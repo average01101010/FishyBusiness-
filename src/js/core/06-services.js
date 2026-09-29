@@ -96,6 +96,8 @@ function opsStep(H){
   let wmax = 0, hmax = 0; const dur = o.hours || 8; for (let k = 0; k <= dur; k += 1){ wmax = Math.max(wmax, windAt(H + k)); hmax = Math.max(hmax, hsOpen(H + k)); }
   if (wmax > o.maxWind || hmax > BOAT.risk[1] * 0.85){ msg(sk.name, 'Blir på land i dag. Varselet gir ' + fmt(wmax, 0) + ' m/s og ' + fmt(hmax, 1) + ' m sjø, over grensa på ' + o.maxWind + ' m/s.', 'Staying ashore today. The forecast gives ' + fmt(wmax, 0) + ' m/s and ' + fmt(hmax, 1) + ' m seas, above the ' + o.maxWind + ' m/s limit.'); log(sk.name + ' ble på land på grunn av været.', sk.name + ' stayed ashore because of the weather.'); return; }
   autoRestock();
+  // a hired skipper fishes cod, haddock and saithe only in the closed group; elsewhere he goes for halibut when the boat has the gear
+  if (!S.lic && b.kgear && !kveiteClosed(H)) S.target = 'kveite';
   S.plan = {wps:o.wps.map(w => ({...w})), idx:0, speed:o.speed, returning:false, depAt:null, ops:true, unsafe:[]};
   log(sk.name + ' gikk ut på fast driftsplan.', sk.name + ' went out on the standing plan.');
   depart();
@@ -111,9 +113,14 @@ function opsLanded(pid){
 }
 function depart(){
   const b = S.boat;
+  // without you aboard, the vessel needs crew of its own
+  if (!meAboard() && !crewAboard().length){ S.plan = null; log('Båten har ikke mannskap og kan ikke gå ut uten deg om bord.', 'The boat has no crew and cannot go out without you aboard.'); return false; }
+  S.tripOwner = !(S.plan && S.plan.ops) && meAboard();
   if (b.status === 'port'){ S.stats.trips++; log('Kastet loss fra ' + portById(b.port).name + '.', 'Cast off from ' + portById(b.port).name + '.'); }
+  if (access() === 'none' && !(S.plan && S.plan.ops) && !(S.target === 'kveite' && b.kgear)) log('Båten har ikke adgang til å fiske torsk, hyse og sei. De kan bare være bifangst, høyst 10 % av landingen.', 'The boat has no access to fish cod, haddock and saithe. They can only be bycatch, at most 10% of the landing.');
   S.tripBuff = Object.assign({}, S.prep || {}); S.prep = {};
   if (S.plan) S.plan.depAt = null; b.status = 'sailing'; b.port = null;
+  return true;
 }
 // jobs: yard service, fitting equipment, preparing gear
 const PREP = {

@@ -106,7 +106,7 @@ function newState(){
     hold:[], log:[], market:{}, stats:{revenue:0, costs:0, trips:0, kg:0}, lastSale:null, fishPlanH:3, lastIceWarn:-1e9, intro:false};
 }
 const KEEP_MIN = 60 * 24 * 60;
-function log(no, en, k){ S.log.push(k ? {t:S.t, no, en, k} : {t:S.t, no, en}); while (S.log.length > 4000 || (S.log.length && S.log[0].t < S.t - KEEP_MIN)) S.log.shift(); if (hooks.onLog) hooks.onLog(); }
+function log(no, en, k){ if (VTAG && S.fleet && S.fleet.length > 1 && S.boatName){ no = S.boatName + ': ' + no; en = S.boatName + ': ' + en; } S.log.push(k ? {t:S.t, no, en, k} : {t:S.t, no, en}); while (S.log.length > 4000 || (S.log.length && S.log[0].t < S.t - KEEP_MIN)) S.log.shift(); if (hooks.onLog) hooks.onLog(); }
 // the deck log: one line every full hour at sea, and a noon observation in port
 function navHour(){
   const b = S.boat, H = S.t / 60, hr = gDate(H).getUTCHours();
@@ -196,8 +196,9 @@ function dock(pid){
   b.status = 'port'; b.port = pid; b.v = 0; b.fishUntil = null; b.pos = {x:port.p.x, y:port.p.y};
   const wasOps = S.plan && S.plan.ops;
   S.plan = null; S.trail = [{x:port.p.x, y:port.p.y, port:pid}];
-  if (wasOps) setTimeout(() => { opsLanded(pid); if (typeof refreshAll === 'function') refreshAll(); }, 0);
   log('Fortøyd i ' + port.name + '.', 'Moored in ' + port.name + '.');
+  // the skipper lands and restocks straight away, on this vessel (a deferred call would land whichever vessel is bound then)
+  if (wasOps){ opsLanded(pid); if (typeof refreshAll === 'function') setTimeout(refreshAll, 0); }
 }
 function fish(H, W, hs){
   const b = S.boat;
@@ -208,7 +209,7 @@ function fish(H, W, hs){
   if (!S.fsess || dist(S.fsess, b.pos) > 0.3) S.fsess = {x:b.pos.x, y:b.pos.y, t0:S.t, kg:0};
   let got = 0;
   // halibut is fished by hand on heavy gear: jigging machines do not help
-  const team0 = crewAboard(), people = 1 + team0.length, keff = people * teamEff(team0);
+  const team0 = crewAboard(), people = (meAboard() ? 1 : 0) + team0.length, keff = people * teamEff(team0, meAboard());
   const pen = (1 - coldPen(H, hs)) * (S.settings.bleed ? 0.8 : 1) * (S.settings.gut ? 0.85 : 1) * (typeof window !== 'undefined' && window.rodActive ? 0.5 : 1);
   let room = capHold() - tot;
   S.facc = S.facc || {}; S.fnext = S.fnext || {};
@@ -225,7 +226,7 @@ function fish(H, W, hs){
   takeStock(b.pos, got); S.fsess.kg += got;
   // cod quota: warn once a day when the cod on board already fills what is left
   const q = quotaState(), codHold = S.hold.filter(x => x.sp === 'torsk').reduce((a, x) => a + x.kg, 0);
-  if (codHold > 0 && q.torsk + codHold >= codLimitNow(H) && !ffPct(H) && (S.codWarn || -1e9) < S.t - 1440){ S.codWarn = S.t; log('Torskekvoten er full. Torsk du lander nå blir inndratt.', 'The cod quota is full. Cod you land now will be confiscated.'); }
+  if (codHold > 0 && access() !== 'none' && q.torsk + codHold >= codLimitNow(H) && !ffPct(H) && (S.codWarn || -1e9) < S.t - 1440){ S.codWarn = S.t; log('Torskekvoten er full. Torsk du lander nå blir inndratt.', 'The cod quota is full. Cod you land now will be confiscated.'); }
 }
 function endFishing(why){
   const b = S.boat; b.fishUntil = null;

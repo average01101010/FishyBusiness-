@@ -3,13 +3,14 @@ panel.addEventListener('pointerdown', () => { pressHold = true; });
 window.addEventListener('pointerup', () => { setTimeout(() => { pressHold = false; }, 250); });
 panel.addEventListener('click', e => { const el = e.target.closest('[data-act]'); if (el && !el.disabled) doAct(el); });
 function doAct(el){
-  const act = el.dataset.act, i = +el.dataset.i, b = S.boat;
+  const act = el.dataset.act, i = +el.dataset.i, b = S.boat, L = (no, en) => S.lang === 'no' ? no : en;
   if (act === 'fp' || act === 'fm'){ const w = S.draft[i]; if (w) w.fish = clamp((w.fish || 0) + (act === 'fp' ? 1 : -1), 0, 12); }
   else if (act === 'rm') S.draft.splice(i, 1);
   else if (act === 'undo') S.draft.pop();
   else if (act === 'clear') S.draft = [];
   else if (act === 'start'){
     if (!S.draft.length || !['port', 'idle'].includes(b.status)) return;
+    if (!meAboard() && !crewAboard().length){ toast(L('Båten har ikke mannskap. Uten deg om bord trenger den folk.', 'The boat has no crew. Without you aboard it needs hands.')); return; }
     const later = S.draftDep && S.draftDep > S.t ? S.draftDep : null;
     if (!later && b.status === 'port' && S.jobs && S.jobs.length){ toast(t('yard_busy', hm((jobsDone() || S.t) / 60))); return; }
     S.plan = {wps:S.draft.map(w => ({...w})), idx:0, speed:S.draftSpeed, returning:false, depAt:later, unsafe:draftHazards().map(h => h.unsafe)};
@@ -18,7 +19,7 @@ function doAct(el){
     else { if (b.status === 'idle') log('Ny rute satt.', 'New route set.'); depart(); }
     if (!G3.isActive()) G3.show(true, true);
   }
-  else if (act === 'depnow'){ if (!S.plan) return; if (b.status === 'port' && S.jobs && S.jobs.length){ toast(t('yard_busy', hm((jobsDone() || S.t) / 60))); return; } depart(); if (!G3.isActive()) G3.show(true, true); }
+  else if (act === 'depnow'){ if (!S.plan) return; if (b.status === 'port' && S.jobs && S.jobs.length){ toast(t('yard_busy', hm((jobsDone() || S.t) / 60))); return; } if (!meAboard() && !crewAboard().length){ toast(L('Båten har ikke mannskap. Uten deg om bord trenger den folk.', 'The boat has no crew. Without you aboard it needs hands.')); return; } depart(); if (!G3.isActive()) G3.show(true, true); }
   else if (act === 'cm'){ const m = el.dataset.m; if (m === 'fish' && !S.equip.plotter){ toast(t('need_plotter')); PHONE.open('utstyr'); return; } S.settings.chart = m; renderBase(); scheduleStatic(); }
   else if (act === 'sd-' || act === 'sd+'){ S.settings.safeDepth = clamp(safeDepth() + (act === 'sd+' ? 1 : -1), 1, 30); hzCache.k = ''; renderBase(); scheduleStatic(); }
   else if (act === 'rod'){ window.ROD.toggle(); renderActs(); return; }
@@ -74,25 +75,35 @@ panel.addEventListener('input', panelInput);
 panel.addEventListener('change', panelChange);
 function sell(){
   const b = S.boat, port = portById(b.port); if (!port || !port.mottak) return;
-  const H = S.t / 60, q = quotaState(), lines = {}, extra = [];
+  const H = S.t / 60, q = quotaState(), lines = {}, extra = [], acc = access(), kgOf = sp => S.hold.filter(x => x.sp === sp).reduce((a, x) => a + x.kg, 0);
   let total = 0, kg = 0;
-  // cod: the fresh-fish allowance first, then the quota; the rest is confiscated by the sales organisation
   const wk = weekOfH(H); if (q.ffW !== wk){ q.ffW = wk; q.ffTot = 0; q.ffCod = 0; }
   const saleKg = S.hold.reduce((a, x) => a + (x.sp === 'hyse' && x.cls === 2 ? 0 : grade(x.fresh) === 'V' ? 0 : x.kg), 0);
-  const codKg = S.hold.filter(x => x.sp === 'torsk').reduce((a, x) => a + x.kg, 0);
-  const pct = ffPct(H), ffAllow = pct ? Math.max(0, pct * (q.ffTot + saleKg) - q.ffCod) : 0;
-  const codFF = Math.min(codKg, ffAllow), codQ = Math.min(codKg - codFF, codRoom(H)), codConf = codKg - codFF - codQ;
-  const confShare = codKg > 0 ? codConf / codKg : 0;
-  let confKr = 0, ordKr = 0;
+  const codKg = kgOf('torsk'), confBy = {};   // share of each species that is confiscated
+  let codFF = 0, codQ = 0, codConf = 0, byCod = 0;
+  if (acc === 'none'){
+    // no access (J-30-2026 § 35): cod, haddock and saithe together at most 10 % of the landing, cut back evenly, and at most 2 t of cod a year
+    const ths = codKg + kgOf('hyse') + kgOf('sei'), f = ths > 0 ? Math.min(1, BYCATCH.share * holdTotal() / ths) : 1;
+    byCod = Math.min(codKg * f, Math.max(0, BYCATCH.cod - (q.byCod || 0))); codConf = codKg - byCod;
+    if (f < 1){ confBy.hyse = 1 - f; confBy.sei = 1 - f; }
+    if (codConf > 0.001) confBy.torsk = codConf / codKg;
+  } else {
+    // cod: the fresh-fish allowance first, then the quota; the rest is confiscated by the sales organisation
+    const pct = ffPct(H), ffAllow = pct ? Math.max(0, pct * (q.ffTot + saleKg) - q.ffCod) : 0;
+    codFF = Math.min(codKg, ffAllow); codQ = Math.min(codKg - codFF, codRoom(H)); codConf = codKg - codFF - codQ;
+    if (codKg > 0 && codConf > 0) confBy.torsk = codConf / codKg;
+  }
+  let confKr = 0, confKg = 0, ordKr = 0;
   for (const x of S.hold){
     const sp = x.sp, sd = SPECIES[sp], c = x.cls != null ? x.cls : sd.ref, g = grade(x.fresh);
     let ppk = g === 'V' ? 1 : clsPrice(port, sp, c, H, x.hook) * GM[g];
     if (x.gut && (sp === 'hyse' || sp === 'sei')) ppk += 0.30;           // no gutting fee deducted
     let v = x.kg * ppk;
-    if (sp === 'torsk' && confShare > 0){ confKr += v * confShare; v *= 1 - confShare; }
-    // orders for this harbour take matching fish first, at their premium
-    for (const o of ordState().active){ if (o.port !== port.id || o.sp !== sp || o.left <= 0.01 || !gradeOk(g, o.q)) continue; const take = Math.min(x.kg - (x._used || 0), o.left); if (take <= 0.01) continue;
-      x._used = (x._used || 0) + take; o.left -= take; const add = take / x.kg * v * o.prem; ordKr += add; o.saleKg = (o.saleKg || 0) + take; o.saleKr = (o.saleKr || 0) + add; }
+    const cs = confBy[sp] || 0; if (cs > 0){ confKr += v * cs; confKg += x.kg * cs; v *= 1 - cs; }
+    // orders for this harbour take matching fish first, at their premium (confiscated fish does not count)
+    const keptKg = x.kg * (1 - cs);
+    for (const o of ordState().active){ if (o.port !== port.id || o.sp !== sp || o.left <= 0.01 || !gradeOk(g, o.q)) continue; const take = Math.min(keptKg - (x._used || 0), o.left); if (take <= 0.01) continue;
+      x._used = (x._used || 0) + take; o.left -= take; const add = take / keptKg * v * o.prem; ordKr += add; o.saleKg = (o.saleKg || 0) + take; o.saleKr = (o.saleKr || 0) + add; }
     const k = sp + '|' + c + '|' + g + '|' + (x.gut ? 1 : 0);
     lines[k] = lines[k] || {sp, c, g, gut:!!x.gut, kg:0, sum:0}; lines[k].kg += x.kg; lines[k].sum += v; total += v; kg += x.kg;
     // liver and roe from fish gutted on board
@@ -108,8 +119,8 @@ function sell(){
   total += ordKr;
   let exKr = 0; const ex = {}; for (const [n, k2, pr] of extra){ ex[n] = ex[n] || {kg:0, sum:0}; ex[n].kg += k2; ex[n].sum += k2 * pr; exKr += k2 * pr; }
   total += exKr;
-  q.torsk += codQ; q.hyse += S.hold.filter(x => x.sp === 'hyse').reduce((a, x) => a + x.kg, 0); q.sei += S.hold.filter(x => x.sp === 'sei').reduce((a, x) => a + x.kg, 0);
-  q.ffTot += saleKg; q.ffCod += codFF; q.conf += codConf; q.confKr += confKr;
+  q.torsk += codQ; q.hyse += kgOf('hyse') * (1 - (confBy.hyse || 0)); q.sei += kgOf('sei') * (1 - (confBy.sei || 0)); q.byCod = (q.byCod || 0) + byCod;
+  if (acc !== 'none'){ q.ffTot += saleKg; q.ffCod += codFF; } q.conf += confKg; q.confKr += confKr;
   const arr = Object.values(lines).sort((a, c) => SP.indexOf(a.sp) - SP.indexOf(c.sp) || a.c - c.c || 'EABXV'.indexOf(a.g) - 'EABXV'.indexOf(c.g));
   // lott goes to those who were aboard; a crew member given time off gets none for this trip
   const aboardNow = crewAboard(), lott = aboardNow.reduce((a, c) => a + c.share, 0) * total;
@@ -120,8 +131,10 @@ function sell(){
   S.sales.push({t:S.t, port:port.id, kg:Math.round(kg), total:Math.round(total), sp:SP.map(sp => [sp, Math.round(arr.filter(r => r.sp === sp).reduce((a, r) => a + r.kg, 0))]).filter(r => r[1] > 0)}); if (S.sales.length > 200) S.sales.shift();
   if (lott > 0) log('Mannskapet fikk ' + Math.round(lott) + ' kr i lott.', 'The crew received NOK ' + Math.round(lott) + ' as their share.');
   if (codFF > 0.5) log(Math.round(codFF) + ' kg torsk gikk på ferskfisktillegget.', Math.round(codFF) + ' kg of cod went on the fresh-fish allowance.');
-  if (codConf > 0.5) msg('Norges Råfisklag', 'Du hadde ikke torskekvote igjen for ' + Math.round(codConf) + ' kg torsk. Verdien, ' + kr(Math.round(confKr)) + ', er inndratt.', 'You had no cod quota left for ' + Math.round(codConf) + ' kg of cod. Its value, ' + kr(Math.round(confKr)) + ', has been confiscated.');
-  S.lastSale = {port:port.id, t:S.t, lines:arr, total, ex, confKg:codConf, confKr, ffKg:codFF, field, lott, ord:ordLines};
+  const vt = S.fleet && S.fleet.length > 1 ? '«' + S.boatName + '»: ' : '';
+  if (acc === 'none' && confKg > 0.5) msg('Norges Råfisklag', vt + 'Båten har ikke adgang til å fiske torsk, hyse og sei. Av disse kan bare 10 % av landingen være bifangst, og høyst ' + fmt(BYCATCH.cod / 1000, 0) + ' tonn torsk i året. ' + Math.round(confKg) + ' kg er inndratt, verdi ' + kr(Math.round(confKr)) + '.', vt + 'The boat has no access to fish cod, haddock and saithe. Only 10% of the landing may be bycatch of these, and at most ' + fmt(BYCATCH.cod / 1000, 0) + ' t of cod a year. ' + Math.round(confKg) + ' kg has been confiscated, worth ' + kr(Math.round(confKr)) + '.');
+  else if (codConf > 0.5) msg('Norges Råfisklag', vt + 'Du hadde ikke torskekvote igjen for ' + Math.round(codConf) + ' kg torsk. Verdien, ' + kr(Math.round(confKr)) + ', er inndratt.', vt + 'You had no cod quota left for ' + Math.round(codConf) + ' kg of cod. Its value, ' + kr(Math.round(confKr)) + ', has been confiscated.');
+  S.lastSale = {port:port.id, t:S.t, lines:arr, total, ex, confKg, confKr, ffKg:codFF, field, lott, ord:ordLines, acc};
   if (S.tubs){ log('Leverte tilbake de lånte fiskekarene.', 'Returned the borrowed fish tubs.'); S.tubs = 0; }
   for (const x of S.hold) delete x._used;
   log('Leverte ' + Math.round(kg) + ' kg i ' + port.name + ' for ' + Math.round(total) + ' kr.', 'Landed ' + Math.round(kg) + ' kg at ' + port.name + ' for NOK ' + Math.round(total) + '.');
@@ -164,10 +177,19 @@ function tick(){
   if (dt > 6) catchUp(dt * 1000);
   else { acc += dt * GAME_RATE * S.mult / 60; let n = 0; while (acc >= 1 && n < 3000){ step(); acc -= 1; n++; } }
   if (!G3.isActive()){ renderDyn(); if (AISSEL) renderAisCard(); } renderHud(); renderClock(); renderActs(); INSTR.renderGPS(); tutUpdate(); PHONE.status(); PHONE.tickHome();
-  if (S.order && S.t >= S.order.due && S.boat.status === 'port' && S.boat.port === 'finnsnes'){ const k = S.order.type; S.order = null; PHONE.switchVessel(k); save(); }
+  if (S.order && S.t >= S.order.due) deliverOrder();
   const pnow = performance.now();
   if ((panelDirty || pnow - lastPanel > 1000) && !panelBusy()){ renderPanel(); lastPanel = pnow; panelDirty = false; }
   if (now - lastSave > 5000){ save(); lastSave = now; }
+}
+// the yard hands over a new build in Finnsnes: in exchange for the vessel it was ordered against (once she is moored there), or as an
+// extra vessel for the fleet (vid null)
+function deliverOrder(){
+  const o = S.order, k = o.type, tv = o.vid === null ? null : vesselById(o.vid || S.cur);
+  if (!tv){ S.order = null; const v = newVesselObj(k, 'finnsnes'); log('Overtok ' + VESSELS[k].name.no + ' fra verftet. Hun heter «' + v.boatName + '» og ligger i Finnsnes.', 'Took delivery of the ' + VESSELS[k].name.en + ' from the yard. She is called «' + v.boatName + '» and lies in Finnsnes.');
+    msg('Verftet', 'Den nye båten, «' + v.boatName + '», er levert og ligger klar i Finnsnes.', 'The new vessel, the «' + v.boatName + '», has been delivered and is ready in Finnsnes.'); save(); return; }
+  const b = vget(tv, 'boat'); if (b.status !== 'port' || b.port !== 'finnsnes') return;
+  S.order = null; onVessel(tv, () => PHONE.switchVessel(k)); save();
 }
 document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
 window.addEventListener('pagehide', save);

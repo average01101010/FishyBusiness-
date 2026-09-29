@@ -26,9 +26,9 @@ Skrevet 29.09.2026 ved flytting fra claude.ai-chat til Claude Code. Dokumentet s
 
 ## 3. Status nå
 
-**Ferdig og publisert (i rekkefølge):** fiskerisystemet, redskapsstige og animasjoner, tempo 1:6, lukket gruppe-kjøp med lån, «Neste mål», haill, pub og verkstedovertid, kveitefiske med fredning, NPC-kaiplasser og trykkprioritet i kartplotteren, jevnere båtbevegelse, «Kaffe på kaia», fiskekar, rengjort bunn, bestillinger, klær og kulde, mannskapssystemet med Mannskapsbørs, og **flåtemodell fase 1**.
+**Ferdig og publisert (i rekkefølge):** fiskerisystemet, redskapsstige og animasjoner, tempo 1:6, lukket gruppe-kjøp med lån, «Neste mål», haill, pub og verkstedovertid, kveitefiske med fredning, NPC-kaiplasser og trykkprioritet i kartplotteren, jevnere båtbevegelse, «Kaffe på kaia», fiskekar, rengjort bunn, bestillinger, klær og kulde, mannskapssystemet med Mannskapsbørs, **flåtemodell fase 1** og **flåtemodell fase 2** (flere båter, bygget i Claude Code).
 
-**Påbegynt, ikke bygget:** flåtemodell **fase 2** (flere båter). Designet er ferdig og godkjent, se kapittel 9. Ingen kode for fase 2 er skrevet ennå.
+**Neste i flåteplanen:** fase 3, rederiappen. Se kapittel 9.
 
 ## 4. Teknisk arkitektur
 
@@ -62,7 +62,13 @@ Skrevet 29.09.2026 ved flytting fra claude.ai-chat til Claude Code. Dokumentet s
 - `step()` kjører først en felles del: bestillinger, Mannskapsbørs, marked, bestand og `hourly()`. Deretter kjøres `crewTick`, `navHour` og `vesselStep(H)` for hver båt via `eachVessel`.
 - **Lagring:** `save()` skriver flåten én gang og fjerner VKEYS fra toppnivået. `load()` binder aliasene til båten som følges straks lagringen er lest, før noe annet leser `S.boat`.
 - **Viktig ved bytte:** Primitive verdier (tall, strenger) må skrives tilbake med `storeVessel` før man bytter båt. `save()` gjør dette selv.
-- **Rederinivå, ikke per båt:** `cash, loan, stats, sales, msgs, log, market, stock, orders, rep, bors, daily, haill, pubE, settings, company, owned, tut, lang, me` (fase 2).
+- **Rederinivå, ikke per båt:** `cash, loan, stats, sales, msgs, log, market, stock, orders, rep, bors, daily, haill, pubE, settings, company, owned, tut, lang, me`.
+- **Fase 2 la til** (i `src/js/core/03-simulation.js`):
+  - `S.me` er båten du er om bord på, og `tripOwner` (i `VKEYS`) sier om du var om bord da båten dro.
+  - `vget(v, k)` leser et felt fra en hvilken som helst båt. For båten som er bundet, ligger de levende verdiene i `S`, ikke i fartøyobjektet.
+  - `openVesselId()`, `meAboard()` og `access()` (`'lukket'`, `'open'` eller `'none'`) gir reglene i kapittel 9.
+  - `onVessel(v, fn)` binder en båt og slår på båtnavn foran loggen. `eachVessel` bruker den.
+  - `newVesselObj(type, havn, lic)`, `vesselValue(v)` og `deliverOrder()` (verftet).
 
 ### 4.4 Konvensjoner og fallgruver i koden
 
@@ -358,7 +364,18 @@ Testet:
 - Et gammelt lagret spill blir en flåte med én båt, og fem timers fravær ble spilt av som 1 800 spillminutter.
 - Alle regresjonstester består.
 
-### Fase 2: Flere båter (godkjent, ikke bygget)
+### Fase 2: Flere båter (ferdig)
+
+Bygget etter designet under, med disse tilleggene:
+- **Fangstinnsats:** Du teller bare med i fisket på båten du er om bord på. Før regnet spillet deg med på alle båter.
+- **Driftsrapporten** leverer nå fangsten med én gang båten legger til. Før skjedde det i en `setTimeout`, som med flere båter kunne selge fangsten fra feil båt, og som under fravær kom etter at hele fraværet var spilt av.
+- **Bestillinger** teller ikke fisk som blir inndratt.
+- **Salgsverdien** for en båt i flåten regnes som innbyttet, altså med halv pris for 90 hk-motoren.
+- **«Gå om bord»** gjør også at du følger båten.
+- **Kvote-fanen** i Salgslaget viser et eget kort for båter uten adgang.
+- **Verftet** sender melding når et nybygg til flåten er levert.
+
+Designet:
 
 Jonas valgte den strengt realistiske varianten.
 
@@ -423,6 +440,9 @@ Større fartøyklasser, line, garn, snurrevad og teiner, egne anlegg og nye regi
 - **Kveithaill** kan gi rundt 8 000 kr per dag ved kveitefiske om høsten. Sjekk balansen i spilltesting.
 - **Klær og kulde:** `coldPen` bruker hele mannskapet (`S.crew.length`), ikke bare dem som er om bord.
 - **Sløyetid:** Anslaget på 150 kg per person og time må sjekkes.
+- **Kvote ved bytte av båt i åpen gruppe:** Kvotebruken ligger per båt. Selger du båten i åpen gruppe midt i året, får neste båt en ubrukt kvote. I virkeligheten følger det du har fisket med når du bytter fartøy.
+- **Driftsplan i åpen gruppe:** En skiff på driftsplan uten kveiteutstyr leverer nesten bare fisk som blir inndratt, fordi torsk, hyse og sei er over bifangstgrensen. Det er etter reglene, men spilleren bør få et tydeligere råd om å kjøpe kveiteutstyr.
+- **Bifangstregelen** (10 % per landing og 2 tonn torsk i året) er tatt fra designet i fase 2 og ikke kontrollert på nytt mot J-30-2026 § 35.
 
 ## 11. Testing
 
@@ -441,6 +461,7 @@ Større fartøyklasser, line, garn, snurrevad og teiner, egne anlegg og nye regi
   - `motion2.py`: båtbevegelse, frakoblet med 60 bilder i sekundet.
   - `berthtest.py`: kaiplasser og trykk i kartplotteren.
   - `fleet1test.py` og `fleet1mig.py`: flåtemodell og migrering.
+  - `fleet2test.py`: fase 2. Levering med og uten adgang, to båter på driftsplan i en simulert uke, knappene i Fartøy-appen, nybygg til flåten, og lagring med to båter. Skriver `OK` eller `FEIL` per sjekk.
 - **Triks:**
   - Testmaskinen gir få bilder i sekundet, og `dt` begrenses til 0,1 s. Test dynamikk frakoblet med `G3._debug.stepBoat`.
   - Spillet lagrer seg selv når siden lukkes. For å teste gamle lagrede spill: legg dem inn med `context.add_init_script` i en ny nettleserøkt.

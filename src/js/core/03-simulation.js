@@ -1,12 +1,40 @@
 // ===== fleet: each vessel keeps its own state; the company holds the rest. The simulation steps through the vessels one at a
 // time and binds S.boat, S.hold, S.crew and the others to the vessel it is working on, so the rest of the code is unchanged. =====
-const VKEYS = ['boat', 'plan', 'hold', 'crew', 'equip', 'jobs', 'cevt', 'ops', 'lic', 'quota', 'draft', 'draftSpeed', 'draftDep', 'marks', 'target', 'tubs', 'clean', 'trail', 'fsess', 'facc', 'fnext', 'fishPlanH', 'workLog', 'clothes', 'tripBuff', 'prep', 'svcTold', 'boatName', 'lastSale', 'restWarn', 'kvRel', 'codWarn', 'lastIceWarn', 'navrows'];
+const VKEYS = ['boat', 'plan', 'hold', 'crew', 'equip', 'jobs', 'cevt', 'ops', 'lic', 'quota', 'draft', 'draftSpeed', 'draftDep', 'marks', 'target', 'tubs', 'clean', 'trail', 'fsess', 'facc', 'fnext', 'fishPlanH', 'workLog', 'clothes', 'tripBuff', 'prep', 'svcTold', 'boatName', 'lastSale', 'restWarn', 'kvRel', 'codWarn', 'lastIceWarn', 'navrows', 'tripOwner'];
 function curVessel(){ return S.fleet.find(v => v.id === S.cur) || S.fleet[0]; }
 function storeVessel(v){ for (const k of VKEYS) v[k] = S[k]; }
 function bindVessel(v){ for (const k of VKEYS) S[k] = v[k]; S.cur = v.id; applyVessel(); }
-function ensureFleet(){ if (!S.fleet || !S.fleet.length){ const v = {id:'v1'}; storeVessel(v); S.fleet = [v]; S.cur = 'v1'; } else bindVessel(curVessel()); }
+function ensureFleet(){ if (!S.fleet || !S.fleet.length){ const v = {id:'v1'}; storeVessel(v); S.fleet = [v]; S.cur = 'v1'; } else bindVessel(curVessel()); if (!S.fleet.some(v => v.id === S.me)) S.me = S.cur; }
 function withVessel(v, fn){ const c = curVessel(); if (v === c) return fn(); storeVessel(c); bindVessel(v); try { return fn(); } finally { storeVessel(v); bindVessel(c); } }
-function eachVessel(fn){ for (const v of S.fleet.slice()) withVessel(v, fn); }
+// log lines written while the fleet loop works on a vessel get its name, once the company has more than one
+let VTAG = false;
+function onVessel(v, fn){ const was = VTAG; VTAG = true; try { return withVessel(v, fn); } finally { VTAG = was; } }
+function eachVessel(fn){ for (const v of S.fleet.slice()) onVessel(v, fn); }
+// a vessel's own field; the bound vessel's live values are in S
+function vget(v, k){ return v.id === S.cur ? S[k] : v[k]; }
+function vesselById(id){ return S.fleet.find(v => v.id === id) || null; }
+// ---- fleet rules (deltakerforskriften, J-30-2026): the company can have one vessel in the open group, and none there if it owns a
+// vessel in the closed group. In the open group the owner must be aboard as skipper; S.me is the vessel you are aboard. ----
+function openVesselId(){ if (S.fleet.some(v => vget(v, 'lic'))) return null; return S.fleet.length ? S.fleet[0].id : null; }
+function meAboard(){ return !S.me || S.me === S.cur; }
+// what the bound vessel may land of cod, haddock and saithe: 'lukket' with a closed-group right, 'open' on the open-group vessel when
+// the owner was aboard for the trip, otherwise 'none': bycatch only (J-30-2026 § 35)
+function access(){ if (S.lic) return 'lukket'; return S.cur === openVesselId() && S.tripOwner !== false ? 'open' : 'none'; }
+const BYCATCH = {share:0.1, cod:2000};
+function vesselValue(v){ const b = vget(v, 'boat'), eq = vget(v, 'equip') || {}; return Math.round(VESSELS[b.type].price * 0.7 + (eq.motor90 ? EQUIP.motor90.price * 0.5 : 0) + licValue(vget(v, 'lic')) * 0.95); }
+// a vessel added to the fleet: default state, in port with 40 % fuel; the bigger boats come with a plotter and VHF
+const VNAMES = ['Senjaværing', 'Nordlys', 'Malangen', 'Gisund', 'Havglimt', 'Skreien', 'Fjordbris', 'Straumen', 'Hekkingen', 'Kvitskjær'];
+function newVesselObj(type, pid, lic){
+  const d = newState(), V = VESSELS[type], p = portById(pid).p, n = Math.max(0, ...S.fleet.map(x => +String(x.id).slice(1) || 0)) + 1, v = {id:'v' + n};
+  for (const k of VKEYS) v[k] = d[k];
+  Object.assign(v.boat, {type, pos:{x:p.x, y:p.y}, port:pid, fuel:V.fuelCap * 0.4});
+  v.trail = [{x:p.x, y:p.y, port:pid}]; v.lic = lic || null;
+  if (type !== 'skiff') Object.assign(v.equip, {plotter:true, vhf:true});
+  const used = S.fleet.map(x => vget(x, 'boatName'));
+  v.boatName = VNAMES.find(nm => !used.includes(nm)) || 'Båt ' + n;
+  S.fleet.push(v); if (!S.owned.includes(type)) S.owned.push(type);
+  return v;
+}
 function applyVessel(){
   const b = S.boat; Object.assign(BOAT, VESSELS[b.type || 'skiff']);
   if (b.type === 'skiff' && S.equip && S.equip.motor90){ BOAT.vmax = 30; BOAT.fuelK = 1.35; }
@@ -14,8 +42,8 @@ function applyVessel(){
 }
 function fishEffort(){
   if (S.plan && S.plan.ops){ const sk = opsSkipper(); const people = Math.max(1, S.crew.length), jk = Math.min(S.equip ? S.equip.jukse : 0, people * 3); return (Math.max(0, people - Math.ceil(jk / 3)) + jk * 1.3) * (sk ? sk.skill : 0.8) * 0.9; }
-  const team = crewAboard(), people = 1 + team.length, jk = Math.min(S.equip ? S.equip.jukse : 0, people * 3);
-  const skill = teamEff(team);
+  const team = crewAboard(), people = (meAboard() ? 1 : 0) + team.length, jk = Math.min(S.equip ? S.equip.jukse : 0, people * 3);
+  const skill = teamEff(team, meAboard());
   const hand = S.boat && S.boat.gear ? 1 : 0.35;   // a rod with one lure until you buy a jig line (pilk and four fly hooks)
   return (Math.max(0, people - Math.ceil(jk / 3)) * hand + jk * 1.3) * skill;
 }
@@ -233,7 +261,7 @@ function avgPrice(sp, H, days){ let s = 0, n = 0; for (let d = 0; d < days; d++)
 const QUOTA = {cod:[[8, 4000, 3000], [10, 5600, 4200], [1e9, 6400, 4800]], hyseG:[4000, 5600, 6400], seiG:5000};
 function doyH(H){ const g = gDate(H); return Math.floor((g - Date.UTC(g.getUTCFullYear(), 0, 1)) / 864e5); }
 function yearH(H){ return gDate(H).getUTCFullYear(); }
-function quotaState(){ const y = yearH(S.t / 60); if (!S.quota || S.quota.y !== y) S.quota = {y, torsk:0, hyse:0, sei:0, ffW:-1, ffTot:0, ffCod:0, conf:0, confKr:0}; return S.quota; }
+function quotaState(){ const y = yearH(S.t / 60); if (!S.quota || S.quota.y !== y) S.quota = {y, torsk:0, hyse:0, sei:0, ffW:-1, ffTot:0, ffCod:0, conf:0, confKr:0, byCod:0}; return S.quota; }
 // vessels with a participation right in the closed group, J-30-2026 §§ 16, 18, 19 (hyse and saithe for largest length under 11 m);
 // quota priced at about NOK 225 per kg of cod (estimate from Riksrevisjonen's 2017 level and the cod price since)
 const LIC_OFFERS = [
