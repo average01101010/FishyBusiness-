@@ -100,7 +100,7 @@ function newState(){
   const home = PORTS[0];
   return {v:1, t:0, lastReal:Date.now(), mult:1, lang:'no', cash:15000,
     boat:{type:'skiff', pos:{x:home.p.x, y:home.p.y}, heading:0, v:0, fuel:60, ice:0, gear:false, status:'port', port:home.id, prev:null, engineUntil:0, fishUntil:null, engH:0, svcAt:0},
-    equip:{vhf:false, ais:false, plotter:false, chirp:false, jukse:0, motor90:false}, crew:[], loan:null, member:false, msgs:[], sales:[], order:null, owned:['skiff'], lic:null, haill:null, pubE:-1, target:'mix', daily:null, tubs:0, clean:0, clothes:{olje:0, varme:0}, orders:null, rep:{}, bors:null, cevt:null, workLog:[], stock:initStock(), marks:[], navrows:[], incidents:[], lore:{}, ops:null, company:'', boatName:'', tut:0, jobs:[], prep:{}, tripBuff:null, draftDep:null,
+    equip:{vhf:false, ais:false, plotter:false, chirp:false, jukse:0, motor90:false}, crew:[], loan:null, member:false, msgs:[], sales:[], order:null, owned:['skiff'], lic:null, haill:null, pubE:-1, target:'mix', daily:null, tubs:0, clean:0, clothes:{olje:0, varme:0}, orders:null, rep:{}, bors:null, cevt:null, workLog:[], stock:initStock(), marks:[], navrows:[], incidents:[], lore:{}, tattoos:{}, tat:{}, ops:null, company:'', boatName:'', tut:0, jobs:[], prep:{}, tripBuff:null, draftDep:null,
     plan:null, draft:[], draftSpeed:16, trail:[{x:home.p.x, y:home.p.y, port:home.id}],
     settings:{bleed:true, ice:true, deckFirst:true, autoOn:true, autoW:11},
     hold:[], log:[], market:{}, stats:{revenue:0, costs:0, trips:0, kg:0}, lastSale:null, fishPlanH:3, lastIceWarn:-1e9, intro:false};
@@ -154,7 +154,7 @@ function vesselStep(H){
     startReturn(true, W);
   }
   if (b.status === 'sailing' || b.status === 'fishing') b.engH = (b.engH || 0) + (b.status === 'sailing' ? 1 : 0.25) / 60;
-  if (b.status === 'sailing') sail(H, W, hs);
+  if (b.status === 'sailing'){ const p0 = b.pos; sail(H, W, hs); if (meAboard()) tatAdd('nm', dist(p0, b.pos) / NM); }
   else if (b.status === 'fishing') fish(H, W, hs);
   else b.v = 0;
   risk(W, hs);
@@ -203,6 +203,7 @@ function dock(pid){
   const wasOps = S.plan && S.plan.ops;
   S.plan = null; S.trail = [{x:port.p.x, y:port.p.y, port:pid}];
   log('Fortøyd i ' + port.name + '.', 'Moored in ' + port.name + '.');
+  tatTripEnd(pid);
   // the skipper starts landing and restocks straight away, on this vessel (a deferred call would act on whichever vessel is bound then)
   if (wasOps){ opsLanded(pid); if (typeof refreshAll === 'function') setTimeout(refreshAll, 0); }
 }
@@ -227,7 +228,8 @@ function fish(H, W, hs){
   // halibut is fished by hand on heavy gear: jigging machines do not help
   const team0 = crewAboard(), people = (meAboard() ? 1 : 0) + team0.length, keff = people * teamEff(team0, meAboard());
   const P = handsAboard(), onDeck = P >= 2 && deckPending() > 0.5 ? 1 : 0;   // one hand fewer at the rail while someone guts
-  const pen = (1 - coldPen(H, hs)) * (P ? (P - onDeck) / P : 1) * (typeof window !== 'undefined' && window.rodActive ? 0.5 : 1);
+  const rod = typeof window !== 'undefined' && window.rodActive; if (rod && meAboard()) S.deckMe = (S.deckMe || 0) + 1;   // fishing by hand counts as your own work on deck
+  const pen = (1 - coldPen(H, hs)) * (P ? (P - onDeck) / P : 1) * (rod ? 0.5 : 1);
   let room = capHold() - tot;
   S.facc = S.facc || {}; S.fnext = S.fnext || {};
   for (const sp of SP){
@@ -336,7 +338,7 @@ function rescue(keepCatch){
   const b = S.boat, port = nearestPort(b.pos), fee = S.member ? 0 : keepCatch ? PRICE.tow : PRICE.rescue;
   S.cash -= fee; S.stats.costs += fee;
   let lost = 0; if (!keepCatch){ lost = Math.round(holdTotal()); S.hold = []; }
-  b.prev = null; dock(port.id); hullRepair();
+  b.prev = null; b.tripBad = true; if (meAboard()) tatAdd('rescued', 1); dock(port.id); hullRepair();
   if (keepCatch) log('Slept inn til ' + port.name + '. Kostnad ' + fee + ' kr.', 'Towed to ' + port.name + '. Cost NOK ' + fee + '.');
   else log('Redningsskøyte slepte båten til ' + port.name + ' i farlig sjø. Kostnad ' + fee + ' kr, mistet ' + lost + ' kg fisk.', 'A rescue boat towed you to ' + port.name + ' in dangerous seas. Cost NOK ' + fee + ', lost ' + lost + ' kg of fish.');
 }

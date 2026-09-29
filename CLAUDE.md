@@ -24,7 +24,7 @@ Et kystfiskespill fra Senja som kjører som én selvstendig HTML-side, publisert
 - Oppsett: `pip install playwright==1.56.0`. Nettleseren ligger allerede i `/opt/pw-browsers`.
 - Kjør med `python3 tests/<navn>.py`. Skriptene skriver ut verdier og feil i stedet for å bruke assert, så les utskriften.
 - Regresjon: `trip2.py` (hel tur, skal ende med `"st":"port"`), `tut.py` (veiledningen, skal ende med `"tut":0`) og `dbg23o.py` (WebGL, skal ikke skrive ut noe). Alle skal gi `[]` for sidefeil.
-- Endringer i fisket eller fangstbehandlingen: kjør også `decktest.py`. Endringer i overtroen: `loretest.py`.
+- Endringer i fisket eller fangstbehandlingen: kjør også `decktest.py`. Endringer i overtroen: `loretest.py`. Endringer i tatoveringene: `tattest.py`.
 - Endringer som berører flåten, salget, driftsplanen eller telefonappene: kjør også `fleet2test.py` og `fleet3test.py`. Endringer i havnene, fortøyningen eller leveringen: `harbourtest.py`, `moortest.py`, `landtest.py` og `bunkertest.py`. Alle sjekklinjene skal starte med `OK`.
 - Funksjonstestene og triksene for testing står i kapittel 11 i overleveringen.
 

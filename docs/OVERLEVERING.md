@@ -493,6 +493,24 @@ Sjøfolk og fiskere har alltid vært overtroiske. Overtroen er bare lore i spill
 - **Appen «Sjømann»** viser det du har hørt under «Fra gamle dager», og resten som ukjent.
 - **Kilder:** Store norske leksikon (noaord, draug), Redningsselskapet «Ikke ta med brunost på havet!», Båtmagasinet «Om tro og overtro til sjøs», Norsk Fisk «Overtro», NRK om mastemynten og en forumtråd om omdøping (svakt belegg). «Snu med sola» og «måker er druknede sjøfolk» ble tatt ut fordi jeg ikke fant belegg.
 
+### Sjømannstatoveringer (T, ferdig 29.09.2026)
+
+Tatoveringene er belønninger som kommer av seg selv, med en melding når du har gjort deg fortjent til en. Appen «Sjømann» viser dem på en figur, og kortene under viser betydning, krav og hvor langt du har kommet. Bare det du gjør selv om bord, teller. Alt ligger i `src/js/core/09-tattoos.js` (`TATS`, tellerne i `S.tat`, tatoveringene i `S.tattoos`).
+
+| Tatovering | Plass | Krav |
+|---|---|---|
+| Svale og svale nummer to | Brystet | 5000 og 10 000 nautiske mil med deg om bord |
+| Nautisk stjerne | Armen | 100 turer hjem uten grunnstøting eller slep |
+| Tau rundt håndleddet | Håndleddet | 100 timer eget arbeid på dekk: sløying, ising og fiske for hånd |
+| Kryssede ankere | Mellom tommel og pekefinger | 50 turer som skipper med fullt mannskap |
+| Harpun | Underarmen | Et rederi med tre båter |
+| Gris og hane | Fotbladene | Reddet etter grunnstøting, motorstopp eller drift |
+| Kniv gjennom rose | Overarmen | Samme mann om bord i ett år, eller 50 leveranser til samme mottak |
+| Anker, skilpadde, hulajente, Kong Neptun | | Låst. Krever Atlanterhavet, ekvator og Hawaii, altså farvann utenfor Senja. |
+
+- **Tempo:** En fiskedag er 20–40 nm, så den første svalen kommer etter 150–250 fiskedager. Tallene justeres i spilltesting.
+- **Kilder for betydningene:** US Navy History «Sailors' Tattoos», One Ocean Expedition om svalen og The Bermudian «Vintage Sailor Tattoos and Their Meanings».
+
 ### Fase 4: Flåten i kart og 3D
 
 Egne båter vises med egne symboler i kartplotteren, og du kan trykke for å følge. Båter i nærheten vises i 3D.
@@ -538,6 +556,7 @@ Større fartøyklasser, line, garn, snurrevad og teiner, egne anlegg og nye regi
   - `fleet1test.py` og `fleet1mig.py`: flåtemodell og migrering.
   - `moortest.py`: fortøyning og mottakene i 3D. Liggeplass i alle havner, å legge til med tauene og å kaste loss.
   - `harbourtest.py`: havnene. Mottak, is og drivstoff per havn. De ekte kaiene: alle båttyper ligger langs kaifronten i sjøen i 3D-kystlinja, og ruta inn og ut av hver havn går fri av land.
+  - `tattest.py`: tatoveringene. Nautiske mil og trygge turer bare med deg om bord, grunnstøting og slep, alle kravene, de låste og appen.
   - `loretest.py`: overtroen. Fredagsavreise, at samme fortelling ikke gjentas, omdøping, mastemynt, fortellinger på sjøen og på puben, uendret humør og appen «Sjømann».
   - `decktest.py`: arbeidet på dekk. Bløggekaret, sløyefart, stopp når karet er fullt, én mann mot to, «ta unna før du går» og kvalitetstapet.
   - `bunkertest.py`: bunkringen. Forhaling til bunkerskaia og tilbake, pumpefart og betaling, avgang som venter, Finnsnes, og i 3D stasjonene, forhalingen og telleren.

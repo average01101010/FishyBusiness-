@@ -3,6 +3,7 @@ function coverage(p){ const d = coastDist(p); return d < 3 ? 4 : d < 8 ? 3 : d <
 function msg(from, no, en){ S.msgs.push({t:S.t, from, no, en, read:false}); if (S.msgs.length > 80) S.msgs.shift(); if (hooks.onMsg) hooks.onMsg(); }
 function hourly(){
   const H = S.t / 60, hr = gDate(H).getUTCHours();
+  if (hr === 0) checkTattoos();   // the fleet and the crew's years are checked once a day
   // the company hears it if any vessel does: in port, with mobile coverage, or on VHF
   const bars = Math.max(0, ...S.fleet.map(v => { const vb = vget(v, 'boat'); return vb.status === 'port' ? 4 : coverage(vb.pos); })), vhf = S.fleet.some(v => (vget(v, 'equip') || {}).vhf);
   // gale warning ahead (coast radio on VHF, or text message when there is coverage)
@@ -129,7 +130,7 @@ function depart(){
   // without you aboard, the vessel needs crew of its own
   if (!meAboard() && !crewAboard().length){ S.plan = null; log('Båten har ikke mannskap og kan ikke gå ut uten deg om bord.', 'The boat has no crew and cannot go out without you aboard.'); return false; }
   S.tripOwner = !(S.plan && S.plan.ops) && meAboard();
-  if (b.status === 'port'){ S.stats.trips++; log('Kastet loss fra ' + portById(b.port).name + '.', 'Cast off from ' + portById(b.port).name + '.'); if (S.tripOwner) loreDepart(); }
+  if (b.status === 'port'){ S.stats.trips++; log('Kastet loss fra ' + portById(b.port).name + '.', 'Cast off from ' + portById(b.port).name + '.'); if (S.tripOwner) loreDepart(); tatTripStart(); }
   if (access() === 'none' && !(S.plan && S.plan.ops) && !(S.target === 'kveite' && b.kgear)) log('Båten har ikke adgang til å fiske torsk, hyse og sei. De kan bare være bifangst, høyst 10 % av landingen.', 'The boat has no access to fish cod, haddock and saithe. They can only be bycatch, at most 10% of the landing.');
   S.tripBuff = Object.assign({}, S.prep || {}); S.prep = {};
   if (S.plan) S.plan.depAt = null;

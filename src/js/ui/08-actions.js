@@ -127,6 +127,7 @@ function sell(){
   if (acc === 'none' && confKg > 0.5) msg('Norges Råfisklag', vt + 'Båten har ikke adgang til å fiske torsk, hyse og sei. Av disse kan bare 10 % av landingen være bifangst, og høyst ' + fmt(BYCATCH.cod / 1000, 0) + ' tonn torsk i året. ' + Math.round(confKg) + ' kg er inndratt, verdi ' + kr(Math.round(confKr)) + '.', vt + 'The boat has no access to fish cod, haddock and saithe. Only 10% of the landing may be bycatch of these, and at most ' + fmt(BYCATCH.cod / 1000, 0) + ' t of cod a year. ' + Math.round(confKg) + ' kg has been confiscated, worth ' + kr(Math.round(confKr)) + '.');
   else if (codConf > 0.5) msg('Norges Råfisklag', vt + 'Du hadde ikke torskekvote igjen for ' + Math.round(codConf) + ' kg torsk. Verdien, ' + kr(Math.round(confKr)) + ', er inndratt.', vt + 'You had no cod quota left for ' + Math.round(codConf) + ' kg of cod. Its value, ' + kr(Math.round(confKr)) + ', has been confiscated.');
   S.lastSale = {port:port.id, t:S.t, lines:arr, total, ex, confKg, confKr, ffKg:codFF, field, lott, ord:ordLines, acc};
+  tatLanding(port.id); checkTattoos();
   if (S.tubs){ log('Leverte tilbake de lånte fiskekarene.', 'Returned the borrowed fish tubs.'); S.tubs = 0; }
   for (const x of S.hold) delete x._used;
   log('Leverte ' + Math.round(kg) + ' kg i ' + port.name + ' for ' + Math.round(total) + ' kr.', 'Landed ' + Math.round(kg) + ' kg at ' + port.name + ' for NOK ' + Math.round(total) + '.');

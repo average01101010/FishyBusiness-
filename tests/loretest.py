@@ -31,7 +31,7 @@ async def main():
           // no effect on the crew
           R.morale = S.crew.map(c => c.morale).every((m, i) => m === morale0[i]);
           // the Seaman app
-          PHONE.open('sjomann'); const v = document.querySelector('.ph-appv'); R.app = {text:v ? v.innerText.slice(0, 160) : null, cards:v ? v.querySelectorAll('.ph-card').length : 0, unknown:v ? v.innerText.split('Ennå ikke hørt').length - 1 : -1};
+          PHONE.open('sjomann'); document.querySelector('[data-pa="sub"][data-s="overtro"]').click(); const v = document.querySelector('.ph-appv'); R.app = {text:v ? v.innerText.slice(0, 160) : null, cards:v ? v.querySelectorAll('.ph-card').length : 0, unknown:v ? v.innerText.split('Ennå ikke hørt').length - 1 : -1};
           return R; })()""")
         print(json.dumps(r, ensure_ascii=False))
         print(ok(r['friday'] == 5 and r['fri']['heard'] and r['fri']['text'] and 'fredag' in r['fri']['text'] and r['fri']['log']), 'a Friday departure: the oldest hand mutters, and it goes in the deck log')

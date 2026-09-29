@@ -93,10 +93,55 @@ const PHONE = (() => {
   const kv = (a, b) => '<div class="ph-kv"><span>' + a + '</span><span>' + b + '</span></div>';
   const subs = (a, list) => '<div class="ph-sub">' + list.map(([k, no, en]) => '<button class="' + ((sub[a] || list[0][0]) === k ? 'on' : '') + '" data-pa="sub" data-s="' + k + '">' + L(no, en) + '</button>').join('') + '</div>';
   const inPort = () => S.boat.status === 'port';
-  // --- the seaman's life: the old ways at sea you have heard of, aboard, on the quay and at the pub
+  // --- the seaman's life: the tattoos you have earned, and the old ways at sea you have heard of
+  // old-school tattoo flash, drawn small: each icon is centred on 0,0 and about 22 units across
+  const TATICON = {
+    swallow:'<path d="M-11,-3 C-5,-9 5,-9 11,-3 L4,-1 L11,7 L2,2 L0,9 L-2,2 L-11,7 L-4,-1 Z" fill="#1d3b6e" stroke="#111" stroke-width=".8"/><circle cx="0" cy="-1" r="2.2" fill="#c8302a"/>',
+    star:'<path d="M0,-11 L3,-3 L11,-3 L4.5,2 L7,10 L0,5 L-7,10 L-4.5,2 L-11,-3 L-3,-3 Z" fill="#c8302a" stroke="#111" stroke-width=".8"/><path d="M0,-11 L0,5 L-7,10 L-4.5,2 L-11,-3 L-3,-3 Z" fill="#1a1a1a"/>',
+    rope:'<rect x="-11" y="-3.5" width="22" height="7" rx="3" fill="#c9a064" stroke="#111" stroke-width=".8"/><path d="M-8,-3 L-5,3 M-4,-3 L-1,3 M0,-3 L3,3 M4,-3 L7,3" stroke="#6b4a1f" stroke-width="1"/>',
+    anchor:'<g fill="none" stroke="#1d3b6e" stroke-width="2.2" stroke-linecap="round"><circle cx="0" cy="-8" r="2.2"/><path d="M0,-6 V9 M-5,-3 H5 M-9,3 C-7,9 7,9 9,3"/></g>',
+    xanchors:'<g transform="rotate(-30) scale(.7)"><g fill="none" stroke="#1d3b6e" stroke-width="2.4" stroke-linecap="round"><circle cx="0" cy="-8" r="2.2"/><path d="M0,-6 V9 M-5,-3 H5 M-9,3 C-7,9 7,9 9,3"/></g></g><g transform="rotate(30) scale(.7)"><g fill="none" stroke="#1d3b6e" stroke-width="2.4" stroke-linecap="round"><circle cx="0" cy="-8" r="2.2"/><path d="M0,-6 V9 M-5,-3 H5 M-9,3 C-7,9 7,9 9,3"/></g></g>',
+    harpoon:'<g stroke="#1a1a1a" stroke-width="1.6" stroke-linecap="round"><path d="M-11,8 L8,-8"/><path d="M8,-8 L3,-8 M8,-8 L8,-3" /></g><path d="M11,-11 L5,-7 L8,-4 Z" fill="#c8302a" stroke="#111" stroke-width=".6"/>',
+    pigcock:'<g transform="translate(-8,0)"><ellipse cx="0" cy="1" rx="6" ry="4.5" fill="#f2a5b0" stroke="#111" stroke-width=".7"/><circle cx="4.5" cy="0" r="1.8" fill="#e58a98" stroke="#111" stroke-width=".5"/></g><g transform="translate(8,0)"><ellipse cx="0" cy="2" rx="4.5" ry="4" fill="#e8c14a" stroke="#111" stroke-width=".7"/><circle cx="2" cy="-3" r="2.3" fill="#e8c14a" stroke="#111" stroke-width=".6"/><path d="M1,-6 l1.2,-2 l1.2,2 l1.2,-2" fill="#c8302a" stroke="#c8302a"/><path d="M-4,0 l-3,-4 l1,5 Z" fill="#2c6b3c"/></g>',
+    rose:'<path d="M-10,10 L10,-10" stroke="#8a8f94" stroke-width="2.2" stroke-linecap="round"/><path d="M-10,10 l3,-1 l-2,-2 Z" fill="#4a3a1f"/><circle cx="0" cy="0" r="5.5" fill="#c8302a" stroke="#111" stroke-width=".8"/><path d="M-2.5,-1 C-1,-3 2,-2 1.5,1 C0,2.5 -2.5,1 -2.5,-1" fill="none" stroke="#7a1512" stroke-width=".9"/><path d="M-4,5 C-7,7 -8,4 -6,3 Z M4,5 C7,7 8,4 6,3 Z" fill="#2c6b3c"/>',
+    turtle:'<ellipse cx="0" cy="0" rx="8" ry="6" fill="#2c6b3c" stroke="#111" stroke-width=".8"/><path d="M-4,-3 L4,-3 L6,1 L0,4 L-6,1 Z" fill="none" stroke="#9cc49a" stroke-width=".8"/><circle cx="9.5" cy="0" r="2.2" fill="#6d9a5b" stroke="#111" stroke-width=".5"/>',
+    hula:'<circle cx="0" cy="-8" r="2.6" fill="#d9a077" stroke="#111" stroke-width=".6"/><path d="M-2,-5 L2,-5 L3,1 L-3,1 Z" fill="#d9a077" stroke="#111" stroke-width=".5"/><path d="M-5,1 L5,1 L7,9 L-7,9 Z" fill="#3d8b3d" stroke="#111" stroke-width=".6"/><path d="M-5,1 l-1,8 M-2,1 l-.5,8 M1,1 l.5,8 M4,1 l1,8" stroke="#1f5a1f" stroke-width=".6"/><circle cx="-1.5" cy="-9" r="1.2" fill="#c8302a"/>',
+    neptune:'<g stroke="#b9892a" stroke-width="1.8" stroke-linecap="round" fill="none"><path d="M0,-9 V10 M-6,-9 C-6,-3 6,-3 6,-9"/></g><path d="M-6,-11 l0,3 M6,-11 l0,3 M0,-11 l0,3" stroke="#b9892a" stroke-width="1.8"/><path d="M-6,4 L-3,1 L0,4 L3,1 L6,4 L6,7 L-6,7 Z" fill="#e8c14a" stroke="#111" stroke-width=".6"/>'
+  };
+  const tatIcon = (T, sc) => '<g transform="translate(' + T.at[0] + ',' + T.at[1] + ') scale(' + (sc || 1) * (T.flip ? -1 : 1) + ',' + (sc || 1) + ')">' + TATICON[T.icon] + '</g>';
+  function tatBody(){
+    const got = S.tattoos || {}, skin = '#e7c3a4', line = '#8a6a55';
+    let s = '<svg viewBox="0 0 200 330" style="width:100%;max-width:260px;display:block;margin:0 auto" role="img" aria-label="' + L('Figur med tatoveringer', 'Figure with tattoos') + '">';
+    s += '<g fill="' + skin + '" stroke="' + line + '" stroke-width="1.2">';
+    s += '<path d="M72,78 L40,196 L50,200 L80,110 Z"/><path d="M128,78 L160,196 L150,200 L120,110 Z"/>';       // arms
+    s += '<ellipse cx="44" cy="206" rx="8" ry="10"/><ellipse cx="156" cy="206" rx="8" ry="10"/>';                  // hands
+    s += '<path d="M80,190 L78,300 L96,300 L99,200 L101,200 L104,300 L122,300 L120,190 Z"/>';                      // legs
+    s += '<ellipse cx="87" cy="312" rx="12" ry="8"/><ellipse cx="113" cy="312" rx="12" ry="8"/>';                 // feet
+    s += '<path d="M70,72 Q100,60 130,72 L126,192 Q100,200 74,192 Z"/>';                                           // body
+    s += '<rect x="93" y="54" width="14" height="14"/><circle cx="100" cy="38" r="20"/></g>';                       // neck, head
+    s += '<path d="M76,150 Q100,158 124,150" fill="none" stroke="' + line + '" stroke-width=".8"/>';
+    for (const T of TATS){ if (got[T.id]) s += tatIcon(T, T.icon === 'rope' ? 0.55 : T.icon === 'pigcock' ? 0.7 : 0.8);
+      else s += '<circle cx="' + T.at[0] + '" cy="' + T.at[1] + '" r="7" fill="none" stroke="' + (T.lock ? '#9aa4ad' : '#6f7c86') + '" stroke-width="1" stroke-dasharray="2 2"/>'; }
+    return s + '</svg>';
+  }
+  function tattoos(){
+    const got = S.tattoos || {}, c = tatCounts(), n = TATS.filter(T => got[T.id]).length;
+    const h = ['<div class="ph-card"><h4>' + L('Tatoveringer', 'Tattoos') + '</h4>' + tatBody() + '<p class="ph-note">' + L('Sjøfolkets gamle merker kommer av seg selv når du har gjort deg fortjent til dem. Du har ', 'The old marks of seafarers come by themselves when you have earned them. You have ') + n + L(' av ', ' of ') + TATS.length + '.</p></div>'];
+    for (const T of TATS){
+      const icon = '<svg viewBox="-13 -13 26 26" style="width:34px;height:34px;flex:none' + (got[T.id] ? '' : ';opacity:.35;filter:grayscale(1)') + '">' + TATICON[T.icon] + '</svg>';
+      let foot;
+      if (got[T.id]) foot = L('Fått ', 'Earned ') + dayStr(got[T.id] / 60);
+      else if (T.lock) foot = L(T.r[0], T.r[1]) + L(', kommer når spillet får nye farvann.', ', coming when the game reaches new waters.');
+      else { const [have, need] = T.p(c); foot = L(T.r[0], T.r[1]) + ': ' + fmt(Math.min(have, need), 0) + ' / ' + fmt(need, 0) + '<div class="ph-bar"><i style="width:' + Math.round(clamp(have / need, 0, 1) * 100) + '%"></i></div>'; }
+      h.push('<div class="ph-card"' + (T.lock && !got[T.id] ? ' style="opacity:.7"' : '') + '><div style="display:flex;gap:10px;align-items:center">' + icon + '<div><h4 style="margin:0">' + L(T.n[0], T.n[1]) + '</h4><p style="margin:2px 0">' + L(T.m[0], T.m[1]) + '</p></div></div><p class="ph-note">' + foot + '</p></div>');
+    }
+    return h.join('');
+  }
   function sjomann(){
+    const tab = sub.sjomann || 'tatover';
+    if (tab === 'tatover') return '<div class="ph-c">' + subs('sjomann', [['tatover', 'Tatoveringer', 'Tattoos'], ['overtro', 'Fra gamle dager', 'The old ways']]) + tattoos() + '</div>';
     const heard = S.lore || {}, ids = Object.keys(LORE), n = ids.filter(id => heard[id]).length;
-    const h = ['<div class="ph-c"><div class="ph-card"><h4>' + L('Fra gamle dager', 'The old ways') + '</h4><p class="ph-note">' + L('Sjøfolk og fiskere har alltid vært overtroiske. Det du hører om bord, på kaia og på puben, samles her. Du har hørt ', 'Seafarers and fishermen have always been superstitious. What you hear aboard, on the quay and at the pub is kept here. You have heard ') + n + L(' av ', ' of ') + ids.length + L(' fortellinger.', ' stories.') + '</p></div>'];
+    const h = ['<div class="ph-c">' + subs('sjomann', [['tatover', 'Tatoveringer', 'Tattoos'], ['overtro', 'Fra gamle dager', 'The old ways']]) + '<div class="ph-card"><h4>' + L('Fra gamle dager', 'The old ways') + '</h4><p class="ph-note">' + L('Sjøfolk og fiskere har alltid vært overtroiske. Det du hører om bord, på kaia og på puben, samles her. Du har hørt ', 'Seafarers and fishermen have always been superstitious. What you hear aboard, on the quay and at the pub is kept here. You have heard ') + n + L(' av ', ' of ') + ids.length + L(' fortellinger.', ' stories.') + '</p></div>'];
     for (const id of ids){ const E = LORE[id], w = heard[id];
       h.push(w ? '<div class="ph-card"><h4>' + L(E.t[0], E.t[1]) + '</h4><p>' + L(E.x[0], E.x[1]) + '</p><p class="ph-note">' + L('Hørt første gang ', 'First heard ') + dayStr(w.first / 60) + '</p></div>'
         : '<div class="ph-card" style="opacity:.55"><h4>?</h4><p class="ph-note">' + L('Ennå ikke hørt. Lytt til folk på sjøen og på puben.', 'Not heard yet. Listen to people at sea and at the pub.') + '</p></div>'); }
