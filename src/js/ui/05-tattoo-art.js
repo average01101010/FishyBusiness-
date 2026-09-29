@@ -96,7 +96,7 @@ const TATART = (() => {
   };
   // where each tattoo sits on the seated sailor: x, y, scale, rotation, mirror
   const AT = {svale1:[173, 226, .92, -10, 0], svale2:[227, 226, .92, 10, 1], stjerne:[124, 228, .78, -8, 0], anker:[277, 232, .76, 6, 0], hula:[124, 294, 1.12, 2, 0], tau:[0, 0, 1, 0, 0],
-    skilpadde:[157, 488, .5, -16, 0], harpun:[262, 392, .98, 30, 1], ankere:[243, 486, .44, 16, 0], rose:[140, 590, .84, -26, 0], neptun:[280, 612, .8, 0, 0], grishane:[0, 0, 1, 0, 0]};
+    skilpadde:[157, 488, .5, -16, 0], harpun:[258, 404, .9, 30, 1], ankere:[243, 486, .44, 16, 0], rose:[140, 590, .84, -26, 0], neptun:[280, 612, .8, 0, 0], grishane:[0, 0, 1, 0, 0]};
   const ICON = {svale1:'swallow', svale2:'swallow', stjerne:'star', anker:'anchor', hula:'hula', tau:'rope', skilpadde:'turtle', harpun:'harpoon', ankere:'xanchors', rose:'rose', neptun:'neptune'};
   const place = (id, body) => { const [x, y, s, r, m] = AT[id]; return '<g transform="translate(' + x + ',' + y + ') rotate(' + r + ') scale(' + (m ? -s : s) + ',' + s + ')">' + body + '</g>'; };
   function tattoo(id){
@@ -133,7 +133,7 @@ const TATART = (() => {
     s += L('M168,188 C180,194 192,194 198,190 M232,188 C220,194 208,194 202,190', 1.4) + L('M162,302 C170,306 176,308 184,308 M238,302 C230,306 224,308 216,308', 1);
     // arms: upper arms hang at his sides, forearms slant in, hands rest on his thighs by the knees
     const arm = m => F(mir('M144,186 C126,186 112,196 108,214 C104,234 106,250 108,264 C108,286 106,306 108,326 C108,338 110,346 112,352 C118,386 128,418 140,450 L162,444 C156,414 150,382 142,346 C141,334 141,322 141,308 C142,282 144,254 146,228 Z', m)) +
-      L(mir('M108,214 C116,226 126,232 140,228', m), 1) + L(mir('M112,318 C118,328 128,332 138,330', m), 1.1) + L(mir('M121,370 C124,384 128,396 132,406', m), .9);
+      L(mir('M112,318 C118,328 128,332 138,330', m), 1.1) + L(mir('M121,370 C124,384 128,396 132,406', m), .9);
     s += arm(0) + arm(1);
     const hand = m => F(mir('M139,446 C136,458 134,470 136,482 C138,494 144,506 150,512 C154,516 160,516 162,512 C166,516 172,514 172,508 C176,508 180,504 178,498 C182,494 180,488 176,486 C178,480 182,474 180,468 C178,462 172,462 168,466 L164,442 Z', m)) +
       L(mir('M150,486 C152,496 156,504 162,512 M158,484 C162,494 166,502 172,508 M166,480 C170,488 174,494 178,498', m), 1.1) + L(mir('M140,478 C150,482 162,478 170,470', m), 1);
