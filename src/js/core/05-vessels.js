@@ -100,7 +100,7 @@ function newState(){
   const home = PORTS[0];
   return {v:1, t:0, lastReal:Date.now(), mult:1, lang:'no', cash:15000,
     boat:{type:'skiff', pos:{x:home.p.x, y:home.p.y}, heading:0, v:0, fuel:60, ice:0, gear:false, status:'port', port:home.id, prev:null, engineUntil:0, fishUntil:null, engH:0, svcAt:0},
-    equip:{vhf:false, ais:false, plotter:false, chirp:false, jukse:0, motor90:false}, crew:[], loan:null, member:false, msgs:[], sales:[], order:null, owned:['skiff'], lic:null, haill:null, pubE:-1, target:'mix', daily:null, tubs:0, clean:0, clothes:{olje:0, varme:0}, orders:null, rep:{}, bors:null, cevt:null, workLog:[], stock:initStock(), marks:[], navrows:[], incidents:[], ops:null, company:'', boatName:'', tut:0, jobs:[], prep:{}, tripBuff:null, draftDep:null,
+    equip:{vhf:false, ais:false, plotter:false, chirp:false, jukse:0, motor90:false}, crew:[], loan:null, member:false, msgs:[], sales:[], order:null, owned:['skiff'], lic:null, haill:null, pubE:-1, target:'mix', daily:null, tubs:0, clean:0, clothes:{olje:0, varme:0}, orders:null, rep:{}, bors:null, cevt:null, workLog:[], stock:initStock(), marks:[], navrows:[], incidents:[], lore:{}, ops:null, company:'', boatName:'', tut:0, jobs:[], prep:{}, tripBuff:null, draftDep:null,
     plan:null, draft:[], draftSpeed:16, trail:[{x:home.p.x, y:home.p.y, port:home.id}],
     settings:{bleed:true, ice:true, deckFirst:true, autoOn:true, autoW:11},
     hold:[], log:[], market:{}, stats:{revenue:0, costs:0, trips:0, kg:0}, lastSale:null, fishPlanH:3, lastIceWarn:-1e9, intro:false};
@@ -121,7 +121,7 @@ function step(){
   if (!S.fleet || !S.fleet.length) ensureFleet();
   if (S.t % 60 === 0){ ordersTick(S.t / 60); borsTick(S.t / 60); eachVessel(() => crewTick(S.t / 60)); }
   S.t += 1; const H = S.t / 60;
-  if (S.t % 60 === 0){ hourly(); eachVessel(navHour); }
+  if (S.t % 60 === 0){ hourly(); eachVessel(navHour); eachVessel(loreHour); }
   if (S.t % 60 === 0) for (const pid in S.market) for (const sp in S.market[pid]) S.market[pid][sp] *= 0.97;
   if (S.t % 60 === 0 && S.stock) stockHour(H);
   eachVessel(() => vesselStep(H));
@@ -316,7 +316,7 @@ function risk(W, hs){
     if (tot > 5){
       const frac = 0.15 + Math.random() * 0.2;
       S.hold.forEach(x => x.kg *= (1 - frac)); S.hold = S.hold.filter(x => x.kg > 0.05);
-      log('Tok inn sjø over ripa. Mistet ' + Math.round(tot * frac) + ' kg fisk.', 'Shipped water over the gunwale. Lost ' + Math.round(tot * frac) + ' kg of fish.');
+      log('Tok inn sjø over ripa. Mistet ' + Math.round(tot * frac) + ' kg fisk.', 'Shipped water over the gunwale. Lost ' + Math.round(tot * frac) + ' kg of fish.'); loreWater();
     } else log('Tok inn sjø, men fikk lenset.', 'Shipped water, but bailed it out.');
   } else if (r < 0.65){
     if (b.status !== 'engine' && b.status !== 'adrift'){

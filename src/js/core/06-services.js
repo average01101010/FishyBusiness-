@@ -129,7 +129,7 @@ function depart(){
   // without you aboard, the vessel needs crew of its own
   if (!meAboard() && !crewAboard().length){ S.plan = null; log('Båten har ikke mannskap og kan ikke gå ut uten deg om bord.', 'The boat has no crew and cannot go out without you aboard.'); return false; }
   S.tripOwner = !(S.plan && S.plan.ops) && meAboard();
-  if (b.status === 'port'){ S.stats.trips++; log('Kastet loss fra ' + portById(b.port).name + '.', 'Cast off from ' + portById(b.port).name + '.'); }
+  if (b.status === 'port'){ S.stats.trips++; log('Kastet loss fra ' + portById(b.port).name + '.', 'Cast off from ' + portById(b.port).name + '.'); if (S.tripOwner) loreDepart(); }
   if (access() === 'none' && !(S.plan && S.plan.ops) && !(S.target === 'kveite' && b.kgear)) log('Båten har ikke adgang til å fiske torsk, hyse og sei. De kan bare være bifangst, høyst 10 % av landingen.', 'The boat has no access to fish cod, haddock and saithe. They can only be bycatch, at most 10% of the landing.');
   S.tripBuff = Object.assign({}, S.prep || {}); S.prep = {};
   if (S.plan) S.plan.depAt = null;
@@ -156,6 +156,7 @@ function jobsDone(){ return S.jobs && S.jobs.length ? S.jobs[S.jobs.length - 1].
 
 function startReturn(auto, W){
   const b = S.boat, tr = S.trail.slice().reverse(), wps = [];
+  if (!auto) loreTurnBack();
   for (const t of tr){
     if (!t.port && dist(t, b.pos) < 0.01) continue;
     wps.push({x:t.x, y:t.y, port:t.port || null, fish:0});

@@ -33,6 +33,7 @@ function newVesselObj(type, pid, lic){
   const used = S.fleet.map(x => vget(x, 'boatName'));
   v.boatName = VNAMES.find(nm => !used.includes(nm)) || 'Båt ' + n;
   S.fleet.push(v); if (!S.owned.includes(type)) S.owned.push(type);
+  loreNewBoat(v.boatName);   // the yard lays a coin under the mast
   return v;
 }
 function applyVessel(){

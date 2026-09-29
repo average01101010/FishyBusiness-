@@ -21,8 +21,9 @@ const PHONE = (() => {
     last:SVG('<path d="M3 8l9-4 9 4v9l-9 4-9-4z"/><path d="M3 8l9 4 9-4M12 12v9"/>'),
     logg:SVG('<path d="M6 3h12v18H6z"/><path d="M9 8h6M9 12h6M9 16h4"/>'),
     rederi:SVG('<path d="M4 20V10l6-3v13"/><path d="M10 20V5l9 4v11"/><path d="M2 20h20"/><path d="M13 10h3M13 13h3M13 16h3M6 13h2M6 16h2"/>'),
+    sjomann:SVG('<circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.9 2.9M15.5 15.5l2.9 2.9M5.6 18.4l2.9-2.9M15.5 8.5l2.9-2.9"/>'),
     innst:SVG('<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>')};
-  const APPS = [['vaer', 'Vær', 'Weather', '#2f7fd0'], ['post', 'Kystposten', 'Coast Post', '#b8402f'], ['salg', 'Salgslaget', 'Sales', '#1e8c6e'], ['redning', 'Redning', 'Rescue', '#e0562b'], ['fartoy', 'Fartøy', 'Vessels', '#28507f'], ['rederi', 'Rederi', 'Company', '#1f4e79'], ['utstyr', 'Utstyr', 'Equipment', '#6b5bb5'], ['mannskap', 'Mannskap', 'Crew', '#b0772b'], ['bors', 'Mannskapsbørs', 'Crew exchange', '#2d6a8f'], ['bank', 'Kystbanken', 'Bank', '#3b6e4f'], ['meld', 'Meldinger', 'Messages', '#29a36a'], ['verksted', 'Verksted', 'Workshop', '#8b4b2b'], ['havn', 'Havn', 'Harbour', '#0f7c8c'], ['haill', 'Haill', 'Luck', '#c9a227'], ['last', 'Last', 'Hold', '#8a6a34'], ['innst', 'Innstillinger', 'Settings', '#4a5560']];
+  const APPS = [['vaer', 'Vær', 'Weather', '#2f7fd0'], ['post', 'Kystposten', 'Coast Post', '#b8402f'], ['salg', 'Salgslaget', 'Sales', '#1e8c6e'], ['redning', 'Redning', 'Rescue', '#e0562b'], ['fartoy', 'Fartøy', 'Vessels', '#28507f'], ['rederi', 'Rederi', 'Company', '#1f4e79'], ['utstyr', 'Utstyr', 'Equipment', '#6b5bb5'], ['mannskap', 'Mannskap', 'Crew', '#b0772b'], ['bors', 'Mannskapsbørs', 'Crew exchange', '#2d6a8f'], ['bank', 'Kystbanken', 'Bank', '#3b6e4f'], ['meld', 'Meldinger', 'Messages', '#29a36a'], ['verksted', 'Verksted', 'Workshop', '#8b4b2b'], ['havn', 'Havn', 'Harbour', '#0f7c8c'], ['haill', 'Haill', 'Luck', '#c9a227'], ['last', 'Last', 'Hold', '#8a6a34'], ['sjomann', 'Sjømann', 'Seaman', '#23506b'], ['innst', 'Innstillinger', 'Settings', '#4a5560']];
   const unread = () => S.msgs.filter(m => !m.read).length;
   function setBadge(){ const n = unread(); for (const bd of [badge, $('phoneBadge2')]){ bd.hidden = !n; bd.textContent = n; } }
   // --- workshop: service, fitting and getting the gear ready, one job after the other while the boat is in port
@@ -82,7 +83,7 @@ const PHONE = (() => {
     a.textContent = hm(H); d.textContent = dayStr(H); w1.textContent = dirName(windDir(H)) + ' ' + fmt(windAt(H), 0) + ' m/s · ' + fmt(Math.round(airTemp(H)) || 0, 0) + ' °C'; w2.textContent = kr(S.cash);
   }
   function render(){ status(); setBadge(); if (!isOpen) return; view.innerHTML = app === 'home' ? home() : shell(app); view.scrollTop = 0; }
-  function shell(a){ const d = APPS.find(x => x[0] === a), f = {vaer, post, salg, redning, fartoy, rederi, utstyr, mannskap, bors, bank, meld, verksted, havn, haill, last, logg, innst}[a]; return '<div class="ph-appv' + (a === 'post' ? ' ph-paper' : '') + '"><div class="ph-top" style="background:' + d[3] + '"><span class="ic">' + IC[a] + '</span>' + L(d[1], d[2]) + '</div>' + (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) + '</div>'; }
+  function shell(a){ const d = APPS.find(x => x[0] === a), f = {vaer, post, salg, redning, fartoy, rederi, utstyr, mannskap, bors, bank, meld, verksted, havn, haill, last, logg, sjomann, innst}[a]; return '<div class="ph-appv' + (a === 'post' ? ' ph-paper' : '') + '"><div class="ph-top" style="background:' + d[3] + '"><span class="ic">' + IC[a] + '</span>' + L(d[1], d[2]) + '</div>' + (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) + '</div>'; }
   function home(){
     const H = S.t / 60, W = windAt(H), n = unread(), na = alerts().length;
     return '<div class="ph-homescr"><div class="ph-clock">' + hm(H) + '</div><div class="ph-date">' + dayStr(H) + '</div>' +
@@ -92,6 +93,15 @@ const PHONE = (() => {
   const kv = (a, b) => '<div class="ph-kv"><span>' + a + '</span><span>' + b + '</span></div>';
   const subs = (a, list) => '<div class="ph-sub">' + list.map(([k, no, en]) => '<button class="' + ((sub[a] || list[0][0]) === k ? 'on' : '') + '" data-pa="sub" data-s="' + k + '">' + L(no, en) + '</button>').join('') + '</div>';
   const inPort = () => S.boat.status === 'port';
+  // --- the seaman's life: the old ways at sea you have heard of, aboard, on the quay and at the pub
+  function sjomann(){
+    const heard = S.lore || {}, ids = Object.keys(LORE), n = ids.filter(id => heard[id]).length;
+    const h = ['<div class="ph-c"><div class="ph-card"><h4>' + L('Fra gamle dager', 'The old ways') + '</h4><p class="ph-note">' + L('Sjøfolk og fiskere har alltid vært overtroiske. Det du hører om bord, på kaia og på puben, samles her. Du har hørt ', 'Seafarers and fishermen have always been superstitious. What you hear aboard, on the quay and at the pub is kept here. You have heard ') + n + L(' av ', ' of ') + ids.length + L(' fortellinger.', ' stories.') + '</p></div>'];
+    for (const id of ids){ const E = LORE[id], w = heard[id];
+      h.push(w ? '<div class="ph-card"><h4>' + L(E.t[0], E.t[1]) + '</h4><p>' + L(E.x[0], E.x[1]) + '</p><p class="ph-note">' + L('Hørt første gang ', 'First heard ') + dayStr(w.first / 60) + '</p></div>'
+        : '<div class="ph-card" style="opacity:.55"><h4>?</h4><p class="ph-note">' + L('Ennå ikke hørt. Lytt til folk på sjøen og på puben.', 'Not heard yet. Listen to people at sea and at the pub.') + '</p></div>'); }
+    return h.join('') + '</div>';
+  }
   // --- weather
   function sunTimesOld(H){ const d0 = Math.floor(H / 24) * 24 - 6 + 24 * (gDate(H).getUTCHours() < 6 ? -0 : 0); let up = null, dn = null, prev = sunAt(d0).el; for (let m = 10; m <= 24 * 60; m += 10){ const e = sunAt(d0 + m / 60).el; if (prev < -0.8 && e >= -0.8 && up === null) up = d0 + m / 60; if (prev >= -0.8 && e < -0.8 && dn === null) dn = d0 + m / 60; prev = e; } return {up, dn, always:sunAt(d0 + 12).el > -0.8 && up === null, never:sunAt(d0 + 6).el < -0.8 && up === null}; }
   function vaer(){
@@ -378,7 +388,7 @@ const PHONE = (() => {
   // --- actions
   function switchVessel(k){
     const b = S.boat, old = VESSELS[b.type];
-    b.type = k; if (k !== 'skiff') S.equip.motor90 = false; applyVessel();
+    b.type = k; if (k !== 'skiff') S.equip.motor90 = false; applyVessel(); loreNewBoat(S.boatName);
     S.equip.jukse = Math.min(S.equip.jukse, BOAT.jukseMax); b.fuel = BOAT.fuelCap * 0.4; b.ice = 0; b.engH = 0; b.svcAt = 0; S.svcTold = false;
     while (S.crew.length > BOAT.crewMax) S.crew.pop();
     if (!S.owned.includes(k)) S.owned.push(k);
@@ -440,7 +450,7 @@ const PHONE = (() => {
       S.me = v.id; log('Du gikk om bord på «' + vget(v, 'boatName') + '».', 'You went aboard the «' + vget(v, 'boatName') + '».');
       if (v.id !== S.cur){ storeVessel(curVessel()); bindVessel(v); if (typeof G3 !== 'undefined') G3.vesselChanged(); refreshAll(); } }
     else if (a === 'vname'){ const v = vesselById(d.id); if (!v) return; const nm = (prompt(L('Nytt navn på båten', 'New name for the vessel'), vget(v, 'boatName') || '') || '').replace(/[<>&"]/g, '').trim().slice(0, 20); if (!nm) return;
-      if (v.id === S.cur) S.boatName = nm; else v.boatName = nm; }
+      if (v.id === S.cur) S.boatName = nm; else v.boatName = nm; loreRename(nm); }
     else if (a === 'vsell'){ const v = vesselById(d.id); if (!v || v.id === S.me || S.fleet.length < 2 || vget(v, 'boat').status !== 'port' || tiLocked(v)) return;
       const val = vesselValue(v), nm = vget(v, 'boatName'), hands = (vget(v, 'crew') || []).length;
       if (!confirm(L('Selge «' + nm + '» for ' + kr(val) + '?', 'Sell the «' + nm + '» for ' + kr(val) + '?'))) return;

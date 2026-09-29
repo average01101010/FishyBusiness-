@@ -30,7 +30,7 @@ window.PUBW = (() => {
     setTimeout(() => { spinning = false; let m;
       if (seg.k === 'kveit' || seg.k === 'haill' || seg.k === 'luksus'){ giveHaill(seg.k, 'pub'); m = L('Du vant ', 'You won ') + HAILL[seg.k][S.lang].toLowerCase() + '! ' + HAILL[seg.k].d[S.lang]; msg('Puben', L('Du gikk hjem med ', 'You went home with ') + HAILL[seg.k][S.lang].toLowerCase() + '.', 'You went home with ' + HAILL[seg.k].en.toLowerCase() + '.'); }
       else if (seg.k === 'rykte'){ const cr = crewRumour(), t0 = cr || rumour()[0]; m = t0; msg('Puben', t0, t0); }
-      else m = EMPTY[Math.floor(Math.random() * EMPTY.length)][S.lang === 'no' ? 0 : 1];
+      else { const st = Math.random() < 0.6 ? lorePub() : null; m = st ? st[S.lang === 'no' ? 0 : 1] : EMPTY[Math.floor(Math.random() * EMPTY.length)][S.lang === 'no' ? 0 : 1]; }   // an old story instead of an empty evening
       save(); render(m); const keep = g.style.transform; setTimeout(() => { const g2 = el.querySelector('.pubrot'); if (g2){ g2.style.transition = 'none'; g2.style.transform = keep; } }, 0);
       if (typeof renderActs === 'function') renderActs(); if (typeof renderHud === 'function') renderHud(); }, 4400);
   }

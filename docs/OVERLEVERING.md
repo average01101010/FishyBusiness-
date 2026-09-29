@@ -475,6 +475,24 @@ Mottakene ligger der Jonas har funnet dem i Råfisklagets leveranseoversikt: Hus
    - **Venting:** Avgang og driftsplan venter mens båten losser, forhaler eller fyller (`portBusy`). Driftsplanen fyller ved bunkerskaia etter lossingen, og rapporten sier det.
    - **I 3D:** Bunkersanlegget har tank i betongkar, pumpe med teller, slangetrommel og «BUNKERS»-skilt, i de fem bunkershavnene og i Finnsnes. Forhalingen følger spilltida: tauene tas inn, båten går over, tauene settes. En person fra båten står ved kaikanten med pistolen i fylleåpningen, og telleren går.
 
+### Overtro som kultur (O, ferdig 29.09.2026)
+
+Sjøfolk og fiskere har alltid vært overtroiske. Overtroen er bare lore i spillet og påvirker ikke fangst, vær eller humøret om bord. Alt ligger i `src/js/core/08-lore.js` (`LORE`).
+- **Innhold:** noaord (høghus for kirke, svartkjole for prest, hest og gris nevnes ikke), ikke plystre om bord, aldri ut på en fredag, ikke ønske god tur, snu er dårlig fiskelykke, å møte presten, brunost, vafler og bananer, kost og bøtte over bord, mastemynten, omdøping av båt, draugen og troen på at kvinner om bord brakte ulykke. Den siste fortelles som noe puben ler av.
+- **Når det dukker opp:**
+  - avgang på en fredag
+  - av og til ved avgang, med folk på kaia og presten på veien
+  - når du snur og går hjem
+  - når dere tar inn sjø
+  - når du gir båten nytt navn
+  - når verftet leverer en ny båt (mastemynten)
+  - omtrent hver 30. time på sjøen med mannskap
+  - draugen om natta i dårlig sikt
+  - pubrunden, der seks av ti tomme kvelder blir en fortelling
+- **Hvem forteller:** Den eldste om bord, folk på kaia, verftet eller puben forteller. Det blir en melding og en linje i dekksdagboka. Samme fortelling kommer ikke igjen innen tre døgn.
+- **Appen «Sjømann»** viser det du har hørt under «Fra gamle dager», og resten som ukjent.
+- **Kilder:** Store norske leksikon (noaord, draug), Redningsselskapet «Ikke ta med brunost på havet!», Båtmagasinet «Om tro og overtro til sjøs», Norsk Fisk «Overtro», NRK om mastemynten og en forumtråd om omdøping (svakt belegg). «Snu med sola» og «måker er druknede sjøfolk» ble tatt ut fordi jeg ikke fant belegg.
+
 ### Fase 4: Flåten i kart og 3D
 
 Egne båter vises med egne symboler i kartplotteren, og du kan trykke for å følge. Båter i nærheten vises i 3D.
@@ -520,6 +538,7 @@ Større fartøyklasser, line, garn, snurrevad og teiner, egne anlegg og nye regi
   - `fleet1test.py` og `fleet1mig.py`: flåtemodell og migrering.
   - `moortest.py`: fortøyning og mottakene i 3D. Liggeplass i alle havner, å legge til med tauene og å kaste loss.
   - `harbourtest.py`: havnene. Mottak, is og drivstoff per havn. De ekte kaiene: alle båttyper ligger langs kaifronten i sjøen i 3D-kystlinja, og ruta inn og ut av hver havn går fri av land.
+  - `loretest.py`: overtroen. Fredagsavreise, at samme fortelling ikke gjentas, omdøping, mastemynt, fortellinger på sjøen og på puben, uendret humør og appen «Sjømann».
   - `decktest.py`: arbeidet på dekk. Bløggekaret, sløyefart, stopp når karet er fullt, én mann mot to, «ta unna før du går» og kvalitetstapet.
   - `bunkertest.py`: bunkringen. Forhaling til bunkerskaia og tilbake, pumpefart og betaling, avgang som venter, Finnsnes, og i 3D stasjonene, forhalingen og telleren.
   - `landtest.py`: leveringen. Lossetid, kasser og kar, avgang som venter, isrenna, og i 3D at kroken står over lasten på dekk og over losseplassen og at trucken rekker siste tur.

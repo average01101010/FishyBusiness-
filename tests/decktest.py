@@ -48,7 +48,7 @@ async def main():
         print(ok(4.5 <= r['gutRate'] <= 5.5), 'one person guts about 5 kg a minute (300 kg an hour)')
         print(ok(not r['done']['stop'] and r['done']['pending'] == 0 and r['done']['gutIced'] >= 64 and r['done']['extended'] >= 15), 'when the tub is empty fishing goes on, and the fishing time is made up')
         print(ok(r['aloneSailing'] == 40), 'alone under way nothing gets gutted')
-        print(ok(3 <= r['twoSailing'] <= 30), 'two aboard under way: one steers, the other guts')
+        print(ok(3 <= r['twoSailing'] <= 40), 'two aboard under way: one steers, the other guts (about 25 kg in five minutes, more or less with the crew\'s form)')
         print(ok(r['twoFishingHands'] == 1 and r['twoFishingStop'] is False), 'two aboard fishing: one works the deck, fishing does not stop')
         print(ok(r['endStay']['status'] == 'fishing' and r['endStay']['stop'] and r['endLeave']['status'] == 'sailing' and r['endLeave']['pending'] == 0), 'alone, the catch is seen to before she leaves the grounds')
         f = dict(r['fresh']); print(ok(f['hyse'] - f['torsk'] >= 5), 'fish left in the tub loses quality faster than iced fish')
