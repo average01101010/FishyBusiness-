@@ -168,6 +168,7 @@ body.v3d #aisCard{display:none} .lbl-ais{font-family:var(--sans);font-weight:600
 .ph-sub button{border:1px solid #c9d5dc;background:#fff;border-radius:14px;padding:4px 11px;font:600 12px var(--sans);color:#15252f;cursor:pointer} .ph-sub button.on{background:#15252f;color:#fff;border-color:#15252f}
 .ph-c{padding:10px 14px 18px}
 .ph-card{background:#fff;border-radius:12px;padding:10px 12px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.ph-tatfig{background:#fbf6ea;border-radius:10px;overflow:hidden;margin:6px 0 4px}
 .ph-card h4{margin:0 0 4px;font:700 14px var(--sans)} .ph-card p{margin:3px 0;font-size:13px}
 .ph-kv{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;padding:2px 0} .ph-kv span:last-child{white-space:nowrap;text-align:right} .ph-kv span:first-child{color:#5b6c76}
 .ph-btn{display:inline-block;margin:6px 6px 0 0;border:0;border-radius:10px;padding:8px 12px;background:#15252f;color:#fff;font:600 13px var(--sans);cursor:pointer} .ph-btn.alt{background:#e3eaee;color:#15252f} .ph-btn.red{background:#d63a2a} .ph-btn:disabled{opacity:.4;cursor:default}

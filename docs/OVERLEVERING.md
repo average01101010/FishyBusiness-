@@ -500,13 +500,15 @@ Tatoveringene er belønninger som kommer av seg selv, med en melding når du har
 | Tatovering | Plass | Krav |
 |---|---|---|
 | Svale og svale nummer to | Brystet | 5000 og 10 000 nautiske mil med deg om bord |
-| Nautisk stjerne | Armen | 100 turer hjem uten grunnstøting eller slep |
+| Nautisk stjerne | Skulderen | 100 turer hjem uten grunnstøting eller slep |
 | Tau rundt håndleddet | Håndleddet | 100 timer eget arbeid på dekk: sløying, ising og fiske for hånd |
 | Kryssede ankere | Mellom tommel og pekefinger | 50 turer som skipper med fullt mannskap |
 | Harpun | Underarmen | Et rederi med tre båter |
 | Gris og hane | Fotbladene | Reddet etter grunnstøting, motorstopp eller drift |
-| Kniv gjennom rose | Overarmen | Samme mann om bord i ett år, eller 50 leveranser til samme mottak |
-| Anker, skilpadde, hulajente, Kong Neptun | | Låst. Krever Atlanterhavet, ekvator og Hawaii, altså farvann utenfor Senja. |
+| Kniv gjennom rose | Leggen | Samme mann om bord i ett år, eller 50 leveranser til samme mottak |
+| Anker, skilpadde, hulajente, Kong Neptun | Skulderen, håndbaken, overarmen og leggen | Låst. Krever Atlanterhavet, ekvator og Hawaii, altså farvann utenfor Senja. |
+
+- **Tegningene** ligger i `src/js/ui/05-tattoo-art.js` (`TATART`). Stilen er strektegning i marineblått blekk på kremfarget papir, etter de gamle flash-arkene. En sjømann med sjømannslue og bart sitter på en pullert med en taukveil ved føttene. Tatoveringer du har fått, er tatovert på ham. Resten vises som svake sjablonger, og de låste er svakest. `AT` bestemmer plassen til hver tatovering på figuren. `icon(id, fått)` gir tegningen til kortene. Figuren var først en enkel strekfigur, men brukeren ville ha den profesjonell, etter et referansebilde av en tatovert sjømann. Den ble tegnet om 29.09.2026.
 
 - **Tempo:** En fiskedag er 20–40 nm, så den første svalen kommer etter 150–250 fiskedager. Tallene justeres i spilltesting.
 - **Kilder for betydningene:** US Navy History «Sailors' Tattoos», One Ocean Expedition om svalen og The Bermudian «Vintage Sailor Tattoos and Their Meanings».
