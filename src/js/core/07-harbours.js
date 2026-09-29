@@ -3,6 +3,24 @@
 // a closed quay outline is its oriented bounding box, a breakwater is lower and wider. Harbours without a mapped quay get one
 // from the shore out to the berth. The 3D view and the berths both use this list, so a boat lies against what you see.
 const QTOP = 2.4;   // quay deck above mean sea level (m); about 3.7 m above chart datum, usual for fishing quays in the north
+// The quays where the fish plants and the bunker quays really are, from satellite pictures marked up by the designer (29.09.2026), laid
+// onto the game's coastline and moved out past where it bulges: a and b are the ends of the quay face (metres), n points out to the
+// water. 'main' is where you land the catch (in Finnsnes: the quay by the net loft and the gear and boat dealers), 'bunker' the fuel quay.
+const QUAYS = {
+  finnsnes:{main:{a:[56058, 53575], b:[56027, 53652], n:[-0.927, -0.376]}},
+  botnhamn:{main:{a:[53266, 23498], b:[53309, 23503], n:[0.11, -0.994]}, bunker:{a:[53362, 23519], b:[53388, 23551], n:[0.774, -0.633]}},
+  husoy:{main:{a:[43800, 19653], b:[43815, 19722], n:[0.978, -0.21]}, bunker:{a:[44033, 19647], b:[44021, 19693], n:[-0.968, -0.251]}},
+  senjahopen:{main:{a:[36780, 25127], b:[36829, 25100], n:[0.474, 0.88]}, bunker:{a:[36849, 25064], b:[36881, 25036], n:[0.666, 0.746]}},
+  gryllefjord:{main:{a:[20280, 39831], b:[20354, 39856], n:[0.316, -0.949]}, bunker:{a:[20029, 39773], b:[20074, 39788], n:[0.307, -0.952]}},
+  torsken:{main:{a:[21824, 42565], b:[21892, 42580], n:[-0.215, 0.977]}, bunker:{a:[21914, 42574], b:[21959, 42572], n:[0.04, 0.999]}},
+  frovag:{main:{a:[19636, 71906], b:[19631, 71932], n:[0.987, 0.163]}}
+};
+const QUAY_DEPTH = 10;   // how far the quay deck reaches in from the face (m)
+function quayFace(pid, kind){
+  const q = QUAYS[pid] && QUAYS[pid][kind]; if (!q) return null;
+  const dx = q.b[0] - q.a[0], dz = q.b[1] - q.a[1], L = Math.hypot(dx, dz), ux = dx / L, uz = dz / L, s = -uz * q.n[0] + ux * q.n[1] >= 0 ? 1 : -1;
+  return {x:(q.a[0] + q.b[0]) / 2, z:(q.a[1] + q.b[1]) / 2, ux, uz, nx:-uz * s, nz:ux * s, hl:L / 2, depth:QUAY_DEPTH};
+}
 const PIERBOX = (() => {
   const out = [];
   for (const pr of PIERS){
@@ -19,25 +37,61 @@ const PIERBOX = (() => {
       out.push({x:(ax + bx) / 2, z:(az + bz) / 2, w:bw ? 9 : 4.2, l:L + (bw ? 4 : 1), ang:Math.atan2(bx - ax, bz - az), bw, closed:false});
     }
   }
+  // the quay decks behind the faces in QUAYS; the shoreline behind them is not always straight, so the deck fills the gap
+  for (const pid in QUAYS) for (const kind in QUAYS[pid]){ const f = quayFace(pid, kind); out.push({x:f.x - f.nx * f.depth / 2, z:f.z - f.nz * f.depth / 2, w:f.depth, l:f.hl * 2, ang:Math.atan2(f.ux, f.uz), bw:false, closed:false, made:true, quay:pid + '|' + kind}); }
   for (const pt of PORTS){
-    if (pt.pier) continue;
+    if (pt.pier || QUAYS[pt.id]) continue;
     const px = pt.p.x * 1000, pz = pt.p.y * 1000, dx = pt.coast.x * 1000 - px, dz = pt.coast.y * 1000 - pz, L = Math.hypot(dx, dz), ux = dx / L, uz = dz / L, ql = L + 20;
     out.push({x:px + ux * (ql / 2 + 8), z:pz + uz * (ql / 2 + 8), w:9, l:ql, ang:Math.atan2(ux, uz), bw:false, closed:false, made:true});
   }
   return out;
 })();
+// The way in: waypoints from open water to the harbour point, outermost first. Found breadth-first through the water cells of the
+// chart (no cutting across the corner of a land cell), then straightened wherever the line is clear. A harbour behind a breakwater,
+// like Husøy, needs more than one.
+const APPROACH = {};
+function clearLine(a, b){ const n = Math.max(1, Math.ceil(dist(a, b) / 0.008)); for (let i = 1; i < n; i++) if (isLand({x:a.x + (b.x - a.x) * i / n, y:a.y + (b.y - a.y) * i / n})) return false; return true; }
+function approachPath(pt){
+  if (APPROACH[pt.id]) return APPROACH[pt.id];
+  const c = GRID.c, nx = GRID.nx, cell = k => { const x = k % nx; return {x:(x + 0.5) * c, y:((k - x) / nx + 0.5) * c}; }, s0 = Math.floor(pt.p.y / c) * nx + Math.floor(pt.p.x / c);
+  const prev = new Map([[s0, -1]]), Q = [s0]; let end = -1;
+  for (let h = 0; h < Q.length && h < 300000; h++){
+    const k = Q[h], x = k % nx, y = (k - x) / nx, p = cell(k);
+    if (dist(p, pt.p) > 0.4 && coastDist(p) > 0.25){ end = k; break; }
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]){
+      const X = x + dx, Y = y + dy, kk = Y * nx + X; if (X < 0 || Y < 0 || X >= nx || Y >= GRID.ny || prev.has(kk) || MASK[kk]) continue;
+      if (dx && dy && (MASK[y * nx + X] || MASK[Y * nx + x])) continue;
+      prev.set(kk, k); Q.push(kk);
+    }
+  }
+  if (end < 0) return APPROACH[pt.id] = [];
+  const cells = []; for (let k = end; k !== -1; k = prev.get(k)) cells.push(cell(k));
+  cells[cells.length - 1] = pt.p;
+  const path = [cells[0]];
+  for (let i = 0; i < cells.length - 1;){ let j = cells.length - 1; while (j > i + 1 && !clearLine(cells[i], cells[j])) j--; if (j === cells.length - 1) break; path.push(cells[j]); i = j; }
+  APPROACH[pt.id] = path.map(q => ({x:Math.round(q.x * 1000) / 1000, y:Math.round(q.y * 1000) / 1000}));
+  pt.app = APPROACH[pt.id][0];   // the harbour's safe zone reaches out to the start of the way in (inHarbour)
+  return APPROACH[pt.id];
+}
+// the waypoints a route needs to get out of harbour towards `to`, and in to a harbour from `from` (the part of the way in that it
+// cannot see past)
+function exitWps(pt, to){ const r = approachPath(pt).slice().reverse(); const out = []; for (const q of r){ out.push(q); if (clearLine(q, to)) break; } return clearLine(pt.p, to) ? [] : out; }
+function entryWps(pt, from){ if (clearLine(from, pt.p)) return []; const a = approachPath(pt); for (let i = a.length - 1; i >= 0; i--) if (clearLine(from, a[i])) return a.slice(i); return a; }
 // beam (m) of the player's vessels, for lying alongside
 const BEAM = {skiff:2.2, snekke:2.7, sjark:3.8, sjarkny:4.3};
 const CAST_MIN = 2;   // game minutes to take the lines in before the boat moves
-// Where a vessel lies in a harbour: alongside the quay face nearest the harbour's berth point, parallel to it with the quay to
-// starboard (where the skipper stands), off the face by half the beam and the fenders. Returned in km like the rest of the chart,
-// with the face (metres) for the bollards and fenders. null when there is no quay near: the boat then lies as before.
+// Where a vessel lies in a harbour: alongside the quay in QUAYS (kind 'main' or 'bunker'), or else the quay face nearest the harbour's
+// berth point; parallel to it with the quay to starboard (where the skipper stands), off the face by half the beam and the fenders.
+// Returned in km like the rest of the chart, with the face (metres) for the bollards and fenders. null when there is no quay near:
+// the boat then lies as before.
 const BERTHPOSE = {};
-function berthPose(pid, type){
-  const key = pid + '|' + type; if (key in BERTHPOSE) return BERTHPOSE[key];
-  const pt = portById(pid), px = pt.p.x * 1000, pz = pt.p.y * 1000, Lb = VESSELS[type].len, Bb = BEAM[type] || 3;
+function berthPose(pid, type, kind = 'main'){
+  const key = pid + '|' + type + '|' + kind; if (key in BERTHPOSE) return BERTHPOSE[key];
+  const pt = portById(pid), px = pt.p.x * 1000, pz = pt.p.y * 1000, Lb = VESSELS[type].len, Bb = BEAM[type] || 3, qf = quayFace(pid, kind);
   let best = null;
-  for (const q of PIERBOX){
+  if (qf) best = {d:0, cx:qf.x + qf.nx * (Bb / 2 + 0.4), cz:qf.z + qf.nz * (Bb / 2 + 0.4), fx:qf.x, fz:qf.z, ux:qf.ux, uz:qf.uz, Nx:qf.nx, Nz:qf.nz, hl:qf.hl, a:0, depth:qf.depth};
+  else if (kind !== 'main'){ BERTHPOSE[key] = null; return null; }
+  if (!qf) for (const q of PIERBOX){
     if (q.bw || Math.hypot(q.x - px, q.z - pz) > (q.l + q.w) / 2 + 150) continue;
     const ax = Math.sin(q.ang), az = Math.cos(q.ang), nx = Math.cos(q.ang), nz = -Math.sin(q.ang);
     const faces = [[nx, nz, q.w / 2, ax, az, q.l / 2], [-nx, -nz, q.w / 2, ax, az, q.l / 2]];
@@ -58,3 +112,4 @@ function berthPose(pid, type){
   const f = {x:Math.sin(hd), z:-Math.cos(hd)};
   return BERTHPOSE[key] = {x:best.cx / 1000, y:best.cz / 1000, hd, fwd:f, face:{x:best.fx, z:best.fz, ux:best.ux, uz:best.uz, nx:best.Nx, nz:best.Nz, hl:best.hl, depth:best.depth}, a:best.a, Lb, Bb};
 }
+

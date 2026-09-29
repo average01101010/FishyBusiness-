@@ -52,8 +52,10 @@ async def main():
           // a working day from Husøy (which has a fish plant): out along the local boats' route into Øyfjorden, fish four hours, and back
           S.t = Math.round((Date.UTC(2028, 4, 8, 0) - EPOCH) / 6e4); S.cash = 5e6; S.stock = initStock(); S.settings.autoW = 14;
           const rt = FLEET.find(f => f.home === 'husoy' && f.L < 15).rt[0].slice(1).map(q => ({x:q[0], y:q[1]}));
-          const mk = sk => { const wps = rt.map((q, i) => ({x:q.x, y:q.y, port:null, fish:i === rt.length - 1 ? 4 : 0})); rt.slice(0, -1).reverse().forEach(q => wps.push({x:q.x, y:q.y, port:null, fish:0}));
-            const h = portById('husoy').p; wps.push({x:h.x, y:h.y, port:'husoy', fish:0}); return {on:true, dep:5, days:[1, 1, 1, 1, 1, 1, 1], maxWind:20, skipper:sk.id, last:-1, wps, speed:16, home:'husoy', end:'husoy', hours:8}; };
+          // out of and back into the harbour the way a player's route goes (exitWps / entryWps), round the breakwater
+          const HP = portById('husoy'), W = q => ({x:q.x, y:q.y, port:null, fish:0});
+          const mk = sk => { const wps = exitWps(HP, rt[0]).map(W).concat(rt.map((q, i) => ({x:q.x, y:q.y, port:null, fish:i === rt.length - 1 ? 4 : 0}))); rt.slice(0, -1).reverse().forEach(q => wps.push(W(q)));
+            entryWps(HP, rt[0]).forEach(q => wps.push(W(q))); const h = HP.p; wps.push({x:h.x, y:h.y, port:'husoy', fish:0}); return {on:true, dep:5, days:[1, 1, 1, 1, 1, 1, 1], maxWind:20, skipper:sk.id, last:-1, wps, speed:16, home:'husoy', end:'husoy', hours:8}; };
           const hand = () => Object.assign(genCrew(), {bi:false, off:false}); const v1 = curVessel(); S.crew = [hand()]; S.ops = mk(S.crew[0]); S.hold = []; S.boat.port = 'husoy'; S.boat.pos = {...portById('husoy').p}; S.boat.fuel = 90; S.boat.gear = true;
           const O = LIC_OFFERS[0], v2 = newVesselObj('snekke', 'husoy', {id:O.id, hl:O.hl, cod:O.cod, hyse:O.hyse, sei:O.sei, kpk:O.kpk});
           withVessel(v2, () => { S.crew = [hand()]; S.ops = mk(S.crew[0]); S.boat.gear = true; });

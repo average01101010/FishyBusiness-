@@ -260,10 +260,13 @@ function addWaypoint(pt){
   if (S.draft.length && S.draft[S.draft.length - 1].port){ toast(t('ends_port')); return; }
   const r = 22 / view.px; let near = null, bd = 1e9;
   for (const p of PORTS){ const d = dist(p.p, pt); if (d < r && d < bd){ bd = d; near = p; } }
+  const wp = q => S.draft.push({x:q.x, y:q.y, port:null, fish:0});
+  // out of the harbour first, the way the boats go, when the first leg would cut across a breakwater or a point
+  if (near && b.status === 'port' && b.port === near.id && !S.draft.length){ toast(t('already_here')); return; }
+  if (!S.draft.length && b.status === 'port' && (near || !isLand(pt))) exitWps(portById(b.port), near ? near.p : pt).forEach(wp);
   if (near){
-    if (b.status === 'port' && b.port === near.id && !S.draft.length){ toast(t('already_here')); return; }
     const prev = S.draft.length ? S.draft[S.draft.length - 1] : b.pos;
-    if (!legClear(prev, near.p)){ if (near.app === undefined) near.app = portApproach(near); if (near.app && legClear(prev, near.app)) S.draft.push({x:near.app.x, y:near.app.y, port:null, fish:0}); }
+    entryWps(near, prev).forEach(wp);
     S.draft.push({x:near.p.x, y:near.p.y, port:near.id, fish:0});
     if (window.innerWidth <= 700) document.body.classList.add('drawer');
   } else {

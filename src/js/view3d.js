@@ -361,8 +361,8 @@ const G3 = (() => {
   function buildHarbourFittings(){
     const nb = NB(), TYRE = [0.07, 0.07, 0.08, 0.05], CHAIN = [0.55, 0.56, 0.58, 0.6], BOLL = [0.12, 0.13, 0.14, 0.4], WOOD = [0.36, 0.26, 0.18, 0.1], YEL = [0.95, 0.78, 0.1, 0.2];
     const done = new Set();
-    for (const pt of PORTS) for (const ty of Object.keys(BEAM)){
-      const bp = berthPose(pt.id, ty); if (!bp) continue; const f = bp.face, key = faceKey(f); if (done.has(key)) continue; done.add(key);
+    for (const pt of PORTS) for (const kind of ['main', 'bunker']) for (const ty of Object.keys(BEAM)){
+      const bp = berthPose(pt.id, ty, kind); if (!bp) continue; const f = bp.face, key = faceKey(f); if (done.has(key)) continue; done.add(key);
       const u = [f.ux, f.uz], n = [f.nx, f.nz], a0 = Math.max(-f.hl + 1, bp.a - 30), a1 = Math.min(f.hl - 1, bp.a + 30), am = (a0 + a1) / 2, len = a1 - a0;
       const at = (a, o) => [f.x + u[0] * a + n[0] * o, f.z + u[1] * a + n[1] * o];
       obox(nb, at(am, 0.1), u, n, len, 0.2, QTOP - 1.5, 0.35, WOOD); obox(nb, at(am, 0.1), u, n, len, 0.2, QTOP - 0.55, 0.3, WOOD);
@@ -602,7 +602,7 @@ const G3 = (() => {
     if (BLD) for (let kx = -1; kx <= 1; kx++) for (let kz = -1; kz <= 1; kz++) for (const i of (BLD.cells.get((Math.floor(cz / 1000) + kz) * 100 + Math.floor(cx / 1000) + kx) || [])){
       const ty = BLD.t[i], A = BLD.l[i] * BLD.w[i]; if (A < 250 || (ty !== 8 && ty !== 9 && ty !== 0)) continue;
       const d = Math.hypot(BLD.x[i] - cx, BLD.z[i] - cz); if (d > 220) continue;
-      const sc = d - (ty === 8 ? 60 : 0) - Math.sqrt(A); if (sc < bs){ bs = sc; bi = i; }
+      const sc = d - (ty === 8 ? 25 : 0) - 1.2 * Math.sqrt(A); if (sc < bs){ bs = sc; bi = i; }   // near, big, and industrial if it can be
     }
     let B;
     if (bi >= 0){ const ty = BLD.t[bi], lv = BLD.lv[bi]; B = {x:BLD.x[bi], z:BLD.z[bi], l:BLD.l[bi], w:BLD.w[bi], a:BLD.a[bi], H:ty === 8 ? (lv ? 4 * lv : 7.5) : ty === 9 ? (lv || 2) * 3.4 : (lv ? 2.8 * lv : 3.6), osm:true}; }
@@ -619,7 +619,7 @@ const G3 = (() => {
     const e1 = off(door, wl.len / 2 - 3, 0), e2 = off(door, -wl.len / 2 + 3, 0), end = Math.hypot(e1[0] - cx, e1[1] - cz) < Math.hypot(e2[0] - cx, e2[1] - cz) ? wl.len / 2 - 3 : -wl.len / 2 + 3;
     // the ice silo stands on the quay aft of the crane, with a short chute out over the berth
     const siloR = clamp(depth / 2 - 0.3, 1.2, 2), lim = f.hl - siloR - 0.5, cA = bp.a - 2.6, dA = bp.a + 1.8;
-    const sA = [bp.a - 9.5, bp.a + 9.5, -lim, lim].map(a => clamp(a, -lim, lim)).reduce((b, a) => Math.min(Math.abs(a - cA), Math.abs(a - dA)) > Math.min(Math.abs(b - cA), Math.abs(b - dA)) ? a : b);
+    const sA = [bp.a - 9.5, bp.a + 9.5].map(a => clamp(a, -lim, lim)).reduce((b, a) => Math.min(Math.abs(a - cA), Math.abs(a - dA)) > Math.min(Math.abs(b - cA), Math.abs(b - dA)) ? a : b);
     const silo = at(sA, -Math.max(siloR + 0.4, Math.min(depth / 2, 3.5))), siloY = gy(silo), chuteB = at(bp.a + (sA > bp.a ? 1.2 : -1.2), 1.3), toB = Math.atan2(chuteB[0] - silo[0], chuteB[1] - silo[1]);
     const P = {id:pt.id, name:plantName(pt), bp, f, u, n, depth, at, gy, drop, crane, B, door, dn, du, dy, wallLen:wl.len, silo, siloY, siloR,
       chuteA:[silo[0] + Math.sin(toB) * siloR * 0.9, siloY + 8.2, silo[1] + Math.cos(toB) * siloR * 0.9], chuteB:[chuteB[0], QTOP + 3.4, chuteB[1]],
