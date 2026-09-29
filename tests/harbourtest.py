@@ -18,17 +18,19 @@ async def main():
           S.tut = 0; S.cash = 1e6; S.t = Math.round((Date.UTC(2027, 2, 9, 10) - EPOCH) / 6e4); const R = {ports:{}};
           const acts = () => document.getElementById('actbar').innerText;
           for (const q of PORTS){
-            const b = S.boat; b.status = 'port'; b.port = q.id; b.pos = {...q.p}; b.ice = 0; b.fuel = 10; S.plan = null;
+            const b = S.boat; b.status = 'port'; b.port = q.id; b.pos = {...q.p}; b.ice = 0; b.fuel = 10; S.plan = null; b.berth = 'main'; b.shift = b.fueling = b.land = b.after = null;
             S.hold = [{sp:'torsk', cls:2, kg:100, n:25, bled:true, iced:true, hr:0, fresh:95, gut:false, hook:true}];
             renderActs(); const a = acts();
             doAct({dataset:{act:'ice'}, disabled:false}); const ice = b.ice > 0;
-            doAct({dataset:{act:'fuel'}, disabled:false}); const fuel = b.fuel > 10;
-            let sold = false; if (q.mottak){ sold = !!document.querySelector('#actbar [data-act="sell"]'); sell(); sold = sold && S.lastSale.port === q.id && S.hold.length === 0; }
+            // filling takes her to the bunker quay and runs the pump: give it time
+            doAct({dataset:{act:'fuel'}, disabled:false}); for (let i = 0; i < 40 && (b.shift || b.fueling); i++) step(); const fuel = b.fuel > 10;
+            if (b.berth !== 'main'){ b.berth = 'main'; b.shift = b.fueling = b.after = null; }
+            let sold = false; if (q.mottak){ sold = a.includes('Lever '); sell(); sold = sold && S.lastSale.port === q.id && S.hold.length === 0; }
             R.ports[q.id] = {water:!isLand(q.p), iceBtn:a.includes('Kjøp is'), fuelBtn:a.includes('Fyll drivstoff'), ice, fuel, sold};
           }
           // a standing plan restocks only what the harbour sells
           const b = S.boat; b.port = 'frovag'; b.fuel = 10; b.ice = 0; autoRestock(); R.opsFrovag = {fuel:b.fuel, ice:b.ice};
-          b.port = 'finnsnes'; b.fuel = 10; b.ice = 0; autoRestock(); R.opsFinnsnes = {fuel:Math.round(b.fuel), ice:b.ice};
+          b.port = 'finnsnes'; b.pos = {...portById('finnsnes').p}; b.fuel = 10; b.ice = 0; autoRestock(); for (let i = 0; i < 40 && (b.shift || b.fueling); i++) step(); R.opsFinnsnes = {fuel:Math.round(b.fuel), ice:b.ice};
           R.customers = CUSTOMERS.filter(c => ['sommaroy', 'brensholmen', 'torsken', 'frovag'].includes(c.port)).map(c => c.port);
           return R; })()""")
         print(json.dumps(r, ensure_ascii=False))

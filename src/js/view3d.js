@@ -664,7 +664,7 @@ const G3 = (() => {
     const mk = f => { const b = NB(); f(b); return b.mesh(); }, unit = k => mk(b => b.tube([[0, 0, 0], [0, 0, 1]], 1, k, 6));
     const YEL = [0.95, 0.72, 0.08, 0.4], DK = [0.14, 0.15, 0.17, 0.2], VEST = [1, 0.45, 0.06, 0.3], REFL = [0.9, 0.95, 0.9, 0.6], SKIN = [0.86, 0.66, 0.52, 0.1];
     PM = {
-      leg:unit([0.16, 0.18, 0.22, 0.1]), arm:unit(VEST), wire:unit([0.1, 0.1, 0.1, 0.3]), broom:unit([0.55, 0.4, 0.25, 0.05]), hose:unit([0.2, 0.55, 0.25, 0.3]),
+      leg:unit([0.16, 0.18, 0.22, 0.1]), arm:unit(VEST), wire:unit([0.1, 0.1, 0.1, 0.3]), fhose:unit([0.06, 0.06, 0.07, 0.35]), broom:unit([0.55, 0.4, 0.25, 0.05]), hose:unit([0.2, 0.55, 0.25, 0.3]),
       boom:mk(b => b.box(0, -0.5, 0.5, 1, 1, 1, YEL)),
       torso:mk(b => { b.box(0, 0, 0, 0.42, 0.56, 0.26, VEST); b.box(0, 0.16, 0, 0.43, 0.06, 0.27, REFL); b.box(0, 0.34, 0, 0.43, 0.06, 0.27, REFL); }),
       head:mk(b => { b.box(0, 0, 0, 0.2, 0.22, 0.22, SKIN); b.box(0, 0.2, 0, 0.26, 0.09, 0.28, [0.95, 0.95, 0.92, 0.5]); b.box(0, 0.19, -0.14, 0.24, 0.03, 0.08, [0.95, 0.95, 0.92, 0.5]); }),
@@ -734,6 +734,7 @@ const G3 = (() => {
       case 'unhook': hands = [W(0.38, 1.9, 0.08), W(0.35, 1.3, -0.18)]; break;
       case 'tally': { const k = Math.max(0, Math.sin(t * 0.9)) * 0.04; hands = [W(0.3, 1.12, 0.1), W(0.28 + k, 1.08, -0.12)]; break; }
       case 'remote': hands = [W(0.3, 1.05, 0.11), W(0.3, 1.05, -0.11)]; break;
+      case 'nozzle': hands = [W(0.42, 0.85, 0.06), W(0.36, 0.98, -0.12)]; break;
       default: hands = [W(-sw * 0.15, 0.82, 0.26), W(sw * 0.15, 0.82, -0.26)];
     }
     [0.21, -0.21].forEach((r, i) => { const sh = W(bend * 0.8, 1.42, r), hd2 = hands[i], el = [(sh[0] + hd2[0]) / 2 - F[0] * 0.05 + R[0] * r * 0.25, (sh[1] + hd2[1]) / 2 - 0.08, (sh[2] + hd2[2]) / 2 - F[1] * 0.05 + R[1] * r * 0.25];
@@ -865,6 +866,67 @@ const G3 = (() => {
     return {night, spray:P.spray, lamps:P.lamps.map(L => rel(L[0], P.gy(L) + 7.7, L[1]))};
   }
   function nearestPlant(eye){ let best = null, bd = 900; for (const P of PLANTS){ const d = Math.hypot(P.drop[0] - eye[0], P.drop[1] - eye[2]); if (d < bd){ bd = d; best = P; } } return best; }
+
+  // ---------- bunker quays: a tank in its bund, the pump with its meter and hose reel, the sign; someone from the boat holds the nozzle ----------
+  const BUNKERS = []; let BUNKN = null;
+  function buildBunkers(){
+    BUNKERS.length = 0; const nb = NB();
+    const TANK = [0.9, 0.91, 0.9, 0.35], RED = [0.78, 0.12, 0.1, 0.35], CONC = [0.62, 0.62, 0.6, 0.05], DK = [0.14, 0.15, 0.16, 0.3], STEEL = [0.7, 0.72, 0.74, 0.5], POLE = [0.45, 0.47, 0.5, 0.4];
+    for (const pt of PORTS){
+      if (!pt.fuel) continue; const kind = hasBunker(pt.id) ? 'bunker' : 'main', bp = berthPose(pt.id, 'skiff', kind); if (!bp) continue;
+      const f = bp.face, u = [f.ux, f.uz], n = [f.nx, f.nz], at = (a, o) => [f.x + u[0] * a + n[0] * o, f.z + u[1] * a + n[1] * o], depth = f.depth || 6;
+      const pa = clamp(bp.a + 2.4, -f.hl + 1, f.hl - 1), B = {id:pt.id, kind, bp, f, u, n, at, pa, pump:at(pa, -1.5), gy:() => QTOP, spray:0};
+      B.outlet = at(pa, -1.15); B.sign = at(clamp(bp.a - 3.5, -f.hl + 0.5, f.hl - 0.5), -0.9);
+      // the pump: cabinet with a red top, the hose reel on its side
+      obox(nb, B.pump, u, n, 0.8, 0.55, QTOP, 1.55, TANK); obox(nb, B.pump, u, n, 0.86, 0.6, QTOP + 1.55, 0.14, RED);
+      const rc = at(pa + 0.62, -1.5); nb.tube([[rc[0] - u[0] * 0.12, QTOP + 0.9, rc[1] - u[1] * 0.12], [rc[0] + u[0] * 0.12, QTOP + 0.9, rc[1] + u[1] * 0.12]], 0.36, DK, 14);
+      nb.disc([rc[0] + u[0] * 0.13, QTOP + 0.9, rc[1] + u[1] * 0.13], [u[0], 0, u[1]], 0.38, STEEL, 14); nb.disc([rc[0] - u[0] * 0.13, QTOP + 0.9, rc[1] - u[1] * 0.13], [-u[0], 0, -u[1]], 0.38, STEEL, 14);
+      // the tank lies along the quay on two saddles inside a low concrete bund
+      const tc = at(pa, -Math.min(depth - 2.2, 6.2)), T = (a, y) => [tc[0] + u[0] * a, y, tc[1] + u[1] * a], ty = QTOP + 1.45;
+      nb.tube([T(-2.3, ty), T(2.3, ty)], 1.05, TANK, 18); nb.disc(T(2.3, ty), [u[0], 0, u[1]], 1.05, TANK, 18); nb.disc(T(-2.3, ty), [-u[0], 0, -u[1]], 1.05, TANK, 18);
+      nb.tube([T(-0.6, ty), T(0.6, ty)], 1.07, RED, 18);
+      for (const a of [-1.5, 1.5]) obox(nb, [tc[0] + u[0] * a, tc[1] + u[1] * a], u, n, 0.3, 1.6, QTOP, 0.55, DK);
+      for (const [a, o, l, w] of [[0, 1.6, 6.2, 0.2], [0, -1.6, 6.2, 0.2], [3.1, 0, 0.2, 3.4], [-3.1, 0, 0.2, 3.4]]) obox(nb, [tc[0] + u[0] * a + n[0] * o, tc[1] + u[1] * a + n[1] * o], u, n, l, w, QTOP, 0.45, CONC);
+      const vent = T(1.8, ty + 1.0); nb.tube([[vent[0], ty + 0.9, vent[2]], [vent[0], ty + 1.7, vent[2]]], 0.05, STEEL, 6);
+      // sign post
+      nb.tube([[B.sign[0], QTOP, B.sign[1]], [B.sign[0], QTOP + 3.1, B.sign[1]]], 0.07, POLE, 6);
+      BUNKERS.push(B);
+    }
+    BUNKN = nb.mesh();
+  }
+  function nearestBunker(eye){ let best = null, bd = 600; for (const B of BUNKERS){ const d = Math.hypot(B.pump[0] - eye[0], B.pump[1] - eye[2]); if (d < bd){ bd = d; best = B; } } return best; }
+  function drawBunker(B, eye, VP, T, BMrel){
+    nSetup(VP);
+    const b = S.boat, f = b.fueling, here = f && b.status === 'port' && b.port === B.id && berthKind(b) === B.kind && BMrel, gt = S.t + currentFrac();
+    const rel = (x, y, z) => [x - eye[0], y - eye[1], z - eye[2]], seaH = Math.atan2(B.n[0], -B.n[1]);
+    let shown = 0;
+    if (here){
+      // the filler on the starboard side (the quay side), and whoever holds the nozzle standing at the edge above it
+      const vt = vtype(), G = VGEO[vt] || VGEO.skiff, fl = vt === 'skiff' ? [0.8, 0.95, 2.3] : [(BEAM[vt] || 3) * 0.42, G.gw + 0.15, (G.stern || 3) * 0.5];
+      const Fr = xf(BMrel, fl), Fw = [Fr[0] + eye[0], Fr[1] + eye[1], Fr[2] + eye[2]], al = (Fw[0] - B.f.x) * B.u[0] + (Fw[2] - B.f.z) * B.u[1], edge = B.at(al, -0.7);
+      const active = gt >= f.t0 + 0.4 && gt < f.until - 0.4, st = active ? {x:edge[0], z:edge[1], h:seaH, task:'nozzle', walk:false, s:0} : {x:B.pump[0] + B.n[0] * 0.8, z:B.pump[1] + B.n[1] * 0.8, h:seaH + Math.PI, task:'look', walk:false, s:0};
+      const w = follow(B, 'p', st, T, 1.4); drawWorker(B, w, eye, T, 5);
+      if (active && Math.hypot(w.x - edge[0], w.z - edge[1]) < 0.4){
+        const F = [Math.sin(seaH), -Math.cos(seaH)], hand = rel(edge[0] + F[0] * 0.42, QTOP + 0.85, edge[1] + F[1] * 0.42), o = rel(B.outlet[0], QTOP + 1.0, B.outlet[1]);
+        const sag = (A, C, s, n0) => { let p0 = A; for (let k = 1; k <= n0; k++){ const q = k / n0, P = [A[0] + (C[0] - A[0]) * q, A[1] + (C[1] - A[1]) * q - s * 4 * q * (1 - q), A[2] + (C[2] - A[2]) * q]; drawN(PM.fhose, limbM(p0, P, 0.028)); p0 = P; } };
+        sag(o, hand, 0.35, 8); sag(hand, Fr, 0.12, 5);
+        if (gt >= f.pumpAt) shown = Math.min(f.liters, (gt - f.pumpAt) * f.lpm);
+      }
+    }
+    // the meter on the pump, and the sign
+    const v = Math.round(shown);
+    if (!B.meter){ B.cv = document.createElement('canvas'); B.cv.width = 256; B.cv.height = 128; B.meter = {tex:mkTex(), v:-1};
+      const du = [-B.n[1], B.n[0]], c = B.at(B.pa, -1.5 + 0.28), w2 = 0.26, a = [c[0] - du[0] * w2, c[1] - du[1] * w2], d = [c[0] + du[0] * w2, c[1] + du[1] * w2];   // read from the water side
+      B.meter.q = texQuad([d[0], QTOP + 1.05, d[1]], [a[0], QTOP + 1.05, a[1]], [a[0], QTOP + 1.31, a[1]], [d[0], QTOP + 1.31, d[1]]);
+      const sv = document.createElement('canvas'); sv.width = 512; sv.height = 256; const g = sv.getContext('2d'); g.fillStyle = '#c21f19'; g.fillRect(0, 0, 512, 256); g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.font = '700 118px Archivo, Arial, sans-serif'; g.fillText('BUNKERS', 256, 104); g.font = '600 52px Archivo, Arial, sans-serif'; g.fillText('DIESEL · BENSIN', 256, 200); B.signT = mkTex(); upTex(B.signT, sv);
+      const s0 = [B.sign[0] + B.n[0] * 0.09, B.sign[1] + B.n[1] * 0.09], sw = 0.9, sa = [s0[0] - du[0] * sw, s0[1] - du[1] * sw], sb = [s0[0] + du[0] * sw, s0[1] + du[1] * sw];
+      B.signQ = texQuad([sb[0], QTOP + 2.2, sb[1]], [sa[0], QTOP + 2.2, sa[1]], [sa[0], QTOP + 3.1, sa[1]], [sb[0], QTOP + 3.1, sb[1]]); }
+    if (B.meter.v !== v){ B.meter.v = v; const g = B.cv.getContext('2d'); g.fillStyle = '#10161a'; g.fillRect(0, 0, 256, 128); g.fillStyle = '#7dff9a'; g.font = '700 72px monospace'; g.textAlign = 'right'; g.textBaseline = 'middle'; g.fillText(String(v), 200, 66); g.font = '600 34px monospace'; g.fillText('L', 244, 76); upTex(B.meter.tex, B.cv); }
+    const TMx = M4.T(-eye[0], -eye[1], -eye[2]);
+    drawTexQuad(B.meter.q, B.meter.tex, TMx, VP, false, [B.n[0], 0, B.n[1]]); drawTexQuad(B.signQ, B.signT, TMx, VP, true, [B.n[0], 0, B.n[1]]);
+    return {liters:v, here:!!here};
+  }
 
   // ---------- boat ----------
   const WHITE = [0.9, 0.92, 0.93], NAVY = [0.1, 0.16, 0.3], RED = [0.45, 0.12, 0.1], FLOOR = [0.72, 0.74, 0.74], ORANGE = [0.93, 0.4, 0.1], SKIN = [0.85, 0.65, 0.5], DARK = [0.14, 0.16, 0.18], GREY = [0.62, 0.64, 0.66], GLASS = [0.2, 0.27, 0.32];
@@ -1493,9 +1555,36 @@ const G3 = (() => {
   const LINE_S = 1.8;   // seconds for each line to go on
   let ROPEM = null, FENDM = null;
   function buildMooring(){ const r = NB(); r.tube([[0, 0, 0], [0, 0, 1]], 1, [0.2, 0.36, 0.72, 0.15], 6); ROPEM = r.mesh(); const f = NB(); f.tube([[0, -0.26, 0], [0, 0.26, 0]], 0.12, [0.93, 0.93, 0.9, 0.35], 10); FENDM = f.mesh(); }
-  function berthNow(){ const b = S.boat; return (b.status === 'port' || b.status === 'unmooring') && b.port ? berthPose(b.port, vtype()) : null; }
+  function berthNow(){
+    const b = S.boat; if (!((b.status === 'port' || b.status === 'unmooring') && b.port)) return null;
+    const sh = b.shift, kind = sh ? (S.t + currentFrac() < sh.castUntil ? sh.from : sh.to) : berthKind(b);
+    return berthPose(b.port, vtype(), kind) || berthPose(b.port, vtype());
+  }
+  // along a curve from where she was (position and heading F) to the berth, u0 from 0 to 1 at du per second
+  function approach(F, bp, u0, du0){
+    const X = bp.x * 1000, Z = bp.y * 1000, u = u0 * u0 * (3 - 2 * u0), k = Math.hypot(X - F.x, Z - F.z) * 1.1;
+    const P0 = [F.x, F.z], T0 = [Math.sin(F.h) * k, -Math.cos(F.h) * k], P1 = [X, Z], T1 = [bp.fwd.x * k, bp.fwd.z * k];
+    const h00 = 2 * u ** 3 - 3 * u * u + 1, h10 = u ** 3 - 2 * u * u + u, h01 = -2 * u ** 3 + 3 * u * u, h11 = u ** 3 - u * u;
+    const d00 = 6 * u * u - 6 * u, d10 = 3 * u * u - 4 * u + 1, d01 = -6 * u * u + 6 * u, d11 = 3 * u * u - 2 * u;
+    const px = h00 * P0[0] + h10 * T0[0] + h01 * P1[0] + h11 * T1[0], pz = h00 * P0[1] + h10 * T0[1] + h01 * P1[1] + h11 * T1[1];
+    const vx = d00 * P0[0] + d10 * T0[0] + d01 * P1[0] + d11 * T1[0], vz = d00 * P0[1] + d10 * T0[1] + d01 * P1[1] + d11 * T1[1];
+    bv.spd = Math.hypot(vx, vz) * 6 * u0 * (1 - u0) * du0; bv.yr = 0;
+    bv.px = px; bv.pz = pz; if (Math.hypot(vx, vz) > 1e-3) bv.cog = Math.atan2(vx, -vz);
+  }
+  function lieAlongside(dt, bp){
+    bv.spd = 0; bv.yr = 0; bv.px += (bp.x * 1000 - bv.px) * (1 - Math.exp(-dt * 2)); bv.pz += (bp.y * 1000 - bv.pz) * (1 - Math.exp(-dt * 2)); bv.cog += angDiff(bv.cog, bp.hd) * (1 - Math.exp(-dt * 2));
+  }
   function moorStep(dt, bp){
     const b = S.boat, key = S.cur + '|' + b.port + '|' + vtype() + '|' + (b.moorT || 0), sp = Math.max(1, S.mult || 1), X = bp.x * 1000, Z = bp.y * 1000;
+    // moving to the other quay in the harbour, on the simulation's clock: the lines come in, she goes over, the lines go on
+    const sh = b.shift;
+    if (sh && b.status === 'port'){
+      const gt = S.t + currentFrac(), A = berthPose(b.port, vtype(), sh.from) || bp; MO.key = key; MO.init = true; MO.sh = true;
+      if (gt < sh.castUntil){ MO.phase = 'out'; MO.lines = clamp(4 * (sh.castUntil - gt) / CAST_MIN, 0, 4); lieAlongside(dt, A); return; }
+      if (gt < sh.arriveAt){ MO.phase = 'in'; MO.lines = 0; MO.len = [0, 0, 0, 0]; const span = sh.arriveAt - sh.castUntil; approach({x:A.x * 1000, z:A.y * 1000, h:A.hd}, bp, clamp((gt - sh.castUntil) / span, 0, 1), GAME_RATE * (S.mult || 1) / 60 / span); return; }
+      MO.phase = 'lines'; MO.lines = clamp(4 * (gt - sh.arriveAt) / Math.max(0.1, sh.until - sh.arriveAt), 0, 4); lieAlongside(dt, bp); return;
+    }
+    if (MO.sh){ MO.sh = false; MO.phase = 'moored'; MO.lines = 4; }   // the move is over: she is made fast
     if (MO.key !== key){
       const d = Math.hypot(bv.px - X, bv.pz - Z); MO.key = key; MO.len = [0, 0, 0, 0];
       if (d < 3 || b.status === 'unmooring' || !MO.init){ MO.phase = 'moored'; MO.lines = 4; }
@@ -1504,19 +1593,13 @@ const G3 = (() => {
     }
     if (b.status === 'unmooring'){ MO.phase = 'out'; MO.lines = clamp(4 * (b.castUntil - S.t - currentFrac()) / CAST_MIN, 0, 4); }
     if (MO.phase === 'in'){
-      MO.t += dt * sp; const u0 = clamp(MO.t / MO.dur, 0, 1), u = u0 * u0 * (3 - 2 * u0), F = MO.from, k = Math.hypot(X - F.x, Z - F.z) * 1.1;
-      const P0 = [F.x, F.z], T0 = [Math.sin(F.h) * k, -Math.cos(F.h) * k], P1 = [X, Z], T1 = [bp.fwd.x * k, bp.fwd.z * k];
-      const h00 = 2 * u ** 3 - 3 * u * u + 1, h10 = u ** 3 - 2 * u * u + u, h01 = -2 * u ** 3 + 3 * u * u, h11 = u ** 3 - u * u;
-      const d00 = 6 * u * u - 6 * u, d10 = 3 * u * u - 4 * u + 1, d01 = -6 * u * u + 6 * u, d11 = 3 * u * u - 2 * u;
-      const px = h00 * P0[0] + h10 * T0[0] + h01 * P1[0] + h11 * T1[0], pz = h00 * P0[1] + h10 * T0[1] + h01 * P1[1] + h11 * T1[1];
-      const vx = d00 * P0[0] + d10 * T0[0] + d01 * P1[0] + d11 * T1[0], vz = d00 * P0[1] + d10 * T0[1] + d01 * P1[1] + d11 * T1[1];
-      const du = 6 * u0 * (1 - u0) / MO.dur * sp; bv.spd = Math.hypot(vx, vz) * du; bv.yr = 0;
-      bv.px = px; bv.pz = pz; if (Math.hypot(vx, vz) > 1e-3) bv.cog = Math.atan2(vx, -vz);
+      MO.t += dt * sp; const u0 = clamp(MO.t / MO.dur, 0, 1);
+      approach(MO.from, bp, u0, sp / MO.dur);
       if (u0 >= 1){ MO.phase = 'lines'; MO.t = 0; bv.cog = bp.hd; }
     } else {
       if (MO.phase === 'lines'){ MO.t += dt * sp; MO.lines = Math.min(4, MO.t / LINE_S); if (MO.lines >= 4) MO.phase = 'moored'; }
       // lying alongside: held in place by the lines, the swell moves her a little
-      bv.spd = 0; bv.yr = 0; bv.px += (X - bv.px) * (1 - Math.exp(-dt * 2)); bv.pz += (Z - bv.pz) * (1 - Math.exp(-dt * 2)); bv.cog += angDiff(bv.cog, bp.hd) * (1 - Math.exp(-dt * 2));
+      lieAlongside(dt, bp);
     }
   }
   // the lines from the boat's cleats to the bollards on the quay, sagging when slack; the tide makes them slack or tight
@@ -1738,7 +1821,7 @@ const G3 = (() => {
       DYNP = buf(new Float32Array(4000 * 3), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); DYNA = buf(new Float32Array(4000), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW);
       try { HG = await loadHeights(); } catch (e){ console.error(e); HG = null; }
       try { BLD = await loadBuildings(); } catch (e){ console.error(e); BLD = null; }
-      buildTerrain(); buildStatics(); buildBoat(); buildSkiff(); buildFlag(); buildSea(); buildWild(); buildNPC(); buildVessels(); buildHarbourFittings(); buildMooring(); buildPlants(); buildPlantParts();
+      buildTerrain(); buildStatics(); buildBoat(); buildSkiff(); buildFlag(); buildSea(); buildWild(); buildNPC(); buildVessels(); buildHarbourFittings(); buildMooring(); buildPlants(); buildPlantParts(); buildBunkers();
       canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); ready = false; failed = true; show(false); });
       buildLabels();
       ready = true; return true;
@@ -1975,8 +2058,8 @@ const G3 = (() => {
     drawTerrain(TM, eye, VPn, true); drawLit(STAT, TM); drawBuildings(TM);
     if (VT === 'skiff'){ drawSkiff(BMrel, VPn, dt, !cam.helm, ncrew > 0); gl.useProgram(PL.p); }
     else { const pv = PV[VT]; drawLit(pv.hull, BMrel); if (!cam.helm) drawLit(pv.skipper, BMrel); for (let i = 0; i < ncrew; i++) drawLit(pv.crew[i], BMrel); }
-    if (STATN){ nSetup(VPn); drawN(STATN, TM); if (PLANTN) drawN(PLANTN, TM); } drawMooring(BMrel, eye, VPn, t);
-    const plant = PM ? nearestPlant(eye) : null, pr = plant ? drawPlant(plant, eye, VPn, t, BMrel) : null; gl.useProgram(PL.p);
+    if (STATN){ nSetup(VPn); drawN(STATN, TM); if (PLANTN) drawN(PLANTN, TM); if (BUNKN) drawN(BUNKN, TM); } drawMooring(BMrel, eye, VPn, t);
+    const plant = PM ? nearestPlant(eye) : null, pr = plant ? drawPlant(plant, eye, VPn, t, BMrel) : null, bunk = PM ? nearestBunker(eye) : null; if (bunk) bunk.last = drawBunker(bunk, eye, VPn, t, BMrel); gl.useProgram(PL.p);
     wildSpawn(t); drawNPC(eye, t, H); drawWild(eye, t, dt);
 
     const pole = xf(BMrel, VG.pole);
@@ -2138,6 +2221,6 @@ const G3 = (() => {
     fineReady(){ if (NEARM){ freeMesh(NEARM); NEARM = null; updateNear(); } },
     fishCam(){ cam.helm = false; cam.dist = 7; cam.pitch = 0.22; cam.yaw = -0.85; },
     isHelm:() => cam.helm, setHelm(on){ const G = VGEO[vtype()] || {}; cam.helm = !!on; cam.hy = 0; cam.hp = G.hp !== undefined ? G.hp : -0.07; cam.fov = G.fov || 55; },
-    _debug:{get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, nearestPlant, fkRun, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; SEAMARKS.lights.forEach((L, i) => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(i, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }}
+    _debug:{get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, BUNKERS, nearestPlant, fkRun, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; SEAMARKS.lights.forEach((L, i) => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(i, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }}
   };
 })();

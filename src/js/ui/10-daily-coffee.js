@@ -134,14 +134,15 @@ function renderActs(){
   } else if (b.status === 'port'){
     const p = portById(b.port), tot = holdTotal();
     if (S.jobs && S.jobs.length) h.push('<button data-ui="verksted">' + LS('Verksted til ', 'Yard until ', 'Verksted ', 'Yard ') + hm((jobsDone() || S.t) / 60) + '</button>');
-    if (b.land){ const [lg, sh] = landText(true); h.push('<span class="stp"><span class="lg">' + lg + '</span><span class="sh">' + sh + '</span></span>'); }
-    else if (p.mottak && tot > 0.5) h.push('<button class="pri" data-act="sell">' + L('Lever ', 'Land ') + fmt(tot, 0) + ' kg</button>');
-    if (p.fuel && BOAT.fuelCap - b.fuel > 0.5) h.push('<button data-act="fuel">' + LS('Fyll drivstoff', 'Refuel', 'Drivstoff', 'Fuel') + '</button>');
-    if (p.ice && b.ice < BOAT.iceCap - 1) h.push('<button data-act="ice">' + LS('Kjøp is', 'Buy ice', 'Is', 'Ice') + '</button>');
+    const stp = ([lg, sh]) => h.push('<span class="stp"><span class="lg">' + lg + '</span><span class="sh">' + sh + '</span></span>'), busy = portBusy(b);
+    if (b.land) stp(landText(true)); if (b.shift || b.fueling) stp(quayText(true));
+    if (!busy && p.mottak && tot > 0.5) h.push('<button class="pri" data-act="sell">' + L('Lever ', 'Land ') + fmt(tot, 0) + ' kg</button>');
+    if (!busy && p.fuel && BOAT.fuelCap - b.fuel > 0.5) h.push('<button data-act="fuel">' + (hasBunker(p.id) && berthKind(b) !== 'bunker' ? LS('Fyll drivstoff ved bunkerskaia', 'Refuel at the bunker quay', 'Drivstoff', 'Fuel') : LS('Fyll drivstoff', 'Refuel', 'Drivstoff', 'Fuel')) + '</button>');
+    if (!b.shift && !(b.land && berthKind(b) !== 'main') && p.ice && b.ice < BOAT.iceCap - 1) h.push('<button data-act="ice">' + LS('Kjøp is', 'Buy ice', 'Is', 'Ice') + '</button>');
     if (!b.gear) h.push('<button data-act="gear">' + LS('Ny juksa', 'New jig line', 'Juksa', 'Jig') + '</button>');
     if (pubOpen(S.t / 60) && S.pubE !== pubEvening(S.t / 60)) h.push('<button data-act="pub">🍺 ' + LS('Pubrunde', 'Pub round', 'Pub', 'Pub') + '</button>');
     if (!b.kgear && (p.fuel || p.ice)) h.push('<button data-act="kgear">' + LS('Kveiteutstyr (' + kr(PRICE.kgear) + ')', 'Halibut gear (' + kr(PRICE.kgear) + ')', 'Kveiteutstyr', 'Halibut gear') + '</button>');
-    h.push('<button' + (tot > 0.5 && p.mottak || b.land ? '' : ' class="pri"') + ' data-ui="plot">' + LS('Planlegg tur', 'Plan a trip', 'Planlegg', 'Plan') + '</button>');
+    h.push('<button' + (tot > 0.5 && p.mottak || busy ? '' : ' class="pri"') + ' data-ui="plot">' + LS('Planlegg tur', 'Plan a trip', 'Planlegg', 'Plan') + '</button>');
   } else if (b.status === 'unmooring'){
     h.push('<span class="stp">' + L('Kaster loss …', 'Casting off …') + '</span>');
   } else if (b.status === 'idle'){

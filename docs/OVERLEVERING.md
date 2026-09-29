@@ -458,7 +458,11 @@ Mottakene ligger der Jonas har funnet dem i Råfisklagets leveranseoversikt: Hus
      - **Folka:** Én gir tegn ved kaikanten, én tar imot lasten og hekter av, én teller ved porten og én kjører kranen med fjernkontroll. Alle møter opp, også om natta. Når noen må til en ny plass, går de dit. Trucken kjører.
      - **Isen:** Den renner fra isrenna ned i båten mens isen fylles.
    - **Ikke med ennå:** Andre båter i flåten og lokalflåten lander uten animasjon. Egne båter vises ikke i 3D før fase 4.
-5. **B5 Bunkring:** Egen kai med pumpe og slange, tid etter pumpefart.
+5. **B5 Bunkring (ferdig):**
+   - **Forhaling:** Der havna har egen bunkerskai, betyr «Fyll drivstoff» at båten kaster loss fra mottakskaia, går bort og fortøyer ved bunkerskaia (`startShift`, rundt 3 knop). Vil du levere derfra, går den tilbake til mottakskaia først. Isen kommer fra isrenna ved mottaket. Står båten ved bunkerskaia, går den derfor tilbake før du kan kjøpe is. Finnsnes fyller der båten ligger.
+   - **Pumpa:** Omtrent 45 L/min bensin og 90 L/min diesel (`PUMP`, anslag), pluss 1,5 min for å få slangen ut og 1 min for å legge den på plass. Du betaler etter hvert som det renner inn. En skiff fyller 80 L på litt over 4 min, en sjark 500 L på rundt 8 min.
+   - **Venting:** Avgang og driftsplan venter mens båten losser, forhaler eller fyller (`portBusy`). Driftsplanen fyller ved bunkerskaia etter lossingen, og rapporten sier det.
+   - **I 3D:** Bunkersanlegget har tank i betongkar, pumpe med teller, slangetrommel og «BUNKERS»-skilt, i de fem bunkershavnene og i Finnsnes. Forhalingen følger spilltida: tauene tas inn, båten går over, tauene settes. En person fra båten står ved kaikanten med pistolen i fylleåpningen, og telleren går.
 
 ### Fase 4: Flåten i kart og 3D
 
@@ -483,7 +487,7 @@ Større fartøyklasser, line, garn, snurrevad og teiner, egne anlegg og nye regi
 - **Sløyetid:** Anslaget på 150 kg per person og time må sjekkes.
 - **Kvote ved bytte av båt i åpen gruppe:** Kvotebruken ligger per båt. Selger du båten i åpen gruppe midt i året, får neste båt en ubrukt kvote. I virkeligheten følger det du har fisket med når du bytter fartøy.
 - **Driftsplan i åpen gruppe:** En skiff på driftsplan uten kveiteutstyr leverer nesten bare fisk som blir inndratt, fordi torsk, hyse og sei er over bifangstgrensen. Det er etter reglene, men spilleren bør få et tydeligere råd om å kjøpe kveiteutstyr.
-- **Drivstoff i Finnsnes:** Bildene viser bare bøteri og utstyrsforhandler i Finnsnes. Spillet selger fortsatt drivstoff der, fordi du starter i Finnsnes. Om det skal fjernes, er ikke avgjort.
+- **Drivstoff i Finnsnes:** Bildene viser bare bøteri og utstyrsforhandler i Finnsnes. Jonas vil at Finnsnes selger drivstoff inntil videre (29.09.2026), fra kaia båten ligger ved.
 - **Bifangstregelen** (10 % per landing og 2 tonn torsk i året) er tatt fra designet i fase 2 og ikke kontrollert på nytt mot J-30-2026 § 35.
 
 ## 11. Testing
@@ -505,6 +509,7 @@ Større fartøyklasser, line, garn, snurrevad og teiner, egne anlegg og nye regi
   - `fleet1test.py` og `fleet1mig.py`: flåtemodell og migrering.
   - `moortest.py`: fortøyning og mottakene i 3D. Liggeplass i alle havner, å legge til med tauene og å kaste loss.
   - `harbourtest.py`: havnene. Mottak, is og drivstoff per havn. De ekte kaiene: alle båttyper ligger langs kaifronten i sjøen i 3D-kystlinja, og ruta inn og ut av hver havn går fri av land.
+  - `bunkertest.py`: bunkringen. Forhaling til bunkerskaia og tilbake, pumpefart og betaling, avgang som venter, Finnsnes, og i 3D stasjonene, forhalingen og telleren.
   - `landtest.py`: leveringen. Lossetid, kasser og kar, avgang som venter, isrenna, og i 3D at kroken står over lasten på dekk og over losseplassen og at trucken rekker siste tur.
   - `fleet3test.py`: fase 3. Varsler, båtvelgeren, inntekt per båt og service per båt.
   - `fleet2test.py`: fase 2. Levering med og uten adgang, to båter på driftsplan i en simulert uke, knappene i Fartøy-appen, nybygg til flåten, og lagring med to båter. Skriver `OK` eller `FEIL` per sjekk.

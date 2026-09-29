@@ -130,7 +130,8 @@ function landState(L, t){
 }
 function startLanding(ops){
   const b = S.boat, pt = portById(b.port), kg = holdTotal();
-  if (b.status !== 'port' || !pt || !pt.mottak || b.land || kg < 0.5) return false;
+  if (b.status !== 'port' || !pt || !pt.mottak || b.land || b.shift || kg < 0.5) return false;
+  if (berthKind(b) !== 'main') return startShift('main', ops ? 'landops' : 'land');   // the crane is at the plant's quay
   const lp = landPlan(b.type, kg), unit = lp.kind === 'tub' ? ['kar', 'tubs'] : ['kasser', 'boxes'];
   b.land = {pid:pt.id, t0:S.t, until:S.t + lp.dur, kind:lp.kind, n:lp.n, lifts:lp.lifts, kg:Math.round(kg), ops:!!ops};
   log('Losser ' + fmt(kg, 0) + ' kg i ' + pt.name + ', ' + lp.n + ' ' + unit[0] + '. Sluttseddelen kommer ca. kl. ' + hm(b.land.until / 60) + '.', 'Landing ' + fmt(kg, 0) + ' kg at ' + pt.name + ', ' + lp.n + ' ' + unit[1] + '. The landing note comes at about ' + hm(b.land.until / 60) + '.');
@@ -145,3 +146,57 @@ function finishLanding(){
 }
 // ice from the silo runs down the chute at about 100 kg a minute; only the 3D view uses this
 function iceChute(kg){ const b = S.boat; b.iceUntil = Math.max(b.iceUntil || 0, S.t) + Math.max(1, kg / 100); }
+
+// ===== the bunker quay: moving along the harbour and filling fuel =====
+// Where a harbour has its own bunker quay, filling fuel means casting off from the plant's quay, going over and making fast there;
+// landing the catch from the bunker quay means going back first. Finnsnes fills where you lie. The boat pumps its own fuel,
+// about 45 litres a minute of petrol and 90 of diesel (guesses from small-boat bunker pumps), and pays as it runs.
+const SHIFT_MPM = 3 * 1852 / 60;   // metres a minute at 3 knots in the harbour
+const PUMP = {petrol:45, diesel:90, hose:1.5, stow:1};   // litres a minute; minutes to get the hose out and the nozzle in, and to stow it
+const berthKind = b => b.berth || 'main';
+const hasBunker = pid => !!quayFace(pid, 'bunker');
+// busy at the quay: landing, moving or filling; a departure waits for it
+function portBusy(b){ const u = Math.max(b.land ? b.land.until : 0, b.shift ? b.shift.until : 0, b.fueling ? b.fueling.until : 0); return u > 0 || b.after ? Math.max(u, S.t) : 0; }
+function startShift(to, after){
+  const b = S.boat, pt = portById(b.port), from = berthKind(b);
+  if (b.status !== 'port' || !pt || b.shift || b.land || b.fueling || from === to || (to === 'bunker' && !hasBunker(pt.id))) return false;
+  const A = berthPose(pt.id, b.type, from), B = berthPose(pt.id, b.type, to); if (!A || !B) return false;
+  const move = Math.max(1.5, Math.hypot(A.x - B.x, A.y - B.y) * 1000 * 1.3 / SHIFT_MPM);
+  b.shift = {from, to, t0:S.t, castUntil:S.t + CAST_MIN, arriveAt:S.t + CAST_MIN + move, until:S.t + CAST_MIN * 2 + move}; b.after = after || null;
+  log(to === 'bunker' ? 'Kaster loss og går bort til bunkerskaia.' : 'Kaster loss og går tilbake til mottakskaia.', to === 'bunker' ? 'Casting off for the bunker quay.' : 'Casting off for the plant\'s quay.');
+  return true;
+}
+function startFueling(ops){
+  const b = S.boat, pt = portById(b.port);
+  if (b.status !== 'port' || !pt || !pt.fuel || b.land || b.fueling || b.shift) return false;
+  if (BOAT.fuelCap - b.fuel < 0.5) return false;
+  if (hasBunker(pt.id) && berthKind(b) !== 'bunker') return startShift('bunker', ops ? 'fuelops' : 'fuel');
+  const lpm = BOAT.diesel ? PUMP.diesel : PUMP.petrol, l = Math.min(BOAT.fuelCap - b.fuel, Math.max(0, S.cash) / fuelPrice());
+  if (l < 0.5){ log('Har ikke penger til drivstoff.', 'No money for fuel.'); return false; }
+  b.fueling = {t0:S.t, pumpAt:S.t + PUMP.hose, until:S.t + PUMP.hose + l / lpm + PUMP.stow, liters:l, lpm, done:0, ops:!!ops};
+  log('Fyller ' + fmt(l, 0) + ' L ' + (BOAT.diesel ? 'diesel' : 'bensin') + ', ferdig ca. kl. ' + hm(b.fueling.until / 60) + '.', 'Filling ' + fmt(l, 0) + ' L of ' + (BOAT.diesel ? 'diesel' : 'petrol') + ', done at about ' + hm(b.fueling.until / 60) + '.');
+  return true;
+}
+// a minute at the quay: the pump runs, the boat moves along, and what was waiting for it starts
+function quayMinute(){
+  const b = S.boat, f = b.fueling;
+  if (f){
+    if (S.t > f.pumpAt && f.done < f.liters){ const l = Math.min(f.lpm, f.liters - f.done), c = l * fuelPrice(); if (c > S.cash){ f.liters = f.done; f.until = S.t + PUMP.stow; } else { b.fuel = Math.min(BOAT.fuelCap, b.fuel + l); f.done += l; S.cash -= c; S.stats.costs += c; if (f.done >= f.liters - 0.01) f.until = Math.min(f.until, S.t + PUMP.stow); } }
+    if (S.t >= f.until){ b.fueling = null; log('Fylte ' + fmt(f.done, 0) + ' L for ' + kr(Math.round(f.done * fuelPrice())) + '.', 'Filled ' + fmt(f.done, 0) + ' L for ' + kr(Math.round(f.done * fuelPrice())) + '.'); }
+  }
+  const s = b.shift;
+  if (s && S.t >= s.until){
+    b.shift = null; b.berth = s.to; const pt = portById(b.port), a = b.after; b.after = null;
+    log('Fortøyd ved ' + (s.to === 'bunker' ? 'bunkerskaia' : 'mottakskaia') + ' i ' + pt.name + '.', 'Made fast at the ' + (s.to === 'bunker' ? 'bunker quay' : 'plant\'s quay') + ' in ' + pt.name + '.');
+    if (a === 'fuel' || a === 'fuelops') startFueling(a === 'fuelops');
+    else if (a === 'land' || a === 'landops') startLanding(a === 'landops');
+    else if (a === 'ice') buyIce(50);
+  }
+}
+// ice comes down the plant's chute, so the boat has to lie at the plant's quay
+function buyIce(kg){
+  const b = S.boat, pt = portById(b.port); if (b.status !== 'port' || !pt || !pt.ice) return false;
+  if (berthKind(b) !== 'main') return startShift('main', 'ice');
+  kg = Math.min(kg, BOAT.iceCap - b.ice); const c = kg * PRICE.ice; if (kg <= 0 || c > S.cash) return false;
+  b.ice += kg; S.cash -= c; S.stats.costs += c; iceChute(kg); return true;
+}

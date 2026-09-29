@@ -192,6 +192,13 @@ function landText(short){
   return st.phase === 'prep' ? L('Mottaket gjør klar kranen og trucken.', 'The plant is getting the crane and the forklift ready.') : st.phase === 'note' ? L('Alt er på kaia. Fangsten veies inn.', 'Everything is ashore. The catch is being weighed in.')
     : L(st.units + ' av ' + L0.n + ' ' + u + ' er på kaia.', st.units + ' of ' + L0.n + ' ' + u + ' are ashore.');
 }
+// what is going on at the quay besides a landing: moving to the other quay, or the pump running
+function quayText(short){
+  const b = S.boat, L = (no, en) => S.lang === 'no' ? no : en;
+  if (b.shift){ const to = b.shift.to === 'bunker'; return short ? [to ? L('Går til bunkerskaia', 'To the bunker quay') : L('Går til mottakskaia', 'To the plant\'s quay'), to ? L('Til bunkers', 'To bunker') : L('Til mottak', 'To plant')] : (to ? L('Båten går bort til bunkerskaia.', 'The boat is moving to the bunker quay.') : L('Båten går tilbake til mottakskaia.', 'The boat is moving back to the plant\'s quay.')); }
+  if (b.fueling){ const f = b.fueling, n = fmt(f.done, 0) + ' / ' + fmt(f.liters, 0) + ' L'; return short ? [L('Fyller ', 'Filling ') + n, n] : L('Pumpa går: ' + n + ', ferdig ca. kl. ' + hm(f.until / 60) + '.', 'The pump is running: ' + n + ', done at about ' + hm(f.until / 60) + '.'); }
+  return '';
+}
 function panelPort(){
   const b = S.boat, H = S.t / 60, h = [];
   if (b.status === 'port'){
@@ -200,10 +207,11 @@ function panelPort(){
     h.push('<h3>' + p.name + '</h3><div class="kv"><span>' + t('services') + '</span><span>' + svc.join(', ') + '</span></div>');
     const btn = [];
     const tot = holdTotal();
+    if (b.shift || b.fueling) h.push('<p class="note">' + quayText(false) + '</p>');
     if (b.land) h.push('<p class="note"><b>' + (S.lang === 'no' ? 'Lossing: ' : 'Landing: ') + '</b>' + landText(false) + ' ' + (S.lang === 'no' ? 'Sluttseddelen kommer ca. kl. ' : 'The landing note comes at about ') + hm(b.land.until / 60) + '.</p>');
-    else if (p.mottak && tot > 0) btn.push('<button class="btn primary" data-act="sell">' + t('sell', fmt(tot, 0)) + '</button>');
-    if (p.fuel){ const need = BOAT.fuelCap - b.fuel; btn.push('<button class="btn" data-act="fuel"' + (need < 0.5 ? ' disabled' : '') + '>' + t('fill_fuel', fmt(need, 0), kr(need * fuelPrice())) + '</button>'); }
-    if (p.ice) btn.push('<button class="btn" data-act="ice"' + (b.ice > BOAT.iceCap - 1 ? ' disabled' : '') + '>' + t('buy_ice', kr(50 * PRICE.ice)) + '</button>');
+    else if (p.mottak && tot > 0 && !b.shift && !b.fueling) btn.push('<button class="btn primary" data-act="sell">' + t('sell', fmt(tot, 0)) + '</button>');
+    if (p.fuel){ const need = BOAT.fuelCap - b.fuel; btn.push('<button class="btn" data-act="fuel"' + (need < 0.5 || portBusy(b) ? ' disabled' : '') + '>' + t('fill_fuel', fmt(need, 0), kr(need * fuelPrice())) + '</button>'); }
+    if (p.ice) btn.push('<button class="btn" data-act="ice"' + (b.ice > BOAT.iceCap - 1 || b.shift || b.land && berthKind(b) !== 'main' ? ' disabled' : '') + '>' + t('buy_ice', kr(50 * PRICE.ice)) + '</button>');
     if (!b.gear) btn.push('<button class="btn" data-act="gear">' + t('buy_gear', kr(PRICE.gear)) + '</button>');
     h.push('<div class="btns">' + btn.join('') + '</div>');
     if (!p.mottak) h.push('<p class="note">' + t('no_mottak') + '</p>');

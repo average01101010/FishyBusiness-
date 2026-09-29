@@ -40,20 +40,8 @@ function doAct(el){
   else if (act === 'startfish'){ b.status = 'fishing'; b.fishUntil = S.t + S.fishPlanH * 60; log('Starter fiske i ' + S.fishPlanH + ' t.', 'Fishing for ' + S.fishPlanH + ' h.'); }
   else if (act === 'stopfish'){ b.fishUntil = S.t; S.plan = null; endFishing('done'); }
   else if (act === 'sell') startLanding(false);
-  else if (act === 'fuel'){
-    if (!(portById(b.port) || {}).fuel) return;
-    const fp = fuelPrice(); let l = BOAT.fuelCap - b.fuel; const cost = l * fp;
-    if (S.cash <= 0){ toast(t('no_cash')); return; }
-    if (cost > S.cash) l = S.cash / fp;
-    b.fuel += l; S.cash -= l * fp; S.stats.costs += l * fp;
-    log('Fylte ' + Math.round(l) + ' L ' + (BOAT.diesel ? 'diesel' : 'bensin') + '.', 'Filled ' + Math.round(l) + ' L of ' + (BOAT.diesel ? 'diesel' : 'petrol') + '.');
-  }
-  else if (act === 'ice'){
-    if (!(portById(b.port) || {}).ice) return;
-    const kg = Math.min(50, BOAT.iceCap - b.ice), c = kg * PRICE.ice;
-    if (c > S.cash){ toast(t('no_cash')); return; }
-    b.ice += kg; S.cash -= c; S.stats.costs += c; iceChute(kg);
-  }
+  else if (act === 'fuel'){ if (S.cash <= 0){ toast(t('no_cash')); return; } startFueling(false); }
+  else if (act === 'ice'){ if (50 * PRICE.ice > S.cash){ toast(t('no_cash')); return; } buyIce(50); }
   else if (act === 'gear'){ if (PRICE.gear > S.cash){ toast(t('no_cash')); return; } b.gear = true; S.cash -= PRICE.gear; S.stats.costs += PRICE.gear; }
   else if (act === 'reset'){ if (confirm(t('reset_q'))){ const lang = S.lang; S = newState(); S.lang = lang; S.intro = true; S.draft = []; ensureFleet(); save(); refreshAll(); } return; }
   renderPanel(); renderDyn(); renderHud(); renderClock(); renderActs(); save();
