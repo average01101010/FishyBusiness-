@@ -83,8 +83,9 @@ function newsForDay(day){
 const OPS_DAYS_NO = ['Ma', 'Ti', 'On', 'To', 'Fr', 'Lø', 'Sø'], OPS_DAYS_EN = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 function opsSkipper(){ return S.ops && S.crew.find(c => c.id === S.ops.skipper) || null; }
 function autoRestock(){
-  const b = S.boat, fp = fuelPrice(); let l = BOAT.fuelCap - b.fuel; if (l > 0.5 && S.cash > 0){ l = Math.min(l, S.cash / fp); b.fuel += l; S.cash -= l * fp; S.stats.costs += l * fp; }
-  if (S.settings.ice !== false){ const kg = Math.max(0, BOAT.iceCap - b.ice), c = kg * PRICE.ice; if (kg > 0 && c <= S.cash){ b.ice += kg; S.cash -= c; S.stats.costs += c; } }
+  // only what the harbour sells: fuel at the bunker quays, ice at the fish plants
+  const b = S.boat, fp = fuelPrice(), pt = portById(b.port) || {}; let l = BOAT.fuelCap - b.fuel; if (pt.fuel && l > 0.5 && S.cash > 0){ l = Math.min(l, S.cash / fp); b.fuel += l; S.cash -= l * fp; S.stats.costs += l * fp; }
+  if (pt.ice && S.settings.ice !== false){ const kg = Math.max(0, BOAT.iceCap - b.ice), c = kg * PRICE.ice; if (kg > 0 && c <= S.cash){ b.ice += kg; S.cash -= c; S.stats.costs += c; } }
   if (!b.gear && PRICE.gear <= S.cash){ b.gear = true; S.cash -= PRICE.gear; S.stats.costs += PRICE.gear; }
 }
 function opsStep(H){

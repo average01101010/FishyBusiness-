@@ -152,11 +152,17 @@ function legClear(a, b){
 }
 
 const PORTS = [
-  {id:'finnsnes', name:'Finnsnes', xy:[55.838,54.288], shore:[55.888,54.288], pier:false, fuel:true, ice:true, mottak:false, pf:1, home:true},
+  // the fish plants are where Råfisklaget lists landings on Senja and at Sommarøy and Brensholmen; Finnsnes has a net loft and gear dealers but no plant and no ice
+  {id:'finnsnes', name:'Finnsnes', xy:[55.838,54.288], shore:[55.888,54.288], pier:false, fuel:true, ice:false, mottak:false, pf:1, home:true},
   {id:'botnhamn', name:'Botnhamn', xy:[53.208,23.505], shore:[53.19,23.559], pier:true, fuel:false, ice:true, mottak:true, pf:1.0},
   {id:'husoy', name:'Husøy', xy:[43.838,19.863], shore:[43.819,19.779], pier:true, fuel:true, ice:true, mottak:true, pf:1.03},
   {id:'senjahopen', name:'Senjahopen', xy:[36.662,25.316], shore:[36.599,25.255], pier:true, fuel:true, ice:true, mottak:true, pf:1.02},
-  {id:'gryllefjord', name:'Gryllefjord', xy:[19.888,39.688], shore:[19.816,39.699], pier:true, fuel:false, ice:true, mottak:true, pf:0.97}
+  {id:'gryllefjord', name:'Gryllefjord', xy:[19.888,39.688], shore:[19.816,39.699], pier:true, fuel:true, ice:true, mottak:true, pf:0.97},
+  // new plants: the berth is on the water side of the OpenStreetMap quay nearest the largest industrial building
+  {id:'sommaroy', name:'Sommarøy', xy:[56.761,9.545], shore:[56.736,9.511], pier:true, fuel:false, ice:true, mottak:true, pf:1.0},
+  {id:'brensholmen', name:'Brensholmen', xy:[58.589,12.628], shore:[58.626,12.649], pier:true, fuel:false, ice:true, mottak:true, pf:0.99},
+  {id:'torsken', name:'Torsken', xy:[21.777,42.581], shore:[21.737,42.569], pier:true, fuel:false, ice:true, mottak:true, pf:0.99},
+  {id:'frovag', name:'Frovåg', xy:[19.705,71.668], shore:[19.700,71.710], pier:true, fuel:false, ice:true, mottak:true, pf:0.98}
 ].map((p, i) => ({...p, i, p:{x:p.xy[0], y:p.xy[1]}, coast:{x:p.shore[0], y:p.shore[1]}}));
 const portById = id => PORTS.find(p => p.id === id);
 function portApproach(pt){

@@ -41,6 +41,7 @@ function doAct(el){
   else if (act === 'stopfish'){ b.fishUntil = S.t; S.plan = null; endFishing('done'); }
   else if (act === 'sell') sell();
   else if (act === 'fuel'){
+    if (!(portById(b.port) || {}).fuel) return;
     const fp = fuelPrice(); let l = BOAT.fuelCap - b.fuel; const cost = l * fp;
     if (S.cash <= 0){ toast(t('no_cash')); return; }
     if (cost > S.cash) l = S.cash / fp;
@@ -48,6 +49,7 @@ function doAct(el){
     log('Fylte ' + Math.round(l) + ' L ' + (BOAT.diesel ? 'diesel' : 'bensin') + '.', 'Filled ' + Math.round(l) + ' L of ' + (BOAT.diesel ? 'diesel' : 'petrol') + '.');
   }
   else if (act === 'ice'){
+    if (!(portById(b.port) || {}).ice) return;
     const kg = Math.min(50, BOAT.iceCap - b.ice), c = kg * PRICE.ice;
     if (c > S.cash){ toast(t('no_cash')); return; }
     b.ice += kg; S.cash -= c; S.stats.costs += c;

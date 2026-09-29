@@ -197,6 +197,7 @@ function panelPort(){
     if (!b.gear) btn.push('<button class="btn" data-act="gear">' + t('buy_gear', kr(PRICE.gear)) + '</button>');
     h.push('<div class="btns">' + btn.join('') + '</div>');
     if (!p.mottak) h.push('<p class="note">' + t('no_mottak') + '</p>');
+    if (!p.ice) h.push('<p class="note">' + (S.lang === 'no' ? 'Is får du kjøpt på fiskemottakene.' : 'Ice is sold at the fish plants.') + '</p>');
     const ls = S.lastSale;
     if (ls && ls.port === b.port && S.t - ls.t < 240){
       const LN = (no, en) => S.lang === 'no' ? no : en;
