@@ -20,8 +20,9 @@ const PHONE = (() => {
     havn:SVG('<circle cx="12" cy="5" r="2"/><path d="M12 7v13"/><path d="M5 13a7 7 0 0 0 14 0"/><path d="M8 10h8"/>'),
     last:SVG('<path d="M3 8l9-4 9 4v9l-9 4-9-4z"/><path d="M3 8l9 4 9-4M12 12v9"/>'),
     logg:SVG('<path d="M6 3h12v18H6z"/><path d="M9 8h6M9 12h6M9 16h4"/>'),
+    rederi:SVG('<path d="M4 20V10l6-3v13"/><path d="M10 20V5l9 4v11"/><path d="M2 20h20"/><path d="M13 10h3M13 13h3M13 16h3M6 13h2M6 16h2"/>'),
     innst:SVG('<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>')};
-  const APPS = [['vaer', 'Vær', 'Weather', '#2f7fd0'], ['post', 'Kystposten', 'Coast Post', '#b8402f'], ['salg', 'Salgslaget', 'Sales', '#1e8c6e'], ['redning', 'Redning', 'Rescue', '#e0562b'], ['fartoy', 'Fartøy', 'Vessels', '#28507f'], ['utstyr', 'Utstyr', 'Equipment', '#6b5bb5'], ['mannskap', 'Mannskap', 'Crew', '#b0772b'], ['bors', 'Mannskapsbørs', 'Crew exchange', '#2d6a8f'], ['bank', 'Kystbanken', 'Bank', '#3b6e4f'], ['meld', 'Meldinger', 'Messages', '#29a36a'], ['verksted', 'Verksted', 'Workshop', '#8b4b2b'], ['havn', 'Havn', 'Harbour', '#0f7c8c'], ['haill', 'Haill', 'Luck', '#c9a227'], ['last', 'Last', 'Hold', '#8a6a34'], ['innst', 'Innstillinger', 'Settings', '#4a5560']];
+  const APPS = [['vaer', 'Vær', 'Weather', '#2f7fd0'], ['post', 'Kystposten', 'Coast Post', '#b8402f'], ['salg', 'Salgslaget', 'Sales', '#1e8c6e'], ['redning', 'Redning', 'Rescue', '#e0562b'], ['fartoy', 'Fartøy', 'Vessels', '#28507f'], ['rederi', 'Rederi', 'Company', '#1f4e79'], ['utstyr', 'Utstyr', 'Equipment', '#6b5bb5'], ['mannskap', 'Mannskap', 'Crew', '#b0772b'], ['bors', 'Mannskapsbørs', 'Crew exchange', '#2d6a8f'], ['bank', 'Kystbanken', 'Bank', '#3b6e4f'], ['meld', 'Meldinger', 'Messages', '#29a36a'], ['verksted', 'Verksted', 'Workshop', '#8b4b2b'], ['havn', 'Havn', 'Harbour', '#0f7c8c'], ['haill', 'Haill', 'Luck', '#c9a227'], ['last', 'Last', 'Hold', '#8a6a34'], ['innst', 'Innstillinger', 'Settings', '#4a5560']];
   const unread = () => S.msgs.filter(m => !m.read).length;
   function setBadge(){ const n = unread(); for (const bd of [badge, $('phoneBadge2')]){ bd.hidden = !n; bd.textContent = n; } }
   // --- workshop: service, fitting and getting the gear ready, one job after the other while the boat is in port
@@ -81,12 +82,12 @@ const PHONE = (() => {
     a.textContent = hm(H); d.textContent = dayStr(H); w1.textContent = dirName(windDir(H)) + ' ' + fmt(windAt(H), 0) + ' m/s · ' + fmt(Math.round(airTemp(H)) || 0, 0) + ' °C'; w2.textContent = kr(S.cash);
   }
   function render(){ status(); setBadge(); if (!isOpen) return; view.innerHTML = app === 'home' ? home() : shell(app); view.scrollTop = 0; }
-  function shell(a){ const d = APPS.find(x => x[0] === a); return '<div class="ph-appv' + (a === 'post' ? ' ph-paper' : '') + '"><div class="ph-top" style="background:' + d[3] + '"><span class="ic">' + IC[a] + '</span>' + L(d[1], d[2]) + '</div>' + ({vaer, post, salg, redning, fartoy, utstyr, mannskap, bors, bank, meld, verksted, havn, haill, last, logg, innst}[a])() + '</div>'; }
+  function shell(a){ const d = APPS.find(x => x[0] === a), f = {vaer, post, salg, redning, fartoy, rederi, utstyr, mannskap, bors, bank, meld, verksted, havn, haill, last, logg, innst}[a]; return '<div class="ph-appv' + (a === 'post' ? ' ph-paper' : '') + '"><div class="ph-top" style="background:' + d[3] + '"><span class="ic">' + IC[a] + '</span>' + L(d[1], d[2]) + '</div>' + (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) + '</div>'; }
   function home(){
-    const H = S.t / 60, W = windAt(H), n = unread();
+    const H = S.t / 60, W = windAt(H), n = unread(), na = alerts().length;
     return '<div class="ph-homescr"><div class="ph-clock">' + hm(H) + '</div><div class="ph-date">' + dayStr(H) + '</div>' +
       '<div class="ph-widget"><span class="w1">' + dirName(windDir(H)) + ' ' + fmt(W, 0) + ' m/s · ' + fmt(Math.round(airTemp(H)) || 0, 0) + ' °C</span><span class="w2">' + kr(S.cash) + '</span></div>' +
-      '<div class="ph-grid">' + APPS.map(a => '<button class="ph-app" data-pa="open" data-a="' + a[0] + '"><span class="ic" style="background:linear-gradient(160deg,' + a[3] + ',' + a[3] + 'cc)">' + IC[a[0]] + '</span>' + L(a[1], a[2]) + (a[0] === 'meld' && n ? '<span class="bd">' + n + '</span>' : '') + '</button>').join('') + '</div></div>';
+      '<div class="ph-grid">' + APPS.map(a => '<button class="ph-app" data-pa="open" data-a="' + a[0] + '"><span class="ic" style="background:linear-gradient(160deg,' + a[3] + ',' + a[3] + 'cc)">' + IC[a[0]] + '</span>' + L(a[1], a[2]) + (a[0] === 'meld' && n ? '<span class="bd">' + n + '</span>' : '') + (a[0] === 'rederi' && na ? '<span class="bd">' + na + '</span>' : '') + '</button>').join('') + '</div></div>';
   }
   const kv = (a, b) => '<div class="ph-kv"><span>' + a + '</span><span>' + b + '</span></div>';
   const subs = (a, list) => '<div class="ph-sub">' + list.map(([k, no, en]) => '<button class="' + ((sub[a] || list[0][0]) === k ? 'on' : '') + '" data-pa="sub" data-s="' + k + '">' + L(no, en) + '</button>').join('') + '</div>';
@@ -188,20 +189,7 @@ const PHONE = (() => {
   function fartoy(){
     const b = S.boat, V = VESSELS[b.type], s0 = sub.fartoy || 'min', h = [subs('fartoy', [['min', 'Min båt', 'My vessel'], ['marked', 'Marked', 'Market']]), '<div class="ph-c">'];
     if (s0 === 'min'){
-      // the fleet: one card per vessel
-      h.push('<h4 style="margin:4px 2px 6px">' + L('Flåten', 'The fleet') + '</h4>');
-      const meV = vesselById(S.me), meIn = !meV || vget(meV, 'boat').status === 'port';
-      for (const v of S.fleet){
-        const vb = vget(v, 'boat'), cur = v.id === S.cur, me = v.id === S.me, inp = vb.status === 'port';
-        h.push('<div class="ph-card"><h4>«' + vget(v, 'boatName') + '»' + (me ? ' ⚓' : '') + '</h4>' + kv(L('Båt', 'Vessel'), VESSELS[vb.type].name[S.lang]) + kv('Status', inp ? L('i havn i ', 'in port at ') + portById(vb.port).name : L('på sjøen', 'at sea')) + '<p class="ph-note">' + L('Adgang: ', 'Access: ') + accessText(v) + '</p>' +
-          (me ? '<p class="ph-note">' + L('Du er om bord på denne båten.', 'You are aboard this vessel.') + '</p>' : '') + (cur && S.fleet.length > 1 ? '<p class="ph-note">' + L('Denne båten følger du nå.', 'You are following this vessel.') + '</p>' : '') +
-          '<div class="ph-btncol">' + (cur ? '' : '<button class="ph-btn p" data-pa="vfollow" data-id="' + v.id + '">' + L('Følg denne båten', 'Follow this vessel') + '</button>') +
-          (me ? '' : '<button class="ph-btn" data-pa="vboard" data-id="' + v.id + '"' + (inp && meIn ? '' : ' disabled') + '>' + L('Gå om bord', 'Go aboard') + '</button>') +
-          '<button class="ph-btn alt" data-pa="vname" data-id="' + v.id + '">' + L('Gi nytt navn', 'Rename') + '</button>' +
-          (me || S.fleet.length < 2 ? '' : '<button class="ph-btn red" data-pa="vsell" data-id="' + v.id + '"' + (inp && !tiLocked(v) ? '' : ' disabled') + '>' + L('Selg for ', 'Sell for ') + kr(vesselValue(v)) + '</button>') + '</div>' +
-          (!me && !(inp && meIn) ? '<p class="ph-note">' + L('For å bytte båt må begge ligge i havn.', 'To change vessel, both must be in port.') + '</p>' : '') + '</div>');
-      }
-      if (S.fleet.length > 1) h.push('<h4 style="margin:10px 2px 6px">«' + S.boatName + '»</h4>');
+      h.push('<div class="ph-card"><h4>«' + S.boatName + '»' + (meAboard() ? ' ⚓' : '') + '</h4><p class="ph-note">' + L('Adgang: ', 'Access: ') + accessText(curVessel()) + '</p>' + (S.fleet.length > 1 ? '<button class="ph-btn alt" data-pa="open" data-a="rederi">' + L('Hele flåten i Rederi-appen', 'The whole fleet in the Company app') + '</button>' : '') + '</div>');
       const svcLeft = V.svcH - ((b.engH || 0) - (b.svcAt || 0)), svcPct = clamp(1 - svcLeft / V.svcH, 0, 1), cls = svcPct > 0.9 ? 'bad' : svcPct > 0.7 ? 'warn' : '';
       const bar = (a, c, k) => '<div class="ph-bar"><i class="' + (k || '') + '" style="width:' + Math.round(clamp(a / c, 0, 1) * 100) + '%"></i></div>';
       h.push('<div class="ph-card"><h4>' + V.name[S.lang] + '</h4>' + kv(L('Lengde', 'Length'), fmt(V.len, 1) + ' m') + kv(L('Toppfart', 'Top speed'), BOAT.vmax + ' kn') + kv(L('Drivstoff', 'Fuel'), BOAT.diesel ? 'Diesel' : L('Bensin', 'Petrol')) + kv(L('Tåler', 'Handles'), L('bølger til ', 'waves up to ') + fmt(BOAT.risk[0], 1) + ' m ' + L('trygt', 'safely')) + '</div>');
@@ -216,7 +204,8 @@ const PHONE = (() => {
       { const steps = [];
         if (!S.boat.gear) steps.push([L('Håndjuksa med pilk og markkroker', 'Hand jig with pilk and fly hooks'), PRICE.gear, false]);
         if ((S.equip.jukse || 0) < 1) steps.push([L('Første juksamaskin', 'First jigging machine'), EQUIP.jukse.price, false]);
-        for (const k of ['snekke', 'sjark']) if (!S.owned.includes(k) && VESSELS[k].price > VESSELS[S.boat.type].price) steps.push([VESSELS[k].name[S.lang], VESSELS[k].price, true]);
+        const owned = S.fleet.map(v => vget(v, 'boat').type);
+        for (const k of ['snekke', 'sjark']) if (!owned.includes(k) && VESSELS[k].price > VESSELS[S.boat.type].price) steps.push([VESSELS[k].name[S.lang], VESSELS[k].price, true]);
         for (const O of LIC_OFFERS) if (!(S.lic && S.lic.id === O.id)) steps.push([O[S.lang], VESSELS[O.ves].price + licValue(O), true]);
         const g = steps.slice(0, 2).map(([n, pr, bank]) => { const need = bank ? Math.max(0, pr * 0.2 - ti) + 5000 : pr, pc = Math.min(1, Math.max(0, S.cash) / Math.max(1, need));
           return '<p style="margin:6px 0 2px"><b>' + n + '</b><br><small>' + (bank ? L('Egenkapital banken krever: ', 'Equity the bank wants: ') : L('Pris: ', 'Price: ')) + kr(need) + (bank && S.sales.length < 3 ? ' · ' + L('og tre sluttsedler', 'and three landing notes') : '') + '</small></p><div class="qbar"><i style="width:' + (pc * 100).toFixed(1) + '%"></i></div>'; });
@@ -242,6 +231,57 @@ const PHONE = (() => {
       }
       if (!inPort()) h.push('<p class="ph-note">' + L('Båthandel gjøres i havn.', 'Vessel deals are done in port.') + '</p>');
     }
+    h.push('</div>'); return h.join('');
+  }
+  // --- the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
+  const SEL_APPS = ['fartoy', 'utstyr', 'mannskap', 'bors', 'verksted'];
+  let selV = null;
+  const selVessel = () => (selV && vesselById(selV)) || curVessel();
+  const withSel = fn => withVessel(selVessel(), fn);
+  function selRow(){ if (S.fleet.length < 2) return ''; const s0 = selVessel(); return '<div class="ph-sub">' + S.fleet.map(v => '<button class="' + (v === s0 ? 'on' : '') + '" data-pa="vsel" data-id="' + v.id + '">' + vget(v, 'boatName') + (v.id === S.me ? ' ⚓' : '') + '</button>').join('') + '</div>'; }
+  // the bound vessel at a glance, with what needs attention
+  function vSummary(){
+    const b = S.boat, H = S.t / 60, o = S.ops, sk = opsSkipper(), day = gDate(H).toISOString().slice(0, 10), al = [];
+    const inc = S.sales.filter(x => x.v === S.cur && gDate(x.t / 60).toISOString().slice(0, 10) === day).reduce((a, x) => a + x.total, 0);
+    const A = (k, no, en, app) => al.push({id:S.cur, k, no, en, app});
+    if (b.status === 'engine') A('eng', 'Motorstopp', 'Engine stopped', 'redning');
+    if (b.status === 'adrift') A('drift', 'Driver uten drivstoff', 'Adrift without fuel', 'redning');
+    if (b.fuel < BOAT.fuelCap * 0.2) A('fuel', 'Lite drivstoff, ' + fmt(b.fuel, 0) + ' L', 'Low on fuel, ' + fmt(b.fuel, 0) + ' L', 'havn');
+    if (b.status !== 'port' && S.settings.ice && b.ice < 1 && holdTotal() > 0) A('ice', 'Tom for is, fangsten ises ikke', 'Out of ice, the catch is not iced', 'last');
+    if (b.status !== 'port' && holdTotal() >= capHold() - 1) A('full', 'Full last', 'Hold full', 'last');
+    if (svcOverdue() > 0) A('svc', 'Motorservice er forfalt', 'Engine service overdue', 'verksted');
+    if (S.cevt) A('cevt', 'Uløst krangel om bord', 'Unresolved quarrel aboard', 'mannskap');
+    for (const c of S.crew) if ((c.low || 0) > 12) A('quit' + c.id, c.name.split(' ')[0] + ' vurderer å slutte', c.name.split(' ')[0] + ' is thinking of quitting', 'mannskap');
+    if (o && o.on && !sk) A('ops', 'Driftsplanen mangler skipper', 'The standing plan has no skipper', 'mannskap');
+    if (o && o.on && b.status === 'port' && b.port !== o.home) A('opsport', 'Ligger ikke i ' + portById(o.home).name + ', der driftsplanen starter', 'Not at ' + portById(o.home).name + ', where the standing plan starts', 'mannskap');
+    if (access() !== 'none'){ const lim = codLimitNow(H); if (lim > 0 && quotaState().torsk >= lim * 0.9) A('quota', 'Torskekvoten er nesten brukt opp', 'The cod quota is nearly used up', 'salg'); }
+    let next = null; if (o && o.on) for (let k = 0; k < 8 && next == null; k++){ const Hd = Math.floor((H + 6) / 24) * 24 - 6 + k * 24 + o.dep, wd = (gDate(Hd).getUTCDay() + 6) % 7; if (o.days[wd] && Hd > H) next = Hd; }
+    return {name:S.boatName, type:b.type, status:statusText(), pos:b.status === 'port' ? portById(b.port).name : fieldCode(b.pos) + ' · ' + L('nær ', 'near ') + nearestPort(b.pos).name,
+      hold:holdTotal(), cap:capHold(), fuel:b.fuel, fuelCap:BOAT.fuelCap, ice:b.ice, iceCap:BOAT.iceCap, crew:S.crew.length, crewMax:BOAT.crewMax, ops:o, sk, next, inc, al, inPort:b.status === 'port'};
+  }
+  const summaries = () => S.fleet.map(v => ({v, s:withVessel(v, vSummary)}));
+  const alerts = () => summaries().flatMap(x => x.s.al);
+  function rederi(){
+    const all = summaries(), al = all.flatMap(x => x.s.al), bar = (a, c, k) => '<div class="ph-bar"><i class="' + (k || '') + '" style="width:' + Math.round(clamp(a / Math.max(1, c), 0, 1) * 100) + '%"></i></div>';
+    const h = ['<div class="ph-c"><div class="ph-card"><h4>' + (S.company || L('Rederiet', 'The company')) + '</h4>' + kv(L('Båter', 'Vessels'), all.length) + kv(L('Konto', 'Account'), kr(S.cash)) + kv(L('Inntekt i dag', 'Income today'), kr(Math.round(all.reduce((a, x) => a + x.s.inc, 0)))) + '</div>'];
+    h.push('<h4 style="margin:10px 2px 6px">' + L('Trenger deg', 'Needs you') + (al.length ? ' (' + al.length + ')' : '') + '</h4>');
+    if (!al.length) h.push('<p class="ph-note">' + L('Alt er i orden i flåten.', 'All is well in the fleet.') + '</p>');
+    for (const a of al) h.push('<div class="ph-card"><div class="ph-kv"><span><b>«' + vget(vesselById(a.id), 'boatName') + '»</b> ' + L(a.no, a.en) + '</span><span><button class="ph-btn" style="margin:0" data-pa="goto" data-id="' + a.id + '" data-a="' + a.app + '">' + L('Åpne', 'Open') + '</button></span></div></div>');
+    h.push('<h4 style="margin:10px 2px 6px">' + L('Flåten', 'The fleet') + '</h4>');
+      const meV = vesselById(S.me), meIn = !meV || vget(meV, 'boat').status === 'port';
+      for (const {v, s: sm} of all){
+        const vb = vget(v, 'boat'), cur = v.id === S.cur, me = v.id === S.me, inp = vb.status === 'port';
+        h.push('<div class="ph-card"><h4>«' + vget(v, 'boatName') + '»' + (me ? ' ⚓' : '') + '</h4>' + '<p class="ph-note">' + VESSELS[vb.type].name[S.lang] + '</p>' + kv('Status', sm.status) + kv(L('Posisjon', 'Position'), sm.pos) +
+          kv(L('Last', 'Hold'), fmt(sm.hold, 0) + ' / ' + fmt(sm.cap, 0) + ' kg') + bar(sm.hold, sm.cap) + kv(L('Drivstoff', 'Fuel'), fmt(sm.fuel, 0) + ' / ' + sm.fuelCap + ' L') + bar(sm.fuel, sm.fuelCap, sm.fuel < sm.fuelCap * 0.2 ? 'bad' : '') + kv(L('Is', 'Ice'), fmt(sm.ice, 0) + ' / ' + sm.iceCap + ' kg') +
+          kv(L('Mannskap', 'Crew'), sm.crew + ' / ' + sm.crewMax) + kv(L('Driftsplan', 'Standing plan'), !sm.ops ? L('ingen', 'none') : sm.ops.on ? (sm.sk ? sm.sk.name.split(' ')[0] + ', ' : '') + (sm.next ? L('neste ', 'next ') + dayStr(sm.next / 60) + ' ' + hm(sm.next / 60) : L('ingen dager valgt', 'no days chosen')) : L('av', 'off')) + kv(L('Inntekt i dag', 'Income today'), kr(Math.round(sm.inc))) +
+          '<p class="ph-note">' + L('Adgang: ', 'Access: ') + accessText(v) + '</p>' +
+          (me ? '<p class="ph-note">' + L('Du er om bord på denne båten.', 'You are aboard this vessel.') + '</p>' : '') + (cur && S.fleet.length > 1 ? '<p class="ph-note">' + L('Denne båten følger du nå.', 'You are following this vessel.') + '</p>' : '') +
+          '<div class="ph-btncol">' + (cur ? '' : '<button class="ph-btn p" data-pa="vfollow" data-id="' + v.id + '">' + L('Følg denne båten', 'Follow this vessel') + '</button>') +
+          (me ? '' : '<button class="ph-btn" data-pa="vboard" data-id="' + v.id + '"' + (inp && meIn ? '' : ' disabled') + '>' + L('Gå om bord', 'Go aboard') + '</button>') +
+          '<button class="ph-btn alt" data-pa="vname" data-id="' + v.id + '">' + L('Gi nytt navn', 'Rename') + '</button>' +
+          (me || S.fleet.length < 2 ? '' : '<button class="ph-btn red" data-pa="vsell" data-id="' + v.id + '"' + (inp && !tiLocked(v) ? '' : ' disabled') + '>' + L('Selg for ', 'Sell for ') + kr(vesselValue(v)) + '</button>') + '</div>' +
+          (!me && !(inp && meIn) ? '<p class="ph-note">' + L('For å bytte båt må begge ligge i havn.', 'To change vessel, both must be in port.') + '</p>' : '') + '</div>');
+      }
     h.push('</div>'); return h.join('');
   }
   // --- equipment
@@ -350,7 +390,12 @@ const PHONE = (() => {
     S.loan = {bal, rate, pay:Math.round(bal * r / (1 - Math.pow(1 + r, -n))), next:S.loan ? S.loan.next : S.t + 30 * 24 * 60};
     S.cash += amount; msg('Kystbanken', 'Lånet på ' + Math.round(amount) + ' kr er utbetalt. Terminbeløp ' + S.loan.pay + ' kr.', 'The loan of NOK ' + Math.round(amount) + ' has been paid out. Monthly payment NOK ' + S.loan.pay + '.');
   }
+  const NAV = new Set(['open', 'home', 'back', 'close', 'lang', 'sub', 'salgW', 'vsel', 'goto', 'vfollow', 'vboard', 'vname', 'vsell']);
   function act(a, d){
+    const done = SEL_APPS.includes(app) && !NAV.has(a) ? withSel(() => act0(a, d)) : act0(a, d);
+    if (done) { save(); renderHud(); renderClock(); panelDirty = true; render(); }
+  }
+  function act0(a, d){
     const b = S.boat;
     if (a === 'open'){ app = d.a; confirmMayday = false; }
     else if (a === 'home'){ app = 'home'; }
@@ -388,7 +433,9 @@ const PHONE = (() => {
       else { const v = newVesselObj(d.k, S.boat.port); log('Kjøpte ' + V2.name.no + ' til flåten. Hun heter «' + v.boatName + '» og ligger i ' + portById(S.boat.port).name + '.', 'Bought the ' + V2.name.en + ' for the fleet. She is called «' + v.boatName + '» and lies at ' + portById(S.boat.port).name + '.'); }
       if (ti && S.lic){ log('Kvoten i lukket gruppe fulgte med den gamle båten.', 'The closed-group quota went with the old vessel.'); S.lic = null; }
     }
-    else if (a === 'vfollow'){ const v = vesselById(d.id); if (!v || v.id === S.cur) return; storeVessel(curVessel()); bindVessel(v); if (typeof G3 !== 'undefined') G3.vesselChanged(); refreshAll(); }
+    else if (a === 'vsel'){ selV = d.id; }
+    else if (a === 'goto'){ const v = vesselById(d.id); if (!v) return; if (SEL_APPS.includes(d.a)) selV = v.id; else if (v.id !== S.cur){ storeVessel(curVessel()); bindVessel(v); selV = null; if (typeof G3 !== 'undefined') G3.vesselChanged(); refreshAll(); } app = d.a; }
+    else if (a === 'vfollow'){ const v = vesselById(d.id); if (!v || v.id === S.cur) return; storeVessel(curVessel()); bindVessel(v); selV = null; if (typeof G3 !== 'undefined') G3.vesselChanged(); refreshAll(); }
     else if (a === 'vboard'){ const v = vesselById(d.id), mv = vesselById(S.me); if (!v || v.id === S.me || vget(v, 'boat').status !== 'port' || (mv && vget(mv, 'boat').status !== 'port')) return;
       S.me = v.id; log('Du gikk om bord på «' + vget(v, 'boatName') + '».', 'You went aboard the «' + vget(v, 'boatName') + '».');
       if (v.id !== S.cur){ storeVessel(curVessel()); bindVessel(v); if (typeof G3 !== 'undefined') G3.vesselChanged(); refreshAll(); } }
@@ -433,7 +480,7 @@ const PHONE = (() => {
       else { const v = newVesselObj(O.ves, S.boat.port, lic); nm = v.boatName; log('Kjøpte ' + O.no.toLowerCase() + ' til flåten. Hun heter «' + nm + '».', 'Bought a ' + O.en.toLowerCase() + ' for the fleet. She is called «' + nm + '».'); }
       msg('Fiskeridirektoratet', 'Deltakeradgangen i lukket gruppe (hjemmelslengde ' + O.hl + ') er registrert på «' + nm + '». Torskekvoten for resten av året er ' + fmt(O.cod / 1000, 2) + ' tonn, fratrukket det båten har fisket i år.' + (lost ? ' Rederiet har nå en båt i lukket gruppe, så «' + lost + '» kan ikke lenger delta i åpen gruppe.' : ''), 'The closed-group participation right (quota length ' + O.hl + ') is registered to the «' + nm + '». The cod quota for the rest of the year is ' + fmt(O.cod / 1000, 2) + ' t, less what the vessel has fished this year.' + (lost ? ' The company now has a vessel in the closed group, so the «' + lost + '» can no longer take part in the open group.' : ''));
     }
-    save(); renderHud(); renderClock(); panelDirty = true; render();
+    return true;
   }
   view.addEventListener('click', e => { const t0 = e.target.closest('[data-pa],[data-act]'); if (!t0 || t0.disabled) return; if (t0.dataset.pa) act(t0.dataset.pa, t0.dataset); else { doAct(t0); render(); } });
   view.addEventListener('input', e => panelInput(e));
@@ -441,6 +488,6 @@ const PHONE = (() => {
   el.querySelector('.ph-nav').addEventListener('click', e => { const t0 = e.target.closest('[data-pa]'); if (t0) act(t0.dataset.pa, t0.dataset); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && isOpen) show(false); });
   el.classList.add('off');
-  return {show, toggle(){ show(!isOpen); }, open(a){ show(true, a); }, isOpen:() => isOpen, render, status, setBadge, tickHome, switchVessel, get app(){ return app; }};
+  return {show, toggle(){ show(!isOpen); }, open(a){ show(true, a); }, isOpen:() => isOpen, render, status, setBadge, tickHome, switchVessel, alerts, get app(){ return app; }, get sel(){ return selVessel().id; }};
 })();
 

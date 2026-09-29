@@ -73,7 +73,7 @@ async def main():
         btn = await pg.evaluate("""(()=>{
           const R = {}; const v1 = curVessel(), v2 = S.fleet[1]; S.cash = 5e6;
           for (const v of S.fleet) withVessel(v, () => { S.plan = null; S.ops && (S.ops.on = false); S.boat.status = 'port'; S.boat.port = 'finnsnes'; S.boat.pos = {...PORTS[0].p}; });
-          PHONE.open('fartoy'); const q = s => document.querySelector(s);
+          PHONE.open('rederi'); const q = s => document.querySelector(s);
           q('[data-pa="vfollow"][data-id="' + v2.id + '"]').click(); R.follow = S.cur;
           R.hudRow = document.getElementById('hud').innerText.includes(S.boatName) && !document.getElementById('hud').innerText.includes('⚓');
           q('[data-pa="vboard"][data-id="' + v2.id + '"]').click(); R.board = S.me; R.hudAnchor = document.getElementById('hud').innerText.includes('⚓');

@@ -128,7 +128,7 @@ function sell(){
   for (const c of S.crew) c.off = false;
   S.cash += total - lott; S.stats.revenue += total; S.stats.costs += lott; S.stats.kg += kg; S.hold = [];
   const fs = S.marks.length ? S.marks[S.marks.length - 1] : null, field = fieldCode(S.fsess || fs || b.pos);
-  S.sales.push({t:S.t, port:port.id, kg:Math.round(kg), total:Math.round(total), sp:SP.map(sp => [sp, Math.round(arr.filter(r => r.sp === sp).reduce((a, r) => a + r.kg, 0))]).filter(r => r[1] > 0)}); if (S.sales.length > 200) S.sales.shift();
+  S.sales.push({t:S.t, v:S.cur, port:port.id, kg:Math.round(kg), total:Math.round(total), sp:SP.map(sp => [sp, Math.round(arr.filter(r => r.sp === sp).reduce((a, r) => a + r.kg, 0))]).filter(r => r[1] > 0)}); if (S.sales.length > 200) S.sales.shift();
   if (lott > 0) log('Mannskapet fikk ' + Math.round(lott) + ' kr i lott.', 'The crew received NOK ' + Math.round(lott) + ' as their share.');
   if (codFF > 0.5) log(Math.round(codFF) + ' kg torsk gikk på ferskfisktillegget.', Math.round(codFF) + ' kg of cod went on the fresh-fish allowance.');
   const vt = S.fleet && S.fleet.length > 1 ? '«' + S.boatName + '»: ' : '';

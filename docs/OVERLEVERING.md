@@ -26,9 +26,9 @@ Skrevet 29.09.2026 ved flytting fra claude.ai-chat til Claude Code. Dokumentet s
 
 ## 3. Status nå
 
-**Ferdig og publisert (i rekkefølge):** fiskerisystemet, redskapsstige og animasjoner, tempo 1:6, lukket gruppe-kjøp med lån, «Neste mål», haill, pub og verkstedovertid, kveitefiske med fredning, NPC-kaiplasser og trykkprioritet i kartplotteren, jevnere båtbevegelse, «Kaffe på kaia», fiskekar, rengjort bunn, bestillinger, klær og kulde, mannskapssystemet med Mannskapsbørs, **flåtemodell fase 1** og **flåtemodell fase 2** (flere båter, bygget i Claude Code).
+**Ferdig og publisert (i rekkefølge):** fiskerisystemet, redskapsstige og animasjoner, tempo 1:6, lukket gruppe-kjøp med lån, «Neste mål», haill, pub og verkstedovertid, kveitefiske med fredning, NPC-kaiplasser og trykkprioritet i kartplotteren, jevnere båtbevegelse, «Kaffe på kaia», fiskekar, rengjort bunn, bestillinger, klær og kulde, mannskapssystemet med Mannskapsbørs, **flåtemodell fase 1**, **fase 2** (flere båter) og **fase 3** (Rederiappen). Fase 2 og 3 er bygget i Claude Code.
 
-**Neste i flåteplanen:** fase 3, rederiappen. Se kapittel 9.
+**Neste:** fiskemottak, kaier og fortøyning (B1–B5 i kapittel 9), deretter fase 4 i flåteplanen.
 
 ## 4. Teknisk arkitektur
 
@@ -69,6 +69,10 @@ Skrevet 29.09.2026 ved flytting fra claude.ai-chat til Claude Code. Dokumentet s
   - `openVesselId()`, `meAboard()` og `access()` (`'lukket'`, `'open'` eller `'none'`) gir reglene i kapittel 9.
   - `onVessel(v, fn)` binder en båt og slår på båtnavn foran loggen. `eachVessel` bruker den.
   - `newVesselObj(type, havn, lic)`, `vesselValue(v)` og `deliverOrder()` (verftet).
+- **Fase 3 la til** (i telefonen, `src/js/ui/05-phone.js`):
+  - Appen `rederi` med flåtekort og varsler. `vSummary()` leser én båt mens den er bundet, og `PHONE.alerts()` gir varslene.
+  - Båtvelgeren: appene i `SEL_APPS` (Fartøy, Utstyr, Mannskap, Mannskapsbørs, Verksted) viser og endrer båten i `selV`, som standard båten du følger. Handlinger i disse appene kjøres inne i `withSel`, bortsett fra navigasjon (`NAV`).
+  - `S.sales` har båtens id i `v`. `hourly()` er delt: varsler og lån for rederiet, service per båt.
 
 ### 4.4 Konvensjoner og fallgruver i koden
 
@@ -414,9 +418,19 @@ Jonas valgte den strengt realistiske varianten.
   - Lagring og innlasting med to båter.
   - Regresjonstestene.
 
-### Fase 3: Rederiappen
+### Fase 3: Rederiappen (ferdig)
 
 Flåteoversikt med status, posisjon, last, drivstoff, skipper, driftsplan og dagens inntekt. Varsler når en båt trenger deg. Velger for hvilken båt i Mannskap, Fartøy, Utstyr og Verksted.
+
+### Havner, mottak og fortøyning (B1–B5, godkjent 29.09.2026)
+
+Mottakene ligger der Jonas har funnet dem i Råfisklagets leveranseoversikt: Husøy, Senjahopen, Botnhamn, Gryllefjord, Sommarøy, Brensholmen, Torsken og Frovåg (Brødrene Karlsen Senja, avd. Frovåg). Finnsnes har ikke mottak eller is i virkeligheten, bare bøteri og forhandler av fiskeutstyr og båter. Bunkerskai: Husøy, Senjahopen og Gryllefjord (forslag, ikke kontrollert), og Finnsnes beholder drivstoff.
+
+1. **B1 Havnene:** Åtte mottak med kaifront og plasser fra OpenStreetMap. Is bare på mottakene, drivstoff bare ved bunkerskaiene.
+2. **B2 Fortøyning:** Langs kaia mot bildekk i kjetting, baug- og hekktamp og to springer, animasjon for å legge til og gå fra, tauene følger tidevannet.
+3. **B3 Mottakene i 3D:** Bygg, issilo, kaikran, truck og folk på kaia med egne gjøremål.
+4. **B4 Levering:** Tar spilltid. Kasser (skiff og snekke) eller kar (sjark) løftes med kran, trucken kjører dem inn, sluttseddelen kommer til slutt. Is fra isrenna.
+5. **B5 Bunkring:** Egen kai med pumpe og slange, tid etter pumpefart.
 
 ### Fase 4: Flåten i kart og 3D
 
@@ -435,8 +449,7 @@ Større fartøyklasser, line, garn, snurrevad og teiner, egne anlegg og nye regi
 - **Garantert torsk for 8–9,99 m:** 4,2 t i forskriften og 3,2 t i departementets rapport. Spillet bruker forskriften.
 - **Minstepriser for andre arter etter 21.09:** Rundskriv 13/2026 er ikke hentet, så lyr og de andre bygger på rundskriv 7/2026.
 - **Farten i 3D:** Med tempo 1:6 går båten seks ganger raskere enn virkeligheten. Bevegelsen er jevn, men farten ser høy ut.
-- **Timesfunksjonen** `hourly()` bruker den fulgte båtens posisjon for dekning og service. Den bør gjøres per båt i fase 2 eller 3.
-- **`S.owned`** er en liste over båttyper fra før flåtemodellen. Den bør avledes av flåten.
+- **`S.owned`** er en liste over båttyper fra før flåtemodellen. «Neste mål» bruker nå typene i flåten, men lista finnes fortsatt.
 - **Kveithaill** kan gi rundt 8 000 kr per dag ved kveitefiske om høsten. Sjekk balansen i spilltesting.
 - **Klær og kulde:** `coldPen` bruker hele mannskapet (`S.crew.length`), ikke bare dem som er om bord.
 - **Sløyetid:** Anslaget på 150 kg per person og time må sjekkes.
@@ -461,6 +474,7 @@ Større fartøyklasser, line, garn, snurrevad og teiner, egne anlegg og nye regi
   - `motion2.py`: båtbevegelse, frakoblet med 60 bilder i sekundet.
   - `berthtest.py`: kaiplasser og trykk i kartplotteren.
   - `fleet1test.py` og `fleet1mig.py`: flåtemodell og migrering.
+  - `fleet3test.py`: fase 3. Varsler, båtvelgeren, inntekt per båt og service per båt.
   - `fleet2test.py`: fase 2. Levering med og uten adgang, to båter på driftsplan i en simulert uke, knappene i Fartøy-appen, nybygg til flåten, og lagring med to båter. Skriver `OK` eller `FEIL` per sjekk.
 - **Triks:**
   - Testmaskinen gir få bilder i sekundet, og `dt` begrenses til 0,1 s. Test dynamikk frakoblet med `G3._debug.stepBoat`.

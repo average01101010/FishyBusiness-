@@ -2,23 +2,25 @@
 function coverage(p){ const d = coastDist(p); return d < 3 ? 4 : d < 8 ? 3 : d < 14 ? 2 : d < 20 ? 1 : 0; }
 function msg(from, no, en){ S.msgs.push({t:S.t, from, no, en, read:false}); if (S.msgs.length > 80) S.msgs.shift(); if (hooks.onMsg) hooks.onMsg(); }
 function hourly(){
-  const H = S.t / 60, b = S.boat, hr = gDate(H).getUTCHours(), bars = coverage(b.pos);
+  const H = S.t / 60, hr = gDate(H).getUTCHours();
+  // the company hears it if any vessel does: in port, with mobile coverage, or on VHF
+  const bars = Math.max(0, ...S.fleet.map(v => { const vb = vget(v, 'boat'); return vb.status === 'port' ? 4 : coverage(vb.pos); })), vhf = S.fleet.some(v => (vget(v, 'equip') || {}).vhf);
   // gale warning ahead (coast radio on VHF, or text message when there is coverage)
-  if ((S.equip.vhf || bars > 0) && (S.lastGale || -1e9) < S.t - 12 * 60){
+  if ((vhf || bars > 0) && (S.lastGale || -1e9) < S.t - 12 * 60){
     let mx = 0, at = 0; for (let k = 1; k <= 12; k++){ const w = fcWind(H + k, H); if (w > mx){ mx = w; at = H + k; } }
     if (mx >= 13.9){ S.lastGale = S.t; const bft = beaufort(mx), kind = mx >= 20.8 ? ['Storm', 'Storm'] : mx >= 17.2 ? ['Sterk kuling', 'Severe gale'] : ['Kuling', 'Gale'];
-      msg(S.equip.vhf ? 'Kystradio' : 'Værvarsel', kind[0] + ' ventet fra ' + dirName(windDir(at)) + ' rundt ' + hm(at) + ', ' + Math.round(mx) + ' m/s (styrke ' + bft + ').', kind[1] + ' expected from ' + DIRS.en[Math.round(windDir(at) / 45) % 8] + ' around ' + hm(at) + ', ' + Math.round(mx) + ' m/s (force ' + bft + ').'); }
+      msg(vhf ? 'Kystradio' : 'Værvarsel', kind[0] + ' ventet fra ' + dirName(windDir(at)) + ' rundt ' + hm(at) + ', ' + Math.round(mx) + ' m/s (styrke ' + bft + ').', kind[1] + ' expected from ' + DIRS.en[Math.round(windDir(at) / 45) % 8] + ' around ' + hm(at) + ', ' + Math.round(mx) + ' m/s (force ' + bft + ').'); }
   }
   // morning tip from the fish plant paying most for cod
   if (hr === 7){ let best = null; for (const q of PORTS) if (q.mottak){ const pr = price(q, 'torsk', H); if (!best || pr > best.pr) best = {q, pr}; }
-    if (best && bars + (b.status === 'port' ? 4 : 0) > 0) msg(best.q.name + ' Fisk', 'God morgen! Vi betaler ' + Math.round(best.pr) + ' kr/kg for torsk i dag (A-kvalitet).', 'Good morning! We pay NOK ' + Math.round(best.pr) + '/kg for cod today (grade A).'); }
+    if (best && bars > 0) msg(best.q.name + ' Fisk', 'God morgen! Vi betaler ' + Math.round(best.pr) + ' kr/kg for torsk i dag (A-kvalitet).', 'Good morning! We pay NOK ' + Math.round(best.pr) + '/kg for cod today (grade A).'); }
   // monthly loan payment
   if (S.loan && S.t >= S.loan.next){ const L = S.loan, r = L.rate / 12, int = L.bal * r, pay = Math.min(L.bal + int, L.pay); L.bal = L.bal + int - pay; S.cash -= pay; S.stats.costs += int; L.next += 30 * 24 * 60;
     msg('Kystbanken', 'Terminbeløp ' + Math.round(pay) + ' kr trukket. Restgjeld ' + Math.round(L.bal) + ' kr.', 'Instalment of NOK ' + Math.round(pay) + ' paid. Remaining NOK ' + Math.round(L.bal) + '.'); if (L.bal < 1) S.loan = null; }
   // yard: new vessel ready
   if (S.order && !S.order.told && S.t >= S.order.due){ S.order.told = true; msg('Verftet', 'Den nye båten er klar for overtakelse i Finnsnes.', 'Your new vessel is ready for handover in Finnsnes.'); }
-  // engine service due
-  if (svcOverdue() > 0 && !S.svcTold){ S.svcTold = true; msg('Verkstedet', 'Motoren har gått ' + Math.round(b.engH) + ' timer og er over tiden for service.', 'The engine has run ' + Math.round(b.engH) + ' hours and is overdue for a service.'); }
+  // engine service due, vessel by vessel
+  eachVessel(() => { const b = S.boat, vt = S.fleet.length > 1 ? '«' + S.boatName + '»: ' : ''; if (svcOverdue() > 0 && !S.svcTold){ S.svcTold = true; msg('Verkstedet', vt + 'Motoren har gått ' + Math.round(b.engH) + ' timer og er over tiden for service.', vt + 'The engine has run ' + Math.round(b.engH) + ' hours and is overdue for a service.'); } });
 }
 // other skippers for the leaderboard: deterministic weekly landings driven by season and weather
 const SKIPPERS = [['Havørn', 'Husøy', 1.25], ['Mefjordingen', 'Senjahopen', 1.1], ['Grylle', 'Gryllefjord', 1.0], ['Botnværing', 'Botnhamn', 0.8], ['Nordstjerna', 'Husøy', 0.95], ['Senjabas', 'Senjahopen', 1.35], ['Kvitholmen', 'Gryllefjord', 0.7], ['Solbris', 'Finnsnes', 0.45], ['Tindvær', 'Husøy', 0.85], ['Laukvik', 'Gryllefjord', 0.6]];
