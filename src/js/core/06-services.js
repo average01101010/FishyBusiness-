@@ -122,7 +122,9 @@ function depart(){
   if (b.status === 'port'){ S.stats.trips++; log('Kastet loss fra ' + portById(b.port).name + '.', 'Cast off from ' + portById(b.port).name + '.'); }
   if (access() === 'none' && !(S.plan && S.plan.ops) && !(S.target === 'kveite' && b.kgear)) log('Båten har ikke adgang til å fiske torsk, hyse og sei. De kan bare være bifangst, høyst 10 % av landingen.', 'The boat has no access to fish cod, haddock and saithe. They can only be bycatch, at most 10% of the landing.');
   S.tripBuff = Object.assign({}, S.prep || {}); S.prep = {};
-  if (S.plan) S.plan.depAt = null; b.status = 'sailing'; b.port = null;
+  if (S.plan) S.plan.depAt = null;
+  // from the quay the lines come in first; the boat moves when they are aboard
+  if (b.status === 'port'){ b.status = 'unmooring'; b.castUntil = S.t + CAST_MIN; } else { b.status = 'sailing'; b.port = null; }
   return true;
 }
 // jobs: yard service, fitting equipment, preparing gear

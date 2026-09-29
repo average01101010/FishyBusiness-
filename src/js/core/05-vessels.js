@@ -141,6 +141,7 @@ function vesselStep(H){
     else if (S.settings.autoOn && W0 > S.settings.autoW && (S.plan.delays || 0) < 12){ S.plan.depAt += 60; S.plan.delays = (S.plan.delays || 0) + 1; log('Avgangen er utsatt en time. Vinden er ' + W0.toFixed(0) + ' m/s.', 'Departure postponed an hour. The wind is ' + W0.toFixed(0) + ' m/s.'); }
     else depart();
   }
+  if (b.status === 'unmooring'){ if (S.t >= b.castUntil){ b.status = 'sailing'; b.port = null; } return; }
   if (b.status === 'port') return;
   const W = windAt(H), hs = hsAt(b.pos, H);
   if (b.status === 'engine' && S.t >= b.engineUntil){ b.status = b.prev || 'idle'; b.prev = null; log('Motoren startet igjen.', 'The engine is running again.'); }
@@ -193,7 +194,7 @@ function arrive(w){
 }
 function dock(pid){
   const b = S.boat, port = portById(pid); S.tripBuff = null;
-  b.status = 'port'; b.port = pid; b.v = 0; b.fishUntil = null; b.pos = {x:port.p.x, y:port.p.y};
+  b.status = 'port'; b.port = pid; b.v = 0; b.fishUntil = null; b.pos = {x:port.p.x, y:port.p.y}; b.moorT = S.t;
   const wasOps = S.plan && S.plan.ops;
   S.plan = null; S.trail = [{x:port.p.x, y:port.p.y, port:pid}];
   log('Fortøyd i ' + port.name + '.', 'Moored in ' + port.name + '.');

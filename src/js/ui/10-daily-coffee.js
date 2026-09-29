@@ -141,6 +141,8 @@ function renderActs(){
     if (pubOpen(S.t / 60) && S.pubE !== pubEvening(S.t / 60)) h.push('<button data-act="pub">🍺 ' + LS('Pubrunde', 'Pub round', 'Pub', 'Pub') + '</button>');
     if (!b.kgear && (p.fuel || p.ice)) h.push('<button data-act="kgear">' + LS('Kveiteutstyr (' + kr(PRICE.kgear) + ')', 'Halibut gear (' + kr(PRICE.kgear) + ')', 'Kveiteutstyr', 'Halibut gear') + '</button>');
     h.push('<button' + (tot > 0.5 && p.mottak ? '' : ' class="pri"') + ' data-ui="plot">' + LS('Planlegg tur', 'Plan a trip', 'Planlegg', 'Plan') + '</button>');
+  } else if (b.status === 'unmooring'){
+    h.push('<span class="stp">' + L('Kaster loss …', 'Casting off …') + '</span>');
   } else if (b.status === 'idle'){
     h.push('<span class="stp"><button data-act="fh-" aria-label="−">−</button>' + S.fishPlanH + ' t<button data-act="fh+" aria-label="+">+</button></span><button class="pri" data-act="startfish">' + LS('Start fiske', 'Start fishing', 'Fisk', 'Fish') + '</button>');
     if (b.kgear){ const cl = kveiteClosed(S.t / 60); h.push('<button data-act="target"' + (cl && S.target !== 'kveite' ? ' disabled' : '') + '>🎯 ' + (S.target === 'kveite' && !cl ? LS('Fisker kveite', 'Fishing halibut', 'Kveite', 'Halibut') : cl ? LS('Kveita er fredet', 'Halibut closed', 'Fredet', 'Closed') : LS('Blandet fiske', 'Mixed fishing', 'Blandet', 'Mixed')) + '</button>'); }

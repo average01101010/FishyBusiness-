@@ -11,7 +11,7 @@ const G3 = (() => {
   const vtype = () => (S.boat.type && PV[S.boat.type]) ? S.boat.type : 'skiff';
   let PERSONM = null, WILDM = null, NPCM = null, CREW2M = null, PT = null, GTEX = null, GRECT = null, STEX = null, SRECT = null, gcv = null, LMTEX = null, lcv = null, HTEX = null;
   // where things sit on each vessel (boat-local metres, bow towards -z)
-  const VGEO = {skiff:{pl:2.4, rl:1.0, eye:[0, 1.86, 0.9], hp:-0.3, fov:62, pole:[-0.8, 1.95, 2.42], stern:3.1, bow:-2.2, side:0.75, lights:[[[-0.08, 1.04, -2.7], [1, 0.12, 0.1]], [[0.08, 1.04, -2.7], [0.1, 1, 0.35]], [[-0.8, 1.95, 2.42], [1, 0.95, 0.85]]]}};
+  const VGEO = {skiff:{pl:2.4, rl:1.0, eye:[0, 1.86, 0.9], hp:-0.3, fov:62, pole:[-0.8, 1.95, 2.42], stern:3.1, bow:-2.2, side:0.75, gw:0.95, lights:[[[-0.08, 1.04, -2.7], [1, 0.12, 0.1]], [[0.08, 1.04, -2.7], [0.1, 1, 0.35]], [[-0.8, 1.95, 2.42], [1, 0.95, 0.85]]]}};
   const PV = {};
   const bv = {x:0, y:0, z:0, head:0, pitch:0, roll:0, init:false};
   const env = {};
@@ -287,21 +287,12 @@ const G3 = (() => {
   function buildStatics(){
     const m = MB(), R = rng(7), WALLS = [[0.62,0.18,0.14],[0.88,0.88,0.84],[0.85,0.68,0.3],[0.76,0.46,0.22],[0.5,0.56,0.6],[0.88,0.88,0.84]], ROOF = [[0.18,0.2,0.22],[0.3,0.2,0.18],[0.22,0.26,0.3]];
     LIGHTS = [];
-    // piers and breakwaters from OpenStreetMap
-    for (const pr of PIERS){
-      const bw = pr[0] === 1, n = (pr.length - 1) / 2, X = k => pr[1 + k * 2] * 1000, Z = k => pr[2 + k * 2] * 1000;
-      const closed = n > 3 && Math.hypot(X(0) - X(n - 1), Z(0) - Z(n - 1)) < 1;
-      if (closed && !bw){
-        let cx = 0, cz = 0; for (let k = 0; k < n - 1; k++){ cx += X(k); cz += Z(k); } cx /= n - 1; cz /= n - 1;
-        let sxx = 0, szz = 0, sxz = 0; for (let k = 0; k < n - 1; k++){ const a = X(k) - cx, b = Z(k) - cz; sxx += a * a; szz += b * b; sxz += a * b; }
-        const th = 0.5 * Math.atan2(2 * sxz, sxx - szz), ux = Math.cos(th), uz = Math.sin(th); let l0 = 1e9, l1 = -1e9, w0 = 1e9, w1 = -1e9;
-        for (let k = 0; k < n - 1; k++){ const a = X(k) - cx, b = Z(k) - cz, pu = a * ux + b * uz, pv = -a * uz + b * ux; l0 = Math.min(l0, pu); l1 = Math.max(l1, pu); w0 = Math.min(w0, pv); w1 = Math.max(w1, pv); }
-        const mx = cx + ux * (l0 + l1) / 2 - uz * (w0 + w1) / 2, mz = cz + uz * (l0 + l1) / 2 + ux * (w0 + w1) / 2;
-        m.box(mx, -2.4, mz, Math.max(3, w1 - w0), 3.7, Math.max(3, l1 - l0), [0.5, 0.49, 0.46], Math.atan2(ux, uz), [0.6, 0.58, 0.54]);
-      } else for (let k = 0; k < n - 1; k++){
-        const ax = X(k), az = Z(k), bx2 = X(k + 1), bz2 = Z(k + 1), L = Math.hypot(bx2 - ax, bz2 - az); if (L < 0.5) continue;
-        m.box((ax + bx2) / 2, bw ? -3 : -2.4, (az + bz2) / 2, bw ? 9 : 4.2, bw ? 5.2 : 3.7, L + (bw ? 4 : 1), bw ? [0.4, 0.41, 0.42] : [0.46, 0.42, 0.37], Math.atan2(bx2 - ax, bz2 - az), bw ? [0.5, 0.5, 0.5] : [0.56, 0.52, 0.46]);
-      }
+    // piers, quays and breakwaters from OpenStreetMap, as listed in PIERBOX (the berths use the same boxes)
+    for (const q of PIERBOX){
+      if (q.bw) m.box(q.x, -3, q.z, q.w, 5.2, q.l, [0.4, 0.41, 0.42], q.ang, [0.5, 0.5, 0.5]);
+      else if (q.closed) m.box(q.x, -2.4, q.z, q.w, QTOP + 2.4, q.l, [0.5, 0.49, 0.46], q.ang, [0.6, 0.58, 0.54]);
+      else if (q.made) m.box(q.x, -3, q.z, q.w, QTOP + 3, q.l, [0.52, 0.53, 0.5], q.ang, [0.6, 0.6, 0.58]);
+      else m.box(q.x, -2.4, q.z, q.w, QTOP + 2.4, q.l, [0.46, 0.42, 0.37], q.ang, [0.56, 0.52, 0.46]);
     }
     // bridges from OpenStreetMap
     for (const br of BRIDGES){
@@ -338,8 +329,6 @@ const G3 = (() => {
       const px = pt.p.x * 1000, pz = pt.p.y * 1000, cx = pt.coast.x * 1000, cz = pt.coast.y * 1000;
       const dxp = cx - px, dzp = cz - pz, L = Math.hypot(dxp, dzp), ux = dxp / L, uz = dzp / L, ang = Math.atan2(ux, uz);
       // quay from the shore out to the berth
-      const qlen = L + 20, qcx = px + ux * (qlen / 2 + 8), qcz = pz + uz * (qlen / 2 + 8);
-      if (!pt.pier) m.box(qcx, -3, qcz, 9, 4.8, qlen, [0.52, 0.53, 0.5], ang, [0.6, 0.6, 0.58]);
       const bx = cx + ux * 45, bz = cz + uz * 45, bh = Math.max(0, terrH(bx, bz));
       if (BLD) continue;
       if (pt.mottak) m.box(bx, bh - 1, bz, 42, 11, 24, [0.78, 0.82, 0.84], ang + Math.PI / 2, [0.35, 0.42, 0.48]);
@@ -360,6 +349,38 @@ const G3 = (() => {
     STAT = m.mesh();
   }
 
+
+  // ---------- harbour fittings along the berth faces: tyres hung on chains, a timber fender beam, the yellow edge and bollards ----------
+  let STATN = null; const QB = {};
+  function obox(nb, c, u, n, len, wid, y0, h, k){   // an oriented box: centre c (x, z), length along u, width along n
+    const P = (a, b, y) => [c[0] + u[0] * a + n[0] * b, y, c[1] + u[1] * a + n[1] * b], l = len / 2, w = wid / 2, y1 = y0 + h;
+    nb.quad(P(-l, w, y0), P(l, w, y0), P(l, w, y1), P(-l, w, y1), k); nb.quad(P(l, -w, y0), P(-l, -w, y0), P(-l, -w, y1), P(l, -w, y1), k);
+    nb.quad(P(-l, -w, y1), P(-l, w, y1), P(l, w, y1), P(l, -w, y1), k); nb.quad(P(-l, -w, y0), P(-l, -w, y1), P(-l, w, y1), P(-l, w, y0), k); nb.quad(P(l, w, y0), P(l, w, y1), P(l, -w, y1), P(l, -w, y0), k);
+  }
+  const faceKey = f => Math.round(f.x) + ',' + Math.round(f.z);
+  function buildHarbourFittings(){
+    const nb = NB(), TYRE = [0.07, 0.07, 0.08, 0.05], CHAIN = [0.55, 0.56, 0.58, 0.6], BOLL = [0.12, 0.13, 0.14, 0.4], WOOD = [0.36, 0.26, 0.18, 0.1], YEL = [0.95, 0.78, 0.1, 0.2];
+    const done = new Set();
+    for (const pt of PORTS) for (const ty of Object.keys(BEAM)){
+      const bp = berthPose(pt.id, ty); if (!bp) continue; const f = bp.face, key = faceKey(f); if (done.has(key)) continue; done.add(key);
+      const u = [f.ux, f.uz], n = [f.nx, f.nz], a0 = Math.max(-f.hl + 1, bp.a - 30), a1 = Math.min(f.hl - 1, bp.a + 30), am = (a0 + a1) / 2, len = a1 - a0;
+      const at = (a, o) => [f.x + u[0] * a + n[0] * o, f.z + u[1] * a + n[1] * o];
+      obox(nb, at(am, 0.1), u, n, len, 0.2, QTOP - 1.5, 0.35, WOOD); obox(nb, at(am, 0.1), u, n, len, 0.2, QTOP - 0.55, 0.3, WOOD);
+      obox(nb, at(am, -0.2), u, n, len, 0.4, QTOP, 0.03, YEL);
+      for (let a = a0 + 1.3; a < a1 - 0.5; a += 2.6){
+        const c = at(a, 0.34), cy = QTOP - 1.05, ring = [];
+        for (let i = 0; i <= 12; i++){ const an = i / 12 * Math.PI * 2; ring.push([c[0] + u[0] * Math.cos(an) * 0.4, cy + Math.sin(an) * 0.4, c[1] + u[1] * Math.cos(an) * 0.4]); }
+        nb.tube(ring, 0.12, TYRE, 6);
+        for (const sd of [-1, 1]){ const top = at(a + sd * 0.35, 0.02); nb.tube([[top[0], QTOP - 0.05, top[1]], [c[0] + u[0] * sd * 0.12, cy + 0.5, c[1] + u[1] * sd * 0.12]], 0.018, CHAIN, 4); }
+      }
+      const bl = QB[key] = [];
+      for (let a = a0 + 2; a < a1; a += 8){
+        const c = at(a, -0.55); nb.tube([[c[0], QTOP, c[1]], [c[0], QTOP + 0.45, c[1]]], 0.16, BOLL, 10); nb.tube([[c[0], QTOP + 0.45, c[1]], [c[0], QTOP + 0.52, c[1]]], 0.24, BOLL, 10);
+        bl.push({x:c[0], z:c[1], a});
+      }
+    }
+    STATN = nb.mesh();
+  }
   // ---------- real buildings (OpenStreetMap), streamed in 1 km chunks inside the terrain corridor ----------
   let BLD = null, chunkSnow = -1;
   const CH = new Map();
@@ -862,7 +883,7 @@ const G3 = (() => {
   };
   const chain = (...ms) => ms.reduce((a, b) => mul(a, b));
   let plotSmall = null, aisCache = {t:-1, v:[]};
-  function engineOn(){ const st = S.boat.status; return st === 'sailing' || st === 'fishing' || st === 'idle' || st === 'returning'; }
+  function engineOn(){ const st = S.boat.status; return st === 'sailing' || st === 'fishing' || st === 'idle' || st === 'returning' || st === 'unmooring' || MO.phase === 'in'; }
   function paintPlotter(){
     const g = SK.cvP.getContext('2d'), W = 512, Hc = 320, b = S.boat, p = {x:bv.x / 1000, y:bv.z / 1000}, Hn = S.t / 60, L = (no, en) => S.lang === 'no' ? no : en;
     g.fillStyle = '#0a1117'; g.fillRect(0, 0, W, Hc);
@@ -1186,11 +1207,67 @@ const G3 = (() => {
     const sn = Math.round(seasonal(SNOWLINE, H) / 20) * 20; if (sn !== snowNow){ snowNow = sn; recolor(TERR, sn); if (NEARM) recolor(NEARM, sn); }
   }
 
+
+  // ---------- mooring: in along the quay, then the lines: aft spring first, bow line, stern line, fore spring (and in reverse when casting off) ----------
+  const MO = {key:'', phase:'', t:0, from:null, dur:0, lines:0, len:[0, 0, 0, 0], init:false};
+  const LINE_S = 1.8;   // seconds for each line to go on
+  let ROPEM = null, FENDM = null;
+  function buildMooring(){ const r = NB(); r.tube([[0, 0, 0], [0, 0, 1]], 1, [0.2, 0.36, 0.72, 0.15], 6); ROPEM = r.mesh(); const f = NB(); f.tube([[0, -0.26, 0], [0, 0.26, 0]], 0.12, [0.93, 0.93, 0.9, 0.35], 10); FENDM = f.mesh(); }
+  function berthNow(){ const b = S.boat; return (b.status === 'port' || b.status === 'unmooring') && b.port ? berthPose(b.port, vtype()) : null; }
+  function moorStep(dt, bp){
+    const b = S.boat, key = S.cur + '|' + b.port + '|' + vtype() + '|' + (b.moorT || 0), sp = Math.max(1, S.mult || 1), X = bp.x * 1000, Z = bp.y * 1000;
+    if (MO.key !== key){
+      const d = Math.hypot(bv.px - X, bv.pz - Z); MO.key = key; MO.len = [0, 0, 0, 0];
+      if (d < 3 || b.status === 'unmooring' || !MO.init){ MO.phase = 'moored'; MO.lines = 4; }
+      else { MO.phase = 'in'; MO.t = 0; MO.from = {x:bv.px, z:bv.pz, h:bv.cog}; MO.dur = clamp(d / 1.3, 8, 40); MO.lines = 0; }
+      MO.init = true;
+    }
+    if (b.status === 'unmooring'){ MO.phase = 'out'; MO.lines = clamp(4 * (b.castUntil - S.t - currentFrac()) / CAST_MIN, 0, 4); }
+    if (MO.phase === 'in'){
+      MO.t += dt * sp; const u0 = clamp(MO.t / MO.dur, 0, 1), u = u0 * u0 * (3 - 2 * u0), F = MO.from, k = Math.hypot(X - F.x, Z - F.z) * 1.1;
+      const P0 = [F.x, F.z], T0 = [Math.sin(F.h) * k, -Math.cos(F.h) * k], P1 = [X, Z], T1 = [bp.fwd.x * k, bp.fwd.z * k];
+      const h00 = 2 * u ** 3 - 3 * u * u + 1, h10 = u ** 3 - 2 * u * u + u, h01 = -2 * u ** 3 + 3 * u * u, h11 = u ** 3 - u * u;
+      const d00 = 6 * u * u - 6 * u, d10 = 3 * u * u - 4 * u + 1, d01 = -6 * u * u + 6 * u, d11 = 3 * u * u - 2 * u;
+      const px = h00 * P0[0] + h10 * T0[0] + h01 * P1[0] + h11 * T1[0], pz = h00 * P0[1] + h10 * T0[1] + h01 * P1[1] + h11 * T1[1];
+      const vx = d00 * P0[0] + d10 * T0[0] + d01 * P1[0] + d11 * T1[0], vz = d00 * P0[1] + d10 * T0[1] + d01 * P1[1] + d11 * T1[1];
+      const du = 6 * u0 * (1 - u0) / MO.dur * sp; bv.spd = Math.hypot(vx, vz) * du; bv.yr = 0;
+      bv.px = px; bv.pz = pz; if (Math.hypot(vx, vz) > 1e-3) bv.cog = Math.atan2(vx, -vz);
+      if (u0 >= 1){ MO.phase = 'lines'; MO.t = 0; bv.cog = bp.hd; }
+    } else {
+      if (MO.phase === 'lines'){ MO.t += dt * sp; MO.lines = Math.min(4, MO.t / LINE_S); if (MO.lines >= 4) MO.phase = 'moored'; }
+      // lying alongside: held in place by the lines, the swell moves her a little
+      bv.spd = 0; bv.yr = 0; bv.px += (X - bv.px) * (1 - Math.exp(-dt * 2)); bv.pz += (Z - bv.pz) * (1 - Math.exp(-dt * 2)); bv.cog += angDiff(bv.cog, bp.hd) * (1 - Math.exp(-dt * 2));
+    }
+  }
+  // the lines from the boat's cleats to the bollards on the quay, sagging when slack; the tide makes them slack or tight
+  function drawMooring(BMrel, eye, VP, t){
+    const bp = berthNow(); if (!bp || !ROPEM) return;
+    const vt = vtype(), G = VGEO[vt] || VGEO.skiff, gw = G.gw || 1, sx = (BEAM[vt] || 2.4) / 2, mid = (G.bow + G.stern) / 2;
+    nSetup(VP);
+    if (MO.phase !== 'in' || MO.t / MO.dur > 0.55) for (const z of [G.bow * 0.45, mid, G.stern * 0.55]){
+      drawN(FENDM, chain(BMrel, M4.T(sx * 0.95 + 0.12, gw - 0.45, z))); drawN(ROPEM, chain(BMrel, limbM([sx * 0.95 + 0.12, gw - 0.2, z], [sx * 0.9, gw, z], 0.012)));
+    }
+    const bl = QB[faceKey(bp.face)]; if (!bl || !bl.length || MO.lines <= 0) return;
+    const X = bp.x * 1000, Z = bp.y * 1000, f = bp.fwd, near = (tx, tz) => bl.reduce((a, q) => Math.hypot(q.x - tx, q.z - tz) < Math.hypot(a.x - tx, a.z - tz) ? q : a, bl[0]);
+    const fore = near(X + f.x * (bp.Lb / 2 + 2.5), Z + f.z * (bp.Lb / 2 + 2.5)), aft = near(X - f.x * (bp.Lb / 2 + 2.5), Z - f.z * (bp.Lb / 2 + 2.5));
+    const cleat = {bow:[sx * 0.55, gw + 0.05, G.bow + 0.4], mid:[sx * 0.95, gw + 0.05, mid], stern:[sx * 0.8, gw + 0.05, G.stern - 0.35]};
+    const LINES = [['mid', aft], ['bow', fore], ['stern', aft], ['mid', fore]];
+    for (let i = 0; i < 4; i++){
+      const p = clamp(MO.lines - i, 0, 1); if (p <= 0) continue;
+      const A = xf(BMrel, cleat[LINES[i][0]]), q = LINES[i][1], Bq = [q.x - eye[0], QTOP + 0.42 - eye[1], q.z - eye[2]];
+      const d = Math.hypot(Bq[0] - A[0], Bq[1] - A[1], Bq[2] - A[2]);
+      let E = Bq, sag;
+      if (p < 1){ E = [A[0] + (Bq[0] - A[0]) * p, A[1] + (Bq[1] - A[1]) * p + Math.sin(Math.PI * p) * 1.4, A[2] + (Bq[2] - A[2]) * p]; sag = 0.6 * (1 - p) + 0.1; MO.len[i] = 0; }
+      else { if (!MO.len[i]) MO.len[i] = d * 1.03; const slack = MO.len[i] - d; sag = slack > 0 ? Math.sqrt(3 * d * slack / 8) : 0.01 * d; }
+      const dd = Math.hypot(E[0] - A[0], E[1] - A[1], E[2] - A[2]); let prev = A;
+      for (let k = 1; k <= 8; k++){ const s2 = k / 8, P = [A[0] + (E[0] - A[0]) * s2, A[1] + (E[1] - A[1]) * s2 - sag * 4 * s2 * (1 - s2) * Math.min(1, dd / Math.max(d, 0.1)), A[2] + (E[2] - A[2]) * s2]; drawN(ROPEM, limbM(prev, P, 0.02)); prev = P; }
+    }
+  }
   // ---------- boat motion ----------
   function currentFrac(){ return clamp(acc + (Date.now() - lastWall) / 1000 * GAME_RATE * S.mult / 60, 0, 0.999); }
   function predict(frac){
     const L = livePose(frac), b = S.boat; let hd = L.hd;
-    if (b.status === 'port'){ const pt = portById(b.port); hd = Math.atan2(pt.coast.x - pt.p.x, -(pt.coast.y - pt.p.y)); }
+    if (b.status === 'port' || b.status === 'unmooring'){ const bp = berthNow(); if (bp) return {p:{x:bp.x, y:bp.y}, hd:bp.hd}; const pt = portById(b.port); hd = Math.atan2(pt.coast.x - pt.p.x, -(pt.coast.y - pt.p.y)); }
     return {p:L.p, hd};
   }
   // the boat in 3D follows the simulated track like a real boat: it speeds up and slows down gradually, turns on an arc,
@@ -1202,7 +1279,9 @@ const G3 = (() => {
     const zp = (G.bow || -2.2) + ((G.stern || 3.1) - (G.bow || -2.2)) / 3;   // pivot point, local z (negative = forward)
     if (!bv.init || Math.hypot(tx - (bv.px || 0), tz - (bv.pz || 0)) > 900){ bv.px = tx; bv.pz = tz; bv.cog = pr.hd; bv.head = pr.hd; bv.spd = sailing ? b.v * KNV() : 0; bv.yr = 0; bv.beta = 0; bv.init = true; TRAIL.length = 0; WV.init = false; }
     else if (dt > 0){
-      if (sailing){
+      const bp = berthNow();
+      if (bp) moorStep(dt, bp);
+      else if (sailing){
         const vs = sailV(S.t / 60) * KNV(), la = livePose(frac + clamp(1.6 * GAME_RATE * (S.mult || 1) / 60, 0.04, 0.6)).p, cx = la.x * 1000, cz = la.y * 1000;
         // steer for a point a little ahead on the track, turning no faster than the turning radius allows
         const want = Math.hypot(cx - bv.px, cz - bv.pz) > 1 ? Math.atan2(cx - bv.px, -(cz - bv.pz)) : pr.hd;
@@ -1379,7 +1458,7 @@ const G3 = (() => {
       DYNP = buf(new Float32Array(4000 * 3), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); DYNA = buf(new Float32Array(4000), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW);
       try { HG = await loadHeights(); } catch (e){ console.error(e); HG = null; }
       try { BLD = await loadBuildings(); } catch (e){ console.error(e); BLD = null; }
-      buildTerrain(); buildStatics(); buildBoat(); buildSkiff(); buildFlag(); buildSea(); buildWild(); buildNPC(); buildVessels();
+      buildTerrain(); buildStatics(); buildBoat(); buildSkiff(); buildFlag(); buildSea(); buildWild(); buildNPC(); buildVessels(); buildHarbourFittings(); buildMooring();
       canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); ready = false; failed = true; show(false); });
       buildLabels();
       ready = true; return true;
@@ -1528,7 +1607,7 @@ const G3 = (() => {
     const sk = MB(); person(sk, 0, y0, z0 + 0.95, [0.93, 0.4, 0.1]);
     const crew = [0, 1, 2].map(i => { const c = MB(); person(c, (i % 2 ? 1 : -1) * B * 0.28, F, z1 + 0.9 + i * 1.1, [0.95, 0.75, 0.15], i % 2 ? -1.2 : 1.2); return c.mesh(); });
     PV[type] = {hull:m.mesh(), skipper:sk.mesh(), crew};
-    VGEO[type] = {pl:L * 0.4, rl:B * 0.38, eye:[0, y0 + 1.62, z0 + 1.1], pole:[-B * 0.3, F + 2.2, L / 2 - 0.35], stern:L / 2 + 0.2, bow:-L * 0.35, side:B * 0.45,
+    VGEO[type] = {gw:F, pl:L * 0.4, rl:B * 0.38, eye:[0, y0 + 1.62, z0 + 1.1], pole:[-B * 0.3, F + 2.2, L / 2 - 0.35], stern:L / 2 + 0.2, bow:-L * 0.35, side:B * 0.45,
       lights:[[[-ww / 2 - 0.05, y0 + wh - 0.1, z0], [1, 0.12, 0.1]], [[ww / 2 + 0.05, y0 + wh - 0.1, z0], [0.1, 1, 0.35]], [[0, y0 + wh + 1.7, z0 + 0.2], [1, 0.95, 0.85]], [[0, F + 0.6, L / 2], [1, 0.95, 0.85]]]};
   }
   function buildVessels(){
@@ -1616,6 +1695,7 @@ const G3 = (() => {
     drawTerrain(TM, eye, VPn, true); drawLit(STAT, TM); drawBuildings(TM);
     if (VT === 'skiff'){ drawSkiff(BMrel, VPn, dt, !cam.helm, ncrew > 0); gl.useProgram(PL.p); }
     else { const pv = PV[VT]; drawLit(pv.hull, BMrel); if (!cam.helm) drawLit(pv.skipper, BMrel); for (let i = 0; i < ncrew; i++) drawLit(pv.crew[i], BMrel); }
+    if (STATN){ nSetup(VPn); drawN(STATN, TM); } drawMooring(BMrel, eye, VPn, t); gl.useProgram(PL.p);
     wildSpawn(t); drawNPC(eye, t, H); drawWild(eye, t, dt);
 
     const pole = xf(BMrel, VG.pole);
@@ -1775,6 +1855,6 @@ const G3 = (() => {
     fineReady(){ if (NEARM){ freeMesh(NEARM); NEARM = null; updateNear(); } },
     fishCam(){ cam.helm = false; cam.dist = 7; cam.pitch = 0.22; cam.yaw = -0.85; },
     isHelm:() => cam.helm, setHelm(on){ const G = VGEO[vtype()] || {}; cam.helm = !!on; cam.hy = 0; cam.hp = G.hp !== undefined ? G.hp : -0.07; cam.fov = G.fov || 55; },
-    _debug:{get SK(){ return SK; }, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; SEAMARKS.lights.forEach((L, i) => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(i, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }}
+    _debug:{get SK(){ return SK; }, get MO(){ return MO; }, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; SEAMARKS.lights.forEach((L, i) => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(i, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }}
   };
 })();

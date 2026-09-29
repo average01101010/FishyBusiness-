@@ -427,7 +427,13 @@ Flåteoversikt med status, posisjon, last, drivstoff, skipper, driftsplan og dag
 Mottakene ligger der Jonas har funnet dem i Råfisklagets leveranseoversikt: Husøy, Senjahopen, Botnhamn, Gryllefjord, Sommarøy, Brensholmen, Torsken og Frovåg (Brødrene Karlsen Senja, avd. Frovåg). Finnsnes har ikke mottak eller is i virkeligheten, bare bøteri og forhandler av fiskeutstyr og båter. Bunkerskai: Husøy, Senjahopen og Gryllefjord (forslag, ikke kontrollert), og Finnsnes beholder drivstoff.
 
 1. **B1 Havnene (ferdig):** Åtte mottak. De fire nye (Sommarøy, Brensholmen, Torsken, Frovåg) ligger ved OpenStreetMap-kaia nærmest det største industribygget. Frovåg er funnet fra sjømerket «Frovåghamn» og veien Frovågneset. Is bare på mottakene, drivstoff i Finnsnes, Husøy, Senjahopen og Gryllefjord. Driftsplanen fyller bare det havna selger, og de nye mottakene legger ut bestillinger. Prisfaktorene for de nye (0,98–1,0) er anslag.
-2. **B2 Fortøyning:** Langs kaia mot bildekk i kjetting, baug- og hekktamp og to springer, animasjon for å legge til og gå fra, tauene følger tidevannet.
+2. **B2 Fortøyning (ferdig):**
+   - **Kaiene:** `src/js/core/07-harbours.js` har kaiene som bokser (`PIERBOX`), som 3D-visningen tegner, med dekket 2,4 m over middelvann (`QTOP`).
+   - **Liggeplassen:** `berthPose(havn, type)` gir liggeplassen langs nærmeste kaifront med kaia på styrbord side. Fronten må være minst 2 m lengre enn båten.
+   - **Kaifronten:** Den har dekk i kjetting, fenderbjelke, gul kant og pullerter.
+   - **Å legge til:** Båten kommer inn i en bue og legger seg parallelt med kaia, og fenderne henges ut. Tauene settes i rekkefølgen akterspring, baugtamp, hekktamp og forspring.
+   - **Tidevannet:** Tauene får lengden de hadde da de ble satt, så de slakkes og strammes med tidevannet.
+   - **Å kaste loss:** Dette er tilstanden `unmooring` i simuleringen og tar `CAST_MIN` (2) spillminutter, mens tauene tas inn i omvendt rekkefølge.
 3. **B3 Mottakene i 3D:** Bygg, issilo, kaikran, truck og folk på kaia med egne gjøremål.
 4. **B4 Levering:** Tar spilltid. Kasser (skiff og snekke) eller kar (sjark) løftes med kran, trucken kjører dem inn, sluttseddelen kommer til slutt. Is fra isrenna.
 5. **B5 Bunkring:** Egen kai med pumpe og slange, tid etter pumpefart.
@@ -474,6 +480,7 @@ Større fartøyklasser, line, garn, snurrevad og teiner, egne anlegg og nye regi
   - `motion2.py`: båtbevegelse, frakoblet med 60 bilder i sekundet.
   - `berthtest.py`: kaiplasser og trykk i kartplotteren.
   - `fleet1test.py` og `fleet1mig.py`: flåtemodell og migrering.
+  - `moortest.py`: fortøyning. Liggeplass i alle havner, å legge til med tauene og å kaste loss.
   - `harbourtest.py`: havnene. Mottak, is og drivstoff per havn.
   - `fleet3test.py`: fase 3. Varsler, båtvelgeren, inntekt per båt og service per båt.
   - `fleet2test.py`: fase 2. Levering med og uten adgang, to båter på driftsplan i en simulert uke, knappene i Fartøy-appen, nybygg til flåten, og lagring med to båter. Skriver `OK` eller `FEIL` per sjekk.
