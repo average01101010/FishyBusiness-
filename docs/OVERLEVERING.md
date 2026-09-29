@@ -154,7 +154,18 @@ Mister du juksa, fiskes det videre med stang. `motor90` er et utstyrsvalg for sk
 | +5 % | 100 % | −15 % | −40 % | 1 kr/kg |
 
 - **Kroktillegg:** Krokfanget hyse over 1,1 kg får +12,8 %.
-- **Sløying om bord** (innstilling): fisket går 15 % tregere, men hyse og sei slipper sløyetrekket på 0,30 kr/kg, og du får betalt for lever og rogn. Lever er 5 % av vekta. Rogn er 4 % for torsk i januar–april og 1 % ellers.
+- **Sløying om bord** (innstilling «Sløy fangsten»): hyse og sei slipper sløyetrekket på 0,30 kr/kg, og du får betalt for lever og rogn. Lever er 5 % av vekta. Rogn er 4 % for torsk i januar–april og 1 % ellers.
+- **Arbeid på dekk (G, 29.09.2026):**
+  - **Bløgging:** Den skjer automatisk og gratis idet fisken kommer over ripa. Deretter ligger fisken i bløggekaret, rund og uiset, og mister kvalitet omtrent tre ganger så fort som iset fisk (3,0 mot 0,9 poeng i timen).
+  - **Sløying og ising** er arbeid (`DECK` i `05-vessels.js`). Sløying tar rundt 300 kg i timen per person og ising rundt 800. Isingen bruker 0,3 kg is per kg fisk. Tallene er anslag. En utstyrsleverandør oppgir 10–15 fisk i minuttet for hånd, trolig flatfisk, og FAO oppgir 30 i minuttet for maskin. Effektiviteten per person er `teamEff`.
+  - **Hvem gjør hva** (`deckHands`):
+    - Alene kan du ikke sløye mens du fisker eller styrer.
+    - To eller flere: én styrer, og de andre jobber. Under fisket står én på dekk, og fisket går tilsvarende tregere.
+    - Ligger båten stille eller ved kai, jobber alle.
+  - **Bløggekaret** tar 60 kg på skiffen, 150 på snekka, 300 på sjarken og 400 på den nye sjarken. Er det fullt, stopper fisket til det er tatt unna. Tida du bruker på dekk, legges til fisketida. Knappene «Stopp og sløy» og «Fisk videre» styrer dette selv.
+  - **«Ta unna fangsten før du går fra feltet»** (på som standard): alene blir du liggende til karet er tomt.
+  - **I 3D:** Bløggekar og sløyebenk står på etterdekket. Den som jobber, står ved benken og sløyer, og sloet går over babord ripe mens måkene stuper etter det. Alene går skipperen fra rattet.
+  - **Større fartøy** med fabrikk om bord kommer senere.
 - **Sluttseddelen** viser art, størrelse, kvalitet, kilo, kilopris, lever og rogn, inndragning, ferskfiskordningen, bestillinger og fangstfelt.
 - Alle priser i spillet er per kilo **rund vekt**.
 
@@ -484,7 +495,7 @@ Større fartøyklasser, line, garn, snurrevad og teiner, egne anlegg og nye regi
 - **`S.owned`** er en liste over båttyper fra før flåtemodellen. «Neste mål» bruker nå typene i flåten, men lista finnes fortsatt.
 - **Kveithaill** kan gi rundt 8 000 kr per dag ved kveitefiske om høsten. Sjekk balansen i spilltesting.
 - **Klær og kulde:** `coldPen` bruker hele mannskapet (`S.crew.length`), ikke bare dem som er om bord.
-- **Sløyetid:** Anslaget på 150 kg per person og time må sjekkes.
+- **Sløyetid:** 300 kg per person og time for sløying og 800 for ising er anslag. Jeg fant ingen god kilde for håndsløying av torsk, så tallene må justeres i spilltesting.
 - **Kvote ved bytte av båt i åpen gruppe:** Kvotebruken ligger per båt. Selger du båten i åpen gruppe midt i året, får neste båt en ubrukt kvote. I virkeligheten følger det du har fisket med når du bytter fartøy.
 - **Driftsplan i åpen gruppe:** En skiff på driftsplan uten kveiteutstyr leverer nesten bare fisk som blir inndratt, fordi torsk, hyse og sei er over bifangstgrensen. Det er etter reglene, men spilleren bør få et tydeligere råd om å kjøpe kveiteutstyr.
 - **Drivstoff i Finnsnes:** Bildene viser bare bøteri og utstyrsforhandler i Finnsnes. Jonas vil at Finnsnes selger drivstoff inntil videre (29.09.2026), fra kaia båten ligger ved.
@@ -509,6 +520,7 @@ Større fartøyklasser, line, garn, snurrevad og teiner, egne anlegg og nye regi
   - `fleet1test.py` og `fleet1mig.py`: flåtemodell og migrering.
   - `moortest.py`: fortøyning og mottakene i 3D. Liggeplass i alle havner, å legge til med tauene og å kaste loss.
   - `harbourtest.py`: havnene. Mottak, is og drivstoff per havn. De ekte kaiene: alle båttyper ligger langs kaifronten i sjøen i 3D-kystlinja, og ruta inn og ut av hver havn går fri av land.
+  - `decktest.py`: arbeidet på dekk. Bløggekaret, sløyefart, stopp når karet er fullt, én mann mot to, «ta unna før du går» og kvalitetstapet.
   - `bunkertest.py`: bunkringen. Forhaling til bunkerskaia og tilbake, pumpefart og betaling, avgang som venter, Finnsnes, og i 3D stasjonene, forhalingen og telleren.
   - `landtest.py`: leveringen. Lossetid, kasser og kar, avgang som venter, isrenna, og i 3D at kroken står over lasten på dekk og over losseplassen og at trucken rekker siste tur.
   - `fleet3test.py`: fase 3. Varsler, båtvelgeren, inntekt per båt og service per båt.

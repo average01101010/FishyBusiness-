@@ -116,14 +116,18 @@ function panelFish(){
   h.push('<h3>' + t('fishing') + '</h3>');
   h.push('<div class="kv"><span>' + t('gear') + '</span><span class="' + (b.gear ? 'r0' : 'r2') + '">' + (b.gear ? t('gear_ok') : t('gear_lost')) + '</span></div>');
   if (b.status === 'fishing'){
-    h.push('<p>' + t('fish_left', dur((b.fishUntil - S.t) / 60)) + '</p><div class="btns"><button class="btn" data-act="stopfish">' + t('stop_fish') + '</button></div>');
+    const L = (no, en) => S.lang === 'no' ? no : en, dk = deckPending() > 0.5;
+    h.push('<p>' + t('fish_left', dur((b.fishUntil - S.t) / 60)) + '</p><div class="btns"><button class="btn" data-act="stopfish">' + t('stop_fish') + '</button>' +
+      (b.deckStop && !b.deckEnd ? '<button class="btn" data-act="deckgo">' + L('Fisk videre', 'Fish on') + '</button>' : dk ? '<button class="btn" data-act="deckstop">' + L('Stopp og sløy', 'Stop and gut') + '</button>' : '') + '</div>');
   } else if (b.status === 'idle'){
     h.push('<div class="btns"><span class="step"><button data-act="fh-" aria-label="−">−</button><output>' + t('fish_h', S.fishPlanH) + '</output><button data-act="fh+" aria-label="+">+</button></span><button class="btn primary" data-act="startfish">' + t('start_fish') + '</button></div>');
   } else h.push('<p class="note">' + t('fish_where') + '</p>');
   h.push('<h3>' + t('handling') + '</h3>');
-  h.push('<label class="tog"><input type="checkbox" id="setBleed"' + (S.settings.bleed ? ' checked' : '') + '><span>' + t('bleed') + '<small>' + t('bleed_n') + '</small></span></label>');
+  h.push('<p class="note">' + (S.lang === 'no' ? 'Fisken blør du idet den kommer over ripa, og så ligger den i bløggekaret til den blir sløyd og iset.' : 'The fish is bled as it comes over the rail and lies in the bleeding tub until it is gutted and iced.') + '</p>');
+  if (holdTotal() > 0.5) h.push('<p class="note"><b>' + deckText(false) + '</b></p>');
   h.push('<label class="tog"><input type="checkbox" id="setGut"' + (S.settings.gut ? ' checked' : '') + '><span>' + t('gut') + '<small>' + t('gut_n') + '</small></span></label>');
   h.push('<label class="tog"><input type="checkbox" id="setIce"' + (S.settings.ice ? ' checked' : '') + '><span>' + t('icing') + '<small>' + t('icing_n') + '</small></span></label>');
+  h.push('<label class="tog"><input type="checkbox" id="setDeckFirst"' + (S.settings.deckFirst !== false ? ' checked' : '') + '><span>' + t('deck_first') + '<small>' + t('deck_first_n') + '</small></span></label>');
   return h.join('');
 }
 function valueEst(sp, g){ const H = S.t / 60, ps = PORTS.filter(p => p.mottak).map(p => price(p, sp, H)); return ps.reduce((a, c) => a + c, 0) / ps.length * GM[g]; }
@@ -191,6 +195,15 @@ function landText(short){
   if (short) return st.phase === 'prep' ? [L('Gjør klar kranen', 'Rigging the crane'), L('Kran', 'Crane')] : st.phase === 'note' ? [L('Veier inn · seddel ', 'Weighing · note ') + at, L('Seddel ', 'Note ') + at] : [L('Losser ', 'Landing ') + st.units + '/' + L0.n + ' ' + u, st.units + '/' + L0.n + ' ' + u];
   return st.phase === 'prep' ? L('Mottaket gjør klar kranen og trucken.', 'The plant is getting the crane and the forklift ready.') : st.phase === 'note' ? L('Alt er på kaia. Fangsten veies inn.', 'Everything is ashore. The catch is being weighed in.')
     : L(st.units + ' av ' + L0.n + ' ' + u + ' er på kaia.', st.units + ' of ' + L0.n + ' ' + u + ' are ashore.');
+}
+// the bleeding tub: what lies in it and how long the work takes with the hands free for it now
+function deckText(short){
+  const L = (no, en) => S.lang === 'no' ? no : en, kg = deckPending(), hands = deckHands(), b = S.boat;
+  if (kg < 0.5) return short ? '' : L('Karet er tomt. Alt er tatt unna.', 'The tub is empty. Everything is seen to.');
+  const eta = deckEta(hands), when = hands ? (eta < 1 ? L('under ett minutt', 'under a minute') : dur(eta / 60)) : null;
+  if (short) return [L('Dekk: ', 'Deck: ') + fmt(kg, 0) + ' kg' + (when ? ' · ' + when : ''), fmt(kg, 0) + ' kg'];
+  return L(fmt(kg, 0) + ' kg i bløggekaret. ', fmt(kg, 0) + ' kg in the bleeding tub. ') + (hands ? L(hands + (hands > 1 ? ' mann' : ' mann') + ' på dekk, ferdig om ' + when + '.', hands + (hands > 1 ? ' hands' : ' hand') + ' on deck, done in ' + when + '.')
+    : b.status === 'fishing' ? L('Alene kan du ikke sløye og fiske samtidig.', 'Alone you cannot gut and fish at once.') : L('Alene kan du ikke sløye mens du kjører.', 'Alone you cannot gut while you steer.'));
 }
 // what is going on at the quay besides a landing: moving to the other quay, or the pump running
 function quayText(short){

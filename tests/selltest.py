@@ -11,7 +11,7 @@ async def main():
           const R = {};
           const catchDay = (y, m, d, g, gut) => { S.t = Math.round((Date.UTC(y, m, d, 7) - EPOCH) / 6e4); S.hold = []; S.facc = {}; S.fnext = {}; S.settings.gut = gut;
             S.boat.status = 'fishing'; S.boat.pos = {...GROUNDS[g].p}; S.boat.fishUntil = S.t + 480; S.boat.gear = true; S.equip.jukse = 0; S.boat.ice = 150;
-            for (let i = 0; i < 480 && S.boat.status === 'fishing'; i++){ S.t++; fish(S.t / 60, 5, 0.5); } S.fsess = {x:GROUNDS[g].p.x, y:GROUNDS[g].p.y};
+            for (let i = 0; i < 480 && S.boat.status === 'fishing'; i++){ S.t++; fish(S.t / 60, 5, 0.5); deckMinute(); } S.fsess = {x:GROUNDS[g].p.x, y:GROUNDS[g].p.y};
             S.t += 120; S.boat.status = 'port'; S.boat.port = 'husoy'; S.boat.pos = {...portById('husoy').p}; };
           S.crew = []; S.quota = null;
           // 1: normal landing in March

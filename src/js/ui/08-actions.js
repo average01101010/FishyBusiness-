@@ -39,6 +39,8 @@ function doAct(el){
   else if (act === 'fh+' || act === 'fh-') S.fishPlanH = clamp(S.fishPlanH + (act === 'fh+' ? 1 : -1), 1, 12);
   else if (act === 'startfish'){ b.status = 'fishing'; b.fishUntil = S.t + S.fishPlanH * 60; log('Starter fiske i ' + S.fishPlanH + ' t.', 'Fishing for ' + S.fishPlanH + ' h.'); }
   else if (act === 'stopfish'){ b.fishUntil = S.t; S.plan = null; endFishing('done'); }
+  else if (act === 'deckstop'){ if (b.status === 'fishing'){ b.deckStop = true; log('Stopper fisket for å sløye og ise.', 'Stopping fishing to gut and ice.'); } }
+  else if (act === 'deckgo'){ b.deckStop = false; b.deckEnd = null; }
   else if (act === 'sell') startLanding(false);
   else if (act === 'fuel'){ if (S.cash <= 0){ toast(t('no_cash')); return; } startFueling(false); }
   else if (act === 'ice'){ if (50 * PRICE.ice > S.cash){ toast(t('no_cash')); return; } buyIce(50); }
@@ -53,7 +55,7 @@ function panelInput(e){
 }
 function panelChange(e){
   const id = e.target.id;
-  if (id === 'setBleed') S.settings.bleed = e.target.checked;
+  if (id === 'setDeckFirst') S.settings.deckFirst = e.target.checked;
   if (id === 'setGut') S.settings.gut = e.target.checked;
   if (id === 'setIce') S.settings.ice = e.target.checked;
   if (id === 'setAuto') S.settings.autoOn = e.target.checked;

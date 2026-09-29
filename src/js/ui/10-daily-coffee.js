@@ -151,9 +151,11 @@ function renderActs(){
     h.push('<button data-act="retrace">' + LS('Hjem samme vei', 'Home same way', 'Hjem', 'Home') + '</button><button data-ui="plot">' + LS('Ny rute', 'New route', 'Rute', 'Route') + '</button>');
   } else if (b.status === 'fishing'){
     h.push('<button data-act="stopfish">' + LS('Stopp fiske', 'Stop fishing', 'Stopp', 'Stop') + ' · ' + dur((b.fishUntil - S.t) / 60) + '</button>');
+    const dk = deckText(true); if (dk){ h.push('<span class="stp"><span class="lg">' + dk[0] + '</span><span class="sh">' + dk[1] + '</span></span>'); if (b.deckStop && !b.deckEnd) h.push('<button data-act="deckgo">' + LS('Fisk videre', 'Fish on', 'Fisk', 'Fish') + '</button>'); else if (!b.deckStop) h.push('<button data-act="deckstop">' + LS('Stopp og sløy', 'Stop and gut', 'Sløy', 'Gut') + '</button>'); }
     if (G3.isActive()) h.push('<button data-act="rod" class="' + (window.rodActive ? 'on' : 'pri') + '">' + (window.rodActive ? LS('Legg fra deg stanga', 'Put the rod down', 'Stang av', 'Rod off') : LS('🎣 Fisk selv', '🎣 Fish yourself', '🎣 Stang', '🎣 Rod')) + '</button>');
   } else if (b.status === 'sailing'){
     h.push('<button data-act="stop">' + LS('Stopp båten', 'Stop the boat', 'Stopp', 'Stop') + '</button>');
+    { const dk = deckText(true); if (dk) h.push('<span class="stp"><span class="lg">' + dk[0] + '</span><span class="sh">' + dk[1] + '</span></span>'); }
     if (!(S.plan && S.plan.returning)) h.push('<button data-act="retrace">' + LS('Hjem samme vei', 'Home same way', 'Hjem', 'Home') + '</button>');
   } else if (b.status === 'adrift' || b.status === 'engine' || b.status === 'aground'){
     h.push('<button class="warn" data-ui="rescue">' + LS('Ring etter hjelp', 'Call for help', 'Hjelp', 'Help') + '</button>');
