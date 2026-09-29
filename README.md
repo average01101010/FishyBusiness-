@@ -23,6 +23,8 @@ Byggeskriptet setter sammen `src/` til `dist/index.html`, som kan åpnes direkte
 | `src/js/ui/` | Grensesnitt: språk, kart, instrumenter, mobil, dekksdagbok, guide, handlinger, håndfiske, «Kaffe på kaia» og oppstart |
 | `src/js/view3d.js` | 3D-visning |
 | `src/data/` | Kartdata for Senja (komprimert, base64) og sjømerker og kaier (JSON) |
+| `docs/OVERLEVERING.md` | Overlevering fra chatten: visjon, arkitektur, systemer, regelverk og flåteplanen |
 | `docs/spesifikasjon.md` | Spesifikasjon for fiskerisystemet |
+| `tests/` | Playwright-tester i Python, som kjøres mot `dist/index.html` |
 
 `docs/spesifikasjon.md` er eksportert fra dokumentet [«Kystfiske – spesifikasjon for fiskerisystemet»](https://claude.ai/code/artifact/0ca28240-d946-46b1-802b-b4b511e9398d) 29. september 2026.
