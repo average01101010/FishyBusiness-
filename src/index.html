@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kystfiske – prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..700&family=Source+Serif+4:ital,wght@0,600;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+@include(styles.css)
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand"><span class="name" data-t="title"></span><span class="sub" data-t="proto"></span></div>
+    <div class="clock" id="clock"></div>
+    <div class="cash" id="cash"></div>
+    <div class="ctrls">
+      <label class="pace"><span data-t="pace"></span>
+        <select id="pace">
+          <option value="1"></option><option value="30">60×</option><option value="300">600×</option><option value="1800">3600×</option>
+        </select>
+      </label>
+      <button id="phoneBtn" class="chip phonebtn" type="button" aria-label="Mobil"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M10.5 18.5h3"/></svg><i id="phoneBadge" hidden></i></button>
+      <button id="lang" class="chip" type="button"></button>
+    </div>
+  </header>
+  <main>
+    <div id="mapwrap">
+      <svg id="map" xmlns="http://www.w3.org/2000/svg"><g id="gBase"></g><g id="gStatic"></g><g id="gDyn"></g></svg>
+      <canvas id="gl" hidden aria-label="3D"></canvas>
+      <div id="labels" hidden></div>
+      <button id="view3d" class="viewbtn" type="button">3D</button>
+      <button id="camBtn" class="ov cam" type="button" aria-label="Kamera"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.6-2.2h6.8L17 8h3v11H4z"/><circle cx="12" cy="13.3" r="3.6"/></svg></button>
+      <div id="aisCard" hidden></div>
+      <div id="ecdisTop"><div class="ec-f"><small>HDG</small><b id="ecHdg"></b></div><div class="ec-f"><small>COG</small><b id="ecCog"></b></div><div class="ec-f"><small>SOG</small><b id="ecSog"></b></div><div class="ec-f ec-pos"><small>POS</small><b id="ecPos"></b></div><div class="ec-f"><small id="ecDepL">DYBDE</small><b id="ecDep"></b></div><div class="ec-f ec-x"><small id="ecTideL">TIDEVANN</small><b id="ecTide"></b></div><div class="ec-f ec-x"><small id="ecSunL">SOL</small><b id="ecSun"></b></div><div class="ec-b"><button id="ecRoute" type="button"></button><button id="ecClose" type="button">3D</button></div></div>
+      <div id="plotTop"><span class="pt-title"></span><button id="plotStyle" type="button"></button><button id="plotClose" type="button" aria-label="3D">3D</button></div>
+      <div id="actbar"></div>
+      <button id="phoneFab" class="ov fab" type="button" aria-label="Mobil"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2.8"/><path d="M10.5 18.3h3"/></svg><i id="phoneBadge2" hidden></i></button>
+      <div id="loader"><div><b>Kystfiske</b><span>Laster Senja …</span></div></div>
+      <button id="gpsBtn" class="ov gpsb" type="button" aria-label="GPS"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z"/><circle cx="12" cy="11" r="2.3"/></svg><span>GPS</span></button>
+      <button id="logbook" type="button" aria-label="Dekksdagbok"><span class="lbk-tab">DEKKSDAGBOK</span></button>
+      <div id="instr" hidden><div id="gps"></div><div id="echoWrap"><canvas id="echo"></canvas><div id="echoDepth"></div><div id="echoTemp"></div><div id="echoScale"></div></div></div>
+      <button id="modeBtn" class="mapbtn" type="button"></button>
+      <button id="instrBtn" class="mapbtn" type="button">GPS</button>
+      <div id="legend" hidden></div>
+      <div class="attr">© Kartverket, Mapzen (CC BY) · © OpenStreetMap (ODbL)</div>
+      <div id="hud"></div>
+      <div class="zoom">
+        <button id="zin" type="button">+</button>
+        <button id="zout" type="button">−</button>
+        <button id="zboat" type="button">◎</button>
+      </div>
+    </div>
+    <section id="side">
+      <nav id="tabs" role="tablist"></nav>
+      <div id="panel"></div>
+    </section>
+  </main>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <div id="book" hidden><div class="bk-back" data-bk="close"></div><div class="bk-wrap"><div class="bk-stage" id="bkStage"></div><div class="bk-ctrl"><button type="button" data-bk="prev" aria-label="Forrige">‹</button><span id="bkDate"></span><button type="button" data-bk="next" aria-label="Neste">›</button><button type="button" data-bk="today" id="bkToday"></button><button type="button" data-bk="close" aria-label="Lukk">✕</button></div></div></div>
+  <div id="tip" hidden><p id="tipText"></p><div class="tip-b"><button type="button" id="tipOk"></button><button type="button" id="tipSkip"></button></div><i class="tip-arrow"></i></div>
+  <div id="phone" hidden><div class="ph-body"><div class="ph-cam"></div><div class="ph-screen"><div class="ph-status"><b id="phTime"></b><span id="phNet"></span></div><div id="phView"></div><div class="ph-nav"><button type="button" data-pa="back" aria-label="Tilbake">‹</button><button type="button" data-pa="home" class="ph-home" aria-label="Hjem"></button><button type="button" data-pa="close" aria-label="Lukk">✕</button></div></div></div></div>
+  <div id="modal" hidden></div>
+</div>
+<script id="bld" type="application/octet-stream" data-n="32724" data-u="1.3">@include(data/bld.b64)</script>
+<script id="hgt" type="application/octet-stream">@include(data/hgt.b64)</script>
+<script>
+@include(js/core/01-world.js)
+@include(js/core/02-species-gear.js)
+@include(js/core/03-simulation.js)
+@include(js/core/04-crew.js)
+@include(js/core/05-vessels.js)
+@include(js/core/06-services.js)
+@include(js/ui/01-i18n.js)
+@include(js/ui/02-format-state.js)
+@include(js/ui/03-map.js)
+@include(js/ui/04-panels-instruments.js)
+@include(js/ui/05-phone.js)
+@include(js/ui/06-logbook.js)
+@include(js/ui/07-guide.js)
+@include(js/ui/08-actions.js)
+@include(js/ui/09-hand-fishing.js)
+@include(js/ui/10-daily-coffee.js)
+@include(js/ui/11-boot.js)
+</script>
+<script>
+@include(js/view3d.js)
+</script>
+</body>
+</html>
