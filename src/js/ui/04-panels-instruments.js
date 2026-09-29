@@ -20,7 +20,7 @@ function statusText(){
   const b = S.boat;
   if (S.plan && S.plan.depAt) return t('st_waiting', hm(S.plan.depAt / 60));
   if (b.status === 'aground') return t('st_aground');
-  if (b.status === 'port') return t('st_port', portById(b.port).name);
+  if (b.status === 'port') return t(b.land ? 'st_landing' : 'st_port', portById(b.port).name);
   if (b.status === 'sailing') return t(S.plan && S.plan.returning ? 'st_returning' : 'st_sailing', fmt(b.v, 0));
   return t('st_' + b.status);
 }

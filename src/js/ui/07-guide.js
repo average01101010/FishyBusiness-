@@ -183,6 +183,15 @@ function panelWx(){
   h.push('<div class="range"><input type="range" min="6" max="20" step="1" value="' + S.settings.autoW + '" id="autoW" aria-label="' + t('auto') + '"' + (S.settings.autoOn ? '' : ' disabled') + '><output id="autoWOut">' + S.settings.autoW + ' m/s</output></div>');
   return h.join('');
 }
+// where a landing has got to, for the action bar and the harbour panel
+function landText(short){
+  const L0 = S.boat.land; if (!L0) return '';
+  const st = landState(L0, S.t), L = (no, en) => S.lang === 'no' ? no : en, u = L0.kind === 'tub' ? L('kar', 'tubs') : L('kasser', 'boxes'), at = hm(L0.until / 60);
+  // the action bar: a line for wide screens and a short one for narrow
+  if (short) return st.phase === 'prep' ? [L('Gjør klar kranen', 'Rigging the crane'), L('Kran', 'Crane')] : st.phase === 'note' ? [L('Veier inn · seddel ', 'Weighing · note ') + at, L('Seddel ', 'Note ') + at] : [L('Losser ', 'Landing ') + st.units + '/' + L0.n + ' ' + u, st.units + '/' + L0.n + ' ' + u];
+  return st.phase === 'prep' ? L('Mottaket gjør klar kranen og trucken.', 'The plant is getting the crane and the forklift ready.') : st.phase === 'note' ? L('Alt er på kaia. Fangsten veies inn.', 'Everything is ashore. The catch is being weighed in.')
+    : L(st.units + ' av ' + L0.n + ' ' + u + ' er på kaia.', st.units + ' of ' + L0.n + ' ' + u + ' are ashore.');
+}
 function panelPort(){
   const b = S.boat, H = S.t / 60, h = [];
   if (b.status === 'port'){
@@ -191,7 +200,8 @@ function panelPort(){
     h.push('<h3>' + p.name + '</h3><div class="kv"><span>' + t('services') + '</span><span>' + svc.join(', ') + '</span></div>');
     const btn = [];
     const tot = holdTotal();
-    if (p.mottak && tot > 0) btn.push('<button class="btn primary" data-act="sell">' + t('sell', fmt(tot, 0)) + '</button>');
+    if (b.land) h.push('<p class="note"><b>' + (S.lang === 'no' ? 'Lossing: ' : 'Landing: ') + '</b>' + landText(false) + ' ' + (S.lang === 'no' ? 'Sluttseddelen kommer ca. kl. ' : 'The landing note comes at about ') + hm(b.land.until / 60) + '.</p>');
+    else if (p.mottak && tot > 0) btn.push('<button class="btn primary" data-act="sell">' + t('sell', fmt(tot, 0)) + '</button>');
     if (p.fuel){ const need = BOAT.fuelCap - b.fuel; btn.push('<button class="btn" data-act="fuel"' + (need < 0.5 ? ' disabled' : '') + '>' + t('fill_fuel', fmt(need, 0), kr(need * fuelPrice())) + '</button>'); }
     if (p.ice) btn.push('<button class="btn" data-act="ice"' + (b.ice > BOAT.iceCap - 1 ? ' disabled' : '') + '>' + t('buy_ice', kr(50 * PRICE.ice)) + '</button>');
     if (!b.gear) btn.push('<button class="btn" data-act="gear">' + t('buy_gear', kr(PRICE.gear)) + '</button>');

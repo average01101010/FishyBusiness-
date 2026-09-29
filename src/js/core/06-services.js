@@ -85,13 +85,13 @@ function opsSkipper(){ return S.ops && S.crew.find(c => c.id === S.ops.skipper) 
 function autoRestock(){
   // only what the harbour sells: fuel at the bunker quays, ice at the fish plants
   const b = S.boat, fp = fuelPrice(), pt = portById(b.port) || {}; let l = BOAT.fuelCap - b.fuel; if (pt.fuel && l > 0.5 && S.cash > 0){ l = Math.min(l, S.cash / fp); b.fuel += l; S.cash -= l * fp; S.stats.costs += l * fp; }
-  if (pt.ice && S.settings.ice !== false){ const kg = Math.max(0, BOAT.iceCap - b.ice), c = kg * PRICE.ice; if (kg > 0 && c <= S.cash){ b.ice += kg; S.cash -= c; S.stats.costs += c; } }
+  if (pt.ice && S.settings.ice !== false){ const kg = Math.max(0, BOAT.iceCap - b.ice), c = kg * PRICE.ice; if (kg > 0 && c <= S.cash){ b.ice += kg; S.cash -= c; S.stats.costs += c; iceChute(kg); } }
   if (!b.gear && PRICE.gear <= S.cash){ b.gear = true; S.cash -= PRICE.gear; S.stats.costs += PRICE.gear; }
 }
 function opsStep(H){
   const o = S.ops, b = S.boat; if (!o || !o.on || !o.wps || !o.wps.length) return;
   const g = gDate(H), day = Math.floor((H + 6) / 24), wd = (g.getUTCDay() + 6) % 7, hod = g.getUTCHours() + g.getUTCMinutes() / 60;
-  if (b.status !== 'port' || S.plan || o.last === day || !o.days[wd] || hod < o.dep || hod > o.dep + 2) return;
+  if (b.status !== 'port' || b.land || S.plan || o.last === day || !o.days[wd] || hod < o.dep || hod > o.dep + 2) return;
   const sk = opsSkipper(); o.last = day;
   if (!sk){ msg('Driftsplan', 'Driftsplanen står: ingen skipper er satt. Velg en skipper i Mannskap-appen.', 'The operations plan is idle: no skipper is set. Choose one in the Crew app.'); return; }
   if (b.port !== o.home){ msg(sk.name, 'Båten ligger ikke i ' + portById(o.home).name + ', så jeg går ikke ut på den faste planen i dag.', 'The boat is not in ' + portById(o.home).name + ', so I am not running the plan today.'); return; }
@@ -106,16 +106,23 @@ function opsStep(H){
   depart();
 }
 function opsLanded(pid){
-  const o = S.ops, sk = opsSkipper(); if (!o) return;
-  const port = portById(pid), kg = holdTotal(); let total = 0;
-  if (port.mottak && kg > 0.5){ const c0 = S.cash; sell(); total = S.cash - c0; }
+  if (!S.ops) return;
+  // the catch goes up with the crane; the report comes with the landing note
+  if (startLanding(true)) return;
+  opsReport(pid, holdTotal(), 0, false);
+}
+function opsReport(pid, kg, total, landed){
+  const sk = opsSkipper(), port = portById(pid);
   autoRestock();
   const extra = Math.round(Math.max(0, total) * 0.05); if (extra > 0){ S.cash -= extra; S.stats.costs += extra; }
-  msg(sk ? sk.name : 'Driftsplan', 'Driftsrapport: ' + (kg > 0.5 ? fmt(kg, 0) + ' kg levert i ' + port.name + ', ' + kr(Math.round(total)) + ' etter lott' + (extra ? ', skippertillegg ' + kr(extra) : '') + '.' : 'ingen fangst å levere.') + ' Båten er fylt opp og klar.',
-    'Operations report: ' + (kg > 0.5 ? fmt(kg, 0) + ' kg landed at ' + port.name + ', ' + kr(Math.round(total)) + ' after shares' + (extra ? ', skipper bonus ' + kr(extra) : '') + '.' : 'no catch to land.') + ' The boat is fuelled and ready.');
+  const what = landed ? [fmt(kg, 0) + ' kg levert i ' + port.name + ', ' + kr(Math.round(total)) + ' etter lott' + (extra ? ', skippertillegg ' + kr(extra) : '') + '.', fmt(kg, 0) + ' kg landed at ' + port.name + ', ' + kr(Math.round(total)) + ' after shares' + (extra ? ', skipper bonus ' + kr(extra) : '') + '.']
+    : kg > 0.5 ? [fmt(kg, 0) + ' kg om bord. ' + port.name + ' har ikke fiskemottak.', fmt(kg, 0) + ' kg aboard. ' + port.name + ' has no fish plant.'] : ['ingen fangst å levere.', 'no catch to land.'];
+  msg(sk ? sk.name : 'Driftsplan', 'Driftsrapport: ' + what[0] + ' Båten er fylt opp og klar.', 'Operations report: ' + what[1] + ' The boat is fuelled and ready.');
 }
 function depart(){
   const b = S.boat;
+  // the lines stay on until the catch is landed; the plan leaves when it is done
+  if (b.land){ if (S.plan){ S.plan.depAt = b.land.until + 1; log('Går når lossingen er ferdig, kl. ' + hm(S.plan.depAt / 60) + '.', 'Leaving when the landing is done, at ' + hm(S.plan.depAt / 60) + '.'); } return false; }
   // without you aboard, the vessel needs crew of its own
   if (!meAboard() && !crewAboard().length){ S.plan = null; log('Båten har ikke mannskap og kan ikke gå ut uten deg om bord.', 'The boat has no crew and cannot go out without you aboard.'); return false; }
   S.tripOwner = !(S.plan && S.plan.ops) && meAboard();

@@ -133,11 +133,14 @@ function vesselStep(H){
   for (const x of S.hold){ const r = x.bled ? (x.iced ? 0.9 : 3.0) : (x.iced ? 2.2 : 6.0); x.fresh = Math.max(0, x.fresh - r * clean / 60); }
   // work queue at the yard and on the quay: runs while the boat is in port
   if (S.jobs && S.jobs.length && b.status === 'port'){ const j = S.jobs[0]; if (j.until == null) j.until = S.t + j.h * 60; if (S.t >= j.until){ finishJob(j); S.jobs.shift(); if (S.jobs.length) S.jobs[0].until = S.t + S.jobs[0].h * 60; } }
+  // the landing note comes when the catch is weighed in
+  if (b.land && S.t >= b.land.until) finishLanding();
   opsStep(H);
   // planned departure
   if (S.plan && S.plan.depAt && S.t >= S.plan.depAt && (b.status === 'port' || b.status === 'idle')){
     const W0 = windAt(H);
-    if (S.jobs && S.jobs.length && b.status === 'port'){ S.plan.depAt = S.jobs[0].until + 1; log('Avgangen venter til verkstedet er ferdig.', 'Departure waits until the yard is done.'); }
+    if (b.land){ S.plan.depAt = b.land.until + 1; log('Avgangen venter til lossingen er ferdig.', 'Departure waits until the landing is done.'); }
+    else if (S.jobs && S.jobs.length && b.status === 'port'){ S.plan.depAt = S.jobs[0].until + 1; log('Avgangen venter til verkstedet er ferdig.', 'Departure waits until the yard is done.'); }
     else if (S.settings.autoOn && W0 > S.settings.autoW && (S.plan.delays || 0) < 12){ S.plan.depAt += 60; S.plan.delays = (S.plan.delays || 0) + 1; log('Avgangen er utsatt en time. Vinden er ' + W0.toFixed(0) + ' m/s.', 'Departure postponed an hour. The wind is ' + W0.toFixed(0) + ' m/s.'); }
     else depart();
   }
@@ -198,7 +201,7 @@ function dock(pid){
   const wasOps = S.plan && S.plan.ops;
   S.plan = null; S.trail = [{x:port.p.x, y:port.p.y, port:pid}];
   log('Fortøyd i ' + port.name + '.', 'Moored in ' + port.name + '.');
-  // the skipper lands and restocks straight away, on this vessel (a deferred call would land whichever vessel is bound then)
+  // the skipper starts landing and restocks straight away, on this vessel (a deferred call would act on whichever vessel is bound then)
   if (wasOps){ opsLanded(pid); if (typeof refreshAll === 'function') setTimeout(refreshAll, 0); }
 }
 function fish(H, W, hs){

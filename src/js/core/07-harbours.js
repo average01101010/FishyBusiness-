@@ -113,3 +113,35 @@ function berthPose(pid, type, kind = 'main'){
   return BERTHPOSE[key] = {x:best.cx / 1000, y:best.cz / 1000, hd, fwd:f, face:{x:best.fx, z:best.fz, ux:best.ux, uz:best.uz, nx:best.Nx, nz:best.Nz, hl:best.hl, depth:best.depth}, a:best.a, Lb, Bb};
 }
 
+// ===== landing the catch =====
+// The catch goes up with the quay crane: boxes of about 40 kg fish, nine to a pallet, from skiffs and snekker; tubs of about 300 kg
+// from the sjarks. The forklift takes two loads at a time into the plant, and the landing note comes when the catch is weighed in.
+// Game minutes; the 3D view plays the same timeline, so what you see is what the clock says. The times are guesses, to be tuned.
+const LANDING = {prep:5, lift:2.5, note:5, boxKg:40, perLift:9, tubKg:300, hooked:0.86};
+function landPlan(type, kg){
+  const tub = type === 'sjark' || type === 'sjarkny', n = Math.max(1, Math.ceil(kg / (tub ? LANDING.tubKg : LANDING.boxKg))), lifts = tub ? n : Math.ceil(n / LANDING.perLift);
+  return {kind:tub ? 'tub' : 'box', n, lifts, dur:LANDING.prep + lifts * LANDING.lift + LANDING.note};
+}
+// how far a landing has come at game minute t: loads up on the quay, units (boxes or tubs) landed, and the phase
+function landState(L, t){
+  const e = t - L.t0, up = clamp(Math.floor((e - LANDING.prep) / LANDING.lift - LANDING.hooked) + 1, 0, L.lifts);
+  const units = L.kind === 'tub' ? up : Math.min(L.n, up * LANDING.perLift);
+  return {e, up, units, phase:e < LANDING.prep ? 'prep' : e < LANDING.prep + L.lifts * LANDING.lift ? 'lift' : 'note'};
+}
+function startLanding(ops){
+  const b = S.boat, pt = portById(b.port), kg = holdTotal();
+  if (b.status !== 'port' || !pt || !pt.mottak || b.land || kg < 0.5) return false;
+  const lp = landPlan(b.type, kg), unit = lp.kind === 'tub' ? ['kar', 'tubs'] : ['kasser', 'boxes'];
+  b.land = {pid:pt.id, t0:S.t, until:S.t + lp.dur, kind:lp.kind, n:lp.n, lifts:lp.lifts, kg:Math.round(kg), ops:!!ops};
+  log('Losser ' + fmt(kg, 0) + ' kg i ' + pt.name + ', ' + lp.n + ' ' + unit[0] + '. Sluttseddelen kommer ca. kl. ' + hm(b.land.until / 60) + '.', 'Landing ' + fmt(kg, 0) + ' kg at ' + pt.name + ', ' + lp.n + ' ' + unit[1] + '. The landing note comes at about ' + hm(b.land.until / 60) + '.');
+  return true;
+}
+// the catch is weighed in: the sale is settled on what is in the hold now, and a standing plan gets its report
+function finishLanding(){
+  const b = S.boat, L = b.land; b.land = null;
+  if (b.status !== 'port' || b.port !== L.pid) return;
+  const c0 = S.cash; sell(); const total = S.cash - c0;
+  if (L.ops) opsReport(L.pid, L.kg, total, true);
+}
+// ice from the silo runs down the chute at about 100 kg a minute; only the 3D view uses this
+function iceChute(kg){ const b = S.boat; b.iceUntil = Math.max(b.iceUntil || 0, S.t) + Math.max(1, kg / 100); }
