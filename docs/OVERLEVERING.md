@@ -434,7 +434,12 @@ Mottakene ligger der Jonas har funnet dem i Råfisklagets leveranseoversikt: Hus
    - **Å legge til:** Båten kommer inn i en bue og legger seg parallelt med kaia, og fenderne henges ut. Tauene settes i rekkefølgen akterspring, baugtamp, hekktamp og forspring.
    - **Tidevannet:** Tauene får lengden de hadde da de ble satt, så de slakkes og strammes med tidevannet.
    - **Å kaste loss:** Dette er tilstanden `unmooring` i simuleringen og tar `CAST_MIN` (2) spillminutter, mens tauene tas inn i omvendt rekkefølge.
-3. **B3 Mottakene i 3D:** Bygg, issilo, kaikran, truck og folk på kaia med egne gjøremål.
+3. **B3 Mottakene i 3D (ferdig):**
+   - **Bygget:** Mottaket er det nærmeste store OpenStreetMap-bygget ved liggeplassen, og industribygg foretrekkes. Finnes det ikke noe, settes et eget bygg på nærmeste tørre land. Veggen mot kaia får port, baldakin og skilt med mottakets navn.
+   - **Kaia:** Issilo på bein står der det er best avstand til kran og losseplass, med kort renne ut over liggeplassen. Kaia har gul kaikran, lysmaster som lyser om natta, og kassestabler og kar ved porten.
+   - **Truck:** Kjører paller mellom stabelen og kaia.
+   - **Arbeidere:** Fire i varselklær og hjelm. De kveiler tau ved pullertene, spyler og stabler kasser, feier og tar kaffepause. Mellom 22 og 06 er bare vakta der.
+   - **Ytelse:** Bare mottaket nærmest kameraet animeres. Koden ligger i `view3d.js` under «fish plants» (`plantLayout`, `buildPlants`, `drawPlant`).
 4. **B4 Levering:** Tar spilltid. Kasser (skiff og snekke) eller kar (sjark) løftes med kran, trucken kjører dem inn, sluttseddelen kommer til slutt. Is fra isrenna.
 5. **B5 Bunkring:** Egen kai med pumpe og slange, tid etter pumpefart.
 
@@ -480,7 +485,7 @@ Større fartøyklasser, line, garn, snurrevad og teiner, egne anlegg og nye regi
   - `motion2.py`: båtbevegelse, frakoblet med 60 bilder i sekundet.
   - `berthtest.py`: kaiplasser og trykk i kartplotteren.
   - `fleet1test.py` og `fleet1mig.py`: flåtemodell og migrering.
-  - `moortest.py`: fortøyning. Liggeplass i alle havner, å legge til med tauene og å kaste loss.
+  - `moortest.py`: fortøyning og mottakene i 3D. Liggeplass i alle havner, å legge til med tauene og å kaste loss.
   - `harbourtest.py`: havnene. Mottak, is og drivstoff per havn.
   - `fleet3test.py`: fase 3. Varsler, båtvelgeren, inntekt per båt og service per båt.
   - `fleet2test.py`: fase 2. Levering med og uten adgang, to båter på driftsplan i en simulert uke, knappene i Fartøy-appen, nybygg til flåten, og lagring med to båter. Skriver `OK` eller `FEIL` per sjekk.

@@ -1,5 +1,5 @@
 from _env import GAME
-# Mooring (B2): a berth alongside the quay in every harbour, coming alongside with the lines going on, and casting off before moving.
+# Mooring (B2) and the fish plants (B3): a berth alongside the quay in every harbour, coming alongside with the lines going on, and casting off before moving.
 import asyncio, json
 from playwright.async_api import async_playwright
 
@@ -32,5 +32,7 @@ async def main():
           return R; })()""")
         print('cast off:', json.dumps(c))
         print(ok(c['st0'] == 'unmooring' and c['until'] == 2 and c['st'] == ['unmooring', 'sailing', 'sailing']), 'casting off takes two game minutes, then she sails')
+        pl = json.loads(await pg.evaluate("JSON.stringify(G3._debug.PLANTS.map(P => P.id))"))
+        print(ok(sorted(pl) == sorted(['husoy', 'senjahopen', 'botnhamn', 'gryllefjord', 'sommaroy', 'brensholmen', 'torsken', 'frovag'])), 'all eight fish plants are laid out in 3D (plant, silo, crane, people)')
         print('errors:', errs[:4]); await b.close()
 asyncio.run(main())

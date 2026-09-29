@@ -586,6 +586,185 @@ const G3 = (() => {
     for (const c of CH.values()) if (c.lights){ attr(0, c.lights, 3); gl.drawArrays(gl.POINTS, 0, c.nl); }
   }
 
+  // ---------- fish plants: the plant with its door, sign, ice silo and chute; the quay crane, a forklift and the people on the quay ----------
+  // The plant is the OpenStreetMap building nearest the berth (industrial preferred), dressed with what a fish plant has on the quay
+  // side; where the map has none, one of ours stands on the nearest dry land. Only the plant nearest the camera is animated.
+  const PLANTS = []; let PLANTN = null, PM = null;
+  const plantName = pt => { const c = CUSTOMERS.find(x => x.port === pt.id && x.big); return (c ? c.no : 'Mottaket i ' + pt.name).toUpperCase(); };
+  function plantLayout(pt){
+    const bp = berthPose(pt.id, 'skiff') || berthPose(pt.id, 'sjark'); if (!bp) return null;
+    const f = bp.face, u = [f.ux, f.uz], n = [f.nx, f.nz], depth = f.depth || 6, cx = bp.x * 1000, cz = bp.y * 1000;
+    const at = (a, o) => [f.x + u[0] * a + n[0] * o, f.z + u[1] * a + n[1] * o];
+    const onQuay = p => { const rx = p[0] - f.x, rz = p[1] - f.z, al = rx * u[0] + rz * u[1], of = rx * n[0] + rz * n[1]; return Math.abs(al) <= f.hl + 0.5 && of <= 0.2 && of >= -depth - 0.2; };
+    const gy = p => onQuay(p) ? QTOP : Math.max(0.4, terrH(p[0], p[1]));
+    const inset = Math.min(2.8, depth / 2), drop = at(bp.a + 1.8, -inset), crane = at(bp.a - 2.6, -Math.min(1.9, depth / 2));
+    let bi = -1, bs = 1e9;
+    if (BLD) for (let kx = -1; kx <= 1; kx++) for (let kz = -1; kz <= 1; kz++) for (const i of (BLD.cells.get((Math.floor(cz / 1000) + kz) * 100 + Math.floor(cx / 1000) + kx) || [])){
+      const ty = BLD.t[i], A = BLD.l[i] * BLD.w[i]; if (A < 250 || (ty !== 8 && ty !== 9 && ty !== 0)) continue;
+      const d = Math.hypot(BLD.x[i] - cx, BLD.z[i] - cz); if (d > 220) continue;
+      const sc = d - (ty === 8 ? 60 : 0) - Math.sqrt(A); if (sc < bs){ bs = sc; bi = i; }
+    }
+    let B;
+    if (bi >= 0){ const ty = BLD.t[bi], lv = BLD.lv[bi]; B = {x:BLD.x[bi], z:BLD.z[bi], l:BLD.l[bi], w:BLD.w[bi], a:BLD.a[bi], H:ty === 8 ? (lv ? 4 * lv : 7.5) : ty === 9 ? (lv || 2) * 3.4 : (lv ? 2.8 * lv : 3.6), osm:true}; }
+    else { let q = null; for (let r = 14; r <= 220 && !q; r += 6){ const p = at(bp.a, -depth - r); if (isLand({x:p[0] / 1000, y:p[1] / 1000}) && terrH(p[0], p[1]) < 25) q = at(bp.a, -depth - r - 10); }
+      if (!q) return null; B = {x:q[0], z:q[1], l:26, w:16, a:Math.atan2(u[1], u[0]), H:8, osm:false}; }
+    const ca = Math.cos(B.a), sa = Math.sin(B.a); let lo = 1e9, hi = -1e9;
+    for (const [s1, s2] of [[-0.5, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, 0.5]]){ const y = terrH(B.x + ca * s1 * B.l - sa * s2 * B.w, B.z + sa * s1 * B.l + ca * s2 * B.w); lo = Math.min(lo, y); hi = Math.max(hi, y); }
+    B.base = Math.max(lo, 0.3) - 0.5; B.top = B.base + B.H + Math.max(0, hi - B.base);
+    // the wall facing the quay gets the door and the sign
+    const walls = [[ca, sa, B.l / 2, B.w], [-ca, -sa, B.l / 2, B.w], [-sa, ca, B.w / 2, B.l], [sa, -ca, B.w / 2, B.l]].map(([nx, nz, off, len]) => ({nx, nz, x:B.x + nx * off, z:B.z + nz * off, len}));
+    const wl = walls.reduce((bw, w) => { const dx = drop[0] - w.x, dz = drop[1] - w.z, s = (dx * w.nx + dz * w.nz) / (Math.hypot(dx, dz) || 1); return !bw || s > bw.s ? {...w, s} : bw; }, null);
+    const dn = [wl.nx, wl.nz], du = [-wl.nz, wl.nx], door = [wl.x, wl.z], dy = Math.max(B.base + 0.5, gy([wl.x + dn[0] * 2, wl.z + dn[1] * 2]));
+    const off = (p, a, o) => [p[0] + du[0] * a + dn[0] * o, p[1] + du[1] * a + dn[1] * o];
+    const e1 = off(door, wl.len / 2 - 3, 0), e2 = off(door, -wl.len / 2 + 3, 0), end = Math.hypot(e1[0] - cx, e1[1] - cz) < Math.hypot(e2[0] - cx, e2[1] - cz) ? wl.len / 2 - 3 : -wl.len / 2 + 3;
+    // the ice silo stands on the quay aft of the crane, with a short chute out over the berth
+    const siloR = clamp(depth / 2 - 0.3, 1.2, 2), lim = f.hl - siloR - 0.5, cA = bp.a - 2.6, dA = bp.a + 1.8;
+    const sA = [bp.a - 9.5, bp.a + 9.5, -lim, lim].map(a => clamp(a, -lim, lim)).reduce((b, a) => Math.min(Math.abs(a - cA), Math.abs(a - dA)) > Math.min(Math.abs(b - cA), Math.abs(b - dA)) ? a : b);
+    const silo = at(sA, -Math.max(siloR + 0.4, Math.min(depth / 2, 3.5))), siloY = gy(silo), chuteB = at(bp.a + (sA > bp.a ? 1.2 : -1.2), 1.3), toB = Math.atan2(chuteB[0] - silo[0], chuteB[1] - silo[1]);
+    const P = {id:pt.id, name:plantName(pt), bp, f, u, n, depth, at, gy, drop, crane, B, door, dn, du, dy, wallLen:wl.len, silo, siloY, siloR,
+      chuteA:[silo[0] + Math.sin(toB) * siloR * 0.9, siloY + 8.2, silo[1] + Math.cos(toB) * siloR * 0.9], chuteB:[chuteB[0], QTOP + 3.4, chuteB[1]],
+      lamps:[at(clamp(bp.a - 9, -f.hl + 1, f.hl - 1), -0.9), at(clamp(bp.a + 9, -f.hl + 1, f.hl - 1), -0.9)], stacks:[off(door, 4.2, 4.5), off(door, -4.2, 4.5)], park:off(door, 7.5, 6.5)};
+    P.signW = Math.min(wl.len * 0.7, 16); P.signY = Math.min(B.top - 1.6, dy + 6.2);
+    return P;
+  }
+  function buildPlants(){
+    PLANTS.length = 0; const nb = NB();
+    const STEEL = [0.74, 0.76, 0.78, 0.55], DOORC = [0.27, 0.3, 0.34, 0.3], BLUE = [0.12, 0.3, 0.55, 0.3], CRANE = [0.95, 0.72, 0.08, 0.4], PALLET = [0.66, 0.53, 0.36, 0.05], POLE = [0.45, 0.47, 0.5, 0.4];
+    const BOXC = [[0.18, 0.4, 0.74, 0.25], [0.6, 0.64, 0.67, 0.25]], WALL = [0.82, 0.85, 0.86, 0.1], ROOFC = [0.3, 0.33, 0.36, 0.1], KAR = [0.5, 0.55, 0.6, 0.25];
+    for (const pt of PORTS){
+      if (!pt.mottak) continue; const P = plantLayout(pt); if (!P) continue; PLANTS.push(P);
+      const B = P.B, du = P.du, dn = P.dn;
+      if (!B.osm){ const L = [Math.cos(B.a), Math.sin(B.a)], W = [-Math.sin(B.a), Math.cos(B.a)]; obox(nb, [B.x, B.z], L, W, B.l, B.w, B.base, B.H, WALL); obox(nb, [B.x, B.z], L, W, B.l + 0.6, B.w + 0.6, B.base + B.H, 0.35, ROOFC); }
+      // door with frame and canopy, the sign board
+      const D = (a, o) => [P.door[0] + du[0] * a + dn[0] * o, P.door[1] + du[1] * a + dn[1] * o];
+      obox(nb, D(0, 0.06), du, dn, 4.4, 0.12, P.dy - 0.2, 4.4, DOORC); for (const s of [-1, 1]) obox(nb, D(s * 2.3, 0.1), du, dn, 0.22, 0.2, P.dy - 0.2, 4.6, STEEL);
+      obox(nb, D(0, 0.8), du, dn, 5.4, 1.6, P.dy + 4.5, 0.15, STEEL); obox(nb, D(0, 0.07), du, dn, P.signW + 0.4, 0.1, P.signY - 0.2, P.signW / 5 + 0.4, BLUE);
+      // the ice silo on legs, its ladder and the chute out over the berth
+      const [sx, sz] = P.silo, sy = P.siloY;
+      const sr = P.siloR, ld = P.u;   // the ladder runs up the side along the quay
+      for (const [lx, lz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) nb.tube([[sx + lx * sr * 0.6, sy, sz + lz * sr * 0.6], [sx + lx * sr * 0.6, sy + 3, sz + lz * sr * 0.6]], 0.12, STEEL, 6);
+      nb.tube([[sx, sy + 2.8, sz], [sx, sy + 9, sz]], sr, STEEL, 16);
+      { const c = [sx, sy + 9 + sr * 0.6, sz]; for (let i = 0; i < 16; i++){ const a0 = i / 16 * Math.PI * 2, a1 = (i + 1) / 16 * Math.PI * 2; nb.tri([sx + Math.cos(a0) * sr, sy + 9, sz + Math.sin(a0) * sr], c, [sx + Math.cos(a1) * sr, sy + 9, sz + Math.sin(a1) * sr], STEEL); } }
+      for (const s of [-0.22, 0.22]) nb.tube([[sx + ld[0] * (sr + 0.05) + dn[0] * s, sy + 3, sz + ld[1] * (sr + 0.05) + dn[1] * s], [sx + ld[0] * (sr + 0.05) + dn[0] * s, sy + 9.4, sz + ld[1] * (sr + 0.05) + dn[1] * s]], 0.03, POLE, 4);
+      for (let y = sy + 3.3; y < sy + 9.3; y += 0.35) nb.tube([[sx + ld[0] * (sr + 0.05) - dn[0] * 0.22, y, sz + ld[1] * (sr + 0.05) - dn[1] * 0.22], [sx + ld[0] * (sr + 0.05) + dn[0] * 0.22, y, sz + ld[1] * (sr + 0.05) + dn[1] * 0.22]], 0.02, POLE, 4);
+      const cA = P.chuteA, cB = P.chuteB; nb.tube([cA, cB], 0.28, STEEL, 10); nb.tube([cB, [cB[0], cB[1] - 0.9, cB[2]]], 0.22, STEEL, 10);
+      const mid = [(cA[0] + cB[0]) / 2, (cA[1] + cB[1]) / 2, (cA[2] + cB[2]) / 2], gm = P.gy([mid[0], mid[2]]); if (mid[1] - gm > 4) nb.tube([[mid[0], gm, mid[2]], [mid[0], mid[1] - 0.3, mid[2]]], 0.12, STEEL, 6);
+      // crane pedestal, lamp posts
+      nb.tube([[P.crane[0], QTOP, P.crane[1]], [P.crane[0], QTOP + 1.1, P.crane[1]]], 0.42, CRANE, 12);
+      for (const L of P.lamps){ const y0 = P.gy(L); nb.tube([[L[0], y0, L[1]], [L[0], y0 + 8, L[1]]], 0.09, POLE, 6); obox(nb, [L[0] + P.n[0] * 0.3, L[1] + P.n[1] * 0.3], P.u, P.n, 0.7, 0.5, y0 + 7.8, 0.3, [0.2, 0.22, 0.25, 0.3]); }
+      // stacks of fish boxes on pallets and a pair of empty tubs by the door
+      P.stacks.forEach((S0, k) => { const y0 = P.gy(S0); for (let j = 0; j < 2; j++){ const c = [S0[0] + du[0] * (j - 0.5) * 1.35, S0[1] + du[1] * (j - 0.5) * 1.35]; obox(nb, c, du, dn, 1.2, 0.8, y0, 0.15, PALLET);
+        for (let lay = 0; lay < 4 + ((k + j) % 3); lay++) for (let b = 0; b < 3; b++) obox(nb, [c[0] + du[0] * (b - 1) * 0.4, c[1] + du[1] * (b - 1) * 0.4], du, dn, 0.38, 0.78, y0 + 0.15 + lay * 0.3, 0.28, BOXC[(k + lay) % 2]); } });
+      for (let j = 0; j < 2; j++){ const c = D(-7 - j * 1.4, 3); obox(nb, c, du, dn, 1.2, 1.0, P.gy(c), 0.8, KAR); }
+    }
+    PLANTN = nb.mesh();
+  }
+  // the moving parts, built once and drawn with a transform; the workers are drawn joint by joint
+  function buildPlantParts(){
+    const mk = f => { const b = NB(); f(b); return b.mesh(); }, unit = k => mk(b => b.tube([[0, 0, 0], [0, 0, 1]], 1, k, 6));
+    const YEL = [0.95, 0.72, 0.08, 0.4], DK = [0.14, 0.15, 0.17, 0.2], VEST = [1, 0.45, 0.06, 0.3], REFL = [0.9, 0.95, 0.9, 0.6], SKIN = [0.86, 0.66, 0.52, 0.1];
+    PM = {
+      leg:unit([0.16, 0.18, 0.22, 0.1]), arm:unit(VEST), wire:unit([0.1, 0.1, 0.1, 0.3]), broom:unit([0.55, 0.4, 0.25, 0.05]), hose:unit([0.2, 0.55, 0.25, 0.3]),
+      boom:mk(b => b.box(0, -0.5, 0.5, 1, 1, 1, YEL)),
+      torso:mk(b => { b.box(0, 0, 0, 0.42, 0.56, 0.26, VEST); b.box(0, 0.16, 0, 0.43, 0.06, 0.27, REFL); b.box(0, 0.34, 0, 0.43, 0.06, 0.27, REFL); }),
+      head:mk(b => { b.box(0, 0, 0, 0.2, 0.22, 0.22, SKIN); b.box(0, 0.2, 0, 0.26, 0.09, 0.28, [0.95, 0.95, 0.92, 0.5]); b.box(0, 0.19, -0.14, 0.24, 0.03, 0.08, [0.95, 0.95, 0.92, 0.5]); }),
+      hand:mk(b => b.box(0, -0.05, 0, 0.09, 0.1, 0.09, [0.9, 0.9, 0.2, 0.2])), boot:mk(b => b.box(0, 0, -0.05, 0.13, 0.12, 0.28, DK)),
+      cup:mk(b => b.box(0, 0, 0, 0.08, 0.1, 0.08, [0.95, 0.95, 0.95, 0.4])), fbox:mk(b => b.box(0, 0, 0, 0.78, 0.28, 0.38, [0.18, 0.4, 0.74, 0.25])),
+      cab:mk(b => { b.box(0, 0, 0, 1.3, 1.5, 1.3, YEL); b.box(0, 0.6, -0.66, 1.1, 0.7, 0.04, [0.15, 0.2, 0.25, 0.8]); }),
+      hook:mk(b => { b.box(0, -0.3, 0, 0.3, 0.45, 0.2, YEL); b.box(0, -0.55, 0, 0.06, 0.25, 0.06, DK); }),
+      // forklift: body with counterweight and overhead guard, driver in the seat; forks on a mast that lifts (local forward -z)
+      fork:mk(b => { b.box(0, 0.25, 0.2, 1.15, 0.8, 1.9, [0.85, 0.2, 0.12, 0.35]); b.box(0, 0.25, 1.05, 1.15, 1.05, 0.5, [0.2, 0.2, 0.22, 0.2]);
+        for (const [x, z] of [[-0.52, -0.55], [0.52, -0.55], [-0.52, 0.8], [0.52, 0.8]]) b.box(x, 1.05, z, 0.07, 1.15, 0.07, DK); b.box(0, 2.2, 0.12, 1.15, 0.06, 1.45, DK);
+        for (const [x, z] of [[-0.5, -0.6], [0.5, -0.6], [-0.5, 0.85], [0.5, 0.85]]) b.tube([[x - 0.12, 0.28, z], [x + 0.12, 0.28, z]], 0.28, DK, 10);
+        b.box(0, 1.05, 0.35, 0.44, 0.55, 0.3, VEST); b.box(0, 1.6, 0.33, 0.2, 0.22, 0.22, SKIN); b.box(0, 1.8, 0.33, 0.26, 0.09, 0.28, [0.95, 0.95, 0.92, 0.5]); }),
+      mast:mk(b => { for (const x of [-0.35, 0.35]) b.box(x, 0, 0, 0.08, 2.3, 0.1, DK); b.box(0, 0.2, -0.08, 0.8, 0.3, 0.06, DK); for (const x of [-0.25, 0.25]) b.box(x, 0, -0.62, 0.1, 0.05, 1.1, DK); }),
+      pal:mk(b => { b.box(0, 0, 0, 1.2, 0.14, 0.8, [0.66, 0.53, 0.36, 0.05]); for (let lay = 0; lay < 3; lay++) for (let k = 0; k < 3; k++) b.box((k - 1) * 0.4, 0.14 + lay * 0.29, 0, 0.38, 0.28, 0.78, [0.18, 0.4, 0.74, 0.25]); })
+    };
+  }
+  // a looping round of stations: stand a while doing the task, then walk to the next (speed in m/s)
+  function roundAt(R, T){
+    if (!R.seg){ let tot = 0; R.seg = R.st.map((a, i) => { const b = R.st[(i + 1) % R.st.length], wd = Math.hypot(b.p[0] - a.p[0], b.p[1] - a.p[1]) / (R.v || 1.2), s = [tot, a.d, wd, a, b]; tot += a.d + wd; return s; }); R.tot = tot; }
+    const tt = ((T % R.tot) + R.tot) % R.tot;
+    for (const [t0, d, wd, a, b] of R.seg){
+      if (tt < t0 + d) return {x:a.p[0], z:a.p[1], h:a.h, task:a.task, walk:false, s:tt - t0, a};
+      if (tt < t0 + d + wd){ const k = (tt - t0 - d) / wd; return {x:a.p[0] + (b.p[0] - a.p[0]) * k, z:a.p[1] + (b.p[1] - a.p[1]) * k, h:Math.atan2(b.p[0] - a.p[0], -(b.p[1] - a.p[1])), task:a.carry ? 'carry' : R.sweep ? 'sweep' : 'walk', walk:true, s:tt - t0 - d, a, k}; }
+    }
+    return {x:R.st[0].p[0], z:R.st[0].p[1], h:0, task:'stand', walk:false, s:0};
+  }
+  function plantRounds(P){
+    if (P.rounds) return P.rounds;
+    const face = (p, q) => Math.atan2(q[0] - p[0], -(q[1] - p[1])), bl = QB[faceKey(P.f)] || [], bp = P.bp, f = P.f;
+    const bol = (a) => bl.length ? bl.reduce((x, q) => Math.abs(q.a - a) < Math.abs(x.a - a) ? q : x, bl[0]) : {x:P.at(a, -0.6)[0], z:P.at(a, -0.6)[1]};
+    const bA = bol(bp.a - 5), bF = bol(bp.a + 5), toW = (q) => [q.x - P.n[0] * 0.7, q.z - P.n[1] * 0.7], seaH = Math.atan2(P.n[0], -P.n[1]);
+    const D2 = [P.door[0] + P.dn[0] * 2.4, P.door[1] + P.dn[1] * 2.4], S1 = P.stacks[0], S2 = P.stacks[1], near = (S) => [S[0] + P.dn[0] * 1.1, S[1] + P.dn[1] * 1.1];
+    const sw1 = P.at(bp.a - 6, -Math.min(1.6, P.depth / 2)), sw2 = P.at(bp.a + 6, -Math.min(1.6, P.depth / 2)), along = Math.atan2(P.u[0], -P.u[1]);
+    return P.rounds = [
+      {v:1.1, st:[{p:toW(bA), d:24, task:'coil', h:seaH}, {p:toW(bF), d:20, task:'coil', h:seaH}, {p:P.drop, d:14, task:'look', h:seaH}]},
+      {v:1.2, st:[{p:near(S1), d:32, task:'hose', h:face(near(S1), S1), carry:true}, {p:near(S2), d:9, task:'stack', h:face(near(S2), S2)}]},
+      {v:0.6, st:[{p:sw1, d:1, task:'sweep', h:along, carry:false}, {p:sw2, d:1, task:'sweep', h:along + Math.PI}], sweep:true},
+      {v:1.0, st:[{p:D2, d:45, task:'coffee', h:face(D2, P.drop)}, {p:[D2[0] + P.du[0] * 2, D2[1] + P.du[1] * 2], d:15, task:'look', h:face(D2, P.drop)}]},
+      {v:2.2, st:[{p:P.park, d:18, task:'park', h:face(P.park, P.door)}, {p:near(S1), d:6, task:'pick', h:face(near(S1), S1), carry:true}, {p:P.drop, d:6, task:'drop', h:seaH}]}
+    ];
+  }
+  function drawWorker(P, st, eye, T, idx){
+    const y = P.gy([st.x, st.z]), h = st.h, F = [Math.sin(h), -Math.cos(h)], R = [Math.cos(h), Math.sin(h)], rel = (x, yy, z) => [x - eye[0], yy - eye[1], z - eye[2]];
+    const W = (a, up, r) => rel(st.x + F[0] * a + R[0] * r, y + up, st.z + F[1] * a + R[1] * r);
+    const ph = st.walk || st.task === 'sweep' ? (T * 6.5 + idx) : 0, sw = st.walk ? Math.sin(ph) : 0;
+    for (const s of [-1, 1]){ const hip = W(0, 0.92, s * 0.11), foot = W(sw * s * 0.28, 0.08 + Math.max(0, Math.cos(ph) * s) * 0.07 * (st.walk ? 1 : 0), s * 0.12), knee = [(hip[0] + foot[0]) / 2 + F[0] * 0.07, (hip[1] + foot[1]) / 2, (hip[2] + foot[2]) / 2 + F[1] * 0.07];
+      drawN(PM.leg, limbM(hip, knee, 0.075)); drawN(PM.leg, limbM(knee, foot, 0.065)); drawN(PM.boot, chain(M4.T(foot[0], foot[1] - 0.08, foot[2]), M4.RY(-h))); }
+    const bend = st.task === 'hose' || st.task === 'coil' || st.task === 'stack' ? 0.12 : 0;
+    const tc = W(bend * 0.4, 1.2, 0); drawN(PM.torso, chain(M4.T(tc[0], tc[1] - 0.28, tc[2]), M4.RY(-h), M4.RX(-bend)));
+    const hd = W(bend, 1.6, 0); drawN(PM.head, chain(M4.T(hd[0], hd[1] - 0.1, hd[2]), M4.RY(-h + (st.task === 'look' ? Math.sin(T * 0.4 + idx) * 0.5 : 0))));
+    let hands;
+    const t = T + idx * 1.7;
+    switch (st.task){
+      case 'hose': hands = [W(0.45, 1.15, 0.12), W(0.3, 1.1, -0.1)]; break;
+      case 'coil': { const a = t * 3; hands = [W(0.35 + Math.cos(a) * 0.12, 1.05 + Math.sin(a) * 0.15, 0.12), W(0.3, 1.0, -0.15)]; break; }
+      case 'stack': { const k = (Math.sin(t * 1.4) + 1) / 2; hands = [W(0.35, 0.7 + k * 0.6, 0.2), W(0.35, 0.7 + k * 0.6, -0.2)]; break; }
+      case 'carry': hands = [W(0.3, 1.0, 0.2), W(0.3, 1.0, -0.2)]; break;
+      case 'sweep': { const k = Math.sin(t * 2.2) * 0.25; hands = [W(0.25 + k * 0.3, 1.0, 0.1 + k), W(0.35 + k * 0.3, 0.8, -0.05 + k)]; break; }
+      case 'coffee': { const k = Math.max(0, Math.sin(t * 0.5)) ** 8; hands = [W(0.18 + (1 - k) * 0.1, 1.05 + k * 0.45, 0.14 - k * 0.1), W(0.05, 0.85, -0.25)]; break; }
+      default: hands = [W(-sw * 0.15, 0.82, 0.26), W(sw * 0.15, 0.82, -0.26)];
+    }
+    [0.21, -0.21].forEach((r, i) => { const sh = W(bend * 0.8, 1.42, r), hd2 = hands[i], el = [(sh[0] + hd2[0]) / 2 - F[0] * 0.05 + R[0] * r * 0.25, (sh[1] + hd2[1]) / 2 - 0.08, (sh[2] + hd2[2]) / 2 - F[1] * 0.05 + R[1] * r * 0.25];
+      drawN(PM.arm, limbM(sh, el, 0.06)); drawN(PM.arm, limbM(el, hd2, 0.055)); drawN(PM.hand, M4.T(hd2[0], hd2[1], hd2[2])); });
+    if (st.task === 'coffee') drawN(PM.cup, M4.T(hands[0][0], hands[0][1] + 0.02, hands[0][2]));
+    if (st.task === 'carry' || st.task === 'stack'){ const c = [(hands[0][0] + hands[1][0]) / 2, (hands[0][1] + hands[1][1]) / 2 - 0.1, (hands[0][2] + hands[1][2]) / 2]; drawN(PM.fbox, chain(M4.T(c[0], c[1], c[2]), M4.RY(-h + Math.PI / 2))); }
+    if (st.task === 'sweep'){ const top = hands[0], foot = [top[0] + F[0] * 0.55, y - eye[1] + 0.02, top[2] + F[1] * 0.55]; drawN(PM.broom, limbM(top, foot, 0.02)); drawN(PM.fbox, chain(M4.T(foot[0], foot[1], foot[2]), M4.RY(-h), M4.S(0.5))); }
+    if (st.task === 'hose'){ const nz = hands[0]; drawN(PM.hose, limbM(W(-0.4, 0.05, 0.4), nz, 0.025));
+      let k = 0; for (let i = 0; i < 40; i++){ const q = ((t * 1.3 + i / 40) % 1), d = q * 1.6; PB[k * 3] = nz[0] + F[0] * d + (hash(i) - 0.5) * 0.15 * q; PB[k * 3 + 1] = nz[1] + d * 0.25 - q * q * 1.3; PB[k * 3 + 2] = nz[2] + F[1] * d + (hash(i + 7) - 0.5) * 0.15 * q; PA[k] = 0.7 * (1 - q); k++; }
+      P.spray = k; } 
+  }
+  // the crane: a slewing cab on the pedestal, a telescopic boom to a tip above the load, the wire and the hook
+  function craneTip(P, T){
+    if (P.lift) return P.lift;   // set by a landing
+    const a0 = Math.atan2(-P.n[0], -P.n[1]) + Math.sin(T * 0.05) * 0.6, r = 5.5;
+    return {tip:[P.crane[0] + Math.sin(a0) * r, QTOP + 6.2, P.crane[1] + Math.cos(a0) * r], hook:QTOP + 3.2, load:null};
+  }
+  function drawPlant(P, eye, VP, T){
+    nSetup(VP);
+    const rel = (x, y, z) => [x - eye[0], y - eye[1], z - eye[2]], night = env.night > 0.3, hr = gDate(S.t / 60).getUTCHours(), onShift = hr >= 6 && hr < 22;
+    // crane
+    const C = craneTip(P, T), piv = rel(P.crane[0], QTOP + 2.6, P.crane[1]), tip = rel(C.tip[0], C.tip[1], C.tip[2]), slew = Math.atan2(C.tip[0] - P.crane[0], C.tip[2] - P.crane[1]);
+    drawN(PM.cab, chain(M4.T(piv[0], QTOP + 1.1 - eye[1], piv[2]), M4.RY(slew + Math.PI)));
+    drawN(PM.boom, limbM(piv, tip, 0.34)); const hk = [tip[0], C.hook - eye[1], tip[2]]; drawN(PM.wire, limbM(tip, hk, 0.02)); drawN(PM.hook, M4.T(hk[0], hk[1], hk[2]));
+    if (C.load){ drawN(C.load === 'pal' ? PM.pal : PM.fbox, chain(M4.T(hk[0], hk[1] - 1.1, hk[2]), M4.RY(slew))); for (const s of [-1, 1]) drawN(PM.wire, limbM([hk[0], hk[1] - 0.55, hk[2]], [hk[0] + Math.cos(slew) * 0.5 * s, hk[1] - 0.95, hk[2] - Math.sin(slew) * 0.5 * s], 0.012)); }
+    // people: the day shift, or one on watch at night
+    const R = plantRounds(P); P.spray = 0;
+    for (let i = 0; i < 4; i++){ if (!onShift && i !== 3) continue; if (P.busy && P.busy[i]) { drawWorker(P, P.busy[i], eye, T, i); continue; } drawWorker(P, roundAt(R[i], T + i * 17), eye, T, i); }
+    // forklift
+    const FK = P.fk || roundAt(R[4], T), fy = P.gy([FK.x, FK.z]), fl = FK.task === 'pick' ? Math.min(1, FK.s / 3) : FK.task === 'drop' ? Math.max(0, 1 - FK.s / 3) : FK.task === 'carry' ? 1 : 0;
+    const FM = chain(M4.T(FK.x - eye[0], fy - eye[1], FK.z - eye[2]), M4.RY(-FK.h)); drawN(PM.fork, FM); drawN(PM.mast, chain(FM, M4.T(0, 0.12 + fl * 0.5, -1.05)));
+    if (FK.task === 'carry' || FK.task === 'drop' && fl > 0.05 || FK.task === 'pick' && FK.s > 3 || FK.load) drawN(PM.pal, chain(FM, M4.T(0, 0.2 + fl * 0.5, -1.6)));
+    // sign
+    if (!P.sign){ const cv = document.createElement('canvas'); cv.width = 1024; cv.height = 200; const g = cv.getContext('2d'); g.fillStyle = '#1f4d8c'; g.fillRect(0, 0, 1024, 200); g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle'; let fs = 110; g.font = '700 ' + fs + 'px Archivo, Arial, sans-serif'; while (g.measureText(P.name).width > 960 && fs > 40){ fs -= 6; g.font = '700 ' + fs + 'px Archivo, Arial, sans-serif'; } g.fillText(P.name, 512, 104); P.sign = {tex:mkTex()}; upTex(P.sign.tex, cv);
+      const w2 = P.signW / 2, hS = P.signW / 5.12, c = [P.door[0] + P.dn[0] * 0.14, P.door[1] + P.dn[1] * 0.14], a = [c[0] - P.du[0] * w2, c[1] - P.du[1] * w2], b = [c[0] + P.du[0] * w2, c[1] + P.du[1] * w2];
+      P.sign.q = texQuad([b[0], P.signY, b[1]], [a[0], P.signY, a[1]], [a[0], P.signY + hS, a[1]], [b[0], P.signY + hS, b[1]]); }
+    drawTexQuad(P.sign.q, P.sign.tex, M4.T(-eye[0], -eye[1], -eye[2]), VP, true, [P.dn[0], 0, P.dn[1]]);
+    return {night, spray:P.spray, lamps:P.lamps.map(L => rel(L[0], P.gy(L) + 7.7, L[1]))};
+  }
+  function nearestPlant(eye){ let best = null, bd = 900; for (const P of PLANTS){ const d = Math.hypot(P.drop[0] - eye[0], P.drop[1] - eye[2]); if (d < bd){ bd = d; best = P; } } return best; }
+
   // ---------- boat ----------
   const WHITE = [0.9, 0.92, 0.93], NAVY = [0.1, 0.16, 0.3], RED = [0.45, 0.12, 0.1], FLOOR = [0.72, 0.74, 0.74], ORANGE = [0.93, 0.4, 0.1], SKIN = [0.85, 0.65, 0.5], DARK = [0.14, 0.16, 0.18], GREY = [0.62, 0.64, 0.66], GLASS = [0.2, 0.27, 0.32];
   // ======================= the starter boat: a 19 ft centre-console skiff, modelled in detail =======================
@@ -1458,7 +1637,7 @@ const G3 = (() => {
       DYNP = buf(new Float32Array(4000 * 3), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); DYNA = buf(new Float32Array(4000), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW);
       try { HG = await loadHeights(); } catch (e){ console.error(e); HG = null; }
       try { BLD = await loadBuildings(); } catch (e){ console.error(e); BLD = null; }
-      buildTerrain(); buildStatics(); buildBoat(); buildSkiff(); buildFlag(); buildSea(); buildWild(); buildNPC(); buildVessels(); buildHarbourFittings(); buildMooring();
+      buildTerrain(); buildStatics(); buildBoat(); buildSkiff(); buildFlag(); buildSea(); buildWild(); buildNPC(); buildVessels(); buildHarbourFittings(); buildMooring(); buildPlants(); buildPlantParts();
       canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); ready = false; failed = true; show(false); });
       buildLabels();
       ready = true; return true;
@@ -1695,7 +1874,8 @@ const G3 = (() => {
     drawTerrain(TM, eye, VPn, true); drawLit(STAT, TM); drawBuildings(TM);
     if (VT === 'skiff'){ drawSkiff(BMrel, VPn, dt, !cam.helm, ncrew > 0); gl.useProgram(PL.p); }
     else { const pv = PV[VT]; drawLit(pv.hull, BMrel); if (!cam.helm) drawLit(pv.skipper, BMrel); for (let i = 0; i < ncrew; i++) drawLit(pv.crew[i], BMrel); }
-    if (STATN){ nSetup(VPn); drawN(STATN, TM); } drawMooring(BMrel, eye, VPn, t); gl.useProgram(PL.p);
+    if (STATN){ nSetup(VPn); drawN(STATN, TM); if (PLANTN) drawN(PLANTN, TM); } drawMooring(BMrel, eye, VPn, t);
+    const plant = PM ? nearestPlant(eye) : null, pr = plant ? drawPlant(plant, eye, VPn, t) : null; gl.useProgram(PL.p);
     wildSpawn(t); drawNPC(eye, t, H); drawWild(eye, t, dt);
 
     const pole = xf(BMrel, VG.pole);
@@ -1706,6 +1886,8 @@ const G3 = (() => {
     if (BLD && env.night > 0.02){ gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.depthMask(false); drawChunkLights(VPn, eye); gl.depthMask(true); gl.disable(gl.BLEND); }
     drawEffects(VPn, eye, BMabs, dt, t); drawBlows(VPn, eye, dt); drawNPCLights(VPn); drawSeaLights(VPn, eye, t, true);
     if (VT === 'skiff') drawSkiffGlass(BMrel, VPn);
+    if (pr && pr.spray){ gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false); drawPts(pr.spray, gl.POINTS, VPn, [0.86, 0.93, 1], 30, true); gl.depthMask(true); gl.disable(gl.BLEND); }
+    if (pr && env.night > 0.05){ gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.depthMask(false); pr.lamps.forEach((q, i) => { PB[i * 3] = q[0]; PB[i * 3 + 1] = q[1]; PB[i * 3 + 2] = q[2]; PA[i] = env.night; }); drawPts(pr.lamps.length, gl.POINTS, VPn, [1, 0.9, 0.72], 1400, true); gl.depthMask(true); gl.disable(gl.BLEND); }
     if (env.night > 0.05){
       gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.depthMask(false);
       const L3 = VG.lights;
@@ -1855,6 +2037,6 @@ const G3 = (() => {
     fineReady(){ if (NEARM){ freeMesh(NEARM); NEARM = null; updateNear(); } },
     fishCam(){ cam.helm = false; cam.dist = 7; cam.pitch = 0.22; cam.yaw = -0.85; },
     isHelm:() => cam.helm, setHelm(on){ const G = VGEO[vtype()] || {}; cam.helm = !!on; cam.hy = 0; cam.hp = G.hp !== undefined ? G.hp : -0.07; cam.fov = G.fov || 55; },
-    _debug:{get SK(){ return SK; }, get MO(){ return MO; }, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; SEAMARKS.lights.forEach((L, i) => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(i, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }}
+    _debug:{get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, nearestPlant, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; SEAMARKS.lights.forEach((L, i) => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(i, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }}
   };
 })();
