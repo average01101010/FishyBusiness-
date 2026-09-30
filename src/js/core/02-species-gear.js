@@ -54,7 +54,7 @@ const EQUIP = {
   ais:{price:4900, name:{no:'AIS-sender (klasse B)', en:'AIS transponder (class B)'}, desc:{no:'Andre båter og redningstjenesten ser deg på AIS. Raskere hjelp ved nød.', en:'Other boats and the rescue service see you on AIS. Faster help in an emergency.'}},
   plotter:{price:24900, name:{no:'Kartplotter 9" med dybdekart', en:'9" chart plotter with depth charts'}, desc:{no:'Plottervisning med dybdefarger, relieff og dybdekurver.', en:'Plotter view with depth colours, relief and contours.'}},
   chirp:{price:13900, name:{no:'CHIRP-ekkolodd', en:'CHIRP sounder'}, desc:{no:'Skarpere fiskeekko og bedre skille like over bunnen.', en:'Sharper fish echoes and better separation near the bottom.'}},
-  jukse:{price:34000, multi:true, name:{no:'Juksamaskin', en:'Electric jigging reel'}, desc:{no:'Fisker jevnere enn håndsnøre. Én person kan passe tre.', en:'Fishes more steadily than a handline. One person can tend three.'}},
+  jukse:{price:34000, multi:true, name:{no:'Juksamaskin', en:'Electric jigging reel'}, desc:{no:'Fisker omtrent dobbelt så mye som håndjuksa. Én person kan passe tre.', en:'Catches about twice as much as a hand jig. One person can tend three.'}},
   motor90:{price:148000, only:'skiff', name:{no:'Påhengsmotor 90 hk', en:'90 hp outboard'}, desc:{no:'Toppfart 30 knop, men tørstere.', en:'Top speed 30 knots, but thirstier.'}},
   // haulers for passive gear (start prices): without one, nets and line come up by hand, slowly, and big pots cannot be hauled at all
   elhaler:{price:38000, types:['skiff', 'snekke'], name:{no:'Elektrisk haler (12 V)', en:'Electric hauler (12 V)'}, desc:{no:'Trekker line og små teiner. Passer små båter.', en:'Hauls line and small pots. Suits small boats.'}},

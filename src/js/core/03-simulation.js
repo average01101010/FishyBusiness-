@@ -43,12 +43,15 @@ function applyVessel(){
   if (b.type === 'skiff' && S.equip && S.equip.motor90){ BOAT.vmax = 30; BOAT.fuelK = 1.35; }
   b.fuel = Math.min(b.fuel, BOAT.fuelCap); b.ice = Math.min(b.ice, BOAT.iceCap);
 }
+// fishing effort per person: a rod with one lure until you buy a hand jig (pilk and four fly hooks); an electric jigging
+// reel does about twice what a hand jig does, and one person tends up to three reels instead of jigging by hand
+const JIG = {rod:0.35, hand:1, machine:2.0, perPerson:3};
+function effortOf(people, jk, hand){ return Math.max(0, people - Math.ceil(jk / JIG.perPerson)) * hand + jk * JIG.machine; }
 function fishEffort(){
-  if (S.plan && S.plan.ops && !meAboard()){ const sk = opsSkipper(); const people = Math.max(1, S.crew.length), jk = Math.min(S.equip ? S.equip.jukse : 0, people * 3); return (Math.max(0, people - Math.ceil(jk / 3)) + jk * 1.3) * (sk ? sk.skill : 0.8) * 0.9; }
-  const team = crewAboard(), people = (meAboard() ? 1 : 0) + team.length, jk = Math.min(S.equip ? S.equip.jukse : 0, people * 3);
-  const skill = teamEff(team, meAboard());
-  const hand = S.boat && S.boat.gear ? 1 : 0.35;   // a rod with one lure until you buy a jig line (pilk and four fly hooks)
-  return (Math.max(0, people - Math.ceil(jk / 3)) * hand + jk * 1.3) * skill;
+  const hand = S.boat && S.boat.gear ? JIG.hand : JIG.rod;
+  if (S.plan && S.plan.ops && !meAboard()){ const sk = opsSkipper(); const people = Math.max(1, S.crew.length), jk = Math.min(S.equip ? S.equip.jukse : 0, people * JIG.perPerson); return effortOf(people, jk, hand) * (sk ? sk.skill : 0.8) * 0.9; }
+  const team = crewAboard(), people = (meAboard() ? 1 : 0) + team.length, jk = Math.min(S.equip ? S.equip.jukse : 0, people * JIG.perPerson);
+  return effortOf(people, jk, hand) * teamEff(team, meAboard());
 }
 const GM = {E:1.05, A:1.0, B:0.85, X:0.6, V:0};
 

@@ -98,7 +98,7 @@ Skrevet 29.09.2026 ved flytting fra claude.ai-chat til Claude Code. Dokumentet s
 **Redskapsstige:**
 - *Fiskestang med én sluk:* effekt 0,35 per person. Alle starter med den.
 - *Håndjuksa med pilk og fire markkroker:* 1 900 kr, effekt 1,0.
-- *Juksamaskin:* 34 000 kr, effekt 1,3 hver. Én person passer tre.
+- *Juksamaskin:* 34 000 kr, effekt 2,0 hver, altså omtrent dobbelt så mye som håndjuksa. Én person passer tre og fisker da ikke selv med håndjuksa. Skiffen med to maskiner fyller lasten på rundt 2 timer på en god skreidag (`JIG` i `03-simulation.js`, endret 01.10.2026).
 - *Kveiteutstyr:* stor pilk, kraftig snøre og gaff, 2 490 kr.
 - *Garn, line og teiner:* passivt redskap som står i sjøen mens båten er borte. Se «Redskap i sjøen» i kapittel 9.
 - *Halere* (`EQUIP`): elektrisk haler 38 000 kr (skiff og snekke, line og små teiner), linehaler 68 000, garnhaler 95 000 og teinehaler 58 000 (snekke og større). Uten haler trekkes garn og line for hånd og tar 2–2,5 ganger så lang tid. Store teiner kan ikke trekkes for hånd.
@@ -136,6 +136,7 @@ Mister du juksa, fiskes det videre med stang. `motor90` er et utstyrsvalg for sk
   - Juli: rundt 80 kg.
   - Seistim i mai: rundt 180 kg.
   - Bare fiskestang: rundt 100–145 kg.
+  - `tests/simday.py` kjører også dekksarbeidet, ellers stopper fisket når bløggekaret er fullt (60 kg). Den skriver ut innsatsstigen 0,35 : 1 : 2 : 4 for stang, håndjuksa, én og to maskiner.
   - Mål for åpen gruppe i 2024 (Lofoten, Vesterålen, Senja og Tromsø): 5,3 t torsk, 3,0 t sei og 1,2 t hyse per båt og år.
 - **Kveitefiske** (`S.target = 'kveite'`, krever kveiteutstyr):
   - Kveite får faktor ×9, og best rundt strømstille: ×(1,4 − 0,8·strømstyrke). Andre arter får ×0,2.
