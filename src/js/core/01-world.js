@@ -72,10 +72,17 @@ function legHazard(a, c, sd){
   return {minD, rocks:rk, unsafe:minD < sd || rk > 0};
 }
 let hzCache = {k:'', v:[]};
+// each leg is remembered by its ends, so moving one point only works out the two legs it touches
+const hzLegs = new Map();
+function legHazardMemo(a, c, sd){
+  const k = sd + '|' + a.x.toFixed(4) + ',' + a.y.toFixed(4) + '|' + c.x.toFixed(4) + ',' + c.y.toFixed(4); let h = hzLegs.get(k);
+  if (!h){ h = legHazard(a, c, sd); if (hzLegs.size > 600) hzLegs.clear(); hzLegs.set(k, h); }
+  return h;
+}
 function draftHazards(){
   const sd = safeDepth(), k = sd + '|' + S.boat.pos.x.toFixed(3) + ',' + S.boat.pos.y.toFixed(3) + '|' + S.draft.map(w => w.x.toFixed(3) + ',' + w.y.toFixed(3)).join(';');
   if (hzCache.k === k) return hzCache.v;
-  let a = S.boat.pos; const v = S.draft.map(w => { const h = legHazard(a, w, sd); a = w; return h; });
+  let a = S.boat.pos; const v = S.draft.map(w => { const h = legHazardMemo(a, w, sd); a = w; return h; });
   hzCache = {k, v}; return v;
 }
 // running aground
@@ -152,7 +159,7 @@ function legClear(a, b){
 }
 
 const PORTS = [
-  // the fish plants are where Råfisklaget lists landings on Senja and at Sommarøy and Brensholmen; Finnsnes has a net loft and gear dealers but no plant and no ice.
+  // the fish plants are where Råfisklaget lists landings on Senja and at Sommarøy and Brensholmen; Finnsnes has a net loft and gear dealers but no plant and no ice chute (the tackle shop sells bagged ice).
   // The harbour point lies just off the plant's quay (Finnsnes: the quay by the net loft, south of the bridge); the quays themselves are QUAYS in 07-harbours.js.
   {id:'finnsnes', name:'Finnsnes', xy:[56.035,53.611], shore:[56.066,53.623], pier:false, fuel:true, ice:false, mottak:false, pf:1, home:true},
   {id:'botnhamn', name:'Botnhamn', xy:[53.288,23.495], shore:[53.285,23.527], pier:true, fuel:true, ice:true, mottak:true, pf:1.0},

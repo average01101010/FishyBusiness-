@@ -75,8 +75,10 @@ function approachPath(pt){
 }
 // the waypoints a route needs to get out of harbour towards `to`, and in to a harbour from `from` (the part of the way in that it
 // cannot see past)
-function exitWps(pt, to){ const r = approachPath(pt).slice().reverse(); const out = []; for (const q of r){ out.push(q); if (clearLine(q, to)) break; } return clearLine(pt.p, to) ? [] : out; }
-function entryWps(pt, from){ if (clearLine(from, pt.p)) return []; const a = approachPath(pt); for (let i = a.length - 1; i >= 0; i--) if (clearLine(from, a[i])) return a.slice(i); return a; }
+// cannot see past). A point is only added when the way from it is clear: when no point on the way sees the target, none is added,
+// and the leg the player drew is the one marked as crossing land (A12). The harbour point itself is never a waypoint.
+function exitWps(pt, to){ if (clearLine(pt.p, to)) return []; const out = []; for (const q of approachPath(pt).slice().reverse()){ if (dist(q, pt.p) < 0.002) continue; out.push(q); if (clearLine(q, to)) return out; } return []; }
+function entryWps(pt, from){ if (clearLine(from, pt.p)) return []; const a = approachPath(pt); for (let i = a.length - 1; i >= 0; i--) if (dist(a[i], pt.p) >= 0.002 && clearLine(from, a[i])) return a.slice(i).filter(q => dist(q, pt.p) >= 0.002); return []; }
 // beam (m) of the player's vessels, for lying alongside
 const BEAM = {skiff:2.2, snekke:2.7, sjark:3.8, sjarkny:4.3};
 const CAST_MIN = 2;   // game minutes to take the lines in before the boat moves

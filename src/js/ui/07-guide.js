@@ -50,7 +50,7 @@ function panelRoute(){
   if (S.plan && S.plan.depAt){
     const H1 = S.plan.depAt / 60, rest = S.plan.wps.slice(S.plan.idx);
     h.push('<h3>' + t('dep_planned') + '</h3><p>' + dayStr(H1) + ' ' + hm(H1) + ' <small class="note">' + inReal(S.plan.depAt - S.t) + '</small> · ' + dirName(windDir(H1)) + ' ' + fmt(fcWind(H1, S.t / 60), 0) + ' m/s</p>');
-    h.push('<ul class="wps">' + rest.map((w, i) => '<li><span class="n' + (w.fish > 0 ? ' f' : '') + '">' + (i + 1) + '</span><span class="lbl">' + (w.port ? portById(w.port).name : coordStr(w)) + '<small>' + (w.port ? '' : (w.fish > 0 ? t('fish_h', w.fish) : t('no_fish'))) + '</small></span></li>').join('') + '</ul>');
+    h.push('<ul class="wps">' + rest.map((w, i) => '<li' + (w.auto ? ' class="auto"' : '') + '><span class="n' + (w.fish > 0 ? ' f' : '') + '">' + wpName(S.plan.idx + i + 1) + '</span><span class="lbl">' + (w.port ? portById(w.port).name : coordStr(w)) + '<small>' + (w.port ? '' : w.auto ? wpTag(w) : (w.fish > 0 ? t('fish_h', w.fish) : t('no_fish'))) + '</small></span></li>').join('') + '</ul>');
     if (S.settings.autoOn) h.push('<p class="note">' + (S.lang === 'no' ? 'Blåser det mer enn ' + S.settings.autoW + ' m/s ved avgang, venter båten en time om gangen.' : 'If it blows more than ' + S.settings.autoW + ' m/s at departure, the boat waits an hour at a time.') + '</p>');
     h.push('<div class="btns"><button class="btn primary" data-act="depnow">' + t('dep_go') + '</button><button class="btn" data-act="depcancel">' + t('dep_cancel') + '</button></div>');
     return h.join('');
@@ -58,7 +58,7 @@ function panelRoute(){
   if (S.plan && b.status !== 'idle'){
     const rest = S.plan.wps.slice(S.plan.idx);
     h.push('<h3>' + (S.plan.returning ? t('ret_active') : t('active')) + '</h3>');
-    h.push('<ul class="wps">' + rest.map((w, i) => '<li><span class="n' + (w.fish > 0 ? ' f' : '') + '">' + (S.plan.idx + i + 1) + '</span><span class="lbl">' + (w.port ? portById(w.port).name : coordStr(w)) + '<small>' + (w.port ? '' : (w.act ? wpActLabel(w.act) + (w.fish > 0 ? ', ' : '') : '') + (w.fish > 0 ? t('fish_h', w.fish) : w.act ? '' : t('no_fish'))) + '</small></span></li>').join('') + '</ul>');
+    h.push('<ul class="wps">' + rest.map((w, i) => '<li' + (w.auto ? ' class="auto"' : '') + '><span class="n' + (w.fish > 0 ? ' f' : '') + '">' + wpName(S.plan.idx + i + 1) + '</span><span class="lbl">' + (w.port ? portById(w.port).name : coordStr(w)) + '<small>' + (w.port ? '' : w.auto && !w.act && !(w.fish > 0) ? wpTag(w) : (w.act ? wpActLabel(w.act) + (w.fish > 0 ? ', ' : '') : '') + (w.fish > 0 ? t('fish_h', w.fish) : w.act ? '' : t('no_fish'))) + '</small></span></li>').join('') + '</ul>');
     h.push('<div class="range"><input type="range" min="2" max="' + BOAT.vmax + '" step="1" value="' + Math.min(S.plan.speed, BOAT.vmax) + '" id="spdLive" aria-label="' + t('speed') + '"><output id="spdLiveOut">' + S.plan.speed + ' kn</output></div>');
     if (b.status === 'sailing' && b.v < S.plan.speed - 0.5) h.push('<p class="note">' + t('speed_live') + ': ' + fmt(b.v, 0) + ' kn (' + t('waves').toLowerCase() + ')</p>');
     h.push('<div class="btns">' + (S.plan.returning ? '' : '<button class="btn" data-act="retrace">' + t('retrace') + '</button>') + (b.status === 'sailing' ? '<button class="btn" data-act="stop">' + t('stop') + '</button>' : '') + '</div>');
@@ -66,11 +66,14 @@ function panelRoute(){
   }
   h.push('<p class="note">' + t('route_hint') + (S.marks.length ? ' ' + t('marks_n') : '') + '</p>');
   if (!S.draft.length){ h.push('<p>' + t(b.status === 'port' && b.port === 'finnsnes' ? 'route_empty_fs' : 'route_empty') + '</p>'); return h.join(''); }
-  h.push('<ul class="wps">' + S.draft.map((w, i) => {
-    const lbl = w.port ? portById(w.port).name : coordStr(w);
+  const tl = draftTimeline(), L = (no, en) => S.lang === 'no' ? no : en, when = T => hm(T / 60) + ' <small>' + inReal(T - S.t) + '</small>';
+  h.push('<ul class="wps wpcards"><li class="wpc wp0"><div class="wh"><span class="n">' + wpName(0) + '</span><span class="lbl">' + (b.status === 'port' ? portById(b.port).name : L('Båten', 'The boat')) + '<small>' + coordStr(b.pos) + '</small></span></div><div class="wg"><span>' + L('Avgang ', 'Departs ') + '<b>' + (tl.dep - S.t < 1 ? L('nå', 'now') : when(tl.dep)) + '</b></span></div></li>' + S.draft.map((w, i) => {
+    const lg = tl.legs[i], lbl = w.port ? portById(w.port).name : coordStr(w);
     const ctl = w.port ? '' : '<span class="step"><button data-act="fm" data-i="' + i + '" aria-label="−">−</button><output>' + (w.fish > 0 ? t('fish_h', w.fish) : t('no_fish')) + '</output><button data-act="fp" data-i="' + i + '" aria-label="+">+</button></span>';
     const gch = w.port ? '' : '<button class="gchip' + (w.act ? ' on' : '') + '" data-act="gwp" data-i="' + i + '">' + wpActLabel(w.act) + '</button>';
-    return '<li><span class="n' + (wpStop(w) && !w.port ? ' f' : '') + '">' + (i + 1) + '</span><span class="lbl">' + lbl + gch + '</span>' + ctl + '<button class="x" data-act="rm" data-i="' + i + '" aria-label="×">×</button></li>';
+    return '<li class="wpc' + (w.auto ? ' auto' : '') + '" data-i="' + i + '"><div class="wh"><span class="n' + (wpStop(w) && !w.port ? ' f' : '') + '">' + wpName(i + 1) + '</span><span class="lbl">' + lbl + (w.auto ? '<small>' + wpTag(w) + '</small>' : w.port ? '' : '') + '</span><button class="x" data-act="rm" data-i="' + i + '" aria-label="×">×</button></div>' +
+      '<div class="wg"><span>' + L('Kurs ', 'Course ') + '<b>' + deg3s(lg.crs) + '</b></span><span><b>' + fmt(lg.nm, lg.nm < 10 ? 2 : 1) + '</b> nm</span><span>ETA <b>' + when(lg.arrive) + '</b></span></div>' +
+      (w.port ? '' : '<div class="wf">' + ctl + gch + '</div>') + '</li>';
   }).join('') + '</ul>');
   const e = estimate();
   h.push('<div class="range"><input type="range" min="2" max="' + BOAT.vmax + '" step="1" value="' + Math.min(S.draftSpeed, BOAT.vmax) + '" id="spd" aria-label="' + t('speed') + '"><output id="spdOut">' + S.draftSpeed + ' kn, ' + t('lpnm', fmt(fuelLph(S.draftSpeed, windAt(S.t / 60)) / S.draftSpeed, 2)) + '</output></div>');
@@ -81,14 +84,15 @@ function panelRoute(){
   h.push('<div class="kv"><span>' + t('sail_time') + '</span><span>' + dur(e.hours) + ' <small class="note">' + t('real', realDur(e.hours * 60)) + '</small></span></div>');
   if (e.fishH) h.push('<div class="kv"><span>' + t('fish_time') + '</span><span>' + dur(e.fishH) + '</span></div>');
   h.push('<div class="kv"><span>' + t('fuel_est') + '</span><span>' + fmt(e.fuel, 0) + ' L <small class="note">' + t('onboard', fmt(b.fuel, 0)) + '</small></span></div>');
+  h.push('<div class="kv"><span>' + L('Turen er ferdig', 'Trip done') + '</span><span>' + when(tl.end) + '</span></div>');
   let can = true;
-  if (e.bad >= 0){ h.push('<p class="bad">' + t('crosses', e.bad + 1) + '</p>'); can = false; }
-  { const hz = draftHazards(), sd = safeDepth(), bad = hz.map((q, i) => [q, i]).filter(x => x[0].unsafe); if (bad.length) h.push('<p class="warn">' + (S.lang === 'no' ? 'Gult: ' : 'Yellow: ') + bad.slice(0, 4).map(([q, i]) => (S.lang === 'no' ? 'etappe ' : 'leg ') + (i + 1) + ' (' + (q.minD < sd ? fmt(q.minD, 1) + ' m' : '') + (q.minD < sd && q.rocks ? ', ' : '') + (q.rocks ? (S.lang === 'no' ? 'skjær' : 'rocks') : '') + ')').join(', ') + '. ' + (S.lang === 'no' ? 'Sikker dybde er ' + sd + ' m, båten stikker ' + fmt(BOAT.draft, 1) + ' m. Du kan kjøre ruten, men da på egen risiko.' : 'Safety depth is ' + sd + ' m, the boat draws ' + fmt(BOAT.draft, 1) + ' m. You can run the route, at your own risk.') + '</p>'); }
+  if (e.bad >= 0){ h.push('<p class="bad">' + t('crosses', legName(e.bad)) + '</p>'); can = false; }
+  { const hz = draftHazards(), sd = safeDepth(), bad = hz.map((q, i) => [q, i]).filter(x => x[0].unsafe); if (bad.length) h.push('<p class="warn">' + (S.lang === 'no' ? 'Gult: ' : 'Yellow: ') + bad.slice(0, 4).map(([q, i]) => (S.lang === 'no' ? 'etappe ' : 'leg ') + legName(i) + ' ('  + (q.minD < sd ? fmt(q.minD, 1) + ' m' : '') + (q.minD < sd && q.rocks ? ', ' : '') + (q.rocks ? (S.lang === 'no' ? 'skjær' : 'rocks') : '') + ')').join(', ') + '. ' + (S.lang === 'no' ? 'Sikker dybde er ' + sd + ' m, båten stikker ' + fmt(BOAT.draft, 1) + ' m. Du kan kjøre ruten, men da på egen risiko.' : 'Safety depth is ' + sd + ' m, the boat draws ' + fmt(BOAT.draft, 1) + ' m. You can run the route, at your own risk.') + '</p>'); }
   if (S.draft.length && S.draft[S.draft.length - 1].port && b.status === 'port') h.push('<div class="btns"><button class="btn" data-act="opssave">' + (S.lang === 'no' ? 'Lagre som fast driftsplan' : 'Save as standing plan') + '</button></div>');
   if (false){ let rk = 0, a0 = b.pos; for (const w of S.draft){ rk += rocksNear(a0, w, 0.03); a0 = w; } if (rk) h.push('<p class="warn">' + (S.lang === 'no' ? 'Ruten går tett forbi ' + rk + (rk === 1 ? ' skjær eller båe' : ' skjær og båer') + '. Sjekk kartet.' : 'The route passes close to ' + rk + (rk === 1 ? ' rock' : ' rocks') + '. Check the chart.') + '</p>'); }
   if (e.fuel > b.fuel){ h.push('<p class="bad">' + t('nofuel') + '</p>'); can = false; }
   else if (e.fuel > b.fuel * 0.8) h.push('<p class="warn">' + t('lowres') + '</p>');
-  h.push('<div class="btns"><button class="btn primary" data-act="start"' + (can ? '' : ' disabled') + '>' + t('start') + '</button><button class="btn" data-act="undo">' + t('undo') + '</button><button class="btn" data-act="clear">' + t('clear') + '</button></div>');
+  h.push('<div class="btns rbar"><button class="btn primary" data-act="start"' + (can ? '' : ' disabled') + '>' + t('start') + '</button><button class="btn" data-act="clear">' + t('clear') + '</button></div>');
   return h.join('');
 }
 

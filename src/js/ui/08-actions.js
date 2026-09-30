@@ -4,18 +4,21 @@ window.addEventListener('pointerup', () => { setTimeout(() => { pressHold = fals
 panel.addEventListener('click', e => { const el = e.target.closest('[data-act]'); if (el && !el.disabled) doAct(el); });
 function doAct(el){
   const act = el.dataset.act, i = +el.dataset.i, b = S.boat, L = (no, en) => S.lang === 'no' ? no : en;
-  if (act === 'gset' || act === 'ghaul' || act === 'gstop' || act === 'gwp') gearDoAct(act, el);
-  else if (act === 'fp' || act === 'fm'){ const w = S.draft[i]; if (w) w.fish = clamp((w.fish || 0) + (act === 'fp' ? 1 : -1), 0, 12); }
-  else if (act === 'rm') S.draft.splice(i, 1);
-  else if (act === 'undo') S.draft.pop();
-  else if (act === 'clear') S.draft = [];
+  if (act === 'gset' || act === 'ghaul' || act === 'gstop') gearDoAct(act, el);
+  // every change to the draft is a step in the route history (03b-route.js)
+  else if (act === 'gwp') draftEdit(() => gearDoAct(act, el));
+  else if (act === 'fp' || act === 'fm') draftEdit(() => { const w = S.draft[i]; if (w) w.fish = clamp((w.fish || 0) + (act === 'fp' ? 1 : -1), 0, 12); });
+  else if (act === 'rm') draftEdit(() => S.draft.splice(i, 1));
+  else if (act === 'undo') draftUndo();
+  else if (act === 'redo') draftRedo();
+  else if (act === 'clear') draftEdit(() => { S.draft = []; });
   else if (act === 'start'){
     if (!S.draft.length || !['port', 'idle'].includes(b.status)) return;
     if (!meAboard() && !crewAboard().length){ toast(L('Båten har ikke mannskap. Uten deg om bord trenger den folk.', 'The boat has no crew. Without you aboard it needs hands.')); return; }
     const later = S.draftDep && S.draftDep > S.t ? S.draftDep : null;
     if (!later && b.status === 'port' && S.jobs && S.jobs.length){ toast(t('yard_busy', hm((jobsDone() || S.t) / 60))); return; }
     S.plan = {wps:S.draft.map(w => ({...w})), idx:0, speed:S.draftSpeed, returning:false, depAt:later, unsafe:draftHazards().map(h => h.unsafe)};
-    S.draft = []; S.draftDep = null;
+    S.draft = []; S.draftDep = null; draftForget();
     if (later) log('Avgang planlagt ' + dayStr(later / 60) + ' kl. ' + hm(later / 60) + '.', 'Departure planned for ' + dayStr(later / 60) + ' at ' + hm(later / 60) + '.');
     else { if (b.status === 'idle') log('Ny rute satt.', 'New route set.'); depart(); }
     if (!G3.isActive()) G3.show(true, true);
@@ -45,8 +48,8 @@ function doAct(el){
   else if (act === 'fuel'){ if (S.cash <= 0){ toast(t('no_cash')); return; } startFueling(false); }
   else if (act === 'ice'){ const why = shopBuy('ice', +el.dataset.kg || 50); if (why){ toast(L(why[0], why[1])); return; } }
   else if (act === 'gear' || act === 'kgear'){ PHONE.open('fiske'); return; }
-  else if (act === 'reset'){ if (confirm(t('reset_q'))){ const lang = S.lang; S = newState(); S.lang = lang; S.intro = true; S.draft = []; ensureFleet(); save(); refreshAll(); } return; }
-  renderPanel(); renderDyn(); renderHud(); renderClock(); renderActs(); save();
+  else if (act === 'reset'){ if (confirm(t('reset_q'))){ const lang = S.lang; S = newState(); S.lang = lang; S.intro = true; S.draft = []; draftForget(true); ensureFleet(); save(); refreshAll(); } return; }
+  renderPanel(); renderDyn(); renderHud(); renderClock(); renderActs(); renderRouteTools(); save();
 }
 function panelInput(e){
   if (e.target.id === 'spd'){ S.draftSpeed = +e.target.value; $('spdOut').textContent = S.draftSpeed + ' kn, ' + t('lpnm', fmt(fuelLph(S.draftSpeed, windAt(S.t / 60)) / S.draftSpeed, 2)); }

@@ -180,9 +180,9 @@ function renderDyn(){
   if (S.plan){
     const pts = [b.pos].concat(S.plan.wps.slice(S.plan.idx)), uz = S.plan.unsafe || [];
     for (let i = 1; i < pts.length; i++) g.push('<line x1="' + pts[i - 1].x + '" y1="' + pts[i - 1].y + '" x2="' + pts[i].x + '" y2="' + pts[i].y + '" class="route' + (uz[S.plan.idx + i - 1] ? ' unsafe' : '') + '" stroke-width="' + (2.5 * u) + '"/>');
-    S.plan.wps.slice(S.plan.idx).forEach(w => { if (!w.port) g.push('<circle cx="' + w.x + '" cy="' + w.y + '" r="' + (5 * u) + '" class="wp' + (w.fish > 0 ? ' fish' : '') + '" stroke-width="' + (2 * u) + '"/>'); });
+    S.plan.wps.slice(S.plan.idx).forEach((w, k) => { if (!w.port) g.push('<circle cx="' + w.x + '" cy="' + w.y + '" r="' + ((w.auto ? 3.5 : 5) * u) + '" class="wp' + (w.fish > 0 ? ' fish' : '') + (w.auto ? ' auto' : '') + '" stroke-width="' + (2 * u) + '"/>'); if (view.z > 3) g.push(txt({x:w.x + 7 * u, y:w.y - 6 * u}, wpName(S.plan.idx + k + 1), 'wpn' + (w.auto ? ' auto' : ''), 10 * u, 'stroke-width="' + (3 * u) + '"')); });
   }
-  // draft
+  // draft: the legs, the «+» handle on each long leg, the points named WP1 … and the start WP0
   if (S.draft.length){
     let a = b.pos;
     const hz = draftHazards();
@@ -191,10 +191,12 @@ function renderDyn(){
       g.push('<line x1="' + a.x + '" y1="' + a.y + '" x2="' + w.x + '" y2="' + w.y + '" class="route' + (ok ? (un ? ' unsafe' : '') : ' bad') + '" stroke-width="' + (2.5 * u) + '" stroke-dasharray="' + (7 * u) + ' ' + (5 * u) + '"/>');
       a = w;
     });
+    if (!RDRAG) for (const hd of insHandles()) g.push('<g class="wpins"><circle cx="' + hd.p.x + '" cy="' + hd.p.y + '" r="' + (8 * u) + '" stroke-width="' + (1.5 * u) + '"/><path d="M' + (hd.p.x - 4 * u) + ',' + hd.p.y + 'h' + (8 * u) + 'M' + hd.p.x + ',' + (hd.p.y - 4 * u) + 'v' + (8 * u) + '" stroke-width="' + (1.8 * u) + '"/></g>');
+    g.push(txt({x:b.pos.x + 9 * u, y:b.pos.y + 16 * u}, wpName(0), 'wpn wp0', 11 * u, 'stroke-width="' + (3 * u) + '"'));
     S.draft.forEach((w, i) => {
-      if (w.port) return;
-      g.push('<circle cx="' + w.x + '" cy="' + w.y + '" r="' + (6 * u) + '" class="wp' + (w.fish > 0 ? ' fish' : '') + '" stroke-width="' + (2 * u) + '"/>');
-      g.push(txt({x:w.x + 8 * u, y:w.y - 7 * u}, String(i + 1), 'wpn', 12 * u, 'stroke-width="' + (3 * u) + '"'));
+      const drg = RDRAG && RDRAG.i === i, cls = 'wp' + (w.fish > 0 ? ' fish' : '') + (w.auto ? ' auto' : '') + (drg ? ' drag' + (RDRAG.land ? ' landed' : '') : '');
+      if (!w.port) g.push('<circle cx="' + w.x + '" cy="' + w.y + '" r="' + ((drg ? 9 : w.auto ? 4.5 : 6) * u) + '" class="' + cls + '" stroke-width="' + (2 * u) + '"/>');
+      g.push(txt({x:w.x + 8 * u, y:w.y - 7 * u}, wpName(i + 1), 'wpn' + (w.auto ? ' auto' : ''), (w.auto ? 10 : 12) * u, 'stroke-width="' + (3 * u) + '"'));
     });
   }
   // passive gear in the sea
@@ -223,8 +225,8 @@ function renderDyn(){
 const ptrs = new Map(); let drag = null, pinch = null;
 svg.addEventListener('pointerdown', e => {
   svg.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
-  if (ptrs.size === 1) drag = {sx:e.clientX, sy:e.clientY, cx:view.cx, cy:view.cy, moved:false};
-  else if (ptrs.size === 2){ const [a, c] = [...ptrs.values()]; pinch = {d:Math.hypot(a.x - c.x, a.y - c.y) || 1, z:view.z}; if (drag) drag.moved = true; }
+  if (ptrs.size === 1){ drag = {sx:e.clientX, sy:e.clientY, cx:view.cx, cy:view.cy, moved:false}; drag.wp = routeGrab(toMap(e.clientX, e.clientY)); }
+  else if (ptrs.size === 2){ const [a, c] = [...ptrs.values()]; pinch = {d:Math.hypot(a.x - c.x, a.y - c.y) || 1, z:view.z}; if (drag){ drag.moved = true; if (drag.wp){ routeDragCancel(drag.wp); drag.wp = null; drag.cx = view.cx; drag.cy = view.cy; } } }
 });
 svg.addEventListener('pointermove', e => {
   if (!ptrs.has(e.pointerId)) return;
@@ -232,11 +234,13 @@ svg.addEventListener('pointermove', e => {
   if (ptrs.size === 2 && pinch){ const [a, c] = [...ptrs.values()]; view.z = clamp(pinch.z * Math.hypot(a.x - c.x, a.y - c.y) / pinch.d, 0.8, 160); applyView(); scheduleStatic(); }
   else if (drag && ptrs.size === 1){
     const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+    if (drag.wp){ if (drag.wp.moved || Math.hypot(dx, dy) > 5) routeDragMove(drag.wp, toMap(e.clientX, e.clientY)); return; }
     if (Math.hypot(dx, dy) > 7) drag.moved = true;
     if (drag.moved){ view.cx = drag.cx - dx / view.px; view.cy = drag.cy - dy / view.px; applyView(); }
   }
 });
 function ptrUp(e){
+  if (drag && drag.wp){ const g = drag.wp; drag.wp = null; ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; if (ptrs.size === 0) drag = null; if (e.type === 'pointerup') routeDragEnd(g); else routeDragCancel(g); return; }
   const tap = drag && !drag.moved && ptrs.size === 1 && e.type === 'pointerup';
   ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null;
   if (tap){ const mp = toMap(e.clientX, e.clientY), rr = 16 / view.px; const gh = gearHit(mp, rr * 0.8); if (gh){ gearTap(gh); renderDyn(); return; } let hit = null, bd = 1e9; for (const n of AISNOW){ const d = dist(n.p, mp); if (d < rr && d < bd){ bd = d; hit = n; } } if (hit && (hit.st === 'port' || hit.v === 0) && PORTS.some(q => dist(q.p, mp) < rr * 1.6)) hit = null; if (hit){ AISSEL = hit.id; renderDyn(); renderAisCard(); return; } addWaypoint(mp); }
@@ -262,20 +266,22 @@ function addWaypoint(pt){
   if (S.draft.length && S.draft[S.draft.length - 1].port){ toast(t('ends_port')); return; }
   const r = 22 / view.px; let near = null, bd = 1e9;
   for (const p of PORTS){ const d = dist(p.p, pt); if (d < r && d < bd){ bd = d; near = p; } }
-  const wp = q => S.draft.push({x:q.x, y:q.y, port:null, fish:0});
-  // out of the harbour first, the way the boats go, when the first leg would cut across a breakwater or a point
   if (near && b.status === 'port' && b.port === near.id && !S.draft.length){ toast(t('already_here')); return; }
-  if (!S.draft.length && b.status === 'port' && (near || !isLand(pt))) exitWps(portById(b.port), near ? near.p : pt).forEach(wp);
-  if (near){
-    const prev = S.draft.length ? S.draft[S.draft.length - 1] : b.pos;
-    entryWps(near, prev).forEach(wp);
-    S.draft.push({x:near.p.x, y:near.p.y, port:near.id, fish:0});
-    if (window.innerWidth <= 700) document.body.classList.add('drawer');
-  } else {
-    if (isLand(pt)){ toast(t('on_land')); return; }
-    S.draft.push({x:pt.x, y:pt.y, port:null, fish:0});
-  }
+  if (!near && isLand(pt)){ toast(t('on_land')); return; }
+  draftEdit(() => {
+    const wp = (q, auto) => S.draft.push({x:q.x, y:q.y, port:null, fish:0, auto});
+    // out of the harbour first, the way the boats go, when the first leg would cut across a breakwater or a point
+    if (!S.draft.length && b.status === 'port') exitWps(portById(b.port), near ? near.p : pt).forEach(q => wp(q, 'out'));
+    if (near){
+      const prev = S.draft.length ? S.draft[S.draft.length - 1] : b.pos;
+      entryWps(near, prev).forEach(q => wp(q, 'in'));
+      S.draft.push({x:near.p.x, y:near.p.y, port:near.id, fish:0});
+      if (window.innerWidth <= 700) document.body.classList.add('drawer');
+    } else S.draft.push({x:pt.x, y:pt.y, port:null, fish:0});
+  });
   if (tab !== 'route') setTab('route'); else panelDirty = true;
-  renderDyn();
+  renderDyn(); renderRouteTools();
 }
+$('rUndo').onclick = () => routeUndoRedo(false);
+$('rRedo').onclick = () => routeUndoRedo(true);
 

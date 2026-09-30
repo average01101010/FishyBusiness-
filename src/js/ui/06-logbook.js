@@ -1,5 +1,5 @@
 // ---------- deck log ----------
-const NAVRE = /Kastet loss|Fortøyd|Fremme|Ny rute|Stoppet båten|Returnerer|går hjem|Avgang|drivstoff\. Båten driver|Motorstopp|Motoren startet|Tok inn sjø|rulling|Slept inn|slepte|Veipunkt|Vinden økte|Overtok/;
+const NAVRE = /Kastet loss|Fortøyd|Fremme|Ny rute|Stoppet båten|Returnerer|går hjem|Avgang|drivstoff\. Båten driver|Motorstopp|Motoren startet|Tok inn sjø|rulling|Slept inn|slepte|Veipunkt|WP\d+ passert|Vinden økte|Overtok/;
 const logKind = e => e.k || (NAVRE.test(e.no) ? 'nav' : 'drift');
 const dayOf = t0 => Math.floor((t0 / 60 + 6) / 24);
 const DAYF = {no:['Søndag','Mandag','Tirsdag','Onsdag','Torsdag','Fredag','Lørdag'], en:['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']};

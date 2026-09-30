@@ -254,13 +254,14 @@ body.vplot #ecdisTop{position:absolute;z-index:6;left:0;right:0;top:0;height:46p
 #ecdisTop .ec-b{margin-left:auto;display:flex;align-items:center;gap:6px;padding:0 8px}
 #ecdisTop button{height:32px;min-width:52px;border-radius:8px;border:1px solid #2c5870;background:#16354a;color:#e6f6ff;font:600 13px var(--sans);cursor:pointer} #ecdisTop #ecClose{background:var(--mag);border-color:var(--mag);color:#fff}
 body.vplot #plotTop{display:none!important}
-body.vplot #map{top:46px;left:0;right:auto;bottom:auto;width:calc(100% - 300px);height:calc(100% - 46px)}
-body.vplot #side{top:46px;left:auto;right:0;bottom:0;width:300px;height:auto;border-radius:0;box-shadow:-6px 0 18px rgba(0,0,0,.18);border-left:1px solid #1f3a4c}
+body.vplot{--sidew:340px}
+body.vplot #map{top:46px;left:0;right:auto;bottom:auto;width:calc(100% - var(--sidew));height:calc(100% - 46px)}
+body.vplot #side{top:46px;left:auto;right:0;bottom:0;width:var(--sidew);height:auto;border-radius:0;box-shadow:-6px 0 18px rgba(0,0,0,.18);border-left:1px solid #1f3a4c}
 body.vplot #side::before{display:none}
 body.vplot #hud{top:calc(env(safe-area-inset-top,0px) + 54px)}
 body.vplot #instr{display:flex!important;top:var(--gpsTop,160px);bottom:auto!important;left:8px!important}
 #echoWrap{display:none!important}
-body.vplot .zoom{right:312px!important;bottom:16px!important}
+body.vplot .zoom{right:calc(var(--sidew) + 12px)!important;bottom:16px!important}
 body.vplot .attr{display:block!important;left:6px;right:auto}
 @media (max-width:980px){#ecdisTop .ec-x b,#ecdisTop .ec-f b{font-size:12.5px} #ecdisTop .ec-pos b{font-size:11px}} @media (max-width:700px){#ecdisTop .ec-f{padding:0 7px;min-width:0} #ecdisTop .ec-pos,#ecdisTop .ec-x{display:none} body.vplot #map{width:100%} body.vplot #side{width:88vw;transform:translateX(100%);transition:transform .25s} body.vplot.drawer #side{transform:none} body.vplot .zoom{right:10px!important}}
 @media (min-width:701px){#ecRoute{display:none}}
@@ -362,3 +363,24 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-nume
 .gchip{display:inline-block;margin:4px 0 0;padding:6px 10px;min-height:32px;border-radius:14px;border:1px solid rgba(255,255,255,.25);background:transparent;color:inherit;font:600 12px var(--sans)}
 .gchip.on{background:#c8602a;border-color:#c8602a;color:#fff}
 .wps .lbl .gchip{display:block}
+/* the route editor: WP names in pills, one card per waypoint, dimmed harbour points, a button row that stays at the bottom */
+.wps .n{width:auto;min-width:22px;padding:0 5px;border-radius:11px;font-size:11px}
+.wps li.auto,.wps li.auto .n{opacity:.62}
+.wpcards li.wpc{display:block;padding:8px 0}
+.wpc .wh{display:flex;align-items:center;gap:8px}
+.wpc .wh .lbl small{display:inline;margin-left:6px;font-style:italic}
+.wpc .wg{display:flex;flex-wrap:wrap;gap:4px 12px;margin:4px 0 0 2px;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.wpc .wg b{color:var(--ink);font-weight:650} .wpc .wg small{color:var(--muted);margin-left:3px}
+.wpc .wf{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:6px}
+.wpc .wf .gchip{display:inline-block}
+.wpc.wp0 .n{border-style:dashed}
+.wpc.flash{animation:wpflash 1.2s ease}
+@keyframes wpflash{0%{background:rgba(208,40,120,.22)}100%{background:transparent}}
+.btns.rbar{position:sticky;bottom:-22px;margin:10px -14px -22px;padding:10px 14px calc(12px + env(safe-area-inset-bottom,0px));background:var(--paper);border-top:1px solid var(--line);z-index:2}
+.wp.auto{opacity:.6}
+.wpn.auto{opacity:.6;font-weight:500}
+.wpn.wp0{fill:var(--muted)}
+.wp.drag{fill:var(--mag);opacity:.85} .wp.drag.landed{fill:var(--bad);stroke:var(--bad)}
+.wpins circle{fill:var(--sea);stroke:var(--mag);opacity:.85} .wpins path{stroke:var(--mag);stroke-linecap:round}
+.zoom button.rt{width:44px;height:44px;margin-left:-6px;display:grid;place-items:center;color:var(--ink)}
+.zoom button.rt[hidden]{display:none} .zoom button.rt:disabled{opacity:.35;cursor:default}
