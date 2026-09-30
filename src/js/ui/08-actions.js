@@ -206,7 +206,7 @@ window.addEventListener('pagehide', save);
 function applyLang(){
   document.documentElement.lang = S.lang === 'no' ? 'no' : 'en';
   document.querySelectorAll('[data-t]').forEach(el => el.textContent = t(el.dataset.t));
-  $('pace').options[0].textContent = t('pace1');
+  { const o = $('pace').options; o[0].textContent = t('pace1'); for (let i = 1; i < o.length; i++) o[i].textContent = fmt(GAME_RATE * +o[i].value) + '×'; }
   $('lang').textContent = S.lang === 'no' ? 'EN' : 'NO';
   $('bkToday').textContent = t('today'); $('logbook').setAttribute('aria-label', S.lang === 'no' ? 'Dekksdagbok' : 'Deck log');
   $('gps').dataset.hint = S.lang === 'no' ? 'KART ›' : 'CHART ›'; document.querySelector('#plotTop .pt-title').textContent = S.lang === 'no' ? 'Kartplotter' : 'Chart plotter';

@@ -25,13 +25,32 @@ function statusText(){
   if (b.gop){ const g = gopText(); return GL(g[2], g[3]); }
   return t('st_' + b.status);
 }
+// the most imminent event for the boat you are looking at: what and when (game minutes)
+function nextEvent(){
+  const b = S.boat, T = S.t, ev = [], L = (no, en) => S.lang === 'no' ? no : en;
+  const add = (t, txt) => { if (t != null && Number.isFinite(t) && t >= T) ev.push({t, txt}); };
+  if (S.plan && S.plan.depAt && (b.status === 'port' || b.status === 'idle')) add(S.plan.depAt, L('Avgang', 'Departure'));
+  if (b.land) add(b.land.until, L('Sluttseddelen', 'The landing note'));
+  if (b.fueling) add(b.fueling.until, L('Bunkringen er ferdig', 'Fuelling done'));
+  if (b.shift) add(b.shift.until, L('Forhalingen er ferdig', 'Shifting done'));
+  if (b.status === 'fishing' && b.fishUntil != null) add(b.fishUntil, L('Fisket er ferdig', 'Fishing done'));
+  if (b.status === 'port' && S.jobs && S.jobs.length && S.jobs[0].until) add(S.jobs[0].until, L('Verkstedet er ferdig', 'The yard is done'));
+  if (b.status === 'sailing' && S.plan && S.plan.idx < S.plan.wps.length){
+    const wps = S.plan.wps; let a = b.pos, km = 0, stop = null;
+    for (let i = S.plan.idx; i < wps.length; i++){ km += dist(a, wps[i]); a = wps[i]; if (wpStop(wps[i]) || i === wps.length - 1){ stop = wps[i]; break; } }
+    const kn = Math.max(4, b.v || S.plan.speed || 10);
+    if (stop) add(T + km / (kn * NM) * 60, stop.port ? L('Fremme i ', 'Arriving at ') + portById(stop.port).name : stop.fish > 0 ? L('Fremme på feltet', 'On the grounds') : L('Fremme ved neste stopp', 'At the next stop'));
+  }
+  ev.sort((x, y) => x.t - y.t); return ev[0] || null;
+}
 function renderHud(){
   const b = S.boat, H = S.t / 60, W = windAt(H), hs = hsAt(b.pos, H), atSea = b.status !== 'port';
   const lvl = riskLevel(W, hs);
   const dot = b.status === 'adrift' || b.status === 'engine' ? 'bad' : (b.status === 'sailing' || b.status === 'fishing') ? 'go' : '';
   document.body.classList.toggle('sailing', b.status === 'sailing');
   requestAnimationFrame(() => { $('mapwrap').style.setProperty('--gpsTop', (hud.offsetTop + hud.offsetHeight + 6) + 'px'); });
-  hud.innerHTML = '<div class="hd"><span>' + dayStr(S.t / 60) + ' ' + hm(S.t / 60) + '</span><b class="' + (S.cash < 0 ? 'r2' : '') + '">' + kr(S.cash) + '</b></div><div class="st"><i class="dot ' + dot + '"></i>' + statusText() + '</div>' +
+  const nx = nextEvent();
+  hud.innerHTML = '<div class="hd"><span>' + dayStr(S.t / 60) + ' ' + hm(S.t / 60) + '</span><b class="' + (S.cash < 0 ? 'r2' : '') + '">' + kr(S.cash) + '</b></div><div class="st"><i class="dot ' + dot + '"></i>' + statusText() + '</div>' + (nx ? '<div class="st nx">⏱ ' + nx.txt + ' ' + inReal(nx.t - S.t) + ' <small>(' + hm(nx.t / 60) + ')</small></div>' : '') +
     (S.fleet && S.fleet.length > 1 ? '<div class="row"><span>' + (S.lang === 'no' ? 'Båt' : 'Vessel') + '</span><b>' + S.boatName + (meAboard() ? ' ⚓' : '') + '</b></div>' : '') +
     '<div class="row"><span>' + t('wind') + '</span><b>' + dirName(windDir(H)) + ' ' + fmt(W, 1) + ' m/s</b></div>' +
     '<div class="row"><span>' + t('waves') + '</span><b>' + fmt(hs, 1) + ' m' + (atSea ? ' <span class="r' + lvl + '">' + t('risk' + lvl) + '</span>' : '') + '</b></div>' +

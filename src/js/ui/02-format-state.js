@@ -4,6 +4,17 @@ function dayKey(d){ d = d || new Date(); return d.getFullYear() + '-' + String(d
 function dayNum(k){ const [y, m, dd] = k.split('-').map(Number); return Math.round(Date.UTC(y, m - 1, dd) / 864e5); }
 function fmt(n, d = 0){ return new Intl.NumberFormat(S.lang === 'no' ? 'nb-NO' : 'en-GB', {minimumFractionDigits:d, maximumFractionDigits:d}).format(n); }
 function kr(n){ return S.lang === 'no' ? fmt(Math.round(n)) + ' kr' : 'NOK ' + fmt(Math.round(n)); }
+// real time for a stretch of game time: the clock runs GAME_RATE × S.mult game minutes per real minute
+function realMin(gameMin){ return gameMin / (GAME_RATE * (S.mult || 1)); }
+function realDur(gameMin){ const m = realMin(Math.max(0, gameMin)), no = S.lang === 'no';
+  if (m < 1) return no ? 'under 1 min' : 'under a minute';
+  if (m < 59.5) return Math.round(m) + ' min';
+  const tm = Math.round(m), hh = Math.floor(tm / 60), mm = tm % 60;
+  if (hh < 24) return hh + (no ? ' t' : ' h') + (mm ? ' ' + mm + ' min' : '');
+  const d = Math.floor(hh / 24), h2 = hh % 24; return d + ' d' + (h2 ? ' ' + h2 + (no ? ' t' : ' h') : ''); }
+function inReal(gameMin){ return (S.lang === 'no' ? 'om ' : 'in ') + realDur(gameMin); }
+// «ferdig 14:20 · om 12 min»: the game clock and how long that is to wait in real time
+function whenTxt(T){ return hm(T / 60) + ' · ' + inReal(T - S.t); }
 function dur(h){ const m = Math.max(0, Math.round(h * 60)), hh = Math.floor(m / 60), mm = m % 60; const u = S.lang === 'no' ? ' t' : ' h'; return (hh ? hh + u + ' ' : '') + mm + ' min'; }
 const DAYS = {no:['søn','man','tir','ons','tor','fre','lør'], en:['Sun','Mon','Tue','Wed','Thu','Fri','Sat']};
 const MONS = {no:['jan','feb','mar','apr','mai','jun','jul','aug','sep','okt','nov','des'], en:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']};

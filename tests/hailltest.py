@@ -8,14 +8,14 @@ async def main():
         errs=[]; pg.on('pageerror', lambda e: errs.append(str(e)))
         await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(400)
         # luck effect on a skrei day, with and without luxury luck (same random seed impossible, so average several days)
-        eff = await pg.evaluate("""(()=>{ const run = (luckType) => { let tot = {torsk:0, all:0};
-            for (let k = 0; k < 6; k++){ S.t = Math.round((Date.UTC(2028, 2, 6 + k, 7) - EPOCH) / 6e4); S.haill = luckType ? {type:luckType, t0:S.t - 60} : null; S.hold = []; S.facc = {}; S.fnext = {};
+        eff = await pg.evaluate("""(()=>{ const stock0 = S.stock.slice(); const run = (luckType) => { let tot = {torsk:0, all:0}; S.stock = stock0.slice();
+            for (let k = 0; k < 6; k++){ S.t = Math.round((Date.UTC(2028, 2, 6 + k, 7) - EPOCH) / 6e4); S.haill = luckType ? {type:luckType, t0:S.t - 60} : null; S.hold = []; S.facc = {}; S.fnext = {}; S.boat.deckStop = false; S.boat.deckEnd = null;
               S.boat.status = 'fishing'; S.boat.pos = {...GROUNDS[0].p}; S.boat.fishUntil = S.t + 240; S.boat.gear = true; S.equip.jukse = 0;
-              for (let i = 0; i < 240 && S.boat.status === 'fishing'; i++){ S.t++; fish(S.t / 60, 5, 0.5); }
+              for (let i = 0; i < 240 && S.boat.status === 'fishing'; i++){ S.t++; fish(S.t / 60, 5, 0.5); deckMinute(); }
               tot.torsk += S.hold.filter(x => x.sp === 'torsk').reduce((a, x) => a + x.kg, 0); tot.all += holdTotal(); } return {torsk:Math.round(tot.torsk), all:Math.round(tot.all)}; };
           const r = {none:run(null), luksus:run('luksus'), kveit:run('kveit')};
           S.haill = {type:'haill', t0:S.t}; const f = []; for (const d of [0, 1.9, 3, 4.5, 6, 7.2]){ S.haill.t0 = S.t - d * 1440; f.push(+haillF().toFixed(2)); } r.decay = f;
-          S.haill = null; S.boat.status = 'port'; S.boat.port = 'husoy'; S.boat.pos = {...portById('husoy').p}; S.hold = []; return r; })()""")
+          S.haill = null; S.stock = stock0; S.boat.status = 'port'; S.boat.port = 'husoy'; S.boat.pos = {...portById('husoy').p}; S.hold = []; return r; })()""")
         print('luck:', json.dumps(eff))
         # shop
         await pg.evaluate("S.tut=0; S.cash=50000; S.t = Math.round((Date.UTC(2028, 2, 6, 18) - EPOCH) / 6e4); PHONE.open('haill')"); await pg.wait_for_timeout(500)

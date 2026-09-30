@@ -49,7 +49,7 @@ function panelRoute(){
   }
   if (S.plan && S.plan.depAt){
     const H1 = S.plan.depAt / 60, rest = S.plan.wps.slice(S.plan.idx);
-    h.push('<h3>' + t('dep_planned') + '</h3><p>' + dayStr(H1) + ' ' + hm(H1) + ' · ' + dirName(windDir(H1)) + ' ' + fmt(fcWind(H1, S.t / 60), 0) + ' m/s</p>');
+    h.push('<h3>' + t('dep_planned') + '</h3><p>' + dayStr(H1) + ' ' + hm(H1) + ' <small class="note">' + inReal(S.plan.depAt - S.t) + '</small> · ' + dirName(windDir(H1)) + ' ' + fmt(fcWind(H1, S.t / 60), 0) + ' m/s</p>');
     h.push('<ul class="wps">' + rest.map((w, i) => '<li><span class="n' + (w.fish > 0 ? ' f' : '') + '">' + (i + 1) + '</span><span class="lbl">' + (w.port ? portById(w.port).name : coordStr(w)) + '<small>' + (w.port ? '' : (w.fish > 0 ? t('fish_h', w.fish) : t('no_fish'))) + '</small></span></li>').join('') + '</ul>');
     if (S.settings.autoOn) h.push('<p class="note">' + (S.lang === 'no' ? 'Blåser det mer enn ' + S.settings.autoW + ' m/s ved avgang, venter båten en time om gangen.' : 'If it blows more than ' + S.settings.autoW + ' m/s at departure, the boat waits an hour at a time.') + '</p>');
     h.push('<div class="btns"><button class="btn primary" data-act="depnow">' + t('dep_go') + '</button><button class="btn" data-act="depcancel">' + t('dep_cancel') + '</button></div>');
@@ -78,7 +78,7 @@ function panelRoute(){
     for (let k = 1; k <= 36; k++){ const m = (Math.floor(H0) + k) * 60, H1 = m / 60; opts.push('<option value="' + m + '"' + (S.draftDep === m ? ' selected' : '') + '>' + (gDate(H1).getUTCDate() !== gDate(H0).getUTCDate() ? dayStr(H1).split(' ')[0] + ' ' : '') + hm(H1) + ' · ' + dirName(windDir(H1)) + ' ' + fmt(fcWind(H1, H0), 0) + ' m/s</option>'); }
     h.push('<div class="kv"><span>' + t('departure') + '</span><span><select id="dep" class="depsel">' + opts.join('') + '</select></span></div>'); }
   h.push('<div class="kv"><span>' + t('dist') + '</span><span>' + fmt(e.nm, 1) + ' nm</span></div>');
-  h.push('<div class="kv"><span>' + t('sail_time') + '</span><span>' + dur(e.hours) + ' <small class="note">' + t('real', dur(e.hours / 2)) + '</small></span></div>');
+  h.push('<div class="kv"><span>' + t('sail_time') + '</span><span>' + dur(e.hours) + ' <small class="note">' + t('real', realDur(e.hours * 60)) + '</small></span></div>');
   if (e.fishH) h.push('<div class="kv"><span>' + t('fish_time') + '</span><span>' + dur(e.fishH) + '</span></div>');
   h.push('<div class="kv"><span>' + t('fuel_est') + '</span><span>' + fmt(e.fuel, 0) + ' L <small class="note">' + t('onboard', fmt(b.fuel, 0)) + '</small></span></div>');
   let can = true;
@@ -119,7 +119,7 @@ function panelFish(){
   if (b.status === 'fishing' && b.gop){ h.push('<p class="note">' + GL('Redskapsarbeid, se under.', 'Gear work, see below.') + '</p>'); }
   else if (b.status === 'fishing'){
     const L = (no, en) => S.lang === 'no' ? no : en, dk = deckPending() > 0.5;
-    h.push('<p>' + t('fish_left', dur((b.fishUntil - S.t) / 60)) + '</p><div class="btns"><button class="btn" data-act="stopfish">' + t('stop_fish') + '</button>' +
+    h.push('<p>' + t('fish_left', dur((b.fishUntil - S.t) / 60)) + ' <small class="note">' + inReal(b.fishUntil - S.t) + '</small></p><div class="btns"><button class="btn" data-act="stopfish">' + t('stop_fish') + '</button>' +
       (b.deckStop && !b.deckEnd ? '<button class="btn" data-act="deckgo">' + L('Fisk videre', 'Fish on') + '</button>' : dk ? '<button class="btn" data-act="deckstop">' + L('Stopp og sløy', 'Stop and gut') + '</button>' : '') + '</div>');
   } else if (b.status === 'idle'){
     h.push('<div class="btns"><span class="step"><button data-act="fh-" aria-label="−">−</button><output>' + t('fish_h', S.fishPlanH) + '</output><button data-act="fh+" aria-label="+">+</button></span><button class="btn primary" data-act="startfish">' + t('start_fish') + '</button></div>');
@@ -212,7 +212,7 @@ function deckText(short){
 function quayText(short){
   const b = S.boat, L = (no, en) => S.lang === 'no' ? no : en;
   if (b.shift){ const to = b.shift.to === 'bunker'; return short ? [to ? L('Går til bunkerskaia', 'To the bunker quay') : L('Går til mottakskaia', 'To the plant\'s quay'), to ? L('Til bunkers', 'To bunker') : L('Til mottak', 'To plant')] : (to ? L('Båten går bort til bunkerskaia.', 'The boat is moving to the bunker quay.') : L('Båten går tilbake til mottakskaia.', 'The boat is moving back to the plant\'s quay.')); }
-  if (b.fueling){ const f = b.fueling, n = fmt(f.done, 0) + ' / ' + fmt(f.liters, 0) + ' L'; return short ? [L('Fyller ', 'Filling ') + n, n] : L('Pumpa går: ' + n + ', ferdig ca. kl. ' + hm(f.until / 60) + '.', 'The pump is running: ' + n + ', done at about ' + hm(f.until / 60) + '.'); }
+  if (b.fueling){ const f = b.fueling, n = fmt(f.done, 0) + ' / ' + fmt(f.liters, 0) + ' L'; return short ? [L('Fyller ', 'Filling ') + n, n] : L('Pumpa går: ' + n + ', ferdig ca. kl. ' + whenTxt(f.until) + '.', 'The pump is running: ' + n + ', done at about ' + whenTxt(f.until) + '.'); }
   return '';
 }
 function panelPort(){
@@ -224,7 +224,7 @@ function panelPort(){
     const btn = [];
     const tot = holdTotal();
     if (b.shift || b.fueling) h.push('<p class="note">' + quayText(false) + '</p>');
-    if (b.land) h.push('<p class="note"><b>' + (S.lang === 'no' ? 'Lossing: ' : 'Landing: ') + '</b>' + landText(false) + ' ' + (S.lang === 'no' ? 'Sluttseddelen kommer ca. kl. ' : 'The landing note comes at about ') + hm(b.land.until / 60) + '.</p>');
+    if (b.land) h.push('<p class="note"><b>' + (S.lang === 'no' ? 'Lossing: ' : 'Landing: ') + '</b>' + landText(false) + ' ' + (S.lang === 'no' ? 'Sluttseddelen kommer ca. kl. ' : 'The landing note comes at about ') + whenTxt(b.land.until) + '.</p>');
     else if (p.mottak && tot > 0 && !b.shift && !b.fueling) btn.push('<button class="btn primary" data-act="sell">' + t('sell', fmt(tot, 0)) + '</button>');
     if (p.fuel){ const need = BOAT.fuelCap - b.fuel; btn.push('<button class="btn" data-act="fuel"' + (need < 0.5 || portBusy(b) ? ' disabled' : '') + '>' + t('fill_fuel', fmt(need, 0), kr(need * fuelPrice())) + '</button>'); }
     if (p.ice) btn.push('<button class="btn" data-act="ice"' + (b.ice > BOAT.iceCap - 1 || b.shift || b.land && berthKind(b) !== 'main' ? ' disabled' : '') + '>' + t('buy_ice', kr(50 * PRICE.ice)) + '</button>');

@@ -1,6 +1,6 @@
 // ---------- i18n ----------
 const T = {
-no:{title:'Kystfiske', proto:'Prototype, steg 1', pace:'Tempo', pace1:'2× (normalt)',
+no:{title:'Kystfiske', proto:'Prototype, steg 1', pace:'Tempo', pace1:'6× (normalt)',
  tab_route:'Rute', tab_fish:'Fiske', tab_hold:'Last', tab_wx:'Vær', tab_port:'Havn', tab_log:'Logg',
  st_port:'I havn i {0}', st_sailing:'Underveis, {0} kn', st_returning:'Returnerer, {0} kn', st_fishing:'Fisker', st_idle:'Ligger stille', st_adrift:'Drivende uten drivstoff', st_engine:'Motorstopp', st_unmooring:'Kaster loss', st_landing:'Losser i {0}', st_shift:'Forhaler i {0}', st_fueling:'Bunkrer i {0}',
  fuel:'Drivstoff', ice:'Is', hold:'Last', wind:'Vind', waves:'Bølger',
@@ -8,7 +8,7 @@ no:{title:'Kystfiske', proto:'Prototype, steg 1', pace:'Tempo', pace1:'2× (norm
  route_hint:'Trykk på kartet for å sette veipunkter. Trykk nær en havn for å avslutte ruten der. Legg inn fisketid på veipunktene, så kjører båten hele turen selv, også når du er borte.',
  route_empty:'Ingen veipunkter ennå. Start med å trykke på sjøen nord i Gisundet.',
  fish_h:'{0} t fiske', no_fish:'ingen fiske', speed:'Marsjfart', lpnm:'{0} L per nm',
- dist:'Distanse', sail_time:'Seilingstid', fish_time:'Fisketid', fuel_est:'Drivstoff, estimat', real:'ca. {0} i sanntid', onboard:'{0} L om bord',
+ dist:'Distanse', sail_time:'Seilingstid', fish_time:'Fisketid', fuel_est:'Drivstoff, estimat', real:'ca. {0} i ekte tid', onboard:'{0} L om bord',
  undo:'Angre', clear:'Tøm', start:'Kast loss', stop:'Stopp båten', retrace:'Returner samme vei',
  crosses:'Etappe {0} krysser land. Legg inn et veipunkt rundt odden, eller fjern punktet.',
  nofuel:'Ikke nok drivstoff for ruten. Fyll på, velg lavere fart eller kort ned ruten.',
@@ -39,10 +39,10 @@ no:{title:'Kystfiske', proto:'Prototype, steg 1', pace:'Tempo', pace1:'2× (norm
  intro_h:'Velkommen om bord',
  intro1:'Du starter i Finnsnes med en 19 fots åpen plastbåt med 60 hk påhengsmotor, 60 liter bensin og 15 000 kr.',
  intro2:'Trykk på GPS-en nede til venstre for å åpne kartplotteren og tegne en rute ut til et fiskefelt. Fisk med juksa og lever fangsten på et mottak. Telefonen nede til høyre har vær, priser, redning og mer. Sjekk været først. Båten tåler lite utenfor Senja, men fisket er best der.',
- intro3:'Tiden går dobbelt så fort som i virkeligheten, også når siden er lukket. Tempo for testing finner du under Innstillinger på telefonen.',
+ intro3:'Tiden går seks ganger så fort som i virkeligheten, også når siden er lukket. Tempo for testing finner du under Innstillinger på telefonen.',
  view_chart:'Kart', st_aground:'På grunn!', dep_now:'Nå', departure:'Avgang', dep_planned:'Planlagt avgang', st_waiting:'Avgang kl. {0}', yard_busy:'Verkstedet jobber til kl. {0}.', dep_go:'Kast loss nå', dep_cancel:'Avbryt avgang', marks_n:'Fargede prikker er dine egne fangster (kg per time). Fisker mange på samme sted, blir det tynnere.', need_plotter:'Plottervisning krever kartplotter. Kjøp i Utstyr-appen.', mode_plot:'Plotter', mode_chart:'Sjøkart', cam_helm:'Førerplass', cam_follow:'Følg båt', loading3d:'Laster 3D-terreng …', no3d:'3D-visning støttes ikke på denne enheten.', plan_in_chart:'Bytt til kart for å legge inn veipunkter.', temp:'Lufttemperatur', precip:'Nedbør', p_none:'opphold', p_rain:'regn', p_snow:'snø', p_light:'lett', p_heavy:'kraftig', vis:'Sikt',
  intro_go:'Gå om bord', today:'I dag', zin:'Zoom inn', zout:'Zoom ut', zboat:'Vis båten', empty_log:'Loggboka er tom.'},
-en:{title:'Kystfiske', proto:'Prototype, step 1', pace:'Pace', pace1:'2× (normal)',
+en:{title:'Kystfiske', proto:'Prototype, step 1', pace:'Pace', pace1:'6× (normal)',
  tab_route:'Route', tab_fish:'Fishing', tab_hold:'Hold', tab_wx:'Weather', tab_port:'Harbour', tab_log:'Log',
  st_port:'In harbour at {0}', st_sailing:'Under way, {0} kn', st_returning:'Returning, {0} kn', st_fishing:'Fishing', st_idle:'Stopped', st_adrift:'Adrift, out of fuel', st_engine:'Engine failure', st_unmooring:'Casting off', st_landing:'Landing at {0}', st_shift:'Moving along the quay at {0}', st_fueling:'Filling fuel at {0}',
  fuel:'Fuel', ice:'Ice', hold:'Hold', wind:'Wind', waves:'Waves',
@@ -81,7 +81,7 @@ en:{title:'Kystfiske', proto:'Prototype, step 1', pace:'Pace', pace1:'2× (norma
  intro_h:'Welcome aboard',
  intro1:'You start in Finnsnes with a 19 ft open skiff, a 60 hp outboard, 60 litres of petrol and NOK 15,000.',
  intro2:'Tap the GPS bottom left to open the chart plotter and plot a route to a fishing ground. Jig for fish and land your catch at a fish buyer. The phone bottom right has weather, prices, rescue and more. Check the weather first. The boat can take little outside Senja, but that is where the fishing is best.',
- intro3:'Time runs twice as fast as real life, even when the page is closed. A faster pace for testing is under Settings on the phone.',
+ intro3:'Time runs six times as fast as real life, even when the page is closed. A faster pace for testing is under Settings on the phone.',
  view_chart:'Chart', st_aground:'Aground!', dep_now:'Now', departure:'Departure', dep_planned:'Planned departure', st_waiting:'Departs at {0}', yard_busy:'The yard is busy until {0}.', dep_go:'Cast off now', dep_cancel:'Cancel departure', marks_n:'Coloured dots are your own catches (kg per hour). Heavily fished spots get thinner.', need_plotter:'Plotter view needs a chart plotter. Buy one in the Equipment app.', mode_plot:'Plotter', mode_chart:'Chart', cam_helm:'Helm', cam_follow:'Follow', loading3d:'Loading 3D terrain…', no3d:'3D view is not supported on this device.', plan_in_chart:'Switch to the chart to add waypoints.', temp:'Air temperature', precip:'Precipitation', p_none:'none', p_rain:'rain', p_snow:'snow', p_light:'light', p_heavy:'heavy', vis:'Visibility',
  intro_go:'Go aboard', today:'Today', zin:'Zoom in', zout:'Zoom out', zboat:'Show the boat', empty_log:'The logbook is empty.'}
 };

@@ -74,7 +74,7 @@ function renderActs(){
     h.push(gearActs(LS));
     const dk = deckText(true); if (dk) h.push('<span class="stp"><span class="lg">' + dk[0] + '</span><span class="sh">' + dk[1] + '</span></span>');
   } else if (b.status === 'fishing'){
-    h.push('<button data-act="stopfish">' + LS('Stopp fiske', 'Stop fishing', 'Stopp', 'Stop') + ' · ' + dur((b.fishUntil - S.t) / 60) + '</button>');
+    h.push('<button data-act="stopfish">' + LS('Stopp fiske', 'Stop fishing', 'Stopp', 'Stop') + ' · ' + inReal(b.fishUntil - S.t) + '</button>');
     const dk = deckText(true); if (dk){ h.push('<span class="stp"><span class="lg">' + dk[0] + '</span><span class="sh">' + dk[1] + '</span></span>'); if (b.deckStop && !b.deckEnd) h.push('<button data-act="deckgo">' + LS('Fisk videre', 'Fish on', 'Fisk', 'Fish') + '</button>'); else if (!b.deckStop) h.push('<button data-act="deckstop">' + LS('Stopp og sløy', 'Stop and gut', 'Sløy', 'Gut') + '</button>'); }
     if (G3.isActive()) h.push('<button data-act="rod" class="' + (window.rodActive ? 'on' : 'pri') + '">' + (window.rodActive ? LS('Legg fra deg stanga', 'Put the rod down', 'Stang av', 'Rod off') : LS('🎣 Fisk selv', '🎣 Fish yourself', '🎣 Stang', '🎣 Rod')) + '</button>');
   } else if (b.status === 'sailing'){
