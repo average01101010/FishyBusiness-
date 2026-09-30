@@ -10,11 +10,12 @@ function doAct(el){
   else if (act === 'fp' || act === 'fm') draftEdit(() => { const w = S.draft[i]; if (w) w.fish = clamp((w.fish || 0) + (act === 'fp' ? 1 : -1), 0, 12); });
   else if (act === 'rm') draftEdit(() => S.draft.splice(i, 1));
   else if (act === 'undo') draftUndo();
-  else if (act === 'leia'){ leiaArm(!LEIA_ARM); return; }
+  else if (act === 'leia'){ if (!LEIA_ARM && !tutAllow('waypoint')) return; leiaArm(!LEIA_ARM); return; }
   else if (act === 'redo') draftRedo();
   else if (act === 'clear') draftEdit(() => { S.draft = []; });
   else if (act === 'start'){
     if (!S.draft.length || !['port', 'idle'].includes(b.status)) return;
+    if (!tutAllow('start')) return;
     if (!meAboard() && !crewAboard().length){ toast(L('Båten har ikke mannskap. Uten deg om bord trenger den folk.', 'The boat has no crew. Without you aboard it needs hands.')); return; }
     const later = S.draftDep && S.draftDep > S.t ? S.draftDep : null;
     if (!later && b.status === 'port' && S.jobs && S.jobs.length){ toast(t('yard_busy', hm((jobsDone() || S.t) / 60))); return; }
@@ -31,6 +32,7 @@ function doAct(el){
   else if (act === 'pub'){ window.PUBW.open(); return; }
   else if (act === 'target'){ if (kveiteClosed(S.t / 60)){ S.target = 'mix'; toast(L('Kveita er fredet fra 20. desember til og med 20. april.', 'Halibut is closed from 20 December to 20 April.')); } else S.target = S.target === 'kveite' ? 'mix' : 'kveite'; renderActs(); return; }
   else if (act === 'opssave'){
+    if (tutOn()) return;
     const last = S.draft[S.draft.length - 1]; if (!last || !last.port || b.status !== 'port'){ toast(S.lang === 'no' ? 'Planen må starte i havn og slutte i en havn.' : 'The plan must start in port and end in a port.'); return; }
     const hours = S.draft.reduce((a, w) => a + (w.fish || 0), 0) + estimate().hours;
     S.ops = Object.assign({on:false, dep:5, days:[1, 1, 1, 1, 1, 0, 0], maxWind:12, skipper:(S.crew[0] || {}).id || null, last:-1}, S.ops || {}, {wps:S.draft.map(w => { const q = {...w}; if (q.act) q.act = {op:'cycle', kind:q.act.kind, spec:q.act.spec}; return q; }), speed:S.draftSpeed, home:b.port, end:last.port, hours:Math.ceil(hours)});
@@ -38,18 +40,18 @@ function doAct(el){
   }
   else if (act === 'depcancel'){ S.plan = null; log('Avgangen er avlyst.', 'Departure cancelled.'); }
   else if (act === 'stop'){ S.plan = null; b.status = 'idle'; b.v = 0; log('Stoppet båten.', 'Stopped the boat.'); }
-  else if (act === 'retrace') startReturn(false);
+  else if (act === 'retrace'){ if (tutOn()) return; startReturn(false); }
   else if (act === 'tow') rescue(true);
   else if (act === 'fh+' || act === 'fh-') S.fishPlanH = clamp(S.fishPlanH + (act === 'fh+' ? 1 : -1), 1, 12);
   else if (act === 'startfish'){ b.status = 'fishing'; b.fishUntil = S.t + S.fishPlanH * 60; log('Starter fiske i ' + S.fishPlanH + ' t.', 'Fishing for ' + S.fishPlanH + ' h.'); }
   else if (act === 'stopfish'){ if (b.gop) gopAbort('stop'); b.fishUntil = S.t; S.plan = null; endFishing('done'); }
   else if (act === 'deckstop'){ if (b.status === 'fishing'){ b.deckStop = true; log('Stopper fisket for å sløye og ise.', 'Stopping fishing to gut and ice.'); } }
   else if (act === 'deckgo'){ b.deckStop = false; b.deckEnd = null; }
-  else if (act === 'sell') startLanding(false);
+  else if (act === 'sell'){ if (!tutAllow('sell')) return; startLanding(false); }
   else if (act === 'fuel'){ if (S.cash <= 0){ toast(t('no_cash')); return; } startFueling(false); }
   else if (act === 'ice'){ const why = shopBuy('ice', +el.dataset.kg || 50); if (why){ toast(L(why[0], why[1])); return; } }
   else if (act === 'gear' || act === 'kgear'){ PHONE.open('fiske'); return; }
-  else if (act === 'reset'){ if (confirm(t('reset_q'))){ const lang = S.lang; S = newState(); S.lang = lang; S.intro = true; S.draft = []; draftForget(true); ensureFleet(); save(); refreshAll(); } return; }
+  else if (act === 'reset'){ if (confirm(t('reset_q'))){ const lang = S.lang; S = newState(); S.lang = lang; S.intro = true; S.draft = []; draftForget(true); S.tut = NOTUT ? 0 : tutNew(); ensureFleet(); save(); refreshAll(); } return; }
   renderPanel(); renderDyn(); renderHud(); renderClock(); renderActs(); renderRouteTools(); save();
 }
 function panelInput(e){
@@ -150,6 +152,7 @@ function sell(){
   // confKg and confKr count all that was confiscated (crab too); codKg and codKr are the cod, haddock and saithe rows on the note
   S.lastSale = {port:port.id, t:S.t, lines:arr, total, ex, confKg:confKg + crabSmall, confKr:confKr + crabKr, codKg:confKg, codKr:confKr, crabKg:crabSmall, crabKr, ordKr, ffKg:codFF, field, lott, ord:ordLines, acc, crabFine, roeCut, streak:{pct:stPct, kr:stKr}, gear:Object.keys(b.tripGear || {})}; b.tripGear = {};
   tatLanding(port.id); checkTattoos();
+  if (S.tut && S.tut.catch) S.tut.catch = false;   // the first-trip guarantee ends with the first landing
   for (const x of S.hold) delete x._used;
   log('Leverte ' + Math.round(kg) + ' kg i ' + port.name + ' for ' + kr(total) + '.', 'Landed ' + Math.round(kg) + ' kg at ' + port.name + ' for ' + kr(total) + '.');
 
@@ -168,7 +171,7 @@ function showIntro(namesOnly){
   $('obGo').addEventListener('click', () => {
     const co = $('obCo').value.trim().slice(0, 28), bn = $('obBoat').value.trim().slice(0, 20);
     S.company = co || L('Senja Kystfiske', 'Senja Coastal Fishing'); S.boatName = bn || 'Havbris';
-    if (!S.intro){ S.tut = NOTUT ? 0 : 1; log('Overtok «' + S.boatName + '» i Finnsnes for ' + S.company + '.', 'Took over the «' + S.boatName + '» in Finnsnes for ' + S.company + '.'); }
+    if (!S.intro){ S.tut = NOTUT ? 0 : tutNew(); log('Overtok «' + S.boatName + '» i Finnsnes for ' + S.company + '.', 'Took over the «' + S.boatName + '» in Finnsnes for ' + S.company + '.'); }
     S.intro = true; save(); refreshAll();
   });
 }

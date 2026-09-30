@@ -7,7 +7,7 @@ window.ROD = (() => {
   const msgEl = el.querySelector('.rod-msg'), btn = el.querySelector('.rod-btn'), pEl = el.querySelector('.rp'), tEl = el.querySelector('.rt'), bars = el.querySelector('.rod-bars');
   const L = (no, en) => S.lang === 'no' ? no : en, MEAN = {torsk:3.8, sei:2.6, hyse:1.6, lange:5.5, brosme:3.2};
   const dens = () => SP.reduce((a, sp) => a + density(sp, S.boat.pos, S.t / 60) * luck(sp) * targetF(sp, S.t / 60), 0);
-  function schedule(now){ const mean = clamp(26 / Math.max(0.12, dens() * 1.4), 5, 50); tNext = now + mean * (0.35 + Math.random() * 1.3) * 1000; }
+  function schedule(now){ if (S.tut && S.tut.catch){ tNext = now + (4 + Math.random() * 4) * 1000; return; } const mean = clamp(26 / Math.max(0.12, dens() * 1.4), 5, 50); tNext = now + mean * (0.35 + Math.random() * 1.3) * 1000; }
   function pick(){ const w = SP.map(sp => [sp, density(sp, S.boat.pos, S.t / 60) * luck(sp) * targetF(sp, S.t / 60)]), tot = w.reduce((a, x) => a + x[1], 0) || 1; let r = Math.random() * tot, sp = w[0][0]; for (const [k, v] of w){ r -= v; if (r <= 0){ sp = k; break; } }
     const kg = sampleFish(sp, S.boat.pos, S.t / 60); return {sp, kg}; }
   function set(s2, now){ st = s2; t0 = now; phase = 0; }
@@ -55,12 +55,12 @@ function renderActs(){
     if (S.jobs && S.jobs.length) h.push('<button data-ui="verksted">' + LS('Verksted til ', 'Yard until ', 'Verksted ', 'Yard ') + hm((jobsDone() || S.t) / 60) + '</button>');
     const stp = ([lg, sh]) => h.push('<span class="stp"><span class="lg">' + lg + '</span><span class="sh">' + sh + '</span></span>'), busy = portBusy(b);
     if (b.land) stp(landText(true)); if (b.shift || b.fueling) stp(quayText(true));
-    if (!busy && p.mottak && tot > 0.5) h.push('<button class="pri" data-act="sell">' + L('Lever ', 'Land ') + fmt(tot, 0) + ' kg</button>');
+    if (!busy && p.mottak && tot > 0.5 && (!tutOn() || p.id === 'botnhamn')) h.push('<button class="pri" data-act="sell">' + L('Lever ', 'Land ') + fmt(tot, 0) + ' kg</button>');
     if (!busy && p.fuel && BOAT.fuelCap - b.fuel > 0.5) h.push('<button data-act="fuel">' + (hasBunker(p.id) && berthKind(b) !== 'bunker' ? LS('Fyll drivstoff ved bunkerskaia', 'Refuel at the bunker quay', 'Drivstoff', 'Fuel') : LS('Fyll drivstoff', 'Refuel', 'Drivstoff', 'Fuel')) + '</button>');
     { const kg = Math.min(50, shopIceRoom()), c = kr(Math.round(kg * shopIceKr()));
       if (!b.shift && !(b.land && berthKind(b) !== 'main') && kg >= 1) h.push('<button data-act="ice" data-kg="' + kg + '">' + LS('Is ' + kg + ' kg · ' + c, 'Ice ' + kg + ' kg · ' + c, 'Is ' + kg + ' kg', 'Ice ' + kg + ' kg') + '</button>'); }
     h.push('<button data-ui="fiske"' + (b.gear ? '' : ' class="pri"') + '>' + LS('Fiskeutstyr', 'Tackle shop', 'Butikk', 'Shop') + '</button>');
-    if (pubOpen(S.t / 60) && S.pubE !== pubEvening(S.t / 60)) h.push('<button data-act="pub">🍺 ' + LS('Pubrunde', 'Pub round', 'Pub', 'Pub') + '</button>');
+    if (!tutOn() && pubOpen(S.t / 60) && S.pubE !== pubEvening(S.t / 60)) h.push('<button data-act="pub">🍺 ' + LS('Pubrunde', 'Pub round', 'Pub', 'Pub') + '</button>');
     h.push(gearActs(LS));
     h.push('<button' + (tot > 0.5 && p.mottak || busy ? '' : ' class="pri"') + ' data-ui="plot">' + LS('Planlegg tur', 'Plan a trip', 'Planlegg', 'Plan') + '</button>');
   } else if (b.status === 'unmooring'){
@@ -69,7 +69,7 @@ function renderActs(){
     h.push(gearActs(LS));
     h.push('<span class="stp"><button data-act="fh-" aria-label="−">−</button>' + S.fishPlanH + ' t<button data-act="fh+" aria-label="+">+</button></span><button class="pri" data-act="startfish">' + LS('Start fiske', 'Start fishing', 'Fisk', 'Fish') + '</button>');
     if (b.kgear){ const cl = kveiteClosed(S.t / 60); h.push('<button data-act="target"' + (cl && S.target !== 'kveite' ? ' disabled' : '') + '>🎯 ' + (S.target === 'kveite' && !cl ? LS('Fisker kveite', 'Fishing halibut', 'Kveite', 'Halibut') : cl ? LS('Kveita er fredet', 'Halibut closed', 'Fredet', 'Closed') : LS('Blandet fiske', 'Mixed fishing', 'Blandet', 'Mixed')) + '</button>'); }
-    h.push('<button data-act="retrace">' + LS('Hjem samme vei', 'Home same way', 'Hjem', 'Home') + '</button><button data-ui="plot">' + LS('Ny rute', 'New route', 'Rute', 'Route') + '</button>');
+    h.push((tutOn() ? '' : '<button data-act="retrace">' + LS('Hjem samme vei', 'Home same way', 'Hjem', 'Home') + '</button>') + '<button data-ui="plot">' + LS('Ny rute', 'New route', 'Rute', 'Route') + '</button>');
   } else if (b.status === 'fishing' && b.gop){
     h.push(gearActs(LS));
     const dk = deckText(true); if (dk) h.push('<span class="stp"><span class="lg">' + dk[0] + '</span><span class="sh">' + dk[1] + '</span></span>');
@@ -80,7 +80,7 @@ function renderActs(){
   } else if (b.status === 'sailing'){
     h.push('<button data-act="stop">' + LS('Stopp båten', 'Stop the boat', 'Stopp', 'Stop') + '</button>');
     { const dk = deckText(true); if (dk) h.push('<span class="stp"><span class="lg">' + dk[0] + '</span><span class="sh">' + dk[1] + '</span></span>'); }
-    if (!(S.plan && S.plan.returning)) h.push('<button data-act="retrace">' + LS('Hjem samme vei', 'Home same way', 'Hjem', 'Home') + '</button>');
+    if (!(S.plan && S.plan.returning) && !tutOn()) h.push('<button data-act="retrace">' + LS('Hjem samme vei', 'Home same way', 'Hjem', 'Home') + '</button>');
   } else if (b.status === 'adrift' || b.status === 'engine' || b.status === 'aground'){
     h.push('<button class="warn" data-ui="rescue">' + LS('Ring etter hjelp', 'Call for help', 'Hjelp', 'Help') + '</button>');
   }

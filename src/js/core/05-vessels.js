@@ -151,7 +151,9 @@ function vesselStep(H){
   if (b.status === 'port') return;
   const W = windAt(H), hs = hsAt(b.pos, H);
   if (b.status === 'engine' && S.t >= b.engineUntil){ b.status = b.prev || 'idle'; b.prev = null; log('Motoren startet igjen.', 'The engine is running again.'); }
-  if (S.settings.autoOn && W > S.settings.autoW && ['sailing','fishing','idle'].includes(b.status) && !(S.plan && S.plan.returning)){
+  // the first trip waits in port for wind (the departure is put off) but does not turn back once out
+  if (b.tutWait && (b.status !== 'idle' || (S.haill && S.haill.type === 'luksus'))){ if (b.status === 'idle'){ b.status = 'fishing'; b.fishUntil = S.t + b.tutWait * 60; log('Haillen er om bord. Starter fiske i ' + b.tutWait + ' t.', 'The luck is aboard. Fishing for ' + b.tutWait + ' h.'); } b.tutWait = null; }
+  if (S.settings.autoOn && W > S.settings.autoW && ['sailing','fishing','idle'].includes(b.status) && !(S.plan && S.plan.returning) && !(S.tut && S.tut.catch)){
     startReturn(true, W);
   }
   if (b.status === 'sailing' || b.status === 'fishing') b.engH = (b.engH || 0) + (b.status === 'sailing' ? 1 : 0.25) / 60;
@@ -196,6 +198,7 @@ function arrive(w){
   if (!(w.fish > 0) && pl.idx < pl.wps.length){ const nw = pl.wps[pl.idx], c = Math.round(((Math.atan2(nw.x - w.x, -(nw.y - w.y)) * 180 / Math.PI) + 360) % 360); log('WP' + pl.idx + ' passert. Ny kurs ' + String(c).padStart(3, '0') + '°.', 'WP' + pl.idx + ' passed. New course ' + String(c).padStart(3, '0') + '°.', 'nav'); }
   // work with passive gear at this waypoint: set or haul, then any fishing hours with the jig
   if (w.act){ b.status = 'idle'; const why = w.act.op === 'cycle' ? gearCycle(w, w.fish) : w.act.op === 'haul' ? startHaul(w.act.sid, w.act.reset, w.fish) : startSet(w.act.kind, w.act.spec, w.fish); if (!why) return true; log(why[0], why[0]); if (!(w.fish > 0)) b.status = 'sailing'; }
+  if (w.fish > 0 && S.tut && S.tut.v === 2 && !(S.haill && S.haill.type === 'luksus')){ b.status = 'idle'; b.v = 0; b.tutWait = w.fish; log('Fremme på feltet. Venter med fisket til haillen er hentet.', 'Arrived on the grounds. Waiting to fish until the luck is fetched.'); return true; }
   if (w.fish > 0){ b.status = 'fishing'; b.fishUntil = S.t + w.fish * 60; log('Fremme på feltet. Starter fiske i ' + w.fish + ' t.', 'Arrived on the grounds. Fishing for ' + w.fish + ' h.'); return true; }
   if (pl.idx >= pl.wps.length){ S.plan = null; b.status = 'idle'; b.v = 0; log('Fremme ved siste veipunkt. Ligger stille.', 'Reached the last waypoint. Stopped.'); return true; }
   return false;
@@ -243,6 +246,15 @@ function fish(H, W, hs){
     while (S.facc[sp] >= S.fnext[sp] && room > 0){
       const w = S.fnext[sp]; S.facc[sp] -= w; S.fnext[sp] = sampleFish(sp, b.pos, H);
       if (w < SPECIES[sp].minKg || (SPECIES[sp].maxKg && w > SPECIES[sp].maxKg) || (sp === 'kveite' && kveiteClosed(H))){ S.stats.released = (S.stats.released || 0) + 1; if (sp === 'kveite' && w >= SPECIES.kveite.minKg && (S.kvRel || -1e9) < S.t - 720){ S.kvRel = S.t; log('Slapp en kveite på ' + fmt(w, 0) + ' kg' + (kveiteClosed(H) ? ' (fredningstid).' : ' (over 200 cm).'), 'Released a ' + fmt(w, 0) + ' kg halibut' + (kveiteClosed(H) ? ' (closed season).' : ' (over 200 cm).')); } continue; }
+      const kg = Math.min(w, room); room -= kg; addCatch(sp, kg, clsOf(sp, w), true); got += kg;
+      if (typeof window !== 'undefined'){ const cq = window.CATCHQ || (window.CATCHQ = []); if (cq.length < 30) cq.push({sp, kg, t:performance.now()}); }
+    }
+  }
+  if (S.tut && S.tut.catch && room > 0){
+    const left = Math.max(1, (b.fishUntil != null ? b.fishUntil : S.t) - S.t), want = (capHold() - holdTotal()) / left, mix = [['torsk', 0.72], ['sei', 0.18], ['hyse', 0.1]];
+    for (let k = 0; got < want && room > 0.01 && k < 40; k++){
+      let r = Math.random(), sp = mix[0][0]; for (const [s2, pw] of mix){ if (r < pw){ sp = s2; break; } r -= pw; }
+      const w = sampleFish(sp, b.pos, H); if (w < SPECIES[sp].minKg || (SPECIES[sp].maxKg && w > SPECIES[sp].maxKg)) continue;
       const kg = Math.min(w, room); room -= kg; addCatch(sp, kg, clsOf(sp, w), true); got += kg;
       if (typeof window !== 'undefined'){ const cq = window.CATCHQ || (window.CATCHQ = []); if (cq.length < 30) cq.push({sp, kg, t:performance.now()}); }
     }
@@ -314,7 +326,7 @@ function deckMinute(){
   if (worked > 0 && meAboard() && hands === handsAboard()) S.deckMe = (S.deckMe || 0) + 1;
 }
 function risk(W, hs){
-  const b = S.boat; if (b.status === 'port') return;
+  const b = S.boat; if (b.status === 'port' || (S.tut && S.tut.catch)) return;
   const over = svcOverdue();
   if (over > 0 && b.status === 'sailing' && Math.random() < over * 0.02 / 60 && b.status !== 'engine'){ b.prev = b.status; b.status = 'engine'; b.engineUntil = S.t + 30 + Math.floor(Math.random() * 60); log('Motorstopp. Motoren trenger service.', 'Engine stopped. The engine needs a service.'); return; }
   const lvl = riskLevel(W, hs); if (!lvl) return;

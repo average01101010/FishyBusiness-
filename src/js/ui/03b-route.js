@@ -94,6 +94,7 @@ function mapToClient(p){ const m = svg.getScreenCTM(); return {x:m.a * p.x + m.c
 // --- «Følg leia»: the next tap on the chart is where to go, and the route there follows the fairway (core/11-route.js)
 let LEIA_ARM = false, LEIA_BUSY = false;
 function leiaArm(on){
+  if (on && !tutAllow('waypoint')) return;
   if (on && S.draft.length && S.draft[S.draft.length - 1].port){ toast(t('ends_port')); return; }
   LEIA_ARM = on && canEditDraft(); if (LEIA_ARM) toast(S.lang === 'no' ? 'Trykk i kartet der du vil. Båten finner leia dit.' : 'Tap the chart where you want to go. The boat finds the fairway there.');
   panelDirty = true; renderPanel(); renderRouteTools();

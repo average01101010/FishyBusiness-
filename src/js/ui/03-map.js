@@ -263,6 +263,7 @@ window.addEventListener('resize', () => { applyView(); scheduleStatic(); });
 
 function addWaypoint(pt){
   const b = S.boat;
+  if (!tutAllow('waypoint')) return;
   if (LEIA_ARM){ leiaTo(pt); return; }
   if (!['port', 'idle'].includes(b.status)){ toast(t('cant_plan')); return; }
   if (S.draft.length && S.draft[S.draft.length - 1].port){ toast(t('ends_port')); return; }

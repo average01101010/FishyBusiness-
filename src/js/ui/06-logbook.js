@@ -52,7 +52,6 @@ const BOOK = (() => {
     spread = window.innerWidth >= 760 && window.innerHeight >= 480;
     idx = spread ? today() - first() : (today() - first()) * 2;
     render(); el.hidden = false; void el.offsetWidth; el.classList.add('on');
-    if (S.tut === 5){ S.tut = 0; save(); }
   }
   function close(){ el.classList.remove('on'); setTimeout(() => { if (!el.classList.contains('on')) el.hidden = true; }, 380); }
   // page turning: the leaf follows the finger around the spine

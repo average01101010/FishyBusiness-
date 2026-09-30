@@ -16,6 +16,7 @@ if (S){ awayMs = Date.now() - (S.lastReal || Date.now()); } else S = newState();
 { const d = newState(); for (const k of ['equip', 'crew', 'loan', 'member', 'msgs', 'sales', 'order', 'owned', 'stock', 'marks', 'jobs', 'prep', 'tripBuff', 'draftDep', 'navrows', 'company', 'boatName', 'tut', 'incidents', 'lore', 'tattoos', 'tat', 'sets', 'gseq', 'ops', 'lic', 'haill', 'pubE', 'target', 'streak', 'clothes', 'orders', 'rep', 'bors', 'cevt', 'workLog']) if (S[k] === undefined || (k === 'stock' && !S[k])) S[k] = d[k];
   if (!S.boat.type) S.boat.type = 'skiff'; if (S.boat.engH === undefined){ S.boat.engH = 0; S.boat.svcAt = 0; }
   delete S.settings.bleed;   // never used; the fish is always bled at the rail
+  if (typeof S.tut === 'number') S.tut = 0;   // saves from before «Første tur» are not sent through it
   applyVessel(); if (!S.settings.chart) S.settings.chart = S.settings.plotter && S.equip.plotter ? 'fish' : 'nav'; if (!S.equip.plotter && S.settings.chart === 'fish') S.settings.chart = 'nav';
   if (S.boat.status === 'port' && portById(S.boat.port)){ const pp = portById(S.boat.port).p; S.boat.pos = {x:pp.x, y:pp.y}; }
   if (S.fleet && S.fleet.length){ ensureFleet(); for (const v of S.fleet) withVessel(v, () => { if (S.boat.status === 'port' && portById(S.boat.port)){ const pp = portById(S.boat.port).p; S.boat.pos = {x:pp.x, y:pp.y}; } }); } else ensureFleet(); }

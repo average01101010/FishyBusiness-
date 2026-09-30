@@ -1,33 +1,3 @@
-// ---------- first-time guide ----------
-const TUT = [null,
-  {sel:'#gpsBtn', no:'Trykk på GPS-en for å åpne kartplotteren og planlegge turen.', en:'Tap the GPS to open the chart plotter and plan your trip.'},
-  {sel:null, no:'Trykk på sjøen for å sette veipunkter. Gi ett av dem fisketid med +, og avslutt ruten ved å trykke på en havn.', en:'Tap the sea to set waypoints. Give one of them fishing time with +, and end the route by tapping a harbour.'},
-  {sel:'#panel [data-act=start]', no:'Sjekk vær og drivstoff, og trykk Kast loss. Båten kjører turen selv, også når du er borte.', en:'Check the weather and fuel, then tap Cast off. The boat runs the trip on its own, even while you are away.'},
-  {sel:'#phoneFab', no:'Telefonen har vær, priser, verksted, redning og mer.', en:'The phone has weather, prices, the workshop, rescue and more.', ok:true},
-  {sel:'#logbook', no:'Dekksdagboka fører alt for deg. Trykk på den og bla med fingeren.', en:'The deck log records everything for you. Tap it and turn the pages with your finger.', ok:true}];
-function tutUpdate(){
-  const tip = $('tip'), st = S.tut || 0;
-  if (st === 1 && document.body.classList.contains('vplot')) S.tut = 2;
-  else if ((st === 2 || st === 3) && !document.body.classList.contains('vplot') && !S.plan) S.tut = 1;
-  else if (st === 2 && S.draft.length && S.draft[S.draft.length - 1].port) S.tut = 3;
-  else if (st === 3 && S.plan) S.tut = 4;
-  if (S.tut === 3 && window.innerWidth <= 700) document.body.classList.add('drawer');
-  const T0 = TUT[S.tut || 0];
-  if (!T0 || PHONE.isOpen() || BOOK.isOpen() || !$('modal').hidden){ tip.hidden = true; return; }
-  const target = T0.sel && document.querySelector(T0.sel);
-  if (T0.sel && (!target || !target.offsetParent)){ tip.hidden = true; return; }
-  const txt = S.lang === 'no' ? T0.no : T0.en; if ($('tipText').textContent !== txt) $('tipText').textContent = txt;
-  $('tipOk').hidden = !T0.ok; $('tipOk').textContent = S.lang === 'no' ? 'Skjønner' : 'Got it'; $('tipSkip').textContent = S.lang === 'no' ? 'Hopp over' : 'Skip';
-  tip.hidden = false;
-  const tw = tip.offsetWidth, th = tip.offsetHeight, ar = tip.querySelector('.tip-arrow'), vw = window.innerWidth, vh = window.innerHeight;
-  if (!target){ tip.style.left = Math.max(8, (vw - tw) / 2) + 'px'; tip.style.top = (72 + (window.visualViewport ? 0 : 0)) + 'px'; ar.style.display = 'none'; return; }
-  const r = target.getBoundingClientRect(), above = r.top > th + 24, x = clamp(r.left + r.width / 2 - tw / 2, 8, vw - tw - 8), y = above ? r.top - th - 14 : Math.min(vh - th - 8, r.bottom + 14);
-  tip.style.left = x + 'px'; tip.style.top = y + 'px'; ar.style.display = '';
-  ar.style.left = clamp(r.left + r.width / 2 - x - 7, 12, tw - 26) + 'px'; ar.style.top = above ? (th - 7) + 'px' : '-7px';
-}
-$('tipOk').onclick = () => { S.tut = S.tut === 4 ? 5 : 0; save(); tutUpdate(); };
-$('tipSkip').onclick = () => { S.tut = 0; save(); tutUpdate(); };
-
 function renderClock(){
   $('clock').textContent = clockStr(S.t / 60);
   const c = $('cash'); c.textContent = kr(S.cash); c.classList.toggle('neg', S.cash < 0);
@@ -61,7 +31,7 @@ function panelRoute(){
     h.push('<ul class="wps">' + rest.map((w, i) => '<li' + (w.auto ? ' class="auto"' : '') + '><span class="n' + (w.fish > 0 ? ' f' : '') + '">' + wpName(S.plan.idx + i + 1) + '</span><span class="lbl">' + (w.port ? portById(w.port).name : coordStr(w)) + '<small>' + (w.port ? '' : w.auto && !w.act && !(w.fish > 0) ? wpTag(w) : (w.act ? wpActLabel(w.act) + (w.fish > 0 ? ', ' : '') : '') + (w.fish > 0 ? t('fish_h', w.fish) : w.act ? '' : t('no_fish'))) + '</small></span></li>').join('') + '</ul>');
     h.push('<div class="range"><input type="range" min="2" max="' + BOAT.vmax + '" step="1" value="' + Math.min(S.plan.speed, BOAT.vmax) + '" id="spdLive" aria-label="' + t('speed') + '"><output id="spdLiveOut">' + S.plan.speed + ' kn</output></div>');
     if (b.status === 'sailing' && b.v < S.plan.speed - 0.5) h.push('<p class="note">' + t('speed_live') + ': ' + fmt(b.v, 0) + ' kn (' + t('waves').toLowerCase() + ')</p>');
-    h.push('<div class="btns">' + (S.plan.returning ? '' : '<button class="btn" data-act="retrace">' + t('retrace') + '</button>') + (b.status === 'sailing' ? '<button class="btn" data-act="stop">' + t('stop') + '</button>' : '') + '</div>');
+    h.push('<div class="btns">' + (S.plan.returning || tutOn() ? '' : '<button class="btn" data-act="retrace">' + t('retrace') + '</button>') + (b.status === 'sailing' ? '<button class="btn" data-act="stop">' + t('stop') + '</button>' : '') + '</div>');
     return h.join('');
   }
   h.push('<p class="note">' + t('route_hint') + (S.marks.length ? ' ' + t('marks_n') : '') + '</p>');
@@ -93,7 +63,7 @@ function panelRoute(){
   let can = true;
   if (e.bad >= 0){ h.push('<p class="bad">' + t('crosses', legName(e.bad)) + '</p>'); can = false; }
   { const hz = draftHazards(), sd = safeDepth(), bad = hz.map((q, i) => [q, i]).filter(x => x[0].unsafe); if (bad.length) h.push('<p class="warn">' + (S.lang === 'no' ? 'Gult: ' : 'Yellow: ') + bad.slice(0, 4).map(([q, i]) => (S.lang === 'no' ? 'etappe ' : 'leg ') + legName(i) + ' ('  + (q.minD < sd ? fmt(q.minD, 1) + ' m' : '') + (q.minD < sd && q.rocks ? ', ' : '') + (q.rocks ? (S.lang === 'no' ? 'skjær' : 'rocks') : '') + ')').join(', ') + '. ' + (S.lang === 'no' ? 'Sikker dybde er ' + sd + ' m, båten stikker ' + fmt(BOAT.draft, 1) + ' m. Du kan kjøre ruten, men da på egen risiko.' : 'Safety depth is ' + sd + ' m, the boat draws ' + fmt(BOAT.draft, 1) + ' m. You can run the route, at your own risk.') + '</p>'); }
-  if (S.draft.length && S.draft[S.draft.length - 1].port && b.status === 'port') h.push('<div class="btns"><button class="btn" data-act="opssave">' + (S.lang === 'no' ? 'Lagre som fast driftsplan' : 'Save as standing plan') + '</button></div>');
+  if (S.draft.length && S.draft[S.draft.length - 1].port && b.status === 'port' && !tutOn()) h.push('<div class="btns"><button class="btn" data-act="opssave">' + (S.lang === 'no' ? 'Lagre som fast driftsplan' : 'Save as standing plan') + '</button></div>');
   if (false){ let rk = 0, a0 = b.pos; for (const w of S.draft){ rk += rocksNear(a0, w, 0.03); a0 = w; } if (rk) h.push('<p class="warn">' + (S.lang === 'no' ? 'Ruten går tett forbi ' + rk + (rk === 1 ? ' skjær eller båe' : ' skjær og båer') + '. Sjekk kartet.' : 'The route passes close to ' + rk + (rk === 1 ? ' rock' : ' rocks') + '. Check the chart.') + '</p>'); }
   if (e.fuel > b.fuel){ h.push('<p class="bad">' + t('nofuel') + '</p>'); can = false; }
   else if (e.fuel > b.fuel * 0.8) h.push('<p class="warn">' + t('lowres') + '</p>');
@@ -244,7 +214,7 @@ function panelPort(){
     const ls = S.lastSale;
     if (ls && ls.port === b.port && S.t - ls.t < 240){
       const LN = (no, en) => S.lang === 'no' ? no : en;
-      h.push('<h3>' + t('slip', portById(ls.port).name) + (ls.field ? ' · ' + LN('fangstfelt', 'field') + ' ' + ls.field : '') + (ls.gear && ls.gear.length ? ' · ' + ls.gear.map(k => k === 'juksa' ? LN('juksa', 'jig') : GEAR[k][S.lang].toLowerCase()).join(', ') : '') + '</h3><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>' + t('species') + '</th><th>' + LN('Størrelse', 'Size') + '</th><th>' + t('quality') + '</th><th>' + t('kg') + '</th><th>kr/kg</th><th>kr</th></tr></thead><tbody>');
+      h.push('<h3>' + t('slip', portById(ls.port).name) + (ls.field ? ' · ' + LN('fangstfelt', 'field') + ' ' + ls.field : '') + (ls.gear && ls.gear.length ? ' · ' + ls.gear.map(k => k === 'juksa' ? LN('juksa', 'jig') : GEAR[k][S.lang].toLowerCase()).join(', ') : '') + '</h3><div style="overflow-x:auto"><table class="tbl slipt"><thead><tr><th>' + t('species') + '</th><th>' + LN('Størrelse', 'Size') + '</th><th>' + t('quality') + '</th><th>' + t('kg') + '</th><th>kr/kg</th><th>kr</th></tr></thead><tbody>');
       // every row is whole kilos and kroner, and the sums are the sums of the rows as shown
       const pkOf = r => Math.round(r.gut ? r.kg / SPECIES[r.sp].uh : r.kg), row = (a, kgc, sum, cls) => '<tr' + (cls ? ' class="' + cls + '"' : '') + '><td colspan="3">' + a + '</td><td>' + kgc + '</td><td></td><td>' + sum + '</td></tr>';
       ls.lines.forEach(r => { const sd = SPECIES[r.sp], cl = sd && sd.cls[r.c], pk = pkOf(r);
