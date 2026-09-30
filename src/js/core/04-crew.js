@@ -42,8 +42,8 @@ function genCrew(){
 // crew from before this system get skills that match their level
 function crewUpgrade(c){ if (c.attr) return c; const g = genCrew(), e = c.lv === 'dreven' ? 4.5 : c.lv === 'erfaren' ? 3 : 1.5; return crewDerive(Object.assign(g, {id:c.id, name:c.name, age:c.age || g.age, share:c.share, ask:c.share, known:[true, true], attr:Object.assign(g.attr, {erf:e, sjo:r15(e * 0.9)})})); }
 function crewAboard(H){ if (H == null) H = S.t / 60; const wd = (gDate(H).getUTCDay() + 6) % 7; return (S.crew || []).map(crewUpgrade).filter(c => !c.off && (!c.bi || c.biDays[wd])); }
-function crewEff(c, H, hs){
-  const A = c.attr, T = c.traits; let e = 0.55 + 0.08 * A.erf + 0.07 * (c.gear.juksa || 1) + 0.04 * A.styrke;
+function crewEff(c, H, hs, g = 'juksa'){
+  const A = c.attr, T = c.traits; let e = 0.55 + 0.08 * A.erf + 0.07 * (c.gear[g] || c.gear.juksa || 1) + 0.04 * A.styrke;
   e *= 1 - 0.5 * sstep(50, 100, c.fatigue); e *= c.morale < 30 ? 0.85 : c.morale > 75 ? 1.05 : 1; if (c.cpen) e *= 0.9;
   if (T.includes('arbeidsjern')) e *= 1.12; if (T.includes('makelig')) e *= 0.9; if (T.includes('perfeksjonist')) e *= 0.95;
   if (T.includes('sjosyk') && hs > 1.2) e *= 0.75;
@@ -51,7 +51,7 @@ function crewEff(c, H, hs){
   if (T.includes('olglad') && S.pubE === pubEvening(H - 12) && gDate(H).getUTCHours() < 12) e *= 0.8;
   return e;
 }
-function teamEff(team, me = true){ const H = S.t / 60, hs = hsAt(S.boat.pos, H), n = (me ? 1 : 0) + team.length; return n ? ((me ? 1 : 0) + team.reduce((a, c) => a + crewEff(c, H, hs), 0)) / n : 1; }
+function teamEff(team, me = true, g = 'juksa'){ const H = S.t / 60, hs = hsAt(S.boat.pos, H), n = (me ? 1 : 0) + team.length; return n ? ((me ? 1 : 0) + team.reduce((a, c) => a + crewEff(c, H, hs, g), 0)) / n : 1; }
 // how two people get along: habits, home village, age, and old grudges
 function compat(a, b){
   const A = a.traits, B = b.traits, both = t => A.includes(t) && B.includes(t), either = t => A.includes(t) || B.includes(t); let k = 0;

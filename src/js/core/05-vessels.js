@@ -100,7 +100,7 @@ function newState(){
   const home = PORTS[0];
   return {v:1, t:0, lastReal:Date.now(), mult:1, lang:'no', cash:15000,
     boat:{type:'skiff', pos:{x:home.p.x, y:home.p.y}, heading:0, v:0, fuel:60, ice:0, gear:false, status:'port', port:home.id, prev:null, engineUntil:0, fishUntil:null, engH:0, svcAt:0},
-    equip:{vhf:false, ais:false, plotter:false, chirp:false, jukse:0, motor90:false}, crew:[], loan:null, member:false, msgs:[], sales:[], order:null, owned:['skiff'], lic:null, haill:null, pubE:-1, target:'mix', daily:null, tubs:0, clean:0, clothes:{olje:0, varme:0}, orders:null, rep:{}, bors:null, cevt:null, workLog:[], stock:initStock(), marks:[], navrows:[], incidents:[], lore:{}, tattoos:{}, tat:{}, ops:null, company:'', boatName:'', tut:0, jobs:[], prep:{}, tripBuff:null, draftDep:null,
+    equip:{vhf:false, ais:false, plotter:false, chirp:false, jukse:0, motor90:false}, crew:[], loan:null, member:false, msgs:[], sales:[], order:null, owned:['skiff'], lic:null, haill:null, pubE:-1, target:'mix', daily:null, tubs:0, clean:0, clothes:{olje:0, varme:0}, orders:null, rep:{}, bors:null, cevt:null, workLog:[], stock:initStock(), marks:[], navrows:[], incidents:[], lore:{}, tattoos:{}, tat:{}, pgear:newPGear(), sets:[], gseq:0, ops:null, company:'', boatName:'', tut:0, jobs:[], prep:{}, tripBuff:null, draftDep:null,
     plan:null, draft:[], draftSpeed:16, trail:[{x:home.p.x, y:home.p.y, port:home.id}],
     settings:{bleed:true, ice:true, deckFirst:true, autoOn:true, autoW:11},
     hold:[], log:[], market:{}, stats:{revenue:0, costs:0, trips:0, kg:0}, lastSale:null, fishPlanH:3, lastIceWarn:-1e9, intro:false};
@@ -124,19 +124,20 @@ function step(){
   if (S.t % 60 === 0){ hourly(); eachVessel(navHour); eachVessel(loreHour); }
   if (S.t % 60 === 0) for (const pid in S.market) for (const sp in S.market[pid]) S.market[pid][sp] *= 0.97;
   if (S.t % 60 === 0 && S.stock) stockHour(H);
+  if (S.t % 60 === 0) gearHour(H);
   eachVessel(() => vesselStep(H));
 }
 // one vessel's minute: the catch keeps, the yard works, plans start, and the boat sails or fishes
 function vesselStep(H){
   const b = S.boat;
   const clean = S.tripBuff && S.tripBuff.hold ? 0.75 : 1;
-  for (const x of S.hold){ const r = x.bled ? (x.iced ? 0.9 : 3.0) : (x.iced ? 2.2 : 6.0); x.fresh = Math.max(0, x.fresh - r * clean / 60); }
+  for (const x of S.hold){ const r = SPECIES[x.sp].live ? 0.4 : x.bled ? (x.iced ? 0.9 : 3.0) : (x.iced ? 2.2 : 6.0); x.fresh = Math.max(0, x.fresh - r * clean / 60); }
   deckMinute();
   // work queue at the yard and on the quay: runs while the boat is in port
   if (S.jobs && S.jobs.length && b.status === 'port'){ const j = S.jobs[0]; if (j.until == null) j.until = S.t + j.h * 60; if (S.t >= j.until){ finishJob(j); S.jobs.shift(); if (S.jobs.length) S.jobs[0].until = S.t + S.jobs[0].h * 60; } }
   // the landing note comes when the catch is weighed in; the pump runs and the boat moves along the harbour
   if (b.land && S.t >= b.land.until) finishLanding();
-  if (b.status === 'port') quayMinute();
+  if (b.status === 'port'){ quayMinute(); shoreTick(); }
   opsStep(H);
   // planned departure
   if (S.plan && S.plan.depAt && S.t >= S.plan.depAt && (b.status === 'port' || b.status === 'idle')){
@@ -166,7 +167,7 @@ function sailV(H, hs){
   let tgt = Math.min(pl.speed, speedCap(hs == null ? hsAt(b.pos, H) : hs)), near = 1e9;
   for (const q of PORTS){ const d = dist(q.p, b.pos); if (d < near) near = d; }
   // brake before the next stop (a harbour or a fishing spot) along the route, not when leaving
-  let rem = 0, p0 = b.pos, stop = false; for (let i = pl.idx; i < pl.wps.length; i++){ const w = pl.wps[i]; rem += dist(p0, w); p0 = w; if (w.port || w.fish > 0){ stop = true; break; } if (rem > 3) break; }
+  let rem = 0, p0 = b.pos, stop = false; for (let i = pl.idx; i < pl.wps.length; i++){ const w = pl.wps[i]; rem += dist(p0, w); p0 = w; if (wpStop(w)){ stop = true; break; } if (rem > 3) break; }
   if (near < 0.25 || (stop && rem < 0.25 + (b.v || 0) * NM / 60 * 1.1)) tgt = Math.min(tgt, 5);
   const acc = BOAT.planing ? 10 : 3, prev = b.status === 'sailing' ? (b.v || 0) : 0;
   return tgt > prev ? Math.min(tgt, prev + acc) : Math.max(tgt, prev - acc * 1.5);
@@ -193,12 +194,14 @@ function arrive(w){
   if (w.port){ dock(w.port); return true; }
   pl.idx++;
   if (!(w.fish > 0) && pl.idx < pl.wps.length){ const nw = pl.wps[pl.idx], c = Math.round(((Math.atan2(nw.x - w.x, -(nw.y - w.y)) * 180 / Math.PI) + 360) % 360); log('Veipunkt ' + pl.idx + ' passert. Ny kurs ' + String(c).padStart(3, '0') + '°.', 'Waypoint ' + pl.idx + ' passed. New course ' + String(c).padStart(3, '0') + '°.', 'nav'); }
+  // work with passive gear at this waypoint: set or haul, then any fishing hours with the jig
+  if (w.act){ b.status = 'idle'; const why = w.act.op === 'haul' ? startHaul(w.act.sid, w.act.reset, w.fish) : startSet(w.act.kind, w.act.spec, w.fish); if (!why) return true; log(why[0], why[0]); if (!(w.fish > 0)) b.status = 'sailing'; }
   if (w.fish > 0){ b.status = 'fishing'; b.fishUntil = S.t + w.fish * 60; log('Fremme på feltet. Starter fiske i ' + w.fish + ' t.', 'Arrived on the grounds. Fishing for ' + w.fish + ' h.'); return true; }
   if (pl.idx >= pl.wps.length){ S.plan = null; b.status = 'idle'; b.v = 0; log('Fremme ved siste veipunkt. Ligger stille.', 'Reached the last waypoint. Stopped.'); return true; }
   return false;
 }
 function dock(pid){
-  const b = S.boat, port = portById(pid); S.tripBuff = null;
+  const b = S.boat, port = portById(pid); S.tripBuff = null; if (b.gop) gopAbort('dock');
   b.status = 'port'; b.port = pid; b.v = 0; b.fishUntil = null; b.pos = {x:port.p.x, y:port.p.y}; b.moorT = S.t; b.berth = 'main'; b.shift = b.fueling = b.after = null;
   const wasOps = S.plan && S.plan.ops;
   S.plan = null; S.trail = [{x:port.p.x, y:port.p.y, port:pid}];
@@ -215,13 +218,15 @@ function fish(H, W, hs){
     b.deckStop = false; if (b.deckEnd){ const why = b.deckEnd; b.deckEnd = null; endFishing(why); return; }
     log('Ferdig på dekk. Fisker videre.', 'Deck work done. Fishing on.');
   }
-  const tot = holdTotal(), done = b.fishUntil != null && S.t >= b.fishUntil, full = tot >= capHold() - 0.01;
+  const tot = holdTotal(), done = !b.gop && b.fishUntil != null && S.t >= b.fishUntil, full = !b.gop && tot >= capHold() - 0.01;
   if (done || full){
     // alone, nobody can gut on the way: see to the catch before leaving the grounds
     if (S.settings.deckFirst !== false && handsAboard() < 2 && deckPending() > 0.5){ b.deckStop = true; b.deckEnd = full ? 'full' : 'done'; log('Tar unna fangsten før vi går videre.', 'Seeing to the catch before we move on.'); return; }
     endFishing(full ? 'full' : 'done'); return;
   }
   if (deckPending() >= tubCap()){ b.deckStop = true; log('Bløggekaret er fullt. Stopper fisket for å sløye og ise.', 'The bleeding tub is full. Stopping to gut and ice.'); return; }
+  // setting or hauling passive gear takes the place of jigging
+  if (b.gop){ gearOpMinute(H, W, hs); return; }
   const tb = S.tripBuff || {}, wpen = Math.max(0.15, 1 - Math.max(0, hs - BOAT.risk[0] * 0.5) * 0.4 / (BOAT.risk[0] / 1.0) - Math.max(0, W - 8) * 0.03), eff = fishEffort() * (1 + (tb.jig ? 0.15 : 0) + (tb.reels && S.equip.jukse ? 0.1 : 0));
   if (!S.fsess || dist(S.fsess, b.pos) > 0.3) S.fsess = {x:b.pos.x, y:b.pos.y, t0:S.t, kg:0};
   let got = 0;
@@ -242,7 +247,7 @@ function fish(H, W, hs){
       if (typeof window !== 'undefined'){ const cq = window.CATCHQ || (window.CATCHQ = []); if (cq.length < 30) cq.push({sp, kg, t:performance.now()}); }
     }
   }
-  takeStock(b.pos, got); S.fsess.kg += got;
+  takeStock(b.pos, got); S.fsess.kg += got; if (got > 0) (b.tripGear = b.tripGear || {}).juksa = 1;
   // cod quota: warn once a day when the cod on board already fills what is left
   const q = quotaState(), codHold = S.hold.filter(x => x.sp === 'torsk').reduce((a, x) => a + x.kg, 0);
   if (codHold > 0 && access() !== 'none' && q.torsk + codHold >= codLimitNow(H) && !ffPct(H) && (S.codWarn || -1e9) < S.t - 1440){ S.codWarn = S.t; log('Torskekvoten er full. Torsk du lander nå blir inndratt.', 'The cod quota is full. Cod you land now will be confiscated.'); }
@@ -250,7 +255,8 @@ function fish(H, W, hs){
 function endFishing(why){
   const b = S.boat; b.fishUntil = null; b.deckStop = false; b.deckEnd = null;
   const fs = S.fsess; if (fs && S.t - fs.t0 >= 15){ S.marks.push({x:fs.x, y:fs.y, t:S.t, kgph:Math.round(fs.kg / ((S.t - fs.t0) / 60))}); if (S.marks.length > 80) S.marks.shift(); } S.fsess = null;
-  if (why === 'full') log('Lasten er full.', 'The hold is full.');
+  if (b.gopQuiet){ b.gopQuiet = false; if (why === 'full') log('Lasten er full.', 'The hold is full.'); }
+  else if (why === 'full') log('Lasten er full.', 'The hold is full.');
   else if (why === 'gear') log('Kan ikke fiske uten juksa.', 'Cannot fish without a jig line.');
   else log('Ferdig med fisket. ' + Math.round(holdTotal()) + ' kg om bord.', 'Finished fishing. ' + Math.round(holdTotal()) + ' kg on board.');
   if (S.plan && S.plan.idx < S.plan.wps.length) b.status = 'sailing';
@@ -258,9 +264,9 @@ function endFishing(why){
 }
 // the fish is bled as it comes over the rail (a cut and into the bleeding tub, no time lost) and lies in the tub, round and not iced,
 // until someone guts and ices it
-function addCatch(sp, kg, cls, hook){
+function addCatch(sp, kg, cls, hook, opt){
   if (cls == null) cls = SPECIES[sp].ref;
-  const bled = true, iced = false, gut = false, hr = Math.floor(S.t / 60), start = 100; hook = hook !== false;
+  const bled = true, iced = false, gut = false, hr = Math.floor(S.t / 60), start = opt && opt.fresh != null ? opt.fresh : 100; hook = hook !== false;
   let x = S.hold.find(h => h.sp === sp && h.cls === cls && h.bled === bled && h.iced === iced && h.hr === hr && !!h.gut === gut && h.hook === hook);
   if (!x){ x = {sp, cls, kg:0, n:0, bled, iced, hr, fresh:start, gut, hook}; S.hold.push(x); }
   x.n = (x.n || 0) + 1;
@@ -280,10 +286,11 @@ function deckHands(){
   return P;                                                                                       // lying still, drifting or at the quay
 }
 // what is still to be done: gutting (when the catch is gutted on board) and icing (when there is ice)
-function deckPending(){ const st = S.settings, icing = st.ice !== false && S.boat.ice > 0.5; return S.hold.reduce((a, x) => a + ((st.gut && !x.gut && !x.iced) || (icing && !x.iced) ? x.kg : 0), 0); }
+// live crab is kept wet in tubs: it is neither gutted nor iced
+function deckPending(){ const st = S.settings, icing = st.ice !== false && S.boat.ice > 0.5; return S.hold.reduce((a, x) => a + (!SPECIES[x.sp].live && ((st.gut && !x.gut && !x.iced) || (icing && !x.iced)) ? x.kg : 0), 0); }
 function deckEta(hands){
   const st = S.settings, icing = st.ice !== false && S.boat.ice > 0.5, e = hands ? hands * teamEff(crewAboard(), meAboard()) : 0; if (!e) return Infinity;
-  let m = 0; for (const x of S.hold){ if (st.gut && !x.gut && !x.iced) m += x.kg / DECK.gut; if (icing && !x.iced) m += x.kg / DECK.ice; } return m / e;
+  let m = 0; for (const x of S.hold){ if (SPECIES[x.sp].live) continue; if (st.gut && !x.gut && !x.iced) m += x.kg / DECK.gut; if (icing && !x.iced) m += x.kg / DECK.ice; } return m / e;
 }
 // move kg of a hold entry into the entry with the new state (gutted, iced), keeping its freshness
 function moveKg(x, kg, patch){
@@ -297,8 +304,8 @@ function moveKg(x, kg, patch){
 function deckMinute(){
   const b = S.boat, st = S.settings, hands = deckHands(); if (!hands || !S.hold.length) return;
   let pm = hands * teamEff(crewAboard(), meAboard()), worked = 0;
-  if (st.gut) for (const x of S.hold.filter(x => !x.gut && !x.iced)){ if (pm <= 0.001) break; const kg = Math.min(x.kg, pm * DECK.gut); moveKg(x, kg, {gut:true}); pm -= kg / DECK.gut; worked += kg; }
-  if (st.ice !== false) for (const x of S.hold.filter(x => !x.iced && (x.gut || !st.gut))){
+  if (st.gut) for (const x of S.hold.filter(x => !x.gut && !x.iced && !SPECIES[x.sp].live)){ if (pm <= 0.001) break; const kg = Math.min(x.kg, pm * DECK.gut); moveKg(x, kg, {gut:true}); pm -= kg / DECK.gut; worked += kg; }
+  if (st.ice !== false) for (const x of S.hold.filter(x => !x.iced && (x.gut || !st.gut) && !SPECIES[x.sp].live)){
     if (pm <= 0.001) break; const kg = Math.min(x.kg, pm * DECK.ice, b.ice / 0.3);
     if (kg <= 0.01){ if (S.t - (S.lastIceWarn || -1e9) > 120){ log('Tom for is. Fangsten ises ikke.', 'Out of ice. The catch is not being iced.'); S.lastIceWarn = S.t; } break; }
     moveKg(x, kg, {iced:true}); b.ice -= kg * 0.3; pm -= kg / DECK.ice; worked += kg;
@@ -326,7 +333,7 @@ function risk(W, hs){
       log('Motorstopp i grov sjø.', 'Engine failure in rough seas.');
     }
   } else if (r < 0.85){
-    if (b.gear && b.status === 'fishing'){ b.gear = false; log('Mistet juksa i sjøen. Du fisker videre med stang.', 'Lost the jig line overboard. You carry on with the rod.'); }
+    if (b.gear && b.status === 'fishing' && !b.gop){ b.gear = false; log('Mistet juksa i sjøen. Du fisker videre med stang.', 'Lost the jig line overboard. You carry on with the rod.'); }
     else log('Kraftig rulling, men ingen skade.', 'Heavy rolling, but no damage.');
   } else {
     if (lvl === 2) rescue(false); else log('Kraftig rulling, men ingen skade.', 'Heavy rolling, but no damage.');
@@ -335,6 +342,7 @@ function risk(W, hs){
 function hullRepair(){ const b = S.boat; if (!b.damage) return; b.damage = 0; const cost = Math.round(VESSELS[b.type].price * 0.035); S.cash -= cost; S.stats.costs += cost; queueJob({kind:'repair', h:8, no:'Reparasjon av skroget', en:'Hull repair'}); msg('Verkstedet', 'Skroget har fått skader etter grunnstøtingen. Reparasjonen koster ' + cost + ' kr og tar 8 timer.', 'The hull was damaged when you ran aground. The repair costs NOK ' + cost + ' and takes 8 hours.'); }
 function svcOverdue(){ const b = S.boat; return Math.max(0, ((b.engH || 0) - (b.svcAt || 0)) / BOAT.svcH - 1); }
 function rescue(keepCatch){
+  if (S.boat.gop) gopAbort('return');
   const b = S.boat, port = nearestPort(b.pos), fee = S.member ? 0 : keepCatch ? PRICE.tow : PRICE.rescue;
   S.cash -= fee; S.stats.costs += fee;
   let lost = 0; if (!keepCatch){ lost = Math.round(holdTotal()); S.hold = []; }

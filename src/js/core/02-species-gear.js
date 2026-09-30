@@ -27,15 +27,24 @@ const SPECIES = {
     cls:[[0.7, 13.25, 'Over 0,7 kg'], [0, 7.00, 'Under 0,7 kg']], ref:0},
   kveite:{no:'Kveite', en:'Halibut', k:0.35, base:0.05, prod:0.7, dep:[120, 0.9], av:[0.6,0.6,0.6,0.7,0.8,0.8,0.6,0.9,1.5,1.3,1.7,1.8],
     pm:[64.6,63.7,65.5,77.9,87.6,91.2,90.3,93.8,84.1,91.2,98.2,100.9], sig:0.03, size:[12, 0.8], minKg:7.2, maxKg:100, uh:1.13,
-    cls:[[67.8, 50.4, 'Over 60 kg'], [45.2, 59.3, '40–60 kg'], [22.6, 68.1, '20–40 kg'], [0, 72.6, '5,3–20 kg']], ref:3}
+    cls:[[67.8, 50.4, 'Over 60 kg'], [45.2, 59.3, '40–60 kg'], [22.6, 68.1, '20–40 kg'], [0, 72.6, '5,3–20 kg']], ref:3},
+  // brown crab (taskekrabbe): caught in pots and landed alive, sorted into female and male with both big claws on (Råfisklaget prices
+  // them that way); carapace width decides the legal size, 13 cm north of 59°30' (høstingsforskriften kap. X). The season is July–October
+  // (spec) and there is most crab south of Senja (IMR 2023–24). Prices are placeholders until Råfisklaget's circular 8/2025 is read.
+  // cw: carapace width in cm [median, log-spread]; weight kg = 0.00018 × cw³ (13 cm ≈ 0.4 kg; a start value)
+  krabbe:{no:'Taskekrabbe', en:'Brown crab', shell:true, live:true, k:0.5, base:0.6, prod:0.3, dep:[20, 0.8], av:[0.05,0.05,0.05,0.1,0.15,0.3,0.8,1.2,1.4,1.2,0.4,0.1],
+    pm:[15,15,15,15,15,15,15,15,16,17,17,16], sig:0.03, size:[0.6, 0.3], cw:[14.6, 0.09], minCw:13, minKg:0, uh:1,
+    cls:[[0, 17, 'Hunnkrabbe'], [0, 14, 'Hannkrabbe'], [0, 0, 'Under 13 cm'], [0, 0, 'Rognkrabbe']], ref:1}
 };
-const SP = Object.keys(SPECIES);
+// fish are caught by jig, rod, line and net; shellfish only in pots. Everything that loops over fish uses SP; ALLSP adds the shellfish last,
+// so the per-species seeds (SP.indexOf) keep their values
+const SP = Object.keys(SPECIES).filter(sp => !SPECIES[sp].shell), SHELL = Object.keys(SPECIES).filter(sp => SPECIES[sp].shell), ALLSP = SP.concat(SHELL);
 // ---------- vessels, equipment, crew ----------
 const VESSELS = {
-  skiff:{name:{no:'Åpen 19-fot, 60 hk påhengs', en:'Open 19 ft, 60 hp outboard'}, draft:0.6, len:5.8, vmax:24, fuelCap:90, iceCap:150, holdCap:350, crewMax:1, diesel:false, fuelK:1, planing:true, risk:[1.0, 1.8, 10.8, 13.9], sea:0.45, price:95000, jukseMax:2, svcH:100, svcCost:3500},
-  snekke:{name:{no:'Snekke 26 fot, 30 hk diesel', en:'26 ft snekke, 30 hp diesel'}, draft:1.2, len:7.9, vmax:8, fuelCap:220, iceCap:400, holdCap:900, crewMax:2, diesel:true, fuelK:0.45, planing:false, risk:[1.5, 2.5, 12.5, 16], sea:0.22, price:245000, jukseMax:3, svcH:250, svcCost:6000},
-  sjark:{name:{no:'Sjark 34 fot (10,4 m), styrhus', en:'34 ft sjark (10.4 m), wheelhouse'}, draft:1.7, len:10.4, vmax:10, fuelCap:600, iceCap:1200, holdCap:3000, crewMax:3, diesel:true, fuelK:1.25, planing:false, risk:[2.2, 3.4, 14.5, 18], sea:0.16, price:1150000, jukseMax:5, svcH:250, svcCost:14000},
-  sjarkny:{name:{no:'Ny sjark 10,99 m, 400 hk', en:'New 10.99 m sjark, 400 hp'}, draft:1.8, len:11, vmax:22, fuelCap:1500, iceCap:2000, holdCap:6000, crewMax:3, diesel:true, fuelK:5, planing:true, risk:[2.4, 3.8, 15, 19], sea:0.14, price:6400000, jukseMax:6, svcH:300, svcCost:22000, isNew:true}
+  skiff:{name:{no:'Åpen 19-fot, 60 hk påhengs', en:'Open 19 ft, 60 hp outboard'}, draft:0.6, len:5.8, vmax:24, fuelCap:90, iceCap:150, holdCap:350, crewMax:1, diesel:false, fuelK:1, planing:true, risk:[1.0, 1.8, 10.8, 13.9], sea:0.45, price:95000, jukseMax:2, svcH:100, svcCost:3500, gearMax:{garn:6, stamp:4, teine:20}},
+  snekke:{name:{no:'Snekke 26 fot, 30 hk diesel', en:'26 ft snekke, 30 hp diesel'}, draft:1.2, len:7.9, vmax:8, fuelCap:220, iceCap:400, holdCap:900, crewMax:2, diesel:true, fuelK:0.45, planing:false, risk:[1.5, 2.5, 12.5, 16], sea:0.22, price:245000, jukseMax:3, svcH:250, svcCost:6000, gearMax:{garn:15, stamp:10, teine:50}},
+  sjark:{name:{no:'Sjark 34 fot (10,4 m), styrhus', en:'34 ft sjark (10.4 m), wheelhouse'}, draft:1.7, len:10.4, vmax:10, fuelCap:600, iceCap:1200, holdCap:3000, crewMax:3, diesel:true, fuelK:1.25, planing:false, risk:[2.2, 3.4, 14.5, 18], sea:0.16, price:1150000, jukseMax:5, svcH:250, svcCost:14000, gearMax:{garn:40, stamp:24, teine:150}},
+  sjarkny:{name:{no:'Ny sjark 10,99 m, 400 hk', en:'New 10.99 m sjark, 400 hp'}, draft:1.8, len:11, vmax:22, fuelCap:1500, iceCap:2000, holdCap:6000, crewMax:3, diesel:true, fuelK:5, planing:true, risk:[2.4, 3.8, 15, 19], sea:0.14, price:6400000, jukseMax:6, svcH:300, svcCost:22000, gearMax:{garn:60, stamp:30, teine:200}, isNew:true}
 };
 const BOAT = Object.assign({}, VESSELS.skiff);
 const PRICE = {fuel:23.9, diesel:14.5, ice:1.5, gear:1900, kgear:2490, tow:4500, rescue:6000, member:1250};
@@ -46,5 +55,10 @@ const EQUIP = {
   plotter:{price:24900, name:{no:'Kartplotter 9" med dybdekart', en:'9" chart plotter with depth charts'}, desc:{no:'Plottervisning med dybdefarger, relieff og dybdekurver.', en:'Plotter view with depth colours, relief and contours.'}},
   chirp:{price:13900, name:{no:'CHIRP-ekkolodd', en:'CHIRP sounder'}, desc:{no:'Skarpere fiskeekko og bedre skille like over bunnen.', en:'Sharper fish echoes and better separation near the bottom.'}},
   jukse:{price:34000, multi:true, name:{no:'Juksamaskin', en:'Electric jigging reel'}, desc:{no:'Fisker jevnere enn håndsnøre. Én person kan passe tre.', en:'Fishes more steadily than a handline. One person can tend three.'}},
-  motor90:{price:148000, only:'skiff', name:{no:'Påhengsmotor 90 hk', en:'90 hp outboard'}, desc:{no:'Toppfart 30 knop, men tørstere.', en:'Top speed 30 knots, but thirstier.'}}
+  motor90:{price:148000, only:'skiff', name:{no:'Påhengsmotor 90 hk', en:'90 hp outboard'}, desc:{no:'Toppfart 30 knop, men tørstere.', en:'Top speed 30 knots, but thirstier.'}},
+  // haulers for passive gear (start prices): without one, nets and line come up by hand, slowly, and big pots cannot be hauled at all
+  elhaler:{price:38000, types:['skiff', 'snekke'], name:{no:'Elektrisk haler (12 V)', en:'Electric hauler (12 V)'}, desc:{no:'Trekker line og små teiner. Passer små båter.', en:'Hauls line and small pots. Suits small boats.'}},
+  linehaler:{price:68000, types:['snekke', 'sjark', 'sjarkny'], name:{no:'Hydraulisk linehaler', en:'Hydraulic line hauler'}, desc:{no:'Trekker lina jevnt og raskt.', en:'Hauls the line steadily and fast.'}},
+  garnhaler:{price:95000, types:['snekke', 'sjark', 'sjarkny'], name:{no:'Hydraulisk garnhaler', en:'Hydraulic net hauler'}, desc:{no:'Trekker garna. For hånd går det sakte.', en:'Hauls the nets. By hand it is slow.'}},
+  teinehaler:{price:58000, types:['snekke', 'sjark', 'sjarkny'], name:{no:'Teinehaler med davit', en:'Pot hauler with davit'}, desc:{no:'Hiver teinene opp. Store teiner kan ikke trekkes for hånd.', en:'Lifts the pots. Big pots cannot be hauled by hand.'}}
 };

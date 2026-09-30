@@ -154,14 +154,16 @@ function finishJob(j){
   if (j.kind === 'svc'){ b.svcAt = b.engH || 0; S.svcTold = false; log('Service på motoren er ferdig.', 'The engine service is done.'); }
   else if (j.kind === 'fit'){ const E = EQUIP[j.k]; if (E.multi) S.equip[j.k] = (S.equip[j.k] || 0) + 1; else S.equip[j.k] = true; applyVessel(); log('Montert: ' + E.name.no + '.', 'Fitted: ' + E.name.en + '.'); if (hooks.onEquip) hooks.onEquip(); }
   else if (j.kind === 'repair'){ log('Skroget er reparert.', 'The hull is repaired.'); }
+  else if (gearJob(j)){}
   else if (j.kind === 'prep'){ S.prep = S.prep || {}; S.prep[j.k] = true; log('Ferdig: ' + PREP[j.k].no + '.', 'Done: ' + PREP[j.k].en + '.'); }
-  msg(j.kind === 'prep' ? (S.lang === 'no' ? 'Kaia' : 'The quay') : 'Verkstedet', (j.no || '') + ' er ferdig.', (j.en || '') + ' is done.');
+  msg(j.kind === 'prep' || j.kind === 'egn' || j.kind === 'mend' ? (S.lang === 'no' ? 'Kaia' : 'The quay') : 'Verkstedet', (j.no || '') + ' er ferdig.', (j.en || '') + ' is done.');
 }
 function queueJob(j){ S.jobs = S.jobs || []; if (S.jobs.length >= 6) return false; S.jobs.push(j); if (S.jobs.length === 1 && S.boat.status === 'port') j.until = S.t + j.h * 60; return true; }
 function jobsDone(){ return S.jobs && S.jobs.length ? S.jobs[S.jobs.length - 1].until || null : null; }
 
 function startReturn(auto, W){
   const b = S.boat, tr = S.trail.slice().reverse(), wps = [];
+  if (b.gop) gopAbort('return');
   if (!auto) loreTurnBack();
   for (const t of tr){
     if (!t.port && dist(t, b.pos) < 0.01) continue;

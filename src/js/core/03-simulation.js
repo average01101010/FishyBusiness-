@@ -1,6 +1,6 @@
 // ===== fleet: each vessel keeps its own state; the company holds the rest. The simulation steps through the vessels one at a
 // time and binds S.boat, S.hold, S.crew and the others to the vessel it is working on, so the rest of the code is unchanged. =====
-const VKEYS = ['boat', 'plan', 'hold', 'crew', 'equip', 'jobs', 'cevt', 'ops', 'lic', 'quota', 'draft', 'draftSpeed', 'draftDep', 'marks', 'target', 'tubs', 'clean', 'trail', 'fsess', 'facc', 'fnext', 'fishPlanH', 'workLog', 'clothes', 'tripBuff', 'prep', 'svcTold', 'boatName', 'lastSale', 'restWarn', 'kvRel', 'codWarn', 'lastIceWarn', 'navrows', 'tripOwner'];
+const VKEYS = ['boat', 'plan', 'hold', 'crew', 'equip', 'jobs', 'cevt', 'ops', 'lic', 'quota', 'draft', 'draftSpeed', 'draftDep', 'marks', 'target', 'tubs', 'clean', 'trail', 'fsess', 'facc', 'fnext', 'fishPlanH', 'workLog', 'clothes', 'tripBuff', 'prep', 'svcTold', 'boatName', 'lastSale', 'restWarn', 'kvRel', 'codWarn', 'lastIceWarn', 'navrows', 'tripOwner', 'pgear'];
 function curVessel(){ return S.fleet.find(v => v.id === S.cur) || S.fleet[0]; }
 function storeVessel(v){ for (const k of VKEYS) v[k] = S[k]; }
 function bindVessel(v){ for (const k of VKEYS) S[k] = v[k]; S.cur = v.id; applyVessel(); }
@@ -16,6 +16,8 @@ function vesselById(id){ return S.fleet.find(v => v.id === id) || null; }
 // ---- fleet rules (deltakerforskriften, J-30-2026): the company can have one vessel in the open group, and none there if it owns a
 // vessel in the closed group. In the open group the owner must be aboard as skipper; S.me is the vessel you are aboard. ----
 function openVesselId(){ if (S.fleet.some(v => vget(v, 'lic'))) return null; return S.fleet.length ? S.fleet[0].id : null; }
+// a waypoint where the boat stops: a port, fishing hours, or work with passive gear (set or haul)
+function wpStop(w){ return !!(w.port || w.fish > 0 || w.act); }
 function meAboard(){ return !S.me || S.me === S.cur; }
 // what the bound vessel may land of cod, haddock and saithe: 'lukket' with a closed-group right, 'open' on the open-group vessel when
 // the owner was aboard for the trip, otherwise 'none': bycatch only (J-30-2026 § 35)
@@ -156,7 +158,7 @@ function noise2(x, y, s){
 // steepness of the sea floor (metres per 100 m): fish gather along bank edges and slopes
 function slopeAt(p){ const e = 0.1, a = depthF({x:p.x + e, y:p.y}), b = depthF({x:p.x - e, y:p.y}), c = depthF({x:p.x, y:p.y + e}), d = depthF({x:p.x, y:p.y - e}); return Math.hypot(a - b, c - d) / 2; }
 // good spots nobody talks about: patches of better fishing that drift every few days
-function hotspot(sp, p, H){ const w = Math.floor(H / 120), n = noise2(p.x / 3.5 + w * 0.61, p.y / 3.5 - w * 0.37, 20 + SP.indexOf(sp)); return 0.3 + 1.5 * n * n; }
+function hotspot(sp, p, H){ const w = Math.floor(H / 120), n = noise2(p.x / 3.5 + w * 0.61, p.y / 3.5 - w * 0.37, 20 + ALLSP.indexOf(sp)); return 0.3 + 1.5 * n * n; }
 // The coastal-cod fjord line (høstingsforskriften vedlegg 4), traced from Fiskeridirektoratet's map: Andøya – Skrolsvik – Gryllefjord – Hekkingen – Sommarøy – Kvaløya.
 // Vessels of 15 m or more may not fish inside it; seine is banned inside; at most 5000 hooks on line and 80 nets for cod.
 const FJORD = [[-21.8,67.2],[10.1,67.1],[12.6,39.2],[37.4,14.5],[50.6,14.0],[59.6,-1.0],[62.1,-3.2],[63.3,-4.4],[82.5,-23.1]].map(q => ({x:q[0], y:q[1]}));
@@ -196,17 +198,21 @@ function density(sp, p, H){
   let v = s.base * (s.prod + (1 - s.prod) * E) * (0.6 + 0.4 * edge) * hotspot(sp, p, H) * 0.95;
   // the named grounds are known for a reason
   for (const g of GROUNDS){ const dd = dist(p, g.p); if (dd > g.r * 3) continue; v += (g.sp[sp] || 0) * Math.exp(-((dd / g.r) ** 2)) * 0.45; }
-  const day = 0.75 + 0.5 * vn(H / 24 + p.x * 0.05, 300 + SP.indexOf(sp));
+  const day = 0.75 + 0.5 * vn(H / 24 + p.x * 0.05, 300 + ALLSP.indexOf(sp));
   let av = seasonal(s.av, H);
   if (sp === 'torsk') av += seasonal(s.skrei, H) * skreiSpot(p);
   if (sp === 'uer' && !uerOpen(H)) av *= 0.15;
-  return 1.6 * s.k * v * day * av * depthFactor(sp, d) * stockAt(p);   // k: calibration to 2025 catches per boat in Lofoten–Tromsø
+  if (s.shell) v *= crabArea(p);
+  return 1.6 * s.k * v * day * av * depthFactor(sp, d) * stockAt(p, sp);   // k: calibration to 2025 catches per boat in Lofoten–Tromsø
 }
 // local stock in 2 x 2 km cells (1 = untouched): fishing takes it down, it recovers over weeks
 const STK = {c:2, nx:Math.ceil(MAP_W / 2), ny:Math.ceil(MAP_H / 2), K:2600};
 function stockIdx(p){ return Math.floor(clamp(p.y, 0, MAP_H - 0.001) / STK.c) * STK.nx + Math.floor(clamp(p.x, 0, MAP_W - 0.001) / STK.c); }
-function stockAt(p){ return S && S.stock ? S.stock[stockIdx(p)] : 1; }
-function takeStock(p, kg){ if (!S.stock) return; const i = stockIdx(p); S.stock[i] = Math.max(0.12, S.stock[i] - kg / STK.K); }
+// shellfish have their own layer (S.cstk), made when the first pot is hauled
+function stockAt(p, sp){ const a = sp && SPECIES[sp].shell ? S && S.cstk : S && S.stock; return a ? a[stockIdx(p)] : 1; }
+function takeStock(p, kg, sp){
+  if (sp && SPECIES[sp].shell){ if (!S.cstk) S.cstk = new Array(STK.nx * STK.ny).fill(1); const i = stockIdx(p); S.cstk[i] = Math.max(0.1, S.cstk[i] - kg / (STK.K * 0.25)); return; }
+  if (!S.stock) return; const i = stockIdx(p); S.stock[i] = Math.max(0.12, S.stock[i] - kg / STK.K); }
 function initStock(){
   const a = new Array(STK.nx * STK.ny).fill(1);
   // the famous grounds are already worked by the local fleet when the game starts
@@ -220,13 +226,15 @@ function stockHour(H){
     nx[i] = Math.round(Math.min(1, s[i] + (1 - s[i]) * 0.004 + (nb - s[i]) * 0.01) * 1000) / 1000;
   }
   S.stock = nx;
+  // crab comes back more slowly, and does not wander far
+  if (S.cstk) S.cstk = S.cstk.map(v => v < 1 ? Math.round(Math.min(1, v + (1 - v) * 0.0015) * 1000) / 1000 : v);
   // the local fleet works the known grounds on fishable days
   for (const q of npcStates(H)) if (q.fleet && q.st === 'fishing') takeStock(q.p, 18);
   const hr = gDate(H).getUTCHours();
   if (hr >= 6 && hr < 15 && windAt(H) < 12) for (const g of GROUNDS.slice(0, 3)) for (let k = 0; k < 5; k++){ const a = k * 1.26 + H * 0.07, q = {x:g.p.x + Math.cos(a) * g.r * 0.45 * (k ? 1 : 0), y:g.p.y + Math.sin(a) * g.r * 0.45 * (k ? 1 : 0)}; if (!isLand(q)) takeStock(q, 12); }
 }
 // preferred depth (m) and spread per species: cod and saithe on the banks, haddock deeper, ling and tusk deep
-const DPREF = Object.fromEntries(SP.map(sp => [sp, SPECIES[sp].dep]));
+const DPREF = Object.fromEntries(ALLSP.map(sp => [sp, SPECIES[sp].dep]));
 function depthFactor(sp, d){ const q = DPREF[sp]; return 0.3 + 0.7 * Math.exp(-((Math.log(Math.max(d, 2) / q[0]) / q[1]) ** 2)); }
 const SST = [3.6,3.1,3.2,3.9,5.6,8.2,10.8,11.4,9.8,7.8,6.0,4.6];
 function depthF(p){ if (isLand(p)) return 0; if (DEPTH) return Math.max(0.8, gridBilinear(DEPTH, GEO_DEPTH.nx, GEO_DEPTH.ny, GEO_DEPTH.c, p)); return depthModel(p); }
@@ -244,7 +252,7 @@ const WDC = {};
 function weekOfH(H){ return Math.floor((H + 6) / 168); }
 function weekDev(sp, H){
   const w = weekOfH(H), key = sp + w; if (WDC[key] != null) return WDC[key];
-  const i = SP.indexOf(sp), sg = SPECIES[sp].sig; let dv = 0;
+  const i = ALLSP.indexOf(sp), sg = SPECIES[sp].sig; let dv = 0;
   for (let k = w - 16; k <= w; k++) dv = 0.7 * dv + sg * gauss(h2(k * 13 + i * 7 + 5000, 811), h2(k * 17 + i * 3 + 5000, 812));
   return WDC[key] = clamp(dv, -0.25, 0.25);
 }

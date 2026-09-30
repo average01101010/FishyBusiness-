@@ -50,7 +50,7 @@ function livePose(frac){
     while (left > 1e-9 && idx < S.plan.wps.length){
       const w = S.plan.wps[idx], d = dist(p, w);
       if (d > 1e-6) hd = Math.atan2(w.x - p.x, -(w.y - p.y));
-      if (d <= left){ p = {x:w.x, y:w.y}; left -= d; if (w.port || w.fish > 0) break; idx++; }
+      if (d <= left){ p = {x:w.x, y:w.y}; left -= d; if (wpStop(w)) break; idx++; }
       else { p = {x:p.x + (w.x - p.x) / d * left, y:p.y + (w.y - p.y) / d * left}; left = 0; }
     }
   }
