@@ -617,6 +617,25 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
 
 ## 10. Kjente problemer og åpne spørsmål
 
+- **Blind spilltest 1 (30.09.2026):** Se `docs/playtest/rapport-1.md`. Feil i koden som er bekreftet, sortert etter alvor:
+  - **Kritisk (A1):** Kjøp av elektrisk haler låser båten i havn. `FIT_H` mangler halerne, og verkstedjobben får `until` NaN.
+  - **Høy:**
+    - Tidsteksten sier 2×, men spillet går 6× (A2).
+    - «Ny juksa» mangler pris og bekreftelse, og båten starter uten juksa (A5).
+  - **Middels:**
+    - Pubhjulets kveld skifter kl. 21 (A3), og premien går tapt ved omlasting (A4).
+    - Kjøp av is og juksa står ikke i loggen (A6).
+    - Statusfelt ser ut som knapper (A9), og kameraet går inn i kaier (A11).
+    - `exitWps` lager ugyldige punkter (A12).
+    - Oddslinja utelater «tomhendt 53 %» (A15).
+  - **Lav:** A7, A8, A10, A13 og A14.
+  - **Design som må avklares:**
+    - Finnsnes har verken mottak eller is fra start.
+    - Fangstfeltene har liten vekt.
+    - Kaffe på kaia og pubhjulet dominerer økonomien de første dagene.
+    - Lånet overlever salg av båten.
+    - Ruteplanleggeren mangler flytt- og sett inn-punkter.
+
 - **Redskap, åpne punkter:**
   - Minsteprisene for taskekrabbe (Råfisklaget, rundskriv 8/2025) er ikke hentet, fordi siden er blokkert herfra. Hunn 17 og hann 14 kr/kg er plassholdere.
   - Hvilke havner som har egnebu, og hva egning koster, er antakelser.
