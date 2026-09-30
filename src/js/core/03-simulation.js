@@ -42,7 +42,7 @@ function applyVessel(){
   b.fuel = Math.min(b.fuel, BOAT.fuelCap); b.ice = Math.min(b.ice, BOAT.iceCap);
 }
 function fishEffort(){
-  if (S.plan && S.plan.ops){ const sk = opsSkipper(); const people = Math.max(1, S.crew.length), jk = Math.min(S.equip ? S.equip.jukse : 0, people * 3); return (Math.max(0, people - Math.ceil(jk / 3)) + jk * 1.3) * (sk ? sk.skill : 0.8) * 0.9; }
+  if (S.plan && S.plan.ops && !meAboard()){ const sk = opsSkipper(); const people = Math.max(1, S.crew.length), jk = Math.min(S.equip ? S.equip.jukse : 0, people * 3); return (Math.max(0, people - Math.ceil(jk / 3)) + jk * 1.3) * (sk ? sk.skill : 0.8) * 0.9; }
   const team = crewAboard(), people = (meAboard() ? 1 : 0) + team.length, jk = Math.min(S.equip ? S.equip.jukse : 0, people * 3);
   const skill = teamEff(team, meAboard());
   const hand = S.boat && S.boat.gear ? 1 : 0.35;   // a rod with one lure until you buy a jig line (pilk and four fly hooks)

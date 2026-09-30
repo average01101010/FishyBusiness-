@@ -396,13 +396,13 @@ Jonas valgte den strengt realistiske varianten.
 
 **Regler:**
 1. **Én båt i åpen gruppe.** Den første båten uten lisens (`openVesselId()`), og **ingen** hvis en båt i flåten har lisens i lukket gruppe.
-2. **Eieren må være om bord i åpen gruppe.** `S.me` er båten spilleren er om bord på. Ved avgang settes `S.tripOwner = !S.plan?.ops && S.me === S.cur` (legg `tripOwner` i `VKEYS`).
+2. **Eieren må være om bord i åpen gruppe.** `S.me` er båten spilleren er om bord på. Ved avgang settes `S.tripOwner = meAboard()` (`tripOwner` ligger i `VKEYS`). Er du om bord på en tur etter driftsplanen, er du høvedsmann, og turen er din. Rettet 30.09.2026: før regnet planturer alltid som skipperens, så fangsten ble inndratt selv om eieren var om bord. Oppstarten retter planturer som allerede er i gang med deg om bord i lagrede spill.
 3. **Tilgang ved levering:**
    - `'lukket'` hvis båten har `lic`.
    - `'open'` hvis det er åpen gruppe-båten og `tripOwner` er sann.
    - Ellers `'none'`.
 4. **`'none'`:** Torsk, hyse og sei samlet høyst 10 % av landingen, fordelt forholdsmessig. Torsk høyst 2 t per år (`q.byCod`). Resten inndras. Ingen ferskfiskordning.
-5. **Driftsplan med ansatt skipper** er bare for lukket gruppe når det gjelder torsk, hyse og sei. På en båt i åpen gruppe eller uten adgang skal skipperen fiske kveite (`S.target = 'kveite'` hvis `kgear`) og andre arter.
+5. **Driftsplan med ansatt skipper** er bare for lukket gruppe når det gjelder torsk, hyse og sei. Går skipperen alene på en båt i åpen gruppe eller uten adgang, fisker han kveite (`S.target = 'kveite'` hvis `kgear`) og andre arter, og han får 5 % skippertillegg. Med deg om bord fisker planen som dine egne turer (`fishEffort` teller deg). Skipperen er da vanlig mannskap og får ikke tillegget.
 6. **Uten deg om bord** kan en båt bare kjøre hvis den har mannskap. Sjekk i starten av `depart()`.
 
 **Endringer i koden:**
@@ -565,6 +565,7 @@ Større fartøyklasser, line, garn, snurrevad og teiner, egne anlegg og nye regi
   - `landtest.py`: leveringen. Lossetid, kasser og kar, avgang som venter, isrenna, og i 3D at kroken står over lasten på dekk og over losseplassen og at trucken rekker siste tur.
   - `fleet3test.py`: fase 3. Varsler, båtvelgeren, inntekt per båt og service per båt.
   - `fleet2test.py`: fase 2. Levering med og uten adgang, to båter på driftsplan i en simulert uke, knappene i Fartøy-appen, nybygg til flåten, og lagring med to båter. Skriver `OK` eller `FEIL` per sjekk.
+  - `opsowntest.py`: driftsplan med deg om bord. Turen er din, torsken går på kvoten, ingenting blir inndratt, ingen kveiteomlegging og ikke noe skippertillegg. Skipperen alene gir de gamle reglene. Sjekker også at lagrede planturer rettes ved oppstart. Velger selv en rolig dag, fordi planen blir på land i for mye sjø.
 - **Triks:**
   - Testmaskinen gir få bilder i sekundet, og `dt` begrenses til 0,1 s. Test dynamikk frakoblet med `G3._debug.stepBoat`.
   - Spillet lagrer seg selv når siden lukkes. For å teste gamle lagrede spill: legg dem inn med `context.add_init_script` i en ny nettleserøkt.

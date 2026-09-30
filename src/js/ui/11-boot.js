@@ -18,6 +18,8 @@ if (S){ awayMs = Date.now() - (S.lastReal || Date.now()); } else S = newState();
   applyVessel(); if (!S.settings.chart) S.settings.chart = S.settings.plotter && S.equip.plotter ? 'fish' : 'nav'; if (!S.equip.plotter && S.settings.chart === 'fish') S.settings.chart = 'nav';
   if (S.boat.status === 'port' && portById(S.boat.port)){ const pp = portById(S.boat.port).p; S.boat.pos = {x:pp.x, y:pp.y}; }
   if (S.fleet && S.fleet.length){ ensureFleet(); for (const v of S.fleet) withVessel(v, () => { if (S.boat.status === 'port' && portById(S.boat.port)){ const pp = portById(S.boat.port).p; S.boat.pos = {x:pp.x, y:pp.y}; } }); } else ensureFleet(); }
+// before 30.09.2026 a standing-plan trip with you aboard counted as the hired skipper's, and the landing lost its access
+for (const v of S.fleet) withVessel(v, () => { const b = S.boat; if (S.plan && S.plan.ops && (b.status !== 'port' || b.land) && meAboard()) S.tripOwner = true; });
 view.cx = MAP_W * 0.56; view.cy = MAP_H * 0.5;
 { const r = svg.getBoundingClientRect(); const asp = (r.width / r.height) || 1; view.z = clamp(MAP_H * asp / MAP_W, 0.8, 1.6); }
 refreshAll();

@@ -102,10 +102,13 @@ function opsStep(H){
   let wmax = 0, hmax = 0; const dur = o.hours || 8; for (let k = 0; k <= dur; k += 1){ wmax = Math.max(wmax, windAt(H + k)); hmax = Math.max(hmax, hsOpen(H + k)); }
   if (wmax > o.maxWind || hmax > BOAT.risk[1] * 0.85){ msg(sk.name, 'Blir på land i dag. Varselet gir ' + fmt(wmax, 0) + ' m/s og ' + fmt(hmax, 1) + ' m sjø, over grensa på ' + o.maxWind + ' m/s.', 'Staying ashore today. The forecast gives ' + fmt(wmax, 0) + ' m/s and ' + fmt(hmax, 1) + ' m seas, above the ' + o.maxWind + ' m/s limit.'); log(sk.name + ' ble på land på grunn av været.', sk.name + ' stayed ashore because of the weather.'); return; }
   autoRestock();
-  // a hired skipper fishes cod, haddock and saithe only in the closed group; elsewhere he goes for halibut when the boat has the gear
-  if (!S.lic && b.kgear && !kveiteClosed(H)) S.target = 'kveite';
+  // a hired skipper fishes cod, haddock and saithe only in the closed group; alone he goes for halibut when the boat has the gear.
+  // With you aboard you are the master, and you fish as on your own trips
+  const me = meAboard();
+  if (!me && !S.lic && b.kgear && !kveiteClosed(H)) S.target = 'kveite';
   S.plan = {wps:o.wps.map(w => ({...w})), idx:0, speed:o.speed, returning:false, depAt:null, ops:true, unsafe:[]};
-  log(sk.name + ' gikk ut på fast driftsplan.', sk.name + ' went out on the standing plan.');
+  if (me) log('Gikk ut på fast driftsplan med deg som høvedsmann. ' + sk.name + ' er mannskap på turen.', 'Went out on the standing plan with you as master. ' + sk.name + ' is crew on this trip.');
+  else log(sk.name + ' gikk ut på fast driftsplan.', sk.name + ' went out on the standing plan.');
   depart();
 }
 function opsLanded(pid){
@@ -117,7 +120,7 @@ function opsLanded(pid){
 function opsReport(pid, kg, total, landed){
   const sk = opsSkipper(), port = portById(pid);
   autoRestock();
-  const extra = Math.round(Math.max(0, total) * 0.05); if (extra > 0){ S.cash -= extra; S.stats.costs += extra; }
+  const extra = S.tripOwner ? 0 : Math.round(Math.max(0, total) * 0.05); if (extra > 0){ S.cash -= extra; S.stats.costs += extra; }
   const what = landed ? [fmt(kg, 0) + ' kg levert i ' + port.name + ', ' + kr(Math.round(total)) + ' etter lott' + (extra ? ', skippertillegg ' + kr(extra) : '') + '.', fmt(kg, 0) + ' kg landed at ' + port.name + ', ' + kr(Math.round(total)) + ' after shares' + (extra ? ', skipper bonus ' + kr(extra) : '') + '.']
     : kg > 0.5 ? [fmt(kg, 0) + ' kg om bord. ' + port.name + ' har ikke fiskemottak.', fmt(kg, 0) + ' kg aboard. ' + port.name + ' has no fish plant.'] : ['ingen fangst å levere.', 'no catch to land.'];
   const b = S.boat, fuelling = b.shift || b.fueling, rest = fuelling ? [' Går bort og fyller drivstoff, så er båten klar.', ' Going over to fill fuel, then the boat is ready.'] : [' Båten er fylt opp og klar.', ' The boat is fuelled and ready.'];
@@ -129,9 +132,11 @@ function depart(){
   if (b.status === 'port' && portBusy(b)){ if (S.plan){ S.plan.depAt = portBusy(b) + 1; log('Går når arbeidet på kaia er ferdig, kl. ' + hm(S.plan.depAt / 60) + '.', 'Leaving when the work at the quay is done, at ' + hm(S.plan.depAt / 60) + '.'); } return false; }
   // without you aboard, the vessel needs crew of its own
   if (!meAboard() && !crewAboard().length){ S.plan = null; log('Båten har ikke mannskap og kan ikke gå ut uten deg om bord.', 'The boat has no crew and cannot go out without you aboard.'); return false; }
-  S.tripOwner = !(S.plan && S.plan.ops) && meAboard();
+  // in the open group the owner must be the master aboard: with you aboard the trip is yours, also when it follows the standing plan,
+  // and the hired skipper is ordinary crew on it
+  S.tripOwner = meAboard();
   if (b.status === 'port'){ S.stats.trips++; log('Kastet loss fra ' + portById(b.port).name + '.', 'Cast off from ' + portById(b.port).name + '.'); if (S.tripOwner) loreDepart(); tatTripStart(); }
-  if (access() === 'none' && !(S.plan && S.plan.ops) && !(S.target === 'kveite' && b.kgear)) log('Båten har ikke adgang til å fiske torsk, hyse og sei. De kan bare være bifangst, høyst 10 % av landingen.', 'The boat has no access to fish cod, haddock and saithe. They can only be bycatch, at most 10% of the landing.');
+  if (access() === 'none' && !(S.plan && S.plan.ops && !S.tripOwner) && !(S.target === 'kveite' && b.kgear)) log('Båten har ikke adgang til å fiske torsk, hyse og sei. De kan bare være bifangst, høyst 10 % av landingen.', 'The boat has no access to fish cod, haddock and saithe. They can only be bycatch, at most 10% of the landing.');
   S.tripBuff = Object.assign({}, S.prep || {}); S.prep = {};
   if (S.plan) S.plan.depAt = null;
   // from the quay the lines come in first; the boat moves when they are aboard
