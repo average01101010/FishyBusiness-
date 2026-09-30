@@ -101,6 +101,7 @@ function opsStep(H){
   if (S.jobs && S.jobs.length){ msg(sk.name, 'Verkstedet jobber på båten, så jeg venter til i morgen.', 'The yard is working on the boat, so I will wait until tomorrow.'); return; }
   let wmax = 0, hmax = 0; const dur = o.hours || 8; for (let k = 0; k <= dur; k += 1){ wmax = Math.max(wmax, windAt(H + k)); hmax = Math.max(hmax, hsOpen(H + k)); }
   if (wmax > o.maxWind || hmax > BOAT.risk[1] * 0.85){ msg(sk.name, 'Blir på land i dag. Varselet gir ' + fmt(wmax, 0) + ' m/s og ' + fmt(hmax, 1) + ' m sjø, over grensa på ' + o.maxWind + ' m/s.', 'Staying ashore today. The forecast gives ' + fmt(wmax, 0) + ' m/s and ' + fmt(hmax, 1) + ' m seas, above the ' + o.maxWind + ' m/s limit.'); log(sk.name + ' ble på land på grunn av været.', sk.name + ' stayed ashore because of the weather.'); return; }
+  { const miss = opsGearNeeds(o); if (miss){ msg(sk.name, 'Går ikke ut på planen i dag: ' + miss.join(', ') + '.', 'Not running the plan today: ' + miss.join(', ') + '.'); return; } }
   autoRestock();
   // a hired skipper fishes cod, haddock and saithe only in the closed group; alone he goes for halibut when the boat has the gear.
   // With you aboard you are the master, and you fish as on your own trips
@@ -113,6 +114,7 @@ function opsStep(H){
 }
 function opsLanded(pid){
   if (!S.ops) return;
+  opsGearAfter();
   // the catch goes up with the crane; the report comes with the landing note
   if (startLanding(true)) return;
   opsReport(pid, holdTotal(), 0, false);

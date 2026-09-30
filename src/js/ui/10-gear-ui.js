@@ -95,6 +95,7 @@ function wpActOptions(w){
 }
 function wpActLabel(a){
   if (!a) return GL('Redskap: nei', 'Gear: no');
+  if (a.op === 'cycle') return GL('Stasjon: ', 'Station: ') + GEAR[a.kind][S.lang].toLowerCase();
   if (a.op === 'set') return GL('Sett ', 'Set ') + GL((a.lbl || ['', ''])[0], (a.lbl || ['', ''])[1]);
   return (a.reset ? GL('Trekk og sett ', 'Haul and set ') : GL('Trekk ', 'Haul ')) + GEAR[a.kind][S.lang].toLowerCase();
 }

@@ -92,7 +92,7 @@ function crewTick(H){
     const here = onIds.has(c.id) && atSea;
     c.fatigue = here ? clamp(c.fatigue + (fishing ? 6 : 3) * (1.4 - 0.16 * c.attr.uth) * (night ? 1.25 : 1) * (viol ? 1.5 : 1), 0, 100) : clamp(c.fatigue - 8 * (night ? 1.5 : 1), 0, 100);
     if (here){ c.seaH = (c.seaH || 0) + 1; const k = c.traits.includes('laerevillig') ? 2 : 1;
-      if (c.seaH % 40 === 0){ c.attr.erf = Math.min(5, c.attr.erf + 0.1 * k); c.gear.juksa = Math.min(5, c.gear.juksa + 0.15 * k); c.attr.sjo = Math.min(5, c.attr.sjo + 0.05 * k); crewDerive(c); }
+      if (c.seaH % 40 === 0){ c.attr.erf = Math.min(5, c.attr.erf + 0.1 * k); { const gk = S.boat.lastGear || 'juksa'; c.gear[gk] = Math.min(5, (c.gear[gk] || 1) + 0.15 * k); } c.attr.sjo = Math.min(5, c.attr.sjo + 0.05 * k); crewDerive(c); }
       if (!c.known[1] && c.seaH >= 12){ c.known = [true, true]; const T = TRAITS[c.traits[c.traits.length - 1]]; msg(c.name, 'Etter noen dager på sjøen vet du mer om ' + c.name + ': ' + T.no.toLowerCase() + '. ' + T.d.no, 'After some days at sea you know more about ' + c.name + ': ' + T.en.toLowerCase() + '. ' + T.d.en); } }
     // what their mood is heading towards
     let tg = 60 + (c.share - c.ask) * 300;

@@ -30,7 +30,7 @@ function doAct(el){
   else if (act === 'opssave'){
     const last = S.draft[S.draft.length - 1]; if (!last || !last.port || b.status !== 'port'){ toast(S.lang === 'no' ? 'Planen må starte i havn og slutte i en havn.' : 'The plan must start in port and end in a port.'); return; }
     const hours = S.draft.reduce((a, w) => a + (w.fish || 0), 0) + estimate().hours;
-    S.ops = Object.assign({on:false, dep:5, days:[1, 1, 1, 1, 1, 0, 0], maxWind:12, skipper:(S.crew[0] || {}).id || null, last:-1}, S.ops || {}, {wps:S.draft.map(w => ({...w})), speed:S.draftSpeed, home:b.port, end:last.port, hours:Math.ceil(hours)});
+    S.ops = Object.assign({on:false, dep:5, days:[1, 1, 1, 1, 1, 0, 0], maxWind:12, skipper:(S.crew[0] || {}).id || null, last:-1}, S.ops || {}, {wps:S.draft.map(w => { const q = {...w}; if (q.act) q.act = {op:'cycle', kind:q.act.kind, spec:q.act.spec}; return q; }), speed:S.draftSpeed, home:b.port, end:last.port, hours:Math.ceil(hours)});
     toast(S.lang === 'no' ? 'Lagret som fast driftsplan. Slå den på i Mannskap-appen.' : 'Saved as the standing plan. Switch it on in the Crew app.'); PHONE.open('mannskap');
   }
   else if (act === 'depcancel'){ S.plan = null; log('Avgangen er avlyst.', 'Departure cancelled.'); }

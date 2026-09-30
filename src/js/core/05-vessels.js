@@ -195,7 +195,7 @@ function arrive(w){
   pl.idx++;
   if (!(w.fish > 0) && pl.idx < pl.wps.length){ const nw = pl.wps[pl.idx], c = Math.round(((Math.atan2(nw.x - w.x, -(nw.y - w.y)) * 180 / Math.PI) + 360) % 360); log('Veipunkt ' + pl.idx + ' passert. Ny kurs ' + String(c).padStart(3, '0') + '°.', 'Waypoint ' + pl.idx + ' passed. New course ' + String(c).padStart(3, '0') + '°.', 'nav'); }
   // work with passive gear at this waypoint: set or haul, then any fishing hours with the jig
-  if (w.act){ b.status = 'idle'; const why = w.act.op === 'haul' ? startHaul(w.act.sid, w.act.reset, w.fish) : startSet(w.act.kind, w.act.spec, w.fish); if (!why) return true; log(why[0], why[0]); if (!(w.fish > 0)) b.status = 'sailing'; }
+  if (w.act){ b.status = 'idle'; const why = w.act.op === 'cycle' ? gearCycle(w, w.fish) : w.act.op === 'haul' ? startHaul(w.act.sid, w.act.reset, w.fish) : startSet(w.act.kind, w.act.spec, w.fish); if (!why) return true; log(why[0], why[0]); if (!(w.fish > 0)) b.status = 'sailing'; }
   if (w.fish > 0){ b.status = 'fishing'; b.fishUntil = S.t + w.fish * 60; log('Fremme på feltet. Starter fiske i ' + w.fish + ' t.', 'Arrived on the grounds. Fishing for ' + w.fish + ' h.'); return true; }
   if (pl.idx >= pl.wps.length){ S.plan = null; b.status = 'idle'; b.v = 0; log('Fremme ved siste veipunkt. Ligger stille.', 'Reached the last waypoint. Stopped.'); return true; }
   return false;
