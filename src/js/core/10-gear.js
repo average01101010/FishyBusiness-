@@ -8,14 +8,14 @@
 const GEAR = {
   garn:{no:'Garn', en:'Nets', u:['garn', 'garn', 'net', 'nets'], km:0.03, set:0.8, haul:4, hand:2.5, crewMin:2, haulers:['garnhaler'], q:0.07, skill:'garn'},
   line:{no:'Line', en:'Line', u:['stamp', 'stamper', 'tub', 'tubs'], kmHook:0.0015, set:5, haul:25 / 700, hand:2.0, crewMin:1, haulers:['linehaler', 'elhaler'], q:0.04, skill:'line'},
-  teine:{no:'Teiner', en:'Pots', u:['teine', 'teiner', 'pot', 'pots'], km:0.025, set:0.9, haul:1.2, hand:2.5, crewMin:1, haulers:['teinehaler', 'elhaler'], q:0.03, skill:'teiner'}
+  teine:{no:'Teiner', en:'Pots', u:['teine', 'teiner', 'pot', 'pots'], km:0.025, set:0.9, haul:1.2, hand:2.5, crewMin:1, haulers:['teinehaler', 'elhaler'], q:0.12, skill:'teiner'}
 };
 const LINE_KINDS = {hyse:{no:'Hyseline', en:'Haddock line', hooks:700, price:2100, egn:500, baitKg:5}, bank:{no:'Bankline', en:'Bank line', hooks:300, price:1700, egn:300, baitKg:3}};
 const POTS = {small:{no:'Små teiner', en:'Small pots', price:550, cap:8, f:1}, big:{no:'Store teiner', en:'Big pots', price:850, cap:15, f:1.4, big:true}};
 const MESHES = [156, 180, 200];                                  // legal cod nets north of 62° N; bigger mesh, bigger fish
 const GPRICE = {net:1500, kit:2500, heavy:1500, bait:18, potBait:0.4, bot:180, egnRate:560};   // kr, kg bait per pot, bøteri kr per net per 0.1, hooks baited per hour
 const FJORD_MAX = {nets:80, hooks:5000};
-const GFINE = {crab:5000};                                       // overtredelsesgebyr for undersized crab: a placeholder, not checked against a source
+const GFINE = {crab:2000, perCrab:100};                          // overtredelsesgebyr for undersized crab: a placeholder, not checked against a source
 // how well each gear takes each species, relative to the jig (1 for every fish); pots take crab and a little cod and tusk
 const SELQ = {
   garn:{torsk:1.0, hyse:0.45, sei:0.7, lyr:0.6, lange:0.35, brosme:0.25, uer:0.3, kveite:0.35},

@@ -86,14 +86,14 @@ function sell(){
     codFF = Math.min(codKg, ffAllow); codQ = Math.min(codKg - codFF, codRoom(H)); codConf = codKg - codFF - codQ;
     if (codKg > 0 && codConf > 0) confBy.torsk = codConf / codKg;
   }
-  let confKr = 0, confKg = 0, ordKr = 0, crabSmall = 0, crabRoe = 0;
+  let confKr = 0, confKg = 0, ordKr = 0, crabSmall = 0, crabSmallN = 0, crabRoe = 0;
   for (const x of S.hold){
     const sp = x.sp, sd = SPECIES[sp], c = x.cls != null ? x.cls : sd.ref, g = grade(x.fresh);
     let ppk = g === 'V' ? 1 : clsPrice(port, sp, c, H, x.hook) * GM[g];
     if (x.gut && (sp === 'hyse' || sp === 'sei')) ppk += 0.30;           // no gutting fee deducted
     let v = x.kg * ppk;
     // brown crab under 13 cm is confiscated; berried crab is worth nothing and tells the plant the sorting was poor
-    if (sp === 'krabbe' && c === 2){ const w = x.kg * clsPrice(port, sp, 1, H, false); confKr += w; confKg += x.kg; crabSmall += x.kg; v = 0; }
+    if (sp === 'krabbe' && c === 2){ const w = x.kg * clsPrice(port, sp, 1, H, false); confKr += w; confKg += x.kg; crabSmall += x.kg; crabSmallN += x.n || 1; v = 0; }
     if (sp === 'krabbe' && c === 3){ crabRoe += x.kg; v = 0; }
     const cs = confBy[sp] || 0; if (cs > 0){ confKr += v * cs; confKg += x.kg * cs; v *= 1 - cs; }
     // orders for this harbour take matching fish first, at their premium (confiscated fish does not count)
@@ -133,7 +133,7 @@ function sell(){
   if (acc === 'none' && confKg > 0.5) msg('Norges Råfisklag', vt + 'Båten har ikke adgang til å fiske torsk, hyse og sei. Av disse kan bare 10 % av landingen være bifangst, og høyst ' + fmt(BYCATCH.cod / 1000, 0) + ' tonn torsk i året. ' + Math.round(confKg) + ' kg er inndratt, verdi ' + kr(Math.round(confKr)) + '.', vt + 'The boat has no access to fish cod, haddock and saithe. Only 10% of the landing may be bycatch of these, and at most ' + fmt(BYCATCH.cod / 1000, 0) + ' t of cod a year. ' + Math.round(confKg) + ' kg has been confiscated, worth ' + kr(Math.round(confKr)) + '.');
   else if (codConf > 0.5) msg('Norges Råfisklag', vt + 'Du hadde ikke torskekvote igjen for ' + Math.round(codConf) + ' kg torsk. Verdien, ' + kr(Math.round(confKr)) + ', er inndratt.', vt + 'You had no cod quota left for ' + Math.round(codConf) + ' kg of cod. Its value, ' + kr(Math.round(confKr)) + ', has been confiscated.');
   // an undersized-crab landing is a breach of the minimum size (høstingsforskriften kap. X); the fee is a placeholder
-  let crabFine = 0; if (crabSmall > 0.01){ crabFine = GFINE.crab; S.cash -= crabFine; S.stats.costs += crabFine; msg('Fiskeridirektoratet', vt + 'Landingen hadde ' + fmt(crabSmall, 1) + ' kg taskekrabbe under minstemålet på 13 cm. Krabben er inndratt, og du får et overtredelsesgebyr på ' + kr(crabFine) + '.', vt + 'The landing had ' + fmt(crabSmall, 1) + ' kg of brown crab under the 13 cm minimum size. The crab is confiscated and you are fined ' + kr(crabFine) + '.'); }
+  let crabFine = 0; if (crabSmall > 0.01){ crabFine = GFINE.crab + GFINE.perCrab * Math.round(crabSmallN); S.cash -= crabFine; S.stats.costs += crabFine; msg('Fiskeridirektoratet', vt + 'Landingen hadde ' + fmt(crabSmall, 1) + ' kg taskekrabbe under minstemålet på 13 cm. Krabben er inndratt, og du får et overtredelsesgebyr på ' + kr(crabFine) + '.', vt + 'The landing had ' + fmt(crabSmall, 1) + ' kg of brown crab under the 13 cm minimum size. The crab is confiscated and you are fined ' + kr(crabFine) + '.'); }
   if (roeCut > 0.5) msg(port.name, 'Det var rognkrabbe i leveransen. Vi trekker 10 % på krabben, ' + kr(Math.round(roeCut)) + ', for dårlig sortering.', 'There was berried crab in the delivery. We take 10 % off the crab, ' + kr(Math.round(roeCut)) + ', for poor sorting.');
   S.lastSale = {port:port.id, t:S.t, lines:arr, total, ex, confKg, confKr, ffKg:codFF, field, lott, ord:ordLines, acc, crabFine, roeCut, gear:Object.keys(b.tripGear || {})}; b.tripGear = {};
   tatLanding(port.id); checkTattoos();
