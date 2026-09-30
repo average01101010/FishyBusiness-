@@ -14,6 +14,7 @@ Alt annet er sperret. En vanlig spiller ser bare skjermen, så ikke prøv å les
   - `vent` lar tiden gå mens du ser på skjermen.
   - `borte` er som å legge fra seg spillet og komme tilbake senere, for eksempel når noe tar mange timer.
 - Du ser skjermen bare når du ser på et skjermbilde. Se på bildet etter handlinger der noe endrer seg.
+- Kjør alltid `bro`-kommandoene i forgrunnen og vent på svaret. Ikke kjør dem i bakgrunnen, for da stopper økta. `bro vent` kan ta opptil 600 sekunder, så gi Bash-kallet en tidsgrense på 600000 ms.
 
 **Dagbok:** Skriv korte notater underveis med `/tmp/playtest/bro dagbok "..."`. Gjør det omtrent hvert tiende steg, og alltid når noe overrasker, forvirrer, irriterer eller gleder deg. Skriv som om du tenker høyt: hva du prøver nå, hva du ser, hva du ikke skjønner og hva du tror skjer. Skriv på norsk. Utviklerne leser dagboka etterpå.
 
