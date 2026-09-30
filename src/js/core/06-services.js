@@ -160,7 +160,12 @@ function finishJob(j){
   else if (j.kind === 'prep'){ S.prep = S.prep || {}; S.prep[j.k] = true; log('Ferdig: ' + PREP[j.k].no + '.', 'Done: ' + PREP[j.k].en + '.'); }
   msg(j.kind === 'prep' || j.kind === 'egn' || j.kind === 'mend' ? (S.lang === 'no' ? 'Kaia' : 'The quay') : 'Verkstedet', (j.no || '') + ' er ferdig.', (j.en || '') + ' is done.');
 }
-function queueJob(j){ S.jobs = S.jobs || []; if (S.jobs.length >= 6) return false; S.jobs.push(j); if (S.jobs.length === 1 && S.boat.status === 'port') j.until = S.t + j.h * 60; return true; }
+// hours at the yard to fit each piece of equipment; anything not listed takes three
+const FIT_H = {vhf:2, ais:2, plotter:4, chirp:3, jukse:3, motor90:6, elhaler:3, linehaler:4, garnhaler:5, teinehaler:4};
+function fitHours(k){ return FIT_H[k] || 3; }
+// a job with no length would never finish and would keep the boat in port for good
+function jobOk(j){ if (!(j.h > 0)) j.h = j.kind === 'fit' ? fitHours(j.k) : 2; if (j.until != null && !Number.isFinite(j.until)) j.until = null; return j; }
+function queueJob(j){ S.jobs = S.jobs || []; if (S.jobs.length >= 6) return false; jobOk(j); S.jobs.push(j); if (S.jobs.length === 1 && S.boat.status === 'port') j.until = S.t + j.h * 60; return true; }
 function jobsDone(){ return S.jobs && S.jobs.length ? S.jobs[S.jobs.length - 1].until || null : null; }
 
 function startReturn(auto, W){

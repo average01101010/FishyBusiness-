@@ -1,4 +1,4 @@
-from _env import GAME, ROUTES
+from _env import GAME_TUT as GAME, ROUTES
 import asyncio, json
 from playwright.async_api import async_playwright
 R=json.load(open(ROUTES))['4']

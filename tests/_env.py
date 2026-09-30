@@ -3,7 +3,9 @@
 import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-GAME = 'file://' + os.path.join(os.path.dirname(HERE), 'dist', 'index.html')
+GAME_TUT = 'file://' + os.path.join(os.path.dirname(HERE), 'dist', 'index.html')
+# the tests play without the first-trip tutorial; tut.py uses GAME_TUT
+GAME = GAME_TUT + '#notut'
 ROUTES = os.path.join(HERE, 'routes.json')
 OUT = os.path.join(HERE, 'out')
 os.makedirs(OUT, exist_ok=True)

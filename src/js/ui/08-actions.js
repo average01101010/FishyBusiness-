@@ -147,6 +147,8 @@ function sell(){
 
 // ---------- modal ----------
 function modal(html){ const m = $('modal'); m.innerHTML = '<div class="box" role="dialog" aria-modal="true">' + html + '</div>'; m.hidden = false; const b = m.querySelector('[data-close]'); if (b){ b.onclick = () => { m.hidden = true; }; b.focus(); } }
+// «#notut» in the address starts a new game without the first-trip tutorial (the automated tests use it)
+const NOTUT = /notut/.test(location.hash);
 function showIntro(namesOnly){
   const L = (no, en) => S.lang === 'no' ? no : en;
   modal('<div class="ob"><h2>' + (namesOnly ? L('Gi båten et navn', 'Name your boat') : t('intro_h')) + '</h2>' + (namesOnly ? '<p>' + L('Dekksdagboka trenger et båtnavn.', 'The deck log needs a boat name.') + '</p>' : '<p>' + t('intro1') + '</p>') +
@@ -156,7 +158,7 @@ function showIntro(namesOnly){
   $('obGo').addEventListener('click', () => {
     const co = $('obCo').value.trim().slice(0, 28), bn = $('obBoat').value.trim().slice(0, 20);
     S.company = co || L('Senja Kystfiske', 'Senja Coastal Fishing'); S.boatName = bn || 'Havbris';
-    if (!S.intro){ S.tut = 1; log('Overtok «' + S.boatName + '» i Finnsnes for ' + S.company + '.', 'Took over the «' + S.boatName + '» in Finnsnes for ' + S.company + '.'); }
+    if (!S.intro){ S.tut = NOTUT ? 0 : 1; log('Overtok «' + S.boatName + '» i Finnsnes for ' + S.company + '.', 'Took over the «' + S.boatName + '» in Finnsnes for ' + S.company + '.'); }
     S.intro = true; save(); refreshAll();
   });
 }

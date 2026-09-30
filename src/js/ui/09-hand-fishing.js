@@ -13,25 +13,38 @@ window.PUBW = (() => {
   function rumour(){ const H = S.t / 60; let best = null, bv = 0; for (const g of GROUNDS) for (const sp of ['torsk', 'sei', 'hyse', 'kveite']){ const v = density(sp, g.p, H) * price(portById('husoy'), sp, H); if (v > bv){ bv = v; best = [g, sp]; } }
     return best ? [L('Kjentfolk på puben sa det var godt med ' + SPECIES[best[1]].no.toLowerCase() + ' på ' + best[0].name.no + ' i dag.', 'Locals at the pub said there was good ' + SPECIES[best[1]].en.toLowerCase() + ' at ' + best[0].name.en + ' today.'), best[0]] : [L('Ingen hadde noe å fortelle i kveld.', 'Nobody had anything to tell tonight.'), null]; }
   const cost = () => (S.daily && S.daily.pubV > 0) ? 0 : PUB_COST;
+  // the odds come from the wheel itself, including the evenings you go home with nothing
+  const pct = k => PUB_WHEEL.filter(w => w[0] === k).reduce((a, w) => a + w[1], 0) / tot * 100, pf = v => fmt(v, v % 1 ? 1 : 0) + ' %';
+  const odds = () => L('Sjansene per runde: tomhendt ' + pf(pct('tom')) + ', kveithaill ' + pf(pct('kveit')) + ', rykte ' + pf(pct('rykte')) + ', haill ' + pf(pct('haill')) + ', luksushaill ' + pf(pct('luksus')) + '. Én runde per kveld, 15:00–03:00.',
+    'Chances per round: empty-handed ' + pf(pct('tom')) + ', halibut luck ' + pf(pct('kveit')) + ', rumour ' + pf(pct('rykte')) + ', luck ' + pf(pct('haill')) + ', luxury luck ' + pf(pct('luksus')) + '. One round per evening, 15:00–03:00.');
+  function why(H){ if (S.boat.status !== 'port') return L('Puben er bare åpen når båten ligger i havn.', 'The pub is only open while the boat is in port.');
+    if (!pubOpen(H)) return L('Puben åpner klokka 15.', 'The pub opens at 15:00.');
+    if (S.pubE === pubEvening(H)) return L('Du har tatt kveldens runde. Neste runde i morgen kveld.', 'You have had tonight\'s round. Next round tomorrow evening.');
+    if (S.cash < cost()) return L('Du har ikke nok penger til en runde.', 'You do not have enough money for a round.'); return ''; }
   function render(msg){
     const H = S.t / 60, can = S.boat.status === 'port' && pubOpen(H) && S.pubE !== pubEvening(H) && S.cash >= cost();
+    // after a reload the round is already decided: show what came of it
+    if (!msg && !spinning && S.pubLast && S.pubLast.e === pubEvening(H) && S.pubE === S.pubLast.e) msg = S.pubLast.m;
     el.innerHTML = '<div class="pubbox"><h3>🍺 ' + L('Puben i ', 'The pub in ') + (portById(S.boat.port) || {}).name + '</h3>' + wheel +
       '<p class="pubmsg">' + (msg || L('Spander en runde og hør hva folk har å si. Kanskje går du hjem med haill.', 'Buy a round and hear what people say. Maybe you go home with some luck.')) + '</p>' +
       '<div class="pubbtns"><button class="pri" data-p="spin"' + (can && !spinning ? '' : ' disabled') + '>' + (cost() ? L('Spander en runde', 'Buy a round') + ' · ' + kr(PUB_COST) : L('Bruk fri runde', 'Use a free round') + ' (' + S.daily.pubV + ')') + '</button><button data-p="close">' + L('Gå hjem', 'Go home') + '</button></div>' +
-      '<p class="pubodds">' + L('Sjansene per runde: kveithaill 18 %, rykte 20 %, haill 7,5 %, luksushaill 1,5 %. Én runde per kveld, 15:00–03:00.', 'Chances per round: halibut luck 18%, rumour 20%, luck 7.5%, luxury luck 1.5%. One round per evening, 15:00–03:00.') + '</p></div>';
+      (!can && !spinning && why(H) ? '<p class="pubwhy">' + why(H) + '</p>' : '') + '<p class="pubodds">' + odds() + '</p></div>';
   }
   function spin(){
     const H = S.t / 60, c = cost(); if (spinning || S.boat.status !== 'port' || !pubOpen(H) || S.pubE === pubEvening(H) || S.cash < c) return;
-    if (c){ S.cash -= c; S.stats.costs += c; } else S.daily.pubV--; S.pubE = pubEvening(H); spinning = true; save(); render(L('Hjulet snurrer …', 'The wheel is spinning …'));
     let r = Math.random() * tot, seg = segs[0]; for (const g of segs){ r -= (g.s1 - g.s0) / 360 * tot; if (r <= 0){ seg = g; break; } }
+    // the round is paid, drawn and saved before the wheel turns, so closing the app mid-spin loses nothing
+    if (c){ S.cash -= c; S.stats.costs += c; } else S.daily.pubV--; S.pubE = pubEvening(H);
+    let m;
+    if (seg.k === 'kveit' || seg.k === 'haill' || seg.k === 'luksus'){ giveHaill(seg.k, 'pub'); m = L('Du vant ', 'You won ') + HAILL[seg.k][S.lang].toLowerCase() + '! ' + HAILL[seg.k].d[S.lang]; msg('Puben', L('Du gikk hjem med ', 'You went home with ') + HAILL[seg.k][S.lang].toLowerCase() + '.', 'You went home with ' + HAILL[seg.k].en.toLowerCase() + '.'); }
+    else if (seg.k === 'rykte'){ const cr = crewRumour(), t0 = cr || rumour()[0]; m = t0; msg('Puben', t0, t0); }
+    else { const st = Math.random() < 0.6 ? lorePub() : null; m = st ? st[S.lang === 'no' ? 0 : 1] : EMPTY[Math.floor(Math.random() * EMPTY.length)][S.lang === 'no' ? 0 : 1]; }   // an old story instead of an empty evening
+    S.pubLast = {e:S.pubE, k:seg.k, m}; spinning = true; save(); render(L('Hjulet snurrer …', 'The wheel is spinning …'));
     const at = seg.s0 + (seg.s1 - seg.s0) * (0.2 + 0.6 * Math.random()), rot = 360 * 5 + (360 - at);
     const g = el.querySelector('.pubrot'); g.style.transition = 'none'; g.style.transform = 'rotate(0deg)'; void g.getBoundingClientRect();
     g.style.transition = 'transform 4.2s cubic-bezier(0.15, 0.85, 0.2, 1)'; g.style.transform = 'rotate(' + rot + 'deg)';
-    setTimeout(() => { spinning = false; let m;
-      if (seg.k === 'kveit' || seg.k === 'haill' || seg.k === 'luksus'){ giveHaill(seg.k, 'pub'); m = L('Du vant ', 'You won ') + HAILL[seg.k][S.lang].toLowerCase() + '! ' + HAILL[seg.k].d[S.lang]; msg('Puben', L('Du gikk hjem med ', 'You went home with ') + HAILL[seg.k][S.lang].toLowerCase() + '.', 'You went home with ' + HAILL[seg.k].en.toLowerCase() + '.'); }
-      else if (seg.k === 'rykte'){ const cr = crewRumour(), t0 = cr || rumour()[0]; m = t0; msg('Puben', t0, t0); }
-      else { const st = Math.random() < 0.6 ? lorePub() : null; m = st ? st[S.lang === 'no' ? 0 : 1] : EMPTY[Math.floor(Math.random() * EMPTY.length)][S.lang === 'no' ? 0 : 1]; }   // an old story instead of an empty evening
-      save(); render(m); const keep = g.style.transform; setTimeout(() => { const g2 = el.querySelector('.pubrot'); if (g2){ g2.style.transition = 'none'; g2.style.transform = keep; } }, 0);
+    setTimeout(() => { spinning = false;
+      render(m); const keep = g.style.transform; setTimeout(() => { const g2 = el.querySelector('.pubrot'); if (g2){ g2.style.transition = 'none'; g2.style.transform = keep; } }, 0);
       if (typeof renderActs === 'function') renderActs(); if (typeof renderHud === 'function') renderHud(); }, 4400);
   }
   el.addEventListener('click', e => { const b = e.target.closest('[data-p]'); if (!b || b.disabled) return; if (b.dataset.p === 'spin') spin(); else if (!spinning){ el.hidden = true; if (typeof renderActs === 'function') renderActs(); } });

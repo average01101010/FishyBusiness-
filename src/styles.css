@@ -113,7 +113,7 @@ body.vplot #gps::after{display:none}
 #pubUI .pubbox{width:min(92vw,380px);background:#1d2328;color:#f2efe6;border-radius:18px;padding:16px 16px 12px;box-shadow:0 12px 40px rgba(0,0,0,.5);text-align:center;font-family:var(--sans)}
 #pubUI h3{margin:0 0 8px;font-size:18px}#pubUI .pubw{width:min(70vw,250px);height:auto;display:block;margin:0 auto}#pubUI .pubw text{fill:#fff;font:700 11px var(--sans)}
 #pubUI .pubrot{transform-origin:0 0}#pubUI .pubmsg{min-height:40px;margin:10px 4px;font-size:14px;line-height:1.35}#pubUI .pubbtns{display:flex;gap:8px;justify-content:center}
-#pubUI .pubbtns button{border:0;border-radius:12px;padding:10px 14px;font:700 14px var(--sans);background:#3a444c;color:#fff}#pubUI .pubbtns button.pri{background:#c9a227;color:#1d2328}#pubUI .pubbtns button:disabled{opacity:.45}
+#pubUI .pubbtns button{border:0;border-radius:12px;padding:10px 14px;font:700 14px var(--sans);background:#3a444c;color:#fff}#pubUI .pubbtns button.pri{background:#c9a227;color:#1d2328}#pubUI .pubbtns button:disabled,#pubUI .pubbtns button.pri:disabled{background:#3a444c;color:#8d979e;cursor:default}#pubUI .pubwhy{font-size:12.5px;margin:8px 0 0;color:#e8c96a}
 #pubUI .pubodds{font-size:11px;opacity:.7;margin:10px 0 0}.haill{color:#e0b93c}.ph-row2{display:flex;gap:6px;margin:4px 0 8px}.ph-row2 .ph-btn{flex:1;margin:0}
 .qbar{height:8px;border-radius:4px;background:rgba(127,127,127,.25);margin:2px 0 8px;overflow:hidden}.qbar i{display:block;height:100%;background:#1e8c6e}
 #rodUI{position:absolute;z-index:6;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 84px);display:flex;flex-direction:column;align-items:center;gap:8px;width:min(92vw,360px);pointer-events:none}

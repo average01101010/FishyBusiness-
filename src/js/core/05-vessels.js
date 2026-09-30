@@ -100,7 +100,7 @@ function newState(){
   const home = PORTS[0];
   return {v:1, t:0, lastReal:Date.now(), mult:1, lang:'no', cash:15000,
     boat:{type:'skiff', pos:{x:home.p.x, y:home.p.y}, heading:0, v:0, fuel:60, ice:0, gear:false, status:'port', port:home.id, prev:null, engineUntil:0, fishUntil:null, engH:0, svcAt:0},
-    equip:{vhf:false, ais:false, plotter:false, chirp:false, jukse:0, motor90:false}, crew:[], loan:null, member:false, msgs:[], sales:[], order:null, owned:['skiff'], lic:null, haill:null, pubE:-1, target:'mix', daily:null, tubs:0, clean:0, clothes:{olje:0, varme:0}, orders:null, rep:{}, bors:null, cevt:null, workLog:[], stock:initStock(), marks:[], navrows:[], incidents:[], lore:{}, tattoos:{}, tat:{}, pgear:newPGear(), sets:[], gseq:0, ops:null, company:'', boatName:'', tut:0, jobs:[], prep:{}, tripBuff:null, draftDep:null,
+    equip:{vhf:false, ais:false, plotter:false, chirp:false, jukse:0, motor90:false}, crew:[], loan:null, member:false, msgs:[], sales:[], order:null, owned:['skiff'], lic:null, haill:null, pubE:-1e9, target:'mix', daily:null, tubs:0, clean:0, clothes:{olje:0, varme:0}, orders:null, rep:{}, bors:null, cevt:null, workLog:[], stock:initStock(), marks:[], navrows:[], incidents:[], lore:{}, tattoos:{}, tat:{}, pgear:newPGear(), sets:[], gseq:0, ops:null, company:'', boatName:'', tut:0, jobs:[], prep:{}, tripBuff:null, draftDep:null,
     plan:null, draft:[], draftSpeed:16, trail:[{x:home.p.x, y:home.p.y, port:home.id}],
     settings:{bleed:true, ice:true, deckFirst:true, autoOn:true, autoW:11},
     hold:[], log:[], market:{}, stats:{revenue:0, costs:0, trips:0, kg:0}, lastSale:null, fishPlanH:3, lastIceWarn:-1e9, intro:false};
@@ -134,7 +134,7 @@ function vesselStep(H){
   for (const x of S.hold){ const r = SPECIES[x.sp].live ? 0.4 : x.bled ? (x.iced ? 0.9 : 3.0) : (x.iced ? 2.2 : 6.0); x.fresh = Math.max(0, x.fresh - r * clean / 60); }
   deckMinute();
   // work queue at the yard and on the quay: runs while the boat is in port
-  if (S.jobs && S.jobs.length && b.status === 'port'){ const j = S.jobs[0]; if (j.until == null) j.until = S.t + j.h * 60; if (S.t >= j.until){ finishJob(j); S.jobs.shift(); if (S.jobs.length) S.jobs[0].until = S.t + S.jobs[0].h * 60; } }
+  if (S.jobs && S.jobs.length && b.status === 'port'){ const j = jobOk(S.jobs[0]); if (j.until == null) j.until = S.t + j.h * 60; if (S.t >= j.until){ finishJob(j); S.jobs.shift(); if (S.jobs.length) S.jobs[0].until = S.t + S.jobs[0].h * 60; } }
   // the landing note comes when the catch is weighed in; the pump runs and the boat moves along the harbour
   if (b.land && S.t >= b.land.until) finishLanding();
   if (b.status === 'port'){ quayMinute(); shoreTick(); }

@@ -302,7 +302,9 @@ function giveHaill(type, how){ S.haill = {type, t0:S.t, how}; log('Ny ' + HAILL[
 // the pub: one round per evening between 15:00 and 03:00, NOK 1000
 const PUB_COST = 1000;
 const PUB_WHEEL = [['tom', 18], ['kveit', 18], ['tom', 17], ['rykte', 20], ['haill', 7.5], ['tom', 18], ['luksus', 1.5]];
-function pubEvening(H){ return Math.floor((H - 15) / 24); }
+// game hour 0 is 06:00 on the clock (EPOCH), so an evening that opens at 15:00 starts at game hour 9 + 24·n
+const EPOCH_HR = new Date(EPOCH).getUTCHours();
+function pubEvening(H){ return Math.floor((H + EPOCH_HR - 15) / 24); }
 function pubOpen(H){ const hr = gDate(H).getUTCHours(); return hr >= 15 || hr < 3; }
 // borrowed fish tubs on deck add room for one trip (they go back when you land); a freshly cleaned hull burns less fuel
 function capHold(){ return BOAT.holdCap + (S.tubs || 0); }

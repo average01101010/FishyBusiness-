@@ -20,6 +20,8 @@ if (S){ awayMs = Date.now() - (S.lastReal || Date.now()); } else S = newState();
   if (S.fleet && S.fleet.length){ ensureFleet(); for (const v of S.fleet) withVessel(v, () => { if (S.boat.status === 'port' && portById(S.boat.port)){ const pp = portById(S.boat.port).p; S.boat.pos = {x:pp.x, y:pp.y}; } }); } else ensureFleet(); }
 // every vessel gets its gear locker (saves from before passive gear have none, also on vessels that are not bound)
 for (const v of S.fleet) withVessel(v, () => { if (!S.pgear) S.pgear = newPGear(); });
+// before 01.10.2026 a hauler fitting had no length and never finished (until NaN, saved as null), which kept the boat in port
+for (const v of S.fleet) withVessel(v, () => { for (const j of S.jobs || []) jobOk(j); if (S.plan && S.plan.depAt != null && !Number.isFinite(S.plan.depAt)) S.plan.depAt = S.t; });
 // before 30.09.2026 a standing-plan trip with you aboard counted as the hired skipper's, and the landing lost its access
 for (const v of S.fleet) withVessel(v, () => { const b = S.boat; if (S.plan && S.plan.ops && (b.status !== 'port' || b.land) && meAboard()) S.tripOwner = true; });
 view.cx = MAP_W * 0.56; view.cy = MAP_H * 0.5;
