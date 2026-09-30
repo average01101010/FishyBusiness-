@@ -375,7 +375,7 @@ Mister du juksa, fiskes det videre med stang. `motor90` er et utstyrsvalg for sk
 - Utmerkelser, artslogg og største fisk
 - Trofé-fisk og tegn i sjøen, som måkeflokker og seistimer
 - «Mens du var borte»-oppsummering
-- Varsler og topplister når spillet får server
+- Varsler og topplister når spillet får server (se «PWA og hele kysten (veikart)» i kapittel 9)
 
 ## 9. Flåteplanen
 
@@ -569,6 +569,40 @@ Jonas' valg: alle tre kystredskapene i samme runde, ståtid for line som avveiin
   - En dag med håndjuksa samme sted: ca. 430 kg for én person.
 - **Priser (startverdier):** garn 1 500 kr, stamp hyseline 2 100 og bankline 1 700, teine 550/850, blåsesett 2 500, tung dregg 1 500, agn 18 kr/kg.
 
+### PWA og hele kysten (veikart, 30.09.2026)
+
+Jonas diskuterte med en annen AI-modell om å gjøre spillet til en PWA og utvide det til hele kysten fra Grense Jakobselv til Nordmøre. Vurderingen ble lagret som veikart. **Ingenting er bygget.** Hver fase krever eget klarsignal.
+
+- **Valgt:** Hosting blir GitHub Pages når det er aktuelt. PWA-bygget kan ha flere filer (manifest, service worker, ikoner, kartsoner), men artifacten forblir én fil.
+- **Vurdering av påstandene:**
+  - *3D i nettleseren* er allerede løst med WebGL.
+  - *Installasjon og offline* krever egen hosting. En artifact på claude.ai kan etter det vi vet ikke få eget manifest og egen service worker.
+  - *Push-varsler* krever alltid en server. Nettet har ingen lokale, tidsstyrte varsler. På iPhone virker push bare for apper på Hjem-skjermen (iOS 16.4+).
+  - *Påstanden om at EU presset fram PWA på iOS* er misvisende. Apple fjernet Hjem-skjerm-apper i EU i iOS 17.4-betaen og snudde 1.3.2024.
+  - *Periodisk bakgrunnssynk* finnes bare i Chrome og Edge.
+  - *Safari* sletter lagring etter 7 dager uten bruk for nettsider, men ikke for apper på Hjem-skjermen. Kvoten er rundt 60 % av disken for installerte webapper.
+  - *Lagringsgrensene* tvinger ikke simuleringen over på en server. En server trengs for felles topplister uten juks, felles marked, push og synk.
+  - *Batteriet* er allerede håndtert. 3D stopper når fanen er skjult, og `catchUp` regner inn tiden spilleren var borte.
+  - *Hele kysten:* Dagens ~80 × 80 km bruker 3,8 MB kartdata. Kyststripa er ~20 ganger større (60–80 MB), så den må lastes i soner.
+- **Faser:**
+  - **P1, PWA-skall uten server:**
+    - `dist-pwa/` med `index.html`, `manifest.webmanifest`, `sw.js` og ikoner
+    - eksport og import av lagret spill, fordi artifacten og PWA-en har ulike domener
+    - `navigator.storage.persist()`
+    - test av offline
+  - **P2, liten server:**
+    - innlogging (Vipps eller e-post), skylagring og synk
+    - push ved ETA: klienten regner ut tidspunktet, serveren sender varselet
+    - betaling for haill (kap. 7)
+  - **P3, flerspiller:** Serveren kontrollerer sluttsedler, slik at topplistene og det felles markedet ikke kan jukses.
+  - **P4, nye regioner i soner:** Soner etter **Norges Råfisklags ni soner** (sone 1 Øst-Finnmark til sone 9 Nordmøre, som er nettopp Råfisklagets område). Hver sone får egne mottak, fjordlinjer, fangstfelt og regler med kildesjekk. Kongekrabbe i kvoteområdet øst for 26° Ø.
+- **Tone:** Engasjementet skal komme av god fisking, med nyttige varsler som spilleren velger selv. Uttrykk som «avhengighetsskapende», «null frafall» og «instant dopamin» strider mot prinsippene i kapittel 7, og Forbrukerrådet og EU følger manipulerende design i spill.
+- **Kilder:**
+  - WebKit, «Updates to Storage Policy»
+  - MDN, «Storage quotas and eviction criteria» og «Periodic Background Synchronization API»
+  - TechCrunch 1.3.2024 om Apples reversering
+  - Norges Råfisklag, «Om Norges Råfisklag»
+
 ### Fase 4: Flåten i kart og 3D
 
 Egne båter vises med egne symboler i kartplotteren, og du kan trykke for å følge. Båter i nærheten vises i 3D.
@@ -579,7 +613,7 @@ Egne båter vises med egne symboler i kartplotteren, og du kan trykke for å fø
 
 ### Senere
 
-Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farvann utenfor 12 nm), egne anlegg og nye regioner.
+Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farvann utenfor 12 nm), egne anlegg og nye regioner. For PWA, server og hele kysten, se «PWA og hele kysten (veikart)».
 
 ## 10. Kjente problemer og åpne spørsmål
 

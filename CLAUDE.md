@@ -38,7 +38,7 @@ Et kystfiskespill fra Senja som kjører som én selvstendig HTML-side, publisert
 
 ## Begrensninger
 
-- Siden må forbli én fil. Den eneste eksterne ressursen er Google Fonts, og alt annet er innebygd.
+- Siden må forbli én fil. Den eneste eksterne ressursen er Google Fonts, og alt annet er innebygd. Dette gjelder artifacten. Et framtidig PWA-bygg på GitHub Pages kan ha flere filer (manifest, service worker, ikoner, kartsoner), se veikartet «PWA og hele kysten» i overleveringen.
 - Tallene i spesifikasjonen og overleveringen er startverdier som justeres i spilltesting.
 
 ## Publisering
