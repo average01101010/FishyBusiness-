@@ -12,7 +12,11 @@ The same process is also a hidden observer the tester does not know about. It wr
   status.json   latest state for the live tribune page
 
 Usage: python3 tests/playtest/harness.py --run r1 --game /tmp/playtest/spill.html
-       [--play /tmp/playtest] [--obs /root/playtest-obs] [--port 8765]
+       [--play /tmp/playtest] [--obs /root/playtest-obs] [--port 8765] [--resume]
+
+--resume picks a stopped run up again (the bridge died, the container restarted): the counters go on from the last
+row of cmd.jsonl, the newest snap/*.json is put back in localStorage once, and the page's clock goes on from the
+save's own time, so the downtime is neither absence nor a lost login day. The restart is logged in events.jsonl.
 """
 import argparse, base64, json, os, socket, sys, time, traceback
 from playwright.sync_api import sync_playwright
@@ -102,6 +106,15 @@ VCLOCK_JS = r"""(() => {
     now: vnow};
 })();"""
 
+# --resume: the save goes back in once (a later reload by the tester keeps the game's own save), and the virtual
+# clock starts where the save left off. It runs before VCLOCK_JS, so Date is still the real one here.
+RESUME_JS = r"""((key, save, v) => { try {
+  if (sessionStorage.getItem('__resumed')) return;
+  sessionStorage.setItem('__resumed', '1');
+  localStorage.setItem(key, save);
+  sessionStorage.setItem('__vclock', JSON.stringify({off:Date.now() - v, at:null}));
+} catch (e) {} })(%s, %s, %d);"""
+
 SELECT_JS = r"""([x, y, pick]) => { let e = document.elementFromPoint(x, y); if (e && e.tagName !== 'SELECT') e = e.closest('select');
   if (!e) { const l = document.elementFromPoint(x, y); const lab = l && l.closest('label'); e = lab ? lab.querySelector('select') : null; }
   if (!e) return null; const opts = [...e.options].map(o => o.textContent.trim());
@@ -135,6 +148,37 @@ class Harness:
         self.frozen = False
         self.seen = {}
         self.acts = 0          # player actions in the current phase (not diary, not reading the screen)
+        self.resume = None
+        if a.resume:
+            self.load_resume()
+
+    def load_resume(self):
+        last = None
+        with open(os.path.join(self.obs, 'cmd.jsonl')) as f:
+            for l in f:
+                if l.strip():
+                    last = json.loads(l)
+        sd = os.path.join(self.obs, 'snap')   # newest by time written: a resumed run's names start over the old ones
+        snaps = sorted((f for f in os.listdir(sd) if f.endswith('.json')), key=lambda f: os.path.getmtime(os.path.join(sd, f)))
+        snap = os.path.join(self.obs, 'snap', snaps[-1])
+        raw = open(snap).read()
+        save = json.loads(raw)
+        self.n, self.acts, self.phase = last['n'], last['acts'], last['phase']
+        self.hum, self.away = float(last['hum']), float(last['away'])
+        self.t0 = time.time() - float(last['w'])
+        self.orient = last.get('orient') or 'liggende'
+        try:
+            with open(os.path.join(self.obs, 'diary.jsonl')) as f:
+                self.diary = [json.loads(l) for l in f if l.strip()]
+        except FileNotFoundError:
+            pass
+        nums = lambda d: [int(x.split('.')[0]) for x in os.listdir(d) if x.split('.')[0].isdigit()]
+        self.n_shot = max(nums(self.shots) or [0])
+        self.frame = max(nums(os.path.join(self.obs, 'frames')) or [0])
+        gap = time.time() - os.path.getmtime(os.path.join(self.obs, 'cmd.jsonl'))
+        self.resume = {'raw': raw, 'v': int(save.get('lastReal') or 0) + 1000}
+        self.jl('events.jsonl', {'w': self.wall(), 'n': self.n, 'kind': 'resume', 'snap': snaps[-1], 'gap_real': round(gap),
+                                 'game_t': save.get('t'), 'cash': round(save.get('cash', 0)), 'orient': self.orient})
 
     # ---- files -------------------------------------------------------------------------------------------------
     def jl(self, name, obj):
@@ -249,19 +293,23 @@ class Harness:
         self.ctx.add_init_script('Object.defineProperty(window, "devicePixelRatio", {get: () => %s});' % self.a.dpr3d)
         # a real playtest: the test-only controls (pace, rush job) are not there, as in a release build
         self.ctx.add_init_script(NO_TEST_TOOLS_JS)
+        if self.resume:
+            self.ctx.add_init_script(RESUME_JS % (json.dumps(KEY), json.dumps(self.resume['raw']), self.resume['v']))
         # the game's clock only runs while the tester acts or waits, never while it thinks (see freeze/run)
         self.ctx.add_init_script(VCLOCK_JS)
         self.page = self.ctx.new_page()
         self.page.on('pageerror', lambda e: self.jl('errors.jsonl', {'w': self.wall(), 'n': self.n, 'kind': 'pageerror', 'msg': str(e)[:500]}))
         self.page.on('console', lambda m: m.type == 'error' and self.jl('errors.jsonl', {'w': self.wall(), 'n': self.n, 'kind': 'console', 'msg': m.text[:500]}))
         self.cdp = self.ctx.new_cdp_session(self.page)
+        if self.orient != 'liggende':
+            self.page.set_viewport_size({'width': self.port[0], 'height': self.port[1]})
         self.page.goto('file://' + os.path.abspath(self.a.game))
         self.page.wait_for_timeout(2500)
         self.thaw_v = self.page.evaluate('window.__vclock.now()') - 2500
         self.freeze()
         self.shoot()
         self.write_status()
-        self.snapshot('start')
+        self.snapshot('resume' if self.resume else 'start')
 
     def shoot(self):
         self.n_shot = getattr(self, 'n_shot', 0) + 1
@@ -612,6 +660,7 @@ def main():
     ap.add_argument('--ph', type=int, default=0)
     ap.add_argument('--dpr3d', type=float, default=0.5)
     ap.add_argument('--ua', default=UA)
+    ap.add_argument('--resume', action='store_true')
     a = ap.parse_args()
     h = Harness(a)
     with sync_playwright() as pw:
