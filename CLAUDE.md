@@ -23,9 +23,11 @@ Et kystfiskespill fra Senja som kjører som én selvstendig HTML-side, publisert
 - Playwright-skript i Python i `tests/`. De tester `dist/index.html`, så bygg først. Skjermbilder havner i `tests/out/`.
 - Oppsett: `pip install playwright==1.56.0`. Nettleseren ligger allerede i `/opt/pw-browsers`.
 - Kjør med `python3 tests/<navn>.py`. Skriptene skriver ut verdier og feil i stedet for å bruke assert, så les utskriften.
-- Regresjon: `trip2.py` (hel tur, skal ende med `"st":"port"`), `tut.py` (veiledningen, skal ende med `"tut":0`) og `dbg23o.py` (WebGL, skal ikke skrive ut noe). Alle skal gi `[]` for sidefeil.
+- Regresjon: `trip2.py` (hel tur, skal ende med `"st":"port"`), `tut.py` (spiller hele «Første tur» med berøring, liggende og stående, skal ende med `"tut": 0` og bare `OK`-linjer, tar noen minutter) og `dbg23o.py` (WebGL, skal ikke skrive ut noe). Alle skal gi `[]` for sidefeil.
 - Endringer i fisket eller fangstbehandlingen: kjør også `decktest.py` og `geartest.py` (redskap i sjøen). Endringer i overtroen: `loretest.py`. Endringer i tatoveringene: `tattest.py`.
-- Endringer som berører flåten, salget, driftsplanen eller telefonappene: kjør også `fleet2test.py`, `fleet3test.py` og `opsowntest.py`. Endringer i havnene, fortøyningen eller leveringen: `harbourtest.py`, `moortest.py`, `landtest.py` og `bunkertest.py`. Alle sjekklinjene skal starte med `OK`.
+- Endringer som berører flåten, salget, driftsplanen eller telefonappene: kjør også `fleet2test.py`, `fleet3test.py` og `opsowntest.py`.
+- Endringer i ruteplanleggeren, kartplotteren eller «Følg leia»: `routetest.py`. Butikken, sluttseddelen eller «Neste mål»: `shoptest.py` og `selltest.py`. Tidstekster og nedtelling: `timetest.py`. Innloggingsbonusen: `streaktest.py`. Pub, haill og verkstedjobber: `fixtest.py` og `hailltest.py`. 3D-kameraet: `camtest.py`.
+- Tester med berøring og drag i kartet trenger `--disable-gpu-compositing` i Chromium, ellers tegner plotteren rundt ett bilde i sekundet. Kjør ikke mange 3D-tester samtidig, da går klikk og skjermbilder ut på tid. Endringer i havnene, fortøyningen eller leveringen: `harbourtest.py`, `moortest.py`, `landtest.py` og `bunkertest.py`. Alle sjekklinjene skal starte med `OK`.
 - Funksjonstestene og triksene for testing står i kapittel 11 i overleveringen.
 
 ## Slik er koden satt sammen

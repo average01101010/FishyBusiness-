@@ -1,11 +1,15 @@
 """The daily login bonus that replaced «Kaffe på kaia»: +1 % a day, −3 % for each day away, nothing for a clock turned back,
-its own row on the landing note, and old saves migrated. The device date is moved with localStorage.__dayoff (days)."""
+its own row on the landing note, and old saves migrated. The device date is moved by a number of days carried in window.name
+across the reload, together with the save: Chrome writes localStorage to disk with a delay, and a file:// page reloaded at once
+can read the old values."""
 from _env import GAME
 import asyncio, json
 from playwright.async_api import async_playwright
 
-SHIFT = """(() => { const inj = localStorage.getItem('__inject'); if (inj){ localStorage.setItem('kystfiske_proto_v1', inj); localStorage.removeItem('__inject'); } })();
-(() => { const off = +(localStorage.getItem('__dayoff') || 0) * 864e5; if (!off) return;
+SHIFT = """(() => { let w = {}; try { w = JSON.parse(window.name || '{}'); } catch (e) {}
+  if (w.save) localStorage.setItem('kystfiske_proto_v1', w.save);
+  const inj = localStorage.getItem('__inject'); if (inj){ localStorage.setItem('kystfiske_proto_v1', inj); localStorage.removeItem('__inject'); }
+  const off = +(w.dayoff || 0) * 864e5; if (!off) return;
   const RD = Date; class D extends RD { constructor(...a){ if (a.length) super(...a); else super(RD.now() + off); } static now(){ return RD.now() + off; } }
   window.Date = D; })();"""
 
@@ -30,8 +34,11 @@ async def main():
         check(not await pg.evaluate("!!document.getElementById('dailyBtn') || !!document.getElementById('dailyUI') || typeof DAILYW !== 'undefined'"), 'Kaffe på kaia er borte')
 
         async def day(n):
-            await pg.evaluate("n => { save(); localStorage.setItem('__dayoff', n); }", n)
-            await pg.reload(); await pg.wait_for_timeout(1500)
+            await pg.evaluate("n => { save(); window.name = JSON.stringify({dayoff:n, save:localStorage.getItem(KEY)}); }", n)
+            await pg.reload()
+            # then wait until the game has booted and looked at the (moved) date
+            await pg.wait_for_function("typeof S !== 'undefined' && S.streak && (S.streak.last === dayKey() || dayNum(dayKey()) < dayNum(S.streak.last))", timeout=10000)
+            await pg.wait_for_timeout(300)
             return json.loads(await st())
 
         s = await day(1)
@@ -65,8 +72,8 @@ async def main():
         await pg.screenshot(path='streak_salg.png')
 
         # an old save with coffee state: unused free pub rounds are paid out, tubs and clean hull are gone
-        old = json.loads(await pg.evaluate("(() => { const o = JSON.parse(localStorage.getItem(KEY)); o.daily = {last:'2026-09-01', streak:4, total:9, restW:-1, pubV:2}; o.tubs = 110; o.clean = o.t + 999; o.streak = undefined; o.cash = 5000; if (o.fleet) for (const v of o.fleet){ v.tubs = 110; v.clean = 1; } localStorage.setItem('__inject', JSON.stringify(o)); return JSON.stringify({cash:o.cash}); })()"))
-        await pg.reload(); await pg.wait_for_timeout(1500)
+        old = json.loads(await pg.evaluate("(() => { const o = JSON.parse(localStorage.getItem(KEY)); o.daily = {last:'2026-09-01', streak:4, total:9, restW:-1, pubV:2}; o.tubs = 110; o.clean = o.t + 999; o.streak = undefined; o.cash = 5000; if (o.fleet) for (const v of o.fleet){ v.tubs = 110; v.clean = 1; } const w = JSON.parse(window.name || '{}'); window.name = JSON.stringify({dayoff:w.dayoff || 0, save:JSON.stringify(o)}); return JSON.stringify({cash:o.cash}); })()"))
+        await pg.reload(); await pg.wait_for_function("typeof S !== 'undefined' && S.streak", timeout=10000); await pg.wait_for_timeout(500)
         r = json.loads(await pg.evaluate("JSON.stringify({cash:S.cash, daily:S.daily === undefined, tubs:S.tubs === undefined, clean:S.clean === undefined, fleetTubs:(S.fleet || []).some(v => 'tubs' in v), cap:capHold() === BOAT.holdCap, pct:S.streak.pct})"))
         check(r['cash'] == old['cash'] + 2000 and r['daily'] and r['tubs'] and r['clean'] and not r['fleetTubs'] and r['cap'], 'gammel lagring: pubrunder betalt ut, kar og skrogvask fjernet', r)
         check(r['pct'] == 1, 'bonusen starter på null for gamle lagringer og får dagens 1 %', r['pct'])

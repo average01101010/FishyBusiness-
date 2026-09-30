@@ -28,14 +28,16 @@ Skrevet 29.09.2026 ved flytting fra claude.ai-chat til Claude Code. Dokumentet s
 
 **Ferdig og publisert (i rekkefølge):** fiskerisystemet, redskapsstige og animasjoner, tempo 1:6, lukket gruppe-kjøp med lån, «Neste mål», haill, pub og verkstedovertid, kveitefiske med fredning, NPC-kaiplasser og trykkprioritet i kartplotteren, jevnere båtbevegelse, «Kaffe på kaia», fiskekar, rengjort bunn, bestillinger, klær og kulde, mannskapssystemet med Mannskapsbørs, **flåtemodell fase 1**, **fase 2** (flere båter) og **fase 3** (Rederiappen). Fase 2 og 3 er bygget i Claude Code.
 
-**Neste:** fiskemottak, kaier og fortøyning (B1–B5 i kapittel 9), deretter fase 4 i flåteplanen.
+**Etter spilltest 1 (bygget 01.10.2026, ikke publisert ennå):** feilrettinger A1–A15, juksamaskin = 2 × håndjuksa, innloggingsbonus i stedet for «Kaffe på kaia», riktig tid (6×) med nedtelling i ekte tid, butikken «Fiskeutstyr», rute-editor med WP-navn, angre og dra, autoruta «Følg leia» og den obligatoriske veiledningen «Første tur». Planen står i kapittel 9 under «Etter spilltest 1».
+
+**Neste:** spilltest 2 (en lang økt fra start), deretter fase 4 i flåteplanen.
 
 ## 4. Teknisk arkitektur
 
 ### 4.1 Én fil, flere lag
 
 1. **Kjerne:** simulering, tilstand `S`, arter, priser, kvoter og regler.
-2. **UI:** HUD, handlingslinje (`#actbar`), panel, telefonen `PHONE` med apper, overlays (`PUBW`, `DAILYW`, `ROD`).
+2. **UI:** HUD, handlingslinje (`#actbar`), panel, telefonen `PHONE` med apper, overlays (`PUBW`, `ROD`), rute-editoren (`ui/03b-route.js`) og veiledningen «Første tur» (`ui/07b-first-trip.js`). Autoruta ligger i kjernen (`core/11-route.js`).
 3. **3D:** `G3`, en egen WebGL-renderer for sjø, terreng, båter og effekter. Kartplotteren er Canvas2D og SVG.
 4. **Data:** base64-blobber i `<script type="application/octet-stream">`, blant annet dybde, høyde, land, vei og bygg.
 
@@ -46,11 +48,12 @@ Skrevet 29.09.2026 ved flytting fra claude.ai-chat til Claude Code. Dokumentet s
 - `EPOCH` = mandag 1. mars 2027 kl. 06:00 UTC. `S.t` er spillminutter siden EPOCH, og `H = S.t/60`.
 - `GAME_RATE = 6` spillminutter per ekte minutt. Ett spillår er rundt to ekte måneder, og en fisketur rundt én kveld. `S.mult` er en testmultiplikator.
 - `step()` kjøres én gang per spillminutt. `catchUp(realMs)` spiller av fravær, opp til `CATCHUP_CAP`.
+- **Tid i ekte tid** (`02-format-state.js`): `realDur(spillminutter)` og `inReal()` gir «om 12 min» ut fra `GAME_RATE × S.mult`, og `whenTxt(T)` gir «14:20 · om 12 min». Brukes i ruteanslaget, fisketida, verkstedet, bunkringen, lossingen, ståtida og planlagt avgang. HUD-brikka «Neste» (`nextEvent()` i `04-panels-instruments.js`) viser den nærmeste hendelsen for båten du ser på, for eksempel «⏱ Fremme på feltet om 7 min (14:20)».
 
 ### 4.3 Flåtemodellen (fase 1, ferdig)
 
 - `S.fleet` er en liste av fartøy, og `S.cur` er båten som følges.
-- Alt som hører til én båt, ligger i fartøyet under nøklene i `VKEYS`: `boat, plan, hold, crew, equip, jobs, cevt, ops, lic, quota, draft, draftSpeed, draftDep, marks, target, tubs, clean, trail, fsess, facc, fnext, fishPlanH, workLog, clothes, tripBuff, prep, svcTold, boatName, lastSale, restWarn, kvRel, codWarn, lastIceWarn, navrows`.
+- Alt som hører til én båt, ligger i fartøyet under nøklene i `VKEYS`: `boat, plan, hold, crew, equip, jobs, cevt, ops, lic, quota, draft, draftSpeed, draftDep, marks, target, trail, fsess, facc, fnext, fishPlanH, workLog, clothes, tripBuff, prep, svcTold, boatName, lastSale, restWarn, kvRel, codWarn, lastIceWarn, navrows`.
 - `S.boat`, `S.hold` og de andre er **alias** som peker på fartøyet som er bundet akkurat nå. All eldre kode virker derfor uendret.
 - Hjelpefunksjoner:
   - `curVessel()` gir båten som følges.
@@ -62,7 +65,7 @@ Skrevet 29.09.2026 ved flytting fra claude.ai-chat til Claude Code. Dokumentet s
 - `step()` kjører først en felles del: bestillinger, Mannskapsbørs, marked, bestand og `hourly()`. Deretter kjøres `crewTick`, `navHour` og `vesselStep(H)` for hver båt via `eachVessel`.
 - **Lagring:** `save()` skriver flåten én gang og fjerner VKEYS fra toppnivået. `load()` binder aliasene til båten som følges straks lagringen er lest, før noe annet leser `S.boat`.
 - **Viktig ved bytte:** Primitive verdier (tall, strenger) må skrives tilbake med `storeVessel` før man bytter båt. `save()` gjør dette selv.
-- **Rederinivå, ikke per båt:** `cash, loan, stats, sales, msgs, log, market, stock, orders, rep, bors, daily, haill, pubE, settings, company, owned, tut, lang, me`.
+- **Rederinivå, ikke per båt:** `cash, loan, stats, sales, msgs, log, market, stock, orders, rep, bors, streak, haill, pubE, settings, company, owned, tut, lang, me`. `S.tut` er `0` eller veiledningens tilstand (5.16).
 - **Fase 2 la til** (i `src/js/core/03-simulation.js`):
   - `S.me` er båten du er om bord på, og `tripOwner` (i `VKEYS`) sier om du var om bord da båten dro.
   - `vget(v, k)` leser et felt fra en hvilken som helst båt. For båten som er bundet, ligger de levende verdiene i `S`, ikke i fartøyobjektet.
@@ -100,11 +103,14 @@ Skrevet 29.09.2026 ved flytting fra claude.ai-chat til Claude Code. Dokumentet s
 - *Håndjuksa med pilk og fire markkroker:* 1 900 kr, effekt 1,0.
 - *Juksamaskin:* 34 000 kr, effekt 2,0 hver, altså omtrent dobbelt så mye som håndjuksa. Én person passer tre og fisker da ikke selv med håndjuksa. Skiffen med to maskiner fyller lasten på rundt 2 timer på en god skreidag (`JIG` i `03-simulation.js`, endret 01.10.2026).
 - *Kveiteutstyr:* stor pilk, kraftig snøre og gaff, 2 490 kr.
+- **Butikken «Fiskeutstyr»** (telefonapp `fiske`, i alle havner, «Fiskeutstyr på kaia» i Finnsnes) selger håndjuksa, is og kveiteutstyr. Et kjøp tar to trykk: det første viser prisen, det andre betaler, og kjøpet står i driftsloggen. Finnsnes har ikke isrenne, så butikken selger is i sekker for 2,00 kr/kg (`PRICE.iceBag`, vårt anslag). På mottakene kommer isen fra isrenna for 1,50 kr/kg. Handlingslinja har «Fiskeutstyr» og en isknapp med mengde og pris. Klær, elektronikk og juksamaskiner er i Utstyr-appen.
 - *Garn, line og teiner:* passivt redskap som står i sjøen mens båten er borte. Se «Redskap i sjøen» i kapittel 9.
 - *Halere* (`EQUIP`): elektrisk haler 38 000 kr (skiff og snekke, line og små teiner), linehaler 68 000, garnhaler 95 000 og teinehaler 58 000 (snekke og større). Uten haler trekkes garn og line for hånd og tar 2–2,5 ganger så lang tid. Store teiner kan ikke trekkes for hånd.
 - *Plass til redskap* (`gearMax` i `VESSELS`): skiff 6 garn / 4 stamper / 20 teiner, snekke 15 / 10 / 50, sjark 40 / 24 / 150, sjarkny 60 / 30 / 200.
 
-Mister du juksa, fiskes det videre med stang. `motor90` er et utstyrsvalg for skiffen (30 kn).
+Mister du juksa, fiskes det videre med stang til du kjøper ny i Fiskeutstyr. `motor90` er et utstyrsvalg for skiffen (30 kn).
+
+**«Neste mål»** står øverst i Fartøy-appen og som en linje på telefonens hjemskjerm, med knapp til butikken når pengene er der.
 
 ### 5.2 Kart, fjordlinje og fangstfelt
 
@@ -170,6 +176,8 @@ Mister du juksa, fiskes det videre med stang. `motor90` er et utstyrsvalg for sk
   - **I 3D:** Bløggekar og sløyebenk står på etterdekket. Den som jobber, står ved benken og sløyer, og sloet går over babord ripe mens måkene stuper etter det. Alene går skipperen fra rattet.
   - **Større fartøy** med fabrikk om bord kommer senere.
 - **Sluttseddelen** viser art, størrelse, kvalitet, kilo, kilopris, lever og rogn, inndragning, ferskfiskordningen, bestillinger og fangstfelt.
+  - Hver linje står i hele kroner og kilo, og totalen er summen av linjene (A7). Linjene står med full verdi, og det som inndras, står som egne trekk: torsk over kvote eller bifangstgrensen, krabbe under minstemålet og trekket for rognkrabbe. Tillegg for bestillinger og innloggingsbonusen har egne linjer.
+  - Under totalen kommer «Lott til mannskapet» og «Til kassa», og kassa får nøyaktig total minus lott. Gebyret for småkrabbe står som en merknad under, fordi det kommer fra Fiskeridirektoratet og ikke står på seddelen.
 - Alle priser i spillet er per kilo **rund vekt**.
 
 ### 5.5 Kvoter og regulering
@@ -244,24 +252,15 @@ Mister du juksa, fiskes det videre med stang. `motor90` er et utstyrsvalg for sk
 - **Omdømme:** Fullført gir +8, tapt frist −10. Omdømmet vektlegger hvilke kunder som bestiller.
 - Fisk som oppfyller kravet går først til bestillingen når du leverer i riktig havn.
 
-### 5.9 «Kaffe på kaia» (daglig belønning, `DAILYW`)
+### 5.9 Innloggingsbonus (`STREAK`, `S.streak`, fra 01.10.2026)
 
-- Én gang per **ekte** døgn. Åpner seg selv når ingen andre vinduer er åpne og veiledningen er ferdig (`S.tut === 0`).
-- **Ukeplan:**
-
-| Dag | Premie |
-|---|---|
-| 1 | Lånte fiskekar |
-| 2 | Full is |
-| 3 | Rykte og 1 500 kr |
-| 4 | 30 L drivstoff |
-| 5 | Fri pubrunde |
-| 6 | Rengjort bunn |
-| 7 | Overraskelse |
-
-- **Kaffekopp:** Du velger 1 av 3 kopper (`CUPS`): 40 % 500 kr, 20 % 1 000 kr, 15 % is, 15 % rykte, 10 % ingenting.
-- **Milepæler:** 10, 30, 60 og 100 dager gir 10 000, 25 000, 50 000 og 100 000 kr.
-- **Tilgivende rekke:** Én fridag per uke, og hver tapt dag koster bare ett trinn. Aldri betaling for å redde rekka.
+- Erstatter «Kaffe på kaia», som ble fjernet etter spilltest 1 fordi den ble opplevd som lotteri.
+- Hver ny kalenderdag du åpner spillet, gir +1 % på prisen for fisken du leverer. Det er ikke noe tak. Hver dag du ikke kommer innom, trekker 3 %, og bonusen går aldri under 0. Tid tilbake i klokka gir ingenting.
+- Regnes i `streakTouch()` (`core/03-simulation.js`) ved oppstart, når appen blir synlig igjen, og hvert minutt. Dagene er lokale kalenderdager (`dayKey`, `dayNum`).
+- Bonusen gjelder fisken, ikke tillegg for bestillinger, lever eller rogn. Den står som egen linje på sluttseddelen, og mannskapets lott regnes av totalen med bonusen.
+- Vises i HUD-en («Bonus +12 %») og på et kort i Salg-appen med hva i morgen gir og hva en tapt dag koster.
+- **Migrering:** Eldre lagringer starter på 0 %. Ubrukte gratis pubrunder fra kaffen ble betalt ut med 1 000 kr hver. Lånte fiskekar og rengjort bunn er borte.
+- **Å måle:** Uten tak dobler bonusen fiskeprisen etter 100 dager. Konstantene i `STREAK` gjør det enkelt å sette et tak senere.
 
 ### 5.10 Haill og pub
 
@@ -279,9 +278,10 @@ Mister du juksa, fiskes det videre med stang. `motor90` er et utstyrsvalg for sk
 - **Pubrunden** (`PUBW`):
   - 1 000 kr i spillkroner, én gang per spillkveld mellom 15:00 og 03:00, bare i havn.
   - Lykkehjulet: kveithaill 18 %, rykte 20 %, haill 7,5 %, luksushaill 1,5 % og tomhendt 53 %, med humoristiske replikker. Oddsen vises.
-  - Frie runder fra kaffen brukes i stedet for tusenlappen.
+  - Runden betales og lagres før hjulet snurrer, så premien overlever at appen lukkes (A4). Kvelden går fra 15:00 til 03:00 (A3).
+- **Første gang er luksushaill gratis** i veiledningen «Første tur», og Haill-appen forklarer da hva haill ellers koster.
 
-### 5.11 Kulde, klær og fiskekar
+### 5.11 Kulde og klær
 
 - **Effektiv temperatur** (`effTemp`): Vindavkjølingsformelen. `coldPen` gir opptil 35 % kuldestraff og 15 % våtstraff.
 - **Klær, per person:**
@@ -289,7 +289,6 @@ Mister du juksa, fiskes det videre med stang. `motor90` er et utstyrsvalg for sk
   - *Varmedress* (3 490 kr): kulde ×0,3, våt ×0,6.
   - *Begge:* kulde ×0,25, våt ×0,15.
 - **Test ved −12 °C effektivt:** Fisket gikk 27 % tregere uten klær, 21 % med oljehyre og 6 % med begge.
-- **Fiskekar:** +30 % last, altså 110 kg på skiffen, til neste landing. **Rengjort bunn:** −10 % drivstoff i 5 døgn.
 
 ### 5.12 Verksted
 
@@ -324,6 +323,29 @@ Mister du juksa, fiskes det videre med stang. `motor90` er et utstyrsvalg for sk
 - **Kaiplasser** (`berthSlot`, `berthShift`): Hver NPC-båt har en egen plass langs kaia, 30–60 m fra havnepunktet. Plassen er kontrollert mot land, og båter i samme havn ligger minst 20 m fra hverandre. Forskyvningen avtar over 150 m.
 - Kystruteskipet og ferja har egne plasser, 70 m unna.
 - **Trykk i kartplotteren:** Trykk nær en havn går til havna, ikke til en fortøyd båt. Fortøyde AIS-mål tegnes mindre og svakere.
+
+### 5.15 Ruteplanleggeren og «Følg leia» (01.10.2026)
+
+- **WP-navn** (`ui/03b-route.js`): WP0 er starten (havna eller båten), så WP1, WP2 … i den rekkefølgen de seiles. Navnene brukes i kartet, lista, varslene («Etappe WP2→WP3 krysser land»), GPS-boksen og loggen («WP3 passert»). Punkter havna legger til på vei ut og inn (`w.auto` `'out'` eller `'in'`), vises dempet og merket «utseiling» eller «innseiling».
+- **A12:** `exitWps` og `entryWps` (`07-harbours.js`) legger bare inn punkter når veien fra dem til neste punkt er fri, og aldri selve havnepunktet. Ser ingen av punktene målet, legges ingen inn, og etappen spilleren tegnet, blir markert.
+- **Rutelista** har ett kort per WP: kurs som skal styres (rettvisende, kartet er nord opp), lengde i nm, ETA i spilltid med nedtelling i ekte tid, koordinat, fisketid ± og redskapsbrikke. `draftTimeline()` regner ut kurs og tider. Under kortene står sumlinjene, og knapperaden med «Kast loss» står fast nederst. Sidepanelet i plotteren er 340 px bredt.
+- **Angre og gjør om:** Alle endringer i kladden er steg i en historikk på 100 steg per båt (`draftEdit`, `draftUndo`, `draftRedo`). Den lagres ikke. Flytende knapper på 44 × 44 px står over zoomknappene.
+- **Flytt og sett inn:** Et trykk innenfor 22 px av et punkt drar det. Havner det på land, blir det rødt og går tilbake. En finger til avbryter og zoomer kartet. Havna til slutt kan ikke flyttes. Hver lange etappe har en «+» midt på: et trykk setter inn et punkt der, og et drag lager et nytt punkt der fingeren slipper. Farene regnes per etappe (`legHazardMemo`), så et drag regner bare om de to etappene som berøres.
+- **«Følg leia»** (`core/11-route.js`): A* på rutenettet på 100 m med avstand til land (`DC`). Et steg koster mer innenfor 200 m fra land, og mye mer over vann grunnere enn sikker dybde + 1 m eller nær skjær (ikke i havnene). Havnene forlates og nås via innseilingen. Ruta rettes ut der en rett etappe holder 150 m fra land (mindre der det er trangt), dyp nok og fri for skjær, til høyst 12 WP. Beregningen går i biter på rundt 8 ms.
+  - Bruk: knappen i knapperaden eller den flytende kompassknappen, og så et trykk i kartet (et punkt eller en havn). Hele autoruta er ett angresteg.
+  - En håndtegnet rute får en linje som sammenligner den med å følge leia gjennom de samme stoppene: «Følg leia: 5,2 nm · 20 min · 3,1 L. Din rute: −0,2 nm, −1 min, −0,1 L.»
+  - Målt: Følg leia er 0–1,4 % lengre enn den strammeste veien langs land til de seks feltene. Fordelen med en god manuell rute er altså liten, fordi rutene mest går over åpent vann.
+
+### 5.16 Veiledningen «Første tur» (01.10.2026)
+
+- **Obligatorisk** for nye spill, også etter nullstilling. Eldre lagringer sendes ikke gjennom den. `#notut` i adressen hopper over den (testene bruker det).
+- **Tilstand:** `S.tut = {v:2, m:{…}, catch:true, pAt}`. `m` er milepælene. Steget som vises, er det første som ikke er gjort, og «gjort» leses også av spilltilstanden, så veiledningen tåler omlasting. Rutestegene (`live`) leses på nytt hver gang til båten har kastet loss.
+- **Stegene** (`TSTEPS` i `ui/07b-first-trip.js`): butikken (håndjuksa og 150 kg is gratis), kartplotteren, rute til ringen ved Gisundet nord (med «Følg leia» fremhevet), minst 2 timer fisketid, «Kast loss», gratis luksushaill mens båten går ut, fisket og «Fisk selv», dekksarbeidet, full last, rute til Botnhamn med «Følg leia», «Kast loss», «Neste»-brikka, levering, sluttseddelen og «Neste mål».
+- **Visning:** Et dempet lag med hull rundt målet og en pulserende ring (z-index 61–62, over telefonen), med tipset over (63). `tutRect()` gir målet.
+- **Garantert første fangst** (`S.tut.catch`): `fish()` fyller på med vanlig fisk hvert minutt, så lasten er full når fisketida er ute. `risk()` og snuing for vind er slått av, og i stangfisket kommer nappet etter 4–8 s. Flagget nullstilles ved første levering.
+- **Haill:** Kommer båten fram før haillen er hentet, venter den på feltet (`b.tutWait`) og begynner å fiske når haillen er om bord.
+- **Sperrer** (`tutAllow`): «Kast loss», nye punkter og levering bare på sine steg. Puben, kveiteutstyret, driftsplanen, «Hjem samme vei» og levering andre steder enn Botnhamn er skjult til veiledningen er ferdig.
+- **Nødutgang:** «Hopp over veiledningen» vises først etter 20 minutter uten fremgang.
 
 ## 6. Regelverk og kilder
 
@@ -364,7 +386,8 @@ Mister du juksa, fiskes det videre med stang. `motor90` er et utstyrsvalg for sk
 ## 8. Engasjement: veikart
 
 **Ferdig:**
-- «Kaffe på kaia»
+- Innloggingsbonus (erstattet «Kaffe på kaia» 01.10.2026)
+- Veiledningen «Første tur»
 - Bestillinger
 - «Neste mål»
 - Pub og haill
@@ -604,6 +627,21 @@ Jonas diskuterte med en annen AI-modell om å gjøre spillet til en PWA og utvid
   - TechCrunch 1.3.2024 om Apples reversering
   - Norges Råfisklag, «Om Norges Råfisklag»
 
+### Etter spilltest 1 (F1–F10, godkjent 30.09.2026, bygget 01.10.2026)
+
+Rapporten fra den blinde spilltesten ga ti faser. Jonas bestemte: veiledningen er obligatorisk, juksamaskinen gir 2 × håndjuksa, «Kaffe på kaia» byttes med en innloggingsbonus på +1 % per dag uten tak og −3 % per tapt dag, puben og haill blir værende og introduseres tidlig, og neste spilltest er en lengre økt fra start.
+
+1. **F1 Kritiske feil:** haleren som låste båten (A1, `FIT_H` i `06-services.js` med `fitHours` og `jobOk`), pubkvelden 15–03 (A3), pubhjulet som tapte premien ved omlasting (A4), oddslinja med «tomhendt 53 %» (A15), og testnøkkelen `#notut`.
+2. **F2 Juksamaskinen:** `JIG = {rod:0.35, hand:1, machine:2.0, perPerson:3}` og én felles `effortOf()`, også for driftsplanen.
+3. **F3 Innloggingsbonus** i stedet for «Kaffe på kaia» (5.9). Fiskekar og rengjort bunn er fjernet.
+4. **F4 Tiden:** tekstene sier seks ganger så fort, tempovalgene viser 6×, 180×, 1 800× og 10 800×, nedtelling i ekte tid og «Neste»-brikka (4.2).
+5. **F5 Butikken og pengesporet:** «Fiskeutstyr» (5.1), sluttseddelen som summerer seg (A7, 5.4), minstepriser med to desimaler (A8), status som ikke ser ut som knapper (A9), Gisundet-tipset bare i Finnsnes (A10), kameraet utenfor kaier, bruer og bygg (A11) og det ubrukte blødningsvalget fjernet (A13).
+6. **F6 Rute-editoren** og **F7 «Følg leia»** (5.15), med A12.
+7. **F8 «Første tur»** (5.16).
+8. **F9** dokumentasjon og full regresjon. **F10** spilltest 2.
+
+Åpne punkter jeg avgjorde (kan overstyres): bonusen starter på 0 for eldre lagringer, «Fiskeutstyr» finnes i alle havner, «Neste»-brikka gjelder båten du ser på, og sidepanelet i plotteren er 340 px.
+
 ### Fase 4: Flåten i kart og 3D
 
 Egne båter vises med egne symboler i kartplotteren, og du kan trykke for å følge. Båter i nærheten vises i 3D.
@@ -618,24 +656,12 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
 
 ## 10. Kjente problemer og åpne spørsmål
 
-- **Blind spilltest 1 (30.09.2026):** Se `docs/playtest/rapport-1.md`. Feil i koden som er bekreftet, sortert etter alvor:
-  - **Kritisk (A1):** Kjøp av elektrisk haler låser båten i havn. `FIT_H` mangler halerne, og verkstedjobben får `until` NaN.
-  - **Høy:**
-    - Tidsteksten sier 2×, men spillet går 6× (A2).
-    - «Ny juksa» mangler pris og bekreftelse, og båten starter uten juksa (A5).
-  - **Middels:**
-    - Pubhjulets kveld skifter kl. 21 (A3), og premien går tapt ved omlasting (A4).
-    - Kjøp av is og juksa står ikke i loggen (A6).
-    - Statusfelt ser ut som knapper (A9), og kameraet går inn i kaier (A11).
-    - `exitWps` lager ugyldige punkter (A12).
-    - Oddslinja utelater «tomhendt 53 %» (A15).
-  - **Lav:** A7, A8, A10, A13 og A14.
-  - **Design som må avklares:**
-    - Finnsnes har verken mottak eller is fra start.
-    - Fangstfeltene har liten vekt.
-    - Kaffe på kaia og pubhjulet dominerer økonomien de første dagene.
-    - Lånet overlever salg av båten.
-    - Ruteplanleggeren mangler flytt- og sett inn-punkter.
+- **Blind spilltest 1 (30.09.2026):** Se `docs/playtest/rapport-1.md`. Feilene A1–A13 og A15 er rettet 01.10.2026 (`fixtest.py`, `shoptest.py`, `camtest.py`, `routetest.py`). A14 (ryktekoppen) forsvant med «Kaffe på kaia». Åpent fra rapporten:
+  - Lånet overlever salg av båten, og hvert nytt lån starter 120 nye måneder.
+  - Fangstfeltene har liten vekt i kartet.
+  - En skipper på driftsplan kjøper ikke sekkeis i Finnsnes. Bare mottakene fyller is på driftsplanen.
+  - Kameraet holdes unna kaier, bruer, fyr, siloer, kraner og bygninger, men ikke andre båter eller kranarmen.
+  - Laster man siden på nytt rett etter en endring, kan Chrome lese en lagring som er noen sekunder gammel (localStorage skrives med forsinkelse). Sett i testmiljøet, ikke kontrollert på nettbrett. Det koster i så fall bare de siste sekundene.
 
 - **Redskap, åpne punkter:**
   - Minsteprisene for taskekrabbe (Råfisklaget, rundskriv 8/2025) er ikke hentet, fordi siden er blokkert herfra. Hunn 17 og hann 14 kr/kg er plassholdere.
@@ -658,16 +684,21 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
 
 ## 11. Testing
 
-- **Verktøy:** Playwright med Chromium og SwiftShader (`--use-angle=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist`). Testskriptene i `tests/` har hardkodede stier (`/home/claude/work.html` eller `/mnt/user-data/outputs/...`), som må byttes ut.
+- **Verktøy:** Playwright med Chromium og SwiftShader (`--use-angle=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist`). Testene finner spillet via `tests/_env.py` (`GAME` med `#notut`, `GAME_TUT` uten).
 - **Regresjon:**
   - `trip2.py`: hel tur via kartplotter, avgang, 3D, fiske og havn.
-  - `tut.py`: førstegangsveiledningen.
+  - `tut.py`: veiledningen «Første tur», spilt gjennom med berøring som en spiller, liggende og stående, med tre omlastinger. Skal ende med `"tut": 0`.
   - `dbg23o.py`: ingen WebGL-feil.
 - **Funksjonstester**, blant andre:
   - `selltest.py`: salg, kvote, ferskfisk og sløying.
   - `simday.py` og `kvtest.py`: kalibrering av fangst.
   - `ordtest.py`: bestillinger, klær og kulde.
-  - `dailytest.py`: kaffen og rekkeregler.
+  - `streaktest.py`: innloggingsbonusen, med flyttet dato.
+  - `fixtest.py`: feilrettingene etter spilltest 1 (haleren, pubkvelden, pubhjulet).
+  - `timetest.py`: tidstekstene, nedtelling i ekte tid og «Neste»-brikka.
+  - `shoptest.py`: Fiskeutstyr, sekkeis og isrenne, «Neste mål», sluttseddelen som summerer seg, og A8–A13.
+  - `camtest.py`: kameraet holdes utenfor kaier, kraner og bropilarer.
+  - `routetest.py`: rute-editoren med berøring (WP-navn, kort, angre, dra, sett inn, A12) og «Følg leia».
   - `hailltest.py` og `luck2.py`: haill og pub.
   - `crewtest.py`: mannskap.
   - `motion2.py`: båtbevegelse, frakoblet med 60 bilder i sekundet.
@@ -700,7 +731,10 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
 - **Triks:**
   - Testmaskinen gir få bilder i sekundet, og `dt` begrenses til 0,1 s. Test dynamikk frakoblet med `G3._debug.stepBoat`.
   - Spillet lagrer seg selv når siden lukkes. For å teste gamle lagrede spill: legg dem inn med `context.add_init_script` i en ny nettleserøkt.
-  - Nyttige verktøy: `G3._debug` (cam, bv, SK, TRAIL, stepBoat), `ROD._strike/_prog`, `DAILYW.claim/pick/close/auto`, `PUBW.open`, `PHONE.open(app)`.
+  - Nyttige verktøy: `G3._debug` (cam, bv, SK, TRAIL, stepBoat, eye, camInside, camFree), `ROD._strike/_prog`, `PUBW.open`, `PHONE.open(app)`, `mapToClient(p)`, `leiaRoute(a, b, aPort, bPort)`, `tutStep()`, `tutRect()`.
+  - Berøring og drag i kartet: send `Input.dispatchTouchEvent` via CDP, og start Chromium med `--disable-gpu-compositing`. Med SwiftShader-komposisjon tegner plotteren rundt ett bilde i sekundet, og hvert fingerflytt venter på et bilde.
+  - Kjør ikke mange 3D-tester samtidig. Da kan klikk og skjermbilder gå ut på tid.
+  - Chrome skriver localStorage til disk med forsinkelse, og en file://-side som lastes på nytt med en gang, kan lese gamle verdier. Skal en test sende noe over en omlasting (datoforskyvning, en lagring), bruk `window.name`, som `streaktest.py` gjør.
   - Klikk telefonknapper med `document.querySelector('[data-pa=...]').click()`.
   - Test effekter med bestanden nullstilt (`S.stock = initStock()`) mellom kjøringer, ellers tømmer den første kjøringen feltet.
 
