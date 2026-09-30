@@ -7,7 +7,7 @@ Utkast til godkjenning · Sep 28, 2026 · @Jonas
 Fiskerisystemet skal gi et realistisk kystfiske fra Senja for en båt i åpen gruppe, bygget på faktiske tall for 2025–2026. Spilleren starter i Finnsnes med en 5,8 m skiff, altså i lengdegruppen under 8 meter, og fisker med juksa.
 
 - **Med i første versjon:** fersk fisk levert til mottak i Troms. Torsk, hyse og sei er hovedarter, og lange, brosme, lyr, uer og kveite er sekundærarter og bifangst.
-- **Utenfor første versjon:** frossen fisk og havflåten, trål og not, reker, krabbe og hummer.
+- **Utenfor første versjon:** frossen fisk og havflåten, trål og not, reker og hummer. Taskekrabbe med teiner kom med redskapsrunden 30.09.2026.
 - **Alle tall er startverdier** som justeres i spilltesting.
 
 | Kilde | Hva vi bruker den til |
@@ -178,7 +178,7 @@ Fangsten regnes ut per time for hver art og kalibreres slik at en god skreidag m
 \text{fangst per time} = \text{grunnrate} \times \text{tilgjengelighet} \times \text{habitat} \times \text{felt} \times \text{vær} \times \text{innsats} \times \text{dyktighet} \times \text{tilfeldighet}
 ```
 
-- **Grunnrate:** Per redskap og art. Juksa fanger torsk, sei, lyr og litt hyse. Line og garn kommer senere.
+- **Grunnrate:** Per redskap og art. Juksa fanger torsk, sei, lyr og litt hyse. Line tar mest hyse (hyseline) eller lange, brosme og kveite (bankline), garn mest torsk, sei og lyr, og teiner taskekrabbe (`SELQ` i `10-gear.js`).
 - **Tilgjengelighet:** Månedsindeksen fra sesongtabellen.
 - **Habitat:** Dybden må passe artens dybdeområde. Kanter og skråninger gir mer fisk, og eksponering vektes per art. Vi bygger på dybde-, skrånings- og eksponeringsdataene som allerede er i spillet.
 - **Felt:** De navngitte feltene gir ekstra fisk, og skreien samles der i januar–april.
@@ -246,7 +246,7 @@ Seks av sju spørsmål er avklart, og det som gjenstår påvirker ikke startbåt
 - [x] Dagsfangst: kalibreres mot årsfangstene per båt i regionen, se fangstmodellen.
 - [x] Dynamiske minstepriser for torsk, hyse og sei: lagt inn fra Råfisklagets tabeller gjeldende fra 21. september 2026.
 - [x] Alder: spilleren har ingen alder, så alderstillegget er ikke med.
-- [x] Redskap: fiskestang, så juksa, så garn eller line etter spillerens valg.
+- [x] Redskap: fiskestang, så juksa, så garn, line og teiner (bygget 30.09.2026, se overleveringen kapittel 9).
 - [x] Pris på lukket gruppe: foreløpig 3–5 millioner kr, se progresjonen.
 - [x] Fjordlinjer rundt Senja: lagt inn under kvoter og regulering, med reglene fra høstingsforskriften kapittel VI.
 - [ ] Kvoteendringer i 2026: forskriften ble endret seks ganger fra februar til mai, og maksimalkvotefisket i åpen gruppe ble stoppet 16. april. Garantert torsk for 8–9,99 m må avklares, 4,2 eller 3,2 tonn.

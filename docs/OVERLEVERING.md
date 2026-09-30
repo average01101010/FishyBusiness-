@@ -100,7 +100,9 @@ Skrevet 29.09.2026 ved flytting fra claude.ai-chat til Claude Code. Dokumentet s
 - *Håndjuksa med pilk og fire markkroker:* 1 900 kr, effekt 1,0.
 - *Juksamaskin:* 34 000 kr, effekt 1,3 hver. Én person passer tre.
 - *Kveiteutstyr:* stor pilk, kraftig snøre og gaff, 2 490 kr.
-- *Senere:* garn eller line etter spillerens valg, deretter teiner.
+- *Garn, line og teiner:* passivt redskap som står i sjøen mens båten er borte. Se «Redskap i sjøen» i kapittel 9.
+- *Halere* (`EQUIP`): elektrisk haler 38 000 kr (skiff og snekke, line og små teiner), linehaler 68 000, garnhaler 95 000 og teinehaler 58 000 (snekke og større). Uten haler trekkes garn og line for hånd og tar 2–2,5 ganger så lang tid. Store teiner kan ikke trekkes for hånd.
+- *Plass til redskap* (`gearMax` i `VESSELS`): skiff 6 garn / 4 stamper / 20 teiner, snekke 15 / 10 / 50, sjark 40 / 24 / 150, sjarkny 60 / 30 / 200.
 
 Mister du juksa, fiskes det videre med stang. `motor90` er et utstyrsvalg for skiffen (30 kn).
 
@@ -327,6 +329,13 @@ Mister du juksa, fiskes det videre med stang. `motor90` er et utstyrsvalg for sk
 | Tema | Kilde | Hovedpunkter |
 |---|---|---|
 | Kvoter nord for 62° N | J-30-2026 (endret flere ganger i 2026) | Se 5.5. Stopp 16.4.2026 |
+| Maskevidde i torskegarn | Maskeviddeforskriften (Lovdata 1989-10-10-1095) | Minst 156 mm nord for 62° N. Spillet selger 156, 180 og 200 mm |
+| Fjordlinja og redskap | Høstingsforskriften kap. VI | Innenfor: høyst 80 torskegarn og 5 000 kroker, ikke snurrevad, ikke fartøy på 15 m eller mer. Håndheves når du setter redskap |
+| Røkting | Høstingsforskriften kap. V | Garn og line for kveite og breiflabb minst hver 4. dag. Hvert fartøy røkter egne teiner |
+| Trål | Høstingsforskriften kap. XIII | Forbudt innenfor 12 nm, med unntak. Ikke i spillet ennå |
+| Tapt redskap | Fiskeridirektoratet, «Meld tapt redskap» | Meldes til Kystvakten med type, mengde og posisjon |
+| Taskekrabbe | Høstingsforskriften kap. X; HI 2023–24; Råfisklaget rundskriv 8/2025 | Minst 13 cm skallbredde nord for 59°30'. Mye krabbe sør for Senja. Pris etter hann/hunn med hele klør (kronetallene ikke hentet) |
+| Line | Store norske leksikon, «line» | Ca. 300 kroker per stamp bankline og 700 hyseline. Snøreline står 3–4 t, annen line over natta |
 | Deltakelse | Deltakerforskriften 2025/2026 (Lovdata) | Eier med ≥ 50 % i båt i lukket gruppe gjør at andre båter ikke kan være i åpen gruppe. Eier med båt i åpen gruppe kan ikke ha flere der |
 | Eier om bord | Fiskeridirektoratets høringsnotat 26.03.2026 | I åpen gruppe må eieren selv være høvedsmann om bord (unntak ved sykdom, graviditet med mer) |
 | Én båt | NFD pressemelding 19.12.2025 | «Ein person, ein båt, ein kvote» |
@@ -513,6 +522,53 @@ Tatoveringene er belønninger som kommer av seg selv, med en melding når du har
 - **Tempo:** En fiskedag er 20–40 nm, så den første svalen kommer etter 150–250 fiskedager. Tallene justeres i spilltesting.
 - **Kilder for betydningene:** US Navy History «Sailors' Tattoos», One Ocean Expedition om svalen og The Bermudian «Vintage Sailor Tattoos and Their Meanings».
 
+### Redskap i sjøen: garn, line og teiner (R1–R7, ferdig 30.09.2026)
+
+Jonas' valg: alle tre kystredskapene i samme runde, ståtid for line som avveiing, ekte krabberegler, og egning både i egnebua og av mannskapet. Snurrevad, trål og ringnot kommer senere med større båter, lisenser og nye farvann (12 nm fra grunnlinja ligger utenfor kartet).
+
+- **Filer:**
+  - `src/js/core/10-gear.js`: redskapstabellene, kjøp, regler, setting og trekking, ståtid, vær, bøting, egning og driftsplanens stasjoner.
+  - `src/js/ui/10-gear-ui.js`: handlingslinja, fiskepanelet, blåsene i kartet og redskapsvalget i ruta.
+  - Telefonappen «Redskap» ligger i `05-phone.js`, og 3D-delen i `view3d.js` (`buildGear`, `drawGearSea`, `drawGearOp`).
+- **Tilstand:**
+  - `S.pgear` er per båt (i `VKEYS`): garnlenker `{id, mesh, n, cond}`, stamper `{n, baited}` per linetype, teiner per størrelse, agn i kg, blåsesett og det som ligger på land (egnebu, bøteri).
+  - `S.sets` er for hele rederiet: redskap i sjøen `{id, vid, kind, a, b, n, tSet, acc, dead, lost, heavy, …}`, slik at kartet og 3D tegner alle båtenes blåser.
+  - `S.cstk` er et eget bestandslag for krabbe.
+- **Arbeidet på sjøen:** Setting og trekking er `b.gop` under status `fishing`, så sløying, hvileregler, automatisk retur og pausen når bløggekaret er fullt virker som før. Båten går langs strengen mens den setter eller trekker.
+  - Setting tar ca. 0,8 min per garn, 5 min per stamp og 0,9 min per teine.
+  - Trekking tar ca. 4 min per garn, 25 min per stamp hyseline og 1,2 min per teine med haler.
+  - Mannskapet og ferdighetene (`gear.garn`, `gear.line`, `gear.teiner`) gjør det raskere.
+- **Ståtid** (`soakHour`, hver time):
+  - *Line:* agnet vaskes ut (τ 10 t), krokene fylles, og marfloen tar 7 %/t etter 20–28 t. Fisken lever de første 5 timene (E-kvalitet og krokpremie), så faller friskheten.
+  - *Garn:* fyller seg, og fisken dør i garnet. Friskheten starter på 84 og faller raskere i varmt vann (`SST`). Maskevidden styrer størrelsen (lengde ≈ 0,40 × maske).
+  - *Teiner:* halve fangsten etter ca. 20 t, og krabben dør etter 48 t.
+  - Selektiviteten per redskap og art står i `SELQ`.
+- **Vær og røkting:**
+  - Tap og skade per time øker kraftig over 2,5 m sjø. Tung dregg holder bedre.
+  - Etter to døgn kommer et varsel, og etter fire døgn en påminnelse fra Fiskeridirektoratet.
+  - Tapt redskap gir melding og varsel til du melder det.
+- **Slitasje og bøting:**
+  - Garna slites ca. 5 % per trekk, mer med stor fangst, krabbe og sjø. Under 25 % går de i filler.
+  - Du bøter selv i havn (en jobb), eller leverer til bøteriet i Finnsnes (180 kr per garn per 10 %, klart etter et døgn).
+- **Egning:**
+  - Egnebua ved mottakene (antatt) tar 500 kr per stamp hyseline og 300 for bankline, pluss agn, og er klar etter 3 t pluss 20 min per stamp.
+  - Egen egning går med ca. 560 kroker per time per person.
+- **Krabbe:**
+  - Holdes levende, sløyes ikke og ises ikke.
+  - Sorteres ved trekking. «Sorter nøye» sender småkrabbe og rognkrabbe ut igjen.
+  - Slurv gir inndragning og gebyr (2 000 kr + 100 kr per krabbe, plassholder), og 10 % trekk for rognkrabbe.
+  - Krabbe har ingen kvote og teller ikke i ferskfiskordningen (antakelse).
+- **Driftsplan:** Et veipunkt med redskap blir en stasjon: trekk og sett ut igjen langs samme strek, sett nytt om ingenting står der, og ta alt med hjem ved kuling innen 36 t.
+  - Garn krever to om bord.
+  - Line går til egnebua etter levering.
+  - Teiner er en lovlig inntekt for en båt i åpen gruppe med ansatt skipper.
+- **Kalibrering (startverdier):**
+  - Hyseline 12 t i februar på et godt hysested: ca. 110 kg per stamp, 67 % hyse.
+  - Garn 180 mm 20 t i mars vest av Gryllefjord: ca. 30 kg per garn.
+  - Store teiner 24 t i september sør på Senja: ca. 1,5 kg per teine.
+  - En dag med håndjuksa samme sted: ca. 430 kg for én person.
+- **Priser (startverdier):** garn 1 500 kr, stamp hyseline 2 100 og bankline 1 700, teine 550/850, blåsesett 2 500, tung dregg 1 500, agn 18 kr/kg.
+
 ### Fase 4: Flåten i kart og 3D
 
 Egne båter vises med egne symboler i kartplotteren, og du kan trykke for å følge. Båter i nærheten vises i 3D.
@@ -523,9 +579,16 @@ Egne båter vises med egne symboler i kartplotteren, og du kan trykke for å fø
 
 ### Senere
 
-Større fartøyklasser, line, garn, snurrevad og teiner, egne anlegg og nye regioner.
+Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farvann utenfor 12 nm), egne anlegg og nye regioner.
 
 ## 10. Kjente problemer og åpne spørsmål
+
+- **Redskap, åpne punkter:**
+  - Minsteprisene for taskekrabbe (Råfisklaget, rundskriv 8/2025) er ikke hentet, fordi siden er blokkert herfra. Hunn 17 og hann 14 kr/kg er plassholdere.
+  - Hvilke havner som har egnebu, og hva egning koster, er antakelser.
+  - Gebyret for småkrabbe er en plassholder.
+  - Kvotetillegg for landegnet line er ikke bekreftet og ikke bygget inn.
+  - NPC-båtene har ikke egne blåser ennå.
 
 - **Garantert torsk for 8–9,99 m:** 4,2 t i forskriften og 3,2 t i departementets rapport. Spillet bruker forskriften.
 - **Minstepriser for andre arter etter 21.09:** Rundskriv 13/2026 er ikke hentet, så lyr og de andre bygger på rundskriv 7/2026.
@@ -561,6 +624,20 @@ Større fartøyklasser, line, garn, snurrevad og teiner, egne anlegg og nye regi
   - `tattest.py`: tatoveringene. Nautiske mil og trygge turer bare med deg om bord, grunnstøting og slep, alle kravene, de låste og appen.
   - `loretest.py`: overtroen. Fredagsavreise, at samme fortelling ikke gjentas, omdøping, mastemynt, fortellinger på sjøen og på puben, uendret humør og appen «Sjømann».
   - `decktest.py`: arbeidet på dekk. Bløggekaret, sløyefart, stopp når karet er fullt, én mann mot to, «ta unna før du går» og kvalitetstapet.
+  - `geartest.py`: redskap i sjøen. Den har 27 sjekker:
+    - kjøp i Redskap-appen etter plassen om bord
+    - to om bord for garn, og grensene innenfor fjordlinja
+    - strengen mellom blåsene
+    - ståtidskurvene for line, garn og teiner, og maskevidden
+    - trekking inn i dekksarbeidet
+    - krabbesortering med gebyr og trekk
+    - tap i storm og melding til Kystvakten
+    - påminnelser, slitasje, bøting og egning
+    - driftsplanens stasjoner
+    - lagring, blåser i kartet og 3D
+    - kalibreringen
+
+    `Math.random` er seedet, så kjøringene gjentar seg.
   - `bunkertest.py`: bunkringen. Forhaling til bunkerskaia og tilbake, pumpefart og betaling, avgang som venter, Finnsnes, og i 3D stasjonene, forhalingen og telleren.
   - `landtest.py`: leveringen. Lossetid, kasser og kar, avgang som venter, isrenna, og i 3D at kroken står over lasten på dekk og over losseplassen og at trucken rekker siste tur.
   - `fleet3test.py`: fase 3. Varsler, båtvelgeren, inntekt per båt og service per båt.
