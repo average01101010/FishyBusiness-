@@ -57,10 +57,10 @@ function renderActs(){
     if (b.land) stp(landText(true)); if (b.shift || b.fueling) stp(quayText(true));
     if (!busy && p.mottak && tot > 0.5) h.push('<button class="pri" data-act="sell">' + L('Lever ', 'Land ') + fmt(tot, 0) + ' kg</button>');
     if (!busy && p.fuel && BOAT.fuelCap - b.fuel > 0.5) h.push('<button data-act="fuel">' + (hasBunker(p.id) && berthKind(b) !== 'bunker' ? LS('Fyll drivstoff ved bunkerskaia', 'Refuel at the bunker quay', 'Drivstoff', 'Fuel') : LS('Fyll drivstoff', 'Refuel', 'Drivstoff', 'Fuel')) + '</button>');
-    if (!b.shift && !(b.land && berthKind(b) !== 'main') && p.ice && b.ice < BOAT.iceCap - 1) h.push('<button data-act="ice">' + LS('Kjøp is', 'Buy ice', 'Is', 'Ice') + '</button>');
-    if (!b.gear) h.push('<button data-act="gear">' + LS('Ny juksa', 'New jig line', 'Juksa', 'Jig') + '</button>');
+    { const kg = Math.min(50, shopIceRoom()), c = kr(Math.round(kg * shopIceKr()));
+      if (!b.shift && !(b.land && berthKind(b) !== 'main') && kg >= 1) h.push('<button data-act="ice" data-kg="' + kg + '">' + LS('Is ' + kg + ' kg · ' + c, 'Ice ' + kg + ' kg · ' + c, 'Is ' + kg + ' kg', 'Ice ' + kg + ' kg') + '</button>'); }
+    h.push('<button data-ui="fiske"' + (b.gear ? '' : ' class="pri"') + '>' + LS('Fiskeutstyr', 'Tackle shop', 'Butikk', 'Shop') + '</button>');
     if (pubOpen(S.t / 60) && S.pubE !== pubEvening(S.t / 60)) h.push('<button data-act="pub">🍺 ' + LS('Pubrunde', 'Pub round', 'Pub', 'Pub') + '</button>');
-    if (!b.kgear && (p.fuel || p.ice)) h.push('<button data-act="kgear">' + LS('Kveiteutstyr (' + kr(PRICE.kgear) + ')', 'Halibut gear (' + kr(PRICE.kgear) + ')', 'Kveiteutstyr', 'Halibut gear') + '</button>');
     h.push(gearActs(LS));
     h.push('<button' + (tot > 0.5 && p.mottak || busy ? '' : ' class="pri"') + ' data-ui="plot">' + LS('Planlegg tur', 'Plan a trip', 'Planlegg', 'Plan') + '</button>');
   } else if (b.status === 'unmooring'){
@@ -88,7 +88,7 @@ function renderActs(){
 }
 $('actbar').addEventListener('click', e => {
   const el = e.target.closest('button'); if (!el || el.disabled) return;
-  if (el.dataset.ui === 'plot') openPlotter(); else if (el.dataset.ui === 'rescue') PHONE.open('redning'); else if (el.dataset.ui === 'redskap') PHONE.open('redskap'); else if (el.dataset.ui === 'verksted') PHONE.open('verksted'); else if (el.dataset.act) doAct(el);
+  const ui = el.dataset.ui; if (ui === 'plot') openPlotter(); else if (ui === 'rescue') PHONE.open('redning'); else if (ui) PHONE.open(ui); else if (el.dataset.act) doAct(el);
 });
 hooks.onView = on => { setBodyView(on); if (on) $('loader').classList.add('gone'); $('view3d').textContent = on ? t('view_chart') : '3D'; if (!on){ tab = 'route'; renderPanel(); applyView(); renderStatic(); renderDyn(); } $('legend').hidden = !S.settings.plotter || on; updateMapButtons(); panelDirty = true; };
 $('modeBtn').onclick = () => {

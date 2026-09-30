@@ -47,7 +47,7 @@ const VESSELS = {
   sjarkny:{name:{no:'Ny sjark 10,99 m, 400 hk', en:'New 10.99 m sjark, 400 hp'}, draft:1.8, len:11, vmax:22, fuelCap:1500, iceCap:2000, holdCap:6000, crewMax:3, diesel:true, fuelK:5, planing:true, risk:[2.4, 3.8, 15, 19], sea:0.14, price:6400000, jukseMax:6, svcH:300, svcCost:22000, gearMax:{garn:60, stamp:30, teine:200}, isNew:true}
 };
 const BOAT = Object.assign({}, VESSELS.skiff);
-const PRICE = {fuel:23.9, diesel:14.5, ice:1.5, gear:1900, kgear:2490, tow:4500, rescue:6000, member:1250};
+const PRICE = {fuel:23.9, diesel:14.5, ice:1.5, iceBag:2.0, gear:1900, kgear:2490, tow:4500, rescue:6000, member:1250};
 const fuelPrice = () => BOAT.diesel ? PRICE.diesel : PRICE.fuel;
 const EQUIP = {
   vhf:{price:6500, name:{no:'VHF-radio', en:'VHF radio'}, desc:{no:'Kulingvarsel fra kystradioen og nødanrop uten mobildekning.', en:'Gale warnings from coast radio and distress calls without mobile coverage.'}},

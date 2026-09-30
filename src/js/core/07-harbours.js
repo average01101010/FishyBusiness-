@@ -190,13 +190,45 @@ function quayMinute(){
     log('Fortøyd ved ' + (s.to === 'bunker' ? 'bunkerskaia' : 'mottakskaia') + ' i ' + pt.name + '.', 'Made fast at the ' + (s.to === 'bunker' ? 'bunker quay' : 'plant\'s quay') + ' in ' + pt.name + '.');
     if (a === 'fuel' || a === 'fuelops') startFueling(a === 'fuelops');
     else if (a === 'land' || a === 'landops') startLanding(a === 'landops');
-    else if (a === 'ice') buyIce(50);
+    else if (a === 'ice'){ buyIce(b.iceKg || 50, b.iceFree); b.iceKg = b.iceFree = null; }
   }
 }
 // ice comes down the plant's chute, so the boat has to lie at the plant's quay
-function buyIce(kg){
+function buyIce(kg, free){
   const b = S.boat, pt = portById(b.port); if (b.status !== 'port' || !pt || !pt.ice) return false;
-  if (berthKind(b) !== 'main') return startShift('main', 'ice');
-  kg = Math.min(kg, BOAT.iceCap - b.ice); const c = kg * PRICE.ice; if (kg <= 0 || c > S.cash) return false;
-  b.ice += kg; S.cash -= c; S.stats.costs += c; iceChute(kg); return true;
+  if (berthKind(b) !== 'main'){ b.iceKg = kg; b.iceFree = !!free; return startShift('main', 'ice'); }
+  kg = Math.round(Math.min(kg, BOAT.iceCap - b.ice)); const c = free ? 0 : Math.round(kg * PRICE.ice); if (kg <= 0 || c > S.cash) return false;
+  b.ice += kg; S.cash -= c; S.stats.costs += c; iceChute(kg);
+  log('Kjøpte ' + kg + ' kg is fra isrenna for ' + kr(c) + '.', 'Bought ' + kg + ' kg of ice from the chute for ' + kr(c) + '.');
+  return true;
+}
+// ---------- the tackle shop on the quay, in every harbour: hand jig, ice and halibut gear ----------
+// Where there is no plant (Finnsnes) the shop sells bagged ice and carries it aboard; elsewhere the ice comes down the plant's chute.
+// PRICE.iceBag is our assumption: dearer than chute ice, not checked against a price list.
+const shopIceKr = () => { const pt = portById(S.boat.port); return pt && pt.ice ? PRICE.ice : PRICE.iceBag; };
+const shopIceRoom = () => Math.max(0, Math.round(BOAT.iceCap - S.boat.ice));
+// buys one thing; returns null, or why not as [no, en]. free: the first-trip tutorial hands it out
+function shopBuy(k, kg, free){
+  const b = S.boat, pt = portById(b.port), pay = c => { S.cash -= c; S.stats.costs += c; };
+  if (b.status !== 'port' || !pt) return ['Butikken er på land. Handle når båten ligger i havn.', 'The shop is ashore. Buy when the boat is in port.'];
+  if (k === 'jig' || k === 'kgear'){
+    const have = k === 'jig' ? b.gear : b.kgear, c = free ? 0 : k === 'jig' ? PRICE.gear : PRICE.kgear;
+    if (have) return ['Det har du allerede om bord.', 'You already have that aboard.'];
+    if (c > S.cash) return ['Du har ikke nok penger.', 'Not enough money.'];
+    if (k === 'jig'){ b.gear = true; pay(c); log('Kjøpte håndjuksa med pilk og markkroker for ' + kr(c) + '.', 'Bought a hand jig with pilk and fly hooks for ' + kr(c) + '.'); }
+    else { b.kgear = true; pay(c); log('Kjøpte kveiteutstyr for ' + kr(c) + ': stor pilk, kraftig snøre og gaff.', 'Bought halibut gear for ' + kr(c) + ': big pilk, heavy line and gaff.'); }
+    return null;
+  }
+  if (k === 'ice'){
+    kg = Math.round(Math.min(kg, shopIceRoom())); if (kg < 1) return ['Iskassa er full.', 'The ice box is full.'];
+    const c = free ? 0 : Math.round(kg * shopIceKr()); if (c > S.cash) return ['Du har ikke nok penger.', 'Not enough money.'];
+    if (pt.ice){
+      if (b.shift || b.land && berthKind(b) !== 'main') return ['Vent til båten ligger ved mottakskaia.', 'Wait until the boat lies at the plant\'s quay.'];
+      return buyIce(kg, free) ? null : ['Isrenna er opptatt. Prøv igjen litt senere.', 'The ice chute is busy. Try again a little later.'];
+    }
+    b.ice += kg; pay(c);
+    log('Kjøpte ' + kg + ' kg is i sekker for ' + kr(c) + '. Butikken bar den om bord.', 'Bought ' + kg + ' kg of bagged ice for ' + kr(c) + '. The shop carried it aboard.');
+    return null;
+  }
+  return ['Ukjent vare.', 'Unknown item.'];
 }

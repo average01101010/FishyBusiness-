@@ -21,12 +21,12 @@ async def main():
             const b = S.boat; b.status = 'port'; b.port = q.id; b.pos = {...q.p}; b.ice = 0; b.fuel = 10; S.plan = null; b.berth = 'main'; b.shift = b.fueling = b.land = b.after = null;
             S.hold = [{sp:'torsk', cls:2, kg:100, n:25, bled:true, iced:true, hr:0, fresh:95, gut:false, hook:true}];
             renderActs(); const a = acts();
-            doAct({dataset:{act:'ice'}, disabled:false}); const ice = b.ice > 0;
+            doAct({dataset:{act:'ice'}, disabled:false}); const ice = b.ice > 0, chute = ice && /isrenna/.test(S.log[S.log.length - 1].no);
             // filling takes her to the bunker quay and runs the pump: give it time
             doAct({dataset:{act:'fuel'}, disabled:false}); for (let i = 0; i < 40 && (b.shift || b.fueling); i++) step(); const fuel = b.fuel > 10;
             if (b.berth !== 'main'){ b.berth = 'main'; b.shift = b.fueling = b.after = null; }
             let sold = false; if (q.mottak){ sold = a.includes('Lever '); sell(); sold = sold && S.lastSale.port === q.id && S.hold.length === 0; }
-            R.ports[q.id] = {water:!isLand(q.p), iceBtn:a.includes('Kjøp is'), fuelBtn:a.includes('Fyll drivstoff'), ice, fuel, sold};
+            R.ports[q.id] = {water:!isLand(q.p), iceBtn:a.includes('Is 50 kg'), fuelBtn:a.includes('Fyll drivstoff'), ice, chute, fuel, sold};
           }
           // a standing plan restocks only what the harbour sells
           const b = S.boat; b.port = 'frovag'; b.fuel = 10; b.ice = 0; autoRestock(); R.opsFrovag = {fuel:b.fuel, ice:b.ice};
@@ -36,8 +36,8 @@ async def main():
         print(json.dumps(r, ensure_ascii=False))
         P = r['ports']
         print(ok(all(P[k]['water'] for k in P)), 'every harbour berth is in the water')
-        print(ok(all(P[k]['sold'] and P[k]['iceBtn'] and P[k]['ice'] for k in PLANTS)), 'the eight plants buy fish and sell ice')
-        print(ok(not P['finnsnes']['iceBtn'] and not P['finnsnes']['ice']), 'no ice in Finnsnes')
+        print(ok(all(P[k]['sold'] and P[k]['iceBtn'] and P[k]['ice'] and P[k]['chute'] for k in PLANTS)), 'the eight plants buy fish and sell ice from the chute')
+        print(ok(P['finnsnes']['iceBtn'] and P['finnsnes']['ice'] and not P['finnsnes']['chute']), 'Finnsnes has no chute: the tackle shop sells bagged ice')
         print(ok(all(P[k]['fuelBtn'] == (k in FUEL) and P[k]['fuel'] == (k in FUEL) for k in P)), 'fuel only at Finnsnes and the bunker quays in Husøy, Senjahopen, Gryllefjord, Botnhamn and Torsken')
         print(ok(r['opsFrovag']['fuel'] == 10 and r['opsFrovag']['ice'] > 0 and r['opsFinnsnes']['fuel'] > 10 and r['opsFinnsnes']['ice'] == 0), 'a standing plan restocks only what the harbour sells')
         print(ok(sorted(r['customers']) == ['brensholmen', 'frovag', 'sommaroy', 'torsken']), 'the new plants post orders')

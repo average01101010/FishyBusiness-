@@ -26,7 +26,6 @@ function doAct(el){
   else if (act === 'rod'){ window.ROD.toggle(); renderActs(); return; }
   else if (act === 'pub'){ window.PUBW.open(); return; }
   else if (act === 'target'){ if (kveiteClosed(S.t / 60)){ S.target = 'mix'; toast(L('Kveita er fredet fra 20. desember til og med 20. april.', 'Halibut is closed from 20 December to 20 April.')); } else S.target = S.target === 'kveite' ? 'mix' : 'kveite'; renderActs(); return; }
-  else if (act === 'kgear'){ if (S.cash < PRICE.kgear){ toast(t('no_cash')); return; } S.cash -= PRICE.kgear; S.stats.costs += PRICE.kgear; b.kgear = true; log('Kjøpte kveiteutstyr: stor pilk, kraftig snøre og gaff.', 'Bought halibut gear: big pilk, heavy line and gaff.'); }
   else if (act === 'opssave'){
     const last = S.draft[S.draft.length - 1]; if (!last || !last.port || b.status !== 'port'){ toast(S.lang === 'no' ? 'Planen må starte i havn og slutte i en havn.' : 'The plan must start in port and end in a port.'); return; }
     const hours = S.draft.reduce((a, w) => a + (w.fish || 0), 0) + estimate().hours;
@@ -44,8 +43,8 @@ function doAct(el){
   else if (act === 'deckgo'){ b.deckStop = false; b.deckEnd = null; }
   else if (act === 'sell') startLanding(false);
   else if (act === 'fuel'){ if (S.cash <= 0){ toast(t('no_cash')); return; } startFueling(false); }
-  else if (act === 'ice'){ if (50 * PRICE.ice > S.cash){ toast(t('no_cash')); return; } buyIce(50); }
-  else if (act === 'gear'){ if (PRICE.gear > S.cash){ toast(t('no_cash')); return; } b.gear = true; S.cash -= PRICE.gear; S.stats.costs += PRICE.gear; }
+  else if (act === 'ice'){ const why = shopBuy('ice', +el.dataset.kg || 50); if (why){ toast(L(why[0], why[1])); return; } }
+  else if (act === 'gear' || act === 'kgear'){ PHONE.open('fiske'); return; }
   else if (act === 'reset'){ if (confirm(t('reset_q'))){ const lang = S.lang; S = newState(); S.lang = lang; S.intro = true; S.draft = []; ensureFleet(); save(); refreshAll(); } return; }
   renderPanel(); renderDyn(); renderHud(); renderClock(); renderActs(); save();
 }
@@ -70,7 +69,7 @@ panel.addEventListener('change', panelChange);
 function sell(){
   const b = S.boat, port = portById(b.port); if (!port || !port.mottak) return;
   const H = S.t / 60, q = quotaState(), lines = {}, extra = [], acc = access(), kgOf = sp => S.hold.filter(x => x.sp === sp).reduce((a, x) => a + x.kg, 0);
-  let total = 0, kg = 0;
+  let kg = 0;
   const wk = weekOfH(H); if (q.ffW !== wk){ q.ffW = wk; q.ffTot = 0; q.ffCod = 0; }
   // the fresh-fish allowance counts fish only (assumed: shellfish do not count)
   const saleKg = S.hold.reduce((a, x) => a + (SPECIES[x.sp].shell || (x.sp === 'hyse' && x.cls === 2) ? 0 : grade(x.fresh) === 'V' ? 0 : x.kg), 0);
@@ -88,62 +87,67 @@ function sell(){
     codFF = Math.min(codKg, ffAllow); codQ = Math.min(codKg - codFF, codRoom(H)); codConf = codKg - codFF - codQ;
     if (codKg > 0 && codConf > 0) confBy.torsk = codConf / codKg;
   }
-  let confKr = 0, confKg = 0, ordKr = 0, crabSmall = 0, crabSmallN = 0, crabRoe = 0;
+  // The landing note lists each lot at its full value and takes what is confiscated off in rows of its own; every row is whole
+  // kroner and the total is the sum of the rows, so the note adds up and the cash gets exactly the total less the crew's share.
+  let confKr = 0, confKg = 0, crabKr = 0, ordKr = 0, crabSmall = 0, crabSmallN = 0, crabRoe = 0;
   for (const x of S.hold){
     const sp = x.sp, sd = SPECIES[sp], c = x.cls != null ? x.cls : sd.ref, g = grade(x.fresh);
     let ppk = g === 'V' ? 1 : clsPrice(port, sp, c, H, x.hook) * GM[g];
     if (x.gut && (sp === 'hyse' || sp === 'sei')) ppk += 0.30;           // no gutting fee deducted
-    let v = x.kg * ppk;
+    let v = x.kg * ppk, gross = v;
     // brown crab under 13 cm is confiscated; berried crab is worth nothing and tells the plant the sorting was poor
-    if (sp === 'krabbe' && c === 2){ const w = x.kg * clsPrice(port, sp, 1, H, false); confKr += w; confKg += x.kg; crabSmall += x.kg; crabSmallN += x.n || 1; v = 0; }
-    if (sp === 'krabbe' && c === 3){ crabRoe += x.kg; v = 0; }
+    if (sp === 'krabbe' && c === 2){ gross = x.kg * clsPrice(port, sp, 1, H, false); crabKr += gross; crabSmall += x.kg; crabSmallN += x.n || 1; v = 0; }
+    if (sp === 'krabbe' && c === 3){ crabRoe += x.kg; v = gross = 0; }
     const cs = confBy[sp] || 0; if (cs > 0){ confKr += v * cs; confKg += x.kg * cs; v *= 1 - cs; }
     // orders for this harbour take matching fish first, at their premium (confiscated fish does not count)
     const keptKg = x.kg * (1 - cs);
-    for (const o of ordState().active){ if (o.port !== port.id || o.sp !== sp || o.left <= 0.01 || !gradeOk(g, o.q)) continue; const take = Math.min(keptKg - (x._used || 0), o.left); if (take <= 0.01) continue;
+    if (v > 0) for (const o of ordState().active){ if (o.port !== port.id || o.sp !== sp || o.left <= 0.01 || !gradeOk(g, o.q)) continue; const take = Math.min(keptKg - (x._used || 0), o.left); if (take <= 0.01) continue;
       x._used = (x._used || 0) + take; o.left -= take; const add = take / keptKg * v * o.prem; ordKr += add; o.saleKg = (o.saleKg || 0) + take; o.saleKr = (o.saleKr || 0) + add; }
     const k = sp + '|' + c + '|' + g + '|' + (x.gut ? 1 : 0);
-    lines[k] = lines[k] || {sp, c, g, gut:!!x.gut, kg:0, sum:0}; lines[k].kg += x.kg; lines[k].sum += v; total += v; kg += x.kg;
+    lines[k] = lines[k] || {sp, c, g, gut:!!x.gut, kg:0, sum:0}; lines[k].kg += x.kg; lines[k].sum += gross; kg += x.kg;
     // liver and roe from fish gutted on board
     if (x.gut && sd.liver){ const m = gDate(H).getUTCMonth(), roeF = sp === 'torsk' && m <= 3 ? 0.04 : 0.01;
       extra.push(['lever', x.kg * 0.05, sd.liver]); extra.push(['rogn', x.kg * roeF, sd.roe]); }
     S.market[port.id] = S.market[port.id] || {}; S.market[port.id][sp] = (S.market[port.id][sp] || 0) + x.kg;
   }
+  for (const r of Object.values(lines)) r.sum = Math.round(r.sum);
   // poor sorting: the plant takes 10 % off the whole lot of crab
-  let roeCut = 0; if (crabRoe > 0.01) for (const r of Object.values(lines)) if (r.sp === 'krabbe' && r.sum > 0){ const d = r.sum * 0.1; r.sum -= d; total -= d; roeCut += d; }
+  let roeCut = 0; if (crabRoe > 0.01) for (const r of Object.values(lines)) if (r.sp === 'krabbe' && r.c !== 2 && r.sum > 0) roeCut += r.sum * 0.1;
+  roeCut = Math.round(roeCut); confKr = Math.round(confKr); crabKr = Math.round(crabKr);
   // the daily login bonus: a share on top of the fish itself (not on order premiums, liver or roe); the crew shares in it
-  const stPct = streakPct(), fishKr = Object.values(lines).reduce((a, r) => a + r.sum, 0), stKr = stPct > 0 ? Math.round(fishKr * stPct / 100) : 0;
-  total += stKr;
+  const stPct = streakPct(), fishKr = Object.values(lines).reduce((a, r) => a + r.sum, 0) - confKr - crabKr - roeCut, stKr = stPct > 0 ? Math.round(fishKr * stPct / 100) : 0;
   // finished orders pay their bonus; the customer remembers
   const ordLines = []; { const O = ordState();
     for (const o of O.active.slice()){ if (!o.saleKg) continue; const c = CUSTOMERS.find(z => z.id === o.cust), done = o.left <= 0.5; let bonus = 0;
       if (done){ bonus = o.bonus; O.active.splice(O.active.indexOf(o), 1); O.done.unshift({...o, t:S.t}); O.done = O.done.slice(0, 10); S.rep[o.cust] = clamp(repOf(o.cust) + 8, 0, 100); msg(c.no, 'Takk for leveransen! Her er ' + kr(bonus) + ' ekstra for at alt kom i tide.', 'Thanks for the delivery! Here is ' + kr(bonus) + ' extra for having it all on time.'); }
       ordLines.push({cust:c.no, sp:o.sp, kg:o.saleKg, kr:o.saleKr, bonus, done, left:o.left}); ordKr += bonus; o.saleKg = 0; o.saleKr = 0; } }
-  total += ordKr;
-  let exKr = 0; const ex = {}; for (const [n, k2, pr] of extra){ ex[n] = ex[n] || {kg:0, sum:0}; ex[n].kg += k2; ex[n].sum += k2 * pr; exKr += k2 * pr; }
-  total += exKr;
+  ordKr = Math.round(ordKr);
+  const ex = {}; for (const [n, k2, pr] of extra){ ex[n] = ex[n] || {kg:0, sum:0}; ex[n].kg += k2; ex[n].sum += k2 * pr; }
+  let exKr = 0; for (const n in ex){ ex[n].sum = Math.round(ex[n].sum); exKr += ex[n].sum; }
+  const total = fishKr + stKr + ordKr + exKr;
   q.torsk += codQ; q.hyse += kgOf('hyse') * (1 - (confBy.hyse || 0)); q.sei += kgOf('sei') * (1 - (confBy.sei || 0)); q.byCod = (q.byCod || 0) + byCod;
-  if (acc !== 'none'){ q.ffTot += saleKg; q.ffCod += codFF; } q.conf += confKg; q.confKr += confKr;
+  if (acc !== 'none'){ q.ffTot += saleKg; q.ffCod += codFF; } q.conf += confKg + crabSmall; q.confKr += confKr + crabKr;
   const arr = Object.values(lines).sort((a, c) => ALLSP.indexOf(a.sp) - ALLSP.indexOf(c.sp) || a.c - c.c || 'EABXV'.indexOf(a.g) - 'EABXV'.indexOf(c.g));
   // lott goes to those who were aboard; a crew member given time off gets none for this trip
-  const aboardNow = crewAboard(), lott = aboardNow.reduce((a, c) => a + c.share, 0) * total;
+  const aboardNow = crewAboard(), lott = Math.round(aboardNow.reduce((a, c) => a + c.share, 0) * total);
   for (const c of aboardNow) c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, total * c.share]]);
   for (const c of S.crew) c.off = false;
   S.cash += total - lott; S.stats.revenue += total; S.stats.costs += lott; S.stats.kg += kg; S.hold = [];
   const fs = S.marks.length ? S.marks[S.marks.length - 1] : null, field = fieldCode(S.fsess || fs || b.pos);
-  S.sales.push({t:S.t, v:S.cur, port:port.id, kg:Math.round(kg), total:Math.round(total), sp:ALLSP.map(sp => [sp, Math.round(arr.filter(r => r.sp === sp).reduce((a, r) => a + r.kg, 0))]).filter(r => r[1] > 0)}); if (S.sales.length > 200) S.sales.shift();
-  if (lott > 0) log('Mannskapet fikk ' + Math.round(lott) + ' kr i lott.', 'The crew received NOK ' + Math.round(lott) + ' as their share.');
+  S.sales.push({t:S.t, v:S.cur, port:port.id, kg:Math.round(kg), total, sp:ALLSP.map(sp => [sp, Math.round(arr.filter(r => r.sp === sp).reduce((a, r) => a + r.kg, 0))]).filter(r => r[1] > 0)}); if (S.sales.length > 200) S.sales.shift();
+  if (lott > 0) log('Mannskapet fikk ' + kr(lott) + ' i lott.', 'The crew received ' + kr(lott) + ' as their share.');
   if (codFF > 0.5) log(Math.round(codFF) + ' kg torsk gikk på ferskfisktillegget.', Math.round(codFF) + ' kg of cod went on the fresh-fish allowance.');
   const vt = S.fleet && S.fleet.length > 1 ? '«' + S.boatName + '»: ' : '';
-  if (acc === 'none' && confKg > 0.5) msg('Norges Råfisklag', vt + 'Båten har ikke adgang til å fiske torsk, hyse og sei. Av disse kan bare 10 % av landingen være bifangst, og høyst ' + fmt(BYCATCH.cod / 1000, 0) + ' tonn torsk i året. ' + Math.round(confKg) + ' kg er inndratt, verdi ' + kr(Math.round(confKr)) + '.', vt + 'The boat has no access to fish cod, haddock and saithe. Only 10% of the landing may be bycatch of these, and at most ' + fmt(BYCATCH.cod / 1000, 0) + ' t of cod a year. ' + Math.round(confKg) + ' kg has been confiscated, worth ' + kr(Math.round(confKr)) + '.');
-  else if (codConf > 0.5) msg('Norges Råfisklag', vt + 'Du hadde ikke torskekvote igjen for ' + Math.round(codConf) + ' kg torsk. Verdien, ' + kr(Math.round(confKr)) + ', er inndratt.', vt + 'You had no cod quota left for ' + Math.round(codConf) + ' kg of cod. Its value, ' + kr(Math.round(confKr)) + ', has been confiscated.');
+  if (acc === 'none' && confKg > 0.5) msg('Norges Råfisklag', vt + 'Båten har ikke adgang til å fiske torsk, hyse og sei. Av disse kan bare 10 % av landingen være bifangst, og høyst ' + fmt(BYCATCH.cod / 1000, 0) + ' tonn torsk i året. ' + Math.round(confKg) + ' kg er inndratt, verdi ' + kr(confKr) + '.', vt + 'The boat has no access to fish cod, haddock and saithe. Only 10% of the landing may be bycatch of these, and at most ' + fmt(BYCATCH.cod / 1000, 0) + ' t of cod a year. ' + Math.round(confKg) + ' kg has been confiscated, worth ' + kr(confKr) + '.');
+  else if (codConf > 0.5) msg('Norges Råfisklag', vt + 'Du hadde ikke torskekvote igjen for ' + Math.round(codConf) + ' kg torsk. Verdien, ' + kr(confKr) + ', er inndratt.', vt + 'You had no cod quota left for ' + Math.round(codConf) + ' kg of cod. Its value, ' + kr(confKr) + ', has been confiscated.');
   // an undersized-crab landing is a breach of the minimum size (høstingsforskriften kap. X); the fee is a placeholder
   let crabFine = 0; if (crabSmall > 0.01){ crabFine = GFINE.crab + GFINE.perCrab * Math.round(crabSmallN); S.cash -= crabFine; S.stats.costs += crabFine; msg('Fiskeridirektoratet', vt + 'Landingen hadde ' + fmt(crabSmall, 1) + ' kg taskekrabbe under minstemålet på 13 cm. Krabben er inndratt, og du får et overtredelsesgebyr på ' + kr(crabFine) + '.', vt + 'The landing had ' + fmt(crabSmall, 1) + ' kg of brown crab under the 13 cm minimum size. The crab is confiscated and you are fined ' + kr(crabFine) + '.'); }
-  if (roeCut > 0.5) msg(port.name, 'Det var rognkrabbe i leveransen. Vi trekker 10 % på krabben, ' + kr(Math.round(roeCut)) + ', for dårlig sortering.', 'There was berried crab in the delivery. We take 10 % off the crab, ' + kr(Math.round(roeCut)) + ', for poor sorting.');
-  S.lastSale = {port:port.id, t:S.t, lines:arr, total, ex, confKg, confKr, ffKg:codFF, field, lott, ord:ordLines, acc, crabFine, roeCut, streak:{pct:stPct, kr:stKr}, gear:Object.keys(b.tripGear || {})}; b.tripGear = {};
+  if (roeCut > 0.5) msg(port.name, 'Det var rognkrabbe i leveransen. Vi trekker 10 % på krabben, ' + kr(roeCut) + ', for dårlig sortering.', 'There was berried crab in the delivery. We take 10 % off the crab, ' + kr(roeCut) + ', for poor sorting.');
+  // confKg and confKr count all that was confiscated (crab too); codKg and codKr are the cod, haddock and saithe rows on the note
+  S.lastSale = {port:port.id, t:S.t, lines:arr, total, ex, confKg:confKg + crabSmall, confKr:confKr + crabKr, codKg:confKg, codKr:confKr, crabKg:crabSmall, crabKr, ordKr, ffKg:codFF, field, lott, ord:ordLines, acc, crabFine, roeCut, streak:{pct:stPct, kr:stKr}, gear:Object.keys(b.tripGear || {})}; b.tripGear = {};
   tatLanding(port.id); checkTattoos();
   for (const x of S.hold) delete x._used;
-  log('Leverte ' + Math.round(kg) + ' kg i ' + port.name + ' for ' + Math.round(total) + ' kr.', 'Landed ' + Math.round(kg) + ' kg at ' + port.name + ' for NOK ' + Math.round(total) + '.');
+  log('Leverte ' + Math.round(kg) + ' kg i ' + port.name + ' for ' + kr(total) + '.', 'Landed ' + Math.round(kg) + ' kg at ' + port.name + ' for ' + kr(total) + '.');
 
 }
 

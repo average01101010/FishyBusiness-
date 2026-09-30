@@ -289,6 +289,7 @@ const G3 = (() => {
     LIGHTS = [];
     // piers, quays and breakwaters from OpenStreetMap, as listed in PIERBOX (the berths use the same boxes)
     for (const q of PIERBOX){
+      camSolid(q.x, q.z, q.w, q.l, q.ang, -3, q.bw ? 2.2 : QTOP);
       if (q.bw) m.box(q.x, -3, q.z, q.w, 5.2, q.l, [0.4, 0.41, 0.42], q.ang, [0.5, 0.5, 0.5]);
       else if (q.closed) m.box(q.x, -2.4, q.z, q.w, QTOP + 2.4, q.l, [0.5, 0.49, 0.46], q.ang, [0.6, 0.58, 0.54]);
       else if (q.made) m.box(q.x, -3, q.z, q.w, QTOP + 3, q.l, [0.52, 0.53, 0.5], q.ang, [0.6, 0.6, 0.58]);
@@ -307,16 +308,16 @@ const G3 = (() => {
           const u0 = q / steps, u1 = (q + 1) / steps, x0 = ax + (bx2 - ax) * u0, z0 = az + (bz2 - az) * u0, x1 = ax + (bx2 - ax) * u1, z1 = az + (bz2 - az) * u1;
           const s0 = cum[k] + segL * u0, s1 = cum[k] + segL * u1, y0 = yAt(s0), y1 = yAt(s1), ym = (y0 + y1) / 2, len = Math.hypot(x1 - x0, z1 - z0) + 0.4, ang = Math.atan2(x1 - x0, z1 - z0), pitch = Math.atan2(y1 - y0, len);
           const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, px = Math.cos(ang), pz = -Math.sin(ang);
-          m.box(cx, ym - 1.2, cz, wdt, 1.3, len, [0.64, 0.64, 0.62], ang, [0.42, 0.44, 0.46]);
+          m.box(cx, ym - 1.2, cz, wdt, 1.3, len, [0.64, 0.64, 0.62], ang, [0.42, 0.44, 0.46]); camSolid(cx, cz, wdt + 0.6, len, ang, ym - 1.2, ym + 1.1);
           for (const sd of [1, -1]) m.box(cx + px * sd * wdt / 2, ym + 0.1, cz + pz * sd * wdt / 2, 0.3, 1.0, len, [0.8, 0.8, 0.78], ang);
-          const mid = (s0 + s1) / 2; if (Math.floor(s0 / 70) !== Math.floor(s1 / 70) || (q === 0 && k === 0)){ const gy = terrH(cx, cz); if (ym - 1.2 - gy > 3) m.box(cx, Math.min(gy, 0) - 4, cz, Math.min(wdt * 0.6, 5), ym - 1.2 - (Math.min(gy, 0) - 4), 3, [0.6, 0.6, 0.58], ang); }
+          const mid = (s0 + s1) / 2; if (Math.floor(s0 / 70) !== Math.floor(s1 / 70) || (q === 0 && k === 0)){ const gy = terrH(cx, cz); if (ym - 1.2 - gy > 3){ m.box(cx, Math.min(gy, 0) - 4, cz, Math.min(wdt * 0.6, 5), ym - 1.2 - (Math.min(gy, 0) - 4), 3, [0.6, 0.6, 0.58], ang); camSolid(cx, cz, Math.min(wdt * 0.6, 5), 3, ang, Math.min(gy, 0) - 4, ym - 1.2); } }
         }
       }
     }
     // lighthouses, lights, beacons and buoys
     for (const mk of SEAMARKS.marks){
       const x = mk[0] * 1000, z = mk[1] * 1000, base = Math.max(terrH(x, z), 0.2), ty = mk[2], cat = mk[3];
-      if (ty === 'M'){ m.box(x, base, z, 3.4, 11, 3.4, [0.95, 0.95, 0.93], 0.3); m.box(x, base + 11, z, 3.6, 2.2, 3.6, [0.75, 0.1, 0.08], 0.3); m.box(x, base + 13.2, z, 2.2, 2.2, 2.2, [0.9, 0.92, 0.9], 0.3, [0.2, 0.2, 0.22]); }
+      if (ty === 'M'){ camSolid(x, z, 3.6, 3.6, 0.3, base, base + 15.4); m.box(x, base, z, 3.4, 11, 3.4, [0.95, 0.95, 0.93], 0.3); m.box(x, base + 11, z, 3.6, 2.2, 3.6, [0.75, 0.1, 0.08], 0.3); m.box(x, base + 13.2, z, 2.2, 2.2, 2.2, [0.9, 0.92, 0.9], 0.3, [0.2, 0.2, 0.22]); }
       else if (ty === 'm' || ty === 'P'){ m.box(x, base, z, 0.9, 4.2, 0.9, [0.94, 0.94, 0.92], 0); m.box(x, base + 4.2, z, 1.1, 0.9, 1.1, [0.8, 0.12, 0.1], 0); }
       else if (ty === 'D'){ m.box(x, base, z, 0.5, 4.5, 0.5, [0.08, 0.08, 0.08], 0); m.box(x, base + 2.2, z, 0.56, 0.9, 0.56, [0.75, 0.1, 0.08], 0); }
       else if (ty === 'L'){ m.box(x, base, z, 0.45, 4, 0.45, cat === 'starb' ? [0.1, 0.55, 0.2] : [0.8, 0.12, 0.08], 0); }
@@ -634,7 +635,8 @@ const G3 = (() => {
     for (const pt of PORTS){
       if (!pt.mottak) continue; const P = plantLayout(pt); if (!P) continue; PLANTS.push(P);
       const B = P.B, du = P.du, dn = P.dn;
-      if (!B.osm){ const L = [Math.cos(B.a), Math.sin(B.a)], W = [-Math.sin(B.a), Math.cos(B.a)]; obox(nb, [B.x, B.z], L, W, B.l, B.w, B.base, B.H, WALL); obox(nb, [B.x, B.z], L, W, B.l + 0.6, B.w + 0.6, B.base + B.H, 0.35, ROOFC); }
+      camSolid(P.silo[0], P.silo[1], P.siloR * 2 + 0.4, P.siloR * 2 + 0.4, 0, P.siloY, P.siloY + 9 + P.siloR); camSolid(P.crane[0], P.crane[1], 2.6, 2.6, 0, QTOP, QTOP + 4.2);
+      if (!B.osm){ camSolid(B.x, B.z, B.w + 0.6, B.l + 0.6, Math.PI / 2 - B.a, B.base, B.top + 0.4); const L = [Math.cos(B.a), Math.sin(B.a)], W = [-Math.sin(B.a), Math.cos(B.a)]; obox(nb, [B.x, B.z], L, W, B.l, B.w, B.base, B.H, WALL); obox(nb, [B.x, B.z], L, W, B.l + 0.6, B.w + 0.6, B.base + B.H, 0.35, ROOFC); }
       // door with frame and canopy, the sign board
       const D = (a, o) => [P.door[0] + du[0] * a + dn[0] * o, P.door[1] + du[1] * a + dn[1] * o];
       obox(nb, D(0, 0.06), du, dn, 4.4, 0.12, P.dy - 0.2, 4.4, DOORC); for (const s of [-1, 1]) obox(nb, D(s * 2.3, 0.1), du, dn, 0.22, 0.2, P.dy - 0.2, 4.6, STEEL);
@@ -2097,6 +2099,50 @@ const G3 = (() => {
     gl.depthMask(true); gl.disable(gl.BLEND);
   }
 
+  // ---------- the chase camera stays out of solid things ----------
+  // Quays and breakwaters, bridge decks and their piers, lighthouses, the plant's silo and crane, and the buildings, as oriented
+  // boxes in a 200 m grid (buildings are added a map cell at a time when the camera first comes near). Each frame the line from the
+  // boat to the eye is checked: the camera tilts up over what is in the way, and what is still in the way pulls it in along the line.
+  const CAMG = new Map(), CAMC = 200, CAMBLD = new Set(); let camStamp = 0, camPull = 1, camLift = 0;
+  // a box the way MB.box draws it: centre x, z; size sx across and sz along the heading ry; from y0 up to y1
+  function camSolid(x, z, sx, sz, ry, y0, y1){
+    const b = {x, z, c:Math.cos(ry), s:Math.sin(ry), hx:sx / 2, hz:sz / 2, y0, y1, m:0}, r = Math.hypot(sx, sz) / 2;
+    for (let gx = Math.floor((x - r) / CAMC); gx <= Math.floor((x + r) / CAMC); gx++) for (let gz = Math.floor((z - r) / CAMC); gz <= Math.floor((z + r) / CAMC); gz++){
+      const k = gz * 1000 + gx; let a = CAMG.get(k); if (!a) CAMG.set(k, a = []); a.push(b); }
+  }
+  // the buildings of one 1 km map cell, as tall as buildChunk makes them at most (walls, roof and the rise of the ground)
+  const BLD_WALL = {1:6, 3:2.6, 4:2.9, 5:3.1, 6:5.2, 7:2.3, 8:7.5, 11:7, 12:1.8, 13:2.6, 14:2.5, 15:1.2}, BLD_ROOF = {3:[0.22, 2], 5:[0.45, 6], 6:[0.4, 7], 7:[0.3, 2], 11:[0.6, 9]};
+  function camBuildings(key){
+    if (CAMBLD.has(key)) return; CAMBLD.add(key); if (!BLD) return;
+    for (const i of BLD.cells.get(key) || []){
+      const x = BLD.x[i], z = BLD.z[i], l = BLD.l[i], w = BLD.w[i], ty = BLD.t[i], lv = BLD.lv[i], ca = Math.cos(BLD.a[i]), sa = Math.sin(BLD.a[i]);
+      let lo = 1e9, hi = -1e9; for (const [u, v] of [[-0.5, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, 0.5]]){ const y = terrH(x + ca * u * l - sa * v * w, z + sa * u * l + ca * v * w); lo = Math.min(lo, y); hi = Math.max(hi, y); }
+      const base = Math.max(lo, 0.3) - 0.5, rise = Math.max(0, hi - base);
+      const hg = ty === 1 && lv ? 2.7 * lv + 0.6 : ty === 2 ? (lv || 3) * 3 : ty === 6 && lv ? 3 * lv : ty === 8 && lv ? 4 * lv : ty === 9 || ty === 10 ? (lv || 2) * 3.4 : ty === 0 && lv ? 2.8 * lv : BLD_WALL[ty] || 3.6;
+      const flat = ty === 2 || ty === 8 || ty === 9 || ty === 12 || ty === 14 || ty === 15 || (ty === 10 && w >= 14), rp = BLD_ROOF[ty] || [0.38, 6];
+      camSolid(x, z, w + 0.8, l + 0.8, Math.PI / 2 - BLD.a[i], base, base + hg + rise + (flat ? 0.3 : Math.min(w * rp[0], rp[1]) + 0.3));
+    }
+  }
+  const slab = (p, d, lo, hi, r) => { if (Math.abs(d) < 1e-9) return p >= lo && p <= hi; let a = (lo - p) / d, b = (hi - p) / d; if (a > b){ const q = a; a = b; b = q; } if (a > r[0]) r[0] = a; if (b < r[1]) r[1] = b; return r[0] <= r[1]; };
+  // how much of the way from o (the boat) to e (the eye) is clear: 1 when nothing is in the way. Boxes o is inside do not count.
+  function camFree(o, e){
+    const dx = e[0] - o[0], dy = e[1] - o[1], dz = e[2] - o[2], x0 = Math.min(o[0], e[0]), x1 = Math.max(o[0], e[0]), z0 = Math.min(o[2], e[2]), z1 = Math.max(o[2], e[2]);
+    const g0 = Math.floor(x0 / CAMC), g1 = Math.floor(x1 / CAMC), h0 = Math.floor(z0 / CAMC), h1 = Math.floor(z1 / CAMC);
+    if ((g1 - g0 + 1) * (h1 - h0 + 1) > 36) return 1;   // far out the camera is high above everything
+    for (let kx = Math.floor((x0 - 60) / 1000); kx <= Math.floor((x1 + 60) / 1000); kx++) for (let kz = Math.floor((z0 - 60) / 1000); kz <= Math.floor((z1 + 60) / 1000); kz++) camBuildings(kz * 100 + kx);
+    let best = 1; const st = ++camStamp, r = [0, 0];
+    for (let gx = g0; gx <= g1; gx++) for (let gz = h0; gz <= h1; gz++) for (const b of CAMG.get(gz * 1000 + gx) || []){
+      if (b.m === st) continue; b.m = st;
+      const px = o[0] - b.x, pz = o[2] - b.z; r[0] = -Infinity; r[1] = Infinity;
+      if (!slab(px * b.c - pz * b.s, dx * b.c - dz * b.s, -b.hx, b.hx, r) || !slab(px * b.s + pz * b.c, dx * b.s + dz * b.c, -b.hz, b.hz, r) || !slab(o[1], dy, b.y0, b.y1, r)) continue;
+      if (r[0] >= 0 && r[0] < best) best = r[0];
+    }
+    return best;
+  }
+  // is a point inside something solid (for the tests)
+  function camInside(x, y, z){ camBuildings(Math.floor(z / 1000) * 100 + Math.floor(x / 1000)); for (const b of CAMG.get(Math.floor(z / CAMC) * 1000 + Math.floor(x / CAMC)) || []){ const px = x - b.x, pz = z - b.z, lx = px * b.c - pz * b.s, lz = px * b.s + pz * b.c; if (Math.abs(lx) <= b.hx && Math.abs(lz) <= b.hz && y >= b.y0 && y <= b.y1) return true; } return false; }
+  let lastEye = [0, 0, 0];
+
   // ---------- frame ----------
   function frame(){
     if (!active){ raf = 0; return; }
@@ -2116,11 +2162,21 @@ const G3 = (() => {
       const f = [Mh[0] * dl[0] + Mh[4] * dl[1] + Mh[8] * dl[2], Mh[1] * dl[0] + Mh[5] * dl[1] + Mh[9] * dl[2], Mh[2] * dl[0] + Mh[6] * dl[1] + Mh[10] * dl[2]];
       V = viewDir(f, [Mh[4], Mh[5], Mh[6]]);
     } else {
-      const yawW = bv.head + cam.yaw, cp = Math.cos(cam.pitch), sp = Math.sin(cam.pitch), tgt = [bv.x, bv.y + 1.3, bv.z];
-      eye = [bv.x - Math.sin(yawW) * cam.dist * cp, bv.y + 1.3 + cam.dist * sp, bv.z + Math.cos(yawW) * cam.dist * cp];
-      const ground = Math.max(terrH(eye[0], eye[2]), seaH(eye[0], eye[2], t)) + 2; if (eye[1] < ground) eye[1] = ground;
+      const yawW = bv.head + cam.yaw, tgt = [bv.x, bv.y + 1.3, bv.z];
+      const eyeAt = p => { const cp = Math.cos(p), sp = Math.sin(p), e = [bv.x - Math.sin(yawW) * cam.dist * cp, bv.y + 1.3 + cam.dist * sp, bv.z + Math.cos(yawW) * cam.dist * cp];
+        const ground = Math.max(terrH(e[0], e[2]), seaH(e[0], e[2], t)) + 2; if (e[1] < ground) e[1] = ground; return e; };
+      // tilt up over a quay or under a bridge rather than diving in close (up quickly, back down slowly) ...
+      let lift = 0, f = camFree(tgt, eyeAt(cam.pitch));
+      while (f < 0.98 && f * cam.dist < 12 && lift < 1.0){ lift += 0.1; f = camFree(tgt, eyeAt(Math.min(1.45, cam.pitch + lift))); }
+      camLift += clamp(lift - camLift, -dt * 0.6, dt * 3);
+      eye = eyeAt(Math.min(1.45, cam.pitch + camLift));
+      // ... and what is still in the way pulls the camera in along the line to the boat, at once; it goes back out gently
+      const L = Math.hypot(eye[0] - tgt[0], eye[1] - tgt[1], eye[2] - tgt[2]) || 1, want = clamp(camFree(tgt, eye) - 0.8 / L, Math.min(1, 2 / L), 1);
+      camPull = want < camPull ? want : Math.min(want, camPull + dt * 1.5);
+      if (camPull < 0.999) eye = [tgt[0] + (eye[0] - tgt[0]) * camPull, tgt[1] + (eye[1] - tgt[1]) * camPull, tgt[2] + (eye[2] - tgt[2]) * camPull];
       V = viewDir([tgt[0] - eye[0], tgt[1] - eye[1], tgt[2] - eye[2]]);
     }
+    lastEye = eye;
     const W = canvas.width, Hh = canvas.height, asp = W / Hh, fov = (cam.helm ? cam.fov : 55) * DEG; curFov = fov;
     let cornerD = 0; if (NEARM) for (const [qx, qz] of [[0, 0], [1, 0], [0, 1], [1, 1]]) cornerD = Math.max(cornerD, Math.hypot(NEARM.x0 + qx * NEARM.sx - eye[0], NEARM.z0 + qz * NEARM.sz - eye[2], eye[1]));
     const nearFar = Math.max(3000, cam.dist * 3, cornerD + 300); lightNF = nearFar; const VPf = mul(persp(fov, asp, 25, 170000), V.m), VPn = mul(persp(fov, asp, 0.25, nearFar), V.m);
@@ -2323,6 +2379,6 @@ const G3 = (() => {
     fineReady(){ if (NEARM){ freeMesh(NEARM); NEARM = null; updateNear(); } },
     fishCam(){ cam.helm = false; cam.dist = 7; cam.pitch = 0.22; cam.yaw = -0.85; },
     isHelm:() => cam.helm, setHelm(on){ const G = VGEO[vtype()] || {}; cam.helm = !!on; cam.hy = 0; cam.hp = G.hp !== undefined ? G.hp : -0.07; cam.fov = G.fov || 55; },
-    _debug:{get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, BUNKERS, nearestPlant, fkRun, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; SEAMARKS.lights.forEach((L, i) => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(i, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }}
+    _debug:{get eye(){ return lastEye; }, camInside, camFree, get camPull(){ return camPull; }, get camLift(){ return camLift; }, get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, BUNKERS, nearestPlant, fkRun, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; SEAMARKS.lights.forEach((L, i) => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(i, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }}
   };
 })();
