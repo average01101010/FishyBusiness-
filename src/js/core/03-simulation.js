@@ -1,6 +1,6 @@
 // ===== fleet: each vessel keeps its own state; the company holds the rest. The simulation steps through the vessels one at a
 // time and binds S.boat, S.hold, S.crew and the others to the vessel it is working on, so the rest of the code is unchanged. =====
-const VKEYS = ['boat', 'plan', 'hold', 'crew', 'equip', 'jobs', 'cevt', 'ops', 'lic', 'quota', 'draft', 'draftSpeed', 'draftDep', 'marks', 'target', 'tubs', 'clean', 'trail', 'fsess', 'facc', 'fnext', 'fishPlanH', 'workLog', 'clothes', 'tripBuff', 'prep', 'svcTold', 'boatName', 'lastSale', 'restWarn', 'kvRel', 'codWarn', 'lastIceWarn', 'navrows', 'tripOwner', 'pgear'];
+const VKEYS = ['boat', 'plan', 'hold', 'crew', 'equip', 'jobs', 'cevt', 'ops', 'lic', 'quota', 'draft', 'draftSpeed', 'draftDep', 'marks', 'target', 'trail', 'fsess', 'facc', 'fnext', 'fishPlanH', 'workLog', 'clothes', 'tripBuff', 'prep', 'svcTold', 'boatName', 'lastSale', 'restWarn', 'kvRel', 'codWarn', 'lastIceWarn', 'navrows', 'tripOwner', 'pgear'];
 function curVessel(){ return S.fleet.find(v => v.id === S.cur) || S.fleet[0]; }
 function storeVessel(v){ for (const k of VKEYS) v[k] = S[k]; }
 function bindVessel(v){ for (const k of VKEYS) S[k] = v[k]; S.cur = v.id; applyVessel(); }
@@ -309,9 +309,24 @@ const PUB_WHEEL = [['tom', 18], ['kveit', 18], ['tom', 17], ['rykte', 20], ['hai
 const EPOCH_HR = new Date(EPOCH).getUTCHours();
 function pubEvening(H){ return Math.floor((H + EPOCH_HR - 15) / 24); }
 function pubOpen(H){ const hr = gDate(H).getUTCHours(); return hr >= 15 || hr < 3; }
-// borrowed fish tubs on deck add room for one trip (they go back when you land); a freshly cleaned hull burns less fuel
-function capHold(){ return BOAT.holdCap + (S.tubs || 0); }
-function hullClean(){ return (S.clean || 0) > S.t; }
+// the hold (borrowed deck tubs from «Kaffe på kaia» are gone since 01.10.2026)
+function capHold(){ return BOAT.holdCap; }
+// ---- the daily login bonus: each real calendar day you open the game adds a point to a bonus on the fish price; each day
+// you stay away takes three off, never below zero. No ceiling for now (decided 30.09.2026); change STREAK to add one. ----
+const STREAK = {step:1, decay:3, max:Infinity};
+function streakState(){ return S.streak || (S.streak = {last:null, pct:0, days:0, best:0}); }
+function streakPct(){ return streakState().pct; }
+function streakTouch(){
+  const st = streakState(), today = dayKey(); if (st.last === today) return null;
+  const gap = st.last ? dayNum(today) - dayNum(st.last) : 1; if (gap <= 0) return null;   // the clock went back: nothing happens
+  const before = st.pct, lost = Math.min(before, STREAK.decay * (gap - 1));
+  st.pct = Math.min(STREAK.max, before - lost + STREAK.step); st.days++; st.best = Math.max(st.best, st.pct); st.last = today;
+  const r = {before, lost, pct:st.pct, missed:gap - 1};
+  if (r.missed > 0 && lost > 0) log('Innloggingsbonus: du var borte ' + r.missed + (r.missed > 1 ? ' dager' : ' dag') + ', og bonusen falt ' + lost + ' %. Dagens innlogging gir 1 %, så nå er den ' + st.pct + ' %.',
+    'Login bonus: you were away ' + r.missed + ' day' + (r.missed > 1 ? 's' : '') + ' and the bonus fell ' + lost + ' %. Today\'s login adds 1 %, so it is now ' + st.pct + ' %.');
+  else log('Innloggingsbonus: ' + st.pct + ' % ekstra på fiskeprisen.', 'Login bonus: ' + st.pct + ' % extra on the fish price.');
+  return r;
+}
 // ---- cold: effective temperature from air temperature and wind, plus wet from rain, snow and spray. Cold, wet hands fish worse;
 // oilskins keep you dry, a thermal suit keeps you warm, and everyone aboard needs their own ----
 const CLOTHES = {olje:{no:'Oljehyre', en:'Oilskins', price:1290, d:{no:'Jakke og bukse som holder deg tørr i regn og sjøsprøyt.', en:'Jacket and trousers that keep you dry in rain and spray.'}},

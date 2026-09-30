@@ -16,7 +16,7 @@ async def main():
         B = json.loads(berths)
         print(ok(all(x and x['ok'] and x['d'] < 120 for x in B)), 'every harbour has a berth for every vessel type, in the water, on a long enough face, near the harbour point (the real quays are checked against the 3D coastline in harbourtest)')
         # coming alongside at Husøy
-        r = await pg.evaluate("""(()=>{ S.tut = 0; window.DAILYW && DAILYW.close(); S.mult = 1;
+        r = await pg.evaluate("""(()=>{ S.tut = 0; S.mult = 1;
           const q = portById('husoy'), a = portApproach(q), k = 0.06 / Math.hypot(a.x - q.p.x, a.y - q.p.y), b = S.boat;
           b.status = 'sailing'; b.port = null; b.pos = {x:q.p.x + (a.x - q.p.x) * k, y:q.p.y + (a.y - q.p.y) * k}; S.plan = null; G3.vesselChanged();
           const t0 = performance.now() / 1000; G3._debug.stepBoat(0.05, t0, 0); dock('husoy');

@@ -9,7 +9,7 @@ from playwright.async_api import async_playwright
 
 ok = lambda c: 'OK  ' if c else 'FEIL'
 SEED = """(()=>{ let a = 20260930; Math.random = () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; })()"""
-PREP = """(()=>{ S.tut = 0; dailyState().last = dayKey(); S.cash = 1e7; S.settings.autoOn = false; S.stock = initStock();
+PREP = """(()=>{ S.tut = 0; S.cash = 1e7; S.settings.autoOn = false; S.stock = initStock();
   window.hand = () => Object.assign(genCrew(), {bi:false, off:false});
   window.dry = (kind, extra, p, H0, hours) => { const s = Object.assign({kind, n:1, a:{x:p.x, y:p.y}, b:{x:p.x + 0.3, y:p.y}, tSet:Math.round(H0 * 60), acc:{}, dead:0, dry:true, cond:1}, extra); const t0 = S.t; for (let h = 1; h <= hours; h++){ S.t = Math.round((H0 + h) * 60); soakHour(s, H0 + h); } S.t = t0; return s; };
   window.kgOf = s => Object.values(s.acc).reduce((a, x) => a + x.kg, 0);

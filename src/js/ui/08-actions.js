@@ -111,6 +111,9 @@ function sell(){
   }
   // poor sorting: the plant takes 10 % off the whole lot of crab
   let roeCut = 0; if (crabRoe > 0.01) for (const r of Object.values(lines)) if (r.sp === 'krabbe' && r.sum > 0){ const d = r.sum * 0.1; r.sum -= d; total -= d; roeCut += d; }
+  // the daily login bonus: a share on top of the fish itself (not on order premiums, liver or roe); the crew shares in it
+  const stPct = streakPct(), fishKr = Object.values(lines).reduce((a, r) => a + r.sum, 0), stKr = stPct > 0 ? Math.round(fishKr * stPct / 100) : 0;
+  total += stKr;
   // finished orders pay their bonus; the customer remembers
   const ordLines = []; { const O = ordState();
     for (const o of O.active.slice()){ if (!o.saleKg) continue; const c = CUSTOMERS.find(z => z.id === o.cust), done = o.left <= 0.5; let bonus = 0;
@@ -137,9 +140,8 @@ function sell(){
   // an undersized-crab landing is a breach of the minimum size (høstingsforskriften kap. X); the fee is a placeholder
   let crabFine = 0; if (crabSmall > 0.01){ crabFine = GFINE.crab + GFINE.perCrab * Math.round(crabSmallN); S.cash -= crabFine; S.stats.costs += crabFine; msg('Fiskeridirektoratet', vt + 'Landingen hadde ' + fmt(crabSmall, 1) + ' kg taskekrabbe under minstemålet på 13 cm. Krabben er inndratt, og du får et overtredelsesgebyr på ' + kr(crabFine) + '.', vt + 'The landing had ' + fmt(crabSmall, 1) + ' kg of brown crab under the 13 cm minimum size. The crab is confiscated and you are fined ' + kr(crabFine) + '.'); }
   if (roeCut > 0.5) msg(port.name, 'Det var rognkrabbe i leveransen. Vi trekker 10 % på krabben, ' + kr(Math.round(roeCut)) + ', for dårlig sortering.', 'There was berried crab in the delivery. We take 10 % off the crab, ' + kr(Math.round(roeCut)) + ', for poor sorting.');
-  S.lastSale = {port:port.id, t:S.t, lines:arr, total, ex, confKg, confKr, ffKg:codFF, field, lott, ord:ordLines, acc, crabFine, roeCut, gear:Object.keys(b.tripGear || {})}; b.tripGear = {};
+  S.lastSale = {port:port.id, t:S.t, lines:arr, total, ex, confKg, confKr, ffKg:codFF, field, lott, ord:ordLines, acc, crabFine, roeCut, streak:{pct:stPct, kr:stKr}, gear:Object.keys(b.tripGear || {})}; b.tripGear = {};
   tatLanding(port.id); checkTattoos();
-  if (S.tubs){ log('Leverte tilbake de lånte fiskekarene.', 'Returned the borrowed fish tubs.'); S.tubs = 0; }
   for (const x of S.hold) delete x._used;
   log('Leverte ' + Math.round(kg) + ' kg i ' + port.name + ' for ' + Math.round(total) + ' kr.', 'Landed ' + Math.round(kg) + ' kg at ' + port.name + ' for NOK ' + Math.round(total) + '.');
 
@@ -186,7 +188,7 @@ function tick(){
   if (S.order && S.t >= S.order.due) deliverOrder();
   const pnow = performance.now();
   if ((panelDirty || pnow - lastPanel > 1000) && !panelBusy()){ renderPanel(); lastPanel = pnow; panelDirty = false; }
-  if (now - lastSave > 5000){ save(); lastSave = now; }
+  if (now - lastSave > 5000){ save(); lastSave = now; if (streakTouch()) refreshAll(); }
 }
 // the yard hands over a new build in Finnsnes: in exchange for the vessel it was ordered against (once she is moored there), or as an
 // extra vessel for the fleet (vid null)

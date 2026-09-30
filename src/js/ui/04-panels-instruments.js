@@ -37,7 +37,7 @@ function renderHud(){
     '<div class="row"><span>' + t('waves') + '</span><b>' + fmt(hs, 1) + ' m' + (atSea ? ' <span class="r' + lvl + '">' + t('risk' + lvl) + '</span>' : '') + '</b></div>' +
     '<div class="row"><span>' + t('fuel') + '</span><b>' + fmt(b.fuel, 0) + ' / ' + BOAT.fuelCap + ' L</b></div>' +
     '<div class="row"><span>' + t('hold') + '</span><b>' + fmt(holdTotal(), 0) + ' / ' + capHold() + ' kg</b></div>' +
-    ((S.tubs || hullClean()) ? '<div class="row"><span>' + (S.lang === 'no' ? 'Ekstra' : 'Extras') + '</span><b>' + [S.tubs ? '🧺 +' + S.tubs + ' kg' : '', hullClean() ? '🧽 −10 %' : ''].filter(Boolean).join(' · ') + '</b></div>' : '') +
+    (streakPct() > 0 ? '<div class="row"><span>' + (S.lang === 'no' ? 'Bonus' : 'Bonus') + '</span><b>+' + fmt(streakPct(), 0) + ' %</b></div>' : '') +
     (() => { const cp = coldPen(S.t / 60); return cp > 0.03 ? '<div class="row"><span>' + (S.lang === 'no' ? 'Kulde' : 'Cold') + '</span><b class="cold">−' + Math.round(cp * 100) + ' % · ' + Math.round(effTemp(S.t / 60)) + ' °C</b></div>' : ''; })() +
     (S.haill && haillF() > 0 ? '<div class="row"><span>' + (S.lang === 'no' ? 'Haill' : 'Luck') + '</span><b class="haill">' + HAILL[S.haill.type][S.lang] + ' ' + Math.round(haillF() * 100) + ' %</b></div>' : '');
 }

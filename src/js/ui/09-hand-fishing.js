@@ -12,7 +12,7 @@ window.PUBW = (() => {
   const EMPTY = [['Du gikk hjem tomhendt, men med en god historie.', 'You went home empty-handed, but with a good story.'], ['Praten gikk om kvoter og vær. Ingen haill i kveld.', 'The talk was about quotas and weather. No luck tonight.'], ['Noen sang Nordlandsbåten. Du gikk hjem før siste vers.', 'Someone sang Nordlandsbåten. You left before the last verse.'], ['Bartenderen mente haillen var utsolgt for i kveld.', 'The bartender reckoned the luck was sold out for tonight.'], ['Du tapte en armbryting mot en fra Husøy. Det var verdt tusenlappen.', 'You lost an arm-wrestle to someone from Husøy. Worth the thousand.']];
   function rumour(){ const H = S.t / 60; let best = null, bv = 0; for (const g of GROUNDS) for (const sp of ['torsk', 'sei', 'hyse', 'kveite']){ const v = density(sp, g.p, H) * price(portById('husoy'), sp, H); if (v > bv){ bv = v; best = [g, sp]; } }
     return best ? [L('Kjentfolk på puben sa det var godt med ' + SPECIES[best[1]].no.toLowerCase() + ' på ' + best[0].name.no + ' i dag.', 'Locals at the pub said there was good ' + SPECIES[best[1]].en.toLowerCase() + ' at ' + best[0].name.en + ' today.'), best[0]] : [L('Ingen hadde noe å fortelle i kveld.', 'Nobody had anything to tell tonight.'), null]; }
-  const cost = () => (S.daily && S.daily.pubV > 0) ? 0 : PUB_COST;
+  const cost = () => PUB_COST;
   // the odds come from the wheel itself, including the evenings you go home with nothing
   const pct = k => PUB_WHEEL.filter(w => w[0] === k).reduce((a, w) => a + w[1], 0) / tot * 100, pf = v => fmt(v, v % 1 ? 1 : 0) + ' %';
   const odds = () => L('Sjansene per runde: tomhendt ' + pf(pct('tom')) + ', kveithaill ' + pf(pct('kveit')) + ', rykte ' + pf(pct('rykte')) + ', haill ' + pf(pct('haill')) + ', luksushaill ' + pf(pct('luksus')) + '. Én runde per kveld, 15:00–03:00.',
@@ -27,14 +27,14 @@ window.PUBW = (() => {
     if (!msg && !spinning && S.pubLast && S.pubLast.e === pubEvening(H) && S.pubE === S.pubLast.e) msg = S.pubLast.m;
     el.innerHTML = '<div class="pubbox"><h3>🍺 ' + L('Puben i ', 'The pub in ') + (portById(S.boat.port) || {}).name + '</h3>' + wheel +
       '<p class="pubmsg">' + (msg || L('Spander en runde og hør hva folk har å si. Kanskje går du hjem med haill.', 'Buy a round and hear what people say. Maybe you go home with some luck.')) + '</p>' +
-      '<div class="pubbtns"><button class="pri" data-p="spin"' + (can && !spinning ? '' : ' disabled') + '>' + (cost() ? L('Spander en runde', 'Buy a round') + ' · ' + kr(PUB_COST) : L('Bruk fri runde', 'Use a free round') + ' (' + S.daily.pubV + ')') + '</button><button data-p="close">' + L('Gå hjem', 'Go home') + '</button></div>' +
+      '<div class="pubbtns"><button class="pri" data-p="spin"' + (can && !spinning ? '' : ' disabled') + '>' + L('Spander en runde', 'Buy a round') + ' · ' + kr(PUB_COST) + '</button><button data-p="close">' + L('Gå hjem', 'Go home') + '</button></div>' +
       (!can && !spinning && why(H) ? '<p class="pubwhy">' + why(H) + '</p>' : '') + '<p class="pubodds">' + odds() + '</p></div>';
   }
   function spin(){
     const H = S.t / 60, c = cost(); if (spinning || S.boat.status !== 'port' || !pubOpen(H) || S.pubE === pubEvening(H) || S.cash < c) return;
     let r = Math.random() * tot, seg = segs[0]; for (const g of segs){ r -= (g.s1 - g.s0) / 360 * tot; if (r <= 0){ seg = g; break; } }
     // the round is paid, drawn and saved before the wheel turns, so closing the app mid-spin loses nothing
-    if (c){ S.cash -= c; S.stats.costs += c; } else S.daily.pubV--; S.pubE = pubEvening(H);
+    S.cash -= c; S.stats.costs += c; S.pubE = pubEvening(H);
     let m;
     if (seg.k === 'kveit' || seg.k === 'haill' || seg.k === 'luksus'){ giveHaill(seg.k, 'pub'); m = L('Du vant ', 'You won ') + HAILL[seg.k][S.lang].toLowerCase() + '! ' + HAILL[seg.k].d[S.lang]; msg('Puben', L('Du gikk hjem med ', 'You went home with ') + HAILL[seg.k][S.lang].toLowerCase() + '.', 'You went home with ' + HAILL[seg.k].en.toLowerCase() + '.'); }
     else if (seg.k === 'rykte'){ const cr = crewRumour(), t0 = cr || rumour()[0]; m = t0; msg('Puben', t0, t0); }

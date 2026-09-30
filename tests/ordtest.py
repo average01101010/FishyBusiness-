@@ -9,9 +9,7 @@ async def main():
         await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(400)
         r = await pg.evaluate("""(()=>{ const R = {};
           S.tut = 0; S.boat.status = 'port'; S.boat.port = 'husoy'; S.boat.pos = {...portById('husoy').p};
-          // daily: tubs and clean hull
-          const c0 = capHold(); giveDaily('tubs'); R.tubs = [c0, capHold()]; giveDaily('clean'); R.clean = hullClean();
-          const f0 = fuelLph(20, 5); R.fuelNote = 'burn at 20 kn ' + f0.toFixed(1) + ' L/h, with clean hull ' + (f0 * 0.9).toFixed(1);
+          const f0 = fuelLph(20, 5); R.fuelNote = 'burn at 20 kn ' + f0.toFixed(1) + ' L/h';
           // cold in March
           const H = (Date.UTC(2028, 1, 15, 8) - EPOCH) / 36e5; S.t = Math.round(H * 60);
           R.effTemp = Math.round(effTemp(H)); S.clothes = {olje:0, varme:0}; R.cold_none = +coldPen(H, 1.0).toFixed(2); S.clothes = {olje:1, varme:0}; R.cold_olje = +coldPen(H, 1.0).toFixed(2); S.clothes = {olje:1, varme:1}; R.cold_both = +coldPen(H, 1.0).toFixed(2);
