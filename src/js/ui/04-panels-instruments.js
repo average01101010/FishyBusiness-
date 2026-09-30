@@ -22,6 +22,7 @@ function statusText(){
   if (b.status === 'aground') return t('st_aground');
   if (b.status === 'port') return t(b.land ? 'st_landing' : b.shift ? 'st_shift' : b.fueling ? 'st_fueling' : 'st_port', portById(b.port).name);
   if (b.status === 'sailing') return t(S.plan && S.plan.returning ? 'st_returning' : 'st_sailing', fmt(b.v, 0));
+  if (b.gop){ const g = gopText(); return GL(g[2], g[3]); }
   return t('st_' + b.status);
 }
 function renderHud(){

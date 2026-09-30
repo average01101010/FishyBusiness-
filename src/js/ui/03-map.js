@@ -197,6 +197,8 @@ function renderDyn(){
       g.push(txt({x:w.x + 8 * u, y:w.y - 7 * u}, String(i + 1), 'wpn', 12 * u, 'stroke-width="' + (3 * u) + '"'));
     });
   }
+  // passive gear in the sea
+  g.push(gearSvg(u));
   // other vessels (AIS)
   const Hn = (S.t + liveFrac()) / 60;
   AISNOW = npcStates(Hn);
@@ -237,7 +239,7 @@ svg.addEventListener('pointermove', e => {
 function ptrUp(e){
   const tap = drag && !drag.moved && ptrs.size === 1 && e.type === 'pointerup';
   ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null;
-  if (tap){ const mp = toMap(e.clientX, e.clientY), rr = 16 / view.px; let hit = null, bd = 1e9; for (const n of AISNOW){ const d = dist(n.p, mp); if (d < rr && d < bd){ bd = d; hit = n; } } if (hit && (hit.st === 'port' || hit.v === 0) && PORTS.some(q => dist(q.p, mp) < rr * 1.6)) hit = null; if (hit){ AISSEL = hit.id; renderDyn(); renderAisCard(); return; } addWaypoint(mp); }
+  if (tap){ const mp = toMap(e.clientX, e.clientY), rr = 16 / view.px; const gh = gearHit(mp, rr * 0.8); if (gh){ gearTap(gh); renderDyn(); return; } let hit = null, bd = 1e9; for (const n of AISNOW){ const d = dist(n.p, mp); if (d < rr && d < bd){ bd = d; hit = n; } } if (hit && (hit.st === 'port' || hit.v === 0) && PORTS.some(q => dist(q.p, mp) < rr * 1.6)) hit = null; if (hit){ AISSEL = hit.id; renderDyn(); renderAisCard(); return; } addWaypoint(mp); }
   if (ptrs.size === 0) drag = null;
   else { const [p] = [...ptrs.values()]; drag = {sx:p.x, sy:p.y, cx:view.cx, cy:view.cy, moved:true}; }
 }

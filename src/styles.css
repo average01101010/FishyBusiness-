@@ -361,3 +361,10 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-nume
 #modal p{margin:8px 0}
 #modal ul{padding-left:18px;font-size:14px}
 @media (prefers-reduced-motion:reduce){#toast{transition:none}}
+/* passive gear on the chart and in the route */
+.gline{fill:none;stroke-linecap:round;opacity:.9} .gline.lost{opacity:.35}
+.buoy{stroke:#1d2328} .buoy.lost{opacity:.35} .buoy.late{stroke:#e5484d} .buoy.due{stroke:#f5a524}
+.lbl-gear{font-family:var(--sans);font-weight:700;fill:#f6f1e3;paint-order:stroke;stroke:#10202e} .lbl-gear.due{fill:#ffd27a} .lbl-gear.late,.lbl-gear.lost{fill:#ff8f8f}
+.gchip{display:inline-block;margin:4px 0 0;padding:6px 10px;min-height:32px;border-radius:14px;border:1px solid rgba(255,255,255,.25);background:transparent;color:inherit;font:600 12px var(--sans)}
+.gchip.on{background:#c8602a;border-color:#c8602a;color:#fff}
+.wps .lbl .gchip{display:block}

@@ -4,7 +4,8 @@ window.addEventListener('pointerup', () => { setTimeout(() => { pressHold = fals
 panel.addEventListener('click', e => { const el = e.target.closest('[data-act]'); if (el && !el.disabled) doAct(el); });
 function doAct(el){
   const act = el.dataset.act, i = +el.dataset.i, b = S.boat, L = (no, en) => S.lang === 'no' ? no : en;
-  if (act === 'fp' || act === 'fm'){ const w = S.draft[i]; if (w) w.fish = clamp((w.fish || 0) + (act === 'fp' ? 1 : -1), 0, 12); }
+  if (act === 'gset' || act === 'ghaul' || act === 'gstop' || act === 'gwp') gearDoAct(act, el);
+  else if (act === 'fp' || act === 'fm'){ const w = S.draft[i]; if (w) w.fish = clamp((w.fish || 0) + (act === 'fp' ? 1 : -1), 0, 12); }
   else if (act === 'rm') S.draft.splice(i, 1);
   else if (act === 'undo') S.draft.pop();
   else if (act === 'clear') S.draft = [];
@@ -38,7 +39,7 @@ function doAct(el){
   else if (act === 'tow') rescue(true);
   else if (act === 'fh+' || act === 'fh-') S.fishPlanH = clamp(S.fishPlanH + (act === 'fh+' ? 1 : -1), 1, 12);
   else if (act === 'startfish'){ b.status = 'fishing'; b.fishUntil = S.t + S.fishPlanH * 60; log('Starter fiske i ' + S.fishPlanH + ' t.', 'Fishing for ' + S.fishPlanH + ' h.'); }
-  else if (act === 'stopfish'){ b.fishUntil = S.t; S.plan = null; endFishing('done'); }
+  else if (act === 'stopfish'){ if (b.gop) gopAbort('stop'); b.fishUntil = S.t; S.plan = null; endFishing('done'); }
   else if (act === 'deckstop'){ if (b.status === 'fishing'){ b.deckStop = true; log('Stopper fisket for å sløye og ise.', 'Stopping fishing to gut and ice.'); } }
   else if (act === 'deckgo'){ b.deckStop = false; b.deckEnd = null; }
   else if (act === 'sell') startLanding(false);
@@ -59,6 +60,7 @@ function panelChange(e){
   if (id === 'setGut') S.settings.gut = e.target.checked;
   if (id === 'setIce') S.settings.ice = e.target.checked;
   if (id === 'setAuto') S.settings.autoOn = e.target.checked;
+  if (id === 'setCrabSort') S.settings.crabSort = e.target.checked;
   if (id === 'dep'){ S.draftDep = e.target.value ? +e.target.value : null; e.target.blur(); }
   e.target.blur && e.target.type === 'range' && e.target.blur();
   panelDirty = true; save();

@@ -21,9 +21,10 @@ const PHONE = (() => {
     last:SVG('<path d="M3 8l9-4 9 4v9l-9 4-9-4z"/><path d="M3 8l9 4 9-4M12 12v9"/>'),
     logg:SVG('<path d="M6 3h12v18H6z"/><path d="M9 8h6M9 12h6M9 16h4"/>'),
     rederi:SVG('<path d="M4 20V10l6-3v13"/><path d="M10 20V5l9 4v11"/><path d="M2 20h20"/><path d="M13 10h3M13 13h3M13 16h3M6 13h2M6 16h2"/>'),
+    redskap:SVG('<circle cx="12" cy="16" r="4.5"/><path d="M12 11.5V3l5 2-5 2"/><path d="M3 21c3-1.5 6-1.5 9 0s6 1.5 9 0"/>'),
     sjomann:SVG('<circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.9 2.9M15.5 15.5l2.9 2.9M5.6 18.4l2.9-2.9M15.5 8.5l2.9-2.9"/>'),
     innst:SVG('<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>')};
-  const APPS = [['vaer', 'Vær', 'Weather', '#2f7fd0'], ['post', 'Kystposten', 'Coast Post', '#b8402f'], ['salg', 'Salgslaget', 'Sales', '#1e8c6e'], ['redning', 'Redning', 'Rescue', '#e0562b'], ['fartoy', 'Fartøy', 'Vessels', '#28507f'], ['rederi', 'Rederi', 'Company', '#1f4e79'], ['utstyr', 'Utstyr', 'Equipment', '#6b5bb5'], ['mannskap', 'Mannskap', 'Crew', '#b0772b'], ['bors', 'Mannskapsbørs', 'Crew exchange', '#2d6a8f'], ['bank', 'Kystbanken', 'Bank', '#3b6e4f'], ['meld', 'Meldinger', 'Messages', '#29a36a'], ['verksted', 'Verksted', 'Workshop', '#8b4b2b'], ['havn', 'Havn', 'Harbour', '#0f7c8c'], ['haill', 'Haill', 'Luck', '#c9a227'], ['last', 'Last', 'Hold', '#8a6a34'], ['sjomann', 'Sjømann', 'Seaman', '#23506b'], ['innst', 'Innstillinger', 'Settings', '#4a5560']];
+  const APPS = [['vaer', 'Vær', 'Weather', '#2f7fd0'], ['post', 'Kystposten', 'Coast Post', '#b8402f'], ['salg', 'Salgslaget', 'Sales', '#1e8c6e'], ['redning', 'Redning', 'Rescue', '#e0562b'], ['fartoy', 'Fartøy', 'Vessels', '#28507f'], ['rederi', 'Rederi', 'Company', '#1f4e79'], ['utstyr', 'Utstyr', 'Equipment', '#6b5bb5'], ['redskap', 'Redskap', 'Gear', '#c8602a'], ['mannskap', 'Mannskap', 'Crew', '#b0772b'], ['bors', 'Mannskapsbørs', 'Crew exchange', '#2d6a8f'], ['bank', 'Kystbanken', 'Bank', '#3b6e4f'], ['meld', 'Meldinger', 'Messages', '#29a36a'], ['verksted', 'Verksted', 'Workshop', '#8b4b2b'], ['havn', 'Havn', 'Harbour', '#0f7c8c'], ['haill', 'Haill', 'Luck', '#c9a227'], ['last', 'Last', 'Hold', '#8a6a34'], ['sjomann', 'Sjømann', 'Seaman', '#23506b'], ['innst', 'Innstillinger', 'Settings', '#4a5560']];
   const unread = () => S.msgs.filter(m => !m.read).length;
   function setBadge(){ const n = unread(); for (const bd of [badge, $('phoneBadge2')]){ bd.hidden = !n; bd.textContent = n; } }
   // --- workshop: service, fitting and getting the gear ready, one job after the other while the boat is in port
@@ -83,7 +84,7 @@ const PHONE = (() => {
     a.textContent = hm(H); d.textContent = dayStr(H); w1.textContent = dirName(windDir(H)) + ' ' + fmt(windAt(H), 0) + ' m/s · ' + fmt(Math.round(airTemp(H)) || 0, 0) + ' °C'; w2.textContent = kr(S.cash);
   }
   function render(){ status(); setBadge(); if (!isOpen) return; view.innerHTML = app === 'home' ? home() : shell(app); view.scrollTop = 0; }
-  function shell(a){ const d = APPS.find(x => x[0] === a), f = {vaer, post, salg, redning, fartoy, rederi, utstyr, mannskap, bors, bank, meld, verksted, havn, haill, last, logg, sjomann, innst}[a]; return '<div class="ph-appv' + (a === 'post' ? ' ph-paper' : '') + '"><div class="ph-top" style="background:' + d[3] + '"><span class="ic">' + IC[a] + '</span>' + L(d[1], d[2]) + '</div>' + (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) + '</div>'; }
+  function shell(a){ const d = APPS.find(x => x[0] === a), f = {vaer, post, salg, redning, fartoy, rederi, utstyr, redskap, mannskap, bors, bank, meld, verksted, havn, haill, last, logg, sjomann, innst}[a]; return '<div class="ph-appv' + (a === 'post' ? ' ph-paper' : '') + '"><div class="ph-top" style="background:' + d[3] + '"><span class="ic">' + IC[a] + '</span>' + L(d[1], d[2]) + '</div>' + (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) + '</div>'; }
   function home(){
     const H = S.t / 60, W = windAt(H), n = unread(), na = alerts().length;
     return '<div class="ph-homescr"><div class="ph-clock">' + hm(H) + '</div><div class="ph-date">' + dayStr(H) + '</div>' +
@@ -260,7 +261,7 @@ const PHONE = (() => {
     h.push('</div>'); return h.join('');
   }
   // --- the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
-  const SEL_APPS = ['fartoy', 'utstyr', 'mannskap', 'bors', 'verksted'];
+  const SEL_APPS = ['fartoy', 'utstyr', 'redskap', 'mannskap', 'bors', 'verksted'];
   let selV = null;
   const selVessel = () => (selV && vesselById(selV)) || curVessel();
   const withSel = fn => withVessel(selVessel(), fn);
@@ -278,6 +279,10 @@ const PHONE = (() => {
     if (svcOverdue() > 0) A('svc', 'Motorservice er forfalt', 'Engine service overdue', 'verksted');
     if (S.cevt) A('cevt', 'Uløst krangel om bord', 'Unresolved quarrel aboard', 'mannskap');
     for (const c of S.crew) if ((c.low || 0) > 12) A('quit' + c.id, c.name.split(' ')[0] + ' vurderer å slutte', c.name.split(' ')[0] + ' is thinking of quitting', 'mannskap');
+    for (const s of (S.sets || []).filter(x => x.vid === S.cur)){ const a = (S.t - s.tSet) / 60;
+      if (s.lost) A('lost' + s.id, GEAR[s.kind].no + ' er tapt. Meld tapt redskap', GEAR[s.kind].en + ' lost. Report the lost gear', 'redskap');
+      else if (s.kind === 'teine' ? a >= 44 : s.kind === 'line' ? a >= 24 : a >= 48) A('soak' + s.id, GEAR[s.kind].no + ' har stått i ' + fmt(a, 0) + ' t', GEAR[s.kind].en + ' has soaked ' + fmt(a, 0) + ' h', 'redskap'); }
+    if (S.pgear && S.pgear.nets.some(l => l.cond < 0.35)) A('worn', 'Slitte garn bør bøtes', 'Worn nets should be mended', 'redskap');
     if (o && o.on && !sk) A('ops', 'Driftsplanen mangler skipper', 'The standing plan has no skipper', 'mannskap');
     if (o && o.on && b.status === 'port' && b.port !== o.home) A('opsport', 'Ligger ikke i ' + portById(o.home).name + ', der driftsplanen starter', 'Not at ' + portById(o.home).name + ', where the standing plan starts', 'mannskap');
     if (access() !== 'none'){ const lim = codLimitNow(H); if (lim > 0 && quotaState().torsk >= lim * 0.9) A('quota', 'Torskekvoten er nesten brukt opp', 'The cod quota is nearly used up', 'salg'); }
@@ -315,6 +320,7 @@ const PHONE = (() => {
     const h = ['<div class="ph-c"><p class="ph-note">' + L('Montering skjer i havn. Utstyret følger med om du bytter båt, bortsett fra motoren.', 'Fitting is done in port. Equipment moves with you if you change vessel, except the engine.') + '</p>'];
     for (const [k, E] of Object.entries(EQUIP)){
       if (E.only && E.only !== S.boat.type) continue;
+      if (E.types && !E.types.includes(S.boat.type)) continue;
       const have = E.multi ? S.equip[k] : S.equip[k] ? 1 : 0, max = E.multi ? BOAT.jukseMax : 1;
       h.push('<div class="ph-card"><h4>' + E.name[S.lang] + (E.multi ? ' (' + have + '/' + max + ')' : '') + '</h4><p>' + E.desc[S.lang] + '</p>' + kv(L('Pris', 'Price'), kr(E.price)) + (have >= max ? '<p><b>' + L('Montert', 'Fitted') + '</b></p>' : (S.jobs || []).some(j => j.kind === 'fit' && j.k === k) ? '<p><b>' + L('Til montering', 'Being fitted') + '</b></p>' : '<button class="ph-btn" data-pa="equip" data-k="' + k + '"' + (inPort() && S.cash >= E.price ? '' : ' disabled') + '>' + L('Kjøp og monter', 'Buy and fit') + ' · ' + FIT_H[k] + ' t</button>') + '</div>');
     }
@@ -323,6 +329,48 @@ const PHONE = (() => {
       for (const k of ['olje', 'varme']){ const C = CLOTHES[k], have = c[k] || 0;
         h.push('<div class="ph-card"><h4>' + C[S.lang] + ' (' + Math.min(have, people) + '/' + people + ')</h4><p>' + C.d[S.lang] + '</p>' + kv(L('Pris', 'Price'), kr(C.price)) + (have >= people ? '<p><b>' + L('Alle om bord har.', 'Everyone aboard has one.') + '</b></p>' : '<button class="ph-btn p" data-pa="cloth" data-k="' + k + '">' + L('Kjøp én', 'Buy one') + '</button>') + '</div>'); } }
     h.push('</div>'); return h.join('');
+  }
+  // --- gear: in the sea, aboard (baiting and mending), and the shop
+  function redskap(){
+    const tab = sub.redskap || 'sjo', b = S.boat, pg = S.pgear, p = portById(b.port), inPortNow = b.status === 'port';
+    const h = ['<div class="ph-c">' + subs('redskap', [['sjo', 'I sjøen', 'In the sea'], ['bord', 'Om bord', 'Aboard'], ['kjop', 'Kjøp', 'Buy']])];
+    if (tab === 'sjo'){
+      const all = (S.sets || []).filter(s => s.vid === S.cur);
+      if (!all.length) h.push('<div class="ph-card"><p class="ph-note">' + L('Ingen redskap i sjøen. Sett garn, line eller teiner fra handlingslinja når båten ligger stille på feltet, eller legg setting inn i ruta.', 'No gear in the sea. Set nets, line or pots from the action bar when the boat lies still on the grounds, or put the setting into the route.') + '</p></div>');
+      for (const s of all){ const st = setState(s);
+        h.push('<div class="ph-card' + (st === 'lost' || st === 'late' ? ' conflict' : '') + '"><h4>' + GEAR[s.kind][S.lang] + ', ' + s.n + ' ' + unitName(s.kind, s.n) + '</h4>' +
+          kv(L('Satt', 'Set'), dayStr(s.tSet / 60) + ' ' + hm(s.tSet / 60)) + kv(L('Ståtid', 'Soak'), fmt((S.t - s.tSet) / 60, 0) + ' t · ' + L(SETST[st][0], SETST[st][1])) + kv(L('Posisjon', 'Position'), coordStr(setMid(s)) + ', ' + s.depth + ' m') +
+          (s.kind === 'garn' ? kv(L('Maskevidde og stand', 'Mesh and condition'), s.mesh + ' mm · ' + Math.round((s.cond || 1) * 100) + ' %') : '') + (s.heavy ? kv(L('Dregg', 'Anchor'), L('tung', 'heavy')) : '') +
+          (s.lost ? '<p class="ph-note">' + L('Blåsene er borte. Tapt redskap skal meldes til Kystvakten med type, mengde og siste posisjon.', 'The buoys are gone. Lost gear must be reported to the Coast Guard with type, amount and last position.') + '</p><button class="ph-btn p" data-pa="grrep" data-id="' + s.id + '">' + L('Meld tapt redskap', 'Report lost gear') + '</button>' : '') + '</div>'); }
+      h.push('<p class="ph-note">' + L('Line er best innen et døgn. Etter 24 timer tar marfloen fisken. Teiner bør stå minst 20 timer og trekkes innen 48. Garn trekkes helst hver dag. Om sommeren går fisken fort i garnet.', 'Line is best within a day. After 24 hours the amphipods take the fish. Pots should stand at least 20 hours and be hauled within 48. Nets are best hauled daily. In summer the fish spoils fast in the net.') + '</p>');
+    } else if (tab === 'bord'){
+      h.push('<div class="ph-card"><h4>' + L('Garn', 'Nets') + '</h4>' + (pg.nets.length ? '' : '<p class="ph-note">' + L('Ingen garn om bord.', 'No nets aboard.') + '</p>'));
+      for (const l of pg.nets){ h.push('<div class="ph-kv"><span>' + l.n + ' garn ' + l.mesh + ' mm</span><span>' + Math.round(l.cond * 100) + ' %</span></div><div class="ph-bar"><i style="width:' + Math.round(l.cond * 100) + '%"></i></div>');
+        if (inPortNow && l.cond < 0.9) h.push('<div class="ph-btncol"><button class="ph-btn" data-pa="grmend" data-id="' + l.id + '" data-m="self">' + L('Bøt selv', 'Mend yourselves') + '</button>' + (botPort(p) ? '<button class="ph-btn" data-pa="grmend" data-id="' + l.id + '" data-m="bot">' + L('Lever til bøteriet', 'Leave at the net loft') + ' (' + kr(Math.round(GPRICE.bot * l.n * (0.95 - l.cond) / 0.1)) + ')</button>' : '') + '</div>');
+        if (l.n >= 2) h.push('<button class="ph-btn alt" data-pa="grsplit" data-id="' + l.id + '">' + L('Del lenka i to', 'Split the string') + '</button>'); }
+      if (pg.nets.length >= 2){ const m = {}; for (const l of pg.nets) (m[l.mesh] = m[l.mesh] || []).push(l); for (const k in m) if (m[k].length >= 2) h.push('<button class="ph-btn alt" data-pa="grjoin" data-a="' + m[k][0].id + '" data-b="' + m[k][1].id + '">' + L('Slå sammen lenker på ' + k + ' mm', 'Join strings of ' + k + ' mm') + '</button>'); }
+      h.push('</div><div class="ph-card"><h4>' + L('Line', 'Line') + '</h4>');
+      for (const lk of ['hyse', 'bank']){ const L0 = pg.lines[lk], un = L0.n - L0.baited; if (!L0.n) continue;
+        h.push(kv(LINE_KINDS[lk][S.lang], L0.n + ' ' + L('stamper', 'tubs') + ', ' + L0.baited + ' ' + L('egnet', 'baited')));
+        if (inPortNow && un > 0) h.push('<div class="ph-btncol">' + (egnPort(p) ? '<button class="ph-btn p" data-pa="gregn" data-lk="' + lk + '" data-n="' + un + '" data-m="shed">' + L('Egnebua egner ' + un, 'The shed baits ' + un) + ' (' + kr(un * (LINE_KINDS[lk].egn + LINE_KINDS[lk].baitKg * GPRICE.bait)) + ')</button>' : '') +
+          '<button class="ph-btn" data-pa="gregn" data-lk="' + lk + '" data-n="' + un + '" data-m="self">' + L('Egn ' + un + ' selv', 'Bait ' + un + ' yourselves') + ' (' + fmt(un * LINE_KINDS[lk].baitKg, 0) + ' kg ' + L('agn', 'bait') + ')</button></div>'); }
+      if (!pg.lines.hyse.n && !pg.lines.bank.n) h.push('<p class="ph-note">' + L('Ingen line om bord.', 'No line aboard.') + '</p>');
+      h.push('</div><div class="ph-card"><h4>' + L('Teiner, blåser og agn', 'Pots, buoys and bait') + '</h4>' + kv(POTS.small[S.lang], pg.pots.small) + kv(POTS.big[S.lang], pg.pots.big) + kv(L('Blåsesett', 'Buoy sets'), pg.kits.n + (pg.kits.heavy ? ' (' + pg.kits.heavy + ' ' + L('med tung dregg', 'with heavy anchor') + ')' : '')) + kv(L('Agn', 'Bait'), fmt(pg.bait, 0) + ' kg') + '</div>');
+      const shore = pg.shore.filter(j => j.ready); if (shore.length) h.push('<div class="ph-card"><h4>' + L('På land', 'Ashore') + '</h4>' + shore.map(j => kv(j.kind === 'egn' ? j.n + ' ' + L('stamper i egnebua', 'tubs at the baiting shed') : j.n + ' ' + L('garn på bøteriet', 'nets at the net loft'), portById(j.port).name + ', ' + L('klar ', 'ready ') + (S.t >= j.ready ? L('nå', 'now') : hm(j.ready / 60)))).join('') + '</div>');
+    } else {
+      // quantities follow the room aboard: a skiff gets fewer nets per button than a sjark
+      const room = k => gearRoom(k), cap = w => w === 'net' ? room('garn') : w === 'stamp' ? room('line') : w === 'pot' ? room('teine') : 1e9;
+      const buy = (w, s, n0, lbl, unit) => { const n = Math.max(1, Math.min(n0, cap(w))), price = n * unit, ok = cap(w) >= 1 && price <= S.cash && inPortNow;
+        return '<button class="ph-btn' + (ok ? ' p' : '') + '"' + (ok ? '' : ' disabled') + ' data-pa="grbuy" data-w="' + w + '" data-s="' + s + '" data-n="' + n + '">' + lbl(n) + ' (' + kr(price) + ')</button>'; };
+      if (!inPortNow) h.push('<div class="ph-card"><p class="ph-note">' + L('Redskap kjøpes i havn.', 'Gear is bought in port.') + '</p></div>');
+      h.push('<div class="ph-card"><h4>' + L('Torskegarn', 'Cod nets') + '</h4><p>' + L('Garn settes i lenker mellom to blåser. 156 mm er vanlig torskegarn, 180 og 200 mm tar større fisk som skrei. Minste lovlige maskevidde nord for 62° N er 156 mm. Garn krever minst to om bord. Plass til ', 'Nets are set in strings between two buoys. 156 mm is the usual cod net; 180 and 200 mm take bigger fish such as skrei. The smallest legal mesh north of 62° N is 156 mm. Nets need at least two aboard. Room for ') + room('garn') + L(' til.', ' more.') + '</p><div class="ph-btncol">' + MESHES.map(m => buy('net', m, 10, n => n + L(' garn ', ' nets ') + m + ' mm', GPRICE.net)).join('') + '</div></div>');
+      h.push('<div class="ph-card"><h4>' + L('Line', 'Line') + '</h4><p>' + L('Hyseline har ca. 700 kroker per stamp og tar mest hyse. Bankline har ca. 300 større kroker og tar lange, brosme og kveite. Lina må egnes i havn. Plass til ', 'Haddock line has about 700 hooks a tub and takes mostly haddock. Bank line has about 300 bigger hooks and takes ling, tusk and halibut. The line must be baited in port. Room for ') + room('line') + L(' stamper til.', ' more tubs.') + '</p><div class="ph-btncol">' + ['hyse', 'bank'].map(lk => buy('stamp', lk, 4, n => n + (n === 1 ? L(' stamp ', ' tub of ') : L(' stamper ', ' tubs of ')) + LINE_KINDS[lk][S.lang].toLowerCase(), LINE_KINDS[lk].price)).join('') + '</div></div>');
+      h.push('<div class="ph-card"><h4>' + L('Teiner', 'Pots') + '</h4><p>' + L('For taskekrabbe i juli–oktober, mest sør på Senja. Store teiner fanger mer, men krever teinehaler. Plass til ', 'For brown crab in July–October, mostly south on Senja. Big pots catch more but need a pot hauler. Room for ') + room('teine') + L(' til.', ' more.') + '</p><div class="ph-btncol">' + buy('pot', 'small', 20, n => n + ' ' + POTS.small[S.lang].toLowerCase(), POTS.small.price) + buy('pot', 'big', 20, n => n + ' ' + POTS.big[S.lang].toLowerCase(), POTS.big.price) + '</div></div>');
+      h.push('<div class="ph-card"><h4>' + L('Blåser, dregg og agn', 'Buoys, anchors and bait') + '</h4><p>' + L('Hvert sett i sjøen trenger et blåsesett: to blåser med stake, flagg og dregg. Tung dregg holder bedre i storm og strøm.', 'Each set in the sea needs a buoy set: two buoys with pole, flag and anchor. A heavy anchor holds better in storm and current.') + '</p><div class="ph-btncol">' +
+        buy('kit', 0, 1, () => L('Blåsesett', 'Buoy set'), GPRICE.kit) + (pg.kits.heavy < pg.kits.n ? buy('heavy', 0, 1, () => L('Tung dregg', 'Heavy anchor'), GPRICE.heavy) : '') + buy('bait', 0, 20, () => L('20 kg agn', '20 kg bait'), GPRICE.bait) + buy('bait', 0, 100, () => L('100 kg agn', '100 kg bait'), GPRICE.bait) + '</div></div>');
+      h.push('<p class="ph-note">' + L('Halere kjøpes i Utstyr-appen. Prisene er foreløpige.', 'Haulers are in the Equipment app. Prices are provisional.') + '</p>');
+    }
+    return h.join('') + '</div>';
   }
   // --- crew
   const NAMES = ['Ole Martin', 'Kari', 'Stian', 'Ingrid', 'Tor Arne', 'Siri', 'Mats', 'Hanne', 'Eirik', 'Marit', 'Sondre', 'Tone', 'Håkon', 'Line', 'Vegard', 'Silje'];
@@ -404,7 +452,7 @@ const PHONE = (() => {
   // --- actions
   function switchVessel(k){
     const b = S.boat, old = VESSELS[b.type];
-    b.type = k; if (k !== 'skiff') S.equip.motor90 = false; applyVessel(); loreNewBoat(S.boatName);
+    b.type = k; if (k !== 'skiff') S.equip.motor90 = false; for (const [q, E] of Object.entries(EQUIP)) if (E.types && !E.types.includes(k)) S.equip[q] = false; applyVessel(); loreNewBoat(S.boatName);
     S.equip.jukse = Math.min(S.equip.jukse, BOAT.jukseMax); b.fuel = BOAT.fuelCap * 0.4; b.ice = 0; b.engH = 0; b.svcAt = 0; S.svcTold = false;
     while (S.crew.length > BOAT.crewMax) S.crew.pop();
     if (!S.owned.includes(k)) S.owned.push(k);
@@ -437,7 +485,13 @@ const PHONE = (() => {
     else if (a === 'member'){ if (S.cash < PRICE.member){ toast(t('no_cash')); return; } S.cash -= PRICE.member; S.stats.costs += PRICE.member; S.member = true; log('Ble medlem i redningstjenesten.', 'Joined the rescue service.'); }
     else if (a === 'svc'){ const c = d.m === 'self' ? Math.round(VESSELS[b.type].svcCost * 0.35) : VESSELS[b.type].svcCost, hh = d.m === 'self' ? Math.round(SVC_H[b.type] * 2.5) : SVC_H[b.type]; if (S.cash < c){ toast(t('no_cash')); return; } if (!queueJob({kind:'svc', h:hh, no:d.m === 'self' ? 'Egen service på motoren' : 'Service på verkstedet', en:d.m === 'self' ? 'Servicing the engine yourself' : 'Engine service at the yard'})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } S.cash -= c; S.stats.costs += c; }
     else if (a === 'prep'){ const P2 = PREP[d.k]; if (S.cash < P2.cost){ toast(t('no_cash')); return; } if (!queueJob({kind:'prep', k:d.k, h:P2.h, no:P2.no, en:P2.en})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } S.cash -= P2.cost; S.stats.costs += P2.cost; }
-    else if (a === 'jobx'){ const j = (S.jobs || [])[+d.i]; if (j && +d.i > 0){ S.jobs.splice(+d.i, 1); const refund = j.kind === 'prep' ? PREP[j.k].cost : j.kind === 'fit' ? EQUIP[j.k].price : 0; S.cash += refund; S.stats.costs -= refund; } }
+    else if (a === 'grbuy'){ const why = buyGear(d.w, isNaN(+d.s) ? d.s : +d.s, +d.n); if (why){ toast(why[0]); return; } }
+    else if (a === 'grrep'){ reportLost(d.id); }
+    else if (a === 'gregn'){ const why = d.m === 'shed' ? egnOrder(d.lk, +d.n) : egnSelf(d.lk, +d.n); if (why){ toast(why[0]); return; } }
+    else if (a === 'grmend'){ const why = d.m === 'bot' ? botOrder(d.id) : mendSelf(d.id); if (why){ toast(why[0]); return; } }
+    else if (a === 'grsplit'){ const l = S.pgear.nets.find(x => x.id === d.id); if (l) splitNets(l.id, Math.floor(l.n / 2)); }
+    else if (a === 'grjoin'){ joinNets(d.a, d.b); }
+    else if (a === 'jobx'){ const j = (S.jobs || [])[+d.i]; if (j && +d.i > 0){ S.jobs.splice(+d.i, 1); gearJobCancel(j); const refund = j.kind === 'prep' ? PREP[j.k].cost : j.kind === 'fit' ? EQUIP[j.k].price : 0; S.cash += refund; S.stats.costs -= refund; } }
     else if (a === 'service'){ const c = VESSELS[b.type].svcCost; if (S.cash < c){ toast(t('no_cash')); return; } S.cash -= c; S.stats.costs += c; b.svcAt = b.engH || 0; S.svcTold = false; log('Motorservice utført.', 'Engine serviced.'); }
     else if (a === 'equip'){ const E = EQUIP[d.k]; if (!inPort() || S.cash < E.price) return; if (!queueJob({kind:'fit', k:d.k, h:FIT_H[d.k], no:'Montering av ' + E.name.no.toLowerCase(), en:'Fitting the ' + E.name.en})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } S.cash -= E.price; S.stats.costs += E.price; log('Kjøpt ' + E.name.no + '. Monteres i verkstedet.', 'Bought the ' + E.name.en + '. Being fitted at the yard.'); } else if (a === 'equipOLD'){ const E = EQUIP[d.k]; if (E.multi) S.equip[d.k] = (S.equip[d.k] || 0) + 1; else S.equip[d.k] = true; applyVessel(); log('Montert: ' + E.name.no + '.', 'Fitted: ' + E.name.en + '.'); updateMapButtons(); INSTR.show(); }
     else if (a === 'ops_on'){ if (!S.ops) return; if (!S.ops.on && !opsSkipper()){ toast(L('Velg en skipper først.', 'Choose a skipper first.')); return; } S.ops.on = !S.ops.on; log(S.ops.on ? 'Fast driftsplan slått på.' : 'Fast driftsplan slått av.', S.ops.on ? 'Standing plan switched on.' : 'Standing plan switched off.'); }

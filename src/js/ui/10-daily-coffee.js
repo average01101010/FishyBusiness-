@@ -142,13 +142,18 @@ function renderActs(){
     if (!b.gear) h.push('<button data-act="gear">' + LS('Ny juksa', 'New jig line', 'Juksa', 'Jig') + '</button>');
     if (pubOpen(S.t / 60) && S.pubE !== pubEvening(S.t / 60)) h.push('<button data-act="pub">🍺 ' + LS('Pubrunde', 'Pub round', 'Pub', 'Pub') + '</button>');
     if (!b.kgear && (p.fuel || p.ice)) h.push('<button data-act="kgear">' + LS('Kveiteutstyr (' + kr(PRICE.kgear) + ')', 'Halibut gear (' + kr(PRICE.kgear) + ')', 'Kveiteutstyr', 'Halibut gear') + '</button>');
+    h.push(gearActs(LS));
     h.push('<button' + (tot > 0.5 && p.mottak || busy ? '' : ' class="pri"') + ' data-ui="plot">' + LS('Planlegg tur', 'Plan a trip', 'Planlegg', 'Plan') + '</button>');
   } else if (b.status === 'unmooring'){
     h.push('<span class="stp">' + L('Kaster loss …', 'Casting off …') + '</span>');
   } else if (b.status === 'idle'){
+    h.push(gearActs(LS));
     h.push('<span class="stp"><button data-act="fh-" aria-label="−">−</button>' + S.fishPlanH + ' t<button data-act="fh+" aria-label="+">+</button></span><button class="pri" data-act="startfish">' + LS('Start fiske', 'Start fishing', 'Fisk', 'Fish') + '</button>');
     if (b.kgear){ const cl = kveiteClosed(S.t / 60); h.push('<button data-act="target"' + (cl && S.target !== 'kveite' ? ' disabled' : '') + '>🎯 ' + (S.target === 'kveite' && !cl ? LS('Fisker kveite', 'Fishing halibut', 'Kveite', 'Halibut') : cl ? LS('Kveita er fredet', 'Halibut closed', 'Fredet', 'Closed') : LS('Blandet fiske', 'Mixed fishing', 'Blandet', 'Mixed')) + '</button>'); }
     h.push('<button data-act="retrace">' + LS('Hjem samme vei', 'Home same way', 'Hjem', 'Home') + '</button><button data-ui="plot">' + LS('Ny rute', 'New route', 'Rute', 'Route') + '</button>');
+  } else if (b.status === 'fishing' && b.gop){
+    h.push(gearActs(LS));
+    const dk = deckText(true); if (dk) h.push('<span class="stp"><span class="lg">' + dk[0] + '</span><span class="sh">' + dk[1] + '</span></span>');
   } else if (b.status === 'fishing'){
     h.push('<button data-act="stopfish">' + LS('Stopp fiske', 'Stop fishing', 'Stopp', 'Stop') + ' · ' + dur((b.fishUntil - S.t) / 60) + '</button>');
     const dk = deckText(true); if (dk){ h.push('<span class="stp"><span class="lg">' + dk[0] + '</span><span class="sh">' + dk[1] + '</span></span>'); if (b.deckStop && !b.deckEnd) h.push('<button data-act="deckgo">' + LS('Fisk videre', 'Fish on', 'Fisk', 'Fish') + '</button>'); else if (!b.deckStop) h.push('<button data-act="deckstop">' + LS('Stopp og sløy', 'Stop and gut', 'Sløy', 'Gut') + '</button>'); }
@@ -164,7 +169,7 @@ function renderActs(){
 }
 $('actbar').addEventListener('click', e => {
   const el = e.target.closest('button'); if (!el || el.disabled) return;
-  if (el.dataset.ui === 'plot') openPlotter(); else if (el.dataset.ui === 'rescue') PHONE.open('redning'); else if (el.dataset.ui === 'verksted') PHONE.open('verksted'); else if (el.dataset.act) doAct(el);
+  if (el.dataset.ui === 'plot') openPlotter(); else if (el.dataset.ui === 'rescue') PHONE.open('redning'); else if (el.dataset.ui === 'redskap') PHONE.open('redskap'); else if (el.dataset.ui === 'verksted') PHONE.open('verksted'); else if (el.dataset.act) doAct(el);
 });
 hooks.onView = on => { setBodyView(on); if (on) $('loader').classList.add('gone'); $('view3d').textContent = on ? t('view_chart') : '3D'; if (!on){ tab = 'route'; renderPanel(); applyView(); renderStatic(); renderDyn(); } $('legend').hidden = !S.settings.plotter || on; updateMapButtons(); panelDirty = true; };
 $('modeBtn').onclick = () => {

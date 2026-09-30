@@ -58,7 +58,7 @@ function panelRoute(){
   if (S.plan && b.status !== 'idle'){
     const rest = S.plan.wps.slice(S.plan.idx);
     h.push('<h3>' + (S.plan.returning ? t('ret_active') : t('active')) + '</h3>');
-    h.push('<ul class="wps">' + rest.map((w, i) => '<li><span class="n' + (w.fish > 0 ? ' f' : '') + '">' + (S.plan.idx + i + 1) + '</span><span class="lbl">' + (w.port ? portById(w.port).name : coordStr(w)) + '<small>' + (w.port ? '' : (w.fish > 0 ? t('fish_h', w.fish) : t('no_fish'))) + '</small></span></li>').join('') + '</ul>');
+    h.push('<ul class="wps">' + rest.map((w, i) => '<li><span class="n' + (w.fish > 0 ? ' f' : '') + '">' + (S.plan.idx + i + 1) + '</span><span class="lbl">' + (w.port ? portById(w.port).name : coordStr(w)) + '<small>' + (w.port ? '' : (w.act ? wpActLabel(w.act) + (w.fish > 0 ? ', ' : '') : '') + (w.fish > 0 ? t('fish_h', w.fish) : w.act ? '' : t('no_fish'))) + '</small></span></li>').join('') + '</ul>');
     h.push('<div class="range"><input type="range" min="2" max="' + BOAT.vmax + '" step="1" value="' + Math.min(S.plan.speed, BOAT.vmax) + '" id="spdLive" aria-label="' + t('speed') + '"><output id="spdLiveOut">' + S.plan.speed + ' kn</output></div>');
     if (b.status === 'sailing' && b.v < S.plan.speed - 0.5) h.push('<p class="note">' + t('speed_live') + ': ' + fmt(b.v, 0) + ' kn (' + t('waves').toLowerCase() + ')</p>');
     h.push('<div class="btns">' + (S.plan.returning ? '' : '<button class="btn" data-act="retrace">' + t('retrace') + '</button>') + (b.status === 'sailing' ? '<button class="btn" data-act="stop">' + t('stop') + '</button>' : '') + '</div>');
@@ -69,7 +69,8 @@ function panelRoute(){
   h.push('<ul class="wps">' + S.draft.map((w, i) => {
     const lbl = w.port ? portById(w.port).name : coordStr(w);
     const ctl = w.port ? '' : '<span class="step"><button data-act="fm" data-i="' + i + '" aria-label="−">−</button><output>' + (w.fish > 0 ? t('fish_h', w.fish) : t('no_fish')) + '</output><button data-act="fp" data-i="' + i + '" aria-label="+">+</button></span>';
-    return '<li><span class="n' + (w.fish > 0 ? ' f' : '') + '">' + (i + 1) + '</span><span class="lbl">' + lbl + '</span>' + ctl + '<button class="x" data-act="rm" data-i="' + i + '" aria-label="×">×</button></li>';
+    const gch = w.port ? '' : '<button class="gchip' + (w.act ? ' on' : '') + '" data-act="gwp" data-i="' + i + '">' + wpActLabel(w.act) + '</button>';
+    return '<li><span class="n' + (wpStop(w) && !w.port ? ' f' : '') + '">' + (i + 1) + '</span><span class="lbl">' + lbl + gch + '</span>' + ctl + '<button class="x" data-act="rm" data-i="' + i + '" aria-label="×">×</button></li>';
   }).join('') + '</ul>');
   const e = estimate();
   h.push('<div class="range"><input type="range" min="2" max="' + BOAT.vmax + '" step="1" value="' + Math.min(S.draftSpeed, BOAT.vmax) + '" id="spd" aria-label="' + t('speed') + '"><output id="spdOut">' + S.draftSpeed + ' kn, ' + t('lpnm', fmt(fuelLph(S.draftSpeed, windAt(S.t / 60)) / S.draftSpeed, 2)) + '</output></div>');
@@ -115,7 +116,8 @@ function panelFish(){
   h.push(b.status === 'port' ? '<p class="note">' + t('echo_off') + '</p>' : echoSvg());
   h.push('<h3>' + t('fishing') + '</h3>');
   h.push('<div class="kv"><span>' + t('gear') + '</span><span class="' + (b.gear ? 'r0' : 'r2') + '">' + (b.gear ? t('gear_ok') : t('gear_lost')) + '</span></div>');
-  if (b.status === 'fishing'){
+  if (b.status === 'fishing' && b.gop){ h.push('<p class="note">' + GL('Redskapsarbeid, se under.', 'Gear work, see below.') + '</p>'); }
+  else if (b.status === 'fishing'){
     const L = (no, en) => S.lang === 'no' ? no : en, dk = deckPending() > 0.5;
     h.push('<p>' + t('fish_left', dur((b.fishUntil - S.t) / 60)) + '</p><div class="btns"><button class="btn" data-act="stopfish">' + t('stop_fish') + '</button>' +
       (b.deckStop && !b.deckEnd ? '<button class="btn" data-act="deckgo">' + L('Fisk videre', 'Fish on') + '</button>' : dk ? '<button class="btn" data-act="deckstop">' + L('Stopp og sløy', 'Stop and gut') + '</button>' : '') + '</div>');
@@ -128,6 +130,7 @@ function panelFish(){
   h.push('<label class="tog"><input type="checkbox" id="setGut"' + (S.settings.gut ? ' checked' : '') + '><span>' + t('gut') + '<small>' + t('gut_n') + '</small></span></label>');
   h.push('<label class="tog"><input type="checkbox" id="setIce"' + (S.settings.ice ? ' checked' : '') + '><span>' + t('icing') + '<small>' + t('icing_n') + '</small></span></label>');
   h.push('<label class="tog"><input type="checkbox" id="setDeckFirst"' + (S.settings.deckFirst !== false ? ' checked' : '') + '><span>' + t('deck_first') + '<small>' + t('deck_first_n') + '</small></span></label>');
+  h.push(gearPanel());
   return h.join('');
 }
 function valueEst(sp, g){ const H = S.t / 60, ps = PORTS.filter(p => p.mottak).map(p => price(p, sp, H)); return ps.reduce((a, c) => a + c, 0) / ps.length * GM[g]; }
@@ -139,7 +142,7 @@ function panelHold(){
   if (!tot){ h.push('<p class="note">' + t('hold_empty') + '</p>'); return h.join(''); }
   const agg = {};
   for (const x of S.hold){ const g = grade(x.fresh), k = x.sp + g; agg[k] = agg[k] || {sp:x.sp, g, kg:0}; agg[k].kg += x.kg; }
-  const rows = Object.values(agg).sort((a, c) => SP.indexOf(a.sp) - SP.indexOf(c.sp) || 'EABX'.indexOf(a.g) - 'EABX'.indexOf(c.g));
+  const rows = Object.values(agg).sort((a, c) => ALLSP.indexOf(a.sp) - ALLSP.indexOf(c.sp) || 'EABX'.indexOf(a.g) - 'EABX'.indexOf(c.g));
   let sum = 0;
   h.push('<table class="tbl"><thead><tr><th>' + t('species') + '</th><th>' + t('quality') + '</th><th>' + t('kg') + '</th><th>' + t('value') + '</th></tr></thead><tbody>');
   rows.forEach(r => { const v = r.kg * valueEst(r.sp, r.g); sum += v; h.push('<tr><td>' + spName(r.sp) + '</td><td>' + t('grade_' + r.g) + '</td><td>' + fmt(r.kg, 0) + '</td><td>' + kr(v) + '</td></tr>'); });
@@ -232,10 +235,12 @@ function panelPort(){
     const ls = S.lastSale;
     if (ls && ls.port === b.port && S.t - ls.t < 240){
       const LN = (no, en) => S.lang === 'no' ? no : en;
-      h.push('<h3>' + t('slip', portById(ls.port).name) + (ls.field ? ' · ' + LN('fangstfelt', 'field') + ' ' + ls.field : '') + '</h3><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>' + t('species') + '</th><th>' + LN('Størrelse', 'Size') + '</th><th>' + t('quality') + '</th><th>' + t('kg') + '</th><th>kr/kg</th><th>kr</th></tr></thead><tbody>');
+      h.push('<h3>' + t('slip', portById(ls.port).name) + (ls.field ? ' · ' + LN('fangstfelt', 'field') + ' ' + ls.field : '') + (ls.gear && ls.gear.length ? ' · ' + ls.gear.map(k => k === 'juksa' ? LN('juksa', 'jig') : GEAR[k][S.lang].toLowerCase()).join(', ') : '') + '</h3><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>' + t('species') + '</th><th>' + LN('Størrelse', 'Size') + '</th><th>' + t('quality') + '</th><th>' + t('kg') + '</th><th>kr/kg</th><th>kr</th></tr></thead><tbody>');
       ls.lines.forEach(r => { const sd = SPECIES[r.sp], cl = sd && sd.cls[r.c], pk = r.gut ? r.kg / sd.uh : r.kg;
         h.push('<tr><td>' + spName(r.sp) + (r.gut ? ' <small>' + LN('sløyd u/h', 'gutted') + '</small>' : '') + '</td><td>' + (cl ? cl[2] : '') + '</td><td>' + t('grade_' + r.g) + '</td><td>' + fmt(pk, 0) + '</td><td>' + fmt(r.sum / Math.max(pk, 0.01), 2) + '</td><td>' + fmt(r.sum, 0) + '</td></tr>'); });
       for (const n in (ls.ex || {})) if (ls.ex[n].kg > 0.05) h.push('<tr><td>' + (n === 'lever' ? LN('Lever', 'Liver') : LN('Rogn', 'Roe')) + '</td><td></td><td></td><td>' + fmt(ls.ex[n].kg, 1) + '</td><td></td><td>' + fmt(ls.ex[n].sum, 0) + '</td></tr>');
+      if (ls.crabFine) h.push('<tr><td colspan="3">' + LN('Gebyr for krabbe under minstemål', 'Fine for undersized crab') + '</td><td></td><td></td><td>−' + fmt(ls.crabFine, 0) + '</td></tr>');
+      if (ls.roeCut > 0.5) h.push('<tr><td colspan="3">' + LN('Trekk for rognkrabbe (dårlig sortering)', 'Deduction for berried crab (poor sorting)') + '</td><td></td><td></td><td>−' + fmt(ls.roeCut, 0) + '</td></tr>');
       if (ls.confKg > 0.5) h.push('<tr><td colspan="3">' + (ls.acc === 'none' ? LN('Inndratt over bifangstgrensen', 'Over the bycatch limit, confiscated') : LN('Inndratt torsk over kvote', 'Cod over quota, confiscated')) + '</td><td>' + fmt(ls.confKg, 0) + '</td><td></td><td>−' + fmt(ls.confKr, 0) + '</td></tr>');
       h.push('<tr class="sum"><td>' + t('total') + '</td><td></td><td></td><td>' + fmt(ls.lines.reduce((a, r) => a + (r.gut ? r.kg / SPECIES[r.sp].uh : r.kg), 0), 0) + '</td><td></td><td>' + fmt(ls.total, 0) + '</td></tr></tbody></table></div>');
       for (const o of (ls.ord || [])) h.push('<p class="note">' + LN('Bestilling fra ' + o.cust + ': ' + fmt(o.kg, 0) + ' kg ' + SPECIES[o.sp].no.toLowerCase() + ', tillegg ' + kr(Math.round(o.kr)) + (o.done ? ', ferdig levert, bonus ' + kr(o.bonus) : ', ' + fmt(o.left, 0) + ' kg igjen') + '.', 'Order from ' + o.cust + ': ' + fmt(o.kg, 0) + ' kg ' + SPECIES[o.sp].en.toLowerCase() + ', premium ' + kr(Math.round(o.kr)) + (o.done ? ', fully delivered, bonus ' + kr(o.bonus) : ', ' + fmt(o.left, 0) + ' kg left') + '.') + '</p>');

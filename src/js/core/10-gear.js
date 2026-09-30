@@ -393,6 +393,11 @@ function gearJob(j){
   if (j.kind === 'mend'){ const i = pg.shore.findIndex(x => x.kind === 'mendself' && x.lenke.id === j.nid); if (i >= 0){ const l = pg.shore[i].lenke; pg.shore.splice(i, 1); l.cond = 0.95; pg.nets.push(l); log(l.n + ' garn er bøtet.', l.n + ' nets are mended.'); } return true; }
   return false;
 }
+function gearJobCancel(j){
+  const pg = S.pgear; if (!pg) return;
+  if (j.kind === 'egn'){ const i = pg.shore.findIndex(x => x.kind === 'egnself' && x.lk === j.lk && x.n === j.n); if (i >= 0) pg.shore.splice(i, 1); pg.lines[j.lk].n += j.n; pg.bait += j.n * LINE_KINDS[j.lk].baitKg; }
+  if (j.kind === 'mend'){ const i = pg.shore.findIndex(x => x.kind === 'mendself' && x.lenke.id === j.nid); if (i >= 0){ pg.nets.push(pg.shore[i].lenke); pg.shore.splice(i, 1); } }
+}
 function shoreTick(){
   const b = S.boat, pg = S.pgear; if (!pg || !pg.shore.length || b.status !== 'port') return;
   for (const j of pg.shore.slice()){
