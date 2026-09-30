@@ -10,6 +10,7 @@ function doAct(el){
   else if (act === 'fp' || act === 'fm') draftEdit(() => { const w = S.draft[i]; if (w) w.fish = clamp((w.fish || 0) + (act === 'fp' ? 1 : -1), 0, 12); });
   else if (act === 'rm') draftEdit(() => S.draft.splice(i, 1));
   else if (act === 'undo') draftUndo();
+  else if (act === 'leia'){ leiaArm(!LEIA_ARM); return; }
   else if (act === 'redo') draftRedo();
   else if (act === 'clear') draftEdit(() => { S.draft = []; });
   else if (act === 'start'){

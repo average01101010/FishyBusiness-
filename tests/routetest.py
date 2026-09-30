@@ -1,7 +1,9 @@
-"""The route editor, part 1: WP names, a card per waypoint with course, length and ETA, undo and redo, moving a point with a finger,
+"""The route editor. Part 1: WP names, a card per waypoint with course, length and ETA, undo and redo, moving a point with a finger,
 inserting one with the «+» on a leg, and the harbour's way-out points (A12). Touch goes through CDP, in landscape and portrait.
-Prints OK or FEIL per check."""
-from _env import GAME
+Part 2: «Følg leia» from Finnsnes to every fishing ground and to Botnhamn (clear of land and hazards, at most 12 WP, slices under
+16 ms, and how its length compares with the hand-drawn routes in routes.json and the tightest way along the shore), the button and
+the tap on the chart, undo in one step, and the comparison line for a hand-drawn route. Prints OK or FEIL per check."""
+from _env import GAME, ROUTES
 import asyncio, json, re
 from playwright.async_api import async_playwright
 
@@ -125,12 +127,63 @@ async def run(p, W, H, tag):
     return errs
 
 
+async def leia(p):
+    R = json.load(open(ROUTES))
+    ctx = await p.new_context(viewport={'width': 1293, 'height': 830}, has_touch=True)
+    pg = await ctx.new_page(); cdp = await ctx.new_cdp_session(pg); T = Touch(cdp)
+    errs = []
+    pg.on('pageerror', lambda e: errs.append(str(e)))
+    await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(500)
+    await pg.wait_for_function("DEPTH !== null", timeout=90000); await pg.evaluate(SETUP); await pg.wait_for_timeout(800)
+    # the algorithm: Finnsnes to each fishing ground (the hand-drawn routes end there) and to Botnhamn
+    rows = []
+    for k in sorted(R):
+        rows.append(json.loads(await pg.evaluate("""async (rt) => { const F = portById('finnsnes'), g = rt[rt.length - 1], sd = safeDepth(); const res = await leiaRoute(F.p, g, 'finnsnes', null);
+          if (res.why) return JSON.stringify({why:res.why}); const ti = await leiaRoute(F.p, g, 'finnsnes', null, {tight:true}); let man = dist(F.p, rt[0]); for (let i = 1; i < rt.length; i++) man += dist(rt[i - 1], rt[i]);
+          let a = F.p, bad = 0; res.wps.forEach(w => { if (!clearLine(a, w) || legHazard(a, w, sd).unsafe) bad++; a = w; });
+          return JSON.stringify({n:res.wps.length, nm:+res.nm.toFixed(2), hand:+(res.nm / (man / NM)).toFixed(3), tight:+(res.nm / ti.nm).toFixed(3), bad, slice:+res.st.maxSlice.toFixed(1), ms:Math.round(res.st.ms)}); }""", R[k])))
+    rows.append(json.loads(await pg.evaluate("""async () => { const F = portById('finnsnes'), B = portById('botnhamn'), sd = safeDepth(); const res = await leiaRoute(F.p, B.p, 'finnsnes', 'botnhamn'); let a = F.p, bad = 0; res.wps.forEach(w => { if (!clearLine(a, w) || legHazard(a, w, sd).unsafe) bad++; a = w; });
+      const last = res.wps[res.wps.length - 1]; return JSON.stringify({n:res.wps.length, nm:+res.nm.toFixed(2), bad, end:dist(last, B.p) < 0.001, slice:+res.st.maxSlice.toFixed(1), ms:Math.round(res.st.ms)}); }""")))
+    print('    ', rows)
+    ok = [r for r in rows if 'why' not in r]
+    check(len(ok) == len(rows) and all(r['bad'] == 0 for r in ok) and rows[-1]['end'], 'Følg leia: alle etapper til de seks feltene og Botnhamn er fri for land, grunner og skjær')
+    check(all(r['n'] <= 12 for r in ok), 'Følg leia: høyst 12 WP', [r['n'] for r in ok])
+    check(all(r['slice'] < 16 for r in ok), 'Følg leia: hver bit tar under 16 ms', [r['slice'] for r in ok])
+    tight = [r['tight'] for r in ok[:-1]]; hand = [r['hand'] for r in ok[:-1]]
+    check(all(1.0 <= x <= 1.35 for x in tight), 'Følg leia er litt lengre enn den strammeste veien langs land', tight)
+    check(all(0.85 <= x <= 1.35 for x in hand), 'og 0,85–1,35 ganger de håndtegnede testrutene (de er ikke de korteste)', hand)
+
+    # the button, then a tap on Botnhamn: the route follows the fairway there, and undo takes it all away at once
+    await pg.evaluate("view.cx = 55.2; view.cy = 38.5; view.z = MAP_H / 36; applyView(); scheduleStatic(); renderDyn()"); await pg.wait_for_timeout(500)
+    lb = json.loads(await pg.evaluate("JSON.stringify((r => ({x:r.x + r.width / 2, y:r.y + r.height / 2, vis:!$('rLeia').hidden}))($('rLeia').getBoundingClientRect()))"))
+    await T.tap(lb['x'], lb['y'])
+    armed = await pg.evaluate("LEIA_ARM && /Følg leia/.test($('panel').textContent)")
+    bh = await pg.evaluate("mapToClient(portById('botnhamn').p)")
+    await T.tap(bh['x'], bh['y'])
+    await pg.wait_for_function("!LEIA_BUSY && S.draft.length > 0", timeout=30000); await pg.wait_for_timeout(300)
+    d = json.loads(await pg.evaluate("JSON.stringify({n:S.draft.length, last:S.draft[S.draft.length - 1].port, leia:S.draft.filter(w => w.leia).length, bad:estimate().bad, txt:$('panel').textContent})"))
+    check(lb['vis'] and armed and d['last'] == 'botnhamn' and d['leia'] >= 1 and d['bad'] < 0 and 'Ruta følger leia' in d['txt'], 'knappen og et trykk på Botnhamn gir en rute langs leia', {k: d[k] for k in ('n', 'last', 'leia', 'bad')})
+    await pg.screenshot(path='route_leia.png')
+    await pg.evaluate("$('rUndo').click()"); n1 = await pg.evaluate("S.draft.length")
+    check(n1 == 0, 'angre tar bort hele autoruta i ett steg', n1)
+    # a hand-drawn route gets the comparison with following the fairway
+    await pg.evaluate(SETUP); await pg.wait_for_timeout(400)
+    for q in R['4'][:-1]:
+        c = await pg.evaluate(C, q); await T.tap(c['x'], c['y'])
+    await pg.wait_for_function("/Din rute:/.test($('panel').textContent)", timeout=30000)
+    cmp = await pg.evaluate("document.querySelector('#panel .leiacmp').textContent")
+    check(re.search(r'Følg leia: [\d,]+ nm · .+ · [\d,]+ L\. Din rute: [−+][\d,]+ nm, [−+]\d+ min, [−+][\d,]+ L\.', cmp), 'håndtegnet rute får sammenligningen med leia', cmp)
+    await ctx.close()
+    return errs
+
+
 async def main():
     async with async_playwright() as p:
         # software compositing: with SwiftShader compositing the plotter draws about one frame a second, and each touch move waits for a frame
         b = await p.chromium.launch(args=['--disable-gpu-compositing', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
         errs = await run(b, 1293, 830, 'liggende')
         errs += await run(b, 915, 1208, 'staaende')
+        errs += await leia(b)
         # A12: the harbour adds a way-out or way-in point only when the way from it is clear
         pg = await b.new_page(viewport={'width': 900, 'height': 700})
         await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(400)

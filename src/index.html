@@ -49,6 +49,7 @@
       <div class="attr">© Kartverket, Mapzen (CC BY) · © OpenStreetMap (ODbL)</div>
       <div id="hud"></div>
       <div class="zoom">
+        <button id="rLeia" class="rt leia" type="button" hidden aria-label="Følg leia"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg></button>
         <button id="rUndo" class="rt" type="button" hidden aria-label="Angre"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>
         <button id="rRedo" class="rt" type="button" hidden aria-label="Gjør om"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg></button>
         <button id="zin" type="button">+</button>
@@ -80,6 +81,7 @@
 @include(js/core/08-lore.js)
 @include(js/core/09-tattoos.js)
 @include(js/core/10-gear.js)
+@include(js/core/11-route.js)
 @include(js/ui/01-i18n.js)
 @include(js/ui/02-format-state.js)
 @include(js/ui/03-map.js)

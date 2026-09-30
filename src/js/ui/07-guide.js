@@ -65,7 +65,8 @@ function panelRoute(){
     return h.join('');
   }
   h.push('<p class="note">' + t('route_hint') + (S.marks.length ? ' ' + t('marks_n') : '') + '</p>');
-  if (!S.draft.length){ h.push('<p>' + t(b.status === 'port' && b.port === 'finnsnes' ? 'route_empty_fs' : 'route_empty') + '</p>'); return h.join(''); }
+  if (LEIA_BUSY || LEIA_ARM) h.push('<p class="leiahint">' + (LEIA_BUSY ? (S.lang === 'no' ? 'Finner leia …' : 'Finding the fairway …') : (S.lang === 'no' ? 'Følg leia: trykk i kartet der du vil. Båten holder seg unna land, grunner og skjær.' : 'Follow the fairway: tap the chart where you want to go. The boat keeps off land, shallows and rocks.')) + '</p>');
+  if (!S.draft.length){ h.push('<p>' + t(b.status === 'port' && b.port === 'finnsnes' ? 'route_empty_fs' : 'route_empty') + '</p><div class="btns"><button class="btn leia' + (LEIA_ARM || LEIA_BUSY ? ' on' : '') + '" data-act="leia"' + (LEIA_BUSY ? ' disabled' : '') + '>' + (S.lang === 'no' ? 'Følg leia' : 'Follow the fairway') + '</button></div>'); return h.join(''); }
   const tl = draftTimeline(), L = (no, en) => S.lang === 'no' ? no : en, when = T => hm(T / 60) + ' <small>' + inReal(T - S.t) + '</small>';
   h.push('<ul class="wps wpcards"><li class="wpc wp0"><div class="wh"><span class="n">' + wpName(0) + '</span><span class="lbl">' + (b.status === 'port' ? portById(b.port).name : L('Båten', 'The boat')) + '<small>' + coordStr(b.pos) + '</small></span></div><div class="wg"><span>' + L('Avgang ', 'Departs ') + '<b>' + (tl.dep - S.t < 1 ? L('nå', 'now') : when(tl.dep)) + '</b></span></div></li>' + S.draft.map((w, i) => {
     const lg = tl.legs[i], lbl = w.port ? portById(w.port).name : coordStr(w);
@@ -85,6 +86,10 @@ function panelRoute(){
   if (e.fishH) h.push('<div class="kv"><span>' + t('fish_time') + '</span><span>' + dur(e.fishH) + '</span></div>');
   h.push('<div class="kv"><span>' + t('fuel_est') + '</span><span>' + fmt(e.fuel, 0) + ' L <small class="note">' + t('onboard', fmt(b.fuel, 0)) + '</small></span></div>');
   h.push('<div class="kv"><span>' + L('Turen er ferdig', 'Trip done') + '</span><span>' + when(tl.end) + '</span></div>');
+  { const c = leiaCompare();
+    if (S.draft.every(w => w.leia || w.port || w.auto) && S.draft.some(w => w.leia)) h.push('<p class="note leiacmp">' + L('Ruta følger leia.', 'The route follows the fairway.') + '</p>');
+    else if (c){ const hrs = c.nm / e.v, fl = fuelLph(e.v, windAt(S.t / 60)) * hrs, sg = v => (v < 0 ? '−' : '+') + fmt(Math.abs(v), 1), sgm = m => (m < 0 ? '−' : '+') + Math.round(Math.abs(m)) + ' min';
+      h.push('<p class="note leiacmp">' + L('Følg leia: ', 'Following the fairway: ') + fmt(c.nm, 1) + ' nm · ' + dur(hrs) + ' · ' + fmt(fl, 1) + ' L. ' + L('Din rute: ', 'Your route: ') + sg(e.nm - c.nm) + ' nm, ' + sgm((e.hours - hrs) * 60) + ', ' + sg(e.fuel - fl) + ' L.</p>'); } }
   let can = true;
   if (e.bad >= 0){ h.push('<p class="bad">' + t('crosses', legName(e.bad)) + '</p>'); can = false; }
   { const hz = draftHazards(), sd = safeDepth(), bad = hz.map((q, i) => [q, i]).filter(x => x[0].unsafe); if (bad.length) h.push('<p class="warn">' + (S.lang === 'no' ? 'Gult: ' : 'Yellow: ') + bad.slice(0, 4).map(([q, i]) => (S.lang === 'no' ? 'etappe ' : 'leg ') + legName(i) + ' ('  + (q.minD < sd ? fmt(q.minD, 1) + ' m' : '') + (q.minD < sd && q.rocks ? ', ' : '') + (q.rocks ? (S.lang === 'no' ? 'skjær' : 'rocks') : '') + ')').join(', ') + '. ' + (S.lang === 'no' ? 'Sikker dybde er ' + sd + ' m, båten stikker ' + fmt(BOAT.draft, 1) + ' m. Du kan kjøre ruten, men da på egen risiko.' : 'Safety depth is ' + sd + ' m, the boat draws ' + fmt(BOAT.draft, 1) + ' m. You can run the route, at your own risk.') + '</p>'); }
@@ -92,7 +97,7 @@ function panelRoute(){
   if (false){ let rk = 0, a0 = b.pos; for (const w of S.draft){ rk += rocksNear(a0, w, 0.03); a0 = w; } if (rk) h.push('<p class="warn">' + (S.lang === 'no' ? 'Ruten går tett forbi ' + rk + (rk === 1 ? ' skjær eller båe' : ' skjær og båer') + '. Sjekk kartet.' : 'The route passes close to ' + rk + (rk === 1 ? ' rock' : ' rocks') + '. Check the chart.') + '</p>'); }
   if (e.fuel > b.fuel){ h.push('<p class="bad">' + t('nofuel') + '</p>'); can = false; }
   else if (e.fuel > b.fuel * 0.8) h.push('<p class="warn">' + t('lowres') + '</p>');
-  h.push('<div class="btns rbar"><button class="btn primary" data-act="start"' + (can ? '' : ' disabled') + '>' + t('start') + '</button><button class="btn" data-act="clear">' + t('clear') + '</button></div>');
+  h.push('<div class="btns rbar"><button class="btn primary" data-act="start"' + (can ? '' : ' disabled') + '>' + t('start') + '</button><button class="btn leia' + (LEIA_ARM || LEIA_BUSY ? ' on' : '') + '" data-act="leia"' + (LEIA_BUSY || S.draft[S.draft.length - 1].port ? ' disabled' : '') + '>' + (S.lang === 'no' ? 'Følg leia' : 'Follow the fairway') + '</button><button class="btn" data-act="clear">' + t('clear') + '</button></div>');
   return h.join('');
 }
 

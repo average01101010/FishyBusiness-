@@ -384,3 +384,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-nume
 .wpins circle{fill:var(--sea);stroke:var(--mag);opacity:.85} .wpins path{stroke:var(--mag);stroke-linecap:round}
 .zoom button.rt{width:44px;height:44px;margin-left:-6px;display:grid;place-items:center;color:var(--ink)}
 .zoom button.rt[hidden]{display:none} .zoom button.rt:disabled{opacity:.35;cursor:default}
+.zoom button.rt.on,.btn.leia.on{background:var(--mag);border-color:var(--mag);color:#fff}
+.zoom button.rt.busy svg{animation:leiaspin 1s linear infinite} @keyframes leiaspin{to{transform:rotate(360deg)}}
+.leiahint{margin:6px 0;padding:8px 10px;border-radius:8px;background:rgba(208,40,120,.1);border:1px solid rgba(208,40,120,.35);font-size:13px}
+.leiacmp{font-variant-numeric:tabular-nums}

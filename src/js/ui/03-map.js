@@ -171,6 +171,7 @@ function aisInfo(n){
 function renderAisCard(){ const el = $('aisCard'); if (!AISSEL){ el.hidden = true; return; } const n = AISNOW.find(q => q.id === AISSEL); if (!n){ el.hidden = true; return; } el.innerHTML = aisInfo(n); el.hidden = false; $('aisX').onclick = () => { AISSEL = null; renderAisCard(); renderDyn(); }; }
 function renderDyn(){
   const u = 1 / view.px, b = S.boat, g = [];
+  renderRouteTools();
   // trail
   if (b.status !== 'port' && S.trail.length){
     const pts = S.trail.concat([b.pos]);
@@ -262,6 +263,7 @@ window.addEventListener('resize', () => { applyView(); scheduleStatic(); });
 
 function addWaypoint(pt){
   const b = S.boat;
+  if (LEIA_ARM){ leiaTo(pt); return; }
   if (!['port', 'idle'].includes(b.status)){ toast(t('cant_plan')); return; }
   if (S.draft.length && S.draft[S.draft.length - 1].port){ toast(t('ends_port')); return; }
   const r = 22 / view.px; let near = null, bd = 1e9;
@@ -283,5 +285,6 @@ function addWaypoint(pt){
   renderDyn(); renderRouteTools();
 }
 $('rUndo').onclick = () => routeUndoRedo(false);
+$('rLeia').onclick = () => leiaArm(!LEIA_ARM);
 $('rRedo').onclick = () => routeUndoRedo(true);
 

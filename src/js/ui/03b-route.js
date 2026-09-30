@@ -32,10 +32,14 @@ const canEditDraft = () => ['port', 'idle'].includes(S.boat.status) && !(S.plan 
 function routeChanged(){ hzCache.k = ''; panelDirty = true; renderDyn(); renderRouteTools(); }
 
 // --- the floating undo and redo buttons over the zoom buttons on the chart
+let rtKey = '';
 function renderRouteTools(){
   const u = $('rUndo'), r = $('rRedo'); if (!u) return;
-  const h = rhist(), on = canEditDraft() && (S.draft.length > 0 || h.u.length > 0 || h.r.length > 0);
+  const h = rhist(), key = [S.cur, S.lang, canEditDraft(), S.draft.length, S.draft.length && S.draft[S.draft.length - 1].port, h.u.length, h.r.length, LEIA_ARM, LEIA_BUSY, document.body.classList.contains('v3d')].join('|');
+  if (key === rtKey) return; rtKey = key;
+  const on = canEditDraft() && (S.draft.length > 0 || h.u.length > 0 || h.r.length > 0), lb = $('rLeia');
   u.hidden = r.hidden = !on; u.disabled = !h.u.length; r.disabled = !h.r.length;
+  if (lb){ lb.hidden = !canEditDraft() || document.body.classList.contains('v3d'); lb.disabled = LEIA_BUSY || !!(S.draft.length && S.draft[S.draft.length - 1].port); lb.classList.toggle('on', LEIA_ARM || LEIA_BUSY); lb.classList.toggle('busy', LEIA_BUSY); lb.setAttribute('aria-label', S.lang === 'no' ? 'Følg leia' : 'Follow the fairway'); }
   u.setAttribute('aria-label', S.lang === 'no' ? 'Angre' : 'Undo'); r.setAttribute('aria-label', S.lang === 'no' ? 'Gjør om' : 'Redo');
 }
 function routeUndoRedo(redo){ if (!canEditDraft()) return; if (redo ? draftRedo() : draftUndo()){ routeChanged(); save(); } }
@@ -63,7 +67,7 @@ function routeGrab(mp){
 let rdragRaf = 0;
 function routeDragMove(g, mp){
   if (g.kind === 'ins'){ S.draft.splice(g.i, 0, {x:mp.x, y:mp.y, port:null, fish:0}); g.kind = 'move'; g.inserted = true; }
-  const w = S.draft[g.i]; w.x = mp.x; w.y = mp.y; delete w.auto; g.moved = true; g.land = isLand(mp); RDRAG = g;
+  const w = S.draft[g.i]; w.x = mp.x; w.y = mp.y; delete w.auto; delete w.leia; g.moved = true; g.land = isLand(mp); RDRAG = g;
   if (!rdragRaf) rdragRaf = requestAnimationFrame(() => { rdragRaf = 0; renderDyn(); });
 }
 function routeDragCancel(g){ S.draft = JSON.parse(g.before); RDRAG = null; routeChanged(); }
@@ -86,3 +90,52 @@ function routeFocus(i){
 }
 // a map point on the screen (for the tests and the first-trip guide)
 function mapToClient(p){ const m = svg.getScreenCTM(); return {x:m.a * p.x + m.c * p.y + m.e, y:m.b * p.x + m.d * p.y + m.f}; }
+
+// --- «Følg leia»: the next tap on the chart is where to go, and the route there follows the fairway (core/11-route.js)
+let LEIA_ARM = false, LEIA_BUSY = false;
+function leiaArm(on){
+  if (on && S.draft.length && S.draft[S.draft.length - 1].port){ toast(t('ends_port')); return; }
+  LEIA_ARM = on && canEditDraft(); if (LEIA_ARM) toast(S.lang === 'no' ? 'Trykk i kartet der du vil. Båten finner leia dit.' : 'Tap the chart where you want to go. The boat finds the fairway there.');
+  panelDirty = true; renderPanel(); renderRouteTools();
+}
+async function leiaTo(pt){
+  const b = S.boat; LEIA_ARM = false;
+  if (!canEditDraft() || LEIA_BUSY) return;
+  if (S.draft.length && S.draft[S.draft.length - 1].port){ toast(t('ends_port')); return; }
+  const r = 22 / view.px; let near = null, bd = 1e9;
+  for (const p of PORTS){ const d = dist(p.p, pt); if (d < r && d < bd){ bd = d; near = p; } }
+  const start = S.draft.length ? S.draft[S.draft.length - 1] : b.pos, aPort = !S.draft.length && b.status === 'port' ? b.port : null;
+  if (near && aPort === near.id){ toast(t('already_here')); return; }
+  if (!near && isLand(pt)){ toast(t('on_land')); return; }
+  const before = JSON.stringify(S.draft); LEIA_BUSY = true; panelDirty = true; renderPanel(); renderRouteTools();
+  let res; try { res = await leiaRoute({x:start.x, y:start.y}, near ? near.p : pt, aPort, near ? near.id : null); } finally { LEIA_BUSY = false; }
+  if (JSON.stringify(S.draft) !== before){ routeChanged(); return; }   // the route was changed while the way was being found
+  if (res.why){ toast(S.lang === 'no' ? res.why[0] : res.why[1]); routeChanged(); return; }
+  draftEdit(() => res.wps.forEach((q, i) => { const last = i === res.wps.length - 1; S.draft.push(last && near ? {x:near.p.x, y:near.p.y, port:near.id, fish:0} : {x:q.x, y:q.y, port:null, fish:0, leia:true}); }));
+  if (near && window.innerWidth <= 700) document.body.classList.add('drawer');
+  if (tab !== 'route') setTab('route');
+  routeChanged(); save();
+}
+// how the drawn route compares with following the fairway through the same stops: worked out in the background, then shown
+const LEIA_CMP = {key:'', res:null, busy:false, timer:0};
+function leiaStops(){
+  const b = S.boat, out = [{p:{x:b.pos.x, y:b.pos.y}, port:!S.draft.length || b.status !== 'port' ? null : b.port}];
+  S.draft.forEach((w, i) => { if (w.port || wpStop(w) || i === S.draft.length - 1) out.push({p:{x:w.x, y:w.y}, port:w.port || null}); });
+  return out;
+}
+function leiaCompare(){
+  if (!S.draft.length || S.draft.every(w => w.leia || w.port || w.auto)) return null;
+  const st = leiaStops(), key = safeDepth() + '|' + st.map(s => s.p.x.toFixed(3) + ',' + s.p.y.toFixed(3) + (s.port || '')).join(';');
+  if (LEIA_CMP.key === key) return LEIA_CMP.res;
+  clearTimeout(LEIA_CMP.timer);
+  LEIA_CMP.timer = setTimeout(async () => {
+    if (LEIA_CMP.busy) return; LEIA_CMP.busy = true;
+    try {
+      let nm = 0;
+      for (let i = 1; i < st.length; i++){ const r = await leiaRoute(st[i - 1].p, st[i].p, st[i - 1].port, st[i].port); if (r.why){ nm = null; break; } nm += r.nm; }
+      LEIA_CMP.key = key; LEIA_CMP.res = nm == null ? null : {nm};
+    } finally { LEIA_CMP.busy = false; }
+    panelDirty = true; renderPanel();
+  }, 350);
+  return null;
+}
