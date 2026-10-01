@@ -497,3 +497,7 @@ body.vplot #setBar{max-width:calc(100% - var(--sidew) - 80px)}
 .wk-sk{display:grid;grid-template-columns:auto 34px 1fr;gap:2px 8px;align-items:center;font-size:12.5px;margin-bottom:6px}.wk-sk .qbar{margin:0}.wk-v{text-align:right;font-variant-numeric:tabular-nums}
 .wk-p .ph-btnrow{display:flex;gap:6px}.wk-p .ph-btnrow .ph-btn{flex:1;min-height:44px;margin:0}
 .wk-said{margin-top:6px;font-size:12.5px}.wk-said p{margin:2px 0}
+/* your energy: the edges darken under 15 %, and at 0 the screen goes black while you sleep */
+#vign{position:fixed;inset:0;pointer-events:none;z-index:63;opacity:0;transition:opacity 2s;background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.92) 100%)}
+#sleep{position:fixed;inset:0;z-index:64;background:#000;color:#cfd6dd;display:flex;align-items:center;justify-content:center;text-align:center;opacity:0;transition:opacity 3s;padding:16px}
+#sleep[hidden]{display:none}#sleep.on{opacity:1}.sl-in b{font:700 22px var(--sans);display:block;margin-bottom:10px}.sl-in p{margin:6px 0;font-size:15px;opacity:.85}#slTime{font-size:18px;opacity:1}

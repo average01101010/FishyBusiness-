@@ -205,7 +205,7 @@ function tick(){
   if (dt > 6) catchUp(dt * 1000);
   else { acc += dt * GAME_RATE * S.mult / 60; let n = 0; while (acc >= 1 && n < 3000){ step(); acc -= 1; n++; } }
   heatTick();
-  if (!G3.isActive()){ renderDyn(); if (AISSEL) renderAisCard(); heatPaint(); } renderHud(); renderClock(); renderActs(); DOCK.tick(); INSTR.renderGPS(); tutUpdate(); PHONE.status(); PHONE.tickHome();
+  if (!G3.isActive()){ renderDyn(); if (AISSEL) renderAisCard(); heatPaint(); } renderHud(); renderClock(); renderActs(); DOCK.tick(); energyUi(); INSTR.renderGPS(); tutUpdate(); PHONE.status(); PHONE.tickHome();
   if (S.order && S.t >= S.order.due) deliverOrder();
   const pnow = performance.now();
   if ((panelDirty || pnow - lastPanel > 1000) && !panelBusy()){ renderPanel(); lastPanel = pnow; panelDirty = false; }

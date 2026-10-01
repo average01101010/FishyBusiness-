@@ -121,6 +121,7 @@ function step(){
   if (!S.fleet || !S.fleet.length) ensureFleet();
   if (S.t % 60 === 0){ ordersTick(S.t / 60); borsTick(S.t / 60); eachVessel(() => crewTick(S.t / 60)); }
   S.t += 1; const H = S.t / 60;
+  energyMinute();
   if (S.t % 60 === 0){ hourly(); eachVessel(navHour); eachVessel(loreHour); }
   if (S.t % 60 === 0) for (const pid in S.market) for (const sp in S.market[pid]) S.market[pid][sp] *= 0.97;
   if (S.t % 60 === 0 && S.stock) stockHour(H);
@@ -154,6 +155,8 @@ function vesselStep(H){
   if (b.status === 'engine' && S.t >= b.engineUntil){ b.status = b.prev || 'idle'; b.prev = null; log('Motoren startet igjen.', 'The engine is running again.'); }
   // the first trip waits in port for wind (the departure is put off) but does not turn back once out
   if (b.tutWait && (b.status !== 'idle' || (S.haill && S.haill.type === 'luksus'))){ if (b.status === 'idle'){ b.status = 'fishing'; b.fishUntil = S.t + b.tutWait * 60; log('Haillen er om bord. Starter fiske i ' + b.tutWait + ' t.', 'The luck is aboard. Fishing for ' + b.tutWait + ' h.'); } b.tutWait = null; }
+  // you are asleep alone aboard: nobody steers or fishes, and the boat drifts (core/15-energy.js)
+  if (sleepAlone() && ['sailing', 'fishing', 'idle'].includes(b.status)){ sleepDrift(H); risk(W, hs); return; }
   if (S.settings.autoOn && W > S.settings.autoW && ['sailing','fishing','idle'].includes(b.status) && !(S.plan && S.plan.returning) && !(S.tut && S.tut.catch)){
     startReturn(true, W);
   }

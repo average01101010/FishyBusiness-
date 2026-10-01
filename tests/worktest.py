@@ -78,7 +78,7 @@ async def main():
           b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; S.plan = null; for (let h = 0; h < 10; h++){ rr.wk = {}; crewTick(S.t / 60 + h); }
           R.afterNight = restCheck(rr.rest);
           // the crew talks: a day at sea gives some lines, never two periodic ones within an hour and a half
-          b.status = 'idle'; b.port = null; b.pos = {...g}; S.crew = [hand(30), hand(45)]; S.crew[0].traits = ['spokefugl']; S.sayT = null; const l0 = S.log.length;
+          S.energy = 100; b.status = 'idle'; b.port = null; b.pos = {...g}; S.crew = [hand(30), hand(45)]; S.crew[0].traits = ['spokefugl']; S.sayT = null; const l0 = S.log.length;
           for (let i = 0; i < 24 * 60; i++) step();
           const said = S.log.slice(l0).filter(e => /: «/.test(e.no)); R.said = said.length; let minGap = 1e9; for (let i = 1; i < said.length; i++) minGap = Math.min(minGap, said[i].t - said[i - 1].t); R.minGap = minGap;
           R.kept = S.crew.reduce((a, c) => a + (c.said || []).length, 0);
@@ -90,6 +90,32 @@ async def main():
         print(ok(r['mood'][0] > r['mood'][1] + 3), 'good food lifts the mood, bad food sinks it')
         print(ok(r['leftAtStart'] >= 14 and r['broken'] == 'gap' and r['warned'] and r['afterNight'] is None), 'a 15-hour trip breaks the 14-hour rule with a message naming it; a night at the quay puts it right')
         print(ok(r['said'] >= 3 and r['minGap'] >= 15 and r['kept'] >= 1), 'the crew talks during a day at sea, not in bursts, and each keeps their last lines')
+
+        # your energy (core/15-energy.js): a day at sea empties it, eight hours at the quay fill it; at 0 you sleep for eight hours
+        r = await pg.evaluate("""(()=>{ const R = {}, b = S.boat, g = GROUNDS[2].p; S.me = S.cur; S.sleep = null; S.myJob = null;
+          const hand = () => Object.assign(genCrew(), {bi:false, off:false, fatigue:10, morale:62, traits:['stolt'], known:[true, true]});
+          const sea = st => { b.status = st; b.port = null; b.pos = {...g}; b.gop = null; b.deckStop = false; S.hold = []; S.plan = null; b.rig = 'juksa'; b.gear = true; b.drift = 0; };
+          sea('idle'); S.crew = []; S.energy = 100; for (let i = 0; i < 60; i++) step(); R.seaHour = +(100 - S.energy).toFixed(2);
+          b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; S.energy = 50; for (let i = 0; i < 60; i++) step(); R.quayHour = +(S.energy - 50).toFixed(2);
+          // at 25 % your work goes slower
+          sea('idle'); S.energy = 25.02; S.enWarn = false; step(); step(); R.warn = !!S.enWarn; addCatch('torsk', 10, null, true); R.slow = workTeam('sloy', 'sloy').sum;
+          // alone at 0: asleep, the jig stops and the boat drifts; the screen goes black with a countdown
+          sea('fishing'); b.fishUntil = S.t + 600; S.energy = 0.01; step(); R.asleep = asleep(); R.alone = !!(S.sleep && S.sleep.alone); const p0 = {...b.pos};
+          for (let i = 0; i < 60; i++) step(); R.caught = holdTotal(); R.drift = Math.round(dist(p0, b.pos) * 1000); R.st = b.status;
+          energyUi(); R.black = !document.getElementById('sleep').hidden; R.count = document.getElementById('slTime').textContent;
+          R.work = workAssign().length; for (let i = 0; i < 430 && asleep(); i++) step(); R.woke = {asleep:asleep(), e:Math.round(S.energy)}; energyUi(); R.blackGone = document.getElementById('sleep').hidden;
+          // with crew aboard the trip goes on: the best seaman takes the helm
+          sea('sailing'); const A = hand(), B = hand(); A.attr.sjo = 2; B.attr.sjo = 4.5; S.crew = [A, B]; S.plan = {wps:[{x:g.x + 8, y:g.y, port:null, fish:0}], idx:0, speed:6, returning:false};
+          S.energy = 0.01; S.sleep = null; step(); const q0 = {...b.pos}; for (let i = 0; i < 30; i++) step(); R.crewTrip = {asleep:asleep(), moved:Math.round(dist(q0, b.pos) * 1000), st:b.status, helm:workAssign().filter(p => p.st === 'ror').map(p => p.c.attr.sjo)};
+          S.sleep = null; S.energy = 5; energyUi(); R.vign = +document.getElementById('vign').style.opacity; S.energy = 100; energyUi(); R.vignOff = +document.getElementById('vign').style.opacity;
+          S.plan = null; return R; })()""")
+        print('energy:', json.dumps(r, ensure_ascii=False))
+        print(ok(abs(r['seaHour'] - 100 / 24) < 0.02 and abs(r['quayHour'] - 12.5) < 0.05), 'energy: −100/24 an hour at sea, +100/8 at the quay')
+        print(ok(r['warn'] and abs(r['slow'] - 0.75) < 1e-6), 'at 25 % you are warned and work at three quarters of your pace')
+        print(ok(r['asleep'] and r['alone'] and r['caught'] == 0 and (r['drift'] > 5 or r['st'] == 'aground') and r['work'] == 0), 'alone at 0 % you sleep: no fishing, and the boat drifts with the wind (or grounds)')
+        print(ok(r['black'] and 'om' in r['count'] and not r['woke']['asleep'] and r['woke']['e'] == 60 and r['blackGone']), 'asleep the screen is black with a countdown; after eight hours you wake with 60 %')
+        print(ok(r['crewTrip']['asleep'] and r['crewTrip']['moved'] > 100 and r['crewTrip']['st'] == 'sailing' and len(r['crewTrip']['helm']) == 1 and r['crewTrip']['helm'][0] >= 4.5), 'with crew the trip goes on while you sleep, the best seaman at the helm')
+        print(ok(r['vign'] > 0.4 and r['vignOff'] == 0), 'under 15 % the edges of the screen darken')
 
         # the Arbeid page: the button shows with crew aboard, a chain is built by tapping, presets and the person card
         for vw, vh, tag in ((1100, 800, 'liggende'), (800, 1180, 'staende')):

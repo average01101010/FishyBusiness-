@@ -40,7 +40,8 @@ const WORK = (() => {
   }
   // how long until the rest rule is broken, at sea (you as skipper are not under it)
   function restLine(c){
-    if (!c || S.boat.status === 'port') return '';
+    if (!c){ const e = S.energy == null ? 100 : S.energy; return '<br><span class="' + (e < ENERGY.dim ? 'r2' : e < ENERGY.warn ? 'r1' : '') + '">' + L('Energi ', 'Energy ') + Math.round(e) + ' %</span>'; }
+    if (S.boat.status === 'port') return '';
     const left = restLeft(c); if (left > 6) return '';
     return '<br><span class="' + (left ? 'r1' : 'r2') + '">' + (left ? L('Må hvile innen ' + left + ' t', 'Must rest within ' + left + ' h') : L('Brudd på hviletiden', 'Rest rule broken')) + '</span>';
   }
@@ -60,6 +61,7 @@ const WORK = (() => {
     h.push(flow(A));
     h.push('<div class="wk-pre">' + Object.keys(JOB_PRESETS).map(k => '<button class="ph-btn" data-pa="wk-pre" data-k="' + k + '">' + JOB_PRESETS[k][S.lang] + '</button>').join('') + '</div>');
     const ix = new Map(team.map((c, i) => [c.id, i]));
+    if (meAboard() && asleep()) h.push('<div class="ph-card wk-p"><div class="wk-top"><b>' + L('Du (skipper)', 'You (skipper)') + '</b><span class="wk-now r2">' + L('Sover', 'Asleep') + '</span></div></div>');
     for (const p of A) h.push(row(p, p.c ? ix.get(p.c.id) : 0));
     h.push('<p class="ph-note">' + L('Hver person går til den første stasjonen i kjeden som har arbeid. Uten arbeid tar de pause. Roret og halingen står aldri tomme: da tar en som har pause over.', 'Each person goes to the first station in their chain that has work. With none, they take a break. The helm and the hauling are never left empty: someone on a break takes over.') + '</p>');
     return h.join('') + '</div>';
@@ -78,3 +80,17 @@ const WORK = (() => {
 })();
 // a line from the crew shows as a toast when you are aboard
 hooks.onSay = (c, no, en) => { if (typeof toast === 'function') toast(c.name.split(' ')[0] + ': «' + (S.lang === 'no' ? no : en) + '»'); };
+// your energy on screen: the edges darken under 15 %, and asleep the screen is black with a countdown in real time
+function energyUi(){
+  const L = (no, en) => S.lang === 'no' ? no : en, e = S.energy == null ? 100 : S.energy, sl = $('sleep'), vg = $('vign'), zz = asleep();
+  vg.style.opacity = zz ? 0 : e < ENERGY.dim ? ((ENERGY.dim - e) / ENERGY.dim * 0.9).toFixed(2) : 0;
+  if (zz){
+    if (sl.hidden){ sl.hidden = false; requestAnimationFrame(() => sl.classList.add('on')); }
+    $('slHead').textContent = L('Du sover', 'You are asleep');
+    $('slTime').textContent = L('Du våkner ', 'You wake ') + inReal(S.sleep.until - S.t);
+    $('slNote').textContent = S.sleep.alone ? L('Båten ligger og driver med vinden.', 'The boat is drifting with the wind.') : L('Mannskapet har roret og fortsetter turen.', 'The crew has the helm and carries on with the trip.');
+  } else if (!sl.hidden){ sl.classList.remove('on'); sl.hidden = true; }
+}
+hooks.onEnergy = k => { if (typeof toast !== 'function') return; const L = (no, en) => S.lang === 'no' ? no : en;
+  if (k === 'warn') toast(L('Du er sliten (25 %). Arbeidet ditt går tregere. Gå til kai for å hvile.', 'You are tired (25 %). Your work goes slower. Go to the quay to rest.'));
+  if (k === 'wake') toast(L('Du våknet. Energi 60 %.', 'You woke up. Energy 60 %.')); };

@@ -36,7 +36,7 @@ function workCtx(as){
 // who stands where: [{c (null for you), st}], you first
 function workAssign(as){
   const team = crewAboard(), ctx = workCtx(as), P = [];
-  if (meAboard()) P.push({c:null, job:jobOf(null)});
+  if (meAboard() && !asleep()) P.push({c:null, job:jobOf(null)});
   team.forEach((c, i) => P.push({c, job:jobOf(c, i)}));
   if (!P.length) return P;
   if (ctx.s === 'aground'){ for (const p of P) p.st = 'pause'; return P; }
@@ -58,7 +58,7 @@ function workAssign(as){
 // the people on a station and what they do there together: n, the sum of their efficiency for skill g, and the mean
 function workTeam(st, g, as){
   const H = S.t / 60, hs = hsAt(S.boat.pos, H), on = workAssign(as).filter(p => Array.isArray(st) ? st.includes(p.st) : p.st === st);
-  const sum = on.reduce((a, p) => a + (p.c ? crewEff(p.c, H, hs, g) : 1), 0);
+  const sum = on.reduce((a, p) => a + (p.c ? crewEff(p.c, H, hs, g) : meEff()), 0);
   return {n:on.length, sum, eff:on.length ? sum / on.length : 1, crew:on.filter(p => p.c).map(p => p.c), me:on.some(p => !p.c)};
 }
 // once a minute per vessel: where each person is, and minutes per station (for learning)
