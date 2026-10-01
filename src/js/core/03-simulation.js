@@ -48,10 +48,10 @@ function applyVessel(){
 const JIG = {rod:0.35, hand:1, machine:2.0, perPerson:3};
 function effortOf(people, jk, hand){ return Math.max(0, people - Math.ceil(jk / JIG.perPerson)) * hand + jk * JIG.machine; }
 function fishEffort(){
-  const hand = S.boat && S.boat.gear ? JIG.hand : JIG.rod;
-  if (S.plan && S.plan.ops && !meAboard()){ const sk = opsSkipper(); const people = Math.max(1, S.crew.length), jk = Math.min(S.equip ? S.equip.jukse : 0, people * JIG.perPerson); return effortOf(people, jk, hand) * (sk ? sk.skill : 0.8) * 0.9; }
-  const team = crewAboard(), people = (meAboard() ? 1 : 0) + team.length, jk = Math.min(S.equip ? S.equip.jukse : 0, people * JIG.perPerson);
-  return effortOf(people, jk, hand) * teamEff(team, meAboard());
+  // the people at the rail: those whose chain has them fishing (as if the boat were jigging where it lies)
+  const hand = S.boat && S.boat.gear ? JIG.hand : JIG.rod, F = workTeam('fiske', 'juksa', 'fishing'), people = F.n, jk = Math.min(S.equip ? S.equip.jukse : 0, people * JIG.perPerson);
+  if (S.plan && S.plan.ops && !meAboard()){ const sk = opsSkipper(); return effortOf(people, jk, hand) * (sk ? sk.skill : 0.8) * 0.9; }
+  return effortOf(people, jk, hand) * F.eff;
 }
 const GM = {E:1.05, A:1.0, B:0.85, X:0.6, V:0};
 

@@ -143,12 +143,13 @@ function setGeomExact(p, hdg, km){ const e = {x:p.x + Math.sin(hdg) * km, y:p.y 
 
 // ---- the work at sea: status stays 'fishing' with b.gop, so deck work, rest rules, auto-return and the tub pause work as before
 function gopUnitMin(g, H, hs){
-  const G = GEAR[g.kind], P = handsAboard(), onDeck = P >= 2 && deckPending() > 0.5 ? 1 : 0, w = Math.max(1, P - onDeck), team = crewAboard();
-  const crewF = teamEff(team, meAboard(), G.skill) * (1 + (g.kind === 'garn' ? 0.4 : 0.3) * (w - 1));
+  // the people at the Haling station; with someone at Krabbesortering the haulers do not stop to sort
+  const G = GEAR[g.kind], T = workTeam('haling', G.skill), w = T.n; if (!w) return Infinity;
+  const crewF = T.eff * (1 + (g.kind === 'garn' ? 0.4 : 0.3) * (w - 1));
   let base = g.op === 'set' ? G.set : G.haul;
   if (g.kind === 'line') base = g.op === 'set' ? G.set * g.hooksPer / 700 : G.haul * g.hooksPer;
   const hand = g.op === 'haul' && !hasHauler(g.kind) ? G.hand : 1;
-  const sort = g.op === 'haul' && g.kind === 'teine' && S.settings.crabSort !== false ? 1.3 : 1;
+  const sort = g.op === 'haul' && g.kind === 'teine' && S.settings.crabSort !== false && !workTeam('sort', 'sort').n ? 1.3 : 1;
   return base * hand * sort * (1 + coldPen(H, hs)) / crewF;
 }
 // hdg: the course drawn on the chart; the gear goes out exactly there or not at all. Without it the string follows the course
@@ -284,7 +285,7 @@ function sampleSel(sp, key, mesh, p, H){ let w = 0; for (let i = 0; i < 24; i++)
 // crabs: sex, width, roe and claws are drawn as they come up; sorting sends the small and berried ones back
 function crabW(cw){ return Math.round(0.00018 * cw * cw * cw * 100) / 100; }
 function landCrabs(g, n, kg){
-  const H = S.t / 60, m = gDate(H).getUTCMonth(), careful = S.settings.crabSort !== false, sk = clamp(teamEff(crewAboard(), meAboard(), 'teiner'), 0.6, 1.3);
+  const H = S.t / 60, m = gDate(H).getUTCMonth(), careful = S.settings.crabSort !== false, ST = workTeam('sort', 'sort'), sk = clamp(ST.n ? ST.eff : teamEff(crewAboard(), meAboard(), 'teiner'), 0.6, 1.3);
   S.gacc = S.gacc || {}; S.gacc.crabN = (S.gacc.crabN || 0) + n; let room = capHold() - holdTotal();
   while (S.gacc.crabN >= 1 && room > 0.05){
     S.gacc.crabN -= 1;

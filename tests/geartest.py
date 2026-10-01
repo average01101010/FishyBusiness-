@@ -108,7 +108,7 @@ async def main():
             const s = S.sets.find(x => x.kind === 'teine'); atSea(s.a); startHaul(s.id); hStep(900); return S.hold.filter(x => x.sp === 'krabbe').map(x => [x.cls, Math.round(x.kg * 10) / 10, Math.round(x.n)]); };
           R.careful = crabRun(true); R.carefulBad = R.careful.filter(x => x[0] >= 2).length; S.hold = []; S.pgear.bait = 60;
           // quick sorting, and a forced small and berried crab so the landing shows both rules
-          R.quick = crabRun(false); addCatch('krabbe', 0.35, 2, false, {}); addCatch('krabbe', 0.8, 3, false, {}); R.crabPend = deckPending(); R.nonCrab = S.hold.filter(x => x.sp !== 'krabbe' && grade(x.fresh) !== 'V').reduce((a, x) => a + x.kg, 0);
+          R.quick = crabRun(false); addCatch('krabbe', 0.35, 2, false, {}); addCatch('krabbe', 0.8, 3, false, {}); { const h0 = S.hold; S.hold = h0.filter(x => x.sp === 'krabbe'); R.crabPend = deckPending(); S.hold = h0; } R.nonCrab = S.hold.filter(x => x.sp !== 'krabbe' && grade(x.fresh) !== 'V').reduce((a, x) => a + x.kg, 0);
           b.status = 'port'; b.port = 'senjahopen'; b.pos = {...portById('senjahopen').p}; const q = quotaState(), ff0 = q.ffTot, m0 = S.msgs.length; sell();
           R.sale = {fine:S.lastSale.crabFine, roe:Math.round(S.lastSale.roeCut), conf:+S.lastSale.confKg.toFixed(2), ffAdd:quotaState().ffTot - ff0, gear:S.lastSale.gear, msgs:S.msgs.slice(m0).map(m => m.from)};
           S.settings.crabSort = true; return R; })()""")
@@ -151,6 +151,7 @@ async def main():
         print(ok(r['egn'] is None and r['egnFee'] == r['egnExpect'] and r['beforeReady'] == 0 and r['afterReady'] == 2 and r['self'] is None and abs(r['selfH'] - r['selfExpect']) < 0.15 and r['selfDone'] == 4), 'baiting: the shed charges fee and bait and has it ready later; the crew baits at about 560 hooks an hour each')
 
         # 6. the standing plan: a net station set on day one, hauled and set again after that, and refused with one hand
+        await pg.evaluate(SEED)   # a fresh seed: the plan's three days must not hang on how many random numbers the sections before used (gear is lost at random)
         r = await pg.evaluate("""(()=>{ const b = S.boat; S.sets = []; S.hold = []; S.cash = 5e6; S.settings.autoW = 16; S.stock = initStock();
           let t0 = null; for (let d = 0; d < 60 && t0 == null; d++){ const H0 = HOUR(2028, 2, 1 + d, 5); let okw = true; for (let k = 0; k <= 60; k++) if (windAt(H0 + k) > 13 || hsOpen(H0 + k) > 2.2) okw = false; if (okw) t0 = H0; }
           S.t = Math.round(t0 * 60) - 30; b.type = 'sjark'; applyVessel(); S.equip.garnhaler = true; b.rig = 'garn'; b.fuel = BOAT.fuelCap; b.port = 'husoy'; b.pos = {...portById('husoy').p}; b.status = 'port'; b.gop = null;

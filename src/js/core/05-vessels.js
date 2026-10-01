@@ -131,6 +131,7 @@ function step(){
 function vesselStep(H){
   const b = S.boat;
   const clean = S.tripBuff && S.tripBuff.hold ? 0.75 : 1;
+  workMinute();
   for (const x of S.hold){ const r = SPECIES[x.sp].live ? 0.4 : x.bled ? (x.iced ? 0.9 : 3.0) : (x.iced ? 2.2 : 6.0); x.fresh = Math.max(0, x.fresh - r * clean / 60); }
   deckMinute();
   // work queue at the yard and on the quay: runs while the boat is in port
@@ -218,9 +219,9 @@ function dock(pid){
 function catchFactors(H, W, hs){
   const tb = S.tripBuff || {}, wpen = Math.max(0.15, 1 - Math.max(0, hs - BOAT.risk[0] * 0.5) * 0.4 / (BOAT.risk[0] / 1.0) - Math.max(0, W - 8) * 0.03), eff = fishEffort() * (1 + (tb.jig ? 0.15 : 0) + (tb.reels && S.equip.jukse ? 0.1 : 0));
   // halibut is fished by hand on heavy gear: jigging machines do not help
-  const team0 = crewAboard(), people = (meAboard() ? 1 : 0) + team0.length, keff = people * teamEff(team0, meAboard());
-  const P = handsAboard(), onDeck = P >= 2 && deckPending() > 0.5 ? 1 : 0;   // one hand fewer at the rail while someone guts
-  const rod = !!(typeof window !== 'undefined' && window.rodActive), cold = coldPen(H, hs), deck = P ? (P - onDeck) / P : 1;
+  // the hands busy on deck are not at the rail: fishEffort counts only those at the Fiske station
+  const keff = workTeam('fiske', 'juksa', 'fishing').sum;
+  const rod = !!(typeof window !== 'undefined' && window.rodActive), cold = coldPen(H, hs), deck = 1;
   return {eff, keff, wpen, cold, deck, rod, pen:(1 - cold) * deck * (rod ? 0.5 : 1)};
 }
 function fish(H, W, hs){
@@ -301,17 +302,13 @@ function addCatch(sp, kg, cls, hook, opt){
 const DECK = {gut:5, ice:800 / 60, tub:{skiff:60, snekke:150, sjark:300, sjarkny:400}};
 const tubCap = () => DECK.tub[S.boat.type] || 150;
 const handsAboard = () => (meAboard() ? 1 : 0) + crewAboard().length;
-function deckHands(){
-  const b = S.boat, P = handsAboard(); if (!P || b.status === 'aground') return 0;
-  if (b.status === 'sailing' || b.status === 'unmooring' || b.status === 'engine') return P - 1;   // someone has to steer
-  if (b.status === 'fishing') return b.deckStop ? P : P >= 2 && deckPending() > 0.5 ? 1 : 0;    // alone: stop fishing to gut
-  return P;                                                                                       // lying still, drifting or at the quay
-}
+// the hands at the gutting and icing stations (core/13-work.js): under way one steers, fishing they follow their chains
+function deckHands(){ return workAssign().filter(p => p.st === 'sloy' || p.st === 'is').length; }
 // what is still to be done: gutting (when the catch is gutted on board) and icing (when there is ice)
 // live crab is kept wet in tubs: it is neither gutted nor iced
 function deckPending(){ const st = S.settings, icing = st.ice !== false && S.boat.ice > 0.5; return S.hold.reduce((a, x) => a + (!SPECIES[x.sp].live && ((st.gut && !x.gut && !x.iced) || (icing && !x.iced)) ? x.kg : 0), 0); }
 function deckEta(hands){
-  const st = S.settings, icing = st.ice !== false && S.boat.ice > 0.5, e = hands ? hands * teamEff(crewAboard(), meAboard()) : 0; if (!e) return Infinity;
+  const st = S.settings, icing = st.ice !== false && S.boat.ice > 0.5, e = hands ? workTeam(['sloy', 'is'], 'sloy').sum : 0; if (!e) return Infinity;
   let m = 0; for (const x of S.hold){ if (SPECIES[x.sp].live) continue; if (st.gut && !x.gut && !x.iced) m += x.kg / DECK.gut; if (icing && !x.iced) m += x.kg / DECK.ice; } return m / e;
 }
 // move kg of a hold entry into the entry with the new state (gutted, iced), keeping its freshness
@@ -324,16 +321,18 @@ function moveKg(x, kg, patch){
 }
 // a minute of deck work: gut first, then ice down what is gutted (or, when landing round, what is bled)
 function deckMinute(){
-  const b = S.boat, st = S.settings, hands = deckHands(); if (!hands || !S.hold.length) return;
-  let pm = hands * teamEff(crewAboard(), meAboard()), worked = 0;
+  const b = S.boat, st = S.settings; if (!S.hold.length) return;
+  const G = workTeam('sloy', 'sloy'), I = workTeam('is', 'is'); if (!G.n && !I.n) return;
+  let pm = G.sum, worked = 0;
   if (st.gut) for (const x of S.hold.filter(x => !x.gut && !x.iced && !SPECIES[x.sp].live)){ if (pm <= 0.001) break; const kg = Math.min(x.kg, pm * DECK.gut); moveKg(x, kg, {gut:true}); pm -= kg / DECK.gut; worked += kg; }
+  pm += I.sum;   // the gutters ice what they have gutted once the gutting is done
   if (st.ice !== false) for (const x of S.hold.filter(x => !x.iced && (x.gut || !st.gut) && !SPECIES[x.sp].live)){
     if (pm <= 0.001) break; const kg = Math.min(x.kg, pm * DECK.ice, b.ice / 0.3);
     if (kg <= 0.01){ if (S.t - (S.lastIceWarn || -1e9) > 120){ log('Tom for is. Fangsten ises ikke.', 'Out of ice. The catch is not being iced.'); S.lastIceWarn = S.t; } break; }
     moveKg(x, kg, {iced:true}); b.ice -= kg * 0.3; pm -= kg / DECK.ice; worked += kg;
   }
-  // your own hours on deck (you work when everyone does, or when you are alone)
-  if (worked > 0 && meAboard() && hands === handsAboard()) S.deckMe = (S.deckMe || 0) + 1;
+  // your own minutes on deck
+  if (worked > 0 && (G.me || I.me)) S.deckMe = (S.deckMe || 0) + 1;
 }
 function risk(W, hs){
   const b = S.boat; if (b.status === 'port' || (S.tut && S.tut.catch)) return;

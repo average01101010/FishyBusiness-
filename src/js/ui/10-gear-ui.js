@@ -25,7 +25,7 @@ function setChoices(){
 function gopText(){
   const g = S.boat.gop; if (!g) return null;
   const k = GEAR[g.kind], left = Math.max(0, (g.n - g.done - g.prog) * gopUnitMin(g, S.t / 60, hsAt(S.boat.pos, S.t / 60)));
-  return [(g.op === 'set' ? 'Setter ' : 'Trekker ') + k.no.toLowerCase() + ' ' + g.done + '/' + g.n + ' · ' + dur(left / 60), (g.op === 'set' ? 'Setting ' : 'Hauling ') + k.en.toLowerCase() + ' ' + g.done + '/' + g.n + ' · ' + dur(left / 60),
+  return [(g.op === 'set' ? 'Setter ' : 'Trekker ') + k.no.toLowerCase() + ' ' + g.done + '/' + g.n + ' · ' + (isFinite(left) ? dur(left / 60) : GL('ingen haler', 'nobody hauling')), (g.op === 'set' ? 'Setting ' : 'Hauling ') + k.en.toLowerCase() + ' ' + g.done + '/' + g.n + ' · ' + (isFinite(left) ? dur(left / 60) : GL('ingen haler', 'nobody hauling')),
     (g.op === 'set' ? 'Setter ' : 'Trekker ') + g.done + '/' + g.n, (g.op === 'set' ? 'Setting ' : 'Hauling ') + g.done + '/' + g.n];
 }
 // buttons for the action bar: at a buoy, haul; lying still, set what is aboard; while working, how far and a stop

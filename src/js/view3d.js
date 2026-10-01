@@ -2218,7 +2218,7 @@ const G3 = (() => {
     }
     // near pass
     gl.clear(gl.DEPTH_BUFFER_BIT);
-    const VT = vtype(), VG = VGEO[VT] || VGEO.skiff, ncrew = Math.min(S.crew.length, VT === 'skiff' ? 1 : 3);
+    const VT = vtype(), VG = VGEO[VT] || VGEO.skiff, ncrew = Math.min(crewAboard().length, VT === 'skiff' ? 1 : 3);
     drawTerrain(TM, eye, VPn, true); drawLit(STAT, TM); drawBuildings(TM);
     // whoever works the deck leaves their place: alone, the skipper leaves the wheel
     DECKACT = deckActivity(); const awaySk = DECKACT.on && DECKACT.alone, awayCr = DECKACT.on && !DECKACT.alone ? 1 : 0;
