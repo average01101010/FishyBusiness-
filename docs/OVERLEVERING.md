@@ -34,6 +34,8 @@ Skrevet 29.09.2026 ved flytting fra claude.ai-chat til Claude Code. Dokumentet s
 
 **Ekkolodd-varmekart (bygget 01.10.2026, ikke publisert ennå):** Kartplotteren viser hvor fisken står i en sirkel rundt båten, ut fra ekkoloddet eller sonaren. Fisken trekker jevnt, bestanden vokser helt tilbake, og første tur har en ekte skreiflekk. Ekkoloddvinduet vises i plotteren, og sonaren er nytt utstyr. Se 5.1, 5.3, 5.14 og 5.16.
 
+**Fartøystigen (bygget 01.10.2026, ikke publisert ennå):** 14 båttyper fra skiffen til havfiskeflåten med fullt datablad, 3D-modeller fra et byggesett (`vessel3d.js`), Båthandelen med faner, sideriss og visning i 3D, blad B, lån som innfris ved salg, toppfinansiering fra Innovasjon Norge og stigen i «Neste mål». NPC-flåten bruker de samme modellene. Se «Fartøystigen» i kapittel 9.
+
 **Neste:** rettingene etter spilltest 2, med prioritet i rapportens siste del, deretter fase 4 i flåteplanen.
 
 ## 4. Teknisk arkitektur
@@ -99,12 +101,30 @@ Skrevet 29.09.2026 ved flytting fra claude.ai-chat til Claude Code. Dokumentet s
 
 ### 5.1 Båter og utstyr
 
-| Båt (`VESSELS`) | Pris | Last | Mannskap | Merknad |
-|---|---|---|---|---|
-| `skiff`, åpen 19 fot, 60 hk påhengs | 95 000 | 350 kg | 1 + 1 | Startbåt, planende, 24 kn |
-| `snekke`, 26 fot, 30 hk diesel | 245 000 | 900 kg | 1 + 2 | 8 kn, deplasement |
-| `sjark`, 34 fot (10,4 m), styrhus | 1 150 000 | 3 000 kg | 1 + 3 | 600 L diesel |
-| `sjarkny`, 10,99 m ny | 6 400 000 | | | Byggetid 45 døgn på verftet i Finnsnes |
+Båtene står i `VESSELS` (`core/02-species-gear.js`). Tallene er startverdier og anslag, og vekta er deplasement.
+
+| Nøkkel | Typenavn | L × B × T (m) | Vekt (t) | Last | Motor, marsj/topp | Mannskap / køyer | Pris | Gruppe |
+|---|---|---|---|---|---|---|---|---|
+| `skiff` | Åpen plastbåt 19 fot, 60 hk påhengs | 5,8 × 2,2 × 0,6 | 1,0 | 350 kg | 60 hk, 18/24 kn | 1+1 / 0 | 95 000 | åpen under 8 m (startbåt) |
+| `trebat` | Gammel tresnekke 22 fot, 10 hk Sabb (1962) | 6,7 × 2,2 × 0,9 | 1,8 | 500 kg | 10 hk, 5,5/6,5 kn | 1+1 / 0 | 60 000 | åpen under 8 m |
+| `snekke` | Plastsnekke 26 fot, 30 hk diesel | 7,9 × 2,7 × 1,2 | 3,0 | 900 kg | 30 hk, 7/8 kn | 1+2 / 0 | 245 000 | åpen under 8 m |
+| `jukesjark` | Plastsjark 29 fot (8,9 m) | 8,9 × 3,2 × 1,2 | 5,5 | 1 800 kg | 150 hk, 8,5/10 kn | 1+2 / 2 | 750 000 | åpen 8–9,99 m |
+| `sjark` | Sjark 34 fot (10,4 m) med styrhus | 10,4 × 3,8 × 1,7 | 11 | 3 000 kg | 180 hk, 8,5/10 kn | 1+3 / 2 | 1 150 000 | åpen 10 m og over |
+| `hurtigsjark` | Brukt hurtigsjark 10,99 m, 500 hk | 10,99 × 3,9 × 1,6 | 12 | 5 000 kg | 500 hk, 17/22 kn | 1+3 / 2 | 4 900 000 | åpen 10 m og over |
+| `sjarkny` | Ny hurtigsjark 10,99 m, 650 hk | 10,99 × 4,3 × 1,8 | 15 | 7 000 kg | 650 hk, 20/25 kn | 1+3 / 3 | 10 500 000, 45 døgn på verftet | åpen 10 m og over |
+| `breisjark` | Bred sjark 10,99 × 5,6 m | 10,99 × 5,6 × 2,3 | 28 | 14 000 kg | 600 hk, 9,5/11 kn | 1+4 / 4 | 9 000 000 | åpen 10 m og over |
+| `kyst15` | Kystbåt 14,99 m med lugarer | 14,99 × 6,6 × 3,0 | 75 | 28 t | 750 hk, 10/11,5 kn | 1+5 / 6 | 18 000 000 | bare lukket gruppe |
+| `kyst21` | Eldre kystbåt 21 m (1978) | 21 × 7,2 × 3,4 | 190 | 55 t | 900 hk, 10/11 kn | 1+6 / 8 | 9 000 000 | bare lukket, ikke innenfor fjordlinja |
+| `snokrabbe` 🔒 | Snøkrabbefartøy 50 m med fryseri | 50 × 11 × 6 | 1 800 | 500 t fryst | 3 600 hk, 11/13,5 kn | 14 / 18 | 60 mill. | havfiske, konsesjon |
+| `autoliner` 🔒 | Autoliner 45 m med frysing | 45 × 10,5 × 6 | 1 500 | 400 t fryst | 3 000 hk, 11/13 kn | 14 / 16 | 70 mill. (ny 300) | havfiske, konsesjon |
+| `bunntral` 🔒 | Frysetråler 62 m med akterslipp | 62 × 14 × 6,5 | 3 000 | 800 t fryst | 8 000 hk, 12/15 kn | 25 / 30 | 150 mill. (ny 500) | havfiske, konsesjon |
+| `pelagisk` 🔒 | Ringnot- og pelagisk tråler 75 m | 75 × 15,5 × 7,5 | 5 000 | 2 000 t RSW | 9 000 hk, 14/17 kn | 12 / 16 | 250 mill. (ny 800) | havfiske, konsesjon |
+
+- **Feltene:** `len`, `beam`, `draft`, `disp`, `holdCap`, `iceCap`, `fuelCap`, `hp`, `engine`, `vcruise`, `vmax`, `accel`, `turnR`, `planing`, `outboard`, `diesel`, `fuelK`, `risk`, `crewMax`, `berths`, `tubCap` (bløggekaret), `land` (kasser eller kar ved levering), `std` (utstyr som følger med), `rigs`, `jukseMax`, `gearMax`, `svcH`, `svcCost`, `svcJobH`, `cls` (`open`, `kyst`, `hav`), `price`, `isNew`, `year` og `desc`. Havbåtene har også `priceNew`, `lock`, `crew` (nøkkelfolk og lag, bare data til havsteget) og `autoHooks`.
+- **Ingen kode velger etter typenavn.** Alt leser feltene, og `vesseltest.py` feiler hvis `=== '<type>'` dukker opp i `src/js`.
+- **Havbåtene (🔒)** har datablad og 3D-modell, men kan ikke kjøpes før havfeltene kommer vestover.
+- **Køyer** styrer hvilen: uten køyer hviler mannskapet bare i land.
+- **Prisene bygger på:** brukte 26-fots snekker til 30 000–340 000 kr, en brukt Selfa 10,65 m til 4,9 mill., nye 10,99-meteres sjarker til 9,5–12,5 mill., nye 14,99-meteres kystbåter til 23–70 mill. og brukte trålere uten kvote til over en halv milliard. Havbåtenes priser og vekt er grove anslag.
 
 **Redskapsstige:**
 - *Fiskestang med én sluk:* effekt 0,35 per person. Alle starter med den.
@@ -113,10 +133,10 @@ Skrevet 29.09.2026 ved flytting fra claude.ai-chat til Claude Code. Dokumentet s
 - *Kveiteutstyr:* stor pilk, kraftig snøre og gaff, 2 490 kr.
 - **Butikken «Fiskeutstyr»** (telefonapp `fiske`, i alle havner, «Fiskeutstyr på kaia» i Finnsnes) selger håndjuksa, is og kveiteutstyr. Et kjøp tar to trykk: det første viser prisen, det andre betaler, og kjøpet står i driftsloggen. Finnsnes har ikke isrenne, så butikken selger is i sekker for 2,00 kr/kg (`PRICE.iceBag`, vårt anslag). På mottakene kommer isen fra isrenna for 1,50 kr/kg. Handlingslinja har «Fiskeutstyr» og en isknapp med mengde og pris. Klær, elektronikk og juksamaskiner er i Utstyr-appen.
 - *Garn, line og teiner:* passivt redskap som står i sjøen mens båten er borte. Se «Redskap i sjøen» i kapittel 9.
-- *Halere* (`EQUIP`): elektrisk haler 38 000 kr (skiff og snekke, line og små teiner), linehaler 68 000, garnhaler 95 000 og teinehaler 58 000 (snekke og større). Uten haler trekkes garn og line for hånd og tar 2–2,5 ganger så lang tid. Store teiner kan ikke trekkes for hånd.
-- *Plass til redskap* (`gearMax` i `VESSELS`): skiff 6 garn / 4 stamper / 20 teiner, snekke 15 / 10 / 50, sjark 40 / 24 / 150, sjarkny 60 / 30 / 200.
+- *Halere* (`EQUIP`): elektrisk haler 38 000 kr (båter til og med 8,5 m, line og små teiner), linehaler 68 000, garnhaler 95 000 og teinehaler 58 000 (fra 7,5 m). Hva som passer hvilken båt, står som `fit:{minLen, maxLen, outboard}` og sjekkes med `equipFits(k, type)`. Uten haler trekkes garn og line for hånd og tar 2–2,5 ganger så lang tid. Store teiner kan ikke trekkes for hånd.
+- *Plass til redskap* (`gearMax` i `VESSELS`, garn / stamper / teiner): skiff 6 / 4 / 20, tresnekke 8 / 6 / 30, snekke 15 / 10 / 50, 8,9-metersjark 25 / 14 / 80, sjark 40 / 24 / 150, hurtigsjark 50 / 26 / 180, ny sjark 60 / 30 / 200, bred sjark 120 / 40 / 400, kystbåt 15 m 160 / 60 / 500 og 21 m 300 / 120 / 800.
 
-Mister du juksa, fiskes det videre med stang til du kjøper ny i Fiskeutstyr. `motor90` er et utstyrsvalg for skiffen (30 kn).
+Mister du juksa, fiskes det videre med stang til du kjøper ny i Fiskeutstyr. `motor90` er et utstyrsvalg for båter med påhengsmotor (`boost`: 30 kn, mer drivstoff).
 
 **Ekkolodd og sonar** (varmekartet i kartplotteren, se 5.14):
 
@@ -124,13 +144,19 @@ Mister du juksa, fiskes det videre med stang til du kjøper ny i Fiskeutstyr. `m
 |---|---|---|---|
 | `basic` | Enkelt ekkolodd, alle båter har det | 1 nm i diameter, ruter på 100 m, fire trinn | Nei |
 | `chirp` | CHIRP-ekkolodd, 13 900 kr, 3 t å montere | 1,5 nm, ruter på 60 m, glatt | Alle, torsk, hyse, sei |
-| `sonar` | Sonar (søkelys), 150 000 kr, 16 t, bare sjark og ny sjark | 3 nm, ruter på 80 m, oppdateres hvert 2. minutt, viser hvor stimene trekker | Alle, torsk, hyse, sei |
+| `sonar` | Sonar (søkelys), 150 000 kr, 16 t, båter fra 10 m | 3 nm, ruter på 80 m, oppdateres hvert 2. minutt, viser hvor stimene trekker | Alle, torsk, hyse, sei |
 
 - Sonarens pris og monteringstid er antakelser. Delene til en Furuno CH-37BB koster rundt 13 200 USD før montering (fant ingen norsk pris), og båten må på slipp for senkerøret.
 - Ekkoloddet og sonaren slås av og på i sidepanelet i plotteren (`S.settings.echo`, `S.settings.sonar`). Av betyr ingen varme, og ekkoloddet slutter å tegne. Fartøy-appen merker dem «(av)».
 - En montering som venter mens båten byttes til en type utstyret ikke passer, betales tilbake (`finishJob`).
 
-**«Neste mål»** står øverst i Fartøy-appen og som en linje på telefonens hjemskjerm, med knapp til butikken når pengene er der.
+**«Neste mål»** står øverst i Båthandel og som en linje på telefonens hjemskjerm, og følger stigen: håndjuksa, første juksamaskin, blad B (landingsdager og verdi, knapp til Papirer), første båt med hjemmel (egenkapitalen banken krever), neste hjemmel opp, kystbåten på 14,99 m og «Havfiske» (kommer). De to neste stegene vises.
+
+**Båthandel** (Verft → Båthandel, `market()` og `sheet()` i `ui/05-phone.js`):
+- Fanene er Åpen gruppe, Med hjemmel, Kystflåten og Havfiske. Hvert kort har et sideriss i SVG (`vesselSVG`, laget fra den samme 3D-spesifikasjonen, så det virker uten WebGL), navn, mål og pris.
+- Databladet har Generelt (pris, mål, vekt, lasterom, is, drivstoff, motor, fart, mannskap, køyer, hva båten tåler, gruppe og fjordlinja), Redskap, Hjemmel og Mannskap om bord, og knappene «Kjøp og bytt inn», «Kjøp til flåten» og «Se båten i 3D».
+- «Se båten i 3D» (`G3.showroom(type)`) viser båten flytende utenfor havna med et kamera som går sakte rundt. Brikka `#showChip` har navn, mål og «Tilbake».
+- Før rederiet har en båt i lukket gruppe, kjøpes en båt i åpen gruppe bare ved å bytte inn den du har. Et rederi kan ha én båt i åpen gruppe.
 
 ### 5.2 Kart, fjordlinje og fangstfelt
 
@@ -219,11 +245,24 @@ Mister du juksa, fiskes det videre med stang til du kjøper ny i Fiskeutstyr. `m
 - **Stopp i maksimalkvotefisket** (`codStopDoy`): 15. mai i 2025 og 16. april i 2026. Andre år trekkes en dato mellom 8. april og 20. mai. Kystposten varsler en uke før.
 - **Ferskfiskordningen** (`ffPct`): 20 % fra 29. juni, 30 % fra 15. september, 40 % fra 13. oktober og 10 % fra 15. desember, av ukas ferske landinger. Hyse under 0,8 kg teller ikke.
 - **Rekkefølge ved levering:** ferskfisktillegget først, så kvoten, og resten inndras. Verdien av inndratt fisk trekkes fra.
-- **Lukket gruppe** (`LIC_OFFERS`, kjøpes i Fartøy-appen):
-  - *Snekke med kvote under 7 m:* 9,562 t torsk, 2,4 mill. kr.
-  - *Sjark med kvote 10–10,9 m:* 17,78 t torsk, rundt 5,15 mill. kr.
-  - Kvotepris rundt 225 kr per kg torsk. Anslaget bygger på Riksrevisjonens nivå fra 2017 og prisutviklingen siden.
-  - Lån opptil 80 % over 15 år til 6,9 %. Fast fartøykvote uten stopp.
+- **Lukket gruppe** (`LIC_OFFERS`, Båthandel → Med hjemmel). Prisen er båten pluss torskekvoten ganger kvoteprisen `KPK` = 260 kr/kg:
+
+| Id | Hjemmelslengde | Båt | Torsk | Pris |
+|---|---|---|---|---|
+| `u7` | under 7 m | `trebat` | 9,562 t | 2 546 120 (inngangen) |
+| `h7` | 7–7,9 m | `snekke` | 11,301 t | 3 183 260 |
+| `h8` | 8–8,9 m | `jukesjark` | 13,434 t | 4 242 840 |
+| `h9` | 9–9,9 m | `sjark` | 16,437 t | 5 423 620 |
+| `h10` | 10–10,9 m | `hurtigsjark` | 17,780 t | 9 522 800 |
+
+  - Kvotetallene er fra J-30-2026 (tabellen i spesifikasjonen). Kvoteprisen er et anslag: Hepsøfjord (10,98 m, to kvotesett) ble solgt for 17,5 mill. i 2025, rundt 270 kr/kg, og Riksrevisjonen satte en 9-meters hjemmel til 1,8 mill. i 2017.
+  - `kyst15` og `kyst21` selges uten hjemmel, fordi kvotene for 11–21 m ikke er hentet ennå.
+  - Fast fartøykvote uten stopp. Kjøper du til flåten, mister båten i åpen gruppe plassen der, men kan fiske kveite, krabbe og annet enn torsk, hyse og sei.
+- **Blad B** (`BLADB`, `S.fm`, `fmLand` i `sell()`): Deltakerloven § 6 krever at den som får ervervstillatelse, har drevet ervervsmessig fiske i minst tre av de siste fem årene (lov 26. mars 1999 nr. 15, Lovdata). Blad B i fiskermanntallet er det vanlige beviset. I spillet er det forenklet til 10 landingsdager med deg om bord og 1 G i førstehåndsverdi (130 160 kr, G fra 1. mai 2025, nav.no). Fiskeridirektoratet sender melding, Papirer i Sjømann-appen har et kort med fremdriften, og en båt med hjemmel krever blad B. Gamle lagringer får det fra sluttsedlene, eller med en gang hvis de har en hjemmel.
+- **Finansiering** (`deal()`, `finance()`, `payDown()` i `core/03-simulation.js`):
+  - Kystbanken låner inntil 80 % av prisen til 6,9 %, over 15 år for båt med hjemmel og 10 år ellers, og krever tre sluttsedler.
+  - Innbytte og salg innfrir lånene først, og bare resten teller som egenkapital (smutthullet fra spilltest 1 er tettet). All gjeld til sammen holdes innenfor 80 % av verdien på flåten med den nye båten.
+  - Innovasjon Norge toppfinansierer det første kjøpet i lukket gruppe med et risikolån på 15 % (`INN`) til 8,9 % over 10 år (`S.loanIN`, eget kort i Bank). Da trengs 5 % egenkapital, rundt 61 000 kr med skiffen i bytte. Vilkårene er ikke sjekket, og andelen er satt med `progweek.py` slik at inngangen kommer sammen med blad B.
 - **Ikke med i spillet:** Alderstillegg, fordi spilleren ikke har noen alder, og kystfiskeordningen, som gjelder Sørreisa men ikke Finnsnes.
 - **Kveite, høstingsforskriften § 39:**
   - Fredet nord for 62° N fra 20.12 til og med 20.4, for alle redskaper.
@@ -324,13 +363,13 @@ Mister du juksa, fiskes det videre med stang til du kjøper ny i Fiskeutstyr. `m
 ### 5.13 Båtbevegelse og animasjoner
 
 - **Simuleringen** (`sailV`):
-  - Planende båter akselererer 10 kn per minutt, deplasementsbåter 3 kn per minutt. Nedbremsing går 1,5 ganger så raskt.
+  - Akselerasjonen står i `accel` (kn per minutt): skiff og ny sjark 10, hurtigsjark 9, deplasementsbåtene 1,5–3 og havbåtene 0,8–1. Nedbremsing går 1,5 ganger så raskt.
   - 5 kn innenfor 250 m fra en havn.
   - Bremsing før neste stopp (havn eller fiskeplass) langs ruta.
   - `livePose` bruker samme fart som neste steg.
 - **3D-følgeren** (`updateBoat`):
   - Styrer mot et punkt litt lenger fremme på ruta (pure pursuit).
-  - `TURN_R`: skiff 35, snekke 45, sjark 70 og sjarkny 80 m.
+  - Svingradius `turnR` i `VESSELS`: skiff 35, tresnekke 30, snekke 45, 8,9-metersjark 50, sjark 70, hurtigsjark 75, ny sjark 80, bred sjark 85, kystbåtene 110 og 150 m.
   - Dreiepunktet ligger en tredel fra baugen, så hekken slår ut.
   - Sideskrens: β = 0,14·yawrate, begrenset til 0,18 rad.
   - Planende båter krenger innover (−0,18·yaw), deplasementsbåter utover (+0,06·yaw).
@@ -343,11 +382,20 @@ Mister du juksa, fiskes det videre med stang til du kjøper ny i Fiskeutstyr. `m
   - Figuren har armer som tegnes live (`limbM`, armløs kropp + rør).
   - Fiskekaret regner bort fisk som fortsatt er i lufta.
 - **Stangfisket** (`ROD`): minispill med napp, kamp, stramming og brudd. Automatisk fangst halveres mens det pågår.
+- **Båtmodellene** (`src/js/vessel3d.js`, eget `<script>` før `view3d.js`, uten WebGL):
+  - `VB()` er byggeren (det gamle `NB()` uten GL), og `lod` styrer oppløsningen. I `view3d.js` er `NB = VB + mesh()`.
+  - `hullShape(H)` lager skroget fra parametre (rund eller hard kimming, baug- og hekkform, flare, spring, skansekledning, bulb), og `hullBuild` lager skrog, kjøl, ror, speil, dekk, skansekledning og ripe med fargebånd.
+  - Delene: styrhus med vinduer og ratt, overbygg, baksadekk, skorstein, mast med radar og lanterner, eksos, rekker, flåter, fendere, galge, halere, davit, kar, teiner, motorkasse, toft, rorkult, juksamaskiner, haleport, nottrommel, og for havbåtene portal, akterslipp, tråldører, kran, kraftblokk og notbinge.
+  - `SPEC3D[type]` beskriver hver båt. `buildVesselModel(type, lod, livery)` gir `{o, glass, cap, geo}`, og `geoOf(type)` gir det `view3d.js` trenger (øye og ratt, dekket, lanterner, flagg, haler, påfylling, plass for mannskapet). Skiffen har fortsatt den håndbygde modellen (`hand:true`).
+  - Glasset tegnes blandet etter resten, og åpne skrog får dybdemasken (`cap`) som holder sjøen ute.
+  - Budsjettet er 25 000 punkter for kystbåtene og 45 000 for havbåtene. Kystbåtene ligger på 11 000–22 000 og havbåtene på 19 000–23 000, og hver bygges på under 15 ms.
+
 
 ### 5.14 NPC-flåte og kartplotter
 
 - **Kaiplasser** (`berthSlot`, `berthShift`): Hver NPC-båt har en egen plass langs kaia, 30–60 m fra havnepunktet. Plassen er kontrollert mot land, og båter i samme havn ligger minst 20 m fra hverandre. Forskyvningen avtar over 150 m.
 - Kystruteskipet og ferja har egne plasser, 70 m unna.
+- **NPC-modellene** (V9): Hver båt i `FLEET` får den dekkede kystmodellen nærmest i lengde og bredde (`npcKit`), skalert til egne mål, i en av fire fargedrakter (`LIVERY`: egen, marineblå, rød, grønnblå). Innenfor 500 m tegnes den med full detalj (lod 1) med skipper i styrhuset og to på dekk når hun fisker, innenfor 1,5 km med lod 0,3 (rundt 5 000 punkter), og lenger ute som de gamle boksmodellene. Lanternene følger modellen. I kartplotteren er ikonet større jo lengre båten er.
 - **Trykk i kartplotteren:** Trykk nær en havn går til havna, ikke til en fortøyd båt. Fortøyde AIS-mål tegnes mindre og svakere.
 - **Varmekartet** (`core/12-heat.js`, `ui/03c-heat.js`, fra 01.10.2026): Kartplotteren viser fisken i en sirkel rundt båten du følger, i både Navigasjon og Fiskekart, ut fra ekkoloddet eller sonaren (tabellen i 5.1). Kartplotteren er ikke nødvendig.
   - Rutene ligger på et fast rutenett i verden (`HEATC`), så bildet ikke flimrer. De regnes ut med `heatSample()` fra den samme `density()` som fangsten, i biter på 5 ms (`heatWork`). Nærmeste ruter regnes først, og litt foran båten når den går. Ved nytt bestandstime regnes de på nytt. I havn, i skjult fane og før dybdedataene er lastet regnes ingenting.
@@ -807,6 +855,23 @@ Rapporten fra den blinde spilltesten ga ti faser. Jonas bestemte: veiledningen e
 
 Åpne punkter jeg avgjorde (kan overstyres): bonusen starter på 0 for eldre lagringer, «Fiskeutstyr» finnes i alle havner, «Neste»-brikka gjelder båten du ser på, og sidepanelet i plotteren er 340 px.
 
+### Fartøystigen (V1–V10, godkjent og bygget 01.10.2026)
+
+Båtene er spillets superstjerner, med Fishing: Barents Sea som inspirasjon, men egne navn som forklarer båttypen. Jonas bestemte: stigen går helt til havfiske (havbåtene bygges nå, men låses til kartet utvides vestover), neste kjøp etter startbåten er en båt i lukket gruppe, rundt én uke med vanlig spilling dit, markedspriser med 80 % banklån og toppfinansiering fra Innovasjon Norge, ingen sertifikatkrav ennå, blad B som forenklet aktivitetskrav og store mannskap som nøkkelfolk og lag (bare data foreløpig).
+
+1. **V1 Skjema:** feltene i `VESSELS`, `equipFits`, `BEAM` avledet fra bredden. Ingen kode velger etter typenavn.
+2. **V2:** `view3d.js` styres av data (`geoOf`, `turnR`, geo-flagg).
+3. **V3 Byggesettet** i `vessel3d.js` (5.13).
+4. **V4:** de nye kyst- og havtypene, prisene, fem tilbud med hjemmel, køyer og fjordlinja for 15 m og over (venter i stedet for å fiske innenfor).
+5. **V5 Båthandel** (5.1) med `G3.showroom`.
+6. **V6:** havbåtene i 3D.
+7. **V7 Progresjonen:** blad B, lån som innfris ved salg og innbytte, toppfinansiering og stigen i «Neste mål» (5.5).
+8. **V8 Kalibreringen** med `progweek.py`: en bot spiller fra 1. mars med skiffen og spillets egne funksjoner i tre tempo (tur hver tredje dag, annenhver dag og hver dag været tillater). Den går ut når bølgene på feltet og vinden er innenfor det skiffen tåler. Blad B kommer etter 14–16 turer i alle tempo, fordi 1 G binder. Med 10 % toppfinansiering tok inngangen 24 turer, med 15 % kommer den sammen med blad B. Torskekvoten i åpen gruppe (4 t) blir full rundt dag 42 for den som fisker hver dag.
+9. **V9 NPC-modellene** (5.14).
+10. **V10** dokumentasjonen.
+
+Åpne punkter står i kapittel 10.
+
 ### Fase 4: Flåten i kart og 3D
 
 Egne båter vises med egne symboler i kartplotteren, og du kan trykke for å følge. Båter i nærheten vises i 3D.
@@ -832,7 +897,7 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
 - **Sertifikatene i Sjømann er ikke sjekket mot kildene.** Søk viste «Fiskeskippersertifikat klasse C eller D6» for båter under 15 m og navnene «helseerklæring for arbeidstakere på skip» og «sikkerhetsopplæring for sjøfolk på mindre skip» (Sjøfartsdirektoratet, 12 PAX-siden), men sdir.no og Lovdata var sperret fra arbeidsmiljøet. Hvilket sertifikat en fører av fiskefartøy under 15 m faktisk trenger, og at helseerklæringen varer 2 år, må sjekkes før papirene får betydning i spillet.
 
 - **Blind spilltest 1 (30.09.2026):** Se `docs/playtest/rapport-1.md`. Feilene A1–A13 og A15 er rettet 01.10.2026 (`fixtest.py`, `shoptest.py`, `camtest.py`, `routetest.py`). A14 (ryktekoppen) forsvant med «Kaffe på kaia». Åpent fra rapporten:
-  - Lånet overlever salg av båten, og hvert nytt lån starter 120 nye måneder.
+  - Lånet innfris nå ved salg og innbytte (V7). Et nytt lån starter fortsatt nye 10 eller 15 år for hele restgjelda.
   - Fangstfeltene har liten vekt i kartet.
   - En skipper på driftsplan kjøper ikke sekkeis i Finnsnes. Bare mottakene fyller is på driftsplanen.
   - Kameraet holdes unna kaier, bruer, fyr, siloer, kraner og bygninger, men ikke andre båter eller kranarmen.
@@ -859,10 +924,21 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
   - Kvotetillegg for landegnet line er ikke bekreftet og ikke bygget inn.
   - NPC-båtene har ikke egne blåser ennå.
 
+- **Fartøystigen, usikre tall og regler:**
+  - Kvoteprisen (260 kr/kg) er et anslag fra ett salg i 2025 og Riksrevisjonen i 2017.
+  - Vilkårene til Innovasjon Norge (15 %, 8,9 %, 10 år) er ikke sjekket. Andelen er satt for spillets tempo.
+  - G er 130 160 kr (fra 1. mai 2025) og er ikke oppdatert for 2026.
+  - Kvotene for 11–21 m i J-30-2026 er ikke hentet, så kystbåtene selges uten hjemmel.
+  - Ikke sjekket om en hjemmel under 11 m kan stå på en båt opp til 15 m (reglene om utskifting av fartøy).
+  - Havbåtenes priser og vekt er grove anslag, og statusen til snøkrabbekonsesjonen er ikke sjekket.
+  - Blad B er en forenkling av deltakerloven § 6 (tre av fem år). Sertifikatene låser ingenting ennå.
+  - Et nytt lån legges sammen med det gamle og betales over nye 10 eller 15 år.
+  - `portFits` (kaifront og dybde per havn) er ikke bygget. Alle kystbåtene får plass i alle havner, men havbåtene trenger det når havsteget kommer.
+  - NPC-modellene er ikke målt med CPU-struping. Første gang en modell trengs, tar den 5–11 ms å bygge.
 - **Garantert torsk for 8–9,99 m:** 4,2 t i forskriften og 3,2 t i departementets rapport. Spillet bruker forskriften.
 - **Minstepriser for andre arter etter 21.09:** Rundskriv 13/2026 er ikke hentet, så lyr og de andre bygger på rundskriv 7/2026.
 - **Farten i 3D:** Med tempo 1:6 går båten seks ganger raskere enn virkeligheten. Bevegelsen er jevn, men farten ser høy ut.
-- **`S.owned`** er en liste over båttyper fra før flåtemodellen. «Neste mål» bruker nå typene i flåten, men lista finnes fortsatt.
+- **`S.owned`** er en liste over båttyper fra før flåtemodellen. «Neste mål» følger stigen og bruker hjemlene i flåten, men lista finnes fortsatt.
 - **Kveithaill** kan gi rundt 8 000 kr per dag ved kveitefiske om høsten. Sjekk balansen i spilltesting.
 - **Klær og kulde:** `coldPen` bruker hele mannskapet (`S.crew.length`), ikke bare dem som er om bord.
 - **Sløyetid:** 300 kg per person og time for sløying og 800 for ising er anslag. Jeg fant ingen god kilde for håndsløying av torsk, så tallene må justeres i spilltesting.
@@ -877,9 +953,9 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
 - **Kjøring** (bare det som er strengt nødvendig, brukerens krav 01.10.2026):
   - Under byggingen: `python3 tests/run.py changed`. Den leser `git diff` og untracked filer, og kjører bare testene i `COVER` for de endrede filene. En test som selv er endret, kjøres. Tekst og dokumentasjon kjører ingenting, og en fil som ikke står i `COVER`, kjører `trip2.py`.
   - `python3 tests/run.py smoke test …` kjører bare de testene du nevner.
-  - `python3 tests/run.py full` er hele regresjonen før publisering (27 tester, rundt 10 minutter). `--3d` tegner 3D i alle.
+  - `python3 tests/run.py full` er hele regresjonen før publisering (32 tester, rundt 10 minutter). `--3d` tegner 3D i alle.
   - Testene i `LITE`, også `tut.py`, kjøres med `KYST_LITE=1`, som gir `#no3d` i adressen: G3 er aktiv og alt går som før, men `frame()` tegner ingenting. Det gjorde `shoptest.py` rundt tre ganger raskere (43 s mot 13 s, med de samme 18 OK) og `docktest.py` fra rundt 10 minutter til 61 s. To slike går samtidig.
-  - Testene i `D3` (`dbg23o`, `camtest`, `moortest`, `landtest`, `bunkertest`) ser på selve 3D-bildet og går med 3D, etter hverandre. `routetest` og `heattest` måler millisekunder, og `landtest` følger kranen i 3D bilde for bilde. De går alene til slutt (`SOLO`), ellers forstyrrer de andre testene dem.
+  - Testene i `D3` (`dbg23o`, `camtest`, `moortest`, `landtest`, `bunkertest`, `vessel3d`) ser på selve 3D-bildet og går med 3D, etter hverandre. `routetest` og `heattest` måler millisekunder, og `landtest` følger kranen i 3D bilde for bilde. De går alene til slutt (`SOLO`), ellers forstyrrer de andre testene dem.
   - Loggene havner i `tests/out/logs/`. `boot(pg)` i `_env.py` starter spillet og venter på startskjermen i stedet for faste pauser.
 - **Regresjon:**
   - `trip2.py`: hel tur via kartplotter, avgang, 3D, fiske og havn.
@@ -927,6 +1003,9 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
   - `landtest.py`: leveringen. Lossetid, kasser og kar, avgang som venter, isrenna, og i 3D at kroken står over lasten på dekk og over losseplassen og at trucken rekker siste tur.
   - `fleet3test.py`: fase 3. Varsler, båtvelgeren, inntekt per båt og service per båt.
   - `fleet2test.py`: fase 2. Levering med og uten adgang, to båter på driftsplan i en simulert uke, knappene i Fartøy-appen, nybygg til flåten, og lagring med to båter. Skriver `OK` eller `FEIL` per sjekk.
+  - `vesseltest.py`: fartøystigen. Ingen valg etter typenavn i `src/js`, fullt datablad og fornuftige forhold for hver type, utstyr som passer, de fem tilbudene, fjordlinja for 21 m, Båthandel liggende og stående (faner, kort med sideriss, havbåtene låst, knapper på 44 px), innbytte til 8,9-metersjarken, og progresjonen: blad B ved tiende landingsdag, migrering, innbyttet som innfrir lånet, inngangen med toppfinansiering, «Neste mål», banken, papirene og salg som innfrir lån.
+  - `vessel3d.py` (3D): hver modell på sjøen fra siden, baugen, akter og rattet (`tests/out/vessel_<type>_*.png`, se på dem), punkter mot budsjettet, lengden innenfor 8 %, visningen i Båthandel, og NPC-båtene (modell per båt, skalering, punkter per utgave og et bilde ved siden av en båt som fisker). `python3 tests/vessel3d.py npc` kjører bare NPC-delen.
+  - `progweek.py` (LES): boten som spiller fram til første båt i lukket gruppe (V8). Les dagen og turen for blad B og inngangen i hvert tempo.
   - `opsowntest.py`: driftsplan med deg om bord. Turen er din, torsken går på kvoten, ingenting blir inndratt, ingen kveiteomlegging og ikke noe skippertillegg. Skipperen alene gir de gamle reglene. Sjekker også at lagrede planturer rettes ved oppstart. Velger selv en rolig dag, fordi planen blir på land i for mye sjø.
 - **Triks:**
   - Testmaskinen gir få bilder i sekundet, og `dt` begrenses til 0,1 s. Test dynamikk frakoblet med `G3._debug.stepBoat`.

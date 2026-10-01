@@ -37,7 +37,9 @@ Et kystfiskespill fra Senja som kjører som én selvstendig HTML-side, publisert
 - `src/index.html` er malen. `@include(sti)` byttes ut med filen, og i JS skrives JSON-data som `/*@include(sti)*/null`.
 - Alle filene i `src/js/core/` og `src/js/ui/` havner i samme `<script>`, i rekkefølgen malen viser. De deler globalt skop, så en ny fil må legges inn i malen på riktig plass.
 - `'use strict'` står øverst i `src/js/core/01-world.js` og gjelder hele det første skriptet. Den filen må derfor alltid komme først.
+- `src/js/vessel3d.js` ligger i et eget `<script>` før `view3d.js`. Den har byggesettet for båtmodellene (`SPEC3D`, `buildVesselModel`, `geoOf`, `vesselSVG`, `npcKit`) og trenger ingen WebGL. Den bruker kjernens globale navn (for eksempel `sstep`) og kan ikke deklarere dem på nytt.
 - `src/js/view3d.js` ligger i et eget `<script>` og eksponerer `G3`.
+- Ingen kode skal velge etter båttypens navn (`=== 'sjark'`). Bruk feltene i `VESSELS`, og `vesseltest.py` passer på det.
 - `src/data/` inneholder komprimerte kartdata. Filene redigeres ikke for hånd.
 
 ## Begrensninger

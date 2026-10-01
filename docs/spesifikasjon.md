@@ -235,7 +235,7 @@ Hyse- og seikvotene gjelder båter med største lengde under 11 meter. Tallene e
    - *Garn:* skrei, blåkveite, rognkjeks og breiflabb.
    - *Teiner:* taskekrabbe i juli–oktober og kongekrabbe.
 2. **Større båt i åpen gruppe:** 8–9,99 m gir 5,6 tonn torsk og 10 m eller mer gir 6,4 tonn.
-3. **Lukket gruppe:** Spilleren kjøper en båt med deltakeradgang. Riksrevisjonen anslo kvoteprisen for en 9-meters hjemmel til knapt 1,8 millioner kr i 2017, og i 2025 ble en sjark med to kvotesett solgt for nesten 20 millioner kr. Foreløpig setter vi en deltakeradgang under 11 meter til 3–5 millioner kr i spillet.
+3. **Lukket gruppe:** Spilleren kjøper en båt med deltakeradgang. Riksrevisjonen anslo kvoteprisen for en 9-meters hjemmel til knapt 1,8 millioner kr i 2017, og i 2025 ble en sjark med to kvotesett solgt for 17,5 millioner kr (rundt 270 kr/kg torsk). Spillet regner 260 kr/kg, så inngangen (gammel tresnekke med hjemmel under 7 m) koster rundt 2,5 millioner kr og hjemmelen 10–10,9 m rundt 9,5 millioner kr med båt. Kjøpet krever blad B i fiskermanntallet (forenklet: 10 landingsdager og 1 G), banken låner 80 %, og Innovasjon Norge toppfinansierer det første kjøpet med 15 %. Stigen fortsetter til kystbåter på 15 og 21 m og havfiskeflåten, som kommer når kartet utvides vestover. Se «Fartøystigen» i overleveringen.
 4. **Nye arter:** blåkveite, rognkjeks og breiflabb, som er viktige for åpen gruppe i regionen, og senere kongekrabbe og reker.
 5. **Ordninger:** levendelagring av torsk og kvotesamarbeid i lukket gruppe.
 
@@ -247,6 +247,6 @@ Seks av sju spørsmål er avklart, og det som gjenstår påvirker ikke startbåt
 - [x] Dynamiske minstepriser for torsk, hyse og sei: lagt inn fra Råfisklagets tabeller gjeldende fra 21. september 2026.
 - [x] Alder: spilleren har ingen alder, så alderstillegget er ikke med.
 - [x] Redskap: fiskestang, så juksa, så garn, line og teiner (bygget 30.09.2026, se overleveringen kapittel 9).
-- [x] Pris på lukket gruppe: foreløpig 3–5 millioner kr, se progresjonen.
+- [x] Pris på lukket gruppe: 2,5–9,5 millioner kr med båt (260 kr/kg torsk, anslag), se progresjonen.
 - [x] Fjordlinjer rundt Senja: lagt inn under kvoter og regulering, med reglene fra høstingsforskriften kapittel VI.
 - [ ] Kvoteendringer i 2026: forskriften ble endret seks ganger fra februar til mai, og maksimalkvotefisket i åpen gruppe ble stoppet 16. april. Garantert torsk for 8–9,99 m må avklares, 4,2 eller 3,2 tonn.
