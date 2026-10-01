@@ -367,13 +367,15 @@ function takeLoan(amount, months, k){ k = k || 'loan'; const C = LOANS[k], r = C
 // a sold or traded-in vessel pays off the loans first (Kystbanken's, then Innovasjon Norge's); returns what went to the lenders
 function payDown(x){ let left = x; for (const k of ['loan', 'loanIN']){ const L = S[k]; if (!L || left <= 0) continue; const p = Math.min(L.bal, left); L.bal -= p; left -= p; if (L.bal < 1) S[k] = null; } return x - left; }
 // what a purchase costs: the trade-in pays off the loans, and only the rest counts as equity. The bank lends up to 80 % of the price
-// (Innovasjon Norge 10 % more), the buyer brings the rest, and all loans together stay within 80 % of the fleet with the new boat
-// (plus the top-up). why: null, 'notes' (three landing notes first), 'eq' (too little equity) or 'cap' (the fleet carries no more debt)
+// (Innovasjon Norge 15 % more on the first closed-group boat, so the buyer brings 5 %; set by tests/progweek.py so the entry comes
+// with blad B, after about 14 trips), and all loans together stay within 80 % of the fleet with the new boat (plus the top-up).
+// why: null, 'notes' (three landing notes first), 'eq' (too little equity) or 'cap' (the fleet carries no more debt)
+const INN = 0.15;
 function deal(price, ti, inn){
-  const D = debt(), payoff = Math.min(ti, D), tiNet = ti - payoff, cost = price - tiNet, eqNeed = Math.max(0, price * (inn ? 0.1 : 0.2) - tiNet);
+  const D = debt(), payoff = Math.min(ti, D), tiNet = ti - payoff, cost = price - tiNet, eqNeed = Math.max(0, price * (inn ? 0.2 - INN : 0.2) - tiNet);
   const loanNeed = S.cash >= cost ? 0 : cost - Math.max(0, S.cash - 5000), bankL = Math.min(loanNeed, price * 0.8), inL = loanNeed - bankL;
-  const cap = (S.fleet.reduce((a, v) => a + vesselValue(v), 0) - ti + price) * 0.8 + (inn ? price * 0.1 : 0) - (D - payoff);
-  const why = !loanNeed ? null : S.sales.length < 3 ? 'notes' : S.cash < eqNeed ? 'eq' : inL > (inn ? price * 0.1 : 0) + 1 || loanNeed > cap + 1 ? 'cap' : null;
+  const cap = (S.fleet.reduce((a, v) => a + vesselValue(v), 0) - ti + price) * 0.8 + (inn ? price * INN : 0) - (D - payoff);
+  const why = !loanNeed ? null : S.sales.length < 3 ? 'notes' : S.cash < eqNeed ? 'eq' : inL > (inn ? price * INN : 0) + 1 || loanNeed > cap + 1 ? 'cap' : null;
   return {cost, eqNeed, loanNeed, bankL, inL, payoff, tiNet, ok:!why, why};
 }
 function finance(x, months){ if (x.payoff) payDown(x.payoff); if (x.bankL > 0) takeLoan(x.bankL, months); if (x.inL > 0) takeLoan(x.inL, 120, 'loanIN'); S.cash -= x.cost; }

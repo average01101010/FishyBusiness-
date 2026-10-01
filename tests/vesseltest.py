@@ -141,7 +141,7 @@ async def main():
         print(ok(r['mig']['b'] and r['mig']['n'] == 10 and r['migLic']), 'an old save gets blad B from its landing notes, or at once with a closed-group right')
         print(ok(r['loophole']['payoff'] == 66500 and r['loophole']['tiNet'] == 0 and r['loophole']['eqNeed'] == 200000), 'a trade-in pays off the loan first; only the rest counts as equity')
         print(ok(r['noB']['btns'] == 0 and r['noB']['note'] and r['withB']['btns'] == 2 and r['withB']['inn']), 'a boat with a right needs blad B; with it, both buttons and the top-up from Innovasjon Norge')
-        print(ok(r['noInn'] == 'eq' and r['after']['lic'] == 'u7' and r['after']['type'] == 'trebat' and r['after']['cash'] >= 0 and r['after']['loanIN'] and r['after']['loanIN'] <= r['price'] * 0.1 + 1
+        print(ok(r['noInn'] == 'eq' and r['after']['lic'] == 'u7' and r['after']['type'] == 'trebat' and r['after']['cash'] >= 0 and r['after']['loanIN'] and r['after']['loanIN'] <= r['price'] * 0.15 + 1
                  and r['after']['loan'] <= r['price'] * 0.8 + 1 and r['after']['inUsed'] and not r['after']['innNow']), 'the entry: the skiff and NOK 200 000 buy the boat with a right under 7 m with the top-up, not without it')
         g0, g1, g2 = r['goals0'], r['goals1'], r['goals2']
         print(ok(len(g0) == 2 and 'Blad B' in g0[0] and 'under 7 m' in g0[1] and 'under 7 m' in g1[0] and '7–7,9 m' in g2[0] and '14,99' in g2[1]), 'Neste mål follows the ladder: blad B, the entry right, the next right, the 14.99 m coastal vessel', [g0, g1, g2])
