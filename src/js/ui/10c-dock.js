@@ -230,3 +230,12 @@ const DOCK = (() => {
 })();
 // the old name: everything that changes what the boat does asks for the buttons again
 function renderActs(){ DOCK.render(); }
+
+// the market's showroom (G3.showroom): a chip with the boat's name and size, and the way back to her spec sheet
+hooks.onShowroom = type => {
+  const el = $('showChip'); if (!el) return;
+  if (!type){ el.hidden = true; return; }
+  const V = VESSELS[type], L = (no, en) => S.lang === 'no' ? no : en;
+  $('scTx').textContent = V.name[S.lang] + ' · ' + fmt(V.len, 2) + ' × ' + fmt(V.beam, 1) + ' m'; $('scBack').textContent = L('‹ Tilbake', '‹ Back'); el.hidden = false;
+};
+$('scBack').addEventListener('click', () => { G3.showroom(null); DOCK.open('fartoy'); });

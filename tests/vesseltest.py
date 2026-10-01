@@ -76,6 +76,38 @@ async def main():
         print(ok([o[0] for o in r['offers']] == ['u7', 'h7', 'h8', 'h9', 'h10'] and r['offers'][0][3] < r['offers'][-1][3]), 'five closed-group offers by quota length, the cheapest the smallest')
         print(ok(r['jukGroup'][0] == 1 and r['jukGroup'][1] == 5600), 'the 8.9 m sjark fishes in the open group 8–9.99 m with 5.6 t of cod')
         print(ok(r['fjord']['kg'] == 0 and r['fjord']['warn']), 'a 21 m vessel may not jig inside the fjord line')
+        # the market: tabs, cards with a side view, the spec sheet, the ocean fleet locked, one open-group boat, in landscape and portrait
+        for vw, vh, tag in ((1100, 800, 'liggende'), (800, 1180, 'staende')):
+            await pg.set_viewport_size({'width':vw, 'height':vh})
+            u = await pg.evaluate("""(()=>{ const R = {}, b = S.boat; S.fleet = [S.fleet[0]]; bindVessel(S.fleet[0]); b.type = 'skiff'; applyVessel(); b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; S.order = null; S.cash = 3e5;
+              S.sales = S.sales.length >= 3 ? S.sales : [{t:0, total:1}, {t:0, total:1}, {t:0, total:1}];
+              const dr = () => document.getElementById('drawerBody'), tap = sel => { const e = dr().querySelector(sel); if (e) e.click(); return !!e; };
+              DOCK.open('fartoy'); tap('[data-pa=mksel]:not([data-k])');
+              const cards = t => { tap('[data-pa=mktab][data-s=' + t + ']'); return [...dr().querySelectorAll('.vcard')].map(c => [c.dataset.k, c.dataset.o || '', !!c.querySelector('svg polygon')]); };
+              R.tabs = {open:cards('open'), lic:cards('lic'), kyst:cards('kyst'), hav:cards('hav')};
+              // the sheet of an ocean vessel: every section, and no buy button
+              tap('[data-pa=mksel][data-k=bunntral]'); const sh = dr().querySelector('.vsheet'); R.havSecs = [...sh.querySelectorAll('.vsec h5')].map(e => e.textContent); R.havBuy = !!sh.querySelector('[data-pa=buy]'); R.havText = sh.textContent.includes('Bredde') && sh.textContent.includes('Dypgående') && sh.textContent.includes('Vekt');
+              tap('[data-pa=mksel]:not([data-k])');
+              // an open-group boat: trade-in only before the company owns a closed-group vessel
+              tap('[data-pa=mktab][data-s=open]'); tap('[data-pa=mksel][data-k=jukesjark]'); R.fleetBtn = !!dr().querySelector('[data-pa=buy][data-ti="0"]'); R.tiBtn = dr().querySelector('[data-pa=buy][data-ti="1"]'); R.tiOk = !!R.tiBtn && !R.tiBtn.disabled; R.tiBtn = !!R.tiBtn;
+              R.small = [...dr().querySelectorAll('button')].filter(e => e.offsetParent && e.getBoundingClientRect().height < 43).map(e => e.textContent.slice(0, 24)); R.overflow = dr().scrollWidth > dr().clientWidth + 1;
+              tap('[data-pa=mksel]:not([data-k])'); tap('[data-pa=mktab][data-s=lic]'); tap('[data-pa=mksel][data-k=trebat][data-o=u7]'); R.licSecs = [...dr().querySelectorAll('.vsheet .vsec h5')].map(e => e.textContent);
+              R.licBtns = [...dr().querySelectorAll('[data-pa=buylic]')].length;
+              return R; })()""")
+            await pg.screenshot(path=os.path.join(ROOT, 'tests', 'out', 'market_' + tag + '.png'))
+            print(tag, json.dumps(u, ensure_ascii=False)[:900])
+            t = u['tabs']
+            print(ok(len(t['open']) == 8 and len(t['lic']) == 5 and len(t['kyst']) == 2 and len(t['hav']) == 4 and all(c[2] for v in t.values() for c in v)), tag + ': four tabs with every boat as a card with its side view')
+            print(ok(u['havText'] and not u['havBuy'] and len(u['havSecs']) >= 3), tag + ': the ocean vessel has a full spec sheet (length, beam, draft, weight) and no buy button')
+            print(ok(u['tiBtn'] and u['tiOk'] and not u['fleetBtn']), tag + ': an open-group boat is bought by trading in, not for the fleet, before the company has a closed-group vessel')
+            print(ok('Hjemmel' in u['licSecs'] and u['licBtns'] == 2), tag + ': a boat with a right shows the right and both ways to buy')
+            print(ok(not u['overflow'] and not u['small']), tag + ': no sideways scroll and every button at least 44 px', u['small'][:4])
+            await pg.evaluate("DOCK.close()")
+        # trading the skiff in for the 8.9 m sjark
+        r = await pg.evaluate("""(()=>{ S.cash = 9e5; const c0 = S.cash; DOCK.open('fartoy'); const dr = document.getElementById('drawerBody'); const back = dr.querySelector('[data-pa=mksel]:not([data-k])'); if (back) back.click(); dr.querySelector('[data-pa=mktab][data-s=open]').click(); dr.querySelector('[data-pa=mksel][data-k=jukesjark]').click();
+          dr.querySelector('[data-pa=buy][data-ti="1"]').click(); const R = {type:S.boat.type, paid:Math.round(c0 - S.cash), fleet:S.fleet.length, open:openVesselId() === S.cur}; DOCK.close(); return R; })()""")
+        print('trade-in:', json.dumps(r))
+        print(ok(r['type'] == 'jukesjark' and r['paid'] == 750000 - 66500 and r['fleet'] == 1 and r['open']), 'trading the skiff in for the 8.9 m sjark costs the price less the trade-in, and she takes the open-group place')
         print('errors:', errs[:5]); await br.close()
 
 asyncio.run(main())

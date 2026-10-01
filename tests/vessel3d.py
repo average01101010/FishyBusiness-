@@ -18,7 +18,7 @@ async def main():
         await pg.wait_for_timeout(900); await pg.click('#obGo')
         await pg.evaluate("(()=>{ S.tut = 0; S.settings.autoOn = false; S.t = 45 * 1440 + 360; const b = S.boat; b.status = 'idle'; b.port = null; b.pos = {...GROUNDS[1].p}; b.heading = 1.1; })()")
         await pg.wait_for_function("G3.isActive()", timeout=90000); await pg.wait_for_timeout(2500)
-        types = await pg.evaluate("Object.keys(VESSELS).filter(t => vesselSpec(t))")
+        types = await pg.evaluate("Object.keys(VESSELS).filter(t => vesselSpec(t) && !vesselSpec(t).hand)")
         if ONLY: types = [t for t in types if t in ONLY]
         counts = {}
         for t in types:
@@ -39,6 +39,16 @@ async def main():
             budget = 45000 if i['cls'] == 'hav' else 25000
             print(ok(i['verts'] <= budget and not i['nan']), '%s: %d punkter (budsjett %d), bygget på %.1f ms, uten NaN' % (t, i['verts'], budget, budget and i['ms']))
             L = i['len']; print(ok(abs(i['box'][1] - L) / L < 0.08), '%s: modellen er %.2f m lang mot %.2f m i dataene' % (t, i['box'][1], L))
+        # the market's showroom: the boat afloat off the harbour, the camera turning round it, a chip with the way back
+        if not ONLY or 'showroom' in ONLY:
+            await pg.evaluate("(()=>{ const b = S.boat; b.type = 'skiff'; applyVessel(); G3.vesselChanged(); b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; })()"); await pg.wait_for_timeout(1500)
+            await pg.evaluate("G3.showroom('kyst15')"); await pg.wait_for_timeout(3500)
+            sr = await pg.evaluate("({showing:G3.showing, chip:!document.getElementById('showChip').hidden, text:document.getElementById('scTx').textContent})")
+            await pg.screenshot(path=os.path.join(OUT, 'vessel_showroom.png'))
+            await pg.click('#scBack'); await pg.wait_for_timeout(600)
+            sr2 = await pg.evaluate("({showing:G3.showing, chip:!document.getElementById('showChip').hidden, drawer:!document.getElementById('drawer').hidden})")
+            print('showroom:', json.dumps(sr, ensure_ascii=False), json.dumps(sr2))
+            print(ok(sr['showing'] == 'kyst15' and sr['chip'] and '14,99' in sr['text'] and sr2['showing'] is None and not sr2['chip'] and sr2['drawer']), 'the showroom shows the boat with a chip, and Tilbake goes back to the market')
         print('errors:', errs[:5]); await br.close()
 
 asyncio.run(main())

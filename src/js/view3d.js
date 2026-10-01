@@ -2106,7 +2106,7 @@ const G3 = (() => {
     computeEnv(H); updateBoat(dt, t, frac); updateWaves(dt, H); updateNear(); updateShadows(); updateChunks(CH.size ? 2 : 999);
     // camera
     let eye, V;
-    if (cam.helm){
+    if (cam.helm && !SHOW){
       // at the wheel: eye above the helmsman, moving with the boat (damped a little)
       const Mh = model(bv.x, bv.y, bv.z, -bv.head, bv.pitch * 0.7, bv.roll * 0.7);
       eye = xf(Mh, (GEO(vtype())).eye);
@@ -2114,8 +2114,9 @@ const G3 = (() => {
       const f = [Mh[0] * dl[0] + Mh[4] * dl[1] + Mh[8] * dl[2], Mh[1] * dl[0] + Mh[5] * dl[1] + Mh[9] * dl[2], Mh[2] * dl[0] + Mh[6] * dl[1] + Mh[10] * dl[2]];
       V = viewDir(f, [Mh[4], Mh[5], Mh[6]]);
     } else {
-      const yawW = bv.head + cam.yaw, tgt = [bv.x, bv.y + 1.3, bv.z];
-      const eyeAt = p => { const cp = Math.cos(p), sp = Math.sin(p), e = [bv.x - Math.sin(yawW) * cam.dist * cp, bv.y + 1.3 + cam.dist * sp, bv.z + Math.cos(yawW) * cam.dist * cp];
+      if (SHOW && !drag) cam.yaw += dt * 0.12;   // the showroom turns slowly round the boat
+      const C = SHOW ? [SHOW.x, (env.tide || 0) + 1.3 + Math.min(4, VESSELS[SHOW.t].len * 0.06), SHOW.z] : [bv.x, bv.y + 1.3, bv.z], yawW = (SHOW ? SHOW.h : bv.head) + cam.yaw, tgt = C;
+      const eyeAt = p => { const cp = Math.cos(p), sp = Math.sin(p), e = [C[0] - Math.sin(yawW) * cam.dist * cp, C[1] + cam.dist * sp, C[2] + Math.cos(yawW) * cam.dist * cp];
         const ground = Math.max(terrH(e[0], e[2]), seaH(e[0], e[2], t)) + 2; if (e[1] < ground) e[1] = ground; return e; };
       // tilt up over a quay or under a bridge rather than diving in close (up quickly, back down slowly) ...
       let lift = 0, f = camFree(tgt, eyeAt(cam.pitch));
@@ -2168,18 +2169,21 @@ const G3 = (() => {
     DECKACT = deckActivity(); const awaySk = DECKACT.on && DECKACT.alone, awayCr = DECKACT.on && !DECKACT.alone ? 1 : 0;
     if (VG.hand){ drawSkiff(BMrel, VPn, dt, !cam.helm && !awaySk, ncrew > 0); gl.useProgram(PL.p); }
     else drawVessel(VT, VG, BMrel, VPn, !cam.helm && !awaySk, ncrew - awayCr);
+    if (SHOW){ const y = (env.tide || 0) + (seaH(SHOW.x, SHOW.z, t) - (env.tide || 0)) * 0.8; SHOW.M = model(SHOW.x - eye[0], y - eye[1], SHOW.z - eye[2], -SHOW.h, Math.sin(t * 0.7) * 0.02, Math.sin(t * 0.9) * 0.03); drawVessel(SHOW.t, GEO(SHOW.t), SHOW.M, VPn, true, 2); }
     if (STATN){ nSetup(VPn); drawN(STATN, TM); if (PLANTN) drawN(PLANTN, TM); if (BUNKN) drawN(BUNKN, TM); } drawMooring(BMrel, eye, VPn, t); if (PM) drawDeck(BMrel, eye, VPn, t, DECKACT); drawGearOp(BMrel, eye, VPn, t);
     const plant = PM ? nearestPlant(eye) : null, pr = plant ? drawPlant(plant, eye, VPn, t, BMrel) : null, bunk = PM ? nearestBunker(eye) : null; if (bunk) bunk.last = drawBunker(bunk, eye, VPn, t, BMrel); gl.useProgram(PL.p);
     wildSpawn(t); drawNPC(eye, t, H); drawGearSea(eye, t, VPn, H); drawWild(eye, t, dt);
 
     const pole = xf(BMrel, VG.pole);
     drawLit(FLAGM, model(pole[0], pole[1], pole[2], Math.PI / 2 - appB, 0, 0));
+    if (SHOW && SHOW.M && GEO(SHOW.t).open && pvm(SHOW.t).cap){ gl.colorMask(false, false, false, false); drawLit(pvm(SHOW.t).cap, SHOW.M); gl.colorMask(true, true, true, true); }
     { const cap = VG.hand ? (SK ? SK.cap : CAPM) : VG.open ? pvm(VT).cap : null; if (cap){ gl.colorMask(false, false, false, false); drawLit(cap, BMrel); gl.colorMask(true, true, true, true); } }
     drawSea(VPn, eye, t, nearFar, 0);
     drawSea(VPn, eye, t, false);
     if (BLD && env.night > 0.02){ gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.depthMask(false); drawChunkLights(VPn, eye); gl.depthMask(true); gl.disable(gl.BLEND); }
     drawEffects(VPn, eye, BMabs, dt, t); drawBlows(VPn, eye, dt); drawNPCLights(VPn); drawSeaLights(VPn, eye, t, true);
     if (VG.hand) drawSkiffGlass(BMrel, VPn); else drawGlass(pvm(VT).glass, BMrel, VPn);
+    if (SHOW && SHOW.M) drawGlass(pvm(SHOW.t).glass, SHOW.M, VPn);
     if (pr && pr.spray){ gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false); drawPts(pr.spray, gl.POINTS, VPn, [0.86, 0.93, 1], 30, true); gl.depthMask(true); gl.disable(gl.BLEND); }
     if (pr && env.night > 0.05){ gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.depthMask(false); pr.lamps.forEach((q, i) => { PB[i * 3] = q[0]; PB[i * 3 + 1] = q[1]; PB[i * 3 + 2] = q[2]; PA[i] = env.night; }); drawPts(pr.lamps.length, gl.POINTS, VPn, [1, 0.9, 0.72], 1400, true); gl.depthMask(true); gl.disable(gl.BLEND); }
     if (env.night > 0.05){
@@ -2311,6 +2315,17 @@ const G3 = (() => {
   canvas.addEventListener('dblclick', () => { if (cam.helm){ const G = GEO(vtype()); cam.hy = 0; cam.hp = G.hp !== undefined ? G.hp : -0.07; cam.fov = G.fov || 55; } else { cam.yaw = 0.55; cam.pitch = 0.26; cam.dist = 21; } }); canvas.addEventListener('pointercancel', up);
   canvas.addEventListener('wheel', e => { e.preventDefault(); cam.dist = clamp(cam.dist * Math.exp(e.deltaY * 0.0012), 7, 8000); }, {passive:false});
 
+  // the market's showroom: a vessel type drawn afloat off the harbour you are in, the camera turning round it; null ends it
+  let SHOW = null;
+  function showroom(type){
+    if (!type){ if (SHOW){ const was = SHOW.was; SHOW = null; cam.yaw = 0.55; cam.pitch = 0.26; cam.dist = 21; if (!was) show(false); } if (hooks.onShowroom) hooks.onShowroom(null); return; }
+    const V = VESSELS[type]; if (!V || !vesselSpec(type)) return;
+    const b = S.boat, pt = (b.port && portById(b.port)) || nearestPort(b.pos), a = approachPath(pt), q = a.length ? [a[0], a[a.length - 1]].sort((u, w) => dist(w, pt.p) - dist(u, pt.p))[0] : b.pos;
+    SHOW = {t:type, x:q.x * 1000, z:q.y * 1000, h:Math.atan2(pt.p.x - q.x, -(pt.p.y - q.y)) + 1.2, was:active};
+    cam.helm = false; cam.pitch = 0.18; cam.dist = Math.max(13, V.len * 1.7); cam.yaw = 1.1;
+    if (!active) show(true);
+    if (hooks.onShowroom) hooks.onShowroom(type);
+  }
   function show(on, auto){
     if (on && !ready){
       if (failed){ if (!auto) toast(t('no3d')); return false; }
@@ -2327,6 +2342,7 @@ const G3 = (() => {
     show, toggle(){ return show(!active); }, isActive:() => active,
     zoom(f){ if (cam.helm) cam.fov = clamp(cam.fov * f, 12, 75); else cam.dist = clamp(cam.dist * f, 7, 8000); }, reset(){ if (cam.helm){ cam.hy = 0; cam.hp = -0.07; cam.fov = 55; } else { cam.yaw = 0.55; cam.pitch = 0.26; cam.dist = 21; } },
     vesselChanged(){ bv.init = false; TRAIL.length = 0; },
+    showroom, get showing(){ return SHOW ? SHOW.t : null; },
     roadsReady(){ if (NEARM) buildGround(); for (const c of CH.values()) freeChunk(c); CH.clear(); },
     fineReady(){ if (NEARM){ freeMesh(NEARM); NEARM = null; updateNear(); } },
     fishCam(){ cam.helm = false; cam.dist = 7; cam.pitch = 0.22; cam.yaw = -0.85; },

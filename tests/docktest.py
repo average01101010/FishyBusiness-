@@ -72,7 +72,7 @@ async def run(p, w, h, tag):
     check(await pg.evaluate("document.getElementById('drawer').hidden"), 'skuffen lukkes')
 
     # pages in the yard and the village
-    for m, it, title, sel in (('verft', 'oppgr', 'Oppgraderinger', '[data-pa=equip]'), ('verft', 'fiskeutstyr', 'Fiskeutstyr', '[data-pa=grbuy]'), ('verft', 'batmarked', 'Båthandel', '[data-pa=buy]'),
+    for m, it, title, sel in (('verft', 'oppgr', 'Oppgraderinger', '[data-pa=equip]'), ('verft', 'fiskeutstyr', 'Fiskeutstyr', '[data-pa=grbuy]'), ('verft', 'batmarked', 'Båthandel', '[data-pa=mksel]'),
                               ('verft', 'vedlikehold', 'Vedlikehold', '[data-pa=svc]'), ('verft', 'rigg', 'Rigg', '.rig.on'), ('bygd', 'bank', 'Kystbanken', '.ph-big'), ('bygd', 'oppdrag', 'Oppdrag', '.ph-card'), ('bygd', 'mannskap', 'Mannskap', '.ph-card')):
         await tap_el('#dock [data-dk=' + m + ']'); await pg.wait_for_timeout(200)
         await tap_el('#dockFan [data-dk=' + it + ']'); await pg.wait_for_timeout(300)

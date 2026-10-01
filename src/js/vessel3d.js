@@ -235,6 +235,9 @@ function partTiller(o, hs, p){ const z0 = hs.zAt(0, 1) - 0.1, y = hs.sh(0.03) + 
 function partJukse(o, hs, p){ for (const z of p.at) for (const sg of p.sides || [1, -1]){ const s = hs.sOf(z), x = sg * (hs.hbS(s) - 0.12), y = hs.sh(s);
   o.box(x, y, z, 0.24, 0.32, 0.32, VC.yellow); o.tube([[x - sg * 0.04, y + 0.2, z - 0.2], [x - sg * 0.04, y + 0.2, z + 0.2]], 0.11, VC.dark, 10); o.tube([[x, y + 0.3, z], [x + sg * 0.75, y + 0.75, z]], 0.018, VC.dark, 4); } }
 function partPort(o, hs, p){ const s = hs.sOf(p.z), y = hs.deckY(s) + 0.15, x = hs.xAt(s, y + p.h / 2) + 0.03; o.quad([x, y, p.z - p.l / 2], [x, y, p.z + p.l / 2], [x, y + p.h, p.z + p.l / 2], [x, y + p.h, p.z - p.l / 2], VC.black); }
+// a drum across the deck (net drum, trawl winch), with flanges
+function partDrum(o, hs, p){ const s = hs.sOf(p.z), y = hs.deckY(s) + p.r + 0.35, x = hs.xAt(s, y) * (p.wf || 0.55); o.tube([[-x, y, p.z], [x, y, p.z]], p.r, p.col || [0.12, 0.2, 0.3, 0.2], 16);
+  for (const sg of [1, -1]){ o.disc([sg * x, y, p.z], [sg, 0, 0], p.r * 1.3, p.col2 || VC.yellow, 16); o.box(sg * x, y - p.r - 0.35, p.z, 0.3, p.r + 0.35, p.r * 1.6, VC.galv); } }
 // a shelter deck flush with the hull sides: the bulwarks go up to the roof, which runs at the height of the sheer from zf to za
 function partShelter(o, hs, p){ const N = 16, G = []; for (let i = 0; i <= N; i++){ const z = p.zf + (p.za - p.zf) * i / N, s = hs.sOf(z), y = hs.sh(s) + 0.02, x = hs.hbS(s) - 0.02; G.push([[-x, y, z], [0, y + 0.06, z], [x, y, z]]); }
   o.grid(G.map(r => r.slice().reverse()), () => p.col || VC.deck);
@@ -258,6 +261,8 @@ function partNetBin(o, hs, p){ const s = hs.sOf(p.z), y = hs.deckY(s), x = hs.xA
 
 // ---------- one spec per type: the hull and the fittings. The skiff is hand-built in view3d.js ----------
 const SPEC3D = {
+  skiff:{hand:true, hull:{form:'chine', F:0.92, fr:0.22, ar:0.02, rake:0.55, srake:0, tw:0.86, smax:0.55, entry:1.8, run:1.2, Tc:0.42, dr:16, drF:40, flare:0.1, trise:0.9, soleY:0.2, NS:30,
+      col:{hull:VC.cream, bottom:VC.navy, boot:VC.navy, deck:VC.inner}}, open:true, parts:[['block', {zf:-0.1, za:0.55, w:0.8, h:0.85, col:VC.white}]], work:{z:1.6}, crew:[]},
   snekke:{hull:{form:'round', F:0.72, fr:0.34, ar:0.24, rake:0.45, srake:0.4, tw:0, smax:0.5, entry:2.0, run:1.8, Tc:0.62, n:2.0, flare:0.06, soleY:0.32, bulH:0, NS:36,
       col:{hull:VC.cream, stripe:VC.green, bottom:VC.afRed, boot:VC.green, deck:VC.wood, inner:VC.cream, rail:VC.teak}, stripeW:0.12, railR:0.05},
     open:true, parts:[['house', {zf:-1.15, za:0.55, w:1.55, h:1.62, rake:0.25, sill:0.82, nwin:2, nside:1, col:VC.white, roof:VC.green, deckY:0.32}], ['mast', {z:0.3, h:1.4, radar:'dome', on:'house'}],
@@ -307,13 +312,39 @@ const SPEC3D = {
       ['house', {zf:2.4, za:5.6, w:4.4, h:2.2, rake:-0.25, sill:1.05, nwin:4, nside:2, on:'block', col:VC.white, roof:VC.white, frame:VC.black}],
       ['mast', {z:4.6, h:3.0, radar:'open', radarL:2.2, on:'house'}], ['mast', {z:-6.0, h:6.5, r:0.12, span:1.2}], ['funnel', {z:6.5, w:0.7, l:0.95, h:1.7, col:VC.black, on:'block'}],
       ['raft', {x:-1.8, z:6.4, on:'block'}], ['hauler', {z:0.5, kind:'garn'}], ['gallows', {z:8.6, h:3.4, col:VC.yellow}], ['tubs', {z:-2.0, n:4}], ['fenders', {at:[0.3, 0.55, 0.72]}]],
-    work:{z:-1.8}, crew:[[1.8, -1.2, -1.6], [-1.8, -2.6, 1.6], [0.6, -3.6, 3.14], [-0.6, -0.4, 0], [2.4, 0.5, -1.57]]}
+    work:{z:-1.8}, crew:[[1.8, -1.2, -1.6], [-1.8, -2.6, 1.6], [0.6, -3.6, 3.14], [-0.6, -0.4, 0], [2.4, 0.5, -1.57]]},
+  // the ocean fleet: high bow, bulb, superstructure decks forward and working deck aft
+  snokrabbe:{hull:{form:'round', F:3.3, fr:2.2, ar:0.4, rake:3.4, srake:0, tw:0.84, smax:0.45, entry:2.4, run:1.4, Tc:5.6, n:3.2, flare:0.05, flareFwd:0.06, bulb:1.6, bulH:1.2, trise:0.4, NS:52, railR:0.08,
+      col:{hull:VC.blue, stripe:VC.white, bottom:VC.afRed, boot:VC.white, deck:VC.deckRed, inner:VC.inner, rail:VC.white}, stripeW:0.35},
+    parts:[['block', {zf:-19, za:-8, w:9.6, h:2.6, nwin:3, nside:5, col:VC.white, roof:VC.deck}], ['house', {zf:-17.6, za:-11, w:8.2, h:2.6, rake:-0.35, sill:1.15, nwin:6, nside:3, on:'block', col:VC.white, roof:VC.white, frame:VC.black, aftWin:true}],
+      ['mast', {z:-12, h:5, radar:'open', radarL:3.2, r:0.12, span:1.6, on:'house'}], ['funnel', {z:-8.8, w:1.6, l:2.2, h:3.4, col:VC.blue, on:'block'}], ['raft', {x:-3.6, z:-9.5, on:'block'}], ['raft', {x:3.6, z:-9.5, on:'block'}],
+      ['crane', {z:-4, x:2.5, h:4, reach:9, dz:4}], ['pots', {z:2, rows:4, cols:5, lay:3, col:[0.15, 0.25, 0.32, 0.15]}], ['pots', {z:9, rows:4, cols:5, lay:3, col:[0.15, 0.25, 0.32, 0.15]}], ['port', {z:-3, l:2.4, h:1.6}], ['rails', {s0:0, s1:0.08, h:1}]],
+    work:{z:6}, crew:[[3, 5, -1.6], [-3, 7, 1.6], [1, 12, 3.14], [-1, 3, 0]]},
+  autoliner:{hull:{form:'round', F:3.1, fr:2.0, ar:0.3, rake:3.2, srake:0, tw:0.86, smax:0.45, entry:2.4, run:1.3, Tc:5.6, n:3.0, flare:0.05, flareFwd:0.06, bulb:1.5, bulH:1.2, trise:0.4, NS:52, railR:0.08,
+      col:{hull:VC.blue, stripe:VC.white, bottom:VC.afRed, boot:VC.white, deck:VC.deck, inner:VC.inner, rail:VC.white}, stripeW:0.3},
+    parts:[['shelter', {zf:-19, za:17}], ['port', {z:-12, l:2.2, h:1.7}], ['block', {zf:-17, za:-8, w:9, h:2.5, nwin:3, nside:4, on:'block', col:VC.white, roof:VC.deck}],
+      ['house', {zf:-16, za:-10.5, w:7.6, h:2.5, rake:-0.35, sill:1.1, nwin:6, nside:3, on:'block', col:VC.white, roof:VC.white, frame:VC.black, aftWin:true}], ['mast', {z:-11.5, h:5, radar:'open', radarL:3, r:0.12, span:1.5, on:'house'}],
+      ['funnel', {z:-7, w:1.4, l:2.0, h:3.2, col:VC.blue, on:'block'}], ['raft', {x:-3.4, z:-6, on:'block'}], ['raft', {x:3.4, z:-6, on:'block'}], ['crane', {z:4, x:-2.8, h:2, reach:6, on:'block'}], ['rails', {s0:0, s1:0.06, h:1}]],
+    work:{z:19}, crew:[[3, 19.5, -1.6], [-3, 20.5, 1.6], [3.6, -12, -1.57]]},
+  bunntral:{hull:{form:'round', F:3.6, fr:2.4, ar:0.7, rake:4, srake:0, tw:0.9, smax:0.45, entry:2.5, run:1.2, Tc:6.2, n:3.4, flare:0.05, flareFwd:0.06, bulb:2.0, bulH:1.3, trise:0.45, NS:56, railR:0.09,
+      col:{hull:VC.navy, stripe:VC.white, bottom:VC.afRed, boot:VC.white, deck:VC.deckRed, inner:VC.inner, rail:VC.white}, stripeW:0.4},
+    parts:[['shelter', {zf:-27, za:8}], ['block', {zf:-25, za:-12, w:12.4, h:2.7, nwin:3, nside:6, on:'block', col:VC.white, roof:VC.deck}],
+      ['house', {zf:-23.5, za:-15.5, w:10.4, h:2.8, rake:-0.4, sill:1.15, nwin:7, nside:3, on:'block', col:VC.white, roof:VC.white, frame:VC.black, aftWin:true}], ['mast', {z:-17, h:6, radar:'open', radarL:3.6, r:0.14, span:2, on:'house'}],
+      ['funnel', {z:-10.5, w:2.2, l:3.2, h:4.2, col:VC.navy, on:'block'}], ['raft', {x:-5, z:-12, on:'block'}], ['raft', {x:5, z:-12, on:'block'}], ['drum', {z:14, r:1.1, wf:0.5}], ['drum', {z:19, r:0.9, wf:0.5, col:VC.dark}],
+      ['ramp', {l:9, w:4.4}], ['gantry', {z:27, h:8, col:VC.yellow}], ['doors', {z:25.5}], ['crane', {z:9, x:4.5, h:3, reach:8}], ['rails', {s0:0.8, s1:0.97, h:1}]],
+    work:{z:16}, crew:[[4, 15, -1.6], [-4, 17, 1.6], [2, 22, 3.14], [-2, 12, 0]]},
+  pelagisk:{hull:{form:'round', F:4.0, fr:2.6, ar:0.5, rake:4.5, srake:0, tw:0.9, smax:0.45, entry:2.6, run:1.2, Tc:7.2, n:3.4, flare:0.05, flareFwd:0.06, bulb:2.4, bulH:1.3, trise:0.45, NS:58, railR:0.1,
+      col:{hull:VC.green, stripe:VC.white, bottom:VC.afRed, boot:VC.white, deck:VC.deck, inner:VC.inner, rail:VC.white}, stripeW:0.45},
+    parts:[['block', {zf:-34, za:-17, w:14, h:2.8, nwin:4, nside:6, col:VC.white, roof:VC.deck}], ['house', {zf:-32, za:-21, w:12, h:2.8, rake:-0.4, sill:1.15, nwin:7, nside:4, on:'block', col:VC.white, roof:VC.white, frame:VC.black, aftWin:true}],
+      ['mast', {z:-22.5, h:6.5, radar:'open', radarL:4, r:0.15, span:2.2, on:'house'}], ['funnel', {z:-15.5, w:2.4, l:3.4, h:4.6, col:VC.green, on:'block'}], ['raft', {x:-5.6, z:-18, on:'block'}], ['raft', {x:5.6, z:-18, on:'block'}],
+      ['pblock', {z:6, h:9, l:4}], ['netbin', {z:24, l:18, h:2.2}], ['drum', {z:12, r:1.3, wf:0.5}], ['gantry', {z:35, h:9, col:VC.yellow}], ['crane', {z:-6, x:5, h:3, reach:9}], ['rails', {s0:0.84, s1:0.97, h:1}]],
+    work:{z:12}, crew:[[4.5, 10, -1.6], [-4.5, 14, 1.6], [2, 18, 3.14]]}
 };
 // a model for a type: the hull with its fittings (near: lod 1), the glass, the depth cap for open hulls, and where things are
 const VMODEL = {};
 function vesselSpec(type){ return SPEC3D[type] || null; }
 function buildVesselModel(type, lod){
-  lod = lod || 1; const V = VESSELS[type], sp = vesselSpec(type); if (!V || !sp) return null;
+  lod = lod || 1; const V = VESSELS[type], sp = vesselSpec(type); if (!V || !sp || sp.hand) return null;
   const H = Object.assign({L:V.len, B:V.beam, T:V.draft}, sp.hull), hs = hullShape(H), o = VB(), gb = VB(); o.lod = lod; gb.lod = lod;
   hullBuild(o, hs, lod);
   let house = null, roofY = null; const anch = {};
@@ -344,6 +375,7 @@ function buildVesselModel(type, lod){
     else if (kind === 'shelter'){ anch.top = partShelter(o, hs, p); }
     else if (kind === 'jukse') partJukse(o, hs, p);
     else if (kind === 'port') partPort(o, hs, p);
+    else if (kind === 'drum') partDrum(o, hs, p);
   }
   const geo = vesselGeo(type, hs, sp, house, anch);
   return {o, glass:gb, cap:sp.open ? hullCap(hs) : null, geo, hs};
@@ -374,4 +406,42 @@ function personVB(B, x, y, z, seated, hands, suit){
   for (const sd of [-1, 1]){ const hd = hands ? hands[sd < 0 ? 0 : 1] : [x + sd * 0.24, hip - 0.02, z + 0.02], el = [x + sd * 0.25, (sh + hd[1]) / 2 - 0.04, (z + hd[2]) / 2 + 0.04];
     B.tube([[x + sd * 0.21, sh - 0.04, z], el, hd], 0.052, JAC, 6); B.rbox(hd[0], hd[1] - 0.04, hd[2], 0.08, 0.08, 0.1, 0.035, SKN); }
   B.rbox(x, sh - 0.03, z, 0.13, 0.1, 0.13, 0.05, SKN); B.rbox(x, sh + 0.05, z, 0.22, 0.26, 0.24, 0.1, SKN); B.rbox(x, sh + 0.23, z, 0.235, 0.13, 0.25, 0.1, HAT);
+}
+// a side view of a type as SVG (bow to the right), from the same spec as the 3D model: the market draws it on every card, with or
+// without WebGL. Colours from the spec; the hull below the waterline in bottom paint.
+function vesselSVG(type, w, h){
+  const V = VESSELS[type], sp = vesselSpec(type); if (!V || !sp) return '';
+  const H = Object.assign({L:V.len, B:V.beam, T:V.draft}, sp.hull), hs = hullShape(H), col = H.col || {};
+  const rgb = c => 'rgb(' + c.slice(0, 3).map(v => Math.round(v * 255)).join(',') + ')';
+  const N = 40, top = [], bot = [];
+  for (let i = 0; i <= N; i++){ const s = i / N; top.push([-hs.zAt(s, 1), hs.sh(s)]); }
+  for (let i = N; i >= 0; i--){ const s = i / N; bot.push([-hs.zAt(s, 0), -hs.kb(s) - hs.keelD(s)]); }
+  const hull = top.concat(bot), parts = [];
+  let roof = null, maxY = Math.max(...top.map(q => q[1])), blockTop = null;
+  for (const [kind, p] of sp.parts){
+    const base = p.on === 'house' && roof != null ? roof : p.on === 'block' && blockTop != null ? blockTop : null;
+    if (kind === 'house'){ const y0 = p.deckY != null ? p.deckY : p.on === 'block' && blockTop != null ? blockTop : hs.deckY(hs.sOf((p.zf + p.za) / 2)), y1 = y0 + p.h, rk = p.rake || 0;
+      parts.push(['poly', [[-p.zf, y0], [-p.za, y0], [-p.za, y1], [-(p.zf + rk), y1]], rgb(p.col || VC.white)]);
+      parts.push(['poly', [[-p.zf - rk * (p.sill / p.h), y0 + p.sill], [-p.za + 0.15, y0 + p.sill], [-p.za + 0.15, y1 - 0.18], [-(p.zf + rk * ((p.h - 0.18) / p.h)), y1 - 0.18]], '#27323b']);
+      parts.push(['poly', [[-(p.zf + rk) + 0.12, y1], [-p.za - 0.12, y1], [-p.za - 0.12, y1 + 0.09], [-(p.zf + rk) + 0.12, y1 + 0.09]], rgb(p.roof || p.col || VC.white)]); roof = y1 + 0.09; maxY = Math.max(maxY, roof); }
+    else if (kind === 'block'){ const y0 = hs.deckY(hs.sOf((p.zf + p.za) / 2)), y1 = y0 + p.h; parts.push(['poly', [[-p.zf, y0], [-p.za, y0], [-p.za, y1], [-p.zf, y1]], rgb(p.col || VC.white)]); blockTop = y1 + 0.1; maxY = Math.max(maxY, blockTop); }
+    else if (kind === 'shelter'){ blockTop = hs.sh(hs.sOf((p.zf + p.za) / 2)) + 0.08; }
+    else if (kind === 'mast'){ const b0 = base != null ? base : hs.deckY(hs.sOf(p.z)), y1 = b0 + (p.h || 2.4); parts.push(['line', [[-p.z, b0], [-p.z, y1]], '#d9dde0', 0.09]); parts.push(['line', [[-p.z - 0.35, b0 + (p.h || 2.4) * 0.72], [-p.z + 0.35, b0 + (p.h || 2.4) * 0.72]], '#d9dde0', 0.06]); maxY = Math.max(maxY, y1); }
+    else if (kind === 'gallows'){ const s = hs.sOf(p.z), y0 = hs.deckY(s), y1 = y0 + (p.h || 2.6); parts.push(['line', [[-p.z, y0], [-p.z + 0.15, y1]], rgb(p.col || VC.yellow), 0.12]); maxY = Math.max(maxY, y1); }
+    else if (kind === 'exhaust' || kind === 'funnel'){ const b0 = base != null ? base : hs.deckY(hs.sOf(p.z)), y1 = b0 + (p.h || 2); parts.push(['line', [[-p.z, b0], [-p.z, y1]], kind === 'funnel' ? rgb(p.col || VC.navy) : '#1c1f22', kind === 'funnel' ? (p.l || 1.5) : 0.14]); maxY = Math.max(maxY, y1); }
+    else if (kind === 'gantry'){ const y0 = hs.deckY(hs.sOf(p.z)), y1 = y0 + (p.h || 6); parts.push(['line', [[-p.z, y0], [-p.z, y1]], rgb(p.col || VC.yellow), 0.45]); maxY = Math.max(maxY, y1); }
+    else if (kind === 'crane'){ const b0 = base != null ? base : hs.deckY(hs.sOf(p.z)), y1 = b0 + (p.h || 3); parts.push(['line', [[-p.z, b0], [-p.z, y1], [-p.z + (p.reach || 4) * 0.5, y1 + (p.reach || 4) * 0.6]], rgb(p.col || VC.yellow), 0.16]); maxY = Math.max(maxY, y1 + (p.reach || 4) * 0.6); }
+  }
+  const x0 = -V.len / 2 - 0.6, x1 = V.len / 2 + 0.6, yMin = -V.draft - 0.3, yMax = maxY + 0.4, f = q => q.map(([x, y]) => x.toFixed(2) + ',' + (-y).toFixed(2)).join(' ');
+  const id = 'vs' + type, wl = '<clipPath id="' + id + '"><polygon points="' + f(hull) + '"/></clipPath>';
+  let svg = '<svg class="vsvg" viewBox="' + x0.toFixed(2) + ' ' + (-yMax).toFixed(2) + ' ' + (x1 - x0).toFixed(2) + ' ' + (yMax - yMin).toFixed(2) + '"' + (w ? ' width="' + w + '"' : '') + (h ? ' height="' + h + '"' : '') + ' preserveAspectRatio="xMidYMid meet"><defs>' + wl + '</defs>';
+  for (const pt of parts.filter(q => q[0] === 'line' && q[1][0][1] < 0.5)) svg += '<polyline points="' + f(pt[1]) + '" fill="none" stroke="' + pt[2] + '" stroke-width="' + pt[3] + '"/>';
+  svg += '<polygon points="' + f(hull) + '" fill="' + rgb(col.hull || VC.white) + '"/>';
+  if (col.lower && H.bandY) svg += '<rect x="' + x0 + '" y="' + (-H.bandY) + '" width="' + (x1 - x0) + '" height="' + (H.bandY + 0.1) + '" fill="' + rgb(col.lower) + '" clip-path="url(#' + id + ')"/>';
+  svg += '<rect x="' + x0 + '" y="-0.1" width="' + (x1 - x0) + '" height="0.2" fill="' + rgb(col.boot || VC.black) + '" clip-path="url(#' + id + ')"/>';
+  svg += '<rect x="' + x0 + '" y="0.02" width="' + (x1 - x0) + '" height="' + (V.draft + 1) + '" fill="' + rgb(col.bottom || VC.afRed) + '" clip-path="url(#' + id + ')"/>';
+  if (col.stripe) svg += '<polyline points="' + f(top.map(([x, y]) => [x, y - (H.stripeW || 0.14) / 2])) + '" fill="none" stroke="' + rgb(col.stripe) + '" stroke-width="' + (H.stripeW || 0.14) + '" clip-path="url(#' + id + ')"/>';
+  for (const pt of parts) svg += pt[0] === 'poly' ? '<polygon points="' + f(pt[1]) + '" fill="' + pt[2] + '"/>' : pt[1][0][1] < 0.5 ? '' : '<polyline points="' + f(pt[1]) + '" fill="none" stroke="' + pt[2] + '" stroke-width="' + pt[3] + '"/>';
+  svg += '<line x1="' + x0 + '" y1="0" x2="' + x1 + '" y2="0" stroke="rgba(30,90,140,.45)" stroke-width="0.05"/></svg>';
+  return svg;
 }

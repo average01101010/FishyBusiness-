@@ -15,7 +15,7 @@ function vget(v, k){ return v.id === S.cur ? S[k] : v[k]; }
 function vesselById(id){ return S.fleet.find(v => v.id === id) || null; }
 // ---- fleet rules (deltakerforskriften, J-30-2026): the company can have one vessel in the open group, and none there if it owns a
 // vessel in the closed group. In the open group the owner must be aboard as skipper; S.me is the vessel you are aboard. ----
-function openVesselId(){ if (S.fleet.some(v => vget(v, 'lic'))) return null; return S.fleet.length ? S.fleet[0].id : null; }
+function openVesselId(){ if (S.fleet.some(v => vget(v, 'lic'))) return null; const v = S.fleet.find(x => (VESSELS[vget(x, 'boat').type] || {}).len < 11); return v ? v.id : null; }
 // a waypoint where the boat stops: a port, fishing hours, or work with passive gear (set or haul)
 function wpStop(w){ return !!(w.port || w.fish > 0 || w.act); }
 function meAboard(){ return !S.me || S.me === S.cur; }
