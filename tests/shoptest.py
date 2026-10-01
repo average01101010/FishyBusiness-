@@ -98,7 +98,7 @@ async def main():
 
         # A7: a landing with gutted cod (liver and roe), haddock and saithe, a crew member aboard and a login bonus
         r = json.loads(await J("""(() => { const b = S.boat, q = portById('botnhamn'); b.port = 'botnhamn'; b.pos = {x:q.p.x, y:q.p.y}; b.status = 'port'; b.land = null;
-          S.crew = [{id:'t1', name:'Ola', age:30, lv:'Dekksmann', lvEn:'Deckhand', skill:1, share:0.23}]; S.streak.pct = 7;
+          S.crew = [crewUpgrade({id:'t1', name:'Ola', age:30, lv:'Dekksmann', lvEn:'Deckhand', skill:1, share:0.23})]; S.crew[0].bi = false; S.crew[0].off = false; S.streak.pct = 7;
           S.hold = [{sp:'torsk', cls:1, kg:123.37, n:25, bled:true, iced:true, hr:0, fresh:90, gut:true}, {sp:'torsk', cls:2, kg:88.91, n:30, bled:true, iced:true, hr:0, fresh:70, gut:false},
             {sp:'hyse', cls:1, kg:41.13, n:30, bled:true, iced:true, hr:0, fresh:90, gut:false}, {sp:'sei', cls:1, kg:57.77, n:20, bled:true, iced:true, hr:0, fresh:50, gut:true}];
           const c0 = S.cash; sell(); tab = 'port'; renderPanel();

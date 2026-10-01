@@ -26,7 +26,7 @@ D3 = ['dbg23o', 'camtest', 'moortest', 'landtest', 'bunkertest', 'heattest']
 LITE = ['tut', 'trip2', 'docktest', 'booktest', 'decktest', 'geartest', 'loretest', 'tattest', 'fleet2test', 'fleet3test', 'opsowntest', 'routetest',
         'shoptest', 'selltest', 'timetest', 'streaktest', 'fixtest', 'hailltest', 'harbourtest', 'simday', 'calib', 'kvtest']
 # they measure milliseconds, so they run alone at the end, when nothing else takes the CPU
-SOLO = ['routetest', 'heattest']
+SOLO = ['routetest', 'heattest', 'landtest']
 READ = {'selltest', 'hailltest', 'simday', 'calib', 'kvtest'}
 LONG = {'tut': 1800}
 MUST = {'trip2': ('"st":"port"', 'ender ikke i havn'), 'tut': ('"tut": 0', 'veiledningen er ikke ferdig')}
