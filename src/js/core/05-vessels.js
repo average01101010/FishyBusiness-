@@ -238,10 +238,11 @@ function fish(H, W, hs){
   const P = handsAboard(), onDeck = P >= 2 && deckPending() > 0.5 ? 1 : 0;   // one hand fewer at the rail while someone guts
   const rod = typeof window !== 'undefined' && window.rodActive; if (rod && meAboard()) S.deckMe = (S.deckMe || 0) + 1;   // fishing by hand counts as your own work on deck
   const pen = (1 - coldPen(H, hs)) * (P ? (P - onDeck) / P : 1) * (rod ? 0.5 : 1);
-  let room = capHold() - tot;
+  let room = capHold() - tot, dsum = 0, tsum = 0, gotTop = 0;
   S.facc = S.facc || {}; S.fnext = S.fnext || {};
   for (const sp of SP){
-    S.facc[sp] = (S.facc[sp] || 0) + 30 * (S.target === 'kveite' && b.kgear ? keff : eff) * density(sp, b.pos, H) * luck(sp) * targetF(sp, H) * wpen * pen * (0.5 + Math.random()) / 60;
+    const dn = density(sp, b.pos, H); dsum += dn; tsum += tutBonus(sp, b.pos);
+    S.facc[sp] = (S.facc[sp] || 0) + 30 * (S.target === 'kveite' && b.kgear ? keff : eff) * dn * luck(sp) * targetF(sp, H) * wpen * pen * (0.5 + Math.random()) / 60;
     if (!S.fnext[sp]) S.fnext[sp] = sampleFish(sp, b.pos, H);
     while (S.facc[sp] >= S.fnext[sp] && room > 0){
       const w = S.fnext[sp]; S.facc[sp] -= w; S.fnext[sp] = sampleFish(sp, b.pos, H);
@@ -255,11 +256,13 @@ function fish(H, W, hs){
     for (let k = 0; got < want && room > 0.01 && k < 40; k++){
       let r = Math.random(), sp = mix[0][0]; for (const [s2, pw] of mix){ if (r < pw){ sp = s2; break; } r -= pw; }
       const w = sampleFish(sp, b.pos, H); if (w < SPECIES[sp].minKg || (SPECIES[sp].maxKg && w > SPECIES[sp].maxKg)) continue;
-      const kg = Math.min(w, room); room -= kg; addCatch(sp, kg, clsOf(sp, w), true); got += kg;
+      const kg = Math.min(w, room); room -= kg; addCatch(sp, kg, clsOf(sp, w), true); got += kg; gotTop += kg;
       if (typeof window !== 'undefined'){ const cq = window.CATCHQ || (window.CATCHQ = []); if (cq.length < 30) cq.push({sp, kg, t:performance.now()}); }
     }
+    if (typeof window !== 'undefined') window.TUTTOP = (window.TUTTOP || 0) + gotTop;   // for the tests: how much the guarantee had to add
   }
-  takeStock(b.pos, got); S.fsess.kg += got; if (got > 0) (b.tripGear = b.tripGear || {}).juksa = 1;
+  // only the stock's own share of the catch is taken from it: not the guide's skrei patch, nor what the guarantee tops up
+  takeStock(b.pos, (got - gotTop) * (dsum > 0 ? Math.max(0, (dsum - tsum) / dsum) : 1)); S.fsess.kg += got; if (got > 0) (b.tripGear = b.tripGear || {}).juksa = 1;
   // cod quota: warn once a day when the cod on board already fills what is left
   const q = quotaState(), codHold = S.hold.filter(x => x.sp === 'torsk').reduce((a, x) => a + x.kg, 0);
   if (codHold > 0 && access() !== 'none' && q.torsk + codHold >= codLimitNow(H) && !ffPct(H) && (S.codWarn || -1e9) < S.t - 1440){ S.codWarn = S.t; log('Torskekvoten er full. Torsk du lander nå blir inndratt.', 'The cod quota is full. Cod you land now will be confiscated.'); }

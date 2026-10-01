@@ -2,7 +2,9 @@
 
 Part 1, the model: the stock is read between the four nearest cells and a catch is taken from the same four, so the drop where
 you fish is exactly kg/K · Σw²; a fished-down cell comes all the way back (rounding used to stop it at 0.876); the stock has no
-hard 2 km edges.
+hard 2 km edges. The hotspots drift instead of jumping every 120 hours, keeping their mean, and the schools average 1.
+The first trip: the guaranteed catch is a real skrei patch on the guide's ground, so the heat shows it; the top-up is only a
+safety net, and only the stock's own share of the catch is taken from the stock.
 """
 from _env import GAME
 import asyncio, json
@@ -56,6 +58,28 @@ async def model(pg):
     check(abs(r['school'] - 1) < 0.02, 'stimene gir 1 i snitt, så fangsten over en dag endres ikke', round(r['school'], 4))
 
 
+async def tutorial(pg):
+    # the first trip's guarantee is a real skrei patch on the guide's ground: the heat shows it, the boat gets it, the stock keeps it
+    r = json.loads(await pg.evaluate("""JSON.stringify((() => {
+      const keep = {tut:S.tut, haill:S.haill}, g = GROUNDS[TUT_FIELD], b = S.boat;
+      S.stock = initStock(); S.tut = tutNew(); S.haill = {type:'luksus', t0:0, how:'shop'};
+      const H = (Date.UTC(2027, 2, 1, 9) - EPOCH) / 36e5, heat = q => 30 * SP.reduce((a, sp) => a + density(sp, q, H), 0);
+      const R = {ring:heat(g.p), edge:heat({x:g.p.x + g.r, y:g.p.y})};
+      S.t = Math.round(H * 60); S.hold = []; S.facc = {}; S.fnext = {}; S.haill.t0 = S.t; b.gear = true; b.ice = 150; S.equip.jukse = 0; S.settings.deckFirst = false;
+      b.status = 'fishing'; b.pos = {...g.p}; b.fishUntil = S.t + 120; window.TUTTOP = 0;
+      const st0 = S.stock.slice(), base = (() => { let d = 0, t = 0; for (const sp of SP){ d += density(sp, g.p, H); t += tutBonus(sp, g.p); } return (d - t) / d; })();
+      for (let i = 0; i < 400 && b.status === 'fishing'; i++){ S.t++; fish(S.t / 60, 4, 0.4); deckMinute(); }   // deck stops add minutes
+      R.hold = holdTotal(); R.top = window.TUTTOP; R.removed = st0.reduce((a, v, i) => a + (v - S.stock[i]), 0) * STK.K; R.want = (R.hold - R.top) * base;
+      S.tut.catch = false; R.after = heat(g.p);
+      S.tut = keep.tut; S.haill = keep.haill; b.status = 'port'; S.hold = []; S.stock = initStock();
+      return R; })())"""))
+    check(r['ring'] >= 100 and r['edge'] < r['ring'] * 0.3, 'første tur: feltet i ringen er varmt (over 100 kg/t), kanten svakere', {k: round(r[k], 1) for k in ('ring', 'edge')})
+    check(r['after'] < 40, 'når garantien er over, er feltet vanlig igjen', round(r['after'], 1))
+    check(r['hold'] >= 349, 'to timer på feltet gir full last (350 kg)', round(r['hold'], 1))
+    check(r['top'] / r['hold'] < 0.35, 'påfyllingen er bare et sikkerhetsnett (under 35 % av fangsten)', round(r['top'] / r['hold'], 3))
+    check(abs(r['removed'] - r['want']) < 0.05 * r['want'] + 1, 'bare bestandens egen andel trekkes fra bestanden, ikke skreiflekken eller påfyllingen', {k: round(r[k], 1) for k in ('removed', 'want', 'hold')})
+
+
 async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(args=['--disable-gpu-compositing', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
@@ -65,6 +89,7 @@ async def main():
         await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(500)
         await pg.wait_for_function("typeof DEPTH !== 'undefined' && DEPTH", timeout=60000)
         await model(pg)
+        await tutorial(pg)
         print(errs)
         await b.close()
 

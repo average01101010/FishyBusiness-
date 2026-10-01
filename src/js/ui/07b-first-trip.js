@@ -7,7 +7,7 @@
 const tutOn = () => !!(S.tut && S.tut.v === 2);
 const tutNew = () => ({v:2, m:{}, catch:true, pAt:Date.now()});
 const TUT_SKIP_MS = 20 * 60 * 1000;
-const tutField = () => GROUNDS[4];   // Gisundet nord
+const tutField = () => GROUNDS[TUT_FIELD];   // Gisundet nord (core: the skrei patch while the catch is guaranteed)
 function tutMark(k){ if (!tutOn() || S.tut.m[k]) return; S.tut.m[k] = S.t || 1; S.tut.pAt = Date.now(); save(); }
 // free the first time: the hand jig, the ice (the first fill, up to 150 kg) and one luxury luck
 const tutFree = k => tutOn() && !S.tut.m['free_' + k];

@@ -238,9 +238,19 @@ function denSp(sp, q, H, T){
   if (sp === 'torsk'){ if (q.skr < 0) q.skr = skreiSpot(p, q.d, q.E); av += T[sp].skrei * q.skr; }
   if (sp === 'uer' && !T.uerOpen) av *= 0.15;
   if (s.shell) v *= crabArea(p); else v *= school(sp, p, H);
-  return 1.6 * s.k * v * day * av * depthFactor(sp, q.d) * stockAt(p, sp);   // k: calibration to 2025 catches per boat in Lofoten–Tromsø
+  return 1.6 * s.k * v * day * av * depthFactor(sp, q.d) * stockAt(p, sp) + tutBonus(sp, p);   // k: calibration to 2025 catches per boat in Lofoten–Tromsø
 }
 function density(sp, p, H){ const q = denPlace(p); return q ? denSp(sp, q, H, denTime(H)) : 0; }
+// The first trip's guaranteed catch is a real patch of skrei on the guide's ground while the guarantee lasts, so the heat map and
+// the echo sounder show what the boat gets. It comes on top of the stock and is not fished down; the species mix is the mix the
+// guarantee tops up with. Full strength within half the ring's radius, a tenth at its edge.
+const TUT_FIELD = 4;   // Gisundet nord
+const TUTB = {peak:5.2, mix:{torsk:0.72, sei:0.18, hyse:0.1}};
+function tutBonus(sp, p){
+  const m = TUTB.mix[sp]; if (!m || !(S && S.tut && S.tut.catch)) return 0;
+  const g = GROUNDS[TUT_FIELD], d = dist(p, g.p), x = Math.max(0, d - g.r * 0.5) / (g.r * 0.33);
+  return TUTB.peak * m * Math.exp(-x * x);
+}
 // local stock of fish in 2 x 2 km cells (1 = untouched): fishing takes it down, it recovers over weeks. The value at a point is read
 // between the four nearest cell centres, and a catch is taken from the same four cells by the same weights, so the stock has
 // no hard 2 km edges and what the heat map shows is what is taken.
