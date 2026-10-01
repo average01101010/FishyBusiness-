@@ -238,7 +238,7 @@ function fish(H, W, hs){
     if (S.settings.deckFirst !== false && handsAboard() < 2 && deckPending() > 0.5){ b.deckStop = true; b.deckEnd = full ? 'full' : 'done'; log('Tar unna fangsten før vi går videre.', 'Seeing to the catch before we move on.'); return; }
     endFishing(full ? 'full' : 'done'); return;
   }
-  if (deckPending() >= tubCap()){ b.deckStop = true; log('Bløggekaret er fullt. Stopper fisket for å sløye og ise.', 'The bleeding tub is full. Stopping to gut and ice.'); return; }
+  if (deckPending() >= tubCap()){ b.deckStop = true; log('Bløggekaret er fullt. Stopper fisket for å sløye og ise.', 'The bleeding tub is full. Stopping to gut and ice.'); crewSay(null, 'tubFull'); return; }
   // setting or hauling passive gear takes the place of jigging
   if (b.gop){ gearOpMinute(H, W, hs); return; }
   if (!rigJig()) return;   // rigged for passive gear: the boat has no jig out, and the fishing hours are spent waiting

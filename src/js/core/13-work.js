@@ -31,7 +31,7 @@ function workCtx(as){
   for (const x of S.hold){ if (SPECIES[x.sp].live || x.iced) continue; if (st.gut && !x.gut) gut += x.kg; else if (icing) ice += x.kg; if ((st.gut && !x.gut) || icing) pend += x.kg; }
   const deck = s !== 'aground' && pend > 0.5;
   return {s, stop, ror:s === 'sailing' || s === 'unmooring' || s === 'engine', fiske:s === 'fishing' && !g && !stop && rigJig(), haling:!!g,
-    sort:!!g && g.kind === 'teine' && g.op === 'haul', sloy:deck && gut > 0.01, is:deck && ice > 0.01, kokk:false, pause:true};
+    sort:!!g && g.kind === 'teine' && g.op === 'haul', sloy:deck && gut > 0.01, is:deck && ice > 0.01, kokk:as !== 'fishing' && mealDue(), pause:true};
 }
 // who stands where: [{c (null for you), st}], you first
 function workAssign(as){
@@ -40,14 +40,17 @@ function workAssign(as){
   team.forEach((c, i) => P.push({c, job:jobOf(c, i)}));
   if (!P.length) return P;
   if (ctx.s === 'aground'){ for (const p of P) p.st = 'pause'; return P; }
-  let helm = false;
+  // the helm and the galley take one person each: the first whose chain gets there
+  let helm = false, cook = false;
   for (const p of P){ p.st = 'pause';
-    for (const k of p.job) if (ctx[k] && (k !== 'ror' || !helm)){ p.st = k; if (k === 'ror') helm = true; break; } }
+    for (const k of p.job) if (ctx[k] && (k !== 'ror' || !helm) && (k !== 'kokk' || !cook)){ p.st = k; if (k === 'ror') helm = true; if (k === 'kokk') cook = true; break; } }
   // nobody at the helm: someone resting, else the best seaman (you before the crew)
   const sjo = p => p.c ? p.c.attr.sjo : 9;
   if (ctx.ror && !helm){ const q = P.filter(p => p.st === 'pause'), who = (q.length ? q : P).slice().sort((a, b) => sjo(b) - sjo(a))[0]; who.st = 'ror'; }
   // gear half out cannot wait: someone resting hauls, else whoever is on deck
   if (ctx.haling && !P.some(p => p.st === 'haling')){ const who = P.find(p => p.st === 'pause') || P.find(p => p.st === 'sloy' || p.st === 'is' || p.st === 'sort'); if (who) who.st = 'haling'; }
+  // a meal is due and nobody has the galley in the chain: the best cook among those on a break, if they can cook (3 or more)
+  if (ctx.kokk && !cook){ const q = P.filter(p => p.st === 'pause' && p.c && p.c.attr.kokk >= MEAL.ok).sort((a, b) => b.c.attr.kokk - a.c.attr.kokk)[0]; if (q) q.st = 'kokk'; }
   // stopped to gut: everyone free goes on deck
   if (ctx.stop) for (const p of P) if (p.st === 'pause' && (ctx.sloy || ctx.is)) p.st = ctx.sloy ? 'sloy' : 'is';
   return P;
@@ -60,8 +63,9 @@ function workTeam(st, g, as){
 }
 // once a minute per vessel: where each person is, and minutes per station (for learning)
 function workMinute(){
-  const A = workAssign(); S.mySt = null;
+  const A = workAssign(); if (meAboard()) S.mySt = null;
   for (const c of S.crew || []) c.st = null;
   for (const p of A){ if (!p.c){ S.mySt = p.st; continue; } p.c.st = p.st; if (WORK_ST.includes(p.st) && S.boat.status !== 'port'){ const w = p.c.wk || (p.c.wk = {}); w[p.st] = (w[p.st] || 0) + 1; } }
+  mealMinute(A);
   return A;
 }

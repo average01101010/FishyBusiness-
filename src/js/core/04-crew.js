@@ -85,42 +85,53 @@ function crewTick(H){
   const b = S.boat; if (!S.crew || !S.crew.length){ S.workLog = []; return; }
   S.crew = S.crew.map(crewUpgrade);
   const hs = hsAt(b.pos, H), atSea = b.status === 'sailing' || b.status === 'fishing', fishing = b.status === 'fishing', hr = gDate(H).getUTCHours(), night = hr >= 22 || hr < 6;
-  // working-time rules for fishers: at least 10 hours of rest in any 24
-  S.workLog = (S.workLog || []).concat([atSea ? 1 : 0]).slice(-24); const rest = S.workLog.filter(v => !v).length, viol = atSea && S.workLog.length >= 24 && rest < 10;
-  if (viol && (S.restWarn || -1e9) < S.t - 1440){ S.restWarn = S.t; msg('Mannskapet', 'Mannskapet har hatt under 10 timer hvile det siste døgnet. Det er brudd på arbeidstidsreglene for fiskere, og folk blir fort slitne.', 'The crew has had less than 10 hours of rest in the last day. That breaks the working-time rules for fishers, and people tire fast.'); }
+  // the vessel's own log of hours at sea, for the crew page
+  S.workLog = (S.workLog || []).concat([atSea ? 1 : 0]).slice(-24);
   const on = crewAboard(H), onIds = new Set(on.map(c => c.id)), has = t => on.filter(c => c.traits.includes(t)).length;
-  const cook = on.length ? Math.max(...on.map(c => c.attr.kokk)) : 0, cold = coldPen(H, hs);
-  for (const c of S.crew){
-    const here = onIds.has(c.id) && atSea;
-    c.fatigue = here ? clamp(c.fatigue + (fishing ? 6 : 3) * (1.4 - 0.16 * c.attr.uth) * (night ? 1.25 : 1) * (viol ? 1.5 : 1), 0, 100) : clamp(c.fatigue - 8 * (night ? 1.5 : 1), 0, 100);
+  const cold = coldPen(H, hs), food = foodScore();
+  // the rest rule, person by person (core/14-crewlife.js): a broken rule tires them faster and sours the mood, and you hear of it once a day
+  const viols = {}; for (const c of S.crew){ const v = restHour(c, onIds.has(c.id)); if (v) viols[c.id] = v; }
+  { const ids = Object.keys(viols); if (ids.length && (S.restWarn || -1e9) < S.t - 1440){ S.restWarn = S.t; const who = ids.map(id => crewById(id).name.split(' ')[0]).join(', '), r = REST_RULE[viols[ids[0]]];
+    msg('Mannskapet', who + ' har brutt hviletidsreglene: ' + r[0] + ' (forskrift om arbeidstid og hviletid på fiskefartøy). Uten køyer om bord teller bare tid ved kai som hvile. Folk blir fort slitne.', who + ' ' + (ids.length > 1 ? 'have' : 'has') + ' broken the rest rules: ' + r[1] + ' (the working-time rules for fishing vessels). Without berths aboard, only time at the quay counts as rest. People tire quickly.');
+    crewSay(crewById(ids[0]), 'rest'); } }
+  for (const c of S.crew.slice()){
+    const here = onIds.has(c.id) && atSea, viol = !!viols[c.id];
+    // the share of the hour spent working: a break at sea tires less, but is not rest
+    const wm = Object.values(c.wk || {}).reduce((a, m) => a + m, 0), workF = c.wk ? clamp(wm / 60, 0, 1) : 1;
+    c.fatigue = here ? clamp(c.fatigue + (fishing ? 6 : 3) * (0.4 + 0.6 * workF) * (1.4 - 0.16 * c.attr.uth) * (night ? 1.25 : 1) * (viol ? 1.5 : 1), 0, 100) : clamp(c.fatigue - 8 * (night ? 1.5 : 1), 0, 100);
+    if (onIds.has(c.id) && b.status !== 'port') learnHour(c);
+    c.wk = {};
     if (here){ c.seaH = (c.seaH || 0) + 1; const k = c.traits.includes('laerevillig') ? 2 : 1;
-      if (c.seaH % 40 === 0){ c.attr.erf = Math.min(5, c.attr.erf + 0.1 * k); { const gk = S.boat.lastGear || 'juksa'; c.gear[gk] = Math.min(5, (c.gear[gk] || 1) + 0.15 * k); } c.attr.sjo = Math.min(5, c.attr.sjo + 0.05 * k); crewDerive(c); }
+      // the skills grow with the station they work (learnHour); experience grows with the hours at sea
+      if (c.seaH % 40 === 0){ c.attr.erf = Math.min(5, c.attr.erf + 0.1 * k); c.attr.sjo = Math.min(5, c.attr.sjo + 0.05 * k); crewDerive(c); }
       if (!c.known[1] && c.seaH >= 12){ c.known = [true, true]; const T = TRAITS[c.traits[c.traits.length - 1]]; msg(c.name, 'Etter noen dager på sjøen vet du mer om ' + c.name + ': ' + T.no.toLowerCase() + '. ' + T.d.no, 'After some days at sea you know more about ' + c.name + ': ' + T.en.toLowerCase() + '. ' + T.d.en); } }
     // what their mood is heading towards
     let tg = 60 + (c.share - c.ask) * 300;
     const earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).reduce((a, e) => a + e[1], 0), expect = c.ask * 6000 * 5;
     if (S.t - (c.hiredT || 0) > 3 * 1440) tg += clamp((earn - expect) / expect * 12, -12, 12);
-    if (here && cook > 0) tg += (cook - 2.5) * 3;
+    if (here) tg += (food - 3) * 3;   // the food on board: the last four meals
     tg -= Math.max(0, c.fatigue - 50) * 0.5; tg -= cold * 50 * (here ? 1 : 0.3);
     if (here && hs > 1.5) tg -= (hs - 1.5) * 10 * (1.2 - 0.12 * c.attr.sjo); if (here && hs > 1.2 && c.traits.includes('sjosyk')) tg -= 15;
     const me = t => c.traits.includes(t) ? 1 : 0; tg += 4 * (has('spokefugl') - me('spokefugl')) + 3 * (has('omsorgsfull') - me('omsorgsfull')) - 2 * (has('grinebiter') - me('grinebiter')); if (me('grinebiter')) tg -= 5;
-    tg -= Object.values(c.grudge || {}).reduce((a, v) => a + v, 0) * 5; if (viol && here) tg -= 8; if (me('olglad') && S.pubE === pubEvening(H)) tg += 6; if (c.cpen) tg -= c.cpen;
+    tg -= Object.values(c.grudge || {}).reduce((a, v) => a + v, 0) * 5; if (viol) tg -= 8; if (me('olglad') && S.pubE === pubEvening(H)) tg += 6; if (c.cpen) tg -= c.cpen;
     c.morale = clamp(c.morale + (tg - c.morale) * (me('rastlos') ? 0.07 : 0.04), 0, 100);
     for (const k in (c.grudge || {})){ c.grudge[k] = Math.max(0, c.grudge[k] - 0.01); if (c.grudge[k] <= 0) delete c.grudge[k]; }
     // someone who stays unhappy too long signs off at the next harbour
     const lim = me('rastlos') ? 30 : me('grinebiter') ? 15 : 22; c.low = c.morale < lim ? (c.low || 0) + 1 : 0;
-    if (c.low > 36 && b.status === 'port'){ crewQuit(c, 'Jeg har ikke trivdes på lenge. Jeg mønstrer av her.'); return; }
+    if (c.low > 36 && b.status === 'port'){ crewQuit(c, 'Jeg har ikke trivdes på lenge. Jeg mønstrer av her.'); continue; }
   }
-  // quarrels between people, or with you as skipper
+  // quarrels between people, or with you as skipper; bad food makes them likelier, good food rarer
+  const foodQ = food < 2.5 ? 1.6 : food > 3.5 ? 0.7 : 1;
   if (!S.cevt && atSea){
     for (let i = 0; i < on.length && !S.cevt; i++) for (let j = i + 1; j < on.length && !S.cevt; j++){ const a = on[i], c2 = on[j], k = compat(a, c2); if (k > -1) continue;
-      const pr = 0.004 * (-k) * (1 + (a.fatigue + c2.fatigue) / 200) * (1 + (100 - (a.morale + c2.morale) / 2) / 100);
+      const pr = 0.004 * (-k) * (1 + (a.fatigue + c2.fatigue) / 200) * (1 + (100 - (a.morale + c2.morale) / 2) / 100) * foodQ;
       if (Math.random() < pr){ const tp = (a.traits.includes('arbeidsjern') && c2.traits.includes('makelig')) ? 'jobb' : (a.traits.includes('stolt') || c2.traits.includes('stolt')) ? 'respekt' : hs > 1.5 ? 'vaer' : ['sloying', 'musikk', 'kaffe'][Math.floor(Math.random() * 3)];
         S.cevt = {type:'pair', a:a.id, b:c2.id, topic:tp, t0:S.t}; const tx = PAIR_TOPICS[tp]; msg('Om bord', tx.no.replace('{a}', a.name).replace('{b}', c2.name) + ' Løs det under Mannskap.', tx.en.replace('{a}', a.name).replace('{b}', c2.name) + ' Sort it out under Crew.'); } }
     for (const c of on){ if (S.cevt || c.morale >= 45) continue; const tf = c.traits.some(t => ['kranglefant', 'stolt', 'grinebiter', 'rastlos'].includes(t)) ? 1.5 : 0.6;
-      if (Math.random() < 0.003 * (45 - c.morale) / 20 * tf){ const tp = c.share < c.ask - 0.001 ? 'lott' : c.fatigue > 70 ? 'hvile' : hs > 1.5 ? 'vaer' : cold > 0.1 ? 'kulde' : 'generelt'; S.cevt = {type:'boss', a:c.id, topic:tp, t0:S.t};
+      if (Math.random() < 0.003 * (45 - c.morale) / 20 * tf * foodQ){ const tp = c.share < c.ask - 0.001 ? 'lott' : c.fatigue > 70 ? 'hvile' : hs > 1.5 ? 'vaer' : cold > 0.1 ? 'kulde' : 'generelt'; S.cevt = {type:'boss', a:c.id, topic:tp, t0:S.t};
         const tx = BOSS_TOPICS[tp]; msg(c.name, tx.no.replace('{a}', c.name) + ' Svar under Mannskap.', tx.en.replace('{a}', c.name) + ' Answer under Crew.'); } }
   }
+  sayHour(H, on, hs);
   // a quarrel left alone gets worse
   if (S.cevt){ const age = S.t - S.cevt.t0, A = crewById(S.cevt.a), Bc = crewById(S.cevt.b);
     if (age > 720 && !S.cevt.esc){ S.cevt.esc = true; if (A) A.cpen = 10; if (Bc) Bc.cpen = 10; msg('Om bord', 'Krangelen om bord er ikke løst, og stemningen blir verre.', 'The quarrel aboard is not sorted out, and the mood is getting worse.'); }

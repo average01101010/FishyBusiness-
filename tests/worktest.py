@@ -54,6 +54,43 @@ async def main():
         print(ok(r['haul'] == ['haling', 'sloy', 'haling'] and r['sort'] == ['haling', 'sloy', 'sort'] and r['sortFaster'][1] < r['sortFaster'][0] and r['forced'] >= 1), 'hauling follows the chains; a crab sorter spares the haulers; someone always hauls')
         print(ok(r['aground'] == 0 and r['port'] == 3), 'aground nobody works; at the quay everyone works the deck')
         print(ok(r['kept'][:3] == ['fiske', 'sloy', 'fiske'] and r['kept'][3]), 'the station is kept on each person, with minutes per station')
+        # learning, meals, the rest rule and the crew's lines (core/14-crewlife.js)
+        r = await pg.evaluate("""(()=>{ const R = {}, b = S.boat, g = GROUNDS[2].p;
+          const hand = (age, kokk) => { const c = Object.assign(genCrew(), {bi:false, off:false, fatigue:10, morale:62, traits:['stolt'], known:[true, true], age}); c.gear.sloy = 2; if (kokk) c.attr.kokk = kokk; return c; };
+          // learning: 20 hours of gutting for a 19-year-old and a 55-year-old; and the young one again, unhappy
+          const y = hand(19), o = hand(55), u = hand(19); u.morale = 20;
+          for (const c of [y, o, u]) for (let h = 0; h < 20; h++){ c.wk = {sloy:60}; learnHour(c); }
+          R.learn = [y, o, u].map(c => +(c.gear.sloy - 2).toFixed(3));
+          // meals: a good cook on a break makes dinner six hours out; with no cook it is bread an hour after it was due
+          b.status = 'idle'; b.port = null; b.pos = {...g}; b.gop = null; S.hold = []; S.plan = null; S.meal = null; S.me = S.cur; S.myJob = null;
+          const ck = hand(40, 4); S.crew = [ck]; const t0 = S.t; for (let i = 0; i < 400 && !(S.meal && S.meal.hist.length); i++) step();
+          R.goodMeal = {q:S.meal.hist[0], after:Math.round((S.t - t0) / 60 * 10) / 10, by:S.meal.last && S.meal.last.by === ck.id};
+          const nc = hand(40, 2); S.crew = [nc]; S.meal = null; const t1 = S.t; for (let i = 0; i < 500 && !(S.meal && S.meal.hist.length); i++) step();
+          R.bread = {q:S.meal.hist[0], after:Math.round((S.t - t1) / 60 * 10) / 10};
+          // the food steers the mood: the same hand, good food against bad, ten hours at sea
+          b.status = 'sailing'; S.plan = {wps:[{x:g.x + 30, y:g.y, port:null, fish:0}], idx:0, speed:2, returning:false};
+          const mood = hist => { const c = hand(40); c.morale = 60; S.crew = [c]; S.meal = {due:S.t + 9999, cook:null, hist}; for (let h = 0; h < 10; h++) crewTick(S.t / 60 + h); return c.morale; };
+          R.mood = [mood([5, 5, 5, 5]), mood([1, 1, 1, 1])].map(v => Math.round(v * 10) / 10);
+          // the rest rule: a skiff trip of 15 hours breaks the 14-hour rule; a night at the quay puts it right
+          const rr = hand(30); S.crew = [rr]; S.restWarn = -1e9; const m0 = S.msgs.length; R.leftAtStart = restLeft(rr);
+          for (let h = 0; h < 15; h++){ rr.wk = {sloy:50}; crewTick(S.t / 60 + h); }
+          R.broken = restCheck(rr.rest); R.warned = S.msgs.slice(m0).some(m => /hviletidsreglene/.test(m.no) && /14 timer/.test(m.no)); R.fat = Math.round(rr.fatigue);
+          b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; S.plan = null; for (let h = 0; h < 10; h++){ rr.wk = {}; crewTick(S.t / 60 + h); }
+          R.afterNight = restCheck(rr.rest);
+          // the crew talks: a day at sea gives some lines, never two periodic ones within an hour and a half
+          b.status = 'idle'; b.port = null; b.pos = {...g}; S.crew = [hand(30), hand(45)]; S.crew[0].traits = ['spokefugl']; S.sayT = null; const l0 = S.log.length;
+          for (let i = 0; i < 24 * 60; i++) step();
+          const said = S.log.slice(l0).filter(e => /: «/.test(e.no)); R.said = said.length; let minGap = 1e9; for (let i = 1; i < said.length; i++) minGap = Math.min(minGap, said[i].t - said[i - 1].t); R.minGap = minGap;
+          R.kept = S.crew.reduce((a, c) => a + (c.said || []).length, 0);
+          return R; })()""")
+        print('life:', json.dumps(r, ensure_ascii=False))
+        print(ok(r['learn'][0] > 1.5 * r['learn'][1] and r['learn'][2] < 0.3 * r['learn'][0]), 'a 19-year-old learns gutting much faster than a 55-year-old, and an unhappy one hardly learns')
+        print(ok(r['goodMeal']['q'] == 4 and 5.9 <= r['goodMeal']['after'] <= 6.7 and r['goodMeal']['by']), 'a cook of 4 on a break makes a meal of 4 about six hours out')
+        print(ok(r['bread']['q'] == 1 and 6.9 <= r['bread']['after'] <= 7.2), 'with nobody who can cook it is dry bread an hour after the meal was due')
+        print(ok(r['mood'][0] > r['mood'][1] + 3), 'good food lifts the mood, bad food sinks it')
+        print(ok(r['leftAtStart'] >= 14 and r['broken'] == 'gap' and r['warned'] and r['afterNight'] is None), 'a 15-hour trip breaks the 14-hour rule with a message naming it; a night at the quay puts it right')
+        print(ok(r['said'] >= 3 and r['minGap'] >= 15 and r['kept'] >= 1), 'the crew talks during a day at sea, not in bursts, and each keeps their last lines')
+
         # the Arbeid page: the button shows with crew aboard, a chain is built by tapping, presets and the person card
         for vw, vh, tag in ((1100, 800, 'liggende'), (800, 1180, 'staende')):
             await pg.set_viewport_size({'width':vw, 'height':vh})

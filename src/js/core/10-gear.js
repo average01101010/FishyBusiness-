@@ -190,7 +190,7 @@ function startHaul(sid, reset, fishAfter){
   return null;
 }
 function gearOpMinute(H, W, hs){
-  const b = S.boat, g = b.gop; b.lastGear = GEAR[g.kind].skill;
+  const b = S.boat, g = b.gop;
   if (handsAboard() < GEAR[g.kind].crewMin){ gopAbort('crew'); return; }
   if (g.op === 'haul' && holdTotal() >= capHold() - 0.01){ log('Lasten er full. Resten av redskapet står igjen.', 'The hold is full. The rest of the gear stays in the sea.'); gopAbort('full'); return; }
   g.prog += 1 / gopUnitMin(g, H, hs);
@@ -312,6 +312,8 @@ function finishHaul(g, H){
   const what = GEAR[s.kind].no.toLowerCase(), whatEn = GEAR[s.kind].en.toLowerCase();
   log('Trakk ' + what + ': ' + fmt(g.kg, 0) + ' kg, sto ' + fmt(g.soak, 0) + ' t' + (g.rel ? ', ' + g.rel + (s.kind === 'teine' ? ' krabber satt ut igjen' : ' fisk sluppet') : '') + (g.dead >= 1 ? ', ' + Math.round(g.dead) + ' døde krabber kastet' : '') + '.',
     'Hauled ' + whatEn + ': ' + fmt(g.kg, 0) + ' kg, soaked ' + fmt(g.soak, 0) + ' h' + (g.rel ? ', ' + g.rel + (s.kind === 'teine' ? ' crabs put back' : ' fish released') : '') + (g.dead >= 1 ? ', ' + Math.round(g.dead) + ' dead crabs thrown' : '') + '.');
+  // the crew remarks on a good or a poor haul (kg per unit against a fair haul for the gear)
+  { const per = g.kg / Math.max(1, g.n), fair = {garn:25, line:80, teine:1.2}[s.kind] || 1; crewSay(null, per > fair * 1.4 ? 'haulGood' : per < fair * 0.35 ? 'haulBad' : null); }
   if (tore) log(tore + ' garn gikk i filler. De var for slitt.', tore + ' nets went to pieces. They were too worn.');
   else if (s.kind === 'garn' && cond < 0.35) log('Garna er slitt (' + Math.round(cond * 100) + ' %). Bøt dem før de går i filler.', 'The nets are worn (' + Math.round(cond * 100) + ' %). Mend them before they go to pieces.');
   S.marks.push({x:setMid(s).x, y:setMid(s).y, t:S.t, kgph:0, g:s.kind, kgpu:Math.round(g.kg / Math.max(1, s.n) * 10) / 10}); if (S.marks.length > 80) S.marks.shift();

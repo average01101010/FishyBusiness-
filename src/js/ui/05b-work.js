@@ -19,6 +19,7 @@ const WORK = (() => {
     if (k === 'haling' || k === 'sort') return g ? g.done + '/' + g.n : '–';
     if (k === 'sloy') return st.gut ? fmt(gut, 0) + ' kg' : L('av', 'off');
     if (k === 'is') return st.ice !== false ? fmt(ice, 0) + ' kg' : L('av', 'off');
+    if (k === 'kokk'){ const M = mealState(), f = L('mat ', 'food ') + fmt(foodScore(), 1) + '/5'; if (b.status === 'port' || M.due == null) return f; return (S.t >= M.due ? '<b class="r2">' + L('måltid nå', 'meal due') + '</b>' : L('måltid om ', 'meal in ') + dur((M.due - S.t) / 60)) + ' · ' + f; }
     return '';
   }
   function flow(A){
@@ -34,11 +35,18 @@ const WORK = (() => {
     return '<div class="wk-card"><div class="wk-sk">' + sk.map(([k, no, en, v]) => '<span>' + L(no, en) + '</span><span class="wk-v">' + fmt(v || 1, 1) + '</span>' + bar(v || 1, 5, '#2f7fc1')).join('') + '</div>' +
       '<div class="wk-sk">' + '<span>' + L('Slitenhet', 'Fatigue') + '</span><span class="wk-v">' + Math.round(c.fatigue) + '</span>' + bar(c.fatigue, 100, c.fatigue > 70 ? '#e5484d' : c.fatigue > 45 ? '#f2b705' : '#35b37e') +
       '<span>' + L('Trivsel', 'Morale') + '</span><span class="wk-v">' + Math.round(c.morale) + '</span>' + bar(c.morale, 100, c.morale >= 65 ? '#35b37e' : c.morale >= 40 ? '#f2b705' : '#e5484d') + '</div>' +
-      '<p class="ph-note">' + c.age + L(' år · ', ' years · ') + c.traits.filter((t, i) => c.known[i]).map(t => TRAITS[t][S.lang]).join(', ') + '</p></div>';
+      '<p class="ph-note">' + c.age + L(' år · ', ' years · ') + c.traits.filter((t, i) => c.known[i]).map(t => TRAITS[t][S.lang]).join(', ') + ' · ' + L('lærer ', 'learns ') + (ageLearn(c.age) * moraleLearn(c.morale) * (c.traits.includes('laerevillig') ? 2 : 1) >= 1.5 ? L('fort', 'fast') : ageLearn(c.age) * moraleLearn(c.morale) < 0.6 ? L('sakte', 'slowly') : L('jevnt', 'steadily')) + '</p>' +
+      ((c.said || []).length ? '<div class="wk-said">' + c.said.slice(-3).reverse().map(x => '<p>«' + x[S.lang] + '» <span class="ph-note">' + hm(x.t / 60) + '</span></p>').join('') + '</div>' : '') + '</div>';
+  }
+  // how long until the rest rule is broken, at sea (you as skipper are not under it)
+  function restLine(c){
+    if (!c || S.boat.status === 'port') return '';
+    const left = restLeft(c); if (left > 6) return '';
+    return '<br><span class="' + (left ? 'r1' : 'r2') + '">' + (left ? L('Må hvile innen ' + left + ' t', 'Must rest within ' + left + ' h') : L('Brudd på hviletiden', 'Rest rule broken')) + '</span>';
   }
   function row(p, i){
     const id = pid(p.c), ed = edit && edit.id === id, job = ed ? edit.chain : jobOf(p.c, i), auto = p.c ? !p.c.job : !S.myJob;
-    let h = '<div class="ph-card wk-p' + (ed ? ' ed' : '') + '"><div class="wk-top"><button class="wk-name" data-pa="wk-card" data-id="' + id + '">' + (p.c ? p.c.name : L('Du (skipper)', 'You (skipper)')) + '</button><span class="wk-now">' + STATIONS[p.st].ing[S.lang === 'no' ? 0 : 1] + '</span></div>';
+    let h = '<div class="ph-card wk-p' + (ed ? ' ed' : '') + '"><div class="wk-top"><button class="wk-name" data-pa="wk-card" data-id="' + id + '">' + (p.c ? p.c.name : L('Du (skipper)', 'You (skipper)')) + '</button><span class="wk-now">' + STATIONS[p.st].ing[S.lang === 'no' ? 0 : 1] + restLine(p.c) + '</span></div>';
     h += '<div class="wk-chain">' + (job.length ? chips(job, p.st) : '<span class="ph-note">' + L('Trykk stasjonene i den rekkefølgen du vil ha dem.', 'Tap the stations in the order you want them.') + '</span>') + (auto && !ed ? '<span class="wk-auto">Auto</span>' : '') + '</div>';
     if (ed) h += '<div class="wk-pick">' + WORK_ST.map(k => '<button class="' + (job.includes(k) ? 'on' : '') + '" data-pa="wk-add" data-k="' + k + '">' + (job.includes(k) ? (job.indexOf(k) + 1) + ' ' : '') + sn(k) + '</button>').join('') + '</div>' +
       '<div class="ph-btnrow"><button class="ph-btn p" data-pa="wk-done">' + L('Ferdig', 'Done') + '</button><button class="ph-btn" data-pa="wk-auto">Auto</button></div>';
@@ -68,3 +76,5 @@ const WORK = (() => {
   }
   return {page, act};
 })();
+// a line from the crew shows as a toast when you are aboard
+hooks.onSay = (c, no, en) => { if (typeof toast === 'function') toast(c.name.split(' ')[0] + ': «' + (S.lang === 'no' ? no : en) + '»'); };

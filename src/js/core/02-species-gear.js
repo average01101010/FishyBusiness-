@@ -40,11 +40,12 @@ const SPECIES = {
 // so the per-species seeds (SP.indexOf) keep their values
 const SP = Object.keys(SPECIES).filter(sp => !SPECIES[sp].shell), SHELL = Object.keys(SPECIES).filter(sp => SPECIES[sp].shell), ALLSP = SP.concat(SHELL);
 // ---------- vessels, equipment, crew ----------
+// berths: bunks where the crew can rest at sea (none of these boats has any, so only time at the quay counts as rest)
 const VESSELS = {
-  skiff:{name:{no:'Åpen 19-fot, 60 hk påhengs', en:'Open 19 ft, 60 hp outboard'}, draft:0.6, len:5.8, vmax:24, fuelCap:90, iceCap:150, holdCap:350, crewMax:1, diesel:false, fuelK:1, planing:true, risk:[1.0, 1.8, 10.8, 13.9], sea:0.45, price:95000, jukseMax:2, svcH:100, svcCost:3500, gearMax:{garn:6, stamp:4, teine:20}},
-  snekke:{name:{no:'Snekke 26 fot, 30 hk diesel', en:'26 ft snekke, 30 hp diesel'}, draft:1.2, len:7.9, vmax:8, fuelCap:220, iceCap:400, holdCap:900, crewMax:2, diesel:true, fuelK:0.45, planing:false, risk:[1.5, 2.5, 12.5, 16], sea:0.22, price:245000, jukseMax:3, svcH:250, svcCost:6000, gearMax:{garn:15, stamp:10, teine:50}},
-  sjark:{name:{no:'Sjark 34 fot (10,4 m), styrhus', en:'34 ft sjark (10.4 m), wheelhouse'}, draft:1.7, len:10.4, vmax:10, fuelCap:600, iceCap:1200, holdCap:3000, crewMax:3, diesel:true, fuelK:1.25, planing:false, risk:[2.2, 3.4, 14.5, 18], sea:0.16, price:1150000, jukseMax:5, svcH:250, svcCost:14000, gearMax:{garn:40, stamp:24, teine:150}},
-  sjarkny:{name:{no:'Ny sjark 10,99 m, 400 hk', en:'New 10.99 m sjark, 400 hp'}, draft:1.8, len:11, vmax:22, fuelCap:1500, iceCap:2000, holdCap:6000, crewMax:3, diesel:true, fuelK:5, planing:true, risk:[2.4, 3.8, 15, 19], sea:0.14, price:6400000, jukseMax:6, svcH:300, svcCost:22000, gearMax:{garn:60, stamp:30, teine:200}, isNew:true}
+  skiff:{name:{no:'Åpen 19-fot, 60 hk påhengs', en:'Open 19 ft, 60 hp outboard'}, draft:0.6, berths:0, len:5.8, vmax:24, fuelCap:90, iceCap:150, holdCap:350, crewMax:1, diesel:false, fuelK:1, planing:true, risk:[1.0, 1.8, 10.8, 13.9], sea:0.45, price:95000, jukseMax:2, svcH:100, svcCost:3500, gearMax:{garn:6, stamp:4, teine:20}},
+  snekke:{name:{no:'Snekke 26 fot, 30 hk diesel', en:'26 ft snekke, 30 hp diesel'}, draft:1.2, berths:0, len:7.9, vmax:8, fuelCap:220, iceCap:400, holdCap:900, crewMax:2, diesel:true, fuelK:0.45, planing:false, risk:[1.5, 2.5, 12.5, 16], sea:0.22, price:245000, jukseMax:3, svcH:250, svcCost:6000, gearMax:{garn:15, stamp:10, teine:50}},
+  sjark:{name:{no:'Sjark 34 fot (10,4 m), styrhus', en:'34 ft sjark (10.4 m), wheelhouse'}, draft:1.7, berths:0, len:10.4, vmax:10, fuelCap:600, iceCap:1200, holdCap:3000, crewMax:3, diesel:true, fuelK:1.25, planing:false, risk:[2.2, 3.4, 14.5, 18], sea:0.16, price:1150000, jukseMax:5, svcH:250, svcCost:14000, gearMax:{garn:40, stamp:24, teine:150}},
+  sjarkny:{name:{no:'Ny sjark 10,99 m, 400 hk', en:'New 10.99 m sjark, 400 hp'}, draft:1.8, berths:0, len:11, vmax:22, fuelCap:1500, iceCap:2000, holdCap:6000, crewMax:3, diesel:true, fuelK:5, planing:true, risk:[2.4, 3.8, 15, 19], sea:0.14, price:6400000, jukseMax:6, svcH:300, svcCost:22000, gearMax:{garn:60, stamp:30, teine:200}, isNew:true}
 };
 const BOAT = Object.assign({}, VESSELS.skiff);
 const PRICE = {fuel:23.9, diesel:14.5, ice:1.5, iceBag:2.0, gear:1900, kgear:2490, tow:4500, rescue:6000, member:1250};
