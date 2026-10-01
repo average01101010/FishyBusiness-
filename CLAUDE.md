@@ -6,8 +6,10 @@ Et kystfiskespill fra Senja som kjører som én selvstendig HTML-side, publisert
 
 ## Arbeidsmåte
 
-- Ved større funksjoner: legg fram en konkret plan og vent på klarsignal. «Snakk uten å bygge» betyr at ingenting skal bygges. «Kjør på» betyr bygg, test og lever.
-- Kjør regresjonstestene etter hver endring.
+- **Fart foran finpuss** (brukerens valg 01.10.2026): Endringene skal inn raskt, og finpuss og feilretting gjøres samlet etterpå.
+- Ved større funksjoner med uklare valg: legg fram en kort plan og vent på klarsignal. Enkle endringer bygges rett. «Snakk uten å bygge» betyr at ingenting skal bygges. «Kjør på» betyr bygg, test og lever.
+- **Under byggingen:** `node --check`, bygg og en rask røyktest: `trip2.py` pluss den korte testen for det som er endret. Én commit per endring.
+- **Full regresjon** (`tut.py`, `dbg23o.py`, funksjonstestene under og kalibreringen) kjøres når en bunke endringer er ferdig, og alltid før publisering. Feil som dukker opp da, rettes samlet.
 - Vær ærlig om svake tester, antakelser og usikre regler. Sjekk regelverk mot kildene (Lovdata, Fiskeridirektoratet, Råfisklaget) før det bygges inn, og oppgi kilden.
 - Brukeren tester på Android-nettbrett, så UI må fungere med berøring i både stående og liggende format.
 
