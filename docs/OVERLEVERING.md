@@ -32,6 +32,8 @@ Skrevet 29.09.2026 ved flytting fra claude.ai-chat til Claude Code. Dokumentet s
 
 **Spilltest 2 (01.10.2026):** én agent, 384 handlinger fra nytt spill. Se `docs/playtest/rapport-2.md`.
 
+**Ekkolodd-varmekart (bygget 01.10.2026, ikke publisert ennå):** Kartplotteren viser hvor fisken står i en sirkel rundt båten, ut fra ekkoloddet eller sonaren. Fisken trekker jevnt, bestanden vokser helt tilbake, og første tur har en ekte skreiflekk. Ekkoloddvinduet vises i plotteren, og sonaren er nytt utstyr. Se 5.1, 5.3, 5.14 og 5.16.
+
 **Neste:** rettingene etter spilltest 2, med prioritet i rapportens siste del, deretter fase 4 i flåteplanen.
 
 ## 4. Teknisk arkitektur
@@ -88,6 +90,10 @@ Skrevet 29.09.2026 ved flytting fra claude.ai-chat til Claude Code. Dokumentet s
 - **Telefonoverskrifter:** `L(no, en)` i telefonen, `t(key)` i panelet (ordbok), og `LS(...)` for korte og lange knappetekster.
 - **3D-kamera mot styrbord side,** der skipperen står: `cam.yaw = -0.85`.
 - Hendelser i 3D fra simuleringen går via `window.CATCHQ`, som er fangstkøen for fiskeanimasjonene.
+- **Lagene i kartplotteren:** dybdekartet `#chartcv` (lerret), varmekartet `#heatcv` (lerret) og så SVG-kartet `svg#map` øverst. Land, kystlinje, kurver og navn ligger i SVG, så det som tegnes på `#heatcv`, havner aldri over land. Legg aldri noe som skal ligge under land, i `gBase` eller etter den.
+- **TDZ mellom filene:** Funksjoner heises i det felles skriptet, men `let` og `const` finnes først når fila deres har kjørt. `03-map.js` kaller derfor `heatPaint()` bare når `window.heatReady` er satt (av `03c-heat.js`), og ingen fil kaller noe fra en senere fil mens den lastes.
+- **Innstillinger må tåle `undefined`:** `S.settings` får ikke standardverdier nøkkel for nøkkel ved lasting. Nye nøkler leses som «ikke satt», for eksempel `S.settings.echo !== false` for «på».
+- **`chartMode()`** (`07-guide.js`) gir `'fish'` bare når båten du følger har kartplotter. `S.settings.chart` er ønsket ditt og beholdes når du følger en båt uten plotter.
 
 ## 5. Systemer i spillet
 
@@ -112,6 +118,18 @@ Skrevet 29.09.2026 ved flytting fra claude.ai-chat til Claude Code. Dokumentet s
 
 Mister du juksa, fiskes det videre med stang til du kjøper ny i Fiskeutstyr. `motor90` er et utstyrsvalg for skiffen (30 kn).
 
+**Ekkolodd og sonar** (varmekartet i kartplotteren, se 5.14):
+
+| Trinn (`HEAT.tiers`) | Utstyr | Varmekartet | Artsvalg |
+|---|---|---|---|
+| `basic` | Enkelt ekkolodd, alle båter har det | 1 nm i diameter, ruter på 100 m, fire trinn | Nei |
+| `chirp` | CHIRP-ekkolodd, 13 900 kr, 3 t å montere | 1,5 nm, ruter på 60 m, glatt | Alle, torsk, hyse, sei |
+| `sonar` | Sonar (søkelys), 150 000 kr, 16 t, bare sjark og ny sjark | 3 nm, ruter på 80 m, oppdateres hvert 2. minutt, viser hvor stimene trekker | Alle, torsk, hyse, sei |
+
+- Sonarens pris og monteringstid er antakelser. Delene til en Furuno CH-37BB koster rundt 13 200 USD før montering (fant ingen norsk pris), og båten må på slipp for senkerøret.
+- Ekkoloddet og sonaren slås av og på i sidepanelet i plotteren (`S.settings.echo`, `S.settings.sonar`). Av betyr ingen varme, og ekkoloddet slutter å tegne. Fartøy-appen merker dem «(av)».
+- En montering som venter mens båten byttes til en type utstyret ikke passer, betales tilbake (`finishJob`).
+
 **«Neste mål»** står øverst i Fartøy-appen og som en linje på telefonens hjemskjerm, med knapp til butikken når pengene er der.
 
 ### 5.2 Kart, fjordlinje og fangstfelt
@@ -135,6 +153,10 @@ Mister du juksa, fiskes det videre med stang til du kjøper ny i Fiskeutstyr. `m
 | 0,37 | 0,3 | 0,6 | 0,3 | 0,3 | 0,35 | 0,5 | 0,35 |
 
 - **Skreipulsen** (`skrei`): 0,6 / 2,0 / 2,5 / 0,8 for januar–april, 0,1 i desember. Den virker bare på eksponerte banker på 40–250 m og på de tre ytre feltene (`skreiSpot`).
+- **`density(sp, p, H)`** er den ene kilden for fisk i spillet: fangst, ekkolodd, varmekart, garn, line, stang og pubrykter. 30 × `density` er kg i timen for én person med håndjuksa. Den er delt i `denPlace(p)` (det alle arter deler: land, dybde, eksponering, helling og avstand til feltene), `denTime(H)` (sesongtallene, lagret for én time) og `denSp()` (artens egen sum). Delingen ga nøyaktig de samme tallene (kontrollsum over rutenett rundt alle feltene).
+- **Fisken trekker** (`hotspot`, `HOT`): Gode flekker på et mønster på 3,5 km. To felt overlapper hele tiden, hvert glir sin vei med 0,7–1,7 km i døgnet og toner inn og ut over 240 timer. Før hoppet hele mønsteret hver 120. time. Snittet er det samme som før (0,742 mot 0,737).
+- **Stimer** (`school`, `SCHOOL`): et finere mønster (400 m) som svømmer 0,5–1 km i timen i hver arts egen retning. Det gir ±15 % og er 1 i snitt, så fangsten over en dag er den samme, men bittet på ett sted kommer og går i løpet av en halvtime. Sonaren viser retningen (`schoolDrift`).
+- **Bestanden** (`STK`, `S.stock`, ruter på 2 km): Den leses mellom de fire nærmeste rutene (`gridBilinear`), og fangsten trekkes fra de samme fire med samme vekter (`stockW`). Nedtrekket der du fisker er kg/K·Σw², altså mykere enn før, men det samlede uttaket er det samme. Gjenveksten har et minste steg og runder til 1e-4, så en rute kommer helt tilbake til 1: en rute på 0,5 er full igjen etter rundt 42 dager. Før stoppet den på 0,876, og krabbe på 0,667. Krabbe (`S.cstk`) er fortsatt én verdi per rute, som før, fordi teinekalibreringen hviler på det og varmekartet ikke viser krabbe.
 - **Fangst:** `density() × luck(sp) × targetF(sp) × innsats × værstraff`, deretter trekkes hver fisk for seg med egen vekt.
   - Fisk under minstemålet slippes.
   - Kveite i fredningstiden eller over 100 kg slippes.
@@ -146,6 +168,7 @@ Mister du juksa, fiskes det videre med stang til du kjøper ny i Fiskeutstyr. `m
   - Bare fiskestang: rundt 100–145 kg.
   - `tests/simday.py` kjører også dekksarbeidet, ellers stopper fisket når bløggekaret er fullt (60 kg). Den skriver ut innsatsstigen 0,35 : 1 : 2 : 4 for stang, håndjuksa, én og to maskiner.
   - Mål for åpen gruppe i 2024 (Lofoten, Vesterålen, Senja og Tromsø): 5,3 t torsk, 3,0 t sei og 1,2 t hyse per båt og år.
+  - **Etter varmekartet (01.10.2026):** `simday.py` ga 350 / 322 / 98 / 245 / 110 / 350 kg før og 350 / 273 / 129 / 229 / 134 / 350 kg etter (Husøy mars, Gryllefjord mars, Husøy juli, Malangsgapet mai, stang, to maskiner). Hver kjøring har ±10–15 % tilfeldighet, og de enkelte tallene flytter seg fordi hotspotene ligger annerledes. Det mykere nedtrekket gir litt mer fisk over en dag på samme sted. `calib.py`, `kvtest.py` og `geartest.py` holder seg innenfor sine intervaller.
 - **Kveitefiske** (`S.target = 'kveite'`, krever kveiteutstyr):
   - Kveite får faktor ×9, og best rundt strømstille: ×(1,4 − 0,8·strømstyrke). Andre arter får ×0,2.
   - Juksamaskiner hjelper ikke.
@@ -325,6 +348,15 @@ Mister du juksa, fiskes det videre med stang til du kjøper ny i Fiskeutstyr. `m
 - **Kaiplasser** (`berthSlot`, `berthShift`): Hver NPC-båt har en egen plass langs kaia, 30–60 m fra havnepunktet. Plassen er kontrollert mot land, og båter i samme havn ligger minst 20 m fra hverandre. Forskyvningen avtar over 150 m.
 - Kystruteskipet og ferja har egne plasser, 70 m unna.
 - **Trykk i kartplotteren:** Trykk nær en havn går til havna, ikke til en fortøyd båt. Fortøyde AIS-mål tegnes mindre og svakere.
+- **Varmekartet** (`core/12-heat.js`, `ui/03c-heat.js`, fra 01.10.2026): Kartplotteren viser fisken i en sirkel rundt båten du følger, i både Navigasjon og Fiskekart, ut fra ekkoloddet eller sonaren (tabellen i 5.1). Kartplotteren er ikke nødvendig.
+  - Rutene ligger på et fast rutenett i verden (`HEATC`), så bildet ikke flimrer. De regnes ut med `heatSample()` fra den samme `density()` som fangsten, i biter på 5 ms (`heatWork`). Nærmeste ruter regnes først, og litt foran båten når den går. Ved nytt bestandstime regnes de på nytt. I havn, i skjult fane og før dybdedataene er lastet regnes ingenting.
+  - Det båten har passert, gløder etter og blekner over 30 spillminutter (`HEAT.glow`). Så glemmes det.
+  - Tegnes på `#heatcv` under SVG-kartet: ettergløden, en dempet mørk skive (sterkere i Fiskekart), de levende rutene og en stiplet ring for rekkevidden. Én ravfarge fra mørk til lys på log-skala fra 4,5 til 150 kg/t. Det enkle ekkoloddet viser fire trinn (4,5 / 13,5 / 30 / 60).
+  - **Boksen** `#heatBox` ved GPS-en: tittel, rekkevidde, fargeskala («kg/t for én person med håndjuksa»), artsbrikke, «Her nå: ca. N kg/t med din båt» (eller «Fisker du her» under seiling) og faktorene bak: fisken her, redskap, haill, kulde, sjø, én på dekk, stang (`expectedRate`, `catchFactors`). Med sonar også hvor stimene trekker. Under første tur står det at full last er garantert, og hva vanlig fiske gir.
+  - Valgene står i sidepanelet: «Ekkolodd: På | Av», «Sonar: På | Av» og «Art: Alle | Torsk | Hyse | Sei» (`S.settings.heatSp`, bare med CHIRP eller sonar).
+  - **Ekkoloddvinduet** (`#echoWrap`, `INSTR`) vises nå i plotteren ved GPS-en, og stopper når ekkoloddet er av. Ekkomerkene kommer fra samme sum som varmen og øker opp mot rundt 100 kg/t.
+  - **Konsollen i 3D** (skiffen) viser den samme varmen (`heatDrawInto`) og «EKKOLODD AV» når ekkoloddet er av. Med CHIRP viser konsollkartet litt mer enn ±1,1 km.
+  - Ytelse: Rundt 10 µs per rute her og rundt 40 µs med CPU-en struping fire ganger. Hele sonarsirkelen (4 000 ruter) tar 0,15–0,18 s fordelt på biter, og en full oppdatering kommer hvert annet spillminutt.
 
 ### 5.15 Ruteplanleggeren og «Følg leia» (01.10.2026)
 
@@ -344,7 +376,9 @@ Mister du juksa, fiskes det videre med stang til du kjøper ny i Fiskeutstyr. `m
 - **Tilstand:** `S.tut = {v:2, m:{…}, catch:true, pAt}`. `m` er milepælene. Steget som vises, er det første som ikke er gjort, og «gjort» leses også av spilltilstanden, så veiledningen tåler omlasting. Rutestegene (`live`) leses på nytt hver gang til båten har kastet loss.
 - **Stegene** (`TSTEPS` i `ui/07b-first-trip.js`): butikken (håndjuksa og 150 kg is gratis), kartplotteren, rute til ringen ved Gisundet nord (med «Følg leia» fremhevet), minst 2 timer fisketid, «Kast loss», gratis luksushaill mens båten går ut, fisket og «Fisk selv», dekksarbeidet, full last, rute til Botnhamn med «Følg leia», «Kast loss», «Neste»-brikka, levering, sluttseddelen og «Neste mål».
 - **Visning:** Et dempet lag med hull rundt målet og en pulserende ring (z-index 61–62, over telefonen), med tipset over (63). `tutRect()` gir målet.
-- **Garantert første fangst** (`S.tut.catch`): `fish()` fyller på med vanlig fisk hvert minutt, så lasten er full når fisketida er ute. `risk()` og snuing for vind er slått av, og i stangfisket kommer nappet etter 4–8 s. Flagget nullstilles ved første levering.
+- **Garantert første fangst** (`S.tut.catch`): Så lenge flagget er satt, ligger det en ekte skreiflekk på feltet i Gisundet nord (`tutBonus`, `TUTB`, `TUT_FIELD`). Den gir rundt 175 kg/t for én person i sentrum og en tidel ved kanten av ringen, i samme miks som påfyllingen (72 % torsk, 18 % sei, 10 % hyse). Flekken legges oppå bestanden og fiskes ikke ned, så ekkoloddet og varmekartet viser det båten får.
+  - `fish()` fyller fortsatt på, så lasten er full når fisketida er ute, men påfyllingen er nå et sikkerhetsnett: rundt en firedel av fangsten i stedet for ni tideler (`window.TUTTOP` teller den i testene). Bare bestandens egen andel av fangsten trekkes fra bestanden.
+  - `risk()` og snuing for vind er slått av, og i stangfisket kommer nappet etter 4–8 s. Flagget nullstilles ved første levering.
 - **Haill:** Kommer båten fram før haillen er hentet, venter den på feltet (`b.tutWait`) og begynner å fiske når haillen er om bord.
 - **Sperrer** (`tutAllow`): «Kast loss», nye punkter og levering bare på sine steg. Puben, kveiteutstyret, driftsplanen, «Hjem samme vei» og levering andre steder enn Botnhamn er skjult til veiledningen er ferdig.
 - **Nødutgang:** «Hopp over veiledningen» vises først etter 20 minutter uten fremgang.
@@ -673,6 +707,12 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
   - Innloggingsbonusen forklarer ikke at den gjelder ekte dager.
   - Reglene når ikke fram uten at spilleren leter dem opp.
 
+- **Varmekartet, åpne punkter:**
+  - Fangsten for fraværstida (`catchUp` i `11-boot.js`) regnes før dybdedataene er lastet. Da brukes den grove dybdemodellen, og på de tre ytre feltene blir fraværsfangsten bare 42–60 % av det den skulle vært. Ikke rettet: det endrer balansen og må avgjøres først.
+  - Sonarens pris (150 000 kr) og monteringstid (16 t) er antakelser.
+  - Bare skiffen har konsoll i 3D, så de andre båtene viser ikke ekkolodd eller varme i 3D.
+  - Utstyr som ikke passer en ny båt, forsvinner ved båtbytte uten refusjon (som før). Teksten i Utstyr-appen sier det nå.
+
 - **Redskap, åpne punkter:**
   - Minsteprisene for taskekrabbe (Råfisklaget, rundskriv 8/2025) er ikke hentet, fordi siden er blokkert herfra. Hunn 17 og hann 14 kr/kg er plassholdere.
   - Hvilke havner som har egnebu, og hva egning koster, er antakelser.
@@ -709,6 +749,7 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
   - `shoptest.py`: Fiskeutstyr, sekkeis og isrenne, «Neste mål», sluttseddelen som summerer seg, og A8–A13.
   - `camtest.py`: kameraet holdes utenfor kaier, kraner og bropilarer.
   - `routetest.py`: rute-editoren med berøring (WP-navn, kort, angre, dra, sett inn, A12) og «Følg leia».
+  - `heattest.py`: fiskemodellen og varmekartet. Bestanden (nedtrekk på fire ruter, gjenvekst helt tilbake), hotspotene som trekker, stimene, skreiflekken på første tur, radius per trinn, varmen ved båten = 30·Σdensity, av og på, artsvalget, avlesningen, ettergløden, sonaren som utstyr, konsollen i 3D og ytelsen med CPU-en struping fire ganger (`Emulation.setCPUThrottlingRate`, en stand-in for nettbrettet). Skjermbilder i `tests/out/heat_*.png`.
   - `hailltest.py` og `luck2.py`: haill og pub.
   - `crewtest.py`: mannskap.
   - `motion2.py`: båtbevegelse, frakoblet med 60 bilder i sekundet.

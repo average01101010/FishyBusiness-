@@ -154,14 +154,17 @@ const PREP = {
 function finishJob(j){
   const b = S.boat;
   if (j.kind === 'svc'){ b.svcAt = b.engH || 0; S.svcTold = false; log('Service på motoren er ferdig.', 'The engine service is done.'); }
-  else if (j.kind === 'fit'){ const E = EQUIP[j.k]; if (E.multi) S.equip[j.k] = (S.equip[j.k] || 0) + 1; else S.equip[j.k] = true; applyVessel(); log('Montert: ' + E.name.no + '.', 'Fitted: ' + E.name.en + '.'); if (hooks.onEquip) hooks.onEquip(); }
+  else if (j.kind === 'fit'){ const E = EQUIP[j.k];
+    // the boat may have been traded for one the equipment does not suit while it waited: the yard pays back
+    if ((E.types && !E.types.includes(b.type)) || (E.only && E.only !== b.type)){ S.cash += E.price; log(E.name.no + ' passer ikke denne båten. Verkstedet betalte tilbake ' + kr(E.price) + '.', E.name.en + ' does not suit this vessel. The yard paid back ' + kr(E.price) + '.'); }
+    else { if (E.multi) S.equip[j.k] = (S.equip[j.k] || 0) + 1; else S.equip[j.k] = true; applyVessel(); log('Montert: ' + E.name.no + '.', 'Fitted: ' + E.name.en + '.'); if (hooks.onEquip) hooks.onEquip(); } }
   else if (j.kind === 'repair'){ log('Skroget er reparert.', 'The hull is repaired.'); }
   else if (gearJob(j)){}
   else if (j.kind === 'prep'){ S.prep = S.prep || {}; S.prep[j.k] = true; log('Ferdig: ' + PREP[j.k].no + '.', 'Done: ' + PREP[j.k].en + '.'); }
   msg(j.kind === 'prep' || j.kind === 'egn' || j.kind === 'mend' ? (S.lang === 'no' ? 'Kaia' : 'The quay') : 'Verkstedet', (j.no || '') + ' er ferdig.', (j.en || '') + ' is done.');
 }
 // hours at the yard to fit each piece of equipment; anything not listed takes three
-const FIT_H = {vhf:2, ais:2, plotter:4, chirp:3, jukse:3, motor90:6, elhaler:3, linehaler:4, garnhaler:5, teinehaler:4};
+const FIT_H = {vhf:2, ais:2, plotter:4, chirp:3, sonar:16, jukse:3, motor90:6, elhaler:3, linehaler:4, garnhaler:5, teinehaler:4};   // the sonar: on the slip for the hoist
 function fitHours(k){ return FIT_H[k] || 3; }
 // a job with no length would never finish and would keep the boat in port for good
 function jobOk(j){ if (!(j.h > 0)) j.h = j.kind === 'fit' ? fitHours(j.k) : 2; if (j.until != null && !Number.isFinite(j.until)) j.until = null; return j; }

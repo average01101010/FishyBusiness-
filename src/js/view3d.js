@@ -1325,7 +1325,8 @@ const G3 = (() => {
   function paintPlotter(){
     const g = SK.cvP.getContext('2d'), W = 512, Hc = 320, b = S.boat, p = {x:bv.x / 1000, y:bv.z / 1000}, Hn = S.t / 60, L = (no, en) => S.lang === 'no' ? no : en;
     g.fillStyle = '#0a1117'; g.fillRect(0, 0, W, Hc);
-    const top = 26, cw = 318, ch = Hc - top - 18, rng = 1.1, sw = 106, sh = Math.round(sw * ch / cw), kpp = 2 * rng / sw, sd = safeDepth();
+    // the chart shows ±1.1 km, more when the echo sounder's heat reaches further (CHIRP)
+    const ht = typeof heatTier === 'function' ? heatTier() : null, top = 26, cw = 318, ch = Hc - top - 18, rng = Math.max(1.1, ht ? HEAT.tiers[ht].r * 1.05 : 0), sw = 106, sh = Math.round(sw * ch / cw), kpp = 2 * rng / sw, sd = safeDepth();
     plotSmall = plotSmall || document.createElement('canvas'); plotSmall.width = sw; plotSmall.height = sh;
     const sg = plotSmall.getContext('2d'), img = sg.createImageData(sw, sh), d = img.data;
     for (let j = 0; j < sh; j++) for (let i = 0; i < sw; i++){
@@ -1336,6 +1337,8 @@ const G3 = (() => {
     sg.putImageData(img, 0, 0); g.imageSmoothingEnabled = true; g.drawImage(plotSmall, 0, top, cw, ch);
     const X = x => (x - p.x) / kpp * (cw / sw), Y = y => top + ch / 2 + (y - p.y) / kpp * (cw / sw);
     g.save(); g.beginPath(); g.rect(0, top, cw, ch); g.clip();
+    // the echo sounder's heat map, the same as on the chart plotter (ui/03c-heat.js)
+    if (typeof heatDrawInto === 'function') heatDrawInto(g, p, cw / 2, top + ch / 2, cw / (2 * rng));
     // route and trail
     if (S.plan){ g.strokeStyle = '#d6336c'; g.lineWidth = 3; g.beginPath(); g.moveTo(X(p.x) + cw / 2, Y(p.y)); for (const w of S.plan.wps.slice(S.plan.idx)) g.lineTo(X(w.x) + cw / 2, Y(w.y)); g.stroke(); }
     // other vessels
@@ -1348,9 +1351,12 @@ const G3 = (() => {
     g.fillStyle = '#123'; g.font = '600 13px system-ui, sans-serif'; g.fillText('0,5 nm', 10, top + ch - 10); g.fillRect(10, top + ch - 26, (0.926 / kpp) * (cw / sw) / 1, 3);
     // echo sounder on the right
     const ec = document.getElementById('echo'), ex = cw + 4, ew = W - ex;
-    g.fillStyle = '#021628'; g.fillRect(ex, top, ew, ch); if (ec && ec.width) g.drawImage(ec, ex, top, ew, ch);
-    const dep = Math.max(0.8, depthF(p) + tideCD(Hn));
-    g.fillStyle = '#fff'; g.font = '700 30px system-ui, sans-serif'; g.fillText(fmt(dep, dep < 100 ? 1 : 0), ex + 8, top + 34); g.font = '600 13px system-ui, sans-serif'; g.fillText('m', ex + 12 + g.measureText(fmt(dep, dep < 100 ? 1 : 0)).width * 2.3, top + 34);
+    g.fillStyle = '#021628'; g.fillRect(ex, top, ew, ch);
+    if (INSTR.echoOn()){
+      if (ec && ec.width) g.drawImage(ec, ex, top, ew, ch);
+      const dep = Math.max(0.8, depthF(p) + tideCD(Hn));
+      g.fillStyle = '#fff'; g.font = '700 30px system-ui, sans-serif'; g.fillText(fmt(dep, dep < 100 ? 1 : 0), ex + 8, top + 34); g.font = '600 13px system-ui, sans-serif'; g.fillText('m', ex + 12 + g.measureText(fmt(dep, dep < 100 ? 1 : 0)).width * 2.3, top + 34);
+    } else { g.fillStyle = '#5f7d8c'; g.font = '700 16px system-ui, sans-serif'; g.textAlign = 'center'; g.fillText(L('EKKOLODD AV', 'SOUNDER OFF'), ex + ew / 2, top + ch / 2); g.textAlign = 'left'; }
     // data bars
     g.fillStyle = '#152029'; g.fillRect(0, 0, W, top); g.fillRect(0, Hc - 18, W, 18);
     g.fillStyle = '#9fe3c6'; g.font = '600 15px ui-monospace, monospace'; const sog = b.status === 'port' ? 0 : b.v;

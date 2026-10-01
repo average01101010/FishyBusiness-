@@ -72,7 +72,7 @@ function heatWork(){
   const run = () => {
     const t0 = performance.now(), H = S.t / 60, hr = Math.floor(S.t / 60); let n = 0;
     while (HEATC.qi < HEATC.queue.length && performance.now() - t0 < HEAT.slice){ const c = HEATC.queue[HEATC.qi++]; c.v = heatSample(c, H); c.t = S.t; c.h = hr; n++; }
-    const ms = performance.now() - t0, st = HEATC.stats; st.slices++; st.maxSlice = Math.max(st.maxSlice, ms); st.n += n; st.ms += ms;
+    const ms = performance.now() - t0, st = HEATC.stats; st.slices++; st.maxSlice = Math.max(st.maxSlice, ms); st.n += n; st.ms += ms; if (ms > 16) st.over = (st.over || 0) + 1;
     if (n) HEATC.rev++;
     const done = HEATC.qi >= HEATC.queue.length;
     if (typeof hooks !== 'undefined' && hooks.onHeat && (done || performance.now() - heatLastHook > 150)){ heatLastHook = performance.now(); hooks.onHeat(); }

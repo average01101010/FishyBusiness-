@@ -73,6 +73,16 @@ function heatPaint(force){
   ctx.beginPath(); ctx.arc(cx, cy, rad, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
   heatCv.dataset.on = tier; heatCv.dataset.r = (rad / dpr).toFixed(1);
 }
+// the same heat on the skiff's console screen in 3D (view3d.js paintPlotter): g its 2D context, p the boat (km), (ox, oy) the boat
+// on the screen, k pixels a km
+function heatDrawInto(g, p, ox, oy, k){
+  const tier = heatTier(); if (!tier || S.boat.status === 'port' || !DEPTH) return;
+  const rad = HEAT.tiers[tier].r * k, gr = g.createRadialGradient(ox, oy, rad * 0.9, ox, oy, rad * 1.05);
+  gr.addColorStop(0, 'rgba(5,14,22,.72)'); gr.addColorStop(1, 'rgba(5,14,22,0)');
+  g.fillStyle = gr; g.beginPath(); g.arc(ox, oy, rad * 1.05, 0, Math.PI * 2); g.fill();
+  if (heatImage()){ const cs = HEATC.cs, sm = g.imageSmoothingEnabled; g.imageSmoothingEnabled = tier !== 'basic'; g.drawImage(HP.off, (HP.ix0 * cs - p.x) * k + ox, (HP.iy0 * cs - p.y) * k + oy, HP.w * cs * k, HP.h * cs * k); g.imageSmoothingEnabled = sm; }
+  g.strokeStyle = 'rgba(255,214,120,.6)'; g.lineWidth = 1.5; g.setLineDash([5, 4]); g.beginPath(); g.arc(ox, oy, rad, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);
+}
 
 // ---------- the box with the scale and the readout: what the fish here is worth to your boat, and why ----------
 const COMPASS = {no:['N', 'NØ', 'Ø', 'SØ', 'S', 'SV', 'V', 'NV'], en:['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']};

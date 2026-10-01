@@ -29,13 +29,14 @@ async def main():
         check(json.loads(r) == {'jobs': 0, 'fitted': True}, 'haleren er montert og køen er tom', r)
         await pg.evaluate("PHONE.show && PHONE.show(false)")
 
-        # A1: a broken job from an old save (no length, until saved as null) is repaired after a reload
-        await pg.evaluate("S.jobs = [{kind:'fit', k:'linehaler', no:'Montering', en:'Fitting', until:null}]; save()")
+        # A1: a broken job from an old save (no length, until saved as null) is repaired after a reload (the plotter, 4 h, suits
+        # every boat; a hauler the skiff cannot carry would be paid back instead of fitted)
+        await pg.evaluate("S.equip.plotter = false; S.jobs = [{kind:'fit', k:'plotter', no:'Montering', en:'Fitting', until:null}]; save()")
         await pg.reload(); await pg.wait_for_timeout(1500)
         r = await pg.evaluate("JSON.stringify(S.jobs.map(j => ({h:j.h, until:j.until})))")
         check(json.loads(r)[0]['h'] == 4, 'gammel jobb uten lengde får 4 t etter omlasting', r)
         await pg.evaluate("for (let i = 0; i < 300; i++) step()")
-        r = await pg.evaluate("JSON.stringify({jobs:S.jobs.length, fitted:!!S.equip.linehaler})")
+        r = await pg.evaluate("JSON.stringify({jobs:S.jobs.length, fitted:!!S.equip.plotter})")
         check(json.loads(r) == {'jobs': 0, 'fitted': True}, 'den reparerte jobben blir ferdig', r)
 
         # A3: the pub evening runs from 15:00 to 03:00 on the clock
