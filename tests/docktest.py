@@ -103,7 +103,7 @@ async def run(p, w, h, tag):
     # the phone has only the apps that are left, and Kvote is one of them
     await pg.evaluate("PHONE.open('home')"); await pg.wait_for_timeout(400)
     apps = await pg.evaluate("[...document.querySelectorAll('#phone .ph-app')].map(x => x.dataset.a)")
-    check(apps == ['vaer', 'post', 'meld', 'rederi', 'salg', 'kvote', 'haill', 'sjomann', 'redning', 'innst'], 'telefonen har ti apper, med Kvote', apps)
+    check(apps == ['vaer', 'post', 'meld', 'rederi', 'salg', 'kvote', 'ordl', 'haill', 'sjomann', 'redning', 'innst'], 'telefonen har elleve apper, med Kvote og Oppdrag', apps)
     await pg.evaluate("PHONE.show(false)"); await pg.wait_for_timeout(300)
     # a link to a page that moved opens the drawer
     await pg.evaluate("PHONE.open('utstyr')"); await pg.wait_for_timeout(300)

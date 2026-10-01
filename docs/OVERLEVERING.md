@@ -405,6 +405,19 @@ Inspirert av Fishing: Barents Sea. Den gamle handlingslinja `#actbar` er borte, 
 - **Auto-nav** åpner kartplotteren med «Følg leia» klar og `AUTONAV` satt. Et trykk på en egen blåse finner veien til et punkt 50 m utenfor (`buoyStandoff`), og båten går med en gang veien er funnet. Den trekker ikke selv. «Kjør dit» per sett i Beholdning gjør det samme (`DOCK.goTo`).
 - **Rettinger:** `gearTap` ga et rutepunkt med trekk uten `kind`, så `wpActLabel` krasjet. En setting som ble stoppet før første enhet gikk ut, gir nå tilbake blåsesettet, egnede stamper og teineagn.
 
+### 5.18 Dekksdagboka med faner, oppdragslista og papirene (01.10.2026)
+
+Inspirert av Fishing: Barents Sea.
+
+- **Fanene** (`#bkTabs`) står på venstre kant av boka: Dagbok, Sesonger, Hendelser, Utstyr og Salg. Hver fane er sin egen sideliste i `BOOK` (`ui/06-logbook.js`), og sidene for alle fanene unntatt Dagbok lages av `bookTabPages(fane)` i `ui/06b-book-tabs.js`. Alt står eldst først, så en fane åpner på nyeste side. `BOOK.open('salg', i)` åpner sluttseddel nummer `i` i `S.sales`.
+  - **Sesonger:** årets regler (kveitefredningen, skreisesongen, maksimalkvotene i åpen gruppe, uer på juksa, ferskfiskordningen, krabbesesongen fra `SPECIES.krabbe.av`) og prissesongene: måneder der `SPECIES[art].pm` ligger minst 10 % over eller under årssnittet. Det som er over, krysses ut (klassen `over`; `x` er opptatt av lukkeknapper).
+  - **Hendelser:** de siste fire ukene. Ukens prisbevegelse per art når `weekDev` er minst ±8 %, uværsdager med toppris (`supplyFactor` ≥ 1,025), og regelendringer.
+  - **Utstyr:** et kort per sett fra `S.gearLog` (hele rederiet, de siste 60), som skrives i `finishSet` og oppdateres i `finishHaul` og når redskap går tapt. Ståtid som tellestreker opp til 40 t.
+  - **Salg:** sluttseddelen per levering. `sell()` lagrer den i `S.sales[i].d`: linjer `[art, klasse, kvalitet, sløyd, kg, kr, antall]`, lever og rogn, innloggingsbonus, oppdragstillegg, inndratt, trekk for rognkrabbe, mannskapet med andel, lott, gebyr og et løpenummer (`S.saleSeq`). Bare de siste 60 salgene beholder `d`. Eldre salg vises med kg og kroner per art.
+- **Oppdrag** tas i Bygd (skuffesiden `oppdrag`). De aktive ligger som en oppdragsliste i telefonappen `ordl` («Oppdrag») med frist og framdrift, og under står de tidligere med Levert eller Ikke levert. `ordState().done` har nå `ok` og tar 20. Både levert og ikke levert skrives i Drift.
+- **Salgslaget, «Mine landinger»:** 📖 per sluttseddel åpner den i boka.
+- **Sjømann, fanen «Papirer»** (`papers()`): helseerklæring for arbeidstakere på skip (fiktiv lege, gyldig 2 år fra første loggføring), sikkerhetsopplæring for sjøfolk på mindre skip (35 t), fiskeskipper klasse C og begrenset radiosertifikat (SRC, gyldig når en båt har VHF). Papirene styrer ingenting.
+
 ## 6. Regelverk og kilder
 
 | Tema | Kilde | Hovedpunkter |
@@ -714,6 +727,8 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
 
 ## 10. Kjente problemer og åpne spørsmål
 
+- **Sertifikatene i Sjømann er ikke sjekket mot kildene.** Søk viste «Fiskeskippersertifikat klasse C eller D6» for båter under 15 m og navnene «helseerklæring for arbeidstakere på skip» og «sikkerhetsopplæring for sjøfolk på mindre skip» (Sjøfartsdirektoratet, 12 PAX-siden), men sdir.no og Lovdata var sperret fra arbeidsmiljøet. Hvilket sertifikat en fører av fiskefartøy under 15 m faktisk trenger, og at helseerklæringen varer 2 år, må sjekkes før papirene får betydning i spillet.
+
 - **Blind spilltest 1 (30.09.2026):** Se `docs/playtest/rapport-1.md`. Feilene A1–A13 og A15 er rettet 01.10.2026 (`fixtest.py`, `shoptest.py`, `camtest.py`, `routetest.py`). A14 (ryktekoppen) forsvant med «Kaffe på kaia». Åpent fra rapporten:
   - Lånet overlever salg av båten, og hvert nytt lån starter 120 nye måneder.
   - Fangstfeltene har liten vekt i kartet.
@@ -776,6 +791,7 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
   - `fixtest.py`: feilrettingene etter spilltest 1 (haleren, pubkvelden, pubhjulet).
   - `timetest.py`: tidstekstene, nedtelling i ekte tid og «Neste»-brikka.
   - `shoptest.py`: Fiskeutstyr, sekkeis og isrenne, «Neste mål», sluttseddelen som summerer seg, og A8–A13.
+  - `booktest.py`: dekksdagboka med faner, med ekte data (to salg gjennom `sell()`, en line satt og trukket med spillets egne steg). Fanene, kryss over det som er over, hendelser med samme prosent som `weekDev`, tellestreker, sluttseddelen som summerer seg og netto, gamle salg uten linjer, blaing innenfor fanen, oppdragslista, Papirer og lenken fra Salgslaget.
   - `docktest.py`: knappelinja, viftene, skuffen og «Sett ut» med berøring, liggende og stående. Knappene i havn og på sjøen, grå knapper som sier hvorfor, kjøp i skuffen, de ti appene, linjelengden i kartet (±2 px), dra i enden, setting langs linja, avbrutt setting, og «Ta opp» 50 m fra blåsa.
   - `camtest.py`: kameraet holdes utenfor kaier, kraner og bropilarer.
   - `routetest.py`: rute-editoren med berøring (WP-navn, kort, angre, dra, sett inn, A12) og «Følg leia».

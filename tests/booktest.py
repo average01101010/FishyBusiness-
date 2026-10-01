@@ -108,6 +108,26 @@ async def run(p, w, h, tag):
     await tap_el('#bkTabs [data-t=dag]'); await pg.wait_for_timeout(400)
     if tag == 'staende': await tap_el('#book [data-bk=next]'); await pg.wait_for_timeout(600)   # one page at a time: Drift follows Navigasjon
     check(await pg.evaluate("BOOK.tab === 'dag' && /Oppdrag levert/.test(document.getElementById('bkStage').textContent)"), 'Dagbok: linja om det leverte oppdraget står i Drift')
+    await tap_el('#book .bk-ctrl [data-bk=close]'); await pg.wait_for_timeout(500)
+
+    if tag == 'liggende':
+        # an order taken in the village shows in the phone's order list, with its deadline
+        r = json.loads(await pg.evaluate("""JSON.stringify((() => { const O = ordState(); O.active = []; O.offers = [{id:501, cust:CUSTOMERS[1].id, port:'botnhamn', sp:'hyse', kg:40, left:40, q:'A', prem:0.25, bonus:1200, offerUntil:S.t + 600, days:2}];
+          DOCK.open('oppdrag'); const b = document.querySelector('#drawerBody [data-pa=ordtake]'); if (b) b.click(); DOCK.close();
+          PHONE.open('ordl'); const t = document.getElementById('phView').innerText; PHONE.show(false);
+          return {active:O.active.length, name:t.includes(CUSTOMERS[1].no), deadline:/Frist/.test(t), earlier:/Tidligere/.test(t)}; })())"""))
+        check(r['active'] == 1 and r['name'] and r['deadline'] and r['earlier'], 'et oppdrag tatt i Bygd står i oppdragslista på telefonen med frist, og de tidligere under', r)
+        # the papers in the Seaman app
+        await pg.evaluate("PHONE.open('sjomann')"); await pg.wait_for_timeout(300)
+        await pg.evaluate("document.querySelector('#phone [data-pa=sub][data-s=papir]').click()"); await pg.wait_for_timeout(300)
+        t = await pg.evaluate("document.getElementById('phView').innerText")
+        check('Helseerklæring for arbeidstakere på skip' in t and 'Sikkerhetsopplæring' in t and 'Fiskeskipper klasse C' in t, 'Sjømann har fanen Papirer med helseerklæring og sertifikater')
+        await pg.screenshot(path='book_papirer.png')
+        # a landing note in the phone opens the same note in the book
+        await pg.evaluate("PHONE.open('salg')"); await pg.wait_for_timeout(200)
+        await pg.evaluate("document.querySelector('#phone [data-pa=sub][data-s=land]').click()"); await pg.wait_for_timeout(300)
+        r = json.loads(await pg.evaluate("JSON.stringify((() => { const i = S.sales.length - 1; document.querySelector('#phone [data-pa=book][data-i=\"' + i + '\"]').click(); return {tab:BOOK.tab, idx:BOOK.idx, want:BOOK.pages > 0 ? (window.innerWidth >= 760 ? Math.floor(i / 2) : i) : -1, phone:PHONE.isOpen()}; })())"))
+        check(r['tab'] == 'salg' and r['idx'] == r['want'] and not r['phone'], 'sluttseddelen i Salgslaget åpner samme sluttseddel i dekksdagboka', r)
     check(errs == [], 'ingen sidefeil', errs)
     await b.close()
 
