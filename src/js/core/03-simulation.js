@@ -222,14 +222,26 @@ function denSp(sp, q, H, T){
   return 1.6 * s.k * v * day * av * depthFactor(sp, q.d) * stockAt(p, sp);   // k: calibration to 2025 catches per boat in Lofoten–Tromsø
 }
 function density(sp, p, H){ const q = denPlace(p); return q ? denSp(sp, q, H, denTime(H)) : 0; }
-// local stock in 2 x 2 km cells (1 = untouched): fishing takes it down, it recovers over weeks
+// local stock of fish in 2 x 2 km cells (1 = untouched): fishing takes it down, it recovers over weeks. The value at a point is read
+// between the four nearest cell centres, and a catch is taken from the same four cells by the same weights, so the stock has
+// no hard 2 km edges and what the heat map shows is what is taken.
 const STK = {c:2, nx:Math.ceil(MAP_W / 2), ny:Math.ceil(MAP_H / 2), K:2600};
 function stockIdx(p){ return Math.floor(clamp(p.y, 0, MAP_H - 0.001) / STK.c) * STK.nx + Math.floor(clamp(p.x, 0, MAP_W - 0.001) / STK.c); }
-// shellfish have their own layer (S.cstk), made when the first pot is hauled
-function stockAt(p, sp){ const a = sp && SPECIES[sp].shell ? S && S.cstk : S && S.stock; return a ? a[stockIdx(p)] : 1; }
+// the four cells around a point and their weights, the same arithmetic as gridBilinear
+function stockW(p){
+  const gx = clamp(p.x / STK.c - 0.5, 0, STK.nx - 1.001), gy = clamp(p.y / STK.c - 0.5, 0, STK.ny - 1.001), ix = Math.floor(gx), iy = Math.floor(gy), fx = gx - ix, fy = gy - iy, i = iy * STK.nx + ix;
+  return [[i, (1 - fx) * (1 - fy)], [i + 1, fx * (1 - fy)], [i + STK.nx, (1 - fx) * fy], [i + STK.nx + 1, fx * fy]];
+}
+// Shellfish have their own layer (S.cstk), made when the first pot is hauled. It stays one value per cell: pots stand still for
+// days and work the cell as a patch, the heat map does not show crab, and the pot calibration rests on it.
+function stockAt(p, sp){
+  if (sp && SPECIES[sp].shell) return S && S.cstk ? S.cstk[stockIdx(p)] : 1;
+  return S && S.stock ? gridBilinear(S.stock, STK.nx, STK.ny, STK.c, p) : 1;
+}
 function takeStock(p, kg, sp){
   if (sp && SPECIES[sp].shell){ if (!S.cstk) S.cstk = new Array(STK.nx * STK.ny).fill(1); const i = stockIdx(p); S.cstk[i] = Math.max(0.1, S.cstk[i] - kg / (STK.K * 0.25)); return; }
-  if (!S.stock) return; const i = stockIdx(p); S.stock[i] = Math.max(0.12, S.stock[i] - kg / STK.K); }
+  if (!S.stock) return; for (const [i, w] of stockW(p)) S.stock[i] = Math.max(0.12, S.stock[i] - kg * w / STK.K);
+}
 function initStock(){
   const a = new Array(STK.nx * STK.ny).fill(1);
   // the famous grounds are already worked by the local fleet when the game starts
@@ -240,11 +252,13 @@ function stockHour(H){
   const s = S.stock, n = STK.nx, m = STK.ny, nx = s.slice();
   for (let r = 0; r < m; r++) for (let c = 0; c < n; c++){
     const i = r * n + c, nb = (s[r * n + Math.max(0, c - 1)] + s[r * n + Math.min(n - 1, c + 1)] + s[Math.max(0, r - 1) * n + c] + s[Math.min(m - 1, r + 1) * n + c]) / 4;
-    nx[i] = Math.round(Math.min(1, s[i] + (1 - s[i]) * 0.004 + (nb - s[i]) * 0.01) * 1000) / 1000;
+    // regrowth has a smallest step, so a cell comes all the way back to 1 (rounding used to stop it at 0.876)
+    const g = s[i] < 1 ? Math.max((1 - s[i]) * 0.004, 0.0001) : 0;
+    nx[i] = Math.round(Math.min(1, s[i] + g + (nb - s[i]) * 0.01) * 1e4) / 1e4;
   }
   S.stock = nx;
   // crab comes back more slowly, and does not wander far
-  if (S.cstk) S.cstk = S.cstk.map(v => v < 1 ? Math.round(Math.min(1, v + (1 - v) * 0.0015) * 1000) / 1000 : v);
+  if (S.cstk) S.cstk = S.cstk.map(v => v < 1 ? Math.round(Math.min(1, v + Math.max((1 - v) * 0.0015, 0.0001)) * 1e4) / 1e4 : v);
   // the local fleet works the known grounds on fishable days
   for (const q of npcStates(H)) if (q.fleet && q.st === 'fishing') takeStock(q.p, 18);
   const hr = gDate(H).getUTCHours();
