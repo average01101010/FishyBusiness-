@@ -80,7 +80,8 @@ function approachPath(pt){
 function exitWps(pt, to){ if (clearLine(pt.p, to)) return []; const out = []; for (const q of approachPath(pt).slice().reverse()){ if (dist(q, pt.p) < 0.002) continue; out.push(q); if (clearLine(q, to)) return out; } return []; }
 function entryWps(pt, from){ if (clearLine(from, pt.p)) return []; const a = approachPath(pt); for (let i = a.length - 1; i >= 0; i--) if (dist(a[i], pt.p) >= 0.002 && clearLine(from, a[i])) return a.slice(i).filter(q => dist(q, pt.p) >= 0.002); return []; }
 // beam (m) of the player's vessels, for lying alongside
-const BEAM = {skiff:2.2, snekke:2.7, sjark:3.8, sjarkny:4.3};
+// beam by vessel type, for the berths and the 3D view (the ocean vessels get their berths at the ocean step)
+const BEAM = Object.fromEntries(Object.entries(VESSELS).filter(([k, V]) => V.cls !== 'hav').map(([k, V]) => [k, V.beam]));
 const CAST_MIN = 2;   // game minutes to take the lines in before the boat moves
 // Where a vessel lies in a harbour: alongside the quay in QUAYS (kind 'main' or 'bunker'), or else the quay face nearest the harbour's
 // berth point; parallel to it with the quay to starboard (where the skipper stands), off the face by half the beam and the fenders.
@@ -121,7 +122,7 @@ function berthPose(pid, type, kind = 'main'){
 // Game minutes; the 3D view plays the same timeline, so what you see is what the clock says. The times are guesses, to be tuned.
 const LANDING = {prep:5, lift:2.5, note:5, boxKg:40, perLift:9, tubKg:300, hooked:0.86};
 function landPlan(type, kg){
-  const tub = type === 'sjark' || type === 'sjarkny', n = Math.max(1, Math.ceil(kg / (tub ? LANDING.tubKg : LANDING.boxKg))), lifts = tub ? n : Math.ceil(n / LANDING.perLift);
+  const tub = (VESSELS[type] || {}).land === 'tub', n = Math.max(1, Math.ceil(kg / (tub ? LANDING.tubKg : LANDING.boxKg))), lifts = tub ? n : Math.ceil(n / LANDING.perLift);
   return {kind:tub ? 'tub' : 'box', n, lifts, dur:LANDING.prep + lifts * LANDING.lift + LANDING.note};
 }
 // how far a landing has come at game minute t: loads up on the quay, units (boxes or tubs) landed, and the phase

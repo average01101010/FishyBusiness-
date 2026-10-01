@@ -175,7 +175,7 @@ function sailV(H, hs){
   // brake before the next stop (a harbour or a fishing spot) along the route, not when leaving
   let rem = 0, p0 = b.pos, stop = false; for (let i = pl.idx; i < pl.wps.length; i++){ const w = pl.wps[i]; rem += dist(p0, w); p0 = w; if (wpStop(w)){ stop = true; break; } if (rem > 3) break; }
   if (near < 0.25 || (stop && rem < 0.25 + (b.v || 0) * NM / 60 * 1.1)) tgt = Math.min(tgt, 5);
-  const acc = BOAT.planing ? 10 : 3, prev = b.status === 'sailing' ? (b.v || 0) : 0;
+  const acc = BOAT.accel || 3, prev = b.status === 'sailing' ? (b.v || 0) : 0;
   return tgt > prev ? Math.min(tgt, prev + acc) : Math.max(tgt, prev - acc * 1.5);
 }
 function sail(H, W, hs){
@@ -302,8 +302,8 @@ function addCatch(sp, kg, cls, hook, opt){
 // About 300 kg an hour per person to gut, wash and sort, and 800 to ice down (guesses: no good source for hand gutting was found).
 // Alone you cannot gut while you steer or fish: fishing stops when the bleeding tub is full, or when you ask, and by default the catch
 // is seen to before you leave the grounds. With two or more, one steers or fishes while the others work the deck.
-const DECK = {gut:5, ice:800 / 60, tub:{skiff:60, snekke:150, sjark:300, sjarkny:400}};
-const tubCap = () => DECK.tub[S.boat.type] || 150;
+const DECK = {gut:5, ice:800 / 60};
+const tubCap = () => BOAT.tubCap || 150;
 const handsAboard = () => (meAboard() ? 1 : 0) + crewAboard().length;
 // the hands at the gutting and icing stations (core/13-work.js): under way one steers, fishing they follow their chains
 function deckHands(){ return workAssign().filter(p => p.st === 'sloy' || p.st === 'is').length; }

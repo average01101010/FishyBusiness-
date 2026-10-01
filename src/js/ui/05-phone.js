@@ -31,7 +31,6 @@ const PHONE = (() => {
   const unread = () => S.msgs.filter(m => !m.read).length;
   function setBadge(){ const n = unread(); for (const bd of [badge, $('phoneBadge2')]){ bd.hidden = !n; bd.textContent = n; } }
   // --- workshop: service, fitting and getting the gear ready, one job after the other while the boat is in port
-  const SVC_H = {skiff:3, snekke:5, sjark:8, sjarkny:10};
   function haill(){
     const h = ['<div class="ph-c">'], a = S.haill, f = haillF();
     if (a && f > 0){ const d = (S.t - a.t0) / 1440; h.push('<div class="ph-card haillc"><h4>' + HAILL[a.type][S.lang] + ' ' + L('om bord', 'aboard') + '</h4>' + kv(L('Styrke nå', 'Strength now'), Math.round(f * 100) + ' %') + '<div class="qbar"><i style="width:' + (f * 100).toFixed(0) + '%;background:#c9a227"></i></div>' + kv(L('Går ut', 'Expires'), dayStr((a.t0 + 7 * 1440) / 60) + ' ' + hm((a.t0 + 7 * 1440) / 60)) + '<p class="ph-note">' + (d < 2 ? L('Fersk haill. Full effekt til ', 'Fresh luck. Full effect until ') + dayStr((a.t0 + 2 * 1440) / 60) + ' ' + hm((a.t0 + 2 * 1440) / 60) + '.' : L('Haillen er ferskvare og blir svakere for hver dag.', 'Luck is fresh goods and fades every day.')) + '</p></div>'); }
@@ -83,8 +82,8 @@ const PHONE = (() => {
     h.push('</div>');
     const svcLeft = V.svcH - ((b.engH || 0) - (b.svcAt || 0)), queuedSvc = jobs.some(j => j.kind === 'svc');
     h.push('<div class="ph-card"><h4>' + L('Motorservice', 'Engine service') + '</h4>' + kv(L('Neste service', 'Next service'), svcLeft > 0 ? L('om ', 'in ') + fmt(svcLeft, 0) + ' t' : '<span class="r2">' + L('forfalt', 'overdue') + '</span>') +
-      '<button class="ph-btn" data-pa="svc" data-m="yard"' + (queuedSvc ? ' disabled' : '') + '>' + L('Verkstedet', 'The yard') + ' · ' + kr(V.svcCost) + ' · ' + SVC_H[b.type] + ' t</button>' +
-      '<button class="ph-btn alt" data-pa="svc" data-m="self"' + (queuedSvc ? ' disabled' : '') + '>' + L('Gjør det selv', 'Do it yourself') + ' · ' + kr(Math.round(V.svcCost * 0.35)) + ' · ' + Math.round(SVC_H[b.type] * 2.5) + ' t</button></div>');
+      '<button class="ph-btn" data-pa="svc" data-m="yard"' + (queuedSvc ? ' disabled' : '') + '>' + L('Verkstedet', 'The yard') + ' · ' + kr(V.svcCost) + ' · ' + V.svcJobH + ' t</button>' +
+      '<button class="ph-btn alt" data-pa="svc" data-m="self"' + (queuedSvc ? ' disabled' : '') + '>' + L('Gjør det selv', 'Do it yourself') + ' · ' + kr(Math.round(V.svcCost * 0.35)) + ' · ' + Math.round(V.svcJobH * 2.5) + ' t</button></div>');
     h.push('<div class="ph-card"><h4>' + L('Klargjøring til neste tur', 'Getting ready for the next trip') + '</h4>');
     for (const [k, P2] of Object.entries(PREP)){
       const ready = S.prep && S.prep[k], queued = jobs.some(j => j.kind === 'prep' && j.k === k), ok = !P2.need || P2.need();
@@ -443,8 +442,7 @@ const PHONE = (() => {
   function utstyr(){
     const h = ['<div class="ph-c"><p class="ph-note">' + L('Montering skjer i havn. Utstyret følger med om du bytter båt, bortsett fra motoren og utstyr som ikke passer den nye båten.', 'Fitting is done in port. Equipment moves with you if you change vessel, except the engine and equipment that does not suit the new vessel.') + '</p>'];
     for (const [k, E] of Object.entries(EQUIP)){
-      if (E.only && E.only !== S.boat.type) continue;
-      if (E.types && !E.types.includes(S.boat.type)) continue;
+      if (!equipFits(k, S.boat.type)) continue;
       const have = E.multi ? S.equip[k] : S.equip[k] ? 1 : 0, max = E.multi ? BOAT.jukseMax : 1;
       h.push('<div class="ph-card"><h4>' + E.name[S.lang] + (E.multi ? ' (' + have + '/' + max + ')' : '') + '</h4><p>' + E.desc[S.lang] + '</p>' + kv(L('Pris', 'Price'), kr(E.price)) + (have >= max ? '<p><b>' + L('Montert', 'Fitted') + '</b></p>' : (S.jobs || []).some(j => j.kind === 'fit' && j.k === k) ? '<p><b>' + L('Til montering', 'Being fitted') + '</b></p>' : '<button class="ph-btn" data-pa="equip" data-k="' + k + '"' + (inPort() && S.cash >= E.price ? '' : ' disabled') + '>' + L('Kjøp og monter', 'Buy and fit') + ' · ' + fitHours(k) + ' t</button>') + '</div>');
     }
@@ -542,7 +540,7 @@ const PHONE = (() => {
       // the rest rule person by person: hours of rest in the last day and week, and how long until a rule is broken
       if (S.crew.length) h.push('<div class="ph-card"><h4>' + L('Hvile', 'Rest') + '</h4>' + S.crew.map(c => { const r = restLog(c), d = r.slice(-24).reduce((a, v) => a + v, 0), wk = r.reduce((a, v) => a + v, 0), left = S.boat.status === 'port' ? 24 : restLeft(c);
           return kv(c.name.split(' ')[0], d + L(' t i døgnet · ', ' h a day · ') + wk + L(' t i uka', ' h a week') + (left <= 6 ? ' · <span class="' + (left ? 'r1' : 'r2') + '">' + (left ? L('hvile innen ' + left + ' t', 'rest within ' + left + ' h') : L('brudd', 'broken')) + '</span>' : '')); }).join('') +
-        '<p class="ph-note">' + L('Forskrift om arbeids- og hviletid på fiskefartøy krever minst 10 timer hvile i døgnet og 77 i uka, hvilen i høyst to perioder der én er minst 6 timer, og høyst 14 timer mellom hvileperiodene. Ingen av båtene har køyer, så bare tid ved kai teller som hvile.', 'The working-time rules for fishing vessels require at least 10 hours of rest a day and 77 a week, the rest in at most two periods with one of at least 6 hours, and at most 14 hours between rest periods. None of the boats has berths, so only time at the quay counts as rest.') + '</p></div>'); }
+        '<p class="ph-note">' + L('Forskrift om arbeids- og hviletid på fiskefartøy krever minst 10 timer hvile i døgnet og 77 i uka, hvilen i høyst to perioder der én er minst 6 timer, og høyst 14 timer mellom hvileperiodene.', 'The working-time rules for fishing vessels require at least 10 hours of rest a day and 77 a week, the rest in at most two periods with one of at least 6 hours, and at most 14 hours between rest periods.') + ' ' + (BOAT.berths ? L('Båten har ' + BOAT.berths + ' køyer, så pause om bord teller som hvile.', 'The boat has ' + BOAT.berths + ' berths, so a break aboard counts as rest.') : L('Båten har ingen køyer, så bare tid ved kai teller som hvile.', 'The boat has no berths, so only time at the quay counts as rest.')) + '</p></div>'); }
     { const o = S.ops;
       if (!o) h.push('<div class="ph-card"><h4>' + L('Fast driftsplan', 'Standing plan') + '</h4><p class="ph-note">' + L('Legg en rute i kartplotteren som starter og slutter i havn, med fisketid på feltene, og trykk «Lagre som fast driftsplan». Da kan en skipper fra mannskapet kjøre den for deg, levere fangsten og fylle opp båten.', 'Plan a route in the plotter that starts and ends in port, with fishing time on the grounds, and press "Save as standing plan". A skipper from your crew can then run it for you, land the catch and restock the boat.') + '</p></div>');
       else {
@@ -579,7 +577,7 @@ const PHONE = (() => {
   // --- actions
   function switchVessel(k){
     const b = S.boat, old = VESSELS[b.type];
-    b.type = k; if (k !== 'skiff') S.equip.motor90 = false; for (const [q, E] of Object.entries(EQUIP)) if (E.types && !E.types.includes(k)) S.equip[q] = false; applyVessel(); loreNewBoat(S.boatName);
+    b.type = k; for (const q of Object.keys(EQUIP)) if (!equipFits(q, k)) S.equip[q] = EQUIP[q].multi ? Math.min(S.equip[q] || 0, VESSELS[k].jukseMax || 0) : false; applyVessel(); loreNewBoat(S.boatName);
     S.equip.jukse = Math.min(S.equip.jukse, BOAT.jukseMax); b.fuel = BOAT.fuelCap * 0.4; b.ice = 0; b.engH = 0; b.svcAt = 0; S.svcTold = false;
     while (S.crew.length > BOAT.crewMax) S.crew.pop();
     if (!S.owned.includes(k)) S.owned.push(k);
@@ -616,7 +614,7 @@ const PHONE = (() => {
     else if (a === 'mayday0'){ confirmMayday = false; }
     else if (a === 'mayday2'){ confirmMayday = false; rescue(false); toast(L('Redningsskøyta har hentet deg.', 'The rescue boat has picked you up.')); }
     else if (a === 'member'){ if (S.cash < PRICE.member){ toast(t('no_cash')); return; } S.cash -= PRICE.member; S.stats.costs += PRICE.member; S.member = true; log('Ble medlem i redningstjenesten.', 'Joined the rescue service.'); }
-    else if (a === 'svc'){ const c = d.m === 'self' ? Math.round(VESSELS[b.type].svcCost * 0.35) : VESSELS[b.type].svcCost, hh = d.m === 'self' ? Math.round(SVC_H[b.type] * 2.5) : SVC_H[b.type]; if (S.cash < c){ toast(t('no_cash')); return; } if (!queueJob({kind:'svc', h:hh, no:d.m === 'self' ? 'Egen service på motoren' : 'Service på verkstedet', en:d.m === 'self' ? 'Servicing the engine yourself' : 'Engine service at the yard'})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } S.cash -= c; S.stats.costs += c; }
+    else if (a === 'svc'){ const c = d.m === 'self' ? Math.round(VESSELS[b.type].svcCost * 0.35) : VESSELS[b.type].svcCost, hh = d.m === 'self' ? Math.round(VESSELS[b.type].svcJobH * 2.5) : VESSELS[b.type].svcJobH; if (S.cash < c){ toast(t('no_cash')); return; } if (!queueJob({kind:'svc', h:hh, no:d.m === 'self' ? 'Egen service på motoren' : 'Service på verkstedet', en:d.m === 'self' ? 'Servicing the engine yourself' : 'Engine service at the yard'})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } S.cash -= c; S.stats.costs += c; }
     else if (a === 'prep'){ const P2 = PREP[d.k]; if (S.cash < P2.cost){ toast(t('no_cash')); return; } if (!queueJob({kind:'prep', k:d.k, h:P2.h, no:P2.no, en:P2.en})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } S.cash -= P2.cost; S.stats.costs += P2.cost; }
     else if (a.slice(0, 3) === 'wk-'){ if (!WORK.act(a, d)) return; }
     else if (a === 'rig'){ const why = rigSet(d.r); if (why){ toast(why[0]); return; } }

@@ -31,7 +31,7 @@ function newVesselObj(type, pid, lic){
   for (const k of VKEYS) v[k] = d[k];
   Object.assign(v.boat, {type, pos:{x:p.x, y:p.y}, port:pid, fuel:V.fuelCap * 0.4});
   v.trail = [{x:p.x, y:p.y, port:pid}]; v.lic = lic || null;
-  if (type !== 'skiff') Object.assign(v.equip, {plotter:true, vhf:true});
+  for (const k of VESSELS[type].std || []) v.equip[k] = true;
   const used = S.fleet.map(x => vget(x, 'boatName'));
   v.boatName = VNAMES.find(nm => !used.includes(nm)) || 'Båt ' + n;
   S.fleet.push(v); if (!S.owned.includes(type)) S.owned.push(type);
@@ -40,7 +40,7 @@ function newVesselObj(type, pid, lic){
 }
 function applyVessel(){
   const b = S.boat; Object.assign(BOAT, VESSELS[b.type || 'skiff']);
-  if (b.type === 'skiff' && S.equip && S.equip.motor90){ BOAT.vmax = 30; BOAT.fuelK = 1.35; }
+  for (const k in EQUIP) if (EQUIP[k].boost && S.equip && S.equip[k] && equipFits(k, b.type || 'skiff')) Object.assign(BOAT, EQUIP[k].boost);
   b.fuel = Math.min(b.fuel, BOAT.fuelCap); b.ice = Math.min(b.ice, BOAT.iceCap);
 }
 // fishing effort per person: a rod with one lure until you buy a hand jig (pilk and four fly hooks); an electric jigging

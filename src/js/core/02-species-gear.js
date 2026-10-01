@@ -40,12 +40,30 @@ const SPECIES = {
 // so the per-species seeds (SP.indexOf) keep their values
 const SP = Object.keys(SPECIES).filter(sp => !SPECIES[sp].shell), SHELL = Object.keys(SPECIES).filter(sp => SPECIES[sp].shell), ALLSP = SP.concat(SHELL);
 // ---------- vessels, equipment, crew ----------
-// berths: bunks where the crew can rest at sea (none of these boats has any, so only time at the quay counts as rest)
+// The vessels, from the open starter boat to the ocean fleet. Every rule reads these fields, never the key:
+//  len, beam, draft (m), disp (displacement loaded, tonnes; an estimate), holdCap, iceCap (kg), fuelCap (L), hp, vmax, vcruise (kn),
+//  accel (kn a minute), turnR (m, 3D), planing, outboard, diesel, fuelK, risk [hs warn, hs danger, wind warn, wind danger], sea (speed
+//  lost per m of wave), crewMax (besides you), berths (bunks where the crew can rest at sea; none means only the quay counts as rest),
+//  tubCap (bleeding tub, kg), land ('box' or 'tub'), std (equipment it comes with), rigs (the kinds of fishing it can be rigged for),
+//  jukseMax, gearMax, svcH (engine hours between services), svcCost, svcJobH (yard hours), cls ('open', 'kyst' or 'hav': the market
+//  tab), price, isNew (built to order), year, desc.
 const VESSELS = {
-  skiff:{name:{no:'Åpen 19-fot, 60 hk påhengs', en:'Open 19 ft, 60 hp outboard'}, draft:0.6, berths:0, len:5.8, vmax:24, fuelCap:90, iceCap:150, holdCap:350, crewMax:1, diesel:false, fuelK:1, planing:true, risk:[1.0, 1.8, 10.8, 13.9], sea:0.45, price:95000, jukseMax:2, svcH:100, svcCost:3500, gearMax:{garn:6, stamp:4, teine:20}},
-  snekke:{name:{no:'Snekke 26 fot, 30 hk diesel', en:'26 ft snekke, 30 hp diesel'}, draft:1.2, berths:0, len:7.9, vmax:8, fuelCap:220, iceCap:400, holdCap:900, crewMax:2, diesel:true, fuelK:0.45, planing:false, risk:[1.5, 2.5, 12.5, 16], sea:0.22, price:245000, jukseMax:3, svcH:250, svcCost:6000, gearMax:{garn:15, stamp:10, teine:50}},
-  sjark:{name:{no:'Sjark 34 fot (10,4 m), styrhus', en:'34 ft sjark (10.4 m), wheelhouse'}, draft:1.7, berths:0, len:10.4, vmax:10, fuelCap:600, iceCap:1200, holdCap:3000, crewMax:3, diesel:true, fuelK:1.25, planing:false, risk:[2.2, 3.4, 14.5, 18], sea:0.16, price:1150000, jukseMax:5, svcH:250, svcCost:14000, gearMax:{garn:40, stamp:24, teine:150}},
-  sjarkny:{name:{no:'Ny sjark 10,99 m, 400 hk', en:'New 10.99 m sjark, 400 hp'}, draft:1.8, berths:0, len:11, vmax:22, fuelCap:1500, iceCap:2000, holdCap:6000, crewMax:3, diesel:true, fuelK:5, planing:true, risk:[2.4, 3.8, 15, 19], sea:0.14, price:6400000, jukseMax:6, svcH:300, svcCost:22000, gearMax:{garn:60, stamp:30, teine:200}, isNew:true}
+  skiff:{name:{no:'Åpen 19-fot, 60 hk påhengs', en:'Open 19 ft, 60 hp outboard'}, len:5.8, beam:2.2, draft:0.6, disp:1.0, holdCap:350, iceCap:150, fuelCap:90, hp:60, engine:{no:'60 hk påhengsmotor, bensin', en:'60 hp petrol outboard'},
+    vmax:24, vcruise:18, accel:10, turnR:35, planing:true, outboard:true, diesel:false, fuelK:1, risk:[1.0, 1.8, 10.8, 13.9], sea:0.45, crewMax:1, berths:0, tubCap:60, land:'box', std:[],
+    rigs:['juksa', 'line', 'garn', 'teiner'], jukseMax:2, gearMax:{garn:6, stamp:4, teine:20}, svcH:100, svcCost:3500, svcJobH:3, cls:'open', price:95000, year:2008,
+    desc:{no:'Åpen plastbåt med konsoll og påhengsmotor. Rask og billig, men liten og våt i sjøgang.', en:'Open fibreglass boat with a console and an outboard. Fast and cheap, but small and wet in a sea.'}},
+  snekke:{name:{no:'Snekke 26 fot, 30 hk diesel', en:'26 ft snekke, 30 hp diesel'}, len:7.9, beam:2.7, draft:1.2, disp:3.0, holdCap:900, iceCap:400, fuelCap:220, hp:30, engine:{no:'30 hk innenbords diesel', en:'30 hp inboard diesel'},
+    vmax:8, vcruise:7, accel:3, turnR:45, planing:false, outboard:false, diesel:true, fuelK:0.45, risk:[1.5, 2.5, 12.5, 16], sea:0.22, crewMax:2, berths:0, tubCap:150, land:'box', std:['plotter', 'vhf'],
+    rigs:['juksa', 'line', 'garn', 'teiner'], jukseMax:3, gearMax:{garn:15, stamp:10, teine:50}, svcH:250, svcCost:6000, svcJobH:5, cls:'open', price:245000, year:1994,
+    desc:{no:'Spissgattet plastsnekke med lite styrhus. Sparsommelig og sjøsterk for størrelsen.', en:'Double-ended fibreglass snekke with a small wheelhouse. Economical and seaworthy for her size.'}},
+  sjark:{name:{no:'Sjark 34 fot (10,4 m), styrhus', en:'34 ft sjark (10.4 m), wheelhouse'}, len:10.4, beam:3.8, draft:1.7, disp:11, holdCap:3000, iceCap:1200, fuelCap:600, hp:180, engine:{no:'180 hk diesel', en:'180 hp diesel'},
+    vmax:10, vcruise:8.5, accel:3, turnR:70, planing:false, outboard:false, diesel:true, fuelK:1.25, risk:[2.2, 3.4, 14.5, 18], sea:0.16, crewMax:3, berths:0, tubCap:300, land:'tub', std:['plotter', 'vhf'],
+    rigs:['juksa', 'line', 'garn', 'teiner'], jukseMax:5, gearMax:{garn:40, stamp:24, teine:150}, svcH:250, svcCost:14000, svcJobH:8, cls:'open', price:1150000, year:1986,
+    desc:{no:'Tradisjonell sjark med styrhus akter og godt arbeidsdekk. Fisker med det meste.', en:'Traditional sjark with the wheelhouse aft and a good working deck. Fishes with most gear.'}},
+  sjarkny:{name:{no:'Ny sjark 10,99 m, 400 hk', en:'New 10.99 m sjark, 400 hp'}, len:11, beam:4.3, draft:1.8, disp:15, holdCap:6000, iceCap:2000, fuelCap:1500, hp:400, engine:{no:'400 hk diesel', en:'400 hp diesel'},
+    vmax:22, vcruise:18, accel:10, turnR:80, planing:true, outboard:false, diesel:true, fuelK:5, risk:[2.4, 3.8, 15, 19], sea:0.14, crewMax:3, berths:0, tubCap:400, land:'tub', std:['plotter', 'vhf'],
+    rigs:['juksa', 'line', 'garn', 'teiner'], jukseMax:6, gearMax:{garn:60, stamp:30, teine:200}, svcH:300, svcCost:22000, svcJobH:10, cls:'open', price:6400000, isNew:true, year:2027,
+    desc:{no:'Nybygd hurtigsjark fra verftet i Finnsnes. Planende skrog, stor motor og stort lasterom.', en:'Newly built speed sjark from the yard in Finnsnes. Planing hull, big engine and a big hold.'}}
 };
 const BOAT = Object.assign({}, VESSELS.skiff);
 const PRICE = {fuel:23.9, diesel:14.5, ice:1.5, iceBag:2.0, gear:1900, kgear:2490, tow:4500, rescue:6000, member:1250};
@@ -56,12 +74,14 @@ const EQUIP = {
   plotter:{price:24900, name:{no:'Kartplotter 9" med dybdekart', en:'9" chart plotter with depth charts'}, desc:{no:'Plottervisning med dybdefarger, relieff og dybdekurver.', en:'Plotter view with depth colours, relief and contours.'}},
   chirp:{price:13900, name:{no:'CHIRP-ekkolodd', en:'CHIRP sounder'}, desc:{no:'Skarpere fiskeekko og bedre skille like over bunnen. Viser fisken 0,75 nm rundt båten i kartet, og du kan velge art.', en:'Sharper fish echoes and better separation near the bottom. Shows the fish 0.75 nm around the boat on the chart, and you can choose the species.'}},
   // a searchlight sonar on a hoist through the hull (start price: the parts of a Furuno CH-37BB are about 13 200 USD, before fitting)
-  sonar:{price:150000, types:['sjark', 'sjarkny'], name:{no:'Sonar (søkelys)', en:'Searchlight sonar'}, desc:{no:'Ser fisken 1,5 nm rundt båten, skiller torsk, hyse og sei og viser hvor stimene trekker. Monteres med senkerør gjennom skroget.', en:'Sees the fish 1.5 nm around the boat, tells cod, haddock and saithe apart and shows where the schools are heading. Fitted with a hoist through the hull.'}},
+  sonar:{price:150000, fit:{minLen:10}, name:{no:'Sonar (søkelys)', en:'Searchlight sonar'}, desc:{no:'Ser fisken 1,5 nm rundt båten, skiller torsk, hyse og sei og viser hvor stimene trekker. Monteres med senkerør gjennom skroget.', en:'Sees the fish 1.5 nm around the boat, tells cod, haddock and saithe apart and shows where the schools are heading. Fitted with a hoist through the hull.'}},
   jukse:{price:34000, multi:true, name:{no:'Juksamaskin', en:'Electric jigging reel'}, desc:{no:'Fisker omtrent dobbelt så mye som håndjuksa. Én person kan passe tre.', en:'Catches about twice as much as a hand jig. One person can tend three.'}},
-  motor90:{price:148000, only:'skiff', name:{no:'Påhengsmotor 90 hk', en:'90 hp outboard'}, desc:{no:'Toppfart 30 knop, men tørstere.', en:'Top speed 30 knots, but thirstier.'}},
+  motor90:{price:148000, fit:{outboard:true}, boost:{vmax:30, fuelK:1.35}, name:{no:'Påhengsmotor 90 hk', en:'90 hp outboard'}, desc:{no:'Toppfart 30 knop, men tørstere.', en:'Top speed 30 knots, but thirstier.'}},
   // haulers for passive gear (start prices): without one, nets and line come up by hand, slowly, and big pots cannot be hauled at all
-  elhaler:{price:38000, types:['skiff', 'snekke'], name:{no:'Elektrisk haler (12 V)', en:'Electric hauler (12 V)'}, desc:{no:'Trekker line og små teiner. Passer små båter.', en:'Hauls line and small pots. Suits small boats.'}},
-  linehaler:{price:68000, types:['snekke', 'sjark', 'sjarkny'], name:{no:'Hydraulisk linehaler', en:'Hydraulic line hauler'}, desc:{no:'Trekker lina jevnt og raskt.', en:'Hauls the line steadily and fast.'}},
-  garnhaler:{price:95000, types:['snekke', 'sjark', 'sjarkny'], name:{no:'Hydraulisk garnhaler', en:'Hydraulic net hauler'}, desc:{no:'Trekker garna. For hånd går det sakte.', en:'Hauls the nets. By hand it is slow.'}},
-  teinehaler:{price:58000, types:['snekke', 'sjark', 'sjarkny'], name:{no:'Teinehaler med davit', en:'Pot hauler with davit'}, desc:{no:'Hiver teinene opp. Store teiner kan ikke trekkes for hånd.', en:'Lifts the pots. Big pots cannot be hauled by hand.'}}
+  elhaler:{price:38000, fit:{maxLen:8.5}, name:{no:'Elektrisk haler (12 V)', en:'Electric hauler (12 V)'}, desc:{no:'Trekker line og små teiner. Passer små båter.', en:'Hauls line and small pots. Suits small boats.'}},
+  linehaler:{price:68000, fit:{minLen:7.5}, name:{no:'Hydraulisk linehaler', en:'Hydraulic line hauler'}, desc:{no:'Trekker lina jevnt og raskt.', en:'Hauls the line steadily and fast.'}},
+  garnhaler:{price:95000, fit:{minLen:7.5}, name:{no:'Hydraulisk garnhaler', en:'Hydraulic net hauler'}, desc:{no:'Trekker garna. For hånd går det sakte.', en:'Hauls the nets. By hand it is slow.'}},
+  teinehaler:{price:58000, fit:{minLen:7.5}, name:{no:'Teinehaler med davit', en:'Pot hauler with davit'}, desc:{no:'Hiver teinene opp. Store teiner kan ikke trekkes for hånd.', en:'Lifts the pots. Big pots cannot be hauled by hand.'}}
 };
+// whether an item fits a vessel type: by length, and outboards only on boats with an outboard
+function equipFits(k, type){ const f = EQUIP[k] && EQUIP[k].fit, V = VESSELS[type]; if (!f || !V) return !!V; return !(f.minLen && V.len < f.minLen) && !(f.maxLen && V.len > f.maxLen) && !(f.outboard && !V.outboard); }
