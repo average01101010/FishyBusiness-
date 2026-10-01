@@ -79,7 +79,7 @@ async def main():
         # the market: tabs, cards with a side view, the spec sheet, the ocean fleet locked, one open-group boat, in landscape and portrait
         for vw, vh, tag in ((1100, 800, 'liggende'), (800, 1180, 'staende')):
             await pg.set_viewport_size({'width':vw, 'height':vh})
-            u = await pg.evaluate("""(()=>{ const R = {}, b = S.boat; S.fleet = [S.fleet[0]]; bindVessel(S.fleet[0]); b.type = 'skiff'; applyVessel(); b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; S.order = null; S.cash = 3e5;
+            u = await pg.evaluate("""(()=>{ const R = {}, b = S.boat; S.fleet = [S.fleet[0]]; bindVessel(S.fleet[0]); b.type = 'skiff'; applyVessel(); b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; S.order = null; S.cash = 3e5; S.fm = {n:10, last:-1, kr:2e5, b:true};
               S.sales = S.sales.length >= 3 ? S.sales : [{t:0, total:1}, {t:0, total:1}, {t:0, total:1}];
               const dr = () => document.getElementById('drawerBody'), tap = sel => { const e = dr().querySelector(sel); if (e) e.click(); return !!e; };
               DOCK.open('fartoy'); tap('[data-pa=mksel]:not([data-k])');
@@ -108,6 +108,45 @@ async def main():
           dr.querySelector('[data-pa=buy][data-ti="1"]').click(); const R = {type:S.boat.type, paid:Math.round(c0 - S.cash), fleet:S.fleet.length, open:openVesselId() === S.cur}; DOCK.close(); return R; })()""")
         print('trade-in:', json.dumps(r))
         print(ok(r['type'] == 'jukesjark' and r['paid'] == 750000 - 66500 and r['fleet'] == 1 and r['open']), 'trading the skiff in for the 8.9 m sjark costs the price less the trade-in, and she takes the open-group place')
+        # V7, the way to the closed group: blad B, the loans, Innovasjon Norge's top-up and the ladder in «Neste mål»
+        r = await pg.evaluate(r'''(()=>{ const R = {}, b = S.boat; S.fleet = [S.fleet[0]]; bindVessel(S.fleet[0]); b.type = 'skiff'; applyVessel(); S.lic = null; S.loan = null; S.loanIN = null; S.inUsed = false; S.order = null;
+          b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; b.gear = true; S.equip.jukse = 1; S.equip.motor90 = false; S.fm = {n:0, last:-1, kr:0, b:false}; S.msgs = [];
+          const dr = () => document.getElementById('drawerBody'), tap = sel => { const e = dr().querySelector(sel); if (e) e.click(); return !!e; };
+          const goalTxt = () => { DOCK.open('fartoy'); const c = [...dr().querySelectorAll('.ph-card')].find(e => /Neste mål/.test(e.textContent)); const t = c ? [...c.querySelectorAll('b')].map(e => e.textContent) : []; DOCK.close(); return t; };
+          R.goals0 = goalTxt();
+          // ten landing days with you aboard and 1 G
+          const t0 = S.t; for (let d = 0; d < 9; d++){ S.t = t0 + d * 1440; fmLand(15000); } R.b9 = bladB(); S.t = t0 + 9 * 1440; fmLand(15000); R.b10 = bladB(); S.t = t0;
+          R.msgB = S.msgs.some(m => /blad B/.test(m.no || m.text || JSON.stringify(m)));
+          // migration: an old save gets blad B from its landing notes, or at once with a closed-group right
+          const keep = S.sales; S.sales = Array.from({length:10}, (_, i) => ({t:i * 1440 + 600, total:14000})); R.mig = fmInit(); S.sales = keep.length >= 3 ? keep : [{t:0, total:1}, {t:0, total:1}, {t:0, total:1}];
+          S.sales = S.sales.slice(-3); const F0 = S.fm; S.fm = null; S.lic = {id:'u7'}; R.migLic = fmInit().b; S.lic = null; S.fm = F0;
+          // the loophole: a trade-in pays the loan off first, and only the rest is equity
+          S.loan = {bal:200000, rate:0.069, pay:2300, next:S.t + 1e5}; R.loophole = deal(1e6, 66500); S.loan = null;
+          // the sheet of the entry boat without and with blad B
+          const sheetOf = () => { DOCK.open('fartoy'); tap('[data-pa=mksel]:not([data-k])'); tap('[data-pa=mktab][data-s=lic]'); tap('[data-pa=mksel][data-k=trebat][data-o=u7]'); const sh = dr().querySelector('.vsheet'), x = {btns:sh.querySelectorAll('[data-pa=buylic]').length, txt:sh.textContent}; tap('[data-pa=mksel]:not([data-k])'); DOCK.close(); return x; };
+          S.fm.b = false; const s0 = sheetOf(); R.noB = {btns:s0.btns, note:/Krever blad B/.test(s0.txt)}; S.fm.b = true; const s1 = sheetOf(); R.withB = {btns:s1.btns, inn:/Innovasjon Norge/.test(s1.txt)};
+          R.goals1 = goalTxt();
+          // the entry: the skiff traded in and NOK 200 000 in the bank buys the boat with a right under 7 m
+          const O = LIC_OFFERS[0], price = VESSELS[O.ves].price + licValue(O); R.price = price; S.cash = 200000; R.noInn = deal(price, vesselValue(curVessel()), false).why;
+          DOCK.open('fartoy'); tap('[data-pa=mksel]:not([data-k])'); tap('[data-pa=mktab][data-s=lic]'); tap('[data-pa=mksel][data-k=trebat][data-o=u7]'); tap('[data-pa=buylic][data-ti="1"]'); DOCK.close();
+          R.after = {type:S.boat.type, lic:S.lic && S.lic.id, cash:Math.round(S.cash), loan:S.loan && Math.round(S.loan.bal), loanIN:S.loanIN && Math.round(S.loanIN.bal), inUsed:!!S.inUsed, innNow:innOK()};
+          R.goals2 = goalTxt();
+          DOCK.open('bank'); R.bank = dr().textContent.includes('Innovasjon Norge'); DOCK.close();
+          PHONE.open('sjomann'); PHONE.dact('sjomann', 'sub', {s:'papir'}); PHONE.render(); R.papers = /blad B/.test(document.querySelector('#phone').textContent) && /Ført på blad B/.test(document.querySelector('#phone').textContent); PHONE.show(false);
+          // selling a vessel pays the loans first
+          const v2 = newVesselObj('snekke', 'husoy'), l0 = S.loan.bal, c0 = S.cash, val = vesselValue(v2); window.confirm = () => true; PHONE.dact('rederi', 'vsell', {id:v2.id}); R.sell = {loanDown:Math.round(l0 - (S.loan ? S.loan.bal : 0)), cash:Math.round(S.cash - c0), val};
+          return R; })()''')
+        print('V7:', json.dumps(r, ensure_ascii=False)[:1400])
+        print(ok(not r['b9'] and r['b10'] and r['msgB']), 'blad B comes with the tenth landing day and 1 G, with a message from Fiskeridirektoratet')
+        print(ok(r['mig']['b'] and r['mig']['n'] == 10 and r['migLic']), 'an old save gets blad B from its landing notes, or at once with a closed-group right')
+        print(ok(r['loophole']['payoff'] == 66500 and r['loophole']['tiNet'] == 0 and r['loophole']['eqNeed'] == 200000), 'a trade-in pays off the loan first; only the rest counts as equity')
+        print(ok(r['noB']['btns'] == 0 and r['noB']['note'] and r['withB']['btns'] == 2 and r['withB']['inn']), 'a boat with a right needs blad B; with it, both buttons and the top-up from Innovasjon Norge')
+        print(ok(r['noInn'] == 'eq' and r['after']['lic'] == 'u7' and r['after']['type'] == 'trebat' and r['after']['cash'] >= 0 and r['after']['loanIN'] and r['after']['loanIN'] <= r['price'] * 0.1 + 1
+                 and r['after']['loan'] <= r['price'] * 0.8 + 1 and r['after']['inUsed'] and not r['after']['innNow']), 'the entry: the skiff and NOK 200 000 buy the boat with a right under 7 m with the top-up, not without it')
+        g0, g1, g2 = r['goals0'], r['goals1'], r['goals2']
+        print(ok(len(g0) == 2 and 'Blad B' in g0[0] and 'under 7 m' in g0[1] and 'under 7 m' in g1[0] and '7–7,9 m' in g2[0] and '14,99' in g2[1]), 'Neste mål follows the ladder: blad B, the entry right, the next right, the 14.99 m coastal vessel', [g0, g1, g2])
+        print(ok(r['bank'] and r['papers']), 'the bank shows the risk loan, and the papers show blad B')
+        print(ok(r['sell']['loanDown'] == r['sell']['val'] and r['sell']['cash'] == 0), 'selling a vessel pays the loan off first')
         print('errors:', errs[:5]); await br.close()
 
 asyncio.run(main())

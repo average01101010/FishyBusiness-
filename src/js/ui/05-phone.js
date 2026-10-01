@@ -183,7 +183,7 @@ const PHONE = (() => {
     const H = S.t / 60, W = windAt(H), n = unread(), na = alerts().length;
     return '<div class="ph-homescr"><div class="ph-clock">' + hm(H) + '</div><div class="ph-date">' + dayStr(H) + '</div>' +
       '<div class="ph-widget"><span class="w1">' + dirName(windDir(H)) + ' ' + fmt(W, 0) + ' m/s · ' + fmt(Math.round(airTemp(H)) || 0, 0) + ' °C</span><span class="w2">' + kr(S.cash) + '</span></div>' +
-      ((g => g ? '<button class="ph-goal" data-pa="open" data-a="fartoy"><span>' + L('Neste mål: ', 'Next goal: ') + '<b>' + g.n + '</b></span><small>' + kr(Math.min(Math.max(0, S.cash), g.need)) + ' / ' + kr(g.need) + '</small><span class="gb"><i style="width:' + (g.pc * 100).toFixed(1) + '%"></i></span></button>' : '')(goals()[0])) +
+      ((g => g ? '<button class="ph-goal" data-pa="open" data-a="fartoy"><span>' + L('Neste mål: ', 'Next goal: ') + '<b>' + g.n + '</b></span><small>' + (g.txt || kr(Math.min(Math.max(0, S.cash), g.need)) + ' / ' + kr(g.need)) + '</small><span class="gb"><i style="width:' + (g.pc * 100).toFixed(1) + '%"></i></span></button>' : '')(goals()[0])) +
       '<div class="ph-grid">' + APPS.map(a => '<button class="ph-app" data-pa="open" data-a="' + a[0] + '"><span class="ic" style="background:linear-gradient(160deg,' + a[3] + ',' + a[3] + 'cc)">' + IC[a[0]] + '</span>' + L(a[1], a[2]) + (a[0] === 'meld' && n ? '<span class="bd">' + n + '</span>' : '') + (a[0] === 'ordl' && ordState().active.length ? '<span class="bd">' + ordState().active.length + '</span>' : '') + (a[0] === 'rederi' && na ? '<span class="bd">' + na + '</span>' : '') + '</button>').join('') + '</div></div>';
   }
   const kv = (a, b) => '<div class="ph-kv"><span>' + a + '</span><span>' + b + '</span></div>';
@@ -215,6 +215,9 @@ const PHONE = (() => {
         L('Fiktiv attest. Legen og nummeret finnes ikke.', 'A fictional certificate. The doctor and the number do not exist.')) +
       card('#1e8c6e', L('Sikkerhetsopplæring for sjøfolk på mindre skip', 'Safety training for seafarers on smaller ships'), [[L('Navn', 'Name'), who], [L('Kurs', 'Course'), L('35 timer, bestått', '35 hours, passed')], [L('Bevis nr.', 'Certificate no.'), no(1)], [L('Dato', 'Date'), bkDate(t0)]]) +
       card('#b0413e', L('Fiskeskipper klasse C', 'Fishing skipper class C'), [[L('Navn', 'Name'), who], [L('Gjelder', 'Covers'), L('fører av fiskefartøy under 15 m', 'master of fishing vessels under 15 m')], [L('Sertifikat nr.', 'Certificate no.'), no(2)]]) +
+      (F => card('#7a5a2c', L('Fiskermanntallet, blad B', 'Fishermen\'s register, blad B'), [[L('Navn', 'Name'), who], [L('Landingsdager med deg om bord', 'Landing days with you aboard'), fmt(F.n, 0) + ' / ' + BLADB.days], [L('Førstehåndsverdi', 'First-hand value'), kr(F.kr) + ' / ' + kr(BLADB.kr) + ' (1 G)'],
+        ['Status', F.b ? '<span class="r0">' + L('Ført på blad B', 'On blad B') + '</span>' : L('Blad A: fiske er ikke hovedyrket ennå', 'Blad A: fishing is not your main occupation yet')]],
+        L('Forenklet. Deltakerloven § 6 krever at den som kjøper en båt i lukket gruppe, har fisket i minst tre av de siste fem årene, og blad B er det vanlige beviset. I spillet holder det med ' + BLADB.days + ' landingsdager med deg om bord og 1 G i førstehåndsverdi.', 'Simplified. Deltakerloven § 6 asks the buyer of a closed-group boat to have fished in at least three of the last five years, and blad B is the usual proof. In the game, ' + BLADB.days + ' landing days with you aboard and 1 G of first-hand value will do.')))(S.fm || {n:0, kr:0, b:false}) +
       card('#5b6770', L('Begrenset radiosertifikat (SRC)', 'Short Range Certificate (SRC)'), [[L('Navn', 'Name'), who], ['Status', vhf ? '<span class="r0">' + L('Gyldig', 'Valid') + '</span>' : L('Ikke tatt, trengs for VHF om bord', 'Not taken, needed for VHF aboard')]]);
   }
   function sjomann(){
@@ -321,25 +324,30 @@ const PHONE = (() => {
   }
   // --- vessels: my vessel overview and the market
   const tradeIn = () => vesselValue(curVessel());
-  // what a purchase costs with or without a trade-in, and whether cash or the bank covers it
-  const deal = (price, ti) => { const cost = price - ti, eqNeed = Math.max(0, price * 0.2 - ti), loanNeed = Math.max(0, cost - Math.max(0, S.cash - 5000)); return {cost, eqNeed, loanNeed, ok:S.cash >= cost || (loanNeed <= price * 0.8 && S.cash >= eqNeed && S.sales.length >= 3)}; };
-  const payNote = (x, no, en, loanNo, loanEn) => '<p class="ph-note">' + L(no, en) + kr(x.cost) + (S.cash < x.cost ? ' · ' + L(loanNo || 'lån ', loanEn || 'loan ') + kr(x.loanNeed) + ', ' + L('egenkapital ', 'equity ') + kr(x.eqNeed) : '') + '</p>';
+  // what a purchase costs (deal() in core/03-simulation.js): the trade-in pays off the loans first, then the bank and Innovasjon Norge
+  const whyText = x => x.why === 'notes' ? L('Banken vil se tre sluttsedler først.', 'The bank wants to see three landing notes first.') : x.why === 'eq' ? L('For lite egenkapital.', 'Too little equity.') : x.why === 'cap' ? L('Banken låner ikke mer: all gjeld skal ligge innenfor 80 % av verdien på flåten.', 'The bank lends no more: all debt has to stay within 80% of the fleet\'s value.') : '';
+  const payNote = (x, no, en, loanNo, loanEn) => '<p class="ph-note">' + L(no, en) + kr(x.cost) + (x.payoff ? ' · ' + L('innbyttet innfrir først ', 'the trade-in first pays off ') + kr(x.payoff) + L(' av gjelda', ' of the debt') : '') +
+    (x.loanNeed ? ' · ' + L(loanNo || 'lån ', loanEn || 'loan ') + kr(x.bankL) + (x.inL > 0 ? ' + Innovasjon Norge ' + kr(x.inL) : '') + ', ' + L('egenkapital ', 'equity ') + kr(x.eqNeed) : '') + (x.ok ? '' : ' · <b>' + whyText(x) + '</b>') + '</p>';
   const accessText = v => { const lic = vget(v, 'lic'); return lic ? L('lukket gruppe, hjemmelslengde ', 'closed group, quota length ') + lic.hl : v.id === openVesselId() ? L('åpen gruppe når du selv er om bord', 'open group when you are aboard yourself') : L('ingen adgang: torsk, hyse og sei bare som bifangst', 'no access: cod, haddock and saithe only as bycatch'); };
   const tiLocked = v => !!(S.order && S.order.vid !== null && (S.order.vid || S.cur) === v.id);
-  // the next things to save up for: the hand jig, the first jigging machine, then bigger vessels and quota; where to buy each
+  // the ladder in «Neste mål»: the hand jig, the first jigging machine, blad B, the entry boat with a closed-group right, the next right
+  // up, the 14.99 m coastal vessel, and the ocean fleet when the chart reaches it. The two next steps are shown
   function goals(){
-    const steps = [], ti = tradeIn();
-    if (!S.boat.gear) steps.push([L('Håndjuksa med pilk og markkroker', 'Hand jig with pilk and fly hooks'), PRICE.gear, false, 'fiske']);
-    if ((S.equip.jukse || 0) < 1) steps.push([L('Første juksamaskin', 'First jigging machine'), EQUIP.jukse.price, false, 'utstyr']);
-    const owned = S.fleet.map(v => vget(v, 'boat').type);
-    for (const k of ['snekke', 'sjark']) if (!owned.includes(k) && VESSELS[k].price > VESSELS[S.boat.type].price) steps.push([VESSELS[k].name[S.lang], VESSELS[k].price, true, 'fartoy']);
-    for (const O of LIC_OFFERS) if (!(S.lic && S.lic.id === O.id)) steps.push([O[S.lang], VESSELS[O.ves].price + licValue(O), true, 'fartoy']);
-    return steps.slice(0, 2).map(([n, pr, bank, a]) => { const need = bank ? Math.max(0, pr * 0.2 - ti) + 5000 : pr; return {n, need, bank, a, pc:Math.min(1, Math.max(0, S.cash) / Math.max(1, need))}; });
+    const steps = [], F = S.fm || {n:0, kr:0};
+    if (!S.boat.gear) steps.push({n:L('Håndjuksa med pilk og markkroker', 'Hand jig with pilk and fly hooks'), need:PRICE.gear, a:'fiske'});
+    if ((S.equip.jukse || 0) < 1) steps.push({n:L('Første juksamaskin', 'First jigging machine'), need:EQUIP.jukse.price, a:'utstyr'});
+    if (!bladB()) steps.push({n:L('Blad B i fiskermanntallet', 'Blad B of the fishermen\'s register'), pc:Math.min(F.n / BLADB.days, F.kr / BLADB.kr, 1), a:'papers',
+      txt:fmt(Math.min(F.n, BLADB.days), 0) + ' / ' + BLADB.days + L(' landingsdager med deg om bord · ', ' landing days with you aboard · ') + kr(Math.min(F.kr, BLADB.kr)) + ' / ' + kr(BLADB.kr)});
+    const top = Math.max(-1, ...S.fleet.map(v => vget(v, 'lic')).filter(Boolean).map(l => LIC_OFFERS.findIndex(O => O.id === l.id))), O = LIC_OFFERS[top + 1];
+    if (O){ const x = deal(VESSELS[O.ves].price + licValue(O), tradeIn(), innOK()); steps.push({n:O[S.lang], need:x.eqNeed + 5000, bank:true, a:'fartoy'}); }
+    if (!S.fleet.some(v => VESSELS[vget(v, 'boat').type].cls !== 'open')){ const k = 'kyst15', x = deal(VESSELS[k].price, 0); steps.push({n:VESSELS[k].name[S.lang], need:x.eqNeed + 5000, bank:true, a:'fartoy'}); }
+    steps.push({n:L('Havfiske', 'Ocean fishing'), pc:0, lock:true, txt:L('Kommer når kartet utvides vestover', 'Comes when the chart is extended west')});
+    return steps.slice(0, 2).map(x => Object.assign(x, {pc:x.pc != null ? x.pc : Math.min(1, Math.max(0, S.cash) / Math.max(1, x.need))}));
   }
   function goalsCard(){
     const g = goals(); if (!g.length) return '';
-    return '<div class="ph-card"><h4>' + L('Neste mål', 'Next goals') + '</h4>' + g.map(x => '<p style="margin:6px 0 2px"><b>' + x.n + '</b><br><small>' + (x.bank ? L('Egenkapital banken krever: ', 'Equity the bank wants: ') : L('Pris: ', 'Price: ')) + kr(x.need) + (x.bank && S.sales.length < 3 ? ' · ' + L('og tre sluttsedler', 'and three landing notes') : '') + '</small></p><div class="qbar"><i style="width:' + (x.pc * 100).toFixed(1) + '%"></i></div>' +
-      (x.pc >= 1 && x.a !== 'fartoy' ? '<button class="ph-btn" data-pa="open" data-a="' + x.a + '">' + L('Til butikken', 'To the shop') + '</button>' : x.pc >= 1 && !x.bank ? '' : x.pc >= 1 ? '<button class="ph-btn" data-pa="sub" data-s="marked">' + L('Se markedet', 'See the market') + '</button>' : '')).join('') + '</div>';
+    return '<div class="ph-card"><h4>' + L('Neste mål', 'Next goals') + '</h4>' + g.map(x => '<p style="margin:6px 0 2px"><b>' + x.n + '</b><br><small>' + (x.txt || (x.bank ? L('Egenkapital banken krever: ', 'Equity the bank wants: ') : L('Pris: ', 'Price: ')) + kr(x.need) + (x.bank && S.sales.length < 3 ? ' · ' + L('og tre sluttsedler', 'and three landing notes') : '')) + '</small></p><div class="qbar"><i style="width:' + (x.pc * 100).toFixed(1) + '%"></i></div>' +
+      (x.a === 'papers' ? '<button class="ph-btn" data-pa="papers">' + L('Se papirene', 'See the papers') + '</button>' : x.lock || x.pc < 1 ? '' : x.a !== 'fartoy' ? '<button class="ph-btn" data-pa="open" data-a="' + x.a + '">' + L('Til butikken', 'To the shop') + '</button>' : '<button class="ph-btn" data-pa="sub" data-s="marked">' + L('Se markedet', 'See the market') + '</button>')).join('') + '</div>';
   }
   // ---- the boat market: tabs for the open group, boats with a closed-group right, the coastal fleet over 11 m and the ocean fleet;
   // a card per boat with its side view, and a spec sheet with the buttons. Until the company owns a closed-group vessel, an open-group
@@ -396,9 +404,10 @@ const PHONE = (() => {
     // buying
     if (V.lock) h.push('<p class="ph-note">' + L('Havfiske kommer når kartet utvides vestover, utenfor 12 nm. Krever konsesjon.', 'Ocean fishing comes when the chart is extended west, outside 12 nm. Needs a licence.') + '</p>');
     else if (mine) h.push('<p class="ph-note">' + L(bn + ' er en slik båt.', bn + ' is one of these.') + '</p>');
-    else if (O){ const mineO = S.lic && S.lic.id === O.id, A = deal(price, ti), B = deal(price, 0);
+    else if (O){ const mineO = S.lic && S.lic.id === O.id, inn = innOK(), A = deal(price, ti, inn), B = deal(price, 0, inn), F = S.fm || {n:0, kr:0}, bb = bladB();
       if (mineO) h.push('<p class="ph-note">' + L(bn + ' har denne hjemmelen.', bn + ' has this right.') + '</p>');
-      else h.push(payNote(A, 'Mellomlegg med ' + bn + ' i bytte: ', 'To pay with ' + bn + ' traded in: ', 'lån over 15 år ', '15-year loan ') + '<button class="ph-btn' + (A.ok ? ' p' : '') + '" data-pa="buylic" data-ti="1" data-id="' + O.id + '"' + (A.ok && free && !tiLocked(curVessel()) ? '' : ' disabled') + '>' + L('Kjøp og bytt inn ' + bn, 'Buy, trading in ' + bn) + '</button>' +
+      else if (!bb) h.push('<p class="ph-note"><b>' + L('Krever blad B i fiskermanntallet.', 'Needs blad B of the fishermen\'s register.') + '</b> ' + L('Du har ' + F.n + ' av ' + BLADB.days + ' landingsdager med deg om bord og ' + kr(F.kr) + ' av ' + kr(BLADB.kr) + ' i førstehåndsverdi. Se Papirer i Sjømann-appen.', 'You have ' + F.n + ' of ' + BLADB.days + ' landing days with you aboard and ' + kr(F.kr) + ' of ' + kr(BLADB.kr) + ' in first-hand value. See Papers in the Sailor app.') + '</p>');
+      else h.push((inn ? '<p class="ph-note">' + L('Første båt i lukket gruppe: Innovasjon Norge toppfinansierer 10 % med et risikolån (8,9 %, 10 år), så banken krever bare 10 % egenkapital.', 'First boat in the closed group: Innovasjon Norge tops up 10% with a risk loan (8.9%, 10 years), so the bank only wants 10% equity.') + '</p>' : '') + payNote(A, 'Mellomlegg med ' + bn + ' i bytte: ', 'To pay with ' + bn + ' traded in: ', 'lån over 15 år ', '15-year loan ') + '<button class="ph-btn' + (A.ok ? ' p' : '') + '" data-pa="buylic" data-ti="1" data-id="' + O.id + '"' + (A.ok && free && !tiLocked(curVessel()) ? '' : ' disabled') + '>' + L('Kjøp og bytt inn ' + bn, 'Buy, trading in ' + bn) + '</button>' +
         payNote(B, 'Til flåten, uten innbytte: ', 'For the fleet, no trade-in: ', 'lån over 15 år ', '15-year loan ') + '<button class="ph-btn" data-pa="buylic" data-ti="0" data-id="' + O.id + '"' + (B.ok && free ? '' : ' disabled') + '>' + L('Kjøp til flåten', 'Buy for the fleet') + '</button>');
       const ov = openVesselId(); if (ov && !mineO) h.push('<p class="ph-note">' + L('Et rederi med en båt i lukket gruppe kan ikke ha noen båt i åpen gruppe. «' + vget(vesselById(ov), 'boatName') + '» mister plassen der, men kan fiske kveite og krabbe.', 'A company with a closed-group vessel can have no vessel in the open group. «' + vget(vesselById(ov), 'boatName') + '» loses its place there, but can fish halibut and crab.') + '</p>'); }
     else { const A = deal(V.price, ti), B = deal(V.price, 0), verb = V.isNew ? L('Bestill', 'Order') : L('Kjøp', 'Buy'), openOnly = V.len < 11 && !hasLic();
@@ -606,8 +615,10 @@ const PHONE = (() => {
   // --- bank
   function bank(){
     const Lo = S.loan, h = ['<div class="ph-c"><div class="ph-card"><p class="ph-note">' + L('Brukskonto', 'Current account') + '</p><div class="ph-big">' + kr(S.cash) + '</div></div>'];
-    if (Lo){ h.push('<div class="ph-card"><h4>' + L('Båtlån', 'Vessel loan') + '</h4>' + kv(L('Restgjeld', 'Balance'), kr(Lo.bal)) + kv(L('Rente', 'Interest'), fmt(Lo.rate * 100, 1) + ' %') + kv(L('Terminbeløp', 'Monthly payment'), kr(Lo.pay)) + kv(L('Neste trekk', 'Next payment'), dayStr(Lo.next / 60)) + '<button class="ph-btn" data-pa="repay"' + (S.cash >= 10000 ? '' : ' disabled') + '>' + L('Innbetal 10 000 kr', 'Pay NOK 10 000') + '</button><button class="ph-btn alt" data-pa="repayAll"' + (S.cash >= Lo.bal ? '' : ' disabled') + '>' + L('Innfri lånet', 'Pay off the loan') + '</button></div>'); }
-    else h.push('<div class="ph-card"><h4>' + L('Båtlån', 'Vessel loan') + '</h4><p>' + L('Kystbanken finansierer inntil 80 % av båtprisen mot pant i fartøyet. Nedbetaling over 10 år, rente 6,9 %. Søk direkte fra Båthandel under Verft når du kjøper.', 'Kystbanken finances up to 80% of the price secured on the vessel, repaid over 10 years at 6.9%. Apply straight from the boat market in the yard when you buy.') + '</p></div>');
+    const loanCard = (k, title) => { const Q = S[k]; return '<div class="ph-card"><h4>' + title + '</h4>' + kv(L('Restgjeld', 'Balance'), kr(Q.bal)) + kv(L('Rente', 'Interest'), fmt(Q.rate * 100, 1) + ' %') + kv(L('Terminbeløp', 'Monthly payment'), kr(Q.pay)) + kv(L('Neste trekk', 'Next payment'), dayStr(Q.next / 60)) + '<button class="ph-btn" data-pa="repay" data-k="' + k + '"' + (S.cash >= 10000 ? '' : ' disabled') + '>' + L('Innbetal 10 000 kr', 'Pay NOK 10 000') + '</button><button class="ph-btn alt" data-pa="repayAll" data-k="' + k + '"' + (S.cash >= Q.bal ? '' : ' disabled') + '>' + L('Innfri lånet', 'Pay off the loan') + '</button></div>'; };
+    if (S.loanIN) h.push(loanCard('loanIN', L('Risikolån, Innovasjon Norge', 'Risk loan, Innovasjon Norge')));
+    if (Lo){ h.push(loanCard('loan', L('Båtlån, Kystbanken', 'Vessel loan, Kystbanken'))); }
+    else h.push('<div class="ph-card"><h4>' + L('Båtlån', 'Vessel loan') + '</h4><p>' + L('Kystbanken finansierer inntil 80 % av båtprisen mot pant i flåten, over 10 år (15 år for båt med hjemmel), rente 6,9 %. Selger eller bytter du inn en båt, går pengene først til å innfri lånet. Søk direkte fra Båthandel under Verft når du kjøper.', 'Kystbanken finances up to 80% of the price secured on the fleet, over 10 years (15 for a boat with a right), at 6.9%. If you sell or trade in a vessel, the money first pays off the loan. Apply straight from the boat market in the yard when you buy.') + '</p></div>');
     h.push('<div class="ph-card"><h4>' + L('Regnskap', 'Accounts') + '</h4>' + kv(L('Inntekter', 'Revenue'), kr(S.stats.revenue)) + kv(L('Kostnader', 'Costs'), kr(S.stats.costs)) + kv(L('Resultat', 'Result'), kr(S.stats.revenue - S.stats.costs)) + '</div></div>');
     return h.join('');
   }
@@ -628,11 +639,6 @@ const PHONE = (() => {
     if (!S.owned.includes(k)) S.owned.push(k);
     log('Overtok ' + VESSELS[k].name.no + '. ' + old.name.no + ' er solgt.', 'Took over the ' + VESSELS[k].name.en + '. The ' + old.name.en + ' has been sold.');
     if (typeof G3 !== 'undefined') G3.vesselChanged();
-  }
-  function takeLoan(amount, months){
-    const rate = 0.069, r = rate / 12, n = months || 120; const bal = (S.loan ? S.loan.bal : 0) + amount;
-    S.loan = {bal, rate, pay:Math.round(bal * r / (1 - Math.pow(1 + r, -n))), next:S.loan ? S.loan.next : S.t + 30 * 24 * 60};
-    S.cash += amount; msg('Kystbanken', 'Lånet på ' + Math.round(amount) + ' kr er utbetalt. Terminbeløp ' + S.loan.pay + ' kr.', 'The loan of NOK ' + Math.round(amount) + ' has been paid out. Monthly payment NOK ' + S.loan.pay + '.');
   }
   const NAV = new Set(['open', 'home', 'back', 'close', 'lang', 'sub', 'shop0', 'shopgear', 'salgW', 'vsel', 'goto', 'vfollow', 'vboard', 'vname', 'vsell']);
   function act(a, d){
@@ -681,17 +687,17 @@ const PHONE = (() => {
     else if (a === 'ops_sk'){ S.ops.skipper = d.id; }
     else if (a === 'hire'){ const c = candidates().find(x => x.id === d.id); if (c && S.crew.length < BOAT.crewMax){ S.crew.push(c); log(c.name + ' er ansatt som ' + c.lv + '.', c.name + ' joined as ' + c.lvEn + '.'); } }
     else if (a === 'fire'){ const c = S.crew.splice(+d.i, 1)[0]; if (c) log(c.name + ' har gått i land.', c.name + ' has gone ashore.'); }
-    else if (a === 'repay'){ const x = Math.min(10000, S.loan.bal); S.cash -= x; S.loan.bal -= x; if (S.loan.bal < 1) S.loan = null; }
-    else if (a === 'repayAll'){ S.cash -= S.loan.bal; S.loan = null; log('Båtlånet er innfridd.', 'The vessel loan is paid off.'); }
+    else if (a === 'repay'){ const k = d.k || 'loan', Q = S[k]; if (!Q || S.cash < 10000) return; const x = Math.min(10000, Q.bal); S.cash -= x; Q.bal -= x; if (Q.bal < 1) S[k] = null; }
+    else if (a === 'repayAll'){ const k = d.k || 'loan', Q = S[k]; if (!Q || S.cash < Q.bal) return; S.cash -= Q.bal; S[k] = null; log((k === 'loanIN' ? 'Risikolånet' : 'Båtlånet') + ' er innfridd.', 'The ' + (k === 'loanIN' ? 'risk' : 'vessel') + ' loan is paid off.'); }
+    else if (a === 'papers'){ app = 'sjomann'; sub.sjomann = 'papir'; }
     else if (a === 'mktab'){ sub.marked = d.s; mkSel = null; }
     else if (a === 'mksel'){ mkSel = d.k ? {k:d.k, o:d.o || null} : null; }
     else if (a === 'mk3d'){ if (typeof DOCK !== 'undefined') DOCK.close(); if (isOpen) show(false); G3.showroom(d.k); return; }
     else if (a === 'buy'){
       // data-ti="1": trade in the vessel you follow; data-ti="0": add a vessel to the fleet (not an open-group boat before the company has a closed-group one)
-      const V2 = VESSELS[d.k], ti = d.ti === '0' ? 0 : tradeIn(), cost = V2.price - ti; if (!V2 || V2.lock || !inPort() || S.order || (ti && S.boat.type === d.k)) return;
+      const V2 = VESSELS[d.k], ti = d.ti === '0' ? 0 : tradeIn(); if (!V2 || V2.lock || !inPort() || S.order || (ti && S.boat.type === d.k)) return;
       if (!ti && V2.len < 11 && !hasLic()){ toast(L('Et rederi kan bare ha én båt i åpen gruppe.', 'A company can only have one boat in the open group.')); return; }
-      if (S.cash < cost){ const need = cost - Math.max(0, S.cash - 5000); if (need > V2.price * 0.8 || S.cash < Math.max(0, V2.price * 0.2 - ti) || S.sales.length < 3){ toast(t('no_cash')); return; } takeLoan(need); }
-      S.cash -= cost;
+      const x = deal(V2.price, ti); if (!x.ok){ toast(whyText(x) || t('no_cash')); return; } finance(x, 120);
       if (V2.isNew){ S.order = {type:d.k, due:S.t + 45 * 24 * 60, vid:ti ? S.cur : null}; log('Bestilte ' + V2.name.no + '. Levering om 45 døgn' + (ti ? ', mot «' + S.boatName + '» i bytte.' : ' til flåten.'), 'Ordered the ' + V2.name.en + '. Delivery in 45 days' + (ti ? ', with «' + S.boatName + '» traded in.' : ' for the fleet.')); }
       else if (ti) switchVessel(d.k);
       else { const v = newVesselObj(d.k, S.boat.port); log('Kjøpte ' + V2.name.no + ' til flåten. Hun heter «' + v.boatName + '» og ligger i ' + portById(S.boat.port).name + '.', 'Bought the ' + V2.name.en + ' for the fleet. She is called «' + v.boatName + '» and lies at ' + portById(S.boat.port).name + '.'); }
@@ -707,10 +713,10 @@ const PHONE = (() => {
       if (v.id === S.cur) S.boatName = nm; else v.boatName = nm; loreRename(nm); }
     else if (a === 'vsell'){ const v = vesselById(d.id); if (!v || v.id === S.me || S.fleet.length < 2 || vget(v, 'boat').status !== 'port' || tiLocked(v)) return;
       const val = vesselValue(v), nm = vget(v, 'boatName'), hands = (vget(v, 'crew') || []).length;
-      if (!confirm(L('Selge «' + nm + '» for ' + kr(val) + '?', 'Sell the «' + nm + '» for ' + kr(val) + '?'))) return;
+      if (!confirm(L('Selge «' + nm + '» for ' + kr(val) + '?', 'Sell the «' + nm + '» for ' + kr(val) + '?') + (debt() > 0 ? ' ' + L('Pengene går først til å innfri lånene.', 'The money first pays off the loans.') : ''))) return;
       if (v.id === S.cur){ bindVessel(vesselById(S.me)); if (typeof G3 !== 'undefined') G3.vesselChanged(); }
-      S.fleet.splice(S.fleet.indexOf(v), 1); S.cash += val;
-      log('Solgte «' + nm + '» for ' + kr(val) + '.' + (hands ? ' Mannskapet hennes gikk i land.' : ''), 'Sold the «' + nm + '» for ' + kr(val) + '.' + (hands ? ' Her crew went ashore.' : '')); refreshAll(); }
+      const paid = payDown(val); S.fleet.splice(S.fleet.indexOf(v), 1); S.cash += val - paid;
+      log('Solgte «' + nm + '» for ' + kr(val) + '.' + (paid ? ' ' + kr(paid) + ' gikk til å innfri lån.' : '') + (hands ? ' Mannskapet hennes gikk i land.' : ''), 'Sold the «' + nm + '» for ' + kr(val) + '.' + (paid ? ' ' + kr(paid) + ' went to pay off loans.' : '') + (hands ? ' Her crew went ashore.' : '')); refreshAll(); }
     else if (a === 'bhire' || a === 'bneg'){ const B = S.bors, c = B && B.pool.find(x => x.id === d.id); if (!c || S.crew.length >= BOAT.crewMax || S.boat.status !== 'port') return;
       if (a === 'bneg'){ c.neg = true; if (Math.random() < 0.6 - (c.traits.includes('stolt') ? 0.25 : 0)){ c.ask = Math.max(0.06, Math.round((c.ask - 0.02) * 100) / 100); c.share = c.ask; c.morale -= 5; toast(L(c.name.split(' ')[0] + ' godtar ' + Math.round(c.ask * 100) + ' %.', c.name.split(' ')[0] + ' accepts ' + Math.round(c.ask * 100) + '%.')); }
         else { B.pool.splice(B.pool.indexOf(c), 1); toast(L(c.name.split(' ')[0] + ' takket nei og tok hyre et annet sted.', c.name.split(' ')[0] + ' said no and took a berth elsewhere.')); } }
@@ -736,13 +742,14 @@ const PHONE = (() => {
     else if (a === 'jobRush'){ const j = S.jobs && S.jobs[0]; if (!j || j.until == null) return; j.until = S.t; log('Hastejobb: mekanikerne gjorde ferdig med én gang.', 'Rush job: the mechanics finished straight away.'); }
     else if (a === 'buylic'){
       const O = LIC_OFFERS.find(x => x.id === d.id); if (!O || !inPort() || S.order) return;
-      const price = VESSELS[O.ves].price + licValue(O), ti = d.ti === '0' ? 0 : tradeIn(), cost = price - ti; if (ti && S.lic && S.lic.id === O.id) return;
-      if (S.cash < cost){ const need = cost - Math.max(0, S.cash - 5000); if (need > price * 0.8 || S.cash < Math.max(0, price * 0.2 - ti) || S.sales.length < 3){ toast(t('no_cash')); return; } takeLoan(need, 180); }
+      const price = VESSELS[O.ves].price + licValue(O), ti = d.ti === '0' ? 0 : tradeIn(); if (ti && S.lic && S.lic.id === O.id) return;
+      if (!bladB()){ toast(L('Du må stå på blad B i fiskermanntallet for å kjøpe en båt med hjemmel. Se Papirer.', 'You must be on blad B of the fishermen\'s register to buy a boat with a right. See Papers.')); return; }
+      const inn = innOK(), x = deal(price, ti, inn); if (!x.ok){ toast(whyText(x) || t('no_cash')); return; } finance(x, 180); if (inn) S.inUsed = true;
       const lic = {id:O.id, hl:O.hl, cod:O.cod, hyse:O.hyse, sei:O.sei, kpk:O.kpk}, ov = openVesselId(), lost = ov && !(ti && ov === S.cur) ? vget(vesselById(ov), 'boatName') : null;
-      S.cash -= cost; let nm;
+      let nm;
       if (ti){ switchVessel(O.ves); S.lic = lic; nm = S.boatName; }
       else { const v = newVesselObj(O.ves, S.boat.port, lic); nm = v.boatName; log('Kjøpte ' + O.no.toLowerCase() + ' til flåten. Hun heter «' + nm + '».', 'Bought a ' + O.en.toLowerCase() + ' for the fleet. She is called «' + nm + '».'); }
-      msg('Fiskeridirektoratet', 'Deltakeradgangen i lukket gruppe (hjemmelslengde ' + O.hl + ') er registrert på «' + nm + '». Torskekvoten for resten av året er ' + fmt(O.cod / 1000, 2) + ' tonn, fratrukket det båten har fisket i år.' + (lost ? ' Rederiet har nå en båt i lukket gruppe, så «' + lost + '» kan ikke lenger delta i åpen gruppe.' : ''), 'The closed-group participation right (quota length ' + O.hl + ') is registered to the «' + nm + '». The cod quota for the rest of the year is ' + fmt(O.cod / 1000, 2) + ' t, less what the vessel has fished this year.' + (lost ? ' The company now has a vessel in the closed group, so the «' + lost + '» can no longer take part in the open group.' : ''));
+      msg('Fiskeridirektoratet', 'Deltakeradgangen i lukket gruppe (hjemmelslengde ' + O.hl + ') er registrert på «' + nm + '». Torskekvoten for resten av året er ' + fmt(O.cod / 1000, 2) + ' tonn, fratrukket det båten har fisket i år.' + (lost ? ' Rederiet har nå en båt i lukket gruppe, så «' + lost + '» kan ikke lenger delta i åpen gruppe. Hun kan fortsatt fiske kveite, krabbe og annet enn torsk, hyse og sei.' : ''), 'The closed-group participation right (quota length ' + O.hl + ') is registered to the «' + nm + '». The cod quota for the rest of the year is ' + fmt(O.cod / 1000, 2) + ' t, less what the vessel has fished this year.' + (lost ? ' The company now has a vessel in the closed group, so the «' + lost + '» can no longer take part in the open group. She can still fish halibut, crab and anything but cod, haddock and saithe.' : ''));
     }
     return true;
   }

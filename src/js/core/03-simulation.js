@@ -346,6 +346,37 @@ const LIC_OFFERS = [
   {id:'h10', ves:'hurtigsjark', hl:'10–10,9 m', cod:17780, hyse:[167727, 7987], sei:[300754, 9702], kpk:KPK, no:'Hurtigsjark med hjemmel 10–10,9 m', en:'Speed sjark with a right of 10–10.9 m'}
 ];
 function licValue(l){ return l ? Math.round(l.cod * l.kpk) : 0; }
+// blad B in the fishermen's register, simplified. Deltakerloven § 6 asks the buyer of a closed-group vessel to have fished commercially
+// in at least three of the last five years, and blad B (fishing as the main occupation) is the usual proof. Here: 10 landing days with
+// you aboard and 1 G of first-hand value (G from 1 May 2025, nav.no; to be updated for 2026)
+const BLADB = {days:10, kr:130160};
+function fmInit(){ const F = {n:0, last:-1, kr:0, b:false}; for (const s of S.sales || []){ const d = Math.floor(s.t / 1440); if (d !== F.last){ F.n++; F.last = d; } F.kr += s.total || 0; }
+  F.b = !!(S.lic || (S.fleet || []).some(v => v.lic)) || (F.n >= BLADB.days && F.kr >= BLADB.kr); return F; }
+function fmLand(total){ const F = S.fm || (S.fm = fmInit()), d = Math.floor(S.t / 1440); if (d !== F.last){ F.n++; F.last = d; } F.kr += total;
+  if (!F.b && F.n >= BLADB.days && F.kr >= BLADB.kr){ F.b = true;
+    msg('Fiskeridirektoratet', 'Du er ført på blad B i fiskermanntallet: fiske er hovedyrket ditt. Nå kan du kjøpe en båt med deltakeradgang i lukket gruppe, og Innovasjon Norge kan toppfinansiere det første kjøpet. Se Båthandel under Verft.', 'You are on blad B of the fishermen\'s register: fishing is your main occupation. You can now buy a boat with a closed-group right, and Innovasjon Norge can top up the financing of the first one. See the boat market in the yard.'); } }
+const bladB = () => !!(S.fm && S.fm.b);
+// loans: Kystbanken lends against the fleet; Innovasjon Norge tops up the first closed-group purchase with a risk loan at a higher rate
+// (the share and the rate are estimates, not checked against their terms)
+const LOANS = {loan:{who:'Kystbanken', rate:0.069}, loanIN:{who:'Innovasjon Norge', rate:0.089}};
+const debt = () => (S.loan ? S.loan.bal : 0) + (S.loanIN ? S.loanIN.bal : 0);
+const innOK = () => bladB() && !S.inUsed && !S.fleet.some(v => vget(v, 'lic'));
+function takeLoan(amount, months, k){ k = k || 'loan'; const C = LOANS[k], r = C.rate / 12, n = months || 120, O = S[k], bal = (O ? O.bal : 0) + amount;
+  S[k] = {bal, rate:C.rate, pay:Math.round(bal * r / (1 - Math.pow(1 + r, -n))), next:O ? O.next : S.t + 30 * 24 * 60}; S.cash += amount;
+  msg(C.who, (k === 'loanIN' ? 'Toppfinansieringen er innvilget: risikolån på ' : 'Lånet på ') + Math.round(amount) + ' kr er utbetalt, over ' + Math.round(n / 12) + ' år. Terminbeløp ' + S[k].pay + ' kr.', (k === 'loanIN' ? 'The top-up is granted: a risk loan of NOK ' : 'The loan of NOK ') + Math.round(amount) + ' has been paid out, over ' + Math.round(n / 12) + ' years. Monthly payment NOK ' + S[k].pay + '.'); }
+// a sold or traded-in vessel pays off the loans first (Kystbanken's, then Innovasjon Norge's); returns what went to the lenders
+function payDown(x){ let left = x; for (const k of ['loan', 'loanIN']){ const L = S[k]; if (!L || left <= 0) continue; const p = Math.min(L.bal, left); L.bal -= p; left -= p; if (L.bal < 1) S[k] = null; } return x - left; }
+// what a purchase costs: the trade-in pays off the loans, and only the rest counts as equity. The bank lends up to 80 % of the price
+// (Innovasjon Norge 10 % more), the buyer brings the rest, and all loans together stay within 80 % of the fleet with the new boat
+// (plus the top-up). why: null, 'notes' (three landing notes first), 'eq' (too little equity) or 'cap' (the fleet carries no more debt)
+function deal(price, ti, inn){
+  const D = debt(), payoff = Math.min(ti, D), tiNet = ti - payoff, cost = price - tiNet, eqNeed = Math.max(0, price * (inn ? 0.1 : 0.2) - tiNet);
+  const loanNeed = S.cash >= cost ? 0 : cost - Math.max(0, S.cash - 5000), bankL = Math.min(loanNeed, price * 0.8), inL = loanNeed - bankL;
+  const cap = (S.fleet.reduce((a, v) => a + vesselValue(v), 0) - ti + price) * 0.8 + (inn ? price * 0.1 : 0) - (D - payoff);
+  const why = !loanNeed ? null : S.sales.length < 3 ? 'notes' : S.cash < eqNeed ? 'eq' : inL > (inn ? price * 0.1 : 0) + 1 || loanNeed > cap + 1 ? 'cap' : null;
+  return {cost, eqNeed, loanNeed, bankL, inL, payoff, tiNet, ok:!why, why};
+}
+function finance(x, months){ if (x.payoff) payDown(x.payoff); if (x.bankL > 0) takeLoan(x.bankL, months); if (x.inL > 0) takeLoan(x.inL, 120, 'loanIN'); S.cash -= x.cost; }
 function lenGroup(){ const L = BOAT.len || 5.8; return L < 8 ? 0 : L < 10 ? 1 : 2; }
 function codLimits(){ if (S.lic) return {max:S.lic.cod, guar:S.lic.cod}; const g = QUOTA.cod[lenGroup()]; return {max:g[1], guar:g[2]}; }
 // the open group's maximum-quota fishing is stopped when the group quota is estimated fished: 15 May in 2025, 16 April in 2026

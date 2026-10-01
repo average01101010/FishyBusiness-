@@ -141,6 +141,7 @@ function sell(){
   const aboardNow = crewAboard(), lott = Math.round(aboardNow.reduce((a, c) => a + c.share, 0) * total);
   for (const c of aboardNow) c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, total * c.share]]);
   for (const c of S.crew) c.off = false;
+  if (meAboard()) fmLand(total);
   S.cash += total - lott; S.stats.revenue += total; S.stats.costs += lott; S.stats.kg += kg; S.hold = [];
   const fs = S.marks.length ? S.marks[S.marks.length - 1] : null, field = fieldCode(S.fsess || fs || b.pos);
   // the whole landing note goes with the sale, for the deck log's Salg tab (ui/06b-book-tabs.js)
