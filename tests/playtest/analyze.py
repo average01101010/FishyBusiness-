@@ -143,7 +143,8 @@ def game_metrics(S):
     g['utstyr'] = S.get('equip')
     g['eide_båter'] = S.get('owned')
     g['lisens'] = S.get('lic')
-    g['mannskap'] = [{'navn': c.get('name'), 'lott': c.get('share')} for c in (S.get('crew') or [])]
+    crew = S.get('crew') or [c for v in (S.get('fleet') or []) for c in (v.get('crew') or [])]   # per vessel in a fleet save
+    g['mannskap'] = [{'navn': c.get('name'), 'lott': c.get('share')} for c in crew]
     g['redskap_i_sjøen'] = len(S.get('sets') or [])
     g['pgear'] = S.get('pgear')
     g['stats'] = S.get('stats')
@@ -151,6 +152,31 @@ def game_metrics(S):
     g['tatoveringer'] = list((S.get('tattoos') or {}).keys())
     g['lore'] = list((S.get('lore') or {}).keys())[:20]
     return g
+
+
+# Milestones: the first log line for each, placed in human time through the first command that saw that game time.
+MILESTONES = [('første_tur_ferdig', r'Første tur er fullført'), ('første_salg', r'^Leverte '), ('juksamaskin', r'Kjøpt Juksamaskin'),
+              ('første_mannskap', r'har mønstret på'), ('driftsplan_på', r'Fast driftsplan slått på'),
+              ('snekke', r'Kjøpt.*snekke|snekke.*kjøpt'), ('sjark', r'Kjøpt.*sjark|sjark.*kjøpt'), ('lån', r'Lån(et)? .*innvilget|tok opp lån'),
+              ('redskap_satt', r'(Satte|satt) (garn|line|teine)')]
+
+
+def milestones(S, rows):
+    log = (S or {}).get('log') or []
+    out = {}
+    for key, pat in MILESTONES:
+        rx = re.compile(pat, re.I)
+        e = next((e for e in log if rx.search(e.get('no') or '')), None)
+        if not e:
+            out[key] = None
+            continue
+        r = next((r for r in rows if ((r.get('after') or {}).get('t') or -1) >= e.get('t', 0)), None)
+        out[key] = {'spilltid_min': e.get('t'), 'logg': (e.get('no') or '')[:90]}
+        if r:
+            out[key].update({'n': r['n'], 'handlinger': r['acts'], 'menneskelig_tid': fmt_h(r['hum']), 'ekte_tid': fmt_h(r['w'])})
+    out['innloggingsbonus'] = (S or {}).get('streak')
+    out['haill'] = (S or {}).get('haill')
+    return out
 
 
 def main():
@@ -164,7 +190,8 @@ def main():
     for r in rows:
         by.setdefault(r.get('phase', 'spill'), []).append(r)
     S, sp = latest_snap(obs)
-    out = {'run': a.run, 'faser': {k: phase_metrics(v) for k, v in by.items()}, 'spillet': game_metrics(S), 'snapshot': sp,
+    out = {'run': a.run, 'faser': {k: phase_metrics(v) for k, v in by.items()}, 'spillet': game_metrics(S),
+           'milepæler': milestones(S, by.get('spill') or rows), 'snapshot': sp,
            'sidefeil': [e for e in load_jsonl(os.path.join(obs, 'errors.jsonl')) if e.get('kind') == 'pageerror'],
            'konsollfeil': len([e for e in load_jsonl(os.path.join(obs, 'errors.jsonl')) if e.get('kind') == 'console']),
            'tempo_hendelser': load_jsonl(os.path.join(obs, 'events.jsonl')),

@@ -30,7 +30,9 @@ Skrevet 29.09.2026 ved flytting fra claude.ai-chat til Claude Code. Dokumentet s
 
 **Etter spilltest 1 (bygget 01.10.2026, ikke publisert ennå):** feilrettinger A1–A15, juksamaskin = 2 × håndjuksa, innloggingsbonus i stedet for «Kaffe på kaia», riktig tid (6×) med nedtelling i ekte tid, butikken «Fiskeutstyr», rute-editor med WP-navn, angre og dra, autoruta «Følg leia» og den obligatoriske veiledningen «Første tur». Planen står i kapittel 9 under «Etter spilltest 1».
 
-**Neste:** spilltest 2 (en lang økt fra start), deretter fase 4 i flåteplanen.
+**Spilltest 2 (01.10.2026):** én agent, 384 handlinger fra nytt spill. Se `docs/playtest/rapport-2.md`.
+
+**Neste:** rettingene etter spilltest 2, med prioritet i rapportens siste del, deretter fase 4 i flåteplanen.
 
 ## 4. Teknisk arkitektur
 
@@ -662,6 +664,14 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
   - En skipper på driftsplan kjøper ikke sekkeis i Finnsnes. Bare mottakene fyller is på driftsplanen.
   - Kameraet holdes unna kaier, bruer, fyr, siloer, kraner og bygninger, men ikke andre båter eller kranarmen.
   - Laster man siden på nytt rett etter en endring, kan Chrome lese en lagring som er noen sekunder gammel (localStorage skrives med forsinkelse). Sett i testmiljøet, ikke kontrollert på nettbrett. Det koster i så fall bare de siste sekundene.
+
+- **Blind spilltest 2 (01.10.2026):** Se `docs/playtest/rapport-2.md`. Starten og ruteplanleggingen virker, og agenten kjøpte juksamaskin og ansatte mannskap. Åpent fra rapporten, i prioritert rekkefølge:
+  - Fangsten er uforklart, og den garanterte første turen (175 kg/t) gir feil forventning.
+  - Havna man startet fra kan ikke velges som sluttpunkt. Trykket på navneskiltet gir «Det er land», og et trykk nær havnepunktet tar utseilingspunktet.
+  - Fartsglideren i rutepanelet fanger sveip.
+  - Planleggeren viser ikke bølger langs ruta.
+  - Innloggingsbonusen forklarer ikke at den gjelder ekte dager.
+  - Reglene når ikke fram uten at spilleren leter dem opp.
 
 - **Redskap, åpne punkter:**
   - Minsteprisene for taskekrabbe (Råfisklaget, rundskriv 8/2025) er ikke hentet, fordi siden er blokkert herfra. Hunn 17 og hann 14 kr/kg er plassholdere.
