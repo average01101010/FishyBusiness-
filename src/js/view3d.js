@@ -10,11 +10,12 @@ const G3 = (() => {
   // «#no3d» in the address (the tests that do not look at 3D): everything runs as before, but no frame is drawn
   const NO3D = /no3d/.test(location.hash);
   const cam = {yaw:0.55, pitch:0.26, dist:21, helm:false, hy:0, hp:-0.07, fov:55};
-  const vtype = () => (S.boat.type && PV[S.boat.type]) ? S.boat.type : 'skiff';
+  // the bound vessel's type when it has a model (vessel3d.js), else the skiff; GEO(t) is where things sit on it
+  const vtype = () => (S.boat.type && VESSELS[S.boat.type] && (VGEO[S.boat.type] || vesselSpec(S.boat.type))) ? S.boat.type : 'skiff';
+  const GEO = t => VGEO[t] || (VGEO[t] = geoOf(t)) || VGEO.skiff;
   let PERSONM = null, WILDM = null, NPCM = null, CREW2M = null, PT = null, GTEX = null, GRECT = null, STEX = null, SRECT = null, gcv = null, LMTEX = null, lcv = null, HTEX = null;
   // where things sit on each vessel (boat-local metres, bow towards -z)
-  const VGEO = {skiff:{pl:2.4, rl:1.0, eye:[0, 1.86, 0.9], hp:-0.3, fov:62, pole:[-0.8, 1.95, 2.42], stern:3.1, bow:-2.2, side:0.75, gw:0.95, deck:{y:0.2, z:2.0}, lights:[[[-0.08, 1.04, -2.7], [1, 0.12, 0.1]], [[0.08, 1.04, -2.7], [0.1, 1, 0.35]], [[-0.8, 1.95, 2.42], [1, 0.95, 0.85]]]}};
-  const PV = {};
+  const VGEO = {skiff:{hand:true, open:true, beam:2.2, crewSpots:[[0.26, 0.32, 1.16, 0]], pl:2.4, rl:1.0, eye:[0, 1.86, 0.9], hp:-0.3, fov:62, pole:[-0.8, 1.95, 2.42], stern:3.1, bow:-2.2, side:0.75, gw:0.95, deck:{y:0.2, z:2.0}, lights:[[[-0.08, 1.04, -2.7], [1, 0.12, 0.1]], [[0.08, 1.04, -2.7], [0.1, 1, 0.35]], [[-0.8, 1.95, 2.42], [1, 0.95, 0.85]]]}};
   const bv = {x:0, y:0, z:0, head:0, pitch:0, roll:0, init:false};
   const env = {};
   const lerp = (a, b, t) => a + (b - a) * t;
@@ -774,7 +775,7 @@ const G3 = (() => {
   const tipOf = (P, q) => [P.crane[0] + Math.sin(q.a) * q.r, TIP_Y, P.crane[1] + Math.cos(q.a) * q.r];
   // where the loads stand on deck, in the boat's frame (x to starboard, z aft); the first slot is the next to go up
   function deckSlots(kind){
-    const G = VGEO[vtype()] || VGEO.skiff, d = G.deck || {y:G.gw, z:(G.stern || 3) * 0.5};
+    const G = GEO(vtype()), d = G.deck || {y:G.gw, z:(G.stern || 3) * 0.5};
     return kind === 'tub' ? [[0.65, d.y, d.z - 0.55], [-0.65, d.y, d.z - 0.55], [0.65, d.y, d.z + 0.55], [-0.65, d.y, d.z + 0.55]] : [[0, d.y, d.z - 0.45], [0, d.y, d.z + 0.45]];
   }
   // the forklift's run: from where it waits by the drop spot, forward to the loads, back out, over to the door, inside, and back.
@@ -868,7 +869,7 @@ const G3 = (() => {
     { let y = 0.2 + FK.fl * 0.5; for (const q of FK.loads){ drawN(q.mesh, chain(FM, M4.T(0, y, -1.6))); y += q.h; } }
     // ice down the chute into the boat
     { const b = S.boat, gt = S.t + currentFrac(); if (b.iceUntil > gt && b.status === 'port' && b.port === P.id && BMrel){
-      const G = VGEO[vtype()] || VGEO.skiff, dy = xf(BMrel, [0, (G.deck || {y:G.gw}).y, 0])[1] + eye[1], O = [P.chuteB[0], P.chuteB[1] - 0.95, P.chuteB[2]], fall = Math.max(0.5, O[1] - dy);
+      const G = GEO(vtype()), dy = xf(BMrel, [0, (G.deck || {y:G.gw}).y, 0])[1] + eye[1], O = [P.chuteB[0], P.chuteB[1] - 0.95, P.chuteB[2]], fall = Math.max(0.5, O[1] - dy);
       let k = P.spray; for (let i = 0; i < 70; i++){ const q = (T * 1.6 + i / 70) % 1, r = 0.12 + 0.1 * q; PB[k * 3] = O[0] + (hash(i) - 0.5) * r - eye[0]; PB[k * 3 + 1] = O[1] - q * q * fall - eye[1]; PB[k * 3 + 2] = O[2] + (hash(i + 31) - 0.5) * r - eye[2]; PA[k] = 0.85; k++; }
       P.spray = k; } }
     // sign
@@ -888,7 +889,7 @@ const G3 = (() => {
     return {on:true, alone:handsAboard() === 1, task:S.settings.gut && S.hold.some(x => !x.gut && !x.iced) ? 'gut' : 'ice'};
   }
   function drawDeck(BMrel, eye, VP, t, DK){
-    const vt = vtype(), G = VGEO[vt] || VGEO.skiff, d = G.deck || {y:G.gw, z:2}, Bm = BEAM[vt] || 2.4, b = S.boat; DK.pt = null;
+    const vt = vtype(), G = GEO(vt), d = G.deck || {y:G.gw, z:2}, Bm = G.beam, b = S.boat; DK.pt = null;
     if (b.land || b.status === 'aground') return;
     nSetup(VP);
     const tx = -(Bm / 2 - 0.42), ux = Bm / 2 - 0.62;
@@ -935,9 +936,9 @@ const G3 = (() => {
   // the work on deck: the hauler turning, the string running over it to the water, pots stacking, the net piling in its bin
   function drawGearOp(BMrel, eye, VP, t){
     const b = S.boat, g = b.gop; if (!g || b.status !== 'fishing') return; if (!GB) buildGear();
-    const vt = vtype(), G = VGEO[vt] || VGEO.skiff, gw = G.gw || 1, sx = (BEAM[vt] || 2.4) / 2, d = G.deck || {y:gw, z:1}, skiff = vt === 'skiff';
+    const vt = vtype(), G = GEO(vt), gw = G.gw || 1, sx = G.beam / 2, d = G.deck || {y:gw, z:1}, skiff = !!G.hand;
     // the hauler on the starboard rail just forward of the working deck; gear stacks on the deck aft of it
-    const HP = skiff ? [0.98, 1.02, 0.3] : [sx * 0.92, gw + 0.35, d.z - 1.3], turning = g.op === 'haul' && !(b.deckStop), DZ = skiff ? 0 : d.z - 0.6;
+    const HP = skiff ? [0.98, 1.02, 0.3] : G.hauler, turning = g.op === 'haul' && !(b.deckStop), DZ = skiff ? 0 : d.z - 0.6;
     nSetup(VP);
     if (!skiff || S.equip.elhaler) drawN(GB.haul, chain(BMrel, M4.T(HP[0], HP[1], HP[2]), M4.RX(turning ? -t * 3 : 0)));
     // from the hauler down into the sea, outboard and a little ahead
@@ -1000,7 +1001,7 @@ const G3 = (() => {
     let shown = 0;
     if (here){
       // the filler on the starboard side (the quay side), and whoever holds the nozzle standing at the edge above it
-      const vt = vtype(), G = VGEO[vt] || VGEO.skiff, fl = vt === 'skiff' ? [0.8, 0.95, 2.3] : [(BEAM[vt] || 3) * 0.42, G.gw + 0.15, (G.stern || 3) * 0.5];
+      const vt = vtype(), G = GEO(vt), fl = G.hand ? [0.8, 0.95, 2.3] : G.filler;
       const Fr = xf(BMrel, fl), Fw = [Fr[0] + eye[0], Fr[1] + eye[1], Fr[2] + eye[2]], al = (Fw[0] - B.f.x) * B.u[0] + (Fw[2] - B.f.z) * B.u[1], edge = B.at(al, -0.7);
       const active = gt >= f.t0 + 0.4 && gt < f.until - 0.4, st = active ? {x:edge[0], z:edge[1], h:seaH, task:'nozzle', walk:false, s:0} : {x:B.pump[0] + B.n[0] * 0.8, z:B.pump[1] + B.n[1] * 0.8, h:seaH + Math.PI, task:'look', walk:false, s:0};
       const w = follow(B, 'p', st, T, 1.4); drawWorker(B, w, eye, T, 5);
@@ -1053,60 +1054,8 @@ const G3 = (() => {
     'foam=cr*prof*smoothstep(0.4,0.8,n)*smoothstep(3.5,0.5,age)*0.85;aer=(cr*0.8+0.3)*prof*exp(-age*0.065)*0.62;}' +
     'foam*=vS;aer*=vS;float d=length(vP);float fg=1.0-exp(-uFogD*uFogD*d*d);' +
     'float al=clamp(max(foam,aer),0.0,0.95);vec3 base=vW4.w<0.5?uAer:uArm;vec3 c=mix(base,uCol,clamp(foam/max(al,0.001),0.0,1.0));gl_FragColor=vec4(mix(c,uFog,fg),al*(1.0-fg));}';
-  // builder with normals and gloss
-  function NB(){
-    const p = [], n = [], c = [];
-    const o = {p, n, c,
-      v(a, nn, k){ p.push(a[0], a[1], a[2]); n.push(nn[0], nn[1], nn[2]); c.push(k[0], k[1], k[2], k[3] === undefined ? 0.2 : k[3]); },
-      tri(a, b, d, k){ const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], w = [d[0] - a[0], d[1] - a[1], d[2] - a[2]], nn = [u[1] * w[2] - u[2] * w[1], u[2] * w[0] - u[0] * w[2], u[0] * w[1] - u[1] * w[0]], l = Math.hypot(nn[0], nn[1], nn[2]) || 1; const q = [nn[0] / l, nn[1] / l, nn[2] / l]; o.v(a, q, k); o.v(b, q, k); o.v(d, q, k); },
-      quad(a, b, d, e, k){ o.tri(a, b, d, k); o.tri(a, d, e, k); },
-      // a grid of points G[i][j] with smooth normals; colour per cell from kf(i, j)
-      grid(G, kf){
-        const R = G.length, C = G[0].length, N = [];
-        for (let i = 0; i < R; i++){ N.push([]); for (let j = 0; j < C; j++){
-          const a = G[Math.min(R - 1, i + 1)][j], b = G[Math.max(0, i - 1)][j], d = G[i][Math.min(C - 1, j + 1)], e = G[i][Math.max(0, j - 1)];
-          const u = [a[0] - b[0], a[1] - b[1], a[2] - b[2]], w = [d[0] - e[0], d[1] - e[1], d[2] - e[2]], nn = [u[1] * w[2] - u[2] * w[1], u[2] * w[0] - u[0] * w[2], u[0] * w[1] - u[1] * w[0]], l = Math.hypot(nn[0], nn[1], nn[2]) || 1;
-          N[i].push([nn[0] / l, nn[1] / l, nn[2] / l]); } }
-        for (let i = 0; i < R - 1; i++) for (let j = 0; j < C - 1; j++){ const k = kf(i, j); o.v(G[i][j], N[i][j], k); o.v(G[i + 1][j], N[i + 1][j], k); o.v(G[i + 1][j + 1], N[i + 1][j + 1], k); o.v(G[i][j], N[i][j], k); o.v(G[i + 1][j + 1], N[i + 1][j + 1], k); o.v(G[i][j + 1], N[i][j + 1], k); }
-      },
-      // a tube along a polyline (stainless rails, handles)
-      tube(P, r, k, sides){
-        sides = sides || 8; const G = [];
-        for (let i = 0; i < P.length; i++){
-          const a = P[Math.max(0, i - 1)], b = P[Math.min(P.length - 1, i + 1)]; let t = [b[0] - a[0], b[1] - a[1], b[2] - a[2]]; const tl = Math.hypot(t[0], t[1], t[2]) || 1; t = t.map(x => x / tl);
-          let up = Math.abs(t[1]) > 0.9 ? [1, 0, 0] : [0, 1, 0]; let s = [t[1] * up[2] - t[2] * up[1], t[2] * up[0] - t[0] * up[2], t[0] * up[1] - t[1] * up[0]]; const sl = Math.hypot(s[0], s[1], s[2]); s = s.map(x => x / sl);
-          const u = [s[1] * t[2] - s[2] * t[1], s[2] * t[0] - s[0] * t[2], s[0] * t[1] - s[1] * t[0]], row = [];
-          for (let j = 0; j <= sides; j++){ const an = j / sides * Math.PI * 2, ca = Math.cos(an), sa = Math.sin(an); row.push([P[i][0] + (s[0] * ca + u[0] * sa) * r, P[i][1] + (s[1] * ca + u[1] * sa) * r, P[i][2] + (s[2] * ca + u[2] * sa) * r]); }
-          G.push(row);
-        }
-        o.grid(G, () => k);
-        if (r >= 0.03) for (const i of [0, P.length - 1]){ const R = G[i]; for (let j = 0; j < sides; j++) o.tri(P[i], R[j], R[j + 1], k); }
-      },
-      box(cx, cy, cz, sx, sy, sz, k, kTop){ const x0 = cx - sx / 2, x1 = cx + sx / 2, z0 = cz - sz / 2, z1 = cz + sz / 2, y1 = cy + sy;
-        o.quad([x0, cy, z1], [x1, cy, z1], [x1, y1, z1], [x0, y1, z1], k); o.quad([x1, cy, z0], [x0, cy, z0], [x0, y1, z0], [x1, y1, z0], k);
-        o.quad([x0, cy, z0], [x0, cy, z1], [x0, y1, z1], [x0, y1, z0], k); o.quad([x1, cy, z1], [x1, cy, z0], [x1, y1, z0], [x1, y1, z1], k);
-        o.quad([x0, y1, z1], [x1, y1, z1], [x1, y1, z0], [x0, y1, z0], kTop || k); o.quad([x0, cy, z0], [x1, cy, z0], [x1, cy, z1], [x0, cy, z1], k); },
-      // a box with rounded vertical and top edges, lofted along z (cowlings, cushions, pods)
-      rbox(cx, cy, cz, w, h, d, r, k, taper){
-        taper = taper || 0; const G = [], NZ = 10, NA = 20;
-        for (let i = 0; i <= NZ; i++){
-          const t = i / NZ, zz = cz - d / 2 + d * t, e = Math.min(1, Math.sin(Math.PI * t) * 1.25), sc = 1 - taper * t, hw = (w / 2) * sc * (0.5 + 0.5 * e), hh = h * (0.55 + 0.45 * e), row = [];
-          for (let j = 0; j <= NA; j++){ const an = j / NA * Math.PI * 2, ca = Math.cos(an), sa = Math.sin(an), px = Math.sign(ca) * Math.max(0, Math.abs(ca) * (hw) - 0) , py = sa;
-            // rounded rectangle via superellipse
-            const ex = Math.sign(ca) * Math.pow(Math.abs(ca), 0.35), ey = Math.sign(sa) * Math.pow(Math.abs(sa), 0.35);
-            row.push([cx + ex * hw, cy + hh / 2 + ey * hh / 2, zz]); }
-          G.push(row);
-        }
-        o.grid(G, () => k);
-        // close both ends
-        for (const i of [0, NZ]){ const R = G[i], c = R.slice(0, NA).reduce((a, q) => [a[0] + q[0] / NA, a[1] + q[1] / NA, a[2] + q[2] / NA], [0, 0, 0]); for (let j = 0; j < NA; j++) o.tri(c, R[j], R[j + 1], k); }
-      },
-      disc(c0, nrm, r, k, seg){ seg = seg || 16; const up = Math.abs(nrm[1]) > 0.9 ? [1, 0, 0] : [0, 1, 0]; let s = [nrm[1] * up[2] - nrm[2] * up[1], nrm[2] * up[0] - nrm[0] * up[2], nrm[0] * up[1] - nrm[1] * up[0]]; const sl = Math.hypot(...s); s = s.map(x => x / sl); const u = [s[1] * nrm[2] - s[2] * nrm[1], s[2] * nrm[0] - s[0] * nrm[2], s[0] * nrm[1] - s[1] * nrm[0]];
-        for (let j = 0; j < seg; j++){ const a0 = j / seg * Math.PI * 2, a1 = (j + 1) / seg * Math.PI * 2, P0 = [c0[0] + (s[0] * Math.cos(a0) + u[0] * Math.sin(a0)) * r, c0[1] + (s[1] * Math.cos(a0) + u[1] * Math.sin(a0)) * r, c0[2] + (s[2] * Math.cos(a0) + u[2] * Math.sin(a0)) * r], P1 = [c0[0] + (s[0] * Math.cos(a1) + u[0] * Math.sin(a1)) * r, c0[1] + (s[1] * Math.cos(a1) + u[1] * Math.sin(a1)) * r, c0[2] + (s[2] * Math.cos(a1) + u[2] * Math.sin(a1)) * r]; o.v(c0, nrm, k); o.v(P0, nrm, k); o.v(P1, nrm, k); } },
-      mesh(){ return {pb:buf(new Float32Array(p)), nb:buf(new Float32Array(n)), cb:buf(new Float32Array(c)), n:p.length / 3}; }
-    };
-    return o;
-  }
+  // builder with normals and gloss: the geometry is VB() (vessel3d.js), this adds the GL buffers
+  function NB(){ const o = VB(); o.mesh = () => ({pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3}); return o; }
   function nSetup(VP){
     gl.useProgram(PRGN.p); const u = PRGN.u;
     gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uSun, env.lightDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb); gl.uniform3fv(u.uGnd, env.gnd); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD); gl.uniform1f(u.uAlpha, 1); gl.uniform1f(u.uEmis, 0);
@@ -1534,10 +1483,11 @@ const G3 = (() => {
       drawTexQuad(SK.qPlot, SK.tPlot, BMrel, VP, false); drawTexQuad(SK.qGauge, SK.tGauge, BMrel, VP, false); if (S.equip.vhf) drawTexQuad(SK.qVhf, SK.tVhf, BMrel, VP, false);
     }
   }
-  function drawSkiffGlass(BMrel, VP){
-    if (!SK) return; nSetup(VP); gl.uniform1f(PRGN.u.uAlpha, 0.2);
+  function drawSkiffGlass(BMrel, VP){ if (SK) drawGlass(SK.glass, BMrel, VP); }
+  function drawGlass(m, BMrel, VP){
+    if (!m || !m.n) return; nSetup(VP); gl.uniform1f(PRGN.u.uAlpha, 0.2);
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
-    drawN(SK.glass, BMrel); gl.disableVertexAttribArray(2);
+    drawN(m, BMrel); gl.disableVertexAttribArray(2);
     gl.depthMask(true); gl.disable(gl.BLEND); gl.useProgram(PL.p);
   }
   function buildBoat(){
@@ -1714,7 +1664,7 @@ const G3 = (() => {
   // the lines from the boat's cleats to the bollards on the quay, sagging when slack; the tide makes them slack or tight
   function drawMooring(BMrel, eye, VP, t){
     const bp = berthNow(); if (!bp || !ROPEM) return;
-    const vt = vtype(), G = VGEO[vt] || VGEO.skiff, gw = G.gw || 1, sx = (BEAM[vt] || 2.4) / 2, mid = (G.bow + G.stern) / 2;
+    const vt = vtype(), G = GEO(vt), gw = G.gw || 1, sx = G.beam / 2, mid = (G.bow + G.stern) / 2;
     nSetup(VP);
     if (MO.phase !== 'in' || MO.t / MO.dur > 0.55) for (const z of [G.bow * 0.45, mid, G.stern * 0.55]){
       drawN(FENDM, chain(BMrel, M4.T(sx * 0.95 + 0.12, gw - 0.45, z))); drawN(ROPEM, chain(BMrel, limbM([sx * 0.95 + 0.12, gw - 0.2, z], [sx * 0.9, gw, z], 0.012)));
@@ -1744,10 +1694,9 @@ const G3 = (() => {
   }
   // the boat in 3D follows the simulated track like a real boat: it speeds up and slows down gradually, turns on an arc,
   // pivots about a point a third of its length from the bow (so the stern swings out), skids a little in turns and banks
-  const TURN_R = {skiff:35, snekke:45, sjark:70, sjarkny:80};
   const KNV = () => 1852 / 3600 * GAME_RATE * (S.mult || 1);      // on-screen metres per real second per knot
   function updateBoat(dt, t, frac){
-    const b = S.boat, pr = predict(frac), tx = pr.p.x * 1000, tz = pr.p.y * 1000, sailing = b.status === 'sailing' && S.plan, G = VGEO[vtype()] || VGEO.skiff;
+    const b = S.boat, pr = predict(frac), tx = pr.p.x * 1000, tz = pr.p.y * 1000, sailing = b.status === 'sailing' && S.plan, G = GEO(vtype());
     const zp = (G.bow || -2.2) + ((G.stern || 3.1) - (G.bow || -2.2)) / 3;   // pivot point, local z (negative = forward)
     if (!bv.init || Math.hypot(tx - (bv.px || 0), tz - (bv.pz || 0)) > 900){ bv.px = tx; bv.pz = tz; bv.cog = pr.hd; bv.head = pr.hd; bv.spd = sailing ? b.v * KNV() : 0; bv.yr = 0; bv.beta = 0; bv.init = true; TRAIL.length = 0; WV.init = false; }
     else if (dt > 0){
@@ -1757,7 +1706,7 @@ const G3 = (() => {
         const vs = sailV(S.t / 60) * KNV(), la = livePose(frac + clamp(1.6 * GAME_RATE * (S.mult || 1) / 60, 0.04, 0.6)).p, cx = la.x * 1000, cz = la.y * 1000;
         // steer for a point a little ahead on the track, turning no faster than the turning radius allows
         const want = Math.hypot(cx - bv.px, cz - bv.pz) > 1 ? Math.atan2(cx - bv.px, -(cz - bv.pz)) : pr.hd;
-        const wmax = clamp(bv.spd / (TURN_R[vtype()] || 40), 0.6, 1.4), err = angDiff(bv.cog, want), rDes = clamp(err * 2.2, -wmax, wmax);
+        const wmax = clamp(bv.spd / ((VESSELS[vtype()] || {}).turnR || 40), 0.6, 1.4), err = angDiff(bv.cog, want), rDes = clamp(err * 2.2, -wmax, wmax);
         bv.yr += (rDes - bv.yr) * (1 - Math.exp(-dt * 3)); bv.cog += bv.yr * dt;
         // speed: keep up with the simulated position, with limits on acceleration and braking
         const fx = Math.sin(bv.cog), fz = -Math.cos(bv.cog), rx = Math.cos(bv.cog), rz = Math.sin(bv.cog), ex = tx - bv.px, ez = tz - bv.pz;
@@ -1930,7 +1879,7 @@ const G3 = (() => {
       DYNP = buf(new Float32Array(4000 * 3), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); DYNA = buf(new Float32Array(4000), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW);
       try { HG = await loadHeights(); } catch (e){ console.error(e); HG = null; }
       try { BLD = await loadBuildings(); } catch (e){ console.error(e); BLD = null; }
-      buildTerrain(); buildStatics(); buildBoat(); buildSkiff(); buildFlag(); buildSea(); buildWild(); buildNPC(); buildVessels(); buildHarbourFittings(); buildMooring(); buildPlants(); buildPlantParts(); buildBunkers();
+      buildTerrain(); buildStatics(); buildBoat(); buildSkiff(); buildFlag(); buildSea(); buildWild(); buildNPC(); buildHarbourFittings(); buildMooring(); buildPlants(); buildPlantParts(); buildBunkers();
       canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); ready = false; failed = true; show(false); });
       buildLabels();
       ready = true; return true;
@@ -2061,32 +2010,27 @@ const G3 = (() => {
     N.lights = {kyst:[[0, 10.2, -1.2, 'w'], [-1.9, 5.3, -2.2, 'r'], [1.9, 5.3, -2.2, 'g'], [0, 2.8, 7.8, 'w']], sjark:[[0, 6.4, 0.3, 'w'], [-1.25, 3.4, 0.2, 'r'], [1.25, 3.4, 0.2, 'g'], [0, 1.6, 5.3, 'w']],
       ferry:[[4.8, 13.5, -6, 'w'], [2, 11, -8, 'r'], [7.6, 11, -8, 'g'], [0, 4, 26, 'w']],
       coastal:[[0, 30, -12, 'w'], [-7.2, 23.5, -26, 'r'], [7.2, 23.5, -26, 'g'], [0, 13, 55, 'w']]};
+    N.lightPx = {sjark:260};   // the small boats' lights are smaller
     NPCM = N;
   }
   const NLC = {w:[1, 0.95, 0.85], r:[1, 0.12, 0.1], g:[0.1, 1, 0.35]};
-  function person(m, x, y, z, suit, ry){ m.box(x, y, z, 0.44, 1.05, 0.32, suit, ry || 0); m.box(x, y + 1.05, z, 0.24, 0.26, 0.24, [0.85, 0.65, 0.5], ry || 0); m.box(x, y + 1.31, z, 0.27, 0.08, 0.27, [0.12, 0.16, 0.3], ry || 0); }
-  function buildPlayerVessel(type, o){
-    const m = MB(), F = o.F, L = o.L, B = o.B, wz = o.wz, ww = o.ww, wl = o.wl, wh = 2.0, WH = [0.93, 0.94, 0.93];
-    shipHull(m, L, B, o.D, F, o.hull, [0.5, 0.12, 0.1], [0.62, 0.6, 0.55]);
-    m.box(-B / 2 + 0.05, F, 0, 0.1, 0.35, L * 0.8, o.hull, 0); m.box(B / 2 - 0.05, F, 0, 0.1, 0.35, L * 0.8, o.hull, 0);
-    // wheelhouse: low walls, corner posts and roof, open windows so you can see out from the helm
-    const x0 = -ww / 2, x1 = ww / 2, z0 = wz - wl / 2, z1 = wz + wl / 2, y0 = F;
-    m.box(0, y0, z0, ww, 1.0, 0.08, WH, 0); m.box(0, y0, z1, ww, wh, 0.08, WH, 0); m.box(x0, y0, wz, 0.08, 1.0, wl, WH, 0); m.box(x1, y0, wz, 0.08, 1.0, wl, WH, 0);
-    for (const [px, pz] of [[x0, z0], [x1, z0], [x0, z1], [x1, z1]]) m.box(px, y0, pz, 0.12, wh, 0.12, WH, 0);
-    m.box(0, y0 + wh, wz, ww + 0.25, 0.14, wl + 0.3, [0.35, 0.37, 0.4], 0, [0.3, 0.32, 0.35]);
-    m.box(0, y0, z0 + 0.35, ww * 0.7, 0.95, 0.4, [0.3, 0.32, 0.34], 0);
-    m.box(0, y0 + wh + 0.14, z0 + 0.2, 0.1, 1.6, 0.1, [0.3, 0.3, 0.3], 0);
-    if (o.bin) m.box(0, F, -L * 0.22, B * 0.45, 0.4, L * 0.22, [0.35, 0.37, 0.4], 0);
-    const sk = MB(); person(sk, 0, y0, z0 + 0.95, [0.93, 0.4, 0.1]);
-    const crew = [0, 1, 2].map(i => { const c = MB(); person(c, (i % 2 ? 1 : -1) * B * 0.28, F, z1 + 0.9 + i * 1.1, [0.95, 0.75, 0.15], i % 2 ? -1.2 : 1.2); return c.mesh(); });
-    PV[type] = {hull:m.mesh(), skipper:sk.mesh(), crew};
-    VGEO[type] = {gw:F, deck:{y:F, z:(z1 + L / 2) / 2}, pl:L * 0.4, rl:B * 0.38, eye:[0, y0 + 1.62, z0 + 1.1], pole:[-B * 0.3, F + 2.2, L / 2 - 0.35], stern:L / 2 + 0.2, bow:-L * 0.35, side:B * 0.45,
-      lights:[[[-ww / 2 - 0.05, y0 + wh - 0.1, z0], [1, 0.12, 0.1]], [[ww / 2 + 0.05, y0 + wh - 0.1, z0], [0.1, 1, 0.35]], [[0, y0 + wh + 1.7, z0 + 0.2], [1, 0.95, 0.85]], [[0, F + 0.6, L / 2], [1, 0.95, 0.85]]]};
+  // the player's vessels other than the skiff: meshes from the vessel kit (vessel3d.js), built the first time each type is shown
+  const PVM = {}; let PERS = null;
+  function pvm(t){
+    if (PVM[t]) return PVM[t]; const m = vesselModel(t); if (!m) return null;
+    const up = o => ({pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3});
+    let cap = null; if (m.cap){ const c = MB(); for (const tr of m.cap) c.tri(tr[0], tr[1], tr[2], [0, 0, 0]); cap = c.mesh(); }
+    return PVM[t] = {hull:up(m.o), glass:up(m.glass), cap};
   }
-  function buildVessels(){
-    buildPlayerVessel('snekke', {L:7.9, B:2.7, D:0.9, F:0.9, wz:1.6, ww:1.7, wl:1.7, hull:[0.86, 0.84, 0.76], bin:true});
-    buildPlayerVessel('sjark', {L:10.4, B:3.8, D:1.1, F:1.2, wz:1.3, ww:2.4, wl:2.8, hull:[0.9, 0.92, 0.94], bin:true});
-    buildPlayerVessel('sjarkny', {L:11, B:4.3, D:1.0, F:1.4, wz:0.4, ww:3.1, wl:3.8, hull:[0.1, 0.22, 0.4], bin:false});
+  function people(){
+    if (PERS) return PERS; const mk = (hands, suit) => { const b = VB(); b.lod = 0.6; personVB(b, 0, 0, 0, false, hands, suit); return {pb:buf(new Float32Array(b.p)), nb:buf(new Float32Array(b.n)), cb:buf(new Float32Array(b.c)), n:b.p.length / 3}; };
+    return PERS = {skip:mk([[-0.16, 1.08, -0.42], [0.16, 1.08, -0.42]], [0.93, 0.4, 0.1, 0.3]), crew:mk(null, [0.95, 0.75, 0.15, 0.3])};
+  }
+  function drawVessel(t, G, BMrel, VP, skipper, ncrew){
+    const m = pvm(t); if (!m) return; const P = people(); nSetup(VP); drawN(m.hull, BMrel);
+    if (skipper) drawN(P.skip, chain(BMrel, M4.T(G.skipperAt[0], G.skipperAt[1], G.skipperAt[2])));
+    for (let i = 0; i < ncrew && i < G.crewSpots.length; i++){ const c = G.crewSpots[i]; drawN(P.crew, chain(BMrel, M4.T(c[0], c[1], c[2]), M4.RY(c[3] || 0))); }
+    gl.disableVertexAttribArray(2); gl.useProgram(PL.p);
   }
   let npcNow = [];
   function drawNPC(eye, t, H){
@@ -2101,7 +2045,7 @@ const G3 = (() => {
   function drawNPCLights(VP){
     if (env.night < 0.05 || !npcNow.length) return;
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.depthMask(false);
-    for (const n of npcNow){ for (const [lx, ly, lz, c] of NPCM.lights[n.type]){ const q = xf(n.M, [lx, ly, lz]); PB[0] = q[0]; PB[1] = q[1]; PB[2] = q[2]; PA[0] = env.night; drawPts(1, gl.POINTS, VP, NLC[c], n.type === 'sjark' ? 260 : 900, true); } }
+    for (const n of npcNow){ for (const [lx, ly, lz, c] of NPCM.lights[n.type]){ const q = xf(n.M, [lx, ly, lz]); PB[0] = q[0]; PB[1] = q[1]; PB[2] = q[2]; PA[0] = env.night; drawPts(1, gl.POINTS, VP, NLC[c], NPCM.lightPx[n.type] || 900, true); } }
     const cs = npcNow.find(n => n.type === 'coastal');
     if (cs){ let k = 0; for (let r = 0; r < 4; r++) for (let i = 0; i < 18; i++) for (const sx of [-1, 1]){ if (hash(r * 97 + i * 13 + (sx > 0 ? 5 : 0)) < 0.35) continue; const q = xf(cs.M, [sx * 8.95, 8.5 + r * 3.2, -24 + i * 3.4]); PB[k * 3] = q[0]; PB[k * 3 + 1] = q[1]; PB[k * 3 + 2] = q[2]; PA[k] = env.night * 0.9; k++; } drawPts(k, gl.POINTS, VP, [1, 0.8, 0.5], 420, true); }
     gl.depthMask(true); gl.disable(gl.BLEND);
@@ -2165,7 +2109,7 @@ const G3 = (() => {
     if (cam.helm){
       // at the wheel: eye above the helmsman, moving with the boat (damped a little)
       const Mh = model(bv.x, bv.y, bv.z, -bv.head, bv.pitch * 0.7, bv.roll * 0.7);
-      eye = xf(Mh, (VGEO[vtype()] || VGEO.skiff).eye);
+      eye = xf(Mh, (GEO(vtype())).eye);
       const cy = Math.cos(cam.hp), dl = [-Math.sin(cam.hy) * cy, Math.sin(cam.hp), -Math.cos(cam.hy) * cy];
       const f = [Mh[0] * dl[0] + Mh[4] * dl[1] + Mh[8] * dl[2], Mh[1] * dl[0] + Mh[5] * dl[1] + Mh[9] * dl[2], Mh[2] * dl[0] + Mh[6] * dl[1] + Mh[10] * dl[2]];
       V = viewDir(f, [Mh[4], Mh[5], Mh[6]]);
@@ -2218,24 +2162,24 @@ const G3 = (() => {
     }
     // near pass
     gl.clear(gl.DEPTH_BUFFER_BIT);
-    const VT = vtype(), VG = VGEO[VT] || VGEO.skiff, ncrew = Math.min(crewAboard().length, VT === 'skiff' ? 1 : 3);
+    const VT = vtype(), VG = GEO(VT), ncrew = Math.min(crewAboard().length, (VG.crewSpots || []).length);
     drawTerrain(TM, eye, VPn, true); drawLit(STAT, TM); drawBuildings(TM);
     // whoever works the deck leaves their place: alone, the skipper leaves the wheel
     DECKACT = deckActivity(); const awaySk = DECKACT.on && DECKACT.alone, awayCr = DECKACT.on && !DECKACT.alone ? 1 : 0;
-    if (VT === 'skiff'){ drawSkiff(BMrel, VPn, dt, !cam.helm && !awaySk, ncrew > 0); gl.useProgram(PL.p); }
-    else { const pv = PV[VT]; drawLit(pv.hull, BMrel); if (!cam.helm && !awaySk) drawLit(pv.skipper, BMrel); for (let i = 0; i < ncrew - awayCr; i++) drawLit(pv.crew[i], BMrel); }
+    if (VG.hand){ drawSkiff(BMrel, VPn, dt, !cam.helm && !awaySk, ncrew > 0); gl.useProgram(PL.p); }
+    else drawVessel(VT, VG, BMrel, VPn, !cam.helm && !awaySk, ncrew - awayCr);
     if (STATN){ nSetup(VPn); drawN(STATN, TM); if (PLANTN) drawN(PLANTN, TM); if (BUNKN) drawN(BUNKN, TM); } drawMooring(BMrel, eye, VPn, t); if (PM) drawDeck(BMrel, eye, VPn, t, DECKACT); drawGearOp(BMrel, eye, VPn, t);
     const plant = PM ? nearestPlant(eye) : null, pr = plant ? drawPlant(plant, eye, VPn, t, BMrel) : null, bunk = PM ? nearestBunker(eye) : null; if (bunk) bunk.last = drawBunker(bunk, eye, VPn, t, BMrel); gl.useProgram(PL.p);
     wildSpawn(t); drawNPC(eye, t, H); drawGearSea(eye, t, VPn, H); drawWild(eye, t, dt);
 
     const pole = xf(BMrel, VG.pole);
     drawLit(FLAGM, model(pole[0], pole[1], pole[2], Math.PI / 2 - appB, 0, 0));
-    if (VT === 'skiff'){ gl.colorMask(false, false, false, false); drawLit(SK ? SK.cap : CAPM, BMrel); gl.colorMask(true, true, true, true); }
+    { const cap = VG.hand ? (SK ? SK.cap : CAPM) : VG.open ? pvm(VT).cap : null; if (cap){ gl.colorMask(false, false, false, false); drawLit(cap, BMrel); gl.colorMask(true, true, true, true); } }
     drawSea(VPn, eye, t, nearFar, 0);
     drawSea(VPn, eye, t, false);
     if (BLD && env.night > 0.02){ gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.depthMask(false); drawChunkLights(VPn, eye); gl.depthMask(true); gl.disable(gl.BLEND); }
     drawEffects(VPn, eye, BMabs, dt, t); drawBlows(VPn, eye, dt); drawNPCLights(VPn); drawSeaLights(VPn, eye, t, true);
-    if (VT === 'skiff') drawSkiffGlass(BMrel, VPn);
+    if (VG.hand) drawSkiffGlass(BMrel, VPn); else drawGlass(pvm(VT).glass, BMrel, VPn);
     if (pr && pr.spray){ gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false); drawPts(pr.spray, gl.POINTS, VPn, [0.86, 0.93, 1], 30, true); gl.depthMask(true); gl.disable(gl.BLEND); }
     if (pr && env.night > 0.05){ gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.depthMask(false); pr.lamps.forEach((q, i) => { PB[i * 3] = q[0]; PB[i * 3 + 1] = q[1]; PB[i * 3 + 2] = q[2]; PA[i] = env.night; }); drawPts(pr.lamps.length, gl.POINTS, VPn, [1, 0.9, 0.72], 1400, true); gl.depthMask(true); gl.disable(gl.BLEND); }
     if (env.night > 0.05){
@@ -2262,7 +2206,7 @@ const G3 = (() => {
     // wake and spray
     const v = bv.v;
     if (v > 1){
-      const VG = VGEO[vtype()] || VGEO.skiff;
+      const VG = GEO(vtype());
       // a trail point for every 1.2 m travelled, stamped with the real clock (independent of frame rate)
       const p = xf(BM, [0, 0, VG.stern]), now = performance.now() / 1000, last = TRAIL[0], moved = last ? Math.hypot(p[0] - last.x, p[2] - last.z) : 99;
       if (moved > 1.2 || (last && now - last.t0 > 0.3)){ wk.odo = (wk.odo || 0) + Math.min(moved, 60); TRAIL.unshift({x:p[0], z:p[2], t0:now, age:0, r:0.45 + Math.random() * 0.55, v, u:wk.odo, hx:Math.sin(bv.head), hz:-Math.cos(bv.head)}); if (TRAIL.length > 700) TRAIL.pop(); }
@@ -2279,7 +2223,7 @@ const G3 = (() => {
     if (TRAIL.length > 1 && WKB){
       const step = 2 * HALF / NP, ox = Math.round(bv.x / step) * step, oz = Math.round(bv.z / step) * step, tide = env.tide || 0;
       const seaY = (x, z) => { const f = 1 - sstep(0.6, 1.0, Math.max(Math.abs(x - ox), Math.abs(z - oz)) / HALF); return tide + (seaH(x, z, t) - tide) * f + 0.07; };
-      const st = xf(BM, [0, 0, (VGEO[vtype()] || VGEO.skiff).stern]), pts = (v > 1 ? [{x:st[0], z:st[2], age:0, v, u:wk.odo || 0, hx:Math.sin(bv.head), hz:-Math.cos(bv.head)}] : []).concat(TRAIL);
+      const st = xf(BM, [0, 0, (GEO(vtype())).stern]), pts = (v > 1 ? [{x:st[0], z:st[2], age:0, v, u:wk.odo || 0, hx:Math.sin(bv.head), hz:-Math.cos(bv.head)}] : []).concat(TRAIL);
       let m = 0; const P = WKB.p, W = WKB.w, Sg = WKB.s, cap = 8900;
       const put = (x, z, u, vv, age, kind, str) => { if (m >= cap) return; P[m * 3] = x - eye[0]; P[m * 3 + 1] = seaY(x, z) - eye[1]; P[m * 3 + 2] = z - eye[2]; W[m * 4] = u; W[m * 4 + 1] = vv; W[m * 4 + 2] = age; W[m * 4 + 3] = kind; Sg[m] = str; m++; };
       const strip = (A, B) => { // A, B: arrays of 3 across-points [x, z, v] at two stations, with u/age/kind/str
@@ -2315,7 +2259,7 @@ const G3 = (() => {
     }
     drawPts(n, gl.POINTS, VP, foamCol, 150, true);
     // fishing lines
-    if (S.boat.status === 'fishing' && vtype() === 'skiff' && SK){
+    if (S.boat.status === 'fishing' && GEO(vtype()).hand && SK){
       const segs = (SK.lines || []).slice(); if (SK.tipW) segs.push([SK.tipW, null]);
       let n = 0;
       for (const [a0, b0] of segs){ if (n > 30) break; const A0 = [a0[0] + eye[0], a0[1] + eye[1], a0[2] + eye[2]], B0 = b0 ? [b0[0] + eye[0], b0[1] + eye[1], b0[2] + eye[2]] : [A0[0], seaH(A0[0], A0[2], t) - 0.2, A0[2]];
@@ -2364,7 +2308,7 @@ const G3 = (() => {
   });
   const up = e => { ptr.delete(e.pointerId); if (ptr.size < 2) pinch = null; if (ptr.size === 1){ const [p] = [...ptr.values()]; drag = {x:p.x, y:p.y}; } else if (!ptr.size) drag = null; };
   canvas.addEventListener('pointerup', up);
-  canvas.addEventListener('dblclick', () => { if (cam.helm){ const G = VGEO[vtype()] || {}; cam.hy = 0; cam.hp = G.hp !== undefined ? G.hp : -0.07; cam.fov = G.fov || 55; } else { cam.yaw = 0.55; cam.pitch = 0.26; cam.dist = 21; } }); canvas.addEventListener('pointercancel', up);
+  canvas.addEventListener('dblclick', () => { if (cam.helm){ const G = GEO(vtype()); cam.hy = 0; cam.hp = G.hp !== undefined ? G.hp : -0.07; cam.fov = G.fov || 55; } else { cam.yaw = 0.55; cam.pitch = 0.26; cam.dist = 21; } }); canvas.addEventListener('pointercancel', up);
   canvas.addEventListener('wheel', e => { e.preventDefault(); cam.dist = clamp(cam.dist * Math.exp(e.deltaY * 0.0012), 7, 8000); }, {passive:false});
 
   function show(on, auto){
@@ -2386,7 +2330,7 @@ const G3 = (() => {
     roadsReady(){ if (NEARM) buildGround(); for (const c of CH.values()) freeChunk(c); CH.clear(); },
     fineReady(){ if (NEARM){ freeMesh(NEARM); NEARM = null; updateNear(); } },
     fishCam(){ cam.helm = false; cam.dist = 7; cam.pitch = 0.22; cam.yaw = -0.85; },
-    isHelm:() => cam.helm, setHelm(on){ const G = VGEO[vtype()] || {}; cam.helm = !!on; cam.hy = 0; cam.hp = G.hp !== undefined ? G.hp : -0.07; cam.fov = G.fov || 55; },
+    isHelm:() => cam.helm, setHelm(on){ const G = GEO(vtype()); cam.helm = !!on; cam.hy = 0; cam.hp = G.hp !== undefined ? G.hp : -0.07; cam.fov = G.fov || 55; },
     _debug:{get eye(){ return lastEye; }, camInside, camFree, get camPull(){ return camPull; }, get camLift(){ return camLift; }, get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, BUNKERS, nearestPlant, fkRun, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; SEAMARKS.lights.forEach((L, i) => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(i, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }}
   };
 })();

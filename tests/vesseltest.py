@@ -14,7 +14,7 @@ def guard():
     src = open(os.path.join(ROOT, 'src/js/core/02-species-gear.js')).read()
     keys = re.findall(r"^  (\w+):\{name:", src[src.index('const VESSELS'):src.index('const BOAT')], re.M)
     hits = []
-    for d in ('src/js/core', 'src/js/ui'):
+    for d in ('src/js/core', 'src/js/ui', 'src/js'):
         for f in sorted(os.listdir(os.path.join(ROOT, d))):
             if not f.endswith('.js'): continue
             for i, line in enumerate(open(os.path.join(ROOT, d, f)), 1):
