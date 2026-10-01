@@ -245,6 +245,8 @@ function fish(H, W, hs){
   // setting or hauling passive gear takes the place of jigging
   if (b.gop){ gearOpMinute(H, W, hs); return; }
   if (!rigJig()) return;   // rigged for passive gear: the boat has no jig out, and the fishing hours are spent waiting
+  // vessels of 15 m or more may not fish inside the fjord line (høstingsforskriften): the boat waits
+  if (BOAT.len >= 15 && insideFjord(b.pos)){ if ((S.fjordWarn || -1e9) < S.t - 720){ S.fjordWarn = S.t; log('Fartøy på 15 meter eller mer kan ikke fiske innenfor fjordlinja. Båten venter.', 'Vessels of 15 m or more may not fish inside the fjord line. The boat waits.'); } return; }
   const {eff, keff, wpen, pen, rod} = catchFactors(H, W, hs);
   if (!S.fsess || dist(S.fsess, b.pos) > 0.3) S.fsess = {x:b.pos.x, y:b.pos.y, t0:S.t, kg:0};
   let got = 0;

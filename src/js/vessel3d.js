@@ -121,7 +121,8 @@ function hullBuild(o, hs, lod){
   const H = hs.H, col = H.col || {}, NS = Math.max(10, Math.round((H.NS || 40) * lod)), NJ = Math.max(5, Math.round(14 * lod));
   const hullC = col.hull || VC.white, botC = col.bottom || VC.afRed, bootC = col.boot || VC.black, stripeC = col.stripe, sheerY = s => hs.sh(s);
   const rows = []; for (let i = 0; i <= NS; i++){ const s = i / NS, Y = hs.sh(s), k = hs.kb(s); rows.push(hs.section(s, NJ).map(q => [q[0], q[1], hs.zAt(s, (q[1] + k) / Math.max(0.05, Y + k)), q[2]])); }
-  const colAt = (y, s) => y < -0.02 ? botC : y < 0.1 ? bootC : (stripeC && y > sheerY(s) - (H.stripeW || 0.14)) ? stripeC : hullC;
+  const lowC = col.lower, bandY = H.bandY || 0;
+  const colAt = (y, s) => y < -0.02 ? botC : y < 0.1 ? bootC : (stripeC && y > sheerY(s) - (H.stripeW || 0.14)) ? stripeC : (lowC && y < bandY) ? lowC : hullC;
   const side = (sg, from, to) => {
     const G = rows.map(r => { const sl = r.slice(from, to + 1).map(q => [sg * q[0], q[1], q[2]]); return sg > 0 ? sl : sl.reverse(); });
     o.grid(G, (i, j) => { const a = G[i][j], b = G[i + 1][j + 1]; return colAt((a[1] + b[1]) / 2, i / NS); });
@@ -170,8 +171,8 @@ function wallWin(o, gb, A0, B0, A1, B1, sill, top, nwin, wallC, frameC, mull){
 }
 // a wheelhouse: footprint at deck height y0 from zf (front) to za (aft), width w, height hgt; rake moves the top of the front wall aft
 // (negative: leans forward, as on most northern fishing boats); returns where the helm, the roof and the side lights are
-function partHouse(o, gb, p, y0){
-  const w = p.w, hw = w / 2, hgt = p.h, zf = p.zf, za = p.za, rk = p.rake || 0, tm = p.tumble == null ? 0.06 : p.tumble, y1 = y0 + hgt, c = p.col || VC.white, fc = p.frame || VC.dark;
+function partHouse(o, gb, p, y0, hs){
+  const w = hs ? Math.min(p.w, 2 * (Math.min(hs.xAt(hs.sOf(p.zf), Math.min(y0, hs.sh(hs.sOf(p.zf)))), hs.xAt(hs.sOf(p.za), Math.min(y0, hs.sh(hs.sOf(p.za))))) - 0.12)) : p.w, hw = w / 2, hgt = p.h, zf = p.zf, za = p.za, rk = p.rake || 0, tm = p.tumble == null ? 0.06 : p.tumble, y1 = y0 + hgt, c = p.col || VC.white, fc = p.frame || VC.dark;
   const FL0 = [-hw, y0, zf], FR0 = [hw, y0, zf], AL0 = [-hw, y0, za], AR0 = [hw, y0, za], FL1 = [-hw + tm, y1, zf + rk], FR1 = [hw - tm, y1, zf + rk], AL1 = [-hw + tm, y1, za], AR1 = [hw - tm, y1, za];
   const sill = p.sill || hgt * 0.5, top = hgt - (p.band || 0.18), nw = p.nwin || 3, ns = p.nside || Math.max(1, Math.round((za - zf) / 1.1));
   wallWin(o, gb, FL0, FR0, FL1, FR1, sill, top, nw, c, fc);                        // front
@@ -229,8 +230,18 @@ function partFenders(o, hs, p){ for (const s of p.at || [0.25, 0.5, 0.75]) for (
 // an engine box (motorkasse) and thwarts in an open boat
 function partEngineBox(o, hs, p){ const s = hs.sOf(p.z), y = hs.deckY(s); o.rbox(0, y, p.z, p.w || 0.8, p.h || 0.6, p.l || 1.0, 0.06, p.col || VC.teak); }
 function partThwart(o, hs, p){ const s = hs.sOf(p.z), y = hs.deckY(s) + (p.h || 0.38), x = hs.xAt(s, y) - 0.04; o.box(0, y, p.z, 2 * x, 0.05, 0.28, p.col || VC.wood); }
+// a tiller from the rudder head forward (open boats), jigging reels on the rails, and a hauling port in a shelter deck
+function partTiller(o, hs, p){ const z0 = hs.zAt(0, 1) - 0.1, y = hs.sh(0.03) + 0.05; o.tube([[0, y - 0.3, z0], [0, y, z0 - 0.15], [0, y + 0.12, z0 - 1.1]], 0.035, VC.wood, 6); }
+function partJukse(o, hs, p){ for (const z of p.at) for (const sg of p.sides || [1, -1]){ const s = hs.sOf(z), x = sg * (hs.hbS(s) - 0.12), y = hs.sh(s);
+  o.box(x, y, z, 0.24, 0.32, 0.32, VC.yellow); o.tube([[x - sg * 0.04, y + 0.2, z - 0.2], [x - sg * 0.04, y + 0.2, z + 0.2]], 0.11, VC.dark, 10); o.tube([[x, y + 0.3, z], [x + sg * 0.75, y + 0.75, z]], 0.018, VC.dark, 4); } }
+function partPort(o, hs, p){ const s = hs.sOf(p.z), y = hs.deckY(s) + 0.15, x = hs.xAt(s, y + p.h / 2) + 0.03; o.quad([x, y, p.z - p.l / 2], [x, y, p.z + p.l / 2], [x, y + p.h, p.z + p.l / 2], [x, y + p.h, p.z - p.l / 2], VC.black); }
+// a shelter deck flush with the hull sides: the bulwarks go up to the roof, which runs at the height of the sheer from zf to za
+function partShelter(o, hs, p){ const N = 16, G = []; for (let i = 0; i <= N; i++){ const z = p.zf + (p.za - p.zf) * i / N, s = hs.sOf(z), y = hs.sh(s) + 0.02, x = hs.hbS(s) - 0.02; G.push([[-x, y, z], [0, y + 0.06, z], [x, y, z]]); }
+  o.grid(G.map(r => r.slice().reverse()), () => p.col || VC.deck);
+  for (const z of [p.zf, p.za]){ const s = hs.sOf(z), y0 = hs.deckY(s), y1 = hs.sh(s), x = hs.xAt(s, y0) - 0.04, xt = hs.hbS(s) - 0.06; if (z === p.za) o.quad([-x, y0, z], [x, y0, z], [xt, y1, z], [-xt, y1, z], VC.inner); }
+  return hs.sh(hs.sOf((p.zf + p.za) / 2)) + 0.08; }
 // a superstructure deck with windows (ocean vessels and the bigger coastal boats)
-function partBlock(o, gb, p, y0){ const hw = p.w / 2, A0 = [-hw, y0, p.zf], B0 = [hw, y0, p.zf], C0 = [hw, y0, p.za], D0 = [-hw, y0, p.za], y1 = y0 + p.h, up = q => [q[0], y1, q[2]], c = p.col || VC.white, fc = p.frame || VC.dark;
+function partBlock(o, gb, p, y0, hs){ const w = hs ? Math.min(p.w, 2 * (Math.min(hs.xAt(hs.sOf(p.zf), y0), hs.xAt(hs.sOf(p.za), y0)) - 0.1)) : p.w; p = Object.assign({}, p, {w}); const hw = p.w / 2, A0 = [-hw, y0, p.zf], B0 = [hw, y0, p.zf], C0 = [hw, y0, p.za], D0 = [-hw, y0, p.za], y1 = y0 + p.h, up = q => [q[0], y1, q[2]], c = p.col || VC.white, fc = p.frame || VC.dark;
   const nw = p.nwin || 0, ns = p.nside || 0, sill = p.h * 0.45, top = p.h - 0.25;
   wallWin(o, gb, A0, B0, up(A0), up(B0), sill, top, nw, c, fc); wallWin(o, gb, B0, C0, up(B0), up(C0), sill, top, ns, c, fc);
   wallWin(o, gb, C0, D0, up(C0), up(D0), sill, top, 0, c, fc); wallWin(o, gb, D0, A0, up(D0), up(A0), sill, top, ns, c, fc);
@@ -258,11 +269,45 @@ const SPEC3D = {
       ['exhaust', {x:0.75, z:3.6, h:2.5}], ['raft', {x:-0.55, z:2.6, on:'house'}], ['hauler', {z:-0.3, kind:'line'}], ['gallows', {z:4.75, h:2.4}],
       ['rails', {s0:0.84, s1:0.99, h:0.6}], ['tubs', {z:-1.4, n:2}], ['fenders', {at:[0.3, 0.55, 0.75]}]],
     work:{z:-0.9}, crew:[[0.7, -0.6, -1.5], [-0.7, -1.4, 1.6], [0, 0.2, 3.14]]},
+  trebat:{hull:{form:'round', F:0.6, fr:0.32, ar:0.26, rake:0.3, srake:0.32, tw:0, smax:0.5, entry:1.9, run:1.9, Tc:0.52, n:1.8, flare:0.08, soleY:0.2, NS:34,
+      col:{hull:[0.9, 0.91, 0.9, 0.45], stripe:VC.red, bottom:VC.afBlack, boot:VC.black, deck:VC.wood, inner:VC.wood, rail:VC.teak}, stripeW:0.09, railR:0.05},
+    open:true, parts:[['engine', {z:0.35, w:0.62, l:0.85, h:0.55}], ['thwart', {z:-1.5}], ['thwart', {z:1.45, h:0.3}], ['tiller', {}], ['tubs', {z:-0.6, n:1, col:VC.tub}]],
+    work:{z:-0.6}, crew:[[0.35, -1.2, 1.5]]},
+  jukesjark:{hull:{form:'round', F:0.82, fr:0.5, ar:0.16, rake:0.75, srake:0.15, tw:0.72, smax:0.48, entry:2.1, run:2.0, Tc:0.78, n:2.3, flare:0.08, trise:0.25, bulH:0.5, NS:38,
+      col:{hull:VC.white, stripe:VC.blue, bottom:VC.afRed, boot:VC.blue, deck:VC.deck, inner:VC.inner, rail:VC.blue}, stripeW:0.13},
+    parts:[['house', {zf:0.85, za:3.05, w:2.0, h:1.9, rake:-0.15, sill:0.95, nwin:3, nside:2, col:VC.white, roof:VC.blue}], ['mast', {z:2.5, h:2.0, radar:'dome', on:'house'}],
+      ['exhaust', {x:0.65, z:2.95, h:2.3}], ['jukse', {at:[-0.6, -2.0]}], ['rails', {s0:0.84, s1:0.99, h:0.6}], ['tubs', {z:-1.2, n:2}], ['fenders', {at:[0.3, 0.55, 0.75]}]],
+    work:{z:-0.9}, crew:[[0.6, -0.6, -1.5], [-0.6, -1.9, 1.6]]},
+  hurtigsjark:{hull:{form:'chine', F:1.1, fr:0.42, ar:0.08, rake:0.8, srake:-0.1, tw:0.92, smax:0.56, entry:1.9, run:1.4, Tc:0.8, dr:15, drF:40, flare:0.1, flareFwd:0.12, trise:0.85, bulH:0.55, NS:40,
+      col:{hull:VC.white, stripe:VC.blue, bottom:VC.afRed, boot:VC.blue, deck:VC.deck, inner:VC.inner, rail:VC.blue}, stripeW:0.16},
+    parts:[['house', {zf:-2.4, za:0.6, w:3.0, h:2.0, rake:0.4, sill:1.0, nwin:3, nside:2, col:VC.white, roof:VC.white, frame:VC.black}], ['mast', {z:0.1, h:1.7, radar:'open', radarL:1.5, on:'house'}],
+      ['raft', {x:-0.8, z:-0.5, on:'house'}], ['hauler', {z:1.4, kind:'line'}], ['gallows', {z:5.1, h:2.4, col:VC.white}], ['rails', {s0:0.82, s1:0.99, h:0.7}], ['tubs', {z:2.6, n:2}], ['fenders', {at:[0.3, 0.5, 0.7]}]],
+    work:{z:2.8}, crew:[[0.8, 2.2, -1.6], [-0.8, 3.4, 1.6], [0.2, 4.2, 3.14]]},
   sjarkny:{hull:{form:'chine', F:1.2, fr:0.45, ar:0.08, rake:0.85, srake:-0.12, tw:0.94, smax:0.56, entry:1.9, run:1.4, Tc:0.85, dr:15, drF:40, flare:0.1, flareFwd:0.12, trise:0.85, bulH:0.6, NS:40,
       col:{hull:VC.navy, stripe:VC.white, bottom:VC.afRed, boot:VC.white, deck:VC.deck, inner:VC.inner, rail:VC.white}, stripeW:0.1, noRudder:false},
     parts:[['house', {zf:-2.7, za:0.5, w:3.3, h:2.1, rake:0.45, sill:1.0, nwin:3, nside:2, col:VC.white, roof:VC.white, frame:VC.black}], ['mast', {z:0.0, h:1.8, radar:'open', radarL:1.8, on:'house'}],
       ['raft', {x:-0.9, z:-0.6, on:'house'}], ['hauler', {z:1.4, kind:'line'}], ['gallows', {z:5.15, h:2.6, col:VC.white}], ['rails', {s0:0.82, s1:0.99, h:0.7}], ['tubs', {z:2.6, n:4}], ['fenders', {at:[0.3, 0.5, 0.7]}]],
-    work:{z:2.9}, crew:[[0.9, 2.2, -1.6], [-0.9, 3.4, 1.6], [0.2, 4.2, 3.14]]}
+    work:{z:2.9}, crew:[[0.9, 2.2, -1.6], [-0.9, 3.4, 1.6], [0.2, 4.2, 3.14]]},
+  breisjark:{hull:{form:'round', F:1.3, fr:0.6, ar:0.18, rake:0.7, srake:0, tw:0.9, smax:0.5, entry:2.0, run:1.2, Tc:1.65, n:3.0, flare:0.06, trise:0.35, bulH:0.9, NS:40,
+      col:{hull:VC.red, stripe:VC.white, bottom:VC.afBlack, boot:VC.white, deck:VC.deck, inner:VC.inner, rail:VC.white}, stripeW:0.12},
+    parts:[['house', {zf:-3.9, za:-0.7, w:4.6, h:2.3, rake:-0.25, sill:1.1, nwin:4, nside:2, col:VC.white, roof:VC.white, frame:VC.black}], ['mast', {z:-1.3, h:2.6, radar:'open', radarL:2.0, on:'house'}],
+      ['exhaust', {x:1.6, z:-0.9, h:2.8}], ['raft', {x:-1.3, z:-1.6, on:'house'}], ['hauler', {z:0.6, kind:'garn'}], ['davit', {z:2.2}], ['gallows', {z:5.15, h:2.8, col:VC.yellow}],
+      ['rails', {s0:0.86, s1:0.99, h:0.5}], ['tubs', {z:2.0, n:4}], ['fenders', {at:[0.3, 0.55, 0.75]}]],
+    work:{z:2.6}, crew:[[1.4, 1.6, -1.6], [-1.4, 2.6, 1.6], [0.4, 3.6, 3.14], [-0.6, 1.2, 0]]},
+  kyst15:{hull:{form:'round', F:3.1, fr:0.55, ar:0.1, rake:1.5, srake:0, tw:0.86, smax:0.48, entry:2.2, run:1.5, Tc:2.15, n:2.8, flare:0.05, flareFwd:0.05, trise:0.3, bulH:2.15, NS:44, bandY:1.25,
+      col:{hull:VC.white, lower:VC.blue, stripe:VC.blue, bottom:VC.afRed, boot:VC.white, deck:VC.deck, inner:VC.inner, rail:VC.blue}, stripeW:0.12},
+    parts:[['shelter', {zf:-6.2, za:4.6}], ['port', {z:-3.4, l:1.6, h:1.5}],
+      ['house', {zf:-4.6, za:-1.4, w:4.4, h:2.2, rake:-0.3, sill:1.05, nwin:4, nside:2, on:'block', col:VC.white, roof:VC.white, frame:VC.black}],
+      ['mast', {z:-2.1, h:3.0, radar:'open', radarL:2.4, on:'house'}], ['exhaust', {x:1.5, z:0.1, h:2.0, on:'block'}], ['raft', {x:-1.8, z:0.6, on:'block'}], ['raft', {x:1.8, z:2.0, on:'block'}],
+      ['crane', {z:3.6, x:-1.7, h:1.4, reach:3.2, on:'block'}], ['rails', {s0:0.0, s1:0.12, h:0.6}], ['tubs', {z:6.0, n:2}], ['fenders', {at:[0.3, 0.55, 0.75]}]],
+    work:{z:6.0}, crew:[[1.6, 5.8, -1.6], [-1.6, 6.4, 1.6], [0.6, 6.7, 3.14], [-0.6, 5.6, 0], [2.2, -3.4, -1.57]]},
+  kyst21:{hull:{form:'round', F:1.25, fr:1.6, ar:0.55, rake:2.2, srake:1.6, tw:0, smax:0.45, entry:2.3, run:1.6, Tc:2.5, n:2.4, flare:0.1, bulH:0.95, NS:48,
+      col:{hull:VC.teal, stripe:VC.white, bottom:VC.afRed, boot:VC.white, deck:VC.deckRed, inner:VC.inner, rail:VC.white}, stripeW:0.16},
+    parts:[['block', {zf:2.0, za:7.0, w:5.6, h:2.0, nwin:0, nside:4, col:VC.white, roof:VC.deck}],
+      ['house', {zf:2.4, za:5.6, w:4.4, h:2.2, rake:-0.25, sill:1.05, nwin:4, nside:2, on:'block', col:VC.white, roof:VC.white, frame:VC.black}],
+      ['mast', {z:4.6, h:3.0, radar:'open', radarL:2.2, on:'house'}], ['mast', {z:-6.0, h:6.5, r:0.12, span:1.2}], ['funnel', {z:6.5, w:0.7, l:0.95, h:1.7, col:VC.black, on:'block'}],
+      ['raft', {x:-1.8, z:6.4, on:'block'}], ['hauler', {z:0.5, kind:'garn'}], ['gallows', {z:8.6, h:3.4, col:VC.yellow}], ['tubs', {z:-2.0, n:4}], ['fenders', {at:[0.3, 0.55, 0.72]}]],
+    work:{z:-1.8}, crew:[[1.8, -1.2, -1.6], [-1.8, -2.6, 1.6], [0.6, -3.6, 3.14], [-0.6, -0.4, 0], [2.4, 0.5, -1.57]]}
 };
 // a model for a type: the hull with its fittings (near: lod 1), the glass, the depth cap for open hulls, and where things are
 const VMODEL = {};
@@ -273,8 +318,8 @@ function buildVesselModel(type, lod){
   hullBuild(o, hs, lod);
   let house = null, roofY = null; const anch = {};
   for (const [kind, p] of sp.parts){
-    const base = p.on === 'house' && house ? house.roofY : null;
-    if (kind === 'house'){ const y0 = p.deckY != null ? p.deckY : hs.deckY(hs.sOf((p.zf + p.za) / 2)); house = partHouse(o, gb, p, y0); roofY = house.roofY; }
+    const base = p.on === 'house' && house ? house.roofY : p.on === 'block' && anch.top ? anch.top : null;
+    if (kind === 'house'){ const y0 = p.deckY != null ? p.deckY : p.on === 'block' && anch.top ? anch.top : hs.deckY(hs.sOf((p.zf + p.za) / 2)); house = partHouse(o, gb, p, y0, p.on === 'block' ? null : hs); roofY = house.roofY; }
     else if (kind === 'mast'){ anch.mast = partMast(o, p, base != null ? base : hs.deckY(hs.sOf(p.z))); }
     else if (kind === 'exhaust') partExhaust(o, p, base != null ? base : hs.deckY(hs.sOf(p.z)));
     else if (kind === 'raft') partRaft(o, p, base != null ? base : hs.deckY(hs.sOf(p.z)));
@@ -287,7 +332,7 @@ function buildVesselModel(type, lod){
     else if (kind === 'fenders') partFenders(o, hs, p);
     else if (kind === 'engine') partEngineBox(o, hs, p);
     else if (kind === 'thwart') partThwart(o, hs, p);
-    else if (kind === 'block'){ const top = partBlock(o, gb, p, p.y0 != null ? p.y0 : (base != null ? base : hs.deckY(hs.sOf((p.zf + p.za) / 2)))); if (p.bridge) house = {roofY:top, helm:[0, top - p.h - 0.1, p.zf + 0.9], eye:[0, top - p.h + 1.56, p.zf + 0.8], sideL:[[-p.w / 2 - 0.05, top - 0.4, p.zf + 0.3], [p.w / 2 + 0.05, top - 0.4, p.zf + 0.3]], zf:p.zf, za:p.za}; anch.top = top; }
+    else if (kind === 'block'){ const top = partBlock(o, gb, p, p.y0 != null ? p.y0 : (base != null ? base : hs.deckY(hs.sOf((p.zf + p.za) / 2))), hs); if (p.bridge) house = {roofY:top, helm:[0, top - p.h - 0.1, p.zf + 0.9], eye:[0, top - p.h + 1.56, p.zf + 0.8], sideL:[[-p.w / 2 - 0.05, top - 0.4, p.zf + 0.3], [p.w / 2 + 0.05, top - 0.4, p.zf + 0.3]], zf:p.zf, za:p.za}; anch.top = top; }
     else if (kind === 'funnel') partFunnel(o, p, base != null ? base : (anch.top || hs.deckY(hs.sOf(p.z))));
     else if (kind === 'gantry') partGantry(o, hs, p);
     else if (kind === 'ramp') partRamp(o, hs, p);
@@ -295,6 +340,10 @@ function buildVesselModel(type, lod){
     else if (kind === 'crane') partCrane(o, hs, p);
     else if (kind === 'pblock') partBlockP(o, hs, p);
     else if (kind === 'netbin') partNetBin(o, hs, p);
+    else if (kind === 'tiller') partTiller(o, hs, p);
+    else if (kind === 'shelter'){ anch.top = partShelter(o, hs, p); }
+    else if (kind === 'jukse') partJukse(o, hs, p);
+    else if (kind === 'port') partPort(o, hs, p);
   }
   const geo = vesselGeo(type, hs, sp, house, anch);
   return {o, glass:gb, cap:sp.open ? hullCap(hs) : null, geo, hs};

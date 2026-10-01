@@ -333,9 +333,17 @@ function yearH(H){ return gDate(H).getUTCFullYear(); }
 function quotaState(){ const y = yearH(S.t / 60); if (!S.quota || S.quota.y !== y) S.quota = {y, torsk:0, hyse:0, sei:0, ffW:-1, ffTot:0, ffCod:0, conf:0, confKr:0, byCod:0}; return S.quota; }
 // vessels with a participation right in the closed group, J-30-2026 §§ 16, 18, 19 (hyse and saithe for largest length under 11 m);
 // quota priced at about NOK 225 per kg of cod (estimate from Riksrevisjonen's 2017 level and the cod price since)
+// Vessels for sale with a closed-group right (deltakeradgang), by quota length (hjemmelslengde), with J-30-2026's figures: cod as a
+// fixed vessel quota, haddock and saithe as [maximum, guaranteed] kg. The price is the boat plus the cod quota at KPK kr a kg. KPK is
+// an estimate: Hepsøfjord (10.98 m, two quota sets) sold for 17.5 million in 2025, about 270 kr/kg; Riksrevisjonen put a 9 m right at
+// 1.8 million in 2017, when the quotas were far bigger. To be checked against the quota brokers.
+const KPK = 260;
 const LIC_OFFERS = [
-  {id:'u7', ves:'snekke', hl:'under 7 m', cod:9562, hyse:[91198, 4343], sei:[163515, 5275], kpk:225, no:'Snekke 26 fot med kvote i lukket gruppe', en:'26 ft snekke with a closed-group quota'},
-  {id:'h10', ves:'sjark', hl:'10–10,9 m', cod:17780, hyse:[167727, 7987], sei:[300754, 9702], kpk:225, no:'Sjark 34 fot med kvote i lukket gruppe', en:'34 ft sjark with a closed-group quota'}
+  {id:'u7', ves:'trebat', hl:'under 7 m', cod:9562, hyse:[91198, 4343], sei:[163515, 5275], kpk:KPK, no:'Gammel tresnekke med hjemmel under 7 m', en:'Old wooden snekke with a right under 7 m'},
+  {id:'h7', ves:'snekke', hl:'7–7,9 m', cod:11301, hyse:[106700, 5100], sei:[191200, 6200], kpk:KPK, no:'Plastsnekke med hjemmel 7–7,9 m', en:'Fibreglass snekke with a right of 7–7.9 m'},
+  {id:'h8', ves:'jukesjark', hl:'8–8,9 m', cod:13434, hyse:[127000, 6000], sei:[227800, 7300], kpk:KPK, no:'Plastsjark med hjemmel 8–8,9 m', en:'Fibreglass sjark with a right of 8–8.9 m'},
+  {id:'h9', ves:'sjark', hl:'9–9,9 m', cod:16437, hyse:[157100, 7500], sei:[281800, 9100], kpk:KPK, no:'Sjark 34 fot med hjemmel 9–9,9 m', en:'34 ft sjark with a right of 9–9.9 m'},
+  {id:'h10', ves:'hurtigsjark', hl:'10–10,9 m', cod:17780, hyse:[167727, 7987], sei:[300754, 9702], kpk:KPK, no:'Hurtigsjark med hjemmel 10–10,9 m', en:'Speed sjark with a right of 10–10.9 m'}
 ];
 function licValue(l){ return l ? Math.round(l.cod * l.kpk) : 0; }
 function lenGroup(){ const L = BOAT.len || 5.8; return L < 8 ? 0 : L < 10 ? 1 : 2; }

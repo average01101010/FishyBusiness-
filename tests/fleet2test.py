@@ -31,7 +31,7 @@ async def main():
           S.tripOwner = false; R.openOps = land(mix);
           withVessel(v2, () => { S.tripOwner = true; R.second = land(mix); quotaState().byCod = 1990; R.secondCap = land(mix); });
           R.openBefore = openVesselId();
-          const v3 = newVesselObj('sjark', 'finnsnes', lic(LIC_OFFERS[1]));
+          const v3 = newVesselObj('sjark', 'finnsnes', lic(LIC_OFFERS.find(o => o.id === 'h10')));
           R.openAfterLic = openVesselId();
           S.tripOwner = true; R.firstAfterLic = land(mix);
           withVessel(v3, () => { R.licensed = land(mix); });
@@ -57,7 +57,7 @@ async def main():
           const mk = sk => { const wps = exitWps(HP, rt[0]).map(W).concat(rt.map((q, i) => ({x:q.x, y:q.y, port:null, fish:i === rt.length - 1 ? 4 : 0}))); rt.slice(0, -1).reverse().forEach(q => wps.push(W(q)));
             entryWps(HP, rt[0]).forEach(q => wps.push(W(q))); const h = HP.p; wps.push({x:h.x, y:h.y, port:'husoy', fish:0}); return {on:true, dep:5, days:[1, 1, 1, 1, 1, 1, 1], maxWind:20, skipper:sk.id, last:-1, wps, speed:16, home:'husoy', end:'husoy', hours:8}; };
           const hand = () => Object.assign(genCrew(), {bi:false, off:false}); const v1 = curVessel(); S.crew = [hand()]; S.ops = mk(S.crew[0]); S.hold = []; S.boat.port = 'husoy'; S.boat.pos = {...portById('husoy').p}; S.boat.fuel = 90; S.boat.gear = true;
-          const O = LIC_OFFERS[0], v2 = newVesselObj('snekke', 'husoy', {id:O.id, hl:O.hl, cod:O.cod, hyse:O.hyse, sei:O.sei, kpk:O.kpk});
+          const O = LIC_OFFERS.find(o => o.id === 'u7'), v2 = newVesselObj('snekke', 'husoy', {id:O.id, hl:O.hl, cod:O.cod, hyse:O.hyse, sei:O.sei, kpk:O.kpk});
           withVessel(v2, () => { S.crew = [hand()]; S.ops = mk(S.crew[0]); S.boat.gear = true; });
           const log0 = S.log.length; let onLand = 0, maxAtSea = 0;
           for (let i = 0; i < 7 * 1440; i++){ step(); if (i % 10 === 0){ let n = 0; for (const v of S.fleet){ const b = vget(v, 'boat'); if (b.status !== 'port'){ n++; if (isLand(b.pos)) onLand++; } } maxAtSea = Math.max(maxAtSea, n); } }
@@ -110,7 +110,7 @@ async def main():
         print(ok(len(r['fleet']) == 2 and r['me'] == btn3['me'] and r['bound']), 'two vessels, the one you are aboard and the bound aliases survive a reload')
 
         # 5. a new build ordered for the fleet is added when the yard delivers
-        order = await pg.evaluate("""(()=>{ S.cash = 1e7; S.order = null; for (const v of S.fleet) withVessel(v, () => { S.plan = null; S.boat.status = 'port'; S.boat.port = 'finnsnes'; });
+        order = await pg.evaluate("""(()=>{ S.cash = 2e7; S.order = null; for (const v of S.fleet) withVessel(v, () => { S.plan = null; S.boat.status = 'port'; S.boat.port = 'finnsnes'; });
           PHONE.open('fartoy'); document.querySelector('[data-pa="sub"][data-s="marked"]').click();
           const n0 = S.fleet.length; document.querySelector('[data-pa="buy"][data-ti="0"][data-k="sjarkny"]').click(); const vid = S.order ? S.order.vid : 'no order';
           S.t = S.order.due; deliverOrder(); const nv = S.fleet[S.fleet.length - 1];

@@ -61,6 +61,21 @@ async def main():
                  and 'sonar' in f['sjark'] and 'sonar' not in f['snekke'] and 'motor90' in f['skiff'] and 'motor90' not in f['snekke']), 'equipment fits by size and engine')
         print(ok(r['boost'] == [30, 1.35] and r['plain'] == [24, 1]), 'the 90 hp outboard gives the skiff 30 kn and a thirstier engine')
         print(ok(r['same'] == [['skiff', 60, 'box', 3, 10], ['snekke', 150, 'box', 5, 3], ['sjark', 300, 'tub', 8, 3], ['sjarkny', 400, 'tub', 10, 10]]), 'the old type tables (tub, landing, yard hours, acceleration) are now fields with the same values')
+        # the ladder: prices rise with what you get, the closed-group offers sit on the right boats, the ocean fleet is locked, big boats keep out of the fjords
+        r = await pg.evaluate("""(()=>{ const R = {}, b = S.boat;
+          R.ladder = Object.entries(VESSELS).map(([k, V]) => [k, V.len, V.cls, !!V.lock]);
+          R.offers = LIC_OFFERS.map(O => [O.id, O.ves, VESSELS[O.ves].len, Math.round((VESSELS[O.ves].price + licValue(O)) / 1000)]);
+          // the 8.9 m sjark is in the open group's 8–9.99 m quota group: 5.6 t of cod
+          const t0 = b.type; b.type = 'jukesjark'; applyVessel(); R.jukGroup = [lenGroup(), codLimits().max]; b.type = 'kyst21'; applyVessel();
+          const inside = GROUNDS.find(g => insideFjord(g.p) && depthF(g.p) > 20).p; b.status = 'fishing'; b.port = null; b.pos = {...inside}; b.gop = null; b.rig = 'juksa'; b.gear = true; b.fishUntil = S.t + 120; S.hold = []; S.crew = [];
+          for (let i = 0; i < 60; i++) step(); R.fjord = {kg:Math.round(holdTotal()), warn:S.log.slice(-40).some(e => /fjordlinja/.test(e.no))};
+          b.type = t0; applyVessel(); b.status = 'idle'; return R; })()""")
+        print('ladder:', json.dumps(r, ensure_ascii=False))
+        lens = [x[1] for x in r['ladder'] if x[2] != 'hav']
+        print(ok(len(r['ladder']) >= 14 and all(x[3] for x in r['ladder'] if x[2] == 'hav') and not any(x[3] for x in r['ladder'] if x[2] != 'hav')), 'the ladder runs from the open boat to the ocean fleet, and only the ocean fleet is locked')
+        print(ok([o[0] for o in r['offers']] == ['u7', 'h7', 'h8', 'h9', 'h10'] and r['offers'][0][3] < r['offers'][-1][3]), 'five closed-group offers by quota length, the cheapest the smallest')
+        print(ok(r['jukGroup'][0] == 1 and r['jukGroup'][1] == 5600), 'the 8.9 m sjark fishes in the open group 8–9.99 m with 5.6 t of cod')
+        print(ok(r['fjord']['kg'] == 0 and r['fjord']['warn']), 'a 21 m vessel may not jig inside the fjord line')
         print('errors:', errs[:5]); await br.close()
 
 asyncio.run(main())
