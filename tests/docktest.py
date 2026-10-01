@@ -42,7 +42,7 @@ async def run(p, w, h, tag):
     check(lbl[:3] == ['Marked', 'Bygd', 'Verft'], 'knappene har kort tekst under ikonet', lbl)
 
     # the fans
-    for m, want in (('marked', ['lever', 'is', 'agn']), ('bygd', ['pub', 'bank', 'oppdrag', 'mannskap']), ('verft', ['batmarked', 'oppgr', 'fiskeutstyr', 'vedlikehold', 'bunker'])):
+    for m, want in (('marked', ['lever', 'is', 'agn']), ('bygd', ['pub', 'bank', 'oppdrag', 'mannskap']), ('verft', ['batmarked', 'oppgr', 'fiskeutstyr', 'rigg', 'vedlikehold', 'bunker'])):
         await tap_el('#dock [data-dk=' + m + ']'); await pg.wait_for_timeout(250)
         f = await pg.evaluate("[...document.querySelectorAll('#dockFan [data-dk]')].map(x => x.dataset.dk)")
         vis = await pg.evaluate("!document.getElementById('dockFan').hidden")
@@ -73,7 +73,7 @@ async def run(p, w, h, tag):
 
     # pages in the yard and the village
     for m, it, title, sel in (('verft', 'oppgr', 'Oppgraderinger', '[data-pa=equip]'), ('verft', 'fiskeutstyr', 'Fiskeutstyr', '[data-pa=grbuy]'), ('verft', 'batmarked', 'Båthandel', '[data-pa=buy]'),
-                              ('verft', 'vedlikehold', 'Vedlikehold', '[data-pa=svc]'), ('bygd', 'bank', 'Kystbanken', '.ph-big'), ('bygd', 'oppdrag', 'Oppdrag', '.ph-card'), ('bygd', 'mannskap', 'Mannskap', '.ph-card')):
+                              ('verft', 'vedlikehold', 'Vedlikehold', '[data-pa=svc]'), ('verft', 'rigg', 'Rigg', '.rig.on'), ('bygd', 'bank', 'Kystbanken', '.ph-big'), ('bygd', 'oppdrag', 'Oppdrag', '.ph-card'), ('bygd', 'mannskap', 'Mannskap', '.ph-card')):
         await tap_el('#dock [data-dk=' + m + ']'); await pg.wait_for_timeout(200)
         await tap_el('#dockFan [data-dk=' + it + ']'); await pg.wait_for_timeout(300)
         ok = await pg.evaluate("document.getElementById('drawerTitle').textContent === '" + title + "' && !!document.querySelector('#drawerBody " + sel + "')")
@@ -135,7 +135,7 @@ async def run(p, w, h, tag):
     await pg.screenshot(path='dock_sea_' + tag + '.png')
 
     # «Sett ut»: the chart opens with the gear drawn as a line from the boat, exactly as long as the gear
-    await pg.evaluate("(() => { const pg = S.pgear; pg.lines.hyse.n = 3; pg.lines.hyse.baited = 3; pg.kits.n = 4; S.crew = S.crew.length ? S.crew : []; renderActs(); })()")
+    await pg.evaluate("(() => { const pg = S.pgear; pg.lines.hyse.n = 3; pg.lines.hyse.baited = 3; pg.kits.n = 4; S.boat.rig = 'line'; S.crew = S.crew.length ? S.crew : []; renderActs(); })()")
     await tap_el('#dock [data-dk=settut]'); await pg.wait_for_timeout(300)
     fan = await pg.evaluate("[...document.querySelectorAll('#dockFan .dk-l')].map(x => x.textContent)")
     i = next((k for k, t in enumerate(fan) if 'hyseline' in t), None)

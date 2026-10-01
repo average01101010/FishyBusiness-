@@ -199,7 +199,7 @@ function arrive(w){
   // work with passive gear at this waypoint: set or haul, then any fishing hours with the jig
   if (w.act){ b.status = 'idle'; const why = w.act.op === 'cycle' ? gearCycle(w, w.fish) : w.act.op === 'haul' ? startHaul(w.act.sid, w.act.reset, w.fish) : startSet(w.act.kind, w.act.spec, w.fish); if (!why) return true; log(why[0], why[0]); if (!(w.fish > 0)) b.status = 'sailing'; }
   if (w.fish > 0 && S.tut && S.tut.v === 2 && !(S.haill && S.haill.type === 'luksus')){ b.status = 'idle'; b.v = 0; b.tutWait = w.fish; log('Fremme på feltet. Venter med fisket til haillen er hentet.', 'Arrived on the grounds. Waiting to fish until the luck is fetched.'); return true; }
-  if (w.fish > 0){ b.status = 'fishing'; b.fishUntil = S.t + w.fish * 60; log('Fremme på feltet. Starter fiske i ' + w.fish + ' t.', 'Arrived on the grounds. Fishing for ' + w.fish + ' h.'); return true; }
+  if (w.fish > 0){ b.status = 'fishing'; b.fishUntil = S.t + w.fish * 60; if (rigJig()) log('Fremme på feltet. Starter fiske i ' + w.fish + ' t.', 'Arrived on the grounds. Fishing for ' + w.fish + ' h.'); else log('Fremme. Båten er rigget for ' + rigName(rigOf()).toLowerCase() + ', så den ligger og venter i ' + w.fish + ' t.', 'Arrived. The boat is rigged for ' + rigName(rigOf()).toLowerCase() + ', so it waits for ' + w.fish + ' h.'); return true; }
   if (pl.idx >= pl.wps.length){ S.plan = null; b.status = 'idle'; b.v = 0; log('Fremme ved siste veipunkt. Ligger stille.', 'Reached the last waypoint. Stopped.'); return true; }
   return false;
 }
@@ -240,6 +240,7 @@ function fish(H, W, hs){
   if (deckPending() >= tubCap()){ b.deckStop = true; log('Bløggekaret er fullt. Stopper fisket for å sløye og ise.', 'The bleeding tub is full. Stopping to gut and ice.'); return; }
   // setting or hauling passive gear takes the place of jigging
   if (b.gop){ gearOpMinute(H, W, hs); return; }
+  if (!rigJig()) return;   // rigged for passive gear: the boat has no jig out, and the fishing hours are spent waiting
   const {eff, keff, wpen, pen, rod} = catchFactors(H, W, hs);
   if (!S.fsess || dist(S.fsess, b.pos) > 0.3) S.fsess = {x:b.pos.x, y:b.pos.y, t0:S.t, kg:0};
   let got = 0;

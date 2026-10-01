@@ -128,6 +128,17 @@ const PHONE = (() => {
     return h.join('') + '</div>';
   }
   function kvote(){ return salg('kvote'); }
+  // the rig: one kind of fishing at a time, changed here in port when the gear is out of the sea
+  function rigg(){
+    const cur = rigOf(), h = ['<div class="ph-c"><p class="ph-note">' + L('Båten er rigget for én type fiske om gangen. Første gang en haler monteres, er det en jobb på verftet (Oppgrader). Har du utstyret, bytter du rigg her gratis og med en gang.', 'The boat is rigged for one kind of fishing at a time. Fitting a hauler the first time is a yard job (Upgrade). Once the gear is aboard, you change the rig here, free and at once.') + '</p>'];
+    const need = {juksa:L('Håndjuksa, juksamaskin eller stang.', 'A hand jig, jigging reels or a rod.'), line:L('Linehaler eller elektrisk haler.', 'A line hauler or an electric hauler.'), garn:L('Garnhaler.', 'A net hauler.'), teiner:L('Teinehaler eller elektrisk haler.', 'A pot hauler or an electric hauler.')};
+    for (const r of Object.keys(RIGS)){
+      const why = r === cur ? null : rigBlock(r);
+      h.push('<div class="ph-card rig' + (r === cur ? ' on' : '') + '"><h4>' + L(RIGS[r].no, RIGS[r].en) + (r === cur ? ' · <span class="r0">' + L('rigget nå', 'rigged now') + '</span>' : '') + '</h4>' + kv(L('Krever', 'Needs'), need[r]) +
+        (r === cur ? '' : why ? '<p class="ph-note">' + why[0] + '</p>' : '<button class="ph-btn p" data-pa="rig" data-r="' + r + '">' + L('Rigg om (gratis)', 'Re-rig (free)') + '</button>') + '</div>');
+    }
+    return h.join('') + '</div>';
+  }
   // what the boat has: gear aboard and in the sea, the hold, and the boat herself
   function beholdning(){
     const tab = sub.beholdning || 'gear', head = subs('beholdning', [['gear', 'Redskap', 'Gear'], ['last', 'Lasterom', 'Hold'], ['boat', 'Båten', 'The boat']]);
@@ -159,7 +170,7 @@ const PHONE = (() => {
   function render(){ status(); setBadge(); if (!isOpen) return; const key = app + '|' + (sub[app] || ''), y = key === shown ? view.scrollTop : 0; view.innerHTML = app === 'home' ? home() : shell(app); shown = key; view.scrollTop = y; }
   // every page by name: the phone apps, and the pages that open in the dock's drawer instead (DRAWER)
   const PAGES = () => ({vaer, post, salg, kvote, redning, rederi, meld, haill, logg, sjomann, innst,
-    ordl, fiske, fartoy:() => fartoy('marked'), utstyr, redskap, mannskap, bors, bank, verksted, havn, last, lever, is:isApp, agn, oppdrag, beholdning});
+    ordl, rigg, fiske, fartoy:() => fartoy('marked'), utstyr, redskap, mannskap, bors, bank, verksted, havn, last, lever, is:isApp, agn, oppdrag, beholdning});
   function shell(a){ const d = APPS.find(x => x[0] === a) || [a, a, a, '#28507f'], f = PAGES()[a]; return '<div class="ph-appv' + (a === 'post' ? ' ph-paper' : '') + '"><div class="ph-top" style="background:' + d[3] + '"><span class="ic">' + (IC[a] || '') + '</span>' + L(d[1], d[2]) + '</div>' + (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) + '</div>'; }
   // a page for the drawer, and an action tapped there: it runs as if that page were the open app, and says which page shows next
   function page(a){ const f = PAGES()[a]; return f ? (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) : ''; }
@@ -374,7 +385,7 @@ const PHONE = (() => {
   }
   // --- the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
   const SEL_APPS = ['fartoy', 'utstyr', 'redskap', 'mannskap', 'bors', 'verksted'];
-  const DRAWER = new Set(['fiske', 'fartoy', 'utstyr', 'redskap', 'mannskap', 'bors', 'bank', 'verksted', 'havn', 'last', 'lever', 'is', 'agn', 'oppdrag', 'beholdning']);
+  const DRAWER = new Set(['rigg', 'fiske', 'fartoy', 'utstyr', 'redskap', 'mannskap', 'bors', 'bank', 'verksted', 'havn', 'last', 'lever', 'is', 'agn', 'oppdrag', 'beholdning']);
   let selV = null;
   const selVessel = () => (selV && vesselById(selV)) || curVessel();
   const withSel = fn => withVessel(selVessel(), fn);
@@ -605,6 +616,7 @@ const PHONE = (() => {
     else if (a === 'member'){ if (S.cash < PRICE.member){ toast(t('no_cash')); return; } S.cash -= PRICE.member; S.stats.costs += PRICE.member; S.member = true; log('Ble medlem i redningstjenesten.', 'Joined the rescue service.'); }
     else if (a === 'svc'){ const c = d.m === 'self' ? Math.round(VESSELS[b.type].svcCost * 0.35) : VESSELS[b.type].svcCost, hh = d.m === 'self' ? Math.round(SVC_H[b.type] * 2.5) : SVC_H[b.type]; if (S.cash < c){ toast(t('no_cash')); return; } if (!queueJob({kind:'svc', h:hh, no:d.m === 'self' ? 'Egen service på motoren' : 'Service på verkstedet', en:d.m === 'self' ? 'Servicing the engine yourself' : 'Engine service at the yard'})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } S.cash -= c; S.stats.costs += c; }
     else if (a === 'prep'){ const P2 = PREP[d.k]; if (S.cash < P2.cost){ toast(t('no_cash')); return; } if (!queueJob({kind:'prep', k:d.k, h:P2.h, no:P2.no, en:P2.en})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } S.cash -= P2.cost; S.stats.costs += P2.cost; }
+    else if (a === 'rig'){ const why = rigSet(d.r); if (why){ toast(why[0]); return; } }
     else if (a === 'grbuy'){ const why = buyGear(d.w, isNaN(+d.s) ? d.s : +d.s, +d.n); if (why){ toast(why[0]); return; } }
     else if (a === 'grrep'){ reportLost(d.id); }
     else if (a === 'book'){ show(false); BOOK.open('salg', +d.i); return false; }

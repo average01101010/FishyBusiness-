@@ -45,7 +45,7 @@ function doAct(el){
   else if (act === 'retrace'){ if (tutOn()) return; startReturn(false); }
   else if (act === 'tow') rescue(true);
   else if (act === 'fh+' || act === 'fh-') S.fishPlanH = clamp(S.fishPlanH + (act === 'fh+' ? 1 : -1), 1, 12);
-  else if (act === 'startfish'){ b.status = 'fishing'; b.fishUntil = S.t + S.fishPlanH * 60; log('Starter fiske i ' + S.fishPlanH + ' t.', 'Fishing for ' + S.fishPlanH + ' h.'); }
+  else if (act === 'startfish'){ if (!rigJig()){ const w = rigWrong(null); toast(w[0]); return; } b.status = 'fishing'; b.fishUntil = S.t + S.fishPlanH * 60; log('Starter fiske i ' + S.fishPlanH + ' t.', 'Fishing for ' + S.fishPlanH + ' h.'); }
   else if (act === 'stopfish'){ if (b.gop) gopAbort('stop'); b.fishUntil = S.t; S.plan = null; endFishing('done'); }
   else if (act === 'deckstop'){ if (b.status === 'fishing'){ b.deckStop = true; log('Stopper fisket for å sløye og ise.', 'Stopping fishing to gut and ice.'); } }
   else if (act === 'deckgo'){ b.deckStop = false; b.deckEnd = null; }

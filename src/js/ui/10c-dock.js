@@ -34,12 +34,13 @@ const DOCK = (() => {
     batmarked:SVG('<path d="M3 15h18l-2.5 4.5H6z"/><path d="M8 15V9h6l2 6"/><path d="M11 9V5"/>'),
     oppgr:SVG('<path d="M14.5 5.5a4 4 0 0 0-5 5L3.8 16.2a1.8 1.8 0 0 0 2.5 2.5l5.7-5.7a4 4 0 0 0 5-5l-2.5 2.5-2.3-.5-.5-2.3z"/>'),
     fiskeutstyr:SVG('<circle cx="12" cy="15" r="4.5"/><path d="M12 10.5V3l5 2-5 2"/>'),
+    rigg:SVG('<path d="M12 3v18"/><path d="M5 21h14"/><path d="M12 4l7 11h-7"/><path d="M12 7L6 15h6"/>'),
     vedlikehold:SVG('<path d="M4 20l7-7"/><path d="M13.5 4.5l6 6-3 3-6-6z"/><path d="M10.5 7.5l6 6"/>'),
     bunker:SVG('<path d="M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16"/><path d="M3 21h14"/><path d="M7.5 8h5"/><path d="M15 9h2a2 2 0 0 1 2 2v5a1.5 1.5 0 0 0 3 0V8l-3-3"/>')};
   // the drawer's pages: title, and the pages that share a row of tabs
   const TITLE = {lever:['Lever fangst', 'Land the catch'], is:['Is', 'Ice'], agn:['Agn og egning', 'Bait and baiting'], bank:['Kystbanken', 'The bank'], oppdrag:['Oppdrag', 'Orders'],
     mannskap:['Mannskap', 'Crew'], bors:['Mannskap', 'Crew'], fartoy:['Båthandel', 'Boat market'], utstyr:['Oppgraderinger', 'Upgrades'], fiske:['Fiskeutstyr', 'Tackle'],
-    redskap:['Redskap', 'Gear'], verksted:['Vedlikehold', 'Maintenance'], havn:['Havn', 'Harbour'], last:['Lasterom', 'Hold'], beholdning:['Beholdning', 'Inventory']};
+    redskap:['Redskap', 'Gear'], rigg:['Rigg', 'Rig'], verksted:['Vedlikehold', 'Maintenance'], havn:['Havn', 'Harbour'], last:['Lasterom', 'Hold'], beholdning:['Beholdning', 'Inventory']};
   const TABS = {mannskap:[['mannskap', 'Om bord', 'Aboard'], ['bors', 'Mannskapsbørs', 'Crew exchange']], bors:null};
   TABS.bors = TABS.mannskap;
   let menu = null, page = null, html = '', fanHtml = '', items = [], fanItems = [];
@@ -72,6 +73,7 @@ const DOCK = (() => {
         I('batmarked', 'batmarked', 'Båthandel', 'Boats', {page:'fartoy'}),
         I('oppgr', 'oppgr', 'Oppgrader', 'Upgrade', {page:'utstyr'}),
         I('fiskeutstyr', 'fiskeutstyr', 'Fiskeutstyr', 'Tackle', {page:'fiske'}),
+        I('rigg', 'rigg', 'Rigg: ' + RIGS[rigOf()].no, 'Rig: ' + RIGS[rigOf()].en, {page:'rigg'}),
         I('vedlikehold', 'vedlikehold', 'Vedlikehold', 'Maintenance', {page:'verksted', dot:svcOverdue() > 0}),
         I('bunker', 'bunker', 'Bunkring', 'Fuel', {act:'fuel', off:!p.fuel ? [L('Det er ikke drivstoff å få i ' + p.name + '.', 'There is no fuel to be had in ' + p.name + '.')] : need < 0.5 ? [L('Tanken er full.', 'The tank is full.')] : portBusy(b) ? [L('Vent til arbeidet på kaia er ferdig.', 'Wait until the work on the quay is done.')] : null})]; }
     if (m === 'settut') return setChoices().map((c, i) => I('set' + i, 'settut', c.lbl[0], c.lbl[1], {act:'gset', data:{c:i}, wide:true}));
@@ -90,14 +92,14 @@ const DOCK = (() => {
       const s = nearSet(b.pos, 0.3), nb = nearestBuoy(), ch = setChoices();
       const haul = s ? (s.kind === 'line' ? I('taopp', 'taopp', 'Ta opp', 'Haul', {act:'ghaul', data:{id:s.id}, pri:true}) : I('taopp', 'taopp', 'Ta opp', 'Haul', {menu:'taopp', pri:true}))
         : I('taopp', 'taopp', 'Ta opp', 'Haul', {off:[nb ? L('Nærmeste blåse er ' + fmt(nb.d / NM, 1) + ' nm unna. Bruk Auto-nav og trykk på blåsa.', 'The nearest buoy is ' + fmt(nb.d / NM, 1) + ' nm away. Use auto-nav and tap the buoy.') : L('Du har ikke redskap i sjøen.', 'You have no gear in the sea.')]});
-      return [I('jukse', 'jukse', 'Jukse', 'Jig', {menu:'jukse', pri:!s}),
-        I('settut', 'settut', 'Sett ut', 'Set', {menu:'settut', off:!ch.length && [S.pgear && (S.pgear.nets.length || S.pgear.lines.hyse.n || S.pgear.lines.bank.n || S.pgear.pots.small || S.pgear.pots.big) ? L('Redskapet om bord er ikke klart: line må egnes, og teiner trenger agn og blåsesett.', 'The gear aboard is not ready: line must be baited, and pots need bait and buoy sets.') : L('Du har ikke garn, line eller teiner om bord.', 'You have no nets, line or pots aboard.')]}),
+      return [I('jukse', 'jukse', 'Jukse', 'Jig', {menu:'jukse', pri:!s && rigJig(), off:!rigJig() && rigWrong(null)}),
+        I('settut', 'settut', 'Sett ut', 'Set', {menu:'settut', off:rigJig() ? [L('Båten er rigget for juksa. Rigg om til line, garn eller teiner på verftet.', 'The boat is rigged for jigging. Re-rig for line, nets or pots at the yard.')] : !ch.length && [S.pgear && (S.pgear.nets.length || S.pgear.lines.hyse.n || S.pgear.lines.bank.n || S.pgear.pots.small || S.pgear.pots.big) ? L('Redskapet om bord er ikke klart: line må egnes, og teiner trenger agn og blåsesett.', 'The gear aboard is not ready: line must be baited, and pots need bait and buoy sets.') : L('Du har ikke garn, line eller teiner om bord.', 'You have no nets, line or pots aboard.')]}),
         haul, nav, home, crew, beh].filter(Boolean);
     }
     if (b.status === 'fishing' && b.gop) return [I('gstop', 'stopp', 'Stopp arbeidet', 'Stop the work', {act:'gstop'}), beh];
     if (b.status === 'fishing') return [I('stopfish', 'stopp', 'Stopp', 'Stop', {act:'stopfish'}),
       b.deckStop && !b.deckEnd ? I('deckgo', 'videre', 'Fisk videre', 'Fish on', {act:'deckgo', pri:true}) : !b.deckStop && deckPending() > 0.5 ? I('deckstop', 'sloy', 'Stopp og sløy', 'Stop and gut', {act:'deckstop'}) : null,
-      G3.isActive() ? I('rod', 'stang', window.rodActive ? 'Legg bort' : 'Fisk selv', window.rodActive ? 'Put down' : 'Fish yourself', {act:'rod', pri:!window.rodActive, on:!!window.rodActive}) : null, crew, beh].filter(Boolean);
+      G3.isActive() && rigJig() ? I('rod', 'stang', window.rodActive ? 'Legg bort' : 'Fisk selv', window.rodActive ? 'Put down' : 'Fish yourself', {act:'rod', pri:!window.rodActive, on:!!window.rodActive}) : null, crew, beh].filter(Boolean);
     if (b.status === 'sailing') return [I('stop', 'stopp', 'Stopp båten', 'Stop', {act:'stop'}), home, nav, crew, beh].filter(Boolean);
     if (b.status === 'adrift' || b.status === 'engine' || b.status === 'aground') return [I('hjelp', 'hjelp', 'Hjelp', 'Help', {run:() => PHONE.open('redning'), warn:true}), beh];
     return [beh];
@@ -109,7 +111,7 @@ const DOCK = (() => {
     if (b.status === 'port'){ if (S.jobs && S.jobs.length) out.push(L('Verksted til ', 'Yard until ') + hm((jobsDone() || S.t) / 60)); if (b.land) out.push(landText(true)[0]); if (b.shift || b.fueling) out.push(quayText(true)[0]); }
     if (b.status === 'unmooring') out.push(L('Kaster loss …', 'Casting off …'));
     if (b.gop){ const g = gopText(); if (g) out.push(L(g[0], g[1])); }
-    else if (b.status === 'fishing' && b.fishUntil != null) out.push(L('Jukser, stopper ', 'Jigging, stops ') + inReal(b.fishUntil - S.t));
+    else if (b.status === 'fishing' && b.fishUntil != null) out.push((rigJig() ? L('Jukser, stopper ', 'Jigging, stops ') : L('Venter, går ', 'Waiting, leaves ')) + inReal(b.fishUntil - S.t));
     const dk = b.status !== 'port' && deckText(true); if (dk) out.push(dk[0]);
     return out.join(' · ');
   }

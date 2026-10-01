@@ -58,12 +58,12 @@ async def main():
         r = await pg.evaluate("""(()=>{ const R = {}, b = S.boat; b.type = 'sjark'; applyVessel(); S.pgear = newPGear(); S.sets = [];
           S.pgear.nets.push({id:'na', mesh:156, n:40, cond:1}, {id:'nb', mesh:156, n:40, cond:1}, {id:'nc', mesh:156, n:1, cond:1}); S.pgear.kits.n = 9; S.pgear.lines.hyse = {n:8, baited:8};
           const inside = GROUNDS.find(g => insideFjord(g.p) && depthF(g.p) > 20).p; window.INSIDE = inside;
-          S.crew = []; S.me = S.cur; atSea(inside); R.alone = !!gearRules('garn', {nid:'na'}, b.pos);
+          S.crew = []; S.me = S.cur; atSea(inside); b.rig = 'garn'; R.alone = !!gearRules('garn', {nid:'na'}, b.pos);
           S.crew = [hand()]; R.withOne = gearRules('garn', {nid:'na'}, b.pos); S.me = 'nobody'; S.crew = [hand(), hand()]; R.twoCrew = gearRules('garn', {nid:'na'}, b.pos); S.me = S.cur; S.crew = [hand()];
           R.set1 = startSet('garn', {nid:'na'}, 0); hStep(400); b.pos = {x:inside.x + 1.2, y:inside.y + 0.6}; if (isLand(b.pos) || !insideFjord(b.pos)) b.pos = {x:inside.x - 1.2, y:inside.y - 0.6};
           R.set2 = startSet('garn', {nid:'nb'}, 0); hStep(400); b.status = 'idle';
           R.set81 = gearRules('garn', {nid:'nc'}, b.pos); R.nets = mySets().filter(s => insideFjord(setMid(s))).reduce((a, s) => a + s.n, 0);
-          R.hooks8 = gearRules('line', {lk:'hyse', n:8}, b.pos); R.hooks7 = gearRules('line', {lk:'hyse', n:7}, b.pos);
+          b.rig = 'line'; R.hooks8 = gearRules('line', {lk:'hyse', n:8}, b.pos); R.hooks7 = gearRules('line', {lk:'hyse', n:7}, b.pos);
           R.geo = mySets().map(s => [!isLand(s.a), !isLand(s.b), legClear(s.a, s.b), depthF(s.a) >= 5 && depthF(s.b) >= 5, Math.round(dist(s.a, s.b) * 1000)]);
           return R; })()""")
         print('rules:', json.dumps(r, ensure_ascii=False))
@@ -96,15 +96,15 @@ async def main():
         r = await pg.evaluate("""(()=>{ const R = {}, b = S.boat; S.sets = []; S.hold = []; S.pgear = newPGear(); S.pgear.kits.n = 4; S.crew = [hand()]; S.me = S.cur;
           S.equip.garnhaler = true; S.equip.linehaler = true; S.equip.teinehaler = true; S.t = Math.round(HOUR(2028, 2, 5, 6) * 60); S.settings.gut = true; S.settings.ice = true; b.ice = 500;
           S.pgear.nets.push({id:'n1', mesh:180, n:10, cond:1}); S.pgear.lines.hyse = {n:2, baited:2};
-          const g0 = GROUNDS[2].p; atSea(g0); startSet('garn', {nid:'n1'}, 0); hStep(300); b.status = 'idle'; b.pos = {x:g0.x + 1.5, y:g0.y}; if (isLand(b.pos)) b.pos = {x:g0.x - 1.5, y:g0.y};
-          startSet('line', {lk:'hyse', n:2}, 0); hStep(300); b.status = 'idle';
+          const g0 = GROUNDS[2].p; atSea(g0); b.rig = 'garn'; startSet('garn', {nid:'n1'}, 0); hStep(300); b.status = 'idle'; b.pos = {x:g0.x + 1.5, y:g0.y}; if (isLand(b.pos)) b.pos = {x:g0.x - 1.5, y:g0.y};
+          b.rig = 'line'; startSet('line', {lk:'hyse', n:2}, 0); hStep(300); b.status = 'idle';
           for (let k = 0; k < 18 * 60; k++) step();
           const sn = S.sets.find(s => s.kind === 'garn'), sl = S.sets.find(s => s.kind === 'line');
           atSea(sn.a); startHaul(sn.id); hStep(900); R.afterNet = {hook:S.hold.filter(x => x.sp !== 'krabbe').every(x => x.hook === false), pend:Math.round(deckPending()), kg:Math.round(holdTotal()), nets:S.pgear.nets.map(l => [l.n, l.cond]), left:S.sets.length};
           S.hold = []; atSea(sl.a); startHaul(sl.id); hStep(900); R.afterLine = {hook:S.hold.every(x => x.hook === true), kg:Math.round(holdTotal()), un:S.pgear.lines.hyse.n - S.pgear.lines.hyse.baited};
           // crab: careful sorting leaves no small or berried crab; quick sorting brings the fine and the deduction
           S.hold = []; S.t = Math.round(HOUR(2028, 8, 10, 6) * 60); S.pgear.pots.big = 60; S.pgear.bait = 60;
-          const crabRun = (careful) => { S.settings.crabSort = careful; atSea(window.CRABSPOT); b.heading = Math.PI / 2; startSet('teine', {pot:'big', n:60}, 0); hStep(400); for (let k = 0; k < 30 * 60; k++) step();
+          const crabRun = (careful) => { S.settings.crabSort = careful; atSea(window.CRABSPOT); b.heading = Math.PI / 2; b.rig = 'teiner'; startSet('teine', {pot:'big', n:60}, 0); hStep(400); for (let k = 0; k < 30 * 60; k++) step();
             const s = S.sets.find(x => x.kind === 'teine'); atSea(s.a); startHaul(s.id); hStep(900); return S.hold.filter(x => x.sp === 'krabbe').map(x => [x.cls, Math.round(x.kg * 10) / 10, Math.round(x.n)]); };
           R.careful = crabRun(true); R.carefulBad = R.careful.filter(x => x[0] >= 2).length; S.hold = []; S.pgear.bait = 60;
           // quick sorting, and a forced small and berried crab so the landing shows both rules
@@ -121,7 +121,7 @@ async def main():
         # 5. weather, deadlines, wear and mending, baiting
         r = await pg.evaluate("""(()=>{ const R = {}, b = S.boat; S.sets = []; S.hold = []; S.msgs = []; S.log = [];
           // a storm: force the loss, then report it
-          S.pgear.nets.push({id:'ns', mesh:156, n:10, cond:1}); S.pgear.kits.n = 5; atSea(GROUNDS[0].p); startSet('garn', {nid:'ns'}, 0); hStep(300); b.status = 'idle';
+          S.pgear.nets.push({id:'ns', mesh:156, n:10, cond:1}); S.pgear.kits.n = 5; atSea(GROUNDS[0].p); b.rig = 'garn'; startSet('garn', {nid:'ns'}, 0); hStep(300); b.status = 'idle';
           const s = S.sets[0]; const r0 = Math.random; Math.random = () => 0; gearHour(S.t / 60); Math.random = r0;
           R.lost = !!s.lost; R.lostMsg = S.msgs.some(m => /Kystvakten/.test(m.no)); R.alert = PHONE.alerts().some(a => /tapt/.test(a.no));
           R.rep = reportLost(s.id); R.gone = !S.sets.includes(s); R.kv = S.msgs.some(m => m.from === 'Kystvakten');
@@ -153,7 +153,7 @@ async def main():
         # 6. the standing plan: a net station set on day one, hauled and set again after that, and refused with one hand
         r = await pg.evaluate("""(()=>{ const b = S.boat; S.sets = []; S.hold = []; S.cash = 5e6; S.settings.autoW = 16; S.stock = initStock();
           let t0 = null; for (let d = 0; d < 60 && t0 == null; d++){ const H0 = HOUR(2028, 2, 1 + d, 5); let okw = true; for (let k = 0; k <= 60; k++) if (windAt(H0 + k) > 13 || hsOpen(H0 + k) > 2.2) okw = false; if (okw) t0 = H0; }
-          S.t = Math.round(t0 * 60) - 30; b.type = 'sjark'; applyVessel(); S.equip.garnhaler = true; b.fuel = BOAT.fuelCap; b.port = 'husoy'; b.pos = {...portById('husoy').p}; b.status = 'port'; b.gop = null;
+          S.t = Math.round(t0 * 60) - 30; b.type = 'sjark'; applyVessel(); S.equip.garnhaler = true; b.rig = 'garn'; b.fuel = BOAT.fuelCap; b.port = 'husoy'; b.pos = {...portById('husoy').p}; b.status = 'port'; b.gop = null;
           S.crew = [hand(), hand()]; S.me = 'nobody'; S.pgear = newPGear(); S.pgear.nets.push({id:'np', mesh:180, n:30, cond:1}); S.pgear.kits.n = 2;
           const HP = portById('husoy'), W = q => ({x:q.x, y:q.y, port:null, fish:0}), rt = FLEET.find(f => f.home === 'husoy' && f.L < 15).rt[0].slice(1).map(q => ({x:q[0], y:q[1]}));
           const wps = exitWps(HP, rt[0]).map(W).concat(rt.map((q, i) => ({x:q.x, y:q.y, port:null, fish:0, act:i === rt.length - 1 ? {op:'cycle', kind:'garn', spec:{nid:'np'}} : undefined})));
@@ -167,6 +167,32 @@ async def main():
         print(ok(len(r['sales']) >= 2 and all(k > 100 for k in r['sales']) and all(len(d) == 1 and d[0] <= 30 for d in r['days'])), 'standing plan: the net station is hauled and set again every day, and the catch is landed')
         print(ok(r['oneHand']), 'with one hand the skipper will not run a plan with nets')
 
+        # 6b. the rig: one kind of fishing at a time, changed at the yard in port, free once the hauler is aboard, with the gear out of the sea
+        r = await pg.evaluate("""(()=>{ const R = {}, b = S.boat; S.sets = []; S.hold = []; S.ops = null; S.me = S.cur; S.crew = [hand()]; b.type = 'skiff'; applyVessel(); b.gop = null;
+          for (const k of ['elhaler', 'linehaler', 'garnhaler', 'teinehaler']) S.equip[k] = false;
+          b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; delete b.rig; R.def = rigOf();
+          R.noHauler = (rigBlock('line') || [''])[0]; R.garnSkiff = (rigBlock('garn') || [''])[0]; R.juksa = rigBlock('juksa');
+          S.equip.elhaler = true; R.toLine = rigSet('line'); R.line = rigOf();
+          S.pgear = newPGear(); S.pgear.kits.n = 2; S.pgear.lines.hyse = {n:2, baited:2}; S.pgear.nets.push({id:'nr', mesh:156, n:5, cond:1}); S.pgear.pots.small = 5; S.pgear.bait = 5;
+          R.choices = [...new Set(setChoices().map(c => c.kind))];
+          atSea(GROUNDS[2].p); R.atSea = (rigBlock('teiner') || [''])[0]; R.netRule = (gearRules('garn', {nid:'nr'}, b.pos) || [''])[0];
+          R.setLine = startSet('line', {lk:'hyse', n:1}, 0); hStep(300); b.status = 'idle';
+          // fishing hours with a line rig: the boat waits, no jig catch
+          S.hold = []; b.status = 'fishing'; b.fishUntil = S.t + 60; for (let i = 0; i < 50; i++) step(); R.jigKg = Math.round(holdTotal() * 10) / 10; endFishing('done');
+          DOCK.render(); R.dockJig = (DOCK.items().find(x => x.id === 'jukse') || {}).off ? 1 : 0;
+          b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; R.inSea = (rigBlock('teiner') || [''])[0];
+          // an old save with pots in the sea and no rig: rigged for pots
+          S.sets[0].kind = 'teine'; delete b.rig; R.guess = rigOf(); S.sets = [];
+          DOCK.open('rigg'); const dr = document.getElementById('drawerBody'); R.page = dr.querySelectorAll('[data-pa=rig]').length; R.pageOn = (dr.querySelector('.rig.on h4') || {}).textContent || '';
+          dr.querySelector('[data-pa=rig][data-r=juksa]').click(); R.byTap = rigOf(); DOCK.close();
+          b.type = 'sjark'; applyVessel(); S.equip.elhaler = false; R.sjarkLine = (rigBlock('line') || [''])[0]; b.type = 'skiff'; applyVessel(); return R; })()""")
+        print('rig:', json.dumps(r, ensure_ascii=False))
+        print(ok(r['def'] == 'juksa' and r['juksa'] and 'haler' in r['noHauler'] and 'passer ikke' in r['garnSkiff']), 'a new boat is rigged for jigging; line needs a hauler, and nets do not fit a skiff')
+        print(ok(r['toLine'] is None and r['line'] == 'line' and r['choices'] == ['line'] and 'rigget for line' in r['netRule']), 'with the electric hauler the skiff rigs for line, and only line can be set')
+        print(ok('verftet' in r['atSea'] and r['setLine'] is None and r['jigKg'] == 0 and r['dockJig'] == 1), 'at sea the rig stays; fishing hours with a line rig catch nothing on the jig, and the Jig button is off')
+        print(ok('Trekk alt' in r['inSea'] and r['guess'] == 'teiner'), 'gear in the sea blocks re-rigging; an old save takes the rig from the gear in the sea')
+        print(ok(r['page'] == 2 and 'Teiner' in r['pageOn'] and r['byTap'] == 'juksa' and 'linehaler' in r['sjarkLine']), 'the Rig page in the drawer offers what the skiff can rig (not nets) and re-rigs on a tap; a sjark needs the hydraulic line hauler')
+
         # 7. save and reload, and an old save with two vessels gets a gear locker on both
         r = await pg.evaluate("""(()=>{ const b = S.boat; b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; b.gop = null; S.sets = []; S.pgear = newPGear(); S.pgear.kits.n = 1; S.pgear.nets.push({id:'nz', mesh:200, n:5, cond:0.8});
           S.sets.push({id:'sz', vid:S.cur, kind:'teine', pot:'big', n:10, a:{x:30, y:60}, b:{x:30.2, y:60}, tSet:S.t, acc:{}, dead:0, lost:null, rep:false, warn:0, heavy:false, depth:20});
@@ -179,7 +205,7 @@ async def main():
         # 8. the chart shows two buoys a set; 3D draws buoys and the work without page errors
         r = await pg.evaluate("""(()=>{ S.fleet = [S.fleet[0]]; bindVessel(S.fleet[0]); G3.show(false); view.cx = 30; view.cy = 60; view.z = 6; applyView(); renderDyn(); return {buoys:document.querySelectorAll('#gDyn .buoy').length}; })()""")
         b3 = await pg.evaluate("""(()=>{ const b = S.boat; b.type = 'sjark'; applyVessel(); S.crew = [hand()]; S.equip.teinehaler = true; S.pgear.pots.big = 10; S.pgear.bait = 10; S.pgear.kits.n = 2;
-          atSea(window.CRABSPOT || GROUNDS[3].p); b.heading = Math.PI / 2; const why = startSet('teine', {pot:'big', n:10}, 0); G3.show(true); return {why}; })()""")
+          atSea(window.CRABSPOT || GROUNDS[3].p); b.heading = Math.PI / 2; b.rig = 'teiner'; const why = startSet('teine', {pot:'big', n:10}, 0); G3.show(true); return {why}; })()""")
         await pg.wait_for_timeout(5000)
         await pg.screenshot(path='gear3d.png')
         print('chart/3d:', json.dumps(r), json.dumps(b3))

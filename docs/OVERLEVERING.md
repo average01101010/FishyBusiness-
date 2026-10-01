@@ -629,6 +629,21 @@ Jonas' valg: alle tre kystredskapene i samme runde, ståtid for line som avveiin
   - `S.pgear` er per båt (i `VKEYS`): garnlenker `{id, mesh, n, cond}`, stamper `{n, baited}` per linetype, teiner per størrelse, agn i kg, blåsesett og det som ligger på land (egnebu, bøteri).
   - `S.sets` er for hele rederiet: redskap i sjøen `{id, vid, kind, a, b, n, tSet, acc, dead, lost, heavy, …}`, slik at kartet og 3D tegner alle båtenes blåser.
   - `S.cstk` er et eget bestandslag for krabbe.
+- **Riggen** (`b.rig`, `RIGS` i `10-gear.js`, fra 01.10.2026, brukerens valg): Båten er rigget for én type fiske om gangen.
+
+  | Rigg | Krever |
+  |---|---|
+  | `juksa` | ingenting (håndjuksa, juksamaskin eller stang) |
+  | `line` | linehaler eller elektrisk haler |
+  | `garn` | garnhaler |
+  | `teiner` | teinehaler eller elektrisk haler |
+
+  - Første montering av en haler er en verftsjobb under Oppgrader. Når utstyret er om bord, byttes riggen gratis og med en gang på siden «Rigg» under Verft (`rigBlock`, `rigSet`). Det skjer bare i havn, og bare når alt eget redskap er trukket.
+  - Riggen styrer `gearRules` (feil rigg gir «Rigg om på verftet»), `setChoices`, valgene i ruta, driftsplanens stasjoner og knappene. «Jukse» er av uten juksarigg, og «Sett ut» er av med juksarigg.
+  - Med passiv rigg gir fisketimer i ruta og etter setting ingen juksefangst. Båten venter («Venter, går …»).
+  - Trekking sjekkes ikke mot riggen, slik at gamle lagringer med blandet redskap i sjøen kan trekkes.
+  - Gamle lagringer får riggen fra redskapet i sjøen eller fra driftsplanen, ellers juksa (`rigGuess`).
+  - En skiff kan rigge line og teiner med elektrisk haler, men ikke garn, fordi garnhaleren bare passer snekke og større.
 - **Arbeidet på sjøen:** Setting og trekking er `b.gop` under status `fishing`, så sløying, hvileregler, automatisk retur og pausen når bløggekaret er fullt virker som før. Båten går langs strengen mens den setter eller trekker.
   - Setting tar ca. 0,8 min per garn, 5 min per stamp og 0,9 min per teine.
   - Trekking tar ca. 4 min per garn, 25 min per stamp hyseline og 1,2 min per teine med haler.

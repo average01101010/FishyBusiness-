@@ -18,7 +18,7 @@ SETUP = """(() => {
   S.sales.push({t:S.t - 3 * 1440, v:S.cur, port:'botnhamn', kg:120, total:3000, sp:[['torsk', 100], ['sei', 20]]});
   // a line set and hauled on the grounds, through the game's own steps
   const f = tutField().p; b.status = 'idle'; b.port = null; b.pos = {x:f.x, y:f.y}; b.v = 0; S.plan = null;
-  S.pgear.lines.hyse.n = 1; S.pgear.lines.hyse.baited = 1; S.pgear.kits.n = 2; S.crew = S.crew || [];
+  S.pgear.lines.hyse.n = 1; S.pgear.lines.hyse.baited = 1; S.pgear.kits.n = 2; S.crew = S.crew || []; S.boat.rig = 'line';
   let why = null; for (const h of [0, 1.6, 3.1, 4.7]){ why = startSet('line', {lk:'hyse', n:1}, 0, h); if (!why) break; }
   R.setWhy = why; for (let i = 0; i < 200 && b.gop; i++) step();
   const s = S.sets[S.sets.length - 1]; R.set = !!s; S.t += 14 * 60; b.status = 'idle'; b.pos = {x:s.a.x, y:s.a.y};

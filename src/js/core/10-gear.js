@@ -39,6 +39,37 @@ function setLog(s, no, en, k){ const v = setVessel(s); if (v) onVessel(v, () => 
 function mySets(vid){ return (S.sets || []).filter(s => s.vid === (vid || S.cur) && !s.lost); }
 function hasHauler(kind){ return GEAR[kind].haulers.some(k => S.equip && S.equip[k]); }
 
+// ---- the rig: a boat is rigged for one kind of fishing at a time. Jigging needs nothing fitted (a rod at worst); line and pots
+// need a hauler that takes them, nets a net hauler. Fitting a hauler the first time is a yard job; once it is aboard, the rig is
+// changed at the yard in port, free and at once, when all the gear is out of the sea
+const RIGS = {juksa:{no:'Juksa', en:'Jigging', kind:null}, line:{no:'Line', en:'Longline', kind:'line'}, garn:{no:'Garn', en:'Nets', kind:'garn'}, teiner:{no:'Teiner', en:'Pots', kind:'teine'}};
+const rigOfKind = kind => Object.keys(RIGS).find(r => RIGS[r].kind === kind) || 'juksa';
+// an old save has no rig: the kind of gear in the sea or in the standing plan, otherwise jigging
+function rigGuess(){
+  const s = mySets()[0]; if (s) return rigOfKind(s.kind);
+  const w = S.ops && (S.ops.wps || []).find(x => x.act && x.act.kind); return w ? rigOfKind(w.act.kind) : 'juksa';
+}
+function rigOf(){ const b = S.boat; if (!RIGS[b.rig]) b.rig = rigGuess(); return b.rig; }
+const rigKindOk = kind => RIGS[rigOf()].kind === kind;
+const rigJig = () => rigOf() === 'juksa';
+function rigHas(r){ return !RIGS[r].kind || hasHauler(RIGS[r].kind); }
+const rigName = r => gL(RIGS[r].no, RIGS[r].en);
+const lc1 = x => x[0].toLowerCase() + x.slice(1);
+function rigWrong(kind){ return [gL('Båten er rigget for ' + rigName(rigOf()).toLowerCase() + '. Rigg om til ' + rigName(rigOfKind(kind)).toLowerCase() + ' på verftet.', 'The boat is rigged for ' + rigName(rigOf()).toLowerCase() + '. Re-rig for ' + rigName(rigOfKind(kind)).toLowerCase() + ' at the yard.')]; }
+// why the rig cannot be changed to r now, or null
+function rigBlock(r){
+  const b = S.boat;
+  if (r === rigOf()) return [gL('Båten er allerede rigget for dette.', 'The boat is already rigged for this.')];
+  if (b.status !== 'port') return [gL('Båten rigges om på verftet, ved kai.', 'The boat is re-rigged at the yard, at the quay.')];
+  if (mySets().length) return [gL('Trekk alt redskap i sjøen først.', 'Haul all the gear in the sea first.')];
+  if (b.gop) return [gL('Redskapsarbeidet er i gang.', 'Gear work is going on.')];
+  if (!rigHas(r)){ const k = RIGS[r].kind, hs = GEAR[k].haulers.filter(h => !EQUIP[h].types || EQUIP[h].types.includes(b.type || 'skiff'));
+    if (!hs.length) return [gL('Denne båten kan ikke rigges for ' + rigName(r).toLowerCase() + ': ' + GEAR[k].haulers.map(h => lc1(EQUIP[h].name.no)).join(' eller ') + ' passer ikke om bord.', 'This boat cannot be rigged for ' + rigName(r).toLowerCase() + ': ' + GEAR[k].haulers.map(h => lc1(EQUIP[h].name.en)).join(' or ') + ' does not fit aboard.')];
+    return [gL('Båten mangler ' + hs.map(h => lc1(EQUIP[h].name.no)).join(' eller ') + '. Monter den under Oppgrader.', 'The boat has no ' + hs.map(h => lc1(EQUIP[h].name.en)).join(' or ') + '. Fit one under Upgrade.')]; }
+  return null;
+}
+function rigSet(r){ const why = rigBlock(r); if (why) return why; S.boat.rig = r; log('Båten er rigget for ' + rigName(r).toLowerCase() + '.', 'The boat is rigged for ' + rigName(r).toLowerCase() + '.'); return null; }
+
 // ---- what the vessel owns: aboard, ashore (baiting, mending) and in the sea
 function ownedUnits(kind){
   const pg = S.pgear || newPGear(), sea = mySets().filter(s => s.kind === kind).reduce((a, s) => a + s.n, 0);
@@ -82,6 +113,7 @@ function segDist(p, a, b){ const dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + 
 function nearSet(p, km){ let best = null, bd = km || 0.3; for (const s of mySets()){ const d = Math.min(dist(p, s.a), dist(p, s.b)); if (d < bd){ bd = d; best = s; } } return best; }
 function gearRules(kind, spec, p){
   const b = S.boat, pg = S.pgear;
+  if (!rigKindOk(kind)) return rigWrong(kind);
   if (b.gop) return [gL('Redskapsarbeidet er allerede i gang.', 'Gear work is already going on.')];
   if (b.status !== 'idle' && b.status !== 'fishing') return [gL('Båten må ligge stille på feltet.', 'The boat must lie still on the grounds.')];
   if (handsAboard() < GEAR[kind].crewMin) return [gL('Garn krever minst to om bord: deg og én til, eller to fra mannskapet.', 'Nets need at least two aboard: you and one more, or two of the crew.')];
@@ -307,6 +339,7 @@ function gearCycle(w, fishAfter){
   let gale = false; for (let k = 0; k <= 36; k += 3) if (windAt(H + k) > 17) gale = true;
   const s = mySets().find(x => x.kind === a.kind && segDist(w, x.a, x.b) < 0.5);
   if (s){ b.pos = dist(b.pos, s.a) <= dist(b.pos, s.b) ? {...s.a} : {...s.b}; const why = startHaul(s.id, a.kind !== 'line' && !gale, fishAfter); if (!why && gale) log('Kuling i varselet. Tar redskapet med hjem.', 'A gale in the forecast. Taking the gear home.'); return why; }
+  if (!s && !rigKindOk(a.kind)) return rigWrong(a.kind);
   if (gale) return [gL('Kuling i varselet. Setter ikke ut redskap nå.', 'A gale in the forecast. Not setting gear now.')];
   const spec = cycleSpec(a.kind, a.spec && (a.kind === 'garn' ? {mesh:(S.pgear.nets.find(l => l.id === a.spec.nid) || {}).mesh} : a.spec));
   if (!spec) return [gL('Ikke noe ' + GEAR[a.kind].no.toLowerCase() + ' klart om bord.', 'No ' + GEAR[a.kind].en.toLowerCase() + ' ready aboard.')];
