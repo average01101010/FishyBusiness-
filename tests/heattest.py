@@ -6,8 +6,8 @@ hard 2 km edges. The hotspots drift instead of jumping every 120 hours, keeping 
 The first trip: the guaranteed catch is a real skrei patch on the guide's ground, so the heat shows it; the top-up is only a
 safety net, and only the stock's own share of the catch is taken from the stock.
 Part 2, the chart plotter, in landscape and portrait: the radius of each tier, the heat at the boat is 30·Σdensity, the species
-choice only with CHIRP or sonar and without working anything out again, on and off (echo sounder, sonar, port), the «Her nå»
-readout, the afterglow, a vessel without a plotter, and the time on a CPU four times slower. Screenshots: tests/out/heat_*.png.
+choice only with CHIRP or sonar and without working anything out again, on and off (echo sounder, sonar, port), no number for
+the fish in the box, the afterglow, a vessel without a plotter, and the time on a CPU four times slower. Screenshots: tests/out/heat_*.png.
 Part 3, the sonar: only on the sjark and the new sjark, 16 hours to fit, the 3 nm heat once fitted, and a fitting paid back if the
 boat is traded for one it does not suit. The skiff's console in 3D shows the heat, and «EKKOLODD AV» when it is off.
 """
@@ -130,11 +130,10 @@ async def ui(pg, tag):
       const v = heatAt(S.boat.pos); return {sp:heatSpecies(), n:HEATC.stats.n - n0, cod:v[0], all:heatValue(v, 'all'), chip:document.querySelector('#heatBox .hb-sp').textContent}; })())"""))
     check(r['sp'] == 'torsk' and r['n'] == 0 and r['cod'] < r['all'] and 'Torsk' in r['chip'], f'{tag}: artsvalget bytter til torsk uten ny utregning, og brikka på kartet viser arten', r)
 
-    # the readout is the expected rate for your boat, and the afterglow fades over 30 game minutes
+    # the box never shows a number for the fish: no kilos, no rates, only «Lite fisk» to «Mye fisk»; and the afterglow fades
     await pg.wait_for_timeout(1200)
-    r = json.loads(await pg.evaluate("""JSON.stringify((() => { const el = document.querySelector('#heatBox .hr-now b'), pose = livePose(), E = expectedRate(pose.p, (S.t + pose.frac) / 60);
-      return {shown:el ? +el.textContent.replace(/\\s/g, '').replace(',', '.') : null, want:E.t, f:document.querySelector('#heatBox .hr-f').textContent}; })())"""))
-    check(r['shown'] is not None and abs(r['shown'] - r['want']) <= 1, f'{tag}: «Her nå» viser forventet fangst for din båt (innen 1 kg/t)', r)
+    r = json.loads(await pg.evaluate("""JSON.stringify((() => { const tx = $('heatBox').textContent; return {tx, kg:/kg|\\d+\\s*%/.test(tx), scale:/Lite fisk/.test(tx) && /Mye fisk/.test(tx)}; })())"""))
+    check(not r['kg'] and r['scale'], f'{tag}: boksen viser ingen tall for fisken, bare en skala fra «Lite fisk» til «Mye fisk»', r['tx'][:90])
     r = json.loads(await pg.evaluate("""JSON.stringify((() => { const b = S.boat, p0 = {...b.pos}, k = heatKey(Math.floor(p0.x / HEATC.cs), Math.floor(p0.y / HEATC.cs));
       b.pos = {x:p0.x + 3.5, y:p0.y}; S.t += 10; heatTick(); const c = HEATC.cells.get(k), a10 = c ? 0.6 * Math.max(0, 1 - (S.t - c.seen) / HEAT.glow) : null;
       S.t += 21; heatTick(); const gone = !HEATC.cells.get(k); b.pos = p0; return {a10, gone}; })())"""))

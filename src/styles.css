@@ -402,11 +402,9 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-nume
 #heatcv{position:absolute;pointer-events:none;display:none} body.vplot #heatcv{display:block} body.v3d #heatcv,body.v3d #heatBox{display:none!important}
 body.vplot #instr{flex-wrap:wrap-reverse;max-width:calc(100% - var(--sidew) - 84px)} @media (max-width:700px){body.vplot #instr{max-width:calc(100% - 84px)}}
 #heatBox{pointer-events:none;width:236px;padding:6px 9px 7px;border-radius:8px;background:#06121c;color:#d9e8ee;border:1px solid #1e3a4a;box-shadow:0 2px 8px rgba(0,0,0,.25);font:11px/1.35 var(--sans)}
-#heatBox .hb-top{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-bottom:5px;white-space:nowrap} #heatBox .hb-top b{color:#ffd88a;font-size:12px} #heatBox .hb-top span{color:#8fb3c4}
-#heatBox .hb-sp{pointer-events:auto;margin-left:auto;min-height:32px;padding:0 10px;border-radius:7px;border:1px solid #3a5566;background:#0f2533;color:#ffe6a8;font:600 12px var(--sans);cursor:pointer}
+#heatBox .hb-top{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-bottom:5px;white-space:nowrap} #heatBox .hb-top b{color:#bfe9ff;font-size:12px} #heatBox .hb-top span{color:#8fb3c4}
+#heatBox .hb-sp{pointer-events:auto;margin-left:auto;min-height:32px;padding:0 10px;border-radius:7px;border:1px solid #3a5566;background:#0f2533;color:#f6e868;font:600 12px var(--sans);cursor:pointer}
 #heatBox .hb-bar{height:9px;border-radius:3px;background-color:#0b1a24;margin:0 4px}
-#heatBox .hb-lab{position:relative;height:13px;margin:1px 8px 0 4px;color:#9fc3d6;font-size:9.5px} #heatBox .hb-lab span{position:absolute;transform:translateX(-50%)}
-#heatBox .hb-sub{margin:0 0 4px;color:#7f9fb0;font-size:10px}
-#heatBox .hr-now{margin:4px 0 2px;color:#eaf6fb} #heatBox .hr-now b{color:#ffd88a;font-size:14px}
-#heatBox .hr-f{margin:0 0 2px;color:#a9c6d4;font-size:10.5px} #heatBox .hr-note{margin:3px 0 0;color:#8fb3c4;font-size:10.5px}
+#heatBox .hb-lab{display:flex;justify-content:space-between;margin:2px 4px 0;color:#9fc3d6;font-size:10px}
+#heatBox .hr-note{margin:4px 0 0;color:#8fb3c4;font-size:10.5px}
 .ecs .kv.ek{align-items:center;border-bottom:0;padding:2px 0} .ecs .seg.sm{flex:0 0 128px;margin:0} .seg.sm button,.seg.hsp button{min-height:40px}

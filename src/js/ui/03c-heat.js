@@ -1,21 +1,23 @@
 // ---------- the heat map on the chart plotter (cells: core/12-heat.js) ----------
 // A canvas between the depth chart (#chartcv) and the vector chart (svg#map): land, coast, contours, names, route and boat lie
 // crisply on top, so the heat never covers land. Painted in this order: the afterglow of what the boat has passed, a dimmed disk
-// that makes the heat readable on both chart styles, the live cells, and a thin ring for the range. One amber hue, darker to
-// lighter on a log scale from 4.5 to 150 kg an hour (the simple sounder shows four steps). Nothing here runs at load except making
+// that makes the heat readable on both chart styles, the live cells, and a thin ring for the range. The colours run like the
+// «Fiskebestand» overlay in Fishing: Barents Sea: blue where there is a little fish, then violet, cyan and pale, and yellow where
+// it is densest, on a log scale (the simple sounder shows four steps). The player never sees a number for the fish: the map shows
+// where it is dense, not how much a boat would take. Nothing here runs at load except making
 // the canvas, and other files call heatPaint() only through window.heatReady, so the `let`s below are always set up first.
 const heatCv = document.createElement('canvas'); heatCv.id = 'heatcv'; svg.parentNode.insertBefore(heatCv, svg);
 const HEATPAL = (() => {
   // 256 colours: index 0 is under 3 kg/h (nothing), then a log ramp from 4.5 to 150 kg/h (HEAT_TOP)
-  // on the dark disk: little fish is a faint ember, more is brighter and more solid, the best is pale gold
-  const stops = [[0, [120, 42, 12]], [0.35, [214, 104, 22]], [0.7, [250, 196, 64]], [1, [255, 246, 196]]], out = new Uint8ClampedArray(256 * 4);
+  // little fish is blue, then violet, cyan and pale, and the densest is yellow
+  const stops = [[0, [34, 112, 222]], [0.3, [122, 62, 214]], [0.55, [58, 196, 242]], [0.78, [186, 240, 255]], [1, [246, 232, 104]]], out = new Uint8ClampedArray(256 * 4);
   for (let i = 1; i < 256; i++){
     const t = (i - 1) / 254, k = i * 4; let j = 0; while (j < stops.length - 2 && t > stops[j + 1][0]) j++;
     const [ta, a] = stops[j], [tb, c] = stops[j + 1], u = (t - ta) / (tb - ta);
     for (let q = 0; q < 3; q++) out[k + q] = a[q] + (c[q] - a[q]) * u;
-    out[k + 3] = 255 * (0.24 + 0.68 * Math.min(1, t / 0.85));
+    out[k + 3] = 255 * (0.8 + 0.18 * Math.min(1, t / 0.5));
   }
-  out[7] = 255 * 0.14;   // 3–4.5 kg/h: barely there
+  out[7] = 255 * 0.45;   // the faintest trace
   return out;
 })();
 const HEAT_TOP = 150, HEAT_STEPS = [4.5, 13.5, 30, 60];   // the scale's top, and the simple sounder's four steps (kg/h)
@@ -61,15 +63,15 @@ function heatPaint(force){
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, H);
   const hh = MAP_H / view.z, ww = hh * (r.width / r.height), x0 = view.cx - ww / 2, y0 = view.cy - hh / 2, k = W / ww;   // screen pixels a km
   const X = x => (x - x0) * k, Y = y => (y - y0) * k, T = HEAT.tiers[tier], pose = livePose(), cx = X(pose.p.x), cy = Y(pose.p.y), rad = T.r * k;
-  // the dimmed disk: a neutral dark glass with a soft edge, a little stronger over the colourful fishing chart
-  const dim = chartMode() === 'fish' ? 0.8 : 0.72, gr = ctx.createRadialGradient(cx, cy, rad * 0.9, cx, cy, rad * 1.05);
-  gr.addColorStop(0, 'rgba(5,14,22,' + dim + ')'); gr.addColorStop(1, 'rgba(5,14,22,0)');
+  // the dimmed disk: a neutral grey glass with a soft edge, a little stronger over the colourful fishing chart
+  const dim = chartMode() === 'fish' ? 0.78 : 0.6, gr = ctx.createRadialGradient(cx, cy, rad * 0.9, cx, cy, rad * 1.05);
+  gr.addColorStop(0, 'rgba(118,124,130,' + dim + ')'); gr.addColorStop(1, 'rgba(118,124,130,0)');
   ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(cx, cy, rad * 1.04, 0, Math.PI * 2); ctx.fill();
   if (heatImage()){
     const cs = HEATC.cs; ctx.imageSmoothingEnabled = tier !== 'basic'; if (ctx.imageSmoothingEnabled) ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(HP.off, X(HP.ix0 * cs), Y(HP.iy0 * cs), HP.w * cs * k, HP.h * cs * k);
   }
-  ctx.strokeStyle = 'rgba(255,214,120,.55)'; ctx.lineWidth = Math.max(1, dpr); ctx.setLineDash([6 * dpr, 5 * dpr]);
+  ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = Math.max(1, dpr); ctx.setLineDash([6 * dpr, 5 * dpr]);
   ctx.beginPath(); ctx.arc(cx, cy, rad, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
   heatCv.dataset.on = tier; heatCv.dataset.r = (rad / dpr).toFixed(1);
 }
@@ -78,33 +80,24 @@ function heatPaint(force){
 function heatDrawInto(g, p, ox, oy, k){
   const tier = heatTier(); if (!tier || S.boat.status === 'port' || !DEPTH) return;
   const rad = HEAT.tiers[tier].r * k, gr = g.createRadialGradient(ox, oy, rad * 0.9, ox, oy, rad * 1.05);
-  gr.addColorStop(0, 'rgba(5,14,22,.72)'); gr.addColorStop(1, 'rgba(5,14,22,0)');
+  gr.addColorStop(0, 'rgba(118,124,130,.6)'); gr.addColorStop(1, 'rgba(118,124,130,0)');
   g.fillStyle = gr; g.beginPath(); g.arc(ox, oy, rad * 1.05, 0, Math.PI * 2); g.fill();
   if (heatImage()){ const cs = HEATC.cs, sm = g.imageSmoothingEnabled; g.imageSmoothingEnabled = tier !== 'basic'; g.drawImage(HP.off, (HP.ix0 * cs - p.x) * k + ox, (HP.iy0 * cs - p.y) * k + oy, HP.w * cs * k, HP.h * cs * k); g.imageSmoothingEnabled = sm; }
-  g.strokeStyle = 'rgba(255,214,120,.6)'; g.lineWidth = 1.5; g.setLineDash([5, 4]); g.beginPath(); g.arc(ox, oy, rad, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);
+  g.strokeStyle = 'rgba(255,255,255,.65)'; g.lineWidth = 1.5; g.setLineDash([5, 4]); g.beginPath(); g.arc(ox, oy, rad, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);
 }
 
-// ---------- the box with the scale and the readout: what the fish here is worth to your boat, and why ----------
+// ---------- the box with the instrument, its range, the species and the scale ----------
 const COMPASS = {no:['N', 'NØ', 'Ø', 'SØ', 'S', 'SV', 'V', 'NV'], en:['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']};
 const compassOf = a => COMPASS[S.lang === 'no' ? 'no' : 'en'][Math.round((((a * 180 / Math.PI) % 360) + 360) % 360 / 45) % 8];
 const SPNAME = {all:['all fisk', 'all fish'], torsk:['torsk', 'cod'], hyse:['hyse', 'haddock'], sei:['sei', 'saithe']};
-const pct = f => (f >= 0 ? '+' : '−') + Math.round(Math.abs(f) * 100) + ' %';
+// what the box says besides the scale: never a number for the fish, only the guide's promise and where the schools are heading
 function heatReadout(){
-  const L = (no, en) => S.lang === 'no' ? no : en, b = S.boat;
-  if (b.status === 'port') return '<p class="hr-note">' + t('echo_off') + '</p>';
-  const pose = livePose(), H = (S.t + pose.frac) / 60, E = expectedRate(pose.p, H); if (!E) return '';
-  const sp = heatSpecies(), fishing = b.status === 'fishing', sub = sp === 'all' ? '' : ' · ' + L('herav ', 'of which ') + SPNAME[sp][S.lang === 'no' ? 0 : 1] + ' ' + fmt(E.by[sp] || 0, 0);
-  let h = '<p class="hr-now">' + (fishing ? L('Her nå: ca. ', 'Here now: about ') : L('Fisker du her: ca. ', 'Fishing here: about ')) + '<b>' + fmt(E.t, 0) + '</b> ' + L('kg/t med din båt', 'kg/h with your boat') + sub + '</p>';
-  const f = E.f, parts = [L('fisken her ', 'fish here ') + fmt(E.base, 0) + ' kg/' + L('t', 'h'), L('redskap ×', 'gear ×') + fmt(f.eff, f.eff < 1 ? 2 : 1)];
-  if (Math.abs(f.luck - 1) > 0.005) parts.push(L('haill ', 'luck ') + pct(f.luck - 1));
-  if (f.cold > 0.005) parts.push(L('kulde ', 'cold ') + pct(-f.cold));
-  if (f.sea < 0.995) parts.push(L('sjø ', 'sea ') + pct(f.sea - 1));
-  if (f.deck < 0.995) parts.push(L('én på dekk ', 'one on deck ') + pct(f.deck - 1));
-  if (f.rod) parts.push(L('stang ', 'rod ') + pct(-0.5));
-  h += '<p class="hr-f">' + parts.join(' · ') + '</p>';
-  if (S.tut && S.tut.catch) h += '<p class="hr-note">' + L('Første tur: full last er garantert. Vanlig fiske med håndjuksa gir 10–40 kg/t.', 'First trip: a full hold is guaranteed. Ordinary fishing with a hand jig gives 10–40 kg/h.') + '</p>';
-  if (HEATC.tier === 'sonar'){ const s2 = sp === 'all' ? 'torsk' : sp, dr = schoolDrift(s2), nm = {torsk:['Torskestimene', 'The cod schools'], hyse:['Hysestimene', 'The haddock schools'], sei:['Seistimene', 'The saithe schools']}[s2];
-    h += '<p class="hr-note">' + nm[S.lang === 'no' ? 0 : 1] + L(' trekker mot ', ' are heading ') + compassOf(dr.a) + L(', ca. ', ', about ') + fmt(dr.v, 1) + ' km/' + L('t', 'h') + '.</p>'; }
+  const L = (no, en) => S.lang === 'no' ? no : en;
+  if (S.boat.status === 'port') return '<p class="hr-note">' + t('echo_off') + '</p>';
+  let h = '';
+  if (S.tut && S.tut.catch) h += '<p class="hr-note">' + L('Første tur: full last er garantert.', 'First trip: a full hold is guaranteed.') + '</p>';
+  if (HEATC.tier === 'sonar'){ const sp = heatSpecies(), s2 = sp === 'all' ? 'torsk' : sp, nm = {torsk:['Torskestimene', 'The cod schools'], hyse:['Hysestimene', 'The haddock schools'], sei:['Seistimene', 'The saithe schools']}[s2];
+    h += '<p class="hr-note">' + nm[S.lang === 'no' ? 0 : 1] + L(' trekker mot ', ' are heading ') + compassOf(schoolDrift(s2).a) + '.</p>'; }
   return h;
 }
 // where a value sits on the scale (0–1), and the scale as a CSS gradient in the same colours as the map
@@ -123,8 +116,7 @@ function heatBox(on){
   const title = tier === 'sonar' ? L('Sonar', 'Sonar') : tier === 'chirp' ? L('CHIRP-ekkolodd', 'CHIRP echo sounder') : L('Ekkolodd', 'Echo sounder');
   const range = fmt(HEAT.tiers[tier].r * 2 / NM, 1) + ' nm';
   el.innerHTML = '<div class="hb-top"><b>' + title + '</b><span>' + range + '</span>' + (pick ? '<button type="button" class="hb-sp" data-act="hsp" data-s="' + nx + '">' + SPNAME[sp][S.lang === 'no' ? 0 : 1].replace(/^./, c => c.toUpperCase()) + ' ›</button>' : '') + '</div>' +
-    '<div class="hb-bar" style="background:' + heatBar(tier === 'basic') + '"></div><div class="hb-lab">' + [5, 15, 30, 60, 150].map(v => '<span style="left:' + (heatPos(v) * 100).toFixed(1) + '%">' + v + '</span>').join('') + '</div>' +
-    '<p class="hb-sub">' + L('kg/t for én person med håndjuksa', 'kg/h for one person with a hand jig') + '</p>' + heatReadout();
+    '<div class="hb-bar" style="background:' + heatBar(tier === 'basic') + '"></div><div class="hb-lab"><span>' + L('Lite fisk', 'Little fish') + '</span><span>' + L('Mye fisk', 'Much fish') + '</span></div>' + heatReadout();
 }
 $('heatBox').addEventListener('click', e => { const el = e.target.closest('[data-act]'); if (el && !el.disabled) doAct(el); });
 hooks.onHeat = () => heatPaint();

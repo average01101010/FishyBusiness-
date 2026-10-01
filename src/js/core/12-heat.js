@@ -83,14 +83,5 @@ function heatWork(){
 // the heat at a point from the cells, as drawn: nearest cell (for the tests and the readout)
 function heatAt(p){ const cs = HEATC.cs; if (!cs) return null; const c = HEATC.cells.get(heatKey(Math.floor(p.x / cs), Math.floor(p.y / cs))); return c && c.v ? c.v : null; }
 
-// What your boat would catch here now, kg an hour, and the factors behind it: the fish here (one person, hand jig), your gear
-// and people, the luck, the cold, the sea and hands busy on deck. The same sum fish() makes, without its dice.
-function expectedRate(p, H){
-  const q = denPlace(p); if (!q) return null;
-  const W = windAt(H), hs = hsAt(p, H), F = catchFactors(H, W, hs), T = denTime(H), kv = S.target === 'kveite' && S.boat.kgear, eff = kv ? F.keff : F.eff;
-  let base = 0, lucky = 0, t = 0; const by = {};
-  for (const sp of SP){ const d = 30 * denSp(sp, q, H, T), lk = luck(sp) * targetF(sp, H), r = d * eff * lk * F.wpen * F.pen; base += d; lucky += d * lk; t += r; by[sp] = r; }
-  return {t, base, by, f:{eff, luck:base ? lucky / base : 1, cold:F.cold, sea:F.wpen, deck:F.deck, rod:F.rod}};
-}
 // where a species' schools are swimming, and how fast (km an hour), for the sonar
 function schoolDrift(sp){ const si = ALLSP.indexOf(sp); return {a:schoolHeading(sp), v:0.5 + 0.5 * h2(si, 741)}; }
