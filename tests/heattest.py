@@ -39,6 +39,22 @@ async def model(pg):
     check(r['d42'] >= 0.99 and r['d100'] == 1, 'en rute fisket ned til 0,5 er full igjen etter 42 dager (før stoppet den på 0,876)', {'42 d': r['d42'], '100 d': r['d100']})
     check(r['crab'] >= 0.97, 'krabbebestanden kommer også tilbake (før stoppet den på 0,667)', r['crab'])
 
+    # the fish move along instead of jumping every 120 hours, and the schools average 1
+    r = json.loads(await pg.evaluate("""JSON.stringify((() => {
+      const old = (sp, p, H) => { const w = Math.floor(H / 120), n = noise2(p.x / 3.5 + w * 0.61, p.y / 3.5 - w * 0.37, 20 + ALLSP.indexOf(sp)); return 0.3 + 1.5 * n * n; };
+      const pts = []; for (let k = 0; pts.length < 2000; k++){ const p = {x:(k * 7.919) % MAP_W, y:(k * 3.141) % MAP_H}; if (!isLand(p)) pts.push(p); }
+      const H0 = (Date.UTC(2028, 2, 1, 0) - EPOCH) / 36e5; let a = 0, b = 0, n = 0, sc = 0, jump = 0, step = 0, hour = 0;
+      for (let t = 0; t < 24; t++){ const H = H0 + t * 37.3; for (const p of pts.slice(0, 600)) for (const sp of ['torsk', 'hyse', 'sei']){ a += hotspot(sp, p, H); b += old(sp, p, H); sc += school(sp, p, H); n++; } }
+      // across a multiple of 120 hours, and from one game minute to the next
+      const Hk = Math.ceil(H0 / 120) * 120;
+      for (const p of pts.slice(0, 400)){ const sp = 'torsk', h0 = hotspot(sp, p, Hk - 0.5 / 60), h1 = hotspot(sp, p, Hk + 0.5 / 60), m0 = hotspot(sp, p, H0 + 31), m1 = hotspot(sp, p, H0 + 31 + 1 / 60), q0 = hotspot(sp, p, H0 + 50), q1 = hotspot(sp, p, H0 + 51);
+        jump = Math.max(jump, Math.abs(h1 - h0) / h0); step = Math.max(step, Math.abs(m1 - m0) / m0); hour += Math.abs(q1 - q0) / q0; }
+      return {mean:a / n, oldMean:b / n, school:sc / n, jump, step, hour:hour / 400}; })())"""))
+    check(abs(r['mean'] / r['oldMean'] - 1) < 0.02, 'hotspotene har samme snitt som før (±2 %)', {k: round(r[k], 4) for k in ('mean', 'oldMean')})
+    check(r['jump'] < 0.01 and r['step'] < 0.01, 'fisken flytter seg jevnt: under 1 % per spillminutt, også over 120-timersskiftet', {k: round(r[k], 5) for k in ('jump', 'step')})
+    check(r['hour'] > 0.003, 'men den flytter seg i løpet av en time', round(r['hour'], 4))
+    check(abs(r['school'] - 1) < 0.02, 'stimene gir 1 i snitt, så fangsten over en dag endres ikke', round(r['school'], 4))
+
 
 async def main():
     async with async_playwright() as p:

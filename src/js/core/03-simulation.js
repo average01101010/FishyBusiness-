@@ -160,8 +160,27 @@ function noise2(x, y, s){
 }
 // steepness of the sea floor (metres per 100 m): fish gather along bank edges and slopes
 function slopeAt(p){ const e = 0.1, a = depthF({x:p.x + e, y:p.y}), b = depthF({x:p.x - e, y:p.y}), c = depthF({x:p.x, y:p.y + e}), d = depthF({x:p.x, y:p.y - e}); return Math.hypot(a - b, c - d) / 2; }
-// good spots nobody talks about: patches of better fishing that drift every few days
-function hotspot(sp, p, H){ const w = Math.floor(H / 120), n = noise2(p.x / 3.5 + w * 0.61, p.y / 3.5 - w * 0.37, 20 + ALLSP.indexOf(sp)); return 0.3 + 1.5 * n * n; }
+// Good spots nobody talks about: patches of better fishing on a 3.5 km pattern that drift. Two fields overlap at any time, each
+// sliding its own way at 0.7–1.7 km a day and fading in and out over 240 hours, so the fish move along instead of jumping every
+// five days. The blend is scaled back to the spread of one field, so the mean stays where it was.
+const HOT = {T:120, v:0.05, cell:3.5};   // hours, km an hour, km
+function hotField(sp, p, H, k){
+  const si = ALLSP.indexOf(sp), a = 2 * Math.PI * h2(k, 700 + si), v = HOT.v * (0.6 + 0.8 * h2(k, 720 + si)), tt = H - k * HOT.T;
+  return noise2((p.x - Math.sin(a) * v * tt) / HOT.cell, (p.y + Math.cos(a) * v * tt) / HOT.cell, 20 + si + 97 * k);
+}
+function hotspot(sp, p, H){
+  const f = H / HOT.T, k = Math.floor(f), u = sstep(0, 1, f - k), a = hotField(sp, p, H, k), b = hotField(sp, p, H, k + 1);
+  const n = clamp(0.5 + ((a - 0.5) * (1 - u) + (b - 0.5) * u) / Math.hypot(1 - u, u), 0, 1); return 0.3 + 1.5 * n * n;
+}
+// Schools: a finer pattern (400 m) that swims 0.5–1 km an hour on each species' own heading. It averages 1, so it moves the bite
+// about within half an hour without changing the catch over a day. The sonar shows it.
+const SCHOOL = {cell:0.4, amp:0.3};
+function school(sp, p, H){
+  const si = ALLSP.indexOf(sp), a = 2 * Math.PI * h2(si, 740), v = 0.5 + 0.5 * h2(si, 741);
+  return 1 - SCHOOL.amp / 2 + SCHOOL.amp * noise2((p.x - Math.sin(a) * v * H) / SCHOOL.cell, (p.y + Math.cos(a) * v * H) / SCHOOL.cell, 60 + si);
+}
+// where a species' schools are heading (radians, map north up), for the sonar
+function schoolHeading(sp){ return 2 * Math.PI * h2(ALLSP.indexOf(sp), 740); }
 // The coastal-cod fjord line (høstingsforskriften vedlegg 4), traced from Fiskeridirektoratet's map: Andøya – Skrolsvik – Gryllefjord – Hekkingen – Sommarøy – Kvaløya.
 // Vessels of 15 m or more may not fish inside it; seine is banned inside; at most 5000 hooks on line and 80 nets for cod.
 const FJORD = [[-21.8,67.2],[10.1,67.1],[12.6,39.2],[37.4,14.5],[50.6,14.0],[59.6,-1.0],[62.1,-3.2],[63.3,-4.4],[82.5,-23.1]].map(q => ({x:q[0], y:q[1]}));
@@ -218,7 +237,7 @@ function denSp(sp, q, H, T){
   let av = T[sp].av;
   if (sp === 'torsk'){ if (q.skr < 0) q.skr = skreiSpot(p, q.d, q.E); av += T[sp].skrei * q.skr; }
   if (sp === 'uer' && !T.uerOpen) av *= 0.15;
-  if (s.shell) v *= crabArea(p);
+  if (s.shell) v *= crabArea(p); else v *= school(sp, p, H);
   return 1.6 * s.k * v * day * av * depthFactor(sp, q.d) * stockAt(p, sp);   // k: calibration to 2025 catches per boat in Lofoten–Tromsø
 }
 function density(sp, p, H){ const q = denPlace(p); return q ? denSp(sp, q, H, denTime(H)) : 0; }
