@@ -90,12 +90,13 @@ const INSTR = (() => {
   let raf = 0, last = 0, range = 0, W = 0, Hp = 0, dpr = 1, jig = 0;
   const targets = [], STEPS = [10, 20, 30, 50, 80, 120, 200, 300, 500, 800];
   const BAND = {torsk:d => d - 1 - Math.random() * Math.min(12, d * 0.3), hyse:d => d - 0.4 - Math.random() * Math.min(4, d * 0.1), sei:d => d * (0.25 + Math.random() * 0.5), lange:d => d - 0.4 - Math.random() * 2.5, brosme:d => d - 0.4 - Math.random() * 2.5, lyr:d => d * (0.6 + Math.random() * 0.35), uer:d => d - 0.6 - Math.random() * 3, kveite:d => d - 0.3 - Math.random() * 1.2};
-  const on = () => true;
-  function show(){ box.hidden = !on(); if (on() && !raf) raf = requestAnimationFrame(loop); renderGPS(); }
+  // the GPS is always on; the echo sounder can be switched off on the chart plotter's side panel, and then it stops drawing
+  const on = () => true, echoOn = () => !S.settings || S.settings.echo !== false;
+  function show(){ box.hidden = !on(); box.classList.toggle('echoOff', !echoOn()); if (echoOn() && !raf) raf = requestAnimationFrame(loop); renderGPS(); }
   function clear(){ ctx.fillStyle = '#021628'; ctx.fillRect(0, 0, W, Hp); }
   function setRange(r){ if (r === range) return; range = r; clear(); sEl.innerHTML = [0.25, 0.5, 0.75].map(f => '<span style="top:calc(' + f * 100 + '% - 5px)">' + Math.round(r * f) + '</span>').join('') + '<span style="bottom:1px">' + r + '</span>'; }
   function loop(ts){
-    raf = 0; if (!on() || document.hidden) return; raf = requestAnimationFrame(loop);
+    raf = 0; if (!echoOn() || document.hidden) return; raf = requestAnimationFrame(loop);
     dpr = Math.min(2, window.devicePixelRatio || 1);
     const hid = !cv.clientWidth; if (hid) dpr = 1; const w = hid ? 200 : Math.round(cv.clientWidth * dpr), h = hid ? 290 : Math.round(cv.clientHeight * dpr); if (!w || !h) return;
     if (w !== W || h !== Hp){ W = cv.width = w; Hp = cv.height = h; range = 0; }
@@ -116,7 +117,8 @@ const INSTR = (() => {
     // fish echoes: arches from single fish, clusters from schools
     if (b.status !== 'port'){
       const dens = SP.map(sp => [sp, density(sp, p, H)]), tot = dens.reduce((a, q) => a + q[1], 0), moving = b.status === 'sailing' ? 1 : 0.55;
-      if (Math.random() < Math.min(0.6, tot * 0.2 * moving * (S.equip.chirp ? 1.3 : 0.75))){
+      // the same sum as the heat map; marks keep growing up to about 100 kg/h, near the top of its scale
+      if (Math.random() < Math.min(0.85, tot * 0.2 * moving * (S.equip.chirp ? 1.3 : 0.75))){
         let r = Math.random() * tot, sp = dens[0][0]; for (const [k, v] of dens){ if ((r -= v) <= 0){ sp = k; break; } }
         const n = sp === 'sei' && Math.random() < 0.5 ? 3 + Math.floor(Math.random() * 5) : 1, base = BAND[sp](d);
         for (let i = 0; i < n; i++) targets.push({d:Math.min(d - 0.4, base + (Math.random() - 0.5) * (n > 1 ? 4 : 0)), life:7 + Math.random() * 9, age:-i * 0.7, sz:(sp === 'sei' || sp === 'hyse' ? 1 : 1.5) + Math.random(), arch:0.6 + Math.random() * 1.4});
@@ -146,6 +148,8 @@ const INSTR = (() => {
   }
   function renderGPS(){
     if (!on()) return;
+    // the echo window follows its setting, however it was changed (the panel, the phone, another vessel)
+    if (box.classList.contains('echoOff') === echoOn()){ box.classList.toggle('echoOff', !echoOn()); if (echoOn() && !raf) raf = requestAnimationFrame(loop); }
     const pose = livePose(), b = S.boat, H = (S.t + pose.frac) / 60, sog = b.status === 'sailing' ? b.v : 0, ll = gpsLL(pose.p);
     let wpt = 'WPT  --', xte = 'XTE  --', eta = 'ETA  --:--';
     if (S.plan && S.plan.idx < S.plan.wps.length){
@@ -165,6 +169,6 @@ const INSTR = (() => {
     gps.innerHTML = 'POS <b>' + ll[0] + '</b>\n    <b>' + ll[1] + '</b>\nSOG <b>' + fmt(sog, 1) + '</b>kn COG <b>' + deg3(pose.hd) + '</b>\nHDG <b>' + deg3(pose.hd) + '</b>\n' + wpt + '\n' + xte + '\n' + eta;
   }
   document.addEventListener('visibilitychange', () => { if (!document.hidden) show(); });
-  return {show, renderGPS};
+  return {show, renderGPS, echoOn};
 })();
 

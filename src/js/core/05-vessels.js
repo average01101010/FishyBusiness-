@@ -213,6 +213,16 @@ function dock(pid){
   // the skipper starts landing and restocks straight away, on this vessel (a deferred call would act on whichever vessel is bound then)
   if (wasOps){ opsLanded(pid); if (typeof refreshAll === 'function') setTimeout(refreshAll, 0); }
 }
+// What the boat makes of the fish where it is, besides the fish itself: effort (people, jigs, machines, the team), weather and
+// sea, cold, hands busy on deck, and the rod. fish() uses it, and so does the heat map's «Her nå» line.
+function catchFactors(H, W, hs){
+  const tb = S.tripBuff || {}, wpen = Math.max(0.15, 1 - Math.max(0, hs - BOAT.risk[0] * 0.5) * 0.4 / (BOAT.risk[0] / 1.0) - Math.max(0, W - 8) * 0.03), eff = fishEffort() * (1 + (tb.jig ? 0.15 : 0) + (tb.reels && S.equip.jukse ? 0.1 : 0));
+  // halibut is fished by hand on heavy gear: jigging machines do not help
+  const team0 = crewAboard(), people = (meAboard() ? 1 : 0) + team0.length, keff = people * teamEff(team0, meAboard());
+  const P = handsAboard(), onDeck = P >= 2 && deckPending() > 0.5 ? 1 : 0;   // one hand fewer at the rail while someone guts
+  const rod = !!(typeof window !== 'undefined' && window.rodActive), cold = coldPen(H, hs), deck = P ? (P - onDeck) / P : 1;
+  return {eff, keff, wpen, cold, deck, rod, pen:(1 - cold) * deck * (rod ? 0.5 : 1)};
+}
 function fish(H, W, hs){
   const b = S.boat;
   // working the deck instead of fishing: until the tub is empty, then fish on (or leave the grounds)
@@ -230,14 +240,10 @@ function fish(H, W, hs){
   if (deckPending() >= tubCap()){ b.deckStop = true; log('Bløggekaret er fullt. Stopper fisket for å sløye og ise.', 'The bleeding tub is full. Stopping to gut and ice.'); return; }
   // setting or hauling passive gear takes the place of jigging
   if (b.gop){ gearOpMinute(H, W, hs); return; }
-  const tb = S.tripBuff || {}, wpen = Math.max(0.15, 1 - Math.max(0, hs - BOAT.risk[0] * 0.5) * 0.4 / (BOAT.risk[0] / 1.0) - Math.max(0, W - 8) * 0.03), eff = fishEffort() * (1 + (tb.jig ? 0.15 : 0) + (tb.reels && S.equip.jukse ? 0.1 : 0));
+  const {eff, keff, wpen, pen, rod} = catchFactors(H, W, hs);
   if (!S.fsess || dist(S.fsess, b.pos) > 0.3) S.fsess = {x:b.pos.x, y:b.pos.y, t0:S.t, kg:0};
   let got = 0;
-  // halibut is fished by hand on heavy gear: jigging machines do not help
-  const team0 = crewAboard(), people = (meAboard() ? 1 : 0) + team0.length, keff = people * teamEff(team0, meAboard());
-  const P = handsAboard(), onDeck = P >= 2 && deckPending() > 0.5 ? 1 : 0;   // one hand fewer at the rail while someone guts
-  const rod = typeof window !== 'undefined' && window.rodActive; if (rod && meAboard()) S.deckMe = (S.deckMe || 0) + 1;   // fishing by hand counts as your own work on deck
-  const pen = (1 - coldPen(H, hs)) * (P ? (P - onDeck) / P : 1) * (rod ? 0.5 : 1);
+  if (rod && meAboard()) S.deckMe = (S.deckMe || 0) + 1;   // fishing by hand counts as your own work on deck
   let room = capHold() - tot, dsum = 0, tsum = 0, gotTop = 0;
   S.facc = S.facc || {}; S.fnext = S.fnext || {};
   for (const sp of SP){

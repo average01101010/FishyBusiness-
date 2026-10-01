@@ -97,7 +97,7 @@ $('modeBtn').onclick = () => {
   S.settings.plotter = !S.settings.plotter; save(); renderBase(); scheduleStatic();
 };
 $('phoneBtn').onclick = () => PHONE.toggle();
-hooks.onEquip = () => { updateMapButtons(); INSTR.show(); };
+hooks.onEquip = () => { updateMapButtons(); INSTR.show(); heatReset(); };
 hooks.onMsg = () => { PHONE.setBadge(); const m = S.msgs[S.msgs.length - 1]; if (m && !PHONE.isOpen()) toast('✉ ' + m.from + ': ' + (S.lang === 'no' ? m.no : m.en)); if (PHONE.isOpen() && (PHONE.app === 'meld' || PHONE.app === 'home')) PHONE.render(); };
 $('instrBtn').onclick = () => { S.settings.instr = S.settings.instr === false; save(); updateMapButtons(); INSTR.show(); };
 if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => renderBase());

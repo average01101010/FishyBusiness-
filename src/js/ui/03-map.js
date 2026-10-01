@@ -12,6 +12,7 @@ function applyView(){
   svg.setAttribute('viewBox', (view.cx - w / 2) + ' ' + (view.cy - h / 2) + ' ' + w + ' ' + h);
   if (window.chartReady && document.body.classList.contains('vplot')){ followChart(); clearTimeout(chartTimer); chartTimer = setTimeout(() => paintChart(1), 160); }
   view.px = r.height / h;
+  if (window.heatReady) heatPaint();   // ui/03c-heat.js, loaded after this file
 }
 function toMap(cx, cy){ const pt = svg.createSVGPoint(); pt.x = cx; pt.y = cy; const q = pt.matrixTransform(svg.getScreenCTM().inverse()); return {x:q.x, y:q.y}; }
 const ptsStr = poly => poly.map(p => p.x.toFixed(3) + ',' + p.y.toFixed(3)).join(' ');
@@ -23,7 +24,7 @@ function plotCol(d){ for (let i = 1; i < PLOT_STOPS.length; i++){ const [b, cb] 
 function cssRGB(name){ const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim().replace('#', ''); return [parseInt(v.slice(0, 2), 16), parseInt(v.slice(2, 4), 16), parseInt(v.slice(4, 6), 16)]; }
 function buildChartImg(){
   if (!DEPTH) return;
-  const plot = S.settings.chart === 'fish', sd = safeDepth(), key = (plot ? 'p' : 'n' + sd);
+  const plot = chartMode() === 'fish', sd = safeDepth(), key = (plot ? 'p' : 'n' + sd);
   if (chartImg.key === key) return;
   const nx = GEO_DEPTH.nx, ny = GEO_DEPTH.ny, cv = document.createElement('canvas'); cv.width = nx; cv.height = ny;
   const ctx = cv.getContext('2d'), img = ctx.createImageData(nx, ny), px = img.data;
@@ -54,7 +55,7 @@ function paintChart(scale){
   if (chartCv.width !== W) chartCv.width = W; if (chartCv.height !== H) chartCv.height = H;
   const hh = MAP_H / view.z, ww = hh * (r.width / r.height), x0 = view.cx - ww / 2, y0 = view.cy - hh / 2, kx = ww / W, ky = hh / H;
   const ctx = chartCv.getContext('2d'), img = ctx.createImageData(W, H), d = img.data, nx = GEO_DEPTH.nx, ny = GEO_DEPTH.ny, c = GEO_DEPTH.c, D = DEPTH;
-  const fish = S.settings.chart === 'fish', sd = safeDepth(), s2 = sd > 2.5 ? Math.min(2, sd / 2) : -1;
+  const fish = chartMode() === 'fish', sd = safeDepth(), s2 = sd > 2.5 ? Math.min(2, sd / 2) : -1;
   const OFF = fish ? [5, 9, 13] : [221, 227, 229], WHITE = [249, 251, 252], U1 = [167, 203, 235], U2 = [134, 180, 223], SC = [59, 106, 165];
   const prev = new Float32Array(W).fill(NaN), sh = 1 / (Math.max(kx, 0.0005) * 10), smooth = scale >= 1;
   // cubic B-spline weights per column (and per row below): smooth, rounded depth contours instead of straight grid steps
@@ -95,7 +96,7 @@ function paintChart(scale){
 function scheduleChart(){ followChart(); clearTimeout(chartTimer); chartTimer = setTimeout(() => paintChart(1), 140); }
 window.addEventListener('resize', () => { if (document.body.classList.contains('vplot')) scheduleChart(); });
 function renderBase(){
-  const plot = S.settings.chart === 'fish'; svg.classList.toggle('plot', plot); svg.classList.toggle('nav', !plot);
+  const plot = chartMode() === 'fish'; svg.classList.toggle('plot', plot); svg.classList.toggle('nav', !plot);
   if (!CONT_D && DEPTH) CONT_D = decodeContours(); scheduleChart();
   const g = [], ns = ' vector-effect="non-scaling-stroke"';
   g.push('<rect x="-400" y="-400" width="' + (MAP_W + 800) + '" height="' + (MAP_H + 800) + '" class="offmap"/>');

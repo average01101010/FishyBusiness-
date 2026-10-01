@@ -5,6 +5,9 @@ you fish is exactly kg/K · Σw²; a fished-down cell comes all the way back (ro
 hard 2 km edges. The hotspots drift instead of jumping every 120 hours, keeping their mean, and the schools average 1.
 The first trip: the guaranteed catch is a real skrei patch on the guide's ground, so the heat shows it; the top-up is only a
 safety net, and only the stock's own share of the catch is taken from the stock.
+Part 2, the chart plotter, in landscape and portrait: the radius of each tier, the heat at the boat is 30·Σdensity, the species
+choice only with CHIRP or sonar and without working anything out again, on and off (echo sounder, sonar, port), the «Her nå»
+readout, the afterglow, a vessel without a plotter, and the time on a CPU four times slower. Screenshots: tests/out/heat_*.png.
 """
 from _env import GAME
 import asyncio, json
@@ -80,16 +83,93 @@ async def tutorial(pg):
     check(abs(r['removed'] - r['want']) < 0.05 * r['want'] + 1, 'bare bestandens egen andel trekkes fra bestanden, ikke skreiflekken eller påfyllingen', {k: round(r[k], 1) for k in ('removed', 'want', 'hold')})
 
 
+SETUP = """(([tier, chart, mo, gi, echo, sonar]) => { const b = S.boat, g = GROUNDS[gi];
+  S.t = Math.round((Date.UTC(2028, mo, 10, 9) - EPOCH) / 6e4); S.stock = initStock(); S.mult = 1; S.tut = 0;
+  b.status = 'fishing'; b.port = null; b.pos = {x:g.p.x + 1.2, y:g.p.y + 0.8}; b.fishUntil = S.t + 600; b.gear = true; b.ice = 150; S.plan = null;
+  S.equip.chirp = tier !== 'basic'; S.equip.sonar = tier === 'sonar'; S.equip.plotter = chart === 'fish'; S.settings.chart = chart;
+  S.settings.echo = echo; S.settings.sonar = sonar; delete S.settings.heatSp;
+  heatReset(); openPlotter(); view.cx = b.pos.x; view.cy = b.pos.y; view.z = MAP_H / 9; applyView(); renderBase(); scheduleStatic(); renderDyn(); renderPanel(); heatTick(); return 1; })"""
+DONE = "!HEATC.busy && HEATC.qi >= HEATC.queue.length && HEATC.cells.size > 0"
+
+
+async def ui(pg, tag):
+    R = {'basic': 0.5 * 1.852, 'chirp': 0.75 * 1.852, 'sonar': 1.5 * 1.852}
+    for tier in ('basic', 'chirp', 'sonar'):
+        await pg.evaluate(SETUP, [tier, 'nav', 2, 0, True, True]); await pg.wait_for_function(DONE, timeout=20000); await pg.wait_for_timeout(400)
+        r = json.loads(await pg.evaluate("""JSON.stringify((() => { const b = S.boat, H = S.t / 60, s = heatSample(b.pos, H), sum = 30 * SP.reduce((a, sp) => a + density(sp, b.pos, H), 0);
+          const cs = HEATC.cs, cc = HEATC.cells.get(heatKey(Math.floor(b.pos.x / cs), Math.floor(b.pos.y / cs))), at = cc.v, ctr = heatSample(cc, cc.t / 60);   // the cell, at the time it was worked out
+          return {tier:heatTier(), r:HEAT.tiers[heatTier()].r, px:+heatCv.dataset.r, want:HEAT.tiers[heatTier()].r * view.px, s:heatValue(s, 'all'), sum, cell:heatValue(at, 'all'), ctr:heatValue(ctr, 'all'),
+            pick:document.querySelectorAll('#panel .seg.hsp button').length, note:/Artsvalg krever/.test(document.querySelector('#panel .ecs').textContent), box:!$('heatBox').hidden, echo:!!$('echoWrap').offsetParent}; })())"""))
+        check(r['tier'] == tier and abs(r['r'] - R[tier]) < 1e-9, f'{tag}: {tier} har radius {R[tier]:.3f} km ({R[tier] * 2 / 1.852:g} nm i diameter)', r['r'])
+        check(abs(r['px'] - r['want']) < 1.5, f'{tag}: {tier}: sirkelen på skjermen er r·view.px', {k: round(r[k], 1) for k in ('px', 'want')})
+        check(abs(r['s'] - r['sum']) < 1e-9 and abs(r['cell'] - r['ctr']) < 1e-9, f'{tag}: {tier}: varmen ved båten er 30·Σdensity, og ruta på kartet har verdien i sentrum', {k: round(r[k], 2) for k in ('s', 'sum', 'cell', 'ctr')})
+        check((r['pick'] == 4) == (tier != 'basic') and r['note'] == (tier == 'basic'), f'{tag}: {tier}: artsvalg {"finnes" if tier != "basic" else "krever CHIRP eller sonar"}', r['pick'])
+        check(r['box'] and r['echo'], f'{tag}: {tier}: boksen med skala og avlesning og ekkoloddvinduet vises')
+        await pg.screenshot(path=f'heat_{tag}_{tier}_nav.png')
+    # the fishing chart with CHIRP, for the screenshots
+    await pg.evaluate(SETUP, ['chirp', 'fish', 2, 0, True, True]); await pg.wait_for_function(DONE, timeout=20000); await pg.wait_for_timeout(400)
+    await pg.screenshot(path=f'heat_{tag}_chirp_fish.png')
+
+    # on and off: the echo sounder off hides it, the sonar alone shows it, both off hides it, and in port there is nothing
+    out = {}
+    for name, args in [('ekko av', ['chirp', 'nav', 2, 0, False, True]), ('sonar alene', ['sonar', 'nav', 2, 0, False, True]), ('begge av', ['sonar', 'nav', 2, 0, False, False])]:
+        await pg.evaluate(SETUP, args); await pg.wait_for_timeout(700)
+        out[name] = json.loads(await pg.evaluate("JSON.stringify({tier:heatTier(), on:heatCv.dataset.on, box:!$('heatBox').hidden, echo:!!$('echoWrap').offsetParent})"))
+    await pg.evaluate("(() => { const b = S.boat, p = portById('husoy'); b.status = 'port'; b.port = 'husoy'; b.pos = {...p.p}; S.settings.echo = true; S.settings.sonar = true; heatPaint(); })()"); await pg.wait_for_timeout(500)
+    out['i havn'] = json.loads(await pg.evaluate("JSON.stringify({tier:heatTier(), on:heatCv.dataset.on})"))
+    check(out['ekko av']['tier'] is None and not out['ekko av']['on'] and not out['ekko av']['box'] and not out['ekko av']['echo'], f'{tag}: ekkoloddet av skjuler varmekartet, boksen og ekkoloddvinduet', out['ekko av'])
+    check(out['sonar alene']['tier'] == 'sonar' and out['sonar alene']['on'] == 'sonar', f'{tag}: sonaren alene viser varmekartet', out['sonar alene'])
+    check(out['begge av']['tier'] is None and not out['begge av']['on'], f'{tag}: ekkolodd og sonar av: ingenting vises', out['begge av'])
+    check(out['i havn']['tier'] and not out['i havn']['on'], f'{tag}: i havn tegnes ikke varmekartet', out['i havn'])
+
+    # the species: switching redraws without working anything out again
+    await pg.evaluate(SETUP, ['chirp', 'nav', 2, 0, True, True]); await pg.wait_for_function(DONE, timeout=20000); await pg.wait_for_timeout(300)
+    r = json.loads(await pg.evaluate("""JSON.stringify((() => { const n0 = HEATC.stats.n, b = document.querySelector('#panel .seg.hsp button[data-s=torsk]'); b.click();
+      const v = heatAt(S.boat.pos); return {sp:heatSpecies(), n:HEATC.stats.n - n0, cod:v[0], all:heatValue(v, 'all'), chip:document.querySelector('#heatBox .hb-sp').textContent}; })())"""))
+    check(r['sp'] == 'torsk' and r['n'] == 0 and r['cod'] < r['all'] and 'Torsk' in r['chip'], f'{tag}: artsvalget bytter til torsk uten ny utregning, og brikka på kartet viser arten', r)
+
+    # the readout is the expected rate for your boat, and the afterglow fades over 30 game minutes
+    await pg.wait_for_timeout(1200)
+    r = json.loads(await pg.evaluate("""JSON.stringify((() => { const el = document.querySelector('#heatBox .hr-now b'), pose = livePose(), E = expectedRate(pose.p, (S.t + pose.frac) / 60);
+      return {shown:el ? +el.textContent.replace(/\\s/g, '').replace(',', '.') : null, want:E.t, f:document.querySelector('#heatBox .hr-f').textContent}; })())"""))
+    check(r['shown'] is not None and abs(r['shown'] - r['want']) <= 1, f'{tag}: «Her nå» viser forventet fangst for din båt (innen 1 kg/t)', r)
+    r = json.loads(await pg.evaluate("""JSON.stringify((() => { const b = S.boat, p0 = {...b.pos}, k = heatKey(Math.floor(p0.x / HEATC.cs), Math.floor(p0.y / HEATC.cs));
+      b.pos = {x:p0.x + 3.5, y:p0.y}; S.t += 10; heatTick(); const c = HEATC.cells.get(k), a10 = c ? 0.6 * Math.max(0, 1 - (S.t - c.seen) / HEAT.glow) : null;
+      S.t += 21; heatTick(); const gone = !HEATC.cells.get(k); b.pos = p0; return {a10, gone}; })())"""))
+    check(r['a10'] is not None and 0.3 < r['a10'] < 0.5 and r['gone'], f'{tag}: etterglød: feltet bak båten blekner (0,4 etter 10 min) og er borte etter 31', r)
+
+    # a vessel without a plotter shows the navigation chart, and the wish for the fishing chart is kept
+    r = json.loads(await pg.evaluate("(() => { S.settings.chart = 'fish'; S.equip.plotter = false; renderBase(); return JSON.stringify({mode:chartMode(), nav:svg.classList.contains('nav'), kept:S.settings.chart}); })()"))
+    check(r['mode'] == 'nav' and r['nav'] and r['kept'] == 'fish', f'{tag}: en båt uten kartplotter viser navigasjonskart, og ønsket om fiskekart beholdes', r)
+
+
+async def perf(pg, cdp):
+    # a tablet stand-in: the CPU four times slower; no slice may hold up a frame, and the sonar's whole disk comes within 3 s
+    await cdp.send('Emulation.setCPUThrottlingRate', {'rate': 4})
+    await pg.evaluate(SETUP, ['sonar', 'nav', 2, 0, True, True])
+    t = await pg.evaluate("""new Promise(res => { HEATC.stats = {slices:0, maxSlice:0, n:0, ms:0}; heatReset(); const t0 = performance.now(); heatTick();
+      const w = () => { if (!HEATC.busy && HEATC.qi >= HEATC.queue.length) res(JSON.stringify({ms:performance.now() - t0, ...HEATC.stats})); else setTimeout(w, 20); }; w(); })""")
+    await cdp.send('Emulation.setCPUThrottlingRate', {'rate': 1})
+    r = json.loads(t)
+    check(r['maxSlice'] < 16 and r['ms'] < 3000, 'ytelse (CPU ×4): ingen bit over 16 ms, og hele sonarsirkelen kommer på under 3 s', {'ms': round(r['ms']), 'biter': r['slices'], 'lengste': round(r['maxSlice'], 1), 'ruter': r['n'], 'µs/rute': round(r['ms'] / max(1, r['n']) * 1000, 1)})
+
+
 async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(args=['--disable-gpu-compositing', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
-        pg = await b.new_page(viewport={'width': 1280, 'height': 800})
         errs = []
-        pg.on('pageerror', lambda e: errs.append(str(e)))
-        await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(500)
-        await pg.wait_for_function("typeof DEPTH !== 'undefined' && DEPTH", timeout=60000)
-        await model(pg)
-        await tutorial(pg)
+        for (W, H, tag) in [(1280, 800, 'liggende'), (915, 1208, 'staaende')]:
+            ctx = await b.new_context(viewport={'width': W, 'height': H}, has_touch=True)
+            pg = await ctx.new_page(); cdp = await ctx.new_cdp_session(pg)
+            pg.on('pageerror', lambda e: errs.append(str(e)))
+            await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(500)
+            await pg.wait_for_function("typeof DEPTH !== 'undefined' && DEPTH", timeout=60000)
+            if tag == 'liggende':
+                await model(pg)
+                await tutorial(pg)
+                await perf(pg, cdp)
+            await ui(pg, tag)
+            await ctx.close()
         print(errs)
         await b.close()
 

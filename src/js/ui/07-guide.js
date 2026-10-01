@@ -3,11 +3,23 @@ function renderClock(){
   const c = $('cash'); c.textContent = kr(S.cash); c.classList.toggle('neg', S.cash < 0);
 }
 
+// the fishing chart needs the plotter on the vessel you follow; the wish is kept, so it comes back on a vessel that has one
+function chartMode(){ return S.settings.chart === 'fish' && S.equip.plotter ? 'fish' : 'nav'; }
+// the echo sounder and the sonar, on or off, and the species they show (only CHIRP and sonar tell the species apart)
+function echoSettings(){
+  const L = (no, en) => S.lang === 'no' ? no : en, st = S.settings, tier = heatTier(), sp = heatSpecies();
+  const onoff = (act, on) => '<div class="seg sm"><button type="button" data-act="' + act + '" data-on="1" class="' + (on ? 'on' : '') + '">' + L('På', 'On') + '</button><button type="button" data-act="' + act + '" data-on="0" class="' + (on ? '' : 'on') + '">' + L('Av', 'Off') + '</button></div>';
+  let h = '<div class="kv ek"><span>' + (S.equip.chirp ? L('CHIRP-ekkolodd', 'CHIRP echo sounder') : L('Ekkolodd', 'Echo sounder')) + '</span>' + onoff('echo', st.echo !== false) + '</div>';
+  if (S.equip.sonar) h += '<div class="kv ek"><span>' + L('Sonar', 'Sonar') + '</span>' + onoff('sonar', st.sonar !== false) + '</div>';
+  if (tier && HEAT.tiers[tier].pick) h += '<div class="seg hsp">' + [['all', L('Alle', 'All')], ['torsk', L('Torsk', 'Cod')], ['hyse', L('Hyse', 'Haddock')], ['sei', L('Sei', 'Saithe')]].map(([k, n]) => '<button type="button" data-act="hsp" data-s="' + k + '" class="' + (sp === k ? 'on' : '') + '">' + n + '</button>').join('') + '</div>';
+  else if (tier) h += '<p class="note">' + L('Artsvalg krever CHIRP-ekkolodd eller sonar.', 'Choosing the species needs a CHIRP echo sounder or a sonar.') + '</p>';
+  return h;
+}
 function chartSettings(){
-  const L = (no, en) => S.lang === 'no' ? no : en, fish = S.settings.chart === 'fish', sd = safeDepth();
+  const L = (no, en) => S.lang === 'no' ? no : en, fish = chartMode() === 'fish', sd = safeDepth();
   return '<div class="ecs"><div class="seg"><button type="button" data-act="cm" data-m="nav" class="' + (fish ? '' : 'on') + '">' + L('Navigasjon', 'Navigation') + '</button><button type="button" data-act="cm" data-m="fish" class="' + (fish ? 'on' : '') + '">' + L('Fiskekart', 'Fishing chart') + (S.equip.plotter ? '' : ' 🔒') + '</button></div>' +
     '<div class="kv"><span>' + L('Sikker dybde', 'Safety depth') + '</span><span class="sdv"><button type="button" data-act="sd-">−</button><b>' + sd + ' m</b><button type="button" data-act="sd+">+</button></span></div>' +
-    '<p class="note">' + (fish ? L('Havbunnen i farger med dybdekoter. Bruk den til å finne kanter og grunner med fisk.', 'The seabed in colour with depth contours. Use it to find edges and banks holding fish.') : L('Blått er grunnere enn sikker dybde. Båten stikker ', 'Blue is shallower than the safety depth. The boat draws ') + fmt(BOAT.draft, 1) + ' m.') + '</p></div>';
+    '<p class="note">' + (fish ? L('Havbunnen i farger med dybdekoter. Bruk den til å finne kanter og grunner med fisk.', 'The seabed in colour with depth contours. Use it to find edges and banks holding fish.') : L('Blått er grunnere enn sikker dybde. Båten stikker ', 'Blue is shallower than the safety depth. The boat draws ') + fmt(BOAT.draft, 1) + ' m.') + '</p>' + echoSettings() + '</div>';
 }
 function panelRoute(){
   const b = S.boat, h = [];

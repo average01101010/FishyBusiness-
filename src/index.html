@@ -42,7 +42,7 @@
       <div id="loader"><div><b>Kystfiske</b><span>Laster Senja …</span></div></div>
       <button id="gpsBtn" class="ov gpsb" type="button" aria-label="GPS"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z"/><circle cx="12" cy="11" r="2.3"/></svg><span>GPS</span></button>
       <button id="logbook" type="button" aria-label="Dekksdagbok"><span class="lbk-tab">DEKKSDAGBOK</span></button>
-      <div id="instr" hidden><div id="gps"></div><div id="echoWrap"><canvas id="echo"></canvas><div id="echoDepth"></div><div id="echoTemp"></div><div id="echoScale"></div></div></div>
+      <div id="instr" hidden><div id="gps"></div><div id="echoWrap"><canvas id="echo"></canvas><div id="echoDepth"></div><div id="echoTemp"></div><div id="echoScale"></div></div><div id="heatBox" hidden></div></div>
       <button id="modeBtn" class="mapbtn" type="button"></button>
       <button id="instrBtn" class="mapbtn" type="button">GPS</button>
       <div id="legend" hidden></div>
@@ -83,10 +83,12 @@
 @include(js/core/09-tattoos.js)
 @include(js/core/10-gear.js)
 @include(js/core/11-route.js)
+@include(js/core/12-heat.js)
 @include(js/ui/01-i18n.js)
 @include(js/ui/02-format-state.js)
 @include(js/ui/03-map.js)
 @include(js/ui/03b-route.js)
+@include(js/ui/03c-heat.js)
 @include(js/ui/04-panels-instruments.js)
 @include(js/ui/05-tattoo-art.js)
 @include(js/ui/05-phone.js)
