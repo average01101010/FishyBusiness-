@@ -171,8 +171,7 @@ function insideFjord(p){ let c = false; for (let i = 0, j = FJORD_POLY.length - 
 const FIELDS = [['05-25', 6, 45], ['05-29', 14, 8], ['05-30', 44, 8], ['05-31', 72, 4], ['05-40', 58, 36], ['05-41', 42, 68], ['05-42', 12, 80]];
 function fieldCode(p){ if (!insideFjord(p) && p.x < 16) return p.y < 30 ? '05-29' : '05-25'; let best = FIELDS[0], bd = 1e9; for (const f of FIELDS){ if (!insideFjord(p) && (f[0] === '05-40' || f[0] === '05-41')) continue; const d = Math.hypot(p.x - f[1], p.y - f[2]); if (d < bd){ bd = d; best = f; } } return best[0]; }
 // where the spawning cod gathers: exposed banks 40–250 m outside the fjords, and the known grounds
-function skreiSpot(p){
-  const d = depthF(p), E = exposure(p);
+function skreiSpot(p, d = depthF(p), E = exposure(p)){
   let v = sstep(0.15, 0.6, E) * sstep(30, 60, d) * (1 - sstep(220, 320, d));
   for (const g of GROUNDS.slice(0, 3)){ const dd = dist(p, g.p); v += 0.6 * Math.exp(-((dd / (g.r * 1.3)) ** 2)); }
   return clamp(v, 0, 1.2) * (insideFjord(p) ? 0.35 : 1);
@@ -195,19 +194,34 @@ function targetF(sp, H){
   const cur = Math.abs(tideH(H + 0.5) - tideH(H - 0.5)); return 9 * (1.4 - 0.8 * clamp(cur / 0.35, 0, 1));
 }
 function uerOpen(H){ const m = gDate(H).getUTCMonth(); return m >= 5 && m <= 7; }
-function density(sp, p, H){
-  if (isLand(p)) return 0;
-  const s = SPECIES[sp], d = depthF(p), E = exposure(p), edge = sstep(1.5, 12, slopeAt(p));
-  let v = s.base * (s.prod + (1 - s.prod) * E) * (0.6 + 0.4 * edge) * hotspot(sp, p, H) * 0.95;
-  // the named grounds are known for a reason
-  for (const g of GROUNDS){ const dd = dist(p, g.p); if (dd > g.r * 3) continue; v += (g.sp[sp] || 0) * Math.exp(-((dd / g.r) ** 2)) * 0.45; }
-  const day = 0.75 + 0.5 * vn(H / 24 + p.x * 0.05, 300 + ALLSP.indexOf(sp));
-  let av = seasonal(s.av, H);
-  if (sp === 'torsk') av += seasonal(s.skrei, H) * skreiSpot(p);
-  if (sp === 'uer' && !uerOpen(H)) av *= 0.15;
-  if (s.shell) v *= crabArea(p);
-  return 1.6 * s.k * v * day * av * depthFactor(sp, d) * stockAt(p, sp);   // k: calibration to 2025 catches per boat in Lofoten–Tromsø
+// How much fish of a species there is at a point and hour: 30 × density is kg an hour for one person with a hand jig.
+// It is split in three so the echo-sounder heat map can share the work between species: what the place gives (denPlace, once
+// per point), what the hour gives (denTime, once per hour), and the species' own sum (denSp). density() gives the same numbers.
+function denPlace(p){
+  if (isLand(p)) return null;
+  const d = depthF(p), E = exposure(p);
+  return {p, d, E, edge:sstep(1.5, 12, slopeAt(p)), gd:GROUNDS.map(g => dist(p, g.p)), skr:-1};
 }
+const DENT = {H:NaN, T:null};
+function denTime(H){
+  if (DENT.H === H) return DENT.T;
+  const T = {uerOpen:uerOpen(H)};
+  for (const sp of ALLSP){ const s = SPECIES[sp]; T[sp] = {av:seasonal(s.av, H), skrei:sp === 'torsk' ? seasonal(s.skrei, H) : 0}; }
+  DENT.H = H; DENT.T = T; return T;
+}
+function denSp(sp, q, H, T){
+  const s = SPECIES[sp], p = q.p;
+  let v = s.base * (s.prod + (1 - s.prod) * q.E) * (0.6 + 0.4 * q.edge) * hotspot(sp, p, H) * 0.95;
+  // the named grounds are known for a reason
+  for (let i = 0; i < GROUNDS.length; i++){ const g = GROUNDS[i], dd = q.gd[i]; if (dd > g.r * 3) continue; v += (g.sp[sp] || 0) * Math.exp(-((dd / g.r) ** 2)) * 0.45; }
+  const day = 0.75 + 0.5 * vn(H / 24 + p.x * 0.05, 300 + ALLSP.indexOf(sp));
+  let av = T[sp].av;
+  if (sp === 'torsk'){ if (q.skr < 0) q.skr = skreiSpot(p, q.d, q.E); av += T[sp].skrei * q.skr; }
+  if (sp === 'uer' && !T.uerOpen) av *= 0.15;
+  if (s.shell) v *= crabArea(p);
+  return 1.6 * s.k * v * day * av * depthFactor(sp, q.d) * stockAt(p, sp);   // k: calibration to 2025 catches per boat in Lofoten–Tromsø
+}
+function density(sp, p, H){ const q = denPlace(p); return q ? denSp(sp, q, H, denTime(H)) : 0; }
 // local stock in 2 x 2 km cells (1 = untouched): fishing takes it down, it recovers over weeks
 const STK = {c:2, nx:Math.ceil(MAP_W / 2), ny:Math.ceil(MAP_H / 2), K:2600};
 function stockIdx(p){ return Math.floor(clamp(p.y, 0, MAP_H - 0.001) / STK.c) * STK.nx + Math.floor(clamp(p.x, 0, MAP_W - 0.001) / STK.c); }
