@@ -235,8 +235,38 @@ body.vplot #logbook{display:none}
 .bk-wrap{position:relative;display:flex;flex-direction:column;align-items:center;gap:10px;transform:translate(-40vw,40vh) scale(.15) rotate(-8deg);opacity:0;transition:transform .38s cubic-bezier(.2,.8,.2,1),opacity .25s}
 #book.on .bk-wrap{transform:none;opacity:1}
 .bk-stage{position:relative;perspective:1800px;touch-action:pan-y;user-select:none;-webkit-user-select:none}
-.bk-stage.spread{width:min(96vw,920px);height:min(80vh,620px)}
-.bk-stage.single{width:min(94vw,440px);height:min(78vh,640px)}
+.bk-stage.spread{width:min(calc(96vw - 48px),920px);height:min(80vh,620px)}
+.bk-stage.single{width:min(calc(94vw - 44px),440px);height:min(78vh,640px)}
+/* the tabs down the left edge of the book, as in a real log book; the open one sticks out */
+.bk-body{position:relative;margin-left:42px}
+.bk-tabs{position:absolute;right:100%;top:14px;bottom:14px;display:flex;flex-direction:column;gap:5px;margin-right:6px;z-index:0}
+.bk-tab{flex:0 1 112px;min-height:44px;width:34px;margin-left:8px;padding:0;border:0;border-radius:9px 0 0 9px;background:var(--tc);color:#3a3324;cursor:pointer;box-shadow:-2px 2px 4px rgba(0,0,0,.25);filter:saturate(.75) brightness(.92);display:flex;align-items:center;justify-content:center;transition:margin .15s,width .15s}
+.bk-tab span{writing-mode:vertical-rl;transform:rotate(180deg);font:600 12px var(--serif);letter-spacing:.06em;white-space:nowrap}
+.bk-tab.on{width:42px;margin-left:0;filter:none;box-shadow:-3px 3px 6px rgba(0,0,0,.35)}
+/* entries in the tabs: seasons and events (crossed out when over), gear cards, landing notes */
+.bk-e{position:relative;margin:4px 0 10px;padding:2px 2px 4px}
+.bk-et{display:flex;justify-content:space-between;gap:8px;align-items:baseline;border-bottom:1px solid rgba(80,110,150,.35);font-family:'Segoe Print','Bradley Hand','Chalkboard SE','Comic Sans MS',cursive;color:#1f2f6e;font-size:14px}
+.bk-ed{color:#b0434f;font-size:12px;white-space:nowrap}
+.bk-e.over{opacity:.55}
+.bk-e.over::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(to top right,transparent calc(50% - 1.5px),rgba(222,96,120,.7) 50%,transparent calc(50% + 1.5px)),linear-gradient(to bottom right,transparent calc(50% - 1.5px),rgba(222,96,120,.7) 50%,transparent calc(50% + 1.5px))}
+.bk-e.now .bk-et{border-bottom-color:#b0434f}
+.bk-nw{font:600 10px var(--serif);color:#fff;background:#b0434f;border-radius:4px;padding:0 5px;vertical-align:2px}
+.bk-g{display:flex;gap:8px;margin:6px 0 12px;padding-bottom:6px;border-bottom:1px solid rgba(80,110,150,.3)}
+.bk-gi svg{width:46px;height:36px}
+.bk-gb{flex:1;min-width:0}
+.bk-gt{font-family:'Segoe Print','Bradley Hand','Chalkboard SE','Comic Sans MS',cursive;color:#b0434f;font-size:15px;line-height:22px}
+.bk-gr{display:flex;gap:6px;align-items:center;font:11.5px var(--serif);color:#3b3020;min-height:22px;flex-wrap:wrap} .bk-gr .hw{font-size:12px;line-height:20px}
+.bk-tl{vertical-align:middle;margin-right:4px} .bk-tl path{stroke:#1f2f6e;stroke-width:1.6;stroke-linecap:round;fill:none}
+.bk-red{color:#b0434f}
+.bk-sp{display:flex;justify-content:space-between;align-items:center;margin:8px 0 0}
+.bk-sn{font-family:'Segoe Print','Bradley Hand','Chalkboard SE','Comic Sans MS',cursive;color:#1f2f6e;font-size:15px}
+.bk-fish svg{width:64px;height:28px}
+.bk-st td,.bk-st th{text-align:right} .bk-st td:first-child,.bk-st th:first-child{text-align:left}
+.bk-tot{margin-top:8px;border-top:2px solid #5a4a30;padding-top:4px}
+.bk-row{display:flex;justify-content:space-between;gap:10px;font:11.5px var(--serif);color:#3b3020;border-bottom:1px solid rgba(138,118,84,.3);min-height:22px;align-items:center}
+.bk-row .hw{line-height:20px;white-space:nowrap} .bk-row.red .hw{color:#b0434f} .bk-row.net{border-top:2px solid #5a4a30;margin-top:4px}
+.bk-sub{font:700 10.5px var(--serif);letter-spacing:.14em;text-transform:uppercase;color:#5a4a30;margin:8px 0 2px;text-align:center}
+.bk-note{font-size:12px;color:#5a4a30}
 .bk-cover{position:absolute;inset:-9px -10px;border-radius:6px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.045' numOctaves='3' seed='11'/%3E%3CfeColorMatrix values='0 0 0 0 0.16  0 0 0 0 0.12  0 0 0 0 0.42  0 0 0 -2.4 1.55'/%3E%3C/filter%3E%3Crect width='220' height='220' fill='%23090a1c'/%3E%3Crect width='220' height='220' filter='url(%23f)'/%3E%3C/svg%3E");background-size:160px;box-shadow:0 18px 50px rgba(0,0,0,.55)}
 .pg,.leaf{position:absolute;top:0;height:100%}
 .spread .pg.L,.spread .leaf.L{left:0;width:50%} .spread .pg.R,.spread .leaf.R{left:50%;width:50%} .single .pg,.single .leaf{left:0;width:100%}

@@ -420,6 +420,8 @@ function ordersTick(H){
   // deadlines: offers you did not take, and orders you did not deliver
   O.offers = O.offers.filter(o => o.offerUntil > S.t);
   for (const o of O.active.slice()) if (o.due <= S.t){ O.active.splice(O.active.indexOf(o), 1); const c = CUSTOMERS.find(x => x.id === o.cust);
+    O.done.unshift({...o, t:S.t, ok:false}); O.done = O.done.slice(0, 20);
+    log('Oppdraget for ' + c.no + ' ble ikke levert i tide: ' + fmt(o.left, 0) + ' av ' + fmt(o.kg, 0) + ' kg ' + SPECIES[o.sp].no.toLowerCase() + ' mangler.', 'The order for ' + c.no + ' was not delivered in time: ' + fmt(o.left, 0) + ' of ' + fmt(o.kg, 0) + ' kg of ' + SPECIES[o.sp].en.toLowerCase() + ' missing.');
     S.rep[o.cust] = clamp(repOf(o.cust) - 10, 0, 100); msg(c.no, 'Bestillingen på ' + fmt(o.kg, 0) + ' kg ' + SPECIES[o.sp].no.toLowerCase() + ' kom ikke i tide. Vi får ta det neste gang.', 'The order for ' + fmt(o.kg, 0) + ' kg of ' + SPECIES[o.sp].en.toLowerCase() + ' did not arrive in time. Maybe next time.'); }
   // new offers in the morning: one or two a day, at most three open
   if (gDate(H).getUTCHours() !== 6 || O.offers.length >= 3) return;

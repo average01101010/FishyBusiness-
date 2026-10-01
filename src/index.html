@@ -65,7 +65,7 @@
     </section>
   </main>
   <div id="toast" role="status" aria-live="polite"></div>
-  <div id="book" hidden><div class="bk-back" data-bk="close"></div><div class="bk-wrap"><div class="bk-stage" id="bkStage"></div><div class="bk-ctrl"><button type="button" data-bk="prev" aria-label="Forrige">‹</button><span id="bkDate"></span><button type="button" data-bk="next" aria-label="Neste">›</button><button type="button" data-bk="today" id="bkToday"></button><button type="button" data-bk="close" aria-label="Lukk">✕</button></div></div></div>
+  <div id="book" hidden><div class="bk-back" data-bk="close"></div><div class="bk-wrap"><div class="bk-body"><div class="bk-tabs" id="bkTabs"></div><div class="bk-stage" id="bkStage"></div></div><div class="bk-ctrl"><button type="button" data-bk="prev" aria-label="Forrige">‹</button><span id="bkDate"></span><button type="button" data-bk="next" aria-label="Neste">›</button><button type="button" data-bk="today" id="bkToday"></button><button type="button" data-bk="close" aria-label="Lukk">✕</button></div></div></div>
   <div id="tutDim" hidden></div><div id="tutRing" hidden></div>
   <div id="tip" hidden><p id="tipText"></p><div class="tip-b"><button type="button" id="tipOk"></button><button type="button" id="tipSkip"></button></div><i class="tip-arrow"></i></div>
   <div id="phone" hidden><div class="ph-body"><div class="ph-cam"></div><div class="ph-screen"><div class="ph-status"><b id="phTime"></b><span id="phNet"></span></div><div id="phView"></div><div class="ph-nav"><button type="button" data-pa="back" aria-label="Tilbake">‹</button><button type="button" data-pa="home" class="ph-home" aria-label="Hjem"></button><button type="button" data-pa="close" aria-label="Lukk">✕</button></div></div></div></div>
@@ -96,6 +96,7 @@
 @include(js/ui/05-tattoo-art.js)
 @include(js/ui/05-phone.js)
 @include(js/ui/06-logbook.js)
+@include(js/ui/06b-book-tabs.js)
 @include(js/ui/07-guide.js)
 @include(js/ui/07b-first-trip.js)
 @include(js/ui/08-actions.js)

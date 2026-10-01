@@ -5,9 +5,12 @@ const dayOf = t0 => Math.floor((t0 / 60 + 6) / 24);
 const DAYF = {no:['Søndag','Mandag','Tirsdag','Onsdag','Torsdag','Fredag','Lørdag'], en:['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']};
 const MONF = {no:['januar','februar','mars','april','mai','juni','juli','august','september','oktober','november','desember'], en:['January','February','March','April','May','June','July','August','September','October','November','December']};
 function longDate(day){ const d = gDate(day * 24 - 6 + 12); return S.lang === 'no' ? DAYF.no[d.getUTCDay()] + ' ' + d.getUTCDate() + '. ' + MONF.no[d.getUTCMonth()] + ' ' + d.getUTCFullYear() : DAYF.en[d.getUTCDay()] + ' ' + d.getUTCDate() + ' ' + MONF.en[d.getUTCMonth()] + ' ' + d.getUTCFullYear(); }
+// the deck log: a book with tabs down the left edge; the pages of the tabs besides Dagbok come from bookTabPages (ui/06b-book-tabs.js)
 const BOOK = (() => {
-  const el = $('book'), stage = $('bkStage'), dEl = $('bkDate');
-  let spread = true, idx = 0, drag = null, busy = false;
+  const el = $('book'), stage = $('bkStage'), dEl = $('bkDate'), tabsEl = $('bkTabs');
+  let spread = true, idx = 0, drag = null, busy = false, tab = 'dag', list = [];
+  // the tabs down the left edge, coloured as in a real log book; Dagbok is the day-by-day log as before
+  const TABS = [['dag', 'Dagbok', 'Log', '#cfc8b4'], ['ses', 'Sesonger', 'Seasons', '#f1a9b7'], ['hen', 'Hendelser', 'Events', '#ece08c'], ['uts', 'Utstyr', 'Gear', '#90dbe0'], ['salg', 'Salg', 'Sales', '#a3b6ee']];
   const L = (no, en) => S.lang === 'no' ? no : en;
   const today = () => dayOf(S.t);
   function first(){ let t0 = S.t; if (S.log.length) t0 = Math.min(t0, S.log[0].t); if (S.navrows.length) t0 = Math.min(t0, S.navrows[0].t); return Math.max(dayOf(t0), today() - 59); }
@@ -35,22 +38,37 @@ const BOOK = (() => {
     if (sales.length){ const kg = sales.reduce((a, x) => a + x.kg, 0), kr0 = sales.reduce((a, x) => a + x.total, 0); h += '<div class="pg-sum">' + L('Landet i dag: ', 'Landed today: ') + fmt(kg, 0) + ' kg · ' + kr(kr0) + '</div>'; }
     return h;
   }
-  // page lists: a spread shows one day; a single page alternates navigation and operations
-  const nPages = () => spread ? today() - first() + 1 : (today() - first() + 1) * 2;
+  // page lists: in the log a spread shows one day and a single page alternates navigation and operations; the other tabs are a
+  // plain list of pages, two to a spread
+  const nPages = () => tab === 'dag' ? (spread ? today() - first() + 1 : (today() - first() + 1) * 2) : Math.max(1, spread ? Math.ceil(list.length / 2) : list.length);
   function pageAt(i, side){
+    if (tab !== 'dag') return list[spread ? i * 2 + (side === 'R' ? 1 : 0) : i] || '';
     if (spread){ const day = first() + i; return side === 'L' ? navPage(day) : driftPage(day); }
     const day = first() + Math.floor(i / 2); return i % 2 ? driftPage(day) : navPage(day);
   }
+  const lastIdx = () => tab === 'dag' ? (spread ? today() - first() : (today() - first()) * 2) : nPages() - 1;
+  function setTab(t, page){
+    tab = t; list = t === 'dag' ? [] : bookTabPages(t);
+    idx = page != null && t !== 'dag' ? (spread ? Math.floor(page / 2) : page) : lastIdx();
+    idx = clamp(idx, 0, nPages() - 1);
+  }
+  function renderTabs(){
+    tabsEl.innerHTML = TABS.map(([k, no, en, c]) => '<button type="button" class="bk-tab' + (k === tab ? ' on' : '') + '" data-bk="tab" data-t="' + k + '" style="--tc:' + c + '"><span>' + L(no, en) + '</span></button>').join('');
+  }
   const face = (html, cls, num) => '<div class="face ' + (cls || '') + '"><div class="pgc">' + html + '</div>' + (num ? '<div class="pg-n">' + num + '</div>' : '') + '</div>';
-  function label(){ const day = spread ? first() + idx : first() + Math.floor(idx / 2); dEl.textContent = dayStr(day * 24 - 6 + 12) + (spread ? '' : ' · ' + (idx % 2 ? L('drift', 'ops') : L('navigasjon', 'navigation'))); }
+  function label(){
+    if (tab !== 'dag'){ const T0 = TABS.find(x => x[0] === tab); dEl.textContent = L(T0[1], T0[2]) + ' · ' + (idx + 1) + ' / ' + nPages(); return; }
+    const day = spread ? first() + idx : first() + Math.floor(idx / 2); dEl.textContent = dayStr(day * 24 - 6 + 12) + (spread ? '' : ' · ' + (idx % 2 ? L('drift', 'ops') : L('navigasjon', 'navigation')));
+  }
   function render(){
     stage.className = 'bk-stage ' + (spread ? 'spread' : 'single');
     stage.innerHTML = '<div class="bk-cover"></div>' + (spread ? '<div class="pg L">' + face(pageAt(idx, 'L'), '', idx * 2 + 1) + '</div><div class="pg R">' + face(pageAt(idx, 'R'), '', idx * 2 + 2) + '</div>' : '<div class="pg">' + face(pageAt(idx), '', idx + 1) + '</div>');
-    label();
+    label(); renderTabs();
   }
-  function open(){
+  // open at a tab (the log by default) and, for the other tabs, at one of its pages (the newest when none is given)
+  function open(t, page){
     spread = window.innerWidth >= 760 && window.innerHeight >= 480;
-    idx = spread ? today() - first() : (today() - first()) * 2;
+    setTab(t || 'dag', page);
     render(); el.hidden = false; void el.offsetWidth; el.classList.add('on');
   }
   function close(){ el.classList.remove('on'); setTimeout(() => { if (!el.classList.contains('on')) el.hidden = true; }, 380); }
@@ -87,10 +105,10 @@ const BOOK = (() => {
   });
   const end = e => { if (!drag) return; const d = drag; drag = null; if (!d.leaf) return; const v = (e.clientX - d.x) / Math.max(1, performance.now() - d.t); finish(d.leaf, d.dir, d.p || 0, (d.p || 0) > 0.35 || Math.abs(v) > 0.5); };
   stage.addEventListener('pointerup', end); stage.addEventListener('pointercancel', end);
-  el.addEventListener('click', e => { const b = e.target.closest('[data-bk]'); if (!b) return; const a = b.dataset.bk; if (a === 'close') close(); else if (a === 'prev') flip(-1); else if (a === 'next') flip(1); else if (a === 'today'){ idx = spread ? today() - first() : (today() - first()) * 2; render(); } });
+  el.addEventListener('click', e => { const b = e.target.closest('[data-bk]'); if (!b) return; const a = b.dataset.bk; if (a === 'close') close(); else if (a === 'prev') flip(-1); else if (a === 'next') flip(1); else if (a === 'today'){ idx = lastIdx(); render(); } else if (a === 'tab' && !busy){ setTab(b.dataset.t); render(); } });
   document.addEventListener('keydown', e => { if (el.hidden) return; if (e.key === 'Escape') close(); else if (e.key === 'ArrowLeft') flip(-1); else if (e.key === 'ArrowRight') flip(1); });
-  window.addEventListener('resize', () => { if (el.hidden) return; const sp = window.innerWidth >= 760 && window.innerHeight >= 480; if (sp !== spread){ const day = spread ? idx : Math.floor(idx / 2); spread = sp; idx = spread ? day : day * 2; render(); } });
-  return {open, close, isOpen:() => !el.hidden};
+  window.addEventListener('resize', () => { if (el.hidden) return; const sp = window.innerWidth >= 760 && window.innerHeight >= 480; if (sp !== spread){ const day = spread ? idx : Math.floor(idx / 2); spread = sp; idx = spread ? day : day * 2; idx = clamp(idx, 0, nPages() - 1); render(); } });
+  return {open, close, isOpen:() => !el.hidden, get tab(){ return tab; }, get idx(){ return idx; }, get pages(){ return nPages(); }};
 })();
 $('logbook').onclick = () => BOOK.open();
 

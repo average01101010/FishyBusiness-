@@ -170,6 +170,8 @@ function gearOpMinute(H, W, hs){
 function finishSet(g, H){
   const b = S.boat, s = Object.assign(g.s, {id:gid('s'), vid:S.cur, a:g.a, b:g.b, tSet:S.t, depth:Math.round(depthF(setMid({a:g.a, b:g.b}))), acc:{}, dead:0, lost:null, rep:false, warn:0});
   S.sets = S.sets || []; S.sets.push(s);
+  // the deck log's gear tab keeps every set, also after it is hauled (ui/06b-book-tabs.js)
+  S.gearLog = S.gearLog || []; S.gearLog.push(gearLogEntry(s)); if (S.gearLog.length > 60) S.gearLog.shift();
   const what = s.kind === 'garn' ? s.n + ' garn (' + s.mesh + ' mm)' : s.kind === 'line' ? s.n + ' ' + (s.n === 1 ? 'stamp' : 'stamper') + ' ' + LINE_KINDS[s.lk].no.toLowerCase() : s.n + ' ' + POTS[s.pot].no.toLowerCase();
   const whatEn = s.kind === 'garn' ? s.n + ' nets (' + s.mesh + ' mm)' : s.kind === 'line' ? s.n + ' ' + (s.n === 1 ? 'tub' : 'tubs') + ' of ' + LINE_KINDS[s.lk].en.toLowerCase() : s.n + ' ' + POTS[s.pot].en.toLowerCase();
   log('Satte ' + what + ' på ' + s.depth + ' m, ' + coordStr(setMid(s)) + '.', 'Set ' + whatEn + ' at ' + s.depth + ' m, ' + coordStr(setMid(s)) + '.', 'nav');
@@ -268,6 +270,7 @@ function finishHaul(g, H){
   const b = S.boat, s = S.sets.find(x => x.id === g.sid); if (!s){ gopEnd(g); return; }
   const cond = wearNets(s, g);
   S.sets.splice(S.sets.indexOf(s), 1);
+  { const e = (S.gearLog || []).find(x => x.id === s.id); if (e){ e.tHaul = S.t; e.kg = Math.round(g.kg || 0); } }
   let tore = 0;
   if (s.kind === 'garn' && cond < 0.25){ const p = Math.min(1, 3 * (0.25 - cond) + (cond <= 0 ? 1 : 0)); for (let i = 0; i < s.n; i++) if (Math.random() < p) tore++; }
   const back = s.n - tore;
@@ -360,7 +363,7 @@ function gearHour(H){
     const p = (0.0002 + 0.008 * sstep(2.5, 5, hs) * shallow * kf) * (s.heavy ? 0.35 : 1) + (s.kind === 'garn' ? 0.001 * sstep(0.25, 0.45, tideRate(H)) : 0);
     const r = Math.random(), what = GEAR[s.kind].no.toLowerCase(), whatEn = GEAR[s.kind].en.toLowerCase();
     if (r < p){
-      s.lost = S.t;
+      s.lost = S.t; { const e = (S.gearLog || []).find(x => x.id === s.id); if (e) e.lost = S.t; }
       setLog(s, 'Mistet ' + what + ' (' + s.n + ' ' + unitName(s.kind, s.n) + ') i været. Tapt redskap skal meldes til Kystvakten.', 'Lost ' + whatEn + ' (' + s.n + ' ' + unitName(s.kind, s.n) + ') in the weather. Lost gear must be reported to the Coast Guard.');
       msg(gL('Redskap', 'Gear'), 'Blåsene er borte, og ' + what + ' er tapt. Meld tapt redskap til Kystvakten under Beholdning.', 'The buoys are gone and the ' + whatEn + ' is lost. Report the lost gear to the Coast Guard under Inventory.');
       continue;
