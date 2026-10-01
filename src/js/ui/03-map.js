@@ -5,6 +5,8 @@ function followChart(){
   const tx = ((cx0 - ww0 / 2) - (view.cx - ww1 / 2)) * p1, ty = ((cy0 - hh0 / 2) - (view.cy - hh1 / 2)) * p1;
   chartCv.style.transformOrigin = '0 0'; chartCv.style.transform = 'translate(' + tx.toFixed(1) + 'px,' + ty.toFixed(1) + 'px) scale(' + sc.toFixed(4) + ')';
 }
+// the gear being drawn out on the chart before it is set (ui/03d-setmode.js), or null
+let SETM = null;
 function applyView(){
   const r = svg.getBoundingClientRect(); if (!r.width || !r.height) return;
   const h = MAP_H / view.z, w = h * (r.width / r.height);
@@ -215,6 +217,8 @@ function renderDyn(){
       g.push('<g transform="translate(' + n.p.x + ' ' + n.p.y + ') rotate(' + dg.toFixed(1) + ')"><path d="M0,' + (-k * 1.25) + ' L' + (0.55 * k) + ',' + (k * 0.8) + ' L0,' + (k * 0.45) + ' L' + (-0.55 * k) + ',' + (k * 0.8) + ' Z" class="' + cls + sel + '" stroke-width="' + sw + '"/></g>'); }
     if (view.z > 5 || sel) g.push(txt({x:n.p.x + 8 * u, y:n.p.y - 6 * u}, n.name, 'lbl-ais', 10 * u, 'stroke-width="' + (3 * u) + '"'));
   }
+  // gear being drawn out
+  if (SETM) g.push(setSvg(u));
   // boat
   const s = 9 * u, deg = b.heading * 180 / Math.PI;
   if (b.status === 'port'){ g.push('<circle cx="' + b.pos.x + '" cy="' + b.pos.y + '" r="' + (11 * u) + '" class="fishring" stroke-width="' + (2.5 * u) + '"/>'); gDyn.innerHTML = g.join(''); return; }
@@ -227,7 +231,7 @@ function renderDyn(){
 const ptrs = new Map(); let drag = null, pinch = null;
 svg.addEventListener('pointerdown', e => {
   svg.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
-  if (ptrs.size === 1){ drag = {sx:e.clientX, sy:e.clientY, cx:view.cx, cy:view.cy, moved:false}; drag.wp = routeGrab(toMap(e.clientX, e.clientY)); }
+  if (ptrs.size === 1){ drag = {sx:e.clientX, sy:e.clientY, cx:view.cx, cy:view.cy, moved:false}; const mp = toMap(e.clientX, e.clientY); drag.set = setGrab(mp); drag.wp = drag.set ? null : routeGrab(mp); }
   else if (ptrs.size === 2){ const [a, c] = [...ptrs.values()]; pinch = {d:Math.hypot(a.x - c.x, a.y - c.y) || 1, z:view.z}; if (drag){ drag.moved = true; if (drag.wp){ routeDragCancel(drag.wp); drag.wp = null; drag.cx = view.cx; drag.cy = view.cy; } } }
 });
 svg.addEventListener('pointermove', e => {
@@ -236,15 +240,18 @@ svg.addEventListener('pointermove', e => {
   if (ptrs.size === 2 && pinch){ const [a, c] = [...ptrs.values()]; view.z = clamp(pinch.z * Math.hypot(a.x - c.x, a.y - c.y) / pinch.d, 0.8, 160); applyView(); scheduleStatic(); }
   else if (drag && ptrs.size === 1){
     const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+    if (drag.set){ drag.moved = true; setAim(toMap(e.clientX, e.clientY)); return; }
     if (drag.wp){ if (drag.wp.moved || Math.hypot(dx, dy) > 5) routeDragMove(drag.wp, toMap(e.clientX, e.clientY)); return; }
     if (Math.hypot(dx, dy) > 7) drag.moved = true;
     if (drag.moved){ view.cx = drag.cx - dx / view.px; view.cy = drag.cy - dy / view.px; applyView(); }
   }
 });
 function ptrUp(e){
+  if (drag && drag.set){ ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; if (ptrs.size === 0) drag = null; return; }
   if (drag && drag.wp){ const g = drag.wp; drag.wp = null; ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; if (ptrs.size === 0) drag = null; if (e.type === 'pointerup') routeDragEnd(g); else routeDragCancel(g); return; }
   const tap = drag && !drag.moved && ptrs.size === 1 && e.type === 'pointerup';
   ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null;
+  if (tap && SETM){ setAim(toMap(e.clientX, e.clientY)); if (ptrs.size === 0) drag = null; return; }
   if (tap){ const mp = toMap(e.clientX, e.clientY), rr = 16 / view.px; const gh = gearHit(mp, rr * 0.8); if (gh){ gearTap(gh); renderDyn(); return; } let hit = null, bd = 1e9; for (const n of AISNOW){ const d = dist(n.p, mp); if (d < rr && d < bd){ bd = d; hit = n; } } if (hit && (hit.st === 'port' || hit.v === 0) && PORTS.some(q => dist(q.p, mp) < rr * 1.6)) hit = null; if (hit){ AISSEL = hit.id; renderDyn(); renderAisCard(); return; } addWaypoint(mp); }
   if (ptrs.size === 0) drag = null;
   else { const [p] = [...ptrs.values()]; drag = {sx:p.x, sy:p.y, cx:view.cx, cy:view.cy, moved:true}; }

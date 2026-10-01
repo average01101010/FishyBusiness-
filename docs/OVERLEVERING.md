@@ -41,7 +41,7 @@ Skrevet 29.09.2026 ved flytting fra claude.ai-chat til Claude Code. Dokumentet s
 ### 4.1 Én fil, flere lag
 
 1. **Kjerne:** simulering, tilstand `S`, arter, priser, kvoter og regler.
-2. **UI:** HUD, handlingslinje (`#actbar`), panel, telefonen `PHONE` med apper, overlays (`PUBW`, `ROD`), rute-editoren (`ui/03b-route.js`) og veiledningen «Første tur» (`ui/07b-first-trip.js`). Autoruta ligger i kjernen (`core/11-route.js`).
+2. **UI:** HUD, knappelinja `#dock` med skuffen `#drawer` (`ui/10c-dock.js`), panel, telefonen `PHONE` med apper, overlays (`PUBW`, `ROD`), rute-editoren (`ui/03b-route.js`) og veiledningen «Første tur» (`ui/07b-first-trip.js`). Autoruta ligger i kjernen (`core/11-route.js`).
 3. **3D:** `G3`, en egen WebGL-renderer for sjø, terreng, båter og effekter. Kartplotteren er Canvas2D og SVG.
 4. **Data:** base64-blobber i `<script type="application/octet-stream">`, blant annet dybde, høyde, land, vei og bygg.
 
@@ -84,7 +84,7 @@ Skrevet 29.09.2026 ved flytting fra claude.ai-chat til Claude Code. Dokumentet s
 ### 4.4 Konvensjoner og fallgruver i koden
 
 - **Telefonknapper bruker `data-pa="handling"`.** `data-a` er en *parameter*, for eksempel appnavn for `data-pa="open"`. Dette ga en feil der driftsplanknappene aldri virket.
-- **Nye apper** krever tre ting: en linje i `APPS`, et ikon i `IC` (SVG), og funksjonsnavnet i render-kartet `{vaer, post, salg, …}` i `shell()`.
+- **Nye apper** krever tre ting: en linje i `APPS`, et ikon i `IC` (SVG), og funksjonsnavnet i sidekartet `PAGES()`. En side som skal åpnes i skuffen i stedet for telefonen, legges også i `DRAWER` og får tittel i `TITLE` i `ui/10c-dock.js` (se 5.17).
 - `BOAT` er et `const`-objekt som oppdateres med `Object.assign(BOAT, VESSELS[type])` i `applyVessel()`.
 - **Nye lagrede nøkler** må legges til i standardlista i lastekoden, `for (const k of ['equip', 'crew', …])`. Nøkler per båt legges i `VKEYS`.
 - **Telefonoverskrifter:** `L(no, en)` i telefonen, `t(key)` i panelet (ordbok), og `LS(...)` for korte og lange knappetekster.
@@ -382,6 +382,28 @@ Mister du juksa, fiskes det videre med stang til du kjøper ny i Fiskeutstyr. `m
 - **Haill:** Kommer båten fram før haillen er hentet, venter den på feltet (`b.tutWait`) og begynner å fiske når haillen er om bord.
 - **Sperrer** (`tutAllow`): «Kast loss», nye punkter og levering bare på sine steg. Puben, kveiteutstyret, driftsplanen, «Hjem samme vei» og levering andre steder enn Botnhamn er skjult til veiledningen er ferdig.
 - **Nødutgang:** «Hopp over veiledningen» vises først etter 20 minutter uten fremgang.
+- **Knappelinja:** Veiledningen peker på Verft og så Fiskeutstyr (`dockApp()`), på «Fisk selv» og statusfeltet i knappelinja, og på Marked, Lever og «Lever» i skuffen. Sluttseddelen vises i skuffen under Marked, Lever.
+
+### 5.17 Knappelinja, skuffen og «Sett ut» (01.10.2026)
+
+Inspirert av Fishing: Barents Sea. Den gamle handlingslinja `#actbar` er borte, og telefonen er slanket.
+
+- **Knappelinja** (`#dock`, `DOCK` i `ui/10c-dock.js`): Runde knapper med et kort ord under, langs nedkanten. Bare knappene som passer akkurat nå, vises. Det som ikke kan brukes, er grått, og et trykk gir grunnen som toast. `renderActs()` er beholdt som navn og kaller `DOCK.render()`.
+  - **I havn:** Marked (Lever, Is, Agn), Bygd (Pub, Bank, Oppdrag, Mannskap), Verft (Båthandel, Oppgrader, Fiskeutstyr, Vedlikehold, Bunkring), Beholdning og Planlegg. Marked, Bygd og Verft åpner en vifte med mindre knapper over seg (`#dockFan`). Med planlagt avgang: Kast loss og Avbryt.
+  - **På sjøen:** Jukse (vifte med timer, start og kveite), Sett ut, Ta opp, Auto-nav, Hjem og Beholdning når båten ligger stille; Stopp, Sløy eller Fisk videre, Stang og Beholdning under juksing; Stopp båten, Hjem og Auto-nav under fart; Hjelp ved motorstopp. Mannskap dukker opp med prikk når det er krangel om bord.
+  - **Statusfeltet** `#dockInfo` over knappene er tekst (avgang, verksted, lossing, kaiarbeid, redskapsarbeid, juksing og dekk).
+  - `DOCK.items(meny)` og `DOCK.text()` er for testene.
+- **Skuffen** (`#drawer`): Liggende kommer den fra høyre (380 px), stående er den et ark over knappene (55 % av høyden). Innholdet er telefonens sider: `PHONE.page(side)` lager HTML, og `PHONE.dact(side, handling, data)` kjører en `data-pa`-handling som om siden var åpen i telefonen. `DOCK.open('side:fane')` åpner en side med en fane valgt.
+  - **Sidene i skuffen** (`DRAWER` i `05-phone.js`): `lever`, `is`, `agn`, `bank`, `oppdrag`, `mannskap` og `bors` (som to faner), `fartoy` (Båthandel), `utstyr`, `fiske` (med kjøp av garn, line og teiner), `verksted`, `beholdning` (Redskap, Lasterom, Båten), og de gamle `havn`, `last` og `redskap`.
+  - `PHONE.open(side)` og `data-pa="open"` sender en side i `DRAWER` til skuffen. Varslene i Rederi bruker `side:fane`, for eksempel `beholdning:last`.
+- **Telefonen** har ti apper: Vær, Kystposten, Meldinger, Rederi, Salgslaget (Priser, Mine landinger, Toppliste), Kvote, Haill, Sjømann, Redning og Innstillinger. Kvote er fanen fra Salgslaget som egen app.
+- **«Sett ut»** (`ui/03d-setmode.js`, tilstanden `SETM` er deklarert i `03-map.js`): Valget i viften åpner kartplotteren med redskapet tegnet som en linje fra båten. Lengden er den samme som `startSet` bruker: garn 30 m, line 1,5 m per krok, teiner 25 m mellom hver. Kartet zoomer så linja fyller rundt 40 %.
+  - Dra i enden, eller trykk i kartet, for å snu linja. − og + endrer antall stamper eller teiner (en garnlenke settes hel).
+  - Linja er rød med grunnen når enden er på land eller grunnere enn 5 m, når den krysser land, eller når `gearRules` sier nei.
+  - «Sett ut» kaller `startSet(kind, spec, 0, hdg)`. Med `hdg` bruker den `setGeomExact` og setter bare der linja er tegnet, og båten snur dit. Uten `hdg` (ruta og driftsplanen) gjelder `setGeom` som før.
+- **Ta opp** lyser innenfor 0,3 km fra en blåse (`nearSet`). For garn og teiner kommer «Trekk og sett igjen» i en vifte.
+- **Auto-nav** åpner kartplotteren med «Følg leia» klar og `AUTONAV` satt. Et trykk på en egen blåse finner veien til et punkt 50 m utenfor (`buoyStandoff`), og båten går med en gang veien er funnet. Den trekker ikke selv. «Kjør dit» per sett i Beholdning gjør det samme (`DOCK.goTo`).
+- **Rettinger:** `gearTap` ga et rutepunkt med trekk uten `kind`, så `wpActLabel` krasjet. En setting som ble stoppet før første enhet gikk ut, gir nå tilbake blåsesettet, egnede stamper og teineagn.
 
 ## 6. Regelverk og kilder
 
@@ -588,7 +610,7 @@ Jonas' valg: alle tre kystredskapene i samme runde, ståtid for line som avveiin
 
 - **Filer:**
   - `src/js/core/10-gear.js`: redskapstabellene, kjøp, regler, setting og trekking, ståtid, vær, bøting, egning og driftsplanens stasjoner.
-  - `src/js/ui/10-gear-ui.js`: handlingslinja, fiskepanelet, blåsene i kartet og redskapsvalget i ruta.
+  - `src/js/ui/10-gear-ui.js`: fiskepanelet, blåsene i kartet og redskapsvalget i ruta. Knappene for redskap ligger i knappelinja (5.17), og «Sett ut» tegnes i kartet (`ui/03d-setmode.js`).
   - Telefonappen «Redskap» ligger i `05-phone.js`, og 3D-delen i `view3d.js` (`buildGear`, `drawGearSea`, `drawGearOp`).
 - **Tilstand:**
   - `S.pgear` er per båt (i `VKEYS`): garnlenker `{id, mesh, n, cond}`, stamper `{n, baited}` per linetype, teiner per størrelse, agn i kg, blåsesett og det som ligger på land (egnebu, bøteri).
@@ -747,6 +769,7 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
   - `fixtest.py`: feilrettingene etter spilltest 1 (haleren, pubkvelden, pubhjulet).
   - `timetest.py`: tidstekstene, nedtelling i ekte tid og «Neste»-brikka.
   - `shoptest.py`: Fiskeutstyr, sekkeis og isrenne, «Neste mål», sluttseddelen som summerer seg, og A8–A13.
+  - `docktest.py`: knappelinja, viftene, skuffen og «Sett ut» med berøring, liggende og stående. Knappene i havn og på sjøen, grå knapper som sier hvorfor, kjøp i skuffen, de ti appene, linjelengden i kartet (±2 px), dra i enden, setting langs linja, avbrutt setting, og «Ta opp» 50 m fra blåsa.
   - `camtest.py`: kameraet holdes utenfor kaier, kraner og bropilarer.
   - `routetest.py`: rute-editoren med berøring (WP-navn, kort, angre, dra, sett inn, A12) og «Følg leia».
   - `heattest.py`: fiskemodellen og varmekartet. Bestanden (nedtrekk på fire ruter, gjenvekst helt tilbake), hotspotene som trekker, stimene, skreiflekken på første tur, radius per trinn, varmen ved båten = 30·Σdensity, av og på, artsvalget, avlesningen, ettergløden, sonaren som utstyr, konsollen i 3D og ytelsen med CPU-en struping fire ganger (`Emulation.setCPUThrottlingRate`, en stand-in for nettbrettet). Skjermbilder i `tests/out/heat_*.png`.
@@ -786,7 +809,8 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
   - Berøring og drag i kartet: send `Input.dispatchTouchEvent` via CDP, og start Chromium med `--disable-gpu-compositing`. Med SwiftShader-komposisjon tegner plotteren rundt ett bilde i sekundet, og hvert fingerflytt venter på et bilde.
   - Kjør ikke mange 3D-tester samtidig. Da kan klikk og skjermbilder gå ut på tid.
   - Chrome skriver localStorage til disk med forsinkelse, og en file://-side som lastes på nytt med en gang, kan lese gamle verdier. Skal en test sende noe over en omlasting (datoforskyvning, en lagring), bruk `window.name`, som `streaktest.py` gjør.
-  - Klikk telefonknapper med `document.querySelector('[data-pa=...]').click()`.
+  - Klikk telefonknapper med `document.querySelector('[data-pa=...]').click()`. Sidene i skuffen ligger i `#drawerBody`.
+  - Playwrights `tap` venter på et stille bilde, og 3D blir aldri stille. Bruk CDP-berøring som i `tut.py` og `docktest.py`.
   - Test effekter med bestanden nullstilt (`S.stock = initStock()`) mellom kjøringer, ellers tømmer den første kjøringen feltet.
 
 ## 12. Innhold i overleveringspakken

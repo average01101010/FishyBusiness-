@@ -17,9 +17,9 @@ async def main():
           const fish = kg => [{sp:'sei', cls:1, kg, n:Math.round(kg / 4), bled:true, iced:true, hr:0, fresh:95, gut:false, hook:true}];
           const b = S.boat, q = portById('husoy'); b.status = 'port'; b.port = 'husoy'; b.pos = {...q.p}; S.plan = null; S.hold = fish(300);
           // the player lands 300 kg from the skiff: 8 boxes, one lift
-          renderActs(); R.btn = !!document.querySelector('#actbar [data-act="sell"]');
+          renderActs(); R.btn = DOCK.items('marked').some(x => x.id === 'lever' && !x.off);
           doAct({dataset:{act:'sell'}, disabled:false}); const L = b.land;
-          R.plan = L && {kind:L.kind, n:L.n, lifts:L.lifts, dur:L.until - L.t0}; renderActs(); R.bar = document.getElementById('actbar').innerText;
+          R.plan = L && {kind:L.kind, n:L.n, lifts:L.lifts, dur:L.until - L.t0}; renderActs(); R.bar = DOCK.text();
           R.stillHold = holdTotal(); R.sale0 = S.lastSale;
           // a route set now leaves when the landing is done
           S.draft = [{x:q.p.x, y:q.p.y + 0.05, port:null, fish:0}, {x:q.p.x, y:q.p.y, port:'husoy', fish:0}]; doAct({dataset:{act:'start'}, disabled:false});

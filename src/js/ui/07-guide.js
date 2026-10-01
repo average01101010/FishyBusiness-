@@ -223,28 +223,7 @@ function panelPort(){
     h.push('<div class="btns">' + btn.join('') + '</div>');
     if (!p.mottak) h.push('<p class="note">' + t('no_mottak') + '</p>');
     if (!p.ice) h.push('<p class="note">' + (S.lang === 'no' ? 'Her er det ikke noe mottak med isrenne, så butikken selger is i sekker og bærer den om bord.' : 'There is no plant with an ice chute here, so the shop sells bagged ice and carries it aboard.') + '</p>');
-    const ls = S.lastSale;
-    if (ls && ls.port === b.port && S.t - ls.t < 240){
-      const LN = (no, en) => S.lang === 'no' ? no : en;
-      h.push('<h3>' + t('slip', portById(ls.port).name) + (ls.field ? ' · ' + LN('fangstfelt', 'field') + ' ' + ls.field : '') + (ls.gear && ls.gear.length ? ' · ' + ls.gear.map(k => k === 'juksa' ? LN('juksa', 'jig') : GEAR[k][S.lang].toLowerCase()).join(', ') : '') + '</h3><div style="overflow-x:auto"><table class="tbl slipt"><thead><tr><th>' + t('species') + '</th><th>' + LN('Størrelse', 'Size') + '</th><th>' + t('quality') + '</th><th>' + t('kg') + '</th><th>kr/kg</th><th>kr</th></tr></thead><tbody>');
-      // every row is whole kilos and kroner, and the sums are the sums of the rows as shown
-      const pkOf = r => Math.round(r.gut ? r.kg / SPECIES[r.sp].uh : r.kg), row = (a, kgc, sum, cls) => '<tr' + (cls ? ' class="' + cls + '"' : '') + '><td colspan="3">' + a + '</td><td>' + kgc + '</td><td></td><td>' + sum + '</td></tr>';
-      ls.lines.forEach(r => { const sd = SPECIES[r.sp], cl = sd && sd.cls[r.c], pk = pkOf(r);
-        h.push('<tr><td>' + spName(r.sp) + (r.gut ? ' <small>' + LN('sløyd u/h', 'gutted') + '</small>' : '') + '</td><td>' + (cl ? cl[2] : '') + '</td><td>' + t('grade_' + r.g) + '</td><td>' + fmt(pk, 0) + '</td><td>' + fmt(r.sum / Math.max(r.gut ? r.kg / sd.uh : r.kg, 0.01), 2) + '</td><td>' + fmt(r.sum, 0) + '</td></tr>'); });
-      for (const n in (ls.ex || {})) if (ls.ex[n].kg > 0.05) h.push('<tr><td>' + (n === 'lever' ? LN('Lever', 'Liver') : LN('Rogn', 'Roe')) + '</td><td></td><td></td><td>' + fmt(ls.ex[n].kg, 1) + '</td><td></td><td>' + fmt(ls.ex[n].sum, 0) + '</td></tr>');
-      const codKg = ls.codKg != null ? ls.codKg : ls.confKg, codKr = ls.codKr != null ? ls.codKr : ls.confKr;
-      if (codKg > 0.5) h.push(row(ls.acc === 'none' ? LN('Inndratt over bifangstgrensen', 'Over the bycatch limit, confiscated') : LN('Inndratt torsk over kvote', 'Cod over quota, confiscated'), fmt(codKg, 0), '−' + fmt(codKr, 0)));
-      if (ls.crabKg > 0.05) h.push(row(LN('Krabbe under minstemål, inndratt', 'Undersized crab, confiscated'), fmt(ls.crabKg, 1), '−' + fmt(ls.crabKr, 0)));
-      if (ls.roeCut > 0.5) h.push(row(LN('Trekk for rognkrabbe (dårlig sortering)', 'Deduction for berried crab (poor sorting)'), '', '−' + fmt(ls.roeCut, 0)));
-      if (ls.ordKr > 0.5) h.push(row(LN('Tillegg for bestillinger', 'Order premiums'), '', fmt(ls.ordKr, 0)));
-      if (ls.streak && ls.streak.kr > 0) h.push(row(LN('Innloggingsbonus +', 'Login bonus +') + fmt(ls.streak.pct, 0) + ' %', '', fmt(ls.streak.kr, 0)));
-      h.push('<tr class="sum"><td>' + t('total') + '</td><td></td><td></td><td>' + fmt(ls.lines.reduce((a, r) => a + pkOf(r), 0), 0) + '</td><td></td><td>' + fmt(ls.total, 0) + '</td></tr>');
-      if (ls.lott > 0) h.push(row(LN('Lott til mannskapet', 'The crew\'s share'), '', '−' + fmt(ls.lott, 0)) + row('<b>' + LN('Til kassa', 'To the cash box') + '</b>', '', '<b>' + fmt(ls.total - ls.lott, 0) + '</b>'));
-      h.push('</tbody></table></div>');
-      if (ls.crabFine) h.push('<p class="note">' + LN('Overtredelsesgebyr fra Fiskeridirektoratet for krabbe under minstemålet: ', 'Fine from the Directorate of Fisheries for undersized crab: ') + kr(ls.crabFine) + LN('. Det står ikke på sluttseddelen, men er trukket fra kassa.', '. It is not on the landing note, but has been taken from the cash box.') + '</p>');
-      for (const o of (ls.ord || [])) h.push('<p class="note">' + LN('Bestilling fra ' + o.cust + ': ' + fmt(o.kg, 0) + ' kg ' + SPECIES[o.sp].no.toLowerCase() + ', tillegg ' + kr(Math.round(o.kr)) + (o.done ? ', ferdig levert, bonus ' + kr(o.bonus) : ', ' + fmt(o.left, 0) + ' kg igjen') + '.', 'Order from ' + o.cust + ': ' + fmt(o.kg, 0) + ' kg ' + SPECIES[o.sp].en.toLowerCase() + ', premium ' + kr(Math.round(o.kr)) + (o.done ? ', fully delivered, bonus ' + kr(o.bonus) : ', ' + fmt(o.left, 0) + ' kg left') + '.') + '</p>');
-      if (ls.ffKg > 0.5) h.push('<p class="note">' + LN(fmt(ls.ffKg, 0) + ' kg torsk gikk på ferskfiskordningen og belastes ikke kvoten.', fmt(ls.ffKg, 0) + ' kg of cod went on the fresh-fish scheme and does not count against the quota.') + '</p>');
-    }
+    h.push(portSlip());
   } else h.push('<p class="note">' + t('not_port') + '</p>');
   h.push('<h3>' + t('prices') + '</h3><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>' + t('port_col') + '</th>' + SP.map(sp => '<th>' + spName(sp) + '</th>').join('') + '</tr></thead><tbody>');
   PORTS.filter(p => p.mottak).forEach(p => h.push('<tr' + (b.port === p.id && b.status === 'port' ? ' class="here"' : '') + '><td>' + p.name + '</td>' + SP.map(sp => '<td>' + fmt(price(p, sp, H), 0) + '</td>').join('') + '</tr>'));
@@ -256,6 +235,47 @@ function panelPort(){
   h.push('<div class="kv"><span>' + t('landed') + '</span><span>' + fmt(S.stats.kg, 0) + ' kg</span></div>');
   h.push('<div class="kv"><span>' + t('trips') + '</span><span>' + S.stats.trips + '</span></div>');
   h.push('<div class="btns"><button class="btn" data-act="reset">' + t('reset') + '</button></div>');
+  return h.join('');
+}
+// the landing note of the last landing here, for a few hours after it
+function portSlip(){
+  const b = S.boat, h = [];
+  const ls = S.lastSale;
+  if (ls && ls.port === b.port && S.t - ls.t < 240){
+    const LN = (no, en) => S.lang === 'no' ? no : en;
+    h.push('<h3>' + t('slip', portById(ls.port).name) + (ls.field ? ' · ' + LN('fangstfelt', 'field') + ' ' + ls.field : '') + (ls.gear && ls.gear.length ? ' · ' + ls.gear.map(k => k === 'juksa' ? LN('juksa', 'jig') : GEAR[k][S.lang].toLowerCase()).join(', ') : '') + '</h3><div style="overflow-x:auto"><table class="tbl slipt"><thead><tr><th>' + t('species') + '</th><th>' + LN('Størrelse', 'Size') + '</th><th>' + t('quality') + '</th><th>' + t('kg') + '</th><th>kr/kg</th><th>kr</th></tr></thead><tbody>');
+    // every row is whole kilos and kroner, and the sums are the sums of the rows as shown
+    const pkOf = r => Math.round(r.gut ? r.kg / SPECIES[r.sp].uh : r.kg), row = (a, kgc, sum, cls) => '<tr' + (cls ? ' class="' + cls + '"' : '') + '><td colspan="3">' + a + '</td><td>' + kgc + '</td><td></td><td>' + sum + '</td></tr>';
+    ls.lines.forEach(r => { const sd = SPECIES[r.sp], cl = sd && sd.cls[r.c], pk = pkOf(r);
+      h.push('<tr><td>' + spName(r.sp) + (r.gut ? ' <small>' + LN('sløyd u/h', 'gutted') + '</small>' : '') + '</td><td>' + (cl ? cl[2] : '') + '</td><td>' + t('grade_' + r.g) + '</td><td>' + fmt(pk, 0) + '</td><td>' + fmt(r.sum / Math.max(r.gut ? r.kg / sd.uh : r.kg, 0.01), 2) + '</td><td>' + fmt(r.sum, 0) + '</td></tr>'); });
+    for (const n in (ls.ex || {})) if (ls.ex[n].kg > 0.05) h.push('<tr><td>' + (n === 'lever' ? LN('Lever', 'Liver') : LN('Rogn', 'Roe')) + '</td><td></td><td></td><td>' + fmt(ls.ex[n].kg, 1) + '</td><td></td><td>' + fmt(ls.ex[n].sum, 0) + '</td></tr>');
+    const codKg = ls.codKg != null ? ls.codKg : ls.confKg, codKr = ls.codKr != null ? ls.codKr : ls.confKr;
+    if (codKg > 0.5) h.push(row(ls.acc === 'none' ? LN('Inndratt over bifangstgrensen', 'Over the bycatch limit, confiscated') : LN('Inndratt torsk over kvote', 'Cod over quota, confiscated'), fmt(codKg, 0), '−' + fmt(codKr, 0)));
+    if (ls.crabKg > 0.05) h.push(row(LN('Krabbe under minstemål, inndratt', 'Undersized crab, confiscated'), fmt(ls.crabKg, 1), '−' + fmt(ls.crabKr, 0)));
+    if (ls.roeCut > 0.5) h.push(row(LN('Trekk for rognkrabbe (dårlig sortering)', 'Deduction for berried crab (poor sorting)'), '', '−' + fmt(ls.roeCut, 0)));
+    if (ls.ordKr > 0.5) h.push(row(LN('Tillegg for bestillinger', 'Order premiums'), '', fmt(ls.ordKr, 0)));
+    if (ls.streak && ls.streak.kr > 0) h.push(row(LN('Innloggingsbonus +', 'Login bonus +') + fmt(ls.streak.pct, 0) + ' %', '', fmt(ls.streak.kr, 0)));
+    h.push('<tr class="sum"><td>' + t('total') + '</td><td></td><td></td><td>' + fmt(ls.lines.reduce((a, r) => a + pkOf(r), 0), 0) + '</td><td></td><td>' + fmt(ls.total, 0) + '</td></tr>');
+    if (ls.lott > 0) h.push(row(LN('Lott til mannskapet', 'The crew\'s share'), '', '−' + fmt(ls.lott, 0)) + row('<b>' + LN('Til kassa', 'To the cash box') + '</b>', '', '<b>' + fmt(ls.total - ls.lott, 0) + '</b>'));
+    h.push('</tbody></table></div>');
+    if (ls.crabFine) h.push('<p class="note">' + LN('Overtredelsesgebyr fra Fiskeridirektoratet for krabbe under minstemålet: ', 'Fine from the Directorate of Fisheries for undersized crab: ') + kr(ls.crabFine) + LN('. Det står ikke på sluttseddelen, men er trukket fra kassa.', '. It is not on the landing note, but has been taken from the cash box.') + '</p>');
+    for (const o of (ls.ord || [])) h.push('<p class="note">' + LN('Bestilling fra ' + o.cust + ': ' + fmt(o.kg, 0) + ' kg ' + SPECIES[o.sp].no.toLowerCase() + ', tillegg ' + kr(Math.round(o.kr)) + (o.done ? ', ferdig levert, bonus ' + kr(o.bonus) : ', ' + fmt(o.left, 0) + ' kg igjen') + '.', 'Order from ' + o.cust + ': ' + fmt(o.kg, 0) + ' kg ' + SPECIES[o.sp].en.toLowerCase() + ', premium ' + kr(Math.round(o.kr)) + (o.done ? ', fully delivered, bonus ' + kr(o.bonus) : ', ' + fmt(o.left, 0) + ' kg left') + '.') + '</p>');
+    if (ls.ffKg > 0.5) h.push('<p class="note">' + LN(fmt(ls.ffKg, 0) + ' kg torsk gikk på ferskfiskordningen og belastes ikke kvoten.', fmt(ls.ffKg, 0) + ' kg of cod went on the fresh-fish scheme and does not count against the quota.') + '</p>');
+  }
+  return h.join('');
+}
+// the market's landing page: land the catch, what is in the hold, and the landing note afterwards
+function landPage(){
+  const b = S.boat, h = [], LN = (no, en) => S.lang === 'no' ? no : en;
+  if (b.status !== 'port') return '<p class="note">' + t('not_port') + '</p>';
+  const p = portById(b.port), tot = holdTotal();
+  if (b.land) h.push('<p class="note"><b>' + LN('Lossing: ', 'Landing: ') + '</b>' + landText(false) + ' ' + LN('Sluttseddelen kommer ca. kl. ', 'The landing note comes at about ') + whenTxt(b.land.until) + '.</p>');
+  else if (b.shift || b.fueling) h.push('<p class="note">' + quayText(false) + '</p>');
+  else if (!p.mottak) h.push('<p class="note">' + t('no_mottak') + '</p>');
+  else if (tutOn() && p.id !== 'botnhamn') h.push('<p class="note">' + LN('På første tur leverer du i Botnhamn.', 'On the first trip you land in Botnhamn.') + '</p>');
+  else if (tot > 0.5) h.push('<div class="btns"><button class="btn primary" data-act="sell">' + t('sell', fmt(tot, 0)) + '</button></div>');
+  h.push('<h3>' + LN('Lasterom', 'Hold') + '</h3>' + panelHold());
+  h.push(portSlip());
   return h.join('');
 }
 function panelLog(){

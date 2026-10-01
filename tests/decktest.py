@@ -39,7 +39,7 @@ async def main():
           for (let i = 0; i < 180; i++){ for (const x of S.hold){ const rr = x.bled ? (x.iced ? 0.9 : 3.0) : (x.iced ? 2.2 : 6.0); x.fresh -= rr / 60; } }
           R.fresh = S.hold.map(x => [x.sp, Math.round(x.fresh)]);
           // the Stop and gut button while fishing, and Fish on
-          reset([]); addCatch('torsk', 10, null, true); renderActs(); R.btn = document.getElementById('actbar').innerText; doAct({dataset:{act:'deckstop'}, disabled:false}); R.btnStop = b.deckStop;
+          reset([]); addCatch('torsk', 10, null, true); renderActs(); R.btn = DOCK.text(); doAct({dataset:{act:'deckstop'}, disabled:false}); R.btnStop = b.deckStop;
           for (let i = 0; i < 5; i++) step(); R.afterBtn = {stop:b.deckStop, pending:Math.round(deckPending())};
           return R; })()""")
         print(json.dumps(r, ensure_ascii=False))

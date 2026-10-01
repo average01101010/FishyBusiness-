@@ -106,6 +106,9 @@ function setGeom(p, hdg, km){
   return null;
 }
 
+// exactly where it is drawn on the chart (ui/03d-setmode.js), or null when that does not work
+function setGeomExact(p, hdg, km){ const e = {x:p.x + Math.sin(hdg) * km, y:p.y - Math.cos(hdg) * km}; return !isLand(e) && depthF(e) >= 5 && legClear(p, e) ? {a:{x:p.x, y:p.y}, b:e, h:hdg} : null; }
+
 // ---- the work at sea: status stays 'fishing' with b.gop, so deck work, rest rules, auto-return and the tub pause work as before
 function gopUnitMin(g, H, hs){
   const G = GEAR[g.kind], P = handsAboard(), onDeck = P >= 2 && deckPending() > 0.5 ? 1 : 0, w = Math.max(1, P - onDeck), team = crewAboard();
@@ -116,19 +119,21 @@ function gopUnitMin(g, H, hs){
   const sort = g.op === 'haul' && g.kind === 'teine' && S.settings.crabSort !== false ? 1.3 : 1;
   return base * hand * sort * (1 + coldPen(H, hs)) / crewF;
 }
-function startSet(kind, spec, fishAfter){
+// hdg: the course drawn on the chart; the gear goes out exactly there or not at all. Without it the string follows the course
+function startSet(kind, spec, fishAfter, hdg){
   const b = S.boat, pg = S.pgear, why = gearRules(kind, spec, b.pos); if (why) return why;
   let n, km, s = {kind};
   if (kind === 'garn'){ const l = pg.nets.find(x => x.id === spec.nid); n = l.n; km = n * GEAR.garn.km; Object.assign(s, {mesh:l.mesh, lid:l.id, cond:l.cond}); }
   else if (kind === 'line'){ n = spec.n; km = n * LINE_KINDS[spec.lk].hooks * GEAR.line.kmHook; Object.assign(s, {lk:spec.lk, hooks:n * LINE_KINDS[spec.lk].hooks}); }
   else { n = spec.n; km = n * GEAR.teine.km; Object.assign(s, {pot:spec.pot}); }
-  const geo = setGeom(b.pos, b.heading || 0, km); if (!geo) return [gL('Det er ikke plass til redskapet her. Prøv lenger ut.', 'There is no room for the gear here. Try further out.')];
+  const geo = hdg != null ? setGeomExact(b.pos, hdg, km) : setGeom(b.pos, b.heading || 0, km); if (!geo) return [gL('Det er ikke plass til redskapet her. Prøv lenger ut.', 'There is no room for the gear here. Try further out.')];
   // the gear leaves the deck as it goes over the side; it is reserved now
   if (kind === 'garn') pg.nets.splice(pg.nets.findIndex(x => x.id === spec.nid), 1);
   else if (kind === 'line'){ pg.lines[spec.lk].n -= n; pg.lines[spec.lk].baited -= n; }
   else { pg.pots[spec.pot] -= n; pg.bait -= n * GPRICE.potBait; }
   const heavy = pg.kits.heavy > 0; pg.kits.n--; if (heavy) pg.kits.heavy--;
   Object.assign(s, {n, heavy});
+  if (hdg != null) b.heading = hdg;
   b.status = 'fishing'; b.fishUntil = null; b.deckStop = false; b.deckEnd = null;
   b.gop = {op:'set', kind, s, n, done:0, prog:0, a:geo.a, b:geo.b, fishAfter:fishAfter || 0, hooksPer:kind === 'line' ? LINE_KINDS[spec.lk].hooks : 0};
   log('Setter ' + n + ' ' + unitName(kind, n) + '.', 'Setting ' + n + ' ' + unitName(kind, n) + '.');
@@ -176,7 +181,9 @@ function gopAbort(why){
   const b = S.boat, g = b.gop; if (!g) return;
   if (g.op === 'set'){
     if (g.done >= 1){ g.n = g.done; const s = g.s; s.n = g.done; if (s.kind === 'line') s.hooks = g.done * g.hooksPer; g.b = {x:b.pos.x, y:b.pos.y}; finishSet(g, S.t / 60); }
-    else { gearBack(g.s, g.s.n, g.s.cond); log('Setting avbrutt. Redskapet er tatt om bord igjen.', 'Setting stopped. The gear is back aboard.'); b.gop = null; }
+    // nothing went over the side: the gear, the buoy set, the bait on the hooks and in the pots all come back
+    else { const pg = S.pgear, s = g.s; gearBack(s, s.n, s.cond); pg.kits.n++; if (s.heavy) pg.kits.heavy++; if (s.kind === 'line') pg.lines[s.lk].baited += s.n; else if (s.kind === 'teine') pg.bait += s.n * GPRICE.potBait;
+      log('Setting avbrutt. Redskapet er tatt om bord igjen.', 'Setting stopped. The gear is back aboard.'); b.gop = null; }
   } else {
     const s = S.sets.find(x => x.id === g.sid);
     if (s && g.done > 0 && g.done < s.n){ gearBack(s, g.done, wearNets(s, g)); s.n -= g.done; if (s.kind === 'line') s.hooks = s.n * g.hooksPer; s.a = {x:b.pos.x, y:b.pos.y}; s.b = {...g.b}; }
@@ -355,7 +362,7 @@ function gearHour(H){
     if (r < p){
       s.lost = S.t;
       setLog(s, 'Mistet ' + what + ' (' + s.n + ' ' + unitName(s.kind, s.n) + ') i været. Tapt redskap skal meldes til Kystvakten.', 'Lost ' + whatEn + ' (' + s.n + ' ' + unitName(s.kind, s.n) + ') in the weather. Lost gear must be reported to the Coast Guard.');
-      msg(gL('Redskap', 'Gear'), 'Blåsene er borte, og ' + what + ' er tapt. Meld tapt redskap til Kystvakten i Redskap-appen.', 'The buoys are gone and the ' + whatEn + ' is lost. Report the lost gear to the Coast Guard in the Gear app.');
+      msg(gL('Redskap', 'Gear'), 'Blåsene er borte, og ' + what + ' er tapt. Meld tapt redskap til Kystvakten under Beholdning.', 'The buoys are gone and the ' + whatEn + ' is lost. Report the lost gear to the Coast Guard under Inventory.');
       continue;
     }
     if (r < p * 2.5){

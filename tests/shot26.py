@@ -27,6 +27,6 @@ async def main():
         await pg.screenshot(path='y2.png')
         await pg.click('#panel [data-act=start]'); await pg.wait_for_timeout(2500)
         await pg.screenshot(path='y3.png')
-        print(await pg.evaluate("JSON.stringify({st:S.boat.status, dep:S.plan&&S.plan.depAt, jobs:S.jobs.length, acts:document.getElementById('actbar').innerText.replace(/\\n/g,' | '), hud:document.querySelector('#hud .st').innerText})"))
+        print(await pg.evaluate("JSON.stringify({st:S.boat.status, dep:S.plan&&S.plan.depAt, jobs:S.jobs.length, acts:DOCK.text(), hud:document.querySelector('#hud .st').innerText})"))
         print(logs[:10]); await b.close()
 asyncio.run(main())

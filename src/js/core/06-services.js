@@ -96,7 +96,7 @@ function opsStep(H){
   const g = gDate(H), day = Math.floor((H + 6) / 24), wd = (g.getUTCDay() + 6) % 7, hod = g.getUTCHours() + g.getUTCMinutes() / 60;
   if (b.status !== 'port' || portBusy(b) || S.plan || o.last === day || !o.days[wd] || hod < o.dep || hod > o.dep + 2) return;
   const sk = opsSkipper(); o.last = day;
-  if (!sk){ msg('Driftsplan', 'Driftsplanen står: ingen skipper er satt. Velg en skipper i Mannskap-appen.', 'The operations plan is idle: no skipper is set. Choose one in the Crew app.'); return; }
+  if (!sk){ msg('Driftsplan', 'Driftsplanen står: ingen skipper er satt. Velg en skipper under Bygd, Mannskap.', 'The operations plan is idle: no skipper is set. Choose one under Crew.'); return; }
   if (b.port !== o.home){ msg(sk.name, 'Båten ligger ikke i ' + portById(o.home).name + ', så jeg går ikke ut på den faste planen i dag.', 'The boat is not in ' + portById(o.home).name + ', so I am not running the plan today.'); return; }
   if (S.jobs && S.jobs.length){ msg(sk.name, 'Verkstedet jobber på båten, så jeg venter til i morgen.', 'The yard is working on the boat, so I will wait until tomorrow.'); return; }
   let wmax = 0, hmax = 0; const dur = o.hours || 8; for (let k = 0; k <= dur; k += 1){ wmax = Math.max(wmax, windAt(H + k)); hmax = Math.max(hmax, hsOpen(H + k)); }

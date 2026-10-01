@@ -92,11 +92,12 @@ function routeFocus(i){
 function mapToClient(p){ const m = svg.getScreenCTM(); return {x:m.a * p.x + m.c * p.y + m.e, y:m.b * p.x + m.d * p.y + m.f}; }
 
 // --- «Følg leia»: the next tap on the chart is where to go, and the route there follows the fairway (core/11-route.js)
-let LEIA_ARM = false, LEIA_BUSY = false;
+// AUTONAV: «Følg leia» from the dock's Auto-nav: the boat leaves as soon as the way is found
+let LEIA_ARM = false, LEIA_BUSY = false, AUTONAV = false;
 function leiaArm(on){
   if (on && !tutAllow('waypoint')) return;
   if (on && S.draft.length && S.draft[S.draft.length - 1].port){ toast(t('ends_port')); return; }
-  LEIA_ARM = on && canEditDraft(); if (LEIA_ARM) toast(S.lang === 'no' ? 'Trykk i kartet der du vil. Båten finner leia dit.' : 'Tap the chart where you want to go. The boat finds the fairway there.');
+  LEIA_ARM = on && canEditDraft(); if (!LEIA_ARM) AUTONAV = false; if (LEIA_ARM) toast(S.lang === 'no' ? 'Trykk i kartet der du vil. Båten finner leia dit.' : 'Tap the chart where you want to go. The boat finds the fairway there.');
   panelDirty = true; renderPanel(); renderRouteTools();
 }
 async function leiaTo(pt){
@@ -111,11 +112,12 @@ async function leiaTo(pt){
   const before = JSON.stringify(S.draft); LEIA_BUSY = true; panelDirty = true; renderPanel(); renderRouteTools();
   let res; try { res = await leiaRoute({x:start.x, y:start.y}, near ? near.p : pt, aPort, near ? near.id : null); } finally { LEIA_BUSY = false; }
   if (JSON.stringify(S.draft) !== before){ routeChanged(); return; }   // the route was changed while the way was being found
-  if (res.why){ toast(S.lang === 'no' ? res.why[0] : res.why[1]); routeChanged(); return; }
+  if (res.why){ AUTONAV = false; toast(S.lang === 'no' ? res.why[0] : res.why[1]); routeChanged(); return; }
   draftEdit(() => res.wps.forEach((q, i) => { const last = i === res.wps.length - 1; S.draft.push(last && near ? {x:near.p.x, y:near.p.y, port:near.id, fish:0} : {x:q.x, y:q.y, port:null, fish:0, leia:true}); }));
   if (near && window.innerWidth <= 700) document.body.classList.add('drawer');
   if (tab !== 'route') setTab('route');
   routeChanged(); save();
+  if (AUTONAV){ AUTONAV = false; if (['idle', 'port'].includes(b.status) && S.draft.length) doAct({dataset:{act:'start'}, disabled:false}); }
 }
 // how the drawn route compares with following the fairway through the same stops: worked out in the background, then shown
 const LEIA_CMP = {key:'', res:null, busy:false, timer:0};

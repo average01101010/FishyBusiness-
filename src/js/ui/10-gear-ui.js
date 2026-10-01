@@ -76,12 +76,19 @@ function gearSvg(u){
   return g.join('');
 }
 function gearHit(p, r){ let best = null, bd = r; for (const s of S.sets || []) for (const e of [s.a, s.b]){ const d = dist(e, p); if (d < bd){ bd = d; best = {s, e}; } } return best; }
+// a point 50 m off the buoy, away from the string, so the boat stops clear of it and within reach of the haul
+function buoyStandoff(s, e){
+  const o = e === s.a ? s.b : s.a, d = dist(e, o) || 1, q = {x:e.x + (e.x - o.x) / d * 0.05, y:e.y + (e.y - o.y) / d * 0.05};
+  return !isLand(q) && depthF(q) >= 3 ? q : {x:e.x, y:e.y};
+}
 // a tap on a buoy: while planning, the haul goes into the route; otherwise the set is described
 function gearTap(hit){
   const b = S.boat, s = hit.s;
+  // with «Følg leia» (or Auto-nav) the way goes to a point just off the buoy, where «Ta opp» can haul it
+  if (LEIA_ARM && s.vid === S.cur && !s.lost){ leiaTo(buoyStandoff(s, hit.e)); return; }
   if (s.vid === S.cur && !s.lost && ['port', 'idle'].includes(b.status)){
     addWaypoint(hit.e); const w = S.draft[S.draft.length - 1];
-    if (w && !w.port && dist(w, hit.e) < 0.01){ w.act = {op:'haul', sid:s.id}; toast(GL('Trekk av ' + GEAR[s.kind].no.toLowerCase() + ' er lagt i ruta.', 'Hauling the ' + GEAR[s.kind].en.toLowerCase() + ' is in the route.')); panelDirty = true; }
+    if (w && !w.port && dist(w, hit.e) < 0.01){ w.act = {op:'haul', sid:s.id, kind:s.kind}; toast(GL('Trekk av ' + GEAR[s.kind].no.toLowerCase() + ' er lagt i ruta.', 'Hauling the ' + GEAR[s.kind].en.toLowerCase() + ' is in the route.')); panelDirty = true; }
     return;
   }
   toast((S.fleet.length > 1 ? vget(setVessel(s) || curVessel(), 'boatName') + ': ' : '') + setLabel(s));
@@ -106,7 +113,8 @@ function wpActCycle(w){
 }
 function gearDoAct(act, el){
   let why = null;
-  if (act === 'gset'){ const c = setChoices()[+el.dataset.c]; if (!c) return true; why = startSet(c.kind, c.spec, 0); }
+  // setting by hand is drawn on the chart first (ui/03d-setmode.js)
+  if (act === 'gset'){ const c = setChoices()[+el.dataset.c]; if (!c) return true; setModeStart(c); return true; }
   else if (act === 'ghaul') why = startHaul(el.dataset.id, el.dataset.r === '1', 0);
   else if (act === 'gstop'){ gopAbort('stop'); }
   else if (act === 'gwp'){ const w = S.draft[+el.dataset.i]; if (w) wpActCycle(w); }

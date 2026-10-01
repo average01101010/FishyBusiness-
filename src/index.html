@@ -37,7 +37,9 @@
       <div id="aisCard" hidden></div>
       <div id="ecdisTop"><div class="ec-f"><small>HDG</small><b id="ecHdg"></b></div><div class="ec-f"><small>COG</small><b id="ecCog"></b></div><div class="ec-f"><small>SOG</small><b id="ecSog"></b></div><div class="ec-f ec-pos"><small>POS</small><b id="ecPos"></b></div><div class="ec-f"><small id="ecDepL">DYBDE</small><b id="ecDep"></b></div><div class="ec-f ec-x"><small id="ecTideL">TIDEVANN</small><b id="ecTide"></b></div><div class="ec-f ec-x"><small id="ecSunL">SOL</small><b id="ecSun"></b></div><div class="ec-b"><button id="ecRoute" type="button"></button><button id="ecClose" type="button">3D</button></div></div>
       <div id="plotTop"><span class="pt-title"></span><button id="plotStyle" type="button"></button><button id="plotClose" type="button" aria-label="3D">3D</button></div>
-      <div id="actbar"></div>
+      <div id="setBar" hidden><div class="sb-t"></div><div class="sb-d"></div><div class="sb-w"></div><div class="sb-b"><span class="sb-n"><button type="button" data-sb="-" aria-label="−">−</button><b></b><button type="button" data-sb="+" aria-label="+">+</button></span><button type="button" data-sb="x" class="alt"></button><button type="button" data-sb="go" class="go"></button></div></div>
+      <div id="dockInfo" hidden></div><div id="dockFan" hidden></div><div id="dock"></div>
+      <aside id="drawer" hidden><div class="dr-head"><b id="drawerTitle"></b><button id="drawerClose" type="button" aria-label="Lukk">✕</button></div><div id="drawerTabs" class="ph-sub" hidden></div><div id="drawerBody"></div></aside>
       <button id="phoneFab" class="ov fab" type="button" aria-label="Mobil"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2.8"/><path d="M10.5 18.3h3"/></svg><i id="phoneBadge2" hidden></i></button>
       <div id="loader"><div><b>Kystfiske</b><span>Laster Senja …</span></div></div>
       <button id="gpsBtn" class="ov gpsb" type="button" aria-label="GPS"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z"/><circle cx="12" cy="11" r="2.3"/></svg><span>GPS</span></button>
@@ -89,6 +91,7 @@
 @include(js/ui/03-map.js)
 @include(js/ui/03b-route.js)
 @include(js/ui/03c-heat.js)
+@include(js/ui/03d-setmode.js)
 @include(js/ui/04-panels-instruments.js)
 @include(js/ui/05-tattoo-art.js)
 @include(js/ui/05-phone.js)
@@ -99,6 +102,7 @@
 @include(js/ui/09-hand-fishing.js)
 @include(js/ui/10-rod-acts.js)
 @include(js/ui/10-gear-ui.js)
+@include(js/ui/10c-dock.js)
 @include(js/ui/11-boot.js)
 </script>
 <script>

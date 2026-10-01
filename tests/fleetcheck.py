@@ -13,7 +13,7 @@ async def main():
         # rod game still lands fish with sizes
         await pg.evaluate("S.tut=0; S.t=Math.round((Date.UTC(2028,2,10,9)-EPOCH)/6e4); S.boat.status='fishing'; S.boat.port=null; S.boat.pos={...GROUNDS[0].p}; S.boat.fishUntil=S.t+600; S.hold=[];")
         await pg.wait_for_function("G3.isActive()", timeout=90000); await pg.wait_for_timeout(1500)
-        await pg.evaluate("renderActs(); document.querySelector('#actbar [data-act=rod]').click()"); await pg.wait_for_timeout(800)
+        await pg.evaluate("renderActs(); document.querySelector('#dock [data-act=rod]').click()"); await pg.wait_for_timeout(800)
         await pg.evaluate("ROD._strike(); ROD._prog(1)"); await pg.dispatch_event('#rodUI .rod-btn', 'pointerdown'); await pg.wait_for_timeout(20000)
         print('rod:', await pg.evaluate("JSON.stringify({st:ROD.state().st, hold:S.hold.map(x=>[x.sp,x.cls,+x.kg.toFixed(1),x.hook]), n:S.rodN})"))
         print('errors:', errs[:4]); await b.close()

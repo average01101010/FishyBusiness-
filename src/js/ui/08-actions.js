@@ -38,7 +38,7 @@ function doAct(el){
     const last = S.draft[S.draft.length - 1]; if (!last || !last.port || b.status !== 'port'){ toast(S.lang === 'no' ? 'Planen må starte i havn og slutte i en havn.' : 'The plan must start in port and end in a port.'); return; }
     const hours = S.draft.reduce((a, w) => a + (w.fish || 0), 0) + estimate().hours;
     S.ops = Object.assign({on:false, dep:5, days:[1, 1, 1, 1, 1, 0, 0], maxWind:12, skipper:(S.crew[0] || {}).id || null, last:-1}, S.ops || {}, {wps:S.draft.map(w => { const q = {...w}; if (q.act) q.act = {op:'cycle', kind:q.act.kind, spec:q.act.spec}; return q; }), speed:S.draftSpeed, home:b.port, end:last.port, hours:Math.ceil(hours)});
-    toast(S.lang === 'no' ? 'Lagret som fast driftsplan. Slå den på i Mannskap-appen.' : 'Saved as the standing plan. Switch it on in the Crew app.'); PHONE.open('mannskap');
+    toast(S.lang === 'no' ? 'Lagret som fast driftsplan. Slå den på under Bygd, Mannskap.' : 'Saved as the standing plan. Switch it on under Village, Crew.'); PHONE.open('mannskap');
   }
   else if (act === 'depcancel'){ S.plan = null; log('Avgangen er avlyst.', 'Departure cancelled.'); }
   else if (act === 'stop'){ S.plan = null; b.status = 'idle'; b.v = 0; log('Stoppet båten.', 'Stopped the boat.'); }
@@ -198,7 +198,7 @@ function tick(){
   if (dt > 6) catchUp(dt * 1000);
   else { acc += dt * GAME_RATE * S.mult / 60; let n = 0; while (acc >= 1 && n < 3000){ step(); acc -= 1; n++; } }
   heatTick();
-  if (!G3.isActive()){ renderDyn(); if (AISSEL) renderAisCard(); heatPaint(); } renderHud(); renderClock(); renderActs(); INSTR.renderGPS(); tutUpdate(); PHONE.status(); PHONE.tickHome();
+  if (!G3.isActive()){ renderDyn(); if (AISSEL) renderAisCard(); heatPaint(); } renderHud(); renderClock(); renderActs(); DOCK.tick(); INSTR.renderGPS(); tutUpdate(); PHONE.status(); PHONE.tickHome();
   if (S.order && S.t >= S.order.due) deliverOrder();
   const pnow = performance.now();
   if ((panelDirty || pnow - lastPanel > 1000) && !panelBusy()){ renderPanel(); lastPanel = pnow; panelDirty = false; }
@@ -242,4 +242,3 @@ $('camBtn').onclick = () => { G3.setHelm(!G3.isHelm()); updateMapButtons(); };
 $('phoneFab').onclick = () => PHONE.toggle();
 $('plotStyle').onclick = () => {};
 hooks.on3dFail = () => { setBodyView(false); $('loader').classList.add('gone'); $('plotClose').hidden = true; tab = 'route'; renderPanel(); applyView(); renderStatic(); renderDyn(); };
-let actsHtml = '';

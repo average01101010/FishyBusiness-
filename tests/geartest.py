@@ -47,7 +47,7 @@ async def main():
           R.fullNets = document.querySelector('[data-pa=grbuy][data-w=net]').disabled;
           // haulers: the small electric one is not for a sjark
           PHONE.open('utstyr'); R.elSkiff = !!document.querySelector('[data-pa=equip][data-k=elhaler]') || document.body.innerHTML.includes('Elektrisk haler');
-          b.type = 'sjark'; applyVessel(); PHONE.open('utstyr'); R.elSjark = document.querySelector('.ph-appv').innerHTML.includes('Elektrisk haler'); R.garnhalerSjark = document.querySelector('.ph-appv').innerHTML.includes('Hydraulisk garnhaler');
+          b.type = 'sjark'; applyVessel(); PHONE.open('utstyr'); R.elSjark = document.getElementById('drawerBody').innerHTML.includes('Elektrisk haler'); R.garnhalerSjark = document.getElementById('drawerBody').innerHTML.includes('Hydraulisk garnhaler');
           PHONE.show(false); b.type = 'skiff'; applyVessel(); return R; })()""")
         print('buy:', json.dumps(r, ensure_ascii=False))
         print(ok(r['spNoCrab'] and r['jigCrab'] == 0 and r['jigKg'] > 0), 'brown crab is outside the fish list, and a day of jigging on a crab spot takes no crab')

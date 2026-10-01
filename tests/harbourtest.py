@@ -16,17 +16,17 @@ async def main():
         await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(400)
         r = await pg.evaluate("""(()=>{
           S.tut = 0; S.cash = 1e6; S.t = Math.round((Date.UTC(2027, 2, 9, 10) - EPOCH) / 6e4); const R = {ports:{}};
-          const acts = () => document.getElementById('actbar').innerText;
+          const can = (m, id) => DOCK.items(m).some(x => x.id === id && !x.off);
           for (const q of PORTS){
             const b = S.boat; b.status = 'port'; b.port = q.id; b.pos = {...q.p}; b.ice = 0; b.fuel = 10; S.plan = null; b.berth = 'main'; b.shift = b.fueling = b.land = b.after = null;
             S.hold = [{sp:'torsk', cls:2, kg:100, n:25, bled:true, iced:true, hr:0, fresh:95, gut:false, hook:true}];
-            renderActs(); const a = acts();
+            renderActs(); const a = {ice:can('marked', 'is'), fuel:can('verft', 'bunker'), sell:can('marked', 'lever')};
             doAct({dataset:{act:'ice'}, disabled:false}); const ice = b.ice > 0, chute = ice && /isrenna/.test(S.log[S.log.length - 1].no);
             // filling takes her to the bunker quay and runs the pump: give it time
             doAct({dataset:{act:'fuel'}, disabled:false}); for (let i = 0; i < 40 && (b.shift || b.fueling); i++) step(); const fuel = b.fuel > 10;
             if (b.berth !== 'main'){ b.berth = 'main'; b.shift = b.fueling = b.after = null; }
-            let sold = false; if (q.mottak){ sold = a.includes('Lever '); sell(); sold = sold && S.lastSale.port === q.id && S.hold.length === 0; }
-            R.ports[q.id] = {water:!isLand(q.p), iceBtn:a.includes('Is 50 kg'), fuelBtn:a.includes('Fyll drivstoff'), ice, chute, fuel, sold};
+            let sold = false; if (q.mottak){ sold = a.sell; sell(); sold = sold && S.lastSale.port === q.id && S.hold.length === 0; }
+            R.ports[q.id] = {water:!isLand(q.p), iceBtn:a.ice, fuelBtn:a.fuel, ice, chute, fuel, sold};
           }
           // a standing plan restocks only what the harbour sells
           const b = S.boat; b.port = 'frovag'; b.fuel = 10; b.ice = 0; autoRestock(); R.opsFrovag = {fuel:b.fuel, ice:b.ice};

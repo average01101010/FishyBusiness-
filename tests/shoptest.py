@@ -29,61 +29,65 @@ async def main():
         await pg.evaluate("S.settings.bleed = true; save()"); await pg.reload(); await pg.wait_for_timeout(1500)
         check(await pg.evaluate("S.settings.bleed === undefined"), 'blødningsvalget er fjernet, også fra gamle lagringer')
 
-        # the action bar in Finnsnes: the shop instead of «Ny juksa», ice with amount and price, no halibut-gear button
+        # the dock in Finnsnes: the shop under Verft, ice under Marked
         await pg.evaluate("S.cash = 20000; renderActs()")
-        acts = await pg.evaluate("[...document.querySelectorAll('#actbar button')].map(x => x.textContent)")
-        check(any('Fiskeutstyr' in a for a in acts) and not any('Ny juksa' in a or 'Kveiteutstyr' in a for a in acts) and any(a.startswith('Is 50 kg · 100') for a in acts), 'handlingslinja har Fiskeutstyr og is med mengde og pris', acts)
+        acts = await pg.evaluate("[DOCK.items('verft').map(x => x.id), DOCK.items('marked').map(x => x.id)]")
+        check('fiskeutstyr' in acts[0] and 'is' in acts[1], 'Fiskeutstyr ligger under Verft og is under Marked', acts)
 
         # the shop: title in Finnsnes, two taps to buy, a log line on the operations page
-        await pg.evaluate("document.querySelector('#actbar [data-ui=fiske]').click()"); await pg.wait_for_timeout(300)
-        title = await pg.evaluate("document.querySelector('#phone .ph-card h4').textContent")
+        await pg.evaluate("DOCK.open('fiske')"); await pg.wait_for_timeout(300)
+        title = await pg.evaluate("document.querySelector('#drawerBody .ph-card h4').textContent")
         check(title == 'Fiskeutstyr på kaia i Finnsnes', 'butikken heter Fiskeutstyr på kaia i Finnsnes', title)
-        await pg.evaluate("document.querySelector('#phone [data-pa=shop][data-k=jig]').click()"); await pg.wait_for_timeout(200)
-        r = json.loads(await J("{gear:S.boat.gear, cash:S.cash, btn:document.querySelector('#phone [data-pa=shop][data-k=jig]').textContent}"))
+        await pg.evaluate("document.querySelector('#drawerBody [data-pa=shop][data-k=jig]').click()"); await pg.wait_for_timeout(200)
+        r = json.loads(await J("{gear:S.boat.gear, cash:S.cash, btn:document.querySelector('#drawerBody [data-pa=shop][data-k=jig]').textContent}"))
         check(not r['gear'] and r['cash'] == 20000 and 'Bekreft' in r['btn'] and '1 900' in r['btn'], 'første trykk viser prisen og ber om bekreftelse', r)
-        await pg.evaluate("document.querySelector('#phone [data-pa=shop0]').click()"); await pg.wait_for_timeout(200)
-        r = json.loads(await J("{gear:S.boat.gear, btn:document.querySelector('#phone [data-pa=shop][data-k=jig]').textContent}"))
+        await pg.evaluate("document.querySelector('#drawerBody [data-pa=shop0]').click()"); await pg.wait_for_timeout(200)
+        r = json.loads(await J("{gear:S.boat.gear, btn:document.querySelector('#drawerBody [data-pa=shop][data-k=jig]').textContent}"))
         check(not r['gear'] and 'Bekreft' not in r['btn'], 'avbryt kjøper ingenting', r)
-        await pg.evaluate("document.querySelector('#phone [data-pa=shop][data-k=jig]').click()"); await pg.wait_for_timeout(150)
-        await pg.evaluate("document.querySelector('#phone [data-pa=shop][data-k=jig]').click()"); await pg.wait_for_timeout(200)
+        await pg.evaluate("document.querySelector('#drawerBody [data-pa=shop][data-k=jig]').click()"); await pg.wait_for_timeout(150)
+        await pg.evaluate("document.querySelector('#drawerBody [data-pa=shop][data-k=jig]').click()"); await pg.wait_for_timeout(200)
         r = json.loads(await J("{gear:S.boat.gear, cash:S.cash, log:S.log[S.log.length - 1].no, kind:logKind(S.log[S.log.length - 1])}"))
         check(r['gear'] and r['cash'] == 18100 and 'håndjuksa' in r['log'] and r['kind'] == 'drift', 'andre trykk kjøper juksa og skriver i driftsloggen', r)
         # bagged ice in Finnsnes: fill up 150 kg at 2 kr
-        room = await pg.evaluate("[...document.querySelectorAll('#phone [data-pa=shop][data-k=ice]')].map(x => x.textContent)")
-        await pg.evaluate("[...document.querySelectorAll('#phone [data-pa=shop][data-k=ice]')].pop().click()"); await pg.wait_for_timeout(150)
-        await pg.evaluate("[...document.querySelectorAll('#phone [data-pa=shop][data-k=ice]')].pop().click()"); await pg.wait_for_timeout(200)
+        await pg.evaluate("DOCK.open('is')"); await pg.wait_for_timeout(300)
+        room = await pg.evaluate("[...document.querySelectorAll('#drawerBody [data-pa=shop][data-k=ice]')].map(x => x.textContent)")
+        await pg.evaluate("[...document.querySelectorAll('#drawerBody [data-pa=shop][data-k=ice]')].pop().click()"); await pg.wait_for_timeout(150)
+        await pg.evaluate("[...document.querySelectorAll('#drawerBody [data-pa=shop][data-k=ice]')].pop().click()"); await pg.wait_for_timeout(200)
         r = json.loads(await J("{ice:S.boat.ice, cash:S.cash, log:S.log[S.log.length - 1].no}"))
         check(r['ice'] == 150 and r['cash'] == 17800 and 'sekker' in r['log'], 'sekkeis i Finnsnes: fyll opp 150 kg for 300 kr', [room, r])
         # the scroll position stays when a card further down asks to confirm
-        sc = json.loads(await J("(() => { const v = document.getElementById('phView'); v.scrollTop = 9999; const y0 = v.scrollTop; document.querySelector('#phone [data-pa=shop][data-k=kgear]').click(); return {y0, y1:v.scrollTop, btn:document.querySelector('#phone [data-pa=shop][data-k=kgear]').textContent}; })()"))
+        await pg.evaluate("DOCK.open('fiske')"); await pg.wait_for_timeout(300)
+        sc = json.loads(await J("(() => { const v = document.getElementById('drawerBody'); v.scrollTop = 9999; const y0 = v.scrollTop; document.querySelector('#drawerBody [data-pa=shop][data-k=kgear]').click(); return {y0, y1:v.scrollTop, btn:document.querySelector('#drawerBody [data-pa=shop][data-k=kgear]').textContent}; })()"))
         check(sc['y0'] > 0 and sc['y1'] == sc['y0'] and 'Bekreft' in sc['btn'], 'bekreftelsen lenger ned hopper ikke til toppen', sc)
-        await pg.evaluate("document.querySelector('#phone [data-pa=shop][data-k=kgear]').click()"); await pg.wait_for_timeout(200)
+        await pg.evaluate("document.querySelector('#drawerBody [data-pa=shop][data-k=kgear]').click()"); await pg.wait_for_timeout(200)
         check(await pg.evaluate("S.boat.kgear && S.cash === 17800 - PRICE.kgear"), 'kveiteutstyret er kjøpt')
         await pg.screenshot(path='shop_fs.png')
 
         # at sea the shop can be looked at, not bought from
-        await pg.evaluate("S.boat.status = 'idle'; S.boat.gear = false; PHONE.open('fiske')"); await pg.wait_for_timeout(200)
-        dis = await pg.evaluate("[...document.querySelectorAll('#phone [data-pa=shop]')].every(x => x.disabled)")
+        await pg.evaluate("S.boat.status = 'idle'; S.boat.gear = false; DOCK.open('fiske')"); await pg.wait_for_timeout(800)
+        dis = await pg.evaluate("[...document.querySelectorAll('#drawerBody [data-pa=shop]')].every(x => x.disabled)")
         check(dis, 'på sjøen er kjøpsknappene grå')
         await pg.evaluate("S.boat.status = 'port'; S.boat.gear = true")
 
-        # chute ice at the plant in Botnhamn from the action bar
-        await pg.evaluate("PHONE.show(false); const b = S.boat, q = portById('botnhamn'); b.port = 'botnhamn'; b.pos = {x:q.p.x, y:q.p.y}; b.berth = 'main'; b.ice = 0; renderActs()")
-        btn = await pg.evaluate("[...document.querySelectorAll('#actbar button')].map(x => x.textContent).find(s => s.startsWith('Is'))")
-        await pg.evaluate("document.querySelector('#actbar [data-act=ice]').click()"); await pg.wait_for_timeout(200)
-        r = json.loads(await J("{ice:S.boat.ice, log:S.log[S.log.length - 1].no}"))
-        check(btn and 'Is 50 kg · 75' in btn and r['ice'] == 50 and 'isrenna' in r['log'], 'isrenna i Botnhamn: 50 kg for 75 kr med logglinje', [btn, r])
+        # chute ice at the plant in Botnhamn, under Marked
+        await pg.evaluate("DOCK.close(); const b = S.boat, q = portById('botnhamn'); b.port = 'botnhamn'; b.pos = {x:q.p.x, y:q.p.y}; b.berth = 'main'; b.ice = 0; DOCK.open('is')"); await pg.wait_for_timeout(300)
+        btn = await pg.evaluate("document.querySelector('#drawerBody [data-pa=shop][data-k=ice][data-kg=\"50\"]').textContent")
+        c0 = await pg.evaluate("S.cash")
+        for _ in range(2): await pg.evaluate("document.querySelector('#drawerBody [data-pa=shop][data-k=ice][data-kg=\"50\"]').click()"); await pg.wait_for_timeout(200)
+        r = json.loads(await J("{ice:S.boat.ice, log:S.log[S.log.length - 1].no, paid:" + str(c0) + " - S.cash}"))
+        check(btn and r['ice'] == 50 and r['paid'] == 75 and 'isrenna' in r['log'], 'isrenna i Botnhamn: 50 kg for 75 kr med logglinje', [btn, r])
 
         # A10: the Gisundet tip only in Finnsnes
         tips = json.loads(await J("(() => { S.draft = []; tab = 'route'; renderPanel(); const a = document.getElementById('panel').textContent; const q = portById('finnsnes'); S.boat.port = 'finnsnes'; S.boat.pos = {x:q.p.x, y:q.p.y}; renderPanel(); const c = document.getElementById('panel').textContent; return {bot:/Gisundet/.test(a), fs:/Gisundet/.test(c)}; })()"))
         check(not tips['bot'] and tips['fs'], 'Gisundet-tipset bare i Finnsnes', tips)
 
         # next goals: at the top of Vessels and a line on the home screen
-        await pg.evaluate("S.boat.gear = true; S.cash = 5000; PHONE.open('fartoy')"); await pg.wait_for_timeout(200)
-        first = await pg.evaluate("document.querySelector('#phone .ph-c .ph-card h4').textContent")
+        await pg.evaluate("S.boat.gear = true; S.cash = 5000; PHONE.open('fartoy')"); await pg.wait_for_timeout(300)
+        first = await pg.evaluate("document.querySelector('#drawerBody .ph-c .ph-card h4').textContent")
+        await pg.evaluate("DOCK.close()")
         await pg.evaluate("PHONE.open('home')"); await pg.wait_for_timeout(200)
         home = await pg.evaluate("(document.querySelector('#phone .ph-goal') || {}).textContent || ''")
-        check(first == 'Neste mål' and 'Første juksamaskin' in home, 'Neste mål øverst i Fartøy og på hjemskjermen', [first, home])
+        check(first == 'Neste mål' and 'Første juksamaskin' in home, 'Neste mål øverst i Båthandel og på hjemskjermen', [first, home])
         await pg.screenshot(path='shop_home.png')
 
         # A8: minimum prices with two decimals
@@ -111,8 +115,8 @@ async def main():
         await pg.screenshot(path='shop_slip.png')
 
         # A9: status in the action bar is not a button
-        st = json.loads(await J("(() => { S.boat.status = 'unmooring'; actsHtml = ''; renderActs(); const s = document.querySelector('#actbar .stp'), cs = getComputedStyle(s); return {border:cs.borderTopStyle, cursor:cs.cursor, radius:cs.borderTopLeftRadius}; })()"))
-        check(st['border'] == 'dashed' and st['cursor'] == 'default' and st['radius'] == '8px', 'statusfelt ser ikke ut som knapper', st)
+        st = json.loads(await J("(() => { S.boat.status = 'unmooring'; renderActs(); const s = document.getElementById('dockInfo'), cs = getComputedStyle(s); return {text:s.textContent, border:cs.borderTopStyle, pe:cs.pointerEvents, radius:cs.borderTopLeftRadius}; })()"))
+        check(st['text'] == 'Kaster loss …' and st['border'] == 'dashed' and st['pe'] == 'none' and st['radius'] == '8px', 'statusfeltet over knappene ser ikke ut som en knapp', st)
         print('sidefeil', errs)
         await b.close()
 

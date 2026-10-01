@@ -43,7 +43,7 @@ async def main():
         check('Fremme' in c and 'om' in c, 'underveis: når båten er fremme', c)
         await pg.evaluate("const b = S.boat; b.status = 'fishing'; b.fishUntil = S.t + 90; renderHud(); renderActs()")
         c = await chip()
-        stop = await pg.evaluate("(document.querySelector('#actbar [data-act=stopfish]') || {}).textContent || ''")
+        stop = await pg.evaluate("document.getElementById('dockInfo').textContent")
         check('Fisket er ferdig om 15 min' in c and 'om 15 min' in stop, 'fisket: nedtelling i HUD og på stoppknappen', [c, stop])
         await pg.evaluate("""(() => { const b = S.boat, q = portById('botnhamn'); S.plan = null; b.status = 'port'; b.port = 'botnhamn'; b.pos = {x:q.p.x, y:q.p.y}; b.fishUntil = null;
           S.hold = [{sp:'torsk', cls:2, kg:120, n:30, bled:true, iced:true, hr:0, fresh:90, gut:false}]; startLanding(); renderHud(); tab = 'port'; renderPanel(); })()""")

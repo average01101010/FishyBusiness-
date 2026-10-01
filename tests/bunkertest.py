@@ -16,9 +16,9 @@ async def main():
           S.tut = 0; S.cash = 1e6; S.t = Math.round((Date.UTC(2027, 2, 9, 10) - EPOCH) / 6e4); const R = {}, b = S.boat, run = n => { for (let i = 0; i < n; i++) step(); };
           const at = pid => { const q = portById(pid); b.status = 'port'; b.port = pid; b.pos = {...q.p}; b.berth = 'main'; b.shift = b.fueling = b.land = b.after = null; S.plan = null; };
           // Husøy, a skiff with 10 L of petrol: over to the bunker quay, then 80 L at 45 L/min
-          at('husoy'); b.fuel = 10; const c0 = S.cash; renderActs(); R.btn = document.getElementById('actbar').innerText.includes('bunkerskaia');
+          at('husoy'); b.fuel = 10; const c0 = S.cash; renderActs(); R.btn = DOCK.items('verft').some(x => x.id === 'bunker' && !x.off);
           doAct({dataset:{act:'fuel'}, disabled:false}); R.shift = b.shift && {to:b.shift.to, cast:b.shift.castUntil - S.t, total:Math.round((b.shift.until - S.t) * 10) / 10}; R.fuel0 = b.fuel;
-          renderActs(); R.bar = document.getElementById('actbar').innerText;
+          renderActs(); R.bar = DOCK.text();
           const T = b.shift.until - S.t; run(Math.ceil(T)); R.berth = b.berth; R.fueling = b.fueling && {liters:Math.round(b.fueling.liters), lpm:b.fueling.lpm, dur:Math.round((b.fueling.until - b.fueling.t0) * 10) / 10};
           const fl = []; for (let i = 0; i < 6; i++){ step(); fl.push(Math.round(b.fuel)); } R.flow = fl; R.after = {fueling:!!b.fueling, fuel:Math.round(b.fuel), paid:Math.round(c0 - S.cash), price:Math.round(80 * fuelPrice())};
           // landing from the bunker quay: back to the plant's quay first, then the crane
