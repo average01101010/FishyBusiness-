@@ -478,3 +478,21 @@ body.vplot #setBar{max-width:calc(100% - var(--sidew) - 80px)}
 .papc{padding:0;overflow:hidden} .papc .ph-kv span:last-child{white-space:normal} .papc .ph-kv,.papc .ph-note{padding-left:12px;padding-right:12px} .papc .ph-note{padding-bottom:8px}
 .pap-h{color:#fff;font:700 13px var(--sans);padding:8px 12px;margin-bottom:4px}
 .ordq h4{color:#2e7d4f}
+/* the Arbeid page: the flow of stations, presets and one row per person */
+.wk-flow{display:flex;align-items:stretch;gap:4px;overflow-x:auto;padding:2px 0 6px}.wk-flow.side{gap:6px}
+.wk-st{flex:1 0 72px;min-width:72px;border:1px solid rgba(127,127,127,.35);border-radius:10px;padding:6px 7px;display:flex;flex-direction:column;gap:2px;font-size:12px;background:rgba(127,127,127,.08)}
+.wk-st.on{border-color:#1e8c6e;background:rgba(30,140,110,.12)}.wk-st b{font:700 13px var(--sans)}.wk-q{opacity:.75}.wk-who{font-weight:600}.wk-who i{font-weight:400;opacity:.6}
+.wk-arr{align-self:center;opacity:.6;font-size:14px}
+.wk-pre{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}.wk-pre .ph-btn{flex:1 1 30%;min-height:44px;margin:0}
+.wk-p .wk-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.wk-name{background:none;border:0;padding:6px 0;min-height:44px;font:700 14px var(--sans);color:inherit;text-decoration:underline dotted;text-align:left}
+.wk-now{font-size:12.5px;opacity:.8}
+.wk-chain{display:flex;flex-wrap:wrap;gap:5px;margin:4px 0 6px;align-items:center}
+.wk-chip{display:inline-flex;align-items:center;gap:4px;border-radius:12px;padding:3px 9px 3px 4px;background:rgba(127,127,127,.15);font-size:12.5px}
+.wk-chip em{font-style:normal;font-weight:700;font-size:11px;background:rgba(127,127,127,.3);border-radius:9px;min-width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center}
+.wk-chip.on{background:rgba(30,140,110,.2);outline:1px solid #1e8c6e}.wk-auto{font-size:11px;opacity:.6;margin-left:2px}
+.wk-pick{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}.wk-pick button{min-height:44px;min-width:64px;flex:1 1 22%;border-radius:10px;border:1px solid rgba(127,127,127,.4);background:transparent;color:inherit;font:600 13px var(--sans)}
+.wk-pick button.on{background:#1e8c6e;color:#fff;border-color:#1e8c6e}
+.wk-edit{min-height:44px}.wk-card{border-top:1px solid rgba(127,127,127,.25);margin-top:8px;padding-top:6px}
+.wk-sk{display:grid;grid-template-columns:auto 34px 1fr;gap:2px 8px;align-items:center;font-size:12.5px;margin-bottom:6px}.wk-sk .qbar{margin:0}.wk-v{text-align:right;font-variant-numeric:tabular-nums}
+.wk-p .ph-btnrow{display:flex;gap:6px}.wk-p .ph-btnrow .ph-btn{flex:1;min-height:44px;margin:0}

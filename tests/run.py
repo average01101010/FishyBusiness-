@@ -38,7 +38,7 @@ COVER = {
   'src/js/core/10-gear.js':['geartest', 'booktest'], 'src/js/core/11-route.js':['routetest'], 'src/js/core/12-heat.js':['heattest'], 'src/js/core/13-work.js':['worktest', 'decktest', 'opsowntest'],
   'src/js/ui/01-i18n.js':[], 'src/js/ui/02-format-state.js':['timetest'], 'src/js/ui/03-map.js':['routetest'], 'src/js/ui/03b-route.js':['routetest'],
   'src/js/ui/03c-heat.js':['heattest'], 'src/js/ui/03d-setmode.js':['docktest'], 'src/js/ui/04-panels-instruments.js':['heattest'],
-  'src/js/ui/05-phone.js':['docktest', 'fleet3test', 'shoptest'], 'src/js/ui/05-tattoo-art.js':['tattest'], 'src/js/ui/06-logbook.js':['booktest'], 'src/js/ui/06b-book-tabs.js':['booktest'],
+  'src/js/ui/05-phone.js':['docktest', 'fleet3test', 'shoptest'], 'src/js/ui/05-tattoo-art.js':['tattest'], 'src/js/ui/05b-work.js':['worktest'], 'src/js/ui/06-logbook.js':['booktest'], 'src/js/ui/06b-book-tabs.js':['booktest'],
   'src/js/ui/07-guide.js':['shoptest', 'selltest'], 'src/js/ui/07b-first-trip.js':['tut'], 'src/js/ui/08-actions.js':['trip2', 'docktest', 'booktest', 'shoptest'],
   'src/js/ui/09-hand-fishing.js':['hailltest', 'fixtest'], 'src/js/ui/10-rod-acts.js':['docktest'], 'src/js/ui/10-gear-ui.js':['geartest', 'docktest'],
   'src/js/ui/10c-dock.js':['docktest'], 'src/js/ui/11-boot.js':['trip2'], 'src/js/view3d.js':['dbg23o'], 'src/styles.css':['docktest'], 'src/index.html':['trip2', 'docktest']}

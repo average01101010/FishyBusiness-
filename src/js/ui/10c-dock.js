@@ -34,13 +34,14 @@ const DOCK = (() => {
     batmarked:SVG('<path d="M3 15h18l-2.5 4.5H6z"/><path d="M8 15V9h6l2 6"/><path d="M11 9V5"/>'),
     oppgr:SVG('<path d="M14.5 5.5a4 4 0 0 0-5 5L3.8 16.2a1.8 1.8 0 0 0 2.5 2.5l5.7-5.7a4 4 0 0 0 5-5l-2.5 2.5-2.3-.5-.5-2.3z"/>'),
     fiskeutstyr:SVG('<circle cx="12" cy="15" r="4.5"/><path d="M12 10.5V3l5 2-5 2"/>'),
+    arbeid:SVG('<circle cx="7" cy="6" r="2.5"/><path d="M3 20v-3a4 4 0 0 1 8 0v3"/><path d="M14 7h7"/><path d="M18 4l3 3-3 3"/><path d="M14 15h7"/><path d="M18 12l3 3-3 3"/>'),
     rigg:SVG('<path d="M12 3v18"/><path d="M5 21h14"/><path d="M12 4l7 11h-7"/><path d="M12 7L6 15h6"/>'),
     vedlikehold:SVG('<path d="M4 20l7-7"/><path d="M13.5 4.5l6 6-3 3-6-6z"/><path d="M10.5 7.5l6 6"/>'),
     bunker:SVG('<path d="M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16"/><path d="M3 21h14"/><path d="M7.5 8h5"/><path d="M15 9h2a2 2 0 0 1 2 2v5a1.5 1.5 0 0 0 3 0V8l-3-3"/>')};
   // the drawer's pages: title, and the pages that share a row of tabs
   const TITLE = {lever:['Lever fangst', 'Land the catch'], is:['Is', 'Ice'], agn:['Agn og egning', 'Bait and baiting'], bank:['Kystbanken', 'The bank'], oppdrag:['Oppdrag', 'Orders'],
     mannskap:['Mannskap', 'Crew'], bors:['Mannskap', 'Crew'], fartoy:['Båthandel', 'Boat market'], utstyr:['Oppgraderinger', 'Upgrades'], fiske:['Fiskeutstyr', 'Tackle'],
-    redskap:['Redskap', 'Gear'], rigg:['Rigg', 'Rig'], verksted:['Vedlikehold', 'Maintenance'], havn:['Havn', 'Harbour'], last:['Lasterom', 'Hold'], beholdning:['Beholdning', 'Inventory']};
+    redskap:['Redskap', 'Gear'], rigg:['Rigg', 'Rig'], arbeid:['Arbeid om bord', 'Work aboard'], verksted:['Vedlikehold', 'Maintenance'], havn:['Havn', 'Harbour'], last:['Lasterom', 'Hold'], beholdning:['Beholdning', 'Inventory']};
   const TABS = {mannskap:[['mannskap', 'Om bord', 'Aboard'], ['bors', 'Mannskapsbørs', 'Crew exchange']], bors:null};
   TABS.bors = TABS.mannskap;
   let menu = null, page = null, html = '', fanHtml = '', items = [], fanItems = [];
@@ -54,8 +55,9 @@ const DOCK = (() => {
       I('marked', 'marked', 'Marked', 'Market', {menu:'marked', dot:p.mottak && tot > 0.5 && !b.land}),
       I('bygd', 'bygd', 'Bygd', 'Village', {menu:'bygd'}),
       I('verft', 'verft', 'Verft', 'Yard', {menu:'verft', dot:svcOverdue() > 0}),
+      crewAboard().length ? I('arbeid', 'arbeid', 'Arbeid', 'Work', {page:'arbeid'}) : null,
       I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'}),
-      I('kart', 'kart', 'Planlegg', 'Plan', {run:openPlotter, pri:!(tot > 0.5 && p.mottak) && !busy})];
+      I('kart', 'kart', 'Planlegg', 'Plan', {run:openPlotter, pri:!(tot > 0.5 && p.mottak) && !busy})].filter(Boolean);
   }
   function menuItems(m){
     const b = S.boat, p = port(), H = S.t / 60;
@@ -86,6 +88,7 @@ const DOCK = (() => {
   function seaItems(){
     // a quarrel aboard waits for an answer, also at sea
     const crew = S.cevt && I('mannskap', 'mannskap', 'Mannskap', 'Crew', {page:'mannskap', dot:true});
+    const work = crewAboard().length && I('arbeid', 'arbeid', 'Arbeid', 'Work', {page:'arbeid'});
     const b = S.boat, beh = I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'}), home = !(S.plan && S.plan.returning) && !tutOn() && I('hjem', 'hjem', 'Hjem', 'Home', {act:'retrace'});
     const nav = I('nav', 'nav', 'Auto-nav', 'Auto-nav', {run:autoNav});
     if (b.status === 'idle'){
@@ -94,13 +97,13 @@ const DOCK = (() => {
         : I('taopp', 'taopp', 'Ta opp', 'Haul', {off:[nb ? L('Nærmeste blåse er ' + fmt(nb.d / NM, 1) + ' nm unna. Bruk Auto-nav og trykk på blåsa.', 'The nearest buoy is ' + fmt(nb.d / NM, 1) + ' nm away. Use auto-nav and tap the buoy.') : L('Du har ikke redskap i sjøen.', 'You have no gear in the sea.')]});
       return [I('jukse', 'jukse', 'Jukse', 'Jig', {menu:'jukse', pri:!s && rigJig(), off:!rigJig() && rigWrong(null)}),
         I('settut', 'settut', 'Sett ut', 'Set', {menu:'settut', off:rigJig() ? [L('Båten er rigget for juksa. Rigg om til line, garn eller teiner på verftet.', 'The boat is rigged for jigging. Re-rig for line, nets or pots at the yard.')] : !ch.length && [S.pgear && (S.pgear.nets.length || S.pgear.lines.hyse.n || S.pgear.lines.bank.n || S.pgear.pots.small || S.pgear.pots.big) ? L('Redskapet om bord er ikke klart: line må egnes, og teiner trenger agn og blåsesett.', 'The gear aboard is not ready: line must be baited, and pots need bait and buoy sets.') : L('Du har ikke garn, line eller teiner om bord.', 'You have no nets, line or pots aboard.')]}),
-        haul, nav, home, crew, beh].filter(Boolean);
+        haul, nav, home, crew, work, beh].filter(Boolean);
     }
-    if (b.status === 'fishing' && b.gop) return [I('gstop', 'stopp', 'Stopp arbeidet', 'Stop the work', {act:'gstop'}), beh];
+    if (b.status === 'fishing' && b.gop) return [I('gstop', 'stopp', 'Stopp arbeidet', 'Stop the work', {act:'gstop'}), work, beh].filter(Boolean);
     if (b.status === 'fishing') return [I('stopfish', 'stopp', 'Stopp', 'Stop', {act:'stopfish'}),
       b.deckStop && !b.deckEnd ? I('deckgo', 'videre', 'Fisk videre', 'Fish on', {act:'deckgo', pri:true}) : !b.deckStop && deckPending() > 0.5 ? I('deckstop', 'sloy', 'Stopp og sløy', 'Stop and gut', {act:'deckstop'}) : null,
-      G3.isActive() && rigJig() ? I('rod', 'stang', window.rodActive ? 'Legg bort' : 'Fisk selv', window.rodActive ? 'Put down' : 'Fish yourself', {act:'rod', pri:!window.rodActive, on:!!window.rodActive}) : null, crew, beh].filter(Boolean);
-    if (b.status === 'sailing') return [I('stop', 'stopp', 'Stopp båten', 'Stop', {act:'stop'}), home, nav, crew, beh].filter(Boolean);
+      G3.isActive() && rigJig() ? I('rod', 'stang', window.rodActive ? 'Legg bort' : 'Fisk selv', window.rodActive ? 'Put down' : 'Fish yourself', {act:'rod', pri:!window.rodActive, on:!!window.rodActive}) : null, crew, work, beh].filter(Boolean);
+    if (b.status === 'sailing') return [I('stop', 'stopp', 'Stopp båten', 'Stop', {act:'stop'}), home, nav, crew, work, beh].filter(Boolean);
     if (b.status === 'adrift' || b.status === 'engine' || b.status === 'aground') return [I('hjelp', 'hjelp', 'Hjelp', 'Help', {run:() => PHONE.open('redning'), warn:true}), beh];
     return [beh];
   }
