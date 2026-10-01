@@ -60,7 +60,8 @@ function serveMeal(q, cook, me){
   crewSay(null, q >= 4 ? 'foodGood' : q <= 2 ? 'foodBad' : null);
 }
 
-// ---- the rest rule for fishers (FOR-2017-11-10-1758, forskrift om arbeidstid og hviletid på fiskefartøy): at least 10 hours of
+// ---- the rest rule for fishers (FOR-2017-11-10-1758, forskrift om arbeids- og hviletid på fiskefartøy § 3; § 1 leaves out
+// those who work alone on their own vessel, so not you): at least 10 hours of
 // rest in any 24 and 77 in any 7 days; the rest in at most two periods, one of at least 6 hours; at most 14 hours between rest
 // periods. Each person keeps a log of the last 168 hours (1 = rest). Without berths, only hours ashore or at the quay are rest.
 const REST = {day:10, long:6, gap:14, week:77};

@@ -92,7 +92,7 @@ function crewTick(H){
   // the rest rule, person by person (core/14-crewlife.js): a broken rule tires them faster and sours the mood, and you hear of it once a day
   const viols = {}; for (const c of S.crew){ const v = restHour(c, onIds.has(c.id)); if (v) viols[c.id] = v; }
   { const ids = Object.keys(viols); if (ids.length && (S.restWarn || -1e9) < S.t - 1440){ S.restWarn = S.t; const who = ids.map(id => crewById(id).name.split(' ')[0]).join(', '), r = REST_RULE[viols[ids[0]]];
-    msg('Mannskapet', who + ' har brutt hviletidsreglene: ' + r[0] + ' (forskrift om arbeidstid og hviletid på fiskefartøy). Uten køyer om bord teller bare tid ved kai som hvile. Folk blir fort slitne.', who + ' ' + (ids.length > 1 ? 'have' : 'has') + ' broken the rest rules: ' + r[1] + ' (the working-time rules for fishing vessels). Without berths aboard, only time at the quay counts as rest. People tire quickly.');
+    msg('Mannskapet', who + ' har brutt hviletidsreglene: ' + r[0] + ' (forskrift om arbeids- og hviletid på fiskefartøy). Uten køyer om bord teller bare tid ved kai som hvile. Folk blir fort slitne.', who + ' ' + (ids.length > 1 ? 'have' : 'has') + ' broken the rest rules: ' + r[1] + ' (the working-time rules for fishing vessels). Without berths aboard, only time at the quay counts as rest. People tire quickly.');
     crewSay(crewById(ids[0]), 'rest'); } }
   for (const c of S.crew.slice()){
     const here = onIds.has(c.id) && atSea, viol = !!viols[c.id];

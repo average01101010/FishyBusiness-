@@ -240,26 +240,27 @@ Mister du juksa, fiskes det videre med stang til du kjøper ny i Fiskeutstyr. `m
   - Stjernene er anslag, og det andre trekket er skjult til det er avslørt.
   - Forhandling ned 2 prosentpoeng lykkes i 60 % av tilfellene, 35 % for stolte folk.
   - Mønstring skjer i havn. Pubrykter kan avsløre skjulte trekk.
-- **Egenskaper** (1–5): erfaring, styrke, utholdenhet, teknisk, kokk og sjømannskap. **Redskap:** juksa, line, garn og teiner.
+- **Egenskaper** (1–5): erfaring, styrke, utholdenhet, teknisk, kokk og sjømannskap. **Redskap og dekk** (`c.gear`): juksa, line, garn, teiner, sløying (`sloy`), ising (`is`) og krabbesortering (`sort`). Dekksferdighetene ble lagt til 01.10.2026, og gamle lagringer får dem ut fra erfaringen (`deckSkills`).
 - **13 trekk:** arbeidsjern, kranglefant, spøkefugl, grinebiter, perfeksjonist, lokalkjent, sjøsyk, ølglad, lærevillig, rastløs, makelig, omsorgsfull og stolt. Alle har fordeler og ulemper, se `TRAITS` og `crewEff`.
 - **Trivsel** drifter mot et mål:
   - Utgangspunkt 60, pluss (lott − ønsket lott) × 300.
   - Pluss eller minus opptil 12 for ukesinntekt mot forventning.
-  - Kokk: (beste kokk − 2,5) × 3.
+  - Mat: (matstell − 3) × 3, der matstell er snittet av de fire siste måltidene (5.19).
   - Minus (slitenhet − 50) × 0,5.
   - Minus kulde × 50.
   - Minus grov sjø, med ekstra straff for sjøsyke.
   - Trekkeffekter, nag × 5, brudd på hviletid −8, og uløst konflikt −10.
   - Driftshastighet 0,04 per time (0,07 for rastløse).
 - **Oppsigelse:** Under grensen i mer enn 36 timer fører til oppsigelse i neste havn. Grensen er 22, 30 for rastløse og 15 for grinebitere.
-- **Slitenhet:** +6 per time ved fiske og +3 ved seiling, skalert med utholdenhet og høyere om natta. Den går ned med 8 per time i havn.
-- **Hviletid:** Minst 10 timer hvile per døgn (arbeidstidsreglene for fiskere). Brudd gir advarsel og 1,5 ganger raskere slitasje.
+- **Slitenhet:** +6 per time ved fiske og +3 ved seiling, skalert med utholdenhet og høyere om natta. Den som tar pause, blir mindre sliten: faktoren er 0,4 + 0,6 × andelen av timen personen jobbet. Den går ned med 8 per time i havn.
+- **Hviletid:** per person etter forskriften, se 5.19. Brudd gir en melding per døgn, 1,5 ganger raskere slitasje og −8 i trivsel.
 - **Kjemi** (`compat`): trekk, samme hjemsted, aldersforskjell over 30 år, og nag.
 - **Konflikter** (`S.cevt`):
   - Mellom mannskapet (`PAIR_TOPICS`): løses ved å snakke med dem, ta parti, gi fri eller si opp.
   - Med skipperen (`BOSS_TOPICS`): løses ved å høre på, stå på sitt eller si opp.
   - Uløst etter 12 timer blir det verre, og etter 48 timer mønstrer noen av.
-- **Utvikling:** Hver 40. time på sjøen øker erfaring og redskap, dobbelt så fort for lærevillige. Skjulte trekk avsløres etter 12 timer på sjøen.
+- **Utvikling:** Ferdighetene vokser med stasjonen personen faktisk står på (5.19). Erfaring og sjømannskap vokser i tillegg hver 40. time på sjøen, dobbelt så fort for lærevillige. Skjulte trekk avsløres etter 12 timer på sjøen.
+- **Rettet 01.10.2026:** `crewQuit` avbrøt resten av `crewTick` den timen, og juksing trente feil redskap etter garn (`lastGear`). Begge er borte.
 - **Testet:** Vanlig drift med 10 timers fiske og klær ga trivsel 60–70. Hardkjøring med 20 timer per døgn fikk alle tre til å si opp innen fire døgn.
 
 ### 5.7 Driftsplan (`S.ops`, per båt)
@@ -418,6 +419,84 @@ Inspirert av Fishing: Barents Sea.
 - **Salgslaget, «Mine landinger»:** 📖 per sluttseddel åpner den i boka.
 - **Sjømann, fanen «Papirer»** (`papers()`): helseerklæring for arbeidstakere på skip (fiktiv lege, gyldig 2 år fra første loggføring), sikkerhetsopplæring for sjøfolk på mindre skip (35 t), fiskeskipper klasse C og begrenset radiosertifikat (SRC, gyldig når en båt har VHF). Papirene styrer ingenting.
 
+### 5.19 Arbeid om bord, mat, hviletid, replikker og energien din (01.10.2026)
+
+Brukerens ønske: mannskapet skal være en levende og givende del av spillet, inspirert av Fishing: Barents Sea. Ingen portretter.
+
+- **Filer:** `core/13-work.js` (stasjoner og kjeder), `core/14-crewlife.js` (læring, mat, hviletid og replikker), `core/15-energy.js` (energien din og søvnen) og `ui/05b-work.js` (skuffesiden «Arbeid», toastene og søvnskjermen).
+- **Stasjoner** (`STATIONS`): Ror, Fiske, Haling, Krabbesortering, Sløying, Ising, Kokk og Pause. Hvert minutt går hver person om bord til den første stasjonen i kjeden sin som har arbeid (`workAssign`, `workCtx`):
+
+  | Stasjon | Har arbeid når … |
+  |---|---|
+  | Ror | båten går, kaster loss eller har motorstopp. Én person. |
+  | Fiske | båten jukser (status `fishing` uten redskapsarbeid, juksarigg, ikke stoppet for sløying) |
+  | Haling | redskap settes eller trekkes |
+  | Krabbesortering | teiner trekkes. Med noen her slipper halerne å sortere (ellers ×1,3 på tida). |
+  | Sløying og Ising | det ligger over 0,5 kg i karet som skal sløyes eller ises |
+  | Kokk | et måltid er forfalt. Én person. |
+
+- **Kjeder:** `c.job` per mannskap og `S.myJob` for deg. `null` betyr standard:
+  - Du: Ror → Haling → Fiske → Sløying → Ising.
+  - Første mann: Sløying → Ising → Haling → Fiske.
+  - De andre: Fiske → Haling → Sløying → Ising.
+  - Det gir samme oppførsel som før: under seiling styrer én og resten sløyer, og ved fiske sløyer én når det er fisk i karet.
+- **Reglene som alltid gjelder:**
+  - Står ingen ved roret, tar den med best sjømannskap det (blant dem som har pause først, du før mannskapet).
+  - Står ingen ved halingen, tar en som har pause den, ellers en fra dekket.
+  - Er måltidet forfalt og ingen har Kokk i kjeden, lager den beste kokken med pause mat, hvis kokk ≥ 3.
+  - Etter «Stopp og sløy» går alle med pause på dekk.
+- **Farten følger dem som står der** (`workTeam`):
+  - Fiske: `effortOf(antall ved ripa, maskiner)` × snittet av deres `crewEff`. Faktoren for hender på dekk i `catchFactors` er borte.
+  - Sløying: 5 kg/min × `crewEff(c, 'sloy')` per person, og det som er til overs går til ising.
+  - Ising: 13,3 kg/min × `crewEff(c, 'is')`.
+  - Haling: `gopUnitMin` med snittet av halerne og antallet som haler. Ingen ved halingen betyr ingen framdrift.
+  - Du teller som 1, eller 0,75 med energi under 25 %.
+- **Ferdige oppsett** (`JOB_PRESETS`): «Én på dekk» (standard), «Alle fisker» og «Alle på dekk».
+- **Menyen «Arbeid»** (knappelinja, i havn og på sjøen, bare med mannskap om bord):
+  - Øverst er flyten for riggen: Ror → Fiske/Haling (→ Krabbe) → Sløying → Ising, med Kokk og Pause ved siden av. Hvert kort viser hvem som står der og hva som venter: kg, redskap trukket, eller tid til måltidet og matstellet.
+  - Under er det én rad per person, med deg først. Raden viser hva personen gjør nå, kjeden som nummererte brikker, energien din, og «Må hvile innen X t» når det er 6 timer eller mindre igjen.
+  - «Endre»: trykk stasjonene i den rekkefølgen du vil ha dem. Et nytt trykk tar en stasjon ut. «Ferdig» lagrer, og «Auto» går tilbake til standarden.
+  - Et trykk på navnet åpner personkortet med ferdighetsstreker (juksa, line, garn, teiner, sløying, ising, krabbesortering, matlaging, sjømannskap og styrke), slitenhet, trivsel, hvor fort personen lærer, og de tre siste replikkene.
+- **Læring** (`learnHour`, hver time per person om bord utenfor havn): Minuttene per stasjon (`c.wk`) trener ferdigheten for den stasjonen.
+  - Formel: vekst = 0,012 × alder × trivsel × lærevillig (×2) × (1 − ferdighet/5,5) per hel time.
+  - Alder: 1,7 for 18 år, 1,3 for 30, 1,0 for 40, 0,7 for 50, 0,45 for 60 og 0,3 for 75, lineært mellom.
+  - Trivsel: 0,2 under 30, 0,6 under 50, 1 opp til 75 og 1,25 over.
+  - Hvilken ferdighet: Haling trener redskapet båten er rigget for, Ror trener sjømannskap, og Kokk trener matlaging.
+  - Hvert hele steg logges og gir gjerne en replikk.
+- **Mat:**
+  - Det er et måltid hver 6. time på sjøen, og bare med mannskap om bord. I havn spiser folk i land.
+  - Den som står ved Kokk, lager mat i 30 minutter, og kvaliteten er kokkens `attr.kokk` avrundet. Lager du maten selv, blir den 3.
+  - Er ingen ledig innen én time, blir det tørre brødskiver (kvalitet 1).
+  - Rettene går fra brødskiver via pølser i lompe, fiskekaker og kokt torsk med poteter til mølje.
+  - Matstell (`foodScore`) er snittet av de fire siste måltidene og er 3 uten måltider. Trivselen får (matstell − 3) × 3.
+  - Sjansen for krangel ganges med 1,6 når matstellet er under 2,5, og med 0,7 når det er over 3,5.
+  - Et måltid på 4 eller mer gir deg +4 % energi.
+  - Tilstanden ligger per båt i `S.meal`.
+- **Hviletid** (forskrift om arbeids- og hviletid på fiskefartøy, FOR-2017-11-10-1758 § 3):
+  - Kravene: minst 10 timer hvile per 24 timer og 77 per 168 timer, hvilen i høyst to perioder der én er minst 6 timer, og høyst 14 timer mellom hvileperiodene.
+  - Hver person har en logg over de siste 168 timene (`c.rest`, 1 = hvile).
+  - Ingen av båtene har køyer (`VESSELS.*.berths = 0`), så bare timer i havn eller i land teller som hvile. Med køyer ville en time med høyst 10 minutters arbeid telle.
+  - `restCheck` sjekker 14-timersregelen først, deretter døgnet, delingen og uka. `restLeft` gir timene som er igjen.
+  - Brudd gir 1,5 ganger raskere slitasje og −8 i trivsel, og én melding per døgn som navngir regelen.
+  - Du er unntatt, fordi § 1 holder den som jobber alene på egen båt utenfor. Du har energien i stedet.
+  - Følge: en skiff-tur med mannskap på over 14 timer bryter regelen.
+- **Replikker** (`SAY`, 102 linjer):
+  - Den norske teksten er på nordnorsk, med ord fra brukerens liste (agalaus, au hirre, hustri, sjyen, kokning, låppen på nævan, han står stiv i dag og flere). Den engelske er vanlig engelsk. Grove og nedsettende ord fra lista er ikke brukt.
+  - Situasjonene: god og dårlig fangst, fullt kar, kulde, sjøsyke, slitenhet, god og dårlig mat, hvilebrudd, uvær, stille vær, lang tur, lott, nytt ferdighetssteg, morgen, godt og dårlig trekk, og småprat etter trekk.
+  - Om lag 60 % av gangene velges en replikk som passer et trekk hos noen om bord.
+  - `sayHour` gir høyst én replikk per 1,5 timer per båt, med 55 % sjanse hver time. Hendelser (`crewSay`) kommer straks, men høyst én per 15 minutter.
+  - Replikken vises som toast når du er om bord, står i Drift i dagboka, og de fem siste lagres på personen (`c.said`).
+- **Energien din** (`S.energy`, 0–100, `energyMinute` hvert minutt):
+  - Den synker 100/24 % per time når båten du er om bord på, ikke ligger ved kai, og stiger 100/8 % per time ved kai eller i land.
+  - HUD-raden heter «Energi».
+  - Ved 25 % kommer en melding og en toast, og arbeidet ditt går med 0,75.
+  - Under 15 % mørkner kantene på skjermen (`#vign`).
+  - **Ved 0 sovner du i 8 spilltimer** (`S.sleep`). `#sleep` (z 64) toner til svart og viser nedtellingen i ekte tid. Du kan ikke hoppe over.
+  - Med mannskap står du utenfor arbeidet, den med best sjømannskap tar roret, og turen går videre.
+  - Alene stopper fisket og redskapsarbeidet, og båten driver med vinden i 0,3–0,8 knop (`sleepDrift`). Den kan gå på grunn.
+  - Du våkner med 60 %. Det er en antakelse.
+  - Søvnen løper også mens spillet er lukket.
+
 ## 6. Regelverk og kilder
 
 | Tema | Kilde | Hovedpunkter |
@@ -439,7 +518,7 @@ Inspirert av Fishing: Barents Sea.
 | Priser og sesong | Råfisklaget, salgsstatistikk 2025 | Troms-sonen, fersk |
 | Fiskere | Fiskerregisteret 2025 | 9 210 med fiske som hovedyrke og 1 115 med biyrke. Troms 963, 6 % kvinner, 24 % under 30 år |
 | Kvotepris | Riksrevisjonen 2017 | 9-meters hjemmel rundt 1,8 mill. kr |
-| Hviletid | Arbeidstidsreglene for fiskere | ≥ 10 t hvile per døgn og ≥ 77 t per uke (per uke ikke modellert) |
+| Hviletid | Forskrift om arbeids- og hviletid på fiskefartøy (FOR-2017-11-10-1758) §§ 1 og 3 | ≥ 10 t hvile per 24 t og ≥ 77 t per 168 t, høyst to perioder der én er ≥ 6 t, og ≤ 14 t mellom hvileperiodene. Gjelder ikke den som jobber alene på egen båt. Snittet på 48 t arbeid per uke er ikke modellert. Sjekket mot søkeresultat 01.10.2026, fordi Lovdata er sperret her. |
 
 **Følg med på:**
 - Arbeidsgruppens rapport om åpen gruppe fra 23.06.2026, som foreslår minstekvantum og aldersgrense 30 år.
@@ -742,6 +821,14 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
 
 ## 10. Kjente problemer og åpne spørsmål
 
+- **Mannskapssystemet (01.10.2026) er ikke spilltestet.** Usikre punkter:
+  - Antakelser: du våkner med 60 %, maten i havn er nøytral, terskelen for å lage mat uten Kokk i kjeden er kokk ≥ 3, og gode og dårlige trekk måles med faste kg per enhet (garn 25, stamp 80, teine 1,2).
+  - Hviletiden telles i hele timer. En kort tur innom kai gir derfor en hvileperiode på én time.
+  - Med standardkjedene og uten kokk på 3 eller mer får mannskapet brødskiver hver 6. time, og trivselen går mot −6. Følg med på om det blir for hardt.
+  - Når du sovner med mannskap på en båt du ikke følger, går turen videre uten deg. Ingenting stopper båten fra å komme i havn og levere mens du sover.
+  - Tester som går over 24 timer på sjøen med deg om bord, kan nå få deg til å sovne. Det vil vise seg i full regresjon.
+- **Riggen:** En båt med blandet redskap i sjøen fra en gammel lagring kan trekke alt, men bare sette det riggen tillater.
+
 - **Sertifikatene i Sjømann er ikke sjekket mot kildene.** Søk viste «Fiskeskippersertifikat klasse C eller D6» for båter under 15 m og navnene «helseerklæring for arbeidstakere på skip» og «sikkerhetsopplæring for sjøfolk på mindre skip» (Sjøfartsdirektoratet, 12 PAX-siden), men sdir.no og Lovdata var sperret fra arbeidsmiljøet. Hvilket sertifikat en fører av fiskefartøy under 15 m faktisk trenger, og at helseerklæringen varer 2 år, må sjekkes før papirene får betydning i spillet.
 
 - **Blind spilltest 1 (30.09.2026):** Se `docs/playtest/rapport-1.md`. Feilene A1–A13 og A15 er rettet 01.10.2026 (`fixtest.py`, `shoptest.py`, `camtest.py`, `routetest.py`). A14 (ryktekoppen) forsvant med «Kaffe på kaia». Åpent fra rapporten:
@@ -820,6 +907,7 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
   - `harbourtest.py`: havnene. Mottak, is og drivstoff per havn. De ekte kaiene: alle båttyper ligger langs kaifronten i sjøen i 3D-kystlinja, og ruta inn og ut av hver havn går fri av land.
   - `tattest.py`: tatoveringene. Nautiske mil og trygge turer bare med deg om bord, grunnstøting og slep, alle kravene, de låste og appen.
   - `loretest.py`: overtroen. Fredagsavreise, at samme fortelling ikke gjentas, omdøping, mastemynt, fortellinger på sjøen og på puben, uendret humør og appen «Sjømann».
+  - `worktest.py`: arbeid om bord (5.19). Den sjekker kjedene og hvem som står hvor, sløyefarten per person, oppsettene, roret og halingen som alltid får folk, krabbesortering, læring etter alder og trivsel, måltider og brødskiver, mat mot trivsel, 14-timersregelen og natt ved kai, replikker og avstanden mellom dem, energien til sjøs og ved kai, søvn alene (driver) og med mannskap (turen går videre), og menyen «Arbeid» liggende og stående med knapper på minst 44 px.
   - `decktest.py`: arbeidet på dekk. Bløggekaret, sløyefart, stopp når karet er fullt, én mann mot to, «ta unna før du går» og kvalitetstapet.
   - `geartest.py`: redskap i sjøen. Den har 27 sjekker:
     - kjøp i Redskap-appen etter plassen om bord
