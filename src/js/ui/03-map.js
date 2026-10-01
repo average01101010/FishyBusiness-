@@ -213,7 +213,7 @@ function renderDyn(){
     const cls = n.fleet ? 'ais fish' : 'ais pass', sel = AISSEL === n.id ? ' sel' : '', moored = n.st === 'port' || (!n.fleet && n.v === 0);
     const sw = (sel ? 2.4 : 1.1) * u;
     if (moored) g.push('<circle cx="' + n.p.x + '" cy="' + n.p.y + '" r="' + (3.2 * u) + '" class="' + cls + sel + ' moor" stroke-width="' + sw + '"/>');
-    else { const k = (n.type === 'coastal' ? 10 : n.type === 'ferry' ? 8.5 : n.type === 'kyst' ? 7.5 : 6.5) * u, dg = (n.cog !== undefined ? n.cog : n.hd) * 180 / Math.PI;
+    else { const k = (n.type === 'coastal' ? 10 : n.type === 'ferry' ? 8.5 : n.fleet ? 5.2 + FLEET[n.fi].L * 0.13 : 6.5) * u, dg = (n.cog !== undefined ? n.cog : n.hd) * 180 / Math.PI;
       g.push('<g transform="translate(' + n.p.x + ' ' + n.p.y + ') rotate(' + dg.toFixed(1) + ')"><path d="M0,' + (-k * 1.25) + ' L' + (0.55 * k) + ',' + (k * 0.8) + ' L0,' + (k * 0.45) + ' L' + (-0.55 * k) + ',' + (k * 0.8) + ' Z" class="' + cls + sel + '" stroke-width="' + sw + '"/></g>'); }
     if (view.z > 5 || sel) g.push(txt({x:n.p.x + 8 * u, y:n.p.y - 6 * u}, n.name, 'lbl-ais', 10 * u, 'stroke-width="' + (3 * u) + '"'));
   }

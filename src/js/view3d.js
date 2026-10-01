@@ -2032,20 +2032,43 @@ const G3 = (() => {
     for (let i = 0; i < ncrew && i < G.crewSpots.length; i++){ const c = G.crewSpots[i]; drawN(P.crew, chain(BMrel, M4.T(c[0], c[1], c[2]), M4.RY(c[3] || 0))); }
     gl.disableVertexAttribArray(2); gl.useProgram(PL.p);
   }
+  // the local fleet near you: the kit model nearest each boat (vessel3d.js npcKit), scaled to her length and beam, at lod 1 within
+  // 500 m and lod 0.3 within 1.5 km, with the skipper in the wheelhouse and hands on deck when she fishes; further out the box models
+  const NKM = {};
+  function npcMesh(i, lod){
+    const f = FLEET[i], t = npcKit(f.L, f.B), k = t + '|' + lod + '|' + (i % 4); if (k in NKM) return NKM[k];
+    const m = npcModel(t, lod, i % 4); if (!m) return NKM[k] = null; const V = VESSELS[t], up = o => ({pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3});
+    const sx = f.B / V.beam, sz = f.L / V.len, sy = (sx + sz) / 2;
+    return NKM[k] = {t, hull:up(m.o), glass:lod >= 1 ? up(m.glass) : null, geo:m.geo, sv:[sx, sy, sz], S:new Float32Array([sx, 0, 0, 0, 0, sy, 0, 0, 0, 0, sz, 0, 0, 0, 0, 1])};
+  }
   let npcNow = [];
-  function drawNPC(eye, t, H){
+  function drawNPC(eye, t, H, VP){
     if (!NPCM) return;
     npcNow = npcStates(H).filter(n => Math.hypot(n.p.x * 1000 - eye[0], n.p.y * 1000 - eye[2]) < 16000);
+    const kit = [];
     for (const n of npcNow){
       const x = n.p.x * 1000, z = n.p.y * 1000, big = n.type === 'coastal' || n.type === 'ferry', y = big ? (env.tide || 0) : (env.tide || 0) + (seaH(x, z, t) - (env.tide || 0)) * 0.8, roll = big ? Math.sin(t * 0.4 + x) * 0.01 : Math.sin(t * 1.1 + x) * 0.05 * (0.3 + WV.hs);
       n.M = model(x - eye[0], y - eye[1], z - eye[2], -n.hd, big ? 0 : Math.sin(t * 0.9 + z) * 0.03, roll);
-      drawLit(NPCM[n.type], n.M);
+      const d = Math.hypot(x - eye[0], z - eye[2]); n.K = n.fleet && d < 1500 ? npcMesh(n.fi, d < 500 ? 1 : 0.3) : null;
+      if (n.K) kit.push(n); else drawLit(NPCM[n.type], n.M);
     }
+    if (!kit.length) return;
+    const P = people(); nSetup(VP);
+    for (const n of kit){ const K = n.K, G = K.geo, at = (p, r) => chain(n.M, M4.T(p[0] * K.sv[0], p[1] * K.sv[1], p[2] * K.sv[2]), M4.RY(r || 0));
+      drawN(K.hull, chain(n.M, K.S));
+      if (!K.glass) continue;
+      if (n.st !== 'port') drawN(P.skip, at(G.skipperAt));
+      if (n.st === 'fishing') for (let i = 0; i < 2 && i < G.crewSpots.length; i++) drawN(P.crew, at(G.crewSpots[i], G.crewSpots[i][3]));
+    }
+    gl.disableVertexAttribArray(2); gl.useProgram(PL.p);
   }
+  function drawNPCGlass(VP){ for (const n of npcNow) if (n.K && n.K.glass) drawGlass(n.K.glass, chain(n.M, n.K.S), VP); }
   function drawNPCLights(VP){
     if (env.night < 0.05 || !npcNow.length) return;
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.depthMask(false);
-    for (const n of npcNow){ for (const [lx, ly, lz, c] of NPCM.lights[n.type]){ const q = xf(n.M, [lx, ly, lz]); PB[0] = q[0]; PB[1] = q[1]; PB[2] = q[2]; PA[0] = env.night; drawPts(1, gl.POINTS, VP, NLC[c], NPCM.lightPx[n.type] || 900, true); } }
+    for (const n of npcNow){
+      if (n.K){ const M = chain(n.M, n.K.S), px = FLEET[n.fi].L < 14 ? 260 : 600; for (const [p, col] of n.K.geo.lights){ const q = xf(M, p); PB[0] = q[0]; PB[1] = q[1]; PB[2] = q[2]; PA[0] = env.night; drawPts(1, gl.POINTS, VP, col, px, true); } continue; }
+      for (const [lx, ly, lz, c] of NPCM.lights[n.type]){ const q = xf(n.M, [lx, ly, lz]); PB[0] = q[0]; PB[1] = q[1]; PB[2] = q[2]; PA[0] = env.night; drawPts(1, gl.POINTS, VP, NLC[c], NPCM.lightPx[n.type] || 900, true); } }
     const cs = npcNow.find(n => n.type === 'coastal');
     if (cs){ let k = 0; for (let r = 0; r < 4; r++) for (let i = 0; i < 18; i++) for (const sx of [-1, 1]){ if (hash(r * 97 + i * 13 + (sx > 0 ? 5 : 0)) < 0.35) continue; const q = xf(cs.M, [sx * 8.95, 8.5 + r * 3.2, -24 + i * 3.4]); PB[k * 3] = q[0]; PB[k * 3 + 1] = q[1]; PB[k * 3 + 2] = q[2]; PA[k] = env.night * 0.9; k++; } drawPts(k, gl.POINTS, VP, [1, 0.8, 0.5], 420, true); }
     gl.depthMask(true); gl.disable(gl.BLEND);
@@ -2152,7 +2175,7 @@ const G3 = (() => {
     gl.disableVertexAttribArray(1); attr(0, SKYQ, 2); gl.drawArrays(gl.TRIANGLES, 0, 6);
     gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL);
     // far pass
-    drawTerrain(TM, eye, VPf, false); drawLit(STAT, TM); drawBuildings(TM); if (NPCM) for (const n of npcStates(H)){ const x = n.p.x * 1000, z = n.p.y * 1000; if (Math.hypot(x - eye[0], z - eye[2]) < 30000) drawLit(NPCM[n.type], model(x - eye[0], (env.tide || 0) - eye[1], z - eye[2], -n.hd, 0, 0)); }
+    drawTerrain(TM, eye, VPf, false); drawLit(STAT, TM); drawBuildings(TM); if (NPCM) for (const n of npcStates(H)){ const x = n.p.x * 1000, z = n.p.y * 1000, d = Math.hypot(x - eye[0], z - eye[2]); if (d < 30000 && !(n.fleet && d < 1500)) drawLit(NPCM[n.type], model(x - eye[0], (env.tide || 0) - eye[1], z - eye[2], -n.hd, 0, 0)); }
     drawSea(VPf, eye, t, 1);
     drawSeaLights(VPf, eye, t, false);
     if (env.night > 0.02){
@@ -2172,7 +2195,7 @@ const G3 = (() => {
     if (SHOW){ const y = (env.tide || 0) + (seaH(SHOW.x, SHOW.z, t) - (env.tide || 0)) * 0.8; SHOW.M = model(SHOW.x - eye[0], y - eye[1], SHOW.z - eye[2], -SHOW.h, Math.sin(t * 0.7) * 0.02, Math.sin(t * 0.9) * 0.03); drawVessel(SHOW.t, GEO(SHOW.t), SHOW.M, VPn, true, 2); }
     if (STATN){ nSetup(VPn); drawN(STATN, TM); if (PLANTN) drawN(PLANTN, TM); if (BUNKN) drawN(BUNKN, TM); } drawMooring(BMrel, eye, VPn, t); if (PM) drawDeck(BMrel, eye, VPn, t, DECKACT); drawGearOp(BMrel, eye, VPn, t);
     const plant = PM ? nearestPlant(eye) : null, pr = plant ? drawPlant(plant, eye, VPn, t, BMrel) : null, bunk = PM ? nearestBunker(eye) : null; if (bunk) bunk.last = drawBunker(bunk, eye, VPn, t, BMrel); gl.useProgram(PL.p);
-    wildSpawn(t); drawNPC(eye, t, H); drawGearSea(eye, t, VPn, H); drawWild(eye, t, dt);
+    wildSpawn(t); drawNPC(eye, t, H, VPn); drawGearSea(eye, t, VPn, H); drawWild(eye, t, dt);
 
     const pole = xf(BMrel, VG.pole);
     drawLit(FLAGM, model(pole[0], pole[1], pole[2], Math.PI / 2 - appB, 0, 0));
@@ -2184,6 +2207,7 @@ const G3 = (() => {
     drawEffects(VPn, eye, BMabs, dt, t); drawBlows(VPn, eye, dt); drawNPCLights(VPn); drawSeaLights(VPn, eye, t, true);
     if (VG.hand) drawSkiffGlass(BMrel, VPn); else drawGlass(pvm(VT).glass, BMrel, VPn);
     if (SHOW && SHOW.M) drawGlass(pvm(SHOW.t).glass, SHOW.M, VPn);
+    drawNPCGlass(VPn);
     if (pr && pr.spray){ gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false); drawPts(pr.spray, gl.POINTS, VPn, [0.86, 0.93, 1], 30, true); gl.depthMask(true); gl.disable(gl.BLEND); }
     if (pr && env.night > 0.05){ gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.depthMask(false); pr.lamps.forEach((q, i) => { PB[i * 3] = q[0]; PB[i * 3 + 1] = q[1]; PB[i * 3 + 2] = q[2]; PA[i] = env.night; }); drawPts(pr.lamps.length, gl.POINTS, VPn, [1, 0.9, 0.72], 1400, true); gl.depthMask(true); gl.disable(gl.BLEND); }
     if (env.night > 0.05){

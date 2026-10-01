@@ -49,6 +49,26 @@ async def main():
             sr2 = await pg.evaluate("({showing:G3.showing, chip:!document.getElementById('showChip').hidden, drawer:!document.getElementById('drawer').hidden})")
             print('showroom:', json.dumps(sr, ensure_ascii=False), json.dumps(sr2))
             print(ok(sr['showing'] == 'kyst15' and sr['chip'] and '14,99' in sr['text'] and sr2['showing'] is None and not sr2['chip'] and sr2['drawer']), 'the showroom shows the boat with a chip, and Tilbake goes back to the market')
+        # the local fleet: each boat on the nearest kit model, scaled, in a livery; near and middle versions within their budgets,
+        # and a screenshot from beside a boat that fishes (vessel_npc_*.png)
+        if not ONLY or 'npc' in ONLY:
+            npc = await pg.evaluate("""(()=>{ const R = {kits:FLEET.map(f => { const t = npcKit(f.L, f.B), V = VESSELS[t]; return [f.n, f.L, t, +(f.L / V.len).toFixed(2), +(f.B / V.beam).toFixed(2)]; })};
+              R.verts = [...new Set(R.kits.map(k => k[2]))].map(t => [t, npcModel(t, 1, 1).o.p.length / 3, npcModel(t, 0.3, 2).o.p.length / 3]);
+              R.liv = (() => { const a = npcModel('sjark', 0.3, 0).o.c, b = npcModel('sjark', 0.3, 1).o.c; let d = 0; for (let i = 0; i < a.length; i++) if (Math.abs(a[i] - b[i]) > 1e-3) d++; return d; })();
+              // a day in April when a boat is on her ground: the player's skiff lies 25 m off her
+              let at = null; for (let m = 0; m < 24 * 60 && !at; m += 10){ const t = (Date.UTC(2028, 3, 12, 0) - EPOCH) / 6e4 + m, n = npcStates(t / 60).find(q => q.fleet && q.st === 'fishing' && FLEET[q.fi].L > 10); if (n) at = {t, n}; }
+              if (!at) return R; S.t = Math.round(at.t) + 30; const n = npcStates(S.t / 60).find(q => q.id === at.n.id), b = S.boat; R.npc = [n.name, n.st, FLEET[n.fi].L];
+              b.type = 'skiff'; applyVessel(); G3.vesselChanged(); b.status = 'idle'; b.port = null; b.pos = {x:n.p.x + Math.cos(n.hd) * 0.025, y:n.p.y + Math.sin(n.hd) * 0.025}; b.heading = n.hd; S.crew = []; S.mult = 0;   // time stands still, so she stays beside you
+              const c = G3._debug.cam; c.helm = false; c.dist = 38; c.pitch = 0.2; return R; })()""")
+            print('npc:', json.dumps(npc, ensure_ascii=False)[:1500])
+            for i, yaw in enumerate((0.6, 2.2, 3.8, 5.4)):
+                await pg.evaluate("G3._debug.cam.yaw = %s" % yaw); await pg.wait_for_timeout(1600)
+                await pg.screenshot(path=os.path.join(OUT, 'vessel_npc_%d.png' % i))
+            await pg.evaluate("S.mult = 1")
+            sc = [k[3] for k in npc['kits']] + [k[4] for k in npc['kits']]
+            print(ok(all(0.8 <= x <= 1.25 for x in sc) and all(k[2] for k in npc['kits'])), 'every boat in the local fleet gets a kit model within 20 % of her length and beam', [k[:3] for k in npc['kits']])
+            print(ok(all(v[1] <= 25000 and v[2] <= 6000 for v in npc['verts']) and npc['liv'] > 0), 'near versions under 25 000 points, middle under 6 000, and the liveries change the colours', npc['verts'])
+            print(ok(bool(npc.get('npc'))), 'found a boat on her ground for the screenshots', npc.get('npc'))
         print('errors:', errs[:5]); await br.close()
 
 asyncio.run(main())

@@ -343,9 +343,9 @@ const SPEC3D = {
 // a model for a type: the hull with its fittings (near: lod 1), the glass, the depth cap for open hulls, and where things are
 const VMODEL = {};
 function vesselSpec(type){ return SPEC3D[type] || null; }
-function buildVesselModel(type, lod){
+function buildVesselModel(type, lod, liv){
   lod = lod || 1; const V = VESSELS[type], sp = vesselSpec(type); if (!V || !sp || sp.hand) return null;
-  const H = Object.assign({L:V.len, B:V.beam, T:V.draft}, sp.hull), hs = hullShape(H), o = VB(), gb = VB(); o.lod = lod; gb.lod = lod;
+  const H = Object.assign({L:V.len, B:V.beam, T:V.draft}, sp.hull, liv ? {col:Object.assign({}, sp.hull.col, liv)} : null), hs = hullShape(H), o = VB(), gb = VB(); o.lod = lod; gb.lod = lod;
   hullBuild(o, hs, lod);
   let house = null, roofY = null; const anch = {};
   for (const [kind, p] of sp.parts){
@@ -395,6 +395,12 @@ function vesselGeo(type, hs, sp, house, anch){
 }
 function vesselModel(type){ if (!(type in VMODEL)) VMODEL[type] = buildVesselModel(type, 1); return VMODEL[type]; }
 function geoOf(type){ const m = vesselModel(type); return m ? m.geo : null; }
+// the local fleet in 3D: each boat gets the decked coastal model nearest her in length and beam (view3d.js scales it to her own
+// size), in one of four liveries for the hull and its stripe; near at lod 1, at middle distance at lod 0.3
+const LIVERY = [null, {hull:VC.navy, stripe:VC.white}, {hull:VC.red, stripe:VC.white, rail:VC.white}, {hull:VC.teal, stripe:VC.yellow}];
+function npcKit(L, B){ let best = null, bd = 1e9; for (const t in SPEC3D){ const V = VESSELS[t], sp = SPEC3D[t]; if (!V || sp.hand || sp.open || V.cls === 'hav') continue; const d = Math.abs(Math.log(V.len / L)) + 0.7 * Math.abs(Math.log(V.beam / B)); if (d < bd){ bd = d; best = t; } } return best; }
+const NPCMOD = {};
+function npcModel(type, lod, liv){ const k = type + '|' + lod + '|' + liv; if (!(k in NPCMOD)) NPCMOD[k] = buildVesselModel(type, lod, LIVERY[liv % LIVERY.length]); return NPCMOD[k]; }
 // a person in oilskins, built facing -z (as the skiff's crew): standing or seated, hands where given (or down by the sides)
 function personVB(B, x, y, z, seated, hands, suit){
   const JAC = suit || [0.95, 0.62, 0.1, 0.3], VEST = [0.86, 0.16, 0.12, 0.35], TRS = [0.1, 0.12, 0.17, 0.2], SKN = [0.93, 0.74, 0.6, 0.25], HAT = [0.12, 0.16, 0.3, 0.15], BOOT = [0.06, 0.06, 0.07, 0.3];
