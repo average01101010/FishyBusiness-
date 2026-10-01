@@ -777,7 +777,7 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
   - `python3 tests/run.py smoke test …` kjører bare de testene du nevner.
   - `python3 tests/run.py full` er hele regresjonen før publisering (27 tester, rundt 10 minutter). `--3d` tegner 3D i alle.
   - Testene i `LITE`, også `tut.py`, kjøres med `KYST_LITE=1`, som gir `#no3d` i adressen: G3 er aktiv og alt går som før, men `frame()` tegner ingenting. Det gjorde `shoptest.py` rundt tre ganger raskere (43 s mot 13 s, med de samme 18 OK) og `docktest.py` fra rundt 10 minutter til 61 s. To slike går samtidig.
-  - Testene i `D3` (`dbg23o`, `camtest`, `moortest`, `landtest`, `bunkertest`) ser på selve 3D-bildet og går med 3D, etter hverandre. `routetest` og `heattest` måler millisekunder og går alene til slutt (`SOLO`).
+  - Testene i `D3` (`dbg23o`, `camtest`, `moortest`, `landtest`, `bunkertest`) ser på selve 3D-bildet og går med 3D, etter hverandre. `routetest` og `heattest` måler millisekunder, og `landtest` følger kranen i 3D bilde for bilde. De går alene til slutt (`SOLO`), ellers forstyrrer de andre testene dem.
   - Loggene havner i `tests/out/logs/`. `boot(pg)` i `_env.py` starter spillet og venter på startskjermen i stedet for faste pauser.
 - **Regresjon:**
   - `trip2.py`: hel tur via kartplotter, avgang, 3D, fiske og havn.
