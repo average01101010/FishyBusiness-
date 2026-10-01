@@ -1,4 +1,4 @@
-from _env import GAME
+from _env import GAME, boot
 # The old ways (O): superstition as lore. The crew, the quay and the pub tell of it at the right moments; what you hear is kept in the
 # Seaman app. Lore only: no effect on the crew's mood, the catch or the weather.
 import asyncio, json
@@ -11,7 +11,7 @@ async def main():
         b = await p.chromium.launch(args=['--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
         pg = await b.new_page(viewport={'width':900, 'height':800})
         errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
-        await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(400)
+        await boot(pg)
         r = await pg.evaluate("""(()=>{
           S.tut = 0; S.cash = 1e6; S.settings.autoOn = false; const R = {}, b = S.boat, q = portById('finnsnes');
           const old = Object.assign(genCrew(), {age:67, bi:false, off:false}), young = Object.assign(genCrew(), {age:19, bi:false, off:false}); S.crew = [old, young]; S.lore = {};

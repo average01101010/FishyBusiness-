@@ -1,4 +1,4 @@
-from _env import GAME
+from _env import GAME, boot
 import asyncio, json
 from playwright.async_api import async_playwright
 async def main():
@@ -6,7 +6,7 @@ async def main():
         b = await p.chromium.launch(args=['--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
         pg = await b.new_page(viewport={'width':520,'height':760})
         errs=[]; pg.on('pageerror', lambda e: errs.append(str(e)))
-        await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(400)
+        await boot(pg)
         r = await pg.evaluate("""(()=>{ const H = (Date.UTC(2027, 2, 10, 1) - EPOCH) / 36e5, res = [];   // 01:00: the fleet is in port
           for (const n of npcStates(H)){ let bd = 1e9, bp = null; for (const q of PORTS){ const d = dist(n.p, q.p); if (d < bd){ bd = d; bp = q.id; } } if (bd < 0.2) res.push([n.id, bp, Math.round(bd * 1000), isLand(n.p)]); }
           let land = 0, pts = 0; for (let k = 0; k < 7 * 24 * 6; k++){ const t = H + k / 6; for (let i = 0; i < FLEET.length; i++){ pts++; if (isLand(fleetState(i, t).p)) land++; } }

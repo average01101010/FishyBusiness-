@@ -1,4 +1,4 @@
-from _env import GAME
+from _env import GAME, boot
 # Harbours (B1): the eight fish plants, ice only at the plants, fuel only at the bunker quays; the quays where the plants and bunker quays really are.
 import asyncio, json
 from playwright.async_api import async_playwright
@@ -13,7 +13,7 @@ async def main():
         b = await p.chromium.launch(args=['--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
         pg = await b.new_page(viewport={'width':900, 'height':800})
         errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
-        await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(400)
+        await boot(pg)
         r = await pg.evaluate("""(()=>{
           S.tut = 0; S.cash = 1e6; S.t = Math.round((Date.UTC(2027, 2, 9, 10) - EPOCH) / 6e4); const R = {ports:{}};
           const can = (m, id) => DOCK.items(m).some(x => x.id === id && !x.off);

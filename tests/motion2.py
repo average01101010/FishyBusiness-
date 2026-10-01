@@ -1,11 +1,11 @@
-from _env import GAME
+from _env import GAME, boot
 import asyncio, json, math
 from playwright.async_api import async_playwright
 async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(args=['--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
         pg = await b.new_page(viewport={'width':400,'height':500})
-        await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(400)
+        await boot(pg)
         out = await pg.evaluate("""(()=>{
           S.tut = 0; S.mult = 1; S.t = Math.round((Date.UTC(2027, 3, 10, 11) - EPOCH) / 6e4); S.boat.status = 'port'; S.boat.port = 'husoy'; S.boat.pos = {...portById('husoy').p}; S.boat.fuel = 90;
           const D = G3._debug, bv = D.bv; bv.init = false; D.stepBoat(1 / 60, 0, 0);

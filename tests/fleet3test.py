@@ -1,4 +1,4 @@
-from _env import GAME
+from _env import GAME, boot
 # Fleet phase 3: the Company app with alerts, the vessel selector in the vessel apps, income per vessel and hourly work per vessel.
 import asyncio, json
 from playwright.async_api import async_playwright
@@ -10,7 +10,7 @@ async def main():
         b = await p.chromium.launch(args=['--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
         pg = await b.new_page(viewport={'width':900, 'height':900})
         errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
-        await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(400)
+        await boot(pg)
 
         r = await pg.evaluate("""(()=>{
           const R = {}, q = s => document.querySelector(s), view = () => document.getElementById('phView').innerText;
@@ -25,7 +25,7 @@ async def main():
           PHONE.open('rederi'); R.cards = (view().match(/«/g) || []).length; R.hasFuel = view().includes('Lite drivstoff');
           // an alert opens the right app on the right vessel, without changing the vessel you follow
           const go = [...document.querySelectorAll('[data-pa="goto"]')].find(x => x.dataset.id === v2.id && x.dataset.a === 'mannskap'); go.click();
-          R.goto = {app:PHONE.app, sel:PHONE.sel, cur:S.cur, crewShown:view().includes(vget(v2, 'crew')[0].name)};
+          R.goto = {app:DOCK.page, sel:PHONE.sel, cur:S.cur, crewShown:document.getElementById('drawerBody').innerText.includes(vget(v2, 'crew')[0].name)};
           // equipment bought with the selector on the second vessel is fitted there
           PHONE.open('utstyr'); [...document.querySelectorAll('[data-pa="vsel"]')].find(x => x.dataset.id === v2.id).click();
           q('[data-pa="equip"][data-k="chirp"]').click();
@@ -43,7 +43,7 @@ async def main():
         print(ok('v1:svc' in a and 'v2:fuel' in a and 'v2:ops' in a), 'alerts: service on the first vessel, low fuel and a plan without skipper on the second')
         print(ok(r['badge'] == str(len(a))), 'the Company icon shows the number of alerts')
         print(ok(r['cards'] >= 2 and r['hasFuel']), 'the Company app shows the fleet and the alerts')
-        print(ok(r['goto']['app'] == 'mannskap' and r['goto']['sel'] == 'v2' and r['goto']['cur'] == 'v1' and r['goto']['crewShown']), 'an alert opens the crew app on the second vessel, following stays on the first')
+        print(ok(r['goto']['app'] == 'mannskap' and r['goto']['sel'] == 'v2' and r['goto']['cur'] == 'v1' and r['goto']['crewShown']), 'an alert opens the crew page in the drawer on the second vessel, following stays on the first')
         print(ok(r['equip']['v2jobs'] == ['fit:chirp'] and r['equip']['v1jobs'] == [] and r['equip']['cur'] == 'v1'), 'equipment bought with the selector goes to the selected vessel')
         print(ok(r['sale']['v'] == 'v2' and r['incomeShown']), 'the landing is booked on the vessel and shows as its income today')
         print(ok(any(m.startswith('«Senjaværing»') for m in r['svcMsgs']) and any(m.startswith('«Havbris»') for m in r['svcMsgs'])), 'service reminders per vessel, with the vessel name')

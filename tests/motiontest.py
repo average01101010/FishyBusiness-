@@ -1,4 +1,4 @@
-from _env import GAME
+from _env import GAME, boot
 import asyncio, json, math
 from playwright.async_api import async_playwright
 async def main():
@@ -6,7 +6,7 @@ async def main():
         b = await p.chromium.launch(args=['--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
         pg = await b.new_page(viewport={'width':420,'height':560})
         errs=[]; pg.on('pageerror', lambda e: errs.append(str(e)))
-        await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(400)
+        await boot(pg)
         await pg.evaluate("S.tut=0; S.t=Math.round((Date.UTC(2027,3,10,11)-EPOCH)/6e4); S.boat.status='port'; S.boat.port='husoy'; S.boat.pos={...portById('husoy').p}; S.boat.fuel=90;")
         await pg.wait_for_function("G3.isActive()", timeout=90000); await pg.wait_for_timeout(2500)
         await pg.evaluate("""(()=>{ const R = FLEET[0].rt[0]; S.plan = {wps:R.slice(1).map(q => ({x:q[0], y:q[1], port:null, fish:0})), idx:0, speed:24, returning:false}; S.boat.status='sailing'; S.boat.port=null; })()""")

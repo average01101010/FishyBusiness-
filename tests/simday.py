@@ -1,4 +1,4 @@
-from _env import GAME
+from _env import GAME, boot
 import asyncio, json
 from playwright.async_api import async_playwright
 async def main():
@@ -6,7 +6,7 @@ async def main():
         b = await p.chromium.launch(args=['--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
         pg = await b.new_page(viewport={'width':600,'height':800})
         errs=[]; pg.on('pageerror', lambda e: errs.append(str(e)))
-        await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(500)
+        await boot(pg)
         out = await pg.evaluate("""(()=>{
           const res = [];
           const day = (y, m, d, g, gear, jk) => {

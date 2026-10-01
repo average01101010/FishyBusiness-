@@ -1,4 +1,4 @@
-from _env import GAME, ROUTES
+from _env import GAME, ROUTES, boot
 # Fleet phase 2: access rules at landing, two vessels on standing plans for a simulated week, the fleet buttons, and save/load.
 import asyncio, json
 from playwright.async_api import async_playwright
@@ -16,7 +16,7 @@ async def main():
             dialogs.append(d.type)
             await (d.accept('Testbåt') if d.type == 'prompt' else d.accept())
         pg.on('dialog', lambda d: asyncio.ensure_future(on_dialog(d)))
-        await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(400)
+        await boot(pg)
 
         # 1. landing with and without access
         land = await pg.evaluate("""(()=>{

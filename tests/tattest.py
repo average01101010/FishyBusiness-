@@ -1,4 +1,4 @@
-from _env import GAME
+from _env import GAME, boot
 # Sailors' tattoos (T): rewards that come by themselves. The counters count what you do yourself, aboard; four tattoos need waters
 # beyond Senja and stay locked. The Seaman app shows them on a figure.
 import asyncio, json
@@ -11,7 +11,7 @@ async def main():
         b = await p.chromium.launch(args=['--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
         pg = await b.new_page(viewport={'width':900, 'height':900})
         errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
-        await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(400)
+        await boot(pg)
         r = await pg.evaluate("""(()=>{
           S.tut = 0; S.cash = 1e7; S.settings.autoOn = false; S.t = Math.round((Date.UTC(2027, 5, 9, 8) - EPOCH) / 6e4); S.tattoos = {}; S.tat = {}; S.deckMe = 0;
           const R = {}, b = S.boat, q = portById('finnsnes'), m0 = S.msgs.length;

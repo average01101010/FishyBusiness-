@@ -1,4 +1,4 @@
-from _env import GAME
+from _env import GAME, boot
 import asyncio, json
 from playwright.async_api import async_playwright
 async def main():
@@ -6,7 +6,7 @@ async def main():
         b = await p.chromium.launch(args=['--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
         pg = await b.new_page(viewport={'width':600,'height':900})
         errs=[]; pg.on('pageerror', lambda e: errs.append(str(e)))
-        await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(500)
+        await boot(pg)
         out = {} if False else await pg.evaluate("""(()=>{
           const R = {};
           const catchDay = (y, m, d, g, gut) => { S.t = Math.round((Date.UTC(y, m, d, 7) - EPOCH) / 6e4); S.hold = []; S.facc = {}; S.fnext = {}; S.settings.gut = gut;
@@ -31,10 +31,9 @@ async def main():
           return R; })()""")
         print(json.dumps(out, ensure_ascii=False, indent=0)[:3500])
         # UI: quota tab and plotter fjord line
-        await pg.evaluate("S.t = Math.round((Date.UTC(2028, 3, 20, 9) - EPOCH) / 6e4); PHONE.open('salg')"); await pg.wait_for_timeout(600)
-        await pg.evaluate("[...document.querySelectorAll('button')].find(x => x.textContent.trim() === 'Kvote').click()"); await pg.wait_for_timeout(600)
+        await pg.evaluate("S.t = Math.round((Date.UTC(2028, 3, 20, 9) - EPOCH) / 6e4); PHONE.open('kvote')"); await pg.wait_for_timeout(600)
         await pg.screenshot(path='q1.png')
-        await pg.evaluate("PHONE.close && PHONE.close()"); await pg.wait_for_timeout(300)
+        await pg.evaluate("PHONE.show(false)"); await pg.wait_for_timeout(300)
         await pg.click('#gpsBtn'); await pg.wait_for_timeout(2500); await pg.screenshot(path='q2.png')
         print('errors:', errs[:4]); await b.close()
 asyncio.run(main())

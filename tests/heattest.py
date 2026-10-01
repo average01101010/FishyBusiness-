@@ -11,7 +11,7 @@ the fish in the box, the afterglow, a vessel without a plotter, and the time on 
 Part 3, the sonar: only on the sjark and the new sjark, 16 hours to fit, the 3 nm heat once fitted, and a fitting paid back if the
 boat is traded for one it does not suit. The skiff's console in 3D shows the heat, and «EKKOLODD AV» when it is off.
 """
-from _env import GAME
+from _env import GAME, boot
 import asyncio, json
 from playwright.async_api import async_playwright
 
@@ -149,19 +149,19 @@ async def sonar(pg):
     # the boat is traded for one it does not suit is paid back
     r = json.loads(await pg.evaluate("""JSON.stringify((() => { const b = S.boat, R = {}, p = portById('husoy');
       b.status = 'port'; b.port = 'husoy'; b.pos = {...p.p}; S.cash = 1e6; S.jobs = []; S.equip.sonar = false; S.settings.sonar = true; S.settings.echo = true;
-      for (const ty of ['skiff', 'snekke', 'sjark', 'sjarkny']){ b.type = ty; applyVessel(); PHONE.open('utstyr'); const btn = document.querySelector('#phone [data-pa=equip][data-k=sonar]'); R[ty] = btn ? btn.textContent : null; }
+      for (const ty of ['skiff', 'snekke', 'sjark', 'sjarkny']){ b.type = ty; applyVessel(); PHONE.open('utstyr'); const btn = document.querySelector('#drawerBody [data-pa=equip][data-k=sonar]'); R[ty] = btn ? btn.textContent : null; }
       // buy it on the sjark and let the yard finish
-      b.type = 'sjark'; applyVessel(); PHONE.open('utstyr'); const c0 = S.cash; document.querySelector('#phone [data-pa=equip][data-k=sonar]').click();
+      b.type = 'sjark'; applyVessel(); PHONE.open('utstyr'); const c0 = S.cash; document.querySelector('#drawerBody [data-pa=equip][data-k=sonar]').click();
       R.paid = c0 - S.cash; R.queued = (S.jobs || []).some(j => j.kind === 'fit' && j.k === 'sonar'); const j = S.jobs.find(j => j.k === 'sonar'); finishJob(j); S.jobs = S.jobs.filter(q => q !== j);
       R.fitted = !!S.equip.sonar; R.tier = heatTier(); R.r = HEAT.tiers[R.tier].r;
-      PHONE.open('fartoy'); R.listed = /Sonar/.test(document.querySelector('#phone').textContent);
+      DOCK.open('beholdning:boat'); R.listed = /Sonar/.test(document.getElementById('drawerBody').textContent);
       // a fitting left waiting while the boat became a skiff
       S.equip.sonar = false; const c1 = S.cash; queueJob({kind:'fit', k:'sonar', h:fitHours('sonar'), no:'Sonar', en:'Sonar'}); b.type = 'skiff'; applyVessel(); finishJob(S.jobs[S.jobs.length - 1]); S.jobs = [];
-      R.refund = S.cash - c1; R.skiffSonar = !!S.equip.sonar; PHONE.close && PHONE.close();
+      R.refund = S.cash - c1; R.skiffSonar = !!S.equip.sonar; DOCK.close();
       return R; })())"""))
     check(r['skiff'] is None and r['snekke'] is None and r['sjark'] and r['sjarkny'], 'sonaren tilbys bare på sjark og ny sjark', {k: r[k] for k in ('skiff', 'snekke', 'sjark', 'sjarkny')})
     check('16 t' in (r['sjark'] or '') and 'undefined' not in (r['sjark'] or ''), 'knappen viser monteringstida 16 t', r['sjark'])
-    check(r['paid'] == 150000 and r['queued'] and r['fitted'] and r['tier'] == 'sonar' and abs(r['r'] - 2.778) < 0.001 and r['listed'], 'kjøpt og montert: sonaren gir varmekart 3 nm i diameter og står i Fartøy', {k: r[k] for k in ('paid', 'tier', 'r', 'listed')})
+    check(r['paid'] == 150000 and r['queued'] and r['fitted'] and r['tier'] == 'sonar' and abs(r['r'] - 2.778) < 0.001 and r['listed'], 'kjøpt og montert: sonaren gir varmekart 3 nm i diameter og står under Båten i Beholdning', {k: r[k] for k in ('paid', 'tier', 'r', 'listed')})
     check(r['refund'] == 150000 and not r['skiffSonar'], 'en montering som venter mens båten byttes til en som ikke passer, betales tilbake', {k: r[k] for k in ('refund', 'skiffSonar')})
 
 
@@ -201,7 +201,7 @@ async def main():
             ctx = await b.new_context(viewport={'width': W, 'height': H}, has_touch=True)
             pg = await ctx.new_page(); cdp = await ctx.new_cdp_session(pg)
             pg.on('pageerror', lambda e: errs.append(str(e)))
-            await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(500)
+            await boot(pg)
             await pg.wait_for_function("typeof DEPTH !== 'undefined' && DEPTH", timeout=60000)
             if tag == 'liggende':
                 await model(pg)

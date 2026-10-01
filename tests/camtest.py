@@ -2,7 +2,7 @@
 boat at a low angle, at the plant's quay in Botnhamn and under the Gisund bridge by Finnsnes. For each position: would the eye
 without the fix have been inside something, is the eye now outside everything, and is the line from the boat to the eye clear.
 Prints OK or FEIL per check."""
-from _env import GAME
+from _env import GAME, boot
 import asyncio, json, math
 from playwright.async_api import async_playwright
 
@@ -28,7 +28,7 @@ async def main():
         pg = await b.new_page(viewport={'width': 900, 'height': 640})
         errs = []
         pg.on('pageerror', lambda e: errs.append(str(e)))
-        await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(400)
+        await boot(pg)
         await pg.evaluate("S.t = Math.round((Date.UTC(2027, 3, 10, 12) - EPOCH) / 6e4); const b = S.boat, q = portById('botnhamn'); b.status = 'port'; b.port = 'botnhamn'; b.pos = {x:q.p.x, y:q.p.y}; b.berth = 'main'; b.moorT = S.t - 60")
         await pg.wait_for_function("G3.isActive()", timeout=90000); await pg.wait_for_timeout(3000)
 

@@ -1,4 +1,4 @@
-from _env import GAME
+from _env import GAME, boot
 import asyncio, json
 from playwright.async_api import async_playwright
 async def main():
@@ -6,7 +6,7 @@ async def main():
         b = await p.chromium.launch(args=['--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
         pg = await b.new_page(viewport={'width':480,'height':900})
         errs=[]; pg.on('pageerror', lambda e: errs.append(str(e)))
-        await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(400)
+        await boot(pg)
         pop = await pg.evaluate("""(()=>{ const N = 3000, g = []; for (let i = 0; i < N; i++) g.push(genCrew()); const band = a => a < 20 ? 0 : a < 30 ? 1 : a < 40 ? 2 : a < 50 ? 3 : a < 60 ? 4 : a < 70 ? 5 : 6, ages = [0,0,0,0,0,0,0]; g.forEach(c => ages[band(c.age)]++);
           const tr = {}; g.forEach(c => c.traits.forEach(t => tr[t] = (tr[t] || 0) + 1));
           return {agesPct:ages.map(v => +(v / N * 100).toFixed(1)), women:+(g.filter(c => c.sex === 'f').length / N * 100).toFixed(1), part:+(g.filter(c => c.bi).length / N * 100).toFixed(1), under30:+(g.filter(c => c.age < 30).length / N * 100).toFixed(1), ask:[Math.min(...g.map(c => c.ask)), Math.max(...g.map(c => c.ask))], topTraits:Object.entries(tr).sort((a, b) => b[1] - a[1]).slice(0, 5)}; })()""")

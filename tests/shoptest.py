@@ -2,7 +2,7 @@
 Finnsnes and chute ice at the plants, the action bar, next goals at the top of Vessels and on the home screen, a landing note that
 adds up in whole kroner (A7), minimum prices with two decimals (A8), status that does not look like buttons (A9), the Gisundet tip
 only in Finnsnes (A10) and the unused bleed setting gone (A13). Prints OK or FEIL per check."""
-from _env import GAME
+from _env import GAME, boot
 import asyncio, json, re
 from playwright.async_api import async_playwright
 
@@ -22,7 +22,7 @@ async def main():
         pg = await b.new_page(viewport={'width': 1000, 'height': 700})
         errs = []
         pg.on('pageerror', lambda e: errs.append(str(e)))
-        await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(400)
+        await boot(pg)
         J = lambda js: pg.evaluate("JSON.stringify(" + js + ")")
 
         # A13: the bleed setting is gone, also from an old save

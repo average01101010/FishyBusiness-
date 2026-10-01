@@ -1,4 +1,4 @@
-from _env import GAME
+from _env import GAME, boot
 # The standing plan with you aboard. In the open group the owner must be the master aboard; when you are aboard, the plan's trip is
 # yours: cod, haddock and saithe go on your quota, nothing is confiscated, the hired skipper is ordinary crew and gets no skipper's
 # bonus, and the plan does not switch you to halibut. When the skipper runs the plan alone, the old rules hold.
@@ -36,12 +36,12 @@ async def main():
         b = await p.chromium.launch(args=['--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
         pg = await b.new_page(viewport={'width':900, 'height':900})
         errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
-        await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(400)
+        await boot(pg)
         own = await pg.evaluate(TRIP, False)
         print('aboard:', json.dumps(own, ensure_ascii=False))
         # a fresh game for the second case, so nothing from the first trip is left on the quay
         await pg.close(); pg = await (await b.new_context(viewport={'width':900, 'height':900})).new_page(); pg.on('pageerror', lambda e: errs.append(str(e)))
-        await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(400)
+        await boot(pg)
         alone = await pg.evaluate(TRIP, True)
         print('alone: ', json.dumps(alone, ensure_ascii=False))
         eff = await pg.evaluate("""(()=>{ S.crew = [Object.assign(genCrew(), {bi:false, off:false})]; S.ops = {skipper:S.crew[0].id}; S.me = S.cur;

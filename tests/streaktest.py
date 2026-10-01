@@ -2,7 +2,7 @@
 its own row on the landing note, and old saves migrated. The device date is moved by a number of days carried in window.name
 across the reload, together with the save: Chrome writes localStorage to disk with a delay, and a file:// page reloaded at once
 can read the old values."""
-from _env import GAME
+from _env import GAME, boot
 import asyncio, json
 from playwright.async_api import async_playwright
 
@@ -28,7 +28,7 @@ async def main():
         pg.on('pageerror', lambda e: errs.append(str(e)))
         st = lambda: pg.evaluate("JSON.stringify(S.streak)")
 
-        await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(400)
+        await boot(pg)
         s = json.loads(await st())
         check(s['pct'] == 1 and s['days'] == 1, 'første dag gir +1 %', s)
         check(not await pg.evaluate("!!document.getElementById('dailyBtn') || !!document.getElementById('dailyUI') || typeof DAILYW !== 'undefined'"), 'Kaffe på kaia er borte')

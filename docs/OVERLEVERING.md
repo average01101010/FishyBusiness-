@@ -757,6 +757,13 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
 ## 11. Testing
 
 - **Verktøy:** Playwright med Chromium og SwiftShader (`--use-angle=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist`). Testene finner spillet via `tests/_env.py` (`GAME` med `#notut`, `GAME_TUT` uten).
+- **Kjøring** (bare det som er strengt nødvendig, brukerens krav 01.10.2026):
+  - Under byggingen: `python3 tests/run.py changed`. Den leser `git diff` og untracked filer, og kjører bare testene i `COVER` for de endrede filene. En test som selv er endret, kjøres. Tekst og dokumentasjon kjører ingenting, og en fil som ikke står i `COVER`, kjører `trip2.py`.
+  - `python3 tests/run.py smoke test …` kjører bare de testene du nevner.
+  - `python3 tests/run.py full` er hele regresjonen før publisering (27 tester, rundt 10 minutter). `--3d` tegner 3D i alle.
+  - Testene i `LITE`, også `tut.py`, kjøres med `KYST_LITE=1`, som gir `#no3d` i adressen: G3 er aktiv og alt går som før, men `frame()` tegner ingenting. Det gjorde `shoptest.py` rundt tre ganger raskere (43 s mot 13 s, med de samme 18 OK) og `docktest.py` fra rundt 10 minutter til 61 s. To slike går samtidig.
+  - Testene i `D3` (`dbg23o`, `camtest`, `moortest`, `landtest`, `bunkertest`) ser på selve 3D-bildet og går med 3D, etter hverandre. `routetest` og `heattest` måler millisekunder og går alene til slutt (`SOLO`).
+  - Loggene havner i `tests/out/logs/`. `boot(pg)` i `_env.py` starter spillet og venter på startskjermen i stedet for faste pauser.
 - **Regresjon:**
   - `trip2.py`: hel tur via kartplotter, avgang, 3D, fiske og havn.
   - `tut.py`: veiledningen «Første tur», spilt gjennom med berøring som en spiller, liggende og stående, med tre omlastinger. Skal ende med `"tut": 0`.

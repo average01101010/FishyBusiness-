@@ -3,7 +3,7 @@ inserting one with the «+» on a leg, and the harbour's way-out points (A12). T
 Part 2: «Følg leia» from Finnsnes to every fishing ground and to Botnhamn (clear of land and hazards, at most 12 WP, slices under
 16 ms, and how its length compares with the hand-drawn routes in routes.json and the tightest way along the shore), the button and
 the tap on the chart, undo in one step, and the comparison line for a hand-drawn route. Prints OK or FEIL per check."""
-from _env import GAME, ROUTES
+from _env import GAME, ROUTES, boot
 import asyncio, json, re
 from playwright.async_api import async_playwright
 
@@ -35,7 +35,7 @@ async def run(p, W, H, tag):
     pg = await ctx.new_page(); cdp = await ctx.new_cdp_session(pg); T = Touch(cdp)
     errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)))
-    await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(500)
+    await boot(pg)
     await pg.evaluate(SETUP); await pg.wait_for_timeout(700)
     J = lambda js, *a: pg.evaluate(js, *a)
     n = lambda: J("S.draft.length")
@@ -133,7 +133,7 @@ async def leia(p):
     pg = await ctx.new_page(); cdp = await ctx.new_cdp_session(pg); T = Touch(cdp)
     errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)))
-    await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(500)
+    await boot(pg)
     await pg.wait_for_function("DEPTH !== null", timeout=90000); await pg.evaluate(SETUP); await pg.wait_for_timeout(800)
     # the algorithm: Finnsnes to each fishing ground (the hand-drawn routes end there) and to Botnhamn
     rows = []
@@ -186,7 +186,7 @@ async def main():
         errs += await leia(b)
         # A12: the harbour adds a way-out or way-in point only when the way from it is clear
         pg = await b.new_page(viewport={'width': 900, 'height': 700})
-        await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(400)
+        await boot(pg)
         r = json.loads(await pg.evaluate("""(() => { const R = {n:0, out:0, inn:0, bad:[]}; let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
           for (const pt of PORTS){ approachPath(pt); for (let k = 0; k < 150; k++){ const a = rnd() * 6.283, r = 0.4 + rnd() * 4, to = {x:pt.p.x + Math.cos(a) * r, y:pt.p.y + Math.sin(a) * r}; if (isLand(to)) continue; R.n++;
             const ex = exitWps(pt, to), en = entryWps(pt, to); if (ex.length) R.out++; if (en.length) R.inn++;

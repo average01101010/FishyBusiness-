@@ -7,6 +7,8 @@ const G3 = (() => {
   let TERR, STAT, BOATM, CAPM, RODM, FLAGM, SKYQ, PATCH, FARQ, DYNP, DYNA;
   let HG = null, NEARM = null, MIDM = null, loading = false, LIGHTS = [], snowNow = -1;
   const T0 = performance.now(), DEG = Math.PI / 180;
+  // «#no3d» in the address (the tests that do not look at 3D): everything runs as before, but no frame is drawn
+  const NO3D = /no3d/.test(location.hash);
   const cam = {yaw:0.55, pitch:0.26, dist:21, helm:false, hy:0, hp:-0.07, fov:55};
   const vtype = () => (S.boat.type && PV[S.boat.type]) ? S.boat.type : 'skiff';
   let PERSONM = null, WILDM = null, NPCM = null, CREW2M = null, PT = null, GTEX = null, GRECT = null, STEX = null, SRECT = null, gcv = null, LMTEX = null, lcv = null, HTEX = null;
@@ -2153,7 +2155,7 @@ const G3 = (() => {
   function frame(){
     if (!active){ raf = 0; return; }
     raf = requestAnimationFrame(frame);
-    if (document.hidden) return;
+    if (document.hidden || NO3D) return;
     resize();
     const now = performance.now(), dt = Math.min(0.1, (now - lastF) / 1000); lastF = now;
     const t = (now - T0) / 1000, frac = currentFrac(), H = (S.t + frac) / 60;

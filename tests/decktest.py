@@ -1,4 +1,4 @@
-from _env import GAME
+from _env import GAME, boot
 # Deck work (G): the catch is bled at once and lies in the bleeding tub; gutting (about 300 kg an hour a person) and icing (about 800)
 # take hands and time. Alone you cannot gut while you fish or steer: fishing stops when the tub is full, and by default the catch is seen
 # to before you leave the grounds. With two aboard, one steers or fishes while the other works the deck.
@@ -12,7 +12,7 @@ async def main():
         b = await p.chromium.launch(args=['--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
         pg = await b.new_page(viewport={'width':900, 'height':800})
         errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
-        await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(400)
+        await boot(pg)
         r = await pg.evaluate("""(()=>{
           S.tut = 0; S.cash = 1e6; S.t = Math.round((Date.UTC(2027, 5, 9, 8) - EPOCH) / 6e4); S.settings.autoOn = false; S.settings.gut = true; S.settings.ice = true; S.settings.deckFirst = true;
           const R = {}, b = S.boat, g = GROUNDS[0].p, kgOf = f => Math.round(S.hold.filter(f).reduce((a, x) => a + x.kg, 0) * 10) / 10;

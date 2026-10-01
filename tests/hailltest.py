@@ -1,4 +1,4 @@
-from _env import GAME
+from _env import GAME, boot
 import asyncio, json
 from playwright.async_api import async_playwright
 async def main():
@@ -6,7 +6,7 @@ async def main():
         b = await p.chromium.launch(args=['--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
         pg = await b.new_page(viewport={'width':480,'height':820})
         errs=[]; pg.on('pageerror', lambda e: errs.append(str(e)))
-        await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(400)
+        await boot(pg)
         # luck effect on a skrei day, with and without luxury luck (same random seed impossible, so average several days)
         eff = await pg.evaluate("""(()=>{ const stock0 = S.stock.slice(); const run = (luckType) => { let tot = {torsk:0, all:0}; S.stock = stock0.slice();
             for (let k = 0; k < 6; k++){ S.t = Math.round((Date.UTC(2028, 2, 6 + k, 7) - EPOCH) / 6e4); S.haill = luckType ? {type:luckType, t0:S.t - 60} : null; S.hold = []; S.facc = {}; S.fnext = {}; S.boat.deckStop = false; S.boat.deckEnd = null;

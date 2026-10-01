@@ -1,4 +1,4 @@
-from _env import GAME
+from _env import GAME, boot
 # Passive gear (R1–R7): nets, line and pots that stand in the sea. Buying and room aboard, rules at setting (two aboard for nets, the fjord
 # line's 80 nets and 5,000 hooks), where the string goes, soak curves (line: more over a day, amphipods after; pots: 20 hours, dying after
 # 48; nets: fish spoils faster in summer), mesh size, hauling into the deck-work pipeline, crab sorting with fine and deduction, storm loss
@@ -23,7 +23,7 @@ PREP = """(()=>{ S.tut = 0; S.cash = 1e7; S.settings.autoOn = false; S.stock = i
 
 async def fresh(br):
     pg = await (await br.new_context(viewport={'width':1100, 'height':800})).new_page(); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
-    await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(400)
+    await boot(pg)
     await pg.evaluate(SEED); await pg.evaluate(PREP)
     return pg, errs
 

@@ -1,4 +1,4 @@
-from _env import GAME
+from _env import GAME, boot
 import asyncio
 from playwright.async_api import async_playwright
 async def main():
@@ -6,7 +6,7 @@ async def main():
         b = await p.chromium.launch(args=['--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
         pg = await b.new_page(viewport={'width':420,'height':560})
         errs=[]; pg.on('pageerror', lambda e: errs.append(str(e)))
-        await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(400)
+        await boot(pg)
         await pg.evaluate("S.tut=0; S.settings.speed=1; S.t=Math.round((Date.UTC(2028,2,10,11)-EPOCH)/6e4); S.boat.status='fishing'; S.boat.port=null; S.boat.pos={...GROUNDS[0].p}; S.boat.fishUntil=S.t+900; S.hold=[{sp:'torsk',cls:2,kg:60,n:12,fresh:95,hr:0,bled:true,iced:true}];")
         await pg.wait_for_function("G3.isActive()", timeout=90000); await pg.wait_for_timeout(1500)
         shots=[]

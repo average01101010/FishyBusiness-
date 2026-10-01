@@ -1,4 +1,4 @@
-from _env import GAME
+from _env import GAME, boot
 import asyncio
 from playwright.async_api import async_playwright
 async def main():
@@ -6,7 +6,7 @@ async def main():
         b = await p.chromium.launch(args=['--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
         pg = await b.new_page(viewport={'width':520,'height':620})
         errs=[]; pg.on('pageerror', lambda e: errs.append(str(e)))
-        await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(400)
+        await boot(pg)
         H = await pg.evaluate("""(()=>{ for (let d = 0; d < 120; d++){ const H = (Date.UTC(2027, 3, 1 + d, 12) - EPOCH) / 36e5; if (fleetState(0, H).st === 'port') return H; } return null; })()""")
         print('daytime with Havørn in port:', H)
         await pg.evaluate(f"S.tut=0; S.t = Math.round({H} * 60); S.boat.status='port'; S.boat.port='husoy'; S.boat.pos={{...portById('husoy').p}};")

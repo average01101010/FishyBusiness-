@@ -1,4 +1,4 @@
-from _env import GAME
+from _env import GAME, boot
 import asyncio, json
 from playwright.async_api import async_playwright
 async def main():
@@ -6,7 +6,7 @@ async def main():
         b = await p.chromium.launch(args=['--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
         pg = await b.new_page(viewport={'width':520,'height':900})
         errs=[]; pg.on('pageerror', lambda e: errs.append(str(e)))
-        await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(500)
+        await boot(pg)
         t0 = await pg.evaluate("S.t"); await pg.wait_for_timeout(20000); t1 = await pg.evaluate("S.t")
         print('game minutes in 20 real s:', t1 - t0, '(expected ~2 at 1:6)')
         await pg.evaluate("S.tut=0; S.cash=620000; S.sales=[{t:0,port:'husoy',kg:300,total:15000},{t:1,port:'husoy',kg:300,total:15000},{t:2,port:'husoy',kg:300,total:15000}]; S.boat.status='port'; S.boat.port='husoy'; S.boat.pos={...portById('husoy').p}; S.boat.gear=true; S.equip.jukse=1; PHONE.open('fartoy')")

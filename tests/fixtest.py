@@ -1,6 +1,6 @@
 """Fixes from playtest 1: the line hauler that locked the boat in port (A1), the pub evening (A3),
 and a pub round that survives closing the app mid-spin (A4). Prints OK or FEIL per check."""
-from _env import GAME
+from _env import GAME, boot
 import asyncio, json
 from playwright.async_api import async_playwright
 
@@ -16,7 +16,7 @@ async def main():
         pg = await ctx.new_page()
         errs = []
         pg.on('pageerror', lambda e: errs.append(str(e)))
-        await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(400)
+        await boot(pg)
 
         # A1: buy an electric hauler in the Equipment app, the job gets a length and finishes
         await pg.evaluate("S.cash = 100000; PHONE.open('utstyr')"); await pg.wait_for_timeout(400)

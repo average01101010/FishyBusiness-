@@ -1,4 +1,4 @@
-from _env import GAME
+from _env import GAME, boot
 import asyncio, json
 from playwright.async_api import async_playwright
 async def main():
@@ -6,7 +6,7 @@ async def main():
         b = await p.chromium.launch(args=['--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
         pg = await b.new_page(viewport={'width':400,'height':600})
         errs=[]; pg.on('pageerror', lambda e: errs.append(str(e)))
-        await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo'); await pg.wait_for_timeout(400)
+        await boot(pg)
         r = await pg.evaluate("""(()=>{ const port = portById('husoy');
           const run = (target, luckType, g, mo) => { const tot = {}; let n = 0, kr = 0, rel0 = S.stats.released || 0;
             for (let k = 0; k < 8; k++){ S.stock = initStock(); S.t = Math.round((Date.UTC(2028, mo, 5 + k, 7) - EPOCH) / 6e4); S.target = target; S.boat.kgear = true; S.haill = luckType ? {type:luckType, t0:S.t - 60} : null;

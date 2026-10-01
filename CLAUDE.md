@@ -8,8 +8,10 @@ Et kystfiskespill fra Senja som kjører som én selvstendig HTML-side, publisert
 
 - **Fart foran finpuss** (brukerens valg 01.10.2026): Endringene skal inn raskt, og finpuss og feilretting gjøres samlet etterpå.
 - Ved større funksjoner med uklare valg: legg fram en kort plan og vent på klarsignal. Enkle endringer bygges rett. «Snakk uten å bygge» betyr at ingenting skal bygges. «Kjør på» betyr bygg, test og lever.
-- **Under byggingen:** `node --check`, bygg og en rask røyktest: `trip2.py` pluss den korte testen for det som er endret. Én commit per endring.
-- **Full regresjon** (`tut.py`, `dbg23o.py`, funksjonstestene under og kalibreringen) kjøres når en bunke endringer er ferdig, og alltid før publisering. Feil som dukker opp da, rettes samlet.
+- **Bare de testene som er strengt nødvendige** (brukerens krav 01.10.2026: tid er penger). Under byggingen: `node --check`, bygg, og `python3 tests/run.py changed`. Den kjører bare testene som dekker filene som er endret siden forrige commit (`COVER` i `run.py`), uten 3D. Rene tekst- og dokumentasjonsendringer kjører ingen tester. Én commit per endring.
+- **Full regresjon** (`python3 tests/run.py full`, rundt 10 minutter) kjøres bare før publisering. Feil som dukker opp da, rettes samlet.
+- Kjør aldri samme test to ganger for å lese utskriften på en annen måte. Loggene ligger i `tests/out/logs/`. Lange tester kjøres i bakgrunnen mens arbeidet går videre.
+- En ny fil i `src/` legges inn i `COVER` i `run.py` med testen som dekker den.
 - Vær ærlig om svake tester, antakelser og usikre regler. Sjekk regelverk mot kildene (Lovdata, Fiskeridirektoratet, Råfisklaget) før det bygges inn, og oppgi kilden.
 - Brukeren tester på Android-nettbrett, så UI må fungere med berøring i både stående og liggende format.
 
@@ -24,13 +26,10 @@ Et kystfiskespill fra Senja som kjører som én selvstendig HTML-side, publisert
 
 - Playwright-skript i Python i `tests/`. De tester `dist/index.html`, så bygg først. Skjermbilder havner i `tests/out/`.
 - Oppsett: `pip install playwright==1.56.0`. Nettleseren ligger allerede i `/opt/pw-browsers`.
-- Kjør med `python3 tests/<navn>.py`. Skriptene skriver ut verdier og feil i stedet for å bruke assert, så les utskriften.
-- Regresjon: `trip2.py` (hel tur, skal ende med `"st":"port"`), `tut.py` (spiller hele «Første tur» med berøring, liggende og stående, skal ende med `"tut": 0` og bare `OK`-linjer, tar noen minutter) og `dbg23o.py` (WebGL, skal ikke skrive ut noe). Alle skal gi `[]` for sidefeil.
-- Endringer i fisket eller fangstbehandlingen: kjør også `decktest.py` og `geartest.py` (redskap i sjøen). Endringer i overtroen: `loretest.py`. Endringer i ekkoloddet, sonaren, varmekartet eller fiskemodellen (`density`, bestanden): `heattest.py`, og `simday.py` og `calib.py` for kalibreringen. Endringer i tatoveringene: `tattest.py`.
-- Endringer som berører flåten, salget, driftsplanen eller telefonappene: kjør også `fleet2test.py`, `fleet3test.py` og `opsowntest.py`.
-- Endringer i knappelinja, skuffen, telefonappene eller «Sett ut»: `docktest.py`.
-- Endringer i ruteplanleggeren, kartplotteren eller «Følg leia»: `routetest.py`. Butikken, sluttseddelen eller «Neste mål»: `shoptest.py` og `selltest.py`. Tidstekster og nedtelling: `timetest.py`. Innloggingsbonusen: `streaktest.py`. Pub, haill og verkstedjobber: `fixtest.py` og `hailltest.py`. 3D-kameraet: `camtest.py`.
-- Tester med berøring og drag i kartet trenger `--disable-gpu-compositing` i Chromium, ellers tegner plotteren rundt ett bilde i sekundet. Kjør ikke mange 3D-tester samtidig, da går klikk og skjermbilder ut på tid. Endringer i havnene, fortøyningen eller leveringen: `harbourtest.py`, `moortest.py`, `landtest.py` og `bunkertest.py`. Alle sjekklinjene skal starte med `OK`.
+- Kjør helst med `tests/run.py` (se over). Den kjører testene som ikke ser på 3D uten å tegne 3D (`KYST_LITE=1`, `#no3d` i adressen: spillet går som før, men ingen 3D-bilder tegnes), to om gangen, og 3D-testene etter hverandre ved siden av. Den oppsummerer OK, FEIL, sidefeil og det testen skal ende med, og viser siste linjer for testene som skriver ut tall som må leses (kalibreringen, `selltest.py`, `hailltest.py`). En enkelt test kan kjøres med `python3 tests/<navn>.py`, med 3D, eller med `KYST_LITE=1` foran uten. Skriptene skriver ut verdier og feil i stedet for å bruke assert, så les utskriften.
+- Nye tester: start spillet med `await boot(pg)` fra `_env.py` i stedet for faste pauser, og legg testen i `D3` eller `LITE` i `run.py`. Trykk i 3D sendes som CDP-berøring (`Input.dispatchTouchEvent`), slik `tut.py` og `docktest.py` gjør, fordi Playwrights `tap` venter på et stille bilde.
+- Hvilke tester som dekker hvilke filer, står i `COVER` i `run.py`. Det som må stemme: `trip2.py` ender med `"st":"port"`, `tut.py` (hele «Første tur» med berøring, liggende og stående) med `"tut": 0`, `dbg23o.py` skriver ingenting, alle sjekklinjer starter med `OK`, og sidefeil er `[]`. `run.py` sjekker dette selv.
+- Berøring og drag i kartet trenger `--disable-gpu-compositing` i Chromium. Kjør aldri flere 3D-tester samtidig.
 - Funksjonstestene og triksene for testing står i kapittel 11 i overleveringen.
 
 ## Slik er koden satt sammen
