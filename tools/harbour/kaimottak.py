@@ -62,6 +62,7 @@ def colours():
     C['cont'] = mat('container', (0.55, 0.20, 0.12), 0.3)
     C['van'] = mat('van', (0.92, 0.93, 0.93), 0.6)
     C['vest'] = mat('vest', (1.0, 0.45, 0.06), 0.3)
+    C['coverall'] = mat('coverall', (0.13, 0.29, 0.62), 0.2)
     C['skin'] = mat('skin', (0.86, 0.66, 0.52), 0.2)
     C['lamp'] = mat('lamp', (1.0, 0.96, 0.85), 0.8, emit=0.6)
 
@@ -91,13 +92,6 @@ def window(name, a, b, s, z, w, h, nrm):
     poly = rrect(0, z + h / 2, w, h, 0.03, 1); outer = rrect(0, z + h / 2, w + 0.12, h + 0.12, 0.04, 1)
     return [frame_ring(name + '_f', o + n * 0.1, u, (0, 0, 1), outer, poly, C['trim'], 0.0, 0.07, nrm=nrm),
             plate(name + '_g', o + n * 0.06, u, (0, 0, 1), poly, C['glass'], nrm=nrm)]
-
-def person(name, x, y, z, h, vest=True):
-    """a simple standing figure (for the renders and the driver's seat): boots, trousers, jacket and vest, head with a helmet"""
-    objs = [box(name + 'l1', x - 0.16, x - 0.02, y - 0.1, y + 0.1, z, z + 0.85, C['dark']), box(name + 'l2', x + 0.02, x + 0.16, y - 0.1, y + 0.1, z, z + 0.85, C['dark']),
-            box(name + 'b', x - 0.22, x + 0.22, y - 0.14, y + 0.14, z + 0.85, z + 1.45, C['vest'] if vest else C['trim'], 0.04),
-            sphere(name + 'h', (x, y, z + 1.6), 0.12, C['skin']), sphere(name + 'c', (x, y, z + 1.67), 0.13, C['yellow'], (1, 1, 0.7))]
-    return objs
 
 
 # ---------- the quay ----------
@@ -354,11 +348,11 @@ def truck_parts():
     b.append(box('tguard', x - 0.55, x + 0.55, y - 0.8, y + 0.6, z + 2.12, z + 2.2, C['dark']))
     for px in (-0.38, 0.38): b.append(box('tmast%d' % int(px * 10), x + px - 0.05, x + px + 0.05, y + 0.78, y + 0.9, z + 0.15, z + 2.3, C['dark']))
     b.append(box('tmast_top', x - 0.43, x + 0.43, y + 0.78, y + 0.9, z + 2.2, z + 2.3, C['dark']))
-    # the driver, seated, facing the forks: legs forward, torso in a vest, helmet
+    # the driver, seated, facing the forks: legs forward, in the blue coverall and the yellow hard hat
     for dx in (-0.12, 0.12):
-        b.append(box('drv_t%d' % int(dx * 100), x + dx - 0.07, x + dx + 0.07, y - 0.65, y - 0.1, z + 1.1, z + 1.25, C['dark']))
-        b.append(box('drv_s%d' % int(dx * 100), x + dx - 0.06, x + dx + 0.06, y - 0.18, y - 0.06, z + 0.85, z + 1.2, C['dark']))
-    b.append(box('drv_b', x - 0.2, x + 0.2, y - 0.66, y - 0.38, z + 1.12, z + 1.7, C['vest'], 0.04))
+        b.append(box('drv_t%d' % int(dx * 100), x + dx - 0.07, x + dx + 0.07, y - 0.65, y - 0.1, z + 1.1, z + 1.25, C['coverall']))
+        b.append(box('drv_s%d' % int(dx * 100), x + dx - 0.06, x + dx + 0.06, y - 0.18, y - 0.06, z + 0.85, z + 1.2, C['coverall']))
+    b.append(box('drv_b', x - 0.2, x + 0.2, y - 0.66, y - 0.38, z + 1.12, z + 1.7, C['coverall'], 0.04))
     b.append(sphere('drv_h', (x, y - 0.5, z + 1.84), 0.11, C['skin'])); b.append(sphere('drv_c', (x, y - 0.5, z + 1.9), 0.125, C['yellow'], (1, 1, 0.7)))
     body = join(b, 'TRUCK')
     f = [box('tcarr', x - 0.45, x + 0.45, y + 0.92, y + 1.0, z + 0.15, z + 1.0, C['dark'])]
@@ -461,7 +455,13 @@ def main():
         shore = grid('shore', [[(x, y, z) for y, z in zip(ys, zs)] for x in (-160, 160)], lambda i, j: mat('land', (0.27, 0.31, 0.22), 0.05), out=lambda c: (0, 0, 1))
         b2.location = (0, -4.5, 0); hk.location = (0, -9.4, CR_PIV - 1.6)
         extra = [shore, cyl('wire', (cx, cy - 9.4, CR_PIV - 0.2), (cx, cy - 9.4, CR_PIV - 1.6), 0.012, C['dark'], 6)]
-        for k, (x, y) in enumerate(((-4.5, 1.0), (-11.0, 4.0), (16.6, 1.4))): extra += person('p%d' % k, x, y, QTOP, 1.8)
+        # the harbour workers from arbeider.py, standing at their stations facing the berth
+        import arbeider
+        arbeider.colours(); WP = arbeider.build_all()
+        for o in WP.values(): o.hide_render = True
+        for k, (x, y, h) in enumerate(((-4.5, 1.0, math.pi), (-11.0, 4.0, math.pi * 0.9), (16.6, 1.4, math.pi), (-10.0, 8.6, math.pi * 1.2))):
+            for o in arbeider.pose(WP, x, y, h, 'hw'): o.location.z += QTOP; extra.append(o)
+        extra += list(WP.values())
         beauty(OUT, 'hu', 0.0, SHOTS)
         for o in extra: bpy.data.objects.remove(o, do_unlink=True)
         b2.location = (0, 0, 0); hk.location = (0, 0, 0)
