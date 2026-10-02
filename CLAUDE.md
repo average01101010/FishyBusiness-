@@ -17,14 +17,14 @@ Et kystfiskespill fra Senja som kjører som én selvstendig HTML-side, publisert
 
 ## Bygg og sjekk
 
-- `node build.mjs` setter sammen `src/` til `dist/index.html`. `dist/` er ikke i git.
+- `node build.mjs` setter sammen `src/` til `dist/index.html` og skriver kartpakkene til `dist/map/` (`tools/mappack.mjs`, se 4.6 i overleveringen). `dist/` er ikke i git. Med `KYST_DIST=<mappe>` bygges det dit i stedet.
 - `node --check <fil>` på hver JS-fil du endrer, og bygg etterpå.
-- Filene i `src/` kan ikke åpnes direkte i nettleseren. Test alltid `dist/index.html`.
+- Filene i `src/` kan ikke åpnes direkte i nettleseren. Test alltid `dist/index.html`, og over HTTP, fordi spillet henter `map/` (`python3 tools/serve.py`). `file://` virker ikke lenger.
 - `docs/OVERLEVERING.md` kaller spillfila `kystfiske-prototype.html`. Her er det `dist/index.html`, bygget fra `src/`.
 
 ## Tester
 
-- Playwright-skript i Python i `tests/`. De tester `dist/index.html`, så bygg først. Skjermbilder havner i `tests/out/`.
+- Playwright-skript i Python i `tests/`. De tester `dist/index.html` over HTTP, med en egen server per test som `_env.py` starter, så bygg først. `KYST_DIST=<mappe>` tester et annet bygg. Skjermbilder havner i `tests/out/`.
 - Oppsett: `pip install playwright==1.56.0`. Nettleseren ligger allerede i `/opt/pw-browsers`.
 - Kjør helst med `tests/run.py` (se over). Den kjører testene som ikke ser på 3D uten å tegne 3D (`KYST_LITE=1`, `#no3d` i adressen: spillet går som før, men ingen 3D-bilder tegnes), to om gangen, og 3D-testene etter hverandre ved siden av. Den oppsummerer OK, FEIL, sidefeil og det testen skal ende med, og viser siste linjer for testene som skriver ut tall som må leses (kalibreringen, `selltest.py`, `hailltest.py`). En enkelt test kan kjøres med `python3 tests/<navn>.py`, med 3D, eller med `KYST_LITE=1` foran uten. Skriptene skriver ut verdier og feil i stedet for å bruke assert, så les utskriften.
 - Nye tester: start spillet med `await boot(pg)` fra `_env.py` i stedet for faste pauser, og legg testen i `D3` eller `LITE` i `run.py`. Trykk i 3D sendes som CDP-berøring (`Input.dispatchTouchEvent`), slik `tut.py` og `docktest.py` gjør, fordi Playwrights `tap` venter på et stille bilde.
@@ -42,12 +42,17 @@ Et kystfiskespill fra Senja som kjører som én selvstendig HTML-side, publisert
 - Ingen kode skal velge etter båttypens navn (`=== 'sjark'`). Bruk feltene i `VESSELS`, og `vesseltest.py` passer på det.
 - Detaljerte båtmodeller lages i Blender med skript i `tools/boats/` (`pip install bpy==4.5.4`, så for eksempel `python3 tools/boats/malo36.py`, `havsjark35.py` eller `skiff59.py`). Felles kode, også eksporten, ligger i `tools/boats/bpyutil.py`. De skriver GLB og sidebilde som base64 til `src/data/boat-*.b64`, som `src/index.html` legger i egne dataelementer (`<script id="glb-TYPE">` og `pic-TYPE`, som ikke kjøres). `vessel3d.js` leser dem først når typen trengs (`glbData`). En ny modell trenger to slike linjer i malen. Referansetegningene legges ikke i repoet, bare målene. Kontrollbildene havner i `tools/boats/out/` (ikke i git). Folkene (`tools/harbour/arbeider.py`, `src/data/worker.b64`) og havneenheten (`tools/harbour/kaimottak.py`) lages på samme måte, med bildene i `tools/harbour/out/`. Se 5.13 i overleveringen.
 - `src/data/` inneholder komprimerte kartdata. Filene redigeres ikke for hånd.
+- Rasterkartene (land, dybde, avstand til land, eksponering, høyde, skog) leses bare gjennom lasteren i `src/js/core/01b-mapdata.js` (`rcell`, `rbil`, `rbilM`), aldri som tabeller. En blokk som ikke er lastet, gir en feil og ingen reserveverdi. Det som leser langt fra båtene, kan bare lese kjernen. Se 4.6 i overleveringen.
 
 ## Begrensninger
 
-- Siden må forbli én fil. Den eneste eksterne ressursen er Google Fonts, og alt annet er innebygd. Dette gjelder artifacten. Et framtidig PWA-bygg på GitHub Pages kan ha flere filer (manifest, service worker, ikoner, kartsoner), se veikartet «PWA og hele kysten» i overleveringen.
+- Siden må forbli én fil. Den eneste eksterne ressursen er Google Fonts, og alt annet er innebygd, bortsett fra kartpakkene i `map/` (fra kystplanens fase K3), som ligger ved siden av siden i samme artifact. Et framtidig PWA-bygg på GitHub Pages kan ha flere filer (manifest, service worker, ikoner, kartsoner), se veikartet «PWA og hele kysten» i overleveringen.
 - Tallene i spesifikasjonen og overleveringen er startverdier som justeres i spilltesting.
 
 ## Publisering
 
 Publiser `dist/index.html` til artifacten https://claude.ai/artifact/HHehndJQmtCYBJpQ1b8L6f med dens URL, slik at lenken beholdes. Gjør det bare når brukeren ber om det.
+
+- Kartpakkene skal være med som `files`: `map/manifest.json` og hver `map/*.wasm` fra `dist/map/`.
+- Navnene har hashen, så en pakke som ikke er endret, har samme navn og trenger ikke sendes på nytt.
+- Pakker som ikke lenger står i manifestet, kan fjernes med `null`.

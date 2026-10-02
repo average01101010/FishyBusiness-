@@ -45,7 +45,9 @@ Skrevet 29.09.2026 ved flytting fra claude.ai-chat til Claude Code. Dokumentet s
 1. **Kjerne:** simulering, tilstand `S`, arter, priser, kvoter og regler.
 2. **UI:** HUD, knappelinja `#dock` med skuffen `#drawer` (`ui/10c-dock.js`), panel, telefonen `PHONE` med apper, overlays (`PUBW`, `ROD`), rute-editoren (`ui/03b-route.js`) og veiledningen «Første tur» (`ui/07b-first-trip.js`). Autoruta ligger i kjernen (`core/11-route.js`).
 3. **3D:** `G3`, en egen WebGL-renderer for sjø, terreng, båter og effekter. Kartplotteren er Canvas2D og SVG.
-4. **Data:** base64-blobber i `<script type="application/octet-stream">`, blant annet dybde, høyde, land, vei og bygg.
+4. **Data:**
+   - Rasterkartene (land, dybde, avstand til land, eksponering, høyde og skog) ligger i kartpakker i `dist/map/`, som spillet henter (4.6).
+   - Resten er base64-blobber i `<script type="application/octet-stream">`, blant annet vei, bygg, fin kyst og båtmodellene.
 
 ### 4.2 Tilstand og tid
 
@@ -113,7 +115,7 @@ Forberedelser til hele kysten (planen står i `docs/kart/`). Spillet ser ut og o
   - Støyfeltene for fisken, dybdemodellen, fjordlinjetesten, fiskerifeltene og krabbeområdet regnes også i gamle km.
   - `MAPB` er dataenes utstrekning i spillets ramme.
   - I dag er `FR` (0, 0). `#frameshift` flytter den 1 000 km øst og sør (torturtesten).
-- **Oppstartsbarrieren** (`11-boot.js`): klokka og catch-up venter på `SIMREADY`, som settes når dybdene er lastet. `boottest.py` tester det.
+- **Oppstartsbarrieren** (`11-boot.js`): klokka og catch-up venter på `SIMREADY`, som settes når kartpakkene båtene trenger er lastet (4.6). `boottest.py` tester det.
 - **Presisjon i 3D** (`view3d.js`):
   - Meshene i verden har hjørnene relativt til sitt eget origo `m.o` (`MB().mesh(o)`, `NB().mesh(o)`, `makeMesh`, `unitPatch`, bitene på 1 km og lysene deres). Modellmatrisen `relM(m)` er origo minus øye, regnet i doble tall.
   - Skyggerne regner verden fra gjengivelsesorigoet `RO`, et multiplum av 4 096 m nær øyet som flyttes først etter 40 km. Det gjelder:
@@ -125,6 +127,53 @@ Forberedelser til hele kysten (planen står i `docs/kart/`). Spillet ser ut og o
   - Uten dette blir Float32 6–12 cm grov 1 000 km fra origo, og bølgefasen går i stykker.
 - **Torturtesten:** `KYST_SHIFT=1 python3 tests/run.py full` kjører alt med `#frameshift` og med rutene i `routes.json` flyttet. Testene sender gamle km gjennom `LG()`.
 - **Bygget** (`build.mjs`) kompilerer hvert skript som helhet med `node:vm`, så et navn som er deklarert i to filer stopper bygget, ikke siden.
+
+### 4.6 Kartdataene i pakker (kystplanen, fase K3, 02.10.2026)
+
+Rasterkartene ligger ikke lenger i siden. Siden gikk fra 9,3 til 6,2 MB, og kartpakkene er 2,8 MB. Spillet ser ut og oppfører seg som før.
+
+- **Bygget:** `node build.mjs` kaller `writeMap` i `tools/mappack.mjs`.
+  - Den leser `src/data/geo-*.b64` og `hgt.b64` og pakker dem ut slik siden gjorde. Avstanden til land regnes her, ikke lenger i siden.
+  - Hvert lag deles i blokker på 10 × 10 km, som pakkes hver for seg med deflate. 16-bitslagene (dybde og høyde) lagres som rest etter medianprediktoren, slik siden lagret dem før.
+  - En pakke har blokkene av ett slag i én flis på 50 × 50 km:
+    `'KMP1'`, u32 lengden på hodet, hodet som JSON (`{kind, tile, blocks:[[lag, bx, by, offset, lengde]]}`) og blokkene.
+  - Filnavnet har de første 12 hex-tegnene av pakkens SHA-256 og endelsen `.wasm`, fordi artifacten avviser `.bin` (K1). `dist/map/manifest.json` lister lagene og pakkene.
+- **Slagene:**
+
+  | Slag | Lag | Lastes |
+  |---|---|---|
+  | `core` | `mask` (land, 25 m), `dc` (avstand til land, 100 m), `expo` (eksponering, 500 m) | alltid, før spillet starter |
+  | `sim` | `depth` (dybde i halve meter, 50 m) | rundt båtene og redskapene før klokka går |
+  | `view` | `hgt` (høyde, 25 m), `forest` (skog, 50 m) | til 3D, etter hvert som de kommer |
+
+  - Det som ser langt, leser bare kjernen: strøklengdestrålene og den lokale flåtens drift og fiske. Derfor ligger 25 m-masken i kjernen. Den er 63 KB for Senja og anslått til rundt 10 MB for hele kysten. K6 kan gi de som ser langt en grovere maske.
+  - Planen hadde masken i `sim`. `maptest` viste at strøklengdestrålene da leste pakker langt fra båten.
+- **Lasteren** (`core/01b-mapdata.js`):
+  - `mapStart` leser manifestet.
+  - `mapLoad(pk)` henter en pakke én gang. Den lagres i IndexedDB (`kyst-map`) etter hashen, så en ny publisering bare henter det som er endret.
+  - En blokk pakkes ut synkront med fflate (`src/js/lib/fflate.js`, MIT) første gang den leses. Den beholdes så lenge det er plass: `MAPD.budget` er 96 MB, og den som er brukt minst nylig, går først. Høydene er Float32, så 96 MB trengs til hele Senja i 3D. K8 gjør dem til Int16.
+  - Lesing:
+    - `rcell(L, ix, iy)` gir én celle.
+    - `rbil(L, p)` interpolerer bilineært i km, med samme regning som `gridBilinear`.
+    - `rbilM(L, x, z)` gjør det samme i meter.
+    - `isLand`, `coastDist`, `depthF`, `exposure`, `swellFactor`, `approachPath`, ruta, sjøkartet, terrenget og skogen leser alle gjennom disse.
+  - **Leser noe en blokk som ikke er lastet, er det en feil** (`MAPD.miss` telles). Spillet bruker aldri reserveverdier, så resultatet avhenger aldri av hva som tilfeldigvis er lastet.
+- **Barrieren:**
+  - `simAreaReady()` (`01b-mapdata.js`) krever at `sim`-pakkene er lastet innen `MAPD.simR` (4 km) fra hver båt du eier og 1 km fra midten av hvert redskap i sjøen. Det dekker ekkoloddet, sonaren og plotteren.
+  - Mangler noe, bes det om, og `playMinutes` i `08-actions.js` stopper. Minuttene som gjenstår, står i `CATCH_LEFT`. `tick` spiller dem når pakken er kommet, uten å vente i `step()`.
+  - `bootMap` i `11-boot.js` laster kjernen og `sim`-pakkene rundt de lagrede båtene, rutene deres, redskapene, havnene og feltene før `bootGame` leser lagringen. 3D laster `view`-pakkene i `init`.
+  - Visninger som leser lenger ut, spør først med `mapViewReady` og tegner uten dybde til pakken er kommet: sjøkartet beholder det forrige bildet, og 3D-strandteksturen og plotteren tegner dypt vann. Varmekartet venter.
+- **Testene går over HTTP:**
+  - `tests/_env.py` starter en egen server for hver test på en ledig port, fordi `file://` ikke kan hente filer. Hver test får dermed sin egen opprinnelse og sin egen `localStorage`.
+  - `KYST_DIST=<mappe>` tester et annet bygg enn `dist/`, og bygget skriver dit med samme variabel.
+  - `tools/serve.py` serverer `dist/` for manuell testing.
+- **`maptest.py`** holder igjen én `sim`-pakke (sletter den i siden og i IndexedDB, og holder svaret med `page.route`). Den sjekker at:
+  - klokka stopper før båten kommer innen rekkevidde, og står stille så lenge pakken mangler
+  - resten spilles når pakken kommer
+  - turen ender nøyaktig som en tur med alt lastet (tid, sted, fangst, penger og logg)
+  - ingenting leser fra en pakke som ikke er lastet
+
+  Simuleringen trekker da fra en egen tilfeldighetsgenerator, så det siden trekker selv i mellomtiden, ikke forskyver den.
 
 ## 5. Systemer i spillet
 
@@ -1253,6 +1302,7 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
   - Testene i `LITE`, også `tut.py`, kjøres med `KYST_LITE=1`, som gir `#no3d` i adressen: G3 er aktiv og alt går som før, men `frame()` tegner ingenting. Det gjorde `shoptest.py` rundt tre ganger raskere (43 s mot 13 s, med de samme 18 OK) og `docktest.py` fra rundt 10 minutter til 61 s. To slike går samtidig.
   - Testene i `D3` (`dbg23o`, `camtest`, `moortest`, `landtest`, `bunkertest`, `vessel3d`, `unittest`, `sea3d`) ser på selve 3D-bildet og går med 3D, etter hverandre. `routetest` og `heattest` måler millisekunder, og `landtest` følger kranen i 3D bilde for bilde. De går alene til slutt (`SOLO`), ellers forstyrrer de andre testene dem.
   - Loggene havner i `tests/out/logs/`. `boot(pg)` i `_env.py` starter spillet og venter på startskjermen i stedet for faste pauser.
+  - Testene henter spillet over HTTP fra en egen server per test (4.6). `KYST_DIST` peker på et annet bygg.
 - **Regresjon:**
   - `trip2.py`: hel tur via kartplotter, avgang, 3D, fiske og havn.
   - `tut.py`: veiledningen «Første tur», spilt gjennom med berøring som en spiller, liggende og stående, med tre omlastinger. Skal ende med `"tut": 0`.
