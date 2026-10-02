@@ -1,3 +1,4 @@
 dist/
 tests/out/
 __pycache__/
+tools/boats/out/
