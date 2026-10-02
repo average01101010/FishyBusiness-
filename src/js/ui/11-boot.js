@@ -40,10 +40,11 @@ else if (awayMs > 6000) catchUp(awayMs);
 lastWall = Date.now();
 streakTouch();
 refreshAll();
-setInterval(tick, 200);
 document.addEventListener('visibilitychange', () => { if (!document.hidden && streakTouch()){ save(); refreshAll(); } });
 INSTR.show(); tab = 'route'; setBodyView(true);
-document.addEventListener('DOMContentLoaded', () => G3.show(true, true));
+// G3 comes from a later <script> (view3d.js): the clock starts when the whole page is read, and the loaders may finish before that
+document.addEventListener('DOMContentLoaded', () => { setInterval(tick, 200); G3.show(true, true); });
+const g3Live = () => typeof G3 !== 'undefined' && G3.isActive();
 loadDepth().then(d => { if (!d) return; DEPTH = d; CONT_D = null; renderBase(); panelDirty = true; }).catch(e => console.error(e));
-loadRoads().then(r => { ROADS = r; scheduleStatic(); if (G3.isActive()) G3.roadsReady(); }).catch(e => console.error(e));
-loadFine().then(f => { FINE = f; if (G3.isActive()) G3.fineReady(); }).catch(e => console.error(e));
+loadRoads().then(r => { ROADS = r; scheduleStatic(); if (g3Live()) G3.roadsReady(); }).catch(e => console.error(e));
+loadFine().then(f => { FINE = f; if (g3Live()) G3.fineReady(); }).catch(e => console.error(e));
