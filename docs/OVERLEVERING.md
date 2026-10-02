@@ -99,22 +99,20 @@ Skrevet 29.09.2026 ved flytting fra claude.ai-chat til Claude Code. Dokumentet s
 - **Innstillinger må tåle `undefined`:** `S.settings` får ikke standardverdier nøkkel for nøkkel ved lasting. Nye nøkler leses som «ikke satt», for eksempel `S.settings.echo !== false` for «på».
 - **`chartMode()`** (`07-guide.js`) gir `'fish'` bare når båten du følger har kartplotter. `S.settings.chart` er ønsket ditt og beholdes når du følger en båt uten plotter.
 
-### 4.5 Rammen, projeksjonen og presisjonen (kystplanen, fase K2, 02.10.2026)
+### 4.5 Rammen, projeksjonen og presisjonen (kystplanen, fase K2 og K4, 02.10.2026)
 
-Forberedelser til hele kysten (planen står i `docs/kart/`). Spillet ser ut og oppfører seg som før.
+Forberedelser til hele kysten (planen står i `docs/kart/`). Fra K4 er spillets ramme den nasjonale UTM 33-rammen (4.7).
 
 - **Projeksjonen** (`core/00-proj.js`, første fil i det felles skriptet, med `'use strict'`):
   - `utm33(lat, lon)` gir `{E, N, gamma, k}` og `utm33inv(E, N)` går tilbake. Krüger/Karney med sjette ordens rekker. Avviket mot PROJ (EPSG:25833) er 0,006 mm fra Utsira til Grense Jakobselv (`projtest.py`, referansen fra `tools/map/projref.py`).
   - `gamma` er meridiankonvergensen: sann kurs = rutenettskurs + γ.
-  - `natP`/`natLL` er den nasjonale rammen i km: x = (E + 250 km)/1000, y = (8 050 km − N)/1000. Den er ennå ikke i bruk.
+  - `natP`/`natLL` er den nasjonale rammen i km: x = (E + 250 km)/1000, y = (8 050 km − N)/1000. Fra K4 er dette spillets ramme: `P`/`LL` i `01-world.js` er `natP`/`natLL`.
 - **`gridKey(ix, iy)`** er nøkkelen for rutenettsceller, med `gridKeyX`/`gridKeyY` tilbake. Den tåler 2²⁰ celler hver vei og negative tall. Strøklengdebufferet, varmekartet, 3D-bitene og kamerakollisjonen bruker den.
-- **Rammeforskyvningen `FR`** (`01-world.js`):
-  - Senja-dataene og det håndplasserte innholdet er laget i den gamle rammen (flat ved 69,35° N, km fra 69,72° N 16,55° Ø).
-  - `LG(x, y)`, `LGa([x, y])` og `LGm([x, z] i meter)` fører dem inn i spillets ramme, og `LGI(p)` fører tilbake.
-  - Alle rasteroppslag (`isLand`, `gridBilinear`, dybdekartet, ruterutenettet, `approachPath`, terreng, skog og bestand) går gjennom den gamle rammen.
-  - Støyfeltene for fisken, dybdemodellen, fjordlinjetesten, fiskerifeltene og krabbeområdet regnes også i gamle km.
-  - `MAPB` er dataenes utstrekning i spillets ramme.
-  - I dag er `FR` (0, 0). `#frameshift` flytter den 1 000 km øst og sør (torturtesten).
+- **Den gamle rammen** (`01-world.js`):
+  - Senja-dataene og det håndplasserte innholdet er laget i den gamle rammen: flat ved 69,35° N, km fra 69,72° N 16,55° Ø.
+  - `LG(x, y)`, `LGa([x, y])` og `LGm([x, z] i meter)` fører dem inn i spillets ramme med den eksakte projeksjonen, og `LGI(p)` fører tilbake.
+  - `LGu(o, u)` dreier en retning, og `LGrot(x, y)` er vinkelen rammen dreies med (omtrent −γ).
+  - I K2 var dette en ren forskyvning, `FR`, og torturtesten (`#frameshift`, `KYST_SHIFT=1`) flyttet rammen 1 000 km. Begge er borte i K4, fordi spillet nå ligger 810–892 km øst og 311–397 km sør for origo.
 - **Oppstartsbarrieren** (`11-boot.js`): klokka og catch-up venter på `SIMREADY`, som settes når kartpakkene båtene trenger er lastet (4.6). `boottest.py` tester det.
 - **Presisjon i 3D** (`view3d.js`):
   - Meshene i verden har hjørnene relativt til sitt eget origo `m.o` (`MB().mesh(o)`, `NB().mesh(o)`, `makeMesh`, `unitPatch`, bitene på 1 km og lysene deres). Modellmatrisen `relM(m)` er origo minus øye, regnet i doble tall.
@@ -125,15 +123,17 @@ Forberedelser til hele kysten (planen står i `docs/kart/`). Spillet ser ut og o
     - terrengets teksturkoordinater (`uPO`)
   - Bygg, fin kyst, veier, sjørokk og kjølvannets hekk lagres i Float64.
   - Uten dette blir Float32 6–12 cm grov 1 000 km fra origo, og bølgefasen går i stykker.
-- **Torturtesten:** `KYST_SHIFT=1 python3 tests/run.py full` kjører alt med `#frameshift` og med rutene i `routes.json` flyttet. Testene sender gamle km gjennom `LG()`.
 - **Bygget** (`build.mjs`) kompilerer hvert skript som helhet med `node:vm`, så et navn som er deklarert i to filer stopper bygget, ikke siden.
 
 ### 4.6 Kartdataene i pakker (kystplanen, fase K3, 02.10.2026)
 
-Rasterkartene ligger ikke lenger i siden. Siden gikk fra 9,3 til 6,2 MB, og kartpakkene er 2,8 MB. Spillet ser ut og oppfører seg som før.
+Rasterkartene ligger ikke lenger i siden. Siden gikk fra 9,3 til 6,2 MB, og kartpakkene er 3,3 MB (2,8 MB i K3, før rammen ble 90 × 90 km i K4).
 
 - **Bygget:** `node build.mjs` kaller `writeMap` i `tools/mappack.mjs`.
-  - Den leser `src/data/geo-*.b64` og `hgt.b64` og pakker dem ut slik siden gjorde. Avstanden til land regnes her, ikke lenger i siden.
+  - Den leser `src/data/geo-*.b64` og `hgt.b64` og pakker dem ut slik siden gjorde.
+  - Fra K4 samples lagene om til den nasjonale rammen (4.7). Cellene telles fra rammens origo, så celle (ix, iy) med størrelse c dekker x i [ix·c, (ix+1)·c). Blokkene på 10 km og flisene på 50 km står dermed likt over hele kysten. For Senja går blokkene fra x 800 til 900 og y 310 til 400 km.
+  - Avstanden til land regnes her fra den nye masken, ikke lenger i siden.
+  - Pakkene lages bare på nytt når kildene endrer seg: dataene, `mappack.mjs` eller `00-proj.js` (`src` i manifestet). Første bygg tar rundt 4 s ekstra.
   - Hvert lag deles i blokker på 10 × 10 km, som pakkes hver for seg med deflate. 16-bitslagene (dybde og høyde) lagres som rest etter medianprediktoren, slik siden lagret dem før.
   - En pakke har blokkene av ett slag i én flis på 50 × 50 km:
     `'KMP1'`, u32 lengden på hodet, hodet som JSON (`{kind, tile, blocks:[[lag, bx, by, offset, lengde]]}`) og blokkene.
@@ -174,6 +174,45 @@ Rasterkartene ligger ikke lenger i siden. Siden gikk fra 9,3 til 6,2 MB, og kart
   - ingenting leser fra en pakke som ikke er lastet
 
   Simuleringen trekker da fra en egen tilfeldighetsgenerator, så det siden trekker selv i mellomtiden, ikke forskyver den.
+
+### 4.7 Over til UTM 33 (kystplanen, fase K4, 02.10.2026)
+
+Dette er den eneste tilsiktede endringen i oppførsel i kartfasen. Spillets ramme er nå UTM sone 33 i km (4.5), og Senja ligger der den ligger på hele kysten.
+
+- **Dataene:**
+  - Vektorene (kystpolygonene, den fine kysten, veier, molo og kaier, sjømerker, bruer, dybdekurver og bygg) går punkt for punkt gjennom `LG`/`LGm` når siden lastes. Den eksakte projeksjonen tar rundt 0,5 µs per punkt.
+  - Byggene dreies med `LGrot`. Retningene til havneenhetene dreies med `LGu`.
+  - Rastrene samples om når bygget kjøres (`tools/mappack.mjs`, 4.6):
+    - dybde, høyde (i meter mellom kodene), eksponering: bilineært
+    - skog: nærmeste celle
+    - avstand til land: regnet på nytt
+  - Den omvendte projeksjonen erstattes der av et polynom av femte grad, med avvik rundt 0,1 mm.
+  - **Masken** rastreres på nytt fra de fine kystpolygonene (`geo-fine.b64`) i den nye rammen. Der den gamle masken og polygonene er uenige, gjelder den gamle masken (holmer og skjær som polygonene mangler, og noen kaiender, 8 785 celler). Utenfor det gamle kvadratet brukes den gamle maskens nærmeste kantcelle.
+  - Mot den gamle masken avviker 0,14 % av cellene, alle langs kysten.
+  - Alle havnepunktene ligger i vann.
+- **Utstrekningen:**
+  - `MAPB` er boksen rundt det gamle kvadratet: x 810,0–892,0 og y 311,4–397,1.
+  - Kvadratet er dreid 1,4–3,3°. I de smale trekantene mellom kvadratet og boksen står kantdataene strukket ut.
+  - Utenfor `MAPB` er det land (`isLand`).
+- **γ** (`gridGamma(p)`, per km-rute):
+  - Simuleringen og 3D regner i rutenettet: kurs, strøklengdestrålene, bølgene og dønningen i 3D, drift og skipsbevegelsene.
+  - Det som kommer inn som sann retning, dreies med −γ: vinden og dønningen inn i strøklengden og 3D, solens og månens asimut, og lyktsektorene.
+  - Det mannskapet leser, vises som sann retning med `trueDeg(r, p)`: COG, HDG, peiling til WPT, kurs i ruta, «Ny kurs» i loggen, navigasjonsloggen og kursen når redskap settes.
+  - Vindretningen i teksten er sann, slik den alltid var.
+- **Fisken:** støyfeltene (patcher, stimer, døgnvariasjon) og dybdemodellen regnes i nasjonale km. Feltene har de samme statistiske egenskapene, men ligger andre steder:
+  - hyse i februar: snittet over havet 0,169 mot 0,178 (−5 %), og den beste prosenten 0,495 mot 0,557
+  - snittet tar også med de smale trekantene i hjørnene av boksen, så det er 9 % flere sjøceller
+  - `geartest` måler nå linefisket på de åtte beste hysestedene i stedet for det ene beste, fordi ett sted alene svinger fra 50 til 110 kg per balje
+- **Krabbeområdet** er et belte fra 35 til 75 km sør for 69,72° N, som før, nå som y i den nye rammen. **Fiskerifeltene** (`fieldCode`) og offshore-strøklengden utenfor kartet (`offMapFetch`) regner fortsatt i gamle km gjennom `LGI`.
+- **Bestanden** er glissen: `S.stock` og `S.cstk` holder bare 2 km-rutene under 1, med `gridKey` i den nasjonale rammen (`stkGet`, `stkSet`, `stockFill`). `stockHour` går over disse rutene og naboene deres.
+- **Lagringen v2:**
+  - Nøkkelen er `kystfiske_v2`. Et spill i `kystfiske_proto_v1` (v1) leses én gang og flyttes over med `migrateV2`, og v1-lagringen blir stående.
+  - `migrateV2` sender alle punkter `{x, y}` i lagringen gjennom `LG`. Det gjelder båt, plan, kladd, spor, merker, navigasjonslogg, redskap i sjøen, driftsplan og veiledningen.
+  - Kursen til båtene dreies med rammen.
+  - Bestandsrutenettene på 40 × 42 i den gamle rammen blir glisne nasjonale ruter. Der to gamle ruter havner i samme nye, brukes den laveste verdien.
+  - Lagringen får `v:2` og `frame:'utm33'`. Oppstarten sjekker deretter, som før, at ingenting ligger på land.
+  - `mig2test.py` lager et v1-spill av et v2-spill med `LGI` og leser det inn igjen. Alle posisjonene (23, i sju slags felt) havner innenfor 1 m, kursen og bestanden følger med, og v1-lagringen er urørt.
+- **Testene:** `routes.json` er regnet om til den nasjonale rammen. Testene sender fortsatt gamle km gjennom `LG()` i siden. `KYST_SHIFT` er borte.
 
 ## 5. Systemer i spillet
 
