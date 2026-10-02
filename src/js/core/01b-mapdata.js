@@ -2,10 +2,11 @@
 // map/manifest.json lists the layers and the packs (tools/mappack.mjs writes them at build). A pack is fetched once and kept in
 // IndexedDB by its hash, so a new publish (which moves every file to a new address) fetches only what changed. A block is unpacked
 // (fflate, synchronous) the first time it is read and kept while there is room (MAPD.budget; the least recently used goes first).
-//   core  mask, dc, expo  always loaded: what looks far (the fetch rays, the local fleet's drift and fishing) reads only these.
-//                         The 25 m land mask is here for now (63 kB for Senja, about 10 MB for the whole coast); phase K6 may give
-//                         the far readers a coarser one.
-//   sim   depth           loaded round the boats and the gear in the sea before the clock runs (mapReadyAt, simAreaReady), within
+//   core  land200, dc200, expo   the national core, always loaded (2.8 MB for the whole coast, phase K6): land at 200 m, the
+//                         distance to it and the openness. What looks far (the fetch rays, the local fleet's drift and fishing, the
+//                         depth model) reads only these, and so does everything off the tiles that have detail.
+//   sim   mask, dc, depth the tiles' detail (land 25 m, distance 100 m, depth 50 m): loaded round the boats and the gear in the
+//                         sea before the clock runs (mapReadyAt, simAreaReady), within
 //                         MAPD.simR, which covers the instruments round a boat (sounder, sonar, plotter); reading a block whose pack
 //                         is not in is an error, never a stand-in value. A view that reads farther (the chart, the 3D shore) asks
 //                         first (mapViewReady) and draws without the depth until the pack comes.
@@ -59,6 +60,9 @@ function mapPacksIn(kind, x0, y0, x1, y1){
 // what the simulation needs at p (game km) within r km: core and sim
 function mapSimPacks(p, r){ return mapPacksIn('core', 0, 0, 0, 0).concat(mapPacksIn('sim', p.x - r, p.y - r, p.x + r, p.y + r)); }
 function mapReadyAt(p, r){ for (const pk of mapSimPacks(p, r)) if (!pk.buf) return false; return true; }
+// whether p's tile has detail (a sim pack): if not, the readers take the national core there
+function mapSimAt(p){ const T = MAPD.man.tile; return MAPD.byTile.has('sim:' + Math.floor(p.x / T) + ':' + Math.floor(p.y / T)); }
+function mapViewAt(p){ const T = MAPD.man.tile; return MAPD.byTile.has('view:' + Math.floor(p.x / T) + ':' + Math.floor(p.y / T)); }
 function mapNeed(p, r){ return Promise.all(mapSimPacks(p, r).map(mapLoad)); }
 function mapLoadKind(kind){ return Promise.all(MAPD.packs.filter(pk => pk.kind === kind).map(mapLoad)); }
 // ---------- blocks ----------

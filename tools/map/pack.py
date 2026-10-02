@@ -21,7 +21,7 @@ def write(layers, out, extra=None):
     man = dict(v=2, frame='utm33', block=BLOCK, tile=TILE, layers={}, packs=[], **(extra or {}))
     groups = {}; T = TILE // BLOCK
     for name, L in layers.items():
-        n = round(BLOCK / L['c']); assert L['ix0'] % n == 0 and L['iy0'] % n == 0 and L['nx'] % n == 0 and L['ny'] % n == 0, name
+        n = L.get('n') or round(BLOCK / L['c']); assert L['ix0'] % n == 0 and L['iy0'] % n == 0 and L['nx'] % n == 0 and L['ny'] % n == 0, name
         man['layers'][name] = dict(c=L['c'], ix0=L['ix0'], iy0=L['iy0'], nx=L['nx'], ny=L['ny'], n=n, type=L['type'], kind=L['kind'], dec=L.get('dec'))
         arr = np.asarray(L['arr']).astype(DT[L['type']])
         for j in range(L['ny'] // n):

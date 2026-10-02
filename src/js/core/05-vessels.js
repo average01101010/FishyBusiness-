@@ -57,7 +57,7 @@ function fleetState0(i, H){
       // drift downwind over the bank, but never onto land: try nearby directions, then a shorter drift
       const jx = (hash(dI * 97 + i * 11 + kc) - 0.5) * 0.3, jy = (hash(dI * 89 + i * 5 + kc) - 0.5) * 0.3, st0 = {x:spot.x + jx, y:spot.y + jy};
       const Hc = day0 + T + kc * C, wd = (windDir(Hc) - gridGamma(spot) + 180) * Math.PI / 180; let run = (0.35 + 0.075 * windAt(Hc)) * NM * 0.62, end = st0, dd = wd;
-      const ok = (a, b) => { for (let q = 1; q <= 8; q++){ const p = {x:a.x + (b.x - a.x) * q / 8, y:a.y + (b.y - a.y) * q / 8}; if (isLand(p) || coastDist(p) < 0.12) return false; } return true; };
+      const ok = (a, b) => { for (let q = 1; q <= 8; q++){ const p = {x:a.x + (b.x - a.x) * q / 8, y:a.y + (b.y - a.y) * q / 8}; if (isLandFar(p) || coastDistFar(p) < 0.12) return false; } return true; };   // the core only: the fleet works anywhere
       search: for (let tries = 0; tries < 3; tries++, run *= 0.5) for (const off of [0, 0.5, -0.5, 1, -1, 1.6, -1.6, Math.PI]){ const a = wd + off, e2 = {x:st0.x + Math.sin(a) * run, y:st0.y - Math.cos(a) * run}; if (ok(st0, e2)){ end = e2; dd = a; break search; } }
       D = {st0, end, dd}; if (DRIFT.size > 3000) DRIFT.clear(); DRIFT.set(dk, D);
     }

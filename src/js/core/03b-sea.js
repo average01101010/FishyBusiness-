@@ -2,34 +2,27 @@
 // Fetch: how far the wind has blown over open water before it reaches p (km). 'from' is the direction the wind comes from on the
 // grid (the rays run on the map): the true direction - gridGamma(p).
 // Seven rays at -45..+45 degrees, effective fetch after Saville (Shore Protection Manual 1984): sum(F cos^2 a) / sum(cos a).
-// The rays march by the distance to the shore (coastDist: 100 m grid, about ±0.07 km and up to 8 % long) and stop on the 25 m land mask.
-const FETCH = {open:600, edge:15, andoy:{x:-16, y:43.4}, kvaloy:62, cell:0.2, sec:10, max:80000};
+// The rays run on the national core (phase K6 of the coast plan), the same for every place on the coast: they march by the distance
+// to the shore (dc200: 200 m grid, 100 m steps) and stop on the 200 m land. Off the frame (the open Norwegian Sea, the Barents Sea,
+// the North Sea) the open sea's fetch is added.
+const FETCH = {open:600, cell:0.2, sec:10, max:80000};
 const FETCH_A = [-45, -30, -15, 0, 15, 30, 45].map(a => ({a:a * Math.PI / 180, c:Math.cos(a * Math.PI / 180)}));
 const FETCH_C = new Map();
-// beyond the map edge (legacy km): the open Norwegian Sea north and north-west, Andøya across Andfjorden to the west, fjords and islands south and east
-function offMapFetch(x, y, dx, dy){
-  if (y < 0) return x < FETCH.kvaloy || dx < -0.4 * -dy ? FETCH.open : FETCH.edge;
-  if (x < 0){
-    if (dx >= 0) return FETCH.edge;
-    const t = (FETCH.andoy.x - x) / dx, yA = y + dy * t;
-    return dy < 0 && yA < FETCH.andoy.y ? FETCH.open : Math.min(30, t);
-  }
-  return FETCH.edge;
-}
 function fetchRay(x, y, dx, dy){
   let s = 0;
   for (let i = 0; i < 3000; i++){
-    if (x < MAPB.x0 || y < MAPB.y0 || x >= MAPB.x1 || y >= MAPB.y1) { const q = LGI({x, y}); return s + offMapFetch(q.x, q.y, dx, dy); }
-    const d = coastDist({x, y});
-    let st = 0.025;
-    if (d < 0.1){ if (isLand({x, y})) return s; } else st = Math.max(0.025, 0.92 * d - 0.07);
+    if (x < MAPB.x0 || y < MAPB.y0 || x >= MAPB.x1 || y >= MAPB.y1) return s + FETCH.open;
+    if (s >= FETCH.open) return s;
+    const d = coastDistFar({x, y});
+    let st = 0.1;
+    if (d < 0.2){ if (isLandFar({x, y})) return s; } else st = Math.max(0.1, 0.92 * d - 0.15);
     x += dx * st; y += dy * st; s += st;
   }
   return s;
 }
 // x east, y south (km); a wind from bearing b comes from the direction (sin b, -cos b)
 function fetchAt(p, from){
-  if (isLand(p)) return 0;
+  if (isLandFar(p)) return 0;
   const b = from * Math.PI / 180; let num = 0, den = 0;
   for (const r of FETCH_A){ const a = b + r.a, F = fetchRay(p.x, p.y, Math.sin(a), -Math.cos(a)); num += F * r.c * r.c; den += r.c; }
   return num / den;
@@ -39,7 +32,7 @@ function fetchCell(ix, iy, k){
   const key = gridKey(ix, iy) * 36 + k; let v = FETCH_C.get(key);
   if (v === undefined){
     const p = {x:(ix + 0.5) * FETCH.cell, y:(iy + 0.5) * FETCH.cell};
-    v = isLand(p) ? -1 : Math.sqrt(fetchAt(p, k * FETCH.sec));
+    v = isLandFar(p) ? -1 : Math.sqrt(fetchAt(p, k * FETCH.sec));
     if (FETCH_C.size >= FETCH.max) FETCH_C.clear();
     FETCH_C.set(key, v);
   }

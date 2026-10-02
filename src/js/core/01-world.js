@@ -24,11 +24,14 @@ const GAMMA_C = new Map();
 // a heading on the grid (radians, clockwise from grid north) as a true bearing in degrees, 0-360, for what the crew reads
 const trueDeg = (r, p) => ((r * 180 / Math.PI + gridGamma(p)) % 360 + 360) % 360;
 function gridGamma(p){ const k = gridKey(Math.floor(p.x), Math.floor(p.y)); let g = GAMMA_C.get(k); if (g === undefined){ const l = natLL({x:Math.floor(p.x) + 0.5, y:Math.floor(p.y) + 0.5}); g = utm33(l.lat, l.lon).gamma; GAMMA_C.set(k, g); } return g; }
-// the extent of the map's data (km): the box round the legacy square, whose edges bow by millimetres (as legacyBox in mappack.mjs)
-const MAPB = (() => { const b = {x0:1e9, y0:1e9, x1:-1e9, y1:-1e9}, W = LEGF.W, H = LEGF.H;
+// HOME is Senja's map, the box round the legacy square (km; its edges bow by millimetres): where the game starts, the 2D zoom's
+// measure (MAP_W, MAP_H) and the 3D view's wide meshes. MAPB is the frame the map covers since phase K6 of the coast plan: the whole
+// coast, coarse from the national core everywhere and in detail where the tiles have it (01b-mapdata.js).
+const HOME = (() => { const b = {x0:1e9, y0:1e9, x1:-1e9, y1:-1e9}, W = LEGF.W, H = LEGF.H;
   for (let i = 0; i <= 32; i++) for (const [x, y] of [[W * i / 32, 0], [W * i / 32, H], [0, H * i / 32], [W, H * i / 32]]){ const q = LG(x, y); b.x0 = Math.min(b.x0, q.x); b.y0 = Math.min(b.y0, q.y); b.x1 = Math.max(b.x1, q.x); b.y1 = Math.max(b.y1, q.y); }
   return b; })();
-const MAP_W = MAPB.x1 - MAPB.x0, MAP_H = MAPB.y1 - MAPB.y0;
+const MAP_W = HOME.x1 - HOME.x0, MAP_H = HOME.y1 - HOME.y0;
+const MAPB = {x0:0, y0:0, x1:1450, y1:1720};
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const gDate = H => new Date(EPOCH + H * 3600000);
@@ -129,11 +132,12 @@ function rocksIn(x0, y0, x1, y1){
   out.sort((a, b) => a - b); return out.map(i => SEAMARKS.rocks[i]);
 }
 for (const q of BRIDGES) for (let i = 4; i + 1 < q.length; i += 2){ const g = LGm([q[i], q[i + 1]]); q[i] = g[0]; q[i + 1] = g[1]; }
-// distance from open water to the nearest shore on a 100 m grid (km), worked out at build (tools/mappack.mjs). DC is that layer's
-// extent (cells numbered from the frame's origin; mapStart fills it in), which the route's grid (11-route.js) covers: its cell v is
-// (ix0 + v % nx, iy0 + floor(v / nx))
+// distance from open water to the nearest shore (km): on the tiles' 100 m grid near the boats, else the national core's 200 m grid
+// (100 m steps to 25.5 km); coastDistFar is the core's alone, for what looks far. DC is the 100 m layer's extent (cells numbered from
+// the frame's origin; mapStart fills it in), which the route's grid (11-route.js) covers: its cell v is (ix0 + v % nx, iy0 + floor(v / nx))
 const DC = {nx:0, ny:0, ix0:0, iy0:0};
-function coastDist(p){ return rbil(MAPD.L.dc, p); }
+function coastDist(p){ return mapSimAt(p) ? rbil(MAPD.L.dc, p) : coastDistFar(p); }
+function coastDistFar(p){ return rbil(MAPD.L.dc200, p) * 0.1; }
 const dcCell = v => rcell(MAPD.L.dc, DC.ix0 + v % DC.nx, DC.iy0 + Math.floor(v / DC.nx));
 // Real depths: Kartverket 50 m depth model (open data), resampled to 100 m; gaps near land filled smoothly
 const GEO_CONTOURS = '@include(data/geo-contours.b64)', CONTOUR_LEVELS = [5,10,20,30,50,100,150,200,300,500,800];
@@ -144,11 +148,21 @@ function decodeContours(){
   for (let k = 0; k < n; k++){ const li = next(), len = next(); let x = 0, y = 0; const q = []; for (let i = 0; i < len; i++){ x += zz(next()); y += zz(next()); const g = LG(x / 100, y / 100); q.push(g.x.toFixed(2) + ',' + g.y.toFixed(2)); } out[li].push('M' + q.join('L')); }
   return out.map(a => a.join(''));
 }
-// off the map is land, so nothing sails off it
+// Land or water at p, for what is near the boats: the 25 m mask where a tile has it (its sim pack must be in, as it is round every
+// boat and set: simAreaReady), else the national core's 200 m. Off the frame is land, so nothing sails off it.
 function isLand(p){
   if (!(p.x >= MAPB.x0 && p.y >= MAPB.y0 && p.x < MAPB.x1 && p.y < MAPB.y1)) return true;
+  if (!mapSimAt(p)) return isLandFar(p);
   const L = MAPD.L.mask; return rcell(L, Math.floor(p.x / L.c), Math.floor(p.y / L.c)) === 1 && !inHarbourPocket(p);
 }
+// for what looks far (the fetch rays, the local fleet, the grounds' stock): the national core only, land at 200 m
+function isLandFar(p){
+  if (!(p.x >= MAPB.x0 && p.y >= MAPB.y0 && p.x < MAPB.x1 && p.y < MAPB.y1)) return true;
+  const L = MAPD.L.land200; return rcell(L, Math.floor(p.x / L.c), Math.floor(p.y / L.c)) === 1;
+}
+// for the screens (a tap on the chart, the route editor): the 25 m mask if its pack is in, else the core's 200 m and the pack is
+// asked for; never part of the simulation
+function isLandUI(p){ if (mapSimAt(p) && !mapReadyAt(p, 0)){ mapNeed(p, 0).catch(e => console.error(e)); return isLandFar(p); } return isLand(p); }
 // The water in front of a quay is water, whatever the 25 m mask makes of it: a harbour unit's dredged basin, and 50 m out from a
 // designer's quay face (QUAYS, 07-harbours.js), which the coastline of the map data may have moved (Finnsnes: OpenStreetMap's
 // coast of 2026 lies 30-45 m out from the face drawn from the pictures, phase K5 of the coast plan)

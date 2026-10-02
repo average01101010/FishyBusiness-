@@ -8,7 +8,7 @@ async function bootMap(){
   await mapStart();
   const saved = load(), pts = [];
   for (const v of saved && saved.fleet && saved.fleet.length ? saved.fleet : saved ? [saved] : []){
-    const b = v.boat; if (b && b.pos) pts.push(b.pos); for (const w of (v.plan && v.plan.wps) || []) pts.push(w); for (const w of (v.ops && v.ops.wps) || []) pts.push(w); }
+    const b = v.boat; if (b && b.pos) pts.push(b.pos); for (const w of [...((v.plan && v.plan.wps) || []), ...((v.ops && v.ops.wps) || []), ...(v.draft || [])]) pts.push(w); }
   for (const s of (saved && saved.sets) || []) if (s.a && s.b) pts.push(setMid(s));
   // the harbours (a new game starts in one, and every boat can go home) and the grounds (the talk on the quay weighs them all)
   for (const q of PORTS) pts.push(q.p); for (const g of GROUNDS) pts.push(g.p);
@@ -47,7 +47,7 @@ delete S.tubs; delete S.clean; for (const v of S.fleet || []){ delete v.tubs; de
 for (const v of S.fleet) withVessel(v, () => { for (const j of S.jobs || []) jobOk(j); if (S.plan && S.plan.depAt != null && !Number.isFinite(S.plan.depAt)) S.plan.depAt = S.t; });
 // before 30.09.2026 a standing-plan trip with you aboard counted as the hired skipper's, and the landing lost its access
 for (const v of S.fleet) withVessel(v, () => { const b = S.boat; if (S.plan && S.plan.ops && (b.status !== 'port' || b.land) && meAboard()) S.tripOwner = true; });
-view.cx = MAPB.x0 + MAP_W * 0.56; view.cy = MAPB.y0 + MAP_H * 0.5;
+view.cx = HOME.x0 + MAP_W * 0.56; view.cy = HOME.y0 + MAP_H * 0.5;
 { const r = svg.getBoundingClientRect(); const asp = (r.width / r.height) || 1; view.z = clamp(MAP_H * asp / MAP_W, 0.8, 1.6); }
 refreshAll();
 if (!S.intro) showIntro();

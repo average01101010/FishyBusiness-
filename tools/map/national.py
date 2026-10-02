@@ -78,6 +78,20 @@ def expo():
         print('expo tile', tx, ty, len(px), file=sys.stderr, flush=True)
     np.save(f, E); return E
 
+# The national core (phase K6): always loaded, for what looks far (the fetch rays, the local fleet, the depth model, the sea off the
+# tiles with detail): land at 200 m, the distance to it in 100 m steps to 25.5 km (u8, at 200 m), and the openness at 500 m. The
+# layers cover the frame padded to 1 750 km south (35 tiles of 50 km), in blocks of 50 km.
+def core_layers():
+    M = mask200(); E = expo().copy()
+    # the open sea off the coast's tiles (worked out only there) is open: 255
+    land500 = M[((np.arange(E.shape[0]) + 0.5) * 2.5).astype(int).clip(0, NY - 1)][:, ((np.arange(E.shape[1]) + 0.5) * 2.5).astype(int).clip(0, NX - 1)] > 0
+    E[(E == 0) & ~land500] = 255
+    pad = lambda a, ny, v=0: np.vstack([a, np.full((ny - a.shape[0], a.shape[1]), v, a.dtype)])
+    DC = np.minimum(np.round(ndimage.distance_transform_edt(M == 0) * 2), 255).astype(np.uint8)
+    return {'land200': dict(c=0.2, n=250, ix0=0, iy0=0, nx=7250, ny=8750, type='u8', kind='core', arr=pad(M, 8750)),
+            'dc200': dict(c=0.2, n=250, ix0=0, iy0=0, nx=7250, ny=8750, type='u8', kind='core', dec='dm', arr=pad(DC, 8750)),
+            'expo': dict(c=0.5, n=100, ix0=0, iy0=0, nx=2900, ny=3500, type='u8', kind='core', arr=pad(E, 3500, 255))}
+
 if __name__ == '__main__':
     st = sys.argv[1]
     if st == 'mask200':

@@ -254,6 +254,37 @@ Kartdataene lages i `tools/map/` (i git, uten dataene). Mellomlageret ligger i `
      - Pakkene havner i `out/national/lite/`, med kjerne per flis.
      - Spillet tar dem i bruk i K6–K8: lasteren må kunne laste kjernen per flis, og ha faste verdier for blokker uten pakke (innland og åpent hav).
 
+### 4.9 Kjernen for hele kysten (kystplanen, fase K6, 02.10.2026)
+
+- **Den nasjonale kjernen** ligger i `core`-pakken og lastes alltid. Den er 2,9 MB og lages av `national.py core_layers()`, som `region.py` legger ved:
+
+  | Lag | Innhold |
+  |---|---|
+  | `land200` | land på 200 m over hele rammen (Norge med naboland, til 1 750 km sør), fra Overture |
+  | `dc200` | avstanden til land på 200 m, i 100 m-steg til 25,5 km (u8) |
+  | `expo` | eksponeringen på 500 m (4.8). Utenfor kystflisene er åpen sjø 255. Den erstatter de gamle Senja-rastrene, også på Senja: feltene utenfor ble litt mindre åpne (0,93/0,82/0,91 mot 0,95/0,90/1,00) og fjordfeltene litt mer (0,31–0,40 mot 0,23–0,28). |
+
+  Lagene står i blokker på 50 km (`n` per lag i manifestet).
+- **Detaljflisene** (`sim`) har nå `mask` (25 m), `dc` (100 m) og `depth` (50 m). `mapSimAt(p)` sier om flisen til p har detalj, og `mapViewAt(p)` det samme for terreng og skog.
+- **Leserne:**
+  - `isLand`, `coastDist` og `depthF` bruker detaljen der flisene har den, og pakken må da være lastet (barrieren). Ellers bruker de kjernen: land på 200 m og dybdemodellen (`depthModel`, med eksponering og `coastDistFar`).
+  - `isLandFar` og `coastDistFar` leser bare kjernen. Det gjør det som ser langt:
+    - strøklengdestrålene og -rutene (`fetchRay`, `fetchAt`, `fetchCell`)
+    - den lokale flåtens drift
+    - fisket på de kjente feltene
+    - dybdemodellen
+  - `isLandUI` er for skjermene: et trykk i kartet og ruteredigeringen. Den bruker detaljen hvis pakken er lastet. Ellers bruker den kjernen og ber om pakken.
+- **Strøklengden:** strålene går på kjernen, stopper på 200 m-land, og får havets 600 km der de går ut av rammen. `offMapFetch` (Andøya, Kvaløya) er borte. Fra feltet nord for Husøy er strøklengden mot vest nå 530 km (før 257), fordi strålene ser havet utenfor Andøya.
+- **Rammen:**
+  - `MAPB` er hele rammen (0–1 450 × 0–1 720 km), og du kan seile overalt.
+  - `HOME` er Senja-boksen. Den brukes til startutsnittet, målet for zoom i 2D (`MAP_W`, `MAP_H`) og de vide meshene i 3D (det fjerne terrenget og sjøtilstanden), til K8.
+- **Utenfor detaljflisene:**
+  - Sjøkartet tegner land fra kjernen og dybden fra modellen. Kystlinjer og kurver kommer i K7.
+  - 3D bruker en flat stedfortreder fra kjernen (2 m land, −4 m sjø). Terrenget for hele kysten kommer i K8.
+- **Ikke ennå:**
+  - Autoruta («Følg leia») leser 100 m-avstanden over hele `dc`-laget. Med nasjonale detaljfliser blir det for stort, og den trenger vinduet i K9.
+  - Detaljflisene for hele kysten (`out/national/lite`) er ikke i git, og bygget bruker dem ikke ennå.
+
 ## 5. Systemer i spillet
 
 ### 5.1 Båter og utstyr

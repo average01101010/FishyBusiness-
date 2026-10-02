@@ -67,7 +67,7 @@ function routeGrab(mp){
 let rdragRaf = 0;
 function routeDragMove(g, mp){
   if (g.kind === 'ins'){ S.draft.splice(g.i, 0, {x:mp.x, y:mp.y, port:null, fish:0}); g.kind = 'move'; g.inserted = true; }
-  const w = S.draft[g.i]; w.x = mp.x; w.y = mp.y; delete w.auto; delete w.leia; g.moved = true; g.land = isLand(mp); RDRAG = g;
+  const w = S.draft[g.i]; w.x = mp.x; w.y = mp.y; delete w.auto; delete w.leia; g.moved = true; g.land = isLandUI(mp); RDRAG = g;
   if (!rdragRaf) rdragRaf = requestAnimationFrame(() => { rdragRaf = 0; renderDyn(); });
 }
 function routeDragCancel(g){ S.draft = JSON.parse(g.before); RDRAG = null; routeChanged(); }
@@ -75,7 +75,7 @@ function routeDragEnd(g){
   RDRAG = null;
   if (!g.moved){
     if (g.kind === 'ins'){
-      if (isLand(g.p)){ toast(t('on_land')); return; }
+      if (isLandUI(g.p)){ toast(t('on_land')); return; }
       draftEdit(() => S.draft.splice(g.i, 0, {x:g.p.x, y:g.p.y, port:null, fish:0}));
     } else { routeFocus(g.i); return; }
   } else if (g.land){ S.draft = JSON.parse(g.before); toast(S.lang === 'no' ? 'Punktet havnet på land og er flyttet tilbake.' : 'The point landed on land and has been moved back.'); }
@@ -108,7 +108,7 @@ async function leiaTo(pt){
   for (const p of PORTS){ const d = dist(p.p, pt); if (d < r && d < bd){ bd = d; near = p; } }
   const start = S.draft.length ? S.draft[S.draft.length - 1] : b.pos, aPort = !S.draft.length && b.status === 'port' ? b.port : null;
   if (near && aPort === near.id){ toast(t('already_here')); return; }
-  if (!near && isLand(pt)){ toast(t('on_land')); return; }
+  if (!near && isLandUI(pt)){ toast(t('on_land')); return; }
   const before = JSON.stringify(S.draft); LEIA_BUSY = true; panelDirty = true; renderPanel(); renderRouteTools();
   let res; try { res = await leiaRoute({x:start.x, y:start.y}, near ? near.p : pt, aPort, near ? near.id : null); } finally { LEIA_BUSY = false; }
   if (JSON.stringify(S.draft) !== before){ routeChanged(); return; }   // the route was changed while the way was being found

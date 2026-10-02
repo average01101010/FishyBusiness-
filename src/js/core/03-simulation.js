@@ -274,8 +274,8 @@ function stockW(p){
   const gx = p.x / STK.c - 0.5, gy = p.y / STK.c - 0.5, ix = Math.floor(gx), iy = Math.floor(gy), fx = gx - ix, fy = gy - iy;
   return [[gridKey(ix, iy), (1 - fx) * (1 - fy)], [gridKey(ix + 1, iy), fx * (1 - fy)], [gridKey(ix, iy + 1), (1 - fx) * fy], [gridKey(ix + 1, iy + 1), fx * fy]];
 }
-// every cell over the map at one value (for the tests)
-function stockFill(v){ const m = {}; for (let iy = Math.floor(MAPB.y0 / STK.c) - 1; iy <= Math.floor(MAPB.y1 / STK.c) + 1; iy++) for (let ix = Math.floor(MAPB.x0 / STK.c) - 1; ix <= Math.floor(MAPB.x1 / STK.c) + 1; ix++) stkSet(m, gridKey(ix, iy), v); return m; }
+// every cell over Senja's map at one value (for the tests)
+function stockFill(v){ const m = {}; for (let iy = Math.floor(HOME.y0 / STK.c) - 1; iy <= Math.floor(HOME.y1 / STK.c) + 1; iy++) for (let ix = Math.floor(HOME.x0 / STK.c) - 1; ix <= Math.floor(HOME.x1 / STK.c) + 1; ix++) stkSet(m, gridKey(ix, iy), v); return m; }
 // Shellfish have their own layer (S.cstk), made when the first pot is hauled. It stays one value per cell: pots stand still for
 // days and work the cell as a patch, the heat map does not show crab, and the pot calibration rests on it.
 function stockAt(p, sp){
@@ -310,16 +310,17 @@ function stockHour(H){
   // the local fleet works the known grounds on fishable days
   for (const q of npcStates(H)) if (q.fleet && q.st === 'fishing') takeStock(q.p, 18);
   const hr = gDate(H).getUTCHours();
-  if (hr >= 6 && hr < 15 && windAt(H) < 12) for (const g of GROUNDS.slice(0, 3)) for (let k = 0; k < 5; k++){ const a = k * 1.26 + H * 0.07, q = {x:g.p.x + Math.cos(a) * g.r * 0.45 * (k ? 1 : 0), y:g.p.y + Math.sin(a) * g.r * 0.45 * (k ? 1 : 0)}; if (!isLand(q)) takeStock(q, 12); }
+  if (hr >= 6 && hr < 15 && windAt(H) < 12) for (const g of GROUNDS.slice(0, 3)) for (let k = 0; k < 5; k++){ const a = k * 1.26 + H * 0.07, q = {x:g.p.x + Math.cos(a) * g.r * 0.45 * (k ? 1 : 0), y:g.p.y + Math.sin(a) * g.r * 0.45 * (k ? 1 : 0)}; if (!isLandFar(q)) takeStock(q, 12); }
 }
 // preferred depth (m) and spread per species: cod and saithe on the banks, haddock deeper, ling and tusk deep
 const DPREF = Object.fromEntries(ALLSP.map(sp => [sp, SPECIES[sp].dep]));
 function depthFactor(sp, d){ const q = DPREF[sp]; return 0.3 + 0.7 * Math.exp(-((Math.log(Math.max(d, 2) / q[0]) / q[1]) ** 2)); }
 const SST = [3.6,3.1,3.2,3.9,5.6,8.2,10.8,11.4,9.8,7.8,6.0,4.6];
 // where a harbour unit stands (07-harbours.js) its quay is dry and its basin dredged
-function depthF(p){ return unitDredge(p, isLand(p) ? 0 : DEPTH ? Math.max(0.8, rbil(MAPD.L.depth, p)) : depthModel(p)); }
+// the depth below chart datum (m): the tiles' depth where they have it, else the model from the core (openness and the distance to the shore)
+function depthF(p){ return unitDredge(p, isLand(p) ? 0 : DEPTH && mapSimAt(p) ? Math.max(0.8, rbil(MAPD.L.depth, p)) : depthModel(p)); }
 function depthAt(p){ return Math.round(depthF(p)); }
-function depthModel(p){ return (2 + (13 + 220 * Math.pow(exposure(p), 1.6) + 25 * vn(p.x / 4 + p.y / 7, 5)) * Math.pow(sstep(0, 1.5, coastDist(p)), 0.6)); }
+function depthModel(p){ return (2 + (13 + 220 * Math.pow(exposure(p), 1.6) + 25 * vn(p.x / 4 + p.y / 7, 5)) * Math.pow(sstep(0, 1.5, coastDistFar(p)), 0.6)); }
 function grade(f){ return f >= 85 ? 'E' : f >= 65 ? 'A' : f >= 40 ? 'B' : f >= 15 ? 'X' : 'V'; }
 // days with few boats out give slightly higher prices; 2025 showed almost no link between local volume and price, so the effect is small
 function supplyFactor(H){

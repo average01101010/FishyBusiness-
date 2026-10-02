@@ -54,7 +54,11 @@ function paintChart(scale){
       if (x < MAPB.x0 || y < MAPB.y0 || x >= MAPB.x1 || y >= MAPB.y1){ d[o] = OFF[0]; d[o + 1] = OFF[1]; d[o + 2] = OFF[2]; d[o + 3] = 255; prev[i] = NaN; left = NaN; continue; }
       const gx = clamp(x / c - 0.5, X0, X1 - 0.001), ix = Math.floor(gx), fx = gx - ix;
       let v;
-      if (smooth){ const q = i * 4; v = 0; for (let a = 0; a < 4; a++){ const ro = RO[a]; v += RW[a] * (D(CX[q], ro) * CW[q] + D(CX[q + 1], ro) * CW[q + 1] + D(CX[q + 2], ro) * CW[q + 2] + D(CX[q + 3], ro) * CW[q + 3]); } }
+      // off the tiles that have detail: the national core's land (the chart has no coastline drawn there yet) and the depth model
+      const q = {x, y}; if (!(x >= X0 * c && y >= Y0 * c && x < (X1 + 1) * c && y < (Y1 + 1) * c) || !mapSimAt(q)){
+        if (isLandFar(q)){ d[o] = 224; d[o + 1] = 206; d[o + 2] = 150; d[o + 3] = 255; prev[i] = NaN; left = NaN; continue; }
+        v = depthModel(q); }
+      else if (smooth){ const q = i * 4; v = 0; for (let a = 0; a < 4; a++){ const ro = RO[a]; v += RW[a] * (D(CX[q], ro) * CW[q] + D(CX[q + 1], ro) * CW[q + 1] + D(CX[q + 2], ro) * CW[q + 2] + D(CX[q + 3], ro) * CW[q + 3]); } }
       else v = (D(ix, iy) * (1 - fx) + D(ix + 1, iy) * fx) * (1 - fy) + (D(ix, iy + 1) * (1 - fx) + D(ix + 1, iy + 1) * fx) * fy;
       let col;
       if (fish){
@@ -81,8 +85,8 @@ function renderBase(){
   const plot = chartMode() === 'fish'; svg.classList.toggle('plot', plot); svg.classList.toggle('nav', !plot);
   if (!CONT_D && DEPTH) CONT_D = decodeContours(); scheduleChart();
   const g = [], ns = ' vector-effect="non-scaling-stroke"';
-  g.push('<rect x="' + (MAPB.x0 - 400) + '" y="' + (MAPB.y0 - 400) + '" width="' + (MAP_W + 800) + '" height="' + (MAP_H + 800) + '" class="offmap"/>');
-  g.push('<rect x="' + MAPB.x0 + '" y="' + MAPB.y0 + '" width="' + MAP_W + '" height="' + MAP_H + '" class="sea"/>');
+  g.push('<rect x="' + (MAPB.x0 - 400) + '" y="' + (MAPB.y0 - 400) + '" width="' + (MAPB.x1 - MAPB.x0 + 800) + '" height="' + (MAPB.y1 - MAPB.y0 + 800) + '" class="offmap"/>');
+  g.push('<rect x="' + MAPB.x0 + '" y="' + MAPB.y0 + '" width="' + (MAPB.x1 - MAPB.x0) + '" height="' + (MAPB.y1 - MAPB.y0) + '" class="sea"/>');
   // the graticule: in the national frame the parallels and meridians lean by the convergence, so they go as lines through P
   const gl = pts => '<path d="M' + pts.map(q => q.x.toFixed(3) + ',' + q.y.toFixed(3)).join('L') + '" class="grid" fill="none" stroke-width="1"' + ns + '/>';
   for (let lat = 69.0; lat <= 69.71; lat += 0.1){ const a = []; for (let lon = 16.3; lon <= 18.81; lon += 0.25) a.push(P(lat, lon)); g.push(gl(a)); }
@@ -259,7 +263,7 @@ function addWaypoint(pt){
   const r = 22 / view.px; let near = null, bd = 1e9;
   for (const p of PORTS){ const d = dist(p.p, pt); if (d < r && d < bd){ bd = d; near = p; } }
   if (near && b.status === 'port' && b.port === near.id && !S.draft.length){ toast(t('already_here')); return; }
-  if (!near && isLand(pt)){ toast(t('on_land')); return; }
+  if (!near && isLandUI(pt)){ toast(t('on_land')); return; }
   draftEdit(() => {
     const wp = (q, auto) => S.draft.push({x:q.x, y:q.y, port:null, fish:0, auto});
     // out of the harbour first, the way the boats go, when the first leg would cut across a breakwater or a point

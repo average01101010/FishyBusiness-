@@ -202,7 +202,7 @@ const G3 = (() => {
   const withOrigin = (m, o) => { if (o) m.o = o; return m; };
   const RO = {x:0, z:0, on:false}; let EYE = [0, 0, 0];
   const relM = m => model(m.o[0] - EYE[0], -EYE[1], m.o[1] - EYE[2], 0, 0, 0);
-  const mapMid = () => [(MAPB.x0 + MAPB.x1) * 500, (MAPB.y0 + MAPB.y1) * 500];
+  const mapMid = () => [(HOME.x0 + HOME.x1) * 500, (HOME.y0 + HOME.y1) * 500];
   function upload(pos, col, idx){ const m = {pb:buf(pos), cb:buf(col), n:idx ? idx.length : pos.length / 3}; if (idx) m.ib = buf(idx, gl.ELEMENT_ARRAY_BUFFER); return m; }
 
   // ---------- mesh builder ----------
@@ -253,7 +253,8 @@ const G3 = (() => {
   // ground (unitTerr)
   function terrRaw(x, z){
     if (x < MAPB.x0 * 1000 || z < MAPB.y0 * 1000 || x > MAPB.x1 * 1000 || z > MAPB.y1 * 1000) return -40;
-    const h = HG ? rbilM(MAPD.L.hgt, x, z) : rbilM(MAPD.L.mask, x, z) >= 0.5 ? 2 : -4;
+    // the tiles' ground where they have it, else a stand-in from the national core's 200 m land (phase K8 brings the ground of the whole coast)
+    const h = HG && mapViewAt({x:x / 1000, y:z / 1000}) ? rbilM(MAPD.L.hgt, x, z) : rbilM(MAPD.L.land200, x, z) >= 0.5 ? 2 : -4;
     return h > -3 && inHarbourPocket({x:x / 1000, y:z / 1000}) ? -3 : h;   // the water in front of a quay (01-world.js)
   }
   function terrH(x, z){ return unitTerr(x, z, terrRaw(x, z)); }
@@ -292,6 +293,7 @@ const G3 = (() => {
   }
   // share of forest around a point: bilinear over the 50 m forest cells, softened over the neighbours
   function forestAt(x, z){
+    if (!HG || !mapViewAt({x:x / 1000, y:z / 1000})) return 0;
     const LF = MAPD.L.forest, cm = LF.c * 1000, gx = x / cm - 0.5, gz = z / cm - 0.5, ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz; let s = 0;
     const F = (c, r) => (!HG || !mapIn(LF, c, r)) ? 0 : rcell(LF, c, r);
     for (let dz = -1; dz <= 2; dz++) for (let dx = -1; dx <= 2; dx++){ const wx = dx <= 0 ? (dx === 0 ? 1 - fx * 0.5 : 0.5 - fx * 0.5) : (dx === 1 ? 0.5 + fx * 0.5 : fx * 0.5), wz = dz <= 0 ? (dz === 0 ? 1 - fz * 0.5 : 0.5 - fz * 0.5) : (dz === 1 ? 0.5 + fz * 0.5 : fz * 0.5); s += F(ix + dx, iz + dz) * wx * wz; }
@@ -351,7 +353,7 @@ const G3 = (() => {
     if (!NEARM) return;
     for (const U of UNITA) if (U.o[0] > NEARM.x0 + 200 && U.o[0] < NEARM.x0 + NEARM.sx - 200 && U.o[1] > NEARM.z0 + 200 && U.o[1] < NEARM.z0 + NEARM.sz - 200) UPATCH.push(unitPatch(U, NEARM));
   }
-  function buildTerrain(){ TERR = makeMesh(MAPB.x0 * 1000, MAPB.y0 * 1000, MAP_W * 1000, MAP_H * 1000, 255); }
+  function buildTerrain(){ TERR = makeMesh(HOME.x0 * 1000, HOME.y0 * 1000, MAP_W * 1000, MAP_H * 1000, 255); }   // Senja's (phase K8 makes it follow the boat)
   // sharp terrain in a 6 km corridor around the boat, rebuilt as it moves
   let shT = 0;
   function updateShadows(){
@@ -629,7 +631,7 @@ const G3 = (() => {
       if (occ[Math.floor((z - z0) / 25) * 40 + Math.floor((x - x0) / 25)] || onUnit(x, z, 8)) continue;
       const h = terrH(x, z); if (h < 2.5 || h > 330) continue;
       const sl = Math.hypot(terrH(x + 10, z) - terrH(x - 10, z), terrH(x, z + 10) - terrH(x, z - 10)) / 20; if (sl > 0.75) continue;
-      const LF = MAPD.L.forest, fc = Math.floor(x / (LF.c * 1000)), fr = Math.floor(z / (LF.c * 1000)), fo = HG && mapIn(LF, fc, fr) && rcell(LF, fc, fr) ? 1 : 0;
+      const LF = MAPD.L.forest, fc = Math.floor(x / (LF.c * 1000)), fr = Math.floor(z / (LF.c * 1000)), fo = HG && mapViewAt({x:x / 1000, y:z / 1000}) && mapIn(LF, fc, fr) && rcell(LF, fc, fr) ? 1 : 0;
       const pr = (1 - sstep(210, 330, h)) * (1 - sstep(0.42, 0.75, sl)) * (fo ? 0.95 : 0.5) * sstep(0.36, 0.62, noise2(x / 260, z / 260, 31) * 0.7 + noise2(x / 60, z / 60, 37) * 0.3);
       if (hash((hh * 5e7 | 0) + 11) > pr) continue;
       const th = 4 + 6 * hash((hh * 9e7 | 0) + 13) * (1 - sstep(120, 320, h) * 0.55), y = h - 0.3, isPine = hash((hh * 2e7 | 0) + 17) < 0.18, v = 0.88 + 0.24 * hash((hh * 4e7 | 0) + 19);
@@ -1780,7 +1782,7 @@ const G3 = (() => {
   // so when the near terrain moves the sea never falls back to the coarse map for a moment (no sudden change in the waves)
   function ssLevel(n, unit){ return {n, unit, brect:null, rect:null, sec:new Map(), sw:null, tex:null, cpu:null, k:[-1, -1], job:null, on:false}; }
   const SSL = {n:ssLevel(32, 4), w:ssLevel(128, 5)};
-  function ssRect(L){ return L === SSL.n ? (NEARM ? [NEARM.x0, NEARM.z0, NEARM.sx] : null) : [MAPB.x0 * 1000, MAPB.y0 * 1000, Math.max(MAP_W, MAP_H) * 1000]; }
+  function ssRect(L){ return L === SSL.n ? (NEARM ? [NEARM.x0, NEARM.z0, NEARM.sx] : null) : [HOME.x0 * 1000, HOME.y0 * 1000, Math.max(MAP_W, MAP_H) * 1000]; }
   function ssWork(L, until){
     const R = ssRect(L); if (!R) return;
     let fresh = false; if (!L.brect || L.brect[0] !== R[0] || L.brect[1] !== R[1] || L.brect[2] !== R[2]){ L.brect = R; L.sec.clear(); L.sw = null; L.job = null; fresh = true; }
@@ -2086,7 +2088,7 @@ const G3 = (() => {
     GRECT = [x0, z0, 1 / sx, 1 / sx];
     // shore layer for the water: R = land cover (surf band), G = how shallow
     const S2 = 256, dat = new Uint8Array(S2 * S2 * 4), st = sx / S2, dok = mapViewReady(x0 / 1000, z0 / 1000, (x0 + sx) / 1000, (z0 + sx) / 1000, () => { if (NEARM) NEARM.stale = true; });
-    for (let j = 0; j < S2; j++) for (let i = 0; i < S2; i++){ const x = x0 + (i + 0.5) * st, z = z0 + (j + 0.5) * st, m = rbilM(MAPD.L.mask, x, z), o = (j * S2 + i) * 4, dd = m > 0.5 ? 0 : dok ? depthF({x:x / 1000, y:z / 1000}) : 50; dat[o] = Math.round(m * 255); dat[o + 1] = Math.round(clamp(1 - dd / 14, 0, 1) * 255); dat[o + 3] = 255; }
+    for (let j = 0; j < S2; j++) for (let i = 0; i < S2; i++){ const x = x0 + (i + 0.5) * st, z = z0 + (j + 0.5) * st, m = dok ? (mapSimAt({x:x / 1000, y:z / 1000}) ? rbilM(MAPD.L.mask, x, z) : rbilM(MAPD.L.land200, x, z)) : rbilM(MAPD.L.land200, x, z), o = (j * S2 + i) * 4, dd = m > 0.5 ? 0 : dok ? depthF({x:x / 1000, y:z / 1000}) : 50; dat[o] = Math.round(m * 255); dat[o + 1] = Math.round(clamp(1 - dd / 14, 0, 1) * 255); dat[o + 3] = 255; }
     STEX = STEX || gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, STEX);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, S2, S2, 0, gl.RGBA, gl.UNSIGNED_BYTE, dat);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -2158,7 +2160,7 @@ const G3 = (() => {
       // flat sea: the whole map less the near terrain for the far pass; in the near pass the near terrain's square (or around the camera)
       // less the wave patch around the boat
       const y = -eye[1] - (drop || 0) + (env.tide || 0);
-      if (drop === undefined){ const ox = (MAPB.x0 + MAPB.x1) * 500, oz = (MAPB.y0 + MAPB.y1) * 500, sc = Math.max(MAP_W, MAP_H) * 500 + 40000;
+      if (drop === undefined){ const ox = (HOME.x0 + HOME.x1) * 500, oz = (HOME.y0 + HOME.y1) * 500, sc = Math.max(MAP_W, MAP_H) * 500 + 40000;
         seaRing(u, eye, y, [ox - sc, oz - sc, ox + sc, oz + sc], NEARM ? [NEARM.x0, NEARM.z0, NEARM.x0 + NEARM.sx, NEARM.z0 + NEARM.sz] : null); }
       else {
         let R; if (NEARM) R = [NEARM.x0 - 20, NEARM.z0 - 20, NEARM.x0 + NEARM.sx + 20, NEARM.z0 + NEARM.sz + 20];
