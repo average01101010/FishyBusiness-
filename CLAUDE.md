@@ -40,6 +40,7 @@ Et kystfiskespill fra Senja som kjører som én selvstendig HTML-side, publisert
 - `src/js/vessel3d.js` ligger i et eget `<script>` før `view3d.js`. Den har byggesettet for båtmodellene (`SPEC3D`, `buildVesselModel`, `geoOf`, `vesselSVG`, `npcKit`) og trenger ingen WebGL. Den bruker kjernens globale navn (for eksempel `sstep`) og kan ikke deklarere dem på nytt.
 - `src/js/view3d.js` ligger i et eget `<script>` og eksponerer `G3`.
 - Ingen kode skal velge etter båttypens navn (`=== 'sjark'`). Bruk feltene i `VESSELS`, og `vesseltest.py` passer på det.
+- Detaljerte båtmodeller lages i Blender med skript i `tools/boats/` (`pip install bpy==4.5.4`, så for eksempel `python3 tools/boats/malo36.py`). De skriver GLB og sidebilde som base64 til `src/data/boat-*.b64`, som `src/index.html` legger i egne dataelementer (`<script id="glb-TYPE">` og `pic-TYPE`, som ikke kjøres). `vessel3d.js` leser dem først når typen trengs (`glbData`). En ny modell trenger to slike linjer i malen. Referansetegningene legges ikke i repoet, bare målene. Kontrollbildene havner i `tools/boats/out/` (ikke i git). Se 5.13 i overleveringen.
 - `src/data/` inneholder komprimerte kartdata. Filene redigeres ikke for hånd.
 
 ## Begrensninger

@@ -112,7 +112,7 @@ Båtene står i `VESSELS` (`core/02-species-gear.js`). Tallene er startverdier o
 | `sjark` | Sjark 34 fot (10,4 m) med styrhus | 10,4 × 3,8 × 1,7 | 11 | 3 000 kg | 180 hk, 8,5/10 kn | 1+3 / 2 | 1 150 000 | åpen 10 m og over |
 | `hurtigsjark` | Brukt hurtigsjark 10,99 m, 500 hk | 10,99 × 3,9 × 1,6 | 12 | 5 000 kg | 500 hk, 17/22 kn | 1+3 / 2 | 4 900 000 | åpen 10 m og over |
 | `sjarkny` | Ny hurtigsjark 10,99 m, 650 hk | 10,99 × 4,3 × 1,8 | 15 | 7 000 kg | 650 hk, 20/25 kn | 1+3 / 3 | 10 500 000, 45 døgn på verftet | åpen 10 m og over |
-| `breisjark` | Bred sjark 10,99 × 5,6 m | 10,99 × 5,6 × 2,3 | 28 | 14 000 kg | 600 hk, 9,5/11 kn | 1+4 / 4 | 9 000 000 | åpen 10 m og over |
+| `breisjark` | Sjark 36 fot med bakk og ly (etter Malo 36) | 10,99 × 4,2 × 2,0 | 20 | 10 000 kg (19 m³) | 300 hk, 9,5/10,5 kn | 1+4 / 4 | 9 000 000 | åpen 10 m og over |
 | `kyst15` | Kystbåt 14,99 m med lugarer | 14,99 × 6,6 × 3,0 | 75 | 28 t | 750 hk, 10/11,5 kn | 1+5 / 6 | 18 000 000 | bare lukket gruppe |
 | `kyst21` | Eldre kystbåt 21 m (1978) | 21 × 7,2 × 3,4 | 190 | 55 t | 900 hk, 10/11 kn | 1+6 / 8 | 9 000 000 | bare lukket, ikke innenfor fjordlinja |
 | `snokrabbe` 🔒 | Snøkrabbefartøy 50 m med fryseri | 50 × 11 × 6 | 1 800 | 500 t fryst | 3 600 hk, 11/13,5 kn | 14 / 18 | 60 mill. | havfiske, konsesjon |
@@ -389,6 +389,12 @@ Mister du juksa, fiskes det videre med stang til du kjøper ny i Fiskeutstyr. `m
   - `SPEC3D[type]` beskriver hver båt. `buildVesselModel(type, lod, livery)` gir `{o, glass, cap, geo}`, og `geoOf(type)` gir det `view3d.js` trenger (øye og ratt, dekket, lanterner, flagg, haler, påfylling, plass for mannskapet). Skiffen har fortsatt den håndbygde modellen (`hand:true`).
   - Glasset tegnes blandet etter resten, og åpne skrog får dybdemasken (`cap`) som holder sjøen ute.
   - Budsjettet er 25 000 punkter for kystbåtene og 45 000 for havbåtene. Kystbåtene ligger på 11 000–22 000 og havbåtene på 19 000–23 000, og hver bygges på under 15 ms.
+- **Detaljerte modeller fra Blender (GLB, fra 02.10.2026):** Byggesettet over holdt ikke målet om realistiske båter. Første båt laget på den nye måten er `breisjark`, 36-fots Malo-sjarken.
+  - **Kilden** er et skript, `tools/boats/malo36.py`, som kjører Blender som Python-modul. Installer med `pip install bpy==4.5.4` og kjør `python3 tools/boats/malo36.py`. Det skriver `src/data/boat-malo36.b64` (GLB, rundt 0,9 MB) og `src/data/boat-malo36-side.b64` (sidebildet til Båthandel, WebP). Med `fast` hoppes bildene over, og med `check` lages bare overlegget. Bildene havner i `tools/boats/out/` (ikke i git).
+  - **Målene** er tatt fra generalarrangementet for 36 fots Malo-sjark 10,99 m (Jemar Norpower, 2014) og databladet: lengde 10,99 m, bredde 4,20 m, dybde 2,34 m, høyde med mast rundt 9,5 m, lasterom 19 m³ og 300 hk. Stasjonene på tegningen står 1 m fra hverandre (92,4 px/m), og profil og dekksplan ble målt til tabeller i skriptet: kjøl og forfot, stevn, ripe, halvbredder, styrhus, ly, vinduer og rigg. Tegningen er ikke i repoet. Overlegget (`ov_side_on_ga.png`, `ov_top_on_ga.png`) legger modellen oppå tegningen, og den treffer i profil og plan. Under vannlinja og i tverrsnittene er formen mitt valg: bunnreisning, rund kimming med radius og utfall.
+  - **Bare eksteriør** (Jonas' krav). Styrhuset har mørke innervegger, konsoll og ratt, slik at vinduene ser ut som glass og rattkameraet ser ut.
+  - **Fila:** Tre deler: full detalj (rundt 26 600 trekanter), glasset, og en enkel utgave (rundt 2 800 trekanter) for NPC-båter fra 300 m til 1,5 km. Posisjonene lagres som 16-bits heltall, og normaler og farger som bytes (KHR_mesh_quantization). Fargens alfa er glans. `_PAINT` har lakksonen (1 = skroget) og den innbakte skyggen, så en fargedrakt kan male om skroget. Skyggen er bakt med Cycles. Alle flater må vende utover, ellers blir både lyset i spillet og skyggen feil (`orient`/`out` i `bpyutil.py`).
+  - **I spillet:** `glbParse` og `glbModel` i `vessel3d.js` leser fila første gang typen vises. `buildVesselModel` bruker den når siden har et dataelement `glb-TYPE`, og ellers byggesettet. Dataene ligger i `<script id="glb-breisjark">` og `<script id="pic-breisjark">` med `type="application/octet-stream"` i `src/index.html`, ved siden av `bld` og `hgt`. De må ikke ligge som strenger i et skript: da tar det så lang tid å lese skriptet at klokka rakk å kalle `G3` før `view3d.js` var lastet. Plassene 3D-visningen trenger, står i GLB-ens `extras`: øye, ratt, mannskap, lanterner, haler, påfylling og flagg. `vesselSVG` viser sidebildet når typen har et, og NPC-båter i samme størrelse bruker modellen med fargedraktene.
 
 
 ### 5.14 NPC-flåte og kartplotter
@@ -445,7 +451,8 @@ Inspirert av Fishing: Barents Sea. Den gamle handlingslinja `#actbar` er borte, 
 - **Skuffen** (`#drawer`): Liggende kommer den fra høyre (380 px), stående er den et ark over knappene (55 % av høyden). Innholdet er telefonens sider: `PHONE.page(side)` lager HTML, og `PHONE.dact(side, handling, data)` kjører en `data-pa`-handling som om siden var åpen i telefonen. `DOCK.open('side:fane')` åpner en side med en fane valgt.
   - **Sidene i skuffen** (`DRAWER` i `05-phone.js`): `lever`, `is`, `agn`, `bank`, `oppdrag`, `mannskap` og `bors` (som to faner), `fartoy` (Båthandel), `utstyr`, `fiske` (med kjøp av garn, line og teiner), `verksted`, `beholdning` (Redskap, Lasterom, Båten), og de gamle `havn`, `last` og `redskap`.
   - `PHONE.open(side)` og `data-pa="open"` sender en side i `DRAWER` til skuffen. Varslene i Rederi bruker `side:fane`, for eksempel `beholdning:last`.
-- **Telefonen** har ti apper: Vær, Kystposten, Meldinger, Rederi, Salgslaget (Priser, Mine landinger, Toppliste), Kvote, Haill, Sjømann, Redning og Innstillinger. Kvote er fanen fra Salgslaget som egen app.
+- **Telefonen** har tolv apper: Vær, Kystposten, Meldinger, Rederi, Salgslaget (Priser, Mine landinger, Toppliste), Kvote, Haill, Sjømann, Redning, Innstillinger og Admin. Kvote er fanen fra Salgslaget som egen app.
+  - **Admin** (testverktøy, 02.10.2026) har tidsskalaen (pause, 6×, 180×, 1 800× og 10 800×, det vil si `S.mult` 0, 1, 30, 300 og 1800) og knappen «+ 100 000 kr», som legger pengene i kassa uten å regne dem som inntekt og skriver en linje i loggen. Tempovalget er flyttet hit fra Innstillinger. Appen fjernes før spillet får felles klokke.
 - **«Sett ut»** (`ui/03d-setmode.js`, tilstanden `SETM` er deklarert i `03-map.js`): Valget i viften åpner kartplotteren med redskapet tegnet som en linje fra båten. Lengden er den samme som `startSet` bruker: garn 30 m, line 1,5 m per krok, teiner 25 m mellom hver. Kartet zoomer så linja fyller rundt 40 %.
   - Dra i enden, eller trykk i kartet, for å snu linja. − og + endrer antall stamper eller teiner (en garnlenke settes hel).
   - Linja er rød med grunnen når enden er på land eller grunnere enn 5 m, når den krysser land, eller når `gearRules` sier nei.
@@ -806,6 +813,14 @@ Jonas' valg: alle tre kystredskapene i samme runde, ståtid for line som avveiin
   - En dag med håndjuksa samme sted: ca. 430 kg for én person.
 - **Priser (startverdier):** garn 1 500 kr, stamp hyseline 2 100 og bankline 1 700, teine 550/850, blåsesett 2 500, tung dregg 1 500, agn 18 kr/kg.
 
+### Felles verden og tid (beslutninger 01.–02.10.2026)
+
+- **Tiden:** 6× beholdes, også for farten i bildet. Et døgn i spillet er 4 ekte timer. Forslaget om ekte fart i bildet (med ETA i ekte tid og på spillklokka) ble vurdert og droppet: døgnrytmen er viktigere, og store båter som går saktere, oppleves uansett realistisk.
+- **Spolingen** (tempo 180×, 1 800× og 10 800×) er et adminverktøy for testing og skal fjernes for spillerne. Den ligger nå i Admin-appen i telefonen, sammen med pause og «+ 100 000 kr».
+- **Felles verden når serveren kommer:** samme klokke og dato, samme bestander og samme priser fra mottakene for alle. Konkurransen kommer av at alle er ute etter den samme fisken. Bestandene skal bygge på ekte data og forvaltes realistisk.
+- **Ingen VHF og ingen sosiale møteplasser.** I kartplotteren kan du trykke på et AIS-mål innenfor rekkevidden og se hvem det er, hvilken båt og hvilket felt hun ligger på.
+- **Spillet krever nett.** PWA-en mellomlagrer filene, men spilles bare med nett.
+
 ### PWA og hele kysten (veikart, 30.09.2026)
 
 Jonas diskuterte med en annen AI-modell om å gjøre spillet til en PWA og utvide det til hele kysten fra Grense Jakobselv til Nordmøre. Vurderingen ble lagret som veikart. **Ingenting er bygget.** Hver fase krever eget klarsignal.
@@ -924,6 +939,7 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
   - Kvotetillegg for landegnet line er ikke bekreftet og ikke bygget inn.
   - NPC-båtene har ikke egne blåser ennå.
 
+- **Malo-modellen (`breisjark`), åpne punkter:** Skrogformen under vannlinja er anslått (tegningen har ikke spantriss). Fra rattet ser du bare konsollen, ikke stoler eller instrumenter. Rekkverk og vaiere er tynne og kan flimre på avstand. Lyset i spillet er enklere enn i Blender, så sammenlign i spillet, ikke bare med Cycles-bildene. Fila gjør `dist/index.html` 1,25 MB større (6,2 MB). Alle 14 typer på denne måten ville gitt rundt 18 MB, over grensen på 16 MB for én artifact, så de neste krever ekstra filer i artifacten eller PWA-en.
 - **Fartøystigen, usikre tall og regler:**
   - Kvoteprisen (260 kr/kg) er et anslag fra ett salg i 2025 og Riksrevisjonen i 2017.
   - Vilkårene til Innovasjon Norge (15 %, 8,9 %, 10 år) er ikke sjekket. Andelen er satt for spillets tempo.
