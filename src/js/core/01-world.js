@@ -1,5 +1,3 @@
-'use strict';
-// ===== CORE START =====
 const EPOCH = Date.UTC(2027, 2, 1, 6, 0, 0);
 // game minutes per real minute: 6 makes a fishing trip one evening, the skrei season two real weeks and a year about two months
 const GAME_RATE = 6;
