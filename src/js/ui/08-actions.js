@@ -192,11 +192,15 @@ function showAway(mins, fromIdx){
 
 // ---------- time ----------
 const CATCHUP_CAP = 72 * 60;
+// Game minutes are played only while every vessel's waters are loaded (simAreaReady, 01b-mapdata.js): what is left waits in
+// CATCH_LEFT and is played by the tick once the packs are in, so a slow network makes the clock wait, never guess.
+let CATCH_LEFT = 0;
+function playMinutes(n){ let i = 0; for (; i < n; i++){ if (!simAreaReady()){ CATCH_LEFT += n - i; break; } step(); } return i; }
 function catchUp(realMs){
   const mins = Math.min(CATCHUP_CAP, Math.floor(realMs / 1000 / 60 * GAME_RATE));
   if (mins < 1) return;
   const idx = S.log.length;
-  for (let i = 0; i < mins; i++) step();
+  playMinutes(mins);
   panelDirty = true;
   if (mins >= 10) showAway(mins, idx);
 }
@@ -204,7 +208,7 @@ let lastWall = Date.now(), acc = 0, lastPanel = 0, lastSave = 0;
 function tick(){
   const now = Date.now(), dt = (now - lastWall) / 1000; lastWall = now;
   // (until the simulation's data is in, the clock waits: 11-boot.js)
-  if (SIMREADY){ if (dt > 6) catchUp(dt * 1000); else { acc += dt * GAME_RATE * S.mult / 60; let n = 0; while (acc >= 1 && n < 3000){ step(); acc -= 1; n++; } } }
+  if (SIMREADY){ if (CATCH_LEFT > 0){ const n = Math.min(CATCH_LEFT, 3000); CATCH_LEFT -= n; playMinutes(n); panelDirty = true; } else if (dt > 6) catchUp(dt * 1000); else { acc += dt * GAME_RATE * S.mult / 60; let n = 0; while (acc >= 1 && n < 3000 && simAreaReady()){ step(); acc -= 1; n++; } } }
   heatTick();
   if (!G3.isActive()){ renderDyn(); if (AISSEL) renderAisCard(); heatPaint(); } renderHud(); renderClock(); renderActs(); DOCK.tick(); energyUi(); INSTR.renderGPS(); tutUpdate(); PHONE.status(); PHONE.tickHome();
   if (S.order && S.t >= S.order.due) deliverOrder();

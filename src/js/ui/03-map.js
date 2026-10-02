@@ -20,32 +20,10 @@ function toMap(cx, cy){ const pt = svg.createSVGPoint(); pt.x = cx; pt.y = cy; c
 const ptsStr = poly => poly.map(p => p.x.toFixed(3) + ',' + p.y.toFixed(3)).join(' ');
 function txt(p, s, cls, size, extra = ''){ return '<text x="' + p.x.toFixed(3) + '" y="' + p.y.toFixed(3) + '" class="' + cls + '" font-size="' + size.toFixed(3) + '" ' + extra + '>' + s + '</text>'; }
 
-let CONT_D = null, chartImg = {key:'', url:''};
+let CONT_D = null;
 const PLOT_STOPS = [[0,[230,60,40]],[5,[245,140,40]],[15,[250,215,60]],[30,[120,210,80]],[60,[60,200,190]],[120,[40,140,230]],[250,[30,70,200]],[500,[60,30,150]],[1000,[30,10,70]]];
 function plotCol(d){ for (let i = 1; i < PLOT_STOPS.length; i++){ const [b, cb] = PLOT_STOPS[i]; if (d < b){ const [a, ca] = PLOT_STOPS[i - 1], u = (d - a) / (b - a); return [ca[0] + (cb[0] - ca[0]) * u, ca[1] + (cb[1] - ca[1]) * u, ca[2] + (cb[2] - ca[2]) * u]; } } return PLOT_STOPS[PLOT_STOPS.length - 1][1]; }
 function cssRGB(name){ const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim().replace('#', ''); return [parseInt(v.slice(0, 2), 16), parseInt(v.slice(2, 4), 16), parseInt(v.slice(4, 6), 16)]; }
-function buildChartImg(){
-  if (!DEPTH) return;
-  const plot = chartMode() === 'fish', sd = safeDepth(), key = (plot ? 'p' : 'n' + sd);
-  if (chartImg.key === key) return;
-  const nx = GEO_DEPTH.nx, ny = GEO_DEPTH.ny, cv = document.createElement('canvas'); cv.width = nx; cv.height = ny;
-  const ctx = cv.getContext('2d'), img = ctx.createImageData(nx, ny), px = img.data;
-  for (let r = 0; r < ny; r++) for (let c = 0; c < nx; c++){
-    const i = r * nx + c, d = DEPTH[i], o = i * 4; if (d <= 0) continue;
-    let col, a = 255;
-    if (plot){
-      const dx = (DEPTH[r * nx + Math.min(nx - 1, c + 1)] || d) - (DEPTH[r * nx + Math.max(0, c - 1)] || d), dy = (DEPTH[Math.min(ny - 1, r + 1) * nx + c] || d) - (DEPTH[Math.max(0, r - 1) * nx + c] || d);
-      const hs = clamp(0.8 + (dx + dy) * 0.35 * 0.012, 0.4, 1.25), pc = plotCol(d); col = [pc[0] * hs, pc[1] * hs, pc[2] * hs];
-    } else {
-      // ECDIS style: water shallower than the safety depth is blue, the rest white, with a darker safety contour
-      const nb = [DEPTH[r * nx + Math.min(nx - 1, c + 1)], DEPTH[r * nx + Math.max(0, c - 1)], DEPTH[Math.min(ny - 1, r + 1) * nx + c], DEPTH[Math.max(0, r - 1) * nx + c]];
-      const edge = d >= sd && nb.some(v => v > 0 && v < sd);
-      col = edge ? [70, 120, 175] : d < Math.min(2, sd / 2) ? [128, 176, 222] : d < sd ? [163, 201, 234] : [249, 251, 252];
-    }
-    px[o] = col[0]; px[o + 1] = col[1]; px[o + 2] = col[2]; px[o + 3] = a;
-  }
-  ctx.putImageData(img, 0, 0); chartImg = {key, url:cv.toDataURL('image/png')};
-}
 // ---------- chart painted at screen resolution for the current view (crisp at any zoom, like a real chart plotter) ----------
 const chartCv = document.createElement('canvas'); chartCv.id = 'chartcv'; svg.parentNode.insertBefore(chartCv, svg);
 let chartTimer = 0; window.chartReady = true;
@@ -56,7 +34,8 @@ function paintChart(scale){
   const dpr = Math.min(2, window.devicePixelRatio || 1) * scale, W = Math.max(2, Math.round(r.width * dpr)), H = Math.max(2, Math.round(r.height * dpr));
   if (chartCv.width !== W) chartCv.width = W; if (chartCv.height !== H) chartCv.height = H;
   const hh = MAP_H / view.z, ww = hh * (r.width / r.height), x0 = view.cx - ww / 2, y0 = view.cy - hh / 2, kx = ww / W, ky = hh / H;
-  const ctx = chartCv.getContext('2d'), img = ctx.createImageData(W, H), d = img.data, nx = GEO_DEPTH.nx, ny = GEO_DEPTH.ny, c = GEO_DEPTH.c, D = DEPTH;
+  if (!mapViewReady(x0, y0, x0 + ww, y0 + hh, () => paintChart(scale))) return;   // the depth under the view is on its way: keep the last picture
+  const ctx = chartCv.getContext('2d'), img = ctx.createImageData(W, H), d = img.data, nx = GEO_DEPTH.nx, ny = GEO_DEPTH.ny, c = GEO_DEPTH.c, LD = MAPD.L.depth, D = (ix, iy) => rcell(LD, ix, iy);
   const fish = chartMode() === 'fish', sd = safeDepth(), s2 = sd > 2.5 ? Math.min(2, sd / 2) : -1;
   const OFF = fish ? [5, 9, 13] : [221, 227, 229], WHITE = [249, 251, 252], U1 = [167, 203, 235], U2 = [134, 180, 223], SC = [59, 106, 165];
   const prev = new Float32Array(W).fill(NaN), sh = 1 / (Math.max(kx, 0.0005) * 10), smooth = scale >= 1;
@@ -67,16 +46,16 @@ function paintChart(scale){
   if (smooth) for (let i = 0; i < W; i++){ const x = lx0 + (i + 0.5) * kx, gx = x / c - 0.5, ix = Math.floor(gx); bw(gx - ix, tmp); for (let k = 0; k < 4; k++){ CX[i * 4 + k] = clamp(ix - 1 + k, 0, nx - 1); CW[i * 4 + k] = tmp[k]; } }
   const RW = [0, 0, 0, 0], RO = [0, 0, 0, 0];
   for (let j = 0; j < H; j++){
-    const y = ly0 + (j + 0.5) * ky, gy = clamp(y / c - 0.5, 0, ny - 1.001), iy = Math.floor(gy), fy = gy - iy, r0 = iy * nx, r1 = r0 + nx;
-    if (smooth){ const gyr = y / c - 0.5, iyr = Math.floor(gyr); bw(gyr - iyr, RW); for (let k = 0; k < 4; k++) RO[k] = clamp(iyr - 1 + k, 0, ny - 1) * nx; }
+    const y = ly0 + (j + 0.5) * ky, gy = clamp(y / c - 0.5, 0, ny - 1.001), iy = Math.floor(gy), fy = gy - iy;
+    if (smooth){ const gyr = y / c - 0.5, iyr = Math.floor(gyr); bw(gyr - iyr, RW); for (let k = 0; k < 4; k++) RO[k] = clamp(iyr - 1 + k, 0, ny - 1); }
     let left = NaN;
     for (let i = 0; i < W; i++){
       const x = lx0 + (i + 0.5) * kx, o = (j * W + i) * 4;
       if (x < 0 || y < 0 || x >= MAP_W || y >= MAP_H){ d[o] = OFF[0]; d[o + 1] = OFF[1]; d[o + 2] = OFF[2]; d[o + 3] = 255; prev[i] = NaN; left = NaN; continue; }
       const gx = clamp(x / c - 0.5, 0, nx - 1.001), ix = Math.floor(gx), fx = gx - ix;
       let v;
-      if (smooth){ const q = i * 4; v = 0; for (let a = 0; a < 4; a++){ const ro = RO[a]; v += RW[a] * (D[ro + CX[q]] * CW[q] + D[ro + CX[q + 1]] * CW[q + 1] + D[ro + CX[q + 2]] * CW[q + 2] + D[ro + CX[q + 3]] * CW[q + 3]); } }
-      else v = (D[r0 + ix] * (1 - fx) + D[r0 + ix + 1] * fx) * (1 - fy) + (D[r1 + ix] * (1 - fx) + D[r1 + ix + 1] * fx) * fy;
+      if (smooth){ const q = i * 4; v = 0; for (let a = 0; a < 4; a++){ const ro = RO[a]; v += RW[a] * (D(CX[q], ro) * CW[q] + D(CX[q + 1], ro) * CW[q + 1] + D(CX[q + 2], ro) * CW[q + 2] + D(CX[q + 3], ro) * CW[q + 3]); } }
+      else v = (D(ix, iy) * (1 - fx) + D(ix + 1, iy) * fx) * (1 - fy) + (D(ix, iy + 1) * (1 - fx) + D(ix + 1, iy + 1) * fx) * fy;
       let col;
       if (fish){
         const dxv = isNaN(left) ? 0 : v - left, dyv = isNaN(prev[i]) ? 0 : v - prev[i], hs = clamp(0.8 + (dxv + dyv) * sh * 0.004, 0.45, 1.25), pc = plotCol(Math.max(v, 0.5));
@@ -104,7 +83,6 @@ function renderBase(){
   const g = [], ns = ' vector-effect="non-scaling-stroke"';
   g.push('<rect x="' + (MAPB.x0 - 400) + '" y="' + (MAPB.y0 - 400) + '" width="' + (MAP_W + 800) + '" height="' + (MAP_H + 800) + '" class="offmap"/>');
   g.push('<rect x="' + MAPB.x0 + '" y="' + MAPB.y0 + '" width="' + MAP_W + '" height="' + MAP_H + '" class="sea"/>');
-  if (false) g.push('<image href="' + chartImg.url + '" x="0" y="0" width="' + (GEO_DEPTH.nx * GEO_DEPTH.c) + '" height="' + (GEO_DEPTH.ny * GEO_DEPTH.c) + '" preserveAspectRatio="none"/>');
   for (let lat = 69.0; lat <= 69.71; lat += 0.1){ const y = P(lat, 17).y; g.push('<line x1="' + MAPB.x0 + '" x2="' + MAPB.x1 + '" y1="' + y + '" y2="' + y + '" class="grid" stroke-width="1"' + ns + '/>'); }
   for (let lon = 16.75; lon <= 18.5; lon += 0.25){ const x = P(69, lon).x; g.push('<line y1="' + MAPB.y0 + '" y2="' + MAPB.y1 + '" x1="' + x + '" x2="' + x + '" class="grid" stroke-width="1"' + ns + '/>'); }
   if (CONT_D) CONT_D.forEach((d, i) => { const lv = CONTOUR_LEVELS[i]; if (!d || (!plot && lv > 50)) return; g.push('<path d="' + d + '" class="depc' + (lv >= 50 ? ' deep' : '') + '"' + ns + '/>'); });

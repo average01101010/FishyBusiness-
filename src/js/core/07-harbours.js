@@ -83,8 +83,8 @@ function approachPath(pt){
     const k = Q[h], x = k % nx, y = (k - x) / nx, p = cell(k);
     if (dist(p, pt.p) > 0.4 && coastDist(p) > 0.25){ end = k; break; }
     for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]){
-      const X = x + dx, Y = y + dy, kk = Y * nx + X; if (X < 0 || Y < 0 || X >= nx || Y >= GRID.ny || prev.has(kk) || MASK[kk]) continue;
-      if (dx && dy && (MASK[y * nx + X] || MASK[Y * nx + x])) continue;
+      const X = x + dx, Y = y + dy, kk = Y * nx + X; if (X < 0 || Y < 0 || X >= nx || Y >= GRID.ny || prev.has(kk) || rcell(MAPD.L.mask, X, Y)) continue;
+      if (dx && dy && (rcell(MAPD.L.mask, X, y) || rcell(MAPD.L.mask, x, Y))) continue;
       prev.set(kk, k); Q.push(kk);
     }
   }

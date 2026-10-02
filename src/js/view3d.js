@@ -249,27 +249,12 @@ const G3 = (() => {
 
   // ---------- terrain ----------
   const SNOWLINE = [0,0,0,150,350,650,900,1000,850,450,120,0];
-  async function loadHeights(){
-    const el = document.getElementById('hgt');
-    if (!el || typeof DecompressionStream === 'undefined') return null;
-    const bytes = b64bytes(el.textContent.trim());
-    const buf = new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate'))).arrayBuffer());
-    const n = HGRID.nx * HGRID.ny, h = new Int16Array(n), z = new Float32Array(n);
-    const nx = HGRID.nx; for (let r = 0; r < HGRID.ny; r++) for (let c = 0; c < nx; c++){ const i = r * nx + c, zz = buf[i] | (buf[n + i] << 8), a = c ? h[i - 1] : 0, b = r ? h[i - nx] : 0, cc = r && c ? h[i - nx - 1] : 0, pr = cc >= Math.max(a, b) ? Math.min(a, b) : cc <= Math.min(a, b) ? Math.max(a, b) : a + b - cc; h[i] = pr + ((zz >>> 1) ^ -(zz & 1)); const q = Math.abs(h[i]); z[i] = Math.sign(h[i]) * (q < 20 ? q / 2 : 10 + (q - 20) * 2); }
-    return z;
-  }
-  function gridAt(arr, x, z, G){
-    G = G || HGRID; const cm = G.c * 1000;
-    // the rasters are in the legacy frame (FR in 01-world.js)
-    const gx = clamp((x - FR.ox * 1000) / cm - 0.5, 0, G.nx - 1.001), gz = clamp((z - FR.oy * 1000) / cm - 0.5, 0, G.ny - 1.001), ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz, i = iz * G.nx + ix, n = G.nx;
-    return (arr[i] * (1 - fx) + arr[i + 1] * fx) * (1 - fz) + (arr[i + n] * (1 - fx) + arr[i + n + 1] * fx) * fz;
-  }
   // real ground height (m) at world x/z (m); sea floor is shaped from shore distance and exposure; where a harbour unit stands, its
   // ground (unitTerr)
   function terrRaw(x, z){
     if (x < MAPB.x0 * 1000 || z < MAPB.y0 * 1000 || x > MAPB.x1 * 1000 || z > MAPB.y1 * 1000) return -40;
-    if (HG) return gridAt(HG, x, z);
-    const m = gridAt(MASK, x, z, GRID); return m >= 0.5 ? 2 : -4;
+    if (HG) return rbilM(MAPD.L.hgt, x, z);
+    const m = rbilM(MAPD.L.mask, x, z); return m >= 0.5 ? 2 : -4;
   }
   function terrH(x, z){ return unitTerr(x, z, terrRaw(x, z)); }
   // The ground round a harbour unit (UNITS, 01-world.js), in its frame (lx along the face, lz out to the water): the basin in front is
@@ -308,7 +293,7 @@ const G3 = (() => {
   // share of forest around a point: bilinear over the 50 m forest cells, softened over the neighbours
   function forestAt(x, z){
     const gx = (x - FR.ox * 1000) / 50 - 0.5, gz = (z - FR.oy * 1000) / 50 - 0.5, ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz; let s = 0;
-    const F = (c, r) => (c < 0 || r < 0 || c >= 1570 || r >= 1648) ? 0 : FOREST[r * 1570 + c];
+    const F = (c, r) => (!HG || c < 0 || r < 0 || c >= 1570 || r >= 1648) ? 0 : rcell(MAPD.L.forest, c, r);
     for (let dz = -1; dz <= 2; dz++) for (let dx = -1; dx <= 2; dx++){ const wx = dx <= 0 ? (dx === 0 ? 1 - fx * 0.5 : 0.5 - fx * 0.5) : (dx === 1 ? 0.5 + fx * 0.5 : fx * 0.5), wz = dz <= 0 ? (dz === 0 ? 1 - fz * 0.5 : 0.5 - fz * 0.5) : (dz === 1 ? 0.5 + fz * 0.5 : fz * 0.5); s += F(ix + dx, iz + dz) * wx * wz; }
     return clamp(s / 2.25, 0, 1);
   }
@@ -398,7 +383,7 @@ const G3 = (() => {
   function updateNear(){
     updateMid();
     const span = cam.dist > 1200 ? 12000 : 6000, snap = span / 10, cx = Math.round(bv.x / snap) * snap, cz = Math.round(bv.z / snap) * snap;
-    if (NEARM && NEARM.sx === span && Math.abs(cx - NEARM.cx) < span / 5 && Math.abs(cz - NEARM.cz) < span / 5) return;
+    if (NEARM && !NEARM.stale && NEARM.sx === span && Math.abs(cx - NEARM.cx) < span / 5 && Math.abs(cz - NEARM.cz) < span / 5) return;
     if (NEARM) freeMesh(NEARM);
     NEARM = makeMesh(cx - span / 2, cz - span / 2, span, span, 256, terrCoarse); NEARM.cx = cx; NEARM.cz = cz; buildPatches(); buildGround();
   }
@@ -642,7 +627,7 @@ const G3 = (() => {
       if (occ[Math.floor((z - z0) / 25) * 40 + Math.floor((x - x0) / 25)] || onUnit(x, z, 8)) continue;
       const h = terrH(x, z); if (h < 2.5 || h > 330) continue;
       const sl = Math.hypot(terrH(x + 10, z) - terrH(x - 10, z), terrH(x, z + 10) - terrH(x, z - 10)) / 20; if (sl > 0.75) continue;
-      const fo = FOREST[Math.floor((z - FR.oy * 1000) / 50) * 1570 + Math.floor((x - FR.ox * 1000) / 50)] ? 1 : 0;
+      const fc = Math.floor((x - FR.ox * 1000) / 50), fr = Math.floor((z - FR.oy * 1000) / 50), fo = HG && fc >= 0 && fr >= 0 && fc < 1570 && fr < 1648 && rcell(MAPD.L.forest, fc, fr) ? 1 : 0;
       const pr = (1 - sstep(210, 330, h)) * (1 - sstep(0.42, 0.75, sl)) * (fo ? 0.95 : 0.5) * sstep(0.36, 0.62, noise2((x - FR.ox * 1000) / 260, (z - FR.oy * 1000) / 260, 31) * 0.7 + noise2((x - FR.ox * 1000) / 60, (z - FR.oy * 1000) / 60, 37) * 0.3);
       if (hash((hh * 5e7 | 0) + 11) > pr) continue;
       const th = 4 + 6 * hash((hh * 9e7 | 0) + 13) * (1 - sstep(120, 320, h) * 0.55), y = h - 0.3, isPine = hash((hh * 2e7 | 0) + 17) < 0.18, v = 0.88 + 0.24 * hash((hh * 4e7 | 0) + 19);
@@ -1450,10 +1435,10 @@ const G3 = (() => {
     // the chart shows ±1.1 km, more when the echo sounder's heat reaches further (CHIRP)
     const ht = typeof heatTier === 'function' ? heatTier() : null, top = 26, cw = 318, ch = Hc - top - 18, rng = Math.max(1.1, ht ? HEAT.tiers[ht].r * 1.05 : 0), sw = 106, sh = Math.round(sw * ch / cw), kpp = 2 * rng / sw, sd = safeDepth();
     plotSmall = plotSmall || document.createElement('canvas'); plotSmall.width = sw; plotSmall.height = sh;
-    const sg = plotSmall.getContext('2d'), img = sg.createImageData(sw, sh), d = img.data;
+    const sg = plotSmall.getContext('2d'), img = sg.createImageData(sw, sh), d = img.data, dok = mapViewReady(p.x - sw * kpp / 2, p.y - sh * kpp / 2, p.x + sw * kpp / 2, p.y + sh * kpp / 2);
     for (let j = 0; j < sh; j++) for (let i = 0; i < sw; i++){
       const q = {x:p.x + (i + 0.5 - sw / 2) * kpp, y:p.y + (j + 0.5 - sh / 2) * kpp}, o = (j * sw + i) * 4; let c;
-      if (q.x < MAPB.x0 || q.y < MAPB.y0 || q.x > MAPB.x1 || q.y > MAPB.y1) c = [60, 66, 70]; else if (isLand(q)) c = [224, 206, 150]; else { const dd = depthF(q); c = dd < Math.min(2, sd / 2) ? [128, 176, 222] : dd < sd ? [165, 202, 234] : dd < 30 ? [236, 243, 248] : [250, 252, 253]; }
+      if (q.x < MAPB.x0 || q.y < MAPB.y0 || q.x > MAPB.x1 || q.y > MAPB.y1) c = [60, 66, 70]; else if (isLand(q)) c = [224, 206, 150]; else { const dd = dok ? depthF(q) : 50; c = dd < Math.min(2, sd / 2) ? [128, 176, 222] : dd < sd ? [165, 202, 234] : dd < 30 ? [236, 243, 248] : [250, 252, 253]; }
       d[o] = c[0]; d[o + 1] = c[1]; d[o + 2] = c[2]; d[o + 3] = 255;
     }
     sg.putImageData(img, 0, 0); g.imageSmoothingEnabled = true; g.drawImage(plotSmall, 0, top, cw, ch);
@@ -2097,8 +2082,8 @@ const G3 = (() => {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     GRECT = [x0, z0, 1 / sx, 1 / sx];
     // shore layer for the water: R = land cover (surf band), G = how shallow
-    const S2 = 256, dat = new Uint8Array(S2 * S2 * 4), st = sx / S2;
-    for (let j = 0; j < S2; j++) for (let i = 0; i < S2; i++){ const x = x0 + (i + 0.5) * st, z = z0 + (j + 0.5) * st, m = gridAt(MASK, x, z, GRID), o = (j * S2 + i) * 4, dd = m > 0.5 ? 0 : depthF({x:x / 1000, y:z / 1000}); dat[o] = Math.round(m * 255); dat[o + 1] = Math.round(clamp(1 - dd / 14, 0, 1) * 255); dat[o + 3] = 255; }
+    const S2 = 256, dat = new Uint8Array(S2 * S2 * 4), st = sx / S2, dok = mapViewReady(x0 / 1000, z0 / 1000, (x0 + sx) / 1000, (z0 + sx) / 1000, () => { if (NEARM) NEARM.stale = true; });
+    for (let j = 0; j < S2; j++) for (let i = 0; i < S2; i++){ const x = x0 + (i + 0.5) * st, z = z0 + (j + 0.5) * st, m = rbilM(MAPD.L.mask, x, z), o = (j * S2 + i) * 4, dd = m > 0.5 ? 0 : dok ? depthF({x:x / 1000, y:z / 1000}) : 50; dat[o] = Math.round(m * 255); dat[o + 1] = Math.round(clamp(1 - dd / 14, 0, 1) * 255); dat[o + 3] = 255; }
     STEX = STEX || gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, STEX);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, S2, S2, 0, gl.RGBA, gl.UNSIGNED_BYTE, dat);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -2197,7 +2182,8 @@ const G3 = (() => {
       PS = program((SST_VS ? '' : '#define NOSST\n') + SEA_VS, SEA_FS, ['aXZ']); PSF = program('#define NOSST\n' + SEA_VS, '#define FAR\n' + SEA_FS, ['aXZ']);
       SSDUMMY = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, SSDUMMY); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255])); PK = program(SKY_VS, SKY_FS, ['aP']); PP = program(PT_VS, PT_FS, ['aPos', 'aA']);
       DYNP = buf(new Float32Array(4000 * 3), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); DYNA = buf(new Float32Array(4000), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW);
-      try { HG = await loadHeights(); } catch (e){ console.error(e); HG = null; }
+      // the ground's heights and the forest (map/, the view packs): until they are in, the land is a flat stand-in
+      try { await mapLoadKind('view'); HG = true; } catch (e){ console.error(e); HG = null; }
       try { BLD = await loadBuildings(); } catch (e){ console.error(e); BLD = null; }
       buildTerrain(); buildStatics(); buildBoat(); buildSkiff(); buildFlag(); buildSea(); buildWild(); buildNPC(); buildHarbourFittings(); buildMooring(); buildPlants(); buildPlantParts(); buildBunkers();
       canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); ready = false; failed = true; show(false); });

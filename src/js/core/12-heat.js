@@ -38,7 +38,7 @@ function heatReset(){ HEATC.key = ''; HEATC.cells.clear(); HEATC.queue = []; HEA
 function heatTick(){
   const tier = heatTier(), b = S.boat;
   if (!tier){ if (HEATC.cells.size) heatReset(); return; }
-  if (!DEPTH || b.status === 'port' || (typeof document !== 'undefined' && document.hidden)) return;
+  if (!DEPTH || b.status === 'port' || (typeof document !== 'undefined' && document.hidden) || !mapReadyAt(b.pos, MAPD.simR)) return;
   // at the fastest test paces the picture is worked out at most once a second
   const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
   if (S.mult >= 300 && now - HEATC.lastTick < 1000) return; HEATC.lastTick = now;

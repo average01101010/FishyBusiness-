@@ -24,18 +24,13 @@ const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const gDate = H => new Date(EPOCH + H * 3600000);
 
-// Real coastline for Senja from OpenStreetMap (ODbL), rasterised to a 25 m land mask
+// Real coastline for Senja from OpenStreetMap (ODbL), rasterised to a 25 m land mask. The rasters (land, depth, distance to the
+// shore, openness, heights, forest) come in blocks from map/ (01b-mapdata.js); these are their sizes in the data's frame.
 const GRID = {nx:3140, ny:3296, c:0.025}, HGRID = {nx:3140, ny:3296, c:0.025};
-const GEO_MASK = '@include(data/geo-mask.b64)';
 const GEO_COAST = '@include(data/geo-coast.b64)';
-const GEO_EXPO = {nx:157, ny:165, c:0.5, b64:'@include(data/geo-expo.b64)'};
+const GEO_EXPO = {nx:157, ny:165, c:0.5};
 function b64bytes(s){ const bin = atob(s), a = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i); return a; }
 function varints(b){ let i = 0; return () => { let v = 0, s = 0, x; do { x = b[i++]; v += (x & 127) * Math.pow(2, s); s += 7; } while (x & 128); return v; }; }
-const MASK = (() => {
-  const next = varints(b64bytes(GEO_MASK)), m = new Uint8Array(GRID.nx * GRID.ny);
-  for (let r = 0; r < GRID.ny; r++){ const n = next(), off = r * GRID.nx; let c = 0, cur = 0; for (let k = 0; k < n; k++){ const len = next(); if (cur) m.fill(1, off + c, off + c + len); c += len; cur ^= 1; } }
-  return m;
-})();
 // chart polygons (km)
 const LAND = (() => {
   const next = varints(b64bytes(GEO_COAST)), zz = v => (v % 2 ? -(v + 1) / 2 : v / 2), n = next(), out = [];
@@ -43,13 +38,11 @@ const LAND = (() => {
   return out;
 })();
 const COAST_D = LAND.map(poly => 'M' + poly.map(q => q.x.toFixed(2) + ',' + q.y.toFixed(2)).join('L') + 'Z').join('');
-const EXPO = b64bytes(GEO_EXPO.b64);
 // roads (deflated), forest raster, piers/breakwaters and seamarks from OpenStreetMap (ODbL)
 const GEO_ROADS = '@include(data/geo-roads.b64)';
 // fine land polygons (smoothed 12.5 m trace of the OSM coastline, metres) and bridges from OSM
 const GEO_FINE = '@include(data/geo-fine.b64)';
 const BRIDGES = [[1,25,"Flakstadveien","yes",23456,52195,23432,52187],[1,41,"Tranøyveien","yes",33723,61648,33702,61684],[2,57,"Hofsøyveien","yes",19695,75432,19702,75488],[1,57,"Finnesveien","yes",24207,48272,24189,48218],[0,139,"Trongstraumen bru","suspension",29259,35257,29120,35253],[0,320,"Gryllefjordbrua","beam",22631,40195,22601,40287,22562,40405,22531,40499],[0,39,"Kjerkesteinen bru","yes",34476,27200,34467,27183,34458,27165],[0,27,"Krokelv bru","yes",33569,37066,33592,37080],[1,539,"Sommarøybrua","beam",58903,10946,58888,10941,58878,10938,58870,10935,58861,10932,58852,10928,58842,10924,58834,10920,58823,10914,58814,10908,58804,10901,58793,10892,58785,10884,58777,10877,58769,10868,58761,10857,58754,10848,58747,10837,58738,10823,58730,10809,58723,10797,58694,10745,58664,10692,58616,10609,58605,10592,58596,10578,58587,10566,58576,10552,58568,10544],[2,75,"Hillesøybrua","beam",56996,9329,56927,9299],[2,104,"Bukkemoveien","beam",49923,37418,49845,37350],[1,45,"Sultindvikveien","yes",69230,39692,69262,39724],[0,48,"Lysnesveien","yes",54813,33235,54838,33194],[0,26,"Synnøvjordvegen","yes",71705,10583,71687,10602],[0,32,"Fossmobrua","yes",77186,73049,77197,73079],[0,1141,"Gisundbrua","beam",55167,52904,55186,52911,55209,52921,55232,52932,55248,52940,55264,52949,55288,52963,55315,52982,55400,53043,55458,53084,55573,53166,55687,53248,55743,53288,56063,53516,56082,53530,56094,53539,56105,53549],[1,602,"Dyrøybrua","beam",41287,70193,41271,70195,41249,70196,41227,70196,41203,70195,41170,70193,40955,70177,40687,70156],[1,52,"Islandsbotnveien","yes",50936,54780,50916,54828],[0,39,"Krokbekkbrua","yes",78227,71999,78255,71973],[4,52,"Lasse Olsens vei","yes",77778,72252,77799,72256,77830,72261],[2,40,"Fagerlidal","yes",78006,71743,78014,71736,78022,71730,78028,71725,78038,71718],[0,30,"Fagerfjellveien","yes",63588,52213,63582,52204,63575,52195,63570,52190],[1,44,"Brygghaugveien","yes",41036,52325,41024,52282],[0,105,"Brandmo bru","truss",77316,79366,77366,79356,77419,79345],[1,90,"Dalembrua","yes",77019,73100,77012,73088,77008,73081,77004,73070,77001,73059,76999,73048,76998,73041,76997,73030,76998,73019,76998,73014],[0,70,"Sundliveien","yes",76058,78905,76022,78845],[0,28,"Bjørkebakkveien","yes",46500,73347,46515,73324],[0,32,"Lundeveien","yes",45468,71686,45462,71683,45456,71678,45448,71674,45441,71670],[0,33,"Skøelvdal bru","truss",56849,68787,56855,68755],[0,29,"Tangen bru","yes",54495,74605,54512,74581],[0,34,"Andselvbrua sør","yes",76809,73079,76842,73072],[0,30,"Andselv bru","yes",76259,73476,76264,73447],[0,27,"Andselvbrua nord","yes",76938,73052,76964,73047],[4,34,"","yes",78171,73424,78200,73442],[1,33,"Bjelma bru","yes",75344,54950,75337,54946,75321,54937,75315,54934],[0,38,"Nordstraumen bru","yes",62796,64120,62813,64087],[0,27,"Mortenelv bru","yes",75284,57385,75280,57378,75273,57361],[4,38,"","yes",50948,54797,50939,54834],[1,48,"Bjorelvnesveien","yes",60198,42292,60198,42268,60196,42244],[4,61,"","yes",57452,47900,57509,47878]];
-const GEO_FOREST = '@include(data/geo-forest.b64)';
 let ROADS = null, FINE = null;
 async function loadFine(){
   if (typeof DecompressionStream === 'undefined') return [];
@@ -70,7 +63,6 @@ async function loadRoads(){
   }
   return out;
 }
-const FOREST = (() => { const next = varints(b64bytes(GEO_FOREST)), m = new Uint8Array(1570 * 1648); for (let r = 0; r < 1648; r++){ const n = next(), off = r * 1570; let c = 0, cur = 0; for (let k = 0; k < n; k++){ const len = next(); if (cur) m.fill(1, off + c, off + c + len); c += len; cur ^= 1; } } return m; })();
 // rocks awash and underwater (skjær/båer): route warnings and chart symbols
 // harbour areas are dredged and buoyed: no depth hazards there, so every vessel can land its catch
 function inHarbour(p){ for (const pt of PORTS){ if (dist(p, pt.p) < 0.6) return true; if (pt.app && dist(p, pt.app) < 0.35) return true; } return false; }
@@ -134,35 +126,15 @@ function gridBilinear(arr, nx, ny, c, p){
   const gx = clamp((p.x - FR.ox) / c - 0.5, 0, nx - 1.001), gy = clamp((p.y - FR.oy) / c - 0.5, 0, ny - 1.001), ix = Math.floor(gx), iy = Math.floor(gy), fx = gx - ix, fy = gy - iy, i = iy * nx + ix;
   return (arr[i] * (1 - fx) + arr[i + 1] * fx) * (1 - fy) + (arr[i + nx] * (1 - fx) + arr[i + nx + 1] * fx) * fy;
 }
-// distance from open water to the nearest shore on a 100 m grid (km)
-const DC = (() => {
-  const nx = GRID.nx >> 2, ny = GRID.ny >> 2, d = new Float32Array(nx * ny), D = Math.SQRT2;
-  for (let r = 0; r < ny; r++) for (let c = 0; c < nx; c++){ let any = 0; for (let a = 0; a < 4 && !any; a++){ const i0 = (4 * r + a) * GRID.nx + 4 * c; any = MASK[i0] | MASK[i0 + 1] | MASK[i0 + 2] | MASK[i0 + 3]; } d[r * nx + c] = any ? 0 : 1e6; }
-  for (let r = 0; r < ny; r++){ const ro = r * nx; for (let c = 0; c < nx; c++){ const i = ro + c; let v = d[i]; if (v === 0) continue; let w;
-    if (c > 0){ w = d[i - 1] + 1; if (w < v) v = w; }
-    if (r > 0){ w = d[i - nx] + 1; if (w < v) v = w; if (c > 0){ w = d[i - nx - 1] + D; if (w < v) v = w; } if (c < nx - 1){ w = d[i - nx + 1] + D; if (w < v) v = w; } }
-    d[i] = v; } }
-  for (let r = ny - 1; r >= 0; r--){ const ro = r * nx; for (let c = nx - 1; c >= 0; c--){ const i = ro + c; let v = d[i]; if (v === 0) continue; let w;
-    if (c < nx - 1){ w = d[i + 1] + 1; if (w < v) v = w; }
-    if (r < ny - 1){ w = d[i + nx] + 1; if (w < v) v = w; if (c < nx - 1){ w = d[i + nx + 1] + D; if (w < v) v = w; } if (c > 0){ w = d[i + nx - 1] + D; if (w < v) v = w; } }
-    d[i] = v; } }
-  for (let i = 0; i < d.length; i++) d[i] *= 0.1;
-  return {nx, ny, d};
-})();
-function coastDist(p){ return gridBilinear(DC.d, DC.nx, DC.ny, 0.1, p); }
+// distance from open water to the nearest shore on a 100 m grid (km), worked out at build (tools/mappack.mjs)
+const DC = {nx:GRID.nx >> 2, ny:GRID.ny >> 2};
+function coastDist(p){ return rbil(MAPD.L.dc, p); }
+const dcCell = v => rcell(MAPD.L.dc, v % DC.nx, Math.floor(v / DC.nx));
 // Real depths: Kartverket 50 m depth model (open data), resampled to 100 m; gaps near land filled smoothly
-const GEO_DEPTH = {nx:1570, ny:1648, c:0.05, b64:'@include(data/geo-depth.b64)'};
+const GEO_DEPTH = {nx:1570, ny:1648, c:0.05};
 const GEO_CONTOURS = '@include(data/geo-contours.b64)', CONTOUR_LEVELS = [5,10,20,30,50,100,150,200,300,500,800];
+// true once the depth blocks are in (they are before the clock runs)
 let DEPTH = null;
-async function loadDepth(){
-  if (typeof DecompressionStream === 'undefined') return null;
-  const bytes = b64bytes(GEO_DEPTH.b64), n = GEO_DEPTH.nx * GEO_DEPTH.ny;
-  const buf = new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate'))).arrayBuffer());
-  const d = new Float32Array(n);
-  const q = new Int32Array(n), nx = GEO_DEPTH.nx;
-  for (let r = 0; r < GEO_DEPTH.ny; r++) for (let c = 0; c < nx; c++){ const i = r * nx + c, z = buf[i] | (buf[n + i] << 8), a = c ? q[i - 1] : 0, b = r ? q[i - nx] : 0, cc = r && c ? q[i - nx - 1] : 0, pr = cc >= Math.max(a, b) ? Math.min(a, b) : cc <= Math.min(a, b) ? Math.max(a, b) : a + b - cc; q[i] = pr + ((z >>> 1) ^ -(z & 1)); d[i] = q[i] / 2; }
-  return d;
-}
 function decodeContours(){
   const next = varints(b64bytes(GEO_CONTOURS)), zz = v => (v % 2 ? -(v + 1) / 2 : v / 2), n = next(), out = CONTOUR_LEVELS.map(() => []);
   for (let k = 0; k < n; k++){ const li = next(), len = next(); let x = 0, y = 0; const q = []; for (let i = 0; i < len; i++){ x += zz(next()); y += zz(next()); q.push((x / 100 + FR.ox).toFixed(2) + ',' + (y / 100 + FR.oy).toFixed(2)); } out[li].push('M' + q.join('L')); }
@@ -171,7 +143,7 @@ function decodeContours(){
 function isLand(p){
   const x = p.x - FR.ox, y = p.y - FR.oy;
   if (!(x >= 0 && y >= 0 && x < GRID.nx * GRID.c && y < GRID.ny * GRID.c)) return true;
-  return MASK[Math.floor(y / GRID.c) * GRID.nx + Math.floor(x / GRID.c)] === 1;
+  return rcell(MAPD.L.mask, Math.floor(x / GRID.c), Math.floor(y / GRID.c)) === 1;
 }
 function legClear(a, b){
   const d = dist(a, b), n = Math.max(1, Math.ceil(d / 0.04));

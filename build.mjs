@@ -7,10 +7,12 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
+import { writeMap } from './tools/mappack.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const SRC = join(ROOT, 'src');
-const OUT = join(ROOT, 'dist', 'index.html');
+// KYST_DIST: another output folder (to build and test while a test run still reads dist/)
+const DIST = process.env.KYST_DIST || join(ROOT, 'dist'), OUT = join(DIST, 'index.html');
 
 function expand(file, stack = []){
   if (stack.includes(file)) throw new Error('include cycle: ' + [...stack, file].join(' -> '));
@@ -32,3 +34,6 @@ for (const m of html.matchAll(/<script>([\s\S]*?)<\/script>/g)){
 mkdirSync(dirname(OUT), {recursive:true});
 writeFileSync(OUT, html);
 console.log(`dist/index.html: ${(Buffer.byteLength(html) / 1e6).toFixed(2)} MB`);
+// the map's rasters in packs of 10 km blocks (tools/mappack.mjs), fetched by the page from map/
+const mp = writeMap(join(SRC, 'data'), join(DIST, 'map'));
+console.log(`dist/map/: ${mp.packs} packs, ${(mp.bytes / 1e6).toFixed(2)} MB`);

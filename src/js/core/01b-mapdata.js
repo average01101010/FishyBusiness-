@@ -1,0 +1,131 @@
+// ===== MAP DATA (phase K3 of the coast plan): the rasters in 10 km blocks, fetched in packs from map/ =====
+// map/manifest.json lists the layers and the packs (tools/mappack.mjs writes them at build). A pack is fetched once and kept in
+// IndexedDB by its hash, so a new publish (which moves every file to a new address) fetches only what changed. A block is unpacked
+// (fflate, synchronous) the first time it is read and kept while there is room (MAPD.budget; the least recently used goes first).
+//   core  mask, dc, expo  always loaded: what looks far (the fetch rays, the local fleet's drift and fishing) reads only these.
+//                         The 25 m land mask is here for now (63 kB for Senja, about 10 MB for the whole coast); phase K6 may give
+//                         the far readers a coarser one.
+//   sim   depth           loaded round the boats and the gear in the sea before the clock runs (mapReadyAt, simAreaReady), within
+//                         MAPD.simR, which covers the instruments round a boat (sounder, sonar, plotter); reading a block whose pack
+//                         is not in is an error, never a stand-in value. A view that reads farther (the chart, the 3D shore) asks
+//                         first (mapViewReady) and draws without the depth until the pack comes.
+//   view  hgt, forest     for the 3D view, as they come (mapHas first)
+// The layers are in the data's own frame (today the legacy Senja frame), so the readers take FR off the game's coordinates.
+const MAPD = {man:null, L:{}, packs:[], byTile:new Map(), core:null, blk:new Map(), bytes:0, budget:96e6, simR:4, base:'map/', db:undefined, miss:0, fetched:0, cached:0};
+function mapOnReady(f){ if (typeof document === 'undefined' || document.readyState !== 'loading') f(); else document.addEventListener('DOMContentLoaded', f); }
+// ---------- IndexedDB, by content ----------
+function mapIdb(){
+  if (MAPD.db !== undefined) return Promise.resolve(MAPD.db);
+  return new Promise(res => { try { const q = indexedDB.open('kyst-map', 1); q.onupgradeneeded = () => q.result.createObjectStore('f'); q.onsuccess = () => res(MAPD.db = q.result); q.onerror = () => res(MAPD.db = null); } catch (e){ res(MAPD.db = null); } });
+}
+function idbDo(mode, f){ return mapIdb().then(db => db && new Promise(res => { try { const tx = db.transaction('f', mode), q = f(tx.objectStore('f')); tx.oncomplete = () => res(q && q.result); tx.onerror = tx.onabort = () => res(null); } catch (e){ res(null); } })); }
+async function mapFetch(pk){
+  const kept = await idbDo('readonly', s => s.get(pk.hash));
+  if (kept && kept.byteLength === pk.bytes){ MAPD.cached++; return new Uint8Array(kept); }
+  const r = await fetch(MAPD.base + pk.file); if (!r.ok) throw new Error('map: ' + pk.file + ' ' + r.status);
+  const buf = await r.arrayBuffer(); MAPD.fetched++;
+  idbDo('readwrite', s => s.put(buf, pk.hash));
+  return new Uint8Array(buf);
+}
+// ---------- the manifest and the packs ----------
+async function mapStart(base){
+  if (base) MAPD.base = base;
+  const man = MAPD.man = await (await fetch(MAPD.base + 'manifest.json', {cache:'no-cache'})).json();
+  let id = 0;
+  for (const name in man.layers) MAPD.L[name] = Object.assign({name, id:id++, bx:NaN, by:NaN, b:null}, man.layers[name]);
+  for (const pk of man.packs){ pk.buf = null; pk.idx = null; pk.load = null; MAPD.packs.push(pk); if (pk.kind === 'core') MAPD.core = pk; else MAPD.byTile.set(pk.kind + ':' + pk.tile[0] + ':' + pk.tile[1], pk); }
+  return man;
+}
+function mapLoad(pk){
+  if (!pk || pk.buf) return Promise.resolve(pk);
+  if (!pk.load) pk.load = mapFetch(pk).then(b => {
+    if (String.fromCharCode(b[0], b[1], b[2], b[3]) !== 'KMP1') throw new Error('map: ' + pk.file + ' is not a map pack');
+    const hl = b[4] | b[5] << 8 | b[6] << 16 | b[7] << 24, head = JSON.parse(new TextDecoder().decode(b.subarray(8, 8 + hl))), at = 8 + hl;
+    pk.idx = new Map(head.blocks.map(e => [e[0] + ':' + e[1] + ':' + e[2], [at + e[3], e[4]]])); pk.buf = b; return pk;
+  }).catch(e => { pk.load = null; throw e; });
+  return pk.load;
+}
+// the pack that holds a layer's block, and the packs over a box in the data's km (kinds: 'core', 'sim', 'view')
+function mapPackOf(L, bx, by){ if (L.kind === 'core') return MAPD.core; const t = MAPD.man.tile / MAPD.man.block; return MAPD.byTile.get(L.kind + ':' + Math.floor(bx / t) + ':' + Math.floor(by / t)) || null; }
+function mapPacksIn(kind, x0, y0, x1, y1){
+  if (kind === 'core') return MAPD.core ? [MAPD.core] : [];
+  const T = MAPD.man.tile, out = [];
+  for (let ty = Math.floor(y0 / T); ty <= Math.floor(y1 / T); ty++) for (let tx = Math.floor(x0 / T); tx <= Math.floor(x1 / T); tx++){ const pk = MAPD.byTile.get(kind + ':' + tx + ':' + ty); if (pk) out.push(pk); }
+  return out;
+}
+// what the simulation needs at p (game km) within r km: core and sim
+function mapSimPacks(p, r){ const x = p.x - FR.ox, y = p.y - FR.oy; return mapPacksIn('core', 0, 0, 0, 0).concat(mapPacksIn('sim', x - r, y - r, x + r, y + r)); }
+function mapReadyAt(p, r){ for (const pk of mapSimPacks(p, r)) if (!pk.buf) return false; return true; }
+function mapNeed(p, r){ return Promise.all(mapSimPacks(p, r).map(mapLoad)); }
+function mapLoadKind(kind){ return Promise.all(MAPD.packs.filter(pk => pk.kind === kind).map(mapLoad)); }
+// ---------- blocks ----------
+function med16(raw, n){
+  const N = n * n, q = new Int32Array(N);
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++){ const i = r * n + c, z = raw[i] | (raw[N + i] << 8), a = c ? q[i - 1] : 0, b = r ? q[i - n] : 0, cc = r && c ? q[i - n - 1] : 0, pr = cc >= Math.max(a, b) ? Math.min(a, b) : cc <= Math.min(a, b) ? Math.max(a, b) : a + b - cc; q[i] = pr + ((z >>> 1) ^ -(z & 1)); }
+  return q;
+}
+function mapDecode(L, raw){
+  const n = L.n, N = n * n;
+  if (L.type === 'u8') return raw;
+  if (L.type === 'f32') return new Float32Array(raw.byteOffset % 4 ? raw.slice().buffer : raw.buffer, raw.byteOffset % 4 ? 0 : raw.byteOffset, N);
+  const q = med16(raw, n), out = new Float32Array(N);
+  // depth in half metres; the ground's height in half metres to 10 m and then 2 m steps (the page's own packing of hgt)
+  if (L.dec === 'half') for (let i = 0; i < N; i++) out[i] = q[i] / 2;
+  else for (let i = 0; i < N; i++){ const a = Math.abs(q[i]); out[i] = Math.sign(q[i]) * (a < 20 ? a / 2 : 10 + (a - 20) * 2); }
+  return out;
+}
+function mapBlock(L, bx, by){
+  const k = gridKey(bx, by) * 8 + L.id; let a = MAPD.blk.get(k);
+  if (a){ MAPD.blk.delete(k); MAPD.blk.set(k, a); return a; }
+  const pk = mapPackOf(L, bx, by), e = pk && pk.idx && pk.idx.get(L.name + ':' + bx + ':' + by);
+  if (!pk || !pk.buf || !e){ MAPD.miss++; throw new Error('map: ' + L.name + ' block ' + bx + ',' + by + (pk ? ' is not loaded (' + pk.file + ')' : ' has no pack')); }
+  a = mapDecode(L, fflate.inflateSync(pk.buf.subarray(e[0], e[0] + e[1])));
+  MAPD.blk.set(k, a); MAPD.bytes += a.byteLength;
+  for (const [kk, v] of MAPD.blk){ if (MAPD.bytes <= MAPD.budget) break; if (kk === k) continue; MAPD.blk.delete(kk); MAPD.bytes -= v.byteLength; }
+  return a;
+}
+function mapHasBlock(L, bx, by){ const pk = mapPackOf(L, bx, by); return !!(pk && pk.buf && pk.idx.has(L.name + ':' + bx + ':' + by)); }
+// one cell (cell indices in the data's frame); the last block of each layer is kept at hand
+function rcell(L, ix, iy){
+  const n = L.n, bx = Math.floor(ix / n), by = Math.floor(iy / n);
+  if (bx !== L.bx || by !== L.by){ L.b = mapBlock(L, bx, by); L.bx = bx; L.by = by; }
+  return L.b[(iy - by * n) * n + (ix - bx * n)];
+}
+// between the four nearest cell centres at p (game km), clamped to the layer's edge: the arithmetic of gridBilinear
+function rbil(L, p){
+  const gx = clamp((p.x - FR.ox) / L.c - 0.5, 0, L.nx - 1.001), gy = clamp((p.y - FR.oy) / L.c - 0.5, 0, L.ny - 1.001), ix = Math.floor(gx), iy = Math.floor(gy), fx = gx - ix, fy = gy - iy;
+  return (rcell(L, ix, iy) * (1 - fx) + rcell(L, ix + 1, iy) * fx) * (1 - fy) + (rcell(L, ix, iy + 1) * (1 - fx) + rcell(L, ix + 1, iy + 1) * fx) * fy;
+}
+// the same at x, z in metres, as the 3D view reads its grids
+function rbilM(L, x, z){
+  const cm = L.c * 1000, gx = clamp((x - FR.ox * 1000) / cm - 0.5, 0, L.nx - 1.001), gz = clamp((z - FR.oy * 1000) / cm - 0.5, 0, L.ny - 1.001), ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz;
+  return (rcell(L, ix, iz) * (1 - fx) + rcell(L, ix + 1, iz) * fx) * (1 - fz) + (rcell(L, ix, iz + 1) * (1 - fx) + rcell(L, ix + 1, iz + 1) * fx) * fz;
+}
+// whether a view layer's blocks under a box of metres are in (the 3D draws a stand-in until they are)
+function mapHasM(L, x0, z0, x1, z1){
+  const bm = L.n * L.c * 1000;
+  for (let by = Math.floor((z0 - FR.oy * 1000) / bm); by <= Math.floor((z1 - FR.oy * 1000) / bm); by++) for (let bx = Math.floor((x0 - FR.ox * 1000) / bm); bx <= Math.floor((x1 - FR.ox * 1000) / bm); bx++){
+    if (bx < 0 || by < 0 || bx * L.n >= L.nx || by * L.n >= L.ny) continue; if (!mapHasBlock(L, bx, by)) return false; }
+  return true;
+}
+// for the views: whether the sim packs under a box of game km are in; the missing ones are asked for, and then() runs when they come
+function mapViewReady(x0, y0, x1, y1, then){
+  const pks = mapPacksIn('sim', x0 - FR.ox, y0 - FR.oy, x1 - FR.ox, y1 - FR.oy).filter(pk => !pk.buf);
+  if (!pks.length) return true;
+  Promise.all(pks.map(mapLoad)).then(then, e => console.error(e)); return false;
+}
+// the simulation's barrier: every vessel you own has its waters (MAPD.simR round it) loaded, and so has each of your sets in the sea
+// (1 km round its middle); what is missing is asked for
+function simAreaReady(){
+  let ok = true;
+  const need = (p, r) => { if (!mapReadyAt(p, r)){ ok = false; mapNeed(p, r).catch(e => console.error(e)); } };
+  for (const v of (S && S.fleet && S.fleet.length ? S.fleet : [null])){ const b = v ? vget(v, 'boat') : S.boat; if (b && b.pos) need(b.pos, MAPD.simR); }
+  for (const s of (S && S.sets) || []) if (!s.lost) need(setMid(s), 1);
+  return ok;
+}
+// for the tests (maptest.py): forget a pack, also in IndexedDB, as if it had never come; the decoded blocks go too
+function mapDrop(pk){
+  pk.buf = null; pk.idx = null; pk.load = null; MAPD.blk.clear(); MAPD.bytes = 0;
+  for (const n in MAPD.L){ const L = MAPD.L[n]; L.bx = L.by = NaN; L.b = null; }
+  return idbDo('readwrite', s => s.delete(pk.hash));
+}

@@ -22,7 +22,7 @@ function leiaCost(v, sd){
   const key = sd + '|' + (DEPTH ? 1 : 0) + '|' + LEIA.shoreK;
   if (LEIA_ST.costKey !== key || !LEIA_ST.cost){ LEIA_ST.cost = new Float32Array(DC.nx * DC.ny).fill(-1); LEIA_ST.costKey = key; }
   let k = LEIA_ST.cost[v]; if (k >= 0) return k;
-  const d = DC.d[v];
+  const d = dcCell(v);
   if (!(d > 0)) k = Infinity;
   else {
     const p = leiaCell(v), hb = inHarbour(p);

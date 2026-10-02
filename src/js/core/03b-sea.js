@@ -94,7 +94,7 @@ function swellOpen(H){
   const v = {hs, dir:300 + 50 * (vn(H / 60, 313) - 0.5), tp:clamp(8.5 + 1.1 * hs, 9, 14)};
   SW_MEMO = {H, v}; return v;
 }
-function swellFactor(p){ return Math.pow(gridBilinear(EXPO, GEO_EXPO.nx, GEO_EXPO.ny, GEO_EXPO.c, p) / 255, 1.5); }
+function swellFactor(p){ return Math.pow(rbil(MAPD.L.expo, p) / 255, 1.5); }
 // the sea at p: wind sea w and swell sw (significant heights, m), the wind sea's peak period and fetch, and where each comes from
 function hsParts(p, H){
   const U = weAt(H), d = wdAt(H), F = fetchField(p, d), S = swellOpen(H);
