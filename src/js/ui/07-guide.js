@@ -157,10 +157,14 @@ function fcChart(){
   return g.join('');
 }
 function panelWx(){
-  const b = S.boat, H = S.t / 60, W = windAt(H), hs = hsAt(b.pos, H), h = [];
+  const b = S.boat, H = S.t / 60, W = windAt(H), hs = hsAt(b.pos, H), h = [], L = (no, en) => S.lang === 'no' ? no : en;
   h.push('<h3>' + t('now') + '</h3>');
   h.push('<div class="kv"><span>' + t('wind') + '</span><span>' + dirName(windDir(H)) + ' ' + fmt(W, 1) + ' m/s, ' + BFN[S.lang][beaufort(W)] + '</span></div>');
   h.push('<div class="kv"><span>' + t('waves') + ', ' + t('here').toLowerCase() + '</span><span>' + fmt(hs, 1) + ' m <span class="r' + riskLevel(W, hs) + '">' + t('risk' + riskLevel(W, hs)) + '</span></span></div>');
+  { const q = seaHere(b.pos, H), fra = L(' fra ', ' from ');
+    h.push('<div class="kv"><span>' + L('Sjøgang her', 'Sea here') + '</span><span>' + SEAN[S.lang][q.code] + (q.krapp ? L(', krapp', ', short and steep') : '') + '</span></div>');
+    h.push('<div class="kv"><span>' + L('Vindsjø · dønning', 'Wind sea · swell') + '</span><span>' + fmt(q.w, 1) + ' m' + (q.w >= 0.1 ? fra + dirName(q.dir) : '') + ' · ' + fmt(q.sw, 1) + ' m' + (q.sw >= 0.1 ? fra + dirName(q.swDir) + ', ' + fmt(q.swTp, 0) + ' s' : '') + '</span></div>');
+    h.push('<p class="note">' + BFN[S.lang][beaufort(W)].replace(/^./, c => c.toUpperCase()) + L(' på havet: ', ' on the open sea: ') + BFS[S.lang][beaufort(W)].replace(/^./, c => c.toLowerCase()) + '</p>'); }
   h.push('<div class="kv"><span>' + t('waves') + ', ' + t('open').toLowerCase() + '</span><span>' + fmt(hsOpen(H), 1) + ' m <span class="r' + riskLevel(W, hsOpen(H)) + '">' + t('risk' + riskLevel(W, hsOpen(H))) + '</span></span></div>');
   const pr = precipAt(H), snow = airTemp(H) < 1;
   const prs = pr < 0.08 ? t('p_none') : (pr < 0.4 ? t('p_light') + ' ' : pr > 0.75 ? t('p_heavy') + ' ' : '') + t(snow ? 'p_snow' : 'p_rain');

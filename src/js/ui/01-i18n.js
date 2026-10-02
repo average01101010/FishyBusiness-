@@ -89,6 +89,24 @@ const BFN = {
   no:['stille','flau vind','svak vind','lett bris','laber bris','frisk bris','liten kuling','stiv kuling','sterk kuling','liten storm','full storm','sterk storm','orkan'],
   en:['calm','light air','light breeze','gentle breeze','moderate breeze','fresh breeze','strong breeze','near gale','gale','strong gale','storm','violent storm','hurricane']
 };
+// what the open sea looks like at each Beaufort force (after SNL «Beauforts vindskala», which gives WMO's descriptions)
+const BFS = {
+  no:['Sjøen er speilblank.', 'Små krusninger uten skumtopper.', 'Små, korte bølger. Toppene er glassaktige og brekker ikke.', 'Store krusninger. Toppene begynner å brekke, med spredte skumtopper.',
+    'Små bølger som blir lengre, og ganske mange skumtopper.', 'Middelstore bølger med mer langstrakt form og mange skumtopper. Noe sjøsprøyt.', 'Store bølger begynner å danne seg. Skumtopper overalt, gjerne noe sjøsprøyt.',
+    'Sjøen hoper seg opp, og hvitt skum fra brytende topper begynner å blåse i striper med vinden.', 'Middels høye, lengre bølger. Kammene brekker til sjørokk som driver i tydelige striper med vinden.',
+    'Høye bølger og tette skumstriper. Sjøen begynner å rulle, og sjørokket kan minske sikten.', 'Svært høye bølger med lange, overhengende kammer. Skummet driver i tette hvite striper, og sjøen blir hvitaktig. Sikten er nedsatt.',
+    'Usedvanlig høye bølger, og sjøen er dekket av lange hvite skumflak. Sikten er nedsatt.', 'Lufta er full av skum og sjørokk, og sjøen er helt hvit. Sikten er svært nedsatt.'],
+  en:['The sea is like a mirror.', 'Ripples without crests.', 'Small wavelets. The crests look glassy and do not break.', 'Large wavelets. The crests begin to break, with scattered whitecaps.',
+    'Small waves becoming longer, and fairly frequent whitecaps.', 'Moderate waves of a more pronounced long form and many whitecaps. Some spray.', 'Large waves begin to form. White foam crests everywhere, probably some spray.',
+    'The sea heaps up, and white foam from breaking waves begins to blow in streaks along the wind.', 'Moderately high waves of greater length. The crests break into spindrift, blown in well-marked streaks.',
+    'High waves and dense streaks of foam. The sea begins to roll, and spray may reduce visibility.', 'Very high waves with long overhanging crests. The foam blows in dense white streaks and the sea looks white. Visibility is reduced.',
+    'Exceptionally high waves, and the sea is covered with long white patches of foam. Visibility is reduced.', 'The air is filled with foam and spray, and the sea is completely white. Visibility is very much reduced.']
+};
+// the sea state by its significant wave height (the Douglas scale, as met.no names it), seaState() gives the number
+const SEAN = {
+  no:['havblikk', 'småkruset sjø', 'smul sjø', 'svak sjø', 'moderat sjø', 'røff sjø', 'veldig røff sjø', 'opprørt hav', 'veldig opprørt hav', 'ekstremt opprørt hav'],
+  en:['calm (glassy)', 'calm (rippled)', 'smooth sea', 'slight sea', 'moderate sea', 'rough sea', 'very rough sea', 'high sea', 'very high sea', 'phenomenal sea']
+};
 function t(k, ...a){ let s = (T[S.lang] && T[S.lang][k]) || T.no[k] || k; a.forEach((v, i) => { s = s.replace('{' + i + '}', v); }); return s; }
 
 

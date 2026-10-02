@@ -113,3 +113,12 @@ function hsAtFc(p, H, now){
   const U = 0.6 * fcWind(H, now) + 0.4 * fcWind(H - 3, now), F = fetchField(p, windDir(H));
   return Math.max(0.05, Math.hypot(hsWind(U, F), swellOpen(H).hs * (1 + fcErr(H, now, 5900)) * swellFactor(p)));
 }
+// the sea state number by the significant wave height (the Douglas scale, WMO code 3700: 0 glassy ... 9 phenomenal)
+const SEA_CODE = [0.05, 0.1, 0.5, 1.25, 2.5, 4, 6, 9, 14];
+function seaState(hs){ let c = 0; while (c < 9 && hs >= SEA_CODE[c]) c++; return c; }
+// the sea where you are, for the weather texts: wind sea and swell with where they come from, the state, and whether the wind sea is
+// krapp (short and steep, as a young sea in a fjord: its height over its peak wavelength above 1/25)
+function seaHere(p, H){
+  const q = hsParts(p, H), hs = Math.max(0.05, Math.hypot(q.w, q.sw)), Lp = 1.56 * q.tp * q.tp;
+  return {hs, w:q.w, sw:q.sw, dir:q.dir, swDir:q.swDir, swTp:q.swTp, code:seaState(hs), krapp:q.w >= 0.4 && q.w >= q.sw && Lp > 0 && q.w / Lp > 0.04};
+}

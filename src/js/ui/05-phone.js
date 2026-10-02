@@ -245,10 +245,10 @@ const PHONE = (() => {
   // --- weather
   function sunTimesOld(H){ const d0 = Math.floor(H / 24) * 24 - 6 + 24 * (gDate(H).getUTCHours() < 6 ? -0 : 0); let up = null, dn = null, prev = sunAt(d0).el; for (let m = 10; m <= 24 * 60; m += 10){ const e = sunAt(d0 + m / 60).el; if (prev < -0.8 && e >= -0.8 && up === null) up = d0 + m / 60; if (prev >= -0.8 && e < -0.8 && dn === null) dn = d0 + m / 60; prev = e; } return {up, dn, always:sunAt(d0 + 12).el > -0.8 && up === null, never:sunAt(d0 + 6).el < -0.8 && up === null}; }
   function vaer(){
-    const b = S.boat, H = S.t / 60, W = windAt(H), hs = hsAt(b.pos, H), h = [], st = sunTimes(H);
+    const b = S.boat, H = S.t / 60, W = windAt(H), hs = hsAt(b.pos, H), h = [], st = sunTimes(H), sq = seaHere(b.pos, H);
     const pr = precipAt(H), snow = airTemp(H) < 1, prs = pr < 0.08 ? t('p_none') : (pr < 0.4 ? t('p_light') + ' ' : pr > 0.75 ? t('p_heavy') + ' ' : '') + t(snow ? 'p_snow' : 'p_rain');
-    h.push('<div class="ph-c"><div class="ph-card"><div class="ph-big">' + fmt(Math.round(airTemp(H)) || 0, 0) + ' °C · ' + dirName(windDir(H)) + ' ' + fmt(W, 0) + ' m/s</div><p>' + BFN[S.lang][beaufort(W)] + ', ' + prs + '</p>' +
-      kv(L('Bølger her', 'Waves here'), fmt(hs, 1) + ' m') + kv(L('Bølger på havet', 'Waves offshore'), fmt(hsOpen(H), 1) + ' m') + kv(L('Sikt', 'Visibility'), fmt(visibility(H), 0) + ' km') + kv(L('Sjøtemperatur', 'Sea temperature'), fmt(seasonal(SST, H), 1) + ' °C') +
+    h.push('<div class="ph-c"><div class="ph-card"><div class="ph-big">' + fmt(Math.round(airTemp(H)) || 0, 0) + ' °C · ' + dirName(windDir(H)) + ' ' + fmt(W, 0) + ' m/s</div><p>' + BFN[S.lang][beaufort(W)] + ', ' + prs + '. ' + BFS[S.lang][beaufort(W)] + '</p>' +
+      kv(L('Bølger her', 'Waves here'), fmt(hs, 1) + ' m · ' + SEAN[S.lang][sq.code] + (sq.krapp ? L(', krapp', ', short and steep') : '')) + kv(L('Vindsjø', 'Wind sea'), fmt(sq.w, 1) + ' m' + (sq.w >= 0.1 ? L(' fra ', ' from ') + dirName(sq.dir) : '')) + kv(L('Dønning', 'Swell'), fmt(sq.sw, 1) + ' m' + (sq.sw >= 0.1 ? L(' fra ', ' from ') + dirName(sq.swDir) + ', ' + fmt(sq.swTp, 0) + ' s' : '')) + kv(L('Bølger på havet', 'Waves offshore'), fmt(hsOpen(H), 1) + ' m') + kv(L('Sikt', 'Visibility'), fmt(visibility(H), 0) + ' km') + kv(L('Sjøtemperatur', 'Sea temperature'), fmt(seasonal(SST, H), 1) + ' °C') +
       kv(L('Sol', 'Sun'), st.always ? L('Midnattssol', 'Midnight sun') : st.never ? L('Mørketid', 'Polar night') : (st.up ? hm(st.up) : '–') + ' – ' + (st.dn ? hm(st.dn) : '–')) + '</div>');
     { const ev = tideEvents(H, 30).slice(0, 5), mo = moonAt(H), th = tideH(H), pts = [];
       for (let k = 0; k <= 48; k++){ const v = tideH(H + k / 2); pts.push((k * 5).toFixed(1) + ',' + (30 - v * 11).toFixed(1)); }

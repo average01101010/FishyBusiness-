@@ -51,7 +51,14 @@ async def main():
           // what it costs: a sailing boat's hsAt (new position every call) and the same spot again
           let t1 = performance.now(); for (let i = 0; i < 20000; i++) hsAt({x:40 + i * 0.0002, y:10 + i * 0.0001}, S.t / 60 + i / 60); R.usHs = r1((performance.now() - t1) / 20000 * 1000);
           const pp = {x:41, y:11}; t1 = performance.now(); for (let i = 0; i < 20000; i++) hsAt(pp, S.t / 60); R.usHsSame = Math.round((performance.now() - t1) / 20000 * 1000 * 100) / 100;
+          // the sea state by height (Douglas), krapp in the lee's young sea, and the texts in the Vær panel and the phone
+          R.codes = [0.02, 0.07, 0.3, 1, 2, 3, 5, 7, 10, 15].map(seaState);
+          const g1 = GROUNDS[0].p; WX_FORCE = {w:11, d:180}; R.krappLee = seaHere(g1, S.t / 60).krapp; WX_FORCE = {w:11, d:0}; R.krappOpen = seaHere(g1, S.t / 60).krapp;
+          S.boat.pos = {...g1}; S.boat.status = 'idle'; S.boat.port = null; const pw = panelWx(); R.panel = /Sjøgang her/.test(pw) && pw.includes(BFS.no[beaufort(11)].replace(/^./, c => c.toLowerCase())) && /Vindsjø · dønning/.test(pw);
+          PHONE.open('vaer'); const ph = document.getElementById('phView').textContent; R.phone = /Vindsjø/.test(ph) && /Dønning/.test(ph) && ph.includes(BFS.no[beaufort(11)]);
+          WX_FORCE = null; R.texts = [BFS.no.length, BFS.en.length, SEAN.no.length, SEAN.en.length];
           return R; })()""")
+        await pg.screenshot(path='seatest_phone.png'); await pg.evaluate("PHONE.show(false)")
         for k, v in r['rose'].items(): print('  ', k.ljust(22), v)
         print(json.dumps({k: v for k, v in r.items() if k != 'rose'}))
         R = r['rose']
@@ -67,5 +74,9 @@ async def main():
         print(ok(all(L[g]['N']['w'] > 2.2 and L[g]['S']['w'] < 0.8 * L[g]['N']['w'] for g in L)), 'at 11 m/s the outer grounds have a full wind sea from the north and less in the lee of Senja from the south')
         print(ok(r['knekk']['S']['w'] < 0.4 and r['knekk']['N']['w'] < 1.0), 'outside Botnhamn (the knekk spot) the sea is short both ways: the fjord is narrow (fishing there needs its own rule)')
         print(ok(r['line'][0] < 0.3 and min(r['line'][1:]) > 2.2 and r['turnStep'] < 0.25), 'NNW 11 m/s: calm inside Husøy harbour, the full sea just outside its mouth (the land ends there), and smooth as the wind turns')
+        print(json.dumps({k: r[k] for k in ['codes', 'krappLee', 'krappOpen', 'panel', 'phone', 'texts']}))
+        print(ok(r['codes'] == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]), 'the sea state follows the Douglas scale (havblikk to ekstremt opprørt hav)')
+        print(ok(r['krappLee'] and not r['krappOpen']), 'the short young sea in the lee is krapp, the grown open sea is not')
+        print(ok(r['panel'] and r['phone'] and r['texts'] == [13, 13, 10, 10]), 'the Vær panel and the weather app show the sea state, wind sea and swell, and what the sea looks like at this force')
         print('errors:', errs[:4]); await b.close()
 asyncio.run(main())

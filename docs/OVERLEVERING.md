@@ -627,6 +627,122 @@ Brukerens ønske: mannskapet skal være en levende og givende del av spillet, in
   - Du våkner med 60 %. Det er en antakelse.
   - Søvnen løper også mens spillet er lukket.
 
+### 5.20 Vær og hav (02.10.2026)
+
+Brukerens ønske: havet skal se ut og oppføre seg slik Beaufort-skalaen beskriver det, og vindretningen mot land skal telle (le og lo). Kjølvann, hekkbølge og baugbølge skal være realistiske. Overgangene skal være jevne.
+
+Brukerens valg:
+- Både spillet og 3D følger vindretning og le.
+- Dønningen er et eget system.
+- Vinden dreier med lavtrykkene.
+- Det åpne havet følger WMO.
+- Dønningen holder feltene ute omtrent like grove som før.
+
+**Kjernen** (`core/03b-sea.js`, etter `03-simulation.js`):
+
+- **Vinden** (`windAt`) er uendret i styrke, med samme kontrollsum som før.
+  - Lavtrykkene ligger i `stormsNear(H)`.
+  - `windDir` dreier med klokka gjennom hvert lavtrykk, fra S foran det, via SV på toppen, til V/NV bak kaldfronten (Buys Ballots lov), vektet etter lavtrykkets andel av vinden.
+  - `WX_FORCE = {w, d}` holder været fast i tester.
+- **Strøklengde** `fetchAt(p, fra)`:
+  - Sju stråler, −45…+45°, mot vinden. Effektiv strøklengde etter Saville (SPM 1984): Σ F·cos²α / Σ cos α.
+  - Strålene marsjerer med `coastDist` (steg `max(25 m, 0,92·d − 70 m)`) og stopper på 25 m-masken.
+  - Utenfor kartet:
+    - åpent Norskehav mot N og NV (600 km)
+    - Andøya rundt 16 km over Andfjorden mot V
+    - 15 km mot S og Ø, og ved Kvaløya
+  - `fetchField` gir roten av strøklengden fra en buffer i 200 m-ruter og 10°-sektorer: bilineær mellom rutene (ruter på land teller ikke) og lineær mellom sektorene, så den aldri hopper.
+  - Kostnaden er rundt 5 µs uten buffer og 0,5 µs med, i Chromium på PC.
+- **Vindsjø:** JONSWAP (Hasselmann m.fl. 1973) med U i m/s og F i meter:
+  - `Hs = 0,0016·U·√(F/g)` og `Tp = 0,286·(U/g)·(gF/U²)^(1/3)`
+  - Den vokser aldri over WMOs sannsynlige høyde for åpent hav per Beaufort-styrke: 0 / 0,1 / 0,2 / 0,6 / 1 / 2 / 3 / 4 / 5,5 / 7 / 9 / 11,5 / 14 m (`WMO`, `hsWMO`, interpolert mellom midtfartene). Tabellen er gjengitt av NOAA og Hong Kong Observatory.
+  - Vinden sjøen svarer på er `weAt(H) = 0,6·W(H) + 0,4·W(H−3)`.
+- **Dønning** (`swellOpen`) kommer fra VNV (300° ± 25°) med periode 9–14 s. Den har to deler:
+  - en grunndønning etter årstid (`SWELL`) × støy (0,1–1,9)
+  - en restdønning etter lavtrykkene: maks av `hsWMO(we(H−k))·e^(−k/24)` for k = 6–36 t, bare for vind fra vestlig halvdel
+
+  Inn mot land dempes den med `EXPO^1,5` (`swellFactor`). `exposure()` er uendret, fordi den styrer fisk og dybde.
+- **Bølgehøyden:**
+  - `hsAt(p, H) = max(0,05; √(vindsjø² + dønning²))` (`hsParts` gir delene).
+  - `hsOpen(H) = √(hsWMO² + dønning²)`.
+  - Varselet `hsAtFc` regner det lokale varselet i «Vær» gjennom den samme sjøen med varselvinden.
+  - Minne for siste kall gjør de 26 kallene billige.
+- **Kalibrering:** Dønningen er satt så snittet gjennom året på de tre ytre feltene er 92–94 % av før.
+
+  | | Før | Nå |
+  |---|---|---|
+  | Snitt Hs, Husøy / Mefjorden / Gryllefjord | 1,78 / 1,66 / 1,91 m | 1,68 / 1,53 / 1,77 m |
+  | Skiffen «trygt» om dagen ved Husøy, vinter / vår–høst / sommer | 12 / 24 / 72 % | 10 / 17 / 63 % |
+
+  - Fjordfeltene er uendret, der er vinden grensen.
+  - `progweek`: blad B dag 22 som før, 37 turer mot 44 på 56 dager, men 296 kg og 10 140 kr per tur mot 281 kg og 8 766 kr. Nettoen etter 56 dager er 379 301 kr mot 388 726 kr. Med 15 % egenkapital kommer inngangen nå litt etter dag 56.
+  - `simday` er innenfor ±3 %.
+- **Sjøgang og tekst:**
+  - `seaState(hs)` gir Douglas-skalaen (WMO-kode 3700) med met.no sine navn: havblikk, småkruset sjø, smul sjø, svak sjø, moderat sjø, røff sjø, veldig røff sjø, opprørt hav, veldig opprørt hav, ekstremt opprørt hav (`SEAN`).
+  - `seaHere` legger til «krapp» når vindsjøen er brattere enn 1/25 av bølgelengden og større enn dønningen.
+  - `BFS` beskriver havet ved hver Beaufort-styrke (etter SNL «Beauforts vindskala»).
+  - Vær-panelet og vær-appen viser sjøgangen, vindsjøen og dønningen med retning og periode, og teksten for vindstyrken.
+
+**Havet i 3D** (`view3d.js`):
+
+- **Sjøtilstandskart:**
+  - To teksturer: n (32² over det nære terrenget) og w (128² over hele kartet).
+  - Kanalene R og G er roten av strøklengden for de to 10°-sektorene rundt vinden, og B er dønningsfaktoren.
+  - De bygges stykkevis, 1,5–25 ms per bilde etter hvor tregt bildet går, og holdes per sektor.
+  - Den viste teksturen står til den nye er klar, så sjøen aldri faller tilbake til det grove kartet.
+  - `ssAt(x, z)` leser det samme på CPU-en.
+- **Bølgene:**
+  - 10 komponenter for vindsjøen, 96–6,4 m.
+  - To spektre, ungt (F = 1 km) og utvokst, som blandes per piksel etter hvor utvokst sjøen er.
+  - 3 dønningskomponenter (L = 1,56·T², ×0,8 / 1 / 1,25) fra dønningens egen retning.
+  - Amplituden settes per sted fra teksturen, både i verteksskyggeren og i fragmentskyggeren.
+  - Uten teksturer i verteksskyggeren, eller med `#novtf`, gjelder verdien ved båten.
+  - Når en bølge dreier eller blir lengre, holdes fasen fast der båten er.
+- **`seaH`** følger det som tegnes:
+  - lokale høyder, bølgegrupper (`grp`), dempingen av korte bølger (`att`) og fadingen mot kanten
+  - Gerstner-forskyvningen opphevet med to steg tilbake
+  - `seaHFast` (uten opphevingen) til kjølvannet
+- **Beaufort-trekk:**
+
+  | Styrke | Utseende |
+  |---|---|
+  | 0 | Speilblankt |
+  | 1 | Kattepoter (krusninger i flekker) |
+  | 2 | Blanke småbølger |
+  | 3 og over | Skumtopper (se under) |
+  | 7 | Skumstriper fra 13,9 m/s |
+  | 8 | Sjørokk fra 17,2 m/s (partikler) |
+  | 9 | Dis av sjørokk, bare i 3D. Sikten blir 15 km ved 24,5, 4 km ved 28,5 og 1 km ved 32,7 m/s. |
+  | 10 | Hvitt hav fra 24,5 m/s |
+
+  Skumtoppene dekker andelen W = 3,84·10⁻⁶·U^3,41 (Monahan og O'Muircheartaigh 1980) der sjøen har hatt 0,2–3 km å bryte på. De sitter på kammene, normalisert med eget standardavvik. Terskelen er tilpasset den målte spredningen: `0,228 + 0,293·z − 0,016·z²`, der z er normalkvantilen. Der skummet er for lite til å synes, blir havet hvitere i stedet. Brenningene følger sjøen som når hver strand.
+- **Jevne overganger:**
+  - Vind, høyde og dønning glir mot nye verdier med tidskonstant 4 s, retningen over 12 s.
+  - Alle trekk har myke overganger.
+  - `sea3d.py` måler at ingen bølge endrer seg mer enn 1,7 cm når vinden økes i steg på 0,1 m/s fra stille til orkan.
+- **Ytelse:**
+  - Det flate havet tegnes som ringer rundt det som tegnes nærmere, uten `discard` og uten piksler som tegnes to ganger.
+  - Fjernpassen bruker en egen variant med de fire lengste bølgene.
+  - `#fps` i adressen viser bildetakten.
+- **Båtens egne bølger** (`WAKE_GLSL`, `updateWake`). Fartsregimet følger Froude-tallet Fr = v/√(gL) med lengden fra `VESSELS` og simuleringens fart gjennom vannet.
+  - **Kelvin-kilen (19,47°):** tverrbølger 2πv²/g lange inne i kilen (faller som 1/√s) og skråbølger med fronter 35° på kursen (k = 1,5·k₀) langs kantene (faller som s^−1/3). De er høyest nær skrogfart (høyde ≈ 0,045·L, maks 0,6 m).
+  - **Planende skrog (Fr > 1):** bare skråbølger, flatt hvitt propellvann og hanekam bak påhengsmotoren.
+  - **Lange og korte bølger:** de lange løfter havet, de korte gir bare skygge.
+  - **I sving:** det rette mønsteret stopper der det går mer enn noen meter fra sporet, og skumstripa (`TRAIL`) fortsetter.
+  - **Baugbølgen:** klatrer opp i stevnen og løper akterover i 25° (høyde ≈ 0,12·v²/2g, maks 0,6 m).
+  - **Brytning:** baugbølgen og hekkbølgen brekker hvitt når de blir bratte.
+  - **Sprøyten:** kommer når baugen stuper ned i en sjø, og blåser med vinden.
+
+**Ikke løst her:** fisket inne i havna i kuling (spilltest r2 «knekk» A). Havna blir roligere, slik den er i virkeligheten, så det trenger en egen regel. Bildetakten på nettbrettet er ikke målt. SwiftShader går rundt 2 bilder/s og kan ikke skille.
+
+**Kilder:**
+- WMO-tabellen over Beaufort og bølgehøyde (NOAA WPC, Hong Kong Observatory)
+- Hasselmann m.fl. 1973 (JONSWAP)
+- Shore Protection Manual 1984 / CEM (effektiv strøklengde)
+- Monahan og O'Muircheartaigh 1980 (skumtopper)
+- SNL «Beauforts vindskala», «frisk bris», «liten kuling»
+- met.no / SNL «sjøgang» (Douglas-skalaen)
+
 ## 6. Regelverk og kilder
 
 | Tema | Kilde | Hovedpunkter |
@@ -985,6 +1101,12 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
   - Når du sovner med mannskap på en båt du ikke følger, går turen videre uten deg. Ingenting stopper båten fra å komme i havn og levere mens du sover.
   - Tester som går over 24 timer på sjøen med deg om bord, kan nå få deg til å sovne. Det vil vise seg i full regresjon.
 - **Riggen:** En båt med blandet redskap i sjøen fra en gammel lagring kan trekke alt, men bare sette det riggen tillater.
+- **Havet (02.10.2026, 5.20):**
+  - Bildetakten på nettbrettet etter endringene i havskyggeren er ikke målt (åpne med `#fps`).
+  - Skumtoppene er flekker fra støy på kammene, ikke brytende bølger.
+  - Kelvin-mønsteret er en tilnærming med én retning for skråbølgene.
+  - Vinden har ikke le bak fjellene, og den herskende vindretningen er ikke sjekket mot seklima.met.no.
+  - Fisket inne i havna i kuling trenger fortsatt en egen regel.
 
 - **Sertifikatene i Sjømann er ikke sjekket mot kildene.** Søk viste «Fiskeskippersertifikat klasse C eller D6» for båter under 15 m og navnene «helseerklæring for arbeidstakere på skip» og «sikkerhetsopplæring for sjøfolk på mindre skip» (Sjøfartsdirektoratet, 12 PAX-siden), men sdir.no og Lovdata var sperret fra arbeidsmiljøet. Hvilket sertifikat en fører av fiskefartøy under 15 m faktisk trenger, og at helseerklæringen varer 2 år, må sjekkes før papirene får betydning i spillet.
 
@@ -1050,13 +1172,24 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
   - `python3 tests/run.py smoke test …` kjører bare de testene du nevner.
   - `python3 tests/run.py full` er hele regresjonen før publisering (32 tester, rundt 10 minutter). `--3d` tegner 3D i alle.
   - Testene i `LITE`, også `tut.py`, kjøres med `KYST_LITE=1`, som gir `#no3d` i adressen: G3 er aktiv og alt går som før, men `frame()` tegner ingenting. Det gjorde `shoptest.py` rundt tre ganger raskere (43 s mot 13 s, med de samme 18 OK) og `docktest.py` fra rundt 10 minutter til 61 s. To slike går samtidig.
-  - Testene i `D3` (`dbg23o`, `camtest`, `moortest`, `landtest`, `bunkertest`, `vessel3d`, `unittest`) ser på selve 3D-bildet og går med 3D, etter hverandre. `routetest` og `heattest` måler millisekunder, og `landtest` følger kranen i 3D bilde for bilde. De går alene til slutt (`SOLO`), ellers forstyrrer de andre testene dem.
+  - Testene i `D3` (`dbg23o`, `camtest`, `moortest`, `landtest`, `bunkertest`, `vessel3d`, `unittest`, `sea3d`) ser på selve 3D-bildet og går med 3D, etter hverandre. `routetest` og `heattest` måler millisekunder, og `landtest` følger kranen i 3D bilde for bilde. De går alene til slutt (`SOLO`), ellers forstyrrer de andre testene dem.
   - Loggene havner i `tests/out/logs/`. `boot(pg)` i `_env.py` starter spillet og venter på startskjermen i stedet for faste pauser.
 - **Regresjon:**
   - `trip2.py`: hel tur via kartplotter, avgang, 3D, fiske og havn.
   - `tut.py`: veiledningen «Første tur», spilt gjennom med berøring som en spiller, liggende og stående, med tre omlastinger. Skal ende med `"tut": 0`.
   - `dbg23o.py`: ingen WebGL-feil.
 - **Funksjonstester**, blant andre:
+  - **`seatest.py` (uten 3D):**
+    - strøklengderoser og at `exposure()` er uendret
+    - le og lo ved 11 m/s, WMO-høydene og jevnheten
+    - at vinden dreier gjennom lavtrykkene
+    - sjøgang, «krapp» og tekstene i Vær og vær-appen
+  - **`sea3d.py` (3D):**
+    - ingen hopp fra stille til orkan, ved brå vindendring eller når det nære kartet bygges på nytt
+    - skumdekket mot Monahan, både regnet ut og tegnet
+    - sjørokk og dis, le mot lo og havn, og `#novtf`
+    - kjølvannet for skiff, sjark og kyst21
+    - bildene `sea3d_bf.png`, `sea3d_lee.png` og `sea3d_wake.png`
   - `selltest.py`: salg, kvote, ferskfisk og sløying.
   - `simday.py` og `kvtest.py`: kalibrering av fangst.
   - `ordtest.py`: bestillinger, klær og kulde.
