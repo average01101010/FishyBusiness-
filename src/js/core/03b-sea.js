@@ -35,7 +35,7 @@ function fetchAt(p, from){
 }
 // cached at 200 m cells and 10 degree sectors as the root of the fetch (the wind sea goes as the root); a cell whose centre is on land is -1
 function fetchCell(ix, iy, k){
-  const key = (iy * 512 + ix) * 36 + k; let v = FETCH_C.get(key);
+  const key = GK(ix, iy) * 36 + k; let v = FETCH_C.get(key);
   if (v === undefined){
     const p = {x:(ix + 0.5) * FETCH.cell, y:(iy + 0.5) * FETCH.cell};
     v = isLand(p) ? -1 : Math.sqrt(fetchAt(p, k * FETCH.sec));
