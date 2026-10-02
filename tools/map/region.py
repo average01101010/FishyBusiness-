@@ -1,5 +1,6 @@
 # One region of the map through the pipeline (phase K5 of the coast plan), into the game's map packs:
-#   mask    land at 25 m: Overture's land polygons (OpenStreetMap's coastline), filled at the cells' centres in the national frame
+#   mask    land at 25 m: Overture's land polygons (OpenStreetMap's coastline), filled at the cells' centres in the national frame,
+#           and the breakwaters (Overture's infrastructure, which the coastline leaves out), widened by half a cell
 #   dc      distance from open water to the land at 100 m (km): any land in a 100 m cell makes it 0, then Euclidean between centres
 #           (mask and dc are 'sim' since phase K6: read near the boats; what looks far reads the national core, national.py)
 #   hgt     the ground at 25 m: Terrarium z13 (Kartverket's 10 m terrain in Norway) on land, above 0; on the sea the sea floor from
@@ -8,9 +9,9 @@
 #   depth   50 m, half metres: Kartverket's depth model as the legacy Senja raster has it (until Geonorge is open)
 #   core    the national core (national.py core_layers: land200, dc200, expo), the same for every region
 #   python3 tools/map/region.py senja [out]     (out: src/data/map, which the build copies to dist/map)
-import os, sys, json, time, numpy as np
+import os, sys, json, time, math, numpy as np
 from scipy import ndimage
-from shapely import from_wkb
+from shapely import from_wkb, affinity
 import frame, terrain, legacy, pack
 from ov import features
 
@@ -46,6 +47,15 @@ def build(R):
     t0 = time.time(); box = R.lonlat_box(); L = {}; log = {}
     land = polys_of(features('base/land', box, ['geometry', 'subtype']), lambda s: s == 'land')
     ix0, iy0, nx, ny = R.grid(0.025); M = fill(land, 0.025, ix0, iy0, nx, ny)
+    # the breakwaters (OpenStreetMap's man_made=breakwater, which the coastline leaves out) are land too: a boat cannot cross Husøy's.
+    # Widened by half a cell (in metres: lon scaled by cos lat), so one narrower than a cell stays whole
+    inf = features('base/infrastructure', box, ['geometry', 'subtype', 'class']); bw = []
+    for g, c in zip(from_wkb(inf.column('geometry').to_numpy(zero_copy_only=False)), inf.column('class').to_pylist()):
+        if c != 'breakwater' or g is None: continue
+        k = math.cos(math.radians(g.centroid.y)); w = affinity.scale(g, k, 1, origin=(0, 0)).buffer(0.0125 / 111.32, 4)
+        bw.append(affinity.scale(w, 1 / k, 1, origin=(0, 0)))
+    if bw: M = np.maximum(M, fill(bw, 0.025, ix0, iy0, nx, ny))
+    log['breakwaters'] = len(bw)
     L['mask'] = dict(c=0.025, ix0=ix0, iy0=iy0, nx=nx, ny=ny, type='u8', kind='sim', arr=M); log['land'] = round(float(M.mean()), 4)
     # dc: 100 m cells with any land are 0; the rest the distance between centres to the nearest of those (km)
     any4 = M.reshape(ny // 4, 4, nx // 4, 4).max(axis=(1, 3)) > 0
@@ -64,17 +74,48 @@ def build(R):
     # the legacy rasters, read at the national cells
     G = legacy.load()
     dx0, dy0, dnx, dny = R.grid(0.05); X, Y = np.meshgrid((dx0 + np.arange(dnx) + 0.5) * 0.05, (dy0 + np.arange(dny) + 0.5) * 0.05)
-    L['depth'] = dict(c=0.05, ix0=dx0, iy0=dy0, nx=dnx, ny=dny, type='i16', kind='sim', dec='half', arr=np.round(legacy.at(G['depth'], X, Y)).astype(np.int16))
+    # outside the legacy square (the tiles reach past it) the game's depth model, as coast.py makes it for the coast's tiles: reading
+    # the legacy raster there clamped it to its edge, and the edge's shallows ran out as stripes across the chart
+    from coast import vn, sstep
+    import national
+    E = national.expo(); ex = E[dy0 // 10:(dy0 + dny) // 10, dx0 // 10:(dx0 + dnx) // 10].astype(np.float32) / 255
+    Ev = 0.2 + 0.8 * ndimage.zoom(ex, 10, order=1)[:dny, :dnx]; dcv = ndimage.zoom(L['dc']['arr'], 2, order=1)[:dny, :dnx]
+    dm = 2 + (13 + 220 * Ev ** 1.6 + 25 * vn(X / 4 + Y / 7, 5)) * sstep(0, 1.5, dcv) ** 0.6
+    lon, lat = frame.to_ll(X, Y); lx, ly = frame.ll_to_leg(lon, lat); ins = (lx >= 0) & (ly >= 0) & (lx <= 2 * frame.LEG['KX']) & (ly <= 0.74 * frame.LEG['KY'])
+    dep = np.where(ins, legacy.at(G['depth'], X, Y), np.round(dm * 2)); land50 = M.reshape(dny, 2, dnx, 2).max(axis=(1, 3)) > 0
+    L['depth'] = dict(c=0.05, ix0=dx0, iy0=dy0, nx=dnx, ny=dny, type='i16', kind='sim', dec='half', arr=np.round(np.where(land50 & ~ins, 0, dep)).astype(np.int16))
+    log['depthModel'] = round(float((~ins).mean()), 3)
     # the sea floor under the ground layer: the depth, 25 m from the 50 m cells
     dep = ndimage.zoom(L['depth']['arr'].astype(np.float32) / 2, 2, order=1)[:ny, :nx]
     L['hgt']['arr'] = np.where(M > 0, H, hgtEnc(-np.maximum(dep, 0.5))).astype(np.int16)
     import national
     L.update(national.core_layers())
     log['sec'] = round(time.time() - t0, 1)
-    return L, log
+    return L, log, chart_vec(R)
+
+# the coast's rings per tile take minutes, and the land does not change within an Overture release: kept in out/national/chart/
+def cached(name, make):
+    import national, pickle
+    f = os.path.join(national.OUT, 'chart', name + '.pkl')
+    if os.path.exists(f): return pickle.load(open(f, 'rb'))
+    v = make(); os.makedirs(os.path.dirname(f), exist_ok=True); pickle.dump(v, open(f, 'wb')); return v
+
+# the chart's vectors (chart.py): the whole country's coast and names in the core, the region's tiles' coast and names in 'chart' packs
+def chart_vec(R):
+    import chart, national
+    V = []; f0 = os.path.join(national.OUT, 'coast0.bin'); f1 = os.path.join(national.OUT, 'names0.json')
+    if not os.path.exists(f0): open(f0, 'wb').write(chart.coast0()[0])
+    if not os.path.exists(f1): json.dump(chart.names0(), open(f1, 'w'), ensure_ascii=False)
+    c0 = open(f0, 'rb').read(); n0 = json.load(open(f1))
+    V.append(('core', (0, 0), 'coast0', c0, 0)); V.append(('core', (0, 0), 'names0', chart.names_bytes(n0), len(n0)))
+    for ty in range(R.by0 // 5, (R.by1 - 1) // 5 + 1):
+        for tx in range(R.bx0 // 5, (R.bx1 - 1) // 5 + 1):
+            b1, k1 = cached(f'coast1-{tx}-{ty}', lambda: chart.coast1(tx, ty)); b2, k2 = cached(f'coast2-{tx}-{ty}', lambda: chart.coast2(tx, ty)); nm = chart.names(tx, ty)
+            V += [('chart', (tx, ty), 'coast1', b1, k1), ('chart', (tx, ty), 'coast2', b2, k2), ('chart', (tx, ty), 'names', chart.names_bytes(nm), len(nm))]
+    return V
 
 if __name__ == '__main__':
     R = frame.REGIONS[sys.argv[1]]; out = sys.argv[2] if len(sys.argv) > 2 else os.path.join(legacy.ROOT, 'src', 'data', 'map')
-    L, log = build(R)
-    n, b = pack.write(L, out, {'region': R.name, 'src': 'tools/map/region.py ' + R.name})
+    L, log, V = build(R)
+    n, b = pack.write(L, out, {'region': R.name, 'src': 'tools/map/region.py ' + R.name}, V)
     print(json.dumps(dict(log, packs=n, mb=round(b / 1e6, 2))))

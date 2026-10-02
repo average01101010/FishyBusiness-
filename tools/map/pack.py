@@ -14,8 +14,9 @@ def med16(q):
     d = q - pr; z = ((d << 1) ^ (d >> 31)) & 0xffff
     return np.concatenate([(z & 255).astype(np.uint8).ravel(), (z >> 8).astype(np.uint8).ravel()]).tobytes()
 def raw_deflate(b): co = zlib.compressobj(9, zlib.DEFLATED, -15); return co.compress(b) + co.flush()
-# layers: {name: {c, ix0, iy0, nx, ny, type, kind, dec, arr (ny x nx)}}, all over whole blocks
-def write(layers, out, extra=None):
+# layers: {name: {c, ix0, iy0, nx, ny, type, kind, dec, arr (ny x nx)}}, all over whole blocks; vec: [(kind, (tx, ty), name, bytes, count)],
+# vector entries (vectors.py, chart.py) at the tile's first block, with the count as a sixth field
+def write(layers, out, extra=None, vec=()):
     if os.path.exists(out): shutil.rmtree(out)
     os.makedirs(out)
     man = dict(v=2, frame='utm33', block=BLOCK, tile=TILE, layers={}, packs=[], **(extra or {}))
@@ -30,10 +31,11 @@ def write(layers, out, extra=None):
                 raw = med16(blk) if L['type'] == 'i16' else np.ascontiguousarray(blk).tobytes()
                 tile = (0, 0) if L['kind'] == 'core' else (bx // T, by // T); k = (L['kind'], tile)
                 groups.setdefault(k, []).append([name, bx, by, raw_deflate(raw)])
+    for kind, (tx, ty), name, b, cnt in vec: groups.setdefault((kind, (tx, ty)), []).append([name, tx * T, ty * T, raw_deflate(b), cnt])
     total = 0
     for (kind, tile), blocks in sorted(groups.items()):
         off = 0; head = {'kind': kind, 'tile': list(tile), 'blocks': []}
-        for l, bx, by, z in blocks: head['blocks'].append([l, bx, by, off, len(z)]); off += len(z)
+        for l, bx, by, z, *cnt in blocks: head['blocks'].append([l, bx, by, off, len(z)] + cnt); off += len(z)
         hj = json.dumps(head, separators=(',', ':')).encode()
         data = b'KMP1' + len(hj).to_bytes(4, 'little') + hj + b''.join(b[3] for b in blocks)
         h = hashlib.sha256(data).hexdigest()[:12]; fn = f'{kind}-{tile[0]}-{tile[1]}-{h}.wasm'
@@ -57,7 +59,7 @@ def read_layer(d, name):
     out = np.zeros((L['ny'], L['nx']), np.float32 if L['type'] == 'f32' else np.int32)
     for p in man['packs']:
         data = open(os.path.join(d, p['file']), 'rb').read(); hl = int.from_bytes(data[4:8], 'little'); head = json.loads(data[8:8 + hl]); at = 8 + hl
-        for l, bx, by, off, ln in head['blocks']:
+        for l, bx, by, off, ln, *_ in head['blocks']:
             if l != name: continue
             raw = zlib.decompress(data[at + off:at + off + ln], -15)
             blk = unmed16(raw, n) if L['type'] == 'i16' else np.frombuffer(raw, DT[L['type']]).reshape(n, n)

@@ -141,14 +141,14 @@ async def leia(p):
         rows.append(json.loads(await pg.evaluate("""async (rt) => { const F = portById('finnsnes'), g = rt[rt.length - 1], sd = safeDepth(); const res = await leiaRoute(F.p, g, 'finnsnes', null);
           if (res.why) return JSON.stringify({why:res.why}); const ti = await leiaRoute(F.p, g, 'finnsnes', null, {tight:true}); let man = dist(F.p, rt[0]); for (let i = 1; i < rt.length; i++) man += dist(rt[i - 1], rt[i]);
           let a = F.p, bad = 0; res.wps.forEach(w => { if (!clearLine(a, w) || legHazard(a, w, sd).unsafe) bad++; a = w; });
-          return JSON.stringify({n:res.wps.length, nm:+res.nm.toFixed(2), hand:+(res.nm / (man / NM)).toFixed(3), tight:+(res.nm / ti.nm).toFixed(3), bad, slice:+res.st.maxSlice.toFixed(1), ms:Math.round(res.st.ms)}); }""", R[k])))
+          return JSON.stringify({n:res.wps.length, nm:+res.nm.toFixed(2), hand:+(res.nm / (man / NM)).toFixed(3), tight:+(res.nm / ti.nm).toFixed(3), bad, slice:+res.st.maxSlice.toFixed(1), at:res.st.at, ms:Math.round(res.st.ms)}); }""", R[k])))
     rows.append(json.loads(await pg.evaluate("""async () => { const F = portById('finnsnes'), B = portById('botnhamn'), sd = safeDepth(); const res = await leiaRoute(F.p, B.p, 'finnsnes', 'botnhamn'); let a = F.p, bad = 0; res.wps.forEach(w => { if (!clearLine(a, w) || legHazard(a, w, sd).unsafe) bad++; a = w; });
-      const last = res.wps[res.wps.length - 1]; return JSON.stringify({n:res.wps.length, nm:+res.nm.toFixed(2), bad, end:dist(last, B.p) < 0.001, slice:+res.st.maxSlice.toFixed(1), ms:Math.round(res.st.ms)}); }""")))
+      const last = res.wps[res.wps.length - 1]; return JSON.stringify({n:res.wps.length, nm:+res.nm.toFixed(2), bad, end:dist(last, B.p) < 0.001, slice:+res.st.maxSlice.toFixed(1), at:res.st.at, ms:Math.round(res.st.ms)}); }""")))
     print('    ', rows)
     ok = [r for r in rows if 'why' not in r]
     check(len(ok) == len(rows) and all(r['bad'] == 0 for r in ok) and rows[-1]['end'], 'Følg leia: alle etapper til de seks feltene og Botnhamn er fri for land, grunner og skjær')
     check(all(r['n'] <= 12 for r in ok), 'Følg leia: høyst 12 WP', [r['n'] for r in ok])
-    check(all(r['slice'] < 16 for r in ok), 'Følg leia: hver bit tar under 16 ms', [r['slice'] for r in ok])
+    check(all(r['slice'] < 16 for r in ok), 'Følg leia: hver bit tar under 16 ms', [(r['slice'], r.get('at')) for r in ok])
     tight = [r['tight'] for r in ok[:-1]]; hand = [r['hand'] for r in ok[:-1]]
     check(all(0.99 <= x <= 1.35 for x in tight), 'Følg leia er litt lengre enn den strammeste veien langs land (eller like lang: 1 % for avrundingen)', tight)
     check(all(0.85 <= x <= 1.35 for x in hand), 'og 0,85–1,35 ganger de håndtegnede testrutene (de er ikke de korteste)', hand)

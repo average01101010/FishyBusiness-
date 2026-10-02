@@ -47,7 +47,10 @@ function leiaHeap(){
     pop(){ const top = k[0], lk = k.pop(), lf = f.pop(); if (k.length){ k[0] = lk; f[0] = lf; let i = 0; for (;;){ const l = 2 * i + 1, r = l + 1; let m = i; if (l < k.length && f[l] < f[m]) m = l; if (r < k.length && f[r] < f[m]) m = r; if (m === i) break; [k[m], k[i]] = [k[i], k[m]]; [f[m], f[i]] = [f[i], f[m]]; i = m; } } return top; }};
 }
 const leiaYield = () => new Promise(r => setTimeout(r, 0));
-// A* between two open cells; returns the cells in order, or null. st collects how the slices went.
+// a slice ends: the longest so far and where it was (search, pull, drop) go to st
+function leiaSlice(st, t0, at){ const dt = performance.now() - t0; if (dt > st.maxSlice){ st.maxSlice = dt; st.at = at; } st.slices++; }
+// A* between two open cells; returns the cells in order, or null. st collects how the slices went. The clock is read every 32
+// expansions: a new cell works out its cost (depth, harbour, rocks) the first time, and 256 of them could take 20 ms
 async function leiaSearch(s, t, sd, st){
   const nx = DC.nx, ny = DC.ny, N = nx * ny;
   if (!LEIA_ST.g){ LEIA_ST.g = new Float64Array(N); LEIA_ST.from = new Int32Array(N); LEIA_ST.seen = new Uint32Array(N); LEIA_ST.shut = new Uint32Array(N); }
@@ -69,7 +72,7 @@ async function leiaSearch(s, t, sd, st){
       const ng = G[u] + len * c;
       if (SEEN[v] !== gen || ng < G[v]){ SEEN[v] = gen; G[v] = ng; FROM[v] = u; H.push(v, ng + h(v)); }
     }
-    if ((++n & 255) === 0 && performance.now() - t0 > LEIA.slice){ st.maxSlice = Math.max(st.maxSlice, performance.now() - t0); st.slices++; await leiaYield(); t0 = performance.now(); }
+    if ((++n & 31) === 0 && performance.now() - t0 > LEIA.slice){ leiaSlice(st, t0, 'search'); await leiaYield(); t0 = performance.now(); }
   }
   st.expanded = n; return null;
 }
@@ -87,18 +90,21 @@ function leiaLegOk(p, q, sd, margin){
 // string-pulling: from each kept point, the furthest point along the path that a straight leg reaches (galloping, then halving)
 async function leiaStraighten(P, sd, margin, st){
   const out = [P[0]]; let i = 0, t0 = performance.now();
+  // the clock is read after every leg checked: one point's galloping can check many long legs
+  const tick = async () => { if (performance.now() - t0 > LEIA.slice){ leiaSlice(st, t0, 'pull'); await leiaYield(); t0 = performance.now(); } };
   while (i < P.length - 1){
     let ok = i + 1, step = 1;
-    while (ok + step < P.length && leiaLegOk(P[i], P[ok + step], sd, margin)){ ok += step; step *= 2; }
+    while (ok + step < P.length && leiaLegOk(P[i], P[ok + step], sd, margin)){ ok += step; step *= 2; await tick(); }
     let lo = ok, hi = Math.min(P.length - 1, ok + step);
-    while (hi - lo > 1){ const m = (lo + hi) >> 1; if (leiaLegOk(P[i], P[m], sd, margin)) lo = m; else hi = m; }
+    while (hi - lo > 1){ const m = (lo + hi) >> 1; if (leiaLegOk(P[i], P[m], sd, margin)) lo = m; else hi = m; await tick(); }
     out.push(P[lo]); i = lo;
-    if (performance.now() - t0 > LEIA.slice){ st.maxSlice = Math.max(st.maxSlice, performance.now() - t0); st.slices++; await leiaYield(); t0 = performance.now(); }
+    await tick();
   }
-  // then drop any point the legs either side of it can do without
+  // then drop any point the legs either side of it can do without (the clock is read per point: a pass can take longer than a slice)
   for (let again = true; again;){ again = false;
-    for (let k = 1; k < out.length - 1; k++) if (leiaLegOk(out[k - 1], out[k + 1], sd, margin)){ out.splice(k, 1); again = true; }
-    if (performance.now() - t0 > LEIA.slice){ st.maxSlice = Math.max(st.maxSlice, performance.now() - t0); st.slices++; await leiaYield(); t0 = performance.now(); } }
+    for (let k = 1; k < out.length - 1; k++){
+      if (leiaLegOk(out[k - 1], out[k + 1], sd, margin)){ out.splice(k, 1); again = true; }
+      if (performance.now() - t0 > LEIA.slice){ leiaSlice(st, t0, 'drop'); await leiaYield(); t0 = performance.now(); } } }
   return out;
 }
 // the way from a (the boat, a waypoint or a harbour id's point) to b (a point at sea or a harbour): the waypoints after a, ending at b.

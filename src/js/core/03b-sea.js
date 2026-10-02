@@ -5,7 +5,7 @@
 // The rays run on the national core (phase K6 of the coast plan), the same for every place on the coast: they march by the distance
 // to the shore (dc200: 200 m grid, 100 m steps) and stop on the 200 m land. Off the frame (the open Norwegian Sea, the Barents Sea,
 // the North Sea) the open sea's fetch is added.
-const FETCH = {open:600, cell:0.2, sec:10, max:80000};
+const FETCH = {open:600, cell:0.2, sec:10, max:80000, near:1, fine:1.5};
 const FETCH_A = [-45, -30, -15, 0, 15, 30, 45].map(a => ({a:a * Math.PI / 180, c:Math.cos(a * Math.PI / 180)}));
 const FETCH_C = new Map();
 function fetchRay(x, y, dx, dy){
@@ -48,6 +48,22 @@ function fetchSector(p, k){
   }
   return den > 0 ? num / den : Math.sqrt(fetchAt(p, k * FETCH.sec));
 }
+// Near the shore the 200 m core cannot see a harbour's breakwater or a narrow sound (Husøy's harbour lies in a 200 m land cell, and
+// the field took the open sea outside for it). Within FETCH.near km of the core's land, where the tile's detail is in, the rays' first
+// FETCH.fine km run on the 25 m mask (isLand, the harbour pockets too) and the core's rays go on from there. The detail is always in
+// round the boats and the gear in the sea (the simulation's barrier, 01b-mapdata.js), where the simulation asks for the sea, so the
+// simulation is the same whatever else is loaded; elsewhere (a view) it takes the field until the pack comes.
+function fetchFine(p, from){
+  const b = from * Math.PI / 180; let num = 0, den = 0;
+  for (const r of FETCH_A){
+    const a = b + r.a, dx = Math.sin(a), dy = -Math.cos(a); let x = p.x, y = p.y, s = 0, F = -1;
+    while (s < FETCH.fine){ const q = {x, y}; if (isLand(q)){ F = s; break; } const st = Math.max(0.02, 0.9 * coastDist(q) - 0.05); x += dx * st; y += dy * st; s += st; }
+    if (F < 0) F = s + fetchRay(x, y, dx, dy);
+    num += F * r.c * r.c; den += r.c;
+  }
+  return num / den;
+}
+function fetchHere(p, from){ return coastDistFar(p) < FETCH.near && mapSimAt(p) && mapReadyAt(p, 0) ? fetchFine(p, from) : fetchField(p, from); }
 function fetchField(p, from){
   const f = ((from % 360) + 360) % 360 / FETCH.sec, k0 = Math.floor(f), u = f - k0;
   const r = fetchSector(p, k0 % 36) * (1 - u) + (u > 1e-3 ? fetchSector(p, (k0 + 1) % 36) * u : 0); return r * r;
@@ -91,7 +107,7 @@ function swellOpen(H){
 function swellFactor(p){ return Math.pow(rbil(MAPD.L.expo, p) / 255, 1.5); }
 // the sea at p: wind sea w and swell sw (significant heights, m), the wind sea's peak period and fetch, and where each comes from
 function hsParts(p, H){
-  const U = weAt(H), d = wdAt(H), F = fetchField(p, d - gridGamma(p)), S = swellOpen(H);
+  const U = weAt(H), d = wdAt(H), F = fetchHere(p, d - gridGamma(p)), S = swellOpen(H);
   return {w:hsWind(U, F), sw:S.hs * swellFactor(p), tp:tpWind(U, F), F, U, dir:d, swDir:S.dir, swTp:S.tp};
 }
 let HS_MEMO = {x:NaN, y:NaN, H:NaN, v:0};
@@ -104,7 +120,7 @@ function hsOpen(H){ return Math.max(0.05, Math.hypot(hsWMO(weAt(H)), swellOpen(H
 // forecasts: the forecast wind (with its error) through the same sea; the swell forecast has its own error
 function fcHsOpen(H, now){ return hsOpen(H) * (1 + fcErr(H, now, 5900)); }
 function hsAtFc(p, H, now){
-  const U = 0.6 * fcWind(H, now) + 0.4 * fcWind(H - 3, now), F = fetchField(p, windDir(H) - gridGamma(p));
+  const U = 0.6 * fcWind(H, now) + 0.4 * fcWind(H - 3, now), F = fetchHere(p, windDir(H) - gridGamma(p));
   return Math.max(0.05, Math.hypot(hsWind(U, F), swellOpen(H).hs * (1 + fcErr(H, now, 5900)) * swellFactor(p)));
 }
 // the sea state number by the significant wave height (the Douglas scale, WMO code 3700: 0 glassy ... 9 phenomenal)
