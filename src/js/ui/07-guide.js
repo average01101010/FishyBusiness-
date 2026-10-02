@@ -164,6 +164,8 @@ function panelWx(){
   { const q = seaHere(b.pos, H), fra = L(' fra ', ' from ');
     h.push('<div class="kv"><span>' + L('Sjøgang her', 'Sea here') + '</span><span>' + SEAN[S.lang][q.code] + (q.krapp ? L(', krapp', ', short and steep') : '') + '</span></div>');
     h.push('<div class="kv"><span>' + L('Vindsjø · dønning', 'Wind sea · swell') + '</span><span>' + fmt(q.w, 1) + ' m' + (q.w >= 0.1 ? fra + dirName(q.dir) : '') + ' · ' + fmt(q.sw, 1) + ' m' + (q.sw >= 0.1 ? fra + dirName(q.swDir) + ', ' + fmt(q.swTp, 0) + ' s' : '') + '</span></div>');
+    if (b.status !== 'port'){ const Z = motionHere(H, b), dg = r => Math.round(r * 180 / Math.PI), lv = Z.state.lvl;
+      h.push('<div class="kv"><span>' + L('Stabilitet', 'Stability') + '</span><span class="r' + lv + '">GM ' + fmt(Z.St.GM, 2) + ' m · ' + L('rulleperiode ', 'roll period ') + fmt(Z.St.Tr, 1) + ' s · ' + L('ruller ±', 'rolls ±') + dg(Z.M.roll) + '°' + (dg(Z.M.heel) >= 1 ? L(', krenger ', ', heels ') + dg(Z.M.heel) + '°' : '') + ' · ' + [L('god', 'good'), L('redusert', 'reduced'), L('kritisk', 'critical')][lv] + '</span></div>'); }
     h.push('<p class="note">' + BFN[S.lang][beaufort(W)].replace(/^./, c => c.toUpperCase()) + L(' på havet: ', ' on the open sea: ') + BFS[S.lang][beaufort(W)].replace(/^./, c => c.toLowerCase()) + '</p>'); }
   h.push('<div class="kv"><span>' + t('waves') + ', ' + t('open').toLowerCase() + '</span><span>' + fmt(hsOpen(H), 1) + ' m <span class="r' + riskLevel(W, hsOpen(H)) + '">' + t('risk' + riskLevel(W, hsOpen(H))) + '</span></span></div>');
   const pr = precipAt(H), snow = airTemp(H) < 1;

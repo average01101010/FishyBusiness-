@@ -117,6 +117,14 @@ async def main():
         await sheet(tiles, 'sea3d_wake.png', 3)
         R['wake'] = wake
         await pg.evaluate("(() => { S.mult = 0.00001; const b = S.boat; b.type = 'skiff'; applyVessel(); G3.vesselChanged(); b.status = 'idle'; S.plan = null; b.v = 0; })()")
+        # 9. the hull's motions (03c-stability.js): a skiff and a 21 m coaster lying beam-on in the same sea, 40 s of motion each
+        R['motion'] = await pg.evaluate("""(() => { const D = G3._debug, out = {}; WX_FORCE = {w:9, d:270}; S.mult = 0.00001;
+          for (const vt of ['skiff', 'kyst21']){ const b = S.boat, g = GROUNDS[0].p; b.type = vt; applyVessel(); G3.vesselChanged(); b.status = 'idle'; b.port = null; b.pos = {x:g.x, y:g.y}; b.heading = 0; S.plan = null; b.v = 0;
+            D.bv.init = false; D.WV.init = false; const rec = []; let t = 100;
+            for (let i = 0; i < 1500; i++){ t += 1 / 30; D.waves(1 / 30, S.t / 60); D.stepBoat(1 / 30, t, 0); if (i > 300) rec.push(D.bv.roll); }
+            const m = rec.reduce((a, v) => a + v, 0) / rec.length, rms = Math.sqrt(rec.reduce((a, v) => a + (v - m) ** 2, 0) / rec.length); let zc = 0; for (let i = 1; i < rec.length; i++) if ((rec[i - 1] - m) * (rec[i] - m) < 0) zc++;
+            out[vt] = {rmsDeg:Math.round(rms * 1800 / Math.PI) / 10, period:Math.round(2 * rec.length / 30 / Math.max(1, zc) * 10) / 10, Tr:Math.round(stabOf(vt).Tr * 10) / 10, ok:rec.every(Number.isFinite)}; }
+          const b = S.boat; b.type = 'skiff'; applyVessel(); G3.vesselChanged(); return out; })()""")
         # 7. a GPU with no textures in the vertex shader: the same page, the waves from the values at the boat
         pg2 = await b.new_page(viewport={'width': 640, 'height': 400}); errs2 = []; pg2.on('pageerror', lambda e: errs2.append(str(e)))
         await boot(pg2, GAME_TUT + '#notut,novtf'); await pg2.evaluate(SETUP)
@@ -135,5 +143,7 @@ async def main():
         W = R['wake']
         print(ok(all(W[k]['on'] == 1 for k in W) and W['skiff']['trans'] < 0.1 and W['sjark']['trans'] > 0.9 and W['kyst21']['trans'] > 0.9), 'a planing skiff leaves divergent waves only; the displacement hulls also the transverse waves behind the stern')
         print(ok(all(abs(W[k]['lam'] - 2 * 3.14159 * (W[k]['kn'] * 0.5144) ** 2 / 9.81) < 0.3 for k in W) and abs(W['sjark']['kn'] - 8.5) < 1 and 0.2 < W['sjark']['A'] < 0.6 and 0.05 < W['skiff']['A'] < 0.3), 'the wake waves are 2 pi v^2 / g long, highest near hull speed and lower for the planing skiff')
+        Mo = R['motion']
+        print(ok(Mo['skiff']['ok'] and Mo['kyst21']['ok'] and Mo['kyst21']['period'] > Mo['skiff']['period'] and Mo['kyst21']['rmsDeg'] > 0.1), 'in 3D the hull rolls as an oscillator: the 21 m coaster rolls slower than the skiff in the same sea')
         print('errors:', errs[:4]); await b.close()
 asyncio.run(main())

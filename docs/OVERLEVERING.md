@@ -743,6 +743,56 @@ Brukerens valg:
 - SNL «Beauforts vindskala», «frisk bris», «liten kuling»
 - met.no / SNL «sjøgang» (Douglas-skalaen)
 
+### 5.21 Skipsstabilitet og båtens bevegelser (02.10.2026)
+
+Brukerens ønske: båtene skal oppføre seg i sjøen etter prinsippene for skipsstabilitet.
+
+Brukerens valg: bevegelse og spill. Båten kantrer ikke, men det kommer tydelige varsler. Ising er ikke med nå.
+
+Fila er `core/03c-stability.js`.
+
+- **Hydrostatikk** (`hullOf`, `stabOf`) fra `VESSELS` (len, beam, draft, disp):
+  - Skrogets midlere dypgang gir en blokkoeffisient på minst 0,35. Draft i `VESSELS` er det dypeste punktet.
+  - Vannlinjekoeffisient Cwp = (1 + 2·Cb)/3.
+  - KB = T·(5/6 − Cb/(3·Cwp)) (Normand) og BM = Cwp²·B²/(11,75·Cb·T) (Murray).
+  - Fribord 0,35 + 0,035·L (maks 2,5 m). Dekkskanten går under ved atan(2f/B).
+  - Tyngdepunktet: små og åpne båter ligger lavt (KG er en andel av dybden), større båter er bygd til GM ≈ 0,09·B + 0,3 m. Den stiveste av de to gjelder.
+  - Resultatet er GM 2,1 m for skiffen, 0,64–0,77 m for sjarkene, 0,9–1,0 m for kystbåtene og 1,3–1,7 m for havbåtene. Alle er over IMOs 0,35 m for fiskefartøy med ett dekk (IS-koden 2008, del B 2.1).
+- **Egenperioder:**
+  - Rull etter IMOs værkriterium (IS-koden 2.3): T = 2·C·B/√GM, C = 0,373 + 0,023·B/d − 0,043·L/100, med B/d maks 3,5 som formelen er tilpasset.
+  - Skiffen ruller på 1,5 s, sjarkene på 4–5 s, kyst21 på 6,1 s og den pelagiske tråleren på 9,2 s.
+  - Hiv og stamp: T = 2π·√(Cb·T·1,8/(g·Cwp)).
+- **Last** (`stabLoad`):
+  - Fangsten ligger lavt i rommet (på dørken i en åpen båt).
+  - Karene som venter, og redskapen ligger på dekk (midten 0,8 m opp). Teine 15 kg (stor 25), garn 9, linestamp 25, juksasett 6.
+  - Sidene faller ut, så BM faller som (Δ0/Δ)^0,4.
+  - Innenfor `gearMax` holder båtene seg over IMOs minimum: sjarken med 150 teiner har GM 0,58 m. Med 500 teiner kommer den ned i 0,32 m.
+- **Bevegelser i spillet** (`motionAt`):
+  - Vindsjø og dønning møtes hver for seg med møtefrekvensen ωe = |ω − k·v·cos μ|.
+  - Rullet svarer på bølgehellingen π·Hs/λ på tvers som en dempet svingning (0,12 av kritisk for spredt sjø), med resonans når møteperioden treffer rulleperioden.
+  - Hiv og stamp følger bølger lengre enn skroget og jevner ut de kortere. Vertikal akselerasjon regnes en tredjedel av lengden foran midten.
+  - Vind fra siden gir slagside: 0,5·ρ·U²·1,2 på siden over vann (`windHeel`).
+- **Arbeidet** (`hsWork`, `motionHere`):
+  - Fiske og arbeid om bord (`catchFactors` med bølgehøyden den får, `workTeam`, `teamEff`) bruker bølgehøyden skalert med hvor mye båten beveger seg, mot det samme skroget i drift med siden mot sjøen og tomt dekk. `simday` er uendret (±10 %), og `progweek` gir 312 211 kr mot 312 801 kr uten.
+  - Kalibreringen holder derfor i snitt, mens kurs, fart, last og resonans teller.
+  - 1 m/s² vertikal akselerasjon teller like mye som 10° rull. Faktoren er avgrenset til 0,6–1,8.
+  - Eksempel: skiffen i 18 kn mot sjøen får 1,64, undan sjøen 0,6.
+- **Varsler** (`stabState`, `stabTick` én gang i minuttet på sjøen):
+  - Redusert når GM er under 0,35 m eller rull + slagside når 60 % av vinkelen til dekkskanten.
+  - Kritisk når GM er under 0,15 m eller 90 %.
+  - Årsaken er «rank» (for mye på dekk), «synkronrulling» (endre kurs eller fart) eller «kraftig rulling» (legg baugen mot sjøen).
+  - Varslene kommer i loggen og i HUD-en. Vær-panelet viser GM, rulleperioden, rullingen og slagsiden.
+- **3D** (`updateBoat`):
+  - Skroget svarer som en dempet svingning i hiv og stamp (demping 0,35) og rull (0,08), med egenperiodene fra `stabOf` med lasten.
+  - Sjøen snittes over vannlinjen i 3×3 punkter, så lange skrog rir over kort sjø.
+  - Vind fra siden gir slagside mot le.
+  - Skjermen går 6× fortere enn ekte tid, så møteperiodene i 3D er kortere enn i spillets regning. Den høye frekvensen dempes bort av egenperiodene.
+- **Ikke med:** ising, kantring, fri væskeflate i rommet, en GZ-kurve forbi dekkskanten (rullet er bare begrenset til 1,6 × dekkskantvinkelen), og Sjøfartsdirektoratets egne krav for fiskefartøy under 15 m (ikke sjekket i detalj).
+
+**Kilder:**
+- IMO International Code on Intact Stability 2008: værkriteriet 2.3 og kravene til fiskefartøy i del B 2.1
+- Normand og Murray (anslagene for KB og BM)
+
 ## 6. Regelverk og kilder
 
 | Tema | Kilde | Hovedpunkter |
@@ -1184,6 +1234,12 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
     - le og lo ved 11 m/s, WMO-høydene og jevnheten
     - at vinden dreier gjennom lavtrykkene
     - sjøgang, «krapp» og tekstene i Vær og vær-appen
+  - **`stabtest.py` (uten 3D):**
+    - GM og egenperioder per båttype
+    - teiner på dekk og fangst i rommet
+    - resonans
+    - at arbeidet kjenner kurs og fart
+    - varslene
   - **`sea3d.py` (3D):**
     - ingen hopp fra stille til orkan, ved brå vindendring eller når det nære kartet bygges på nytt
     - skumdekket mot Monahan, både regnet ut og tegnet

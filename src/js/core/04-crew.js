@@ -53,7 +53,7 @@ function crewEff(c, H, hs, g = 'juksa'){
   if (T.includes('olglad') && S.pubE === pubEvening(H - 12) && gDate(H).getUTCHours() < 12) e *= 0.8;
   return e;
 }
-function teamEff(team, me = true, g = 'juksa'){ const H = S.t / 60, hs = hsAt(S.boat.pos, H), n = (me ? 1 : 0) + team.length; return n ? ((me ? 1 : 0) + team.reduce((a, c) => a + crewEff(c, H, hs, g), 0)) / n : 1; }
+function teamEff(team, me = true, g = 'juksa'){ const H = S.t / 60, hs = hsWork(S.boat.pos, H), n = (me ? 1 : 0) + team.length; return n ? ((me ? 1 : 0) + team.reduce((a, c) => a + crewEff(c, H, hs, g), 0)) / n : 1; }
 // how two people get along: habits, home village, age, and old grudges
 function compat(a, b){
   const A = a.traits, B = b.traits, both = t => A.includes(t) && B.includes(t), either = t => A.includes(t) || B.includes(t); let k = 0;

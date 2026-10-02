@@ -1968,7 +1968,7 @@ const G3 = (() => {
   function updateBoat(dt, t, frac){
     const b = S.boat, pr = predict(frac), tx = pr.p.x * 1000, tz = pr.p.y * 1000, sailing = b.status === 'sailing' && S.plan, G = GEO(vtype());
     const zp = (G.bow || -2.2) + ((G.stern || 3.1) - (G.bow || -2.2)) / 3;   // pivot point, local z (negative = forward)
-    if (!bv.init || Math.hypot(tx - (bv.px || 0), tz - (bv.pz || 0)) > 900){ bv.px = tx; bv.pz = tz; bv.cog = pr.hd; bv.head = pr.hd; bv.spd = sailing ? b.v * KNV() : 0; bv.yr = 0; bv.beta = 0; bv.init = true; TRAIL.length = 0; WV.init = false; }
+    if (!bv.init || Math.hypot(tx - (bv.px || 0), tz - (bv.pz || 0)) > 900){ bv.px = tx; bv.pz = tz; bv.cog = pr.hd; bv.head = pr.hd; bv.spd = sailing ? b.v * KNV() : 0; bv.yr = 0; bv.beta = 0; bv.init = true; bv.osc = false; bv.st = null; TRAIL.length = 0; WV.init = false; }
     else if (dt > 0){
       const bp = berthNow();
       if (bp) moorStep(dt, bp);
@@ -1997,15 +1997,26 @@ const G3 = (() => {
     // the hull is placed so that the track point is its pivot
     bv.x = bv.px + Math.sin(bv.head) * zp; bv.z = bv.pz - Math.cos(bv.head) * zp;
     const fx = Math.sin(bv.head), fz = -Math.cos(bv.head), rx = Math.cos(bv.head), rz = Math.sin(bv.head);
-    const pl = G.pl, rl = G.rl;
-    const hb = seaH(bv.x + fx * pl, bv.z + fz * pl, t), hs = seaH(bv.x - fx * pl, bv.z - fz * pl, t), hp = seaH(bv.x - rx * rl, bv.z - rz * rl, t), hst = seaH(bv.x + rx * rl, bv.z + rz * rl, t);
+    // The hull answers the sea it floats on as a damped oscillator in heave, pitch and roll, with the natural periods of the boat as loaded
+    // (03c-stability.js). The sea is averaged over the waterplane (3 x 3 points), so a long hull rides over short waves and a light boat
+    // follows them; a sea that meets her roll period builds the roll up (resonance), and a beam wind heels her.
+    if (!bv.st || t - (bv.stT || 0) > 1 || t < (bv.stT || 0)){ bv.st = stabOf(b.type || 'skiff'); bv.stT = t; bv.heel = -windHeel(bv.st, env.wind || 0) * Math.sign(Math.sin((windDir(S.t / 60) * DEG + Math.PI) - bv.head) || 1); }   // to leeward
+    const pl = G.pl, rl = G.rl, Ls = Math.max(pl * 2, (G.stern - G.bow) * 0.8 || 0), Bs = Math.max(rl * 2, (G.beam || 2.4) * 0.8);
+    let hm = 0, sl = 0, st = 0;
+    for (const a of [-0.5, 0, 0.5]) for (const c of [-0.5, 0, 0.5]){ const h = seaH(bv.x + fx * a * Ls + rx * c * Bs, bv.z + fz * a * Ls + rz * c * Bs, t); hm += h; sl += h * a; st += h * c; }
+    hm /= 9; sl /= 1.5 * Ls; st /= 1.5 * Bs;
     const v = b.status === 'sailing' ? bv.spd / KNV() : 0;
     const trim = 0.07 * sstep(9, 17, v) - 0.02 * sstep(3, 9, v) * (1 - sstep(9, 13, v));
     // planing hulls bank into a turn, displacement hulls heel a little outwards
     const bank = (BOAT.planing ? -0.18 : 0.06) * clamp(bv.yr, -1.2, 1.2) * sstep(4, 18, v);
-    const tp = Math.atan2(hb - hs, pl * 2) + trim, tr = Math.atan2(hst - hp, rl * 2) + bank, ty = (hb + hs + hp + hst) / 4 + 0.06;
-    const k = 1 - Math.exp(-dt * 7);
-    bv.pitch = lerp(bv.pitch, tp, k); bv.roll = lerp(bv.roll, tr, k); bv.y = lerp(bv.y, ty, k);
+    const tp = Math.atan(sl) + trim, tr = Math.atan(st) + bank + (bv.heel || 0), ty = hm + 0.06;
+    if (!bv.osc){ bv.osc = true; bv.vy = bv.vp = bv.vr = 0; bv.y = ty; bv.pitch = tp; bv.roll = tr; }
+    const wz = 2 * Math.PI / Math.max(0.6, bv.st.Tz), wr = 2 * Math.PI / Math.max(0.8, bv.st.Tr), zz = 0.35, zr = 0.08, n = Math.ceil(dt / 0.02), h = dt / n, lim = Math.min(0.9, bv.st.deckEdge * 1.6);
+    for (let i = 0; i < n; i++){
+      bv.vy += (wz * wz * (ty - bv.y) - 2 * zz * wz * bv.vy) * h; bv.y += bv.vy * h;
+      bv.vp += (wz * wz * (tp - bv.pitch) - 2 * zz * wz * bv.vp) * h; bv.pitch += bv.vp * h;
+      bv.vr += (wr * wr * (tr - bv.roll) - 2 * zr * wr * bv.vr) * h; bv.roll = clamp(bv.roll + bv.vr * h, -lim, lim);
+    }
     bv.v = v;
   }
 
@@ -2683,7 +2694,7 @@ const G3 = (() => {
   return {
     show, toggle(){ return show(!active); }, isActive:() => active,
     zoom(f){ if (cam.helm) cam.fov = clamp(cam.fov * f, 12, 75); else cam.dist = clamp(cam.dist * f, 7, 8000); }, reset(){ if (cam.helm){ cam.hy = 0; cam.hp = -0.07; cam.fov = 55; } else { cam.yaw = 0.55; cam.pitch = 0.26; cam.dist = 21; } },
-    vesselChanged(){ bv.init = false; TRAIL.length = 0; },
+    vesselChanged(){ bv.init = false; bv.st = null; TRAIL.length = 0; },
     showroom, get showing(){ return SHOW ? SHOW.t : null; },
     roadsReady(){ if (NEARM) buildGround(); for (const c of CH.values()) freeChunk(c); CH.clear(); },
     fineReady(){ if (NEARM){ freeMesh(NEARM); NEARM = null; updateNear(); } },

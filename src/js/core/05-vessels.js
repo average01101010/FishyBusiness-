@@ -152,6 +152,7 @@ function vesselStep(H){
   if (b.status === 'unmooring'){ if (S.t >= b.castUntil){ b.status = 'sailing'; b.port = null; } return; }
   if (b.status === 'port') return;
   const W = windAt(H), hs = hsAt(b.pos, H);
+  if (['sailing', 'fishing', 'idle'].includes(b.status)) stabTick(H);
   if (b.status === 'engine' && S.t >= b.engineUntil){ b.status = b.prev || 'idle'; b.prev = null; log('Motoren startet igjen.', 'The engine is running again.'); }
   // the first trip waits in port for wind (the departure is put off) but does not turn back once out
   if (b.tutWait && (b.status !== 'idle' || (S.haill && S.haill.type === 'luksus'))){ if (b.status === 'idle'){ b.status = 'fishing'; b.fishUntil = S.t + b.tutWait * 60; log('Haillen er om bord. Starter fiske i ' + b.tutWait + ' t.', 'The luck is aboard. Fishing for ' + b.tutWait + ' h.'); } b.tutWait = null; }
@@ -220,7 +221,8 @@ function dock(pid){
 // What the boat makes of the fish where it is, besides the fish itself: effort (people, jigs, machines, the team), weather and
 // sea, cold, hands busy on deck, and the rod. fish() uses it, and so does the heat map's «Her nå» line.
 function catchFactors(H, W, hs){
-  const tb = S.tripBuff || {}, wpen = Math.max(0.15, 1 - Math.max(0, hs - BOAT.risk[0] * 0.5) * 0.4 / (BOAT.risk[0] / 1.0) - Math.max(0, W - 8) * 0.03), eff = fishEffort() * (1 + (tb.jig ? 0.15 : 0) + (tb.reels && S.equip.jukse ? 0.1 : 0));
+  // fishing feels the boat's motions (03c-stability.js): the wave height given, scaled by how she moves here
+  const tb = S.tripBuff || {}, hw = hs * motionHere(H).f, wpen = Math.max(0.15, 1 - Math.max(0, hw - BOAT.risk[0] * 0.5) * 0.4 / (BOAT.risk[0] / 1.0) - Math.max(0, W - 8) * 0.03), eff = fishEffort() * (1 + (tb.jig ? 0.15 : 0) + (tb.reels && S.equip.jukse ? 0.1 : 0));
   // halibut is fished by hand on heavy gear: jigging machines do not help
   // the hands busy on deck are not at the rail: fishEffort counts only those at the Fiske station
   const keff = workTeam('fiske', 'juksa', 'fishing').sum;

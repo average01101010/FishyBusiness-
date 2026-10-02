@@ -54,6 +54,8 @@ function renderHud(){
     (S.fleet && S.fleet.length > 1 ? '<div class="row"><span>' + (S.lang === 'no' ? 'Båt' : 'Vessel') + '</span><b>' + S.boatName + (meAboard() ? ' ⚓' : '') + '</b></div>' : '') +
     '<div class="row"><span>' + t('wind') + '</span><b>' + dirName(windDir(H)) + ' ' + fmt(W, 1) + ' m/s</b></div>' +
     '<div class="row"><span>' + t('waves') + '</span><b>' + fmt(hs, 1) + ' m' + (atSea ? ' <span class="r' + lvl + '">' + t('risk' + lvl) + '</span>' : '') + '</b></div>' +
+    (() => { if (!atSea) return ''; const z = motionHere(H, b).state; if (!z.lvl) return ''; const L = (no, en) => S.lang === 'no' ? no : en;
+      return '<div class="row"><span>' + L('Stabilitet', 'Stability') + '</span><b class="r' + z.lvl + '">' + {gm:L('rank', 'tender'), res:L('synkronrulling', 'synchronous roll'), roll:L('kraftig rulling', 'heavy rolling')}[z.why] + '</b></div>'; })() +
     '<div class="row"><span>' + t('fuel') + '</span><b>' + fmt(b.fuel, 0) + ' / ' + BOAT.fuelCap + ' L</b></div>' +
     '<div class="row"><span>' + t('hold') + '</span><b>' + fmt(holdTotal(), 0) + ' / ' + capHold() + ' kg</b></div>' +
     (() => { const e = S.energy == null ? 100 : S.energy; return '<div class="row"><span>' + (S.lang === 'no' ? 'Energi' : 'Energy') + '</span><b class="' + (asleep() ? 'r2' : e < ENERGY.dim ? 'r2' : e < ENERGY.warn ? 'r1' : '') + '">' + (asleep() ? (S.lang === 'no' ? 'sover' : 'asleep') : Math.round(e) + ' %') + '</b></div>'; })() +
