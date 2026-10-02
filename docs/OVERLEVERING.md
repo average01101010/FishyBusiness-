@@ -715,7 +715,7 @@ Brukerens valg:
   | 9 | Dis av sjørokk, bare i 3D. Sikten blir 15 km ved 24,5, 4 km ved 28,5 og 1 km ved 32,7 m/s. |
   | 10 | Hvitt hav fra 24,5 m/s |
 
-  Skumtoppene dekker andelen W = 3,84·10⁻⁶·U^3,41 (Monahan og O'Muircheartaigh 1980) der sjøen har hatt 0,2–3 km å bryte på. De sitter på kammene, normalisert med eget standardavvik. Terskelen er tilpasset den målte spredningen: `0,228 + 0,293·z − 0,016·z²`, der z er normalkvantilen. Der skummet er for lite til å synes, blir havet hvitere i stedet. Brenningene følger sjøen som når hver strand.
+  Skumtoppene dekker andelen W = 3,84·10⁻⁶·U^3,41 (Monahan og O'Muircheartaigh 1980) der sjøen har hatt 0,2–3 km å bryte på. De sitter på kammene, normalisert med eget standardavvik. Terskelen er tilpasset den målte spredningen: `0,228 + 0,293·z − 0,016·z²`, der z er normalkvantilen. Kanten er like bred som pikselen (`fwidth`), med en svak, myk rand utenfor, og flekkene inni glattes ut før de blir mindre enn et par piksler. Da hakker ikke kanten. Der skummet er for lite til å synes, blir havet hvitere i stedet. Brenningene følger sjøen som når hver strand.
 - **Jevne overganger:**
   - Vind, høyde og dønning glir mot nye verdier med tidskonstant 4 s, retningen over 12 s.
   - Alle trekk har myke overganger.

@@ -103,7 +103,7 @@ const G3 = (() => {
   const SEA_WAVE = W => '{vec4 a=uWa[i];vec4 b=uWb[i];float att=smoothstep(2.0,7.0,6.2832/(a.z*px));float am=ampOf(a,b,S);float gr=grpOf(P,a,b,float(i));float Q=steepOf(a,b,am);' +
     'float f=a.z*dot(a.xy,P)-b.y*uTime+b.z;float c=cos(f);float s=sin(f);float wa=a.z*am*gr;N.x-=a.x*wa*c*att;N.z-=a.y*wa*c*att;N.y-=Q*wa*s*att;lost+=wa*wa*(1.0-att);' + (W ? 'y+=am*gr*s*att;sa+=am*am*0.228;' : '') + '}';
   // FAR (the far pass beyond the near terrain): the four longest wind waves and the swell, the rest of the wind sea only as roughness, no ripples
-  const SEA_FS = '#ifdef FAR\n#define NWIND 4\n#else\n#define NWIND 10\n#endif\nprecision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;uniform vec3 uZen;uniform vec3 uHor;uniform vec3 uDeep;' +
+  const SEA_FS = '#extension GL_OES_standard_derivatives : enable\n#ifdef FAR\n#define NWIND 4\n#else\n#define NWIND 10\n#endif\nprecision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;uniform vec3 uZen;uniform vec3 uHor;uniform vec3 uDeep;' +
     'uniform float uTime;uniform float uWind;uniform vec2 uWindDir;uniform float uFlat;uniform float uSpec;uniform vec4 uWa[13];uniform vec4 uWb[13];uniform sampler2D uHgt;uniform float uHOn;uniform float uTideL;uniform vec4 uSRect;uniform float uSOn;uniform float uPx;uniform float uDbg;' +
     'varying vec3 vW;varying vec2 vXZ;' + NOISE + SEA_STATE + WAKE_GLSL +
     'void main(){float d=length(vW);vec2 P=vXZ;vec4 S=seaAt(P);' +
@@ -138,9 +138,12 @@ const G3 = (() => {
     'vec3 fc=min(uAmb*1.3+uSunCol*0.85,vec3(1.0));float lod=1.0-smoothstep(0.35,1.6,px);float dw=smoothstep(0.45,1.73,S.w);' +
     'float Wc=clamp(3.84e-6*pow(max(uWind,0.3),3.41)*dw,1e-5,0.5);vec2 cq=vec2(dot(P,w),dot(P,wp));float fn=ns(cq*vec2(0.3,0.12)+vec2(uTime*0.25,0.0))*0.6+ns(cq*vec2(0.7,0.3)-vec2(uTime*0.4,uTime*0.1))*0.4;' +
     'float zt=sqrt(-2.0*log(Wc));zt-=(2.515517+0.802853*zt+0.010328*zt*zt)/(1.0+1.432788*zt+0.189269*zt*zt+0.001308*zt*zt*zt);float th=0.228+0.293*zt-0.016*zt*zt;' +
-    'float foam=smoothstep(th-0.03,th+0.03,crest*0.25+fn*0.45)*lod*(0.55+0.45*ns(cq*vec2(1.7,0.9)+vec2(uTime*0.6,0.0)));' +
+    // The edge is as wide as the pixel (fwidth), so it never steps or crawls, with a thin soft rim of older foam outside it; the mottle
+    // inside fades to its mean before it gets smaller than a couple of pixels.
+    'float fv=crest*0.25+fn*0.45;float aa=max(0.03,1.2*fwidth(fv));float core=smoothstep(th-aa,th+aa,fv);float mo=1.0-smoothstep(0.12,0.45,px);' +
+    'float foam=(core+0.22*smoothstep(th-0.12-aa,th,fv)*(1.0-core))*lod*mix(0.78,0.55+0.45*ns(cq*vec2(1.7,0.9)+vec2(uTime*0.6,0.0)),mo);' +
     // streaks of foam along the wind from a near gale (Beaufort 7), denser in a gale and storm
-    'vec2 st=vec2(dot(P,w)*0.011,dot(P,wp)*0.2);foam+=smoothstep(0.8,0.96,ns(st+vec2(uTime*0.03,ns(P*0.02)*3.0)))*smoothstep(13.9,20.8,uWind)*(0.35+0.4*smoothstep(20.8,28.5,uWind))*lod*dw;' +
+    'vec2 st=vec2(dot(P,w)*0.011,dot(P,wp)*0.2);float sv=ns(st+vec2(uTime*0.03,ns(P*0.02)*3.0));float sq=max(0.08,1.2*fwidth(sv));foam+=smoothstep(0.88-sq,0.88+sq,sv)*smoothstep(13.9,20.8,uWind)*(0.35+0.4*smoothstep(20.8,28.5,uWind))*lod*dw;' +
     'col=mix(col,fc,Wc*(1.0-lod)*0.9+0.3*smoothstep(24.5,32.7,uWind)*dw);' +
     '\n#ifndef FAR\nif(uFlat<0.5&&uWk3.w>0.5&&wh>0.0){vec2 r=P-uWk0.xy;float s=-dot(r,uWk0.zw);float br=ns(P*1.4+vec2(uTime*1.3,0.0))*0.5+0.5;' +
     'foam=max(foam,uWk3.x*smoothstep(0.35,0.85,wh/max(uWk2.y,0.02))*step(-uWk2.x-0.5,s)*step(s,0.2)*br);' +
