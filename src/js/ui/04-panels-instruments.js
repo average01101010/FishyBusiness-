@@ -144,7 +144,8 @@ const INSTR = (() => {
     dEl.innerHTML = fmt(d, d < 100 ? 1 : 0) + '<small>m</small>';
     tEl.textContent = fmt(seasonal(SST, H) + (vnoise2(p.x * 0.3, p.y * 0.3, 2) - 0.5) * 0.8, 1) + ' °C';
   }
-  const deg3 = r => String(Math.round((((r * 180 / Math.PI) % 360) + 360) % 360) % 360).padStart(3, '0') + '°';
+  // a grid heading (radians) as the true bearing the instruments show
+  const deg3 = (r, p) => String(Math.round(trueDeg(r, p || S.boat.pos)) % 360).padStart(3, '0') + '°';
   function gpsLL(p){
     const {lat, lon} = LL(p), f = (v, w, hh) => { const a = Math.abs(v), dd = Math.floor(a); let m = ((a - dd) * 60).toFixed(3).padStart(6, '0'); if (S.lang === 'no') m = m.replace('.', ','); return String(dd).padStart(w, '0') + '°' + m + "'" + hh; };
     return [f(lat, 2, 'N'), f(lon, 3, S.lang === 'no' ? 'Ø' : 'E')];

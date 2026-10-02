@@ -1,5 +1,6 @@
 // ===== SEA: fetch, wind sea, swell =====
-// Fetch: how far the wind has blown over open water before it reaches p (km). 'from' is the compass direction the wind comes from.
+// Fetch: how far the wind has blown over open water before it reaches p (km). 'from' is the direction the wind comes from on the
+// grid (the rays run on the map): the true direction - gridGamma(p).
 // Seven rays at -45..+45 degrees, effective fetch after Saville (Shore Protection Manual 1984): sum(F cos^2 a) / sum(cos a).
 // The rays march by the distance to the shore (coastDist: 100 m grid, about ±0.07 km and up to 8 % long) and stop on the 25 m land mask.
 const FETCH = {open:600, edge:15, andoy:{x:-16, y:43.4}, kvaloy:62, cell:0.2, sec:10, max:80000};
@@ -18,7 +19,7 @@ function offMapFetch(x, y, dx, dy){
 function fetchRay(x, y, dx, dy){
   let s = 0;
   for (let i = 0; i < 3000; i++){
-    if (x < MAPB.x0 || y < MAPB.y0 || x >= MAPB.x1 || y >= MAPB.y1) return s + offMapFetch(x - FR.ox, y - FR.oy, dx, dy);
+    if (x < MAPB.x0 || y < MAPB.y0 || x >= MAPB.x1 || y >= MAPB.y1) { const q = LGI({x, y}); return s + offMapFetch(q.x, q.y, dx, dy); }
     const d = coastDist({x, y});
     let st = 0.025;
     if (d < 0.1){ if (isLand({x, y})) return s; } else st = Math.max(0.025, 0.92 * d - 0.07);
@@ -97,7 +98,7 @@ function swellOpen(H){
 function swellFactor(p){ return Math.pow(rbil(MAPD.L.expo, p) / 255, 1.5); }
 // the sea at p: wind sea w and swell sw (significant heights, m), the wind sea's peak period and fetch, and where each comes from
 function hsParts(p, H){
-  const U = weAt(H), d = wdAt(H), F = fetchField(p, d), S = swellOpen(H);
+  const U = weAt(H), d = wdAt(H), F = fetchField(p, d - gridGamma(p)), S = swellOpen(H);
   return {w:hsWind(U, F), sw:S.hs * swellFactor(p), tp:tpWind(U, F), F, U, dir:d, swDir:S.dir, swTp:S.tp};
 }
 let HS_MEMO = {x:NaN, y:NaN, H:NaN, v:0};
@@ -110,7 +111,7 @@ function hsOpen(H){ return Math.max(0.05, Math.hypot(hsWMO(weAt(H)), swellOpen(H
 // forecasts: the forecast wind (with its error) through the same sea; the swell forecast has its own error
 function fcHsOpen(H, now){ return hsOpen(H) * (1 + fcErr(H, now, 5900)); }
 function hsAtFc(p, H, now){
-  const U = 0.6 * fcWind(H, now) + 0.4 * fcWind(H - 3, now), F = fetchField(p, windDir(H));
+  const U = 0.6 * fcWind(H, now) + 0.4 * fcWind(H - 3, now), F = fetchField(p, windDir(H) - gridGamma(p));
   return Math.max(0.05, Math.hypot(hsWind(U, F), swellOpen(H).hs * (1 + fcErr(H, now, 5900)) * swellFactor(p)));
 }
 // the sea state number by the significant wave height (the Douglas scale, WMO code 3700: 0 glassy ... 9 phenomenal)

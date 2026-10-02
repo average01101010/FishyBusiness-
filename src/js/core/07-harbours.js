@@ -77,14 +77,15 @@ const APPROACH = {};
 function clearLine(a, b){ const n = Math.max(1, Math.ceil(dist(a, b) / 0.008)); for (let i = 1; i < n; i++) if (isLand({x:a.x + (b.x - a.x) * i / n, y:a.y + (b.y - a.y) * i / n})) return false; return true; }
 function approachPath(pt){
   if (APPROACH[pt.id]) return APPROACH[pt.id];
-  const c = GRID.c, nx = GRID.nx, cell = k => { const x = k % nx; return {x:(x + 0.5) * c + FR.ox, y:((k - x) / nx + 0.5) * c + FR.oy}; }, s0 = Math.floor((pt.p.y - FR.oy) / c) * nx + Math.floor((pt.p.x - FR.ox) / c);
+  // over the mask's cells (k = y * nx + x, counted from the layer's corner)
+  const M = MAPD.L.mask, c = M.c, nx = M.nx, cell = k => { const x = k % nx; return {x:(M.ix0 + x + 0.5) * c, y:(M.iy0 + (k - x) / nx + 0.5) * c}; }, s0 = (Math.floor(pt.p.y / c) - M.iy0) * nx + Math.floor(pt.p.x / c) - M.ix0, mk = (x, y) => rcell(M, M.ix0 + x, M.iy0 + y);
   const prev = new Map([[s0, -1]]), Q = [s0]; let end = -1;
   for (let h = 0; h < Q.length && h < 300000; h++){
     const k = Q[h], x = k % nx, y = (k - x) / nx, p = cell(k);
     if (dist(p, pt.p) > 0.4 && coastDist(p) > 0.25){ end = k; break; }
     for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]){
-      const X = x + dx, Y = y + dy, kk = Y * nx + X; if (X < 0 || Y < 0 || X >= nx || Y >= GRID.ny || prev.has(kk) || rcell(MAPD.L.mask, X, Y)) continue;
-      if (dx && dy && (rcell(MAPD.L.mask, X, y) || rcell(MAPD.L.mask, x, Y))) continue;
+      const X = x + dx, Y = y + dy, kk = Y * nx + X; if (X < 0 || Y < 0 || X >= nx || Y >= M.ny || prev.has(kk) || mk(X, Y)) continue;
+      if (dx && dy && (mk(X, y) || mk(x, Y))) continue;
       prev.set(kk, k); Q.push(kk);
     }
   }

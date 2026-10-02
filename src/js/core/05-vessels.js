@@ -56,7 +56,7 @@ function fleetState0(i, H){
     if (!D){
       // drift downwind over the bank, but never onto land: try nearby directions, then a shorter drift
       const jx = (hash(dI * 97 + i * 11 + kc) - 0.5) * 0.3, jy = (hash(dI * 89 + i * 5 + kc) - 0.5) * 0.3, st0 = {x:spot.x + jx, y:spot.y + jy};
-      const Hc = day0 + T + kc * C, wd = (windDir(Hc) + 180) * Math.PI / 180; let run = (0.35 + 0.075 * windAt(Hc)) * NM * 0.62, end = st0, dd = wd;
+      const Hc = day0 + T + kc * C, wd = (windDir(Hc) - gridGamma(spot) + 180) * Math.PI / 180; let run = (0.35 + 0.075 * windAt(Hc)) * NM * 0.62, end = st0, dd = wd;
       const ok = (a, b) => { for (let q = 1; q <= 8; q++){ const p = {x:a.x + (b.x - a.x) * q / 8, y:a.y + (b.y - a.y) * q / 8}; if (isLand(p) || coastDist(p) < 0.12) return false; } return true; };
       search: for (let tries = 0; tries < 3; tries++, run *= 0.5) for (const off of [0, 0.5, -0.5, 1, -1, 1.6, -1.6, Math.PI]){ const a = wd + off, e2 = {x:st0.x + Math.sin(a) * run, y:st0.y - Math.cos(a) * run}; if (ok(st0, e2)){ end = e2; dd = a; break search; } }
       D = {st0, end, dd}; if (DRIFT.size > 3000) DRIFT.clear(); DRIFT.set(dk, D);
@@ -100,7 +100,7 @@ const hooks = {};
 let S;
 function newState(){
   const home = PORTS[0];
-  return {v:1, t:0, lastReal:Date.now(), mult:1, lang:'no', cash:15000,
+  return {v:2, frame:'utm33', t:0, lastReal:Date.now(), mult:1, lang:'no', cash:15000,
     boat:{type:'skiff', pos:{x:home.p.x, y:home.p.y}, heading:0, v:0, fuel:60, ice:0, gear:false, status:'port', port:home.id, prev:null, engineUntil:0, fishUntil:null, engH:0, svcAt:0},
     equip:{vhf:false, ais:false, plotter:false, chirp:false, sonar:false, jukse:0, motor90:false}, crew:[], loan:null, member:false, msgs:[], sales:[], order:null, owned:['skiff'], lic:null, fm:{n:0, last:-1, kr:0, b:false}, haill:null, pubE:-1e9, target:'mix', streak:null, clothes:{olje:0, varme:0}, orders:null, rep:{}, bors:null, cevt:null, workLog:[], stock:initStock(), marks:[], navrows:[], incidents:[], lore:{}, tattoos:{}, tat:{}, pgear:newPGear(), sets:[], gseq:0, ops:null, company:'', boatName:'', tut:0, jobs:[], prep:{}, tripBuff:null, draftDep:null,
     plan:null, draft:[], draftSpeed:16, trail:[{x:home.p.x, y:home.p.y, port:home.id}],
@@ -113,7 +113,7 @@ function log(no, en, k){ if (VTAG && S.fleet && S.fleet.length > 1 && S.boatName
 function navHour(){
   const b = S.boat, H = S.t / 60, hr = gDate(H).getUTCHours();
   if (b.status === 'port' && hr !== 12) return;
-  S.navrows.push({t:S.t, port:b.status === 'port' ? b.port : null, st:b.status, hd:Math.round(((b.heading * 180 / Math.PI) % 360 + 360) % 360), v:Math.round((b.status === 'sailing' ? b.v : 0) * 10) / 10, x:Math.round(b.pos.x * 1000) / 1000, y:Math.round(b.pos.y * 1000) / 1000, W:Math.round(windAt(H) * 10) / 10, wd:Math.round(windDir(H)), hs:Math.round(hsAt(b.pos, H) * 10) / 10, vis:Math.round(visibility(H))});
+  S.navrows.push({t:S.t, port:b.status === 'port' ? b.port : null, st:b.status, hd:Math.round(trueDeg(b.heading, b.pos)) % 360, v:Math.round((b.status === 'sailing' ? b.v : 0) * 10) / 10, x:Math.round(b.pos.x * 1000) / 1000, y:Math.round(b.pos.y * 1000) / 1000, W:Math.round(windAt(H) * 10) / 10, wd:Math.round(windDir(H)), hs:Math.round(hsAt(b.pos, H) * 10) / 10, vis:Math.round(visibility(H))});
   while (S.navrows.length && S.navrows[0].t < S.t - KEEP_MIN) S.navrows.shift();
 }
 const holdTotal = () => S.hold.reduce((a, x) => a + x.kg, 0);
@@ -202,7 +202,7 @@ function arrive(w){
   S.trail.push({x:w.x, y:w.y, port:w.port || null});
   if (w.port){ dock(w.port); return true; }
   pl.idx++;
-  if (!(w.fish > 0) && pl.idx < pl.wps.length){ const nw = pl.wps[pl.idx], c = Math.round(((Math.atan2(nw.x - w.x, -(nw.y - w.y)) * 180 / Math.PI) + 360) % 360); log('WP' + pl.idx + ' passert. Ny kurs ' + String(c).padStart(3, '0') + '°.', 'WP' + pl.idx + ' passed. New course ' + String(c).padStart(3, '0') + '°.', 'nav'); }
+  if (!(w.fish > 0) && pl.idx < pl.wps.length){ const nw = pl.wps[pl.idx], c = Math.round(trueDeg(Math.atan2(nw.x - w.x, -(nw.y - w.y)), w)) % 360; log('WP' + pl.idx + ' passert. Ny kurs ' + String(c).padStart(3, '0') + '°.', 'WP' + pl.idx + ' passed. New course ' + String(c).padStart(3, '0') + '°.', 'nav'); }
   // work with passive gear at this waypoint: set or haul, then any fishing hours with the jig
   if (w.act){ b.status = 'idle'; const why = w.act.op === 'cycle' ? gearCycle(w, w.fish) : w.act.op === 'haul' ? startHaul(w.act.sid, w.act.reset, w.fish) : startSet(w.act.kind, w.act.spec, w.fish); if (!why) return true; log(why[0], why[0]); if (!(w.fish > 0)) b.status = 'sailing'; }
   if (w.fish > 0 && S.tut && S.tut.v === 2 && !(S.haill && S.haill.type === 'luksus')){ b.status = 'idle'; b.v = 0; b.tutWait = w.fish; log('Fremme på feltet. Venter med fisket til haillen er hentet.', 'Arrived on the grounds. Waiting to fish until the luck is fetched.'); return true; }

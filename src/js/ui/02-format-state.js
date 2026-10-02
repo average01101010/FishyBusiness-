@@ -32,9 +32,27 @@ function dirName(deg){ return DIRS[S.lang][Math.round(deg / 45) % 8]; }
 const spName = sp => SPECIES[sp][S.lang];
 
 // ---------- persistence ----------
-const KEY = 'kystfiske_proto_v1';
+// v2 (phase K4 of the coast plan) is in the national frame and under its own key; a v1 game (the legacy frame) is read once from its
+// old key, moved over (migrateV2) and saved as v2, and the v1 save is left as it was
+const KEY = 'kystfiske_v2', KEY_V1 = 'kystfiske_proto_v1';
 function save(){ try { S.lastReal = Date.now(); let o = S; if (S.fleet && S.fleet.length){ storeVessel(curVessel()); o = Object.assign({}, S); for (const k of VKEYS) delete o[k]; } localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) {} }
-function load(){ try { const s = localStorage.getItem(KEY); if (!s) return null; const o = JSON.parse(s); if (!o || o.v !== 1) return null;
+// v1 to v2: every point {x, y} (km) anywhere in the save goes through LG; the stock's dense grids of the legacy frame (40 x 42 cells of
+// 2 km) become the sparse cells of the national frame, the lowest value where two old cells land in one new; headings turn with the frame
+function migrateV2(o){
+  const walk = v => { if (!v || typeof v !== 'object') return;
+    if (typeof v.x === 'number' && typeof v.y === 'number' && isFinite(v.x) && isFinite(v.y)){ const q = LG(v.x, v.y); v.x = q.x; v.y = q.y; }
+    for (const k in v) if (k !== 'stock' && k !== 'cstk') walk(v[k]); };
+  const turn = b => { if (b && typeof b.heading === "number" && b.pos){ const l = LGI(b.pos); b.heading += LGrot(l.x, l.y); } };
+  walk(o);
+  for (const v of [o].concat(o.fleet || [])) turn(v.boat);
+  const grid = a => { if (!Array.isArray(a)) return a; const m = {}; a.forEach((v, i) => { if (!(v < 1)) return; const c = i % 40, r = Math.floor(i / 40), k = stockIdx(LG((c + 0.5) * 2, (r + 0.5) * 2)); stkSet(m, k, Math.min(stkGet(m, k), v)); }); return m; };
+  if (o.stock) o.stock = grid(o.stock); if (o.cstk) o.cstk = grid(o.cstk);
+  o.v = 2; o.frame = 'utm33'; o.migrated = Date.now();
+  return o;
+}
+function load(){ try { let s = localStorage.getItem(KEY), o = s ? JSON.parse(s) : null;
+  if (!o){ s = localStorage.getItem(KEY_V1); o = s ? JSON.parse(s) : null; o = o && o.v === 1 ? migrateV2(o) : null; }
+  if (!o || o.v !== 2) return null;
   // a saved fleet: point the vessel fields at the vessel being followed before anything else reads them
   if (o.fleet && o.fleet.length){ const v = o.fleet.find(x => x.id === o.cur) || o.fleet[0]; for (const k of VKEYS) o[k] = v[k]; }
   return o; } catch (e) { return null; } }

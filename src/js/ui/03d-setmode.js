@@ -60,7 +60,7 @@ function renderSetBar(){
   const L = (no, en) => S.lang === 'no' ? no : en, why = setWhy(), p = S.boat.pos, e = setEnd(), d0 = Math.round(depthF(p)), d1 = Math.round(depthF(e));
   el.hidden = false;
   el.querySelector('.sb-t').textContent = setLabelNow();
-  el.querySelector('.sb-d').textContent = fmt(setKm() * 1000, 0) + ' m · ' + L('kurs ', 'course ') + deg3s(SETM.hdg * 180 / Math.PI) + ' · ' + d0 + '–' + d1 + ' m ' + L('dyp', 'deep');
+  el.querySelector('.sb-d').textContent = fmt(setKm() * 1000, 0) + ' m · ' + L('kurs ', 'course ') + deg3s(trueDeg(SETM.hdg, S.boat.pos)) + ' · ' + d0 + '–' + d1 + ' m ' + L('dyp', 'deep');
   const w = el.querySelector('.sb-w'); w.textContent = why || L('Dra i enden av linja, eller trykk i kartet, for å velge retning.', 'Drag the end of the line, or tap the chart, to choose the direction.'); w.classList.toggle('bad', !!why);
   el.querySelector('.sb-n').hidden = SETM.fix; el.querySelector('.sb-n b').textContent = SETM.n;
   el.querySelector('[data-sb="-"]').disabled = SETM.n <= 1; el.querySelector('[data-sb="+"]').disabled = SETM.n >= SETM.max;

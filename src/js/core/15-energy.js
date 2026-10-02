@@ -30,7 +30,7 @@ function wakeUp(){ S.sleep = null; S.energy = ENERGY.wake; S.enWarn = false; log
 // asleep and alone aboard: nobody steers or fishes, and the boat drifts downwind at 0.3–0.8 kn
 const sleepAlone = () => asleep() && meAboard() && !crewAboard().length;
 function sleepDrift(H){
-  const b = S.boat, W = windAt(H), kn = 0.3 + 0.5 * clamp(W / 15, 0, 1), h = (windDir(H) + 180) * Math.PI / 180, d = kn * NM / 60;
+  const b = S.boat, W = windAt(H), kn = 0.3 + 0.5 * clamp(W / 15, 0, 1), h = (windDir(H) - gridGamma(b.pos) + 180) * Math.PI / 180, d = kn * NM / 60;
   const to = {x:b.pos.x + Math.sin(h) * d, y:b.pos.y - Math.cos(h) * d}, gp = groundCheck(b.pos, to); b.v = 0;
   if (gp){ runAground(gp); return; }
   if (!isLand(to)){ b.pos = to; b.drift = (b.drift || 0) + d; }

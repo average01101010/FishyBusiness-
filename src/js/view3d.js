@@ -292,8 +292,8 @@ const G3 = (() => {
   }
   // share of forest around a point: bilinear over the 50 m forest cells, softened over the neighbours
   function forestAt(x, z){
-    const gx = (x - FR.ox * 1000) / 50 - 0.5, gz = (z - FR.oy * 1000) / 50 - 0.5, ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz; let s = 0;
-    const F = (c, r) => (!HG || c < 0 || r < 0 || c >= 1570 || r >= 1648) ? 0 : rcell(MAPD.L.forest, c, r);
+    const LF = MAPD.L.forest, cm = LF.c * 1000, gx = x / cm - 0.5, gz = z / cm - 0.5, ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz; let s = 0;
+    const F = (c, r) => (!HG || !mapIn(LF, c, r)) ? 0 : rcell(LF, c, r);
     for (let dz = -1; dz <= 2; dz++) for (let dx = -1; dx <= 2; dx++){ const wx = dx <= 0 ? (dx === 0 ? 1 - fx * 0.5 : 0.5 - fx * 0.5) : (dx === 1 ? 0.5 + fx * 0.5 : fx * 0.5), wz = dz <= 0 ? (dz === 0 ? 1 - fz * 0.5 : 0.5 - fz * 0.5) : (dz === 1 ? 0.5 + fz * 0.5 : fz * 0.5); s += F(ix + dx, iz + dz) * wx * wz; }
     return clamp(s / 2.25, 0, 1);
   }
@@ -302,7 +302,7 @@ const G3 = (() => {
     const dx = sx / (n - 1), dz = sz / (n - 1), N = n * n, pos = new Float32Array(N * 3), h = new Float32Array(N), nz = new Float32Array(N), slope = new Float32Array(N), nor = new Float32Array(N * 3), fo = new Float32Array(N);
     for (let j = 0; j < n; j++) for (let i = 0; i < n; i++){
       const k = j * n + i, x = x0 + i * dx, z = z0 + j * dz, y = hf(x, z);
-      h[k] = y; pos[k * 3] = i * dx; pos[k * 3 + 1] = y; pos[k * 3 + 2] = j * dz; nz[k] = fbm((x - FR.ox * 1000) / 600, (z - FR.oy * 1000) / 600, 2, 90); fo[k] = forestAt(x, z);
+      h[k] = y; pos[k * 3] = i * dx; pos[k * 3 + 1] = y; pos[k * 3 + 2] = j * dz; nz[k] = fbm(x / 600, z / 600, 2, 90); fo[k] = forestAt(x, z);
     }
     for (let j = 0; j < n; j++) for (let i = 0; i < n; i++){
       const k = j * n + i, hx = (h[j * n + Math.min(n - 1, i + 1)] - h[j * n + Math.max(0, i - 1)]) / (2 * dx), hz = (h[Math.min(n - 1, j + 1) * n + i] - h[Math.max(0, j - 1) * n + i]) / (2 * dz);
@@ -331,7 +331,7 @@ const G3 = (() => {
     const n = xs.length, N = n * n, pos = new Float32Array(N * 3), h = new Float32Array(N), nzA = new Float32Array(N), slope = new Float32Array(N), nor = new Float32Array(N * 3), fo = new Float32Array(N);
     for (let j = 0; j < n; j++) for (let i = 0; i < n; i++){
       const k = j * n + i, w = unitW(U, xs[i], zs[j]), x = w[0], z = w[1], y = unitTerr(x, z, nearSurf(M, x, z));
-      h[k] = y; pos[k * 3] = x - U.o[0]; pos[k * 3 + 1] = y; pos[k * 3 + 2] = z - U.o[1]; nzA[k] = fbm((x - FR.ox * 1000) / 600, (z - FR.oy * 1000) / 600, 2, 90); fo[k] = forestAt(x, z);
+      h[k] = y; pos[k * 3] = x - U.o[0]; pos[k * 3 + 1] = y; pos[k * 3 + 2] = z - U.o[1]; nzA[k] = fbm(x / 600, z / 600, 2, 90); fo[k] = forestAt(x, z);
     }
     for (let j = 0; j < n; j++) for (let i = 0; i < n; i++){
       const k = j * n + i, i0 = Math.max(0, i - 1), i1 = Math.min(n - 1, i + 1), j0 = Math.max(0, j - 1), j1 = Math.min(n - 1, j + 1);
@@ -519,7 +519,9 @@ const G3 = (() => {
     const dec = q => q <= 160 ? q * 0.5 : 80 + (q - 160) * 2;
     const B = {n, x:new Float64Array(n), z:new Float64Array(n), l:new Float32Array(n), w:new Float32Array(n), a:new Float32Array(n), t:new Uint8Array(n), lv:new Uint8Array(n), cells:new Map()};
     for (let i = 0; i < n; i++){
-      B.x[i] = X[i] * U + FR.ox * 1000; B.z[i] = Y[i] * U + FR.oy * 1000; B.l[i] = dec(Lq[i]); B.w[i] = Math.max(1.5, dec(Wq[i])); B.a[i] = Aq[i] / 256 * Math.PI; B.t[i] = Tq[i] & 15; B.lv[i] = Tq[i] >> 4;
+      // stored in the legacy frame (metres): into the national frame, turned with it (LGrot, about -gamma)
+      const lx = X[i] * U, lz = Y[i] * U, q = LGm([lx, lz]);
+      B.x[i] = q[0]; B.z[i] = q[1]; B.l[i] = dec(Lq[i]); B.w[i] = Math.max(1.5, dec(Wq[i])); B.a[i] = Aq[i] / 256 * Math.PI + LGrot(lx / 1000, lz / 1000); B.t[i] = Tq[i] & 15; B.lv[i] = Tq[i] >> 4;
       const k = gridKey(Math.floor(B.x[i] / 1000), Math.floor(B.z[i] / 1000));
       if (bldOnUnit(B, i)) continue;   // a harbour unit stands there
       let c = B.cells.get(k); if (!c) B.cells.set(k, c = []); c.push(i);
@@ -623,12 +625,12 @@ const G3 = (() => {
     const ses = treeSeason(), leaf = ses === 1 ? [0.15, 0.29, 0.11] : ses === 2 ? [0.7, 0.48, 0.12] : [0.55, 0.5, 0.47], pine = [0.06, 0.15, 0.08], trunk = [0.78, 0.76, 0.7];
     let count = 0;
     for (let j = 0; j < 30 && count < 260; j++) for (let i = 0; i < 30 && count < 260; i++){
-      const hh = hash(((gx - FR.ox) * 7919 + (gz - FR.oy) * 104729) * 900 + j * 30 + i), x = x0 + (i + 0.15 + 0.7 * hash(hh * 1e7 | 0)) * 33.3, z = z0 + (j + 0.15 + 0.7 * hash((hh * 3e7 | 0) + 5)) * 33.3;
+      const hh = hash((gx * 7919 + gz * 104729) * 900 + j * 30 + i), x = x0 + (i + 0.15 + 0.7 * hash(hh * 1e7 | 0)) * 33.3, z = z0 + (j + 0.15 + 0.7 * hash((hh * 3e7 | 0) + 5)) * 33.3;
       if (occ[Math.floor((z - z0) / 25) * 40 + Math.floor((x - x0) / 25)] || onUnit(x, z, 8)) continue;
       const h = terrH(x, z); if (h < 2.5 || h > 330) continue;
       const sl = Math.hypot(terrH(x + 10, z) - terrH(x - 10, z), terrH(x, z + 10) - terrH(x, z - 10)) / 20; if (sl > 0.75) continue;
-      const fc = Math.floor((x - FR.ox * 1000) / 50), fr = Math.floor((z - FR.oy * 1000) / 50), fo = HG && fc >= 0 && fr >= 0 && fc < 1570 && fr < 1648 && rcell(MAPD.L.forest, fc, fr) ? 1 : 0;
-      const pr = (1 - sstep(210, 330, h)) * (1 - sstep(0.42, 0.75, sl)) * (fo ? 0.95 : 0.5) * sstep(0.36, 0.62, noise2((x - FR.ox * 1000) / 260, (z - FR.oy * 1000) / 260, 31) * 0.7 + noise2((x - FR.ox * 1000) / 60, (z - FR.oy * 1000) / 60, 37) * 0.3);
+      const LF = MAPD.L.forest, fc = Math.floor(x / (LF.c * 1000)), fr = Math.floor(z / (LF.c * 1000)), fo = HG && mapIn(LF, fc, fr) && rcell(LF, fc, fr) ? 1 : 0;
+      const pr = (1 - sstep(210, 330, h)) * (1 - sstep(0.42, 0.75, sl)) * (fo ? 0.95 : 0.5) * sstep(0.36, 0.62, noise2(x / 260, z / 260, 31) * 0.7 + noise2(x / 60, z / 60, 37) * 0.3);
       if (hash((hh * 5e7 | 0) + 11) > pr) continue;
       const th = 4 + 6 * hash((hh * 9e7 | 0) + 13) * (1 - sstep(120, 320, h) * 0.55), y = h - 0.3, isPine = hash((hh * 2e7 | 0) + 17) < 0.18, v = 0.88 + 0.24 * hash((hh * 4e7 | 0) + 19);
       if (isPine){
@@ -700,7 +702,7 @@ const G3 = (() => {
     SEAMARKS.lights.forEach((L, i) => {
       const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - eye[0], z - eye[2]); if (d > L[3] * 1852 * 1.3 + 500 || (near ? d > lightNF : d < lightNF * 0.8)) return;
       if (!lightOn(i, t)) return;
-      const brg = ((Math.atan2(x - eye[0], -(z - eye[2])) * 180 / Math.PI) + 360) % 360;
+      const brg = trueDeg(Math.atan2(x - eye[0], -(z - eye[2])), {x:L[0], y:L[1]});   // the sectors are true bearings
       const sec = L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1]); if (!sec) return;
       by[sec[2]].push(x - eye[0], Math.max(terrH(x, z), 0.2) + L[2] - eye[1], z - eye[2], Math.min(1, env.night * 1.2));
     });
@@ -1056,7 +1058,7 @@ const G3 = (() => {
     const L = []; for (const s of S.sets || []) if (!s.lost){ L.push(s.a); L.push(s.b); }
     const g = S.boat.gop; if (g && g.op === 'set' && g.done >= 0) L.push(g.a);
     if (!L.length) return; if (!GB) buildGear();
-    nSetup(VP); const wd = (windDir(H) + 180) * DEG;
+    nSetup(VP); const wd = (windDir(H) - gridGamma({x:bv.x / 1000, y:bv.z / 1000}) + 180) * DEG;
     for (const e of L){ const x = e.x * 1000, z = e.y * 1000; if (Math.hypot(x - eye[0], z - eye[2]) > 4000) continue;
       const y = seaH(x, z, t) - 0.1, sx = (seaH(x + 0.6, z, t) - seaH(x - 0.6, z, t)) / 1.2, sz = (seaH(x, z + 0.6, t) - seaH(x, z - 0.6, t)) / 1.2;
       drawN(GB.buoy, model(x - eye[0], y - eye[1], z - eye[2], Math.PI / 2 - wd, -sz * 0.9, sx * 0.9)); }
@@ -1718,7 +1720,7 @@ const G3 = (() => {
   // a broad spectrum around the peak wavelength; short waves keep a little energy so the surface always has texture (sum of squares 1/8, so Hs = 1)
   function specW(L0){ const w = WL.map(L => Math.exp(-(((Math.log(L) - Math.log(L0)) / 0.75) ** 2)) + 0.06 * Math.min(1, L0 / L)), n = Math.sqrt(w.reduce((a, c) => a + c * c, 0)) * 2.828; return w.map(v => v / n); }
   function updateWaves(dt, H){
-    const p = {x:bv.x / 1000, y:bv.z / 1000}, hsT = hsAt(p, H), WT = windAt(H), wdT = windDir(H), dirT = (wdT + 180) * DEG, SW = swellOpen(H), swDirT = (SW.dir + 180) * DEG;
+    const p = {x:bv.x / 1000, y:bv.z / 1000}, gT = gridGamma(p), hsT = hsAt(p, H), WT = windAt(H), wdT = windDir(H) - gT, dirT = (wdT + 180) * DEG, SW = swellOpen(H), swDirT = (SW.dir - gT + 180) * DEG;   // the world is drawn on the grid: true directions turn by -gamma
     if (!WV.init){ WV.hs = hsT; WV.W = WT; WV.dir = dirT; WV.swHs = SW.hs; WV.swDir = swDirT; WV.swTp = SW.tp; WV.init = true; }
     // the sea answers the wind over a few seconds (a sudden change, as after skipping time, never snaps the waves)
     const k = 1 - Math.exp(-dt / 4); WV.hs = lerp(WV.hs, hsT, k); WV.W = lerp(WV.W, WT, k); WV.swHs = lerp(WV.swHs, SW.hs, k); WV.swTp = lerp(WV.swTp, SW.tp, k * 0.2);
@@ -1850,8 +1852,9 @@ const G3 = (() => {
     const L = PAL[PAL.length - 1]; return [L[1], L[2]];
   }
   function computeEnv(H){
-    const s = sunAt(H), el = s.el, er = el * DEG; env.el = el;
-    env.sunDir = [Math.cos(er) * Math.sin(s.az), Math.sin(er), -Math.cos(er) * Math.cos(s.az)];
+    // the sun's and the moon's true azimuths onto the grid the world is drawn on
+    const s = sunAt(H), el = s.el, er = el * DEG, gz = gridGamma({x:bv.x / 1000, y:bv.z / 1000}) * DEG, saz = s.az - gz; env.el = el;
+    env.sunDir = [Math.cos(er) * Math.sin(saz), Math.sin(er), -Math.cos(er) * Math.cos(saz)];
     const ly = Math.max(env.sunDir[1], 0.25), ll = Math.hypot(env.sunDir[0], ly, env.sunDir[2]); env.lightDir = [env.sunDir[0] / ll, ly / ll, env.sunDir[2] / ll];
     env.cloud = cloudAt(H); env.precip = precipAt(H); env.temp = airTemp(H); env.vis = visibility(H); env.aur = auroraAt(H);
     let [zen, hor] = pal(el); const lum = 0.3 * hor[0] + 0.59 * hor[1] + 0.11 * hor[2], grey = [lum * 0.92, lum * 0.96, lum * 1.02];
@@ -1867,7 +1870,7 @@ const G3 = (() => {
     env.stars = sstep(-5, -12, el) * (1 - env.cloud); env.spec = sstep(-1, 4, el) * (1 - env.cloud) * 2.2;
     env.night = sstep(3, -5, el);
     // moon: where it is, how full, and the light it gives at night
-    const mo = moonAt(H), mr = mo.el * DEG; env.moon = mo; env.moonDir = [Math.cos(mr) * Math.sin(mo.az), Math.sin(mr), -Math.cos(mr) * Math.cos(mo.az)];
+    const mo = moonAt(H), mr = mo.el * DEG; env.moon = mo; env.moonDir = [Math.cos(mr) * Math.sin(mo.az - gz), Math.sin(mr), -Math.cos(mr) * Math.cos(mo.az - gz)];
     env.moonA = sstep(-1, 2, mo.el) * (1 - 0.6 * env.day);
     const mlight = sstep(0, 8, mo.el) * mo.illum * sstep(-2, -8, el) * (1 - 0.8 * env.cloud);
     if (mlight > 0.02){ const ml = [0.62, 0.7, 0.9].map(v => v * mlight * 0.32); env.sunCol = env.sunCol.map((v, k) => v + ml[k]); env.amb = env.amb.map((v, k) => v + [0.02, 0.025, 0.04][k] * mlight); const my = Math.max(env.moonDir[1], 0.25), mll = Math.hypot(env.moonDir[0], my, env.moonDir[2]); env.lightDir = [env.moonDir[0] / mll, my / mll, env.moonDir[2] / mll]; }
@@ -2473,7 +2476,7 @@ const G3 = (() => {
     const BMrel = model(bv.x - eye[0], bv.y - eye[1], bv.z - eye[2], -bv.head, bv.pitch, bv.roll);
     const BMabs = model(bv.x, bv.y, bv.z, -bv.head, bv.pitch, bv.roll);
     // apparent wind for the flag
-    const wdir = (windDir(H) + 180) * DEG, wv = env.wind || windAt(H), bms = bv.v * 0.514 * 2;
+    const wdir = (windDir(H) - gridGamma({x:bv.x / 1000, y:bv.z / 1000}) + 180) * DEG, wv = env.wind || windAt(H), bms = bv.v * 0.514 * 2;
     const ax = Math.sin(wdir) * wv - Math.sin(bv.head) * bms, az = -Math.cos(wdir) * wv + Math.cos(bv.head) * bms, appW = Math.hypot(ax, az), appB = Math.atan2(ax, -az);
     updateFlag(t, appW);
 

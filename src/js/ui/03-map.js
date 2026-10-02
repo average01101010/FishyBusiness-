@@ -35,24 +35,24 @@ function paintChart(scale){
   if (chartCv.width !== W) chartCv.width = W; if (chartCv.height !== H) chartCv.height = H;
   const hh = MAP_H / view.z, ww = hh * (r.width / r.height), x0 = view.cx - ww / 2, y0 = view.cy - hh / 2, kx = ww / W, ky = hh / H;
   if (!mapViewReady(x0, y0, x0 + ww, y0 + hh, () => paintChart(scale))) return;   // the depth under the view is on its way: keep the last picture
-  const ctx = chartCv.getContext('2d'), img = ctx.createImageData(W, H), d = img.data, nx = GEO_DEPTH.nx, ny = GEO_DEPTH.ny, c = GEO_DEPTH.c, LD = MAPD.L.depth, D = (ix, iy) => rcell(LD, ix, iy);
+  const ctx = chartCv.getContext('2d'), img = ctx.createImageData(W, H), d = img.data, LD = MAPD.L.depth, c = LD.c, X0 = LD.ix0, Y0 = LD.iy0, X1 = LD.ix0 + LD.nx - 1, Y1 = LD.iy0 + LD.ny - 1, D = (ix, iy) => rcell(LD, ix, iy);
   const fish = chartMode() === 'fish', sd = safeDepth(), s2 = sd > 2.5 ? Math.min(2, sd / 2) : -1;
   const OFF = fish ? [5, 9, 13] : [221, 227, 229], WHITE = [249, 251, 252], U1 = [167, 203, 235], U2 = [134, 180, 223], SC = [59, 106, 165];
   const prev = new Float32Array(W).fill(NaN), sh = 1 / (Math.max(kx, 0.0005) * 10), smooth = scale >= 1;
   // cubic B-spline weights per column (and per row below): smooth, rounded depth contours instead of straight grid steps
   const bw = (t, o) => { const t2 = t * t, t3 = t2 * t; o[0] = (1 - t) * (1 - t) * (1 - t) / 6; o[1] = (3 * t3 - 6 * t2 + 4) / 6; o[2] = (-3 * t3 + 3 * t2 + 3 * t + 1) / 6; o[3] = t3 / 6; };
-  // the depth raster is in the legacy frame: x, y below are legacy km
-  const CX = new Int32Array(W * 4), CW = new Float32Array(W * 4), tmp = [0, 0, 0, 0], lx0 = x0 - FR.ox, ly0 = y0 - FR.oy;
-  if (smooth) for (let i = 0; i < W; i++){ const x = lx0 + (i + 0.5) * kx, gx = x / c - 0.5, ix = Math.floor(gx); bw(gx - ix, tmp); for (let k = 0; k < 4; k++){ CX[i * 4 + k] = clamp(ix - 1 + k, 0, nx - 1); CW[i * 4 + k] = tmp[k]; } }
+  // the depth layer's cells are numbered from the frame's origin (01b-mapdata.js)
+  const CX = new Int32Array(W * 4), CW = new Float32Array(W * 4), tmp = [0, 0, 0, 0], lx0 = x0, ly0 = y0;
+  if (smooth) for (let i = 0; i < W; i++){ const x = lx0 + (i + 0.5) * kx, gx = x / c - 0.5, ix = Math.floor(gx); bw(gx - ix, tmp); for (let k = 0; k < 4; k++){ CX[i * 4 + k] = clamp(ix - 1 + k, X0, X1); CW[i * 4 + k] = tmp[k]; } }
   const RW = [0, 0, 0, 0], RO = [0, 0, 0, 0];
   for (let j = 0; j < H; j++){
-    const y = ly0 + (j + 0.5) * ky, gy = clamp(y / c - 0.5, 0, ny - 1.001), iy = Math.floor(gy), fy = gy - iy;
-    if (smooth){ const gyr = y / c - 0.5, iyr = Math.floor(gyr); bw(gyr - iyr, RW); for (let k = 0; k < 4; k++) RO[k] = clamp(iyr - 1 + k, 0, ny - 1); }
+    const y = ly0 + (j + 0.5) * ky, gy = clamp(y / c - 0.5, Y0, Y1 - 0.001), iy = Math.floor(gy), fy = gy - iy;
+    if (smooth){ const gyr = y / c - 0.5, iyr = Math.floor(gyr); bw(gyr - iyr, RW); for (let k = 0; k < 4; k++) RO[k] = clamp(iyr - 1 + k, Y0, Y1); }
     let left = NaN;
     for (let i = 0; i < W; i++){
       const x = lx0 + (i + 0.5) * kx, o = (j * W + i) * 4;
-      if (x < 0 || y < 0 || x >= MAP_W || y >= MAP_H){ d[o] = OFF[0]; d[o + 1] = OFF[1]; d[o + 2] = OFF[2]; d[o + 3] = 255; prev[i] = NaN; left = NaN; continue; }
-      const gx = clamp(x / c - 0.5, 0, nx - 1.001), ix = Math.floor(gx), fx = gx - ix;
+      if (x < MAPB.x0 || y < MAPB.y0 || x >= MAPB.x1 || y >= MAPB.y1){ d[o] = OFF[0]; d[o + 1] = OFF[1]; d[o + 2] = OFF[2]; d[o + 3] = 255; prev[i] = NaN; left = NaN; continue; }
+      const gx = clamp(x / c - 0.5, X0, X1 - 0.001), ix = Math.floor(gx), fx = gx - ix;
       let v;
       if (smooth){ const q = i * 4; v = 0; for (let a = 0; a < 4; a++){ const ro = RO[a]; v += RW[a] * (D(CX[q], ro) * CW[q] + D(CX[q + 1], ro) * CW[q + 1] + D(CX[q + 2], ro) * CW[q + 2] + D(CX[q + 3], ro) * CW[q + 3]); } }
       else v = (D(ix, iy) * (1 - fx) + D(ix + 1, iy) * fx) * (1 - fy) + (D(ix, iy + 1) * (1 - fx) + D(ix + 1, iy + 1) * fx) * fy;
@@ -83,8 +83,10 @@ function renderBase(){
   const g = [], ns = ' vector-effect="non-scaling-stroke"';
   g.push('<rect x="' + (MAPB.x0 - 400) + '" y="' + (MAPB.y0 - 400) + '" width="' + (MAP_W + 800) + '" height="' + (MAP_H + 800) + '" class="offmap"/>');
   g.push('<rect x="' + MAPB.x0 + '" y="' + MAPB.y0 + '" width="' + MAP_W + '" height="' + MAP_H + '" class="sea"/>');
-  for (let lat = 69.0; lat <= 69.71; lat += 0.1){ const y = P(lat, 17).y; g.push('<line x1="' + MAPB.x0 + '" x2="' + MAPB.x1 + '" y1="' + y + '" y2="' + y + '" class="grid" stroke-width="1"' + ns + '/>'); }
-  for (let lon = 16.75; lon <= 18.5; lon += 0.25){ const x = P(69, lon).x; g.push('<line y1="' + MAPB.y0 + '" y2="' + MAPB.y1 + '" x1="' + x + '" x2="' + x + '" class="grid" stroke-width="1"' + ns + '/>'); }
+  // the graticule: in the national frame the parallels and meridians lean by the convergence, so they go as lines through P
+  const gl = pts => '<path d="M' + pts.map(q => q.x.toFixed(3) + ',' + q.y.toFixed(3)).join('L') + '" class="grid" fill="none" stroke-width="1"' + ns + '/>';
+  for (let lat = 69.0; lat <= 69.71; lat += 0.1){ const a = []; for (let lon = 16.3; lon <= 18.81; lon += 0.25) a.push(P(lat, lon)); g.push(gl(a)); }
+  for (let lon = 16.75; lon <= 18.5; lon += 0.25){ const a = []; for (let lat = 68.9; lat <= 69.81; lat += 0.1) a.push(P(lat, lon)); g.push(gl(a)); }
   if (CONT_D) CONT_D.forEach((d, i) => { const lv = CONTOUR_LEVELS[i]; if (!d || (!plot && lv > 50)) return; g.push('<path d="' + d + '" class="depc' + (lv >= 50 ? ' deep' : '') + '"' + ns + '/>'); });
   g.push('<path d="' + COAST_D + '" class="land" stroke-width="1" stroke-linejoin="round"' + ns + '/>');
   $('gBase').innerHTML = g.join('');

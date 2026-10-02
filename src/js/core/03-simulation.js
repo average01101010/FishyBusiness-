@@ -176,7 +176,7 @@ function slopeAt(p){ const e = 0.1, a = depthF({x:p.x + e, y:p.y}), b = depthF({
 const HOT = {T:120, v:0.05, cell:3.5};   // hours, km an hour, km
 function hotField(sp, p, H, k){
   const si = ALLSP.indexOf(sp), a = 2 * Math.PI * h2(k, 700 + si), v = HOT.v * (0.6 + 0.8 * h2(k, 720 + si)), tt = H - k * HOT.T;
-  return noise2((p.x - FR.ox - Math.sin(a) * v * tt) / HOT.cell, (p.y - FR.oy + Math.cos(a) * v * tt) / HOT.cell, 20 + si + 97 * k);
+  return noise2((p.x - Math.sin(a) * v * tt) / HOT.cell, (p.y + Math.cos(a) * v * tt) / HOT.cell, 20 + si + 97 * k);
 }
 function hotspot(sp, p, H){
   const f = H / HOT.T, k = Math.floor(f), u = sstep(0, 1, f - k), a = hotField(sp, p, H, k), b = hotField(sp, p, H, k + 1);
@@ -187,7 +187,7 @@ function hotspot(sp, p, H){
 const SCHOOL = {cell:0.4, amp:0.3};
 function school(sp, p, H){
   const si = ALLSP.indexOf(sp), a = 2 * Math.PI * h2(si, 740), v = 0.5 + 0.5 * h2(si, 741);
-  return 1 - SCHOOL.amp / 2 + SCHOOL.amp * noise2((p.x - FR.ox - Math.sin(a) * v * H) / SCHOOL.cell, (p.y - FR.oy + Math.cos(a) * v * H) / SCHOOL.cell, 60 + si);
+  return 1 - SCHOOL.amp / 2 + SCHOOL.amp * noise2((p.x - Math.sin(a) * v * H) / SCHOOL.cell, (p.y + Math.cos(a) * v * H) / SCHOOL.cell, 60 + si);
 }
 // where a species' schools are heading (radians, map north up), for the sonar
 function schoolHeading(sp){ return 2 * Math.PI * h2(ALLSP.indexOf(sp), 740); }
@@ -243,7 +243,7 @@ function denSp(sp, q, H, T){
   let v = s.base * (s.prod + (1 - s.prod) * q.E) * (0.6 + 0.4 * q.edge) * hotspot(sp, p, H) * 0.95;
   // the named grounds are known for a reason
   for (let i = 0; i < GROUNDS.length; i++){ const g = GROUNDS[i], dd = q.gd[i]; if (dd > g.r * 3) continue; v += (g.sp[sp] || 0) * Math.exp(-((dd / g.r) ** 2)) * 0.45; }
-  const day = 0.75 + 0.5 * vn(H / 24 + (p.x - FR.ox) * 0.05, 300 + ALLSP.indexOf(sp));
+  const day = 0.75 + 0.5 * vn(H / 24 + p.x * 0.05, 300 + ALLSP.indexOf(sp));
   let av = T[sp].av;
   if (sp === 'torsk'){ if (q.skr < 0) q.skr = skreiSpot(p, q.d, q.E); av += T[sp].skrei * q.skr; }
   if (sp === 'uer' && !T.uerOpen) av *= 0.15;
@@ -261,43 +261,52 @@ function tutBonus(sp, p){
   const g = GROUNDS[TUT_FIELD], d = dist(p, g.p), x = Math.max(0, d - g.r * 0.5) / (g.r * 0.33);
   return TUTB.peak * m * Math.exp(-x * x);
 }
-// local stock of fish in 2 x 2 km cells (1 = untouched): fishing takes it down, it recovers over weeks. The value at a point is read
-// between the four nearest cell centres, and a catch is taken from the same four cells by the same weights, so the stock has
-// no hard 2 km edges and what the heat map shows is what is taken.
-const STK = {c:2, nx:Math.ceil(MAP_W / 2), ny:Math.ceil(MAP_H / 2), K:2600};
-function stockIdx(p){ return Math.floor(clamp(p.y - FR.oy, 0, MAP_H - 0.001) / STK.c) * STK.nx + Math.floor(clamp(p.x - FR.ox, 0, MAP_W - 0.001) / STK.c); }
-// the four cells around a point and their weights, the same arithmetic as gridBilinear
+// local stock of fish in 2 x 2 km cells of the national frame (1 = untouched): fishing takes it down, it recovers over weeks. S.stock
+// holds only the cells below 1, by gridKey, so it covers the whole coast. The value at a point is read between the four nearest
+// cell centres, and a catch is taken from the same four cells by the same weights, so the stock has no hard 2 km edges and what
+// the heat map shows is what is taken.
+const STK = {c:2, K:2600};
+const stkGet = (m, k) => { const v = m[k]; return v === undefined ? 1 : v; };
+const stkSet = (m, k, v) => { if (v < 1) m[k] = v; else delete m[k]; };
+function stockIdx(p){ return gridKey(Math.floor(p.x / STK.c), Math.floor(p.y / STK.c)); }
+// the four cells around a point and their weights
 function stockW(p){
-  const gx = clamp((p.x - FR.ox) / STK.c - 0.5, 0, STK.nx - 1.001), gy = clamp((p.y - FR.oy) / STK.c - 0.5, 0, STK.ny - 1.001), ix = Math.floor(gx), iy = Math.floor(gy), fx = gx - ix, fy = gy - iy, i = iy * STK.nx + ix;
-  return [[i, (1 - fx) * (1 - fy)], [i + 1, fx * (1 - fy)], [i + STK.nx, (1 - fx) * fy], [i + STK.nx + 1, fx * fy]];
+  const gx = p.x / STK.c - 0.5, gy = p.y / STK.c - 0.5, ix = Math.floor(gx), iy = Math.floor(gy), fx = gx - ix, fy = gy - iy;
+  return [[gridKey(ix, iy), (1 - fx) * (1 - fy)], [gridKey(ix + 1, iy), fx * (1 - fy)], [gridKey(ix, iy + 1), (1 - fx) * fy], [gridKey(ix + 1, iy + 1), fx * fy]];
 }
+// every cell over the map at one value (for the tests)
+function stockFill(v){ const m = {}; for (let iy = Math.floor(MAPB.y0 / STK.c) - 1; iy <= Math.floor(MAPB.y1 / STK.c) + 1; iy++) for (let ix = Math.floor(MAPB.x0 / STK.c) - 1; ix <= Math.floor(MAPB.x1 / STK.c) + 1; ix++) stkSet(m, gridKey(ix, iy), v); return m; }
 // Shellfish have their own layer (S.cstk), made when the first pot is hauled. It stays one value per cell: pots stand still for
 // days and work the cell as a patch, the heat map does not show crab, and the pot calibration rests on it.
 function stockAt(p, sp){
-  if (sp && SPECIES[sp].shell) return S && S.cstk ? S.cstk[stockIdx(p)] : 1;
-  return S && S.stock ? gridBilinear(S.stock, STK.nx, STK.ny, STK.c, p) : 1;
+  if (sp && SPECIES[sp].shell) return S && S.cstk ? stkGet(S.cstk, stockIdx(p)) : 1;
+  if (!S || !S.stock) return 1; let v = 0; for (const [k, w] of stockW(p)) v += stkGet(S.stock, k) * w; return v;
 }
 function takeStock(p, kg, sp){
-  if (sp && SPECIES[sp].shell){ if (!S.cstk) S.cstk = new Array(STK.nx * STK.ny).fill(1); const i = stockIdx(p); S.cstk[i] = Math.max(0.1, S.cstk[i] - kg / (STK.K * 0.25)); return; }
-  if (!S.stock) return; for (const [i, w] of stockW(p)) S.stock[i] = Math.max(0.12, S.stock[i] - kg * w / STK.K);
+  if (sp && SPECIES[sp].shell){ if (!S.cstk) S.cstk = {}; const k = stockIdx(p); stkSet(S.cstk, k, Math.max(0.1, stkGet(S.cstk, k) - kg / (STK.K * 0.25))); return; }
+  if (!S.stock) return; for (const [k, w] of stockW(p)) if (w > 0) stkSet(S.stock, k, Math.max(0.12, stkGet(S.stock, k) - kg * w / STK.K));
 }
 function initStock(){
-  const a = new Array(STK.nx * STK.ny).fill(1);
+  const a = {};
   // the famous grounds are already worked by the local fleet when the game starts
-  for (const g of GROUNDS.slice(0, 4)) for (let r = 0; r < STK.ny; r++) for (let c = 0; c < STK.nx; c++){ const d = Math.hypot((c + 0.5) * STK.c + FR.ox - g.p.x, (r + 0.5) * STK.c + FR.oy - g.p.y); if (d < g.r * 1.2) a[r * STK.nx + c] = Math.min(a[r * STK.nx + c], 0.55 + 0.35 * d / (g.r * 1.2)); }
+  for (const g of GROUNDS.slice(0, 4)){ const R = g.r * 1.2;
+    for (let iy = Math.floor((g.p.y - R) / STK.c); iy <= Math.floor((g.p.y + R) / STK.c); iy++) for (let ix = Math.floor((g.p.x - R) / STK.c); ix <= Math.floor((g.p.x + R) / STK.c); ix++){
+      const d = Math.hypot((ix + 0.5) * STK.c - g.p.x, (iy + 0.5) * STK.c - g.p.y), k = gridKey(ix, iy); if (d < R) stkSet(a, k, Math.min(stkGet(a, k), 0.55 + 0.35 * d / R)); } }
   return a;
 }
 function stockHour(H){
-  const s = S.stock, n = STK.nx, m = STK.ny, nx = s.slice();
-  for (let r = 0; r < m; r++) for (let c = 0; c < n; c++){
-    const i = r * n + c, nb = (s[r * n + Math.max(0, c - 1)] + s[r * n + Math.min(n - 1, c + 1)] + s[Math.max(0, r - 1) * n + c] + s[Math.min(m - 1, r + 1) * n + c]) / 4;
+  // the cells below 1 and their neighbours: each moves towards its neighbours' mean and grows back
+  const s = S.stock, nx = {}, cells = new Set(), at = (x, y) => stkGet(s, gridKey(x, y));
+  for (const k in s){ const K = +k, x = gridKeyX(K), y = gridKeyY(K); cells.add(K); cells.add(gridKey(x - 1, y)); cells.add(gridKey(x + 1, y)); cells.add(gridKey(x, y - 1)); cells.add(gridKey(x, y + 1)); }
+  for (const K of cells){
+    const x = gridKeyX(K), y = gridKeyY(K), v = stkGet(s, K), nb = (at(x - 1, y) + at(x + 1, y) + at(x, y - 1) + at(x, y + 1)) / 4;
     // regrowth has a smallest step, so a cell comes all the way back to 1 (rounding used to stop it at 0.876)
-    const g = s[i] < 1 ? Math.max((1 - s[i]) * 0.004, 0.0001) : 0;
-    nx[i] = Math.round(Math.min(1, s[i] + g + (nb - s[i]) * 0.01) * 1e4) / 1e4;
+    const g = v < 1 ? Math.max((1 - v) * 0.004, 0.0001) : 0;
+    stkSet(nx, K, Math.round(Math.min(1, v + g + (nb - v) * 0.01) * 1e4) / 1e4);
   }
   S.stock = nx;
   // crab comes back more slowly, and does not wander far
-  if (S.cstk) S.cstk = S.cstk.map(v => v < 1 ? Math.round(Math.min(1, v + Math.max((1 - v) * 0.0015, 0.0001)) * 1e4) / 1e4 : v);
+  if (S.cstk){ const c = {}; for (const k in S.cstk){ const v = S.cstk[k]; stkSet(c, k, Math.round(Math.min(1, v + Math.max((1 - v) * 0.0015, 0.0001)) * 1e4) / 1e4); } S.cstk = c; }
   // the local fleet works the known grounds on fishable days
   for (const q of npcStates(H)) if (q.fleet && q.st === 'fishing') takeStock(q.p, 18);
   const hr = gDate(H).getUTCHours();
@@ -310,7 +319,7 @@ const SST = [3.6,3.1,3.2,3.9,5.6,8.2,10.8,11.4,9.8,7.8,6.0,4.6];
 // where a harbour unit stands (07-harbours.js) its quay is dry and its basin dredged
 function depthF(p){ return unitDredge(p, isLand(p) ? 0 : DEPTH ? Math.max(0.8, rbil(MAPD.L.depth, p)) : depthModel(p)); }
 function depthAt(p){ return Math.round(depthF(p)); }
-function depthModel(p){ return (2 + (13 + 220 * Math.pow(exposure(p), 1.6) + 25 * vn((p.x - FR.ox) / 4 + (p.y - FR.oy) / 7, 5)) * Math.pow(sstep(0, 1.5, coastDist(p)), 0.6)); }
+function depthModel(p){ return (2 + (13 + 220 * Math.pow(exposure(p), 1.6) + 25 * vn(p.x / 4 + p.y / 7, 5)) * Math.pow(sstep(0, 1.5, coastDist(p)), 0.6)); }
 function grade(f){ return f >= 85 ? 'E' : f >= 65 ? 'A' : f >= 40 ? 'B' : f >= 15 ? 'X' : 'V'; }
 // days with few boats out give slightly higher prices; 2025 showed almost no link between local volume and price, so the effect is small
 function supplyFactor(H){

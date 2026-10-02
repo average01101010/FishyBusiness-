@@ -4,7 +4,7 @@
 const wpName = i => 'WP' + i;
 const legName = i => wpName(i) + '→' + wpName(i + 1);   // the leg that ends at draft index i
 function wpTag(w){ return w.auto === 'out' ? (S.lang === 'no' ? 'utseiling' : 'way out') : w.auto === 'in' ? (S.lang === 'no' ? 'innseiling' : 'way in') : ''; }
-const courseDeg = (a, c) => (Math.atan2(c.x - a.x, -(c.y - a.y)) * 180 / Math.PI + 360) % 360;   // the chart is north up, so this is true course
+const courseDeg = (a, c) => trueDeg(Math.atan2(c.x - a.x, -(c.y - a.y)), a);   // the chart is grid north up: the true course is the grid's + gamma
 const deg3s = d => String(Math.round(d) % 360).padStart(3, '0') + '°';
 // the draft leg by leg: course to steer, length, and when the boat gets to each point and leaves it (game minutes). Gear work at a
 // point is not counted, the same as in the estimate.

@@ -10,7 +10,9 @@
 //                         is not in is an error, never a stand-in value. A view that reads farther (the chart, the 3D shore) asks
 //                         first (mapViewReady) and draws without the depth until the pack comes.
 //   view  hgt, forest     for the 3D view, as they come (mapHas first)
-// The layers are in the data's own frame (today the legacy Senja frame), so the readers take FR off the game's coordinates.
+// The layers are in the national frame (phase K4): a layer's cell (ix, iy) of size c covers x in [ix c, (ix + 1) c) km, the cells are
+// numbered from the frame's origin, and a layer has cells from (ix0, iy0) for nx by ny; blocks (bx, by) of n cells and tiles of
+// 50 km line up with the frame, so the packs of the whole coast fit together.
 const MAPD = {man:null, L:{}, packs:[], byTile:new Map(), core:null, blk:new Map(), bytes:0, budget:96e6, simR:4, base:'map/', db:undefined, miss:0, fetched:0, cached:0};
 function mapOnReady(f){ if (typeof document === 'undefined' || document.readyState !== 'loading') f(); else document.addEventListener('DOMContentLoaded', f); }
 // ---------- IndexedDB, by content ----------
@@ -33,6 +35,7 @@ async function mapStart(base){
   const man = MAPD.man = await (await fetch(MAPD.base + 'manifest.json', {cache:'no-cache'})).json();
   let id = 0;
   for (const name in man.layers) MAPD.L[name] = Object.assign({name, id:id++, bx:NaN, by:NaN, b:null}, man.layers[name]);
+  const dc = MAPD.L.dc; Object.assign(DC, {nx:dc.nx, ny:dc.ny, ix0:dc.ix0, iy0:dc.iy0});
   for (const pk of man.packs){ pk.buf = null; pk.idx = null; pk.load = null; MAPD.packs.push(pk); if (pk.kind === 'core') MAPD.core = pk; else MAPD.byTile.set(pk.kind + ':' + pk.tile[0] + ':' + pk.tile[1], pk); }
   return man;
 }
@@ -45,7 +48,7 @@ function mapLoad(pk){
   }).catch(e => { pk.load = null; throw e; });
   return pk.load;
 }
-// the pack that holds a layer's block, and the packs over a box in the data's km (kinds: 'core', 'sim', 'view')
+// the pack that holds a layer's block, and the packs over a box of km (kinds: 'core', 'sim', 'view')
 function mapPackOf(L, bx, by){ if (L.kind === 'core') return MAPD.core; const t = MAPD.man.tile / MAPD.man.block; return MAPD.byTile.get(L.kind + ':' + Math.floor(bx / t) + ':' + Math.floor(by / t)) || null; }
 function mapPacksIn(kind, x0, y0, x1, y1){
   if (kind === 'core') return MAPD.core ? [MAPD.core] : [];
@@ -54,7 +57,7 @@ function mapPacksIn(kind, x0, y0, x1, y1){
   return out;
 }
 // what the simulation needs at p (game km) within r km: core and sim
-function mapSimPacks(p, r){ const x = p.x - FR.ox, y = p.y - FR.oy; return mapPacksIn('core', 0, 0, 0, 0).concat(mapPacksIn('sim', x - r, y - r, x + r, y + r)); }
+function mapSimPacks(p, r){ return mapPacksIn('core', 0, 0, 0, 0).concat(mapPacksIn('sim', p.x - r, p.y - r, p.x + r, p.y + r)); }
 function mapReadyAt(p, r){ for (const pk of mapSimPacks(p, r)) if (!pk.buf) return false; return true; }
 function mapNeed(p, r){ return Promise.all(mapSimPacks(p, r).map(mapLoad)); }
 function mapLoadKind(kind){ return Promise.all(MAPD.packs.filter(pk => pk.kind === kind).map(mapLoad)); }
@@ -84,33 +87,35 @@ function mapBlock(L, bx, by){
   for (const [kk, v] of MAPD.blk){ if (MAPD.bytes <= MAPD.budget) break; if (kk === k) continue; MAPD.blk.delete(kk); MAPD.bytes -= v.byteLength; }
   return a;
 }
+// whether a cell is in the layer (the readers that pick cells themselves keep to it)
+const mapIn = (L, ix, iy) => ix >= L.ix0 && iy >= L.iy0 && ix < L.ix0 + L.nx && iy < L.iy0 + L.ny;
 function mapHasBlock(L, bx, by){ const pk = mapPackOf(L, bx, by); return !!(pk && pk.buf && pk.idx.has(L.name + ':' + bx + ':' + by)); }
-// one cell (cell indices in the data's frame); the last block of each layer is kept at hand
+// one cell (cell numbers from the frame's origin); the last block of each layer is kept at hand
 function rcell(L, ix, iy){
   const n = L.n, bx = Math.floor(ix / n), by = Math.floor(iy / n);
   if (bx !== L.bx || by !== L.by){ L.b = mapBlock(L, bx, by); L.bx = bx; L.by = by; }
   return L.b[(iy - by * n) * n + (ix - bx * n)];
 }
-// between the four nearest cell centres at p (game km), clamped to the layer's edge: the arithmetic of gridBilinear
+// between the four nearest cell centres at p (km), clamped to the layer's edge
 function rbil(L, p){
-  const gx = clamp((p.x - FR.ox) / L.c - 0.5, 0, L.nx - 1.001), gy = clamp((p.y - FR.oy) / L.c - 0.5, 0, L.ny - 1.001), ix = Math.floor(gx), iy = Math.floor(gy), fx = gx - ix, fy = gy - iy;
+  const gx = clamp(p.x / L.c - 0.5, L.ix0, L.ix0 + L.nx - 1.001), gy = clamp(p.y / L.c - 0.5, L.iy0, L.iy0 + L.ny - 1.001), ix = Math.floor(gx), iy = Math.floor(gy), fx = gx - ix, fy = gy - iy;
   return (rcell(L, ix, iy) * (1 - fx) + rcell(L, ix + 1, iy) * fx) * (1 - fy) + (rcell(L, ix, iy + 1) * (1 - fx) + rcell(L, ix + 1, iy + 1) * fx) * fy;
 }
 // the same at x, z in metres, as the 3D view reads its grids
 function rbilM(L, x, z){
-  const cm = L.c * 1000, gx = clamp((x - FR.ox * 1000) / cm - 0.5, 0, L.nx - 1.001), gz = clamp((z - FR.oy * 1000) / cm - 0.5, 0, L.ny - 1.001), ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz;
+  const cm = L.c * 1000, gx = clamp(x / cm - 0.5, L.ix0, L.ix0 + L.nx - 1.001), gz = clamp(z / cm - 0.5, L.iy0, L.iy0 + L.ny - 1.001), ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz;
   return (rcell(L, ix, iz) * (1 - fx) + rcell(L, ix + 1, iz) * fx) * (1 - fz) + (rcell(L, ix, iz + 1) * (1 - fx) + rcell(L, ix + 1, iz + 1) * fx) * fz;
 }
 // whether a view layer's blocks under a box of metres are in (the 3D draws a stand-in until they are)
 function mapHasM(L, x0, z0, x1, z1){
   const bm = L.n * L.c * 1000;
-  for (let by = Math.floor((z0 - FR.oy * 1000) / bm); by <= Math.floor((z1 - FR.oy * 1000) / bm); by++) for (let bx = Math.floor((x0 - FR.ox * 1000) / bm); bx <= Math.floor((x1 - FR.ox * 1000) / bm); bx++){
-    if (bx < 0 || by < 0 || bx * L.n >= L.nx || by * L.n >= L.ny) continue; if (!mapHasBlock(L, bx, by)) return false; }
+  for (let by = Math.floor(z0 / bm); by <= Math.floor(z1 / bm); by++) for (let bx = Math.floor(x0 / bm); bx <= Math.floor(x1 / bm); bx++){
+    if (bx * L.n < L.ix0 || by * L.n < L.iy0 || bx * L.n >= L.ix0 + L.nx || by * L.n >= L.iy0 + L.ny) continue; if (!mapHasBlock(L, bx, by)) return false; }
   return true;
 }
 // for the views: whether the sim packs under a box of game km are in; the missing ones are asked for, and then() runs when they come
 function mapViewReady(x0, y0, x1, y1, then){
-  const pks = mapPacksIn('sim', x0 - FR.ox, y0 - FR.oy, x1 - FR.ox, y1 - FR.oy).filter(pk => !pk.buf);
+  const pks = mapPacksIn('sim', x0, y0, x1, y1).filter(pk => !pk.buf);
   if (!pks.length) return true;
   Promise.all(pks.map(mapLoad)).then(then, e => console.error(e)); return false;
 }
