@@ -97,6 +97,35 @@ Skrevet 29.09.2026 ved flytting fra claude.ai-chat til Claude Code. Dokumentet s
 - **Innstillinger må tåle `undefined`:** `S.settings` får ikke standardverdier nøkkel for nøkkel ved lasting. Nye nøkler leses som «ikke satt», for eksempel `S.settings.echo !== false` for «på».
 - **`chartMode()`** (`07-guide.js`) gir `'fish'` bare når båten du følger har kartplotter. `S.settings.chart` er ønsket ditt og beholdes når du følger en båt uten plotter.
 
+### 4.5 Rammen, projeksjonen og presisjonen (kystplanen, fase K2, 02.10.2026)
+
+Forberedelser til hele kysten (planen står i `docs/kart/`). Spillet ser ut og oppfører seg som før.
+
+- **Projeksjonen** (`core/00-proj.js`, første fil i det felles skriptet, med `'use strict'`):
+  - `utm33(lat, lon)` gir `{E, N, gamma, k}` og `utm33inv(E, N)` går tilbake. Krüger/Karney med sjette ordens rekker. Avviket mot PROJ (EPSG:25833) er 0,006 mm fra Utsira til Grense Jakobselv (`projtest.py`, referansen fra `tools/map/projref.py`).
+  - `gamma` er meridiankonvergensen: sann kurs = rutenettskurs + γ.
+  - `natP`/`natLL` er den nasjonale rammen i km: x = (E + 250 km)/1000, y = (8 050 km − N)/1000. Den er ennå ikke i bruk.
+- **`gridKey(ix, iy)`** er nøkkelen for rutenettsceller, med `gridKeyX`/`gridKeyY` tilbake. Den tåler 2²⁰ celler hver vei og negative tall. Strøklengdebufferet, varmekartet, 3D-bitene og kamerakollisjonen bruker den.
+- **Rammeforskyvningen `FR`** (`01-world.js`):
+  - Senja-dataene og det håndplasserte innholdet er laget i den gamle rammen (flat ved 69,35° N, km fra 69,72° N 16,55° Ø).
+  - `LG(x, y)`, `LGa([x, y])` og `LGm([x, z] i meter)` fører dem inn i spillets ramme, og `LGI(p)` fører tilbake.
+  - Alle rasteroppslag (`isLand`, `gridBilinear`, dybdekartet, ruterutenettet, `approachPath`, terreng, skog og bestand) går gjennom den gamle rammen.
+  - Støyfeltene for fisken, dybdemodellen, fjordlinjetesten, fiskerifeltene og krabbeområdet regnes også i gamle km.
+  - `MAPB` er dataenes utstrekning i spillets ramme.
+  - I dag er `FR` (0, 0). `#frameshift` flytter den 1 000 km øst og sør (torturtesten).
+- **Oppstartsbarrieren** (`11-boot.js`): klokka og catch-up venter på `SIMREADY`, som settes når dybdene er lastet. `boottest.py` tester det.
+- **Presisjon i 3D** (`view3d.js`):
+  - Meshene i verden har hjørnene relativt til sitt eget origo `m.o` (`MB().mesh(o)`, `NB().mesh(o)`, `makeMesh`, `unitPatch`, bitene på 1 km og lysene deres). Modellmatrisen `relM(m)` er origo minus øye, regnet i doble tall.
+  - Skyggerne regner verden fra gjengivelsesorigoet `RO`, et multiplum av 4 096 m nær øyet som flyttes først etter 40 km. Det gjelder:
+    - bølgefasene og gruppefasene (`uGp`), regnet i doble tall per bølge
+    - havets origo og sjøtilstandsrutene
+    - kjølvannet
+    - terrengets teksturkoordinater (`uPO`)
+  - Bygg, fin kyst, veier, sjørokk og kjølvannets hekk lagres i Float64.
+  - Uten dette blir Float32 6–12 cm grov 1 000 km fra origo, og bølgefasen går i stykker.
+- **Torturtesten:** `KYST_SHIFT=1 python3 tests/run.py full` kjører alt med `#frameshift` og med rutene i `routes.json` flyttet. Testene sender gamle km gjennom `LG()`.
+- **Bygget** (`build.mjs`) kompilerer hvert skript som helhet med `node:vm`, så et navn som er deklarert i to filer stopper bygget, ikke siden.
+
 ## 5. Systemer i spillet
 
 ### 5.1 Båter og utstyr
