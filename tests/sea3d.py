@@ -97,7 +97,7 @@ async def main():
         await sheet(tiles, 'sea3d_bf.png', 3)
         tiles, lee = [], {}
         for key, name, setup in [('wind', 'Husøy-feltet, NV 17 m/s', "const g = GROUNDS[0].p; S.boat.pos = {x:g.x, y:g.y};"), ('lee', 'Husøy-feltet, S 17 m/s', "const g = GROUNDS[0].p; S.boat.pos = {x:g.x, y:g.y}; WX_FORCE.d = 180;"),
-                                 ('harbour', 'Ved Botnhamn, NV 17 m/s', "S.boat.pos = {x:53.30, y:23.20};"), ('sound', 'Gisundet, NV 17 m/s', "S.boat.pos = {x:57.25, y:44.35};")]:
+                                 ('harbour', 'Ved Botnhamn, NV 17 m/s', "S.boat.pos = LG(53.30, 23.20);"), ('sound', 'Gisundet, NV 17 m/s', "S.boat.pos = LG(57.25, 44.35);")]:
             await pg.evaluate("WX_FORCE = {w:17, d:315}; " + setup + " G3._debug.WV.init = false;")
             await pg.wait_for_function("G3._debug.SSL.n.on && Math.abs(G3._debug.bv.x / 1000 - S.boat.pos.x) < 0.05", timeout=60000); await pg.wait_for_timeout(5000)
             s = await pg.evaluate("(()=>{ const D = G3._debug; return D.ssAt(D.bv.x, D.bv.z).map(v => +v.toFixed(2)); })()"); lee[key] = s
@@ -117,14 +117,22 @@ async def main():
         await sheet(tiles, 'sea3d_wake.png', 3)
         R['wake'] = wake
         await pg.evaluate("(() => { S.mult = 0.00001; const b = S.boat; b.type = 'skiff'; applyVessel(); G3.vesselChanged(); b.status = 'idle'; S.plan = null; b.v = 0; })()")
-        # 9. the hull's motions (03c-stability.js): a skiff and a 21 m coaster lying beam-on in the same sea, 40 s of motion each
-        R['motion'] = await pg.evaluate("""(() => { const D = G3._debug, out = {}; WX_FORCE = {w:9, d:270}; S.mult = 0.00001;
+        # 9. the hull's motions (03c-stability.js): a skiff and a 21 m coaster lying beam-on in the same sea, 40 s of motion each, and then
+        # let go from 7 degrees of heel in the calm of Finnsnes: the free roll swings at the hull's own period (the forced roll in a
+        # sea follows the waves, so its period says little about the hull)
+        R['motion'] = await pg.evaluate("""(() => { const D = G3._debug, out = {}; S.mult = 0.00001;
+          const zc = rec => { const m = rec.reduce((a, v) => a + v, 0) / rec.length; let z = 0; for (let i = 1; i < rec.length; i++) if ((rec[i - 1] - m) * (rec[i] - m) < 0) z++; return {m, z}; };
           for (const vt of ['skiff', 'kyst21']){ const b = S.boat, g = GROUNDS[0].p; b.type = vt; applyVessel(); G3.vesselChanged(); b.status = 'idle'; b.port = null; b.pos = {x:g.x, y:g.y}; b.heading = 0; S.plan = null; b.v = 0;
-            D.bv.init = false; D.WV.init = false; const rec = []; let t = 100;
+            WX_FORCE = {w:9, d:270}; D.bv.init = false; D.WV.init = false; const rec = []; let t = 100;
             for (let i = 0; i < 1500; i++){ t += 1 / 30; D.waves(1 / 30, S.t / 60); D.stepBoat(1 / 30, t, 0); if (i > 300) rec.push(D.bv.roll); }
-            const m = rec.reduce((a, v) => a + v, 0) / rec.length, rms = Math.sqrt(rec.reduce((a, v) => a + (v - m) ** 2, 0) / rec.length); let zc = 0; for (let i = 1; i < rec.length; i++) if ((rec[i - 1] - m) * (rec[i] - m) < 0) zc++;
-            out[vt] = {rmsDeg:Math.round(rms * 1800 / Math.PI) / 10, period:Math.round(2 * rec.length / 30 / Math.max(1, zc) * 10) / 10, Tr:Math.round(stabOf(vt).Tr * 10) / 10, ok:rec.every(Number.isFinite)}; }
-          const b = S.boat; b.type = 'skiff'; applyVessel(); G3.vesselChanged(); return out; })()""")
+            const q = zc(rec), rms = Math.sqrt(rec.reduce((a, v) => a + (v - q.m) ** 2, 0) / rec.length);
+            const fp = PORTS[0].p; b.pos = {x:fp.x, y:fp.y}; WX_FORCE = {w:0.3, d:270}; D.bv.init = false; D.WV.init = false; t = 300;
+            for (let i = 0; i < 60; i++){ t += 1 / 30; D.waves(1 / 30, S.t / 60); D.stepBoat(1 / 30, t, 0); }
+            D.bv.roll = 0.12; D.bv.vr = 0; const fr = [];
+            for (let i = 0; i < 600; i++){ t += 1 / 30; D.waves(1 / 30, S.t / 60); D.stepBoat(1 / 30, t, 0); fr.push(D.bv.roll); }
+            const f = zc(fr);
+            out[vt] = {rmsDeg:Math.round(rms * 1800 / Math.PI) / 10, free:Math.round(2 * fr.length / 30 / Math.max(1, f.z) * 10) / 10, Tr:Math.round(stabOf(vt).Tr * 10) / 10, ok:rec.every(Number.isFinite) && fr.every(Number.isFinite)}; }
+          WX_FORCE = null; const b = S.boat; b.type = 'skiff'; applyVessel(); G3.vesselChanged(); return out; })()""")
         # 7. a GPU with no textures in the vertex shader: the same page, the waves from the values at the boat
         pg2 = await b.new_page(viewport={'width': 640, 'height': 400}); errs2 = []; pg2.on('pageerror', lambda e: errs2.append(str(e)))
         await boot(pg2, GAME_TUT + '#notut,novtf'); await pg2.evaluate(SETUP)
@@ -144,6 +152,6 @@ async def main():
         print(ok(all(W[k]['on'] == 1 for k in W) and W['skiff']['trans'] < 0.1 and W['sjark']['trans'] > 0.9 and W['kyst21']['trans'] > 0.9), 'a planing skiff leaves divergent waves only; the displacement hulls also the transverse waves behind the stern')
         print(ok(all(abs(W[k]['lam'] - 2 * 3.14159 * (W[k]['kn'] * 0.5144) ** 2 / 9.81) < 0.3 for k in W) and abs(W['sjark']['kn'] - 8.5) < 1 and 0.2 < W['sjark']['A'] < 0.6 and 0.05 < W['skiff']['A'] < 0.3), 'the wake waves are 2 pi v^2 / g long, highest near hull speed and lower for the planing skiff')
         Mo = R['motion']
-        print(ok(Mo['skiff']['ok'] and Mo['kyst21']['ok'] and Mo['kyst21']['period'] > Mo['skiff']['period'] and Mo['kyst21']['rmsDeg'] > 0.1), 'in 3D the hull rolls as an oscillator: the 21 m coaster rolls slower than the skiff in the same sea')
+        print(ok(Mo['skiff']['ok'] and Mo['kyst21']['ok'] and Mo['kyst21']['rmsDeg'] > 0.1 and all(abs(Mo[v]['free'] / Mo[v]['Tr'] - 1) < 0.25 for v in Mo) and Mo['kyst21']['free'] > 2 * Mo['skiff']['free']), 'in 3D the hull rolls as an oscillator: let go from a heel each swings at its own roll period, the 21 m coaster much slower than the skiff')
         print('errors:', errs[:4]); await b.close()
 asyncio.run(main())

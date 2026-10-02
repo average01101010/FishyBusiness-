@@ -55,7 +55,7 @@ async function loadFine(){
   if (typeof DecompressionStream === 'undefined') return [];
   const buf = new Uint8Array(await new Response(new Blob([b64bytes(GEO_FINE)]).stream().pipeThrough(new DecompressionStream('deflate'))).arrayBuffer());
   const next = varints(buf), zz = v => (v % 2 ? -(v + 1) / 2 : v / 2), n = next(), out = [];
-  for (let k = 0; k < n; k++){ const len = next(), xs = new Float32Array(len), zs = new Float32Array(len); let x = 0, z = 0, a = 1e9, b = 1e9, e = -1e9, f = -1e9;
+  for (let k = 0; k < n; k++){ const len = next(), xs = new Float64Array(len), zs = new Float64Array(len); let x = 0, z = 0, a = 1e9, b = 1e9, e = -1e9, f = -1e9;
     for (let j = 0; j < len; j++){ x += zz(next()); z += zz(next()); xs[j] = x + FR.ox * 1000; zs[j] = z + FR.oy * 1000; if (x < a) a = x; if (z < b) b = z; if (x > e) e = x; if (z > f) f = z; } out.push({xs, zs, bb:[a + FR.ox * 1000, b + FR.oy * 1000, e + FR.ox * 1000, f + FR.oy * 1000]}); }
   return out;
 }
@@ -64,7 +64,7 @@ async function loadRoads(){
   const buf = new Uint8Array(await new Response(new Blob([b64bytes(GEO_ROADS)]).stream().pipeThrough(new DecompressionStream('deflate'))).arrayBuffer());
   const next = varints(buf), zz = v => (v % 2 ? -(v + 1) / 2 : v / 2), n = next(), out = [];
   for (let k = 0; k < n; k++){
-    const c = next(), len = next(), xs = new Float32Array(len), zs = new Float32Array(len); let x = 0, z = 0, a = 1e9, b = 1e9, e = -1e9, f = -1e9;
+    const c = next(), len = next(), xs = new Float64Array(len), zs = new Float64Array(len); let x = 0, z = 0, a = 1e9, b = 1e9, e = -1e9, f = -1e9;
     for (let j = 0; j < len; j++){ x += zz(next()); z += zz(next()); xs[j] = x + FR.ox * 1000; zs[j] = z + FR.oy * 1000; if (x < a) a = x; if (z < b) b = z; if (x > e) e = x; if (z > f) f = z; }
     out.push({c, xs, zs, bb:[a + FR.ox * 1000, b + FR.oy * 1000, e + FR.ox * 1000, f + FR.oy * 1000]});
   }
