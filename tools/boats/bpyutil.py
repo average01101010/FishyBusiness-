@@ -351,3 +351,120 @@ def camera(loc, look, ortho=None, lens=35):
 
 def render(path):
     bpy.context.scene.render.filepath = path; bpy.ops.render.render(write_still=True)
+
+
+# ---------- shared by the boat scripts: tables, polygons, pictures and the export ----------
+def interp(tab, x):
+    """monotone cubic through (x, y) pairs (Fritsch-Carlson)"""
+    xs = [p[0] for p in tab]; ys = [p[1] for p in tab]; n = len(xs)
+    if x <= xs[0]: return ys[0]
+    if x >= xs[-1]: return ys[-1]
+    d = [(ys[i + 1] - ys[i]) / (xs[i + 1] - xs[i]) for i in range(n - 1)]
+    m = [d[0]] + [0 if d[i - 1] * d[i] <= 0 else (d[i - 1] + d[i]) / 2 for i in range(1, n - 1)] + [d[-1]]
+    for i in range(n - 1):
+        if d[i] == 0: m[i] = m[i + 1] = 0
+        else:
+            a = m[i] / d[i]; b = m[i + 1] / d[i]; s = a * a + b * b
+            if s > 9: t = 3 / math.sqrt(s); m[i] = t * a * d[i]; m[i + 1] = t * b * d[i]
+    for i in range(n - 1):
+        if xs[i] <= x <= xs[i + 1]:
+            h = xs[i + 1] - xs[i]; t = (x - xs[i]) / h
+            return (ys[i] * (2 * t ** 3 - 3 * t ** 2 + 1) + h * m[i] * (t ** 3 - 2 * t ** 2 + t) + ys[i + 1] * (-2 * t ** 3 + 3 * t ** 2) + h * m[i + 1] * (t ** 3 - t ** 2))
+
+
+def resample(sec, bands):
+    """points along a section polyline [(y, z)] with rows exactly at the colour boundaries: bands [(z_top, n)] from the bottom up"""
+    L = [0.0]
+    for a, b in zip(sec, sec[1:]): L.append(L[-1] + math.hypot(b[0] - a[0], b[1] - a[1]))
+    def at_len(s):
+        for i in range(1, len(L)):
+            if L[i] >= s:
+                t = (s - L[i - 1]) / max(1e-9, L[i] - L[i - 1]); a = sec[i - 1]; b = sec[i]; return (a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t)
+        return sec[-1]
+    def len_at_z(z):
+        if z <= sec[0][1]: return 0.0
+        for i in range(1, len(sec)):
+            if sec[i][1] >= z:
+                a = sec[i - 1]; b = sec[i]; t = (z - a[1]) / max(1e-9, b[1] - a[1]); return L[i - 1] + (L[i] - L[i - 1]) * t
+        return L[-1]
+    pts = [sec[0]]; s0 = 0.0
+    for ztop, n in bands:
+        s1 = max(s0, len_at_z(ztop) if ztop is not None else L[-1])
+        for k in range(1, n + 1): pts.append(at_len(s0 + (s1 - s0) * k / n))
+        s0 = s1
+    return pts
+
+
+def offset_poly(poly, d):
+    """a convex counter-clockwise polygon (x, y) pushed out by d"""
+    n = len(poly); lines = []
+    for i in range(n):
+        a = poly[i]; b = poly[(i + 1) % n]; ex = b[0] - a[0]; ey = b[1] - a[1]; L = math.hypot(ex, ey); nx, ny = ey / L, -ex / L
+        lines.append(((a[0] + nx * d, a[1] + ny * d), (ex / L, ey / L)))
+    out = []
+    for i in range(n):
+        (p1, d1), (p2, d2) = lines[i - 1], lines[i]
+        den = d1[0] * d2[1] - d1[1] * d2[0]
+        t = ((p2[0] - p1[0]) * d2[1] - (p2[1] - p1[1]) * d2[0]) / den
+        out.append((p1[0] + d1[0] * t, p1[1] + d1[1] * t))
+    return out
+
+
+def beauty(out_dir, prefix, wl, shots):
+    """renders to look at, on calm water at the waterline wl: shots [(name, camera, target, lens)]"""
+    import os
+    if 'water' not in bpy.data.objects:
+        bm = bmesh.new(); s_ = 60
+        bm.faces.new([bm.verts.new(p) for p in ((-s_, -s_, wl), (s_, -s_, wl), (s_, s_, wl), (-s_, s_, wl))])
+        obj_from_bm('water', bm, [mat('water', (0.03, 0.09, 0.12), 0.9)])
+    bpy.data.objects['water'].hide_render = False
+    setup_render(1280, 720, samples=40)
+    for nm, loc, look, lens in shots:
+        camera(loc, look, lens=lens); render(os.path.join(out_dir, '%s_%s.png' % (prefix, nm)))
+    bpy.data.objects['water'].hide_render = True
+
+
+def side_picture(out_dir, path_b64, cx, cz, ortho):
+    """the side view for the boat market: bow to the right, transparent, cropped, WebP as base64"""
+    import os
+    from PIL import Image
+    setup_render(900, 760, samples=24, transparent=True)
+    camera((cx, -40, cz), (cx, 0, cz), ortho=ortho); png = os.path.join(out_dir, 'side_pic.png'); render(png)
+    im = Image.open(png); bb = im.getbbox(); im = im.crop(bb); im.thumbnail((360, 360), Image.LANCZOS)
+    webp = os.path.join(out_dir, 'side_pic.webp'); im.save(webp, 'WEBP', quality=82, method=6)
+    open(path_b64, 'w').write(base64.b64encode(open(webp, 'rb').read()).decode())
+    return im.size, os.path.getsize(webp)
+
+
+def on_drawing(render_png, drawing, box, out_png, alpha=0.55):
+    """a render laid over a crop of a drawing (the drawing is not in the repository; its path comes from the environment)"""
+    from PIL import Image
+    r = Image.open(render_png).convert('RGBA'); g = Image.open(drawing).convert('RGBA').crop(box)
+    if g.size != r.size: g = g.resize(r.size)
+    a = r.split()[3].point(lambda v: int(v * alpha)); r.putalpha(a)
+    g.alpha_composite(r); g.save(out_png)
+
+
+def export_boat(build, to_game, to_game_n, out_dir, glb_name, data_b64, extras, side=None, dry=False):
+    """bake and write a boat: build(fine) -> (solids, glass); lod0 + glass + lod1 into a GLB, base64 to data_b64 (unless dry), and the
+    side picture side = (pic_b64, cx, cz, ortho). The objects of the fine build must already exist as BOAT0 and GLASS0."""
+    import os
+    boat = bpy.data.objects['BOAT0']; gl = bpy.data.objects['GLASS0']
+    bake_ao(boat, samples=48, distance=0.9)
+    A0 = mesh_arrays(boat, to_game, to_game_n); AG = mesh_arrays(gl, to_game, to_game_n, ao=False)
+    # the simple version for the fleet at a distance
+    for o in list(bpy.data.objects):
+        if o.name not in ('cam', 'sun'): o.hide_render = True; o.hide_viewport = True
+    s1, g1 = build(False); boat1 = join(s1, 'BOAT1')
+    for o in g1: bpy.data.objects.remove(o, do_unlink=True)
+    bake_ao(boat1, samples=16, distance=0.9)
+    A1 = mesh_arrays(boat1, to_game, to_game_n)
+    for o in (boat, gl): o.hide_render = False; o.hide_viewport = False
+    boat1.hide_render = True
+    size_pic = side_picture(out_dir, side[0] if not dry else os.path.join(out_dir, 'side_pic.b64'), *side[1:]) if side else None
+    glb = os.path.join(out_dir, glb_name)
+    n = write_glb(glb, [('lod0', A0, 1.0), ('glass', AG, 0.35), ('lod1', A1, 1.0)], extras)
+    open(data_b64 if not dry else glb + '.b64', 'w').write(base64.b64encode(open(glb, 'rb').read()).decode())
+    tri = lambda A: len(A['idx']) // 3
+    print('GLB %.0f KB, lod0 %d tris / %d verts, glass %d tris, lod1 %d tris / %d verts; side picture %s' % (n / 1024, tri(A0), len(A0['pos']), tri(AG), tri(A1), len(A1['pos']), size_pic))
+    return A0, A1

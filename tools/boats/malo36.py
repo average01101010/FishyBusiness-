@@ -6,6 +6,7 @@ Exterior only, with a dark wheelhouse so the windows read as glass.
     pip install bpy==4.5.4
     python3 tools/boats/malo36.py            -> src/data/boat-malo36.b64 (+ the side picture), renders in tools/boats/out/
     python3 tools/boats/malo36.py check      -> only the overlay on the drawing (needs the drawing at DRAWING)
+    python3 tools/boats/malo36.py fast dry   -> no renders to look at, and the GLB only in tools/boats/out (src/data untouched)
 
 Frame: x forward from the aft perpendicular, y to port, z up from the baseline; the waterline is z = 1.38."""
 import os, sys, math, json, base64
@@ -19,23 +20,6 @@ WL = 1.38; XA = -0.42; XF = 10.78; XM = (XA + XF) / 2
 
 
 # ---------- measured lines (metres) ----------
-def interp(tab, x):
-    """monotone cubic through (x, y) pairs (Fritsch-Carlson)"""
-    xs = [p[0] for p in tab]; ys = [p[1] for p in tab]; n = len(xs)
-    if x <= xs[0]: return ys[0]
-    if x >= xs[-1]: return ys[-1]
-    d = [(ys[i + 1] - ys[i]) / (xs[i + 1] - xs[i]) for i in range(n - 1)]
-    m = [d[0]] + [0 if d[i - 1] * d[i] <= 0 else (d[i - 1] + d[i]) / 2 for i in range(1, n - 1)] + [d[-1]]
-    for i in range(n - 1):
-        if d[i] == 0: m[i] = m[i + 1] = 0
-        else:
-            a = m[i] / d[i]; b = m[i + 1] / d[i]; s = a * a + b * b
-            if s > 9: t = 3 / math.sqrt(s); m[i] = t * a * d[i]; m[i + 1] = t * b * d[i]
-    for i in range(n - 1):
-        if xs[i] <= x <= xs[i + 1]:
-            h = xs[i + 1] - xs[i]; t = (x - xs[i]) / h
-            return (ys[i] * (2 * t ** 3 - 3 * t ** 2 + 1) + h * m[i] * (t ** 3 - 2 * t ** 2 + t) + ys[i + 1] * (-2 * t ** 3 + 3 * t ** 2) + h * m[i + 1] * (t ** 3 - t ** 2))
-
 # the bottom of the hull body on the centreline: the canoe body aft (the skeg is separate), the keel line, the forefoot and the stem
 LOW = [(XA, 1.12), (0.0, 1.05), (1.0, 0.83), (2.0, 0.62), (3.0, 0.41), (4.0, 0.21), (5.0, 0.03), (6.0, -0.16), (7.0, -0.09), (8.0, -0.02),
        (8.5, 0.0), (9.0, 0.04), (9.56, 0.09), (9.92, 0.16), (10.18, 0.31), (10.34, 0.49), (10.42, 0.80), (10.45, 1.09), (10.46, 1.38),
@@ -103,30 +87,6 @@ def y_at(x, z):
     return s[-1][0]
 
 
-def resample(sec, x, bands):
-    """points along the section with rows exactly at the colour boundaries: bands [(z_top, n)] from the bottom up"""
-    # arc length along the section
-    L = [0.0]
-    for a, b in zip(sec, sec[1:]): L.append(L[-1] + math.hypot(b[0] - a[0], b[1] - a[1]))
-    def at_len(s):
-        for i in range(1, len(L)):
-            if L[i] >= s:
-                t = (s - L[i - 1]) / max(1e-9, L[i] - L[i - 1]); a = sec[i - 1]; b = sec[i]; return (a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t)
-        return sec[-1]
-    def len_at_z(z):
-        if z <= sec[0][1]: return 0.0
-        for i in range(1, len(sec)):
-            if sec[i][1] >= z:
-                a = sec[i - 1]; b = sec[i]; t = (z - a[1]) / max(1e-9, b[1] - a[1]); return L[i - 1] + (L[i] - L[i - 1]) * t
-        return L[-1]
-    pts = [sec[0]]; s0 = 0.0
-    for ztop, n in bands:
-        s1 = max(s0, len_at_z(ztop) if ztop is not None else L[-1])
-        for k in range(1, n + 1): pts.append(at_len(s0 + (s1 - s0) * k / n))
-        s0 = s1
-    return pts
-
-
 def stations(fine=True):
     xs = [XA]
     if fine:
@@ -173,7 +133,7 @@ def build_hull(fine=True):
     for x in xs:
         sec = section(x)
         bands = [(Z_AF, 12 if fine else 4), (Z_BT, 2 if fine else 1), (z_rub(x), 10 if fine else 3), (None, 6 if fine else 2)]
-        pts = resample(sec, x, bands)
+        pts = resample(sec, bands)
         rows.append([(x_transom(z) if x == XA else x, y, z) for y, z in pts])
     def mf(i, j):
         a = rows[i][j]; b = rows[i + 1][j + 1]; return band_mat((a[2] + b[2]) / 2, (a[0] + b[0]) / 2)
@@ -350,20 +310,6 @@ def wh_ring(z):
     return [(5.95, -1.50, z), (7.97 + d, -1.50, z), (8.45 + d, -1.00, z), (8.45 + d, 1.26, z), (7.97 + d, 1.76, z), (5.95, 1.76, z)]
 
 def roof_z(x): return 5.18 + 0.42 * max(0.0, min(1.0, (x - 5.83) / (9.09 - 5.83)))
-
-def offset_poly(poly, d):
-    """a convex counter-clockwise polygon (x, y) pushed out by d"""
-    n = len(poly); lines = []
-    for i in range(n):
-        a = poly[i]; b = poly[(i + 1) % n]; ex = b[0] - a[0]; ey = b[1] - a[1]; L = math.hypot(ex, ey); nx, ny = ey / L, -ex / L
-        lines.append(((a[0] + nx * d, a[1] + ny * d), (ex / L, ey / L)))
-    out = []
-    for i in range(n):
-        (p1, d1), (p2, d2) = lines[i - 1], lines[i]
-        den = d1[0] * d2[1] - d1[1] * d2[0]
-        t = ((p2[0] - p1[0]) * d2[1] - (p2[1] - p1[1]) * d2[0]) / den
-        out.append((p1[0] + d1[0] * t, p1[1] + d1[1] * t))
-    return out
 
 def wh_faces():
     """(origin, u, v) for each wall carrying windows: front, the two corners, the two sides; u along the wall, v up it"""
@@ -547,31 +493,6 @@ def anchors():
             'stern': round(-(XA - XM) + 0.2, 3), 'bow': round(-(10.3 - XM), 3), 'side': 1.89, 'beam': 4.2, 'pl': 4.4, 'rl': 1.6, 'open': False, 'hand': False}
 
 
-def beauty(prefix):
-    """renders to look at: three quarters, the side, and from above, on calm water"""
-    import bmesh as _bm
-    if 'water' not in bpy.data.objects:
-        bm = _bm.new(); s_ = 60
-        bm.faces.new([bm.verts.new(p) for p in ((-s_, -s_, WL), (s_, -s_, WL), (s_, s_, WL), (-s_, s_, WL))])
-        w = obj_from_bm('water', bm, [mat('water', (0.03, 0.09, 0.12), 0.9)])
-    setup_render(1280, 720, samples=40)
-    for nm, loc, look in (('bow3q', (17.5, -12.5, 5.2), (5.0, 0, 3.4)), ('stern3q', (-8.5, 11.0, 6.2), (4.0, 0, 3.4)), ('side', (5.0, -21, 2.6), (5.0, 0, 3.6)),
-                          ('above', (13.0, -9.0, 15.0), (5.0, 0, 3.0)), ('deck', (1.5, -4.5, 6.6), (5.5, 0.5, 3.0))):
-        camera(loc, look, lens=35 if nm != 'deck' else 24); render(os.path.join(OUT, '%s_%s.png' % (prefix, nm)))
-    bpy.data.objects['water'].hide_render = True
-
-
-def side_picture(path_b64):
-    """the side view for the boat market: bow to the right, transparent, cropped, WebP as base64"""
-    from PIL import Image
-    setup_render(900, 760, samples=24, transparent=True)
-    camera((5.2, -40, 4.5), (5.2, 0, 4.5), ortho=12.4); png = os.path.join(OUT, 'side_pic.png'); render(png)
-    im = Image.open(png); bb = im.getbbox(); im = im.crop(bb); im.thumbnail((360, 360), Image.LANCZOS)
-    webp = os.path.join(OUT, 'side_pic.webp'); im.save(webp, 'WEBP', quality=82, method=6)
-    open(path_b64, 'w').write(base64.b64encode(open(webp, 'rb').read()).decode())
-    return im.size, os.path.getsize(webp)
-
-
 def check_overlay(objs):
     """the model drawn over the drawing: side view at 92.4 px/m (profile) and from above (plan)"""
     from PIL import Image
@@ -584,12 +505,12 @@ def check_overlay(objs):
     c.rotation_euler = (0, 0, 0)
     render(os.path.join(OUT, 'ov_top.png'))
     if not DRAWING: return
-    ga = Image.open(DRAWING).convert('RGBA')
     for nm, box in (('ov_side.png', (0, 0, 1408, 980)), ('ov_top.png', (0, 995, 1408, 1455))):
-        r = Image.open(os.path.join(OUT, nm)).convert('RGBA'); g = ga.crop(box)
-        a = r.split()[3].point(lambda v: int(v * 0.55)); r.putalpha(a)
-        g.alpha_composite(r); g.save(os.path.join(OUT, nm.replace('.png', '_on_ga.png')))
+        on_drawing(os.path.join(OUT, nm), DRAWING, box, os.path.join(OUT, nm.replace('.png', '_on_ga.png')))
 
+
+SHOTS = [('bow3q', (17.5, -12.5, 5.2), (5.0, 0, 3.4), 35), ('stern3q', (-8.5, 11.0, 6.2), (4.0, 0, 3.4), 35), ('side', (5.0, -21, 2.6), (5.0, 0, 3.6), 35),
+         ('above', (13.0, -9.0, 15.0), (5.0, 0, 3.0), 35), ('deck', (1.5, -4.5, 6.6), (5.5, 0.5, 3.0), 24)]
 
 def main():
     os.makedirs(OUT, exist_ok=True)
@@ -598,27 +519,13 @@ def main():
     solids, glass = build(True)
     if only_check:
         check_overlay(solids); return
-    boat = join(solids, 'BOAT0'); gl = join(glass, 'GLASS0')
+    join(solids, 'BOAT0'); join(glass, 'GLASS0')
     if 'fast' not in sys.argv:
-        check_overlay([boat]); beauty('lod0')
-    bake_ao(boat, samples=48, distance=0.9)
-    A0 = mesh_arrays(boat, to_game, to_game_n); AG = mesh_arrays(gl, to_game, to_game_n, ao=False)
-    # the simple version for the fleet at a distance
-    for o in list(bpy.data.objects):
-        if o.name not in ('cam', 'sun'): o.hide_render = True; o.hide_viewport = True
-    s1, g1 = build(False); boat1 = join(s1, 'BOAT1')
-    bake_ao(boat1, samples=16, distance=0.9)
-    A1 = mesh_arrays(boat1, to_game, to_game_n)
-    for o in (boat, gl): o.hide_render = False; o.hide_viewport = False
-    boat1.hide_render = True
-    size_pic = side_picture(os.path.join(ROOT, 'src', 'data', 'boat-malo36-side.b64'))
+        check_overlay([bpy.data.objects['BOAT0']]); beauty(OUT, 'lod0', WL, SHOTS)
     ex = {'frame': 'kystfiske: x starboard, y up from the waterline, z aft; metres', 'type': 'breisjark', 'name': 'Malo 36 (10.99 m)', 'len': 10.99, 'beam': 4.2, 'draft': 2.0,
           'anchors': anchors()}
-    glb = os.path.join(OUT, 'malo36.glb')
-    n = write_glb(glb, [('lod0', A0, 1.0), ('glass', AG, 0.35), ('lod1', A1, 1.0)], ex)
-    open(os.path.join(ROOT, 'src', 'data', 'boat-malo36.b64'), 'w').write(base64.b64encode(open(glb, 'rb').read()).decode())
-    tri = lambda A: len(A['idx']) // 3
-    print('GLB %.0f KB, lod0 %d tris / %d verts, glass %d tris, lod1 %d tris / %d verts; side picture %s %d bytes' % (n / 1024, tri(A0), len(A0['pos']), tri(AG), tri(A1), len(A1['pos']), size_pic[0], size_pic[1]))
+    export_boat(build, to_game, to_game_n, OUT, 'malo36.glb', os.path.join(ROOT, 'src', 'data', 'boat-malo36.b64'), ex,
+                side=(os.path.join(ROOT, 'src', 'data', 'boat-malo36-side.b64'), 5.2, 4.5, 12.4), dry='dry' in sys.argv)
 
 
 if __name__ == '__main__':
