@@ -24,7 +24,7 @@ async def main():
         for t in types:
             info = await pg.evaluate("""(t => { const t0 = performance.now(), m = buildVesselModel(t, 1), ms = performance.now() - t0, b = S.boat; b.type = t; applyVessel(); G3.vesselChanged();
               S.crew = [0, 1, 2].map(() => Object.assign(genCrew(), {bi:false, off:false})).slice(0, VESSELS[t].crewMax);
-              const V = VESSELS[t], hull = (() => { if (!m.glb) return null; let z0 = 1e9, z1 = -1e9, x0 = 1e9, x1 = -1e9; for (let i = 0; i < m.o.p.length; i += 3){ const y = m.o.p[i + 1]; if (y < -0.3 || y > 1.0) continue; const x = m.o.p[i], z = m.o.p[i + 2]; z0 = Math.min(z0, z); z1 = Math.max(z1, z); x0 = Math.min(x0, x); x1 = Math.max(x1, x); } return [+(x1 - x0).toFixed(2), +(z1 - z0).toFixed(2)]; })();
+              const V = VESSELS[t], hull = (() => { if (!m.glb) return null; let z0 = 1e9, z1 = -1e9, x0 = 1e9, x1 = -1e9; for (let i = 0; i < m.o.p.length; i += 3){ const y = m.o.p[i + 1]; if (y < -0.3 || y > 1.5) continue; const x = m.o.p[i], z = m.o.p[i + 2]; z0 = Math.min(z0, z); z1 = Math.max(z1, z); x0 = Math.min(x0, x); x1 = Math.max(x1, x); } return [+(x1 - x0).toFixed(2), +(z1 - z0).toFixed(2)]; })();
               const need = ['eye', 'skipperAt', 'crewSpots', 'lights', 'hauler', 'pole', 'deck', 'stern', 'bow'];
               return {verts:m.o.p.length / 3, glass:m.glass.p.length / 3, ms:Math.round(ms * 10) / 10, len:V.len, beam:V.beam, cls:V.cls, glb:!!m.glb, hull, geoOk:need.every(k => m.geo && m.geo[k] != null),
                 nan:m.o.p.some(x => !isFinite(x)) || m.o.n.some(x => !isFinite(x)),
@@ -43,7 +43,8 @@ async def main():
             print(ok(i['verts'] <= budget and not i['nan']), '%s: %d punkter (budsjett %d), bygget på %.1f ms, uten NaN' % (t, i['verts'], budget, budget and i['ms']))
             L = i['len']
             if i['glb']:
-                # the hull between the waterline and the deck, without the bow roller and the gantry over the stern
+                # the hull from just below the waterline to 1.5 m above it (the fender strake, the stem up to the strake), without the bow roller,
+                # the riding sail's boom and the gantry over the stern
                 print(ok(abs(i['hull'][1] - L) / L < 0.03 and abs(i['hull'][0] - i['beam']) / i['beam'] < 0.05 and i['geoOk']), '%s (GLB): skroget er %.2f m langt og %.2f m bredt mot %.2f x %.2f m, og alle plassene for 3D-visningen finnes' % (t, i['hull'][1], i['hull'][0], L, i['beam']))
             else: print(ok(abs(i['box'][1] - L) / L < 0.08), '%s: modellen er %.2f m lang mot %.2f m i dataene' % (t, i['box'][1], L))
         # the market's showroom: the boat afloat off the harbour, the camera turning round it, a chip with the way back

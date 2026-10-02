@@ -342,7 +342,7 @@ const LIC_OFFERS = [
   {id:'u7', ves:'trebat', hl:'under 7 m', cod:9562, hyse:[91198, 4343], sei:[163515, 5275], kpk:KPK, no:'Gammel tresnekke med hjemmel under 7 m', en:'Old wooden snekke with a right under 7 m'},
   {id:'h7', ves:'snekke', hl:'7–7,9 m', cod:11301, hyse:[106700, 5100], sei:[191200, 6200], kpk:KPK, no:'Plastsnekke med hjemmel 7–7,9 m', en:'Fibreglass snekke with a right of 7–7.9 m'},
   {id:'h8', ves:'jukesjark', hl:'8–8,9 m', cod:13434, hyse:[127000, 6000], sei:[227800, 7300], kpk:KPK, no:'Plastsjark med hjemmel 8–8,9 m', en:'Fibreglass sjark with a right of 8–8.9 m'},
-  {id:'h9', ves:'sjark', hl:'9–9,9 m', cod:16437, hyse:[157100, 7500], sei:[281800, 9100], kpk:KPK, no:'Sjark 34 fot med hjemmel 9–9,9 m', en:'34 ft sjark with a right of 9–9.9 m'},
+  {id:'h9', ves:'sjark', hl:'9–9,9 m', cod:16437, hyse:[157100, 7500], sei:[281800, 9100], kpk:KPK, no:'Havsjark 35 fot med hjemmel 9–9,9 m', en:'35 ft havsjark with a right of 9–9.9 m'},
   {id:'h10', ves:'hurtigsjark', hl:'10–10,9 m', cod:17780, hyse:[167727, 7987], sei:[300754, 9702], kpk:KPK, no:'Hurtigsjark med hjemmel 10–10,9 m', en:'Speed sjark with a right of 10–10.9 m'}
 ];
 function licValue(l){ return l ? Math.round(l.cod * l.kpk) : 0; }

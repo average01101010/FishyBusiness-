@@ -348,6 +348,7 @@ const SPEC3D = {
 // The data sits in non-running <script id="glb-TYPE"> and <script id="pic-TYPE"> elements in the page (src/index.html), so the big
 // strings never pass through the script parser and the clock's first ticks are not held up by them.
 const GLBM = {}, glbData = (k, type) => { const el = typeof document !== 'undefined' && document.getElementById(k + '-' + type), s = el ? el.textContent.trim() : ''; return s.length > 100 ? s : null; };
+const GLBHAS = {}; function glbHas(type){ if (!(type in GLBHAS)) GLBHAS[type] = !!glbData('glb', type); return GLBHAS[type]; }
 function glbParse(b64){
   const bin = atob(b64), u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
   const dv = new DataView(u8.buffer); if (dv.getUint32(0, true) !== 0x46546C67) return null;
