@@ -41,7 +41,7 @@ async def run(p, W, H, tag):
     n = lambda: J("S.draft.length")
     # three taps on the sea: from Finnsnes out and up Gisundet
     for q in [{'x': 55.65, 'y': 54.05}, {'x': 56.35, 'y': 45.25}, {'x': 57.25, 'y': 44.35}]:
-        c = await J(C, q); await T.tap(c['x'], c['y'])
+        c = await J("(q => mapToClient(LG(q.x, q.y)))", q); await T.tap(c['x'], c['y'])
     await pg.wait_for_timeout(300)
     d = json.loads(await J("JSON.stringify({n:S.draft.length, auto:S.draft.map(w => w.auto || ''), cards:[...document.querySelectorAll('#panel .wpc')].map(li => li.textContent), nums:[...document.querySelectorAll('#panel .wpc .n')].map(x => x.textContent), labels:[...document.querySelectorAll('#gDyn text.wpn')].map(t => t.textContent)})"))
     names = d['nums']

@@ -21,12 +21,13 @@ FOAM = """async (U) => {
   const hs = (x, y) => { let q = [fr(x * 0.1031), fr(y * 0.1031), fr(x * 0.1031)]; const dd = q[0] * (q[1] + 33.33) + q[1] * (q[2] + 33.33) + q[2] * (q[0] + 33.33); q = q.map(v => v + dd); return fr((q[0] + q[1]) * q[2]); };
   const ns = (x, y) => { const ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy, ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy); return (hs(ix, iy) * (1 - ux) + hs(ix + 1, iy) * ux) * (1 - uy) + (hs(ix, iy + 1) * (1 - ux) + hs(ix + 1, iy + 1) * ux) * uy; };
   const w = [Math.sin(WV.dir), -Math.cos(WV.dir)], wp = [-w[1], w[0]]; let hit = 0, n = 0, Wc = 0;
-  for (let j = 0; j < 150; j++) for (let i = 0; i < 150; i++){
-    const x = D.bv.x + (i - 75) * 1.9 + 0.37 * j, z = D.bv.z + (j - 75) * 1.9, S = D.ssAt(x, z), ren = 1 / Math.sqrt(Math.max(1 - 2 * S[2] * (1 - S[2]) * (1 - WV.dot), 0.05));
+  // the shader works from the render origin RO (view3d.js), so its noise is sampled there; four patches of 285 m round the boat
+  for (const [ox, oz] of [[0, 0], [400, 0], [0, 400], [-400, -400]]) for (let j = 0; j < 150; j++) for (let i = 0; i < 150; i++){
+    const x = D.bv.x + ox + (i - 75) * 1.9 + 0.37 * j, z = D.bv.z + oz + (j - 75) * 1.9, S = D.ssAt(x, z), ren = 1 / Math.sqrt(Math.max(1 - 2 * S[2] * (1 - S[2]) * (1 - WV.dot), 0.05));
     let y = 0, sa = 1e-6;
     for (let k = 0; k < 10; k++){ const c = WV.list[k], am = S[0] * (S[2] * c.wo + (1 - S[2]) * c.wy) * ren, grp = 0.62 + 0.38 * Math.sin((x * c.Dx + z * c.Dz) * c.k * 0.083 + (x * c.Dz - z * c.Dx) * c.k * 0.041 - c.om * t * 0.5 + k * 2.59);
       y += am * grp * Math.sin(c.k * (c.Dx * x + c.Dz * z) - c.om * t + c.ph); sa += am * am * 0.228; }
-    const cq = [x * w[0] + z * w[1], x * wp[0] + z * wp[1]], fn = ns(cq[0] * 0.3 + t * 0.25, cq[1] * 0.12) * 0.6 + ns(cq[0] * 0.7 - t * 0.4, cq[1] * 0.3 - t * 0.1) * 0.4;
+    const xr = x - D.RO.x, zr = z - D.RO.z, cq = [xr * w[0] + zr * w[1], xr * wp[0] + zr * wp[1]], fn = ns(cq[0] * 0.3 + t * 0.25, cq[1] * 0.12) * 0.6 + ns(cq[0] * 0.7 - t * 0.4, cq[1] * 0.3 - t * 0.1) * 0.4;
     const dw = Math.min(1, Math.max(0, (S[3] - 0.45) / 1.28)), dws = dw * dw * (3 - 2 * dw); Wc = Math.min(0.5, Math.max(1e-5, 3.84e-6 * Math.pow(U, 3.41) * dws));
     let zt = Math.sqrt(-2 * Math.log(Wc)); zt -= (2.515517 + 0.802853 * zt + 0.010328 * zt * zt) / (1 + 1.432788 * zt + 0.189269 * zt * zt + 0.001308 * zt * zt * zt);
     if (y / Math.sqrt(sa) * 0.25 + fn * 0.45 > 0.228 + 0.293 * zt - 0.016 * zt * zt) hit++; n++;
