@@ -504,9 +504,9 @@ body.vplot #setBar{max-width:calc(100% - var(--sidew) - 80px)}
 /* the boat market: cards with the side view, the spec sheet, and the showroom chip */
 .ph-sub.mk{flex-wrap:wrap}.ph-sub.mk button{min-height:44px}
 .vcard{display:flex;gap:10px;align-items:center;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;min-height:76px}
-.vcard.mine{outline:2px solid #1e8c6e}.vpic{flex:0 0 42%;max-width:190px;height:64px;display:flex;align-items:center}.vpic svg{width:100%;height:100%}
+.vcard.mine{outline:2px solid #1e8c6e}.vpic{flex:0 0 42%;max-width:190px;height:64px;display:flex;align-items:center}.vpic svg{width:100%;height:100%}.vpic img{width:100%;height:100%;object-fit:contain}
 .vtx{display:flex;flex-direction:column;gap:2px;min-width:0}.vtx b{font:700 13.5px var(--sans)}.vtx small{opacity:.75}.vpr{font-weight:700}.vpr i{font-style:normal;font-weight:400;opacity:.7;font-size:12px;margin-left:4px}
-.vsheet .vbig{background:linear-gradient(#dfe9f2 0 62%,#bcd3e6 62%);border-radius:10px;padding:6px;margin:4px 0 8px}.vsheet .vbig svg{width:100%;height:120px}
+.vsheet .vbig{background:linear-gradient(#dfe9f2 0 62%,#bcd3e6 62%);border-radius:10px;padding:6px;margin:4px 0 8px}.vsheet .vbig svg{width:100%;height:120px}.vsheet .vbig img{display:block;width:100%;height:150px;object-fit:contain}
 .vsec{margin:8px 0}.vsec h5{margin:6px 0 2px;font:700 12px var(--sans);text-transform:uppercase;letter-spacing:.05em;opacity:.7}
 .mkback{min-height:44px;margin-bottom:6px}
 #showChip{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:30;display:flex;gap:10px;align-items:center;background:var(--ink);color:var(--paper);padding:6px 6px 6px 14px;border-radius:24px;font:600 14px var(--sans);max-width:calc(100vw - 32px)}

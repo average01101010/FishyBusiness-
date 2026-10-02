@@ -41,7 +41,7 @@ COVER = {
   'src/js/ui/05-phone.js':['docktest', 'fleet3test', 'shoptest', 'vesseltest'], 'src/js/ui/05-tattoo-art.js':['tattest'], 'src/js/ui/05b-work.js':['worktest'], 'src/js/ui/06-logbook.js':['booktest'], 'src/js/ui/06b-book-tabs.js':['booktest'],
   'src/js/ui/07-guide.js':['shoptest', 'selltest'], 'src/js/ui/07b-first-trip.js':['tut'], 'src/js/ui/08-actions.js':['trip2', 'docktest', 'booktest', 'shoptest'],
   'src/js/ui/09-hand-fishing.js':['hailltest', 'fixtest'], 'src/js/ui/10-rod-acts.js':['docktest'], 'src/js/ui/10-gear-ui.js':['geartest', 'docktest'],
-  'src/js/ui/10c-dock.js':['docktest'], 'src/js/ui/11-boot.js':['trip2'], 'src/js/view3d.js':['dbg23o'], 'src/js/vessel3d.js':['vessel3d', 'dbg23o'], 'src/styles.css':['docktest'], 'src/index.html':['trip2', 'docktest']}
+  'src/js/ui/10c-dock.js':['docktest'], 'src/js/ui/11-boot.js':['trip2'], 'src/js/view3d.js':['dbg23o'], 'src/js/vessel3d.js':['vessel3d', 'dbg23o', 'vesseltest'], 'src/data/boat-malo36.b64':['vessel3d', 'vesseltest'], 'src/data/boat-malo36-side.b64':['vesseltest'], 'src/styles.css':['docktest'], 'src/index.html':['trip2', 'docktest']}
 
 
 def changed_tests():

@@ -340,11 +340,48 @@ const SPEC3D = {
       ['pblock', {z:6, h:9, l:4}], ['netbin', {z:24, l:18, h:2.2}], ['drum', {z:12, r:1.3, wf:0.5}], ['gantry', {z:35, h:9, col:VC.yellow}], ['crane', {z:-6, x:5, h:3, reach:9}], ['rails', {s0:0.84, s1:0.97, h:1}]],
     work:{z:12}, crew:[[4.5, 10, -1.6], [-4.5, 14, 1.6], [2, 18, 3.14]]}
 };
+// ---------- detailed models from GLB files (tools/boats, built in Blender from the yards' drawings) ----------
+// The GLB holds the near model (lod0), the glass and the simple model for the fleet at a distance (lod1), in the game's frame,
+// positions as 16-bit integers scaled by the node, normals and colours as bytes (KHR_mesh_quantization); colour alpha is gloss,
+// _PAINT carries the paint zone (1 = hull) and the baked occlusion, so a livery can repaint the hull. The scene's extras hold the
+// places the 3D view needs (helm, eye, crew, lights, hauler, flag). Read the first time a type is shown.
+// The data sits in non-running <script id="glb-TYPE"> and <script id="pic-TYPE"> elements in the page (src/index.html), so the big
+// strings never pass through the script parser and the clock's first ticks are not held up by them.
+const GLBM = {}, glbData = (k, type) => { const el = typeof document !== 'undefined' && document.getElementById(k + '-' + type), s = el ? el.textContent.trim() : ''; return s.length > 100 ? s : null; };
+function glbParse(b64){
+  const bin = atob(b64), u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+  const dv = new DataView(u8.buffer); if (dv.getUint32(0, true) !== 0x46546C67) return null;
+  const jl = dv.getUint32(12, true), J = JSON.parse(new TextDecoder().decode(u8.subarray(20, 20 + jl))), bo = 20 + jl + 8;
+  const NC = {SCALAR:1, VEC2:2, VEC3:3, VEC4:4}, SZ = {5120:1, 5121:1, 5122:2, 5123:2, 5125:4, 5126:4};
+  const acc = i => { const A = J.accessors[i], BV = J.bufferViews[A.bufferView], n = NC[A.type], ct = A.componentType, sz = SZ[ct], st = BV.byteStride || n * sz, off = bo + (BV.byteOffset || 0) + (A.byteOffset || 0), out = new Float32Array(A.count * n);
+    for (let k = 0; k < A.count; k++) for (let c = 0; c < n; c++){ const o = off + k * st + c * sz;
+      let v = ct === 5120 ? dv.getInt8(o) : ct === 5121 ? dv.getUint8(o) : ct === 5122 ? dv.getInt16(o, true) : ct === 5123 ? dv.getUint16(o, true) : ct === 5125 ? dv.getUint32(o, true) : dv.getFloat32(o, true);
+      if (A.normalized) v = ct === 5120 ? Math.max(v / 127, -1) : ct === 5121 ? v / 255 : ct === 5122 ? Math.max(v / 32767, -1) : ct === 5123 ? v / 65535 : v;
+      out[k * n + c] = v; }
+    return out; };
+  const parts = {};
+  for (const nd of J.nodes){
+    const pr = J.meshes[nd.mesh].primitives[0], P = acc(pr.attributes.POSITION), N = acc(pr.attributes.NORMAL), Cc = acc(pr.attributes.COLOR_0), Q = pr.attributes._PAINT != null ? acc(pr.attributes._PAINT) : null, I = acc(pr.indices);
+    const t = nd.translation || [0, 0, 0], s = nd.scale || [1, 1, 1], o = {p:[], n:[], c:[], zone:[], ao:[]};
+    for (const i of I){ o.p.push(P[i * 3] * s[0] + t[0], P[i * 3 + 1] * s[1] + t[1], P[i * 3 + 2] * s[2] + t[2]); o.n.push(N[i * 3], N[i * 3 + 1], N[i * 3 + 2]); o.c.push(Cc[i * 4], Cc[i * 4 + 1], Cc[i * 4 + 2], Cc[i * 4 + 3]);
+      if (Q){ o.zone.push(Q[i * 4]); o.ao.push(Q[i * 4 + 1] / 255); } }
+    parts[nd.name] = o;
+  }
+  return {parts, ex:(J.scenes[0] && J.scenes[0].extras) || {}};
+}
+function glbModel(type, lod, liv){
+  if (!(type in GLBM)){ const src = glbData('glb', type); if (!src) return null; try { GLBM[type] = glbParse(src); } catch (e){ GLBM[type] = null; } }
+  const G = GLBM[type]; if (!G || !G.parts.lod0) return null;
+  const part = lod >= 1 ? G.parts.lod0 : (G.parts.lod1 || G.parts.lod0); let o = part;
+  if (liv && liv.hull){ const c = part.c.slice(); for (let i = 0; i < part.zone.length; i++) if (part.zone[i] === 1){ const a = part.ao[i]; c[i * 4] = liv.hull[0] * a; c[i * 4 + 1] = liv.hull[1] * a; c[i * 4 + 2] = liv.hull[2] * a; } o = {p:part.p, n:part.n, c}; }
+  return {o, glass:lod >= 1 && G.parts.glass ? G.parts.glass : {p:[], n:[], c:[]}, cap:null, geo:Object.assign({gw:1, open:false, hand:false}, G.ex.anchors), hs:null, glb:true};
+}
 // a model for a type: the hull with its fittings (near: lod 1), the glass, the depth cap for open hulls, and where things are
 const VMODEL = {};
 function vesselSpec(type){ return SPEC3D[type] || null; }
 function buildVesselModel(type, lod, liv){
   lod = lod || 1; const V = VESSELS[type], sp = vesselSpec(type); if (!V || !sp || sp.hand) return null;
+  { const g = glbModel(type, lod, liv); if (g) return g; }
   const H = Object.assign({L:V.len, B:V.beam, T:V.draft}, sp.hull, liv ? {col:Object.assign({}, sp.hull.col, liv)} : null), hs = hullShape(H), o = VB(), gb = VB(); o.lod = lod; gb.lod = lod;
   hullBuild(o, hs, lod);
   let house = null, roofY = null; const anch = {};
@@ -416,6 +453,7 @@ function personVB(B, x, y, z, seated, hands, suit){
 // a side view of a type as SVG (bow to the right), from the same spec as the 3D model: the market draws it on every card, with or
 // without WebGL. Colours from the spec; the hull below the waterline in bottom paint.
 function vesselSVG(type, w, h){
+  const pic = glbData('pic', type); if (pic) return '<img class="vimg" alt="" src="data:image/webp;base64,' + pic + '">';   // the rendered side view of a detailed model
   const V = VESSELS[type], sp = vesselSpec(type); if (!V || !sp) return '';
   const H = Object.assign({L:V.len, B:V.beam, T:V.draft}, sp.hull), hs = hullShape(H), col = H.col || {};
   const rgb = c => 'rgb(' + c.slice(0, 3).map(v => Math.round(v * 255)).join(',') + ')';

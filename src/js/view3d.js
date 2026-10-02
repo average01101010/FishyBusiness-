@@ -2033,7 +2033,7 @@ const G3 = (() => {
     gl.disableVertexAttribArray(2); gl.useProgram(PL.p);
   }
   // the local fleet near you: the kit model nearest each boat (vessel3d.js npcKit), scaled to her length and beam, at lod 1 within
-  // 500 m and lod 0.3 within 1.5 km, with the skipper in the wheelhouse and hands on deck when she fishes; further out the box models
+  // 300 m and lod 0.3 within 1.5 km (a detailed GLB model gives its near and simple versions), with the skipper in the wheelhouse and hands on deck when she fishes; further out the box models
   const NKM = {};
   function npcMesh(i, lod){
     const f = FLEET[i], t = npcKit(f.L, f.B), k = t + '|' + lod + '|' + (i % 4); if (k in NKM) return NKM[k];
@@ -2049,7 +2049,7 @@ const G3 = (() => {
     for (const n of npcNow){
       const x = n.p.x * 1000, z = n.p.y * 1000, big = n.type === 'coastal' || n.type === 'ferry', y = big ? (env.tide || 0) : (env.tide || 0) + (seaH(x, z, t) - (env.tide || 0)) * 0.8, roll = big ? Math.sin(t * 0.4 + x) * 0.01 : Math.sin(t * 1.1 + x) * 0.05 * (0.3 + WV.hs);
       n.M = model(x - eye[0], y - eye[1], z - eye[2], -n.hd, big ? 0 : Math.sin(t * 0.9 + z) * 0.03, roll);
-      const d = Math.hypot(x - eye[0], z - eye[2]); n.K = n.fleet && d < 1500 ? npcMesh(n.fi, d < 500 ? 1 : 0.3) : null;
+      const d = Math.hypot(x - eye[0], z - eye[2]); n.K = n.fleet && d < 1500 ? npcMesh(n.fi, d < 300 ? 1 : 0.3) : null;
       if (n.K) kit.push(n); else drawLit(NPCM[n.type], n.M);
     }
     if (!kit.length) return;

@@ -24,7 +24,9 @@ async def main():
         for t in types:
             info = await pg.evaluate("""(t => { const t0 = performance.now(), m = buildVesselModel(t, 1), ms = performance.now() - t0, b = S.boat; b.type = t; applyVessel(); G3.vesselChanged();
               S.crew = [0, 1, 2].map(() => Object.assign(genCrew(), {bi:false, off:false})).slice(0, VESSELS[t].crewMax);
-              const V = VESSELS[t]; return {verts:m.o.p.length / 3, glass:m.glass.p.length / 3, ms:Math.round(ms * 10) / 10, len:V.len, cls:V.cls,
+              const V = VESSELS[t], hull = (() => { if (!m.glb) return null; let z0 = 1e9, z1 = -1e9, x0 = 1e9, x1 = -1e9; for (let i = 0; i < m.o.p.length; i += 3){ const y = m.o.p[i + 1]; if (y < -0.3 || y > 1.0) continue; const x = m.o.p[i], z = m.o.p[i + 2]; z0 = Math.min(z0, z); z1 = Math.max(z1, z); x0 = Math.min(x0, x); x1 = Math.max(x1, x); } return [+(x1 - x0).toFixed(2), +(z1 - z0).toFixed(2)]; })();
+              const need = ['eye', 'skipperAt', 'crewSpots', 'lights', 'hauler', 'pole', 'deck', 'stern', 'bow'];
+              return {verts:m.o.p.length / 3, glass:m.glass.p.length / 3, ms:Math.round(ms * 10) / 10, len:V.len, beam:V.beam, cls:V.cls, glb:!!m.glb, hull, geoOk:need.every(k => m.geo && m.geo[k] != null),
                 nan:m.o.p.some(x => !isFinite(x)) || m.o.n.some(x => !isFinite(x)),
                 box:(() => { let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9, y0 = 1e9; for (let i = 0; i < m.o.p.length; i += 3){ const x = m.o.p[i], y = m.o.p[i + 1], z = m.o.p[i + 2]; x0 = Math.min(x0, x); x1 = Math.max(x1, x); z0 = Math.min(z0, z); z1 = Math.max(z1, z); y0 = Math.min(y0, y); } return [+(x1 - x0).toFixed(2), +(z1 - z0).toFixed(2), +(-y0).toFixed(2)]; })()}; })""", t)
             counts[t] = info
@@ -36,9 +38,14 @@ async def main():
             await pg.screenshot(path=os.path.join(OUT, 'vessel_%s_helm.png' % t)); await pg.evaluate("G3.setHelm(false)")
         print(json.dumps(counts, ensure_ascii=False))
         for t, i in counts.items():
-            budget = 45000 if i['cls'] == 'hav' else 25000
+            # a detailed model from tools/boats is drawn as triangles without shared corners: about three points to a triangle
+            budget = 120000 if i['glb'] else 45000 if i['cls'] == 'hav' else 25000
             print(ok(i['verts'] <= budget and not i['nan']), '%s: %d punkter (budsjett %d), bygget på %.1f ms, uten NaN' % (t, i['verts'], budget, budget and i['ms']))
-            L = i['len']; print(ok(abs(i['box'][1] - L) / L < 0.08), '%s: modellen er %.2f m lang mot %.2f m i dataene' % (t, i['box'][1], L))
+            L = i['len']
+            if i['glb']:
+                # the hull between the waterline and the deck, without the bow roller and the gantry over the stern
+                print(ok(abs(i['hull'][1] - L) / L < 0.03 and abs(i['hull'][0] - i['beam']) / i['beam'] < 0.05 and i['geoOk']), '%s (GLB): skroget er %.2f m langt og %.2f m bredt mot %.2f x %.2f m, og alle plassene for 3D-visningen finnes' % (t, i['hull'][1], i['hull'][0], L, i['beam']))
+            else: print(ok(abs(i['box'][1] - L) / L < 0.08), '%s: modellen er %.2f m lang mot %.2f m i dataene' % (t, i['box'][1], L))
         # the market's showroom: the boat afloat off the harbour, the camera turning round it, a chip with the way back
         if not ONLY or 'showroom' in ONLY:
             await pg.evaluate("(()=>{ const b = S.boat; b.type = 'skiff'; applyVessel(); G3.vesselChanged(); b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; })()"); await pg.wait_for_timeout(1500)
@@ -53,7 +60,7 @@ async def main():
         # and a screenshot from beside a boat that fishes (vessel_npc_*.png)
         if not ONLY or 'npc' in ONLY:
             npc = await pg.evaluate("""(()=>{ const R = {kits:FLEET.map(f => { const t = npcKit(f.L, f.B), V = VESSELS[t]; return [f.n, f.L, t, +(f.L / V.len).toFixed(2), +(f.B / V.beam).toFixed(2)]; })};
-              R.verts = [...new Set(R.kits.map(k => k[2]))].map(t => [t, npcModel(t, 1, 1).o.p.length / 3, npcModel(t, 0.3, 2).o.p.length / 3]);
+              R.verts = [...new Set(R.kits.map(k => k[2]))].map(t => { const m = npcModel(t, 1, 1); return [t, m.o.p.length / 3, npcModel(t, 0.3, 2).o.p.length / 3, !!m.glb]; });
               R.liv = (() => { const a = npcModel('sjark', 0.3, 0).o.c, b = npcModel('sjark', 0.3, 1).o.c; let d = 0; for (let i = 0; i < a.length; i++) if (Math.abs(a[i] - b[i]) > 1e-3) d++; return d; })();
               // a day in April when a boat is on her ground: the player's skiff lies 25 m off her
               let at = null; for (let m = 0; m < 24 * 60 && !at; m += 10){ const t = (Date.UTC(2028, 3, 12, 0) - EPOCH) / 6e4 + m, n = npcStates(t / 60).find(q => q.fleet && q.st === 'fishing' && FLEET[q.fi].L > 10); if (n) at = {t, n}; }
@@ -67,7 +74,7 @@ async def main():
             await pg.evaluate("S.mult = 1")
             sc = [k[3] for k in npc['kits']] + [k[4] for k in npc['kits']]
             print(ok(all(0.8 <= x <= 1.25 for x in sc) and all(k[2] for k in npc['kits'])), 'every boat in the local fleet gets a kit model within 20 % of her length and beam', [k[:3] for k in npc['kits']])
-            print(ok(all(v[1] <= 25000 and v[2] <= 6000 for v in npc['verts']) and npc['liv'] > 0), 'near versions under 25 000 points, middle under 6 000, and the liveries change the colours', npc['verts'])
+            print(ok(all(v[1] <= (120000 if v[3] else 25000) and v[2] <= (10000 if v[3] else 6000) for v in npc['verts']) and npc['liv'] > 0), 'near versions under 25 000 points (detailed GLB models 120 000), middle under 6 000 (GLB 10 000), and the liveries change the colours', npc['verts'])
             print(ok(bool(npc.get('npc'))), 'found a boat on her ground for the screenshots', npc.get('npc'))
         print('errors:', errs[:5]); await br.close()
 

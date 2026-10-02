@@ -83,7 +83,7 @@ async def main():
               S.sales = S.sales.length >= 3 ? S.sales : [{t:0, total:1}, {t:0, total:1}, {t:0, total:1}];
               const dr = () => document.getElementById('drawerBody'), tap = sel => { const e = dr().querySelector(sel); if (e) e.click(); return !!e; };
               DOCK.open('fartoy'); tap('[data-pa=mksel]:not([data-k])');
-              const cards = t => { tap('[data-pa=mktab][data-s=' + t + ']'); return [...dr().querySelectorAll('.vcard')].map(c => [c.dataset.k, c.dataset.o || '', !!c.querySelector('svg polygon')]); };
+              const cards = t => { tap('[data-pa=mktab][data-s=' + t + ']'); return [...dr().querySelectorAll('.vcard')].map(c => [c.dataset.k, c.dataset.o || '', !!c.querySelector('svg polygon, img.vimg')]); };
               R.tabs = {open:cards('open'), lic:cards('lic'), kyst:cards('kyst'), hav:cards('hav')};
               // the sheet of an ocean vessel: every section, and no buy button
               tap('[data-pa=mksel][data-k=bunntral]'); const sh = dr().querySelector('.vsheet'); R.havSecs = [...sh.querySelectorAll('.vsec h5')].map(e => e.textContent); R.havBuy = !!sh.querySelector('[data-pa=buy]'); R.havText = sh.textContent.includes('Bredde') && sh.textContent.includes('Dypgående') && sh.textContent.includes('Vekt');
