@@ -79,7 +79,7 @@ function legHazard(a, c, sd){
   const L = dist(a, c), n = Math.max(1, Math.ceil(L / 0.03)); let minD = 1e9;
   for (let i = 0; i <= n; i++){ const p = {x:a.x + (c.x - a.x) * i / n, y:a.y + (c.y - a.y) * i / n}; if (inHarbour(p) || isLand(p)) continue; const d = depthF(p); if (d < minD) minD = d; }
   let rk = 0; if (!(inHarbour(a) && inHarbour(c))){ const x0 = Math.min(a.x, c.x) - 0.03, x1 = Math.max(a.x, c.x) + 0.03, y0 = Math.min(a.y, c.y) - 0.03, y1 = Math.max(a.y, c.y) + 0.03, dx = c.x - a.x, dy = c.y - a.y, L2 = dx * dx + dy * dy || 1e-9;
-    for (const q of SEAMARKS.rocks){ if (q[0] < x0 || q[0] > x1 || q[1] < y0 || q[1] > y1 || inHarbour({x:q[0], y:q[1]})) continue; const u = clamp(((q[0] - a.x) * dx + (q[1] - a.y) * dy) / L2, 0, 1); if (Math.hypot(a.x + dx * u - q[0], a.y + dy * u - q[1]) < 0.025) rk++; } }
+    for (const q of rocksIn(x0, y0, x1, y1)){ if (q[0] < x0 || q[0] > x1 || q[1] < y0 || q[1] > y1 || inHarbour({x:q[0], y:q[1]})) continue; const u = clamp(((q[0] - a.x) * dx + (q[1] - a.y) * dy) / L2, 0, 1); if (Math.hypot(a.x + dx * u - q[0], a.y + dy * u - q[1]) < 0.025) rk++; } }
   return {minD, rocks:rk, unsafe:minD < sd || rk > 0};
 }
 let hzCache = {k:'', v:[]};
@@ -105,7 +105,7 @@ function groundCheck(a, c){
   const L = dist(a, c), n = Math.max(1, Math.ceil(L / 0.02));
   const tl = tideCD(S.t / 60);
   for (let i = 1; i <= n; i++){ const p = {x:a.x + (c.x - a.x) * i / n, y:a.y + (c.y - a.y) * i / n}; if (inHarbour(p)) continue; if (!isLand(p) && depthF(p) + tl < BOAT.draft) return p; }
-  if (!inHarbour(c)){ const dx = c.x - a.x, dy = c.y - a.y, L2 = dx * dx + dy * dy || 1e-9; for (const q of SEAMARKS.rocks){ if (Math.abs(q[0] - c.x) > L + 0.02 || Math.abs(q[1] - c.y) > L + 0.02) continue; const u = clamp(((q[0] - a.x) * dx + (q[1] - a.y) * dy) / L2, 0, 1); if (Math.hypot(a.x + dx * u - q[0], a.y + dy * u - q[1]) < 0.012 && Math.random() < 0.5) return {x:q[0], y:q[1]}; } }
+  if (!inHarbour(c)){ const dx = c.x - a.x, dy = c.y - a.y, L2 = dx * dx + dy * dy || 1e-9; for (const q of rocksIn(c.x - L - 0.02, c.y - L - 0.02, c.x + L + 0.02, c.y + L + 0.02)){ if (Math.abs(q[0] - c.x) > L + 0.02 || Math.abs(q[1] - c.y) > L + 0.02) continue; const u = clamp(((q[0] - a.x) * dx + (q[1] - a.y) * dy) / L2, 0, 1); if (Math.hypot(a.x + dx * u - q[0], a.y + dy * u - q[1]) < 0.012 && Math.random() < 0.5) return {x:q[0], y:q[1]}; } }
   return null;
 }
 function runAground(p){
@@ -115,12 +115,20 @@ function runAground(p){
   if (hooks.onAground) hooks.onAground();
 }
 function rocksNear(a, b, r){ let n = 0; const x0 = Math.min(a.x, b.x) - r, x1 = Math.max(a.x, b.x) + r, y0 = Math.min(a.y, b.y) - r, y1 = Math.max(a.y, b.y) + r, dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy || 1e-9;
-  for (const q of SEAMARKS.rocks){ if (q[0] < x0 || q[0] > x1 || q[1] < y0 || q[1] > y1) continue; const u = clamp(((q[0] - a.x) * dx + (q[1] - a.y) * dy) / L2, 0, 1); if (Math.hypot(a.x + dx * u - q[0], a.y + dy * u - q[1]) < r) n++; } return n; }
+  for (const q of rocksIn(x0, y0, x1, y1)){ if (q[0] < x0 || q[0] > x1 || q[1] < y0 || q[1] > y1) continue; const u = clamp(((q[0] - a.x) * dx + (q[1] - a.y) * dy) / L2, 0, 1); if (Math.hypot(a.x + dx * u - q[0], a.y + dy * u - q[1]) < r) n++; } return n; }
 const PIERS = /*@include(data/piers.json)*/null;
 const SEAMARKS = /*@include(data/seamarks.json)*/null;
 // into the game's frame: piers are [type, x, y, x, y, ...], lights, marks and rocks start with x, y (km); bridges end with x0, z0, x1, z1 (m)
 for (const q of PIERS) for (let i = 1; i + 1 < q.length; i += 2){ q[i] += FR.ox; q[i + 1] += FR.oy; }
 for (const k of ['lights', 'marks', 'rocks']) for (const q of SEAMARKS[k]){ q[0] += FR.ox; q[1] += FR.oy; }
+// the rocks by 1 km cell, so a search looks only at the cells its box touches (and in the order of SEAMARKS.rocks, as before)
+const ROCKIDX = new Map();
+SEAMARKS.rocks.forEach((q, i) => { const k = gridKey(Math.floor(q[0]), Math.floor(q[1])); let a = ROCKIDX.get(k); if (!a) ROCKIDX.set(k, a = []); a.push(i); });
+function rocksIn(x0, y0, x1, y1){
+  const out = [];
+  for (let gy = Math.floor(y0); gy <= Math.floor(y1); gy++) for (let gx = Math.floor(x0); gx <= Math.floor(x1); gx++){ const a = ROCKIDX.get(gridKey(gx, gy)); if (a) for (const i of a) out.push(i); }
+  out.sort((a, b) => a - b); return out.map(i => SEAMARKS.rocks[i]);
+}
 for (const q of BRIDGES){ q[4] += FR.ox * 1000; q[5] += FR.oy * 1000; q[6] += FR.ox * 1000; q[7] += FR.oy * 1000; }
 function gridBilinear(arr, nx, ny, c, p){
   const gx = clamp((p.x - FR.ox) / c - 0.5, 0, nx - 1.001), gy = clamp((p.y - FR.oy) / c - 0.5, 0, ny - 1.001), ix = Math.floor(gx), iy = Math.floor(gy), fx = gx - ix, fy = gy - iy, i = iy * nx + ix;
