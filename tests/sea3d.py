@@ -1,7 +1,8 @@
 from _env import GAME, GAME_TUT, boot
 # The sea in 3D (view3d.js): the local sea from the sea-state textures, smooth through every change of wind and place, whitecaps as
 # Monahan and O'Muircheartaigh (1980) give them, calm in the lee, spindrift and haze in a storm, and the same without vertex textures.
-# Pictures: sea3d_bf.png (Beaufort 0-11 on the Husøy ground) and sea3d_lee.png (windward, lee, harbour and sound in a gale).
+# Pictures: sea3d_bf.png (Beaufort 0-11 on the Husøy ground), sea3d_lee.png (windward, lee, harbour and sound in a gale) and
+# sea3d_wake.png (the wake of a planing skiff, a sjark and a 21 m coaster at speed).
 import asyncio, json, os
 from playwright.async_api import async_playwright
 from PIL import Image, ImageDraw, ImageFont
@@ -103,6 +104,19 @@ async def main():
             f = f'sea3d_{key}.png'; await pg.screenshot(path=f); tiles.append((f, f'{name} · vindsjø {s[0]:.1f} m, dønning {s[1]:.1f} m'))
         await sheet(tiles, 'sea3d_lee.png', 2)
         R['lee'] = lee
+        # 8. the boat's own waves at speed: a planing skiff, a sjark near hull speed and a 21 m coaster, on a calm sea, seen from astern
+        tiles, wake = [], {}
+        for vt, kn in [('skiff', 18), ('sjark', 8.5), ('kyst21', 10)]:
+            await pg.evaluate(f"""(() => {{ WX_FORCE = {{w:3, d:315}}; S.mult = 1; const b = S.boat, g = GROUNDS[0].p; b.type = '{vt}'; applyVessel(); G3.vesselChanged();
+              b.pos = {{x:g.x, y:g.y}}; b.heading = 0; S.plan = {{wps:[{{x:g.x, y:g.y - 6, port:null, fish:0}}], idx:0, speed:{kn}, returning:false}}; b.status = 'sailing'; b.port = null; b.v = {kn};
+              const D = G3._debug; D.bv.init = false; D.WV.init = false; const c = D.cam; c.helm = false; c.dist = 46; c.pitch = 0.42; c.yaw = 0; }})()""")
+            await pg.wait_for_timeout(9000)
+            wake[vt] = await pg.evaluate("""(() => { const D = G3._debug, K = D.WK, bv = D.bv, fx = Math.sin(bv.head), fz = -Math.cos(bv.head), L = K.u2[0];
+              const lam = 2 * Math.PI / K.u1[0]; return {kn:+K.kn.toFixed(2), Fr:+K.Fr.toFixed(2), on:K.u3[3], A:+K.u1[1].toFixed(2), trans:+K.u1[2].toFixed(2), bow:+K.u2[1].toFixed(2), lam:+lam.toFixed(1), reach:Math.round(K.u1[3]), trail:D.TRAIL.length}; })()""")
+            f = f'sea3d_wake_{vt}.png'; await pg.screenshot(path=f); tiles.append((f, f'{vt} {kn} kn · Fr {wake[vt]["Fr"]} · bølgelengde {wake[vt]["lam"]} m'))
+        await sheet(tiles, 'sea3d_wake.png', 3)
+        R['wake'] = wake
+        await pg.evaluate("(() => { S.mult = 0.00001; const b = S.boat; b.type = 'skiff'; applyVessel(); G3.vesselChanged(); b.status = 'idle'; S.plan = null; b.v = 0; })()")
         # 7. a GPU with no textures in the vertex shader: the same page, the waves from the values at the boat
         pg2 = await b.new_page(viewport={'width': 640, 'height': 400}); errs2 = []; pg2.on('pageerror', lambda e: errs2.append(str(e)))
         await boot(pg2, GAME_TUT + '#notut,novtf'); await pg2.evaluate(SETUP)
@@ -118,5 +132,8 @@ async def main():
         L = R['lee']
         print(ok(L['wind'][0] > 4 and L['lee'][0] < 0.3 * L['wind'][0] and L['harbour'][0] < 0.2 * L['wind'][0] and L['harbour'][1] < 0.3), 'in a gale from NW the ground off Husøy has the full sea, the lee from the south a fraction, the harbour almost none')
         print(ok(R['novtf']['vtf'] is False and not R['novtfErrors']), 'without textures in the vertex shader (#novtf) the sea is drawn from the values at the boat, with no errors')
+        W = R['wake']
+        print(ok(all(W[k]['on'] == 1 for k in W) and W['skiff']['trans'] < 0.1 and W['sjark']['trans'] > 0.9 and W['kyst21']['trans'] > 0.9), 'a planing skiff leaves divergent waves only; the displacement hulls also the transverse waves behind the stern')
+        print(ok(all(abs(W[k]['lam'] - 2 * 3.14159 * (W[k]['kn'] * 0.5144) ** 2 / 9.81) < 0.3 for k in W) and abs(W['sjark']['kn'] - 8.5) < 1 and 0.2 < W['sjark']['A'] < 0.6 and 0.05 < W['skiff']['A'] < 0.3), 'the wake waves are 2 pi v^2 / g long, highest near hull speed and lower for the planing skiff')
         print('errors:', errs[:4]); await b.close()
 asyncio.run(main())
