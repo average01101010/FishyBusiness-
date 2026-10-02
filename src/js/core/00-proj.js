@@ -60,5 +60,5 @@ function utm33inv(E, N){
 function natP(lat, lon){ const u = utm33(lat, lon); return {x:(u.E - UTM.e0) / 1000, y:(UTM.n1 - u.N) / 1000}; }
 function natLL(p){ return utm33inv(p.x * 1000 + UTM.e0, UTM.n1 - p.y * 1000); }
 // one key for a grid cell (ix, iy) that holds for the whole country at any cell size, also below zero: 2^20 cells each way
-const GK = (ix, iy) => (iy + 524288) * 1048576 + (ix + 524288);
-const GKX = k => k % 1048576 - 524288, GKY = k => Math.floor(k / 1048576) - 524288;
+const gridKey = (ix, iy) => (iy + 524288) * 1048576 + (ix + 524288);
+const gridKeyX = k => k % 1048576 - 524288, gridKeyY = k => Math.floor(k / 1048576) - 524288;

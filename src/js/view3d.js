@@ -526,7 +526,7 @@ const G3 = (() => {
     const B = {n, x:new Float32Array(n), z:new Float32Array(n), l:new Float32Array(n), w:new Float32Array(n), a:new Float32Array(n), t:new Uint8Array(n), lv:new Uint8Array(n), cells:new Map()};
     for (let i = 0; i < n; i++){
       B.x[i] = X[i] * U; B.z[i] = Y[i] * U; B.l[i] = dec(Lq[i]); B.w[i] = Math.max(1.5, dec(Wq[i])); B.a[i] = Aq[i] / 256 * Math.PI; B.t[i] = Tq[i] & 15; B.lv[i] = Tq[i] >> 4;
-      const k = GK(Math.floor(B.x[i] / 1000), Math.floor(B.z[i] / 1000));
+      const k = gridKey(Math.floor(B.x[i] / 1000), Math.floor(B.z[i] / 1000));
       if (bldOnUnit(B, i)) continue;   // a harbour unit stands there
       let c = B.cells.get(k); if (!c) B.cells.set(k, c = []); c.push(i);
     }
@@ -621,7 +621,7 @@ const G3 = (() => {
   // trees: birch woods below the tree line with some pine, kept off roads and buildings; colours follow the season
   const treeSeason = () => { const mo = gDate(S.t / 60).getUTCMonth(); return mo >= 5 && mo <= 7 ? 1 : mo === 8 ? 2 : 0; };
   function addTrees(m, key, idx, snowy){
-    const gz = GKY(key), gx = GKX(key), x0 = gx * 1000, z0 = gz * 1000, occ = new Uint8Array(1600);
+    const gz = gridKeyY(key), gx = gridKeyX(key), x0 = gx * 1000, z0 = gz * 1000, occ = new Uint8Array(1600);
     const mark = (x, z, r) => { const cx = Math.floor((x - x0) / 25), cz = Math.floor((z - z0) / 25); for (let a = -r; a <= r; a++) for (let b = -r; b <= r; b++){ const i = cx + b, j = cz + a; if (i >= 0 && j >= 0 && i < 40 && j < 40) occ[j * 40 + i] = 1; } };
     for (const i of idx) mark(BLD.x[i], BLD.z[i], Math.max(BLD.l[i], BLD.w[i]) > 30 ? 2 : 1);
     if (ROADS) for (const r of ROADS){ if (r.bb[2] < x0 - 30 || r.bb[0] > x0 + 1030 || r.bb[3] < z0 - 30 || r.bb[1] > z0 + 1030) continue; for (let j = 1; j < r.xs.length; j++){ const L = Math.hypot(r.xs[j] - r.xs[j - 1], r.zs[j] - r.zs[j - 1]), n = Math.ceil(L / 12); for (let q = 0; q <= n; q++) mark(r.xs[j - 1] + (r.xs[j] - r.xs[j - 1]) * q / n, r.zs[j - 1] + (r.zs[j] - r.zs[j - 1]) * q / n, 0); } }
@@ -648,7 +648,7 @@ const G3 = (() => {
   }
   function addRoads(m, key, snowy){
     if (!ROADS) return;
-    const gz = GKY(key), gx = GKX(key), x0 = gx * 1000, z0 = gz * 1000, W = [7.5, 6.5, 5.5, 5, 3.6];
+    const gz = gridKeyY(key), gx = gridKeyX(key), x0 = gx * 1000, z0 = gz * 1000, W = [7.5, 6.5, 5.5, 5, 3.6];
     const col = snowy ? [0.5, 0.52, 0.55] : [0.4, 0.42, 0.44], edge = snowy ? [0.62, 0.63, 0.65] : [0.55, 0.54, 0.5];
     for (const r of ROADS){
       if (r.bb[2] < x0 || r.bb[0] > x0 + 1000 || r.bb[3] < z0 || r.bb[1] > z0 + 1000) continue;
@@ -678,7 +678,7 @@ const G3 = (() => {
     for (const [k, c] of CH) if (Math.abs(c.x - cx) > half + 700 || Math.abs(c.z - cz) > half + 700 || (c.mesh && c.detail !== want(c.x, c.z))){ freeChunk(c); CH.delete(k); }
     const cand = [];
     for (let gz = Math.floor((cz - half) / 1000); gz <= Math.floor((cz + half) / 1000); gz++) for (let gx = Math.floor((cx - half) / 1000); gx <= Math.floor((cx + half) / 1000); gx++){
-      const k = GK(gx, gz); if (CH.has(k)) continue;
+      const k = gridKey(gx, gz); if (CH.has(k)) continue;
       const mx = gx * 1000 + 500, mz = gz * 1000 + 500; cand.push([Math.hypot(mx - bv.x, mz - bv.z), k, mx, mz]);
     }
     cand.sort((a, b) => a[0] - b[0]);
@@ -2391,7 +2391,7 @@ const G3 = (() => {
   function camSolid(x, z, sx, sz, ry, y0, y1){
     const b = {x, z, c:Math.cos(ry), s:Math.sin(ry), hx:sx / 2, hz:sz / 2, y0, y1, m:0}, r = Math.hypot(sx, sz) / 2;
     for (let gx = Math.floor((x - r) / CAMC); gx <= Math.floor((x + r) / CAMC); gx++) for (let gz = Math.floor((z - r) / CAMC); gz <= Math.floor((z + r) / CAMC); gz++){
-      const k = GK(gx, gz); let a = CAMG.get(k); if (!a) CAMG.set(k, a = []); a.push(b); }
+      const k = gridKey(gx, gz); let a = CAMG.get(k); if (!a) CAMG.set(k, a = []); a.push(b); }
   }
   // the buildings of one 1 km map cell, as tall as buildChunk makes them at most (walls, roof and the rise of the ground)
   const BLD_WALL = {1:6, 3:2.6, 4:2.9, 5:3.1, 6:5.2, 7:2.3, 8:7.5, 11:7, 12:1.8, 13:2.6, 14:2.5, 15:1.2}, BLD_ROOF = {3:[0.22, 2], 5:[0.45, 6], 6:[0.4, 7], 7:[0.3, 2], 11:[0.6, 9]};
@@ -2412,9 +2412,9 @@ const G3 = (() => {
     const dx = e[0] - o[0], dy = e[1] - o[1], dz = e[2] - o[2], x0 = Math.min(o[0], e[0]), x1 = Math.max(o[0], e[0]), z0 = Math.min(o[2], e[2]), z1 = Math.max(o[2], e[2]);
     const g0 = Math.floor(x0 / CAMC), g1 = Math.floor(x1 / CAMC), h0 = Math.floor(z0 / CAMC), h1 = Math.floor(z1 / CAMC);
     if ((g1 - g0 + 1) * (h1 - h0 + 1) > 36) return 1;   // far out the camera is high above everything
-    for (let kx = Math.floor((x0 - 60) / 1000); kx <= Math.floor((x1 + 60) / 1000); kx++) for (let kz = Math.floor((z0 - 60) / 1000); kz <= Math.floor((z1 + 60) / 1000); kz++) camBuildings(GK(kx, kz));
+    for (let kx = Math.floor((x0 - 60) / 1000); kx <= Math.floor((x1 + 60) / 1000); kx++) for (let kz = Math.floor((z0 - 60) / 1000); kz <= Math.floor((z1 + 60) / 1000); kz++) camBuildings(gridKey(kx, kz));
     let best = 1; const st = ++camStamp, r = [0, 0];
-    for (let gx = g0; gx <= g1; gx++) for (let gz = h0; gz <= h1; gz++) for (const b of CAMG.get(GK(gx, gz)) || []){
+    for (let gx = g0; gx <= g1; gx++) for (let gz = h0; gz <= h1; gz++) for (const b of CAMG.get(gridKey(gx, gz)) || []){
       if (b.m === st) continue; b.m = st;
       const px = o[0] - b.x, pz = o[2] - b.z; r[0] = -Infinity; r[1] = Infinity;
       if (!slab(px * b.c - pz * b.s, dx * b.c - dz * b.s, -b.hx, b.hx, r) || !slab(px * b.s + pz * b.c, dx * b.s + dz * b.c, -b.hz, b.hz, r) || !slab(o[1], dy, b.y0, b.y1, r)) continue;
@@ -2423,7 +2423,7 @@ const G3 = (() => {
     return best;
   }
   // is a point inside something solid (for the tests)
-  function camInside(x, y, z){ camBuildings(GK(Math.floor(x / 1000), Math.floor(z / 1000))); for (const b of CAMG.get(GK(Math.floor(x / CAMC), Math.floor(z / CAMC))) || []){ const px = x - b.x, pz = z - b.z, lx = px * b.c - pz * b.s, lz = px * b.s + pz * b.c; if (Math.abs(lx) <= b.hx && Math.abs(lz) <= b.hz && y >= b.y0 && y <= b.y1) return true; } return false; }
+  function camInside(x, y, z){ camBuildings(gridKey(Math.floor(x / 1000), Math.floor(z / 1000))); for (const b of CAMG.get(gridKey(Math.floor(x / CAMC), Math.floor(z / CAMC))) || []){ const px = x - b.x, pz = z - b.z, lx = px * b.c - pz * b.s, lz = px * b.s + pz * b.c; if (Math.abs(lx) <= b.hx && Math.abs(lz) <= b.hz && y >= b.y0 && y <= b.y1) return true; } return false; }
   let lastEye = [0, 0, 0];
 
   // ---------- frame ----------

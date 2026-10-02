@@ -31,7 +31,7 @@ function heatValue(v, sp){ return sp === 'torsk' ? v[0] : sp === 'hyse' ? v[1] :
 
 // the cells: key → {x, y (centre), v, t (game minute worked out), h (stock hour), seen (game minute last inside the disk)}
 const HEATC = {key:'', tier:null, cs:0, cells:new Map(), queue:[], qi:0, busy:false, t:-1, rev:0, lastTick:0, stats:{slices:0, maxSlice:0, n:0, ms:0}};
-const heatKey = GK;
+const heatKey = gridKey;
 function heatReset(){ HEATC.key = ''; HEATC.cells.clear(); HEATC.queue = []; HEATC.qi = 0; HEATC.rev++; }
 // called from the UI's tick: mark what the disk covers, queue what is missing or stale (nearest first, and a little ahead of a
 // boat under way), forget what has faded, and start the work
