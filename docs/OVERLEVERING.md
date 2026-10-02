@@ -242,6 +242,11 @@ Kartdataene lages i `tools/map/` (i git, uten dataene). Mellomlageret ligger i `
   - **Skog 50 m** fra Overture (ESA WorldCover): 25 % av ruta mot 0,2 % før. Det gir rundt 20 % flere trær i 3D.
   - **Dybde og eksponering** kommer som før fra de gamle Senja-rastrene.
   - Bygget tar 30 s med varmt mellomlager.
+- **Fyllingen av polygonene** (`fill` i `region.py`):
+  - En celle er land når sentrum ligger inne. Fyllingen er partall/oddetall per polygon, så hull blir hull, og den er sjekket mot punkt-i-polygon.
+  - PILs fylling tok med hver celle en kant rørte, så landet vokste opptil én celle. På 200 m-masken var det opptil 200 m, og i Gisundet stengte det testruta.
+- **Terrenget i sjøen** er sjøbunnen fra dybdelaget. Terrarium har sjøen på 0 ved z13. Det ga −0,5 m overalt, som 3D tok for grunner og tegnet skum på (66 % mot 12 % i `sea3d`).
+- **Den nye kysten i Gisundet:** OSM fra 2026 har et 40 m smalt landstykke ved 69,3075° N 17,984° Ø, der den gamle kysten hadde vann. Testrute 4 (`tests/routes.json`) har fått vendepunktet sitt flyttet 150 m vest.
 - **Vannet foran kaiene** (`inHarbourPocket` i `01-world.js`):
   - Havneenhetens basseng og 50 m ut fra designerens kaifront (`QUAYS`, bare Finnsnes har ingen enhet) er vann, både i `isLand` og i terrenget i 3D.
   - **Finnsnes:** OSM-kysten fra 2026 ligger 30–45 m ute foran kaifronten designeren tegnet etter flyfoto 29.09.2026. Det kan være en ny utfylling eller en kai som ikke er på bildene. **Bør sjekkes på stedet eller mot nyere bilder.** Inntil videre gjelder designerens kai, og vannet foran den.

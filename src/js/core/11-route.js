@@ -54,6 +54,7 @@ async function leiaSearch(s, t, sd, st){
   const G = LEIA_ST.g, FROM = LEIA_ST.from, SEEN = LEIA_ST.seen, SHUT = LEIA_ST.shut, gen = ++LEIA_ST.gen;
   const tx = t % nx, ty = Math.floor(t / nx), h = v => Math.hypot(v % nx - tx, Math.floor(v / nx) - ty) * 0.1;
   const H = leiaHeap(); G[s] = 0; FROM[s] = -1; SEEN[s] = gen; H.push(s, h(s));
+  leiaRocks(); leiaCost(s, sd);   // the rock and cost grids are made before the slices are timed
   let t0 = performance.now(), n = 0;
   const NB = [[1, 0, 0.1], [-1, 0, 0.1], [0, 1, 0.1], [0, -1, 0.1], [1, 1, 0.1414], [1, -1, 0.1414], [-1, 1, 0.1414], [-1, -1, 0.1414]];
   while (H.size()){

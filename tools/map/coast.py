@@ -27,9 +27,14 @@ def vn(t, s):
     return h2(i, s) * (1 - u) + h2(i + 1, s) * u
 def sstep(a, b, x): t = np.clip((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t)
 
+# the sea floor under the ground layer (Terrarium has the sea at 0, which the 3D view took for shallows): the depth, 25 m from 50 m
+def seafloor(out):
+    dep = ndimage.zoom(out['depth'].astype(np.float32) / 2, 2, order=1)[:2000, :2000]
+    out['hgt'] = np.where(out['mask'] > 0, out['hgt'], hgtEnc(-np.maximum(dep, 0.5))).astype(np.int16); return out
+
 def tile(tx, ty):
     f = os.path.join(TD, f'{tx}_{ty}.npz')
-    if os.path.exists(f): return dict(np.load(f))
+    if os.path.exists(f): return seafloor(dict(np.load(f)))
     t0 = time.time(); R = frame.Region(f't{tx}_{ty}', tx * 5, ty * 5, tx * 5 + 5, ty * 5 + 5); box = R.lonlat_box(1); out = {}
     ix0, iy0, nx, ny = R.grid(0.025)
     tab = features('base/land', box, ['geometry', 'subtype']); M = fill(polys_of(tab, lambda s: s == 'land'), 0.025, ix0, iy0, nx, ny) if tab is not None else np.zeros((ny, nx), np.uint8)
@@ -65,6 +70,7 @@ def tile(tx, ty):
     if ins.any(): d[ins] = legacy.at(legacy.load()['depth'], X[ins], Y[ins]) / 2
     land50 = M.reshape(fny, 2, fnx, 2).max(axis=(1, 3)) > 0
     out['depth'] = np.where(land50 & ~ins, 0, np.round(d * 2)).astype(np.int16)
+    seafloor(out)
     out['sec'] = np.array(time.time() - t0)
     np.savez_compressed(f, **out); return out
 

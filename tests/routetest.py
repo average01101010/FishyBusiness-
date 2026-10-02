@@ -150,7 +150,7 @@ async def leia(p):
     check(all(r['n'] <= 12 for r in ok), 'Følg leia: høyst 12 WP', [r['n'] for r in ok])
     check(all(r['slice'] < 16 for r in ok), 'Følg leia: hver bit tar under 16 ms', [r['slice'] for r in ok])
     tight = [r['tight'] for r in ok[:-1]]; hand = [r['hand'] for r in ok[:-1]]
-    check(all(1.0 <= x <= 1.35 for x in tight), 'Følg leia er litt lengre enn den strammeste veien langs land', tight)
+    check(all(0.99 <= x <= 1.35 for x in tight), 'Følg leia er litt lengre enn den strammeste veien langs land (eller like lang: 1 % for avrundingen)', tight)
     check(all(0.85 <= x <= 1.35 for x in hand), 'og 0,85–1,35 ganger de håndtegnede testrutene (de er ikke de korteste)', hand)
 
     # the button, then a tap on Botnhamn: the route follows the fairway there, and undo takes it all away at once

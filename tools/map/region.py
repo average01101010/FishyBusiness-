@@ -2,13 +2,13 @@
 #   mask    land at 25 m: Overture's land polygons (OpenStreetMap's coastline), filled at the cells' centres in the national frame
 #   dc      distance from open water to the land at 100 m (km): any land in a 100 m cell makes it 0, then Euclidean between centres
 #           (mask and dc are 'sim' since phase K6: read near the boats; what looks far reads the national core, national.py)
-#   hgt     the ground at 25 m: Terrarium z13 (Kartverket's 10 m terrain in Norway), above 0 on land and below on the sea
+#   hgt     the ground at 25 m: Terrarium z13 (Kartverket's 10 m terrain in Norway) on land, above 0; on the sea the sea floor from
+#           the depth layer (Terrarium has the sea at 0 there, which the 3D view took for shallows everywhere)
 #   forest  50 m: Overture's land cover 'forest' (ESA WorldCover 10 m)
 #   depth   50 m, half metres: Kartverket's depth model as the legacy Senja raster has it (until Geonorge is open)
 #   core    the national core (national.py core_layers: land200, dc200, expo), the same for every region
 #   python3 tools/map/region.py senja [out]     (out: src/data/map, which the build copies to dist/map)
 import os, sys, json, time, numpy as np
-from PIL import Image, ImageDraw
 from scipy import ndimage
 from shapely import from_wkb
 import frame, terrain, legacy, pack
@@ -18,16 +18,27 @@ def polys_of(tab, keep):
     g = from_wkb(tab.column('geometry').to_numpy(zero_copy_only=False)); sub = tab.column('subtype').to_pylist()
     return [p for p, s in zip(g, sub) if keep(s) and p.geom_type in ('Polygon', 'MultiPolygon')]
 
-# polygons (lon/lat) filled on a layer's cells: a cell is in when its centre is (PIL's fill, holes cut after each polygon)
+# polygons (lon/lat) filled on a layer's cells: a cell is in when its centre is inside (even-odd per polygon, so holes are holes), and
+# overlapping polygons add up. No outline: PIL's fill took in every cell an edge touched, and the land grew by up to a cell.
 def fill(polys, c, ix0, iy0, nx, ny):
-    im = Image.new('L', (nx, ny), 0); dr = ImageDraw.Draw(im)
-    def ring(cs):
-        a = np.asarray(cs); x, y = frame.to_nat(a[:, 0], a[:, 1]); return list(zip(x / c - 0.5 - ix0, y / c - 0.5 - iy0))
-    for p in polys:
+    R, X, P = [], [], []
+    for k, p in enumerate(polys):
         for q in getattr(p, 'geoms', [p]):
-            dr.polygon(ring(q.exterior.coords), fill=1)
-            for h in q.interiors: dr.polygon(ring(h.coords), fill=0)
-    return np.asarray(im, np.uint8)
+            for ring in [q.exterior, *q.interiors]:
+                a = np.asarray(ring.coords); x, y = frame.to_nat(a[:, 0], a[:, 1]); gx = x / c - ix0 - 0.5; gy = y / c - iy0 - 0.5   # cell centres at integers
+                x0, y0, x1, y1 = gx[:-1], gy[:-1], gx[1:], gy[1:]; lo = np.minimum(y0, y1); hi = np.maximum(y0, y1)
+                r0 = np.maximum(np.ceil(lo), 0).astype(np.int64); r1 = np.minimum(np.ceil(hi) - 1, ny - 1).astype(np.int64)   # rows with lo <= r < hi
+                cnt = np.maximum(r1 - r0 + 1, 0); m = cnt > 0
+                if not m.any(): continue
+                e = np.repeat(np.flatnonzero(m), cnt[m]); rr = r0[e] + (np.arange(len(e)) - np.repeat(np.cumsum(cnt[m]) - cnt[m], cnt[m]))
+                R.append(rr); X.append(x0[e] + (rr - y0[e]) * (x1[e] - x0[e]) / (y1[e] - y0[e])); P.append(np.full(len(e), k))
+    out = np.zeros((ny, nx + 1), np.int32)
+    if R:
+        R = np.concatenate(R); X = np.concatenate(X); P = np.concatenate(P); o = np.lexsort((X, P, R)); R, X = R[o], X[o]
+        a, b = R[0::2], np.stack([X[0::2], X[1::2]], 1) if len(R) % 2 == 0 else None
+        c0 = np.clip(np.ceil(b[:, 0]), 0, nx).astype(np.int64); c1 = np.clip(np.floor(b[:, 1]) + 1, 0, nx).astype(np.int64); ok = c1 > c0
+        np.add.at(out, (a[ok], c0[ok]), 1); np.add.at(out, (a[ok], c1[ok]), -1)
+    return (np.cumsum(out, axis=1)[:, :nx] > 0).astype(np.uint8)
 
 hgtEnc = lambda v: np.sign(v) * np.where(np.abs(v) < 9.75, np.round(np.abs(v) * 2), 20 + np.round((np.abs(v) - 10) / 2))
 
@@ -54,6 +65,9 @@ def build(R):
     G = legacy.load()
     dx0, dy0, dnx, dny = R.grid(0.05); X, Y = np.meshgrid((dx0 + np.arange(dnx) + 0.5) * 0.05, (dy0 + np.arange(dny) + 0.5) * 0.05)
     L['depth'] = dict(c=0.05, ix0=dx0, iy0=dy0, nx=dnx, ny=dny, type='i16', kind='sim', dec='half', arr=np.round(legacy.at(G['depth'], X, Y)).astype(np.int16))
+    # the sea floor under the ground layer: the depth, 25 m from the 50 m cells
+    dep = ndimage.zoom(L['depth']['arr'].astype(np.float32) / 2, 2, order=1)[:ny, :nx]
+    L['hgt']['arr'] = np.where(M > 0, H, hgtEnc(-np.maximum(dep, 0.5))).astype(np.int16)
     import national
     L.update(national.core_layers())
     log['sec'] = round(time.time() - t0, 1)

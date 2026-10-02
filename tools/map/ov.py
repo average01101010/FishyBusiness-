@@ -8,7 +8,7 @@ import pyarrow as pa, pyarrow.parquet as pq, pyarrow.compute as pc
 RELEASE = '2026-09-23.1'
 BASE = 'https://overturemaps-us-west-2.s3.us-west-2.amazonaws.com/'
 NOR = (4.0, 57.7, 32.0, 71.5)   # lon/lat box round Norway with Jutland and Kola
-TYPES = ['base/land', 'base/water', 'base/land_cover', 'base/infrastructure', 'base/bathymetry', 'buildings/building', 'transportation/segment', 'divisions/division_area']
+TYPES = ['base/land', 'base/water', 'base/land_cover', 'base/infrastructure', 'base/bathymetry', 'buildings/building', 'transportation/segment', 'divisions/division_area', 'divisions/division']
 CACHE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cache')
 os.makedirs(CACHE, exist_ok=True)
 S = requests.Session()
@@ -63,8 +63,8 @@ def files():
 
 def index():
     f = os.path.join(CACHE, f'index-{RELEASE}.json')
-    if os.path.exists(f): return json.load(open(f))
-    idx = {}
+    idx = json.load(open(f)) if os.path.exists(f) else {}
+    if all(t in idx for t in TYPES): return idx
     def rgs(key, size):
         _, md = footer(key, size)
         names = [md.schema.column(i).path for i in range(md.num_columns)]
@@ -75,7 +75,10 @@ def index():
             bb = (st['xmin'].min, st['ymin'].min, st['xmax'].max, st['ymax'].max)
             if bb[2] >= NOR[0] and bb[0] <= NOR[2] and bb[3] >= NOR[1] and bb[1] <= NOR[3]: out.append([g, rg.num_rows, rg.total_byte_size, *[round(v, 4) for v in bb]])
         return out
-    for t, fl in files().items():
+    fs = files()
+    if any(t not in fs for t in TYPES): os.remove(os.path.join(CACHE, f'files-{RELEASE}.json')); fs = files()
+    for t, fl in fs.items():
+        if t in idx: continue
         with cf.ThreadPoolExecutor(16) as ex: res = list(ex.map(lambda x: (x[0], x[1], rgs(*x)), fl))
         idx[t] = {k: [size, v] for k, size, v in res if v}
         print(t, len(idx[t]), 'files,', sum(len(v[1]) for v in idx[t].values()), 'row groups', file=sys.stderr)
