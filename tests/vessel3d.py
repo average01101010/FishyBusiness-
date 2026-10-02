@@ -18,13 +18,13 @@ async def main():
         await pg.wait_for_timeout(900); await pg.click('#obGo')
         await pg.evaluate("(()=>{ S.tut = 0; S.settings.autoOn = false; S.t = 45 * 1440 + 360; const b = S.boat; b.status = 'idle'; b.port = null; b.pos = {...GROUNDS[1].p}; b.heading = 1.1; })()")
         await pg.wait_for_function("G3.isActive()", timeout=90000); await pg.wait_for_timeout(2500)
-        types = await pg.evaluate("Object.keys(VESSELS).filter(t => vesselSpec(t) && !vesselSpec(t).hand)")
+        types = await pg.evaluate("Object.keys(VESSELS).filter(t => vesselSpec(t) && (!vesselSpec(t).hand || glbHas(t)))")
         if ONLY: types = [t for t in types if t in ONLY]
         counts = {}
         for t in types:
             info = await pg.evaluate("""(t => { const t0 = performance.now(), m = buildVesselModel(t, 1), ms = performance.now() - t0, b = S.boat; b.type = t; applyVessel(); G3.vesselChanged();
               S.crew = [0, 1, 2].map(() => Object.assign(genCrew(), {bi:false, off:false})).slice(0, VESSELS[t].crewMax);
-              const V = VESSELS[t], hull = (() => { if (!m.glb) return null; let z0 = 1e9, z1 = -1e9, x0 = 1e9, x1 = -1e9; for (let i = 0; i < m.o.p.length; i += 3){ const y = m.o.p[i + 1]; if (y < -0.3 || y > 1.5) continue; const x = m.o.p[i], z = m.o.p[i + 2]; z0 = Math.min(z0, z); z1 = Math.max(z1, z); x0 = Math.min(x0, x); x1 = Math.max(x1, x); } return [+(x1 - x0).toFixed(2), +(z1 - z0).toFixed(2)]; })();
+              const V = VESSELS[t], hull = (() => { if (!m.glb) return null; const H = glbPart(t, 'lod0') || m.o; let z0 = 1e9, z1 = -1e9, x0 = 1e9, x1 = -1e9; for (let i = 0; i < H.p.length; i += 3){ const y = H.p[i + 1]; if (y < -0.3 || y > 1.5) continue; const x = H.p[i], z = H.p[i + 2]; z0 = Math.min(z0, z); z1 = Math.max(z1, z); x0 = Math.min(x0, x); x1 = Math.max(x1, x); } return [+(x1 - x0).toFixed(2), +(z1 - z0).toFixed(2)]; })();
               const need = ['eye', 'skipperAt', 'crewSpots', 'lights', 'hauler', 'pole', 'deck', 'stern', 'bow'];
               return {verts:m.o.p.length / 3, glass:m.glass.p.length / 3, ms:Math.round(ms * 10) / 10, len:V.len, beam:V.beam, cls:V.cls, glb:!!m.glb, hull, geoOk:need.every(k => m.geo && m.geo[k] != null),
                 nan:m.o.p.some(x => !isFinite(x)) || m.o.n.some(x => !isFinite(x)),
