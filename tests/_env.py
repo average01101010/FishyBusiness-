@@ -1,9 +1,16 @@
 # Shared paths for the Playwright scripts. They test the built game (run `node build.mjs` first),
 # and screenshots and other output land in tests/out/.
-import os
+import os, threading, functools, http.server
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-GAME_TUT = 'file://' + os.path.join(os.path.dirname(HERE), 'dist', 'index.html')
+# the game is served over HTTP from dist/ (it fetches its map data from dist/map/, which a file:// page cannot), by a server of
+# this test's own on a free port; each test gets its own origin, so its own localStorage
+class _Quiet(http.server.SimpleHTTPRequestHandler):
+    def log_message(self, *a): pass
+_SRV = http.server.ThreadingHTTPServer(('127.0.0.1', 0), functools.partial(_Quiet, directory=os.environ.get('KYST_DIST') or os.path.join(os.path.dirname(HERE), 'dist')))
+threading.Thread(target=_SRV.serve_forever, daemon=True).start()
+BASE = 'http://127.0.0.1:%d/' % _SRV.server_port
+GAME_TUT = BASE + 'index.html'
 # the tests play without the first-trip tutorial; tut.py uses GAME_TUT
 GAME = GAME_TUT + '#notut'
 # KYST_LITE=1 (tests/run.py sets it for the tests that do not look at 3D): the game runs as before, but no 3D frame is drawn,
