@@ -63,7 +63,12 @@ async def main():
           return {perFrameWind:+dW.toFixed(3), perFrameHs:+dH.toFixed(3), perFrameDirDeg:+(dD * 180 / Math.PI).toFixed(3), reached:+D.WV.W.toFixed(1)}; })()""")
         # 3. sailing 3 km: the near map is rebuilt on the way, and the sea at a fixed spot must not jump meanwhile
         await pg.evaluate("WX_FORCE = {w:12, d:200}; G3._debug.WV.init = false; window.__P = {x:G3._debug.bv.x, z:G3._debug.bv.z}; window.__x0 = G3._debug.NEARM.x0;")
-        await pg.wait_for_timeout(2000)
+        # the sea-state map is worked out a slice per frame: wait till the forced wind's map stands still (under load it takes more than 2 s)
+        prev = None
+        for _ in range(60):
+            await pg.wait_for_timeout(500); s = await pg.evaluate("(() => { const s = G3._debug.ssAt(__P.x, __P.z); return [s[0], s[1]]; })()")
+            if prev and abs(s[0] - prev[0]) + abs(s[1] - prev[1]) < 1e-4: break
+            prev = s
         trace = []
         for k in range(40):
             await pg.evaluate(f"(() => {{ const g = GROUNDS[0].p; S.boat.pos = {{x:g.x + {k} * 0.075, y:g.y}}; }})()"); await pg.wait_for_timeout(450)

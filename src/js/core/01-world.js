@@ -147,7 +147,19 @@ function decodeContours(){
 // off the map is land, so nothing sails off it
 function isLand(p){
   if (!(p.x >= MAPB.x0 && p.y >= MAPB.y0 && p.x < MAPB.x1 && p.y < MAPB.y1)) return true;
-  const L = MAPD.L.mask; return rcell(L, Math.floor(p.x / L.c), Math.floor(p.y / L.c)) === 1;
+  const L = MAPD.L.mask; return rcell(L, Math.floor(p.x / L.c), Math.floor(p.y / L.c)) === 1 && !inHarbourPocket(p);
+}
+// The water in front of a quay is water, whatever the 25 m mask makes of it: a harbour unit's dredged basin, and 50 m out from a
+// designer's quay face (QUAYS, 07-harbours.js), which the coastline of the map data may have moved (Finnsnes: OpenStreetMap's
+// coast of 2026 lies 30-45 m out from the face drawn from the pictures, phase K5 of the coast plan)
+const POCKET = 50;
+let QPOCK = null;
+function inHarbourPocket(p){
+  const x = p.x * 1000, z = p.y * 1000;
+  for (const U of UNITA){ if (Math.abs(x - U.o[0]) > 60 || Math.abs(z - U.o[1]) > 60) continue; const [lx, lz] = unitL(U, x, z); if (lz > 0 && lz <= UNIT.basinZ && Math.abs(lx) <= UNIT.basinX) return true; }
+  if (!QPOCK){ QPOCK = []; for (const pid in QUAYS) for (const kind in QUAYS[pid]) if (!UNITS[pid]) QPOCK.push(quayFace(pid, kind)); }
+  for (const f of QPOCK){ const dx = x - f.x, dz = z - f.z, s = dx * f.ux + dz * f.uz, t = dx * f.nx + dz * f.nz; if (t > 0 && t <= POCKET && Math.abs(s) <= f.hl + 4) return true; }
+  return false;
 }
 function legClear(a, b){
   const d = dist(a, b), n = Math.max(1, Math.ceil(d / 0.04));

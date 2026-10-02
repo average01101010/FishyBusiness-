@@ -253,8 +253,8 @@ const G3 = (() => {
   // ground (unitTerr)
   function terrRaw(x, z){
     if (x < MAPB.x0 * 1000 || z < MAPB.y0 * 1000 || x > MAPB.x1 * 1000 || z > MAPB.y1 * 1000) return -40;
-    if (HG) return rbilM(MAPD.L.hgt, x, z);
-    const m = rbilM(MAPD.L.mask, x, z); return m >= 0.5 ? 2 : -4;
+    const h = HG ? rbilM(MAPD.L.hgt, x, z) : rbilM(MAPD.L.mask, x, z) >= 0.5 ? 2 : -4;
+    return h > -3 && inHarbourPocket({x:x / 1000, y:z / 1000}) ? -3 : h;   // the water in front of a quay (01-world.js)
   }
   function terrH(x, z){ return unitTerr(x, z, terrRaw(x, z)); }
   // The ground round a harbour unit (UNITS, 01-world.js), in its frame (lx along the face, lz out to the water): the basin in front is

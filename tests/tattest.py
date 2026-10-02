@@ -14,14 +14,14 @@ async def main():
         await boot(pg)
         r = await pg.evaluate("""(()=>{
           S.tut = 0; S.cash = 1e7; S.settings.autoOn = false; S.t = Math.round((Date.UTC(2027, 5, 9, 8) - EPOCH) / 6e4); S.tattoos = {}; S.tat = {}; S.deckMe = 0;
-          const R = {}, b = S.boat, q = portById('finnsnes'), m0 = S.msgs.length;
+          const R = {}, b = S.boat, q = portById('finnsnes'), m0 = S.msgs.length, lq = LGI(q.p), W = LG(lq.x - 1.5, lq.y + 0.3);   // 1.5 km west in Gisundet (legacy km)
           // a trip with you aboard: the miles count, and a trip home without trouble counts as safe
-          b.status = 'port'; b.port = 'finnsnes'; b.pos = {...q.p}; S.plan = {wps:[{x:q.p.x - 1.5, y:q.p.y + 0.3, port:null, fish:0}, {x:q.p.x, y:q.p.y, port:'finnsnes', fish:0}], idx:0, speed:20, returning:false}; depart();
+          b.status = 'port'; b.port = 'finnsnes'; b.pos = {...q.p}; S.plan = {wps:[{...W, port:null, fish:0}, {x:q.p.x, y:q.p.y, port:'finnsnes', fish:0}], idx:0, speed:20, returning:false}; depart();
           for (let i = 0; i < 400 && b.status !== 'port'; i++) step(); R.trip = {st:b.status, nm:Math.round((S.tat.nm || 0) * 100) / 100, safe:S.tat.safe || 0};
           // without you aboard the miles do not count
-          const nm0 = S.tat.nm; S.me = 'nobody'; b.status = 'sailing'; S.plan = {wps:[{x:q.p.x - 1.5, y:q.p.y + 0.3, port:null, fish:0}], idx:0, speed:20, returning:false}; for (let i = 0; i < 5; i++) step(); R.notAboard = S.tat.nm === nm0; S.me = S.cur;
+          const nm0 = S.tat.nm; S.me = 'nobody'; b.status = 'sailing'; S.plan = {wps:[{...W, port:null, fish:0}], idx:0, speed:20, returning:false}; for (let i = 0; i < 5; i++) step(); R.notAboard = S.tat.nm === nm0; S.me = S.cur;
           // run aground, towed in: not a safe trip, but the pig and the rooster
-          b.status = 'port'; b.port = 'finnsnes'; b.pos = {...q.p}; S.plan = {wps:[{x:q.p.x - 1.5, y:q.p.y + 0.3, port:null, fish:0}], idx:0, speed:20, returning:false}; depart(); step(); step();
+          b.status = 'port'; b.port = 'finnsnes'; b.pos = {...q.p}; S.plan = {wps:[{...W, port:null, fish:0}], idx:0, speed:20, returning:false}; depart(); step(); step();
           const safe0 = S.tat.safe; runAground({...b.pos}); rescue(true); R.tow = {safe:S.tat.safe - safe0, rescued:S.tat.rescued, pig:!!S.tattoos.grishane};
           // the swallows, the deckhand's rope, the harpoon
           S.tat.nm = 5000; checkTattoos(); R.sw1 = !!S.tattoos.svale1 && !S.tattoos.svale2; S.tat.nm = 10000; checkTattoos(); R.sw2 = !!S.tattoos.svale2;
