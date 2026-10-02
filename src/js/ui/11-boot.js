@@ -1,6 +1,7 @@
 // ---------- boot ----------
 S = load();
 let awayMs = 0;
+const BOOT_T = Date.now();
 if (S){ awayMs = Date.now() - (S.lastReal || Date.now()); } else S = newState();
 { const fixW = w => { if (w && w.port){ const q = portById(w.port); if (q){ w.x = q.p.x; w.y = q.p.y; } } };
   if (S.boat.status === 'port'){ const q = portById(S.boat.port); S.boat.pos = {x:q.p.x, y:q.p.y}; S.trail = [{x:q.p.x, y:q.p.y, port:q.id}]; }
@@ -36,7 +37,8 @@ view.cx = MAP_W * 0.56; view.cy = MAP_H * 0.5;
 refreshAll();
 if (!S.intro) showIntro();
 else if (!S.boatName) showIntro(true);
-else if (awayMs > 6000) catchUp(awayMs);
+// the catch-up waits for the simulation's data (simReady below), so the time away is played with the real depths
+let AWAY = !S.intro || !S.boatName ? 0 : awayMs > 6000 ? awayMs : 0;
 lastWall = Date.now();
 streakTouch();
 refreshAll();
@@ -45,6 +47,9 @@ INSTR.show(); tab = 'route'; setBodyView(true);
 // G3 comes from a later <script> (view3d.js): the clock starts when the whole page is read, and the loaders may finish before that
 document.addEventListener('DOMContentLoaded', () => { setInterval(tick, 200); G3.show(true, true); });
 const g3Live = () => typeof G3 !== 'undefined' && G3.isActive();
-loadDepth().then(d => { if (!d) return; DEPTH = d; CONT_D = null; renderBase(); panelDirty = true; }).catch(e => console.error(e));
+// the barrier: the clock does not step until the depths are in (they decide where the fish are), and then the time away is played
+let SIMREADY = false;
+const simReady = loadDepth().then(d => { if (!d) return; DEPTH = d; CONT_D = null; renderBase(); panelDirty = true; }).catch(e => console.error(e))
+  .then(() => { SIMREADY = true; if (AWAY){ catchUp(AWAY + Date.now() - BOOT_T); AWAY = 0; refreshAll(); } lastWall = Date.now(); });
 loadRoads().then(r => { ROADS = r; scheduleStatic(); if (g3Live()) G3.roadsReady(); }).catch(e => console.error(e));
 loadFine().then(f => { FINE = f; if (g3Live()) G3.fineReady(); }).catch(e => console.error(e));

@@ -24,7 +24,7 @@ os.makedirs(LOGS, exist_ok=True)
 # draw 3D: they look at the 3D view itself (frames, camera, quays, cranes, pumps)
 D3 = ['dbg23o', 'camtest', 'moortest', 'landtest', 'bunkertest', 'heattest', 'vessel3d', 'unittest', 'sea3d']
 LITE = ['tut', 'trip2', 'docktest', 'booktest', 'decktest', 'geartest', 'loretest', 'tattest', 'fleet2test', 'fleet3test', 'opsowntest', 'routetest',
-        'shoptest', 'selltest', 'timetest', 'worktest', 'vesseltest', 'streaktest', 'fixtest', 'hailltest', 'harbourtest', 'simday', 'calib', 'kvtest', 'progweek', 'seatest', 'stabtest', 'projtest']
+        'shoptest', 'selltest', 'timetest', 'worktest', 'vesseltest', 'streaktest', 'fixtest', 'hailltest', 'harbourtest', 'simday', 'calib', 'kvtest', 'progweek', 'seatest', 'stabtest', 'projtest', 'boottest']
 # they measure milliseconds, so they run alone at the end, when nothing else takes the CPU
 SOLO = ['routetest', 'heattest', 'landtest']
 READ = {'selltest', 'hailltest', 'simday', 'calib', 'kvtest', 'progweek', 'seatest'}
@@ -41,9 +41,9 @@ COVER = {
   'src/js/ui/01-i18n.js':[], 'src/js/ui/02-format-state.js':['timetest'], 'src/js/ui/03-map.js':['routetest'], 'src/js/ui/03b-route.js':['routetest'],
   'src/js/ui/03c-heat.js':['heattest'], 'src/js/ui/03d-setmode.js':['docktest'], 'src/js/ui/04-panels-instruments.js':['heattest'],
   'src/js/ui/05-phone.js':['docktest', 'fleet3test', 'shoptest', 'vesseltest'], 'src/js/ui/05-tattoo-art.js':['tattest'], 'src/js/ui/05b-work.js':['worktest'], 'src/js/ui/06-logbook.js':['booktest'], 'src/js/ui/06b-book-tabs.js':['booktest'],
-  'src/js/ui/07-guide.js':['shoptest', 'selltest'], 'src/js/ui/07b-first-trip.js':['tut'], 'src/js/ui/08-actions.js':['trip2', 'docktest', 'booktest', 'shoptest'],
+  'src/js/ui/07-guide.js':['shoptest', 'selltest'], 'src/js/ui/07b-first-trip.js':['tut'], 'src/js/ui/08-actions.js':['trip2', 'docktest', 'booktest', 'shoptest', 'boottest'],
   'src/js/ui/09-hand-fishing.js':['hailltest', 'fixtest'], 'src/js/ui/10-rod-acts.js':['docktest'], 'src/js/ui/10-gear-ui.js':['geartest', 'docktest'],
-  'src/js/ui/10c-dock.js':['docktest'], 'src/js/ui/11-boot.js':['trip2'], 'src/js/view3d.js':['dbg23o', 'unittest', 'landtest', 'sea3d'], 'src/js/vessel3d.js':['vessel3d', 'dbg23o', 'vesseltest'], 'src/data/boat-malo36.b64':['vessel3d', 'vesseltest'], 'src/data/boat-havsjark35.b64':['vessel3d', 'vesseltest'], 'src/data/boat-havsjark35-side.b64':['vesseltest'], 'src/data/boat-skiff59.b64':['vessel3d', 'vesseltest', 'camtest', 'moortest'], 'src/data/boat-skiff59-side.b64':['vesseltest'], 'src/data/boat-malo36-side.b64':['vesseltest'], 'src/data/worker.b64':['vessel3d', 'camtest', 'landtest', 'dbg23o'], 'src/data/harbour-unit.b64':['unittest', 'landtest', 'bunkertest', 'moortest'], 'src/styles.css':['docktest'], 'src/index.html':['trip2', 'docktest']}
+  'src/js/ui/10c-dock.js':['docktest'], 'src/js/ui/11-boot.js':['trip2', 'boottest'], 'src/js/view3d.js':['dbg23o', 'unittest', 'landtest', 'sea3d'], 'src/js/vessel3d.js':['vessel3d', 'dbg23o', 'vesseltest'], 'src/data/boat-malo36.b64':['vessel3d', 'vesseltest'], 'src/data/boat-havsjark35.b64':['vessel3d', 'vesseltest'], 'src/data/boat-havsjark35-side.b64':['vesseltest'], 'src/data/boat-skiff59.b64':['vessel3d', 'vesseltest', 'camtest', 'moortest'], 'src/data/boat-skiff59-side.b64':['vesseltest'], 'src/data/boat-malo36-side.b64':['vesseltest'], 'src/data/worker.b64':['vessel3d', 'camtest', 'landtest', 'dbg23o'], 'src/data/harbour-unit.b64':['unittest', 'landtest', 'bunkertest', 'moortest'], 'src/styles.css':['docktest'], 'src/index.html':['trip2', 'docktest']}
 
 
 def changed_tests():

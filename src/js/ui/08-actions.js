@@ -203,8 +203,8 @@ function catchUp(realMs){
 let lastWall = Date.now(), acc = 0, lastPanel = 0, lastSave = 0;
 function tick(){
   const now = Date.now(), dt = (now - lastWall) / 1000; lastWall = now;
-  if (dt > 6) catchUp(dt * 1000);
-  else { acc += dt * GAME_RATE * S.mult / 60; let n = 0; while (acc >= 1 && n < 3000){ step(); acc -= 1; n++; } }
+  // (until the simulation's data is in, the clock waits: 11-boot.js)
+  if (SIMREADY){ if (dt > 6) catchUp(dt * 1000); else { acc += dt * GAME_RATE * S.mult / 60; let n = 0; while (acc >= 1 && n < 3000){ step(); acc -= 1; n++; } } }
   heatTick();
   if (!G3.isActive()){ renderDyn(); if (AISSEL) renderAisCard(); heatPaint(); } renderHud(); renderClock(); renderActs(); DOCK.tick(); energyUi(); INSTR.renderGPS(); tutUpdate(); PHONE.status(); PHONE.tickHome();
   if (S.order && S.t >= S.order.due) deliverOrder();
