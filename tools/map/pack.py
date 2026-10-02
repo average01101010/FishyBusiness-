@@ -63,3 +63,29 @@ def read_layer(d, name):
             blk = unmed16(raw, n) if L['type'] == 'i16' else np.frombuffer(raw, DT[L['type']]).reshape(n, n)
             j, i = by * n - L['iy0'], bx * n - L['ix0']; out[j:j + n, i:i + n] = blk
     return out, L
+# the coast's tiles: [(tx, ty, {layer: array over the 50 km tile})], every kind a pack per tile (the core too); the layers' extents
+# are the whole frame, and the manifest lists the tiles there are (a block outside them has no pack)
+def write_tiles(tiles, spec, out, extra=None):
+    if os.path.exists(out): shutil.rmtree(out)
+    os.makedirs(out)
+    man = dict(v=2, frame='utm33', block=BLOCK, tile=TILE, layers={}, packs=[], tiles=[[t[0], t[1]] for t in tiles], **(extra or {}))
+    for name, (c, typ, kind, dec) in spec.items():
+        n = round(BLOCK / c); man['layers'][name] = dict(c=c, ix0=0, iy0=0, nx=round(1450 / c), ny=round(1720 / c), n=n, type=typ, kind=kind, dec=dec)
+    total = 0; T = TILE // BLOCK
+    for tx, ty, L in tiles:
+        groups = {}
+        for name, (c, typ, kind, dec) in spec.items():
+            n = round(BLOCK / c); arr = np.asarray(L[name]).astype(DT[typ])
+            for j in range(T):
+                for i in range(T):
+                    blk = arr[j * n:(j + 1) * n, i * n:(i + 1) * n]; raw = med16(blk) if typ == 'i16' else np.ascontiguousarray(blk).tobytes()
+                    groups.setdefault(kind, []).append([name, tx * T + i, ty * T + j, raw_deflate(raw)])
+        for kind, blocks in sorted(groups.items()):
+            off = 0; head = {'kind': kind, 'tile': [tx, ty], 'blocks': []}
+            for l, bx, by, z in blocks: head['blocks'].append([l, bx, by, off, len(z)]); off += len(z)
+            hj = json.dumps(head, separators=(',', ':')).encode(); data = b'KMP1' + len(hj).to_bytes(4, 'little') + hj + b''.join(b[3] for b in blocks)
+            h = hashlib.sha256(data).hexdigest()[:12]; fn = f'{kind}-{tx}-{ty}-{h}.wasm'; open(os.path.join(out, fn), 'wb').write(data); total += len(data)
+            man['packs'].append(dict(file=fn, hash=h, kind=kind, tile=[tx, ty], box=[tx * TILE, ty * TILE, (tx + 1) * TILE, (ty + 1) * TILE], bytes=len(data)))
+    man['packs'].sort(key=lambda p: p['file'])
+    json.dump(man, open(os.path.join(out, 'manifest.json'), 'w'), separators=(',', ':'))
+    return len(man['packs']), total

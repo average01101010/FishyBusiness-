@@ -214,6 +214,46 @@ Dette er den eneste tilsiktede endringen i oppførsel i kartfasen. Spillets ramm
   - `mig2test.py` lager et v1-spill av et v2-spill med `LGI` og leser det inn igjen. Alle posisjonene (23, i sju slags felt) havner innenfor 1 m, kursen og bestanden følger med, og v1-lagringen er urørt.
 - **Testene:** `routes.json` er regnet om til den nasjonale rammen. Testene sender fortsatt gamle km gjennom `LG()` i siden. `KYST_SHIFT` er borte.
 
+### 4.8 Kartrørledningen (kystplanen, fase K5, 02.10.2026)
+
+Kartdataene lages i `tools/map/` (i git, uten dataene). Mellomlageret ligger i `tools/map/cache/` og resultatene i `tools/map/out/`, og ingen av dem er i git.
+
+- **Kildene:**
+
+  | Kilde | Hva | Status |
+  |---|---|---|
+  | Overture 2026-09-23.1 | land (OSM-kysten), arealdekke (skog), bygg, veier, kaier, landegrenser | åpen |
+  | Terrarium | z13 (Kartverkets 10 m-terreng i Norge), z11 grovere | åpen |
+  | Geonorge | dybde 50 m (`bathymetry50m`) og DTM10 | stengt fra miljøet |
+  | Overpass | sjømerker med lyktsektorer, skjær | stengt |
+  | Tidevannet (`api.sehavniva.no`) | | stengt |
+
+  - Terrariums sjøbunn duger ikke som dybde. Ved z13 er sjøen 0, og de grove nivåene (z8–z9) har bare 0,3 i korrelasjon med Kartverkets dybde rundt Senja.
+- **Filene:**
+  - `ov.py`: filliste, indeks over radgruppene som berører Norge (`python3 tools/map/ov.py index`), og `features(type, boks, kolonner)` med HTTP-delhenting og mellomlager per radgruppe.
+  - `frame.py`: den nasjonale rammen (pyproj EPSG:25833), den gamle Senja-rammen og regioner i hele 10 km-blokker.
+  - `terrain.py`: Terrarium, samplet bilineært i lat/lon.
+  - `legacy.py`: de gamle Senja-rastrene (dybde, eksponering), dekodet av `readSenja` i `tools/mappack.mjs`.
+  - `pack.py`: kartpakkene (formatet i 4.6), `write` for en region, `write_tiles` for kystflisene, og `read_layer` for sjekker.
+- **Senja** (`python3 tools/map/region.py senja`) skriver `src/data/map/`, som er i git (3,9 MB). `node build.mjs` kopierer den til `dist/map/`.
+  - **Maske 25 m** fra Overture-land. Inne i det gamle kvadratet avviker den fra K4-masken i 0,43 % av cellene, og 97 % av dem ligger i kystlinja. Utenfor kvadratet ligger nå ekte data i stedet for strukket kant.
+  - **Avstand til land** (100 m) er euklidsk.
+  - **Terreng 25 m** fra Terrarium z13 (før z11). Det er over 0 på land og under 0 på sjøen etter masken.
+  - **Skog 50 m** fra Overture (ESA WorldCover): 25 % av ruta mot 0,2 % før. Det gir rundt 20 % flere trær i 3D.
+  - **Dybde og eksponering** kommer som før fra de gamle Senja-rastrene.
+  - Bygget tar 30 s med varmt mellomlager.
+- **Vannet foran kaiene** (`inHarbourPocket` i `01-world.js`):
+  - Havneenhetens basseng og 50 m ut fra designerens kaifront (`QUAYS`, bare Finnsnes har ingen enhet) er vann, både i `isLand` og i terrenget i 3D.
+  - **Finnsnes:** OSM-kysten fra 2026 ligger 30–45 m ute foran kaifronten designeren tegnet etter flyfoto 29.09.2026. Det kan være en ny utfylling eller en kai som ikke er på bildene. **Bør sjekkes på stedet eller mot nyere bilder.** Inntil videre gjelder designerens kai, og vannet foran den.
+- **Hele kysten** (`national.py`, `coast.py`) går i trinn, som hver lagrer resultatet sitt:
+  1. `national.py mask200`: land over hele rammen (1 450 × 1 720 km) på 200 m, også Sverige, Finland, Russland og Danmark, slik at strålene ser ut mot havet.
+  2. `national.py tiles`: 50 km-flisene med norsk sjø innen 20 km fra land eller norsk land innen 3 km fra sjøen. Norges land og sjø kommer fra Overtures landegrenser.
+  3. `national.py expo`: eksponeringen på 500 m. 48 stråler på 200 m-masken, og eksponeringen = 0,585 × middelet av åpen andel innen 10 km + 1,009 × andelen stråler som er åpne ut til 150 km. Modellen er tilpasset de gamle Senja-rastrene: korrelasjon 0,95 (testet på halvparten), og feilen er 0,125 på en skala fra 0 til 1.
+  4. `coast.py`: lett utgave per flis med maske 25 m, avstand 100 m, terreng 25 m (z13 i blokkene innen 3 km fra sjøen, z11 ellers), skog, eksponering og dybde.
+     - Dybden er Kartverkets inne i det gamle Senja-kvadratet. Ellers er den spillets egen dybdemodell, med støyen overført bit for bit, til Geonorge er åpen.
+     - Pakkene havner i `out/national/lite/`, med kjerne per flis.
+     - Spillet tar dem i bruk i K6–K8: lasteren må kunne laste kjernen per flis, og ha faste verdier for blokker uten pakke (innland og åpent hav).
+
 ## 5. Systemer i spillet
 
 ### 5.1 Båter og utstyr
