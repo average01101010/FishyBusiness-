@@ -5,8 +5,8 @@ from playwright.async_api import async_playwright
 
 ok = lambda c: 'OK  ' if c else 'FEIL'
 PLANTS = ['husoy', 'senjahopen', 'botnhamn', 'gryllefjord', 'sommaroy', 'brensholmen', 'torsken', 'frovag']
-FUEL = ['finnsnes', 'husoy', 'senjahopen', 'gryllefjord', 'botnhamn', 'torsken']
-BUNKER = ['husoy', 'senjahopen', 'gryllefjord', 'botnhamn', 'torsken']
+FUEL = ['finnsnes', 'husoy', 'senjahopen', 'gryllefjord', 'botnhamn', 'torsken', 'sommaroy', 'brensholmen', 'frovag']
+BUNKER = ['husoy', 'senjahopen', 'gryllefjord', 'botnhamn', 'torsken', 'sommaroy', 'brensholmen', 'frovag']   # every harbour unit has its bunker berth
 
 async def main():
     async with async_playwright() as p:
@@ -29,7 +29,7 @@ async def main():
             R.ports[q.id] = {water:!isLand(q.p), iceBtn:a.ice, fuelBtn:a.fuel, ice, chute, fuel, sold};
           }
           // a standing plan restocks only what the harbour sells
-          const b = S.boat; b.port = 'frovag'; b.fuel = 10; b.ice = 0; autoRestock(); R.opsFrovag = {fuel:b.fuel, ice:b.ice};
+          const b = S.boat; b.port = 'frovag'; b.fuel = 10; b.ice = 0; autoRestock(); R.opsFrovag = {fuel:b.fuel, ice:b.ice, shift:b.shift && b.shift.to}; b.shift = null; b.after = null; b.berth = 'main';
           b.port = 'finnsnes'; b.pos = {...portById('finnsnes').p}; b.fuel = 10; b.ice = 0; autoRestock(); for (let i = 0; i < 40 && (b.shift || b.fueling); i++) step(); R.opsFinnsnes = {fuel:Math.round(b.fuel), ice:b.ice};
           R.customers = CUSTOMERS.filter(c => ['sommaroy', 'brensholmen', 'torsken', 'frovag'].includes(c.port)).map(c => c.port);
           return R; })()""")
@@ -38,8 +38,8 @@ async def main():
         print(ok(all(P[k]['water'] for k in P)), 'every harbour berth is in the water')
         print(ok(all(P[k]['sold'] and P[k]['iceBtn'] and P[k]['ice'] and P[k]['chute'] for k in PLANTS)), 'the eight plants buy fish and sell ice from the chute')
         print(ok(P['finnsnes']['iceBtn'] and P['finnsnes']['ice'] and not P['finnsnes']['chute']), 'Finnsnes has no chute: the tackle shop sells bagged ice')
-        print(ok(all(P[k]['fuelBtn'] == (k in FUEL) and P[k]['fuel'] == (k in FUEL) for k in P)), 'fuel only at Finnsnes and the bunker quays in Husøy, Senjahopen, Gryllefjord, Botnhamn and Torsken')
-        print(ok(r['opsFrovag']['fuel'] == 10 and r['opsFrovag']['ice'] > 0 and r['opsFinnsnes']['fuel'] > 10 and r['opsFinnsnes']['ice'] == 0), 'a standing plan restocks only what the harbour sells')
+        print(ok(all(P[k]['fuelBtn'] == (k in FUEL) and P[k]['fuel'] == (k in FUEL) for k in P)), 'fuel in every harbour: Finnsnes and the bunker berth of every harbour unit')
+        print(ok(r['opsFrovag']['shift'] == 'bunker' and r['opsFrovag']['ice'] > 0 and r['opsFinnsnes']['fuel'] > 10 and r['opsFinnsnes']['ice'] == 0), 'a standing plan restocks what the harbour sells: Frovåg ice, then over to the bunker berth for fuel; Finnsnes fuel, no chute ice')
         print(ok(sorted(r['customers']) == ['brensholmen', 'frovag', 'sommaroy', 'torsken']), 'the new plants post orders')
         # the quays from the marked-up satellite pictures: every vessel type lies at the quay face, in the water of the 3D coastline
         await pg.wait_for_function("typeof FINE !== 'undefined' && FINE && FINE.length", timeout=90000)
@@ -47,20 +47,20 @@ async def main():
           const inPoly = (P, x, z) => { let c = false; for (let i = 0, j = P.xs.length - 1; i < P.xs.length; j = i++){ const xi = P.xs[i], zi = P.zs[i], xj = P.xs[j], zj = P.zs[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; };
           const land = (x, z) => FINE.some(P => x >= P.bb[0] && x <= P.bb[2] && z >= P.bb[1] && z <= P.bb[3] && inPoly(P, x, z));
           const R = {};
-          for (const pid in QUAYS) for (const kind in QUAYS[pid]) for (const t of Object.keys(BEAM)){
-            const b = berthPose(pid, t, kind), f = quayFace(pid, kind), fx = Math.sin(b.hd), fz = -Math.cos(b.hd), sx = Math.cos(b.hd), sz = Math.sin(b.hd), X = b.x * 1000, Z = b.y * 1000;
+          for (const pid of PORTS.map(q => q.id)) for (const kind of ['main', 'bunker']) for (const t of Object.keys(BEAM)){
+            const f = quayFace(pid, kind); if (!f) continue; const b = berthPose(pid, t, kind), fx = Math.sin(b.hd), fz = -Math.cos(b.hd), sx = Math.cos(b.hd), sz = Math.sin(b.hd), X = b.x * 1000, Z = b.y * 1000;
             const pts = [[0, 0], [b.Lb / 2 - 0.5, 0], [-b.Lb / 2 + 0.5, 0], [0, b.Bb / 2], [0, -b.Bb / 2]].map(([l, s]) => [X + fx * l + sx * s, Z + fz * l + sz * s]);
             const off = (X - f.x) * f.nx + (Z - f.z) * f.nz, starb = sx * -f.nx + sz * -f.nz;
             R[pid + '|' + kind + '|' + t] = {wet:pts.every(([x, z]) => !land(x, z)), off:Math.round(off * 10) / 10, bb:b.Bb, starb:starb > 0.99, fits:f.hl * 2 >= b.Lb + 2}; }
-          R.near = PORTS.filter(q => QUAYS[q.id]).map(q => { const f = quayFace(q.id, 'main'); return [q.id, Math.round(Math.hypot(q.p.x * 1000 - f.x, q.p.y * 1000 - f.z))]; });
+          R.near = PORTS.filter(q => quayFace(q.id, 'main')).map(q => { const f = quayFace(q.id, 'main'); return [q.id, Math.round(Math.hypot(q.p.x * 1000 - f.x, q.p.y * 1000 - f.z))]; });
           return R; })()""")
         bad = [k for k, v in q.items() if k != 'near' and not (v['wet'] and v['fits'] and v['starb'] and abs(v['off'] - (v['bb'] / 2 + 0.4)) < 0.6)]
         ntypes = len({k.split('|')[2] for k in q if k != 'near'})
         if bad: print({k: q[k] for k in bad[:20:4]})
         print('quays:', len(q) - 1, 'berths, bad:', bad, 'harbour point to quay (m):', q['near'])
-        print(ok(not bad and len(q) - 1 == ntypes * 12 and ntypes >= 10), 'every coastal vessel type (%d) lies alongside each real quay face, half its beam off, quay to starboard, in the water of the 3D coastline' % ntypes)
-        print(ok(sorted({k.split('|')[0] for k in q if k.endswith('|bunker|skiff')}) == sorted(BUNKER)), 'bunker quays in Husøy, Senjahopen, Gryllefjord, Botnhamn and Torsken')
-        print(ok(all(d < 30 for _, d in q['near'])), 'the harbour point lies off the plant quay (Finnsnes: the quay by the net loft)')
+        print(ok(not bad and len(q) - 1 == ntypes * 17 and ntypes >= 10), 'every coastal vessel type (%d) lies alongside each quay face (Finnsnes, and the landing and bunker berths of the eight harbour units), half its beam off, quay to starboard, in the water of the 3D coastline' % ntypes)
+        print(ok(sorted({k.split('|')[0] for k in q if k.endswith('|bunker|skiff')}) == sorted(BUNKER)), 'a bunker berth in every harbour unit')
+        print(ok(all(d < 30 for _, d in q['near'])), 'the harbour point lies off the landing berth (Finnsnes: the quay by the net loft)')
         # the plotter: a tap on a harbour, or on the sea when leaving one, routes round the breakwaters on the way in and out
         rt = await pg.evaluate("""(()=>{ const px0 = view.px; view.px = 400; const R = {}, b = S.boat, legs = () => { let a = b.pos, ok = true; for (const w of S.draft){ if (!clearLine(a, w)) ok = false; a = w; } return ok; };
           for (const q of PORTS){ const out = approachPath(q)[0], sea = {x:out.x + (out.x - q.p.x) * 0.2, y:out.y + (out.y - q.p.y) * 0.2};

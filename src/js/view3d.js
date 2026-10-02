@@ -201,11 +201,46 @@ const G3 = (() => {
     const gx = clamp(x / cm - 0.5, 0, G.nx - 1.001), gz = clamp(z / cm - 0.5, 0, G.ny - 1.001), ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz, i = iz * G.nx + ix, n = G.nx;
     return (arr[i] * (1 - fx) + arr[i + 1] * fx) * (1 - fz) + (arr[i + n] * (1 - fx) + arr[i + n + 1] * fx) * fz;
   }
-  // real ground height (m) at world x/z (m); sea floor is shaped from shore distance and exposure
-  function terrH(x, z){
+  // real ground height (m) at world x/z (m); sea floor is shaped from shore distance and exposure; where a harbour unit stands, its
+  // ground (unitTerr)
+  function terrRaw(x, z){
     if (x < 0 || z < 0 || x > MAP_W * 1000 || z > MAP_H * 1000) return -40;
     if (HG) return gridAt(HG, x, z);
     const m = gridAt(MASK, x, z, GRID); return m >= 0.5 ? 2 : -4;
+  }
+  function terrH(x, z){ return unitTerr(x, z, terrRaw(x, z)); }
+  // The ground round a harbour unit (UNITS, 01-world.js), in its frame (lx along the face, lz out to the water): the basin in front is
+  // dredged to 6.6 m below mean sea level and rises 1 in 2 outside it; beside and behind the quay land higher than the deck is cut down
+  // to it and goes back to what it was within UNIT_REACH m (nothing is filled, so nothing sticks out into the water); the seabed reaches
+  // the walls' foot (9 m down). Inside
+  // the block nothing is drawn (the fine patch has a hole there). h0 is the ground without the unit.
+  const UNIT_REACH = 22, UNIT_FINE = UNIT_REACH + 50;
+  function unitTerr(x, z, h0){
+    for (const U of UNITA){
+      if (Math.abs(x - U.o[0]) > 140 || Math.abs(z - U.o[1]) > 140) continue;
+      const [lx, lz] = unitL(U, x, z), ax = Math.abs(lx), dx = Math.max(0, ax - UNIT.E), dzB = Math.max(0, -UNIT.B - lz);
+      if (lz >= 0){
+        const dO = Math.hypot(Math.max(0, ax - UNIT.basinX), Math.max(0, lz - UNIT.basinZ)); if (dO >= UNIT_REACH) continue;
+        let h = Math.min(h0, -UNIT.dredge + 0.5 * dO); if (lz < 6 && dx < 3) h = Math.max(h, UNIT.bot);
+        return h + (h0 - h) * sstep(UNIT_REACH - 8, UNIT_REACH, dO);
+      }
+      if (!dx && !dzB) return UNIT.bot;
+      const d = Math.hypot(dx, dzB); if (d >= UNIT_REACH) continue;
+      let h = h0;
+      h = Math.min(h0, QTOP - 0.1 + 0.45 * d);
+      if (d < 3) h = Math.max(h, UNIT.bot);
+      return h + (h0 - h) * sstep(UNIT_REACH - 8, UNIT_REACH, d);
+    }
+    return h0;
+  }
+  // the coarse terrain sinks out of sight where a unit's fine patch takes over (unitPatch draws it)
+  function terrCoarse(x, z){
+    const h0 = terrRaw(x, z);
+    for (const U of UNITA){ if (Math.abs(x - U.o[0]) > 140 || Math.abs(z - U.o[1]) > 140) continue;
+      const [lx, lz] = unitL(U, x, z), ax = Math.abs(lx);
+      const d = lz >= 0 ? Math.hypot(Math.max(0, ax - UNIT.basinX), Math.max(0, lz - UNIT.basinZ)) : Math.hypot(Math.max(0, ax - UNIT.E), Math.max(0, -UNIT.B - lz));
+      if (d < UNIT_REACH) return -14; }
+    return h0;
   }
   // share of forest around a point: bilinear over the 50 m forest cells, softened over the neighbours
   function forestAt(x, z){
@@ -214,10 +249,11 @@ const G3 = (() => {
     for (let dz = -1; dz <= 2; dz++) for (let dx = -1; dx <= 2; dx++){ const wx = dx <= 0 ? (dx === 0 ? 1 - fx * 0.5 : 0.5 - fx * 0.5) : (dx === 1 ? 0.5 + fx * 0.5 : fx * 0.5), wz = dz <= 0 ? (dz === 0 ? 1 - fz * 0.5 : 0.5 - fz * 0.5) : (dz === 1 ? 0.5 + fz * 0.5 : fz * 0.5); s += F(ix + dx, iz + dz) * wx * wz; }
     return clamp(s / 2.25, 0, 1);
   }
-  function makeMesh(x0, z0, sx, sz, n){
+  function makeMesh(x0, z0, sx, sz, n, hf){
+    hf = hf || terrH;
     const dx = sx / (n - 1), dz = sz / (n - 1), N = n * n, pos = new Float32Array(N * 3), h = new Float32Array(N), nz = new Float32Array(N), slope = new Float32Array(N), nor = new Float32Array(N * 3), fo = new Float32Array(N);
     for (let j = 0; j < n; j++) for (let i = 0; i < n; i++){
-      const k = j * n + i, x = x0 + i * dx, z = z0 + j * dz, y = terrH(x, z);
+      const k = j * n + i, x = x0 + i * dx, z = z0 + j * dz, y = hf(x, z);
       h[k] = y; pos[k * 3] = x; pos[k * 3 + 1] = y; pos[k * 3 + 2] = z; nz[k] = fbm(x / 600, z / 600, 2, 90); fo[k] = forestAt(x, z);
     }
     for (let j = 0; j < n; j++) for (let i = 0; i < n; i++){
@@ -231,12 +267,48 @@ const G3 = (() => {
     return m;
   }
   function freeMesh(m){ gl.deleteBuffer(m.pb); gl.deleteBuffer(m.cb); gl.deleteBuffer(m.ib); if (m.nb) gl.deleteBuffer(m.nb); if (m.sb) gl.deleteBuffer(m.sb); }
+  // the near terrain's own surface at x, z (its triangles over the ground without the units), so a fine patch meets it exactly
+  function nearSurf(M, x, z){
+    const n = M.gn, d = M.sx / (n - 1), gx = clamp((x - M.x0) / d, 0, n - 1.001), gz = clamp((z - M.z0) / d, 0, n - 1.001), i = Math.floor(gx), j = Math.floor(gz), fx = gx - i, fz = gz - j;
+    const X = i * d + M.x0, Z = j * d + M.z0, H = (a, b) => terrRaw(X + a * d, Z + b * d);
+    return fx + fz <= 1 ? H(0, 0) + (H(1, 0) - H(0, 0)) * fx + (H(0, 1) - H(0, 0)) * fz : H(1, 1) + (H(0, 1) - H(1, 1)) * (1 - fx) + (H(1, 0) - H(1, 1)) * (1 - fz);
+  }
+  // The fine ground round a harbour unit: a grid in the unit's frame, lined up with the quay's walls (1.6-4 m apart), with a hole
+  // where the block stands. Its outer part lies on the near terrain's own triangles, so the two meet; the near terrain sinks under it
+  // (terrCoarse), and it is drawn with a little offset so it wins where they coincide. Rebuilt with the near terrain.
+  let UPATCH = [];
+  function unitPatch(U, M){
+    const E = UNIT.E, B = UNIT.B, F = UNIT_FINE, span = (a, b, k) => Array.from({length:k + 1}, (_, i) => a + (b - a) * i / k);
+    const xs = [...span(-E - F, -E, 18), ...span(-E, E, 34).slice(1), ...span(E, E + F, 18).slice(1)], zs = [...span(-B - F, -B, 22), ...span(-B, 0, 14).slice(1), ...span(0, UNIT.basinZ + F, 34).slice(1)];
+    const n = xs.length, N = n * n, pos = new Float32Array(N * 3), h = new Float32Array(N), nzA = new Float32Array(N), slope = new Float32Array(N), nor = new Float32Array(N * 3), fo = new Float32Array(N);
+    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++){
+      const k = j * n + i, w = unitW(U, xs[i], zs[j]), x = w[0], z = w[1], y = unitTerr(x, z, nearSurf(M, x, z));
+      h[k] = y; pos[k * 3] = x; pos[k * 3 + 1] = y; pos[k * 3 + 2] = z; nzA[k] = fbm(x / 600, z / 600, 2, 90); fo[k] = forestAt(x, z);
+    }
+    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++){
+      const k = j * n + i, i0 = Math.max(0, i - 1), i1 = Math.min(n - 1, i + 1), j0 = Math.max(0, j - 1), j1 = Math.min(n - 1, j + 1);
+      const hx = (h[j * n + i1] - h[j * n + i0]) / (xs[i1] - xs[i0]), hz = (h[j1 * n + i] - h[j0 * n + i]) / (zs[j1] - zs[j0]);
+      slope[k] = Math.hypot(hx, hz); const wx = -hx * U.u[0] - hz * U.n[0], wz = -hx * U.u[1] - hz * U.n[1], nl = Math.hypot(wx, 1, wz); nor[k * 3] = wx / nl; nor[k * 3 + 1] = 1 / nl; nor[k * 3 + 2] = wz / nl;
+    }
+    const idx = []; for (let j = 0; j < n - 1; j++) for (let i = 0; i < n - 1; i++){
+      if (xs[i] >= -E - 1e-6 && xs[i + 1] <= E + 1e-6 && zs[j] >= -B - 1e-6 && zs[j + 1] <= 1e-6) continue;   // the quay's own block
+      const a = j * n + i, b = a + 1, c = a + n, d = c + 1; idx.push(a, c, b, b, c, d); }
+    const col = new Float32Array(N * 3), m = {pb:buf(pos), cb:buf(col, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), nb:buf(nor), ib:buf(new Uint16Array(idx), gl.ELEMENT_ARRAY_BUFFER), n:idx.length, h, nz:nzA, slope, fo, col, pos, nor, gn:n, unit:U.id, sh:new Float32Array(N).fill(1)};
+    m.sb = buf(m.sh, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); m.shKey = '';
+    recolor(m, snowNow < 0 ? 0 : snowNow);
+    return m;
+  }
+  function buildPatches(){
+    for (const m of UPATCH) freeMesh(m); UPATCH = [];
+    if (!NEARM) return;
+    for (const U of UNITA) if (U.o[0] > NEARM.x0 + 200 && U.o[0] < NEARM.x0 + NEARM.sx - 200 && U.o[1] > NEARM.z0 + 200 && U.o[1] < NEARM.z0 + NEARM.sz - 200) UPATCH.push(unitPatch(U, NEARM));
+  }
   function buildTerrain(){ TERR = makeMesh(0, 0, MAP_W * 1000, MAP_H * 1000, 255); }
   // sharp terrain in a 6 km corridor around the boat, rebuilt as it moves
   let shT = 0;
   function updateShadows(){
     const d = env.shadowDir, key = d ? d.map(v => v.toFixed(2)).join(',') : 'flat';
-    for (const m of [NEARM, MIDM, TERR]){
+    for (const m of [NEARM, ...UPATCH, MIDM, TERR]){
       if (!m) continue;
       if (m.shKey !== key && !m.shJob && performance.now() - shT > 1500){ m.shJob = {i:0, key, d}; shT = performance.now(); }
       if (!m.shJob) continue;
@@ -265,7 +337,7 @@ const G3 = (() => {
     const span = cam.dist > 1200 ? 12000 : 6000, snap = span / 10, cx = Math.round(bv.x / snap) * snap, cz = Math.round(bv.z / snap) * snap;
     if (NEARM && NEARM.sx === span && Math.abs(cx - NEARM.cx) < span / 5 && Math.abs(cz - NEARM.cz) < span / 5) return;
     if (NEARM) freeMesh(NEARM);
-    NEARM = makeMesh(cx - span / 2, cz - span / 2, span, span, 256); NEARM.cx = cx; NEARM.cz = cz; buildGround();
+    NEARM = makeMesh(cx - span / 2, cz - span / 2, span, span, 256, terrCoarse); NEARM.cx = cx; NEARM.cz = cz; buildPatches(); buildGround();
   }
   function recolor(m, snow){
     const {slope, nz, col, h, fo} = m;
@@ -368,6 +440,7 @@ const G3 = (() => {
     const done = new Set();
     for (const pt of PORTS) for (const kind of ['main', 'bunker']) for (const ty of Object.keys(BEAM)){
       const bp = berthPose(pt.id, ty, kind); if (!bp) continue; const f = bp.face, key = faceKey(f); if (done.has(key)) continue; done.add(key);
+      if (f.unit){ const M = unitModel(); if (M) QB[key] = M.A.bollards.map(q => { const w = unitW(UNITS[f.unit], q[0], q[2]); return {x:w[0], z:w[1], a:(w[0] - f.x) * f.ux + (w[1] - f.z) * f.uz}; }); continue; }
       const u = [f.ux, f.uz], n = [f.nx, f.nz], a0 = Math.max(-f.hl + 1, bp.a - 30), a1 = Math.min(f.hl - 1, bp.a + 30), am = (a0 + a1) / 2, len = a1 - a0;
       const at = (a, o) => [f.x + u[0] * a + n[0] * o, f.z + u[1] * a + n[1] * o];
       obox(nb, at(am, 0.1), u, n, len, 0.2, QTOP - 1.5, 0.35, WOOD); obox(nb, at(am, 0.1), u, n, len, 0.2, QTOP - 0.55, 0.3, WOOD);
@@ -400,10 +473,13 @@ const G3 = (() => {
     for (let i = 0; i < n; i++){
       B.x[i] = X[i] * U; B.z[i] = Y[i] * U; B.l[i] = dec(Lq[i]); B.w[i] = Math.max(1.5, dec(Wq[i])); B.a[i] = Aq[i] / 256 * Math.PI; B.t[i] = Tq[i] & 15; B.lv[i] = Tq[i] >> 4;
       const k = Math.floor(B.z[i] / 1000) * 100 + Math.floor(B.x[i] / 1000);
+      if (bldOnUnit(B, i)) continue;   // a harbour unit stands there
       let c = B.cells.get(k); if (!c) B.cells.set(k, c = []); c.push(i);
     }
     return B;
   }
+  function bldOnUnit(B, i){ const ca = Math.cos(B.a[i]), sa = Math.sin(B.a[i]), nu = Math.ceil(B.l[i] / 3), nv = Math.ceil(B.w[i] / 3);
+    for (let p = 0; p <= nu; p++) for (let q = 0; q <= nv; q++){ const u = p / nu - 0.5, v = q / nv - 0.5; if (onUnit(B.x[i] + ca * u * B.l[i] - sa * v * B.w[i], B.z[i] + sa * u * B.l[i] + ca * v * B.w[i], 3)) return true; } return false; }
   const PAL_HOUSE = [[0.9,0.9,0.87],[0.9,0.9,0.87],[0.62,0.18,0.14],[0.87,0.72,0.35],[0.78,0.52,0.25],[0.72,0.74,0.73],[0.6,0.7,0.78],[0.55,0.62,0.52],[0.9,0.9,0.87]];
   const PAL_CABIN = [[0.33,0.25,0.19],[0.55,0.17,0.13],[0.36,0.3,0.24],[0.78,0.52,0.25],[0.2,0.18,0.16]];
   const PAL_NAUST = [[0.62,0.17,0.13],[0.58,0.16,0.12],[0.55,0.34,0.2],[0.3,0.23,0.18],[0.88,0.88,0.85]];
@@ -499,7 +575,7 @@ const G3 = (() => {
     let count = 0;
     for (let j = 0; j < 30 && count < 260; j++) for (let i = 0; i < 30 && count < 260; i++){
       const hh = hash((gx * 7919 + gz * 104729) * 900 + j * 30 + i), x = x0 + (i + 0.15 + 0.7 * hash(hh * 1e7 | 0)) * 33.3, z = z0 + (j + 0.15 + 0.7 * hash((hh * 3e7 | 0) + 5)) * 33.3;
-      if (occ[Math.floor((z - z0) / 25) * 40 + Math.floor((x - x0) / 25)]) continue;
+      if (occ[Math.floor((z - z0) / 25) * 40 + Math.floor((x - x0) / 25)] || onUnit(x, z, 8)) continue;
       const h = terrH(x, z); if (h < 2.5 || h > 330) continue;
       const sl = Math.hypot(terrH(x + 10, z) - terrH(x - 10, z), terrH(x, z + 10) - terrH(x, z - 10)) / 20; if (sl > 0.75) continue;
       const fo = FOREST[Math.floor(z / 50) * 1570 + Math.floor(x / 50)] ? 1 : 0;
@@ -591,100 +667,88 @@ const G3 = (() => {
     for (const c of CH.values()) if (c.lights){ attr(0, c.lights, 3); gl.drawArrays(gl.POINTS, 0, c.nl); }
   }
 
-  // ---------- fish plants: the plant with its door, sign, ice silo and chute; the quay crane, a forklift and the people on the quay ----------
-  // The plant is the OpenStreetMap building nearest the berth (industrial preferred), dressed with what a fish plant has on the quay
-  // side; where the map has none, one of ours stands on the nearest dry land. Only the plant nearest the camera is animated.
-  const PLANTS = []; let PLANTN = null, PM = null;
-  const plantName = pt => { const c = CUSTOMERS.find(x => x.port === pt.id && x.big); return (c ? c.no : 'Mottaket i ' + pt.name).toUpperCase(); };
-  function plantLayout(pt){
-    const bp = berthPose(pt.id, 'skiff') || berthPose(pt.id, 'sjark'); if (!bp) return null;
-    const f = bp.face, u = [f.ux, f.uz], n = [f.nx, f.nz], depth = f.depth || 6, cx = bp.x * 1000, cz = bp.y * 1000;
-    const at = (a, o) => [f.x + u[0] * a + n[0] * o, f.z + u[1] * a + n[1] * o];
-    const onQuay = p => { const rx = p[0] - f.x, rz = p[1] - f.z, al = rx * u[0] + rz * u[1], of = rx * n[0] + rz * n[1]; return Math.abs(al) <= f.hl + 0.5 && of <= 0.2 && of >= -depth - 0.2; };
-    const gy = p => onQuay(p) ? QTOP : Math.max(0.4, terrH(p[0], p[1]));
-    const inset = Math.min(2.8, depth / 2), drop = at(bp.a + 1.8, -inset), crane = at(bp.a - 2.6, -Math.min(1.9, depth / 2));
-    let bi = -1, bs = 1e9;
-    if (BLD) for (let kx = -1; kx <= 1; kx++) for (let kz = -1; kz <= 1; kz++) for (const i of (BLD.cells.get((Math.floor(cz / 1000) + kz) * 100 + Math.floor(cx / 1000) + kx) || [])){
-      const ty = BLD.t[i], A = BLD.l[i] * BLD.w[i]; if (A < 250 || (ty !== 8 && ty !== 9 && ty !== 0)) continue;
-      const d = Math.hypot(BLD.x[i] - cx, BLD.z[i] - cz); if (d > 220) continue;
-      const sc = d - (ty === 8 ? 25 : 0) - 1.2 * Math.sqrt(A); if (sc < bs){ bs = sc; bi = i; }   // near, big, and industrial if it can be
+  // ---------- the harbour unit (tools/harbour/kaimottak.py): quay, fish plant, crane, forklift, ice silo and bunker station in one ----------
+  // One model for every harbour with a plant (UNITS, 01-world.js): drawn in full within 900 m and in its simple version further out.
+  // Its moving parts (the crane's slewing column, the boom and its extension, the hook, the forklift and its forks, the roller door
+  // and the ice chute) stand at rest in every harbour, and the plant nearest the camera works them (drawPlant).
+  let UMOD = null;
+  function unitModel(){
+    if (UMOD !== null) return UMOD;
+    const G = glbHas('harbour') ? glbLoad('harbour') : null; if (!G || !G.parts.lod0){ UMOD = false; return UMOD; }
+    const P = G.parts, gl0 = P.glass || {p:[], n:[], c:[]};
+    UMOD = {near:upA({p:P.lod0.p.concat(gl0.p), n:P.lod0.n.concat(gl0.n), c:P.lod0.c.concat(gl0.c)}), far:upA(P.lod1), house:upA(P.crane_house), boom1:upA(P.crane_boom1), boom2:upA(P.crane_boom2),
+      hook:upA(P.crane_hook), truck:upA(P.truck), forks:upA(P.truck_forks), door:upA(P.door), chute:upA(P.chute), A:G.ex.anchors};
+    return UMOD;
+  }
+  // the unit's frame: a point [x, y, z] in it, in the world; the model's matrix (eye-relative)
+  const unitP = (U, p) => { const w = unitW(U, p[0], p[2]); return [w[0], p[1], w[1]]; };
+  const unitMat = (U, eye) => chain(M4.T(U.o[0] - eye[0], -eye[1], U.o[1] - eye[2]), M4.RY(Math.atan2(-U.u[1], U.u[0])));
+  // on the unit's ground: the block (m out round it) or its basin
+  function onUnit(x, z, m){ for (const U of UNITA){ if (Math.abs(x - U.o[0]) > 120 || Math.abs(z - U.o[1]) > 120) continue; const [lx, lz] = unitL(U, x, z), ax = Math.abs(lx);
+    if ((ax <= UNIT.E + m && lz <= m && lz >= -UNIT.B - m) || (ax <= UNIT.basinX && lz >= 0 && lz <= UNIT.basinZ)) return U; } return null; }
+  // The crane's pose {a: the boom's heading in the world, r: the radius from the column, hook: the hook's height} as the column's slew,
+  // the boom's angle up (it rises to reach in close and keeps the tip at least 2.6 m over the heel) and how far the extension runs out
+  function craneGeo(P, q){
+    const C = P.ucrane, L = clamp(Math.hypot(q.r, 2.6), C.L1, C.L1 + C.ext), th = Math.acos(clamp(q.r / L, 0, 1)), Lh = L * Math.cos(th);
+    return {th, e:L - C.L1, tip:[P.crane[0] + Math.sin(q.a) * Lh, C.heelY + L * Math.sin(th), P.crane[1] + Math.cos(q.a) * Lh]};
+  }
+  // the unit's moving parts: the crane at pose q, the forklift st {x, z, h, fl, loads}, the door open by k (0-1), the chute at angle
+  // ch (in the unit's frame, 0 = straight out over the berth); what hangs from the hook is drawn by the caller
+  function drawUnitParts(P, eye, q, st, k, ch){
+    const M = unitModel(), U = P.unit, A = M.A, rel = p => [p[0] - eye[0], p[1] - eye[1], p[2] - eye[2]], g = craneGeo(P, q);
+    const base = rel([P.crane[0], A.crane.base[1], P.crane[1]]), heel = rel([P.crane[0], A.crane.heel[1], P.crane[1]]);
+    drawN(M.house, chain(M4.T(base[0], base[1], base[2]), M4.RY(q.a)));
+    const BM = chain(M4.T(heel[0], heel[1], heel[2]), M4.RY(q.a), M4.RX(-g.th)); drawN(M.boom1, BM); drawN(M.boom2, chain(BM, M4.T(0, 0, g.e)));
+    // the hook's block hangs so its bottom is 0.1 m over the load's top at q.hook (landScene's heights)
+    const tip = rel(g.tip), hk = [tip[0], q.hook + 0.62 - eye[1], tip[2]]; drawN(PM.wire, limbM([tip[0], tip[1] - 0.2, tip[2]], hk, 0.012)); drawN(M.hook, chain(M4.T(hk[0], hk[1], hk[2]), M4.RY(q.a)));
+    const fy = P.gy([st.x, st.z]), FM = chain(M4.T(st.x - eye[0], fy - eye[1], st.z - eye[2]), M4.RY(-st.h)), lift = 0.05 + st.fl * 0.45;
+    drawN(M.truck, FM); drawN(M.forks, chain(FM, M4.T(0, lift, 0))); { let y = 0.17 + lift; for (const L of st.loads || []){ drawN(L.mesh, chain(FM, M4.T(0, y, -1.5))); y += L.h; } }
+    const UM = unitMat(U, eye), D = A.door.top, sk = 1 - 0.94 * k; drawN(M.door, chain(UM, M4.T(D[0], D[1], D[2]), new Float32Array([1,0,0,0, 0,sk,0,0, 0,0,1,0, 0,0,0,1])));
+    const S0 = A.silo.axis; drawN(M.chute, chain(UM, M4.T(S0[0], S0[1], S0[2]), M4.RY(ch)));
+    return {tip:g.tip, hk};
+  }
+  // the units' quays and buildings: far ones in their simple version; near ones in full with their moving parts at rest, but for the
+  // plant that works them (skip)
+  function drawUnits(eye, VP, near, far, skip){
+    const M = unitModel(); if (!M) return; nSetup(VP);
+    for (const U of UNITA){
+      const d = Math.hypot(U.o[0] - eye[0], U.o[1] - eye[2]); if (d > far) continue;
+      const full = near && d < 900; drawN(full ? M.near : M.far, unitMat(U, eye));
+      const P = full && U.id !== skip && PLANTS.find(q => q.id === U.id); if (P) drawUnitParts(P, eye, craneIdle(P, 0), fkRest(P), 0, P.chRest);
     }
-    let B;
-    if (bi >= 0){ const ty = BLD.t[bi], lv = BLD.lv[bi]; B = {x:BLD.x[bi], z:BLD.z[bi], l:BLD.l[bi], w:BLD.w[bi], a:BLD.a[bi], H:ty === 8 ? (lv ? 4 * lv : 7.5) : ty === 9 ? (lv || 2) * 3.4 : (lv ? 2.8 * lv : 3.6), osm:true}; }
-    else { let q = null; for (let r = 14; r <= 220 && !q; r += 6){ const p = at(bp.a, -depth - r); if (isLand({x:p[0] / 1000, y:p[1] / 1000}) && terrH(p[0], p[1]) < 25) q = at(bp.a, -depth - r - 10); }
-      if (!q) return null; B = {x:q[0], z:q[1], l:26, w:16, a:Math.atan2(u[1], u[0]), H:8, osm:false}; }
-    const ca = Math.cos(B.a), sa = Math.sin(B.a); let lo = 1e9, hi = -1e9;
-    for (const [s1, s2] of [[-0.5, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, 0.5]]){ const y = terrH(B.x + ca * s1 * B.l - sa * s2 * B.w, B.z + sa * s1 * B.l + ca * s2 * B.w); lo = Math.min(lo, y); hi = Math.max(hi, y); }
-    B.base = Math.max(lo, 0.3) - 0.5; B.top = B.base + B.H + Math.max(0, hi - B.base);
-    // the wall facing the quay gets the door and the sign
-    const walls = [[ca, sa, B.l / 2, B.w], [-ca, -sa, B.l / 2, B.w], [-sa, ca, B.w / 2, B.l], [sa, -ca, B.w / 2, B.l]].map(([nx, nz, off, len]) => ({nx, nz, x:B.x + nx * off, z:B.z + nz * off, len}));
-    const wl = walls.reduce((bw, w) => { const dx = drop[0] - w.x, dz = drop[1] - w.z, s = (dx * w.nx + dz * w.nz) / (Math.hypot(dx, dz) || 1); return !bw || s > bw.s ? {...w, s} : bw; }, null);
-    const dn = [wl.nx, wl.nz], du = [-wl.nz, wl.nx], door = [wl.x, wl.z], dy = Math.max(B.base + 0.5, gy([wl.x + dn[0] * 2, wl.z + dn[1] * 2]));
-    const off = (p, a, o) => [p[0] + du[0] * a + dn[0] * o, p[1] + du[1] * a + dn[1] * o];
-    const e1 = off(door, wl.len / 2 - 3, 0), e2 = off(door, -wl.len / 2 + 3, 0), end = Math.hypot(e1[0] - cx, e1[1] - cz) < Math.hypot(e2[0] - cx, e2[1] - cz) ? wl.len / 2 - 3 : -wl.len / 2 + 3;
-    // the ice silo stands on the quay aft of the crane, with a short chute out over the berth
-    const siloR = clamp(depth / 2 - 0.3, 1.2, 2), lim = f.hl - siloR - 0.5, cA = bp.a - 2.6, dA = bp.a + 1.8;
-    const sA = [bp.a - 9.5, bp.a + 9.5].map(a => clamp(a, -lim, lim)).reduce((b, a) => Math.min(Math.abs(a - cA), Math.abs(a - dA)) > Math.min(Math.abs(b - cA), Math.abs(b - dA)) ? a : b);
-    const silo = at(sA, -Math.max(siloR + 0.4, Math.min(depth / 2, 3.5))), siloY = gy(silo), chuteB = at(bp.a + (sA > bp.a ? 1.2 : -1.2), 1.3), toB = Math.atan2(chuteB[0] - silo[0], chuteB[1] - silo[1]);
-    const P = {id:pt.id, name:plantName(pt), bp, f, u, n, depth, at, gy, drop, crane, B, door, dn, du, dy, wallLen:wl.len, silo, siloY, siloR,
-      chuteA:[silo[0] + Math.sin(toB) * siloR * 0.9, siloY + 8.2, silo[1] + Math.cos(toB) * siloR * 0.9], chuteB:[chuteB[0], QTOP + 3.4, chuteB[1]],
-      lamps:[at(clamp(bp.a - 9, -f.hl + 1, f.hl - 1), -0.9), at(clamp(bp.a + 9, -f.hl + 1, f.hl - 1), -0.9)], stacks:[off(door, 4.2, 4.5), off(door, -4.2, 4.5)], park:off(door, 7.5, 6.5)};
-    P.signW = Math.min(wl.len * 0.7, 16); P.signY = Math.min(B.top - 1.6, dy + 6.2);
+    gl.disableVertexAttribArray(2); gl.useProgram(PL.p);
+  }
+  // ---------- fish plants: the harbour unit's crane, forklift, door and chute at work, and the people on the quay ----------
+  const PLANTS = []; let PM = null;
+  function plantLayout(pt){
+    const U = UNITS[pt.id], M = unitModel(), bp = berthPose(pt.id, 'skiff'); if (!U || !M || !bp) return null;
+    const A = M.A, f = bp.face, u = [f.ux, f.uz], n = [f.nx, f.nz], at = (a, o) => [f.x + u[0] * a + n[0] * o, f.z + u[1] * a + n[1] * o], W = p => unitW(U, p[0], p[2]);
+    const onQuay = p => { const [lx, lz] = unitL(U, p[0], p[1]); return Math.abs(lx) <= UNIT.E + 0.1 && lz <= 0.1 && lz >= -UNIT.B - 0.1; };
+    const gy = p => onQuay(p) ? QTOP : Math.max(0.4, terrH(p[0], p[1]));
+    const P = {id:pt.id, unit:U, bp, f, u, n, depth:UNIT.B, at, gy, onQuay, drop:W(A.drop), crane:W(A.crane.base), door:W(A.door.top), dn:n, du:u, dy:QTOP,
+      ucrane:{L1:A.crane.boom1, ext:A.crane.ext, heelY:A.crane.heel[1]}, lamps:A.lamps.map(q => { const w = W(q); return [w[0], w[1], q[1]]; }), stacks:A.stacks.map(W), park:W(A.truck.wait),
+      ws:Object.fromEntries(Object.entries(A.workers).map(([k, q]) => [k, W(q)])), chRest:Math.PI / 2};
     return P;
   }
   function buildPlants(){
-    PLANTS.length = 0; const nb = NB();
-    const STEEL = [0.74, 0.76, 0.78, 0.55], DOORC = [0.27, 0.3, 0.34, 0.3], BLUE = [0.12, 0.3, 0.55, 0.3], CRANE = [0.95, 0.72, 0.08, 0.4], PALLET = [0.66, 0.53, 0.36, 0.05], POLE = [0.45, 0.47, 0.5, 0.4];
-    const BOXC = [[0.18, 0.4, 0.74, 0.25], [0.6, 0.64, 0.67, 0.25]], WALL = [0.82, 0.85, 0.86, 0.1], ROOFC = [0.3, 0.33, 0.36, 0.1], KAR = [0.5, 0.55, 0.6, 0.25];
+    PLANTS.length = 0;
+    const M = unitModel(), ry = U => Math.atan2(U.n[0], U.n[1]);
     for (const pt of PORTS){
       if (!pt.mottak) continue; const P = plantLayout(pt); if (!P) continue; PLANTS.push(P);
-      const B = P.B, du = P.du, dn = P.dn;
-      camSolid(P.silo[0], P.silo[1], P.siloR * 2 + 0.4, P.siloR * 2 + 0.4, 0, P.siloY, P.siloY + 9 + P.siloR); camSolid(P.crane[0], P.crane[1], 2.6, 2.6, 0, QTOP, QTOP + 4.2);
-      if (!B.osm){ camSolid(B.x, B.z, B.w + 0.6, B.l + 0.6, Math.PI / 2 - B.a, B.base, B.top + 0.4); const L = [Math.cos(B.a), Math.sin(B.a)], W = [-Math.sin(B.a), Math.cos(B.a)]; obox(nb, [B.x, B.z], L, W, B.l, B.w, B.base, B.H, WALL); obox(nb, [B.x, B.z], L, W, B.l + 0.6, B.w + 0.6, B.base + B.H, 0.35, ROOFC); }
-      // door with frame and canopy, the sign board
-      const D = (a, o) => [P.door[0] + du[0] * a + dn[0] * o, P.door[1] + du[1] * a + dn[1] * o];
-      obox(nb, D(0, 0.06), du, dn, 4.4, 0.12, P.dy - 0.2, 4.4, DOORC); for (const s of [-1, 1]) obox(nb, D(s * 2.3, 0.1), du, dn, 0.22, 0.2, P.dy - 0.2, 4.6, STEEL);
-      obox(nb, D(0, 0.8), du, dn, 5.4, 1.6, P.dy + 4.5, 0.15, STEEL); obox(nb, D(0, 0.07), du, dn, P.signW + 0.4, 0.1, P.signY - 0.2, P.signW / 5 + 0.4, BLUE);
-      // the ice silo on legs, its ladder and the chute out over the berth
-      const [sx, sz] = P.silo, sy = P.siloY;
-      const sr = P.siloR, ld = P.u;   // the ladder runs up the side along the quay
-      for (const [lx, lz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) nb.tube([[sx + lx * sr * 0.6, sy, sz + lz * sr * 0.6], [sx + lx * sr * 0.6, sy + 3, sz + lz * sr * 0.6]], 0.12, STEEL, 6);
-      nb.tube([[sx, sy + 2.8, sz], [sx, sy + 9, sz]], sr, STEEL, 16);
-      { const c = [sx, sy + 9 + sr * 0.6, sz]; for (let i = 0; i < 16; i++){ const a0 = i / 16 * Math.PI * 2, a1 = (i + 1) / 16 * Math.PI * 2; nb.tri([sx + Math.cos(a0) * sr, sy + 9, sz + Math.sin(a0) * sr], c, [sx + Math.cos(a1) * sr, sy + 9, sz + Math.sin(a1) * sr], STEEL); } }
-      for (const s of [-0.22, 0.22]) nb.tube([[sx + ld[0] * (sr + 0.05) + dn[0] * s, sy + 3, sz + ld[1] * (sr + 0.05) + dn[1] * s], [sx + ld[0] * (sr + 0.05) + dn[0] * s, sy + 9.4, sz + ld[1] * (sr + 0.05) + dn[1] * s]], 0.03, POLE, 4);
-      for (let y = sy + 3.3; y < sy + 9.3; y += 0.35) nb.tube([[sx + ld[0] * (sr + 0.05) - dn[0] * 0.22, y, sz + ld[1] * (sr + 0.05) - dn[1] * 0.22], [sx + ld[0] * (sr + 0.05) + dn[0] * 0.22, y, sz + ld[1] * (sr + 0.05) + dn[1] * 0.22]], 0.02, POLE, 4);
-      const cA = P.chuteA, cB = P.chuteB; nb.tube([cA, cB], 0.28, STEEL, 10); nb.tube([cB, [cB[0], cB[1] - 0.9, cB[2]]], 0.22, STEEL, 10);
-      const mid = [(cA[0] + cB[0]) / 2, (cA[1] + cB[1]) / 2, (cA[2] + cB[2]) / 2], gm = P.gy([mid[0], mid[2]]); if (mid[1] - gm > 4) nb.tube([[mid[0], gm, mid[2]], [mid[0], mid[1] - 0.3, mid[2]]], 0.12, STEEL, 6);
-      // crane pedestal, lamp posts
-      nb.tube([[P.crane[0], QTOP, P.crane[1]], [P.crane[0], QTOP + 1.1, P.crane[1]]], 0.42, CRANE, 12);
-      for (const L of P.lamps){ const y0 = P.gy(L); nb.tube([[L[0], y0, L[1]], [L[0], y0 + 8, L[1]]], 0.09, POLE, 6); obox(nb, [L[0] + P.n[0] * 0.3, L[1] + P.n[1] * 0.3], P.u, P.n, 0.7, 0.5, y0 + 7.8, 0.3, [0.2, 0.22, 0.25, 0.3]); }
-      // stacks of fish boxes on pallets and a pair of empty tubs by the door
-      P.stacks.forEach((S0, k) => { const y0 = P.gy(S0); for (let j = 0; j < 2; j++){ const c = [S0[0] + du[0] * (j - 0.5) * 1.35, S0[1] + du[1] * (j - 0.5) * 1.35]; obox(nb, c, du, dn, 1.2, 0.8, y0, 0.15, PALLET);
-        for (let lay = 0; lay < 4 + ((k + j) % 3); lay++) for (let b = 0; b < 3; b++) obox(nb, [c[0] + du[0] * (b - 1) * 0.4, c[1] + du[1] * (b - 1) * 0.4], du, dn, 0.38, 0.78, y0 + 0.15 + lay * 0.3, 0.28, BOXC[(k + lay) % 2]); } });
-      for (let j = 0; j < 2; j++){ const c = D(-7 - j * 1.4, 3); obox(nb, c, du, dn, 1.2, 1.0, P.gy(c), 0.8, KAR); }
+      // the camera stays out of the quay's block, the plant, the silo and the tank
+      for (const [cx, cz, sx, sz, y0, y1] of M.A.solids){ const c = unitW(P.unit, cx, cz); camSolid(c[0], c[1], sx, sz, ry(P.unit), y0, y1); }
     }
-    PLANTN = nb.mesh();
   }
   // the moving parts, built once and drawn with a transform; the workers are drawn joint by joint
   function buildPlantParts(){
     const mk = f => { const b = NB(); f(b); return b.mesh(); }, unit = k => mk(b => b.tube([[0, 0, 0], [0, 0, 1]], 1, k, 6));
-    const YEL = [0.95, 0.72, 0.08, 0.4], DK = [0.14, 0.15, 0.17, 0.2], VEST = [1, 0.45, 0.06, 0.3], REFL = [0.9, 0.95, 0.9, 0.6], SKIN = [0.86, 0.66, 0.52, 0.1];
+    const DK = [0.14, 0.15, 0.17, 0.2], VEST = [1, 0.45, 0.06, 0.3], REFL = [0.9, 0.95, 0.9, 0.6], SKIN = [0.86, 0.66, 0.52, 0.1];
     PM = {W:glbHas('worker') ? {hw:wkMeshes('hw'), crew:wkMeshes('crew')} : null,
       leg:unit([0.16, 0.18, 0.22, 0.1]), arm:unit(VEST), wire:unit([0.1, 0.1, 0.1, 0.3]), fhose:unit([0.06, 0.06, 0.07, 0.35]), broom:unit([0.55, 0.4, 0.25, 0.05]), hose:unit([0.2, 0.55, 0.25, 0.3]),
-      boom:mk(b => b.box(0, -0.5, 0.5, 1, 1, 1, YEL)),
       torso:mk(b => { b.box(0, 0, 0, 0.42, 0.56, 0.26, VEST); b.box(0, 0.16, 0, 0.43, 0.06, 0.27, REFL); b.box(0, 0.34, 0, 0.43, 0.06, 0.27, REFL); }),
       head:mk(b => { b.box(0, 0, 0, 0.2, 0.22, 0.22, SKIN); b.box(0, 0.2, 0, 0.26, 0.09, 0.28, [0.95, 0.95, 0.92, 0.5]); b.box(0, 0.19, -0.14, 0.24, 0.03, 0.08, [0.95, 0.95, 0.92, 0.5]); }),
       hand:mk(b => b.box(0, -0.05, 0, 0.09, 0.1, 0.09, [0.9, 0.9, 0.2, 0.2])), boot:mk(b => b.box(0, 0, -0.05, 0.13, 0.12, 0.28, DK)),
       cup:mk(b => b.box(0, 0, 0, 0.08, 0.1, 0.08, [0.95, 0.95, 0.95, 0.4])), fbox:mk(b => b.box(0, 0, 0, 0.78, 0.28, 0.38, [0.18, 0.4, 0.74, 0.25])),
-      cab:mk(b => { b.box(0, 0, 0, 1.3, 1.5, 1.3, YEL); b.box(0, 0.6, -0.66, 1.1, 0.7, 0.04, [0.15, 0.2, 0.25, 0.8]); }),
-      hook:mk(b => { b.box(0, -0.3, 0, 0.3, 0.45, 0.2, YEL); b.box(0, -0.55, 0, 0.06, 0.25, 0.06, DK); }),
-      // forklift: body with counterweight and overhead guard, driver in the seat; forks on a mast that lifts (local forward -z)
-      fork:mk(b => { b.box(0, 0.25, 0.2, 1.15, 0.8, 1.9, [0.85, 0.2, 0.12, 0.35]); b.box(0, 0.25, 1.05, 1.15, 1.05, 0.5, [0.2, 0.2, 0.22, 0.2]);
-        for (const [x, z] of [[-0.52, -0.55], [0.52, -0.55], [-0.52, 0.8], [0.52, 0.8]]) b.box(x, 1.05, z, 0.07, 1.15, 0.07, DK); b.box(0, 2.2, 0.12, 1.15, 0.06, 1.45, DK);
-        for (const [x, z] of [[-0.5, -0.6], [0.5, -0.6], [-0.5, 0.85], [0.5, 0.85]]) b.tube([[x - 0.12, 0.28, z], [x + 0.12, 0.28, z]], 0.28, DK, 10);
-        b.box(0, 1.05, 0.35, 0.44, 0.55, 0.3, [0.13, 0.29, 0.62, 0.2]); b.box(0, 1.6, 0.33, 0.2, 0.22, 0.22, SKIN); b.box(0, 1.8, 0.33, 0.26, 0.09, 0.28, [0.98, 0.8, 0.06, 0.7]); }),
-      mast:mk(b => { for (const x of [-0.35, 0.35]) b.box(x, 0, 0, 0.08, 2.3, 0.1, DK); b.box(0, 0.2, -0.08, 0.8, 0.3, 0.06, DK); for (const x of [-0.25, 0.25]) b.box(x, 0, -0.62, 0.1, 0.05, 1.1, DK); }),
-      pal:mk(b => { b.box(0, 0, 0, 1.2, 0.14, 0.8, [0.66, 0.53, 0.36, 0.05]); for (let lay = 0; lay < 3; lay++) for (let k = 0; k < 3; k++) b.box((k - 1) * 0.4, 0.14 + lay * 0.29, 0, 0.38, 0.28, 0.78, [0.18, 0.4, 0.74, 0.25]); }),
       // a landing's loads: a pallet with 1 to 9 boxes of fish, or a 460 litre tub with ice on top of the fish
       palN:[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(nb => mk(b => { b.box(0, 0, 0, 1.2, 0.14, 0.8, [0.66, 0.53, 0.36, 0.05]); for (let k = 0; k < nb; k++) b.box((k % 3 - 1) * 0.4, 0.14 + Math.floor(k / 3) * 0.29, 0, 0.38, 0.28, 0.78, [0.18, 0.4, 0.74, 0.25]); })),
       tub:mk(b => { b.box(0, 0, 0, 1.2, 0.85, 1.0, [0.2, 0.36, 0.62, 0.25]); b.box(0, 0.84, 0, 1.24, 0.05, 1.04, [0.16, 0.3, 0.52, 0.25]); b.box(0, 0.8, 0, 1.08, 0.06, 0.88, [0.93, 0.96, 0.98, 0.5]); }),
@@ -707,19 +771,17 @@ const G3 = (() => {
     }
     return {x:R.st[0].p[0], z:R.st[0].p[1], h:0, task:'stand', walk:false, s:0};
   }
+  // the day's rounds at the quay: coiling at the bollards, hosing and stacking by the pallets, sweeping, coffee on the bench; the
+  // forklift stands at its spot (the places are the unit's, clear of the forklift's route)
   function plantRounds(P){
     if (P.rounds) return P.rounds;
-    const face = (p, q) => Math.atan2(q[0] - p[0], -(q[1] - p[1])), bl = QB[faceKey(P.f)] || [], bp = P.bp, f = P.f;
-    const bol = (a) => bl.length ? bl.reduce((x, q) => Math.abs(q.a - a) < Math.abs(x.a - a) ? q : x, bl[0]) : {x:P.at(a, -0.6)[0], z:P.at(a, -0.6)[1]};
-    const bA = bol(bp.a - 5), bF = bol(bp.a + 5), toW = (q) => [q.x - P.n[0] * 0.7, q.z - P.n[1] * 0.7], seaH = Math.atan2(P.n[0], -P.n[1]);
-    const D2 = [P.door[0] + P.dn[0] * 2.4, P.door[1] + P.dn[1] * 2.4], S1 = P.stacks[0], S2 = P.stacks[1], near = (S) => [S[0] + P.dn[0] * 1.1, S[1] + P.dn[1] * 1.1];
-    const sw1 = P.at(bp.a - 6, -Math.min(1.6, P.depth / 2)), sw2 = P.at(bp.a + 6, -Math.min(1.6, P.depth / 2)), along = Math.atan2(P.u[0], -P.u[1]);
+    const R = unitModel().A.rounds, W = q => unitW(P.unit, q[0], q[2]), face = (p, q) => Math.atan2(q[0] - p[0], -(q[1] - p[1])), seaH = Math.atan2(P.n[0], -P.n[1]), along = Math.atan2(P.u[0], -P.u[1]);
+    const c = R.coil.map(W), h = R.hose.map(W), sw = R.sweep.map(W), cf = R.coffee.map(W);
     return P.rounds = [
-      {v:1.1, st:[{p:toW(bA), d:24, task:'coil', h:seaH}, {p:toW(bF), d:20, task:'coil', h:seaH}, {p:P.drop, d:14, task:'look', h:seaH}]},
-      {v:1.2, st:[{p:near(S1), d:32, task:'hose', h:face(near(S1), S1), carry:true}, {p:near(S2), d:9, task:'stack', h:face(near(S2), S2)}]},
-      {v:0.6, st:[{p:sw1, d:1, task:'sweep', h:along, carry:false}, {p:sw2, d:1, task:'sweep', h:along + Math.PI}], sweep:true},
-      {v:1.0, st:[{p:D2, d:45, task:'coffee', h:face(D2, P.drop)}, {p:[D2[0] + P.du[0] * 2, D2[1] + P.du[1] * 2], d:15, task:'look', h:face(D2, P.drop)}]},
-      {v:2.2, st:[{p:P.park, d:18, task:'park', h:face(P.park, P.door)}, {p:near(S1), d:6, task:'pick', h:face(near(S1), S1), carry:true}, {p:P.drop, d:6, task:'drop', h:seaH}]}
+      {v:1.1, st:[{p:c[0], d:24, task:'coil', h:seaH}, {p:c[1], d:20, task:'coil', h:seaH}, {p:c[2], d:14, task:'look', h:seaH}]},
+      {v:1.2, st:[{p:h[0], d:32, task:'hose', h:face(h[0], P.stacks[0]), carry:true}, {p:h[1], d:9, task:'stack', h:face(h[1], P.stacks[0])}]},
+      {v:0.6, st:[{p:sw[0], d:1, task:'sweep', h:along, carry:false}, {p:sw[1], d:1, task:'sweep', h:along + Math.PI}], sweep:true},
+      {v:1.0, st:[{p:cf[0], d:45, task:'coffee', h:seaH}, {p:cf[1], d:15, task:'look', h:seaH}]}
     ];
   }
   function drawWorker(P, st, eye, T, idx){
@@ -773,29 +835,44 @@ const G3 = (() => {
   // plant, and the people on the quay have their jobs: one signals at the edge, one takes the loads, one counts at the door and the
   // crane driver works the radio remote. It all follows the simulation's landing timeline (LANDING, game minutes), so the last load
   // is ashore when the landing note comes.
-  const HOOK_UP = QTOP + 3.9, TIP_Y = QTOP + 6.2;
+  const HOOK_UP = QTOP + 3.9;
   const ease = u => u * u * (3 - 2 * u), seg = (u, a, b) => clamp((u - a) / (b - a), 0, 1);
   const loadH = (kind, nb) => kind === 'tub' ? 0.85 : 0.13 + Math.ceil(nb / 3) * 0.29;
-  const craneIdle = (P, T) => ({a:Math.atan2(-P.n[0], -P.n[1]) + Math.sin(T * 0.05) * 0.6, r:5.5, hook:QTOP + 3.2});
+  const craneIdle = (P, T) => ({a:Math.atan2(P.u[0], P.u[1]) + Math.sin(T * 0.05) * 0.25, r:5.5, hook:QTOP + 3.2});
+  // the forklift at rest: at its spot east of the drop spot, forks towards it
+  const fkRest = P => { const R = fkRun(P); return {x:R.Wp[0], z:R.Wp[1], h:R.waitH, fl:0, loads:[]}; };
   const poseTo = (P, x, z, hook) => ({a:Math.atan2(x - P.crane[0], z - P.crane[1]), r:Math.max(1.5, Math.hypot(x - P.crane[0], z - P.crane[1])), hook});
   const poseMix = (A, B, k) => ({a:A.a + angDiff(A.a, B.a) * k, r:A.r + (B.r - A.r) * k, hook:A.hook + (B.hook - A.hook) * k});
-  const tipOf = (P, q) => [P.crane[0] + Math.sin(q.a) * q.r, TIP_Y, P.crane[1] + Math.cos(q.a) * q.r];
+  const tipOf = (P, q) => craneGeo(P, q).tip;
   // where the loads stand on deck, in the boat's frame (x to starboard, z aft); the first slot is the next to go up
   function deckSlots(kind){
     const G = GEO(vtype()), d = G.deck || {y:G.gw, z:(G.stern || 3) * 0.5};
     return kind === 'tub' ? [[0.65, d.y, d.z - 0.55], [-0.65, d.y, d.z - 0.55], [0.65, d.y, d.z + 0.55], [-0.65, d.y, d.z + 0.55]] : [[0, d.y, d.z - 0.45], [0, d.y, d.z + 0.45]];
   }
-  // the forklift's run: from where it waits by the drop spot, forward to the loads, back out, over to the door, inside, and back.
-  // Its speed is set so a run takes at most two lifts, whatever the distance to the door.
+  // the forklift's run on the unit's route: from its spot east of the drop spot forward to the loads, lift, on round a quarter turn to
+  // the door's line and in through the door, set down, and back the same way in reverse. The route keeps the truck's corners well
+  // inside the deck (unittest.py checks it). Its speed is set so a run takes at most two lifts.
   function fkRun(P){
     if (P.run) return P.run;
-    const D = P.drop, E = [P.door[0] + P.dn[0] * 3, P.door[1] + P.dn[1] * 3], I = [P.door[0] - P.dn[0] * 4, P.door[1] - P.dn[1] * 4];
-    const dl = Math.hypot(E[0] - D[0], E[1] - D[1]) || 1, u = [(E[0] - D[0]) / dl, (E[1] - D[1]) / dl], Wp = [D[0] + u[0] * 6, D[1] + u[1] * 6], Dp = [D[0] + u[0] * 1.7, D[1] + u[1] * 1.7];
-    const hd = (a, c) => Math.atan2(c[0] - a[0], -(c[1] - a[1])), toD = hd(Wp, Dp), len = (a, c) => Math.hypot(c[0] - a[0], c[1] - a[1]);
-    const legs = [['go', Wp, Dp, toD], ['pick', Dp, Dp, toD, 0.35], ['go', Dp, Wp, toD], ['go', Wp, E, hd(Wp, E)], ['go', E, I, hd(E, I)], ['drop', I, I, hd(E, I), 0.3], ['go', I, E, hd(I, E)], ['go', E, Wp, hd(E, Wp)]];
-    const dist = legs.reduce((s, g) => s + len(g[1], g[2]), 0), vG = Math.max(20, dist / 3.95);   // metres per game minute
-    let t = 0; for (const g of legs){ g.t0 = t; g.dur = g[4] || len(g[1], g[2]) / vG; t += g.dur; }
-    return P.run = {legs, T:t, Wp, D, E, I, waitH:toD};
+    const T = unitModel().A.truck, W = q => unitW(P.unit, q[0], q[2]), c = T.arc, r = T.r;
+    const arc = []; for (let k = 0; k <= 8; k++){ const a = Math.PI / 2 * k / 8; arc.push(W([c[0] - r * Math.sin(a), 0, c[2] + r * Math.cos(a)])); }
+    const wait = W(T.wait), pick = W(T.pick), inn = W(T.in), inPath = [pick, ...arc, inn], outPath = [...inPath].reverse().concat([wait]);
+    const hd = (a, b) => Math.atan2(b[0] - a[0], -(b[1] - a[1])), plen = pts => pts.reduce((s, q, i) => i ? s + Math.hypot(q[0] - pts[i - 1][0], q[1] - pts[i - 1][1]) : 0, 0);
+    const legs = [{kind:'go', pts:[wait, pick], rev:false}, {kind:'pick', pts:[pick], h:hd(wait, pick), dur:0.35}, {kind:'go', pts:inPath, rev:false},
+      {kind:'drop', pts:[inn], h:hd(arc[8], inn), dur:0.3}, {kind:'go', pts:outPath, rev:true}];
+    for (const g of legs) g.len = plen(g.pts);
+    const dist = legs.reduce((s, g) => s + g.len, 0), vG = Math.max(20, dist / 3.95);   // metres per game minute
+    let t = 0; for (const g of legs){ g.t0 = t; g.dur = g.dur || g.len / vG; t += g.dur; }
+    return P.run = {legs, T:t, Wp:wait, waitH:hd(wait, pick), inn};
+  }
+  // where a leg of the run puts the truck at w (0-1): moving off and pulling up gently, facing the way it drives (or the other way
+  // when it reverses)
+  function legAt(g, w){
+    if (g.kind !== 'go'){ const q = g.pts[0]; return {x:q[0], z:q[1], h:g.h}; }
+    let s = ease(w) * g.len;
+    for (let i = 1; i < g.pts.length; i++){ const a = g.pts[i - 1], b = g.pts[i], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (s > L && i < g.pts.length - 1){ s -= L; continue; }
+      const k = L ? clamp(s / L, 0, 1) : 0, dx = b[0] - a[0], dz = b[1] - a[1]; return {x:a[0] + dx * k, z:a[1] + dz * k, h:g.rev ? Math.atan2(-dx, dz) : Math.atan2(dx, -dz)}; }
+    const q = g.pts[g.pts.length - 1]; return {x:q[0], z:q[1], h:0};
   }
   // everything a landing shows at game minute gt: the crane's pose and what hangs from it, the loads on deck and on the quay,
   // the forklift, and where the people stand and what they do. null when this plant is not landing the boat you are on.
@@ -828,14 +905,15 @@ const G3 = (() => {
     const quay = []; let fk = {x:R.Wp[0], z:R.Wp[1], h:R.waitH, fl:0, loads:[]};
     for (let j = 0; j < n; j++){ const k = j >> 1; if (e >= tR(j) && e < pickAt(k)) quay.push({mesh:mesh(j), y:QTOP + (j % 2 ? hh(j - 1) : 0)}); }
     for (let k = runs - 1; k >= 0; k--){ const t = e - start(k); if (t < 0) continue; if (t >= R.T) break;
-      const g = R.legs.find(q => t < q.t0 + q.dur) || R.legs[R.legs.length - 1], w = clamp((t - g.t0) / g.dur, 0, 1), gi = R.legs.indexOf(g);
+      const g = R.legs.find(q => t < q.t0 + q.dur) || R.legs[R.legs.length - 1], w = clamp((t - g.t0) / g.dur, 0, 1), gi = R.legs.indexOf(g), q = legAt(g, w);
       const loads = [2 * k, 2 * k + 1].filter(j => j < n).map(j => ({mesh:mesh(j), h:hh(j)}));
-      fk = {x:g[1][0] + (g[2][0] - g[1][0]) * w, z:g[1][1] + (g[2][1] - g[1][1]) * w, h:g[3], fl:g[0] === 'pick' ? w : g[0] === 'drop' ? 1 - w : gi > 1 && gi < 5 ? 1 : 0, loads:gi >= 1 && gi <= 5 ? loads : []};
+      fk = {x:q.x, z:q.z, h:q.h, fl:g.kind === 'pick' ? w : g.kind === 'drop' ? 1 - w : gi === 2 ? 1 : 0, loads:gi >= 1 && gi <= 3 ? loads : []};
       break; }
     // the people: stations and jobs
-    const along = (x, z) => (x - P.f.x) * P.u[0] + (z - P.f.z) * P.u[1], aK = along(K[0], K[2]), aD = along(D[0], D[1]), sd = aD >= along(P.crane[0], P.crane[1]) ? 1 : -1;
     const hdg = (p, q) => Math.atan2(q[0] - p[0], -(q[1] - p[1])), seaH = Math.atan2(P.n[0], -P.n[1]), tip = tipOf(P, pose);
-    const s0 = P.at(aK, -0.8), s1 = P.at(aD + sd * 1.9, -Math.min(2.8, P.depth / 2)), s2 = [R.E[0] + P.du[0] * 2.6, R.E[1] + P.du[1] * 2.6], s3 = P.at(along(P.crane[0], P.crane[1]) - sd * 1.6, -Math.min(P.depth - 0.8, 3.6));
+    // at the unit's stations, clear of the forklift's route: one signals at the edge, one takes the loads, one counts by the door, one
+    // works the crane's remote
+    const s0 = P.ws.signal, s1 = P.ws.receive, s2 = P.ws.tally, s3 = P.ws.remote;
     const moving = i >= 0 && (u < 0.18 || (u >= 0.42 && u < 0.74)), recv = i >= 0 && u >= 0.74 && u < hk ? 'guide' : i >= 0 && u >= hk && u < 0.93 ? 'unhook' : 'look';
     const busy = [{x:s0[0], z:s0[1], h:seaH, task:moving ? 'signal' : 'look'}, {x:s1[0], z:s1[1], h:hdg(s1, D), task:recv}, {x:s2[0], z:s2[1], h:hdg(s2, D), task:'tally'}, {x:s3[0], z:s3[1], h:hdg(s3, [tip[0], tip[2]]), task:'remote'}].map(q => ({...q, walk:false, s:0}));
     return {e, i, u, pose, hang, deck, quay, fk, busy, K, slewD:Math.atan2(D[0] - P.crane[0], D[1] - P.crane[1])};
@@ -853,12 +931,19 @@ const G3 = (() => {
     nSetup(VP);
     const rel = (x, y, z) => [x - eye[0], y - eye[1], z - eye[2]], night = env.night > 0.3, hr = gDate(S.t / 60).getUTCHours(), LS = landScene(P, T, BMrel, eye), onShift = !!LS || (hr >= 6 && hr < 22);
     P.scene = LS;
-    // crane: a slewing cab on the pedestal, a telescopic boom to a tip above the load, the wire and the hook
-    const pose = LS ? LS.pose : craneIdle(P, T), tp = tipOf(P, pose), piv = rel(P.crane[0], QTOP + 2.6, P.crane[1]), tip = rel(tp[0], tp[1], tp[2]), slew = pose.a;
-    drawN(PM.cab, chain(M4.T(piv[0], QTOP + 1.1 - eye[1], piv[2]), M4.RY(slew + Math.PI)));
-    drawN(PM.boom, limbM(piv, tip, 0.34)); const hk = [tip[0], pose.hook - eye[1], tip[2]]; drawN(PM.wire, limbM(tip, hk, 0.02)); drawN(PM.hook, M4.T(hk[0], hk[1], hk[2]));
-    if (LS && LS.hang){ const h = LS.hang.h; drawN(LS.hang.mesh, chain(M4.T(hk[0], hk[1] - 0.1 - h, hk[2]), M4.RY(slew)));
-      for (const s of [-1, 1]) drawN(PM.wire, limbM([hk[0], hk[1] - 0.3, hk[2]], [hk[0] + Math.cos(slew) * 0.55 * s, hk[1] - 0.1, hk[2] - Math.sin(slew) * 0.55 * s], 0.012)); }
+    const dt = P.pT ? clamp(T - P.pT, 0, 0.5) : 0; P.pT = T;
+    const pose = LS ? LS.pose : craneIdle(P, T), FK = LS ? LS.fk : fkRest(P), U = P.unit, A = unitModel().A;
+    // the roller door (on a sensor) rolls up as the forklift turns in towards it, is open before the forks reach it, and rolls down
+    // as it backs out
+    const [, fz] = unitL(U, FK.x, FK.z), pz = A.truck.pick[2], az = A.truck.arc[2]; P.doorK = ease(clamp((pz - fz) / (pz - az), 0, 1));
+    // the ice chute swings out over the boat's hold while ice runs, and back along the quay after
+    const b = S.boat, gt = S.t + currentFrac(), icing = b.iceUntil > gt && b.status === 'port' && b.port === P.id && BMrel, ax = A.silo.axis;
+    let chW = P.chRest;
+    if (icing){ const c = xf(BMrel, [0, 0, 0]), C = [c[0] + eye[0], c[2] + eye[2]], fw = [Math.sin(bv.head), -Math.cos(bv.head)], Lb = (VESSELS[vtype()] || {len:6}).len, sw = unitW(U, ax[0], ax[2]);
+      const k = clamp((sw[0] - C[0]) * fw[0] + (sw[1] - C[1]) * fw[1], -Lb / 3, Lb / 3), [tx, tz] = unitL(U, C[0] + fw[0] * k, C[1] + fw[1] * k); chW = Math.atan2(tx - ax[0], tz - ax[2]); }
+    P.chA = P.chA === undefined ? P.chRest : P.chA + clamp(angDiff(P.chA, chW), -0.35 * dt, 0.35 * dt);
+    const r = drawUnitParts(P, eye, pose, FK, P.doorK, P.chA);
+    if (LS && LS.hang){ const h = LS.hang.h, t = rel(r.tip[0], pose.hook - 0.1 - h, r.tip[2]); drawN(LS.hang.mesh, chain(M4.T(t[0], t[1], t[2]), M4.RY(pose.a))); }
     if (LS){
       for (const q of LS.deck) drawN(q.mesh, chain(BMrel, M4.T(q.at[0], q.at[1], q.at[2])));
       for (const q of LS.quay){ const c = rel(P.drop[0], q.y, P.drop[1]); drawN(q.mesh, chain(M4.T(c[0], c[1], c[2]), M4.RY(LS.slewD))); }
@@ -866,25 +951,12 @@ const G3 = (() => {
     // people: the day shift, or one on watch at night; everyone turns out for a landing
     const R = plantRounds(P); P.spray = 0;
     for (let i = 0; i < 4; i++){ if (!onShift && i !== 3) continue; drawWorker(P, follow(P, 'w' + i, LS ? LS.busy[i] : roundAt(R[i], T + i * 17), T, 1.6), eye, T, i); }
-    // forklift
-    let FK;
-    if (LS) FK = LS.fk;
-    else { const r = roundAt(R[4], T); FK = {x:r.x, z:r.z, h:r.h, fl:r.task === 'pick' ? Math.min(1, r.s / 3) : r.task === 'drop' ? Math.max(0, 1 - r.s / 3) : r.task === 'carry' ? 1 : 0, loads:r.task === 'carry' || r.task === 'drop' && r.s < 3 || r.task === 'pick' && r.s > 3 ? [{mesh:PM.pal, h:1}] : []}; }
-    FK = follow(P, 'fk', {...FK, task:'fk'}, T, 4.5);
-    { const dt = P.fkT ? clamp(T - P.fkT, 0, 0.5) : 1; P.fkT = T; P.fkH = P.fkH === undefined || dt >= 0.5 ? FK.h : P.fkH + clamp(angDiff(P.fkH, FK.h), -2.4 * dt, 2.4 * dt); }
-    const fy = P.gy([FK.x, FK.z]), FM = chain(M4.T(FK.x - eye[0], fy - eye[1], FK.z - eye[2]), M4.RY(-P.fkH)); drawN(PM.fork, FM); drawN(PM.mast, chain(FM, M4.T(0, 0.12 + FK.fl * 0.5, -1.05)));
-    { let y = 0.2 + FK.fl * 0.5; for (const q of FK.loads){ drawN(q.mesh, chain(FM, M4.T(0, y, -1.6))); y += q.h; } }
-    // ice down the chute into the boat
-    { const b = S.boat, gt = S.t + currentFrac(); if (b.iceUntil > gt && b.status === 'port' && b.port === P.id && BMrel){
-      const G = GEO(vtype()), dy = xf(BMrel, [0, (G.deck || {y:G.gw}).y, 0])[1] + eye[1], O = [P.chuteB[0], P.chuteB[1] - 0.95, P.chuteB[2]], fall = Math.max(0.5, O[1] - dy);
-      let k = P.spray; for (let i = 0; i < 70; i++){ const q = (T * 1.6 + i / 70) % 1, r = 0.12 + 0.1 * q; PB[k * 3] = O[0] + (hash(i) - 0.5) * r - eye[0]; PB[k * 3 + 1] = O[1] - q * q * fall - eye[1]; PB[k * 3 + 2] = O[2] + (hash(i + 31) - 0.5) * r - eye[2]; PA[k] = 0.85; k++; }
-      P.spray = k; } }
-    // sign
-    if (!P.sign){ const cv = document.createElement('canvas'); cv.width = 1024; cv.height = 200; const g = cv.getContext('2d'); g.fillStyle = '#1f4d8c'; g.fillRect(0, 0, 1024, 200); g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle'; let fs = 110; g.font = '700 ' + fs + 'px Archivo, Arial, sans-serif'; while (g.measureText(P.name).width > 960 && fs > 40){ fs -= 6; g.font = '700 ' + fs + 'px Archivo, Arial, sans-serif'; } g.fillText(P.name, 512, 104); P.sign = {tex:mkTex()}; upTex(P.sign.tex, cv);
-      const w2 = P.signW / 2, hS = P.signW / 5.12, c = [P.door[0] + P.dn[0] * 0.14, P.door[1] + P.dn[1] * 0.14], a = [c[0] - P.du[0] * w2, c[1] - P.du[1] * w2], b = [c[0] + P.du[0] * w2, c[1] + P.du[1] * w2];
-      P.sign.q = texQuad([b[0], P.signY, b[1]], [a[0], P.signY, a[1]], [a[0], P.signY + hS, a[1]], [b[0], P.signY + hS, b[1]]); }
-    drawTexQuad(P.sign.q, P.sign.tex, M4.T(-eye[0], -eye[1], -eye[2]), VP, true, [P.dn[0], 0, P.dn[1]]);
-    return {night, spray:P.spray, lamps:P.lamps.map(L => rel(L[0], P.gy(L) + 7.7, L[1]))};
+    // ice from the chute's spout down into the boat
+    if (icing && Math.abs(angDiff(P.chA, chW)) < 0.15){
+      const G = GEO(vtype()), dy = xf(BMrel, [0, (G.deck || {y:G.gw}).y, 0])[1] + eye[1], L = A.silo.chute, O = unitP(U, [ax[0] + Math.sin(P.chA) * L, ax[1] + A.silo.spout, ax[2] + Math.cos(P.chA) * L]), fall = Math.max(0.5, O[1] - dy);
+      let k = P.spray; for (let i = 0; i < 70; i++){ const q = (T * 1.6 + i / 70) % 1, rr = 0.12 + 0.1 * q; PB[k * 3] = O[0] + (hash(i) - 0.5) * rr - eye[0]; PB[k * 3 + 1] = O[1] - q * q * fall - eye[1]; PB[k * 3 + 2] = O[2] + (hash(i + 31) - 0.5) * rr - eye[2]; PA[k] = 0.85; k++; }
+      P.spray = k; }
+    return {night, spray:P.spray, lamps:P.lamps.map(L => rel(L[0], L[2] - 0.12, L[1]))};
   }
   function nearestPlant(eye){ let best = null, bd = 900; for (const P of PLANTS){ const d = Math.hypot(P.drop[0] - eye[0], P.drop[1] - eye[2]); if (d < bd){ bd = d; best = P; } } return best; }
 
@@ -984,6 +1056,9 @@ const G3 = (() => {
       const f = bp.face, u = [f.ux, f.uz], n = [f.nx, f.nz], at = (a, o) => [f.x + u[0] * a + n[0] * o, f.z + u[1] * a + n[1] * o], depth = f.depth || 6;
       const pa = clamp(bp.a + 2.4, -f.hl + 1, f.hl - 1), B = {id:pt.id, kind, bp, f, u, n, at, pa, pump:at(pa, -1.5), gy:() => QTOP, spray:0};
       B.outlet = at(pa, -1.15); B.sign = at(clamp(bp.a - 3.5, -f.hl + 0.5, f.hl - 0.5), -0.9);
+      // a harbour unit has its own pump, hose reel, tank and sign: only the meter and the hose are drawn
+      const U = UNITS[pt.id], M = U && unitModel();
+      if (M){ const W = q => unitW(U, q[0], q[2]); B.unit = true; B.pump = W(M.A.pump); B.outlet = W(M.A.reel); B.meterAt = W(M.A.meter); B.meterY = M.A.meter[1]; BUNKERS.push(B); continue; }
       // the pump: cabinet with a red top, the hose reel on its side
       obox(nb, B.pump, u, n, 0.8, 0.55, QTOP, 1.55, TANK); obox(nb, B.pump, u, n, 0.86, 0.6, QTOP + 1.55, 0.14, RED);
       const rc = at(pa + 0.62, -1.5); nb.tube([[rc[0] - u[0] * 0.12, QTOP + 0.9, rc[1] - u[1] * 0.12], [rc[0] + u[0] * 0.12, QTOP + 0.9, rc[1] + u[1] * 0.12]], 0.36, DK, 14);
@@ -1023,15 +1098,15 @@ const G3 = (() => {
     // the meter on the pump, and the sign
     const v = Math.round(shown);
     if (!B.meter){ B.cv = document.createElement('canvas'); B.cv.width = 256; B.cv.height = 128; B.meter = {tex:mkTex(), v:-1};
-      const du = [-B.n[1], B.n[0]], c = B.at(B.pa, -1.5 + 0.28), w2 = 0.26, a = [c[0] - du[0] * w2, c[1] - du[1] * w2], d = [c[0] + du[0] * w2, c[1] + du[1] * w2];   // read from the water side
-      B.meter.q = texQuad([d[0], QTOP + 1.05, d[1]], [a[0], QTOP + 1.05, a[1]], [a[0], QTOP + 1.31, a[1]], [d[0], QTOP + 1.31, d[1]]);
+      const du = [-B.n[1], B.n[0]], c = B.unit ? [B.meterAt[0] + B.n[0] * 0.005, B.meterAt[1] + B.n[1] * 0.005] : B.at(B.pa, -1.5 + 0.28), w2 = 0.26, a = [c[0] - du[0] * w2, c[1] - du[1] * w2], d = [c[0] + du[0] * w2, c[1] + du[1] * w2];   // read from the water side
+      const my = B.unit ? B.meterY - 0.13 : QTOP + 1.05; B.meter.q = texQuad([d[0], my, d[1]], [a[0], my, a[1]], [a[0], my + 0.26, a[1]], [d[0], my + 0.26, d[1]]);
       const sv = document.createElement('canvas'); sv.width = 512; sv.height = 256; const g = sv.getContext('2d'); g.fillStyle = '#c21f19'; g.fillRect(0, 0, 512, 256); g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle';
       g.font = '700 118px Archivo, Arial, sans-serif'; g.fillText('BUNKERS', 256, 104); g.font = '600 52px Archivo, Arial, sans-serif'; g.fillText('DIESEL · BENSIN', 256, 200); B.signT = mkTex(); upTex(B.signT, sv);
       const s0 = [B.sign[0] + B.n[0] * 0.09, B.sign[1] + B.n[1] * 0.09], sw = 0.9, sa = [s0[0] - du[0] * sw, s0[1] - du[1] * sw], sb = [s0[0] + du[0] * sw, s0[1] + du[1] * sw];
       B.signQ = texQuad([sb[0], QTOP + 2.2, sb[1]], [sa[0], QTOP + 2.2, sa[1]], [sa[0], QTOP + 3.1, sa[1]], [sb[0], QTOP + 3.1, sb[1]]); }
     if (B.meter.v !== v){ B.meter.v = v; const g = B.cv.getContext('2d'); g.fillStyle = '#10161a'; g.fillRect(0, 0, 256, 128); g.fillStyle = '#7dff9a'; g.font = '700 72px monospace'; g.textAlign = 'right'; g.textBaseline = 'middle'; g.fillText(String(v), 200, 66); g.font = '600 34px monospace'; g.fillText('L', 244, 76); upTex(B.meter.tex, B.cv); }
     const TMx = M4.T(-eye[0], -eye[1], -eye[2]);
-    drawTexQuad(B.meter.q, B.meter.tex, TMx, VP, false, [B.n[0], 0, B.n[1]]); drawTexQuad(B.signQ, B.signT, TMx, VP, true, [B.n[0], 0, B.n[1]]);
+    drawTexQuad(B.meter.q, B.meter.tex, TMx, VP, false, [B.n[0], 0, B.n[1]]); if (!B.unit) drawTexQuad(B.signQ, B.signT, TMx, VP, true, [B.n[0], 0, B.n[1]]);
     return {liters:v, here:!!here};
   }
 
@@ -1639,7 +1714,7 @@ const G3 = (() => {
     if (mlight > 0.02){ const ml = [0.62, 0.7, 0.9].map(v => v * mlight * 0.32); env.sunCol = env.sunCol.map((v, k) => v + ml[k]); env.amb = env.amb.map((v, k) => v + [0.02, 0.025, 0.04][k] * mlight); const my = Math.max(env.moonDir[1], 0.25), mll = Math.hypot(env.moonDir[0], my, env.moonDir[2]); env.lightDir = [env.moonDir[0] / mll, my / mll, env.moonDir[2] / mll]; }
     env.shadowDir = el > -1 ? env.sunDir : mlight > 0.02 ? env.moonDir : null;
     env.tide = tideH(H);
-    const sn = Math.round(seasonal(SNOWLINE, H) / 20) * 20; if (sn !== snowNow){ snowNow = sn; recolor(TERR, sn); if (NEARM) recolor(NEARM, sn); }
+    const sn = Math.round(seasonal(SNOWLINE, H) / 20) * 20; if (sn !== snowNow){ snowNow = sn; recolor(TERR, sn); if (NEARM) recolor(NEARM, sn); for (const m of UPATCH) recolor(m, sn); }
   }
 
 
@@ -1812,7 +1887,7 @@ const G3 = (() => {
     };
     const holeOf = (M, g) => new Float32Array([M.x0 + g - eye[0], M.z0 + g - eye[2], M.x0 + M.sx - g - eye[0], M.z0 + M.sz - g - eye[2]]);
     if (!NEARM) one(TERR);
-    else if (near) one(NEARM, null, true);
+    else if (near){ one(NEARM, null, true); if (UPATCH.length){ gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(-1, -2); for (const m of UPATCH) one(m, null, true); gl.disable(gl.POLYGON_OFFSET_FILL); } }
     else if (!MIDM) one(TERR, holeOf(NEARM, 45));
     else { one(TERR, holeOf(MIDM, 180)); one(MIDM, holeOf(NEARM, 45)); }
     gl.disableVertexAttribArray(2); gl.disableVertexAttribArray(3); litSetup(VP);
@@ -2211,7 +2286,7 @@ const G3 = (() => {
     gl.disableVertexAttribArray(1); attr(0, SKYQ, 2); gl.drawArrays(gl.TRIANGLES, 0, 6);
     gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL);
     // far pass
-    drawTerrain(TM, eye, VPf, false); drawLit(STAT, TM); drawBuildings(TM); if (NPCM) for (const n of npcStates(H)){ const x = n.p.x * 1000, z = n.p.y * 1000, d = Math.hypot(x - eye[0], z - eye[2]); if (d < 30000 && !(n.fleet && d < 1500)) drawLit(NPCM[n.type], model(x - eye[0], (env.tide || 0) - eye[1], z - eye[2], -n.hd, 0, 0)); }
+    drawTerrain(TM, eye, VPf, false); drawLit(STAT, TM); drawBuildings(TM); drawUnits(eye, VPf, false, 15000); if (NPCM) for (const n of npcStates(H)){ const x = n.p.x * 1000, z = n.p.y * 1000, d = Math.hypot(x - eye[0], z - eye[2]); if (d < 30000 && !(n.fleet && d < 1500)) drawLit(NPCM[n.type], model(x - eye[0], (env.tide || 0) - eye[1], z - eye[2], -n.hd, 0, 0)); }
     drawSea(VPf, eye, t, 1);
     drawSeaLights(VPf, eye, t, false);
     if (env.night > 0.02){
@@ -2229,8 +2304,9 @@ const G3 = (() => {
     if (VG.hand){ drawSkiff(BMrel, VPn, dt, !cam.helm && !awaySk, ncrew > 0); gl.useProgram(PL.p); }
     else drawVessel(VT, VG, BMrel, VPn, !cam.helm && !awaySk, ncrew - awayCr);
     if (SHOW){ const y = (env.tide || 0) + (seaH(SHOW.x, SHOW.z, t) - (env.tide || 0)) * 0.8; SHOW.M = model(SHOW.x - eye[0], y - eye[1], SHOW.z - eye[2], -SHOW.h, Math.sin(t * 0.7) * 0.02, Math.sin(t * 0.9) * 0.03); drawVessel(SHOW.t, GEO(SHOW.t), SHOW.M, VPn, true, 2); }
-    if (STATN){ nSetup(VPn); drawN(STATN, TM); if (PLANTN) drawN(PLANTN, TM); if (BUNKN) drawN(BUNKN, TM); } drawMooring(BMrel, eye, VPn, t); if (PM) drawDeck(BMrel, eye, VPn, t, DECKACT); drawGearOp(BMrel, eye, VPn, t);
-    const plant = PM ? nearestPlant(eye) : null, pr = plant ? drawPlant(plant, eye, VPn, t, BMrel) : null, bunk = PM ? nearestBunker(eye) : null; if (bunk) bunk.last = drawBunker(bunk, eye, VPn, t, BMrel); gl.useProgram(PL.p);
+    if (STATN){ nSetup(VPn); drawN(STATN, TM); if (BUNKN) drawN(BUNKN, TM); } drawMooring(BMrel, eye, VPn, t); if (PM) drawDeck(BMrel, eye, VPn, t, DECKACT); drawGearOp(BMrel, eye, VPn, t);
+    const plant = PM ? nearestPlant(eye) : null; drawUnits(eye, VPn, true, nearFar, plant && plant.id);
+    const pr = plant ? drawPlant(plant, eye, VPn, t, BMrel) : null, bunk = PM ? nearestBunker(eye) : null; if (bunk) bunk.last = drawBunker(bunk, eye, VPn, t, BMrel); gl.useProgram(PL.p);
     wildSpawn(t); drawNPC(eye, t, H, VPn); drawGearSea(eye, t, VPn, H); drawWild(eye, t, dt);
 
     const pole = xf(BMrel, VG.pole);
@@ -2407,6 +2483,6 @@ const G3 = (() => {
     fineReady(){ if (NEARM){ freeMesh(NEARM); NEARM = null; updateNear(); } },
     fishCam(){ cam.helm = false; cam.dist = 7; cam.pitch = 0.22; cam.yaw = -0.85; },
     isHelm:() => cam.helm, setHelm(on){ const G = GEO(vtype()); cam.helm = !!on; cam.hy = 0; cam.hp = G.hp !== undefined ? G.hp : -0.07; cam.fov = G.fov || 55; },
-    _debug:{get eye(){ return lastEye; }, camInside, camFree, get camPull(){ return camPull; }, get camLift(){ return camLift; }, get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, BUNKERS, nearestPlant, fkRun, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; SEAMARKS.lights.forEach((L, i) => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(i, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }}
+    _debug:{get eye(){ return lastEye; }, camInside, camFree, get camPull(){ return camPull; }, get camLift(){ return camLift; }, get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, BUNKERS, nearestPlant, fkRun, legAt, terrH, unitModel, get UPATCH(){ return UPATCH; }, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; SEAMARKS.lights.forEach((L, i) => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(i, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }}
   };
 })();

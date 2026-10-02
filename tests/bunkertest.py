@@ -29,7 +29,7 @@ async def main():
           R.wait = S.plan && S.plan.depAt >= b.shift.until; const st = []; for (let i = 0; i < 40 && b.status === 'port'; i++){ step(); } R.leftFull = b.status === 'unmooring' || b.status === 'sailing' ? Math.round(b.fuel) : 'still ' + b.status;
           // Finnsnes: filled where she lies
           at('finnsnes'); b.fuel = 30; startFueling(false); R.finnsnes = {shift:!!b.shift, fueling:!!b.fueling}; run(5); R.finnsnesFuel = Math.round(b.fuel);
-          // Frovåg sells no fuel
+          // Frovåg has its harbour unit's bunker berth now
           at('frovag'); b.fuel = 30; R.frovag = startFueling(false);
           // a sjark fills diesel at 90 L/min
           b.type = 'sjark'; applyVessel(); at('torsken'); b.fuel = 100; startFueling(false); run(Math.ceil(b.shift.until - S.t)); R.sjark = b.fueling && {lpm:b.fueling.lpm, liters:Math.round(b.fueling.liters)};
@@ -41,7 +41,7 @@ async def main():
         print(ok(r['flow'][0] <= 10 and r['flow'][-1] == 90 and len(set(r['flow'])) >= 3 and not r['after']['fueling'] and abs(r['after']['paid'] - r['after']['price']) <= 1), 'the fuel runs in over a few minutes and is paid as it fills')
         print(ok(r['back'] == 'main' and r['landing']), "landing from the bunker quay: back to the plant's quay, then the crane starts")
         print(ok(r['wait'] and r['leftFull'] == 90), 'a route set while at the pump leaves when she is full')
-        print(ok(not r['finnsnes']['shift'] and r['finnsnes']['fueling'] and r['finnsnesFuel'] > 30 and r['frovag'] is False), 'Finnsnes fills where she lies; Frovåg sells no fuel')
+        print(ok(not r['finnsnes']['shift'] and r['finnsnes']['fueling'] and r['finnsnesFuel'] > 30 and r['frovag'] is True), 'Finnsnes fills where she lies; Frovåg fills at its bunker berth')
         print(ok(r['sjark'] and r['sjark']['lpm'] == 90), 'a sjark takes diesel at 90 L/min')
         # in 3D: a bunker station at each bunker quay and in Finnsnes; the move follows the game clock; the meter counts while the pump runs
         await pg.wait_for_function("G3.isActive()", timeout=90000); await pg.wait_for_timeout(1000)
@@ -58,7 +58,7 @@ async def main():
         await pg.wait_for_timeout(4000)
         meter = await pg.evaluate("JSON.stringify((G3._debug.BUNKERS.find(B => B.id === 'husoy') || {}).last)")
         print('stations:', st, 'phases:', ph, 'meter:', meter)
-        print(ok(sorted(json.loads(st)) == sorted(['finnsnes|main', 'husoy|bunker', 'senjahopen|bunker', 'gryllefjord|bunker', 'botnhamn|bunker', 'torsken|bunker'])), 'a bunker station at each bunker quay, and at the quay in Finnsnes')
+        print(ok(sorted(json.loads(st)) == sorted(['finnsnes|main'] + [k + '|bunker' for k in ['husoy', 'senjahopen', 'gryllefjord', 'botnhamn', 'torsken', 'sommaroy', 'brensholmen', 'frovag']])), 'a bunker station at every harbour unit\'s bunker berth, and at the quay in Finnsnes')
         print(ok(ph == ['out', 'in', 'lines']), 'in 3D the move follows the game clock: lines in, over, lines on')
         m = json.loads(meter) if meter else {}
         print(ok(m.get('here') and 15 <= m.get('liters', 0) <= 30), 'the pump meter counts the litres while the nozzle is in')

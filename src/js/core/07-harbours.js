@@ -16,7 +16,22 @@ const QUAYS = {
   frovag:{main:{a:[19636, 71906], b:[19631, 71932], n:[0.987, 0.163]}}
 };
 const QUAY_DEPTH = 10;   // how far the quay deck reaches in from the face (m)
+// The harbour unit (UNIT, UNITS in 01-world.js) is the quay in every harbour with a plant: its berths, its dredged basin.
+// the depth below chart datum at p (km) where a unit stands: 0 on the quay itself, at least the dredged depth in the basin, rising
+// 1 in 2 outside it; d elsewhere
+function unitDredge(p, d){
+  const x = p.x * 1000, z = p.y * 1000;
+  for (const U of UNITA){
+    if (Math.abs(x - U.o[0]) > 100 || Math.abs(z - U.o[1]) > 100) continue;
+    const [lx, lz] = unitL(U, x, z);
+    if (Math.abs(lx) <= UNIT.E && lz <= 0 && lz >= -UNIT.B) return 0;
+    if (lz > 0){ const dO = Math.hypot(Math.max(0, Math.abs(lx) - UNIT.basinX), Math.max(0, lz - UNIT.basinZ)); d = Math.max(d, UNIT.dredge - TIDE_ZC - 0.5 * dO); }
+  }
+  return d;
+}
 function quayFace(pid, kind){
+  const U = UNITS[pid];
+  if (U){ const b = UNIT.berth[kind]; if (!b) return null; const c = unitW(U, b[0], 0); return {x:c[0], z:c[1], ux:U.u[0], uz:U.u[1], nx:U.n[0], nz:U.n[1], hl:b[1] / 2, depth:UNIT.B, unit:pid}; }
   const q = QUAYS[pid] && QUAYS[pid][kind]; if (!q) return null;
   const dx = q.b[0] - q.a[0], dz = q.b[1] - q.a[1], L = Math.hypot(dx, dz), ux = dx / L, uz = dz / L, s = -uz * q.n[0] + ux * q.n[1] >= 0 ? 1 : -1;
   return {x:(q.a[0] + q.b[0]) / 2, z:(q.a[1] + q.b[1]) / 2, ux, uz, nx:-uz * s, nz:ux * s, hl:L / 2, depth:QUAY_DEPTH};
@@ -38,7 +53,15 @@ const PIERBOX = (() => {
     }
   }
   // the quay decks behind the faces in QUAYS; the shoreline behind them is not always straight, so the deck fills the gap
-  for (const pid in QUAYS) for (const kind in QUAYS[pid]){ const f = quayFace(pid, kind); out.push({x:f.x - f.nx * f.depth / 2, z:f.z - f.nz * f.depth / 2, w:f.depth, l:f.hl * 2, ang:Math.atan2(f.ux, f.uz), bw:false, closed:false, made:true, quay:pid + '|' + kind}); }
+  for (const pid in QUAYS) for (const kind in QUAYS[pid]){ if (UNITS[pid]) continue; const f = quayFace(pid, kind); out.push({x:f.x - f.nx * f.depth / 2, z:f.z - f.nz * f.depth / 2, w:f.depth, l:f.hl * 2, ang:Math.atan2(f.ux, f.uz), bw:false, closed:false, made:true, quay:pid + '|' + kind}); }
+  // where a harbour unit stands, the mapped piers on its ground and in its basin go (the unit is its own quay)
+  const inUnit = (x, z) => UNITA.some(U => { const [lx, lz] = unitL(U, x, z); return (Math.abs(lx) <= UNIT.E + 2 && lz <= 2 && lz >= -UNIT.B - 2) || (Math.abs(lx) <= UNIT.basinX && lz >= 0 && lz <= UNIT.basinZ); });
+  for (let i = out.length - 1; i >= 0; i--){
+    const q = out[i]; if (q.made) continue;
+    const ax = Math.sin(q.ang), az = Math.cos(q.ang), nx = Math.cos(q.ang), nz = -Math.sin(q.ang); let hit = false;
+    for (let s = -1; s <= 1 && !hit; s += 0.25) for (const t of [-1, 0, 1]){ if (inUnit(q.x + ax * s * q.l / 2 + nx * t * q.w / 2, q.z + az * s * q.l / 2 + nz * t * q.w / 2)){ hit = true; break; } }
+    if (hit) out.splice(i, 1);
+  }
   for (const pt of PORTS){
     if (pt.pier || QUAYS[pt.id]) continue;
     const px = pt.p.x * 1000, pz = pt.p.y * 1000, dx = pt.coast.x * 1000 - px, dz = pt.coast.y * 1000 - pz, L = Math.hypot(dx, dz), ux = dx / L, uz = dz / L, ql = L + 20;
@@ -92,7 +115,7 @@ function berthPose(pid, type, kind = 'main'){
   const key = pid + '|' + type + '|' + kind; if (key in BERTHPOSE) return BERTHPOSE[key];
   const pt = portById(pid), px = pt.p.x * 1000, pz = pt.p.y * 1000, Lb = VESSELS[type].len, Bb = BEAM[type] || 3, qf = quayFace(pid, kind);
   let best = null;
-  if (qf) best = {d:0, cx:qf.x + qf.nx * (Bb / 2 + 0.4), cz:qf.z + qf.nz * (Bb / 2 + 0.4), fx:qf.x, fz:qf.z, ux:qf.ux, uz:qf.uz, Nx:qf.nx, Nz:qf.nz, hl:qf.hl, a:0, depth:qf.depth};
+  if (qf) best = {d:0, cx:qf.x + qf.nx * (Bb / 2 + 0.4), cz:qf.z + qf.nz * (Bb / 2 + 0.4), fx:qf.x, fz:qf.z, ux:qf.ux, uz:qf.uz, Nx:qf.nx, Nz:qf.nz, hl:qf.hl, a:0, depth:qf.depth, unit:qf.unit};
   else if (kind !== 'main'){ BERTHPOSE[key] = null; return null; }
   if (!qf) for (const q of PIERBOX){
     if (q.bw || Math.hypot(q.x - px, q.z - pz) > (q.l + q.w) / 2 + 150) continue;
@@ -113,7 +136,7 @@ function berthPose(pid, type, kind = 'main'){
   // starboard of a boat heading hd is (cos hd, sin hd); the quay must be on that side
   let hd = Math.atan2(best.ux, -best.uz); if (Math.cos(hd) * -best.Nx + Math.sin(hd) * -best.Nz < 0) hd += Math.PI;
   const f = {x:Math.sin(hd), z:-Math.cos(hd)};
-  return BERTHPOSE[key] = {x:best.cx / 1000, y:best.cz / 1000, hd, fwd:f, face:{x:best.fx, z:best.fz, ux:best.ux, uz:best.uz, nx:best.Nx, nz:best.Nz, hl:best.hl, depth:best.depth}, a:best.a, Lb, Bb};
+  return BERTHPOSE[key] = {x:best.cx / 1000, y:best.cz / 1000, hd, fwd:f, face:{x:best.fx, z:best.fz, ux:best.ux, uz:best.uz, nx:best.Nx, nz:best.Nz, hl:best.hl, depth:best.depth, unit:best.unit || null}, a:best.a, Lb, Bb};
 }
 
 // ===== landing the catch =====

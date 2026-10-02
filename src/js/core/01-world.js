@@ -159,7 +159,7 @@ function legClear(a, b){
 }
 
 const PORTS = [
-  // the fish plants are where Råfisklaget lists landings on Senja and at Sommarøy and Brensholmen; Finnsnes has a net loft and gear dealers but no plant and no ice chute (the tackle shop sells bagged ice).
+  // the fish plants are where Råfisklaget lists landings on Senja and at Sommarøy and Brensholmen, each with the harbour unit and its bunker station (07-harbours.js); Finnsnes has a net loft and gear dealers but no plant and no ice chute (the tackle shop sells bagged ice).
   // The harbour point lies just off the plant's quay (Finnsnes: the quay by the net loft, south of the bridge); the quays themselves are QUAYS in 07-harbours.js.
   {id:'finnsnes', name:'Finnsnes', xy:[56.035,53.611], shore:[56.066,53.623], pier:false, fuel:true, ice:false, mottak:false, pf:1, home:true},
   {id:'botnhamn', name:'Botnhamn', xy:[53.288,23.495], shore:[53.285,23.527], pier:true, fuel:true, ice:true, mottak:true, pf:1.0},
@@ -167,12 +167,33 @@ const PORTS = [
   {id:'senjahopen', name:'Senjahopen', xy:[36.807,25.119], shore:[36.791,25.09], pier:true, fuel:true, ice:true, mottak:true, pf:1.02},
   {id:'gryllefjord', name:'Gryllefjord', xy:[20.319,39.836], shore:[20.309,39.867], pier:true, fuel:true, ice:true, mottak:true, pf:0.97},
   // Sommarøy and Brensholmen: the berth is on the water side of the OpenStreetMap quay nearest the largest industrial building (not checked against pictures)
-  {id:'sommaroy', name:'Sommarøy', xy:[56.761,9.545], shore:[56.736,9.511], pier:true, fuel:false, ice:true, mottak:true, pf:1.0},
-  {id:'brensholmen', name:'Brensholmen', xy:[58.589,12.628], shore:[58.626,12.649], pier:true, fuel:false, ice:true, mottak:true, pf:0.99},
+  {id:'sommaroy', name:'Sommarøy', xy:[56.761,9.545], shore:[56.736,9.511], pier:true, fuel:true, ice:true, mottak:true, pf:1.0},
+  {id:'brensholmen', name:'Brensholmen', xy:[58.589,12.628], shore:[58.626,12.649], pier:true, fuel:true, ice:true, mottak:true, pf:0.99},
   {id:'torsken', name:'Torsken', xy:[21.856,42.58], shore:[21.863,42.548], pier:true, fuel:true, ice:true, mottak:true, pf:0.99},
-  {id:'frovag', name:'Frovåg', xy:[19.651,71.922], shore:[19.607,71.915], pier:true, fuel:false, ice:true, mottak:true, pf:0.98}
+  {id:'frovag', name:'Frovåg', xy:[19.651,71.922], shore:[19.607,71.915], pier:true, fuel:true, ice:true, mottak:true, pf:0.98}
 ].map((p, i) => ({...p, i, p:{x:p.xy[0], y:p.xy[1]}, coast:{x:p.shore[0], y:p.shore[1]}}));
 const portById = id => PORTS.find(p => p.id === id);
+// ===== the harbour unit (02.10.2026) =====
+// One quay with the fish plant, the crane, the forklift, the ice silo and the bunker station, built in Blender
+// (tools/harbour/kaimottak.py, data/harbour-unit.b64) and set down in every harbour with a plant; Finnsnes keeps its quay. Its frame:
+// x along the face, y up from mean sea level, z out to the water. o is the middle of the face (metres), u the way along it, and the
+// water is on n = (-u.z, u.x). The quay is a block of 54.8 x 24.4 m with straight walls down to 9 m below mean sea level; the basin
+// in front is dredged to 6.6 m, which is 5 m at the lowest tide (TIDE_C adds up to 1.55 m), so the deepest coastal boat (kyst21,
+// 3.4 m) lies afloat. The landing berth is round x = -5, where the crane and the ice chute reach, the bunker berth round x = 16.5 by
+// the pump. The face lies on the plant's quay in QUAYS (the designer's), slid along it to stand on the most land with clear water in
+// front (Husøy 12 m, Frovåg 14 m); Sommarøy and Brensholmen, which have no marked quay, by a search near the harbour point for the
+// most land under the block and clear water in front. The landing berth stays within 25 m of the harbour point.
+const UNIT = {E:27.4, B:24.4, bot:-9, basinX:33.4, basinZ:26, dredge:6.6, berth:{main:[-5, 24], bunker:[16.5, 23]}};
+const UNITS = {
+  botnhamn:{o:[53282.5, 23499.9], u:[-0.993, -0.116]}, husoy:{o:[43803.9, 19670.9], u:[-0.212, -0.977]}, senjahopen:{o:[36807.1, 25112.1], u:[0.876, -0.483]},
+  gryllefjord:{o:[20312.3, 39841.9], u:[-0.947, -0.32]}, sommaroy:{o:[56736.6, 9544.3], u:[-0.707, -0.707]}, brensholmen:{o:[58576.6, 12633.9], u:[-0.766, -0.643]},
+  torsken:{o:[21862.9, 42573.6], u:[0.977, 0.215]}, frovag:{o:[19637.0, 71900.4], u:[0.189, -0.982]}
+};
+for (const k in UNITS){ const U = UNITS[k], l = Math.hypot(U.u[0], U.u[1]); U.id = k; U.u = [U.u[0] / l, U.u[1] / l]; U.n = [-U.u[1], U.u[0]]; }
+const UNITA = Object.values(UNITS);
+// the unit's frame and the world (metres)
+const unitW = (U, lx, lz) => [U.o[0] + U.u[0] * lx + U.n[0] * lz, U.o[1] + U.u[1] * lx + U.n[1] * lz];
+const unitL = (U, x, z) => { const dx = x - U.o[0], dz = z - U.o[1]; return [dx * U.u[0] + dz * U.u[1], dx * U.n[0] + dz * U.n[1]]; };
 function portApproach(pt){
   let best = null;
   for (let r = 0.15; r <= 0.7; r += 0.05) for (let a = 0; a < 360; a += 7.5){

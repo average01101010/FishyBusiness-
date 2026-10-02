@@ -34,9 +34,9 @@ BLDG = (-26.0, 0.5, 10.0, 23.5); BH = 7.2; RIDGE = 8.4      # the plant building
 C = {}
 def colours():
     C['conc'] = mat('concrete', (0.64, 0.64, 0.62), 0.15)
-    C['conc_d'] = mat('concrete_wet', (0.36, 0.37, 0.36), 0.25)
-    C['tidal'] = mat('tidal', (0.20, 0.22, 0.16), 0.35)
-    C['asph'] = mat('asphalt', (0.25, 0.26, 0.27), 0.08)
+    C['conc_d'] = mat('concrete_wet', (0.44, 0.45, 0.44), 0.25)
+    C['tidal'] = mat('tidal', (0.36, 0.37, 0.30), 0.35)
+    C['asph'] = mat('asphalt', (0.38, 0.39, 0.40), 0.08)
     C['yellow'] = mat('yellow_paint', (0.95, 0.76, 0.12), 0.3)
     C['white_p'] = mat('white_paint', (0.88, 0.89, 0.88), 0.25)
     C['rubber'] = mat('rubber', (0.07, 0.07, 0.08), 0.25)
@@ -417,21 +417,26 @@ def rel_game(c):
     g = to_game(c); return lambda p: tuple(a - b for a, b in zip(to_game(p), g))
 
 def anchors():
+    """the places the game needs, in the unit's frame (x along the face, y up from mean sea level, z out to sea; metres). The
+    forklift's route is the wait spot east of the drop spot, the pick spot with the forks over it, a quarter turn round arc (radius r)
+    to the door's line and in through the door; it reverses the same way out. The people's places are clear of the route."""
     G = lambda x, y, z=QTOP: [round(v, 3) for v in to_game((x, y, z))]
-    # the forklift's round, in the unit's frame on the deck: wait by the drop spot, in to the loads, back, over to the door and in, out
-    # again; every point keeps the truck's corners 2.5 m or more from the face and the deck's edges (checked in the test)
-    path = [(-6.0, 6.6), (-9.5, 6.6), (-12.0, 7.4), (-13.0, 9.0), (-13.0, 13.5), (-13.0, 9.0), (-11.5, 7.0), (-8.0, 6.4), (-6.0, 6.6)]
-    return {'face': {'hl': HL, 'depth': DEPTH, 'kerb': KERB, 'deckY': QTOP, 'bottom': WALL_BOT},
+    return {'face': {'hl': HL + 0.4, 'depth': DEPTH + 0.4, 'kerb': KERB, 'deckY': QTOP, 'bottom': WALL_BOT},
             'deck': [G(-HL - 0.4, 0.0), G(HL + 0.4, 0.0), G(HL + 0.4, DEPTH + 0.4), G(-HL - 0.4, DEPTH + 0.4)],
-            'basin': {'poly': [G(-HL - 6, 0.0), G(HL + 6, 0.0), G(HL + 6, -26.0), G(-HL - 6, -26.0)], 'depth': -6.6},
-            'footprint': {'poly': [G(-HL - 3, 0.0), G(HL + 3, 0.0), G(HL + 3, DEPTH + 3), G(-HL - 3, DEPTH + 3)]},
-            'berths': {'main': {'at': G(BERTH, 0.0), 'len': 24.0}, 'bunker': {'at': G(17.5, 0.0), 'len': 18.0}},
-            'crane': {'base': G(CRANE[0], CRANE[1], QTOP + 1.1), 'heel': G(CRANE[0], CRANE[1], CR_PIV), 'boom1': 4.8, 'boom2': 4.9},
-            'drop': G(*DROP), 'door': {'out': G(DOOR[0], DOOR[1] - 3.0), 'in': G(DOOR[0], DOOR[1] + 4.0), 'at': G(DOOR[0], DOOR[1]), 'w': 4.4, 'h': 4.8},
-            'truckPath': [G(x, y) for x, y in path], 'truck': {'park': G(*TRUCK_AT), 'front': 2.1, 'back': 1.35, 'half': 0.7},
-            'silo': {'axis': G(SILO[0], SILO[1], CHUTE_Z), 'r': SILO_R, 'chute': CHUTE_L, 'drop': CHUTE_Z - 1.6 - 1.3},
-            'pump': G(PUMP[0], PUMP[1], QTOP + 1.2), 'reel': G(PUMP[0] + 0.74, PUMP[1], QTOP + 1.0),
-            'workers': {'signal': G(-4.5, 1.0), 'receive': G(-11.0, 4.0), 'tally': G(-10.0, 8.6), 'remote': G(-10.5, 2.4), 'bunker': G(16.6, 1.4), 'ice': G(4.2, 3.6)},
+            'basin': {'x': HL + 6, 'z': 26.0, 'depth': -6.6},
+            'berths': {'main': {'x': BERTH, 'len': 24.0}, 'bunker': {'x': 16.5, 'len': 23.0}},
+            'bollards': [G(-24.5 + 7 * k, 0.5, QTOP + 0.55) for k in range(8)],
+            'crane': {'base': G(CRANE[0], CRANE[1], QTOP + 1.1), 'heel': G(CRANE[0], CRANE[1], CR_PIV), 'boom1': 4.95, 'ext': 4.6},
+            'drop': G(*DROP), 'door': {'top': G(DOOR[0], BLDG[2], QTOP + 4.8), 'w': 4.4, 'h': 4.8},
+            'truck': {'wait': G(-6.0, 4.6), 'pick': G(-8.0, 4.6), 'arc': G(-10.5, 7.1), 'r': 2.5, 'in': G(-13.0, 13.8), 'front': 2.1, 'back': 1.35, 'half': 0.7},
+            'silo': {'axis': G(SILO[0], SILO[1], CHUTE_Z), 'chute': CHUTE_L, 'spout': -2.9},
+            'pump': G(PUMP[0], PUMP[1], QTOP), 'reel': G(PUMP[0] + 0.74, PUMP[1], QTOP + 1.0), 'meter': G(PUMP[0], PUMP[1] - 0.38, QTOP + 1.3),
+            'workers': {'signal': G(-4.5, 1.0), 'receive': G(-9.6, 2.9), 'tally': G(-16.0, 8.5), 'remote': G(-4.0, 3.0)},
+            'rounds': {'coil': [G(-10.5, 1.2), G(-3.5, 1.2), G(-6.0, 2.4)], 'hose': [G(-24.6, 6.3), G(-22.2, 8.0)], 'sweep': [G(-20.0, 3.0), G(-14.0, 3.0)],
+                       'coffee': [G(-5.8, 8.9), G(-3.8, 8.9)]},
+            'stacks': [G(-24.6, 8.0), G(-17.95, 8.6)],
+            'solids': [[0.0, -(DEPTH + 0.4) / 2, 2 * HL + 0.8, DEPTH + 0.4, WALL_BOT, QTOP], [(BLDG[0] + BLDG[1]) / 2, -(BLDG[2] + BLDG[3]) / 2, BLDG[1] - BLDG[0], BLDG[3] - BLDG[2], QTOP, QTOP + RIDGE],
+                       [SILO[0], -SILO[1], 2 * SILO_R + 0.6, 2 * SILO_R + 0.6, QTOP, SILO_Z1 + 1.5], [TANK[0], -TANK[1], 11.0, 5.2, QTOP, QTOP + 3.5]],
             'lamps': [G(x, y - 0.3, QTOP + 8.85) for x, y in ((-24.0, 1.4), (0.0, 1.4), (24.0, 1.4), (-6.0, 23.0), (12.0, 23.0))]}
 
 SHOTS = [('sea3q', (34.0, -42.0, 16.0), (-2.0, 8.0, 3.0), 30), ('front', (0.0, -55.0, 6.0), (0.0, 8.0, 4.0), 32), ('above', (30.0, -20.0, 45.0), (0.0, 10.0, 0.0), 30),

@@ -427,14 +427,49 @@ Mister du juksa, fiskes det videre med stang til du kjøper ny i Fiskeutstyr. `m
     - **Fiskeren i skiffen:** får armene fra figuren (`SK.wk`).
     - **Uten dataelementet:** spillet tegner de gamle klossfigurene.
   - **Kjøring:** `python3 tools/harbour/arbeider.py` (eller `fast` uten bilder). Fila er `src/data/worker.b64`, rundt 180 KB, og ligger i malen som `glb-worker`.
-- **Havneenheten (fra 02.10.2026, ikke i spillet ennå):** `tools/harbour/kaimottak.py` bygger kaia med fiskemottak, kran, truck, is og bunkers som én enhet, til alle mottakshavnene. Planen er H1 til H5 (Blender, Husøy, animasjoner, alle havnene, tester).
-  - **Kaia:** en blokk på 54 × 24 m med rette betongvegger ned til 9 m under middel vannstand på alle sider. Ingenting stikker ut i sjøen (Jonas).
-  - **Delene som skal bevege seg:** kranen (`crane_house`, `crane_boom1`, `crane_boom2` og `crane_hook`), trucken (`truck` og `truck_forks`), rulleporten (`door`, med origo i overkant) og isrenna (`chute`).
-  - **Ankerne:**
-    - liggeplassene og slippsonen
-    - truckens rute og hjørnemål, og plassene til folkene
-    - dekket, fotavtrykket og bassenget
-  - **Data:** `src/data/harbour-unit.b64` (585 KB).
+- **Havneenheten (02.10.2026, i alle de åtte mottakshavnene):** `tools/harbour/kaimottak.py` bygger kaia med fiskemottak, kran, truck, is og bunkers som én enhet. Finnsnes beholder sin kai.
+  - **Kaia:** en blokk på 54,8 × 24,4 m med rette betongvegger ned til 9 m under middel vannstand på alle sider. Ingenting stikker ut i sjøen (Jonas).
+  - **Plasseringen:** `UNITS` i `01-world.js` gir for hver havn midten av fronten (`o`, i meter) og retningen langs fronten (`u`). Sjøen ligger på `n = (-u.z, u.x)`.
+    - Fronten ligger på mottakskaia Jonas merket i `QUAYS`. Den er skjøvet langs kaia dit blokka står på mest land og har fritt vann foran: Husøy 12 m, Frovåg 14 m og Senjahopen 2 m.
+    - Sommarøy og Brensholmen har ingen merket kai og er plassert med et søk nær havnepunktet etter det samme.
+    - Liggeplassen ligger høyst 25 m fra havnepunktet, så innseilingen står.
+  - **Liggeplassene:** `quayFace` henter dem fra enheten (`UNIT.berth`).
+    - Landing: midt på x = −5 og 24 m lang, der kranen og isrenna rekker.
+    - Bunkers: midt på x = 16,5 og 23 m lang, ved pumpa.
+    - `berthPose` gir dem videre med `face.unit`. Forhaling til bunkers er en tur på rundt 21 m langs samme kai. Alle åtte havnene har bunkers (`PORTS.fuel`).
+  - **Dybden:**
+    - Bassenget foran (|x| ≤ 33,4 m, 26 m ut) er mudret til 6,6 m under middel vannstand, både i navigasjonen (`unitDredge` i `depthF`, 5,3 m under sjøkartnull) og i 3D (`unitTerr`). Det stiger 1:2 utenfor.
+    - Ved laveste lavvann (summen av `TIDE_C` er 1,55 m) er det minst 5 m vann langs hele fronten.
+  - **Terrenget i 3D:**
+    - `unitTerr` senker land som er høyere enn dekket ved sidene og bak, og går tilbake til det opprinnelige innen 22 m (`UNIT_REACH`). Ingenting fylles opp.
+    - Hver enhet nær båten har sitt eget fine terrengstykke (`unitPatch`, 1,6–4 m mellom punktene). Det følger veggene og har hull der blokka står.
+    - Ytterkanten ligger på det nære terrengets egne trekanter. Det nære terrenget senkes under stykket (`terrCoarse`), og stykket tegnes med litt offset.
+  - **Det som skjules:**
+    - bygg fra kartdataene på kaia og i bassenget (`bldOnUnit` ved innlasting)
+    - trær (`addTrees`)
+    - brygger og de gamle kaidekkene (`PIERBOX`)
+    - de gamle fittings-delene; pullertene til fortøyningen kommer fra enheten (`QB`)
+  - **Tegningen:** `drawUnits` tegner full modell innen 900 m og den enkle utgaven ute til 15 km. De bevegelige delene står i hvile ved alle enhetene. Mottaket nærmest kameraet arbeider (`drawPlant`).
+  - **Kranen** (`craneGeo`):
+    - Søyla svinger, bommen løftes for å nå inn nær søyla og holder tuppen minst 2,6 m over hælen, og teleskopet går ut 0–4,6 m.
+    - Posisjonen i `landScene` er den samme som før: retning, radius og krokhøyde.
+  - **Trucken** (`fkRun`, `legAt`):
+    - Den venter øst for slippsonen og kjører fram med gaflene over lasten. Så går den en kvart sving med radius 2,5 m inn på linja til porten, gjennom porten og inn.
+    - Ut rygger den samme vei. Den kjører mykt i gang og bremser mykt.
+    - Rulleporten ruller opp etter hvor trucken er på ruta, så den er oppe før gaflene når den.
+  - **Isrenna:** svinger ut over lasterommet mens isen renner, og tilbake langs kaia etterpå. Isen faller fra tuten.
+  - **Folkene:** står på enhetens plasser, utenfor truckruta: én gir tegn, én tar imot, én teller og én kjører fjernkontrollen. Rundene deres (tau, spyling, feiing og kaffe på benken) går også utenfor ruta.
+  - **Bunkers:** pumpa, slangetrommelen, tanken og skiltet er enhetens. Spillet tegner bare telleren og slangen.
+  - **Delene som beveger seg:** kranen (`crane_house`, `crane_boom1`, `crane_boom2` og `crane_hook`), trucken (`truck` og `truck_forks`), rulleporten (`door`, med origo i overkant) og isrenna (`chute`).
+  - **Ankerne** (`anchors` i GLB-en): liggeplassene, pullertene, kranen, slippsonen, porten, truckruta med hjørnemålene, silo og renne, pumpe, trommel og teller, folkenes plasser og runder, kassestablene, kamerahindringene og lysene.
+  - **Testen:** `tests/unittest.py` sjekker for hver havn:
+    - at det er minst 5 m vann langs fronten ved laveste lavvann
+    - at havbunnen i 3D i bassenget aldri ligger over laveste vann
+    - at truckens fire hjørner er minst 1 m innenfor dekket langs hele ruta
+    - at en truckrunde tar høyst to løft
+    - at ingen brygge står på kaia
+    - Den tar også bilder (`unit_<havn>.png`).
+  - **Data:** `src/data/harbour-unit.b64` (585 KB), i malen som `glb-harbour`.
 
 
 ### 5.14 NPC-flåte og kartplotter
@@ -712,6 +747,8 @@ Jonas valgte den strengt realistiske varianten.
 Flåteoversikt med status, posisjon, last, drivstoff, skipper, driftsplan og dagens inntekt. Varsler når en båt trenger deg. Velger for hvilken båt i Mannskap, Fartøy, Utstyr og Verksted.
 
 ### Havner, mottak og fortøyning (B1–B5, godkjent 29.09.2026)
+
+**Fra 02.10.2026 står havneenheten i alle de åtte mottakshavnene** (se 5.13). Den erstatter de genererte mottakene i B3, bunkerskaiene i B5 og kaifrontene i `QUAYS` for disse havnene. Sommarøy, Brensholmen og Frovåg har nå også bunkers. Tidslinjene for landing, forhaling, bunkring og is er de samme. Finnsnes har som før sin kai i `QUAYS` og fyller der båten ligger.
 
 Mottakene ligger der Jonas har funnet dem i Råfisklagets leveranseoversikt: Husøy, Senjahopen, Botnhamn, Gryllefjord, Sommarøy, Brensholmen, Torsken og Frovåg (Brødrene Karlsen Senja, avd. Frovåg). Finnsnes har ikke mottak eller is i virkeligheten, bare bøteri og forhandler av fiskeutstyr og båter. Bunkerskai: Husøy, Senjahopen, Gryllefjord, Botnhamn og Torsken, fra Jonas' satellittbilder. Finnsnes beholder drivstoff inntil videre (se åpne spørsmål).
 
@@ -1013,7 +1050,7 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
   - `python3 tests/run.py smoke test …` kjører bare de testene du nevner.
   - `python3 tests/run.py full` er hele regresjonen før publisering (32 tester, rundt 10 minutter). `--3d` tegner 3D i alle.
   - Testene i `LITE`, også `tut.py`, kjøres med `KYST_LITE=1`, som gir `#no3d` i adressen: G3 er aktiv og alt går som før, men `frame()` tegner ingenting. Det gjorde `shoptest.py` rundt tre ganger raskere (43 s mot 13 s, med de samme 18 OK) og `docktest.py` fra rundt 10 minutter til 61 s. To slike går samtidig.
-  - Testene i `D3` (`dbg23o`, `camtest`, `moortest`, `landtest`, `bunkertest`, `vessel3d`) ser på selve 3D-bildet og går med 3D, etter hverandre. `routetest` og `heattest` måler millisekunder, og `landtest` følger kranen i 3D bilde for bilde. De går alene til slutt (`SOLO`), ellers forstyrrer de andre testene dem.
+  - Testene i `D3` (`dbg23o`, `camtest`, `moortest`, `landtest`, `bunkertest`, `vessel3d`, `unittest`) ser på selve 3D-bildet og går med 3D, etter hverandre. `routetest` og `heattest` måler millisekunder, og `landtest` følger kranen i 3D bilde for bilde. De går alene til slutt (`SOLO`), ellers forstyrrer de andre testene dem.
   - Loggene havner i `tests/out/logs/`. `boot(pg)` i `_env.py` starter spillet og venter på startskjermen i stedet for faste pauser.
 - **Regresjon:**
   - `trip2.py`: hel tur via kartplotter, avgang, 3D, fiske og havn.
@@ -1059,6 +1096,7 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
     `Math.random` er seedet, så kjøringene gjentar seg.
   - `bunkertest.py`: bunkringen. Forhaling til bunkerskaia og tilbake, pumpefart og betaling, avgang som venter, Finnsnes, og i 3D stasjonene, forhalingen og telleren.
   - `landtest.py`: leveringen. Lossetid, kasser og kar, avgang som venter, isrenna, og i 3D at kroken står over lasten på dekk og over losseplassen og at trucken rekker siste tur.
+  - `unittest.py`: havneenheten i de åtte havnene. Den sjekker minst 5 m vann langs fronten ved laveste lavvann, at havbunnen i bassenget ikke er over laveste vann i 3D, at truckens hjørner er minst 1 m innenfor dekket langs hele ruta, liggeplassene, mottaket og bunkersstasjonen, og at ingen brygge står på kaia. Bilder: `unit_<havn>.png`.
   - `fleet3test.py`: fase 3. Varsler, båtvelgeren, inntekt per båt og service per båt.
   - `fleet2test.py`: fase 2. Levering med og uten adgang, to båter på driftsplan i en simulert uke, knappene i Fartøy-appen, nybygg til flåten, og lagring med to båter. Skriver `OK` eller `FEIL` per sjekk.
   - `vesseltest.py`: fartøystigen. Ingen valg etter typenavn i `src/js`, fullt datablad og fornuftige forhold for hver type, utstyr som passer, de fem tilbudene, fjordlinja for 21 m, Båthandel liggende og stående (faner, kort med sideriss, havbåtene låst, knapper på 44 px), innbytte til 8,9-metersjarken, og progresjonen: blad B ved tiende landingsdag, migrering, innbyttet som innfrir lånet, inngangen med toppfinansiering, «Neste mål», banken, papirene og salg som innfrir lån.

@@ -297,7 +297,8 @@ function stockHour(H){
 const DPREF = Object.fromEntries(ALLSP.map(sp => [sp, SPECIES[sp].dep]));
 function depthFactor(sp, d){ const q = DPREF[sp]; return 0.3 + 0.7 * Math.exp(-((Math.log(Math.max(d, 2) / q[0]) / q[1]) ** 2)); }
 const SST = [3.6,3.1,3.2,3.9,5.6,8.2,10.8,11.4,9.8,7.8,6.0,4.6];
-function depthF(p){ if (isLand(p)) return 0; if (DEPTH) return Math.max(0.8, gridBilinear(DEPTH, GEO_DEPTH.nx, GEO_DEPTH.ny, GEO_DEPTH.c, p)); return depthModel(p); }
+// where a harbour unit stands (07-harbours.js) its quay is dry and its basin dredged
+function depthF(p){ return unitDredge(p, isLand(p) ? 0 : DEPTH ? Math.max(0.8, gridBilinear(DEPTH, GEO_DEPTH.nx, GEO_DEPTH.ny, GEO_DEPTH.c, p)) : depthModel(p)); }
 function depthAt(p){ return Math.round(depthF(p)); }
 function depthModel(p){ return (2 + (13 + 220 * Math.pow(exposure(p), 1.6) + 25 * vn(p.x / 4 + p.y / 7, 5)) * Math.pow(sstep(0, 1.5, coastDist(p)), 0.6)); }
 function grade(f){ return f >= 85 ? 'E' : f >= 65 ? 'A' : f >= 40 ? 'B' : f >= 15 ? 'X' : 'V'; }
