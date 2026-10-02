@@ -1,5 +1,6 @@
 from _env import GAME, boot
 # The sea (03b-sea.js): fetch up-wind over open water, so the lee is calm and the open sea is not; exposure() (fish and depth) unchanged.
+# The wind sea grows with the fetch to WMO's height for the open sea, the swell comes from the ocean, and the wind veers as the lows pass.
 import asyncio, json
 from playwright.async_api import async_playwright
 
@@ -18,10 +19,10 @@ async def main():
           R.rose = {}; for (const g of GROUNDS) R.rose[g.name.no] = D.map(d => r1(fetchAt(g.p, d)));
           for (const q of PORTS) R.rose[q.id] = D.map(d => r1(fetchAt(q.p, d)));
           // smooth: the cached field over a full turn in 1 degree steps, and against fetchAt
-          // (a step per degree is never more than a tenth of the step between two 10 degree sectors; the wind sea goes as the root of the fetch)
-          const g0 = GROUNDS[0].p; let jump = 0, prev = fetchField(g0, 0), dev = 0, sec = 0;
-          for (let k = 0; k < 36; k++) sec = Math.max(sec, Math.abs(fetchField(g0, (k + 1) * 10) - fetchField(g0, k * 10)));
-          for (let d = 1; d <= 360; d++){ const v = fetchField(g0, d); jump = Math.max(jump, Math.abs(v - prev)); prev = v; }
+          // (the root of the fetch, which the wind sea goes as, steps no more per degree than a tenth of the step between two 10 degree sectors)
+          const g0 = GROUNDS[0].p, rf = d => Math.sqrt(fetchField(g0, d)); let jump = 0, prev = rf(0), dev = 0, sec = 0;
+          for (let k = 0; k < 36; k++) sec = Math.max(sec, Math.abs(rf((k + 1) * 10) - rf(k * 10)));
+          for (let d = 1; d <= 360; d++){ const v = rf(d); jump = Math.max(jump, Math.abs(v - prev)); prev = v; }
           // (the field blends neighbouring sectors, so it is held to the rays within ±10 degrees, as a real wind wanders)
           for (const g of GROUNDS) for (let d = 0; d < 360; d += 15){ const a = [-10, -5, 0, 5, 10].map(e => Math.sqrt(Math.max(1, fetchAt(g.p, d + e)))), f = Math.sqrt(Math.max(1, fetchField(g.p, d)));
             dev = Math.max(dev, f / Math.max(...a) - 1, Math.min(...a) / f - 1); }
@@ -29,6 +30,27 @@ async def main():
           let t0 = performance.now(); for (let i = 0; i < 2000; i++) fetchAt({x:Math.random() * 78, y:Math.random() * 82}, Math.random() * 360); R.usRay = r1((performance.now() - t0) / 2000 * 1000);
           t0 = performance.now(); for (let i = 0; i < 10000; i++) fetchField({x:40 + Math.random(), y:10 + Math.random()}, 200 + Math.random() * 20); R.usWarm0 = r1((performance.now() - t0) / 10000 * 1000);
           t0 = performance.now(); for (let i = 0; i < 10000; i++) fetchField({x:40 + Math.random(), y:10 + Math.random()}, 200 + Math.random() * 20); R.usWarm = r1((performance.now() - t0) / 10000 * 1000);
+          // the wind is the same as before the sea model (only its direction turns with the lows)
+          let ws = 0; for (let h = 0; h < 8760 * 2; h += 0.7) ws += windAt(h); R.windSum = Math.round(ws * 1000) / 1000;
+          // a low veers the wind clockwise as it passes: from south ahead of it towards north-west behind
+          const H0 = (Date.UTC(2028, 0, 1) - EPOCH) / 3.6e6, seen = new Set(), turns = [];
+          for (let h = 0; h < 8760; h += 12) for (const st of stormsNear(H0 + h)){ if (st.amp < 10 || seen.has(st.c)) continue; seen.add(st.c);
+            const a = windDir(st.c - 0.8 * st.w), b = windDir(st.c + 0.8 * st.w); turns.push(((b - a + 540) % 360) - 180); }
+          R.veer = {n:turns.length, cw:turns.filter(t => t > 30).length, mean:Math.round(turns.reduce((x, y) => x + y, 0) / turns.length)};
+          // open sea: the wind sea on a long fetch is WMO's probable height at the middle of each force
+          R.wmo = [[4.4, 0.6], [6.7, 1], [9.35, 2], [12.3, 3], [15.5, 4], [18.95, 5.5], [22.6, 7], [26.45, 9]].map(([u, h]) => Math.round(hsWind(u, 600) / h * 100) / 100);
+          // lee and windward at 11 m/s: the open grounds with the wind from the north, then from the south (behind Senja)
+          const at = (p, d) => { WX_FORCE = {w:11, d}; const v = hsParts(p, S.t / 60); WX_FORCE = null; return {w:r1(v.w * 10) / 10, sw:r1(v.sw * 10) / 10, F:r1(v.F), tp:r1(v.tp)}; };
+          R.lee = {}; for (const g of GROUNDS.slice(0, 3)) R.lee[g.name.no] = {N:at(g.p, 0), S:at(g.p, 180)};
+          const kn = {x:(17 + 54.9 / 60 - B.lonMin) * KX, y:(B.latMax - (69 + 30.7 / 60)) * KY}; R.knekk = {N:at(kn, 0), S:at(kn, 180)};
+          // smooth from the harbour out to the open sea (Husøy to the ground north of it, 100 m steps), and over a full turn of the wind
+          const q = portById('husoy').p, gp = GROUNDS[0].p; let line = [], pl = null, step = 0;
+          WX_FORCE = {w:11, d:330}; for (let i = 0; i <= 120; i++){ const t = i / 120, p = {x:q.x + (gp.x - q.x) * t, y:q.y + (gp.y - q.y) * t}; if (isLand(p)) { pl = null; continue; } const v = hsAt(p, S.t / 60); if (pl != null) step = Math.max(step, Math.abs(v - pl)); pl = v; if (i % 12 === 0) line.push(r1(v * 10) / 10); }
+          R.line = line; R.lineStep = Math.round(step * 100) / 100;
+          let turn = 0, pv = null; for (let d = 0; d <= 360; d += 2){ WX_FORCE = {w:11, d}; const v = hsAt(gp, S.t / 60); if (pv != null) turn = Math.max(turn, Math.abs(v - pv)); pv = v; } WX_FORCE = null; R.turnStep = Math.round(turn * 100) / 100;
+          // what it costs: a sailing boat's hsAt (new position every call) and the same spot again
+          let t1 = performance.now(); for (let i = 0; i < 20000; i++) hsAt({x:40 + i * 0.0002, y:10 + i * 0.0001}, S.t / 60 + i / 60); R.usHs = r1((performance.now() - t1) / 20000 * 1000);
+          const pp = {x:41, y:11}; t1 = performance.now(); for (let i = 0; i < 20000; i++) hsAt(pp, S.t / 60); R.usHsSame = Math.round((performance.now() - t1) / 20000 * 1000 * 100) / 100;
           return R; })()""")
         for k, v in r['rose'].items(): print('  ', k.ljust(22), v)
         print(json.dumps({k: v for k, v in r.items() if k != 'rose'}))
@@ -38,5 +60,12 @@ async def main():
         print(ok(all(max(R[q]) < 5 for q in ['husoy', 'senjahopen', 'sommaroy', 'botnhamn'])), 'the harbours have under 5 km of fetch from every side')
         print(ok(all(max(R[g]) < 15 for g in ['Gisundet nord', 'Solbergfjorden', 'Malangsgapet'])), 'the fjord grounds have short fetches')
         print(ok(r['jump'] <= 1.05 and r['dev'] < 15), 'the cached field turns smoothly with the wind, and its wave height is within 15 % of what the rays give within 10 degrees at the grounds')
+        L = r['lee']
+        print(ok(abs(r['windSum'] - 192722.469) < 1e-2), 'the wind speed is the same as before the sea model')
+        print(ok(r['veer']['n'] >= 5 and r['veer']['cw'] >= 0.7 * r['veer']['n']), 'the wind veers clockwise as a low passes (most lows over 10 m/s in 2028)')
+        print(ok(all(0.95 <= v <= 1.05 for v in r['wmo'])), 'the wind sea on the open sea is WMO\'s probable height for each Beaufort force')
+        print(ok(all(L[g]['N']['w'] > 2.2 and L[g]['S']['w'] < 0.8 * L[g]['N']['w'] for g in L)), 'at 11 m/s the outer grounds have a full wind sea from the north and less in the lee of Senja from the south')
+        print(ok(r['knekk']['S']['w'] < 0.4 and r['knekk']['N']['w'] < 1.0), 'outside Botnhamn (the knekk spot) the sea is short both ways: the fjord is narrow (fishing there needs its own rule)')
+        print(ok(r['line'][0] < 0.3 and min(r['line'][1:]) > 2.2 and r['turnStep'] < 0.25), 'NNW 11 m/s: calm inside Husøy harbour, the full sea just outside its mouth (the land ends there), and smooth as the wind turns')
         print('errors:', errs[:4]); await b.close()
 asyncio.run(main())

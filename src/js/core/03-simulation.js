@@ -69,26 +69,36 @@ function seasonal(arr, H){
 // weather: seasonal climate + low-pressure passages
 const WIND_MEAN = [9.2,9.0,8.4,7.0,6.0,5.4,5.0,5.4,6.8,7.8,8.6,9.0];
 const STORM_P = [0.12,0.11,0.09,0.06,0.03,0.02,0.02,0.03,0.06,0.09,0.11,0.12];
-const SWELL = [0.5,0.5,0.45,0.35,0.25,0.2,0.2,0.2,0.3,0.4,0.45,0.5];
+// tests can hold the weather still: WX_FORCE = {w:11, d:180} (m/s, from degrees)
+let WX_FORCE = null;
+// the lows near H: centre hour, peak (m/s) and width (hours)
+function stormsNear(H){
+  const out = [], k0 = Math.floor(H / 24);
+  for (let k = k0 - 2; k <= k0 + 2; k++) if (h2(k, 101) < STORM_P[gDate(k * 24).getUTCMonth()]) out.push({c:k * 24 + h2(k, 102) * 24, amp:5 + h2(k, 103) * 9, w:5 + h2(k, 104) * 7});
+  return out;
+}
 function windAt(H){
+  if (WX_FORCE) return WX_FORCE.w;
   const base = seasonal(WIND_MEAN, H);
   const n = 0.55 * vn(H / 30, 11) + 0.30 * vn(H / 9, 23) + 0.15 * vn(H / 3, 37);
-  let storm = 0; const k0 = Math.floor(H / 24);
-  for (let k = k0 - 2; k <= k0 + 2; k++){
-    if (h2(k, 101) < STORM_P[gDate(k * 24).getUTCMonth()]){
-      const c = k * 24 + h2(k, 102) * 24, amp = 5 + h2(k, 103) * 9, w = 5 + h2(k, 104) * 7;
-      storm += amp * Math.exp(-(((H - c) / w) ** 2));
-    }
-  }
+  let storm = 0; for (const s of stormsNear(H)) storm += s.amp * Math.exp(-(((H - s.c) / s.w) ** 2));
   return Math.max(0.3, base * (0.1 + 1.8 * n) + storm);
 }
-function windDir(H){ return ((225 + 400 * (vn(H / 40, 55) - 0.5)) % 360 + 360) % 360; }
-function hsOpen(H){ const we = 0.6 * windAt(H) + 0.4 * windAt(H - 3); return 0.15 + 0.021 * we * we + seasonal(SWELL, H) * vn(H / 50, 77); }
+// A low passing north-east along the coast: the wind backs to south ahead of it and veers through south-west to north-west behind
+// the cold front (Buys Ballot's law; the lows go north-east past northern Norway). The turn follows the low's share of the wind.
+function windDir(H){
+  if (WX_FORCE) return WX_FORCE.d;
+  const base = ((225 + 400 * (vn(H / 40, 55) - 0.5)) % 360 + 360) % 360;
+  let sx = 0, sy = 0, sa = 0;
+  for (const s of stormsNear(H)){ const u = (H - s.c) / s.w, a = s.amp * Math.exp(-u * u), d = (235 + 65 * Math.tanh(1.3 * u)) * Math.PI / 180; sx += a * Math.sin(d); sy += a * Math.cos(d); sa += a; }
+  if (sa < 0.05) return base;
+  const f = clamp(sa / windAt(H), 0, 1), b = base * Math.PI / 180, x = (1 - f) * Math.sin(b) + f * sx / sa, y = (1 - f) * Math.cos(b) + f * sy / sa;
+  return ((Math.atan2(x, y) * 180 / Math.PI) % 360 + 360) % 360;
+}
 function exposure(p){ return 0.2 + 0.8 * gridBilinear(EXPO, GEO_EXPO.nx, GEO_EXPO.ny, GEO_EXPO.c, p) / 255; }
-function hsAt(p, H){ return Math.max(0.05, hsOpen(H) * Math.pow(exposure(p), 1.3)); }
+// the waves (hsAt, hsOpen) are in 03b-sea.js
 function fcErr(H, now, seed){ const ahead = Math.max(0, H - now), issue = Math.floor(now / 6); return (vn(H / 10, seed + issue) - 0.5) * 0.7 * Math.min(1, ahead / 48); }
 function fcWind(H, now){ return windAt(H) * (1 + fcErr(H, now, 900)); }
-function fcHsOpen(H, now){ return hsOpen(H) * (1 + fcErr(H, now, 5900)); }
 const BF = [0.3,1.6,3.4,5.5,8.0,10.8,13.9,17.2,20.8,24.5,28.5,32.7];
 function beaufort(W){ let b = 0; while (b < 12 && W >= BF[b]) b++; return b; }
 const AIRT = [-2.5,-2.5,-1.5,1.5,5.5,9,12,11.5,8,3.5,0.5,-1.5];

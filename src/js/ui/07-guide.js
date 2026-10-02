@@ -169,10 +169,9 @@ function panelWx(){
   h.push('<div class="kv"><span>' + t('vis') + '</span><span>' + fmt(visibility(H), 0) + ' km</span></div>');
   h.push('<p class="note">' + t('limits') + '</p>');
   h.push('<h3>' + t('fc') + '</h3>' + fcChart());
-  const ex = exposure(b.pos);
   h.push('<table class="tbl"><thead><tr><th>' + t('time') + '</th><th>' + t('wind') + '</th><th>' + t('open') + '</th><th>' + t('here') + '</th></tr></thead><tbody>');
   for (let i = 3; i <= 48; i += 3){
-    const Hh = Math.floor(H / 3) * 3 + i, w = fcWind(Hh, H), ho = fcHsOpen(Hh, H), hh = Math.max(0.05, ho * Math.pow(ex, 1.3));
+    const Hh = Math.floor(H / 3) * 3 + i, w = fcWind(Hh, H), ho = fcHsOpen(Hh, H), hh = hsAtFc(b.pos, Hh, H);
     const lab = (gDate(Hh).getUTCHours() < 3 ? dayStr(Hh) + ' ' : '') + hm(Hh);
     h.push('<tr><td>' + lab + '</td><td class="r' + riskLevel(w, 0) + '">' + dirName(windDir(Hh)) + ' ' + fmt(w, 0) + '</td><td class="r' + riskLevel(0, ho) + '">' + fmt(ho, 1) + ' m</td><td class="r' + riskLevel(w, hh) + '">' + fmt(hh, 1) + ' m</td></tr>');
   }
