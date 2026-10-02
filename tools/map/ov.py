@@ -105,7 +105,7 @@ def features(typ, box, cols, workers=8):
         bb = t.column('bbox')
         m = pc.and_(pc.and_(pc.greater_equal(pc.struct_field(bb, 'xmax'), box[0]), pc.less_equal(pc.struct_field(bb, 'xmin'), box[2])),
                     pc.and_(pc.greater_equal(pc.struct_field(bb, 'ymax'), box[1]), pc.less_equal(pc.struct_field(bb, 'ymin'), box[3])))
-        out.append(t.filter(m))
+        out.append(t.filter(m).select(cols))   # the cache keeps the columns in another order
     return pa.concat_tables(out) if out else None
 
 if __name__ == '__main__' and sys.argv[1:2] == ['index']:

@@ -68,6 +68,18 @@ def tile(tx, ty):
     out['sec'] = np.array(time.time() - t0)
     np.savez_compressed(f, **out); return out
 
+# the vector layers of a tile (vectors.py), kept in out/national/vec/; the lite profile has the buildings within 2 km of the sea
+VD = os.path.join(OUT, 'vec'); os.makedirs(VD, exist_ok=True)
+def vec(tx, ty, M):
+    f = os.path.join(VD, f'{tx}_{ty}.npz')
+    if os.path.exists(f): z = np.load(f); return {k: (z[k].tobytes(), int(z[k + '_n'])) for k in ('bld', 'road', 'pier', 'coast')}
+    import vectors
+    dsea = ndimage.distance_transform_edt(M > 0) * 25   # m to the sea at 25 m
+    near = lambda x, y: dsea[min(1999, max(0, int(y // 25))), min(1999, max(0, int(x // 25)))] <= 2000
+    v = vectors.build(tx, ty, near)
+    np.savez_compressed(f, **{k: np.frombuffer(b, np.uint8) for k, (b, n) in v.items()}, **{k + '_n': n for k, (b, n) in v.items()})
+    return v
+
 LAYERS = dict(mask=(0.025, 'u8', 'core', None), dc=(0.1, 'f32', 'core', None), expo=(0.5, 'u8', 'core', None), depth=(0.05, 'i16', 'sim', 'half'),
               hgt=(0.025, 'i16', 'view', 'hgt'), forest=(0.05, 'u8', 'view', None))
 if __name__ == '__main__':
@@ -75,7 +87,7 @@ if __name__ == '__main__':
     T = [tuple(map(int, a.split(','))) for a in args] or [tuple(t) for t in national.tiles()]
     t0 = time.time(); per = []
     for k, (tx, ty) in enumerate(T):
-        L = tile(tx, ty); per.append((tx, ty, {n: L[n] for n in LAYERS}))
+        L = tile(tx, ty); per.append((tx, ty, {n: L[n] for n in LAYERS}, vec(tx, ty, L['mask'])))
         print(f'{k + 1}/{len(T)} tile {tx},{ty} {float(L["sec"]):.0f} s, land {L["mask"].mean():.3f}, total {time.time() - t0:.0f} s', file=sys.stderr, flush=True)
     n, b = pack.write_tiles(per, LAYERS, os.path.join(OUT, 'lite'), {'profile': 'lite', 'src': 'tools/map/coast.py'})
     print(json.dumps({'tiles': len(T), 'packs': n, 'mb': round(b / 1e6, 1)}))

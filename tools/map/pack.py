@@ -72,8 +72,10 @@ def write_tiles(tiles, spec, out, extra=None):
     for name, (c, typ, kind, dec) in spec.items():
         n = round(BLOCK / c); man['layers'][name] = dict(c=c, ix0=0, iy0=0, nx=round(1450 / c), ny=round(1720 / c), n=n, type=typ, kind=kind, dec=dec)
     total = 0; T = TILE // BLOCK
-    for tx, ty, L in tiles:
+    for tx, ty, L, *V in tiles:
         groups = {}
+        # the vector layers (vectors.py): one entry each, at the tile's first block, with its count as a sixth field
+        for name, (b, cnt) in (V[0].items() if V else []): groups.setdefault('vec', []).append([name, tx * T, ty * T, raw_deflate(b), cnt])
         for name, (c, typ, kind, dec) in spec.items():
             n = round(BLOCK / c); arr = np.asarray(L[name]).astype(DT[typ])
             for j in range(T):
@@ -82,7 +84,7 @@ def write_tiles(tiles, spec, out, extra=None):
                     groups.setdefault(kind, []).append([name, tx * T + i, ty * T + j, raw_deflate(raw)])
         for kind, blocks in sorted(groups.items()):
             off = 0; head = {'kind': kind, 'tile': [tx, ty], 'blocks': []}
-            for l, bx, by, z in blocks: head['blocks'].append([l, bx, by, off, len(z)]); off += len(z)
+            for l, bx, by, z, *cnt in blocks: head['blocks'].append([l, bx, by, off, len(z)] + cnt); off += len(z)
             hj = json.dumps(head, separators=(',', ':')).encode(); data = b'KMP1' + len(hj).to_bytes(4, 'little') + hj + b''.join(b[3] for b in blocks)
             h = hashlib.sha256(data).hexdigest()[:12]; fn = f'{kind}-{tx}-{ty}-{h}.wasm'; open(os.path.join(out, fn), 'wb').write(data); total += len(data)
             man['packs'].append(dict(file=fn, hash=h, kind=kind, tile=[tx, ty], box=[tx * TILE, ty * TILE, (tx + 1) * TILE, (ty + 1) * TILE], bytes=len(data)))
