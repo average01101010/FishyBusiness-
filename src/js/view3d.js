@@ -3,7 +3,7 @@
 const G3 = (() => {
   const wrap = document.getElementById('mapwrap'), canvas = document.getElementById('gl'), labelsEl = document.getElementById('labels');
   let gl = null, ready = false, failed = false, active = false, raf = 0, lastF = 0;
-  let PL, PS, PK, PP;
+  let PL, PS, PSF, PK, PP, SST_VS = false, SSDUMMY = null, SEADBG = false;
   let TERR, STAT, BOATM, CAPM, RODM, FLAGM, SKYQ, PATCH, FARQ, DYNP, DYNA;
   let HG = null, NEARM = null, MIDM = null, loading = false, LIGHTS = [], snowNow = -1;
   const T0 = performance.now(), DEG = Math.PI / 180;
@@ -61,48 +61,80 @@ const G3 = (() => {
   const TER_VS = 'attribute vec3 aPos;attribute vec3 aCol;attribute vec3 aNor;attribute float aShd;uniform mat4 uVP;uniform mat4 uM;varying vec3 vW;varying vec3 vC;varying vec3 vN;varying vec3 vP;varying float vS;void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;vC=aCol;vN=aNor;vP=aPos;vS=aShd;gl_Position=uVP*w;}';
   const NOISE = 'float hs(vec2 p){vec3 q=fract(vec3(p.xyx)*0.1031);q+=dot(q,q.yzx+33.33);return fract((q.x+q.y)*q.z);}' +
     'float ns(vec2 p){vec2 i=floor(p),f=fract(p);vec2 u=f*f*(3.0-2.0*f);return mix(mix(hs(i),hs(i+vec2(1.0,0.0)),u.x),mix(hs(i+vec2(0.0,1.0)),hs(i+vec2(1.0,1.0)),u.x),u.y);}';
-  const SEA_VS = 'precision highp float;attribute vec2 aXZ;uniform mat4 uVP;uniform vec2 uOrigin;uniform vec3 uOriginRel;uniform float uTime;uniform float uHalf;uniform float uFlat;uniform float uScale;uniform float uCell;' +
-    'uniform vec4 uWa[10];uniform vec4 uWb[10];varying vec3 vW;varying vec2 vXZ;varying float vCrest;varying vec3 vN;' +
+  // The local sea (03b-sea.js) from the sea-state textures, n (32 x 32 over the near terrain) and w (128 x 128 over the whole map): R and G hold
+  // the root of the fetch for the 10 degree sectors either side of the wind (blended by uSea2.z and .w), B how much of the ocean swell gets in.
+  // uSea: wind-sea height per root-km of fetch (JONSWAP), WMO's open-sea height, the log of the fetch (km) where the sea is fully grown, the
+  // open swell's height. uSea2: the overlap of the young and the grown wind-sea spectrum, the steepness, the sector blends. uLocal: the same
+  // at the boat, for when there is no texture (NOSST: the far pass's vertices, and phones with no texture lookups in the vertex shader).
+  // seaAt gives: the wind sea's height, the swell's height, how grown the sea is (0 young, 1 the open sea's spectrum), the root of the fetch.
+  const SEA_STATE = 'uniform vec4 uSea;uniform vec4 uSea2;uniform vec4 uSSN;uniform vec4 uSSW;uniform vec4 uLocal;' +
+    '\n#ifdef NOSST\nvec4 seaAt(vec2 P){return uLocal;}\n#else\nuniform sampler2D uSSTn;uniform sampler2D uSSTw;' +
+    'vec4 seaAt(vec2 P){vec2 un=(P-uSSN.xy)*uSSN.z;vec2 uw=(P-uSSW.xy)*uSSW.z;vec4 tw=texture2D(uSSTw,uw);vec4 tn=texture2D(uSSTn,un);float r=mix(tw.r,tw.g,uSea2.w);float sf=tw.b;' +
+    'float e=uSSN.w*smoothstep(0.0,0.06,min(min(un.x,un.y),min(1.0-un.x,1.0-un.y)));r=mix(r,mix(tn.r,tn.g,uSea2.z),e);sf=mix(sf,tn.b,e);r*=24.495;' +
+    'vec4 L=vec4(min(uSea.y,uSea.x*r),uSea.w*sf,clamp(2.0*log(max(r,1.0))/uSea.z,0.0,1.0),r);return uSSW.w>0.5?L:uLocal;}\n#endif\n' +
+    // a wave's amplitude here (the wind sea between its young and its grown spectrum, or the swell), and the slow wave groups
+    'float ampOf(vec4 a,vec4 b,vec4 S){float dv=S.z;return b.x>0.5?S.y*a.w:S.x*(dv*a.w+(1.0-dv)*b.w)*inversesqrt(max(1.0-2.0*dv*(1.0-dv)*(1.0-uSea2.x),0.05));}' +
+    'float grpOf(vec2 P,vec4 a,vec4 b,float fi){vec2 gd=vec2(a.y,-a.x);return 0.62+0.38*sin(dot(P,a.xy)*a.z*0.083+dot(P,gd)*a.z*0.041-b.y*uTime*0.5+fi*2.59);}' +
+    // Gerstner steepness: the wind sea's crests sharpen with the wind; the swell is long and round
+    'float steepOf(vec4 a,vec4 b,float am){return b.x>0.5?0.3:min(uSea2.y/(10.0*a.z*am+1e-4),1.0);}';
+  // 13 waves: 0-9 the wind sea (longest first), 10-12 the swell
+  const SEA_VS = 'precision highp float;attribute vec2 aXZ;uniform mat4 uVP;uniform vec2 uOrigin;uniform vec3 uOriginRel;uniform float uTime;uniform float uHalf;uniform float uFlat;uniform vec2 uScale;uniform float uCell;' +
+    'uniform vec4 uWa[13];uniform vec4 uWb[13];varying vec3 vW;varying vec2 vXZ;' + SEA_STATE +
     'void main(){vec2 lxz=aXZ*uScale;vec2 wxz=uOrigin+lxz;vec3 d=vec3(0.0);' +
-    'if(uFlat<0.5){float fade=1.0-smoothstep(0.6,1.0,max(abs(aXZ.x),abs(aXZ.y))/uHalf);for(int i=0;i<10;i++){vec4 a=uWa[i];vec4 b=uWb[i];float att=smoothstep(2.5,5.0,6.2832/(a.z*uCell));float f=a.z*dot(a.xy,wxz)-b.y*uTime+b.z;float c=cos(f);float s=sin(f);' +
-    'd.x+=b.x*a.w*a.x*c*att;d.z+=b.x*a.w*a.y*c*att;d.y+=a.w*s*att;}d*=fade;}' +
-    'vec3 rel=uOriginRel+vec3(lxz.x,0.0,lxz.y)+d;vW=rel;vXZ=wxz;vCrest=0.0;vN=vec3(0.0,1.0,0.0);gl_Position=uVP*vec4(rel,1.0);}';
-  const SEA_FS = 'precision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;uniform vec3 uZen;uniform vec3 uHor;uniform vec3 uDeep;' +
-    'uniform float uTime;uniform float uWind;uniform vec2 uWindDir;uniform float uFlat;uniform float uSpec;uniform vec4 uWa[10];uniform vec4 uWb[10];uniform sampler2D uShore;uniform sampler2D uLand;uniform sampler2D uHgt;uniform float uHOn;uniform float uTideL;uniform float uHs;uniform vec4 uSRect;uniform float uSOn;uniform vec4 uPHole;uniform float uPx;' +
-    'varying vec3 vW;varying vec2 vXZ;varying float vCrest;varying vec3 vN;' + NOISE +
-    'void main(){if(uFlat>0.5&&vW.x>uPHole.x&&vW.x<uPHole.z&&vW.z>uPHole.y&&vW.z<uPHole.w)discard;float d=length(vW);vec2 P=vXZ;' +
+    'if(uFlat<0.5){float fade=1.0-smoothstep(0.6,1.0,max(abs(aXZ.x),abs(aXZ.y))/uHalf);vec4 S=seaAt(wxz);' +
+    'for(int i=0;i<13;i++){vec4 a=uWa[i];vec4 b=uWb[i];float att=smoothstep(2.5,5.0,6.2832/(a.z*uCell));float am=ampOf(a,b,S);float Q=steepOf(a,b,am);am*=grpOf(wxz,a,b,float(i))*att;' +
+    'float f=a.z*dot(a.xy,wxz)-b.y*uTime+b.z;float c=cos(f);d.x+=Q*am*a.x*c;d.z+=Q*am*a.y*c;d.y+=am*sin(f);}d*=fade;}' +
+    'vec3 rel=uOriginRel+vec3(lxz.x,0.0,lxz.y)+d;vW=rel;vXZ=wxz;gl_Position=uVP*vec4(rel,1.0);}';
+  // one wave's slope, height and lost roughness in the fragment shader (W: whether it counts for the wind sea's crests)
+  const SEA_WAVE = W => '{vec4 a=uWa[i];vec4 b=uWb[i];float att=smoothstep(2.0,7.0,6.2832/(a.z*px));float am=ampOf(a,b,S);float gr=grpOf(P,a,b,float(i));float Q=steepOf(a,b,am);' +
+    'float f=a.z*dot(a.xy,P)-b.y*uTime+b.z;float c=cos(f);float s=sin(f);float wa=a.z*am*gr;N.x-=a.x*wa*c*att;N.z-=a.y*wa*c*att;N.y-=Q*wa*s*att;lost+=wa*wa*(1.0-att);' + (W ? 'y+=am*gr*s*att;sa+=am*am*0.228;' : '') + '}';
+  // FAR (the far pass beyond the near terrain): the four longest wind waves and the swell, the rest of the wind sea only as roughness, no ripples
+  const SEA_FS = '#ifdef FAR\n#define NWIND 4\n#else\n#define NWIND 10\n#endif\nprecision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;uniform vec3 uZen;uniform vec3 uHor;uniform vec3 uDeep;' +
+    'uniform float uTime;uniform float uWind;uniform vec2 uWindDir;uniform float uFlat;uniform float uSpec;uniform vec4 uWa[13];uniform vec4 uWb[13];uniform sampler2D uHgt;uniform float uHOn;uniform float uTideL;uniform vec4 uSRect;uniform float uSOn;uniform float uPx;uniform float uDbg;' +
+    'varying vec3 vW;varying vec2 vXZ;' + NOISE + SEA_STATE +
+    'void main(){float d=length(vW);vec2 P=vXZ;vec4 S=seaAt(P);' +
     // metres covered by one pixel here (grows with distance and grazing angle); a wave shorter than a few pixels is faded out and its slope becomes roughness instead
     'vec3 V=normalize(-vW);float px=d*uPx/max(abs(V.y),0.12);vec2 w=uWindDir;vec2 wp=vec2(-w.y,w.x);' +
     // gusts: slow patches of rougher and calmer water break up any repetition
     'vec2 Q=P+w*uTime*1.2;float gust=0.62+0.2*sin(dot(Q,vec2(0.0021,0.0013)))*sin(dot(Q,vec2(-0.0009,0.0024))+1.3)+0.12*sin(dot(Q,vec2(0.0047,-0.0031))+2.1)+0.08*sin(dot(Q,vec2(0.0019,0.0067))+4.0);' +
-    'vec3 N=vec3(0.0,1.0,0.0);float y=0.0;float sa=0.001;float lost=0.0;' +
-    'for(int i=0;i<10;i++){vec4 a=uWa[i];vec4 b=uWb[i];float att=smoothstep(2.0,7.0,6.2832/(a.z*px));float f=a.z*dot(a.xy,P)-b.y*uTime+b.z;float c=cos(f);float s=sin(f);' +
-    'vec2 gd=vec2(a.y,-a.x);float grp=0.62+0.38*sin(dot(P,a.xy)*a.z*0.083+dot(P,gd)*a.z*0.041-b.y*uTime*0.5+b.w*7.0);float wa=a.z*a.w*grp;' +
-    'N.x-=a.x*wa*c*att;N.z-=a.y*wa*c*att;N.y-=b.x*wa*s*att;y+=a.w*grp*s*att;sa+=a.w;lost+=wa*wa*(1.0-att);}' +
-    // ripples: eight short waves spread around the wind, analytic slopes (no grid), scaled by wind and gusts
-    'float ra=(0.018+0.0032*uWind)*gust;' +
+    // y and sa: the wind sea's height here and its variance, so the crest is in standard deviations whatever the spectrum
+    'vec3 N=vec3(0.0,1.0,0.0);float y=0.0;float sa=1e-6;float lost=0.0;' +
+    'for(int i=0;i<NWIND;i++)' + SEA_WAVE(true) +
+    '\n#ifdef FAR\nfor(int i=4;i<10;i++){vec4 a=uWa[i];vec4 b=uWb[i];float wa=a.z*ampOf(a,b,S);lost+=wa*wa*0.456;}\n#endif\n' +
+    'for(int i=10;i<13;i++)' + SEA_WAVE(false) +
+    // ripples: eight short waves spread around the wind, analytic slopes (no grid), scaled by wind and gusts; in light air (Beaufort 0-1)
+    // only in patches, the cat's paws, and glassy between them
+    'float paw=mix(smoothstep(0.45,0.75,ns(P*0.013+w*uTime*0.5)),1.0,smoothstep(1.6,4.0,uWind));float ra=(0.004+0.0034*uWind)*gust*paw;\n#ifdef FAR\nlost+=ra*ra*6.0;\n#else\n' +
     'for(int j=0;j<8;j++){float fj=float(j);float ang=(fj-3.5)*0.36+sin(fj*2.3)*0.2;vec2 dir=w*cos(ang)+wp*sin(ang);float L=1.1+fj*0.42+fract(fj*0.618)*0.9;float k=6.2832/L;float att=smoothstep(2.0,7.0,L/px);' +
-    'float f=k*dot(dir,P)-sqrt(9.81*k+0.074*k*k*k/1025.0)*uTime+fj*1.9;float sl=ra*cos(f);N.x-=dir.x*sl*att;N.z-=dir.y*sl*att;lost+=sl*sl*(1.0-att)*0.5+ra*ra*0.5*(1.0-att);}' +
-    'N=normalize(N);float crest=y/sa;float ndv=max(dot(N,V),0.0);float fr=0.02+0.98*pow(1.0-ndv,5.0);vec3 R=reflect(-V,N);R.y=abs(R.y);' +
+    'float f=k*dot(dir,P)-sqrt(9.81*k+0.074*k*k*k/1025.0)*uTime+fj*1.9;float sl=ra*cos(f);N.x-=dir.x*sl*att;N.z-=dir.y*sl*att;lost+=sl*sl*(1.0-att)*0.5+ra*ra*0.5*(1.0-att);}\n#endif\n' +
+    'N=normalize(N);float crest=y*inversesqrt(sa);float ndv=max(dot(N,V),0.0);float fr=0.02+0.98*pow(1.0-ndv,5.0);vec3 R=reflect(-V,N);R.y=abs(R.y);' +
     'vec3 sky=mix(uHor,uZen,pow(clamp(R.y,0.0,1.0),0.5));' +
     'vec3 body=uDeep*(uAmb*1.7+uSunCol*0.3*max(dot(N,uSun),0.0));' +
-    'float sss=pow(max(dot(V,normalize(vec3(-uSun.x,0.3,-uSun.z))),0.0),3.0)*smoothstep(0.05,0.8,crest);body+=vec3(0.02,0.19,0.17)*sss*(uSunCol*0.9+uAmb*0.35);' +
+    'float sss=pow(max(dot(V,normalize(vec3(-uSun.x,0.3,-uSun.z))),0.0),3.0)*smoothstep(0.05,0.8,crest*0.25);body+=vec3(0.02,0.19,0.17)*sss*(uSunCol*0.9+uAmb*0.35);' +
     'vec3 col=mix(body,sky,fr);' +
     // sun glitter: sharp where the surface is resolved, a wider glitter path where the waves have become roughness
     'float rough=clamp(0.0015+lost,0.0015,0.25);float sp=clamp(2.0/rough,8.0,1200.0);float rs=max(dot(R,uSun),0.0);vec3 Hh=normalize(V+uSun);float Fs=0.02+0.98*pow(1.0-max(dot(Hh,V),0.0),5.0);' +
     'vec3 spec=uSunCol*pow(rs,sp)*(sp+2.0)*0.125*Fs*uSpec;col+=spec/(1.0+0.35*max(max(spec.r,spec.g),spec.b));' +
-    // whitecaps: only on steep crests in fresh wind, broken up, fading where they can no longer be resolved
-    'float lod=1.0-smoothstep(0.35,1.6,px);float wf=smoothstep(6.5,14.0,uWind);float fn=ns(P*0.06+w*uTime*0.1)*0.6+ns(P*0.17-wp*uTime*0.18)*0.4;' +
-    'float foam=smoothstep(0.62,0.98,crest*0.8+fn*0.45)*smoothstep(0.45,0.85,fn)*wf*lod*gust;' +
-    'vec2 st=vec2(dot(P,w)*0.011,dot(P,wp)*0.2);foam+=smoothstep(0.8,0.96,ns(st+vec2(uTime*0.03,ns(P*0.02)*3.0)))*smoothstep(12.0,20.0,uWind)*0.3*lod;' +
-    'col+=vec3(0.045)*wf*(1.0-lod)*smoothstep(0.3,0.9,crest)*gust;' +
+    // whitecaps: the share of the sea that is white is Monahan and O'Muircheartaigh's (1980) W = 3.84e-6 U^3.41, where the sea has had
+    // 0.2-3 km of fetch to break (dw). They sit on the highest crests, broken into patches a few metres long across the wind (the threshold is fitted to the measured spread of crest
+    // and noise, through the normal quantile of that share),
+    // and where they are too small to see they whiten the sea by their share instead.
+    'vec3 fc=min(uAmb*1.3+uSunCol*0.85,vec3(1.0));float lod=1.0-smoothstep(0.35,1.6,px);float dw=smoothstep(0.45,1.73,S.w);' +
+    'float Wc=clamp(3.84e-6*pow(max(uWind,0.3),3.41)*dw,1e-5,0.5);vec2 cq=vec2(dot(P,w),dot(P,wp));float fn=ns(cq*vec2(0.3,0.12)+vec2(uTime*0.25,0.0))*0.6+ns(cq*vec2(0.7,0.3)-vec2(uTime*0.4,uTime*0.1))*0.4;' +
+    'float zt=sqrt(-2.0*log(Wc));zt-=(2.515517+0.802853*zt+0.010328*zt*zt)/(1.0+1.432788*zt+0.189269*zt*zt+0.001308*zt*zt*zt);float th=0.228+0.293*zt-0.016*zt*zt;' +
+    'float foam=smoothstep(th-0.03,th+0.03,crest*0.25+fn*0.45)*lod*(0.55+0.45*ns(cq*vec2(1.7,0.9)+vec2(uTime*0.6,0.0)));' +
+    // streaks of foam along the wind from a near gale (Beaufort 7), denser in a gale and storm
+    'vec2 st=vec2(dot(P,w)*0.011,dot(P,wp)*0.2);foam+=smoothstep(0.8,0.96,ns(st+vec2(uTime*0.03,ns(P*0.02)*3.0)))*smoothstep(13.9,20.8,uWind)*(0.35+0.4*smoothstep(20.8,28.5,uWind))*lod*dw;' +
+    'col=mix(col,fc,Wc*(1.0-lod)*0.9+0.3*smoothstep(24.5,32.7,uWind)*dw);' +
+    // shallows and surf, the surf from the sea that reaches this shore
     'if(uSOn>0.5&&uHOn>0.5){vec2 su=(vW.xz-uSRect.xy)*uSRect.zw;if(su.x>0.0&&su.y>0.0&&su.x<1.0&&su.y<1.0){float ef=smoothstep(0.0,0.06,min(min(su.x,su.y),min(1.0-su.x,1.0-su.y)));' +
-    'float hb=texture2D(uHgt,su*(255.0/256.0)+0.5/256.0).r*16.0-8.0;float dep=uTideL-hb;' +
+    'float hb=texture2D(uHgt,su*(255.0/256.0)+0.5/256.0).r*16.0-8.0;float dep=uTideL-hb;float hl=length(S.xy);' +
     'col=mix(col,vec3(0.07,0.33,0.32)*(uAmb*1.5+uSunCol*0.75),(1.0-smoothstep(0.3,5.0,dep))*0.42*(1.0-fr)*ef);' +
-    'float bw=0.15+uHs*0.9;float band=(1.0-smoothstep(0.0,bw,dep))*smoothstep(-0.2,0.02,dep);float sw=0.5+0.5*sin(uTime*0.9+dot(P,w)*0.06);' +
+    'float bw=0.15+hl*0.9;float band=(1.0-smoothstep(0.0,bw,dep))*smoothstep(-0.2,0.02,dep);float sw=0.5+0.5*sin(uTime*0.9+dot(P,w)*0.06);' +
     'float ln=ns(P*0.32+vec2(uTime*0.35,-uTime*0.25))*0.6+ns(P*0.95-uTime*0.45)*0.4;' +
-    'foam=max(foam,band*smoothstep(0.35,0.72,ln+band*0.2)*(0.3+0.7*clamp(uHs*1.6,0.0,1.0))*(0.7+0.3*sw)*ef);}}' +
-    'col=mix(col,min(uAmb*1.3+uSunCol*0.85,vec3(1.0)),clamp(foam,0.0,1.0)*0.85);float fg=1.0-exp(-uFogD*uFogD*d*d);gl_FragColor=vec4(mix(col,uFog,fg),1.0);}';
+    'foam=max(foam,band*smoothstep(0.35,0.72,ln+band*0.2)*(0.3+0.7*clamp(hl*1.6,0.0,1.0))*(0.7+0.3*sw)*ef);}}' +
+    'if(uDbg>0.5){gl_FragColor=vec4(vec3(clamp(foam,0.0,1.0)),1.0);return;}' +
+    'col=mix(col,fc,clamp(foam,0.0,1.0)*0.85);float fg=1.0-exp(-uFogD*uFogD*d*d);gl_FragColor=vec4(mix(col,uFog,fg),1.0);}';
   const TER_FS = '#extension GL_OES_standard_derivatives : enable\nprecision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform vec4 uHole;' +
     'uniform sampler2D uGround;uniform sampler2D uLand;uniform vec4 uGRect;uniform float uGOn;uniform float uLOn;uniform vec3 uSand;varying vec3 vW;varying vec3 vC;varying vec3 vN;varying vec3 vP;varying float vS;' + NOISE +
     'void main(){if(vW.x>uHole.x&&vW.x<uHole.z&&vW.z>uHole.y&&vW.z<uHole.w)discard;vec2 wp=mod(vP.xz,4096.0);float d=length(vW);float det=1.0-smoothstep(900.0,5000.0,d);' +
@@ -1661,29 +1693,111 @@ const G3 = (() => {
     FARQ = {pb:buf(g), ib:buf(gi, gl.ELEMENT_ARRAY_BUFFER), n:gi.length};
     SKYQ = buf(new Float32Array([-1, -1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1]));
   }
+  // ---------- the waves: wind sea and swell from the sea model (03b-sea.js) ----------
   const WL = [96, 67, 49, 36.5, 27.5, 20.5, 15.3, 11.4, 8.6, 6.4], WOFF = [0, -0.46, 0.53, -0.92, 0.27, 0.84, -0.21, 1.12, -0.68, 0.41], WPH = [0, 2.1, 4.4, 1.3, 5.6, 3.2, 0.7, 4.9, 2.6, 5.9];
-  const WV = {sets:[{dir:0, w:1}, {dir:0, w:0}], cur:0, hs:0.3, W:5, init:false, list:[], ua:new Float32Array(40), ub:new Float32Array(40)};
+  // the swell: three long waves around its peak wavelength (deep water L = 1.56 T^2), from its own direction
+  const SWL = [0.8, 1.0, 1.25], SWW = [0.55, 1, 0.6], SWOFF = [-0.14, 0, 0.17], SWPH = [1.7, 4.2, 0.4];
+  const WV = {hs:0.3, W:5, dir:0, swHs:0, swDir:0, swTp:10, init:false, list:[], ph:[], kd:[], ua:new Float32Array(52), ub:new Float32Array(52), C:0, cap:0, lnFcap:1, dot:1, steep:0.3, loc:[0.3, 0, 1, 1]};
+  // a broad spectrum around the peak wavelength; short waves keep a little energy so the surface always has texture (sum of squares 1/8, so Hs = 1)
+  function specW(L0){ const w = WL.map(L => Math.exp(-(((Math.log(L) - Math.log(L0)) / 0.75) ** 2)) + 0.06 * Math.min(1, L0 / L)), n = Math.sqrt(w.reduce((a, c) => a + c * c, 0)) * 2.828; return w.map(v => v / n); }
   function updateWaves(dt, H){
-    const p = {x:bv.x / 1000, y:bv.z / 1000};
-    const hsT = hsAt(p, H), WT = windAt(H), dirT = (windDir(H) + 180) * DEG;
-    if (!WV.init){ WV.hs = hsT; WV.W = WT; WV.sets[0].dir = dirT; WV.init = true; }
-    const k = 1 - Math.exp(-dt / 1.5); WV.hs = lerp(WV.hs, hsT, k); WV.W = lerp(WV.W, WT, k);
-    const set = WV.sets[0]; set.dir += angDiff(set.dir, dirT) * Math.min(1, dt / 12); set.w = 1;
-    const Hs = Math.max(0.05, WV.hs), Tp = 3.2 * Math.sqrt(Hs) + 1.5, L0 = 9.81 * Tp * Tp / (2 * Math.PI);
-    // a broad spectrum around the peak wavelength; short waves keep a little energy so the surface always has texture
-    const w = WL.map(L => Math.exp(-(((Math.log(L) - Math.log(L0)) / 0.75) ** 2)) + 0.06 * Math.min(1, L0 / L)), norm = Math.sqrt(w.reduce((a, c) => a + c * c, 0)) * 2.828;
-    const steep = 0.25 + 0.45 * sstep(4, 14, WV.W);
-    WV.list = [];
-    WL.forEach((L, i) => {
-      const kk = 2 * Math.PI / L, a = Hs * w[i] / norm, ang = set.dir + WOFF[i] * (0.75 + 0.25 * sstep(3, 12, WV.W));
-      const c = {Dx:Math.sin(ang), Dz:-Math.cos(ang), k:kk, a, Q:Math.min(steep / (kk * Math.max(a, 1e-4) * 10), 1), om:Math.sqrt(9.81 * kk), ph:WPH[i]};
-      WV.list.push(c);
-      WV.ua[i * 4] = c.Dx; WV.ua[i * 4 + 1] = c.Dz; WV.ua[i * 4 + 2] = c.k; WV.ua[i * 4 + 3] = c.a;
-      WV.ub[i * 4] = c.Q; WV.ub[i * 4 + 1] = c.om; WV.ub[i * 4 + 2] = c.ph; WV.ub[i * 4 + 3] = i * 0.37;
-    });
+    const p = {x:bv.x / 1000, y:bv.z / 1000}, hsT = hsAt(p, H), WT = windAt(H), wdT = windDir(H), dirT = (wdT + 180) * DEG, SW = swellOpen(H), swDirT = (SW.dir + 180) * DEG;
+    if (!WV.init){ WV.hs = hsT; WV.W = WT; WV.dir = dirT; WV.swHs = SW.hs; WV.swDir = swDirT; WV.swTp = SW.tp; WV.init = true; }
+    // the sea answers the wind over a few seconds (a sudden change, as after skipping time, never snaps the waves)
+    const k = 1 - Math.exp(-dt / 4); WV.hs = lerp(WV.hs, hsT, k); WV.W = lerp(WV.W, WT, k); WV.swHs = lerp(WV.swHs, SW.hs, k); WV.swTp = lerp(WV.swTp, SW.tp, k * 0.2);
+    WV.dir += angDiff(WV.dir, dirT) * Math.min(1, dt / 12); WV.swDir += angDiff(WV.swDir, swDirT) * Math.min(1, dt / 30);
+    // the wind sea grows over the fetch to WMO's open-sea height; its spectrum goes from a young sea (1 km of fetch) to the grown one
+    const U = Math.max(0.3, WV.W), Fc = Math.max(1.01, fetchCap(U)), L0 = T => 9.81 * T * T / (2 * Math.PI);
+    WV.C = 0.0016 * U * Math.sqrt(1000 / 9.81); WV.cap = hsWMO(U); WV.lnFcap = Math.log(Fc);
+    const wo = specW(L0(Math.max(0.5, tpWind(U, Fc)))), wy = specW(L0(Math.max(0.5, tpWind(U, 1))));
+    WV.dot = 8 * wo.reduce((a, v, i) => a + v * wy[i], 0); WV.steep = 0.25 + 0.45 * sstep(4, 14, U);
+    const f = (((wdT % 360) + 360) % 360) / FETCH.sec; SSK = [Math.floor(f) % 36, (Math.floor(f) + 1) % 36]; SSU = f - Math.floor(f);
+    const L = [];
+    WL.forEach((Lw, i) => { const kk = 2 * Math.PI / Lw, ang = WV.dir + WOFF[i] * (0.75 + 0.25 * sstep(3, 12, U)); L.push({Dx:Math.sin(ang), Dz:-Math.cos(ang), k:kk, wo:wo[i], wy:wy[i], swell:0, om:Math.sqrt(9.81 * kk), ph0:WPH[i]}); });
+    const sn = Math.sqrt(SWW.reduce((a, c) => a + c * c, 0)) * 2.828, Ls = 1.56 * WV.swTp * WV.swTp;
+    SWL.forEach((m, j) => { const kk = 2 * Math.PI / (Ls * m), ang = WV.swDir + SWOFF[j]; L.push({Dx:Math.sin(ang), Dz:-Math.cos(ang), k:kk, wo:SWW[j] / sn, wy:SWW[j] / sn, swell:1, om:Math.sqrt(9.81 * kk), ph0:SWPH[j]}); });
+    // as a wave turns or lengthens, its phase is held where the boat is, so the sea does not slide past her (the map is 80 km across)
+    L.forEach((c, i) => { const kx = c.k * c.Dx, kz = c.k * c.Dz;
+      if (WV.kd[i]) WV.ph[i] = ((WV.ph[i] + (WV.kd[i][0] - kx) * bv.x + (WV.kd[i][1] - kz) * bv.z) % 6.2832 + 6.2832) % 6.2832; else WV.ph[i] = c.ph0;
+      WV.kd[i] = [kx, kz]; c.ph = WV.ph[i]; WV.ua.set([c.Dx, c.Dz, c.k, c.wo], i * 4); WV.ub.set([c.swell, c.om, c.ph, c.wy], i * 4); });
+    WV.list = L;
+    // the same at the boat: for the vertex shader on a GPU that cannot read textures there, and until the textures are ready
+    const q = hsParts(p, H), rF = Math.sqrt(q.F); WV.loc = [Math.min(WV.cap, WV.C * rF), WV.swHs * swellFactor(p), clamp(2 * Math.log(Math.max(rF, 1)) / WV.lnFcap, 0, 1), rF];
     env.windDir = [Math.sin(dirT), -Math.cos(dirT)]; env.wind = WV.W;
   }
-  function seaH(x, z, t){ let y = env.tide || 0; for (const c of WV.list) y += c.a * Math.sin(c.k * (c.Dx * x + c.Dz * z) - c.om * t + c.ph); return y; }
+
+  // ---------- the sea state over the near terrain and the whole map ----------
+  // Two textures, as SEA_STATE reads them: n (32 x 32 over the near terrain) and w (128 x 128 over the map). Each holds the root of the
+  // fetch for a 10 degree sector per pixel, worked out a slice per frame and kept per sector, so a turning wind needs only the new sector.
+  const SSRT = Math.sqrt(FETCH.open);
+  let SSK = [0, 1], SSU = 0;   // the sectors either side of the wind, and the blend between them
+  // brect, sec, sw, job: what is being worked out; rect, tex, cpu, k: what is shown. The shown texture stays until the new one is ready,
+  // so when the near terrain moves the sea never falls back to the coarse map for a moment (no sudden change in the waves)
+  function ssLevel(n, unit){ return {n, unit, brect:null, rect:null, sec:new Map(), sw:null, tex:null, cpu:null, k:[-1, -1], job:null, on:false}; }
+  const SSL = {n:ssLevel(32, 4), w:ssLevel(128, 5)};
+  function ssRect(L){ return L === SSL.n ? (NEARM ? [NEARM.x0, NEARM.z0, NEARM.sx] : null) : [0, 0, Math.max(MAP_W, MAP_H) * 1000]; }
+  function ssWork(L, until){
+    const R = ssRect(L); if (!R) return;
+    let fresh = false; if (!L.brect || L.brect[0] !== R[0] || L.brect[1] !== R[1] || L.brect[2] !== R[2]){ L.brect = R; L.sec.clear(); L.sw = null; L.job = null; fresh = true; }
+    const n = L.n, px = R[2] / n, at = i => ({x:(R[0] + (i % n + 0.5) * px) / 1000, y:(R[1] + (Math.floor(i / n) + 0.5) * px) / 1000});
+    if (!L.sw){ L.sw = new Uint8Array(n * n); for (let i = 0; i < n * n; i++) L.sw[i] = Math.round(clamp(swellFactor(at(i)), 0, 1) * 255); }
+    while (performance.now() < until){
+      if (!L.job){ const k = SSK.find(q => !L.sec.has(q)); if (k === undefined) break; L.job = {k, i:0, a:new Uint8Array(n * n)}; }
+      const J = L.job, p = at(J.i), r = L === SSL.n ? fetchSector(p, J.k) : Math.sqrt(fetchAt(p, J.k * FETCH.sec));
+      J.a[J.i] = Math.round(clamp(r / SSRT, 0, 1) * 255);
+      if (++J.i >= n * n){ L.sec.set(J.k, J.a); L.job = null; for (const q of L.sec.keys()) if (L.sec.size > 6 && !SSK.includes(q)) L.sec.delete(q); }
+    }
+    if (fresh) L.fresh = true;
+    if (L.sec.has(SSK[0]) && L.sec.has(SSK[1]) && (L.k[0] !== SSK[0] || L.k[1] !== SSK[1] || L.fresh)){
+      const A = L.sec.get(SSK[0]), B = L.sec.get(SSK[1]), px4 = new Uint8Array(n * n * 4);
+      for (let i = 0; i < n * n; i++){ px4[i * 4] = A[i]; px4[i * 4 + 1] = B[i]; px4[i * 4 + 2] = L.sw[i]; px4[i * 4 + 3] = 255; }
+      L.tex = L.tex || gl.createTexture(); gl.activeTexture(gl.TEXTURE0 + L.unit); gl.bindTexture(gl.TEXTURE_2D, L.tex); gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, n, n, 0, gl.RGBA, gl.UNSIGNED_BYTE, px4);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); gl.activeTexture(gl.TEXTURE0);
+      L.cpu = px4; L.k = [SSK[0], SSK[1]]; L.rect = L.brect; L.fresh = false; L.on = true;
+    }
+  }
+  // a slice per frame, more when frames are slow (so a slow machine is not left waiting for many frames)
+  function ssStep(rdt){ const until = performance.now() + clamp(rdt * 60, 1.5, 25); ssWork(SSL.n, until); ssWork(SSL.w, until); }
+  // the blend between a texture's two sectors: while a new sector is worked out, hold the one it shares with the old pair
+  function ssBlend(L){ return L.k[0] === SSK[0] && L.k[1] === SSK[1] ? SSU : L.k[1] === SSK[0] ? 1 : L.k[0] === SSK[1] ? 0 : SSU; }
+  // a texture as the GPU reads it (linear, clamped to the edge), 0-1 per channel
+  function ssTex(L, x, z, out){
+    const n = L.n, R = L.rect, gx = clamp((x - R[0]) / R[2] * n - 0.5, 0, n - 1), gy = clamp((z - R[1]) / R[2] * n - 0.5, 0, n - 1), i = Math.min(n - 2, Math.floor(gx)), j = Math.min(n - 2, Math.floor(gy)), fx = gx - i, fy = gy - j, T = L.cpu;
+    for (let c = 0; c < 3; c++){ const a = (j * n + i) * 4 + c, b = a + n * 4; out[c] = ((T[a] * (1 - fx) + T[a + 4] * fx) * (1 - fy) + (T[b] * (1 - fx) + T[b + 4] * fx) * fy) / 255; }
+    return out;
+  }
+  // the local sea at (x, z), as seaAt in the shaders: wind sea height, swell height, how grown the sea is, the root of the fetch
+  const SST_A = [0, 0, 0], SST_B = [0, 0, 0];
+  function ssAt(x, z){
+    if (!SSL.w.on) return WV.loc;
+    const W = ssTex(SSL.w, x, z, SST_A); let r = lerp(W[0], W[1], ssBlend(SSL.w)), sf = W[2];
+    const N = SSL.n; if (N.on){ const R = N.rect, ux = (x - R[0]) / R[2], uz = (z - R[1]) / R[2], e = sstep(0, 0.06, Math.min(ux, uz, 1 - ux, 1 - uz)); if (e > 0){ const T = ssTex(N, x, z, SST_B); r = lerp(r, lerp(T[0], T[1], ssBlend(N)), e); sf = lerp(sf, T[2], e); } }
+    r *= SSRT; return [Math.min(WV.cap, WV.C * r), WV.swHs * sf, clamp(2 * Math.log(Math.max(r, 1)) / WV.lnFcap, 0, 1), r];
+  }
+  // the sea's height at (x, z) as the wave patch draws it: the same waves with the local heights, groups, fading and the Gerstner shift
+  // undone (two steps back to the rest point that moved there). seaHFast skips the undoing (the wake, which lies across the waves anyway).
+  const SEA_D = [0, 0, 0];
+  function seaDisp(x, z, t, S, fade){
+    let dx = 0, dy = 0, dz = 0; const ren = 1 / Math.sqrt(Math.max(1 - 2 * S[2] * (1 - S[2]) * (1 - WV.dot), 0.05)), cell = 2 * HALF / NP;
+    for (let i = 0; i < WV.list.length; i++){
+      const c = WV.list[i], att = sstep(2.5, 5, 2 * Math.PI / (c.k * cell)); if (att <= 0) continue;
+      const am0 = c.swell ? S[1] * c.wo : S[0] * (S[2] * c.wo + (1 - S[2]) * c.wy) * ren, Q = c.swell ? 0.3 : Math.min(WV.steep / (10 * c.k * am0 + 1e-4), 1);
+      const grp = 0.62 + 0.38 * Math.sin((x * c.Dx + z * c.Dz) * c.k * 0.083 + (x * c.Dz - z * c.Dx) * c.k * 0.041 - c.om * t * 0.5 + i * 2.59);
+      const am = am0 * grp * att * fade, f = c.k * (c.Dx * x + c.Dz * z) - c.om * t + c.ph, co = Math.cos(f);
+      dx += Q * am * c.Dx * co; dz += Q * am * c.Dz * co; dy += am * Math.sin(f);
+    }
+    SEA_D[0] = dx; SEA_D[1] = dy; SEA_D[2] = dz; return SEA_D;
+  }
+  function seaFade(x, z){ const st = 2 * HALF / NP, ox = Math.round(bv.x / st) * st, oz = Math.round(bv.z / st) * st; return 1 - sstep(0.6, 1, Math.max(Math.abs(x - ox), Math.abs(z - oz)) / HALF); }
+  function seaH(x, z, t){
+    const tide = env.tide || 0, fade = seaFade(x, z); if (fade <= 0 || !WV.list.length) return tide;
+    const S = ssAt(x, z); let px = x, pz = z;
+    for (let it = 0; it < 2; it++){ const D = seaDisp(px, pz, t, S, fade); px = x - D[0]; pz = z - D[2]; }
+    return tide + seaDisp(px, pz, t, S, fade)[1];
+  }
+  function seaHFast(x, z, t){ const tide = env.tide || 0, fade = seaFade(x, z); return fade <= 0 || !WV.list.length ? tide : tide + seaDisp(x, z, t, ssAt(x, z), fade)[1]; }
 
   // ---------- environment ----------
   const PAL = [[-18,[0.006,0.012,0.035],[0.02,0.035,0.07]], [-9,[0.02,0.04,0.1],[0.08,0.1,0.18]], [-3,[0.1,0.16,0.33],[0.5,0.4,0.5]], [2,[0.28,0.42,0.7],[0.93,0.68,0.5]], [9,[0.3,0.52,0.8],[0.76,0.83,0.9]], [25,[0.25,0.49,0.82],[0.68,0.8,0.92]]];
@@ -1704,7 +1818,9 @@ const G3 = (() => {
     env.sunCol = sc.map(v => v * si);
     env.amb = [zen[0] * 0.55 + hor[0] * 0.25 + 0.075, zen[1] * 0.55 + hor[1] * 0.25 + 0.095 + env.aur * 0.07, zen[2] * 0.55 + hor[2] * 0.25 + 0.14 + env.aur * 0.03];
     env.gnd = env.amb.map(v => v * 0.6);
-    env.fog = hor; env.fogD = 1.73 / (env.vis * 1000);
+    // from a strong gale (Beaufort 9) the spray in the air shortens the view over the sea: about 15 km at force 10, 4 km at 11, 1 km at 12
+    // (only in 3D; the game's visibility() is unchanged)
+    env.fog = hor; env.fogD = 1.73 / (Math.min(env.vis, 50 * Math.exp(-0.325 * Math.max(0, windAt(H) - 20.8))) * 1000);
     env.stars = sstep(-5, -12, el) * (1 - env.cloud); env.spec = sstep(-1, 4, el) * (1 - env.cloud) * 2.2;
     env.night = sstep(3, -5, el);
     // moon: where it is, how full, and the light it gives at night
@@ -1951,28 +2067,46 @@ const G3 = (() => {
     }
     if (false){ gl.bindBuffer(gl.ARRAY_BUFFER, M.pb); gl.bufferData(gl.ARRAY_BUFFER, M.pos, gl.STATIC_DRAW); gl.bindBuffer(gl.ARRAY_BUFFER, M.nb); gl.bufferData(gl.ARRAY_BUFFER, M.nor, gl.STATIC_DRAW); recolor(M, snowNow < 0 ? 0 : snowNow); }
   }
+  // the flat sea as a ring: the rectangle R [x0, z0, x1, z1] less the hole Hl where something nearer is drawn, as up to four strips,
+  // so no water is shaded twice and the shader never discards (which costs the early depth test on phone and tablet GPUs)
+  function seaRing(u, eye, y, R, Hl){
+    if (Hl){ Hl = [Math.max(R[0], Hl[0]), Math.max(R[1], Hl[1]), Math.min(R[2], Hl[2]), Math.min(R[3], Hl[3])]; if (Hl[2] <= Hl[0] || Hl[3] <= Hl[1]) Hl = null; }
+    const strips = Hl ? [[R[0], R[1], R[2], Hl[1]], [R[0], Hl[3], R[2], R[3]], [R[0], Hl[1], Hl[0], Hl[3]], [Hl[2], Hl[1], R[2], Hl[3]]] : [R];
+    attr(0, FARQ.pb, 2); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, FARQ.ib);
+    for (const [a, b, c, d] of strips){
+      if (c - a < 0.5 || d - b < 0.5) continue; const ox = (a + c) / 2, oz = (b + d) / 2;
+      gl.uniform2fv(u.uScale, [(c - a) / 2, (d - b) / 2]); gl.uniform2fv(u.uOrigin, [ox, oz]); gl.uniform3fv(u.uOriginRel, [ox - eye[0], y, oz - eye[2]]);
+      gl.drawElements(gl.TRIANGLES, FARQ.n, gl.UNSIGNED_SHORT, 0);
+    }
+  }
   function drawSea(VP, eye, t, far, drop){
-    gl.useProgram(PS.p); const u = PS.u;
+    const P = far && drop === undefined ? PSF : PS; gl.useProgram(P.p); const u = P.u;
     gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform1f(u.uTime, t); gl.uniform1f(u.uHalf, HALF); gl.uniform1f(u.uFlat, far ? 1 : 0);
-    gl.uniform1f(u.uCell, 2 * HALF / NP); gl.uniform1f(u.uPx, 2 * Math.tan(curFov / 2) / Math.max(canvas.height, 1));
+    gl.uniform1f(u.uCell, 2 * HALF / NP); gl.uniform1f(u.uPx, 2 * Math.tan(curFov / 2) / Math.max(canvas.height, 1)); gl.uniform1f(u.uDbg, SEADBG ? 1 : 0);
+    // the local sea: the textures on units 4 and 5 (a 1 x 1 stand-in until they are ready)
+    gl.uniform4fv(u.uSea, [WV.C, WV.cap, WV.lnFcap, WV.swHs]); gl.uniform4fv(u.uSea2, [WV.dot, WV.steep, ssBlend(SSL.n), ssBlend(SSL.w)]); gl.uniform4fv(u.uLocal, WV.loc);
+    for (const L of [SSL.n, SSL.w]){ gl.activeTexture(gl.TEXTURE0 + L.unit); gl.bindTexture(gl.TEXTURE_2D, L.on ? L.tex : SSDUMMY); gl.uniform1i(L === SSL.n ? u.uSSTn : u.uSSTw, L.unit); gl.uniform4fv(L === SSL.n ? u.uSSN : u.uSSW, L.on ? [L.rect[0], L.rect[1], 1 / L.rect[2], 1] : [0, 0, 1, 0]); }
+    gl.activeTexture(gl.TEXTURE0);
     gl.uniform4fv(u.uWa, WV.ua); gl.uniform4fv(u.uWb, WV.ub);
     gl.uniform3fv(u.uSun, env.lightDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD);
     gl.uniform3fv(u.uZen, env.zen); gl.uniform3fv(u.uHor, env.hor); gl.uniform3fv(u.uDeep, [0.035, 0.14, 0.18]); gl.uniform1f(u.uWind, env.wind); gl.uniform2fv(u.uWindDir, env.windDir); gl.uniform1f(u.uSpec, env.spec);
-    gl.uniform1f(u.uSOn, STEX ? 1 : 0); gl.uniform1f(u.uHOn, HTEX ? 1 : 0); gl.uniform1f(u.uTideL, env.tide || 0); gl.uniform1f(u.uHs, WV.hs || 0); if (HTEX){ gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, HTEX); gl.uniform1i(u.uHgt, 3); gl.activeTexture(gl.TEXTURE0); } if (STEX){ gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, STEX); gl.uniform1i(u.uShore, 1); if (LMTEX){ gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, LMTEX); gl.uniform1i(u.uLand, 2); gl.activeTexture(gl.TEXTURE1); } gl.uniform4fv(u.uSRect, [SRECT[0] - eye[0], SRECT[1] - eye[2], SRECT[2], SRECT[3]]); gl.activeTexture(gl.TEXTURE0); }
+    gl.uniform1f(u.uSOn, STEX ? 1 : 0); gl.uniform1f(u.uHOn, HTEX ? 1 : 0); gl.uniform1f(u.uTideL, env.tide || 0); if (HTEX){ gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, HTEX); gl.uniform1i(u.uHgt, 3); gl.activeTexture(gl.TEXTURE0); } if (STEX) gl.uniform4fv(u.uSRect, [SRECT[0] - eye[0], SRECT[1] - eye[2], SRECT[2], SRECT[3]]);
     gl.disableVertexAttribArray(1);
     if (far){
-      // flat sea on a subdivided grid: whole map for the far pass, or around the camera (lowered) to hide the sea floor in the near pass
-      let ox, oz, sc;
-      if (drop === undefined){ ox = MAP_W * 500; oz = MAP_H * 500; sc = Math.max(MAP_W, MAP_H) * 500 + 40000; }
-      else if (NEARM){ ox = NEARM.x0 + NEARM.sx / 2; oz = NEARM.z0 + NEARM.sz / 2; sc = NEARM.sx / 2 + 20; }
-      else { ox = Math.round(eye[0] / 100) * 100; oz = Math.round(eye[2] / 100) * 100; sc = far * 1.15; }
-      if (drop === undefined) gl.uniform4fv(u.uPHole, NOHOLE);
-      else { const st = 2 * HALF / NP, px = Math.round(bv.x / st) * st, pz = Math.round(bv.z / st) * st, hh = HALF * 0.97; gl.uniform4fv(u.uPHole, [px - hh - eye[0], pz - hh - eye[2], px + hh - eye[0], pz + hh - eye[2]]); }
-      gl.uniform1f(u.uScale, sc); gl.uniform2fv(u.uOrigin, [ox, oz]); gl.uniform3fv(u.uOriginRel, [ox - eye[0], -eye[1] - (drop || 0) + (env.tide || 0), oz - eye[2]]);
-      attr(0, FARQ.pb, 2); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, FARQ.ib); gl.drawElements(gl.TRIANGLES, FARQ.n, gl.UNSIGNED_SHORT, 0);
+      // flat sea: the whole map less the near terrain for the far pass; in the near pass the near terrain's square (or around the camera)
+      // less the wave patch around the boat
+      const y = -eye[1] - (drop || 0) + (env.tide || 0);
+      if (drop === undefined){ const ox = MAP_W * 500, oz = MAP_H * 500, sc = Math.max(MAP_W, MAP_H) * 500 + 40000;
+        seaRing(u, eye, y, [ox - sc, oz - sc, ox + sc, oz + sc], NEARM ? [NEARM.x0, NEARM.z0, NEARM.x0 + NEARM.sx, NEARM.z0 + NEARM.sz] : null); }
+      else {
+        let R; if (NEARM) R = [NEARM.x0 - 20, NEARM.z0 - 20, NEARM.x0 + NEARM.sx + 20, NEARM.z0 + NEARM.sz + 20];
+        else { const ox = Math.round(eye[0] / 100) * 100, oz = Math.round(eye[2] / 100) * 100, sc = far * 1.15; R = [ox - sc, oz - sc, ox + sc, oz + sc]; }
+        const st = 2 * HALF / NP, px = Math.round(bv.x / st) * st, pz = Math.round(bv.z / st) * st, hh = HALF * 0.97;
+        seaRing(u, eye, y, R, [px - hh, pz - hh, px + hh, pz + hh]);
+      }
     } else {
       const step = 2 * HALF / NP, ox = Math.round(bv.x / step) * step, oz = Math.round(bv.z / step) * step;
-      gl.uniform1f(u.uScale, 1); gl.uniform2fv(u.uOrigin, [ox, oz]); gl.uniform3fv(u.uOriginRel, [ox - eye[0], -eye[1] + (env.tide || 0), oz - eye[2]]);
+      gl.uniform2fv(u.uScale, [1, 1]); gl.uniform2fv(u.uOrigin, [ox, oz]); gl.uniform3fv(u.uOriginRel, [ox - eye[0], -eye[1] + (env.tide || 0), oz - eye[2]]);
       attr(0, PATCH.pb, 2); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, PATCH.ib); gl.drawElements(gl.TRIANGLES, PATCH.n, gl.UNSIGNED_SHORT, 0);
     }
   }
@@ -1984,7 +2118,10 @@ const G3 = (() => {
       gl = canvas.getContext('webgl', {antialias:true, alpha:false, powerPreference:'high-performance'}) || canvas.getContext('experimental-webgl');
       if (!gl || !gl.getExtension('OES_standard_derivatives')) throw new Error('webgl');
       PL = program(LIT_VS, LIT_FS, ['aPos', 'aCol']); PT = program(TER_VS, TER_FS, ['aPos', 'aCol', 'aNor', 'aShd']); PRGN = program(LITN_VS, LITN_FS, ['aPos', 'aNor', 'aCol']); PRGX = program(TEX_VS, TEX_FS, ['aPos', 'aUV']); PRGW = program(WK_VS, WK_FS, ['aPos', 'aW', 'aS']);
-      WKB = {p:new Float32Array(9000 * 3), w:new Float32Array(9000 * 4), s:new Float32Array(9000), pb:buf(new Float32Array(9000 * 3), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), wb:buf(new Float32Array(9000 * 4), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), sb:buf(new Float32Array(9000), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW)}; PS = program(SEA_VS, SEA_FS, ['aXZ']); PK = program(SKY_VS, SKY_FS, ['aP']); PP = program(PT_VS, PT_FS, ['aPos', 'aA']);
+      WKB = {p:new Float32Array(9000 * 3), w:new Float32Array(9000 * 4), s:new Float32Array(9000), pb:buf(new Float32Array(9000 * 3), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), wb:buf(new Float32Array(9000 * 4), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), sb:buf(new Float32Array(9000), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW)}; // the waves read the sea-state texture in the vertex shader where the GPU can (#novtf in the address tries without)
+      SST_VS = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS) >= 2 && !/novtf/.test(location.hash);
+      PS = program((SST_VS ? '' : '#define NOSST\n') + SEA_VS, SEA_FS, ['aXZ']); PSF = program('#define NOSST\n' + SEA_VS, '#define FAR\n' + SEA_FS, ['aXZ']);
+      SSDUMMY = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, SSDUMMY); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255])); PK = program(SKY_VS, SKY_FS, ['aP']); PP = program(PT_VS, PT_FS, ['aPos', 'aA']);
       DYNP = buf(new Float32Array(4000 * 3), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); DYNA = buf(new Float32Array(4000), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW);
       try { HG = await loadHeights(); } catch (e){ console.error(e); HG = null; }
       try { BLD = await loadBuildings(); } catch (e){ console.error(e); BLD = null; }
@@ -2230,14 +2367,18 @@ const G3 = (() => {
   let lastEye = [0, 0, 0];
 
   // ---------- frame ----------
+  // «#fps» in the address: the frame rate in a corner, to measure on the tablet
+  const FPS = {v:0, at:0, el:null};
+  if (/fps/.test(location.hash)){ FPS.el = document.createElement('div'); FPS.el.style.cssText = 'position:fixed;left:6px;bottom:6px;z-index:99;font:12px monospace;color:#fff;background:rgba(0,0,0,.55);padding:2px 6px;border-radius:4px;pointer-events:none'; document.body.appendChild(FPS.el); }
   function frame(){
     if (!active){ raf = 0; return; }
     raf = requestAnimationFrame(frame);
     if (document.hidden || NO3D) return;
     resize();
-    const now = performance.now(), dt = Math.min(0.1, (now - lastF) / 1000); lastF = now;
+    const now = performance.now(), dt = Math.min(0.1, (now - lastF) / 1000), rdt = Math.max(1e-3, (now - lastF) / 1000); lastF = now;
+    FPS.v = FPS.v ? FPS.v * 0.95 + 0.05 / rdt : 1 / rdt; if (FPS.el && now - FPS.at > 500){ FPS.at = now; FPS.el.textContent = Math.round(FPS.v) + ' fps · ' + (1000 / FPS.v).toFixed(1) + ' ms'; }
     const t = (now - T0) / 1000, frac = currentFrac(), H = (S.t + frac) / 60;
-    computeEnv(H); updateBoat(dt, t, frac); updateWaves(dt, H); updateNear(); updateShadows(); updateChunks(CH.size ? 2 : 999);
+    computeEnv(H); updateBoat(dt, t, frac); updateWaves(dt, H); updateNear(); ssStep(rdt); updateShadows(); updateChunks(CH.size ? 2 : 999);
     // camera
     let eye, V;
     if (cam.helm && !SHOW){
@@ -2340,6 +2481,17 @@ const G3 = (() => {
     drawPts(n, gl.LINES, VP, [0.88, 0.25, 0.62], 1, false, [-eye[0], -eye[1], -eye[2]]);
     gl.disable(gl.BLEND);
   }
+  // spindrift: from a gale (Beaufort 8) the wind tears spray off the crests and drives it low along the sea, more and more into a storm
+  const SDN = 400, SD = {x:new Float32Array(SDN), y:new Float32Array(SDN), z:new Float32Array(SDN), vx:new Float32Array(SDN), vy:new Float32Array(SDN), vz:new Float32Array(SDN), age:new Float32Array(SDN).fill(99), life:new Float32Array(SDN).fill(1), n:0, acc:0};
+  function driftSpray(VP, eye, dt, t, col){
+    const U = env.wind || 0, wd = env.windDir; SD.acc = Math.min(SD.acc + dt * 260 * sstep(17.2, 28.5, U), 60);
+    while (SD.acc >= 1){ SD.acc -= 1; const a = Math.random() * 6.2832, r = 8 + Math.random() * 110, x = eye[0] + Math.sin(a) * r, z = eye[2] + Math.cos(a) * r, i = SD.n = (SD.n + 1) % SDN, sp = U * (0.45 + Math.random() * 0.35);
+      SD.x[i] = x; SD.z[i] = z; SD.y[i] = seaHFast(x, z, t) + 0.2; SD.vx[i] = wd[0] * sp; SD.vz[i] = wd[1] * sp; SD.vy[i] = 0.6 + Math.random() * 1.6; SD.age[i] = 0; SD.life[i] = 0.8 + Math.random() * 1.2; }
+    let n = 0;
+    for (let i = 0; i < SDN; i++){ if (SD.age[i] >= SD.life[i]) continue; SD.age[i] += dt; SD.vy[i] -= 2.5 * dt; SD.x[i] += SD.vx[i] * dt; SD.y[i] += SD.vy[i] * dt; SD.z[i] += SD.vz[i] * dt;
+      PB[n * 3] = SD.x[i] - eye[0]; PB[n * 3 + 1] = SD.y[i] - eye[1]; PB[n * 3 + 2] = SD.z[i] - eye[2]; PA[n] = Math.sin(Math.PI * Math.min(1, SD.age[i] / SD.life[i])) * 0.45; n++; }
+    if (n) drawPts(n, gl.POINTS, VP, col, 90, true);
+  }
   function drawEffects(VP, eye, BM, dt, t){
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
     const foamCol = [Math.min(1, env.amb[0] * 1.4 + env.sunCol[0] * 0.8), Math.min(1, env.amb[1] * 1.4 + env.sunCol[1] * 0.8), Math.min(1, env.amb[2] * 1.4 + env.sunCol[2] * 0.8)];
@@ -2362,13 +2514,13 @@ const G3 = (() => {
     while (TRAIL.length && TRAIL[TRAIL.length - 1].age > 18) TRAIL.pop();
     if (TRAIL.length > 1 && WKB){
       const step = 2 * HALF / NP, ox = Math.round(bv.x / step) * step, oz = Math.round(bv.z / step) * step, tide = env.tide || 0;
-      const seaY = (x, z) => { const f = 1 - sstep(0.6, 1.0, Math.max(Math.abs(x - ox), Math.abs(z - oz)) / HALF); return tide + (seaH(x, z, t) - tide) * f + 0.07; };
+      const seaY = (x, z) => seaHFast(x, z, t) + 0.07;
       const st = xf(BM, [0, 0, (GEO(vtype())).stern]), pts = (v > 1 ? [{x:st[0], z:st[2], age:0, v, u:wk.odo || 0, hx:Math.sin(bv.head), hz:-Math.cos(bv.head)}] : []).concat(TRAIL);
       let m = 0; const P = WKB.p, W = WKB.w, Sg = WKB.s, cap = 8900;
-      const put = (x, z, u, vv, age, kind, str) => { if (m >= cap) return; P[m * 3] = x - eye[0]; P[m * 3 + 1] = seaY(x, z) - eye[1]; P[m * 3 + 2] = z - eye[2]; W[m * 4] = u; W[m * 4 + 1] = vv; W[m * 4 + 2] = age; W[m * 4 + 3] = kind; Sg[m] = str; m++; };
+      const put = (x, z, y, u, vv, age, kind, str) => { if (m >= cap) return; P[m * 3] = x - eye[0]; P[m * 3 + 1] = y - eye[1]; P[m * 3 + 2] = z - eye[2]; W[m * 4] = u; W[m * 4 + 1] = vv; W[m * 4 + 2] = age; W[m * 4 + 3] = kind; Sg[m] = str; m++; };
       const strip = (A, B) => { // A, B: arrays of 3 across-points [x, z, v] at two stations, with u/age/kind/str
         for (let c = 0; c < 2; c++){ const a0 = A.q[c], a1 = A.q[c + 1], b0 = B.q[c], b1 = B.q[c + 1];
-          for (const [q, S2] of [[a0, A], [a1, A], [b1, B], [a0, A], [b1, B], [b0, B]]) put(q[0], q[1], S2.u, q[2], S2.age, S2.kind, S2.str); } };
+          for (const [q, S2] of [[a0, A], [a1, A], [b1, B], [a0, A], [b1, B], [b0, B]]) put(q[0], q[1], q[3], S2.u, q[2], S2.age, S2.kind, S2.str); } };
       const sections = (kind) => {
         const out = []; let di = 0;
         for (let i = 0; i < pts.length; i++){
@@ -2382,7 +2534,8 @@ const G3 = (() => {
         }
         return out;
       };
-      for (const kind of [1, 2, 0]){ const sec = sections(kind); for (let i = 0; i < sec.length - 1; i++) strip(sec[i], sec[i + 1]); }
+      // the sea height once per point across the wake (each is a corner of up to six triangles)
+      for (const kind of [1, 2, 0]){ const sec = sections(kind); for (const S2 of sec){ const y = seaY(S2.q[1][0], S2.q[1][1]); for (const q of S2.q) q.push(y); } for (let i = 0; i < sec.length - 1; i++) strip(sec[i], sec[i + 1]); }
       if (m){
         gl.useProgram(PRGW.p); const u = PRGW.u; gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uEye, eye); gl.uniform3fv(u.uCol, foamCol); gl.uniform3fv(u.uAer, [0.09, 0.3, 0.31].map((c, k) => c * (env.amb[k] * 1.4 + env.sunCol[k] * 0.6))); gl.uniform3fv(u.uArm, [0.1, 0.27, 0.31].map((c, k) => c * (env.amb[k] * 1.8 + env.sunCol[k] * 0.6))); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD); gl.uniform1f(u.uTime, t);
         gl.bindBuffer(gl.ARRAY_BUFFER, WKB.pb); gl.bufferSubData(gl.ARRAY_BUFFER, 0, P.subarray(0, m * 3)); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
@@ -2398,6 +2551,7 @@ const G3 = (() => {
       PB[n * 3] = wk.x[i] - eye[0]; PB[n * 3 + 1] = wk.y[i] - eye[1]; PB[n * 3 + 2] = wk.z[i] - eye[2]; PA[n] = Math.pow(Math.max(0, 1 - wk.age[i] / wk.life[i]), 1.5) * 0.75; n++;
     }
     drawPts(n, gl.POINTS, VP, foamCol, 150, true);
+    driftSpray(VP, eye, dt, t, foamCol);
     // fishing lines
     if (S.boat.status === 'fishing' && GEO(vtype()).hand && SK){
       const segs = (SK.lines || []).slice(); if (SK.tipW) segs.push([SK.tipW, null]);
@@ -2483,6 +2637,6 @@ const G3 = (() => {
     fineReady(){ if (NEARM){ freeMesh(NEARM); NEARM = null; updateNear(); } },
     fishCam(){ cam.helm = false; cam.dist = 7; cam.pitch = 0.22; cam.yaw = -0.85; },
     isHelm:() => cam.helm, setHelm(on){ const G = GEO(vtype()); cam.helm = !!on; cam.hy = 0; cam.hp = G.hp !== undefined ? G.hp : -0.07; cam.fov = G.fov || 55; },
-    _debug:{get eye(){ return lastEye; }, camInside, camFree, get camPull(){ return camPull; }, get camLift(){ return camLift; }, get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, BUNKERS, nearestPlant, fkRun, legAt, terrH, unitModel, get UPATCH(){ return UPATCH; }, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; SEAMARKS.lights.forEach((L, i) => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(i, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }}
+    _debug:{get fps(){ return FPS.v; }, SSL, WV, ssAt, seaH, waves:(dt, H) => updateWaves(dt, H), get sstVS(){ return SST_VS; }, set seaDbg(v){ SEADBG = v; }, get drift(){ let c = 0; for (let i = 0; i < SDN; i++) if (SD.age[i] < SD.life[i]) c++; return c; }, get eye(){ return lastEye; }, camInside, camFree, get camPull(){ return camPull; }, get camLift(){ return camLift; }, get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, BUNKERS, nearestPlant, fkRun, legAt, terrH, unitModel, get UPATCH(){ return UPATCH; }, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; SEAMARKS.lights.forEach((L, i) => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(i, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }}
   };
 })();
