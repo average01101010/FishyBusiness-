@@ -13,6 +13,14 @@ if os.environ.get('KYST_LITE') == '1':
 ROUTES = os.path.join(HERE, 'routes.json')
 OUT = os.path.join(HERE, 'out')
 os.makedirs(OUT, exist_ok=True)
+# KYST_SHIFT=1 (the torture test of the coast plan, phase K2): the game runs with #frameshift, which moves the map 1000 km east and
+# south, and the hand-drawn routes are moved with it. A test that still passes legacy km to the game shows up.
+SHIFT = 1000 if os.environ.get('KYST_SHIFT') == '1' else 0
+if SHIFT:
+    GAME_TUT += '#frameshift'; GAME += ',frameshift'
+    import json as _json
+    _r = {k: [{**q, 'x': q['x'] + SHIFT, 'y': q['y'] + SHIFT} for q in v] for k, v in _json.load(open(ROUTES)).items()}
+    ROUTES = os.path.join(OUT, 'routes_shift.json'); _json.dump(_r, open(ROUTES, 'w'))
 os.chdir(OUT)
 
 

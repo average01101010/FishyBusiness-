@@ -24,7 +24,7 @@ async def model(pg):
     r = json.loads(await pg.evaluate("""JSON.stringify((() => {
       S.stock = initStock(); delete S.cstk; S.tut = 0;
       // a sea point well away from the grounds the local fleet works
-      let p = null; for (let k = 0; k < 4000 && !p; k++){ const q = {x:4 + (k * 7.31) % 70, y:4 + (k * 3.77) % 74};
+      let p = null; for (let k = 0; k < 4000 && !p; k++){ const q = LG(4 + (k * 7.31) % 70, 4 + (k * 3.77) % 74);
         if (!isLand(q) && GROUNDS.slice(0, 3).every(g => dist(q, g.p) > 18) && stockW(q).every(([i]) => S.stock[i] === 1)) p = q; }
       const R = {p};
       const w = stockW(p), s0 = stockAt(p); takeStock(p, 1500);
@@ -49,7 +49,7 @@ async def model(pg):
     # the fish move along instead of jumping every 120 hours, and the schools average 1
     r = json.loads(await pg.evaluate("""JSON.stringify((() => {
       const old = (sp, p, H) => { const w = Math.floor(H / 120), n = noise2(p.x / 3.5 + w * 0.61, p.y / 3.5 - w * 0.37, 20 + ALLSP.indexOf(sp)); return 0.3 + 1.5 * n * n; };
-      const pts = []; for (let k = 0; pts.length < 2000; k++){ const p = {x:(k * 7.919) % MAP_W, y:(k * 3.141) % MAP_H}; if (!isLand(p)) pts.push(p); }
+      const pts = []; for (let k = 0; pts.length < 2000; k++){ const p = LG((k * 7.919) % MAP_W, (k * 3.141) % MAP_H); if (!isLand(p)) pts.push(p); }
       const H0 = (Date.UTC(2028, 2, 1, 0) - EPOCH) / 36e5; let a = 0, b = 0, n = 0, sc = 0, jump = 0, step = 0, hour = 0;
       for (let t = 0; t < 24; t++){ const H = H0 + t * 37.3; for (const p of pts.slice(0, 600)) for (const sp of ['torsk', 'hyse', 'sei']){ a += hotspot(sp, p, H); b += old(sp, p, H); sc += school(sp, p, H); n++; } }
       // across a multiple of 120 hours, and from one game minute to the next

@@ -34,7 +34,7 @@ async def main():
 
         for name, dist, pitch, setup in [
             ('kaia i Botnhamn', 26, 0.08, None),
-            ('under Gisundbrua', 45, 0.02, "const b = S.boat; b.status = 'idle'; b.port = null; b.pos = {x:55.515, y:53.125}; b.v = 0; b.heading = 0.6"),
+            ('under Gisundbrua', 45, 0.02, "const b = S.boat; b.status = 'idle'; b.port = null; b.pos = LG(55.515, 53.125); b.v = 0; b.heading = 0.6"),
         ]:
             if setup:
                 await pg.evaluate(setup); await pg.wait_for_timeout(3000)

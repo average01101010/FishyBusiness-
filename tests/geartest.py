@@ -17,7 +17,7 @@ PREP = """(()=>{ S.tut = 0; S.cash = 1e7; S.settings.autoOn = false; S.stock = i
   window.hStep = (n) => { for (let i = 0; i < n && S.boat.gop; i++) step(); };
   window.HOUR = (y, m, d, h) => (Date.UTC(y, m, d, h) - EPOCH) / 3.6e6;
   // a shallow crab spot south on Senja
-  let spot = null; for (let y = 60; y < 70 && !spot; y += 0.5) for (let x = 20; x < 60; x += 0.5){ const q = {x, y}; if (!isLand(q) && depthF(q) > 12 && depthF(q) < 35){ spot = q; break; } }
+  let spot = null; for (let y = 60; y < 70 && !spot; y += 0.5) for (let x = 20; x < 60; x += 0.5){ const q = LG(x, y); if (!isLand(q) && depthF(q) > 12 && depthF(q) < 35){ spot = q; break; } }
   window.CRABSPOT = spot;
 })()"""
 
@@ -196,7 +196,7 @@ async def main():
 
         # 7. save and reload, and an old save with two vessels gets a gear locker on both
         r = await pg.evaluate("""(()=>{ const b = S.boat; b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; b.gop = null; S.sets = []; S.pgear = newPGear(); S.pgear.kits.n = 1; S.pgear.nets.push({id:'nz', mesh:200, n:5, cond:0.8});
-          S.sets.push({id:'sz', vid:S.cur, kind:'teine', pot:'big', n:10, a:{x:30, y:60}, b:{x:30.2, y:60}, tSet:S.t, acc:{}, dead:0, lost:null, rep:false, warn:0, heavy:false, depth:20});
+          S.sets.push({id:'sz', vid:S.cur, kind:'teine', pot:'big', n:10, a:LG(30, 60), b:LG(30.2, 60), tSet:S.t, acc:{}, dead:0, lost:null, rep:false, warn:0, heavy:false, depth:20});
           const v2 = newVesselObj('snekke', 'husoy'); storeVessel(curVessel()); delete v2.pgear; save(); return {n:S.fleet.length}; })()""")
         await pg.reload(); await pg.wait_for_timeout(1800); await pg.evaluate(SEED); await pg.evaluate(PREP)
         r = await pg.evaluate("""(()=>({sets:S.sets.map(s => s.id), nets:S.pgear.nets.map(l => [l.id, l.n, l.cond]), v2:!!vget(S.fleet[1], 'pgear') && Array.isArray(vget(S.fleet[1], 'pgear').nets)}))()""")

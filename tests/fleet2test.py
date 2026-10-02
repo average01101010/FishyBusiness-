@@ -93,7 +93,7 @@ async def main():
           const bt = document.querySelector('[data-pa="buy"][data-ti="0"][data-k="skiff"]'); R.buyEnabled = !bt.disabled; bt.click();
           R.after = S.fleet.map(v => vget(v, 'boatName') + ':' + vget(v, 'boat').type + ':' + vget(v, 'boat').port);
           // not aboard and no crew: the new skiff cannot leave
-          const nv = S.fleet[S.fleet.length - 1]; R.depart = onVessel(nv, () => { S.crew = []; S.plan = {wps:[{x:1, y:1, port:null, fish:0}], idx:0, speed:10}; return depart(); });
+          const nv = S.fleet[S.fleet.length - 1]; R.depart = onVessel(nv, () => { S.crew = []; S.plan = {wps:[{...LG(1, 1), port:null, fish:0}], idx:0, speed:10}; return depart(); });
           return R; })""", [btn2['c0'], btn2['val']])
         print('buttons:', json.dumps([btn, btn2['name'], btn3], ensure_ascii=False))
         print(ok(btn['follow'] == 'v2' and btn['hudRow']), 'follow: the HUD shows the followed vessel, no anchor')

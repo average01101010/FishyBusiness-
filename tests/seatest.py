@@ -15,7 +15,7 @@ async def main():
         await boot(pg)
         r = await pg.evaluate("""(()=>{
           const R = {}, D = [0, 45, 90, 135, 180, 225, 270, 315], r1 = v => Math.round(v * 10) / 10;
-          let s = 0; for (let x = 0.2; x < 78; x += 0.37) for (let y = 0.2; y < 82; y += 0.41) s += exposure({x, y}); R.expo = Math.round(s * 1e4) / 1e4;
+          let s = 0; for (let x = 0.2; x < 78; x += 0.37) for (let y = 0.2; y < 82; y += 0.41) s += exposure(LG(x, y)); R.expo = Math.round(s * 1e4) / 1e4;
           R.rose = {}; for (const g of GROUNDS) R.rose[g.name.no] = D.map(d => r1(fetchAt(g.p, d)));
           for (const q of PORTS) R.rose[q.id] = D.map(d => r1(fetchAt(q.p, d)));
           // smooth: the cached field over a full turn in 1 degree steps, and against fetchAt
@@ -27,9 +27,9 @@ async def main():
           for (const g of GROUNDS) for (let d = 0; d < 360; d += 15){ const a = [-10, -5, 0, 5, 10].map(e => Math.sqrt(Math.max(1, fetchAt(g.p, d + e)))), f = Math.sqrt(Math.max(1, fetchField(g.p, d)));
             dev = Math.max(dev, f / Math.max(...a) - 1, Math.min(...a) / f - 1); }
           R.jump = r1(jump / (sec / 10)); R.dev = r1(dev * 100);
-          let t0 = performance.now(); for (let i = 0; i < 2000; i++) fetchAt({x:Math.random() * 78, y:Math.random() * 82}, Math.random() * 360); R.usRay = r1((performance.now() - t0) / 2000 * 1000);
-          t0 = performance.now(); for (let i = 0; i < 10000; i++) fetchField({x:40 + Math.random(), y:10 + Math.random()}, 200 + Math.random() * 20); R.usWarm0 = r1((performance.now() - t0) / 10000 * 1000);
-          t0 = performance.now(); for (let i = 0; i < 10000; i++) fetchField({x:40 + Math.random(), y:10 + Math.random()}, 200 + Math.random() * 20); R.usWarm = r1((performance.now() - t0) / 10000 * 1000);
+          let t0 = performance.now(); for (let i = 0; i < 2000; i++) fetchAt(LG(Math.random() * 78, Math.random() * 82), Math.random() * 360); R.usRay = r1((performance.now() - t0) / 2000 * 1000);
+          t0 = performance.now(); for (let i = 0; i < 10000; i++) fetchField(LG(40 + Math.random(), 10 + Math.random()), 200 + Math.random() * 20); R.usWarm0 = r1((performance.now() - t0) / 10000 * 1000);
+          t0 = performance.now(); for (let i = 0; i < 10000; i++) fetchField(LG(40 + Math.random(), 10 + Math.random()), 200 + Math.random() * 20); R.usWarm = r1((performance.now() - t0) / 10000 * 1000);
           // the wind is the same as before the sea model (only its direction turns with the lows)
           let ws = 0; for (let h = 0; h < 8760 * 2; h += 0.7) ws += windAt(h); R.windSum = Math.round(ws * 1000) / 1000;
           // a low veers the wind clockwise as it passes: from south ahead of it towards north-west behind
@@ -42,15 +42,15 @@ async def main():
           // lee and windward at 11 m/s: the open grounds with the wind from the north, then from the south (behind Senja)
           const at = (p, d) => { WX_FORCE = {w:11, d}; const v = hsParts(p, S.t / 60); WX_FORCE = null; return {w:r1(v.w * 10) / 10, sw:r1(v.sw * 10) / 10, F:r1(v.F), tp:r1(v.tp)}; };
           R.lee = {}; for (const g of GROUNDS.slice(0, 3)) R.lee[g.name.no] = {N:at(g.p, 0), S:at(g.p, 180)};
-          const kn = {x:(17 + 54.9 / 60 - B.lonMin) * KX, y:(B.latMax - (69 + 30.7 / 60)) * KY}; R.knekk = {N:at(kn, 0), S:at(kn, 180)};
+          const kn = P(69 + 30.7 / 60, 17 + 54.9 / 60); R.knekk = {N:at(kn, 0), S:at(kn, 180)};
           // smooth from the harbour out to the open sea (Husøy to the ground north of it, 100 m steps), and over a full turn of the wind
           const q = portById('husoy').p, gp = GROUNDS[0].p; let line = [], pl = null, step = 0;
           WX_FORCE = {w:11, d:330}; for (let i = 0; i <= 120; i++){ const t = i / 120, p = {x:q.x + (gp.x - q.x) * t, y:q.y + (gp.y - q.y) * t}; if (isLand(p)) { pl = null; continue; } const v = hsAt(p, S.t / 60); if (pl != null) step = Math.max(step, Math.abs(v - pl)); pl = v; if (i % 12 === 0) line.push(r1(v * 10) / 10); }
           R.line = line; R.lineStep = Math.round(step * 100) / 100;
           let turn = 0, pv = null; for (let d = 0; d <= 360; d += 2){ WX_FORCE = {w:11, d}; const v = hsAt(gp, S.t / 60); if (pv != null) turn = Math.max(turn, Math.abs(v - pv)); pv = v; } WX_FORCE = null; R.turnStep = Math.round(turn * 100) / 100;
           // what it costs: a sailing boat's hsAt (new position every call) and the same spot again
-          let t1 = performance.now(); for (let i = 0; i < 20000; i++) hsAt({x:40 + i * 0.0002, y:10 + i * 0.0001}, S.t / 60 + i / 60); R.usHs = r1((performance.now() - t1) / 20000 * 1000);
-          const pp = {x:41, y:11}; t1 = performance.now(); for (let i = 0; i < 20000; i++) hsAt(pp, S.t / 60); R.usHsSame = Math.round((performance.now() - t1) / 20000 * 1000 * 100) / 100;
+          let t1 = performance.now(); for (let i = 0; i < 20000; i++) hsAt(LG(40 + i * 0.0002, 10 + i * 0.0001), S.t / 60 + i / 60); R.usHs = r1((performance.now() - t1) / 20000 * 1000);
+          const pp = LG(41, 11); t1 = performance.now(); for (let i = 0; i < 20000; i++) hsAt(pp, S.t / 60); R.usHsSame = Math.round((performance.now() - t1) / 20000 * 1000 * 100) / 100;
           // the sea state by height (Douglas), krapp in the lee's young sea, and the texts in the Vær panel and the phone
           R.codes = [0.02, 0.07, 0.3, 1, 2, 3, 5, 7, 10, 15].map(seaState);
           const g1 = GROUNDS[0].p; WX_FORCE = {w:11, d:180}; R.krappLee = seaHere(g1, S.t / 60).krapp; WX_FORCE = {w:11, d:0}; R.krappOpen = seaHere(g1, S.t / 60).krapp;

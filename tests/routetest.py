@@ -23,7 +23,7 @@ class Touch:
         await self.ev('touchEnd', []); await asyncio.sleep(0.2)
 
 
-SETUP = """(() => { S.cash = 50000; S.boat.gear = true; openPlotter(); const r = svg.getBoundingClientRect(); view.cx = 56.3; view.cy = 49.4; view.z = MAP_H / 13; applyView(); scheduleStatic(); renderDyn(); return 1; })()"""
+SETUP = """(() => { S.cash = 50000; S.boat.gear = true; openPlotter(); const r = svg.getBoundingClientRect(); view.cx = LG(56.3, 49.4).x; view.cy = LG(56.3, 49.4).y; view.z = MAP_H / 13; applyView(); scheduleStatic(); renderDyn(); return 1; })()"""
 C = "(p => mapToClient(p))"
 # a sea point about d px from w on screen, and a land point near it
 NEAR = """([i, d, land]) => { const w = S.draft[i]; for (let k = 0; k < 64; k++){ const a = k / 64 * Math.PI * 2, r = (d + (k % 8) * 6) / view.px, p = {x:w.x + Math.cos(a) * r, y:w.y + Math.sin(a) * r};
@@ -154,7 +154,7 @@ async def leia(p):
     check(all(0.85 <= x <= 1.35 for x in hand), 'og 0,85–1,35 ganger de håndtegnede testrutene (de er ikke de korteste)', hand)
 
     # the button, then a tap on Botnhamn: the route follows the fairway there, and undo takes it all away at once
-    await pg.evaluate("view.cx = 55.2; view.cy = 38.5; view.z = MAP_H / 36; applyView(); scheduleStatic(); renderDyn()"); await pg.wait_for_timeout(500)
+    await pg.evaluate("view.cx = LG(55.2, 38.5).x; view.cy = LG(55.2, 38.5).y; view.z = MAP_H / 36; applyView(); scheduleStatic(); renderDyn()"); await pg.wait_for_timeout(500)
     lb = json.loads(await pg.evaluate("JSON.stringify((r => ({x:r.x + r.width / 2, y:r.y + r.height / 2, vis:!$('rLeia').hidden}))($('rLeia').getBoundingClientRect()))"))
     await T.tap(lb['x'], lb['y'])
     armed = await pg.evaluate("LEIA_ARM && /Følg leia/.test($('panel').textContent)")
