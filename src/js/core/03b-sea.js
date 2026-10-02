@@ -5,7 +5,7 @@
 const FETCH = {open:600, edge:15, andoy:{x:-16, y:43.4}, kvaloy:62, cell:0.2, sec:10, max:80000};
 const FETCH_A = [-45, -30, -15, 0, 15, 30, 45].map(a => ({a:a * Math.PI / 180, c:Math.cos(a * Math.PI / 180)}));
 const FETCH_C = new Map();
-// beyond the map edge: the open Norwegian Sea north and north-west, Andøya across Andfjorden to the west, fjords and islands south and east
+// beyond the map edge (legacy km): the open Norwegian Sea north and north-west, Andøya across Andfjorden to the west, fjords and islands south and east
 function offMapFetch(x, y, dx, dy){
   if (y < 0) return x < FETCH.kvaloy || dx < -0.4 * -dy ? FETCH.open : FETCH.edge;
   if (x < 0){
@@ -18,7 +18,7 @@ function offMapFetch(x, y, dx, dy){
 function fetchRay(x, y, dx, dy){
   let s = 0;
   for (let i = 0; i < 3000; i++){
-    if (x < 0 || y < 0 || x >= MAP_W || y >= MAP_H) return s + offMapFetch(x, y, dx, dy);
+    if (x < MAPB.x0 || y < MAPB.y0 || x >= MAPB.x1 || y >= MAPB.y1) return s + offMapFetch(x - FR.ox, y - FR.oy, dx, dy);
     const d = coastDist({x, y});
     let st = 0.025;
     if (d < 0.1){ if (isLand({x, y})) return s; } else st = Math.max(0.025, 0.92 * d - 0.07);

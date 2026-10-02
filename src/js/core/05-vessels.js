@@ -1,6 +1,6 @@
 // ---------- other vessels (deterministic, so every player sees the same traffic) ----------
 const NPC_ROUTES = {"coastal":[[35.025,82.275],[41.875,68.925],[43.025,67.925],[56.525,59.825],[57.425,58.775],[56.275,55.625],[55.575,54.775],[55.725,54.525],[55.625,52.775],[56.275,45.125],[60.325,40.925],[60.725,39.775],[60.475,37.425],[62.125,28.775],[63.025,28.025],[78.375,19.375]],"coastalStop":7,"ferry":[[53.208,23.505],[53.225,23.475],[53.875,22.425],[57.575,12.575],[57.725,12.475],[58.425,12.425],[58.925,12.625],[59.025,12.775]],"sjark":[[[43.811,19.839],[43.825,19.875],[43.825,19.925],[43.825,19.975],[43.825,20.025],[43.725,20.075],[43.575,20.025],[43.175,19.275],[42.125,13.525],[42.925,9.425],[44.05,8.35]],[[36.662,25.316],[37.125,24.975],[37.025,23.075],[32.35,18.65]],[[19.851,39.709],[19.875,39.675],[19.825,39.625],[19.775,39.625],[19.625,39.575],[17.875,39.625],[17.325,40.125],[9.475,39.425],[9.15,39.15]],[[53.208,23.505],[53.275,23.475],[53.325,23.475],[53.375,23.475],[55.325,22.025],[59.65,19.35]]]};
-function prepRoute(r){ const pts = r.map(q => ({x:q[0], y:q[1]})), cum = [0]; for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + dist(pts[i - 1], pts[i])); return {pts, cum, len:cum[cum.length - 1]}; }
+function prepRoute(r){ const pts = r.map(q => LG(q[0], q[1])), cum = [0]; for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + dist(pts[i - 1], pts[i])); return {pts, cum, len:cum[cum.length - 1]}; }
 function atRoute(R, s){
   s = clamp(s, 0, R.len); let i = 1; while (i < R.pts.length - 1 && R.cum[i] < s) i++;
   const a = R.pts[i - 1], b = R.pts[i], seg = (R.cum[i] - R.cum[i - 1]) || 1, u = clamp((s - R.cum[i - 1]) / seg, 0, 1);
@@ -12,7 +12,7 @@ const FLEET = [{"n":"Havørn","home":"husoy","hp":[43.838,19.863],"L":10.99,"B":
 const HOMES = {"finnsnes":[55.838,54.288],"botnhamn":[53.208,23.505],"husoy":[43.838,19.863],"senjahopen":[36.662,25.316],"gryllefjord":[19.888,39.688],"Torsken":[21.338,42.788],"Skaland":[29.263,30.763],"Mefjordv\u00e6r":[34.988,22.288],"Hamn":[24.213,33.788],"Skrolsvik":[19.662,71.888]};
 const HOME_NAMES = {finnsnes:'Finnsnes', botnhamn:'Botnhamn', husoy:'Husøy', senjahopen:'Senjahopen', gryllefjord:'Gryllefjord'};
 // vessels of 15 m or more may not fish inside the fjord line (høstingsforskriften § 31): keep only their grounds outside it
-FLEET.forEach(f => { if (f.L >= 15){ const out = f.rt.filter(r => { const q = r[r.length - 1]; return !insideFjord({x:q[0], y:q[1]}); }); if (out.length) f.rt = out; } });
+FLEET.forEach(f => { if (f.L >= 15){ const out = f.rt.filter(r => { const q = r[r.length - 1]; return !insideFjord(LG(q[0], q[1])); }); if (out.length) f.rt = out; } });
 FLEET.forEach(f => { f.R = f.rt.map(prepRoute); f.RR = f.rt.map(r => prepRoute(r.slice().reverse())); f.homeName = HOME_NAMES[f.home] || f.home; });
 // where fleet vessel i is at time H: harbour speed near home, its own cruising speed at sea (slower in big waves),
 // and jig fishing on the bank: drift with the wind, then steam back up for a new drift
@@ -43,7 +43,7 @@ function fleetState0(i, H){
   const f = FLEET[i], big = f.L >= 14, g = gDate(H), hod = g.getUTCHours() + g.getUTCMinutes() / 60 + g.getUTCSeconds() / 3600;
   const dep = 4.5 + hash(i * 13 + 5) * 2.5, e = ((hod - dep) % 24 + 24) % 24, day0 = H - e, dI = Math.floor((day0 + 6) / 24);
   const k = f.R.length > 1 && hash(dI * 31 + i) < 0.5 ? 1 : 0, R = f.R[k], RR = f.RR[k];
-  const moored = () => { const q = f.R[0] ? atRoute(f.R[0], 0) : {p:{x:f.hp[0], y:f.hp[1]}, hd:0}; return {p:q.p, hd:q.hd + Math.PI, st:'port'}; };
+  const moored = () => { const q = f.R[0] ? atRoute(f.R[0], 0) : {p:LG(f.hp[0], f.hp[1]), hd:0}; return {p:q.p, hd:q.hd + Math.PI, st:'port'}; };
   if (!R || hash(dI * 17 + i * 7) < 0.12 || windAt(day0) >= (big ? 15 : f.L >= 12 ? 13.5 : 12)) return moored();
   const cs = ((big ? 9.8 : 7.8) + hash(i * 3 + 1) * 1.8) * clamp(1 - (hsOpen(day0) - 1.2) * 0.12, 0.65, 1) * NM, hsp = 5 * NM;
   const hz = Math.min(0.45, R.len * 0.25), tH = hz / hsp, T = tH + (R.len - hz) / cs, fishH = 5 + hash(dI * 7 + i * 3) * 3.5;

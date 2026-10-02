@@ -15,6 +15,7 @@ const QUAYS = {
   torsken:{main:{a:[21824, 42565], b:[21892, 42580], n:[-0.215, 0.977]}, bunker:{a:[21914, 42574], b:[21959, 42572], n:[0.04, 0.999]}},
   frovag:{main:{a:[19636, 71906], b:[19631, 71932], n:[0.987, 0.163]}}
 };
+for (const pid in QUAYS) for (const kind in QUAYS[pid]){ const f = QUAYS[pid][kind]; f.a = LGm(f.a); f.b = LGm(f.b); }   // legacy metres into the game's frame
 const QUAY_DEPTH = 10;   // how far the quay deck reaches in from the face (m)
 // The harbour unit (UNIT, UNITS in 01-world.js) is the quay in every harbour with a plant: its berths, its dredged basin.
 // the depth below chart datum at p (km) where a unit stands: 0 on the quay itself, at least the dredged depth in the basin, rising
@@ -76,7 +77,7 @@ const APPROACH = {};
 function clearLine(a, b){ const n = Math.max(1, Math.ceil(dist(a, b) / 0.008)); for (let i = 1; i < n; i++) if (isLand({x:a.x + (b.x - a.x) * i / n, y:a.y + (b.y - a.y) * i / n})) return false; return true; }
 function approachPath(pt){
   if (APPROACH[pt.id]) return APPROACH[pt.id];
-  const c = GRID.c, nx = GRID.nx, cell = k => { const x = k % nx; return {x:(x + 0.5) * c, y:((k - x) / nx + 0.5) * c}; }, s0 = Math.floor(pt.p.y / c) * nx + Math.floor(pt.p.x / c);
+  const c = GRID.c, nx = GRID.nx, cell = k => { const x = k % nx; return {x:(x + 0.5) * c + FR.ox, y:((k - x) / nx + 0.5) * c + FR.oy}; }, s0 = Math.floor((pt.p.y - FR.oy) / c) * nx + Math.floor((pt.p.x - FR.ox) / c);
   const prev = new Map([[s0, -1]]), Q = [s0]; let end = -1;
   for (let h = 0; h < Q.length && h < 300000; h++){
     const k = Q[h], x = k % nx, y = (k - x) / nx, p = cell(k);

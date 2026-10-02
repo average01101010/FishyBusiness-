@@ -32,7 +32,7 @@ delete S.tubs; delete S.clean; for (const v of S.fleet || []){ delete v.tubs; de
 for (const v of S.fleet) withVessel(v, () => { for (const j of S.jobs || []) jobOk(j); if (S.plan && S.plan.depAt != null && !Number.isFinite(S.plan.depAt)) S.plan.depAt = S.t; });
 // before 30.09.2026 a standing-plan trip with you aboard counted as the hired skipper's, and the landing lost its access
 for (const v of S.fleet) withVessel(v, () => { const b = S.boat; if (S.plan && S.plan.ops && (b.status !== 'port' || b.land) && meAboard()) S.tripOwner = true; });
-view.cx = MAP_W * 0.56; view.cy = MAP_H * 0.5;
+view.cx = MAPB.x0 + MAP_W * 0.56; view.cy = MAPB.y0 + MAP_H * 0.5;
 { const r = svg.getBoundingClientRect(); const asp = (r.width / r.height) || 1; view.z = clamp(MAP_H * asp / MAP_W, 0.8, 1.6); }
 refreshAll();
 if (!S.intro) showIntro();

@@ -10,7 +10,7 @@ let SETM = null;
 function applyView(){
   const r = svg.getBoundingClientRect(); if (!r.width || !r.height) return;
   const h = MAP_H / view.z, w = h * (r.width / r.height);
-  view.cx = clamp(view.cx, 0, MAP_W); view.cy = clamp(view.cy, 0, MAP_H);
+  view.cx = clamp(view.cx, MAPB.x0, MAPB.x1); view.cy = clamp(view.cy, MAPB.y0, MAPB.y1);
   svg.setAttribute('viewBox', (view.cx - w / 2) + ' ' + (view.cy - h / 2) + ' ' + w + ' ' + h);
   if (window.chartReady && document.body.classList.contains('vplot')){ followChart(); clearTimeout(chartTimer); chartTimer = setTimeout(() => paintChart(1), 160); }
   view.px = r.height / h;
@@ -62,15 +62,16 @@ function paintChart(scale){
   const prev = new Float32Array(W).fill(NaN), sh = 1 / (Math.max(kx, 0.0005) * 10), smooth = scale >= 1;
   // cubic B-spline weights per column (and per row below): smooth, rounded depth contours instead of straight grid steps
   const bw = (t, o) => { const t2 = t * t, t3 = t2 * t; o[0] = (1 - t) * (1 - t) * (1 - t) / 6; o[1] = (3 * t3 - 6 * t2 + 4) / 6; o[2] = (-3 * t3 + 3 * t2 + 3 * t + 1) / 6; o[3] = t3 / 6; };
-  const CX = new Int32Array(W * 4), CW = new Float32Array(W * 4), tmp = [0, 0, 0, 0];
-  if (smooth) for (let i = 0; i < W; i++){ const x = x0 + (i + 0.5) * kx, gx = x / c - 0.5, ix = Math.floor(gx); bw(gx - ix, tmp); for (let k = 0; k < 4; k++){ CX[i * 4 + k] = clamp(ix - 1 + k, 0, nx - 1); CW[i * 4 + k] = tmp[k]; } }
+  // the depth raster is in the legacy frame: x, y below are legacy km
+  const CX = new Int32Array(W * 4), CW = new Float32Array(W * 4), tmp = [0, 0, 0, 0], lx0 = x0 - FR.ox, ly0 = y0 - FR.oy;
+  if (smooth) for (let i = 0; i < W; i++){ const x = lx0 + (i + 0.5) * kx, gx = x / c - 0.5, ix = Math.floor(gx); bw(gx - ix, tmp); for (let k = 0; k < 4; k++){ CX[i * 4 + k] = clamp(ix - 1 + k, 0, nx - 1); CW[i * 4 + k] = tmp[k]; } }
   const RW = [0, 0, 0, 0], RO = [0, 0, 0, 0];
   for (let j = 0; j < H; j++){
-    const y = y0 + (j + 0.5) * ky, gy = clamp(y / c - 0.5, 0, ny - 1.001), iy = Math.floor(gy), fy = gy - iy, r0 = iy * nx, r1 = r0 + nx;
+    const y = ly0 + (j + 0.5) * ky, gy = clamp(y / c - 0.5, 0, ny - 1.001), iy = Math.floor(gy), fy = gy - iy, r0 = iy * nx, r1 = r0 + nx;
     if (smooth){ const gyr = y / c - 0.5, iyr = Math.floor(gyr); bw(gyr - iyr, RW); for (let k = 0; k < 4; k++) RO[k] = clamp(iyr - 1 + k, 0, ny - 1) * nx; }
     let left = NaN;
     for (let i = 0; i < W; i++){
-      const x = x0 + (i + 0.5) * kx, o = (j * W + i) * 4;
+      const x = lx0 + (i + 0.5) * kx, o = (j * W + i) * 4;
       if (x < 0 || y < 0 || x >= MAP_W || y >= MAP_H){ d[o] = OFF[0]; d[o + 1] = OFF[1]; d[o + 2] = OFF[2]; d[o + 3] = 255; prev[i] = NaN; left = NaN; continue; }
       const gx = clamp(x / c - 0.5, 0, nx - 1.001), ix = Math.floor(gx), fx = gx - ix;
       let v;
@@ -101,11 +102,11 @@ function renderBase(){
   const plot = chartMode() === 'fish'; svg.classList.toggle('plot', plot); svg.classList.toggle('nav', !plot);
   if (!CONT_D && DEPTH) CONT_D = decodeContours(); scheduleChart();
   const g = [], ns = ' vector-effect="non-scaling-stroke"';
-  g.push('<rect x="-400" y="-400" width="' + (MAP_W + 800) + '" height="' + (MAP_H + 800) + '" class="offmap"/>');
-  g.push('<rect x="0" y="0" width="' + MAP_W + '" height="' + MAP_H + '" class="sea"/>');
+  g.push('<rect x="' + (MAPB.x0 - 400) + '" y="' + (MAPB.y0 - 400) + '" width="' + (MAP_W + 800) + '" height="' + (MAP_H + 800) + '" class="offmap"/>');
+  g.push('<rect x="' + MAPB.x0 + '" y="' + MAPB.y0 + '" width="' + MAP_W + '" height="' + MAP_H + '" class="sea"/>');
   if (false) g.push('<image href="' + chartImg.url + '" x="0" y="0" width="' + (GEO_DEPTH.nx * GEO_DEPTH.c) + '" height="' + (GEO_DEPTH.ny * GEO_DEPTH.c) + '" preserveAspectRatio="none"/>');
-  for (let lat = 69.0; lat <= 69.71; lat += 0.1){ const y = P(lat, 17).y; g.push('<line x1="0" x2="' + MAP_W + '" y1="' + y + '" y2="' + y + '" class="grid" stroke-width="1"' + ns + '/>'); }
-  for (let lon = 16.75; lon <= 18.5; lon += 0.25){ const x = P(69, lon).x; g.push('<line y1="0" y2="' + MAP_H + '" x1="' + x + '" x2="' + x + '" class="grid" stroke-width="1"' + ns + '/>'); }
+  for (let lat = 69.0; lat <= 69.71; lat += 0.1){ const y = P(lat, 17).y; g.push('<line x1="' + MAPB.x0 + '" x2="' + MAPB.x1 + '" y1="' + y + '" y2="' + y + '" class="grid" stroke-width="1"' + ns + '/>'); }
+  for (let lon = 16.75; lon <= 18.5; lon += 0.25){ const x = P(69, lon).x; g.push('<line y1="' + MAPB.y0 + '" y2="' + MAPB.y1 + '" x1="' + x + '" x2="' + x + '" class="grid" stroke-width="1"' + ns + '/>'); }
   if (CONT_D) CONT_D.forEach((d, i) => { const lv = CONTOUR_LEVELS[i]; if (!d || (!plot && lv > 50)) return; g.push('<path d="' + d + '" class="depc' + (lv >= 50 ? ' deep' : '') + '"' + ns + '/>'); });
   g.push('<path d="' + COAST_D + '" class="land" stroke-width="1" stroke-linejoin="round"' + ns + '/>');
   $('gBase').innerHTML = g.join('');

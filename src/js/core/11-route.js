@@ -12,11 +12,11 @@ function leiaRocks(){
   if (LEIA_ST.rock) return LEIA_ST.rock;
   const nx = DC.nx, ny = DC.ny, g = new Uint8Array(nx * ny), R = LEIA.rockR;
   for (const q of SEAMARKS.rocks){ if (inHarbour({x:q[0], y:q[1]})) continue;
-    for (let r = Math.max(0, Math.floor((q[1] - R) / 0.1)); r <= Math.min(ny - 1, Math.floor((q[1] + R) / 0.1)); r++)
-      for (let c = Math.max(0, Math.floor((q[0] - R) / 0.1)); c <= Math.min(nx - 1, Math.floor((q[0] + R) / 0.1)); c++) g[r * nx + c] = 1; }
+    for (let r = Math.max(0, Math.floor((q[1] - FR.oy - R) / 0.1)); r <= Math.min(ny - 1, Math.floor((q[1] - FR.oy + R) / 0.1)); r++)
+      for (let c = Math.max(0, Math.floor((q[0] - FR.ox - R) / 0.1)); c <= Math.min(nx - 1, Math.floor((q[0] - FR.ox + R) / 0.1)); c++) g[r * nx + c] = 1; }
   return LEIA_ST.rock = g;
 }
-const leiaCell = v => ({x:(v % DC.nx + 0.5) * 0.1, y:(Math.floor(v / DC.nx) + 0.5) * 0.1});
+const leiaCell = v => ({x:(v % DC.nx + 0.5) * 0.1 + FR.ox, y:(Math.floor(v / DC.nx) + 0.5) * 0.1 + FR.oy});
 // what it costs to sail through a cell, per km (Infinity: closed); worked out once per cell and safe depth
 function leiaCost(v, sd){
   const key = sd + '|' + (DEPTH ? 1 : 0) + '|' + LEIA.shoreK;
@@ -34,7 +34,7 @@ function leiaCost(v, sd){
 }
 // the open cell nearest a point, within 1 km, that can be reached from the point in a straight line
 function leiaNearCell(p, sd){
-  const nx = DC.nx, ny = DC.ny, c0 = Math.floor(p.x / 0.1), r0 = Math.floor(p.y / 0.1); let best = -1, bd = 1e9;
+  const nx = DC.nx, ny = DC.ny, c0 = Math.floor((p.x - FR.ox) / 0.1), r0 = Math.floor((p.y - FR.oy) / 0.1); let best = -1, bd = 1e9;
   for (let r = Math.max(0, r0 - 10); r <= Math.min(ny - 1, r0 + 10); r++) for (let c = Math.max(0, c0 - 10); c <= Math.min(nx - 1, c0 + 10); c++){
     const v = r * nx + c; if (!isFinite(leiaCost(v, sd))) continue; const q = leiaCell(v), d = dist(p, q); if (d < bd && clearLine(p, q)){ bd = d; best = v; } }
   return best;

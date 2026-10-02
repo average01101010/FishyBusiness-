@@ -176,7 +176,7 @@ function slopeAt(p){ const e = 0.1, a = depthF({x:p.x + e, y:p.y}), b = depthF({
 const HOT = {T:120, v:0.05, cell:3.5};   // hours, km an hour, km
 function hotField(sp, p, H, k){
   const si = ALLSP.indexOf(sp), a = 2 * Math.PI * h2(k, 700 + si), v = HOT.v * (0.6 + 0.8 * h2(k, 720 + si)), tt = H - k * HOT.T;
-  return noise2((p.x - Math.sin(a) * v * tt) / HOT.cell, (p.y + Math.cos(a) * v * tt) / HOT.cell, 20 + si + 97 * k);
+  return noise2((p.x - FR.ox - Math.sin(a) * v * tt) / HOT.cell, (p.y - FR.oy + Math.cos(a) * v * tt) / HOT.cell, 20 + si + 97 * k);
 }
 function hotspot(sp, p, H){
   const f = H / HOT.T, k = Math.floor(f), u = sstep(0, 1, f - k), a = hotField(sp, p, H, k), b = hotField(sp, p, H, k + 1);
@@ -187,18 +187,18 @@ function hotspot(sp, p, H){
 const SCHOOL = {cell:0.4, amp:0.3};
 function school(sp, p, H){
   const si = ALLSP.indexOf(sp), a = 2 * Math.PI * h2(si, 740), v = 0.5 + 0.5 * h2(si, 741);
-  return 1 - SCHOOL.amp / 2 + SCHOOL.amp * noise2((p.x - Math.sin(a) * v * H) / SCHOOL.cell, (p.y + Math.cos(a) * v * H) / SCHOOL.cell, 60 + si);
+  return 1 - SCHOOL.amp / 2 + SCHOOL.amp * noise2((p.x - FR.ox - Math.sin(a) * v * H) / SCHOOL.cell, (p.y - FR.oy + Math.cos(a) * v * H) / SCHOOL.cell, 60 + si);
 }
 // where a species' schools are heading (radians, map north up), for the sonar
 function schoolHeading(sp){ return 2 * Math.PI * h2(ALLSP.indexOf(sp), 740); }
 // The coastal-cod fjord line (høstingsforskriften vedlegg 4), traced from Fiskeridirektoratet's map: Andøya – Skrolsvik – Gryllefjord – Hekkingen – Sommarøy – Kvaløya.
 // Vessels of 15 m or more may not fish inside it; seine is banned inside; at most 5000 hooks on line and 80 nets for cod.
-const FJORD = [[-21.8,67.2],[10.1,67.1],[12.6,39.2],[37.4,14.5],[50.6,14.0],[59.6,-1.0],[62.1,-3.2],[63.3,-4.4],[82.5,-23.1]].map(q => ({x:q[0], y:q[1]}));
-const FJORD_POLY = FJORD.concat([{x:140, y:-23.1}, {x:140, y:140}, {x:-21.8, y:140}]);
+const FJORD = [[-21.8,67.2],[10.1,67.1],[12.6,39.2],[37.4,14.5],[50.6,14.0],[59.6,-1.0],[62.1,-3.2],[63.3,-4.4],[82.5,-23.1]].map(q => LG(q[0], q[1]));
+const FJORD_POLY = FJORD.concat([LG(140, -23.1), LG(140, 140), LG(-21.8, 140)]);
 function insideFjord(p){ let c = false; for (let i = 0, j = FJORD_POLY.length - 1; i < FJORD_POLY.length; j = i++){ const a = FJORD_POLY[i], b = FJORD_POLY[j]; if ((a.y > p.y) !== (b.y > p.y) && p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x) c = !c; } return c; }
 // Fiskeridirektoratet's statistical locations (approximate: nearest representative point)
 const FIELDS = [['05-25', 6, 45], ['05-29', 14, 8], ['05-30', 44, 8], ['05-31', 72, 4], ['05-40', 58, 36], ['05-41', 42, 68], ['05-42', 12, 80]];
-function fieldCode(p){ if (!insideFjord(p) && p.x < 16) return p.y < 30 ? '05-29' : '05-25'; let best = FIELDS[0], bd = 1e9; for (const f of FIELDS){ if (!insideFjord(p) && (f[0] === '05-40' || f[0] === '05-41')) continue; const d = Math.hypot(p.x - f[1], p.y - f[2]); if (d < bd){ bd = d; best = f; } } return best[0]; }
+function fieldCode(p){ const q = LGI(p); if (!insideFjord(p) && q.x < 16) return q.y < 30 ? '05-29' : '05-25'; let best = FIELDS[0], bd = 1e9; for (const f of FIELDS){ if (!insideFjord(p) && (f[0] === '05-40' || f[0] === '05-41')) continue; const d = Math.hypot(q.x - f[1], q.y - f[2]); if (d < bd){ bd = d; best = f; } } return best[0]; }
 // where the spawning cod gathers: exposed banks 40–250 m outside the fjords, and the known grounds
 function skreiSpot(p, d = depthF(p), E = exposure(p)){
   let v = sstep(0.15, 0.6, E) * sstep(30, 60, d) * (1 - sstep(220, 320, d));
@@ -243,7 +243,7 @@ function denSp(sp, q, H, T){
   let v = s.base * (s.prod + (1 - s.prod) * q.E) * (0.6 + 0.4 * q.edge) * hotspot(sp, p, H) * 0.95;
   // the named grounds are known for a reason
   for (let i = 0; i < GROUNDS.length; i++){ const g = GROUNDS[i], dd = q.gd[i]; if (dd > g.r * 3) continue; v += (g.sp[sp] || 0) * Math.exp(-((dd / g.r) ** 2)) * 0.45; }
-  const day = 0.75 + 0.5 * vn(H / 24 + p.x * 0.05, 300 + ALLSP.indexOf(sp));
+  const day = 0.75 + 0.5 * vn(H / 24 + (p.x - FR.ox) * 0.05, 300 + ALLSP.indexOf(sp));
   let av = T[sp].av;
   if (sp === 'torsk'){ if (q.skr < 0) q.skr = skreiSpot(p, q.d, q.E); av += T[sp].skrei * q.skr; }
   if (sp === 'uer' && !T.uerOpen) av *= 0.15;
@@ -265,10 +265,10 @@ function tutBonus(sp, p){
 // between the four nearest cell centres, and a catch is taken from the same four cells by the same weights, so the stock has
 // no hard 2 km edges and what the heat map shows is what is taken.
 const STK = {c:2, nx:Math.ceil(MAP_W / 2), ny:Math.ceil(MAP_H / 2), K:2600};
-function stockIdx(p){ return Math.floor(clamp(p.y, 0, MAP_H - 0.001) / STK.c) * STK.nx + Math.floor(clamp(p.x, 0, MAP_W - 0.001) / STK.c); }
+function stockIdx(p){ return Math.floor(clamp(p.y - FR.oy, 0, MAP_H - 0.001) / STK.c) * STK.nx + Math.floor(clamp(p.x - FR.ox, 0, MAP_W - 0.001) / STK.c); }
 // the four cells around a point and their weights, the same arithmetic as gridBilinear
 function stockW(p){
-  const gx = clamp(p.x / STK.c - 0.5, 0, STK.nx - 1.001), gy = clamp(p.y / STK.c - 0.5, 0, STK.ny - 1.001), ix = Math.floor(gx), iy = Math.floor(gy), fx = gx - ix, fy = gy - iy, i = iy * STK.nx + ix;
+  const gx = clamp((p.x - FR.ox) / STK.c - 0.5, 0, STK.nx - 1.001), gy = clamp((p.y - FR.oy) / STK.c - 0.5, 0, STK.ny - 1.001), ix = Math.floor(gx), iy = Math.floor(gy), fx = gx - ix, fy = gy - iy, i = iy * STK.nx + ix;
   return [[i, (1 - fx) * (1 - fy)], [i + 1, fx * (1 - fy)], [i + STK.nx, (1 - fx) * fy], [i + STK.nx + 1, fx * fy]];
 }
 // Shellfish have their own layer (S.cstk), made when the first pot is hauled. It stays one value per cell: pots stand still for
@@ -284,7 +284,7 @@ function takeStock(p, kg, sp){
 function initStock(){
   const a = new Array(STK.nx * STK.ny).fill(1);
   // the famous grounds are already worked by the local fleet when the game starts
-  for (const g of GROUNDS.slice(0, 4)) for (let r = 0; r < STK.ny; r++) for (let c = 0; c < STK.nx; c++){ const d = Math.hypot((c + 0.5) * STK.c - g.p.x, (r + 0.5) * STK.c - g.p.y); if (d < g.r * 1.2) a[r * STK.nx + c] = Math.min(a[r * STK.nx + c], 0.55 + 0.35 * d / (g.r * 1.2)); }
+  for (const g of GROUNDS.slice(0, 4)) for (let r = 0; r < STK.ny; r++) for (let c = 0; c < STK.nx; c++){ const d = Math.hypot((c + 0.5) * STK.c + FR.ox - g.p.x, (r + 0.5) * STK.c + FR.oy - g.p.y); if (d < g.r * 1.2) a[r * STK.nx + c] = Math.min(a[r * STK.nx + c], 0.55 + 0.35 * d / (g.r * 1.2)); }
   return a;
 }
 function stockHour(H){
@@ -310,7 +310,7 @@ const SST = [3.6,3.1,3.2,3.9,5.6,8.2,10.8,11.4,9.8,7.8,6.0,4.6];
 // where a harbour unit stands (07-harbours.js) its quay is dry and its basin dredged
 function depthF(p){ return unitDredge(p, isLand(p) ? 0 : DEPTH ? Math.max(0.8, gridBilinear(DEPTH, GEO_DEPTH.nx, GEO_DEPTH.ny, GEO_DEPTH.c, p)) : depthModel(p)); }
 function depthAt(p){ return Math.round(depthF(p)); }
-function depthModel(p){ return (2 + (13 + 220 * Math.pow(exposure(p), 1.6) + 25 * vn(p.x / 4 + p.y / 7, 5)) * Math.pow(sstep(0, 1.5, coastDist(p)), 0.6)); }
+function depthModel(p){ return (2 + (13 + 220 * Math.pow(exposure(p), 1.6) + 25 * vn((p.x - FR.ox) / 4 + (p.y - FR.oy) / 7, 5)) * Math.pow(sstep(0, 1.5, coastDist(p)), 0.6)); }
 function grade(f){ return f >= 85 ? 'E' : f >= 65 ? 'A' : f >= 40 ? 'B' : f >= 15 ? 'X' : 'V'; }
 // days with few boats out give slightly higher prices; 2025 showed almost no link between local volume and price, so the effect is small
 function supplyFactor(H){

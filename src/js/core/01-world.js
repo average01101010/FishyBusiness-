@@ -5,8 +5,21 @@ const B = {latMin:68.98, latMax:69.72, lonMin:16.55, lonMax:18.55};
 const KY = 111.32, KX = 111.32 * Math.cos(69.35 * Math.PI / 180);
 const MAP_W = (B.lonMax - B.lonMin) * KX, MAP_H = (B.latMax - B.latMin) * KY;
 const NM = 1.852;
-const P = (lat, lon) => ({x:(lon - B.lonMin) * KX, y:(B.latMax - lat) * KY});
-const LL = p => ({lat:B.latMax - p.y / KY, lon:B.lonMin + p.x / KX});
+// The Senja data (the rasters, the files in data/) and the hand-placed content (harbours, quays, grounds, routes) were made in the
+// legacy frame: flat at 69.35 N, km east and south of 69.72 N 16.55 E. FR is where that frame lies in the game's frame: today the
+// same place (the national UTM frame takes over in phase K4 of the coast plan). #frameshift, a debug flag for the torture test,
+// moves it 1000 km east and south, so whatever still assumes the legacy square shows. LG takes legacy km to the game's frame and
+// LGI back (the rasters are read through LGI); LGa and LGm do the same for [x, y] in km and [x, z] in metres.
+const FR = {ox:0, oy:0};
+if (typeof location !== 'undefined' && /frameshift/.test(location.hash)) FR.ox = FR.oy = 1000;
+const LG = (x, y) => ({x:x + FR.ox, y:y + FR.oy});
+const LGI = p => ({x:p.x - FR.ox, y:p.y - FR.oy});
+const LGa = a => [a[0] + FR.ox, a[1] + FR.oy];
+const LGm = a => [a[0] + FR.ox * 1000, a[1] + FR.oy * 1000];
+// the extent of the map's data in the game's frame (km)
+const MAPB = {x0:FR.ox, y0:FR.oy, x1:FR.ox + MAP_W, y1:FR.oy + MAP_H};
+const P = (lat, lon) => ({x:(lon - B.lonMin) * KX + FR.ox, y:(B.latMax - lat) * KY + FR.oy});
+const LL = p => ({lat:B.latMax - (p.y - FR.oy) / KY, lon:B.lonMin + (p.x - FR.ox) / KX});
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const gDate = H => new Date(EPOCH + H * 3600000);
@@ -26,7 +39,7 @@ const MASK = (() => {
 // chart polygons (km)
 const LAND = (() => {
   const next = varints(b64bytes(GEO_COAST)), zz = v => (v % 2 ? -(v + 1) / 2 : v / 2), n = next(), out = [];
-  for (let k = 0; k < n; k++){ const len = next(); let x = 0, y = 0; const poly = []; for (let i = 0; i < len; i++){ x += zz(next()); y += zz(next()); poly.push({x:x / 100, y:y / 100}); } out.push(poly); }
+  for (let k = 0; k < n; k++){ const len = next(); let x = 0, y = 0; const poly = []; for (let i = 0; i < len; i++){ x += zz(next()); y += zz(next()); poly.push({x:x / 100 + FR.ox, y:y / 100 + FR.oy}); } out.push(poly); }
   return out;
 })();
 const COAST_D = LAND.map(poly => 'M' + poly.map(q => q.x.toFixed(2) + ',' + q.y.toFixed(2)).join('L') + 'Z').join('');
@@ -43,7 +56,7 @@ async function loadFine(){
   const buf = new Uint8Array(await new Response(new Blob([b64bytes(GEO_FINE)]).stream().pipeThrough(new DecompressionStream('deflate'))).arrayBuffer());
   const next = varints(buf), zz = v => (v % 2 ? -(v + 1) / 2 : v / 2), n = next(), out = [];
   for (let k = 0; k < n; k++){ const len = next(), xs = new Float32Array(len), zs = new Float32Array(len); let x = 0, z = 0, a = 1e9, b = 1e9, e = -1e9, f = -1e9;
-    for (let j = 0; j < len; j++){ x += zz(next()); z += zz(next()); xs[j] = x; zs[j] = z; if (x < a) a = x; if (z < b) b = z; if (x > e) e = x; if (z > f) f = z; } out.push({xs, zs, bb:[a, b, e, f]}); }
+    for (let j = 0; j < len; j++){ x += zz(next()); z += zz(next()); xs[j] = x + FR.ox * 1000; zs[j] = z + FR.oy * 1000; if (x < a) a = x; if (z < b) b = z; if (x > e) e = x; if (z > f) f = z; } out.push({xs, zs, bb:[a + FR.ox * 1000, b + FR.oy * 1000, e + FR.ox * 1000, f + FR.oy * 1000]}); }
   return out;
 }
 async function loadRoads(){
@@ -52,8 +65,8 @@ async function loadRoads(){
   const next = varints(buf), zz = v => (v % 2 ? -(v + 1) / 2 : v / 2), n = next(), out = [];
   for (let k = 0; k < n; k++){
     const c = next(), len = next(), xs = new Float32Array(len), zs = new Float32Array(len); let x = 0, z = 0, a = 1e9, b = 1e9, e = -1e9, f = -1e9;
-    for (let j = 0; j < len; j++){ x += zz(next()); z += zz(next()); xs[j] = x; zs[j] = z; if (x < a) a = x; if (z < b) b = z; if (x > e) e = x; if (z > f) f = z; }
-    out.push({c, xs, zs, bb:[a, b, e, f]});
+    for (let j = 0; j < len; j++){ x += zz(next()); z += zz(next()); xs[j] = x + FR.ox * 1000; zs[j] = z + FR.oy * 1000; if (x < a) a = x; if (z < b) b = z; if (x > e) e = x; if (z > f) f = z; }
+    out.push({c, xs, zs, bb:[a + FR.ox * 1000, b + FR.oy * 1000, e + FR.ox * 1000, f + FR.oy * 1000]});
   }
   return out;
 }
@@ -105,8 +118,12 @@ function rocksNear(a, b, r){ let n = 0; const x0 = Math.min(a.x, b.x) - r, x1 = 
   for (const q of SEAMARKS.rocks){ if (q[0] < x0 || q[0] > x1 || q[1] < y0 || q[1] > y1) continue; const u = clamp(((q[0] - a.x) * dx + (q[1] - a.y) * dy) / L2, 0, 1); if (Math.hypot(a.x + dx * u - q[0], a.y + dy * u - q[1]) < r) n++; } return n; }
 const PIERS = /*@include(data/piers.json)*/null;
 const SEAMARKS = /*@include(data/seamarks.json)*/null;
+// into the game's frame: piers are [type, x, y, x, y, ...], lights, marks and rocks start with x, y (km); bridges end with x0, z0, x1, z1 (m)
+for (const q of PIERS) for (let i = 1; i + 1 < q.length; i += 2){ q[i] += FR.ox; q[i + 1] += FR.oy; }
+for (const k of ['lights', 'marks', 'rocks']) for (const q of SEAMARKS[k]){ q[0] += FR.ox; q[1] += FR.oy; }
+for (const q of BRIDGES){ q[4] += FR.ox * 1000; q[5] += FR.oy * 1000; q[6] += FR.ox * 1000; q[7] += FR.oy * 1000; }
 function gridBilinear(arr, nx, ny, c, p){
-  const gx = clamp(p.x / c - 0.5, 0, nx - 1.001), gy = clamp(p.y / c - 0.5, 0, ny - 1.001), ix = Math.floor(gx), iy = Math.floor(gy), fx = gx - ix, fy = gy - iy, i = iy * nx + ix;
+  const gx = clamp((p.x - FR.ox) / c - 0.5, 0, nx - 1.001), gy = clamp((p.y - FR.oy) / c - 0.5, 0, ny - 1.001), ix = Math.floor(gx), iy = Math.floor(gy), fx = gx - ix, fy = gy - iy, i = iy * nx + ix;
   return (arr[i] * (1 - fx) + arr[i + 1] * fx) * (1 - fy) + (arr[i + nx] * (1 - fx) + arr[i + nx + 1] * fx) * fy;
 }
 // distance from open water to the nearest shore on a 100 m grid (km)
@@ -140,12 +157,13 @@ async function loadDepth(){
 }
 function decodeContours(){
   const next = varints(b64bytes(GEO_CONTOURS)), zz = v => (v % 2 ? -(v + 1) / 2 : v / 2), n = next(), out = CONTOUR_LEVELS.map(() => []);
-  for (let k = 0; k < n; k++){ const li = next(), len = next(); let x = 0, y = 0; const q = []; for (let i = 0; i < len; i++){ x += zz(next()); y += zz(next()); q.push((x / 100).toFixed(2) + ',' + (y / 100).toFixed(2)); } out[li].push('M' + q.join('L')); }
+  for (let k = 0; k < n; k++){ const li = next(), len = next(); let x = 0, y = 0; const q = []; for (let i = 0; i < len; i++){ x += zz(next()); y += zz(next()); q.push((x / 100 + FR.ox).toFixed(2) + ',' + (y / 100 + FR.oy).toFixed(2)); } out[li].push('M' + q.join('L')); }
   return out.map(a => a.join(''));
 }
 function isLand(p){
-  if (!(p.x >= 0 && p.y >= 0 && p.x < GRID.nx * GRID.c && p.y < GRID.ny * GRID.c)) return true;
-  return MASK[Math.floor(p.y / GRID.c) * GRID.nx + Math.floor(p.x / GRID.c)] === 1;
+  const x = p.x - FR.ox, y = p.y - FR.oy;
+  if (!(x >= 0 && y >= 0 && x < GRID.nx * GRID.c && y < GRID.ny * GRID.c)) return true;
+  return MASK[Math.floor(y / GRID.c) * GRID.nx + Math.floor(x / GRID.c)] === 1;
 }
 function legClear(a, b){
   const d = dist(a, b), n = Math.max(1, Math.ceil(d / 0.04));
@@ -169,7 +187,7 @@ const PORTS = [
   {id:'brensholmen', name:'Brensholmen', xy:[58.589,12.628], shore:[58.626,12.649], pier:true, fuel:true, ice:true, mottak:true, pf:0.99},
   {id:'torsken', name:'Torsken', xy:[21.856,42.58], shore:[21.863,42.548], pier:true, fuel:true, ice:true, mottak:true, pf:0.99},
   {id:'frovag', name:'Frovåg', xy:[19.651,71.922], shore:[19.607,71.915], pier:true, fuel:true, ice:true, mottak:true, pf:0.98}
-].map((p, i) => ({...p, i, p:{x:p.xy[0], y:p.xy[1]}, coast:{x:p.shore[0], y:p.shore[1]}}));
+].map((p, i) => ({...p, i, xy:LGa(p.xy), shore:LGa(p.shore), p:LG(p.xy[0], p.xy[1]), coast:LG(p.shore[0], p.shore[1])}));
 const portById = id => PORTS.find(p => p.id === id);
 // ===== the harbour unit (02.10.2026) =====
 // One quay with the fish plant, the crane, the forklift, the ice silo and the bunker station, built in Blender
@@ -187,7 +205,7 @@ const UNITS = {
   gryllefjord:{o:[20312.3, 39841.9], u:[-0.947, -0.32]}, sommaroy:{o:[56736.6, 9544.3], u:[-0.707, -0.707]}, brensholmen:{o:[58576.6, 12633.9], u:[-0.766, -0.643]},
   torsken:{o:[21862.9, 42573.6], u:[0.977, 0.215]}, frovag:{o:[19637.0, 71900.4], u:[0.189, -0.982]}
 };
-for (const k in UNITS){ const U = UNITS[k], l = Math.hypot(U.u[0], U.u[1]); U.id = k; U.u = [U.u[0] / l, U.u[1] / l]; U.n = [-U.u[1], U.u[0]]; }
+for (const k in UNITS){ const U = UNITS[k], l = Math.hypot(U.u[0], U.u[1]); U.id = k; U.o = LGm(U.o); U.u = [U.u[0] / l, U.u[1] / l]; U.n = [-U.u[1], U.u[0]]; }
 const UNITA = Object.values(UNITS);
 // the unit's frame and the world (metres)
 const unitW = (U, lx, lz) => [U.o[0] + U.u[0] * lx + U.n[0] * lz, U.o[1] + U.u[1] * lx + U.n[1] * lz];
@@ -209,6 +227,6 @@ const GROUNDS = [
   {name:{no:'Malangsgapet', en:'Malangen mouth'}, xy:[59.65,19.35], r:4, sp:{torsk:0.55, sei:0.9, hyse:0.45, lange:0, brosme:0.1}},
   {name:{no:'Gisundet nord', en:'North Gisundet'}, xy:[57.25,44.35], r:1.6, sp:{torsk:0.25, sei:0.5, hyse:0.15, lange:0, brosme:0}},
   {name:{no:'Solbergfjorden', en:'Solbergfjorden'}, xy:[47.45,66.05], r:2.5, sp:{torsk:0.35, sei:0.35, hyse:0.3, lange:0, brosme:0}}
-].map((g, i) => ({...g, i, p:{x:g.xy[0], y:g.xy[1]}}));
+].map((g, i) => ({...g, i, xy:LGa(g.xy), p:LG(g.xy[0], g.xy[1])}));
 [[0.15,0.12,0.1],[0.2,0.1,0.08],[0.15,0.15,0.12],[0.25,0,0.05],[0.2,0,0],[0.2,0,0.02]].forEach((v, i) => Object.assign(GROUNDS[i].sp, {lyr:v[0], uer:v[1], kveite:v[2]}));
 

@@ -28,7 +28,7 @@ const CRAB = {roeM:[0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.08, 0.04, 0.03, 0.06, 0.1, 0
 const gearKey = s => s.kind === 'line' ? 'line:' + s.lk : s.kind;
 const setMid = s => ({x:(s.a.x + s.b.x) / 2, y:(s.a.y + s.b.y) / 2});
 const tideRate = H => Math.abs(tideH(H + 0.5) - tideH(H - 0.5));
-function crabArea(p){ return 0.35 + 0.9 * sstep(35, 75, p.y); }   // brown crab is common south of Senja and thin north of it (IMR 2023–24)
+function crabArea(p){ return 0.35 + 0.9 * sstep(35, 75, p.y - FR.oy); }   // brown crab is common south of Senja and thin north of it (IMR 2023–24)
 function newPGear(){ return {nets:[], lines:{hyse:{n:0, baited:0}, bank:{n:0, baited:0}}, pots:{small:0, big:0}, bait:0, kits:{n:0, heavy:0}, shore:[]}; }
 const gid = p => p + (S.gseq = (S.gseq || 0) + 1);
 const gL = (no, en) => S.lang === 'no' ? no : en;

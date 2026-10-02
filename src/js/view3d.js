@@ -252,13 +252,14 @@ const G3 = (() => {
   }
   function gridAt(arr, x, z, G){
     G = G || HGRID; const cm = G.c * 1000;
-    const gx = clamp(x / cm - 0.5, 0, G.nx - 1.001), gz = clamp(z / cm - 0.5, 0, G.ny - 1.001), ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz, i = iz * G.nx + ix, n = G.nx;
+    // the rasters are in the legacy frame (FR in 01-world.js)
+    const gx = clamp((x - FR.ox * 1000) / cm - 0.5, 0, G.nx - 1.001), gz = clamp((z - FR.oy * 1000) / cm - 0.5, 0, G.ny - 1.001), ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz, i = iz * G.nx + ix, n = G.nx;
     return (arr[i] * (1 - fx) + arr[i + 1] * fx) * (1 - fz) + (arr[i + n] * (1 - fx) + arr[i + n + 1] * fx) * fz;
   }
   // real ground height (m) at world x/z (m); sea floor is shaped from shore distance and exposure; where a harbour unit stands, its
   // ground (unitTerr)
   function terrRaw(x, z){
-    if (x < 0 || z < 0 || x > MAP_W * 1000 || z > MAP_H * 1000) return -40;
+    if (x < MAPB.x0 * 1000 || z < MAPB.y0 * 1000 || x > MAPB.x1 * 1000 || z > MAPB.y1 * 1000) return -40;
     if (HG) return gridAt(HG, x, z);
     const m = gridAt(MASK, x, z, GRID); return m >= 0.5 ? 2 : -4;
   }
@@ -298,7 +299,7 @@ const G3 = (() => {
   }
   // share of forest around a point: bilinear over the 50 m forest cells, softened over the neighbours
   function forestAt(x, z){
-    const gx = x / 50 - 0.5, gz = z / 50 - 0.5, ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz; let s = 0;
+    const gx = (x - FR.ox * 1000) / 50 - 0.5, gz = (z - FR.oy * 1000) / 50 - 0.5, ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz; let s = 0;
     const F = (c, r) => (c < 0 || r < 0 || c >= 1570 || r >= 1648) ? 0 : FOREST[r * 1570 + c];
     for (let dz = -1; dz <= 2; dz++) for (let dx = -1; dx <= 2; dx++){ const wx = dx <= 0 ? (dx === 0 ? 1 - fx * 0.5 : 0.5 - fx * 0.5) : (dx === 1 ? 0.5 + fx * 0.5 : fx * 0.5), wz = dz <= 0 ? (dz === 0 ? 1 - fz * 0.5 : 0.5 - fz * 0.5) : (dz === 1 ? 0.5 + fz * 0.5 : fz * 0.5); s += F(ix + dx, iz + dz) * wx * wz; }
     return clamp(s / 2.25, 0, 1);
@@ -308,7 +309,7 @@ const G3 = (() => {
     const dx = sx / (n - 1), dz = sz / (n - 1), N = n * n, pos = new Float32Array(N * 3), h = new Float32Array(N), nz = new Float32Array(N), slope = new Float32Array(N), nor = new Float32Array(N * 3), fo = new Float32Array(N);
     for (let j = 0; j < n; j++) for (let i = 0; i < n; i++){
       const k = j * n + i, x = x0 + i * dx, z = z0 + j * dz, y = hf(x, z);
-      h[k] = y; pos[k * 3] = x; pos[k * 3 + 1] = y; pos[k * 3 + 2] = z; nz[k] = fbm(x / 600, z / 600, 2, 90); fo[k] = forestAt(x, z);
+      h[k] = y; pos[k * 3] = x; pos[k * 3 + 1] = y; pos[k * 3 + 2] = z; nz[k] = fbm((x - FR.ox * 1000) / 600, (z - FR.oy * 1000) / 600, 2, 90); fo[k] = forestAt(x, z);
     }
     for (let j = 0; j < n; j++) for (let i = 0; i < n; i++){
       const k = j * n + i, hx = (h[j * n + Math.min(n - 1, i + 1)] - h[j * n + Math.max(0, i - 1)]) / (2 * dx), hz = (h[Math.min(n - 1, j + 1) * n + i] - h[Math.max(0, j - 1) * n + i]) / (2 * dz);
@@ -357,7 +358,7 @@ const G3 = (() => {
     if (!NEARM) return;
     for (const U of UNITA) if (U.o[0] > NEARM.x0 + 200 && U.o[0] < NEARM.x0 + NEARM.sx - 200 && U.o[1] > NEARM.z0 + 200 && U.o[1] < NEARM.z0 + NEARM.sz - 200) UPATCH.push(unitPatch(U, NEARM));
   }
-  function buildTerrain(){ TERR = makeMesh(0, 0, MAP_W * 1000, MAP_H * 1000, 255); }
+  function buildTerrain(){ TERR = makeMesh(MAPB.x0 * 1000, MAPB.y0 * 1000, MAP_W * 1000, MAP_H * 1000, 255); }
   // sharp terrain in a 6 km corridor around the boat, rebuilt as it moves
   let shT = 0;
   function updateShadows(){
@@ -525,7 +526,7 @@ const G3 = (() => {
     const dec = q => q <= 160 ? q * 0.5 : 80 + (q - 160) * 2;
     const B = {n, x:new Float32Array(n), z:new Float32Array(n), l:new Float32Array(n), w:new Float32Array(n), a:new Float32Array(n), t:new Uint8Array(n), lv:new Uint8Array(n), cells:new Map()};
     for (let i = 0; i < n; i++){
-      B.x[i] = X[i] * U; B.z[i] = Y[i] * U; B.l[i] = dec(Lq[i]); B.w[i] = Math.max(1.5, dec(Wq[i])); B.a[i] = Aq[i] / 256 * Math.PI; B.t[i] = Tq[i] & 15; B.lv[i] = Tq[i] >> 4;
+      B.x[i] = X[i] * U + FR.ox * 1000; B.z[i] = Y[i] * U + FR.oy * 1000; B.l[i] = dec(Lq[i]); B.w[i] = Math.max(1.5, dec(Wq[i])); B.a[i] = Aq[i] / 256 * Math.PI; B.t[i] = Tq[i] & 15; B.lv[i] = Tq[i] >> 4;
       const k = gridKey(Math.floor(B.x[i] / 1000), Math.floor(B.z[i] / 1000));
       if (bldOnUnit(B, i)) continue;   // a harbour unit stands there
       let c = B.cells.get(k); if (!c) B.cells.set(k, c = []); c.push(i);
@@ -628,12 +629,12 @@ const G3 = (() => {
     const ses = treeSeason(), leaf = ses === 1 ? [0.15, 0.29, 0.11] : ses === 2 ? [0.7, 0.48, 0.12] : [0.55, 0.5, 0.47], pine = [0.06, 0.15, 0.08], trunk = [0.78, 0.76, 0.7];
     let count = 0;
     for (let j = 0; j < 30 && count < 260; j++) for (let i = 0; i < 30 && count < 260; i++){
-      const hh = hash((gx * 7919 + gz * 104729) * 900 + j * 30 + i), x = x0 + (i + 0.15 + 0.7 * hash(hh * 1e7 | 0)) * 33.3, z = z0 + (j + 0.15 + 0.7 * hash((hh * 3e7 | 0) + 5)) * 33.3;
+      const hh = hash(((gx - FR.ox) * 7919 + (gz - FR.oy) * 104729) * 900 + j * 30 + i), x = x0 + (i + 0.15 + 0.7 * hash(hh * 1e7 | 0)) * 33.3, z = z0 + (j + 0.15 + 0.7 * hash((hh * 3e7 | 0) + 5)) * 33.3;
       if (occ[Math.floor((z - z0) / 25) * 40 + Math.floor((x - x0) / 25)] || onUnit(x, z, 8)) continue;
       const h = terrH(x, z); if (h < 2.5 || h > 330) continue;
       const sl = Math.hypot(terrH(x + 10, z) - terrH(x - 10, z), terrH(x, z + 10) - terrH(x, z - 10)) / 20; if (sl > 0.75) continue;
-      const fo = FOREST[Math.floor(z / 50) * 1570 + Math.floor(x / 50)] ? 1 : 0;
-      const pr = (1 - sstep(210, 330, h)) * (1 - sstep(0.42, 0.75, sl)) * (fo ? 0.95 : 0.5) * sstep(0.36, 0.62, noise2(x / 260, z / 260, 31) * 0.7 + noise2(x / 60, z / 60, 37) * 0.3);
+      const fo = FOREST[Math.floor((z - FR.oy * 1000) / 50) * 1570 + Math.floor((x - FR.ox * 1000) / 50)] ? 1 : 0;
+      const pr = (1 - sstep(210, 330, h)) * (1 - sstep(0.42, 0.75, sl)) * (fo ? 0.95 : 0.5) * sstep(0.36, 0.62, noise2((x - FR.ox * 1000) / 260, (z - FR.oy * 1000) / 260, 31) * 0.7 + noise2((x - FR.ox * 1000) / 60, (z - FR.oy * 1000) / 60, 37) * 0.3);
       if (hash((hh * 5e7 | 0) + 11) > pr) continue;
       const th = 4 + 6 * hash((hh * 9e7 | 0) + 13) * (1 - sstep(120, 320, h) * 0.55), y = h - 0.3, isPine = hash((hh * 2e7 | 0) + 17) < 0.18, v = 0.88 + 0.24 * hash((hh * 4e7 | 0) + 19);
       if (isPine){
@@ -1443,7 +1444,7 @@ const G3 = (() => {
     const sg = plotSmall.getContext('2d'), img = sg.createImageData(sw, sh), d = img.data;
     for (let j = 0; j < sh; j++) for (let i = 0; i < sw; i++){
       const q = {x:p.x + (i + 0.5 - sw / 2) * kpp, y:p.y + (j + 0.5 - sh / 2) * kpp}, o = (j * sw + i) * 4; let c;
-      if (q.x < 0 || q.y < 0 || q.x > MAP_W || q.y > MAP_H) c = [60, 66, 70]; else if (isLand(q)) c = [224, 206, 150]; else { const dd = depthF(q); c = dd < Math.min(2, sd / 2) ? [128, 176, 222] : dd < sd ? [165, 202, 234] : dd < 30 ? [236, 243, 248] : [250, 252, 253]; }
+      if (q.x < MAPB.x0 || q.y < MAPB.y0 || q.x > MAPB.x1 || q.y > MAPB.y1) c = [60, 66, 70]; else if (isLand(q)) c = [224, 206, 150]; else { const dd = depthF(q); c = dd < Math.min(2, sd / 2) ? [128, 176, 222] : dd < sd ? [165, 202, 234] : dd < 30 ? [236, 243, 248] : [250, 252, 253]; }
       d[o] = c[0]; d[o + 1] = c[1]; d[o + 2] = c[2]; d[o + 3] = 255;
     }
     sg.putImageData(img, 0, 0); g.imageSmoothingEnabled = true; g.drawImage(plotSmall, 0, top, cw, ch);
@@ -1783,7 +1784,7 @@ const G3 = (() => {
   // so when the near terrain moves the sea never falls back to the coarse map for a moment (no sudden change in the waves)
   function ssLevel(n, unit){ return {n, unit, brect:null, rect:null, sec:new Map(), sw:null, tex:null, cpu:null, k:[-1, -1], job:null, on:false}; }
   const SSL = {n:ssLevel(32, 4), w:ssLevel(128, 5)};
-  function ssRect(L){ return L === SSL.n ? (NEARM ? [NEARM.x0, NEARM.z0, NEARM.sx] : null) : [0, 0, Math.max(MAP_W, MAP_H) * 1000]; }
+  function ssRect(L){ return L === SSL.n ? (NEARM ? [NEARM.x0, NEARM.z0, NEARM.sx] : null) : [MAPB.x0 * 1000, MAPB.y0 * 1000, Math.max(MAP_W, MAP_H) * 1000]; }
   function ssWork(L, until){
     const R = ssRect(L); if (!R) return;
     let fresh = false; if (!L.brect || L.brect[0] !== R[0] || L.brect[1] !== R[1] || L.brect[2] !== R[2]){ L.brect = R; L.sec.clear(); L.sw = null; L.job = null; fresh = true; }
@@ -2156,7 +2157,7 @@ const G3 = (() => {
       // flat sea: the whole map less the near terrain for the far pass; in the near pass the near terrain's square (or around the camera)
       // less the wave patch around the boat
       const y = -eye[1] - (drop || 0) + (env.tide || 0);
-      if (drop === undefined){ const ox = MAP_W * 500, oz = MAP_H * 500, sc = Math.max(MAP_W, MAP_H) * 500 + 40000;
+      if (drop === undefined){ const ox = (MAPB.x0 + MAPB.x1) * 500, oz = (MAPB.y0 + MAPB.y1) * 500, sc = Math.max(MAP_W, MAP_H) * 500 + 40000;
         seaRing(u, eye, y, [ox - sc, oz - sc, ox + sc, oz + sc], NEARM ? [NEARM.x0, NEARM.z0, NEARM.x0 + NEARM.sx, NEARM.z0 + NEARM.sz] : null); }
       else {
         let R; if (NEARM) R = [NEARM.x0 - 20, NEARM.z0 - 20, NEARM.x0 + NEARM.sx + 20, NEARM.z0 + NEARM.sz + 20];
