@@ -118,7 +118,7 @@ function rocksNear(a, b, r){ let n = 0; const x0 = Math.min(a.x, b.x) - r, x1 = 
   for (const q of rocksIn(x0, y0, x1, y1)){ if (q[0] < x0 || q[0] > x1 || q[1] < y0 || q[1] > y1) continue; const u = clamp(((q[0] - a.x) * dx + (q[1] - a.y) * dy) / L2, 0, 1); if (Math.hypot(a.x + dx * u - q[0], a.y + dy * u - q[1]) < r) n++; } return n; }
 const PIERS = /*@include(data/piers.json)*/null;
 const SEAMARKS = /*@include(data/seamarks.json)*/null;
-// into the game's frame: piers are [type, x, y, x, y, ...], lights, marks and rocks start with x, y (km); bridges end with x0, z0, x1, z1 (m)
+// into the game's frame: piers are [type, x, y, x, y, ...], lights, marks and rocks start with x, y (km); bridges are [class, length, name, type, x, z, x, z, ...] (m)
 for (const q of PIERS) for (let i = 1; i + 1 < q.length; i += 2){ q[i] += FR.ox; q[i + 1] += FR.oy; }
 for (const k of ['lights', 'marks', 'rocks']) for (const q of SEAMARKS[k]){ q[0] += FR.ox; q[1] += FR.oy; }
 // the rocks by 1 km cell, so a search looks only at the cells its box touches (and in the order of SEAMARKS.rocks, as before)
@@ -129,7 +129,7 @@ function rocksIn(x0, y0, x1, y1){
   for (let gy = Math.floor(y0); gy <= Math.floor(y1); gy++) for (let gx = Math.floor(x0); gx <= Math.floor(x1); gx++){ const a = ROCKIDX.get(gridKey(gx, gy)); if (a) for (const i of a) out.push(i); }
   out.sort((a, b) => a - b); return out.map(i => SEAMARKS.rocks[i]);
 }
-for (const q of BRIDGES){ q[4] += FR.ox * 1000; q[5] += FR.oy * 1000; q[6] += FR.ox * 1000; q[7] += FR.oy * 1000; }
+for (const q of BRIDGES) for (let i = 4; i + 1 < q.length; i += 2){ q[i] += FR.ox * 1000; q[i + 1] += FR.oy * 1000; }
 function gridBilinear(arr, nx, ny, c, p){
   const gx = clamp((p.x - FR.ox) / c - 0.5, 0, nx - 1.001), gy = clamp((p.y - FR.oy) / c - 0.5, 0, ny - 1.001), ix = Math.floor(gx), iy = Math.floor(gy), fx = gx - ix, fy = gy - iy, i = iy * nx + ix;
   return (arr[i] * (1 - fx) + arr[i + 1] * fx) * (1 - fy) + (arr[i + nx] * (1 - fx) + arr[i + nx + 1] * fx) * fy;
