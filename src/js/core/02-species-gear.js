@@ -48,10 +48,10 @@ const SP = Object.keys(SPECIES).filter(sp => !SPECIES[sp].shell), SHELL = Object
 //  jukseMax, gearMax, svcH (engine hours between services), svcCost, svcJobH (yard hours), cls ('open', 'kyst' or 'hav': the market
 //  tab), price, isNew (built to order), year, desc.
 const VESSELS = {
-  skiff:{name:{no:'Åpen plastbåt 19 fot, 60 hk påhengs', en:'Open 19 ft fibreglass boat, 60 hp outboard'}, len:5.8, beam:2.2, draft:0.6, disp:1.0, holdCap:350, iceCap:150, fuelCap:90, hp:60, engine:{no:'60 hk påhengsmotor, bensin', en:'60 hp petrol outboard'},
+  skiff:{name:{no:'Aluminiumsbåt 19 fot (5,9 m), 60 hk påhengs', en:'19 ft aluminium boat (5.9 m), 60 hp outboard'}, len:5.9, beam:2.45, draft:0.6, disp:1.0, holdCap:350, iceCap:150, fuelCap:90, hp:60, engine:{no:'60 hk påhengsmotor, bensin', en:'60 hp petrol outboard'},
     vmax:24, vcruise:18, accel:10, turnR:35, planing:true, outboard:true, diesel:false, fuelK:1, risk:[1.0, 1.8, 10.8, 13.9], sea:0.45, crewMax:1, berths:0, tubCap:60, land:'box', std:[],
     rigs:['juksa', 'line', 'garn', 'teiner'], jukseMax:2, gearMax:{garn:6, stamp:4, teine:20}, svcH:100, svcCost:3500, svcJobH:3, cls:'open', price:95000, year:2008,
-    desc:{no:'Åpen plastbåt med konsoll og påhengsmotor. Rask og billig, men liten og våt i sjøgang.', en:'Open fibreglass boat with a console and an outboard. Fast and cheap, but small and wet in a sea.'}},
+    desc:{no:'Åpen aluminiumsbåt med midtkonsoll, sete og fordekk, og påhengsmotor. Rask og billig, men liten og våt i sjøgang.', en:'Open aluminium boat with a centre console, a seat, a casting deck and an outboard. Fast and cheap, but small and wet in a sea.'}},
   trebat:{name:{no:'Gammel tresnekke 22 fot, 10 hk Sabb', en:'Old 22 ft wooden snekke, 10 hp Sabb'}, len:6.7, beam:2.2, draft:0.9, disp:1.8, holdCap:500, iceCap:200, fuelCap:40, hp:10, engine:{no:'Sabb 10 hk, én sylinder', en:'Sabb 10 hp, single cylinder'},
     vmax:6.5, vcruise:5.5, accel:2, turnR:30, planing:false, outboard:false, diesel:true, fuelK:0.25, risk:[1.2, 2.0, 11, 14.5], sea:0.3, crewMax:1, berths:0, tubCap:80, land:'box', std:[],
     rigs:['juksa', 'line', 'garn', 'teiner'], jukseMax:2, gearMax:{garn:8, stamp:6, teine:30}, svcH:150, svcCost:2500, svcJobH:4, cls:'open', price:60000, year:1962,
