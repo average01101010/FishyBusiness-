@@ -11,6 +11,8 @@
 //                         is not in is an error, never a stand-in value. A view that reads farther (the chart, the 3D shore) asks
 //                         first (mapViewReady) and draws without the depth until the pack comes.
 //   view  hgt, forest     for the 3D view, as they come (mapHas first)
+//   chart coast1, coast2, names   the chart's vectors per tile (tools/map/chart.py; the core has coast0 and names0 for the whole
+//                         country): entries with a count as a sixth field, read with mapVec (ui/03a-chart.js draws them)
 // The layers are in the national frame (phase K4): a layer's cell (ix, iy) of size c covers x in [ix c, (ix + 1) c) km, the cells are
 // numbered from the frame's origin, and a layer has cells from (ix0, iy0) for nx by ny; blocks (bx, by) of n cells and tiles of
 // 50 km line up with the frame, so the packs of the whole coast fit together.
@@ -45,7 +47,7 @@ function mapLoad(pk){
   if (!pk.load) pk.load = mapFetch(pk).then(b => {
     if (String.fromCharCode(b[0], b[1], b[2], b[3]) !== 'KMP1') throw new Error('map: ' + pk.file + ' is not a map pack');
     const hl = b[4] | b[5] << 8 | b[6] << 16 | b[7] << 24, head = JSON.parse(new TextDecoder().decode(b.subarray(8, 8 + hl))), at = 8 + hl;
-    pk.idx = new Map(head.blocks.map(e => [e[0] + ':' + e[1] + ':' + e[2], [at + e[3], e[4]]])); pk.buf = b; return pk;
+    pk.idx = new Map(head.blocks.map(e => [e[0] + ':' + e[1] + ':' + e[2], [at + e[3], e[4], e[5]]])); pk.vec = {}; pk.buf = b; return pk;
   }).catch(e => { pk.load = null; throw e; });
   return pk.load;
 }
@@ -117,9 +119,16 @@ function mapHasM(L, x0, z0, x1, z1){
     if (bx * L.n < L.ix0 || by * L.n < L.iy0 || bx * L.n >= L.ix0 + L.nx || by * L.n >= L.iy0 + L.ny) continue; if (!mapHasBlock(L, bx, by)) return false; }
   return true;
 }
-// for the views: whether the sim packs under a box of game km are in; the missing ones are asked for, and then() runs when they come
-function mapViewReady(x0, y0, x1, y1, then){
-  const pks = mapPacksIn('sim', x0, y0, x1, y1).filter(pk => !pk.buf);
+// a vector entry of a loaded pack (at the tile's first block): its bytes, inflated once, and its count; null if the pack has none
+function mapVec(pk, name){
+  if (!pk || !pk.buf) return null; if (pk.vec[name] !== undefined) return pk.vec[name];
+  const T = MAPD.man.tile / MAPD.man.block, e = pk.idx.get(name + ':' + pk.tile[0] * T + ':' + pk.tile[1] * T);
+  return pk.vec[name] = e ? {b:fflate.inflateSync(pk.buf.subarray(e[0], e[0] + e[1])), n:e[2] || 0} : null;
+}
+// for the views: whether the packs (sim, or the kinds asked for) under a box of game km are in; the missing ones are asked for, and
+// then() runs when they come
+function mapViewReady(x0, y0, x1, y1, then, kinds){
+  const pks = [].concat(...(kinds || ['sim']).map(k => mapPacksIn(k, x0, y0, x1, y1))).filter(pk => !pk.buf);
   if (!pks.length) return true;
   Promise.all(pks.map(mapLoad)).then(then, e => console.error(e)); return false;
 }
@@ -134,7 +143,7 @@ function simAreaReady(){
 }
 // for the tests (maptest.py): forget a pack, also in IndexedDB, as if it had never come; the decoded blocks go too
 function mapDrop(pk){
-  pk.buf = null; pk.idx = null; pk.load = null; MAPD.blk.clear(); MAPD.bytes = 0;
+  pk.buf = null; pk.idx = null; pk.vec = null; pk.load = null; MAPD.blk.clear(); MAPD.bytes = 0;
   for (const n in MAPD.L){ const L = MAPD.L[n]; L.bx = L.by = NaN; L.b = null; }
   return idbDo('readwrite', s => s.delete(pk.hash));
 }

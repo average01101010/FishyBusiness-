@@ -21,6 +21,8 @@ const ptsStr = poly => poly.map(p => p.x.toFixed(3) + ',' + p.y.toFixed(3)).join
 function txt(p, s, cls, size, extra = ''){ return '<text x="' + p.x.toFixed(3) + '" y="' + p.y.toFixed(3) + '" class="' + cls + '" font-size="' + size.toFixed(3) + '" ' + extra + '>' + s + '</text>'; }
 
 let CONT_D = null;
+// the chart's zoom: from the whole country (the frame is 1 720 km tall) to a harbour (half a kilometre)
+const ZMIN = MAP_H / 1800, ZMAX = 160;
 const PLOT_STOPS = [[0,[230,60,40]],[5,[245,140,40]],[15,[250,215,60]],[30,[120,210,80]],[60,[60,200,190]],[120,[40,140,230]],[250,[30,70,200]],[500,[60,30,150]],[1000,[30,10,70]]];
 function plotCol(d){ for (let i = 1; i < PLOT_STOPS.length; i++){ const [b, cb] = PLOT_STOPS[i]; if (d < b){ const [a, ca] = PLOT_STOPS[i - 1], u = (d - a) / (b - a); return [ca[0] + (cb[0] - ca[0]) * u, ca[1] + (cb[1] - ca[1]) * u, ca[2] + (cb[2] - ca[2]) * u]; } } return PLOT_STOPS[PLOT_STOPS.length - 1][1]; }
 function cssRGB(name){ const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim().replace('#', ''); return [parseInt(v.slice(0, 2), 16), parseInt(v.slice(2, 4), 16), parseInt(v.slice(4, 6), 16)]; }
@@ -33,31 +35,42 @@ function paintChart(scale){
   chartCv.style.left = (r.left - mr.left) + 'px'; chartCv.style.top = (r.top - mr.top) + 'px'; chartCv.style.width = r.width + 'px'; chartCv.style.height = r.height + 'px';
   const dpr = Math.min(2, window.devicePixelRatio || 1) * scale, W = Math.max(2, Math.round(r.width * dpr)), H = Math.max(2, Math.round(r.height * dpr));
   if (chartCv.width !== W) chartCv.width = W; if (chartCv.height !== H) chartCv.height = H;
-  const hh = MAP_H / view.z, ww = hh * (r.width / r.height), x0 = view.cx - ww / 2, y0 = view.cy - hh / 2, kx = ww / W, ky = hh / H;
-  if (!mapViewReady(x0, y0, x0 + ww, y0 + hh, () => paintChart(scale))) return;   // the depth under the view is on its way: keep the last picture
-  const ctx = chartCv.getContext('2d'), img = ctx.createImageData(W, H), d = img.data, LD = MAPD.L.depth, c = LD.c, X0 = LD.ix0, Y0 = LD.iy0, X1 = LD.ix0 + LD.nx - 1, Y1 = LD.iy0 + LD.ny - 1, D = (ix, iy) => rcell(LD, ix, iy);
+  const hh = MAP_H / view.z, ww = hh * (r.width / r.height), x0 = view.cx - ww / 2, y0 = view.cy - hh / 2, kx = ww / W, ky = hh / H, lv = chartLevel(hh);
+  // the depth and the chart's vectors under the view are on their way: keep the last picture (the view of the whole country draws
+  // from the national core only)
+  if (lv && !mapViewReady(x0, y0, x0 + ww, y0 + hh, () => { paintChart(scale); scheduleStatic(); }, ['sim', 'chart'])) return;
+  // the far view is painted coarse (CHARTV.px samples of the depth model) and scaled up, with the coast drawn sharp over it
+  const f = lv ? 1 : Math.min(1, Math.sqrt(CHARTV.px / (W * H))), PW = Math.max(2, Math.round(W * f)), PH = Math.max(2, Math.round(H * f)), pkx = ww / PW, pky = hh / PH;
+  const ctx = chartCv.getContext('2d'), img = ctx.createImageData(PW, PH), d = img.data, LD = MAPD.L.depth, c = LD.c, X0 = LD.ix0, Y0 = LD.iy0, X1 = LD.ix0 + LD.nx - 1, Y1 = LD.iy0 + LD.ny - 1, D = (ix, iy) => rcell(LD, ix, iy);
   const fish = chartMode() === 'fish', sd = safeDepth(), s2 = sd > 2.5 ? Math.min(2, sd / 2) : -1;
-  const OFF = fish ? [5, 9, 13] : [221, 227, 229], WHITE = [249, 251, 252], U1 = [167, 203, 235], U2 = [134, 180, 223], SC = [59, 106, 165];
-  const prev = new Float32Array(W).fill(NaN), sh = 1 / (Math.max(kx, 0.0005) * 10), smooth = scale >= 1;
+  const OFF = fish ? [5, 9, 13] : [221, 227, 229], WHITE = [249, 251, 252], U1 = [167, 203, 235], U2 = [134, 180, 223], SC = [59, 106, 165], FS = fish ? [46, 54, 40] : [204, 214, 172];
+  // the B-spline only where a pixel is finer than the depth's cells (50 m): farther out the bilinear is as smooth and a fifth of the work
+  const prev = new Float32Array(PW).fill(NaN), sh = 1 / (Math.max(pkx, 0.0005) * 10), smooth = scale >= 1 && lv > 0 && pkx < MAPD.L.depth.c;
+  // near in, the land mask (25 m) as foreshore where the coast leaves it out: what the route check takes as land
+  const LM = MAPD.L.mask, pocket = lv === 2 ? pocketsIn(x0, y0, x0 + ww, y0 + hh) : null, T = MAPD.man.tile;
+  let ltx = NaN, lty = NaN, lsim = false; const simAt = (x, y) => { const tx = Math.floor(x / T), ty = Math.floor(y / T); if (tx !== ltx || ty !== lty){ ltx = tx; lty = ty; lsim = lv > 0 && mapSimAt({x, y}); } return lsim; };
   // cubic B-spline weights per column (and per row below): smooth, rounded depth contours instead of straight grid steps
   const bw = (t, o) => { const t2 = t * t, t3 = t2 * t; o[0] = (1 - t) * (1 - t) * (1 - t) / 6; o[1] = (3 * t3 - 6 * t2 + 4) / 6; o[2] = (-3 * t3 + 3 * t2 + 3 * t + 1) / 6; o[3] = t3 / 6; };
   // the depth layer's cells are numbered from the frame's origin (01b-mapdata.js)
-  const CX = new Int32Array(W * 4), CW = new Float32Array(W * 4), tmp = [0, 0, 0, 0], lx0 = x0, ly0 = y0;
-  if (smooth) for (let i = 0; i < W; i++){ const x = lx0 + (i + 0.5) * kx, gx = x / c - 0.5, ix = Math.floor(gx); bw(gx - ix, tmp); for (let k = 0; k < 4; k++){ CX[i * 4 + k] = clamp(ix - 1 + k, X0, X1); CW[i * 4 + k] = tmp[k]; } }
+  const CX = new Int32Array(PW * 4), CW = new Float32Array(PW * 4), tmp = [0, 0, 0, 0], lx0 = x0, ly0 = y0;
+  if (smooth) for (let i = 0; i < PW; i++){ const x = lx0 + (i + 0.5) * pkx, gx = x / c - 0.5, ix = Math.floor(gx); bw(gx - ix, tmp); for (let k = 0; k < 4; k++){ CX[i * 4 + k] = clamp(ix - 1 + k, X0, X1); CW[i * 4 + k] = tmp[k]; } }
   const RW = [0, 0, 0, 0], RO = [0, 0, 0, 0];
-  for (let j = 0; j < H; j++){
-    const y = ly0 + (j + 0.5) * ky, gy = clamp(y / c - 0.5, Y0, Y1 - 0.001), iy = Math.floor(gy), fy = gy - iy;
+  for (let j = 0; j < PH; j++){
+    const y = ly0 + (j + 0.5) * pky, gy = clamp(y / c - 0.5, Y0, Y1 - 0.001), iy = Math.floor(gy), fy = gy - iy;
     if (smooth){ const gyr = y / c - 0.5, iyr = Math.floor(gyr); bw(gyr - iyr, RW); for (let k = 0; k < 4; k++) RO[k] = clamp(iyr - 1 + k, Y0, Y1); }
     let left = NaN;
-    for (let i = 0; i < W; i++){
-      const x = lx0 + (i + 0.5) * kx, o = (j * W + i) * 4;
+    for (let i = 0; i < PW; i++){
+      const x = lx0 + (i + 0.5) * pkx, o = (j * PW + i) * 4;
       if (x < MAPB.x0 || y < MAPB.y0 || x >= MAPB.x1 || y >= MAPB.y1){ d[o] = OFF[0]; d[o + 1] = OFF[1]; d[o + 2] = OFF[2]; d[o + 3] = 255; prev[i] = NaN; left = NaN; continue; }
       const gx = clamp(x / c - 0.5, X0, X1 - 0.001), ix = Math.floor(gx), fx = gx - ix;
       let v;
-      // off the tiles that have detail: the national core's land (the chart has no coastline drawn there yet) and the depth model
-      const q = {x, y}; if (!(x >= X0 * c && y >= Y0 * c && x < (X1 + 1) * c && y < (Y1 + 1) * c) || !mapSimAt(q)){
-        if (isLandFar(q)){ d[o] = 224; d[o + 1] = 206; d[o + 2] = 150; d[o + 3] = 255; prev[i] = NaN; left = NaN; continue; }
-        v = depthModel(q); }
+      // off the tiles that have detail: the national core's land under the coast0 lines, and the depth model (all of the far view)
+      if (!simAt(x, y) || !(x >= X0 * c && y >= Y0 * c && x < (X1 + 1) * c && y < (Y1 + 1) * c)){
+        const q = {x, y}; if (lv && isLandFar(q)){ d[o] = 224; d[o + 1] = 206; d[o + 2] = 150; d[o + 3] = 255; prev[i] = NaN; left = NaN; continue; }
+        // the far view takes the depth model (03-simulation.js) without its slope to the shore, which is finer than a pixel there,
+        // so the distance to the shore is not read for the whole country
+        v = lv ? depthModel(q) : 15 + 220 * Math.pow(exposure(q), 1.6); }
+      else if (lv === 2 && rcell(LM, Math.floor(x / LM.c), Math.floor(y / LM.c)) === 1 && !(pocket && pocket(x, y))){ d[o] = FS[0]; d[o + 1] = FS[1]; d[o + 2] = FS[2]; d[o + 3] = 255; prev[i] = NaN; left = NaN; continue; }
       else if (smooth){ const q = i * 4; v = 0; for (let a = 0; a < 4; a++){ const ro = RO[a]; v += RW[a] * (D(CX[q], ro) * CW[q] + D(CX[q + 1], ro) * CW[q + 1] + D(CX[q + 2], ro) * CW[q + 2] + D(CX[q + 3], ro) * CW[q + 3]); } }
       else v = (D(ix, iy) * (1 - fx) + D(ix + 1, iy) * fx) * (1 - fy) + (D(ix, iy + 1) * (1 - fx) + D(ix + 1, iy + 1) * fx) * fy;
       let col;
@@ -71,7 +84,10 @@ function paintChart(scale){
       d[o] = col[0]; d[o + 1] = col[1]; d[o + 2] = col[2]; d[o + 3] = 255; prev[i] = v; left = v;
     }
   }
-  ctx.putImageData(img, 0, 0);
+  if (f < 1){ const oc = CHARTV.off || (CHARTV.off = document.createElement('canvas')); oc.width = PW; oc.height = PH; oc.getContext('2d').putImageData(img, 0, 0); ctx.imageSmoothingEnabled = true; ctx.drawImage(oc, 0, 0, W, H); }
+  else ctx.putImageData(img, 0, 0);
+  chartCoast(ctx, x0, y0, kx, ky, W, H, dpr, fish);
+  chartGrid(ctx, x0, y0, kx, ky, W, H, dpr, fish);
   // fjord line for coastal cod: dashed violet, as regulation lines are drawn on official charts
   ctx.save(); ctx.strokeStyle = 'rgba(150,40,170,0.85)'; ctx.lineWidth = 1.6 * dpr; ctx.setLineDash([7 * dpr, 5 * dpr]); ctx.beginPath();
   FJORD.forEach((q, i) => { const X = (q.x - x0) / kx, Y = (q.y - y0) / ky; i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); }); ctx.stroke(); ctx.setLineDash([]);
@@ -87,12 +103,8 @@ function renderBase(){
   const g = [], ns = ' vector-effect="non-scaling-stroke"';
   g.push('<rect x="' + (MAPB.x0 - 400) + '" y="' + (MAPB.y0 - 400) + '" width="' + (MAPB.x1 - MAPB.x0 + 800) + '" height="' + (MAPB.y1 - MAPB.y0 + 800) + '" class="offmap"/>');
   g.push('<rect x="' + MAPB.x0 + '" y="' + MAPB.y0 + '" width="' + (MAPB.x1 - MAPB.x0) + '" height="' + (MAPB.y1 - MAPB.y0) + '" class="sea"/>');
-  // the graticule: in the national frame the parallels and meridians lean by the convergence, so they go as lines through P
-  const gl = pts => '<path d="M' + pts.map(q => q.x.toFixed(3) + ',' + q.y.toFixed(3)).join('L') + '" class="grid" fill="none" stroke-width="1"' + ns + '/>';
-  for (let lat = 69.0; lat <= 69.71; lat += 0.1){ const a = []; for (let lon = 16.3; lon <= 18.81; lon += 0.25) a.push(P(lat, lon)); g.push(gl(a)); }
-  for (let lon = 16.75; lon <= 18.5; lon += 0.25){ const a = []; for (let lat = 68.9; lat <= 69.81; lat += 0.1) a.push(P(lat, lon)); g.push(gl(a)); }
+  // the graticule, the coast and the names are the chart's (03a-chart.js): drawn for the view, by its level of detail
   if (CONT_D) CONT_D.forEach((d, i) => { const lv = CONTOUR_LEVELS[i]; if (!d || (!plot && lv > 50)) return; g.push('<path d="' + d + '" class="depc' + (lv >= 50 ? ' deep' : '') + '"' + ns + '/>'); });
-  g.push('<path d="' + COAST_D + '" class="land" stroke-width="1" stroke-linejoin="round"' + ns + '/>');
   $('gBase').innerHTML = g.join('');
   const lg = $('legend'); lg.hidden = !plot || !document.body.classList.contains('vplot') || (typeof G3 !== 'undefined' && G3.isActive());
   if (plot && !lg.innerHTML){ const marks = [0, 10, 30, 60, 120, 250, 500]; lg.innerHTML = '<div class="bar" style="background:linear-gradient(90deg,' + marks.map((m, i) => { const c = plotCol(m); return 'rgb(' + c.map(Math.round).join(',') + ') ' + (i / (marks.length - 1) * 100).toFixed(0) + '%'; }).join(',') + ')"></div><div class="lab">' + marks.map(m => '<span>' + m + '</span>').join('') + '</div>'; }
@@ -112,11 +124,10 @@ function renderStatic(){
   // grounds
   for (const gr of GROUNDS){
     g.push('<circle cx="' + gr.p.x + '" cy="' + gr.p.y + '" r="' + (gr.r * 0.75) + '" class="ground" stroke-width="' + u + '" stroke-dasharray="' + (4 * u) + ' ' + (3 * u) + '"/>');
-    g.push(txt({x:gr.p.x, y:gr.p.y + 3.6 * u}, gr.name[S.lang], 'lbl-ground', 11 * u, 'text-anchor="middle" stroke-width="' + (3 * u) + '"'));
+    if (view.z >= 0.5) g.push(txt({x:gr.p.x, y:gr.p.y + 3.6 * u}, gr.name[S.lang], 'lbl-ground', 11 * u, 'text-anchor="middle" stroke-width="' + (3 * u) + '"'));
   }
   // what is inside the view (with a margin)
   const vr = svg.getBoundingClientRect(), vhh = MAP_H / view.z / 2 + 0.5, vww = vhh * (vr.width / (vr.height || 1)) + 0.5, vx0 = view.cx - vww, vx1 = view.cx + vww, vy0 = view.cy - vhh, vy1 = view.cy + vhh, inV = (x, y) => x > vx0 && x < vx1 && y > vy0 && y < vy1;
-  if (FINE && view.z > 9){ const d = []; for (const q of FINE){ if (q.bb[2] / 1000 < vx0 || q.bb[0] / 1000 > vx1 || q.bb[3] / 1000 < vy0 || q.bb[1] / 1000 > vy1) continue; d.push('M' + Array.from(q.xs, (x, j) => (x / 1000).toFixed(4) + ',' + (q.zs[j] / 1000).toFixed(4)).join('L') + 'Z'); } if (d.length) g.push('<path d="' + d.join('') + '" class="land" fill-rule="evenodd" stroke-width="' + (0.8 * u) + '"/>'); }
   if (ROADS && view.z > 3){ const d = []; for (const r of ROADS){ if (r.c > 3 && view.z < 6) continue; if (r.bb[2] / 1000 < vx0 || r.bb[0] / 1000 > vx1 || r.bb[3] / 1000 < vy0 || r.bb[1] / 1000 > vy1) continue; d.push('M' + Array.from(r.xs, (x, j) => (x / 1000).toFixed(3) + ',' + (r.zs[j] / 1000).toFixed(3)).join('L')); } if (d.length) g.push('<path d="' + d.join('') + '" class="road" stroke-width="' + (1.1 * u) + '"/>'); }
   if (view.z > 2.5) for (const br of BRIDGES){ const n = (br.length - 4) / 2; let d = ''; for (let k = 0; k < n; k++) d += (k ? 'L' : 'M') + (br[4 + k * 2] / 1000).toFixed(3) + ',' + (br[5 + k * 2] / 1000).toFixed(3); g.push('<path d="' + d + '" class="bridge" stroke-width="' + (2.6 * u) + '"/>'); }
   if (view.z > 5){ const pr = []; for (const q of rocksIn(vx0, vy0, vx1, vy1)) if (inV(q[0], q[1])) pr.push('M' + (q[0] - 2.2 * u).toFixed(3) + ',' + q[1].toFixed(3) + 'h' + (4.4 * u).toFixed(3) + 'M' + q[0].toFixed(3) + ',' + (q[1] - 2.2 * u).toFixed(3) + 'v' + (4.4 * u).toFixed(3)); if (pr.length) g.push('<path d="' + pr.join('') + '" class="rock" stroke-width="' + (1 * u) + '"/>'); }
@@ -126,16 +137,14 @@ function renderStatic(){
   for (const mk of S.marks){ const col = mk.kgph >= 40 ? '#d7301f' : mk.kgph >= 20 ? '#f08a24' : mk.kgph >= 8 ? '#e5c12b' : '#5b8db8';
     g.push('<circle cx="' + mk.x + '" cy="' + mk.y + '" r="' + (4.2 * u) + '" fill="' + col + '" stroke="#fff" stroke-width="' + (1.2 * u) + '"/>');
     if (view.z > 3.5) g.push(txt({x:mk.x + 6 * u, y:mk.y + 3.5 * u}, mk.kgph + ' kg/t', 'lbl-ground', 9.5 * u, 'stroke-width="' + (2.5 * u) + '"')); }
-  // names
-  g.push(txt(P(69.32, 17.47), 'Senja', 'lbl-land', 22 * u, 'text-anchor="middle"'));
-  const wn = [['Gisundet',69.3227,17.9656,-62],['Malangen',69.488,18.42,-12],['Mefjorden',69.558,17.40,0],['Øyfjorden',69.5747,17.6128,-76],['Andfjorden',69.13,16.78,0],['Norskehavet',69.685,17.05,0]];
-  for (const [n, la, lo, rot] of wn){ const q = P(la, lo); g.push(txt(q, n, 'lbl-water', (n === 'Norskehavet' || n === 'Andfjorden' ? 15 : 12) * u, 'text-anchor="middle" transform="rotate(' + rot + ' ' + q.x + ' ' + q.y + ')"')); }
-  // ports
+  // ports, their names when the view is closer than the whole region; the place names (03a-chart.js) keep clear of them
+  const taken = [], pl = view.z >= 0.5;
   for (const p of PORTS){
-    const s = 5 * u;
+    const s = (pl ? 5 : 3) * u; if (!inV(p.p.x, p.p.y)) continue;
     g.push('<rect x="' + (p.p.x - s) + '" y="' + (p.p.y - s) + '" width="' + (2 * s) + '" height="' + (2 * s) + '" class="port' + (p.home ? ' home' : '') + '" stroke-width="' + (1.5 * u) + '" transform="rotate(45 ' + p.p.x + ' ' + p.p.y + ')"/>');
-    g.push(txt({x:p.p.x + 9 * u, y:p.p.y + 4 * u}, p.name, 'lbl-port', 13 * u, 'stroke-width="' + (3 * u) + '"'));
+    if (pl){ g.push(txt({x:p.p.x + 9 * u, y:p.p.y + 4 * u}, p.name, 'lbl-port', 13 * u, 'stroke-width="' + (3 * u) + '"')); taken.push([p.p.x - s, p.p.y - 9 * u, p.p.x + 9 * u + p.name.length * 7.5 * u, p.p.y + 6 * u]); }
   }
+  g.push(chartNamesSvg(vx0, vy0, vx1, vy1, u, taken));
   gStatic.innerHTML = g.join('');
 }
 let staticQueued = false;
@@ -222,7 +231,7 @@ svg.addEventListener('pointerdown', e => {
 svg.addEventListener('pointermove', e => {
   if (!ptrs.has(e.pointerId)) return;
   ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
-  if (ptrs.size === 2 && pinch){ const [a, c] = [...ptrs.values()]; view.z = clamp(pinch.z * Math.hypot(a.x - c.x, a.y - c.y) / pinch.d, 0.8, 160); applyView(); scheduleStatic(); }
+  if (ptrs.size === 2 && pinch){ const [a, c] = [...ptrs.values()]; view.z = clamp(pinch.z * Math.hypot(a.x - c.x, a.y - c.y) / pinch.d, ZMIN, ZMAX); applyView(); scheduleStatic(); }
   else if (drag && ptrs.size === 1){
     const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
     if (drag.set){ drag.moved = true; setAim(toMap(e.clientX, e.clientY)); return; }
@@ -245,12 +254,12 @@ svg.addEventListener('pointerup', ptrUp); svg.addEventListener('pointercancel', 
 svg.addEventListener('wheel', e => {
   e.preventDefault();
   const before = toMap(e.clientX, e.clientY);
-  view.z = clamp(view.z * Math.exp(-e.deltaY * 0.0015), 0.8, 160); applyView();
+  view.z = clamp(view.z * Math.exp(-e.deltaY * 0.0015), ZMIN, ZMAX); applyView();
   const after = toMap(e.clientX, e.clientY);
   view.cx += before.x - after.x; view.cy += before.y - after.y; applyView(); scheduleStatic();
 }, {passive:false});
-$('zin').onclick = () => { if (G3.isActive()) return G3.zoom(1 / 1.4); view.z = clamp(view.z * 1.4, 0.8, 160); applyView(); scheduleStatic(); };
-$('zout').onclick = () => { if (G3.isActive()) return G3.zoom(1.4); view.z = clamp(view.z / 1.4, 0.8, 160); applyView(); scheduleStatic(); };
+$('zin').onclick = () => { if (G3.isActive()) return G3.zoom(1 / 1.4); view.z = clamp(view.z * 1.4, ZMIN, ZMAX); applyView(); scheduleStatic(); };
+$('zout').onclick = () => { if (G3.isActive()) return G3.zoom(1.4); view.z = clamp(view.z / 1.4, ZMIN, ZMAX); applyView(); scheduleStatic(); };
 $('zboat').onclick = () => { if (G3.isActive()) return G3.reset(); view.cx = S.boat.pos.x; view.cy = S.boat.pos.y; applyView(); scheduleStatic(); };
 window.addEventListener('resize', () => { applyView(); scheduleStatic(); });
 

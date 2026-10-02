@@ -284,11 +284,69 @@ Kartdataene lages i `tools/map/` (i git, uten dataene). Mellomlageret ligger i `
   - `MAPB` er hele rammen (0–1 450 × 0–1 720 km), og du kan seile overalt.
   - `HOME` er Senja-boksen. Den brukes til startutsnittet, målet for zoom i 2D (`MAP_W`, `MAP_H`) og de vide meshene i 3D (det fjerne terrenget og sjøtilstanden), til K8.
 - **Utenfor detaljflisene:**
-  - Sjøkartet tegner land fra kjernen og dybden fra modellen. Kystlinjer og kurver kommer i K7.
+  - Sjøkartet tegner land fra kjernen og dybden fra modellen, med kysten fra `coast0` over (4.10).
   - 3D bruker en flat stedfortreder fra kjernen (2 m land, −4 m sjø). Terrenget for hele kysten kommer i K8.
+- **Rettet etter regresjonen** (02.10.2026):
+  - **Moloene** er land i 25 m-masken. De ligger i Overtures `base/infrastructure` (klasse `breakwater`, OSMs `man_made=breakwater`) og ikke i kystlinja. Fyllingen etter cellesentrum mistet dem som var smalere enn en celle, og ruta gikk rett gjennom moloen på Husøy. De fylles nå med en halv celle ekstra bredde (93 moloer i Senja-flisene).
+  - **Strøklengden nær land:** 200 m-kjernen ser ikke moloene eller de smale sundene, og Husøy havn ligger i en 200 m-landcelle. Feltet tok da havet utenfor for havna (1,6 m sjø inne i havna i NNV 11 m/s). Innen `FETCH.near` (1 km) fra kjernens land går strålenes første `FETCH.fine` (1,5 km) på 25 m-masken (`fetchFine`, `fetchHere`), og kjernens stråler går videre derfra.
+    - Det gjelder bare der flisens detalj er lastet. Den er alltid lastet rundt båtene og redskapen (barrieren), som er der simuleringen spør etter sjøen, så simuleringen blir lik uansett hva annet som er lastet.
+  - **Dybden utenfor det gamle Senja-kvadratet:** Senja-flisene går utenfor kvadratet, og der ble Kartverket-rasteret lest med kanten dratt bortover (lyseblå striper i kartet vest for Senja). Der brukes nå dybdemodellen, slik `coast.py` gjør for kystflisene.
+  - `seatest` forventer den nye eksponeringssummen (19 452,4477, 2,0 % over den gamle). Endringen kom med den nasjonale eksponeringen i K6 og er tilsiktet.
 - **Ikke ennå:**
   - Autoruta («Følg leia») leser 100 m-avstanden over hele `dc`-laget. Med nasjonale detaljfliser blir det for stort, og den trenger vinduet i K9.
   - Detaljflisene for hele kysten (`out/national/lite`) er ikke i git, og bygget bruker dem ikke ennå.
+
+### 4.10 Sjøkartet i 2D (kystplanen, fase K7, 02.10.2026)
+
+- **Zoom:** fra hele landet (`ZMIN = MAP_H / 1800`, utsnittet 1 800 km høyt) til en havn (`ZMAX = 160`, en halv kilometer). `view.z` er fortsatt målt mot `MAP_H` (Senja-boksen).
+- **Kartpakkene får vektorer** (`tools/map/chart.py`, som `region.py` legger ved):
+
+  | Oppføring | Hvor | Innhold |
+  |---|---|---|
+  | `coast0` | kjernen | land i hele rammen forenklet til 300 m, polygoner over 0,2 km² (10 167 ringer, 294 kB pakket) |
+  | `names0` | kjernen | navnene som vises fra hele landet: byer og tettsteder over 20 000 i Norge, over 150 000 i utlandet; hav, fjorder og sund som spenner over 40 km; øyer som spenner over 25 km (115 navn) |
+  | `coast1` | `chart`-pakke per flis | land forenklet til 25 m, polygoner over 2 000 m² |
+  | `coast2` | `chart`-pakke per flis | land forenklet til 3 m, polygoner over 50 m² |
+  | `names` | `chart`-pakke per flis | steder, vann, øyer og topper/nes med rang 0–3, og vinkelen navnet dreies |
+
+  - Vektoroppføringene ligger ved flisens første blokk med antallet som sjette felt, og leses med `mapVec(pk, navn)`.
+  - Ringene er pakket som i `vectors.py` (klasse, antall punkter, sikksakk-steg). De ytre ringene og hullene går hver sin vei, så spillet fyller med `nonzero` og overlappende polygoner blir land.
+  - Overture deler landet i biter. Spillet streker derfor ringene dobbelt så bredt og fyller over etterpå, så sømmene mellom bitene dekkes og bare stranda beholder streken (halvparten, på sjøsiden).
+  - **Rangen:**
+    - Steder går etter Overtures klasse og folketall.
+    - Vann er stort sett punkter eller linjer langs fjorden i OpenStreetMap (`place=bay`). Det rangeres etter hvor langt det er til land fra punktet (200 m-masken), etter lengden på linja og etter arealet. Navn på -vika, -bukta, -hamna, -pollen og lignende kommer nær inne.
+    - En fjord som er tegnet som linje, får navnet dreid langs linja (Malangen, Gisundet, Andfjorden).
+    - Innen hver rang står det viktigste først, og spillet beholder den rekkefølgen.
+  - Navnene har bokmål, norsk eller nynorsk der Overture har det, ellers første form av hovednavnet («Porsangerfjorden», ikke «Porsáŋgguvuotna»).
+  - `names0` går etter avgrensningsboksene uten geometri (geometrien for hele rammen ville vært flere GB). Hvert navn plasseres i boksen der det er lengst fra land (vann) eller sjø (øyer), regnet på 200 m-masken.
+- **Tre detaljnivåer etter høyden på utsnittet** (`chartLevel`, `src/js/ui/03a-chart.js`):
+
+  | Nivå | Utsnitt | Kyst | Dybde |
+  |---|---|---|---|
+  | 0 | over 150 km | `coast0` | grovt: dybdemodellen uten skråningen mot land, høyst 160 000 punkter skalert opp; ingen flispakker hentes |
+  | 1 | 8–150 km | `coast1` der flisen har kartpakke, `coast0` ellers | som før: detaljflisene, ellers kjernens land og dybdemodellen |
+  | 2 | under 8 km | `coast2` | som nivå 1, og 25 m-masken vises som fjære der den er land utenfor kystlinja |
+
+  - På nivå 2 viser kartet det `legClear` regner som land (masken med havnelommene). `charttest` krever at minst 98,5 % av punktene i et havneutsnitt stemmer (99,5–99,8 % målt).
+  - B-splinen for dybden brukes bare der en piksel er finere enn dybdecellene (50 m). Lenger ute gir bilineær like glatt kart for en femtedel av arbeidet.
+  - **Tegnetid** i `charttest` (1 280 × 800, CPU strupet 4×): hele landet 0,1 s, regionen 0,35 s, fjorden (20 km) 1,5 s, havna 0,5 s. Fjordnivået er det tyngste: B-splinen med 16 oppslag per piksel. Det er det samme som før K7, og en kandidat for finpussen.
+  - Stiene ligger som `Path2D` i km, flisene fra sitt eget hjørne, så tallene holder seg små ved største zoom. Hver flis tegnes innenfor sin rute, så kantene der polygonene er kuttet, ikke blir streket opp.
+- **Gradnettet** tegnes i lerretet med et steg som gir minst tre paralleller over utsnittet (fra 10° ned til 15″). Meridianene får omtrent samme avstand på bakken. Breddene står ved venstre kant og lengdene ved nedre kant (`69°20'N`, `17°30'Ø`).
+- **Stedsnavnene** står i SVG-en (`chartNamesSvg`):
+  - Rang 0 vises alltid og kommer fra `names0` i kjernen, også over flisene. Rang 1 vises under 140 km, rang 2 under 30 km og rang 3 under 9 km, alle fra flisene. Et flisnavn som `names0` alt har innen 60 km, droppes.
+  - Det viktigste kommer først, og et navn som dekker et navn som alt står (eller en havns navn), droppes.
+  - Et sted med samme navn som en havn innen 3 km droppes.
+  - De håndplasserte navnene og Senja-kysten (`geo-coast.b64`, `COAST_D`) er borte. Havnenavnene og feltnavnene vises først fra `view.z ≥ 0,5`.
+- **`charttest.py`** (uten 3D, måler tid, så den kjører alene til slutt), liggende og stående:
+  - zoomer fra hele landet via regionen og fjorden til havna og sjekker detaljnivået på hvert trinn
+  - sjekker land og sjø i pikslene, byene og fjordnavnene, gradnettet og at havnekartet stemmer med `isLand`
+  - drar kartet med én finger og knipser det ut med to (berøring over CDP), forbi den gamle grensen på 0,8
+  - måler tegnetiden med CPU strupet 4× (`Emulation.setCPUThrottlingRate`); grensen er 2,5 s på hvert nivå
+  - skjermbilder: `chart_land.png`, `chart_region.png`, `chart_harbour.png`, `chart_pinch.png`
+- **Ikke ennå:**
+  - Kartpakkene finnes bare for Senja-flisene. Ellers tegnes `coast0`, også nær inne, over kjernens land på 200 m.
+  - Navnene står vannrett (de gamle fjordnavnene var rotert langs fjorden).
+  - `FINE` (den gamle 12,5 m-kysten) brukes fortsatt av plotteren i 3D.
 
 ## 5. Systemer i spillet
 

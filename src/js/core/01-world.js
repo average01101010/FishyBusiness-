@@ -38,16 +38,9 @@ const gDate = H => new Date(EPOCH + H * 3600000);
 
 // Real coastline for Senja from OpenStreetMap (ODbL), rasterised to a 25 m land mask. The rasters (land, depth, distance to the
 // shore, openness, heights, forest) come in blocks from map/ (01b-mapdata.js), in the national frame.
-const GEO_COAST = '@include(data/geo-coast.b64)';
 function b64bytes(s){ const bin = atob(s), a = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i); return a; }
 function varints(b){ let i = 0; return () => { let v = 0, s = 0, x; do { x = b[i++]; v += (x & 127) * Math.pow(2, s); s += 7; } while (x & 128); return v; }; }
-// chart polygons (km)
-const LAND = (() => {
-  const next = varints(b64bytes(GEO_COAST)), zz = v => (v % 2 ? -(v + 1) / 2 : v / 2), n = next(), out = [];
-  for (let k = 0; k < n; k++){ const len = next(); let x = 0, y = 0; const poly = []; for (let i = 0; i < len; i++){ x += zz(next()); y += zz(next()); poly.push(LG(x / 100, y / 100)); } out.push(poly); }
-  return out;
-})();
-const COAST_D = LAND.map(poly => 'M' + poly.map(q => q.x.toFixed(2) + ',' + q.y.toFixed(2)).join('L') + 'Z').join('');
+// the chart's coast and names come from the map packs (ui/03a-chart.js, phase K7 of the coast plan)
 // roads (deflated), forest raster, piers/breakwaters and seamarks from OpenStreetMap (ODbL)
 const GEO_ROADS = '@include(data/geo-roads.b64)';
 // fine land polygons (smoothed 12.5 m trace of the OSM coastline, metres) and bridges from OSM
@@ -168,12 +161,18 @@ function isLandUI(p){ if (mapSimAt(p) && !mapReadyAt(p, 0)){ mapNeed(p, 0).catch
 // coast of 2026 lies 30-45 m out from the face drawn from the pictures, phase K5 of the coast plan)
 const POCKET = 50;
 let QPOCK = null;
-function inHarbourPocket(p){
-  const x = p.x * 1000, z = p.y * 1000;
-  for (const U of UNITA){ if (Math.abs(x - U.o[0]) > 60 || Math.abs(z - U.o[1]) > 60) continue; const [lx, lz] = unitL(U, x, z); if (lz > 0 && lz <= UNIT.basinZ && Math.abs(lx) <= UNIT.basinX) return true; }
-  if (!QPOCK){ QPOCK = []; for (const pid in QUAYS) for (const kind in QUAYS[pid]) if (!UNITS[pid]) QPOCK.push(quayFace(pid, kind)); }
-  for (const f of QPOCK){ const dx = x - f.x, dz = z - f.z, s = dx * f.ux + dz * f.uz, t = dx * f.nx + dz * f.nz; if (t > 0 && t <= POCKET && Math.abs(s) <= f.hl + 4) return true; }
+function inHarbourPocket(p){ return pocketHit(UNITA, qPockets(), p.x * 1000, p.y * 1000); }
+function qPockets(){ if (!QPOCK){ QPOCK = []; for (const pid in QUAYS) for (const kind in QUAYS[pid]) if (!UNITS[pid]) QPOCK.push(quayFace(pid, kind)); } return QPOCK; }
+function pocketHit(US, QS, x, z){
+  for (const U of US){ if (Math.abs(x - U.o[0]) > 60 || Math.abs(z - U.o[1]) > 60) continue; const [lx, lz] = unitL(U, x, z); if (lz > 0 && lz <= UNIT.basinZ && Math.abs(lx) <= UNIT.basinX) return true; }
+  for (const f of QS){ const dx = x - f.x, dz = z - f.z, s = dx * f.ux + dz * f.uz, t = dx * f.nx + dz * f.nz; if (t > 0 && t <= POCKET && Math.abs(s) <= f.hl + 4) return true; }
   return false;
+}
+// the same for the pockets near a box of km only (the chart asks for every pixel): null when there are none
+function pocketsIn(x0, y0, x1, y1){
+  const m = 0.2, near = (x, z) => x / 1000 > x0 - m && x / 1000 < x1 + m && z / 1000 > y0 - m && z / 1000 < y1 + m;
+  const US = UNITA.filter(U => near(U.o[0], U.o[1])), QS = qPockets().filter(f => near(f.x, f.z));
+  return US.length || QS.length ? (x, y) => pocketHit(US, QS, x * 1000, y * 1000) : null;
 }
 function legClear(a, b){
   const d = dist(a, b), n = Math.max(1, Math.ceil(d / 0.04));

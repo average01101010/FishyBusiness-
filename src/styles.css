@@ -329,6 +329,10 @@ body.vplot .attr{display:block!important;left:6px;right:auto}
 .lbl-water{font-family:var(--serif);font-style:italic;fill:var(--water)}
 .lbl-port{font-family:var(--sans);font-weight:600;fill:var(--ink);paint-order:stroke;stroke:var(--sea);stroke-linejoin:round}
 .lbl-ground{font-family:var(--sans);fill:var(--water);paint-order:stroke;stroke:var(--sea);stroke-linejoin:round}
+.lbl-town{font-family:var(--sans);fill:var(--ink);paint-order:stroke;stroke:var(--land);stroke-linejoin:round} .lbl-town.big{font-weight:600} .townpt{fill:var(--ink)}
+.lbl-peak{font-family:var(--sans);font-style:italic;fill:var(--landEdge);paint-order:stroke;stroke:var(--land);stroke-linejoin:round}
+#map.nav .lbl-town{fill:#2c2416;stroke:#e8d7a6} #map.nav .townpt{fill:#2c2416} #map.nav .lbl-peak{fill:#6b5a36;stroke:#e8d7a6}
+#map.plot .lbl-town{fill:#e9eef0;stroke:#262b23} #map.plot .townpt{fill:#e9eef0} #map.plot .lbl-peak{fill:#a5b08f;stroke:#262b23}
 .port{fill:var(--sea);stroke:var(--ink)} .port.home{fill:var(--ink)}
 .ground{fill:rgba(47,109,134,.05);stroke:var(--water);opacity:.7}
 .route{fill:none;stroke:var(--mag);stroke-linecap:round;stroke-linejoin:round}
