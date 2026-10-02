@@ -24,7 +24,7 @@ os.makedirs(LOGS, exist_ok=True)
 # draw 3D: they look at the 3D view itself (frames, camera, quays, cranes, pumps)
 D3 = ['dbg23o', 'camtest', 'moortest', 'landtest', 'bunkertest', 'heattest', 'vessel3d', 'unittest', 'sea3d']
 LITE = ['tut', 'trip2', 'docktest', 'booktest', 'decktest', 'geartest', 'loretest', 'tattest', 'fleet2test', 'fleet3test', 'opsowntest', 'routetest',
-        'shoptest', 'selltest', 'timetest', 'worktest', 'vesseltest', 'streaktest', 'fixtest', 'hailltest', 'harbourtest', 'simday', 'calib', 'kvtest', 'progweek', 'seatest', 'stabtest', 'projtest', 'boottest']
+        'shoptest', 'selltest', 'timetest', 'worktest', 'vesseltest', 'streaktest', 'fixtest', 'hailltest', 'harbourtest', 'simday', 'calib', 'kvtest', 'progweek', 'seatest', 'stabtest', 'projtest', 'boottest', 'maptest']
 # they measure milliseconds, so they run alone at the end, when nothing else takes the CPU
 SOLO = ['routetest', 'heattest', 'landtest']
 READ = {'selltest', 'hailltest', 'simday', 'calib', 'kvtest', 'progweek', 'seatest'}
@@ -32,7 +32,7 @@ LONG = {'tut': 1800}
 MUST = {'trip2': ('"st":"port"', 'ender ikke i havn'), 'tut': ('"tut": 0', 'veiledningen er ikke ferdig')}
 # which tests cover which file: «changed» runs these for the files in the diff. A file not listed runs trip2; texts and docs run nothing
 COVER = {
-  'src/js/core/00-proj.js':['projtest', 'trip2'], 'src/js/core/01-world.js':['trip2', 'harbourtest', 'unittest'], 'src/js/core/02-species-gear.js':['selltest', 'shoptest', 'vesseltest'], 'src/js/core/03-simulation.js':['heattest', 'decktest', 'simday', 'calib', 'vesseltest', 'unittest'],
+  'src/js/core/00-proj.js':['projtest', 'trip2'], 'src/js/core/01b-mapdata.js':['maptest', 'boottest', 'trip2', 'dbg23o'], 'tools/mappack.mjs':['maptest', 'boottest', 'trip2', 'dbg23o'], 'build.mjs':['boottest', 'trip2'], 'src/js/core/01-world.js':['trip2', 'harbourtest', 'unittest'], 'src/js/core/02-species-gear.js':['selltest', 'shoptest', 'vesseltest'], 'src/js/core/03-simulation.js':['heattest', 'decktest', 'simday', 'calib', 'vesseltest', 'unittest'],
   'src/js/core/03b-sea.js':['seatest', 'calib', 'simday', 'progweek', 'trip2', 'sea3d'],
   'src/js/core/03c-stability.js':['stabtest', 'calib', 'simday', 'progweek', 'worktest', 'trip2', 'sea3d'],
   'src/js/core/04-crew.js':['fleet2test', 'opsowntest', 'worktest'], 'src/js/core/05-vessels.js':['decktest', 'trip2', 'heattest', 'worktest'], 'src/js/core/06-services.js':['fixtest', 'fleet3test', 'opsowntest'],
