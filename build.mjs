@@ -3,11 +3,10 @@
 // src/index.html is the template. Every @include(path) is replaced by that file (path relative to src/),
 // minus its final newline, and included files may include others. In JS, a JSON value is written
 // /*@include(path)*/null so the source file still parses on its own; the whole placeholder is replaced.
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, copyFileSync, statSync, existsSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
-import { writeMap } from './tools/mappack.mjs';
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
 const SRC = join(ROOT, 'src');
@@ -34,6 +33,11 @@ for (const m of html.matchAll(/<script>([\s\S]*?)<\/script>/g)){
 mkdirSync(dirname(OUT), {recursive:true});
 writeFileSync(OUT, html);
 console.log(`dist/index.html: ${(Buffer.byteLength(html) / 1e6).toFixed(2)} MB`);
-// the map's rasters in packs of 10 km blocks (tools/mappack.mjs), fetched by the page from map/
-const mp = writeMap(join(SRC, 'data'), join(DIST, 'map'));
-console.log(`dist/map/: ${mp.packs} packs, ${(mp.bytes / 1e6).toFixed(2)} MB`);
+// the map's rasters in packs of 10 km blocks, made by the map pipeline (tools/map/region.py, phase K5 of the coast plan) into
+// src/data/map/ and fetched by the page from map/
+const MAPSRC = join(SRC, 'data', 'map'), MAPOUT = join(DIST, 'map');
+if (existsSync(MAPOUT)) rmSync(MAPOUT, {recursive:true});
+mkdirSync(MAPOUT, {recursive:true});
+let mapBytes = 0; const mapFiles = readdirSync(MAPSRC).filter(f => f === 'manifest.json' || f.endsWith('.wasm'));
+for (const f of mapFiles){ copyFileSync(join(MAPSRC, f), join(MAPOUT, f)); if (f.endsWith('.wasm')) mapBytes += statSync(join(MAPSRC, f)).size; }
+console.log(`dist/map/: ${mapFiles.length - 1} packs, ${(mapBytes / 1e6).toFixed(2)} MB`);

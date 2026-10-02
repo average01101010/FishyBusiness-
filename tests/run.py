@@ -32,7 +32,7 @@ LONG = {'tut': 1800}
 MUST = {'trip2': ('"st":"port"', 'ender ikke i havn'), 'tut': ('"tut": 0', 'veiledningen er ikke ferdig')}
 # which tests cover which file: «changed» runs these for the files in the diff. A file not listed runs trip2; texts and docs run nothing
 COVER = {
-  'src/js/core/00-proj.js':['projtest', 'trip2'], 'src/js/core/01b-mapdata.js':['maptest', 'boottest', 'trip2', 'dbg23o'], 'tools/mappack.mjs':['maptest', 'boottest', 'trip2', 'dbg23o'], 'build.mjs':['boottest', 'trip2'], 'src/js/core/01-world.js':['trip2', 'harbourtest', 'unittest'], 'src/js/core/02-species-gear.js':['selltest', 'shoptest', 'vesseltest'], 'src/js/core/03-simulation.js':['heattest', 'decktest', 'simday', 'calib', 'vesseltest', 'unittest'],
+  'src/js/core/00-proj.js':['projtest', 'trip2'], 'src/js/core/01b-mapdata.js':['maptest', 'boottest', 'trip2', 'dbg23o'], 'tools/mappack.mjs':[], 'build.mjs':['boottest', 'trip2'], 'src/data/map/manifest.json':['trip2', 'maptest', 'harbourtest', 'moortest', 'unittest', 'landtest', 'routetest', 'seatest', 'dbg23o', 'sea3d'], 'src/js/core/01-world.js':['trip2', 'harbourtest', 'unittest'], 'src/js/core/02-species-gear.js':['selltest', 'shoptest', 'vesseltest'], 'src/js/core/03-simulation.js':['heattest', 'decktest', 'simday', 'calib', 'vesseltest', 'unittest'],
   'src/js/core/03b-sea.js':['seatest', 'calib', 'simday', 'progweek', 'trip2', 'sea3d'],
   'src/js/core/03c-stability.js':['stabtest', 'calib', 'simday', 'progweek', 'worktest', 'trip2', 'sea3d'],
   'src/js/core/04-crew.js':['fleet2test', 'opsowntest', 'worktest'], 'src/js/core/05-vessels.js':['decktest', 'trip2', 'heattest', 'worktest'], 'src/js/core/06-services.js':['fixtest', 'fleet3test', 'opsowntest'],
