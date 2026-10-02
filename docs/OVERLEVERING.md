@@ -285,7 +285,7 @@ Kartdataene lages i `tools/map/` (i git, uten dataene). Mellomlageret ligger i `
   - `HOME` er Senja-boksen. Den brukes til startutsnittet, målet for zoom i 2D (`MAP_W`, `MAP_H`) og de vide meshene i 3D (det fjerne terrenget og sjøtilstanden), til K8.
 - **Utenfor detaljflisene:**
   - Sjøkartet tegner land fra kjernen og dybden fra modellen, med kysten fra `coast0` over (4.10).
-  - 3D bruker en flat stedfortreder fra kjernen (2 m land, −4 m sjø). Terrenget for hele kysten kommer i K8.
+  - 3D bruker fjernhøydene på 200 m fra K8 (4.11), og en flat stedfortreder fra kjernen til de er lastet.
 - **Rettet etter regresjonen** (02.10.2026):
   - **Moloene** er land i 25 m-masken. De ligger i Overtures `base/infrastructure` (klasse `breakwater`, OSMs `man_made=breakwater`) og ikke i kystlinja. Fyllingen etter cellesentrum mistet dem som var smalere enn en celle, og ruta gikk rett gjennom moloen på Husøy. De fylles nå med en halv celle ekstra bredde (93 moloer i Senja-flisene).
   - **Strøklengden nær land:** 200 m-kjernen ser ikke moloene eller de smale sundene, og Husøy havn ligger i en 200 m-landcelle. Feltet tok da havet utenfor for havna (1,6 m sjø inne i havna i NNV 11 m/s). Innen `FETCH.near` (1 km) fra kjernens land går strålenes første `FETCH.fine` (1,5 km) på 25 m-masken (`fetchFine`, `fetchHere`), og kjernens stråler går videre derfra.
@@ -347,6 +347,55 @@ Kartdataene lages i `tools/map/` (i git, uten dataene). Mellomlageret ligger i `
   - Kartpakkene finnes bare for Senja-flisene. Ellers tegnes `coast0`, også nær inne, over kjernens land på 200 m.
   - Navnene står vannrett (de gamle fjordnavnene var rotert langs fjorden).
   - `FINE` (den gamle 12,5 m-kysten) brukes fortsatt av plotteren i 3D.
+
+### 4.11 3D for hele kysten (kystplanen, fase K8, 02.10.2026)
+
+- **Fjernhøydene (`far`):**
+  - Bakken på 200 m for 3D-visningen langs hele kysten: 191 fliser med land som er kystfliser eller grenser til en, med én pakke per flis (5,2 MB i alt).
+  - De lages av `national.py far200()` fra Terrarium z9, som gir 100–160 m per piksel i Norge, med Kartverkets terreng på land og havbunnen fra GEBCO.
+  - Høydene er lest bilineært i 200 m-cellenes midtpunkt og tilpasset 200 m-landet: land minst 1 m, sjø høyst −2 m.
+  - Kilden hadde enkeltspisser (4 378 m i Rogaland). En celle som ligger 400 m over medianen av naboene, får medianen, og ingenting går over 2 470 m.
+  - Laget er av typen `far`, med blokker på 50 km. `pack.write` regner nå flisa ut fra blokkens størrelse i km og skriver bare blokkene som er med (`keep`).
+- **Høydene lagres som Int16** i desimeter (`L.k = 0.1`, `rbil`/`rbilM` ganger med `L.k`). Det tar halve plassen av Float32. Dybden er fortsatt Float32.
+- **Strømming** (`stream3d`): 3D-visningen henter pakkene rundt båten høyst hvert andre sekund.
+  - Fjernhøydene hentes over fjernterrengets vindu, og flisenes bakke og skog innenfor 14 km.
+  - Når en pakke kommer, bygges meshene over den på nytt.
+  - Før pakken er inne, er landet en stedfortreder fra 200 m-landet.
+  - `tileH` leser et høydelag bare der cellenes flis har pakken inne. Kantene mellom flisene og områder som ikke er lastet ennå, gir derfor aldri en feil.
+- **Bakken i 3D:**
+
+  | Kilde | Hvor |
+  |---|---|
+  | Flisenes 25 m-bakke | der den er lastet |
+  | Fjernhøydene | ellers, holdt til 200 m-landet som simuleringen seiler etter utenfor flisene |
+  | Flat stedfortreder (land 2 m, sjø −4 m) | til fjernpakken kommer |
+
+- **Vinduer som følger båten:**
+  - Fjernterrenget (`TERR`) er et vindu på 100 km rundt båten, på et rutenett av 10 km. Det bygges på nytt når båten er 20 km fra midten (`TERRW`).
+  - Det vide sjøtilstandskartet og havet langt ute følger det samme vinduet.
+  - Senja-kvadratet (`HOME`) brukes nå bare til startutsnittet, zoommålet i 2D og de faste meshene for Senja-havnene.
+- **Kvalitetsnivåer** (`QUAL`, valget Grafikk i 3D i Innstillinger på telefonen: Auto, Lav, Middels, Høy):
+
+  | | Lav | Middels | Høy |
+  |---|---|---|---|
+  | Største `dpr` | 1 | 1,25 | 1,5 |
+  | Nærterreng (nær / langt kamera) | 3 / 6 km | 6 / 12 km | 6 / 12 km |
+  | Skygger på terrenget | av | på | på |
+  | Havskyggeren | fjernvarianten helt inn til bølgefeltet | full | full |
+  | Sjørokk og sprut i lufta | av | på | på |
+
+  - Auto går ned et nivå etter 4 s under 28 bilder/s og opp et nivå etter 12 s over 50, men ikke tilbake til et nivå den forlot før det har gått to minutter.
+  - `#qfix` i adressen holder nivået på Høy. Testene bruker det (`_env.py`), fordi SwiftShader bare gir noen få bilder/s.
+- **`teleport3d.py`** (3D) flytter båten til Kirkenes, Honningsvåg, Reine, Bergen, Hvaler og Senja. På hvert sted sjekker den at:
+  - fjernpakken kom, og vinduet fulgte båten
+  - fjellene når høyden for stedet (målt 560, 573, 802, 1 552, 372 og 1 298 m i vinduet)
+  - det ikke er noen GL-feil eller sidefeil, og at bildet har innhold (`tp_<sted>.png`)
+
+  Den sjekker også at kartblokkenes minne holder seg under budsjettet (36 MB etter seks steder), at Lav gir kortere nærterreng, at Auto går ned og opp som beskrevet, og at valget står på telefonen. Bildetakten skrives ut, men tallene fra SwiftShader sier ingenting om et nettbrett.
+- **Ikke ennå:**
+  - Detaljert bakke (25 m), skog, bygg og veier finnes bare for Senja. Andre steder er bakken 200 m og landet glatt uten skog.
+  - Sola, månen og tidevannet regnes fortsatt for Senja (K10), så bildene fra Kirkenes og Bergen har Senjas lys.
+  - Bildetakten er ikke målt på nettbrettet ennå. Testsiden for bildetakt, minne og tid for catch-up er ikke bygget.
 
 ## 5. Systemer i spillet
 

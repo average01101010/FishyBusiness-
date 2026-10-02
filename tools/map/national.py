@@ -78,6 +78,36 @@ def expo():
         print('expo tile', tx, ty, len(px), file=sys.stderr, flush=True)
     np.save(f, E); return E
 
+# The far heights (phase K8 of the coast plan): the ground at 200 m for the 3D view's far terrain everywhere on the coast, and its
+# near terrain where a tile has no detail yet. Terrarium z9 (about 100-160 m a pixel in Norway; Kartverket's terrain on land, the sea
+# floor from GEBCO), bilinear at the 200 m cells' centres, made to agree with the 200 m land: land at least 1 m, sea at most -2 m.
+# The tiles with land that are coast tiles or touch one (191); returns {(tx, ty): int16 in the page's packing of hgt (hgtEnc)}.
+def far_tiles():
+    T = tiles(); M = mask200(); coast = np.zeros((35, 29), bool)
+    for tx, ty in T: coast[ty, tx] = True
+    near = ndimage.binary_dilation(coast, iterations=1)
+    return [(tx, ty) for ty in range(35) for tx in range(29) if near[ty, tx] and M[ty * 250:(ty + 1) * 250, tx * 250:(tx + 1) * 250].any()]
+def far200():
+    f = os.path.join(OUT, 'far200.npz')
+    if os.path.exists(f): z = np.load(f); return {tuple(map(int, k.split('_'))): z[k] for k in z.files}
+    import terrain
+    from region import hgtEnc
+    M = mask200(); out = {}; t0 = time.time()
+    for k, (tx, ty) in enumerate(far_tiles()):
+        X, Y = np.meshgrid((tx * 250 + np.arange(250) + 0.5) * C200, (ty * 250 + np.arange(250) + 0.5) * C200)
+        lon, lat = frame.to_ll(X.ravel(), Y.ravel()); h = terrain.sample(lon, lat, 9).reshape(250, 250)
+        # the source has a few spikes (4 378 m in Rogaland): a cell 400 m over its neighbours' median takes the median, and nothing
+        # goes over Galdhøpiggen
+        md = ndimage.median_filter(h, 3); h = np.minimum(np.where(h > md + 400, md, h), 2470)
+        m = np.zeros((250, 250), bool); sub = M[ty * 250:(ty + 1) * 250, tx * 250:(tx + 1) * 250] > 0; m[:sub.shape[0], :sub.shape[1]] = sub
+        out[(tx, ty)] = hgtEnc(np.where(m, np.maximum(h, 1), np.minimum(h, -2))).astype(np.int16)
+        if k % 20 == 0: print('far tile', k, tx, ty, round(time.time() - t0), 's', file=sys.stderr, flush=True)
+    np.savez_compressed(f, **{f'{tx}_{ty}': v for (tx, ty), v in out.items()}); return out
+def far_layer():
+    F = far200(); A = np.zeros((8750, 7250), np.int16)
+    for (tx, ty), v in F.items(): A[ty * 250:(ty + 1) * 250, tx * 250:(tx + 1) * 250] = v
+    return {'far': dict(c=0.2, n=250, ix0=0, iy0=0, nx=7250, ny=8750, type='i16', kind='far', dec='hgt', arr=A, keep={(tx, ty) for tx, ty in F})}
+
 # The national core (phase K6): always loaded, for what looks far (the fetch rays, the local fleet, the depth model, the sea off the
 # tiles with detail): land at 200 m, the distance to it in 100 m steps to 25.5 km (u8, at 200 m), and the openness at 500 m. The
 # layers cover the frame padded to 1 750 km south (35 tiles of 50 km), in blocks of 50 km.
@@ -96,6 +126,9 @@ if __name__ == '__main__':
     st = sys.argv[1]
     if st == 'mask200':
         M = mask200(); print(json.dumps({'land': round(float(M.mean()), 4), 'km2': int(M.sum() * C200 * C200)}))
+    elif st == 'far':
+        F = far200(); import zlib, pack
+        print(json.dumps({'tiles': len(F), 'mb': round(sum(len(pack.raw_deflate(pack.med16(v))) for v in F.values()) / 1e6, 2)}))
     elif st == 'tiles':
         T = tiles(); L, S = norway200(); print(json.dumps({'tiles': len(T), 'norwayLandKm2': int(L.sum() * 0.04), 'norwaySeaKm2': int(S.sum() * 0.04)}))
     elif st == 'expo':

@@ -28,8 +28,10 @@ def write(layers, out, extra=None, vec=()):
         for j in range(L['ny'] // n):
             for i in range(L['nx'] // n):
                 bx, by = L['ix0'] // n + i, L['iy0'] // n + j; blk = arr[j * n:(j + 1) * n, i * n:(i + 1) * n]
+                if L.get('keep') is not None and (bx, by) not in L['keep']: continue   # a layer with blocks only where it has data (far)
                 raw = med16(blk) if L['type'] == 'i16' else np.ascontiguousarray(blk).tobytes()
-                tile = (0, 0) if L['kind'] == 'core' else (bx // T, by // T); k = (L['kind'], tile)
+                bk = round(n * L['c'])   # the block's size in km (10, or 50 for the far heights): the tile is where the block lies
+                tile = (0, 0) if L['kind'] == 'core' else (bx * bk // TILE, by * bk // TILE); k = (L['kind'], tile)
                 groups.setdefault(k, []).append([name, bx, by, raw_deflate(raw)])
     for kind, (tx, ty), name, b, cnt in vec: groups.setdefault((kind, (tx, ty)), []).append([name, tx * T, ty * T, raw_deflate(b), cnt])
     total = 0

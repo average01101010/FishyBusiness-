@@ -58,3 +58,4 @@ Publiser `dist/index.html` til artifacten https://claude.ai/artifact/HHehndJQmtC
 - Kartpakkene skal være med som `files`: `map/manifest.json` og hver `map/*.wasm` fra `dist/map/`.
 - Navnene har hashen, så en pakke som ikke er endret, har samme navn og trenger ikke sendes på nytt.
 - Pakker som ikke lenger står i manifestet, kan fjernes med `null`.
+- Det er rundt 205 kartfiler (fra K8 én fjernhøydepakke per kystflis). Én publisering tar høyst 255 filer, så send bare de endrede.

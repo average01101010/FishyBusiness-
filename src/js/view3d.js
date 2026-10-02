@@ -6,6 +6,21 @@ const G3 = (() => {
   let PL, PS, PSF, PK, PP, SST_VS = false, SSDUMMY = null, SEADBG = false;
   let TERR, STAT, BOATM, CAPM, RODM, FLAGM, SKYQ, PATCH, FARQ, DYNP, DYNA;
   let HG = null, NEARM = null, MIDM = null, loading = false, LIGHTS = [], snowNow = -1;
+  // Quality (phase K8 of the coast plan): 0 low, 1 medium, 2 high. 'auto' (the setting S.settings.q3d) steps down a level when the
+  // frames have been slower than 28 a second for 4 s, and up when faster than 50 for 12 s, but not back up to a level it left within
+  // the last two minutes. «#qfix» in the address (the tests) keeps it at high. Per level: the drawing's pixels (dpr), the near
+  // terrain's reach, the terrain's shadows, the full sea shader beyond the wave patch, and the spray in the air.
+  const QUAL = {lvl:2, bad:0, good:0, cap:2, capT:0, fix:/qfix/.test(location.hash), dpr:[1, 1.25, 1.5], near:[[3000, 6000], [6000, 12000], [6000, 12000]]};
+  function qualSet(){ const v = S.settings.q3d || 'auto'; if (QUAL.fix) QUAL.lvl = 2; else if (v !== 'auto') QUAL.lvl = {low:0, mid:1, high:2}[v]; return v; }
+  // one frame's step of the automatic quality (dt s, fps the frame rate); returns the level
+  function qualTick(dt, fps, now){
+    if (qualSet() !== 'auto' || QUAL.fix || !fps) return QUAL.lvl;
+    if (now - QUAL.capT > 120000) QUAL.cap = 2;
+    if (fps < 28){ QUAL.bad += dt; QUAL.good = 0; if (QUAL.bad > 4 && QUAL.lvl > 0){ QUAL.cap = QUAL.lvl - 1; QUAL.capT = now; QUAL.lvl--; QUAL.bad = 0; } }
+    else if (fps > 50){ QUAL.good += dt; QUAL.bad = 0; if (QUAL.good > 12){ if (QUAL.lvl < QUAL.cap) QUAL.lvl++; QUAL.good = 0; } }
+    else QUAL.bad = QUAL.good = 0;
+    return QUAL.lvl;
+  }
   const T0 = performance.now(), DEG = Math.PI / 180;
   // «#no3d» in the address (the tests that do not look at 3D): everything runs as before, but no frame is drawn
   const NO3D = /no3d/.test(location.hash);
@@ -253,9 +268,25 @@ const G3 = (() => {
   // ground (unitTerr)
   function terrRaw(x, z){
     if (x < MAPB.x0 * 1000 || z < MAPB.y0 * 1000 || x > MAPB.x1 * 1000 || z > MAPB.y1 * 1000) return -40;
-    // the tiles' ground where they have it, else a stand-in from the national core's 200 m land (phase K8 brings the ground of the whole coast)
-    const h = HG && mapViewAt({x:x / 1000, y:z / 1000}) ? rbilM(MAPD.L.hgt, x, z) : rbilM(MAPD.L.land200, x, z) >= 0.5 ? 2 : -4;
-    return h > -3 && inHarbourPocket({x:x / 1000, y:z / 1000}) ? -3 : h;   // the water in front of a quay (01-world.js)
+    // the tiles' ground (25 m) where they have it and it is in; else the far heights (200 m, phase K8) held to the national core's
+    // 200 m land, which the simulation sails by off the tiles (land at least a little above the sea, the sea a little below); else
+    // a flat stand-in from that land until the far pack comes
+    const p = {x:x / 1000, y:z / 1000}; let h;
+    h = HG ? tileH(MAPD.L.hgt, 'view', x, z) : NaN;
+    if (h !== h){ const m = rbilM(MAPD.L.land200, x, z); h = HG ? tileH(MAPD.L.far, 'far', x, z) : NaN; if (h !== h) h = m >= 0.5 ? 2 : -4; h = m >= 0.5 ? Math.max(h, 0.3 + (m - 0.5) * 6) : Math.min(h, -0.5 - (0.5 - m) * 8); }
+    return h > -3 && inHarbourPocket(p) ? -3 : h;   // the water in front of a quay (01-world.js)
+  }
+  // a height layer (the tiles' ground 'view', the far heights 'far') at x, z (m) between the four nearest cells, or NaN where a cell is
+  // off the layer or its tile has no pack of that kind or it is not in yet: the edges of the tiles, and before the pack comes, so the
+  // view never reads a block that is not there. A tile whose pack is in is remembered.
+  const TIN = new Set();
+  function tileIn(kind, tx, ty){ const k = kind + tx * 64 + ty; if (TIN.has(k)) return true; const pk = MAPD.byTile.get(kind + ':' + tx + ':' + ty); if (pk && pk.buf){ TIN.add(k); return true; } return false; }
+  function tileH(L, kind, x, z){
+    const cm = L.c * 1000, gx = x / cm - 0.5, gz = z / cm - 0.5, ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz, ct = Math.round(MAPD.man.tile / L.c);
+    if (ix < L.ix0 || iz < L.iy0 || ix + 1 >= L.ix0 + L.nx || iz + 1 >= L.iy0 + L.ny) return NaN;
+    const a0 = Math.floor(ix / ct), a1 = Math.floor((ix + 1) / ct), b0 = Math.floor(iz / ct), b1 = Math.floor((iz + 1) / ct);
+    if (!tileIn(kind, a0, b0) || (a1 !== a0 && !tileIn(kind, a1, b0)) || (b1 !== b0 && (!tileIn(kind, a0, b1) || !tileIn(kind, a1, b1)))) return NaN;
+    return ((rcell(L, ix, iz) * (1 - fx) + rcell(L, ix + 1, iz) * fx) * (1 - fz) + (rcell(L, ix, iz + 1) * (1 - fx) + rcell(L, ix + 1, iz + 1) * fx) * fz) * L.k;
   }
   function terrH(x, z){ return unitTerr(x, z, terrRaw(x, z)); }
   // The ground round a harbour unit (UNITS, 01-world.js), in its frame (lx along the face, lz out to the water): the basin in front is
@@ -293,9 +324,9 @@ const G3 = (() => {
   }
   // share of forest around a point: bilinear over the 50 m forest cells, softened over the neighbours
   function forestAt(x, z){
-    if (!HG || !mapViewAt({x:x / 1000, y:z / 1000})) return 0;
+    if (!HG || !mapViewIn({x:x / 1000, y:z / 1000})) return 0;
     const LF = MAPD.L.forest, cm = LF.c * 1000, gx = x / cm - 0.5, gz = z / cm - 0.5, ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz; let s = 0;
-    const F = (c, r) => (!HG || !mapIn(LF, c, r)) ? 0 : rcell(LF, c, r);
+    const ct = Math.round(MAPD.man.tile / LF.c), F = (c, r) => (!HG || !mapIn(LF, c, r) || !tileIn('view', Math.floor(c / ct), Math.floor(r / ct))) ? 0 : rcell(LF, c, r);
     for (let dz = -1; dz <= 2; dz++) for (let dx = -1; dx <= 2; dx++){ const wx = dx <= 0 ? (dx === 0 ? 1 - fx * 0.5 : 0.5 - fx * 0.5) : (dx === 1 ? 0.5 + fx * 0.5 : fx * 0.5), wz = dz <= 0 ? (dz === 0 ? 1 - fz * 0.5 : 0.5 - fz * 0.5) : (dz === 1 ? 0.5 + fz * 0.5 : fz * 0.5); s += F(ix + dx, iz + dz) * wx * wz; }
     return clamp(s / 2.25, 0, 1);
   }
@@ -353,11 +384,30 @@ const G3 = (() => {
     if (!NEARM) return;
     for (const U of UNITA) if (U.o[0] > NEARM.x0 + 200 && U.o[0] < NEARM.x0 + NEARM.sx - 200 && U.o[1] > NEARM.z0 + 200 && U.o[1] < NEARM.z0 + NEARM.sz - 200) UPATCH.push(unitPatch(U, NEARM));
   }
-  function buildTerrain(){ TERR = makeMesh(HOME.x0 * 1000, HOME.y0 * 1000, MAP_W * 1000, MAP_H * 1000, 255); }   // Senja's (phase K8 makes it follow the boat)
+  // The far terrain: a window of TERRW.span round the boat (phase K8; it was Senja's square), on a grid of TERRW.snap, built again when
+  // the boat is TERRW.move from its middle or new packs have come; the far sea and the wide sea-state map follow it
+  const TERRW = {span:100000, snap:10000, move:20000};
+  function buildTerrain(){
+    const p = bv.x || bv.z ? {x:bv.x, z:bv.z} : {x:S.boat.pos.x * 1000, z:S.boat.pos.y * 1000}, cx = Math.round(p.x / TERRW.snap) * TERRW.snap, cz = Math.round(p.z / TERRW.snap) * TERRW.snap;
+    if (TERR) freeMesh(TERR);
+    TERR = makeMesh(cx - TERRW.span / 2, cz - TERRW.span / 2, TERRW.span, TERRW.span, 255); TERR.cx = cx; TERR.cz = cz;
+  }
+  // the packs the view needs round the boat: the far heights over the far terrain's window, the tiles' ground (and forest) over the
+  // middle terrain's; when they come the meshes over them are built again. Asked at most every 2 s.
+  let streamT = -1e9;
+  function stream3d(){
+    const now = performance.now(); if (now - streamT < 2000) return; streamT = now;
+    const x = bv.x / 1000, z = bv.z / 1000, F = TERRW.span / 2000 + 10, V = 14, then = () => { for (const m of [NEARM, MIDM, TERR]) if (m) m.stale = true; };
+    mapViewReady(x - F, z - F, x + F, z + F, then, ['far']); mapViewReady(x - V, z - V, x + V, z + V, then, ['view']);
+  }
+  function updateFar(){
+    if (TERR && !TERR.stale && Math.abs(bv.x - TERR.cx) < TERRW.move && Math.abs(bv.z - TERR.cz) < TERRW.move) return;
+    buildTerrain(); recolor(TERR, snowNow < 0 ? 0 : snowNow);
+  }
   // sharp terrain in a 6 km corridor around the boat, rebuilt as it moves
   let shT = 0;
   function updateShadows(){
-    const d = env.shadowDir, key = d ? d.map(v => v.toFixed(2)).join(',') : 'flat';
+    const d = QUAL.lvl ? env.shadowDir : null, key = d ? d.map(v => v.toFixed(2)).join(',') : 'flat';   // no shadows on low quality
     for (const m of [NEARM, ...UPATCH, MIDM, TERR]){
       if (!m) continue;
       if (m.shKey !== key && !m.shJob && performance.now() - shT > 1500){ m.shJob = {i:0, key, d}; shT = performance.now(); }
@@ -378,13 +428,13 @@ const G3 = (() => {
   }
   function updateMid(){
     const span = 22000, snap = 2000, cx = Math.round(bv.x / snap) * snap, cz = Math.round(bv.z / snap) * snap;
-    if (MIDM && Math.abs(cx - MIDM.cx) < 3000 && Math.abs(cz - MIDM.cz) < 3000) return;
+    if (MIDM && !MIDM.stale && Math.abs(cx - MIDM.cx) < 3000 && Math.abs(cz - MIDM.cz) < 3000) return;
     if (MIDM) freeMesh(MIDM);
     MIDM = makeMesh(cx - span / 2, cz - span / 2, span, span, 256); MIDM.cx = cx; MIDM.cz = cz;
   }
   function updateNear(){
-    updateMid();
-    const span = cam.dist > 1200 ? 12000 : 6000, snap = span / 10, cx = Math.round(bv.x / snap) * snap, cz = Math.round(bv.z / snap) * snap;
+    stream3d(); updateFar(); updateMid();
+    const span = QUAL.near[QUAL.lvl][cam.dist > 1200 ? 1 : 0], snap = span / 10, cx = Math.round(bv.x / snap) * snap, cz = Math.round(bv.z / snap) * snap;
     if (NEARM && !NEARM.stale && NEARM.sx === span && Math.abs(cx - NEARM.cx) < span / 5 && Math.abs(cz - NEARM.cz) < span / 5) return;
     if (NEARM) freeMesh(NEARM);
     NEARM = makeMesh(cx - span / 2, cz - span / 2, span, span, 256, terrCoarse); NEARM.cx = cx; NEARM.cz = cz; buildPatches(); buildGround();
@@ -631,7 +681,7 @@ const G3 = (() => {
       if (occ[Math.floor((z - z0) / 25) * 40 + Math.floor((x - x0) / 25)] || onUnit(x, z, 8)) continue;
       const h = terrH(x, z); if (h < 2.5 || h > 330) continue;
       const sl = Math.hypot(terrH(x + 10, z) - terrH(x - 10, z), terrH(x, z + 10) - terrH(x, z - 10)) / 20; if (sl > 0.75) continue;
-      const LF = MAPD.L.forest, fc = Math.floor(x / (LF.c * 1000)), fr = Math.floor(z / (LF.c * 1000)), fo = HG && mapViewAt({x:x / 1000, y:z / 1000}) && mapIn(LF, fc, fr) && rcell(LF, fc, fr) ? 1 : 0;
+      const LF = MAPD.L.forest, fc = Math.floor(x / (LF.c * 1000)), fr = Math.floor(z / (LF.c * 1000)), fo = HG && mapViewIn({x:x / 1000, y:z / 1000}) && mapIn(LF, fc, fr) && rcell(LF, fc, fr) ? 1 : 0;
       const pr = (1 - sstep(210, 330, h)) * (1 - sstep(0.42, 0.75, sl)) * (fo ? 0.95 : 0.5) * sstep(0.36, 0.62, noise2(x / 260, z / 260, 31) * 0.7 + noise2(x / 60, z / 60, 37) * 0.3);
       if (hash((hh * 5e7 | 0) + 11) > pr) continue;
       const th = 4 + 6 * hash((hh * 9e7 | 0) + 13) * (1 - sstep(120, 320, h) * 0.55), y = h - 0.3, isPine = hash((hh * 2e7 | 0) + 17) < 0.18, v = 0.88 + 0.24 * hash((hh * 4e7 | 0) + 19);
@@ -1782,7 +1832,7 @@ const G3 = (() => {
   // so when the near terrain moves the sea never falls back to the coarse map for a moment (no sudden change in the waves)
   function ssLevel(n, unit){ return {n, unit, brect:null, rect:null, sec:new Map(), sw:null, tex:null, cpu:null, k:[-1, -1], job:null, on:false}; }
   const SSL = {n:ssLevel(32, 4), w:ssLevel(128, 5)};
-  function ssRect(L){ return L === SSL.n ? (NEARM ? [NEARM.x0, NEARM.z0, NEARM.sx] : null) : [HOME.x0 * 1000, HOME.y0 * 1000, Math.max(MAP_W, MAP_H) * 1000]; }
+  function ssRect(L){ return L === SSL.n ? (NEARM ? [NEARM.x0, NEARM.z0, NEARM.sx] : null) : TERR ? [TERR.x0, TERR.z0, TERR.sx] : null; }   // the wide one follows the far terrain
   function ssWork(L, until){
     const R = ssRect(L); if (!R) return;
     let fresh = false; if (!L.brect || L.brect[0] !== R[0] || L.brect[1] !== R[1] || L.brect[2] !== R[2]){ L.brect = R; L.sec.clear(); L.sw = null; L.job = null; fresh = true; }
@@ -2139,7 +2189,7 @@ const G3 = (() => {
     }
   }
   function drawSea(VP, eye, t, far, drop){
-    const P = far && drop === undefined ? PSF : PS; gl.useProgram(P.p); const u = P.u;
+    const P = far && (drop === undefined || !QUAL.lvl) ? PSF : PS; gl.useProgram(P.p); const u = P.u;   // low quality: the far shader right up to the wave patch
     gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform1f(u.uTime, t); gl.uniform1f(u.uHalf, HALF); gl.uniform1f(u.uFlat, far ? 1 : 0);
     gl.uniform1f(u.uCell, 2 * HALF / NP); gl.uniform1f(u.uPx, 2 * Math.tan(curFov / 2) / Math.max(canvas.height, 1)); gl.uniform1f(u.uDbg, SEADBG ? 1 : 0);
     // the local sea: the textures on units 4 and 5 (a 1 x 1 stand-in until they are ready)
@@ -2160,7 +2210,7 @@ const G3 = (() => {
       // flat sea: the whole map less the near terrain for the far pass; in the near pass the near terrain's square (or around the camera)
       // less the wave patch around the boat
       const y = -eye[1] - (drop || 0) + (env.tide || 0);
-      if (drop === undefined){ const ox = (HOME.x0 + HOME.x1) * 500, oz = (HOME.y0 + HOME.y1) * 500, sc = Math.max(MAP_W, MAP_H) * 500 + 40000;
+      if (drop === undefined){ const ox = TERR ? TERR.cx : bv.x, oz = TERR ? TERR.cz : bv.z, sc = TERRW.span / 2 + 40000;
         seaRing(u, eye, y, [ox - sc, oz - sc, ox + sc, oz + sc], NEARM ? [NEARM.x0, NEARM.z0, NEARM.x0 + NEARM.sx, NEARM.z0 + NEARM.sz] : null); }
       else {
         let R; if (NEARM) R = [NEARM.x0 - 20, NEARM.z0 - 20, NEARM.x0 + NEARM.sx + 20, NEARM.z0 + NEARM.sz + 20];
@@ -2188,7 +2238,7 @@ const G3 = (() => {
       SSDUMMY = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, SSDUMMY); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255])); PK = program(SKY_VS, SKY_FS, ['aP']); PP = program(PT_VS, PT_FS, ['aPos', 'aA']);
       DYNP = buf(new Float32Array(4000 * 3), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); DYNA = buf(new Float32Array(4000), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW);
       // the ground's heights and the forest (map/, the view packs): until they are in, the land is a flat stand-in
-      try { await mapLoadKind('view'); HG = true; } catch (e){ console.error(e); HG = null; }
+      HG = true;   // the ground comes in packs round the boat as it goes (stream3d); until a pack is in, its land is a stand-in
       try { BLD = await loadBuildings(); } catch (e){ console.error(e); BLD = null; }
       buildTerrain(); buildStatics(); buildBoat(); buildSkiff(); buildFlag(); buildSea(); buildWild(); buildNPC(); buildHarbourFittings(); buildMooring(); buildPlants(); buildPlantParts(); buildBunkers();
       canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); ready = false; failed = true; show(false); });
@@ -2199,7 +2249,7 @@ const G3 = (() => {
   let labelEls = [];
   function buildLabels(){ labelsEl.innerHTML = ''; labelEls = PORTS.map(p => { const d = document.createElement('div'); d.className = 'lbl3d'; d.textContent = p.name; labelsEl.appendChild(d); return d; }); }
   function resize(){
-    const r = wrap.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    const r = wrap.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, QUAL.dpr[QUAL.lvl]);
     const w = Math.max(1, Math.round(r.width * dpr)), h = Math.max(1, Math.round(r.height * dpr));
     if (canvas.width !== w || canvas.height !== h){ canvas.width = w; canvas.height = h; }
   }
@@ -2441,7 +2491,7 @@ const G3 = (() => {
     if (document.hidden || NO3D) return;
     resize();
     const now = performance.now(), dt = Math.min(0.1, (now - lastF) / 1000), rdt = Math.max(1e-3, (now - lastF) / 1000); lastF = now;
-    FPS.v = FPS.v ? FPS.v * 0.95 + 0.05 / rdt : 1 / rdt; if (FPS.el && now - FPS.at > 500){ FPS.at = now; FPS.el.textContent = Math.round(FPS.v) + ' fps · ' + (1000 / FPS.v).toFixed(1) + ' ms'; }
+    FPS.v = FPS.v ? FPS.v * 0.95 + 0.05 / rdt : 1 / rdt; qualTick(dt, FPS.v, now); if (FPS.el && now - FPS.at > 500){ FPS.at = now; FPS.el.textContent = Math.round(FPS.v) + ' fps · ' + (1000 / FPS.v).toFixed(1) + ' ms'; }
     const t = (now - T0) / 1000, frac = currentFrac(), H = (S.t + frac) / 60;
     computeEnv(H); updateBoat(dt, t, frac); updateWaves(dt, H); updateWake(); updateNear(); ssStep(rdt); updateShadows(); updateChunks(CH.size ? 2 : 999);
     // camera
@@ -2622,8 +2672,8 @@ const G3 = (() => {
       wk.age[i] += dt; wk.vy[i] -= wk.g[i] * dt; wk.x[i] += wk.vx[i] * dt; wk.y[i] += wk.vy[i] * dt; wk.z[i] += wk.vz[i] * dt;
       PB[n * 3] = wk.x[i] - eye[0]; PB[n * 3 + 1] = wk.y[i] - eye[1]; PB[n * 3 + 2] = wk.z[i] - eye[2]; PA[n] = Math.pow(Math.max(0, 1 - wk.age[i] / wk.life[i]), 1.5) * 0.75; n++;
     }
-    drawPts(n, gl.POINTS, VP, foamCol, 150, true);
-    driftSpray(VP, eye, dt, t, foamCol);
+    if (QUAL.lvl) drawPts(n, gl.POINTS, VP, foamCol, 150, true);
+    if (QUAL.lvl) driftSpray(VP, eye, dt, t, foamCol);
     // fishing lines
     if (S.boat.status === 'fishing' && GEO(vtype()).hand && SK){
       const segs = (SK.lines || []).slice(); if (SK.tipW) segs.push([SK.tipW, null]);
@@ -2701,6 +2751,8 @@ const G3 = (() => {
     return true;
   }
   return {
+    // the quality: with a setting ('auto', 'low', 'mid', 'high') it applies it; returns the level now and the frame rate
+    quality(v){ if (v){ S.settings.q3d = v; QUAL.bad = QUAL.good = 0; QUAL.cap = 2; qualSet(); } return {lvl:QUAL.lvl, set:S.settings.q3d || 'auto', fps:FPS.v}; },
     show, toggle(){ return show(!active); }, isActive:() => active,
     zoom(f){ if (cam.helm) cam.fov = clamp(cam.fov * f, 12, 75); else cam.dist = clamp(cam.dist * f, 7, 8000); }, reset(){ if (cam.helm){ cam.hy = 0; cam.hp = -0.07; cam.fov = 55; } else { cam.yaw = 0.55; cam.pitch = 0.26; cam.dist = 21; } },
     vesselChanged(){ bv.init = false; bv.st = null; TRAIL.length = 0; },
@@ -2709,6 +2761,6 @@ const G3 = (() => {
     fineReady(){ if (NEARM){ freeMesh(NEARM); NEARM = null; updateNear(); } },
     fishCam(){ cam.helm = false; cam.dist = 7; cam.pitch = 0.22; cam.yaw = -0.85; },
     isHelm:() => cam.helm, setHelm(on){ const G = GEO(vtype()); cam.helm = !!on; cam.hy = 0; cam.hp = G.hp !== undefined ? G.hp : -0.07; cam.fov = G.fov || 55; },
-    _debug:{get fps(){ return FPS.v; }, RO, SSL, WV, WK, ssAt, seaH, waves:(dt, H) => updateWaves(dt, H), get sstVS(){ return SST_VS; }, set seaDbg(v){ SEADBG = v; }, get drift(){ let c = 0; for (let i = 0; i < SDN; i++) if (SD.age[i] < SD.life[i]) c++; return c; }, get eye(){ return lastEye; }, camInside, camFree, get camPull(){ return camPull; }, get camLift(){ return camLift; }, get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, BUNKERS, nearestPlant, fkRun, legAt, terrH, unitModel, get UPATCH(){ return UPATCH; }, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; SEAMARKS.lights.forEach((L, i) => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(i, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }}
+    _debug:{get fps(){ return FPS.v; }, glErr(){ return gl ? gl.getError() : -1; }, QUAL, qualTick, TERRW, get TERR(){ return TERR; }, get MIDM(){ return MIDM; }, RO, SSL, WV, WK, ssAt, seaH, waves:(dt, H) => updateWaves(dt, H), get sstVS(){ return SST_VS; }, set seaDbg(v){ SEADBG = v; }, get drift(){ let c = 0; for (let i = 0; i < SDN; i++) if (SD.age[i] < SD.life[i]) c++; return c; }, get eye(){ return lastEye; }, camInside, camFree, get camPull(){ return camPull; }, get camLift(){ return camLift; }, get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, BUNKERS, nearestPlant, fkRun, legAt, terrH, unitModel, get UPATCH(){ return UPATCH; }, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; SEAMARKS.lights.forEach((L, i) => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(i, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }}
   };
 })();

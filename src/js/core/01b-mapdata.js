@@ -10,7 +10,8 @@
 //                         MAPD.simR, which covers the instruments round a boat (sounder, sonar, plotter); reading a block whose pack
 //                         is not in is an error, never a stand-in value. A view that reads farther (the chart, the 3D shore) asks
 //                         first (mapViewReady) and draws without the depth until the pack comes.
-//   view  hgt, forest     for the 3D view, as they come (mapHas first)
+//   view  hgt, forest     for the 3D view, as they come round the boat (view3d.js stream3d; mapViewIn first)
+//   far   far             the ground at 200 m for the 3D view's far terrain, on the coast's 191 tiles with land (phase K8)
 //   chart coast1, coast2, names   the chart's vectors per tile (tools/map/chart.py; the core has coast0 and names0 for the whole
 //                         country): entries with a count as a sixth field, read with mapVec (ui/03a-chart.js draws them)
 // The layers are in the national frame (phase K4): a layer's cell (ix, iy) of size c covers x in [ix c, (ix + 1) c) km, the cells are
@@ -37,7 +38,8 @@ async function mapStart(base){
   if (base) MAPD.base = base;
   const man = MAPD.man = await (await fetch(MAPD.base + 'manifest.json', {cache:'no-cache'})).json();
   let id = 0;
-  for (const name in man.layers) MAPD.L[name] = Object.assign({name, id:id++, bx:NaN, by:NaN, b:null}, man.layers[name]);
+  // k: what a cell's number is worth; the heights are kept as Int16 decimetres (phase K8), half the room of Float32
+  for (const name in man.layers) MAPD.L[name] = Object.assign({name, id:id++, bx:NaN, by:NaN, b:null, k:man.layers[name].dec === 'hgt' ? 0.1 : 1}, man.layers[name]);
   const dc = MAPD.L.dc; Object.assign(DC, {nx:dc.nx, ny:dc.ny, ix0:dc.ix0, iy0:dc.iy0});
   for (const pk of man.packs){ pk.buf = null; pk.idx = null; pk.load = null; MAPD.packs.push(pk); if (pk.kind === 'core') MAPD.core = pk; else MAPD.byTile.set(pk.kind + ':' + pk.tile[0] + ':' + pk.tile[1], pk); }
   return man;
@@ -52,7 +54,7 @@ function mapLoad(pk){
   return pk.load;
 }
 // the pack that holds a layer's block, and the packs over a box of km (kinds: 'core', 'sim', 'view')
-function mapPackOf(L, bx, by){ if (L.kind === 'core') return MAPD.core; const t = MAPD.man.tile / MAPD.man.block; return MAPD.byTile.get(L.kind + ':' + Math.floor(bx / t) + ':' + Math.floor(by / t)) || null; }
+function mapPackOf(L, bx, by){ if (L.kind === 'core') return MAPD.core; const bk = Math.round(L.n * L.c), T = MAPD.man.tile; return MAPD.byTile.get(L.kind + ':' + Math.floor(bx * bk / T) + ':' + Math.floor(by * bk / T)) || null; }
 function mapPacksIn(kind, x0, y0, x1, y1){
   if (kind === 'core') return MAPD.core ? [MAPD.core] : [];
   const T = MAPD.man.tile, out = [];
@@ -65,6 +67,10 @@ function mapReadyAt(p, r){ for (const pk of mapSimPacks(p, r)) if (!pk.buf) retu
 // whether p's tile has detail (a sim pack): if not, the readers take the national core there
 function mapSimAt(p){ const T = MAPD.man.tile; return MAPD.byTile.has('sim:' + Math.floor(p.x / T) + ':' + Math.floor(p.y / T)); }
 function mapViewAt(p){ const T = MAPD.man.tile; return MAPD.byTile.has('view:' + Math.floor(p.x / T) + ':' + Math.floor(p.y / T)); }
+// whether p's tile has the view's ground (or the far heights) and it is in: the 3D view draws a stand-in until it is
+let MVI = {k:'', v:false}, MFI = {k:'', v:false};
+function mapKindIn(kind, p, memo){ const T = MAPD.man.tile, k = kind + ':' + Math.floor(p.x / T) + ':' + Math.floor(p.y / T); if (memo.k === k && memo.v) return true; const pk = MAPD.byTile.get(k); memo.k = k; memo.v = !!(pk && pk.buf); return memo.v; }
+const mapViewIn = p => mapKindIn('view', p, MVI), mapFarIn = p => mapKindIn('far', p, MFI);
 function mapNeed(p, r){ return Promise.all(mapSimPacks(p, r).map(mapLoad)); }
 function mapLoadKind(kind){ return Promise.all(MAPD.packs.filter(pk => pk.kind === kind).map(mapLoad)); }
 // ---------- blocks ----------
@@ -77,10 +83,11 @@ function mapDecode(L, raw){
   const n = L.n, N = n * n;
   if (L.type === 'u8') return raw;
   if (L.type === 'f32') return new Float32Array(raw.byteOffset % 4 ? raw.slice().buffer : raw.buffer, raw.byteOffset % 4 ? 0 : raw.byteOffset, N);
-  const q = med16(raw, n), out = new Float32Array(N);
-  // depth in half metres; the ground's height in half metres to 10 m and then 2 m steps (the page's own packing of hgt)
-  if (L.dec === 'half') for (let i = 0; i < N; i++) out[i] = q[i] / 2;
-  else for (let i = 0; i < N; i++){ const a = Math.abs(q[i]); out[i] = Math.sign(q[i]) * (a < 20 ? a / 2 : 10 + (a - 20) * 2); }
+  const q = med16(raw, n);
+  // depth in half metres; the ground's height in half metres to 10 m and then 2 m steps (the page's own packing of hgt), kept as
+  // Int16 decimetres (L.k = 0.1)
+  if (L.dec === 'half'){ const out = new Float32Array(N); for (let i = 0; i < N; i++) out[i] = q[i] / 2; return out; }
+  const out = new Int16Array(N); for (let i = 0; i < N; i++){ const a = Math.abs(q[i]); out[i] = Math.sign(q[i]) * (a < 20 ? a * 5 : 100 + (a - 20) * 20); }
   return out;
 }
 function mapBlock(L, bx, by){
@@ -105,12 +112,12 @@ function rcell(L, ix, iy){
 // between the four nearest cell centres at p (km), clamped to the layer's edge
 function rbil(L, p){
   const gx = clamp(p.x / L.c - 0.5, L.ix0, L.ix0 + L.nx - 1.001), gy = clamp(p.y / L.c - 0.5, L.iy0, L.iy0 + L.ny - 1.001), ix = Math.floor(gx), iy = Math.floor(gy), fx = gx - ix, fy = gy - iy;
-  return (rcell(L, ix, iy) * (1 - fx) + rcell(L, ix + 1, iy) * fx) * (1 - fy) + (rcell(L, ix, iy + 1) * (1 - fx) + rcell(L, ix + 1, iy + 1) * fx) * fy;
+  return ((rcell(L, ix, iy) * (1 - fx) + rcell(L, ix + 1, iy) * fx) * (1 - fy) + (rcell(L, ix, iy + 1) * (1 - fx) + rcell(L, ix + 1, iy + 1) * fx) * fy) * L.k;
 }
 // the same at x, z in metres, as the 3D view reads its grids
 function rbilM(L, x, z){
   const cm = L.c * 1000, gx = clamp(x / cm - 0.5, L.ix0, L.ix0 + L.nx - 1.001), gz = clamp(z / cm - 0.5, L.iy0, L.iy0 + L.ny - 1.001), ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz;
-  return (rcell(L, ix, iz) * (1 - fx) + rcell(L, ix + 1, iz) * fx) * (1 - fz) + (rcell(L, ix, iz + 1) * (1 - fx) + rcell(L, ix + 1, iz + 1) * fx) * fz;
+  return ((rcell(L, ix, iz) * (1 - fx) + rcell(L, ix + 1, iz) * fx) * (1 - fz) + (rcell(L, ix, iz + 1) * (1 - fx) + rcell(L, ix + 1, iz + 1) * fx) * fz) * L.k;
 }
 // whether a view layer's blocks under a box of metres are in (the 3D draws a stand-in until they are)
 function mapHasM(L, x0, z0, x1, z1){
@@ -143,7 +150,7 @@ function simAreaReady(){
 }
 // for the tests (maptest.py): forget a pack, also in IndexedDB, as if it had never come; the decoded blocks go too
 function mapDrop(pk){
-  pk.buf = null; pk.idx = null; pk.vec = null; pk.load = null; MAPD.blk.clear(); MAPD.bytes = 0;
+  pk.buf = null; pk.idx = null; pk.vec = null; pk.load = null; MAPD.blk.clear(); MAPD.bytes = 0; MVI = {k:'', v:false}; MFI = {k:'', v:false};
   for (const n in MAPD.L){ const L = MAPD.L[n]; L.bx = L.by = NaN; L.b = null; }
   return idbDo('readwrite', s => s.delete(pk.hash));
 }

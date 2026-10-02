@@ -149,7 +149,12 @@ const PHONE = (() => {
   function logg(){ return '<div class="ph-panel">' + panelLog() + '</div>'; }
   function innst(){
     const chk = (id, on) => '<input type="checkbox" id="' + id + '"' + (on ? ' checked' : '') + '>';
+    // the 3D view's quality (view3d.js QUAL): automatic steps down when the frames get slow, and back up when there is room
+    const q3 = S.settings.q3d || 'auto', ql = [['auto', L('Auto', 'Auto')], ['low', L('Lav', 'Low')], ['mid', L('Middels', 'Medium')], ['high', L('Høy', 'High')]], now = typeof G3 !== 'undefined' && G3.quality ? G3.quality() : null;
     return '<div class="ph-c"><div class="ph-card ph-set"><h4>' + L('Spill', 'Game') + '</h4><label>' + L('Språk', 'Language') + '<button class="ph-btn alt" data-pa="lang" style="margin:0">' + (S.lang === 'no' ? 'English' : 'Norsk') + '</button></label></div>' +
+      '<div class="ph-card"><h4>' + L('Grafikk i 3D', '3D graphics') + '</h4><div class="ph-sub">' + ql.map(([v, l]) => '<button class="' + (q3 === v ? 'on' : '') + '" data-pa="q3d" data-v="' + v + '">' + l + '</button>').join('') + '</div><p class="ph-note">' +
+      L('Lav tegner med færre piksler, kortere detaljer rundt båten, uten skygger og sjørokk. Auto går ned et nivå når bildene kommer for sjelden, og opp igjen når det er god margin.', 'Low draws fewer pixels and less detail round the boat, without shadows and spray. Auto steps down a level when the frames come too slowly, and back up when there is room.') +
+      (now ? ' ' + L('Nå: ', 'Now: ') + ['Lav', 'Middels', 'Høy'][now.lvl] + (now.fps ? ' · ' + Math.round(now.fps) + ' bilder/s' : '') : '') + '</p></div>' +
       '<div class="ph-card ph-set"><h4>' + L('Fangstbehandling', 'Catch handling') + '</h4><label>' + t('gut') + chk('setGut', S.settings.gut) + '</label><label>' + t('icing') + chk('setIce', S.settings.ice) + '</label><label>' + t('deck_first') + chk('setDeckFirst', S.settings.deckFirst !== false) + '</label><p class="ph-note">' + t('gut_n') + ' ' + t('icing_n') + ' ' + t('deck_first_n') + '</p></div>' +
       '<div class="ph-card ph-set"><h4>' + L('Sikkerhet', 'Safety') + '</h4><label>' + t('auto') + chk('setAuto', S.settings.autoOn) + '</label><label><span>' + L('Snu ved', 'Turn back at') + ' <output id="autoWOut">' + S.settings.autoW + ' m/s</output></span><input type="range" min="6" max="20" step="1" value="' + S.settings.autoW + '" id="autoW"' + (S.settings.autoOn ? '' : ' disabled') + '></label><p class="ph-note">' + t('auto_n') + '</p></div>' +
       '<div class="ph-card"><button class="ph-btn red" data-act="reset">' + t('reset') + '</button></div></div>';
@@ -669,6 +674,7 @@ const PHONE = (() => {
     else if (a === 'shopgear'){ app = 'redskap'; sub.redskap = 'kjop'; }
     else if (a === 'close'){ show(false); return; }
     else if (a === 'lang'){ S.lang = S.lang === 'no' ? 'en' : 'no'; refreshAll(); }
+    else if (a === 'q3d'){ S.settings.q3d = d.v; if (typeof G3 !== 'undefined' && G3.quality) G3.quality(d.v); }
     else if (a === 'admPace'){ S.mult = +d.v; $('pace').value = String(S.mult); }
     else if (a === 'admCash'){ S.cash += 100000; log('Admin: 100 000 kr lagt i kassa.', 'Admin: NOK 100,000 put in the cash.'); }
     else if (a === 'sub'){ sub[app] = d.s; }

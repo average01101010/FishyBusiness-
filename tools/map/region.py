@@ -8,6 +8,7 @@
 #   forest  50 m: Overture's land cover 'forest' (ESA WorldCover 10 m)
 #   depth   50 m, half metres: Kartverket's depth model as the legacy Senja raster has it (until Geonorge is open)
 #   core    the national core (national.py core_layers: land200, dc200, expo), the same for every region
+#   far     the far heights at 200 m (national.py far_layer) for the 3D view, a pack per coast tile with land
 #   python3 tools/map/region.py senja [out]     (out: src/data/map, which the build copies to dist/map)
 import os, sys, json, time, math, numpy as np
 from scipy import ndimage
@@ -90,6 +91,7 @@ def build(R):
     L['hgt']['arr'] = np.where(M > 0, H, hgtEnc(-np.maximum(dep, 0.5))).astype(np.int16)
     import national
     L.update(national.core_layers())
+    L.update(national.far_layer())   # the far heights (phase K8): their own packs, one per coast tile with land
     log['sec'] = round(time.time() - t0, 1)
     return L, log, chart_vec(R)
 

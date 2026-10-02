@@ -10,7 +10,8 @@ class _Quiet(http.server.SimpleHTTPRequestHandler):
 _SRV = http.server.ThreadingHTTPServer(('127.0.0.1', 0), functools.partial(_Quiet, directory=os.environ.get('KYST_DIST') or os.path.join(os.path.dirname(HERE), 'dist')))
 threading.Thread(target=_SRV.serve_forever, daemon=True).start()
 BASE = 'http://127.0.0.1:%d/' % _SRV.server_port
-GAME_TUT = BASE + 'index.html'
+# «#qfix»: the 3D view keeps its high quality (view3d.js QUAL), so SwiftShader's few frames a second do not step it down
+GAME_TUT = BASE + 'index.html#qfix'
 # the tests play without the first-trip tutorial; tut.py uses GAME_TUT
 GAME = GAME_TUT + '#notut'
 # KYST_LITE=1 (tests/run.py sets it for the tests that do not look at 3D): the game runs as before, but no 3D frame is drawn,
