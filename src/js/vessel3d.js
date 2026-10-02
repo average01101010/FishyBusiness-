@@ -457,7 +457,8 @@ function npcKit(L, B){ let best = null, bd = 1e9; for (const t in SPEC3D){ const
 const NPCMOD = {};
 function npcModel(type, lod, liv){ const k = type + '|' + lod + '|' + liv; if (!(k in NPCMOD)) NPCMOD[k] = buildVesselModel(type, lod, LIVERY[liv % LIVERY.length]); return NPCMOD[k]; }
 // a person in oilskins, built facing -z (as the skiff's crew): standing or seated, hands where given (or down by the sides)
-function personVB(B, x, y, z, seated, hands, suit){
+function personVB(B, x, y, z, seated, hands, suit, kit){
+  if (kit && glbHas('worker')) return figureVB(B, x, y, z, seated, hands, kit);       // the detailed figure (tools/harbour/arbeider.py)
   const JAC = suit || [0.95, 0.62, 0.1, 0.3], VEST = [0.86, 0.16, 0.12, 0.35], TRS = [0.1, 0.12, 0.17, 0.2], SKN = [0.93, 0.74, 0.6, 0.25], HAT = [0.12, 0.16, 0.3, 0.15], BOOT = [0.06, 0.06, 0.07, 0.3];
   const hip = y + (seated ? 0.46 : 0.82);
   for (const sd of [-1, 1]){ const knee = seated ? [x + sd * 0.1, hip + 0.02, z - 0.4] : [x + sd * 0.1, y + 0.44, z - 0.03], foot = seated ? [x + sd * 0.11, y + 0.08, z - 0.44] : [x + sd * 0.11, y + 0.08, z + 0.01];
@@ -467,6 +468,60 @@ function personVB(B, x, y, z, seated, hands, suit){
   for (const sd of [-1, 1]){ const hd = hands ? hands[sd < 0 ? 0 : 1] : [x + sd * 0.24, hip - 0.02, z + 0.02], el = [x + sd * 0.25, (sh + hd[1]) / 2 - 0.04, (z + hd[2]) / 2 + 0.04];
     B.tube([[x + sd * 0.21, sh - 0.04, z], el, hd], 0.052, JAC, 6); B.rbox(hd[0], hd[1] - 0.04, hd[2], 0.08, 0.08, 0.1, 0.035, SKN); }
   B.rbox(x, sh - 0.03, z, 0.13, 0.1, 0.13, 0.05, SKN); B.rbox(x, sh + 0.05, z, 0.22, 0.26, 0.24, 0.1, SKN); B.rbox(x, sh + 0.23, z, 0.235, 0.13, 0.25, 0.1, HAT);
+}
+// ---------- people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit ----------
+// The jacket (paint zone 1) and the trousers (zone 3) take the kit's colours, and each kit has its torso and its hat: the harbour
+// worker in a blue coverall and a yellow hard hat, the skipper in a navy sweater and a skipper's cap (so you see who is who), the
+// fishermen in orange oilskins and a red knitted cap. The parts' frames: see arbeider.py.
+const WKIT = {hw:{top:[0.13, 0.29, 0.62], legs:[0.13, 0.29, 0.62], torso:'torso', hat:'hardhat'},
+  skipper:{top:[0.11, 0.15, 0.30], legs:[0.20, 0.21, 0.24], torso:'sweater', hat:'skippercap'},
+  crew:{top:[0.95, 0.42, 0.07], legs:[0.95, 0.42, 0.07], torso:'torso', hat:'beanie'}};
+const WK_S = 0.95;      // on board a little smaller than on the quay (1.73 m with the cap), as the wheelhouses were made for the old figure
+const WK_SH = 1.42 * WK_S;      // the shoulders' height on board, for the arms the 3D view draws live
+const WKPC = {};
+function wkPart(name, kit){
+  const k = name + '|' + kit; if (k in WKPC) return WKPC[k];
+  const o = glbPart('worker', name), K = WKIT[kit]; if (!o || !K) return WKPC[k] = null;
+  const c = o.c.slice();
+  for (let i = 0; i < o.zone.length; i++){ const col = o.zone[i] === 1 ? K.top : o.zone[i] === 3 ? K.legs : null; if (col){ const a = o.ao[i]; c[i * 4] = col[0] * a; c[i * 4 + 1] = col[1] * a; c[i * 4 + 2] = col[2] * a; } }
+  return WKPC[k] = {p:o.p, n:o.n, c};
+}
+// a part into a builder through a frame: unit axes ax = [x, y, z] scaled by s, origin at
+function wkPut(B, o, ax, s, at){
+  if (!o) return; const [X, Y, Z] = ax;
+  for (let i = 0, j = 0; i < o.p.length; i += 3, j += 4){
+    const a = o.p[i] * s[0], b = o.p[i + 1] * s[1], d = o.p[i + 2] * s[2], na = o.n[i] / s[0], nb = o.n[i + 1] / s[1], nd = o.n[i + 2] / s[2];
+    const N = [X[0] * na + Y[0] * nb + Z[0] * nd, X[1] * na + Y[1] * nb + Z[1] * nd, X[2] * na + Y[2] * nb + Z[2] * nd], l = Math.hypot(N[0], N[1], N[2]) || 1;
+    B.v([at[0] + X[0] * a + Y[0] * b + Z[0] * d, at[1] + X[1] * a + Y[1] * b + Z[1] * d, at[2] + X[2] * a + Y[2] * b + Z[2] * d], [N[0] / l, N[1] / l, N[2] / l], [o.c[j], o.c[j + 1], o.c[j + 2], o.c[j + 3]]);
+  }
+}
+const WKI = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+// a limb from A to E (as view3d.js limbM): the part's z stretched from joint to joint, its cross-section at scale r
+function wkLimb(B, o, A, E, r){
+  const d = [E[0] - A[0], E[1] - A[1], E[2] - A[2]], L = Math.hypot(d[0], d[1], d[2]) || 1e-6, z = d.map(v => v / L), up = Math.abs(z[1]) > 0.9 ? [1, 0, 0] : [0, 1, 0];
+  let x = [up[1] * z[2] - up[2] * z[1], up[2] * z[0] - up[0] * z[2], up[0] * z[1] - up[1] * z[0]]; const xl = Math.hypot(x[0], x[1], x[2]) || 1; x = x.map(v => v / xl);
+  wkPut(B, o, [x, [z[1] * x[2] - z[2] * x[1], z[2] * x[0] - z[0] * x[2], z[0] * x[1] - z[1] * x[0]], z], [r, r, L], A);
+}
+// a whole figure facing -z with the feet at (x, y, z), standing or seated; hands where given (null: down by the sides, or on the knees
+// seated; false: no arms, the 3D view draws them live)
+function figureVB(B, x, y, z, seated, hands, kit){
+  const K = WKIT[kit], S = WK_S, P = n => wkPart(n, kit), hip = y + (seated ? 0.46 : 0.92 * S);
+  for (const sd of [-1, 1]){
+    const H = [x + sd * 0.11 * S, hip, z], knee = seated ? [x + sd * 0.11 * S, hip + 0.02, z - 0.42 * S] : [x + sd * 0.115 * S, y + 0.5 * S, z - 0.03];
+    const foot = seated ? [x + sd * 0.12 * S, y + 0.08 * S, z - 0.46 * S] : [x + sd * 0.12 * S, y + 0.08 * S, z];
+    wkLimb(B, P('thigh'), H, knee, S); wkLimb(B, P('shin'), knee, foot, S); wkPut(B, P('boot'), WKI, [S, S, S], [foot[0], foot[1] - 0.08 * S, foot[2]]);
+  }
+  wkPut(B, P(K.torso), WKI, [S, S, S], [x, hip, z]);
+  const neck = [x, hip + 0.58 * S, z]; wkPut(B, P('head'), WKI, [S, S, S], neck); wkPut(B, P(K.hat), WKI, [S, S, S], neck);
+  if (hands === false) return;
+  const sh = hip + 0.5 * S;
+  for (const sd of [-1, 1]){
+    const S0 = [x + sd * 0.21 * S, sh, z], hd = hands ? hands[sd < 0 ? 0 : 1] : seated ? [x + sd * 0.16, hip + 0.1, z - 0.36] : [x + sd * 0.26 * S, y + 0.82 * S, z + 0.02];
+    const el = [(S0[0] + hd[0]) / 2 + sd * 0.04, (S0[1] + hd[1]) / 2 - 0.06, (S0[2] + hd[2]) / 2 + 0.05];
+    wkLimb(B, P('uarm'), S0, el, S); wkLimb(B, P('farm'), el, hd, S);
+    const d = [hd[0] - el[0], hd[1] - el[1], hd[2] - el[2]], l = Math.hypot(d[0], d[1], d[2]) || 1;
+    wkLimb(B, P('hand'), hd, [hd[0] + d[0] / l * S, hd[1] + d[1] / l * S, hd[2] + d[2] / l * S], S);
+  }
 }
 // a side view of a type as SVG (bow to the right), from the same spec as the 3D model: the market draws it on every card, with or
 // without WebGL. Colours from the spec; the hull below the waterline in bottom paint.

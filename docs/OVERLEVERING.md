@@ -410,6 +410,31 @@ Mister du juksa, fiskes det videre med stang til du kjøper ny i Fiskeutstyr. `m
   - **I spillet:** `glbModel` tar også starterbåten (før sjekken på `hand`), setter motoren og propellen på plass i den hele modellen (Båthandel og testene) og gir lokket som trekanter. `glbPart(type, navn)` gir én del. `view3d.js` bytter `VGEO.skiff` med geometrien fra GLB-en, og `buildSkiff` henter skrog, glass, lokk, motor og propell derfra. Ratt, gasshendel, motorens sving og vipp og propellens rotasjon er som før.
   - **Plassene:** `SKA` i `view3d.js` har plassene som de levende delene og folkene bruker (dørk, kar, fiskeren, haleren, håndjuksa, de tre juksamaskinene, redskapsstabelen og påfyllingen). Standardtallene er det gamle skrogets, og `anchors.skiff` i GLB-en overstyrer dem, sammen med ratt, gasshendel, motor, propell, sjarm, skipper, sete og navnebrettene. `anchors.work` gir plassene for sløyebordet og blødekaret (`drawDeck`), som ellers settes ut fra bredden.
   - **Kjøring:** `python3 tools/boats/skiff59.py` (med `check`, `fast` og `dry` som de andre). Overlegget trenger tegningen i `SKIFF_GA`. Dataene ligger i `src/data/boat-skiff59.b64` og `boat-skiff59-side.b64`, og i malen som `glb-skiff` og `pic-skiff`.
+- **Folkene (`worker`, fra 02.10.2026):** `tools/harbour/arbeider.py` bygger én kropp i deler, etter Jonas' bilder.
+  - **Delene:** overkropp (`torso` med glidelås og brystlommer, eller `sweater` med stripet hals), hode med ansikt (`head`), tre hodeplagg (`hardhat`, `skippercap` og `beanie`), overarm, underarm, lår, legg, støvel og hanske.
+  - **Hvert koordinatsystem:**
+    - Overkroppen har origo i hoftene, 0,92 m opp.
+    - Hodet og hodeplaggene har origo i halsroten, 1,50 m opp.
+    - Støvelen har origo på bakken under ankelen.
+    - Lemmene er én enhet lange langs +z og runde, så spillet strekker dem mellom to ledd (`limbM` med r = 1).
+  - **Drakter:** Plaggene er lakksoner. Sone 1 er jakka og sone 3 buksa. `WKIT` i `vessel3d.js` maler dem:
+    - havnearbeideren i blå kjeledress og gul hjelm
+    - skipperen i marineblå genser og skipperlue (Jonas: «så man ser forskjellen på dem»)
+    - mannskapet i oransje oljehyre og rød lue
+  - **I spillet:**
+    - **Havnearbeiderne og dekksmannskapet:** `drawWorker` stiller delene ledd for ledd (`PM.W`).
+    - **Skipper og mannskap i båtene og i NPC-flåten:** `figureVB` setter figuren sammen til én modell (`personVB`, `people()`, `person()` i `buildSkiff`). Om bord er figuren skalert til 0,95 (`WK_S`), fordi styrehusene ble laget for den gamle figuren.
+    - **Fiskeren i skiffen:** får armene fra figuren (`SK.wk`).
+    - **Uten dataelementet:** spillet tegner de gamle klossfigurene.
+  - **Kjøring:** `python3 tools/harbour/arbeider.py` (eller `fast` uten bilder). Fila er `src/data/worker.b64`, rundt 180 KB, og ligger i malen som `glb-worker`.
+- **Havneenheten (fra 02.10.2026, ikke i spillet ennå):** `tools/harbour/kaimottak.py` bygger kaia med fiskemottak, kran, truck, is og bunkers som én enhet, til alle mottakshavnene. Planen er H1 til H5 (Blender, Husøy, animasjoner, alle havnene, tester).
+  - **Kaia:** en blokk på 54 × 24 m med rette betongvegger ned til 9 m under middel vannstand på alle sider. Ingenting stikker ut i sjøen (Jonas).
+  - **Delene som skal bevege seg:** kranen (`crane_house`, `crane_boom1`, `crane_boom2` og `crane_hook`), trucken (`truck` og `truck_forks`), rulleporten (`door`, med origo i overkant) og isrenna (`chute`).
+  - **Ankerne:**
+    - liggeplassene og slippsonen
+    - truckens rute og hjørnemål, og plassene til folkene
+    - dekket, fotavtrykket og bassenget
+  - **Data:** `src/data/harbour-unit.b64` (585 KB).
 
 
 ### 5.14 NPC-flåte og kartplotter
