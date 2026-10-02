@@ -26,8 +26,9 @@ const PHONE = (() => {
     sjomann:SVG('<circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.9 2.9M15.5 15.5l2.9 2.9M5.6 18.4l2.9-2.9M15.5 8.5l2.9-2.9"/>'),
     ordl:SVG('<path d="M8.5 3.5h7v3h-7z"/><path d="M8 5H5v16h14V5h-3"/><path d="M8 11l1.5 1.5L12 10M8 16l1.5 1.5L12 15M14 11h3M14 16h3"/>'),
     kvote:SVG('<path d="M12 3a9 9 0 1 0 9 9h-9z"/><path d="M15 2.6A9 9 0 0 1 21.4 9H15z"/>'),
-    innst:SVG('<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>')};
-  const APPS = [['vaer', 'Vær', 'Weather', '#2f7fd0'], ['post', 'Kystposten', 'Coast Post', '#b8402f'], ['meld', 'Meldinger', 'Messages', '#29a36a'], ['rederi', 'Rederi', 'Company', '#1f4e79'], ['salg', 'Salgslaget', 'Sales', '#1e8c6e'], ['kvote', 'Kvote', 'Quota', '#8a6a1c'], ['ordl', 'Oppdrag', 'Orders', '#2e7d4f'], ['haill', 'Haill', 'Luck', '#c9a227'], ['sjomann', 'Sjømann', 'Seaman', '#23506b'], ['redning', 'Redning', 'Rescue', '#e0562b'], ['innst', 'Innstillinger', 'Settings', '#4a5560']];
+    innst:SVG('<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>'),
+    admin:SVG('<path d="M14.5 6.5a4 4 0 0 0 5 5L12 19a2.1 2.1 0 0 1-3-3l7.5-7.5"/><path d="M14.5 6.5L17 4l3 3-2.5 2.5"/><path d="M5 3l3 3M3 5l3 3"/>')};
+  const APPS = [['vaer', 'Vær', 'Weather', '#2f7fd0'], ['post', 'Kystposten', 'Coast Post', '#b8402f'], ['meld', 'Meldinger', 'Messages', '#29a36a'], ['rederi', 'Rederi', 'Company', '#1f4e79'], ['salg', 'Salgslaget', 'Sales', '#1e8c6e'], ['kvote', 'Kvote', 'Quota', '#8a6a1c'], ['ordl', 'Oppdrag', 'Orders', '#2e7d4f'], ['haill', 'Haill', 'Luck', '#c9a227'], ['sjomann', 'Sjømann', 'Seaman', '#23506b'], ['redning', 'Redning', 'Rescue', '#e0562b'], ['innst', 'Innstillinger', 'Settings', '#4a5560'], ['admin', 'Admin', 'Admin', '#7a2e8f']];
   const unread = () => S.msgs.filter(m => !m.read).length;
   function setBadge(){ const n = unread(); for (const bd of [badge, $('phoneBadge2')]){ bd.hidden = !n; bd.textContent = n; } }
   // --- workshop: service, fitting and getting the gear ready, one job after the other while the boat is in port
@@ -147,11 +148,21 @@ const PHONE = (() => {
   }
   function logg(){ return '<div class="ph-panel">' + panelLog() + '</div>'; }
   function innst(){
-    const pace = [1, 30, 300, 1800].map(v => [v, v === 1 ? L('6× (normalt)', '6× (normal)') : fmt(GAME_RATE * v) + '×']), chk = (id, on) => '<input type="checkbox" id="' + id + '"' + (on ? ' checked' : '') + '>';
-    return '<div class="ph-c"><div class="ph-card ph-set"><h4>' + L('Spill', 'Game') + '</h4><label>' + L('Tempo (for testing)', 'Pace (for testing)') + '<select id="phPace">' + pace.map(([v, l]) => '<option value="' + v + '"' + (S.mult === v ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></label><label>' + L('Språk', 'Language') + '<button class="ph-btn alt" data-pa="lang" style="margin:0">' + (S.lang === 'no' ? 'English' : 'Norsk') + '</button></label></div>' +
+    const chk = (id, on) => '<input type="checkbox" id="' + id + '"' + (on ? ' checked' : '') + '>';
+    return '<div class="ph-c"><div class="ph-card ph-set"><h4>' + L('Spill', 'Game') + '</h4><label>' + L('Språk', 'Language') + '<button class="ph-btn alt" data-pa="lang" style="margin:0">' + (S.lang === 'no' ? 'English' : 'Norsk') + '</button></label></div>' +
       '<div class="ph-card ph-set"><h4>' + L('Fangstbehandling', 'Catch handling') + '</h4><label>' + t('gut') + chk('setGut', S.settings.gut) + '</label><label>' + t('icing') + chk('setIce', S.settings.ice) + '</label><label>' + t('deck_first') + chk('setDeckFirst', S.settings.deckFirst !== false) + '</label><p class="ph-note">' + t('gut_n') + ' ' + t('icing_n') + ' ' + t('deck_first_n') + '</p></div>' +
       '<div class="ph-card ph-set"><h4>' + L('Sikkerhet', 'Safety') + '</h4><label>' + t('auto') + chk('setAuto', S.settings.autoOn) + '</label><label><span>' + L('Snu ved', 'Turn back at') + ' <output id="autoWOut">' + S.settings.autoW + ' m/s</output></span><input type="range" min="6" max="20" step="1" value="' + S.settings.autoW + '" id="autoW"' + (S.settings.autoOn ? '' : ' disabled') + '></label><p class="ph-note">' + t('auto_n') + '</p></div>' +
       '<div class="ph-card"><button class="ph-btn red" data-act="reset">' + t('reset') + '</button></div></div>';
+  }
+  // tools for testing while the game is built (02.10.2026): the clock's pace, a pause, and money in one tap. Not for players: in the
+  // shared world everyone has the same clock (OVERLEVERING, «Felles verden og tid»), so the app goes before the game opens.
+  function admin(){
+    const pace = [[0, L('Pause', 'Pause')], [1, '6×'], [30, fmt(GAME_RATE * 30) + '×'], [300, fmt(GAME_RATE * 300) + '×'], [1800, fmt(GAME_RATE * 1800) + '×']];
+    const day = S.mult ? 1440 / (GAME_RATE * S.mult) : 0, dur = day >= 60 ? fmt(day / 60, 1) + ' t' : day >= 1 ? fmt(day) + ' min' : fmt(day * 60) + ' s';
+    return '<div class="ph-c"><div class="ph-card"><h4>' + L('Tidsskala', 'Time scale') + '</h4><div class="ph-sub">' + pace.map(([v, l]) => '<button class="' + (S.mult === v ? 'on' : '') + '" data-pa="admPace" data-v="' + v + '">' + l + '</button>').join('') + '</div>' +
+      '<p class="ph-note">' + (S.mult ? L('Klokka går ' + fmt(GAME_RATE * S.mult) + ' ganger fortere enn ekte tid, så et døgn i spillet tar ' + dur + '.', 'The clock runs ' + fmt(GAME_RATE * S.mult) + ' times real time, so a day in the game takes ' + dur + '.') : L('Tida står stille.', 'Time stands still.')) + '</p></div>' +
+      '<div class="ph-card"><h4>' + L('Penger', 'Money') + '</h4>' + kv(L('Kasse', 'Cash'), kr(S.cash)) + '<button class="ph-btn" data-pa="admCash">+ 100 000 kr</button></div>' +
+      '<p class="ph-note">' + L('Verktøy for testing. Appen fjernes før spillet får felles klokke.', 'Tools for testing. The app goes before the game gets a shared clock.') + '</p></div>';
   }
   function show(on, a){ isOpen = on; if (a) app = a; if (on){ el.hidden = false; void el.offsetWidth; el.classList.remove('off'); render(); } else { el.classList.add('off'); setTimeout(() => { if (!isOpen) el.hidden = true; }, 300); } }
   function status(){
@@ -168,7 +179,7 @@ const PHONE = (() => {
   let shown = '';
   function render(){ status(); setBadge(); if (!isOpen) return; const key = app + '|' + (sub[app] || ''), y = key === shown ? view.scrollTop : 0; view.innerHTML = app === 'home' ? home() : shell(app); shown = key; view.scrollTop = y; }
   // every page by name: the phone apps, and the pages that open in the dock's drawer instead (DRAWER)
-  const PAGES = () => ({vaer, post, salg, kvote, redning, rederi, meld, haill, logg, sjomann, innst,
+  const PAGES = () => ({vaer, post, salg, kvote, redning, rederi, meld, haill, logg, sjomann, innst, admin,
     ordl, rigg, arbeid:() => WORK.page(), fiske, fartoy:() => fartoy('marked'), utstyr, redskap, mannskap, bors, bank, verksted, havn, last, lever, is:isApp, agn, oppdrag, beholdning});
   function shell(a){ const d = APPS.find(x => x[0] === a) || [a, a, a, '#28507f'], f = PAGES()[a]; return '<div class="ph-appv' + (a === 'post' ? ' ph-paper' : '') + '"><div class="ph-top" style="background:' + d[3] + '"><span class="ic">' + (IC[a] || '') + '</span>' + L(d[1], d[2]) + '</div>' + (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) + '</div>'; }
   // a page for the drawer, and an action tapped there: it runs as if that page were the open app, and says which page shows next
@@ -658,6 +669,8 @@ const PHONE = (() => {
     else if (a === 'shopgear'){ app = 'redskap'; sub.redskap = 'kjop'; }
     else if (a === 'close'){ show(false); return; }
     else if (a === 'lang'){ S.lang = S.lang === 'no' ? 'en' : 'no'; refreshAll(); }
+    else if (a === 'admPace'){ S.mult = +d.v; $('pace').value = String(S.mult); }
+    else if (a === 'admCash'){ S.cash += 100000; log('Admin: 100 000 kr lagt i kassa.', 'Admin: NOK 100,000 put in the cash.'); }
     else if (a === 'sub'){ sub[app] = d.s; }
     else if (a === 'salgW'){ sub.salgW = d.s; }
     else if (a === 'tow'){ rescue(true); toast(L('Redningsskøyta slepte deg inn.', 'The rescue boat towed you in.')); }
@@ -755,7 +768,7 @@ const PHONE = (() => {
   }
   view.addEventListener('click', e => { const t0 = e.target.closest('[data-pa],[data-act]'); if (!t0 || t0.disabled) return; if (t0.dataset.pa) act(t0.dataset.pa, t0.dataset); else { doAct(t0); render(); } });
   view.addEventListener('input', e => panelInput(e));
-  view.addEventListener('change', e => { if (e.target.id === 'phPace'){ S.mult = +e.target.value; $('pace').value = String(S.mult); save(); return; } panelChange(e); if (e.target.id === 'setAuto') render(); });
+  view.addEventListener('change', e => { panelChange(e); if (e.target.id === 'setAuto') render(); });
   el.querySelector('.ph-nav').addEventListener('click', e => { const t0 = e.target.closest('[data-pa]'); if (t0) act(t0.dataset.pa, t0.dataset); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && isOpen) show(false); });
   el.classList.add('off');
