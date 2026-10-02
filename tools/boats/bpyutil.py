@@ -445,13 +445,19 @@ def on_drawing(render_png, drawing, box, out_png, alpha=0.55):
     g.alpha_composite(r); g.save(out_png)
 
 
-def export_boat(build, to_game, to_game_n, out_dir, glb_name, data_b64, extras, side=None, dry=False):
+def export_boat(build, to_game, to_game_n, out_dir, glb_name, data_b64, extras, side=None, dry=False, more=None):
     """bake and write a boat: build(fine) -> (solids, glass); lod0 + glass + lod1 into a GLB, base64 to data_b64 (unless dry), and the
-    side picture side = (pic_b64, cx, cz, ortho). The objects of the fine build must already exist as BOAT0 and GLASS0."""
+    side picture side = (pic_b64, cx, cz, ortho). The objects of the fine build must already exist as BOAT0 and GLASS0.
+    more: further parts [{name, obj, alpha, xf_p, xf_n, ao, show}] (a lid, a motor in its own frame ...), written after lod1."""
     import os
     boat = bpy.data.objects['BOAT0']; gl = bpy.data.objects['GLASS0']
     bake_ao(boat, samples=48, distance=0.9)
     A0 = mesh_arrays(boat, to_game, to_game_n); AG = mesh_arrays(gl, to_game, to_game_n, ao=False)
+    AM = []
+    for p in more or []:
+        p['_o'] = p['obj']() if callable(p['obj']) else p['obj']          # a callable makes its object after the hull is baked
+        if p.get('ao'): bake_ao(p['_o'], samples=32, distance=0.5)
+        AM.append((p['name'], mesh_arrays(p['_o'], p.get('xf_p', to_game), p.get('xf_n', to_game_n), ao=bool(p.get('ao'))), p.get('alpha', 1.0)))
     # the simple version for the fleet at a distance
     for o in list(bpy.data.objects):
         if o.name not in ('cam', 'sun'): o.hide_render = True; o.hide_viewport = True
@@ -459,11 +465,11 @@ def export_boat(build, to_game, to_game_n, out_dir, glb_name, data_b64, extras, 
     for o in g1: bpy.data.objects.remove(o, do_unlink=True)
     bake_ao(boat1, samples=16, distance=0.9)
     A1 = mesh_arrays(boat1, to_game, to_game_n)
-    for o in (boat, gl): o.hide_render = False; o.hide_viewport = False
+    for o in [boat, gl] + [p['_o'] for p in more or [] if p.get('show')]: o.hide_render = False; o.hide_viewport = False
     boat1.hide_render = True
     size_pic = side_picture(out_dir, side[0] if not dry else os.path.join(out_dir, 'side_pic.b64'), *side[1:]) if side else None
     glb = os.path.join(out_dir, glb_name)
-    n = write_glb(glb, [('lod0', A0, 1.0), ('glass', AG, 0.35), ('lod1', A1, 1.0)], extras)
+    n = write_glb(glb, [('lod0', A0, 1.0), ('glass', AG, 0.35), ('lod1', A1, 1.0)] + AM, extras)
     open(data_b64 if not dry else glb + '.b64', 'w').write(base64.b64encode(open(glb, 'rb').read()).decode())
     tri = lambda A: len(A['idx']) // 3
     print('GLB %.0f KB, lod0 %d tris / %d verts, glass %d tris, lod1 %d tris / %d verts; side picture %s' % (n / 1024, tri(A0), len(A0['pos']), tri(AG), tri(A1), len(A1['pos']), size_pic))
