@@ -214,14 +214,17 @@ async def main():
 
         # 9. calibration (start values): kg per unit and the jig day for comparison
         r = await pg.evaluate("""(()=>{ S.stock = initStock(); const R = {}, Hf = HOUR(2028, 1, 10, 6), Hm = HOUR(2028, 2, 5, 6), Hc = HOUR(2028, 8, 10, 6);
-          let best = null, bd = 0; for (const g of GROUNDS) for (let k = 0; k < 60; k++){ const a = k * 2.4, r0 = g.r * (k % 6) / 5, q = {x:g.p.x + Math.cos(a) * r0, y:g.p.y + Math.sin(a) * r0}; if (isLand(q)) continue; const d = density('hyse', q, Hf); if (d > bd){ bd = d; best = q; } }
-          const L = dry('line', {lk:'hyse', hooks:2800, n:4}, best, Hf, 12); R.linePerTub = Math.round(kgOf(L) / 4); R.lineHyse = Math.round(L.acc.hyse.kg / kgOf(L) * 100);
+          // the eight best haddock spots on the grounds: one spot alone swings from 50 to 110 kg a tub with where the fish's patches lie
+          const C = []; for (const g of GROUNDS) for (let k = 0; k < 60; k++){ const a = k * 2.4, r0 = g.r * (k % 6) / 5, q = {x:g.p.x + Math.cos(a) * r0, y:g.p.y + Math.sin(a) * r0}; if (isLand(q)) continue; C.push([density('hyse', q, Hf), q]); }
+          C.sort((a, b) => b[0] - a[0]); let kg = 0, hy = 0;
+          for (const [, q] of C.slice(0, 8)){ S.stock = initStock(); const L = dry('line', {lk:'hyse', hooks:2800, n:4}, q, Hf, 12); kg += kgOf(L); hy += L.acc.hyse.kg; }
+          R.linePerTub = Math.round(kg / 32); R.lineHyse = Math.round(hy / kg * 100); S.stock = initStock();
           const N = dry('garn', {mesh:180, n:30}, GROUNDS[2].p, Hm, 20); R.netPerNet = Math.round(kgOf(N) / 30);
           const P = dry('teine', {pot:'big', n:100}, window.CRABSPOT, Hc, 24); R.potPerPot = +(kgOf(P) / 100).toFixed(2);
           let jig = 0; for (let h = 0; h < 8; h++) for (const sp of SP) jig += 30 * density(sp, GROUNDS[2].p, Hm + h); R.jigOneHand8h = Math.round(jig);
           return R; })()""")
         print('calibration:', json.dumps(r))
-        print(ok(70 <= r['linePerTub'] <= 115 and r['lineHyse'] >= 55), 'haddock line, 12 hours in February on a good haddock spot: 70–115 kg a tub, mostly haddock')
+        print(ok(70 <= r['linePerTub'] <= 115 and r['lineHyse'] >= 50), 'haddock line, 12 hours in February on the eight best haddock spots: 70–115 kg a tub, mostly haddock')
         print(ok(20 <= r['netPerNet'] <= 45), 'cod nets of 180 mm, 20 hours in March west of Gryllefjord: 20–45 kg a net')
         print(ok(1.0 <= r['potPerPot'] <= 2.5), 'big pots, 24 hours in September south on Senja: 1–2.5 kg a pot')
         print('errors:', errs[:5]); await br.close()

@@ -17,17 +17,10 @@ GAME = GAME_TUT + '#notut'
 # which is most of the time a test takes with SwiftShader
 if os.environ.get('KYST_LITE') == '1':
     GAME = GAME_TUT + '#notut,no3d'
+# the hand-drawn routes, in the national frame (km, UTM 33: x = (E + 250 km) / 1000, y = (8050 km - N) / 1000)
 ROUTES = os.path.join(HERE, 'routes.json')
 OUT = os.path.join(HERE, 'out')
 os.makedirs(OUT, exist_ok=True)
-# KYST_SHIFT=1 (the torture test of the coast plan, phase K2): the game runs with #frameshift, which moves the map 1000 km east and
-# south, and the hand-drawn routes are moved with it. A test that still passes legacy km to the game shows up.
-SHIFT = 1000 if os.environ.get('KYST_SHIFT') == '1' else 0
-if SHIFT:
-    GAME_TUT += '#frameshift'; GAME += ',frameshift'
-    import json as _json
-    _r = {k: [{**q, 'x': q['x'] + SHIFT, 'y': q['y'] + SHIFT} for q in v] for k, v in _json.load(open(ROUTES)).items()}
-    ROUTES = os.path.join(OUT, 'routes_shift.json'); _json.dump(_r, open(ROUTES, 'w'))
 os.chdir(OUT)
 
 

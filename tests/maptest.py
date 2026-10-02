@@ -5,7 +5,7 @@ import asyncio, json
 from playwright.async_api import async_playwright
 
 ok = lambda c: 'OK  ' if c else 'FEIL'
-R = json.load(open(ROUTES))['4']   # Finnsnes north up Gisundet: the end is in the 50 km tile north of Finnsnes'
+R = json.load(open(ROUTES))['3']   # Finnsnes north to Malangsgapet: the end is in the 50 km tile north of Finnsnes'
 # the simulation draws from a PRNG of its own, seeded just before the trip, so what the page draws for itself meanwhile (the
 # panels, the sounder) does not shift it
 SEED = """(() => { let a = 20261002; const R = () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
@@ -21,7 +21,7 @@ async def run(p, hold):
     errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
     await boot(pg)
     await pg.evaluate('S.mult = 0')
-    pk = await pg.evaluate("(([e, f]) => { const at = q => mapPacksIn('sim', q.x - FR.ox, q.y - FR.oy, q.x - FR.ox, q.y - FR.oy)[0].file; return {file:at(e), other:at(f)}; })", [R[-1], R[0]])
+    pk = await pg.evaluate("(([e, f]) => { const at = q => mapPacksIn('sim', q.x, q.y, q.x, q.y)[0].file; return {file:at(e), other:at(f)}; })", [R[-1], R[0]])
     R0 = {'pack': pk}
     gate = asyncio.Event()
     if hold:
@@ -30,7 +30,7 @@ async def run(p, hold):
         await pg.route('**/map/' + pk['file'], handler)
         await pg.evaluate("(f => mapDrop(MAPD.packs.find(p => p.file === f)))", pk['file'])
     await pg.evaluate(TRIP, R)
-    await pg.evaluate("catchUp(7 * 3600e3 / GAME_RATE)")   # seven game hours: out, two hours of fishing, home
+    await pg.evaluate("catchUp(10 * 3600e3 / GAME_RATE)")   # ten game hours: out, two hours of fishing, home
     R0['first'] = await pg.evaluate(OUT)
     if hold:
         await pg.wait_for_timeout(1500)
@@ -49,7 +49,7 @@ async def main():
         print(json.dumps({'all': a, 'held': h}))
         print(ok(a['pack']['file'] != a['pack']['other']), 'the ground and Finnsnes lie in two different sim packs')
         print(ok(h['first']['left'] > 0 and h['held']['t'] == h['first']['t'] and h['held']['left'] == h['first']['left'] and not h['ready']), 'with the ground\'s pack held back the clock stops before the boat comes within reach of it, and stands while it is away')
-        print(ok(h['end']['left'] == 0 and h['end']['t'] == a['end']['t']), 'when the pack comes, the rest of the seven hours is played')
+        print(ok(h['end']['left'] == 0 and h['end']['t'] == a['end']['t']), 'when the pack comes, the rest of the ten hours is played')
         e1, e2 = dict(a['end']), dict(h['end'])
         print(ok(all(e1[k] == e2[k] for k in ['t', 'st', 'port', 'pos', 'hold', 'cash', 'trail', 'log'])), 'and the trip ends exactly as the one with every pack at hand (time, place, catch, cash)')
         print(ok(a['end']['miss'] == 0 and h['end']['miss'] == 0), 'nothing read a block whose pack was not in')

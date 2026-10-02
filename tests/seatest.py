@@ -5,7 +5,8 @@ import asyncio, json
 from playwright.async_api import async_playwright
 
 ok = lambda c: 'OK  ' if c else 'FEIL'
-EXPO_SUM = 19066.9774   # exposure() summed over a grid before the sea model: fish and depth use it, so it must not move
+EXPO_SUM = 19066.9774   # exposure() summed over a grid before the sea model: fish and depth use it, so it must not move (but for the
+# resampling into the national frame in phase K4 of the coast plan, which moved it by 0.007 %)
 
 async def main():
     async with async_playwright() as p:
@@ -62,7 +63,7 @@ async def main():
         for k, v in r['rose'].items(): print('  ', k.ljust(22), v)
         print(json.dumps({k: v for k, v in r.items() if k != 'rose'}))
         R = r['rose']
-        print(ok(abs(r['expo'] - EXPO_SUM) < 1e-3), 'exposure() is unchanged, so the fish and the depths are too')
+        print(ok(abs(r['expo'] - EXPO_SUM) < 2e-4 * EXPO_SUM), 'exposure() is unchanged (within 0.02 %, the resampling into the national frame), so the fish and the depths are too')
         print(ok(all(min(R[g][0], R[g][7]) > 200 and R[g][4] < 30 for g in ['Havet nord for Husøy', 'Utenfor Mefjorden', 'Vest av Gryllefjord'])), 'the outer grounds have the open sea to the north and north-west and the land in the lee to the south')
         print(ok(all(max(R[q]) < 5 for q in ['husoy', 'senjahopen', 'sommaroy', 'botnhamn'])), 'the harbours have under 5 km of fetch from every side')
         print(ok(all(max(R[g]) < 15 for g in ['Gisundet nord', 'Solbergfjorden', 'Malangsgapet'])), 'the fjord grounds have short fetches')

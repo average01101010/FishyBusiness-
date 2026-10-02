@@ -8,7 +8,7 @@ async def main():
         errs=[]; pg.on('pageerror', lambda e: errs.append(str(e)))
         await boot(pg)
         # luck effect on a skrei day, with and without luxury luck (same random seed impossible, so average several days)
-        eff = await pg.evaluate("""(()=>{ const stock0 = S.stock.slice(); const run = (luckType) => { let tot = {torsk:0, all:0}; S.stock = stock0.slice();
+        eff = await pg.evaluate("""(()=>{ const stock0 = {...S.stock}; const run = (luckType) => { let tot = {torsk:0, all:0}; S.stock = {...stock0};
             for (let k = 0; k < 6; k++){ S.t = Math.round((Date.UTC(2028, 2, 6 + k, 7) - EPOCH) / 6e4); S.haill = luckType ? {type:luckType, t0:S.t - 60} : null; S.hold = []; S.facc = {}; S.fnext = {}; S.boat.deckStop = false; S.boat.deckEnd = null;
               S.boat.status = 'fishing'; S.boat.pos = {...GROUNDS[0].p}; S.boat.fishUntil = S.t + 240; S.boat.gear = true; S.equip.jukse = 0;
               for (let i = 0; i < 240 && S.boat.status === 'fishing'; i++){ S.t++; fish(S.t / 60, 5, 0.5); deckMinute(); }

@@ -25,19 +25,19 @@ async def model(pg):
       S.stock = initStock(); delete S.cstk; S.tut = 0;
       // a sea point well away from the grounds the local fleet works
       let p = null; for (let k = 0; k < 4000 && !p; k++){ const q = LG(4 + (k * 7.31) % 70, 4 + (k * 3.77) % 74);
-        if (!isLand(q) && GROUNDS.slice(0, 3).every(g => dist(q, g.p) > 18) && stockW(q).every(([i]) => S.stock[i] === 1)) p = q; }
+        if (!isLand(q) && GROUNDS.slice(0, 3).every(g => dist(q, g.p) > 18) && stockW(q).every(([i]) => stkGet(S.stock, i) === 1)) p = q; }
       const R = {p};
       const w = stockW(p), s0 = stockAt(p); takeStock(p, 1500);
       R.drop = s0 - stockAt(p); R.want = 1500 / STK.K * w.reduce((a, [, x]) => a + x * x, 0);
-      R.total = w.reduce((a, [i]) => a + (1 - S.stock[i]), 0) * STK.K;
+      R.total = w.reduce((a, [i]) => a + (1 - stkGet(S.stock, i)), 0) * STK.K;
       // no step at a cell edge: two cells side by side with different stock
       S.stock = initStock(); const c = Math.floor(p.x / STK.c), e = (c + 1) * STK.c, i0 = stockIdx(p); S.stock[i0] = 0.4;
       R.edge = Math.abs(stockAt({x:e - 1e-4, y:p.y}) - stockAt({x:e + 1e-4, y:p.y}));
       // regrowth all the way back: no other fleets, the whole sea fished down to a half
-      const keep = npcStates; npcStates = () => []; S.stock = new Array(STK.nx * STK.ny).fill(0.5); S.cstk = new Array(STK.nx * STK.ny).fill(0.1);
+      const keep = npcStates; npcStates = () => []; S.stock = stockFill(0.5); S.cstk = stockFill(0.1);
       const H0 = (Date.UTC(2028, 5, 1, 0) - EPOCH) / 36e5; let d42 = null;
-      for (let h = 0; h < 2400; h++){ stockHour(H0 + h); if (h === 42 * 24) d42 = S.stock[i0]; }
-      npcStates = keep; R.d42 = d42; R.d100 = S.stock[i0]; R.crab = S.cstk[i0];
+      for (let h = 0; h < 2400; h++){ stockHour(H0 + h); if (h === 42 * 24) d42 = stkGet(S.stock, i0); }
+      npcStates = keep; R.d42 = d42; R.d100 = stkGet(S.stock, i0); R.crab = stkGet(S.cstk, i0);
       S.stock = initStock(); delete S.cstk;
       return R; })())"""))
     check(abs(r['drop'] - r['want']) < 1e-9, 'bestanden synker med nøyaktig kg/K·Σw² der det fiskes', {k: round(r[k], 5) for k in ('drop', 'want')})
@@ -49,7 +49,7 @@ async def model(pg):
     # the fish move along instead of jumping every 120 hours, and the schools average 1
     r = json.loads(await pg.evaluate("""JSON.stringify((() => {
       const old = (sp, p, H) => { const w = Math.floor(H / 120), n = noise2(LGI(p).x / 3.5 + w * 0.61, LGI(p).y / 3.5 - w * 0.37, 20 + ALLSP.indexOf(sp)); return 0.3 + 1.5 * n * n; };
-      const pts = []; for (let k = 0; pts.length < 2000; k++){ const p = LG((k * 7.919) % MAP_W, (k * 3.141) % MAP_H); if (!isLand(p)) pts.push(p); }
+      const pts = []; for (let k = 0; pts.length < 2000; k++){ const p = LG((k * 7.919) % LEGF.W, (k * 3.141) % LEGF.H); if (!isLand(p)) pts.push(p); }
       const H0 = (Date.UTC(2028, 2, 1, 0) - EPOCH) / 36e5; let a = 0, b = 0, n = 0, sc = 0, jump = 0, step = 0, hour = 0;
       for (let t = 0; t < 24; t++){ const H = H0 + t * 37.3; for (const p of pts.slice(0, 600)) for (const sp of ['torsk', 'hyse', 'sei']){ a += hotspot(sp, p, H); b += old(sp, p, H); sc += school(sp, p, H); n++; } }
       // across a multiple of 120 hours, and from one game minute to the next
@@ -72,9 +72,9 @@ async def tutorial(pg):
       const R = {ring:heat(g.p), edge:heat({x:g.p.x + g.r, y:g.p.y})};
       S.t = Math.round(H * 60); S.hold = []; S.facc = {}; S.fnext = {}; S.haill.t0 = S.t; b.gear = true; b.ice = 150; S.equip.jukse = 0; S.settings.deckFirst = false;
       b.status = 'fishing'; b.pos = {...g.p}; b.fishUntil = S.t + 120; window.TUTTOP = 0;
-      const st0 = S.stock.slice(), base = (() => { let d = 0, t = 0; for (const sp of SP){ d += density(sp, g.p, H); t += tutBonus(sp, g.p); } return (d - t) / d; })();
+      const st0 = {...S.stock}, base = (() => { let d = 0, t = 0; for (const sp of SP){ d += density(sp, g.p, H); t += tutBonus(sp, g.p); } return (d - t) / d; })();
       for (let i = 0; i < 400 && b.status === 'fishing'; i++){ S.t++; fish(S.t / 60, 4, 0.4); deckMinute(); }   // deck stops add minutes
-      R.hold = holdTotal(); R.top = window.TUTTOP; R.removed = st0.reduce((a, v, i) => a + (v - S.stock[i]), 0) * STK.K; R.want = (R.hold - R.top) * base;
+      R.hold = holdTotal(); R.top = window.TUTTOP; R.removed = [...new Set(Object.keys(st0).concat(Object.keys(S.stock)))].reduce((a, k) => a + (stkGet(st0, k) - stkGet(S.stock, k)), 0) * STK.K; R.want = (R.hold - R.top) * base;
       S.tut.catch = false; R.after = heat(g.p);
       S.tut = keep.tut; S.haill = keep.haill; b.status = 'port'; S.hold = []; S.stock = initStock();
       return R; })())"""))

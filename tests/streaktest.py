@@ -7,8 +7,8 @@ import asyncio, json
 from playwright.async_api import async_playwright
 
 SHIFT = """(() => { let w = {}; try { w = JSON.parse(window.name || '{}'); } catch (e) {}
-  if (w.save) localStorage.setItem('kystfiske_proto_v1', w.save);
-  const inj = localStorage.getItem('__inject'); if (inj){ localStorage.setItem('kystfiske_proto_v1', inj); localStorage.removeItem('__inject'); }
+  if (w.save) localStorage.setItem('kystfiske_v2', w.save);
+  const inj = localStorage.getItem('__inject'); if (inj){ localStorage.setItem('kystfiske_v2', inj); localStorage.removeItem('__inject'); }
   const off = +(w.dayoff || 0) * 864e5; if (!off) return;
   const RD = Date; class D extends RD { constructor(...a){ if (a.length) super(...a); else super(RD.now() + off); } static now(){ return RD.now() + off; } }
   window.Date = D; })();"""

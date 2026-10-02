@@ -10,7 +10,7 @@ async def main():
         out = await pg.evaluate("""(()=>{
           const r = {}; const H0 = (Date.UTC(2028,0,15,10) - EPOCH) / 36e5;
           // sea points near the coast inside the map
-          const pts = []; let k = 0; while (pts.length < 400 && k < 20000){ k++; const p = LG(Math.random()*MAP_W, Math.random()*MAP_H); if (!isLand(p) && coastDist(p) < 8 && depthF(p) > 8) pts.push(p); }
+          const pts = []; let k = 0; while (pts.length < 400 && k < 20000){ k++; const p = LG(Math.random()*LEGF.W, Math.random()*LEGF.H); if (!isLand(p) && coastDist(p) < 8 && depthF(p) > 8) pts.push(p); }
           for (const sp of SP){ r[sp] = {best:[], p90:[]};
             for (let m = 0; m < 12; m++){ const H = H0 + m * 30.4 * 24;
               const g = GROUNDS.map(q => density(sp, q.p, H)); r[sp].best.push(+(30 * Math.max(...g)).toFixed(1));
