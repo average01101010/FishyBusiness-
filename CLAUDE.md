@@ -18,6 +18,7 @@ Et kystfiskespill fra Senja som kjører som én selvstendig HTML-side, publisert
 ## Bygg og sjekk
 
 - `node build.mjs` setter sammen `src/` til `dist/index.html` og kopierer kartpakkene fra `src/data/map/` til `dist/map/`. Kartpakkene lages av kartrørledningen: `python3 tools/map/region.py senja` (Overture og Terrarium over nettet, med mellomlager i `tools/map/cache/`). Se 4.6–4.8 i overleveringen. `dist/` er ikke i git. Med `KYST_DIST=<mappe>` bygges det dit i stedet.
+- De nasjonale kartdataene bygges av `.github/workflows/kart.yml` (startes ved å endre `tools/map/kart.json`) og ligger som releaser `kart-N`. De hentes med `python3 tools/map/release.py`. Se 4.8b i overleveringen.
 - `node --check <fil>` på hver JS-fil du endrer, og bygg etterpå.
 - Filene i `src/` kan ikke åpnes direkte i nettleseren. Test alltid `dist/index.html`, og over HTTP, fordi spillet henter `map/` (`python3 tools/serve.py`). `file://` virker ikke lenger.
 - `docs/OVERLEVERING.md` kaller spillfila `kystfiske-prototype.html`. Her er det `dist/index.html`, bygget fra `src/`.

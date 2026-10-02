@@ -89,6 +89,13 @@ def vec(tx, ty, M):
 LAYERS = dict(mask=(0.025, 'u8', 'core', None), dc=(0.1, 'f32', 'core', None), expo=(0.5, 'u8', 'core', None), depth=(0.05, 'i16', 'sim', 'half'),
               hgt=(0.025, 'i16', 'view', 'hgt'), forest=(0.05, 'u8', 'view', None))
 if __name__ == '__main__':
+    # part k of n of the coast's tiles, only into the caches (out/national/tiles, vec): the workflow runs the parts side by side
+    if sys.argv[1:2] == ['cache']:
+        k, n = int(sys.argv[2]), int(sys.argv[3]); T = [tuple(t) for t in national.tiles()][k::n]; t0 = time.time()
+        for i, (tx, ty) in enumerate(T):
+            L = tile(tx, ty); vec(tx, ty, L['mask'])
+            print(f'part {k}/{n}: {i + 1}/{len(T)} tile {tx},{ty} {float(L["sec"]):.0f} s, total {time.time() - t0:.0f} s', file=sys.stderr, flush=True)
+        sys.exit(0)
     args = [a for a in sys.argv[1:] if a != 'lite']
     T = [tuple(map(int, a.split(','))) for a in args] or [tuple(t) for t in national.tiles()]
     t0 = time.time(); per = []

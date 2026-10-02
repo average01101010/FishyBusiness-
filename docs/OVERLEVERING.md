@@ -259,6 +259,18 @@ Kartdataene lages i `tools/map/` (i git, uten dataene). Mellomlageret ligger i `
      - Pakkene havner i `out/national/lite/`, med kjerne per flis.
      - Spillet tar dem i bruk i K6–K8: lasteren må kunne laste kjernen per flis, og ha faste verdier for blokker uten pakke (innland og åpent hav).
 
+### 4.8b Kartdataene for hele kysten i GitHub Actions og releaser (02.10.2026)
+
+Jonas valgte 02.10.2026 å la GitHub bygge og lagre de nasjonale kartdataene. Git har bare koden og Senja-pakkene.
+
+- **`.github/workflows/kart.yml`** kjører rørledningen på GitHubs maskiner, der nettet er åpent. Repoet er offentlig, så det er gratis.
+  - **`national`:** Overtures indeks og de nasjonale trinnene (land på 200 m, kystflisene, eksponeringen, fjernhøydene).
+  - **`tiles`:** flisene fordelt på `parts` deler (12) side om side, med `coast.py cache k n`.
+  - **`pack`:** pakkene for alle flisene (`coast.py lite`) og releasen `kart-<kjøringsnummer>` med `kart-lite.tar.gz` og `manifest.json`.
+- **Start:** en push som endrer `tools/map/kart.json`, på en hvilken som helst gren (endre `run` for å bygge på nytt), eller for hånd fra Actions-fanen når fila ligger på `main`.
+- **`python3 tools/map/release.py [tag]`** henter den nyeste (eller den nevnte) releasen og pakker den ut i `tools/map/out/release/<tag>/lite`. Nedlastingen fra GitHub virker fra skymiljøet.
+- **Ikke ennå:** Bygget tar ikke pakkene fra releasen ennå. Det kommer med den lette artifacten og PWA-en i K11. Geonorge (dybde 50 m, DTM10) og Overpass kan nå kjøres i workflowen, men rørledningen bruker dem ikke ennå.
+
 ### 4.9 Kjernen for hele kysten (kystplanen, fase K6, 02.10.2026)
 
 - **Den nasjonale kjernen** ligger i `core`-pakken og lastes alltid. Den er 2,9 MB og lages av `national.py core_layers()`, som `region.py` legger ved:
