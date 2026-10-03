@@ -1,0 +1,3 @@
+{"run": 1, "mode": "probe",
+ "candidates": ["https://wcs.geonorge.no/skwms1/wcs.dybdedata_terrengmodeller", "https://wcs.geonorge.no/skwms1/wcs.dybdedata", "https://wcs.geonorge.no/skwms1/wcs.dybdedata_dtm",
+   "https://wms.geonorge.no/skwms1/wms.havbunnraster3", "https://wms.geonorge.no/skwms1/wms.dybdedata_terrengmodeller", "https://wms.geonorge.no/skwms1/wms.dtm2"]}
