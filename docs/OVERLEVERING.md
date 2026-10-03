@@ -1613,7 +1613,7 @@ Jonas' valg: alle tre kystredskapene i samme runde, ståtid for line som avveiin
 
 Jonas diskuterte med en annen AI-modell om å gjøre spillet til en PWA og utvide det til hele kysten fra Grense Jakobselv til Nordmøre. Vurderingen ble lagret som veikart. **Ingenting er bygget.** Hver fase krever eget klarsignal.
 
-- **Valgt:** Hosting blir GitHub Pages når det er aktuelt. PWA-bygget kan ha flere filer (manifest, service worker, ikoner, kartsoner), men artifacten forblir én fil.
+- **Valgt:** Hosting er GitHub Pages (P1 er bygget 03.10.2026). PWA-bygget kan ha flere filer (manifest, service worker, ikoner, kartsoner), men artifacten forblir én fil.
 - **Vurdering av påstandene:**
   - *3D i nettleseren* er allerede løst med WebGL.
   - *Installasjon og offline* krever egen hosting. En artifact på claude.ai kan etter det vi vet ikke få eget manifest og egen service worker.
@@ -1625,11 +1625,21 @@ Jonas diskuterte med en annen AI-modell om å gjøre spillet til en PWA og utvid
   - *Batteriet* er allerede håndtert. 3D stopper når fanen er skjult, og `catchUp` regner inn tiden spilleren var borte.
   - *Hele kysten:* Dagens ~80 × 80 km bruker 3,8 MB kartdata. Kyststripa er ~20 ganger større (60–80 MB), så den må lastes i soner.
 - **Faser:**
-  - **P1, PWA-skall uten server:**
-    - `dist-pwa/` med `index.html`, `manifest.webmanifest`, `sw.js` og ikoner
-    - eksport og import av lagret spill, fordi artifacten og PWA-en har ulike domener
-    - `navigator.storage.persist()`
-    - test av offline
+  - **P1, PWA-skall uten server (bygget 03.10.2026):**
+    - Jonas ba om å få beskjed når vi blir begrenset. Det ble vi: artifacten var på 236 av 256 MB, og bygg, veier, bruer, kaier og NPC-ruter for hele kysten får ikke plass.
+    - `KYST_PWA=1 node build.mjs` lager `dist-pwa/` med samme side, `manifest.webmanifest`, `sw.js` (versjon fra siden og kartmanifestet) og ikoner (`src/pwa/`, tegnet av `tools/pwa/icons.py`).
+    - Service workeren:
+      - henter kartpakkene fra mellomlageret først (`kyst-map`; navnet har hashen, så de byttes aldri)
+      - fjerner pakker et nytt kartmanifest ikke lister
+      - henter siden og kartmanifestet fra nettet først, og fra mellomlageret uten nett
+    - `navigator.storage.persist()`.
+    - Eksport og import av lagret spill under Innstillinger → «Lagret spill»: lagringen gzippet i base64 etter `KYST2:` (`saveCode`/`loadCode` i `02-format-state.js`). `SAVE_OFF` hindrer at `pagehide` lagrer over den før siden lastes på nytt.
+    - `.github/workflows/pwa.yml` bygger med den nyeste kart-releasen (`game.py`) og legger ut på GitHub Pages: https://average01101010.github.io/FishyBusiness-/.
+      - Pages' kilde er «GitHub Actions».
+      - Miljøet `github-pages` tillater `main` og `ccr-5e1ba2f4-pusvyd` (Jonas satte det opp 03.10.2026).
+      - Repoet er offentlig, så Pages er gratis.
+    - `pwatest.py` sjekker manifestet, at service workeren tar over, mellomlageret, oppstart uten nett, og eksport og import.
+    - Artifacten publiseres som før med samme kode, uten service worker.
   - **P2, liten server:**
     - innlogging (Vipps eller e-post), skylagring og synk
     - push ved ETA: klienten regner ut tidspunktet, serveren sender varselet

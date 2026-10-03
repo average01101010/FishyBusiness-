@@ -59,6 +59,8 @@ Et kystfiskespill fra Senja som kjører som én selvstendig HTML-side, publisert
 
 Publiser `dist/index.html` til artifacten https://claude.ai/artifact/HHehndJQmtCYBJpQ1b8L6f med dens URL, slik at lenken beholdes. Gjør det bare når brukeren ber om det.
 
+Appen for hjemskjermen (PWA, fra 03.10.2026) bygges med `KYST_PWA=1 node build.mjs` til `dist-pwa/`. Den legges ut på GitHub Pages av `.github/workflows/pwa.yml` hver gang en push endrer spillet, bygget eller kart-releasen: https://average01101010.github.io/FishyBusiness-/. Kartdata for hele kysten som ikke får plass i artifacten (256 MB), kommer bare i appen.
+
 - Kartpakkene skal være med som `files`: `map/manifest.json` og hver `map/*.wasm` fra `dist/map/`.
 - Navnene har hashen, så en pakke som ikke er endret, har samme navn og trenger ikke sendes på nytt.
 - Pakker som ikke lenger står i manifestet, kan fjernes med `null`.
