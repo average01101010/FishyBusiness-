@@ -2097,7 +2097,7 @@ const G3 = (() => {
     }
   }
   // ---------- boat motion ----------
-  function currentFrac(){ return clamp(acc + (Date.now() - lastWall) / 1000 * GAME_RATE * S.mult / 60, 0, 0.999); }
+  function currentFrac(){ return clamp(acc + (Date.now() - lastWall) / 1000 * simRate() / 60, 0, 0.999); }
   function predict(frac){
     const L = livePose(frac), b = S.boat; let hd = L.hd;
     if (b.status === 'port' || b.status === 'unmooring'){ const bp = berthNow(); if (bp) return {p:{x:bp.x, y:bp.y}, hd:bp.hd}; const pt = portById(b.port); hd = Math.atan2(pt.coast.x - pt.p.x, -(pt.coast.y - pt.p.y)); }
@@ -2105,7 +2105,7 @@ const G3 = (() => {
   }
   // the boat in 3D follows the simulated track like a real boat: it speeds up and slows down gradually, turns on an arc,
   // pivots about a point a third of its length from the bow (so the stern swings out), skids a little in turns and banks
-  const KNV = () => 1852 / 3600 * GAME_RATE * (S.mult || 1);      // on-screen metres per real second per knot
+  const KNV = () => 1852 / 3600 * simRate();      // on-screen metres per real second per knot (real time with the hand on the helm)
   function updateBoat(dt, t, frac){
     const b = S.boat, pr = predict(frac), tx = pr.p.x * 1000, tz = pr.p.y * 1000, sailing = b.status === 'sailing' && S.plan, G = GEO(vtype());
     const zp = (G.bow || -2.2) + ((G.stern || 3.1) - (G.bow || -2.2)) / 3;   // pivot point, local z (negative = forward)
@@ -2113,6 +2113,13 @@ const G3 = (() => {
     else if (dt > 0){
       const bp = berthNow();
       if (bp) moorStep(dt, bp);
+      else if (helmOn()){
+        // by hand (16-helm.js): she is where the simulation puts her every tick, so she follows it closely; the turn and the way she
+        // has come from the helm, so she banks and makes her wake as under a route
+        const h = S.helm, k = 1 - Math.exp(-dt * 6);
+        bv.px += (tx - bv.px) * k; bv.pz += (tz - bv.pz) * k; bv.cog += angDiff(bv.cog, pr.hd) * k;
+        bv.yr += (h.yaw - bv.yr) * (1 - Math.exp(-dt * 3)); bv.spd = Math.abs(h.v) * KNV();
+      }
       else if (sailing){
         const vs = sailV(S.t / 60) * KNV(), la = livePose(frac + clamp(1.6 * GAME_RATE * (S.mult || 1) / 60, 0.04, 0.6)).p, cx = la.x * 1000, cz = la.y * 1000;
         // steer for a point a little ahead on the track, turning no faster than the turning radius allows

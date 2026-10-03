@@ -69,10 +69,11 @@ function renderHud(){
   if (hud.dataset.v !== hudV || performance.now() - hudT > 2000){ hudV = hud.dataset.v; hudT = performance.now(); requestAnimationFrame(() => { const mw = $('mapwrap').style, top = (hud.offsetTop + hud.offsetHeight + 6) + 'px', w = hud.offsetWidth + 'px'; if (mw.getPropertyValue('--gpsTop') !== top) mw.setProperty('--gpsTop', top); if (mw.getPropertyValue('--hudW') !== w) mw.setProperty('--hudW', w); }); }
 }
 // position/heading between simulation steps, so instruments and 3D move smoothly
-function liveFrac(){ return clamp(acc + (Date.now() - lastWall) / 1000 * GAME_RATE * S.mult / 60, 0, 0.999); }
+function liveFrac(){ return clamp(acc + (Date.now() - lastWall) / 1000 * simRate() / 60, 0, 0.999); }
 function livePose(frac){
   if (frac === undefined) frac = liveFrac();
   const b = S.boat; let p = {x:b.pos.x, y:b.pos.y}, hd = b.heading;
+  if (helmOn()) return helmPose(frac);
   if (b.status === 'sailing' && S.plan){
     let left = sailV(S.t / 60) * NM / 60 * frac, idx = S.plan.idx;
     while (left > 1e-9 && idx < S.plan.wps.length){

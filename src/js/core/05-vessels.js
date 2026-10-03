@@ -151,7 +151,7 @@ function vesselStep(H){
     else if (S.settings.autoOn && W0 > S.settings.autoW && (S.plan.delays || 0) < 12){ S.plan.depAt += 60; S.plan.delays = (S.plan.delays || 0) + 1; log('Avgangen er utsatt en time. Vinden er ' + W0.toFixed(0) + ' m/s.', 'Departure postponed an hour. The wind is ' + W0.toFixed(0) + ' m/s.'); }
     else depart();
   }
-  if (b.status === 'unmooring'){ if (S.t >= b.castUntil){ b.status = 'sailing'; b.port = null; } return; }
+  if (b.status === 'unmooring'){ if (S.t >= b.castUntil){ const pid = b.port; b.status = 'sailing'; b.port = null; helmCastDone(pid); } return; }
   if (b.status === 'port') return;
   const W = windAt(H), hs = hsAt(b.pos, H);
   if (['sailing', 'fishing', 'idle'].includes(b.status)) stabTick(H);
@@ -160,11 +160,12 @@ function vesselStep(H){
   if (b.tutWait && (b.status !== 'idle' || (S.haill && S.haill.type === 'luksus'))){ if (b.status === 'idle'){ b.status = 'fishing'; b.fishUntil = S.t + b.tutWait * 60; log('Haillen er om bord. Starter fiske i ' + b.tutWait + ' t.', 'The luck is aboard. Fishing for ' + b.tutWait + ' h.'); } b.tutWait = null; }
   // you are asleep alone aboard: nobody steers or fishes, and the boat drifts (core/15-energy.js)
   if (sleepAlone() && ['sailing', 'fishing', 'idle'].includes(b.status)){ sleepDrift(H); risk(W, hs); return; }
-  if (S.settings.autoOn && W > S.settings.autoW && ['sailing','fishing','idle'].includes(b.status) && !(S.plan && S.plan.returning) && !(S.tut && S.tut.catch)){
+  // (with the hand on the helm the skipper decides: no turning back by itself, 16-helm.js)
+  if (S.settings.autoOn && W > S.settings.autoW && ['sailing','fishing','idle'].includes(b.status) && !(S.plan && S.plan.returning) && !(S.tut && S.tut.catch) && !helmOn()){
     startReturn(true, W);
   }
   if (b.status === 'sailing' || b.status === 'fishing') b.engH = (b.engH || 0) + (b.status === 'sailing' ? 1 : 0.25) / 60;
-  if (b.status === 'sailing'){ const p0 = b.pos; sail(H, W, hs); if (meAboard()) tatAdd('nm', dist(p0, b.pos) / NM); }
+  if (b.status === 'sailing'){ if (!helmOn()){ const p0 = b.pos; sail(H, W, hs); if (meAboard()) tatAdd('nm', dist(p0, b.pos) / NM); } }   // by hand she moves every tick (helmStep)
   else if (b.status === 'fishing') fish(H, W, hs);
   else b.v = 0;
   risk(W, hs);

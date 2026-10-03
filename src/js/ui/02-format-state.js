@@ -5,7 +5,7 @@ function dayNum(k){ const [y, m, dd] = k.split('-').map(Number); return Math.rou
 function fmt(n, d = 0){ return new Intl.NumberFormat(S.lang === 'no' ? 'nb-NO' : 'en-GB', {minimumFractionDigits:d, maximumFractionDigits:d}).format(n); }
 function kr(n){ return S.lang === 'no' ? fmt(Math.round(n)) + ' kr' : 'NOK ' + fmt(Math.round(n)); }
 // real time for a stretch of game time: the clock runs GAME_RATE × S.mult game minutes per real minute
-function realMin(gameMin){ return gameMin / (GAME_RATE * (S.mult || 1)); }
+function realMin(gameMin){ return gameMin / simRate(); }
 function realDur(gameMin){ const m = realMin(Math.max(0, gameMin)), no = S.lang === 'no';
   if (m < 1) return no ? 'under 1 min' : 'under a minute';
   if (m < 59.5) return Math.round(m) + ' min';

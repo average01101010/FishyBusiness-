@@ -552,5 +552,23 @@ body.v3d #hud,body.v3d #gps3d:not([hidden]),body.v3d #gps,body.v3d .ov,body.v3d 
 body.v3d #hud,body.v3d #gps3d:not([hidden]),body.v3d #gps{background:rgba(6,16,24,.56)!important}
 body.v3d .ov,body.v3d #dockInfo{background:rgba(6,16,24,.56)}
 body.v3d .dk-b .dk-i{background:rgba(6,16,24,.7)}
+/* the helm on the screen (ui/10d-helm.js): a throttle on the right and a joystick on the left, nearly see-through until touched */
+#helmThr,#helmJoy{display:none;position:absolute;z-index:6;touch-action:none;user-select:none;-webkit-user-select:none;opacity:.16;transition:opacity .4s}
+#helmThr.act,#helmJoy.act{opacity:.96;transition:opacity .08s}
+body.v3d.helm #helmThr,body.v3d.helm #helmJoy{display:block}
+#helmThr{right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 100px);width:64px;height:220px;border-radius:32px;background:rgba(6,16,24,.62);border:2px solid rgba(255,255,255,.75)}
+#helmThr::before{content:'';position:absolute;left:50%;top:20px;bottom:20px;width:6px;margin-left:-3px;border-radius:3px;background:linear-gradient(#3ec46d 0 47%,#fff 47% 53%,#e0703a 53%)}
+#helmThr i{position:absolute;left:7px;font:700 11px var(--sans);font-style:normal;color:#fff}
+#helmThr .ht-f{top:7px}#helmThr .ht-n{top:50%;margin-top:-7px}#helmThr .ht-b{bottom:5px}
+#helmThr .ht-k{position:absolute;left:8px;right:8px;height:32px;margin-top:-16px;border-radius:10px;background:#f3f6f8;border:2px solid #15252f;box-shadow:0 2px 6px rgba(0,0,0,.5);font:700 12px/28px var(--sans);text-align:center;color:#15252f}
+#helmThr .ht-k.ahead{background:#d7f5e1}#helmThr .ht-k.astern{background:#fbe0d2}
+#helmJoy{left:56px;bottom:calc(env(safe-area-inset-bottom,0px) + 150px);width:144px;height:144px;border-radius:50%;background:rgba(6,16,24,.55);border:2px solid rgba(255,255,255,.75)}
+#helmJoy i{position:absolute;top:50%;width:0;height:0;margin-top:-7px;border:7px solid transparent}
+#helmJoy .hj-l{left:8px;border-right-color:#e0412f}#helmJoy .hj-r{right:8px;border-left-color:#3ec46d}
+#helmJoy .hj-k{position:absolute;left:50%;top:50%;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff,#c3ced5);box-shadow:0 2px 8px rgba(0,0,0,.5)}
+#helmAct{position:absolute;z-index:7;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 132px);padding:12px 26px;border-radius:24px;border:2px solid #fff;background:#1f7a46;color:#fff;font:700 16px var(--sans);box-shadow:0 4px 14px rgba(0,0,0,.4);white-space:nowrap}
+#helmAct[hidden],body.vplot #helmAct{display:none}
+@media (max-width:560px){#helmJoy{left:40px;width:120px;height:120px}#helmThr{height:180px}}
+body.kino-clean #hud,body.kino-clean #gps3d,body.kino-clean #miniPlot,body.kino-clean #compass3d,body.kino-clean #dock,body.kino-clean #dockInfo,body.kino-clean #dockFan,body.kino-clean #phoneFab,body.kino-clean #logbook,body.kino-clean #camBtn,body.kino-clean #helmThr,body.kino-clean #helmJoy,body.kino-clean #helmAct,body.kino-clean #modeBtn,body.kino-clean #instrBtn,body.kino-clean #labels,body.kino-clean .attr{display:none!important}
 /* the sleep screen's «Spol fram» (05b-work.js) */
 #slSkip{margin-top:18px;padding:10px 20px;border-radius:20px;border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.08);color:#dfe6ec;font:600 15px var(--sans)}
