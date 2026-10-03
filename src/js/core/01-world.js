@@ -188,7 +188,7 @@ const PORTS = [
   // The harbour point lies just off the plant's quay (Finnsnes: the quay by the net loft, south of the bridge); the quays themselves are QUAYS in 07-harbours.js.
   {id:'finnsnes', name:'Finnsnes', xy:[56.035,53.611], shore:[56.066,53.623], pier:false, fuel:true, ice:false, mottak:false, pf:1, home:true},
   {id:'botnhamn', name:'Botnhamn', xy:[53.288,23.495], shore:[53.285,23.527], pier:true, fuel:true, ice:true, mottak:true, pf:1.0},
-  {id:'husoy', name:'Husøy', xy:[43.815,19.685], shore:[43.783,19.692], pier:true, fuel:true, ice:true, mottak:true, pf:1.03},
+  {id:'husoy', name:'Husøy', xy:[43.803,19.676], shore:[43.783,19.692], pier:true, fuel:true, ice:true, mottak:true, pf:1.03},
   {id:'senjahopen', name:'Senjahopen', xy:[36.807,25.119], shore:[36.791,25.09], pier:true, fuel:true, ice:true, mottak:true, pf:1.02},
   {id:'gryllefjord', name:'Gryllefjord', xy:[20.319,39.836], shore:[20.309,39.867], pier:true, fuel:true, ice:true, mottak:true, pf:0.97},
   // Sommarøy and Brensholmen: the berth is on the water side of the OpenStreetMap quay nearest the largest industrial building (not checked against pictures)
@@ -207,10 +207,12 @@ const portById = id => PORTS.find(p => p.id === id);
 // 3.4 m) lies afloat. The landing berth is round x = -5, where the crane and the ice chute reach, the bunker berth round x = 16.5 by
 // the pump. The face lies on the plant's quay in QUAYS (the designer's), slid along it to stand on the most land with clear water in
 // front (Husøy 12 m, Frovåg 14 m); Sommarøy and Brensholmen, which have no marked quay, by a search near the harbour point for the
-// most land under the block and clear water in front. The landing berth stays within 25 m of the harbour point.
+// most land under the block and clear water in front. The landing berth stays within 25 m of the harbour point. Husøy (the user's
+// wish 03.10.2026): the face on the line of the plant's sea walls in OpenStreetMap and parallel to its buildings, so the block stands
+// on the shore, not out in the water.
 const UNIT = {E:27.4, B:24.4, bot:-9, basinX:33.4, basinZ:26, dredge:6.6, berth:{main:[-5, 24], bunker:[16.5, 23]}};
 const UNITS = {
-  botnhamn:{o:[53282.5, 23499.9], u:[-0.993, -0.116]}, husoy:{o:[43803.9, 19670.9], u:[-0.212, -0.977]}, senjahopen:{o:[36807.1, 25112.1], u:[0.876, -0.483]},
+  botnhamn:{o:[53282.5, 23499.9], u:[-0.993, -0.116]}, husoy:{o:[43788.5, 19672.7], u:[-0.12, -0.993]}, senjahopen:{o:[36807.1, 25112.1], u:[0.876, -0.483]},
   gryllefjord:{o:[20312.3, 39841.9], u:[-0.947, -0.32]}, sommaroy:{o:[56736.6, 9544.3], u:[-0.707, -0.707]}, brensholmen:{o:[58576.6, 12633.9], u:[-0.766, -0.643]},
   torsken:{o:[21862.9, 42573.6], u:[0.977, 0.215]}, frovag:{o:[19637.0, 71900.4], u:[0.189, -0.982]}
 };

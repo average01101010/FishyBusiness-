@@ -45,7 +45,9 @@ async def main():
         await pg.wait_for_function("typeof FINE !== 'undefined' && FINE && FINE.length", timeout=90000)
         q = await pg.evaluate("""(()=>{
           const inPoly = (P, x, z) => { let c = false; for (let i = 0, j = P.xs.length - 1; i < P.xs.length; j = i++){ const xi = P.xs[i], zi = P.zs[i], xj = P.xs[j], zj = P.zs[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; };
-          const land = (x, z) => FINE.some(P => x >= P.bb[0] && x <= P.bb[2] && z >= P.bb[1] && z <= P.bb[3] && inPoly(P, x, z));
+          // the basin in front of a harbour unit is dredged in 3D (unitTerr) and water in the simulation (inHarbourPocket), also where
+          // the fine coast has land: at Husøy the unit stands on the shore (the user's wish 03.10.2026)
+          const land = (x, z) => !inHarbourPocket({x:x / 1000, y:z / 1000}) && FINE.some(P => x >= P.bb[0] && x <= P.bb[2] && z >= P.bb[1] && z <= P.bb[3] && inPoly(P, x, z));
           const R = {};
           for (const pid of PORTS.map(q => q.id)) for (const kind of ['main', 'bunker']) for (const t of Object.keys(BEAM)){
             const f = quayFace(pid, kind); if (!f) continue; const b = berthPose(pid, t, kind), fx = Math.sin(b.hd), fz = -Math.cos(b.hd), sx = Math.cos(b.hd), sz = Math.sin(b.hd), X = b.x * 1000, Z = b.y * 1000;
