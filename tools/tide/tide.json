@@ -1,4 +1,4 @@
 {
   "what": "the tide along the coast (tools/tide/fetch.py), fetched by .github/workflows/tidevann.yml when this file changes and kept as a release tide-<run number>",
-  "run": 1
+  "run": 2
 }

@@ -1,4 +1,4 @@
-# The tide along the coast (phase K10 of the coast plan): Kartverket's tide prediction (api.sehavniva.no, «Se havnivå», CC BY 4.0) for a
+# The tide along the coast (phase K10 of the coast plan): Kartverket's tide prediction (vannstand.kartverket.no, «Se havnivå», CC BY 4.0) for a
 # year at each point of points.json, hourly and above chart datum, and the harmonic constants the game's tide uses fitted to it by least
 # squares: the mean sea level above chart datum (zc) and the amplitude and phase of M2, S2, N2, K2, K1 and O1, with the astronomical
 # arguments exactly as tideH in src/js/core/03-simulation.js has them (no nodal factors: a year's fit takes them in). Kartverket's
@@ -6,7 +6,8 @@
 #   python3 tools/tide/fetch.py [out]
 import os, re, sys, json, math, time, datetime as dt, numpy as np, requests
 HERE = os.path.dirname(os.path.abspath(__file__))
-API = 'https://api.sehavniva.no/tideapi.php'
+APIS = ['https://vannstand.kartverket.no/tideapi.php', 'https://api.sehavniva.no/tideapi.php']   # the new address first, the old one if it does not answer
+API = APIS[0]
 YEAR0 = dt.datetime(2026, 10, 1, tzinfo=dt.timezone.utc)
 CONS = ['M2', 'S2', 'N2', 'K2', 'K1', 'O1']
 S = requests.Session(); S.headers['User-Agent'] = 'kystfiske-tide/1 (github.com/average01101010/FishyBusiness-)'
@@ -16,7 +17,7 @@ def fetch(lat, lon, t0, t1):
              fromtime=t0.strftime('%Y-%m-%dT%H:%M'), totime=t1.strftime('%Y-%m-%dT%H:%M'), place='', file='')
     for k in range(4):
         try:
-            r = S.get(API, params=p, timeout=120); r.raise_for_status(); break
+            r = S.get(API, params=p, timeout=(20, 180)); r.raise_for_status(); break
         except Exception as e:
             if k == 3: raise
             time.sleep(5 * (k + 1))
@@ -47,8 +48,14 @@ def fit(series):
 if __name__ == '__main__':
     out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, 'out', 'tide.json')
     pts = json.load(open(os.path.join(HERE, 'points.json')))['points']; res = []; t00 = time.time()
-    # a day at the first point first, so the log shows what the service answers
-    s, name, head = fetch(pts[0][2], pts[0][3], YEAR0, YEAR0 + dt.timedelta(days=1)); print('probe:', len(s), name, repr(head), file=sys.stderr, flush=True)
+    # a day at the first point at each address, so the log shows what the service answers; the first that gives values is used
+    for u in APIS:
+        API = u
+        try: s, name, head = fetch(pts[0][2], pts[0][3], YEAR0, YEAR0 + dt.timedelta(days=1))
+        except Exception as e: s, name, head = [], '', repr(e)[:300]
+        print('probe', u, len(s), name, repr(head), file=sys.stderr, flush=True)
+        if s: break
+    else: sys.exit('no address of the tide service answered with values')
     for k, (tx, ty, lat, lon, x, y) in enumerate(pts):
         ser = []; name = ''; head = ''
         for q in range(4):   # a quarter a request
