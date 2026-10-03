@@ -1,0 +1,135 @@
+# The whole coast through the pipeline (phase K5 of the coast plan), in stages that each keep their result in out/national/:
+#   python3 tools/map/national.py mask200     land over the whole frame (x 0-1450, y 0-1720 km) at 200 m, from Overture, with
+#                                             Norway's land and sea area from Overture's divisions; Sweden, Finland, Russia and
+#                                             Denmark are land as much as Norway is, for the rays that look out to sea
+#   python3 tools/map/national.py tiles       the 50 km tiles of the coast: Norwegian sea within 20 km of land, or land within 3 km
+#                                             of the sea
+#   python3 tools/map/national.py expo        the openness to the ocean at 500 m on the coast's tiles (48 rays on the 200 m mask:
+#                                             0.585 x the mean open share within 10 km + 1.009 x the share of rays open to 150 km,
+#                                             fitted to the legacy Senja raster: correlation 0.95, error 0.125 on 0-1)
+import os, sys, json, time, numpy as np
+from scipy import ndimage
+import frame
+from region import polys_of, fill
+from ov import features
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'out', 'national'); os.makedirs(OUT, exist_ok=True)
+C200, NX, NY = 0.2, 7250, 8600   # the frame at 200 m: 1450 x 1720 km
+
+def mask200():
+    f = os.path.join(OUT, 'land200.npy')
+    if os.path.exists(f): return np.load(f)
+    M = np.zeros((NY, NX), np.uint8); t0 = time.time(); S = 100   # chunks of 100 km
+    for cy in range(0, 1720, S):
+        for cx in range(0, 1450, S):
+            R = frame.Region('c', cx // 10, cy // 10, min(cx + S, 1450) // 10, min(cy + S, 1720) // 10)
+            box = R.lonlat_box(1)
+            tab = features('base/land', box, ['geometry', 'subtype'])
+            if tab is None or tab.num_rows == 0: continue
+            ix0, iy0, nx, ny = R.grid(C200)
+            M[iy0:iy0 + ny, ix0:ix0 + nx] |= fill(polys_of(tab, lambda s: s == 'land'), C200, ix0, iy0, nx, ny)
+        print('row', cy, 'km,', round(time.time() - t0), 's, land', round(float(M[:(cy + S) * 5].mean()), 3), file=sys.stderr, flush=True)
+    np.save(f, M); return M
+
+# Norway's land and sea (Overture divisions: the country's land area and its maritime area out to the territorial limit) at 200 m
+def norway200():
+    f = os.path.join(OUT, 'norway200.npz')
+    if os.path.exists(f): z = np.load(f); return z['land'], z['sea']
+    tab = features('divisions/division_area', frame.Region('n', 0, 0, 145, 172).lonlat_box(0), ['geometry', 'subtype', 'class', 'country'])
+    from shapely import from_wkb
+    g = from_wkb(tab.column('geometry').to_numpy(zero_copy_only=False)); sub = tab.column('subtype').to_pylist(); cls = tab.column('class').to_pylist(); cc = tab.column('country').to_pylist()
+    land = [x for x, s, c, k in zip(g, sub, cls, cc) if s == 'country' and c == 'land' and k == 'NO' and x.geom_type in ('Polygon', 'MultiPolygon')]
+    sea = [x for x, s, c, k in zip(g, sub, cls, cc) if s == 'country' and c == 'maritime' and k == 'NO' and x.geom_type in ('Polygon', 'MultiPolygon')]
+    L = fill(land, C200, 0, 0, NX, NY).astype(bool); S = fill(sea, C200, 0, 0, NX, NY).astype(bool) & ~L
+    np.savez_compressed(f, land=L, sea=S); return L, S
+
+# the coast's tiles: 50 km tiles with Norwegian sea within 20 km of land, or Norwegian land within 3 km of the sea
+def tiles():
+    f = os.path.join(OUT, 'tiles.json')
+    if os.path.exists(f): return json.load(open(f))
+    M = mask200().astype(bool); NL, NS = norway200()
+    sea = ~M; dland = ndimage.distance_transform_edt(sea) * C200; dsea = ndimage.distance_transform_edt(M) * C200
+    want = (NS & sea & (dland <= 20)) | (NL & M & (dsea <= 3))
+    T = 250   # 50 km in 200 m cells
+    out = [[tx, ty] for ty in range(NY // T + 1) for tx in range(NX // T + 1) if want[ty * T:(ty + 1) * T, tx * T:(tx + 1) * T].any()]
+    json.dump(out, open(f, 'w')); return out
+
+# the openness to the ocean at 500 m over the coast's tiles (sea cells; land gets 0)
+EXPO_FIT = (0.585, 1.009)
+def expo():
+    f = os.path.join(OUT, 'expo500.npy')
+    if os.path.exists(f): return np.load(f)
+    M = mask200().astype(bool); DL = ndimage.distance_transform_edt(~M) * C200
+    E = np.zeros((1720 * 2, 1450 * 2), np.uint8); K = 48
+    for tx, ty in tiles():
+        ys, xs = np.mgrid[ty * 100:(ty + 1) * 100, tx * 100:(tx + 1) * 100]; px = (xs.ravel() + 0.5) * 0.5; py = (ys.ravel() + 0.5) * 0.5
+        ok = (py < 1720) & (px < 1450); px, py = px[ok], py[ok]; gi = (py / C200).astype(int); gj = (px / C200).astype(int); wet = ~M[gi, gj]
+        px, py = px[wet], py[wet]; D = np.zeros((len(px), K), np.float32)
+        for k in range(K):
+            a = 2 * np.pi * k / K; dx, dy = np.sin(a), -np.cos(a); x, y, s = px.copy(), py.copy(), np.zeros(len(px)); act = np.ones(len(px), bool)
+            for it in range(400):
+                if not act.any(): break
+                idx = np.flatnonzero(act); i = (y[idx] / C200).astype(int); j = (x[idx] / C200).astype(int)
+                out = (i < 0) | (j < 0) | (i >= NY) | (j >= NX); i2 = np.clip(i, 0, NY - 1); j2 = np.clip(j, 0, NX - 1)
+                hit = M[i2, j2] & ~out; done = hit | out | (s[idx] >= 150); s[idx[out]] = 150; act[idx[done]] = False
+                st = np.maximum(0.2, 0.95 * DL[i2, j2][~done] - 0.15); ii = idx[~done]; x[ii] += dx * st; y[ii] += dy * st; s[ii] += st
+            D[:, k] = np.minimum(s, 150)
+        v = np.clip(EXPO_FIT[0] * np.minimum(D, 10).mean(1) / 10 + EXPO_FIT[1] * (D >= 150).mean(1), 0, 1)
+        E[(py / 0.5).astype(int), (px / 0.5).astype(int)] = np.round(v * 255).astype(np.uint8)
+        print('expo tile', tx, ty, len(px), file=sys.stderr, flush=True)
+    np.save(f, E); return E
+
+# The far heights (phase K8 of the coast plan): the ground at 200 m for the 3D view's far terrain everywhere on the coast, and its
+# near terrain where a tile has no detail yet. Terrarium z9 (about 100-160 m a pixel in Norway; Kartverket's terrain on land, the sea
+# floor from GEBCO), bilinear at the 200 m cells' centres, made to agree with the 200 m land: land at least 1 m, sea at most -2 m.
+# The tiles with land that are coast tiles or touch one (191); returns {(tx, ty): int16 in the page's packing of hgt (hgtEnc)}.
+def far_tiles():
+    T = tiles(); M = mask200(); coast = np.zeros((35, 29), bool)
+    for tx, ty in T: coast[ty, tx] = True
+    near = ndimage.binary_dilation(coast, iterations=1)
+    return [(tx, ty) for ty in range(35) for tx in range(29) if near[ty, tx] and M[ty * 250:(ty + 1) * 250, tx * 250:(tx + 1) * 250].any()]
+def far200():
+    f = os.path.join(OUT, 'far200.npz')
+    if os.path.exists(f): z = np.load(f); return {tuple(map(int, k.split('_'))): z[k] for k in z.files}
+    import terrain
+    from region import hgtEnc
+    M = mask200(); out = {}; t0 = time.time()
+    for k, (tx, ty) in enumerate(far_tiles()):
+        X, Y = np.meshgrid((tx * 250 + np.arange(250) + 0.5) * C200, (ty * 250 + np.arange(250) + 0.5) * C200)
+        lon, lat = frame.to_ll(X.ravel(), Y.ravel()); h = terrain.sample(lon, lat, 9).reshape(250, 250)
+        # the source has a few spikes (4 378 m in Rogaland): a cell 400 m over its neighbours' median takes the median, and nothing
+        # goes over Galdhøpiggen
+        md = ndimage.median_filter(h, 3); h = np.minimum(np.where(h > md + 400, md, h), 2470)
+        m = np.zeros((250, 250), bool); sub = M[ty * 250:(ty + 1) * 250, tx * 250:(tx + 1) * 250] > 0; m[:sub.shape[0], :sub.shape[1]] = sub
+        out[(tx, ty)] = hgtEnc(np.where(m, np.maximum(h, 1), np.minimum(h, -2))).astype(np.int16)
+        if k % 20 == 0: print('far tile', k, tx, ty, round(time.time() - t0), 's', file=sys.stderr, flush=True)
+    np.savez_compressed(f, **{f'{tx}_{ty}': v for (tx, ty), v in out.items()}); return out
+def far_layer():
+    F = far200(); A = np.zeros((8750, 7250), np.int16)
+    for (tx, ty), v in F.items(): A[ty * 250:(ty + 1) * 250, tx * 250:(tx + 1) * 250] = v
+    return {'far': dict(c=0.2, n=250, ix0=0, iy0=0, nx=7250, ny=8750, type='i16', kind='far', dec='hgt', arr=A, keep={(tx, ty) for tx, ty in F})}
+
+# The national core (phase K6): always loaded, for what looks far (the fetch rays, the local fleet, the depth model, the sea off the
+# tiles with detail): land at 200 m, the distance to it in 100 m steps to 25.5 km (u8, at 200 m), and the openness at 500 m. The
+# layers cover the frame padded to 1 750 km south (35 tiles of 50 km), in blocks of 50 km.
+def core_layers():
+    M = mask200(); E = expo().copy()
+    # the open sea off the coast's tiles (worked out only there) is open: 255
+    land500 = M[((np.arange(E.shape[0]) + 0.5) * 2.5).astype(int).clip(0, NY - 1)][:, ((np.arange(E.shape[1]) + 0.5) * 2.5).astype(int).clip(0, NX - 1)] > 0
+    E[(E == 0) & ~land500] = 255
+    pad = lambda a, ny, v=0: np.vstack([a, np.full((ny - a.shape[0], a.shape[1]), v, a.dtype)])
+    DC = np.minimum(np.round(ndimage.distance_transform_edt(M == 0) * 2), 255).astype(np.uint8)
+    return {'land200': dict(c=0.2, n=250, ix0=0, iy0=0, nx=7250, ny=8750, type='u8', kind='core', arr=pad(M, 8750)),
+            'dc200': dict(c=0.2, n=250, ix0=0, iy0=0, nx=7250, ny=8750, type='u8', kind='core', dec='dm', arr=pad(DC, 8750)),
+            'expo': dict(c=0.5, n=100, ix0=0, iy0=0, nx=2900, ny=3500, type='u8', kind='core', arr=pad(E, 3500, 255))}
+
+if __name__ == '__main__':
+    st = sys.argv[1]
+    if st == 'mask200':
+        M = mask200(); print(json.dumps({'land': round(float(M.mean()), 4), 'km2': int(M.sum() * C200 * C200)}))
+    elif st == 'far':
+        F = far200(); import zlib, pack
+        print(json.dumps({'tiles': len(F), 'mb': round(sum(len(pack.raw_deflate(pack.med16(v))) for v in F.values()) / 1e6, 2)}))
+    elif st == 'tiles':
+        T = tiles(); L, S = norway200(); print(json.dumps({'tiles': len(T), 'norwayLandKm2': int(L.sum() * 0.04), 'norwaySeaKm2': int(S.sum() * 0.04)}))
+    elif st == 'expo':
+        E = expo(); print(json.dumps({'cells': int((E > 0).sum())}))

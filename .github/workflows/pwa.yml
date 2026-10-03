@@ -1,0 +1,48 @@
+# The app for the home screen (P1 of the PWA plan, 03.10.2026) on GitHub Pages: https://average01101010.github.io/FishyBusiness-/
+# The newest map release (kart-N, tools/map/release.py) joined with Senja's packs (tools/map/game.py), the page built with KYST_PWA=1
+# (build.mjs: dist-pwa/ with the manifest, the service worker and the icons), and dist-pwa/ deployed to Pages.
+# Started by a push to the working branch or main that changes the game, the build or the map release, or by hand from the Actions
+# tab once this file is on main. Pages' source must be «GitHub Actions», and the github-pages environment must let the branch deploy.
+name: Appen på GitHub Pages
+on:
+  push:
+    branches: [main, ccr-5e1ba2f4-pusvyd]
+    paths: ['src/**', 'build.mjs', 'tools/map/kart.json', 'tools/map/game.py', '.github/workflows/pwa.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: The whole coast's map packs (the newest kart- release, joined with Senja's)
+        run: |
+          pip install requests
+          python3 tools/map/game.py
+      - name: The app
+        run: KYST_PWA=1 node build.mjs
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist-pwa
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.pages.outputs.page_url }}
+    steps:
+      - id: pages
+        uses: actions/deploy-pages@v4
