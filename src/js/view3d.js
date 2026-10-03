@@ -2729,7 +2729,7 @@ const G3 = (() => {
   }
   // ---------- cinema (the user's wish 03.10.2026) ----------
   // «Kino» lets the camera film the trip by itself: shots of 12-20 s in turn, a drone circling high, low along the side at the waterline,
-  // from ahead looking back at the bow, from the shore as she passes, a wide shot of the landscape, and from behind over the wake. The
+  // from ahead looking back at the bow, from the shore as she passes (with a long lens), a wide shot of the landscape, and from behind over the wake. The
   // eye and the aim move through a filter of 0.7 s (cut at a new shot), the horizon is level (no roll), and a shot whose eye would be
   // in the land or the sea, or with the land between it and the boat, is passed over for the next.
   const KINO = {on:false, shot:null, n:0, eye:null, tgt:null};
@@ -2740,7 +2740,8 @@ const G3 = (() => {
     if (K.type === 'drone'){ const a = K.a0 + u * 0.06 * s, R = 45 + L * 3; const e = [C[0] + Math.sin(a) * R, 0, C[2] - Math.cos(a) * R]; e[1] = sea(e[0], e[2]) + 26 + L; return [e, C, 50]; }
     if (K.type === 'low'){ const e = [C[0] + rx * s * (L * 0.35 + 5) - fx * L * (0.3 - u * 0.012), 0, C[2] + rz * s * (L * 0.35 + 5) - fz * L * (0.3 - u * 0.012)]; e[1] = sea(e[0], e[2]) + 0.9; return [e, [C[0] + fx * L * 0.4, C[1], C[2] + fz * L * 0.4], 55]; }
     if (K.type === 'ahead'){ const e = [C[0] + fx * (L * 2.2 + 22) + rx * s * 5, 0, C[2] + fz * (L * 2.2 + 22) + rz * s * 5]; e[1] = sea(e[0], e[2]) + 2.6; return [e, C, 45]; }
-    if (K.type === 'shore'){ const e = [K.px, sea(K.px, K.pz) + 1.8, K.pz]; return [e, C, 40]; }
+    // from the shore a long lens: the frame about four boat lengths high wherever she is
+    if (K.type === 'shore'){ const e = [K.px, sea(K.px, K.pz) + 1.8, K.pz], d = Math.hypot(C[0] - e[0], C[2] - e[2]); return [e, C, clamp(2 * Math.atan(2 * L / Math.max(1, d)) / DEG, 6, 40)]; }
     if (K.type === 'wide'){ const e = [C[0] - fx * 220 + rx * s * 140, 0, C[2] - fz * 220 + rz * s * 140]; e[1] = sea(e[0], e[2]) + 70; return [e, [C[0] + fx * 260, C[1], C[2] + fz * 260], 60]; }
     const e = [C[0] - fx * (L * 3 + 18), 0, C[2] - fz * (L * 3 + 18)]; e[1] = sea(e[0], e[2]) + 7 + L * 0.3; return [e, [C[0] + fx * 30, C[1], C[2] + fz * 30], 50];
   }
