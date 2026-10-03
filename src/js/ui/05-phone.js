@@ -176,6 +176,9 @@ const PHONE = (() => {
       '<div class="ph-card"><h4>' + L('Penger', 'Money') + '</h4>' + kv(L('Kasse', 'Cash'), kr(S.cash)) + '<button class="ph-btn" data-pa="admCash">+ 100 000 kr</button></div>' +
       // a full tank anywhere, for trips along the coast before there are fuel quays outside Senja (the user's wish 03.10.2026)
       '<div class="ph-card"><h4>' + L('Drivstoff', 'Fuel') + '</h4>' + kv(L('Tanken', 'Tank'), fmt(S.boat.fuel) + ' / ' + fmt(BOAT.fuelCap) + ' L') + '<button class="ph-btn" data-pa="admFuel">' + L('Fyll tanken', 'Fill the tank') + '</button></div>' +
+      // your own energy off, so you never tire or fall asleep while testing (the user's wish 03.10.2026)
+      '<div class="ph-card"><h4>' + L('Energi', 'Energy') + '</h4>' + kv(L('Din energi', 'Your energy'), energyOff() ? L('av', 'off') : asleep() ? L('sover', 'asleep') : fmt(S.energy == null ? 100 : S.energy) + ' %') + '<button class="ph-btn' + (energyOff() ? ' alt' : '') + '" data-pa="admEnergy">' + (energyOff() ? L('Skru på energi', 'Turn energy on') : L('Skru av energi', 'Turn energy off')) + '</button>' +
+      '<p class="ph-note">' + L('Av: du blir aldri sliten og sovner ikke.', 'Off: you never tire and do not fall asleep.') + '</p></div>' +
       '<p class="ph-note">' + L('Verktøy for testing. Appen fjernes før spillet får felles klokke.', 'Tools for testing. The app goes before the game gets a shared clock.') + '</p></div>';
   }
   function show(on, a){ isOpen = on; if (a) app = a; if (on){ el.hidden = false; void el.offsetWidth; el.classList.remove('off'); render(); } else { el.classList.add('off'); setTimeout(() => { if (!isOpen) el.hidden = true; }, 300); } }
@@ -689,6 +692,9 @@ const PHONE = (() => {
     else if (a === 'manual'){ S.settings.manual = d.v === '1'; if (!S.settings.manual) helmOff(); }
     else if (a === 'admPace'){ S.mult = +d.v; $('pace').value = String(S.mult); }
     else if (a === 'admCash'){ S.cash += 100000; log('Admin: 100 000 kr lagt i kassa.', 'Admin: NOK 100,000 put in the cash.'); }
+    else if (a === 'admEnergy'){ S.adm = S.adm || {}; S.adm.noEnergy = !S.adm.noEnergy;
+      if (S.adm.noEnergy){ S.sleep = null; S.energy = 100; S.drowsy = false; S.enWarn = false; log('Admin: energien er skrudd av. Du blir ikke sliten og sovner ikke.', 'Admin: energy is off. You do not tire or fall asleep.'); }
+      else log('Admin: energien er skrudd på igjen.', 'Admin: energy is on again.'); }
     else if (a === 'admFuel'){ const b = S.boat, add = Math.max(0, BOAT.fuelCap - b.fuel); b.fuel = BOAT.fuelCap; if (b.status === 'adrift' && add > 0) b.status = 'idle'; log('Admin: tanken fylt (' + fmt(add) + ' L).', 'Admin: the tank filled (' + fmt(add) + ' L).'); }
     else if (a === 'sub'){ sub[app] = d.s; }
     else if (a === 'salgW'){ sub.salgW = d.s; }

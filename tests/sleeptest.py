@@ -49,6 +49,13 @@ async def main():
         check(a3['zz'] and a3['n'] < 300 and a3['alarm'] == 3, 'døsig døser du av igjen før lenge, og alarmen går igjen', a3)
         a4 = await pg.evaluate("(() => { for (let i = 0; i < 3; i++) step(); alarmAck(); const b = S.boat, q = portById('finnsnes'); b.status = 'port'; b.port = 'finnsnes'; b.pos = {x:q.p.x, y:q.p.y}; let n = 0; while (S.drowsy && n < 600){ step(); n++; } return {drowsy:!!S.drowsy, en:Math.round(S.energy), n}; })()")
         check(not a4['drowsy'] and a4['en'] >= 60, 'ved kai hviler du deg ut, og da er du ikke døsig lenger', a4)
+        # «Energi av» in Admin (the user's wish 03.10.2026): it wakes you, and 30 hours at sea give no sleep; on again, sleep is as before
+        en = await pg.evaluate("""(() => { const b = S.boat; b.status = 'idle'; b.port = null; S.drowsy = false; S.equip.brovakt = false; S.energy = 0.001; step(); const z0 = asleep();
+          PHONE.open('admin'); document.querySelector('[data-pa=admEnergy]').click(); const z1 = asleep(); let slept = false;
+          for (let i = 0; i < 30 * 60; i++){ step(); if (asleep()) slept = true; }
+          const r = {z0, z1, slept, en:Math.round(S.energy), btn:document.querySelector('[data-pa=admEnergy]').textContent};
+          document.querySelector('[data-pa=admEnergy]').click(); S.energy = 0.001; step(); r.back = asleep(); PHONE.show(false); return r; })()""")
+        check(en['z0'] and not en['z1'] and not en['slept'] and en['en'] == 100 and 'på' in en['btn'] and en['back'], '«Skru av energi» i Admin vekker deg, og 30 timer på sjøen gir ingen søvn; skrur du den på igjen, sovner du som før', en)
         has = await pg.evaluate("(() => { PHONE.open('utstyr'); return [...document.querySelectorAll('.ph-card h4')].some(h => /Brovaktsalarm/.test(h.textContent)); })()")
         check(has, 'brovaktsalarmen kan kjøpes i utstyrsappen', has)
         print('errors:', errs[:5])

@@ -19,9 +19,12 @@ function alarmAck(){
   return true;
 }
 const meEff = () => S.energy != null && S.energy < ENERGY.warn ? ENERGY.slow : 1;
+// «Energi av» in the admin app (the user's wish 03.10.2026, for testing without falling asleep): full energy, no sleep, no dozing
+const energyOff = () => !!(S.adm && S.adm.noEnergy);
 // once a minute, before the vessels move
 function energyMinute(){
   if (S.energy == null) S.energy = 100;
+  if (energyOff()){ S.energy = 100; S.sleep = null; S.drowsy = false; S.enWarn = false; return; }
   if (S.sleep){ if (S.t >= S.sleep.until) wakeUp(); return; }
   const v = myVessel(), b = v && vget(v, 'boat'), quay = !b || b.status === 'port';
   S.energy = clamp(S.energy + (quay ? ENERGY.quay : -ENERGY.sea), 0, 100);

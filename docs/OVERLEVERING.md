@@ -1080,6 +1080,7 @@ Brukerens ønske: mannskapet skal være en levende og givende del av spillet, in
     - Døsigheten går over når du har hvilt deg til 60 % ved kai, eller etter en hel søvn.
     - Trykker ingen ACK (spillet lukket), piper den videre og du sover som uten alarm.
     - Kilder til selve ordningen er ikke sjekket. BNWAS er påbudt på større skip (SOLAS V/19). Om og når den kreves på norske fiskefartøy, er ikke sjekket.
+  - **«Energi av» i Admin** (`S.adm.noEnergy`, `energyOff`; Jonas 03.10.2026, for testing): energien holdes på 100 %, du sovner ikke og døser ikke av, og knappen vekker deg om du sover. HUD-raden viser «av». `sleeptest.py` sjekker den.
 
 ### 5.20 Vær og hav (02.10.2026)
 
