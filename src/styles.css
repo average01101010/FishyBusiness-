@@ -572,3 +572,8 @@ body.v3d.helm #helmThr,body.v3d.helm #helmJoy{display:block}
 body.kino-clean #hud,body.kino-clean #gps3d,body.kino-clean #miniPlot,body.kino-clean #compass3d,body.kino-clean #dock,body.kino-clean #dockInfo,body.kino-clean #dockFan,body.kino-clean #phoneFab,body.kino-clean #logbook,body.kino-clean #camBtn,body.kino-clean #helmThr,body.kino-clean #helmJoy,body.kino-clean #helmAct,body.kino-clean #modeBtn,body.kino-clean #instrBtn,body.kino-clean #labels,body.kino-clean .attr{display:none!important}
 /* the sleep screen's «Spol fram» (05b-work.js) */
 #slSkip{margin-top:18px;padding:10px 20px;border-radius:20px;border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.08);color:#dfe6ec;font:600 15px var(--sans)}
+/* the bridge watch alarm on the sleep screen: a red flashing ACK (05b-work.js) */
+#slAck{display:block;margin:18px auto 0;width:140px;height:140px;border-radius:50%;border:4px solid #fff;background:#d01c12;color:#fff;font:800 34px var(--sans);letter-spacing:2px;box-shadow:0 0 30px rgba(255,40,30,.8);animation:ackBlink .5s steps(2) infinite}
+#slAck[hidden]{display:none}
+#sleep.alarm{background:#1a0303}
+@keyframes ackBlink{0%{background:#d01c12;box-shadow:0 0 34px rgba(255,40,30,.9)}50%{background:#5a0805;box-shadow:none}}

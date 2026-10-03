@@ -116,6 +116,8 @@ const BOAT = Object.assign({}, VESSELS.skiff);
 const PRICE = {fuel:23.9, diesel:14.5, ice:1.5, iceBag:2.0, gear:1900, kgear:2490, tow:4500, rescue:6000, member:1250};
 const fuelPrice = () => BOAT.diesel ? PRICE.diesel : PRICE.fuel;
 const EQUIP = {
+  // a bridge navigational watch alarm for a small boat (start price): it goes off when you doze at the wheel (core/15-energy.js)
+  brovakt:{price:7900, name:{no:'Brovaktsalarm (BNWAS)', en:'Bridge watch alarm (BNWAS)'}, desc:{no:'Døser du av ved roret på sjøen, piper den etter tre minutter til du kvitterer med ACK. Du våkner, men er trøtt og kan døse av igjen til du har hvilt ved kai.', en:'If you doze off at the wheel at sea, it beeps after three minutes until you acknowledge with ACK. You wake, but stay drowsy and may doze off again until you have rested at the quay.'}},
   vhf:{price:6500, name:{no:'VHF-radio', en:'VHF radio'}, desc:{no:'Kulingvarsel fra kystradioen og nødanrop uten mobildekning.', en:'Gale warnings from coast radio and distress calls without mobile coverage.'}},
   ais:{price:4900, name:{no:'AIS-sender (klasse B)', en:'AIS transponder (class B)'}, desc:{no:'Andre båter og redningstjenesten ser deg på AIS. Raskere hjelp ved nød.', en:'Other boats and the rescue service see you on AIS. Faster help in an emergency.'}},
   plotter:{price:24900, name:{no:'Kartplotter 9" med dybdekart', en:'9" chart plotter with depth charts'}, desc:{no:'Plottervisning med dybdefarger, relieff og dybdekurver.', en:'Plotter view with depth colours, relief and contours.'}},

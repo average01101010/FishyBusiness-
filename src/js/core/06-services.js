@@ -165,7 +165,7 @@ function finishJob(j){
   msg(j.kind === 'prep' || j.kind === 'egn' || j.kind === 'mend' ? (S.lang === 'no' ? 'Kaia' : 'The quay') : 'Verkstedet', (j.no || '') + ' er ferdig.', (j.en || '') + ' is done.');
 }
 // hours at the yard to fit each piece of equipment; anything not listed takes three
-const FIT_H = {vhf:2, ais:2, plotter:4, chirp:3, sonar:16, jukse:3, motor90:6, elhaler:3, linehaler:4, garnhaler:5, teinehaler:4};   // the sonar: on the slip for the hoist
+const FIT_H = {brovakt:2, vhf:2, ais:2, plotter:4, chirp:3, sonar:16, jukse:3, motor90:6, elhaler:3, linehaler:4, garnhaler:5, teinehaler:4};   // the sonar: on the slip for the hoist
 function fitHours(k){ return FIT_H[k] || 3; }
 // a job with no length would never finish and would keep the boat in port for good
 function jobOk(j){ if (!(j.h > 0)) j.h = j.kind === 'fit' ? fitHours(j.k) : 2; if (j.until != null && !Number.isFinite(j.until)) j.until = null; return j; }

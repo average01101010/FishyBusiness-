@@ -2114,11 +2114,12 @@ const G3 = (() => {
       const bp = berthNow();
       if (bp) moorStep(dt, bp);
       else if (helmOn()){
-        // by hand (16-helm.js): she is where the simulation puts her every tick, so she follows it closely; the turn and the way she
+        // by hand (16-helm.js): she is where the simulation puts her every tick, so she follows it closely; the turn (a game second's,
+        // so times the rate on the screen) and the way she
         // has come from the helm, so she banks and makes her wake as under a route
         const h = S.helm, k = 1 - Math.exp(-dt * 6);
         bv.px += (tx - bv.px) * k; bv.pz += (tz - bv.pz) * k; bv.cog += angDiff(bv.cog, pr.hd) * k;
-        bv.yr += (h.yaw - bv.yr) * (1 - Math.exp(-dt * 3)); bv.spd = Math.abs(h.v) * KNV();
+        bv.yr += (h.yaw * simRate() - bv.yr) * (1 - Math.exp(-dt * 3)); bv.spd = Math.abs(h.v) * KNV();
       }
       else if (sailing){
         const vs = sailV(S.t / 60) * KNV(), la = livePose(frac + clamp(1.6 * GAME_RATE * (S.mult || 1) / 60, 0.04, 0.6)).p, cx = la.x * 1000, cz = la.y * 1000;

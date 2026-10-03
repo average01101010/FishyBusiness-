@@ -202,12 +202,14 @@ function catchUp(realMs){
   playMinutes(mins);
   panelDirty = true;
   if (mins >= 10) showAway(mins, idx);
+  if (realMs >= 5 * 60000) WAKE_BACK = true;
 }
-let lastWall = Date.now(), acc = 0, lastPanel = 0, lastSave = 0;
+let lastWall = Date.now(), acc = 0, lastPanel = 0, lastSave = 0, WAKE_BACK = false;
 function tick(){
   const now = Date.now(), dt = (now - lastWall) / 1000; lastWall = now;
   // (until the simulation's data is in, the clock waits: 11-boot.js)
   if (SIMREADY){ if (CATCH_LEFT > 0){ const n = Math.min(CATCH_LEFT, 3000); CATCH_LEFT -= n; playMinutes(n); panelDirty = true; } else if (dt > 6) catchUp(dt * 1000); else { if (helmOn() && !sleepAlone()) helmStep(dt); acc += dt * simRate() / 60; let n = 0; while (acc >= 1 && n < 3000 && simAreaReady()){ step(); acc -= 1; n++; } } }
+  if (WAKE_BACK && !CATCH_LEFT){ WAKE_BACK = false; if (asleep()) wakeEarly(true); }
   heatTick();
   if (!G3.isActive()){ renderDyn(); if (AISSEL) renderAisCard(); heatPaint(); } renderHud(); renderClock(); renderActs(); DOCK.tick(); HUI.tick(); energyUi(); INSTR.renderGPS(); renderRouteTools(); tutUpdate(); PHONE.status(); PHONE.tickHome();
   if (S.order && S.t >= S.order.due) deliverOrder();

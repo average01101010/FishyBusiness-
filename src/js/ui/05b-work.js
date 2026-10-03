@@ -86,14 +86,20 @@ function energyUi(){
   vg.style.opacity = zz ? 0 : e < ENERGY.dim ? ((ENERGY.dim - e) / ENERGY.dim * 0.9).toFixed(2) : 0;
   if (zz){
     if (sl.hidden){ sl.hidden = false; requestAnimationFrame(() => sl.classList.add('on')); }
-    $('slHead').textContent = L('Du sover', 'You are asleep');
-    $('slTime').textContent = L('Du våkner ', 'You wake ') + inReal(S.sleep.until - S.t);
-    $('slSkip').textContent = L('Spol fram til du våkner', 'Skip to when you wake');
+    const al = S.sleep.alarmAt != null, ring = alarmOn();
+    $('slHead').textContent = ring ? L('BROVAKTSALARM', 'BRIDGE WATCH ALARM') : al ? L('Du døser av …', 'You are dozing off …') : L('Du sover', 'You are asleep');
+    $('slTime').textContent = ring ? L('Trykk ACK for å kvittere', 'Press ACK to acknowledge') : al ? L('Brovaktsalarmen går ', 'The bridge watch alarm goes off ') + inReal(S.sleep.alarmAt - S.t) : L('Du våkner ', 'You wake ') + inReal(S.sleep.until - S.t);
+    $('slAck').hidden = !ring; sl.classList.toggle('alarm', ring);
+    const canW = S.t - S.sleep.t0 >= WAKE_MIN; $('slSkip').disabled = !canW; $('slSkip').hidden = al;
+    $('slSkip').textContent = canW ? L('Våkn opp (energi ' + Math.round(sleepGain()) + ' %)', 'Wake up (energy ' + Math.round(sleepGain()) + ' %)') : L('Du kan vekke deg ', 'You can wake ') + inReal(S.sleep.t0 + WAKE_MIN - S.t);
     $('slNote').textContent = S.sleep.alone ? L('Båten ligger og driver med vinden.', 'The boat is drifting with the wind.') : L('Mannskapet har roret og fortsetter turen.', 'The crew has the helm and carries on with the trip.');
-  } else if (!sl.hidden){ sl.classList.remove('on'); sl.hidden = true; }
+  } else if (!sl.hidden){ sl.classList.remove('on', 'alarm'); sl.hidden = true; }
 }
-// the rest of the sleep at once, as when the game was closed (the crew or the drift go on meanwhile)
-$('slSkip').onclick = () => { if (!asleep()) return; playMinutes(Math.max(0, S.sleep.until - S.t)); panelDirty = true; if (typeof refreshAll === 'function') refreshAll(); energyUi(); };
+// «ACK»: the alarm is acknowledged and you are awake (15-energy.js alarmAck)
+$('slAck').onclick = () => { if (alarmAck()){ save(); panelDirty = true; if (typeof refreshAll === 'function') refreshAll(); } energyUi(); };
+// «Våkn opp»: the sleep is broken off with the rest it has given (15-energy.js wakeEarly)
+$('slSkip').onclick = () => { if (wakeEarly(false)){ save(); panelDirty = true; if (typeof refreshAll === 'function') refreshAll(); } energyUi(); };
 hooks.onEnergy = k => { if (typeof toast !== 'function') return; const L = (no, en) => S.lang === 'no' ? no : en;
   if (k === 'warn') toast(L('Du er sliten (25 %). Arbeidet ditt går tregere. Gå til kai for å hvile.', 'You are tired (25 %). Your work goes slower. Go to the quay to rest.'));
-  if (k === 'wake') toast(L('Du våknet. Energi 60 %.', 'You woke up. Energy 60 %.')); };
+  if (k === 'ack') toast(L('Du er våken, men trøtt og døsig. Du kan døse av igjen til du har hvilt ved kai.', 'You are awake, but tired and drowsy. You may doze off again until you have rested at the quay.'));
+  if (k === 'wake') toast(L('Du våknet. Energi ' + Math.round(S.energy) + ' %.', 'You woke up. Energy ' + Math.round(S.energy) + ' %.')); };
