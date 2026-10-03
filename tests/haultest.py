@@ -12,9 +12,10 @@ def check(ok, what, extra=''):
 
 
 SET = """(kind => { const b = S.boat, g = GROUNDS[0].p; S.t = Math.round((Date.UTC(2027, 5, 12, 11) - EPOCH) / 6e4); b.type = 'sjark'; applyVessel(); G3.vesselChanged();
+  if (!S.crew.length) S.crew = [Object.assign(genCrew(), {bi:false, off:false, fatigue:10, morale:62, traits:[]})]; S.me = S.cur; b.rig = kind; S.equip[kind === 'garn' ? 'garnhaler' : 'linehaler'] = true;   // nets need two hands
   b.status = 'fishing'; b.port = null; b.pos = {x:g.x, y:g.y}; b.heading = 0.4; b.v = 0; b.fishUntil = S.t + 600; S.plan = null; S.mult = 0;
   b.gop = {op:'haul', kind, sid:'t', n:6, done:2, prog:0.4, a:{x:g.x, y:g.y}, b:{x:g.x + 0.5, y:g.y}, kg:0, rel:0, dead:0, hooksPer:kind === 'line' ? 100 : 0};
-  const c = G3._debug.cam; c.helm = false; c.dist = 9; c.pitch = 0.32; c.yaw = -1.25; })"""
+  const c = G3._debug.cam; c.helm = false; c.dist = 7.5; c.pitch = 0.3; c.yaw = -1.4; })"""
 
 
 async def main():
