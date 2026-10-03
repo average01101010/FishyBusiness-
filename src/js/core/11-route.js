@@ -72,7 +72,7 @@ const leiaYield = () => new Promise(r => setTimeout(r, 0));
 // a slice ends: the longest so far and where it was (search, pull, drop) go to st
 function leiaSlice(st, t0, at){ const dt = performance.now() - t0; if (dt > st.maxSlice){ st.maxSlice = dt; st.at = at; } st.slices++; }
 // A* between two open cells of a grid; returns the cells in order, or null. st collects how the slices went. The clock is read every
-// 16 expansions: a new cell works out its cost (depth, harbour, rocks) the first time, and 256 of them could take 20 ms
+// 8 expansions: a new cell works out its cost (depth, harbour, rocks) the first time, and 256 of them could take 20 ms
 async function leiaSearch(G, s, t, sd, st){
   const nx = G.nx, ny = G.ny, N = nx * ny, c = G.c;
   const Gv = new Float64Array(N), FROM = new Int32Array(N), SEEN = new Uint8Array(N), SHUT = new Uint8Array(N);
@@ -93,7 +93,7 @@ async function leiaSearch(G, s, t, sd, st){
       const ng = Gv[u] + len * k;
       if (!SEEN[v] || ng < Gv[v]){ SEEN[v] = 1; Gv[v] = ng; FROM[v] = u; H.push(v, ng + h(v)); }
     }
-    if ((++n & 15) === 0 && performance.now() - t0 > LEIA.slice){ leiaSlice(st, t0, 'search'); await leiaYield(); t0 = performance.now(); }
+    if ((++n & 7) === 0 && performance.now() - t0 > LEIA.slice){ leiaSlice(st, t0, 'search'); await leiaYield(); t0 = performance.now(); }
   }
   st.expanded += n; return null;
 }

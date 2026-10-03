@@ -34,10 +34,12 @@ mkdirSync(dirname(OUT), {recursive:true});
 writeFileSync(OUT, html);
 console.log(`dist/index.html: ${(Buffer.byteLength(html) / 1e6).toFixed(2)} MB`);
 // the map's rasters in packs of 10 km blocks, made by the map pipeline (tools/map/region.py, phase K5 of the coast plan) into
-// src/data/map/ and fetched by the page from map/
-const MAPSRC = join(SRC, 'data', 'map'), MAPOUT = join(DIST, 'map');
+// src/data/map/ and fetched by the page from map/. The whole coast (tools/map/game.py: src/data/map with a release's tiles) is taken
+// from tools/map/out/game/ when it is there, or from KYST_MAP
+const GAMEMAP = join(ROOT, 'tools', 'map', 'out', 'game');
+const MAPSRC = process.env.KYST_MAP || (existsSync(join(GAMEMAP, 'manifest.json')) ? GAMEMAP : join(SRC, 'data', 'map')), MAPOUT = join(DIST, 'map');
 if (existsSync(MAPOUT)) rmSync(MAPOUT, {recursive:true});
 mkdirSync(MAPOUT, {recursive:true});
 let mapBytes = 0; const mapFiles = readdirSync(MAPSRC).filter(f => f === 'manifest.json' || f.endsWith('.wasm'));
 for (const f of mapFiles){ copyFileSync(join(MAPSRC, f), join(MAPOUT, f)); if (f.endsWith('.wasm')) mapBytes += statSync(join(MAPSRC, f)).size; }
-console.log(`dist/map/: ${mapFiles.length - 1} packs, ${(mapBytes / 1e6).toFixed(2)} MB`);
+console.log(`dist/map/: ${mapFiles.length - 1} packs, ${(mapBytes / 1e6).toFixed(2)} MB (${MAPSRC === GAMEMAP ? 'the whole coast, tools/map/out/game' : MAPSRC})`);

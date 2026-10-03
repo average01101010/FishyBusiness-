@@ -1,5 +1,6 @@
 // ---------- services behind the phone ----------
-function coverage(p){ const d = coastDist(p); return d < 3 ? 4 : d < 8 ? 3 : d < 14 ? 2 : d < 20 ? 1 : 0; }
+// the phone's bars by the distance to land: kilometres, so the national core's (it looks far, and never waits for a tile's pack)
+function coverage(p){ const d = coastDistFar(p); return d < 3 ? 4 : d < 8 ? 3 : d < 14 ? 2 : d < 20 ? 1 : 0; }
 function msg(from, no, en){ S.msgs.push({t:S.t, from, no, en, read:false}); if (S.msgs.length > 80) S.msgs.shift(); if (hooks.onMsg) hooks.onMsg(); }
 function hourly(){
   const H = S.t / 60, hr = gDate(H).getUTCHours();

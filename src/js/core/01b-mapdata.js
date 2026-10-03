@@ -41,11 +41,18 @@ async function mapStart(base){
   // k: what a cell's number is worth; the heights are kept as Int16 decimetres (phase K8), half the room of Float32
   for (const name in man.layers) MAPD.L[name] = Object.assign({name, id:id++, bx:NaN, by:NaN, b:null, k:man.layers[name].dec === 'hgt' ? 0.1 : 1}, man.layers[name]);
   const dc = MAPD.L.dc; Object.assign(DC, {nx:dc.nx, ny:dc.ny, ix0:dc.ix0, iy0:dc.iy0});
-  for (const pk of man.packs){ pk.buf = null; pk.idx = null; pk.load = null; MAPD.packs.push(pk); if (pk.kind === 'core') MAPD.core = pk; else MAPD.byTile.set(pk.kind + ':' + pk.tile[0] + ':' + pk.tile[1], pk); }
+  // a joined pack (tools/map/game.py: the far heights and the chart, several tiles a file) is filed under each of its tiles as a
+  // pack of its own that loads through it
+  for (const pk of man.packs){
+    pk.buf = null; pk.idx = null; pk.load = null; MAPD.packs.push(pk);
+    if (pk.kind === 'core'){ MAPD.core = pk; continue; }
+    for (const t of pk.tiles || [pk.tile]) MAPD.byTile.set(pk.kind + ':' + t[0] + ':' + t[1], pk.tiles ? {file:pk.file, hash:pk.hash, kind:pk.kind, tile:t, bytes:pk.bytes, of:pk, buf:null, idx:null, load:null} : pk);
+  }
   return man;
 }
 function mapLoad(pk){
   if (!pk || pk.buf) return Promise.resolve(pk);
+  if (pk.of){ if (!pk.load) pk.load = mapLoad(pk.of).then(p => { pk.idx = p.idx; pk.vec = {}; pk.buf = p.buf; return pk; }, e => { pk.load = null; throw e; }); return pk.load; }
   if (!pk.load) pk.load = mapFetch(pk).then(b => {
     if (String.fromCharCode(b[0], b[1], b[2], b[3]) !== 'KMP1') throw new Error('map: ' + pk.file + ' is not a map pack');
     const hl = b[4] | b[5] << 8 | b[6] << 16 | b[7] << 24, head = JSON.parse(new TextDecoder().decode(b.subarray(8, 8 + hl))), at = 8 + hl;
@@ -123,7 +130,7 @@ function rbilM(L, x, z){
 function mapHasM(L, x0, z0, x1, z1){
   const bm = L.n * L.c * 1000;
   for (let by = Math.floor(z0 / bm); by <= Math.floor(z1 / bm); by++) for (let bx = Math.floor(x0 / bm); bx <= Math.floor(x1 / bm); bx++){
-    if (bx * L.n < L.ix0 || by * L.n < L.iy0 || bx * L.n >= L.ix0 + L.nx || by * L.n >= L.iy0 + L.ny) continue; if (!mapHasBlock(L, bx, by)) return false; }
+    if (bx * L.n < L.ix0 || by * L.n < L.iy0 || bx * L.n >= L.ix0 + L.nx || by * L.n >= L.iy0 + L.ny || !mapPackOf(L, bx, by)) continue; if (!mapHasBlock(L, bx, by)) return false; }
   return true;
 }
 // a vector entry of a loaded pack (at the tile's first block): its bytes, inflated once, and its count; null if the pack has none

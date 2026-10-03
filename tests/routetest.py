@@ -153,13 +153,13 @@ async def leia(p):
     check(all(0.99 <= x <= 1.35 for x in tight), 'Autonav er litt lengre enn den strammeste veien langs land (eller like lang: 1 % for avrundingen)', tight)
     check(all(0.85 <= x <= 1.35 for x in hand), 'og 0,85–1,35 ganger de håndtegnede testrutene (de er ikke de korteste)', hand)
 
-    # phase K9: Autonav anywhere on the coast. The ends are the nearest sea 300 m or more from the land near each town; a way must be
+    # phase K9: Autonav anywhere on the coast. The ends are the nearest sea 300 m or more from the land and deep enough near each town (the tiles' detail); a way must be
     # found, clear of land and hazards, within 40 waypoints (maxWp is a target), no more than 1.6 times the straight line, in slices under 16 ms, and
     # Bergen to Florø inside the skerries (no point of it more than 4 km from the land)
     nat = {}
     for name, a, bb, aport in [('Finnsnes–Tromsø', None, (69.652, 18.962), 'finnsnes'), ('Bodø–Reine', (67.287, 14.385), (67.931, 13.088), None), ('Bergen–Florø', (60.398, 5.315), (61.599, 5.035), None)]:
-        nat[name] = json.loads(await pg.evaluate("""async ([a, b, aport]) => { const sea = ([la, lo]) => { const c = P(la, lo); for (let r = 0; r <= 60; r++) for (let k = 0; k < Math.max(1, r * 6); k++){ const t = k / Math.max(1, r * 6) * 2 * Math.PI, q = {x:c.x + Math.cos(t) * r * 0.1, y:c.y + Math.sin(t) * r * 0.1}; if (!isLandFar(q) && coastDistFar(q) >= 0.3) return q; } return null; };
-          const A = aport ? portById(aport).p : sea(a), B = sea(b), sd = safeDepth(), t0 = performance.now(), res = await leiaRoute(A, B, aport, null);
+        nat[name] = json.loads(await pg.evaluate("""async ([a, b, aport]) => { const sd = safeDepth(), sea = async ([la, lo]) => { const c = P(la, lo); await mapNeed(c, 7); for (let r = 0; r <= 60; r++) for (let k = 0; k < Math.max(1, r * 6); k++){ const t = k / Math.max(1, r * 6) * 2 * Math.PI, q = {x:c.x + Math.cos(t) * r * 0.1, y:c.y + Math.sin(t) * r * 0.1}; if (!isLand(q) && coastDist(q) >= 0.3 && depthF(q) >= sd + 1) return q; } return null; };
+          const A = aport ? portById(aport).p : await sea(a), B = await sea(b), t0 = performance.now(), res = await leiaRoute(A, B, aport, null);
           if (res.why) return JSON.stringify({why:res.why[0]});
           let p = A, bad = 0, far = 0, len = 0; for (const w of res.wps){ if (!clearLine(p, w) || legHazard(p, w, sd).unsafe) bad++; const L = dist(p, w); for (let k = 1; k < L / 0.25; k++){ const u = k * 0.25 / L; far = Math.max(far, coastDistFar({x:p.x + (w.x - p.x) * u, y:p.y + (w.y - p.y) * u})); } len += L; p = w; }
           return JSON.stringify({n:res.wps.length, max:res.st.maxWp, km:+len.toFixed(1), ratio:+(len / dist(A, B)).toFixed(2), bad, far:+far.toFixed(1), slice:+res.st.maxSlice.toFixed(1), at:res.st.at, cell:res.st.cell, s:+((performance.now() - t0) / 1000).toFixed(1)}); }""", [a, bb, aport]))

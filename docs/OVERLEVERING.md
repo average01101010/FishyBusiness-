@@ -422,8 +422,8 @@ Jonas valgte 02.10.2026 å la GitHub bygge og lagre de nasjonale kartdataene. Gi
   - Finnsnes–Tromsø: 67 km, 12 punkter, 1,11 ganger luftlinja, 100 m-celler.
   - Bodø–Reine: 93 km, 7 punkter, 1,04 ganger luftlinja, 200 m-celler (bare kjernen der).
   - Bergen–Florø innaskjærs: 150 km, 35 punkter, 1,10 ganger luftlinja, aldri mer enn 3,5 km fra land.
-  - Ingen bit tar over 16 ms. Søket leser klokka hver 16. ekspansjon. Med hver 32. ga Finnsnes–Tromsø 15,7 ms, og nå er den lengste biten 13,2 ms (utrettingen Bodø–Reine). Hver nasjonal rute er ferdig på under ett sekund.
-- **Ikke ennå:** Utenfor Senja er bare 200 m-kjernen i bygget. Detaljflisene for hele kysten (releasen `kart-1`, 4.8b) må inn i bygget før Autonav finner de smaleste sundene der.
+  - Ingen bit tar over 16 ms. Søket leser klokka hver 8. ekspansjon. Med hver 32. ga Finnsnes–Tromsø 15,7 ms, og med detaljen for hele kysten ga Bergen–Florø 15 ms ved hver 16. Nå er den lengste biten 10,8 ms. Hver nasjonal rute er ferdig på under ett sekund.
+  - Med hele kysten i bygget (4.13) går alle tre rutene på 100 m-celler: Bodø–Reine 94 km med 9 punkter, Bergen–Florø 153 km med 33. Endepunktene i testen velges nå med detaljen (300 m fra land og dypt nok). Startpunktet ved Bodø fra 200 m-kjernen lå på 1,1 m dyp.
 
 ### 4.13 Hele kysten i bygget (03.10.2026)
 
@@ -441,6 +441,22 @@ Jonas valgte 02.10.2026 å la GitHub bygge og lagre de nasjonale kartdataene. Gi
   - En sammenslått pakke føres under hver av flisene sine som en egen pakke (`of`) som lastes gjennom den.
   - `mapHasM` hopper over blokker i fliser uten pakke (innlandet, åpent hav), så 3D ikke venter på dem.
   - Sjøkartets mellomlager er per pakke og flis (`chartPath`, navnene).
+- **Bygget for hele kysten** (`kart-2`): 168 fliser med detalj, 424 kartpakker og manifestet. Det er 195 MB kart pluss en side på 6,2 MB.
+
+  | Slag | Pakker | MB |
+  |---|---|---|
+  | `sim` | 168 | 60,8 |
+  | `view` | 168 | 113,6 |
+  | `chart` | 62 | 12,1 |
+  | `far` | 25 | 5,2 |
+  | `core` | 1 | 3,3 |
+
+  En spiller laster bare pakkene rundt båten (og kjernen), og de lagres i IndexedDB.
+- **Rettet etter regresjonen med hele kysten:**
+  - Telefonens dekning (`coverage`) leste den detaljerte avstanden til land, som krever at pakken er lastet. Den bruker nå kjernens (`coastDistFar`): det er kilometre, og en skjerm skal aldri vente på en pakke.
+  - Testene som flytter båten rett til et sted (`teleport3d`, `tidetest`, endepunktene i `routetest`), laster nå detaljpakkene der først, slik barrieren gjør før en båt kommer dit. En båt som seiler, kommer aldri inn i en flis som ikke er lastet, fordi barrieren laster 4 km rundt den før klokka går.
+  - Kartblokkene fyller nå hele budsjettet (96 MB) etter seks steder, og det eldste går ut. `teleport3d` sjekker at budsjettet holder.
+- **Kameraet ved kaia** (`view3d.js`): ved lavvann ligger en båt ved kaia rundt 3 m under kaikanten, og en løfting på 57° var ikke nok til å se over kanten (`camtest`, Botnhamn, med tidevannet fra K10). Kameraet kan nå løftes nesten rett ned over båten (1,45 rad).
 
 ### 4.14 Tidevann per sted og sol etter posisjon (kystplanen, fase K10, 03.10.2026)
 

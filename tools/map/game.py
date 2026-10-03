@@ -33,19 +33,23 @@ def main(rel, out):
         if name in layers:
             a = layers[name]; assert all(a[k] == L[k] for k in ('c', 'n', 'type', 'kind', 'dec')), name
         layers[name] = L
-    # per kind and tile: Senja's own (src) first, then the release's for the tiles src does not have
+    # per kind and tile: Senja's own (src) first, then the release's for the tiles src does not have. Senja's region does not cover
+    # its tiles whole (y from 310 km, the tiles from 300), so a tile both have is joined block by block, Senja's blocks first
     have = {}
     for d, man in ((SRC, src), (rel, nat)):
         for pk in man['packs']:
-            k = (pk['kind'], tuple(pk['tile']))
             if pk['kind'] == 'core' and d != SRC: continue
-            if k not in have: have[k] = (d, pk)
+            have.setdefault((pk['kind'], tuple(pk['tile'])), []).append((d, pk))
     packs, groups = [], {}
-    for (kind, t), (d, pk) in sorted(have.items()):
+    for (kind, t), srcs in sorted(have.items()):
         g = GROUP.get(kind)
-        if not g:
-            shutil.copyfile(os.path.join(d, pk['file']), os.path.join(out, pk['file'])); packs.append(dict(pk)); continue
-        groups.setdefault((kind, t[0] // g, t[1] // g), []).append((t, d, pk))
+        if g: groups.setdefault((kind, t[0] // g, t[1] // g), []).append((t, srcs[0][0], srcs[0][1])); continue
+        if len(srcs) == 1:
+            d, pk = srcs[0]; shutil.copyfile(os.path.join(d, pk['file']), os.path.join(out, pk['file'])); packs.append(dict(pk)); continue
+        (d0, p0), (d1, p1) = srcs; h0, r0 = read(d0, p0); h1, r1 = read(d1, p1); own = {(b[0], b[1], b[2]) for b in h0['blocks']}
+        h1 = dict(h1, blocks=[b for b in h1['blocks'] if (b[0], b[1], b[2]) not in own])
+        fn, h, n = write(out, kind, f'{t[0]}-{t[1]}', [(h0, r0), (h1, r1)])
+        packs.append(dict(p0, file=fn, hash=h, bytes=n))
     for (kind, gx, gy), mem in sorted(groups.items()):
         mem.sort(); parts = [read(d, pk) for t, d, pk in mem]; fn, h, n = write(out, kind, f'g{gx}-{gy}', parts)
         tl = [list(t) for t, d, pk in mem]; xs = [t[0] for t in tl]; ys = [t[1] for t in tl]

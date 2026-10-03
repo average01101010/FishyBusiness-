@@ -21,7 +21,7 @@ function vecPath(v, sc){
   return p;
 }
 function chartPath0(){ if (!CHARTV.p0){ const v = mapVec(MAPD.core, 'coast0'); if (v) CHARTV.p0 = vecPath(v, 0.01); } return CHARTV.p0; }
-function chartPath(pk, lv){ const k = pk.file + lv; if (!CHARTV.paths.has(k)){ const v = mapVec(pk, lv === 2 ? 'coast2' : 'coast1'); CHARTV.paths.set(k, v ? vecPath(v, 0.001) : null); } return CHARTV.paths.get(k); }
+function chartPath(pk, lv){ const k = pk.file + ':' + pk.tile + ':' + lv; if (!CHARTV.paths.has(k)){ const v = mapVec(pk, lv === 2 ? 'coast2' : 'coast1'); CHARTV.paths.set(k, v ? vecPath(v, 0.001) : null); } return CHARTV.paths.get(k); }
 // the coast over the painted depth: the rings stroked twice as wide and then filled (nonzero: the holes turn the other way), so the
 // seams between Overture's land pieces are covered and only the shore keeps half its line, on the sea's side
 function chartCoast(ctx, x0, y0, kx, ky, W, H, dpr, fish){
@@ -72,7 +72,7 @@ function chartGrid(ctx, x0, y0, kx, ky, W, H, dpr, fish){
 // the names of a pack's entry, in km: [x, y, kind, rank, name, angle (degrees, a fjord's name along it)]; kinds 0 town,
 // 1 sea/fjord/sound/bay, 2 island, 3 peak/cape
 function chartNamesOf(pk, entry, sc, ox, oy){
-  const k = pk.file + entry; if (CHARTV.names.has(k)) return CHARTV.names.get(k);
+  const k = pk.file + ':' + pk.tile + ':' + entry; if (CHARTV.names.has(k)) return CHARTV.names.get(k);
   const v = mapVec(pk, entry), out = [];
   if (v){ const r = vReader(v.b), n = r.u(); for (let i = 0; i < n; i++){ const x = r.u(), y = r.u(), kind = r.byte(), rank = r.byte(), ang = r.byte() - 90, L = r.u(); out.push([ox + x * sc, oy + y * sc, kind, rank, r.str(L), ang]); } }
   CHARTV.names.set(k, out); return out;

@@ -26,7 +26,8 @@ async def main():
         errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
         await boot(pg)
         pts = {k: await pg.evaluate(SEA, list(v)) for k, v in PLACES.items()}
-        r = await pg.evaluate("""(Q) => {
+        r = await pg.evaluate("""async (Q) => {
+          await Promise.all(Object.values(Q).map(p => mapNeed(p, 1)));   // the tiles' detail where the boat is put, as the barrier would load it
           const H0 = Math.round((Date.UTC(2027, 2, 1, 0) - EPOCH) / 6e4) / 60, R = {table:!!TIDEP, n:TIDEP ? TIDEP.length : 0, places:{}};
           for (const k in Q){ const p = Q[k]; let lo = 1e9, hi = -1e9; for (let h = 0; h < 15 * 24; h += 0.25){ const z = tideH(H0 + h, p); lo = Math.min(lo, z); hi = Math.max(hi, z); }
             R.places[k] = {range:+(hi - lo).toFixed(2), zc:+tideZC(p).toFixed(2), M2:+tidePlace(p).C[0][0].toFixed(2), M2g:Math.round(tidePlace(p).C[0][1])}; }
