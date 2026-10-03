@@ -10,7 +10,7 @@ async def main():
         await pg.goto(GAME)
         await pg.wait_for_timeout(700); await pg.click('[data-close]')
         await pg.wait_for_function("G3.isActive()", timeout=40000)
-        await pg.click('#gpsBtn'); await pg.wait_for_timeout(800)
+        await pg.click('#miniPlot'); await pg.wait_for_timeout(800)
         print('plotter open:', await pg.evaluate("document.body.classList.contains('vplot')"))
         js="(()=>{const w=%s; S.settings.autoOn=false; S.draft=w.map((q,i)=>({x:q.x,y:q.y,port:null,fish:i===w.length-1?1:0})); const back=w.slice(0,-1).reverse(); back.forEach(q=>S.draft.push({x:q.x,y:q.y,port:null,fish:0})); const f=PORTS[0].p; S.draft.push({x:f.x,y:f.y,port:'finnsnes',fish:0}); panelDirty=true; renderPanel(); })()" % json.dumps(R)
         await pg.evaluate(js); await pg.wait_for_timeout(300)

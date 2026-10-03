@@ -2479,7 +2479,25 @@ const G3 = (() => {
   }
   // is a point inside something solid (for the tests)
   function camInside(x, y, z){ camBuildings(gridKey(Math.floor(x / 1000), Math.floor(z / 1000))); for (const b of CAMG.get(gridKey(Math.floor(x / CAMC), Math.floor(z / CAMC))) || []){ const px = x - b.x, pz = z - b.z, lx = px * b.c - pz * b.s, lz = px * b.s + pz * b.c; if (Math.abs(lx) <= b.hx && Math.abs(lz) <= b.hz && y >= b.y0 && y <= b.y1) return true; } return false; }
-  let lastEye = [0, 0, 0];
+  let lastEye = [0, 0, 0], camFwd = [0, -1];
+  // the compass line at the top of the 3D view (the user's wish 02.10.2026): the true bearing the camera looks along, thin ticks every
+  // 5 degrees, the quarters and eighths by name and the tens of degrees between them, 70 degrees either way; drawn when it turns
+  const CMPS = {el:document.getElementById('compass3d'), at:NaN, w:0};
+  function compassDraw(az, p){
+    const el = CMPS.el; if (!el || !el.clientWidth) return;
+    const deg = trueDeg(az, p); if (Math.abs(deg - CMPS.at) < 0.2 && CMPS.w === el.clientWidth) return; CMPS.at = deg; CMPS.w = el.clientWidth;
+    const dpr = Math.min(2, window.devicePixelRatio || 1), W = Math.round(el.clientWidth * dpr), H = Math.round(el.clientHeight * dpr); if (el.width !== W) el.width = W; if (el.height !== H) el.height = H;
+    const g = el.getContext('2d'), span = 70, k = W / (2 * span), names = S.lang === 'no' ? ['N', 'NØ', 'Ø', 'SØ', 'S', 'SV', 'V', 'NV'] : ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    g.clearRect(0, 0, W, H); g.lineCap = 'round'; g.textAlign = 'center'; g.shadowColor = 'rgba(0,0,0,.6)'; g.shadowBlur = 3 * dpr;
+    const a0 = Math.ceil((deg - span) / 5) * 5;
+    for (let a = a0; a <= deg + span; a += 5){
+      const x = W / 2 + (a - deg) * k, n = ((a % 360) + 360) % 360, fade = 1 - Math.pow(Math.abs(a - deg) / span, 2), main = n % 45 === 0;
+      g.strokeStyle = 'rgba(255,255,255,' + (0.85 * fade).toFixed(2) + ')'; g.lineWidth = (main ? 1.6 : 1) * dpr;
+      g.beginPath(); g.moveTo(x, H - 2 * dpr); g.lineTo(x, H - (main ? 9 : n % 15 === 0 ? 6 : 4) * dpr); g.stroke();
+      if (main || n % 15 === 0){ g.fillStyle = 'rgba(255,255,255,' + fade.toFixed(2) + ')'; g.font = (main ? '600 ' + Math.round(12 * dpr) : Math.round(9.5 * dpr)) + 'px sans-serif'; g.fillText(main ? names[n / 45] : String(n), x, H - 12 * dpr); }
+    }
+    g.fillStyle = '#ff5aa8'; g.beginPath(); g.moveTo(W / 2 - 4 * dpr, H); g.lineTo(W / 2 + 4 * dpr, H); g.lineTo(W / 2, H - 6 * dpr); g.closePath(); g.fill();
+  }
 
   // ---------- frame ----------
   // «#fps» in the address: the frame rate in a corner, to measure on the tablet
@@ -2502,7 +2520,7 @@ const G3 = (() => {
       eye = xf(Mh, (GEO(vtype())).eye);
       const cy = Math.cos(cam.hp), dl = [-Math.sin(cam.hy) * cy, Math.sin(cam.hp), -Math.cos(cam.hy) * cy];
       const f = [Mh[0] * dl[0] + Mh[4] * dl[1] + Mh[8] * dl[2], Mh[1] * dl[0] + Mh[5] * dl[1] + Mh[9] * dl[2], Mh[2] * dl[0] + Mh[6] * dl[1] + Mh[10] * dl[2]];
-      V = viewDir(f, [Mh[4], Mh[5], Mh[6]]);
+      V = viewDir(f, [Mh[4], Mh[5], Mh[6]]); camFwd = [f[0], f[2]];
     } else {
       if (SHOW && !drag) cam.yaw += dt * 0.12;   // the showroom turns slowly round the boat
       const C = SHOW ? [SHOW.x, (env.tide || 0) + 1.3 + Math.min(4, VESSELS[SHOW.t].len * 0.06), SHOW.z] : [bv.x, bv.y + 1.3, bv.z], yawW = (SHOW ? SHOW.h : bv.head) + cam.yaw, tgt = C;
@@ -2517,9 +2535,9 @@ const G3 = (() => {
       const L = Math.hypot(eye[0] - tgt[0], eye[1] - tgt[1], eye[2] - tgt[2]) || 1, want = clamp(camFree(tgt, eye) - 0.8 / L, Math.min(1, 2 / L), 1);
       camPull = want < camPull ? want : Math.min(want, camPull + dt * 1.5);
       if (camPull < 0.999) eye = [tgt[0] + (eye[0] - tgt[0]) * camPull, tgt[1] + (eye[1] - tgt[1]) * camPull, tgt[2] + (eye[2] - tgt[2]) * camPull];
-      V = viewDir([tgt[0] - eye[0], tgt[1] - eye[1], tgt[2] - eye[2]]);
+      V = viewDir([tgt[0] - eye[0], tgt[1] - eye[1], tgt[2] - eye[2]]); camFwd = [tgt[0] - eye[0], tgt[2] - eye[2]];
     }
-    lastEye = eye; EYE = eye;
+    lastEye = eye; EYE = eye; compassDraw(Math.atan2(camFwd[0], -camFwd[1]), {x:eye[0] / 1000, y:eye[2] / 1000});
     if (!RO.on || Math.abs(eye[0] - RO.x) > 40000 || Math.abs(eye[2] - RO.z) > 40000){ RO.x = Math.round(eye[0] / 4096) * 4096; RO.z = Math.round(eye[2] / 4096) * 4096; RO.on = true; }
     const W = canvas.width, Hh = canvas.height, asp = W / Hh, fov = (cam.helm ? cam.fov : 55) * DEG; curFov = fov;
     let cornerD = 0; if (NEARM) for (const [qx, qz] of [[0, 0], [1, 0], [0, 1], [1, 1]]) cornerD = Math.max(cornerD, Math.hypot(NEARM.x0 + qx * NEARM.sx - eye[0], NEARM.z0 + qz * NEARM.sz - eye[2], eye[1]));

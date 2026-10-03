@@ -101,12 +101,12 @@ async def ui(pg, tag):
         r = json.loads(await pg.evaluate("""JSON.stringify((() => { const b = S.boat, H = S.t / 60, s = heatSample(b.pos, H), sum = 30 * SP.reduce((a, sp) => a + density(sp, b.pos, H), 0);
           const cs = HEATC.cs, cc = HEATC.cells.get(heatKey(Math.floor(b.pos.x / cs), Math.floor(b.pos.y / cs))), at = cc.v, ctr = heatSample(cc, cc.t / 60);   // the cell, at the time it was worked out
           return {tier:heatTier(), r:HEAT.tiers[heatTier()].r, px:+heatCv.dataset.r, want:HEAT.tiers[heatTier()].r * view.px, s:heatValue(s, 'all'), sum, cell:heatValue(at, 'all'), ctr:heatValue(ctr, 'all'),
-            pick:document.querySelectorAll('#panel .seg.hsp button').length, note:/Artsvalg krever/.test(document.querySelector('#panel .ecs').textContent), box:!$('heatBox').hidden, echo:!!$('echoWrap').offsetParent}; })())"""))
+            pick:(plotSetOpen(true), document.querySelectorAll('#plotSet .seg.hsp button').length), note:/Artsvalg krever/.test(document.querySelector('#plotSet .ecs').textContent), box:(plotSetOpen(false), !$('heatBox').hidden), echo:!document.getElementById('echoWrap')}; })())"""))
         check(r['tier'] == tier and abs(r['r'] - R[tier]) < 1e-9, f'{tag}: {tier} har radius {R[tier]:.3f} km ({R[tier] * 2 / 1.852:g} nm i diameter)', r['r'])
         check(abs(r['px'] - r['want']) < 1.5, f'{tag}: {tier}: sirkelen på skjermen er r·view.px', {k: round(r[k], 1) for k in ('px', 'want')})
         check(abs(r['s'] - r['sum']) < 1e-9 and abs(r['cell'] - r['ctr']) < 1e-9, f'{tag}: {tier}: varmen ved båten er 30·Σdensity, og ruta på kartet har verdien i sentrum', {k: round(r[k], 2) for k in ('s', 'sum', 'cell', 'ctr')})
         check((r['pick'] == 4) == (tier != 'basic') and r['note'] == (tier == 'basic'), f'{tag}: {tier}: artsvalg {"finnes" if tier != "basic" else "krever CHIRP eller sonar"}', r['pick'])
-        check(r['box'] and r['echo'], f'{tag}: {tier}: boksen med skala og avlesning og ekkoloddvinduet vises')
+        check(r['box'] and r['echo'], f'{tag}: {tier}: skalaen står i toppbaren, og den lille ekkoloddboksen er borte')
         await pg.screenshot(path=f'heat_{tag}_{tier}_nav.png')
     # the fishing chart with CHIRP, for the screenshots
     await pg.evaluate(SETUP, ['chirp', 'fish', 2, 0, True, True]); await pg.wait_for_function(DONE, timeout=20000); await pg.wait_for_timeout(400)
@@ -116,23 +116,23 @@ async def ui(pg, tag):
     out = {}
     for name, args in [('ekko av', ['chirp', 'nav', 2, 0, False, True]), ('sonar alene', ['sonar', 'nav', 2, 0, False, True]), ('begge av', ['sonar', 'nav', 2, 0, False, False])]:
         await pg.evaluate(SETUP, args); await pg.wait_for_timeout(700)
-        out[name] = json.loads(await pg.evaluate("JSON.stringify({tier:heatTier(), on:heatCv.dataset.on, box:!$('heatBox').hidden, echo:!!$('echoWrap').offsetParent})"))
+        out[name] = json.loads(await pg.evaluate("JSON.stringify({tier:heatTier(), on:heatCv.dataset.on, box:!$('heatBox').hidden, echo:false})"))
     await pg.evaluate("(() => { const b = S.boat, p = portById('husoy'); b.status = 'port'; b.port = 'husoy'; b.pos = {...p.p}; S.settings.echo = true; S.settings.sonar = true; heatPaint(); })()"); await pg.wait_for_timeout(500)
     out['i havn'] = json.loads(await pg.evaluate("JSON.stringify({tier:heatTier(), on:heatCv.dataset.on})"))
-    check(out['ekko av']['tier'] is None and not out['ekko av']['on'] and not out['ekko av']['box'] and not out['ekko av']['echo'], f'{tag}: ekkoloddet av skjuler varmekartet, boksen og ekkoloddvinduet', out['ekko av'])
+    check(out['ekko av']['tier'] is None and not out['ekko av']['on'] and not out['ekko av']['box'] and not out['ekko av']['echo'], f'{tag}: ekkoloddet av skjuler varmekartet og skalaen i toppbaren', out['ekko av'])
     check(out['sonar alene']['tier'] == 'sonar' and out['sonar alene']['on'] == 'sonar', f'{tag}: sonaren alene viser varmekartet', out['sonar alene'])
     check(out['begge av']['tier'] is None and not out['begge av']['on'], f'{tag}: ekkolodd og sonar av: ingenting vises', out['begge av'])
     check(out['i havn']['tier'] and not out['i havn']['on'], f'{tag}: i havn tegnes ikke varmekartet', out['i havn'])
 
     # the species: switching redraws without working anything out again
     await pg.evaluate(SETUP, ['chirp', 'nav', 2, 0, True, True]); await pg.wait_for_function(DONE, timeout=20000); await pg.wait_for_timeout(300)
-    r = json.loads(await pg.evaluate("""JSON.stringify((() => { const n0 = HEATC.stats.n, b = document.querySelector('#panel .seg.hsp button[data-s=torsk]'); b.click();
+    r = json.loads(await pg.evaluate("""JSON.stringify((() => { const n0 = HEATC.stats.n; plotSetOpen(true); const b = document.querySelector('#plotSet .seg.hsp button[data-s=torsk]'); b.click(); plotSetOpen(false);
       const v = heatAt(S.boat.pos); return {sp:heatSpecies(), n:HEATC.stats.n - n0, cod:v[0], all:heatValue(v, 'all'), chip:document.querySelector('#heatBox .hb-sp').textContent}; })())"""))
     check(r['sp'] == 'torsk' and r['n'] == 0 and r['cod'] < r['all'] and 'Torsk' in r['chip'], f'{tag}: artsvalget bytter til torsk uten ny utregning, og brikka på kartet viser arten', r)
 
     # the box never shows a number for the fish: no kilos, no rates, only «Lite fisk» to «Mye fisk»; and the afterglow fades
     await pg.wait_for_timeout(1200)
-    r = json.loads(await pg.evaluate("""JSON.stringify((() => { const tx = $('heatBox').textContent; return {tx, kg:/kg|\\d+\\s*%/.test(tx), scale:/Lite fisk/.test(tx) && /Mye fisk/.test(tx)}; })())"""))
+    r = json.loads(await pg.evaluate("""JSON.stringify((() => { const tx = $('heatBox').textContent; return {tx, kg:/kg|\\d+\\s*%/.test(tx), scale:/lite/.test(tx) && /mye fisk/.test(tx)}; })())"""))
     check(not r['kg'] and r['scale'], f'{tag}: boksen viser ingen tall for fisken, bare en skala fra «Lite fisk» til «Mye fisk»', r['tx'][:90])
     r = json.loads(await pg.evaluate("""JSON.stringify((() => { const b = S.boat, p0 = {...b.pos}, k = heatKey(Math.floor(p0.x / HEATC.cs), Math.floor(p0.y / HEATC.cs));
       b.pos = {x:p0.x + 3.5, y:p0.y}; S.t += 10; heatTick(); const c = HEATC.cells.get(k), a10 = c ? 0.6 * Math.max(0, 1 - (S.t - c.seen) / HEAT.glow) : null;

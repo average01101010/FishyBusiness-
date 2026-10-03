@@ -54,8 +54,10 @@ function heatTick(){
       const x = (ix + 0.5) * cs, y = (iy + 0.5) * cs, d2 = (x - p.x) ** 2 + (y - p.y) ** 2, d2a = (x - p.x - hx) ** 2 + (y - p.y - hy) ** 2;
       if (d2 > R2 && d2a > R2) continue;
       const k = heatKey(ix, iy); let c = HEATC.cells.get(k);
-      if (!c){ c = {x, y, v:null, t:-1e9, h:-1, seen:-1e9}; HEATC.cells.set(k, c); }
-      if (d2 <= r2) c.seen = S.t;
+      if (!c){ c = {x, y, v:null, t:-1e9, h:-1, seen:-1e9, near:1}; HEATC.cells.set(k, c); }
+      // near: the closest the cell has come to the boat (a share of the radius) while it has stayed lit, so the picture can fade towards
+      // the ring's edge (03c-heat.js heatImage)
+      if (d2 <= r2){ const n = Math.sqrt(d2) / T.r; c.near = S.t - c.seen > HEAT.glow ? n : Math.min(c.near, n); c.seen = S.t; }
       if (!c.v || S.t - c.t >= T.every || c.h !== hr) want.push([Math.min(d2, d2a), c]);
     }
   // the afterglow fades, and old cells are let go
@@ -65,7 +67,7 @@ function heatTick(){
   HEATC.queue = want.map(w => w[1]); HEATC.qi = 0;
   if (HEATC.queue.length) heatWork();
 }
-// work through the queue in slices of a few milliseconds, the way «Følg leia» searches, so frames stay smooth on a tablet
+// work through the queue in slices of a few milliseconds, the way Autonav searches (11-route.js), so frames stay smooth on a tablet
 let heatLastHook = 0;
 function heatWork(){
   if (HEATC.busy) return; HEATC.busy = true;

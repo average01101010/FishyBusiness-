@@ -44,6 +44,8 @@ async def main():
         await pg.evaluate("""(()=>{ S.mult = 0.00001; const q = portById('torsken'), b = S.boat; b.type = 'sjark'; applyVessel(); b.status = 'port'; b.port = 'torsken'; b.pos = {...q.p}; b.land = null; S.plan = null; G3.vesselChanged();
           S.hold = [{sp:'sei', cls:1, kg:900, n:200, bled:true, iced:true, hr:0, fresh:95, gut:false, hook:true}]; startLanding(false);
           const t0 = performance.now() / 1000; for (let i = 0; i < 60; i++) G3._debug.stepBoat(0.05, t0 + i * 0.05, 0); const c = G3._debug.cam; c.dist = 30; c.yaw = 1.2; c.pitch = 0.3; })()""")
+        # the sjark's model and the landing scene take a moment to come (2.6 s here): wait for them instead of a fixed pause
+        await pg.wait_for_function("!!G3._debug.PLANTS.find(q => q.id === 'torsken').scene", timeout=30000)
         S3 = []
         for e in [5 + 0.40 * 2.5, 5 + 0.90 * 2.5, 5 + 1.40 * 2.5, 5 + 1.90 * 2.5]:
             await pg.evaluate(f"S.boat.land.t0 = S.t + liveFrac() - {e}"); await pg.wait_for_timeout(1500)

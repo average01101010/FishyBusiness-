@@ -34,6 +34,6 @@ async def main():
         await pg.evaluate("S.t = Math.round((Date.UTC(2028, 3, 20, 9) - EPOCH) / 6e4); PHONE.open('kvote')"); await pg.wait_for_timeout(600)
         await pg.screenshot(path='q1.png')
         await pg.evaluate("PHONE.show(false)"); await pg.wait_for_timeout(300)
-        await pg.click('#gpsBtn'); await pg.wait_for_timeout(2500); await pg.screenshot(path='q2.png')
+        await pg.click('#miniPlot'); await pg.wait_for_timeout(2500); await pg.screenshot(path='q2.png')
         print('errors:', errs[:4]); await b.close()
 asyncio.run(main())

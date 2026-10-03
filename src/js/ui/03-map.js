@@ -115,7 +115,7 @@ function updateMapButtons(){
   $('modeBtn').textContent = g3 ? (G3.isHelm() ? t('cam_follow') : t('cam_helm')) : (S.settings.plotter ? t('mode_chart') : t('mode_plot'));
   $('instrBtn').classList.toggle('on', S.settings.instr !== false);
   $('modeBtn').classList.toggle('locked', !g3 && !S.equip.plotter);
-  $('ecRoute').textContent = S.lang === 'no' ? 'Rute' : 'Route'; $('plotStyle').classList.toggle('locked', !S.equip.plotter);
+  $('ecRoute').textContent = S.lang === 'no' ? 'Rute' : 'Route'; $('ecSet').textContent = S.lang === 'no' ? 'Innstillinger' : 'Settings'; $('ecClose').textContent = S.lang === 'no' ? 'Lukk' : 'Close'; $('plotStyle').classList.toggle('locked', !S.equip.plotter);
   $('camBtn').classList.toggle('on', g3 && G3.isHelm()); $('camBtn').setAttribute('aria-label', g3 && G3.isHelm() ? t('cam_follow') : t('cam_helm'));
 }
 function renderStatic(){
@@ -288,6 +288,7 @@ function addWaypoint(pt){
   renderDyn(); renderRouteTools();
 }
 $('rUndo').onclick = () => routeUndoRedo(false);
-$('rLeia').onclick = () => leiaArm(!LEIA_ARM);
+$('rAuto').onclick = () => leiaArm(!LEIA_ARM);
+$('rPlay').onclick = () => routePlay();
 $('rRedo').onclick = () => routeUndoRedo(true);
 

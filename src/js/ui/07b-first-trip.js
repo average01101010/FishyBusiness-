@@ -19,11 +19,11 @@ const inPlot = () => document.body.classList.contains('vplot');
 const planEnds = id => !!(S.plan && S.plan.wps.length && S.plan.wps[S.plan.wps.length - 1].port === id);
 const draftEnds = id => !!(S.draft.length && S.draft[S.draft.length - 1].port === id);
 // open the phone: the button on the chart in 3D; from the plotter, back to 3D first
-const phoneTarget = () => inPlot() ? {el:vis('#ecClose'), no:'Gå tilbake til 3D først.', en:'Go back to 3D first.'} : {el:vis(['#phoneFab', '#phoneBtn'])};
+const phoneTarget = () => inPlot() ? {el:vis('#ecClose'), no:'Trykk «Lukk» for å gå tilbake til 3D først.', en:'Tap «Close» to go back to 3D first.'} : {el:vis(['#phoneFab', '#phoneBtn'])};
 // open a page in the dock's drawer: the button, then the item in its fan (ui/10c-dock.js)
 function dockApp(menu, item, page, inner){
   if (DOCK.page === page) return {el:inner ? vis(inner) : null, scroll:true};
-  if (inPlot()) return {el:vis('#ecClose'), no:'Gå tilbake til 3D først.', en:'Go back to 3D first.'};
+  if (inPlot()) return {el:vis('#ecClose'), no:'Trykk «Lukk» for å gå tilbake til 3D først.', en:'Tap «Close» to go back to 3D first.'};
   return {el:DOCK.menuOpen === menu ? vis('#dockFan [data-dk=' + item + ']') : vis('#dock [data-dk=' + menu + ']')};
 }
 function phoneApp(app, inner){
@@ -39,19 +39,19 @@ const TSTEPS = [
       const t0 = dockApp('verft', 'fiskeutstyr', 'fiske', null);
       return {...t0, no:'Velkommen om bord! Først trenger du utstyr. Trykk Verft og så Fiskeutstyr: håndjuksa og 150 kg is er gratis denne gangen.', en:'Welcome aboard! First you need gear. Tap Yard and then Tackle: a hand jig and 150 kg of ice are free this time.'}; }},
   {id:'gps', done:() => inPlot() || !!S.plan || S.boat.status !== 'port',
-    tip:() => PHONE.isOpen() ? {el:vis('#phone .ph-nav [data-pa=close]'), no:'Lukk telefonen. Nå skal du planlegge turen.', en:'Close the phone. Now you plan the trip.'} : DOCK.page ? {el:vis('#drawerClose'), no:'Lukk Fiskeutstyr. Nå skal du planlegge turen.', en:'Close the tackle shop. Now you plan the trip.'} : {el:vis('#gpsBtn'), no:'Trykk på GPS-en for å åpne kartplotteren.', en:'Tap the GPS to open the chart plotter.'}},
+    tip:() => PHONE.isOpen() ? {el:vis('#phone .ph-nav [data-pa=close]'), no:'Lukk telefonen. Nå skal du planlegge turen.', en:'Close the phone. Now you plan the trip.'} : DOCK.page ? {el:vis('#drawerClose'), no:'Lukk Fiskeutstyr. Nå skal du planlegge turen.', en:'Close the tackle shop. Now you plan the trip.'} : {el:vis('#miniPlot'), no:'Trykk på GPS-en for å åpne kartplotteren.', en:'Tap the GPS to open the chart plotter.'}},
   {id:'route1', live:true, view:() => [PORTS[0].p, tutField().p], done:() => tutFieldWp(S.draft) >= 0 || (S.plan && tutFieldWp(S.plan.wps) >= 0) || S.boat.status === 'fishing',
-    tip:() => { if (!inPlot()) return {el:vis('#gpsBtn'), no:'Åpne kartplotteren igjen.', en:'Open the chart plotter again.'};
+    tip:() => { if (!inPlot()) return {el:vis('#miniPlot'), no:'Åpne kartplotteren igjen.', en:'Open the chart plotter again.'};
       const g = tutField();
       if (LEIA_ARM || LEIA_BUSY) return {map:{p:g.p, r:g.r}, no:'Trykk i kartet innenfor ringen ved Gisundet nord. Der står fisken nå.', en:'Tap the chart inside the ring at North Gisundet. That is where the fish are.'};
-      return {el:vis(['#rLeia', '#panel [data-act=leia]']), no:'Fisken står i Gisundet nord. Trykk «Følg leia», og så i ringen der, så finner båten en trygg vei. Du kan også sette punktene selv.', en:'The fish are at North Gisundet. Tap «Follow the fairway», then inside the ring there, and the boat finds a safe way. You can also set the points yourself.'}; }},
+      return {el:vis('#rAuto'), no:'Fisken står i Gisundet nord. Trykk «Autonav», og så i ringen der, så finner båten en trygg vei. Du kan også sette punktene selv.', en:'The fish are at North Gisundet. Tap «Autonav», then inside the ring there, and the boat finds a safe way. You can also set the points yourself.'}; }},
   {id:'fish2', live:true, done:() => tutFieldFish() >= 2 || S.boat.status === 'fishing',
     tip:() => { const k = tutFieldWp(S.draft); if (k < 0) return {no:'Legg et punkt innenfor ringen igjen.', en:'Put a point inside the ring again.'};
       if (window.innerWidth <= 700) document.body.classList.add('drawer');
       return {el:vis('#panel .wpc[data-i="' + k + '"] [data-act=fp]'), scroll:true, no:'Gi punktet minst 2 timer fisketid med +. Båten fisker der til tida er ute.', en:'Give the point at least 2 hours of fishing time with +. The boat fishes there until the time is up.'}; }},
   {id:'cast1', done:() => !!S.plan || ['unmooring', 'sailing', 'fishing'].includes(S.boat.status),
     tip:() => { const e = estimate();
-      if (e.bad >= 0) return {el:vis(['#rUndo', '#panel [data-act=clear]']), no:'Etappe ' + legName(e.bad) + ' krysser land. Trykk angre, og bruk «Følg leia», eller dra punktet ut på sjøen.', en:'Leg ' + legName(e.bad) + ' crosses land. Tap undo and use «Follow the fairway», or drag the point out to sea.'};
+      if (e.bad >= 0) return {el:vis(['#rUndo', '#panel [data-act=clear]']), no:'Etappe ' + legName(e.bad) + ' krysser land. Trykk angre, og bruk «Autonav», eller dra punktet ut på sjøen.', en:'Leg ' + legName(e.bad) + ' crosses land. Tap undo and use «Autonav», or drag the point out to sea.'};
       if (e.fuel > S.boat.fuel) return {el:vis('#panel [data-act=clear]'), no:'Turen bruker mer drivstoff enn du har. Gjør ruta kortere.', en:'The trip needs more fuel than you have. Make the route shorter.'};
       return {el:vis('#panel .rbar [data-act=start]'), no:'Trykk «Kast loss». Båten kjører selv ut til feltet.', en:'Tap «Cast off». The boat runs out to the grounds on its own.'}; }},
   {id:'haill', done:() => !!(S.haill && S.haill.type === 'luksus'),
@@ -59,24 +59,24 @@ const TSTEPS = [
       return {...t0, no:(S.boat.tutWait ? 'Båten venter på feltet til du har hentet haillen. ' : 'Mens båten går ut: ') + 'Åpne Haill-appen og hent en gratis luksushaill. Den gir bedre fiskelykke i sju døgn.', en:(S.boat.tutWait ? 'The boat waits on the grounds until you have fetched the luck. ' : 'While the boat heads out: ') + 'Open the Luck app and fetch a free luxury luck. It brings better fishing for seven days.'}; }},
   {id:'fish', done:() => S.tut.m.rodOn || (S.fsess && S.t - S.fsess.t0 >= 20) || (S.tut.m.cast1 && S.boat.status === 'idle' && holdTotal() > 1 && !S.boat.tutWait),
     tip:() => { if (S.boat.status !== 'fishing') return {no:'Båten er på vei ut. Den begynner å fiske når den er fremme.', en:'The boat is on its way out. It starts fishing when it gets there.', small:true};
-      if (inPlot()) return {el:vis('#ecClose'), no:'Nå fisker juksa. Gå tilbake til 3D for å se fisket.', en:'The jig is fishing now. Go back to 3D to watch.'};
+      if (inPlot()) return {el:vis('#ecClose'), no:'Nå fisker juksa. Trykk «Lukk» for å se fisket i 3D.', en:'The jig is fishing now. Tap «Close» to watch in 3D.'};
       return {el:vis('#dock [data-act=rod]'), no:'Nå fisker juksa for deg. Trykk «Fisk selv» for å prøve stanga også: trykk «Trekk!» når det napper, og hold «Sveiv».', en:'The jig fishes for you now. Tap «Fish yourself» to try the rod too: tap «Strike!» when it bites, and hold «Reel».'}; }},
   {id:'deck', ok:true, done:() => false,
     tip:() => ({el:vis(['#dockInfo', '#hud']), no:'Fisken blør i bløggekaret idet den kommer over ripa. Så blir den sløyd og iset. Isen holder kvaliteten oppe, og kvaliteten gir prisen.', en:'The fish is bled in the tub as it comes over the rail. Then it is gutted and iced. The ice keeps the quality up, and the quality sets the price.'})},
   {id:'full', done:() => holdTotal() >= capHold() - 1 || (S.boat.status === 'idle' && holdTotal() > 1 && !S.boat.fishUntil && !S.boat.tutWait) || !!S.lastSale,
     tip:() => ({el:vis('#hud'), no:'Lasterommet fylles. Når det er fullt, går du til Botnhamn og leverer.', en:'The hold is filling up. When it is full, you go to Botnhamn and land the catch.', small:true})},
   {id:'route2', live:true, view:() => [S.boat.pos, portById('botnhamn').p], done:() => draftEnds('botnhamn') || planEnds('botnhamn') || (S.boat.status === 'port' && S.boat.port === 'botnhamn'),
-    tip:() => { if (!inPlot()) return {el:vis('#gpsBtn'), no:'Lasten er full! Åpne kartplotteren. Finnsnes har ikke fiskemottak, så fisken skal til Botnhamn.', en:'The hold is full! Open the chart plotter. Finnsnes has no fish plant, so the catch goes to Botnhamn.'};
+    tip:() => { if (!inPlot()) return {el:vis('#miniPlot'), no:'Lasten er full! Åpne kartplotteren. Finnsnes har ikke fiskemottak, så fisken skal til Botnhamn.', en:'The hold is full! Open the chart plotter. Finnsnes has no fish plant, so the catch goes to Botnhamn.'};
       if (LEIA_ARM || LEIA_BUSY) return {map:{p:portById('botnhamn').p, r:0.5}, no:'Trykk på Botnhamn i kartet.', en:'Tap Botnhamn on the chart.'};
-      return {el:vis(['#rLeia', '#panel [data-act=leia]']), no:'Trykk «Følg leia», og så på Botnhamn i kartet. Båten finner en trygg vei dit.', en:'Tap «Follow the fairway», then Botnhamn on the chart. The boat finds a safe way there.'}; }},
+      return {el:vis('#rAuto'), no:'Trykk «Autonav», og så på Botnhamn i kartet. Båten finner en trygg vei dit.', en:'Tap «Autonav», then Botnhamn on the chart. The boat finds a safe way there.'}; }},
   {id:'cast2', done:() => (planEnds('botnhamn') && S.boat.status !== 'idle') || (S.boat.status === 'port' && S.boat.port === 'botnhamn'),
-    tip:() => { const e = estimate(); if (e.bad >= 0) return {el:vis(['#rUndo', '#panel [data-act=clear]']), no:'Etappe ' + legName(e.bad) + ' krysser land. Trykk angre, og bruk «Følg leia».', en:'Leg ' + legName(e.bad) + ' crosses land. Tap undo and use «Follow the fairway».'};
+    tip:() => { const e = estimate(); if (e.bad >= 0) return {el:vis(['#rUndo', '#panel [data-act=clear]']), no:'Etappe ' + legName(e.bad) + ' krysser land. Trykk angre, og bruk «Autonav».', en:'Leg ' + legName(e.bad) + ' crosses land. Tap undo and use «Autonav».'};
       return {el:vis('#panel .rbar [data-act=start]'), no:'Trykk «Kast loss».', en:'Tap «Cast off».'}; }},
   {id:'chip', ok:true, done:() => S.boat.status === 'port' && S.boat.port === 'botnhamn',
     tip:() => ({el:vis('#hud .st.nx'), no:'Brikka «Neste» viser hva som skjer og når, også hvor lenge det er i ekte tid. Båten kjører selv, så du kan gjøre andre ting imens.', en:'The «Next» chip shows what happens next and when, also how long that is in real time. The boat runs on its own, so you can do other things meanwhile.'})},
   {id:'land', done:() => !!S.boat.land || !!(S.lastSale && S.lastSale.port === 'botnhamn'),
     tip:() => { if (!(S.boat.status === 'port' && S.boat.port === 'botnhamn')) return {el:vis('#hud .st.nx'), no:'Båten er på vei til Botnhamn.', en:'The boat is on its way to Botnhamn.', small:true};
-      if (inPlot()) return {el:vis('#ecClose'), no:'Fremme! Gå tilbake til 3D for å levere.', en:'Arrived! Go back to 3D to land the catch.'};
+      if (inPlot()) return {el:vis('#ecClose'), no:'Fremme! Trykk «Lukk» og lever i 3D.', en:'Arrived! Tap «Close» and land the catch in 3D.'};
       return {...dockApp('marked', 'lever', 'lever', '#drawerBody [data-act=sell]'), no:'Fremme i Botnhamn. Trykk Marked, så Lever, og «Lever» for å levere fisken.', en:'Arrived at Botnhamn. Tap Market, then Land, and «Land» to land the catch.'}; }},
   {id:'slip', ok:true, done:() => false,
     tip:() => { if (S.boat.land) return {el:vis('#hud .st.nx'), no:'Kranen løfter fisken på land. Sluttseddelen kommer når lossingen er ferdig.', en:'The crane lifts the catch ashore. The landing note comes when the landing is done.', small:true, noOk:true};

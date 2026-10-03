@@ -36,7 +36,7 @@ async def run(p, w, h, tag):
     # in port: Marked, Bygd, Verft, Beholdning and Planlegg; the old action bar is gone
     await pg.evaluate("S.cash = 200000; renderActs()")
     d = await ids()
-    check(d == ['marked', 'bygd', 'verft', 'beh', 'kart'], 'i havn: Marked, Bygd, Verft, Beholdning og Planlegg', d)
+    check(d == ['marked', 'bygd', 'verft', 'beh'], 'i havn: Marked, Bygd, Verft og Beholdning (Planlegg er borte: den lille kartplotteren åpner den store)', d)
     check(not await pg.evaluate("!!document.getElementById('actbar')"), 'den gamle handlingslinja er borte')
     lbl = await pg.evaluate("[...document.querySelectorAll('#dock .dk-l')].map(x => x.textContent)")
     check(lbl[:3] == ['Marked', 'Bygd', 'Verft'], 'knappene har kort tekst under ikonet', lbl)

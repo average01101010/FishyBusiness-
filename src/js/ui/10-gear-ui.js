@@ -84,7 +84,7 @@ function buoyStandoff(s, e){
 // a tap on a buoy: while planning, the haul goes into the route; otherwise the set is described
 function gearTap(hit){
   const b = S.boat, s = hit.s;
-  // with «Følg leia» (or Auto-nav) the way goes to a point just off the buoy, where «Ta opp» can haul it
+  // with Autonav the way goes to a point just off the buoy, where «Ta opp» can haul it
   if (LEIA_ARM && s.vid === S.cur && !s.lost){ leiaTo(buoyStandoff(s, hit.e)); return; }
   if (s.vid === S.cur && !s.lost && ['port', 'idle'].includes(b.status)){
     addWaypoint(hit.e); const w = S.draft[S.draft.length - 1];

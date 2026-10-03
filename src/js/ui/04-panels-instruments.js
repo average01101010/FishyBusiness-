@@ -48,7 +48,7 @@ function renderHud(){
   const lvl = riskLevel(W, hs);
   const dot = b.status === 'adrift' || b.status === 'engine' ? 'bad' : (b.status === 'sailing' || b.status === 'fishing') ? 'go' : '';
   document.body.classList.toggle('sailing', b.status === 'sailing');
-  requestAnimationFrame(() => { $('mapwrap').style.setProperty('--gpsTop', (hud.offsetTop + hud.offsetHeight + 6) + 'px'); });
+  requestAnimationFrame(() => { const mw = $('mapwrap').style; mw.setProperty('--gpsTop', (hud.offsetTop + hud.offsetHeight + 6) + 'px'); mw.setProperty('--hudW', hud.offsetWidth + 'px'); });
   const nx = nextEvent();
   hud.innerHTML = '<div class="hd"><span>' + dayStr(S.t / 60) + ' ' + hm(S.t / 60) + '</span><b class="' + (S.cash < 0 ? 'r2' : '') + '">' + kr(S.cash) + '</b></div><div class="st"><i class="dot ' + dot + '"></i>' + statusText() + '</div>' + (nx ? '<div class="st nx">⏱ ' + nx.txt + ' ' + inReal(nx.t - S.t) + ' <small>(' + hm(nx.t / 60) + ')</small></div>' : '') +
     (S.fleet && S.fleet.length > 1 ? '<div class="row"><span>' + (S.lang === 'no' ? 'Båt' : 'Vessel') + '</span><b>' + S.boatName + (meAboard() ? ' ⚓' : '') + '</b></div>' : '') +
@@ -89,88 +89,52 @@ function microBottom(p, d){ return (vnoise2(p.x * 40, p.y * 40, 3) - 0.5) * Math
 
 // ---------- instruments: GPS and echo sounder ----------
 const INSTR = (() => {
-  const box = $('instr'), gps = $('gps'), cv = $('echo'), ctx = cv.getContext('2d'), dEl = $('echoDepth'), tEl = $('echoTemp'), sEl = $('echoScale');
-  let raf = 0, last = 0, range = 0, W = 0, Hp = 0, dpr = 1, jig = 0;
-  const targets = [], STEPS = [10, 20, 30, 50, 80, 120, 200, 300, 500, 800];
-  const BAND = {torsk:d => d - 1 - Math.random() * Math.min(12, d * 0.3), hyse:d => d - 0.4 - Math.random() * Math.min(4, d * 0.1), sei:d => d * (0.25 + Math.random() * 0.5), lange:d => d - 0.4 - Math.random() * 2.5, brosme:d => d - 0.4 - Math.random() * 2.5, lyr:d => d * (0.6 + Math.random() * 0.35), uer:d => d - 0.6 - Math.random() * 3, kveite:d => d - 0.3 - Math.random() * 1.2};
-  // the GPS is always on; the echo sounder can be switched off on the chart plotter's side panel, and then it stops drawing
-  const on = () => true, echoOn = () => !S.settings || S.settings.echo !== false;
-  function show(){ box.hidden = !on(); box.classList.toggle('echoOff', !echoOn()); if (echoOn() && !raf) raf = requestAnimationFrame(loop); renderGPS(); }
-  function clear(){ ctx.fillStyle = '#021628'; ctx.fillRect(0, 0, W, Hp); }
-  function setRange(r){ if (r === range) return; range = r; clear(); sEl.innerHTML = [0.25, 0.5, 0.75].map(f => '<span style="top:calc(' + f * 100 + '% - 5px)">' + Math.round(r * f) + '</span>').join('') + '<span style="bottom:1px">' + r + '</span>'; }
-  function loop(ts){
-    raf = 0; if (!echoOn() || document.hidden) return; raf = requestAnimationFrame(loop);
-    dpr = Math.min(2, window.devicePixelRatio || 1);
-    const hid = !cv.clientWidth; if (hid) dpr = 1; const w = hid ? 200 : Math.round(cv.clientWidth * dpr), h = hid ? 290 : Math.round(cv.clientHeight * dpr); if (!w || !h) return;
-    if (w !== W || h !== Hp){ W = cv.width = w; Hp = cv.height = h; range = 0; }
-    if (ts - last < 100) return; last = ts; ping();
-  }
-  function ping(){
-    const pose = livePose(), p = pose.p, H = (S.t + pose.frac) / 60, b = S.boat;
-    let d = Math.max(1, depthF(p) + tideCD(H)); d = Math.max(0.8, d + microBottom(p, d));
-    let want = STEPS.find(v => v >= d * 1.25) || 800; if (range && want < range && d * 1.25 > range * 0.55) want = range; setRange(want);
-    const sx = Math.max(1, Math.round(dpr * 1.5)), x = W - sx, top = 2 * dpr, ppm = (Hp - top) / range;
-    ctx.drawImage(cv, -sx, 0);
-    ctx.fillStyle = '#021628'; ctx.fillRect(x, 0, sx, Hp);
-    // surface clutter from waves and bubbles
-    const cl = (0.5 + hsAt(p, H) * 1.3) * ppm;
-    for (let y = top; y < top + cl; y += dpr * 1.5) if (Math.random() < 0.6){ ctx.fillStyle = Math.random() < 0.5 ? '#2f7fd0' : '#3fb48a'; ctx.fillRect(x, y, sx, dpr * 1.5); }
-    // plankton and noise
-    for (let k = 0; k < 3; k++) if (Math.random() < 0.3){ ctx.fillStyle = 'rgba(60,170,120,.55)'; ctx.fillRect(x, top + Math.random() * d * ppm, sx, dpr); }
-    // fish echoes: arches from single fish, clusters from schools
-    if (b.status !== 'port'){
-      const dens = SP.map(sp => [sp, density(sp, p, H)]), tot = dens.reduce((a, q) => a + q[1], 0), moving = b.status === 'sailing' ? 1 : 0.55;
-      // the same sum as the heat map; marks keep growing up to about 100 kg/h, near the top of its scale
-      if (Math.random() < Math.min(0.85, tot * 0.2 * moving * (S.equip.chirp ? 1.3 : 0.75))){
-        let r = Math.random() * tot, sp = dens[0][0]; for (const [k, v] of dens){ if ((r -= v) <= 0){ sp = k; break; } }
-        const n = sp === 'sei' && Math.random() < 0.5 ? 3 + Math.floor(Math.random() * 5) : 1, base = BAND[sp](d);
-        for (let i = 0; i < n; i++) targets.push({d:Math.min(d - 0.4, base + (Math.random() - 0.5) * (n > 1 ? 4 : 0)), life:7 + Math.random() * 9, age:-i * 0.7, sz:(sp === 'sei' || sp === 'hyse' ? 1 : 1.5) + Math.random(), arch:0.6 + Math.random() * 1.4});
-      }
-    }
-    for (let i = targets.length - 1; i >= 0; i--){
-      const q = targets[i]; q.age++; if (q.age < 0) continue; if (q.age > q.life){ targets.splice(i, 1); continue; }
-      const u = q.age / q.life * 2 - 1, st = 1 - u * u, y = top + (q.d + u * u * q.arch) * ppm, hgt = Math.max(dpr, q.sz * dpr * 1.6);
-      ctx.fillStyle = st > 0.75 ? '#ff4030' : st > 0.4 ? '#ffb030' : '#d8e040'; ctx.fillRect(x, y - hgt / 2, sx, hgt);
-    }
-    // the jig when fishing
-    if (b.status === 'fishing'){ jig += 0.35; const jd = d - 1.5 - (Math.sin(jig) * 0.5 + 0.5) * 3.5; ctx.fillStyle = '#ffe860'; ctx.fillRect(x, top + jd * ppm, sx, dpr); }
-    // bottom echo: hard return on top, fading into the seabed, plus a faint double echo
-    const yb = top + d * ppm, hard = 0.6 + vnoise2(p.x * 25, p.y * 25, 9) * 0.8;
-    ctx.fillStyle = '#ff2e22'; ctx.fillRect(x, yb, sx, 2.2 * dpr * hard);
-    ctx.fillStyle = '#ff8a24'; ctx.fillRect(x, yb + 2.2 * dpr * hard, sx, 2.5 * dpr);
-    ctx.fillStyle = '#d8c236'; ctx.fillRect(x, yb + (2.2 * hard + 2.5) * dpr, sx, 2.2 * dpr);
-    ctx.fillStyle = '#4a2c16'; ctx.fillRect(x, yb + (4.4 + 2.2 * hard) * dpr, sx, Hp);
-    if (2 * d < range * 0.98){ ctx.fillStyle = 'rgba(200,60,40,.45)'; ctx.fillRect(x, top + 2 * d * ppm, sx, 1.5 * dpr); }
-    dEl.innerHTML = fmt(d, d < 100 ? 1 : 0) + '<small>m</small>';
-    tEl.textContent = fmt(seasonal(SST, H) + (vnoise2(p.x * 0.3, p.y * 0.3, 2) - 0.5) * 0.8, 1) + ' °C';
-  }
+  // the GPS's readings in the chart plotter's top bar (#ecdisTop); the GPS box and the little echogram box beside it went on
+  // 02.10.2026 (the user's wishes: the box's lines are in the bar, the echo sounder's fish shows on the chart with its scale in the
+  // bar). WPT, XTE and ETA show while a route is sailed (body.navon). echoOn: the echo sounder's setting, which the heat map and
+  // the skiff's console follow
+  const echoOn = () => !S.settings || S.settings.echo !== false;
+  function show(){ renderGPS(); }
   // a grid heading (radians) as the true bearing the instruments show
   const deg3 = (r, p) => String(Math.round(trueDeg(r, p || S.boat.pos)) % 360).padStart(3, '0') + '°';
   function gpsLL(p){
     const {lat, lon} = LL(p), f = (v, w, hh) => { const a = Math.abs(v), dd = Math.floor(a); let m = ((a - dd) * 60).toFixed(3).padStart(6, '0'); if (S.lang === 'no') m = m.replace('.', ','); return String(dd).padStart(w, '0') + '°' + m + "'" + hh; };
     return [f(lat, 2, 'N'), f(lon, 3, S.lang === 'no' ? 'Ø' : 'E')];
   }
+  // the route's numbers: the next point (number, distance, bearing, time), the cross-track error and the time at the end
+  function navOf(pose, H, sog){
+    const b = S.boat; if (!(S.plan && S.plan.idx < S.plan.wps.length && b.status !== 'port')) return null;
+    const wps = S.plan.wps.slice(S.plan.idx), w = wps[0], dw = dist(pose.p, w), brg = Math.atan2(w.x - pose.p.x, -(w.y - pose.p.y));
+    let tot = 0, a = pose.p, fishH = 0; wps.forEach((q, i) => { tot += dist(a, q); a = q; if (i && q.fish > 0) fishH += q.fish; });
+    const v = (sog || S.plan.speed || 10) * NM, last = wps[wps.length - 1], H0 = S.plan.depAt ? Math.max(H, S.plan.depAt / 60) : H;
+    // off the leg from the last point to the next, to starboard (R) or port (L)
+    const p0 = S.plan.idx > 0 ? S.plan.wps[S.plan.idx - 1] : null, lx = p0 ? w.x - p0.x : 0, ly = p0 ? w.y - p0.y : 0, ll2 = Math.hypot(lx, ly);
+    const xt = ll2 > 1e-6 ? (lx * (pose.p.y - p0.y) - ly * (pose.p.x - p0.x)) / ll2 : 0;
+    return {n:S.plan.idx + 1, wpt:fmt(dw / NM, 2) + ' nm ' + deg3(brg), at:hm(H0 + dw / v), xte:fmt(Math.abs(xt) / NM, 2) + ' nm' + (Math.abs(xt) < 0.005 ? '' : xt > 0 ? ' R' : ' L'),
+      dest:last.port ? portById(last.port).name : 'WPT ' + S.plan.wps.length, eta:hm(H0 + tot / v + fishH)};
+  }
+  // the box under the little chart in 3D (the user's wish 02.10.2026): the same width and look as the status box over it
+  function render3d(pose, H, sog, ll, nv){
+    const el = $('gps3d'), no = S.lang === 'no', on = S.boat.status !== 'port'; if (!el) return;
+    if (el.hidden === on) el.hidden = !on; if (!on) return;
+    const row = (k, v) => '<div class="row"><span>' + k + '</span><b>' + v + '</b></div>';
+    el.innerHTML = row(no ? 'Fart' : 'Speed', fmt(sog, 1) + ' kn') + row(no ? 'Kurs' : 'Course', deg3(pose.hd)) + row('POS', ll[0]) + row('', ll[1]) +
+      (nv ? row('WPT ' + nv.n, nv.wpt) + row('XTE', nv.xte) + row(no ? 'Neste' : 'Next', nv.at) + row('ETA ' + nv.dest, nv.eta) : '');
+  }
   function renderGPS(){
-    if (!on()) return;
-    // the echo window follows its setting, however it was changed (the panel, the phone, another vessel)
-    if (box.classList.contains('echoOff') === echoOn()){ box.classList.toggle('echoOff', !echoOn()); if (echoOn() && !raf) raf = requestAnimationFrame(loop); }
-    const pose = livePose(), b = S.boat, H = (S.t + pose.frac) / 60, sog = b.status === 'sailing' ? b.v : 0, ll = gpsLL(pose.p);
-    let wpt = 'WPT  --', xte = 'XTE  --', eta = 'ETA  --:--';
-    if (S.plan && S.plan.idx < S.plan.wps.length){
-      const wps = S.plan.wps.slice(S.plan.idx), w = wps[0], dw = dist(pose.p, w), brg = Math.atan2(w.x - pose.p.x, -(w.y - pose.p.y));
-      let tot = 0, a = pose.p, fishH = 0; wps.forEach((q, i) => { tot += dist(a, q); a = q; if (i && q.fish > 0) fishH += q.fish; });
-      const v = (sog || S.plan.speed || 10) * NM, tw = dw / v, td = tot / v + fishH;
-      const dest = wps[wps.length - 1].port ? portById(wps[wps.length - 1].port).name.slice(0, 6) : 'END';
-      wpt = 'WPT <b>' + (S.plan.idx + 1) + '</b> <b>' + fmt(dw / NM, 2) + '</b>nm <b>' + deg3(brg) + '</b>';
-      xte = 'XTE <b>' + fmt(0, 2) + '</b>nm';
-      const H0 = S.plan.depAt ? Math.max(H, S.plan.depAt / 60) : H;
-      eta = 'ETA <b>' + hm(H0 + tw) + '</b> ' + dest + ' <b>' + hm(H0 + td) + '</b>';
+    const v3 = document.body.classList.contains('v3d'); if (!v3 && !document.body.classList.contains('vplot')) return;
+    const pose = livePose(), b = S.boat, H = (S.t + pose.frac) / 60, sog = b.status === 'sailing' ? b.v : 0, ll = gpsLL(pose.p), no = S.lang === 'no', nv = navOf(pose, H, sog);
+    if (v3){ render3d(pose, H, sog, ll, nv); return; }
+    const nav = !!nv;
+    if (document.body.classList.contains('navon') !== nav) document.body.classList.toggle('navon', nav);
+    if (nav){
+      $('ecWptL').textContent = 'WPT ' + nv.n + ' · ' + nv.at; $('ecWpt').textContent = nv.wpt; $('ecXte').textContent = nv.xte;
+      $('ecEtaL').textContent = 'ETA · ' + nv.dest.toUpperCase(); $('ecEta').textContent = nv.eta;
     }
-    if (document.body.classList.contains('vplot')){ $('ecHdg').textContent = deg3(pose.hd); $('ecCog').textContent = deg3(pose.hd); $('ecSog').textContent = fmt(sog, 1) + ' kn'; $('ecPos').innerHTML = ll[0] + '<br>' + ll[1]; $('ecDepL').textContent = S.lang === 'no' ? 'DYBDE' : 'DEPTH'; $('ecDep').textContent = b.status === 'port' ? '–' : fmt(depthF(pose.p) + tideCD(H), 1) + ' m';
-      const th = tideH(H), up = tideH(H + 0.25) > th, nx = tideEvents(H, 14)[0], st = sunTimes(H);
-      $('ecTideL').textContent = S.lang === 'no' ? 'TIDEVANN' : 'TIDE'; $('ecTide').textContent = (th >= 0 ? '+' : '') + fmt(th, 1) + ' m ' + (up ? '↑' : '↓') + (nx ? ' ' + (nx.kind === 'high' ? (S.lang === 'no' ? 'flo ' : 'HW ') : (S.lang === 'no' ? 'fjære ' : 'LW ')) + hm(nx.t) : '');
-      $('ecSunL').textContent = S.lang === 'no' ? 'SOL' : 'SUN'; $('ecSun').textContent = st.always ? (S.lang === 'no' ? 'Midnattssol' : 'Midnight sun') : st.never ? (S.lang === 'no' ? 'Mørketid' : 'Polar night') : '↑' + (st.up ? hm(st.up) : '–') + ' ↓' + (st.dn ? hm(st.dn) : '–'); }
-    gps.innerHTML = 'POS <b>' + ll[0] + '</b>\n    <b>' + ll[1] + '</b>\nSOG <b>' + fmt(sog, 1) + '</b>kn COG <b>' + deg3(pose.hd) + '</b>\nHDG <b>' + deg3(pose.hd) + '</b>\n' + wpt + '\n' + xte + '\n' + eta;
+    $('ecHdg').textContent = deg3(pose.hd); $('ecCog').textContent = deg3(pose.hd); $('ecSog').textContent = fmt(sog, 1) + ' kn'; $('ecPos').innerHTML = ll[0] + '<br>' + ll[1]; $('ecDepL').textContent = no ? 'DYBDE' : 'DEPTH'; $('ecDep').textContent = b.status === 'port' ? '–' : fmt(depthF(pose.p) + tideCD(H), 1) + ' m';
+    const th = tideH(H), up = tideH(H + 0.25) > th, nx = tideEvents(H, 14)[0], st = sunTimes(H);
+    $('ecTideL').textContent = no ? 'TIDEVANN' : 'TIDE'; $('ecTide').textContent = (th >= 0 ? '+' : '') + fmt(th, 1) + ' m ' + (up ? '↑' : '↓') + (nx ? ' ' + (nx.kind === 'high' ? (no ? 'flo ' : 'HW ') : (no ? 'fjære ' : 'LW ')) + hm(nx.t) : '');
+    $('ecSunL').textContent = no ? 'SOL' : 'SUN'; $('ecSun').textContent = st.always ? (no ? 'Midnattssol' : 'Midnight sun') : st.never ? (no ? 'Mørketid' : 'Polar night') : '↑' + (st.up ? hm(st.up) : '–') + ' ↓' + (st.dn ? hm(st.dn) : '–');
   }
   document.addEventListener('visibilitychange', () => { if (!document.hidden) show(); });
   return {show, renderGPS, echoOn};

@@ -17,7 +17,7 @@ async def main():
         print('vessels sharing a harbour, metres apart:', json.dumps(r['pairs']))
         # a real tap on the Husøy harbour point in the plotter
         await pg.evaluate("S.tut=0; S.t = Math.round((Date.UTC(2027, 2, 10, 1) - EPOCH) / 6e4); S.boat.status='port'; S.boat.port='finnsnes'; S.boat.pos={...portById('finnsnes').p}; S.draft=[];")
-        await pg.click('#gpsBtn'); await pg.wait_for_timeout(1200)
+        await pg.click('#miniPlot'); await pg.wait_for_timeout(1200)
         await pg.evaluate("const q = portById('husoy').p; view.cx = q.x; view.cy = q.y; view.z = 40; applyView(); scheduleStatic(); renderDyn();"); await pg.wait_for_timeout(1500)
         box = await pg.evaluate("(() => { const r = svg.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; })()")
         await pg.mouse.click(box[0], box[1]); await pg.wait_for_timeout(800)

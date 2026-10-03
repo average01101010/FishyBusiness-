@@ -141,28 +141,45 @@ async def leia(p):
         rows.append(json.loads(await pg.evaluate("""async (rt) => { const F = portById('finnsnes'), g = rt[rt.length - 1], sd = safeDepth(); const res = await leiaRoute(F.p, g, 'finnsnes', null);
           if (res.why) return JSON.stringify({why:res.why}); const ti = await leiaRoute(F.p, g, 'finnsnes', null, {tight:true}); let man = dist(F.p, rt[0]); for (let i = 1; i < rt.length; i++) man += dist(rt[i - 1], rt[i]);
           let a = F.p, bad = 0; res.wps.forEach(w => { if (!clearLine(a, w) || legHazard(a, w, sd).unsafe) bad++; a = w; });
-          return JSON.stringify({n:res.wps.length, nm:+res.nm.toFixed(2), hand:+(res.nm / (man / NM)).toFixed(3), tight:+(res.nm / ti.nm).toFixed(3), bad, slice:+res.st.maxSlice.toFixed(1), at:res.st.at, ms:Math.round(res.st.ms)}); }""", R[k])))
+          return JSON.stringify({n:res.wps.length, max:res.st.maxWp, nm:+res.nm.toFixed(2), hand:+(res.nm / (man / NM)).toFixed(3), tight:+(res.nm / ti.nm).toFixed(3), bad, slice:+res.st.maxSlice.toFixed(1), at:res.st.at, ms:Math.round(res.st.ms)}); }""", R[k])))
     rows.append(json.loads(await pg.evaluate("""async () => { const F = portById('finnsnes'), B = portById('botnhamn'), sd = safeDepth(); const res = await leiaRoute(F.p, B.p, 'finnsnes', 'botnhamn'); let a = F.p, bad = 0; res.wps.forEach(w => { if (!clearLine(a, w) || legHazard(a, w, sd).unsafe) bad++; a = w; });
-      const last = res.wps[res.wps.length - 1]; return JSON.stringify({n:res.wps.length, nm:+res.nm.toFixed(2), bad, end:dist(last, B.p) < 0.001, slice:+res.st.maxSlice.toFixed(1), at:res.st.at, ms:Math.round(res.st.ms)}); }""")))
+      const last = res.wps[res.wps.length - 1]; return JSON.stringify({n:res.wps.length, max:res.st.maxWp, nm:+res.nm.toFixed(2), bad, end:dist(last, B.p) < 0.001, slice:+res.st.maxSlice.toFixed(1), at:res.st.at, ms:Math.round(res.st.ms)}); }""")))
     print('    ', rows)
     ok = [r for r in rows if 'why' not in r]
-    check(len(ok) == len(rows) and all(r['bad'] == 0 for r in ok) and rows[-1]['end'], 'Følg leia: alle etapper til de seks feltene og Botnhamn er fri for land, grunner og skjær')
-    check(all(r['n'] <= 12 for r in ok), 'Følg leia: høyst 12 WP', [r['n'] for r in ok])
-    check(all(r['slice'] < 16 for r in ok), 'Følg leia: hver bit tar under 16 ms', [(r['slice'], r.get('at')) for r in ok])
+    check(len(ok) == len(rows) and all(r['bad'] == 0 for r in ok) and rows[-1]['end'], 'Autonav: alle etapper til de seks feltene og Botnhamn er fri for land, grunner og skjær')
+    check(all(r['n'] <= r['max'] for r in ok), 'Autonav: høyst maxWp WP (12 på ruter under 80 km, flere på lengre)', [(r['n'], r['max']) for r in ok])
+    check(all(r['slice'] < 16 for r in ok), 'Autonav: hver bit tar under 16 ms', [(r['slice'], r.get('at')) for r in ok])
     tight = [r['tight'] for r in ok[:-1]]; hand = [r['hand'] for r in ok[:-1]]
-    check(all(0.99 <= x <= 1.35 for x in tight), 'Følg leia er litt lengre enn den strammeste veien langs land (eller like lang: 1 % for avrundingen)', tight)
+    check(all(0.99 <= x <= 1.35 for x in tight), 'Autonav er litt lengre enn den strammeste veien langs land (eller like lang: 1 % for avrundingen)', tight)
     check(all(0.85 <= x <= 1.35 for x in hand), 'og 0,85–1,35 ganger de håndtegnede testrutene (de er ikke de korteste)', hand)
+
+    # phase K9: Autonav anywhere on the coast. The ends are the nearest sea 300 m or more from the land near each town; a way must be
+    # found, clear of land and hazards, within 40 waypoints (maxWp is a target), no more than 1.6 times the straight line, in slices under 16 ms, and
+    # Bergen to Florø inside the skerries (no point of it more than 4 km from the land)
+    nat = {}
+    for name, a, bb, aport in [('Finnsnes–Tromsø', None, (69.652, 18.962), 'finnsnes'), ('Bodø–Reine', (67.287, 14.385), (67.931, 13.088), None), ('Bergen–Florø', (60.398, 5.315), (61.599, 5.035), None)]:
+        nat[name] = json.loads(await pg.evaluate("""async ([a, b, aport]) => { const sea = ([la, lo]) => { const c = P(la, lo); for (let r = 0; r <= 60; r++) for (let k = 0; k < Math.max(1, r * 6); k++){ const t = k / Math.max(1, r * 6) * 2 * Math.PI, q = {x:c.x + Math.cos(t) * r * 0.1, y:c.y + Math.sin(t) * r * 0.1}; if (!isLandFar(q) && coastDistFar(q) >= 0.3) return q; } return null; };
+          const A = aport ? portById(aport).p : sea(a), B = sea(b), sd = safeDepth(), t0 = performance.now(), res = await leiaRoute(A, B, aport, null);
+          if (res.why) return JSON.stringify({why:res.why[0]});
+          let p = A, bad = 0, far = 0, len = 0; for (const w of res.wps){ if (!clearLine(p, w) || legHazard(p, w, sd).unsafe) bad++; const L = dist(p, w); for (let k = 1; k < L / 0.25; k++){ const u = k * 0.25 / L; far = Math.max(far, coastDistFar({x:p.x + (w.x - p.x) * u, y:p.y + (w.y - p.y) * u})); } len += L; p = w; }
+          return JSON.stringify({n:res.wps.length, max:res.st.maxWp, km:+len.toFixed(1), ratio:+(len / dist(A, B)).toFixed(2), bad, far:+far.toFixed(1), slice:+res.st.maxSlice.toFixed(1), at:res.st.at, cell:res.st.cell, s:+((performance.now() - t0) / 1000).toFixed(1)}); }""", [a, bb, aport]))
+    print('     K9:', json.dumps(nat, ensure_ascii=False))
+    okn = all('why' not in v for v in nat.values())
+    check(okn and all(v['bad'] == 0 and v['n'] <= 40 for v in nat.values()), 'Autonav over hele kysten: Finnsnes–Tromsø, Bodø–Reine og Bergen–Florø gir en vei fri for land, grunner og skjær, med høyst 40 punkter (maxWp er et mål)', {k: (v.get('n'), v.get('max'), v.get('bad'), v.get('why')) for k, v in nat.items()})
+    check(okn and all(v['ratio'] <= 1.6 for v in nat.values()), 'og ingen er mer enn 1,6 ganger den rette linja', {k: v.get('ratio') for k, v in nat.items()})
+    check(okn and nat['Bergen–Florø']['far'] <= 4, 'Bergen–Florø går innaskjærs (ingen punkt mer enn 4 km fra land)', nat['Bergen–Florø'].get('far'))
+    check(okn and all(v['slice'] < 16 for v in nat.values()), 'og hver bit tar under 16 ms', {k: (v.get('slice'), v.get('at')) for k, v in nat.items()})
 
     # the button, then a tap on Botnhamn: the route follows the fairway there, and undo takes it all away at once
     await pg.evaluate("view.cx = LG(55.2, 38.5).x; view.cy = LG(55.2, 38.5).y; view.z = MAP_H / 36; applyView(); scheduleStatic(); renderDyn()"); await pg.wait_for_timeout(500)
-    lb = json.loads(await pg.evaluate("JSON.stringify((r => ({x:r.x + r.width / 2, y:r.y + r.height / 2, vis:!$('rLeia').hidden}))($('rLeia').getBoundingClientRect()))"))
+    lb = json.loads(await pg.evaluate("JSON.stringify((r => ({x:r.x + r.width / 2, y:r.y + r.height / 2, vis:!$('rAuto').hidden, txt:$('rAuto').textContent}))($('rAuto').getBoundingClientRect()))"))
     await T.tap(lb['x'], lb['y'])
-    armed = await pg.evaluate("LEIA_ARM && /Følg leia/.test($('panel').textContent)")
+    armed = await pg.evaluate("LEIA_ARM && /Autonav/.test($('panel').textContent) && !document.querySelector('#panel [data-act=leia]')")
     bh = await pg.evaluate("mapToClient(portById('botnhamn').p)")
     await T.tap(bh['x'], bh['y'])
     await pg.wait_for_function("!LEIA_BUSY && S.draft.length > 0", timeout=30000); await pg.wait_for_timeout(300)
     d = json.loads(await pg.evaluate("JSON.stringify({n:S.draft.length, last:S.draft[S.draft.length - 1].port, leia:S.draft.filter(w => w.leia).length, bad:estimate().bad, txt:$('panel').textContent})"))
-    check(lb['vis'] and armed and d['last'] == 'botnhamn' and d['leia'] >= 1 and d['bad'] < 0 and 'Ruta følger leia' in d['txt'], 'knappen og et trykk på Botnhamn gir en rute langs leia', {k: d[k] for k in ('n', 'last', 'leia', 'bad')})
+    check(lb['vis'] and lb['txt'] == 'Autonav' and armed and d['last'] == 'botnhamn' and d['leia'] >= 1 and d['bad'] < 0 and 'Ruta følger leia' in d['txt'], 'Autonav-knappen i kartplotteren og et trykk på Botnhamn gir en rute langs leia (ingen «Følg leia»-knapp i panelet)', {k: d[k] for k in ('n', 'last', 'leia', 'bad')})
     await pg.screenshot(path='route_leia.png')
     await pg.evaluate("$('rUndo').click()"); n1 = await pg.evaluate("S.draft.length")
     check(n1 == 0, 'angre tar bort hele autoruta i ett steg', n1)
@@ -172,7 +189,11 @@ async def leia(p):
         c = await pg.evaluate(C, q); await T.tap(c['x'], c['y'])
     await pg.wait_for_function("/Din rute:/.test($('panel').textContent)", timeout=30000)
     cmp = await pg.evaluate("document.querySelector('#panel .leiacmp').textContent")
-    check(re.search(r'Følg leia: [\d,]+ nm · .+ · [\d,]+ L\. Din rute: [−+][\d,]+ nm, [−+]\d+ min, [−+][\d,]+ L\.', cmp), 'håndtegnet rute får sammenligningen med leia', cmp)
+    check(re.search(r'Autonav: [\d,]+ nm · .+ · [\d,]+ L\. Din rute: [−+][\d,]+ nm, [−+]\d+ min, [−+][\d,]+ L\.', cmp), 'håndtegnet rute får sammenligningen med leia', cmp)
+    # «Kast loss» sets off and the chart plotter stays open (it is closed by hand)
+    await pg.evaluate("document.querySelector('#panel .rbar [data-act=start]').click()"); await pg.wait_for_timeout(600)
+    k = json.loads(await pg.evaluate("JSON.stringify({plan:!!S.plan, plot:document.body.classList.contains('vplot'), g3:G3.isActive()})"))
+    check(k['plan'] and k['plot'] and not k['g3'], 'Kast loss setter ruta i gang, og kartplotteren står åpen', k)
     await ctx.close()
     return errs
 

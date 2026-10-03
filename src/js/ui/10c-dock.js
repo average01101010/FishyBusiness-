@@ -56,8 +56,7 @@ const DOCK = (() => {
       I('bygd', 'bygd', 'Bygd', 'Village', {menu:'bygd'}),
       I('verft', 'verft', 'Verft', 'Yard', {menu:'verft', dot:svcOverdue() > 0}),
       crewAboard().length ? I('arbeid', 'arbeid', 'Arbeid', 'Work', {page:'arbeid'}) : null,
-      I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'}),
-      I('kart', 'kart', 'Planlegg', 'Plan', {run:openPlotter, pri:!(tot > 0.5 && p.mottak) && !busy})].filter(Boolean);
+      I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'})].filter(Boolean);   // «Planlegg» went 02.10.2026: the little chart opens the plotter
   }
   function menuItems(m){
     const b = S.boat, p = port(), H = S.t / 60;
@@ -89,21 +88,22 @@ const DOCK = (() => {
     // a quarrel aboard waits for an answer, also at sea
     const crew = S.cevt && I('mannskap', 'mannskap', 'Mannskap', 'Crew', {page:'mannskap', dot:true});
     const work = crewAboard().length && I('arbeid', 'arbeid', 'Arbeid', 'Work', {page:'arbeid'});
-    const b = S.boat, beh = I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'}), home = !(S.plan && S.plan.returning) && !tutOn() && I('hjem', 'hjem', 'Hjem', 'Home', {act:'retrace'});
+    const b = S.boat, beh = I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'});   // no «Hjem» (the user's wish 02.10.2026: Autonav to the harbour, or «Returner samme vei» in the plotter)
     const nav = I('nav', 'nav', 'Auto-nav', 'Auto-nav', {run:autoNav});
     if (b.status === 'idle'){
       const s = nearSet(b.pos, 0.3), nb = nearestBuoy(), ch = setChoices();
       const haul = s ? (s.kind === 'line' ? I('taopp', 'taopp', 'Ta opp', 'Haul', {act:'ghaul', data:{id:s.id}, pri:true}) : I('taopp', 'taopp', 'Ta opp', 'Haul', {menu:'taopp', pri:true}))
         : I('taopp', 'taopp', 'Ta opp', 'Haul', {off:[nb ? L('Nærmeste blåse er ' + fmt(nb.d / NM, 1) + ' nm unna. Bruk Auto-nav og trykk på blåsa.', 'The nearest buoy is ' + fmt(nb.d / NM, 1) + ' nm away. Use auto-nav and tap the buoy.') : L('Du har ikke redskap i sjøen.', 'You have no gear in the sea.')]});
-      return [I('jukse', 'jukse', 'Jukse', 'Jig', {menu:'jukse', pri:!s && rigJig(), off:!rigJig() && rigWrong(null)}),
+      // «Jukse» only on a boat rigged for jigging (the user's wish 02.10.2026)
+      return [rigJig() && I('jukse', 'jukse', 'Jukse', 'Jig', {menu:'jukse', pri:!s}),
         I('settut', 'settut', 'Sett ut', 'Set', {menu:'settut', off:rigJig() ? [L('Båten er rigget for juksa. Rigg om til line, garn eller teiner på verftet.', 'The boat is rigged for jigging. Re-rig for line, nets or pots at the yard.')] : !ch.length && [S.pgear && (S.pgear.nets.length || S.pgear.lines.hyse.n || S.pgear.lines.bank.n || S.pgear.pots.small || S.pgear.pots.big) ? L('Redskapet om bord er ikke klart: line må egnes, og teiner trenger agn og blåsesett.', 'The gear aboard is not ready: line must be baited, and pots need bait and buoy sets.') : L('Du har ikke garn, line eller teiner om bord.', 'You have no nets, line or pots aboard.')]}),
-        haul, nav, home, crew, work, beh].filter(Boolean);
+        haul, nav, crew, work, beh].filter(Boolean);
     }
     if (b.status === 'fishing' && b.gop) return [I('gstop', 'stopp', 'Stopp arbeidet', 'Stop the work', {act:'gstop'}), work, beh].filter(Boolean);
     if (b.status === 'fishing') return [I('stopfish', 'stopp', 'Stopp', 'Stop', {act:'stopfish'}),
       b.deckStop && !b.deckEnd ? I('deckgo', 'videre', 'Fisk videre', 'Fish on', {act:'deckgo', pri:true}) : !b.deckStop && deckPending() > 0.5 ? I('deckstop', 'sloy', 'Stopp og sløy', 'Stop and gut', {act:'deckstop'}) : null,
       G3.isActive() && rigJig() ? I('rod', 'stang', window.rodActive ? 'Legg bort' : 'Fisk selv', window.rodActive ? 'Put down' : 'Fish yourself', {act:'rod', pri:!window.rodActive, on:!!window.rodActive}) : null, crew, work, beh].filter(Boolean);
-    if (b.status === 'sailing') return [I('stop', 'stopp', 'Stopp båten', 'Stop', {act:'stop'}), home, nav, crew, work, beh].filter(Boolean);
+    if (b.status === 'sailing') return [I('stop', 'stopp', 'Stopp båten', 'Stop', {act:'stop'}), nav, crew, work, beh].filter(Boolean);
     if (b.status === 'adrift' || b.status === 'engine' || b.status === 'aground') return [I('hjelp', 'hjelp', 'Hjelp', 'Help', {run:() => PHONE.open('redning'), warn:true}), beh];
     return [beh];
   }
@@ -158,16 +158,16 @@ const DOCK = (() => {
     if (b.status === 'sailing'){ S.plan = null; b.status = 'idle'; b.v = 0; }
     if (!['idle', 'port'].includes(b.status) || (S.plan && S.plan.depAt)){ toast(L('Båten er opptatt. Stopp det den holder på med først.', 'The boat is busy. Stop what it is doing first.')); return; }
     if (S.draft.length) draftEdit(() => { S.draft = []; });
-    close(); openPlotter(); AUTONAV = true;
+    close(); openPlotter();
     leiaTo(buoyStandoff(s, dist(b.pos, s.a) <= dist(b.pos, s.b) ? s.a : s.b));
   }
-  // Auto-nav: the chart opens with «Følg leia» ready; a tap on a buoy or the sea, and the boat goes there by itself
+  // Auto-nav: the chart opens with Autonav ready; a tap on a buoy or the sea makes the route there, and «Kast loss» sets off
   function autoNav(){
     const b = S.boat; menu = null;
     if (b.status === 'sailing'){ S.plan = null; b.status = 'idle'; b.v = 0; }
     if (S.draft.length) draftEdit(() => { S.draft = []; });
-    openPlotter(); leiaArm(true); AUTONAV = LEIA_ARM;
-    if (LEIA_ARM) toast(L('Trykk på en blåse eller et sted i kartet. Båten går dit av seg selv.', 'Tap a buoy or a place on the chart. The boat goes there by itself.'));
+    openPlotter(); leiaArm(true);
+    if (LEIA_ARM) toast(L('Trykk på en blåse eller et sted i kartet, så trykker du «Kast loss».', 'Tap a buoy or a place on the chart, then tap «Cast off».'));
   }
   function run(x){
     if (!x) return;

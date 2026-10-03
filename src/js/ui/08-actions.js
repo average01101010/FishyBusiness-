@@ -10,7 +10,6 @@ function doAct(el){
   else if (act === 'fp' || act === 'fm') draftEdit(() => { const w = S.draft[i]; if (w) w.fish = clamp((w.fish || 0) + (act === 'fp' ? 1 : -1), 0, 12); });
   else if (act === 'rm') draftEdit(() => S.draft.splice(i, 1));
   else if (act === 'undo') draftUndo();
-  else if (act === 'leia'){ if (!LEIA_ARM && !tutAllow('waypoint')) return; leiaArm(!LEIA_ARM); return; }
   else if (act === 'redo') draftRedo();
   else if (act === 'clear') draftEdit(() => { S.draft = []; });
   else if (act === 'start'){
@@ -23,7 +22,7 @@ function doAct(el){
     S.draft = []; S.draftDep = null; draftForget();
     if (later) log('Avgang planlagt ' + dayStr(later / 60) + ' kl. ' + hm(later / 60) + '.', 'Departure planned for ' + dayStr(later / 60) + ' at ' + hm(later / 60) + '.');
     else { if (b.status === 'idle') log('Ny rute satt.', 'New route set.'); depart(); }
-    if (!G3.isActive()) G3.show(true, true);
+    // the chart plotter stays open: the skipper goes back to 3D himself (the user's wish 02.10.2026)
   }
   else if (act === 'depnow'){ if (!S.plan) return; if (b.status === 'port' && S.jobs && S.jobs.length){ toast(t('yard_busy', hm((jobsDone() || S.t) / 60))); return; } if (!meAboard() && !crewAboard().length){ toast(L('Båten har ikke mannskap. Uten deg om bord trenger den folk.', 'The boat has no crew. Without you aboard it needs hands.')); return; } depart(); if (!G3.isActive()) G3.show(true, true); }
   else if (act === 'cm'){ const m = el.dataset.m; if (m === 'fish' && !S.equip.plotter){ toast(t('need_plotter')); PHONE.open('utstyr'); return; } S.settings.chart = m; renderBase(); scheduleStatic(); }
@@ -210,7 +209,7 @@ function tick(){
   // (until the simulation's data is in, the clock waits: 11-boot.js)
   if (SIMREADY){ if (CATCH_LEFT > 0){ const n = Math.min(CATCH_LEFT, 3000); CATCH_LEFT -= n; playMinutes(n); panelDirty = true; } else if (dt > 6) catchUp(dt * 1000); else { acc += dt * GAME_RATE * S.mult / 60; let n = 0; while (acc >= 1 && n < 3000 && simAreaReady()){ step(); acc -= 1; n++; } } }
   heatTick();
-  if (!G3.isActive()){ renderDyn(); if (AISSEL) renderAisCard(); heatPaint(); } renderHud(); renderClock(); renderActs(); DOCK.tick(); energyUi(); INSTR.renderGPS(); tutUpdate(); PHONE.status(); PHONE.tickHome();
+  if (!G3.isActive()){ renderDyn(); if (AISSEL) renderAisCard(); heatPaint(); } renderHud(); renderClock(); renderActs(); DOCK.tick(); energyUi(); INSTR.renderGPS(); renderRouteTools(); tutUpdate(); PHONE.status(); PHONE.tickHome();
   if (S.order && S.t >= S.order.due) deliverOrder();
   const pnow = performance.now();
   if ((panelDirty || pnow - lastPanel > 1000) && !panelBusy()){ renderPanel(); lastPanel = pnow; panelDirty = false; }
@@ -235,7 +234,7 @@ function applyLang(){
   { const o = $('pace').options; o[0].textContent = t('pace1'); for (let i = 1; i < o.length; i++) o[i].textContent = fmt(GAME_RATE * +o[i].value) + '×'; }
   $('lang').textContent = S.lang === 'no' ? 'EN' : 'NO';
   $('bkToday').textContent = t('today'); $('logbook').setAttribute('aria-label', S.lang === 'no' ? 'Dekksdagbok' : 'Deck log');
-  $('gps').dataset.hint = S.lang === 'no' ? 'KART ›' : 'CHART ›'; document.querySelector('#plotTop .pt-title').textContent = S.lang === 'no' ? 'Kartplotter' : 'Chart plotter';
+  document.querySelector('#plotTop .pt-title').textContent = S.lang === 'no' ? 'Kartplotter' : 'Chart plotter';
   $('view3d').textContent = (typeof G3 !== 'undefined' && G3.isActive()) ? t('view_chart') : '3D';
   $('lang').setAttribute('aria-label', S.lang === 'no' ? 'Switch to English' : 'Bytt til norsk');
   $('zin').setAttribute('aria-label', t('zin')); $('zout').setAttribute('aria-label', t('zout')); $('zboat').setAttribute('aria-label', t('zboat'));
@@ -243,10 +242,22 @@ function applyLang(){
 }
 $('view3d').onclick = () => G3.toggle();
 // ---------- screens: full-screen 3D, or the chart plotter for route planning ----------
-function setBodyView(v3d){ document.body.classList.remove('drawer'); document.body.classList.toggle('v3d', v3d); document.body.classList.toggle('vplot', !v3d); }
-function openPlotter(){ if (G3.isActive()) G3.show(false); else { setBodyView(false); tab = 'route'; renderPanel(); applyView(); renderStatic(); renderDyn(); } }
-$('gps').addEventListener('click', () => { if (document.body.classList.contains('v3d')) openPlotter(); });
-$('gpsBtn').addEventListener('click', openPlotter);
+function setBodyView(v3d){ document.body.classList.remove('drawer'); if (v3d) plotSetOpen(false); document.body.classList.toggle('v3d', v3d); document.body.classList.toggle('vplot', !v3d); }
+// the chart plotter opens on the boat, PLOT_KM km of chart from top to bottom (the user's wish 02.10.2026); it is opened from the
+// little chart in 3D (#miniPlot, ui/03e-miniplot.js), the dock's Auto-nav and the tutorial
+const PLOT_KM = 6;
+function openPlotter(){
+  const p = S.boat.pos; view.cx = p.x; view.cy = p.y; view.z = MAP_H / PLOT_KM;
+  if (G3.isActive()) G3.show(false); else { setBodyView(false); tab = 'route'; renderPanel(); applyView(); renderStatic(); renderDyn(); }
+}
+// «Innstillinger» in the top bar: the chart's and the echo sounder's settings, which were at the top of the side panel
+function plotSetRender(){
+  const el = $('plotSet'); if (el.hidden) return;
+  el.innerHTML = '<div class="ps-h"><b>' + (S.lang === 'no' ? 'Kartplotter og ekkolodd' : 'Chart plotter and echo sounder') + '</b><button type="button" data-x aria-label="Lukk">✕</button></div>' + chartSettings() + heatReadout();
+}
+function plotSetOpen(on){ const el = $('plotSet'); el.hidden = !on; $('ecSet').classList.toggle('on', on); plotSetRender(); }
+$('ecSet').onclick = () => plotSetOpen($('plotSet').hidden);
+$('plotSet').addEventListener('click', e => { if (e.target.closest('[data-x]')){ plotSetOpen(false); return; } const el = e.target.closest('[data-act]'); if (el && !el.disabled){ doAct(el); plotSetRender(); } });
 $('plotClose').onclick = () => G3.show(true);
 $('ecClose').onclick = () => G3.show(true);
 $('ecRoute').onclick = () => document.body.classList.toggle('drawer');

@@ -35,23 +35,23 @@
       <button id="view3d" class="viewbtn" type="button">3D</button>
       <button id="camBtn" class="ov cam" type="button" aria-label="Kamera"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.6-2.2h6.8L17 8h3v11H4z"/><circle cx="12" cy="13.3" r="3.6"/></svg></button>
       <div id="aisCard" hidden></div>
-      <div id="ecdisTop"><div class="ec-f"><small>HDG</small><b id="ecHdg"></b></div><div class="ec-f"><small>COG</small><b id="ecCog"></b></div><div class="ec-f"><small>SOG</small><b id="ecSog"></b></div><div class="ec-f ec-pos"><small>POS</small><b id="ecPos"></b></div><div class="ec-f"><small id="ecDepL">DYBDE</small><b id="ecDep"></b></div><div class="ec-f ec-x"><small id="ecTideL">TIDEVANN</small><b id="ecTide"></b></div><div class="ec-f ec-x"><small id="ecSunL">SOL</small><b id="ecSun"></b></div><div class="ec-b"><button id="ecRoute" type="button"></button><button id="ecClose" type="button">3D</button></div></div>
+      <div id="ecdisTop"><div class="ec-f"><small>HDG</small><b id="ecHdg"></b></div><div class="ec-f"><small>COG</small><b id="ecCog"></b></div><div class="ec-f"><small>SOG</small><b id="ecSog"></b></div><div class="ec-f ec-pos"><small>POS</small><b id="ecPos"></b></div><div class="ec-f ec-nav ec-wpt"><small id="ecWptL">WPT</small><b id="ecWpt"></b></div><div class="ec-f ec-nav ec-xte"><small>XTE</small><b id="ecXte"></b></div><div class="ec-f ec-nav"><small id="ecEtaL">ETA</small><b id="ecEta"></b></div><div class="ec-f"><small id="ecDepL">DYBDE</small><b id="ecDep"></b></div><div class="ec-f ec-x ec-tide"><small id="ecTideL">TIDEVANN</small><b id="ecTide"></b></div><div class="ec-f ec-x ec-sun"><small id="ecSunL">SOL</small><b id="ecSun"></b></div><div class="ec-f ec-echo" id="heatBox" hidden></div><div class="ec-b"><button id="ecRoute" type="button"></button><button id="ecSet" type="button">Innstillinger</button><button id="ecClose" type="button" title="Tilbake til 3D">Lukk</button></div></div><div id="plotSet" hidden></div>
       <div id="plotTop"><span class="pt-title"></span><button id="plotStyle" type="button"></button><button id="plotClose" type="button" aria-label="3D">3D</button></div>
       <div id="setBar" hidden><div class="sb-t"></div><div class="sb-d"></div><div class="sb-w"></div><div class="sb-b"><span class="sb-n"><button type="button" data-sb="-" aria-label="−">−</button><b></b><button type="button" data-sb="+" aria-label="+">+</button></span><button type="button" data-sb="x" class="alt"></button><button type="button" data-sb="go" class="go"></button></div></div>
       <div id="dockInfo" hidden></div><div id="dockFan" hidden></div><div id="dock"></div>
       <aside id="drawer" hidden><div class="dr-head"><b id="drawerTitle"></b><button id="drawerClose" type="button" aria-label="Lukk">✕</button></div><div id="drawerTabs" class="ph-sub" hidden></div><div id="drawerBody"></div></aside>
       <button id="phoneFab" class="ov fab" type="button" aria-label="Mobil"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2.8"/><path d="M10.5 18.3h3"/></svg><i id="phoneBadge2" hidden></i></button>
       <div id="loader"><div><b>Kystfiske</b><span>Laster Senja …</span></div></div>
-      <button id="gpsBtn" class="ov gpsb" type="button" aria-label="GPS"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z"/><circle cx="12" cy="11" r="2.3"/></svg><span>GPS</span></button>
+      <canvas id="miniPlot" role="button" aria-label="Kartplotter"></canvas><canvas id="compass3d" aria-hidden="true"></canvas><div id="gps3d"></div>
       <button id="logbook" type="button" aria-label="Dekksdagbok"><span class="lbk-tab">DEKKSDAGBOK</span></button>
-      <div id="instr" hidden><div id="gps"></div><div id="echoWrap"><canvas id="echo"></canvas><div id="echoDepth"></div><div id="echoTemp"></div><div id="echoScale"></div></div><div id="heatBox" hidden></div></div>
       <button id="modeBtn" class="mapbtn" type="button"></button>
       <button id="instrBtn" class="mapbtn" type="button">GPS</button>
       <div id="legend" hidden></div>
       <div class="attr">© Kartverket, Mapzen (CC BY) · © OpenStreetMap (ODbL)</div>
       <div id="hud"></div>
       <div class="zoom">
-        <button id="rLeia" class="rt leia" type="button" hidden aria-label="Følg leia"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg></button>
+        <button id="rPlay" class="rt play" type="button" hidden aria-label="Start ruta"><svg class="i-play" viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg><svg class="i-pause" viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><rect x="6" y="5" width="4.2" height="14" rx="1.2"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.2"/></svg></button>
+        <button id="rAuto" class="rt leia auto" type="button" hidden aria-label="Autonav"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg><span>Autonav</span></button>
         <button id="rUndo" class="rt" type="button" hidden aria-label="Angre"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>
         <button id="rRedo" class="rt" type="button" hidden aria-label="Gjør om"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg></button>
         <button id="zin" type="button">+</button>
@@ -113,6 +113,7 @@
 @include(js/ui/03b-route.js)
 @include(js/ui/03c-heat.js)
 @include(js/ui/03d-setmode.js)
+@include(js/ui/03e-miniplot.js)
 @include(js/ui/04-panels-instruments.js)
 @include(js/ui/05-tattoo-art.js)
 @include(js/ui/05-phone.js)
