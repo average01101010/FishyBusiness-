@@ -3,3 +3,5 @@ tests/out/
 __pycache__/
 tools/boats/out/
 tools/harbour/out/
+tools/wild/out/
+tools/gear/out/
