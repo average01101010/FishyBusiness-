@@ -157,6 +157,9 @@ const PHONE = (() => {
       (now ? ' ' + L('Nå: ', 'Now: ') + ['Lav', 'Middels', 'Høy'][now.lvl] + (now.fps ? ' · ' + Math.round(now.fps) + ' bilder/s' : '') : '') + '</p>' +
       // the frame rate in a corner of the 3D view, to measure on the tablet (#fps in the address does not reach the artifact's page)
       '<div class="ph-sub"><button class="' + (S.settings.fpsShow ? 'on' : '') + '" data-pa="fpsShow" data-v="1">' + L('Vis bildetakt', 'Show frame rate') + '</button><button class="' + (S.settings.fpsShow ? '' : 'on') + '" data-pa="fpsShow" data-v="0">' + L('Skjul', 'Hide') + '</button></div></div>' +
+      // the sound (ui/10e-sound.js): off, or a volume
+      '<div class="ph-card"><h4>' + L('Lyd', 'Sound') + '</h4><div class="ph-sub">' + [[0, L('Av', 'Off')], [0.25, '25 %'], [0.5, '50 %'], [0.75, '75 %'], [1, '100 %']].map(([v, l]) => { const cur = S.settings.sound === false ? 0 : (S.settings.vol == null ? 0.6 : S.settings.vol); return '<button class="' + (Math.abs(cur - v) < 0.13 ? 'on' : '') + '" data-pa="snd" data-v="' + v + '">' + l + '</button>'; }).join('') + '</div><p class="ph-note">' +
+      L('Motor, sjø, vind og regn, måker, og arbeidet i havna og om bord. Lyden starter når du trykker på skjermen.', 'Engine, sea, wind and rain, gulls, and the work in the harbour and aboard. The sound starts when you touch the screen.') + '</p></div>' +
       // the hand on the helm: a throttle and a joystick in 3D (core/16-helm.js, ui/10d-helm.js)
       '<div class="ph-card"><h4>' + L('Manuell styring', 'Manual steering') + '</h4><div class="ph-sub"><button class="' + (S.settings.manual ? 'on' : '') + '" data-pa="manual" data-v="1">' + L('På', 'On') + '</button><button class="' + (S.settings.manual ? '' : 'on') + '" data-pa="manual" data-v="0">' + L('Av', 'Off') + '</button></div><p class="ph-note">' +
       L('Gass til høyre (fram, nøytral, bak; den blir stående der du slipper) og ratt til venstre (det går tilbake til midten) i 3D. Rører du dem på sjøen, tar du roret fra ruta eller Autonav. «Fortøy» kommer når du er sakte ved en kai, og «Kast loss» når du ligger fortøyd.', 'Throttle on the right (ahead, neutral, astern; it stays where you leave it) and wheel on the left (it springs back) in 3D. Touching them at sea takes the helm from the route or Autonav. «Moor» shows when you are slow at a quay, and «Cast off» when you lie moored.') + '</p></div>' +
@@ -682,6 +685,7 @@ const PHONE = (() => {
     else if (a === 'lang'){ S.lang = S.lang === 'no' ? 'en' : 'no'; refreshAll(); }
     else if (a === 'q3d'){ S.settings.q3d = d.v; if (typeof G3 !== 'undefined' && G3.quality) G3.quality(d.v); }
     else if (a === 'fpsShow'){ S.settings.fpsShow = d.v === '1'; }
+    else if (a === 'snd'){ const v = +d.v; S.settings.sound = v > 0; if (v > 0){ S.settings.vol = v; SND.start(); } }
     else if (a === 'manual'){ S.settings.manual = d.v === '1'; if (!S.settings.manual) helmOff(); }
     else if (a === 'admPace'){ S.mult = +d.v; $('pace').value = String(S.mult); }
     else if (a === 'admCash'){ S.cash += 100000; log('Admin: 100 000 kr lagt i kassa.', 'Admin: NOK 100,000 put in the cash.'); }
