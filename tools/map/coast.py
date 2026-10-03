@@ -2,7 +2,8 @@
 # (the artifact's): mask 25 m (with the breakwaters), distance to land 100 m, ground 25 m, forest 50 m, depth 50 m and openness 500 m.
 # Kept per tile in out/national/tiles/, so a stopped run goes on.
 #   python3 tools/map/coast.py game [tx,ty ...]   the game's packs (01b-mapdata.js, as region.py groups them): per tile 'sim' (mask, dc,
-#                                                 depth), 'view' (hgt, forest) and 'chart' (coast1, coast2, names) in out/national/game/;
+#                                                 depth), 'view' (hgt, forest), 'chart' (coast1, coast2, names) and 'vec' (bld, road,
+#                                                 bridge, pier, quay: vectors.py) in out/national/game/;
 #                                                 the core and the far heights come from src/data/map (tools/map/game.py joins them)
 #   python3 tools/map/coast.py [lite] [tx,ty ...] the K5 packs in out/national/lite/ (a pack per kind and tile, the core per tile too)
 #   python3 tools/map/coast.py cache k n          part k of n of the tiles into the caches only (the workflow's parts)
@@ -102,17 +103,24 @@ def tile(tx, ty):
     out['sec'] = np.array(time.time() - t0)
     np.savez_compressed(f, **out); return out
 
-# the vector layers of a tile (vectors.py), kept in out/national/vec/; the lite profile has the buildings within 2 km of the sea
+# the vector layers of a tile (vectors.py), kept in out/national/vec/ (worked out again when a layer is missing); the lite profile has
+# the buildings within 2 km of the sea; the quays need the tile's mask and depth (L, as tile() gives it)
 VD = os.path.join(OUT, 'vec'); os.makedirs(VD, exist_ok=True)
-def vec(tx, ty, M):
+VKEYS = ('bld', 'road', 'bridge', 'pier', 'quay', 'coast')
+def vec(tx, ty, L):
     f = os.path.join(VD, f'{tx}_{ty}.npz')
-    if os.path.exists(f): z = np.load(f); return {k: (z[k].tobytes(), int(z[k + '_n'])) for k in ('bld', 'road', 'pier', 'coast')}
+    if os.path.exists(f):
+        z = np.load(f)
+        if all(k in z for k in VKEYS): return {k: (z[k].tobytes(), int(z[k + '_n'])) for k in VKEYS}
     import vectors
-    dsea = ndimage.distance_transform_edt(M > 0) * 25   # m to the sea at 25 m
+    dsea = ndimage.distance_transform_edt(L['mask'] > 0) * 25   # m to the sea at 25 m
     near = lambda x, y: dsea[min(1999, max(0, int(y // 25))), min(1999, max(0, int(x // 25)))] <= 2000
-    v = vectors.build(tx, ty, near)
+    v = vectors.build(tx, ty, near, L)
     np.savez_compressed(f, **{k: np.frombuffer(b, np.uint8) for k, (b, n) in v.items()}, **{k + '_n': n for k, (b, n) in v.items()})
     return v
+# the vector layers the game takes, in a 'vec' pack per tile (01c-vec.js): the 'view' packs keep their hash, so a new vector release does
+# not fetch the heights again
+VGAME = ('bld', 'road', 'bridge', 'pier', 'quay')
 
 # the chart's vectors of a tile (chart.py): the coast at 25 m and 3 m, and the names, kept in out/national/chart/ (region.cached)
 def chart_tile(tx, ty):
@@ -129,21 +137,23 @@ if __name__ == '__main__':
     if sys.argv[1:2] == ['cache']:
         k, n = int(sys.argv[2]), int(sys.argv[3]); T = [tuple(t) for t in national.tiles()][k::n]; t0 = time.time()
         for i, (tx, ty) in enumerate(T):
-            L = tile(tx, ty); vec(tx, ty, L['mask']); chart_tile(tx, ty)
+            L = tile(tx, ty); vec(tx, ty, L); chart_tile(tx, ty)
             print(f'part {k}/{n}: {i + 1}/{len(T)} tile {tx},{ty} {float(L["sec"]):.0f} s, total {time.time() - t0:.0f} s', file=sys.stderr, flush=True)
         sys.exit(0)
     if sys.argv[1:2] == ['game']:
-        T = [tuple(map(int, a.split(','))) for a in sys.argv[2:]] or [tuple(t) for t in national.tiles()]; t0 = time.time(); per = []
+        T = [tuple(map(int, a.split(','))) for a in sys.argv[2:]] or [tuple(t) for t in national.tiles()]; t0 = time.time(); per = []; vsz = {}; vct = {}
         for k, (tx, ty) in enumerate(T):
-            L = tile(tx, ty); per.append((tx, ty, {n: L[n] for n in GAME}, chart_tile(tx, ty)))
+            L = tile(tx, ty); V = vec(tx, ty, L); per.append((tx, ty, {n: L[n] for n in GAME}, dict(chart_tile(tx, ty), **{n: V[n] for n in VGAME})))
+            for n in VGAME: vsz[n] = vsz.get(n, 0) + len(V[n][0]); vct[n] = vct.get(n, 0) + V[n][1]
             print(f'{k + 1}/{len(T)} tile {tx},{ty}, total {time.time() - t0:.0f} s', file=sys.stderr, flush=True)
         n, b = pack.write_tiles(per, GAME, os.path.join(OUT, 'game'), {'profile': 'game', 'src': 'tools/map/coast.py game'})
-        print(json.dumps({'tiles': len(T), 'packs': n, 'mb': round(b / 1e6, 1)})); sys.exit(0)
+        vb = sum(p.stat().st_size for p in __import__('pathlib').Path(os.path.join(OUT, 'game')).glob('vec-*.wasm'))
+        print(json.dumps({'tiles': len(T), 'packs': n, 'mb': round(b / 1e6, 1), 'vec_mb': round(vb / 1e6, 1), 'vec_raw_mb': {k: round(v / 1e6, 1) for k, v in vsz.items()}, 'vec_n': vct})); sys.exit(0)
     args = [a for a in sys.argv[1:] if a != 'lite']
     T = [tuple(map(int, a.split(','))) for a in args] or [tuple(t) for t in national.tiles()]
     t0 = time.time(); per = []
     for k, (tx, ty) in enumerate(T):
-        L = tile(tx, ty); per.append((tx, ty, {n: L[n] for n in LAYERS}, vec(tx, ty, L['mask'])))
+        L = tile(tx, ty); per.append((tx, ty, {n: L[n] for n in LAYERS}, vec(tx, ty, L)))
         print(f'{k + 1}/{len(T)} tile {tx},{ty} {float(L["sec"]):.0f} s, land {L["mask"].mean():.3f}, total {time.time() - t0:.0f} s', file=sys.stderr, flush=True)
     n, b = pack.write_tiles(per, LAYERS, os.path.join(OUT, 'lite'), {'profile': 'lite', 'src': 'tools/map/coast.py'})
     print(json.dumps({'tiles': len(T), 'packs': n, 'mb': round(b / 1e6, 1)}))

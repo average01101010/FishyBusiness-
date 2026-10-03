@@ -1,5 +1,6 @@
 # The whole coast's map packs for the build (tools/map/out/game/, which build.mjs takes when it is there): the core and the far
 # heights from src/data/map (region.py), Senja's tiles from there too, and every other tile's 'sim', 'view' and 'chart' from a release
+# (and every tile's 'vec', the buildings, roads, bridges, piers and quays, which src does not have)
 # in the game's format (coast.py game, fetched by release.py). The small packs are joined so the artifact stays under its 511 files a
 # version: the far heights 4 x 4 tiles a file, the chart 2 x 2. A joined pack lists its tiles ('tiles' in the manifest), and the loader
 # (01b-mapdata.js) files it under each of them.
