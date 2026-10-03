@@ -569,7 +569,13 @@ body.v3d.helm #helmThr,body.v3d.helm #helmJoy{display:block}
 #helmAct{position:absolute;z-index:7;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 132px);padding:12px 26px;border-radius:24px;border:2px solid #fff;background:#1f7a46;color:#fff;font:700 16px var(--sans);box-shadow:0 4px 14px rgba(0,0,0,.4);white-space:nowrap}
 #helmAct[hidden],body.vplot #helmAct{display:none}
 @media (max-width:560px){#helmJoy{left:40px;width:120px;height:120px}#helmThr{height:180px}}
+/* the cinema (08-actions.js kinoUi, view3d.js KINO): its button under the camera button, and «Skjul» that hides the rest */
+.ov.kino{top:calc(env(safe-area-inset-top,0px) + 62px);right:10px;width:46px;height:46px;border-radius:14px}
+.ov.kino.on{background:#c0392b!important;color:#fff;border-color:#fff}
+.ov.kino2{top:calc(env(safe-area-inset-top,0px) + 114px);right:10px;height:34px;padding:0 12px;border-radius:12px;font:700 13px var(--sans)}
+.ov.kino2[hidden],body.vplot .ov.kino,body.vplot .ov.kino2{display:none}
 body.kino-clean #hud,body.kino-clean #gps3d,body.kino-clean #miniPlot,body.kino-clean #compass3d,body.kino-clean #dock,body.kino-clean #dockInfo,body.kino-clean #dockFan,body.kino-clean #phoneFab,body.kino-clean #logbook,body.kino-clean #camBtn,body.kino-clean #helmThr,body.kino-clean #helmJoy,body.kino-clean #helmAct,body.kino-clean #modeBtn,body.kino-clean #instrBtn,body.kino-clean #labels,body.kino-clean .attr{display:none!important}
+body.kino-clean .ov.kino,body.kino-clean .ov.kino2{opacity:.35}
 /* the sleep screen's «Spol fram» (05b-work.js) */
 #slSkip{margin-top:18px;padding:10px 20px;border-radius:20px;border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.08);color:#dfe6ec;font:600 15px var(--sans)}
 /* the bridge watch alarm on the sleep screen: a red flashing ACK (05b-work.js) */

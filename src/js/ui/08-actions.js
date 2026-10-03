@@ -263,7 +263,12 @@ $('plotSet').addEventListener('click', e => { if (e.target.closest('[data-x]')){
 $('plotClose').onclick = () => G3.show(true);
 $('ecClose').onclick = () => G3.show(true);
 $('ecRoute').onclick = () => document.body.classList.toggle('drawer');
-$('camBtn').onclick = () => { G3.setHelm(!G3.isHelm()); updateMapButtons(); };
+$('camBtn').onclick = () => { if (G3.kino()) G3.kino(false); G3.setHelm(!G3.isHelm()); kinoUi(); updateMapButtons(); };
+// the cinema (view3d.js KINO): the camera films the trip by itself; «Skjul» hides everything on the screen but these two buttons
+function kinoUi(){ const on = G3.kino(); $('kinoBtn').classList.toggle('on', on); $('kinoHud').hidden = !on; if (!on) document.body.classList.remove('kino-clean');
+  $('kinoHud').textContent = document.body.classList.contains('kino-clean') ? (S.lang === 'no' ? 'Vis' : 'Show') : (S.lang === 'no' ? 'Skjul' : 'Hide'); }
+$('kinoBtn').onclick = () => { G3.kino(!G3.kino()); kinoUi(); };
+$('kinoHud').onclick = () => { document.body.classList.toggle('kino-clean'); kinoUi(); };
 $('phoneFab').onclick = () => PHONE.toggle();
 $('plotStyle').onclick = () => {};
 hooks.on3dFail = () => { setBodyView(false); $('loader').classList.add('gone'); $('plotClose').hidden = true; tab = 'route'; renderPanel(); applyView(); renderStatic(); renderDyn(); };
