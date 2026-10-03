@@ -36,7 +36,15 @@ Skrevet 29.09.2026 ved flytting fra claude.ai-chat til Claude Code. Dokumentet s
 
 **Fartøystigen (bygget 01.10.2026, ikke publisert ennå):** 14 båttyper fra skiffen til havfiskeflåten med fullt datablad, 3D-modeller fra et byggesett (`vessel3d.js`), Båthandelen med faner, sideriss og visning i 3D, blad B, lån som innfris ved salg, toppfinansiering fra Innovasjon Norge og stigen i «Neste mål». NPC-flåten bruker de samme modellene. Se «Fartøystigen» i kapittel 9.
 
-**Neste:** rettingene etter spilltest 2, med prioritet i rapportens siste del, deretter fase 4 i flåteplanen.
+**Publisert 03.10.2026 (artifactversjon 64):**
+- alt over
+- kystplanens K1–K10: hele kysten med detalj i 3D og sjøkart, Autonav overalt, og tidevann og sol der båten er
+- UI-runden for kartplotteren og 3D (5.15)
+- «Fyll tanken» i Admin
+
+Siden og 425 kartfiler (195 MB) gikk ut i fire publiseringer. Levering og bunkring finnes fortsatt bare i Senja-havnene.
+
+**Neste:** rettingene etter spilltest 2, med prioritet i rapportens siste del. Deretter K11 (nettstedet og PWA) og innholdet sone for sone, hver med eget klarsignal, og fase 4 i flåteplanen.
 
 ## 4. Teknisk arkitektur
 
