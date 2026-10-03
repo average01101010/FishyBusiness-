@@ -44,6 +44,15 @@ Skrevet 29.09.2026 ved flytting fra claude.ai-chat til Claude Code. Dokumentet s
 
 Siden og 425 kartfiler (195 MB) gikk ut i fire publiseringer. Levering og bunkring finnes fortsatt bare i Senja-havnene.
 
+**Publisert 03.10.2026 (artifactversjon 68):**
+- alt over
+- rettingene etter spilltesten 03.10.2026: Husøy, ytelse i 3D, kartplotteren i fliser, bro-visningen og stille sjø
+- Kartverkets dybde langs hele kysten (kart-4, 4.8b)
+- søvn på den felles klokka, brovaktsalarm og manuell styring (5.19, 5.22)
+- lys om natta, kino, lyd, måker og halerne fra Blender (5.23–5.26)
+
+Siden og 424 kartpakker (230 MB, 321 nye) gikk ut i fire publiseringer, med de 321 gamle fjernet. Regresjonen var grønn, unntatt to tester som feilet på testens egen venting og tidsgrense: `sea3d` og `vessel3d`. Begge er rettet i testene etterpå.
+
 **Neste:** rettingene etter spilltest 2, med prioritet i rapportens siste del. Deretter K11 (nettstedet og PWA) og innholdet sone for sone, hver med eget klarsignal, og fase 4 i flåteplanen.
 
 ## 4. Teknisk arkitektur
