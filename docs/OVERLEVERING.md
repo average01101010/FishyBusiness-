@@ -280,6 +280,14 @@ Jonas valgte 02.10.2026 å la GitHub bygge og lagre de nasjonale kartdataene. Gi
 - **Første kjøring** (02.10.2026, 21 minutter): releasen `kart-1` med 168 fliser og 672 pakker, 217,7 MB. Det er flere filer enn én artifactversjon kan ha (511), så pakkene må slås sammen før den lette utgaven publiseres (K11).
 - **Ikke ennå:** Bygget tar ikke pakkene fra releasen ennå. Det kommer med den lette artifacten og PWA-en i K11. Geonorge (dybde 50 m, DTM10) og Overpass kan nå kjøres i workflowen, men rørledningen bruker dem ikke ennå.
 
+- **Ekte havbunn (03.10.2026):** `.github/workflows/dybde.yml` henter dybdemodellen «Dybdedata – terrengmodeller 50 meters grid» (Kartverket, CC BY 4.0) fra Geonorges WCS. Den brukes for hver kystflis (`tools/map/dybde.py`, `dybde.json`).
+  - **Tjenesten:** `https://wms.geonorge.no/skwms1/wms.dtm2`, coverage `bathymetry50m`, EPSG:25833. Den skaleres til spillets 1 000 × 1 000 celler.
+  - **Lagringen:** desimeter. 0 betyr at det ikke finnes data.
+  - **Releasen:** `dybde-2`, alle 168 flisene, 86 MB.
+  - **I rørledningen:** `coast.py` bruker dybden (`kartverket()`), og dybdemodellen der Kartverket ikke har data, blandet over 250 m i kanten. Inne i Senja-ruta står de gamle dataene, som er fra samme kilde (korrelasjon 1,0, medianavvik 0,1 m).
+  - **Kartdataene:** `kart.yml` henter releasen som `kart.json` peker på (`depth`). `kart-3` ble 250 MB, over grensen for en artifact. Derfor rundes dybden i `kart-4` av grovere på dypt vann (`qdepth`: ½ m til 20 m, 1 m til 60 m, 2 m til 150 m og 5 m dypere).
+  - **Høydereferansen** er ikke sjekket. Den er antatt å være den samme som i Senja-dataene, siden tallene stemmer.
+
 ### 4.9 Kjernen for hele kysten (kystplanen, fase K6, 02.10.2026)
 
 - **Den nasjonale kjernen** ligger i `core`-pakken og lastes alltid. Den er 2,9 MB og lages av `national.py core_layers()`, som `region.py` legger ved:
@@ -369,6 +377,15 @@ Jonas valgte 02.10.2026 å la GitHub bygge og lagre de nasjonale kartdataene. Gi
   - Navnene står vannrett (de gamle fjordnavnene var rotert langs fjorden).
   - `FINE` (den gamle 12,5 m-kysten) brukes fortsatt av plotteren i 3D.
 
+- **Fliser (03.10.2026, etter spilltesten):** Bakgrunnen (dybde, fjære og land) tegnes nå i fliser på 256 × 256 piksler (`CT`, `chartTile`, `chartCompose`, `chartWork`). Kyst, gradnett og fjordlinje ligger på et eget lerret over (`CT.vec`).
+  - En ny flis kommer først grovt (¼ oppløsning) med en gang. Så tegnes den fint, 8 ms per bilde, fra midten og ut.
+  - Når kartet dras, tegnes flisene som finnes der de nå er (`chartPan`), så det blir aldri mørke felt.
+  - Mangler pakkene, tegnes flisene fra kjernen (`prov`) og på nytt når pakkene kommer (`chartCame`).
+  - Fjæra leses bilineært fra masken med kantutjevning.
+  - Kystlinja forenkles etter pikselstørrelsen (`pathStep`) og strekes som tre hårstreker under fyllet. En bred strek kostet 0,7 s rundt hele landet med CPU strupet 4×.
+  - Dybden nær inne regnes med B-spline i hver 4. piksel og interpoleres imellom.
+  - **Tidene med CPU strupet 4× (`charttest`):** første bilde 0,06–0,36 s og alt fint innen 1,6 s, mot 1,5–2,6 s før.
+
 ### 4.11 3D for hele kysten (kystplanen, fase K8, 02.10.2026)
 
 - **Fjernhøydene (`far`):**
@@ -417,6 +434,14 @@ Jonas valgte 02.10.2026 å la GitHub bygge og lagre de nasjonale kartdataene. Gi
   - Detaljert bakke (25 m), skog, bygg og veier finnes bare for Senja. Andre steder er bakken 200 m og landet glatt uten skog.
   - Sola, månen og tidevannet regnes fortsatt for Senja (K10), så bildene fra Kirkenes og Bergen har Senjas lys.
   - Bildetakten er ikke målt på nettbrettet ennå. Testsiden for bildetakt, minne og tid for catch-up er ikke bygget.
+
+- **Ytelsen etter spilltesten 03.10.2026:**
+  - Skyggene regnes med en tidsgrense per bilde (`SHMS`, 2–4 ms). Nettene bygges rad for rad over flere bilder (`meshTask`, `meshStep`), ett om gangen og med nærnettet først.
+  - Et nett under bygging som fortsatt dekker båten, får gjøre seg ferdig. Uten det hoppet sjøkartet når båten gikk fort.
+  - Pakkene for 3D hentes én gang hver (`stream3d`), og bare nett som en ny pakke dekker, bygges på nytt (`staleOver`).
+  - Kompasslinja er en ferdig tegnet stripe. Det er ingen backdrop-filter i 3D.
+  - Automatisk kvalitet går opp igjen etter 8 s over 40 bilder/s.
+  - «Vis bildetakt» ligger i Innstillinger.
 
 ### 4.12 Autonav over hele kysten (kystplanen, fase K9, 02.10.2026)
 
@@ -1031,11 +1056,21 @@ Brukerens ønske: mannskapet skal være en levende og givende del av spillet, in
   - HUD-raden heter «Energi».
   - Ved 25 % kommer en melding og en toast, og arbeidet ditt går med 0,75.
   - Under 15 % mørkner kantene på skjermen (`#vign`).
-  - **Ved 0 sovner du i 8 spilltimer** (`S.sleep`). `#sleep` (z 64) toner til svart og viser nedtellingen i ekte tid. Du kan ikke hoppe over.
+  - **Ved 0 sovner du i 8 spilltimer** (`S.sleep`). `#sleep` (z 64) toner til svart og viser nedtellingen i ekte tid.
   - Med mannskap står du utenfor arbeidet, den med best sjømannskap tar roret, og turen går videre.
   - Alene stopper fisket og redskapsarbeidet, og båten driver med vinden i 0,3–0,8 knop (`sleepDrift`). Den kan gå på grunn.
   - Du våkner med 60 %. Det er en antakelse.
   - Søvnen løper også mens spillet er lukket.
+  - **Klokka er felles for alle spillerne** (Jonas 03.10.2026). Søvnen kan derfor ikke gå raskere eller spoles over. Den kan bare avbrytes, med mindre hvile:
+    - **«Våkn opp»** på søvnskjermen kommer etter første time (`WAKE_MIN`). Du får energien søvnen har gitt så langt (`sleepGain`: 60 % × sovet tid / 8 t).
+    - **Du våkner når du kommer tilbake** etter fem minutter eller mer borte (`WAKE_BACK` i `catchUp`), med samme regel.
+  - **Brovaktsalarmen** (`EQUIP.brovakt`, 7 900 kr, startverdi, 2 t montering; Jonas 03.10.2026):
+    - Døser du av på sjøen, får søvnen `alarmAt` = 3 spillminutter. Da piper den (`SND`), skjermen blir mørkerød og en rød blinkende **ACK** vises.
+    - ACK (`alarmAck`) vekker deg med 10 % og gjør deg døsig (`S.drowsy`).
+    - Døsig på sjøen døser du av igjen med 3 % sjanse hvert minutt (`h2(S.t, 977)`, så samme minutt er likt for alle). Alarmen går da på nytt.
+    - Døsigheten går over når du har hvilt deg til 60 % ved kai, eller etter en hel søvn.
+    - Trykker ingen ACK (spillet lukket), piper den videre og du sover som uten alarm.
+    - Kilder til selve ordningen er ikke sjekket. BNWAS er påbudt på større skip (SOLAS V/19). Om og når den kreves på norske fiskefartøy, er ikke sjekket.
 
 ### 5.20 Vær og hav (02.10.2026)
 
@@ -1202,6 +1237,85 @@ Fila er `core/03c-stability.js`.
 **Kilder:**
 - IMO International Code on Intact Stability 2008: værkriteriet 2.3 og kravene til fiskefartøy i del B 2.1
 - Normand og Murray (anslagene for KB og BM)
+
+### 5.22 Manuell styring (03.10.2026)
+
+Brukerens ønske: en frivillig mulighet til å styre båten selv, med gass og ratt på skjermen.
+- **Filer:** `core/16-helm.js` (simuleringen), `ui/10d-helm.js` (kontrollene), `helmtest.py`.
+- **Innstillingen:** «Manuell styring» på/av i Innstillinger (`S.settings.manual`).
+- **Kontrollene i 3D:**
+  - Gassen står til høyre: fram, nøytral og bak. Den klikker inn i nøytral innenfor 7 % og blir stående der du slipper.
+  - Rattet (joysticken) står til venstre. Sideveis er roret, og det går tilbake til midten.
+  - Begge er 16 % synlige til du rører dem.
+- **Å ta roret:** rører du kontrollene på sjøen (`helmTake`), stopper ruta eller Autonav. Lager du en ny rute, styrer ruta igjen (`helmOn` krever at det ikke finnes noen `S.plan`).
+- **Klokka er den felles** (6×). Jonas ville ikke ha ekte tid mens man styrer, fordi alle spillerne deler klokka.
+- **Simuleringen** (`helmStep`) flytter båten hvert tikk (200 ms) med spillsekundene som har gått:
+  - Farten følger `BOAT.accel` per spillminutt.
+  - Svingen følger `turnR` når båten har fart, med litt propellstrøm når den står stille i gir. På skjermen svinger den høyst ½ rad/s.
+  - Drivstoff går etter `fuelLph`.
+  - Grunnstøting skjer som med en rute.
+  - **Land** stopper båten. Over 3 knop går den på grunn med skade, saktere legger den bare an. Grunnsjekken regner bare grunt vann som grunn, fordi rutene holdes unna land.
+- **Kast loss og Fortøy:**
+  - «Kast loss» i havna lar deg starte fra kaiplassen (`helmCast`, `helmCastDone`).
+  - «Fortøy i …» kommer når du er under 3 knop innen 80 m fra kaiplassen eller 120 m fra havnepunktet (`helmMoorable`).
+- **3D:** båten følger simuleringens posisjon tett, og svingen gir krenging og kjølvann som med en rute.
+
+### 5.23 Lys om natta og fyrlykter (03.10.2026)
+
+- **Lyskildene:** opptil 8 punktlys lyser opp terreng, bygg, havneenheter, båter og sjø (`PLG`, `pLit` i skyggeleggerne, `pickLights` hvert bilde). På «Lav» brukes 2, på «Middels» 4.
+  - båtens eget arbeidslys over dekk, 26 m rekkevidde
+  - sjømerkelysene i nærheten mens de blinker på: fyr 170 m, middels 90 m og små 50 m
+  - lyskasterne over kaiplassene, 45 m
+- **På sjøen** glitrer lysene i bølgene, med samme ruhet som sola, ut til tre ganger rekkevidden.
+- **Lyskjeglene** (`drawBeams`): fyr («M» eller rekkevidde 10 nm og mer) har to kjegler som går rundt én gang i lysets periode.
+  - De fleste norske fyr er sektorlys som ikke roterer. Kjeglene er for utseendet Jonas ba om.
+  - I Senja-dataene gjelder det Hekkingen og Bukkskinn.
+- `lighttest.py` sjekker lysene og kjeglene.
+
+### 5.24 Kino-visning (03.10.2026)
+
+- **Knappen** (filmkamera) under kameraknappen skrur kino på og av (`G3.kino`, `KINO` i `view3d.js`).
+- **Opptakene** varer 12–20 s og går etter tur:
+  - drone som sirkler
+  - lavt langs siden i vannflaten
+  - forfra mot baugen
+  - fra land når båten går forbi
+  - landskap
+  - bakfra over kjølvannet
+- **Kameraet:** øyet og siktepunktet glattes over 0,7 s, med klipp ved nytt opptak. Horisonten er vannrett.
+- **Opptak som hoppes over:** et opptak med øyet i land eller sjø, eller med noe mellom kameraet og båten (`camFree`), hoppes over. Gisundbrua stenger for eksempel for halvparten av opptakene nord for Finnsnes.
+- **«Skjul»** tar bort statusboksen, knappene, kompasset og minikartet. Bare de to kinoknappene står igjen.
+- Kameraknappen avslutter kino.
+- Funksjonene for kinokameraet kom med i commiten for ytelse ved en feil, men brukes først med kino-commiten.
+
+### 5.25 Lyd (03.10.2026)
+
+- **Fil og oppstart:** `ui/10e-sound.js` (`SND`). Lyden lages i nettleseren med Web Audio uten opptak, og starter ved første trykk.
+- **Lagene** følges hvert 100. ms:
+  - Motoren følger turtallet fra farten. En påhengsmotor går høyt, en diesel lavt og dunkende. Den går på tomgang når båten ligger stille på sjøen, og er av i havn.
+  - Skvulp og vasking langs skroget øker med fart og sjø, og det kommer smell i skroget.
+  - Vind, regn og snø.
+  - Måker, ofte når det sløyes.
+  - I havna: kranens sus og truckens ryggepip mens fangsten landes, pumpa ved bunkring og isrenna.
+  - Haleren i hydraulikk mens det hales, og snella ved jukse.
+  - Brovaktsalarmen.
+- **Innstillinger:** Av, 25, 50, 75 eller 100 % (`S.settings.sound`, `S.settings.vol`). I 2D er lyden 60 % av styrken.
+- `soundtest.py` sjekker lagene, ikke hvordan de låter.
+
+### 5.26 Måker og halere fra Blender (03.10.2026)
+
+- **Måkene** (`tools/wild/maake.py`, `src/data/gull.b64`):
+  - gråmåke og svartbak med egne vingedeler (arm og hånd)
+  - vingeslag med raskere nedslag og glid
+  - raskere slag når de stuper etter innmat
+- **Halerne** (`tools/gear/haler.py`, `src/data/haul-garn.b64` og `haul-line.b64`) er bygd etter målene på Jonas' tegninger. Tegningene ligger ikke i repoet.
+  - **Garnhaleren** (Lorentzen-type) er 1 562 mm ut fra stolpen, 745 mm inn og 1 950 mm høy. Den har V-skive av gummi med ribber, hydraulikkmotor, avtakerrull, V-renne og blå slanger.
+  - **Linehaleren** er 1 330 × 500 × 440 mm over stolpen. Den har rød V-skive (Ø350), gul avtaker (Ø160), to loddrette føringsruller (Ø60, 225 mm fra hverandre), innløpsrulle (Ø104) og renne.
+  - Fargen på stålet (galvanisert grå), stolpehøyden og ribbene på garnskiva har jeg valgt selv.
+  - **I spillet** (`drawGearOp`, `haulModel`) står haleren på en stolpe innenfor styrbord ripe på båter over 7,5 m. Skiva går rundt med redskapet (0,6 m/s), og avtakeren går motsatt vei.
+  - **Redskapet** følger stien over haleren fra sjøen og ned renna: garnet med flottører, lina med fortommer.
+  - **Mannskapet:** de som står på «Haling» i arbeidskjedene, står ved haleren, ved enden av renna og ved binge eller balje. Skipperen er med når det er hans jobb, og forlater da rattet.
+  - `haultest.py` tar bilder og sjekker at skiva går rundt.
 
 ## 6. Regelverk og kilder
 
@@ -1651,6 +1765,14 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
     - resonans
     - at arbeidet kjenner kurs og fart
     - varslene
+  - **Fra 03.10.2026:**
+    - `helmtest.py` (uten 3D): manuell styring med musa som finger, med «Kast loss», gass, ratt, nøytral, overtakelse fra rute, land og «Fortøy»
+    - `sleeptest.py` (uten 3D): søvn på den felles klokka, «Våkn opp», oppvåkning når du kommer tilbake, brovaktsalarmen med ACK og døsigheten
+    - `soundtest.py` (uten 3D): lydlagene følger båten. Den sjekker ikke hvordan det låter.
+    - `lighttest.py` (3D): lysene om natta, «Lav» og fyrkjeglene
+    - `kinotest.py` (3D): kino-opptakene, «Skjul» og avslutning
+    - `haultest.py` (3D): halerne fra Blender, skiva og mannskapet
+    - `charttest.py`: tidsmåler også første bilde og drar kartet et halvt utsnitt
   - **`sea3d.py` (3D):**
     - ingen hopp fra stille til orkan, ved brå vindendring eller når det nære kartet bygges på nytt
     - skumdekket mot Monahan, både regnet ut og tegnet
