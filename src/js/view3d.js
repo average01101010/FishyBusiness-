@@ -1156,7 +1156,7 @@ const G3 = (() => {
   function deckActivity(){
     const b = S.boat; if (!b || b.land || typeof deckHands !== 'function' || !S.hold || !S.hold.length) return {on:false};
     if (deckHands() < 1 || deckPending() < 0.5) return {on:false};
-    return {on:true, alone:handsAboard() === 1, task:S.settings.gut && S.hold.some(x => !x.gut && !x.iced) ? 'gut' : 'ice'};
+    return {on:true, alone:handsAboard() === 1, task:catchGut() && S.hold.some(x => !x.gut && !x.iced) ? 'gut' : 'ice'};
   }
   function drawDeck(BMrel, eye, VP, t, DK){
     const vt = vtype(), G = GEO(vt), d = G.deck || {y:G.gw, z:2}, Bm = G.beam, b = S.boat; DK.pt = null;
@@ -2731,8 +2731,11 @@ const G3 = (() => {
     drawTerrain(TM, eye, VPn, true); drawLit(STAT, TM); drawBuildings(TM);
     // whoever works the deck leaves their place: alone, the skipper leaves the wheel
     DECKACT = deckActivity(); const awaySk = DECKACT.on && DECKACT.alone, awayCr = DECKACT.on && !DECKACT.alone ? 1 : 0;
-    if (VG.hand){ drawSkiff(BMrel, VPn, dt, !cam.helm && !awaySk, ncrew > 0); gl.useProgram(PL.p); }
-    else drawVessel(VT, VG, BMrel, VPn, !cam.helm && !awaySk, ncrew - awayCr);
+    // under way the crew are inside (the user: no reason for them to stand on deck all day, 03.10.2026); whoever guts is at the table
+    // (drawDeck), and in an open boat they sit where they are. The one at the table leaves their place (a skiff drew them twice).
+    const underway = S.boat.status === 'sailing' && !S.boat.gop, deckCrew = underway && !VG.open ? 0 : Math.max(0, ncrew - awayCr);
+    if (VG.hand){ drawSkiff(BMrel, VPn, dt, !cam.helm && !awaySk, deckCrew > 0); gl.useProgram(PL.p); }
+    else drawVessel(VT, VG, BMrel, VPn, !cam.helm && !awaySk, deckCrew);
     if (SHOW){ const y = (env.tide || 0) + (seaH(SHOW.x, SHOW.z, t) - (env.tide || 0)) * 0.8; SHOW.M = model(SHOW.x - eye[0], y - eye[1], SHOW.z - eye[2], -SHOW.h, Math.sin(t * 0.7) * 0.02, Math.sin(t * 0.9) * 0.03); drawVessel(SHOW.t, GEO(SHOW.t), SHOW.M, VPn, true, 2); }
     if (STATN){ nSetup(VPn); drawN(STATN, TM); if (BUNKN) drawN(BUNKN, TM); } drawMooring(BMrel, eye, VPn, t); if (PM) drawDeck(BMrel, eye, VPn, t, DECKACT); drawGearOp(BMrel, eye, VPn, t);
     const plant = PM ? nearestPlant(eye) : null; drawUnits(eye, VPn, true, nearFar, plant && plant.id);

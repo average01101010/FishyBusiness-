@@ -118,9 +118,8 @@ function panelFish(){
   h.push('<h3>' + t('handling') + '</h3>');
   h.push('<p class="note">' + (S.lang === 'no' ? 'Fisken blør du idet den kommer over ripa, og så ligger den i bløggekaret til den blir sløyd og iset.' : 'The fish is bled as it comes over the rail and lies in the bleeding tub until it is gutted and iced.') + '</p>');
   if (holdTotal() > 0.5) h.push('<p class="note"><b>' + deckText(false) + '</b></p>');
-  h.push('<label class="tog"><input type="checkbox" id="setGut"' + (S.settings.gut ? ' checked' : '') + '><span>' + t('gut') + '<small>' + t('gut_n') + '</small></span></label>');
-  h.push('<label class="tog"><input type="checkbox" id="setIce"' + (S.settings.ice ? ' checked' : '') + '><span>' + t('icing') + '<small>' + t('icing_n') + '</small></span></label>');
-  h.push('<label class="tog"><input type="checkbox" id="setDeckFirst"' + (S.settings.deckFirst !== false ? ' checked' : '') + '><span>' + t('deck_first') + '<small>' + t('deck_first_n') + '</small></span></label>');
+  // who guts and who ices is set in the work menu (Arbeid), not here (the user's wish 03.10.2026)
+  h.push('<p class="note">' + (S.lang === 'no' ? 'Hvem som sløyer og iser, setter du under «Arbeid».' : 'Who guts and who ices is set under «Work».') + '</p>');
   h.push(gearPanel());
   return h.join('');
 }

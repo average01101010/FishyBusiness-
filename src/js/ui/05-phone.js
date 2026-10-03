@@ -154,7 +154,6 @@ const PHONE = (() => {
     return '<div class="ph-c"><div class="ph-card ph-set"><h4>' + L('Spill', 'Game') + '</h4><label>' + L('Språk', 'Language') + '<button class="ph-btn alt" data-pa="lang" style="margin:0">' + (S.lang === 'no' ? 'English' : 'Norsk') + '</button></label></div>' +
       '<div class="ph-card"><h4>' + L('Grafikk i 3D', '3D graphics') + '</h4><div class="ph-sub">' + ql.map(([v, l]) => '<button class="' + (q3 === v ? 'on' : '') + '" data-pa="q3d" data-v="' + v + '">' + l + '</button>').join('') + '</div><p class="ph-note">' +
       L('Lav tegner med færre piksler, kortere detaljer rundt båten, uten skygger og sjørokk. Auto går ned et nivå når bildene kommer for sjelden, og opp igjen når det er god margin.', 'Low draws fewer pixels and less detail round the boat, without shadows and spray. Auto steps down a level when the frames come too slowly, and back up when there is room.') +
-      '<div class="ph-card ph-set"><h4>' + L('Fangstbehandling', 'Catch handling') + '</h4><label>' + t('gut') + chk('setGut', S.settings.gut) + '</label><label>' + t('icing') + chk('setIce', S.settings.ice) + '</label><label>' + t('deck_first') + chk('setDeckFirst', S.settings.deckFirst !== false) + '</label><p class="ph-note">' + t('gut_n') + ' ' + t('icing_n') + ' ' + t('deck_first_n') + '</p></div>' +
       (now ? ' ' + L('Nå: ', 'Now: ') + ['Lav', 'Middels', 'Høy'][now.lvl] + (now.fps ? ' · ' + Math.round(now.fps) + ' bilder/s' : '') : '') + '</p>' +
       // the frame rate in a corner of the 3D view, to measure on the tablet (#fps in the address does not reach the artifact's page)
       '<div class="ph-sub"><button class="' + (S.settings.fpsShow ? 'on' : '') + '" data-pa="fpsShow" data-v="1">' + L('Vis bildetakt', 'Show frame rate') + '</button><button class="' + (S.settings.fpsShow ? '' : 'on') + '" data-pa="fpsShow" data-v="0">' + L('Skjul', 'Hide') + '</button></div></div>' +
@@ -471,7 +470,7 @@ const PHONE = (() => {
     if (b.status === 'engine') A('eng', 'Motorstopp', 'Engine stopped', 'redning');
     if (b.status === 'adrift') A('drift', 'Driver uten drivstoff', 'Adrift without fuel', 'redning');
     if (b.fuel < BOAT.fuelCap * 0.2) A('fuel', 'Lite drivstoff, ' + fmt(b.fuel, 0) + ' L', 'Low on fuel, ' + fmt(b.fuel, 0) + ' L', 'beholdning:boat');
-    if (b.status !== 'port' && S.settings.ice && b.ice < 1 && holdTotal() > 0) A('ice', 'Tom for is, fangsten ises ikke', 'Out of ice, the catch is not iced', 'beholdning:last');
+    if (b.status !== 'port' && catchIce() && b.ice < 1 && holdTotal() > 0) A('ice', 'Tom for is, fangsten ises ikke', 'Out of ice, the catch is not iced', 'beholdning:last');
     if (b.status !== 'port' && holdTotal() >= capHold() - 1) A('full', 'Full last', 'Hold full', 'beholdning:last');
     if (svcOverdue() > 0) A('svc', 'Motorservice er forfalt', 'Engine service overdue', 'verksted');
     if (S.cevt) A('cevt', 'Uløst krangel om bord', 'Unresolved quarrel aboard', 'mannskap');

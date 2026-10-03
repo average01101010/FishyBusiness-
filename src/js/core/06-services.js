@@ -88,7 +88,7 @@ function autoRestock(){
   // only what the harbour sells: ice down the plant's chute (where she lies at the plant's quay), then fuel at the bunker quay,
   // which takes her over there and runs the pump
   const b = S.boat, pt = portById(b.port) || {};
-  if (pt.ice && S.settings.ice !== false && berthKind(b) === 'main'){ const kg = Math.max(0, BOAT.iceCap - b.ice), c = kg * PRICE.ice; if (kg > 0 && c <= S.cash){ b.ice += kg; S.cash -= c; S.stats.costs += c; iceChute(kg); } }
+  if (pt.ice && catchIce() && berthKind(b) === 'main'){ const kg = Math.max(0, BOAT.iceCap - b.ice), c = kg * PRICE.ice; if (kg > 0 && c <= S.cash){ b.ice += kg; S.cash -= c; S.stats.costs += c; iceChute(kg); } }
   if (pt.fuel && BOAT.fuelCap - b.fuel > 0.5 && S.cash > 0) startFueling(true);
   if (!b.gear && PRICE.gear <= S.cash){ b.gear = true; S.cash -= PRICE.gear; S.stats.costs += PRICE.gear; }
 }

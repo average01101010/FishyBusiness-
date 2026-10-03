@@ -12,13 +12,13 @@ const WORK = (() => {
   function flowOf(){ const r = rigOf(); return r === 'juksa' ? ['ror', 'fiske', 'sloy', 'is'] : r === 'teiner' ? ['ror', 'haling', 'sort', 'sloy', 'is'] : ['ror', 'haling', 'sloy', 'is']; }
   // what waits at a station: the queue line on its card
   function queue(k){
-    const b = S.boat, st = S.settings, g = b.gop; let gut = 0, ice = 0;
-    for (const x of S.hold){ if (SPECIES[x.sp].live || x.iced) continue; if (st.gut && !x.gut) gut += x.kg; else if (st.ice !== false) ice += x.kg; }
+    const b = S.boat, cg = catchGut(), ci = catchIce(), g = b.gop; let gut = 0, ice = 0;
+    for (const x of S.hold){ if (SPECIES[x.sp].live || x.iced) continue; if (cg && !x.gut) gut += x.kg; else if (ci) ice += x.kg; }
     if (k === 'ror') return b.status === 'sailing' ? fmt(b.v || 0, 0) + ' kn' : '–';
     if (k === 'fiske') return b.status === 'fishing' && !g && S.fsess ? fmt(S.fsess.kg, 0) + ' kg' : '–';
     if (k === 'haling' || k === 'sort') return g ? g.done + '/' + g.n : '–';
-    if (k === 'sloy') return st.gut ? fmt(gut, 0) + ' kg' : L('av', 'off');
-    if (k === 'is') return st.ice !== false ? fmt(ice, 0) + ' kg' : L('av', 'off');
+    if (k === 'sloy') return cg ? fmt(gut, 0) + ' kg' : L('ingen på', 'nobody on it');
+    if (k === 'is') return ci ? fmt(ice, 0) + ' kg' : L('ingen på', 'nobody on it');
     if (k === 'kokk'){ const M = mealState(), f = L('mat ', 'food ') + fmt(foodScore(), 1) + '/5'; if (b.status === 'port' || M.due == null) return f; return (S.t >= M.due ? '<b class="r2">' + L('måltid nå', 'meal due') + '</b>' : L('måltid om ', 'meal in ') + dur((M.due - S.t) / 60)) + ' · ' + f; }
     return '';
   }

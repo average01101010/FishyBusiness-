@@ -55,6 +55,8 @@ function load(){ try { let s = localStorage.getItem(KEY), o = s ? JSON.parse(s) 
   if (!o || o.v !== 2) return null;
   // a saved fleet: point the vessel fields at the vessel being followed before anything else reads them
   if (o.fleet && o.fleet.length){ const v = o.fleet.find(x => x.id === o.cur) || o.fleet[0]; for (const k of VKEYS) o[k] = v[k]; }
+  // the catch's handling follows the work chains now (13-work.js catchGut): the old switches go, once
+  if (o.settings && !o.settings.catchByWork){ delete o.settings.gut; delete o.settings.ice; o.settings.catchByWork = true; }
   return o; } catch (e) { return null; } }
 
 // ---------- UI state ----------
