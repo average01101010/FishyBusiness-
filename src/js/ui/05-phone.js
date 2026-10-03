@@ -1,7 +1,7 @@
 // ---------- the phone ----------
 const PHONE = (() => {
   const el = $('phone'), view = $('phView'), tEl = $('phTime'), nEl = $('phNet'), badge = $('phoneBadge');
-  let app = 'home', sub = {}, isOpen = false, confirmMayday = false, shopPend = null;
+  let app = 'home', sub = {}, isOpen = false, confirmMayday = false, shopPend = null, saveBox = null;
   const L = (no, en) => S.lang === 'no' ? no : en;
   const SVG = d => '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
   const IC = {
@@ -164,6 +164,11 @@ const PHONE = (() => {
       '<div class="ph-card"><h4>' + L('Manuell styring', 'Manual steering') + '</h4><div class="ph-sub"><button class="' + (S.settings.manual ? 'on' : '') + '" data-pa="manual" data-v="1">' + L('På', 'On') + '</button><button class="' + (S.settings.manual ? '' : 'on') + '" data-pa="manual" data-v="0">' + L('Av', 'Off') + '</button></div><p class="ph-note">' +
       L('Gass til høyre (fram, nøytral, bak; den blir stående der du slipper) og ratt til venstre (det går tilbake til midten) i 3D. Rører du dem på sjøen, tar du roret fra ruta eller Autonav. «Fortøy» kommer når du er sakte ved en kai, og «Kast loss» når du ligger fortøyd.', 'Throttle on the right (ahead, neutral, astern; it stays where you leave it) and wheel on the left (it springs back) in 3D. Touching them at sea takes the helm from the route or Autonav. «Moor» shows when you are slow at a quay, and «Cast off» when you lie moored.') + '</p></div>' +
       '<div class="ph-card ph-set"><h4>' + L('Sikkerhet', 'Safety') + '</h4><label>' + t('auto') + chk('setAuto', S.settings.autoOn) + '</label><label><span>' + L('Snu ved', 'Turn back at') + ' <output id="autoWOut">' + S.settings.autoW + ' m/s</output></span><input type="range" min="6" max="20" step="1" value="' + S.settings.autoW + '" id="autoW"' + (S.settings.autoOn ? '' : ' disabled') + '></label><p class="ph-note">' + t('auto_n') + '</p></div>' +
+      // the saved game as a code, to take it between the artifact and the app on the home screen (they keep their own storage)
+      '<div class="ph-card"><h4>' + L('Lagret spill', 'Saved game') + '</h4><p class="ph-note">' + L('Artifacten og appen på hjemskjermen har hver sin lagring. Kopier koden her og lim den inn der for å ta med spillet.', 'The artifact and the app on the home screen keep their own saves. Copy the code here and paste it there to take the game along.') + '</p>' +
+      '<button class="ph-btn alt" data-pa="saveOut">' + L('Kopier lagringen', 'Copy the save') + '</button><button class="ph-btn alt" data-pa="saveIn">' + L('Lim inn lagring', 'Paste a save') + '</button>' +
+      (saveBox ? '<textarea id="saveCode" rows="4" style="width:100%;margin-top:8px;font:11px ui-monospace,monospace"' + (saveBox.mode === 'out' ? ' readonly' : ' placeholder="KYST2:…"') + '>' + (saveBox.text || '') + '</textarea>' +
+        (saveBox.mode === 'in' ? '<button class="ph-btn" data-pa="saveLoad">' + L('Last inn dette spillet', 'Load this game') + '</button><p class="ph-note">' + L('Spillet her blir erstattet.', 'The game here is replaced.') + '</p>' : '<p class="ph-note">' + L('Koden er kopiert om nettleseren tillot det. Ellers marker og kopier den selv.', 'The code is copied if the browser allowed it. Otherwise select and copy it yourself.') + '</p>') : '') + '</div>' +
       '<div class="ph-card"><button class="ph-btn red" data-act="reset">' + t('reset') + '</button></div></div>';
   }
   // tools for testing while the game is built (02.10.2026): the clock's pace, a pause, and money in one tap. Not for players: in the
@@ -692,6 +697,9 @@ const PHONE = (() => {
     else if (a === 'manual'){ S.settings.manual = d.v === '1'; if (!S.settings.manual) helmOff(); }
     else if (a === 'admPace'){ S.mult = +d.v; $('pace').value = String(S.mult); }
     else if (a === 'admCash'){ S.cash += 100000; log('Admin: 100 000 kr lagt i kassa.', 'Admin: NOK 100,000 put in the cash.'); }
+    else if (a === 'saveOut'){ saveCode().then(c => { saveBox = {mode:'out', text:c || ''}; render(); const ta = document.getElementById('saveCode'); if (ta){ ta.focus(); ta.select(); } if (c && navigator.clipboard) navigator.clipboard.writeText(c).then(() => toast(L('Lagringen er kopiert.', 'The save is copied.'))).catch(() => {}); }); return; }
+    else if (a === 'saveIn'){ saveBox = {mode:'in', text:''}; }
+    else if (a === 'saveLoad'){ const ta = document.getElementById('saveCode'); loadCode(ta ? ta.value : '').then(() => { toast(L('Spillet er lest inn. Siden lastes på nytt.', 'The game is read in. The page loads again.')); setTimeout(() => location.reload(), 700); }).catch(() => toast(L('Koden kunne ikke leses.', 'The code could not be read.'))); return; }
     else if (a === 'admEnergy'){ S.adm = S.adm || {}; S.adm.noEnergy = !S.adm.noEnergy;
       if (S.adm.noEnergy){ S.sleep = null; S.energy = 100; S.drowsy = false; S.enWarn = false; log('Admin: energien er skrudd av. Du blir ikke sliten og sovner ikke.', 'Admin: energy is off. You do not tire or fall asleep.'); }
       else log('Admin: energien er skrudd på igjen.', 'Admin: energy is on again.'); }

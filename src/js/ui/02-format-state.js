@@ -35,7 +35,9 @@ const spName = sp => SPECIES[sp][S.lang];
 // v2 (phase K4 of the coast plan) is in the national frame and under its own key; a v1 game (the legacy frame) is read once from its
 // old key, moved over (migrateV2) and saved as v2, and the v1 save is left as it was
 const KEY = 'kystfiske_v2', KEY_V1 = 'kystfiske_proto_v1';
-function save(){ try { S.lastReal = Date.now(); let o = S; if (S.fleet && S.fleet.length){ storeVessel(curVessel()); o = Object.assign({}, S); for (const k of VKEYS) delete o[k]; } localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) {} }
+// set when a save code has been read in and the page is about to load it: nothing may save over it before the reload (pagehide saves)
+let SAVE_OFF = false;
+function save(){ if (SAVE_OFF) return; try { S.lastReal = Date.now(); let o = S; if (S.fleet && S.fleet.length){ storeVessel(curVessel()); o = Object.assign({}, S); for (const k of VKEYS) delete o[k]; } localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) {} }
 // v1 to v2: every point {x, y} (km) anywhere in the save goes through LG; the stock's dense grids of the legacy frame (40 x 42 cells of
 // 2 km) become the sparse cells of the national frame, the lowest value where two old cells land in one new; headings turn with the frame
 function migrateV2(o){
@@ -68,3 +70,19 @@ hooks.onLog = () => { panelDirty = true; };
 
 function toast(msg){ const el = $('toast'); el.textContent = msg; el.classList.add('on'); clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove('on'), 2600); }
 
+
+// The saved game as a code (P1 of the PWA plan, 03.10.2026): the artifact and the app on the home screen are two places, each with
+// its own storage, so a game is carried across as text, the save gzipped in base64 after «KYST2:» (Innstillinger on the phone).
+const b64of = u => { let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); };
+async function saveCode(){
+  save(); const raw = localStorage.getItem(KEY); if (!raw) return null;
+  const z = new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer());
+  return 'KYST2:' + b64of(z);
+}
+// a code read in: checked, then stored in place of the game here (the page is loaded again after it, ui/05-phone.js)
+async function loadCode(code){
+  const m = /^KYST2:([A-Za-z0-9+/=\s]+)$/.exec((code || '').trim()); if (!m) throw new Error('not a save code');
+  const raw = await new Response(new Blob([b64bytes(m[1].replace(/\s/g, ''))]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+  const o = JSON.parse(raw); if (!o || o.v !== 2 || !(o.boat || (o.fleet && o.fleet.length))) throw new Error('not a game of this version');
+  SAVE_OFF = true; localStorage.setItem(KEY, raw); return o;
+}

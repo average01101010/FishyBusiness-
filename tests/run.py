@@ -25,7 +25,7 @@ os.makedirs(LOGS, exist_ok=True)
 # draw 3D: they look at the 3D view itself (frames, camera, quays, cranes, pumps)
 D3 = ['dbg23o', 'camtest', 'moortest', 'landtest', 'bunkertest', 'heattest', 'vessel3d', 'unittest', 'sea3d', 'teleport3d', 'lighttest', 'kinotest', 'haultest']
 LITE = ['tut', 'tidetest', 'trip2', 'docktest', 'booktest', 'decktest', 'geartest', 'loretest', 'tattest', 'fleet2test', 'fleet3test', 'opsowntest', 'routetest',
-        'shoptest', 'selltest', 'timetest', 'worktest', 'vesseltest', 'streaktest', 'fixtest', 'hailltest', 'harbourtest', 'simday', 'calib', 'kvtest', 'progweek', 'seatest', 'stabtest', 'projtest', 'boottest', 'maptest', 'mig2test', 'charttest', 'helmtest', 'soundtest', 'sleeptest']
+        'shoptest', 'selltest', 'timetest', 'worktest', 'vesseltest', 'streaktest', 'fixtest', 'hailltest', 'harbourtest', 'simday', 'calib', 'kvtest', 'progweek', 'seatest', 'stabtest', 'projtest', 'boottest', 'maptest', 'mig2test', 'charttest', 'helmtest', 'soundtest', 'sleeptest', 'pwatest']
 # they measure milliseconds, so they run alone at the end, when nothing else takes the CPU
 SOLO = ['routetest', 'heattest', 'landtest', 'charttest']
 READ = {'selltest', 'hailltest', 'simday', 'calib', 'kvtest', 'progweek', 'seatest'}
@@ -35,13 +35,13 @@ DRAWS3D = {'tut'}
 MUST = {'trip2': ('"st":"port"', 'ender ikke i havn'), 'tut': ('"tut": 0', 'veiledningen er ikke ferdig')}
 # which tests cover which file: «changed» runs these for the files in the diff. A file not listed runs trip2; texts and docs run nothing
 COVER = {
-  'src/js/core/00-proj.js':['projtest', 'trip2'], 'src/js/core/01b-mapdata.js':['maptest', 'boottest', 'trip2', 'dbg23o', 'teleport3d'], 'tools/mappack.mjs':[], 'build.mjs':['boottest', 'trip2'], 'src/data/map/manifest.json':['trip2', 'maptest', 'harbourtest', 'moortest', 'unittest', 'landtest', 'routetest', 'seatest', 'dbg23o', 'sea3d', 'teleport3d'], 'src/js/core/01-world.js':['trip2', 'harbourtest', 'unittest'], 'src/js/core/02-species-gear.js':['selltest', 'shoptest', 'vesseltest'], 'src/js/core/03-simulation.js':['heattest', 'decktest', 'simday', 'calib', 'vesseltest', 'unittest', 'tidetest'], 'src/data/tide.json':['tidetest', 'unittest'],
+  'src/js/core/00-proj.js':['projtest', 'trip2'], 'src/js/core/01b-mapdata.js':['maptest', 'boottest', 'trip2', 'dbg23o', 'teleport3d'], 'tools/mappack.mjs':[], 'build.mjs':['boottest', 'trip2', 'pwatest'], 'src/pwa/sw.js':['pwatest'], 'src/pwa/manifest.webmanifest':['pwatest'], 'src/data/map/manifest.json':['trip2', 'maptest', 'harbourtest', 'moortest', 'unittest', 'landtest', 'routetest', 'seatest', 'dbg23o', 'sea3d', 'teleport3d'], 'src/js/core/01-world.js':['trip2', 'harbourtest', 'unittest'], 'src/js/core/02-species-gear.js':['selltest', 'shoptest', 'vesseltest'], 'src/js/core/03-simulation.js':['heattest', 'decktest', 'simday', 'calib', 'vesseltest', 'unittest', 'tidetest'], 'src/data/tide.json':['tidetest', 'unittest'],
   'src/js/core/03b-sea.js':['seatest', 'calib', 'simday', 'progweek', 'trip2', 'sea3d'],
   'src/js/core/03c-stability.js':['stabtest', 'calib', 'simday', 'progweek', 'worktest', 'trip2', 'sea3d'],
   'src/js/core/04-crew.js':['fleet2test', 'opsowntest', 'worktest'], 'src/js/core/05-vessels.js':['decktest', 'trip2', 'heattest', 'worktest'], 'src/js/core/06-services.js':['fixtest', 'fleet3test', 'opsowntest'],
   'src/js/core/07-harbours.js':['harbourtest', 'landtest', 'bunkertest', 'moortest', 'unittest'], 'src/js/core/08-lore.js':['loretest'], 'src/js/core/09-tattoos.js':['tattest'],
   'src/js/core/10-gear.js':['geartest', 'booktest'], 'src/js/core/11-route.js':['routetest'], 'src/js/core/12-heat.js':['heattest'], 'src/js/core/13-work.js':['worktest', 'decktest', 'opsowntest'], 'src/js/core/14-crewlife.js':['worktest', 'fleet2test'], 'src/js/core/15-energy.js':['worktest', 'trip2', 'sleeptest'],
-  'src/js/ui/01-i18n.js':[], 'src/js/ui/02-format-state.js':['timetest', 'mig2test'], 'src/js/ui/03-map.js':['routetest', 'charttest'], 'src/js/ui/03a-chart.js':['charttest'], 'src/js/ui/03b-route.js':['routetest'],
+  'src/js/ui/01-i18n.js':[], 'src/js/ui/02-format-state.js':['timetest', 'mig2test', 'pwatest'], 'src/js/ui/03-map.js':['routetest', 'charttest'], 'src/js/ui/03a-chart.js':['charttest'], 'src/js/ui/03b-route.js':['routetest'],
   'src/js/ui/03c-heat.js':['heattest'], 'src/js/ui/03e-miniplot.js':['teleport3d', 'tut'], 'src/js/ui/03d-setmode.js':['docktest'], 'src/js/ui/04-panels-instruments.js':['heattest'],
   'src/js/ui/05-phone.js':['docktest', 'fleet3test', 'shoptest', 'vesseltest', 'teleport3d'], 'src/js/ui/05-tattoo-art.js':['tattest'], 'src/js/ui/05b-work.js':['worktest', 'sleeptest'], 'src/js/ui/06-logbook.js':['booktest'], 'src/js/ui/06b-book-tabs.js':['booktest'],
   'src/js/ui/07-guide.js':['shoptest', 'selltest'], 'src/js/ui/07b-first-trip.js':['tut'], 'src/js/ui/08-actions.js':['trip2', 'docktest', 'booktest', 'shoptest', 'boottest', 'kinotest'],
