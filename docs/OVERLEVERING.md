@@ -1690,6 +1690,22 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
   - Kelvin-mønsteret er en tilnærming med én retning for skråbølgene.
   - Vinden har ikke le bak fjellene, og den herskende vindretningen er ikke sjekket mot seklima.met.no.
   - Fisket inne i havna i kuling trenger fortsatt en egen regel.
+- **Kartplotteren: dobbel kyst langs vannlinja (03.10.2026, framtidig jobb, venter på klarsignal):**
+  - **Hva som ses:** på nært hold ligger et mykt grønt felt ved siden av den gule kysten, og smale sund er tettet med grønt. Det ser ut som to landmasser oppå hverandre.
+  - **Årsaken:** kartet tegner land fra to kilder.
+    - Den gule kysten er vektorkysten fra Overture/OSM (`coast2`, forenklet til 3 m, `chartCoast` i `03a-chart.js`).
+    - Det grønne er 25 m-masken, de samme polygonene gjort om til ruter (en rute er land hvis midten er det, `fill` i `tools/map/region.py`), pluss moloene. Spillet bruker masken i `isLand`, `legClear` og `groundCheck` (`01-world.js`).
+    - På nivå 2 tegner `chartRaster` (`03-map.js`) masken som grønn fjære der den er land utenfor kysten (K7, så spilleren skal se hvorfor en rute blir avvist). Siden 03.10.2026 leses den bilineært, så kanten blir myk.
+    - Maskens kant kan ligge 12–18 m fra kysten, til begge sider, og sund under 25–40 m blir lukket.
+  - **Tre måter å rette det på:**
+    1. **Kystlinja gjelder** (anbefalt):
+       - Landsjekken nær kysten bruker `coast2`, og masken er bare en rask forhåndssjekk. Vektorkysten brukes bare der maskens 3 × 3 nabolag er blandet. Avgjørelsen tas lokalt ved å telle kryssinger av kanter fra en rute med kjent svar.
+       - Chart-pakkene lastes da rundt båtene, ikke bare i kartvisningen.
+       - Moloene, og mask-land mer enn én rute fra vektorland, er fortsatt land.
+       - Fjæra tegnes bare der kildene virkelig er uenige.
+       - Ingen nye kartdata. Rundt en halv til en hel dag, med `routetest`, `charttest`, `helmtest` og `trip2`.
+    2. **Bare fjern det grønne:** raskt, men en rute gjennom et smalt sund kan bli avvist uten synlig grunn.
+    3. **Kysten tegnes fra masken** (glattet konturlinje): kart og spill blir like, men kysten blir mindre detaljert på nært hold.
 
 - **Sertifikatene i Sjømann er ikke sjekket mot kildene.** Søk viste «Fiskeskippersertifikat klasse C eller D6» for båter under 15 m og navnene «helseerklæring for arbeidstakere på skip» og «sikkerhetsopplæring for sjøfolk på mindre skip» (Sjøfartsdirektoratet, 12 PAX-siden), men sdir.no og Lovdata var sperret fra arbeidsmiljøet. Hvilket sertifikat en fører av fiskefartøy under 15 m faktisk trenger, og at helseerklæringen varer 2 år, må sjekkes før papirene får betydning i spillet.
 
