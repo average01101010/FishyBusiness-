@@ -2150,7 +2150,13 @@ const G3 = (() => {
     const trim = 0.07 * sstep(9, 17, v) - 0.02 * sstep(3, 9, v) * (1 - sstep(9, 13, v));
     // planing hulls bank into a turn, displacement hulls heel a little outwards
     const bank = (BOAT.planing ? -0.18 : 0.06) * clamp(bv.yr, -1.2, 1.2) * sstep(4, 18, v);
-    const tp = Math.atan(sl) + trim, tr = Math.atan(st) + bank + (bv.heel || 0), ty = hm + 0.06;
+    let tp = Math.atan(sl) + trim, tr = Math.atan(st) + bank + (bv.heel || 0), ty = hm + 0.06;
+    // Under way the boat on screen runs GAME_RATE x (and the pace) faster than she would through these waves, which move in real time,
+    // so she met them several times too often and heaved a metre at half a second in a gale (the user's «rister voldsomt» at the
+    // helm, 03.10.2026): the sea she answers is smoothed over a time that grows with that speed
+    const tf = 0.45 * sstep(2, 14, bv.spd || 0) + 0.3 * sstep(14, 45, bv.spd || 0);
+    if (!bv.osc || tf < 0.02 || bv.fy === undefined){ bv.fy = ty; bv.fp = tp; bv.fr = tr; }
+    else { const k = 1 - Math.exp(-dt / tf); bv.fy += (ty - bv.fy) * k; bv.fp += (tp - bv.fp) * k; bv.fr += (tr - bv.fr) * k; ty = bv.fy; tp = bv.fp; tr = bv.fr; }
     if (!bv.osc){ bv.osc = true; bv.vy = bv.vp = bv.vr = 0; bv.y = ty; bv.pitch = tp; bv.roll = tr; }
     const wz = 2 * Math.PI / Math.max(0.6, bv.st.Tz), wr = 2 * Math.PI / Math.max(0.8, bv.st.Tr), zz = 0.35, zr = 0.08, n = Math.ceil(dt / 0.02), h = dt / n, lim = Math.min(0.9, bv.st.deckEdge * 1.6);
     for (let i = 0; i < n; i++){
@@ -2635,7 +2641,11 @@ const G3 = (() => {
     let eye, V;
     if (cam.helm && !SHOW){
       // at the wheel: eye above the helmsman, moving with the boat (damped a little)
-      const Mh = model(bv.x, bv.y, bv.z, -bv.head, bv.pitch * 0.7, bv.roll * 0.7);
+      // the helmsman's head steadies itself: the view follows the boat's pitch and roll through a filter of 0.3 s, so an uneven frame
+      // (the tablet's) does not jerk the horizon (the user: «båten rister voldsomt i bro-visningen», 03.10.2026)
+      const kh = 1 - Math.exp(-Math.min(0.25, rdt) / 0.3); if (cam.sp === undefined || !isFinite(cam.sp)){ cam.sp = bv.pitch; cam.sr = bv.roll; }
+      cam.sp += (bv.pitch - cam.sp) * kh; cam.sr += (bv.roll - cam.sr) * kh; if (cam.sy === undefined || !isFinite(cam.sy)) cam.sy = bv.y; cam.sy += (bv.y - cam.sy) * kh;
+      const Mh = model(bv.x, cam.sy, bv.z, -bv.head, cam.sp * 0.7, cam.sr * 0.7);
       eye = xf(Mh, (GEO(vtype())).eye);
       const cy = Math.cos(cam.hp), dl = [-Math.sin(cam.hy) * cy, Math.sin(cam.hp), -Math.cos(cam.hy) * cy];
       const f = [Mh[0] * dl[0] + Mh[4] * dl[1] + Mh[8] * dl[2], Mh[1] * dl[0] + Mh[5] * dl[1] + Mh[9] * dl[2], Mh[2] * dl[0] + Mh[6] * dl[1] + Mh[10] * dl[2]];
