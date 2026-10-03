@@ -269,6 +269,7 @@ Jonas valgte 02.10.2026 å la GitHub bygge og lagre de nasjonale kartdataene. Gi
   - **`pack`:** pakkene for alle flisene (`coast.py lite`) og releasen `kart-<kjøringsnummer>` med `kart-lite.tar.gz` og `manifest.json`.
 - **Start:** en push som endrer `tools/map/kart.json`, på en hvilken som helst gren (endre `run` for å bygge på nytt), eller for hånd fra Actions-fanen når fila ligger på `main`.
 - **`python3 tools/map/release.py [tag]`** henter den nyeste (eller den nevnte) releasen og pakker den ut i `tools/map/out/release/<tag>/lite`. Nedlastingen fra GitHub virker fra skymiljøet.
+- **Første kjøring** (02.10.2026, 21 minutter): releasen `kart-1` med 168 fliser og 672 pakker, 217,7 MB. Det er flere filer enn én artifactversjon kan ha (511), så pakkene må slås sammen før den lette utgaven publiseres (K11).
 - **Ikke ennå:** Bygget tar ikke pakkene fra releasen ennå. Det kommer med den lette artifacten og PWA-en i K11. Geonorge (dybde 50 m, DTM10) og Overpass kan nå kjøres i workflowen, men rørledningen bruker dem ikke ennå.
 
 ### 4.9 Kjernen for hele kysten (kystplanen, fase K6, 02.10.2026)
@@ -305,7 +306,7 @@ Jonas valgte 02.10.2026 å la GitHub bygge og lagre de nasjonale kartdataene. Gi
   - **Dybden utenfor det gamle Senja-kvadratet:** Senja-flisene går utenfor kvadratet, og der ble Kartverket-rasteret lest med kanten dratt bortover (lyseblå striper i kartet vest for Senja). Der brukes nå dybdemodellen, slik `coast.py` gjør for kystflisene.
   - `seatest` forventer den nye eksponeringssummen (19 452,4477, 2,0 % over den gamle). Endringen kom med den nasjonale eksponeringen i K6 og er tilsiktet.
 - **Ikke ennå:**
-  - Autoruta («Følg leia») leser 100 m-avstanden over hele `dc`-laget. Med nasjonale detaljfliser blir det for stort, og den trenger vinduet i K9.
+  - Autoruta («Følg leia», nå Autonav) leste 100 m-avstanden over hele `dc`-laget. Det er løst med vinduet i K9 (4.12).
   - Detaljflisene for hele kysten (`out/national/lite`) er ikke i git, og bygget bruker dem ikke ennå.
 
 ### 4.10 Sjøkartet i 2D (kystplanen, fase K7, 02.10.2026)
@@ -408,6 +409,21 @@ Jonas valgte 02.10.2026 å la GitHub bygge og lagre de nasjonale kartdataene. Gi
   - Detaljert bakke (25 m), skog, bygg og veier finnes bare for Senja. Andre steder er bakken 200 m og landet glatt uten skog.
   - Sola, månen og tidevannet regnes fortsatt for Senja (K10), så bildene fra Kirkenes og Bergen har Senjas lys.
   - Bildetakten er ikke målt på nettbrettet ennå. Testsiden for bildetakt, minne og tid for catch-up er ikke bygget.
+
+### 4.12 Autonav over hele kysten (kystplanen, fase K9, 02.10.2026)
+
+- **Vindu i stedet for hele kartet** (`leiaFind` i `core/11-route.js`): A* går i et vindu rundt start og mål, `LEIA.pad` (5 km) eller `LEIA.padK` (35 %) av avstanden, det som er størst.
+  - Der vinduet når flisenes detalj (sim-pakkene), brukes 100 m-celler med 100 m-avstanden til land (`dc`), ellers 200 m-celler på den nasjonale kjernen (`dc200`). Pakkene under vinduet lastes før søket.
+  - Blir vinduet for stort (over `LEIA.maxCells`, 600 000 celler), eller detaljen er inne men bare 200 m-celler får plass, søkes det først grovt (celler på et multiplum av 200 m). Deretter søkes det i en korridor på `LEIA.corr` grove celler pluss 1 km på hver side av den grove veien. Korridoren bruker 100 m-celler der detaljen er inne og boksen ikke er for stor, så de smale sundene i 25 m-masken ikke blir oversett.
+  - Finner søket ingen vei i vinduet (rundt et nes, ut av en dyp fjord), prøves det igjen med 2,5 og 6 ganger så stort vindu.
+- **Antall punkter** (`leiaMaxWp`): et mål, ikke et tak. 12 på ruter under 80 km, så ett til per 2,5 km, høyst 40. Utrettingen stopper ved den første avstanden fra land (`LEIA.margins`) som når målet, ellers beholdes færrest punkter.
+- **Målt** (`routetest.py`, 02.10.2026):
+  - Senja: alle etapper til de seks feltene og Botnhamn er fri for land, grunner og skjær. Rutene er 0,0–2,5 % lengre enn den strammeste veien langs land. Feltet rundt Senja (52 nm) trenger det andre vinduet og får 15 punkter (målet 20).
+  - Finnsnes–Tromsø: 67 km, 12 punkter, 1,11 ganger luftlinja, 100 m-celler.
+  - Bodø–Reine: 93 km, 7 punkter, 1,04 ganger luftlinja, 200 m-celler (bare kjernen der).
+  - Bergen–Florø innaskjærs: 150 km, 35 punkter, 1,10 ganger luftlinja, aldri mer enn 3,5 km fra land.
+  - Ingen bit tar over 16 ms. Søket leser klokka hver 16. ekspansjon. Med hver 32. ga Finnsnes–Tromsø 15,7 ms, og nå er den lengste biten 13,2 ms (utrettingen Bodø–Reine). Hver nasjonal rute er ferdig på under ett sekund.
+- **Ikke ennå:** Utenfor Senja er bare 200 m-kjernen i bygget. Detaljflisene for hele kysten (releasen `kart-1`, 4.8b) må inn i bygget før Autonav finner de smaleste sundene der.
 
 ## 5. Systemer i spillet
 
@@ -793,30 +809,44 @@ Mister du juksa, fiskes det videre med stang til du kjøper ny i Fiskeutstyr. `m
 - **Varmekartet** (`core/12-heat.js`, `ui/03c-heat.js`, fra 01.10.2026): Kartplotteren viser fisken i en sirkel rundt båten du følger, i både Navigasjon og Fiskekart, ut fra ekkoloddet eller sonaren (tabellen i 5.1). Kartplotteren er ikke nødvendig.
   - Rutene ligger på et fast rutenett i verden (`HEATC`), så bildet ikke flimrer. De regnes ut med `heatSample()` fra den samme `density()` som fangsten, i biter på 5 ms (`heatWork`). Nærmeste ruter regnes først, og litt foran båten når den går. Ved nytt bestandstime regnes de på nytt. I havn, i skjult fane og før dybdedataene er lastet regnes ingenting.
   - Det båten har passert, gløder etter og blekner over 30 spillminutter (`HEAT.glow`). Så glemmes det.
-  - Tegnes på `#heatcv` under SVG-kartet: ettergløden, en dempet grå skive (sterkere i Fiskekart), de levende rutene og en stiplet ring for rekkevidden. Fargene følger «Fiskebestand» i Fishing: Barents Sea: blått der det er lite fisk, så fiolett, turkis og lyst, og gult der det er tettest. Skalaen er logaritmisk (4,5–150 kg/t internt), og det enkle ekkoloddet viser fire trinn.
-  - **Ingen tall for fisken** (brukerens krav 01.10.2026): Spilleren skal aldri se kilo eller kilo i timen for fisken. Varmen viser hvor fisken står tett, ikke hvor mye en båt vil ta. Boksen `#heatBox` ved GPS-en viser bare instrumentet, rekkevidden i nm, artsbrikka og en skala fra «Lite fisk» til «Mye fisk». Med sonar står det også hvor stimene trekker (bare retning), og under første tur at full last er garantert.
-  - Valgene står i sidepanelet: «Ekkolodd: På | Av», «Sonar: På | Av» og «Art: Alle | Torsk | Hyse | Sei» (`S.settings.heatSp`, bare med CHIRP eller sonar).
-  - **Ekkoloddvinduet** (`#echoWrap`, `INSTR`) vises nå i plotteren ved GPS-en, og stopper når ekkoloddet er av. Ekkomerkene kommer fra samme sum som varmen og øker opp mot rundt 100 kg/t.
+  - Tegnes på `#heatcv` under SVG-kartet: ettergløden og de levende rutene. Skalaen er logaritmisk (4,5–150 kg/t internt), og det enkle ekkoloddet viser fire trinn.
+  - **Fargene** (brukerens ønsker 02.10.2026): fra gjennomsiktig der det ikke er fisk, gjennom lys turkis og blå, til lilla der det er mest (`HEATPAL`), så bare ansamlingene av fisk synes, og fargetonen skiller mengdene. Dekningen er ((t − 0,06)/0,56)^1,15, så tynn fisk er klar, og fra rundt 40 kg/t er fargen helt tett. Den grå skiva og den stiplede ringen er borte.
+  - **Myk kant:** Bildet tegnes med uskarphet på 5 % av radien. Hver rute husker hvor nær båten den har vært mens den har lyst (`c.near`, andel av radien), og dekningen går fra full innenfor 55 % av radien til ingenting ved ringen. Sporet bak en båt i fart beholder dermed fargen, mens sidene og forkanten fader ut.
+  - **Ingen tall for fisken** (brukerens krav 01.10.2026): Spilleren skal aldri se kilo eller kilo i timen for fisken. Varmen viser hvor fisken står tett, ikke hvor mye en båt vil ta. Feltet `#heatBox` i navigasjonslinja øverst i plotteren (`#ecdisTop`, etter SOL) viser bare instrumentet, rekkevidden i nm, en fargestripe fra «lite» til «mye fisk» og artsbrikka. Teksten i `title` har resten. Med sonar står det også hvor stimene trekker (bare retning), og under første tur at full last er garantert.
+  - Valgene står under «Innstillinger» i navigasjonslinja (`#plotSet`, `plotSetOpen`): kartplotterens innstillinger (`chartSettings`), «Ekkolodd: På | Av», «Sonar: På | Av» og «Art: Alle | Torsk | Hyse | Sei» (`S.settings.heatSp`, bare med CHIRP eller sonar).
+  - Ekkoloddvinduet (`#echoWrap`) er fjernet (02.10.2026). GPS-boksen (`#instr`, `INSTR`) står igjen.
   - **Konsollen i 3D** (skiffen) viser den samme varmen (`heatDrawInto`) og «EKKOLODD AV» når ekkoloddet er av. Med CHIRP viser konsollkartet litt mer enn ±1,1 km.
   - Ytelse: Rundt 10 µs per rute her og rundt 40 µs med CPU-en struping fire ganger. Hele sonarsirkelen (4 000 ruter) tar 0,15–0,18 s fordelt på biter, og en full oppdatering kommer hvert annet spillminutt.
 
-### 5.15 Ruteplanleggeren og «Følg leia» (01.10.2026)
+### 5.15 Ruteplanleggeren og Autonav (01.10.2026, Autonav fra 02.10.2026)
 
 - **WP-navn** (`ui/03b-route.js`): WP0 er starten (havna eller båten), så WP1, WP2 … i den rekkefølgen de seiles. Navnene brukes i kartet, lista, varslene («Etappe WP2→WP3 krysser land»), GPS-boksen og loggen («WP3 passert»). Punkter havna legger til på vei ut og inn (`w.auto` `'out'` eller `'in'`), vises dempet og merket «utseiling» eller «innseiling».
 - **A12:** `exitWps` og `entryWps` (`07-harbours.js`) legger bare inn punkter når veien fra dem til neste punkt er fri, og aldri selve havnepunktet. Ser ingen av punktene målet, legges ingen inn, og etappen spilleren tegnet, blir markert.
 - **Rutelista** har ett kort per WP: kurs som skal styres (rettvisende, kartet er nord opp), lengde i nm, ETA i spilltid med nedtelling i ekte tid, koordinat, fisketid ± og redskapsbrikke. `draftTimeline()` regner ut kurs og tider. Under kortene står sumlinjene, og knapperaden med «Kast loss» står fast nederst. Sidepanelet i plotteren er 340 px bredt.
 - **Angre og gjør om:** Alle endringer i kladden er steg i en historikk på 100 steg per båt (`draftEdit`, `draftUndo`, `draftRedo`). Den lagres ikke. Flytende knapper på 44 × 44 px står over zoomknappene.
 - **Flytt og sett inn:** Et trykk innenfor 22 px av et punkt drar det. Havner det på land, blir det rødt og går tilbake. En finger til avbryter og zoomer kartet. Havna til slutt kan ikke flyttes. Hver lange etappe har en «+» midt på: et trykk setter inn et punkt der, og et drag lager et nytt punkt der fingeren slipper. Farene regnes per etappe (`legHazardMemo`), så et drag regner bare om de to etappene som berøres.
-- **«Følg leia»** (`core/11-route.js`): A* på rutenettet på 100 m med avstand til land (`DC`). Et steg koster mer innenfor 200 m fra land, og mye mer over vann grunnere enn sikker dybde + 1 m eller nær skjær (ikke i havnene). Havnene forlates og nås via innseilingen. Ruta rettes ut der en rett etappe holder 150 m fra land (mindre der det er trangt), dyp nok og fri for skjær, til høyst 12 WP. Beregningen går i biter på rundt 8 ms.
-  - Bruk: knappen i knapperaden eller den flytende kompassknappen, og så et trykk i kartet (et punkt eller en havn). Hele autoruta er ett angresteg.
-  - En håndtegnet rute får en linje som sammenligner den med å følge leia gjennom de samme stoppene: «Følg leia: 5,2 nm · 20 min · 3,1 L. Din rute: −0,2 nm, −1 min, −0,1 L.»
-  - Målt: Følg leia er 0–1,4 % lengre enn den strammeste veien langs land til de seks feltene. Fordelen med en god manuell rute er altså liten, fordi rutene mest går over åpent vann.
+- **Autonav** (før «Følg leia», `core/11-route.js`): A* på rutenettet på 100 m med avstand til land (`DC`). Et steg koster mer innenfor 200 m fra land, og mye mer over vann grunnere enn sikker dybde + 1 m eller nær skjær (ikke i havnene). Havnene forlates og nås via innseilingen. Ruta rettes ut der en rett etappe holder 150 m fra land (mindre der det er trangt), dyp nok og fri for skjær, til høyst 12 WP (lengre ruter flere, se 4.12). Beregningen går i biter på rundt 8 ms. Søket går i et vindu rundt etappen fra K9 (4.12).
+  - Bruk (brukerens ønske 02.10.2026): én knapp, «Autonav» (`#rAuto`), over zoomknappene i kartplotteren, og så et trykk i kartet (et punkt eller en havn). Knappene «Følg leia» i panelet og knapperaden er fjernet. Hele autoruta er ett angresteg. Båten går først når spilleren trykker «Kast loss», og kartplotteren blir stående åpen etter «Kast loss». Den lukkes med «Lukk».
+  - En håndtegnet rute får en linje som sammenligner den med Autonav gjennom de samme stoppene: «Autonav: 5,2 nm · 20 min · 3,1 L. Din rute: −0,2 nm, −1 min, −0,1 L.»
+  - Målt: Autonav er 0–1,4 % lengre enn den strammeste veien langs land til de seks feltene. Fordelen med en god manuell rute er altså liten, fordi rutene mest går over åpent vann.
+
+- **Kartplotteren** (brukerens ønsker 02.10.2026):
+  - **Navigasjonslinja** øverst (`#ecdisTop`): HDG, COG, SOG, POS, dybde, tidevann, sol, ekkoloddfeltet (`#heatBox`, 5.14), og helt til høyre «Rute», «Innstillinger» og «Lukk» (`#ecClose`, tilbake til 3D).
+  - **GPS-boksen** er flyttet inn i linja (brukerens ønske 02.10.2026). Mens en rute seiles (`body.navon`), kommer WPT (nummer og tid dit som etikett, avstand og peiling), XTE (avstanden fra etappen, R eller L) og ETA (til siste punkt, med navnet) etter POS, med rosa etiketter som ruta. Er linja for smal, viker SOL (under 1 440 px), så TIDEVANN (1 240 px), og under 980 px XTE og POS.
+  - **Play og pause** (`#rPlay`, `routePlayMode`, brukerens ønske 02.10.2026): En stor rosa ▶ dukker opp øverst i knappesøyla når en rute er lagt inn og båten ligger stille, og gjør det samme som «Kast loss». Mens båten seiler ruta, blir den ⏸: båten stopper der den er, og resten av ruta går tilbake til kladden (`routePause`), så den kan endres før ▶ fortsetter. En driftsplan pauses ikke her.
+  - **«Innstillinger»** (`#ecSet`) åpner et lite vindu under linja (`#plotSet`) med kartplotterens og ekkoloddets innstillinger. Det lukkes med ✕, et nytt trykk på knappen eller når 3D vises.
+  - **Sidepanelet** er skjult til spilleren begynner å legge inn en rute. Klassen `routing` på `body` settes av `renderRouteTools` når kladden har punkter, det er en plan, eller Autonav regner. Da kommer panelet med kursene og driftsplanen som før.
+  - **Åpning:** `openPlotter()` sentrerer alltid på båten med 6 km i høyden (`PLOT_KM`).
+- **3D-visningen** (brukerens ønsker 02.10.2026):
+  - **Kompasslinja** (`#compass3d`, `compassDraw` i `view3d.js`): en tynn linje øverst med ±70° rundt kameraets retning, streker for hver 5°, tall for hver 15° og N, NØ, Ø … Retningen er sann (rutenettsretning + γ). En rosa hakk viser midten.
+  - **Det lille kartet** (`#miniPlot`, `ui/03e-miniplot.js`) under statusboksen, like bredt som den: nord opp, så stort at ekkoloddringens diameter fyller det (en halv nautisk mil hver vei uten ekkolodd), med fisken (`heatDrawInto` uten uskarphet), ruta som gjenstår og båten. Det tegnes en gang i sekundet over en bakgrunn (sjø, land og kyst for to ganger utsnittet, `miniBg`) som tegnes på nytt bare når båten har flyttet seg en femdel av radien, eller hvert 20. sekund. Å tegne kysten hver gang gjorde skjermbildene i 3D-testene 5–8 ganger tregere med SwiftShader. Et trykk åpner kartplotteren. Det erstatter GPS-knappen og «Planlegg».
+  - **GPS-boksen i 3D** (`#gps3d`, brukerens ønske 02.10.2026) under det lille kartet, like bred og like gjennomsiktig som statusboksen: fart, kurs og posisjon, og mens en rute seiles også WPT, XTE, tid til neste punkt og ETA. Den vises ikke i havn.
 
 ### 5.16 Veiledningen «Første tur» (01.10.2026)
 
 - **Obligatorisk** for nye spill, også etter nullstilling. Eldre lagringer sendes ikke gjennom den. `#notut` i adressen hopper over den (testene bruker det).
 - **Tilstand:** `S.tut = {v:2, m:{…}, catch:true, pAt}`. `m` er milepælene. Steget som vises, er det første som ikke er gjort, og «gjort» leses også av spilltilstanden, så veiledningen tåler omlasting. Rutestegene (`live`) leses på nytt hver gang til båten har kastet loss.
-- **Stegene** (`TSTEPS` i `ui/07b-first-trip.js`): butikken (håndjuksa og 150 kg is gratis), kartplotteren, rute til ringen ved Gisundet nord (med «Følg leia» fremhevet), minst 2 timer fisketid, «Kast loss», gratis luksushaill mens båten går ut, fisket og «Fisk selv», dekksarbeidet, full last, rute til Botnhamn med «Følg leia», «Kast loss», «Neste»-brikka, levering, sluttseddelen og «Neste mål».
+- **Stegene** (`TSTEPS` i `ui/07b-first-trip.js`): butikken (håndjuksa og 150 kg is gratis), kartplotteren, rute til ringen ved Gisundet nord (med «Autonav» fremhevet), minst 2 timer fisketid, «Kast loss», gratis luksushaill mens båten går ut, fisket og «Fisk selv», dekksarbeidet, full last, rute til Botnhamn med «Autonav», «Kast loss», «Neste»-brikka, levering, sluttseddelen og «Neste mål».
 - **Visning:** Et dempet lag med hull rundt målet og en pulserende ring (z-index 61–62, over telefonen), med tipset over (63). `tutRect()` gir målet.
 - **Garantert første fangst** (`S.tut.catch`): Så lenge flagget er satt, ligger det en ekte skreiflekk på feltet i Gisundet nord (`tutBonus`, `TUTB`, `TUT_FIELD`). Den gir rundt 175 kg/t for én person i sentrum og en tidel ved kanten av ringen, i samme miks som påfyllingen (72 % torsk, 18 % sei, 10 % hyse). Flekken legges oppå bestanden og fiskes ikke ned, så ekkoloddet og varmekartet viser det båten får.
   - `fish()` fyller fortsatt på, så lasten er full når fisketida er ute, men påfyllingen er nå et sikkerhetsnett: rundt en firedel av fangsten i stedet for ni tideler (`window.TUTTOP` teller den i testene). Bare bestandens egen andel av fangsten trekkes fra bestanden.
@@ -831,8 +861,8 @@ Mister du juksa, fiskes det videre med stang til du kjøper ny i Fiskeutstyr. `m
 Inspirert av Fishing: Barents Sea. Den gamle handlingslinja `#actbar` er borte, og telefonen er slanket.
 
 - **Knappelinja** (`#dock`, `DOCK` i `ui/10c-dock.js`): Runde knapper med et kort ord under, langs nedkanten. Bare knappene som passer akkurat nå, vises. Det som ikke kan brukes, er grått, og et trykk gir grunnen som toast. `renderActs()` er beholdt som navn og kaller `DOCK.render()`.
-  - **I havn:** Marked (Lever, Is, Agn), Bygd (Pub, Bank, Oppdrag, Mannskap), Verft (Båthandel, Oppgrader, Fiskeutstyr, Vedlikehold, Bunkring), Beholdning og Planlegg. Marked, Bygd og Verft åpner en vifte med mindre knapper over seg (`#dockFan`). Med planlagt avgang: Kast loss og Avbryt.
-  - **På sjøen:** Jukse (vifte med timer, start og kveite), Sett ut, Ta opp, Auto-nav, Hjem og Beholdning når båten ligger stille; Stopp, Sløy eller Fisk videre, Stang og Beholdning under juksing; Stopp båten, Hjem og Auto-nav under fart; Hjelp ved motorstopp. Mannskap dukker opp med prikk når det er krangel om bord.
+  - **I havn:** Marked (Lever, Is, Agn), Bygd (Pub, Bank, Oppdrag, Mannskap), Verft (Båthandel, Oppgrader, Fiskeutstyr, Vedlikehold, Bunkring) og Beholdning. «Planlegg» er fjernet (02.10.2026); kartplotteren åpnes fra det lille kartet i 3D. Marked, Bygd og Verft åpner en vifte med mindre knapper over seg (`#dockFan`). Med planlagt avgang: Kast loss og Avbryt.
+  - **På sjøen:** Jukse (vifte med timer, start og kveite, bare når båten er rigget for juksa), Sett ut, Ta opp, Auto-nav og Beholdning når båten ligger stille; Stopp, Sløy eller Fisk videre, Stang og Beholdning under juksing; Stopp båten og Auto-nav under fart; «Hjem» er fjernet (02.10.2026, «Returner samme vei» står i plotteren); Hjelp ved motorstopp. Mannskap dukker opp med prikk når det er krangel om bord.
   - **Statusfeltet** `#dockInfo` over knappene er tekst (avgang, verksted, lossing, kaiarbeid, redskapsarbeid, juksing og dekk).
   - `DOCK.items(meny)` og `DOCK.text()` er for testene.
 - **Skuffen** (`#drawer`): Liggende kommer den fra høyre (380 px), stående er den et ark over knappene (55 % av høyden). Innholdet er telefonens sider: `PHONE.page(side)` lager HTML, og `PHONE.dact(side, handling, data)` kjører en `data-pa`-handling som om siden var åpen i telefonen. `DOCK.open('side:fane')` åpner en side med en fane valgt.
@@ -845,7 +875,7 @@ Inspirert av Fishing: Barents Sea. Den gamle handlingslinja `#actbar` er borte, 
   - Linja er rød med grunnen når enden er på land eller grunnere enn 5 m, når den krysser land, eller når `gearRules` sier nei.
   - «Sett ut» kaller `startSet(kind, spec, 0, hdg)`. Med `hdg` bruker den `setGeomExact` og setter bare der linja er tegnet, og båten snur dit. Uten `hdg` (ruta og driftsplanen) gjelder `setGeom` som før.
 - **Ta opp** lyser innenfor 0,3 km fra en blåse (`nearSet`). For garn og teiner kommer «Trekk og sett igjen» i en vifte.
-- **Auto-nav** åpner kartplotteren med «Følg leia» klar og `AUTONAV` satt. Et trykk på en egen blåse finner veien til et punkt 50 m utenfor (`buoyStandoff`), og båten går med en gang veien er funnet. Den trekker ikke selv. «Kjør dit» per sett i Beholdning gjør det samme (`DOCK.goTo`).
+- **Auto-nav** åpner kartplotteren med Autonav klar (`leiaArm`). Et trykk på en egen blåse finner veien til et punkt 50 m utenfor (`buoyStandoff`). Fra 02.10.2026 går båten ikke av seg selv: spilleren trykker «Kast loss». Den trekker ikke selv. «Kjør dit» per sett i Beholdning gjør det samme (`DOCK.goTo`).
 - **Rettinger:** `gearTap` ga et rutepunkt med trekk uten `kind`, så `wpActLabel` krasjet. En setting som ble stoppet før første enhet gikk ut, gir nå tilbake blåsesettet, egnede stamper og teineagn.
 
 ### 5.18 Dekksdagboka med faner, oppdragslista og papirene (01.10.2026)
