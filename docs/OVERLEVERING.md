@@ -1309,8 +1309,19 @@ Brukerens ønske: en frivillig mulighet til å styre båten selv, med gass og ra
   - I havna: kranens sus og truckens ryggepip mens fangsten landes, pumpa ved bunkring og isrenna.
   - Haleren i hydraulikk mens det hales, og snella ved jukse.
   - Brovaktsalarmen.
+- **Hvor lyden kommer fra** (Jonas 03.10.2026): i 3D er øret kameraet (`G3.ear`, fra siste bilde som ble tegnet).
+  - Det som har en plass, dempes med avstanden: `(ref / d)^0.9` fra `ref` meter (`SNDREF`).
+    - Egen båt (`G3.sndSrc`): motor 12 m, skvulp 10 m, haler 5 m, snelle 4 m og smell 8 m. Måkene er 8–38 m rundt båten (12 m).
+    - Mottaket der båten ligger: kran 18 m, truck 20 m og isrenne 15 m.
+    - Pumpa: 6 m.
+    - De tre nærmeste NPC-båtene innen 2,5 km (12 m, Kystpilen og ferja 30 m): en lav diesel hver, sterkere i fart.
+  - Lyden blir mattere langt unna, fordi lavpasset går ned til 35 %.
+  - Den panoreres mot venstre eller høyre etter vinkelen fra kameraet (`StereoPannerNode`).
+  - Vind, regn og havet rundt deg dempes ikke. Brovaktsalarmen går aldri under halv styrke.
+  - I 2D-kartet er øret om bord som før, og ingen NPC-motorer høres.
+  - Med kameraet 21 m bak båten er motoren 62 % av full styrke, og 300 m unna 5,5 % (målt i 3D).
 - **Innstillinger:** Av, 25, 50, 75 eller 100 % (`S.settings.sound`, `S.settings.vol`). I 2D er lyden 60 % av styrken.
-- `soundtest.py` sjekker lagene, ikke hvordan de låter.
+- `soundtest.py` sjekker lagene, avstanden, panoreringen, alarmgulvet og NPC-motorene (med `SND.testEar`/`testSrc`), ikke hvordan det låter.
 
 ### 5.26 Måker og halere fra Blender (03.10.2026)
 
