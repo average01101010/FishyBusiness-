@@ -34,7 +34,9 @@ async def main():
         box = (0, 160, 900, 640); on, off = lum('light_night.png', box), lum('light_off.png', box)
         check(night > 0.5 and n >= 2, 'en januarnatt i Finnsnes er dekkslyset og lyskasterne på kaia valgt', {'lys': n, 'natt': round(night, 2)})
         check(on > off * 1.08 + 0.5, 'og de lyser opp rundt seg: bildet er lysere med dem enn uten', {'med': round(on, 1), 'uten': round(off, 1)})
-        await pg.evaluate("G3.quality('low')"); await pg.wait_for_timeout(2500); nl = await pg.evaluate(NL); await pg.evaluate("G3.quality('high')"); await pg.wait_for_timeout(1500)
+        # the tests' #qfix holds «Høy»: let go of it first, as teleport3d does
+        await pg.evaluate("() => { G3._debug.QUAL.fix = false; G3.quality('low'); }"); await pg.wait_for_timeout(2500); nl = await pg.evaluate(NL)
+        await pg.evaluate("() => { G3.quality('high'); G3._debug.QUAL.fix = true; }"); await pg.wait_for_timeout(1500)
         check(1 <= nl <= 2, 'på «Lav» høyst to lys', nl)
         # off Hekkingen fyr: its two beams turn
         await pg.evaluate("(() => { const L = SEAMARKS.lights.find(l => l[7] === 'Hekkingen'); const b = S.boat; b.status = 'idle'; b.port = null; b.pos = {x:L[0] + 2.2, y:L[1] + 1.2}; b.v = 0; b.heading = 4.9; })()")
