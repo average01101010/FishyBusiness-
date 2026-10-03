@@ -68,6 +68,6 @@ if __name__ == '__main__':
         print(f'{k + 1}/{len(pts)} {name} {lat},{lon}: zc {c[0]} M2 {c[1]} m {c[2]} deg, range {rng:.2f} m, rms {rms:.3f} m, {time.time() - t00:.0f} s', file=sys.stderr, flush=True)
     if len(res) < len(pts) // 2: sys.exit(f'only {len(res)} of {len(pts)} points')
     os.makedirs(os.path.dirname(out) or '.', exist_ok=True)
-    json.dump({'src': 'Kartverket, Se havnivå (api.sehavniva.no), prediction above chart datum, hourly ' + YEAR0.date().isoformat() + ' + 1 year; CC BY 4.0',
+    json.dump({'src': 'Kartverket, Se havnivå (' + API.split('/')[2] + '), prediction above chart datum, hourly ' + YEAR0.date().isoformat() + ' + 1 year; CC BY 4.0',
                'cols': ['tx', 'ty', 'lat', 'lon', 'x', 'y', 'zc'] + [f'{c}{p}' for c in CONS for p in ('A', 'g')] + ['rms'], 'points': res}, open(out, 'w'))
     print(json.dumps({'points': len(res), 'of': len(pts), 'sec': round(time.time() - t00)}))

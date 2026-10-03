@@ -108,10 +108,15 @@ function cloudAt(H){ return clamp(0.3 + precipAt(H) * 0.9 + (vn(H / 14, 91) - 0.
 function visibility(H){ const p = precipAt(H), snow = airTemp(H) < 1; return clamp(45 - p * (snow ? 42 : 28) - cloudAt(H) * 8, 1.2, 50); }
 const RAD = Math.PI / 180, OBS = {lat:69.35 * RAD, lw:-17.6 * RAD}, OBL = 23.4397 * RAD;
 const jdays = H => (gDate(H).getTime() - 3600000) / 86400000 + 2440587.5 - 2451545;   // days since J2000 (UTC)
-function eqToHor(ra, dec, d){
-  const th = RAD * (280.16 + 360.9856235 * d) - OBS.lw, hA = th - ra;
-  const alt = Math.asin(Math.sin(OBS.lat) * Math.sin(dec) + Math.cos(OBS.lat) * Math.cos(dec) * Math.cos(hA));
-  const az = Math.atan2(Math.sin(hA), Math.cos(hA) * Math.sin(OBS.lat) - Math.tan(dec) * Math.cos(OBS.lat)) + Math.PI;   // from north, clockwise
+// where the sky and the tide are reckoned (phase K10 of the coast plan): the place asked for, else the boat you follow; OBS (Senja)
+// before there is a game
+const herePos = () => (S && S.boat && S.boat.pos) || null;
+let OBSQ = {k:'', o:OBS};
+function obsAt(p){ if (!p) return OBS; const k = Math.round(p.x / 5) + ':' + Math.round(p.y / 5); if (OBSQ.k !== k){ const l = LL(p); OBSQ = {k, o:{lat:l.lat * RAD, lw:-l.lon * RAD}}; } return OBSQ.o; }
+function eqToHor(ra, dec, d, ob){
+  const O = ob || OBS, th = RAD * (280.16 + 360.9856235 * d) - O.lw, hA = th - ra;
+  const alt = Math.asin(Math.sin(O.lat) * Math.sin(dec) + Math.cos(O.lat) * Math.cos(dec) * Math.cos(hA));
+  const az = Math.atan2(Math.sin(hA), Math.cos(hA) * Math.sin(O.lat) - Math.tan(dec) * Math.cos(O.lat)) + Math.PI;   // from north, clockwise
   return {alt, az};
 }
 function sunEq(d){
@@ -123,9 +128,9 @@ function moonEq(d){
   const lon = L + RAD * 6.289 * Math.sin(M), lat = RAD * 5.128 * Math.sin(F);
   return {ra:Math.atan2(Math.sin(lon) * Math.cos(OBL) - Math.tan(lat) * Math.sin(OBL), Math.cos(lon)), dec:Math.asin(Math.sin(lat) * Math.cos(OBL) + Math.cos(lat) * Math.sin(OBL) * Math.sin(lon)), dist:385001 - 20905 * Math.cos(M)};
 }
-function sunAt(H){ const d = jdays(H), e = sunEq(d), h = eqToHor(e.ra, e.dec, d); return {el:h.alt / RAD + (h.alt > -0.02 ? 0.57 * Math.exp(-h.alt / RAD / 3) : 0), az:h.az}; }
-function moonAt(H){
-  const d = jdays(H), m = moonEq(d), sn = sunEq(d), h = eqToHor(m.ra, m.dec, d);
+function sunAt(H, p){ const d = jdays(H), e = sunEq(d), h = eqToHor(e.ra, e.dec, d, obsAt(p || herePos())); return {el:h.alt / RAD + (h.alt > -0.02 ? 0.57 * Math.exp(-h.alt / RAD / 3) : 0), az:h.az}; }
+function moonAt(H, p){
+  const d = jdays(H), m = moonEq(d), sn = sunEq(d), h = eqToHor(m.ra, m.dec, d, obsAt(p || herePos()));
   const phi = Math.acos(clamp(Math.sin(sn.dec) * Math.sin(m.dec) + Math.cos(sn.dec) * Math.cos(m.dec) * Math.cos(sn.ra - m.ra), -1, 1));
   const inc = Math.atan2(sn.dist * Math.sin(phi), m.dist - sn.dist * Math.cos(phi));
   const ang = Math.atan2(Math.cos(sn.dec) * Math.sin(sn.ra - m.ra), Math.sin(sn.dec) * Math.cos(m.dec) - Math.cos(sn.dec) * Math.sin(m.dec) * Math.cos(sn.ra - m.ra));
@@ -133,26 +138,44 @@ function moonAt(H){
 }
 function moonName(mo){ const f = mo.illum; return f < 0.04 ? {no:'Nymåne', en:'New moon'} : f > 0.96 ? {no:'Fullmåne', en:'Full moon'} : f < 0.5 ? (mo.waxing ? {no:'Voksende månesigd', en:'Waxing crescent'} : {no:'Minkende månesigd', en:'Waning crescent'}) : (mo.waxing ? {no:'Voksende måne', en:'Waxing gibbous'} : {no:'Minkende måne', en:'Waning gibbous'}); }
 // sunrise and sunset for the day containing H (polar day / polar night when there are none)
-function sunTimes(H){
-  const d0 = Math.floor((H + 6) / 24) * 24 - 6; let up = null, dn = null, prev = sunAt(d0).el, maxEl = prev, minEl = prev;
-  for (let m = 5; m <= 24 * 60; m += 5){ const e = sunAt(d0 + m / 60).el; maxEl = Math.max(maxEl, e); minEl = Math.min(minEl, e); if (prev < -0.83 && e >= -0.83 && up === null) up = d0 + m / 60; if (prev >= -0.83 && e < -0.83 && dn === null) dn = d0 + m / 60; prev = e; }
+function sunTimes(H, p){
+  p = p || herePos(); const d0 = Math.floor((H + 6) / 24) * 24 - 6; let up = null, dn = null, prev = sunAt(d0, p).el, maxEl = prev, minEl = prev;
+  for (let m = 5; m <= 24 * 60; m += 5){ const e = sunAt(d0 + m / 60, p).el; maxEl = Math.max(maxEl, e); minEl = Math.min(minEl, e); if (prev < -0.83 && e >= -0.83 && up === null) up = d0 + m / 60; if (prev >= -0.83 && e < -0.83 && dn === null) dn = d0 + m / 60; prev = e; }
   return {up, dn, always:minEl > -0.83, never:maxEl < -0.83};
 }
-// ---------- tide: harmonic prediction (mean sea level reference); real Kartverket series replace it when embedded ----------
-const TIDE_ZC = 1.3;   // mean sea level above chart datum
-const TIDE_C = [[0.86, 300, 'M2'], [0.31, 345, 'S2'], [0.17, 280, 'N2'], [0.09, 345, 'K2'], [0.08, 180, 'K1'], [0.04, 160, 'O1']];
-let TIDE_SERIES = null;   // {t0 (game hours), dt (hours), v: Float32Array metres above MSL}
-function tideH(H){
-  if (TIDE_SERIES){ const f = (H - TIDE_SERIES.t0) / TIDE_SERIES.dt, i = Math.floor(f); if (i >= 0 && i < TIDE_SERIES.v.length - 1){ const u = f - i; return TIDE_SERIES.v[i] * (1 - u) + TIDE_SERIES.v[i + 1] * u; } }
+// ---------- tide: harmonic prediction per place (phase K10 of the coast plan) ----------
+// tools/tide/fetch.py fits the constants to Kartverket's prediction for a year at a sea point of each coast tile (data/tide.json:
+// x, y, the mean sea level above chart datum zc, and amplitude (m) and phase (degrees) of M2, S2, N2, K2, K1 and O1). At a place the
+// three nearest points are blended by the inverse square of the distance, as complex numbers so the phases blend smoothly; from
+// 0.3 m of range in the Skagerrak to 3 m in Nordland. Without the table, Senja's constants of before (TIDE_ZC, TIDE_C) everywhere.
+const TIDE_ZC = 1.3, TIDE_N = ['M2', 'S2', 'N2', 'K2', 'K1', 'O1'];
+const TIDE_C = [[0.86, 300], [0.31, 345], [0.17, 280], [0.09, 345], [0.08, 180], [0.04, 160]];
+const TIDEP = (() => {
+  const T = /*@include(data/tide.json)*/null; if (!T || !T.points || !T.points.length) return null;
+  const c = T.cols, at = n => c.indexOf(n);
+  return T.points.map(r => ({x:r[at('x')], y:r[at('y')], zc:r[at('zc')], re:TIDE_N.map(n => r[at(n + 'A')] * Math.cos(r[at(n + 'g')] * RAD)), im:TIDE_N.map(n => r[at(n + 'A')] * Math.sin(r[at(n + 'g')] * RAD))}));
+})();
+let TIDEQ = {k:'', v:{zc:TIDE_ZC, C:TIDE_C}};
+function tidePlace(p){
+  if (!TIDEP || !p) return TIDEQ.k === '' ? TIDEQ.v : {zc:TIDE_ZC, C:TIDE_C};
+  const k = Math.round(p.x) + ':' + Math.round(p.y); if (TIDEQ.k === k) return TIDEQ.v;
+  const near = TIDEP.map(q => [(q.x - p.x) ** 2 + (q.y - p.y) ** 2, q]).sort((a, b) => a[0] - b[0]).slice(0, 3);
+  let W = 0, zc = 0; const re = TIDE_N.map(() => 0), im = TIDE_N.map(() => 0);
+  for (const [d2, q] of near){ const w = 1 / Math.max(d2, 1); W += w; zc += w * q.zc; for (let i = 0; i < TIDE_N.length; i++){ re[i] += w * q.re[i]; im[i] += w * q.im[i]; } }
+  TIDEQ = {k, v:{zc:zc / W, C:TIDE_N.map((n, i) => [Math.hypot(re[i], im[i]) / W, Math.atan2(im[i], re[i]) / RAD])}}; return TIDEQ.v;
+}
+// metres above mean sea level at hour H, at p (else the boat you follow)
+function tideH(H, p){
   const d = jdays(H), Tc = d / 36525, sL = 218.3165 + 481267.8813 * Tc, hL = 280.4661 + 36000.7698 * Tc, pL = 83.3535 + 4069.0137 * Tc;
   const g = gDate(H), T0 = 15 * (g.getUTCHours() - 1 + g.getUTCMinutes() / 60 + g.getUTCSeconds() / 3600), tau = T0 + hL - sL;
-  const V = {M2:2 * tau, S2:2 * T0, N2:2 * tau - sL + pL, K2:2 * (T0 + hL), K1:T0 + hL, O1:T0 + hL - 2 * sL};
-  let z = 0; for (const [A, gg, n] of TIDE_C) z += A * Math.cos((V[n] - gg) * RAD); return z;
+  const V = [2 * tau, 2 * T0, 2 * tau - sL + pL, 2 * (T0 + hL), T0 + hL, T0 + hL - 2 * sL], C = tidePlace(p || herePos()).C;
+  let z = 0; for (let i = 0; i < 6; i++) z += C[i][0] * Math.cos((V[i] - C[i][1]) * RAD); return z;
 }
-const tideCD = H => tideH(H) + TIDE_ZC;   // water level above chart datum: add to charted depths
-function tideEvents(H0, hours){
-  const out = []; let a = tideH(H0 - 0.1), b = tideH(H0);
-  for (let m = 6; m <= hours * 60; m += 6){ const H = H0 + m / 60, c = tideH(H); if ((b - a) * (c - b) <= 0 && b !== a) out.push({t:H - 0.1, h:b, kind:c < b ? 'high' : 'low'}); a = b; b = c; }
+const tideZC = p => tidePlace(p || herePos()).zc;   // mean sea level above chart datum at p
+const tideCD = (H, p) => tideH(H, p) + tideZC(p);   // water level above chart datum: add to charted depths
+function tideEvents(H0, hours, p){
+  const out = []; let a = tideH(H0 - 0.1, p), b = tideH(H0, p);
+  for (let m = 6; m <= hours * 60; m += 6){ const H = H0 + m / 60, c = tideH(H, p); if ((b - a) * (c - b) <= 0 && b !== a) out.push({t:H - 0.1, h:b, kind:c < b ? 'high' : 'low'}); a = b; b = c; }
   return out;
 }
 function auroraAt(H){ if (sunAt(H).el > -7) return 0; return clamp((0.5 - cloudAt(H)) / 0.5, 0, 1) * clamp(vn(H / 5, 111) * 1.6 - 0.3, 0, 1); }

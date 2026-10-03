@@ -26,7 +26,7 @@ function unitDredge(p, d){
     if (Math.abs(x - U.o[0]) > 100 || Math.abs(z - U.o[1]) > 100) continue;
     const [lx, lz] = unitL(U, x, z);
     if (Math.abs(lx) <= UNIT.E && lz <= 0 && lz >= -UNIT.B) return 0;
-    if (lz > 0){ const dO = Math.hypot(Math.max(0, Math.abs(lx) - UNIT.basinX), Math.max(0, lz - UNIT.basinZ)); d = Math.max(d, UNIT.dredge - TIDE_ZC - 0.5 * dO); }
+    if (lz > 0){ const dO = Math.hypot(Math.max(0, Math.abs(lx) - UNIT.basinX), Math.max(0, lz - UNIT.basinZ)); d = Math.max(d, UNIT.dredge - tideZC(p) - 0.5 * dO); }
   }
   return d;
 }

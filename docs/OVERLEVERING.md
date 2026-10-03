@@ -425,6 +425,50 @@ Jonas valgte 02.10.2026 å la GitHub bygge og lagre de nasjonale kartdataene. Gi
   - Ingen bit tar over 16 ms. Søket leser klokka hver 16. ekspansjon. Med hver 32. ga Finnsnes–Tromsø 15,7 ms, og nå er den lengste biten 13,2 ms (utrettingen Bodø–Reine). Hver nasjonal rute er ferdig på under ett sekund.
 - **Ikke ennå:** Utenfor Senja er bare 200 m-kjernen i bygget. Detaljflisene for hele kysten (releasen `kart-1`, 4.8b) må inn i bygget før Autonav finner de smaleste sundene der.
 
+### 4.13 Hele kysten i bygget (03.10.2026)
+
+- **Releasen i spillets format** (`coast.py game`, `kart-2` og senere): per flis `sim` (maske 25 m med moloene, avstand 100 m, dybde 50 m), `view` (terreng 25 m, skog 50 m) og `chart` (kyst på 25 m og 3 m, stedsnavn), slik `region.py` lager Senja. `kart-1` var i K5-formatet (maske og avstand i en kjerne per flis, ingen sjøkart) og brukes ikke av bygget.
+  - Moloene (`region.breakwaters`) er nå med for hele kysten.
+  - Flisjobbene i workflowen lager kysten og navnene per flis (`chart_tile`, mellomlagret i `out/national/chart/`), og pakkejobben skriver `kart-game.tar.gz`.
+- **`tools/map/game.py`** setter sammen pakkene til bygget i `tools/map/out/game/` (ikke i git):
+  - kjernen og fjernhøydene fra `src/data/map` (`region.py`)
+  - Senjas fliser derfra også, men blokk for blokk sammen med releasens: Senja-regionen begynner på y 310 km, flisene på 300, så raden 300–310 kommer fra releasen
+  - alle andre fliser fra releasen
+  - de små pakkene slått sammen, så artifacten holder seg under 511 filer per versjon: fjernhøydene 4 × 4 fliser per fil og sjøkartet 2 × 2. En sammenslått pakke har `tiles` i manifestet.
+  - Lagene for flisene dekker hele rammen (releasens utstrekning).
+- **`python3 tools/map/release.py`** henter den nyeste releasen (`game/`), og `python3 tools/map/game.py` setter sammen. `node build.mjs` tar `tools/map/out/game/` når den finnes, ellers `src/data/map` (bare Senja), eller det `KYST_MAP` peker på. Den skriver ut hvilken.
+- **Lasteren** (`01b-mapdata.js`):
+  - En sammenslått pakke føres under hver av flisene sine som en egen pakke (`of`) som lastes gjennom den.
+  - `mapHasM` hopper over blokker i fliser uten pakke (innlandet, åpent hav), så 3D ikke venter på dem.
+  - Sjøkartets mellomlager er per pakke og flis (`chartPath`, navnene).
+
+### 4.14 Tidevann per sted og sol etter posisjon (kystplanen, fase K10, 03.10.2026)
+
+- **Tidevannet** (`core/03-simulation.js`):
+  - `tools/tide/fetch.py` henter Kartverkets tidevannsvarsel (Se havnivå, `vannstand.kartverket.no`, CC BY 4.0). Det er timevis over sjøkartnull for et år fra 1.10.2026, i et punkt på sjøen per kystflis (`tools/tide/points.json`, 143 punkter 0,4–3 km fra land).
+  - Skriptet tilpasser spillets harmoniske konstanter med minste kvadraters metode. Konstantene er middelvann over sjøkartnull og amplitude og fase for M2, S2, N2, K2, K1 og O1, med de samme astronomiske argumentene som `tideH`. Nodalfaktorene ligger i årets tilpasning.
+  - Kartverket er stengt fra skymiljøet. Derfor kjører `.github/workflows/tidevann.yml` skriptet og legger resultatet som releasen `tide-<kjøring>`. Den startes av en endring i `tools/tide/tide.json`. `api.sehavniva.no` svarte ikke fra GitHub, så den nye adressen prøves først.
+  - Resultatet ligger i `src/data/tide.json` (138 punkter, fra `tide-2`). Restavviket er 7–13 cm, fra tidevannskomponentene spillet ikke har (M4, P1, Q1 og andre).
+  - `tidePlace(p)` blander de tre nærmeste punktene etter omvendt kvadrat av avstanden, som komplekse tall så fasene går jevnt over.
+  - `tideH(H, p)`, `tideZC(p)`, `tideCD(H, p)` og `tideEvents(H0, timer, p)` gjelder der `p` er, ellers der båten du følger er (`herePos`). Uten tabellen brukes Senjas gamle konstanter overalt. Det var Tromsøs: M2 0,86 m.
+  - **Målt** (`tidetest.py`):
+
+    | Sted | Tidevannsforskjell over 15 dager i mars 2027 | Middelvann over sjøkartnull | M2 |
+    |---|---|---|---|
+    | Hvaler | 0,30 m | 0,57 m | 0,12 m |
+    | Bergen | 1,27 m | 0,89 m | 0,42 m |
+    | Bodø | 2,58 m | 1,68 m | 0,85 m |
+    | Senja (Husøy) | 1,98 m | 1,36 m | 0,66 m, før 0,86 m |
+    | Kirkenes | 2,96 m | 2,06 m | 1,06 m |
+
+    Ved Egersund er M2 bare 3–6 cm (amfidromepunktet). Høyvannet kommer rundt 1,4 timer senere på yttersida av Senja enn med Tromsøs konstanter.
+  - Havneenhetene mudres i forhold til middelvann der de ligger (`unitDredge` bruker `tideZC(p)`). `unittest` regner det laveste vannet per enhet.
+- **Sola og månen:** `sunAt(H, p)`, `moonAt(H, p)` og `sunTimes(H, p)` regner der `p` er, ellers der båten er (`obsAt`, i 5 km-ruter). 3D-lyset, SOL i navigasjonslinja, været på telefonen, nordlyset og overtroen følger dermed båten.
+  - Midtsommer har Senja, Bodø og Kirkenes midnattssol, og dagen er 19,2 timer i Bergen og 18,7 på Hvaler.
+  - Midtvinter har Senja og Kirkenes mørketid, og dagen er 1,6 timer i Bodø, 5,8 i Bergen og 6,3 på Hvaler.
+  - Sola regner lysbrytningen to ganger nær horisonten (`sunAt` legger den til høyden, og `sunTimes` bruker −0,83°). Dagene blir derfor noen minutter for lange. Det er gammelt og er ikke rettet.
+- **Grunnstøting i sør** (`tidetest.py`): over samme grunne (1,0 m i kartet) ved høyvann går en båt med 1,8 m dypgang på grunn på Hvaler (1,66 m vann), men flyter i Bodø (3,15 m).
+
 ## 5. Systemer i spillet
 
 ### 5.1 Båter og utstyr

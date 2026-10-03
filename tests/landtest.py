@@ -48,7 +48,9 @@ async def main():
         await pg.wait_for_function("!!G3._debug.PLANTS.find(q => q.id === 'torsken').scene", timeout=30000)
         S3 = []
         for e in [5 + 0.40 * 2.5, 5 + 0.90 * 2.5, 5 + 1.40 * 2.5, 5 + 1.90 * 2.5]:
-            await pg.evaluate(f"S.boat.land.t0 = S.t + liveFrac() - {e}"); await pg.wait_for_timeout(1500)
+            # set the landing's clock, and wait for a frame that shows it (a fixed pause was too short when the frames are slow)
+            await pg.evaluate(f"S.boat.land.t0 = S.t + liveFrac() - {e}")
+            await pg.wait_for_function("(e) => { const s = G3._debug.PLANTS.find(q => q.id === 'torsken').scene; return !!s && Math.abs(s.e - e) < 0.3; }", arg=e, timeout=60000); await pg.wait_for_timeout(300)
             S3.append(await pg.evaluate("""(()=>{ const P = G3._debug.PLANTS.find(q => q.id === 'torsken'), s = P.scene; if (!s) return null;
               const tip = [P.crane[0] + Math.sin(s.pose.a) * s.pose.r, P.crane[1] + Math.cos(s.pose.a) * s.pose.r];
               return {i:s.i, u:Math.round(s.u * 100) / 100, hang:!!s.hang, deck:s.deck.length, quay:s.quay.length, toK:Math.round(Math.hypot(tip[0] - s.K[0], tip[1] - s.K[2]) * 100) / 100, hookOverDeck:Math.round((s.pose.hook - s.K[1]) * 100) / 100,
