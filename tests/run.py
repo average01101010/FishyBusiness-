@@ -7,13 +7,14 @@ before publishing.
   python3 tests/run.py full --3d          the same with 3D drawn in every test
 
 The tests that do not look at 3D run with KYST_LITE=1: the game runs as before, but no 3D frame is drawn (#no3d), and that is
-most of the time a test takes with SwiftShader. They run two at a time. The 3D tests run one after the other beside them, so
-there are never two 3D tests at once. The tests that measure milliseconds (SOLO) run alone at the end. Each test's whole output lands in tests/out/logs/<test>.txt.
+most of the time a test takes with SwiftShader. They run two at a time, first. Then the 3D tests (and tut.py, which draws 3D)
+run one after the other with nothing beside them: SwiftShader's frames stall under any other load, so a 3D test beside the others
+timed out on clicks and screenshots (03.10.2026). The tests that measure milliseconds (SOLO) run alone at the end. Each test's whole output lands in tests/out/logs/<test>.txt.
 
 A test fails on a FEIL line, a Python error, a time-out, page errors, or what that test must end with (trip2 in port, tut.py with
 "tut": 0, dbg23o with no output). The tests that print numbers to be read (the calibration, selltest, hailltest) are marked LES,
 with their last lines shown."""
-import os, re, subprocess, sys, threading, time
+import os, re, subprocess, sys, time
 from concurrent.futures import ThreadPoolExecutor
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -28,7 +29,9 @@ LITE = ['tut', 'tidetest', 'trip2', 'docktest', 'booktest', 'decktest', 'geartes
 # they measure milliseconds, so they run alone at the end, when nothing else takes the CPU
 SOLO = ['routetest', 'heattest', 'landtest', 'charttest']
 READ = {'selltest', 'hailltest', 'simday', 'calib', 'kvtest', 'progweek', 'seatest'}
-LONG = {'tut': 1800}
+LONG = {'tut': 1800, 'vessel3d': 1500, 'sea3d': 1200}
+# not in D3, but they draw 3D all the same (tut.py plays the first trip with the 3D view), so they run in the 3D lane
+DRAWS3D = {'tut'}
 MUST = {'trip2': ('"st":"port"', 'ender ikke i havn'), 'tut': ('"tut": 0', 'veiledningen er ikke ferdig')}
 # which tests cover which file: «changed» runs these for the files in the diff. A file not listed runs trip2; texts and docs run nothing
 COVER = {
@@ -110,18 +113,15 @@ def main():
     missing = [n for n in names if not os.path.exists(os.path.join(HERE, n + '.py'))]
     if missing: print('Finner ikke: ' + ', '.join(missing)); sys.exit(2)
     solo = [n for n in names if n in SOLO]
-    heavy = [n for n in names if (n in D3 or all3d) and n not in solo]
+    heavy = [n for n in names if (n in D3 or n in DRAWS3D or all3d) and n not in solo]
     light = [n for n in names if n not in heavy and n not in solo]
-    print('Bygg først: node build.mjs. %d tester: %d med 3D etter hverandre, %d uten 3D to om gangen, og %d som måler tid, alene til slutt. Logger: tests/out/logs/' % (len(names), len(heavy), len(light), len(solo)), flush=True)
+    print('Bygg først: node build.mjs. %d tester: %d uten 3D to om gangen, så %d med 3D alene etter hverandre, og %d som måler tid, alene til slutt. Logger: tests/out/logs/' % (len(names), len(light), len(heavy), len(solo)), flush=True)
     t0 = time.time(); res = []
-    def lane3d():
-        for n in heavy:
-            r = run(n, False); report(r); res.append(r)
-    t3 = threading.Thread(target=lane3d); t3.start()
     with ThreadPoolExecutor(2) as ex:
         for r in ex.map(lambda n: run(n, True), light):
             report(r); res.append(r)
-    t3.join()
+    for n in heavy:
+        r = run(n, n not in D3 and not all3d); report(r); res.append(r)
     for n in solo:
         r = run(n, not (all3d or n in D3)); report(r); res.append(r)
     bad = [r['name'] for r in res if r['status'] == 'FEIL']

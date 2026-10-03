@@ -1744,9 +1744,9 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
 - **Kjøring** (bare det som er strengt nødvendig, brukerens krav 01.10.2026):
   - Under byggingen: `python3 tests/run.py changed`. Den leser `git diff` og untracked filer, og kjører bare testene i `COVER` for de endrede filene. En test som selv er endret, kjøres. Tekst og dokumentasjon kjører ingenting, og en fil som ikke står i `COVER`, kjører `trip2.py`.
   - `python3 tests/run.py smoke test …` kjører bare de testene du nevner.
-  - `python3 tests/run.py full` er hele regresjonen før publisering (32 tester, rundt 10 minutter). `--3d` tegner 3D i alle.
-  - Testene i `LITE`, også `tut.py`, kjøres med `KYST_LITE=1`, som gir `#no3d` i adressen: G3 er aktiv og alt går som før, men `frame()` tegner ingenting. Det gjorde `shoptest.py` rundt tre ganger raskere (43 s mot 13 s, med de samme 18 OK) og `docktest.py` fra rundt 10 minutter til 61 s. To slike går samtidig.
-  - Testene i `D3` (`dbg23o`, `camtest`, `moortest`, `landtest`, `bunkertest`, `vessel3d`, `unittest`, `sea3d`) ser på selve 3D-bildet og går med 3D, etter hverandre. `routetest` og `heattest` måler millisekunder, og `landtest` følger kranen i 3D bilde for bilde. De går alene til slutt (`SOLO`), ellers forstyrrer de andre testene dem.
+  - `python3 tests/run.py full` er hele regresjonen før publisering (49 tester, rundt en time). `--3d` tegner 3D i alle.
+  - Testene i `LITE` kjøres med `KYST_LITE=1`, som gir `#no3d` i adressen: G3 er aktiv og alt går som før, men `frame()` tegner ingenting. Det gjorde `shoptest.py` rundt tre ganger raskere (43 s mot 13 s, med de samme 18 OK) og `docktest.py` fra rundt 10 minutter til 61 s. To slike går samtidig, først.
+  - Testene i `D3` ser på selve 3D-bildet og går med 3D, én om gangen og uten andre tester ved siden av. Det gjelder også `tut.py` (`DRAWS3D`), som spiller «Første tur» med 3D. SwiftShaders bilder stopper opp under annen last: 03.10.2026 gikk alle 3D-testene som kjørte ved siden av testene uten 3D, ut på tid ved klikk og skjermbilder, men de gikk alene. `vessel3d` (60 skjermbilder) har 1500 s og `sea3d` 1200 s. `routetest` og `heattest` måler millisekunder, og `landtest` følger kranen i 3D bilde for bilde. De går alene til slutt (`SOLO`), ellers forstyrrer de andre testene dem.
   - Loggene havner i `tests/out/logs/`. `boot(pg)` i `_env.py` starter spillet og venter på startskjermen i stedet for faste pauser.
   - Testene henter spillet over HTTP fra en egen server per test (4.6). `KYST_DIST` peker på et annet bygg.
 - **Regresjon:**

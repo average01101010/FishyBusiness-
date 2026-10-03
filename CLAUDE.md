@@ -10,7 +10,7 @@ Et kystfiskespill fra Senja som kjører som én selvstendig HTML-side, publisert
 - **Grafikken er nesten det viktigste** (brukerens valg 03.10.2026): Ikke senk kvaliteten med mindre målinger viser at vi absolutt må. Ytelse hentes først uten å endre utseendet (arbeid ut av hovedtråden, mindre søppel, færre tegnekall, smartere oppdeling). Lagging og feil skal heller ikke ødelegge spillopplevelsen.
 - Ved større funksjoner med uklare valg: legg fram en kort plan og vent på klarsignal. Enkle endringer bygges rett. «Snakk uten å bygge» betyr at ingenting skal bygges. «Kjør på» betyr bygg, test og lever.
 - **Bare de testene som er strengt nødvendige** (brukerens krav 01.10.2026: tid er penger). Under byggingen: `node --check`, bygg, og `python3 tests/run.py changed`. Den kjører bare testene som dekker filene som er endret siden forrige commit (`COVER` i `run.py`), uten 3D. Rene tekst- og dokumentasjonsendringer kjører ingen tester. Én commit per endring.
-- **Full regresjon** (`python3 tests/run.py full`, rundt 10 minutter) kjøres bare før publisering. Feil som dukker opp da, rettes samlet.
+- **Full regresjon** (`python3 tests/run.py full`, rundt en time, med 3D-testene alene etter de andre) kjøres bare før publisering. Feil som dukker opp da, rettes samlet.
 - Kjør aldri samme test to ganger for å lese utskriften på en annen måte. Loggene ligger i `tests/out/logs/`. Lange tester kjøres i bakgrunnen mens arbeidet går videre.
 - En ny fil i `src/` legges inn i `COVER` i `run.py` med testen som dekker den.
 - Vær ærlig om svake tester, antakelser og usikre regler. Sjekk regelverk mot kildene (Lovdata, Fiskeridirektoratet, Råfisklaget) før det bygges inn, og oppgi kilden.
