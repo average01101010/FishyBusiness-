@@ -32,10 +32,14 @@ def vn(t, s):
     i = np.floor(t); f = t - i; u = f * f * (3 - 2 * f); i = i.astype(np.int64)
     return h2(i, s) * (1 - u) + h2(i + 1, s) * u
 def sstep(a, b, x): t = np.clip((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t)
+# depth (m) rounded coarser the deeper it is: half a metre to 20 m, a metre to 60, two to 150, five below. Kartverket's measured depth
+# packs far worse than the model did (the packs grew from 195 to 250 MB, over what an artifact takes), and below 20 m the steps are
+# finer than the 50 m grid knows anyway; the shallows, where she grounds, keep their half metre
+def qdepth(d): return np.where(d < 20, np.round(d * 2) / 2, np.where(d < 60, np.round(d), np.where(d < 150, np.round(d / 2) * 2, np.round(d / 5) * 5)))
 
 # the sea floor under the ground layer (Terrarium has the sea at 0, which the 3D view took for shallows): the depth, 25 m from 50 m
 def seafloor(out):
-    dep = ndimage.zoom(out['depth'].astype(np.float32) / 2, 2, order=1)[:2000, :2000]
+    dep = qdepth(ndimage.zoom(out['depth'].astype(np.float32) / 2, 2, order=1)[:2000, :2000])
     out['hgt'] = np.where(out['mask'] > 0, out['hgt'], hgtEnc(-np.maximum(dep, 0.5))).astype(np.int16); return out
 
 # Kartverket's depth over a tile (m, positive down) on the tile's 50 m cells, NaN where it has no data (0 in the coverage, which has
@@ -90,6 +94,7 @@ def tile(tx, ty):
         if ok.any():
             dist, (iy, ix) = ndimage.distance_transform_edt(~ok, return_indices=True)
             w = np.clip(dist / 5, 0, 1); d = kv[iy, ix] * (1 - w) + d * w
+    d = qdepth(d)   # (the legacy square keeps its own values: Senja's calibration was made on them)
     if ins.any(): d[ins] = legacy.at(legacy.load()['depth'], X[ins], Y[ins]) / 2
     land50 = M.reshape(fny, 2, fnx, 2).max(axis=(1, 3)) > 0
     out['depth'] = np.where(land50 & ~ins, 0, np.round(d * 2)).astype(np.int16)
