@@ -1279,7 +1279,7 @@ Brukerens ønske: en frivillig mulighet til å styre båten selv, med gass og ra
   - drone som sirkler
   - lavt langs siden i vannflaten
   - forfra mot baugen
-  - fra land når båten går forbi
+  - fra land når båten går forbi, med telelinse: bildet er rundt fire båtlengder høyt uansett avstand (6–40°)
   - landskap
   - bakfra over kjølvannet
 - **Kameraet:** øyet og siktepunktet glattes over 0,7 s, med klipp ved nytt opptak. Horisonten er vannrett.
