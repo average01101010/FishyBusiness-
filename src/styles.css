@@ -552,3 +552,5 @@ body.v3d #hud,body.v3d #gps3d:not([hidden]),body.v3d #gps,body.v3d .ov,body.v3d 
 body.v3d #hud,body.v3d #gps3d:not([hidden]),body.v3d #gps{background:rgba(6,16,24,.56)!important}
 body.v3d .ov,body.v3d #dockInfo{background:rgba(6,16,24,.56)}
 body.v3d .dk-b .dk-i{background:rgba(6,16,24,.7)}
+/* the sleep screen's «Spol fram» (05b-work.js) */
+#slSkip{margin-top:18px;padding:10px 20px;border-radius:20px;border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.08);color:#dfe6ec;font:600 15px var(--sans)}

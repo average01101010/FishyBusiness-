@@ -88,9 +88,12 @@ function energyUi(){
     if (sl.hidden){ sl.hidden = false; requestAnimationFrame(() => sl.classList.add('on')); }
     $('slHead').textContent = L('Du sover', 'You are asleep');
     $('slTime').textContent = L('Du våkner ', 'You wake ') + inReal(S.sleep.until - S.t);
+    $('slSkip').textContent = L('Spol fram til du våkner', 'Skip to when you wake');
     $('slNote').textContent = S.sleep.alone ? L('Båten ligger og driver med vinden.', 'The boat is drifting with the wind.') : L('Mannskapet har roret og fortsetter turen.', 'The crew has the helm and carries on with the trip.');
   } else if (!sl.hidden){ sl.classList.remove('on'); sl.hidden = true; }
 }
+// the rest of the sleep at once, as when the game was closed (the crew or the drift go on meanwhile)
+$('slSkip').onclick = () => { if (!asleep()) return; playMinutes(Math.max(0, S.sleep.until - S.t)); panelDirty = true; if (typeof refreshAll === 'function') refreshAll(); energyUi(); };
 hooks.onEnergy = k => { if (typeof toast !== 'function') return; const L = (no, en) => S.lang === 'no' ? no : en;
   if (k === 'warn') toast(L('Du er sliten (25 %). Arbeidet ditt går tregere. Gå til kai for å hvile.', 'You are tired (25 %). Your work goes slower. Go to the quay to rest.'));
   if (k === 'wake') toast(L('Du våknet. Energi 60 %.', 'You woke up. Energy 60 %.')); };
