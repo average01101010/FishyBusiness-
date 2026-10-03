@@ -7,8 +7,10 @@
 #   python3 tools/map/coast.py [lite] [tx,ty ...] the K5 packs in out/national/lite/ (a pack per kind and tile, the core per tile too)
 #   python3 tools/map/coast.py cache k n          part k of n of the tiles into the caches only (the workflow's parts)
 #   ground  Terrarium z13 (Kartverket's 10 m) in the 10 km blocks within 3 km of the sea, z11 (about 30 m) in the others
-#   depth   Kartverket's (the legacy Senja raster) inside the legacy square; elsewhere, until Geonorge is open to the pipeline, the
-#           game's own depth model (depthModel in 03-simulation.js: openness, distance to the shore and a little noise)
+#   depth   Kartverket's (the legacy Senja raster) inside the legacy square; elsewhere Kartverket's 50 m depth models (the release
+#           dybde-N that .github/workflows/dybde.yml fetches from Geonorge, unpacked in out/depth/), and where they have no data the
+#           game's own depth model (depthModel in 03-simulation.js: openness, distance to the shore and a little noise), blended over
+#           250 m at the edge of the data
 import os, sys, json, time, numpy as np
 from scipy import ndimage
 import frame, terrain, legacy, pack, national
@@ -35,6 +37,15 @@ def sstep(a, b, x): t = np.clip((x - a) / (b - a), 0, 1); return t * t * (3 - 2 
 def seafloor(out):
     dep = ndimage.zoom(out['depth'].astype(np.float32) / 2, 2, order=1)[:2000, :2000]
     out['hgt'] = np.where(out['mask'] > 0, out['hgt'], hgtEnc(-np.maximum(dep, 0.5))).astype(np.int16); return out
+
+# Kartverket's depth over a tile (m, positive down) on the tile's 50 m cells, NaN where it has no data (0 in the coverage, which has
+# the sea's cells negative and drying ground a little over 0, which is kept as half a metre); None without out/depth/
+DEPTHD = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'out', 'depth')
+def kartverket(tx, ty):
+    f = os.path.join(DEPTHD, f'{tx}_{ty}.npz')
+    if not os.path.exists(f): return None
+    z = np.load(f)['z'].astype(np.float32)
+    return np.where((z == 0) | (z == -32768), np.nan, np.maximum(-z / 10, 0.5))
 
 def tile(tx, ty):
     f = os.path.join(TD, f'{tx}_{ty}.npz')
@@ -73,6 +84,12 @@ def tile(tx, ty):
     d = 2 + (13 + 220 * Ev ** 1.6 + 25 * vn(X / 4 + Y / 7, 5)) * sstep(0, 1.5, dcv) ** 0.6
     lon, lat = frame.to_ll(X, Y); lx, ly = frame.ll_to_leg(lon, lat); W, Hh = 2 * frame.LEG['KX'], 0.74 * frame.LEG['KY']
     ins = (lx >= 0) & (ly >= 0) & (lx <= W) & (ly <= Hh)
+    kv = kartverket(tx, ty)
+    if kv is not None:
+        ok = np.isfinite(kv)
+        if ok.any():
+            dist, (iy, ix) = ndimage.distance_transform_edt(~ok, return_indices=True)
+            w = np.clip(dist / 5, 0, 1); d = kv[iy, ix] * (1 - w) + d * w
     if ins.any(): d[ins] = legacy.at(legacy.load()['depth'], X[ins], Y[ins]) / 2
     land50 = M.reshape(fny, 2, fnx, 2).max(axis=(1, 3)) > 0
     out['depth'] = np.where(land50 & ~ins, 0, np.round(d * 2)).astype(np.int16)

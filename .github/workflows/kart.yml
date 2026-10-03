@@ -3,7 +3,7 @@
 # tools/map/release.py fetches a release's files for a build.
 #   national  the national stages (land at 200 m, the coast's tiles, the openness, the far heights) and Overture's index
 #   tiles     the coast's tiles in tools/map/kart.json's 'parts' parts side by side (coast.py cache k n), with the chart's coast and
-#             names per tile
+#             names per tile, and Kartverket's depth from the release kart.json's 'depth' names (dybde-N, .github/workflows/dybde.yml)
 #   pack      the game's packs of all the tiles (coast.py game: sim, view and chart per tile), and the release: kart-game.tar.gz and
 #             its manifest.json (tools/map/game.py joins them with the core and the far heights in src/data/map for the build)
 # Started by a push that changes tools/map/kart.json (on any branch), or by hand from the Actions tab once this file is on main.
@@ -70,6 +70,12 @@ jobs:
         with:
           name: national
           path: tools/map
+      - name: Kartverket's depth (the release kart.json names, from .github/workflows/dybde.yml)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=$(python3 -c "import json; print(json.load(open('tools/map/kart.json')).get('depth', ''))")
+          if [ -n "$TAG" ]; then mkdir -p tools/map/out && gh release download "$TAG" -p depth.tgz -D /tmp && tar xzf /tmp/depth.tgz -C tools/map/out && ls tools/map/out/depth | wc -l; fi
       - name: The tiles of part ${{ matrix.part }}
         working-directory: tools/map
         run: python3 coast.py cache ${{ matrix.part }} $(python3 -c "import json; print(json.load(open('kart.json'))['parts'])")
