@@ -78,8 +78,9 @@ def write_tiles(tiles, spec, out, extra=None):
     total = 0; T = TILE // BLOCK
     for tx, ty, L, *V in tiles:
         groups = {}
-        # the vector layers (vectors.py): one entry each, at the tile's first block, with its count as a sixth field
-        for name, (b, cnt) in (V[0].items() if V else []): groups.setdefault('vec', []).append([name, tx * T, ty * T, raw_deflate(b), cnt])
+        # the vector layers (vectors.py, chart.py): one entry each, at the tile's first block, with its count as a sixth field; a third
+        # field in the value is the pack's kind (else 'vec')
+        for name, (b, cnt, *kd) in (V[0].items() if V else []): groups.setdefault(kd[0] if kd else 'vec', []).append([name, tx * T, ty * T, raw_deflate(b), cnt])
         for name, (c, typ, kind, dec) in spec.items():
             n = round(BLOCK / c); arr = np.asarray(L[name]).astype(DT[typ])
             for j in range(T):

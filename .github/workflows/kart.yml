@@ -2,8 +2,10 @@
 # open, and kept as a release (tag kart-<run number>), as the user chose on 02.10.2026: git keeps the code and Senja's packs only.
 # tools/map/release.py fetches a release's files for a build.
 #   national  the national stages (land at 200 m, the coast's tiles, the openness, the far heights) and Overture's index
-#   tiles     the coast's tiles in tools/map/kart.json's 'parts' parts side by side (coast.py cache k n)
-#   pack      the packs of all the tiles (coast.py lite), and the release: kart-lite.tar.gz and its manifest.json
+#   tiles     the coast's tiles in tools/map/kart.json's 'parts' parts side by side (coast.py cache k n), with the chart's coast and
+#             names per tile
+#   pack      the game's packs of all the tiles (coast.py game: sim, view and chart per tile), and the release: kart-game.tar.gz and
+#             its manifest.json (tools/map/game.py joins them with the core and the far heights in src/data/map for the build)
 # Started by a push that changes tools/map/kart.json (on any branch), or by hand from the Actions tab once this file is on main.
 name: Kartdata for hele kysten
 on:
@@ -78,6 +80,7 @@ jobs:
           path: |
             tools/map/out/national/tiles/*.npz
             tools/map/out/national/vec/*.npz
+            tools/map/out/national/chart/*.pkl
 
   pack:
     needs: tiles
@@ -103,14 +106,14 @@ jobs:
       - name: The packs
         working-directory: tools/map
         run: |
-          python3 coast.py lite | tee out/national/lite.json
-          tar czf ../../kart-lite.tar.gz -C out/national lite
-          cp out/national/lite/manifest.json ../../manifest.json
-          ls -la ../../kart-lite.tar.gz
+          python3 coast.py game | tee out/national/game.json
+          tar czf ../../kart-game.tar.gz -C out/national game
+          cp out/national/game/manifest.json ../../manifest.json
+          ls -la ../../kart-game.tar.gz
       - name: The release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG=kart-${{ github.run_number }}
-          gh release create "$TAG" kart-lite.tar.gz manifest.json --target "${{ github.sha }}" --title "Kartdata $TAG" \
-            --notes "Kartdata for hele kysten (lite) fra tools/map, Overture $(python3 -c "import json; print(json.load(open('tools/map/kart.json'))['overture'])"), commit ${{ github.sha }}. $(cat tools/map/out/national/lite.json)"
+          gh release create "$TAG" kart-game.tar.gz manifest.json --target "${{ github.sha }}" --title "Kartdata $TAG" \
+            --notes "Kartdata for hele kysten i spillets format (sim, view og chart per flis) fra tools/map, Overture $(python3 -c "import json; print(json.load(open('tools/map/kart.json'))['overture'])"), commit ${{ github.sha }}. $(cat tools/map/out/national/game.json)"

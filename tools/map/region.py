@@ -42,19 +42,24 @@ def fill(polys, c, ix0, iy0, nx, ny):
         np.add.at(out, (a[ok], c0[ok]), 1); np.add.at(out, (a[ok], c1[ok]), -1)
     return (np.cumsum(out, axis=1)[:, :nx] > 0).astype(np.uint8)
 
+# the breakwaters (OpenStreetMap's man_made=breakwater, which the coastline leaves out) over a lon/lat box, as land: a boat cannot cross
+# Husøy's. Widened by half a cell (in metres: lon scaled by cos lat), so one narrower than a cell stays whole
+def breakwaters(box):
+    inf = features('base/infrastructure', box, ['geometry', 'subtype', 'class']); bw = []
+    if inf is None: return bw
+    for g, c in zip(from_wkb(inf.column('geometry').to_numpy(zero_copy_only=False)), inf.column('class').to_pylist()):
+        if c != 'breakwater' or g is None: continue
+        k = math.cos(math.radians(g.centroid.y)); w = affinity.scale(g, k, 1, origin=(0, 0)).buffer(0.0125 / 111.32, 4)
+        bw.append(affinity.scale(w, 1 / k, 1, origin=(0, 0)))
+    return bw
+
 hgtEnc = lambda v: np.sign(v) * np.where(np.abs(v) < 9.75, np.round(np.abs(v) * 2), 20 + np.round((np.abs(v) - 10) / 2))
 
 def build(R):
     t0 = time.time(); box = R.lonlat_box(); L = {}; log = {}
     land = polys_of(features('base/land', box, ['geometry', 'subtype']), lambda s: s == 'land')
     ix0, iy0, nx, ny = R.grid(0.025); M = fill(land, 0.025, ix0, iy0, nx, ny)
-    # the breakwaters (OpenStreetMap's man_made=breakwater, which the coastline leaves out) are land too: a boat cannot cross Husøy's.
-    # Widened by half a cell (in metres: lon scaled by cos lat), so one narrower than a cell stays whole
-    inf = features('base/infrastructure', box, ['geometry', 'subtype', 'class']); bw = []
-    for g, c in zip(from_wkb(inf.column('geometry').to_numpy(zero_copy_only=False)), inf.column('class').to_pylist()):
-        if c != 'breakwater' or g is None: continue
-        k = math.cos(math.radians(g.centroid.y)); w = affinity.scale(g, k, 1, origin=(0, 0)).buffer(0.0125 / 111.32, 4)
-        bw.append(affinity.scale(w, 1 / k, 1, origin=(0, 0)))
+    bw = breakwaters(box)
     if bw: M = np.maximum(M, fill(bw, 0.025, ix0, iy0, nx, ny))
     log['breakwaters'] = len(bw)
     L['mask'] = dict(c=0.025, ix0=ix0, iy0=iy0, nx=nx, ny=ny, type='u8', kind='sim', arr=M); log['land'] = round(float(M.mean()), 4)

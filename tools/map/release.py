@@ -1,6 +1,6 @@
 # The national map data kept as a release (.github/workflows/kart.yml builds it, tag kart-<run number>): the newest kart- tag
-# (git ls-remote, or the one named), its kart-lite.tar.gz fetched from GitHub and unpacked into tools/map/out/release/<tag>/lite,
-# where a build can take its packs from.
+# (git ls-remote, or the one named), its packs fetched from GitHub and unpacked into tools/map/out/release/<tag>/: game/ (the game's
+# format, from kart-2) or lite/ (kart-1's K5 format). tools/map/game.py joins game/ with src/data/map for the build.
 #   python3 tools/map/release.py [tag]
 import os, re, sys, json, tarfile, subprocess, requests
 REPO = os.environ.get('KYST_REPO', 'average01101010/FishyBusiness-')
@@ -9,15 +9,23 @@ def newest():
     r = subprocess.run(['git', 'ls-remote', '--tags', 'origin', 'kart-*'], capture_output=True, text=True, check=True).stdout
     tags = sorted({int(m) for m in re.findall(r'refs/tags/kart-(\d+)$', r, re.M)})
     return f'kart-{tags[-1]}' if tags else None
+def fetch(tag):
+    d = os.path.join(OUT, tag); os.makedirs(d, exist_ok=True)
+    for name in ('game', 'lite'):
+        f = os.path.join(d, f'kart-{name}.tar.gz')
+        if not os.path.exists(f):
+            r = requests.get(f'https://github.com/{REPO}/releases/download/{tag}/kart-{name}.tar.gz', timeout=600, stream=True)
+            if r.status_code == 404: continue
+            r.raise_for_status()
+            with open(f + '.part', 'wb') as o:
+                for c in r.iter_content(1 << 20): o.write(c)
+            os.replace(f + '.part', f)
+        if not os.path.exists(os.path.join(d, name, 'manifest.json')):
+            with tarfile.open(f) as t: t.extractall(d, filter='data')
+        return os.path.join(d, name)
+    sys.exit(f'{tag} has no kart-game.tar.gz or kart-lite.tar.gz')
 if __name__ == '__main__':
     tag = sys.argv[1] if len(sys.argv) > 1 else newest()
     if not tag: sys.exit('no kart- release yet')
-    d = os.path.join(OUT, tag); os.makedirs(d, exist_ok=True); f = os.path.join(d, 'kart-lite.tar.gz')
-    if not os.path.exists(f):
-        r = requests.get(f'https://github.com/{REPO}/releases/download/{tag}/kart-lite.tar.gz', timeout=600, stream=True); r.raise_for_status()
-        with open(f + '.part', 'wb') as o:
-            for c in r.iter_content(1 << 20): o.write(c)
-        os.replace(f + '.part', f)
-    with tarfile.open(f) as t: t.extractall(d, filter='data')
-    man = json.load(open(os.path.join(d, 'lite', 'manifest.json')))
-    print(json.dumps({'tag': tag, 'dir': os.path.join(d, 'lite'), 'packs': len(man['packs']), 'mb': round(sum(p['bytes'] for p in man['packs']) / 1e6, 1)}))
+    dd = fetch(tag); man = json.load(open(os.path.join(dd, 'manifest.json')))
+    print(json.dumps({'tag': tag, 'dir': dd, 'packs': len(man['packs']), 'mb': round(sum(p['bytes'] for p in man['packs']) / 1e6, 1)}))
