@@ -64,11 +64,14 @@ async def main():
         # 3. sailing 3 km: the near map is rebuilt on the way, and the sea at a fixed spot must not jump meanwhile
         await pg.evaluate("WX_FORCE = {w:12, d:200}; G3._debug.WV.init = false; window.__P = {x:G3._debug.bv.x, z:G3._debug.bv.z}; window.__x0 = G3._debug.NEARM.x0;")
         # the sea-state map is worked out a slice per frame: wait till the forced wind's map stands still (under load it takes more than 2 s)
+        # (with SwiftShader a frame can take more than the half second between two looks, so the values only count as still when frames
+        # have passed between them and neither map has a sector left to work out; it once broke off before the new wind's map was in)
+        await pg.evaluate("window.__sf = 0; (function L(){ window.__sf++; requestAnimationFrame(L); })()")
         prev = None
-        for _ in range(60):
-            await pg.wait_for_timeout(500); s = await pg.evaluate("(() => { const s = G3._debug.ssAt(__P.x, __P.z); return [s[0], s[1]]; })()")
-            if prev and abs(s[0] - prev[0]) + abs(s[1] - prev[1]) < 1e-4: break
-            prev = s
+        for _ in range(120):
+            await pg.wait_for_timeout(500); s = await pg.evaluate("(() => { const D = G3._debug, s = D.ssAt(__P.x, __P.z); return [s[0], s[1], window.__sf, !D.SSL.n.job && !D.SSL.w.job]; })()")
+            if prev and abs(s[0] - prev[0]) + abs(s[1] - prev[1]) < 1e-4 and s[2] - prev[2] >= 3 and s[3] and prev[3]: break
+            if not prev or s[2] - prev[2] >= 3: prev = s
         trace = []
         for k in range(40):
             await pg.evaluate(f"(() => {{ const g = GROUNDS[0].p; S.boat.pos = {{x:g.x + {k} * 0.075, y:g.y}}; }})()"); await pg.wait_for_timeout(450)
