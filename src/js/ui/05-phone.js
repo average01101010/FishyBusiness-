@@ -167,6 +167,8 @@ const PHONE = (() => {
     return '<div class="ph-c"><div class="ph-card"><h4>' + L('Tidsskala', 'Time scale') + '</h4><div class="ph-sub">' + pace.map(([v, l]) => '<button class="' + (S.mult === v ? 'on' : '') + '" data-pa="admPace" data-v="' + v + '">' + l + '</button>').join('') + '</div>' +
       '<p class="ph-note">' + (S.mult ? L('Klokka går ' + fmt(GAME_RATE * S.mult) + ' ganger fortere enn ekte tid, så et døgn i spillet tar ' + dur + '.', 'The clock runs ' + fmt(GAME_RATE * S.mult) + ' times real time, so a day in the game takes ' + dur + '.') : L('Tida står stille.', 'Time stands still.')) + '</p></div>' +
       '<div class="ph-card"><h4>' + L('Penger', 'Money') + '</h4>' + kv(L('Kasse', 'Cash'), kr(S.cash)) + '<button class="ph-btn" data-pa="admCash">+ 100 000 kr</button></div>' +
+      // a full tank anywhere, for trips along the coast before there are fuel quays outside Senja (the user's wish 03.10.2026)
+      '<div class="ph-card"><h4>' + L('Drivstoff', 'Fuel') + '</h4>' + kv(L('Tanken', 'Tank'), fmt(S.boat.fuel) + ' / ' + fmt(BOAT.fuelCap) + ' L') + '<button class="ph-btn" data-pa="admFuel">' + L('Fyll tanken', 'Fill the tank') + '</button></div>' +
       '<p class="ph-note">' + L('Verktøy for testing. Appen fjernes før spillet får felles klokke.', 'Tools for testing. The app goes before the game gets a shared clock.') + '</p></div>';
   }
   function show(on, a){ isOpen = on; if (a) app = a; if (on){ el.hidden = false; void el.offsetWidth; el.classList.remove('off'); render(); } else { el.classList.add('off'); setTimeout(() => { if (!isOpen) el.hidden = true; }, 300); } }
@@ -677,6 +679,7 @@ const PHONE = (() => {
     else if (a === 'q3d'){ S.settings.q3d = d.v; if (typeof G3 !== 'undefined' && G3.quality) G3.quality(d.v); }
     else if (a === 'admPace'){ S.mult = +d.v; $('pace').value = String(S.mult); }
     else if (a === 'admCash'){ S.cash += 100000; log('Admin: 100 000 kr lagt i kassa.', 'Admin: NOK 100,000 put in the cash.'); }
+    else if (a === 'admFuel'){ const b = S.boat, add = Math.max(0, BOAT.fuelCap - b.fuel); b.fuel = BOAT.fuelCap; if (b.status === 'adrift' && add > 0) b.status = 'idle'; log('Admin: tanken fylt (' + fmt(add) + ' L).', 'Admin: the tank filled (' + fmt(add) + ' L).'); }
     else if (a === 'sub'){ sub[app] = d.s; }
     else if (a === 'salgW'){ sub.salgW = d.s; }
     else if (a === 'tow'){ rescue(true); toast(L('Redningsskøyta slepte deg inn.', 'The rescue boat towed you in.')); }

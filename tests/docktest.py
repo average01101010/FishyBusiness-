@@ -104,6 +104,10 @@ async def run(p, w, h, tag):
     await pg.evaluate("PHONE.open('home')"); await pg.wait_for_timeout(400)
     apps = await pg.evaluate("[...document.querySelectorAll('#phone .ph-app')].map(x => x.dataset.a)")
     check(apps == ['vaer', 'post', 'meld', 'rederi', 'salg', 'kvote', 'ordl', 'haill', 'sjomann', 'redning', 'innst', 'admin'], 'telefonen har tolv apper, med Kvote, Oppdrag og Admin', apps)
+    # Admin fills the tank anywhere, and a boat adrift with an empty tank can go on (for trips along the coast)
+    fu = await pg.evaluate("""(() => { const b = S.boat, st = {status:b.status, fuel:b.fuel}; b.fuel = 0; b.status = 'adrift'; PHONE.open('admin');
+      const btn = document.querySelector('#phView [data-pa=admFuel]'); if (btn) btn.click(); const r = {btn:!!btn, fuel:b.fuel, cap:BOAT.fuelCap, status:b.status}; b.status = st.status; b.fuel = st.fuel; return r; })()""")
+    check(fu['btn'] and fu['fuel'] == fu['cap'] and fu['status'] == 'idle', 'Admin: «Fyll tanken» fyller tanken, og en båt som drev tom, kan gå videre', fu)
     await pg.evaluate("PHONE.show(false)"); await pg.wait_for_timeout(300)
     # a link to a page that moved opens the drawer
     await pg.evaluate("PHONE.open('utstyr')"); await pg.wait_for_timeout(300)
