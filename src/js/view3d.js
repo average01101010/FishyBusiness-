@@ -2526,9 +2526,10 @@ const G3 = (() => {
       const C = SHOW ? [SHOW.x, (env.tide || 0) + 1.3 + Math.min(4, VESSELS[SHOW.t].len * 0.06), SHOW.z] : [bv.x, bv.y + 1.3, bv.z], yawW = (SHOW ? SHOW.h : bv.head) + cam.yaw, tgt = C;
       const eyeAt = p => { const cp = Math.cos(p), sp = Math.sin(p), e = [C[0] - Math.sin(yawW) * cam.dist * cp, C[1] + cam.dist * sp, C[2] + Math.cos(yawW) * cam.dist * cp];
         const ground = Math.max(terrH(e[0], e[2]), seaH(e[0], e[2], t)) + 2; if (e[1] < ground) e[1] = ground; return e; };
-      // tilt up over a quay or under a bridge rather than diving in close (up quickly, back down slowly) ...
+      // tilt up over a quay or under a bridge rather than diving in close (up quickly, back down slowly) ... as far as straight down
+      // over the boat: at low water a boat alongside lies 3 m under the quay's edge, which a lift of 57 degrees did not clear
       let lift = 0, f = camFree(tgt, eyeAt(cam.pitch));
-      while (f < 0.98 && f * cam.dist < 12 && lift < 1.0){ lift += 0.1; f = camFree(tgt, eyeAt(Math.min(1.45, cam.pitch + lift))); }
+      while (f < 0.98 && f * cam.dist < 12 && cam.pitch + lift < 1.45){ lift += 0.1; f = camFree(tgt, eyeAt(Math.min(1.45, cam.pitch + lift))); }
       camLift += clamp(lift - camLift, -dt * 0.6, dt * 3);
       eye = eyeAt(Math.min(1.45, cam.pitch + camLift));
       // ... and what is still in the way pulls the camera in along the line to the boat, at once; it goes back out gently
