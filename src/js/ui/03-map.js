@@ -7,14 +7,16 @@ function followChart(){
 }
 // the gear being drawn out on the chart before it is set (ui/03d-setmode.js), or null
 let SETM = null;
+let heatT = 0;
 function applyView(){
   const r = svg.getBoundingClientRect(); if (!r.width || !r.height) return;
   const h = MAP_H / view.z, w = h * (r.width / r.height);
   view.cx = clamp(view.cx, MAPB.x0, MAPB.x1); view.cy = clamp(view.cy, MAPB.y0, MAPB.y1);
   svg.setAttribute('viewBox', (view.cx - w / 2) + ' ' + (view.cy - h / 2) + ' ' + w + ' ' + h);
-  if (window.chartReady && document.body.classList.contains('vplot')){ followChart(); clearTimeout(chartTimer); chartTimer = setTimeout(() => paintChart(1), 160); }
+  if (window.chartReady && document.body.classList.contains('vplot')){ if (!chartPan()) followChart(); clearTimeout(chartTimer); chartTimer = setTimeout(() => paintChart(1), 160); }
   view.px = r.height / h;
-  if (window.heatReady) heatPaint();   // ui/03c-heat.js, loaded after this file
+  // ui/03c-heat.js, loaded after this file: at most every 100 ms while the view moves (it was drawn with a blur at every move)
+  if (window.heatReady && !heatT) heatT = setTimeout(() => { heatT = 0; heatPaint(); }, 100);
 }
 function toMap(cx, cy){ const pt = svg.createSVGPoint(); pt.x = cx; pt.y = cy; const q = pt.matrixTransform(svg.getScreenCTM().inverse()); return {x:q.x, y:q.y}; }
 const ptsStr = poly => poly.map(p => p.x.toFixed(3) + ',' + p.y.toFixed(3)).join(' ');
@@ -29,63 +31,110 @@ function cssRGB(name){ const v = getComputedStyle(document.documentElement).getP
 // ---------- chart painted at screen resolution for the current view (crisp at any zoom, like a real chart plotter) ----------
 const chartCv = document.createElement('canvas'); chartCv.id = 'chartcv'; svg.parentNode.insertBefore(chartCv, svg);
 let chartTimer = 0; window.chartReady = true;
+// The chart is painted in tiles of 256 x 256 raster pixels fixed to the map at the zoom (03.10.2026: the whole view was painted pixel
+// by pixel at every move, seconds on the tablet, and it stayed dark until the packs had come). A tile is painted coarse at once (a
+// quarter of the resolution, scaled up) and fine a few at a time between frames, the middle first; the tiles kept from before are
+// drawn again as they are when the chart moves, also while it is dragged. What the packs do not cover yet is painted from the national
+// core and painted again when they come. The raster is at most 1.5 pixels a CSS pixel (it is smooth; the coast over it is drawn at the
+// screen's own resolution). The coast, the graticule and the fjord line are drawn over the tiles once per view (CT.vec).
+const CT = {key:'', tiles:new Map(), job:[], raf:0, vec:null, vsh:[0, 0], v:null, want:new Set(), came:0, TS:256, whole:null};
+function chartView(scale){
+  const r = svg.getBoundingClientRect(), mr = svg.parentNode.getBoundingClientRect(); if (!r.width || !r.height) return null;
+  const dpr = Math.min(2, window.devicePixelRatio || 1) * scale, W = Math.max(2, Math.round(r.width * dpr)), H = Math.max(2, Math.round(r.height * dpr));
+  const hh = MAP_H / view.z, ww = hh * (r.width / r.height), x0 = view.cx - ww / 2, y0 = view.cy - hh / 2, k = hh / H, rd = Math.min(dpr, 1.5 * scale);
+  return {r, mr, dpr, W, H, hh, ww, x0, y0, k, kr:k * dpr / rd, kx:ww / W, ky:k, lv:chartLevel(hh), fish:chartMode() === 'fish', sd:safeDepth()};
+}
 function paintChart(scale){
   if (!DEPTH || !document.body.classList.contains('vplot')) return;
-  const r = svg.getBoundingClientRect(), mr = svg.parentNode.getBoundingClientRect(); if (!r.width || !r.height) return;
+  const V = chartView(scale); if (!V) return;
+  const {r, mr, W, H, hh, ww, x0, y0, lv} = V;
   chartCv.style.left = (r.left - mr.left) + 'px'; chartCv.style.top = (r.top - mr.top) + 'px'; chartCv.style.width = r.width + 'px'; chartCv.style.height = r.height + 'px';
-  const dpr = Math.min(2, window.devicePixelRatio || 1) * scale, W = Math.max(2, Math.round(r.width * dpr)), H = Math.max(2, Math.round(r.height * dpr));
   if (chartCv.width !== W) chartCv.width = W; if (chartCv.height !== H) chartCv.height = H;
-  const hh = MAP_H / view.z, ww = hh * (r.width / r.height), x0 = view.cx - ww / 2, y0 = view.cy - hh / 2, kx = ww / W, ky = hh / H, lv = chartLevel(hh);
-  // the depth and the chart's vectors under the view are on their way: keep the last picture (the view of the whole country draws
-  // from the national core only)
-  if (lv && !mapViewReady(x0, y0, x0 + ww, y0 + hh, () => { paintChart(scale); scheduleStatic(); }, ['sim', 'chart'])) return;
-  // the far view is painted coarse (CHARTV.px samples of the depth model) and scaled up, with the coast drawn sharp over it
-  const f = lv ? 1 : Math.min(1, Math.sqrt(CHARTV.px / (W * H))), PW = Math.max(2, Math.round(W * f)), PH = Math.max(2, Math.round(H * f)), pkx = ww / PW, pky = hh / PH;
-  const ctx = chartCv.getContext('2d'), img = ctx.createImageData(PW, PH), d = img.data, LD = MAPD.L.depth, c = LD.c, X0 = LD.ix0, Y0 = LD.iy0, X1 = LD.ix0 + LD.nx - 1, Y1 = LD.iy0 + LD.ny - 1, D = (ix, iy) => rcell(LD, ix, iy);
-  const fish = chartMode() === 'fish', sd = safeDepth(), s2 = sd > 2.5 ? Math.min(2, sd / 2) : -1;
-  const OFF = fish ? [5, 9, 13] : [221, 227, 229], WHITE = [249, 251, 252], U1 = [167, 203, 235], U2 = [134, 180, 223], SC = [59, 106, 165], FS = fish ? [46, 54, 40] : [204, 214, 172];
-  // the B-spline only where a pixel is finer than the depth's cells (50 m): farther out the bilinear is as smooth and a fifth of the work
-  const prev = new Float32Array(PW).fill(NaN), sh = 1 / (Math.max(pkx, 0.0005) * 10), smooth = scale >= 1 && lv > 0 && pkx < MAPD.L.depth.c;
-  // near in, the land mask (25 m) as foreshore where the coast leaves it out: what the route check takes as land
-  const LM = MAPD.L.mask, pocket = lv === 2 ? pocketsIn(x0, y0, x0 + ww, y0 + hh) : null, T = MAPD.man.tile;
-  let ltx = NaN, lty = NaN, lsim = false; const simAt = (x, y) => { const tx = Math.floor(x / T), ty = Math.floor(y / T); if (tx !== ltx || ty !== lty){ ltx = tx; lty = ty; lsim = lv > 0 && mapSimAt({x, y}); } return lsim; };
-  // cubic B-spline weights per column (and per row below): smooth, rounded depth contours instead of straight grid steps
-  const bw = (t, o) => { const t2 = t * t, t3 = t2 * t; o[0] = (1 - t) * (1 - t) * (1 - t) / 6; o[1] = (3 * t3 - 6 * t2 + 4) / 6; o[2] = (-3 * t3 + 3 * t2 + 3 * t + 1) / 6; o[3] = t3 / 6; };
-  // the depth layer's cells are numbered from the frame's origin (01b-mapdata.js)
-  const CX = new Int32Array(PW * 4), CW = new Float32Array(PW * 4), tmp = [0, 0, 0, 0], lx0 = x0, ly0 = y0;
-  if (smooth) for (let i = 0; i < PW; i++){ const x = lx0 + (i + 0.5) * pkx, gx = x / c - 0.5, ix = Math.floor(gx); bw(gx - ix, tmp); for (let k = 0; k < 4; k++){ CX[i * 4 + k] = clamp(ix - 1 + k, X0, X1); CW[i * 4 + k] = tmp[k]; } }
-  const RW = [0, 0, 0, 0], RO = [0, 0, 0, 0];
-  for (let j = 0; j < PH; j++){
-    const y = ly0 + (j + 0.5) * pky, gy = clamp(y / c - 0.5, Y0, Y1 - 0.001), iy = Math.floor(gy), fy = gy - iy;
-    if (smooth){ const gyr = y / c - 0.5, iyr = Math.floor(gyr); bw(gyr - iyr, RW); for (let k = 0; k < 4; k++) RO[k] = clamp(iyr - 1 + k, Y0, Y1); }
-    let left = NaN;
-    for (let i = 0; i < PW; i++){
-      const x = lx0 + (i + 0.5) * pkx, o = (j * PW + i) * 4;
-      if (x < MAPB.x0 || y < MAPB.y0 || x >= MAPB.x1 || y >= MAPB.y1){ d[o] = OFF[0]; d[o + 1] = OFF[1]; d[o + 2] = OFF[2]; d[o + 3] = 255; prev[i] = NaN; left = NaN; continue; }
-      const gx = clamp(x / c - 0.5, X0, X1 - 0.001), ix = Math.floor(gx), fx = gx - ix;
-      let v;
-      // off the tiles that have detail: the national core's land under the coast0 lines, and the depth model (all of the far view)
-      if (!simAt(x, y) || !(x >= X0 * c && y >= Y0 * c && x < (X1 + 1) * c && y < (Y1 + 1) * c)){
-        const q = {x, y}; if (lv && isLandFar(q)){ d[o] = 224; d[o + 1] = 206; d[o + 2] = 150; d[o + 3] = 255; prev[i] = NaN; left = NaN; continue; }
-        // the far view takes the depth model (03-simulation.js) without its slope to the shore, which is finer than a pixel there,
-        // so the distance to the shore is not read for the whole country
-        v = lv ? depthModel(q) : 15 + 220 * Math.pow(exposure(q), 1.6); }
-      else if (lv === 2 && rcell(LM, Math.floor(x / LM.c), Math.floor(y / LM.c)) === 1 && !(pocket && pocket(x, y))){ d[o] = FS[0]; d[o + 1] = FS[1]; d[o + 2] = FS[2]; d[o + 3] = 255; prev[i] = NaN; left = NaN; continue; }
-      else if (smooth){ const q = i * 4; v = 0; for (let a = 0; a < 4; a++){ const ro = RO[a]; v += RW[a] * (D(CX[q], ro) * CW[q] + D(CX[q + 1], ro) * CW[q + 1] + D(CX[q + 2], ro) * CW[q + 2] + D(CX[q + 3], ro) * CW[q + 3]); } }
-      else v = (D(ix, iy) * (1 - fx) + D(ix + 1, iy) * fx) * (1 - fy) + (D(ix, iy + 1) * (1 - fx) + D(ix + 1, iy + 1) * fx) * fy;
-      let col;
-      if (fish){
-        const dxv = isNaN(left) ? 0 : v - left, dyv = isNaN(prev[i]) ? 0 : v - prev[i], hs = clamp(0.8 + (dxv + dyv) * sh * 0.004, 0.45, 1.25), pc = plotCol(Math.max(v, 0.5));
-        col = [pc[0] * hs, pc[1] * hs, pc[2] * hs];
-      } else {
-        const edge = (v >= sd && ((left < sd) || (prev[i] < sd))) || (v < sd && ((left >= sd) || (prev[i] >= sd)));
-        col = edge ? SC : v < s2 ? U2 : v < sd ? U1 : WHITE;
-      }
-      d[o] = col[0]; d[o + 1] = col[1]; d[o + 2] = col[2]; d[o + 3] = 255; prev[i] = v; left = v;
+  CT.v = V;
+  // the packs under the view and half a view round it are asked for, each once; the chart is painted again when they come
+  if (lv) chartWant(x0 - ww / 2, y0 - hh / 2, x0 + ww * 1.5, y0 + hh * 1.5);
+  if (!lv) chartWhole(V);
+  else { const key = [V.kr.toPrecision(10), lv, V.fish, V.sd].join('|'); if (key !== CT.key){ CT.key = key; CT.tiles.clear(); CT.job = []; } }
+  chartVectors(V);
+  chartCompose(V, lv > 0, 40);
+}
+// dragged at the same zoom: the tiles kept are drawn where they now are, and the coast of the last paint shifted, until it is painted
+function chartPan(){
+  const V0 = CT.v; if (!V0 || !V0.lv || !document.body.classList.contains('vplot')) return false;
+  const V = chartView(1); if (!V || V.k !== V0.k || V.W !== V0.W || V.H !== V0.H || V.lv !== V0.lv || V.fish !== V0.fish) return false;
+  CT.vsh = [CT.vsh[0] + (V0.x0 - V.x0) / V.k, CT.vsh[1] + (V0.y0 - V.y0) / V.k]; CT.v = V; chartCompose(V, true, 6); return true;
+}
+// the whole country (level 0): coarse from the core, at most CHARTV.px samples, scaled up (no tiles: the view is quick)
+function chartWhole(V){
+  const {W, H, x0, y0, kx, ky} = V, f = Math.min(1, Math.sqrt(CHARTV.px / (W * H))), PW = Math.max(2, Math.round(W * f)), PH = Math.max(2, Math.round(H * f));
+  const img = new ImageData(PW, PH); chartRaster(img.data, PW, PH, x0, y0, W * kx / PW, H * ky / PH, V, null);
+  const oc = CT.whole || (CT.whole = document.createElement('canvas')); oc.width = PW; oc.height = PH; oc.getContext('2d').putImageData(img, 0, 0);
+}
+// the tiles over the view: those kept are drawn, those missing painted coarse now (within budget ms) and the rest queued, coarse first
+function chartCompose(V, tiles, budget){
+  const ctx = chartCv.getContext('2d'), {W, H, x0, y0, k, kr} = V;
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.imageSmoothingEnabled = true;
+  if (!tiles) ctx.drawImage(CT.whole, 0, 0, W, H);
+  else {
+    ctx.fillStyle = V.fish ? '#05090d' : '#dde3e5'; ctx.fillRect(0, 0, W, H);
+    const TS = CT.TS, tw = TS * kr, i0 = Math.floor(x0 / tw), j0 = Math.floor(y0 / tw), i1 = Math.floor((x0 + W * k) / tw), j1 = Math.floor((y0 + H * k) / tw);
+    const until = performance.now() + (budget || 0), cx = (i0 + i1) / 2, cy = (j0 + j1) / 2, need = [], X = i => Math.round((i * tw - x0) / k), Y = j => Math.round((j * tw - y0) / k);
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++){
+      const tk = i + ',' + j; let t = CT.tiles.get(tk);
+      if (!t && performance.now() < until){ t = chartTile(V, i, j, 4); CT.tiles.set(tk, t); }
+      const dd = Math.hypot(i - cx, j - cy);
+      if (!t){ need.push([dd - 1e3, i, j]); continue; }
+      if (t.q > 1) need.push([dd, i, j]);   // (a tile painted before its packs came is painted again when they come: chartCame)
+      ctx.drawImage(t.cv, X(i), Y(j), X(i + 1) - X(i), Y(j + 1) - Y(j));
+      CT.tiles.delete(tk); CT.tiles.set(tk, t);   // the least recently used goes first
     }
+    const keep = Math.max(120, (i1 - i0 + 1) * (j1 - j0 + 1) * 2.5); while (CT.tiles.size > keep) CT.tiles.delete(CT.tiles.keys().next().value);
+    need.sort((a, b) => a[0] - b[0]); CT.job = need.map(n => [n[1], n[2]]);
+    if (CT.job.length && !CT.raf) CT.raf = requestAnimationFrame(chartWork);
   }
-  if (f < 1){ const oc = CHARTV.off || (CHARTV.off = document.createElement('canvas')); oc.width = PW; oc.height = PH; oc.getContext('2d').putImageData(img, 0, 0); ctx.imageSmoothingEnabled = true; ctx.drawImage(oc, 0, 0, W, H); }
-  else ctx.putImageData(img, 0, 0);
+  if (CT.vec) ctx.drawImage(CT.vec, Math.round(CT.vsh[0]), Math.round(CT.vsh[1]));
+  chartCv.style.transform = ''; chartCv.dataset.v = [view.cx, view.cy, view.z, V.r.width, V.r.height].join(',');
+}
+// the queued tiles, about 8 ms a frame (a missing one coarse, a coarse one fine); then the view is composed again
+function chartWork(){
+  CT.raf = 0; const V = CT.v; if (!V || !V.lv || !CT.job.length || !document.body.classList.contains('vplot')) return;
+  const until = performance.now() + 8; let did = 0;
+  while (CT.job.length && (performance.now() < until || !did)){
+    const [i, j] = CT.job.shift(), tk = i + ',' + j, t = CT.tiles.get(tk); if (t && t.q === 1) continue;
+    CT.tiles.set(tk, chartTile(V, i, j, t ? 1 : 4)); did++;
+  }
+  if (did) chartCompose(V, true, 0);
+  if (CT.job.length && !CT.raf) CT.raf = requestAnimationFrame(chartWork);
+}
+// for the tests: every tile of the view fine at once
+function chartFlush(){
+  const V = CT.v; if (!V || !V.lv) return; let n = 0;
+  while (CT.job.length && n++ < 1e4){ const [i, j] = CT.job.shift(); CT.tiles.set(i + ',' + j, chartTile(V, i, j, 1)); if (!CT.job.length) chartCompose(V, true, 0); }
+  chartCompose(V, true, 0);
+}
+// one tile: its raster at 1/q of the resolution (q = 4 coarse, 1 fine) on its own canvas; prov when some of its packs had not come
+function chartTile(V, i, j, q){
+  const TS = CT.TS, n = TS / q, k = V.kr * q, img = new ImageData(n, n), st = {prov:false};
+  chartRaster(img.data, n, n, i * TS * V.kr, j * TS * V.kr, k, k, V, st);
+  const cv = document.createElement('canvas'); cv.width = cv.height = n; cv.getContext('2d').putImageData(img, 0, 0);
+  return {cv, q, prov:st.prov};
+}
+// the packs a view needs, each asked for once; when they come the tiles painted without them go, and the chart is painted again
+function chartWant(x0, y0, x1, y1){
+  for (const kind of ['sim', 'chart']) for (const pk of mapPacksIn(kind, x0, y0, x1, y1)){
+    if (pk.buf || CT.want.has(pk)) continue; CT.want.add(pk);
+    mapLoad(pk).then(() => { CT.want.delete(pk); chartCame(); }, e => { CT.want.delete(pk); console.error(e); });
+  }
+}
+function chartCame(){
+  clearTimeout(CT.came);
+  CT.came = setTimeout(() => { for (const [tk, t] of CT.tiles) if (t.prov) CT.tiles.delete(tk); if (document.body.classList.contains('vplot')){ paintChart(1); scheduleStatic(); } }, 120);
+}
+// the coast, the graticule and the fjord line for the view, on their own canvas
+function chartVectors(V){
+  const {W, H, x0, y0, kx, ky, dpr, fish} = V;
+  const cv = CT.vec || (CT.vec = document.createElement('canvas')); if (cv.width !== W) cv.width = W; if (cv.height !== H) cv.height = H; CT.vsh = [0, 0];
+  const ctx = cv.getContext('2d'); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, H);
   chartCoast(ctx, x0, y0, kx, ky, W, H, dpr, fish);
   chartGrid(ctx, x0, y0, kx, ky, W, H, dpr, fish);
   // fjord line for coastal cod: dashed violet, as regulation lines are drawn on official charts
@@ -93,7 +142,73 @@ function paintChart(scale){
   FJORD.forEach((q, i) => { const X = (q.x - x0) / kx, Y = (q.y - y0) / ky; i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); }); ctx.stroke(); ctx.setLineDash([]);
   if (view.z > 1.6){ const a = FJORD[2], b2 = FJORD[3], X = ((a.x + b2.x) / 2 - x0) / kx, Y = ((a.y + b2.y) / 2 - y0) / ky; ctx.font = 'italic ' + Math.round(11 * dpr) + 'px sans-serif'; ctx.fillStyle = 'rgba(130,30,150,0.9)'; ctx.fillText(S.lang === 'no' ? 'Fjordlinje' : 'Fjord line', X + 6 * dpr, Y); }
   ctx.restore();
-  chartCv.style.transform = ''; chartCv.dataset.v = [view.cx, view.cy, view.z, r.width, r.height].join(',');
+}
+// The raster under the coast: PW x PH samples from (x0, y0) km, pkx/pky km apart, into d (RGBA). Off the tiles with detail (or before
+// their pack has come: st.prov) the national core's land and the depth model; on them the depth (a B-spline where a sample is finer
+// than its 50 m cells) and the land mask (25 m): at level 2 as foreshore where the coast leaves it out (what the route check takes as
+// land), read between the cells so its edge is a smooth line a pixel wide rather than 25 m steps; at level 1 as land under the coast.
+function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){
+  const {lv, fish, sd} = V, LD = MAPD.L.depth, c = LD.c, X0 = LD.ix0, Y0 = LD.iy0, X1 = LD.ix0 + LD.nx - 1, Y1 = LD.iy0 + LD.ny - 1, D = (ix, iy) => rcell(LD, ix, iy);
+  const s2 = sd > 2.5 ? Math.min(2, sd / 2) : -1;
+  const OFF = fish ? [5, 9, 13] : [221, 227, 229], WHITE = [249, 251, 252], U1 = [167, 203, 235], U2 = [134, 180, 223], SC = [59, 106, 165], FS = fish ? [46, 54, 40] : [204, 214, 172], LAND = fish ? [38, 43, 35] : [232, 215, 166];
+  const prev = new Float32Array(PW).fill(NaN), sh = 1 / (Math.max(pkx, 0.0005) * 10), smooth = lv > 0 && pkx < LD.c;
+  const LM = MAPD.L.mask, lc = LM.c, pocket = lv === 2 ? pocketsIn(x0, y0, x0 + PW * pkx, y0 + PH * pky) : null, T = MAPD.man.tile, aa = Math.max(0.04, 0.5 * pkx / lc);
+  let ltx = NaN, lty = NaN, lsim = false;
+  const simAt = (x, y) => { const tx = Math.floor(x / T), ty = Math.floor(y / T); if (tx !== ltx || ty !== lty){ ltx = tx; lty = ty; const pk = lv > 0 ? MAPD.byTile.get('sim:' + tx + ':' + ty) : null; lsim = !!(pk && pk.buf); if (pk && !pk.buf && st) st.prov = true; } return lsim; };
+  const bw = (t, o) => { const t2 = t * t, t3 = t2 * t; o[0] = (1 - t) * (1 - t) * (1 - t) / 6; o[1] = (3 * t3 - 6 * t2 + 4) / 6; o[2] = (-3 * t3 + 3 * t2 + 3 * t + 1) / 6; o[3] = t3 / 6; };
+  const CX = new Int32Array(PW * 4), CW = new Float32Array(PW * 4), tmp = [0, 0, 0, 0];
+  if (smooth) for (let i = 0; i < PW; i++){ const x = x0 + (i + 0.5) * pkx, gx = x / c - 0.5, ix = Math.floor(gx); bw(gx - ix, tmp); for (let k = 0; k < 4; k++){ CX[i * 4 + k] = clamp(ix - 1 + k, X0, X1); CW[i * 4 + k] = tmp[k]; } }
+  const RW = [0, 0, 0, 0], RO = [0, 0, 0, 0], col = [0, 0, 0], put = (o, k) => { d[o] = k[0]; d[o + 1] = k[1]; d[o + 2] = k[2]; d[o + 3] = 255; };
+  // near in (a sample under an eighth of a cell) the B-spline every GS samples and between them bilinear: the depth is smooth there,
+  // and the 16 cells a sample made the harbour's tiles slow; NaN where a corner is off the packs (the sample is then its own)
+  const GS = 4, G = smooth && pkx < c / 8 ? new Float32Array((Math.ceil(PW / GS) + 1) * (Math.ceil(PH / GS) + 1)) : null, GW = Math.ceil(PW / GS) + 1;
+  if (G){ const w = [0, 0, 0, 0], u = [0, 0, 0, 0];
+    for (let gj = 0; gj * GS < PH + GS; gj++) for (let gi = 0; gi < GW; gi++){
+      const x = x0 + (gi * GS + 0.5) * pkx, y = y0 + (gj * GS + 0.5) * pky; let v = NaN;
+      if (simAt(x, y) && x >= X0 * c && y >= Y0 * c && x < (X1 + 1) * c && y < (Y1 + 1) * c) try {
+        const gx = x / c - 0.5, ix = Math.floor(gx), gy = y / c - 0.5, iy = Math.floor(gy); bw(gx - ix, w); bw(gy - iy, u); v = 0;
+        for (let a = 0; a < 4; a++){ const ro = clamp(iy - 1 + a, Y0, Y1); let r = 0; for (let b = 0; b < 4; b++) r += w[b] * D(clamp(ix - 1 + b, X0, X1), ro); v += u[a] * r; }
+      } catch (e){ v = NaN; }
+      G[gj * GW + gi] = v;
+    }
+    ltx = NaN; }
+  for (let j = 0; j < PH; j++){
+    const y = y0 + (j + 0.5) * pky, gy = clamp(y / c - 0.5, Y0, Y1 - 0.001), iy = Math.floor(gy), fy = gy - iy;
+    if (smooth){ const gyr = y / c - 0.5, iyr = Math.floor(gyr); bw(gyr - iyr, RW); for (let k = 0; k < 4; k++) RO[k] = clamp(iyr - 1 + k, Y0, Y1); }
+    let left = NaN;
+    for (let i = 0; i < PW; i++){
+      const x = x0 + (i + 0.5) * pkx, o = (j * PW + i) * 4;
+      if (x < MAPB.x0 || y < MAPB.y0 || x >= MAPB.x1 || y >= MAPB.y1){ put(o, OFF); prev[i] = NaN; left = NaN; continue; }
+      const gx = clamp(x / c - 0.5, X0, X1 - 0.001), ix = Math.floor(gx), fx = gx - ix;
+      let v, land = 0;
+      if (!simAt(x, y) || !(x >= X0 * c && y >= Y0 * c && x < (X1 + 1) * c && y < (Y1 + 1) * c)){
+        const q = {x, y}; if (lv && isLandFar(q)){ put(o, [224, 206, 150]); prev[i] = NaN; left = NaN; continue; }
+        v = lv ? depthModel(q) : 15 + 220 * Math.pow(exposure(q), 1.6); }
+      else try {
+        if (lv === 2){ const gxm = x / lc - 0.5, gym = y / lc - 0.5, mx = Math.floor(gxm), my = Math.floor(gym), ax = gxm - mx, ay = gym - my;
+          const m = (rcell(LM, mx, my) * (1 - ax) + rcell(LM, mx + 1, my) * ax) * (1 - ay) + (rcell(LM, mx, my + 1) * (1 - ax) + rcell(LM, mx + 1, my + 1) * ax) * ay;
+          land = m > 0.5 - aa && !(pocket && pocket(x, y)) ? clamp((m - 0.5 + aa) / (2 * aa), 0, 1) : 0; }
+        else if (lv === 1 && rcell(LM, Math.floor(x / lc), Math.floor(y / lc)) === 1){ put(o, LAND); prev[i] = NaN; left = NaN; continue; }
+        if (land >= 1){ put(o, FS); prev[i] = NaN; left = NaN; continue; }
+        const gi = Math.floor(i / GS), gj = Math.floor(j / GS), go = gj * GW + gi;
+        if (G && !isNaN(v = ((G[go] * (GS - i % GS) + G[go + 1] * (i % GS)) * (GS - j % GS) + (G[go + GW] * (GS - i % GS) + G[go + GW + 1] * (i % GS)) * (j % GS)) / (GS * GS))){ }
+        else if (smooth){ const q = i * 4; v = 0; for (let a = 0; a < 4; a++){ const ro = RO[a]; v += RW[a] * (D(CX[q], ro) * CW[q] + D(CX[q + 1], ro) * CW[q + 1] + D(CX[q + 2], ro) * CW[q + 2] + D(CX[q + 3], ro) * CW[q + 3]); } }
+        else v = (D(ix, iy) * (1 - fx) + D(ix + 1, iy) * fx) * (1 - fy) + (D(ix, iy + 1) * (1 - fx) + D(ix + 1, iy + 1) * fx) * fy;
+      } catch (e){
+        // a cell across the edge of a tile whose pack has not come (or has none): the depth model here, painted again when it comes
+        if (st) st.prov = true; land = 0; const q = {x, y}; if (isLandFar(q)){ put(o, [224, 206, 150]); prev[i] = NaN; left = NaN; continue; } v = depthModel(q);
+      }
+      if (fish){
+        const dxv = isNaN(left) ? 0 : v - left, dyv = isNaN(prev[i]) ? 0 : v - prev[i], hs = clamp(0.8 + (dxv + dyv) * sh * 0.004, 0.45, 1.25), pc = plotCol(Math.max(v, 0.5));
+        col[0] = pc[0] * hs; col[1] = pc[1] * hs; col[2] = pc[2] * hs;
+      } else {
+        const edge = (v >= sd && ((left < sd) || (prev[i] < sd))) || (v < sd && ((left >= sd) || (prev[i] >= sd)));
+        const k = edge ? SC : v < s2 ? U2 : v < sd ? U1 : WHITE; col[0] = k[0]; col[1] = k[1]; col[2] = k[2];
+      }
+      if (land > 0){ col[0] += (FS[0] - col[0]) * land; col[1] += (FS[1] - col[1]) * land; col[2] += (FS[2] - col[2]) * land; }
+      put(o, col); prev[i] = v; left = v;
+    }
+  }
 }
 function scheduleChart(){ followChart(); clearTimeout(chartTimer); chartTimer = setTimeout(() => paintChart(1), 140); }
 window.addEventListener('resize', () => { if (document.body.classList.contains('vplot')) scheduleChart(); });

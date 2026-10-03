@@ -14,30 +14,50 @@ function vReader(b){
   const u = () => { let v = 0, s = 1, x; do { x = b[i++]; v += (x & 127) * s; s *= 128; } while (x & 128); return v; };
   return {u, z(){ const v = u(); return v % 2 ? -(v + 1) / 2 : v / 2; }, byte(){ return b[i++]; }, str(n){ const t = new TextDecoder().decode(b.subarray(i, i + n)); i += n; return t; }};
 }
-// the rings of a vector entry (vectors.py's lines: n, then per ring its class, point count and zigzag steps) as one Path2D, sc km per unit
-function vecPath(v, sc){
-  const r = vReader(v.b), n = r.u(), p = new Path2D();
-  for (let k = 0; k < n; k++){ r.u(); const m = r.u(); let x = 0, y = 0; for (let j = 0; j < m; j++){ x += r.z(); y += r.z(); j ? p.lineTo(x * sc, y * sc) : p.moveTo(x * sc, y * sc); } p.closePath(); }
+// the rings of a vector entry (vectors.py's lines: n, then per ring its class, point count and zigzag steps) as one Path2D, sc km per unit;
+// with tol (units) for a view whose pixel is coarser than the data: a point nearer than tol to the last one kept is left out, and so is
+// a ring smaller than tol (the vertices made the coast seconds to draw at the whole country and the region, 03.10.2026)
+function vecPath(v, sc, tol){
+  const r = vReader(v.b), n = r.u(), p = new Path2D(), q = [];
+  for (let k = 0; k < n; k++){
+    r.u(); const m = r.u(); let x = 0, y = 0;
+    if (!tol){ for (let j = 0; j < m; j++){ x += r.z(); y += r.z(); j ? p.lineTo(x * sc, y * sc) : p.moveTo(x * sc, y * sc); } p.closePath(); continue; }
+    q.length = 0; let lx = 0, ly = 0, ax = Infinity, ay = Infinity, bx = -Infinity, by = -Infinity;
+    for (let j = 0; j < m; j++){ x += r.z(); y += r.z(); if (x < ax) ax = x; if (x > bx) bx = x; if (y < ay) ay = y; if (y > by) by = y; if (!j || Math.abs(x - lx) + Math.abs(y - ly) >= tol){ q.push(x, y); lx = x; ly = y; } }
+    if (bx - ax < tol && by - ay < tol) continue;
+    for (let j = 0; j < q.length; j += 2) j ? p.lineTo(q[j] * sc, q[j + 1] * sc) : p.moveTo(q[j] * sc, q[j + 1] * sc); p.closePath();
+  }
   return p;
 }
-function chartPath0(){ if (!CHARTV.p0){ const v = mapVec(MAPD.core, 'coast0'); if (v) CHARTV.p0 = vecPath(v, 0.01); } return CHARTV.p0; }
-function chartPath(pk, lv){ const k = pk.file + ':' + pk.tile + ':' + lv; if (!CHARTV.paths.has(k)){ const v = mapVec(pk, lv === 2 ? 'coast2' : 'coast1'); CHARTV.paths.set(k, v ? vecPath(v, 0.001) : null); } return CHARTV.paths.get(k); }
-// the coast over the painted depth: the rings stroked twice as wide and then filled (nonzero: the holes turn the other way), so the
-// seams between Overture's land pieces are covered and only the shore keeps half its line, on the sea's side
+// the step (a power of two of the data's own, 0 for all of it) that suits a pixel of px km
+const pathStep = (px, base) => Math.max(0, Math.floor(Math.log2(0.7 * px / base)));
+function chartPath0(px){ const b = pathStep(px || 0, 0.3), k = 'p0:' + b; if (!CHARTV.paths.has(k)){ const v = mapVec(MAPD.core, 'coast0'); if (!v) return null; CHARTV.paths.set(k, vecPath(v, 0.01, b ? 30 * 2 ** b : 0)); } return CHARTV.paths.get(k); }
+function chartPath(pk, lv, px){ const base = lv === 2 ? 0.003 : 0.025, b = pathStep(px || 0, base), k = pk.file + ':' + pk.tile + ':' + lv + ':' + b; if (!CHARTV.paths.has(k)){ const v = mapVec(pk, lv === 2 ? 'coast2' : 'coast1'); CHARTV.paths.set(k, v ? vecPath(v, 0.001, b ? base * 1000 * 2 ** b : 0) : null); } return CHARTV.paths.get(k); }
+// the coast over the painted depth: the rings stroked and then filled (nonzero: the holes turn the other way), so the seams between
+// Overture's land pieces are covered and only the shore keeps its line, on the sea's side
 function chartCoast(ctx, x0, y0, kx, ky, W, H, dpr, fish){
-  const hh = H * ky, lv = chartLevel(hh), T = MAPD.man.tile, lw = 0.9 * dpr;
-  const tiles = lv ? mapPacksIn('chart', x0, y0, x0 + W * kx, y0 + hh).filter(pk => pk.buf && chartPath(pk, lv)) : [];
-  ctx.save(); ctx.fillStyle = fish ? '#262b23' : '#e8d7a6'; ctx.strokeStyle = fish ? '#6b755c' : '#8f7d52'; ctx.lineJoin = 'round';
-  const p0 = chartPath0();
+  const hh = H * ky, lv = chartLevel(hh), T = MAPD.man.tile;
+  const tiles = lv ? mapPacksIn('chart', x0, y0, x0 + W * kx, y0 + hh).filter(pk => pk.buf && chartPath(pk, lv, kx)) : [];
+  ctx.save(); ctx.fillStyle = fish ? '#262b23' : '#e8d7a6'; ctx.strokeStyle = fish ? '#6b755c' : '#8f7d52';
+  // the line: three hairlines (a pixel wide, which the canvas draws without building a stroke's outline: a 1.8 px line round the
+  // whole country took 0.7 s with the CPU slowed four times, 03.10.2026) moved most of a pixel round the coast, under the fill
+  const draw = (p, ox, oy) => {
+    ctx.lineWidth = ky;
+    for (const [dx, dy] of [[0, -0.9], [0.78, 0.45], [-0.78, 0.45]]){ ctx.setTransform(1 / kx, 0, 0, 1 / ky, (ox - x0) / kx + dx * dpr, (oy - y0) / ky + dy * dpr); ctx.stroke(p); }
+    ctx.setTransform(1 / kx, 0, 0, 1 / ky, (ox - x0) / kx, (oy - y0) / ky); ctx.fill(p);
+  };
+  // the national coast only where a tile in the view has no chart pack of its own (it was stroked over the whole country each time)
+  const nT = (Math.floor((x0 + W * kx) / T) - Math.floor(x0 / T) + 1) * (Math.floor((y0 + hh) / T) - Math.floor(y0 / T) + 1);
+  const p0 = tiles.length < nT ? chartPath0(kx) : null;
   if (p0){
     ctx.save();
     if (tiles.length){ ctx.beginPath(); ctx.rect(0, 0, W, H); for (const pk of tiles) ctx.rect((pk.tile[0] * T - x0) / kx, (pk.tile[1] * T - y0) / ky, T / kx, T / ky); ctx.clip('evenodd'); }
-    ctx.setTransform(1 / kx, 0, 0, 1 / ky, -x0 / kx, -y0 / ky); ctx.lineWidth = 2 * lw * ky; ctx.stroke(p0); ctx.fill(p0); ctx.restore();
+    draw(p0, 0, 0); ctx.restore();
   }
   for (const pk of tiles){
-    const ox = pk.tile[0] * T, oy = pk.tile[1] * T, p = chartPath(pk, lv);
-    ctx.save(); ctx.beginPath(); ctx.rect((ox - x0) / kx, (oy - y0) / ky, T / kx, T / ky); ctx.clip();
-    ctx.setTransform(1 / kx, 0, 0, 1 / ky, (ox - x0) / kx, (oy - y0) / ky); ctx.lineWidth = 2 * lw * ky; ctx.stroke(p); ctx.fill(p); ctx.restore();
+    const ox = pk.tile[0] * T, oy = pk.tile[1] * T;
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.beginPath(); ctx.rect((ox - x0) / kx, (oy - y0) / ky, T / kx, T / ky); ctx.clip();
+    draw(chartPath(pk, lv, kx), ox, oy); ctx.restore();
   }
   ctx.restore();
 }

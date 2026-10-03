@@ -16,7 +16,8 @@ def check(ok, what, extra=''):
 SETV = """([cx, cy, hh]) => { view.cx = cx; view.cy = cy; view.z = MAP_H / hh; applyView(); scheduleStatic(); return 1; }"""
 READY = """() => { const r = svg.getBoundingClientRect(), hh = MAP_H / view.z, ww = hh * r.width / r.height, x0 = view.cx - ww / 2, y0 = view.cy - hh / 2;
   return chartLevel(hh) === 0 || ['sim', 'chart'].every(k => mapPacksIn(k, x0, y0, x0 + ww, y0 + hh).every(pk => pk.buf)); }"""
-PAINT = """() => { clearTimeout(chartTimer); const t0 = performance.now(); paintChart(1); const ms = performance.now() - t0; renderStatic(); return ms; }"""
+# the first picture (the tiles kept, the rest coarse) and the whole chart fine (chartFlush paints the queued tiles at once)
+PAINT = """() => { clearTimeout(chartTimer); const t0 = performance.now(); paintChart(1); const t1 = performance.now(); chartFlush(); const ms = performance.now() - t0; renderStatic(); return [t1 - t0, ms]; }"""
 # a canvas pixel's colour at a point of the map (km), and the names drawn
 PIX = """(pts) => { const r = svg.getBoundingClientRect(), W = chartCv.width, H = chartCv.height, hh = MAP_H / view.z, ww = hh * r.width / r.height, x0 = view.cx - ww / 2, y0 = view.cy - hh / 2, c = chartCv.getContext('2d');
   return pts.map(p => { const i = Math.floor((p.x - x0) / ww * W), j = Math.floor((p.y - y0) / hh * H); if (i < 0 || j < 0 || i >= W || j >= H) return null; return Array.from(c.getImageData(i, j, 1, 1).data.slice(0, 3)); }); }"""
@@ -38,14 +39,15 @@ async def run(p, w, h, tag, full):
     P = lambda la, lo: pg.evaluate("([a, b]) => P(a, b)", [la, lo])
     home = await pg.evaluate("PORTS[0].p")
     levels = [('hele landet', 725, 900, 1800, 0), ('regionen', 850, 355, 100, 1), ('fjorden', home['x'], home['y'], 20, 1), ('havna', home['x'], home['y'], 2.2, 2)]
-    times = {}
+    times = {}; firsts = {}
     for name, cx, cy, hh, lv in levels:
         await pg.evaluate(SETV, [cx, cy, hh]); await pg.wait_for_function(READY, timeout=30000)
         await pg.evaluate(PAINT)   # the first paint unpacks the blocks and builds the paths; the second is the one a moving chart repaints
         await cdp.send('Emulation.setCPUThrottlingRate', {'rate': 4})
-        ms = await pg.evaluate(PAINT)
+        await pg.evaluate("() => { CT.key = ''; }")   # the tiles of the first paint go, so the time is a fresh view's
+        first, ms = await pg.evaluate(PAINT)
         await cdp.send('Emulation.setCPUThrottlingRate', {'rate': 1})
-        got = await pg.evaluate("chartLevel(MAP_H / view.z)"); times[name] = round(ms)
+        got = await pg.evaluate("chartLevel(MAP_H / view.z)"); times[name] = round(ms); firsts[name] = round(first)
         check(got == lv, name + ': detaljnivå ' + str(lv), got)
         names = await pg.evaluate(NAMES)
         if name == 'hele landet':
@@ -70,10 +72,13 @@ async def run(p, w, h, tag, full):
         if name == 'havna':
             # near in the chart shows what legClear takes as land: compare a grid of pixels with isLand
             r = await pg.evaluate("""() => { const r = svg.getBoundingClientRect(), W = chartCv.width, H = chartCv.height, hh = MAP_H / view.z, ww = hh * r.width / r.height, x0 = view.cx - ww / 2, y0 = view.cy - hh / 2, c = chartCv.getContext('2d'), d = c.getImageData(0, 0, W, H).data, out = [];
-              for (let a = 0; a < 60; a++) for (let b2 = 0; b2 < 40; b2++){ const i = Math.floor((a + 0.5) / 60 * W), j = Math.floor((b2 + 0.5) / 40 * H), o = (j * W + i) * 4; out.push([d[o], d[o + 1], d[o + 2], isLand({x:x0 + (i + 0.5) / W * ww, y:y0 + (j + 0.5) / H * hh}) ? 1 : 0]); }
+              for (let a = 0; a < 60; a++) for (let b2 = 0; b2 < 40; b2++){ const i = Math.floor((a + 0.5) / 60 * W), j = Math.floor((b2 + 0.5) / 40 * H), o = (j * W + i) * 4; const q = {x:x0 + (i + 0.5) / W * ww, y:y0 + (j + 0.5) / H * hh}, L = isLand(q) ? 1 : 0, e = 0.015;
+                // a point within 15 m of the mask's edge does not count: the chart draws that edge as a smooth line between the 25 m cells
+                const edge = [[e, 0], [-e, 0], [0, e], [0, -e]].some(([u, v]) => (isLand({x:q.x + u, y:q.y + v}) ? 1 : 0) !== L); out.push([d[o], d[o + 1], d[o + 2], edge ? -1 : L]); }
               return out; }""")
             agree = n = land = 0
             for R, G, B, L in r:
+                if L < 0: continue
                 c = (R, G, B); isl = near(c, LANDC); iss = near(c, SEAC) and not isl
                 if not (isl or iss): continue
                 n += 1; agree += (isl == bool(L)); land += isl
@@ -81,8 +86,19 @@ async def run(p, w, h, tag, full):
             check(len(names) >= 3, 'havna: stedsnavn nær inne', names[:12])
             if full:
                 await pg.screenshot(path='chart_harbour.png')
-    print('tegnetid med CPU strupet 4x (ms):', json.dumps(times, ensure_ascii=False))
-    check(max(times.values()) < 2500, 'tegnetiden er under 2,5 s på hvert nivå med CPU strupet 4x', times)
+    print('tegnetid med CPU strupet 4x (ms), første bilde:', json.dumps(firsts, ensure_ascii=False), 'hele kartet fint:', json.dumps(times, ensure_ascii=False))
+    check(max(times.values()) < 2500, 'tegnetiden for hele kartet fint er under 2,5 s på hvert nivå med CPU strupet 4x', times)
+    check(max(firsts.values()) < 600, 'det første bildet (grove fliser) kommer innen 0,6 s på hvert nivå med CPU strupet 4x', firsts)
+    # dragging the chart half a view at the fjord level: the next frame has no dark or empty pixel (the tiles kept are drawn where
+    # they now are, the new ones coarse), and a little later every tile is fine
+    await pg.evaluate(SETV, [home['x'], home['y'], 20]); await pg.wait_for_function(READY, timeout=30000); await pg.evaluate(PAINT)
+    pan = await pg.evaluate("""() => new Promise(res => { const hh = MAP_H / view.z; view.cx += hh * 0.5; applyView(); requestAnimationFrame(() => {
+      const W = chartCv.width, H = chartCv.height, d = chartCv.getContext('2d').getImageData(0, 0, W, H).data; let bad = 0, n = 0;
+      for (let a = 0; a < 50; a++) for (let b = 0; b < 30; b++){ const o = (Math.floor((b + 0.5) / 30 * H) * W + Math.floor((a + 0.5) / 50 * W)) * 4; n++; if (d[o + 3] < 255 || (d[o] < 40 && d[o + 1] < 50 && d[o + 2] < 60)) bad++; }
+      res({bad, n, kept:CT.tiles.size}); }); })""")
+    await pg.wait_for_timeout(1500)
+    left = await pg.evaluate("CT.job.length")
+    check(pan['bad'] == 0 and left == 0, 'kartet dras et halvt utsnitt: ingen mørke eller tomme piksler i neste bilde, og alle flisene er fine etter 1,5 s', (pan, left))
 
     if full:
         # touch: one finger pans the chart, two pinch it out to the whole region and beyond the old limit (0.8)
