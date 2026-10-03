@@ -161,7 +161,15 @@ function isLandUI(p){ if (mapSimAt(p) && !mapReadyAt(p, 0)){ mapNeed(p, 0).catch
 // coast of 2026 lies 30-45 m out from the face drawn from the pictures, phase K5 of the coast plan)
 const POCKET = 50;
 let QPOCK = null;
-function inHarbourPocket(p){ return pocketHit(UNITA, qPockets(), p.x * 1000, p.y * 1000); }
+function inHarbourPocket(p){ const x = p.x * 1000, z = p.y * 1000; return harbourNear(x, z) && pocketHit(UNITA, qPockets(), x, z); }
+// whether x, z (m) lies within 200 m of a harbour unit or a quay pocket: a set of 200 m cells, so the ground and the sea far from the
+// harbours skip the loops over them (the 3D view asks for every point of its meshes and every step of the shadows)
+let HNEAR = null;
+function harbourNear(x, z){
+  if (!HNEAR){ HNEAR = new Set(); const add = (cx, cz) => { for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) HNEAR.add((Math.floor(cx / 200) + a) * 65536 + Math.floor(cz / 200) + b); };
+    for (const U of UNITA) add(U.o[0], U.o[1]); for (const f of qPockets()) add(f.x, f.z); }
+  return HNEAR.has(Math.floor(x / 200) * 65536 + Math.floor(z / 200));
+}
 function qPockets(){ if (!QPOCK){ QPOCK = []; for (const pid in QUAYS) for (const kind in QUAYS[pid]) if (!UNITS[pid]) QPOCK.push(quayFace(pid, kind)); } return QPOCK; }
 function pocketHit(US, QS, x, z){
   for (const U of US){ if (Math.abs(x - U.o[0]) > 60 || Math.abs(z - U.o[1]) > 60) continue; const [lx, lz] = unitL(U, x, z); if (lz > 0 && lz <= UNIT.basinZ && Math.abs(lx) <= UNIT.basinX) return true; }

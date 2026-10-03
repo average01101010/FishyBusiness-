@@ -15,9 +15,11 @@ const G3 = (() => {
   // one frame's step of the automatic quality (dt s, fps the frame rate); returns the level
   function qualTick(dt, fps, now){
     if (qualSet() !== 'auto' || QUAL.fix || !fps) return QUAL.lvl;
-    if (now - QUAL.capT > 120000) QUAL.cap = 2;
+    // down after 4 s under 28 frames a second; up again after 8 s over 40, but not within 30 s of a step down (it went up after 12 s
+    // over 50 and not within two minutes, which on the tablet never came, 03.10.2026)
+    if (now - QUAL.capT > 30000) QUAL.cap = 2;
     if (fps < 28){ QUAL.bad += dt; QUAL.good = 0; if (QUAL.bad > 4 && QUAL.lvl > 0){ QUAL.cap = QUAL.lvl - 1; QUAL.capT = now; QUAL.lvl--; QUAL.bad = 0; } }
-    else if (fps > 50){ QUAL.good += dt; QUAL.bad = 0; if (QUAL.good > 12){ if (QUAL.lvl < QUAL.cap) QUAL.lvl++; QUAL.good = 0; } }
+    else if (fps > 40){ QUAL.good += dt; QUAL.bad = 0; if (QUAL.good > 8){ if (QUAL.lvl < QUAL.cap) QUAL.lvl++; QUAL.good = 0; } }
     else QUAL.bad = QUAL.good = 0;
     return QUAL.lvl;
   }
@@ -271,16 +273,17 @@ const G3 = (() => {
     // the tiles' ground (25 m) where they have it and it is in; else the far heights (200 m, phase K8) held to the national core's
     // 200 m land, which the simulation sails by off the tiles (land at least a little above the sea, the sea a little below); else
     // a flat stand-in from that land until the far pack comes
-    const p = {x:x / 1000, y:z / 1000}; let h;
+    let h;
     h = HG ? tileH(MAPD.L.hgt, 'view', x, z) : NaN;
     if (h !== h){ const m = rbilM(MAPD.L.land200, x, z); h = HG ? tileH(MAPD.L.far, 'far', x, z) : NaN; if (h !== h) h = m >= 0.5 ? 2 : -4; h = m >= 0.5 ? Math.max(h, 0.3 + (m - 0.5) * 6) : Math.min(h, -0.5 - (0.5 - m) * 8); }
-    return h > -3 && inHarbourPocket(p) ? -3 : h;   // the water in front of a quay (01-world.js)
+    return h > -3 && harbourNear(x, z) && inHarbourPocket({x:x / 1000, y:z / 1000}) ? -3 : h;   // the water in front of a quay (01-world.js)
   }
   // a height layer (the tiles' ground 'view', the far heights 'far') at x, z (m) between the four nearest cells, or NaN where a cell is
   // off the layer or its tile has no pack of that kind or it is not in yet: the edges of the tiles, and before the pack comes, so the
   // view never reads a block that is not there. A tile whose pack is in is remembered.
-  const TIN = new Set();
-  function tileIn(kind, tx, ty){ const k = kind + tx * 64 + ty; if (TIN.has(k)) return true; const pk = MAPD.byTile.get(kind + ':' + tx + ':' + ty); if (pk && pk.buf){ TIN.add(k); return true; } return false; }
+  // (a number for the key and the last tile kept per kind: the string keys cost more than the lookups they guarded)
+  const TIN = new Set(), TLAST = {view:NaN, far:NaN};
+  function tileIn(kind, tx, ty){ const k = (kind === 'far' ? 1e7 : 0) + tx * 4096 + ty; if (TLAST[kind] === k || TIN.has(k)){ TLAST[kind] = k; return true; } const pk = MAPD.byTile.get(kind + ':' + tx + ':' + ty); if (pk && pk.buf){ TIN.add(k); TLAST[kind] = k; return true; } return false; }
   function tileH(L, kind, x, z){
     const cm = L.c * 1000, gx = x / cm - 0.5, gz = z / cm - 0.5, ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz, ct = Math.round(MAPD.man.tile / L.c);
     if (ix < L.ix0 || iz < L.iy0 || ix + 1 >= L.ix0 + L.nx || iz + 1 >= L.iy0 + L.ny) return NaN;
@@ -296,6 +299,7 @@ const G3 = (() => {
   // the block nothing is drawn (the fine patch has a hole there). h0 is the ground without the unit.
   const UNIT_REACH = 22, UNIT_FINE = UNIT_REACH + 50;
   function unitTerr(x, z, h0){
+    if (!harbourNear(x, z)) return h0;
     for (const U of UNITA){
       if (Math.abs(x - U.o[0]) > 140 || Math.abs(z - U.o[1]) > 140) continue;
       const [lx, lz] = unitL(U, x, z), ax = Math.abs(lx), dx = Math.max(0, ax - UNIT.E), dzB = Math.max(0, -UNIT.B - lz);
@@ -316,6 +320,7 @@ const G3 = (() => {
   // the coarse terrain sinks out of sight where a unit's fine patch takes over (unitPatch draws it)
   function terrCoarse(x, z){
     const h0 = terrRaw(x, z);
+    if (!harbourNear(x, z)) return h0;
     for (const U of UNITA){ if (Math.abs(x - U.o[0]) > 140 || Math.abs(z - U.o[1]) > 140) continue;
       const [lx, lz] = unitL(U, x, z), ax = Math.abs(lx);
       const d = lz >= 0 ? Math.hypot(Math.max(0, ax - UNIT.basinX), Math.max(0, lz - UNIT.basinZ)) : Math.hypot(Math.max(0, ax - UNIT.E), Math.max(0, -UNIT.B - lz));
@@ -324,19 +329,37 @@ const G3 = (() => {
   }
   // share of forest around a point: bilinear over the 50 m forest cells, softened over the neighbours
   function forestAt(x, z){
-    if (!HG || !mapViewIn({x:x / 1000, y:z / 1000})) return 0;
+    if (!HG) return 0;
     const LF = MAPD.L.forest, cm = LF.c * 1000, gx = x / cm - 0.5, gz = z / cm - 0.5, ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz; let s = 0;
-    const ct = Math.round(MAPD.man.tile / LF.c), F = (c, r) => (!HG || !mapIn(LF, c, r) || !tileIn('view', Math.floor(c / ct), Math.floor(r / ct))) ? 0 : rcell(LF, c, r);
+    const ct = Math.round(MAPD.man.tile / LF.c), tx = Math.floor((ix - 1) / ct), tz = Math.floor((iz - 1) / ct);
+    // the 4 x 4 cells in one tile (nearly always): its pack is asked once; at a tile's edge, cell by cell
+    const one = tx === Math.floor((ix + 2) / ct) && tz === Math.floor((iz + 2) / ct) && mapIn(LF, ix - 1, iz - 1) && mapIn(LF, ix + 2, iz + 2);
+    if (one && !tileIn('view', tx, tz)) return 0;
+    if (!one && !mapViewIn({x:x / 1000, y:z / 1000})) return 0;
+    const F = one ? (c, r) => rcell(LF, c, r) : (c, r) => (!mapIn(LF, c, r) || !tileIn('view', Math.floor(c / ct), Math.floor(r / ct))) ? 0 : rcell(LF, c, r);
     for (let dz = -1; dz <= 2; dz++) for (let dx = -1; dx <= 2; dx++){ const wx = dx <= 0 ? (dx === 0 ? 1 - fx * 0.5 : 0.5 - fx * 0.5) : (dx === 1 ? 0.5 + fx * 0.5 : fx * 0.5), wz = dz <= 0 ? (dz === 0 ? 1 - fz * 0.5 : 0.5 - fz * 0.5) : (dz === 1 ? 0.5 + fz * 0.5 : fz * 0.5); s += F(ix + dx, iz + dz) * wx * wz; }
     return clamp(s / 2.25, 0, 1);
   }
-  function makeMesh(x0, z0, sx, sz, n, hf){
-    hf = hf || terrH;
-    const dx = sx / (n - 1), dz = sz / (n - 1), N = n * n, pos = new Float32Array(N * 3), h = new Float32Array(N), nz = new Float32Array(N), slope = new Float32Array(N), nor = new Float32Array(N * 3), fo = new Float32Array(N);
-    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++){
-      const k = j * n + i, x = x0 + i * dx, z = z0 + j * dz, y = hf(x, z);
-      h[k] = y; pos[k * 3] = i * dx; pos[k * 3 + 1] = y; pos[k * 3 + 2] = j * dz; nz[k] = fbm(x / 600, z / 600, 2, 90); fo[k] = forestAt(x, z);
+  // A mesh is built in three parts so it can be done a few rows a frame (meshTask): the heights row by row, then the normals, the
+  // indices and the buffers at once. makeMesh does it all in one go.
+  function meshBegin(x0, z0, sx, sz, n, hf){
+    const N = n * n;
+    return {x0, z0, sx, sz, n, hf:hf || terrH, dx:sx / (n - 1), dz:sz / (n - 1), j:0, pos:new Float32Array(N * 3), h:new Float32Array(N), nz:new Float32Array(N), fo:new Float32Array(N)};
+  }
+  function meshRows(B, until){
+    const {x0, z0, n, dx, dz, hf, pos, h, nz, fo} = B;
+    while (B.j < n){
+      const j = B.j++;
+      for (let i = 0; i < n; i++){
+        const k = j * n + i, x = x0 + i * dx, z = z0 + j * dz, y = hf(x, z);
+        h[k] = y; pos[k * 3] = i * dx; pos[k * 3 + 1] = y; pos[k * 3 + 2] = j * dz; nz[k] = fbm(x / 600, z / 600, 2, 90); fo[k] = forestAt(x, z);
+      }
+      if (performance.now() > until) break;
     }
+    return B.j >= n;
+  }
+  function meshEnd(B){
+    const {x0, z0, sx, sz, n, dx, dz, pos, h, nz, fo} = B, N = n * n, slope = new Float32Array(N), nor = new Float32Array(N * 3);
     for (let j = 0; j < n; j++) for (let i = 0; i < n; i++){
       const k = j * n + i, hx = (h[j * n + Math.min(n - 1, i + 1)] - h[j * n + Math.max(0, i - 1)]) / (2 * dx), hz = (h[Math.min(n - 1, j + 1) * n + i] - h[Math.max(0, j - 1) * n + i]) / (2 * dz);
       slope[k] = Math.hypot(hx, hz); const nl = Math.hypot(hx, 1, hz); nor[k * 3] = -hx / nl; nor[k * 3 + 1] = 1 / nl; nor[k * 3 + 2] = -hz / nl;
@@ -347,6 +370,7 @@ const G3 = (() => {
     recolor(m, snowNow < 0 ? 0 : snowNow);
     return m;
   }
+  function makeMesh(x0, z0, sx, sz, n, hf){ const B = meshBegin(x0, z0, sx, sz, n, hf); meshRows(B, Infinity); return meshEnd(B); }
   function freeMesh(m){ gl.deleteBuffer(m.pb); gl.deleteBuffer(m.cb); gl.deleteBuffer(m.ib); if (m.nb) gl.deleteBuffer(m.nb); if (m.sb) gl.deleteBuffer(m.sb); }
   // the near terrain's own surface at x, z (its triangles over the ground without the units), so a fine patch meets it exactly
   function nearSurf(M, x, z){
@@ -389,55 +413,118 @@ const G3 = (() => {
   const TERRW = {span:100000, snap:10000, move:20000};
   function buildTerrain(){
     const p = bv.x || bv.z ? {x:bv.x, z:bv.z} : {x:S.boat.pos.x * 1000, z:S.boat.pos.y * 1000}, cx = Math.round(p.x / TERRW.snap) * TERRW.snap, cz = Math.round(p.z / TERRW.snap) * TERRW.snap;
-    if (TERR) freeMesh(TERR);
-    TERR = makeMesh(cx - TERRW.span / 2, cz - TERRW.span / 2, TERRW.span, TERRW.span, 255); TERR.cx = cx; TERR.cz = cz;
+    const old = TERR;
+    TERR = makeMesh(cx - TERRW.span / 2, cz - TERRW.span / 2, TERRW.span, TERRW.span, 255); TERR.cx = cx; TERR.cz = cz; shSeed(TERR, old); if (old) freeMesh(old);
   }
   // the packs the view needs round the boat: the far heights over the far terrain's window, the tiles' ground (and forest) over the
   // middle terrain's; when they come the meshes over them are built again. Asked at most every 2 s.
   let streamT = -1e9;
   function stream3d(){
     const now = performance.now(); if (now - streamT < 2000) return; streamT = now;
-    const x = bv.x / 1000, z = bv.z / 1000, F = TERRW.span / 2000 + 10, V = 14, then = () => { for (const m of [NEARM, MIDM, TERR]) if (m) m.stale = true; };
-    mapViewReady(x - F, z - F, x + F, z + F, then, ['far']); mapViewReady(x - V, z - V, x + V, z + V, then, ['view']);
+    const x = bv.x / 1000, z = bv.z / 1000, F = TERRW.span / 2000 + 10, V = 14;
+    for (const [kind, R] of [['far', F], ['view', V]]) for (const pk of mapPacksIn(kind, x - R, z - R, x + R, z + R)){
+      if (pk.buf || pk.want3d) continue; pk.want3d = true;
+      mapLoad(pk).then(() => { pk.want3d = false; staleOver(pk); }, e => { pk.want3d = false; console.error(e); });
+    }
+  }
+  // One terrain mesh is rebuilt at a time, a few rows a frame (MESHMS ms; the near, middle and far meshes were each built in one
+  // frame, all three whenever a pack came anywhere, 03.10.2026): the old mesh is drawn until the new one is done. A mesh that does not
+  // cover the boat at all (a jump, the first build) is built at once.
+  let MJOB = null;
+  const MESHMS = [3, 4, 5];
+  function meshTask(kind, cur, x0, z0, span, n, hf, done){
+    const covers = cur && bv.x > cur.x0 && bv.x < cur.x0 + cur.sx && bv.z > cur.z0 && bv.z < cur.z0 + cur.sz;
+    if (!covers){ if (MJOB && MJOB.kind === kind) MJOB = null; done(makeMesh(x0, z0, span, span, n, hf), false); return; }
+    if (MJOB && MJOB.kind === kind && MJOB.B.x0 === x0 && MJOB.B.z0 === z0 && MJOB.B.sx === span) return;   // on its way
+    // one on its way that will still have the boat well inside is let finish (started again at every new spot of a moving boat it
+    // never finished, and the mesh then jumped kilometres at once when she left the old one, and the sea map with it)
+    if (MJOB && MJOB.kind === kind){ const B = MJOB.B, m = span * 0.2; if (B.sx === span && bv.x > B.x0 + m && bv.x < B.x0 + span - m && bv.z > B.z0 + m && bv.z < B.z0 + span - m) return; }
+    if (MJOB && MJOB.kind !== kind) return;   // another mesh is being built: this one waits its turn
+    MJOB = {kind, B:meshBegin(x0, z0, span, span, n, hf), done, dirty:false};
+  }
+  let FRAMEMS = 16;
+  function meshStep(){
+    const J = MJOB; if (!J) return;
+    // a share of the frame: when the frames are slow anyway the mesh keeps pace with the boat (at most 30 % of a frame, 60 ms)
+    if (!meshRows(J.B, performance.now() + Math.max(MESHMS[QUAL.lvl], Math.min(60, 0.3 * FRAMEMS)))) return;
+    MJOB = null; J.done(meshEnd(J.B), J.dirty);
+  }
+  // a pack has come: the meshes over its tile are built again (one being built over it goes again when it is done)
+  function staleMesh(kind){ const m = kind === 'near' ? NEARM : kind === 'mid' ? MIDM : TERR; if (m) m.stale = true; if (MJOB && MJOB.kind === kind) MJOB.dirty = true; }
+  function staleOver(pk){
+    const T = MAPD.man.tile * 1000, x0 = pk.tile[0] * T, z0 = pk.tile[1] * T;
+    for (const [m, kind] of [[NEARM, 'near'], [MIDM, 'mid'], [TERR, 'far']]){
+      if (MJOB && MJOB.kind === kind){ const B = MJOB.B; if (B.x0 < x0 + T && B.x0 + B.sx > x0 && B.z0 < z0 + T && B.z0 + B.sz > z0) MJOB.dirty = true; }
+      if (m && m.x0 < x0 + T && m.x0 + m.sx > x0 && m.z0 < z0 + T && m.z0 + m.sz > z0) m.stale = true;
+    }
   }
   function updateFar(){
     if (TERR && !TERR.stale && Math.abs(bv.x - TERR.cx) < TERRW.move && Math.abs(bv.z - TERR.cz) < TERRW.move) return;
-    buildTerrain(); recolor(TERR, snowNow < 0 ? 0 : snowNow);
+    const cx = Math.round(bv.x / TERRW.snap) * TERRW.snap, cz = Math.round(bv.z / TERRW.snap) * TERRW.snap;
+    meshTask('far', TERR, cx - TERRW.span / 2, cz - TERRW.span / 2, TERRW.span, 255, null, (M, dirty) => { const old = TERR; TERR = M; TERR.cx = cx; TERR.cz = cz; TERR.stale = dirty; shSeed(TERR, old); if (old) freeMesh(old); });
   }
-  // sharp terrain in a 6 km corridor around the boat, rebuilt as it moves
+  // sharp terrain in a 6 km corridor around the boat, rebuilt as it moves. The shadows are marched towards the sun in time slices
+  // (SHMS ms a frame: 7 000 points a frame stalled the user's tablet for a third of a second, 03.10.2026): the fine ground near the
+  // point, farther out the middle and far meshes' own heights, which are already in memory; ground under the sea is not marched.
   let shT = 0;
+  const SHMS = [2, 3, 4];
+  function meshH(m, x, z){
+    const n = m.gn, d = m.sx / (n - 1), gx = (x - m.x0) / d, gz = (z - m.z0) / d; if (!(gx >= 0 && gz >= 0 && gx < n - 1 && gz < n - 1)) return NaN;
+    const i = gx | 0, j = gz | 0, fx = gx - i, fz = gz - j, h = m.h, k = j * n + i;
+    return (h[k] * (1 - fx) + h[k + 1] * fx) * (1 - fz) + (h[k + n] * (1 - fx) + h[k + n + 1] * fx) * fz;
+  }
+  function shadeH(x, z, dd){ if (dd < 400) return terrH(x, z); let h = MIDM && !MIDM.stale ? meshH(MIDM, x, z) : NaN; if (h !== h && TERR) h = meshH(TERR, x, z); return h === h ? h : terrH(x, z); }
+  // a new mesh starts with the shadows of the one it replaces where they overlap, so they do not flash while they are worked out
+  function shSeed(m, old){
+    if (!old || !old.sh || typeof old.x0 !== 'number' || old.gn === undefined) return;
+    const n = m.gn, d = m.sx / (n - 1), on = old.gn, od = old.sx / (on - 1);
+    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++){
+      const gx = (m.x0 + i * d - old.x0) / od, gz = (m.z0 + j * d - old.z0) / od; if (!(gx >= 0 && gz >= 0 && gx <= on - 1 && gz <= on - 1)) continue;
+      m.sh[j * n + i] = old.sh[Math.round(gz) * on + Math.round(gx)];
+    }
+    gl.bindBuffer(gl.ARRAY_BUFFER, m.sb); gl.bufferData(gl.ARRAY_BUFFER, m.sh, gl.DYNAMIC_DRAW);
+  }
   function updateShadows(){
-    const d = QUAL.lvl ? env.shadowDir : null, key = d ? d.map(v => v.toFixed(2)).join(',') : 'flat';   // no shadows on low quality
+    // the sun's direction in steps of 0.03 (it moved 0.01 every 20 s of play at 6x time, and each step started all the meshes again)
+    const d = QUAL.lvl ? env.shadowDir : null, key = d ? d.map(v => (Math.round(v / 0.03) * 0.03).toFixed(2)).join(',') : 'flat';   // no shadows on low quality
+    const until = performance.now() + SHMS[QUAL.lvl];
     for (const m of [NEARM, ...UPATCH, MIDM, TERR]){
       if (!m) continue;
       if (m.shKey !== key && !m.shJob && performance.now() - shT > 1500){ m.shJob = {i:0, key, d}; shT = performance.now(); }
       if (!m.shJob) continue;
-      const J = m.shJob, N = m.gn * m.gn, end = Math.min(N, J.i + (m === NEARM ? 7000 : 5000));
-      if (!J.d || J.d[1] <= 0.005) m.sh.fill(J.d ? 0 : 1, J.i, end);
+      const J = m.shJob, N = m.gn * m.gn;
+      if (!J.d || J.d[1] <= 0.005){ m.sh.fill(J.d ? 0 : 1, J.i, N); J.i = N; }
       else {
         const hl = Math.hypot(J.d[0], J.d[2]) || 1e-6, dx = J.d[0] / hl, dz = J.d[2] / hl, tE = J.d[1] / hl, far = m === TERR ? 25000 : 9000, st0 = m === TERR ? 160 : m === MIDM ? 60 : 25;
-        for (let k = J.i; k < end; k++){
-          const x = m.o[0] + m.pos[k * 3], z = m.o[1] + m.pos[k * 3 + 2], y = Math.max(m.pos[k * 3 + 1], 0) + 2; let lit = 1, dd = st0;
-          while (dd < far){ const over = terrH(x + dx * dd, z + dz * dd) - (y + dd * tE); if (over > 0){ lit = over > 8 ? 0 : 0.35; if (!lit) break; } dd += st0 + dd * 0.07; }
-          m.sh[k] = lit;
+        let k = J.i;
+        while (k < N){
+          const end = Math.min(N, k + 24);
+          for (; k < end; k++){
+            const y0 = m.pos[k * 3 + 1]; if (y0 < -1){ m.sh[k] = 1; continue; }
+            const x = m.o[0] + m.pos[k * 3], z = m.o[1] + m.pos[k * 3 + 2], y = Math.max(y0, 0) + 2; let lit = 1, dd = st0;
+            while (dd < far){ const over = shadeH(x + dx * dd, z + dz * dd, dd) - (y + dd * tE); if (over > 0){ lit = over > 8 ? 0 : 0.35; if (!lit) break; } dd += st0 + dd * 0.07; }
+            m.sh[k] = lit;
+          }
+          if (performance.now() > until) break;
         }
+        J.i = k;
       }
-      J.i = end; if (J.i >= N){ gl.bindBuffer(gl.ARRAY_BUFFER, m.sb); gl.bufferData(gl.ARRAY_BUFFER, m.sh, gl.DYNAMIC_DRAW); m.shKey = J.key; m.shJob = null; }
+      if (J.i >= N){ gl.bindBuffer(gl.ARRAY_BUFFER, m.sb); gl.bufferData(gl.ARRAY_BUFFER, m.sh, gl.DYNAMIC_DRAW); m.shKey = J.key; m.shJob = null; }
       break;   // one mesh per frame
     }
   }
   function updateMid(){
     const span = 22000, snap = 2000, cx = Math.round(bv.x / snap) * snap, cz = Math.round(bv.z / snap) * snap;
     if (MIDM && !MIDM.stale && Math.abs(cx - MIDM.cx) < 3000 && Math.abs(cz - MIDM.cz) < 3000) return;
-    if (MIDM) freeMesh(MIDM);
-    MIDM = makeMesh(cx - span / 2, cz - span / 2, span, span, 256); MIDM.cx = cx; MIDM.cz = cz;
+    meshTask('mid', MIDM, cx - span / 2, cz - span / 2, span, 256, null, (M, dirty) => { const old = MIDM; MIDM = M; MIDM.cx = cx; MIDM.cz = cz; MIDM.stale = dirty; shSeed(MIDM, old); if (old) freeMesh(old); });
   }
   function updateNear(){
-    stream3d(); updateFar(); updateMid();
+    stream3d(); nearWanted(); updateMid(); updateFar(); meshStep();   // the near mesh first when more than one is due
+  }
+  function nearWanted(){
     const span = QUAL.near[QUAL.lvl][cam.dist > 1200 ? 1 : 0], snap = span / 10, cx = Math.round(bv.x / snap) * snap, cz = Math.round(bv.z / snap) * snap;
     if (NEARM && !NEARM.stale && NEARM.sx === span && Math.abs(cx - NEARM.cx) < span / 5 && Math.abs(cz - NEARM.cz) < span / 5) return;
-    if (NEARM) freeMesh(NEARM);
-    NEARM = makeMesh(cx - span / 2, cz - span / 2, span, span, 256, terrCoarse); NEARM.cx = cx; NEARM.cz = cz; buildPatches(); buildGround();
+    meshTask('near', NEARM && NEARM.sx === span ? NEARM : null, cx - span / 2, cz - span / 2, span, 256, terrCoarse, (M, dirty) => { const old = NEARM; NEARM = M; NEARM.cx = cx; NEARM.cz = cz; NEARM.stale = dirty; shSeed(NEARM, old); if (old) freeMesh(old); buildPatches(); buildGround(); });
   }
   function recolor(m, snow){
     const {slope, nz, col, h, fo} = m;
@@ -1499,7 +1586,7 @@ const G3 = (() => {
     const X = x => (x - p.x) / kpp * (cw / sw), Y = y => top + ch / 2 + (y - p.y) / kpp * (cw / sw);
     g.save(); g.beginPath(); g.rect(0, top, cw, ch); g.clip();
     // the echo sounder's heat map, the same as on the chart plotter (ui/03c-heat.js)
-    if (typeof heatDrawInto === 'function') heatDrawInto(g, p, cw / 2, top + ch / 2, cw / (2 * rng));
+    if (typeof heatDrawInto === 'function') heatDrawInto(g, p, cw / 2, top + ch / 2, cw / (2 * rng), true);   // without the blur filter (costly on a tablet)
     // route and trail
     if (S.plan){ g.strokeStyle = '#d6336c'; g.lineWidth = 3; g.beginPath(); g.moveTo(X(p.x) + cw / 2, Y(p.y)); for (const w of S.plan.wps.slice(S.plan.idx)) g.lineTo(X(w.x) + cw / 2, Y(w.y)); g.stroke(); }
     // other vessels
@@ -2121,23 +2208,11 @@ const G3 = (() => {
   function buildGround(){
     if (!NEARM) return;
     const size = 2048, x0 = NEARM.x0, z0 = NEARM.z0, sx = NEARM.sx, k = size / sx;
-    gcv = gcv || document.createElement('canvas'); gcv.width = gcv.height = size; const g = gcv.getContext('2d'); g.clearRect(0, 0, size, size);
-    const snowy = snowNow < 60, c0 = Math.floor(x0 / 50), c1 = Math.ceil((x0 + sx) / 50), r0 = Math.floor(z0 / 50), r1 = Math.ceil((z0 + sx) / 50);
-    if (false){
-      const W = [7.5, 6.5, 5.5, 5, 3.6]; g.lineCap = g.lineJoin = 'round';
-      const inRect = r => !(r.bb[2] < x0 || r.bb[0] > x0 + sx || r.bb[3] < z0 || r.bb[1] > z0 + sx);
-      for (const pass of [0, 1]){
-        g.strokeStyle = pass ? (snowy ? 'rgba(128,134,140,0.95)' : 'rgba(120,126,130,0.96)') : (snowy ? 'rgba(88,94,100,0.8)' : 'rgba(64,70,72,0.85)');
-        for (const r of ROADS){ if (!inRect(r)) continue; g.lineWidth = (W[r.c] + (pass ? 0 : 2.4)) * k; g.beginPath(); g.moveTo((r.xs[0] - x0) * k, (r.zs[0] - z0) * k); for (let j = 1; j < r.xs.length; j++) g.lineTo((r.xs[j] - x0) * k, (r.zs[j] - z0) * k); g.stroke(); }
-      }
-    }
-    GTEX = GTEX || gl.createTexture(); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, GTEX);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, gcv); gl.generateMipmap(gl.TEXTURE_2D);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    // the roads on the ground are off (the canvas was a blank 2048 x 2048 uploaded with mipmaps at every rebuild): no ground texture
+    GTEX = null;
     GRECT = [x0, z0, 1 / sx, 1 / sx];
     // shore layer for the water: R = land cover (surf band), G = how shallow
-    const S2 = 256, dat = new Uint8Array(S2 * S2 * 4), st = sx / S2, dok = mapViewReady(x0 / 1000, z0 / 1000, (x0 + sx) / 1000, (z0 + sx) / 1000, () => { if (NEARM) NEARM.stale = true; });
+    const S2 = 256, dat = new Uint8Array(S2 * S2 * 4), st = sx / S2, dok = mapViewReady(x0 / 1000, z0 / 1000, (x0 + sx) / 1000, (z0 + sx) / 1000, () => staleMesh('near'));
     for (let j = 0; j < S2; j++) for (let i = 0; i < S2; i++){ const x = x0 + (i + 0.5) * st, z = z0 + (j + 0.5) * st, m = dok ? (mapSimAt({x:x / 1000, y:z / 1000}) ? rbilM(MAPD.L.mask, x, z) : rbilM(MAPD.L.land200, x, z)) : rbilM(MAPD.L.land200, x, z), o = (j * S2 + i) * 4, dd = m > 0.5 ? 0 : dok ? depthF({x:x / 1000, y:z / 1000}) : 50; dat[o] = Math.round(m * 255); dat[o + 1] = Math.round(clamp(1 - dd / 14, 0, 1) * 255); dat[o + 3] = 255; }
     STEX = STEX || gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, STEX);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, S2, S2, 0, gl.RGBA, gl.UNSIGNED_BYTE, dat);
@@ -2161,20 +2236,6 @@ const G3 = (() => {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, lcv); gl.generateMipmap(gl.TEXTURE_2D);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); gl.activeTexture(gl.TEXTURE0);
-    // shelf: mesh points within ~45 m of the fine coast are lifted just above the water; the shader then cuts the exact outline
-    const S = 512, f = size / S, im = g.getImageData(0, 0, size, size).data, cm = new Uint8Array(S * S);
-    for (let j = 0; j < S; j++) for (let i = 0; i < S; i++){ let v = 0; for (let b = 0; b < f && !v; b++) for (let a = 0; a < f; a++) if (im[((j * f + b) * size + i * f + a) * 4] > 127){ v = 1; break; } cm[j * S + i] = v; }
-    const R = Math.ceil(45 / (sx / S)), tmp = new Uint8Array(S * S), dil = new Uint8Array(S * S);
-    for (let j = 0; j < S; j++){ let run = -1e9; for (let i = 0; i < S; i++){ if (cm[j * S + i]) run = i; tmp[j * S + i] = i - run <= R ? 1 : 0; } run = 1e9; for (let i = S - 1; i >= 0; i--){ if (cm[j * S + i]) run = i; if (run - i <= R) tmp[j * S + i] = 1; } }
-    for (let i = 0; i < S; i++){ let run = -1e9; for (let j = 0; j < S; j++){ if (tmp[j * S + i]) run = j; dil[j * S + i] = j - run <= R ? 1 : 0; } run = 1e9; for (let j = S - 1; j >= 0; j--){ if (tmp[j * S + i]) run = j; if (run - j <= R) dil[j * S + i] = 1; } }
-    const M = NEARM, n = M.gn, dxm = M.sx / (n - 1); let changed = 0;
-    for (let jj = 0; jj < n; jj++) for (let ii = 0; ii < n; ii++){
-      const kk = jj * n + ii; if (true) continue;
-      const si = Math.min(S - 1, Math.floor(ii * dxm / sx * S)), sj = Math.min(S - 1, Math.floor(jj * dxm / sx * S));
-      if (!dil[sj * S + si]) continue;
-      M.h[kk] = 0.12; M.pos[kk * 3 + 1] = 0.12; M.nor[kk * 3] = 0; M.nor[kk * 3 + 1] = 1; M.nor[kk * 3 + 2] = 0; changed++;
-    }
-    if (false){ gl.bindBuffer(gl.ARRAY_BUFFER, M.pb); gl.bufferData(gl.ARRAY_BUFFER, M.pos, gl.STATIC_DRAW); gl.bindBuffer(gl.ARRAY_BUFFER, M.nb); gl.bufferData(gl.ARRAY_BUFFER, M.nor, gl.STATIC_DRAW); recolor(M, snowNow < 0 ? 0 : snowNow); }
   }
   // the flat sea as a ring: the rectangle R [x0, z0, x1, z1] less the hole Hl where something nearer is drawn, as up to four strips,
   // so no water is shaded twice and the shader never discards (which costs the early depth test on phone and tablet GPUs)
@@ -2482,34 +2543,91 @@ const G3 = (() => {
   let lastEye = [0, 0, 0], camFwd = [0, -1];
   // the compass line at the top of the 3D view (the user's wish 02.10.2026): the true bearing the camera looks along, thin ticks every
   // 5 degrees, the quarters and eighths by name and the tens of degrees between them, 70 degrees either way; drawn when it turns
-  const CMPS = {el:document.getElementById('compass3d'), at:NaN, w:0};
+  // The compass line: a strip of the whole round (and 70 degrees more each side) is drawn once per width, pixel ratio and language,
+  // and each frame only shows the part round the heading (it was drawn anew with shadows at every 0.2 degrees, 03.10.2026)
+  const CMPS = {el:document.getElementById('compass3d'), at:NaN, w:0, strip:null, key:''};
+  function compassStrip(W, H, dpr){
+    const span = 70, k = W / (2 * span), names = S.lang === 'no' ? ['N', 'NØ', 'Ø', 'SØ', 'S', 'SV', 'V', 'NV'] : ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    const c = CMPS.strip || (CMPS.strip = document.createElement('canvas')); c.width = Math.ceil((360 + 2 * span) * k); c.height = H;
+    const g = c.getContext('2d'); g.clearRect(0, 0, c.width, H); g.lineCap = 'round'; g.textAlign = 'center'; g.shadowColor = 'rgba(0,0,0,.6)'; g.shadowBlur = 3 * dpr;
+    for (let a = -span; a <= 360 + span; a += 5){
+      const x = (a + span) * k, n = ((a % 360) + 360) % 360, main = n % 45 === 0;
+      g.strokeStyle = 'rgba(255,255,255,0.85)'; g.lineWidth = (main ? 1.6 : 1) * dpr;
+      g.beginPath(); g.moveTo(x, H - 2 * dpr); g.lineTo(x, H - (main ? 9 : n % 15 === 0 ? 6 : 4) * dpr); g.stroke();
+      if (main || n % 15 === 0){ g.fillStyle = '#fff'; g.font = (main ? '600 ' + Math.round(12 * dpr) : Math.round(9.5 * dpr)) + 'px sans-serif'; g.fillText(main ? names[n / 45] : String(n), x, H - 12 * dpr); }
+    }
+    return k;
+  }
   function compassDraw(az, p){
     const el = CMPS.el; if (!el || !el.clientWidth) return;
-    const deg = trueDeg(az, p); if (Math.abs(deg - CMPS.at) < 0.2 && CMPS.w === el.clientWidth) return; CMPS.at = deg; CMPS.w = el.clientWidth;
+    const deg = trueDeg(az, p); if (Math.abs(deg - CMPS.at) < 0.1 && CMPS.w === el.clientWidth) return; CMPS.at = deg; CMPS.w = el.clientWidth;
     const dpr = Math.min(2, window.devicePixelRatio || 1), W = Math.round(el.clientWidth * dpr), H = Math.round(el.clientHeight * dpr); if (el.width !== W) el.width = W; if (el.height !== H) el.height = H;
-    const g = el.getContext('2d'), span = 70, k = W / (2 * span), names = S.lang === 'no' ? ['N', 'NØ', 'Ø', 'SØ', 'S', 'SV', 'V', 'NV'] : ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-    g.clearRect(0, 0, W, H); g.lineCap = 'round'; g.textAlign = 'center'; g.shadowColor = 'rgba(0,0,0,.6)'; g.shadowBlur = 3 * dpr;
-    const a0 = Math.ceil((deg - span) / 5) * 5;
-    for (let a = a0; a <= deg + span; a += 5){
-      const x = W / 2 + (a - deg) * k, n = ((a % 360) + 360) % 360, fade = 1 - Math.pow(Math.abs(a - deg) / span, 2), main = n % 45 === 0;
-      g.strokeStyle = 'rgba(255,255,255,' + (0.85 * fade).toFixed(2) + ')'; g.lineWidth = (main ? 1.6 : 1) * dpr;
-      g.beginPath(); g.moveTo(x, H - 2 * dpr); g.lineTo(x, H - (main ? 9 : n % 15 === 0 ? 6 : 4) * dpr); g.stroke();
-      if (main || n % 15 === 0){ g.fillStyle = 'rgba(255,255,255,' + fade.toFixed(2) + ')'; g.font = (main ? '600 ' + Math.round(12 * dpr) : Math.round(9.5 * dpr)) + 'px sans-serif'; g.fillText(main ? names[n / 45] : String(n), x, H - 12 * dpr); }
-    }
+    const key = W + ',' + H + ',' + dpr + ',' + S.lang; if (key !== CMPS.key){ CMPS.key = key; CMPS.k = compassStrip(W, H, dpr); }
+    const span = 70, k = CMPS.k, g = el.getContext('2d');
+    g.clearRect(0, 0, W, H); g.drawImage(CMPS.strip, (deg % 360) * k, 0, W, H, 0, 0, W, H);
+    // the ends fade out (one gradient over what was drawn)
+    g.globalCompositeOperation = 'destination-in'; if (!CMPS.fade || CMPS.fw !== W){ const gr = g.createLinearGradient(0, 0, W, 0); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(0.25, 'rgba(0,0,0,0.75)'); gr.addColorStop(0.5, '#000'); gr.addColorStop(0.75, 'rgba(0,0,0,0.75)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); CMPS.fade = gr; CMPS.fw = W; }
+    g.fillStyle = CMPS.fade; g.fillRect(0, 0, W, H); g.globalCompositeOperation = 'source-over';
     g.fillStyle = '#ff5aa8'; g.beginPath(); g.moveTo(W / 2 - 4 * dpr, H); g.lineTo(W / 2 + 4 * dpr, H); g.lineTo(W / 2, H - 6 * dpr); g.closePath(); g.fill();
   }
 
   // ---------- frame ----------
   // «#fps» in the address: the frame rate in a corner, to measure on the tablet
   const FPS = {v:0, at:0, el:null};
-  if (/fps/.test(location.hash)){ FPS.el = document.createElement('div'); FPS.el.style.cssText = 'position:fixed;left:6px;bottom:6px;z-index:99;font:12px monospace;color:#fff;background:rgba(0,0,0,.55);padding:2px 6px;border-radius:4px;pointer-events:none'; document.body.appendChild(FPS.el); }
+  // shown with «#fps» in the address or «Vis bildetakt» in the settings (S.settings.fpsShow)
+  function fpsEl(){
+    const on = /fps/.test(location.hash) || !!(S.settings && S.settings.fpsShow);
+    if (on && !FPS.el){ FPS.el = document.createElement('div'); FPS.el.style.cssText = 'position:fixed;left:6px;bottom:6px;z-index:99;font:12px monospace;color:#fff;background:rgba(0,0,0,.55);padding:2px 6px;border-radius:4px;pointer-events:none'; document.body.appendChild(FPS.el); }
+    if (FPS.el) FPS.el.hidden = !on;
+    return on ? FPS.el : null;
+  }
+  // ---------- cinema (the user's wish 03.10.2026) ----------
+  // «Kino» lets the camera film the trip by itself: shots of 12-20 s in turn, a drone circling high, low along the side at the waterline,
+  // from ahead looking back at the bow, from the shore as she passes, a wide shot of the landscape, and from behind over the wake. The
+  // eye and the aim move through a filter of 0.7 s (cut at a new shot), the horizon is level (no roll), and a shot whose eye would be
+  // in the land or the sea, or with the land between it and the boat, is passed over for the next.
+  const KINO = {on:false, shot:null, n:0, eye:null, tgt:null};
+  const KTYPES = ['drone', 'low', 'ahead', 'shore', 'wide', 'chase'];
+  function kinoWant(K, t){
+    const L = Math.max(5, (VESSELS[vtype()] || {}).len || 6), C = [bv.x, bv.y + 1.2, bv.z], fx = Math.sin(bv.head), fz = -Math.cos(bv.head), rx = Math.cos(bv.head), rz = Math.sin(bv.head), s = K.side, u = t - K.t0;
+    const sea = (x, z) => Math.max(terrH(x, z), seaH(x, z, t));
+    if (K.type === 'drone'){ const a = K.a0 + u * 0.06 * s, R = 45 + L * 3; const e = [C[0] + Math.sin(a) * R, 0, C[2] - Math.cos(a) * R]; e[1] = sea(e[0], e[2]) + 26 + L; return [e, C, 50]; }
+    if (K.type === 'low'){ const e = [C[0] + rx * s * (L * 0.35 + 5) - fx * L * (0.3 - u * 0.012), 0, C[2] + rz * s * (L * 0.35 + 5) - fz * L * (0.3 - u * 0.012)]; e[1] = sea(e[0], e[2]) + 0.9; return [e, [C[0] + fx * L * 0.4, C[1], C[2] + fz * L * 0.4], 55]; }
+    if (K.type === 'ahead'){ const e = [C[0] + fx * (L * 2.2 + 22) + rx * s * 5, 0, C[2] + fz * (L * 2.2 + 22) + rz * s * 5]; e[1] = sea(e[0], e[2]) + 2.6; return [e, C, 45]; }
+    if (K.type === 'shore'){ const e = [K.px, sea(K.px, K.pz) + 1.8, K.pz]; return [e, C, 40]; }
+    if (K.type === 'wide'){ const e = [C[0] - fx * 220 + rx * s * 140, 0, C[2] - fz * 220 + rz * s * 140]; e[1] = sea(e[0], e[2]) + 70; return [e, [C[0] + fx * 260, C[1], C[2] + fz * 260], 60]; }
+    const e = [C[0] - fx * (L * 3 + 18), 0, C[2] - fz * (L * 3 + 18)]; e[1] = sea(e[0], e[2]) + 7 + L * 0.3; return [e, [C[0] + fx * 30, C[1], C[2] + fz * 30], 50];
+  }
+  function kinoNext(t){
+    for (let k = 0; k < KTYPES.length; k++){
+      const type = KTYPES[(KINO.n++) % KTYPES.length], K = {type, t0:t, dur:12 + 8 * hash(KINO.n * 7 + 3), side:hash(KINO.n * 13 + 1) < 0.5 ? -1 : 1, a0:hash(KINO.n * 5 + 2) * 6.28};
+      if (type === 'shore'){
+        // a point 60-210 m off her course ahead, on the side with land if there is any near; the boat sails past it
+        const fx = Math.sin(bv.head), fz = -Math.cos(bv.head), rx = Math.cos(bv.head), rz = Math.sin(bv.head), ahead = 90 + Math.max(0, bv.spd || 0) * 6; let best = null;
+        for (const off of [60, 110, 160, 210]){ for (const sd of [1, -1]){ const x = bv.x + fx * ahead + rx * sd * off, z = bv.z + fz * ahead + rz * sd * off; if (terrH(x, z) > 1.5){ best = [x, z]; break; } } if (best) break; }
+        if (!best) best = [bv.x + fx * ahead + rx * K.side * 70, bv.z + fz * ahead + rz * K.side * 70];
+        K.px = best[0]; K.pz = best[1];
+      }
+      const [e, g] = kinoWant(K, t);
+      if (camFree(g, e) > 0.9){ KINO.shot = K; KINO.eye = e.slice(); KINO.tgt = g.slice(); return; }
+    }
+    KINO.shot = {type:'drone', t0:t, dur:12, side:1, a0:0}; KINO.eye = null;
+  }
+  function kinoCam(t, rdt){
+    if (!KINO.shot || t - KINO.shot.t0 > KINO.shot.dur || t < KINO.shot.t0) kinoNext(t);
+    const [e, g, fov] = kinoWant(KINO.shot, t), k = 1 - Math.exp(-Math.min(0.25, rdt) / 0.7);
+    if (!KINO.eye){ KINO.eye = e.slice(); KINO.tgt = g.slice(); }
+    for (let i = 0; i < 3; i++){ KINO.eye[i] += (e[i] - KINO.eye[i]) * k; KINO.tgt[i] += (g[i] - KINO.tgt[i]) * k; }
+    const gy = Math.max(terrH(KINO.eye[0], KINO.eye[2]), seaH(KINO.eye[0], KINO.eye[2], t)) + 0.6; if (KINO.eye[1] < gy) KINO.eye[1] = gy;
+    return {eye:KINO.eye.slice(), tgt:KINO.tgt, fov};
+  }
   function frame(){
     if (!active){ raf = 0; return; }
     raf = requestAnimationFrame(frame);
     if (document.hidden || NO3D) return;
     resize();
     const now = performance.now(), dt = Math.min(0.1, (now - lastF) / 1000), rdt = Math.max(1e-3, (now - lastF) / 1000); lastF = now;
-    FPS.v = FPS.v ? FPS.v * 0.95 + 0.05 / rdt : 1 / rdt; qualTick(dt, FPS.v, now); if (FPS.el && now - FPS.at > 500){ FPS.at = now; FPS.el.textContent = Math.round(FPS.v) + ' fps · ' + (1000 / FPS.v).toFixed(1) + ' ms'; }
+    FPS.v = FPS.v ? FPS.v * 0.95 + 0.05 / rdt : 1 / rdt; FRAMEMS = FRAMEMS * 0.8 + Math.min(500, rdt * 1000) * 0.2; qualTick(dt, FPS.v, now); if (now - FPS.at > 500){ FPS.at = now; const fe = fpsEl(); if (fe) fe.textContent = Math.round(FPS.v) + ' bilder/s · ' + (1000 / FPS.v).toFixed(1) + ' ms · ' + ['Lav', 'Middels', 'Høy'][QUAL.lvl]; }
     const t = (now - T0) / 1000, frac = currentFrac(), H = (S.t + frac) / 60;
     computeEnv(H); updateBoat(dt, t, frac); updateWaves(dt, H); updateWake(); updateNear(); ssStep(rdt); updateShadows(); updateChunks(CH.size ? 2 : 999);
     // camera

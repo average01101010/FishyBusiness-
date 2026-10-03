@@ -43,14 +43,16 @@ function nextEvent(){
   }
   ev.sort((x, y) => x.t - y.t); return ev[0] || null;
 }
+// innerHTML only when the markup has changed (the tick writes the boxes five times a second); el.dataset.v counts the changes
+function setHtml(el, h){ if (el._h === h) return false; el._h = h; el.innerHTML = h; el.dataset.v = (+el.dataset.v || 0) + 1; return true; }
+let hudV = '', hudT = 0;
 function renderHud(){
   const b = S.boat, H = S.t / 60, W = windAt(H), hs = hsAt(b.pos, H), atSea = b.status !== 'port';
   const lvl = riskLevel(W, hs);
   const dot = b.status === 'adrift' || b.status === 'engine' ? 'bad' : (b.status === 'sailing' || b.status === 'fishing') ? 'go' : '';
   document.body.classList.toggle('sailing', b.status === 'sailing');
-  requestAnimationFrame(() => { const mw = $('mapwrap').style; mw.setProperty('--gpsTop', (hud.offsetTop + hud.offsetHeight + 6) + 'px'); mw.setProperty('--hudW', hud.offsetWidth + 'px'); });
   const nx = nextEvent();
-  hud.innerHTML = '<div class="hd"><span>' + dayStr(S.t / 60) + ' ' + hm(S.t / 60) + '</span><b class="' + (S.cash < 0 ? 'r2' : '') + '">' + kr(S.cash) + '</b></div><div class="st"><i class="dot ' + dot + '"></i>' + statusText() + '</div>' + (nx ? '<div class="st nx">⏱ ' + nx.txt + ' ' + inReal(nx.t - S.t) + ' <small>(' + hm(nx.t / 60) + ')</small></div>' : '') +
+  setHtml(hud, '<div class="hd"><span>' + dayStr(S.t / 60) + ' ' + hm(S.t / 60) + '</span><b class="' + (S.cash < 0 ? 'r2' : '') + '">' + kr(S.cash) + '</b></div><div class="st"><i class="dot ' + dot + '"></i>' + statusText() + '</div>' + (nx ? '<div class="st nx">⏱ ' + nx.txt + ' ' + inReal(nx.t - S.t) + ' <small>(' + hm(nx.t / 60) + ')</small></div>' : '') +
     (S.fleet && S.fleet.length > 1 ? '<div class="row"><span>' + (S.lang === 'no' ? 'Båt' : 'Vessel') + '</span><b>' + S.boatName + (meAboard() ? ' ⚓' : '') + '</b></div>' : '') +
     '<div class="row"><span>' + t('wind') + '</span><b>' + dirName(windDir(H)) + ' ' + fmt(W, 1) + ' m/s</b></div>' +
     '<div class="row"><span>' + t('waves') + '</span><b>' + fmt(hs, 1) + ' m' + (atSea ? ' <span class="r' + lvl + '">' + t('risk' + lvl) + '</span>' : '') + '</b></div>' +
@@ -61,7 +63,10 @@ function renderHud(){
     (() => { const e = S.energy == null ? 100 : S.energy; return '<div class="row"><span>' + (S.lang === 'no' ? 'Energi' : 'Energy') + '</span><b class="' + (asleep() ? 'r2' : e < ENERGY.dim ? 'r2' : e < ENERGY.warn ? 'r1' : '') + '">' + (asleep() ? (S.lang === 'no' ? 'sover' : 'asleep') : Math.round(e) + ' %') + '</b></div>'; })() +
     (streakPct() > 0 ? '<div class="row"><span>' + (S.lang === 'no' ? 'Bonus' : 'Bonus') + '</span><b>+' + fmt(streakPct(), 0) + ' %</b></div>' : '') +
     (() => { const cp = coldPen(S.t / 60); return cp > 0.03 ? '<div class="row"><span>' + (S.lang === 'no' ? 'Kulde' : 'Cold') + '</span><b class="cold">−' + Math.round(cp * 100) + ' % · ' + Math.round(effTemp(S.t / 60)) + ' °C</b></div>' : ''; })() +
-    (S.haill && haillF() > 0 ? '<div class="row"><span>' + (S.lang === 'no' ? 'Haill' : 'Luck') + '</span><b class="haill">' + HAILL[S.haill.type][S.lang] + ' ' + Math.round(haillF() * 100) + ' %</b></div>' : '');
+    (S.haill && haillF() > 0 ? '<div class="row"><span>' + (S.lang === 'no' ? 'Haill' : 'Luck') + '</span><b class="haill">' + HAILL[S.haill.type][S.lang] + ' ' + Math.round(haillF() * 100) + ' %</b></div>' : ''));
+  // the boxes under the status box in 3D take their place and width from it: measured when its content has changed and every 2 s (setting
+  // them on the chart's parent every tick restyled the whole chart)
+  if (hud.dataset.v !== hudV || performance.now() - hudT > 2000){ hudV = hud.dataset.v; hudT = performance.now(); requestAnimationFrame(() => { const mw = $('mapwrap').style, top = (hud.offsetTop + hud.offsetHeight + 6) + 'px', w = hud.offsetWidth + 'px'; if (mw.getPropertyValue('--gpsTop') !== top) mw.setProperty('--gpsTop', top); if (mw.getPropertyValue('--hudW') !== w) mw.setProperty('--hudW', w); }); }
 }
 // position/heading between simulation steps, so instruments and 3D move smoothly
 function liveFrac(){ return clamp(acc + (Date.now() - lastWall) / 1000 * GAME_RATE * S.mult / 60, 0, 0.999); }
@@ -118,9 +123,10 @@ const INSTR = (() => {
     const el = $('gps3d'), no = S.lang === 'no', on = S.boat.status !== 'port'; if (!el) return;
     if (el.hidden === on) el.hidden = !on; if (!on) return;
     const row = (k, v) => '<div class="row"><span>' + k + '</span><b>' + v + '</b></div>';
-    el.innerHTML = row(no ? 'Fart' : 'Speed', fmt(sog, 1) + ' kn') + row(no ? 'Kurs' : 'Course', deg3(pose.hd)) + row('POS', ll[0]) + row('', ll[1]) +
-      (nv ? row('WPT ' + nv.n, nv.wpt) + row('XTE', nv.xte) + row(no ? 'Neste' : 'Next', nv.at) + row('ETA ' + nv.dest, nv.eta) : '');
+    setHtml(el, row(no ? 'Fart' : 'Speed', fmt(sog, 1) + ' kn') + row(no ? 'Kurs' : 'Course', deg3(pose.hd)) + row('POS', ll[0]) + row('', ll[1]) +
+      (nv ? row('WPT ' + nv.n, nv.wpt) + row('XTE', nv.xte) + row(no ? 'Neste' : 'Next', nv.at) + row('ETA ' + nv.dest, nv.eta) : ''));
   }
+  const GPSC = {k:'', nx:null, st:null};
   function renderGPS(){
     const v3 = document.body.classList.contains('v3d'); if (!v3 && !document.body.classList.contains('vplot')) return;
     const pose = livePose(), b = S.boat, H = (S.t + pose.frac) / 60, sog = b.status === 'sailing' ? b.v : 0, ll = gpsLL(pose.p), no = S.lang === 'no', nv = navOf(pose, H, sog);
@@ -132,7 +138,10 @@ const INSTR = (() => {
       $('ecEtaL').textContent = 'ETA · ' + nv.dest.toUpperCase(); $('ecEta').textContent = nv.eta;
     }
     $('ecHdg').textContent = deg3(pose.hd); $('ecCog').textContent = deg3(pose.hd); $('ecSog').textContent = fmt(sog, 1) + ' kn'; $('ecPos').innerHTML = ll[0] + '<br>' + ll[1]; $('ecDepL').textContent = no ? 'DYBDE' : 'DEPTH'; $('ecDep').textContent = b.status === 'port' ? '–' : fmt(depthF(pose.p) + tideCD(H), 1) + ' m';
-    const th = tideH(H), up = tideH(H + 0.25) > th, nx = tideEvents(H, 14)[0], st = sunTimes(H);
+    // the next tide and the sun's day change slowly: worked out again every 10 game minutes or km
+    const tk = Math.floor(S.t / 10) + ':' + Math.round(pose.p.x) + ':' + Math.round(pose.p.y);
+    if (GPSC.k !== tk){ GPSC.k = tk; GPSC.nx = tideEvents(H, 14)[0]; GPSC.st = sunTimes(H); }
+    const th = tideH(H), up = tideH(H + 0.25) > th, nx = GPSC.nx && GPSC.nx.t > H ? GPSC.nx : (GPSC.nx = tideEvents(H, 14)[0]), st = GPSC.st;
     $('ecTideL').textContent = no ? 'TIDEVANN' : 'TIDE'; $('ecTide').textContent = (th >= 0 ? '+' : '') + fmt(th, 1) + ' m ' + (up ? '↑' : '↓') + (nx ? ' ' + (nx.kind === 'high' ? (no ? 'flo ' : 'HW ') : (no ? 'fjære ' : 'LW ')) + hm(nx.t) : '');
     $('ecSunL').textContent = no ? 'SOL' : 'SUN'; $('ecSun').textContent = st.always ? (no ? 'Midnattssol' : 'Midnight sun') : st.never ? (no ? 'Mørketid' : 'Polar night') : '↑' + (st.up ? hm(st.up) : '–') + ' ↓' + (st.dn ? hm(st.dn) : '–');
   }

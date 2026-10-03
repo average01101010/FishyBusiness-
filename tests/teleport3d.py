@@ -62,12 +62,12 @@ async def main():
         await pg.evaluate("() => { G3._debug.QUAL.fix = false; G3.quality('low'); }"); await pg.wait_for_timeout(2500)
         q1 = await pg.evaluate("(() => ({w:document.getElementById('gl').width, near:G3._debug.NEARM && G3._debug.NEARM.sx, lvl:G3.quality().lvl}))()")
         check(q1['lvl'] == 0 and q1['near'] < q0['near'] and q1['w'] <= q0['w'], 'Lav: kortere nærterreng og ikke flere piksler', (q0, q1))
-        # auto: 5 s at 20 frames a second steps down twice, 13 s at 60 does not go back up at once, after two minutes it does
+        # auto: 5 s at 20 frames a second steps down twice, 13 s at 60 does not go back up at once, after 30 s it does (8 s over 40 a level)
         a = await pg.evaluate("""() => { const Q = G3._debug.QUAL, tick = G3._debug.qualTick; G3.quality('auto'); Q.lvl = 2; Q.cap = 2; Q.bad = Q.good = 0; let now = 1e6; const out = [];
           for (let i = 0; i < 50; i++) tick(0.1, 20, now += 100); out.push(Q.lvl); for (let i = 0; i < 50; i++) tick(0.1, 20, now += 100); out.push(Q.lvl);
           for (let i = 0; i < 130; i++) tick(0.1, 60, now += 100); out.push(Q.lvl); now += 120000; for (let i = 0; i < 130; i++) tick(0.1, 60, now += 100); out.push(Q.lvl);
           Q.fix = true; Q.lvl = 2; return out; }""")
-        check(a == [1, 0, 0, 1], 'Auto: ned ett nivå etter 4 s under 28 bilder/s, ikke straks opp igjen, opp etter to minutter med god margin', a)
+        check(a[:3] == [1, 0, 0] and a[3] >= 1, 'Auto: ned ett nivå etter 4 s under 28 bilder/s, ikke straks opp igjen, opp etter 30 s med god margin', a)
         # the setting on the phone: Auto, Lav, Middels, Høy
         await pg.evaluate("PHONE.open('innst')"); nb = await pg.evaluate("document.querySelectorAll('#phView [data-pa=q3d]').length"); await pg.evaluate("PHONE.show(false)")
         check(nb == 4, 'Innstillinger på telefonen har grafikkvalget (Auto, Lav, Middels, Høy)', nb)

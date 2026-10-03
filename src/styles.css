@@ -546,3 +546,9 @@ body.v3d #gps3d:not([hidden]){display:block;position:absolute;z-index:4;left:8px
 .zoom button.rt.play{width:56px;height:56px;border-radius:50%;background:var(--mag);border-color:var(--mag);color:#fff;align-self:flex-end;box-shadow:0 4px 14px rgba(208,40,120,.45)}
 .zoom button.rt.play .i-pause{display:none} .zoom button.rt.play.pause .i-play{display:none} .zoom button.rt.play.pause .i-pause{display:block}
 .zoom button.rt.play.pause{background:#0a1620;border-color:#2c5870;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+/* 3D: no blurred backdrops (the sea under them changes every frame, so the blur was worked out again for every box each frame on the
+   tablet's GPU, 03.10.2026); the boxes are a little denser instead, all alike */
+body.v3d #hud,body.v3d #gps3d:not([hidden]),body.v3d #gps,body.v3d .ov,body.v3d .dk-b .dk-i,body.v3d #dockInfo,body.v3d #dockFan{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+body.v3d #hud,body.v3d #gps3d:not([hidden]),body.v3d #gps{background:rgba(6,16,24,.56)!important}
+body.v3d .ov,body.v3d #dockInfo{background:rgba(6,16,24,.56)}
+body.v3d .dk-b .dk-i{background:rgba(6,16,24,.7)}
