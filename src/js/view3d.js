@@ -134,8 +134,9 @@ const G3 = (() => {
     '\n#ifdef FAR\nfor(int i=4;i<10;i++){vec4 a=uWa[i];vec4 b=uWb[i];float wa=a.z*ampOf(a,b,S);lost+=wa*wa*0.456;}\n#endif\n' +
     'for(int i=10;i<13;i++)' + SEA_WAVE(false) +
     // ripples: eight short waves spread around the wind, analytic slopes (no grid), scaled by wind and gusts; in light air (Beaufort 0-1)
-    // only in patches, the cat's paws, and glassy between them
-    'float paw=mix(smoothstep(0.45,0.75,ns(P*0.013+w*uTime*0.5)),1.0,smoothstep(1.6,4.0,uWind));float ra=(0.004+0.0034*uWind)*gust*paw;\n#ifdef FAR\nlost+=ra*ra*6.0;\n#else\n' +
+    // only in patches, the cat's paws, and glassy between them; near calm they are a third as steep as they were, since a mirror-like
+    // sea shows every slope in its reflections and the sub-second ripples looked like the water shivering (the user, 03.10.2026)
+    'float paw=mix(smoothstep(0.45,0.75,ns(P*0.013+w*uTime*0.5)),1.0,smoothstep(1.6,4.0,uWind));float ra=(0.0015+0.0042*min(uWind,2.0)+0.0034*max(uWind-2.0,0.0))*gust*paw;\n#ifdef FAR\nlost+=ra*ra*6.0;\n#else\n' +
     'for(int j=0;j<8;j++){float fj=float(j);float ang=(fj-3.5)*0.36+sin(fj*2.3)*0.2;vec2 dir=w*cos(ang)+wp*sin(ang);float L=1.1+fj*0.42+fract(fj*0.618)*0.9;float k=6.2832/L;float att=smoothstep(2.0,7.0,L/px);' +
     'float f=k*dot(dir,P)-sqrt(9.81*k+0.074*k*k*k/1025.0)*uTime+fj*1.9;float sl=ra*cos(f);N.x-=dir.x*sl*att;N.z-=dir.y*sl*att;lost+=sl*sl*(1.0-att)*0.5+ra*ra*0.5*(1.0-att);}\n#endif\n' +
     // the boat's own waves: their slopes (the short ones too, as shading), and the bow wave and the stern wave breaking white when steep
