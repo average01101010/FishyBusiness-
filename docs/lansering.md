@@ -166,6 +166,18 @@ Jonas' ønske 04.10.2026 er et dashbord med all bruksinformasjon, og lista hans 
   - den sosiale utløseren for kjøp
 - **Betalte boostere** finnes ikke ennå.
 
+### Tilgang: bare Jonas (hans krav 04.10.2026: «Dette må ingen andre enn meg ha tilgang til»)
+
+- **Låsen ligger i databasen, ikke i siden.**
+  - Reglene i tabellene (Row Level Security) gir lesetilgang til målingene bare til én bruker-ID, din.
+  - Spillerne kan bare skrive sine egne hendelser og kan ikke lese noe.
+  - Adminsiden har ingen data og ingen hemmelige nøkler i seg. Uten innloggingen din viser den ingenting.
+- **Totrinnsinnlogging er påkrevd.** Regelen krever at innloggingen er gjort med kode fra en autentiseringsapp (Supabase MFA, `aal2`), så et stjålet passord er ikke nok.
+- **Den hemmelige nøkkelen** (`service_role`) skal aldri ligge i nettleseren eller i repoet, bare i hemmelighetene til Supabase og GitHub.
+- **Slå på totrinnsinnlogging** også hos Supabase, GitHub, Stripe, domeneregistraren og e-posten. Den som kommer inn der, kommer inn overalt.
+- **Ingen lenke fra spillet** til `/admin`, og siden er merket `noindex`. Sikkerheten hviler likevel ikke på at siden er skjult.
+- **Claude** ser ikke dataene med mindre du gir meg nøkler. Under utviklingen bruker jeg testdata.
+
 ### Personvern (må på plass for at dette er lov)
 
 - En fast nettleser-ID for statistikk krever samtykke (ekomloven, sjekk). Ved første start spør spillet: «Vil du dele bruksstatistikk for å gjøre spillet bedre?»
