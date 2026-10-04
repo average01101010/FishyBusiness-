@@ -15,7 +15,7 @@
 // the fleet; G3.sndSrc) is fainter with the distance, (ref / d)^0.9 from ref metres out, duller (a lower low-pass) and to the left or
 // right as it lies from the camera. The wind, the rain and the sea round you are where you are. The bridge watch alarm is never under
 // half. In the 2D chart the ear is aboard, as before.
-const SNDREF = {eng:12, wash:10, haul:5, reel:4, slap:8, gull:12, crane:18, beep:20, chute:15, pump:6, alarm:8, npc:12, npcBig:30};
+const SNDREF = {eng:12, wash:10, haul:5, reel:4, slap:8, gull:12, crane:18, beep:20, chute:15, pump:6, alarm:8, npc:12, npcBig:30, air:350};
 const SND = (() => {
   let ac = null, master = null, L = null, started = false, lastIce = null, craneT = 0, beepT = 0, alarmT = 0, EAR = null;
   const LV = {};   // the levels set at the last tick (for the tests)
@@ -39,6 +39,9 @@ const SND = (() => {
       f.connect(g); o1.connect(am); o2.connect(g2); lfo.connect(lg); lg.connect(am.gain); L.eng = {g, p, f, o1, o2, lfo, lg}; }
     // the three nearest boats of the fleet: a diesel each, low and dull
     for (let k = 0; k < 3; k++){ const {g, p} = pgain(), f = filt('lowpass', 260, 1.5), o1 = osc('sawtooth', 32), o2 = osc('square', 16), g2 = gain(0.4, f); o1.connect(f); o2.connect(g2); f.connect(g); L['npc' + k] = {g, p, f, o1, o2}; }
+    // the nearest aircraft: pink noise through a low-pass with the propellers' hum, chopped at the blade rate for a helicopter
+    { const {g, p} = pgain(), f = filt('lowpass', 600, 0.8), am = gain(0.6, f), o = osc('sawtooth', 82), og = gain(0.12, f), lfo = osc('sine', 0.3), lg = gain(0.05);
+      loop(PINK).connect(am); o.connect(og); lfo.connect(lg); lg.connect(am.gain); f.connect(g); L.air = {g, p, f, o, lfo, lg}; }
     // the wash and the sea round her
     { const g = gain(0, master), f = filt('lowpass', 800, 0.7); loop(PINK).connect(f); f.connect(g); L.sea = {g, f}; }
     // the wind
@@ -126,6 +129,10 @@ const SND = (() => {
     set('haul', (b.gop && b.gop.op === 'haul' ? 0.07 : b.gop ? 0.025 : 0) * aH.g, 0.3); place('haul', aH);
     if (b.status === 'fishing' && !b.gop && Math.random() < 0.02) L.reel.until = now + 2 + Math.random() * 2;
     const aR = at(boat, SNDREF.reel); set('reel', b.status === 'fishing' && L.reel.until > now ? 0.03 * aR.g : 0, 0.15); place('reel', aR);
+    // the nearest aircraft (in 3D only), heard far: a drone that grows and fades as it passes
+    const air = EAR && SRC.air ? SRC.air : null, aA = at(air, SNDREF.air);
+    if (air){ const hl = !!air[3]; L.air.o.frequency.setTargetAtTime(hl ? 24 : 82, now, 0.5); L.air.lfo.frequency.setTargetAtTime(hl ? 21 : 0.3, now, 0.5); L.air.lg.gain.setTargetAtTime(hl ? 0.5 : 0.05, now, 0.5); L.air.f.frequency.setTargetAtTime((hl ? 480 : 700) * aA.lp, now, 0.5); }
+    set('air', air ? 0.22 * aA.g : 0, 1.0); place('air', aA);
     // the three nearest boats of the fleet that are under way or idling (in 3D only: the 2D chart has no place to hear them from)
     const npc = (EAR && SRC.npc ? SRC.npc : []).map(n => ({n, a:at([n.x, 2, n.z], n.big ? SNDREF.npcBig : SNDREF.npc)})).filter(o => o.a.d < 2500).sort((x, y) => x.a.d - y.a.d);
     for (let k = 0; k < 3; k++){

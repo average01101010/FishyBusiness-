@@ -1583,6 +1583,24 @@ Jonas' liste: oppgraderinger, kvotehandel, kikkert, raskere fangst, fortøying, 
   - **Blåsestaken fra Blender** står i begge ender av hvert sett: oransje flottør, stang med blylodd under, svart flagg og radarreflektor. Dreggen har fire fliker.
   - **Trekking:** fisk kommer opp i maskene og på krokene, så mange som settet har igjen, med artene i forhold.
   - **Test:** ingen ny test, fordi det bare er tegning. Det er sjekket med skjermbilder.
+- **Fly og helikopter** (`05c-air.js`; `tools/air/fly.py`, `src/data/air.b64`):
+  - **Modellene** er generiske og uten flyselskap:
+    - et regionalt propellfly: høyvinget, med T-hale, to motorer og firebladede propeller, 22 m langt og 26 m mellom vingetuppene, omtrent som Dash 8-100/200
+    - et tomotors helikopter med fembladet rotor på 14 m
+  - **Plassene:**
+    - 37 flyplasser og 19 helikopterplasser (baser og sykehus) i en håndliste
+    - koordinatene er skrevet fra hukommelsen og ligger innenfor noen hundre meter
+  - **Rutene:**
+    - 40 flyruter og 13 helikopterruter, et tenkt nett og ikke en ekte rutetabell
+    - hver rute går 1–4 ganger om dagen hver vei, mellom kl. 06 og 22, litt ulikt fra dag til dag
+  - **Flygingen:**
+    - flyet stiger med 8 %, flyr 470 km/t i opptil 5 500 m høyde og kommer inn på 3 grader
+    - helikopteret flyr 250 km/t i 250–500 m høyde
+  - **I 3D** vises de innenfor 15 km:
+    - propeller og rotorer går rundt
+    - lanternene lyser om natta, og de røde antikollisjonslysene og de hvite strobene blinker hele døgnet
+    - lyden er en dur som vokser og avtar, og helikopteret har rotorslag
+  - **Test:** `airtest.py` sjekker rutetabellen, høydeprofilen, at ingen fly går om natta, at tabellen er lik hver gang, og målene på modellene.
 
 ## 6. Regelverk og kilder
 
