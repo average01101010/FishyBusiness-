@@ -186,7 +186,8 @@ function sell(){
 }
 
 // ---------- modal ----------
-function modal(html){ const m = $('modal'); m.innerHTML = '<div class="box" role="dialog" aria-modal="true">' + html + '</div>'; m.hidden = false; const b = m.querySelector('[data-close]'); if (b){ b.onclick = () => { m.hidden = true; }; b.focus(); } }
+// every [data-close] button closes the dialog (the cloud's consent and save dialogs have two); the first one gets the focus
+function modal(html){ const m = $('modal'); m.innerHTML = '<div class="box" role="dialog" aria-modal="true">' + html + '</div>'; m.hidden = false; const bs = m.querySelectorAll('[data-close]'); bs.forEach(b => { b.onclick = () => { m.hidden = true; }; }); if (bs[0]) bs[0].focus(); }
 // «#notut» in the address starts a new game without the first-trip tutorial (the automated tests use it)
 const NOTUT = /notut/.test(location.hash);
 function showIntro(namesOnly){
