@@ -828,7 +828,11 @@ Jonas' valg: gratis å spille med kjøp via Stripe, påkrevd innlogging med Work
   - Caddy på Hetzner med HTTPS. Kartpakkene bufres i ett år, og siden, service workeren og kartmanifestet sjekkes hver gang.
   - En egen bruker for utrulling som bare kan kjøre `rsync` til `/srv/detstorebla` (rrsync).
   - En brannmur som bare slipper inn port 22, 80 og 443, og automatiske sikkerhetsoppdateringer.
-  - Utrullingen går fra `main` når hemmelighetene `DEPLOY_HOST`, `DEPLOY_KEY` og `DEPLOY_KNOWN_HOSTS` finnes.
+  - Utrullingen går fra `main` og arbeidsgrenen når hemmelighetene `DEPLOY_HOST`, `DEPLOY_KEY` og `DEPLOY_KNOWN_HOSTS` finnes.
+  - **`setup.sh` kjøres rett fra GitHub** (`curl … | bash -s detstorebla.no`) og henter da `Caddyfile` fra samme gren (`DSB_REF`).
+    - Uten nøkkel lager skriptet deploy-nøkkelen på serveren og skriver ut de tre hemmelighetene. Slik går nøkkelen aldri gjennom chatten.
+    - Først sjekker skriptet tre ting: SSH-portene holdes åpne, det stopper hvis noe annet bruker port 80 eller 443, og en fremmed Caddyfile tas vare på som `.bak`.
+    - Det legger ut en «kommer snart»-side til første opplasting.
   - `try_files {path} {path}.html`, så `/personvern` og `/vilkar` virker uten `.html`.
 - **Personvern og vilkår** (`src/legal/`, utkast 04.10.2026):
   - `build.mjs` legger `personvern.html` og `vilkar.html` ved siden av spillet, med stilen fra `legal.css` satt inn.

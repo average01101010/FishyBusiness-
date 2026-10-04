@@ -21,7 +21,18 @@ Laget 04.10.2026, da spillet fikk navnet Det Store Blå og domenet detstorebla.n
   - en spiller ser 0 rader og kommer ikke inn i `admins`
   - Jonas uten tofaktor får «admin only», og med `aal2` får han dashbordet
 - **Rådgiveren:** at spillet og innloggede brukere kan kalle funksjonene, er med vilje, og hver funksjon sjekker selv hvem som spør. «Leaked password protection» kan slås på under Auth → Attack Protection, trolig bare på betalt plan (ikke sjekket).
-- **Etterpå:** serveren (A1 og G), og deretter Stripe.
+- **Serveren (04.10.2026):**
+  - Hetzner CX23 `ubuntu-4gb-hel1-10`, 65.108.252.250, Helsinki, med 2 vCPU, 4 GB minne, 40 GB disk og 20 TB trafikk. Det er god margin for statiske filer.
+  - Domenet ligger hos Webhuset.no.
+  - **Oppsettet:**
+    1. DNS: `A` og `AAAA` for `@`, og `CNAME` for `www`.
+    2. Termius med root-passordet, som nullstilles under Rescue i Hetzner.
+    3. `curl -fsSL https://raw.githubusercontent.com/average01101010/FishyBusiness-/ccr-5e1ba2f4-pusvyd/tools/server/setup.sh | bash -s detstorebla.no`
+    4. De tre hemmelighetene skriptet skriver ut, inn i GitHub.
+    5. `shred -u /root/dsb-deploy`.
+    6. «Re-run all jobs» på den siste kjøringen av «Appen på Hetzner».
+  - WorkOS trenger redirect-adressen `https://detstorebla.no/` med skråstrek, fordi spillet sender `location.origin + location.pathname`.
+- **Etterpå:** Stripe.
 
 ## A. Det du må gjøre selv
 

@@ -1,12 +1,13 @@
 # Det Store Blå on the Hetzner server (docs/lansering.md G): the app built as for Pages (pwa.yml) and uploaded with rsync over SSH
-# to the deploy user that tools/server/setup.sh made. Runs on a push to main that changes the game, and by hand from the Actions tab.
+# to the deploy user that tools/server/setup.sh made. Runs on a push to main or the working branch (as pwa.yml) that changes the game,
+# and by hand from the Actions tab once the file is on main; until then a run is started again with «Re-run all jobs».
 # Needs the secrets DEPLOY_HOST (the server's address), DEPLOY_KEY (the private deploy key) and DEPLOY_KNOWN_HOSTS (ssh-keyscan of
 # the server); without DEPLOY_HOST it builds and stops.
 name: Appen på Hetzner
 on:
   push:
-    branches: [main]
-    paths: ['src/**', 'build.mjs', 'tools/map/kart.json', 'tools/map/game.py', '.github/workflows/deploy.yml']
+    branches: [main, ccr-5e1ba2f4-pusvyd]
+    paths: ['src/**', 'build.mjs', 'tools/map/kart.json', 'tools/map/game.py', 'tools/server/**', '.github/workflows/deploy.yml']
   workflow_dispatch:
 permissions:
   contents: read
