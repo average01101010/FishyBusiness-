@@ -848,7 +848,7 @@ const G3 = (() => {
     const done = new Set();
     for (const pt of PORTS) for (const kind of ['main', 'bunker']) for (const ty of Object.keys(BEAM)){
       const bp = berthPose(pt.id, ty, kind); if (!bp) continue; const f = bp.face, key = faceKey(f); if (done.has(key)) continue; done.add(key);
-      if (f.unit){ const M = unitModel(); if (M) QB[key] = M.A.bollards.map(q => { const w = unitW(UNITS[f.unit], q[0], q[2]); return {x:w[0], z:w[1], a:(w[0] - f.x) * f.ux + (w[1] - f.z) * f.uz}; }); continue; }
+      if (f.unit){ const M = unitModel(UNITS[f.unit].v); if (M) QB[key] = M.A.bollards.map(q => { const w = unitW(UNITS[f.unit], q[0], q[2]); return {x:w[0], z:w[1], a:(w[0] - f.x) * f.ux + (w[1] - f.z) * f.uz}; }); continue; }
       const u = [f.ux, f.uz], n = [f.nx, f.nz], a0 = Math.max(-f.hl + 1, bp.a - 30), a1 = Math.min(f.hl - 1, bp.a + 30), am = (a0 + a1) / 2, len = a1 - a0;
       const at = (a, o) => [f.x + u[0] * a + n[0] * o, f.z + u[1] * a + n[1] * o];
       obox(nb, at(am, 0.1), u, n, len, 0.2, QTOP - 1.5, 0.35, WOOD); obox(nb, at(am, 0.1), u, n, len, 0.2, QTOP - 0.55, 0.3, WOOD);
@@ -1144,17 +1144,19 @@ const G3 = (() => {
   }
 
   // ---------- the harbour unit (tools/harbour/kaimottak.py): quay, fish plant, crane, forklift, ice silo and bunker station in one ----------
-  // One model for every harbour with a plant (UNITS, 01-world.js): drawn in full within 900 m and in its simple version further out.
+  // Three looks (U.v in UNITS, 01-world.js: a the plant of today, b the old fish plant, c the big plant; tools/harbour/kaimottak.py),
+  // each with the same quay, crane, forklift, door and chute in the same places: drawn in full within 900 m and in its simple version
+  // further out; a look whose model is not in the page falls back to a.
   // Its moving parts (the crane's slewing column, the boom and its extension, the hook, the forklift and its forks, the roller door
   // and the ice chute) stand at rest in every harbour, and the plant nearest the camera works them (drawPlant).
-  let UMOD = null;
-  function unitModel(){
-    if (UMOD !== null) return UMOD;
-    const G = glbHas('harbour') ? glbLoad('harbour') : null; if (!G || !G.parts.lod0){ UMOD = false; return UMOD; }
+  const UMOD = {};
+  function unitModel(v){
+    const k = v && v !== 'a' && glbHas('harbour-' + v) ? v : 'a';
+    if (k in UMOD) return UMOD[k];
+    const G = k === 'a' ? (glbHas('harbour') ? glbLoad('harbour') : null) : glbLoad('harbour-' + k); if (!G || !G.parts.lod0){ UMOD[k] = false; return false; }
     const P = G.parts, gl0 = P.glass || {p:[], n:[], c:[]};
-    UMOD = {near:upA({p:P.lod0.p.concat(gl0.p), n:P.lod0.n.concat(gl0.n), c:P.lod0.c.concat(gl0.c)}), far:upA(P.lod1), house:upA(P.crane_house), boom1:upA(P.crane_boom1), boom2:upA(P.crane_boom2),
+    return UMOD[k] = {near:upA({p:P.lod0.p.concat(gl0.p), n:P.lod0.n.concat(gl0.n), c:P.lod0.c.concat(gl0.c)}), far:upA(P.lod1), house:upA(P.crane_house), boom1:upA(P.crane_boom1), boom2:upA(P.crane_boom2),
       hook:upA(P.crane_hook), truck:upA(P.truck), forks:upA(P.truck_forks), door:upA(P.door), chute:upA(P.chute), A:G.ex.anchors};
-    return UMOD;
   }
   // the unit's frame: a point [x, y, z] in it, in the world; the model's matrix (eye-relative)
   const unitP = (U, p) => { const w = unitW(U, p[0], p[2]); return [w[0], p[1], w[1]]; };
@@ -1171,7 +1173,7 @@ const G3 = (() => {
   // the unit's moving parts: the crane at pose q, the forklift st {x, z, h, fl, loads}, the door open by k (0-1), the chute at angle
   // ch (in the unit's frame, 0 = straight out over the berth); what hangs from the hook is drawn by the caller
   function drawUnitParts(P, eye, q, st, k, ch){
-    const M = unitModel(), U = P.unit, A = M.A, rel = p => [p[0] - eye[0], p[1] - eye[1], p[2] - eye[2]], g = craneGeo(P, q);
+    const U = P.unit, M = unitModel(U.v), A = M.A, rel = p => [p[0] - eye[0], p[1] - eye[1], p[2] - eye[2]], g = craneGeo(P, q);
     const base = rel([P.crane[0], A.crane.base[1], P.crane[1]]), heel = rel([P.crane[0], A.crane.heel[1], P.crane[1]]);
     drawN(M.house, chain(M4.T(base[0], base[1], base[2]), M4.RY(q.a)));
     const BM = chain(M4.T(heel[0], heel[1], heel[2]), M4.RY(q.a), M4.RX(-g.th)); drawN(M.boom1, BM); drawN(M.boom2, chain(BM, M4.T(0, 0, g.e)));
@@ -1186,9 +1188,9 @@ const G3 = (() => {
   // the units' quays and buildings: far ones in their simple version; near ones in full with their moving parts at rest, but for the
   // plant that works them (skip)
   function drawUnits(eye, VP, near, far, skip){
-    const M = unitModel(); if (!M) return; nSetup(VP);
+    if (!unitModel()) return; nSetup(VP);
     for (const U of UNITA){
-      const d = Math.hypot(U.o[0] - eye[0], U.o[1] - eye[2]); if (d > far) continue;
+      const d = Math.hypot(U.o[0] - eye[0], U.o[1] - eye[2]); if (d > far) continue; const M = unitModel(U.v);
       const full = near && d / ZF() < 900; drawN(full ? M.near : M.far, unitMat(U, eye));
       const P = full && U.id !== skip && PLANTS.find(q => q.id === U.id); if (P) drawUnitParts(P, eye, craneIdle(P, 0), fkRest(P), 0, P.chRest);
     }
@@ -1197,7 +1199,7 @@ const G3 = (() => {
   // ---------- fish plants: the harbour unit's crane, forklift, door and chute at work, and the people on the quay ----------
   const PLANTS = []; let PM = null;
   function plantLayout(pt){
-    const U = UNITS[pt.id], M = unitModel(), bp = berthPose(pt.id, 'skiff'); if (!U || !M || !bp) return null;
+    const U = UNITS[pt.id], M = U && unitModel(U.v), bp = berthPose(pt.id, 'skiff'); if (!U || !M || !bp) return null;
     const A = M.A, f = bp.face, u = [f.ux, f.uz], n = [f.nx, f.nz], at = (a, o) => [f.x + u[0] * a + n[0] * o, f.z + u[1] * a + n[1] * o], W = p => unitW(U, p[0], p[2]);
     const onQuay = p => { const [lx, lz] = unitL(U, p[0], p[1]); return Math.abs(lx) <= UNIT.E + 0.1 && lz <= 0.1 && lz >= -UNIT.B - 0.1; };
     const gy = p => onQuay(p) ? QTOP : Math.max(0.4, terrH(p[0], p[1]));
@@ -1208,11 +1210,11 @@ const G3 = (() => {
   }
   function buildPlants(){
     PLANTS.length = 0;
-    const M = unitModel(), ry = U => Math.atan2(U.n[0], U.n[1]);
+    const ry = U => Math.atan2(U.n[0], U.n[1]);
     for (const pt of PORTS){
       if (!pt.mottak) continue; const P = plantLayout(pt); if (!P) continue; PLANTS.push(P);
       // the camera stays out of the quay's block, the plant, the silo and the tank
-      for (const [cx, cz, sx, sz, y0, y1] of M.A.solids){ const c = unitW(P.unit, cx, cz); camSolid(c[0], c[1], sx, sz, ry(P.unit), y0, y1); }
+      for (const [cx, cz, sx, sz, y0, y1] of unitModel(P.unit.v).A.solids){ const c = unitW(P.unit, cx, cz); camSolid(c[0], c[1], sx, sz, ry(P.unit), y0, y1); }
     }
   }
   // the moving parts, built once and drawn with a transform; the workers are drawn joint by joint
@@ -1251,7 +1253,7 @@ const G3 = (() => {
   // forklift stands at its spot (the places are the unit's, clear of the forklift's route)
   function plantRounds(P){
     if (P.rounds) return P.rounds;
-    const R = unitModel().A.rounds, W = q => unitW(P.unit, q[0], q[2]), face = (p, q) => Math.atan2(q[0] - p[0], -(q[1] - p[1])), seaH = Math.atan2(P.n[0], -P.n[1]), along = Math.atan2(P.u[0], -P.u[1]);
+    const R = unitModel(P.unit.v).A.rounds, W = q => unitW(P.unit, q[0], q[2]), face = (p, q) => Math.atan2(q[0] - p[0], -(q[1] - p[1])), seaH = Math.atan2(P.n[0], -P.n[1]), along = Math.atan2(P.u[0], -P.u[1]);
     const c = R.coil.map(W), h = R.hose.map(W), sw = R.sweep.map(W), cf = R.coffee.map(W);
     return P.rounds = [
       {v:1.1, st:[{p:c[0], d:24, task:'coil', h:seaH}, {p:c[1], d:20, task:'coil', h:seaH}, {p:c[2], d:14, task:'look', h:seaH}]},
@@ -1330,7 +1332,7 @@ const G3 = (() => {
   // inside the deck (unittest.py checks it). Its speed is set so a run takes at most two lifts.
   function fkRun(P){
     if (P.run) return P.run;
-    const T = unitModel().A.truck, W = q => unitW(P.unit, q[0], q[2]), c = T.arc, r = T.r;
+    const T = unitModel(P.unit.v).A.truck, W = q => unitW(P.unit, q[0], q[2]), c = T.arc, r = T.r;
     const arc = []; for (let k = 0; k <= 8; k++){ const a = Math.PI / 2 * k / 8; arc.push(W([c[0] - r * Math.sin(a), 0, c[2] + r * Math.cos(a)])); }
     const wait = W(T.wait), pick = W(T.pick), inn = W(T.in), inPath = [pick, ...arc, inn], outPath = [...inPath].reverse().concat([wait]);
     const hd = (a, b) => Math.atan2(b[0] - a[0], -(b[1] - a[1])), plen = pts => pts.reduce((s, q, i) => i ? s + Math.hypot(q[0] - pts[i - 1][0], q[1] - pts[i - 1][1]) : 0, 0);
@@ -1408,7 +1410,7 @@ const G3 = (() => {
     const rel = (x, y, z) => [x - eye[0], y - eye[1], z - eye[2]], night = env.night > 0.3, hr = gDate(S.t / 60).getUTCHours(), LS = landScene(P, T, BMrel, eye), onShift = !!LS || (hr >= 6 && hr < 22);
     P.scene = LS;
     const dt = P.pT ? clamp(T - P.pT, 0, 0.5) : 0; P.pT = T;
-    const pose = LS ? LS.pose : craneIdle(P, T), FK = LS ? LS.fk : fkRest(P), U = P.unit, A = unitModel().A;
+    const pose = LS ? LS.pose : craneIdle(P, T), FK = LS ? LS.fk : fkRest(P), U = P.unit, A = unitModel(U.v).A;
     // the roller door (on a sensor) rolls up as the forklift turns in towards it, is open before the forks reach it, and rolls down
     // as it backs out
     const [, fz] = unitL(U, FK.x, FK.z), pz = A.truck.pick[2], az = A.truck.arc[2]; P.doorK = ease(clamp((pz - fz) / (pz - az), 0, 1));
@@ -1616,7 +1618,7 @@ const G3 = (() => {
       const pa = clamp(bp.a + 2.4, -f.hl + 1, f.hl - 1), B = {id:pt.id, kind, bp, f, u, n, at, pa, pump:at(pa, -1.5), gy:() => QTOP, spray:0};
       B.outlet = at(pa, -1.15); B.sign = at(clamp(bp.a - 3.5, -f.hl + 0.5, f.hl - 0.5), -0.9);
       // a harbour unit has its own pump, hose reel, tank and sign: only the meter and the hose are drawn
-      const U = UNITS[pt.id], M = U && unitModel();
+      const U = UNITS[pt.id], M = U && unitModel(U.v);
       if (M){ const W = q => unitW(U, q[0], q[2]); B.unit = true; B.pump = W(M.A.pump); B.outlet = W(M.A.reel); B.meterAt = W(M.A.meter); B.meterY = M.A.meter[1]; BUNKERS.push(B); continue; }
       // the pump: cabinet with a red top, the hose reel on its side
       obox(nb, B.pump, u, n, 0.8, 0.55, QTOP, 1.55, TANK); obox(nb, B.pump, u, n, 0.86, 0.6, QTOP + 1.55, 0.14, RED);

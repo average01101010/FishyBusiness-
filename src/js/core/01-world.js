@@ -227,11 +227,14 @@ const portById = id => PORTS.find(p => p.id === id);
 // for 10 m on), measured along every metre of the back from the view's packs (04.10.2026) where that land is within 70 m, at least
 // 4 m deep all along the back (where the shore turns away at a corner, the block's back wall stands on that apron), simplified to 1 m.
 // Its sides slope down to the seabed (view3d.js unitTerr); in the simulation it is land, as the block is.
+// v is the plant's look (tools/harbour/kaimottak.py; a when left out): c the big plant where the register's receiver takes in over
+// 5 000 t a year (Senjahopen: Nergård, Husøy: Brødrene Karlsen), b the old fish plant where it takes under 1 000 t, mostly from
+// small boats (Gryllefjord, Torsken, Brensholmen), a the plant of today elsewhere (src/data/mottak.json, 04.10.2026)
 const UNIT = {E:27.4, B:24.4, bot:-9, basinX:33.4, basinZ:26, dredge:6.6, berth:{main:[-5, 24], bunker:[16.5, 23]}};
 const UNITS = {
-  botnhamn:{o:[53282.5, 23499.9], u:[-0.993, -0.116], f:[27.4,-24.4, 27.4,-70.9, 12,-65.9, 9,-61.4, 7,-28.4, -27.4,-28.4, -27.4,-24.4]}, husoy:{o:[43788.5, 19672.7], u:[-0.12, -0.993], f:[27.4,-24.4, 27.4,-28.4, -27.4,-28.4, -27.4,-24.4]}, senjahopen:{o:[36807.1, 25112.1], u:[0.876, -0.483], f:[27.4,-24.4, 27.4,-35.9, 9,-46.4, -2,-28.4, -9,-28.4, -27.4,-39.4, -27.4,-24.4]},
-  gryllefjord:{o:[20312.3, 39841.9], u:[-0.947, -0.32], f:[27.4,-24.4, 27.4,-28.4, -27.4,-28.4, -27.4,-24.4]}, sommaroy:{o:[56736.6, 9544.3], u:[-0.707, -0.707], f:[27.4,-24.4, 27.4,-28.4, -27.4,-28.4, -27.4,-24.4]}, brensholmen:{o:[58576.6, 12633.9], u:[-0.766, -0.643], f:[27.4,-24.4, 27.4,-80.4, 12,-59.4, 8,-47.9, 7,-38.9, -7,-28.4, -27.4,-28.4, -27.4,-24.4]},
-  torsken:{o:[21862.9, 42573.6], u:[0.977, 0.215], f:[27.4,-24.4, 27.4,-32.9, 4,-28.4, -27.4,-28.4, -27.4,-24.4]}, frovag:{o:[19637.0, 71900.4], u:[0.189, -0.982], f:[27.4,-24.4, 27.4,-47.9, 13,-47.4, -10,-43.4, -21,-65.4, -24,-69.9, -27.4,-71.9, -27.4,-24.4]}
+  botnhamn:{o:[53282.5, 23499.9], u:[-0.993, -0.116], f:[27.4,-24.4, 27.4,-70.9, 12,-65.9, 9,-61.4, 7,-28.4, -27.4,-28.4, -27.4,-24.4]}, husoy:{o:[43788.5, 19672.7], u:[-0.12, -0.993], v:'c', f:[27.4,-24.4, 27.4,-28.4, -27.4,-28.4, -27.4,-24.4]}, senjahopen:{o:[36807.1, 25112.1], u:[0.876, -0.483], v:'c', f:[27.4,-24.4, 27.4,-35.9, 9,-46.4, -2,-28.4, -9,-28.4, -27.4,-39.4, -27.4,-24.4]},
+  gryllefjord:{o:[20312.3, 39841.9], u:[-0.947, -0.32], v:'b', f:[27.4,-24.4, 27.4,-28.4, -27.4,-28.4, -27.4,-24.4]}, sommaroy:{o:[56736.6, 9544.3], u:[-0.707, -0.707], f:[27.4,-24.4, 27.4,-28.4, -27.4,-28.4, -27.4,-24.4]}, brensholmen:{o:[58576.6, 12633.9], u:[-0.766, -0.643], v:'b', f:[27.4,-24.4, 27.4,-80.4, 12,-59.4, 8,-47.9, 7,-38.9, -7,-28.4, -27.4,-28.4, -27.4,-24.4]},
+  torsken:{o:[21862.9, 42573.6], u:[0.977, 0.215], v:'b', f:[27.4,-24.4, 27.4,-32.9, 4,-28.4, -27.4,-28.4, -27.4,-24.4]}, frovag:{o:[19637.0, 71900.4], u:[0.189, -0.982], f:[27.4,-24.4, 27.4,-47.9, 13,-47.4, -10,-43.4, -21,-65.4, -24,-69.9, -27.4,-71.9, -27.4,-24.4]}
 };
 for (const k in UNITS){ const U = UNITS[k], l = Math.hypot(U.u[0], U.u[1]); U.id = k; U.u = LGu(U.o, [U.u[0] / l, U.u[1] / l]); U.o = LGm(U.o); U.n = [-U.u[1], U.u[0]]; }
 const UNITA = Object.values(UNITS);

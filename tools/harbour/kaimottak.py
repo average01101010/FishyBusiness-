@@ -5,9 +5,9 @@ quay is a block with straight concrete walls down to 9 m below mean sea level on
 02.10.2026); the game flattens the land behind it to the deck and raises the seabed to the walls' foot where it is deeper. No name on the wall: the sign says FISKEMOTTAK.
 
     pip install bpy==4.5.4
-    python3 tools/harbour/kaimottak.py          -> src/data/harbour-unit.b64, renders in tools/harbour/out/
-    python3 tools/harbour/kaimottak.py fast     -> without the renders to look at
-    python3 tools/harbour/kaimottak.py dry      -> the GLB only in tools/harbour/out
+    python3 tools/harbour/kaimottak.py [a|b|c]          -> src/data/harbour-unit(-b|-c).b64, renders in tools/harbour/out/
+    python3 tools/harbour/kaimottak.py [a|b|c] fast     -> without the renders to look at
+    python3 tools/harbour/kaimottak.py [a|b|c] dry      -> the GLB only in tools/harbour/out
 
 Frame here: x along the quay face (the face is y = 0, the middle x = 0), y inland, z up from mean sea level. In the game the unit's own
 frame is x along the face, y up from mean sea level, z out to sea; the 3D view places it with a position and a heading per harbour.
@@ -19,6 +19,18 @@ import bpy, bmesh
 from bpyutil import *
 
 OUT = os.path.join(HERE, 'out')
+# Three looks (Jonas 04.10.2026: «2 blender-modeller til av fiskemottakene slik at vi får litt variasjon»). The quay, the crane, the
+# forklift, the roller door, the ice chute and the bunker station stand where they do in every one, so the game's landing works the
+# same and the anchors are the same but for the solids; the plant's building, its colours and what stands about change.
+#   a  the plant of today: grey cladding, navy trim (harbour-unit)
+#   b  the old fish plant: red-painted boards, white trim, a steep roof with a loft hatch and a hoist beam on the gable, a chimney
+#      (harbour-unit-b)
+#   c  the big plant: a tall hall in pale panels on a dark plinth with a green stripe, a cold store rising over it, a steel ice silo
+#      (harbour-unit-c)
+VAR = next((a for a in sys.argv[1:] if a in ('a', 'b', 'c')), 'a')
+VV = {'a': dict(file='harbour-unit', shot='hu', name='Kai med fiskemottak, is og bunkers', bh=7.2, ridge=8.4, silo=12.5, wall=(0.25, 0.035), plinth=0.45),
+      'b': dict(file='harbour-unit-b', shot='hub', name='Kai med gammelt fiskebruk, is og bunkers', bh=5.8, ridge=9.4, silo=11.0, wall=(0.19, 0.022), plinth=0.45),
+      'c': dict(file='harbour-unit-c', shot='huc', name='Kai med stort fiskeindustrianlegg, fryselager, is og bunkers', bh=9.6, ridge=10.5, silo=15.0, wall=(1.0, 0.012), plinth=1.5)}[VAR]
 QTOP = 2.4                      # the deck above mean sea level, as QTOP in 07-harbours.js
 LW = 9.0                        # half the length of the quay face less 18 m: the face is 54 m long
 HL = 27.0; DEPTH = 24.0         # half the face length, and the deck from the face inland
@@ -28,11 +40,23 @@ KERB = 0.9                      # the kerb (capping beam) along the face is this
 CRANE = (-8.0, 1.9); DROP = (-9.5, 4.6); DOOR = (-13.0, 10.0); SILO = (2.5, 6.6); PUMP = (17.5, 1.7); TANK = (19.0, 20.0)
 D2 = (-23.0, -19.6); PD = (-7.6, -6.6); BD = (-21.0, -17.0)   # BD: the dispatch door at the back                          # the small roller door and the personnel door (x from, to)
 BERTH = -5.0                                                    # the landing berth's middle: the crane and the ice chute both reach it
-BLDG = (-26.0, 0.5, 10.0, 23.5); BH = 7.2; RIDGE = 8.4      # the plant building: x0, x1, y0, y1, eaves and ridge
+BLDG = (-26.0, 0.5, 10.0, 23.5); BH = VV['bh']; RIDGE = VV['ridge']      # the plant building: x0, x1, y0, y1, eaves and ridge
+COLD = (-11.5, 0.3, 13.0, 23.3, 14.5)                                    # the big plant's cold store: x0, x1, y0, y1, height
 
 
 C = {}
+# the looks' own colours (name: (rgb, gloss)); the rest as the plant of today
+OVR = {'b': {'cladding': ((0.50, 0.11, 0.08), 0.15), 'trim': ((0.90, 0.90, 0.86), 0.3), 'roof': ((0.12, 0.12, 0.13), 0.25), 'door': ((0.86, 0.85, 0.80), 0.3),
+             'sign': ((0.92, 0.92, 0.88), 0.3), 'letters': ((0.08, 0.08, 0.09), 0.3), 'crane': ((0.16, 0.32, 0.55), 0.5), 'truck': ((0.95, 0.66, 0.10), 0.5),
+             'tank': ((0.30, 0.44, 0.32), 0.4), 'band': ((0.75, 0.12, 0.10), 0.5)},
+       'c': {'cladding': ((0.90, 0.91, 0.90), 0.5), 'trim': ((0.22, 0.24, 0.26), 0.4), 'roof': ((0.56, 0.58, 0.59), 0.4), 'door': ((0.84, 0.86, 0.87), 0.45),
+             'sign': ((0.0, 0.42, 0.40), 0.45), 'crane': ((0.95, 0.45, 0.08), 0.5), 'truck': ((0.95, 0.70, 0.10), 0.5), 'band': ((0.0, 0.42, 0.40), 0.45),
+             'plinth': ((0.25, 0.27, 0.29), 0.3)}}
 def colours():
+    o = OVR.get(VAR, {})
+    mat_ = globals()['mat']
+    def mat(name, rgb, gloss=0.4, **kw):
+        r = o.get(name); return mat_(name, r[0] if r else rgb, r[1] if r else gloss, **kw)
     C['conc'] = mat('concrete', (0.64, 0.64, 0.62), 0.15)
     C['conc_d'] = mat('concrete_wet', (0.44, 0.45, 0.44), 0.25)
     C['tidal'] = mat('tidal', (0.36, 0.37, 0.30), 0.35)
@@ -50,7 +74,7 @@ def colours():
     C['inside'] = mat('inside', (0.05, 0.05, 0.06), 0.1)
     C['sign'] = mat('sign', (0.10, 0.22, 0.42), 0.45)
     C['letters'] = mat('letters', (0.95, 0.96, 0.96), 0.4)
-    C['silo'] = mat('silo', (0.90, 0.91, 0.92), 0.55)
+    C['silo'] = mat('silo', (0.80, 0.82, 0.84), 0.7, metal=0.6) if VAR == 'c' else mat('silo', (0.90, 0.91, 0.92), 0.55)
     C['tank'] = mat('tank', (0.90, 0.90, 0.88), 0.5)
     C['red'] = mat('red', (0.75, 0.12, 0.10), 0.5)
     C['crane'] = mat('crane', (0.95, 0.70, 0.08), 0.5)
@@ -65,6 +89,11 @@ def colours():
     C['coverall'] = mat('coverall', (0.13, 0.29, 0.62), 0.2)
     C['skin'] = mat('skin', (0.86, 0.66, 0.52), 0.2)
     C['lamp'] = mat('lamp', (1.0, 0.96, 0.85), 0.8, emit=0.6)
+    C['band'] = mat('band', (0.12, 0.21, 0.36), 0.45)          # the silo's band and letters (the trim's colour in the plant of today)
+    C['plinth'] = mat('plinth', (0.64, 0.64, 0.62), 0.15)      # the plinth round the walls (concrete, dark panels in the big plant)
+    C['cold'] = mat('cold_store', (0.93, 0.94, 0.94), 0.5)
+    C['brick'] = mat('brick', (0.42, 0.18, 0.13), 0.1)
+    C['tubs'] = mat('line_tubs', (0.10, 0.14, 0.22), 0.3)
 
 
 # ---------- helpers ----------
@@ -78,8 +107,10 @@ def text_obj(name, s, size, m, extrude=0.03, res=3):
 def place(o, loc, rot=(0, 0, 0)):
     o.location = loc; o.rotation_euler = rot; return o
 
-def corr_wall(name, a, b, z0, z1, m, period=0.25, amp=0.035):
-    """corrugated cladding from a to b (x, y), facing to the left of a->b (walls run counter-clockwise seen from above)"""
+def corr_wall(name, a, b, z0, z1, m, period=None, amp=None):
+    """corrugated cladding from a to b (x, y), facing to the left of a->b (walls run counter-clockwise seen from above); boards with
+    battens in the old plant, wide panels in the big one"""
+    period = period or VV['wall'][0]; amp = amp or VV['wall'][1]
     a = V((a[0], a[1], 0)); b = V((b[0], b[1], 0)); d = b - a; L = d.length; u = d / L; out = V((-u.y, u.x, 0))
     n = max(2, int(round(L / period)) * 2); rows = []
     for k in range(n + 1):
@@ -157,10 +188,11 @@ def plant(fine=True):
     # the plinth round the walls, open at the doors so the forklift drives in level with the deck
     gaps = sorted([(DOOR[0] - dw / 2, DOOR[0] + dw / 2), D2, PD])
     xs = [x0 - 0.1] + [v for g in gaps for v in g] + [x1 + 0.1]
-    for k in range(0, len(xs), 2): objs.append(box('plinth_f%d' % k, xs[k], xs[k + 1], y0 - 0.1, y0 + 0.2, zb, zb + 0.45, C['conc']))
-    for k, (a, b) in enumerate(((x0 - 0.1, BD[0]), (BD[1], x1 + 0.1))): objs.append(box('plinth_b%d' % k, a, b, y1 - 0.2, y1 + 0.1, zb, zb + 0.45, C['conc']))
-    objs.append(box('plinth_w', x0 - 0.1, x0 + 0.2, y0 + 0.2, y1 - 0.2, zb, zb + 0.45, C['conc']))
-    objs.append(box('plinth_e', x1 - 0.2, x1 + 0.1, y0 + 0.2, y1 - 0.2, zb, zb + 0.45, C['conc']))
+    pl = zb + VV['plinth']
+    for k in range(0, len(xs), 2): objs.append(box('plinth_f%d' % k, xs[k], xs[k + 1], y0 - 0.1, y0 + 0.2, zb, pl, C['plinth']))
+    for k, (a, b) in enumerate(((x0 - 0.1, BD[0]), (BD[1], x1 + 0.1))): objs.append(box('plinth_b%d' % k, a, b, y1 - 0.2, y1 + 0.1, zb, pl, C['plinth']))
+    objs.append(box('plinth_w', x0 - 0.1, x0 + 0.2, y0 + 0.2, y1 - 0.2, zb, pl, C['plinth']))
+    objs.append(box('plinth_e', x1 - 0.2, x1 + 0.1, y0 + 0.2, y1 - 0.2, zb, pl, C['plinth']))
     if fine:
         # the front with the big roller door at DOOR, a small roller door, the office end with windows and a door
         fx = lambda a, b: corr_wall('front_%d' % int(a * 10), (b, y0), (a, y0), zb + 0.45, ze, C['clad'])
@@ -181,9 +213,15 @@ def plant(fine=True):
         for k in range(11): objs.append(box('door2r%d' % k, D2[0], D2[1], y0 - 0.08, y0 - 0.06, zb + 0.2 + 0.34 * k, zb + 0.24 + 0.34 * k, C['steel']))
         objs.append(box('pdoor', PD[0], PD[1], y0 - 0.06, y0, zb, zb + 2.2, C['trim']))
         objs.append(box('pdoor_can', PD[0] - 0.4, PD[1] + 0.4, y0 - 1.0, y0, zb + 2.75, zb + 2.85, C['trim']))
-        for k, s in enumerate((1.5, 3.5, 5.5)):
-            for zz in (zb + 1.2, zb + 4.4):
-                o = window('fw%d%d' % (k, int(zz)), (x1, y0), (x0, y0), s, zz, 1.4, 1.2, (0, -1, 0)); objs.append(o[0]); glass.append(o[1])
+        # the office end's windows: small and many-paned in the old plant, three floors of offices in the big one
+        FW = {'a': ((1.5, 3.5, 5.5), (zb + 1.2, zb + 4.4), 1.4, 1.2), 'b': ((1.5, 3.3, 5.1), (zb + 1.2, zb + 3.5), 0.9, 1.1),
+              'c': ((1.2, 2.9, 4.6), (zb + 1.9, zb + 4.8, zb + 7.6), 1.5, 1.3)}[VAR]
+        for k, s in enumerate(FW[0]):
+            for zz in FW[1]:
+                o = window('fw%d%d' % (k, int(zz)), (x1, y0), (x0, y0), s, zz, FW[2], FW[3], (0, -1, 0)); objs.append(o[0]); glass.append(o[1])
+                if VAR == 'b':   # the glazing bars of an old window
+                    xm = x1 - s; objs.append(box('fwb%d%d' % (k, int(zz * 10)), xm - 0.025, xm + 0.025, y0 - 0.1, y0 - 0.06, zz, zz + FW[3], C['trim']))
+                    objs.append(box('fwh%d%d' % (k, int(zz * 10)), xm - FW[2] / 2, xm + FW[2] / 2, y0 - 0.1, y0 - 0.06, zz + FW[3] / 2 - 0.025, zz + FW[3] / 2 + 0.025, C['trim']))
         # the other walls
         objs.append(corr_wall('wall_w', (x0, y0), (x0, y1), zb + 0.45, ze, C['clad']))
         objs.append(corr_wall('wall_b', (x0, y1), (x1, y1), zb + 0.45, ze, C['clad']))
@@ -202,6 +240,17 @@ def plant(fine=True):
             o = window('ew%d' % k, (x1, y1), (x1, y0), s, zb + 4.4, 1.4, 1.1, (1, 0, 0)); objs.append(o[0]); glass.append(o[1])
         # trim: corners and the eaves
         for (cx, cy) in ((x0, y0), (x1, y0), (x0, y1), (x1, y1)): objs.append(box('corner%d%d' % (int(cx), int(cy)), cx - 0.12, cx + 0.12, cy - 0.12, cy + 0.12, zb + 0.45, ze + 0.05, C['trim']))
+        if VAR == 'c':   # the green stripe round the hall under the eaves
+            z0s, z1s = ze - 1.3, ze - 0.7
+            for nm, a in (('st_f', (x0 - 0.06, x1 + 0.06, y0 - 0.07, y0 - 0.01)), ('st_b', (x0 - 0.06, x1 + 0.06, y1 + 0.01, y1 + 0.07)), ('st_w', (x0 - 0.07, x0 - 0.01, y0, y1)), ('st_e', (x1 + 0.01, x1 + 0.07, y0, y1))):
+                objs.append(box(nm, *a, z0s, z1s, C['band']))
+        if VAR == 'b':   # the loft hatch on the west gable and the hoist beam over it with its block and rope
+            yc_ = (y0 + y1) / 2
+            objs.append(box('loft_frame', x0 - 0.08, x0 - 0.02, yc_ - 0.95, yc_ + 0.95, ze + 0.15, ze + 2.15, C['trim']))
+            objs.append(box('loft_hatch', x0 - 0.1, x0 - 0.06, yc_ - 0.8, yc_ + 0.8, ze + 0.25, ze + 2.05, C['clad']))
+            objs.append(box('hoist_beam', x0 - 1.5, x0 + 0.2, yc_ - 0.09, yc_ + 0.09, ze + 2.45, ze + 2.65, C['dark']))
+            objs.append(box('hoist_block', x0 - 1.4, x0 - 1.2, yc_ - 0.07, yc_ + 0.07, ze + 2.15, ze + 2.45, C['dark']))
+            objs.append(cyl('hoist_rope', (x0 - 1.3, yc_, ze + 2.15), (x0 - 1.3, yc_, zb + 2.0), 0.015, C['wood'], 5))
     else:
         objs.append(box('walls', x0, x1, y0, y1, zb + 0.45, ze, C['clad']))
         objs.append(box('door_d', DOOR[0] - dw / 2, DOOR[0] + dw / 2, y0 - 0.02, y0, zb, zb + dh, C['door']))
@@ -216,22 +265,43 @@ def plant(fine=True):
         objs.append(obj_from_bm('gable%d' % int(x), bm, [C['clad']]))
     if fine:
         # the sign over the big door: navy board, white letters
-        sx = DOOR[0]; sz = zb + dh + 1.55
-        objs.append(box('sign_board', sx - 2.95, sx + 2.95, y0 - 0.14, y0 - 0.02, sz - 0.55, sz + 0.55, C['sign'], 0.02))
-        t = text_obj('sign_text', 'FISKEMOTTAK', 0.82, C['letters'], 0.02); place(t, (sx, y0 - 0.16, sz), (math.pi / 2, 0, 0)); objs.append(t)
+        # (the old plant's under its low eaves, east of the door)
+        sx, sz, sw, sh, ls = (DOOR[0], zb + dh + 1.55, 2.95, 0.55, 0.82) if VAR != 'b' else (-3.0, zb + 5.17, 2.5, 0.36, 0.52)
+        objs.append(box('sign_board', sx - sw, sx + sw, y0 - 0.14, y0 - 0.02, sz - sh, sz + sh, C['sign'], 0.02))
+        t = text_obj('sign_text', 'FISKEMOTTAK', ls, C['letters'], 0.02); place(t, (sx, y0 - 0.16, sz), (math.pi / 2, 0, 0)); objs.append(t)
         # on the roof: two fans and the cooling unit
-        for k, x in enumerate((-20.0, -8.0)): objs.append(box('fan%d' % k, x - 1.0, x + 1.0, yc + 1.0, yc + 3.0, zr - 0.6, zr + 0.6, C['steel'], 0.05))
-        objs.append(box('cooler', -15.0, -11.0, yc - 4.5, yc - 1.5, ze + 0.2, ze + 1.3, C['steel'], 0.05))
+        if VAR == 'b':   # the old plant has a chimney instead
+            objs.append(box('chimney', -8.6, -7.8, yc + 0.6, yc + 1.4, zr - 1.2, zr + 1.0, C['brick']))
+            objs.append(box('chimney_cap', -8.7, -7.7, yc + 0.5, yc + 1.5, zr + 1.0, zr + 1.12, C['conc']))
+        else:
+            for k, x in enumerate((-20.0, -8.0) if VAR == 'a' else (-23.0, -18.0)): objs.append(box('fan%d' % k, x - 1.0, x + 1.0, yc + 1.0, yc + 3.0, zr - 0.6, zr + 0.6, C['steel'], 0.05))
+            cx_ = (-15.0, -11.0) if VAR == 'a' else (-21.0, -16.0)
+            objs.append(box('cooler', cx_[0], cx_[1], yc - 4.5, yc - 1.5, ze + 0.2, ze + 1.3, C['steel'], 0.05))
         # an outside stair to the office door on the east end
         for k in range(12): objs.append(box('step%d' % k, x1 + 0.2, x1 + 1.3, y1 - 6.0 + 0.28 * k, y1 - 5.72 + 0.28 * k, zb + 0.25 * k, zb + 0.25 * k + 0.08, C['steel']))
         objs.append(box('landing', x1 + 0.2, x1 + 1.4, y1 - 2.6, y1 - 1.0, zb + 3.0, zb + 3.1, C['steel']))
         objs.append(tube('stair_rail', [(x1 + 1.35, y1 - 6.0, zb + 1.0), (x1 + 1.35, y1 - 2.6, zb + 4.0), (x1 + 1.35, y1 - 1.0, zb + 4.0)], 0.025, C['steel'], 6))
         objs.append(box('odoor', x1 - 0.02, x1 + 0.02, y1 - 2.3, y1 - 1.3, zb + 3.1, zb + 5.2, C['trim']))
+    if VAR == 'c':
+        # the cold store: a tall block in white panels rising out of the hall's back, a green stripe at the top, a parapet and its
+        # refrigeration units on the roof
+        cx0, cx1, cy0, cy1, ch = COLD; zt = zb + ch
+        if fine:
+            for nm, a, b in (('cold_f', (cx1, cy0), (cx0, cy0)), ('cold_w', (cx0, cy0), (cx0, cy1)), ('cold_b', (cx0, cy1), (cx1, cy1)), ('cold_e', (cx1, cy1), (cx1, cy0))):
+                objs.append(corr_wall(nm, a, b, ze - 0.6, zt, C['cold']))
+            for nm, a in (('cst_f', (cx0 - 0.06, cx1 + 0.06, cy0 - 0.07, cy0 - 0.01)), ('cst_b', (cx0 - 0.06, cx1 + 0.06, cy1 + 0.01, cy1 + 0.07)), ('cst_w', (cx0 - 0.07, cx0 - 0.01, cy0, cy1)), ('cst_e', (cx1 + 0.01, cx1 + 0.07, cy0, cy1))):
+                objs.append(box(nm, *a, zt - 1.4, zt - 0.8, C['band']))
+            for nm, a in (('cpar_f', (cx0 - 0.1, cx1 + 0.1, cy0 - 0.1, cy0 + 0.15)), ('cpar_b', (cx0 - 0.1, cx1 + 0.1, cy1 - 0.15, cy1 + 0.1)), ('cpar_w', (cx0 - 0.1, cx0 + 0.15, cy0, cy1)), ('cpar_e', (cx1 - 0.15, cx1 + 0.1, cy0, cy1))):
+                objs.append(box(nm, *a, zt, zt + 0.5, C['trim']))
+            for k, x in enumerate((-9.0, -5.5, -2.0)): objs.append(box('cold_unit%d' % k, x - 1.2, x + 1.2, cy0 + 3.0, cy0 + 6.0, zt, zt + 1.6, C['steel'], 0.05))
+            objs.append(box('cold_roof', cx0, cx1, cy0, cy1, zt - 0.05, zt + 0.05, C['roof']))
+        else:
+            objs.append(box('cold', cx0, cx1, cy0, cy1, ze - 0.6, zt, C['cold']))
     return objs, glass
 
 
 # ---------- the ice silo with its stand, the chute is a part of its own ----------
-CHUTE_L = 10.0; SILO_R = 2.0; SILO_Z0 = QTOP + 5.0; SILO_Z1 = QTOP + 12.5; CHUTE_Z = QTOP + 5.6
+CHUTE_L = 10.0; SILO_R = 2.0; SILO_Z0 = QTOP + 5.0; SILO_Z1 = QTOP + VV['silo']; CHUTE_Z = QTOP + 5.6
 def ice(fine=True):
     objs = []; sx, sy = SILO
     for dx, dy in ((1, 1), (1, -1), (-1, 1), (-1, -1)):
@@ -242,13 +312,13 @@ def ice(fine=True):
     objs.append(cyl('silo_cone', (sx, sy, SILO_Z0), (sx, sy, SILO_Z0 - 1.2), SILO_R, C['silo'], 28 if fine else 10, r1=0.35))
     objs.append(cyl('silo_top', (sx, sy, SILO_Z1), (sx, sy, SILO_Z1 + 0.6), SILO_R, C['silo'], 28 if fine else 10, r1=0.4))
     if fine:
-        objs.append(cyl('silo_band', (sx, sy, SILO_Z1 - 1.6), (sx, sy, SILO_Z1 - 1.0), SILO_R + 0.02, C['trim'], 28))
-        t = text_obj('ice_text', 'IS', 1.3, C['trim'], 0.0); place(t, (sx, sy - SILO_R - 0.02, SILO_Z0 + 3.4), (math.pi / 2, 0, 0)); objs.append(t)
+        objs.append(cyl('silo_band', (sx, sy, SILO_Z1 - 1.6), (sx, sy, SILO_Z1 - 1.0), SILO_R + 0.02, C['band'], 28))
+        t = text_obj('ice_text', 'IS', 1.3, C['band'], 0.0); place(t, (sx, sy - SILO_R - 0.02, SILO_Z0 + 3.4), (math.pi / 2, 0, 0)); objs.append(t)
         # the turntable the chute swings on, the ladder up the side and the railing on top
         objs.append(cyl('turntable', (sx, sy, CHUTE_Z - 0.3), (sx, sy, CHUTE_Z + 0.2), 0.7, C['steel'], 18))
         objs.append(cyl('feed', (sx, sy, SILO_Z0 - 1.2), (sx, sy, CHUTE_Z + 0.2), 0.3, C['steel'], 12))
         for s in (-0.25, 0.25): objs.append(cyl('sl%d' % int(s * 100), (sx + SILO_R + 0.12, sy + s, QTOP), (sx + SILO_R + 0.12, sy + s, SILO_Z1 + 1.4), 0.025, C['steel'], 6))
-        for z in [QTOP + 0.4 + 0.4 * k for k in range(29)]: objs.append(cyl('slr%d' % int(z * 10), (sx + SILO_R + 0.12, sy - 0.25, z), (sx + SILO_R + 0.12, sy + 0.25, z), 0.016, C['steel'], 4))
+        for z in [QTOP + 0.4 + 0.4 * k for k in range(int((SILO_Z1 + 1.0 - QTOP) / 0.4))]: objs.append(cyl('slr%d' % int(z * 10), (sx + SILO_R + 0.12, sy - 0.25, z), (sx + SILO_R + 0.12, sy + 0.25, z), 0.016, C['steel'], 4))
         objs.append(torus('silo_rail', (sx, sy, SILO_Z1 + 1.5), (0, 0, 1), SILO_R - 0.1, 0.025, C['steel'], 28, 4))
         for k in range(8): a = 2 * math.pi * k / 8; objs.append(cyl('srp%d' % k, (sx + math.cos(a) * (SILO_R - 0.1), sy + math.sin(a) * (SILO_R - 0.1), SILO_Z1 + 0.4), (sx + math.cos(a) * (SILO_R - 0.1), sy + math.sin(a) * (SILO_R - 0.1), SILO_Z1 + 1.5), 0.02, C['steel'], 4))
     return objs
@@ -396,6 +466,17 @@ def props(fine=True):
     # a couple of people on the quay for the renders are drawn by the game; here only a bench by the plant door
     objs.append(box('bench', -6.5, -5.0, 9.4, 9.8, QTOP + 0.42, QTOP + 0.48, C['wood']))
     for x in (-6.4, -5.1): objs.append(box('bench_l%d' % int(x * 10), x, x + 0.08, 9.45, 9.75, QTOP, QTOP + 0.42, C['dark']))
+    if VAR == 'b':
+        # line tubs (baljer) and a stack of old wooden fish crates east of the silo, clear of the pipe and the van
+        for k, (x, y) in enumerate(((10.0, 6.4), (10.9, 6.4), (10.45, 7.2), (11.8, 6.6))): objs.append(cyl('balje%d' % k, (x, y, QTOP), (x, y, QTOP + 0.5), 0.4, C['tubs'], 16, r1=0.44))
+        for lay in range(4):
+            for i in range(2): objs.append(box('crate%d%d' % (lay, i), 12.9 + 0.82 * i, 13.7 + 0.82 * i, 7.6, 8.1, QTOP + 0.3 * lay, QTOP + 0.3 * lay + 0.29, C['wood'], 0.01))
+    if VAR == 'c':
+        # a reefer container and a stack of empty pallets
+        objs.append(box('reefer', 10.5, 16.6, 8.5, 10.95, QTOP, QTOP + 2.6, C['cold'], 0.03))
+        objs.append(box('reefer_unit', 16.6, 16.75, 8.7, 10.75, QTOP + 0.3, QTOP + 2.3, C['dark']))
+        for k in range(14): objs.append(box('reefer_r%d' % k, 10.7 + 0.42 * k, 10.75 + 0.42 * k, 8.48, 8.5, QTOP + 0.1, QTOP + 2.5, C['cold']))
+        for k in range(9): objs.append(box('epal%d' % k, 7.4, 8.6, 9.0, 9.8, QTOP + 0.15 * k, QTOP + 0.15 * k + 0.14, C['wood']))
     return objs
 
 
@@ -436,7 +517,8 @@ def anchors():
                        'coffee': [G(-5.8, 8.9), G(-3.8, 8.9)]},
             'stacks': [G(-24.6, 8.0), G(-17.95, 8.6)],
             'solids': [[0.0, -(DEPTH + 0.4) / 2, 2 * HL + 0.8, DEPTH + 0.4, WALL_BOT, QTOP], [(BLDG[0] + BLDG[1]) / 2, -(BLDG[2] + BLDG[3]) / 2, BLDG[1] - BLDG[0], BLDG[3] - BLDG[2], QTOP, QTOP + RIDGE],
-                       [SILO[0], -SILO[1], 2 * SILO_R + 0.6, 2 * SILO_R + 0.6, QTOP, SILO_Z1 + 1.5], [TANK[0], -TANK[1], 11.0, 5.2, QTOP, QTOP + 3.5]],
+                       [SILO[0], -SILO[1], 2 * SILO_R + 0.6, 2 * SILO_R + 0.6, QTOP, SILO_Z1 + 1.5], [TANK[0], -TANK[1], 11.0, 5.2, QTOP, QTOP + 3.5]] +
+                      ([[(COLD[0] + COLD[1]) / 2, -(COLD[2] + COLD[3]) / 2, COLD[1] - COLD[0], COLD[3] - COLD[2], QTOP, QTOP + COLD[4] + 1.6]] if VAR == 'c' else []),
             'lamps': [G(x, y - 0.3, QTOP + 8.85) for x, y in ((-24.0, 1.4), (0.0, 1.4), (24.0, 1.4), (-6.0, 23.0), (12.0, 23.0))]}
 
 SHOTS = [('sea3q', (34.0, -42.0, 16.0), (-2.0, 8.0, 3.0), 30), ('front', (0.0, -55.0, 6.0), (0.0, 8.0, 4.0), 32), ('above', (30.0, -20.0, 45.0), (0.0, 10.0, 0.0), 30),
@@ -467,7 +549,7 @@ def main():
         for k, (x, y, h) in enumerate(((-4.5, 1.0, math.pi), (-11.0, 4.0, math.pi * 0.9), (16.6, 1.4, math.pi), (-10.0, 8.6, math.pi * 1.2))):
             for o in arbeider.pose(WP, x, y, h, 'hw'): o.location.z += QTOP; extra.append(o)
         extra += list(WP.values())
-        beauty(OUT, 'hu', 0.0, SHOTS)
+        beauty(OUT, VV['shot'], 0.0, SHOTS)
         for o in extra: bpy.data.objects.remove(o, do_unlink=True)
         b2.location = (0, 0, 0); hk.location = (0, 0, 0)
     more = [{'name': 'crane_house', 'obj': house, 'xf_p': rel_game((cx, cy, QTOP + 1.1)), 'ao': True, 'show': True},
@@ -478,9 +560,9 @@ def main():
             {'name': 'truck_forks', 'obj': forks, 'xf_p': rel_game((tx, ty, QTOP)), 'ao': False, 'show': True},
             {'name': 'door', 'obj': dr, 'xf_p': rel_game((dx, BLDG[2], QTOP + 4.8)), 'ao': False, 'show': True},
             {'name': 'chute', 'obj': ch, 'xf_p': rel_game((sx, sy, CHUTE_Z)), 'ao': True, 'show': True}]
-    ex = {'frame': 'kystfiske harbour unit: x along the quay face, y up from mean sea level, z out to sea; metres', 'name': 'Kai med fiskemottak, is og bunkers',
+    ex = {'frame': 'kystfiske harbour unit: x along the quay face, y up from mean sea level, z out to sea; metres', 'name': VV['name'], 'look': VAR,
           'anchors': anchors()}
-    export_boat(build, to_game, to_game_n, OUT, 'harbour-unit.glb', os.path.join(ROOT, 'src', 'data', 'harbour-unit.b64'), ex, side=None, dry='dry' in sys.argv, more=more)
+    export_boat(build, to_game, to_game_n, OUT, VV['file'] + '.glb', os.path.join(ROOT, 'src', 'data', VV['file'] + '.b64'), ex, side=None, dry='dry' in sys.argv, more=more)
 
 
 if __name__ == '__main__':
