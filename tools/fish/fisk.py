@@ -338,8 +338,9 @@ def build_crab():
         a0 = V((sd * 0.16, 0.14, -0.005)); a1 = V((sd * 0.26, 0.24, -0.002)); a2 = V((sd * 0.24, 0.33, 0.0))
         parts.append(tube('crab_arm', [a0, a1], 0.028, C['leg'], seg=8)); parts.append(tube('crab_wrist', [a1, a2], 0.032, C['leg'], seg=8))
         h0 = a2; h1 = V((sd * 0.13, 0.40, 0.003))
-        parts.append(sphere('crab_hand', (h0 + h1) / 2, 0.05, C['leg'], scale=(1.5, 0.75, 0.6), seg=12, rings=6))
-        hand = parts[-1]; d = (h1 - h0).normalized(); hand.rotation_euler = (0, 0, math.atan2(d.y, d.x)); apply_all(hand)
+        # the hand: built round the origin, turned along the claw and then moved to its place (turning it in place swung it off the arm)
+        hand = sphere('crab_hand', (0, 0, 0), 0.05, C['leg'], scale=(1.5, 0.75, 0.6), seg=12, rings=6); d = (h1 - h0).normalized()
+        hand.rotation_euler = (0, 0, math.atan2(d.y, d.x)); hand.location = (h0 + h1) / 2; apply_all(hand); parts.append(hand)
         f0 = h1 + V((0, 0, 0.012)); f1 = f0 + V((-sd * 0.09, 0.03, 0.0)); g0 = h1 + V((0, 0, -0.012)); g1 = g0 + V((-sd * 0.085, 0.022, 0.0))
         parts.append(cyl('crab_dact', f0, f0 + (f1 - f0) * 0.55, 0.016, C['leg'], seg=6, r1=0.012)); parts.append(cyl('crab_dact2', f0 + (f1 - f0) * 0.55, f1, 0.012, C['tip'], seg=6, r1=0.002))
         parts.append(cyl('crab_fix', g0, g0 + (g1 - g0) * 0.55, 0.016, C['leg'], seg=6, r1=0.012)); parts.append(cyl('crab_fix2', g0 + (g1 - g0) * 0.55, g1, 0.012, C['tip'], seg=6, r1=0.002))
@@ -369,11 +370,11 @@ def main():
     # renders: the species side by side on a light deck, from the side and from above at an angle
     for k, (sp, o) in enumerate(objs.items()):
         o.location = (0.0, (k % 3) * 1.25 - 1.25, -(k // 3) * 0.55 + 0.55) if sp != 'krabbe' else (0.0, 1.25, -0.55)
-        o.rotation_euler = (0, 0, math.pi / 2) if sp != 'krabbe' else (math.pi / 2 - 0.5, 0, math.pi / 2)
+        if sp == 'krabbe': o.rotation_euler = (0, 1.0, 0)      # the fish from their right side, the crab tilted to show its shell
     setup_render(1600, 1000, samples=24)
     bpy.context.scene.world.node_tree.nodes.get('Background').inputs['Color'].default_value = (0.70, 0.76, 0.82, 1)
     camera((4.2, 0.0, 0.0), (0.0, 0.0, 0.0), ortho=4.1); render(os.path.join(OUT, 'fish_side.png'))
-    camera((3.2, -1.8, 1.4), (0.0, 0.0, 0.0), lens=40); render(os.path.join(OUT, 'fish_3q.png'))
+    camera((3.0, 1.6, 1.3), (0.0, 0.0, 0.0), lens=40); render(os.path.join(OUT, 'fish_3q.png'))
 
 if __name__ == '__main__':
     main()
