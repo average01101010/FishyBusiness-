@@ -129,9 +129,9 @@ function vecWorker(){
   return VEC.worker || null;
 }
 const VECN = {bld:'nb', road:'nr', bridge:'ng', pier:'np', quay:'nq', npc:'nn'};
-// the share of the packs' NPC boats the game keeps (vecDecode; with one a harbour at least it comes to about a quarter of kart-6's
-// 19 411): 1 when the packs have the right number themselves (kart-7)
-const NPC_KEEP = 0.17;
+// the share of the packs' NPC boats the game keeps (vecDecode): 1 now that the packs have the right number themselves (kart-7: 4 137
+// along the coast; kart-6 had 19 411 and was thinned with 0.17 for a while)
+const NPC_KEEP = 1;
 function vecInput(pk, inflate){
   const D = {tx:pk.tile[0], ty:pk.tile[1], T:MAPD.man.tile * 1000, Q:SENJAQ, keep:NPC_KEEP}, B = MAPD.man.tile / MAPD.man.block;
   for (const n in VECN){
