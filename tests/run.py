@@ -24,7 +24,7 @@ os.makedirs(LOGS, exist_ok=True)
 
 # draw 3D: they look at the 3D view itself (frames, camera, quays, cranes, pumps)
 D3 = ['dbg23o', 'camtest', 'moortest', 'landtest', 'bunkertest', 'heattest', 'vessel3d', 'unittest', 'sea3d', 'teleport3d', 'lighttest', 'kinotest', 'haultest', 'vectest']
-LITE = ['tut', 'quotatest', 'rulestest', 'npctest', 'tidetest', 'trip2', 'docktest', 'booktest', 'decktest', 'geartest', 'loretest', 'tattest', 'towtest', 'airtest', 'fleet2test', 'fleet3test', 'opsowntest', 'routetest',
+LITE = ['sqltest', 'tut', 'quotatest', 'rulestest', 'npctest', 'tidetest', 'trip2', 'docktest', 'booktest', 'decktest', 'geartest', 'loretest', 'tattest', 'towtest', 'airtest', 'fleet2test', 'fleet3test', 'opsowntest', 'routetest',
         'shoptest', 'selltest', 'timetest', 'worktest', 'vesseltest', 'streaktest', 'fixtest', 'hailltest', 'harbourtest', 'simday', 'calib', 'kvtest', 'progweek', 'seatest', 'stabtest', 'projtest', 'boottest', 'maptest', 'mig2test', 'charttest', 'helmtest', 'soundtest', 'sleeptest', 'pwatest']
 # they measure milliseconds, so they run alone at the end, when nothing else takes the CPU
 SOLO = ['routetest', 'heattest', 'landtest', 'charttest']
@@ -35,6 +35,7 @@ DRAWS3D = {'tut'}
 MUST = {'trip2': ('"st":"port"', 'ender ikke i havn'), 'tut': ('"tut": 0', 'veiledningen er ikke ferdig')}
 # which tests cover which file: «changed» runs these for the files in the diff. A file not listed runs trip2; texts and docs run nothing
 COVER = {
+  'supabase/migrations/20261004120000_cloud.sql':['sqltest'],
   'src/js/core/00-proj.js':['projtest', 'trip2'], 'src/js/core/01b-mapdata.js':['maptest', 'boottest', 'trip2', 'dbg23o', 'teleport3d'], 'src/js/core/01c-vec.js':['vectest', 'npctest', 'harbourtest', 'trip2'], 'src/js/core/01d-coast.js':['routetest', 'charttest', 'maptest', 'trip2', 'npctest', 'helmtest', 'harbourtest', 'seatest', 'moortest'], 'tools/mappack.mjs':[], 'build.mjs':['boottest', 'trip2', 'pwatest', 'vectest'], 'src/pwa/sw.js':['pwatest'], 'src/pwa/manifest.webmanifest':['pwatest'], 'src/data/map/manifest.json':['trip2', 'maptest', 'harbourtest', 'moortest', 'unittest', 'landtest', 'routetest', 'seatest', 'dbg23o', 'sea3d', 'teleport3d'], 'src/js/core/01-world.js':['trip2', 'harbourtest', 'unittest'], 'src/js/core/02-species-gear.js':['selltest', 'shoptest', 'vesseltest'], 'src/js/core/03-simulation.js':['heattest', 'decktest', 'simday', 'calib', 'vesseltest', 'unittest', 'tidetest'], 'src/data/tide.json':['tidetest', 'unittest'],
   'src/js/core/03b-sea.js':['seatest', 'calib', 'simday', 'progweek', 'trip2', 'sea3d'],
   'src/js/core/03d-quota.js':['quotatest', 'fleet2test', 'selltest', 'progweek'], 'src/js/core/03e-rules.js':['rulestest', 'geartest', 'selltest', 'vesseltest', 'trip2'], 'src/data/rules.json':['rulestest', 'trip2'], 'tools/rules/regler.py':[], 'tools/rules/fetch.py':[], 'tools/rules/look.py':[],
