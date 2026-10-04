@@ -45,12 +45,12 @@ async def main():
           S.hold = [{sp:'sei', cls:1, kg:900, n:200, bled:true, iced:true, hr:0, fresh:95, gut:false, hook:true}]; startLanding(false);
           const t0 = performance.now() / 1000; for (let i = 0; i < 60; i++) G3._debug.stepBoat(0.05, t0 + i * 0.05, 0); const c = G3._debug.cam; c.dist = 30; c.yaw = 1.2; c.pitch = 0.3; })()""")
         # the sjark's model and the landing scene take a moment to come (2.6 s here): wait for them instead of a fixed pause
-        await pg.wait_for_function("!!G3._debug.PLANTS.find(q => q.id === 'torsken').scene", timeout=30000)
+        await pg.wait_for_function("!!G3._debug.PLANTS.find(q => q.id === 'torsken').scene", timeout=120000)
         S3 = []
         for e in [5 + 0.40 * 2.5, 5 + 0.90 * 2.5, 5 + 1.40 * 2.5, 5 + 1.90 * 2.5]:
             # set the landing's clock, and wait for a frame that shows it (a fixed pause was too short when the frames are slow)
             await pg.evaluate(f"S.boat.land.t0 = S.t + liveFrac() - {e}")
-            await pg.wait_for_function("(e) => { const s = G3._debug.PLANTS.find(q => q.id === 'torsken').scene; return !!s && Math.abs(s.e - e) < 0.3; }", arg=e, timeout=60000); await pg.wait_for_timeout(300)
+            await pg.wait_for_function("(e) => { const s = G3._debug.PLANTS.find(q => q.id === 'torsken').scene; return !!s && Math.abs(s.e - e) < 0.3; }", arg=e, timeout=180000); await pg.wait_for_timeout(300)
             S3.append(await pg.evaluate("""(()=>{ const P = G3._debug.PLANTS.find(q => q.id === 'torsken'), s = P.scene; if (!s) return null;
               const tip = [P.crane[0] + Math.sin(s.pose.a) * s.pose.r, P.crane[1] + Math.cos(s.pose.a) * s.pose.r];
               return {i:s.i, u:Math.round(s.u * 100) / 100, hang:!!s.hang, deck:s.deck.length, quay:s.quay.length, toK:Math.round(Math.hypot(tip[0] - s.K[0], tip[1] - s.K[2]) * 100) / 100, hookOverDeck:Math.round((s.pose.hook - s.K[1]) * 100) / 100,

@@ -48,7 +48,7 @@ async def main():
         pg = await b.new_page(viewport={'width': 800, 'height': 500})
         errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
         await boot(pg); await pg.evaluate(SETUP)
-        await pg.wait_for_function("G3.isActive() && G3._debug.SSL.w.on && G3._debug.SSL.n.on", timeout=120000); await pg.wait_for_timeout(1500)
+        await pg.wait_for_function("G3.isActive() && G3._debug.SSL.w.on && G3._debug.SSL.n.on", timeout=300000); await pg.wait_for_timeout(1500)
         R = {}
         calm = await pg.evaluate("({drift:G3._debug.drift, fog:G3._debug.env.fogD})")   # 5 m/s since the start: no spindrift, no haze
         # 1. the wind from calm to hurricane in steps of 0.1 m/s, the waves snapped to each: no wave may jump
@@ -108,7 +108,7 @@ async def main():
         for key, name, setup in [('wind', 'Husøy-feltet, NV 17 m/s', "const g = GROUNDS[0].p; S.boat.pos = {x:g.x, y:g.y};"), ('lee', 'Husøy-feltet, S 17 m/s', "const g = GROUNDS[0].p; S.boat.pos = {x:g.x, y:g.y}; WX_FORCE.d = 180;"),
                                  ('harbour', 'Ved Botnhamn, NV 17 m/s', "S.boat.pos = LG(53.30, 23.20);"), ('sound', 'Gisundet, NV 17 m/s', "S.boat.pos = LG(57.25, 44.35);")]:
             await pg.evaluate("WX_FORCE = {w:17, d:315}; " + setup + " G3._debug.WV.init = false;")
-            await pg.wait_for_function("G3._debug.SSL.n.on && Math.abs(G3._debug.bv.x / 1000 - S.boat.pos.x) < 0.05", timeout=60000); await pg.wait_for_timeout(5000)
+            await pg.wait_for_function("G3._debug.SSL.n.on && Math.abs(G3._debug.bv.x / 1000 - S.boat.pos.x) < 0.05", timeout=180000); await pg.wait_for_timeout(5000)
             s = await pg.evaluate("(()=>{ const D = G3._debug; return D.ssAt(D.bv.x, D.bv.z).map(v => +v.toFixed(2)); })()"); lee[key] = s
             f = f'sea3d_{key}.png'; await pg.screenshot(path=f); tiles.append((f, f'{name} · vindsjø {s[0]:.1f} m, dønning {s[1]:.1f} m'))
         await sheet(tiles, 'sea3d_lee.png', 2)
@@ -145,7 +145,7 @@ async def main():
         # 7. a GPU with no textures in the vertex shader: the same page, the waves from the values at the boat
         pg2 = await b.new_page(viewport={'width': 640, 'height': 400}); errs2 = []; pg2.on('pageerror', lambda e: errs2.append(str(e)))
         await boot(pg2, GAME_TUT + '#notut,novtf'); await pg2.evaluate(SETUP)
-        await pg2.wait_for_function("G3.isActive() && G3._debug.SSL.w.on", timeout=120000); await pg2.wait_for_timeout(2000)
+        await pg2.wait_for_function("G3.isActive() && G3._debug.SSL.w.on", timeout=300000); await pg2.wait_for_timeout(2000)
         R['novtf'] = await pg2.evaluate("({vtf:G3._debug.sstVS, y:+G3._debug.seaH(G3._debug.bv.x, G3._debug.bv.z, 3).toFixed(3)})"); R['novtfErrors'] = errs2[:3]
         print(json.dumps(R, ensure_ascii=False))
         print(ok(R['ramp']['maxWave'] < 0.05 and R['ramp']['maxHs'] < 0.08), 'from calm to hurricane in steps of 0.1 m/s no wave changes by more than 5 cm, and the height by less than 8 cm: no jumps between the Beaufort forces')

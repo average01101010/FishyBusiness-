@@ -24,9 +24,14 @@ async def main():
         await pg.click('#kinoBtn'); await pg.wait_for_timeout(2500)
         seen = {}
         for i in range(6):
-            await pg.evaluate("G3._debug.kinoNext()"); await pg.wait_for_timeout(2500)
+            # (the next shot is picked on the next frame: wait for it, up to 10 s, rather than a fixed time; few frames a second in the tests)
+            k0 = await pg.evaluate("G3.kinoShot")
+            await pg.evaluate("G3._debug.kinoNext()")
+            try: await pg.wait_for_function("(k0) => !!G3._debug.kino && !!G3.kinoShot && G3.kinoShot !== k0", arg=k0, timeout=10000)
+            except Exception: pass
+            await pg.wait_for_timeout(1500)
             k = await pg.evaluate("G3._debug.kino")
-            if k: seen[k['type']] = k; await pg.screenshot(path='kino_%s.png' % k['type'])
+            if k: seen[k['type']] = k; await pg.screenshot(path="kino_%s.png" % k["type"], timeout=120000)
         bad = {t: (round(k['up'], 1), round(k['free'], 2)) for t, k in seen.items() if k['up'] < 0.3 or k['free'] < 0.85}
         check(len(seen) >= 5, 'kino går gjennom opptakene', sorted(seen))
         check(not bad, 'i hvert opptak er øyet over land og sjø, og båten er i bildet uten land imellom', bad or {t: round(k['d']) for t, k in seen.items()})

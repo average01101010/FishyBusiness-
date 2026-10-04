@@ -27,6 +27,9 @@ os.chdir(OUT)
 
 async def boot(pg, url=None):
     """Open the game and press «Start» on the first screen. It waits for the page and the start, not for fixed pauses."""
+    # the software GPU of the test machine draws only a few 3D frames a second (05.10.2026): a screenshot or a wait without its own
+    # limit gets 120 s instead of Playwright's 30
+    pg.set_default_timeout(120000)
     await pg.goto(url or GAME)
     await pg.wait_for_selector('#obGo', state='visible', timeout=90000)
     await pg.click('#obGo')
