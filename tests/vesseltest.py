@@ -165,6 +165,15 @@ async def main():
         print(ok(len(g0) == 2 and 'Blad B' in g0[0] and 'under 7 m' in g0[1] and 'under 7 m' in g1[0] and '7–7,9 m' in g2[0] and '14,99' in g2[1]), 'Neste mål follows the ladder: blad B, the entry right, the next right, the 14.99 m coastal vessel', [g0, g1, g2])
         print(ok(r['bank'] and r['papers']), 'the bank shows the risk loan, and the papers show blad B')
         print(ok(r['sell']['loanDown'] == r['sell']['val'] and r['sell']['cash'] == 0), 'selling a vessel pays the loan off first')
+        # the catch from tools/fish/fisk.py: every species 1 m long with the head at -z, the halibut flat, the crab 1 m across its legs
+        r = await pg.evaluate('''() => { const out = {}; for (const sp of ['torsk', 'sei', 'hyse', 'lyr', 'lange', 'brosme', 'uer', 'kveite', 'krabbe']){ const o = glbPart('fish', sp);
+            if (!o){ out[sp] = null; continue; } const lo = [9, 9, 9], hi = [-9, -9, -9]; let fz = 0, fn = 0;
+            for (let i = 0; i < o.p.length; i += 3){ for (let k = 0; k < 3; k++){ lo[k] = Math.min(lo[k], o.p[i + k]); hi[k] = Math.max(hi[k], o.p[i + k]); } }
+            out[sp] = {tri:o.p.length / 9, size:[0, 1, 2].map(k => +(hi[k] - lo[k]).toFixed(3)), z:[+lo[2].toFixed(3), +hi[2].toFixed(3)]}; } return out; }''')
+        fish = {k: v for k, v in r.items() if k != 'krabbe'}
+        print(ok(all(r.values()) and all(0.95 <= v['size'][2] <= 1.05 and v['z'][0] >= -0.52 and v['z'][1] <= 0.52 and v['size'][0] < 0.26 for v in fish.values())
+                 and r['kveite']['size'][1] > 2.5 * r['kveite']['size'][0] and 0.8 <= r['krabbe']['size'][0] <= 1.2 and all(300 < v['tri'] < 3000 for v in r.values())),
+              'the fish from Blender: nine species, each 1 m from the snout at -z, the halibut flat, the crab about 1 m across', r)
         print('errors:', errs[:5]); await br.close()
 
 asyncio.run(main())

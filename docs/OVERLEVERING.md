@@ -1541,6 +1541,26 @@ Jonas' liste: oppgraderinger, kvotehandel, kikkert, raskere fangst, fortøying, 
   - **Banen går** fra båten til et punkt 1,5 båtlengder akter for kaiplassen og en bredde ut fra kaia, og så langs kaia inn. Er det fritt, går den rett. Ellers søker den over maskens celler innenfor 1,5 km og strammer linja.
   - **3D:** `moorStep` følger banen, glattet med `pathM`/`pathAt`. Ved avgang går båten baklengs ut fra kaia og så banen ut til havnepunktet (`DEP` i `updateBoat`), før følgeren tar over.
   - **Test:** `harbourtest` sjekker banen inn til hver kaiplass for tre båttyper, fra havnepunktet og fra innseilingen.
+- **Fiskeslagene fra Blender** (`tools/fish/fisk.py`, `src/data/fish.b64`, 363 KB):
+  - **Artene:** torsk, sei, hyse, lyr, lange, brosme, uer, kveite og taskekrabbe, hver som én del i GLB-en.
+  - **Fiskene** er 1 m lange, med hodet mot −z, ryggen opp og høyre side mot +x. Spillet skalerer dem etter vekta. Krabben er 1 m over beina.
+  - **Kjennetegnene** er tatt med slik de ses på dekk:
+    - torsk: skjeggtråd, overkjeve over underkjeve, flekker og lys sidelinje
+    - sei: underkjeven lengst, rett lys sidelinje, kløyvd stjert
+    - hyse: svart sidelinje og svart flekk over brystfinnen, høy første ryggfinne
+    - lyr: mørk sidelinje som buer høyt over brystfinnen
+    - lange og brosme: lange kropper og lange finner. Brosmen har mørkt bånd og hvit kant på finnene.
+    - uer: rød, med piggete ryggfinne og store øyne
+    - kveite: flatfisk med begge øynene på høyre side, mørk oppe og hvit under
+  - **Kroppen** er ringer langs fisken med et smalt bånd for sidelinja. Finnene er tynne plater. Farger og flekker ligger i hjørnefargene.
+  - **I spillet** erstatter de de prosedyrale fiskene (`FC`/`fishM`, som står igjen som reserve) gjennom `fishOf(sp)` i `view3d.js`:
+    - i baljen på skiffen
+    - på jukselina og i jukse-spillet (`hang`)
+    - som lykkefisken i haillen
+    - som torsken i hendene ved sløying
+    - som fangst i blødekaret og på sløyebordet på dekkede båter (`drawDeck`, inntil 8 fisk etter artene i lasten)
+  - Krabbene ligger flatt i baljen.
+  - **Test:** `vesseltest` sjekker at alle ni delene finnes, at fiskene er 1 m fra snuten ved −z, at kveita er flat og at krabben er rundt 1 m bred.
 
 ## 6. Regelverk og kilder
 
