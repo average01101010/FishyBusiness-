@@ -135,7 +135,7 @@ def npc_tile(t):
 # the chart's vectors of a tile (chart.py): the coast at 25 m and 3 m, and the names, kept in out/national/chart/ (region.cached)
 def chart_tile(tx, ty):
     import chart
-    b1, k1 = cached(f'coast1-{tx}-{ty}', lambda: chart.coast1(tx, ty)); b2, k2 = cached(f'coast2-{tx}-{ty}', lambda: chart.coast2(tx, ty))
+    b1, k1 = cached(f'coast1-{tx}-{ty}', lambda: chart.coast1(tx, ty)); b2, k2 = cached(f'coast2u-{tx}-{ty}', lambda: chart.coast2(tx, ty))
     nm = cached(f'names-{tx}-{ty}', lambda: chart.names(tx, ty))
     return {'coast1': (b1, k1, 'chart'), 'coast2': (b2, k2, 'chart'), 'names': (chart.names_bytes(nm), len(nm), 'chart')}
 

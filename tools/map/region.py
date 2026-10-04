@@ -117,7 +117,7 @@ def chart_vec(R):
     V.append(('core', (0, 0), 'coast0', c0, 0)); V.append(('core', (0, 0), 'names0', chart.names_bytes(n0), len(n0)))
     for ty in range(R.by0 // 5, (R.by1 - 1) // 5 + 1):
         for tx in range(R.bx0 // 5, (R.bx1 - 1) // 5 + 1):
-            b1, k1 = cached(f'coast1-{tx}-{ty}', lambda: chart.coast1(tx, ty)); b2, k2 = cached(f'coast2-{tx}-{ty}', lambda: chart.coast2(tx, ty)); nm = chart.names(tx, ty)
+            b1, k1 = cached(f'coast1-{tx}-{ty}', lambda: chart.coast1(tx, ty)); b2, k2 = cached(f'coast2u-{tx}-{ty}', lambda: chart.coast2(tx, ty)); nm = chart.names(tx, ty)
             V += [('chart', (tx, ty), 'coast1', b1, k1), ('chart', (tx, ty), 'coast2', b2, k2), ('chart', (tx, ty), 'names', chart.names_bytes(nm), len(nm))]
     return V
 

@@ -1,14 +1,15 @@
 # The chart's vector layers (phase K7 of the coast plan): the coastline at three levels of detail and the place names, from Overture.
 #   coast0  the whole frame's land, simplified to 300 m, polygons over 0.2 km2: the core
 #   coast1  per 50 km tile, the land simplified to 25 m, polygons over 2 000 m2, cut to the tile and 500 m round it
-#   (coast) the fine coast per tile at 3 m is vectors.py's
+#   coast2  per tile, the land joined and simplified to 3 m (skerries from 4 m2), and the breakwaters as rings of class 2 and 3
 #   names   per tile: [x, y (m from the tile's corner), kind, rank, name, angle]; kinds 0 town, 1 sea/fjord/sound/bay, 2 island, 3 peak/cape;
 #           rank 0 shows from the whole country, 1 from a region, 2 from a fjord, 3 close in; names0 is the core's rank-0 list
-# Polygons are packed as vectors.py packs them: n, then per ring its class (0 outer, 1 hole), point count and zigzag steps, here in
+# Polygons are packed as vectors.py packs them: n, then per ring its class (0 outer, 1 hole; coast2 also 2 and 3 for a breakwater's
+# outer ring and hole), point count and zigzag steps, here in
 # metres from the tile's corner (or in units of 10 m from the frame's origin for coast0). The outer rings and the holes turn opposite
 # ways, so the game fills them with the nonzero rule (overlapping polygons stay land).
 import os, sys, json, math, numpy as np
-from shapely import from_wkb, box as sbox, intersection, make_valid
+from shapely import from_wkb, box as sbox, intersection, make_valid, unary_union
 from shapely.geometry.polygon import orient
 from shapely.ops import transform as stransform
 import frame
@@ -103,11 +104,36 @@ def names(tx, ty):
             elif c in ('peak', 'cape'): p = pt(g); add(p.x, p.y, 3, 2 if c == 'cape' else 3, nm, 0)
     out.sort(key=lambda q: (q[0], q[1])); return [q[2] for q in out]
 
-# the fine coast of a tile (3 m), as vectors.py makes it
+# the breakwaters near a tile (OpenStreetMap's man_made=breakwater in Overture's infrastructure, which the coastline leaves out), in the
+# tile's metres: areas as mapped, lines widened to BW_HALF on each side (12 m: an estimate of a rubble mound at the waterline)
+BW_HALF = 6.0
+def breakwaters_m(box, ox, oy, clip):
+    inf = features('base/infrastructure', box, ['geometry', 'subtype', 'class']); out = []
+    if inf is None: return out
+    for g, c in zip(from_wkb(inf.column('geometry').to_numpy(zero_copy_only=False)), inf.column('class').to_pylist()):
+        if c != 'breakwater' or g is None: continue
+        m = make_valid(nat(g, 1000, ox, oy))
+        for q in getattr(m, 'geoms', [m]):
+            if q.geom_type == 'LineString': q = q.buffer(BW_HALF, 4)
+            elif q.geom_type == 'Polygon': q = q.buffer(0)
+            else: continue
+            q = intersection(q, clip)
+            if not q.is_empty: out.append(q)
+    return out
+
+# the fine coast of a tile (3 m): the one truth for land and sea in the game (04.10.2026, the user: the land is to follow the lines).
+# Overture's land pieces are joined before they are simplified (each simplified on its own left seams up to 3 m that a point test
+# took for water), and small skerries are kept (4 m2). The breakwaters outside that land follow as their own rings, class 2 (outer)
+# and 3 (hole): the chart fills them as land, isLand takes them as land, and the 3D view builds them as rubble mounds.
 def coast2(tx, ty):
     R = frame.Region('c', tx * 5, ty * 5, tx * 5 + 5, ty * 5 + 5); ox, oy = tx * 50000.0, ty * 50000.0; clip = sbox(-500, -500, 50500, 50500)
-    gs = [intersection(make_valid(nat(g, 1000, ox, oy)), clip) for g in land(R.lonlat_box(0.6))]
-    b = bytearray(); r = rings_of([g for g in gs if not g.is_empty], 3, 50); lines(b, r); return bytes(b), len(r)
+    box = R.lonlat_box(0.6)
+    U = unary_union([g for g in (intersection(make_valid(nat(g, 1000, ox, oy)), clip) for g in land(box)) if not g.is_empty])
+    B = unary_union(breakwaters_m(box, ox, oy, clip))
+    if not B.is_empty and not U.is_empty: B = B.difference(U)
+    r = rings_of([U], 3, 4) if not U.is_empty else []
+    if not B.is_empty: r += [(c + 2, pts) for c, pts in rings_of([B], 1, 4)]
+    b = bytearray(); lines(b, r); return bytes(b), len(r)
 
 # n, then per name x, y (varint), kind, rank, the angle the name is turned (degrees + 90: 90 is level), name length and UTF-8
 def names_bytes(nm):
