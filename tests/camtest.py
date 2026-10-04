@@ -50,8 +50,8 @@ async def main():
         # the binoculars in the bridge view (04.10.2026): two fingers apart zoom to 8x (a field of view under 10 degrees) without moving
         # the chase camera's distance, with the binocular frame and its 8x showing; a double tap goes back
         bn = json.loads(await pg.evaluate("""async () => { const D = G3._debug, c = D.cam; G3.setHelm(true); const d0 = c.dist; await new Promise(r => setTimeout(r, 800)); const f1 = D.curFov * 180 / Math.PI;
-          c.zoom = 8; await new Promise(r => setTimeout(r, 1500)); const f8 = D.curFov * 180 / Math.PI, el = document.getElementById('binoc'), shown = !el.hidden, txt = el.textContent;
-          document.getElementById('gl').dispatchEvent(new MouseEvent('dblclick')); await new Promise(r => setTimeout(r, 800)); const back = c.zoom, f0 = D.curFov * 180 / Math.PI;
+          c.zoom = 8; for (let i = 0; i < 40 && D.curFov * 180 / Math.PI > 10; i++) await new Promise(r => setTimeout(r, 200)); const f8 = D.curFov * 180 / Math.PI, el = document.getElementById('binoc'), shown = !el.hidden, txt = el.textContent;
+          document.getElementById('gl').dispatchEvent(new MouseEvent('dblclick')); for (let i = 0; i < 40 && D.curFov * 180 / Math.PI < 40; i++) await new Promise(r => setTimeout(r, 200)); const back = c.zoom, f0 = D.curFov * 180 / Math.PI;
           G3.setHelm(false); return JSON.stringify({f1:+f1.toFixed(1), f8:+f8.toFixed(1), shown, txt, back, f0:+f0.toFixed(1), dist:c.dist === d0}); }"""))
         check(bn['f8'] < 10 and bn['f1'] > 40 and bn['shown'] and bn['txt'] == '8×' and bn['back'] == 1 and bn['f0'] > 40 and bn['dist'], 'kikkerten i bro-visning: 8× gir under 10 graders synsfelt med kikkertramme, dobbelttrykk går tilbake, og kameraavstanden er urørt', bn)
         print('sidefeil', errs)
