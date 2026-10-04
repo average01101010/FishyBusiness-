@@ -190,7 +190,7 @@ async def perf(pg, cdp):
         t = await pg.evaluate("""new Promise(res => { HEATC.stats = {slices:0, maxSlice:0, n:0, ms:0, over:0}; heatReset(); const t0 = performance.now(); heatTick();
           const w = () => { if (!HEATC.busy && HEATC.qi >= HEATC.queue.length) res(JSON.stringify({ms:performance.now() - t0, ...HEATC.stats})); else setTimeout(w, 20); }; w(); })""")
         await cdp.send('Emulation.setCPUThrottlingRate', {'rate': 1})
-        r = json.loads(t); runs.append(r); print('· perf run', k + 1, round(r['ms']), 'ms', flush=True)
+        r = json.loads(t); runs.append(r); print('· %4.0f s  perf run %d: %d ms' % (time.time() - T0, k + 1, round(r['ms'])), flush=True)
         # a slice is 5 ms of work; one slice over a frame (16 ms) is let through, never two, and none over two frames
         if r.get('over', 0) <= 1 and r['maxSlice'] < 33 and r['ms'] < 3000: break
     r = runs[-1]
