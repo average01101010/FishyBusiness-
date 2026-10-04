@@ -2,10 +2,14 @@
 # player's AIS range), per 50 km tile, in metres from the tile's corner:
 #   harbours  the quay faces of vectors.py of 12 m and more within 250 m of each other, 30 m of face or more together; not a marina's
 #             pontoons (piers mapped as lines, kind 1), where the leisure boats lie
-#   fleet     a boat for every 45 m of face, 1 to 8 (at most 300 a tile), lengths drawn from the coastal fleet (most under 11 m, a few to 28 m), each at a
-#             face that takes her as the game's quayFit has it (90 % of the face her length and 2 m, the water her draught and half a
-#             metre, 3 m where the depth is not known), alongside it, never two in one place
-#   grounds   2 to 4 off each harbour: 20 to 150 m deep, 3 to 22 km by sea, on a slope (the depth's gradient at 500 m), 2 km apart
+#   fleet     a boat for every 150 m of face, 1 to 3 (at most 55 a tile; about 5 000 along the coast, near the 4 614 active fishing
+#             vessels of 2024 by Fiskeridirektoratet; kart-6 had 19 411), lengths drawn from the coastal fleet (most under 11 m, a few to 28 m),
+#             each at a face that takes her as the game's quayFit has it (90 % of the face her length and 2 m, the water her draught and
+#             half a metre; a face whose depth was not measured takes none), alongside it, never two in one place
+#   grounds   2 to 4 off each harbour: 20 to 150 m deep, 3 to 22 km by sea, 600 m or more from the land (better 1 km: the boats drift
+#             a kilometre with the wind as they fish), on a slope (the depth's gradient at 500 m), 2 km apart, and away from the grounds
+#             the tile's other harbours took (the user's test 04.10.2026: the boats were heaped on a few grounds, some ashore). A
+#             harbour that gets no ground (a lake, a pocket with no way out) is left out
 #   routes    the way from the harbour's mouth to each ground round the land: the shortest path on a 100 m grid of the tile's 25 m
 #             mask (a cell is water with at most 4 of its 16 cells land), straightened where the mask is clear
 # As JSON in the tile's vec pack ('npc'): {"h": [{"x", "z", "b": [[L, B, T, x, z, heading, name], ...], "g": [[x, z, [x, z, ...]], ...]}]}
@@ -22,7 +26,9 @@ NAMES = ['Havbris', 'Nordlys', 'Havgull', 'Skarven', 'Sjøsprøyt', 'Polarstjern
          'Lofotværing', 'Fjordbris', 'Stormfuglen', 'Nordstjerna', 'Havtind', 'Sjøgutt', 'Fiskebank', 'Skreien', 'Lyrtind', 'Havlys', 'Sørvær',
          'Ishavet', 'Kobben', 'Teisten', 'Bjørnøy', 'Steinbit', 'Lomvi', 'Ærfuglen', 'Breiflabb', 'Havstjerna', 'Brisen', 'Seigutten', 'Kyststjerna']
 LEGW, LEGH = 2 * frame.LEG['KX'], 0.74 * frame.LEG['KY']
-CAP = 300   # boats a tile
+CAP = 55    # boats a tile
+PER = 150   # m of face a boat
+MOST = 3    # boats a harbour
 
 def h01(*a): return int(hashlib.sha256(repr(a).encode()).hexdigest()[:12], 16) / 16 ** 12
 def vlen(q): return q * 0.5 if q <= 160 else 80 + (q - 160) * 2
@@ -62,6 +68,8 @@ def build(tx, ty, L, quay):
     M = np.asarray(L['mask']) > 0; LAND16 = M.reshape(500, 4, 500, 4).sum(axis=(1, 3))
     Dm = np.asarray(L['depth']).astype(np.float32) / 2; D100 = Dm.reshape(500, 2, 500, 2).mean(axis=(1, 3))
     slope = ndimage.gaussian_gradient_magnitude(ndimage.uniform_filter(D100, 5), 2.5)
+    dland = ndimage.distance_transform_edt(~M) * 25   # m to the land at 25 m
+    D2L = dland.reshape(500, 4, 500, 4).min(axis=(1, 3))   # the nearest land of a 100 m cell's 16
     def grid(W):
         nid = -np.ones((500, 500), np.int64); wi = np.argwhere(W); nid[wi[:, 0], wi[:, 1]] = np.arange(len(wi))
         rows, cols, wts = [], [], []
@@ -73,7 +81,8 @@ def build(tx, ty, L, quay):
     GRIDS = [grid(LAND16 <= 1), grid(LAND16 <= 4)]
     W = GRIDS[1]['W']
     # the candidate grounds: every 500 m, 20-150 m deep
-    cand = [(r, c) for r in range(2, 500, 5) for c in range(2, 500, 5) if W[r, c] and 20 <= D100[r, c] <= 150]
+    cand = [(r, c) for r in range(2, 500, 5) for c in range(2, 500, 5) if W[r, c] and 20 <= D100[r, c] <= 150 and D2L[r, c] >= 600]
+    taken = []   # the grounds the tile's harbours took so far: the next harbours keep off them
     smax = max(1e-6, float(np.percentile(slope[W], 95)))
     def clear(a, c):   # the straight line on the 25 m mask, every 10 m
         k = max(1, int(math.hypot(c[0] - a[0], c[1] - a[1]) / 10))
@@ -85,7 +94,7 @@ def build(tx, ty, L, quay):
     # the boats a harbour gets: one for every 45 m of face, 1 to 8, at most CAP a tile (a city's many quays are not a fishing fleet),
     # the bigger harbours first when there are more harbours than that
     harbours = sorted(harbours, key=lambda g: -Lf[g].sum())[:CAP]
-    want = [int(min(8, max(1, round(Lf[g].sum() / 45)))) for g in harbours]
+    want = [int(min(MOST, max(1, round(Lf[g].sum() / PER)))) for g in harbours]
     if sum(want) > CAP: want = [max(1, int(w * CAP / sum(want))) for w in want]
     nwant = {id(g): w for g, w in zip(harbours, want)}
     for hi, g in enumerate(sorted(harbours, key=lambda g: (round(X[g].mean()), round(Y[g].mean())))):
@@ -97,7 +106,7 @@ def build(tx, ty, L, quay):
             for tries in range(4):
                 spot = None
                 for i in faces:
-                    if Lf[i] * 0.9 < Lb + 2 or (Df[i] if Df[i] > 0 else 3.0) < Tb + 0.5: continue
+                    if Df[i] <= 0 or Lf[i] * 0.9 < Lb + 2 or Df[i] < Tb + 0.5: continue
                     lim = Lf[i] / 2 - Lb / 2 - 1; u = used.setdefault(i, [])
                     for s in range(0, int(lim * 2) + 1, 2):
                         for a in ([0.0] if s == 0 else [s / 2, -s / 2]):
@@ -132,7 +141,10 @@ def build(tx, ty, L, quay):
             for r, c in cand:
                 if not Wg[r, c]: continue
                 d = dist[nid[r, c]]
-                if 30 <= d <= 220: sc.append((0.7 * min(1, slope[r, c] / smax) + 0.3 * h01(seed, 'g', r, c), r, c))
+                if 30 <= d <= 220:
+                    gx, gy = (c + 0.5) * 100, (r + 0.5) * 100
+                    near = sum(1 for qx, qy in taken if math.hypot(gx - qx, gy - qy) < 2000)
+                    sc.append((0.55 * min(1, slope[r, c] / smax) + 0.25 * h01(seed, 'g', r, c) + 0.2 * min(1, (D2L[r, c] - 600) / 600) - 0.45 * near, r, c))
             sc.sort(reverse=True); K = 2 + int(h01(seed, 'K') * 3)
             mouth = ((best[2] + 0.5) * 100, (best[1] + 0.5) * 100)
             for s_, r, c in sc:
@@ -150,6 +162,8 @@ def build(tx, ty, L, quay):
                 route = [v for p in st for v in (round(p[0]), round(p[1]))]
                 grounds.append(((c + 0.5) * 100, (r + 0.5) * 100, route))
             if grounds: break
+        if not grounds: continue
+        taken += [(gx, gy) for gx, gy, _ in grounds]
         out.append({'x': round(hx), 'z': round(hy), 'b': boats, 'g': [[round(gx), round(gy), rt] for gx, gy, rt in grounds]})
     return {'h': out}
 
