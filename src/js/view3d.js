@@ -3148,13 +3148,15 @@ const G3 = (() => {
     if (KINO.on && !SHOW){
       const K = kinoCam(t, rdt); eye = K.eye; kfov = K.fov; V = viewDir([K.tgt[0] - eye[0], K.tgt[1] - eye[1], K.tgt[2] - eye[2]]); camFwd = [K.tgt[0] - eye[0], K.tgt[2] - eye[2]];
     } else if (cam.helm && !SHOW){
-      // at the wheel: eye above the helmsman, moving with the boat (damped a little)
-      // the helmsman's head steadies itself: the view follows the boat's pitch and roll through a filter of 0.3 s, so an uneven frame
-      // (the tablet's) does not jerk the horizon (the user: «båten rister voldsomt i bro-visningen», 03.10.2026)
+      // at the wheel: the eye stands where the helmsman's head is on the hull, and moves with it, so the boat round him stands still
+      // in the picture; only the head steadies itself: the view follows the boat's pitch and roll through a filter of 0.3 s, so an
+      // uneven frame (the tablet's) does not jerk the horizon (the user: «båten rister voldsomt i bro-visningen», 03.10.2026). The eye
+      // was placed by the steadied pitch and heave too, so the rail and the console bobbed against it (the user's video 04.10.2026:
+      // «hvor mye båten vibrerer under seiling»); a heave does not move the horizon, which is far off
       const kh = 1 - Math.exp(-Math.min(0.25, rdt) / 0.3); if (cam.sp === undefined || !isFinite(cam.sp)){ cam.sp = bv.pitch; cam.sr = bv.roll; }
-      cam.sp += (bv.pitch - cam.sp) * kh; cam.sr += (bv.roll - cam.sr) * kh; if (cam.sy === undefined || !isFinite(cam.sy)) cam.sy = bv.y; cam.sy += (bv.y - cam.sy) * kh;
-      const Mh = model(bv.x, cam.sy, bv.z, -bv.head, cam.sp * 0.7, cam.sr * 0.7);
-      eye = xf(Mh, (GEO(vtype())).eye);
+      cam.sp += (bv.pitch - cam.sp) * kh; cam.sr += (bv.roll - cam.sr) * kh;
+      const Mh = model(bv.x, bv.y, bv.z, -bv.head, cam.sp * 0.7, cam.sr * 0.7);
+      eye = xf(model(bv.x, bv.y, bv.z, -bv.head, bv.pitch, bv.roll), (GEO(vtype())).eye);
       const cy = Math.cos(cam.hp), dl = [-Math.sin(cam.hy) * cy, Math.sin(cam.hp), -Math.cos(cam.hy) * cy];
       const f = [Mh[0] * dl[0] + Mh[4] * dl[1] + Mh[8] * dl[2], Mh[1] * dl[0] + Mh[5] * dl[1] + Mh[9] * dl[2], Mh[2] * dl[0] + Mh[6] * dl[1] + Mh[10] * dl[2]];
       V = viewDir(f, [Mh[4], Mh[5], Mh[6]]); camFwd = [f[0], f[2]];
