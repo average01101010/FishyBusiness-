@@ -1469,7 +1469,11 @@ const G3 = (() => {
     const tub = NB(); tub.box(0, 0, 0, 0.55, 0.32, 0.55, k(0.2, 0.45, 0.72, 0.4), k(0.4, 0.3, 0.2, 0.1));
     const fl = NB(); fl.tube([[0, 0, 0], [0, 0, 1]], 1, k(0.95, 0.72, 0.15, 0.2), 5);
     const net = NB(); net.tube([[0, 0, 0], [0, 0, 1]], 1, k(0.55, 0.62, 0.6, 0.1), 4);
-    GB = {buoy:b.mesh(), haul:h.mesh(), pot:pt.mesh(), bin:bin.mesh(), tub:tub.mesh(), float:fl.mesh(), net:net.mesh()};
+    const bt = NB(); bt.box(0, 0, 0, 0.035, 0.03, 0.05, k(0.62, 0.42, 0.36, 0.5));
+    GB = {buoy:b.mesh(), haul:h.mesh(), pot:pt.mesh(), bin:bin.mesh(), tub:tub.mesh(), float:fl.mesh(), net:net.mesh(), bait:bt.mesh(), dregg:null};
+    // the blåse and the grapnel from tools/gear/blaase.py, in place of the drawn float above
+    if (typeof glbHas === 'function' && glbHas('gear-marks')){ const up = nm => { const o = glbPart('gear-marks', nm); return o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null; };
+      GB.buoy = up('blaase') || GB.buoy; GB.dregg = up('dregg'); }
   }
   // the buoys of every set within sight, bobbing on the waves, flags blowing downwind
   function drawGearSea(eye, t, VP, H){
@@ -1487,6 +1491,33 @@ const G3 = (() => {
   // the starboard rail with the arm out over the side. Parts from their own origins: the frame from the post's foot, the sheave and the
   // stripper from their axles (along the boat, so they turn about z); in the extras the path the gear takes over them.
   const HAULM = {}; let HAULA = 0, HAULT = 0;
+  // setting nets or lines (plan E2): the gear runs from the stack over the stern into the sea astern at the setting speed, the net with
+  // its floats and lead line, the line with baited hooks on their snoods; the grapnel goes over first and sinks
+  let SETA = 0, SETT = 0, SETG = null, SETT0 = 0;
+  function drawSetting(BMrel, t, g, G, stack, x0){
+    const garn = g.kind === 'garn', gw = G.gw || 1, st = G.stern, v = clamp(2.5 * KNV(), 0.6, 4);
+    SETA += v * clamp(t - SETT, 0, 0.1); SETT = t; if (SETG !== g){ SETG = g; SETT0 = t; }
+    const path = [[stack[0], stack[1] + 0.35, stack[2]], [x0, gw + 0.1, st - 0.15], [x0 + 0.1, gw - 0.05, st + 0.15], [x0 + 0.3, -0.12, st + 2.4], [x0 + 0.6, -1.0, st + 9], [x0 + 0.9, -2.6, st + 16]];
+    const L = []; let tot = 0; for (let i = 1; i < path.length; i++){ const l = Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1], path[i][2] - path[i - 1][2]); L.push(l); tot += l; }
+    const pos = s => { let i = 0; while (i < L.length - 1 && s > L[i]){ s -= L[i]; i++; } const u = clamp(s / L[i], 0, 1), A = path[i], B = path[i + 1]; return [A[0] + (B[0] - A[0]) * u, A[1] + (B[1] - A[1]) * u, A[2] + (B[2] - A[2]) * u]; };
+    for (let i = 1; i < path.length; i++){ drawN(garn ? GB.float : GB.net, chain(BMrel, limbM(path[i - 1], path[i], garn ? 0.012 : 0.006)));
+      if (garn) drawN(GB.net, chain(BMrel, limbM([path[i - 1][0], path[i - 1][1] - 0.3, path[i - 1][2]], [path[i][0], path[i][1] - 0.3, path[i][2]], 0.008))); }
+    const sp = garn ? 1.0 : 1.4;
+    for (let s = SETA % sp; s < tot; s += sp){ const p = pos(s), q = pos(Math.min(tot, s + (garn ? 0.12 : 0.05)));
+      if (garn){ drawN(GB.float, chain(BMrel, limbM([p[0], p[1] + 0.04, p[2]], [q[0], q[1] + 0.04, q[2]], 0.035))); drawN(GB.net, chain(BMrel, limbM(p, [p[0], p[1] - 0.3, p[2]], 0.005))); }
+      else { drawN(GB.net, chain(BMrel, limbM(p, [p[0], p[1] - 0.22, p[2] + 0.02], 0.004))); drawN(GB.bait, chain(BMrel, M4.T(p[0], p[1] - 0.24, p[2] + 0.02))); } }
+    const ta = t - SETT0;
+    if (GB.dregg && g.done === 0 && ta < 4){ const u = clamp(ta / 1.4, 0, 1), A = path[1], B = [x0 + 0.4, -0.2, st + 2.6], dn = Math.max(0, ta - 1.4);
+      drawN(GB.dregg, chain(BMrel, M4.T(A[0] + (B[0] - A[0]) * u, A[1] + (B[1] - A[1]) * u + Math.sin(Math.PI * u) * 0.6 - dn * 0.9, A[2] + (B[2] - A[2]) * u + dn * 0.4), M4.RX(ta * 2))); }
+  }
+  // fish in the meshes or on the hooks coming up while hauling (plan E2): as many as the set still holds, the species in proportion
+  function haulFish(g){
+    const s = (S.sets || []).find(x => x.id === g.sid); if (!s || g.op !== 'haul') return null;
+    let kg = 0; const cum = []; for (const sp in s.acc){ if (sp === 'krabbe') continue; const k = s.acc[sp].kg || 0; if (k > 0){ kg += k; cum.push([sp, kg]); } }
+    if (kg <= 0) return null;
+    const left = Math.max(1, g.n - g.done), unit = g.kind === 'garn' ? 30 : Math.max(10, (g.hooksPer || 30) * 1.4);
+    return {p:clamp(kg / left / 3 / unit, 0, 0.85), sp:r => (cum.find(c => r * kg <= c[1] + 1e-9) || cum[0])[0]};
+  }
   function haulModel(kind){
     if (kind in HAULM) return HAULM[kind]; HAULM[kind] = null; const type = 'haul-' + kind;
     if (typeof glbHas !== 'function' || !glbHas(type)) return null;
@@ -1505,7 +1536,7 @@ const G3 = (() => {
     // the hauler on the starboard rail just forward of the working deck; gear stacks on the deck aft of it
     const HP = skiff ? SKA.haul : G.hauler, turning = g.op === 'haul' && !(b.deckStop), DZ = skiff ? 0 : d.z - 0.6;
     nSetup(VP);
-    const HM = !skiff && (g.kind === 'garn' || g.kind === 'line') ? haulModel(g.kind) : null;
+    const HM = !skiff && (g.kind === 'garn' || g.kind === 'line') ? haulModel(g.kind) : null, setting = g.op === 'set' && (g.kind === 'garn' || g.kind === 'line');
     if (!HM && (!skiff || S.equip.elhaler)) drawN(GB.haul, chain(BMrel, M4.T(HP[0], HP[1], HP[2]), M4.RX(turning ? -t * 3 : 0)));
     // from the hauler down into the sea, outboard and a little ahead
     const W0 = [sx + (skiff ? 1.6 : 2.6), -0.35, HP[2] - (skiff ? 1.2 : 2.2)], seg = (A, Bp, r, m, sag) => { let prev = A; for (let i = 1; i <= 8; i++){ const u = i / 8, P = [A[0] + (Bp[0] - A[0]) * u, A[1] + (Bp[1] - A[1]) * u - sag * 4 * u * (1 - u), A[2] + (Bp[2] - A[2]) * u]; drawN(m, chain(BMrel, limbM(prev, P, r))); prev = P; } };
@@ -1516,27 +1547,33 @@ const G3 = (() => {
       HAULA += v * clamp(t - HAULT, 0, 0.1) / HM.r; HAULT = t;
       litSetup(VP); drawLit(HM.frame, at([0, 0, 0])); drawLit(HM.sheave, chain(at(HM.ax), M4.RZ(HAULA))); drawLit(HM.stripper, chain(at(HM.st), M4.RZ(-HAULA * HM.r / (g.kind === 'garn' ? 0.06 : 0.08))));
       nSetup(VP);
+      if (setting) drawSetting(BMrel, t, g, G, [sx * 0.3, d.y, DZ], 0.45); else {
       const path = HM.path.map(q => [P0[0] + q[0], P0[1] + q[1], P0[2] + q[2]]); path[0] = W0.slice();
       const garn = g.kind === 'garn', rope = garn ? GB.net : GB.float;
       for (let i = 1; i < path.length; i++) seg(path[i - 1], path[i], garn ? 0.03 : 0.006, rope, i === 1 ? 0.25 : 0);
       // along the path by length: floats (net) or snoods with a hook (line) every metre, moving in with the gear
       const L = []; let tot = 0; for (let i = 1; i < path.length; i++){ const l = Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1], path[i][2] - path[i - 1][2]); L.push(l); tot += l; }
       const pos = s => { let i = 0; while (i < L.length - 1 && s > L[i]){ s -= L[i]; i++; } const u = clamp(s / L[i], 0, 1), A = path[i], B = path[i + 1]; return [A[0] + (B[0] - A[0]) * u, A[1] + (B[1] - A[1]) * u, A[2] + (B[2] - A[2]) * u]; };
-      const off = (HAULA * HM.r) % 1;
-      for (let s = off; s < tot; s += 1){ const p = pos(s), q = pos(Math.min(tot, s + (garn ? 0.12 : 0.05)));
+      const off = (HAULA * HM.r) % 1, HF = haulFish(g), id0 = Math.floor(HAULA * HM.r);
+      for (let s = off, k = 0; s < tot; s += 1, k++){ const p = pos(s), q = pos(Math.min(tot, s + (garn ? 0.12 : 0.05)));
+        if (HF && s < tot * 0.7 && hash((k - id0) * 7 + 13) < HF.p) drawN(fishOf(HF.sp(hash((k - id0) * 3 + 1))), chain(BMrel, M4.T(p[0], p[1] - (garn ? 0.3 : 0.4), p[2]), M4.RX(Math.PI / 2), M4.RZ(hash(k - id0) - 0.5), M4.S(garn ? 0.5 : 0.45)));
         if (garn){ drawN(GB.float, chain(BMrel, limbM([p[0], p[1] + 0.05, p[2]], [q[0], q[1] + 0.05, q[2]], 0.035))); if (s < L[0] && Math.floor(s + HAULA * HM.r) % 3 === 0) drawN(GB.net, chain(BMrel, limbM(p, [p[0], p[1] - 0.45, p[2]], 0.01))); }
         else drawN(GB.float, chain(BMrel, limbM(p, [p[0], p[1] - 0.25, p[2] + 0.02], 0.004))); }
-      if (garn){ const n = g.op === 'haul' ? g.done : g.n - g.done, fill = clamp(n / Math.max(1, g.n), 0, 1); drawN(GB.bin, chain(BMrel, M4.T(sx * 0.3, d.y, DZ), M4.S(1, 0.3 + 0.7 * fill, 1))); }
+      }
+      if (g.kind === 'garn'){ const n = g.op === 'haul' ? g.done : g.n - g.done, fill = clamp(n / Math.max(1, g.n), 0, 1); drawN(GB.bin, chain(BMrel, M4.T(sx * 0.3, d.y, DZ), M4.S(1, 0.3 + 0.7 * fill, 1))); }
       else { const n = g.op === 'haul' ? g.done : g.n - g.done; for (let i = 0; i < Math.min(6, n); i++) drawN(GB.tub, chain(BMrel, M4.T(sx * 0.25 - (i % 2) * 0.6, d.y + Math.floor(i / 2) * 0.33, DZ + (Math.floor(i / 2) % 2) * 0.1))); }
     } else if (g.kind === 'garn'){
       // float line on top, lead line below, and the mesh between them moving with the net
+      if (setting) drawSetting(BMrel, t, g, G, SKA.stack, -0.55); else {
       seg([HP[0], HP[1] + 0.12, HP[2]], [W0[0], W0[1] + 0.3, W0[2]], 0.012, GB.float, 0.15); seg([HP[0], HP[1] - 0.12, HP[2]], W0, 0.01, GB.net, 0.25);
-      const ph = (t * (turning ? 0.5 : 0.15)) % 0.125;
-      for (let u = ph; u < 1; u += 0.125){ const A = [HP[0] + (W0[0] - HP[0]) * u, HP[1] + 0.12 + (W0[1] + 0.3 - HP[1] - 0.12) * u - 0.15 * 4 * u * (1 - u), HP[2] + (W0[2] - HP[2]) * u], B2 = [A[0], A[1] - 0.24 - 0.1 * u, A[2]]; drawN(GB.net, chain(BMrel, limbM(A, B2, 0.004))); }
+      const ph = (t * (turning ? 0.5 : 0.15)) % 0.125, HF = haulFish(g), id0 = Math.floor(t * (turning ? 0.5 : 0.15) / 0.125);
+      for (let u = ph, k = 0; u < 1; u += 0.125, k++){ const A = [HP[0] + (W0[0] - HP[0]) * u, HP[1] + 0.12 + (W0[1] + 0.3 - HP[1] - 0.12) * u - 0.15 * 4 * u * (1 - u), HP[2] + (W0[2] - HP[2]) * u], B2 = [A[0], A[1] - 0.24 - 0.1 * u, A[2]]; drawN(GB.net, chain(BMrel, limbM(A, B2, 0.004)));
+        if (HF && u < 0.85 && hash((k - id0) * 7 + 13) < HF.p * 3) drawN(fishOf(HF.sp(hash((k - id0) * 3 + 1))), chain(BMrel, M4.T(B2[0], B2[1] - 0.1, B2[2]), M4.RX(Math.PI / 2), M4.S(0.45))); }
+      }
       const n = g.op === 'haul' ? g.done : g.n - g.done, fill = clamp(n / Math.max(1, g.n), 0, 1);
       drawN(GB.bin, chain(BMrel, M4.T(skiff ? SKA.stack[0] + 0.1 : sx * 0.3, d.y, skiff ? SKA.stack[2] : DZ), M4.S(1, 0.3 + 0.7 * fill, 1)));
     } else if (g.kind === 'line'){
-      seg(HP, W0, 0.008, GB.float, 0.2);
+      if (setting) drawSetting(BMrel, t, g, G, SKA.stack || [0, d.y, 0], -0.55); else seg(HP, W0, 0.008, GB.float, 0.2);
       const n = g.op === 'haul' ? g.done : g.n - g.done;
       for (let i = 0; i < Math.min(6, n); i++) drawN(GB.tub, chain(BMrel, M4.T((skiff ? SKA.stack[0] : sx * 0.25) - (i % 2) * 0.6, d.y + Math.floor(i / 2) * 0.33, (skiff ? SKA.stack[2] : DZ) + (Math.floor(i / 2) % 2) * 0.1)));
     } else {

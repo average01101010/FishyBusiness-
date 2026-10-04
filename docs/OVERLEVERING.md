@@ -1578,6 +1578,11 @@ Jonas' liste: oppgraderinger, kvotehandel, kikkert, raskere fangst, fortøying, 
     - slepetauet går fra slepekroken til baugen din
     - den høres som en stor båt
   - **Test:** `towtest.py` sjekker oppmønstringen, farten, at veiene aldri går over land, pris og fangst, båt på grunn, spoling og statusteksten.
+- **Garn og line i 3D** (`drawSetting`, `haulFish` i `view3d.js`; `tools/gear/blaase.py`, `src/data/gear-marks.b64`):
+  - **Setting:** redskapet går fra bingen eller balja over hekken og akterut i sjøen. Garnet har flottører og blytau, og lina har agnede kroker på tauemene. Dreggen går over først og synker. På skiffen går det over hekken på babord side av påhengsmotoren.
+  - **Blåsestaken fra Blender** står i begge ender av hvert sett: oransje flottør, stang med blylodd under, svart flagg og radarreflektor. Dreggen har fire fliker.
+  - **Trekking:** fisk kommer opp i maskene og på krokene, så mange som settet har igjen, med artene i forhold.
+  - **Test:** ingen ny test, fordi det bare er tegning. Det er sjekket med skjermbilder.
 
 ## 6. Regelverk og kilder
 
