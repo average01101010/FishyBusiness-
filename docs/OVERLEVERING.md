@@ -1719,6 +1719,10 @@ Jonas' liste: oppgraderinger, kvotehandel, kikkert, raskere fangst, fortøying, 
   - 3D-følgeren (`updateBoat`) holdt fart forbi sluttpunktet mens målet sto fast der i opptil ett spillminutt, og snudde rundt punktet. Nå trappes farten ned med avstanden når målet er neste stopp eller rutens slutt, og forbi punktet holdes kursen.
   - `sailV` bremser også inn mot rutens siste punkt.
   - `routetest` steger følgeren med 30 bilder i sekundet: før 360 graders sving, nå 0.
+- **Piruett før et stopp** (Jonas 04.10.2026):
+  - **Årsaken:** Simuleringen bremser inn mot neste stopp med ett minutts sprang, fra 23 til 8 kn. Punktet følgeren sikter på, saktnet da med én gang, mens følgeren bremset saktere. Den kom 58 m forbi punktet og snudde 360° for å nå det.
+  - **Nå:** Ligger punktet bak følgeren langs sporet, holder den sporets kurs og senker farten til punktet er foran igjen. Bremsen regnes ut fra farten båten har.
+  - `routetest` har fått et stopp i 23 kn, som gikk 360° før og 0° nå.
 - **Juksa ×2 og jukse-spillet:** se «Redskapsstige» og «Jukse-spillet» over.
 - **Nattmodus i kartplotteren:**
   - `S.settings.chartNight` er 'auto', 'day' eller 'night', valgt i kartets innstillinger. Auto er natt når sola står mer enn 4° under horisonten der båten er (`chartNight()` i `07-guide.js`).

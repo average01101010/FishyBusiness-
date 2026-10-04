@@ -219,16 +219,18 @@ async def main():
         # the 3D boat at a route's last waypoint (the user's test 04.10.2026: she spun round it): the simulation paused, the minutes stepped
         # by hand and the 3D follower stepped at 30 frames a second (G3._debug.stepBoat), she comes in to the point without turning round
         sp = []
-        for spd in (16, 5):
-            sp.append(await pg.evaluate("""(spd) => { SIMREADY = false; const b = S.boat, c = tutField().p; b.status = 'idle'; b.port = null; b.pos = {x:c.x, y:c.y}; b.v = 0;
-              const end = {x:c.x + 0.9, y:c.y - 0.6}; b.heading = Math.atan2(0.9, 0.6); S.plan = {wps:[end], idx:0, speed:spd}; b.status = 'sailing';
+        # 23 kn to a fishing stop: the simulation brakes from 23 to 8 knots in one minute and the follower came past the point it steers
+        # for and turned round for it (the user's test 04.10.2026: a pirouette before the stop)
+        for spd, fish, far in ((16, 0, 1), (5, 0, 1), (23, 1, 2)):
+            sp.append(await pg.evaluate("""([spd, fish, far]) => { SIMREADY = false; const b = S.boat, c = tutField().p; b.status = 'idle'; b.port = null; b.pos = {x:c.x, y:c.y}; b.v = 0;
+              const end = {x:c.x + 0.9 * far, y:c.y - 0.6 * far, fish}; b.heading = Math.atan2(0.9, 0.6); S.plan = {wps:[end], idx:0, speed:spd}; b.status = 'sailing';
               const D = G3._debug; D.bv.init = false; D.stepBoat(0, 0, 0); let frac = 0, turn = 0, prev = null, idleK = -1; const R = 1 / 30;
               for (let k = 0; k < 30 * 400; k++){ frac += R * simRate() / 60; if (frac >= 1){ frac -= 1; step(); } D.stepBoat(R, k * R, b.status === 'sailing' ? frac : 0);
                 const bv = D.bv, d = Math.hypot(bv.px - end.x * 1000, bv.pz - end.y * 1000);
-                if (d < 60 || idleK >= 0){ if (prev !== null){ let a = bv.cog - prev; while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; turn += Math.abs(a); } prev = bv.cog; }
+                if (d < 500 || idleK >= 0){ if (prev !== null){ let a = bv.cog - prev; while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; turn += Math.abs(a); } prev = bv.cog; }
                 if (b.status !== 'sailing' && idleK < 0) idleK = k; if (idleK >= 0 && k - idleK > 600) break; }
-              SIMREADY = true; return {spd, turn:+(turn * 180 / Math.PI).toFixed(1), end:+Math.hypot(G3._debug.bv.px - end.x * 1000, G3._debug.bv.pz - end.y * 1000).toFixed(1)}; }""", spd))
-        check(all(v['turn'] < 30 and v['end'] < 5 for v in sp), 'båten i 3D kommer inn til siste veipunkt og stopper der uten å snurre (gammel kode: 360 grader)', sp)
+              SIMREADY = true; return {spd, turn:+(turn * 180 / Math.PI).toFixed(1), end:+Math.hypot(G3._debug.bv.px - end.x * 1000, G3._debug.bv.pz - end.y * 1000).toFixed(1)}; }""", [spd, fish, far]))
+        check(all(v['turn'] < 30 and v['end'] < 5 for v in sp), 'båten i 3D kommer inn til siste veipunkt og til et stopp i 23 knop, og stopper der uten å snurre (gammel kode: 360 grader)', sp)
         print('sidefeil', errs)
         await b.close()
 

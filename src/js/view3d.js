@@ -2493,15 +2493,19 @@ const G3 = (() => {
         if (pl) for (let i = pl.idx; i < pl.wps.length; i++){ const w = pl.wps[i]; if (wpStop(w) || i === pl.wps.length - 1){ endW = w; break; } }
         const arriving = !!endW && Math.hypot(cx - endW.x * 1000, cz - endW.y * 1000) < 1, ax = arriving ? endW.x * 1000 - bv.px : 0, az = arriving ? endW.y * 1000 - bv.pz : 0, dEnd = Math.hypot(ax, az);
         const f0x = Math.sin(bv.cog), f0z = -Math.cos(bv.cog), past = arriving && (dEnd < 3 || ax * f0x + az * f0z < 0);
+        // the point she steers for has fallen behind her (the simulation braked for a stop harder than she can, 23 to 8 knots in a
+        // minute): she keeps her course along the track and slows down until it is ahead again, instead of turning round for it (the
+        // user's test 04.10.2026: a pirouette before the stop)
+        const lead = (cx - bv.px) * Math.sin(pr.hd) - (cz - bv.pz) * Math.cos(pr.hd), behind = !past && !arriving && lead < 2;
         // steer for a point a little ahead on the track, turning no faster than the turning radius allows
-        const want = past ? bv.cog : Math.hypot(cx - bv.px, cz - bv.pz) > 1 ? Math.atan2(cx - bv.px, -(cz - bv.pz)) : pr.hd;
+        const want = past ? bv.cog : behind ? pr.hd : Math.hypot(cx - bv.px, cz - bv.pz) > 1 ? Math.atan2(cx - bv.px, -(cz - bv.pz)) : pr.hd;
         const wmax = clamp(bv.spd / ((VESSELS[vtype()] || {}).turnR || 40), 0.6, 1.4), err = angDiff(bv.cog, want), rDes = clamp(err * 2.2, -wmax, wmax);
         bv.yr += (rDes - bv.yr) * (1 - Math.exp(-dt * 3)); bv.cog += bv.yr * dt;
         // speed: keep up with the simulated position, with limits on acceleration and braking
         const fx = Math.sin(bv.cog), fz = -Math.cos(bv.cog), rx = Math.cos(bv.cog), rz = Math.sin(bv.cog), ex = tx - bv.px, ez = tz - bv.pz;
         // always keep some way on while turning (like a boat swinging out from the quay), and catch up without racing; coming in to the end,
         // slow down with the distance left and stop at it
-        const vDes = past ? 0 : arriving ? Math.min(vs, Math.max(0, dEnd - 1) * 0.8) : clamp(vs + (ex * fx + ez * fz) * 0.5, vs * (0.25 + 0.3 * Math.max(0, Math.cos(err))), vs * 1.25 + 3), aMax = Math.max(3, vs / 4);
+        const vDes = past ? 0 : arriving ? Math.min(vs, Math.max(0, dEnd - 1) * 0.8) : behind ? vs * clamp(0.6 + lead / 50, 0.1, 0.6) : clamp(vs + (ex * fx + ez * fz) * 0.5, vs * (0.25 + 0.3 * Math.max(0, Math.cos(err))), vs * 1.25 + 3), aMax = Math.max(3, Math.max(vs, bv.spd) / 4);
         bv.spd += clamp(vDes - bv.spd, -aMax * 1.4 * dt, aMax * dt);
         bv.px += fx * bv.spd * dt; bv.pz += fz * bv.spd * dt;
       } else if (b.status === 'tow' && b.tow && b.tow.ph === 'tow'){
