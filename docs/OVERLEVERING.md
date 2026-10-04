@@ -928,6 +928,13 @@ Mister du juksa, fisker bare juksamaskinene til du kjøper ny i Fiskeutstyr. `mo
     - **Hyra mannskapet ber om** er 90 % av det lotten de ønsker ville gitt i en uke med 6 000 kr om dagen i fem dager, fordelt på sju dager. Dette er et anslag, ingen tariff. Moralen følger hyra mot det de ba om, med litt ekstra fordi den er trygg.
     - **Ingen arbeidsgiveravgift** på hyre til mannskap på fiskefartøy. Produktavgiften dekker den (folketrygdloven § 23-5, Skatteetaten «Hyre til mannskap på fiske-, småhvalfangst- og selfartsfartøy», funnet med søk 04.10.2026).
     - **Ikke ennå:** Salg-fanen regner fortsatt mannskapets andel som lott for alle.
+  - **Skatt og Rederi AS** (E4, 04.10.2026, `TAX`, `taxOf`, `taxTick` og `foundAS` i `03-simulation.js`, kortet «Skatt» under Regnskap i Rederi-appen):
+    - **Når:** forskuddsskatt hvert kvartal (1. januar, april, juli og oktober) på året så langt (ingenting kommer tilbake før oppgjøret), og skatteoppgjøret ved nyttår. Meldingene kommer fra Skatteetaten.
+    - **Overskuddet:** inntekter minus kostnader i `S.stats` siden nyttår (trekk, lott, hyre, diesel, utstyr, renter; ikke avdrag, båtkjøp eller skatten selv) minus avskrivning på 14 % av skrog og motor (saldogruppe e, `depBase`). Kvoten avskrives ikke. Underskudd føres ikke videre (forenkling).
+    - **Enkeltpersonforetak** (`S.form` mangler): overskuddet er eierens inntekt. 22 % på alminnelig inntekt etter fiskerfradrag og personfradrag (114 540 kr), trygdeavgift 7,6 % (satsen for fiske og fangst; nedre grense 99 650 kr, høyst 25 % av inntekten over den) og trinnskatt (1,7 % fra 226 100, 4,0 % fra 318 300, 13,7 % fra 725 050, 16,8 % fra 980 100 og 17,8 % fra 1 467 200 kr).
+    - **Fiskerfradraget** (skatteloven § 6-60): 30 % av overskuddet, høyst 160 000 kr, når du har vært på fiske minst 130 dager i året (`S.tx.days`: dager båten du er om bord i, var ute).
+    - **Rederi AS** (knappen på skattekortet): 30 000 kr i aksjekapital blir stående i selskapet (aksjeloven § 3-1), og registreringsgebyret er 5 570 kr. Selskapet betaler 22 %, uten fiskerfradrag, og rundt 30 000 kr i året til regnskap (trukket månedlig; et anslag). Uttak og utbytte er forenklet bort.
+    - **Kildene:** satsene er fra Stortingets skattevedtak for 2026 og vedtaket om avgifter til folketrygden for 2026, slik regjeringen.no og andre gjengir dem (funnet med søk 04.10.2026). Lovdata og Skatteetaten var sperret fra arbeidsmiljøet. Gebyret og regnskapsbeløpet er ikke sjekket.
 - Alle priser i spillet er per kilo **rund vekt**.
 
 ### 5.5 Kvoter og regulering

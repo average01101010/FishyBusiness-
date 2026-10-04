@@ -456,6 +456,61 @@ const TREKK = {lag:0.0043, pens:0.004, prod:0.016, forsk:0.0135, ress:0.0042, kt
 // A business must register when its sales pass 50 000 kr in twelve months (merverdiavgiftsloven § 2-1); a fisher's business is then a
 // sole proprietorship (enkeltpersonforetak) in the Central Coordinating Register (Enhetsregisteret), which needs no company to fish.
 const MVA = {rate:0.1111, limit:50000};
+// Income tax (E4 of the economy plan, 04.10.2026). The year's profit is the revenue less the costs in S.stats (the levies, the shares,
+// fuel, gear, interest ...; not the instalments, the boats bought or the tax itself) less the boats' depreciation (14 % a year of the
+// hulls and engines, saldogruppe e; a quota right is not depreciated). As a sole proprietor (ENK) the profit is the owner's income:
+// 22 % on it less the fisherman's deduction (30 % of it, at most 160 000 kr, when at least 130 days of the year were spent fishing) and
+// the personal allowance, 7,6 % social security (fishers' rate; the product levy pays the rest) and the bracket tax. As a company (AS)
+// it pays 22 %, and keeps its books for 30 000 kr a year (an estimate). The rates are 2026's (Stortingets skattevedtak and the vedtak on
+// the folketrygd's levies for 2026, as regjeringen.no and others give them: found by search 04.10.2026, Lovdata and Skatteetaten were
+// shut from here). The social security has its lower limit (99 650 kr) and is at most 25 % of the income above it. A loss is not
+// carried forward. Paid every quarter on the year so far, settled at the new year.
+const TAX = {alm:0.22, pfrad:114540, trygd:0.076, tlow:99650, trinn:[[226100, 0.017], [318300, 0.04], [725050, 0.137], [980100, 0.168], [1467200, 0.178]],
+  fisk:{share:0.30, max:160000, days:130}, as:{rate:0.22, capital:30000, fee:5570, books:30000}, dep:0.14};
+function taxOf(P, form, days){
+  const R = {P:Math.round(P), fd:0, alm:0, tryg:0, trinn:0, sum:0}; if (P <= 0) return R;
+  if (form === 'AS'){ R.alm = Math.round(P * TAX.as.rate); R.sum = R.alm; return R; }
+  R.fd = days >= TAX.fisk.days ? Math.round(Math.min(P * TAX.fisk.share, TAX.fisk.max)) : 0;
+  R.alm = Math.round(Math.max(0, P - R.fd - TAX.pfrad) * TAX.alm); R.tryg = P > TAX.tlow ? Math.round(Math.min(P * TAX.trygd, (P - TAX.tlow) * 0.25)) : 0;
+  const B = TAX.trinn; for (let i = 0; i < B.length; i++){ const lo = B[i][0], hi = i + 1 < B.length ? B[i + 1][0] : Infinity; if (P > lo) R.trinn += (Math.min(P, hi) - lo) * B[i][1]; }
+  R.trinn = Math.round(R.trinn); R.sum = R.alm + R.tryg + R.trinn; return R;
+}
+// the hulls' and engines' value for the depreciation (vesselValue less the quota right)
+const depBase = () => S.fleet.reduce((a, v) => { const b = vget(v, 'boat'), eq = vget(v, 'equip') || {}; return a + VESSELS[b.type].price * 0.7 + (eq.motor90 ? EQUIP.motor90.price * 0.5 : 0); }, 0);
+function txInit(H){ S.tx = {y:gDate(H).getUTCFullYear(), rev0:S.stats.revenue, cost0:S.stats.costs, paid:0, days:[]}; }
+// the profit of the year so far, with the depreciation for the part of the year that has gone
+function txProfit(H){ const T = S.tx, d = gDate(H), y0 = Date.UTC(T.y, 0, 1), frac = clamp((d.getTime() - y0) / (Date.UTC(T.y + 1, 0, 1) - y0), 0, 1);
+  return (S.stats.revenue - T.rev0) - (S.stats.costs - T.cost0) - depBase() * TAX.dep * frac; }
+const txForm = () => S.form === 'AS' ? 'AS' : 'ENK';
+// at midnight: the days at sea with you aboard, the company's books every month, the advance every quarter, the settlement at the new year
+function taxTick(H){
+  if (!S.tx) txInit(H);
+  const T = S.tx, d = gDate(H), mv = vesselById(S.me), mb = mv ? vget(mv, 'boat') : null, day = Math.floor(H / 24);
+  if (mb && ['sailing', 'fishing'].includes(mb.status) && T.days[T.days.length - 1] !== day) T.days.push(day);
+  if (d.getUTCDate() !== 1) return;
+  if (S.form === 'AS'){ const c = Math.round(TAX.as.books / 12); S.cash -= c; S.stats.costs += c; }
+  const m = d.getUTCMonth(); if (m % 3) return;
+  const L2 = (no, en) => S.lang === 'no' ? no : en;
+  if (m === 0 && d.getUTCFullYear() > T.y){
+    // the settlement for the year that has ended
+    const R = taxOf(txProfit(H), txForm(), T.days.length), rest = R.sum - T.paid; S.cash -= rest; S.stats.tax = (S.stats.tax || 0) + rest;
+    S.taxLast = {y:T.y, form:txForm(), days:T.days.length, R, paid:T.paid, rest};
+    msg('Skatteetaten', 'Skatteoppgjøret for ' + T.y + ' (' + (txForm() === 'AS' ? 'aksjeselskap' : 'enkeltpersonforetak') + '): overskudd ' + kr(R.P) + ', skatt ' + kr(R.sum) + (R.fd ? ', fiskerfradrag ' + kr(R.fd) : '') + '. Forskudd betalt ' + kr(T.paid) + '. ' + (rest >= 0 ? 'Restskatt ' + kr(rest) + ' er trukket.' : 'Du får ' + kr(-rest) + ' tilbake.'),
+      'The tax settlement for ' + T.y + ': profit NOK ' + R.P + ', tax NOK ' + R.sum + '. Paid in advance NOK ' + T.paid + '. ' + (rest >= 0 ? 'NOK ' + rest + ' still owed has been taken.' : 'NOK ' + (-rest) + ' comes back to you.'));
+    txInit(H); return;
+  }
+  // the advance on the year so far (nothing comes back until the settlement)
+  const due = taxOf(txProfit(H), txForm(), T.days.length).sum - T.paid;
+  if (due > 0){ S.cash -= due; T.paid += due; S.stats.tax = (S.stats.tax || 0) + due;
+    msg('Skatteetaten', 'Forskuddsskatt for ' + T.y + ': ' + kr(due) + ' er trukket. Betalt i år: ' + kr(T.paid) + '.', 'Advance tax for ' + T.y + ': NOK ' + due + ' taken. Paid this year: NOK ' + T.paid + '.'); }
+}
+// founding the company: the share capital stays the company's money, the registration fee goes
+function foundAS(){
+  if (S.form === 'AS' || S.cash < TAX.as.capital + TAX.as.fee) return false;
+  S.cash -= TAX.as.fee; S.stats.costs += TAX.as.fee; S.form = 'AS'; S.formT = S.t; if (S.company && !/ AS$/.test(S.company)) S.company += ' AS';
+  msg('Brønnøysundregistrene', S.company + ' er registrert i Foretaksregisteret med ' + kr(TAX.as.capital) + ' i aksjekapital. Fra nå skattlegges overskuddet med 22 % i selskapet, uten fiskerfradrag, og selskapet fører regnskap.', S.company + ' is registered with NOK ' + TAX.as.capital + ' in share capital. From now the profit is taxed at 22 % in the company, without the fisherman\'s deduction, and the company keeps books.');
+  return true;
+}
 const mvaOf = (total, tk) => Math.round((total - tk.pens - tk.prod - tk.forsk - tk.ress - tk.ktrl) * MVA.rate);
 // the sales of the last twelve months (kroner, gross) and the registration when they pass the limit
 function mvaCheck(total){

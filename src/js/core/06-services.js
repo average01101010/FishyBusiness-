@@ -4,7 +4,7 @@ function coverage(p){ const d = coastDistFar(p); return d < 3 ? 4 : d < 8 ? 3 : 
 function msg(from, no, en){ S.msgs.push({t:S.t, from, no, en, read:false}); if (S.msgs.length > 80) S.msgs.shift(); if (hooks.onMsg) hooks.onMsg(); }
 function hourly(){
   const H = S.t / 60, hr = gDate(H).getUTCHours();
-  if (hr === 0){ checkTattoos(); payHyre(); }   // the fleet and the crew's years are checked once a day; the day wages are paid
+  if (hr === 0){ checkTattoos(); payHyre(); taxTick(H); }   // the fleet and the crew's years are checked once a day; the day wages are paid
   // the company hears it if any vessel does: in port, with mobile coverage, or on VHF
   const bars = Math.max(0, ...S.fleet.map(v => { const vb = vget(v, 'boat'); return vb.status === 'port' ? 4 : coverage(vb.pos); })), vhf = S.fleet.some(v => (vget(v, 'equip') || {}).vhf);
   // gale warning ahead (coast radio on VHF, or text message when there is coverage)
