@@ -11,7 +11,7 @@
 -- the functions below (security definer, each checking pid() and the consent itself). Only the admin's select policies read.
 -- The shop's purchases are written by the Stripe webhook with the service role, which bypasses RLS.
 
-create or replace function public.pid() returns text language sql stable as $$ select nullif(auth.jwt() ->> 'sub', '') $$;
+create or replace function public.pid() returns text language sql stable set search_path = '' as $$ select nullif(auth.jwt() ->> 'sub', '') $$;
 
 create table if not exists public.admins (user_id uuid primary key, note text);
 alter table public.admins enable row level security;
@@ -207,7 +207,7 @@ grant execute on function public.tm_hello(jsonb), public.tm_consent(boolean, int
 grant execute on function public.tm_error(text, text, text, jsonb), public.tm_perf(real, real, int, jsonb) to anon, authenticated;
 
 -- ---------- the admin dashboard's numbers (one call, all panels) ----------
-create or replace function public.gini(xs numeric[]) returns numeric language sql immutable as $$
+create or replace function public.gini(xs numeric[]) returns numeric language sql immutable set search_path = '' as $$
   with v as (select x, row_number() over (order by x) i, count(*) over () n, sum(x) over () s from unnest(xs) x where x is not null and x >= 0)
   select case when max(n) > 1 and max(s) > 0 then round(((2 * sum(i * x)) / (max(n) * max(s)) - (max(n) + 1.0) / max(n))::numeric, 3) else null end from v
 $$;
@@ -324,4 +324,6 @@ end $$;
 revoke all on public.admins from anon, authenticated;
 revoke all on all sequences in schema public from anon, authenticated;
 revoke execute on all functions in schema public from anon;
+revoke execute on function public.pid(), public.is_admin(), public.gini(numeric[]) from public;
+grant execute on function public.pid(), public.is_admin(), public.gini(numeric[]) to authenticated;
 grant execute on function public.tm_error(text, text, text, jsonb), public.tm_perf(real, real, int, jsonb) to anon;
