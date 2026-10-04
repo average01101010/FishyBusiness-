@@ -14,7 +14,7 @@ Laget 04.10.2026, da spillet fikk navnet Det Store Blå og domenet detstorebla.n
 - **Admin-brukeren** er Jonas (UID `a426989a-385e-44c3-8839-d72737a0b77f`), og den står i `public.admins`.
 - **Skjemaet ble kjørt med MCP 04.10.2026** i bitene `cloud_1_admins` til `cloud_7_search_path`.
   - Supabase-koblingen ber om bekreftelse for SQL med DROP eller DELETE. Den bekreftelsen kommer ikke fram i Claude-appen, så slike biter kan ikke kjøres med MCP.
-  - `tm_consent`, `delete_me` og ryddejobben i pg_cron limer Jonas inn i SQL Editor selv.
+  - `tm_consent`, `delete_me` og ryddejobben i pg_cron limte Jonas inn i SQL Editor selv (04.10.2026). Med MCP er det sjekket at de finnes, at bare `authenticated` kan kalle dem, og at `dsb-retention` er aktiv. Prosjektet har 10 tabeller, 12 funksjoner og 1 admin.
   - Fila i repoet er hele skjemaet og kan kjøres på nytt uten skade.
 - **Låsen er sjekket i prosjektet:**
   - en anonym bruker blir avvist
