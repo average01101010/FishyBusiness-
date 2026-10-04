@@ -18,14 +18,14 @@ const QUAYS = {
 for (const pid in QUAYS) for (const kind in QUAYS[pid]){ const f = QUAYS[pid][kind]; f.a = LGm(f.a); f.b = LGm(f.b); }   // legacy metres into the game's frame
 const QUAY_DEPTH = 10;   // how far the quay deck reaches in from the face (m)
 // The harbour unit (UNIT, UNITS in 01-world.js) is the quay in every harbour with a plant: its berths, its dredged basin.
-// the depth below chart datum at p (km) where a unit stands: 0 on the quay itself, at least the dredged depth in the basin, rising
+// the depth below chart datum at p (km) where a unit stands: 0 on the quay itself and its fill, at least the dredged depth in the basin, rising
 // 1 in 2 outside it; d elsewhere
 function unitDredge(p, d){
   const x = p.x * 1000, z = p.y * 1000;
   for (const U of UNITA){
     if (Math.abs(x - U.o[0]) > 100 || Math.abs(z - U.o[1]) > 100) continue;
     const [lx, lz] = unitL(U, x, z);
-    if (Math.abs(lx) <= UNIT.E && lz <= 0 && lz >= -UNIT.B) return 0;
+    if (groundOut(U, lx, lz) === 0) return 0;
     if (lz > 0){ const dO = Math.hypot(Math.max(0, Math.abs(lx) - UNIT.basinX), Math.max(0, lz - UNIT.basinZ)); d = Math.max(d, UNIT.dredge - tideZC(p) - 0.5 * dO); }
   }
   return d;
@@ -43,8 +43,8 @@ const PIERBOX = (() => {
   PIERS.forEach((pr, i) => pierBoxes(out, pr[0], (pr.length - 1) / 2, k => pr[1 + k * 2] * 1000, k => pr[2 + k * 2] * 1000, i));
   // the quay decks behind the faces in QUAYS; the shoreline behind them is not always straight, so the deck fills the gap
   for (const pid in QUAYS) for (const kind in QUAYS[pid]){ if (UNITS[pid]) continue; const f = quayFace(pid, kind); out.push({x:f.x - f.nx * f.depth / 2, z:f.z - f.nz * f.depth / 2, w:f.depth, l:f.hl * 2, ang:Math.atan2(f.ux, f.uz), bw:false, closed:false, made:true, quay:pid + '|' + kind}); }
-  // where a harbour unit stands, the mapped piers on its ground and in its basin go (the unit is its own quay)
-  const inUnit = (x, z) => UNITA.some(U => { const [lx, lz] = unitL(U, x, z); return (Math.abs(lx) <= UNIT.E + 2 && lz <= 2 && lz >= -UNIT.B - 2) || (Math.abs(lx) <= UNIT.basinX && lz >= 0 && lz <= UNIT.basinZ); });
+  // where a harbour unit stands, the mapped piers on its ground (the block and its fill) and in its basin go (the unit is its own quay)
+  const inUnit = (x, z) => UNITA.some(U => { const [lx, lz] = unitL(U, x, z); return groundOut(U, lx, lz) <= 2 || (Math.abs(lx) <= UNIT.basinX && lz >= 0 && lz <= UNIT.basinZ); });
   for (let i = out.length - 1; i >= 0; i--){
     const q = out[i]; if (q.made) continue;
     const ax = Math.sin(q.ang), az = Math.cos(q.ang), nx = Math.cos(q.ang), nz = -Math.sin(q.ang); let hit = false;

@@ -212,7 +212,7 @@ function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){
       else try {
         if (lv === 2){ const gxm = x / lc - 0.5, gym = y / lc - 0.5, mx = Math.floor(gxm), my = Math.floor(gym), ax = gxm - mx, ay = gym - my;
           const m = (rcell(LM, mx, my) * (1 - ax) + rcell(LM, mx + 1, my) * ax) * (1 - ay) + (rcell(LM, mx, my + 1) * (1 - ax) + rcell(LM, mx + 1, my + 1) * ax) * ay;
-          land = m > 0.5 - aa && !(pocket && pocket(x, y)) ? clamp((m - 0.5 + aa) / (2 * aa), 0, 1) : 0; }
+          const pk = pocket ? pocket(x, y) : 0; land = pk === 2 ? 1 : m > 0.5 - aa && !pk ? clamp((m - 0.5 + aa) / (2 * aa), 0, 1) : 0; }
         else if (lv === 1 && rcell(LM, Math.floor(x / lc), Math.floor(y / lc)) === 1){ put(o, LAND); prev[i] = NaN; left = NaN; continue; }
         if (land >= 1){ put(o, FS); prev[i] = NaN; left = NaN; continue; }
         const gi = Math.floor(i / GS), gj = Math.floor(j / GS), go = gj * GW + gi;

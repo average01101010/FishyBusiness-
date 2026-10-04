@@ -308,37 +308,44 @@ const G3 = (() => {
   }
   function terrH(x, z){ return unitTerr(x, z, terrRaw(x, z)); }
   // The ground round a harbour unit (UNITS, 01-world.js), in its frame (lx along the face, lz out to the water): the basin in front is
-  // dredged to 6.6 m below mean sea level and rises 1 in 2 outside it; beside and behind the quay land higher than the deck is cut down
-  // to it and goes back to what it was within UNIT_REACH m (nothing is filled, so nothing sticks out into the water); the seabed reaches
-  // the walls' foot (9 m down). Inside
-  // the block nothing is drawn (the fine patch has a hole there). h0 is the ground without the unit.
-  const UNIT_REACH = 22, UNIT_FINE = UNIT_REACH + 50;
+  // dredged to 6.6 m below mean sea level and rises 1 in 2 outside it; the fill behind the block (U.f) is flat at the deck's height and
+  // its sides slope 1 in 1.6 down to the seabed; land higher than the deck beside and behind them is cut down to it and goes back to
+  // what it was within UNIT_REACH m, and the low land round them is raised over the highest tide (TIDE_C reaches 1.55 m; the map's land
+  // is 0.5 m and up, so it flooded behind the quays, 04.10.2026), as harbour land is built up, going back to what it was within
+  // UNIT_LIFT m. The seabed reaches the block's walls' foot (9 m down). Inside the block nothing is drawn (the fine patch has a hole
+  // there). h0 is the ground without the unit.
+  const UNIT_REACH = 22, UNIT_LIFT = 45, UNIT_FINE = UNIT_LIFT + 20, UNIT_TOP = QTOP - 0.05;
   function unitTerr(x, z, h0){
     if (!harbourNear(x, z)) return h0;
     for (const U of UNITA){
-      if (Math.abs(x - U.o[0]) > 140 || Math.abs(z - U.o[1]) > 140) continue;
-      const [lx, lz] = unitL(U, x, z), ax = Math.abs(lx), dx = Math.max(0, ax - UNIT.E), dzB = Math.max(0, -UNIT.B - lz);
+      if (Math.abs(x - U.o[0]) > 160 || Math.abs(z - U.o[1]) > 160) continue;
+      const [lx, lz] = unitL(U, x, z), ax = Math.abs(lx), dx = Math.max(0, ax - UNIT.E);
       if (lz >= 0){
-        const dO = Math.hypot(Math.max(0, ax - UNIT.basinX), Math.max(0, lz - UNIT.basinZ)); if (dO >= UNIT_REACH) continue;
-        let h = Math.min(h0, -UNIT.dredge + 0.5 * dO); if (lz < 6 && dx < 3) h = Math.max(h, UNIT.bot);
-        return h + (h0 - h) * sstep(UNIT_REACH - 8, UNIT_REACH, dO);
+        const dO = Math.hypot(Math.max(0, ax - UNIT.basinX), Math.max(0, lz - UNIT.basinZ));
+        if (dO < UNIT_REACH){
+          let h = Math.min(h0, -UNIT.dredge + 0.5 * dO); if (lz < 6 && dx < 3) h = Math.max(h, UNIT.bot);
+          return h + (h0 - h) * sstep(UNIT_REACH - 8, UNIT_REACH, dO);
+        }
       }
-      if (!dx && !dzB) return UNIT.bot;
-      const d = Math.hypot(dx, dzB); if (d >= UNIT_REACH) continue;
-      let h = h0;
-      h = Math.min(h0, QTOP - 0.1 + 0.45 * d);
-      if (d < 3) h = Math.max(h, UNIT.bot);
-      return h + (h0 - h) * sstep(UNIT_REACH - 8, UNIT_REACH, d);
+      const dB = blockOut(lx, lz), dF = fillOut(U, lx, lz), dG = Math.min(dB, dF);
+      if (!dB) return UNIT.bot;
+      if (dG >= UNIT_LIFT) continue;
+      if (!dF) return Math.max(UNIT_TOP, Math.min(h0, UNIT_TOP + 0.45 * dB));   // on the fill: flat, or rising with the land behind it
+      let h = Math.min(h0, UNIT_TOP + 0.45 * dG); h = h + (h0 - h) * sstep(UNIT_REACH - 8, UNIT_REACH, dG);
+      if (h0 < UNIT_TOP) h = Math.max(h, h0 + (UNIT_TOP - h0) * sstep(UNIT_LIFT, UNIT_LIFT - 15, dG) * sstep(-0.5, 0.5, h0));
+      h = Math.max(h, UNIT_TOP - 0.62 * dF);
+      if (dB < 3) h = Math.max(h, UNIT.bot);
+      return h;
     }
     return h0;
   }
-  // the coarse terrain sinks out of sight where a unit's fine patch takes over (unitPatch draws it)
+  // the coarse terrain sinks out of sight where a unit's fine patch takes over and cuts the ground down (unitPatch draws it)
   function terrCoarse(x, z){
     const h0 = terrRaw(x, z);
     if (!harbourNear(x, z)) return h0;
-    for (const U of UNITA){ if (Math.abs(x - U.o[0]) > 140 || Math.abs(z - U.o[1]) > 140) continue;
+    for (const U of UNITA){ if (Math.abs(x - U.o[0]) > 160 || Math.abs(z - U.o[1]) > 160) continue;
       const [lx, lz] = unitL(U, x, z), ax = Math.abs(lx);
-      const d = lz >= 0 ? Math.hypot(Math.max(0, ax - UNIT.basinX), Math.max(0, lz - UNIT.basinZ)) : Math.hypot(Math.max(0, ax - UNIT.E), Math.max(0, -UNIT.B - lz));
+      const d = lz >= 0 ? Math.min(Math.hypot(Math.max(0, ax - UNIT.basinX), Math.max(0, lz - UNIT.basinZ)), groundOut(U, lx, lz)) : groundOut(U, lx, lz);
       if (d < UNIT_REACH) return -14; }
     return h0;
   }
@@ -393,27 +400,32 @@ const G3 = (() => {
     const X = i * d + M.x0, Z = j * d + M.z0, H = (a, b) => terrRaw(X + a * d, Z + b * d);
     return fx + fz <= 1 ? H(0, 0) + (H(1, 0) - H(0, 0)) * fx + (H(0, 1) - H(0, 0)) * fz : H(1, 1) + (H(0, 1) - H(1, 1)) * (1 - fx) + (H(1, 0) - H(1, 1)) * (1 - fz);
   }
-  // The fine ground round a harbour unit: a grid in the unit's frame, lined up with the quay's walls (1.6-4 m apart), with a hole
-  // where the block stands. Its outer part lies on the near terrain's own triangles, so the two meet; the near terrain sinks under it
-  // (terrCoarse), and it is drawn with a little offset so it wins where they coincide. Rebuilt with the near terrain.
+  // The fine ground round a harbour unit: a grid in the unit's frame, lined up with the quay's walls (1.6-4 m apart), over the block, its
+  // fill and UNIT_FINE m round them, with a hole where the block stands. Its outer part lies on the near terrain's own triangles, so
+  // the two meet; the near terrain sinks under it (terrCoarse), and it is drawn with a little offset so it wins where they coincide.
+  // The fill and the flat harbour land right by the ground are paved (pv: asphalt and gravel). Rebuilt with the near terrain.
   let UPATCH = [];
   function unitPatch(U, M){
     const E = UNIT.E, B = UNIT.B, F = UNIT_FINE, span = (a, b, k) => Array.from({length:k + 1}, (_, i) => a + (b - a) * i / k);
-    const xs = [...span(-E - F, -E, 18), ...span(-E, E, 34).slice(1), ...span(E, E + F, 18).slice(1)], zs = [...span(-B - F, -B, 22), ...span(-B, 0, 14).slice(1), ...span(0, UNIT.basinZ + F, 34).slice(1)];
-    const n = xs.length, N = n * n, pos = new Float32Array(N * 3), h = new Float32Array(N), nzA = new Float32Array(N), slope = new Float32Array(N), nor = new Float32Array(N * 3), fo = new Float32Array(N);
-    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++){
-      const k = j * n + i, w = unitW(U, xs[i], zs[j]), x = w[0], z = w[1], y = unitTerr(x, z, nearSurf(M, x, z));
+    let X0 = -E, X1 = E, Z0 = -B; if (U.f) for (let i = 0; i < U.f.length; i += 2){ X0 = Math.min(X0, U.f[i]); X1 = Math.max(X1, U.f[i]); Z0 = Math.min(Z0, U.f[i + 1]); }
+    const xs = [...span(X0 - F, X0, 22), ...span(X0, X1, Math.ceil((X1 - X0) / 1.6)).slice(1), ...span(X1, X1 + F, 22).slice(1)];
+    const zs = [...span(Z0 - F, Z0, 22), ...(Z0 < -B ? span(Z0, -B, Math.ceil((-B - Z0) / 2.5)).slice(1) : []), ...span(-B, 0, 14).slice(1), ...span(0, UNIT.basinZ + F, 34).slice(1)];
+    const nx = xs.length, nz = zs.length, N = nx * nz, pos = new Float32Array(N * 3), h = new Float32Array(N), nzA = new Float32Array(N), slope = new Float32Array(N), nor = new Float32Array(N * 3), fo = new Float32Array(N), pv = new Float32Array(N);
+    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++){
+      const k = j * nx + i, w = unitW(U, xs[i], zs[j]), x = w[0], z = w[1], y = unitTerr(x, z, nearSurf(M, x, z));
       h[k] = y; pos[k * 3] = x - U.o[0]; pos[k * 3 + 1] = y; pos[k * 3 + 2] = z - U.o[1]; nzA[k] = fbm(x / 600, z / 600, 2, 90); fo[k] = forestAt(x, z);
+      const dF = fillOut(U, xs[i], zs[j]), dG = Math.min(dF, blockOut(xs[i], zs[j]));
+      pv[k] = dF < 0.5 ? 1 : dG < 14 && Math.abs(y - UNIT_TOP) < 0.25 ? 0.85 * sstep(14, 4, dG) : 0;
     }
-    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++){
-      const k = j * n + i, i0 = Math.max(0, i - 1), i1 = Math.min(n - 1, i + 1), j0 = Math.max(0, j - 1), j1 = Math.min(n - 1, j + 1);
-      const hx = (h[j * n + i1] - h[j * n + i0]) / (xs[i1] - xs[i0]), hz = (h[j1 * n + i] - h[j0 * n + i]) / (zs[j1] - zs[j0]);
+    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++){
+      const k = j * nx + i, i0 = Math.max(0, i - 1), i1 = Math.min(nx - 1, i + 1), j0 = Math.max(0, j - 1), j1 = Math.min(nz - 1, j + 1);
+      const hx = (h[j * nx + i1] - h[j * nx + i0]) / (xs[i1] - xs[i0]), hz = (h[j1 * nx + i] - h[j0 * nx + i]) / (zs[j1] - zs[j0]);
       slope[k] = Math.hypot(hx, hz); const wx = -hx * U.u[0] - hz * U.n[0], wz = -hx * U.u[1] - hz * U.n[1], nl = Math.hypot(wx, 1, wz); nor[k * 3] = wx / nl; nor[k * 3 + 1] = 1 / nl; nor[k * 3 + 2] = wz / nl;
     }
-    const idx = []; for (let j = 0; j < n - 1; j++) for (let i = 0; i < n - 1; i++){
+    const idx = []; for (let j = 0; j < nz - 1; j++) for (let i = 0; i < nx - 1; i++){
       if (xs[i] >= -E - 1e-6 && xs[i + 1] <= E + 1e-6 && zs[j] >= -B - 1e-6 && zs[j + 1] <= 1e-6) continue;   // the quay's own block
-      const a = j * n + i, b = a + 1, c = a + n, d = c + 1; idx.push(a, c, b, b, c, d); }
-    const col = new Float32Array(N * 3), m = {pb:buf(pos), cb:buf(col, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), nb:buf(nor), ib:buf(new Uint16Array(idx), gl.ELEMENT_ARRAY_BUFFER), n:idx.length, h, nz:nzA, slope, fo, col, pos, nor, gn:n, unit:U.id, o:[U.o[0], U.o[1]], sh:new Float32Array(N).fill(1)};
+      const a = j * nx + i, b = a + 1, c = a + nx, d = c + 1; idx.push(a, c, b, b, c, d); }
+    const col = new Float32Array(N * 3), m = {pb:buf(pos), cb:buf(col, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), nb:buf(nor), ib:buf(new Uint16Array(idx), gl.ELEMENT_ARRAY_BUFFER), n:idx.length, h, nz:nzA, slope, fo, pv, col, pos, nor, unit:U.id, o:[U.o[0], U.o[1]], sh:new Float32Array(N).fill(1)};
     m.sb = buf(m.sh, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); m.shKey = '';
     recolor(m, snowNow < 0 ? 0 : snowNow);
     return m;
@@ -546,7 +558,7 @@ const G3 = (() => {
       if (!m) continue;
       if (m.shKey !== key && !m.shJob && performance.now() - shT > 1500){ m.shJob = {i:0, key, d}; shT = performance.now(); }
       if (!m.shJob) continue;
-      const J = m.shJob, N = m.gn * m.gn;
+      const J = m.shJob, N = m.h.length;
       if (!J.d || J.d[1] <= 0.005){ m.sh.fill(J.d ? 0 : 1, J.i, N); J.i = N; }
       else {
         const hl = Math.hypot(J.d[0], J.d[2]) || 1e-6, dx = J.d[0] / hl, dz = J.d[2] / hl, tE = J.d[1] / hl, far = m === TERR ? 25000 : 9000, st0 = m === TERR ? 160 : m === MIDM ? 60 : 25;
@@ -583,6 +595,7 @@ const G3 = (() => {
   function recolor(m, snow){
     const {slope, nz, col, h, fo} = m;
     const grass = [0.36, 0.43, 0.28], birch = [0.25, 0.33, 0.22], rock = [0.33, 0.35, 0.37], snowC = [0.9, 0.92, 0.95], shore = [0.5, 0.49, 0.44], bed = [0.3, 0.3, 0.27];
+    const asph = [0.3, 0.31, 0.32], gravel = [0.47, 0.45, 0.41], pv = m.pv;   // a harbour unit's fill and the flat land by it (unitPatch)
     for (let i = 0; i < h.length; i++){
       const y = h[i], n = nz[i]; let c;
       if (y < 0) c = bed;
@@ -591,8 +604,9 @@ const G3 = (() => {
         if (y < 6) c = mix3(shore, c, y / 6);
         // birch woods below the tree line stay dark through the snow; steep faces show bare rock
         const rs = sstep(0.32, 0.7, slope[i]), wood = Math.max(y < 320 ? sstep(0.42, 0.62, n) * sstep(320, 200, y) : 0, fo ? fo[i] * sstep(420, 260, y) * 0.9 : 0) * (1 - rs);
-        const sn = sstep(snow - 60, snow + 60, y + n * 90) * (1 - rs * 0.85) * (1 - wood * 0.55);
+        const p = pv ? pv[i] : 0, sn = sstep(snow - 60, snow + 60, y + n * 90) * (1 - rs * 0.85) * (1 - wood * 0.55) * (1 - p * 0.6);
         c = mix3(mix3(c, rock, rs * 0.75), birch, wood * 0.6);
+        if (p) c = mix3(c, mix3(asph, gravel, sstep(0.4, 0.75, n) * 0.7 + (1 - p) * 0.3), p);
         c = mix3(c, snowC, sn);
       }
       col[i * 3] = c[0]; col[i * 3 + 1] = c[1]; col[i * 3 + 2] = c[2];
@@ -1145,9 +1159,9 @@ const G3 = (() => {
   // the unit's frame: a point [x, y, z] in it, in the world; the model's matrix (eye-relative)
   const unitP = (U, p) => { const w = unitW(U, p[0], p[2]); return [w[0], p[1], w[1]]; };
   const unitMat = (U, eye) => chain(M4.T(U.o[0] - eye[0], -eye[1], U.o[1] - eye[2]), M4.RY(Math.atan2(-U.u[1], U.u[0])));
-  // on the unit's ground: the block (m out round it) or its basin
+  // on the unit's ground: the block and its fill (m out round them) or its basin
   function onUnit(x, z, m){ for (const U of UNITA){ if (Math.abs(x - U.o[0]) > 120 || Math.abs(z - U.o[1]) > 120) continue; const [lx, lz] = unitL(U, x, z), ax = Math.abs(lx);
-    if ((ax <= UNIT.E + m && lz <= m && lz >= -UNIT.B - m) || (ax <= UNIT.basinX && lz >= 0 && lz <= UNIT.basinZ)) return U; } return null; }
+    if (groundOut(U, lx, lz) <= m || (ax <= UNIT.basinX && lz >= 0 && lz <= UNIT.basinZ)) return U; } return null; }
   // The crane's pose {a: the boom's heading in the world, r: the radius from the column, hook: the hook's height} as the column's slew,
   // the boom's angle up (it rises to reach in close and keeps the tip at least 2.6 m over the heel) and how far the extension runs out
   function craneGeo(P, q){
@@ -3397,6 +3411,6 @@ const G3 = (() => {
     // the cinema: on or off (the HUD is the page's: body.kino-clean)
     kino(on){ if (on !== undefined){ KINO.on = !!on; KINO.shot = null; } return KINO.on; }, get kinoShot(){ return KINO.shot ? KINO.shot.type : null; },
     isHelm:() => cam.helm, setHelm(on){ const G = GEO(vtype()); cam.helm = !!on; cam.zoom = 1; cam.hy = 0; cam.hp = G.hp !== undefined ? G.hp : -0.07; cam.fov = G.fov || 55; },
-    _debug:{get fps(){ return FPS.v; }, get air(){ return airNow.map(a => ({kind:a.kind, w:a.w.map(Math.round)})); }, get airM(){ return !!(AIRM && AIRM.plane); }, get curFov(){ return curFov; }, cam, moundTop, bridgeInto, get statTris(){ return STAT ? STAT.n / 3 : 0; }, get vec(){ return {tiles:[...VEC.tiles.values()].map(t => ({k:t.k, bld:t.bld ? t.bld.n : 0, roads:t.roads.length, bridges:t.bridges.length, piers:t.piers.length, molos:t.molos.length, quays:t.quays.length, ms:Math.round(t.ms)})), statics:[...TST].map(([k, s]) => ({k, tris:s.tris, ms:Math.round(s.ms)})), chunks:CH.size}; }, moundInto, MB, haulModel, get haulA(){ return HAULA; }, gopHands, kinoNext(){ KINO.shot = null; }, get kino(){ const k = KINO.shot, e = KINO.eye, g = KINO.tgt; if (!k || !e) return null; const t = (performance.now() - T0) / 1000; return {type:k.type, up:e[1] - Math.max(terrH(e[0], e[2]), seaH(e[0], e[2], t)), free:camFree(g, e), d:Math.hypot(e[0] - bv.x, e[2] - bv.z)}; }, get PLA(){ return PLA; }, get PCA(){ return PCA; }, set noPL(v){ NOPL = !!v; }, get beams(){ return BMN; }, glErr(){ return gl ? gl.getError() : -1; }, QUAL, qualTick, TERRW, get TERR(){ return TERR; }, get MIDM(){ return MIDM; }, RO, SSL, WV, WK, ssAt, seaH, waves:(dt, H) => updateWaves(dt, H), get sstVS(){ return SST_VS; }, set seaDbg(v){ SEADBG = v; }, get drift(){ let c = 0; for (let i = 0; i < SDN; i++) if (SD.age[i] < SD.life[i]) c++; return c; }, get eye(){ return lastEye; }, camInside, camFree, get camPull(){ return camPull; }, get camLift(){ return camLift; }, get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, BUNKERS, nearestPlant, fkRun, legAt, terrH, unitModel, get UPATCH(){ return UPATCH; }, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; SEAMARKS.lights.forEach((L, i) => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(i, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }}
+    _debug:{get fps(){ return FPS.v; }, get air(){ return airNow.map(a => ({kind:a.kind, w:a.w.map(Math.round)})); }, get airM(){ return !!(AIRM && AIRM.plane); }, get curFov(){ return curFov; }, cam, moundTop, bridgeInto, get statTris(){ return STAT ? STAT.n / 3 : 0; }, get vec(){ return {tiles:[...VEC.tiles.values()].map(t => ({k:t.k, bld:t.bld ? t.bld.n : 0, roads:t.roads.length, bridges:t.bridges.length, piers:t.piers.length, molos:t.molos.length, quays:t.quays.length, ms:Math.round(t.ms)})), statics:[...TST].map(([k, s]) => ({k, tris:s.tris, ms:Math.round(s.ms)})), chunks:CH.size}; }, moundInto, MB, haulModel, get haulA(){ return HAULA; }, gopHands, kinoNext(){ KINO.shot = null; }, get kino(){ const k = KINO.shot, e = KINO.eye, g = KINO.tgt; if (!k || !e) return null; const t = (performance.now() - T0) / 1000; return {type:k.type, up:e[1] - Math.max(terrH(e[0], e[2]), seaH(e[0], e[2], t)), free:camFree(g, e), d:Math.hypot(e[0] - bv.x, e[2] - bv.z)}; }, get PLA(){ return PLA; }, get PCA(){ return PCA; }, set noPL(v){ NOPL = !!v; }, get beams(){ return BMN; }, glErr(){ return gl ? gl.getError() : -1; }, QUAL, qualTick, TERRW, get TERR(){ return TERR; }, get MIDM(){ return MIDM; }, RO, SSL, WV, WK, ssAt, seaH, waves:(dt, H) => updateWaves(dt, H), get sstVS(){ return SST_VS; }, set seaDbg(v){ SEADBG = v; }, get drift(){ let c = 0; for (let i = 0; i < SDN; i++) if (SD.age[i] < SD.life[i]) c++; return c; }, get eye(){ return lastEye; }, camInside, camFree, get camPull(){ return camPull; }, get camLift(){ return camLift; }, get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, BUNKERS, nearestPlant, fkRun, legAt, terrH, terrRaw, unitModel, get UPATCH(){ return UPATCH; }, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; SEAMARKS.lights.forEach((L, i) => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(i, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }}
   };
 })();

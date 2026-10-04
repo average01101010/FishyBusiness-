@@ -1,6 +1,7 @@
 from _env import GAME, boot
 # The harbour unit (H5): in every harbour with a plant the quay stands on enough water and nothing of the seabed shows, the forklift
-# keeps well inside the deck all along its route, and the landing, bunker and ice places work. Screenshots: unit_<harbour>.png.
+# keeps well inside the deck all along its route, the landing, bunker and ice places work, and there is no water behind the quay (its
+# fill and the harbour land, 04.10.2026). Screenshots: unit_<harbour>.png.
 import asyncio, json
 from playwright.async_api import async_playwright
 
@@ -14,6 +15,8 @@ async def main():
         await boot(pg)
         await pg.evaluate("""(()=>{ S.tut = 0; S.cash = 1e6; S.t = Math.round((Date.UTC(2027, 7, 9, 12) - EPOCH) / 6e4); S.mult = 0.00001; })()""")
         await pg.wait_for_function("G3.isActive() && typeof DEPTH !== 'undefined' && DEPTH", timeout=90000); await pg.wait_for_timeout(800)
+        # the 3D ground's packs at every unit (the heights round the ones far from the boat are not in otherwise)
+        await pg.evaluate("Promise.all(UNITA.map(U => Promise.all(mapPacksIn('view', U.o[0] / 1000 - 0.3, U.o[1] / 1000 - 0.3, U.o[0] / 1000 + 0.3, U.o[1] / 1000 + 0.3).map(mapLoad))))")
         r = await pg.evaluate("""(()=>{
           // the lowest tide at each unit: all the constituents of its place at their low together (phase K10: the tide per place)
           const D = G3._debug, lowAt = p => -tidePlace(p).C.reduce((s, c) => s + c[0], 0), R = {low:-1e9, units:{}};
@@ -32,6 +35,13 @@ async def main():
             const m = berthPose(U.id, 'kyst21', 'main'), k = berthPose(U.id, 'kyst21', 'bunker'), B = D.BUNKERS.find(q => q.id === U.id);
             R.units[U.id] = {face:Math.round(face * 10) / 10, bed:Math.round(bed * 10) / 10, low:Math.round(low * 100) / 100, truck:Math.round(margin * 100) / 100, samples:n, T:Math.round(Rn.T * 100) / 100,
               berths:!!(m && k && m.face.unit === U.id && k.face.unit === U.id), bunker:!!(B && B.unit && B.kind === 'bunker'), plant:!!P, patch:D.UPATCH.some(q => q.unit === U.id) || null};
+            // no water behind the quay (04.10.2026): the ground right behind the block (3.5 m, all along it) stands over the highest tide
+            // and is land in the simulation, the whole fill is at the deck's height, and the map's land within 25 m of the block and the
+            // fill is raised over the highest tide (harbour land)
+            let back = 1e9, simB = true, fill = 1e9, lift = 1e9; for (let lx = -UNIT.E + 1; lx <= UNIT.E - 1; lx += 1.5) for (let lz = -UNIT.B - 0.5; lz >= -UNIT.B - 3.5; lz -= 1){ const q = at(lx, lz); back = Math.min(back, D.terrH(q.w[0], q.w[1])); if (!isLand(q)) simB = false; }
+            for (let lx = -UNIT.E; lx <= UNIT.E; lx += 1) for (let lz = -UNIT.B - 0.5; lz >= -UNIT.B - 90; lz -= 1){ if (fillOut(U, lx, lz)) continue; const q = at(lx, lz); fill = Math.min(fill, D.terrH(q.w[0], q.w[1])); }
+            for (let lx = -UNIT.E - 25; lx <= UNIT.E + 25; lx += 3) for (let lz = -1; lz >= -UNIT.B - 100; lz -= 3){ const g = groundOut(U, lx, lz), q = at(lx, lz); if (!g || g > 25 || D.terrRaw(q.w[0], q.w[1]) < 0.5) continue; lift = Math.min(lift, D.terrH(q.w[0], q.w[1])); }
+            Object.assign(R.units[U.id], {back:Math.round(back * 100) / 100, simB, fill:Math.round(fill * 100) / 100, lift:Math.round(lift * 100) / 100});
           }
           // no mapped building or pier stands on a unit's ground
           R.piers = PIERBOX.filter(q => !q.made && UNITA.some(U => { const [lx, lz] = unitL(U, q.x, q.z); return Math.abs(lx) <= UNIT.E && lz <= 0 && lz >= -UNIT.B; })).length;
@@ -44,6 +54,7 @@ async def main():
         print(ok(all(v['truck'] >= 1 for v in U.values())), 'the forklift\'s corners keep at least 1 m inside the deck all along its route (it can never drive off the edge)')
         print(ok(all(v['T'] <= 4.6 for v in U.values())), 'a forklift run takes at most two lifts')
         print(ok(r['piers'] == 0), 'no mapped pier stands on a unit\'s quay')
+        print(ok(all(v['back'] >= 1.6 and v['simB'] and v['fill'] >= 2.3 and v['lift'] >= 1.6 for v in U.values())), 'no water behind any quay: right behind the block the ground stands over the highest tide (1.55 m) and is land in the simulation, the fills are at the deck\'s height, the land round them over the highest tide (%s)' % ', '.join(k + ' ' + str(v['back']) + '/' + str(v['fill']) + '/' + str(v['lift']) for k, v in U.items()))
         # pictures of each harbour from above and from the water
         for pid in U:
             await pg.evaluate(f"""(()=>{{ const q = portById('{pid}'), b = S.boat; b.status = 'port'; b.port = '{pid}'; b.pos = {{...q.p}}; b.berth = 'main'; b.land = null; S.plan = null; b.moorT = S.t; G3.vesselChanged();

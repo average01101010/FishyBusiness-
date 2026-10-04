@@ -1153,8 +1153,16 @@ Kvotesystemet ligger i `core/03d-quota.js` (04.10.2026, plan Q1–Q6). Grunnlage
     - Bassenget foran (|x| ≤ 33,4 m, 26 m ut) er mudret til 6,6 m under middel vannstand, både i navigasjonen (`unitDredge` i `depthF`, 5,3 m under sjøkartnull) og i 3D (`unitTerr`). Det stiger 1:2 utenfor.
     - Ved laveste lavvann (summen av `TIDE_C` er 1,55 m) er det minst 5 m vann langs hele fronten.
   - **Terrenget i 3D:**
-    - `unitTerr` senker land som er høyere enn dekket ved sidene og bak, og går tilbake til det opprinnelige innen 22 m (`UNIT_REACH`). Ingenting fylles opp.
-    - Hver enhet nær båten har sitt eget fine terrengstykke (`unitPatch`, 1,6–4 m mellom punktene). Det følger veggene og har hull der blokka står.
+    - `unitTerr` senker land som er høyere enn dekket ved sidene og bak, og går tilbake til det opprinnelige innen 22 m (`UNIT_REACH`).
+    - **Fyllingen bak blokka** (Jonas 04.10.2026: «det er viktig at fiskemottaket ser ut som det hører hjemme med omgivelsene»):
+      - Sju av åtte blokker sto ute i vannet med 10–60 m sjø bak seg i 3D-terrenget.
+      - `UNITS[k].f` er omrisset av en fylling i enhetens ramme, fra baksiden til 3 m inn på fast land (0,5 m og over i minst 10 m). Den er målt per meter langs baksiden fra høydepakkene, der landet ligger innen 70 m, og er minst 4 m dyp overalt.
+      - Fyllingen ligger flatt i dekkhøyde (`UNIT_TOP`), og sidene skråner 1:1,6 ned til bunnen.
+      - Den er land i simuleringen (`onUnitGround` i `isLand`, `unitDredge`), land i kartplotteren (`pocketsIn` gir 2) og fjerner kartlagte brygger (`PIERBOX`).
+    - **Havnelandet over flo:** Kartets land er 0,5 m og over, mens tidevannet går til 1,55 m, så lavt land bak kaiene ble oversvømt ved flo. Land innen 30 m fra blokka og fyllingen heves til dekkhøyde, og det går tilbake til det opprinnelige innen 45 m (`UNIT_LIFT`).
+    - Fyllingen og det flate havnelandet rett ved den er asfalt og grus (`pv` i `unitPatch` og `recolor`). Skråningene blir stein fordi de er bratte.
+    - `unittest` sjekker at det rett bak blokka er over høyeste flo og land i simuleringen, at hele fyllingen er i dekkhøyde, og at kartets land innen 25 m er over flo.
+    - Hver enhet nær båten har sitt eget fine terrengstykke (`unitPatch`, 1,6–4 m mellom punktene) over blokka, fyllingen og 65 m rundt (`UNIT_FINE`). Det følger veggene og har hull der blokka står.
     - Ytterkanten ligger på det nære terrengets egne trekanter. Det nære terrenget senkes under stykket (`terrCoarse`), og stykket tegnes med litt offset.
   - **Det som skjules:**
     - bygg fra kartdataene på kaia og i bassenget (`bldOnUnit` ved innlasting)

@@ -142,11 +142,12 @@ function decodeContours(){
   return out.map(a => a.join(''));
 }
 // Land or water at p, for what is near the boats: the 25 m mask where a tile has it (its sim pack must be in, as it is round every
-// boat and set: simAreaReady), else the national core's 200 m. Off the frame is land, so nothing sails off it.
+// boat and set: simAreaReady), and a harbour unit's block and fill; else the national core's 200 m. Off the frame is land, so nothing
+// sails off it.
 function isLand(p){
   if (!(p.x >= MAPB.x0 && p.y >= MAPB.y0 && p.x < MAPB.x1 && p.y < MAPB.y1)) return true;
   if (!mapSimAt(p)) return isLandFar(p);
-  const L = MAPD.L.mask; return rcell(L, Math.floor(p.x / L.c), Math.floor(p.y / L.c)) === 1 && !inHarbourPocket(p);
+  const L = MAPD.L.mask; return (rcell(L, Math.floor(p.x / L.c), Math.floor(p.y / L.c)) === 1 || onUnitGround(p)) && !inHarbourPocket(p);
 }
 // for what looks far (the fetch rays, the local fleet, the grounds' stock): the national core only, land at 200 m
 function isLandFar(p){
@@ -176,11 +177,13 @@ function pocketHit(US, QS, x, z){
   for (const f of QS){ const dx = x - f.x, dz = z - f.z, s = dx * f.ux + dz * f.uz, t = dx * f.nx + dz * f.nz; if (t > 0 && t <= POCKET && Math.abs(s) <= f.hl + 4) return true; }
   return false;
 }
-// the same for the pockets near a box of km only (the chart asks for every pixel): null when there are none
+// the same for the pockets near a box of km only (the chart asks for every pixel): null when there are none, else 1 in a pocket, 2 on
+// a unit's block or fill (land on the chart), 0 elsewhere
 function pocketsIn(x0, y0, x1, y1){
   const m = 0.2, near = (x, z) => x / 1000 > x0 - m && x / 1000 < x1 + m && z / 1000 > y0 - m && z / 1000 < y1 + m;
   const US = UNITA.filter(U => near(U.o[0], U.o[1])), QS = qPockets().filter(f => near(f.x, f.z));
-  return US.length || QS.length ? (x, y) => pocketHit(US, QS, x * 1000, y * 1000) : null;
+  return US.length || QS.length ? (x, y) => { const X = x * 1000, Z = y * 1000; if (pocketHit(US, QS, X, Z)) return 1;
+    for (const U of US){ if (Math.abs(X - U.o[0]) > 120 || Math.abs(Z - U.o[1]) > 120) continue; const [lx, lz] = unitL(U, X, Z); if (groundOut(U, lx, lz) === 0) return 2; } return 0; } : null;
 }
 function legClear(a, b){
   const d = dist(a, b), n = Math.max(1, Math.ceil(d / 0.04));
@@ -218,17 +221,43 @@ const portById = id => PORTS.find(p => p.id === id);
 // most land under the block and clear water in front. The landing berth stays within 25 m of the harbour point. Husøy (the user's
 // wish 03.10.2026): the face on the line of the plant's sea walls in OpenStreetMap and parallel to its buildings, so the block stands
 // on the shore, not out in the water.
+// The fill behind the block (Jonas 04.10.2026: «det er viktig at fiskemottaket ser ut som det hører hjemme med omgivelsene»): where
+// the shore lies back from the block, the ground goes on at the deck's height in to the land, so there is no water behind the quay.
+// f is its outline in the unit's frame (lx, lz pairs, m): from the block's back to 3 m into the 3D ground's solid land (0.5 m and up
+// for 10 m on), measured along every metre of the back from the view's packs (04.10.2026) where that land is within 70 m, at least
+// 4 m deep all along the back (where the shore turns away at a corner, the block's back wall stands on that apron), simplified to 1 m.
+// Its sides slope down to the seabed (view3d.js unitTerr); in the simulation it is land, as the block is.
 const UNIT = {E:27.4, B:24.4, bot:-9, basinX:33.4, basinZ:26, dredge:6.6, berth:{main:[-5, 24], bunker:[16.5, 23]}};
 const UNITS = {
-  botnhamn:{o:[53282.5, 23499.9], u:[-0.993, -0.116]}, husoy:{o:[43788.5, 19672.7], u:[-0.12, -0.993]}, senjahopen:{o:[36807.1, 25112.1], u:[0.876, -0.483]},
-  gryllefjord:{o:[20312.3, 39841.9], u:[-0.947, -0.32]}, sommaroy:{o:[56736.6, 9544.3], u:[-0.707, -0.707]}, brensholmen:{o:[58576.6, 12633.9], u:[-0.766, -0.643]},
-  torsken:{o:[21862.9, 42573.6], u:[0.977, 0.215]}, frovag:{o:[19637.0, 71900.4], u:[0.189, -0.982]}
+  botnhamn:{o:[53282.5, 23499.9], u:[-0.993, -0.116], f:[27.4,-24.4, 27.4,-70.9, 12,-65.9, 9,-61.4, 7,-28.4, -27.4,-28.4, -27.4,-24.4]}, husoy:{o:[43788.5, 19672.7], u:[-0.12, -0.993], f:[27.4,-24.4, 27.4,-28.4, -27.4,-28.4, -27.4,-24.4]}, senjahopen:{o:[36807.1, 25112.1], u:[0.876, -0.483], f:[27.4,-24.4, 27.4,-35.9, 9,-46.4, -2,-28.4, -9,-28.4, -27.4,-39.4, -27.4,-24.4]},
+  gryllefjord:{o:[20312.3, 39841.9], u:[-0.947, -0.32], f:[27.4,-24.4, 27.4,-28.4, -27.4,-28.4, -27.4,-24.4]}, sommaroy:{o:[56736.6, 9544.3], u:[-0.707, -0.707], f:[27.4,-24.4, 27.4,-28.4, -27.4,-28.4, -27.4,-24.4]}, brensholmen:{o:[58576.6, 12633.9], u:[-0.766, -0.643], f:[27.4,-24.4, 27.4,-80.4, 12,-59.4, 8,-47.9, 7,-38.9, -7,-28.4, -27.4,-28.4, -27.4,-24.4]},
+  torsken:{o:[21862.9, 42573.6], u:[0.977, 0.215], f:[27.4,-24.4, 27.4,-32.9, 4,-28.4, -27.4,-28.4, -27.4,-24.4]}, frovag:{o:[19637.0, 71900.4], u:[0.189, -0.982], f:[27.4,-24.4, 27.4,-47.9, 13,-47.4, -10,-43.4, -21,-65.4, -24,-69.9, -27.4,-71.9, -27.4,-24.4]}
 };
 for (const k in UNITS){ const U = UNITS[k], l = Math.hypot(U.u[0], U.u[1]); U.id = k; U.u = LGu(U.o, [U.u[0] / l, U.u[1] / l]); U.o = LGm(U.o); U.n = [-U.u[1], U.u[0]]; }
 const UNITA = Object.values(UNITS);
 // the unit's frame and the world (metres)
 const unitW = (U, lx, lz) => [U.o[0] + U.u[0] * lx + U.n[0] * lz, U.o[1] + U.u[1] * lx + U.n[1] * lz];
 const unitL = (U, x, z) => { const dx = x - U.o[0], dz = z - U.o[1]; return [dx * U.u[0] + dz * U.u[1], dx * U.n[0] + dz * U.n[1]]; };
+// how far (m) lx, lz in a unit's frame lie outside its block, outside its fill (Infinity without one) and outside both: 0 on it
+const blockOut = (lx, lz) => Math.hypot(Math.max(0, Math.abs(lx) - UNIT.E), Math.max(0, -UNIT.B - lz, lz));
+function fillOut(U, lx, lz){
+  const f = U.f; if (!f) return Infinity;
+  let inside = false, d2 = Infinity;
+  for (let i = 0, j = f.length - 2; i < f.length; j = i, i += 2){
+    const ax = f[j], az = f[j + 1], ex = f[i] - ax, ez = f[i + 1] - az;
+    if ((az > lz) !== (f[i + 1] > lz) && lx < ax + (lz - az) * ex / ez) inside = !inside;
+    const t = clamp(((lx - ax) * ex + (lz - az) * ez) / (ex * ex + ez * ez || 1), 0, 1), dx = lx - ax - ex * t, dz = lz - az - ez * t;
+    d2 = Math.min(d2, dx * dx + dz * dz);
+  }
+  return inside ? 0 : Math.sqrt(d2);
+}
+const groundOut = (U, lx, lz) => Math.min(blockOut(lx, lz), fillOut(U, lx, lz));
+// whether p (km) is on a unit's block or fill
+function onUnitGround(p){
+  const x = p.x * 1000, z = p.y * 1000; if (!harbourNear(x, z)) return false;
+  for (const U of UNITA){ if (Math.abs(x - U.o[0]) > 120 || Math.abs(z - U.o[1]) > 120) continue; const [lx, lz] = unitL(U, x, z); if (groundOut(U, lx, lz) === 0) return true; }
+  return false;
+}
 function portApproach(pt){
   let best = null;
   for (let r = 0.15; r <= 0.7; r += 0.05) for (let a = 0; a < 360; a += 7.5){
