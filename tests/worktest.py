@@ -105,7 +105,8 @@ async def main():
           energyUi(); R.black = !document.getElementById('sleep').hidden; R.count = document.getElementById('slTime').textContent;
           R.work = workAssign().length; for (let i = 0; i < 430 && asleep(); i++) step(); R.woke = {asleep:asleep(), e:Math.round(S.energy)}; energyUi(); R.blackGone = document.getElementById('sleep').hidden;
           // with crew aboard the trip goes on: the best seaman takes the helm
-          sea('sailing'); const A = hand(), B = hand(); A.attr.sjo = 2; B.attr.sjo = 4.5; S.crew = [A, B]; S.plan = {wps:[{x:g.x + 8, y:g.y, port:null, fish:0}], idx:0, speed:6, returning:false};
+          sea('sailing'); const A = hand(), B = hand(); A.attr.sjo = 2; B.attr.sjo = 4.5; S.crew = [A, B]; const tgt = [0, 1, 2, 3, 4, 5, 6, 7].map(k => ({x:b.pos.x + 8 * Math.cos(k * Math.PI / 4), y:b.pos.y + 8 * Math.sin(k * Math.PI / 4)})).find(q => legClear(b.pos, q)) || {x:g.x + 8, y:g.y};   // a clear leg (the vector coast has skerries the old mask did not)
+          S.plan = {wps:[{x:tgt.x, y:tgt.y, port:null, fish:0}], idx:0, speed:6, returning:false};
           S.energy = 0.01; S.sleep = null; step(); const q0 = {...b.pos}; for (let i = 0; i < 30; i++) step(); R.crewTrip = {asleep:asleep(), moved:Math.round(dist(q0, b.pos) * 1000), st:b.status, helm:workAssign().filter(p => p.st === 'ror').map(p => p.c.attr.sjo)};
           S.sleep = null; S.energy = 5; energyUi(); R.vign = +document.getElementById('vign').style.opacity; S.energy = 100; energyUi(); R.vignOff = +document.getElementById('vign').style.opacity;
           S.plan = null; return R; })()""")
