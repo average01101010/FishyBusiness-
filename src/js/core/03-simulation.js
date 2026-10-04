@@ -379,7 +379,20 @@ function depthFactor(sp, d){ const q = DPREF[sp]; return 0.3 + 0.7 * Math.exp(-(
 const SST = [3.6,3.1,3.2,3.9,5.6,8.2,10.8,11.4,9.8,7.8,6.0,4.6];
 // where a harbour unit stands (07-harbours.js) its quay is dry and its basin dredged
 // the depth below chart datum (m): the tiles' depth where they have it, else the model from the core (openness and the distance to the shore)
-function depthF(p){ return unitDredge(p, isLand(p) ? 0 : DEPTH && mapSimAt(p) ? Math.max(0.8, rbil(MAPD.L.depth, p)) : depthModel(p)); }
+function depthF(p){ return unitDredge(p, isLand(p) ? 0 : DEPTH && mapSimAt(p) ? Math.max(0.8, depthWater(p)) : depthModel(p)); }
+// the tiles' depth between the four nearest cells that are water (the layer has 0 on the 25 m mask's land): the fine coast decides
+// what is land (01d-coast.js), so next to it the water keeps the depth of its own cells rather than running out to 0 (which grounded
+// boats in water the chart shows). Where all four are land, the water cells two round; where there are none, 2 m (a sound the mask closed).
+function depthWater(p){
+  const L = MAPD.L.depth, gx = clamp(p.x / L.c - 0.5, L.ix0, L.ix0 + L.nx - 1.001), gy = clamp(p.y / L.c - 0.5, L.iy0, L.iy0 + L.ny - 1.001), ix = Math.floor(gx), iy = Math.floor(gy), fx = gx - ix, fy = gy - iy;
+  const a = rcell(L, ix, iy), b = rcell(L, ix + 1, iy), c = rcell(L, ix, iy + 1), d = rcell(L, ix + 1, iy + 1);
+  if (a > 0 && b > 0 && c > 0 && d > 0) return ((a * (1 - fx) + b * fx) * (1 - fy) + (c * (1 - fx) + d * fx) * fy) * L.k;
+  const wa = a > 0 ? (1 - fx) * (1 - fy) : 0, wb = b > 0 ? fx * (1 - fy) : 0, wc = c > 0 ? (1 - fx) * fy : 0, wd = d > 0 ? fx * fy : 0, w = wa + wb + wc + wd;
+  if (w > 1e-6) return (a * wa + b * wb + c * wc + d * wd) / w * L.k;
+  let s = 0, n = 0;
+  for (let j = iy - 1; j <= iy + 2; j++) for (let i = ix - 1; i <= ix + 2; i++){ if (!mapIn(L, i, j)) continue; const v = rcell(L, i, j); if (v > 0){ s += v; n++; } }
+  return n ? s / n * L.k : 2;
+}
 function depthAt(p){ return Math.round(depthF(p)); }
 function depthModel(p){ return (2 + (13 + 220 * Math.pow(exposure(p), 1.6) + 25 * vn(p.x / 4 + p.y / 7, 5)) * Math.pow(sstep(0, 1.5, coastDistFar(p)), 0.6)); }
 function grade(f){ return f >= 85 ? 'E' : f >= 65 ? 'A' : f >= 40 ? 'B' : f >= 15 ? 'X' : 'V'; }

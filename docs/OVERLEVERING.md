@@ -363,9 +363,9 @@ Jonas valgte 02.10.2026 å la GitHub bygge og lagre de nasjonale kartdataene. Gi
   |---|---|---|---|
   | 0 | over 150 km | `coast0` | grovt: dybdemodellen uten skråningen mot land, høyst 160 000 punkter skalert opp; ingen flispakker hentes |
   | 1 | 8–150 km | `coast1` der flisen har kartpakke, `coast0` ellers | som før: detaljflisene, ellers kjernens land og dybdemodellen |
-  | 2 | under 8 km | `coast2` | som nivå 1, og 25 m-masken vises som fjære der den er land utenfor kystlinja |
+  | 2 | under 8 km | `coast2` | som nivå 1; landet er bare vektorkysten, med moloene (fra 04.10.2026, 4.19) |
 
-  - På nivå 2 viser kartet det `legClear` regner som land (masken med havnelommene). `charttest` krever at minst 98,5 % av punktene i et havneutsnitt stemmer (99,5–99,8 % målt).
+  - På nivå 2 viser kartet det `legClear` regner som land: vektorkysten med moloene, havnelommene og mottakenes fyllinger (4.19). `charttest` krever at minst 99,5 % av punktene i et havneutsnitt stemmer (100 % målt 04.10.2026, mot 99,5–99,8 % med masken).
   - B-splinen for dybden brukes bare der en piksel er finere enn dybdecellene (50 m). Lenger ute gir bilineær like glatt kart for en femtedel av arbeidet.
   - **Tegnetid** i `charttest` (1 280 × 800, CPU strupet 4×): hele landet 0,1 s, regionen 0,35 s, fjorden (20 km) 1,5 s, havna 0,5 s. Fjordnivået er det tyngste: B-splinen med 16 oppslag per piksel. Det er det samme som før K7, og en kandidat for finpussen.
   - Stiene ligger som `Path2D` i km, flisene fra sitt eget hjørne, så tallene holder seg små ved største zoom. Hver flis tegnes innenfor sin rute, så kantene der polygonene er kuttet, ikke blir streket opp.
@@ -751,6 +751,28 @@ Jonas ville ha et register over alle fiskemottak i Norge, med kaimottaket fra Bl
 - **Typen:** 15 anlegg har typen «NOT_TRANSLATED» i registeret, mest fryselagre og terminaler.
   - De som Råfisklaget kaller fiskemottak, regnes som ordinært anlegg. Resten blir «Annet anlegg».
 - **Snitt over to år:** Kilo og landinger er snittet for de to årene. Et mottak som startet eller stengte i perioden, ser derfor halvt så stort ut.
+
+### 4.19 Vektorkysten gjelder (04.10.2026)
+
+Jonas: «Jeg vil ha bort det som er i magenta», og vannlinja skal være nøyaktig nok til at skjær og moloer stemmer. Fra nå er vektorkysten (`coast2`) fasiten for land og sjø i hele spillet, ikke 25 m-masken.
+
+- **Dataene** (`tools/map/chart.py`, `coast2`):
+  - Overtures landbiter slås sammen per flis (`unary_union`) før de forenkles til 3 m. Før ble hver bit forenklet for seg, og sømmene mellom dem ble glipper på opptil 3 m, som en landsjekk ville sett som vann.
+  - Skjær ned til 4 m² beholdes (før 50 m²).
+  - Moloene (`base/infrastructure`, klasse `breakwater`) utenfor landet kommer som egne ringer: klasse 2 (ytre) og 3 (hull). Flater brukes som de er tegnet, og linjer blir 12 m brede, som er et anslag. Mange moloer ligger allerede i OSM-kysten, for eksempel i Botnhamn, rundt 8 m brede. Masken gjorde dem 25 m brede.
+  - Senjas kartpakker er bygget på nytt med `region.py senja`. Hele kysten bygges av `kart.yml` (`run` 8 i `kart.json`), og mellomlageret heter nå `coast2u-*`.
+  - En flis med ny `coast2` har 504 ringer der den før hadde 1 060.
+- **Kystindeksen** (`core/01d-coast.js`, `COAST`):
+  - Hver kartflis får en indeks når pakken kommer (`coastEnsure`), laget i en worker (`coastBuild`). Flisa deles i ruter på 100 m. Hver rute har vindingstallet i hjørnet, med land og moloer talt hver for seg etter nonzero-regelen, og kantene som berører den.
+  - Svaret i en rute med kanter regnes eksakt ved å telle kantene en krysser på vei fra hjørnet, ned langs rutas venstre side og bort til punktet. Hjørnene ligger utenfor hele meter (`COX`, `COY`), der punktene i dataene ligger.
+  - `coastAt(p)` gir 1 (land), 2 (molo), 0 (sjø) eller −1 (ingen fin kyst). `coastDistM(p)` gir avstanden til kysten innen 100 m. `coastSegHit(a, b)` sier om en rett strekning krysser kysten.
+  - **Målt for Senjas fire fliser:** 1,4 s i workeren til sammen, og 200 000 `isLand` på 73 ms (0,4 µs hver).
+  - **Barrieren:** kartpakkene lastes rundt båtene, og indeksen er en del av `mapReadyAt`, `mapNeed`, oppstarten og autonav (`leiaFind1`). Simuleringen leser derfor aldri en flis uten indeks (`maptest`). Skjermene kan tegne ruter over fliser ingen har bedt om. Der gjelder masken til indeksen er klar (`COAST.soft` teller det).
+- **Landsjekkene:**
+  - `isLand` bruker indeksen der flisa har kartpakke, ellers masken. Havnelommene og mottakenes fyllinger gjelder som før.
+  - Moloene er 8–12 m brede, og prøvene i `legClear` (hver 40. m), `groundCheck` (20 m), `clearLine` og `leiaLegOk` (8 m) og rorhjelpen (10 m) kunne gå rett over dem. Alle sjekker nå også strekningen med `coastSegHit`. Søkene i `approachPath` og `berthPath` gjør det mellom nabocellene, og en celle er land der `isLand` sier det om midten.
+  - **Dybden** (`depthWater` i `03-simulation.js`): dybdelaget har 0 på maskens land. Nå regnes dybden bare av vanncellene, så vannet rett ved kysten har dybden til sine egne celler i stedet for å gå mot 0, ellers ville båter gått på grunn i vann kartet viser. Der alle fire cellene er land, brukes vanncellene to ruter ut. Der det ikke er noen, er dybden 2 m, som er et anslag for et sund masken tettet.
+- **Kartplotteren:** masken tegnes ikke lenger som fjære (`chartRaster`). Landet er bare vektorkysten, med moloene. Bare mottakenes fyllinger males i rasteret, i samme farge som landet.
 
 ## 5. Systemer i spillet
 
@@ -2274,7 +2296,7 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
   - Terrenget ved en kaifront er fra 25 m-masken, så en båt ved kai kan stå litt inn i terrenget der kaia ikke er kartlagt som brygge.
   - Havnene har ingen navn.
   - Flåten er en tilnærming. Den følger kaiplassen, ikke Fiskeridirektoratets register.
-- **Kartplotteren: dobbel kyst langs vannlinja (03.10.2026, framtidig jobb, venter på klarsignal):**
+- **Kartplotteren: dobbel kyst langs vannlinja (03.10.2026). Løst 04.10.2026 med «Kystlinja gjelder», se 4.19.** Det som sto her:
   - **Hva som ses:** på nært hold ligger et mykt grønt felt ved siden av den gule kysten, og smale sund er tettet med grønt. Det ser ut som to landmasser oppå hverandre.
   - **Årsaken:** kartet tegner land fra to kilder.
     - Den gule kysten er vektorkysten fra Overture/OSM (`coast2`, forenklet til 3 m, `chartCoast` i `03a-chart.js`).

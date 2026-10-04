@@ -39,7 +39,9 @@ function helmStep(dt){
   // land: the simulation's ground check leaves it to the routes (legClear keeps them off it), but by hand she can be driven at it:
   // over 3 knots she runs aground there, slower she comes to a stop against it
   if (d){ const n = Math.max(1, Math.ceil(Math.abs(d) / 0.01)); let last = b.pos;
-    for (let i = 1; i <= n; i++){ const q = {x:b.pos.x + (to.x - b.pos.x) * i / n, y:b.pos.y + (to.y - b.pos.y) * i / n}; if (isLand(q)){ if (Math.abs(h.v) > 3){ runAground(last); helmOff(); } else { b.pos = last; h.v = 0; b.v = 0; } return; } last = q; } }
+    for (let i = 1; i <= n; i++){ const q = {x:b.pos.x + (to.x - b.pos.x) * i / n, y:b.pos.y + (to.y - b.pos.y) * i / n}; if (isLand(q)){ if (Math.abs(h.v) > 3){ runAground(last); helmOff(); } else { b.pos = last; h.v = 0; b.v = 0; } return; } last = q; }
+    // a breakwater thinner than the 10 m steps (01d-coast.js)
+    if (coastSegHit(b.pos, to)){ if (Math.abs(h.v) > 3){ runAground(b.pos); helmOff(); } else { h.v = 0; b.v = 0; } return; } }
   const gp = d ? groundCheck(b.pos, to) : null;
   if (gp){ runAground(gp); helmOff(); return; }
   HELM.nm += Math.abs(d) / NM; if (HELM.nm > 0.05 && meAboard()){ tatAdd('nm', HELM.nm); HELM.nm = 0; }

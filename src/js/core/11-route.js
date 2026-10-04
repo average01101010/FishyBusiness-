@@ -107,7 +107,7 @@ async function leiaFind(from, to, sd, st){
 }
 async function leiaFind1(from, to, sd, st, pad){
   const x0 = Math.max(MAPB.x0, Math.min(from.x, to.x) - pad), y0 = Math.max(MAPB.y0, Math.min(from.y, to.y) - pad), x1 = Math.min(MAPB.x1, Math.max(from.x, to.x) + pad), y1 = Math.min(MAPB.y1, Math.max(from.y, to.y) + pad);
-  await Promise.all(mapPacksIn('sim', x0, y0, x1, y1).map(mapLoad));
+  await Promise.all(mapPacksIn('sim', x0, y0, x1, y1).map(mapLoad).concat(mapPacksIn('chart', x0, y0, x1, y1).map(coastEnsure)));
   const area = (x1 - x0) * (y1 - y0), sim = mapPacksIn('sim', x0, y0, x1, y1).length > 0;
   let c = sim && area / 0.01 <= LEIA.maxCells ? 0.1 : 0.2, mask = null, wx = [x0, y0, x1, y1];
   if (area / (c * c) > LEIA.maxCells || (sim && c > 0.1)){
@@ -140,7 +140,7 @@ function leiaLegOk(p, q, sd, margin){
     if (margin > 0 && coastDist(pt) < margin && Math.min(dist(pt, p), dist(pt, q)) > margin) return false;
     if (depthF(pt) < sd + 1 && Math.min(dist(pt, p), dist(pt, q)) > 0.05) return false;
   }
-  return legHazardMemo(p, q, sd).rocks === 0;
+  return !coastSegHit(p, q) && legHazardMemo(p, q, sd).rocks === 0;
 }
 // string-pulling: from each kept point, the furthest point along the path that a straight leg reaches (galloping, then halving)
 async function leiaStraighten(P, sd, margin, st){

@@ -13,7 +13,8 @@
 //   view  hgt, forest     for the 3D view, as they come round the boat (view3d.js stream3d; mapViewIn first)
 //   far   far             the ground at 200 m for the 3D view's far terrain, on the coast's 191 tiles with land (phase K8)
 //   chart coast1, coast2, names   the chart's vectors per tile (tools/map/chart.py; the core has coast0 and names0 for the whole
-//                         country): entries with a count as a sixth field, read with mapVec (ui/03a-chart.js draws them)
+//                         country): entries with a count as a sixth field, read with mapVec (ui/03a-chart.js draws them). Loaded
+//                         round the boats too: coast2 is the truth for land and sea there (01d-coast.js), indexed as it comes
 // The layers are in the national frame (phase K4): a layer's cell (ix, iy) of size c covers x in [ix c, (ix + 1) c) km, the cells are
 // numbered from the frame's origin, and a layer has cells from (ix0, iy0) for nx by ny; blocks (bx, by) of n cells and tiles of
 // 50 km line up with the frame, so the packs of the whole coast fit together.
@@ -68,9 +69,10 @@ function mapPacksIn(kind, x0, y0, x1, y1){
   for (let ty = Math.floor(y0 / T); ty <= Math.floor(y1 / T); ty++) for (let tx = Math.floor(x0 / T); tx <= Math.floor(x1 / T); tx++){ const pk = MAPD.byTile.get(kind + ':' + tx + ':' + ty); if (pk) out.push(pk); }
   return out;
 }
-// what the simulation needs at p (game km) within r km: core and sim
-function mapSimPacks(p, r){ return mapPacksIn('core', 0, 0, 0, 0).concat(mapPacksIn('sim', p.x - r, p.y - r, p.x + r, p.y + r)); }
-function mapReadyAt(p, r){ for (const pk of mapSimPacks(p, r)) if (!pk.buf) return false; return true; }
+// what the simulation needs at p (game km) within r km: core, sim, and the chart packs with their coast indexed (01d-coast.js: the
+// fine coast is the truth for land and sea since 04.10.2026)
+function mapSimPacks(p, r){ return mapPacksIn('core', 0, 0, 0, 0).concat(mapPacksIn('sim', p.x - r, p.y - r, p.x + r, p.y + r), mapPacksIn('chart', p.x - r, p.y - r, p.x + r, p.y + r)); }
+function mapReadyAt(p, r){ for (const pk of mapSimPacks(p, r)) if (!pk.buf || (pk.kind === 'chart' && !pk.coast)) return false; return true; }
 // whether p's tile has detail (a sim pack): if not, the readers take the national core there
 function mapSimAt(p){ const T = MAPD.man.tile; return MAPD.byTile.has('sim:' + Math.floor(p.x / T) + ':' + Math.floor(p.y / T)); }
 function mapViewAt(p){ const T = MAPD.man.tile; return MAPD.byTile.has('view:' + Math.floor(p.x / T) + ':' + Math.floor(p.y / T)); }
@@ -78,7 +80,7 @@ function mapViewAt(p){ const T = MAPD.man.tile; return MAPD.byTile.has('view:' +
 let MVI = {k:'', v:false}, MFI = {k:'', v:false};
 function mapKindIn(kind, p, memo){ const T = MAPD.man.tile, k = kind + ':' + Math.floor(p.x / T) + ':' + Math.floor(p.y / T); if (memo.k === k && memo.v) return true; const pk = MAPD.byTile.get(k); memo.k = k; memo.v = !!(pk && pk.buf); return memo.v; }
 const mapViewIn = p => mapKindIn('view', p, MVI), mapFarIn = p => mapKindIn('far', p, MFI);
-function mapNeed(p, r){ return Promise.all(mapSimPacks(p, r).map(mapLoad)); }
+function mapNeed(p, r){ return Promise.all(mapSimPacks(p, r).map(pk => pk.kind === 'chart' ? coastEnsure(pk) : mapLoad(pk))); }
 function mapLoadKind(kind){ return Promise.all(MAPD.packs.filter(pk => pk.kind === kind).map(mapLoad)); }
 // ---------- blocks ----------
 function med16(raw, n){
@@ -157,7 +159,7 @@ function simAreaReady(){
 }
 // for the tests (maptest.py): forget a pack, also in IndexedDB, as if it had never come; the decoded blocks go too
 function mapDrop(pk){
-  pk.buf = null; pk.idx = null; pk.vec = null; pk.load = null; MAPD.blk.clear(); MAPD.bytes = 0; MVI = {k:'', v:false}; MFI = {k:'', v:false};
+  pk.buf = null; pk.idx = null; pk.vec = null; pk.load = null; pk.coast = null; pk.coastQ = null; COAST.last = null; MAPD.blk.clear(); MAPD.bytes = 0; MVI = {k:'', v:false}; MFI = {k:'', v:false};
   for (const n in MAPD.L){ const L = MAPD.L[n]; L.bx = L.by = NaN; L.b = null; }
   return idbDo('readwrite', s => s.delete(pk.hash));
 }

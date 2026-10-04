@@ -169,15 +169,20 @@ function chartVectors(V){
 }
 // The raster under the coast: PW x PH samples from (x0, y0) km, pkx/pky km apart, into d (RGBA). Off the tiles with detail (or before
 // their pack has come: st.prov) the national core's land and the depth model; on them the depth (a B-spline where a sample is finer
-// than its 50 m cells) and the land mask (25 m): at level 2 as foreshore where the coast leaves it out (what the route check takes as
-// land), read between the cells so its edge is a smooth line a pixel wide rather than 25 m steps; at level 1 as land under the coast.
+// than its 50 m cells). The land is the vector coast drawn over it (chartCoast), which is what the route check takes as land since
+// 04.10.2026 (01d-coast.js); the 25 m mask is no longer drawn as foreshore beside it (the user: «Jeg vil ha bort det som er i
+// magenta»). Only a harbour unit's block and fill are painted here, at level 2, as land.
 function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){
   const {lv, fish, night, sd} = V, LD = MAPD.L.depth, c = LD.c, X0 = LD.ix0, Y0 = LD.iy0, X1 = LD.ix0 + LD.nx - 1, Y1 = LD.iy0 + LD.ny - 1, D = (ix, iy) => rcell(LD, ix, iy);
   const s2 = sd > 2.5 ? Math.min(2, sd / 2) : -1;
   // the night colours: dark sea in blues, dim land, as a chart plotter's night mode (the fishing chart is dark already)
-  const OFF = fish || night ? [5, 9, 13] : [221, 227, 229], WHITE = night ? [9, 20, 33] : [249, 251, 252], U1 = night ? [16, 38, 62] : [167, 203, 235], U2 = night ? [22, 52, 84] : [134, 180, 223], SC = night ? [74, 112, 150] : [59, 106, 165], FS = fish ? [46, 54, 40] : night ? [38, 42, 33] : [204, 214, 172], LAND = fish ? [38, 43, 35] : night ? [42, 38, 30] : [232, 215, 166], FAR = fish || night ? [42, 38, 30] : [224, 206, 150];
+  const OFF = fish || night ? [5, 9, 13] : [221, 227, 229], WHITE = night ? [9, 20, 33] : [249, 251, 252], U1 = night ? [16, 38, 62] : [167, 203, 235], U2 = night ? [22, 52, 84] : [134, 180, 223], SC = night ? [74, 112, 150] : [59, 106, 165], FS = fish ? [46, 54, 40] : night ? [38, 42, 33] : [204, 214, 172], LAND = fish ? [38, 43, 35] : night ? [42, 38, 30] : [232, 215, 166], FAR = fish || night ? [42, 38, 30] : [224, 206, 150], UG = fish || night ? [38, 43, 35] : [232, 215, 166];
   const prev = new Float32Array(PW).fill(NaN), sh = 1 / (Math.max(pkx, 0.0005) * 10), smooth = lv > 0 && pkx < LD.c;
-  const LM = MAPD.L.mask, lc = LM.c, pocket = lv === 2 ? pocketsIn(x0, y0, x0 + PW * pkx, y0 + PH * pky) : null, T = MAPD.man.tile, aa = Math.max(0.04, 0.5 * pkx / lc);
+  const pocket = lv === 2 ? pocketsIn(x0, y0, x0 + PW * pkx, y0 + PH * pky) : null, T = MAPD.man.tile, LM = MAPD.L.mask, lc = LM.c;
+  // deep inside the 25 m mask's land (the cell and its four neighbours) the vector coast's fill covers the pixel anyway: it is painted
+  // in that fill's colour and its depth is not worked out (the B-spline's 16 cells a pixel for the land made the fjord's view 3x slower);
+  // at the mask's edge, where it and the coast differ, the depth is drawn and the coast's fill decides
+  const deep = (x, y) => { const mx = Math.floor(x / lc), my = Math.floor(y / lc); return rcell(LM, mx, my) === 1 && rcell(LM, mx + 1, my) === 1 && rcell(LM, mx - 1, my) === 1 && rcell(LM, mx, my + 1) === 1 && rcell(LM, mx, my - 1) === 1; };
   let ltx = NaN, lty = NaN, lsim = false;
   const simAt = (x, y) => { const tx = Math.floor(x / T), ty = Math.floor(y / T); if (tx !== ltx || ty !== lty){ ltx = tx; lty = ty; const pk = lv > 0 ? MAPD.byTile.get('sim:' + tx + ':' + ty) : null; lsim = !!(pk && pk.buf); if (pk && !pk.buf && st) st.prov = true; } return lsim; };
   const bw = (t, o) => { const t2 = t * t, t3 = t2 * t; o[0] = (1 - t) * (1 - t) * (1 - t) / 6; o[1] = (3 * t3 - 6 * t2 + 4) / 6; o[2] = (-3 * t3 + 3 * t2 + 3 * t + 1) / 6; o[3] = t3 / 6; };
@@ -210,11 +215,8 @@ function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){
         const q = {x, y}; if (lv && isLandFar(q)){ put(o, FAR); prev[i] = NaN; left = NaN; continue; }
         v = lv ? depthModel(q) : 15 + 220 * Math.pow(exposure(q), 1.6); }
       else try {
-        if (lv === 2){ const gxm = x / lc - 0.5, gym = y / lc - 0.5, mx = Math.floor(gxm), my = Math.floor(gym), ax = gxm - mx, ay = gym - my;
-          const m = (rcell(LM, mx, my) * (1 - ax) + rcell(LM, mx + 1, my) * ax) * (1 - ay) + (rcell(LM, mx, my + 1) * (1 - ax) + rcell(LM, mx + 1, my + 1) * ax) * ay;
-          const pk = pocket ? pocket(x, y) : 0; land = pk === 2 ? 1 : m > 0.5 - aa && !pk ? clamp((m - 0.5 + aa) / (2 * aa), 0, 1) : 0; }
-        else if (lv === 1 && rcell(LM, Math.floor(x / lc), Math.floor(y / lc)) === 1){ put(o, LAND); prev[i] = NaN; left = NaN; continue; }
-        if (land >= 1){ put(o, FS); prev[i] = NaN; left = NaN; continue; }
+        { const pk = pocket ? pocket(x, y) : 0; if (pk === 2 || (!pk && lv && (deep(x, y) || coastAtIf({x, y}) > 0))) land = 1; }   // (the coast's index where it is in: 01d-coast.js)
+        if (land >= 1){ put(o, UG); prev[i] = NaN; left = NaN; continue; }
         const gi = Math.floor(i / GS), gj = Math.floor(j / GS), go = gj * GW + gi;
         if (G && !isNaN(v = ((G[go] * (GS - i % GS) + G[go + 1] * (i % GS)) * (GS - j % GS) + (G[go + GW] * (GS - i % GS) + G[go + GW + 1] * (i % GS)) * (j % GS)) / (GS * GS))){ }
         else if (smooth){ const q = i * 4; v = 0; for (let a = 0; a < 4; a++){ const ro = RO[a]; v += RW[a] * (D(CX[q], ro) * CW[q] + D(CX[q + 1], ro) * CW[q + 1] + D(CX[q + 2], ro) * CW[q + 2] + D(CX[q + 3], ro) * CW[q + 3]); } }

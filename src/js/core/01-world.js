@@ -100,6 +100,7 @@ function groundCheck(a, c){
   const L = dist(a, c), n = Math.max(1, Math.ceil(L / 0.02));
   const tl = tideCD(S.t / 60);
   for (let i = 1; i <= n; i++){ const p = {x:a.x + (c.x - a.x) * i / n, y:a.y + (c.y - a.y) * i / n}; if (inHarbour(p)) continue; if (!isLand(p) && depthF(p) + tl < BOAT.draft) return p; }
+  if (!inHarbour(c) && coastSegHit(a, c)) return c;   // a breakwater or a skerry thinner than the 20 m steps (01d-coast.js)
   if (!inHarbour(c)){ const dx = c.x - a.x, dy = c.y - a.y, L2 = dx * dx + dy * dy || 1e-9; for (const q of rocksIn(c.x - L - 0.02, c.y - L - 0.02, c.x + L + 0.02, c.y + L + 0.02)){ if (Math.abs(q[0] - c.x) > L + 0.02 || Math.abs(q[1] - c.y) > L + 0.02) continue; const u = clamp(((q[0] - a.x) * dx + (q[1] - a.y) * dy) / L2, 0, 1); if (Math.hypot(a.x + dx * u - q[0], a.y + dy * u - q[1]) < 0.012 && Math.random() < 0.5) return {x:q[0], y:q[1]}; } }
   return null;
 }
@@ -141,13 +142,16 @@ function decodeContours(){
   for (let k = 0; k < n; k++){ const li = next(), len = next(); let x = 0, y = 0; const q = []; for (let i = 0; i < len; i++){ x += zz(next()); y += zz(next()); const g = LG(x / 100, y / 100); q.push(g.x.toFixed(2) + ',' + g.y.toFixed(2)); } out[li].push('M' + q.join('L')); }
   return out.map(a => a.join(''));
 }
-// Land or water at p, for what is near the boats: the 25 m mask where a tile has it (its sim pack must be in, as it is round every
-// boat and set: simAreaReady), and a harbour unit's block and fill; else the national core's 200 m. Off the frame is land, so nothing
-// sails off it.
+// Land or water at p, for what is near the boats: the fine coast with its breakwaters (01d-coast.js, the chart packs' coast2, the
+// truth since 04.10.2026) where a tile has it, else the 25 m mask (the packs must be in and the coast indexed, as they are round every
+// boat and set: simAreaReady), and a harbour unit's block and fill; off the tiles with detail the national core's 200 m. Off the
+// frame is land, so nothing sails off it.
 function isLand(p){
   if (!(p.x >= MAPB.x0 && p.y >= MAPB.y0 && p.x < MAPB.x1 && p.y < MAPB.y1)) return true;
   if (!mapSimAt(p)) return isLandFar(p);
-  const L = MAPD.L.mask; return (rcell(L, Math.floor(p.x / L.c), Math.floor(p.y / L.c)) === 1 || onUnitGround(p)) && !inHarbourPocket(p);
+  const c = coastAt(p); let l;
+  if (c >= 0) l = c > 0; else { const L = MAPD.L.mask; l = rcell(L, Math.floor(p.x / L.c), Math.floor(p.y / L.c)) === 1; }
+  return (l || onUnitGround(p)) && !inHarbourPocket(p);
 }
 // for what looks far (the fetch rays, the local fleet, the grounds' stock): the national core only, land at 200 m
 function isLandFar(p){
@@ -191,7 +195,7 @@ function legClear(a, b){
     const t = i / n;
     if (isLand({x:a.x + (b.x - a.x) * t, y:a.y + (b.y - a.y) * t})) return false;
   }
-  return true;
+  return !coastSegHit(a, b);   // and nothing thinner than the samples' step in between (01d-coast.js)
 }
 
 const PORTS = [

@@ -105,11 +105,12 @@ function npcBerths(group, p, boats, R = 0.6){
 // chart (no cutting across the corner of a land cell), then straightened wherever the line is clear. A harbour behind a breakwater,
 // like Husøy, needs more than one.
 const APPROACH = {};
-function clearLine(a, b){ const n = Math.max(1, Math.ceil(dist(a, b) / 0.008)); for (let i = 1; i < n; i++) if (isLand({x:a.x + (b.x - a.x) * i / n, y:a.y + (b.y - a.y) * i / n})) return false; return true; }
+function clearLine(a, b){ const n = Math.max(1, Math.ceil(dist(a, b) / 0.008)); for (let i = 1; i < n; i++) if (isLand({x:a.x + (b.x - a.x) * i / n, y:a.y + (b.y - a.y) * i / n})) return false; return !coastSegHit(a, b); }
 function approachPath(pt){
   if (APPROACH[pt.id]) return APPROACH[pt.id];
-  // over the mask's cells (k = y * nx + x, counted from the layer's corner)
-  const M = MAPD.L.mask, c = M.c, nx = M.nx, cell = k => { const x = k % nx; return {x:(M.ix0 + x + 0.5) * c, y:(M.iy0 + (k - x) / nx + 0.5) * c}; }, s0 = (Math.floor(pt.p.y / c) - M.iy0) * nx + Math.floor(pt.p.x / c) - M.ix0, mk = (x, y) => rcell(M, M.ix0 + x, M.iy0 + y);
+  // over the mask's cells (k = y * nx + x, counted from the layer's corner), a cell land where isLand has its middle (the fine coast)
+  const M = MAPD.L.mask, c = M.c, nx = M.nx, cell = k => { const x = k % nx; return {x:(M.ix0 + x + 0.5) * c, y:(M.iy0 + (k - x) / nx + 0.5) * c}; }, s0 = (Math.floor(pt.p.y / c) - M.iy0) * nx + Math.floor(pt.p.x / c) - M.ix0;
+  const LM = new Map(), mk = (x, y) => { const k = y * nx + x; let v = LM.get(k); if (v === undefined){ v = isLand(cell(k)); LM.set(k, v); } return v; };
   const prev = new Map([[s0, -1]]), Q = [s0]; let end = -1;
   for (let h = 0; h < Q.length && h < 300000; h++){
     const k = Q[h], x = k % nx, y = (k - x) / nx, p = cell(k);
@@ -117,6 +118,7 @@ function approachPath(pt){
     for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]){
       const X = x + dx, Y = y + dy, kk = Y * nx + X; if (X < 0 || Y < 0 || X >= nx || Y >= M.ny || prev.has(kk) || mk(X, Y)) continue;
       if (dx && dy && (mk(X, y) || mk(x, Y))) continue;
+      if (coastSegHit(p, cell(kk))) continue;   // a breakwater thinner than a cell between them
       prev.set(kk, k); Q.push(kk);
     }
   }
@@ -185,7 +187,7 @@ function berthBlocked(p, m = 2){
   for (const U of UNITA){ const [lx, lz] = unitL(U, x, z); if (Math.abs(lx) <= UNIT.E + m && lz <= m && lz >= -UNIT.B) return true; }
   return false;
 }
-function berthClear(a, b, m){ const n = Math.max(1, Math.ceil(dist(a, b) / 0.004)); for (let i = 1; i < n; i++) if (berthBlocked({x:a.x + (b.x - a.x) * i / n, y:a.y + (b.y - a.y) * i / n}, m)) return false; return true; }
+function berthClear(a, b, m){ const n = Math.max(1, Math.ceil(dist(a, b) / 0.004)); for (let i = 1; i < n; i++) if (berthBlocked({x:a.x + (b.x - a.x) * i / n, y:a.y + (b.y - a.y) * i / n}, m)) return false; return !coastSegHit(a, b); }
 function berthPath(from, bp){
   const L = (bp.Lb || 10) / 1000, B = (bp.Bb || 3) / 1000, m = (bp.Bb || 3) / 2, F = bp.face, P1 = {x:bp.x, y:bp.y}, fw = bp.fwd;
   // the point to come in from: astern of the berth and out from the quay; if that is blocked, straight out from the quay
@@ -199,7 +201,7 @@ function berthPath(from, bp){
     const [i, j] = Q[h]; if (Math.abs(i - i1) <= 1 && Math.abs(j - j1) <= 1){ prev.set('end', key(i, j)); found = true; break; }
     for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]){
       const I = i + di, J = j + dj, k = key(I, J); if (prev.has(k) || Math.abs(I - i0) > R || Math.abs(J - j0) > R) continue;
-      if (berthBlocked(ctr(I, J), m)){ prev.set(k, undefined); continue; }
+      if (berthBlocked(ctr(I, J), m) || coastSegHit(ctr(i, j), ctr(I, J))){ prev.set(k, undefined); continue; }
       prev.set(k, key(i, j)); Q.push([I, J]);
     }
   }

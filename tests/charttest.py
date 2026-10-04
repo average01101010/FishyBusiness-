@@ -90,7 +90,7 @@ async def run(p, w, h, tag, full):
                 c = (R, G, B); isl = near(c, LANDC); iss = near(c, SEAC) and not isl
                 if not (isl or iss): continue
                 n += 1; agree += (isl == bool(L)); land += isl
-            check(n > 1500 and agree / n >= 0.985 and 0.05 < land / n < 0.95, 'havna: kartet viser det ruta regner som land (masken som fjære), %d av %d punkter like' % (agree, n), round(agree / max(n, 1), 4))
+            check(n > 1500 and agree / n >= 0.995 and 0.05 < land / n < 0.95, 'havna: kartet viser det ruta regner som land (vektorkysten med moloene, 4.19), %d av %d punkter like' % (agree, n), round(agree / max(n, 1), 4))
             check(len(names) >= 3, 'havna: stedsnavn nær inne', names[:12])
             if full:
                 await pg.screenshot(path='chart_harbour.png')
