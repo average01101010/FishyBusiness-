@@ -3,7 +3,7 @@
 # Kept per tile in out/national/tiles/, so a stopped run goes on.
 #   python3 tools/map/coast.py game [tx,ty ...]   the game's packs (01b-mapdata.js, as region.py groups them): per tile 'sim' (mask, dc,
 #                                                 depth), 'view' (hgt, forest), 'chart' (coast1, coast2, names) and 'vec' (bld, road,
-#                                                 bridge, pier, quay: vectors.py) in out/national/game/;
+#                                                 bridge, pier, quay: vectors.py; npc: npc.py) in out/national/game/;
 #                                                 the core and the far heights come from src/data/map (tools/map/game.py joins them)
 #   python3 tools/map/coast.py [lite] [tx,ty ...] the K5 packs in out/national/lite/ (a pack per kind and tile, the core per tile too)
 #   python3 tools/map/coast.py cache k n          part k of n of the tiles into the caches only (the workflow's parts)
@@ -121,6 +121,16 @@ def vec(tx, ty, L):
 # the vector layers the game takes, in a 'vec' pack per tile (01c-vec.js): the 'view' packs keep their hash, so a new vector release does
 # not fetch the heights again
 VGAME = ('bld', 'road', 'bridge', 'pier', 'quay')
+# the NPC traffic of a tile (npc.py: harbours, fleets, grounds, routes), kept in out/national/npc/; worked out for all the tiles in
+# parallel before the packs are written (a tile of a city is half a minute)
+ND = os.path.join(OUT, 'npc'); os.makedirs(ND, exist_ok=True)
+def npc_tile(t):
+    tx, ty = t; f = os.path.join(ND, f'{tx}_{ty}.json')
+    if not os.path.exists(f):
+        import npc
+        L = tile(tx, ty); b, n = npc.entry(tx, ty, L, vec(tx, ty, L)['quay'])
+        open(f + '.part', 'wb').write(b); os.replace(f + '.part', f)
+    b = open(f, 'rb').read(); return b, sum(len(h['b']) for h in json.loads(b)['h'])
 
 # the chart's vectors of a tile (chart.py): the coast at 25 m and 3 m, and the names, kept in out/national/chart/ (region.cached)
 def chart_tile(tx, ty):
@@ -142,9 +152,12 @@ if __name__ == '__main__':
         sys.exit(0)
     if sys.argv[1:2] == ['game']:
         T = [tuple(map(int, a.split(','))) for a in sys.argv[2:]] or [tuple(t) for t in national.tiles()]; t0 = time.time(); per = []; vsz = {}; vct = {}
+        import multiprocessing
+        with multiprocessing.Pool(os.cpu_count()) as pool: NPC = dict(zip(T, pool.map(npc_tile, T)))
+        print(f'npc: {sum(v[1] for v in NPC.values())} boats, {time.time() - t0:.0f} s', file=sys.stderr, flush=True)
         for k, (tx, ty) in enumerate(T):
-            L = tile(tx, ty); V = vec(tx, ty, L); per.append((tx, ty, {n: L[n] for n in GAME}, dict(chart_tile(tx, ty), **{n: V[n] for n in VGAME})))
-            for n in VGAME: vsz[n] = vsz.get(n, 0) + len(V[n][0]); vct[n] = vct.get(n, 0) + V[n][1]
+            L = tile(tx, ty); V = dict(vec(tx, ty, L), npc=NPC[(tx, ty)]); per.append((tx, ty, {n: L[n] for n in GAME}, dict(chart_tile(tx, ty), **{n: V[n] for n in VGAME + ('npc',)})))
+            for n in VGAME + ('npc',): vsz[n] = vsz.get(n, 0) + len(V[n][0]); vct[n] = vct.get(n, 0) + V[n][1]
             print(f'{k + 1}/{len(T)} tile {tx},{ty}, total {time.time() - t0:.0f} s', file=sys.stderr, flush=True)
         n, b = pack.write_tiles(per, GAME, os.path.join(OUT, 'game'), {'profile': 'game', 'src': 'tools/map/coast.py game'})
         vb = sum(p.stat().st_size for p in __import__('pathlib').Path(os.path.join(OUT, 'game')).glob('vec-*.wasm'))
