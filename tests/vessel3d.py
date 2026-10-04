@@ -13,7 +13,7 @@ ONLY = [a for a in sys.argv[1:] if not a.startswith('-')]
 async def main():
     async with async_playwright() as p:
         br = await p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
-        pg = await br.new_page(viewport={'width':900, 'height':700}); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
+        pg = await br.new_page(viewport={'width':900, 'height':700}); pg.set_default_timeout(120000); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
         await pg.goto(GAME + ('#notut' if '#' not in GAME else ''))
         await pg.wait_for_timeout(900); await pg.click('#obGo')
         await pg.evaluate("(()=>{ S.tut = 0; S.settings.autoOn = false; S.t = 45 * 1440 + 360; const b = S.boat; b.status = 'idle'; b.port = null; b.pos = {...GROUNDS[1].p}; b.heading = 1.1; })()")
