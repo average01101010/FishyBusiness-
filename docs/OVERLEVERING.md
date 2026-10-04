@@ -1470,6 +1470,7 @@ Brukerens valg:
   - Det flate havet tegnes som ringer rundt det som tegnes nærmere, uten `discard` og uten piksler som tegnes to ganger.
   - Fjernpassen bruker en egen variant med de fire lengste bølgene.
   - `#fps` i adressen viser bildetakten.
+  - **Når 3D ikke starter** (Jonas' telefon 04.10.2026, Galaxy A52s): meldingen «3D-visning støttes ikke» sier nå også hvilket steg og hvilken feil som stoppet det (`failWhy`, `G3.failWhy`): WebGL-konteksten, en shader med loggen sin, et byggesteg eller en mistet kontekst. Dyr, NPC-båter, fly og redningsskøyta stopper ikke 3D om de feiler (`opt`).
 - **Båtens egne bølger** (`WAKE_GLSL`, `updateWake`). Fartsregimet følger Froude-tallet Fr = v/√(gL) med lengden fra `VESSELS` og simuleringens fart gjennom vannet.
   - **Kelvin-kilen (19,47°):** tverrbølger 2πv²/g lange inne i kilen (faller som 1/√s) og skråbølger med fronter 35° på kursen (k = 1,5·k₀) langs kantene (faller som s^−1/3). De er høyest nær skrogfart (høyde ≈ 0,045·L, maks 0,6 m).
   - **Planende skrog (Fr > 1):** bare skråbølger, flatt hvitt propellvann og hanekam bak påhengsmotoren.

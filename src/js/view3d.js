@@ -2684,11 +2684,17 @@ const G3 = (() => {
   }
 
   // ---------- setup ----------
+  // What stopped the 3D view, shown with the message so a device it fails on tells why (the user's phone 04.10.2026: «3D-visning
+  // støttes ikke» with no more to go on): the step and the error, or the shader's log
+  let failWhy = '', stage = '';
+  const opt = (nm, f) => { try { f(); } catch (e){ console.error(nm, e); } };    // a part the view can do without
   async function init(){
     if (ready) return true; if (failed) return false;
     try {
+      stage = 'webgl';
       gl = canvas.getContext('webgl', {antialias:true, alpha:false, powerPreference:'high-performance'}) || canvas.getContext('experimental-webgl');
-      if (!gl || !gl.getExtension('OES_standard_derivatives')) throw new Error('webgl');
+      if (!gl) throw new Error('ingen WebGL-kontekst'); if (!gl.getExtension('OES_standard_derivatives')) throw new Error('mangler OES_standard_derivatives');
+      stage = 'shadere';
       PL = program(LIT_VS, LIT_FS, ['aPos', 'aCol']); PT = program(TER_VS, TER_FS, ['aPos', 'aCol', 'aNor', 'aShd']); PRGN = program(LITN_VS, LITN_FS, ['aPos', 'aNor', 'aCol']); PRGX = program(TEX_VS, TEX_FS, ['aPos', 'aUV']); PRGW = program(WK_VS, WK_FS, ['aPos', 'aW', 'aS']);
       WKB = {p:new Float32Array(9000 * 3), w:new Float32Array(9000 * 4), s:new Float32Array(9000), pb:buf(new Float32Array(9000 * 3), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), wb:buf(new Float32Array(9000 * 4), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), sb:buf(new Float32Array(9000), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW)}; // the waves read the sea-state texture in the vertex shader where the GPU can (#novtf in the address tries without)
       SST_VS = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS) >= 2 && !/novtf/.test(location.hash);
@@ -2697,12 +2703,14 @@ const G3 = (() => {
       DYNP = buf(new Float32Array(4000 * 3), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); DYNA = buf(new Float32Array(4000), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW);
       // the ground's heights and the forest (map/, the view packs): until they are in, the land is a flat stand-in
       HG = true;   // the ground comes in packs round the boat as it goes (stream3d); until a pack is in, its land is a stand-in
-      try { BLD = await loadBuildings(); } catch (e){ console.error(e); BLD = null; }
-      buildTerrain(); buildStatics(); buildBoat(); buildSkiff(); buildFlag(); buildSea(); buildWild(); buildNPC(); buildAir(); buildRescue(); buildHarbourFittings(); buildMooring(); buildPlants(); buildPlantParts(); buildBunkers();
-      canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); ready = false; failed = true; show(false); });
+      stage = 'bygg'; try { BLD = await loadBuildings(); } catch (e){ console.error(e); BLD = null; }
+      for (const [nm, f] of [['terreng', buildTerrain], ['kai', buildStatics], ['båt', buildBoat], ['skiff', buildSkiff], ['flagg', buildFlag], ['sjø', buildSea]]){ stage = nm; f(); }
+      opt('wild', buildWild); opt('npc', buildNPC); opt('air', buildAir); opt('rescue', buildRescue);
+      for (const [nm, f] of [['havn', buildHarbourFittings], ['fortøying', buildMooring], ['mottak', buildPlants], ['folk', buildPlantParts], ['bunkers', buildBunkers]]){ stage = nm; f(); }
+      canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); ready = false; failed = true; failWhy = 'WebGL-konteksten ble mistet'; show(false); });
       buildLabels();
       ready = true; return true;
-    } catch (e){ console.error(e); failed = true; return false; }
+    } catch (e){ console.error(e); failed = true; failWhy = stage + ': ' + String(e && e.message || e).replace(/\s+/g, ' ').slice(0, 160); return false; }
   }
   let labelEls = [];
   function buildLabels(){ labelsEl.innerHTML = ''; labelEls = PORTS.map(p => { const d = document.createElement('div'); d.className = 'lbl3d'; d.textContent = p.name; labelsEl.appendChild(d); return d; }); }
@@ -3397,8 +3405,9 @@ const G3 = (() => {
   }
   function show(on, auto){
     if (on && !ready){
-      if (failed){ if (!auto) toast(t('no3d')); return false; }
-      if (!loading){ loading = true; toast(t('loading3d')); init().then(ok => { loading = false; if (ok) show(true, auto); else { if (hooks.on3dFail) hooks.on3dFail(); if (!auto) toast(t('no3d')); } }); }
+      const no3d = () => toast(t('no3d') + (failWhy ? ' (' + failWhy + ')' : ''));
+      if (failed){ if (!auto) no3d(); return false; }
+      if (!loading){ loading = true; toast(t('loading3d')); init().then(ok => { loading = false; if (ok) show(true, auto); else { if (hooks.on3dFail) hooks.on3dFail(); if (!auto) no3d(); } }); }
       return false;
     }
     active = !!on; canvas.hidden = !active; labelsEl.hidden = !active;
@@ -3410,7 +3419,7 @@ const G3 = (() => {
   return {
     // the quality: with a setting ('auto', 'low', 'mid', 'high') it applies it; returns the level now and the frame rate
     quality(v){ if (v){ S.settings.q3d = v; QUAL.bad = QUAL.good = 0; QUAL.cap = 2; qualSet(); } return {lvl:QUAL.lvl, set:S.settings.q3d || 'auto', fps:FPS.v}; },
-    show, toggle(){ return show(!active); }, isActive:() => active,
+    show, toggle(){ return show(!active); }, isActive:() => active, get failWhy(){ return failWhy; },
     // for the sound (ui/10e-sound.js): the ear is the camera of the last frame drawn (metres; x east, z south; its direction on the
     // level), and where the sounds are: your boat, the crane and the ice chute of the plant she lies at, its pump, and the fleet near by
     ear(){ return active && performance.now() - earT < 2000 ? {x:lastEye[0], y:lastEye[1], z:lastEye[2], fx:camFwd[0], fz:camFwd[1]} : null; },
