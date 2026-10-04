@@ -32,6 +32,11 @@ Laget 04.10.2026, da spillet fikk navnet Det Store Blå og domenet detstorebla.n
     5. `shred -u /root/dsb-deploy`.
     6. «Re-run all jobs» på den siste kjøringen av «Appen på Hetzner».
   - WorkOS trenger redirect-adressen `https://detstorebla.no/` med skråstrek, fordi spillet sender `location.origin + location.pathname`.
+  - **Gjort 05.10.2026:**
+    - Serveren er oppdatert og startet på nytt (Ubuntu 24.04.5, ikke oppgradert til 26.04).
+    - `setup.sh` er kjørt, og de tre hemmelighetene ligger i GitHub.
+    - Den andre kjøringen av «Appen på Hetzner» (run 37240712788) lastet opp spillet på 19 s.
+    - Jonas logger inn med SSH-nøkkelen fra iMacen. Termux og Termius på nettbrettet fikk ikke inn passordet.
 - **Etterpå:** Stripe.
 
 ## A. Det du må gjøre selv
