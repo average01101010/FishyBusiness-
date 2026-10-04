@@ -153,6 +153,8 @@ function sell(){
   // lott goes to those who were aboard; a crew member given time off gets none for this trip
   // the sales organisation's deductions (TREKK) come off the value first; the crew's share is reckoned on what is left
   const tk = trekkOf(total, BOAT.len || 0), net = total - tk.sum;
+  // VAT on the sale once the business is in the VAT register: it comes with the settlement and goes straight on to the state
+  mvaCheck(total); const mva = S.mva ? mvaOf(total, tk) : 0;
   const aboardNow = crewAboard(), lott = Math.round(aboardNow.reduce((a, c) => a + c.share, 0) * net);
   for (const c of aboardNow) c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, net * c.share]]);
   for (const c of S.crew) c.off = false;
@@ -163,7 +165,7 @@ function sell(){
   // the whole landing note goes with the sale, for the deck log's Salg tab (ui/06b-book-tabs.js)
   S.saleSeq = (S.saleSeq || 0) + 1;
   const det = {id:S.saleSeq, ln:arr.map(r => [r.sp, r.c, r.g, r.gut ? 1 : 0, Math.round(r.kg * 10) / 10, r.sum, Math.round(r.n || 0)]), ex:Object.fromEntries(Object.entries(ex).map(([n, v]) => [n, [Math.round(v.kg * 10) / 10, v.sum]])),
-    st:[stPct, stKr], ord:ordKr, conf:[Math.round(confKg), confKr, Math.round(crabSmall * 10) / 10, crabKr], roe:roeCut, crew:aboardNow.map(c => [c.name, c.share]), lott, fine:0, tk:[tk.lag, tk.pens, tk.prod, tk.forsk, tk.ress, tk.ktrl]};
+    st:[stPct, stKr], ord:ordKr, conf:[Math.round(confKg), confKr, Math.round(crabSmall * 10) / 10, crabKr], roe:roeCut, crew:aboardNow.map(c => [c.name, c.share]), lott, fine:0, tk:[tk.lag, tk.pens, tk.prod, tk.forsk, tk.ress, tk.ktrl], mva};
   S.sales.push({t:S.t, v:S.cur, port:port.id, kg:Math.round(kg), total, sp:ALLSP.map(sp => [sp, Math.round(arr.filter(r => r.sp === sp).reduce((a, r) => a + r.kg, 0))]).filter(r => r[1] > 0), d:det}); if (S.sales.length > 200) S.sales.shift();
   // older notes keep their sums only, so the save stays small
   for (let i = 0; i < S.sales.length - 60; i++) delete S.sales[i].d;
@@ -177,7 +179,7 @@ function sell(){
   let crabFine = 0; if (crabSmall > 0.01){ crabFine = GFINE.crab + GFINE.perCrab * Math.round(crabSmallN); det.fine = crabFine; S.cash -= crabFine; S.stats.costs += crabFine; msg('Fiskeridirektoratet', vt + 'Landingen hadde ' + fmt(crabSmall, 1) + ' kg taskekrabbe under minstemålet på 13 cm. Krabben er inndratt, og du får et overtredelsesgebyr på ' + kr(crabFine) + '.', vt + 'The landing had ' + fmt(crabSmall, 1) + ' kg of brown crab under the 13 cm minimum size. The crab is confiscated and you are fined ' + kr(crabFine) + '.'); }
   if (roeCut > 0.5) msg(port.name, 'Det var rognkrabbe i leveransen. Vi trekker 10 % på krabben, ' + kr(roeCut) + ', for dårlig sortering.', 'There was berried crab in the delivery. We take 10 % off the crab, ' + kr(roeCut) + ', for poor sorting.');
   // confKg and confKr count all that was confiscated (crab too); codKg and codKr are the cod, haddock and saithe rows on the note
-  S.lastSale = {port:port.id, t:S.t, lines:arr, total, ex, confKg:confKg + crabSmall, confKr:confKr + crabKr, codKg:confKg, codKr:confKr, crabKg:crabSmall, crabKr, ordKr, ffKg:codFF, field, lott, tk, ord:ordLines, acc, crabFine, roeCut, streak:{pct:stPct, kr:stKr}, gear:Object.keys(b.tripGear || {})}; b.tripGear = {};
+  S.lastSale = {port:port.id, t:S.t, lines:arr, total, ex, confKg:confKg + crabSmall, confKr:confKr + crabKr, codKg:confKg, codKr:confKr, crabKg:crabSmall, crabKr, ordKr, ffKg:codFF, field, lott, tk, mva, ord:ordLines, acc, crabFine, roeCut, streak:{pct:stPct, kr:stKr}, gear:Object.keys(b.tripGear || {})}; b.tripGear = {};
   tatLanding(port.id); checkTattoos();
   if (S.tut && S.tut.catch) S.tut.catch = false;   // the first-trip guarantee ends with the first landing
   for (const x of S.hold) delete x._used;

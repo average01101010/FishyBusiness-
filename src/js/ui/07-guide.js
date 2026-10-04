@@ -277,6 +277,7 @@ function portSlip(){
     for (const [k, no, en] of [['lag', 'Lagsavgift til Råfisklaget', 'Sales organisation levy'], ['pens', 'Pensjonstrekk, Garantikassen', 'Pension levy'], ['prod', 'Produktavgift til folketrygden', 'Product levy (social security)'],
       ['forsk', 'Fiskeriforskningsavgift', 'Fisheries research levy'], ['ress', 'Ressursavgift', 'Resource levy'], ['ktrl', 'Kontrollavgift', 'Control levy']])
       if (tk[k] > 0) h.push(row(LN(no, en) + ' ' + pc(TREKK[k]), '', '−' + fmt(tk[k], 0)));
+    if (ls.mva > 0) h.push(row(LN('MVA 11,11 % på salget', 'VAT 11.11 % on the sale'), '', fmt(ls.mva, 0)) + row(LN('MVA videre til staten', 'VAT on to the state'), '', '−' + fmt(ls.mva, 0)));
     if (ls.lott > 0) h.push(row(LN('Lott til mannskapet', 'The crew\'s share'), '', '−' + fmt(ls.lott, 0)));
     if (tk.sum > 0 || ls.lott > 0) h.push(row('<b>' + LN('Til kassa', 'To the cash box') + '</b>', '', '<b>' + fmt(ls.total - tk.sum - ls.lott, 0) + '</b>'));
     h.push('</tbody></table></div>');

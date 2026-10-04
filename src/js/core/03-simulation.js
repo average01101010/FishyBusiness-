@@ -438,6 +438,22 @@ const BLADB = {days:10, kr:130160};
 // the fisheries research levy (1,35 %), the resource levy to the state (0,42 %) and the control levy (0,22 %, not yet taken from
 // vessels under 15 m). The crew's share is reckoned on what is left (an assumption: the crew agreements reckon it after the common costs)
 const TREKK = {lag:0.0043, pens:0.004, prod:0.016, forsk:0.0135, ress:0.0042, ktrl:0.0022};
+// VAT on the first-hand sale through the sales organisation: 11,11 % (merverdiavgiftsloven § 5-8) of the gross less the public levies
+// (the same page), only for a fisher in the VAT register, who settles it with the state himself; the game passes it straight on.
+// A business must register when its sales pass 50 000 kr in twelve months (merverdiavgiftsloven § 2-1); a fisher's business is then a
+// sole proprietorship (enkeltpersonforetak) in the Central Coordinating Register (Enhetsregisteret), which needs no company to fish.
+const MVA = {rate:0.1111, limit:50000};
+const mvaOf = (total, tk) => Math.round((total - tk.pens - tk.prod - tk.forsk - tk.ress - tk.ktrl) * MVA.rate);
+// the sales of the last twelve months (kroner, gross) and the registration when they pass the limit
+function mvaCheck(total){
+  if (S.mva) return false;
+  const yr = (S.sales || []).filter(s => s.t > S.t - 365 * 1440).reduce((a, s) => a + (s.total || 0), 0) + total;
+  if (yr < MVA.limit) return false;
+  S.mva = {t:S.t, org:900000000 + Math.floor(h2(S.t % 100000, 77) * 99999999)};
+  msg('Brønnøysundregistrene', 'Salget ditt har passert 50 000 kr på tolv måneder. Fisket ditt er registrert som enkeltpersonforetak i Enhetsregisteret, og foretaket er ført i Merverdiavgiftsregisteret. Fra nå legger Råfisklaget 11,11 % MVA på oppgjøret, og du betaler den videre til staten. Se Papirer under Sjømann.',
+    'Your sales have passed NOK 50,000 in twelve months. Your fishing is registered as a sole proprietorship in the Central Coordinating Register and in the VAT register. From now the sales organisation adds 11.11 % VAT to the settlement, which you pass on to the state. See Papers under Seaman.');
+  return true;
+}
 function trekkOf(total, len){
   const lag = Math.round(total * TREKK.lag), g = total - lag, r = k => Math.round(g * TREKK[k]);
   const t = {lag, pens:r('pens'), prod:r('prod'), forsk:r('forsk'), ress:r('ress'), ktrl:len >= 15 ? r('ktrl') : 0};
