@@ -37,6 +37,7 @@ Laget 04.10.2026, da spillet fikk navnet Det Store Blå og domenet detstorebla.n
     - `setup.sh` er kjørt, og de tre hemmelighetene ligger i GitHub.
     - Den andre kjøringen av «Appen på Hetzner» (run 37240712788) lastet opp spillet på 19 s.
     - Jonas logger inn med SSH-nøkkelen fra iMacen. Termux og Termius på nettbrettet fikk ikke inn passordet.
+  - **Første ekte innlogging (05.10.2026, 01:45):** Jonas logget inn med Google på https://detstorebla.no. Supabase har da 1 spiller med samtykke, 1 økt, 1 hendelse, 1 bildetaktmåling og 0 feil. Lagringen i skyen kommer etter 3 minutters spill eller når siden lukkes.
 - **Etterpå:** Stripe.
 
 ## A. Det du må gjøre selv
