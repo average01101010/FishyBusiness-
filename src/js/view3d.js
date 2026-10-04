@@ -1693,11 +1693,10 @@ const G3 = (() => {
     'vec2 P=vP.xz+uEye.xz;' +
     'if(vW4.w<0.5){float e=ns(P*0.33+age*0.12)*0.6+ns(P*0.95-age*0.3)*0.4;float prof=1.0-smoothstep(0.2+0.35*e,1.0,abs(v)*(0.8+0.35*e));' +
     'float f=ns(P*0.55+vec2(age*0.35,0.0))*0.5+ns(P*1.45-vec2(0.0,age*0.7))*0.3+ns(P*3.7+age*0.9)*0.2;' +
-    'float cover=clamp(1.0-age*0.11,0.0,1.0);float th=1.0-cover*0.95;' +
-    'foam=smoothstep(th,th+0.14,f*(0.35+0.65*prof)+prof*0.25*cover)*prof*(0.62+0.38*f);' +
-    'aer=prof*exp(-age*0.08)*0.34*(0.7+0.3*f);}' +
+    'float cover=clamp(1.0-age*0.16,0.0,1.0);float th=1.0-cover*0.55;' +
+    'foam=smoothstep(th,th+0.1,f*(0.4+0.6*prof))*prof*(0.55+0.45*f)*cover;}' +
     'else{float prof=1.0-smoothstep(0.1,1.0,abs(v));float sl=u*0.85+v*2.0;float cr=pow(max(sin(sl*2.2+age*0.9),0.0),3.0);float n=ns(vec2(u*0.5,v*3.5+age*0.4));' +
-    'foam=cr*prof*smoothstep(0.4,0.8,n)*smoothstep(3.5,0.5,age)*0.85;aer=(cr*0.8+0.3)*prof*exp(-age*0.065)*0.62;}' +
+    'foam=cr*prof*smoothstep(0.4,0.8,n)*smoothstep(3.5,0.5,age)*0.85;aer=(cr*0.8+0.3)*prof*exp(-age*0.15)*(1.0-smoothstep(4.0,10.0,age))*0.62;}' +
     'foam*=vS;aer*=vS;float d=length(vP);float fg=1.0-exp(-uFogD*uFogD*d*d);' +
     'float al=clamp(max(foam,aer),0.0,0.95);vec3 base=vW4.w<0.5?uAer:uArm;vec3 c=mix(base,uCol,clamp(foam/max(al,0.001),0.0,1.0));gl_FragColor=vec4(mix(c,uFog,fg),al*(1.0-fg));}';
   // builder with normals and gloss: the geometry is VB() (vessel3d.js), this adds the GL buffers
@@ -3272,9 +3271,11 @@ const G3 = (() => {
         while (wk.racc >= 1){ wk.racc -= 1; const p = xf(BM, [(Math.random() - 0.5) * 0.3, 0.1, VG.stern + 0.4]), bk = 2 + Math.random() * 3;
           spawn(p[0], p[1], p[2], -Math.sin(bv.head) * bk + wx, 2.2 + Math.random() * 2.2, Math.cos(bv.head) * bk + wz, 0.6 + Math.random() * 0.4, 9.8); } }
     }
-    // wake: foaming prop wash behind the stern and the two Kelvin arms spreading at 19.5 degrees, laid on the waves
+    // wake: the prop wash's bubbles behind the stern (gone in 6 s; the pale band under them went, Jonas 04.10.2026: «kun vise
+    // boblepartiklene») and the two Kelvin arms spreading at 19.5 degrees, fading out within 10 s («gradvis forsvinner»), each corner
+    // laid on the waves where it lies (one height across an arm hid it under the waves on one side more than the other)
     { const now = performance.now() / 1000; for (const q of TRAIL) q.age = now - (q.t0 || now); }
-    while (TRAIL.length && TRAIL[TRAIL.length - 1].age > 18) TRAIL.pop();
+    while (TRAIL.length && TRAIL[TRAIL.length - 1].age > 11) TRAIL.pop();
     if (TRAIL.length > 1 && WKB){
       const step = 2 * HALF / NP, ox = Math.round(bv.x / step) * step, oz = Math.round(bv.z / step) * step, tide = env.tide || 0;
       const seaY = (x, z) => seaHFast(x, z, t) + wakeHFast(x, z) + 0.07;
@@ -3287,6 +3288,7 @@ const G3 = (() => {
       const sections = (kind) => {
         const out = []; let di = 0;
         for (let i = 0; i < pts.length; i++){
+          if (pts[i].age > (kind ? 10.3 : 6.3)) break;
           if (i) di += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].z - pts[i - 1].z);
           const a = pts[i], b = pts[Math.min(pts.length - 1, i + 1)], c0 = pts[Math.max(0, i - 1)];
           let dx = c0.x - b.x, dz = c0.z - b.z; const l = Math.hypot(dx, dz); if (l < 1e-3){ dx = a.hx; dz = a.hz; } else { dx /= l; dz /= l; }
@@ -3298,7 +3300,7 @@ const G3 = (() => {
         return out;
       };
       // the sea height once per point across the wake (each is a corner of up to six triangles)
-      for (const kind of [1, 2, 0]){ const sec = sections(kind); for (const S2 of sec){ const y = seaY(S2.q[1][0], S2.q[1][1]); for (const q of S2.q) q.push(y); } for (let i = 0; i < sec.length - 1; i++) strip(sec[i], sec[i + 1]); }
+      for (const kind of [1, 2, 0]){ const sec = sections(kind); for (const S2 of sec) for (const q of S2.q) q.push(seaY(q[0], q[1])); for (let i = 0; i < sec.length - 1; i++) strip(sec[i], sec[i + 1]); }
       if (m){
         gl.useProgram(PRGW.p); const u = PRGW.u; gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uEye, [eye[0] - RO.x, eye[1], eye[2] - RO.z]); gl.uniform3fv(u.uCol, foamCol); gl.uniform3fv(u.uAer, [0.09, 0.3, 0.31].map((c, k) => c * (env.amb[k] * 1.4 + env.sunCol[k] * 0.6))); gl.uniform3fv(u.uArm, [0.1, 0.27, 0.31].map((c, k) => c * (env.amb[k] * 1.8 + env.sunCol[k] * 0.6))); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD); gl.uniform1f(u.uTime, t);
         gl.bindBuffer(gl.ARRAY_BUFFER, WKB.pb); gl.bufferSubData(gl.ARRAY_BUFFER, 0, P.subarray(0, m * 3)); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);

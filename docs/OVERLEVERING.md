@@ -1475,6 +1475,10 @@ Brukerens valg:
   - **Planende skrog (Fr > 1):** bare skråbølger, flatt hvitt propellvann og hanekam bak påhengsmotoren.
   - **Lange og korte bølger:** de lange løfter havet, de korte gir bare skygge.
   - **I sving:** det rette mønsteret stopper der det går mer enn noen meter fra sporet, og skumstripa (`TRAIL`) fortsetter.
+  - **Skumstripa** (Jonas 04.10.2026):
+    - Hekkbølgene (de to Kelvin-armene) blekner gradvis og er borte etter 10 s, rundt 115 m ved 23 kn. Før varte de 18 s, 210 m.
+    - Hvert hjørne ligger på bølgene der det står. Med én høyde på tvers ble den ene armen mer skjult av bølgene enn den andre, og babord så kortere ut.
+    - Propellstrømmen viser bare skumboblene, og de er borte etter 6 s: «kun vise boblepartiklene». Det lyse båndet under dem er fjernet.
   - **Baugbølgen:** klatrer opp i stevnen og løper akterover i 25° (høyde ≈ 0,12·v²/2g, maks 0,6 m).
   - **Brytning:** baugbølgen og hekkbølgen brekker hvitt når de blir bratte.
   - **Sprøyten:** kommer når baugen stuper ned i en sjø, og blåser med vinden.
