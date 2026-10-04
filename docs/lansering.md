@@ -106,3 +106,78 @@ Lista er amerikansk («so your app doesn't get sued»). Her er hvert punkt vurde
 | 20 | Sletting av data | Ja (GDPR art. 17). Google Play og App Store krever også at kontoen kan slettes inne i appen. | En knapp for å slette kontoen, som sletter lagringen og personopplysningene. Kjøpene beholdes så lenge bokføringsloven krever (Claude) |
 
 **Det som kan gjøres nå, uten å vente på valgene:** legge skriftene i appen, sette inn forbeholdet i Regler-appen og lage siden med kildene.
+
+## E. Admin-dashbordet (plan, venter på klarsignal)
+
+Jonas' ønske 04.10.2026 er et dashbord med all bruksinformasjon, og lista hans har 40 punkter. Planen nedenfor dekker de fleste. Noen punkter krever funksjoner som spillet ikke har ennå, og de er merket.
+
+### Slik henger det sammen
+
+1. **Målingen i spillet** (en ny `core/18-telemetry.js`):
+   - Hendelsene legges i en kø i nettleseren og sendes samlet hvert minutt. Uten nett blir de liggende til nettet kommer tilbake.
+   - **Øktene:** start og slutt, aktiv tid (stopper når fanen er skjult) og et livstegn hvert minutt for sanntidsoversikten.
+   - **Spillet:** appene som åpnes, rigg, setting og trekking av redskap, kast loss og fortøying, leveringer (kr, kg, art, felt, mottak, tiden fra kast loss til levering), ruter og Autonav, grunnstøtinger og skader, båtkjøp, lån, rekka (streak) og kassa.
+   - **Teknikk:** feil og krasj (`window.onerror` og avviste løfter), bildetakt og hakk, 3D-kvalitet, nettleser og plattform, og om appen er installert som PWA.
+   - **Avbrudd:** en økt som slutter mindre enn 60 sekunder etter en grunnstøting, et tap eller en avvist levering, telles som et mulig «rage quit».
+2. **Databasen** (Supabase, EU):
+   - **Tabellene:** hendelser, økter, spillere (en tilfeldig ID og eventuelt kontoen), feil, kjøp (fra Stripe-webhooken) og daglige sammendrag.
+   - **Tilgang:** spillet kan bare skrive. Bare admin kan lese.
+   - **Sammendragene:** hver time regnes daglige tall, ukedag × time, tilbakekomst og churn-indeks ut i SQL (`pg_cron`).
+3. **Dashbordet** på `detstorebla.no/admin`, med innlogging der bare kontoen din har adminrolle. Det er en egen side med diagrammer, ikke en del av spillet.
+
+### Fanene og punktene dine
+
+- **Oversikt:**
+  - antall brukere (daglig, ukentlig og månedlig) og aktive brukere nå
+  - registrert total spilltid, avsluttede økter, gjennomsnittlig og median øktlengde
+  - tilbakekomstandel og gjennomsnittlig streak
+- **Spilletid:**
+  - søylediagram per dag (dato, timer, økter og nettlesere)
+  - heatmap over ukedag × time og fordeling over året
+  - svingdørindeksen: mange korte økter sammenlignet med få lange (forslag til definisjon: spredningen i øktlengde delt på medianen, per spiller)
+- **Frafall:**
+  - churn-indeks fra 0 til 100 per spiller, fra dager siden sist, synkende øktlengde og stopp i framgangen
+  - inaktivitetsvarsler og listen over spillere i faresonen
+  - tapsanalyse: rage quit og den døde sonen, det vil si stedene og øyeblikkene i spillet der spillerne slutter
+- **Spillbruk:**
+  - bruken av appene og funksjonene
+  - mest brukte redskap og båt
+  - grunnstøtinger og skader (hvor, båttype, fart)
+  - ruter og fiskefelt (kart), og tiden fra kast loss til levering ved mottaket
+  - flere spillstatistikker etter ønske
+- **Økonomi i spillet:** Gini-koeffisienten for kassa og for flåten, kr per tur og rikdom over tid.
+- **Penger** (når Stripe er på plass):
+  - konverteringsrate, ARPU, tid til første kjøp, kjøpshyppighet og gjenkjøpsandel
+  - transaksjonsloggen fra Stripe, refusjoner og andelen som forlater kassen
+  - bruk av betalte boostere, når slike finnes
+- **Teknikk:**
+  - feil- og krasjlogg, gruppert etter melding og versjon
+  - bildetakt og hakk per enhet
+  - nettlesere, plattformer og PWA-installasjoner
+- **Geografi:** land og fylke fra nettverket, uten å lagre IP-adressen, og hjemhavna i spillet.
+
+### Det som må vente på nye funksjoner i spillet
+
+- **Push-varsler** finnes ikke, så push-åpningsraten må vente.
+- **Spillet har ingen venner, deling eller invitasjoner.** Disse punktene må derfor vente:
+  - sosial klyngedynamikk og nettverkskoeffisient
+  - viralitet og deling
+  - invite-to-churn
+  - den sosiale utløseren for kjøp
+- **Betalte boostere** finnes ikke ennå.
+
+### Personvern (må på plass for at dette er lov)
+
+- En fast nettleser-ID for statistikk krever samtykke (ekomloven, sjekk). Ved første start spør spillet: «Vil du dele bruksstatistikk for å gjøre spillet bedre?»
+  - **Ja:** fast ID og alle målingene.
+  - **Nei:** bare anonyme feil og bildetakt uten ID.
+  - Banneret fra D4–5 trengs da likevel, i denne enkle formen.
+- **Dataminimering:** ingen IP-adresser, ingen nøyaktig posisjon og ingen fritekst lagres.
+- **Lagringstid:** rådataene slettes etter 13 måneder, og sammendragene beholdes.
+- Personvernerklæringen beskriver målingen, og «slett kontoen» sletter også hendelsene.
+
+### Rekkefølge
+
+1. Supabase, samtykket, målingen og dashbordets faner for oversikt, spilletid, frafall, spillbruk, økonomi i spillet, teknikk og geografi.
+2. Pengefanen når Stripe er på plass.
+3. De sosiale punktene og push når de funksjonene finnes.
