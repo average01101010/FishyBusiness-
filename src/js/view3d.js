@@ -225,7 +225,7 @@ const G3 = (() => {
   // anywhere in the country; the model matrix carries the origin less the eye, worked out in doubles (relM). The shaders get the
   // world from the render origin RO (a multiple of 4096 m near the eye), for the wave phases, the noise and the texture tiling.
   const relTo = (p, o) => { const P = new Float32Array(p); if (o) for (let i = 0; i < P.length; i += 3){ P[i] = p[i] - o[0]; P[i + 2] = p[i + 2] - o[1]; } return P; };
-  const withOrigin = (m, o) => { if (o) m.o = o; return m; };
+  const withOrigin = (m, o) => { if (o) m.o = o; return m; }, MESHMAX = 60000;
   const RO = {x:0, z:0, on:false}; let EYE = [0, 0, 0];
   const relM = m => model(m.o[0] - EYE[0], -EYE[1], m.o[1] - EYE[2], 0, 0, 0);
   const mapMid = () => [(HOME.x0 + HOME.x1) * 500, (HOME.y0 + HOME.y1) * 500];
@@ -268,7 +268,9 @@ const G3 = (() => {
         const off = [0, 1, 2].map(i => { const a = i * 2 * Math.PI / 3; return [0, 1, 2].map(j => (u[j] * Math.cos(a) + w[j] * Math.sin(a)) * r); });
         for (let i = 0; i < 3; i++){ const j = (i + 1) % 3; o.quad([A[0] + off[i][0], A[1] + off[i][1], A[2] + off[i][2]], [B[0] + off[i][0], B[1] + off[i][1], B[2] + off[i][2]], [B[0] + off[j][0], B[1] + off[j][1], B[2] + off[j][2]], [A[0] + off[j][0], A[1] + off[j][1], A[2] + off[j][2]], k); }
       },
-      mesh(o){ return withOrigin(upload(relTo(p, o), new Float32Array(c)), o); }
+      // more than MESHMAX triangles go up in parts: one draw over 65 535 triangles stalled SwiftShader for seconds a frame (03.10.2026)
+      mesh(o){ const n = p.length / 9; if (n <= MESHMAX) return withOrigin(upload(relTo(p, o), new Float32Array(c)), o);
+        const parts = []; for (let a = 0; a < n; a += MESHMAX){ const b = Math.min(n, a + MESHMAX); parts.push(withOrigin(upload(relTo(p.slice(a * 9, b * 9), o), new Float32Array(c.slice(a * 9, b * 9))), o)); } return {parts, n:n * 3, o}; }
     };
     return o;
   }
@@ -380,7 +382,7 @@ const G3 = (() => {
     return m;
   }
   function makeMesh(x0, z0, sx, sz, n, hf){ const B = meshBegin(x0, z0, sx, sz, n, hf); meshRows(B, Infinity); return meshEnd(B); }
-  function freeMesh(m){ gl.deleteBuffer(m.pb); gl.deleteBuffer(m.cb); gl.deleteBuffer(m.ib); if (m.nb) gl.deleteBuffer(m.nb); if (m.sb) gl.deleteBuffer(m.sb); }
+  function freeMesh(m){ if (m.parts){ m.parts.forEach(freeMesh); return; } gl.deleteBuffer(m.pb); gl.deleteBuffer(m.cb); gl.deleteBuffer(m.ib); if (m.nb) gl.deleteBuffer(m.nb); if (m.sb) gl.deleteBuffer(m.sb); }
   // the near terrain's own surface at x, z (its triangles over the ground without the units), so a fine patch meets it exactly
   function nearSurf(M, x, z){
     const n = M.gn, d = M.sx / (n - 1), gx = clamp((x - M.x0) / d, 0, n - 1.001), gz = clamp((z - M.z0) / d, 0, n - 1.001), i = Math.floor(gx), j = Math.floor(gz), fx = gx - i, fz = gz - j;
@@ -431,11 +433,50 @@ const G3 = (() => {
   function stream3d(){
     const now = performance.now(); if (now - streamT < 2000) return; streamT = now;
     const x = bv.x / 1000, z = bv.z / 1000, F = TERRW.span / 2000 + 10, V = 14;
-    for (const [kind, R] of [['far', F], ['view', V]]) for (const pk of mapPacksIn(kind, x - R, z - R, x + R, z + R)){
+    for (const [kind, R] of [['far', F], ['view', V], ['vec', V]]) for (const pk of mapPacksIn(kind, x - R, z - R, x + R, z + R)){
       if (pk.buf || pk.want3d) continue; pk.want3d = true;
-      mapLoad(pk).then(() => { pk.want3d = false; staleOver(pk); }, e => { pk.want3d = false; console.error(e); });
+      mapLoad(pk).then(() => { pk.want3d = false; if (kind === 'vec') vecTile(pk.tile[0], pk.tile[1]); else staleOver(pk); }, e => { pk.want3d = false; console.error(e); });
+    }
+    for (const pk of mapPacksIn('vec', x - V, z - V, x + V, z + V)) if (pk.buf) vecTile(pk.tile[0], pk.tile[1]);
+    vecPrune([{x, y:z}, {x:lastEye[0] / 1000, y:lastEye[2] / 1000}]);
+    tileStatics();
+  }
+  // ---------- the coast's packs (01c-vec.js, part 4 of the coast-wide plan): buildings, roads, bridges, piers and breakwaters ----------
+  // When a tile comes in (decoded in the worker), the 1 km chunks on it are built again with its buildings and roads. Its bridges, piers
+  // and breakwaters go into a mesh of its own once its heights are in (a deck must start from the real ground), a few at a time in each
+  // frame's spare milliseconds (tileStep; Tromsø's tile was half a second at once). All of it goes when the tile is let go (vecPrune).
+  const TST = new Map(); let TJOB = null;
+  const tileOf = key => { const T = MAPD.man ? MAPD.man.tile : 50; return Math.floor(gridKeyX(key) / T) + ':' + Math.floor(gridKeyY(key) / T); };
+  VEC.came.push(t => { for (const [k, c] of CH) if (tileOf(k) === t.k){ freeChunk(c); CH.delete(k); } });
+  function tileStatics(){
+    if (TJOB) return;
+    for (const t of VEC.tiles.values()){
+      if (TST.has(t.k)) continue;
+      const vp = MAPD.byTile.get('view:' + t.k); if (vp && !vp.buf) continue;
+      const items = [...t.piers.map(q => m => pierInto(m, q, t.k)), ...t.slabs.map(pts => m => slabInto(m, pts, t.k)), ...t.molos.map((pts, i) => m => stonesOf(TJOB.stones, sm => moundInto(m, pts, (t.tx * 31 + t.ty) * 7919 + i * 104729, false, t.k, sm))), ...t.bridges.map(br => m => bridgeInto(m, br, t.k))];
+      TJOB = {t, m:MB(), items, i:0, ms:0, stones:[]}; return;
     }
   }
+  function tileStep(){
+    const J = TJOB; if (!J) return;
+    if (!VEC.tiles.has(J.t.k)){ TJOB = null; return; }   // let go meanwhile
+    const t0 = performance.now(), end = t0 + MESHMS[QUAL.lvl];
+    while (J.i < J.items.length && performance.now() < end) J.items[J.i++](J.m);
+    J.ms += performance.now() - t0;
+    if (J.i < J.items.length) return;
+    const m = J.m, t = J.t; TJOB = null;
+    TST.set(t.k, {mesh:m.p.length ? m.mesh([t.x0 + 25000, t.z0 + 25000]) : null, stones:J.stones, ms:J.ms, tris:m.p.length / 9});
+    // the roads on its breakwaters' crests: the chunks under them built again
+    for (const [k, l] of MOLOH) if (CH.has(k) && l.some(M => M.tag === t.k)){ freeChunk(CH.get(k)); CH.delete(k); }
+  }
+  VEC.drop.push(t => {
+    const s = TST.get(t.k); if (s && gl){ if (s.mesh) freeMesh(s.mesh); for (const q of s.stones) freeMesh(q.mesh); } TST.delete(t.k);
+    if (TJOB && TJOB.t === t && gl) for (const q of TJOB.stones) freeMesh(q.mesh); if (TJOB && TJOB.t === t) TJOB = null; camDropTag(t.k);
+    for (const [k, l] of MOLOH){ const b = l.filter(M => M.tag !== t.k); if (b.length) MOLOH.set(k, b); else MOLOH.delete(k); }
+    for (const k of [...CAMBLD]) if (typeof k === 'string' && tileOf(+k.slice(1)) === t.k) CAMBLD.delete(k);
+    for (const [k, c] of CH) if (tileOf(k) === t.k){ freeChunk(c); CH.delete(k); }
+  });
+  function drawTileStatics(TM, eye){ drawStones(STONES, TM, eye); for (const s of TST.values()){ if (s.mesh) drawLit(s.mesh, TM); drawStones(s.stones, TM, eye); } }
   // One terrain mesh is rebuilt at a time, a few rows a frame (MESHMS ms; the near, middle and far meshes were each built in one
   // frame, all three whenever a pack came anywhere, 03.10.2026): the old mesh is drawn until the new one is done. A mesh that does not
   // cover the boat at all (a jump, the first build) is built at once.
@@ -528,7 +569,7 @@ const G3 = (() => {
     meshTask('mid', MIDM, cx - span / 2, cz - span / 2, span, 256, null, (M, dirty) => { const old = MIDM; MIDM = M; MIDM.cx = cx; MIDM.cz = cz; MIDM.stale = dirty; shSeed(MIDM, old); if (old) freeMesh(old); });
   }
   function updateNear(){
-    stream3d(); nearWanted(); updateMid(); updateFar(); meshStep();   // the near mesh first when more than one is due
+    stream3d(); nearWanted(); updateMid(); updateFar(); meshStep(); tileStep();   // the near mesh first when more than one is due
   }
   function nearWanted(){
     const span = QUAL.near[QUAL.lvl][cam.dist > 1200 ? 1 : 0], snap = span / 10, cx = Math.round(bv.x / snap) * snap, cz = Math.round(bv.z / snap) * snap;
@@ -555,37 +596,29 @@ const G3 = (() => {
     gl.bindBuffer(gl.ARRAY_BUFFER, m.cb); gl.bufferSubData(gl.ARRAY_BUFFER, 0, col);
   }
 
+  // ---------- the breakwaters' armour stones: a mesh a breakwater, drawn only within STONE_R of the eye (beyond it a stone is less than a
+  // pixel; the faces' normals come from the pixels' derivatives, and thousands of stones too small to see stalled SwiftShader for seconds
+  // a frame, 03.10.2026) ----------
+  const STONES = [], STONE_R = 1500;
+  function stonesOf(list, build){
+    const sm = MB(); build(sm); if (!sm.p.length) return;
+    let x0 = 1e18, z0 = 1e18, x1 = -1e18, z1 = -1e18; for (let i = 0; i < sm.p.length; i += 3){ x0 = Math.min(x0, sm.p[i]); z0 = Math.min(z0, sm.p[i + 2]); x1 = Math.max(x1, sm.p[i]); z1 = Math.max(z1, sm.p[i + 2]); }
+    list.push({mesh:sm.mesh([(x0 + x1) / 2, (z0 + z1) / 2]), x0, z0, x1, z1});
+  }
+  function drawStones(list, TM, eye){
+    for (const q of list){ const dx = Math.max(q.x0 - eye[0], 0, eye[0] - q.x1), dz = Math.max(q.z0 - eye[2], 0, eye[2] - q.z1); if (dx * dx + dz * dz < STONE_R * STONE_R) drawLit(q.mesh, TM); }
+  }
   // ---------- villages and quays ----------
   function buildStatics(){
     const m = MB(), R = rng(7), WALLS = [[0.62,0.18,0.14],[0.88,0.88,0.84],[0.85,0.68,0.3],[0.76,0.46,0.22],[0.5,0.56,0.6],[0.88,0.88,0.84]], ROOF = [[0.18,0.2,0.22],[0.3,0.2,0.18],[0.22,0.26,0.3]];
     LIGHTS = [];
-    // piers, quays and breakwaters from OpenStreetMap, as listed in PIERBOX (the berths use the same boxes)
-    for (const q of PIERBOX){
-      camSolid(q.x, q.z, q.w, q.l, q.ang, -3, q.bw ? 2.2 : QTOP);
-      if (q.bw) m.box(q.x, -3, q.z, q.w, 5.2, q.l, [0.4, 0.41, 0.42], q.ang, [0.5, 0.5, 0.5]);
-      else if (q.closed) m.box(q.x, -2.4, q.z, q.w, QTOP + 2.4, q.l, [0.5, 0.49, 0.46], q.ang, [0.6, 0.58, 0.54]);
-      else if (q.made) m.box(q.x, -3, q.z, q.w, QTOP + 3, q.l, [0.52, 0.53, 0.5], q.ang, [0.6, 0.6, 0.58]);
-      else m.box(q.x, -2.4, q.z, q.w, QTOP + 2.4, q.l, [0.46, 0.42, 0.37], q.ang, [0.56, 0.52, 0.46]);
-    }
+    // piers, quays and breakwaters from OpenStreetMap, as listed in PIERBOX (the berths use the same boxes); the breakwaters as rubble
+    // mounds, those a harbour unit has not taken
+    for (const q of PIERBOX) pierInto(m, q);
+    const bwLeft = new Set(PIERBOX.filter(q => q.bw).map(q => q.src));
+    PIERS.forEach((pr, i) => { if (pr[0] === 1 && bwLeft.has(i)) stonesOf(STONES, sm => moundInto(m, Array.from({length:(pr.length - 1) / 2}, (_, k) => [pr[1 + k * 2] * 1000, pr[2 + k * 2] * 1000]), i * 7919 + 13, true, undefined, sm)); });
     // bridges from OpenStreetMap
-    for (const br of BRIDGES){
-      const cls = br[0], L = br[1], n = (br.length - 4) / 2, X = k => br[4 + k * 2], Z = k => br[5 + k * 2];
-      const cum = [0]; for (let k = 1; k < n; k++) cum.push(cum[k - 1] + Math.hypot(X(k) - X(k - 1), Z(k) - Z(k - 1)));
-      const tot = cum[n - 1] || 1, hA = Math.max(terrH(X(0), Z(0)), 1), hB = Math.max(terrH(X(n - 1), Z(n - 1)), 1);
-      const clear = L < 60 ? 0 : clamp(tot * 0.036, 6, 42), wdt = [9, 8.5, 7.5, 7, 5][cls] || 7;
-      const yAt = s => { const u = s / tot; return hA + (hB - hA) * u + clear * Math.pow(Math.sin(Math.PI * u), 0.55); };
-      for (let k = 0; k < n - 1; k++){
-        const ax = X(k), az = Z(k), bx2 = X(k + 1), bz2 = Z(k + 1), segL = Math.hypot(bx2 - ax, bz2 - az), steps = Math.max(1, Math.ceil(segL / 18));
-        for (let q = 0; q < steps; q++){
-          const u0 = q / steps, u1 = (q + 1) / steps, x0 = ax + (bx2 - ax) * u0, z0 = az + (bz2 - az) * u0, x1 = ax + (bx2 - ax) * u1, z1 = az + (bz2 - az) * u1;
-          const s0 = cum[k] + segL * u0, s1 = cum[k] + segL * u1, y0 = yAt(s0), y1 = yAt(s1), ym = (y0 + y1) / 2, len = Math.hypot(x1 - x0, z1 - z0) + 0.4, ang = Math.atan2(x1 - x0, z1 - z0), pitch = Math.atan2(y1 - y0, len);
-          const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, px = Math.cos(ang), pz = -Math.sin(ang);
-          m.box(cx, ym - 1.2, cz, wdt, 1.3, len, [0.64, 0.64, 0.62], ang, [0.42, 0.44, 0.46]); camSolid(cx, cz, wdt + 0.6, len, ang, ym - 1.2, ym + 1.1);
-          for (const sd of [1, -1]) m.box(cx + px * sd * wdt / 2, ym + 0.1, cz + pz * sd * wdt / 2, 0.3, 1.0, len, [0.8, 0.8, 0.78], ang);
-          const mid = (s0 + s1) / 2; if (Math.floor(s0 / 70) !== Math.floor(s1 / 70) || (q === 0 && k === 0)){ const gy = terrH(cx, cz); if (ym - 1.2 - gy > 3){ m.box(cx, Math.min(gy, 0) - 4, cz, Math.min(wdt * 0.6, 5), ym - 1.2 - (Math.min(gy, 0) - 4), 3, [0.6, 0.6, 0.58], ang); camSolid(cx, cz, Math.min(wdt * 0.6, 5), 3, ang, Math.min(gy, 0) - 4, ym - 1.2); } }
-        }
-      }
-    }
+    for (const br of BRIDGES) bridgeInto(m, br);
     // lighthouses, lights, beacons and buoys
     for (const mk of SEAMARKS.marks){
       const x = mk[0] * 1000, z = mk[1] * 1000, base = Math.max(terrH(x, z), 0.2), ty = mk[2], cat = mk[3];
@@ -620,6 +653,167 @@ const G3 = (() => {
       }
     }
     STAT = m.mesh(mapMid());
+  }
+  // a pier, a quay's deck or a breakwater's box: its camera solid, and the box itself (a breakwater is drawn by moundInto); tag marks
+  // what a tile of the coast's packs built (tileStatics), so it can go with the tile
+  function pierInto(m, q, tag){
+    if (q.closed && q.src !== undefined && tag !== undefined) return;   // a pack's area pier: slabInto, in its shape
+    camSolid(q.x, q.z, q.w, q.l, q.ang, -3, q.bw ? 3.2 : QTOP, tag);
+    if (q.bw) return;
+    if (q.closed) m.box(q.x, -2.4, q.z, q.w, QTOP + 2.4, q.l, [0.5, 0.49, 0.46], q.ang, [0.6, 0.58, 0.54]);
+    else if (q.made) m.box(q.x, -3, q.z, q.w, QTOP + 3, q.l, [0.52, 0.53, 0.5], q.ang, [0.6, 0.6, 0.58]);
+    else m.box(q.x, -2.4, q.z, q.w, QTOP + 2.4, q.l, [0.46, 0.42, 0.37], q.ang, [0.56, 0.52, 0.46]);
+  }
+  // a pier mapped as an area, in its shape (its bounding box, as Senja's small ones are drawn, lay over the water at a big quay in
+  // Bergen): the deck in strips a metre deep, each cut where the outline crosses its middle, the walls down the outline's edges; the
+  // camera's solids in strips 4 m deep
+  function slabInto(m, pts, tag){
+    const n = pts.length; let z0 = 1e18, z1 = -1e18; for (const [, z] of pts){ z0 = Math.min(z0, z); z1 = Math.max(z1, z); }
+    const top = [0.6, 0.58, 0.54], side = [0.5, 0.49, 0.46], runs = (z, f) => { const xs = []; for (let k = 0; k < n - 1; k++){ const az = pts[k][1], bz = pts[k + 1][1]; if ((az > z) !== (bz > z)) xs.push(pts[k][0] + (z - az) * (pts[k + 1][0] - pts[k][0]) / (bz - az)); } xs.sort((a, b) => a - b); for (let q = 0; q + 1 < xs.length; q += 2) f(xs[q], xs[q + 1]); };
+    for (let z = z0; z < z1; z += 1){ const z2 = Math.min(z1, z + 1); runs((z + z2) / 2, (a, b) => m.quad([a, QTOP, z], [b, QTOP, z], [b, QTOP, z2], [a, QTOP, z2], top)); }
+    for (let k = 0; k < n - 1; k++){ const [ax, az] = pts[k], [bx, bz] = pts[k + 1]; if (Math.hypot(bx - ax, bz - az) < 0.2) continue; m.quad([ax, -2.4, az], [bx, -2.4, bz], [bx, QTOP, bz], [ax, QTOP, az], side); }
+    for (let z = z0; z < z1; z += 4){ const z2 = Math.min(z1, z + 4); runs((z + z2) / 2, (a, b) => camSolid((a + b) / 2, (z + z2) / 2, b - a, z2 - z, 0, -3, QTOP, tag)); }
+  }
+  // a road bridge [class, length, name, type, x, z, ...]: the deck rises from its ends to a clearance by its length (Tromsøbrua, 1046 m,
+  // about 38 m; the longest 42 m). The deck is one smooth band over cross-sections every 8 m (it was boxes 18 m long, each level, which
+  // climbed like a stair: the user 03.10.2026): the road on top, the edge beams and the railings along its sides, and under it a box
+  // girder narrower than the deck, deeper the longer the bridge; a pier every 70 m where the deck is more than 3 m over the ground or
+  // the sea. The camera's solids stay boxes every 18 m.
+  const BRC = {road:[0.3, 0.31, 0.33], edge:[0.7, 0.7, 0.67], under:[0.5, 0.5, 0.48], rail:[0.82, 0.84, 0.84], pier:[0.62, 0.62, 0.59]};
+  function bridgeInto(m, br, tag){
+    const cls = br[0], L = br[1], n = (br.length - 4) / 2, X = k => br[4 + k * 2], Z = k => br[5 + k * 2];
+    const cum = [0]; for (let k = 1; k < n; k++) cum.push(cum[k - 1] + Math.hypot(X(k) - X(k - 1), Z(k) - Z(k - 1)));
+    const tot = cum[n - 1] || 1, hA = Math.max(terrH(X(0), Z(0)), 1), hB = Math.max(terrH(X(n - 1), Z(n - 1)), 1);
+    const clear = L < 60 ? 0 : clamp(tot * 0.036, 6, 42), wdt = [9, 8.5, 7.5, 7, 5][cls] || 7, hw = wdt / 2, gd = clamp(L / 450, 1.1, 2.6), gw = hw * 0.55;
+    const yAt = s => { const u = s / tot; return hA + (hB - hA) * u + clear * Math.pow(Math.sin(Math.PI * u), 0.55); };
+    // the cross-sections: along each leg every 8 m or less; at a bend the section is turned half way (a mitre)
+    const C = [];
+    for (let k = 0; k < n - 1; k++){
+      const ax = X(k), az = Z(k), dx = X(k + 1) - ax, dz = Z(k + 1) - az, segL = Math.hypot(dx, dz) || 1e-6, steps = Math.max(1, Math.ceil(segL / 8));
+      for (let q = k ? 1 : 0; q <= steps; q++){ const u = q / steps; C.push({x:ax + dx * u, z:az + dz * u, s:cum[k] + segL * u, ux:dx / segL, uz:dz / segL}); }
+    }
+    for (let i = 1; i < C.length - 1; i++){ const a = C[i - 1], c = C[i + 1]; if (Math.abs(a.ux - c.ux) + Math.abs(a.uz - c.uz) > 1e-6){ const mx = (C[i].ux + c.ux) / 2, mz = (C[i].uz + c.uz) / 2, l = Math.hypot(mx, mz) || 1; C[i].ux = mx / l; C[i].uz = mz / l; } }
+    const at = (c, o, dy) => [c.x + c.uz * o, c.y + dy, c.z - c.ux * o];
+    for (const c of C) c.y = yAt(c.s);
+    for (let i = 0; i < C.length - 1; i++){
+      const a = C[i], c = C[i + 1];
+      m.quad(at(a, hw, 0), at(a, -hw, 0), at(c, -hw, 0), at(c, hw, 0), BRC.road);
+      for (const sd of [1, -1]){
+        const o = sd * (hw + 0.15), g = sd * gw;
+        m.quad(at(a, o, 0.25), at(c, o, 0.25), at(c, o, -0.55), at(a, o, -0.55), BRC.edge);                  // the edge beam
+        m.quad(at(a, sd * (hw - 0.15), 0.25), at(c, sd * (hw - 0.15), 0.25), at(c, o, 0.25), at(a, o, 0.25), BRC.edge);
+        m.quad(at(a, o, -0.55), at(c, o, -0.55), at(c, g, -0.55), at(a, g, -0.55), BRC.under);                  // the slab's underside
+        m.quad(at(a, g, -0.55), at(c, g, -0.55), at(c, g, -gd), at(a, g, -gd), BRC.edge);                       // the girder's side
+        m.quad(at(a, sd * (hw - 0.05), 0.25), at(c, sd * (hw - 0.05), 0.25), at(c, sd * (hw - 0.05), 1.15), at(a, sd * (hw - 0.05), 1.15), BRC.rail);   // the railing
+      }
+      m.quad(at(a, gw, -gd), at(c, gw, -gd), at(c, -gw, -gd), at(a, -gw, -gd), BRC.under);
+    }
+    // the camera's solids and the piers, every 18 m and 70 m as before
+    for (let k = 0; k < n - 1; k++){
+      const ax = X(k), az = Z(k), bx2 = X(k + 1), bz2 = Z(k + 1), segL = Math.hypot(bx2 - ax, bz2 - az), steps = Math.max(1, Math.ceil(segL / 18));
+      for (let q = 0; q < steps; q++){
+        const u0 = q / steps, u1 = (q + 1) / steps, x0 = ax + (bx2 - ax) * u0, z0 = az + (bz2 - az) * u0, x1 = ax + (bx2 - ax) * u1, z1 = az + (bz2 - az) * u1;
+        const s0 = cum[k] + segL * u0, s1 = cum[k] + segL * u1, ym = (yAt(s0) + yAt(s1)) / 2, len = Math.hypot(x1 - x0, z1 - z0) + 0.4, ang = Math.atan2(x1 - x0, z1 - z0), cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+        camSolid(cx, cz, wdt + 0.6, len, ang, ym - gd, ym + 1.2, tag);
+        if (Math.floor(s0 / 70) !== Math.floor(s1 / 70) || (q === 0 && k === 0)){
+          const gy = terrH(cx, cz), top = ym - gd; if (top - gy > 3){ const bot = Math.min(gy, 0) - 4, pw = Math.min(gw * 1.6, 5); m.box(cx, bot, cz, pw, top - bot, 3, BRC.pier, ang); camSolid(cx, cz, pw, 3, ang, bot, top, tag); }
+        }
+      }
+    }
+  }
+  // ---------- breakwaters (the user's wish 03.10.2026: they shelter the boats at the quays, and should look it) ----------
+  // A rubble mound as a height field over the mapped shape: an outline is taken as the waterline, a line as the middle of a mound 16 m
+  // wide there. The crest stands about 2.8 m over mean sea level, over the highest tide (TIDE_C), flat and gravelled, for most
+  // breakwaters carry a road on top (the user 03.10.2026: Husøy's does; addRoads lays a road over a crest, moundTop); the sides fall
+  // 1 : 1.4 to 6 m under, grey above, dark and weedy in the tidal zone, with armour stones loose on them. Any shape: a bend, an L, a
+  // round head. The ground it is built from (terrH over it) and a harbour unit (unit) are left.
+  // a stone: a box sx by sy by sz (centre of its foot at x, y, z) with its corners pushed in and out by up to a quarter of its size, turned
+  // about the vertical and tipped up to 25 degrees, so no two lie alike and none is a block
+  function rockInto(m, x, y, z, sx, sy, sz, seed, k){
+    const ry = hash(seed) * Math.PI * 2, tx = (hash(seed + 1) - 0.5) * 0.9, tz = (hash(seed + 2) - 0.5) * 0.9, cr = Math.cos(ry), sr = Math.sin(ry), ca = Math.cos(tx), sa = Math.sin(tx), cb = Math.cos(tz), sb = Math.sin(tz);
+    const V = [];
+    for (let q = 0; q < 8; q++){
+      const u = (q & 1 ? 0.5 : -0.5) * sx * (0.75 + 0.5 * hash(seed + 3 + q)), w = (q & 4 ? 0.5 : -0.5) * sz * (0.75 + 0.5 * hash(seed + 11 + q)), h = (q & 2 ? 1 : 0) * sy * (0.7 + 0.6 * hash(seed + 19 + q)) - sy * 0.15;
+      const y1 = h * ca - w * sa, w1 = h * sa + w * ca, u1 = u * cb - y1 * sb, y2 = u * sb + y1 * cb;
+      V.push([x + u1 * cr + w1 * sr, y + y2, z - u1 * sr + w1 * cr]);
+    }
+    const d = k.map(c => c * 0.8);
+    m.quad(V[0], V[1], V[3], V[2], d); m.quad(V[4], V[6], V[7], V[5], d); m.quad(V[0], V[2], V[6], V[4], d); m.quad(V[1], V[5], V[7], V[3], d);
+    m.quad(V[2], V[3], V[7], V[6], k);   // the top; the foot is under the ground
+  }
+  const MOLO = {g:2, slope:1 / 1.4, crest:2.8, foot:-6, half:8};
+  // the crests the roads lie on: each mound's height field under the km cells it covers (tag as camSolid's)
+  const MOLOH = new Map();
+  function moundTop(x, z){
+    const a = MOLOH.get(gridKey(Math.floor(x / 1000), Math.floor(z / 1000))); if (!a) return -1e9; let best = -1e9;
+    for (const M of a){
+      const fx = (x - M.x0) / M.g, fz = (z - M.z0) / M.g; if (fx < 0 || fz < 0 || fx >= M.nx - 1 || fz >= M.nz - 1) continue;
+      const i = Math.floor(fx), j = Math.floor(fz), u = fx - i, w = fz - j, k = j * M.nx + i, H = M.H;
+      best = Math.max(best, (H[k] * (1 - u) + H[k + 1] * u) * (1 - w) + (H[k + M.nx] * (1 - u) + H[k + M.nx + 1] * u) * w);
+    }
+    return best;
+  }
+  function moundInto(m, pts, seed, unit, tag, sm){
+    const n = pts.length; if (n < 2) return 0;
+    const closed = n > 3 && Math.hypot(pts[0][0] - pts[n - 1][0], pts[0][1] - pts[n - 1][1]) < 1;
+    let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9; for (const [x, z] of pts){ x0 = Math.min(x0, x); z0 = Math.min(z0, z); x1 = Math.max(x1, x); z1 = Math.max(z1, z); }
+    const E = MOLO.half + (MOLO.crest - MOLO.foot) / MOLO.slope; x0 -= E; z0 -= E; x1 += E; z1 += E;
+    let g = MOLO.g; const area = (x1 - x0) * (z1 - z0); if (area / (g * g) > 90000) g = Math.sqrt(area / 90000);
+    const nx = Math.ceil((x1 - x0) / g) + 1, nz = Math.ceil((z1 - z0) / g) + 1, H = new Float32Array(nx * nz);
+    // the signed distance to the shape (m; positive inside the outline, or within MOLO.half of the line) on the grid: the outline filled
+    // row by row (or the line drawn), then a two-pass chamfer distance (1 and 1.41 cells; a few per cent off, which the rock's noise
+    // hides): a 600 m breakwater is a few milliseconds, not the hundreds a distance to every edge from every point took
+    const N = nx * nz, IN = new Uint8Array(N);
+    if (closed) for (let j = 0; j < nz; j++){
+      const z = z0 + j * g, xs = [];
+      for (let k = 0; k < n - 1; k++){ const az = pts[k][1], bz = pts[k + 1][1]; if ((az > z) !== (bz > z)) xs.push(pts[k][0] + (z - az) * (pts[k + 1][0] - pts[k][0]) / (bz - az)); }
+      xs.sort((p, q) => p - q);
+      for (let q = 0; q + 1 < xs.length; q += 2) for (let i = Math.max(0, Math.ceil((xs[q] - x0) / g)); i <= Math.min(nx - 1, Math.floor((xs[q + 1] - x0) / g)); i++) IN[j * nx + i] = 1;
+    } else for (let k = 0; k < n - 1; k++){
+      const ax = pts[k][0], az = pts[k][1], dx = pts[k + 1][0] - ax, dz = pts[k + 1][1] - az, st = Math.max(1, Math.ceil(Math.hypot(dx, dz) / (g / 2)));
+      for (let q = 0; q <= st; q++){ const i = Math.round((ax + dx * q / st - x0) / g), j = Math.round((az + dz * q / st - z0) / g); if (i >= 0 && j >= 0 && i < nx && j < nz) IN[j * nx + i] = 1; }
+    }
+    const dist = want => {
+      const D = new Float32Array(N), d2 = g * Math.SQRT2; for (let i = 0; i < N; i++) D[i] = IN[i] === want ? 0 : 1e9;
+      for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++){ const a = j * nx + i; let v = D[a]; if (i) v = Math.min(v, D[a - 1] + g); if (j){ v = Math.min(v, D[a - nx] + g); if (i) v = Math.min(v, D[a - nx - 1] + d2); if (i < nx - 1) v = Math.min(v, D[a - nx + 1] + d2); } D[a] = v; }
+      for (let j = nz - 1; j >= 0; j--) for (let i = nx - 1; i >= 0; i--){ const a = j * nx + i; let v = D[a]; if (i < nx - 1) v = Math.min(v, D[a + 1] + g); if (j < nz - 1){ v = Math.min(v, D[a + nx] + g); if (i < nx - 1) v = Math.min(v, D[a + nx + 1] + d2); if (i) v = Math.min(v, D[a + nx - 1] + d2); } D[a] = v; }
+      return D;
+    };
+    const Dto = dist(1), Dout = closed ? dist(0) : null;
+    const sdAt = a => closed ? (IN[a] ? Dout[a] - g / 2 : -(Dto[a] - g / 2)) : MOLO.half - Dto[a];
+    const cr = MOLO.crest + 0.4 * (hash(seed) - 0.5);
+    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++){
+      // the crest flat; the slopes rough, the more so the further below it
+      const x = x0 + i * g, z = z0 + j * g, a = j * nx + i, h = Math.max(MOLO.foot, Math.min(cr, sdAt(a) * MOLO.slope)), f = clamp((cr - h) / 0.8, 0, 1);
+      H[a] = h > -1.5 ? h + f * (0.5 * (noise2(x / 2.4, z / 2.4, 53) - 0.5) + 0.25 * (noise2(x / 0.9, z / 0.9, 59) - 0.5)) : h;
+    }
+    const rec = {x0, z0, g, nx, nz, H, tag, cells:[]};
+    for (let gz = Math.floor(z0 / 1000); gz <= Math.floor((z0 + nz * g) / 1000); gz++) for (let gx = Math.floor(x0 / 1000); gx <= Math.floor((x0 + nx * g) / 1000); gx++){ const k = gridKey(gx, gz); let l = MOLOH.get(k); if (!l) MOLOH.set(k, l = []); l.push(rec); rec.cells.push(k); }
+    const ROCK = [0.43, 0.43, 0.41], LICHEN = [0.5, 0.5, 0.42], WET = [0.2, 0.19, 0.16], WEED = [0.23, 0.21, 0.1], DEEP = [0.16, 0.19, 0.17], GRAVEL = [0.53, 0.51, 0.47];
+    // the cells to draw: none deeper than 1.6 m (the water hides them), none on the ground it is built from or a harbour unit; the flat
+    // crest in one strip a row (the triangles were 135 000 for Senja's breakwaters, and SwiftShader's frames could not keep up)
+    let tris = 0;
+    for (let j = 0; j < nz - 1; j++){
+      let run = -1;
+      const flush = i => { if (run < 0) return; const z = z0 + j * g, xa = x0 + run * g, xb = x0 + i * g; m.quad([xa, cr, z], [xb, cr, z], [xb, cr, z + g], [xa, cr, z + g], GRAVEL.map(c => c * (0.94 + 0.08 * hash(seed + j * 13 + run)))); tris += 2; run = -1; };
+      for (let i = 0; i < nx - 1; i++){
+        const a = j * nx + i, h00 = H[a], h10 = H[a + 1], h01 = H[a + nx], h11 = H[a + nx + 1], hm = (h00 + h10 + h01 + h11) / 4;
+        const x = x0 + i * g, z = z0 + j * g, cx = x + g / 2, cz = z + g / 2;
+        if (Math.max(h00, h10, h01, h11) < -1.6 || terrH(cx, cz) > hm + 0.3 || (unit && onUnit(cx, cz, 1))){ flush(i); continue; }
+        if (Math.min(h00, h10, h01, h11) > cr - 0.02){ if (run < 0) run = i; continue; }
+        flush(i);
+        const r = hash(seed + j * 7919 + i * 104729), v = 0.82 + 0.3 * r;
+        const k = hm > 1.0 ? (r > 0.9 ? LICHEN : ROCK) : hm > -0.5 ? mix3(WET, WEED, hash(seed + j * 31 + i * 17)) : DEEP;
+        m.quad([x, h00, z], [x + g, h10, z], [x + g, h11, z + g], [x, h01, z + g], k.map(c => c * v)); tris += 2;
+        // armour stones, half sunk and tipped, on the slopes (the crest is the road's)
+        if (hm > 0.2 && hm < cr - 0.45 && (i + 2 * j) % 3 === 0 && r < 0.4){
+        const b = 0.9 + 1.5 * hash(seed + a * 3 + 1), ox = (hash(seed + a * 7 + 3) - 0.5) * g * 1.4, oz = (hash(seed + a * 11 + 4) - 0.5) * g * 1.4;
+        rockInto(sm || m, cx + ox, hm - b * 0.18, cz + oz, b, b * (0.55 + 0.3 * hash(seed + a * 13 + 5)), b * (0.7 + 0.5 * hash(seed + a * 19 + 7)), seed + a * 23, ROCK.map(c => c * (0.72 + 0.36 * hash(seed + a * 17 + 6)))); tris += 10;
+        }
+      }
+      flush(nx - 1);
+    }
+    return tris;
   }
 
 
@@ -658,6 +852,14 @@ const G3 = (() => {
   // ---------- real buildings (OpenStreetMap), streamed in 1 km chunks inside the terrain corridor ----------
   let BLD = null, chunkSnow = -1;
   const CH = new Map();
+  // the buildings of a 1 km cell: Senja's embedded ones (BLD) and those of the coast's pack for its tile (01c-vec.js), each with its
+  // own arrays; a building's look is hashed from its index and the source's seed (Senja's 0, as before)
+  function bldCells(key){
+    const out = [], a = BLD && BLD.cells.get(key); if (a) out.push([BLD, a]);
+    const T = MAPD.man ? MAPD.man.tile : 50, t = vecTile(Math.floor(gridKeyX(key) / T), Math.floor(gridKeyY(key) / T));
+    if (t && t.bld){ const b = t.bld.cells.get(key); if (b) out.push([t.bld, b]); }
+    return out;
+  }
   async function loadBuildings(){
     const el = document.getElementById('bld');
     if (!el || typeof DecompressionStream === 'undefined') return null;
@@ -665,7 +867,7 @@ const G3 = (() => {
     const raw = new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate'))).arrayBuffer());
     const X = new Uint16Array(raw.buffer, 0, n), Y = new Uint16Array(raw.buffer, 2 * n, n), Lq = raw.subarray(4 * n, 5 * n), Wq = raw.subarray(5 * n, 6 * n), Aq = raw.subarray(6 * n, 7 * n), Tq = raw.subarray(7 * n, 8 * n);
     const dec = q => q <= 160 ? q * 0.5 : 80 + (q - 160) * 2;
-    const B = {n, x:new Float64Array(n), z:new Float64Array(n), l:new Float32Array(n), w:new Float32Array(n), a:new Float32Array(n), t:new Uint8Array(n), lv:new Uint8Array(n), cells:new Map()};
+    const B = {n, x:new Float64Array(n), z:new Float64Array(n), l:new Float32Array(n), w:new Float32Array(n), a:new Float32Array(n), t:new Uint8Array(n), lv:new Uint8Array(n), cells:new Map(), seed:0};
     for (let i = 0; i < n; i++){
       // stored in the legacy frame (metres): into the national frame, turned with it (LGrot, about -gamma)
       const lx = X[i] * U, lz = Y[i] * U, q = LGm([lx, lz]);
@@ -688,11 +890,11 @@ const G3 = (() => {
   // type: 0 other, 1 house, 2 apartments, 3 garage, 4 cabin, 5 boathouse, 6 barn, 7 shed, 8 industrial, 9 commercial, 10 civic, 11 church, 12 bunker, 13 greenhouse, 14 service, 15 ruin
   const FRAME = [0.93, 0.93, 0.9], BGLASS = [0.1, 0.13, 0.16], WARM = [1, 0.78, 0.42], DOORS = [[0.3,0.2,0.14],[0.2,0.3,0.24],[0.55,0.15,0.12],[0.9,0.9,0.88],[0.22,0.28,0.4]];
   function buildChunk(key, detail){
-    const idx = BLD.cells.get(key) || [], c = {mesh:null, lights:null, nl:0, detail, dm:null, gd:null, gl:null};
+    const srcs = bldCells(key), c = {mesh:null, lights:null, nl:0, detail, dm:null, gd:null, gl:null};
     const m = MB(), L = [], snowy = chunkSnow % 10 === 1, D = detail ? MB() : null, GD = detail ? MB() : null, GLm = detail ? MB() : null;
-    for (const i of idx){
-      const x = BLD.x[i], z = BLD.z[i], l = BLD.l[i], w = BLD.w[i], ty = BLD.t[i], lv = BLD.lv[i], ry = Math.PI / 2 - BLD.a[i], hsh = hash(i * 7 + 3);
-      const ca = Math.cos(BLD.a[i]), sa = Math.sin(BLD.a[i]);
+    for (const [B, idx] of srcs) for (const j of idx){
+      const i = j + B.seed, x = B.x[j], z = B.z[j], l = B.l[j], w = B.w[j], ty = B.t[j], lv = B.lv[j], ry = Math.PI / 2 - B.a[j], hsh = hash(i * 7 + 3);
+      const ca = Math.cos(B.a[j]), sa = Math.sin(B.a[j]);
       let lo = 1e9, hi = -1e9;
       for (const [u, v] of [[-0.5, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, 0.5]]){ const y = terrH(x + ca * u * l - sa * v * w, z + sa * u * l + ca * v * w); lo = Math.min(lo, y); hi = Math.max(hi, y); }
       const base = Math.max(lo, 0.3) - 0.5, rise = Math.max(0, hi - base);
@@ -755,7 +957,7 @@ const G3 = (() => {
         if (ty === 6) wins(l, w / 2, bx, bz, ca, sa, [floor + 1.6], 0.8, 0.7, 4, -1);
       }
     }
-    addTrees(m, key, idx, snowy);
+    addTrees(m, key, srcs, snowy);
     const o = c.o = [gridKeyX(key) * 1000, gridKeyY(key) * 1000];
     c.mesh = m.p.length ? m.mesh(o) : null;
     const RM = MB(); addRoads(RM, key, snowy); if (RM.p.length) c.rd = RM.mesh(o);
@@ -765,11 +967,11 @@ const G3 = (() => {
   }
   // trees: birch woods below the tree line with some pine, kept off roads and buildings; colours follow the season
   const treeSeason = () => { const mo = gDate(S.t / 60).getUTCMonth(); return mo >= 5 && mo <= 7 ? 1 : mo === 8 ? 2 : 0; };
-  function addTrees(m, key, idx, snowy){
+  function addTrees(m, key, srcs, snowy){
     const gz = gridKeyY(key), gx = gridKeyX(key), x0 = gx * 1000, z0 = gz * 1000, occ = new Uint8Array(1600);
     const mark = (x, z, r) => { const cx = Math.floor((x - x0) / 25), cz = Math.floor((z - z0) / 25); for (let a = -r; a <= r; a++) for (let b = -r; b <= r; b++){ const i = cx + b, j = cz + a; if (i >= 0 && j >= 0 && i < 40 && j < 40) occ[j * 40 + i] = 1; } };
-    for (const i of idx) mark(BLD.x[i], BLD.z[i], Math.max(BLD.l[i], BLD.w[i]) > 30 ? 2 : 1);
-    if (ROADS) for (const r of ROADS){ if (r.bb[2] < x0 - 30 || r.bb[0] > x0 + 1030 || r.bb[3] < z0 - 30 || r.bb[1] > z0 + 1030) continue; for (let j = 1; j < r.xs.length; j++){ const L = Math.hypot(r.xs[j] - r.xs[j - 1], r.zs[j] - r.zs[j - 1]), n = Math.ceil(L / 12); for (let q = 0; q <= n; q++) mark(r.xs[j - 1] + (r.xs[j] - r.xs[j - 1]) * q / n, r.zs[j - 1] + (r.zs[j] - r.zs[j - 1]) * q / n, 0); } }
+    for (const [B, idx] of srcs) for (const i of idx) mark(B.x[i], B.z[i], Math.max(B.l[i], B.w[i]) > 30 ? 2 : 1);
+    for (const r of roadsIn(x0 - 30, z0 - 30, x0 + 1030, z0 + 1030)){ for (let j = 1; j < r.xs.length; j++){ const L = Math.hypot(r.xs[j] - r.xs[j - 1], r.zs[j] - r.zs[j - 1]), n = Math.ceil(L / 12); for (let q = 0; q <= n; q++) mark(r.xs[j - 1] + (r.xs[j] - r.xs[j - 1]) * q / n, r.zs[j - 1] + (r.zs[j] - r.zs[j - 1]) * q / n, 0); } }
     const ses = treeSeason(), leaf = ses === 1 ? [0.15, 0.29, 0.11] : ses === 2 ? [0.7, 0.48, 0.12] : [0.55, 0.5, 0.47], pine = [0.06, 0.15, 0.08], trunk = [0.78, 0.76, 0.7];
     let count = 0;
     for (let j = 0; j < 30 && count < 260; j++) for (let i = 0; i < 30 && count < 260; i++){
@@ -792,11 +994,9 @@ const G3 = (() => {
     }
   }
   function addRoads(m, key, snowy){
-    if (!ROADS) return;
     const gz = gridKeyY(key), gx = gridKeyX(key), x0 = gx * 1000, z0 = gz * 1000, W = [7.5, 6.5, 5.5, 5, 3.6];
     const col = snowy ? [0.5, 0.52, 0.55] : [0.4, 0.42, 0.44], edge = snowy ? [0.62, 0.63, 0.65] : [0.55, 0.54, 0.5];
-    for (const r of ROADS){
-      if (r.bb[2] < x0 || r.bb[0] > x0 + 1000 || r.bb[3] < z0 || r.bb[1] > z0 + 1000) continue;
+    for (const r of roadsIn(x0, z0, x0 + 1000, z0 + 1000)){
       const hw = W[r.c] / 2;
       for (let j = 1; j < r.xs.length; j++){
         const ax = r.xs[j - 1], az = r.zs[j - 1], bx2 = r.xs[j], bz2 = r.zs[j], mx = (ax + bx2) / 2, mz = (az + bz2) / 2;
@@ -806,16 +1006,16 @@ const G3 = (() => {
         for (let q = 0; q < n; q++){
           const s0 = q / n, s1 = (q + 1) / n, e0 = q === 0 ? -hw * 0.5 : 0, e1 = q === n - 1 ? hw * 0.5 : 0;
           const x0s = ax + (bx2 - ax) * s0 + ux * e0, z0s = az + (bz2 - az) * s0 + uz * e0, x1s = ax + (bx2 - ax) * s1 + ux * e1, z1s = az + (bz2 - az) * s1 + uz * e1;
-          const y0 = Math.max(terrH(x0s, z0s), 0.2) + 0.3, y1 = Math.max(terrH(x1s, z1s), 0.2) + 0.3;
+          const y0 = Math.max(Math.max(terrH(x0s, z0s), 0.2) + 0.3, moundTop(x0s, z0s) + 0.08), y1 = Math.max(Math.max(terrH(x1s, z1s), 0.2) + 0.3, moundTop(x1s, z1s) + 0.08);
           m.quad([x0s + px * hw, y0, z0s + pz * hw], [x1s + px * hw, y1, z1s + pz * hw], [x1s - px * hw, y1, z1s - pz * hw], [x0s - px * hw, y0, z0s - pz * hw], col);
           if (r.c <= 1) for (const sd of [1, -1]) m.quad([x0s + px * sd * (hw - 0.35), y0 + 0.02, z0s + pz * sd * (hw - 0.35)], [x1s + px * sd * (hw - 0.35), y1 + 0.02, z1s + pz * sd * (hw - 0.35)], [x1s + px * sd * (hw - 0.55), y1 + 0.02, z1s + pz * sd * (hw - 0.55)], [x0s + px * sd * (hw - 0.55), y0 + 0.02, z0s + pz * sd * (hw - 0.55)], edge);
         }
       }
     }
   }
-  function freeChunk(c){ if (c.rd){ gl.deleteBuffer(c.rd.pb); gl.deleteBuffer(c.rd.cb); } for (const mm of [c.mesh, c.dm, c.gd, c.gl]) if (mm){ gl.deleteBuffer(mm.pb); gl.deleteBuffer(mm.cb); } if (c.lights) gl.deleteBuffer(c.lights); }
+  function freeChunk(c){ const del = mm => { if (mm.parts) mm.parts.forEach(del); else { gl.deleteBuffer(mm.pb); gl.deleteBuffer(mm.cb); } }; for (const mm of [c.rd, c.mesh, c.dm, c.gd, c.gl]) if (mm) del(mm); if (c.lights) gl.deleteBuffer(c.lights); }
   function updateChunks(maxBuilds){
-    if (!BLD || !NEARM) return;
+    if (!NEARM) return;
     const sf = (snowNow < 80 ? 1 : 0) + 10 * treeSeason();
     if (sf !== chunkSnow){ for (const c of CH.values()) freeChunk(c); CH.clear(); chunkSnow = sf; }
     const half = NEARM.sx / 2 - 400, cx = NEARM.cx, cz = NEARM.cz;
@@ -2304,6 +2504,7 @@ const G3 = (() => {
   }
   const NOHOLE = new Float32Array([1e9, 1e9, -1e9, -1e9]);
   function drawLit(m, M, hole){
+    if (m.parts){ for (const q of m.parts) drawLit(q, M, hole); return; }
     gl.uniformMatrix4fv(PL.u.uM, false, m.o ? relM(m) : M); gl.uniform4fv(PL.u.uHole, hole || NOHOLE); attr(0, m.pb, 3); attr(1, m.cb, 3);
     if (m.ib){ gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, m.ib); gl.drawElements(gl.TRIANGLES, m.n, gl.UNSIGNED_SHORT, 0); } else gl.drawArrays(gl.TRIANGLES, 0, m.n);
   }
@@ -2650,24 +2851,33 @@ const G3 = (() => {
   // boat to the eye is checked: the camera tilts up over what is in the way, and what is still in the way pulls it in along the line.
   const CAMG = new Map(), CAMC = 200, CAMBLD = new Set(); let camStamp = 0, camPull = 1, camLift = 0;
   // a box the way MB.box draws it: centre x, z; size sx across and sz along the heading ry; from y0 up to y1
-  function camSolid(x, z, sx, sz, ry, y0, y1){
-    const b = {x, z, c:Math.cos(ry), s:Math.sin(ry), hx:sx / 2, hz:sz / 2, y0, y1, m:0}, r = Math.hypot(sx, sz) / 2;
+  function camSolid(x, z, sx, sz, ry, y0, y1, tag){
+    const b = {x, z, c:Math.cos(ry), s:Math.sin(ry), hx:sx / 2, hz:sz / 2, y0, y1, m:0, tag}, r = Math.hypot(sx, sz) / 2;
     for (let gx = Math.floor((x - r) / CAMC); gx <= Math.floor((x + r) / CAMC); gx++) for (let gz = Math.floor((z - r) / CAMC); gz <= Math.floor((z + r) / CAMC); gz++){
       const k = gridKey(gx, gz); let a = CAMG.get(k); if (!a) CAMG.set(k, a = []); a.push(b); }
   }
   // the buildings of one 1 km map cell, as tall as buildChunk makes them at most (walls, roof and the rise of the ground)
   const BLD_WALL = {1:6, 3:2.6, 4:2.9, 5:3.1, 6:5.2, 7:2.3, 8:7.5, 11:7, 12:1.8, 13:2.6, 14:2.5, 15:1.2}, BLD_ROOF = {3:[0.22, 2], 5:[0.45, 6], 6:[0.4, 7], 7:[0.3, 2], 11:[0.6, 9]};
   function camBuildings(key){
-    if (CAMBLD.has(key)) return; CAMBLD.add(key); if (!BLD) return;
-    for (const i of BLD.cells.get(key) || []){
-      const x = BLD.x[i], z = BLD.z[i], l = BLD.l[i], w = BLD.w[i], ty = BLD.t[i], lv = BLD.lv[i], ca = Math.cos(BLD.a[i]), sa = Math.sin(BLD.a[i]);
+    if (!CAMBLD.has(key)){ CAMBLD.add(key); if (BLD) camBld(BLD, BLD.cells.get(key)); }
+    // a pack's: once its tile is decoded (a tile whose pack is on its way is looked at again)
+    const vk = 'v' + key; if (CAMBLD.has(vk)) return;
+    const T = MAPD.man ? MAPD.man.tile : 50, tx = Math.floor(gridKeyX(key) / T), ty = Math.floor(gridKeyY(key) / T), t = vecTile(tx, ty);
+    if (!t && vecHas(tx, ty)) return;
+    CAMBLD.add(vk); if (t && t.bld) camBld(t.bld, t.bld.cells.get(key), t.k);
+  }
+  function camBld(B, idx, tag){
+    for (const i of idx || []){
+      const x = B.x[i], z = B.z[i], l = B.l[i], w = B.w[i], ty = B.t[i], lv = B.lv[i], ca = Math.cos(B.a[i]), sa = Math.sin(B.a[i]);
       let lo = 1e9, hi = -1e9; for (const [u, v] of [[-0.5, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, 0.5]]){ const y = terrH(x + ca * u * l - sa * v * w, z + sa * u * l + ca * v * w); lo = Math.min(lo, y); hi = Math.max(hi, y); }
       const base = Math.max(lo, 0.3) - 0.5, rise = Math.max(0, hi - base);
       const hg = ty === 1 && lv ? 2.7 * lv + 0.6 : ty === 2 ? (lv || 3) * 3 : ty === 6 && lv ? 3 * lv : ty === 8 && lv ? 4 * lv : ty === 9 || ty === 10 ? (lv || 2) * 3.4 : ty === 0 && lv ? 2.8 * lv : BLD_WALL[ty] || 3.6;
       const flat = ty === 2 || ty === 8 || ty === 9 || ty === 12 || ty === 14 || ty === 15 || (ty === 10 && w >= 14), rp = BLD_ROOF[ty] || [0.38, 6];
-      camSolid(x, z, w + 0.8, l + 0.8, Math.PI / 2 - BLD.a[i], base, base + hg + rise + (flat ? 0.3 : Math.min(w * rp[0], rp[1]) + 0.3));
+      camSolid(x, z, w + 0.8, l + 0.8, Math.PI / 2 - B.a[i], base, base + hg + rise + (flat ? 0.3 : Math.min(w * rp[0], rp[1]) + 0.3), tag);
     }
   }
+  // what a tile of the coast's packs put in the camera's way goes with it
+  function camDropTag(tag){ for (const [k, a] of CAMG){ const b = a.filter(q => q.tag !== tag); if (b.length !== a.length){ if (b.length) CAMG.set(k, b); else CAMG.delete(k); } } }
   const slab = (p, d, lo, hi, r) => { if (Math.abs(d) < 1e-9) return p >= lo && p <= hi; let a = (lo - p) / d, b = (hi - p) / d; if (a > b){ const q = a; a = b; b = q; } if (a > r[0]) r[0] = a; if (b < r[1]) r[1] = b; return r[0] <= r[1]; };
   // how much of the way from o (the boat) to e (the eye) is clear: 1 when nothing is in the way. Boxes o is inside do not count.
   function camFree(o, e){
@@ -2834,7 +3044,7 @@ const G3 = (() => {
     gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL);
     // far pass
     pickLights(eye, t);
-    drawTerrain(TM, eye, VPf, false); drawLit(STAT, TM); drawBuildings(TM); drawUnits(eye, VPf, false, 15000); if (NPCM) for (const n of npcStates(H)){ const x = n.p.x * 1000, z = n.p.y * 1000, d = Math.hypot(x - eye[0], z - eye[2]); if (d < 30000 && !(n.fleet && d < 1500)) drawLit(NPCM[n.type], model(x - eye[0], (env.tide || 0) - eye[1], z - eye[2], -n.hd, 0, 0)); }
+    drawTerrain(TM, eye, VPf, false); drawLit(STAT, TM); drawTileStatics(TM, eye); drawBuildings(TM); drawUnits(eye, VPf, false, 15000); if (NPCM) for (const n of npcStates(H)){ const x = n.p.x * 1000, z = n.p.y * 1000, d = Math.hypot(x - eye[0], z - eye[2]); if (d < 30000 && !(n.fleet && d < 1500)) drawLit(NPCM[n.type], model(x - eye[0], (env.tide || 0) - eye[1], z - eye[2], -n.hd, 0, 0)); }
     drawSea(VPf, eye, t, 1);
     drawSeaLights(VPf, eye, t, false);
     if (env.night > 0.02){
@@ -2846,7 +3056,7 @@ const G3 = (() => {
     // near pass
     gl.clear(gl.DEPTH_BUFFER_BIT);
     const VT = vtype(), VG = GEO(VT), ncrew = Math.min(crewAboard().length, (VG.crewSpots || []).length);
-    drawTerrain(TM, eye, VPn, true); drawLit(STAT, TM); drawBuildings(TM);
+    drawTerrain(TM, eye, VPn, true); drawLit(STAT, TM); drawTileStatics(TM, eye); drawBuildings(TM);
     // whoever works the deck leaves their place: alone, the skipper leaves the wheel
     DECKACT = deckActivity(); const awaySk = (DECKACT.on && DECKACT.alone) || gopMe(), awayCr = DECKACT.on && !DECKACT.alone ? 1 : 0;
     // under way the crew are inside (the user: no reason for them to stand on deck all day, 03.10.2026); whoever guts is at the table
@@ -3064,6 +3274,6 @@ const G3 = (() => {
     // the cinema: on or off (the HUD is the page's: body.kino-clean)
     kino(on){ if (on !== undefined){ KINO.on = !!on; KINO.shot = null; } return KINO.on; }, get kinoShot(){ return KINO.shot ? KINO.shot.type : null; },
     isHelm:() => cam.helm, setHelm(on){ const G = GEO(vtype()); cam.helm = !!on; cam.hy = 0; cam.hp = G.hp !== undefined ? G.hp : -0.07; cam.fov = G.fov || 55; },
-    _debug:{get fps(){ return FPS.v; }, haulModel, get haulA(){ return HAULA; }, gopHands, kinoNext(){ KINO.shot = null; }, get kino(){ const k = KINO.shot, e = KINO.eye, g = KINO.tgt; if (!k || !e) return null; const t = (performance.now() - T0) / 1000; return {type:k.type, up:e[1] - Math.max(terrH(e[0], e[2]), seaH(e[0], e[2], t)), free:camFree(g, e), d:Math.hypot(e[0] - bv.x, e[2] - bv.z)}; }, get PLA(){ return PLA; }, get PCA(){ return PCA; }, set noPL(v){ NOPL = !!v; }, get beams(){ return BMN; }, glErr(){ return gl ? gl.getError() : -1; }, QUAL, qualTick, TERRW, get TERR(){ return TERR; }, get MIDM(){ return MIDM; }, RO, SSL, WV, WK, ssAt, seaH, waves:(dt, H) => updateWaves(dt, H), get sstVS(){ return SST_VS; }, set seaDbg(v){ SEADBG = v; }, get drift(){ let c = 0; for (let i = 0; i < SDN; i++) if (SD.age[i] < SD.life[i]) c++; return c; }, get eye(){ return lastEye; }, camInside, camFree, get camPull(){ return camPull; }, get camLift(){ return camLift; }, get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, BUNKERS, nearestPlant, fkRun, legAt, terrH, unitModel, get UPATCH(){ return UPATCH; }, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; SEAMARKS.lights.forEach((L, i) => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(i, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }}
+    _debug:{get fps(){ return FPS.v; }, cam, moundTop, bridgeInto, get statTris(){ return STAT ? STAT.n / 3 : 0; }, get vec(){ return {tiles:[...VEC.tiles.values()].map(t => ({k:t.k, bld:t.bld ? t.bld.n : 0, roads:t.roads.length, bridges:t.bridges.length, piers:t.piers.length, molos:t.molos.length, quays:t.quays.length, ms:Math.round(t.ms)})), statics:[...TST].map(([k, s]) => ({k, tris:s.tris, ms:Math.round(s.ms)})), chunks:CH.size}; }, moundInto, MB, haulModel, get haulA(){ return HAULA; }, gopHands, kinoNext(){ KINO.shot = null; }, get kino(){ const k = KINO.shot, e = KINO.eye, g = KINO.tgt; if (!k || !e) return null; const t = (performance.now() - T0) / 1000; return {type:k.type, up:e[1] - Math.max(terrH(e[0], e[2]), seaH(e[0], e[2], t)), free:camFree(g, e), d:Math.hypot(e[0] - bv.x, e[2] - bv.z)}; }, get PLA(){ return PLA; }, get PCA(){ return PCA; }, set noPL(v){ NOPL = !!v; }, get beams(){ return BMN; }, glErr(){ return gl ? gl.getError() : -1; }, QUAL, qualTick, TERRW, get TERR(){ return TERR; }, get MIDM(){ return MIDM; }, RO, SSL, WV, WK, ssAt, seaH, waves:(dt, H) => updateWaves(dt, H), get sstVS(){ return SST_VS; }, set seaDbg(v){ SEADBG = v; }, get drift(){ let c = 0; for (let i = 0; i < SDN; i++) if (SD.age[i] < SD.life[i]) c++; return c; }, get eye(){ return lastEye; }, camInside, camFree, get camPull(){ return camPull; }, get camLift(){ return camLift; }, get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, BUNKERS, nearestPlant, fkRun, legAt, terrH, unitModel, get UPATCH(){ return UPATCH; }, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; SEAMARKS.lights.forEach((L, i) => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(i, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }}
   };
 })();

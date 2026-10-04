@@ -4,7 +4,7 @@
 // minus its final newline, and included files may include others. In JS, a JSON value is written
 // /*@include(path)*/null so the source file still parses on its own; the whole placeholder is replaced.
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, copyFileSync, statSync, existsSync, rmSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
 import { createHash } from 'node:crypto';
@@ -14,7 +14,10 @@ const SRC = join(ROOT, 'src');
 // KYST_DIST: another output folder (to build and test while a test run still reads dist/)
 // KYST_PWA=1: the app for the home screen (P1 of the PWA plan, 03.10.2026) in dist-pwa/: the same page with a manifest, a service
 // worker (src/pwa/sw.js) and the icons, for GitHub Pages (.github/workflows/pwa.yml). The artifact (dist/) has none of them.
-const PWA = process.env.KYST_PWA === '1';
+// KYST_VEC: whether the coast's 'vec' packs (buildings, roads, bridges, piers and quays per tile, kart-5 on; 35 MB for the whole coast)
+// go with the map: in the app always, in the artifact only with KYST_VEC=1 (it has 256 MB a version, and the map is near that), where
+// Senja's embedded buildings and roads stand alone as before
+const PWA = process.env.KYST_PWA === '1', VECP = PWA || process.env.KYST_VEC === '1';
 const DIST = process.env.KYST_DIST || join(ROOT, PWA ? 'dist-pwa' : 'dist'), OUT = join(DIST, 'index.html');
 
 function expand(file, stack = []){
@@ -46,7 +49,7 @@ if (PWA){
   page = page.slice(0, h) + head + page.slice(h, b) + reg + page.slice(b);
 }
 writeFileSync(OUT, page);
-console.log(`${PWA ? 'dist-pwa' : 'dist'}/index.html: ${(Buffer.byteLength(page) / 1e6).toFixed(2)} MB`);
+console.log(`${basename(DIST)}/index.html: ${(Buffer.byteLength(page) / 1e6).toFixed(2)} MB`);
 // the map's rasters in packs of 10 km blocks, made by the map pipeline (tools/map/region.py, phase K5 of the coast plan) into
 // src/data/map/ and fetched by the page from map/. The whole coast (tools/map/game.py: src/data/map with a release's tiles) is taken
 // from tools/map/out/game/ when it is there, or from KYST_MAP
@@ -54,9 +57,11 @@ const GAMEMAP = join(ROOT, 'tools', 'map', 'out', 'game');
 const MAPSRC = process.env.KYST_MAP || (existsSync(join(GAMEMAP, 'manifest.json')) ? GAMEMAP : join(SRC, 'data', 'map')), MAPOUT = join(DIST, 'map');
 if (existsSync(MAPOUT)) rmSync(MAPOUT, {recursive:true});
 mkdirSync(MAPOUT, {recursive:true});
-let mapBytes = 0; const mapFiles = readdirSync(MAPSRC).filter(f => f === 'manifest.json' || f.endsWith('.wasm'));
-for (const f of mapFiles){ copyFileSync(join(MAPSRC, f), join(MAPOUT, f)); if (f.endsWith('.wasm')) mapBytes += statSync(join(MAPSRC, f)).size; }
-console.log(`${PWA ? 'dist-pwa' : 'dist'}/map/: ${mapFiles.length - 1} packs, ${(mapBytes / 1e6).toFixed(2)} MB (${MAPSRC === GAMEMAP ? 'the whole coast, tools/map/out/game' : MAPSRC})`);
+let mapBytes = 0; const mapFiles = readdirSync(MAPSRC).filter(f => f.endsWith('.wasm') && (VECP || !f.startsWith('vec-')));
+for (const f of mapFiles){ copyFileSync(join(MAPSRC, f), join(MAPOUT, f)); mapBytes += statSync(join(MAPSRC, f)).size; }
+const mapMan = JSON.parse(readFileSync(join(MAPSRC, 'manifest.json'), 'utf8')); if (!VECP) mapMan.packs = mapMan.packs.filter(p => p.kind !== 'vec');
+writeFileSync(join(MAPOUT, 'manifest.json'), JSON.stringify(mapMan)); mapFiles.push('manifest.json');
+console.log(`${basename(DIST)}/map/: ${mapFiles.length - 1} packs, ${(mapBytes / 1e6).toFixed(2)} MB (${MAPSRC === GAMEMAP ? 'the whole coast, tools/map/out/game' : MAPSRC})`);
 // the app's own files: the manifest, the icons, and the service worker with the build's version (the page and the map's manifest)
 if (PWA){
   const P = join(SRC, 'pwa'), ver = createHash('sha256').update(page).update(readFileSync(join(MAPOUT, 'manifest.json'))).digest('hex').slice(0, 12);

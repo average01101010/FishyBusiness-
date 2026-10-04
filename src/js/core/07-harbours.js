@@ -39,20 +39,8 @@ function quayFace(pid, kind){
 }
 const PIERBOX = (() => {
   const out = [];
-  for (const pr of PIERS){
-    const bw = pr[0] === 1, n = (pr.length - 1) / 2, X = k => pr[1 + k * 2] * 1000, Z = k => pr[2 + k * 2] * 1000;
-    const closed = n > 3 && Math.hypot(X(0) - X(n - 1), Z(0) - Z(n - 1)) < 1;
-    if (closed && !bw){
-      let cx = 0, cz = 0; for (let k = 0; k < n - 1; k++){ cx += X(k); cz += Z(k); } cx /= n - 1; cz /= n - 1;
-      let sxx = 0, szz = 0, sxz = 0; for (let k = 0; k < n - 1; k++){ const a = X(k) - cx, b = Z(k) - cz; sxx += a * a; szz += b * b; sxz += a * b; }
-      const th = 0.5 * Math.atan2(2 * sxz, sxx - szz), ux = Math.cos(th), uz = Math.sin(th); let l0 = 1e9, l1 = -1e9, w0 = 1e9, w1 = -1e9;
-      for (let k = 0; k < n - 1; k++){ const a = X(k) - cx, b = Z(k) - cz, pu = a * ux + b * uz, pv = -a * uz + b * ux; l0 = Math.min(l0, pu); l1 = Math.max(l1, pu); w0 = Math.min(w0, pv); w1 = Math.max(w1, pv); }
-      out.push({x:cx + ux * (l0 + l1) / 2 - uz * (w0 + w1) / 2, z:cz + uz * (l0 + l1) / 2 + ux * (w0 + w1) / 2, w:Math.max(3, w1 - w0), l:Math.max(3, l1 - l0), ang:Math.atan2(ux, uz), bw:false, closed:true});
-    } else for (let k = 0; k < n - 1; k++){
-      const ax = X(k), az = Z(k), bx = X(k + 1), bz = Z(k + 1), L = Math.hypot(bx - ax, bz - az); if (L < 0.5) continue;
-      out.push({x:(ax + bx) / 2, z:(az + bz) / 2, w:bw ? 9 : 4.2, l:L + (bw ? 4 : 1), ang:Math.atan2(bx - ax, bz - az), bw, closed:false});
-    }
-  }
+  // OpenStreetMap's piers and breakwaters (01c-vec.js pierBoxes, as the coast's packs have them)
+  PIERS.forEach((pr, i) => pierBoxes(out, pr[0], (pr.length - 1) / 2, k => pr[1 + k * 2] * 1000, k => pr[2 + k * 2] * 1000, i));
   // the quay decks behind the faces in QUAYS; the shoreline behind them is not always straight, so the deck fills the gap
   for (const pid in QUAYS) for (const kind in QUAYS[pid]){ if (UNITS[pid]) continue; const f = quayFace(pid, kind); out.push({x:f.x - f.nx * f.depth / 2, z:f.z - f.nz * f.depth / 2, w:f.depth, l:f.hl * 2, ang:Math.atan2(f.ux, f.uz), bw:false, closed:false, made:true, quay:pid + '|' + kind}); }
   // where a harbour unit stands, the mapped piers on its ground and in its basin go (the unit is its own quay)
@@ -70,6 +58,49 @@ const PIERBOX = (() => {
   }
   return out;
 })();
+// ===== the NPC boats' berths at the quays of the map data (part 4 of the coast-wide plan; the user's wish 03.10.2026: the quays made
+// from the map data are where the NPC boats lie, and a quay's size decides how big a boat can come in) =====
+// The faces are the coast's packs' (01c-vec.js quays, Senja's too). A face takes a boat when 90 % of its length is her length and 2 m,
+// and the water off it is her draught and half a metre; where the 50 m depth does not know the water off a face it counts as 3 m (a
+// guess). The faces by a harbour point (where the player lies) and at a harbour unit are left to the player. A harbour's boats are
+// given their places together, in their order, the nearest face that has room first, so a boat keeps her place while the same tiles
+// are in; none (null) where no face near has room, and the boat lies as before (berthSlot).
+const QUAY_DEPTH_UNKNOWN = 3;
+const quayFit = (f, L, T) => f.hl * 2 * 0.9 >= L + 2 && (f.depth == null ? QUAY_DEPTH_UNKNOWN : f.depth) >= T + 0.5;
+function quayFree(f){
+  if (f.free !== undefined) return f.free;
+  for (const pt of PORTS){
+    const px = pt.p.x * 1000, pz = pt.p.y * 1000; if (Math.abs(px - f.x) > f.hl + 60 || Math.abs(pz - f.z) > f.hl + 60) continue;
+    const a = clamp((px - f.x) * f.ux + (pz - f.z) * f.uz, -f.hl, f.hl); if (Math.hypot(f.x + f.ux * a - px, f.z + f.uz * a - pz) < 35) return f.free = false;
+  }
+  for (const U of UNITA){ const [lx, lz] = unitL(U, f.x, f.z); if (Math.abs(lx) < UNIT.E + 40 && lz > -UNIT.B - 15 && lz < UNIT.basinZ + 25) return f.free = false; }
+  return f.free = true;
+}
+const NPCB = new Map();
+// boats [{key, L, B, T}] of a harbour (group) round p (km), within R km: {key: {p (km), hd, face}} for those that got a place
+function npcBerths(group, p, boats, R = 0.6){
+  const c = NPCB.get(group); if (c && c.ver === VEC.ver) return c.v;
+  const x = p.x * 1000, z = p.y * 1000, Rm = R * 1000, faces = [];
+  for (const t of vecTilesIn(x - Rm, z - Rm, x + Rm, z + Rm)) for (const f of t.quays){
+    const a = clamp((x - f.x) * f.ux + (z - f.z) * f.uz, -f.hl, f.hl), d = Math.hypot(f.x + f.ux * a - x, f.z + f.uz * a - z);
+    if (d <= Rm && quayFree(f)) faces.push([d, f]);
+  }
+  faces.sort((a, b) => a[0] - b[0] || (a[1].id < b[1].id ? -1 : 1));
+  const used = new Map(), v = {};
+  for (const b of boats){
+    for (const [, f] of faces){
+      if (!quayFit(f, b.L, b.T)) continue;
+      const u = used.get(f.id) || [], lim = f.hl - b.L / 2 - 1; let at = null;
+      for (let s = 0; s <= lim * 2 && at === null; s += 2) for (const a of s ? [s / 2, -s / 2] : [0]){ if (Math.abs(a) > lim || u.some(([a0, a1]) => a + b.L / 2 + 1 > a0 && a - b.L / 2 - 1 < a1)) continue; at = a; break; }
+      if (at === null) continue;
+      u.push([at - b.L / 2 - 1, at + b.L / 2 + 1]); used.set(f.id, u);
+      const off = b.B / 2 + 0.4, cx = f.x + f.ux * at + f.nx * off, cz = f.z + f.uz * at + f.nz * off, flip = hash(hashStr(b.key)) < 0.5;
+      v[b.key] = {p:{x:cx / 1000, y:cz / 1000}, hd:Math.atan2(f.ux, -f.uz) + (flip ? Math.PI : 0), face:f.id};
+      break;
+    }
+  }
+  NPCB.set(group, {ver:VEC.ver, v}); return v;
+}
 // The way in: waypoints from open water to the harbour point, outermost first. Found breadth-first through the water cells of the
 // chart (no cutting across the corner of a land cell), then straightened wherever the line is clear. A harbour behind a breakwater,
 // like Husøy, needs more than one.

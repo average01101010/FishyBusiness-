@@ -243,8 +243,10 @@ function renderStatic(){
   }
   // what is inside the view (with a margin)
   const vr = svg.getBoundingClientRect(), vhh = MAP_H / view.z / 2 + 0.5, vww = vhh * (vr.width / (vr.height || 1)) + 0.5, vx0 = view.cx - vww, vx1 = view.cx + vww, vy0 = view.cy - vhh, vy1 = view.cy + vhh, inV = (x, y) => x > vx0 && x < vx1 && y > vy0 && y < vy1;
-  if (ROADS && view.z > 3){ const d = []; for (const r of ROADS){ if (r.c > 3 && view.z < 6) continue; if (r.bb[2] / 1000 < vx0 || r.bb[0] / 1000 > vx1 || r.bb[3] / 1000 < vy0 || r.bb[1] / 1000 > vy1) continue; d.push('M' + Array.from(r.xs, (x, j) => (x / 1000).toFixed(3) + ',' + (r.zs[j] / 1000).toFixed(3)).join('L')); } if (d.length) g.push('<path d="' + d.join('') + '" class="road" stroke-width="' + (1.1 * u) + '"/>'); }
-  if (view.z > 2.5) for (const br of BRIDGES){ const n = (br.length - 4) / 2; let d = ''; for (let k = 0; k < n; k++) d += (k ? 'L' : 'M') + (br[4 + k * 2] / 1000).toFixed(3) + ',' + (br[5 + k * 2] / 1000).toFixed(3); g.push('<path d="' + d + '" class="bridge" stroke-width="' + (2.6 * u) + '"/>'); }
+  // roads and bridges: Senja's and those of the coast's packs (01c-vec.js), asked for when the view is near enough to show them
+  if (view.z > 2.5){ vecWant(vx0, vy0, vx1, vy1, () => scheduleStatic()); vecPrune([{x:view.cx, y:view.cy}, S.boat.pos]); }
+  if (view.z > 3){ const d = []; for (const r of roadsIn(vx0 * 1000, vy0 * 1000, vx1 * 1000, vy1 * 1000)){ if (r.c > 3 && view.z < 6) continue; d.push('M' + Array.from(r.xs, (x, j) => (x / 1000).toFixed(3) + ',' + (r.zs[j] / 1000).toFixed(3)).join('L')); } if (d.length) g.push('<path d="' + d.join('') + '" class="road" stroke-width="' + (1.1 * u) + '"/>'); }
+  if (view.z > 2.5) for (const br of BRIDGES.concat(bridgesIn(vx0 * 1000, vy0 * 1000, vx1 * 1000, vy1 * 1000))){ const n = (br.length - 4) / 2; let d = ''; for (let k = 0; k < n; k++) d += (k ? 'L' : 'M') + (br[4 + k * 2] / 1000).toFixed(3) + ',' + (br[5 + k * 2] / 1000).toFixed(3); g.push('<path d="' + d + '" class="bridge" stroke-width="' + (2.6 * u) + '"/>'); }
   if (view.z > 5){ const pr = []; for (const q of rocksIn(vx0, vy0, vx1, vy1)) if (inV(q[0], q[1])) pr.push('M' + (q[0] - 2.2 * u).toFixed(3) + ',' + q[1].toFixed(3) + 'h' + (4.4 * u).toFixed(3) + 'M' + q[0].toFixed(3) + ',' + (q[1] - 2.2 * u).toFixed(3) + 'v' + (4.4 * u).toFixed(3)); if (pr.length) g.push('<path d="' + pr.join('') + '" class="rock" stroke-width="' + (1 * u) + '"/>'); }
   if (view.z > 3.5) for (const mk of SEAMARKS.marks){ if (!inV(mk[0], mk[1]) || mk[2] === 'M' || mk[2] === 'm') continue; const c = mk[2] === 'L' || mk[2] === 'B' ? (mk[3] === 'starb' ? '#1f8a3c' : '#c8231c') : mk[2] === 'C' || mk[2] === 'S' ? '#d6a800' : '#333'; g.push('<circle cx="' + mk[0] + '" cy="' + mk[1] + '" r="' + (2 * u) + '" fill="' + c + '" stroke="#fff" stroke-width="' + (0.6 * u) + '"/>'); }
   if (view.z > 2) for (const L of SEAMARKS.lights){ if (!inV(L[0], L[1])) continue; const s0 = (L[6] === 'M' ? 9 : 6.5) * u; g.push('<path d="M' + L[0] + ',' + L[1] + 'q' + (s0 * 0.35) + ',' + (-s0 * 0.5) + ' ' + (s0 * 0.12) + ',' + (-s0) + 'q' + (-s0 * 0.5) + ',' + (s0 * 0.3) + ' ' + (-s0 * 0.12) + ',' + s0 + 'z" class="lightsym"/><circle cx="' + L[0] + '" cy="' + L[1] + '" r="' + (1.3 * u) + '" class="lightdot" stroke-width="' + (0.8 * u) + '"/>'); }
@@ -263,6 +265,8 @@ function renderStatic(){
   gStatic.innerHTML = g.join('');
 }
 let staticQueued = false;
+// a tile of the coast's packs decoded (01c-vec.js): its roads and bridges are drawn when the chart is near enough to show them
+VEC.came.push(() => { if (view.z > 2.5) scheduleStatic(); });
 function scheduleStatic(){ if (staticQueued) return; staticQueued = true; requestAnimationFrame(() => { staticQueued = false; renderStatic(); renderDyn(); }); }
 
 let AISNOW = [], AISSEL = null;

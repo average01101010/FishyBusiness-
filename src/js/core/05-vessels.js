@@ -40,7 +40,17 @@ function berthShift(p, key, big){
   let best = null, bd = 0.15; for (const q of PORTS){ const d = dist(p, q.p); if (d < bd){ bd = d; best = q; } }
   if (!best) return p; const f = 1 - bd / 0.15, o = berthSlot(best, key, big); return {x:p.x + o.x * f, y:p.y + o.y * f};
 }
-function fleetState(i, H){ const s = fleetState0(i, H); s.p = berthShift(s.p, 'f' + i, false); return s; }
+// at home the boat lies at a quay face of the map data that fits her (npcBerths, 07-harbours.js), and goes from there to the way out
+// over its first 450 m (and back); without one, off the harbour point as before (berthShift)
+function fleetState(i, H){
+  const s = fleetState0(i, H), f = FLEET[i], home = {x:f.hp[0], y:f.hp[1]};
+  const mates = f.mates || (f.mates = FLEET.map((g, j) => ({key:'f' + j, L:g.L, B:g.B, T:g.T, home:g.home})).filter(g => g.home === f.home));
+  const bp = npcBerths('fleet:' + f.home, home, mates)['f' + i];
+  if (!bp){ s.p = berthShift(s.p, 'f' + i, false); return s; }
+  if (s.st === 'port') return {p:bp.p, hd:bp.hd, st:'port', berth:bp.face};
+  const d = dist(s.p, home); if (d < 0.45 && (s.st === 'out' || s.st === 'in')){ const u = d / 0.45; s.p = {x:bp.p.x + (s.p.x - bp.p.x) * u, y:bp.p.y + (s.p.y - bp.p.y) * u}; }
+  return s;
+}
 function fleetState0(i, H){
   const f = FLEET[i], big = f.L >= 14, g = gDate(H), hod = g.getUTCHours() + g.getUTCMinutes() / 60 + g.getUTCSeconds() / 3600;
   const dep = 4.5 + hash(i * 13 + 5) * 2.5, e = ((hod - dep) % 24 + 24) % 24, day0 = H - e, dI = Math.floor((day0 + 6) / 24);
