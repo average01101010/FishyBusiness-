@@ -118,6 +118,8 @@ function coastSegHit(a, b){
 function coastAt(p){ const I = coastIndexAt(p); if (!I) return -1; const L = COAST.last; return coastQuery(I, p.x * 1000 - L.ox, p.y * 1000 - L.oy); }
 // the same where the tile's index is in, else -1 without asking for it (the 3D view's far ground reads 100 km round)
 function coastAtIf(p){ const I = coastIndexAt(p, false); if (!I) return -1; const L = COAST.last; return coastQuery(I, p.x * 1000 - L.ox, p.y * 1000 - L.oy); }
+// the signed distance (m, + on land) to the fine coast at p within cap, where the tile's index is in, else NaN without asking
+function coastSdIf(p, cap){ const I = coastIndexAt(p, false); if (!I) return NaN; const L = COAST.last, x = p.x * 1000 - L.ox, y = p.y * 1000 - L.oy, d = coastDistQ(I, x, y, cap); return coastQuery(I, x, y) ? d : -d; }
 // metres to the fine coast at p, capped at cap (100 m reaches; more is cap); -1 where the tile has no fine coast
 function coastDistM(p, cap){ const I = coastIndexAt(p); if (!I) return -1; const L = COAST.last; return coastDistQ(I, p.x * 1000 - L.ox, p.y * 1000 - L.oy, cap || 100); }
 // a chart pack loaded and its coast indexed (once); the promise is kept on the pack

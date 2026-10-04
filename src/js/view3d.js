@@ -5,7 +5,7 @@ const G3 = (() => {
   let gl = null, ready = false, failed = false, active = false, raf = 0, lastF = 0;
   let PL, PS, PSF, PK, PP, SST_VS = false, SSDUMMY = null, SEADBG = false;
   let TERR, STAT, BOATM, CAPM, RODM, FLAGM, SKYQ, PATCH, FARQ, DYNP, DYNA;
-  let HG = null, NEARM = null, MIDM = null, loading = false, LIGHTS = [], snowNow = -1;
+  let HG = null, NEARM = null, MIDM = null, FINEM = null, loading = false, LIGHTS = [], snowNow = -1;
   // Quality (phase K8 of the coast plan): 0 low, 1 medium, 2 high. 'auto' (the setting S.settings.q3d) steps down a level when the
   // frames have been slower than 28 a second for 4 s, and up when faster than 50 for 12 s, but not back up to a level it left within
   // the last two minutes. «#qfix» in the address (the tests) keeps it at high. Per level: the drawing's pixels (dpr), the near
@@ -188,8 +188,10 @@ const G3 = (() => {
     'if(uDbg>0.5){gl_FragColor=vec4(vec3(clamp(foam,0.0,1.0)),1.0);return;}' +
     'col=mix(col,fc,clamp(foam,0.0,1.0)*0.85);float fg=1.0-exp(-uFogD*uFogD*d*d);gl_FragColor=vec4(mix(col,uFog,fg),1.0);}';
   const TER_FS = '#extension GL_OES_standard_derivatives : enable\nprecision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform vec4 uHole;' +
-    'uniform sampler2D uGround;uniform sampler2D uLand;uniform vec4 uGRect;uniform float uGOn;uniform float uLOn;uniform vec3 uSand;varying vec3 vW;varying vec3 vC;varying vec3 vN;varying vec3 vP;varying float vS;' + NOISE + PLG +
-    'void main(){if(vW.x>uHole.x&&vW.x<uHole.z&&vW.z>uHole.y&&vW.z<uHole.w)discard;vec2 wp=mod(vP.xz,4096.0);float d=length(vW);float det=1.0-smoothstep(900.0,5000.0,d);' +
+    'uniform sampler2D uGround;uniform sampler2D uLand;uniform vec4 uGRect;uniform float uGOn;uniform float uLOn;uniform float uTideY;uniform vec3 uSand;varying vec3 vW;varying vec3 vC;varying vec3 vN;varying vec3 vP;varying float vS;' + NOISE + PLG +
+    // the ground above the water where the land mask says sea is cut, so the waterline is the vector coast's (buildLandMask)
+    'void main(){if(vW.x>uHole.x&&vW.x<uHole.z&&vW.z>uHole.y&&vW.z<uHole.w)discard;vec2 luv=(vW.xz-uGRect.xy)*uGRect.zw;' +
+    'if(uLOn>0.5&&vP.y>uTideY+0.02&&luv.x>0.0&&luv.y>0.0&&luv.x<1.0&&luv.y<1.0&&texture2D(uLand,luv).r<0.5)discard;vec2 wp=mod(vP.xz,4096.0);float d=length(vW);float det=1.0-smoothstep(900.0,5000.0,d);' +
     'float b1=ns(wp*0.045)-0.5;float b2=ns(wp.yx*0.045+13.0)-0.5;float b3=ns(wp*0.011+5.0)-0.5;vec3 n=normalize(vN);float st=1.0-n.y;' +
     'n=normalize(n+vec3(b1*0.5+b3,0.0,b2*0.5-b3*0.6)*(0.2+st*0.7)*det);vec3 c=vC*(0.92+0.16*ns(wp*0.018+2.0));float h=vP.y;vec2 uv=(vW.xz-uGRect.xy)*uGRect.zw;float ins=step(0.0,uv.x)*step(0.0,uv.y)*step(uv.x,1.0)*step(uv.y,1.0);float ef=smoothstep(0.0,0.06,min(min(uv.x,uv.y),min(1.0-uv.x,1.0-uv.y)));' +
     'float sand=(1.0-smoothstep(1.0,3.6,h+b1*1.6))*step(0.05,h);c=mix(c,uSand,sand*0.8);' +
@@ -283,6 +285,7 @@ const G3 = (() => {
   const SNOWLINE = [0,0,0,150,350,650,900,1000,850,450,120,0];
   // real ground height (m) at world x/z (m); sea floor is shaped from shore distance and exposure; where a harbour unit stands, its
   // ground (unitTerr)
+  const COAST3 = {top:1.7};
   function terrRaw(x, z){
     if (x < MAPB.x0 * 1000 || z < MAPB.y0 * 1000 || x > MAPB.x1 * 1000 || z > MAPB.y1 * 1000) return -40;
     // the tiles' ground (25 m) where they have it and it is in; else the far heights (200 m, phase K8) held to the national core's
@@ -291,6 +294,12 @@ const G3 = (() => {
     let h;
     h = HG ? tileH(MAPD.L.hgt, 'view', x, z) : NaN;
     if (h !== h){ const m = rbilM(MAPD.L.land200, x, z); h = HG ? tileH(MAPD.L.far, 'far', x, z) : NaN; if (h !== h) h = m >= 0.5 ? 2 : -4; h = m >= 0.5 ? Math.max(h, 0.3 + (m - 0.5) * 6) : Math.min(h, -0.5 - (0.5 - m) * 8); }
+    // the fine coast (01d-coast.js, where its tile is indexed: round the camera) decides where the ground meets the sea: the ground
+    // rises 1 in 1 from the coast's line to COAST3.top on its land side and falls the same on its sea side, so between two points of a
+    // mesh the waterline lies on the coast's line, not on the grid (a breakwater 8 m wide came out as steps); no ground of the 25 m mask
+    // the heights were made from stands in water the chart shows. The terrain shader cuts the rest at the line (buildLandMask).
+    const sd = coastSdIf({x:x / 1000, y:z / 1000}, COAST3.top + 1);
+    if (sd === sd) h = sd >= 0 ? Math.max(h, Math.min(COAST3.top, sd)) : Math.min(h, -Math.min(COAST3.top, -sd));
     return h > -3 && harbourNear(x, z) && inHarbourPocket({x:x / 1000, y:z / 1000}) ? -3 : h;   // the water in front of a quay (01-world.js)
   }
   // a height layer (the tiles' ground 'view', the far heights 'far') at x, z (m) between the four nearest cells, or NaN where a cell is
@@ -454,6 +463,8 @@ const G3 = (() => {
       mapLoad(pk).then(() => { pk.want3d = false; if (kind === 'vec') vecTile(pk.tile[0], pk.tile[1]); else staleOver(pk); }, e => { pk.want3d = false; console.error(e); });
     }
     for (const pk of mapPacksIn('vec', x - V, z - V, x + V, z + V)) if (pk.buf) vecTile(pk.tile[0], pk.tile[1]);
+    // the fine coast round the camera (01d-coast.js): the ground meets the sea at its line, and the land mask is drawn from it
+    for (const pk of mapPacksIn('chart', x - V, z - V, x + V, z + V)){ if (pk.coast || pk.want3d) continue; pk.want3d = true; coastEnsure(pk).then(() => { pk.want3d = false; staleOver(pk); }, e => { pk.want3d = false; console.error(e); }); }
     vecPrune([{x, y:z}, {x:lastEye[0] / 1000, y:lastEye[2] / 1000}]);
     tileStatics();
   }
@@ -516,10 +527,10 @@ const G3 = (() => {
     MJOB = null; J.done(meshEnd(J.B), J.dirty);
   }
   // a pack has come: the meshes over its tile are built again (one being built over it goes again when it is done)
-  function staleMesh(kind){ const m = kind === 'near' ? NEARM : kind === 'mid' ? MIDM : TERR; if (m) m.stale = true; if (MJOB && MJOB.kind === kind) MJOB.dirty = true; }
+  function staleMesh(kind){ const m = kind === 'near' ? NEARM : kind === 'fine' ? FINEM : kind === 'mid' ? MIDM : TERR; if (m) m.stale = true; if (MJOB && MJOB.kind === kind) MJOB.dirty = true; }
   function staleOver(pk){
     const T = MAPD.man.tile * 1000, x0 = pk.tile[0] * T, z0 = pk.tile[1] * T;
-    for (const [m, kind] of [[NEARM, 'near'], [MIDM, 'mid'], [TERR, 'far']]){
+    for (const [m, kind] of [[NEARM, 'near'], [FINEM, 'fine'], [MIDM, 'mid'], [TERR, 'far']]){
       if (MJOB && MJOB.kind === kind){ const B = MJOB.B; if (B.x0 < x0 + T && B.x0 + B.sx > x0 && B.z0 < z0 + T && B.z0 + B.sz > z0) MJOB.dirty = true; }
       if (m && m.x0 < x0 + T && m.x0 + m.sx > x0 && m.z0 < z0 + T && m.z0 + m.sz > z0) m.stale = true;
     }
@@ -554,7 +565,7 @@ const G3 = (() => {
     // the sun's direction in steps of 0.03 (it moved 0.01 every 20 s of play at 6x time, and each step started all the meshes again)
     const d = QUAL.lvl ? env.shadowDir : null, key = d ? d.map(v => (Math.round(v / 0.03) * 0.03).toFixed(2)).join(',') : 'flat';   // no shadows on low quality
     const until = performance.now() + SHMS[QUAL.lvl];
-    for (const m of [NEARM, ...UPATCH, MIDM, TERR]){
+    for (const m of [NEARM, FINEM, ...UPATCH, MIDM, TERR]){
       if (!m) continue;
       if (m.shKey !== key && !m.shJob && performance.now() - shT > 1500){ m.shJob = {i:0, key, d}; shT = performance.now(); }
       if (!m.shJob) continue;
@@ -585,12 +596,22 @@ const G3 = (() => {
     meshTask('mid', MIDM, cx - span / 2, cz - span / 2, span, 256, null, (M, dirty) => { const old = MIDM; MIDM = M; MIDM.cx = cx; MIDM.cz = cz; MIDM.stale = dirty; shSeed(MIDM, old); if (old) freeMesh(old); });
   }
   function updateNear(){
-    stream3d(); nearWanted(); updateMid(); updateFar(); meshStep(); tileStep();   // the near mesh first when more than one is due
+    stream3d(); nearWanted(); fineWanted(); updateMid(); updateFar(); meshStep(); tileStep();   // the near mesh first when more than one is due
   }
   function nearWanted(){
     const span = QUAL.near[QUAL.lvl][cam.dist > 1200 ? 1 : 0], snap = span / 10, cx = Math.round(bv.x / snap) * snap, cz = Math.round(bv.z / snap) * snap;
     if (NEARM && !NEARM.stale && NEARM.sx === span && Math.abs(cx - NEARM.cx) < span / 5 && Math.abs(cz - NEARM.cz) < span / 5) return;
     meshTask('near', NEARM && NEARM.sx === span ? NEARM : null, cx - span / 2, cz - span / 2, span, 256, terrCoarse, (M, dirty) => { const old = NEARM; NEARM = M; NEARM.cx = cx; NEARM.cz = cz; NEARM.stale = dirty; shSeed(NEARM, old); if (old) freeMesh(old); buildPatches(); buildGround(); });
+  }
+  // The fine ground round the boat (04.10.2026, the user: the 3D world is to follow the vector coast, so breakwaters, harbours and quays
+  // come out right): about 4 m between the points over a kilometre, where the near mesh has 12-47 m, so a breakwater 8 m wide or a skerry
+  // gets its shape from the fine coast (terrRaw); the near mesh has a hole under it. Built like the others, a few rows a frame.
+  const FINEW = {span:[768, 1024, 1024], n:[192, 256, 256]};
+  function fineWanted(){
+    if (!NEARM) return;
+    const span = FINEW.span[QUAL.lvl], n = FINEW.n[QUAL.lvl], snap = span / 8, cx = Math.round(bv.x / snap) * snap, cz = Math.round(bv.z / snap) * snap;
+    if (FINEM && !FINEM.stale && FINEM.sx === span && Math.abs(cx - FINEM.cx) < span / 5 && Math.abs(cz - FINEM.cz) < span / 5) return;
+    meshTask('fine', FINEM && FINEM.sx === span ? FINEM : null, cx - span / 2, cz - span / 2, span, n, terrCoarse, (M, dirty) => { const old = FINEM; FINEM = M; FINEM.cx = cx; FINEM.cz = cz; FINEM.stale = dirty; shSeed(FINEM, old); if (old) freeMesh(old); if (snowNow >= 0) recolor(FINEM, snowNow); });
   }
   function recolor(m, snow){
     const {slope, nz, col, h, fo} = m;
@@ -2364,7 +2385,7 @@ const G3 = (() => {
     if (mlight > 0.02){ const ml = [0.62, 0.7, 0.9].map(v => v * mlight * 0.32); env.sunCol = env.sunCol.map((v, k) => v + ml[k]); env.amb = env.amb.map((v, k) => v + [0.02, 0.025, 0.04][k] * mlight); const my = Math.max(env.moonDir[1], 0.25), mll = Math.hypot(env.moonDir[0], my, env.moonDir[2]); env.lightDir = [env.moonDir[0] / mll, my / mll, env.moonDir[2] / mll]; }
     env.shadowDir = el > -1 ? env.sunDir : mlight > 0.02 ? env.moonDir : null;
     env.tide = tideH(H);
-    const sn = Math.round(seasonal(SNOWLINE, H) / 20) * 20; if (sn !== snowNow){ snowNow = sn; recolor(TERR, sn); if (NEARM) recolor(NEARM, sn); for (const m of UPATCH) recolor(m, sn); }
+    const sn = Math.round(seasonal(SNOWLINE, H) / 20) * 20; if (sn !== snowNow){ snowNow = sn; recolor(TERR, sn); if (NEARM) recolor(NEARM, sn); if (FINEM) recolor(FINEM, sn); for (const m of UPATCH) recolor(m, sn); }
   }
 
 
@@ -2588,7 +2609,7 @@ const G3 = (() => {
     gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uSun, env.lightDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb); gl.uniform3fv(u.uGnd, env.gnd); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD);
     gl.uniform3fv(u.uSand, snowNow < 5 ? [0.84, 0.86, 0.88] : [0.74, 0.71, 0.6]); gl.uniformMatrix4fv(u.uM, false, TM);
     const one = (m, hole, ground) => {
-      gl.uniformMatrix4fv(u.uM, false, relM(m)); gl.uniform3fv(u.uPO, [m.o[0] - RO.x, 0, m.o[1] - RO.z]); gl.uniform4fv(u.uHole, hole || NOHOLE); gl.uniform1f(u.uGOn, ground && GTEX ? 1 : 0); gl.uniform1f(u.uLOn, ground && LMTEX ? 1 : 0);
+      gl.uniformMatrix4fv(u.uM, false, relM(m)); gl.uniform3fv(u.uPO, [m.o[0] - RO.x, 0, m.o[1] - RO.z]); gl.uniform4fv(u.uHole, hole || NOHOLE); gl.uniform1f(u.uGOn, ground && GTEX ? 1 : 0); gl.uniform1f(u.uLOn, ground && LMTEX && LMON ? 1 : 0); gl.uniform1f(u.uTideY, env.tide || 0);
       if (ground && LMTEX){ gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, LMTEX); gl.uniform1i(u.uLand, 2); gl.activeTexture(gl.TEXTURE0); }
       if (GRECT) gl.uniform4fv(u.uGRect, [GRECT[0] - eye[0], GRECT[1] - eye[2], GRECT[2], GRECT[3]]);
       if (ground && GTEX){ gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, GTEX); gl.uniform1i(u.uGround, 0); gl.uniform4fv(u.uGRect, [GRECT[0] - eye[0], GRECT[1] - eye[2], GRECT[2], GRECT[3]]); }
@@ -2596,7 +2617,7 @@ const G3 = (() => {
     };
     const holeOf = (M, g) => new Float32Array([M.x0 + g - eye[0], M.z0 + g - eye[2], M.x0 + M.sx - g - eye[0], M.z0 + M.sz - g - eye[2]]);
     if (!NEARM) one(TERR);
-    else if (near){ one(NEARM, null, true); if (UPATCH.length){ gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(-1, -2); for (const m of UPATCH) one(m, null, true); gl.disable(gl.POLYGON_OFFSET_FILL); } }
+    else if (near){ one(NEARM, FINEM ? holeOf(FINEM, 6) : null, true); if (FINEM){ gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(-1, -1); one(FINEM, null, true); gl.disable(gl.POLYGON_OFFSET_FILL); } if (UPATCH.length){ gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(-1, -2); for (const m of UPATCH) one(m, null, true); gl.disable(gl.POLYGON_OFFSET_FILL); } }
     else if (!MIDM) one(TERR, holeOf(NEARM, 45));
     else { one(TERR, holeOf(MIDM, 180)); one(MIDM, holeOf(NEARM, 45)); }
     gl.disableVertexAttribArray(2); gl.disableVertexAttribArray(3); litSetup(VP);
@@ -2622,13 +2643,30 @@ const G3 = (() => {
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); gl.activeTexture(gl.TEXTURE0); }
     buildLandMask();
   }
+  // The land mask over the near terrain (2048 x 2048, 1.5-6 m a texel): the fine coast with its breakwaters (01d-coast.js, the chart
+  // packs' coast2), the harbour units' blocks and fills as land, and their basins and the quays' pockets as water, as isLand has them.
+  // The terrain shader cuts the ground above the water where it says sea, so the waterline is the coast's own line (the user: the 3D
+  // world is to follow the vector coast, 04.10.2026), not the 25 m cells the heights were made from. Off the tiles with a chart pack
+  // (or until it comes) there is no mask, and the ground meets the sea where it is.
+  let LMON = false;
   function buildLandMask(){
-    if (!FINE || !NEARM) return;
-    const size = 2048, x0 = NEARM.x0, z0 = NEARM.z0, sx = NEARM.sx, k = size / sx;
+    if (!NEARM) return;
+    const size = 2048, x0 = NEARM.x0, z0 = NEARM.z0, sx = NEARM.sx, k = size / sx, T = MAPD.man.tile * 1000;
+    const pks = mapPacksIn('chart', x0 / 1000, z0 / 1000, (x0 + sx) / 1000, (z0 + sx) / 1000);
+    LMON = false; if (!pks.length) return;
+    const wait = pks.filter(pk => !pk.buf); if (wait.length){ Promise.all(wait.map(mapLoad)).then(() => buildLandMask(), e => console.error(e)); return; }
     lcv = lcv || document.createElement('canvas'); lcv.width = lcv.height = size; const g = lcv.getContext('2d');
-    g.fillStyle = '#000'; g.fillRect(0, 0, size, size); g.fillStyle = '#fff'; g.beginPath();
-    for (const q of FINE){ if (q.bb[2] < x0 || q.bb[0] > x0 + sx || q.bb[3] < z0 || q.bb[1] > z0 + sx) continue; g.moveTo((q.xs[0] - x0) * k, (q.zs[0] - z0) * k); for (let j = 1; j < q.xs.length; j++) g.lineTo((q.xs[j] - x0) * k, (q.zs[j] - z0) * k); g.closePath(); }
-    g.fill('evenodd');
+    g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#000'; g.fillRect(0, 0, size, size); g.fillStyle = '#fff';
+    for (const pk of pks){ const p = chartPath(pk, 2, 0); if (!p) continue; g.setTransform(1000 * k, 0, 0, 1000 * k, (pk.tile[0] * T - x0) * k, (pk.tile[1] * T - z0) * k); g.fill(p, 'nonzero'); }
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    const poly = (pts, col) => { g.fillStyle = col; g.beginPath(); pts.forEach(([x, z], i) => i ? g.lineTo((x - x0) * k, (z - z0) * k) : g.moveTo((x - x0) * k, (z - z0) * k)); g.closePath(); g.fill(); };
+    const near = (x, z) => x > x0 - 300 && x < x0 + sx + 300 && z > z0 - 300 && z < z0 + sx + 300;
+    for (const U of UNITA){ if (!near(U.o[0], U.o[1])) continue;
+      const fl = []; for (let i = 0; i < U.f.length; i += 2) fl.push(unitW(U, U.f[i], U.f[i + 1])); poly(fl, '#fff');
+      poly([[-UNIT.E, -UNIT.B], [UNIT.E, -UNIT.B], [UNIT.E, 0], [-UNIT.E, 0]].map(([a, b]) => unitW(U, a, b)), '#fff');
+      poly([[-UNIT.basinX, 0.2], [UNIT.basinX, 0.2], [UNIT.basinX, UNIT.basinZ], [-UNIT.basinX, UNIT.basinZ]].map(([a, b]) => unitW(U, a, b)), '#000'); }
+    for (const f of qPockets()){ if (!near(f.x, f.z)) continue; const s = f.hl + 4, Q = (a, b) => [f.x + f.ux * a + f.nx * b, f.z + f.uz * a + f.nz * b]; poly([Q(-s, 0.2), Q(s, 0.2), Q(s, POCKET), Q(-s, POCKET)], '#000'); }
+    LMON = true;
     LMTEX = LMTEX || gl.createTexture(); gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, LMTEX);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, lcv); gl.generateMipmap(gl.TEXTURE_2D);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -3433,7 +3471,7 @@ const G3 = (() => {
     vesselChanged(){ bv.init = false; bv.st = null; TRAIL.length = 0; },
     showroom, get showing(){ return SHOW ? SHOW.t : null; },
     roadsReady(){ if (NEARM) buildGround(); for (const c of CH.values()) freeChunk(c); CH.clear(); },
-    fineReady(){ if (NEARM){ freeMesh(NEARM); NEARM = null; updateNear(); } },
+    fineReady(){ if (FINEM){ freeMesh(FINEM); FINEM = null; } if (NEARM){ freeMesh(NEARM); NEARM = null; updateNear(); } },
     fishCam(){ cam.helm = false; cam.dist = 7; cam.pitch = 0.22; cam.yaw = -0.85; },
     // the cinema: on or off (the HUD is the page's: body.kino-clean)
     kino(on){ if (on !== undefined){ KINO.on = !!on; KINO.shot = null; } return KINO.on; }, get kinoShot(){ return KINO.shot ? KINO.shot.type : null; },

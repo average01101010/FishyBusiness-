@@ -773,6 +773,19 @@ Jonas: «Jeg vil ha bort det som er i magenta», og vannlinja skal være nøyakt
   - Moloene er 8–12 m brede, og prøvene i `legClear` (hver 40. m), `groundCheck` (20 m), `clearLine` og `leiaLegOk` (8 m) og rorhjelpen (10 m) kunne gå rett over dem. Alle sjekker nå også strekningen med `coastSegHit`. Søkene i `approachPath` og `berthPath` gjør det mellom nabocellene, og en celle er land der `isLand` sier det om midten.
   - **Dybden** (`depthWater` i `03-simulation.js`): dybdelaget har 0 på maskens land. Nå regnes dybden bare av vanncellene, så vannet rett ved kysten har dybden til sine egne celler i stedet for å gå mot 0, ellers ville båter gått på grunn i vann kartet viser. Der alle fire cellene er land, brukes vanncellene to ruter ut. Der det ikke er noen, er dybden 2 m, som er et anslag for et sund masken tettet.
 - **Kartplotteren:** masken tegnes ikke lenger som fjære (`chartRaster`). Landet er bare vektorkysten, med moloene. Bare mottakenes fyllinger males i rasteret, i samme farge som landet.
+  - Piksler dypt inne i maskens land (cellen og de fire naboene), og der den indekserte kysten sier land (`coastAtIf`), males i landfargen uten at dybden regnes. Land fikk B-splinen for dybden og gjorde fjordnivået tregere.
+  - **Tegnetiden i `charttest`** varierer mye i testmiljøet, også på nivået for hele landet, som ikke er endret: 0,49–0,74 s for første bilde med både gammel og ny kode, og fjordnivået 1,5–2,9 s, mot grensene 0,6 og 2,5 s. Bør måles på nettbrettet.
+- **3D** (`view3d.js`):
+  - `stream3d` laster kartpakkene innen 14 km og bygger indeksen. Når den kommer, bygges terrengnettene over flisa på nytt.
+  - **Høydene ved kysten** (`terrRaw`, `COAST3`): der indeksen er inne, stiger bakken 1:1 fra kystlinja til 1,7 m på landsiden og faller like mye på sjøsiden (`coastSdIf`, signert avstand). Vannlinja mellom to punkter i nettet havner da på kystlinja, ikke på rutenettet. Land fra 25 m-masken som står i vann kartet viser, blir borte. Alt land ligger over høyeste tidevann (1,55 m).
+  - **Landmasken** (`buildLandMask`, 2048 × 2048 over nærnettet, 1,5–6 m per piksel) tegnes fra `coast2` med moloene, mottakenes kaiblokk og fylling som land og havnebassengene og lommene foran kaiene som sjø. Terrengskyggeren kaster bakke over vannet der masken sier sjø (`uLand`, `uTideY`), så kanten blir kystlinjas egen. Sjøskyggeren kaster ingenting, så den tidlige dybdetesten beholdes.
+  - **Det fine terrenget rundt båten** (`FINEM`, `fineWanted`): 1 024 m med rundt 4 m mellom punktene (768 m på lav kvalitet), der nærnettet har 12–47 m. Nærnettet har et hull under det. Ellers ble en 8 m bred molo, som ved Hamnskjæret i Botnhamn, flekkete eller borte.
+  - **Moloene:** de som ligger i OSM-kysten, blir terreng. De som er tegnet som molo (Senjas `PIERS` type 1 og vec-pakkenes `molos`), bygges som før som steinfyllinger, som på Husøy.
+  - **Kontrollbilder** (`probe/coast3d.py` i kladdemappa): Botnhamn, Husøy og Senjahopen før og etter.
+  - **Ikke ennå:**
+    - Kantene kan bli litt taggete på skrå, der masken leses fra en grovere mip.
+    - Skummet langs land regnes fortsatt fra høydene i nærnettet, ikke fra masken.
+    - Hus som står på brygger over vann, viser nå veggene helt ned til vannet, fordi bakken under dem ikke lenger dekker dem.
 
 ## 5. Systemer i spillet
 
