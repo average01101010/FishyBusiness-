@@ -11,10 +11,10 @@ Laget 04.10.2026, da spillet fikk navnet Det Store Blå og domenet detstorebla.n
    - `AAAA` for `detstorebla.no`: 2606:50c0:8000::153, 2606:50c0:8001::153, 2606:50c0:8002::153 og 2606:50c0:8003::153
    - `CNAME` for `www`: `average01101010.github.io`
 2. Verifiser domenet på GitHub, slik at ingen andre kan ta det: profilbildet → Settings → Pages → «Add a domain». GitHub gir deg en `TXT`-post som du legger inn hos registraren.
-3. Si fra når postene er lagt inn. Da kobler vi domenet til Pages: repoet → Settings → Pages → Custom domain `detstorebla.no`, og så «Enforce HTTPS» når sertifikatet er klart. Vent med dette til lagringseksporten er ute (se B1).
+3. Si fra når postene er lagt inn. Da kobler vi domenet til Pages: repoet → Settings → Pages → Custom domain `detstorebla.no`, og så «Enforce HTTPS» når sertifikatet er klart.
 4. Lag e-post på domenet, for eksempel `post@` og `support@`. Det går hos registraren eller hos Google Workspace eller Zoho.
 
-**Viktig om lagringene:** Lagringen ligger i nettleseren og hører til adressen. Når appen flytter fra `average01101010.github.io` til `detstorebla.no`, følger ikke lagringen med av seg selv. Derfor må lagringseksporten eller skylagringen være ute før domenet byttes.
+**Viktig om lagringene:** Lagringen ligger i nettleseren og hører til adressen. Når appen flytter fra `average01101010.github.io` til `detstorebla.no`, følger ikke lagringen med av seg selv. Spillet har alt lagringskoden under Innstillinger → Lagret spill («Kopier lagringen» og «Lim inn lagring»), som flytter spillet mellom artifacten og appen. Før byttet bør spillet varsle om koden, slik at spillerne tar den med seg. Det kan jeg legge inn.
 
 ### 2. Firma, bank og regnskap
 
@@ -64,7 +64,7 @@ Laget 04.10.2026, da spillet fikk navnet Det Store Blå og domenet detstorebla.n
 
 ## B. Det Claude bygger (når valgene er tatt)
 
-1. **Eksport og import av lagringen**, som fil eller kode, før domenet byttes. Gjøres raskt.
+1. **Lagringskoden finnes alt** (Innstillinger → Lagret spill). Før domenet byttes, kommer et varsel i spillet om å ta med koden til den nye adressen.
 2. **Domenebyttet:** PWA-en på detstorebla.no. Artifacten blir værende som testutgave.
 3. **Innlogging og skylagring** i Supabase: lagringen følger kontoen på alle enheter, og den lokale lagringen synkes.
 4. **Betaling** med Stripe Checkout og en webhook (serverfunksjon i Supabase) som låser opp det som er kjøpt. Kjøpet følger kontoen.

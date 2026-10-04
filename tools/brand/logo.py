@@ -39,17 +39,17 @@ def world():
     for n in list(N): N.remove(n)
     tc = N.new('ShaderNodeTexCoord'); sep = N.new('ShaderNodeSeparateXYZ'); L.new(tc.outputs['Generated'], sep.inputs[0])
     ramp = N.new('ShaderNodeValToRGB'); E = ramp.color_ramp.elements
-    E[0].position = 0.0; E[0].color = (0.95, 0.52, 0.30, 1); E[1].position = 0.55; E[1].color = (0.015, 0.035, 0.11, 1)
-    for p, c in ((0.035, (0.80, 0.60, 0.52, 1)), (0.09, (0.38, 0.52, 0.68, 1)), (0.22, (0.10, 0.20, 0.40, 1))):
+    E[0].position = 0.0; E[0].color = (0.62, 0.66, 0.78, 1); E[1].position = 0.6; E[1].color = (0.008, 0.025, 0.10, 1)
+    for p, c in ((0.04, (0.40, 0.55, 0.78, 1)), (0.12, (0.13, 0.30, 0.62, 1)), (0.30, (0.035, 0.10, 0.30, 1))):
         e = E.new(p); e.color = c
     L.new(sep.outputs['Z'], ramp.inputs['Fac'])
     # the glow: (dir . sun)^k, added in warm light
     dot = N.new('ShaderNodeVectorMath'); dot.operation = 'DOT_PRODUCT'; dot.inputs[1].default_value = SUN
     L.new(tc.outputs['Generated'], dot.inputs[0])
-    pw = N.new('ShaderNodeMath'); pw.operation = 'POWER'; pw.inputs[1].default_value = 24.0; pw.use_clamp = True
+    pw = N.new('ShaderNodeMath'); pw.operation = 'POWER'; pw.inputs[1].default_value = 16.0; pw.use_clamp = True
     mx = N.new('ShaderNodeMath'); mx.operation = 'MAXIMUM'; mx.inputs[1].default_value = 0.0
     L.new(dot.outputs['Value'], mx.inputs[0]); L.new(mx.outputs[0], pw.inputs[0])
-    mul = N.new('ShaderNodeMath'); mul.operation = 'MULTIPLY'; mul.inputs[1].default_value = 1.6; L.new(pw.outputs[0], mul.inputs[0])
+    mul = N.new('ShaderNodeMath'); mul.operation = 'MULTIPLY'; mul.inputs[1].default_value = 1.2; L.new(pw.outputs[0], mul.inputs[0])
     glow = N.new('ShaderNodeMix'); glow.data_type = 'RGBA'; glow.blend_type = 'ADD'
     L.new(mul.outputs[0], glow.inputs['Factor']); L.new(ramp.outputs['Color'], glow.inputs['A']); glow.inputs['B'].default_value = (1.0, 0.62, 0.32, 1)
     bg = N.new('ShaderNodeBackground'); bg.inputs['Strength'].default_value = 1.0; L.new(glow.outputs['Result'], bg.inputs['Color'])
@@ -65,11 +65,11 @@ def sun():
 
 
 def sea():
-    m = principled('sea', (0.004, 0.022, 0.055), rough=0.05)
+    m = principled('sea', (0.004, 0.03, 0.10), rough=0.08)
     b = m.node_tree.nodes['Principled BSDF']; b.inputs['IOR'].default_value = 1.33
     bpy.ops.mesh.primitive_plane_add(size=1, location=(0, 0, 0)); s = bpy.context.active_object; s.name = 'ocean'
     oc = s.modifiers.new('ocean', 'OCEAN'); oc.geometry_mode = 'GENERATE'
-    oc.spatial_size = 40; oc.repeat_x = 6; oc.repeat_y = 6; oc.wave_scale = 0.32; oc.choppiness = 0.9; oc.wind_velocity = 8.0; oc.random_seed = 11
+    oc.spatial_size = 40; oc.repeat_x = 6; oc.repeat_y = 6; oc.wave_scale = 0.75; oc.choppiness = 1.1; oc.wind_velocity = 9.0; oc.random_seed = 11
     oc.wave_alignment = 0.35; oc.wave_direction = math.radians(70)
     res = 7 if QUICK else 10
     for a in ('resolution', 'viewport_resolution'):
@@ -126,7 +126,7 @@ def boat():
     bb = [B.matrix_world @ V(c) for c in B.bound_box]
     print('boat: %.1f x %.1f x %.1f m' % (max(p.x for p in bb) - min(p.x for p in bb), max(p.y for p in bb) - min(p.y for p in bb), max(p.z for p in bb) - min(p.z for p in bb)))
     # the masthead light
-    top = max(bb, key=lambda p: p.z)
+    top = max((B.matrix_world @ v.co for v in B.data.vertices), key=lambda p: p.z)
     bpy.ops.mesh.primitive_uv_sphere_add(radius=0.09, location=(top.x, top.y, top.z + 0.05)); ml = bpy.context.active_object
     ml.data.materials.append(principled('mast', (1, 1, 1), emit=(1.0, 0.95, 0.85), estr=30.0))
     return B
@@ -141,7 +141,7 @@ def setup(w, h, samples):
     sc.render.film_transparent = False
     try: sc.view_settings.view_transform = 'AgX'; sc.view_settings.look = 'AgX - Punchy'
     except Exception: pass
-    sc.view_settings.exposure = 0.15
+    sc.view_settings.exposure = 0.35
     return sc
 
 
@@ -160,15 +160,15 @@ def render(path):
 def main():
     os.makedirs(OUT, exist_ok=True)
     reset(); world(); sun(); sea(); boat()
-    rockN = principled('rockN', (0.035, 0.05, 0.075), rough=0.9); snowN = principled('snowN', (0.70, 0.76, 0.86), rough=0.7)
-    rockF = principled('rockF', (0.16, 0.22, 0.33), rough=0.9); snowF = principled('snowF', (0.62, 0.70, 0.82), rough=0.8)
+    rockN = principled('rockN', (0.05, 0.075, 0.12), rough=0.9); snowN = principled('snowN', (0.70, 0.76, 0.86), rough=0.7)
+    rockF = principled('rockF', (0.14, 0.22, 0.38), rough=0.9); snowF = principled('snowF', (0.62, 0.70, 0.82), rough=0.8)
     # Senja's outer coast: spires like Okshornan and Segla near, a softer range far behind
     peaks('near', 520, 160, -700, 700, [(-310, 70, 70), (-235, 92, 55), (-170, 64, 60), (-60, 50, 90), (60, 84, 48), (110, 102, 42), (165, 76, 50), (290, 60, 85), (420, 72, 70)], rockN, snowN, 1.0)
     peaks('far', 1300, 300, -1800, 1800, [(-900, 150, 260), (-420, 190, 200), (150, 170, 240), (700, 210, 260), (1200, 160, 220)], rockF, snowF, 2.3, nx=240, ny=24)
-    S = 24 if QUICK else 160; k = 0.5 if QUICK else 1.0
-    look = (0.4, 0.0, 2.3)
-    setup(int(1024 * k), int(1024 * k), S); camera((0.0, -27.0, 2.6), look, 50); render(os.path.join(OUT, 'logo.png'))
-    setup(int(1024 * k), int(1024 * k), S); camera((0.0, -27.0, 2.6), look, 38); render(os.path.join(OUT, 'logo-maskable.png'))
+    S = 24 if QUICK else 96; k = 0.5 if QUICK else 1.0
+    look = (0.4, 0.0, 3.0)
+    setup(int(1024 * k), int(1024 * k), S); camera((0.0, -22.5, 2.3), look, 48); render(os.path.join(OUT, 'logo.png'))
+    setup(int(1024 * k), int(1024 * k), S); camera((0.0, -22.5, 2.3), look, 35); render(os.path.join(OUT, 'logo-maskable.png'))
     setup(int(1200 * k), int(630 * k), S); camera((0.0, -27.0, 2.4), look, 30, shift_x=-0.17, shift_y=0.04); render(os.path.join(OUT, 'og.png'))
     if QUICK: return
     from PIL import Image, ImageDraw, ImageFilter, ImageFont
