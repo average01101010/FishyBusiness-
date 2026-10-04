@@ -44,7 +44,8 @@ Spillet skal ligge på Hetzner-serveren din, ikke på GitHub Pages (se G).
 ### 5. Juridisk
 
 - **Personvernerklæring og vilkår (utkast 04.10.2026):** `src/legal/personvern.html` og `src/legal/vilkar.html`, bygget til `personvern.html` og `vilkar.html` ved siden av spillet (`/personvern` og `/vilkar` på serveren, som Googles innloggingsskjerm lenker til). De bygger på det spillet faktisk lagrer, og det gule står igjen for deg:
-  - organisasjonsnummer, adresse og en e-postadresse på domenet (for eksempel videresending hos domeneselgeren)
+  - en e-postadresse på domenet (for eksempel videresending hos domeneselgeren). Organisasjonsnummeret (935 600 820) og adressen (Sandvikveien 131, 9300 Finnsnes) er fylt inn.
+  - Aktiviteten i Enhetsregisteret er skipper- og matrostjenester. Spillsalg bør legges til med Samordnet registermelding i Altinn (sjekk næringskoden for utgivelse av dataspill).
   - regionen Supabase-prosjektet ligger i
   - varselet før nedleggelse (forslaget er 90 dager)
   - Google Fonts-linja går ut når skriftene ligger på vår egen server (punkt 181), og kildesiden må lages
