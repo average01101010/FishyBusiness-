@@ -12,7 +12,7 @@ Part 3, the sonar: only on the sjark and the new sjark, 16 hours to fit, the 3 n
 boat is traded for one it does not suit. The skiff's console in 3D shows the heat, and «EKKOLODD AV» when it is off.
 """
 from _env import GAME, boot
-import asyncio, json
+import asyncio, json, time
 from playwright.async_api import async_playwright
 
 
@@ -190,11 +190,15 @@ async def perf(pg, cdp):
         t = await pg.evaluate("""new Promise(res => { HEATC.stats = {slices:0, maxSlice:0, n:0, ms:0, over:0}; heatReset(); const t0 = performance.now(); heatTick();
           const w = () => { if (!HEATC.busy && HEATC.qi >= HEATC.queue.length) res(JSON.stringify({ms:performance.now() - t0, ...HEATC.stats})); else setTimeout(w, 20); }; w(); })""")
         await cdp.send('Emulation.setCPUThrottlingRate', {'rate': 1})
-        r = json.loads(t); runs.append(r)
+        r = json.loads(t); runs.append(r); print('· perf run', k + 1, round(r['ms']), 'ms', flush=True)
         # a slice is 5 ms of work; one slice over a frame (16 ms) is let through, never two, and none over two frames
         if r.get('over', 0) <= 1 and r['maxSlice'] < 33 and r['ms'] < 3000: break
     r = runs[-1]
     check(r.get('over', 0) <= 1 and r['maxSlice'] < 33 and r['ms'] < 3000, 'ytelse (CPU ×4): bitene holder seg under én skjermramme (16 ms, høyst én unntak), og hele sonarsirkelen kommer på under 3 s', {'ms': round(r['ms']), 'biter': r['slices'], 'over 16 ms': r.get('over', 0), 'lengste': round(r['maxSlice'], 1), 'ruter': r['n'], 'µs/rute': round(r['ms'] / max(1, r['n']) * 1000, 1), 'forsøk': [(round(x['ms']), round(x['maxSlice'], 1), x.get('over', 0)) for x in runs]})
+
+
+T0 = time.time()
+stage = lambda s: print('· %4.0f s  %s done' % (time.time() - T0, s), flush=True)   # progress, so a run that runs out of time shows where it was
 
 
 async def main():
@@ -208,12 +212,12 @@ async def main():
             await boot(pg)
             await pg.wait_for_function("typeof DEPTH !== 'undefined' && DEPTH", timeout=60000)
             if tag == 'liggende':
-                await model(pg)
-                await tutorial(pg)
-                await perf(pg, cdp)
-                await sonar(pg)
-                await console3d(pg)
-            await ui(pg, tag)
+                await model(pg); stage('model')
+                await tutorial(pg); stage('tutorial')
+                await perf(pg, cdp); stage('perf')
+                await sonar(pg); stage('sonar')
+                await console3d(pg); stage('console3d')
+            await ui(pg, tag); stage('ui ' + tag)
             await ctx.close()
         print(errs)
         await b.close()
