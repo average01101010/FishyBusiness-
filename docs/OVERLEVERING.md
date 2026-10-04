@@ -1,4 +1,6 @@
-# Kystfiske – overlevering fra chat til Claude Code
+# Det Store Blå (Kystfiske) – overlevering fra chat til Claude Code
+
+> Spillet heter **Det Store Blå** fra 04.10.2026 (brukerens valg, domenet detstorebla.no). Navnet står i `<title>`, lasteskjermen, toppstripa (`T.no.title`, `T.en.title`) og PWA-manifestet. Et engelsk navn for lansering i utlandet er ikke valgt. Repoet, lagringsnøklene (`kystfiske_v2`) og andre interne navn heter fortsatt kystfiske og skal ikke endres. Sjekklista for lanseringen står i `docs/lansering.md`.
 
 Skrevet 29.09.2026 ved flytting fra claude.ai-chat til Claude Code. Dokumentet samler beslutninger, regler, tall og arbeidsmåte som ikke står i koden. Les det sammen med `docs/spesifikasjon.md` (fiskerisystemet) og koden.
 

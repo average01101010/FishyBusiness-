@@ -24,7 +24,7 @@ async def main():
         pg.on('pageerror', lambda e: errs.append(str(e)))
         await pg.goto(GAME); await pg.wait_for_function("typeof SIMREADY !== 'undefined' && SIMREADY", timeout=90000)
         man = await pg.evaluate("fetch('manifest.webmanifest').then(r => r.json()).then(m => ({name:m.name, icons:m.icons.length, display:m.display, link:!!document.querySelector('link[rel=manifest]')}))")
-        check(man['link'] and man['icons'] == 3 and man['name'] == 'Kystfiske', 'siden har manifestet med navn og tre ikoner', man)
+        check(man['link'] and man['icons'] == 3 and man['name'] == 'Det Store Blå', 'siden har manifestet med navn og tre ikoner', man)
         await pg.evaluate("navigator.serviceWorker.ready.then(() => true)")
         await pg.reload(); await pg.wait_for_function("typeof SIMREADY !== 'undefined' && SIMREADY", timeout=90000); await pg.wait_for_timeout(3000)
         sw = await pg.evaluate("(async () => ({ctl:!!navigator.serviceWorker.controller, packs:(await (await caches.open('kyst-map')).keys()).length, page:(await caches.keys()).filter(k => k.startsWith('kyst-page-')).length}))()")

@@ -1,7 +1,7 @@
 {
-  "name": "Kystfiske",
-  "short_name": "Kystfiske",
-  "description": "Kystfiske langs norskekysten, fra sjarken og opp.",
+  "name": "Det Store Blå",
+  "short_name": "Det Store Blå",
+  "description": "Det Store Blå: kystfiske langs norskekysten, fra sjarken og opp.",
   "lang": "no",
   "start_url": "./",
   "scope": "./",
