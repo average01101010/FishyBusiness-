@@ -371,7 +371,8 @@ const PHONE = (() => {
     ['p11', '05.10.2026', 'Havn og sjø', 'Harbour and sea', [
       ['Mottakene står på en fylling inn til land, og havna rundt er hevet over flo, så det er ikke lenger vann bak kaia.', 'The fish plants stand on a fill in to the shore, and the harbour round them is raised above high tide, so there is no more water behind the quay.'],
       ['Hekkbølgene blekner gradvis og er like lange på begge sider, og propellstrømmen viser bare skumboblene.', 'The stern waves fade out gradually and are as long on both sides, and the prop wash shows only its foam bubbles.'],
-      ['Båten snurrer ikke lenger rundt før den kommer fram til et stopp i høy fart.', 'The boat no longer spins round before it reaches a stop at speed.']]],
+      ['Båten snurrer ikke lenger rundt før den kommer fram til et stopp i høy fart.', 'The boat no longer spins round before it reaches a stop at speed.'],
+      ['Kino-visningen holder båten i bildet også i høy fart, og bytter opptak når land kommer imellom.', 'The cinema view keeps the boat in the picture at speed too, and changes shot when land comes between.']]],
     ['p10', '05.10.2026', 'Regler langs hele kysten', 'Rules along the whole coast', [
       ['Fjordlinjene for kysttorsk gjelder langs hele kysten, rett fra Fiskeridirektoratet, og vises i kartet.', 'The fjord lines for coastal cod hold along the whole coast, straight from the Directorate of Fisheries, and show on the chart.'],
       ['Båtlengden avgjør hvor du kan fiske torsk, hyse og sei: innenfor fjordlinjene fra 15 m, innenfor grunnlinja fra 21 m og innenfor 4 nm fra 28 m, med unntakene i forskriften.', 'The boat\'s length decides where you may fish cod, haddock and saithe: inside the fjord lines from 15 m, inside the baseline from 21 m and within 4 nm from 28 m, with the regulation\'s exceptions.'],

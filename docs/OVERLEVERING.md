@@ -1588,6 +1588,11 @@ Brukerens ønske: en frivillig mulighet til å styre båten selv, med gass og ra
   - landskap
   - bakfra over kjølvannet
 - **Kameraet:** øyet og siktepunktet glattes over 0,7 s, med klipp ved nytt opptak. Horisonten er vannrett.
+  - Glattingen skjer relativt til båten (`KINO.eyeR`, `KINO.tgtR`).
+  - Før ble den gjort i verdensrammen. Siden båten går seks ganger raskere på skjermen (71 m/s ved 23 kn), hang kameraet rundt 50 m etter, og båten var som oftest utenfor bildet (Jonas 04.10.2026).
+  - Kameraet fra land står stille, og bare siktet følger båten.
+  - Er båten skjult bak land i mer enn ett sekund, klippes det til neste opptak.
+  - Landskapsbildet er tatt nærmere (120 m bak og 80 m til siden), med siktet 60 m foran båten.
 - **Opptak som hoppes over:** et opptak med øyet i land eller sjø, eller med noe mellom kameraet og båten (`camFree`), hoppes over. Gisundbrua stenger for eksempel for halvparten av opptakene nord for Finnsnes.
 - **«Skjul»** tar bort statusboksen, knappene, kompasset og minikartet. Bare de to kinoknappene står igjen.
 - Kameraknappen avslutter kino.

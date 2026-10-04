@@ -3092,7 +3092,7 @@ const G3 = (() => {
     if (K.type === 'ahead'){ const e = [C[0] + fx * (L * 2.2 + 22) + rx * s * 5, 0, C[2] + fz * (L * 2.2 + 22) + rz * s * 5]; e[1] = sea(e[0], e[2]) + 2.6; return [e, C, 45]; }
     // from the shore a long lens: the frame about four boat lengths high wherever she is
     if (K.type === 'shore'){ const e = [K.px, sea(K.px, K.pz) + 1.8, K.pz], d = Math.hypot(C[0] - e[0], C[2] - e[2]); return [e, C, clamp(2 * Math.atan(2 * L / Math.max(1, d)) / DEG, 6, 40)]; }
-    if (K.type === 'wide'){ const e = [C[0] - fx * 220 + rx * s * 140, 0, C[2] - fz * 220 + rz * s * 140]; e[1] = sea(e[0], e[2]) + 70; return [e, [C[0] + fx * 260, C[1], C[2] + fz * 260], 60]; }
+    if (K.type === 'wide'){ const e = [C[0] - fx * 120 + rx * s * 80, 0, C[2] - fz * 120 + rz * s * 80]; e[1] = sea(e[0], e[2]) + 45; return [e, [C[0] + fx * 60, C[1], C[2] + fz * 60], 55]; }
     const e = [C[0] - fx * (L * 3 + 18), 0, C[2] - fz * (L * 3 + 18)]; e[1] = sea(e[0], e[2]) + 7 + L * 0.3; return [e, [C[0] + fx * 30, C[1], C[2] + fz * 30], 50];
   }
   function kinoNext(t){
@@ -3106,17 +3106,25 @@ const G3 = (() => {
         K.px = best[0]; K.pz = best[1];
       }
       const [e, g] = kinoWant(K, t);
-      if (camFree(g, e) > 0.9){ KINO.shot = K; KINO.eye = e.slice(); KINO.tgt = g.slice(); return; }
+      if (camFree(g, e) > 0.9){ KINO.shot = K; KINO.eye = e.slice(); KINO.tgt = g.slice(); KINO.eyeR = null; KINO.hid = 0; return; }
     }
-    KINO.shot = {type:'drone', t0:t, dur:12, side:1, a0:0}; KINO.eye = null;
+    KINO.shot = {type:'drone', t0:t, dur:12, side:1, a0:0}; KINO.eye = null; KINO.eyeR = null; KINO.hid = 0;
   }
+  // The eye and the aim are smoothed in the boat's frame (as offsets from her), so they keep up with her at the screen's speed (six
+  // times real: 71 m/s at 23 knots); in the world's frame the filter of 0.7 s left them some 50 m behind her and she ran out of the
+  // picture (the user 04.10.2026: «I cinematic-view vises som oftest ikke båten»). The shore camera stands still and only its aim
+  // follows. A shot that loses her behind the land for a second cuts to the next.
   function kinoCam(t, rdt){
     if (!KINO.shot || t - KINO.shot.t0 > KINO.shot.dur || t < KINO.shot.t0) kinoNext(t);
-    const [e, g, fov] = kinoWant(KINO.shot, t), k = 1 - Math.exp(-Math.min(0.25, rdt) / 0.7);
-    if (!KINO.eye){ KINO.eye = e.slice(); KINO.tgt = g.slice(); }
-    for (let i = 0; i < 3; i++){ KINO.eye[i] += (e[i] - KINO.eye[i]) * k; KINO.tgt[i] += (g[i] - KINO.tgt[i]) * k; }
-    const gy = Math.max(terrH(KINO.eye[0], KINO.eye[2]), seaH(KINO.eye[0], KINO.eye[2], t)) + 0.6; if (KINO.eye[1] < gy) KINO.eye[1] = gy;
-    return {eye:KINO.eye.slice(), tgt:KINO.tgt, fov};
+    const C = [bv.x, bv.y, bv.z], [e, g, fov] = kinoWant(KINO.shot, t), k = 1 - Math.exp(-Math.min(0.25, rdt) / 0.7), fixed = KINO.shot.type === 'shore';
+    const eW = fixed ? e : [e[0] - C[0], e[1] - C[1], e[2] - C[2]], gR = [g[0] - C[0], g[1] - C[1], g[2] - C[2]];
+    if (!KINO.eyeR){ KINO.eyeR = eW.slice(); KINO.tgtR = gR.slice(); }
+    for (let i = 0; i < 3; i++){ KINO.eyeR[i] += (eW[i] - KINO.eyeR[i]) * k; KINO.tgtR[i] += (gR[i] - KINO.tgtR[i]) * k; }
+    const eye = fixed ? KINO.eyeR.slice() : [KINO.eyeR[0] + C[0], KINO.eyeR[1] + C[1], KINO.eyeR[2] + C[2]], tgt = [KINO.tgtR[0] + C[0], KINO.tgtR[1] + C[1], KINO.tgtR[2] + C[2]];
+    const gy = Math.max(terrH(eye[0], eye[2]), seaH(eye[0], eye[2], t)) + 0.6; if (eye[1] < gy) eye[1] = gy;
+    if (camFree([C[0], C[1] + 1.2, C[2]], eye) < 0.6){ KINO.hid = (KINO.hid || 0) + rdt; if (KINO.hid > 1) kinoNext(t); } else KINO.hid = 0;
+    KINO.eye = eye; KINO.tgt = tgt;
+    return {eye:eye.slice(), tgt, fov};
   }
   function frame(){
     if (!active){ raf = 0; return; }
