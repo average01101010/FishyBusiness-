@@ -3,11 +3,13 @@ from _env import GAME, GAME_TUT, boot
 # Monahan and O'Muircheartaigh (1980) give them, calm in the lee, spindrift and haze in a storm, and the same without vertex textures.
 # Pictures: sea3d_bf.png (Beaufort 0-11 on the Husøy ground), sea3d_lee.png (windward, lee, harbour and sound in a gale) and
 # sea3d_wake.png (the wake of a planing skiff, a sjark and a 21 m coaster at speed).
-import asyncio, json, os
+import asyncio, json, os, time
 from playwright.async_api import async_playwright
 from PIL import Image, ImageDraw, ImageFont
 
 ok = lambda c: 'OK  ' if c else 'FEIL'
+T0 = time.time()
+stage = lambda s: print('· %4.0f s  %s' % (time.time() - T0, s), flush=True)   # progress, so a run that runs out of time shows where it was
 FONT = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 15)
 BF = [(0, 0.2), (1, 1.0), (2, 2.5), (3, 4.4), (4, 6.7), (5, 9.4), (6, 12.3), (7, 15.5), (8, 19), (9, 22.6), (10, 26.5), (11, 30.6)]
 SETUP = "S.t = Math.round((Date.UTC(2027, 3, 10, 13) - EPOCH) / 6e4); WX_FORCE = {w:5, d:315}; S.mult = 0.00001; const b = S.boat, g = GROUNDS[0].p; b.status = 'idle'; b.port = null; b.pos = {x:g.x, y:g.y}; b.v = 0; b.heading = 2.2;"
@@ -49,7 +51,7 @@ async def main():
         errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
         await boot(pg); await pg.evaluate(SETUP)
         await pg.wait_for_function("G3.isActive() && G3._debug.SSL.w.on && G3._debug.SSL.n.on", timeout=300000); await pg.wait_for_timeout(1500)
-        R = {}
+        stage('the sea is up'); R = {}
         calm = await pg.evaluate("({drift:G3._debug.drift, fog:G3._debug.env.fogD})")   # 5 m/s since the start: no spindrift, no haze
         # 1. the wind from calm to hurricane in steps of 0.1 m/s, the waves snapped to each: no wave may jump
         R['ramp'] = await pg.evaluate("""(() => { const D = G3._debug, H = S.t / 60; let prev = null, jump = 0, hjump = 0, at = 0;
@@ -80,6 +82,7 @@ async def main():
         jumps = [abs(trace[i][1] - trace[i - 1][1]) + abs(trace[i][2] - trace[i - 1][2]) for i in range(1, len(trace))]
         R['rebuild'] = {'nearMoved': moved, 'alwaysNear': all(t[0] for t in trace), 'maxStep': round(max(jumps), 3), 'at': trace[0][1:3]}
         await pg.evaluate("(() => { const g = GROUNDS[0].p; S.boat.pos = {x:g.x, y:g.y}; })()"); await pg.wait_for_timeout(3000)
+        stage('ramp, sudden wind and rebuild done')
         # 4. whitecaps: the share above the shader's threshold against Monahan, and the rendered foam in a gale and a storm
         R['foam'] = [await pg.evaluate(FOAM, U) for U in [8, 12, 17, 25]]
         await pg.evaluate("(()=>{const c = G3._debug.cam; c.helm = false; c.dist = 150; c.pitch = 1.3; c.yaw = 0; G3._debug.seaDbg = true; })()")
@@ -93,6 +96,7 @@ async def main():
             rend.append({'U': U, 'share': round(sum(fr) / 4 * 100, 2), 'monahan': round(3.84e-4 * U ** 3.41, 2)})
         R['foamRendered'] = rend
         await pg.evaluate("G3._debug.seaDbg = false;")
+        stage('foam done')
         # 5. spindrift from a gale, haze from a strong gale
         await pg.evaluate("(()=>{const c = G3._debug.cam; c.dist = 34; c.pitch = 0.2; c.yaw = 2.6; })()")
         await pg.evaluate("WX_FORCE = {w:28, d:315}; G3._debug.WV.init = false;"); await pg.wait_for_timeout(3000)
@@ -103,7 +107,7 @@ async def main():
         for n, U in BF:
             await pg.evaluate(f"WX_FORCE = {{w:{U}, d:315}}; G3._debug.WV.init = false;"); await pg.wait_for_timeout(3000)
             f = f'sea3d_bf{n}.png'; await pg.screenshot(path=f); tiles.append((f, f'Beaufort {n} · {U} m/s'))
-        await sheet(tiles, 'sea3d_bf.png', 3)
+        await sheet(tiles, 'sea3d_bf.png', 3); stage('Beaufort pictures done')
         tiles, lee = [], {}
         for key, name, setup in [('wind', 'Husøy-feltet, NV 17 m/s', "const g = GROUNDS[0].p; S.boat.pos = {x:g.x, y:g.y};"), ('lee', 'Husøy-feltet, S 17 m/s', "const g = GROUNDS[0].p; S.boat.pos = {x:g.x, y:g.y}; WX_FORCE.d = 180;"),
                                  ('harbour', 'Ved Botnhamn, NV 17 m/s', "S.boat.pos = LG(53.30, 23.20);"), ('sound', 'Gisundet, NV 17 m/s', "S.boat.pos = LG(57.25, 44.35);")]:
@@ -111,7 +115,7 @@ async def main():
             await pg.wait_for_function("G3._debug.SSL.n.on && Math.abs(G3._debug.bv.x / 1000 - S.boat.pos.x) < 0.05", timeout=180000); await pg.wait_for_timeout(5000)
             s = await pg.evaluate("(()=>{ const D = G3._debug; return D.ssAt(D.bv.x, D.bv.z).map(v => +v.toFixed(2)); })()"); lee[key] = s
             f = f'sea3d_{key}.png'; await pg.screenshot(path=f); tiles.append((f, f'{name} · vindsjø {s[0]:.1f} m, dønning {s[1]:.1f} m'))
-        await sheet(tiles, 'sea3d_lee.png', 2)
+        await sheet(tiles, 'sea3d_lee.png', 2); stage('lee pictures done')
         R['lee'] = lee
         # 8. the boat's own waves at speed: a planing skiff, a sjark near hull speed and a 21 m coaster, on a calm sea, seen from astern
         tiles, wake = [], {}
@@ -123,7 +127,7 @@ async def main():
             wake[vt] = await pg.evaluate("""(() => { const D = G3._debug, K = D.WK, bv = D.bv, fx = Math.sin(bv.head), fz = -Math.cos(bv.head), L = K.u2[0];
               const lam = 2 * Math.PI / K.u1[0]; return {kn:+K.kn.toFixed(2), Fr:+K.Fr.toFixed(2), on:K.u3[3], A:+K.u1[1].toFixed(2), trans:+K.u1[2].toFixed(2), bow:+K.u2[1].toFixed(2), lam:+lam.toFixed(1), reach:Math.round(K.u1[3]), trail:D.TRAIL.length}; })()""")
             f = f'sea3d_wake_{vt}.png'; await pg.screenshot(path=f); tiles.append((f, f'{vt} {kn} kn · Fr {wake[vt]["Fr"]} · bølgelengde {wake[vt]["lam"]} m'))
-        await sheet(tiles, 'sea3d_wake.png', 3)
+        await sheet(tiles, 'sea3d_wake.png', 3); stage('wake pictures done')
         R['wake'] = wake
         await pg.evaluate("(() => { S.mult = 0.00001; const b = S.boat; b.type = 'skiff'; applyVessel(); G3.vesselChanged(); b.status = 'idle'; S.plan = null; b.v = 0; })()")
         # 9. the hull's motions (03c-stability.js): a skiff and a 21 m coaster lying beam-on in the same sea, 40 s of motion each, and then
@@ -142,6 +146,7 @@ async def main():
             const f = zc(fr);
             out[vt] = {rmsDeg:Math.round(rms * 1800 / Math.PI) / 10, free:Math.round(2 * fr.length / 30 / Math.max(1, f.z) * 10) / 10, Tr:Math.round(stabOf(vt).Tr * 10) / 10, ok:rec.every(Number.isFinite) && fr.every(Number.isFinite)}; }
           WX_FORCE = null; const b = S.boat; b.type = 'skiff'; applyVessel(); G3.vesselChanged(); return out; })()""")
+        stage('motion done')
         # 7. a GPU with no textures in the vertex shader: the same page, the waves from the values at the boat
         pg2 = await b.new_page(viewport={'width': 640, 'height': 400}); errs2 = []; pg2.on('pageerror', lambda e: errs2.append(str(e)))
         await boot(pg2, GAME_TUT + '#notut,novtf'); await pg2.evaluate(SETUP)
