@@ -80,3 +80,29 @@ Laget 04.10.2026, da spillet fikk navnet Det Store Blå og domenet detstorebla.n
 3. **Database:** Supabase (anbefalt) eller en annen.
 4. **Selskapsform:** ENK eller AS.
 5. **Engelsk navn** til lanseringen i utlandet. «The Big Blue» er tittelen på samme film, så det bør unngås.
+
+## D. De 20 punktene fra TikTok-lista, for Norge og EU
+
+Lista er amerikansk («so your app doesn't get sued»). Her er hvert punkt vurdert for Det Store Blå, med norske og europeiske regler. «Claude» betyr at jeg kan bygge eller skrive det. «Du» betyr at det er din avgjørelse eller avtale. Det som er merket «sjekk», er ikke bekreftet mot lovteksten.
+
+| # | Punkt | Gjelder oss? | Hva vi gjør |
+|---|---|---|---|
+| 1 | Personvernerklæring | Ja (GDPR art. 13), så snart vi har kontoer, betaling eller besøkstall | Claude skriver utkast, du godkjenner |
+| 2 | Brukervilkår | Ja | Claude skriver utkast, du godkjenner |
+| 3 | Refusjon | Ja, som angrerett: 14 dager, men den faller bort for digitalt innhold når kjøperen samtykker til levering med en gang (angrerettloven § 22 n) | Avkrysning i kassen og en tekst i salgsvilkårene (Claude) |
+| 4–5 | Informasjonskapsler og samtykkebanner | Bare for det som ikke er nødvendig (ekomloven, sjekk). Lagringen i nettleseren er nødvendig for spillet og krever ikke samtykke. | Ingen sporing, og besøkstall uten informasjonskapsler, så slipper vi banneret |
+| 6 | Samtykke i skjemaer | Ja: vilkår og angrerett ved kjøp, og eget samtykke til nyhetsbrev, aldri forhåndskrysset | Claude |
+| 7 | Ikke samle unødvendige data | Ja (GDPR art. 5, dataminimering) | Bare e-post, lagringen og kjøp |
+| 8 | Gå gjennom tredjeparter | Ja | Google Fonts sender IP-adressen til Google (tysk dom fra 2022). Skriftene bør ligge i appen selv. Ellers bare Supabase og Stripe, ingen reklame (Claude) |
+| 9 | Ingen mørke mønstre | Ja (markedsføringsloven, EUs regler for forbrukerbeskyttelse) | Ingen falske nedtellinger eller press. Et abonnement skal være like lett å si opp som å starte |
+| 10 | Ingen skjulte gebyrer | Ja: forbrukerpriser skal vises med MVA (prisopplysningsforskriften) | Prisen med MVA vises før kjøpet |
+| 11 | Ingen falske anmeldelser | Ja (markedsføringsloven) | Vi har ingen |
+| 12 | Ingen udokumenterte påstander | Ja | Ikke antyd at Fiskeridirektoratet, Råfisklaget eller Kartverket står bak spillet. Regler-appen må si at reglene er forenklet og kan være utdaterte, og at Fiskeridirektoratet gjelder for ekte fiske (Claude) |
+| 13–15 | Alt-tekst, kontrast og tastatur | Delvis: forskriften om universell utforming av IKT (WCAG 2.1 AA) gjelder nettløsninger for allmennheten. Om spillet selv er unntatt, er ikke avklart (sjekk). | Kjøp, konto og vilkårssidene skal oppfylle WCAG. Menyene i spillet forbedres etter hvert (Claude) |
+| 16 | Firmaopplysninger | Ja (ehandelsloven § 8): navn, adresse, e-post og organisasjonsnummer | På Kontakt-siden og i butikkene (du gir opplysningene, Claude lager siden) |
+| 17 | Alder | Ja: barn under 13 år kan ikke samtykke selv (personopplysningsloven § 5). Butikkene krever også en aldersgrense (IARC/PEGI-skjemaet, gratis). | Spør om alder når kontoen lages. Du fyller ut IARC-skjemaet. |
+| 18 | Avmelding i e-post | Bare for markedsføring: samtykke på forhånd og enkel avmelding (markedsføringsloven § 15). Innloggingslenker og kvitteringer er unntatt. | Lenke for avmelding hvis vi sender nyhetsbrev |
+| 19 | Lisenser for skrift og bilder | Ja | Skriftene (Archivo og Source Serif 4) har OFL-lisens og er i orden. Modellene er laget selv i Blender. Kartdata og kilder må oppgis (se A5). En side med kildene (Claude) |
+| 20 | Sletting av data | Ja (GDPR art. 17). Google Play og App Store krever også at kontoen kan slettes inne i appen. | En knapp for å slette kontoen, som sletter lagringen og personopplysningene. Kjøpene beholdes så lenge bokføringsloven krever (Claude) |
+
+**Det som kan gjøres nå, uten å vente på valgene:** legge skriftene i appen, sette inn forbeholdet i Regler-appen og lage siden med kildene.
