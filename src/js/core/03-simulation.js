@@ -298,7 +298,8 @@ const DENT = {H:NaN, T:null};
 function denTime(H){
   if (DENT.H === H) return DENT.T;
   const T = {uerOpen:uerOpen(H)};
-  for (const sp of ALLSP){ const s = SPECIES[sp]; T[sp] = {av:seasonal(s.av, H), skrei:sp === 'torsk' ? seasonal(s.skrei, H) : 0}; }
+  // cod, haddock and saithe follow their spawning stock from year to year (stockF in 03d-quota.js; 1 in March 2027)
+  for (const sp of ALLSP){ const s = SPECIES[sp], f = stockF(sp, H); T[sp] = {av:seasonal(s.av, H) * f, skrei:sp === 'torsk' ? seasonal(s.skrei, H) * f : 0}; }
   DENT.H = H; DENT.T = T; return T;
 }
 function denSp(sp, q, H, T){
@@ -410,26 +411,25 @@ function clsPrice(port, sp, c, H, hook){
 }
 function price(port, sp, H){ return clsPrice(port, sp, SPECIES[sp].ref, H, true); }
 function avgPrice(sp, H, days){ let s = 0, n = 0; for (let d = 0; d < days; d++) for (const q of PORTS) if (q.mottak){ s += price(q, sp, H - d * 24); n++; } return s / n; }
-// ---------- quotas: open group (åpen gruppe) north of 62° N, J-30-2026 ----------
-const QUOTA = {cod:[[8, 4000, 3000], [10, 5600, 4200], [1e9, 6400, 4800]], hyseG:[4000, 5600, 6400], seiG:5000};
+// ---------- quotas north of 62° N: the regulation and the year's figures are in 03d-quota.js ----------
 function doyH(H){ const g = gDate(H); return Math.floor((g - Date.UTC(g.getUTCFullYear(), 0, 1)) / 864e5); }
 function yearH(H){ return gDate(H).getUTCFullYear(); }
 function quotaState(){ const y = yearH(S.t / 60); if (!S.quota || S.quota.y !== y) S.quota = {y, torsk:0, hyse:0, sei:0, ffW:-1, ffTot:0, ffCod:0, conf:0, confKr:0, byCod:0}; return S.quota; }
-// vessels with a participation right in the closed group, J-30-2026 §§ 16, 18, 19 (hyse and saithe for largest length under 11 m);
-// quota priced at about NOK 225 per kg of cod (estimate from Riksrevisjonen's 2017 level and the cod price since)
-// Vessels for sale with a closed-group right (deltakeradgang), by quota length (hjemmelslengde), with J-30-2026's figures: cod as a
-// fixed vessel quota, haddock and saithe as [maximum, guaranteed] kg. The price is the boat plus the cod quota at KPK kr a kg. KPK is
-// an estimate: Hepsøfjord (10.98 m, two quota sets) sold for 17.5 million in 2025, about 270 kr/kg; Riksrevisjonen put a 9 m right at
-// 1.8 million in 2017, when the quotas were far bigger. To be checked against the quota brokers.
+// Vessels for sale with a closed-group right (deltakeradgang), by quota length (hjemmelslengde). The quotas are the year's (licQ in
+// 03d-quota.js): cod as a fixed vessel quota, haddock and saithe as [maximum, guaranteed] kg for the boat's largest length. The price
+// is the boat plus the cod quota at KPK kr a kg. KPK is an estimate: Hepsøfjord (10.98 m, two quota sets) sold for 17.5 million in
+// 2025, about 270 kr/kg; no source publishes quota prices.
 const KPK = 260;
 const LIC_OFFERS = [
-  {id:'u7', ves:'trebat', hl:'under 7 m', cod:9562, hyse:[91198, 4343], sei:[163515, 5275], kpk:KPK, no:'Gammel tresnekke med hjemmel under 7 m', en:'Old wooden snekke with a right under 7 m'},
-  {id:'h7', ves:'snekke', hl:'7–7,9 m', cod:11301, hyse:[106700, 5100], sei:[191200, 6200], kpk:KPK, no:'Plastsnekke med hjemmel 7–7,9 m', en:'Fibreglass snekke with a right of 7–7.9 m'},
-  {id:'h8', ves:'jukesjark', hl:'8–8,9 m', cod:13434, hyse:[127000, 6000], sei:[227800, 7300], kpk:KPK, no:'Plastsjark med hjemmel 8–8,9 m', en:'Fibreglass sjark with a right of 8–8.9 m'},
-  {id:'h9', ves:'sjark', hl:'9–9,9 m', cod:16437, hyse:[157100, 7500], sei:[281800, 9100], kpk:KPK, no:'Havsjark 35 fot med hjemmel 9–9,9 m', en:'35 ft havsjark with a right of 9–9.9 m'},
-  {id:'h10', ves:'hurtigsjark', hl:'10–10,9 m', cod:17780, hyse:[167727, 7987], sei:[300754, 9702], kpk:KPK, no:'Hurtigsjark med hjemmel 10–10,9 m', en:'Speed sjark with a right of 10–10.9 m'}
+  {id:'u7', ves:'trebat', no:'Gammel tresnekke med hjemmel under 7 m', en:'Old wooden snekke with a right under 7 m'},
+  {id:'h7', ves:'snekke', no:'Plastsnekke med hjemmel 7–7,9 m', en:'Fibreglass snekke with a right of 7–7.9 m'},
+  {id:'h8', ves:'jukesjark', no:'Plastsjark med hjemmel 8–8,9 m', en:'Fibreglass sjark with a right of 8–8.9 m'},
+  {id:'h9', ves:'sjark', no:'Havsjark 35 fot med hjemmel 9–9,9 m', en:'35 ft havsjark with a right of 9–9.9 m'},
+  {id:'h10', ves:'hurtigsjark', no:'Hurtigsjark med hjemmel 10–10,9 m', en:'Speed sjark with a right of 10–10.9 m'},
+  {id:'h14', ves:'kyst15', no:'Kystbåt 14,99 m med hjemmel 14–14,9 m', en:'14.99 m coastal vessel with a right of 14–14.9 m'},
+  {id:'h20', ves:'kyst21', no:'Eldre kystbåt 21 m med hjemmel 20–20,9 m', en:'Older 21 m coastal vessel with a right of 20–20.9 m'}
 ];
-function licValue(l){ return l ? Math.round(l.cod * l.kpk) : 0; }
+function licValue(l){ return l ? Math.round(licQ(l).torsk * KPK) : 0; }
 // blad B in the fishermen's register, simplified. Deltakerloven § 6 asks the buyer of a closed-group vessel to have fished commercially
 // in at least three of the last five years, and blad B (fishing as the main occupation) is the usual proof. Here: 10 landing days with
 // you aboard and 1 G of first-hand value (G from 1 May 2025, nav.no; to be updated for 2026)
@@ -464,14 +464,11 @@ function deal(price, ti, inn){
 }
 function finance(x, months){ if (x.payoff) payDown(x.payoff); if (x.bankL > 0) takeLoan(x.bankL, months); if (x.inL > 0) takeLoan(x.inL, 120, 'loanIN'); S.cash -= x.cost; }
 function lenGroup(){ const L = BOAT.len || 5.8; return L < 8 ? 0 : L < 10 ? 1 : 2; }
-function codLimits(){ if (S.lic) return {max:S.lic.cod, guar:S.lic.cod}; const g = QUOTA.cod[lenGroup()]; return {max:g[1], guar:g[2]}; }
-// the open group's maximum-quota fishing is stopped when the group quota is estimated fished: 15 May in 2025, 16 April in 2026
-function codStopDoy(y){ return y === 2025 ? 134 : y === 2026 ? 105 : 98 + Math.floor(h2(y, 901) * 42); }
-function codOpen(H){ return !!S.lic || doyH(H) < codStopDoy(yearH(H)); }
-function codLimitNow(H){ const l = codLimits(); return codOpen(H) ? l.max : l.guar; }
-// fresh-fish scheme: from 29 June, cod up to a share of the week's fresh landings comes on top of the quota
-function ffPct(H){ const y = yearH(H), d = doyH(H), day = (m, dd) => Math.floor((Date.UTC(y, m - 1, dd) - Date.UTC(y, 0, 1)) / 864e5);
-  return d < day(6, 29) ? 0 : d < day(9, 15) ? 0.2 : d < day(10, 13) ? 0.3 : d < day(12, 15) ? 0.4 : 0.1; }
+function codLimits(H){ if (H == null) H = S.t / 60; if (S.lic){ const c = licQ(S.lic, H).torsk; return {max:c, guar:c}; } const O = yearQuota(yearH(H)).open, g = lenGroup(); return {max:(O.max[g] + openMaxAdd(H)) * 1000, guar:O.guar[g] * 1000}; }
+// the open group's maximum-quota fishing is stopped when the group quota is estimated fished (the stop and the raises are worked out in
+// 03d-quota.js); after the stop only the guaranteed quota is left. A closed-group vessel quota is never stopped.
+function codOpen(H){ if (S.lic) return true; const sd = codStopDoy(yearH(H)); return sd == null || doyH(H) < sd; }
+function codLimitNow(H){ const l = codLimits(H); return codOpen(H) ? l.max : l.guar; }
 // ---- haill: luck from the quay. Fresh goods: full effect for two days, fading to nothing on day seven. Sold for real money only (test mode now) or won at the pub. ----
 // Two kinds (the user's list 04.10.2026), bought (for real money; a test now) or won at the pub, and kept in a store until you switch one
 // on yourself: never by itself. Haill is fresh the first 48 hours (+100 % luck on every species), then «mellomhaill» to 72 hours

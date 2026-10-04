@@ -147,6 +147,8 @@ Foreløpig antar vi at lever utgjør 5 % av rundvekten. Rogn utgjør 4 % for tor
 
 ## Kvoter og regulering i åpen gruppe 2026
 
+Tallene her er startpunktet. Fra 04.10.2026 følger spillet forskriften slik den sto fra 1. oktober 2026 (J-161-2026), og kvotene regnes ut år for år fra totalkvoten og bestanden. Flåten fisker ned gruppekvoten i åpen gruppe, og stoppen kommer av seg selv. Se 5.5 i overleveringen.
+
 Startbåten under 8 meter har 4,0 tonn torsk i maksimalkvote, hvorav 3,0 tonn er garantert. Hyse og sei er fritt fiske med 4,0 og 5 tonn garantert.
 
 | Lengdegruppe | Torsk, maksimalkvote | Torsk, garantert | Hyse, garantert | Sei, garantert |
@@ -155,7 +157,7 @@ Startbåten under 8 meter har 4,0 tonn torsk i maksimalkvote, hvorav 3,0 tonn er
 | 8–9,99 m | 5,6 t | 4,2 t | 5,6 t | 5 t |
 | 10 m og over | 6,4 t | 4,8 t | 6,4 t | 5 t |
 
-Hyse og sei har ingen øvre grense så lenge fisket er åpent. Gruppekvotene for 2026 er 9 257 tonn torsk, hvorav 865 tonn til ferskfiskordningen, 3 706 tonn hyse og 7 780 tonn sei. Departementets rapport oppgir 3,2 tonn garantert torsk for 8–9,99 m, mens forskriften sier 4,2 tonn. Vi bruker forskriften til det er avklart.
+Hyse og sei har ingen øvre grense så lenge fisket er åpent. Gruppekvotene for 2026 er 9 257 tonn torsk, hvorav 865 tonn til ferskfiskordningen, 3 706 tonn hyse og 7 780 tonn sei. Departementets rapport oppgir 3,2 tonn garantert torsk for 8–9,99 m, men forskriften sier 4,2 tonn, også i J-161-2026. Spillet bruker 4,2 tonn.
 
 1. **Kvoteåret** går fra 1. januar til 31. desember, og båten kan bare fiske én kvote per art. Det er ikke lov med bifangst av torsk utover kvoten.
 2. **Stopp i fisket:** Fiskeridirektoratet stopper fisket når gruppekvoten er beregnet oppfisket. Da kan båten bare fiske resten av den garanterte kvoten. Maksimalkvotefisket ble stoppet 15. mai i 2025 og allerede 16. april i 2026. I spillet regnes resten av flåtens fangst ut etter sesongen, og stoppen varsles i Kystposten en uke før.
@@ -241,7 +243,7 @@ Hyse- og seikvotene gjelder båter med største lengde under 11 meter. Tallene e
 
 ## Åpne spørsmål
 
-Seks av sju spørsmål er avklart, og det som gjenstår påvirker ikke startbåten. Spesifikasjonen er klar til godkjenning.
+Alle sju spørsmålene er avklart.
 
 - [x] Dagsfangst: kalibreres mot årsfangstene per båt i regionen, se fangstmodellen.
 - [x] Dynamiske minstepriser for torsk, hyse og sei: lagt inn fra Råfisklagets tabeller gjeldende fra 21. september 2026.
@@ -249,4 +251,4 @@ Seks av sju spørsmål er avklart, og det som gjenstår påvirker ikke startbåt
 - [x] Redskap: fiskestang, så juksa, så garn, line og teiner (bygget 30.09.2026, se overleveringen kapittel 9).
 - [x] Pris på lukket gruppe: 2,5–9,5 millioner kr med båt (260 kr/kg torsk, anslag), se progresjonen.
 - [x] Fjordlinjer rundt Senja: lagt inn under kvoter og regulering, med reglene fra høstingsforskriften kapittel VI.
-- [ ] Kvoteendringer i 2026: forskriften ble endret seks ganger fra februar til mai, og maksimalkvotefisket i åpen gruppe ble stoppet 16. april. Garantert torsk for 8–9,99 m må avklares, 4,2 eller 3,2 tonn.
+- [x] Kvoteendringer i 2026: forskriften ble endret ni ganger fram til J-161-2026 (1. oktober). Garantert torsk for 8–9,99 m er 4,2 tonn. Spillet følger J-161-2026 og regner senere år ut fra totalkvoten (04.10.2026).

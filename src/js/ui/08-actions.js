@@ -98,6 +98,10 @@ function sell(){
     const pct = ffPct(H), ffAllow = pct ? Math.max(0, pct * (q.ffTot + saleKg) - q.ffCod) : 0;
     codFF = Math.min(codKg, ffAllow); codQ = Math.min(codKg - codFF, codRoom(H)); codConf = codKg - codFF - codQ;
     if (codKg > 0 && codConf > 0) confBy.torsk = codConf / codKg;
+    // the closed group's haddock and saithe: the maximum quota, then up to 30 % haddock and 20 % saithe as bycatch in each landing
+    // (J-161-2026 §§ 18 and 19); the rest is confiscated
+    if (acc === 'lukket'){ const LQ = licQ(S.lic, H), all = holdTotal();
+      for (const [sp, share] of [['hyse', 0.3], ['sei', 0.2]]){ const k = kgOf(sp), ok = Math.min(k, Math.max(LQ[sp][0] - q[sp], share * all)); if (k > 0 && ok < k - 0.01) confBy[sp] = 1 - Math.max(0, ok) / k; } }
   }
   // The landing note lists each lot at its full value and takes what is confiscated off in rows of its own; every row is whole
   // kroner and the total is the sum of the rows, so the note adds up and the cash gets exactly the total less the crew's share.
@@ -138,15 +142,20 @@ function sell(){
   const ex = {}; for (const [n, k2, pr] of extra){ ex[n] = ex[n] || {kg:0, sum:0}; ex[n].kg += k2; ex[n].sum += k2 * pr; }
   let exKr = 0; for (const n in ex){ ex[n].sum = Math.round(ex[n].sum); exKr += ex[n].sum; }
   const total = fishKr + stKr + ordKr + exKr;
+  // quota cooperation (§ 31): cod landed beyond your own vessel quota goes on the partner's, and he takes his share of its value
+  let coopKr = 0; if (acc === 'lukket' && S.lic.coop && S.lic.coop.y === yearH(H) && codQ > 0){ const own = licQ({...S.lic, coop:null}, H).torsk, onP = Math.max(0, q.torsk + codQ - own) - Math.max(0, q.torsk - own);
+    const codGross = Object.values(lines).filter(r => r.sp === 'torsk').reduce((a, r) => a + r.sum, 0); coopKr = Math.round(COOP.share * onP * codGross / Math.max(1, codKg)); }
   q.torsk += codQ; q.hyse += kgOf('hyse') * (1 - (confBy.hyse || 0)); q.sei += kgOf('sei') * (1 - (confBy.sei || 0)); q.byCod = (q.byCod || 0) + byCod;
-  if (acc !== 'none'){ q.ffTot += saleKg; q.ffCod += codFF; } q.conf += confKg + crabSmall; q.confKr += confKr + crabKr;
+  if (acc !== 'none'){ q.ffTot += saleKg; q.ffCod += codFF; }
+  if (acc === 'open') qyAt(H).me += codQ / 1000;   // your landings count in the open group's catch (03d-quota.js) q.conf += confKg + crabSmall; q.confKr += confKr + crabKr;
   const arr = Object.values(lines).sort((a, c) => ALLSP.indexOf(a.sp) - ALLSP.indexOf(c.sp) || a.c - c.c || 'EABXV'.indexOf(a.g) - 'EABXV'.indexOf(c.g));
   // lott goes to those who were aboard; a crew member given time off gets none for this trip
   const aboardNow = crewAboard(), lott = Math.round(aboardNow.reduce((a, c) => a + c.share, 0) * total);
   for (const c of aboardNow) c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, total * c.share]]);
   for (const c of S.crew) c.off = false;
   if (meAboard()) fmLand(total);
-  S.cash += total - lott; S.stats.revenue += total; S.stats.costs += lott; S.stats.kg += kg; S.hold = [];
+  S.cash += total - lott - coopKr; S.stats.revenue += total; S.stats.costs += lott + coopKr;
+  if (coopKr > 0) log(S.lic.coop.name + ' fikk ' + kr(coopKr) + ' for torsken på kvoten hans.', S.lic.coop.name + ' got ' + kr(coopKr) + ' for the cod on his quota.'); S.stats.kg += kg; S.hold = [];
   const fs = S.marks.length ? S.marks[S.marks.length - 1] : null, field = fieldCode(S.fsess || fs || b.pos);
   // the whole landing note goes with the sale, for the deck log's Salg tab (ui/06b-book-tabs.js)
   S.saleSeq = (S.saleSeq || 0) + 1;
@@ -159,6 +168,7 @@ function sell(){
   if (codFF > 0.5) log(Math.round(codFF) + ' kg torsk gikk på ferskfisktillegget.', Math.round(codFF) + ' kg of cod went on the fresh-fish allowance.');
   const vt = S.fleet && S.fleet.length > 1 ? '«' + S.boatName + '»: ' : '';
   if (acc === 'none' && confKg > 0.5) msg('Norges Råfisklag', vt + 'Båten har ikke adgang til å fiske torsk, hyse og sei. Av disse kan bare 10 % av landingen være bifangst, og høyst ' + fmt(BYCATCH.cod / 1000, 0) + ' tonn torsk i året. ' + Math.round(confKg) + ' kg er inndratt, verdi ' + kr(confKr) + '.', vt + 'The boat has no access to fish cod, haddock and saithe. Only 10% of the landing may be bycatch of these, and at most ' + fmt(BYCATCH.cod / 1000, 0) + ' t of cod a year. ' + Math.round(confKg) + ' kg has been confiscated, worth ' + kr(confKr) + '.');
+  else if (acc === 'lukket' && confKg - codConf > 0.5) msg('Norges Råfisklag', vt + 'Maksimalkvoten for hyse eller sei er fisket, og etter den kan bare 30 % hyse og 20 % sei være bifangst i hver landing. ' + Math.round(confKg) + ' kg er inndratt, verdi ' + kr(confKr) + '.', vt + 'The maximum quota for haddock or saithe is fished, and after it only 30 % haddock and 20 % saithe may be bycatch in each landing. ' + Math.round(confKg) + ' kg is confiscated, worth ' + kr(confKr) + '.');
   else if (codConf > 0.5) msg('Norges Råfisklag', vt + 'Du hadde ikke torskekvote igjen for ' + Math.round(codConf) + ' kg torsk. Verdien, ' + kr(confKr) + ', er inndratt.', vt + 'You had no cod quota left for ' + Math.round(codConf) + ' kg of cod. Its value, ' + kr(confKr) + ', has been confiscated.');
   // an undersized-crab landing is a breach of the minimum size (høstingsforskriften kap. X); the fee is a placeholder
   let crabFine = 0; if (crabSmall > 0.01){ crabFine = GFINE.crab + GFINE.perCrab * Math.round(crabSmallN); det.fine = crabFine; S.cash -= crabFine; S.stats.costs += crabFine; msg('Fiskeridirektoratet', vt + 'Landingen hadde ' + fmt(crabSmall, 1) + ' kg taskekrabbe under minstemålet på 13 cm. Krabben er inndratt, og du får et overtredelsesgebyr på ' + kr(crabFine) + '.', vt + 'The landing had ' + fmt(crabSmall, 1) + ' kg of brown crab under the 13 cm minimum size. The crab is confiscated and you are fined ' + kr(crabFine) + '.'); }

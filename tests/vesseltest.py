@@ -65,8 +65,8 @@ async def main():
         r = await pg.evaluate("""(()=>{ const R = {}, b = S.boat;
           R.ladder = Object.entries(VESSELS).map(([k, V]) => [k, V.len, V.cls, !!V.lock]);
           R.offers = LIC_OFFERS.map(O => [O.id, O.ves, VESSELS[O.ves].len, Math.round((VESSELS[O.ves].price + licValue(O)) / 1000)]);
-          // the 8.9 m sjark is in the open group's 8–9.99 m quota group: 5.6 t of cod
-          const t0 = b.type; b.type = 'jukesjark'; applyVessel(); R.jukGroup = [lenGroup(), codLimits().max]; b.type = 'kyst21'; applyVessel();
+          // the 8.9 m sjark is in the open group's 8–9.99 m quota group: the year's maximum quota for it (5.6 t in 2026)
+          const t0 = b.type; b.type = 'jukesjark'; applyVessel(); R.jukGroup = [lenGroup(), codLimits().max, Math.round((yearQuota(yearH(S.t / 60)).open.max[1] + openMaxAdd(S.t / 60)) * 1000)]; b.type = 'kyst21'; applyVessel();
           const inside = GROUNDS.find(g => insideFjord(g.p) && depthF(g.p) > 20).p; b.status = 'fishing'; b.port = null; b.pos = {...inside}; b.gop = null; b.rig = 'juksa'; b.gear = true; b.fishUntil = S.t + 120; S.hold = []; S.crew = [];
           for (let i = 0; i < 60; i++) step(); R.fjord = {kg:Math.round(holdTotal()), warn:S.log.slice(-40).some(e => /fjordlinja/.test(e.no))};
           b.type = t0; applyVessel(); b.status = 'idle'; return R; })()""")
@@ -91,8 +91,8 @@ async def main():
         print(ok([x[0] for x in hd['out']] == [hd['spec'], round(hd['spec'] * 1.25), round(hd['spec'] * 1.6), hd['spec'] * 2] and hd['out'][3][1] == hd['ice'] * 2 and all(x[0] == x[2] for x in hd['out']) and hd['job'] == 1), 'the hold rebuilt in three steps: +25 %, +60 %, twice, the ice room with it', hd)
         lens = [x[1] for x in r['ladder'] if x[2] != 'hav']
         print(ok(len(r['ladder']) >= 14 and all(x[3] for x in r['ladder'] if x[2] == 'hav') and not any(x[3] for x in r['ladder'] if x[2] != 'hav')), 'the ladder runs from the open boat to the ocean fleet, and only the ocean fleet is locked')
-        print(ok([o[0] for o in r['offers']] == ['u7', 'h7', 'h8', 'h9', 'h10'] and r['offers'][0][3] < r['offers'][-1][3]), 'five closed-group offers by quota length, the cheapest the smallest')
-        print(ok(r['jukGroup'][0] == 1 and r['jukGroup'][1] == 5600), 'the 8.9 m sjark fishes in the open group 8–9.99 m with 5.6 t of cod')
+        print(ok([o[0] for o in r['offers']] == ['u7', 'h7', 'h8', 'h9', 'h10', 'h14', 'h20'] and all(r['offers'][i][3] < r['offers'][i + 1][3] for i in range(6))), 'seven closed-group offers by quota length (the coastal vessels with 14–14.9 and 20–20.9 m), dearer the longer')
+        print(ok(r['jukGroup'][0] == 1 and r['jukGroup'][1] == r['jukGroup'][2]), 'the 8.9 m sjark fishes in the open group 8–9.99 m, with the year\'s maximum quota for that group', r['jukGroup'])
         print(ok(r['fjord']['kg'] == 0 and r['fjord']['warn']), 'a 21 m vessel may not jig inside the fjord line')
         # the market: tabs, cards with a side view, the spec sheet, the ocean fleet locked, one open-group boat, in landscape and portrait
         for vw, vh, tag in ((1100, 800, 'liggende'), (800, 1180, 'staende')):
@@ -115,7 +115,7 @@ async def main():
             await pg.screenshot(path=os.path.join(ROOT, 'tests', 'out', 'market_' + tag + '.png'))
             print(tag, json.dumps(u, ensure_ascii=False)[:900])
             t = u['tabs']
-            print(ok(len(t['open']) == 8 and len(t['lic']) == 5 and len(t['kyst']) == 2 and len(t['hav']) == 4 and all(c[2] for v in t.values() for c in v)), tag + ': four tabs with every boat as a card with its side view')
+            print(ok(len(t['open']) == 8 and len(t['lic']) == 7 and len(t['kyst']) == 2 and len(t['hav']) == 4 and all(c[2] for v in t.values() for c in v)), tag + ': four tabs with every boat as a card with its side view')
             print(ok(u['havText'] and not u['havBuy'] and len(u['havSecs']) >= 3), tag + ': the ocean vessel has a full spec sheet (length, beam, draft, weight) and no buy button')
             print(ok(u['tiBtn'] and u['tiOk'] and not u['fleetBtn']), tag + ': an open-group boat is bought by trading in, not for the fleet, before the company has a closed-group vessel')
             print(ok('Hjemmel' in u['licSecs'] and u['licBtns'] == 2), tag + ': a boat with a right shows the right and both ways to buy')

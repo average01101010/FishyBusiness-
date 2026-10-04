@@ -789,31 +789,82 @@ Mister du juksa, fisker bare juksamaskinene til du kjøper ny i Fiskeutstyr. `mo
 
 ### 5.5 Kvoter og regulering
 
-- **Åpen gruppe, J-30-2026 § 21:**
+Kvotesystemet ligger i `core/03d-quota.js` (04.10.2026, plan Q1–Q6). Grunnlaget er forskriften slik den sto fra 1. oktober 2026 (J-161-2026, fiskeridir.no), Fiskeridirektoratets saksdokument 5/2025 til reguleringsmøtet og kvoterådene fra Havforskningsinstituttet. Kildenotatet med alle tall og lenker ligger under kapittel 6.
 
-| Lengde | Maks torsk | Garantert torsk |
-|---|---|---|
-| Under 8 m | 4,0 t | 3,0 t |
-| 8–9,99 m | 5,6 t | 4,2 t (uavklart, se kap. 10) |
-| 10 m og over | 6,4 t | 4,8 t |
-
-  Hyse og sei er fritt fiske, med garantert 4,0/5,6/6,4 t hyse og 5 t sei.
-- **Stopp i maksimalkvotefisket** (`codStopDoy`): 15. mai i 2025 og 16. april i 2026. Andre år trekkes en dato mellom 8. april og 20. mai. Kystposten varsler en uke før.
-- **Ferskfiskordningen** (`ffPct`): 20 % fra 29. juni, 30 % fra 15. september, 40 % fra 13. oktober og 10 % fra 15. desember, av ukas ferske landinger. Hyse under 0,8 kg teller ikke.
+- **Fra totalkvote til fartøykvote** (`norQuota`, `codChain`, `yearQuota`):
+  - **Norges kvote av torsk** = (TAC + 21 000 − tredjeland)/2 + 6 000. Formelen treffer 2019–2025 eksakt. Tredjelandsandelen 13,455 % er regnet ut fra § 2 for 2026. Hyse og sei følger TAC i samme forhold som i 2026.
+  - **Fra toppen trekkes:**
+    - forskning 880 t
+    - ungdoms- og fritidsfiske 7 000 t
+    - kystfiskeordningen (0,9 %, minst 3 000 t)
+    - levendelagring 500 t
+    - rekrutteringskvoter: 2 543 t i lukket og 450 t i åpen gruppe
+  - **Åpen gruppe får 6,62 %.**
+  - **Trålstigen:** 28 % til trål når resten er under 130 000 t, stigende til 33 % ved 330 000 t.
+  - **Av det konvensjonelle:** havfiskeflåten får 12,81 % og lukket gruppe 87,19 %.
+  - **Lukket gruppe:**
+    - Den gir ferskfiskordningen sin del.
+    - Resten fordeles med Finnmarksmodellen: 27,83 / 26,31 / 26,43 / 19,43 % på hjemmelslengdene under 11 / 11–14,99 / 15–20,99 / 21–27,99 m, pluss rekrutteringskvotene under 15 m.
+  - **Kontroll mot 2026:** Kjeden gir § 5 for 2026 eksakt (9 257 / 72 945 / 19 164 / 19 036 / 17 407 / 12 796 t). `quotatest.py` sjekker det.
+- **Åpen gruppe** (§§ 21, 26, 27):
+  - Maksimalkvoten for 2026 var 4,0 / 5,6 / 6,4 t og den garanterte 3,0 / 4,2 / 4,8 t (under 8 m / 8–9,99 m / 10 m og over).
+  - Senere år skaleres kvotene med gruppekvoten. Maksimalkvotene ganges i tillegg med en trukket faktor på 0,75–1,15 for hvor stramt direktoratet setter dem. Den garanterte kvoten er aldri over maksimalkvoten.
+  - Hyse og sei har ingen maksimalkvote. Den garanterte kvoten skaleres med Norges kvote.
+- **Lukket gruppe** (§§ 16, 18, 19, `HJ` og `licQ`):
+  - **Torsk:** kvotefaktor × årets kvoteenhet for gruppen. I 2026 er enheten 8,4172 / 7,2662 / 6,9986 / 6,9982.
+  - **Hyse og sei:** garantert kvote og maksimalkvote etter båtens største lengde, skalert med Norges kvote. Hyse under 11 m har ingen grense, slik det er fra 31.08.2026.
+  - **Hjemmelslengder spillet selger:** under 7 m, 7–7,9, 8–8,9, 9–9,9, 10–10,9, 14–14,9 (`kyst15`) og 20–20,9 m (`kyst21`, 21 m).
+  - **Ingen lengdegrense:** Deltakerforskriften for 2026 har ingen største lengde knyttet til hjemmelslengden, bare under 500 m³ lasterom.
+  - **Over maksimalkvoten** kan en landing ha 30 % hyse og 20 % sei. Resten inndras ved levering.
+- **Bestand og totalkvote** (`STOCK`, `stockYear`, `stockF`):
+  - **Historikken** for gytebestand og totalkvote 2014–2026 er fra HI.
+  - **2027:** Rådet er 312 667 t torsk, 180 336 t hyse og 127 807 t sei. TAC settes til rådet eller inntil 8 % over (torsk; i 2026 var den 5,8 % over).
+  - **Fra 2028** gjelder en enkel modell per lagring:
+    - Bestanden trekkes mot et langtidsnivå med tilfeldige årsklasser, og fiske over rådet holder den nede.
+    - Rådet ∝ SSB^0,55 under B_pa.
+    - Endringen er høyst ±20 % per år over B_pa (sei ±15 %).
+  - **Fisketettheten** følger kvadratroten av gytebestanden mot mars 2027, for torsk, hyse og sei.
+  - **Frøet** er `S.qseed` per lagring, så verdenen er ulik fra spill til spill.
+- **Åpen gruppe gjennom året** (`qyOf`, `qyStep`, `qyAt`, `S.qy`):
+  - **Flåten:** Rundt 2 100 virtuelle båter fisker gruppekvoten ned dag for dag. Fangsten avhenger av sesongen, været (vind under 12 m/s), bestanden og maksimalkvotene de har igjen. Antall båter og hvor hardt de fisker, trekkes for hvert år.
+  - **Stopp:** Direktoratet stopper med en ukes varsel i Kystposten når gruppekvoten ser ut til å bli fisket, men bare før 1. juni.
+  - **Økning:** Maksimalkvotene økes 1. mai og 1. juni når båtene ikke kan ta gruppekvoten.
+  - **Fritt fiske** kan komme om høsten.
+  - **Din fangst** teller med.
+  - **Kalibrering mot 2019–2026** (`k = 0,02`):
+    - Med 2026-kvotene kommer stoppen i snitt 20. april (16. april i virkeligheten).
+    - Rundt en tredjedel av årene har ingen stopp (3 av 8 år i 2019–2026).
+  - **Lagring:** Året regnes ut dag for dag fram til i dag og lagres, så en varslet stopp står fast.
+- **Ferskfiskordningen** (`ffPlan`, `ffPct`):
+  - 20 % fra 29. juni.
+  - Om høsten trekkes en endring etter historikken for 2017–2025:
+    - økt til 30–50 % mellom 15. september og 25. november i rundt 70 % av årene
+    - nedgang som i 2023
+    - stopp som i 2019
+    - ofte 10 % før jul
+  - Kystposten melder endringene.
 - **Rekkefølge ved levering:** ferskfisktillegget først, så kvoten, og resten inndras. Verdien av inndratt fisk trekkes fra.
-- **Lukket gruppe** (`LIC_OFFERS`, Båthandel → Med hjemmel). Prisen er båten pluss torskekvoten ganger kvoteprisen `KPK` = 260 kr/kg:
-
-| Id | Hjemmelslengde | Båt | Torsk | Pris |
-|---|---|---|---|---|
-| `u7` | under 7 m | `trebat` | 9,562 t | 2 546 120 (inngangen) |
-| `h7` | 7–7,9 m | `snekke` | 11,301 t | 3 183 260 |
-| `h8` | 8–8,9 m | `jukesjark` | 13,434 t | 4 242 840 |
-| `h9` | 9–9,9 m | `sjark` | 16,437 t | 5 423 620 |
-| `h10` | 10–10,9 m | `hurtigsjark` | 17,780 t | 9 522 800 |
-
-  - Kvotetallene er fra J-30-2026 (tabellen i spesifikasjonen). Kvoteprisen er et anslag: Hepsøfjord (10,98 m, to kvotesett) ble solgt for 17,5 mill. i 2025, rundt 270 kr/kg, og Riksrevisjonen satte en 9-meters hjemmel til 1,8 mill. i 2017.
-  - `kyst15` og `kyst21` selges uten hjemmel, fordi kvotene for 11–21 m ikke er hentet ennå.
-  - Fast fartøykvote uten stopp. Kjøper du til flåten, mister båten i åpen gruppe plassen der, men kan fiske kveite, krabbe og annet enn torsk, hyse og sei.
+- **§ 29 ved båtbytte:**
+  - Det eieren har fisket i åpen gruppe i år, følger med til neste båt i åpen gruppe (`S.openUsed`).
+  - En båt som tar over en hjemmel, starter året med det selgeren har fisket (`sellerCod`).
+- **Registeret i lukket gruppe** (`REGN`, `npcReg`):
+  - Torsk nord hadde 1 622 deltakeradganger per 17.10.2025. I spillet er de fordelt på hjemmelslengdene spillet selger, og hver har en NPC-eier.
+  - Kjøper du en hjemmel, går eieren ut, så det blir én NPC mindre. Strukturering tar båten ut for godt.
+  - Når spillet får ekte spillere på en felles server, tar de plassene til NPC-ene i det samme registeret (se veikartet i kapittel 9).
+- **Kvotehandel** (Kvote-appen → Marked):
+  - **Strukturkvote for 11–27,99 m** (J-244-2025):
+    - Du kjøper en hjemmel i samme gruppe, hogger båten og får kvotefaktoren minus 10 %, for 20 år.
+    - Kvotetaket er 3× egen kvote for 11–14,99 m og 4× for 15–27,99 m.
+    - Når tiden går ut, går kvoten tilbake til gruppen (`structExpire`).
+  - **Den særlige kvoteordningen under 11 m** (fra 2025): To egne båter med hjemmel, begge eid siden året før. Den ene oppgir hjemmelen og selges, og den andre fisker begge kvotene. Ingen avkorting, etter min lesning.
+  - **Kvotesamarbeid (§ 31):**
+    - Samarbeidet er med en NPC-eier, som mønstrer på (begge eierne skal være om bord).
+    - Hans kvote kommer om bord for året, og han får halvparten av verdien av torsken som landes på den. Andelen er en antakelse.
+    - Han går i land ved nyttår.
+  - **Leie av kvote** er ikke med. Det er ikke lov å overføre fangst eller kvantum til en annen båt (§ 30).
+- **Kvote-appen:** fanene Mine kvoter, Åpen gruppe (gruppekvote, fisket så langt, stopp, økninger og ferskfisk), Bestand (graf over gytebestand og totalkvote med B_pa og B_lim) og Marked.
+- **Kystposten:** stoppvarsel og stopp, økning, fritt fiske, endringer i ferskfiskordningen, kvoterådet for neste år (26. juni), totalkvoten (17. oktober) og reguleringen for neste år (19. desember).
+- **Kvoteprisen** (`KPK`) står på 260 kr/kg. Jeg fant ingen kilde for kvotepriser (se kapittel 10). Med større kvoter i 2027 koster hjemlene mer, og inngangen til lukket gruppe kommer litt senere i `progweek`.
 - **Blad B** (`BLADB`, `S.fm`, `fmLand` i `sell()`): Deltakerloven § 6 krever at den som får ervervstillatelse, har drevet ervervsmessig fiske i minst tre av de siste fem årene (lov 26. mars 1999 nr. 15, Lovdata). Blad B i fiskermanntallet er det vanlige beviset. I spillet er det forenklet til 10 landingsdager med deg om bord og 1 G i førstehåndsverdi (130 160 kr, G fra 1. mai 2025, nav.no). Fiskeridirektoratet sender melding, Papirer i Sjømann-appen har et kort med fremdriften, og en båt med hjemmel krever blad B. Gamle lagringer får det fra sluttsedlene, eller med en gang hvis de har en hjemmel.
 - **Finansiering** (`deal()`, `finance()`, `payDown()` i `core/03-simulation.js`):
   - Kystbanken låner inntil 80 % av prisen til 6,9 %, over 15 år for båt med hjemmel og 10 år ellers, og krever tre sluttsedler.
@@ -1606,7 +1657,11 @@ Jonas' liste: oppgraderinger, kvotehandel, kikkert, raskere fangst, fortøying, 
 
 | Tema | Kilde | Hovedpunkter |
 |---|---|---|
-| Kvoter nord for 62° N | J-30-2026 (endret flere ganger i 2026) | Se 5.5. Stopp 16.4.2026 |
+| Kvoter nord for 62° N | J-161-2026, gjeldende fra 01.10.2026 (fiskeridir.no/yrkesfiske/j-meldinger/j-161-2026). Kjeden: J-30, J-43, J-52, J-57, J-76, J-80, J-88, J-137, J-156, J-161 | Se 5.5. Stopp i åpen gruppe 16.4.2026 (J-57). Garantert torsk 8–9,99 m er 4,2 t |
+| Fordeling av norsk kvote | Fiskeridirektoratets saksdokument 5/2025 (reguleringsmøtet november 2025), og tilsvarende for 2019–2024 | Avsetninger, åpen gruppe 6,62 %, trålstigen, Finnmarksmodellen. Gir § 5 eksakt |
+| Bestander og råd | HI, kvoteråd for 2027 (juni 2026), og IMR-VNIRO-rapporten 2026 | Torsk: TAC 2026 285 000 t, råd 2027 312 667 t, B_lim 220 000, B_pa 460 000 t. Hyse og sei i STOCK |
+| Strukturkvoter | Forskrift om spesielle kvoteordninger for kystfiskeflåten (J-244-2025), og høringsnotatet om strukturgevinst 2026 | 11–27,99 m, samme gruppe, 10 % avkorting, 20 år, kvotetak 3× (11–14,99) og 4× (15–27,99). Særlig kvoteordning under 11 m fra 2025 |
+| Åpen gruppe og ferskfisk, historikk | Saksdokumentene 2019–2025 | Stopp 24.3.2019, 20.4.2020, 1.5.2023, 15.5.2025, 16.4.2026; ingen i 2021, 2022, 2024. Ferskfisk 2017–2025 |
 | Maskevidde i torskegarn | Maskeviddeforskriften (Lovdata 1989-10-10-1095) | Minst 156 mm nord for 62° N. Spillet selger 156, 180 og 200 mm |
 | Fjordlinja og redskap | Høstingsforskriften kap. VI | Innenfor: høyst 80 torskegarn og 5 000 kroker, ikke snurrevad, ikke fartøy på 15 m eller mer. Håndheves når du setter redskap |
 | Røkting | Høstingsforskriften kap. V | Garn og line for kveite og breiflabb minst hver 4. dag. Hvert fartøy røkter egne teiner |
@@ -1617,7 +1672,7 @@ Jonas' liste: oppgraderinger, kvotehandel, kikkert, raskere fangst, fortøying, 
 | Deltakelse | Deltakerforskriften 2025/2026 (Lovdata) | Eier med ≥ 50 % i båt i lukket gruppe gjør at andre båter ikke kan være i åpen gruppe. Eier med båt i åpen gruppe kan ikke ha flere der |
 | Eier om bord | Fiskeridirektoratets høringsnotat 26.03.2026 | I åpen gruppe må eieren selv være høvedsmann om bord (unntak ved sykdom, graviditet med mer) |
 | Én båt | NFD pressemelding 19.12.2025 | «Ein person, ein båt, ein kvote» |
-| Bifangst uten adgang | J-30 § 35 | Høyst 10 % torsk, hyse og sei samlet per landing, og høyst 2 t torsk |
+| Bifangst uten adgang | J-161-2026 § 35 (sjekket 04.10.2026) | Høyst 10 % torsk, hyse og sei samlet per landing, og høyst 2 t torsk |
 | Kveite | Høstingsforskriften § 39, 2026 | Fredet 20.12–20.4, 84 cm / 7,2 kg, slippes over 200 cm |
 | Minstepriser | Råfisklaget, 21.09.2026 og rundskriv 7/2026 | Se `SPECIES.cls` |
 | Priser og sesong | Råfisklaget, salgsstatistikk 2025 | Troms-sonen, fersk |
@@ -1909,6 +1964,10 @@ Jonas diskuterte med en annen AI-modell om å gjøre spillet til en PWA og utvid
     - push ved ETA: klienten regner ut tidspunktet, serveren sender varselet
     - betaling for haill (kap. 7)
   - **P3, flerspiller:** Serveren kontrollerer sluttsedler, slik at topplistene og det felles markedet ikke kan jukses.
+    - **Verdener (Jonas 04.10.2026):** Hver verden er en kopi av norsk fiskeri, med de samme 1 622 hjemlene i lukket gruppe, rundt 2 100 båter i åpen gruppe, de samme bestandene og den samme forskriften.
+      - NPC-ene fyller plassene som ikke er tatt av spillere. En spiller som kjøper en hjemmel, tar over plassen til NPC-eieren (registeret `npcReg` i `03d-quota.js` er laget for å flyttes til serveren). I åpen gruppe tar hver spiller plassen til én av de virtuelle båtene.
+      - Når alle NPC-hjemlene i en verden er kjøpt, handler spillerne med hverandre, og kvoteprisen stiger.
+      - Når en verden er full, starter nye spillere i en ny verden. Bestander og kvoter justeres ikke for å gi plass, fordi det ville bryte realismen.
   - **P4, nye regioner i soner:** Soner etter **Norges Råfisklags ni soner** (sone 1 Øst-Finnmark til sone 9 Nordmøre, som er nettopp Råfisklagets område). Hver sone får egne mottak, fjordlinjer, fangstfelt og regler med kildesjekk. Kongekrabbe i kvoteområdet øst for 26° Ø.
 - **Tone:** Engasjementet skal komme av god fisking, med nyttige varsler som spilleren velger selv. Uttrykk som «avhengighetsskapende», «null frafall» og «instant dopamin» strider mot prinsippene i kapittel 7, og Forbrukerrådet og EU følger manipulerende design i spill.
 - **Kilder:**
@@ -2040,27 +2099,34 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
 - **Havsjarken (`sjark`), åpne punkter:** Formen under vannlinja er anslått, og ballastkjølen er en egen kropp som ikke glir over i skroget. Stytteseglet står alltid, også i havn. Styrhusets dør på babord side og innredningen er ikke med. De to sjarkmodellene gjør sammen `dist/index.html` rundt 2,6 MB større (7,5 MB).
 - **Starterbåten (`skiff`), åpne punkter:** Den gamle skiffen i `buildSkiff` bygges fortsatt én gang og byttes ut med GLB-delene. Den er reserve og kan ryddes bort. Skjermene i konsollen er ikke levende lenger (Jonas). Sløyebordet og blødekaret står tett ved setet, og blødekaret er tegnet i 75 % størrelse. Med de tre detaljerte båtene er `dist/index.html` 8,2 MB.
 - **Fartøystigen, usikre tall og regler:**
-  - Kvoteprisen (260 kr/kg) er et anslag fra ett salg i 2025 og Riksrevisjonen i 2017.
+  - Kvoteprisen (260 kr/kg) er et anslag fra ett salg i 2025 og Riksrevisjonen i 2017. Ingen kilde publiserer kvotepriser (Fiskeridirektoratet, Råfisklaget, HI og NAV sjekket 04.10.2026). Fiskeridirektoratet regner 54 kr/kg ved første hånd, så 260 kr/kg er rundt fem års førstehåndsverdi.
   - Vilkårene til Innovasjon Norge (15 %, 8,9 %, 10 år) er ikke sjekket. Andelen er satt for spillets tempo.
   - G er 130 160 kr (fra 1. mai 2025) og er ikke oppdatert for 2026.
-  - Kvotene for 11–21 m i J-30-2026 er ikke hentet, så kystbåtene selges uten hjemmel.
-  - Ikke sjekket om en hjemmel under 11 m kan stå på en båt opp til 15 m (reglene om utskifting av fartøy).
   - Havbåtenes priser og vekt er grove anslag, og statusen til snøkrabbekonsesjonen er ikke sjekket.
   - Blad B er en forenkling av deltakerloven § 6 (tre av fem år). Sertifikatene låser ingenting ennå.
   - Et nytt lån legges sammen med det gamle og betales over nye 10 eller 15 år.
   - `portFits` (kaifront og dybde per havn) er ikke bygget. Alle kystbåtene får plass i alle havner, men havbåtene trenger det når havsteget kommer.
   - NPC-modellene er ikke målt med CPU-struping. Første gang en modell trengs, tar den 5–11 ms å bygge.
-- **Garantert torsk for 8–9,99 m:** 4,2 t i forskriften og 3,2 t i departementets rapport. Spillet bruker forskriften.
 - **Minstepriser for andre arter etter 21.09:** Rundskriv 13/2026 er ikke hentet, så lyr og de andre bygger på rundskriv 7/2026.
 - **Farten i 3D:** Med tempo 1:6 går båten seks ganger raskere enn virkeligheten. Bevegelsen er jevn, men farten ser høy ut.
 - **`S.owned`** er en liste over båttyper fra før flåtemodellen. «Neste mål» følger stigen og bruker hjemlene i flåten, men lista finnes fortsatt.
 - **Kveithaill** kan gi rundt 8 000 kr per dag ved kveitefiske om høsten. Sjekk balansen i spilltesting.
 - **Klær og kulde:** `coldPen` bruker hele mannskapet (`S.crew.length`), ikke bare dem som er om bord.
 - **Sløyetid:** 300 kg per person og time for sløying og 800 for ising er anslag. Jeg fant ingen god kilde for håndsløying av torsk, så tallene må justeres i spilltesting.
-- **Kvote ved bytte av båt i åpen gruppe:** Kvotebruken ligger per båt. Selger du båten i åpen gruppe midt i året, får neste båt en ubrukt kvote. I virkeligheten følger det du har fisket med når du bytter fartøy.
 - **Driftsplan i åpen gruppe:** En skiff på driftsplan uten kveiteutstyr leverer nesten bare fisk som blir inndratt, fordi torsk, hyse og sei er over bifangstgrensen. Det er etter reglene, men spilleren bør få et tydeligere råd om å kjøpe kveiteutstyr.
 - **Drivstoff i Finnsnes:** Bildene viser bare bøteri og utstyrsforhandler i Finnsnes. Jonas vil at Finnsnes selger drivstoff inntil videre (29.09.2026), fra kaia båten ligger ved.
-- **Bifangstregelen** (10 % per landing og 2 tonn torsk i året) er tatt fra designet i fase 2 og ikke kontrollert på nytt mot J-30-2026 § 35.
+
+- **Kvotesystemet, usikre tall og regler (04.10.2026):**
+  - Totalkvoten for 2027 var ikke satt da systemet ble bygget, så spillet bruker HIs råd med inntil 8 % over.
+  - Tredjelandsandelen i formelen for Norges kvote (13,455 %) er regnet ut fra § 2 for 2026, ikke hentet fra en kilde.
+  - Bestandsmodellen fra 2028 er enkel og kalibrert på HIs serie 2014–2027. Seiens historiske gytebestand ble ikke funnet.
+  - Flåtemodellen i åpen gruppe er kalibrert slik at kvotene for 2026 gir stopp rundt midten av april. Den treffer ikke 2025, da stoppen kom 15. mai med høyere overregulering.
+  - Fordelingen av de 1 622 hjemlene på hjemmelslengdene spillet selger, er et anslag. Fiskeridirektoratet oppgir bare gruppene under 11, 11–14,9, 15–20,9 og 21–27,9 m.
+  - Om den særlige kvoteordningen under 11 m har avkorting, er min lesning av J-244-2025 (ingen avkorting).
+  - Andelen til NPC-eieren i et kvotesamarbeid (50 %) er en antakelse.
+  - Fartøy på 21–27,99 m har forbud mot å fiske torsk innenfor grunnlinjen (§ 32). Grunnlinjen finnes ikke i kartdataene, så det er ikke håndhevet.
+  - Strukturgevinst som går tilbake etter «modell X», er ikke modellert. Strukturkvoten bare faller bort.
+- **`heattest` i testmiljøet (04.10.2026):** Ytelsesmålingen med CPU ×4 holder ikke 3 s i testmiljøet, fordi SwiftShader tegner 3D på den strupede CPU-en. Bygget fra før 04.10 oppfører seg likt (målt med det samme prøveskriptet). Testen bruker rundt 50 minutter. Mål heller på nettbrettet.
 
 ## 11. Testing
 
