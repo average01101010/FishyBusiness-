@@ -147,6 +147,7 @@ async def main():
             out[vt] = {rmsDeg:Math.round(rms * 1800 / Math.PI) / 10, free:Math.round(2 * fr.length / 30 / Math.max(1, f.z) * 10) / 10, Tr:Math.round(stabOf(vt).Tr * 10) / 10, ok:rec.every(Number.isFinite) && fr.every(Number.isFinite)}; }
           WX_FORCE = null; const b = S.boat; b.type = 'skiff'; applyVessel(); G3.vesselChanged(); return out; })()""")
         stage('motion done')
+        await pg.close()   # the first page is done; left open it keeps drawing 3D and starves the second page's sea-state work in a slow browser
         # 7. a GPU with no textures in the vertex shader: the same page, the waves from the values at the boat
         pg2 = await b.new_page(viewport={'width': 640, 'height': 400}); errs2 = []; pg2.on('pageerror', lambda e: errs2.append(str(e)))
         await boot(pg2, GAME_TUT + '#notut,novtf'); await pg2.evaluate(SETUP)
