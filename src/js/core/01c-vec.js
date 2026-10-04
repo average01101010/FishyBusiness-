@@ -13,6 +13,8 @@
 //           which the 3D view builds as rubble mounds; slabs the outlines of the piers mapped as areas, which it builds in their shape
 //   quays   the faces a boat can lie at: middle x, z (m), along ux, uz, the normal to the water nx, nz, half length hl, depth (m, null
 //           where the 50 m depth has no water off it) and kind (0 pier, 1 pier line, 2 quay, 3 coast); Senja's too (npcBerths)
+//   npc     the NPC traffic (tools/map/npc.py): harbours {x, y (km), boats [{id, L, B, T, p, hd, name, liv}], grounds [{p, pts}]},
+//           which 05-vessels.js sails by the clock within AIS range
 const VEC = {tiles:new Map(), want:new Set(), wait:new Map(), came:[], drop:[], ver:0, worker:null, id:0, ms:0};
 // Senja's legacy square as its corners in the national frame (metres): its edges bow by millimetres, so a point is tested against the
 // quadrilateral (inSenja takes km)
@@ -48,7 +50,7 @@ function vecDecode(D){
   const lines = b => { let i = 0; const nx = () => { let v = 0, s = 0, x; do { x = b[i++]; v += (x & 127) * Math.pow(2, s); s += 7; } while (x & 128); return v; }, zz = v => (v % 2 ? -(v + 1) / 2 : v / 2), n = nx(), out = [];
     for (let k = 0; k < n; k++){ const c = nx(), m = nx(), xs = new Float64Array(m), zs = new Float64Array(m); let x = 0, z = 0; for (let j = 0; j < m; j++){ x += zz(nx()); z += zz(nx()); xs[j] = ox + x; zs[j] = oz + z; } out.push([c, xs, zs]); } return out; };
   const cellsOf = (keys) => { const order = Array.from(keys.keys()).sort((a, b) => keys[a] - keys[b]), ck = [], cs = []; for (let i = 0; i < order.length; i++) if (!i || keys[order[i]] !== keys[order[i - 1]]){ ck.push(keys[order[i]]); cs.push(i); } cs.push(order.length); return {order:Int32Array.from(order), ck:Float64Array.from(ck), cs:Int32Array.from(cs)}; };
-  const r = {tx:D.tx, ty:D.ty, bld:null, roads:null, bridges:[], piers:[], molos:[], slabs:[], quays:[]};
+  const r = {tx:D.tx, ty:D.ty, bld:null, roads:null, bridges:[], piers:[], molos:[], slabs:[], quays:[], npc:[]};
   // buildings
   if (D.bld && D.nb){
     const n = D.nb, b = D.bld, u16 = o => b[o] | b[o + 1] << 8, X = new Float64Array(n), Z = new Float64Array(n), Lq = new Float32Array(n), Wq = new Float32Array(n), A = new Float32Array(n), Ty = new Uint8Array(n), Lv = new Uint8Array(n), K = new Float64Array(n);
@@ -90,11 +92,18 @@ function vecDecode(D){
       r.quays.push({id:D.tx + ':' + D.ty + ':' + i, x, z, nx, nz, ux:-nz, uz:nx, hl:len(b[6 * n + i]) / 2, depth:b[7 * n + i] ? b[7 * n + i] / 4 : null, kind:b[8 * n + i]});
     }
   }
+  // the NPC traffic (tools/map/npc.py): harbours with their boats (at their berths) and grounds with the routes there, in km
+  if (D.npc && D.nn){
+    const J = JSON.parse(new TextDecoder().decode(D.npc)), k = (x, z) => ({x:(ox + x) / 1000, y:(oz + z) / 1000});
+    J.h.forEach((h, hi) => r.npc.push({x:(ox + h.x) / 1000, y:(oz + h.z) / 1000,
+      boats:h.b.map((b, bi) => ({id:'c' + D.tx + ':' + D.ty + '.' + hi + '.' + bi, L:b[0], B:b[1], T:b[2], p:k(b[3], b[4]), hd:b[5], name:b[6], liv:(hi * 7 + bi) % 4})),
+      grounds:h.g.map(g => { const pts = []; for (let i = 0; i + 1 < g[2].length; i += 2) pts.push(k(g[2][i], g[2][i + 1])); return {p:k(g[0], g[1]), pts}; })}));
+  }
   return r;
 }
 // the decoded arrays into the tile the views read: the cells as maps of index lists, the roads as objects over the shared arrays
 function vecFinish(r){
-  const T = MAPD.man.tile * 1000, k = r.tx + ':' + r.ty, t = {k, tx:r.tx, ty:r.ty, x0:r.tx * T, z0:r.ty * T, bld:null, roads:[], rcell:new Map(), bridges:r.bridges, piers:r.piers, molos:r.molos, slabs:r.slabs, quays:r.quays};
+  const T = MAPD.man.tile * 1000, k = r.tx + ':' + r.ty, t = {k, tx:r.tx, ty:r.ty, x0:r.tx * T, z0:r.ty * T, bld:null, roads:[], rcell:new Map(), bridges:r.bridges, piers:r.piers, molos:r.molos, slabs:r.slabs, quays:r.quays, npc:r.npc};
   if (r.bld){ const B = t.bld = Object.assign(r.bld, {cells:new Map(), seed:(r.tx * 131 + r.ty * 977) * 1000003 % 2147483647}); for (let i = 0; i < B.ck.length; i++) B.cells.set(B.ck[i], B.order.subarray(B.cs[i], B.cs[i + 1])); }
   if (r.roads){ const R = r.roads; for (let i = 0; i < R.n; i++) t.roads.push({c:R.c[i], xs:R.x.subarray(R.o[i], R.o[i + 1]), zs:R.z.subarray(R.o[i], R.o[i + 1]), bb:[R.bb[4 * i], R.bb[4 * i + 1], R.bb[4 * i + 2], R.bb[4 * i + 3]]}); for (let i = 0; i < R.ck.length; i++) t.rcell.set(R.ck[i], R.ri.subarray(R.cs[i], R.cs[i + 1])); }
   VEC.tiles.set(k, t); VEC.ver++; for (const f of VEC.came) f(t);
@@ -106,7 +115,7 @@ function vecWorker(){
   try {
     const src = pierBoxes.toString() + '\n' + vecDecode.toString() + '\n' +
       'const inflate = async b => new Uint8Array(await new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer());\n' +
-      'onmessage = async e => { const D = e.data; try { for (const n of ["bld", "road", "bridge", "pier", "quay"]) if (D[n]) D[n] = await inflate(D[n]); const r = vecDecode(D), tr = []; for (const o of [r.bld, r.roads]) if (o) for (const v of Object.values(o)) if (ArrayBuffer.isView(v)) tr.push(v.buffer); postMessage({id:D.id, r}, tr); } catch (err){ postMessage({id:D.id, err:String(err)}); } };';
+      'onmessage = async e => { const D = e.data; try { for (const n of ["bld", "road", "bridge", "pier", "quay", "npc"]) if (D[n]) D[n] = await inflate(D[n]); const r = vecDecode(D), tr = []; for (const o of [r.bld, r.roads]) if (o) for (const v of Object.values(o)) if (ArrayBuffer.isView(v)) tr.push(v.buffer); postMessage({id:D.id, r}, tr); } catch (err){ postMessage({id:D.id, err:String(err)}); } };';
     const w = new Worker(URL.createObjectURL(new Blob([src], {type:'text/javascript'})));
     w.onmessage = e => { const {id, r, err} = e.data, q = VEC.wait.get(id); VEC.wait.delete(id); if (!q) return; if (err){ console.error('vec: ' + err); vecDecodeHere(q.pk); return; } VEC.ms += performance.now() - q.t0; q.pk.vecQ = false; vecFinish(r); };
     w.onerror = e => { console.error('vec worker', e.message || e); e.preventDefault && e.preventDefault(); VEC.worker = false; for (const q of VEC.wait.values()) vecDecodeHere(q.pk); VEC.wait.clear(); };
@@ -114,7 +123,7 @@ function vecWorker(){
   } catch (e){ VEC.worker = false; }
   return VEC.worker || null;
 }
-const VECN = {bld:'nb', road:'nr', bridge:'ng', pier:'np', quay:'nq'};
+const VECN = {bld:'nb', road:'nr', bridge:'ng', pier:'np', quay:'nq', npc:'nn'};
 function vecInput(pk, inflate){
   const D = {tx:pk.tile[0], ty:pk.tile[1], T:MAPD.man.tile * 1000, Q:SENJAQ}, B = MAPD.man.tile / MAPD.man.block;
   for (const n in VECN){

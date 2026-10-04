@@ -79,6 +79,62 @@ function fleetState0(i, H){
   if (eb < T){ const tb = (RR.len - hz) / cs, sd = eb < tb ? eb * cs : RR.len - hz + (eb - tb) * hsp, a = atRoute(RR, sd); return {p:a.p, hd:a.hd, st:'in'}; }
   return moored();
 }
+// ===== the NPC traffic along the coast (part 5 of the coast-wide plan, 03.10.2026; the user: full traffic along the coast, but only
+// within the player's AIS range) =====
+// The harbours, boats, grounds and routes come with the tiles' vec packs (tools/map/npc.py, 01c-vec.js t.npc), and where a boat is, is
+// a function of the clock alone, as FLEET's: out in the morning from her berth to the harbour's mouth and along the route to one of
+// her grounds, jigging there in drifts with the wind, home in the afternoon; in port in a gale (a bigger boat goes out in worse) or on
+// a day off. Only the boats within AIS_KM of the boat you follow are worked out (coastNear), and their packs are asked for as she
+// goes. They take no fish from the simulation's stock (only FLEET's do, which every player has).
+const AIS_KM = 15;
+const hodOf = H => { const g = gDate(H); return g.getUTCHours() + g.getUTCMinutes() / 60 + g.getUTCSeconds() / 3600; };
+function coastState(b, H, hod = hodOf(H)){
+  const i = b.seed || (b.seed = hashStr(b.id) % 1000003);
+  const dep = 4.5 + hash(i * 13 + 5) * 2.5, e = ((hod - dep) % 24 + 24) % 24, day0 = H - e, dI = Math.floor((day0 + 6) / 24), G = b.h.grounds;
+  const moored = b.moored || (b.moored = {p:b.p, hd:b.hd, st:'port'});
+  // a day out is at most 17 hours (the weather is not asked at night)
+  if (e > 17 || !G.length || hash(dI * 17 + i * 7) < 0.15 || windAt(day0) >= (b.L >= 15 ? 15 : b.L >= 12 ? 13.5 : 12)) return moored;
+  const gr = G[Math.floor(hash(dI * 31 + i) * G.length)], R = gr.R || (gr.R = prepRoute(gr.pts.map(q => [q.x, q.y]))), RR = gr.RR || (gr.RR = prepRoute(gr.pts.map(q => [q.x, q.y]).reverse()));
+  const cs = ((b.L >= 14 ? 9.8 : 7.8) + hash(i * 3 + 1) * 1.8) * clamp(1 - (hsOpen(day0) - 1.2) * 0.12, 0.65, 1) * NM, hsp = 5 * NM;
+  const m0 = R.pts[0], t0 = dist(b.p, m0) / hsp, tr = R.len / cs, T = t0 + tr, fishH = 5 + hash(dI * 7 + i * 3) * 3.5;
+  const along = (a, c, u) => ({p:{x:a.x + (c.x - a.x) * u, y:a.y + (c.y - a.y) * u}, hd:Math.atan2(c.x - a.x, -(c.y - a.y))});
+  if (e < t0){ const q = along(b.p, m0, e / t0); return {p:q.p, hd:q.hd, st:'out'}; }
+  if (e < T){ const a = atRoute(R, (e - t0) * cs); return {p:a.p, hd:a.hd, st:'out'}; }
+  if (e < T + fishH){
+    // drifts downwind over the ground and back up for the next, as FLEET's (no land search: a ground is 20 m deep or more)
+    const tf = e - T, C = 0.75, kc = Math.floor(tf / C), u = tf - kc * C, Hc = day0 + T + kc * C, wd = (windDir(Hc) - gridGamma(gr.p) + 180) * Math.PI / 180;
+    const st0 = {x:gr.p.x + (hash(dI * 97 + i * 11 + kc) - 0.5) * 0.3, y:gr.p.y + (hash(dI * 89 + i * 5 + kc) - 0.5) * 0.3}, run = (0.35 + 0.075 * windAt(Hc)) * NM * 0.62;
+    const end = {x:st0.x + Math.sin(wd) * run, y:st0.y - Math.cos(wd) * run};
+    if (u < 0.62){ const q = u / 0.62; return {p:{x:st0.x + (end.x - st0.x) * q, y:st0.y + (end.y - st0.y) * q}, hd:wd + Math.PI / 2, st:'fishing'}; }
+    const q = (u - 0.62) / 0.13; return {p:{x:end.x + (st0.x - end.x) * Math.min(1, q), y:end.y + (st0.y - end.y) * Math.min(1, q)}, hd:wd + Math.PI, st:'fishing'};
+  }
+  const eb = e - T - fishH;
+  if (eb < tr){ const a = atRoute(RR, eb * cs); return {p:a.p, hd:a.hd, st:'in'}; }
+  if (eb < tr + t0){ const q = along(m0, b.p, (eb - tr) / t0); return {p:q.p, hd:q.hd, st:'in'}; }
+  return moored;
+}
+const COASTM = {k:'', v:[]};
+function coastNear(H, only){
+  const b = S && S.boat; if (!b || !b.pos || !MAPD.man) return [];
+  const R = AIS_KM, x = b.pos.x, y = b.pos.y, F = R + 25, k = H + '|' + x.toFixed(2) + ',' + y.toFixed(2) + '|' + VEC.ver;
+  if (!only && COASTM.k === k) return COASTM.v;
+  vecWant(x - F, y - F, x + F, y + F); vecPrune([b.pos], 120);
+  const out = [], hod = hodOf(H), hod1 = hodOf(H - 1 / 60);
+  for (const t of vecTilesIn((x - F) * 1000, (y - F) * 1000, (x + F) * 1000, (y + F) * 1000)) for (const h of t.npc || []){
+    // a harbour whose berths, routes and grounds all lie beyond the range is passed over (its reach: the farthest of them from its
+    // middle, worked out once; a long waterfront is one harbour)
+    if (h.reach === undefined){ h.reach = 0.3; for (const bt of h.boats) h.reach = Math.max(h.reach, dist(bt.p, h) + 0.1); for (const g of h.grounds) for (const q of g.pts.concat([g.p])) h.reach = Math.max(h.reach, dist(q, h) + 0.6); }
+    if (dist(h, b.pos) - h.reach > R) continue;
+    for (const bt of h.boats){
+      if (only && only !== bt.id) continue;
+      bt.h = h; const A = coastState(bt, H, hod); if (dist(A.p, b.pos) > R) continue;
+      const P = A.st === 'port' ? A : coastState(bt, H - 1 / 60, hod1), dx = A.p.x - P.p.x, dy = A.p.y - P.p.y, sog = Math.hypot(dx, dy) / NM * 60;
+      out.push({id:bt.id, name:bt.name, type:bt.L >= 14 ? 'kyst' : 'sjark', p:A.p, hd:A.hd, cog:sog > 0.15 ? Math.atan2(dx, -dy) : A.hd, v:Math.round(sog * 10) / 10, st:A.st, coast:true, L:bt.L, B:bt.B, T:bt.T, liv:bt.liv});
+    }
+  }
+  if (!only){ COASTM.k = k; COASTM.v = out; }
+  return out;
+}
 function npcStates(H, only){
   const out = [], d = gDate(H), hod = d.getUTCHours() + d.getUTCMinutes() / 60 + d.getUTCSeconds() / 3600, mon = d.getUTCMonth();
   const ago = start => ((hod - start) % 24 + 24) % 24;
@@ -101,8 +157,10 @@ function npcStates(H, only){
   FLEET.forEach((f, i) => {
     if (only && only !== 'f' + i) return;
     const A = fleetState(i, H), B = fleetState(i, H - 1 / 60), dx = A.p.x - B.p.x, dy = A.p.y - B.p.y, sog = Math.hypot(dx, dy) / NM * 60;
-    out.push({id:'f' + i, name:f.n, type:f.L >= 14 ? 'kyst' : 'sjark', p:A.p, hd:A.hd, cog:sog > 0.15 ? Math.atan2(dx, -dy) : A.hd, v:Math.round(sog * 10) / 10, st:A.st, fleet:true, fi:i});
+    out.push({id:'f' + i, name:f.n, type:f.L >= 14 ? 'kyst' : 'sjark', p:A.p, hd:A.hd, cog:sog > 0.15 ? Math.atan2(dx, -dy) : A.hd, v:Math.round(sog * 10) / 10, st:A.st, fleet:true, fi:i, L:f.L, B:f.B, liv:i % 4});
   });
+  // the coast's boats within AIS range of the boat you follow (part 5)
+  if (!only || only[0] === 'c') for (const n of coastNear(H, only)) out.push(n);
   return out;
 }
 

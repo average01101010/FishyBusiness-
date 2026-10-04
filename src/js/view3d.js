@@ -1898,7 +1898,7 @@ const G3 = (() => {
     if (S.plan){ g.strokeStyle = '#d6336c'; g.lineWidth = 3; g.beginPath(); g.moveTo(X(p.x) + cw / 2, Y(p.y)); for (const w of S.plan.wps.slice(S.plan.idx)) g.lineTo(X(w.x) + cw / 2, Y(w.y)); g.stroke(); }
     // other vessels
     if (Hn - aisCache.t > 0.02 || aisCache.t < 0){ aisCache = {t:Hn, v:npcStates(Hn)}; }
-    for (const n of aisCache.v){ const x = X(n.p.x) + cw / 2, y = Y(n.p.y); if (x < -10 || x > cw + 10 || y < top - 10 || y > top + ch + 10) continue; g.save(); g.translate(x, y); g.rotate(n.cog !== undefined ? n.cog : n.hd); g.fillStyle = n.fleet ? '#ff8a65' : '#4c8df0'; g.strokeStyle = '#1b2a33'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(0, -9); g.lineTo(5, 6); g.lineTo(0, 3); g.lineTo(-5, 6); g.closePath(); g.fill(); g.stroke(); g.restore(); }
+    for (const n of aisCache.v){ const x = X(n.p.x) + cw / 2, y = Y(n.p.y); if (x < -10 || x > cw + 10 || y < top - 10 || y > top + ch + 10) continue; g.save(); g.translate(x, y); g.rotate(n.cog !== undefined ? n.cog : n.hd); g.fillStyle = n.fleet || n.coast ? '#ff8a65' : '#4c8df0'; g.strokeStyle = '#1b2a33'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(0, -9); g.lineTo(5, 6); g.lineTo(0, 3); g.lineTo(-5, 6); g.closePath(); g.fill(); g.stroke(); g.restore(); }
     // own boat with heading line
     g.save(); g.translate(cw / 2, top + ch / 2); g.rotate(bv.head); g.strokeStyle = '#111'; g.lineWidth = 2; g.beginPath(); g.moveTo(0, -12); g.lineTo(0, -60); g.stroke(); g.fillStyle = '#111'; g.beginPath(); g.moveTo(0, -12); g.lineTo(8, 10); g.lineTo(0, 5); g.lineTo(-8, 10); g.closePath(); g.fill(); g.restore();
     g.restore();
@@ -2805,12 +2805,17 @@ const G3 = (() => {
   // 300 m and lod 0.3 within 1.5 km (a detailed GLB model gives its near and simple versions), with the skipper in the wheelhouse and hands on deck when she fishes; further out the box models
   const NKM = {};
   // a detailed model from tools/boats is near only within 150 m: many of the local fleet share it, and a tablet draws them all
-  const NKN = {}; function npcNear(i){ if (!(i in NKN)){ const f = FLEET[i]; NKN[i] = glbHas(npcKit(f.L, f.B)) ? 150 : 300; } return NKN[i]; }
-  function npcMesh(i, lod){
-    const f = FLEET[i], t = npcKit(f.L, f.B), k = t + '|' + lod + '|' + (i % 4); if (k in NKM) return NKM[k];
-    const m = npcModel(t, lod, i % 4); if (!m) return NKM[k] = null; const V = VESSELS[t], up = o => ({pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3});
-    const sx = f.B / V.beam, sz = f.L / V.len, sy = (sx + sz) / 2;
-    return NKM[k] = {t, hull:up(m.o), glass:lod >= 1 ? up(m.glass) : null, geo:m.geo, sv:[sx, sy, sz], S:new Float32Array([sx, 0, 0, 0, 0, sy, 0, 0, 0, 0, sz, 0, 0, 0, 0, 1])};
+  // a fishing NPC's model by her length and beam (FLEET's, and the coast's from tools/map/npc.py): the buffers by model, lod and livery,
+  // the scale by boat
+  const NKN = {}; function npcNear(n){ const k = n.L + '|' + n.B; if (!(k in NKN)) NKN[k] = glbHas(npcKit(n.L, n.B)) ? 150 : 300; return NKN[k]; }
+  const NKB = {};
+  function npcMesh(n, lod){
+    const kk = n.id + '|' + lod; if (kk in NKM) return NKM[kk];
+    const t = npcKit(n.L, n.B), liv = n.liv || 0, k = t + '|' + lod + '|' + liv;
+    if (!(k in NKB)){ const m = npcModel(t, lod, liv), up = o => ({pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3}); NKB[k] = m ? {t, hull:up(m.o), glass:lod >= 1 ? up(m.glass) : null, geo:m.geo} : null; }
+    const B = NKB[k]; if (!B) return NKM[kk] = null;
+    const V = VESSELS[t], sx = n.B / V.beam, sz = n.L / V.len, sy = (sx + sz) / 2;
+    return NKM[kk] = Object.assign({}, B, {sv:[sx, sy, sz], S:new Float32Array([sx, 0, 0, 0, 0, sy, 0, 0, 0, 0, sz, 0, 0, 0, 0, 1])});
   }
   let npcNow = [];
   function drawNPC(eye, t, H, VP){
@@ -2820,7 +2825,7 @@ const G3 = (() => {
     for (const n of npcNow){
       const x = n.p.x * 1000, z = n.p.y * 1000, big = n.type === 'coastal' || n.type === 'ferry', y = big ? (env.tide || 0) : (env.tide || 0) + (seaH(x, z, t) - (env.tide || 0)) * 0.8, roll = big ? Math.sin(t * 0.4 + x) * 0.01 : Math.sin(t * 1.1 + x) * 0.05 * (0.3 + WV.hs);
       n.M = model(x - eye[0], y - eye[1], z - eye[2], -n.hd, big ? 0 : Math.sin(t * 0.9 + z) * 0.03, roll);
-      const d = Math.hypot(x - eye[0], z - eye[2]); n.K = n.fleet && d < 1500 ? npcMesh(n.fi, d < npcNear(n.fi) ? 1 : 0.3) : null;
+      const d = Math.hypot(x - eye[0], z - eye[2]); n.K = (n.fleet || n.coast) && d < 1500 ? npcMesh(n, d < npcNear(n) ? 1 : 0.3) : null;
       if (n.K) kit.push(n); else drawLit(NPCM[n.type], n.M);
     }
     if (!kit.length) return;
@@ -2838,7 +2843,7 @@ const G3 = (() => {
     if (env.night < 0.05 || !npcNow.length) return;
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.depthMask(false);
     for (const n of npcNow){
-      if (n.K){ const M = chain(n.M, n.K.S), px = FLEET[n.fi].L < 14 ? 260 : 600; for (const [p, col] of n.K.geo.lights){ const q = xf(M, p); PB[0] = q[0]; PB[1] = q[1]; PB[2] = q[2]; PA[0] = env.night; drawPts(1, gl.POINTS, VP, col, px, true); } continue; }
+      if (n.K){ const M = chain(n.M, n.K.S), px = n.L < 14 ? 260 : 600; for (const [p, col] of n.K.geo.lights){ const q = xf(M, p); PB[0] = q[0]; PB[1] = q[1]; PB[2] = q[2]; PA[0] = env.night; drawPts(1, gl.POINTS, VP, col, px, true); } continue; }
       for (const [lx, ly, lz, c] of NPCM.lights[n.type]){ const q = xf(n.M, [lx, ly, lz]); PB[0] = q[0]; PB[1] = q[1]; PB[2] = q[2]; PA[0] = env.night; drawPts(1, gl.POINTS, VP, NLC[c], NPCM.lightPx[n.type] || 900, true); } }
     const cs = npcNow.find(n => n.type === 'coastal');
     if (cs){ let k = 0; for (let r = 0; r < 4; r++) for (let i = 0; i < 18; i++) for (const sx of [-1, 1]){ if (hash(r * 97 + i * 13 + (sx > 0 ? 5 : 0)) < 0.35) continue; const q = xf(cs.M, [sx * 8.95, 8.5 + r * 3.2, -24 + i * 3.4]); PB[k * 3] = q[0]; PB[k * 3 + 1] = q[1]; PB[k * 3 + 2] = q[2]; PA[k] = env.night * 0.9; k++; } drawPts(k, gl.POINTS, VP, [1, 0.8, 0.5], 420, true); }
@@ -3044,7 +3049,7 @@ const G3 = (() => {
     gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL);
     // far pass
     pickLights(eye, t);
-    drawTerrain(TM, eye, VPf, false); drawLit(STAT, TM); drawTileStatics(TM, eye); drawBuildings(TM); drawUnits(eye, VPf, false, 15000); if (NPCM) for (const n of npcStates(H)){ const x = n.p.x * 1000, z = n.p.y * 1000, d = Math.hypot(x - eye[0], z - eye[2]); if (d < 30000 && !(n.fleet && d < 1500)) drawLit(NPCM[n.type], model(x - eye[0], (env.tide || 0) - eye[1], z - eye[2], -n.hd, 0, 0)); }
+    drawTerrain(TM, eye, VPf, false); drawLit(STAT, TM); drawTileStatics(TM, eye); drawBuildings(TM); drawUnits(eye, VPf, false, 15000); if (NPCM) for (const n of npcStates(H)){ const x = n.p.x * 1000, z = n.p.y * 1000, d = Math.hypot(x - eye[0], z - eye[2]); if (d < 30000 && !((n.fleet || n.coast) && d < 1500)) drawLit(NPCM[n.type], model(x - eye[0], (env.tide || 0) - eye[1], z - eye[2], -n.hd, 0, 0)); }
     drawSea(VPf, eye, t, 1);
     drawSeaLights(VPf, eye, t, false);
     if (env.night > 0.02){

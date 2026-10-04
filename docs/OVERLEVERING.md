@@ -600,6 +600,52 @@ Jonas sto i Tromsø og så ingen hus. Før dette fantes bygg, veier, bruer og br
   - Senja-flåten (`FLEET`, med `L`, `B` og `T`) ligger ved slike fronter i havn og går derfra til leia over de første 450 m (`fleetState`). Finnes ingen front, ligger båten som før (`berthShift`).
 - **Ytelse** (SwiftShader, sier lite om nettbrettet): Tromsø-flisa (33 687 bygg, 11 351 veibiter, 63 bruer, 612 bryggebokser, 25 moloer) pakkes ut i workeren. Bruene, bryggene og moloene er rundt 88 000 trekanter.
 
+### 4.16 NPC-trafikk langs hele kysten (del 5, 04.10.2026)
+
+Jonas valgte «Full trafikk langs kysten», men «NPC båtene skal kun dukke opp innenfor spillerens AIS område».
+
+**Rørledningen** (`tools/map/npc.py`, `coast.py game`, fra `kart-6`):
+- **Havner:** kaifronter på 12 m eller mer som ligger innenfor 250 m av hverandre, med minst 30 m front til sammen.
+  - Flytebryggene i småbåthavner (bryggelinjer, slag 1) teller ikke, for der ligger fritidsbåtene.
+  - Senja-ruta er utelatt, fordi `FLEET` er flåten der.
+- **Flåte:** én båt per 45 m front, 1–8 per havn og høyst 300 per flis. Bergen-flisa hadde 235 havner og ville ellers fått 1 460 båter.
+  - Lengdene trekkes fra kystflåten: 45 % 7–10 m, 30 % 10–11 m, 15 % 11–15 m, 8 % 15–21 m og 2 % 21–28 m.
+  - Bredden er 0,3·L + 0,9, og dypgåendet er 0,09·L + 0,6. Begge er tilnærminger.
+  - Hver båt får en kaiplass som passer (samme regel som `quayFit`). Får ingen front plass, prøves en mindre båt.
+  - Navnet trekkes fra en liste.
+- **Felt:** 2–4 per havn, 20–150 m dypt og 3–22 km sjøvei unna, 2 km fra hverandre. Feltene velges mest etter skråningen (dybdens gradient på 500 m) og litt tilfeldig.
+- **Leia:** korteste vei på et 100 m rutenett av flisas 25 m-maske, rettet ut der masken er fri.
+  - Først prøves et strengt rutenett der høyst én av 16 småruter er land, så et romsligere med fire.
+  - Havner hvis munning ligger i samme 500 m-rute, deler beregningen.
+  - Noen få leibiter skjærer et hjørne av 25 m-masken: 23 av 680 rundt Tromsø.
+- Alt legges som JSON i flisas vec-pakke (`npc`). Det beregnes i parallell før pakkene skrives. Tromsø tar 5 s og Bergen 30 s.
+
+**Spillet** (`core/05-vessels.js`):
+- `coastState(båt, H)` er en ren funksjon av klokka, som `fleetState0`:
+  - ut om morgenen fra kaiplassen til havnemunningen i havnefart, så leia til et av feltene
+  - driv med vinden på feltet
+  - hjem om ettermiddagen
+  - inne i kuling (en større båt går ut i verre vær) eller på fridager
+- `coastNear` regner bare båtene innenfor `AIS_KM` (15 km) fra båten du følger, og ber om pakkene der båten er.
+  - Havner der verken båtplassene, leiene eller feltene kan komme innenfor, hoppes over.
+  - Klokkeslettet regnes én gang per kall.
+  - Det tar rundt 1 ms per kall for 200 båter ved Tromsø (stasjonær maskin).
+- `npcStates` tar dem med som `coast:true`, med lengde, bredde, dypgående og lakk.
+  - De tar ikke fisk fra bestanden: bare `FLEET` gjør det, og den har hver spiller.
+  - De har AIS-kort og spor i kartet, og vises som fiskebåter i miniplotteren.
+  - I 3D bruker de byggesettet (`npcMesh` etter lengde og bredde), som Senja-flåten.
+- Båtene kommer bare i appen, siden de ligger i vec-pakkene.
+
+**Test:** `npctest.py` (LITE) sjekker:
+- at båtene bare er innenfor AIS-rekkevidden
+- natt, dag og kveld
+- at samme tid gir de samme posisjonene
+- at hver båt ligger ved en front som passer
+- at leiene holder seg unna land
+- at ingen havn ligger i Senja-ruta
+- at båtene ikke tar fisk
+- AIS-kortet og sporet
+
 ## 5. Systemer i spillet
 
 ### 5.1 Båter og utstyr
@@ -1043,7 +1089,7 @@ Inspirert av Fishing: Barents Sea. Den gamle handlingslinja `#actbar` er borte, 
 - **Skuffen** (`#drawer`): Liggende kommer den fra høyre (380 px), stående er den et ark over knappene (55 % av høyden). Innholdet er telefonens sider: `PHONE.page(side)` lager HTML, og `PHONE.dact(side, handling, data)` kjører en `data-pa`-handling som om siden var åpen i telefonen. `DOCK.open('side:fane')` åpner en side med en fane valgt.
   - **Sidene i skuffen** (`DRAWER` i `05-phone.js`): `lever`, `is`, `agn`, `bank`, `oppdrag`, `mannskap` og `bors` (som to faner), `fartoy` (Båthandel), `utstyr`, `fiske` (med kjøp av garn, line og teiner), `verksted`, `beholdning` (Redskap, Lasterom, Båten), og de gamle `havn`, `last` og `redskap`.
   - `PHONE.open(side)` og `data-pa="open"` sender en side i `DRAWER` til skuffen. Varslene i Rederi bruker `side:fane`, for eksempel `beholdning:last`.
-- **Telefonen** har tolv apper: Vær, Kystposten, Meldinger, Rederi, Salgslaget (Priser, Mine landinger, Toppliste), Kvote, Haill, Sjømann, Redning, Innstillinger og Admin. Kvote er fanen fra Salgslaget som egen app.
+- **Telefonen** har tolv apper: Vær, Kystposten, Meldinger, Rederi, Salgslaget (Priser, Mine landinger, Toppliste), Kvote, Oppdrag, Haill, Sjømann, Redning, Innstillinger og Admin. Kvote er fanen fra Salgslaget som egen app.
   - **Admin** (testverktøy, 02.10.2026) har tidsskalaen (pause, 6×, 180×, 1 800× og 10 800×, det vil si `S.mult` 0, 1, 30, 300 og 1800) og knappen «+ 100 000 kr», som legger pengene i kassa uten å regne dem som inntekt og skriver en linje i loggen. Tempovalget er flyttet hit fra Innstillinger. Appen fjernes før spillet får felles klokke.
 - **«Sett ut»** (`ui/03d-setmode.js`, tilstanden `SETM` er deklarert i `03-map.js`): Valget i viften åpner kartplotteren med redskapet tegnet som en linje fra båten. Lengden er den samme som `startSet` bruker: garn 30 m, line 1,5 m per krok, teiner 25 m mellom hver. Kartet zoomer så linja fyller rundt 40 %.
   - Dra i enden, eller trykk i kartet, for å snu linja. − og + endrer antall stamper eller teiner (en garnlenke settes hel).
@@ -1792,6 +1838,12 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
   - Kystkantene som regnes som kai, er funnet med en regel (rett kyst nær en brygge eller et stort industribygg). Små havner uten kartlagte brygger kan mangle fronter, og en steinfylling nær en brygge kan bli regnet som kai.
   - Senja-flåtens kaiplasser kommer når flisas `vec`-pakke er lastet (i 3D innenfor 14 km), og før det ligger båtene som før. Del 5 skal regne plassene ut i rørledningen, så alle får de samme uansett hva som er lastet.
   - Bildetakten med bygg i tette byer er ikke målt på nettbrettet (åpne med «Vis bildetakt»).
+- **NPC-trafikken langs kysten (04.10.2026, 4.16):**
+  - Båtene går rett fra kaiplassen til havnemunningen, og den streken kan krysse en brygge.
+  - Noen få leibiter skjærer et hjørne av land.
+  - Terrenget ved en kaifront er fra 25 m-masken, så en båt ved kai kan stå litt inn i terrenget der kaia ikke er kartlagt som brygge.
+  - Havnene har ingen navn.
+  - Flåten er en tilnærming. Den følger kaiplassen, ikke Fiskeridirektoratets register.
 - **Kartplotteren: dobbel kyst langs vannlinja (03.10.2026, framtidig jobb, venter på klarsignal):**
   - **Hva som ses:** på nært hold ligger et mykt grønt felt ved siden av den gule kysten, og smale sund er tettet med grønt. Det ser ut som to landmasser oppå hverandre.
   - **Årsaken:** kartet tegner land fra to kilder.
