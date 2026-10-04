@@ -6,13 +6,15 @@ Laget 04.10.2026, da spillet fikk navnet Det Store Blå og domenet detstorebla.n
 
 ### 1. Domenet (først, det tar tid å slå gjennom)
 
+Spillet skal ligge på Hetzner-serveren din, ikke på GitHub Pages (se G).
+
 1. Legg inn DNS-postene hos registraren der du kjøpte detstorebla.no:
-   - `A` for `detstorebla.no`: 185.199.108.153, 185.199.109.153, 185.199.110.153 og 185.199.111.153
-   - `AAAA` for `detstorebla.no`: 2606:50c0:8000::153, 2606:50c0:8001::153, 2606:50c0:8002::153 og 2606:50c0:8003::153
-   - `CNAME` for `www`: `average01101010.github.io`
-2. Verifiser domenet på GitHub, slik at ingen andre kan ta det: profilbildet → Settings → Pages → «Add a domain». GitHub gir deg en `TXT`-post som du legger inn hos registraren.
-3. Si fra når postene er lagt inn. Da kobler vi domenet til Pages: repoet → Settings → Pages → Custom domain `detstorebla.no`, og så «Enforce HTTPS» når sertifikatet er klart.
-4. Lag e-post på domenet, for eksempel `post@` og `support@`. Det går hos registraren eller hos Google Workspace eller Zoho.
+   - `A` for `detstorebla.no`: IPv4-adressen til Hetzner-serveren
+   - `AAAA` for `detstorebla.no`: IPv6-adressen til serveren
+   - `CNAME` for `www`: `detstorebla.no`
+   - Det kan også gjøres gjennom Cloudflare (gratis): flytt navnetjenerne dit og legg inn de samme postene. Da får du hurtigbuffer for kartpakkene nær spillerne og beskyttelse mot angrep.
+2. Si fra når postene er lagt inn. Serveren henter selv HTTPS-sertifikat fra Let's Encrypt (Caddy).
+3. Lag e-post på domenet, for eksempel `post@` og `support@`. Det går hos registraren eller hos Google Workspace eller Zoho.
 
 **Viktig om lagringene:** Lagringen ligger i nettleseren og hører til adressen. Når appen flytter fra `average01101010.github.io` til `detstorebla.no`, følger ikke lagringen med av seg selv. Spillet har alt lagringskoden under Innstillinger → Lagret spill («Kopier lagringen» og «Lim inn lagring»), som flytter spillet mellom artifacten og appen. Før byttet bør spillet varsle om koden, slik at spillerne tar den med seg. Det kan jeg legge inn.
 
@@ -233,3 +235,30 @@ Jonas' ønske 04.10.2026 er et dashbord med all bruksinformasjon, og lista hans 
 4. **Admin-dashbordet** (`/admin`) med alle fanene fra E. Det kan vises med testdata før de ekte dataene kommer.
 5. **Butikken:** Stripe Checkout, webhooken i Supabase og rettighetene i spillet, når produktene (boostere, båter og skins) er bestemt.
 6. **Juridiske sider** (personvern, vilkår, kilder, kontakt) og sletting av konto.
+
+## G. Server og drift: trengs det en egen server?
+
+**Kort svar:** Nei, ikke for spillets logikk. Supabase tar databasen og serverfunksjonene, også webhooken og kassen til Stripe. WorkOS tar innloggingen. Spillet selv er statiske filer.
+
+**Men spillet må flyttes fra GitHub Pages før lansering:**
+- Pages er ikke lov å bruke for nettsteder som først og fremst driver handel eller kommersiell programvare ([GitHub Pages limits](https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits)).
+- Pages har en myk grense på 100 GB trafikk i måneden. Kartpakkene for hele kysten er 227 MB, så bare noen hundre nye spillere i måneden kan nå grensen.
+
+**Forslag: Hetzner-serveren din serverer spillfilene.**
+- **Caddy** serverer `dist-pwa/` og henter HTTPS-sertifikat selv.
+- **Hetzner** har 20 TB trafikk i måneden inkludert i de fleste servere, og datasentrene i EU passer med GDPR.
+- **GitHub Actions** bygger og laster opp med `rsync` over SSH når spillet endres, slik `pwa.yml` gjør til Pages i dag. SSH-nøkkelen ligger som hemmelighet i GitHub.
+- **Cloudflare** foran serveren er valgfritt. Det gir hurtigbuffer for kartpakkene og beskyttelse mot angrep.
+- **Serveren** kan gjøre det den gjør i dag i tillegg, så lenge den har plass.
+
+**Det du gjør på serveren** (Claude skriver oppsettskriptet `tools/server/setup.sh`):
+1. Lag en egen bruker for utrulling, med en SSH-nøkkel bare for dette. Den private nøkkelen legges som hemmelighet i GitHub (`DEPLOY_KEY`, `DEPLOY_HOST`).
+2. Kjør oppsettskriptet:
+   - Caddy
+   - brannmur som bare slipper inn port 22, 80 og 443
+   - automatiske sikkerhetsoppdateringer
+3. Slå på totrinnsinnlogging i Hetzner-konsollen.
+
+**Alternativ uten server:** Cloudflare Pages for siden og Cloudflare R2 for kartpakkene. Det har gratis trafikk, men en grense på 25 MB per fil.
+
+**Supabase på egen server** går også, men da må du drifte databasen, sikkerhetskopiene og oppdateringene selv. Det anbefales ikke nå.
