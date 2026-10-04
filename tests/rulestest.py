@@ -37,6 +37,19 @@ RULES = """(() => { const R = {}, Q = __Q__, at = (m, d) => (Date.UTC(2027, m - 
   let t0 = performance.now(), n = 0; for (let i = 0; i < 20000; i++){ const x = 820 + (i * 7919 % 6000) / 100, y = 340 + (i * 104729 % 6000) / 100; n += ruBits({x, y}) & 2 ? 1 : 0; } R.tBits = Math.round(performance.now() - t0);
   t0 = performance.now(); for (let i = 0; i < 400; i++) ruBits({x:600 + (i * 7919 % 600), y:200 + (i * 104729 % 500)}); R.tBlocks = Math.round(performance.now() - t0);
   t0 = performance.now(); for (let i = 0; i < 300; i++) rulesAt({p:{x:840 + i * 0.05, y:380}, len:16, sp:'torsk', gear:'line'}); R.tRules = Math.round(performance.now() - t0);
+  // R3: the Regler app, the line in the status box, and the chart's rule layer
+  const P0 = {...S.boat.pos}, st0 = S.boat.status; S.boat.status = 'sailing'; S.boat.pos = {...p('malangen')}; RU_NOW = null; renderHud();
+  const row = document.querySelector('#hud .rlink'); R.hud = row ? row.textContent : null;
+  PHONE.open('regler'); const v = () => document.querySelector('#phone') ? document.querySelector('#phone').innerText : document.body.innerText;
+  R.app = {here:/Kan jeg fiske her|Can I fish here/.test(v()), grid:document.querySelectorAll('.ru-grid tr').length, cells:document.querySelectorAll('.ru-c').length};
+  const cell = document.querySelector('.ru-c[data-v="hyse:line"]'); if (cell) cell.click();
+  R.app.check = {tab:/Svar|Answer/.test(v()), sp:(document.querySelector('.ru-chips button.on[data-k="sp"]') || {}).dataset ? document.querySelector('.ru-chips button.on[data-k="sp"]').dataset.v : null, gear:(document.querySelector('.ru-chips button.on[data-k="gear"]') || {dataset:{}}).dataset.v};
+  const lb = document.querySelector('.ph-sub button[data-s="laer"]'); if (lb) lb.click(); R.app.learn = document.querySelectorAll('.ph-c .ph-card').length;
+  PHONE.show(false); S.boat.pos = P0; S.boat.status = st0; RU_NOW = null;
+  const qm = p('malangen'), bx = Math.floor(qm.x / 10), by = Math.floor(qm.y / 10), cnt = (A, v) => A.reduce((a, x) => a + (x === v ? 1 : 0), 0);
+  t0 = performance.now(); const A16 = ruLayerBlock(bx, by, {len:16, gear:'juksa', sp:null, hand:false}); R.tLayer = Math.round(performance.now() - t0);
+  const A9 = ruLayerBlock(bx, by, {len:9, gear:'juksa', sp:null, hand:false});
+  R.layer = {no16:cnt(A16, 2), no9:cnt(A9, 2), land:cnt(A16, 3), sea:1600 - cnt(A16, 3)};
   return R; })()"""
 
 
@@ -73,6 +86,11 @@ async def main():
         print(ok(R['field'].startswith('05-') and len(R['field']) == 5), 'the landing note\'s location from Fiskeridirektoratet\'s locations', R['field'])
         print(ok(R['block']['small'] is None and R['block']['big']), 'what the game stops: a 16 m boat jigging in Malangen, not a 9 m one', R['block'])
         print(ok(R['tBits'] < 400 and R['tRules'] < 400 and R['tBlocks'] < 3000), 'speed: 20,000 cells round Senja (60 x 60 km), 300 full answers, and 400 cells spread over northern Norway, each in a new 10 km block (ms)', R['tBits'], R['tRules'], R['tBlocks'])
+        a = R['app']
+        print(ok(R['hud'] and ('Ikke torsk' in R['hud'] or '✓' in R['hud'] or '!' in R['hud'])), 'R3: the status box has a rules line at sea that opens the Regler app', R['hud'])
+        print(ok(a['here'] and a['grid'] == 8 and a['cells'] == 19 and a['check']['tab'] and a['check']['sp'] == 'hyse' and a['check']['gear'] == 'line' and a['learn'] == 8), 'R3: the Regler app: here and now with the grid of species and gear, a tap shows the check, and eight rules told plainly', a)
+        l = R['layer']
+        print(ok(l['no16'] > l['sea'] * 0.5 and l['no9'] < l['no16'] * 0.1 and R['tLayer'] < 300), 'R3: the chart\'s rule layer is red inside Malangen for a 16 m boat and not for a 9 m one (cells, ms)', l, R['tLayer'])
         print('errors:', errs[:5]); await br.close()
 
 asyncio.run(main())

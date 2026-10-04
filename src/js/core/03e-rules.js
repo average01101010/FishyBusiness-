@@ -167,3 +167,32 @@ function ruMinSize(sp, p){
 // the limits on gear in the sea inside the fjord lines where p is (§ 33, § 33a), or null outside them
 function fjordLimits(p, H){ const b = ruBits(p); if (!(b & 2)) return null; const winter = ruIn2(ruMD(H == null ? S.t / 60 : H), 1101, 430);
   return {nets:80, hooks:winter && (b & 32) ? null : 5000}; }
+// R3: what the HUD, the Regler app and the chart's rule layer show. The short label of each reason, and the question asked for your
+// boat where she is: her length, the gear she is rigged with, and halibut when you fish for it (otherwise any species)
+const RU_SHORT = {f31:['Ikke torsk her', 'No cod here'], j32b:['Ikke innenfor grunnlinja', 'Not inside the baseline'], j32c:['Ikke innenfor 4 nm', 'Not within 4 nm'],
+  henn:['Henningsværboksen er stengt', 'The Henningsvær box is closed'], borg:['Borgundfjorden er stengt', 'Borgundfjorden is closed'], stengt:['Stengt felt', 'Closed field'],
+  gyte:['Gytefeltet er stengt', 'The spawning area is closed'], null:['Nullfiskeområde', 'No-fishing area'], oslo:['Ikke torsk i Oslofjorden', 'No cod in the Oslo fjord'],
+  oslog:['Bare håndredskap her', 'Hand gear only here'], lopp:['Verneområde', 'Protected area'], kv39:['Kveita er fredet', 'Halibut is protected'], kv40:['Forbudsområde for kveite', 'No-fishing area for halibut'],
+  uer39:['Uer er ikke lov', 'Redfish not allowed'], f33:['Høyst 5 000 kroker', 'At most 5,000 hooks'], f33a:['Høyst 80 torskegarn', 'At most 80 cod nets'], j32by:['Bifangst høyst 20 %', 'Bycatch at most 20%'],
+  lofot:['Felleshav: om bord 10–17', 'Common ground: aboard 10–17'], raet:['Raet: egne regler', 'Raet: own rules'], oslot:['Høyst 10 teiner', 'At most 10 pots'],
+  f31h:['Andre arter enn torsk er lov', 'Species other than cod allowed'], f31a:['Andre arter enn torsk er lov', 'Species other than cod allowed'], f33b:['Ingen krokgrense nå', 'No hook limit now']};
+function ruCtx(){ const b = S.boat; return {p:b.status === 'port' && typeof portById === 'function' && b.port ? portById(b.port).p : b.pos, len:BOAT.len, gear:b.rig || 'juksa',
+  sp:S.target === 'kveite' ? 'kveite' : null, hand:!(S.equip && S.equip.jukse > 0)}; }
+// the answer for your boat now, kept for 10 game minutes and 50 m
+let RU_NOW = null;
+function ruNow(){ const q = ruCtx(), k = [q.len, q.gear, q.sp, q.hand].join('|');
+  if (RU_NOW && RU_NOW.k === k && Math.abs(RU_NOW.t - S.t) < 10 && Math.hypot(RU_NOW.p.x - q.p.x, RU_NOW.p.y - q.p.y) < 0.05) return RU_NOW.r;
+  const r = rulesAt(q); RU_NOW = {k, t:S.t, p:{x:q.p.x, y:q.p.y}, r}; return r; }
+const ruShort = it => it ? gL(...(RU_SHORT[it.k] || [it.no, it.en])) : '';
+// the chart's rule layer: the answer for your boat on a 250 m grid, a 10 km block at a time (40 x 40), 0 ok, 1 warn, 2 no; only at sea
+const RU_LAYER = new Map();
+function ruLayerBlock(bx, by, q, budget){
+  const key = bx + ',' + by + '|' + [q.len, q.gear, q.sp, q.hand, ruMD(S.t / 60)].join('|'); let A = RU_LAYER.get(key); if (A) return A;
+  if (budget && performance.now() > budget) return null;
+  A = new Uint8Array(1600); const rank = {no:2, warn:1, ok:0};
+  for (let j = 0; j < 40; j++) for (let i = 0; i < 40; i++){ const p = {x:bx * 10 + (i + 0.5) * 0.25, y:by * 10 + (j + 0.5) * 0.25};
+    if (isLandFar(p)){ A[j * 40 + i] = 3; continue; }
+    const r = rulesAt({p, H:S.t / 60, len:q.len, gear:q.gear, sp:q.sp, hand:q.hand}); A[j * 40 + i] = rank[r.v] || 0; }
+  if (RU_LAYER.size > 400) RU_LAYER.delete(RU_LAYER.keys().next().value);
+  RU_LAYER.set(key, A); return A;
+}

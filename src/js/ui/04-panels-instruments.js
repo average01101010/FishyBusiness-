@@ -59,6 +59,9 @@ function renderHud(){
     '<div class="row"><span>' + t('waves') + '</span><b>' + fmt(hs, 1) + ' m' + (atSea ? ' <span class="r' + lvl + '">' + t('risk' + lvl) + '</span>' : '') + '</b></div>' +
     (() => { if (!atSea) return ''; const z = motionHere(H, b).state; if (!z.lvl) return ''; const L = (no, en) => S.lang === 'no' ? no : en;
       return '<div class="row"><span>' + L('Stabilitet', 'Stability') + '</span><b class="r' + z.lvl + '">' + {gm:L('rank', 'tender'), res:L('synkronrulling', 'synchronous roll'), roll:L('kraftig rulling', 'heavy rolling')}[z.why] + '</b></div>'; })() +
+    // the rules where you are (03e-rules.js ruNow): a tap opens the Regler app
+    (() => { if (!atSea || !RU.ok) return ''; const r = ruNow(), it = r.items.find(i => i.v === r.v && i.v !== 'ok'); const L = (no, en) => S.lang === 'no' ? no : en;
+      return '<div class="row rlink"><span>' + L('Regler', 'Rules') + '</span><b class="' + (r.v === 'no' ? 'r2' : r.v === 'warn' ? 'r1' : 'r0') + '">' + (r.v === 'no' ? '✕ ' : r.v === 'warn' ? '! ' : '✓ ') + (it ? ruShort(it) : L('Lov her', 'Allowed here')) + ' ›</b></div>'; })() +
     '<div class="row"><span>' + t('fuel') + '</span><b>' + fmt(b.fuel, 0) + ' / ' + BOAT.fuelCap + ' L</b></div>' +
     '<div class="row"><span>' + t('hold') + '</span><b>' + fmt(holdTotal(), 0) + ' / ' + capHold() + ' kg</b></div>' +
     (() => { const e = S.energy == null ? 100 : S.energy; return '<div class="row"><span>' + (S.lang === 'no' ? 'Energi' : 'Energy') + '</span><b class="' + (asleep() ? 'r2' : e < ENERGY.dim ? 'r2' : e < ENERGY.warn ? 'r1' : '') + '">' + (energyOff() ? (S.lang === 'no' ? 'av' : 'off') : asleep() ? (S.lang === 'no' ? 'sover' : 'asleep') : Math.round(e) + ' %') + '</b></div>'; })() +
@@ -151,4 +154,5 @@ const INSTR = (() => {
   document.addEventListener('visibilitychange', () => { if (!document.hidden) show(); });
   return {show, renderGPS, echoOn};
 })();
-
+// a tap on the rules line in the status box opens the Regler app
+hud.addEventListener('click', e => { if (e.target.closest('.rlink')) PHONE.open('regler'); });

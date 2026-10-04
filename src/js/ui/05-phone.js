@@ -25,12 +25,13 @@ const PHONE = (() => {
     redskap:SVG('<circle cx="12" cy="16" r="4.5"/><path d="M12 11.5V3l5 2-5 2"/><path d="M3 21c3-1.5 6-1.5 9 0s6 1.5 9 0"/>'),
     sjomann:SVG('<circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.9 2.9M15.5 15.5l2.9 2.9M5.6 18.4l2.9-2.9M15.5 8.5l2.9-2.9"/>'),
     ordl:SVG('<path d="M8.5 3.5h7v3h-7z"/><path d="M8 5H5v16h14V5h-3"/><path d="M8 11l1.5 1.5L12 10M8 16l1.5 1.5L12 15M14 11h3M14 16h3"/>'),
+    regler:SVG('<path d="M6 3h11a2 2 0 0 1 2 2v14H8a2 2 0 0 1-2-2z"/><path d="M6 17a2 2 0 0 1 2-2h11"/><path d="M9.5 8.6l1.8 1.8L15 6.7"/>'),
     kvote:SVG('<path d="M12 3a9 9 0 1 0 9 9h-9z"/><path d="M15 2.6A9 9 0 0 1 21.4 9H15z"/>'),
     trim:SVG('<path d="M4 15a8 8 0 1 1 16 0"/><path d="M12 15l4-5"/><circle cx="12" cy="15" r="1.6"/><path d="M6 19h12"/>'),
     patch:SVG('<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 12h7M9 15.5h7M9 19h4"/>'),
     innst:SVG('<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>'),
     admin:SVG('<path d="M14.5 6.5a4 4 0 0 0 5 5L12 19a2.1 2.1 0 0 1-3-3l7.5-7.5"/><path d="M14.5 6.5L17 4l3 3-2.5 2.5"/><path d="M5 3l3 3M3 5l3 3"/>')};
-  const APPS = [['vaer', 'Vær', 'Weather', '#2f7fd0'], ['post', 'Kystposten', 'Coast Post', '#b8402f'], ['meld', 'Meldinger', 'Messages', '#29a36a'], ['rederi', 'Rederi', 'Company', '#1f4e79'], ['salg', 'Salgslaget', 'Sales', '#1e8c6e'], ['kvote', 'Kvote', 'Quota', '#8a6a1c'], ['ordl', 'Oppdrag', 'Orders', '#2e7d4f'], ['haill', 'Haill', 'Luck', '#c9a227'], ['sjomann', 'Sjømann', 'Seaman', '#23506b'], ['redning', 'Redning', 'Rescue', '#e0562b'], ['trim', 'Trim', 'Tuning', '#b3261e'], ['patch', 'Patchnotes', 'Patch notes', '#5a4fa3'], ['innst', 'Innstillinger', 'Settings', '#4a5560'], ['admin', 'Admin', 'Admin', '#7a2e8f']];
+  const APPS = [['vaer', 'Vær', 'Weather', '#2f7fd0'], ['post', 'Kystposten', 'Coast Post', '#b8402f'], ['meld', 'Meldinger', 'Messages', '#29a36a'], ['rederi', 'Rederi', 'Company', '#1f4e79'], ['salg', 'Salgslaget', 'Sales', '#1e8c6e'], ['kvote', 'Kvote', 'Quota', '#8a6a1c'], ['regler', 'Regler', 'Rules', '#2d6a4f'], ['ordl', 'Oppdrag', 'Orders', '#2e7d4f'], ['haill', 'Haill', 'Luck', '#c9a227'], ['sjomann', 'Sjømann', 'Seaman', '#23506b'], ['redning', 'Redning', 'Rescue', '#e0562b'], ['trim', 'Trim', 'Tuning', '#b3261e'], ['patch', 'Patchnotes', 'Patch notes', '#5a4fa3'], ['innst', 'Innstillinger', 'Settings', '#4a5560'], ['admin', 'Admin', 'Admin', '#7a2e8f']];
   const unread = () => S.msgs.filter(m => !m.read).length;
   function setBadge(){ const n = unread(); for (const bd of [badge, $('phoneBadge2')]){ bd.hidden = !n; bd.textContent = n; } }
   // --- workshop: service, fitting and getting the gear ready, one job after the other while the boat is in port
@@ -151,6 +152,62 @@ const PHONE = (() => {
     if (old.length) h.push('<h4 style="margin:10px 2px 4px">' + L('Tidligere', 'Earlier') + '</h4><div class="ph-card">' + old.map(o => kv(cn(o.cust) + ' · ' + fmt(o.kg, 0) + ' kg ' + SPECIES[o.sp].no.toLowerCase(), (o.ok === false ? '<span class="r2">' + L('Ikke levert', 'Not delivered') + '</span>' : '<span class="r0">' + L('Levert', 'Delivered') + '</span>') + ' · ' + dayStr(o.t / 60).replace(/^\S+ /, ''))).join('') + '</div>');
     return h.join('') + '</div>';
   }
+  // the Regler app (R3 of the rules plan, 05.10.2026): «Her og nå» answers «can I fish here?» for your boat, gear and target where she is,
+  // with every species and gear in a grid; «Sjekk» asks the same for any species, gear, length, month and place (the boat, the middle of
+  // the chart or a port); «Lær mer» tells the rules plainly. All of it from rulesAt() in core/03e-rules.js
+  const RU_SPR = [['torsk', 'Torsk', 'Cod'], ['hyse', 'Hyse', 'Haddock'], ['sei', 'Sei', 'Saithe'], ['lange', 'Lyr, lange, brosme', 'Pollack, ling, tusk'], ['kveite', 'Kveite', 'Halibut'], ['uer', 'Uer', 'Redfish'], ['krabbe', 'Taskekrabbe', 'Brown crab']];
+  const RU_GR = [['juksa', 'Juksa', 'Jig'], ['line', 'Line', 'Line'], ['garn', 'Garn', 'Nets'], ['teiner', 'Teiner', 'Pots']];
+  const ruMark = v => v === 'no' ? '✕' : v === 'warn' ? '!' : '✓';
+  const ruBadge = v => '<span class="rv rv-' + v + '">' + ruMark(v) + ' ' + (v === 'no' ? L('Nei', 'No') : v === 'warn' ? L('Ja, men', 'Yes, but') : L('Ja', 'Yes')) + '</span>';
+  function ruList(r){ const it = r.items.filter(i => i.v !== 'info'); if (!it.length) return '<p class="ph-note">' + L('Ingen særlige regler her for dette. Kvoten og minstemålene gjelder som ellers.', 'No special rules here for this. Your quota and the minimum sizes hold as always.') + '</p>';
+    return it.map(i => '<div class="ru-it ru-' + i.v + '"><b>' + ruMark(i.v) + '</b><span>' + L(i.no, i.en) + '<small>' + i.ref + (i.url ? ' · <a href="' + i.url + '" target="_blank" rel="noopener">' + L('kilde', 'source') + '</a>' : '') + '</small></span></div>').join('') +
+      (r.items.some(i => i.v === 'info') ? '<p class="ph-note">' + r.items.filter(i => i.v === 'info').map(i => L(i.no, i.en)).join(' ') + ' ' + L('Det gjelder ikke redskapet ditt.', 'It does not concern your gear.') + '</p>' : ''); }
+  function ruWhere(p){ const z = insideFjord(p) ? ruZone(p) : null, nm = blNm(p), hom = ruHom(p), lok = ruLok(p), ln = z && z.l.filter(x => x[0] === 'F').slice(0, 2).map(ruLineName).filter(Boolean);
+    return kv(L('Fjordlinjene', 'Fjord lines'), insideFjord(p) ? L('innenfor', 'inside') + (ln && ln.length ? '<small> · ' + ln.join(', ') + '</small>' : '') : L('utenfor', 'outside')) +
+      kv(L('Grunnlinja', 'Baseline'), insideBaseline(p) ? L('innenfor', 'inside') : fmt(nm, 1) + ' nm ' + L('utenfor', 'outside')) +
+      kv(L('Statistikkområde', 'Statistics area'), (hom || '–') + (lok ? ' · ' + L('lokasjon ', 'location ') + lok : '')) +
+      kv(L('Minstemål her', 'Minimum sizes here'), [['torsk', 'torsk', 'cod'], ['hyse', 'hyse', 'haddock'], ['sei', 'sei', 'saithe'], ['krabbe', 'krabbe', 'crab']].map(([k, no, en]) => L(no, en) + ' ' + ruMinSize(k, p) + ' cm').join(', ')); }
+  // the grid: every species with every gear, for your boat here today
+  function ruGrid(p, len, H, hand){
+    return '<table class="ph-tbl ru-grid"><tr><th></th>' + RU_GR.map(g => '<th>' + L(g[1], g[2]) + '</th>').join('') + '</tr>' + RU_SPR.map(([sp, no, en]) => '<tr><td>' + L(no, en) + '</td>' + RU_GR.map(([g]) => {
+      if ((sp === 'krabbe') !== (g === 'teiner')) return '<td class="ru-na">–</td>';
+      const r = rulesAt({p, H, len, gear:g, sp, hand}); return '<td><button class="ru-c rv-' + r.v + '" data-pa="ruchk" data-k="pick" data-v="' + sp + ':' + g + '">' + ruMark(r.v) + '</button></td>'; }).join('') + '</tr>').join('') + '</table>'; }
+  function ruChk(){ const c = Object.assign({sp:'torsk', gear:S.boat.rig || 'juksa', len:BOAT.len, where:'boat', port:null, month:null}, S.ruChk || {});
+    if (c.pick){ const [sp, g] = String(c.pick).split(':'); c.sp = sp; c.gear = g; c.pick = null; } return c; }
+  function ruHere(){ const q = ruCtx(), r = ruNow(), H = S.t / 60;
+    return '<div class="ph-card"><h4>' + L('Kan jeg fiske her?', 'Can I fish here?') + ' ' + ruBadge(r.v) + '</h4><p class="ph-note">' + L('For ', 'For ') + S.boatName + ' (' + fmt(BOAT.len, 1) + ' m) ' + L('med ', 'with ') +
+      L(...(RU_GR.find(g => g[0] === q.gear) || RU_GR[0]).slice(1)).toLowerCase() + (q.sp === 'kveite' ? L(', etter kveite', ', for halibut') : '') + ', ' + dayStr(H) + '.</p>' + ruList(r) + '</div>' +
+      '<div class="ph-card"><h4>' + L('Alle arter og redskap her i dag', 'Every species and gear here today') + '</h4>' + ruGrid(q.p, q.len, H, q.hand) + '<p class="ph-note">' + L('Trykk på en rute for å se hvorfor.', 'Tap a square to see why.') + '</p></div>' +
+      '<div class="ph-card"><h4>' + L('Hvor du er', 'Where you are') + '</h4>' + ruWhere(q.p) + '</div>' +
+      '<p class="ph-note">' + L('Fra Fiskeridirektoratets reguleringskart og forskriftene (hentet ', 'From the Directorate of Fisheries\' regulation map and the regulations (fetched ') + RU.made + L('). De stengte feltene er et øyeblikksbilde fra den dagen. Kartplotteren viser det samme som et lag: rødt der du ikke kan fiske, gult der det er grenser.', '). The closed fields are a snapshot from that day. The chart plotter shows the same as a layer: red where you may not fish, yellow where there are limits.') + '</p>'; }
+  function ruCheck(){ const c = ruChk(), y = yearH(S.t / 60), H = c.month == null ? S.t / 60 : (Date.UTC(y, c.month, 15, 12) - EPOCH) / 36e5;
+    const near = PORTS.slice().sort((a, b) => dist(a.p, S.boat.pos) - dist(b.p, S.boat.pos)).slice(0, 6);
+    const p = c.where === 'chart' ? {x:view.cx, y:view.cy} : c.where === 'port' && c.port && portById(c.port) ? portById(c.port).p : ruCtx().p;
+    const chip = (k, v, label, on) => '<button class="' + (on ? 'on' : '') + '" data-pa="ruchk" data-k="' + k + '" data-v="' + v + '">' + label + '</button>';
+    const lens = [[BOAT.len, L('Din båt', 'Your boat') + ' ' + fmt(BOAT.len, 1) + ' m'], [9, L('under 11 m', 'under 11 m')], [13, '11–14,99 m'], [18, '15–20,99 m'], [24, '21–27,99 m'], [30, L('28 m og over', '28 m and over')]];
+    const r = rulesAt({p, H, len:c.len, gear:c.gear, sp:c.sp, hand:c.gear === 'juksa' && !(S.equip && S.equip.jukse > 0)});
+    return '<div class="ph-card"><h4>' + L('Art', 'Species') + '</h4><div class="ru-chips">' + RU_SPR.map(([k, no, en]) => chip('sp', k, L(no, en), c.sp === k)).join('') + '</div>' +
+      '<h4>' + L('Redskap', 'Gear') + '</h4><div class="ru-chips">' + RU_GR.map(([k, no, en]) => chip('gear', k, L(no, en), c.gear === k)).join('') + '</div>' +
+      '<h4>' + L('Båtlengde', 'Boat length') + '</h4><div class="ru-chips">' + lens.map(([v, t]) => chip('len', v, t, Math.abs(c.len - v) < 0.01)).join('') + '</div>' +
+      '<h4>' + L('Når', 'When') + '</h4><div class="ru-chips">' + chip('month', 'null', L('I dag', 'Today'), c.month == null) + MNS().map((m, i) => chip('month', i, m.slice(0, 3), c.month === i)).join('') + '</div>' +
+      '<h4>' + L('Hvor', 'Where') + '</h4><div class="ru-chips">' + chip('where', 'boat', L('Der båten er', 'Where the boat is'), c.where === 'boat') + chip('where', 'chart', L('Midt i kartet', 'The middle of the chart'), c.where === 'chart') +
+        near.map(q => chip('port', q.id, q.name, c.where === 'port' && c.port === q.id)).join('') + '</div></div>' +
+      '<div class="ph-card"><h4>' + L('Svar', 'Answer') + ' ' + ruBadge(r.v) + '</h4>' + ruList(r) + ruWhere(p) + '</div>' +
+      '<p class="ph-note">' + L('«Midt i kartet» er midten av kartplotteren: flytt kartet dit du vil fiske, og kom tilbake hit.', '«The middle of the chart» is the middle of the chart plotter: move the chart to where you want to fish, and come back here.') + '</p>'; }
+  // the rules told plainly, each with its source
+  function ruLearn(){ const T = [
+      ['Fjordlinjene', 'The fjord lines', 'Fra Stad til Russland går det rette linjer over fjordmunningene. Innenfor dem gyter og vokser kysttorsken opp. Der kan båter på 15 m eller mer ikke fiske torsk, du kan ha høyst 80 torskegarn og 5 000 kroker, og snurrevad er forbudt.', 'From Stad to Russia straight lines cross the fjord mouths. Inside them the coastal cod spawns and grows up. There boats of 15 m or more may not fish cod, you may have at most 80 cod nets and 5,000 hooks, and Danish seine is banned.', 'Høstingsforskriften kap. VI og vedlegg 4', 'https://lovdata.no/forskrift/2021-12-23-3910'],
+      ['Grunnlinja og nautiske mil', 'The baseline and nautical miles', 'Grunnlinja er rette linjer mellom de ytterste skjærene. Avstander til havs måles fra den, i nautiske mil (1 nm = 1 852 m). Innenfor grunnlinja er indre farvann, og territorialgrensa går 12 nm ut.', 'The baseline is straight lines between the outermost skerries. Distances at sea are measured from it, in nautical miles (1 nm = 1,852 m). Inside it are inner waters, and the territorial limit is 12 nm out.', 'Kartverket, Norges maritime grenser', 'https://kartkatalog.geonorge.no/metadata/e106adf4-c9d8-4fce-a9b5-7886a4126d23'],
+      ['Båtlengde og kysttorsk', 'Boat length and coastal cod', 'Jo større båt, jo lenger ut: 21–27,99 m kan ikke fiske torsk, hyse og sei innenfor grunnlinja, og 28 m og over ikke innenfor 4 nm, nord for 62° N. I Vestfjorden og sør for den, og i Finnmark deler av året, er det unntak.', 'The bigger the boat, the further out: 21–27.99 m may not fish cod, haddock and saithe inside the baseline, and 28 m and over not within 4 nm, north of 62° N. In and south of Vestfjorden, and in Finnmark part of the year, there are exceptions.', 'J-161-2026 § 32', 'https://www.fiskeridir.no/yrkesfiske/j-meldinger/j-161-2026'],
+      ['Minstemål', 'Minimum sizes', 'Fisk under minstemålet skal ikke fiskes, og velger du feltet godt, får du lite av den. Torsk nord for 62° N: 44 cm, men 55 cm innenfor 4 nm. Hyse 40 cm, sei 45 cm, kveite 84 cm, taskekrabbe 13 cm (11 cm sør for Rogaland).', 'Fish under the minimum size must not be caught, and choosing your ground well keeps it few. Cod north of 62° N: 44 cm, but 55 cm within 4 nm. Haddock 40 cm, saithe 45 cm, halibut 84 cm, brown crab 13 cm (11 cm south of Rogaland).', 'Høstingsforskriften § 47', 'https://lovdata.no/forskrift/2021-12-23-3910'],
+      ['Fredningstider', 'Closed seasons', 'Kveita er fredet nord for 62° N fra 20. desember til 20. april, og sør for 62° N hele året. Uer kan nord for 62° N bare fiskes med juksa fra båt under 15 m, fra 1. juni til 31. august.', 'Halibut is protected north of 62° N from 20 December to 20 April, and south of 62° N all year. North of 62° N redfish may only be fished by jig from a boat under 15 m, 1 June to 31 August.', 'Høstingsforskriften § 39', 'https://lovdata.no/forskrift/2021-12-23-3910'],
+      ['Stengte felt', 'Closed fields', 'Fiskeridirektoratet stenger felt der det er mye småfisk, ofte for ett redskap om gangen. Det kunngjøres i J-meldinger. Sjekk før du setter redskap.', 'The Directorate of Fisheries closes grounds with much small fish, often for one gear at a time. It is announced in J-messages. Check before you set gear.', 'J-meldinger', 'https://www.fiskeridir.no/yrkesfiske/j-meldinger'],
+      ['Lofoten og Henningsvær', 'Lofoten and Henningsvær', 'Henningsværboksen er stengt 1.1–30.6 for båter over 11 m. I de fleksible felleshavene i Lofotfisket skal faste redskap være om bord fra kl. 10 til 17, så alle får plass.', 'The Henningsvær box is closed 1.1–30.6 for boats over 11 m. In the flexible common grounds of the Lofoten fishery fixed gear must be aboard from 10:00 to 17:00, so everyone has room.', 'J-161-2026 § 32 og J-236-2025', 'https://www.fiskeridir.no/yrkesfiske/j-meldinger/j-161-2026'],
+      ['Sør for 62° N', 'South of 62° N', 'I gytefeltene for kysttorsk i sør er alt fiske forbudt 1.1–30.4. I Oslofjorden er det forbudt å fiske torsk hele året, og bare håndsnøre og stang er lov for fisk.', 'In the coastal cod spawning areas in the south all fishing is banned 1.1–30.4. In the Oslo fjord fishing cod is banned all year, and only hand line and rod are allowed for fish.', 'Forskrift om fredningsområder for kysttorsk og Oslofjordforskriften', 'https://www.fiskeridir.no/fritidsfiske/artar/vern-av-kysttorsk-i-soer']];
+    return T.map(([hn, he, tn, te, ref, url]) => '<div class="ph-card"><h4>' + L(hn, he) + '</h4><p>' + L(tn, te) + '</p><p class="ph-note">' + ref + ' · <a href="' + url + '" target="_blank" rel="noopener">' + L('kilde', 'source') + '</a></p></div>').join(''); }
+  function regler(){ const t = ['her', 'sjekk', 'laer'].includes(sub.regler) ? sub.regler : 'her';
+    const top = subs('regler', [['her', 'Her og nå', 'Here and now'], ['sjekk', 'Sjekk', 'Check'], ['laer', 'Lær mer', 'Learn']]);
+    return top + '<div class="ph-c">' + (t === 'her' ? ruHere() : t === 'sjekk' ? ruCheck() : ruLearn()) + '</div>'; }
   // the Kvote app: your quotas, the open group's season, the stocks, and the market for rights (core/03d-quota.js)
   function kvote(){ const t = ['mine', 'open', 'stock', 'mkt'].includes(sub.kvote) ? sub.kvote : 'mine', H = S.t / 60;
     const top = subs('kvote', [['mine', 'Mine kvoter', 'My quotas'], ['open', 'Åpen gruppe', 'Open group'], ['stock', 'Bestand', 'Stock'], ['mkt', 'Marked', 'Market']]);
@@ -287,7 +344,7 @@ const PHONE = (() => {
   let shown = '';
   function render(){ status(); setBadge(); if (!isOpen) return; if (app === 'patch' && S.settings.patchSeen !== PATCH[0][0]){ S.settings.patchLast = S.settings.patchSeen; S.settings.patchSeen = PATCH[0][0]; } const key = app + '|' + (sub[app] || ''), y = key === shown ? view.scrollTop : 0; view.innerHTML = app === 'home' ? home() : shell(app); shown = key; view.scrollTop = y; }
   // every page by name: the phone apps, and the pages that open in the dock's drawer instead (DRAWER)
-  const PAGES = () => ({vaer, post, salg, kvote, redning, rederi, meld, haill, logg, sjomann, trim, patch, innst, admin,
+  const PAGES = () => ({vaer, post, salg, kvote, regler, redning, rederi, meld, haill, logg, sjomann, trim, patch, innst, admin,
     ordl, rigg, arbeid:() => WORK.page(), fiske, fartoy:() => fartoy('marked'), utstyr, redskap, mannskap, bors, bank, verksted, havn, last, lever, is:isApp, agn, oppdrag, beholdning});
   function shell(a){ const d = APPS.find(x => x[0] === a) || [a, a, a, '#28507f'], f = PAGES()[a]; return '<div class="ph-appv' + (a === 'post' ? ' ph-paper' : '') + '"><div class="ph-top" style="background:' + d[3] + '"><span class="ic">' + (IC[a] || '') + '</span>' + L(d[1], d[2]) + '</div>' + (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) + '</div>'; }
   // a page for the drawer, and an action tapped there: it runs as if that page were the open app, and says which page shows next
@@ -314,7 +371,9 @@ const PHONE = (() => {
     ['p10', '05.10.2026', 'Regler langs hele kysten', 'Rules along the whole coast', [
       ['Fjordlinjene for kysttorsk gjelder langs hele kysten, rett fra Fiskeridirektoratet, og vises i kartet.', 'The fjord lines for coastal cod hold along the whole coast, straight from the Directorate of Fisheries, and show on the chart.'],
       ['Båtlengden avgjør hvor du kan fiske torsk, hyse og sei: innenfor fjordlinjene fra 15 m, innenfor grunnlinja fra 21 m og innenfor 4 nm fra 28 m, med unntakene i forskriften.', 'The boat\'s length decides where you may fish cod, haddock and saithe: inside the fjord lines from 15 m, inside the baseline from 21 m and within 4 nm from 28 m, with the regulation\'s exceptions.'],
-      ['Stengte felt, Henningsværboksen, Borgundfjorden, Oslofjorden og gytefeltene i sør gjelder også. Sluttseddelen får Fiskeridirektoratets lokasjon.', 'Closed fields, the Henningsvær box, Borgundfjorden, the Oslo fjord and the spawning areas in the south apply too. The landing note gets the Directorate\'s location.']]],
+      ['Stengte felt, Henningsværboksen, Borgundfjorden, Oslofjorden og gytefeltene i sør gjelder også. Sluttseddelen får Fiskeridirektoratets lokasjon.', 'Closed fields, the Henningsvær box, Borgundfjorden, the Oslo fjord and the spawning areas in the south apply too. The landing note gets the Directorate\'s location.'],
+      ['Ny app: Regler. «Kan jeg fiske her?» med alle arter og redskap, Sjekk for andre steder og måneder, og reglene forklart enkelt. Linja «Regler» i statusboksen åpner den.', 'New app: Rules. «Can I fish here?» with every species and gear, Check for other places and months, and the rules told plainly. The «Rules» line in the status box opens it.'],
+      ['Kartplotteren har et regellag: rødt der din båt ikke kan fiske med redskapet sitt i dag, gult der det er grenser. Det slås av og på under innstillingene.', 'The chart plotter has a rule layer: red where your boat may not fish with her gear today, yellow where there are limits. It is switched on and off in the settings.']]],
     ['p9', '05.10.2026', 'Rettinger', 'Fixes', [
       ['Alene i båten sløyer skipperen selv, og den som haler, er skipperen når det er hans jobb, i stedet for en annen figur.', 'Alone in the boat the skipper guts the catch himself, and the one hauling is the skipper when it is his job, not another figure.']]],
     ['p8', '05.10.2026', 'Kvotesystemet', 'The quota system', [
@@ -894,6 +953,7 @@ const PHONE = (() => {
       else log('Admin: energien er skrudd på igjen.', 'Admin: energy is on again.'); }
     else if (a === 'admFuel'){ const b = S.boat, add = Math.max(0, BOAT.fuelCap - b.fuel); b.fuel = BOAT.fuelCap; if (b.status === 'adrift' && add > 0) b.status = 'idle'; log('Admin: tanken fylt (' + fmt(add) + ' L).', 'Admin: the tank filled (' + fmt(add) + ' L).'); }
     else if (a === 'sub'){ sub[app] = d.s; }
+    else if (a === 'ruchk'){ const c = ruChk(); c[d.k] = /^-?\d+(\.\d+)?$/.test(d.v) ? +d.v : d.v === 'null' ? null : d.v; S.ruChk = c; sub.regler = 'sjekk'; }
     else if (a === 'salgW'){ sub.salgW = d.s; }
     else if (a === 'tow'){ rescue(true); toast(L('Redningsskøyta er på vei.', 'The rescue boat is on its way.')); }
     else if (a === 'mayday'){ confirmMayday = true; }

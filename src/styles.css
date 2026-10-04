@@ -587,3 +587,16 @@ body.kino-clean .ov.kino,body.kino-clean .ov.kino2{opacity:.35}
 #slAck[hidden]{display:none}
 #sleep.alarm{background:#1a0303}
 @keyframes ackBlink{0%{background:#d01c12;box-shadow:0 0 34px rgba(255,40,30,.9)}50%{background:#5a0805;box-shadow:none}}
+/* the rules (R3): the line in the status box opens the Regler app; the app's answers, reasons, grid and chips */
+#hud .row.rlink{pointer-events:auto;cursor:pointer}#hud .row.rlink b.r0{color:#8fe3a6}
+.rv{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:10px;font-size:12px;font-weight:700;vertical-align:1px}
+.rv-ok{background:#1f7a46;color:#fff}.rv-warn{background:#c98a12;color:#fff}.rv-no{background:#b3261e;color:#fff}
+.ru-it{display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-top:1px solid rgba(0,0,0,.07)}.ru-it:first-of-type{border-top:0}
+.ru-it>b{flex:0 0 22px;height:22px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff}
+.ru-no>b{background:#b3261e}.ru-warn>b{background:#c98a12}.ru-ok>b{background:#1f7a46}.ru-it small{display:block;opacity:.7;font-size:11.5px;margin-top:2px}
+.ru-grid td,.ru-grid th{text-align:center}.ru-grid td:first-child{text-align:left}.ru-na{opacity:.35}
+.ru-c{min-width:38px;min-height:34px;border:0;border-radius:8px;font-weight:700;font-size:15px;color:#fff;cursor:pointer}
+.ru-c.rv-ok{background:#1f7a46}.ru-c.rv-warn{background:#c98a12}.ru-c.rv-no{background:#b3261e}
+.ru-chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}.ru-chips button{min-height:34px;padding:4px 10px;border-radius:17px;border:1px solid rgba(0,0,0,.15);background:#fff;font-size:13px;cursor:pointer}
+.ru-chips button.on{background:#2d6a4f;color:#fff;border-color:#2d6a4f}
+

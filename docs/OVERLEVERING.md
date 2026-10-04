@@ -1625,6 +1625,34 @@ Brukerens ønske: en frivillig mulighet til å styre båten selv, med gass og ra
 
 `tests/rulestest.py` sjekker punkter langs kysten (sonene, områdene og avstanden til grunnlinja) og svarene for hver regel, med datoer og lengder.
 
+### 5.29 Regler-appen, statuslinja og regellaget (R3 av regelplanen, 05.10.2026)
+
+Jonas: «mange som skal spille dette har kanskje ikke så mye erfaring med fiskeri fra før, så vi blir nødt til å lage en intuitiv løsning der hvordan vi skal vise og lære dem hvilke regelverk som gjelder».
+
+- **Statusboksen** har linja «Regler» når du er på sjøen: ✓ Lov her, ! en grense eller ✕ et forbud, med en kort tekst (`RU_SHORT`).
+  - Den gjelder din båt, redskapet hun er rigget med, og kveite når du fisker etter den (`ruCtx`, `ruNow`, som holder svaret i 10 spillminutter og 50 m).
+  - Et trykk åpner appen.
+- **Regler-appen** (`regler` i `05-phone.js`):
+  - **Her og nå:**
+    - «Kan jeg fiske her?» med svar, grunner, paragraf og lenke til kilden.
+    - Et rutenett med alle arter og redskap for din båt her i dag. Trykk på en rute for å se hvorfor.
+    - Hvor du er: fjordlinjene med navnene, grunnlinja i nm, statistikkområdet og lokasjonen, og minstemålene her.
+  - **Sjekk:** art, redskap, båtlengde etter lengdegruppene, måned, og hvor. Stedet kan være der båten er, midt i kartplotteren eller en av de seks nærmeste havnene.
+  - **Lær mer:** åtte regler forklart enkelt, hver med kilde:
+    - fjordlinjene
+    - grunnlinja og nm
+    - båtlengde og kysttorsk
+    - minstemål
+    - fredningstider
+    - stengte felt
+    - Lofoten og Henningsvær
+    - sør for 62° N
+- **Regellaget i kartplotteren** (`ruLayerBlock` og `ruLayerCanvas`):
+  - Laget er rødt der din båt ikke kan fiske med redskapet sitt i dag, og gult der det er grenser.
+  - Det regnes på et rutenett på 250 m, en blokk på 10 km om gangen. Én blokk tar rundt 40 ms, og høyst 25 ms regnes per bilde. Resten kommer i de neste bildene.
+  - Laget tegnes mykt over sjøen, med fjordlinjene skarpt oppå.
+  - Det slås av og på under innstillingene til kartplotteren («Regellag på / Av»). Standard er på.
+
 ### 5.27 Forslagslista 04.10.2026 (natta til 05.10)
 
 Jonas' liste: oppgraderinger, kvotehandel, kikkert, raskere fangst, fortøying, snurring ved siste veipunkt, stanga ut, drivstoffpriser, jukse-spill, nattmodus, salg for ekte penger, Blender-modeller, åpningstider, flytrafikk, ny haill og agn. Svarene hans: håndjuksa omtrent dobbelt så rask, luksushaill +200 % (kan justeres ned), motoroppgraderinger på verftet og speed-boost i en egen telefonapp for ekte penger.

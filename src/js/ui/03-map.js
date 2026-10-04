@@ -130,6 +130,14 @@ function chartCame(){
   clearTimeout(CT.came);
   CT.came = setTimeout(() => { for (const [tk, t] of CT.tiles) if (t.prov) CT.tiles.delete(tk); if (document.body.classList.contains('vplot')){ paintChart(1); scheduleStatic(); } }, 120);
 }
+// a block of the rule layer as a 40 x 40 picture (null when it has nothing to show), kept with the block
+const RU_CV = new WeakMap();
+function ruLayerCanvas(A){
+  if (RU_CV.has(A)) return RU_CV.get(A);
+  let any = false; const cv = document.createElement('canvas'); cv.width = cv.height = 40; const c = cv.getContext('2d'), im = c.createImageData(40, 40), d = im.data;
+  for (let k = 0; k < 1600; k++){ const v = A[k]; if (v === 2){ d[k * 4] = 190; d[k * 4 + 1] = 32; d[k * 4 + 2] = 32; d[k * 4 + 3] = 92; any = true; } else if (v === 1){ d[k * 4] = 222; d[k * 4 + 1] = 150; d[k * 4 + 2] = 20; d[k * 4 + 3] = 50; any = true; } }
+  c.putImageData(im, 0, 0); const out = any ? cv : null; RU_CV.set(A, out); return out;
+}
 // the coast, the graticule and the fjord line for the view, on their own canvas
 function chartVectors(V){
   const {W, H, x0, y0, kx, ky, dpr} = V, fish = V.fish || V.night;
@@ -137,12 +145,23 @@ function chartVectors(V){
   const ctx = cv.getContext('2d'); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, H);
   chartCoast(ctx, x0, y0, kx, ky, W, H, dpr, fish);
   chartGrid(ctx, x0, y0, kx, ky, W, H, dpr, fish);
+  // the rule layer (R3, 03e-rules.js ruLayerBlock): red where your boat may not fish with her gear today, yellow where there are
+  // limits, from a 250 m grid drawn soft over the sea; the blocks not worked out yet (25 ms a paint) come in the next paints
+  const xb = x0 + W * kx, yb = y0 + H * ky;
+  if (S.settings.ruleLayer !== false && RU.ok){
+    const q = ruCtx(), budget = performance.now() + 25; let miss = false;
+    ctx.save(); ctx.imageSmoothingEnabled = true;
+    for (let by = Math.floor(y0 / 10); by <= Math.floor(yb / 10); by++) for (let bx = Math.floor(x0 / 10); bx <= Math.floor(xb / 10); bx++){
+      const A = ruLayerBlock(bx, by, q, budget); if (!A){ miss = true; continue; }
+      const cv = ruLayerCanvas(A); if (cv) ctx.drawImage(cv, (bx * 10 - x0) / kx, (by * 10 - y0) / ky, 10 / kx, 10 / ky); }
+    ctx.restore();
+    if (miss){ clearTimeout(CT.ruT); CT.ruT = setTimeout(() => { if (document.body.classList.contains('vplot')) paintChart(1); }, 60); }
+  }
   // the fjord lines for coastal cod along the coast (høstingsforskriften vedlegg 4, rules.json): dashed violet, as regulation lines
   // are drawn on official charts, named when zoomed in
   const FL = RU.L[2]; if (!FL) return;
   ctx.save(); ctx.strokeStyle = 'rgba(150,40,170,0.85)'; ctx.lineWidth = 1.6 * dpr; ctx.setLineDash([7 * dpr, 5 * dpr]);
   ctx.font = 'italic ' + Math.round(11 * dpr) + 'px sans-serif'; ctx.fillStyle = 'rgba(130,30,150,0.9)';
-  const xb = x0 + W * kx, yb = y0 + H * ky;
   for (const f of FL.f){ const b = f.bb; if (b[2] < x0 || b[0] > xb || b[3] < y0 || b[1] > yb) continue;
     for (const l of f.ls){ ctx.beginPath(); for (let i = 0; i < l.length; i += 2){ const X = (l[i] - x0) / kx, Y = (l[i + 1] - y0) / ky; i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); } ctx.stroke();
       if (view.z > 1.6 && l.length >= 4){ const m = (l.length >> 2) << 1, X = (l[m] - x0) / kx, Y = (l[m + 1] - y0) / ky; ctx.fillText(S.lang === 'no' ? 'Fjordlinje' : 'Fjord line', X + 6 * dpr, Y); } } }

@@ -26,6 +26,7 @@ function doAct(el){
   }
   else if (act === 'depnow'){ if (!S.plan) return; if (b.status === 'port' && S.jobs && S.jobs.length){ toast(t('yard_busy', hm((jobsDone() || S.t) / 60))); return; } if (!meAboard() && !crewAboard().length){ toast(L('Båten har ikke mannskap. Uten deg om bord trenger den folk.', 'The boat has no crew. Without you aboard it needs hands.')); return; } depart(); if (!G3.isActive()) G3.show(true, true); }
   else if (act === 'cn'){ S.settings.chartNight = el.dataset.m; renderBase(); scheduleStatic(); if (typeof MINIP !== 'undefined') MINIP.key = ''; }
+  else if (act === 'rl'){ S.settings.ruleLayer = el.dataset.m === 'on'; renderBase(); scheduleStatic(); paintChart(1); }
   else if (act === 'cm'){ const m = el.dataset.m; if (m === 'fish' && !S.equip.plotter){ toast(t('need_plotter')); PHONE.open('utstyr'); return; } S.settings.chart = m; renderBase(); scheduleStatic(); }
   else if (act === 'echo' || act === 'sonar'){ S.settings[act] = el.dataset.on === '1'; heatReset(); if (typeof heatPaint === 'function') heatPaint(); INSTR.show(); }
   else if (act === 'hsp'){ S.settings.heatSp = el.dataset.s; if (typeof heatPaint === 'function') heatPaint(true); }
