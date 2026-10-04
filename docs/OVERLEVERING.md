@@ -829,6 +829,12 @@ Jonas' valg: gratis å spille med kjøp via Stripe, påkrevd innlogging med Work
   - En egen bruker for utrulling som bare kan kjøre `rsync` til `/srv/detstorebla` (rrsync).
   - En brannmur som bare slipper inn port 22, 80 og 443, og automatiske sikkerhetsoppdateringer.
   - Utrullingen går fra `main` når hemmelighetene `DEPLOY_HOST`, `DEPLOY_KEY` og `DEPLOY_KNOWN_HOSTS` finnes.
+  - `try_files {path} {path}.html`, så `/personvern` og `/vilkar` virker uten `.html`.
+- **Personvern og vilkår** (`src/legal/`, utkast 04.10.2026):
+  - `build.mjs` legger `personvern.html` og `vilkar.html` ved siden av spillet, med stilen fra `legal.css` satt inn.
+  - Innloggingsskjermen og samtykket lenker dit. Tekstene beskriver det databasen faktisk gjør, så en endring i hva som lagres må også inn der.
+  - Uten samtykke lagrer `tm_hello` bare kontoen. Utstyret, landet og fødselsåret kommer først med et ja, og et nei i `tm_consent` sletter det igjen.
+  - Det som står igjen, og hullet med WorkOS-brukeren ved «slett kontoen», står i `docs/lansering.md` under «Juridisk».
 
 
 ## 5. Systemer i spillet

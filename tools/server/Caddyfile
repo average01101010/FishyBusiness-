@@ -4,6 +4,8 @@
 @DOMAIN@ {
 	root * /srv/detstorebla/current
 	encode zstd gzip
+	# /personvern and /vilkar (the links on Google's sign-in screen) are personvern.html and vilkar.html
+	try_files {path} {path}.html
 	file_server
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"

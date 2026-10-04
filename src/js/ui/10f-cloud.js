@@ -67,7 +67,8 @@ async function cloudGate(){
     cloudGateShow('<p>' + cloudL('Kystfiske langs norskekysten, fra sjarken og opp.', 'Coastal fishing along the coast of Norway, from the sjark up.') + '</p><p style="opacity:.8;font-size:14px">' +
       cloudL('Logg inn med Google, Apple eller e-post for å spille. Spillet lagres på kontoen din, så du kan fortsette på en annen enhet.', 'Sign in with Google, Apple or e-mail to play. The game is saved to your account, so you can go on from another device.') + '</p>' +
       cloudBtn('cgIn', cloudL('Logg inn', 'Sign in'), true) + cloudBtn('cgUp', cloudL('Lag konto', 'Create account')) +
-      '<p style="opacity:.6;font-size:12px;margin-top:18px"><a href="personvern.html" style="color:#9cc4ec">' + cloudL('Personvern', 'Privacy') + '</a> · <a href="vilkar.html" style="color:#9cc4ec">' + cloudL('Vilkår', 'Terms') + '</a></p>');
+      '<p style="opacity:.7;font-size:12px;margin-top:18px">' + cloudL('Når du lager konto, godtar du <a href="vilkar.html" style="color:#9cc4ec">vilkårene</a>. Les hvordan vi behandler opplysninger i <a href="personvern.html" style="color:#9cc4ec">personvernerklæringen</a>.',
+        'By creating an account you accept the <a href="vilkar.html" style="color:#9cc4ec">terms</a>. Read how we handle your data in the <a href="personvern.html" style="color:#9cc4ec">privacy policy</a>.') + '</p>');
     document.getElementById('cgIn').onclick = () => CLOUD.ak.signIn();
     document.getElementById('cgUp').onclick = () => CLOUD.ak.signUp();
     return new Promise(() => {});

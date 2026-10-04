@@ -74,3 +74,8 @@ if (PWA){
   if (existsSync(A)){ mkdirSync(join(DIST, 'admin'), {recursive:true});
     const cfg = readFileSync(join(SRC, 'data', 'cloud.json'), 'utf8').trim();
     writeFileSync(join(DIST, 'admin', 'index.html'), readFileSync(join(A, 'index.html'), 'utf8').replace('/*@cloud*/null', cfg)); } }
+// the privacy and terms pages (docs/lansering.md D) next to the game, as the sign-in and the consent link them (personvern.html,
+// vilkar.html), each with the shared style put in
+{ const L = join(SRC, 'legal');
+  if (existsSync(L)){ const css = '<style>\n' + readFileSync(join(L, 'legal.css'), 'utf8') + '</style>';
+    for (const f of readdirSync(L).filter(f => f.endsWith('.html'))) writeFileSync(join(DIST, f), readFileSync(join(L, f), 'utf8').replace('<!--@css-->', css)); } }

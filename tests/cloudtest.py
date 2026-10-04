@@ -41,6 +41,12 @@ async def main():
         await pg.goto(GAME); await pg.wait_for_selector('#cloudGate #cgIn', timeout=90000); await pg.wait_for_timeout(1500)
         g = await pg.evaluate("(() => { document.getElementById('cgIn').click(); return {gate:!!document.getElementById('cloudGate'), signIn:window.__signIn === 1, ready:typeof SIMREADY !== 'undefined' && SIMREADY}; })()")
         check(g['gate'] and g['signIn'] and not g['ready'] and not calls, 'not signed in, the gate stops the game, «Logg inn» goes to WorkOS, and nothing is sent', g)
+        # the gate's links to the terms and the privacy page lead to the pages next to the game, with their style put in
+        legal = await pg.evaluate("""async () => { const out = {};
+          for (const a of document.querySelectorAll('#cloudGate a')){ const r = await fetch(a.getAttribute('href')); const t = await r.text();
+            out[a.getAttribute('href')] = r.status + ' ' + ((t.match(/<h1>([^<]+)/) || [])[1] || '') + (t.includes('<!--@css-->') ? ' nocss' : ''); }
+          return out; }""")
+        check(legal.get('vilkar.html') == '200 Vilkår' and legal.get('personvern.html') == '200 Personvernerklæring', 'the gate links the terms and the privacy page, and both are there', legal)
         await ctx.close()
 
         # 2. signed in: hello, consent, events, errors, rage quit, the save

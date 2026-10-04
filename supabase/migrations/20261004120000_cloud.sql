@@ -103,23 +103,32 @@ declare p text := pid(); r public.players;
 begin
   if p is null then raise exception 'not signed in'; end if;
   insert into players (id, last_seen) values (p, now()) on conflict (id) do update set last_seen = now();
+  -- the device and the country only with consent (the privacy page, src/legal/personvern.html): without it the row is the account
   update players set lang = left(meta ->> 'lang', 12), tz = left(meta ->> 'tz', 40), platform = left(meta ->> 'platform', 20),
     browser = left(meta ->> 'browser', 20), pwa = (meta ->> 'pwa')::boolean,
     country = coalesce(left(nullif(current_setting('request.headers', true)::json ->> 'cf-ipcountry', ''), 2), country)
-    where id = p returning * into r;
+    where id = p and consent is true;
+  select * into r from players where id = p;
   return jsonb_build_object('consent', r.consent, 'created', r.created_at, 'birth_year', r.birth_year,
     'owned', coalesce((select jsonb_agg(product_id) from entitlements where player_id = p), '[]'::jsonb));
 end $$;
 
 create or replace function public.tm_consent(yes boolean, birth_year int) returns void language plpgsql security definer set search_path = public as $$
-declare p text := pid();
+declare p text := pid(); ok boolean;
 begin
   if p is null then raise exception 'not signed in'; end if;
-  -- under 13 the answer does not count as consent (personopplysningsloven § 5)
-  update players set consent = yes and (tm_consent.birth_year is null or tm_consent.birth_year <= extract(year from now())::int - 13),
-    consent_at = now(), birth_year = coalesce(tm_consent.birth_year, players.birth_year) where id = p;
-  -- a no takes back what was gathered under a yes
-  if not yes then delete from sessions where player_id = p; end if;
+  -- under 13 the answer does not count as consent (personopplysningsloven § 5), and the year of birth is kept only with consent
+  ok := coalesce(yes, false) and (tm_consent.birth_year is null or tm_consent.birth_year <= extract(year from now())::int - 13);
+  update players set consent = ok, consent_at = now(), birth_year = case when ok then coalesce(tm_consent.birth_year, players.birth_year) end
+    where id = p;
+  -- a no takes back what was gathered under a yes: the sessions and their events, the device, the latest state, the name on errors
+  if not ok then
+    delete from sessions where player_id = p;
+    delete from events where player_id = p;
+    update errors set player_id = null, session_id = null where player_id = p;
+    update players set lang = null, tz = null, country = null, platform = null, browser = null, pwa = null, home = null, boat = null,
+      cash = null, fleet = null, fleet_value = null, streak = null, game_days = null where id = p;
+  end if;
 end $$;
 
 -- a batch from the game: the session's heartbeat (active seconds since the last batch), the latest state and the events

@@ -43,8 +43,15 @@ Spillet skal ligge på Hetzner-serveren din, ikke på GitHub Pages (se G).
 
 ### 5. Juridisk
 
-- **Personvernerklæring (GDPR):** hva som lagres (e-post, lagringen, kjøp), hvem som behandler det (Supabase, Stripe, GitHub), hvor lenge og hvilke rettigheter spilleren har. Jeg kan lage et utkast som du godkjenner.
-- **Salgs- og brukervilkår:** For digitalt innhold faller angreretten bort når kjøperen uttrykkelig ber om levering med en gang og bekrefter at angreretten da går tapt (angrerettloven § 22). Det løses med en avkrysning i kassen.
+- **Personvernerklæring og vilkår (utkast 04.10.2026):** `src/legal/personvern.html` og `src/legal/vilkar.html`, bygget til `personvern.html` og `vilkar.html` ved siden av spillet (`/personvern` og `/vilkar` på serveren, som Googles innloggingsskjerm lenker til). De bygger på det spillet faktisk lagrer, og det gule står igjen for deg:
+  - organisasjonsnummer, adresse og en e-postadresse på domenet (for eksempel videresending hos domeneselgeren)
+  - regionen Supabase-prosjektet ligger i
+  - varselet før nedleggelse (forslaget er 90 dager)
+  - Google Fonts-linja går ut når skriftene ligger på vår egen server (punkt 181), og kildesiden må lages
+  - når du godkjenner, fjernes utkastbanneret
+- **Hull som må tettes før lansering:** «Slett kontoen» sletter alt hos oss, men ikke brukeren hos WorkOS (e-post og navn). Det krever et kall med WorkOS-hemmeligheten fra serveren, og det lages som en Supabase Edge Function sammen med Stripe-webhooken.
+- **Tvister:** Mekling skjer i Forbrukertilsynet (ikke lenger Forbrukerrådet). Forbrukerklageutvalget kan bare avgjøre saker om varer, håndverkertjenester og angreretten, ikke om digitale ytelser ellers ([Forbrukertilsynet](https://www.forbrukertilsynet.no/forbrukerklageutvalget/behandling-forbrukerklageutvalget)). EUs klageportal (ODR) ble lagt ned 20.07.2025 og skal ikke nevnes.
+- **Salgs- og brukervilkår:** For digitalt innhold faller angreretten bort når kjøperen uttrykkelig ber om levering med en gang og bekrefter at angreretten da går tapt (angrerettloven § 22 bokstav n). Det løses med en avkrysning i kassen som ikke er krysset av på forhånd, og bekreftelsen må stå i kvitteringen. Feil og mangler følger digitalytelsesloven (i kraft 01.01.2023).
 - **Alder:** I Norge er aldersgrensen 13 år for å samtykke selv til nettjenester (personopplysningsloven § 5). Kjøp fra mindreårige bør kreve en voksen (sjekk).
 - **Varemerke:** Søk opp «Det Store Blå» i Patentstyrets base (search.patentstyret.no). Det store blå er også den norske tittelen på filmen *Le Grand Bleu* fra 1988. Registrer navnet i klasse 9 (programvare) og 41 (spill). Gebyrene står hos Patentstyret.
 - **Kartdata og kilder:** Spillet bygger på OpenStreetMap via Overture (ODbL), Kartverket (CC BY 4.0), Fiskeridirektoratet (NLOD), Råfisklaget og Havforskningsinstituttet.
@@ -89,10 +96,10 @@ Lista er amerikansk («so your app doesn't get sued»). Her er hvert punkt vurde
 
 | # | Punkt | Gjelder oss? | Hva vi gjør |
 |---|---|---|---|
-| 1 | Personvernerklæring | Ja (GDPR art. 13), så snart vi har kontoer, betaling eller besøkstall | Claude skriver utkast, du godkjenner |
-| 2 | Brukervilkår | Ja | Claude skriver utkast, du godkjenner |
+| 1 | Personvernerklæring | Ja (GDPR art. 13), så snart vi har kontoer, betaling eller besøkstall | Utkast i `src/legal/personvern.html` (04.10.2026), du godkjenner |
+| 2 | Brukervilkår | Ja | Utkast i `src/legal/vilkar.html` (04.10.2026), du godkjenner |
 | 3 | Refusjon | Ja, som angrerett: 14 dager, men den faller bort for digitalt innhold når kjøperen samtykker til levering med en gang (angrerettloven § 22 n) | Avkrysning i kassen og en tekst i salgsvilkårene (Claude) |
-| 4–5 | Informasjonskapsler og samtykkebanner | Bare for det som ikke er nødvendig (ekomloven, sjekk). Lagringen i nettleseren er nødvendig for spillet og krever ikke samtykke. | Ingen sporing, og besøkstall uten informasjonskapsler, så slipper vi banneret |
+| 4–5 | Informasjonskapsler og samtykkebanner | Bare for det som ikke er strengt nødvendig (ekomloven § 3-15, i kraft 01.01.2025). Lagringen i nettleseren og innloggingen er nødvendige for spillet og krever ikke samtykke. | Ingen sporing og ingen reklamepiksler, så vi slipper banneret. Statistikken spør spillet om selv. Kommer det Google Analytics, Meta- eller TikTok-piksel, trengs banneret. |
 | 6 | Samtykke i skjemaer | Ja: vilkår og angrerett ved kjøp, og eget samtykke til nyhetsbrev, aldri forhåndskrysset | Claude |
 | 7 | Ikke samle unødvendige data | Ja (GDPR art. 5, dataminimering) | Bare e-post, lagringen og kjøp |
 | 8 | Gå gjennom tredjeparter | Ja | Google Fonts sender IP-adressen til Google (tysk dom fra 2022). Skriftene bør ligge i appen selv. Ellers bare Supabase og Stripe, ingen reklame (Claude) |
@@ -189,6 +196,7 @@ Jonas' ønske 04.10.2026 er et dashbord med all bruksinformasjon, og lista hans 
 - **Dataminimering:** ingen IP-adresser, ingen nøyaktig posisjon og ingen fritekst lagres.
 - **Lagringstid:** rådataene slettes etter 13 måneder, og sammendragene beholdes.
 - Personvernerklæringen beskriver målingen, og «slett kontoen» sletter også hendelsene.
+- **Uten samtykke** lagres bare kontoen (WorkOS-ID, når den ble laget og sist brukt) og lagringen. Utstyret, landet og fødselsåret lagres bare med et ja. Et nei etterpå sletter øktene, hendelsene, utstyret og spilltilstanden og fjerner navnet fra feilrapportene (`tm_hello`, `tm_consent`, `sqltest.py`).
 
 ### Rekkefølge
 
