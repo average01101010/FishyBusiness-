@@ -431,6 +431,18 @@ function licValue(l){ return l ? Math.round(licQ(l).torsk * KPK) : 0; }
 // in at least three of the last five years, and blad B (fishing as the main occupation) is the usual proof. Here: 10 landing days with
 // you aboard and 1 G of first-hand value (G from 1 May 2025, nav.no; to be updated for 2026)
 const BLADB = {days:10, kr:130160};
+// The sales organisation's deductions on the landing note (Norges Råfisklag, «Forklaring til trekk på fiskers avregning», rafisklaget.no,
+// read 04.10.2026): the organisation's own levy on the gross value (fresh fish 0,43 % from 1.7.2026), and on the gross less it
+// («trekkgrunnlag 1») the pension levy to Garantikassen for fiskere (0,4 % from 1.1.2023, every fisher), the product levy to NAV
+// (1,6 % from 1.1.2026, folketrygdloven § 23-5; it pays the fishers' social security above 7,6 % and the employer's tax on crew wages),
+// the fisheries research levy (1,35 %), the resource levy to the state (0,42 %) and the control levy (0,22 %, not yet taken from
+// vessels under 15 m). The crew's share is reckoned on what is left (an assumption: the crew agreements reckon it after the common costs)
+const TREKK = {lag:0.0043, pens:0.004, prod:0.016, forsk:0.0135, ress:0.0042, ktrl:0.0022};
+function trekkOf(total, len){
+  const lag = Math.round(total * TREKK.lag), g = total - lag, r = k => Math.round(g * TREKK[k]);
+  const t = {lag, pens:r('pens'), prod:r('prod'), forsk:r('forsk'), ress:r('ress'), ktrl:len >= 15 ? r('ktrl') : 0};
+  t.sum = t.lag + t.pens + t.prod + t.forsk + t.ress + t.ktrl; return t;
+}
 function fmInit(){ const F = {n:0, last:-1, kr:0, b:false}; for (const s of S.sales || []){ const d = Math.floor(s.t / 1440); if (d !== F.last){ F.n++; F.last = d; } F.kr += s.total || 0; }
   F.b = !!(S.lic || (S.fleet || []).some(v => v.lic)) || (F.n >= BLADB.days && F.kr >= BLADB.kr); return F; }
 function fmLand(total){ const F = S.fm || (S.fm = fmInit()), d = Math.floor(S.t / 1440); if (d !== F.last){ F.n++; F.last = d; } F.kr += total;

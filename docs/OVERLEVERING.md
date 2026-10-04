@@ -882,7 +882,19 @@ Mister du juksa, fisker bare juksamaskinene til du kjøper ny i Fiskeutstyr. `mo
   - **Større fartøy** med fabrikk om bord kommer senere.
 - **Sluttseddelen** viser art, størrelse, kvalitet, kilo, kilopris, lever og rogn, inndragning, ferskfiskordningen, bestillinger og fangstfelt.
   - Hver linje står i hele kroner og kilo, og totalen er summen av linjene (A7). Linjene står med full verdi, og det som inndras, står som egne trekk: torsk over kvote eller bifangstgrensen, krabbe under minstemålet og trekket for rognkrabbe. Tillegg for bestillinger og innloggingsbonusen har egne linjer.
-  - Under totalen kommer «Lott til mannskapet» og «Til kassa», og kassa får nøyaktig total minus lott. Gebyret for småkrabbe står som en merknad under, fordi det kommer fra Fiskeridirektoratet og ikke står på seddelen.
+  - Under totalen kommer trekkene i oppgjøret, så «Lott til mannskapet» og «Til kassa». Kassa får nøyaktig total minus trekk og lott. Gebyret for småkrabbe står som en merknad under, fordi det kommer fra Fiskeridirektoratet og ikke står på seddelen.
+  - **Trekkene** (E2 av økonomiplanen, 04.10.2026, `TREKK` og `trekkOf` i `03-simulation.js`), som Råfisklaget trekker dem:
+    - **Lagsavgift:** 0,43 % av totalen (ferske produkter fra 1.7.2026).
+    - **Av totalen minus lagsavgiften:**
+      - pensjonstrekk til Garantikassen for fiskere: 0,4 %
+      - produktavgift til folketrygden: 1,6 % fra 1.1.2026
+      - fiskeriforskningsavgift: 1,35 %
+      - ressursavgift: 0,42 %
+      - kontrollavgift: 0,22 %, bare fra fartøy på 15 m og mer, fordi den ennå ikke er innført under 15 m
+    - **Til sammen:** rundt 4,2 % under 15 m.
+    - **Lotten:** Mannskapets lott regnes av det som er igjen etter trekkene. Det er en antakelse, fordi lottavtalene regner etter felles utgifter.
+    - **Lagring:** I `S.sales[].d.tk` og `S.lastSale.tk`. Salg-fanen viser dem som én linje.
+    - **Balansen:** Inntekten blir 4 % lavere, så `progweek` er kjørt på nytt.
 - Alle priser i spillet er per kilo **rund vekt**.
 
 ### 5.5 Kvoter og regulering
@@ -1862,6 +1874,7 @@ Jonas' liste: oppgraderinger, kvotehandel, kikkert, raskere fangst, fortøying, 
 | Strukturkvoter | Forskrift om spesielle kvoteordninger for kystfiskeflåten (J-244-2025), og høringsnotatet om strukturgevinst 2026 | 11–27,99 m, samme gruppe, 10 % avkorting, 20 år, kvotetak 3× (11–14,99) og 4× (15–27,99). Særlig kvoteordning under 11 m fra 2025 |
 | Åpen gruppe og ferskfisk, historikk | Saksdokumentene 2019–2025 | Stopp 24.3.2019, 20.4.2020, 1.5.2023, 15.5.2025, 16.4.2026; ingen i 2021, 2022, 2024. Ferskfisk 2017–2025 |
 | Maskevidde i torskegarn | Maskeviddeforskriften (Lovdata 1989-10-10-1095) | Minst 156 mm nord for 62° N. Spillet selger 156, 180 og 200 mm |
+| Trekk i oppgjøret | Norges Råfisklag, «Forklaring til trekk på fiskers avregning» (rafisklaget.no, lest 04.10.2026) | Lagsavgift 0,43 % (ferskt fra 1.7.2026). Av totalen minus den: pensjonstrekk 0,4 %, produktavgift 1,6 % (fra 1.1.2026), forskningsavgift 1,35 %, ressursavgift 0,42 %, kontrollavgift 0,22 % (ikke under 15 m ennå). MVA 11,11 % på salget til salgslaget. Se 5.4 |
 | Fjordlinja og redskap | Høstingsforskriften kap. VI (§ 31, 33, 33a, lest 04.10.2026) | Innenfor: høyst 80 torskegarn og 5 000 kroker (yttersidene av kroklinjene i Finnmark unntatt 1.11–30.4), ikke snurrevad. 15 m eller mer: ikke torsk; under 21 m andre arter, sør for 68° 15,6′ N annet enn torsk. Se 5.28 |
 | Kysttorsk etter lengde | J-161-2026 § 32 (lest 04.10.2026) | 21–27,99 m ikke innenfor grunnlinja, 28 m og over ikke innenfor 4 nm, med unntak etter område og dato. Henningsværboksen og Borgundfjorden. Se 5.28 |
 | Grunnlinja og sonene | Kartverket, Norges maritime grenser (Geonorge, 25833) | Grunnlinja, 1, 4, 6, 10, 12 og 24 nm. Se 4.17 |

@@ -272,7 +272,13 @@ function portSlip(){
     if (ls.ordKr > 0.5) h.push(row(LN('Tillegg for bestillinger', 'Order premiums'), '', fmt(ls.ordKr, 0)));
     if (ls.streak && ls.streak.kr > 0) h.push(row(LN('Innloggingsbonus +', 'Login bonus +') + fmt(ls.streak.pct, 0) + ' %', '', fmt(ls.streak.kr, 0)));
     h.push('<tr class="sum"><td>' + t('total') + '</td><td></td><td></td><td>' + fmt(ls.lines.reduce((a, r) => a + pkOf(r), 0), 0) + '</td><td></td><td>' + fmt(ls.total, 0) + '</td></tr>');
-    if (ls.lott > 0) h.push(row(LN('Lott til mannskapet', 'The crew\'s share'), '', '−' + fmt(ls.lott, 0)) + row('<b>' + LN('Til kassa', 'To the cash box') + '</b>', '', '<b>' + fmt(ls.total - ls.lott, 0) + '</b>'));
+    // the sales organisation's deductions (TREKK, 03-simulation.js), the crew's share of what is left, and what comes to the cash box
+    const tk = ls.tk || {sum:0}, pc = v => fmt(v * 100, 2).replace(/0$/, '').replace(/[,.]0$/, '') + ' %';
+    for (const [k, no, en] of [['lag', 'Lagsavgift til Råfisklaget', 'Sales organisation levy'], ['pens', 'Pensjonstrekk, Garantikassen', 'Pension levy'], ['prod', 'Produktavgift til folketrygden', 'Product levy (social security)'],
+      ['forsk', 'Fiskeriforskningsavgift', 'Fisheries research levy'], ['ress', 'Ressursavgift', 'Resource levy'], ['ktrl', 'Kontrollavgift', 'Control levy']])
+      if (tk[k] > 0) h.push(row(LN(no, en) + ' ' + pc(TREKK[k]), '', '−' + fmt(tk[k], 0)));
+    if (ls.lott > 0) h.push(row(LN('Lott til mannskapet', 'The crew\'s share'), '', '−' + fmt(ls.lott, 0)));
+    if (tk.sum > 0 || ls.lott > 0) h.push(row('<b>' + LN('Til kassa', 'To the cash box') + '</b>', '', '<b>' + fmt(ls.total - tk.sum - ls.lott, 0) + '</b>'));
     h.push('</tbody></table></div>');
     if (ls.crabFine) h.push('<p class="note">' + LN('Overtredelsesgebyr fra Fiskeridirektoratet for krabbe under minstemålet: ', 'Fine from the Directorate of Fisheries for undersized crab: ') + kr(ls.crabFine) + LN('. Det står ikke på sluttseddelen, men er trukket fra kassa.', '. It is not on the landing note, but has been taken from the cash box.') + '</p>');
     for (const o of (ls.ord || [])) h.push('<p class="note">' + LN('Bestilling fra ' + o.cust + ': ' + fmt(o.kg, 0) + ' kg ' + SPECIES[o.sp].no.toLowerCase() + ', tillegg ' + kr(Math.round(o.kr)) + (o.done ? ', ferdig levert, bonus ' + kr(o.bonus) : ', ' + fmt(o.left, 0) + ' kg igjen') + '.', 'Order from ' + o.cust + ': ' + fmt(o.kg, 0) + ' kg ' + SPECIES[o.sp].en.toLowerCase() + ', premium ' + kr(Math.round(o.kr)) + (o.done ? ', fully delivered, bonus ' + kr(o.bonus) : ', ' + fmt(o.left, 0) + ' kg left') + '.') + '</p>');

@@ -368,6 +368,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p12', '05.10.2026', 'Økonomien', 'The economy', [
+      ['Sluttseddelen har de ekte trekkene fra Råfisklaget: lagsavgift, pensjonstrekk, produktavgift, forskningsavgift og ressursavgift, rundt 4 % til sammen. Lotten regnes av det som er igjen.', 'The landing note has the real deductions of the sales organisation: its levy, the pension, product, research and resource levies, about 4 % in all. The crew\'s share is reckoned on what is left.']]],
     ['p11', '05.10.2026', 'Havn og sjø', 'Harbour and sea', [
       ['Mottakene står på en fylling inn til land, og havna rundt er hevet over flo, så det er ikke lenger vann bak kaia.', 'The fish plants stand on a fill in to the shore, and the harbour round them is raised above high tide, so there is no more water behind the quay.'],
       ['Hekkbølgene blekner gradvis og er like lange på begge sider, og propellstrømmen viser bare skumboblene.', 'The stern waves fade out gradually and are as long on both sides, and the prop wash shows only its foam bubbles.'],

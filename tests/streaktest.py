@@ -60,9 +60,9 @@ async def main():
           S.hold = [{sp:'torsk', cls:2, kg:200, n:50, bled:true, iced:true, hr:0, fresh:90, gut:false}];
           const cash0 = S.cash; sell(); const ls = S.lastSale;
           const fish = ls.lines.reduce((a, r) => a + r.sum, 0);
-          return JSON.stringify({pct:ls.streak.pct, kr:ls.streak.kr, want:Math.round(fish * 0.2), total:Math.round(ls.total), fish:Math.round(fish), got:Math.round(S.cash - cash0), lott:ls.lott}); })()"""))
+          return JSON.stringify({pct:ls.streak.pct, kr:ls.streak.kr, want:Math.round(fish * 0.2), total:Math.round(ls.total), fish:Math.round(fish), got:Math.round(S.cash - cash0), lott:ls.lott, tk:ls.tk.sum}); })()"""))
         check(r['pct'] == 20 and r['kr'] == r['want'] and r['kr'] > 0, 'bonusen er 20 % av fisken', r)
-        check(abs(r['total'] - (r['fish'] + r['kr'])) <= 1 and abs(r['got'] - r['total']) <= 1, 'bonusen går inn i oppgjøret', r)
+        check(abs(r['total'] - (r['fish'] + r['kr'])) <= 1 and abs(r['got'] - (r['total'] - r['tk'] - r['lott'])) <= 1, 'bonusen går inn i oppgjøret', r)
         await pg.evaluate("tab = 'port'; renderPanel()"); await pg.wait_for_timeout(300)
         row = await pg.evaluate("[...document.querySelectorAll('#panel td')].some(td => /Innloggingsbonus \\+20 %/.test(td.textContent))")
         check(row, 'sluttseddelen har en egen bonuslinje')

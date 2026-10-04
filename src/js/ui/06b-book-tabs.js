@@ -134,10 +134,12 @@ function bookSales(){
     if (d.conf && d.conf[1] > 0.5) cost.push([BKL('Inndratt over kvote eller bifangst', 'Confiscated over quota or bycatch'), '−' + kr(d.conf[1])]);
     if (d.conf && d.conf[3] > 0.5) cost.push([BKL('Krabbe under minstemål', 'Undersized crab'), '−' + kr(d.conf[3])]);
     if (d.roe > 0.5) cost.push([BKL('Trekk for rognkrabbe', 'Berried crab deduction'), '−' + kr(d.roe)]);
-    for (const [nm, sh] of d.crew || []) cost.push([nm + ' · ' + fmt(sh * 100, 0) + ' % ' + BKL('lott', 'share'), '−' + kr(Math.round(sh * x.total))]);
+    const tks = (d.tk || []).reduce((a, v) => a + v, 0);
+    if (tks > 0) cost.push([BKL('Trekk til Råfisklaget og staten', 'Sales organisation and state levies'), '−' + kr(tks)]);
+    for (const [nm, sh] of d.crew || []) cost.push([nm + ' · ' + fmt(sh * 100, 0) + ' % ' + BKL('lott', 'share'), '−' + kr(Math.round(sh * (x.total - tks)))]);
     if (d.fine > 0) cost.push([BKL('Gebyr fra Fiskeridirektoratet', 'Fine from the Directorate'), '−' + kr(d.fine)]);
     if (cost.length) h += '<div class="bk-sub">' + BKL('Utgifter', 'Expenses') + '</div>' + cost.map(([a, b]) => row(a, b, 'red')).join('');
-    h += row('<b>' + BKL('Netto til kassa', 'Net to the cash box') + '</b>', '<b>' + kr(x.total - (d.lott || 0) - (d.fine || 0)) + '</b>', 'net') + '</div>';
+    h += row('<b>' + BKL('Netto til kassa', 'Net to the cash box') + '</b>', '<b>' + kr(x.total - tks - (d.lott || 0) - (d.fine || 0)) + '</b>', 'net') + '</div>';
     return h;
   });
 }
