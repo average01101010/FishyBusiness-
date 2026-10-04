@@ -72,4 +72,4 @@ if (AWAY){ catchUp(AWAY + Date.now() - BOOT_T); AWAY = 0; refreshAll(); } lastWa
 loadRoads().then(r => { ROADS = r; scheduleStatic(); if (g3Live()) G3.roadsReady(); }).catch(e => console.error(e));
 loadFine().then(f => { FINE = f; if (g3Live()) G3.fineReady(); }).catch(e => console.error(e));
 }
-bootMap().then(bootGame).catch(e => { console.error(e); const m = document.getElementById('modal'); if (m){ m.hidden = false; m.innerHTML = '<div class="card"><h2>Kartet lastet ikke</h2><p class="note">' + String(e && e.message || e) + '</p></div>'; } });
+bootMap().then(cloudGate).then(() => { bootGame(); cloudHooks(); cloudStart(); }).catch(e => { console.error(e); const m = document.getElementById('modal'); if (m){ m.hidden = false; m.innerHTML = '<div class="card"><h2>Kartet lastet ikke</h2><p class="note">' + String(e && e.message || e) + '</p></div>'; } });

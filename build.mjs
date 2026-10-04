@@ -68,3 +68,9 @@ if (PWA){
   for (const f of readdirSync(P)){ if (f === 'sw.js') writeFileSync(join(DIST, f), readFileSync(join(P, f), 'utf8').replace('@V@', ver)); else copyFileSync(join(P, f), join(DIST, f)); }
   console.log(`dist-pwa/: the app's files (service worker ${ver})`);
 }
+// the admin dashboard (docs/lansering.md E): its own page at /admin/, with the cloud's public address and key (src/data/cloud.json)
+// put in; the app and a local build both get it (the dashboard asks for the admin's sign-in with a second factor before any number)
+{ const A = join(SRC, 'admin');
+  if (existsSync(A)){ mkdirSync(join(DIST, 'admin'), {recursive:true});
+    const cfg = readFileSync(join(SRC, 'data', 'cloud.json'), 'utf8').trim();
+    writeFileSync(join(DIST, 'admin', 'index.html'), readFileSync(join(A, 'index.html'), 'utf8').replace('/*@cloud*/null', cfg)); } }

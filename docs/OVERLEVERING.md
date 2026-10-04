@@ -789,6 +789,48 @@ Jonas: «Jeg vil ha bort det som er i magenta», og vannlinja skal være nøyakt
     - Skummet langs land regnes fortsatt fra høydene i nærnettet, ikke fra masken.
     - Hus som står på brygger over vann, viser nå veggene helt ned til vannet, fordi bakken under dem ikke lenger dekker dem.
 
+### 4.20 Skyen: innlogging, skylagring, måling og admin-dashbordet (04.10.2026)
+
+Jonas' valg: gratis å spille med kjøp via Stripe, påkrevd innlogging med WorkOS, Supabase, samtykke til statistikk og bare han som admin. Hele lista står i `docs/lansering.md`.
+
+- **Konfigurasjon:** `src/data/cloud.json` har bare offentlige verdier: vertene (`hosts`), Supabase-adressen og `anon`-nøkkelen, WorkOS-klient-ID-en, et eventuelt eget innloggingsdomene og den publiserbare Stripe-nøkkelen. Skyen er av når en verdi mangler eller siden ikke ligger på en av vertene. Derfor er den av i artifacten, i testene og lokalt. Hemmelige nøkler skal aldri inn her.
+- **Databasen** (`supabase/migrations/20261004120000_cloud.sql`):
+  - Tabellene er spillere, lagringer, økter, hendelser, feil, bildetakt, produkter, kjøp og rettigheter.
+  - Alle tabellene har RLS, med lesetilgang bare for `is_admin()`. Det krever Supabase Auth-ID-en til Jonas i `admins` og totrinnsinnlogging (`aal2`).
+  - Spillet skriver bare gjennom funksjonene `tm_hello`, `tm_consent`, `tm_batch`, `tm_error`, `tm_perf`, `save_get`, `save_put` og `delete_me` (security definer). Funksjonene sjekker WorkOS-ID-en (`pid()`, tokenets `sub`) og samtykket.
+  - Under 13 år teller ikke et ja som samtykke.
+  - Når kontoen slettes, forsvinner alt om spilleren. Kjøpene blir stående uten navn, fordi bokføringsloven krever det.
+  - Rådata slettes etter 13 måneder (`pg_cron`).
+  - `admin_dashboard(days)` gir alle tallene til dashbordet i ett svar.
+  - **Test:** `sqltest` kjører skjemaet på en lokal PostgreSQL med Supabases `auth.jwt()`.
+- **I spillet** (`ui/10f-cloud.js`, og AuthKit i `src/vendor/authkit.js`, MIT):
+  - `bootMap().then(cloudGate)`: uten innlogging stopper innloggingsskjermen spillet. Med innlogging hilser spillet (`tm_hello`), og er lagringen på kontoen nyere enn den her, blir den lest inn og siden lastet på nytt.
+  - En enhet som har vært logget inn før, kan spille uten nett.
+  - **Samtykket** spørres én gang, fire sekunder etter start, sammen med fødselsåret.
+  - **Målingen** starter med et ja:
+    - en økt med et livstegn hvert minutt, med aktiv tid bare når fanen er synlig
+    - spilltilstanden: båt, kasse, flåte, rekke og hjemhavn
+    - hendelsene, gjennom innpakning av spillets egne funksjoner: `depart`, `sell`, `runAground`, `startSet`, `startHaul`, `PHONE.open` og alle knapper med `data-pa`
+    - feil, opptil 20 ulike per økt
+    - bildetakten, anonymt
+  - **Rage quit:** en økt som slutter innen ett minutt etter en grunnstøting eller en dårlig levering.
+  - **Lagringen** går opp som lagringskode hvert tredje minutt og når siden lukkes. Avviser skyen den fordi en nyere ligger der, velger spilleren hvilken som skal beholdes.
+  - **Kontokortet** i Innstillinger har e-posten, statistikkbryteren, «Logg ut» og «Slett kontoen».
+  - **Innloggingsdomenet:** WorkOS bruker utviklermodus (fornyelsesnøkkelen ligger i `localStorage`) til et eget innloggingsdomene som `auth.detstorebla.no` er satt opp og ført inn som `workosApiHostname`.
+  - **Test:** `cloudtest` bruker stand-ins for WorkOS og Supabase.
+- **Admin-dashbordet** (`src/admin/index.html` blir `admin/` i bygget, med verdiene fra `cloud.json` satt inn):
+  - Innlogging med Supabase Auth og TOTP. Første gang vises QR-koden for autentiseringsappen.
+  - Fanene er oversikt, spilletid, frafall, spillbruk, økonomi i spillet, penger, teknikk, geografi og det som må vente.
+  - Diagrammene er SVG, uten biblioteker. Tallene oppdateres hvert minutt.
+  - Uten nøkler, eller med `?demo`, vises oppdiktede tall.
+  - **Test:** `admintest`.
+- **Serveren** (`tools/server/setup.sh` og `Caddyfile`, `.github/workflows/deploy.yml`):
+  - Caddy på Hetzner med HTTPS. Kartpakkene bufres i ett år, og siden, service workeren og kartmanifestet sjekkes hver gang.
+  - En egen bruker for utrulling som bare kan kjøre `rsync` til `/srv/detstorebla` (rrsync).
+  - En brannmur som bare slipper inn port 22, 80 og 443, og automatiske sikkerhetsoppdateringer.
+  - Utrullingen går fra `main` når hemmelighetene `DEPLOY_HOST`, `DEPLOY_KEY` og `DEPLOY_KNOWN_HOSTS` finnes.
+
+
 ## 5. Systemer i spillet
 
 ### 5.1 Båter og utstyr

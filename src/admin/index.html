@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Det Store Blå · admin</title>
+<style>
+:root{--bg:#07111d;--panel:#0e1d2f;--line:#1f3550;--ink:#e8f0f8;--dim:#93a9c1;--acc:#f2b33d;--blue:#4b9be0;--good:#53c48a;--bad:#e5645b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:2;flex-wrap:wrap}
+header h1{font:600 20px Georgia,serif;margin:0}
+header .sp{flex:1}
+select,input,button{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+button{cursor:pointer}button.p{background:var(--acc);color:#1b1407;border:0;font-weight:600}
+nav{display:flex;gap:6px;padding:10px 16px;overflow-x:auto;border-bottom:1px solid var(--line)}
+nav button{white-space:nowrap}nav button.on{background:var(--blue);border-color:var(--blue)}
+main{padding:16px;max-width:1280px;margin:0 auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.card h3{margin:0 0 8px;font-size:14px;color:var(--dim);font-weight:600}
+.kpi b{display:block;font-size:26px;font-weight:650}.kpi span{color:var(--dim);font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:5px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{color:var(--dim);font-weight:600}
+.bar{display:flex;align-items:center;gap:8px;font-size:13px;margin:3px 0}.bar i{display:block;height:10px;background:var(--blue);border-radius:3px}.bar em{color:var(--dim);font-style:normal;margin-left:auto}
+.note{color:var(--dim);font-size:13px}.warn{color:var(--acc)}
+#login{max-width:380px;margin:12vh auto;padding:0 16px}#login .card{padding:20px}#login label{display:block;margin:10px 0 4px;color:var(--dim)}#login input{width:100%}
+svg text{fill:var(--dim);font-size:10px}
+.demo{background:#3a2a07;color:var(--acc);padding:6px 16px;font-size:13px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// The admin dashboard of Det Store Blå (04.10.2026; docs/lansering.md E): only Jonas. He signs in with Supabase Auth and a TOTP
+// code (aal2); the numbers come from one call, admin_dashboard() in supabase/migrations/, which refuses anyone else. Nothing secret
+// is in this page: the project's address and public key only. Without them, or with ?demo, it shows made-up numbers to see the layout.
+const CFG = /*@cloud*/null;
+const DEMO = !CFG || !CFG.supabaseUrl || /[?&]demo/.test(location.search);
+const $ = s => document.querySelector(s), esc = v => String(v == null ? '–' : v).replace(/[&<>"]/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'})[c]);
+const nf = (v, d) => v == null || isNaN(v) ? '–' : Number(v).toLocaleString('nb-NO', {maximumFractionDigits:d == null ? 1 : d});
+const pct = v => v == null ? '–' : nf(v * 100, 1) + ' %';
+let SES = JSON.parse(sessionStorage.getItem('dsbAdmin') || 'null'), DATA = null, TAB = 'oversikt', DAYS = 30;
+
+async function auth(path, body, tok){
+  const r = await fetch(CFG.supabaseUrl.replace(/\/$/, '') + '/auth/v1/' + path, {method:body ? 'POST' : 'GET', headers:{'Content-Type':'application/json', apikey:CFG.supabaseAnon, ...(tok ? {Authorization:'Bearer ' + tok} : {})}, body:body ? JSON.stringify(body) : undefined});
+  const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.msg || j.error_description || j.message || ('HTTP ' + r.status)); return j;
+}
+async function rpc(fn, args){
+  const r = await fetch(CFG.supabaseUrl.replace(/\/$/, '') + '/rest/v1/rpc/' + fn, {method:'POST', headers:{'Content-Type':'application/json', apikey:CFG.supabaseAnon, Authorization:'Bearer ' + SES.access_token}, body:JSON.stringify(args)});
+  if (r.status === 401){ SES = null; sessionStorage.removeItem('dsbAdmin'); render(); throw new Error('utlogget'); }
+  if (!r.ok) throw new Error((await r.text()).slice(0, 200)); return r.json();
+}
+function keep(s){ SES = s; sessionStorage.setItem('dsbAdmin', JSON.stringify(s)); }
+
+// ---------- sign-in: password, then the second factor (enrolled the first time) ----------
+function loginView(msg){
+  $('#app').innerHTML = '<div id="login"><div class="card"><h1 style="font:600 24px Georgia,serif;margin:0 0 4px">Det Store Blå</h1><p class="note">Admin. Bare for eieren.</p>' +
+    (msg ? '<p class="warn">' + esc(msg) + '</p>' : '') +
+    '<label>E-post</label><input id="em" type="email" autocomplete="username"><label>Passord</label><input id="pw" type="password" autocomplete="current-password">' +
+    '<p><button class="p" id="go">Logg inn</button></p></div></div>';
+  $('#go').onclick = async () => { try { const s = await auth('token?grant_type=password', {email:$('#em').value, password:$('#pw').value}); keep(s); await mfa(); } catch (e){ loginView(e.message); } };
+}
+async function mfa(){
+  const u = await auth('user', null, SES.access_token), f = (u.factors || []).find(x => x.factor_type === 'totp' && x.status === 'verified');
+  let id = f && f.id, qr = '';
+  if (!id){ const en = await auth('factors', {factor_type:'totp', friendly_name:'Det Store Blå admin ' + Date.now()}, SES.access_token); id = en.id;
+    qr = '<p class="note">Første gang: skann koden med en autentiseringsapp (for eksempel Google Authenticator eller 1Password), og skriv inn de seks sifrene.</p><div style="background:#fff;padding:8px;border-radius:8px;width:max-content">' + (en.totp.qr_code.startsWith('data:') ? '<img src="' + en.totp.qr_code + '" width="180" height="180" alt="QR">' : en.totp.qr_code) + '</div><p class="note">Eller skriv inn: <code>' + esc(en.totp.secret) + '</code></p>'; }
+  $('#app').innerHTML = '<div id="login"><div class="card"><h1 style="font:600 22px Georgia,serif;margin:0 0 8px">Totrinnskode</h1>' + qr +
+    '<label>Kode fra appen</label><input id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6"><p><button class="p" id="ok">Bekreft</button></p><p class="warn" id="err"></p></div></div>';
+  $('#ok').onclick = async () => { try { const ch = await auth('factors/' + id + '/challenge', {}, SES.access_token);
+    const s = await auth('factors/' + id + '/verify', {challenge_id:ch.id, code:$('#code').value.trim()}, SES.access_token); keep(s); load(); } catch (e){ $('#err').textContent = e.message; } };
+}
+
+// ---------- the numbers ----------
+async function load(){
+  try { DATA = DEMO ? demo() : await rpc('admin_dashboard', {days:DAYS}); render(); }
+  catch (e){ if (SES) $('#app').innerHTML = '<main><div class="card warn">' + esc(e.message) + '</div><button onclick="SES=null;sessionStorage.clear();render()">Logg inn på nytt</button></main>'; }
+}
+const TABS = [['oversikt', 'Oversikt'], ['tid', 'Spilletid'], ['frafall', 'Frafall'], ['bruk', 'Spillbruk'], ['okonomi', 'Økonomi i spillet'], ['penger', 'Penger'], ['teknikk', 'Teknikk'], ['geo', 'Geografi'], ['kommer', 'Kommer']];
+function render(){
+  if (!DEMO && !SES) return loginView();
+  if (!DATA) { $('#app').innerHTML = '<main class="note">Henter …</main>'; return load(); }
+  $('#app').innerHTML = (DEMO ? '<div class="demo">Demo: tallene er oppdiktet. Med Supabase-nøklene og innlogging vises de ekte.</div>' : '') +
+    '<header><h1>Det Store Blå · admin</h1><span class="sp"></span><span class="note">Oppdatert ' + new Date(DATA.generated).toLocaleTimeString('nb-NO') + '</span>' +
+    '<select id="days">' + [1, 7, 30, 90, 365].map(d => '<option value="' + d + '"' + (d === DAYS ? ' selected' : '') + '>' + (d === 1 ? 'Siste døgn' : 'Siste ' + d + ' dager') + '</option>').join('') + '</select>' +
+    (DEMO ? '' : '<button id="out">Logg ut</button>') + '</header><nav>' + TABS.map(([k, n]) => '<button data-t="' + k + '"' + (k === TAB ? ' class="on"' : '') + '>' + n + '</button>').join('') + '</nav><main>' + (VIEW[TAB] || (() => ''))(DATA) + '</main>';
+  $('#days').onchange = e => { DAYS = +e.target.value; DATA = null; render(); };
+  document.querySelectorAll('nav button').forEach(b => b.onclick = () => { TAB = b.dataset.t; render(); });
+  if ($('#out')) $('#out').onclick = () => { auth('logout', {}, SES.access_token).catch(() => {}); SES = null; sessionStorage.clear(); render(); };
+}
+const kpi = (label, v, sub) => '<div class="card kpi"><b>' + v + '</b><span>' + label + (sub ? '<br>' + sub : '') + '</span></div>';
+const card = (title, body, note) => '<div class="card"><h3>' + title + '</h3>' + body + (note ? '<p class="note">' + note + '</p>' : '') + '</div>';
+function bars(obj, fmt){ const e = Object.entries(obj || {}).sort((a, b) => b[1] - a[1]); if (!e.length) return '<p class="note">Ingen data ennå.</p>'; const m = Math.max(...e.map(x => +x[1])) || 1;
+  return e.slice(0, 25).map(([k, v]) => '<div class="bar"><span style="min-width:120px">' + esc(k) + '</span><i style="width:' + Math.max(2, 60 * v / m) + '%"></i><em>' + (fmt ? fmt(v) : nf(v, 0)) + '</em></div>').join(''); }
+function table(rows, cols){ if (!rows || !rows.length) return '<p class="note">Ingen data ennå.</p>'; return '<table><tr>' + cols.map(c => '<th>' + c[1] + '</th>').join('') + '</tr>' + rows.map(r => '<tr>' + cols.map(c => '<td>' + (c[2] ? c[2](r[c[0]], r) : esc(r[c[0]])) + '</td>').join('') + '</tr>').join('') + '</table>'; }
+function daily(d){ const W = 900, H = 200, n = Math.max(1, d.length), bw = W / n, mh = Math.max(0.1, ...d.map(x => x.hours)), ms = Math.max(1, ...d.map(x => x.sessions));
+  let s = '<svg viewBox="0 0 ' + W + ' ' + (H + 30) + '" width="100%">';
+  d.forEach((x, i) => { const h = H * x.hours / mh, y = H - h; s += '<rect x="' + (i * bw + 1) + '" y="' + y + '" width="' + Math.max(1, bw - 2) + '" height="' + h + '" fill="#4b9be0"><title>' + x.day + ': ' + nf(x.hours) + ' t, ' + x.sessions + ' økter, ' + x.players + ' spillere, ' + Object.entries(x.browsers || {}).map(e => e.join(' ')).join(', ') + '</title></rect>';
+    s += '<circle cx="' + (i * bw + bw / 2) + '" cy="' + (H - H * x.sessions / ms) + '" r="2.5" fill="#f2b33d"/>'; if (n <= 31 || i % Math.ceil(n / 15) === 0) s += '<text x="' + (i * bw + bw / 2) + '" y="' + (H + 14) + '" text-anchor="middle">' + x.day.slice(5) + '</text>'; });
+  return s + '</svg><p class="note">Søyler: timer spilt. Prikker: økter. Hold over en søyle for nettleserne.</p>'; }
+function heat(hm){ const g = {}; let m = 0; (hm || []).forEach(x => { g[x.dow + ':' + x.hour] = x.hours; m = Math.max(m, x.hours); }); const days = ['Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør', 'Søn'];
+  let s = '<svg viewBox="0 0 760 200" width="100%">'; for (let d = 1; d <= 7; d++){ s += '<text x="0" y="' + (d * 24 + 4) + '">' + days[d - 1] + '</text>';
+    for (let h = 0; h < 24; h++){ const v = g[d + ':' + h] || 0, a = m ? v / m : 0; s += '<rect x="' + (34 + h * 30) + '" y="' + (d * 24 - 12) + '" width="28" height="22" rx="3" fill="rgba(75,155,224,' + (0.06 + 0.94 * a).toFixed(2) + ')"><title>' + days[d - 1] + ' kl. ' + h + ': ' + nf(v) + ' t</title></rect>'; } }
+  for (let h = 0; h < 24; h += 3) s += '<text x="' + (34 + h * 30 + 8) + '" y="196">' + h + '</text>'; return s + '</svg>'; }
+const VIEW = {
+  oversikt: D => { const o = D.overview; return '<div class="grid">' + kpi('Spillere i alt', nf(o.players, 0), nf(o.consented, 0) + ' deler statistikk') + kpi('Aktive nå', nf(o.active_now, 0)) + kpi('Daglig / ukentlig / månedlig', nf(o.dau, 0) + ' / ' + nf(o.wau, 0) + ' / ' + nf(o.mau, 0)) +
+    kpi('Spilletid registrert', nf(o.play_total_h) + ' t') + kpi('Økter (avsluttet)', nf(o.sessions, 0) + ' (' + nf(o.sessions_ended, 0) + ')') + kpi('Snitt / median økt', nf(o.avg_min) + ' / ' + nf(o.median_min) + ' min') +
+    kpi('Kommer tilbake', pct(o.return_ratio), 'spilte to dager eller flere') + kpi('Snitt innloggingsrekke', nf(o.streak_avg) + ' dager') + kpi('Installert som app', pct(o.pwa_share)) + '</div>' + card('Spilletid per dag', daily(D.daily || [])); },
+  tid: D => card('Spilletid per dag', daily(D.daily || [])) + card('Ukedag og time (Norge)', heat(D.heatmap)) + card('Per måned', bars(D.months, v => nf(v) + ' t')) +
+    card('Svingdørindeksen', '<p class="note">Spredningen i øktlengde delt på medianen per spiller kommer når det er nok økter. Mange korte økter og få lange gir høy indeks.</p>'),
+  frafall: D => card('Churn-indeks (0–100), de 200 sist aktive', table(D.churn, [['player', 'Spiller'], ['index', 'Indeks', v => '<b style="color:' + (v >= 70 ? 'var(--bad)' : v >= 40 ? 'var(--acc)' : 'var(--good)') + '">' + v + '</b>'], ['days_since', 'Dager siden'], ['min_7d', 'Min siste 7 d'], ['min_prev_7d', 'Min uka før']]),
+    'Indeksen: 60 % fra dager siden sist (full ved 14 dager), 40 % fra fallet i spilletid fra uka før til siste uke.') +
+    card('Rage quit', '<p>Andel økter som sluttet mindre enn ett minutt etter en grunnstøting eller en dårlig levering: <b>' + pct(D.rage.share) + '</b></p>' + bars(D.rage.after)) +
+    card('Død sone: hvor de slutter i sinne', table((D.rage.where || []).slice(0, 30), [['x', 'x (km)'], ['y', 'y (km)'], ['n', 'Antall']])),
+  bruk: D => card('Appene og knappene som brukes', bars(D.features)) + card('Redskap', bars(D.gear)) + card('Båtene spillerne har nå', bars(D.boats)) +
+    card('Grunnstøtinger', '<p>I perioden: <b>' + nf(D.groundings.count, 0) + '</b></p>' + bars(D.groundings.by_boat) + table((D.groundings.where || []).slice(0, 20), [['x', 'x'], ['y', 'y'], ['v', 'Fart (kn)']])) +
+    card('Turene', '<div class="grid">' + kpi('Leveringer', nf(D.trips.count, 0)) + kpi('Snitt kast loss → levering', nf(D.trips.avg_trip_min, 0) + ' min spilltid') + kpi('Snitt per levering', nf(D.trips.avg_kr, 0) + ' kr') + '</div><h3>Mottak</h3>' + bars(D.trips.ports) + '<h3>Fangstfelt</h3>' + bars(D.trips.fields)),
+  okonomi: D => '<div class="grid">' + kpi('Gini for kassa', nf(D.economy.gini_cash, 3), '0 er likt, 1 er alt hos én') + kpi('Gini for flåten', nf(D.economy.gini_fleet, 3)) + kpi('Median kasse', nf(D.economy.cash_p50, 0) + ' kr') + kpi('90-persentil kasse', nf(D.economy.cash_p90, 0) + ' kr') + '</div>',
+  penger: D => { const m = D.money; return '<div class="grid">' + kpi('Inntekt i perioden', nf(m.revenue_nok, 0) + ' kr') + kpi('Betalende', nf(m.payers, 0)) + kpi('ARPU', nf(m.arpu, 2) + ' kr') + kpi('Konvertering', pct(m.conversion)) +
+    kpi('Gjenkjøp', pct(m.repurchase)) + kpi('Tid til første kjøp', nf(m.ttfp_days) + ' dager') + kpi('Refusjoner', pct(m.refund_rate)) + kpi('Forlatt kasse', pct(m.abandon_rate)) + '</div>' +
+    card('Boostere', bars(m.boosters)) + card('Transaksjonslogg (Stripe)', table(m.log, [['at', 'Tid', v => esc(new Date(v).toLocaleString('nb-NO'))], ['player', 'Spiller'], ['product', 'Produkt'], ['nok', 'Kr'], ['status', 'Status'], ['id', 'Stripe-økt']]), 'Fylles når Stripe-webhooken er koblet på.'); },
+  teknikk: D => card('Feil og krasj', table(D.tech.errors, [['msg', 'Melding'], ['n', 'Antall'], ['last', 'Sist', v => esc(new Date(v).toLocaleString('nb-NO'))], ['versions', 'Versjoner', v => esc((v || []).join(', '))]])) +
+    card('Bildetakt', table(D.tech.fps, [['platform', 'Plattform'], ['quality', 'Kvalitet'], ['fps', 'Snitt'], ['low', 'Lavest'], ['drops', 'Hakk (< 20)'], ['n', 'Målinger']])) + card('Nettlesere', bars(D.tech.browsers)) + card('Plattformer', bars(D.tech.platforms)),
+  geo: D => card('Land (fra nettverket, IP-adressen lagres ikke)', bars(D.geo.countries)) + card('Tidssoner', bars(D.geo.timezones)) + card('Hjemhavn i spillet', bars(D.geo.homes)),
+  kommer: () => card('Venter på funksjoner i spillet', '<ul><li>Push-varsler: åpningsrate</li><li>Venner og deling: sosial klyngedynamikk, nettverkskoeffisient, viralitet, invite-to-churn og den sosiale utløseren for kjøp</li><li>Betalte boostere: bruken (tabellen er klar)</li></ul>', 'Se docs/lansering.md E.')
+};
+// made-up numbers in the same shape as admin_dashboard(), to see the layout before there are players
+function demo(){
+  const R = (a, b) => a + Math.random() * (b - a), now = Date.now(), d = [];
+  for (let i = DAYS - 1; i >= 0; i--){ const day = new Date(now - i * 864e5).toISOString().slice(0, 10), s = Math.round(R(20, 90)); d.push({day, hours:+(s * R(0.3, 0.9)).toFixed(1), sessions:s, players:Math.round(s * 0.6), browsers:{chrome:Math.round(s * 0.6), samsung:Math.round(s * 0.25), safari:Math.round(s * 0.15)}}); }
+  const hm = []; for (let w = 1; w <= 7; w++) for (let h = 0; h < 24; h++) hm.push({dow:w, hour:h, sessions:0, hours:+(Math.max(0, Math.sin((h - 6) / 24 * Math.PI * 2 - 1) + (w > 5 ? 0.6 : 0)) * R(2, 6)).toFixed(1)});
+  return {generated:new Date().toISOString(), days:DAYS, overview:{players:412, consented:301, active_window:188, dau:57, wau:143, mau:188, active_now:9, play_total_h:2310.4, sessions:1840, sessions_ended:1795, avg_min:31.2, median_min:22.5, return_ratio:0.46, streak_avg:3.8, pwa_share:0.38},
+    daily:d, heatmap:hm, months:{'2026-08':310, '2026-09':980, '2026-10':1020},
+    churn:Array.from({length:12}, (_, i) => ({player:'user_01H' + (1000 + i), index:Math.round(R(5, 95)), days_since:+R(0, 20).toFixed(1), min_7d:Math.round(R(0, 400)), min_prev_7d:Math.round(R(0, 400))})),
+    rage:{share:0.031, after:{aground:41, sale:9}, where:[{x:821, y:381, n:7}, {x:842, y:376, n:4}]},
+    features:{'redskap':420, 'kart':390, 'regler':160, 'pa:sell':350, 'pa:depart':330, 'pa:grbuy':120}, gear:{garn:210, line:180, teine:60}, boats:{skiff:200, snekke:90, jukesjark:60, sjark:40, breisjark:12},
+    groundings:{count:63, by_boat:{skiff:30, snekke:18, sjark:15}, where:[{x:'821.4', y:'381.2', v:'9.0'}]}, trips:{count:880, avg_trip_min:410, avg_kr:6900, ports:{husoy:300, senjahopen:240, botnhamn:120}, fields:{'05-08':200, '05-12':140}},
+    economy:{gini_cash:0.62, gini_fleet:0.55, cash_p50:84000, cash_p90:1450000},
+    money:{revenue_nok:18450, payers:61, arpu:98.1, conversion:0.032, repurchase:0.28, ttfp_days:4.5, refund_rate:0.01, abandon_rate:0.22, boosters:{}, log:[{at:new Date().toISOString(), player:'user_01H1004', product:'skin-rodt-skrog', nok:49, status:'paid', id:'cs_test_a1'}]},
+    tech:{errors:[{msg:'TypeError: Cannot read properties of null', n:12, last:new Date().toISOString(), versions:['p15']}], fps:[{platform:'android', quality:'auto', fps:41.2, low:18, drops:3.1, n:220}, {platform:'windows', quality:'high', fps:58.9, low:44, drops:0.2, n:140}], browsers:{chrome:1100, samsung:450, safari:250, firefox:40}, platforms:{android:1200, windows:380, ios:220, mac:40}},
+    geo:{countries:{NO:380, SE:14, DE:9}, timezones:{'Europe/Oslo':388, 'Europe/Stockholm':14}, homes:{husoy:160, senjahopen:120, finnsnes:80}}};
+}
+render(); setInterval(() => { if (DATA && (DEMO || SES)) { DATA = null; load(); } }, 60000);
+</script>
+</body>
+</html>
