@@ -323,13 +323,19 @@ function renderDyn(){
   const Hn = (S.t + liveFrac()) / 60;
   AISNOW = npcStates(Hn);
   if (AISSEL){ const tr = aisTrack(AISSEL, Hn); if (tr.length > 1) g.push('<polyline points="' + tr.map(q => q.x.toFixed(3) + ',' + q.y.toFixed(3)).join(' ') + '" class="aistrack" stroke-width="' + (1.6 * u) + '" stroke-dasharray="' + (4 * u) + ' ' + (3 * u) + '"/>'); }
+  // names: the coast's boats only when the chart is under 4 km tall, and none on top of another (a grid of label cells)
+  const lblAt = new Set(), lw = 70 * u, lh = 14 * u, coastLbl = MAP_H / view.z < 4;
   for (const n of AISNOW){
     const cls = n.fleet || n.coast ? 'ais fish' : 'ais pass', sel = AISSEL === n.id ? ' sel' : '', moored = n.st === 'port' || (!n.fleet && !n.coast && n.v === 0);
     const sw = (sel ? 2.4 : 1.1) * u;
     if (moored) g.push('<circle cx="' + n.p.x + '" cy="' + n.p.y + '" r="' + (3.2 * u) + '" class="' + cls + sel + ' moor" stroke-width="' + sw + '"/>');
     else { const k = (n.type === 'coastal' ? 10 : n.type === 'ferry' ? 8.5 : n.fleet || n.coast ? 5.2 + n.L * 0.13 : 6.5) * u, dg = (n.cog !== undefined ? n.cog : n.hd) * 180 / Math.PI;
       g.push('<g transform="translate(' + n.p.x + ' ' + n.p.y + ') rotate(' + dg.toFixed(1) + ')"><path d="M0,' + (-k * 1.25) + ' L' + (0.55 * k) + ',' + (k * 0.8) + ' L0,' + (k * 0.45) + ' L' + (-0.55 * k) + ',' + (k * 0.8) + ' Z" class="' + cls + sel + '" stroke-width="' + sw + '"/></g>'); }
-    if (view.z > 5 || sel) g.push(txt({x:n.p.x + 8 * u, y:n.p.y - 6 * u}, n.name, 'lbl-ais', 10 * u, 'stroke-width="' + (3 * u) + '"'));
+    if (sel || (view.z > 5 && (!n.coast || coastLbl))){
+      const kx = Math.floor(n.p.x / lw), ky = Math.floor(n.p.y / lh);
+      if (!sel && [-1, 0, 1].some(d => lblAt.has((kx + d) + ',' + ky))) continue;
+      lblAt.add(kx + ',' + ky); g.push(txt({x:n.p.x + 8 * u, y:n.p.y - 6 * u}, n.name, 'lbl-ais', 10 * u, 'stroke-width="' + (3 * u) + '"'));
+    }
   }
   // gear being drawn out
   if (SETM) g.push(setSvg(u));

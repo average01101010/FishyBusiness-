@@ -40,10 +40,28 @@ async def main():
         for h in (3, 9, 13, 21):
             await pg.evaluate(AT, h); R[h] = await pg.evaluate(STATES)
         ais = await pg.evaluate("AIS_KM")
-        check(all(v['far'] <= ais for v in R.values()) and R[3]['n'] > 20, 'båtene langs kysten vises bare innenfor AIS-rekkevidden (%d km), mange ved Tromsø' % ais, R[3])
+        check(all(v['far'] <= ais for v in R.values()) and R[3]['n'] > 10, 'båtene langs kysten vises bare innenfor AIS-rekkevidden (%d km), mange ved Tromsø' % ais, R[3])
         check(R[3]['st'] == {'port': R[3]['n']} and R[21]['st'] == {'port': R[21]['n']}, 'om natta og om kvelden ligger alle ved kai', (R[3]['st'], R[21]['st']))
         day = {k: R[9]['st'].get(k, 0) + R[13]['st'].get(k, 0) for k in ('out', 'fishing', 'in')}
         check(day['fishing'] + day['out'] > 0 and day['in'] + R[13]['st'].get('fishing', 0) > 0, 'om dagen er de ute, fisker og går hjem', (R[9]['st'], R[13]['st']))
+        # no boat fishing on the land, and no heaps of them on a ground (at nine and at one)
+        spread = []
+        for h in (9, 13):
+            await pg.evaluate(AT, h)
+            spread.append(await pg.evaluate("""(() => { const a = npcStates(S.t / 60).filter(n => n.coast && n.st === 'fishing'), cell = new Map();
+              let land = 0, fine = 0; for (const n of a){ if (coastFine(n.p)){ fine++; if (isLand(n.p)) land++; } else if (isLandFar(n.p)) land++;
+                const k = Math.floor(n.p.x / 0.3) + ',' + Math.floor(n.p.y / 0.3); cell.set(k, (cell.get(k) || 0) + 1); }
+              return {fishing:a.length, fine, land, most:Math.max(0, ...cell.values())}; })()"""))
+        check(all(v['land'] == 0 for v in spread) and sum(v['fishing'] for v in spread) > 5, 'ingen båt som fisker, står på land', spread)
+        check(all(v['most'] <= 4 for v in spread), 'høyst fire båter som fisker i samme 300 m-rute (de sprer seg over feltet)', spread)
+        # the share the game keeps of kart-6's boats (NPC_KEEP): about the active fleet of 2024 along the whole coast
+        kp = await pg.evaluate("""(() => { let raw = 0, kept = 0, empty = 0; for (const t of VEC.tiles.values()){ raw += t.npcRaw || 0; for (const h of t.npc || []){ kept += h.boats.length; if (!h.boats.length) empty++; } } return {raw, kept, empty, keep:NPC_KEEP}; })()""")
+        share = kp['kept'] / max(1, kp['raw'])
+        check(kp['empty'] == 0 and (kp['keep'] >= 1 or share * 19411 < 6000), 'rundt 4 600 båter langs kysten (Fiskeridirektoratet: 4 614 aktive i 2024), og hver havn har minst én', dict(kp, share=round(share, 3), coast=round(share * 19411)))
+        # the coast's boats have no names on the chart when it is zoomed out (more than 4 km tall), but the one you tapped has
+        lb = await pg.evaluate("""(() => { const all = npcStates(S.t / 60), other = new Set(all.filter(n => !n.coast).map(n => n.name)), names = new Set(all.filter(n => n.coast && !other.has(n.name)).map(n => n.name)), cnt = () => [...document.querySelectorAll('.lbl-ais')].filter(e => names.has(e.textContent)).length;
+          const z0 = view.z; view.cx = S.boat.pos.x; view.cy = S.boat.pos.y; view.z = MAP_H / 8; applyView(); renderDyn(); const out = cnt(); view.z = MAP_H / 2.5; applyView(); renderDyn(); const inn = cnt(); view.z = z0; applyView(); return {out, inn}; })()""")
+        check(lb['out'] == 0 and lb['inn'] > 0, 'navnene på båtene langs kysten vises bare når kartet er zoomet inn', lb)
         await pg.evaluate(AT, 11)
         same = await pg.evaluate("(() => { const H = S.t / 60, f = () => JSON.stringify(npcStates(H).filter(n => n.coast).map(n => [n.id, n.p.x.toFixed(5), n.p.y.toFixed(5), n.st])); const a = f(); COASTM.k = ''; return a === f(); })()")
         check(same, 'samme tid gir samme båter på samme steder')
@@ -56,7 +74,7 @@ async def main():
               for (let s = 1; s < m; s++){ const p = {x:a.x + (c.x - a.x) * s / m, y:a.y + (c.y - a.y) * s / m}; if (!mapSimAt(p) || !mapReadyAt(p, 0)) continue; seen = true; if (isLand(p)) hit = true; }
               if (seen){ legs++; if (hit) land++; } } }
           const both = npcStates(S.t / 60).filter(n => n.coast && n.fleet).length; return {n, bad, senja, legs, land, both}; })()""")
-        check(q['n'] > 50 and q['bad'] == 0, 'hver båt ligger langs en kaifront som er lang og dyp nok for henne', q)
+        check(q['n'] > 30 and q['bad'] == 0, 'hver båt ligger langs en kaifront som er lang og dyp nok for henne', q)
         check(q['senja'] == 0 and q['both'] == 0, 'ingen havn i Senja-ruta (FLEET er flåten der), og båtene langs kysten tar ikke fisk fra bestanden', q)
         check(q['legs'] > 20 and q['land'] <= q['legs'] * 0.08, 'leiene til feltene holder seg unna land (noen hjørner av 25 m-masken unntatt)', (q['land'], q['legs']))
         card = await pg.evaluate("(() => { const n = npcStates(S.t / 60).find(n => n.coast); AISSEL = n.id; const tr = aisTrack(n.id, (S.t + 0.5) / 60); return {info:aisInfo(n).includes('Fiskefartøy') || aisInfo(n).includes('Fishing'), size:/×/.test(aisInfo(n)), track:tr.length}; })()")

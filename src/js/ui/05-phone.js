@@ -215,6 +215,11 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p6', '04.10.2026', 'Færre fiskebåter, spredt utover', 'Fewer fishing boats, spread out', [
+      ['Rundt 4 300 båter langs kysten i stedet for 19 000, omtrent som de 4 614 aktive fiskefartøyene i 2024.', 'About 4,300 boats along the coast instead of 19,000, close to the 4,614 active fishing vessels of 2024.'],
+      ['Hver båt fisker på sin egen plass på feltet, og driften går aldri opp på land.', 'Each boat fishes its own spot on the ground, and the drift never goes ashore.'],
+      ['Flere fridager, og avreisen spres over morgenen.', 'More days off, and the departures spread over the morning.'],
+      ['Navnene i kartplotteren vises når du zoomer inn, uten å ligge oppå hverandre.', 'The names in the chart plotter show when you zoom in, without lying on top of each other.']]],
     ['p5', '04.10.2026', 'Fiskebåter langs hele kysten', 'Fishing boats along the whole coast', [
       ['Havnene langs kysten har sin egen flåte. Du ser båtene innenfor AIS-rekkevidden (15 km).', 'The harbours along the coast have their own fleet. You see the boats within AIS range (15 km).'],
       ['De ligger ved kai om natta og i dårlig vær, går ut på feltene om morgenen og kommer hjem på ettermiddagen.', 'They lie at the quay at night and in bad weather, go out to the grounds in the morning and come home in the afternoon.'],

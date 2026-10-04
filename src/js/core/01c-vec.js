@@ -95,15 +95,20 @@ function vecDecode(D){
   // the NPC traffic (tools/map/npc.py): harbours with their boats (at their berths) and grounds with the routes there, in km
   if (D.npc && D.nn){
     const J = JSON.parse(new TextDecoder().decode(D.npc)), k = (x, z) => ({x:(ox + x) / 1000, y:(oz + z) / 1000});
-    J.h.forEach((h, hi) => r.npc.push({x:(ox + h.x) / 1000, y:(oz + h.z) / 1000,
-      boats:h.b.map((b, bi) => ({id:'c' + D.tx + ':' + D.ty + '.' + hi + '.' + bi, L:b[0], B:b[1], T:b[2], p:k(b[3], b[4]), hd:b[5], name:b[6], liv:(hi * 7 + bi) % 4})),
-      grounds:h.g.map(g => { const pts = []; for (let i = 0; i + 1 < g[2].length; i += 2) pts.push(k(g[2][i], g[2][i + 1])); return {p:k(g[0], g[1]), pts}; })}));
+    // a share of the boats only (D.keep, NPC_KEEP): kart-6 has about four times the 4 614 active fishing vessels of 2024 (Fiskeridirektoratet);
+    // a harbour keeps one at least. The draw is by the boat's id (FNV-1a, self-contained: this runs in the worker too)
+    const keep = D.keep == null ? 1 : D.keep, fnv = t => { let x = 2166136261; for (let q = 0; q < t.length; q++) x = Math.imul(x ^ t.charCodeAt(q), 16777619); x ^= x >>> 13; x = Math.imul(x, 0x5bd1e995); x ^= x >>> 15; return (x >>> 0) / 4294967296; };
+    r.npcRaw = 0;
+    J.h.forEach((h, hi) => { r.npcRaw += h.b.length; let boats = h.b.map((b, bi) => ({id:'c' + D.tx + ':' + D.ty + '.' + hi + '.' + bi, L:b[0], B:b[1], T:b[2], p:k(b[3], b[4]), hd:b[5], name:b[6], liv:(hi * 7 + bi) % 4}));
+      if (keep < 1){ const w = boats.map(b => fnv(b.id)), kept = boats.filter((b, i) => w[i] < keep); boats = kept.length ? kept : [boats[w.indexOf(Math.min(...w))]]; }
+      r.npc.push({x:(ox + h.x) / 1000, y:(oz + h.z) / 1000, boats,
+        grounds:h.g.map(g => { const pts = []; for (let i = 0; i + 1 < g[2].length; i += 2) pts.push(k(g[2][i], g[2][i + 1])); return {p:k(g[0], g[1]), pts}; })}); });
   }
   return r;
 }
 // the decoded arrays into the tile the views read: the cells as maps of index lists, the roads as objects over the shared arrays
 function vecFinish(r){
-  const T = MAPD.man.tile * 1000, k = r.tx + ':' + r.ty, t = {k, tx:r.tx, ty:r.ty, x0:r.tx * T, z0:r.ty * T, bld:null, roads:[], rcell:new Map(), bridges:r.bridges, piers:r.piers, molos:r.molos, slabs:r.slabs, quays:r.quays, npc:r.npc};
+  const T = MAPD.man.tile * 1000, k = r.tx + ':' + r.ty, t = {k, tx:r.tx, ty:r.ty, x0:r.tx * T, z0:r.ty * T, bld:null, roads:[], rcell:new Map(), bridges:r.bridges, piers:r.piers, molos:r.molos, slabs:r.slabs, quays:r.quays, npc:r.npc, npcRaw:r.npcRaw || 0};
   if (r.bld){ const B = t.bld = Object.assign(r.bld, {cells:new Map(), seed:(r.tx * 131 + r.ty * 977) * 1000003 % 2147483647}); for (let i = 0; i < B.ck.length; i++) B.cells.set(B.ck[i], B.order.subarray(B.cs[i], B.cs[i + 1])); }
   if (r.roads){ const R = r.roads; for (let i = 0; i < R.n; i++) t.roads.push({c:R.c[i], xs:R.x.subarray(R.o[i], R.o[i + 1]), zs:R.z.subarray(R.o[i], R.o[i + 1]), bb:[R.bb[4 * i], R.bb[4 * i + 1], R.bb[4 * i + 2], R.bb[4 * i + 3]]}); for (let i = 0; i < R.ck.length; i++) t.rcell.set(R.ck[i], R.ri.subarray(R.cs[i], R.cs[i + 1])); }
   VEC.tiles.set(k, t); VEC.ver++; for (const f of VEC.came) f(t);
@@ -124,8 +129,11 @@ function vecWorker(){
   return VEC.worker || null;
 }
 const VECN = {bld:'nb', road:'nr', bridge:'ng', pier:'np', quay:'nq', npc:'nn'};
+// the share of the packs' NPC boats the game keeps (vecDecode; with one a harbour at least it comes to about a quarter of kart-6's
+// 19 411): 1 when the packs have the right number themselves (kart-7)
+const NPC_KEEP = 0.17;
 function vecInput(pk, inflate){
-  const D = {tx:pk.tile[0], ty:pk.tile[1], T:MAPD.man.tile * 1000, Q:SENJAQ}, B = MAPD.man.tile / MAPD.man.block;
+  const D = {tx:pk.tile[0], ty:pk.tile[1], T:MAPD.man.tile * 1000, Q:SENJAQ, keep:NPC_KEEP}, B = MAPD.man.tile / MAPD.man.block;
   for (const n in VECN){
     const e = pk.idx.get(n + ':' + pk.tile[0] * B + ':' + pk.tile[1] * B); if (!e) continue;
     const z = pk.buf.subarray(e[0], e[0] + e[1]); D[n] = inflate ? fflate.inflateSync(z) : z.slice(); D[VECN[n]] = e[2] || 0;

@@ -636,6 +636,14 @@ Jonas valgte «Full trafikk langs kysten», men «NPC båtene skal kun dukke opp
   - I 3D bruker de byggesettet (`npcMesh` etter lengde og bredde), som Senja-flåten.
 - Båtene kommer bare i appen, siden de ligger i vec-pakkene.
 
+**Rettet etter spilltesten 04.10.2026** (skjermbilde fra Toppsundet: båtene i klynger på sjøen og på land, og for mange):
+- **Færre.** `vecDecode` beholder bare båtene med `fnv(id) < NPC_KEEP` (0,17, minst én per havn). Det gir rundt 22 % av kart-6s 19 411, altså rundt 4 300. Fiskeridirektoratet oppgir 4 614 aktive fiskefartøy i 2024 (kystmagasinet.no, «Stabilt antall norske fiskefartøy»). Med kart-7 settes `NPC_KEEP` til 1.
+- **Fridager og avreise.** 30 % fridager, og avreise kl. 4–8.
+- **Spredt.** Hver båt har en egen plass 0,3–1,2 km fra feltets midtpunkt (`coastSpot`) og en egen vinkel på driften. Hvert kast slutter der det neste starter.
+- **Ikke på land.** Før hvert kast sjekkes driften mot land: 25 m-masken der pakken er lastet, ellers kjernens 200 m (`coastLand`). Treffer den land, snus den, legges tvers eller halveres, og ellers ligger båten stille. Svaret lagres per båt og kast (`coastCast`).
+  - Årsaken var at to tredjedeler av feltene ved Toppsundet lå under 500 m fra land, og driften (rundt 1 km med vinden) ble ikke sjekket.
+- **Navnene i kartplotteren.** Båtene langs kysten får navn bare når kartet er under 4 km høyt. Ingen navn legges oppå et annet, styrt av et rutenett av navneceller i `renderDyn`.
+
 **Test:** `npctest.py` (LITE) sjekker:
 - at båtene bare er innenfor AIS-rekkevidden
 - natt, dag og kveld

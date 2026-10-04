@@ -90,28 +90,50 @@ const AIS_KM = 15;
 const hodOf = H => { const g = gDate(H); return g.getUTCHours() + g.getUTCMinutes() / 60 + g.getUTCSeconds() / 3600; };
 function coastState(b, H, hod = hodOf(H)){
   const i = b.seed || (b.seed = hashStr(b.id) % 1000003);
-  const dep = 4.5 + hash(i * 13 + 5) * 2.5, e = ((hod - dep) % 24 + 24) % 24, day0 = H - e, dI = Math.floor((day0 + 6) / 24), G = b.h.grounds;
+  const dep = 4 + hash(i * 13 + 5) * 4, e = ((hod - dep) % 24 + 24) % 24, day0 = H - e, dI = Math.floor((day0 + 6) / 24), G = b.h.grounds;
   const moored = b.moored || (b.moored = {p:b.p, hd:b.hd, st:'port'});
   // a day out is at most 17 hours (the weather is not asked at night)
-  if (e > 17 || !G.length || hash(dI * 17 + i * 7) < 0.15 || windAt(day0) >= (b.L >= 15 ? 15 : b.L >= 12 ? 13.5 : 12)) return moored;
+  if (e > 17 || !G.length || hash(dI * 17 + i * 7) < 0.3 || windAt(day0) >= (b.L >= 15 ? 15 : b.L >= 12 ? 13.5 : 12)) return moored;
   const gr = G[Math.floor(hash(dI * 31 + i) * G.length)], R = gr.R || (gr.R = prepRoute(gr.pts.map(q => [q.x, q.y]))), RR = gr.RR || (gr.RR = prepRoute(gr.pts.map(q => [q.x, q.y]).reverse()));
   const cs = ((b.L >= 14 ? 9.8 : 7.8) + hash(i * 3 + 1) * 1.8) * clamp(1 - (hsOpen(day0) - 1.2) * 0.12, 0.65, 1) * NM, hsp = 5 * NM;
   const m0 = R.pts[0], t0 = dist(b.p, m0) / hsp, tr = R.len / cs, T = t0 + tr, fishH = 5 + hash(dI * 7 + i * 3) * 3.5;
   const along = (a, c, u) => ({p:{x:a.x + (c.x - a.x) * u, y:a.y + (c.y - a.y) * u}, hd:Math.atan2(c.x - a.x, -(c.y - a.y))});
   if (e < t0){ const q = along(b.p, m0, e / t0); return {p:q.p, hd:q.hd, st:'out'}; }
   if (e < T){ const a = atRoute(R, (e - t0) * cs); return {p:a.p, hd:a.hd, st:'out'}; }
-  if (e < T + fishH){
-    // drifts downwind over the ground and back up for the next, as FLEET's (no land search: a ground is 20 m deep or more)
-    const tf = e - T, C = 0.75, kc = Math.floor(tf / C), u = tf - kc * C, Hc = day0 + T + kc * C, wd = (windDir(Hc) - gridGamma(gr.p) + 180) * Math.PI / 180;
-    const st0 = {x:gr.p.x + (hash(dI * 97 + i * 11 + kc) - 0.5) * 0.3, y:gr.p.y + (hash(dI * 89 + i * 5 + kc) - 0.5) * 0.3}, run = (0.35 + 0.075 * windAt(Hc)) * NM * 0.62;
-    const end = {x:st0.x + Math.sin(wd) * run, y:st0.y - Math.cos(wd) * run};
-    if (u < 0.62){ const q = u / 0.62; return {p:{x:st0.x + (end.x - st0.x) * q, y:st0.y + (end.y - st0.y) * q}, hd:wd + Math.PI / 2, st:'fishing'}; }
-    const q = (u - 0.62) / 0.13; return {p:{x:end.x + (st0.x - end.x) * Math.min(1, q), y:end.y + (st0.y - end.y) * Math.min(1, q)}, hd:wd + Math.PI, st:'fishing'};
+  // on the ground: over to the boat's own spot, whole casts drifting off it (each cast ends where the next starts), back to the centre
+  const spot = coastSpot(gr, dI, i), C = 0.75, nc = Math.max(1, Math.round(fishH / C)), fH = nc * C, tin = Math.max(1e-3, dist(gr.p, spot) / cs);
+  if (e < T + tin){ const q = along(gr.p, spot, (e - T) / tin); return {p:q.p, hd:q.hd, st:'out'}; }
+  if (e < T + tin + fH){
+    const tf = e - T - tin, kc = Math.min(nc - 1, Math.floor(tf / C)), u = tf - kc * C, Hc = day0 + T + tin + kc * C, c = coastCast(b, gr, dI, i, kc, Hc, spot);
+    if (u < 0.62){ const q = u / 0.62; return {p:{x:c.A.x + (c.E.x - c.A.x) * q, y:c.A.y + (c.E.y - c.A.y) * q}, hd:c.dir + Math.PI / 2, st:'fishing'}; }
+    const nx = kc + 1 < nc ? coastCast(b, gr, dI, i, kc + 1, Hc + C, spot).A : gr.p, q = along(c.E, nx, Math.min(1, (u - 0.62) / 0.13)); return {p:q.p, hd:q.hd, st:'fishing'};
   }
-  const eb = e - T - fishH;
+  const eb = e - T - tin - fH;
   if (eb < tr){ const a = atRoute(RR, eb * cs); return {p:a.p, hd:a.hd, st:'in'}; }
   if (eb < tr + t0){ const q = along(m0, b.p, (eb - tr) / t0); return {p:q.p, hd:q.hd, st:'in'}; }
   return moored;
+}
+// land for the coast's boats: the 25 m mask where its pack is in, else the national core's 200 m (always there)
+const coastFine = p => mapSimAt(p) && mapReadyAt(p, 0), coastLand = p => coastFine(p) ? isLand(p) : isLandFar(p);
+// a point on land walks back toward the ground's centre (a ground is 20 m deep or more)
+function seaward(p, c){ for (let s = 0; s < 4 && coastLand(p); s++) p = {x:p.x + (c.x - p.x) * 0.4, y:p.y + (c.y - p.y) * 0.4}; return coastLand(p) ? {x:c.x, y:c.y} : p; }
+// the boat's own spot for the day: 0.3 to 1.2 km off the ground's centre (they spread over the ground instead of stacking on it)
+function coastSpot(gr, dI, i){ const a = hash(dI * 53 + i * 19) * 2 * Math.PI, r = 0.3 + hash(dI * 61 + i * 23) * 0.9; return seaward({x:gr.p.x + Math.sin(a) * r, y:gr.p.y - Math.cos(a) * r}, gr.p); }
+// one cast: its start A near the spot and the end E of the drift downwind (each boat slants it its own way), turned about, across or
+// shortened when the drift would reach the land, else the boat lies still. Kept per boat and cast; asked again once the 25 m mask is in
+function coastCast(b, gr, dI, i, kc, Hc, spot){
+  const key = (dI * 4096 + kc) * 2 + (coastFine(spot) ? 1 : 0), M = b.cc || (b.cc = new Map());
+  let c = M.get(key); if (c) return c;
+  if (M.size > 8) M.clear();
+  const A = seaward({x:spot.x + (hash(dI * 97 + i * 11 + kc) - 0.5) * 0.3, y:spot.y + (hash(dI * 89 + i * 5 + kc) - 0.5) * 0.3}, gr.p);
+  const wd = (windDir(Hc) - gridGamma(gr.p) + 180) * Math.PI / 180 + (hash(i * 41 + 7) - 0.5) * 1.2, run = (0.35 + 0.075 * windAt(Hc)) * NM * 0.62;
+  c = {A, E:A, dir:wd};
+  out: for (const f of [1, 0.5]) for (const t of [0, Math.PI, Math.PI / 2, -Math.PI / 2]){
+    const a = wd + t, E = {x:A.x + Math.sin(a) * run * f, y:A.y - Math.cos(a) * run * f};
+    if ([0.33, 0.66, 1].some(u => coastLand({x:A.x + (E.x - A.x) * u, y:A.y + (E.y - A.y) * u}))) continue;
+    c = {A, E, dir:a}; break out;
+  }
+  M.set(key, c); return c;
 }
 const COASTM = {k:'', v:[]};
 function coastNear(H, only){
