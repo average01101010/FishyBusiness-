@@ -42,7 +42,7 @@ async def main():
           PHONE.open('redskap'); document.querySelector('[data-pa=sub][data-s=kjop]').click();
           const click = sel => { const e = document.querySelector(sel); if (e && !e.disabled) e.click(); return !!(e && !e.disabled); };
           R.clicked = [click('[data-pa=grbuy][data-w=net][data-s="156"]'), click('[data-pa=grbuy][data-w=stamp][data-s=hyse]'), click('[data-pa=grbuy][data-w=pot][data-s=small]'), click('[data-pa=grbuy][data-w=kit]'), click('[data-pa=grbuy][data-w=bait][data-n="20"]')];
-          R.pg = {nets:S.pgear.nets.map(l => l.n), hyse:S.pgear.lines.hyse.n, pots:S.pgear.pots.small, kits:S.pgear.kits.n, bait:S.pgear.bait};
+          R.pg = {nets:S.pgear.nets.map(l => l.n), hyse:S.pgear.lines.hyse.n, pots:S.pgear.pots.small, kits:S.pgear.kits.n, bait:baitKg(S.pgear)};
           R.spent = Math.round(c0 - S.cash); R.expect = 6 * GPRICE.net + 4 * LINE_KINDS.hyse.price + 20 * POTS.small.price + GPRICE.kit + 20 * GPRICE.bait;
           R.fullNets = document.querySelector('[data-pa=grbuy][data-w=net]').disabled;
           // haulers: the small electric one is not for a sjark
@@ -227,5 +227,14 @@ async def main():
         print(ok(70 <= r['linePerTub'] <= 115 and r['lineHyse'] >= 50), 'haddock line, 12 hours in February on the eight best haddock spots: 70–115 kg a tub, mostly haddock')
         print(ok(20 <= r['netPerNet'] <= 45), 'cod nets of 180 mm, 20 hours in March west of Gryllefjord: 20–45 kg a net')
         print(ok(1.0 <= r['potPerPot'] <= 2.5), 'big pots, 24 hours in September south on Senja: 1–2.5 kg a pot')
+        # bait (04.10.2026): five kinds with their own species, a set line keeps the tubs' bait, and own saithe as bait counts on the quota
+        bt = await pg.evaluate("""(()=>{ const R = {f:[baitF('reke', 'torsk'), baitF('krill', 'uer'), baitF('krill', 'torsk'), baitF('krabbe', 'lange'), baitF('sei', 'kveite'), baitF('makrell', 'sei')]};
+          const pg = S.pgear; pg.lines.hyse = {n:3, baited:3, bt:{reke:2, krill:1}}; pg.baitPref = 'reke';
+          const L = dry('line', {lk:'hyse', hooks:2100, n:3, baitW:{reke:3}}, GROUNDS[2].p, HOUR(2028, 1, 10, 6), 12), K = dry('line', {lk:'hyse', hooks:2100, n:3, baitW:{krill:3}}, GROUNDS[2].p, HOUR(2028, 1, 10, 6), 12);
+          R.cod = [Math.round((L.acc.torsk || {kg:0}).kg), Math.round((K.acc.torsk || {kg:0}).kg)];
+          const b = S.boat; b.status = 'port'; b.port = 'husoy'; b.land = null; S.hold = [{sp:'sei', cls:1, kg:60, n:20, bled:true, iced:true, hr:0, fresh:95, gut:false, hook:true}]; const q0 = quotaState().sei;
+          R.own = baitFromHold('sei', 50); R.ownBait = baitOf(pg).sei; R.quota = Math.round(quotaState().sei - q0); R.left = Math.round(holdTotal()); S.hold = []; return R; })()""")
+        print('bait:', json.dumps(bt))
+        print(ok(bt['f'] == [1.4, 1.8, 0.6, 1, 1.6, 1.4] and bt['cod'][0] > bt['cod'][1] * 1.8 and bt['own'] == 50 and bt['ownBait'] >= 50 and bt['quota'] == 50 and bt['left'] == 10), 'bait: shrimp takes more cod than krill, and own saithe as bait leaves the hold and counts on the quota')
         print('errors:', errs[:5]); await br.close()
 asyncio.run(main())

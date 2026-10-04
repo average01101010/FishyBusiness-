@@ -171,6 +171,45 @@ function berthPose(pid, type, kind = 'main'){
   const f = {x:Math.sin(hd), z:-Math.cos(hd)};
   return BERTHPOSE[key] = {x:best.cx / 1000, y:best.cz / 1000, hd, fwd:f, face:{x:best.fx, z:best.fz, ux:best.ux, uz:best.uz, nx:best.Nx, nz:best.Nz, hl:best.hl, depth:best.depth, unit:best.unit || null}, a:best.a, Lb, Bb};
 }
+// ---- the way in to a berth and out of it (the user's list 04.10.2026: «legge til og fra kai uten å gå gjennom landmasse og
+// bygninger»). A point is blocked when it is land on the 25 m mask, or within half the beam of a pier's box (PIERBOX) or of a harbour
+// unit's quay block. The way: from where the boat is to a point one and a half boat lengths astern of the berth and a beam out from the
+// quay, then along the quay to the berth; straight where that is clear, else a short search over the mask's cells (1.5 km round),
+// straightened. In km; the 3D view sails it in and, backwards, out (view3d.js moorStep)
+function berthBlocked(p, m = 2){
+  if (isLand(p)) return true;
+  const x = p.x * 1000, z = p.y * 1000;
+  for (const q of PIERBOX){ if (Math.abs(q.x - x) > q.l + q.w + 30 || Math.abs(q.z - z) > q.l + q.w + 30) continue;
+    const ax = Math.sin(q.ang), az = Math.cos(q.ang), nx = Math.cos(q.ang), nz = -Math.sin(q.ang), dx = x - q.x, dz = z - q.z;
+    if (Math.abs(dx * ax + dz * az) <= q.l / 2 + m && Math.abs(dx * nx + dz * nz) <= q.w / 2 + m) return true; }
+  for (const U of UNITA){ const [lx, lz] = unitL(U, x, z); if (Math.abs(lx) <= UNIT.E + m && lz <= m && lz >= -UNIT.B) return true; }
+  return false;
+}
+function berthClear(a, b, m){ const n = Math.max(1, Math.ceil(dist(a, b) / 0.004)); for (let i = 1; i < n; i++) if (berthBlocked({x:a.x + (b.x - a.x) * i / n, y:a.y + (b.y - a.y) * i / n}, m)) return false; return true; }
+function berthPath(from, bp){
+  const L = (bp.Lb || 10) / 1000, B = (bp.Bb || 3) / 1000, m = (bp.Bb || 3) / 2, F = bp.face, P1 = {x:bp.x, y:bp.y}, fw = bp.fwd;
+  // the point to come in from: astern of the berth and out from the quay; if that is blocked, straight out from the quay
+  let PL = {x:P1.x - fw.x * 1.5 * L + F.nx * B, y:P1.y - fw.z * 1.5 * L + F.nz * B};
+  if (berthBlocked(PL, m) || !berthClear(PL, P1, 0.5)) PL = {x:P1.x + F.nx * 3 * B, y:P1.y + F.nz * 3 * B};
+  if (berthClear(from, PL, m)) return [from, PL, P1];
+  // a search over the mask's cells round the way, then the line pulled tight
+  const M = MAPD.L.mask, c = M.c, key = (i, j) => i + ',' + j, ci = q => [Math.floor(q.x / c), Math.floor(q.y / c)], ctr = (i, j) => ({x:(i + 0.5) * c, y:(j + 0.5) * c});
+  const [i0, j0] = ci(from), [i1, j1] = ci(PL), R = Math.ceil(1.5 / c), prev = new Map([[key(i0, j0), null]]), Q = [[i0, j0]]; let found = false;
+  for (let h = 0; h < Q.length && h < 40000; h++){
+    const [i, j] = Q[h]; if (Math.abs(i - i1) <= 1 && Math.abs(j - j1) <= 1){ prev.set('end', key(i, j)); found = true; break; }
+    for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]){
+      const I = i + di, J = j + dj, k = key(I, J); if (prev.has(k) || Math.abs(I - i0) > R || Math.abs(J - j0) > R) continue;
+      if (berthBlocked(ctr(I, J), m)){ prev.set(k, undefined); continue; }
+      prev.set(k, key(i, j)); Q.push([I, J]);
+    }
+  }
+  if (!found) return [from, PL, P1];   // nothing better to offer: as before
+  const cells = []; for (let k = prev.get('end'); k; k = prev.get(k)){ const [i, j] = k.split(',').map(Number); cells.push(ctr(i, j)); }
+  cells.reverse(); cells[0] = from; cells.push(PL);
+  const out = [cells[0]];
+  for (let i = 0; i < cells.length - 1;){ let j = cells.length - 1; while (j > i + 1 && !berthClear(cells[i], cells[j], m)) j--; out.push(cells[j]); i = j; }
+  out.push(P1); return out;
+}
 
 // ===== landing the catch =====
 // The catch goes up with the quay crane: boxes of about 40 kg fish, nine to a pallet, from skiffs and snekker; tubs of about 300 kg
@@ -187,9 +226,27 @@ function landState(L, t){
   const units = L.kind === 'tub' ? up : Math.min(L.n, up * LANDING.perLift);
   return {e, up, units, phase:e < LANDING.prep ? 'prep' : e < LANDING.prep + L.lifts * LANDING.lift ? 'lift' : 'note'};
 }
+// The plants' opening hours (the user's list 04.10.2026). The plants publish none (looked up 04.10.2026: Nergård in Senjahopen gives
+// a phone number, Råfisklaget lists the plants without hours), so these are typical ones: weekdays 06-18 and Saturday 08-14, closed
+// on Sunday, and every day 05-22 in the skrei season (January to April), when the boats land late. The first trip never waits.
+function mottakOpen(H){
+  if (typeof tutOn === 'function' && tutOn()) return true;
+  const g = gDate(H), m = g.getUTCMonth(), wd = g.getUTCDay(), h = g.getUTCHours() + g.getUTCMinutes() / 60;
+  if (m <= 3) return h >= 5 && h < 22;
+  return wd >= 1 && wd <= 5 ? h >= 6 && h < 18 : wd === 6 ? h >= 8 && h < 14 : false;
+}
+// the next quarter hour the plants are open (within four days)
+function mottakNext(H){ for (let k = 0; k < 4 * 24 * 4; k++){ const h = (Math.ceil(H * 4) + k) / 4; if (mottakOpen(h)) return h; } return H; }
+// when it opens, in words: «i dag kl. 06:00», «i morgen kl. 06:00» or the weekday
+function mottakWhen(H, no){
+  const n = mottakNext(H), a = gDate(H), b = gDate(n), days = Math.round((Date.UTC(b.getUTCFullYear(), b.getUTCMonth(), b.getUTCDate()) - Date.UTC(a.getUTCFullYear(), a.getUTCMonth(), a.getUTCDate())) / 864e5);
+  const t = String(b.getUTCHours()).padStart(2, '0') + ':' + String(b.getUTCMinutes()).padStart(2, '0'), wd = b.getUTCDay();
+  const day = days <= 0 ? (no ? 'i dag' : 'today') : days === 1 ? (no ? 'i morgen' : 'tomorrow') : (no ? ['søndag', 'mandag', 'tirsdag', 'onsdag', 'torsdag', 'fredag', 'lørdag'] : ['on Sunday', 'on Monday', 'on Tuesday', 'on Wednesday', 'on Thursday', 'on Friday', 'on Saturday'])[wd];
+  return day + (no ? ' kl. ' : ' at ') + t;
+}
 function startLanding(ops){
   const b = S.boat, pt = portById(b.port), kg = holdTotal();
-  if (b.status !== 'port' || !pt || !pt.mottak || b.land || b.shift || kg < 0.5) return false;
+  if (b.status !== 'port' || !pt || !pt.mottak || b.land || b.shift || kg < 0.5 || !mottakOpen(S.t / 60)) return false;
   if (berthKind(b) !== 'main') return startShift('main', ops ? 'landops' : 'land');   // the crane is at the plant's quay
   const lp = landPlan(b.type, kg), unit = lp.kind === 'tub' ? ['kar', 'tubs'] : ['kasser', 'boxes'];
   b.land = {pid:pt.id, t0:S.t, until:S.t + lp.dur, kind:lp.kind, n:lp.n, lifts:lp.lifts, kg:Math.round(kg), ops:!!ops};
@@ -240,8 +297,8 @@ function startFueling(ops){
 function quayMinute(){
   const b = S.boat, f = b.fueling;
   if (f){
-    if (S.t > f.pumpAt && f.done < f.liters){ const l = Math.min(f.lpm, f.liters - f.done), c = l * fuelPrice(); if (c > S.cash){ f.liters = f.done; f.until = S.t + PUMP.stow; } else { b.fuel = Math.min(BOAT.fuelCap, b.fuel + l); f.done += l; S.cash -= c; S.stats.costs += c; if (f.done >= f.liters - 0.01) f.until = Math.min(f.until, S.t + PUMP.stow); } }
-    if (S.t >= f.until){ b.fueling = null; log('Fylte ' + fmt(f.done, 0) + ' L for ' + kr(Math.round(f.done * fuelPrice())) + '.', 'Filled ' + fmt(f.done, 0) + ' L for ' + kr(Math.round(f.done * fuelPrice())) + '.'); }
+    if (S.t > f.pumpAt && f.done < f.liters){ const l = Math.min(f.lpm, f.liters - f.done), c = l * fuelPrice(); if (c > S.cash){ f.liters = f.done; f.until = S.t + PUMP.stow; } else { b.fuel = Math.min(BOAT.fuelCap, b.fuel + l); f.done += l; f.paid = (f.paid || 0) + c; S.cash -= c; S.stats.costs += c; if (f.done >= f.liters - 0.01) f.until = Math.min(f.until, S.t + PUMP.stow); } }
+    if (S.t >= f.until){ b.fueling = null; log('Fylte ' + fmt(f.done, 0) + ' L for ' + kr(Math.round(f.paid || 0)) + '.', 'Filled ' + fmt(f.done, 0) + ' L for ' + kr(Math.round(f.paid || 0)) + '.'); }
   }
   const s = b.shift;
   if (s && S.t >= s.until){

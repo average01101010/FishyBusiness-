@@ -26,7 +26,11 @@ const G3 = (() => {
   const T0 = performance.now(), DEG = Math.PI / 180;
   // «#no3d» in the address (the tests that do not look at 3D): everything runs as before, but no frame is drawn
   const NO3D = /no3d/.test(location.hash);
-  const cam = {yaw:0.55, pitch:0.26, dist:21, helm:false, hy:0, hp:-0.07, fov:55};
+  const cam = {yaw:0.55, pitch:0.26, dist:21, helm:false, hy:0, hp:-0.07, fov:55, zoom:1};
+  // the binoculars in the bridge view (two fingers apart, the user's list 04.10.2026): the zoom, 1 to 8; what is drawn in detail
+  // goes by the distance it looks to be at (distance / zoom), and the point lights grow with it
+  const ZF = () => cam.helm ? cam.zoom || 1 : 1;
+  const binoc = document.createElement('div'); binoc.id = 'binoc'; binoc.hidden = true; binoc.innerHTML = '<span></span>'; wrap.appendChild(binoc);
   // the bound vessel's type when it has a model (vessel3d.js), else the skiff; GEO(t) is where things sit on it
   const vtype = () => (S.boat.type && VESSELS[S.boat.type] && (VGEO[S.boat.type] || vesselSpec(S.boat.type))) ? S.boat.type : 'skiff';
   const GEO = t => VGEO[t] || (VGEO[t] = geoOf(t)) || VGEO.skiff;
@@ -1019,7 +1023,7 @@ const G3 = (() => {
     const sf = (snowNow < 80 ? 1 : 0) + 10 * treeSeason();
     if (sf !== chunkSnow){ for (const c of CH.values()) freeChunk(c); CH.clear(); chunkSnow = sf; }
     const half = NEARM.sx / 2 - 400, cx = NEARM.cx, cz = NEARM.cz;
-    const want = (mx, mz) => Math.hypot(mx - bv.x, mz - bv.z) < 1300;
+    const want = (mx, mz) => Math.hypot(mx - bv.x, mz - bv.z) < 1300 * Math.min(3, ZF());
     for (const [k, c] of CH) if (Math.abs(c.x - cx) > half + 700 || Math.abs(c.z - cz) > half + 700 || (c.mesh && c.detail !== want(c.x, c.z))){ freeChunk(c); CH.delete(k); }
     const cand = [];
     for (let gz = Math.floor((cz - half) / 1000); gz <= Math.floor((cz + half) / 1000); gz++) for (let gx = Math.floor((cx - half) / 1000); gx <= Math.floor((cx + half) / 1000); gx++){
@@ -1120,7 +1124,7 @@ const G3 = (() => {
   }
   function drawChunkLights(VP, eye){
     gl.useProgram(PP.p); const u = PP.u;
-    gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform1f(u.uPull, 12); gl.uniform3fv(u.uCol, [1, 0.78, 0.42]); gl.uniform1f(u.uSize, 4200); gl.uniform1f(u.uRound, 1);
+    gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform1f(u.uPull, 12); gl.uniform3fv(u.uCol, [1, 0.78, 0.42]); gl.uniform1f(u.uSize, 4200 * ZF()); gl.uniform1f(u.uRound, 1);
     gl.disableVertexAttribArray(1); gl.vertexAttrib1f(1, env.night * 0.9);
     for (const c of CH.values()) if (c.lights){ gl.uniform3fv(u.uOff, [c.o[0] - eye[0], -eye[1], c.o[1] - eye[2]]); attr(0, c.lights, 3); gl.drawArrays(gl.POINTS, 0, c.nl); }
   }
@@ -1171,7 +1175,7 @@ const G3 = (() => {
     const M = unitModel(); if (!M) return; nSetup(VP);
     for (const U of UNITA){
       const d = Math.hypot(U.o[0] - eye[0], U.o[1] - eye[2]); if (d > far) continue;
-      const full = near && d < 900; drawN(full ? M.near : M.far, unitMat(U, eye));
+      const full = near && d / ZF() < 900; drawN(full ? M.near : M.far, unitMat(U, eye));
       const P = full && U.id !== skip && PLANTS.find(q => q.id === U.id); if (P) drawUnitParts(P, eye, craneIdle(P, 0), fkRest(P), 0, P.chRest);
     }
     gl.disableVertexAttribArray(2); gl.useProgram(PL.p);
@@ -1813,9 +1817,6 @@ const G3 = (() => {
     };
     const pb = NB(); person(pb, 0, 0.2, 0.8, false, [[-0.12, 1.12, 0.05], [0.16, 1.1, 0.05]], 'skipper');
     const cb = NB(); person(cb, 0.26, 0.32, 1.16, true, null, 'crew');
-    // the angler at the rail (built facing -z, turned to face starboard when drawn), and the rod (butt at the hands, pointing -z)
-    const ab = NB(); person(ab, 0, 0, 0, false, [[-0.1, 1.2, -0.3], [0.1, 1.14, -0.26]], 'skipper');
-    const rb = NB(); rb.tube([[0, 0, 0.35], [0, 0, -0.1]], 0.02, [0.12, 0.1, 0.08, 0.3], 8); rb.tube([[0, 0, -0.1], [0, 0, -2.3]], 0.009, [0.25, 0.32, 0.3, 0.8], 6); rb.rbox(0, -0.07, 0.1, 0.07, 0.08, 0.1, 0.03, [0.15, 0.15, 0.17, 0.6]);
     // the fisher at the rail: body without arms (the arms are drawn live, reaching for rod, reel or line)
     const fb = NB(); person(fb, 0, 0, 0, false, false, 'skipper');
     const lb = NB(); lb.tube([[0, 0, 0], [0, 0, 1]], 1, [0.14, 0.26, 0.58, 0.25], 10);
@@ -1846,7 +1847,7 @@ const G3 = (() => {
     const cvN = document.createElement('canvas'); cvN.width = 512; cvN.height = 128;
     SK = {hull, glass:gl2.mesh(), wheel:wh.mesh(), lever:lv.mesh(), motor:ob.mesh(), prop:prop.mesh(), cap:cap.mesh(),
       qPlot:texQuad(...scrPlot), qGauge:texQuad(...scrGauge), qVhf:texQuad(...scrVhf), qName:nq,
-      skipper:pb.mesh(), crew:cb.mesh(), angler:ab.mesh(), rod:rb.mesh(), fishM, tipW:null, rodT:0, fisher:fb.mesh(), cstr:cs.mesh(), shoe:hs.mesh(), limb:lb.mesh(), hand:hb.mesh(), reelF:jf.mesh(), reelD:jd.mesh(), mach:mm.mesh(), anim:null, lines:[], tPlot:mkTex(), tGauge:mkTex(), tVhf:mkTex(), tName:mkTex(), cvP, cvG, cvV, cvN, nameKey:'',
+      skipper:pb.mesh(), crew:cb.mesh(), fishM, rodT:0, fisher:fb.mesh(), cstr:cs.mesh(), shoe:hs.mesh(), limb:lb.mesh(), hand:hb.mesh(), reelF:jf.mesh(), reelD:jd.mesh(), mach:mm.mesh(), anim:null, lines:[], tPlot:mkTex(), tGauge:mkTex(), tVhf:mkTex(), tName:mkTex(), cvP, cvG, cvV, cvN, nameKey:'',
       wheelAt:[0.02, 0.98, zb - 0.075], wheelTilt:0.42, leverAt:lvBox, motorAt:[0, 0.5, zs(0) + 0.02],
       needle:{rpm:0, fuel:0, temp:8, volt:12.6}, wheelA:0, headPrev:null, propA:0, tP:0, tG:0};
     if (glbHas('worker')) SK.wk = wkMeshes('skipper');      // the fisher's arms, drawn live
@@ -1972,16 +1973,16 @@ const G3 = (() => {
     SK.wheelA += (clamp(rate * 9, -2.4, 2.4) - SK.wheelA) * Math.min(1, dt * 2.5);
     const on = engineOn(), frac = on ? clamp(b.v / BOAT.vmax, 0, 1) : 0; SK.propA += (on ? 6 + frac * 120 : 0) * dt;
     nSetup(VP);
-    const R = window.ROD ? window.ROD.state() : null, rodOn = R && R.on, fishing = S.boat.status === 'fishing' && !S.boat.deckStop;   // with all hands on deck, nobody fishes
-    drawN(SK.hull, BMrel); if (showSkipper && !rodOn && !fishing) drawN(SK.skipper, BMrel); if (showCrew) drawN(SK.crew, BMrel);
-    SK.rodT += dt; SK.lines = []; SK.tipW = null;
+    const fishing = S.boat.status === 'fishing' && !S.boat.deckStop;   // with all hands on deck, nobody fishes
+    drawN(SK.hull, BMrel); if (showSkipper && !fishing) drawN(SK.skipper, BMrel); if (showCrew) drawN(SK.crew, BMrel);
+    SK.rodT += dt; SK.lines = [];
     const T = SK.rodT, A = SK.anim || (SK.anim = {mode:null, st:'jig', t:0, fish:[], fly:[], th:0, mc:[]});
-    const kv = S.target === 'kveite' && S.boat.kgear && !kveiteClosed(S.t / 60), mode = rodOn ? 'game' : !fishing ? null : S.boat.gop ? 'gear' : (!kv && S.equip && S.equip.jukse > 0) ? 'machine' : (S.boat.gear || kv) ? 'juksa' : 'rod';
+    const kv = S.target === 'kveite' && S.boat.kgear && !kveiteClosed(S.t / 60), mode = !fishing ? null : S.boat.gop ? 'gear' : (!kv && S.equip && S.equip.jukse > 0 && !window.jigActive) ? 'machine' : (S.boat.gear || kv) ? 'juksa' : null;
     if (mode !== A.mode){ A.mode = mode; A.st = 'jig'; A.t = 0; A.fish = []; A.fly = []; A.mc = []; }
     // fish reported by the fishing step; stale ones (3D was off) are dropped
     const Q = window.CATCHQ || (window.CATCHQ = []), nowT = performance.now();
     while (Q.length && (nowT - Q[0].t > 15000 || Q.length > 12)) Q.shift();
-    if (!mode || mode === 'game') Q.length = 0;
+    if (!mode) Q.length = 0;
     const airKg = Q.reduce((a, f) => a + f.kg, 0) + A.fish.reduce((a, f) => a + f.kg, 0) + A.fly.reduce((a, f) => a + f.kg, 0) + A.mc.reduce((a, m) => a + (m.fish || []).reduce((c, f) => c + f.kg, 0), 0);
     // the catch in the tub: one fish per ~5 kg, species in proportion to the hold; fish still in the air are not in it yet
     { const all = S.hold.reduce((a, x) => a + x.kg, 0), tot = Math.max(0, all - airKg), n = Math.min(40, Math.ceil(tot / 5)); if (n > 0){ const cum = []; let acc = 0; for (const sp of SP){ acc += S.hold.filter(x => x.sp === sp).reduce((a, x) => a + x.kg, 0); cum.push([sp, acc / all]); }
@@ -1989,14 +1990,14 @@ const G3 = (() => {
         drawN(SK.fishM[sp] || SK.fishM.torsk, chain(BMrel, M4.T(x, SKA.tub[1] + 0.05 + lay * 0.05, z), M4.RY(Math.PI / 2 + (k % 2 ? Math.PI : 0) + (hash(i * 5) - 0.5) * 0.4), M4.RZ(Math.PI / 2 * (hash(i * 11) > 0.5 ? 1 : -1)), M4.S(0.42 + hash(i * 13) * 0.12))); } } }
     // luck aboard: a charm swinging from the grab rail
     if (S.haill && haillF() > 0){ const CM = chain(BMrel, M4.T(CHARM_AT[0], CHARM_AT[1], CHARM_AT[2]), M4.RZ(Math.sin(T * 1.3) * 0.18), M4.RX(Math.sin(T * 0.9) * 0.12)); drawN(SK.cstr, CM);
-      if (S.haill.type === 'luksus') drawN(SK.shoe, CM); else drawN(SK.fishM[S.haill.type === 'kveit' ? 'kveite' : 'torsk'], chain(CM, M4.T(0, -0.17, 0), M4.RX(Math.PI / 2), M4.S(0.16))); }
+      if (S.haill.type === 'luksus') drawN(SK.shoe, CM); else drawN(SK.fishM.torsk, chain(CM, M4.T(0, -0.17, 0), M4.RX(Math.PI / 2), M4.S(0.16))); }
     const L2R = q => xf(BMrel, q), fsc = kg => clamp(0.42 * Math.cbrt(kg), 0.28, 1.2);
     const hang = (sp, kg, P, w) => drawN(SK.fishM[sp] || SK.fishM.torsk, chain(BMrel, M4.T(P[0], P[1] - fsc(kg) * 0.45, P[2]), M4.RX(Math.PI / 2), M4.RZ(Math.sin(T * 9 + w) * 0.45), M4.S(fsc(kg))));
     const TUB = [SKA.tub[0], SKA.tub[1] + 0.42, SKA.tub[2] - 0.05], F = SKA.fisher;
     // fish swung from the rail into the tub
     for (let i = A.fly.length - 1; i >= 0; i--){ const f = A.fly[i]; f.u += dt / 0.75; if (f.u >= 1){ A.fly.splice(i, 1); continue; }
       const u = f.u; hang(f.sp, f.kg, [f.a[0] + (TUB[0] - f.a[0]) * u, f.a[1] + (TUB[1] - f.a[1]) * u + Math.sin(Math.PI * u) * 0.45, f.a[2] + (TUB[2] - f.a[2]) * u], i); }
-    if (mode && mode !== 'game'){
+    if (mode){
       const FP = chain(M4.T(F[0], F[1], F[2]), M4.RY(-Math.PI / 2)); drawN(SK.fisher, chain(BMrel, FP));
       const shY = SK.wk ? WK_SH : 1.3, shR = xf(FP, [0.2, shY, 0]), shL = xf(FP, [-0.2, shY, 0]); let hR, hL;
       A.t += dt;
@@ -2005,16 +2006,6 @@ const G3 = (() => {
         hR = [RL[0] - 0.02, RL[1] + 0.05 + 0.22 * Math.max(0, Math.sin(w)), RL[2] + 0.12]; hL = [RL[0] - 0.02, RL[1] + 0.05 + 0.22 * Math.max(0, Math.sin(w + Math.PI)), RL[2] - 0.12];
         SK.lines.push([L2R(RL), L2R([RL[0] + 1.4, -0.3, RL[2] - 1.0])]);
         if (hauling && Q.length && (A.t > 0.9)){ const f = Q.shift(); A.fly.push({...f, a:[RL[0] - 0.05, RL[1] + 0.1, RL[2]], u:0}); A.t = 0; }
-      } else if (mode === 'rod'){
-        // one lure: jig until a fish takes it, lift it to the tip and swing it in
-        if (A.st === 'jig' && Q.length){ A.fish = [Q.shift()]; A.st = 'haul'; A.t = 0; }
-        let el = 0.25 + 0.4 * Math.pow(Math.max(0, Math.sin(T * 2.2)), 2), q = 0;
-        if (A.st === 'haul'){ q = Math.min(1, A.t / 1.4); el = 0.45 + 0.6 * q + 0.05 * Math.sin(T * 14); }
-        const RM = chain(FP, M4.T(0, 1.18, -0.3), M4.RX(el)); drawN(SK.rod, chain(BMrel, RM));
-        const tip = xf(RM, [0, 0, -2.3]); hR = xf(RM, [0, 0, 0.26]); hL = xf(RM, [0, 0, -0.12]);
-        if (A.st === 'haul' && A.fish.length){ const f = A.fish[0], hk = [tip[0], -0.6 + (tip[1] - 0.25 + 0.6) * q, tip[2]]; if (hk[1] > -0.2) hang(f.sp, f.kg, hk, 0); SK.lines.push([L2R(tip), L2R(hk)]);
-          if (A.t > 1.55){ A.fly.push({...f, a:hk, u:0}); A.fish = []; A.st = 'jig'; } }
-        else SK.lines.push([L2R(tip), L2R([tip[0], -0.3, tip[2]])]);
       } else if (mode === 'juksa'){
         // hand jig: the left hand works the line over the roller; on a bite the right hand cranks it up with a fish on the pilk and the fly hooks
         const C = SKA.reel, RL = [C[0] + 0.14, C[1] - 0.05, C[2]], WX = C[0] + 0.3;
@@ -2060,19 +2051,6 @@ const G3 = (() => {
           drawN(W.uarm, chain(BMrel, limbM(Sw, E, WK_S))); drawN(W.farm, chain(BMrel, limbM(E, Hc, WK_S))); drawN(W.hand, chain(BMrel, limbM(Hc, HT, WK_S))); return; }
         drawN(SK.limb, chain(BMrel, limbM(Sw, E, 0.056))); drawN(SK.limb, chain(BMrel, limbM(E, Hc, 0.048))); drawN(SK.hand, chain(BMrel, M4.T(Hc[0], Hc[1], Hc[2]))); };
       arm(shR, hR, 1); arm(shL, hL, -1);
-    }
-    if (rodOn){
-      SK.rodT += dt; const T = SK.rodT, st = R.st;
-      let el = 0.3; if (st === 'jig') el = 0.25 + 0.4 * Math.pow(Math.max(0, Math.sin(T * 2.2)), 2); else if (st === 'bite') el = 0.35 + 0.12 * Math.sin(T * 38); else if (st === 'fight') el = 0.75 + 0.14 * Math.sin(T * (R.hold ? 9 : 3)) * (0.4 + R.tens); else if (st === 'land') el = 1.1; else el = 0.2;
-      const AM = chain(BMrel, M4.T(F[0] - 0.02, F[1], F[2]), M4.RY(-Math.PI / 2)), RM = chain(AM, M4.T(0, 1.18, -0.3), M4.RX(el));
-      drawN(SK.angler, AM); drawN(SK.rod, RM);
-      const tip = xf(RM, [0, 0, -2.3]); SK.tipW = tip;
-      if ((st === 'fight' && R.prog > 0.85) || st === 'land'){
-        const q = st === 'land' ? clamp(R.phase / 1.4, 0, 1) : 0, sp = R.fish ? R.fish.sp : 'torsk', sc = R.fish ? clamp(0.42 * Math.cbrt(R.fish.kg), 0.3, 1.1) : 0.6;
-        const water = xf(BMrel, [F[0] + 1.58, 0, F[2]]), tub = xf(BMrel, [TUB[0], TUB[1] - 0.02, TUB[2]]);
-        const px = q < 0.5 ? water[0] + (tip[0] - water[0]) * q * 2 * 0.8 : tip[0] + (tub[0] - tip[0]) * (q - 0.5) * 2, py = q < 0.5 ? water[1] + (tip[1] - 0.6 - water[1]) * q * 2 : tip[1] - 0.6 + (tub[1] - tip[1] + 0.6) * (q - 0.5) * 2, pz = q < 0.5 ? water[2] + (tip[2] - water[2]) * q * 2 * 0.8 : tip[2] + (tub[2] - tip[2]) * (q - 0.5) * 2;
-        drawN(SK.fishM[sp] || SK.fishM.torsk, chain(M4.T(px, py, pz), M4.RX(Math.PI / 2 - 0.2), M4.RZ(Math.sin(T * 14) * 0.5), M4.S(sc)));
-      }
     }
     drawN(SK.wheel, chain(BMrel, M4.T(...SK.wheelAt), M4.RX(-SK.wheelTilt), M4.RZ(SK.wheelA)));
     drawN(SK.lever, chain(BMrel, M4.T(...SK.leverAt), M4.RX(-(0.1 + frac * 0.9))));
@@ -2328,6 +2306,7 @@ const G3 = (() => {
 
   // ---------- mooring: in along the quay, then the lines: aft spring first, bow line, stern line, fore spring (and in reverse when casting off) ----------
   const MO = {key:'', phase:'', t:0, from:null, dur:0, lines:0, len:[0, 0, 0, 0], init:false};
+  let DEP = null;        // casting off: the way astern out from the quay and on to the harbour point (updateBoat)
   const LINE_S = 1.8;   // seconds for each line to go on
   let ROPEM = null, FENDM = null;
   function buildMooring(){ const r = NB(); r.tube([[0, 0, 0], [0, 0, 1]], 1, [0.2, 0.36, 0.72, 0.15], 6); ROPEM = r.mesh(); const f = NB(); f.tube([[0, -0.26, 0], [0, 0.26, 0]], 0.12, [0.93, 0.93, 0.9, 0.35], 10); FENDM = f.mesh(); }
@@ -2347,6 +2326,13 @@ const G3 = (() => {
     bv.spd = Math.hypot(vx, vz) * 6 * u0 * (1 - u0) * du0; bv.yr = 0;
     bv.px = px; bv.pz = pz; if (Math.hypot(vx, vz) > 1e-3) bv.cog = Math.atan2(vx, -vz);
   }
+  // a polyline in metres, smoothed (Chaikin, twice) and measured: the ways in to a berth and out of it (core berthPath)
+  function pathM(pts){
+    let P = pts.map(q => [q.x * 1000, q.y * 1000]);
+    for (let it = 0; it < 2; it++){ const Q = [P[0]]; for (let i = 0; i < P.length - 1; i++){ const a = P[i], c = P[i + 1]; Q.push([a[0] * 0.75 + c[0] * 0.25, a[1] * 0.75 + c[1] * 0.25], [a[0] * 0.25 + c[0] * 0.75, a[1] * 0.25 + c[1] * 0.75]); } Q.push(P[P.length - 1]); P = Q; }
+    const L = [0]; for (let i = 1; i < P.length; i++) L.push(L[i - 1] + Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1])); return {P, L, len:L[L.length - 1]};
+  }
+  function pathAt(M, s){ s = clamp(s, 0, M.len); let i = 1; while (i < M.L.length - 1 && M.L[i] < s) i++; const a = M.P[i - 1], c = M.P[i], f = (s - M.L[i - 1]) / Math.max(1e-6, M.L[i] - M.L[i - 1]); return {x:a[0] + (c[0] - a[0]) * f, z:a[1] + (c[1] - a[1]) * f, h:Math.atan2(c[0] - a[0], -(c[1] - a[1]))}; }
   function lieAlongside(dt, bp){
     bv.spd = 0; bv.yr = 0; bv.px += (bp.x * 1000 - bv.px) * (1 - Math.exp(-dt * 2)); bv.pz += (bp.y * 1000 - bv.pz) * (1 - Math.exp(-dt * 2)); bv.cog += angDiff(bv.cog, bp.hd) * (1 - Math.exp(-dt * 2));
   }
@@ -2364,13 +2350,15 @@ const G3 = (() => {
     if (MO.key !== key){
       const d = Math.hypot(bv.px - X, bv.pz - Z); MO.key = key; MO.len = [0, 0, 0, 0];
       if (d < 3 || b.status === 'unmooring' || !MO.init){ MO.phase = 'moored'; MO.lines = 4; }
-      else { MO.phase = 'in'; MO.t = 0; MO.from = {x:bv.px, z:bv.pz, h:bv.cog}; MO.dur = clamp(d / 1.3, 8, 40); MO.lines = 0; }
+      else { MO.phase = 'in'; MO.t = 0; MO.from = {x:bv.px, z:bv.pz, h:bv.cog}; MO.path = pathM(berthPath({x:bv.px / 1000, y:bv.pz / 1000}, bp)); MO.dur = clamp(MO.path.len / 1.6, 8, 60); MO.lines = 0; }
       MO.init = true;
     }
-    if (b.status === 'unmooring'){ MO.phase = 'out'; MO.lines = clamp(4 * (b.castUntil - S.t - currentFrac()) / CAST_MIN, 0, 4); }
+    if (b.status === 'unmooring'){ MO.phase = 'out'; MO.lines = clamp(4 * (b.castUntil - S.t - currentFrac()) / CAST_MIN, 0, 4); MO.dep = {bp, pid:b.port}; }
     if (MO.phase === 'in'){
       MO.t += dt * sp; const u0 = clamp(MO.t / MO.dur, 0, 1);
-      approach(MO.from, bp, u0, sp / MO.dur);
+      // along the way in (clear of land, piers and the unit's quay), turning to lie along the quay at the end
+      if (MO.path){ const u = u0 * u0 * (3 - 2 * u0), q = pathAt(MO.path, u * MO.path.len); bv.px = q.x; bv.pz = q.z; bv.cog += angDiff(bv.cog, u0 > 0.9 ? bp.hd : q.h) * Math.min(1, dt * 3); bv.spd = MO.path.len * 6 * u0 * (1 - u0) * sp / MO.dur; bv.yr = 0; }
+      else approach(MO.from, bp, u0, sp / MO.dur);
       if (u0 >= 1){ MO.phase = 'lines'; MO.t = 0; bv.cog = bp.hd; }
     } else {
       if (MO.phase === 'lines'){ MO.t += dt * sp; MO.lines = Math.min(4, MO.t / LINE_S); if (MO.lines >= 4) MO.phase = 'moored'; }
@@ -2426,6 +2414,14 @@ const G3 = (() => {
         const h = S.helm, k = 1 - Math.exp(-dt * 6);
         bv.px += (tx - bv.px) * k; bv.pz += (tz - bv.pz) * k; bv.cog += angDiff(bv.cog, pr.hd) * k;
         bv.yr += (h.yaw * simRate() - bv.yr) * (1 - Math.exp(-dt * 3)); bv.spd = Math.abs(h.v) * KNV();
+      }
+      else if (sailing && (MO.dep || DEP)){
+        // cast off: astern out from the quay, then the way out to the harbour point clear of piers and the unit; the follower takes
+        // over from there (the simulation starts at the harbour point)
+        if (MO.dep){ const d0 = MO.dep, pt = portById(d0.pid); MO.dep = null; const M = pt ? pathM(berthPath(pt.p, d0.bp).reverse()) : null;
+          DEP = M && M.len > 5 ? {M, t:0, dur:clamp(M.len / 1.8, 5, 45), back:Math.hypot(M.P[0][0] - M.P[Math.min(4, M.P.length - 1)][0], M.P[0][1] - M.P[Math.min(4, M.P.length - 1)][1]), hd:d0.bp.hd} : null; }
+        if (DEP){ const sp = Math.max(1, S.mult || 1); DEP.t += dt * sp; const u0 = clamp(DEP.t / DEP.dur, 0, 1), s = u0 * u0 * (3 - 2 * u0) * DEP.M.len, q = pathAt(DEP.M, s);
+          bv.px = q.x; bv.pz = q.z; bv.cog += angDiff(bv.cog, s < DEP.back ? DEP.hd : q.h) * Math.min(1, dt * 2.5); bv.spd = DEP.M.len * 6 * u0 * (1 - u0) * sp / DEP.dur; bv.yr = 0; if (u0 >= 1) DEP = null; }
       }
       else if (sailing){
         const vs = sailV(S.t / 60) * KNV(), la = livePose(frac + clamp(1.6 * GAME_RATE * (S.mult || 1) / 60, 0.04, 0.6)).p, cx = la.x * 1000, cz = la.y * 1000;
@@ -2497,7 +2493,7 @@ const G3 = (() => {
   function drawPts(n, mode, VP, col, size, round, off){
     if (!n) return;
     gl.useProgram(PP.p); const u = PP.u;
-    gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uOff, off || [0, 0, 0]); gl.uniform1f(u.uPull, 0); gl.uniform3fv(u.uCol, col); gl.uniform1f(u.uSize, size); gl.uniform1f(u.uRound, round ? 1 : 0);
+    gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uOff, off || [0, 0, 0]); gl.uniform1f(u.uPull, 0); gl.uniform3fv(u.uCol, col); gl.uniform1f(u.uSize, size * ZF()); gl.uniform1f(u.uRound, round ? 1 : 0);
     gl.bindBuffer(gl.ARRAY_BUFFER, DYNP); gl.bufferSubData(gl.ARRAY_BUFFER, 0, PB.subarray(0, n * 3)); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
     gl.bindBuffer(gl.ARRAY_BUFFER, DYNA); gl.bufferSubData(gl.ARRAY_BUFFER, 0, PA.subarray(0, n)); gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 0, 0);
     gl.drawArrays(mode, 0, n);
@@ -2832,7 +2828,7 @@ const G3 = (() => {
     for (const n of npcNow){
       const x = n.p.x * 1000, z = n.p.y * 1000, big = n.type === 'coastal' || n.type === 'ferry', y = big ? (env.tide || 0) : (env.tide || 0) + (seaH(x, z, t) - (env.tide || 0)) * 0.8, roll = big ? Math.sin(t * 0.4 + x) * 0.01 : Math.sin(t * 1.1 + x) * 0.05 * (0.3 + WV.hs);
       n.M = model(x - eye[0], y - eye[1], z - eye[2], -n.hd, big ? 0 : Math.sin(t * 0.9 + z) * 0.03, roll);
-      const d = Math.hypot(x - eye[0], z - eye[2]); n.K = (n.fleet || n.coast) && d < 1500 ? npcMesh(n, d < npcNear(n) ? 1 : 0.3) : null;
+      const d = Math.hypot(x - eye[0], z - eye[2]); n.K = (n.fleet || n.coast) && d / ZF() < 1500 ? npcMesh(n, d / ZF() < npcNear(n) ? 1 : 0.3) : null;
       if (n.K) kit.push(n); else drawLit(NPCM[n.type], n.M);
     }
     if (!kit.length) return;
@@ -3033,7 +3029,8 @@ const G3 = (() => {
     }
     lastEye = eye; EYE = eye; earT = performance.now(); compassDraw(Math.atan2(camFwd[0], -camFwd[1]), {x:eye[0] / 1000, y:eye[2] / 1000});
     if (!RO.on || Math.abs(eye[0] - RO.x) > 40000 || Math.abs(eye[2] - RO.z) > 40000){ RO.x = Math.round(eye[0] / 4096) * 4096; RO.z = Math.round(eye[2] / 4096) * 4096; RO.on = true; }
-    const W = canvas.width, Hh = canvas.height, asp = W / Hh, fov = (kfov || (cam.helm ? cam.fov : 55)) * DEG; curFov = fov;
+    const W = canvas.width, Hh = canvas.height, asp = W / Hh, fov = kfov ? kfov * DEG : cam.helm ? 2 * Math.atan(Math.tan(cam.fov * DEG / 2) / (cam.zoom || 1)) : 55 * DEG; curFov = fov;
+    { const z = !kfov && cam.helm ? cam.zoom || 1 : 1, on = z > 1.5; if (binoc.hidden === on) binoc.hidden = !on; if (on){ const t = Math.round(z) + '×'; if (binoc.firstChild.textContent !== t) binoc.firstChild.textContent = t; } }
     let cornerD = 0; if (NEARM) for (const [qx, qz] of [[0, 0], [1, 0], [0, 1], [1, 1]]) cornerD = Math.max(cornerD, Math.hypot(NEARM.x0 + qx * NEARM.sx - eye[0], NEARM.z0 + qz * NEARM.sz - eye[2], eye[1]));
     const nearFar = Math.max(3000, cam.dist * 3, cornerD + 300); lightNF = nearFar; const VPf = mul(persp(fov, asp, 25, 170000), V.m), VPn = mul(persp(fov, asp, 0.25, nearFar), V.m);
     const TM = model(-eye[0], -eye[1], -eye[2], 0, 0, 0);
@@ -3193,7 +3190,7 @@ const G3 = (() => {
     if (QUAL.lvl) driftSpray(VP, eye, dt, t, foamCol);
     // fishing lines
     if (S.boat.status === 'fishing' && GEO(vtype()).hand && SK){
-      const segs = (SK.lines || []).slice(); if (SK.tipW) segs.push([SK.tipW, null]);
+      const segs = (SK.lines || []).slice();
       let n = 0;
       for (const [a0, b0] of segs){ if (n > 30) break; const A0 = [a0[0] + eye[0], a0[1] + eye[1], a0[2] + eye[2]], B0 = b0 ? [b0[0] + eye[0], b0[1] + eye[1], b0[2] + eye[2]] : [A0[0], seaH(A0[0], A0[2], t) - 0.2, A0[2]];
         PB.set([A0[0] - eye[0], A0[1] - eye[1], A0[2] - eye[2], B0[0] - eye[0], B0[1] - eye[1], B0[2] - eye[2]], n * 6); PA[n * 2] = PA[n * 2 + 1] = 0.8; n++; }
@@ -3233,16 +3230,16 @@ const G3 = (() => {
 
   // ---------- controls ----------
   const ptr = new Map(); let drag = null, pinch = null;
-  canvas.addEventListener('pointerdown', e => { canvas.setPointerCapture(e.pointerId); ptr.set(e.pointerId, {x:e.clientX, y:e.clientY}); if (ptr.size === 1) drag = {x:e.clientX, y:e.clientY}; else if (ptr.size === 2){ const [a, b] = [...ptr.values()]; pinch = {d:Math.hypot(a.x - b.x, a.y - b.y) || 1, dist:cam.dist}; } });
+  canvas.addEventListener('pointerdown', e => { canvas.setPointerCapture(e.pointerId); ptr.set(e.pointerId, {x:e.clientX, y:e.clientY}); if (ptr.size === 1) drag = {x:e.clientX, y:e.clientY}; else if (ptr.size === 2){ const [a, b] = [...ptr.values()]; pinch = {d:Math.hypot(a.x - b.x, a.y - b.y) || 1, dist:cam.dist, zoom:cam.zoom}; } });
   canvas.addEventListener('pointermove', e => {
     if (!ptr.has(e.pointerId)) return; ptr.set(e.pointerId, {x:e.clientX, y:e.clientY});
-    if (ptr.size === 2 && pinch){ const [a, b] = [...ptr.values()]; cam.dist = clamp(pinch.dist * pinch.d / (Math.hypot(a.x - b.x, a.y - b.y) || 1), 7, 8000); }
-    else if (drag && ptr.size === 1){ if (cam.helm){ cam.hy = clamp(cam.hy - (e.clientX - drag.x) * 0.005, -2.6, 2.6); cam.hp = clamp(cam.hp + (e.clientY - drag.y) * 0.004, -0.6, 0.5); } else { cam.yaw -= (e.clientX - drag.x) * 0.006; cam.pitch = clamp(cam.pitch + (e.clientY - drag.y) * 0.004, 0.02, 1.4); } drag = {x:e.clientX, y:e.clientY}; }
+    if (ptr.size === 2 && pinch){ const [a, b] = [...ptr.values()], dd = Math.hypot(a.x - b.x, a.y - b.y) || 1; if (cam.helm) cam.zoom = clamp(pinch.zoom * dd / pinch.d, 1, 8); else cam.dist = clamp(pinch.dist * pinch.d / dd, 7, 8000); }
+    else if (drag && ptr.size === 1){ if (cam.helm){ const z = cam.zoom || 1; cam.hy = clamp(cam.hy - (e.clientX - drag.x) * 0.005 / z, -2.6, 2.6); cam.hp = clamp(cam.hp + (e.clientY - drag.y) * 0.004 / z, -0.6, 0.5); } else { cam.yaw -= (e.clientX - drag.x) * 0.006; cam.pitch = clamp(cam.pitch + (e.clientY - drag.y) * 0.004, 0.02, 1.4); } drag = {x:e.clientX, y:e.clientY}; }
   });
   const up = e => { ptr.delete(e.pointerId); if (ptr.size < 2) pinch = null; if (ptr.size === 1){ const [p] = [...ptr.values()]; drag = {x:p.x, y:p.y}; } else if (!ptr.size) drag = null; };
   canvas.addEventListener('pointerup', up);
-  canvas.addEventListener('dblclick', () => { if (cam.helm){ const G = GEO(vtype()); cam.hy = 0; cam.hp = G.hp !== undefined ? G.hp : -0.07; cam.fov = G.fov || 55; } else { cam.yaw = 0.55; cam.pitch = 0.26; cam.dist = 21; } }); canvas.addEventListener('pointercancel', up);
-  canvas.addEventListener('wheel', e => { e.preventDefault(); cam.dist = clamp(cam.dist * Math.exp(e.deltaY * 0.0012), 7, 8000); }, {passive:false});
+  canvas.addEventListener('dblclick', () => { if (cam.helm){ const G = GEO(vtype()); cam.zoom = 1; cam.hy = 0; cam.hp = G.hp !== undefined ? G.hp : -0.07; cam.fov = G.fov || 55; } else { cam.yaw = 0.55; cam.pitch = 0.26; cam.dist = 21; } }); canvas.addEventListener('pointercancel', up);
+  canvas.addEventListener('wheel', e => { e.preventDefault(); if (cam.helm) cam.zoom = clamp(cam.zoom * Math.exp(-e.deltaY * 0.0015), 1, 8); else cam.dist = clamp(cam.dist * Math.exp(e.deltaY * 0.0012), 7, 8000); }, {passive:false});
 
   // the market's showroom: a vessel type drawn afloat off the harbour you are in, the camera turning round it; null ends it
   let SHOW = null;
@@ -3285,7 +3282,7 @@ const G3 = (() => {
     fishCam(){ cam.helm = false; cam.dist = 7; cam.pitch = 0.22; cam.yaw = -0.85; },
     // the cinema: on or off (the HUD is the page's: body.kino-clean)
     kino(on){ if (on !== undefined){ KINO.on = !!on; KINO.shot = null; } return KINO.on; }, get kinoShot(){ return KINO.shot ? KINO.shot.type : null; },
-    isHelm:() => cam.helm, setHelm(on){ const G = GEO(vtype()); cam.helm = !!on; cam.hy = 0; cam.hp = G.hp !== undefined ? G.hp : -0.07; cam.fov = G.fov || 55; },
-    _debug:{get fps(){ return FPS.v; }, cam, moundTop, bridgeInto, get statTris(){ return STAT ? STAT.n / 3 : 0; }, get vec(){ return {tiles:[...VEC.tiles.values()].map(t => ({k:t.k, bld:t.bld ? t.bld.n : 0, roads:t.roads.length, bridges:t.bridges.length, piers:t.piers.length, molos:t.molos.length, quays:t.quays.length, ms:Math.round(t.ms)})), statics:[...TST].map(([k, s]) => ({k, tris:s.tris, ms:Math.round(s.ms)})), chunks:CH.size}; }, moundInto, MB, haulModel, get haulA(){ return HAULA; }, gopHands, kinoNext(){ KINO.shot = null; }, get kino(){ const k = KINO.shot, e = KINO.eye, g = KINO.tgt; if (!k || !e) return null; const t = (performance.now() - T0) / 1000; return {type:k.type, up:e[1] - Math.max(terrH(e[0], e[2]), seaH(e[0], e[2], t)), free:camFree(g, e), d:Math.hypot(e[0] - bv.x, e[2] - bv.z)}; }, get PLA(){ return PLA; }, get PCA(){ return PCA; }, set noPL(v){ NOPL = !!v; }, get beams(){ return BMN; }, glErr(){ return gl ? gl.getError() : -1; }, QUAL, qualTick, TERRW, get TERR(){ return TERR; }, get MIDM(){ return MIDM; }, RO, SSL, WV, WK, ssAt, seaH, waves:(dt, H) => updateWaves(dt, H), get sstVS(){ return SST_VS; }, set seaDbg(v){ SEADBG = v; }, get drift(){ let c = 0; for (let i = 0; i < SDN; i++) if (SD.age[i] < SD.life[i]) c++; return c; }, get eye(){ return lastEye; }, camInside, camFree, get camPull(){ return camPull; }, get camLift(){ return camLift; }, get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, BUNKERS, nearestPlant, fkRun, legAt, terrH, unitModel, get UPATCH(){ return UPATCH; }, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; SEAMARKS.lights.forEach((L, i) => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(i, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }}
+    isHelm:() => cam.helm, setHelm(on){ const G = GEO(vtype()); cam.helm = !!on; cam.zoom = 1; cam.hy = 0; cam.hp = G.hp !== undefined ? G.hp : -0.07; cam.fov = G.fov || 55; },
+    _debug:{get fps(){ return FPS.v; }, get curFov(){ return curFov; }, cam, moundTop, bridgeInto, get statTris(){ return STAT ? STAT.n / 3 : 0; }, get vec(){ return {tiles:[...VEC.tiles.values()].map(t => ({k:t.k, bld:t.bld ? t.bld.n : 0, roads:t.roads.length, bridges:t.bridges.length, piers:t.piers.length, molos:t.molos.length, quays:t.quays.length, ms:Math.round(t.ms)})), statics:[...TST].map(([k, s]) => ({k, tris:s.tris, ms:Math.round(s.ms)})), chunks:CH.size}; }, moundInto, MB, haulModel, get haulA(){ return HAULA; }, gopHands, kinoNext(){ KINO.shot = null; }, get kino(){ const k = KINO.shot, e = KINO.eye, g = KINO.tgt; if (!k || !e) return null; const t = (performance.now() - T0) / 1000; return {type:k.type, up:e[1] - Math.max(terrH(e[0], e[2]), seaH(e[0], e[2], t)), free:camFree(g, e), d:Math.hypot(e[0] - bv.x, e[2] - bv.z)}; }, get PLA(){ return PLA; }, get PCA(){ return PCA; }, set noPL(v){ NOPL = !!v; }, get beams(){ return BMN; }, glErr(){ return gl ? gl.getError() : -1; }, QUAL, qualTick, TERRW, get TERR(){ return TERR; }, get MIDM(){ return MIDM; }, RO, SSL, WV, WK, ssAt, seaH, waves:(dt, H) => updateWaves(dt, H), get sstVS(){ return SST_VS; }, set seaDbg(v){ SEADBG = v; }, get drift(){ let c = 0; for (let i = 0; i < SDN; i++) if (SD.age[i] < SD.life[i]) c++; return c; }, get eye(){ return lastEye; }, camInside, camFree, get camPull(){ return camPull; }, get camLift(){ return camLift; }, get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, BUNKERS, nearestPlant, fkRun, legAt, terrH, unitModel, get UPATCH(){ return UPATCH; }, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; SEAMARKS.lights.forEach((L, i) => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(i, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }}
   };
 })();

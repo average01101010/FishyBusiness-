@@ -1,6 +1,6 @@
 // ---------- «Første tur»: the guided first trip every new player goes through ----------
 // A new game, also after a reset, starts with S.tut = {v:2, m:{}, catch:true, pAt}: the milestones reached (m, game minute), whether
-// the first catch is still guaranteed (core: fish(), risk(), the rod), and when the player last got further (real ms, for the skip
+// the first catch is still guaranteed (core: fish(), risk(), the jig game), and when the player last got further (real ms, for the skip
 // button, which only shows after 20 minutes without progress). The step shown is the first one not yet done, and «done» is read from
 // the game state as well as the milestones, so the guide survives reloads and surprises. Saves from before it are not sent through.
 // While it runs, a dimmed layer with a hole and a pulsing ring shows where to tap (z-index 61–62, over the phone), with the tip above.
@@ -55,12 +55,13 @@ const TSTEPS = [
       if (e.fuel > S.boat.fuel) return {el:vis('#panel [data-act=clear]'), no:'Turen bruker mer drivstoff enn du har. Gjør ruta kortere.', en:'The trip needs more fuel than you have. Make the route shorter.'};
       return {el:vis('#panel .rbar [data-act=start]'), no:'Trykk «Kast loss». Båten kjører selv ut til feltet.', en:'Tap «Cast off». The boat runs out to the grounds on its own.'}; }},
   {id:'haill', done:() => !!(S.haill && S.haill.type === 'luksus'),
-    tip:() => { const t0 = phoneApp('haill', '#phone [data-pa=haillbuy][data-k=luksus]');
-      return {...t0, no:(S.boat.tutWait ? 'Båten venter på feltet til du har hentet haillen. ' : 'Mens båten går ut: ') + 'Åpne Haill-appen og hent en gratis luksushaill. Den gir bedre fiskelykke i sju døgn.', en:(S.boat.tutWait ? 'The boat waits on the grounds until you have fetched the luck. ' : 'While the boat heads out: ') + 'Open the Luck app and fetch a free luxury luck. It brings better fishing for seven days.'}; }},
-  {id:'fish', done:() => S.tut.m.rodOn || (S.fsess && S.t - S.fsess.t0 >= 20) || (S.tut.m.cast1 && S.boat.status === 'idle' && holdTotal() > 1 && !S.boat.tutWait),
+    tip:() => { const got = S.haillInv && S.haillInv.luksus > 0, t0 = phoneApp('haill', got ? '#phone [data-pa=haillon][data-k=luksus]' : '#phone [data-pa=haillbuy][data-k=luksus]');
+      if (got) return {...t0, no:'Haillen ligger i beholdningen. Trykk «Aktiver luksushaill». Haill blir aldri aktivert av seg selv, så du velger når den skal virke.', en:'The luck is in store. Tap «Switch on luxury luck». Luck is never switched on by itself, so you choose when it works.'};
+      return {...t0, no:(S.boat.tutWait ? 'Båten venter på feltet til du har hentet haillen. ' : 'Mens båten går ut: ') + 'Åpne Haill-appen og hent en gratis luksushaill. Den gir +200 % fiskelykke de første to døgnene.', en:(S.boat.tutWait ? 'The boat waits on the grounds until you have fetched the luck. ' : 'While the boat heads out: ') + 'Open the Luck app and fetch a free luxury luck. It gives +200% luck for the first two days.'}; }},
+  {id:'fish', done:() => S.tut.m.jigOn || (S.fsess && S.t - S.fsess.t0 >= 20) || (S.tut.m.cast1 && S.boat.status === 'idle' && holdTotal() > 1 && !S.boat.tutWait),
     tip:() => { if (S.boat.status !== 'fishing') return {no:'Båten er på vei ut. Den begynner å fiske når den er fremme.', en:'The boat is on its way out. It starts fishing when it gets there.', small:true};
       if (inPlot()) return {el:vis('#ecClose'), no:'Nå fisker juksa. Trykk «Lukk» for å se fisket i 3D.', en:'The jig is fishing now. Tap «Close» to watch in 3D.'};
-      return {el:vis('#dock [data-act=rod]'), no:'Nå fisker juksa for deg. Trykk «Fisk selv» for å prøve stanga også: trykk «Trekk!» når det napper, og hold «Sveiv».', en:'The jig fishes for you now. Tap «Fish yourself» to try the rod too: tap «Strike!» when it bites, and hold «Reel».'}; }},
+      return {el:vis('#dock [data-act=jigg]'), no:'Nå fisker juksa for deg. Trykk «Jukse selv» for å jukse selv: når det napper, trykk «Rykk!» mens nåla er midt på. Midt på gir to fisk på kroken.', en:'The jig fishes for you now. Tap «Jig yourself» to jig yourself: when it bites, tap «Strike!» as the needle is in the middle. The middle gives two fish on the hooks.'}; }},
   {id:'deck', ok:true, done:() => false,
     tip:() => ({el:vis(['#dockInfo', '#hud']), no:'Fisken blør i bløggekaret idet den kommer over ripa. Så blir den sløyd og iset. Isen holder kvaliteten oppe, og kvaliteten gir prisen.', en:'The fish is bled in the tub as it comes over the rail. Then it is gutted and iced. The ice keeps the quality up, and the quality sets the price.'})},
   {id:'full', done:() => holdTotal() >= capHold() - 1 || (S.boat.status === 'idle' && holdTotal() > 1 && !S.boat.fishUntil && !S.boat.tutWait) || !!S.lastSale,
@@ -134,9 +135,9 @@ function tutUpdate(){
   if (!tutOn() || !$('modal').hidden || BOOK.isOpen()){ hide(); return; }
   const st = tutStep(); if (!st){ tutFinish(); return; }
   tutView(st);
-  if (window.rodActive) tutMark('rodOn');
+  if (window.jigActive) tutMark('jigOn');
   const T0 = tutTip(st), txt = S.lang === 'no' ? T0.no : T0.en; tutCur = {st, T0};
-  if (ROD_OPEN()){ hide(); return; }   // the rod has its own controls on screen
+  if (JIG_OPEN()){ hide(); return; }   // the jig game has its own controls on screen
   if ($('tipText').textContent !== txt) $('tipText').textContent = txt || '';
   const ok = (st.ok && !T0.noOk) || T0.okAct; $('tipOk').hidden = !ok;
   $('tipOk').textContent = T0.okText ? (S.lang === 'no' ? T0.okText[0] : T0.okText[1]) : (S.lang === 'no' ? 'Skjønner' : 'Got it');
@@ -151,6 +152,6 @@ function tutUpdate(){
   tip.style.left = x + 'px'; tip.style.top = y + 'px'; ar.style.display = '';
   ar.style.left = clamp(R.x + R.w / 2 - x - 7, 12, tw - 26) + 'px'; ar.style.top = above ? (th - 7) + 'px' : '-7px';
 }
-const ROD_OPEN = () => !!window.rodActive && !$('rodUI').hidden;
+const JIG_OPEN = () => !!window.jigActive && !$('jigUI').hidden;
 $('tipOk').onclick = () => { if (!tutCur) return; const {st, T0} = tutCur; if (T0.okAct){ T0.okAct(); tutUpdate(); return; } if (st.id === 'goal'){ tutMark('goal'); tutFinish(); return; } tutMark(st.id); tutUpdate(); };
 $('tipSkip').onclick = () => { if (confirm(S.lang === 'no' ? 'Hoppe over resten av veiledningen?' : 'Skip the rest of the guide?')){ if (S.tut) S.tut.catch = false; tutFinish(); } };

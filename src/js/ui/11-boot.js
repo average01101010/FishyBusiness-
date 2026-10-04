@@ -42,7 +42,8 @@ for (const v of S.fleet) withVessel(v, () => { if (!S.pgear) S.pgear = newPGear(
 // «Kaffe på kaia» was replaced by the daily login bonus on 01.10.2026: unused free pub rounds are paid out, borrowed deck tubs
 // and the clean-hull bonus are gone, and the bonus starts at zero
 if (S.daily){ const v = S.daily.pubV || 0; if (v > 0){ S.cash += v * PUB_COST; log('Kaffe på kaia er lagt ned. Du fikk ' + kr(v * PUB_COST) + ' for ' + v + (v > 1 ? ' ubrukte pubrunder.' : ' ubrukt pubrunde.'), '«Coffee on the quay» is gone. You got ' + kr(v * PUB_COST) + ' for ' + v + ' unused pub round' + (v > 1 ? 's.' : '.')); } delete S.daily; }
-delete S.tubs; delete S.clean; for (const v of S.fleet || []){ delete v.tubs; delete v.clean; }
+if (!S.haillInv) S.haillInv = {haill:0, luksus:0}; if (S.haill && !HAILL[S.haill.type]) S.haill.type = 'haill';   // the halibut luck is gone (04.10.2026)
+delete S.tubs; delete S.clean; delete S.rodN; delete S.rodBest; for (const v of S.fleet || []){ delete v.tubs; delete v.clean; }
 // before 01.10.2026 a hauler fitting had no length and never finished (until NaN, saved as null), which kept the boat in port
 for (const v of S.fleet) withVessel(v, () => { for (const j of S.jobs || []) jobOk(j); if (S.plan && S.plan.depAt != null && !Number.isFinite(S.plan.depAt)) S.plan.depAt = S.t; });
 // before 30.09.2026 a standing-plan trip with you aboard counted as the hired skipper's, and the landing lost its access

@@ -25,11 +25,12 @@ function doAct(el){
     // the chart plotter stays open: the skipper goes back to 3D himself (the user's wish 02.10.2026)
   }
   else if (act === 'depnow'){ if (!S.plan) return; if (b.status === 'port' && S.jobs && S.jobs.length){ toast(t('yard_busy', hm((jobsDone() || S.t) / 60))); return; } if (!meAboard() && !crewAboard().length){ toast(L('Båten har ikke mannskap. Uten deg om bord trenger den folk.', 'The boat has no crew. Without you aboard it needs hands.')); return; } depart(); if (!G3.isActive()) G3.show(true, true); }
+  else if (act === 'cn'){ S.settings.chartNight = el.dataset.m; renderBase(); scheduleStatic(); if (typeof MINIP !== 'undefined') MINIP.key = ''; }
   else if (act === 'cm'){ const m = el.dataset.m; if (m === 'fish' && !S.equip.plotter){ toast(t('need_plotter')); PHONE.open('utstyr'); return; } S.settings.chart = m; renderBase(); scheduleStatic(); }
   else if (act === 'echo' || act === 'sonar'){ S.settings[act] = el.dataset.on === '1'; heatReset(); if (typeof heatPaint === 'function') heatPaint(); INSTR.show(); }
   else if (act === 'hsp'){ S.settings.heatSp = el.dataset.s; if (typeof heatPaint === 'function') heatPaint(true); }
   else if (act === 'sd-' || act === 'sd+'){ S.settings.safeDepth = clamp(safeDepth() + (act === 'sd+' ? 1 : -1), 1, 30); hzCache.k = ''; renderBase(); scheduleStatic(); }
-  else if (act === 'rod'){ window.ROD.toggle(); renderActs(); return; }
+  else if (act === 'jigg'){ window.JIGG.toggle(); renderActs(); return; }
   else if (act === 'pub'){ window.PUBW.open(); return; }
   else if (act === 'target'){ if (kveiteClosed(S.t / 60)){ S.target = 'mix'; toast(L('Kveita er fredet fra 20. desember til og med 20. april.', 'Halibut is closed from 20 December to 20 April.')); } else S.target = S.target === 'kveite' ? 'mix' : 'kveite'; renderActs(); return; }
   else if (act === 'opssave'){
@@ -44,11 +45,14 @@ function doAct(el){
   else if (act === 'retrace'){ if (tutOn()) return; startReturn(false); }
   else if (act === 'tow') rescue(true);
   else if (act === 'fh+' || act === 'fh-') S.fishPlanH = clamp(S.fishPlanH + (act === 'fh+' ? 1 : -1), 1, 12);
-  else if (act === 'startfish'){ if (!rigJig()){ const w = rigWrong(null); toast(w[0]); return; } if (BOAT.len >= 15 && insideFjord(b.pos)){ toast(S.lang === 'no' ? 'Fartøy på 15 meter eller mer kan ikke fiske innenfor fjordlinja.' : 'Vessels of 15 m or more may not fish inside the fjord line.'); return; } b.status = 'fishing'; b.fishUntil = S.t + S.fishPlanH * 60; log('Starter fiske i ' + S.fishPlanH + ' t.', 'Fishing for ' + S.fishPlanH + ' h.'); }
+  else if (act === 'startfish'){ if (!rigJig()){ const w = rigWrong(null); toast(w[0]); return; }
+    // there is no rod: without a hand jig, reels or halibut gear for halibut nobody can fish
+    if (!b.gear && !(S.equip && S.equip.jukse > 0) && !(S.target === 'kveite' && b.kgear)){ toast(L('Du har ingen juksa. Kjøp håndjuksa i butikken på kaia.', 'You have no jig. Buy a hand jig in the shop on the quay.')); return; } if (BOAT.len >= 15 && insideFjord(b.pos)){ toast(S.lang === 'no' ? 'Fartøy på 15 meter eller mer kan ikke fiske innenfor fjordlinja.' : 'Vessels of 15 m or more may not fish inside the fjord line.'); return; } b.status = 'fishing'; b.fishUntil = S.t + S.fishPlanH * 60; log('Starter fiske i ' + S.fishPlanH + ' t.', 'Fishing for ' + S.fishPlanH + ' h.'); }
   else if (act === 'stopfish'){ if (b.gop) gopAbort('stop'); b.fishUntil = S.t; S.plan = null; endFishing('done'); }
   else if (act === 'deckstop'){ if (b.status === 'fishing'){ b.deckStop = true; log('Stopper fisket for å sløye og ise.', 'Stopping fishing to gut and ice.'); } }
   else if (act === 'deckgo'){ b.deckStop = false; b.deckEnd = null; }
-  else if (act === 'sell'){ if (!tutAllow('sell')) return; startLanding(false); }
+  else if (act === 'sell'){ if (!tutAllow('sell')) return; if (!mottakOpen(S.t / 60)){ toast(L('Mottaket er stengt. Det åpner ', 'The plant is closed. It opens ') + mottakWhen(S.t / 60, S.lang === 'no') + '.'); return; } startLanding(false); }
+  else if (act === 'waitopen'){ const n = Math.max(0, Math.round((mottakNext(S.t / 60) - S.t / 60) * 60)); playMinutes(n); toast(L('Mottaket har åpnet.', 'The plant has opened.')); }
   else if (act === 'fuel'){ if (S.cash <= 0){ toast(t('no_cash')); return; } startFueling(false); }
   else if (act === 'ice'){ const why = shopBuy('ice', +el.dataset.kg || 50); if (why){ toast(L(why[0], why[1])); return; } }
   else if (act === 'gear' || act === 'kgear'){ PHONE.open('fiske'); return; }
@@ -213,6 +217,8 @@ function tick(){
   heatTick();
   if (!G3.isActive()){ renderDyn(); if (AISSEL) renderAisCard(); heatPaint(); } renderHud(); renderClock(); renderActs(); DOCK.tick(); HUI.tick(); energyUi(); INSTR.renderGPS(); renderRouteTools(); tutUpdate(); PHONE.status(); PHONE.tickHome();
   if (S.order && S.t >= S.order.due) deliverOrder();
+  // the chart's night colours follow the sun: drawn again when they change
+  if (S.t !== CHN.t){ CHN.t = S.t; if (chartNight() !== CHN.v && document.body.classList.contains('vplot')) renderBase(); }
   const pnow = performance.now();
   if ((panelDirty || pnow - lastPanel > 1000) && !panelBusy()){ renderPanel(); lastPanel = pnow; panelDirty = false; }
   if (now - lastSave > 5000){ save(); lastSave = now; if (streakTouch()) refreshAll(); }

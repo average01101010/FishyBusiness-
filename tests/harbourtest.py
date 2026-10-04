@@ -71,5 +71,16 @@ async def main():
           view.px = px0; S.draft = []; const q = portById('husoy'); b.status = 'port'; b.port = 'husoy'; b.pos = {...q.p}; return R; })()""")
         print('routes:', json.dumps(rt))
         print(ok(all(v['out']['clear'] and v['out']['n'] >= 1 and v['in']['clear'] and v['in']['end'] == k for k, v in rt.items()) and rt['husoy']['in']['n'] >= 2 and rt['husoy']['out']['n'] >= 2), 'from sea to harbour and out again, a tap gives a route clear of land (Husøy: in through the breakwater gap)')
+        # the way in to each berth and out of it (04.10.2026): from the harbour point and from 400 m out on the way in, every step of it
+        # clear of land, the piers' boxes and the units' quay blocks (berthBlocked), ending at the berth
+        bp = await pg.evaluate("""(()=>{ const R = {n:0, bad:[], pts:0};
+          for (const q of PORTS) for (const kind of ['main', 'bunker']) for (const t of ['skiff', 'sjark', 'kyst15']){ const P = berthPose(q.id, t, kind); if (!P) continue;
+            const a = approachPath(q), far = a.length ? a[0] : q.p;
+            for (const from of [q.p, far]){ R.n++; const path = berthPath(from, P), m = P.Bb / 2; let ok = Math.hypot(path[path.length - 1].x - P.x, path[path.length - 1].y - P.y) < 1e-6;
+              for (let i = 1; i < path.length && ok; i++){ const A = path[i - 1], B2 = path[i], n = Math.max(1, Math.ceil(dist(A, B2) / 0.004)); for (let k = 1; k < n; k++){ R.pts++; const p = {x:A.x + (B2.x - A.x) * k / n, y:A.y + (B2.y - A.y) * k / n}; if (berthBlocked(p, i === path.length - 1 ? 0.3 : m * 0.5)){ ok = false; break; } } }
+              if (!ok) R.bad.push([q.id, kind, t, dist(from, q.p) < 0.001 ? 'harbour' : 'out', path.length]); } }
+          return R; })()""")
+        print('berth paths:', json.dumps({k: bp[k] for k in ('n', 'pts')}), 'bad:', bp['bad'][:8])
+        print(ok(bp['n'] > 40 and len(bp['bad']) <= bp['n'] * 0.05), 'the way in to every berth (and out, backwards) keeps clear of land, piers and the units\' quays (at most 5 % with a corner)', len(bp['bad']))
         print('errors:', errs[:4]); await b.close()
 asyncio.run(main())

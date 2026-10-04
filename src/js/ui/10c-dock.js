@@ -20,7 +20,7 @@ const DOCK = (() => {
     hjem:SVG('<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/>'),
     sloy:SVG('<path d="M3 21l11-11 3 3-8 8z"/><path d="M14 10l4-4a2.1 2.1 0 0 1 3 3l-4 4"/>'),
     videre:SVG('<path d="M8 5l11 7-11 7z"/>'),
-    stang:SVG('<path d="M4 20L19 4"/><path d="M19 4v11"/><circle cx="19" cy="17" r="2"/>'),
+    juks:SVG('<path d="M6 3v13"/><path d="M3 6h6"/><path d="M6 16l-2 3h4z"/><path d="M14 4c3 2 5 5 5 9a5 5 0 0 1-10 0"/><path d="M14 4v6"/>'),
     hjelp:SVG('<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.8"/><path d="M6 6l3.3 3.3M18 6l-3.3 3.3M6 18l3.3-3.3M18 18l-3.3-3.3"/>'),
     loss:SVG('<circle cx="12" cy="5" r="2"/><path d="M12 7v13"/><path d="M5 13a7 7 0 0 0 14 0"/><path d="M8 10h8"/>'),
     avbryt:SVG('<path d="M6 6l12 12M18 6L6 18"/>'),
@@ -102,7 +102,7 @@ const DOCK = (() => {
     if (b.status === 'fishing' && b.gop) return [I('gstop', 'stopp', 'Stopp arbeidet', 'Stop the work', {act:'gstop'}), work, beh].filter(Boolean);
     if (b.status === 'fishing') return [I('stopfish', 'stopp', 'Stopp', 'Stop', {act:'stopfish'}),
       b.deckStop && !b.deckEnd ? I('deckgo', 'videre', 'Fisk videre', 'Fish on', {act:'deckgo', pri:true}) : !b.deckStop && deckPending() > 0.5 ? I('deckstop', 'sloy', 'Stopp og sløy', 'Stop and gut', {act:'deckstop'}) : null,
-      G3.isActive() && rigJig() ? I('rod', 'stang', window.rodActive ? 'Legg bort' : 'Fisk selv', window.rodActive ? 'Put down' : 'Fish yourself', {act:'rod', pri:!window.rodActive, on:!!window.rodActive}) : null, crew, work, beh].filter(Boolean);
+      G3.isActive() && window.JIGG && (window.jigActive || window.JIGG.ok()) ? I('jigg', 'juks', window.jigActive ? 'Slutt å jukse' : 'Jukse selv', window.jigActive ? 'Stop jigging' : 'Jig yourself', {act:'jigg', pri:!window.jigActive, on:!!window.jigActive}) : null, crew, work, beh].filter(Boolean);
     if (b.status === 'sailing') return [I('stop', 'stopp', 'Stopp båten', 'Stop', {act:'stop'}), nav, crew, work, beh].filter(Boolean);
     if (b.status === 'adrift' || b.status === 'engine' || b.status === 'aground') return [I('hjelp', 'hjelp', 'Hjelp', 'Help', {run:() => PHONE.open('redning'), warn:true}), beh];
     return [beh];

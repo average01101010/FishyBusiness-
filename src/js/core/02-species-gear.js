@@ -36,7 +36,7 @@ const SPECIES = {
     pm:[15,15,15,15,15,15,15,15,16,17,17,16], sig:0.03, size:[0.6, 0.3], cw:[14.6, 0.09], minCw:13, minKg:0, uh:1,
     cls:[[0, 17, 'Hunnkrabbe'], [0, 14, 'Hannkrabbe'], [0, 0, 'Under 13 cm'], [0, 0, 'Rognkrabbe']], ref:1}
 };
-// fish are caught by jig, rod, line and net; shellfish only in pots. Everything that loops over fish uses SP; ALLSP adds the shellfish last,
+// fish are caught by jig, line and net; shellfish only in pots. Everything that loops over fish uses SP; ALLSP adds the shellfish last,
 // so the per-species seeds (SP.indexOf) keep their values
 const SP = Object.keys(SPECIES).filter(sp => !SPECIES[sp].shell), SHELL = Object.keys(SPECIES).filter(sp => SPECIES[sp].shell), ALLSP = SP.concat(SHELL);
 // ---------- vessels, equipment, crew ----------
@@ -114,9 +114,17 @@ const VESSELS = {
 };
 const BOAT = Object.assign({}, VESSELS.skiff);
 const PRICE = {fuel:23.9, diesel:14.5, ice:1.5, iceBag:2.0, gear:1900, kgear:2490, tow:4500, rescue:6000, member:1250};
-const fuelPrice = () => BOAT.diesel ? PRICE.diesel : PRICE.fuel;
+// The fuel's price at a port this week (the user's list 04.10.2026): the base times a weekly swing (an AR(1) over the weeks like the
+// fish prices', within ±12 %, the same at every port) and the port's own level (±4 %, by its name). The base was checked 04.10.2026:
+// Preem's anleggsdiesel was 16,28 kr/l without VAT on 29.08.2026, and a fishing vessel pays neither the mineral oil tax nor the CO2
+// tax on it (Skatteetaten), so 14,50 kr/l stands; the petrol at a marina, 23,90 kr/l, too
+const FWD = {};
+function fuelWeek(w){ if (FWD[w] != null) return FWD[w]; let v = 0; for (let k = w - 16; k <= w; k++) v = 0.7 * v + 0.05 * gauss(h2(k * 13 + 5911, 811), h2(k * 17 + 5911, 812)); return FWD[w] = clamp(v, -0.12, 0.12); }
+const fuelPortF = pid => pid ? (hashStr(pid) % 1000 / 1000 - 0.5) * 0.08 : 0;
+function fuelPrice(H = S.t / 60, pid = S.boat && S.boat.port, diesel = BOAT.diesel){ return Math.round((diesel ? PRICE.diesel : PRICE.fuel) * (1 + fuelWeek(weekOfH(H))) * (1 + fuelPortF(pid)) * 100) / 100; }
 const EQUIP = {
   // a bridge navigational watch alarm for a small boat (start price): it goes off when you doze at the wheel (core/15-energy.js)
+  antigro:{price:18000, name:{no:'Antigro-belegg', en:'Antifouling coat'}, desc:{no:'Bunnstoff som holder groe og rur unna skroget. Båten gror til tre ganger så sakte, og holder farten og forbruket lenger.', en:'Bottom paint that keeps weed and barnacles off the hull. The boat fouls three times as slowly and keeps her speed and fuel use longer.'}},
   brovakt:{price:7900, name:{no:'Brovaktsalarm (BNWAS)', en:'Bridge watch alarm (BNWAS)'}, desc:{no:'Døser du av ved roret på sjøen, piper den etter tre minutter til du kvitterer med ACK. Du våkner, men er trøtt og kan døse av igjen til du har hvilt ved kai.', en:'If you doze off at the wheel at sea, it beeps after three minutes until you acknowledge with ACK. You wake, but stay drowsy and may doze off again until you have rested at the quay.'}},
   vhf:{price:6500, name:{no:'VHF-radio', en:'VHF radio'}, desc:{no:'Kulingvarsel fra kystradioen og nødanrop uten mobildekning.', en:'Gale warnings from coast radio and distress calls without mobile coverage.'}},
   ais:{price:4900, name:{no:'AIS-sender (klasse B)', en:'AIS transponder (class B)'}, desc:{no:'Andre båter og redningstjenesten ser deg på AIS. Raskere hjelp ved nød.', en:'Other boats and the rescue service see you on AIS. Faster help in an emergency.'}},

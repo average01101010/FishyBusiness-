@@ -608,12 +608,12 @@ Jonas valgte «Full trafikk langs kysten», men «NPC båtene skal kun dukke opp
 - **Havner:** kaifronter på 12 m eller mer som ligger innenfor 250 m av hverandre, med minst 30 m front til sammen.
   - Flytebryggene i småbåthavner (bryggelinjer, slag 1) teller ikke, for der ligger fritidsbåtene.
   - Senja-ruta er utelatt, fordi `FLEET` er flåten der.
-- **Flåte:** én båt per 45 m front, 1–8 per havn og høyst 300 per flis. Bergen-flisa hadde 235 havner og ville ellers fått 1 460 båter.
+- **Flåte** (fra kart-7): én båt per 150 m front, 1–3 per havn og høyst 55 per flis, 4 137 langs kysten. Fiskeridirektoratet oppgir 4 614 aktive fiskefartøy i 2024. kart-6 hadde én per 45 m, 1–8 per havn og høyst 300 per flis, altså 19 411 båter.
   - Lengdene trekkes fra kystflåten: 45 % 7–10 m, 30 % 10–11 m, 15 % 11–15 m, 8 % 15–21 m og 2 % 21–28 m.
   - Bredden er 0,3·L + 0,9, og dypgåendet er 0,09·L + 0,6. Begge er tilnærminger.
   - Hver båt får en kaiplass som passer (samme regel som `quayFit`). Får ingen front plass, prøves en mindre båt.
   - Navnet trekkes fra en liste.
-- **Felt:** 2–4 per havn, 20–150 m dypt og 3–22 km sjøvei unna, 2 km fra hverandre. Feltene velges mest etter skråningen (dybdens gradient på 500 m) og litt tilfeldig.
+- **Felt:** 2–4 per havn, 20–150 m dypt og 3–22 km sjøvei unna, 2 km fra hverandre. Fra kart-7 ligger de minst 600 m fra land (helst 1 km), og et felt som en annen havn i flisa har valgt innenfor 2 km, får trekk. En havn uten felt (innsjøer og lommer) er utelatt, og en kaifront uten målt dybde gir ingen kaiplass. Feltene velges mest etter skråningen (dybdens gradient på 500 m) og litt tilfeldig.
 - **Leia:** korteste vei på et 100 m rutenett av flisas 25 m-maske, rettet ut der masken er fri.
   - Først prøves et strengt rutenett der høyst én av 16 småruter er land, så et romsligere med fire.
   - Havner hvis munning ligger i samme 500 m-rute, deler beregningen.
@@ -637,7 +637,7 @@ Jonas valgte «Full trafikk langs kysten», men «NPC båtene skal kun dukke opp
 - Båtene kommer bare i appen, siden de ligger i vec-pakkene.
 
 **Rettet etter spilltesten 04.10.2026** (skjermbilde fra Toppsundet: båtene i klynger på sjøen og på land, og for mange):
-- **Færre.** `vecDecode` beholder bare båtene med `fnv(id) < NPC_KEEP` (0,17, minst én per havn). Det gir rundt 22 % av kart-6s 19 411, altså rundt 4 300. Fiskeridirektoratet oppgir 4 614 aktive fiskefartøy i 2024 (kystmagasinet.no, «Stabilt antall norske fiskefartøy»). Med kart-7 settes `NPC_KEEP` til 1.
+- **Færre.** `vecDecode` beholder bare båtene med `fnv(id) < NPC_KEEP` (0,17, minst én per havn). Det gir rundt 22 % av kart-6s 19 411, altså rundt 4 300. Fiskeridirektoratet oppgir 4 614 aktive fiskefartøy i 2024 (kystmagasinet.no, «Stabilt antall norske fiskefartøy»). Med kart-7 er `NPC_KEEP` satt til 1.
 - **Fridager og avreise.** 30 % fridager, og avreise kl. 4–8.
 - **Spredt.** Hver båt har en egen plass 0,3–1,2 km fra feltets midtpunkt (`coastSpot`) og en egen vinkel på driften. Hvert kast slutter der det neste starter.
 - **Ikke på land.** Før hvert kast sjekkes driften mot land: 25 m-masken der pakken er lastet, ellers kjernens 200 m (`coastLand`). Treffer den land, snus den, legges tvers eller halveres, og ellers ligger båten stille. Svaret lagres per båt og kast (`coastCast`).
@@ -684,16 +684,16 @@ Båtene står i `VESSELS` (`core/02-species-gear.js`). Tallene er startverdier o
 - **Prisene bygger på:** brukte 26-fots snekker til 30 000–340 000 kr, en brukt Selfa 10,65 m til 4,9 mill., nye 10,99-meteres sjarker til 9,5–12,5 mill., nye 14,99-meteres kystbåter til 23–70 mill. og brukte trålere uten kvote til over en halv milliard. Havbåtenes priser og vekt er grove anslag.
 
 **Redskapsstige:**
-- *Fiskestang med én sluk:* effekt 0,35 per person. Alle starter med den.
-- *Håndjuksa med pilk og fire markkroker:* 1 900 kr, effekt 1,0.
-- *Juksamaskin:* 34 000 kr, effekt 2,0 hver, altså omtrent dobbelt så mye som håndjuksa. Én person passer tre og fisker da ikke selv med håndjuksa. Skiffen med to maskiner fyller lasten på rundt 2 timer på en god skreidag (`JIG` i `03-simulation.js`, endret 01.10.2026).
+- *Ingen fiskestang* (fjernet 04.10.2026 etter Jonas' liste): uten håndjuksa eller juksamaskin fisker ingen for hånd. «Jukse» sier fra og peker til butikken.
+- *Håndjuksa med pilk og fire markkroker:* 1 900 kr, effekt 2,0 (doblet 04.10.2026: «350 kg på 9 spilltimer er for lite»).
+- *Juksamaskin:* 34 000 kr, effekt 4,0 hver, altså dobbelt så mye som håndjuksa. Én person passer tre og fisker da ikke selv med håndjuksa (`JIG` i `03-simulation.js`).
 - *Kveiteutstyr:* stor pilk, kraftig snøre og gaff, 2 490 kr.
 - **Butikken «Fiskeutstyr»** (telefonapp `fiske`, i alle havner, «Fiskeutstyr på kaia» i Finnsnes) selger håndjuksa, is og kveiteutstyr. Et kjøp tar to trykk: det første viser prisen, det andre betaler, og kjøpet står i driftsloggen. Finnsnes har ikke isrenne, så butikken selger is i sekker for 2,00 kr/kg (`PRICE.iceBag`, vårt anslag). På mottakene kommer isen fra isrenna for 1,50 kr/kg. Handlingslinja har «Fiskeutstyr» og en isknapp med mengde og pris. Klær, elektronikk og juksamaskiner er i Utstyr-appen.
 - *Garn, line og teiner:* passivt redskap som står i sjøen mens båten er borte. Se «Redskap i sjøen» i kapittel 9.
 - *Halere* (`EQUIP`): elektrisk haler 38 000 kr (båter til og med 8,5 m, line og små teiner), linehaler 68 000, garnhaler 95 000 og teinehaler 58 000 (fra 7,5 m). Hva som passer hvilken båt, står som `fit:{minLen, maxLen, outboard}` og sjekkes med `equipFits(k, type)`. Uten haler trekkes garn og line for hånd og tar 2–2,5 ganger så lang tid. Store teiner kan ikke trekkes for hånd.
 - *Plass til redskap* (`gearMax` i `VESSELS`, garn / stamper / teiner): skiff 6 / 4 / 20, tresnekke 8 / 6 / 30, snekke 15 / 10 / 50, 8,9-metersjark 25 / 14 / 80, sjark 40 / 24 / 150, hurtigsjark 50 / 26 / 180, ny sjark 60 / 30 / 200, bred sjark 120 / 40 / 400, kystbåt 15 m 160 / 60 / 500 og 21 m 300 / 120 / 800.
 
-Mister du juksa, fiskes det videre med stang til du kjøper ny i Fiskeutstyr. `motor90` er et utstyrsvalg for båter med påhengsmotor (`boost`: 30 kn, mer drivstoff).
+Mister du juksa, fisker bare juksamaskinene til du kjøper ny i Fiskeutstyr. `motor90` er et utstyrsvalg for båter med påhengsmotor (`boost`: 30 kn, mer drivstoff).
 
 **Ekkolodd og sonar** (varmekartet i kartplotteren, se 5.14):
 
@@ -736,7 +736,7 @@ Mister du juksa, fiskes det videre med stang til du kjøper ny i Fiskeutstyr. `m
 | 0,37 | 0,3 | 0,6 | 0,3 | 0,3 | 0,35 | 0,5 | 0,35 |
 
 - **Skreipulsen** (`skrei`): 0,6 / 2,0 / 2,5 / 0,8 for januar–april, 0,1 i desember. Den virker bare på eksponerte banker på 40–250 m og på de tre ytre feltene (`skreiSpot`).
-- **`density(sp, p, H)`** er den ene kilden for fisk i spillet: fangst, ekkolodd, varmekart, garn, line, stang og pubrykter. 30 × `density` er kg i timen for én person med håndjuksa. Den er delt i `denPlace(p)` (det alle arter deler: land, dybde, eksponering, helling og avstand til feltene), `denTime(H)` (sesongtallene, lagret for én time) og `denSp()` (artens egen sum). Delingen ga nøyaktig de samme tallene (kontrollsum over rutenett rundt alle feltene).
+- **`density(sp, p, H)`** er den ene kilden for fisk i spillet: fangst, ekkolodd, varmekart, garn, line, jukse-spillet og pubrykter. 30 × `density` × innsats er kg i timen (én person med håndjuksa har innsats 2). Den er delt i `denPlace(p)` (det alle arter deler: land, dybde, eksponering, helling og avstand til feltene), `denTime(H)` (sesongtallene, lagret for én time) og `denSp()` (artens egen sum). Delingen ga nøyaktig de samme tallene (kontrollsum over rutenett rundt alle feltene).
 - **Fisken trekker** (`hotspot`, `HOT`): Gode flekker på et mønster på 3,5 km. To felt overlapper hele tiden, hvert glir sin vei med 0,7–1,7 km i døgnet og toner inn og ut over 240 timer. Før hoppet hele mønsteret hver 120. time. Snittet er det samme som før (0,742 mot 0,737).
 - **Stimer** (`school`, `SCHOOL`): et finere mønster (400 m) som svømmer 0,5–1 km i timen i hver arts egen retning. Det gir ±15 % og er 1 i snitt, så fangsten over en dag er den samme, men bittet på ett sted kommer og går i løpet av en halvtime. Sonaren viser retningen (`schoolDrift`).
 - **Bestanden** (`STK`, `S.stock`, ruter på 2 km): Den leses mellom de fire nærmeste rutene (`gridBilinear`), og fangsten trekkes fra de samme fire med samme vekter (`stockW`). Nedtrekket der du fisker er kg/K·Σw², altså mykere enn før, men det samlede uttaket er det samme. Gjenveksten har et minste steg og runder til 1e-4, så en rute kommer helt tilbake til 1: en rute på 0,5 er full igjen etter rundt 42 dager. Før stoppet den på 0,876, og krabbe på 0,667. Krabbe (`S.cstk`) er fortsatt én verdi per rute, som før, fordi teinekalibreringen hviler på det og varmekartet ikke viser krabbe.
@@ -744,12 +744,11 @@ Mister du juksa, fiskes det videre med stang til du kjøper ny i Fiskeutstyr. `m
   - Fisk under minstemålet slippes.
   - Kveite i fredningstiden eller over 100 kg slippes.
   - Uer utenfor juni–august er bare bifangst (×0,15).
-- **Kalibrering** (én person med håndjuksa, 8 timer):
-  - Skreidag på godt felt: 350 kg, altså full last på skiffen.
-  - Juli: rundt 80 kg.
-  - Seistim i mai: rundt 180 kg.
-  - Bare fiskestang: rundt 100–145 kg.
-  - `tests/simday.py` kjører også dekksarbeidet, ellers stopper fisket når bløggekaret er fullt (60 kg). Den skriver ut innsatsstigen 0,35 : 1 : 2 : 4 for stang, håndjuksa, én og to maskiner.
+- **Kalibrering** (én person med håndjuksa, 8 timer, etter doblingen 04.10.2026):
+  - Skreidag på godt felt: full last på skiffen (350 kg) på rundt halve dagen.
+  - Juli: rundt 270 kg (før doblingen 140).
+  - Seistim i mai: full last.
+  - `tests/simday.py` kjører også dekksarbeidet, ellers stopper fisket når bløggekaret er fullt (60 kg). Dekket holder følge: juli ga 269 kg mot 140 før. Den skriver ut innsatsstigen 2 : 4 : 8 for håndjuksa, én og to maskiner (og 0,35 for den gamle stanga, som ikke brukes lenger).
   - Mål for åpen gruppe i 2024 (Lofoten, Vesterålen, Senja og Tromsø): 5,3 t torsk, 3,0 t sei og 1,2 t hyse per båt og år.
   - **Etter varmekartet (01.10.2026):** `simday.py` ga 350 / 322 / 98 / 245 / 110 / 350 kg før og 350 / 273 / 129 / 229 / 134 / 350 kg etter (Husøy mars, Gryllefjord mars, Husøy juli, Malangsgapet mai, stang, to maskiner). Hver kjøring har ±10–15 % tilfeldighet, og de enkelte tallene flytter seg fordi hotspotene ligger annerledes. Det mykere nedtrekket gir litt mer fisk over en dag på samme sted. `calib.py`, `kvtest.py` og `geartest.py` holder seg innenfor sine intervaller.
 - **Kveitefiske** (`S.target = 'kveite'`, krever kveiteutstyr):
@@ -889,19 +888,22 @@ Mister du juksa, fiskes det videre med stang til du kjøper ny i Fiskeutstyr. `m
 - **Haill selges kun for ekte penger.** Den er i testmodus nå, uten betaling. Kan også vinnes på puben.
 - **Haill gjelder hele rederiet,** alle båter. Jonas' begrunnelse: det koster ekte penger.
 
-| Type | Pris | Effekt |
-|---|---|---|
-| Kveithaill | 19 kr | ×3 kveite ved kveitefiske, ×1,5 ved vanlig fiske, ingen minus |
-| Haill | 29 kr | +10 % på alle arter |
-| Luksushaill | 59 kr | +20 % på alle arter, +35 % på torsk |
+**Ny haill fra 04.10.2026** (Jonas' liste, `HAILL` i `03-simulation.js`). To typer, og kveithaillen er borte. En gammel kveithaill blir vanlig haill.
 
-- **Ferskvare:** Full effekt i 2 døgn, deretter lineært ned til 0 etter 7 døgn. En ny haill erstatter den gamle.
-- Haillen vises i HUD og som pynt på gelenderet i 3D (gullhestesko eller liten fisk).
+| Type | Pris | Trinn (fiskelykke på alle arter og alt redskap) |
+|---|---|---|
+| Haill | 29 kr | fersk +100 % til 48 t, mellomhaill +50 % til 72 t, gammelhaill +25 % til 96 t, borte |
+| Luksushaill | 59 kr | +200 % til 48 t, så fersk +100 % til 96 t, mellom +50 % til 120 t, gammel +25 % til 144 t, borte |
+
+- `luck(sp)` = 1 + `haillBoost()`. Trinnene står i `steps`. `haillStage()` gir navnet, og `haillLeft()` gir timene som er igjen.
+- **Beholdning:** et kjøp eller en pubpremie legges i `S.haillInv` (`giveHaill`). «Aktiver» i Haill-appen tar en derfra (`useHaill`). Er det allerede haill om bord, må du bekrefte at den byttes ut. **Haill aktiveres aldri av seg selv.**
+- +200 % er Jonas' valg («så kan vi eventuelt justere det ned om det blir for sterkt. Målet er jo at det skal være fristende å kjøpe»). Sammen med juksa ×2 gir luksushaillen seks ganger fangsten fra før 04.10. Det må måles i spilltest.
+- Haillen vises i HUD («Luksushaill +200 %») og som pynt på gelenderet i 3D (gullhestesko eller liten fisk).
 - **Pubrunden** (`PUBW`):
   - 1 000 kr i spillkroner, én gang per spillkveld mellom 15:00 og 03:00, bare i havn.
-  - Lykkehjulet: kveithaill 18 %, rykte 20 %, haill 7,5 %, luksushaill 1,5 % og tomhendt 53 %, med humoristiske replikker. Oddsen vises.
+  - Lykkehjulet (fra 04.10.2026): haill 12 %, luksushaill 3 %, rykte 25 % og tomhendt 60 %. Premien legges i beholdningen. Oddsen vises.
   - Runden betales og lagres før hjulet snurrer, så premien overlever at appen lukkes (A4). Kvelden går fra 15:00 til 03:00 (A3).
-- **Første gang er luksushaill gratis** i veiledningen «Første tur», og Haill-appen forklarer da hva haill ellers koster.
+- **Første gang er luksushaill gratis** i veiledningen «Første tur», og Haill-appen forklarer da hva haill ellers koster. Steget ber deg også trykke «Aktiver».
 
 ### 5.11 Kulde og klær
 
@@ -933,12 +935,16 @@ Mister du juksa, fiskes det videre med stang til du kjøper ny i Fiskeutstyr. `m
   - Båten flyttes direkte til simuleringens posisjon hvis den er mer enn 900 m unna.
   - `G3._debug.stepBoat(dt, t, frac)` brukes til frakoblet testing med 60 bilder i sekundet.
 - **Fiskeanimasjoner:**
-  - Stang: skipperen rykker og svinger fisken inn.
   - Håndjuksa: snelle med sveiv på ripa, og én til fem fisk på pilk og markkroker.
   - Juksamaskiner: haler selv.
   - Figuren har armer som tegnes live (`limbM`, armløs kropp + rør).
   - Fiskekaret regner bort fisk som fortsatt er i lufta.
-- **Stangfisket** (`ROD`): minispill med napp, kamp, stramming og brudd. Automatisk fangst halveres mens det pågår.
+- **Jukse-spillet** (`JIGG` i `ui/10-rod-acts.js`, 04.10.2026, erstatter stangfisket): «Jukse selv» i skuffen når du jukser for hånd i 3D.
+  - Mens du spiller, går din egen del av juksefangsten (`jigMeShare()` i `03-simulation.js`) ut av den automatiske fangsten og kommer gjennom nappene dine i stedet, i samme takt i snitt (`kgps`).
+  - Ved napp sveiper en nål over en stripe på 1,4 s. «Rykk!» innenfor ±0,06 s av midten gir 2× (pilk og markkrok), ±0,15 s gir 1,5×, ±0,3 s gir 1×, og ellers 0,5× (fisken slapp halve gangen). Ikke noe trykk regnes som 0,5×.
+  - Et napp er verdt det som har kommet til siden forrige napp, og leveres som hele fisk. Resten tas med til neste napp. Nappene kommer 5–40 s fra hverandre (4–8 s på første tur).
+  - 3D viser vanlig håndjuksing med fisken som kommer opp (`CATCHQ`).
+  - Testkroker: `JIGG.grade(off)`, `_bite()` og `_hit(off)`.
 - **Båtmodellene** (`src/js/vessel3d.js`, eget `<script>` før `view3d.js`, uten WebGL):
   - `VB()` er byggeren (det gamle `NB()` uten GL), og `lod` styrer oppløsningen. I `view3d.js` er `NB = VB + mesh()`.
   - `hullShape(H)` lager skroget fra parametre (rund eller hard kimming, baug- og hekkform, flare, spring, skansekledning, bulb), og `hullBuild` lager skrog, kjøl, ror, speil, dekk, skansekledning og ripe med fargebånd.
@@ -1075,15 +1081,15 @@ Mister du juksa, fiskes det videre med stang til du kjøper ny i Fiskeutstyr. `m
 
 - **Obligatorisk** for nye spill, også etter nullstilling. Eldre lagringer sendes ikke gjennom den. `#notut` i adressen hopper over den (testene bruker det).
 - **Tilstand:** `S.tut = {v:2, m:{…}, catch:true, pAt}`. `m` er milepælene. Steget som vises, er det første som ikke er gjort, og «gjort» leses også av spilltilstanden, så veiledningen tåler omlasting. Rutestegene (`live`) leses på nytt hver gang til båten har kastet loss.
-- **Stegene** (`TSTEPS` i `ui/07b-first-trip.js`): butikken (håndjuksa og 150 kg is gratis), kartplotteren, rute til ringen ved Gisundet nord (med «Autonav» fremhevet), minst 2 timer fisketid, «Kast loss», gratis luksushaill mens båten går ut, fisket og «Fisk selv», dekksarbeidet, full last, rute til Botnhamn med «Autonav», «Kast loss», «Neste»-brikka, levering, sluttseddelen og «Neste mål».
+- **Stegene** (`TSTEPS` i `ui/07b-first-trip.js`): butikken (håndjuksa og 150 kg is gratis), kartplotteren, rute til ringen ved Gisundet nord (med «Autonav» fremhevet), minst 2 timer fisketid, «Kast loss», gratis luksushaill mens båten går ut, fisket og «Jukse selv», dekksarbeidet, full last, rute til Botnhamn med «Autonav», «Kast loss», «Neste»-brikka, levering, sluttseddelen og «Neste mål».
 - **Visning:** Et dempet lag med hull rundt målet og en pulserende ring (z-index 61–62, over telefonen), med tipset over (63). `tutRect()` gir målet.
 - **Garantert første fangst** (`S.tut.catch`): Så lenge flagget er satt, ligger det en ekte skreiflekk på feltet i Gisundet nord (`tutBonus`, `TUTB`, `TUT_FIELD`). Den gir rundt 175 kg/t for én person i sentrum og en tidel ved kanten av ringen, i samme miks som påfyllingen (72 % torsk, 18 % sei, 10 % hyse). Flekken legges oppå bestanden og fiskes ikke ned, så ekkoloddet og varmekartet viser det båten får.
   - `fish()` fyller fortsatt på, så lasten er full når fisketida er ute, men påfyllingen er nå et sikkerhetsnett: rundt en firedel av fangsten i stedet for ni tideler (`window.TUTTOP` teller den i testene). Bare bestandens egen andel av fangsten trekkes fra bestanden.
-  - `risk()` og snuing for vind er slått av, og i stangfisket kommer nappet etter 4–8 s. Flagget nullstilles ved første levering.
+  - `risk()` og snuing for vind er slått av, og i jukse-spillet kommer nappet etter 4–8 s. Flagget nullstilles ved første levering.
 - **Haill:** Kommer båten fram før haillen er hentet, venter den på feltet (`b.tutWait`) og begynner å fiske når haillen er om bord.
 - **Sperrer** (`tutAllow`): «Kast loss», nye punkter og levering bare på sine steg. Puben, kveiteutstyret, driftsplanen, «Hjem samme vei» og levering andre steder enn Botnhamn er skjult til veiledningen er ferdig.
 - **Nødutgang:** «Hopp over veiledningen» vises først etter 20 minutter uten fremgang.
-- **Knappelinja:** Veiledningen peker på Verft og så Fiskeutstyr (`dockApp()`), på «Fisk selv» og statusfeltet i knappelinja, og på Marked, Lever og «Lever» i skuffen. Sluttseddelen vises i skuffen under Marked, Lever.
+- **Knappelinja:** Veiledningen peker på Verft og så Fiskeutstyr (`dockApp()`), på «Jukse selv» og statusfeltet i knappelinja, og på Marked, Lever og «Lever» i skuffen. Sluttseddelen vises i skuffen under Marked, Lever.
 
 ### 5.17 Knappelinja, skuffen og «Sett ut» (01.10.2026)
 
@@ -1091,13 +1097,13 @@ Inspirert av Fishing: Barents Sea. Den gamle handlingslinja `#actbar` er borte, 
 
 - **Knappelinja** (`#dock`, `DOCK` i `ui/10c-dock.js`): Runde knapper med et kort ord under, langs nedkanten. Bare knappene som passer akkurat nå, vises. Det som ikke kan brukes, er grått, og et trykk gir grunnen som toast. `renderActs()` er beholdt som navn og kaller `DOCK.render()`.
   - **I havn:** Marked (Lever, Is, Agn), Bygd (Pub, Bank, Oppdrag, Mannskap), Verft (Båthandel, Oppgrader, Fiskeutstyr, Vedlikehold, Bunkring) og Beholdning. «Planlegg» er fjernet (02.10.2026); kartplotteren åpnes fra det lille kartet i 3D. Marked, Bygd og Verft åpner en vifte med mindre knapper over seg (`#dockFan`). Med planlagt avgang: Kast loss og Avbryt.
-  - **På sjøen:** Jukse (vifte med timer, start og kveite, bare når båten er rigget for juksa), Sett ut, Ta opp, Auto-nav og Beholdning når båten ligger stille; Stopp, Sløy eller Fisk videre, Stang og Beholdning under juksing; Stopp båten og Auto-nav under fart; «Hjem» er fjernet (02.10.2026, «Returner samme vei» står i plotteren); Hjelp ved motorstopp. Mannskap dukker opp med prikk når det er krangel om bord.
+  - **På sjøen:** Jukse (vifte med timer, start og kveite, bare når båten er rigget for juksa), Sett ut, Ta opp, Auto-nav og Beholdning når båten ligger stille; Stopp, Sløy eller Fisk videre, Jukse selv og Beholdning under juksing; Stopp båten og Auto-nav under fart; «Hjem» er fjernet (02.10.2026, «Returner samme vei» står i plotteren); Hjelp ved motorstopp. Mannskap dukker opp med prikk når det er krangel om bord.
   - **Statusfeltet** `#dockInfo` over knappene er tekst (avgang, verksted, lossing, kaiarbeid, redskapsarbeid, juksing og dekk).
   - `DOCK.items(meny)` og `DOCK.text()` er for testene.
 - **Skuffen** (`#drawer`): Liggende kommer den fra høyre (380 px), stående er den et ark over knappene (55 % av høyden). Innholdet er telefonens sider: `PHONE.page(side)` lager HTML, og `PHONE.dact(side, handling, data)` kjører en `data-pa`-handling som om siden var åpen i telefonen. `DOCK.open('side:fane')` åpner en side med en fane valgt.
   - **Sidene i skuffen** (`DRAWER` i `05-phone.js`): `lever`, `is`, `agn`, `bank`, `oppdrag`, `mannskap` og `bors` (som to faner), `fartoy` (Båthandel), `utstyr`, `fiske` (med kjøp av garn, line og teiner), `verksted`, `beholdning` (Redskap, Lasterom, Båten), og de gamle `havn`, `last` og `redskap`.
   - `PHONE.open(side)` og `data-pa="open"` sender en side i `DRAWER` til skuffen. Varslene i Rederi bruker `side:fane`, for eksempel `beholdning:last`.
-- **Telefonen** har tretten apper: Vær, Kystposten, Meldinger, Rederi, Salgslaget (Priser, Mine landinger, Toppliste), Kvote, Oppdrag, Haill, Sjømann, Redning, Patchnotes, Innstillinger og Admin. Kvote er fanen fra Salgslaget som egen app.
+- **Telefonen** har fjorten apper: Vær, Kystposten, Meldinger, Rederi, Salgslaget (Priser, Mine landinger, Toppliste), Kvote, Oppdrag, Haill, Sjømann, Redning, Trim, Patchnotes, Innstillinger og Admin. Kvote er fanen fra Salgslaget som egen app.
 - **Patchnotes** (04.10.2026) viser kort hva de siste oppdateringene har gitt, med det nyeste først (`PATCH` i `05-phone.js`). Hver oppdatering har en id, en dato, en tittel og noen linjer på norsk og engelsk. Appen har et merke med tallet på oppdateringer du ikke har sett (`S.settings.patchSeen`), og de som var nye da du åpnet den, får «Ny» (`patchLast`). **Ved hver oppdatering legges en ny linje øverst i `PATCH`.**
   - **Admin** (testverktøy, 02.10.2026) har tidsskalaen (pause, 6×, 180×, 1 800× og 10 800×, det vil si `S.mult` 0, 1, 30, 300 og 1800) og knappen «+ 100 000 kr», som legger pengene i kassa uten å regne dem som inntekt og skriver en linje i loggen. Tempovalget er flyttet hit fra Innstillinger. Appen fjernes før spillet får felles klokke.
 - **«Sett ut»** (`ui/03d-setmode.js`, tilstanden `SETM` er deklarert i `03-map.js`): Valget i viften åpner kartplotteren med redskapet tegnet som en linje fra båten. Lengden er den samme som `startSet` bruker: garn 30 m, line 1,5 m per krok, teiner 25 m mellom hver. Kartet zoomer så linja fyller rundt 40 %.
@@ -1466,6 +1472,76 @@ Brukerens ønske: en frivillig mulighet til å styre båten selv, med gass og ra
   - **Mannskapet:** de som står på «Haling» i arbeidskjedene, står ved haleren, ved enden av renna og ved binge eller balje. Skipperen er med når det er hans jobb, og forlater da rattet.
   - `haultest.py` tar bilder og sjekker at skiva går rundt.
 
+### 5.27 Forslagslista 04.10.2026 (natta til 05.10)
+
+Jonas' liste: oppgraderinger, kvotehandel, kikkert, raskere fangst, fortøying, snurring ved siste veipunkt, stanga ut, drivstoffpriser, jukse-spill, nattmodus, salg for ekte penger, Blender-modeller, åpningstider, flytrafikk, ny haill og agn. Svarene hans: håndjuksa omtrent dobbelt så rask, luksushaill +200 % (kan justeres ned), motoroppgraderinger på verftet og speed-boost i en egen telefonapp for ekte penger.
+
+- **Siste veipunkt:**
+  - 3D-følgeren (`updateBoat`) holdt fart forbi sluttpunktet mens målet sto fast der i opptil ett spillminutt, og snudde rundt punktet. Nå trappes farten ned med avstanden når målet er neste stopp eller rutens slutt, og forbi punktet holdes kursen.
+  - `sailV` bremser også inn mot rutens siste punkt.
+  - `routetest` steger følgeren med 30 bilder i sekundet: før 360 graders sving, nå 0.
+- **Juksa ×2 og jukse-spillet:** se «Redskapsstige» og «Jukse-spillet» over.
+- **Nattmodus i kartplotteren:**
+  - `S.settings.chartNight` er 'auto', 'day' eller 'night', valgt i kartets innstillinger. Auto er natt når sola står mer enn 4° under horisonten der båten er (`chartNight()` i `07-guide.js`).
+  - Navigasjonskartet får da mørk sjø i blått og dempet land (`chartRaster`, `FAR`). Kyst, gradnett og bakgrunn bruker fiskekartets mørke stil, og SVG-laget får klassen `plot` (og `night`).
+  - Miniplotteren følger med.
+  - `tick()` tegner kartet på nytt når sola skifter det (`CHN`).
+- **Kikkert i bro-visningen** (`cam.zoom` 1–8 i `view3d.js`):
+  - To fingre fra hverandre zoomer (fov = 2·atan(tan(fov0/2)/z)). Dra-farten deles på z, og hjulet zoomer også.
+  - Dobbelttrykk og `setHelm` går tilbake.
+  - Knipingen endrer ikke lenger `cam.dist` i bro-visning (den endret terrengets rekkevidde i det skjulte).
+  - Lyspunktene vokser med z (`uSize × ZF()`).
+  - Detaljavstandene for NPC-sett, havneenheter og byggdetalj regnes som avstand/z, byggene med høyst 3×.
+  - Kikkertrammen er `#binoc`, som viser «4×».
+- **Åpningstider på mottakene** (`mottakOpen`, `mottakNext`, `mottakWhen` i `07-harbours.js`):
+  - Mottakene publiserer ingen tider (søkt 04.10.2026: Nergård i Senjahopen oppgir telefon, og Råfisklaget lister mottakene uten tider). Derfor typiske tider: hverdager 06–18, lørdag 08–14, stengt søndag, og 05–22 hver dag i skreisesongen (januar–april).
+  - Første tur venter aldri.
+  - «Lever» viser når mottaket åpner og har knappen «Vent til åpning» (`playMinutes`).
+  - Driftsplanen venter ved kaia (`b.landWait`) og losser når mottaket åpner.
+- **Drivstoffprisen** (`fuelPrice(H, pid, diesel)` i `02-species-gear.js`):
+  - Grunnprisen × en ukeskurve (AR(1) over ukene som fiskeprisene, ±12 %, lik i alle havner) × havnefaktor (±4 % etter navnet).
+  - Grunnprisen ble sjekket 04.10.2026: Preem oppga anleggsdiesel til 16,28 kr/l uten mva (29.08.2026), og fiskefartøy betaler verken mineraloljeavgift eller CO2-avgift (Skatteetaten). Derfor står 14,50 kr/l, og bensinen på 23,90.
+  - Bunkringen fører det som faktisk er betalt (`f.paid`).
+  - Vær-appen viser diesel denne og forrige uke.
+
+- **Verftet og speed-boost (C1–C4):**
+  - **Lasterom** (`HOLDUP`, `S.boat.holdLv`): tre trinn, ×1,25, ×1,6 og ×2,0 av typens lasterom. Isrommet vokser likt (`applyVessel`). Prisen er 4, 7 og 12 % av båtens pris, og jobben `hold` tar 8, 16 og 32 timer.
+  - **Last og vekt** (`boatTons`, `boatTons0`, `loadF` i `03-simulation.js`): vekten er egenvekt + last + is + drivstoff + 90 kg per person, mot egenvekt + en fjerdedel av lasterommet + halv tank + én person. Toppfarten ganges med (D0/D)^0,22 for deplasementsbåter og ^0,5 for planende båter, mellom 0,55 og 1,08. Forbruket ganges med (D/D0)^(2/3).
+    - Skiffen full: −10 %. Sjarken full: −8 %.
+  - **Større motor** (`ENGUP`, `S.boat.engLv`, ikke påhengsmotor): +20 % og +40 % effekt. Prisen er 6 og 11 % av båtens pris, og jobben `eng` tar 12 og 24 timer.
+    - Farten følger kvadratroten av effekten for planende båter og kubikkroten for deplasementsbåter, med høyst +12 % (skrogfarten).
+    - `fuelK` × (1 + 0,4·(P−1)).
+  - **Begroing** (`foulHour`, `S.boat.foul`): vokser hver time i sjøen, 0,012 per døgn i juni–september og 0,004 ellers, og ×0,3 med `EQUIP.antigro` (18 000 kr, 6 t). Full begroing gir −15 % fart og +25 % drivstoff. Jobben `hull` («Skrogrens på slipp», 1 500 kr + 400 kr per meter, 6 t) nullstiller den.
+    - Ikke nøkkelen `clean`, som slettes ved oppstart.
+  - **Trim-appen** (`BOOSTS`, `S.boat.boost`, bare diesel og ikke påhengsmotor): justert dieselpumpe +10 %, ladeluftkjøling +8 % og økt turbotrykk +12 % effekt, med en tidel bedre akselerasjon hver.
+    - Til sammen gir det +10 % toppfart på en deplasementsbåt og +15 % på en planende båt.
+    - Kjøpet er i testmodus som haillen. Prisene (49, 59 og 79 kr) er plassholdere.
+    - **Effektene er vårt forslag:** Jonas skrev at han hadde oppgitt dem, men de står ikke i meldingene hans.
+
+- **Agn til line og teiner** (`BAITS` i `10-gear.js`):
+  - Faktorene per art på line- og teinefangsten:
+
+    | Agn | Pris | Faktorer |
+    |---|---|---|
+    | Makrell | 18 kr/kg (som før) | sei 1,4 · hyse, torsk og krabbe 1,0 · ellers 0,8 |
+    | Krabbe | 10 kr/kg | 1,0 på alt |
+    | Reke | 28 kr/kg | torsk 1,4 · hyse og sei 1,1 · ellers 0,8 |
+    | Sei | 12 kr/kg | kveite 1,6 · krabbe 1,2 · ellers 0,7 |
+    | Krill | 22 kr/kg | uer 1,8 · ellers 0,6 |
+
+  - Prisene er spillverdier, og faktorene følger Jonas' beskrivelse.
+  - **Beholdningen** er `pgear.bait`, gruppert etter slag (`baitOf`). Ei gammel lagring blir makrell, fordi teksten var «Sild og makrell».
+  - **Valgt slag** (`pgear.baitPref`) bestemmer hva egnebua og egningen bruker, og hva teinene tar.
+  - **Stampene husker agnet:** `lines[lk].bt` holder slag → stamper, og et lineset får `baitW`. Teineset får `bait`.
+  - **Egen sei og krabbe** kan tas fra lasten i havn før levering (`baitFromHold`). Seien teller på kvoten (`quotaState().sei`).
+    - **Antakelse, ikke bekreftet:** fangst til eget bruk skal føres på landingsseddelen etter landingsforskriften. Lovdata var sperret fra arbeidsmiljøet 04.10.2026, og søk ga ikke noe klart svar.
+  - Makrell finnes ikke som art i spillet ennå, så den kan bare kjøpes.
+- **Inn til kai og ut igjen** (`berthPath`, `berthBlocked`, `berthClear` i `07-harbours.js`):
+  - Et punkt er sperret når det er land i 25 m-masken eller ligger innenfor halv bredde av en bryggeboks (`PIERBOX`) eller en havneenhets kaiblokk.
+  - **Banen går** fra båten til et punkt 1,5 båtlengder akter for kaiplassen og en bredde ut fra kaia, og så langs kaia inn. Er det fritt, går den rett. Ellers søker den over maskens celler innenfor 1,5 km og strammer linja.
+  - **3D:** `moorStep` følger banen, glattet med `pathM`/`pathAt`. Ved avgang går båten baklengs ut fra kaia og så banen ut til havnepunktet (`DEP` i `updateBoat`), før følgeren tar over.
+  - **Test:** `harbourtest` sjekker banen inn til hver kaiplass for tre båttyper, fra havnepunktet og fra innseilingen.
+
 ## 6. Regelverk og kilder
 
 | Tema | Kilde | Hovedpunkter |
@@ -1683,7 +1759,7 @@ Jonas' valg: alle tre kystredskapene i samme runde, ståtid for line som avveiin
 
   | Rigg | Krever |
   |---|---|
-  | `juksa` | ingenting (håndjuksa, juksamaskin eller stang) |
+  | `juksa` | ingenting (håndjuksa eller juksamaskin) |
   | `line` | linehaler eller elektrisk haler |
   | `garn` | garnhaler |
   | `teiner` | teinehaler eller elektrisk haler |

@@ -42,7 +42,7 @@ function chartView(scale){
   const r = svg.getBoundingClientRect(), mr = svg.parentNode.getBoundingClientRect(); if (!r.width || !r.height) return null;
   const dpr = Math.min(2, window.devicePixelRatio || 1) * scale, W = Math.max(2, Math.round(r.width * dpr)), H = Math.max(2, Math.round(r.height * dpr));
   const hh = MAP_H / view.z, ww = hh * (r.width / r.height), x0 = view.cx - ww / 2, y0 = view.cy - hh / 2, k = hh / H, rd = Math.min(dpr, 1.5 * scale);
-  return {r, mr, dpr, W, H, hh, ww, x0, y0, k, kr:k * dpr / rd, kx:ww / W, ky:k, lv:chartLevel(hh), fish:chartMode() === 'fish', sd:safeDepth()};
+  return {r, mr, dpr, W, H, hh, ww, x0, y0, k, kr:k * dpr / rd, kx:ww / W, ky:k, lv:chartLevel(hh), fish:chartMode() === 'fish', night:chartMode() !== 'fish' && chartNight(), sd:safeDepth()};
 }
 function paintChart(scale){
   if (!DEPTH || !document.body.classList.contains('vplot')) return;
@@ -54,14 +54,14 @@ function paintChart(scale){
   // the packs under the view and half a view round it are asked for, each once; the chart is painted again when they come
   if (lv) chartWant(x0 - ww / 2, y0 - hh / 2, x0 + ww * 1.5, y0 + hh * 1.5);
   if (!lv) chartWhole(V);
-  else { const key = [V.kr.toPrecision(10), lv, V.fish, V.sd].join('|'); if (key !== CT.key){ CT.key = key; CT.tiles.clear(); CT.job = []; } }
+  else { const key = [V.kr.toPrecision(10), lv, V.fish, V.night, V.sd].join('|'); if (key !== CT.key){ CT.key = key; CT.tiles.clear(); CT.job = []; } }
   chartVectors(V);
   chartCompose(V, lv > 0, 40);
 }
 // dragged at the same zoom: the tiles kept are drawn where they now are, and the coast of the last paint shifted, until it is painted
 function chartPan(){
   const V0 = CT.v; if (!V0 || !V0.lv || !document.body.classList.contains('vplot')) return false;
-  const V = chartView(1); if (!V || V.k !== V0.k || V.W !== V0.W || V.H !== V0.H || V.lv !== V0.lv || V.fish !== V0.fish) return false;
+  const V = chartView(1); if (!V || V.k !== V0.k || V.W !== V0.W || V.H !== V0.H || V.lv !== V0.lv || V.fish !== V0.fish || V.night !== V0.night) return false;
   CT.vsh = [CT.vsh[0] + (V0.x0 - V.x0) / V.k, CT.vsh[1] + (V0.y0 - V.y0) / V.k]; CT.v = V; chartCompose(V, true, 6); return true;
 }
 // the whole country (level 0): coarse from the core, at most CHARTV.px samples, scaled up (no tiles: the view is quick)
@@ -76,7 +76,7 @@ function chartCompose(V, tiles, budget){
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.imageSmoothingEnabled = true;
   if (!tiles) ctx.drawImage(CT.whole, 0, 0, W, H);
   else {
-    ctx.fillStyle = V.fish ? '#05090d' : '#dde3e5'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = V.fish || V.night ? '#05090d' : '#dde3e5'; ctx.fillRect(0, 0, W, H);
     const TS = CT.TS, tw = TS * kr, i0 = Math.floor(x0 / tw), j0 = Math.floor(y0 / tw), i1 = Math.floor((x0 + W * k) / tw), j1 = Math.floor((y0 + H * k) / tw);
     const until = performance.now() + (budget || 0), cx = (i0 + i1) / 2, cy = (j0 + j1) / 2, need = [], X = i => Math.round((i * tw - x0) / k), Y = j => Math.round((j * tw - y0) / k);
     for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++){
@@ -132,7 +132,7 @@ function chartCame(){
 }
 // the coast, the graticule and the fjord line for the view, on their own canvas
 function chartVectors(V){
-  const {W, H, x0, y0, kx, ky, dpr, fish} = V;
+  const {W, H, x0, y0, kx, ky, dpr} = V, fish = V.fish || V.night;
   const cv = CT.vec || (CT.vec = document.createElement('canvas')); if (cv.width !== W) cv.width = W; if (cv.height !== H) cv.height = H; CT.vsh = [0, 0];
   const ctx = cv.getContext('2d'); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, H);
   chartCoast(ctx, x0, y0, kx, ky, W, H, dpr, fish);
@@ -148,9 +148,10 @@ function chartVectors(V){
 // than its 50 m cells) and the land mask (25 m): at level 2 as foreshore where the coast leaves it out (what the route check takes as
 // land), read between the cells so its edge is a smooth line a pixel wide rather than 25 m steps; at level 1 as land under the coast.
 function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){
-  const {lv, fish, sd} = V, LD = MAPD.L.depth, c = LD.c, X0 = LD.ix0, Y0 = LD.iy0, X1 = LD.ix0 + LD.nx - 1, Y1 = LD.iy0 + LD.ny - 1, D = (ix, iy) => rcell(LD, ix, iy);
+  const {lv, fish, night, sd} = V, LD = MAPD.L.depth, c = LD.c, X0 = LD.ix0, Y0 = LD.iy0, X1 = LD.ix0 + LD.nx - 1, Y1 = LD.iy0 + LD.ny - 1, D = (ix, iy) => rcell(LD, ix, iy);
   const s2 = sd > 2.5 ? Math.min(2, sd / 2) : -1;
-  const OFF = fish ? [5, 9, 13] : [221, 227, 229], WHITE = [249, 251, 252], U1 = [167, 203, 235], U2 = [134, 180, 223], SC = [59, 106, 165], FS = fish ? [46, 54, 40] : [204, 214, 172], LAND = fish ? [38, 43, 35] : [232, 215, 166];
+  // the night colours: dark sea in blues, dim land, as a chart plotter's night mode (the fishing chart is dark already)
+  const OFF = fish || night ? [5, 9, 13] : [221, 227, 229], WHITE = night ? [9, 20, 33] : [249, 251, 252], U1 = night ? [16, 38, 62] : [167, 203, 235], U2 = night ? [22, 52, 84] : [134, 180, 223], SC = night ? [74, 112, 150] : [59, 106, 165], FS = fish ? [46, 54, 40] : night ? [38, 42, 33] : [204, 214, 172], LAND = fish ? [38, 43, 35] : night ? [42, 38, 30] : [232, 215, 166], FAR = fish || night ? [42, 38, 30] : [224, 206, 150];
   const prev = new Float32Array(PW).fill(NaN), sh = 1 / (Math.max(pkx, 0.0005) * 10), smooth = lv > 0 && pkx < LD.c;
   const LM = MAPD.L.mask, lc = LM.c, pocket = lv === 2 ? pocketsIn(x0, y0, x0 + PW * pkx, y0 + PH * pky) : null, T = MAPD.man.tile, aa = Math.max(0.04, 0.5 * pkx / lc);
   let ltx = NaN, lty = NaN, lsim = false;
@@ -182,7 +183,7 @@ function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){
       const gx = clamp(x / c - 0.5, X0, X1 - 0.001), ix = Math.floor(gx), fx = gx - ix;
       let v, land = 0;
       if (!simAt(x, y) || !(x >= X0 * c && y >= Y0 * c && x < (X1 + 1) * c && y < (Y1 + 1) * c)){
-        const q = {x, y}; if (lv && isLandFar(q)){ put(o, [224, 206, 150]); prev[i] = NaN; left = NaN; continue; }
+        const q = {x, y}; if (lv && isLandFar(q)){ put(o, FAR); prev[i] = NaN; left = NaN; continue; }
         v = lv ? depthModel(q) : 15 + 220 * Math.pow(exposure(q), 1.6); }
       else try {
         if (lv === 2){ const gxm = x / lc - 0.5, gym = y / lc - 0.5, mx = Math.floor(gxm), my = Math.floor(gym), ax = gxm - mx, ay = gym - my;
@@ -196,7 +197,7 @@ function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){
         else v = (D(ix, iy) * (1 - fx) + D(ix + 1, iy) * fx) * (1 - fy) + (D(ix, iy + 1) * (1 - fx) + D(ix + 1, iy + 1) * fx) * fy;
       } catch (e){
         // a cell across the edge of a tile whose pack has not come (or has none): the depth model here, painted again when it comes
-        if (st) st.prov = true; land = 0; const q = {x, y}; if (isLandFar(q)){ put(o, [224, 206, 150]); prev[i] = NaN; left = NaN; continue; } v = depthModel(q);
+        if (st) st.prov = true; land = 0; const q = {x, y}; if (isLandFar(q)){ put(o, FAR); prev[i] = NaN; left = NaN; continue; } v = depthModel(q);
       }
       if (fish){
         const dxv = isNaN(left) ? 0 : v - left, dyv = isNaN(prev[i]) ? 0 : v - prev[i], hs = clamp(0.8 + (dxv + dyv) * sh * 0.004, 0.45, 1.25), pc = plotCol(Math.max(v, 0.5));
@@ -212,8 +213,10 @@ function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){
 }
 function scheduleChart(){ followChart(); clearTimeout(chartTimer); chartTimer = setTimeout(() => paintChart(1), 140); }
 window.addEventListener('resize', () => { if (document.body.classList.contains('vplot')) scheduleChart(); });
+const CHN = {v:false};   // the night colours the base was last drawn with (tick() draws it again when the sun changes them)
 function renderBase(){
-  const plot = chartMode() === 'fish'; svg.classList.toggle('plot', plot); svg.classList.toggle('nav', !plot);
+  // the night colours take the fishing chart's dark overlay (labels, ports, AIS)
+  const fishM = chartMode() === 'fish', night = !fishM && chartNight(), plot = fishM || night; svg.classList.toggle('plot', plot); svg.classList.toggle('nav', !plot); svg.classList.toggle('night', night); CHN.v = night;
   if (!CONT_D && DEPTH) CONT_D = decodeContours(); scheduleChart();
   const g = [], ns = ' vector-effect="non-scaling-stroke"';
   g.push('<rect x="' + (MAPB.x0 - 400) + '" y="' + (MAPB.y0 - 400) + '" width="' + (MAPB.x1 - MAPB.x0 + 800) + '" height="' + (MAPB.y1 - MAPB.y0 + 800) + '" class="offmap"/>');

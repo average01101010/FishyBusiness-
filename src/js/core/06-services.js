@@ -115,6 +115,9 @@ function opsStep(H){
 }
 function opsLanded(pid){
   if (!S.ops) return;
+  // the plant is closed: the boat waits at the quay until it opens (vesselStep asks again)
+  const pt = portById(pid); if (pt && pt.mottak && holdTotal() >= 0.5 && !mottakOpen(S.t / 60)){ if (S.boat.landWait !== pid) log('Mottaket i ' + pt.name + ' er stengt. Båten venter til det åpner ' + mottakWhen(S.t / 60, true) + '.', 'The plant in ' + pt.name + ' is closed. The boat waits until it opens ' + mottakWhen(S.t / 60, false) + '.'); S.boat.landWait = pid; return; }
+  S.boat.landWait = null;
   opsGearAfter();
   // the catch goes up with the crane; the report comes with the landing note
   if (startLanding(true)) return;
@@ -160,12 +163,15 @@ function finishJob(j){
     if (!equipFits(j.k, b.type)){ S.cash += E.price; log(E.name.no + ' passer ikke denne båten. Verkstedet betalte tilbake ' + kr(E.price) + '.', E.name.en + ' does not suit this vessel. The yard paid back ' + kr(E.price) + '.'); }
     else { if (E.multi) S.equip[j.k] = (S.equip[j.k] || 0) + 1; else S.equip[j.k] = true; applyVessel(); log('Montert: ' + E.name.no + '.', 'Fitted: ' + E.name.en + '.'); if (hooks.onEquip) hooks.onEquip(); } }
   else if (j.kind === 'repair'){ log('Skroget er reparert.', 'The hull is repaired.'); }
+  else if (j.kind === 'eng'){ b.engLv = j.lv; applyVessel(); log('Ny motor montert: ' + BOAT.hp + ' hk, ' + fmt(BOAT.vmax, 1) + ' knop.', 'New engine fitted: ' + BOAT.hp + ' hp, ' + fmt(BOAT.vmax, 1) + ' knots.'); }
+  else if (j.kind === 'hull'){ b.foul = 0; log('Skroget er renset på slipp.', 'The hull is cleaned on the slip.'); }
+  else if (j.kind === 'hold'){ b.holdLv = j.lv; applyVessel(); log('Lasterommet er bygd om: ' + fmt(BOAT.holdCap, 0) + ' kg.', 'The hold is rebuilt: ' + fmt(BOAT.holdCap, 0) + ' kg.'); }
   else if (gearJob(j)){}
   else if (j.kind === 'prep'){ S.prep = S.prep || {}; S.prep[j.k] = true; log('Ferdig: ' + PREP[j.k].no + '.', 'Done: ' + PREP[j.k].en + '.'); }
   msg(j.kind === 'prep' || j.kind === 'egn' || j.kind === 'mend' ? (S.lang === 'no' ? 'Kaia' : 'The quay') : 'Verkstedet', (j.no || '') + ' er ferdig.', (j.en || '') + ' is done.');
 }
 // hours at the yard to fit each piece of equipment; anything not listed takes three
-const FIT_H = {brovakt:2, vhf:2, ais:2, plotter:4, chirp:3, sonar:16, jukse:3, motor90:6, elhaler:3, linehaler:4, garnhaler:5, teinehaler:4};   // the sonar: on the slip for the hoist
+const FIT_H = {antigro:6, brovakt:2, vhf:2, ais:2, plotter:4, chirp:3, sonar:16, jukse:3, motor90:6, elhaler:3, linehaler:4, garnhaler:5, teinehaler:4};   // the sonar: on the slip for the hoist
 function fitHours(k){ return FIT_H[k] || 3; }
 // a job with no length would never finish and would keep the boat in port for good
 function jobOk(j){ if (!(j.h > 0)) j.h = j.kind === 'fit' ? fitHours(j.k) : 2; if (j.until != null && !Number.isFinite(j.until)) j.until = null; return j; }

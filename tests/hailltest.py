@@ -8,20 +8,24 @@ async def main():
         errs=[]; pg.on('pageerror', lambda e: errs.append(str(e)))
         await boot(pg)
         # luck effect on a skrei day, with and without luxury luck (same random seed impossible, so average several days)
-        eff = await pg.evaluate("""(()=>{ const stock0 = {...S.stock}; const run = (luckType) => { let tot = {torsk:0, all:0}; S.stock = {...stock0};
+        eff = await pg.evaluate("""(()=>{ const stock0 = {...S.stock}, cap0 = BOAT.holdCap, tub0 = BOAT.tubCap; BOAT.holdCap = 1e5; BOAT.tubCap = 1e5; const run = (luckType) => { let tot = {torsk:0, all:0}; S.stock = {...stock0};
             for (let k = 0; k < 6; k++){ S.t = Math.round((Date.UTC(2028, 2, 6 + k, 7) - EPOCH) / 6e4); S.haill = luckType ? {type:luckType, t0:S.t - 60} : null; S.hold = []; S.facc = {}; S.fnext = {}; S.boat.deckStop = false; S.boat.deckEnd = null;
-              S.boat.status = 'fishing'; S.boat.pos = {...GROUNDS[0].p}; S.boat.fishUntil = S.t + 240; S.boat.gear = true; S.equip.jukse = 0;
-              for (let i = 0; i < 240 && S.boat.status === 'fishing'; i++){ S.t++; fish(S.t / 60, 5, 0.5); deckMinute(); }
+              S.boat.status = 'fishing'; S.boat.pos = {...GROUNDS[0].p}; S.boat.fishUntil = S.t + 90; S.boat.gear = true; S.equip.jukse = 0;
+              for (let i = 0; i < 90 && S.boat.status === 'fishing'; i++){ S.t++; fish(S.t / 60, 5, 0.5); deckMinute(); }
               tot.torsk += S.hold.filter(x => x.sp === 'torsk').reduce((a, x) => a + x.kg, 0); tot.all += holdTotal(); } return {torsk:Math.round(tot.torsk), all:Math.round(tot.all)}; };
-          const r = {none:run(null), luksus:run('luksus'), kveit:run('kveit')};
-          S.haill = {type:'haill', t0:S.t}; const f = []; for (const d of [0, 1.9, 3, 4.5, 6, 7.2]){ S.haill.t0 = S.t - d * 1440; f.push(+haillF().toFixed(2)); } r.decay = f;
+          const r = {none:run(null), haill:run('haill'), luksus:run('luksus')}; BOAT.holdCap = cap0; BOAT.tubCap = tub0;
+          // the stages (04.10.2026): haill +100 % to 48 h, +50 % to 72 h, +25 % to 96 h; luksushaill +200 % for 48 h in front of that
+          const at = (type, hs) => hs.map(h => { S.haill = {type, t0:S.t - h * 60}; return haillBoost(); });
+          r.haillSteps = at('haill', [0, 47, 49, 71, 73, 95, 97]); r.luksusSteps = at('luksus', [0, 47, 49, 95, 97, 119, 121, 143, 145]);
           S.haill = null; S.stock = stock0; S.boat.status = 'port'; S.boat.port = 'husoy'; S.boat.pos = {...portById('husoy').p}; S.hold = []; return r; })()""")
         print('luck:', json.dumps(eff))
         # shop
         await pg.evaluate("S.tut=0; S.cash=50000; S.t = Math.round((Date.UTC(2028, 2, 6, 18) - EPOCH) / 6e4); PHONE.open('haill')"); await pg.wait_for_timeout(500)
         await pg.evaluate("document.querySelector('[data-pa=haillbuy][data-k=luksus]').click()"); await pg.wait_for_timeout(400)
         await pg.screenshot(path='h1.png')
-        print('after buy:', await pg.evaluate("JSON.stringify({h:S.haill && S.haill.type, f:haillF(), hud:document.querySelector('.haill') && document.querySelector('.haill').textContent})"))
+        print('after buy (in store, not on):', await pg.evaluate("JSON.stringify({h:S.haill && S.haill.type, inv:S.haillInv, btn:!!document.querySelector('[data-pa=haillon][data-k=luksus]')})"))
+        await pg.evaluate("document.querySelector('[data-pa=haillon][data-k=luksus]').click()"); await pg.wait_for_timeout(400)
+        print('after switch-on:', await pg.evaluate("JSON.stringify({h:S.haill && S.haill.type, boost:haillBoost(), inv:S.haillInv, hud:document.querySelector('.haill') && document.querySelector('.haill').textContent})"))
         await pg.evaluate("PHONE.close && PHONE.close(); renderActs()"); await pg.wait_for_timeout(300)
         print('pub button:', await pg.evaluate("DOCK.items('bygd').some(x => x.id === 'pub' && !x.off)"))
         await pg.evaluate("doAct({dataset:{act:'pub'}, disabled:false})"); await pg.wait_for_timeout(400)

@@ -17,7 +17,7 @@ def check(ok, what, extra=''):
 # the target is worked out afresh (the ring on screen slides there over 0.2 s)
 STATE = """JSON.stringify((() => { const st = tutOn() ? tutStep() : null, q = st && !$('tutRing').hidden ? tutRect(tutTip(st)).R : null;
   return {id:st ? st.id : null, tut:S.tut && S.tut.v ? 'v2' : S.tut, ring:q && {x:q.x + q.w / 2, y:q.y + q.h / 2, w:q.w}, ok:!$('tipOk').hidden && !$('tip').hidden, okText:$('tipOk').textContent,
-    tip:$('tip').hidden ? '' : $('tipText').textContent, rod:!!window.rodActive, st:S.boat.status, hold:Math.round(holdTotal()), busy:LEIA_BUSY, skip:!$('tipSkip').hidden}; })())"""
+    tip:$('tip').hidden ? '' : $('tipText').textContent, rod:!!window.jigActive, st:S.boat.status, hold:Math.round(holdTotal()), busy:LEIA_BUSY, skip:!$('tipSkip').hidden}; })())"""
 
 
 async def play(p, W, H, tag):
@@ -55,7 +55,7 @@ async def play(p, W, H, tag):
         stuck += 1
         if stuck and stuck % 30 == 0: print('    ', tag, 'still', sid, json.dumps({k: s[k] for k in ('ring', 'ok', 'okText', 'st', 'hold', 'rod')}), (await pg.evaluate("JSON.stringify({open:PHONE.isOpen(), app:PHONE.app, tip:tutStep() && tutTip(tutStep()).el ? tutTip(tutStep()).el.outerHTML.slice(0, 80) : null, wait:S.boat.tutWait, plan:!!S.plan})")), flush=True)
         if s['rod'] and sid != 'fish':
-            await pg.evaluate("ROD.stop(); renderActs()"); continue
+            await pg.evaluate("JIGG.stop(); renderActs()"); continue
         if sid == 'land' and s['st'] == 'port' and hold_at_land is None: hold_at_land = s['hold']
         if sid in ('route2',) and s['busy']:
             await pg.wait_for_timeout(300); continue

@@ -10,7 +10,7 @@ ok = lambda c: 'OK  ' if c else 'FEIL'
 TRIP = """((alone)=>{
   S.tut = 0;
   // a calm day, so the plan's weather check lets the skiff out
-  let t0 = null; for (let d = 0; d < 90 && t0 == null; d++){ const H0 = (Date.UTC(2028, 4, 1 + d, 5) - EPOCH) / 3.6e6; let ok = true; for (let k = 0; k <= 6; k++) if (windAt(H0 + k) > 20 || hsOpen(H0 + k) > BOAT.risk[1] * 0.8) ok = false; if (ok) t0 = H0; }
+  let t0 = null; for (let d = 0; d < 90 && t0 == null; d++){ const H0 = (Date.UTC(2028, 4, 1 + d, 5) - EPOCH) / 3.6e6; let ok = ![0, 6].includes(new Date(Date.UTC(2028, 4, 1 + d)).getUTCDay()); for (let k = 0; k <= 6; k++) if (windAt(H0 + k) > 20 || hsOpen(H0 + k) > BOAT.risk[1] * 0.8) ok = false; if (ok) t0 = H0; }   // a weekday: the plants are closed on Sundays outside the skrei season (04.10.2026)
   S.t = Math.round(t0 * 60) - 20; S.cash = 5e6; S.stock = initStock(); S.settings.autoW = 14; S.quota = null;
   const HP = portById('husoy'), W = q => ({x:q.x, y:q.y, port:null, fish:0});
   const rt = FLEET.find(f => f.home === 'husoy' && f.L < 15).rt[0].slice(1).map(q => ({x:q[0], y:q[1]}));

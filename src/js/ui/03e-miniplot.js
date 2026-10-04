@@ -7,7 +7,7 @@ function miniRadius(){ const tier = typeof heatTier === 'function' ? heatTier() 
 // the background (sea, land and coast) for twice the box round c: drawn again only when the boat has moved a fifth of the radius, the
 // box or the radius has changed, or every 20 s (packs come in); painting the coast twice a second slowed a software GPU a lot
 function miniBg(c, R, k, W, H, dpr){
-  const now = performance.now(), key = [R, W, H, dpr].join('|'), C = MINIP.c;
+  const night = chartNight(), now = performance.now(), key = [R, W, H, dpr, night].join('|'), C = MINIP.c;
   if (key === MINIP.key && C && dist(C, c) < R / 5 && now - MINIP.at < 20000) return;
   MINIP.key = key; MINIP.c = {x:c.x, y:c.y}; MINIP.at = now;
   const BW = W * 2, BH = H * 2, bg = MINIP.bg; if (bg.width !== BW) bg.width = BW; if (bg.height !== BH) bg.height = BH;
@@ -17,14 +17,14 @@ function miniBg(c, R, k, W, H, dpr){
   const d = MINIP.img.data, sx = BW / k / n, sy = BH / k / n;
   for (let j = 0; j < n; j++) for (let i = 0; i < n; i++){
     const q = {x:x0 + (i + 0.5) * sx, y:y0 + (j + 0.5) * sy}, o = (j * n + i) * 4; let cl;
-    if (q.x < MAPB.x0 || q.y < MAPB.y0 || q.x >= MAPB.x1 || q.y >= MAPB.y1) cl = [221, 227, 229];
-    else if (dok ? isLand(q) : isLandFar(q)) cl = [232, 215, 166];
-    else { const v = dok ? depthF(q) : depthModel(q); cl = v < s2 ? [134, 180, 223] : v < sd ? [167, 203, 235] : [249, 251, 252]; }
+    if (q.x < MAPB.x0 || q.y < MAPB.y0 || q.x >= MAPB.x1 || q.y >= MAPB.y1) cl = night ? [5, 9, 13] : [221, 227, 229];
+    else if (dok ? isLand(q) : isLandFar(q)) cl = night ? [42, 38, 30] : [232, 215, 166];
+    else { const v = dok ? depthF(q) : depthModel(q); cl = night ? (v < s2 ? [22, 52, 84] : v < sd ? [16, 38, 62] : [9, 20, 33]) : v < s2 ? [134, 180, 223] : v < sd ? [167, 203, 235] : [249, 251, 252]; }
     d[o] = cl[0]; d[o + 1] = cl[1]; d[o + 2] = cl[2]; d[o + 3] = 255;
   }
   off.getContext('2d').putImageData(MINIP.img, 0, 0);
   g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true; g.drawImage(off, 0, 0, BW, BH);
-  chartCoast(g, x0, y0, 1 / k, 1 / k, BW, BH, dpr, false);
+  chartCoast(g, x0, y0, 1 / k, 1 / k, BW, BH, dpr, night);
 }
 function miniPaint(){
   const el = MINIP.el; if (!el || !window.chartReady || !document.body.classList.contains('v3d') || !el.clientWidth || !MAPD.core || !MAPD.core.buf) return;
@@ -44,7 +44,7 @@ function miniPaint(){
   ctx.beginPath(); ctx.moveTo(0, -s * 1.3); ctx.lineTo(s * 0.7, s); ctx.lineTo(0, s * 0.55); ctx.lineTo(-s * 0.7, s); ctx.closePath();
   ctx.fillStyle = '#d02878'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5 * dpr; ctx.fill(); ctx.stroke(); ctx.restore();
   // north, and how far across
-  ctx.fillStyle = 'rgba(20,40,55,.8)'; ctx.font = '600 ' + Math.round(10 * dpr) + 'px sans-serif'; ctx.textAlign = 'right'; ctx.fillText('N ↑', W - 6 * dpr, 13 * dpr);
+  ctx.fillStyle = chartNight() ? 'rgba(200,215,225,.85)' : 'rgba(20,40,55,.8)'; ctx.font = '600 ' + Math.round(10 * dpr) + 'px sans-serif'; ctx.textAlign = 'right'; ctx.fillText('N ↑', W - 6 * dpr, 13 * dpr);
   ctx.textAlign = 'left'; ctx.fillText(fmt(2 * R / NM, 1) + ' nm', 6 * dpr, H - 6 * dpr);
 }
 if (MINIP.el){ MINIP.el.addEventListener('click', () => openPlotter()); setInterval(() => { if (!document.hidden) miniPaint(); }, 1000); }

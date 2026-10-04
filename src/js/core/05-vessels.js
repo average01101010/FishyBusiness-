@@ -192,7 +192,7 @@ function newState(){
   const home = PORTS[0];
   return {v:2, frame:'utm33', t:0, lastReal:Date.now(), mult:1, lang:'no', cash:15000,
     boat:{type:'skiff', pos:{x:home.p.x, y:home.p.y}, heading:0, v:0, fuel:60, ice:0, gear:false, status:'port', port:home.id, prev:null, engineUntil:0, fishUntil:null, engH:0, svcAt:0},
-    equip:{vhf:false, ais:false, plotter:false, chirp:false, sonar:false, jukse:0, motor90:false}, crew:[], loan:null, member:false, msgs:[], sales:[], order:null, owned:['skiff'], lic:null, fm:{n:0, last:-1, kr:0, b:false}, haill:null, pubE:-1e9, target:'mix', streak:null, clothes:{olje:0, varme:0}, orders:null, rep:{}, bors:null, cevt:null, workLog:[], stock:initStock(), marks:[], navrows:[], incidents:[], lore:{}, tattoos:{}, tat:{}, pgear:newPGear(), sets:[], gseq:0, ops:null, company:'', boatName:'', tut:0, jobs:[], prep:{}, tripBuff:null, draftDep:null,
+    equip:{vhf:false, ais:false, plotter:false, chirp:false, sonar:false, jukse:0, motor90:false}, crew:[], loan:null, member:false, msgs:[], sales:[], order:null, owned:['skiff'], lic:null, fm:{n:0, last:-1, kr:0, b:false}, haill:null, haillInv:{haill:0, luksus:0}, pubE:-1e9, target:'mix', streak:null, clothes:{olje:0, varme:0}, orders:null, rep:{}, bors:null, cevt:null, workLog:[], stock:initStock(), marks:[], navrows:[], incidents:[], lore:{}, tattoos:{}, tat:{}, pgear:newPGear(), sets:[], gseq:0, ops:null, company:'', boatName:'', tut:0, jobs:[], prep:{}, tripBuff:null, draftDep:null,
     plan:null, draft:[], draftSpeed:16, trail:[{x:home.p.x, y:home.p.y, port:home.id}],
     settings:{deckFirst:true, autoOn:true, autoW:11, catchByWork:true},
     hold:[], log:[], market:{}, stats:{revenue:0, costs:0, trips:0, kg:0}, lastSale:null, fishPlanH:3, lastIceWarn:-1e9, intro:false};
@@ -211,7 +211,7 @@ function nearestPort(p){ let best = null, bd = 1e9; for (const q of PORTS){ cons
 
 function step(){
   if (!S.fleet || !S.fleet.length) ensureFleet();
-  if (S.t % 60 === 0){ ordersTick(S.t / 60); borsTick(S.t / 60); eachVessel(() => crewTick(S.t / 60)); }
+  if (S.t % 60 === 0){ ordersTick(S.t / 60); borsTick(S.t / 60); eachVessel(() => { crewTick(S.t / 60); if (!(S.jobs && S.jobs[0] && S.jobs[0].kind === 'hull' && S.jobs[0].until)) foulHour(S.t / 60); }); }   // (no fouling while she is on the slip)
   S.t += 1; const H = S.t / 60;
   energyMinute();
   if (S.t % 60 === 0){ hourly(); eachVessel(navHour); eachVessel(loreHour); }
@@ -242,7 +242,7 @@ function vesselStep(H){
     else depart();
   }
   if (b.status === 'unmooring'){ if (S.t >= b.castUntil){ const pid = b.port; b.status = 'sailing'; b.port = null; helmCastDone(pid); } return; }
-  if (b.status === 'port') return;
+  if (b.status === 'port'){ if (b.landWait && b.port === b.landWait && mottakOpen(H)){ const pid = b.landWait; b.landWait = null; opsLanded(pid); } return; }
   const W = windAt(H), hs = hsAt(b.pos, H);
   if (['sailing', 'fishing', 'idle'].includes(b.status)) stabTick(H);
   if (b.status === 'engine' && S.t >= b.engineUntil){ b.status = b.prev || 'idle'; b.prev = null; log('Motoren startet igjen.', 'The engine is running again.'); }
@@ -312,15 +312,16 @@ function dock(pid){
   if (wasOps){ opsLanded(pid); if (typeof refreshAll === 'function') setTimeout(refreshAll, 0); }
 }
 // What the boat makes of the fish where it is, besides the fish itself: effort (people, jigs, machines, the team), weather and
-// sea, cold, hands busy on deck, and the rod. fish() uses it, and so does the heat map's «Her nå» line.
+// sea, cold, hands busy on deck, and your own share while you play the jig game. fish() uses it, and so does the heat map's «Her nå» line.
 function catchFactors(H, W, hs){
   // fishing feels the boat's motions (03c-stability.js): the wave height given, scaled by how she moves here
   const tb = S.tripBuff || {}, hw = hs * motionHere(H).f, wpen = Math.max(0.15, 1 - Math.max(0, hw - BOAT.risk[0] * 0.5) * 0.4 / (BOAT.risk[0] / 1.0) - Math.max(0, W - 8) * 0.03), eff = fishEffort() * (1 + (tb.jig ? 0.15 : 0) + (tb.reels && S.equip.jukse ? 0.1 : 0));
   // halibut is fished by hand on heavy gear: jigging machines do not help
   // the hands busy on deck are not at the rail: fishEffort counts only those at the Fiske station
   const keff = workTeam('fiske', 'juksa', 'fishing').sum;
-  const rod = !!(typeof window !== 'undefined' && window.rodActive), cold = coldPen(H, hs), deck = 1;
-  return {eff, keff, wpen, cold, deck, rod, pen:(1 - cold) * deck * (rod ? 0.5 : 1)};
+  // playing the jig game, your own share comes through your bites (ui/10-rod-acts.js) and is left out here
+  const jig = !!(typeof window !== 'undefined' && window.jigActive), share = jig ? jigMeShare() : 0, cold = coldPen(H, hs), deck = 1;
+  return {eff, keff, wpen, cold, deck, jig, pen:(1 - cold) * deck * (1 - share)};
 }
 function fish(H, W, hs){
   const b = S.boat;
@@ -342,10 +343,10 @@ function fish(H, W, hs){
   if (!rigJig()) return;   // rigged for passive gear: the boat has no jig out, and the fishing hours are spent waiting
   // vessels of 15 m or more may not fish inside the fjord line (høstingsforskriften): the boat waits
   if (BOAT.len >= 15 && insideFjord(b.pos)){ if ((S.fjordWarn || -1e9) < S.t - 720){ S.fjordWarn = S.t; log('Fartøy på 15 meter eller mer kan ikke fiske innenfor fjordlinja. Båten venter.', 'Vessels of 15 m or more may not fish inside the fjord line. The boat waits.'); } return; }
-  const {eff, keff, wpen, pen, rod} = catchFactors(H, W, hs);
+  const {eff, keff, wpen, pen, jig} = catchFactors(H, W, hs);
   if (!S.fsess || dist(S.fsess, b.pos) > 0.3) S.fsess = {x:b.pos.x, y:b.pos.y, t0:S.t, kg:0};
   let got = 0;
-  if (rod && meAboard()) S.deckMe = (S.deckMe || 0) + 1;   // fishing by hand counts as your own work on deck
+  if (jig && meAboard()) S.deckMe = (S.deckMe || 0) + 1;   // jigging by hand counts as your own work on deck
   let room = capHold() - tot, dsum = 0, tsum = 0, gotTop = 0;
   S.facc = S.facc || {}; S.fnext = S.fnext || {};
   for (const sp of SP){
@@ -454,7 +455,7 @@ function risk(W, hs){
       log('Motorstopp i grov sjø.', 'Engine failure in rough seas.');
     }
   } else if (r < 0.85){
-    if (b.gear && b.status === 'fishing' && !b.gop){ b.gear = false; log('Mistet juksa i sjøen. Du fisker videre med stang.', 'Lost the jig line overboard. You carry on with the rod.'); }
+    if (b.gear && b.status === 'fishing' && !b.gop){ b.gear = false; log('Mistet juksa i sjøen. Uten juksa fisker bare juksamaskinene. Kjøp ny juksa i butikken.', 'Lost the jig line overboard. Without a jig only the reels fish. Buy a new jig in the shop.'); if (typeof window !== 'undefined' && window.JIGG) window.JIGG.stop(); }
     else log('Kraftig rulling, men ingen skade.', 'Heavy rolling, but no damage.');
   } else {
     if (lvl === 2) rescue(false); else log('Kraftig rulling, men ingen skade.', 'Heavy rolling, but no damage.');

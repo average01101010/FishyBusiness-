@@ -15,8 +15,8 @@ window.PUBW = (() => {
   const cost = () => PUB_COST;
   // the odds come from the wheel itself, including the evenings you go home with nothing
   const pct = k => PUB_WHEEL.filter(w => w[0] === k).reduce((a, w) => a + w[1], 0) / tot * 100, pf = v => fmt(v, v % 1 ? 1 : 0) + ' %';
-  const odds = () => L('Sjansene per runde: tomhendt ' + pf(pct('tom')) + ', kveithaill ' + pf(pct('kveit')) + ', rykte ' + pf(pct('rykte')) + ', haill ' + pf(pct('haill')) + ', luksushaill ' + pf(pct('luksus')) + '. Én runde per kveld, 15:00–03:00.',
-    'Chances per round: empty-handed ' + pf(pct('tom')) + ', halibut luck ' + pf(pct('kveit')) + ', rumour ' + pf(pct('rykte')) + ', luck ' + pf(pct('haill')) + ', luxury luck ' + pf(pct('luksus')) + '. One round per evening, 15:00–03:00.');
+  const odds = () => L('Sjansene per runde: tomhendt ' + pf(pct('tom')) + ', rykte ' + pf(pct('rykte')) + ', haill ' + pf(pct('haill')) + ', luksushaill ' + pf(pct('luksus')) + '. Én runde per kveld, 15:00–03:00.',
+    'Chances per round: empty-handed ' + pf(pct('tom')) + ', rumour ' + pf(pct('rykte')) + ', luck ' + pf(pct('haill')) + ', luxury luck ' + pf(pct('luksus')) + '. One round per evening, 15:00–03:00.');
   function why(H){ if (S.boat.status !== 'port') return L('Puben er bare åpen når båten ligger i havn.', 'The pub is only open while the boat is in port.');
     if (!pubOpen(H)) return L('Puben åpner klokka 15.', 'The pub opens at 15:00.');
     if (S.pubE === pubEvening(H)) return L('Du har tatt kveldens runde. Neste runde i morgen kveld.', 'You have had tonight\'s round. Next round tomorrow evening.');
@@ -36,7 +36,7 @@ window.PUBW = (() => {
     // the round is paid, drawn and saved before the wheel turns, so closing the app mid-spin loses nothing
     S.cash -= c; S.stats.costs += c; S.pubE = pubEvening(H);
     let m;
-    if (seg.k === 'kveit' || seg.k === 'haill' || seg.k === 'luksus'){ giveHaill(seg.k, 'pub'); m = L('Du vant ', 'You won ') + HAILL[seg.k][S.lang].toLowerCase() + '! ' + HAILL[seg.k].d[S.lang]; msg('Puben', L('Du gikk hjem med ', 'You went home with ') + HAILL[seg.k][S.lang].toLowerCase() + '.', 'You went home with ' + HAILL[seg.k].en.toLowerCase() + '.'); }
+    if (seg.k === 'haill' || seg.k === 'luksus'){ giveHaill(seg.k, 'pub'); m = L('Du vant ', 'You won ') + HAILL[seg.k][S.lang].toLowerCase() + '! ' + L('Den ligger i Haill-appen til du aktiverer den.', 'It waits in the Luck app until you switch it on.'); msg('Puben', L('Du gikk hjem med ', 'You went home with ') + HAILL[seg.k][S.lang].toLowerCase() + '.', 'You went home with ' + HAILL[seg.k].en.toLowerCase() + '.'); }
     else if (seg.k === 'rykte'){ const cr = crewRumour(), t0 = cr || rumour()[0]; m = t0; msg('Puben', t0, t0); }
     else { const st = Math.random() < 0.6 ? lorePub() : null; m = st ? st[S.lang === 'no' ? 0 : 1] : EMPTY[Math.floor(Math.random() * EMPTY.length)][S.lang === 'no' ? 0 : 1]; }   // an old story instead of an empty evening
     S.pubLast = {e:S.pubE, k:seg.k, m}; spinning = true; save(); render(L('Hjulet snurrer …', 'The wheel is spinning …'));

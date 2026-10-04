@@ -33,7 +33,7 @@ async def run(p, w, h, tag, full):
     pg = await ctx.new_page(); cdp = await ctx.new_cdp_session(pg); errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)))
     await boot(pg)
-    await pg.evaluate("() => { S.settings.plotter = false; openPlotter(); renderBase(); }")
+    await pg.evaluate("() => { S.settings.plotter = false; S.settings.chartNight = 'day'; openPlotter(); renderBase(); }")   # the day colours (the night ones are checked on their own)
     await pg.wait_for_function("document.body.classList.contains('vplot') && !!MAPD.core && !!MAPD.core.buf", timeout=60000)
     print('--', tag, w, 'x', h)
     P = lambda la, lo: pg.evaluate("([a, b]) => P(a, b)", [la, lo])
@@ -67,6 +67,14 @@ async def run(p, w, h, tag, full):
             check(c[0] and near(c[0], LANDC) and not any(x and near(x, LANDC) for x in c[1:]), 'regionen: Senja er land, tre av feltene sjø (coast1 fra kartpakkene)', c)
             fj = ('Malangen', 'Andfjorden') if full else ()   # standing, the view is narrower and the fjords' names lie outside it
             check('Senja' in names and 'Finnsnes' in names and all(n in names for n in fj), 'regionen: Senja, fjordene og byene har navn', names)
+            # the night colours (the user's list 04.10.2026): the sea dark at night, light by day, and the overlay takes the dark look
+            nc = []
+            for m in ('night', 'day'):
+                await pg.evaluate("(m) => { S.settings.chartNight = m; renderBase(); }", m); await pg.evaluate(PAINT)
+                nc.append([await pg.evaluate(PIX, pts[1:]), await pg.evaluate("svg.classList.contains('plot')")])
+            await pg.evaluate("() => { S.settings.chartNight = 'day'; renderBase(); }"); await pg.evaluate(PAINT)
+            dark = lambda c: c is None or sum(c) < 200
+            check(all(dark(x) for x in nc[0][0]) and any(nc[0][0]) and nc[0][1] and not any(x and dark(x) for x in nc[1][0]) and not nc[1][1], 'nattmodus: sjøen er mørk om natta og lys om dagen, og merkene får den mørke stilen', nc)
             if full:
                 await pg.screenshot(path='chart_region.png')
         if name == 'havna':

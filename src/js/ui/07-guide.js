@@ -4,7 +4,11 @@ function renderClock(){
 }
 
 // the fishing chart needs the plotter on the vessel you follow; the wish is kept, so it comes back on a vessel that has one
+// the plant is closed: when it opens, and a button to wait for it (the clock runs on to the opening)
+function mottakShut(){ const no = S.lang === 'no'; return '<button class="btn" disabled>' + (no ? 'Mottaket er stengt · åpner ' : 'The plant is closed · opens ') + mottakWhen(S.t / 60, no) + '</button><button class="btn primary" data-act="waitopen">' + (no ? 'Vent til åpning' : 'Wait for opening') + '</button>'; }
 function chartMode(){ return S.settings.chart === 'fish' && S.equip.plotter ? 'fish' : 'nav'; }
+// the chart's night colours (the user's list 04.10.2026): on, off, or by the sun where the boat is (below 4 degrees under the horizon)
+function chartNight(){ const m = S.settings.chartNight || 'auto'; if (m !== 'auto') return m === 'night'; try { return sunAt(S.t / 60, S.boat.pos).el < -4; } catch (e){ return false; } }
 // the echo sounder and the sonar, on or off, and the species they show (only CHIRP and sonar tell the species apart)
 function echoSettings(){
   const L = (no, en) => S.lang === 'no' ? no : en, st = S.settings, tier = heatTier(), sp = heatSpecies();
@@ -18,6 +22,7 @@ function echoSettings(){
 function chartSettings(){
   const L = (no, en) => S.lang === 'no' ? no : en, fish = chartMode() === 'fish', sd = safeDepth();
   return '<div class="ecs"><div class="seg"><button type="button" data-act="cm" data-m="nav" class="' + (fish ? '' : 'on') + '">' + L('Navigasjon', 'Navigation') + '</button><button type="button" data-act="cm" data-m="fish" class="' + (fish ? 'on' : '') + '">' + L('Fiskekart', 'Fishing chart') + (S.equip.plotter ? '' : ' 🔒') + '</button></div>' +
+    (fish ? '' : '<div class="seg">' + [['auto', 'Auto', 'Auto'], ['day', 'Dag', 'Day'], ['night', 'Natt', 'Night']].map(([k, no, en]) => '<button type="button" data-act="cn" data-m="' + k + '" class="' + ((S.settings.chartNight || 'auto') === k ? 'on' : '') + '">' + L(no, en) + '</button>').join('') + '</div>') +
     '<div class="kv"><span>' + L('Sikker dybde', 'Safety depth') + '</span><span class="sdv"><button type="button" data-act="sd-">−</button><b>' + sd + ' m</b><button type="button" data-act="sd+">+</button></span></div>' +
     '<p class="note">' + (fish ? L('Havbunnen i farger med dybdekoter. Bruk den til å finne kanter og grunner med fisk.', 'The seabed in colour with depth contours. Use it to find edges and banks holding fish.') : L('Blått er grunnere enn sikker dybde. Båten stikker ', 'Blue is shallower than the safety depth. The boat draws ') + fmt(BOAT.draft, 1) + ' m.') + '</p>' + echoSettings() + '</div>';
 }
@@ -220,7 +225,7 @@ function panelPort(){
     const tot = holdTotal();
     if (b.shift || b.fueling) h.push('<p class="note">' + quayText(false) + '</p>');
     if (b.land) h.push('<p class="note"><b>' + (S.lang === 'no' ? 'Lossing: ' : 'Landing: ') + '</b>' + landText(false) + ' ' + (S.lang === 'no' ? 'Sluttseddelen kommer ca. kl. ' : 'The landing note comes at about ') + whenTxt(b.land.until) + '.</p>');
-    else if (p.mottak && tot > 0 && !b.shift && !b.fueling) btn.push('<button class="btn primary" data-act="sell">' + t('sell', fmt(tot, 0)) + '</button>');
+    else if (p.mottak && tot > 0 && !b.shift && !b.fueling) btn.push(mottakOpen(S.t / 60) ? '<button class="btn primary" data-act="sell">' + t('sell', fmt(tot, 0)) + '</button>' : mottakShut());
     if (p.fuel){ const need = BOAT.fuelCap - b.fuel; btn.push('<button class="btn" data-act="fuel"' + (need < 0.5 || portBusy(b) ? ' disabled' : '') + '>' + t('fill_fuel', fmt(need, 0), kr(need * fuelPrice())) + '</button>'); }
     { const kg = Math.min(50, shopIceRoom()); btn.push('<button class="btn" data-act="ice" data-kg="' + (kg || 50) + '"' + (kg < 1 || b.shift || b.land && berthKind(b) !== 'main' ? ' disabled' : '') + '>' + t('buy_ice', kg || 50, kr(Math.round((kg || 50) * shopIceKr()))) + '</button>'); }
     btn.push('<button class="btn' + (b.gear ? '' : ' primary') + '" data-act="gear">' + t('shop_open') + '</button>');
@@ -277,7 +282,7 @@ function landPage(){
   else if (b.shift || b.fueling) h.push('<p class="note">' + quayText(false) + '</p>');
   else if (!p.mottak) h.push('<p class="note">' + t('no_mottak') + '</p>');
   else if (tutOn() && p.id !== 'botnhamn') h.push('<p class="note">' + LN('På første tur leverer du i Botnhamn.', 'On the first trip you land in Botnhamn.') + '</p>');
-  else if (tot > 0.5) h.push('<div class="btns"><button class="btn primary" data-act="sell">' + t('sell', fmt(tot, 0)) + '</button></div>');
+  else if (tot > 0.5) h.push('<div class="btns">' + (mottakOpen(S.t / 60) ? '<button class="btn primary" data-act="sell">' + t('sell', fmt(tot, 0)) + '</button>' : mottakShut()) + '</div>');
   h.push('<h3>' + LN('Lasterom', 'Hold') + '</h3>' + panelHold());
   h.push(portSlip());
   return h.join('');

@@ -38,20 +38,46 @@ function newVesselObj(type, pid, lic){
   loreNewBoat(v.boatName);   // the yard lays a coin under the mast
   return v;
 }
+// ---- the yard's rebuilds, per boat (S.boat; the user's list 04.10.2026): a bigger hold in three steps, the last doubling it (more
+// boxes, a longer hold: the weight shows in her stability and speed), priced on the boat's price
+const HOLDUP = [{x:1.25, pc:0.04, h:8}, {x:1.6, pc:0.07, h:16}, {x:2.0, pc:0.12, h:32}];
+const holdX = b => b && b.holdLv ? HOLDUP[b.holdLv - 1].x : 1;
+const upPrice = pc => Math.max(5000, Math.round(VESSELS[S.boat.type || 'skiff'].price * pc / 1000) * 1000);
+// the engine: a bigger one from the yard in two steps (+20 % and +40 % power; inboard engines, the outboard skiff has the 90 hp
+// outboard instead), and the speed boosts sold in the Trim app (diesel engines; real money later, a test now). The power's gain in
+// speed: a planing hull its square root, a displacement hull its cube root but held under +12 % by its hull speed. The effects of the
+// boosts are our proposal (the user named them, not their effects): power +10 %, +8 % and +12 %, a tenth more acceleration each
+const ENGUP = [{p:0.2, pc:0.06, h:12}, {p:0.4, pc:0.11, h:24}];
+const BOOSTS = {pump:{p:0.10, nok:49, no:'Justert dieselpumpe', en:'Tuned injection pump'}, ic:{p:0.08, nok:59, no:'Ladeluftkjøling', en:'Charge air cooling'}, turbo:{p:0.12, nok:79, no:'Økt turbotrykk', en:'Higher boost pressure'}};
+const canBoost = V => !!(V && V.diesel && !V.outboard);
+function powerX(b){ const V = VESSELS[b.type || 'skiff']; let p = 1 + (b.engLv && !V.outboard ? ENGUP[b.engLv - 1].p : 0); if (canBoost(V)) for (const k in BOOSTS) if (b.boost && b.boost[k]) p *= 1 + BOOSTS[k].p; return p; }
+const speedOfPower = (P, planing) => planing ? Math.sqrt(P) : Math.min(1.12, Math.cbrt(P));
 function applyVessel(){
   const b = S.boat; Object.assign(BOAT, VESSELS[b.type || 'skiff']);
   for (const k in EQUIP) if (EQUIP[k].boost && S.equip && S.equip[k] && equipFits(k, b.type || 'skiff')) Object.assign(BOAT, EQUIP[k].boost);
+  const hx = holdX(b); BOAT.holdCap = Math.round(BOAT.holdCap * hx); BOAT.iceCap = Math.round(BOAT.iceCap * hx);
+  const P = powerX(b); if (P > 1){ const sx = speedOfPower(P, BOAT.planing), nb = Object.keys(BOOSTS).filter(k => b.boost && b.boost[k] && canBoost(BOAT)).length;
+    BOAT.vmax *= sx; BOAT.vcruise *= sx; BOAT.fuelK *= 1 + 0.4 * (P - 1); BOAT.accel *= 1 + 0.1 * nb + (b.engLv ? 0.3 * ENGUP[b.engLv - 1].p : 0); BOAT.hp = Math.round(BOAT.hp * P); }
   b.fuel = Math.min(b.fuel, BOAT.fuelCap); b.ice = Math.min(b.ice, BOAT.iceCap);
 }
-// fishing effort per person: a rod with one lure until you buy a hand jig (pilk and four fly hooks); an electric jigging
-// reel does about twice what a hand jig does, and one person tends up to three reels instead of jigging by hand
-const JIG = {rod:0.35, hand:1, machine:2.0, perPerson:3};
+// fishing effort per person: a hand jig (pilk and four fly hooks; there is no rod, and without a jig nobody fishes by hand); an
+// electric jigging reel does about twice what a hand jig does, and one person tends up to three reels instead of jigging by hand.
+// The hand jig and the reels are twice what they were (the user's test 04.10.2026: 350 kg in nine game hours was a long day for little money)
+const JIG = {hand:2, machine:4.0, perPerson:3};
 function effortOf(people, jk, hand){ return Math.max(0, people - Math.ceil(jk / JIG.perPerson)) * hand + jk * JIG.machine; }
 function fishEffort(){
   // the people at the rail: those whose chain has them fishing (as if the boat were jigging where it lies)
-  const hand = S.boat && S.boat.gear ? JIG.hand : JIG.rod, F = workTeam('fiske', 'juksa', 'fishing'), people = F.n, jk = Math.min(S.equip ? S.equip.jukse : 0, people * JIG.perPerson);
+  const hand = S.boat && S.boat.gear ? JIG.hand : 0, F = workTeam('fiske', 'juksa', 'fishing'), people = F.n, jk = Math.min(S.equip ? S.equip.jukse : 0, people * JIG.perPerson);
   if (S.plan && S.plan.ops && !meAboard()){ const sk = opsSkipper(); return effortOf(people, jk, hand) * (sk ? sk.skill : 0.8) * 0.9; }
   return effortOf(people, jk, hand) * F.eff;
+}
+// your own share of the effort when you jig by hand at the rail (the jig game takes it over, ui/10-rod-acts.js): 0 when you are not
+// aboard, have no hand jig, or tend the reels
+function jigMeShare(){
+  const b = S.boat; if (!b || !b.gear || !meAboard()) return 0;
+  const F = workTeam('fiske', 'juksa', 'fishing'), jk = Math.min(S.equip ? S.equip.jukse : 0, F.n * JIG.perPerson);
+  if (F.n - Math.ceil(jk / JIG.perPerson) < 1) return 0;
+  const tot = effortOf(F.n, jk, JIG.hand) * F.eff; return tot > 0 ? clamp(JIG.hand * meEff() / tot, 0, 1) : 0;
 }
 const GM = {E:1.05, A:1.0, B:0.85, X:0.6, V:0};
 
@@ -182,8 +208,22 @@ function auroraAt(H){ if (sunAt(H).el > -7) return 0; return clamp((0.5 - cloudA
 function riskLevel(W, hs){ const r = BOAT.risk; if (hs >= r[1] || W >= r[3]) return 2; if (hs >= r[0] || W >= r[2]) return 1; return 0; }
 
 // boat
-function fuelLph(v, W){ const base = BOAT.planing ? 1.0 + 0.03 * v * v + 3 * Math.exp(-(((v - BOAT.vmax * 0.42) / 3) ** 2)) : 1 + 0.1 * v * v + (v > BOAT.vmax * 0.9 ? (v - BOAT.vmax * 0.9) * 6 : 0); return base * BOAT.fuelK * (1 + 0.015 * W); }
-function speedCap(hs){ return BOAT.vmax * clamp(1 - (hs - 0.3) * BOAT.sea, 0.2, 1); }
+// ---- weight (the user's list 04.10.2026: «mer last og vekt betyr mindre fart ... viktig at ikke dette blir urealistisk»): what she
+// carries against what she is rated with (her own weight, half her fuel, a quarter of her hold and one person aboard). A displacement
+// hull's resistance at a speed goes with the weight to the 2/3, so at the same power the speed goes with (D0/D)^(2/9), about ^0.22
+// (+50 % weight: −9 %); a planing hull feels it more, ^0.5. The fuel at a speed goes with (D/D0)^(2/3)
+const FUEL_KG = d => d ? 0.84 : 0.74;   // kg a litre, diesel and petrol
+function boatTons(){ const b = S.boat, V = VESSELS[b.type] || VESSELS.skiff; return V.disp + (holdTotal() + (b.ice || 0) + (b.fuel || 0) * FUEL_KG(V.diesel) + 90 * Math.max(1, handsAboard())) / 1000; }
+function boatTons0(){ const V = VESSELS[S.boat.type] || VESSELS.skiff; return V.disp + (V.holdCap * 0.25 + V.fuelCap * 0.5 * FUEL_KG(V.diesel) + 90) / 1000; }
+function loadF(){ return clamp(Math.pow(boatTons0() / Math.max(0.1, boatTons()), BOAT.planing ? 0.5 : 0.22), 0.55, 1.08); }
+// ---- fouling: weed and barnacles on the hull (S.boat.foul, 0 to 1) slow her up to 15 % and cost up to 25 % more fuel; it grows in
+// the sea about three times as fast in summer (June to September) as in winter (full after about three summer months), slowed to 30 %
+// by an antifouling coat (EQUIP.antigro); «Skrogrens» on the slip (the yard's job 'hull') takes it off. The old «Rengjort bunn» (S.clean)
+// was a different thing and is gone
+function foulHour(H){ const b = S.boat, m = gDate(H).getUTCMonth(), r = (m >= 5 && m <= 8 ? 0.012 : 0.004) / 24 * (S.equip && S.equip.antigro ? 0.3 : 1); b.foul = Math.min(1, (b.foul || 0) + r); }
+const foulSpeed = () => 1 - 0.15 * ((S.boat && S.boat.foul) || 0), foulFuel = () => 1 + 0.25 * ((S.boat && S.boat.foul) || 0);
+function fuelLph(v, W){ const base = BOAT.planing ? 1.0 + 0.03 * v * v + 3 * Math.exp(-(((v - BOAT.vmax * 0.42) / 3) ** 2)) : 1 + 0.1 * v * v + (v > BOAT.vmax * 0.9 ? (v - BOAT.vmax * 0.9) * 6 : 0); return base * BOAT.fuelK * (1 + 0.015 * W) * Math.pow(boatTons() / boatTons0(), 2 / 3) * foulFuel(); }
+function speedCap(hs){ return BOAT.vmax * clamp(1 - (hs - 0.3) * BOAT.sea, 0.2, 1) * loadF() * foulSpeed(); }
 
 // fish
 function noise2(x, y, s){
@@ -246,7 +286,7 @@ function targetF(sp, H){
   const cur = Math.abs(tideH(H + 0.5) - tideH(H - 0.5)); return 9 * (1.4 - 0.8 * clamp(cur / 0.35, 0, 1));
 }
 function uerOpen(H){ const m = gDate(H).getUTCMonth(); return m >= 5 && m <= 7; }
-// How much fish of a species there is at a point and hour: 30 × density is kg an hour for one person with a hand jig.
+// How much fish of a species there is at a point and hour: 30 × density × effort is kg an hour (one person with a hand jig is effort 2).
 // It is split in three so the echo-sounder heat map can share the work between species: what the place gives (denPlace, once
 // per point), what the hour gives (denTime, once per hour), and the species' own sum (denSp). density() gives the same numbers.
 function denPlace(p){
@@ -433,20 +473,27 @@ function codLimitNow(H){ const l = codLimits(); return codOpen(H) ? l.max : l.gu
 function ffPct(H){ const y = yearH(H), d = doyH(H), day = (m, dd) => Math.floor((Date.UTC(y, m - 1, dd) - Date.UTC(y, 0, 1)) / 864e5);
   return d < day(6, 29) ? 0 : d < day(9, 15) ? 0.2 : d < day(10, 13) ? 0.3 : d < day(12, 15) ? 0.4 : 0.1; }
 // ---- haill: luck from the quay. Fresh goods: full effect for two days, fading to nothing on day seven. Sold for real money only (test mode now) or won at the pub. ----
+// Two kinds (the user's list 04.10.2026), bought (for real money; a test now) or won at the pub, and kept in a store until you switch one
+// on yourself: never by itself. Haill is fresh the first 48 hours (+100 % luck on every species), then «mellomhaill» to 72 hours
+// (+50 %) and «gammelhaill» to 96 hours (+25 %), gone after that. Luksushaill puts 48 hours at +200 % in front (gone after 144 hours).
+// The luck multiplies what every gear catches (the jig, line, nets and pots). The halibut luck is gone.
 const HAILL = {
-  kveit:{no:'Kveithaill', en:'Halibut luck', nok:19, d:{no:'Tre ganger så stor sjanse for kveite når du fisker etter kveite, og litt mer kveite ved vanlig fiske.', en:'Three times the chance of halibut when you fish for halibut, and a little more halibut in ordinary fishing.'}},
-  haill:{no:'Haill', en:'Luck', nok:29, d:{no:'10 % bedre fiskelykke på alle arter.', en:'10% better luck on all species.'}},
-  luksus:{no:'Luksushaill', en:'Luxury luck', nok:59, d:{no:'20 % bedre fiskelykke på alle arter og 35 % bedre på torsk og skrei.', en:'20% better luck on all species and 35% better on cod and skrei.'}}
+  haill:{no:'Haill', en:'Luck', nok:29, steps:[[48, 1], [72, 0.5], [96, 0.25]], d:{no:'Fersk haill gir +100 % fiskelykke på alle arter de første 48 timene. Så blir den mellomhaill (+50 %) til 72 timer og gammelhaill (+25 %) til 96 timer.', en:'Fresh luck gives +100% luck on every species for the first 48 hours. Then it is middle luck (+50%) to 72 hours and old luck (+25%) to 96 hours.'}},
+  luksus:{no:'Luksushaill', en:'Luxury luck', nok:59, steps:[[48, 2], [96, 1], [120, 0.5], [144, 0.25]], d:{no:'Eksklusiv: +200 % fiskelykke de første 48 timene, så fersk haill (+100 %) i 48 timer, mellomhaill og gammelhaill. Borte etter 144 timer.', en:'Exclusive: +200% luck for the first 48 hours, then fresh luck (+100%) for 48 hours, middle and old luck. Gone after 144 hours.'}}
 };
-function haillF(){ const h = S.haill; if (!h) return 0; const d = (S.t - h.t0) / 1440; return d < 2 ? 1 : d >= 7 ? 0 : 1 - (d - 2) / 5; }
-function luck(sp){ const h = S.haill, f = haillF(); if (!h || f <= 0) return 1;
-  if (h.type === 'kveit') return sp !== 'kveite' ? 1 : S.target === 'kveite' ? 1 + 2 * f : 1 + 0.5 * f;
-  if (h.type === 'haill') return 1 + 0.1 * f;
-  return 1 + (sp === 'torsk' ? 0.35 : 0.2) * f; }
-function giveHaill(type, how){ S.haill = {type, t0:S.t, how}; log('Ny ' + HAILL[type].no.toLowerCase() + ' om bord.', 'New ' + HAILL[type].en.toLowerCase() + ' aboard.'); }
+const HAILL_STAGE = [[2, 'Luksushaill', 'Luxury luck'], [1, 'Fersk haill', 'Fresh luck'], [0.5, 'Mellomhaill', 'Middle luck'], [0.25, 'Gammelhaill', 'Old luck']];
+const haillAge = () => S.haill ? (S.t - S.haill.t0) / 60 : 1e9;   // hours since it was switched on
+function haillBoost(){ const h = S.haill, X = h && HAILL[h.type]; if (!X) return 0; const a = haillAge(); for (const [t, v] of X.steps) if (a < t) return v; return 0; }
+function haillLeft(){ const h = S.haill, X = h && HAILL[h.type]; return X ? Math.max(0, X.steps[X.steps.length - 1][0] - haillAge()) : 0; }   // hours till it is gone
+function haillStage(){ const v = haillBoost(), s = HAILL_STAGE.find(x => x[0] === v); return s ? {v, no:s[1], en:s[2]} : null; }
+function haillF(){ return haillBoost() > 0 ? 1 : 0; }   // luck aboard or not
+function luck(sp){ return 1 + haillBoost(); }
+// a purchase or a pub prize goes into the store; switching one on takes it from there (and replaces the one aboard)
+function giveHaill(type, how){ const inv = S.haillInv || (S.haillInv = {haill:0, luksus:0}); inv[type] = (inv[type] || 0) + 1; log('Ny ' + HAILL[type].no.toLowerCase() + ' i beholdningen. Aktiver den i Haill-appen når du vil.', 'New ' + HAILL[type].en.toLowerCase() + ' in store. Switch it on in the Luck app when you like.'); }
+function useHaill(type){ const inv = S.haillInv || {}; if (!(inv[type] > 0)) return false; inv[type]--; S.haill = {type, t0:S.t, how:'inv'}; log(HAILL[type].no + ' er aktivert.', HAILL[type].en + ' is switched on.'); return true; }
 // the pub: one round per evening between 15:00 and 03:00, NOK 1000
 const PUB_COST = 1000;
-const PUB_WHEEL = [['tom', 18], ['kveit', 18], ['tom', 17], ['rykte', 20], ['haill', 7.5], ['tom', 18], ['luksus', 1.5]];
+const PUB_WHEEL = [['tom', 20], ['haill', 6], ['tom', 20], ['rykte', 25], ['haill', 6], ['tom', 20], ['luksus', 3]];   // the halibut luck is gone (04.10.2026)
 // game hour 0 is 06:00 on the clock (EPOCH), so an evening that opens at 15:00 starts at game hour 9 + 24·n
 const EPOCH_HR = new Date(EPOCH).getUTCHours();
 function pubEvening(H){ return Math.floor((H + EPOCH_HR - 15) / 24); }

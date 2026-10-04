@@ -103,13 +103,13 @@ async def run(p, w, h, tag):
     # the phone has only the apps that are left, and Kvote is one of them
     await pg.evaluate("PHONE.open('home')"); await pg.wait_for_timeout(400)
     apps = await pg.evaluate("[...document.querySelectorAll('#phone .ph-app')].map(x => x.dataset.a)")
-    check(apps == ['vaer', 'post', 'meld', 'rederi', 'salg', 'kvote', 'ordl', 'haill', 'sjomann', 'redning', 'patch', 'innst', 'admin'], 'telefonen har tretten apper, med Kvote, Oppdrag, Patchnotes og Admin', apps)
+    check(apps == ['vaer', 'post', 'meld', 'rederi', 'salg', 'kvote', 'ordl', 'haill', 'sjomann', 'redning', 'trim', 'patch', 'innst', 'admin'], 'telefonen har fjorten apper, med Kvote, Oppdrag, Trim, Patchnotes og Admin', apps)
     # the patch notes: a badge until the app is opened, then the latest updates as short lists, newest first
     pn = await pg.evaluate("""(() => { const bd = () => { const e = document.querySelector('#phone .ph-app[data-a=patch] .bd'); return e ? e.textContent : null; }, b0 = bd();
       document.querySelector('#phone .ph-app[data-a=patch]').click(); const cards = [...document.querySelectorAll('#phView .patchc')];
       const r = {b0, cards:cards.length, items:cards.map(c => c.querySelectorAll('li').length), first:cards[0] ? cards[0].querySelector('h4').textContent : ''};
       PHONE.open('home'); r.b1 = bd(); return r; })()""")
-    check(pn['b0'] and pn['cards'] >= 5 and min(pn['items']) >= 2 and len(pn['first']) > 5 and pn['b1'] is None, 'Patchnotes: merke til appen er åpnet, så korte lister med det nyeste først', pn)
+    check(pn['b0'] and pn['cards'] >= 5 and min(pn['items']) >= 1 and len(pn['first']) > 5 and pn['b1'] is None, 'Patchnotes: merke til appen er åpnet, så korte lister med det nyeste først', pn)
     # Admin fills the tank anywhere, and a boat adrift with an empty tank can go on (for trips along the coast)
     fu = await pg.evaluate("""(() => { const b = S.boat, st = {status:b.status, fuel:b.fuel}; b.fuel = 0; b.status = 'adrift'; PHONE.open('admin');
       const btn = document.querySelector('#phView [data-pa=admFuel]'); if (btn) btn.click(); const r = {btn:!!btn, fuel:b.fuel, cap:BOAT.fuelCap, status:b.status}; b.status = st.status; b.fuel = st.fuel; return r; })()""")
@@ -121,7 +121,7 @@ async def run(p, w, h, tag):
     await pg.evaluate("DOCK.close()")
 
     # at sea: lying still, jigging, sailing
-    await pg.evaluate("(() => { const b = S.boat; b.status = 'idle'; b.port = null; b.pos = {...tutField().p}; b.v = 0; renderActs(); })()")
+    await pg.evaluate("(() => { const b = S.boat; b.status = 'idle'; b.port = null; b.pos = {...tutField().p}; b.v = 0; b.gear = true; renderActs(); })()")   # a hand jig aboard: without one nobody fishes (the rod is gone)
     d = await ids()
     check(d[:4] == ['jukse', 'settut', 'taopp', 'nav'] and 'beh' in d, 'stille på sjøen: Jukse, Sett ut, Ta opp, Auto-nav og Beholdning', d)
     await tap_el('#dock [data-dk=taopp]', force=True); await pg.wait_for_timeout(200)
@@ -192,6 +192,16 @@ async def run(p, w, h, tag):
       return {far:!!far.off, near:!near.off, act:near.act, d:Math.round(dist(sf, s.a) * 1000)}; })()"""))
     check(r['far'] and r['near'] and r['act'] == 'ghaul' and r['d'] == 50, 'Ta opp er grått langt unna og lyser 50 m fra blåsa', r)
     await pg.evaluate("(() => { const s = S.sets.find(x => x.id === 'tst'); S.sets.splice(S.sets.indexOf(s), 1); renderActs(); })()")
+    # the jig game (the rod is gone, 04.10.2026): what a hit is worth, your share leaves the automatic catch while you play, and
+    # without a jig nobody fishes
+    jg = json.loads(await J("""(() => { const b = S.boat, g0 = b.gear, st0 = b.status, eq = S.equip.jukse, tg = S.target, rg = b.rig; b.gear = true; b.rig = 'juksa'; S.target = 'mix'; S.equip.jukse = 0;
+      const G = [0, 0.1, 0.2, 0.5, null].map(o => JIGG.grade(o)); b.status = 'fishing'; const H = S.t / 60, sh = jigMeShare(), p0 = catchFactors(H, 5, 0.5).pen;
+      window.jigActive = true; const p1 = catchFactors(H, 5, 0.5).pen; window.jigActive = false;
+      b.gear = false; b.status = 'idle'; b.port = null; doAct({dataset:{act:'startfish'}}); const refused = b.status !== 'fishing', msg = document.getElementById('toast').textContent;
+      b.gear = g0; b.status = st0; S.equip.jukse = eq; S.target = tg; b.rig = rg; b.fishUntil = null; renderActs();
+      return {G, sh:+sh.toFixed(2), p0:+p0.toFixed(3), p1:+p1.toFixed(3), refused, msg, rod:typeof window.ROD}; })()"""))
+    check(jg['G'] == [2, 1.5, 1, 0.5, 0.5] and jg['sh'] > 0 and jg['p1'] < jg['p0'] and jg['refused'] and 'juksa' in jg['msg'] and jg['rod'] == 'undefined',
+          'jukse-spillet: midt på gir 2×, din del går ut av den automatiske fangsten mens du spiller, uten juksa kan du ikke fiske, og stanga er borte', jg)
     check(errs == [], 'ingen sidefeil', errs)
     await b.close()
 

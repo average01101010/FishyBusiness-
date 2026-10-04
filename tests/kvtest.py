@@ -14,7 +14,7 @@ async def main():
               for (let i = 0; i < 480 && S.boat.status === 'fishing'; i++){ S.t++; fish(S.t / 60, 5, 0.5); }
               for (const x of S.hold){ tot[x.sp] = (tot[x.sp] || 0) + x.kg; if (x.sp === 'kveite') n += x.n; kr += x.kg * clsPrice(port, x.sp, x.cls, S.t / 60, true); } }
             for (const k in tot) tot[k] = Math.round(tot[k]); return {kg:tot, kveiteN:n, krPerDay:Math.round(kr / 8), released:(S.stats.released || 0) - rel0}; };
-          return {sep_kveite:run('kveite', null, 2, 8), sep_kveite_haill:run('kveite', 'kveit', 2, 8), oct_kveite_g0:run('kveite', null, 0, 9)}; })()""")
+          return {sep_kveite:run('kveite', null, 2, 8), sep_kveite_haill:run('kveite', 'haill', 2, 8), oct_kveite_g0:run('kveite', null, 0, 9)}; })()""")
         for k,v in r.items(): print(k, json.dumps(v, ensure_ascii=False))
         print('errors:', errs[:3]); await b.close()
 asyncio.run(main())
