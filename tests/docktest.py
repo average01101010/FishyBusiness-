@@ -103,7 +103,13 @@ async def run(p, w, h, tag):
     # the phone has only the apps that are left, and Kvote is one of them
     await pg.evaluate("PHONE.open('home')"); await pg.wait_for_timeout(400)
     apps = await pg.evaluate("[...document.querySelectorAll('#phone .ph-app')].map(x => x.dataset.a)")
-    check(apps == ['vaer', 'post', 'meld', 'rederi', 'salg', 'kvote', 'ordl', 'haill', 'sjomann', 'redning', 'innst', 'admin'], 'telefonen har tolv apper, med Kvote, Oppdrag og Admin', apps)
+    check(apps == ['vaer', 'post', 'meld', 'rederi', 'salg', 'kvote', 'ordl', 'haill', 'sjomann', 'redning', 'patch', 'innst', 'admin'], 'telefonen har tretten apper, med Kvote, Oppdrag, Patchnotes og Admin', apps)
+    # the patch notes: a badge until the app is opened, then the latest updates as short lists, newest first
+    pn = await pg.evaluate("""(() => { const bd = () => { const e = document.querySelector('#phone .ph-app[data-a=patch] .bd'); return e ? e.textContent : null; }, b0 = bd();
+      document.querySelector('#phone .ph-app[data-a=patch]').click(); const cards = [...document.querySelectorAll('#phView .patchc')];
+      const r = {b0, cards:cards.length, items:cards.map(c => c.querySelectorAll('li').length), first:cards[0] ? cards[0].querySelector('h4').textContent : ''};
+      PHONE.open('home'); r.b1 = bd(); return r; })()""")
+    check(pn['b0'] and pn['cards'] >= 5 and min(pn['items']) >= 2 and 'kysten' in pn['first'] and pn['b1'] is None, 'Patchnotes: merke til appen er åpnet, så korte lister med det nyeste først', pn)
     # Admin fills the tank anywhere, and a boat adrift with an empty tank can go on (for trips along the coast)
     fu = await pg.evaluate("""(() => { const b = S.boat, st = {status:b.status, fuel:b.fuel}; b.fuel = 0; b.status = 'adrift'; PHONE.open('admin');
       const btn = document.querySelector('#phView [data-pa=admFuel]'); if (btn) btn.click(); const r = {btn:!!btn, fuel:b.fuel, cap:BOAT.fuelCap, status:b.status}; b.status = st.status; b.fuel = st.fuel; return r; })()""")

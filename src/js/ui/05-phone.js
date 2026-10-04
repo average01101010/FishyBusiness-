@@ -26,9 +26,10 @@ const PHONE = (() => {
     sjomann:SVG('<circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.9 2.9M15.5 15.5l2.9 2.9M5.6 18.4l2.9-2.9M15.5 8.5l2.9-2.9"/>'),
     ordl:SVG('<path d="M8.5 3.5h7v3h-7z"/><path d="M8 5H5v16h14V5h-3"/><path d="M8 11l1.5 1.5L12 10M8 16l1.5 1.5L12 15M14 11h3M14 16h3"/>'),
     kvote:SVG('<path d="M12 3a9 9 0 1 0 9 9h-9z"/><path d="M15 2.6A9 9 0 0 1 21.4 9H15z"/>'),
+    patch:SVG('<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 12h7M9 15.5h7M9 19h4"/>'),
     innst:SVG('<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>'),
     admin:SVG('<path d="M14.5 6.5a4 4 0 0 0 5 5L12 19a2.1 2.1 0 0 1-3-3l7.5-7.5"/><path d="M14.5 6.5L17 4l3 3-2.5 2.5"/><path d="M5 3l3 3M3 5l3 3"/>')};
-  const APPS = [['vaer', 'Vær', 'Weather', '#2f7fd0'], ['post', 'Kystposten', 'Coast Post', '#b8402f'], ['meld', 'Meldinger', 'Messages', '#29a36a'], ['rederi', 'Rederi', 'Company', '#1f4e79'], ['salg', 'Salgslaget', 'Sales', '#1e8c6e'], ['kvote', 'Kvote', 'Quota', '#8a6a1c'], ['ordl', 'Oppdrag', 'Orders', '#2e7d4f'], ['haill', 'Haill', 'Luck', '#c9a227'], ['sjomann', 'Sjømann', 'Seaman', '#23506b'], ['redning', 'Redning', 'Rescue', '#e0562b'], ['innst', 'Innstillinger', 'Settings', '#4a5560'], ['admin', 'Admin', 'Admin', '#7a2e8f']];
+  const APPS = [['vaer', 'Vær', 'Weather', '#2f7fd0'], ['post', 'Kystposten', 'Coast Post', '#b8402f'], ['meld', 'Meldinger', 'Messages', '#29a36a'], ['rederi', 'Rederi', 'Company', '#1f4e79'], ['salg', 'Salgslaget', 'Sales', '#1e8c6e'], ['kvote', 'Kvote', 'Quota', '#8a6a1c'], ['ordl', 'Oppdrag', 'Orders', '#2e7d4f'], ['haill', 'Haill', 'Luck', '#c9a227'], ['sjomann', 'Sjømann', 'Seaman', '#23506b'], ['redning', 'Redning', 'Rescue', '#e0562b'], ['patch', 'Patchnotes', 'Patch notes', '#5a4fa3'], ['innst', 'Innstillinger', 'Settings', '#4a5560'], ['admin', 'Admin', 'Admin', '#7a2e8f']];
   const unread = () => S.msgs.filter(m => !m.read).length;
   function setBadge(){ const n = unread(); for (const bd of [badge, $('phoneBadge2')]){ bd.hidden = !n; bd.textContent = n; } }
   // --- workshop: service, fitting and getting the gear ready, one job after the other while the boat is in port
@@ -199,9 +200,9 @@ const PHONE = (() => {
     a.textContent = hm(H); d.textContent = dayStr(H); w1.textContent = dirName(windDir(H)) + ' ' + fmt(windAt(H), 0) + ' m/s · ' + fmt(Math.round(airTemp(H)) || 0, 0) + ' °C'; w2.textContent = kr(S.cash);
   }
   let shown = '';
-  function render(){ status(); setBadge(); if (!isOpen) return; const key = app + '|' + (sub[app] || ''), y = key === shown ? view.scrollTop : 0; view.innerHTML = app === 'home' ? home() : shell(app); shown = key; view.scrollTop = y; }
+  function render(){ status(); setBadge(); if (!isOpen) return; if (app === 'patch' && S.settings.patchSeen !== PATCH[0][0]){ S.settings.patchLast = S.settings.patchSeen; S.settings.patchSeen = PATCH[0][0]; } const key = app + '|' + (sub[app] || ''), y = key === shown ? view.scrollTop : 0; view.innerHTML = app === 'home' ? home() : shell(app); shown = key; view.scrollTop = y; }
   // every page by name: the phone apps, and the pages that open in the dock's drawer instead (DRAWER)
-  const PAGES = () => ({vaer, post, salg, kvote, redning, rederi, meld, haill, logg, sjomann, innst, admin,
+  const PAGES = () => ({vaer, post, salg, kvote, redning, rederi, meld, haill, logg, sjomann, patch, innst, admin,
     ordl, rigg, arbeid:() => WORK.page(), fiske, fartoy:() => fartoy('marked'), utstyr, redskap, mannskap, bors, bank, verksted, havn, last, lever, is:isApp, agn, oppdrag, beholdning});
   function shell(a){ const d = APPS.find(x => x[0] === a) || [a, a, a, '#28507f'], f = PAGES()[a]; return '<div class="ph-appv' + (a === 'post' ? ' ph-paper' : '') + '"><div class="ph-top" style="background:' + d[3] + '"><span class="ic">' + (IC[a] || '') + '</span>' + L(d[1], d[2]) + '</div>' + (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) + '</div>'; }
   // a page for the drawer, and an action tapped there: it runs as if that page were the open app, and says which page shows next
@@ -212,12 +213,49 @@ const PHONE = (() => {
     if (done){ save(); renderHud(); renderClock(); panelDirty = true; render(); }
     return cur;
   }
+  // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
+  const PATCH = [
+    ['p5', '04.10.2026', 'Fiskebåter langs hele kysten', 'Fishing boats along the whole coast', [
+      ['Havnene langs kysten har sin egen flåte. Du ser båtene innenfor AIS-rekkevidden (15 km).', 'The harbours along the coast have their own fleet. You see the boats within AIS range (15 km).'],
+      ['De ligger ved kai om natta og i dårlig vær, går ut på feltene om morgenen og kommer hjem på ettermiddagen.', 'They lie at the quay at night and in bad weather, go out to the grounds in the morning and come home in the afternoon.'],
+      ['Hver båt ligger ved en kai som er lang og dyp nok for henne.', 'Each boat lies at a quay that is long and deep enough for her.'],
+      ['Trykk på en båt i kartplotteren for AIS-kortet med størrelse, dypgående og spor.', 'Tap a boat in the chart plotter for the AIS card with size, draught and track.']]],
+    ['p4', '04.10.2026', 'Hus, veier, bruer og moloer langs kysten', 'Houses, roads, bridges and breakwaters along the coast', [
+      ['Bygninger, veier og bruer langs hele kysten, ikke bare på Senja.', 'Buildings, roads and bridges along the whole coast, not only on Senja.'],
+      ['Bruene går jevnt opp og ned, og tunnelene tegnes ikke over fjellet.', 'The bridges rise and fall smoothly, and the tunnels are not drawn over the mountain.'],
+      ['Moloene er bygd av stein, med vei på toppen.', 'The breakwaters are built of stone, with a road on top.'],
+      ['Brygger og kaier med lengde og dybde. Kartplotteren viser veiene og bruene.', 'Piers and quays with length and depth. The chart plotter shows the roads and bridges.']]],
+    ['p3', '03.10.2026', 'Appen på hjemskjermen', 'The app on the home screen', [
+      ['Spillet kan legges på hjemskjermen fra GitHub Pages og virker uten nett når kartet er lastet.', 'The game can go on the home screen from GitHub Pages and works offline once the map is loaded.'],
+      ['Flytt spillet mellom artifacten og appen med lagringskoden under Innstillinger → Lagret spill.', 'Move the game between the artifact and the app with the save code under Settings → Saved game.']]],
+    ['p2', '03.10.2026', 'Lyd', 'Sound', [
+      ['Motor, sjø, vind og regn, måker, havna og arbeidet om bord.', 'Engine, sea, wind and rain, gulls, the harbour and the work aboard.'],
+      ['Lyden blir svakere og mattere langt unna, og kommer fra venstre eller høyre. De andre båtene har egen motorlyd.', 'Sounds get fainter and duller far away, and come from the left or the right. The other boats have their own engines.']]],
+    ['p1', '03.10.2026', 'Om bord og på broa', 'Aboard and on the bridge', [
+      ['Manuell styring med gass og ratt i 3D, «Kast loss» og «Fortøy».', 'Manual steering with throttle and wheel in 3D, «Cast off» and «Moor».'],
+      ['Lys om natta: lyktene lyser opp rundt seg, og fyrene sveiper.', 'Lights at night: the lamps light up round them, and the lighthouses sweep.'],
+      ['Kino-visning der kameraet filmer turen selv.', 'A cinema view where the camera films the trip by itself.'],
+      ['Garnhaler og linehaler som drar redskapet opp over skiva, og måker som flakser.', 'Net and line haulers that pull the gear up over the roller, and gulls that flap.'],
+      ['Søvn med «Spol fram til du våkner», og brovaktsalarm som piper til du kvitterer.', 'Sleep with «Fast forward until you wake», and a bridge watch alarm that beeps until you acknowledge.'],
+      ['Admin: «Fyll tanken» og «Skru av energi» for lange turer og testing.', 'Admin: «Fill the tank» and «Turn off energy» for long trips and testing.']]],
+    ['p0', '02.–03.10.2026', 'Hele kysten', 'The whole coast', [
+      ['Du kan seile langs hele norskekysten, med Kartverkets dybde.', 'You can sail the whole Norwegian coast, with the Norwegian Mapping Authority\'s depths.'],
+      ['Tidevann for stedet du er, og sol og måne der båten er.', 'The tide where you are, and the sun and moon where the boat is.'],
+      ['Autonav over hele kysten, og en kartplotter uten mørke felt når du drar i kartet.', 'Autonav along the whole coast, and a chart plotter without dark patches when you drag the map.']]]];
+  const patchNew = () => { const i = PATCH.findIndex(p => p[0] === S.settings.patchSeen); return i < 0 ? PATCH.length : i; };
+  function patch(){
+    const seen = S.settings.patchLast, h = ['<div class="ph-c">'];
+    for (const [id, date, no, en, lines] of PATCH)
+      h.push('<div class="ph-card patchc"><h4>' + L(no, en) + (seen && PATCH.findIndex(p => p[0] === id) < PATCH.findIndex(p => p[0] === seen) ? ' <span class="pnew">' + L('Ny', 'New') + '</span>' : '') + '</h4><p class="ph-note">' + date + '</p><ul>' + lines.map(l => '<li>' + L(l[0], l[1]) + '</li>').join('') + '</ul></div>');
+    h.push('</div>');
+    return h.join('');
+  }
   function home(){
-    const H = S.t / 60, W = windAt(H), n = unread(), na = alerts().length;
+    const H = S.t / 60, W = windAt(H), n = unread(), na = alerts().length, np = patchNew();
     return '<div class="ph-homescr"><div class="ph-clock">' + hm(H) + '</div><div class="ph-date">' + dayStr(H) + '</div>' +
       '<div class="ph-widget"><span class="w1">' + dirName(windDir(H)) + ' ' + fmt(W, 0) + ' m/s · ' + fmt(Math.round(airTemp(H)) || 0, 0) + ' °C</span><span class="w2">' + kr(S.cash) + '</span></div>' +
       ((g => g ? '<button class="ph-goal" data-pa="open" data-a="fartoy"><span>' + L('Neste mål: ', 'Next goal: ') + '<b>' + g.n + '</b></span><small>' + (g.txt || kr(Math.min(Math.max(0, S.cash), g.need)) + ' / ' + kr(g.need)) + '</small><span class="gb"><i style="width:' + (g.pc * 100).toFixed(1) + '%"></i></span></button>' : '')(goals()[0])) +
-      '<div class="ph-grid">' + APPS.map(a => '<button class="ph-app" data-pa="open" data-a="' + a[0] + '"><span class="ic" style="background:linear-gradient(160deg,' + a[3] + ',' + a[3] + 'cc)">' + IC[a[0]] + '</span>' + L(a[1], a[2]) + (a[0] === 'meld' && n ? '<span class="bd">' + n + '</span>' : '') + (a[0] === 'ordl' && ordState().active.length ? '<span class="bd">' + ordState().active.length + '</span>' : '') + (a[0] === 'rederi' && na ? '<span class="bd">' + na + '</span>' : '') + '</button>').join('') + '</div></div>';
+      '<div class="ph-grid">' + APPS.map(a => '<button class="ph-app" data-pa="open" data-a="' + a[0] + '"><span class="ic" style="background:linear-gradient(160deg,' + a[3] + ',' + a[3] + 'cc)">' + IC[a[0]] + '</span>' + L(a[1], a[2]) + (a[0] === 'meld' && n ? '<span class="bd">' + n + '</span>' : '') + (a[0] === 'ordl' && ordState().active.length ? '<span class="bd">' + ordState().active.length + '</span>' : '') + (a[0] === 'rederi' && na ? '<span class="bd">' + na + '</span>' : '') + (a[0] === 'patch' && np ? '<span class="bd">' + np + '</span>' : '') + '</button>').join('') + '</div></div>';
   }
   const kv = (a, b) => '<div class="ph-kv"><span>' + a + '</span><span>' + b + '</span></div>';
   const subs = (a, list) => '<div class="ph-sub">' + list.map(([k, no, en]) => '<button class="' + ((sub[a] || list[0][0]) === k ? 'on' : '') + '" data-pa="sub" data-s="' + k + '">' + L(no, en) + '</button>').join('') + '</div>';
