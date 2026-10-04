@@ -316,3 +316,12 @@ do $$ begin
   $c$);
 exception when others then raise notice 'pg_cron is not enabled: turn it on under Database → Extensions and run this block again';
 end $$;
+
+-- ---------- Supabase's default privileges ----------
+-- New tables, sequences and functions in public come with every right for anon and authenticated. The tables above take theirs
+-- back one by one; this takes back the rest. TRUNCATE is not stopped by row level security, so the admin list is closed outright
+-- (is_admin() reads it as its owner), and anon keeps only the two anonymous reports.
+revoke all on public.admins from anon, authenticated;
+revoke all on all sequences in schema public from anon, authenticated;
+revoke execute on all functions in schema public from anon;
+grant execute on function public.tm_error(text, text, text, jsonb), public.tm_perf(real, real, int, jsonb) to anon;
