@@ -20,7 +20,7 @@ window.DSB_AUTHKIT = {createClient: async () => ({getUser: () => (window.__noUse
 
 async def page(br, calls, replies, no_user=False):
     ctx = await br.new_context(viewport={'width': 1100, 'height': 800}); pg = await ctx.new_page(); errs = []
-    pg.on('pageerror', lambda e: errs.append(str(e)))
+    pg.on('pageerror', lambda e: errs.append(str(e)) if 'cloudtest boom' not in str(e) else None)
     await pg.add_init_script(STUB + ("window.__noUser = 1;" if no_user else ""))
     async def handle(route):
         req = route.request; fn = req.url.rsplit('/', 1)[-1]
@@ -56,7 +56,7 @@ async def main():
           await cloudFlush(false);
           runAground({...S.boat.pos}); await cloudFlush(true);
           S.lastReal = Date.now(); save(); CLOUD.lastSave = 0; await cloudSaveSoon();
-          PHONE.open('innstillinger'); const card = document.body.innerText.includes('jonas@test.no'); PHONE.show(false);
+          PHONE.open('innst'); const card = document.body.innerText.includes('jonas@test.no'); PHONE.show(false);
           return {sid:CLOUD.sid, consent:CLOUD.consent, card}; }""")
         batches = [c[1] for c in calls if c[0] == 'tm_batch']; ev = [e['k'] for b in batches for e in b.get('evs', [])]
         apps = [e['d'].get('app') for b in batches for e in b.get('evs', []) if e['k'] == 'app']

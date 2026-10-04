@@ -11,16 +11,18 @@ function cloudOn(){
   const c = CLOUD_CFG; if (!c || !c.supabaseUrl || !c.supabaseAnon || !c.workosClientId || typeof location === 'undefined') return false;
   return (c.hosts || []).includes(location.hostname) && !/nocloud/.test(location.hash);
 }
-const cloudL = (no, en) => (S && S.lang === 'en') ? en : no;
+function cloudS(){ try { return S; } catch (e){ return null; } }
+const cloudL = (no, en) => { const s = cloudS(); return s && s.lang === 'en' ? en : no; };
 function cloudMeta(){
-  const ua = navigator.userAgent, b = S.boat || {};
+  // at the gate the game is not loaded yet (S comes in bootGame)
+  const S = cloudS() || {}, ua = navigator.userAgent, b = S.boat || {};
   const browser = /SamsungBrowser/.test(ua) ? 'samsung' : /Edg\//.test(ua) ? 'edge' : /Firefox\//.test(ua) ? 'firefox' : /Chrome\//.test(ua) ? 'chrome' : /Safari\//.test(ua) ? 'safari' : 'other';
   const platform = /Android/.test(ua) ? 'android' : /iPhone|iPad|iPod/.test(ua) ? 'ios' : /Windows/.test(ua) ? 'windows' : /Mac OS X/.test(ua) ? 'mac' : /Linux/.test(ua) ? 'linux' : 'other';
   const pwa = !!(window.matchMedia && (matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches));
-  const fleet = S.fleet || [];
+  const fleet = S.fleet || [], VES = typeof VESSELS !== 'undefined' ? VESSELS : {};
   return {version:(document.querySelector('meta[name=dsb-version]') || {}).content || 'dev', browser, platform, pwa, lang:S.lang, tz:(Intl.DateTimeFormat().resolvedOptions() || {}).timeZone,
     quality:(S.settings && S.settings.q3d) || 'auto', boat:b.type, home:b.port || null, cash:Math.round(S.cash || 0), fleet:fleet.length || 1,
-    fleetValue:Math.round((fleet.length ? fleet : [{boat:b}]).reduce((a, v) => a + (((VESSELS[(vget(v, 'boat') || {}).type] || {}).price) || 0), 0)),
+    fleetValue:(() => { try { return Math.round(fleet.length ? fleet.reduce((a, v) => a + (((VES[(vget(v, 'boat') || {}).type] || {}).price) || 0), 0) : ((VES[b.type] || {}).price || 0)); } catch (e){ return null; } })(),
     streak:(S.streak && S.streak.days) || 0, gameDays:Math.floor((S.t || 0) / 1440), sid:CLOUD.sid};
 }
 
@@ -76,9 +78,10 @@ async function cloudGate(){
     // the save: the cloud's when it is newer than the one here (a new device, or played elsewhere since)
     const cs = await cloudRpc('save_get', {});
     const localRaw = localStorage.getItem(KEY), local = localRaw ? (JSON.parse(localRaw).lastReal || 0) : 0;
-    if (cs && cs.data && Date.parse(cs.saved_at) > local + 5000){
+    // (once per save: the save's own time can be a little older than the cloud's stamp, and the page must not load it again and again)
+    if (cs && cs.data && Date.parse(cs.saved_at) > local + 5000 && sessionStorage.getItem('dsb_pulled') !== cs.saved_at){
       cloudGateShow('<p>' + cloudL('Henter spillet ditt …', 'Fetching your game …') + '</p>');
-      await loadCode(cs.data); location.reload(); return new Promise(() => {});
+      sessionStorage.setItem('dsb_pulled', cs.saved_at); await loadCode(cs.data); location.reload(); return new Promise(() => {});
     }
   } catch (e){ console.error(e); }
   cloudGateHide();
@@ -89,7 +92,9 @@ function cloudStart(){
   if (!CLOUD.on) return;
   window.addEventListener('error', e => cloudErr(e.message, (e.filename || '') + ':' + (e.lineno || ''), e.error && e.error.stack));
   window.addEventListener('unhandledrejection', e => cloudErr(String(e.reason && e.reason.message || e.reason), 'promise', e.reason && e.reason.stack));
-  if (CLOUD.consent == null) setTimeout(cloudAsk, 4000); else if (CLOUD.consent) cloudBegin();
+  // the question waits until the first-start dialog (company and boat names) is done and no other dialog is open
+  if (CLOUD.consent == null){ const iv = setInterval(() => { const m = document.getElementById('modal'); if (S.intro && S.boatName && m && m.hidden){ clearInterval(iv); setTimeout(cloudAsk, 1500); } }, 2000); }
+  else if (CLOUD.consent) cloudBegin();
   setInterval(cloudSaveSoon, 180000);
   window.addEventListener('pagehide', () => { cloudSaveSoon(true); if (CLOUD.sid) cloudFlush(true); });
 }
