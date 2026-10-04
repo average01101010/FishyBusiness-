@@ -193,3 +193,43 @@ Jonas' ønske 04.10.2026 er et dashbord med all bruksinformasjon, og lista hans 
 1. Supabase, samtykket, målingen og dashbordets faner for oversikt, spilletid, frafall, spillbruk, økonomi i spillet, teknikk og geografi.
 2. Pengefanen når Stripe er på plass.
 3. De sosiale punktene og push når de funksjonene finnes.
+
+## F. Valgene (Jonas, 04.10.2026)
+
+1. **Forretningsmodell:** gratis å spille, med frivillige kjøp av boostere, båter og skins via Stripe.
+   - **Prisene vises i kroner.** Ingen egen spillvaluta skal skjule hva ting koster. EUs forbrukermyndigheter (CPC) la fram prinsipper for valuta i spill i 2025 (sjekk).
+   - **Ingen tilfeldige kjøp (lootbokser).** Den som kjøper, vet hva hen får. Forbrukertilsynet er kritisk til lootbokser (sjekk).
+   - **Ingen direkte oppfordring til barn om å kjøpe** (markedsføringsloven og EUs liste over forbudt praksis, UCPD vedlegg I nr. 28).
+   - **Balansen:** en båt kjøpt for ekte penger bør ikke gjøre spillet om til «betal for å vinne». Forslag: kjøpte båter er egne utgaver eller utseender, eller en snarvei til det som kan tjenes i spillet. Det tar vi når produktene skal lages.
+   - **Bare på nettet:** Stripe fungerer i appen på detstorebla.no. I Google Play og App Store må kjøp inne i appen gå gjennom butikkenes betaling, eller EU-ordningen for alternativ betaling.
+   - **MVA:** 25 % på digitale varer til norske forbrukere, og EU-moms til forbrukere i EU (Stripe Tax).
+2. **Innlogging er påkrevd, med WorkOS (AuthKit):** Google, Apple, e-post og totrinnsinnlogging.
+   - Supabase godtar WorkOS-nøklene direkte som tredjepartsinnlogging. Reglene i databasen bruker bruker-ID-en fra WorkOS (`sub`).
+   - Admin er WorkOS-ID-en din, og totrinnsinnlogging er påkrevd.
+   - Artifacten på claude.ai kan ikke bruke WorkOS-innlogging, fordi den kjører i en innebygd ramme. Den blir værende som testutgave uten konto.
+3. **Database:** Supabase i EU-regionen.
+4. **Samtykke:** spillet spør om samtykke til statistikk ved første start.
+5. **Selskap:** det eksisterende enkeltpersonforetaket Johansen Havbruksdrift.
+   - **Ny virksomhet:** Legg den til i Enhetsregisteret med Samordnet registermelding i Altinn. Ny næringskode er for eksempel 58.210, «Utgivelse av programvare for dataspill» (sjekk koden), og formålet utvides med utvikling og salg av dataspill.
+   - **MVA:** Er foretaket alt MVA-registrert, kommer spillsalget med i samme registrering. Utleie av arbeidskraft er ofte MVA-pliktig, så sjekk dette. Er det ikke registrert, gjelder grensen på 50 000 kr for alt MVA-pliktig salg til sammen.
+   - **Stripe:** Kontoen registreres på foretakets organisasjonsnummer. Kontoutskriften kan vise «DETSTOREBLA.NO», og kassen kan vise navnet Det Store Blå. Det juridiske navnet og organisasjonsnummeret skal likevel stå på Kontakt-siden (ehandelsloven § 8).
+   - **Regnskap:** Før spillet som eget prosjekt eller egen avdeling. Overskudd og underskudd blir en del av næringsinntekten. Over tid må det se ut som næring og ikke hobby (sjekk med regnskapsfører).
+   - **Ansvar:** I et ENK står du personlig ansvarlig for alt, også kundekrav og eventuelle GDPR-bøter. Når inntekten eller risikoen vokser, bør spillet flyttes til et AS.
+
+### Det du oppretter (så kan Claude koble det på)
+
+- **WorkOS:** en konto og AuthKit med Google, Apple og e-post, totrinnsinnlogging slått på og adressen `https://detstorebla.no` som tillatt. Gi meg klient-ID-en. API-nøkkelen holdes hemmelig.
+- **Supabase:** et prosjekt i EU med WorkOS lagt til under Third-party auth. Gi meg prosjektadressen og `anon`-nøkkelen.
+- **Stripe:** en konto på foretaket, med testnøklene klare.
+
+### Rekkefølgen for byggingen (venter på «kjør på»)
+
+1. **Supabase-skjemaet** som SQL i repoet (`supabase/migrations/`):
+   - tabellene for spillere, lagringer, økter, hendelser, feil, produkter, kjøp og rettigheter
+   - reglene (RLS) med admin bare for deg
+   - sammendragene i SQL
+2. **Målingen** (`core/18-telemetry.js`) med samtykkedialogen. Den er av til nøklene er satt, så artifacten og testene går som før.
+3. **Innloggingen og skylagringen** i appen. Lagringen synkes til kontoen.
+4. **Admin-dashbordet** (`/admin`) med alle fanene fra E. Det kan vises med testdata før de ekte dataene kommer.
+5. **Butikken:** Stripe Checkout, webhooken i Supabase og rettighetene i spillet, når produktene (boostere, båter og skins) er bestemt.
+6. **Juridiske sider** (personvern, vilkår, kilder, kontakt) og sletting av konto.
