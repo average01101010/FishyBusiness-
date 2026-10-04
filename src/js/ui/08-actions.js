@@ -155,7 +155,8 @@ function sell(){
   const tk = trekkOf(total, BOAT.len || 0), net = total - tk.sum;
   // VAT on the sale once the business is in the VAT register: it comes with the settlement and goes straight on to the state
   mvaCheck(total); const mva = S.mva ? mvaOf(total, tk) : 0;
-  const aboardNow = crewAboard(), lott = Math.round(aboardNow.reduce((a, c) => a + c.share, 0) * net);
+  // those on hyre have their day wage (payHyre) and no share
+  const aboardNow = crewAboard().filter(c => c.pay !== 'hyre'), lott = Math.round(aboardNow.reduce((a, c) => a + c.share, 0) * net);
   for (const c of aboardNow) c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, net * c.share]]);
   for (const c of S.crew) c.off = false;
   if (meAboard()) fmLand(total);

@@ -43,6 +43,15 @@ function genCrew(){
 function deckSkills(ex){ return {sloy:r15(1.2 + ex * 0.6 * Math.random() + 0.3), is:r15(1.3 + ex * 0.5 * Math.random()), sort:r15(1 + ex * 0.4 * Math.random())}; }
 // crew from before this system get skills that match their level; crew from before the deck skills get those
 function crewUpgrade(c){ if (c.attr){ if (c.gear && c.gear.sloy == null) Object.assign(c.gear, deckSkills(c.attr.erf)); return c; } const g = genCrew(), e = c.lv === 'dreven' ? 4.5 : c.lv === 'erfaren' ? 3 : 1.5; return crewDerive(Object.assign(g, {id:c.id, name:c.name, age:c.age || g.age, share:c.share, ask:c.share, known:[true, true], attr:Object.assign(g.attr, {erf:e, sjo:r15(e * 0.9)})})); }
+// Hyre (E3 of the economy plan, 04.10.2026): instead of a share of the catch a crew member can be paid a day wage for every day signed
+// on, whatever the catch and whether the boat goes out or not. It is allowed in the open group as in the closed one, and on a fishing
+// vessel no employer's tax is paid on it (the product levy covers it: Skatteetaten, «Hyre til mannskap på fiske-, småhval- og
+// selfangstfartøy»). The day wage asked is 90 % of what the share asked for would bring in a week such as the morale reckons with
+// (6 000 kr a day, five days), a day: safety costs a little (an assumption, not a tariff).
+const HYRE = {week:6000 * 5, safe:0.9};
+const hyreAsk = c => Math.max(100, Math.round(c.ask * HYRE.week / 7 * HYRE.safe / 10) * 10);
+// the day wages, paid at midnight for every vessel's crew on hyre
+function payHyre(){ let sum = 0; eachVessel(() => { for (const c of S.crew) if (c.pay === 'hyre'){ S.cash -= c.hyre; S.stats.costs += c.hyre; sum += c.hyre; c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, c.hyre]]); } }); return sum; }
 function crewAboard(H){ if (H == null) H = S.t / 60; const wd = (gDate(H).getUTCDay() + 6) % 7; return (S.crew || []).map(crewUpgrade).filter(c => !c.off && (!c.bi || c.biDays[wd])); }
 function crewEff(c, H, hs, g = 'juksa'){
   const A = c.attr, T = c.traits; let e = 0.55 + 0.08 * A.erf + 0.07 * (c.gear[g] || c.gear.juksa || 1) + 0.04 * A.styrke;
@@ -106,9 +115,13 @@ function crewTick(H){
       if (c.seaH % 40 === 0){ c.attr.erf = Math.min(5, c.attr.erf + 0.1 * k); c.attr.sjo = Math.min(5, c.attr.sjo + 0.05 * k); crewDerive(c); }
       if (!c.known[1] && c.seaH >= 12){ c.known = [true, true]; const T = TRAITS[c.traits[c.traits.length - 1]]; msg(c.name, 'Etter noen dager på sjøen vet du mer om ' + c.name + ': ' + T.no.toLowerCase() + '. ' + T.d.no, 'After some days at sea you know more about ' + c.name + ': ' + T.en.toLowerCase() + '. ' + T.d.en); } }
     // what their mood is heading towards
-    let tg = 60 + (c.share - c.ask) * 300;
-    const earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).reduce((a, e) => a + e[1], 0), expect = c.ask * 6000 * 5;
-    if (S.t - (c.hiredT || 0) > 3 * 1440) tg += clamp((earn - expect) / expect * 12, -12, 12);
+    // on lott: the share against the one asked for, and the week's earnings against what was hoped for; on hyre: the day wage against
+    // the one asked for, and a little for the safety of it, whatever the catch
+    let tg;
+    if (c.pay === 'hyre') tg = 64 + clamp((c.hyre / hyreAsk(c) - 1) * 30, -20, 20);
+    else { tg = 60 + (c.share - c.ask) * 300;
+      const earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).reduce((a, e) => a + e[1], 0), expect = c.ask * 6000 * 5;
+      if (S.t - (c.hiredT || 0) > 3 * 1440) tg += clamp((earn - expect) / expect * 12, -12, 12); }
     if (here) tg += (food - 3) * 3;   // the food on board: the last four meals
     tg -= Math.max(0, c.fatigue - 50) * 0.5; tg -= cold * 50 * (here ? 1 : 0.3);
     if (here && hs > 1.5) tg -= (hs - 1.5) * 10 * (1.2 - 0.12 * c.attr.sjo); if (here && hs > 1.2 && c.traits.includes('sjosyk')) tg -= 15;
@@ -128,7 +141,7 @@ function crewTick(H){
       if (Math.random() < pr){ const tp = (a.traits.includes('arbeidsjern') && c2.traits.includes('makelig')) ? 'jobb' : (a.traits.includes('stolt') || c2.traits.includes('stolt')) ? 'respekt' : hs > 1.5 ? 'vaer' : ['sloying', 'musikk', 'kaffe'][Math.floor(Math.random() * 3)];
         S.cevt = {type:'pair', a:a.id, b:c2.id, topic:tp, t0:S.t}; const tx = PAIR_TOPICS[tp]; msg('Om bord', tx.no.replace('{a}', a.name).replace('{b}', c2.name) + ' Løs det under Mannskap.', tx.en.replace('{a}', a.name).replace('{b}', c2.name) + ' Sort it out under Crew.'); } }
     for (const c of on){ if (S.cevt || c.morale >= 45) continue; const tf = c.traits.some(t => ['kranglefant', 'stolt', 'grinebiter', 'rastlos'].includes(t)) ? 1.5 : 0.6;
-      if (Math.random() < 0.003 * (45 - c.morale) / 20 * tf * foodQ){ const tp = c.share < c.ask - 0.001 ? 'lott' : c.fatigue > 70 ? 'hvile' : hs > 1.5 ? 'vaer' : cold > 0.1 ? 'kulde' : 'generelt'; S.cevt = {type:'boss', a:c.id, topic:tp, t0:S.t};
+      if (Math.random() < 0.003 * (45 - c.morale) / 20 * tf * foodQ){ const tp = c.pay !== 'hyre' && c.share < c.ask - 0.001 ? 'lott' : c.fatigue > 70 ? 'hvile' : hs > 1.5 ? 'vaer' : cold > 0.1 ? 'kulde' : 'generelt'; S.cevt = {type:'boss', a:c.id, topic:tp, t0:S.t};
         const tx = BOSS_TOPICS[tp]; msg(c.name, tx.no.replace('{a}', c.name) + ' Svar under Mannskap.', tx.en.replace('{a}', c.name) + ' Answer under Crew.'); } }
   }
   sayHour(H, on, hs);

@@ -900,6 +900,12 @@ Mister du juksa, fisker bare juksamaskinene til du kjøper ny i Fiskeutstyr. `mo
     - Du trenger verken ENK eller AS for å fiske. Når salget passerer 50 000 kr på tolv måneder (merverdiavgiftsloven § 2-1), registreres fisket som ENK i Enhetsregisteret og i Merverdiavgiftsregisteret (`S.mva`, med et fiktivt org.nr.). Det kommer en melding fra Brønnøysundregistrene.
     - Etter det står MVA 11,11 % (§ 5-8) på sluttseddelen, regnet av totalen minus de offentlige trekkene, og like stor «MVA videre til staten». Netto er null.
     - **Forenkling:** Inngående MVA på diesel og utstyr kommer ikke tilbake, så prisene i spillet regnes som uten MVA.
+  - **Lott eller hyre** (E3, 04.10.2026, `HYRE`, `hyreAsk` og `payHyre` i `04-crew.js`):
+    - Hvert mannskap kan gå på lott (som før) eller på hyre. Bytte gjøres med knappen på mannskapskortet i Rederi-appen (`cpay`).
+    - **Hyre** er en fast dagslønn (`c.hyre`), betalt ved midnatt (`hourly` i `06-services.js`) for hver dag mannskapet er ansatt, også når båten ligger. Den som går på hyre, får ingen lott i `sell()`.
+    - **Hyra mannskapet ber om** er 90 % av det lotten de ønsker ville gitt i en uke med 6 000 kr om dagen i fem dager, fordelt på sju dager. Dette er et anslag, ingen tariff. Moralen følger hyra mot det de ba om, med litt ekstra fordi den er trygg.
+    - **Ingen arbeidsgiveravgift** på hyre til mannskap på fiskefartøy. Produktavgiften dekker den (folketrygdloven § 23-5, Skatteetaten «Hyre til mannskap på fiske-, småhvalfangst- og selfartsfartøy», funnet med søk 04.10.2026).
+    - **Ikke ennå:** Salg-fanen regner fortsatt mannskapets andel som lott for alle.
 - Alle priser i spillet er per kilo **rund vekt**.
 
 ### 5.5 Kvoter og regulering
