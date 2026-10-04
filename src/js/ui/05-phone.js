@@ -215,6 +215,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p7', '05.10.2026', 'Fra forslagslista', 'From the wish list', [
+      ['Båten snurrer ikke lenger rundt siste veipunkt. Den bremser inn og stopper der.', 'The boat no longer spins round the last waypoint. It slows down and stops there.']]],
     ['p6', '04.10.2026', 'Færre fiskebåter, spredt utover', 'Fewer fishing boats, spread out', [
       ['Rundt 4 300 båter langs kysten i stedet for 19 000, omtrent som de 4 614 aktive fiskefartøyene i 2024.', 'About 4,300 boats along the coast instead of 19,000, close to the 4,614 active fishing vessels of 2024.'],
       ['Hver båt fisker på sin egen plass på feltet, og driften går aldri opp på land.', 'Each boat fishes its own spot on the ground, and the drift never goes ashore.'],

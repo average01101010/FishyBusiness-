@@ -266,8 +266,8 @@ function sailV(H, hs){
   const b = S.boat, pl = S.plan; if (!pl) return 0;
   let tgt = Math.min(pl.speed, speedCap(hs == null ? hsAt(b.pos, H) : hs)), near = 1e9;
   for (const q of PORTS){ const d = dist(q.p, b.pos); if (d < near) near = d; }
-  // brake before the next stop (a harbour or a fishing spot) along the route, not when leaving
-  let rem = 0, p0 = b.pos, stop = false; for (let i = pl.idx; i < pl.wps.length; i++){ const w = pl.wps[i]; rem += dist(p0, w); p0 = w; if (wpStop(w)){ stop = true; break; } if (rem > 3) break; }
+  // brake before the next stop (a harbour or a fishing spot) or the route's end along the route, not when leaving
+  let rem = 0, p0 = b.pos, stop = false; for (let i = pl.idx; i < pl.wps.length; i++){ const w = pl.wps[i]; rem += dist(p0, w); p0 = w; if (wpStop(w) || i === pl.wps.length - 1){ stop = true; break; } if (rem > 3) break; }
   if (near < 0.25 || (stop && rem < 0.25 + (b.v || 0) * NM / 60 * 1.1)) tgt = Math.min(tgt, 5);
   const acc = BOAT.accel || 3, prev = b.status === 'sailing' ? (b.v || 0) : 0;
   return tgt > prev ? Math.min(tgt, prev + acc) : Math.max(tgt, prev - acc * 1.5);

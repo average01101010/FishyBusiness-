@@ -2429,14 +2429,21 @@ const G3 = (() => {
       }
       else if (sailing){
         const vs = sailV(S.t / 60) * KNV(), la = livePose(frac + clamp(1.6 * GAME_RATE * (S.mult || 1) / 60, 0.04, 0.6)).p, cx = la.x * 1000, cz = la.y * 1000;
+        // the next stop or the route's end: when the point ahead has reached it, she comes in to it and stops there instead of keeping
+        // way on past it and circling back (the user's test 04.10.2026: she spun round the last waypoint until the next tick)
+        const pl = S.plan; let endW = null;
+        if (pl) for (let i = pl.idx; i < pl.wps.length; i++){ const w = pl.wps[i]; if (wpStop(w) || i === pl.wps.length - 1){ endW = w; break; } }
+        const arriving = !!endW && Math.hypot(cx - endW.x * 1000, cz - endW.y * 1000) < 1, ax = arriving ? endW.x * 1000 - bv.px : 0, az = arriving ? endW.y * 1000 - bv.pz : 0, dEnd = Math.hypot(ax, az);
+        const f0x = Math.sin(bv.cog), f0z = -Math.cos(bv.cog), past = arriving && (dEnd < 3 || ax * f0x + az * f0z < 0);
         // steer for a point a little ahead on the track, turning no faster than the turning radius allows
-        const want = Math.hypot(cx - bv.px, cz - bv.pz) > 1 ? Math.atan2(cx - bv.px, -(cz - bv.pz)) : pr.hd;
+        const want = past ? bv.cog : Math.hypot(cx - bv.px, cz - bv.pz) > 1 ? Math.atan2(cx - bv.px, -(cz - bv.pz)) : pr.hd;
         const wmax = clamp(bv.spd / ((VESSELS[vtype()] || {}).turnR || 40), 0.6, 1.4), err = angDiff(bv.cog, want), rDes = clamp(err * 2.2, -wmax, wmax);
         bv.yr += (rDes - bv.yr) * (1 - Math.exp(-dt * 3)); bv.cog += bv.yr * dt;
         // speed: keep up with the simulated position, with limits on acceleration and braking
         const fx = Math.sin(bv.cog), fz = -Math.cos(bv.cog), rx = Math.cos(bv.cog), rz = Math.sin(bv.cog), ex = tx - bv.px, ez = tz - bv.pz;
-        // always keep some way on while turning (like a boat swinging out from the quay), and catch up without racing
-        const vDes = clamp(vs + (ex * fx + ez * fz) * 0.5, vs * (0.25 + 0.3 * Math.max(0, Math.cos(err))), vs * 1.25 + 3), aMax = Math.max(3, vs / 4);
+        // always keep some way on while turning (like a boat swinging out from the quay), and catch up without racing; coming in to the end,
+        // slow down with the distance left and stop at it
+        const vDes = past ? 0 : arriving ? Math.min(vs, Math.max(0, dEnd - 1) * 0.8) : clamp(vs + (ex * fx + ez * fz) * 0.5, vs * (0.25 + 0.3 * Math.max(0, Math.cos(err))), vs * 1.25 + 3), aMax = Math.max(3, vs / 4);
         bv.spd += clamp(vDes - bv.spd, -aMax * 1.4 * dt, aMax * dt);
         bv.px += fx * bv.spd * dt; bv.pz += fz * bv.spd * dt;
       } else {
