@@ -30,8 +30,10 @@ function cloudMeta(){
 async function cloudToken(){ try { return CLOUD.ak ? await CLOUD.ak.getAccessToken() : null; } catch (e){ return null; } }
 async function cloudRpc(fn, args, opt){
   const c = CLOUD_CFG, tok = opt && opt.anon ? null : await cloudToken();
+  // a publishable key (sb_publishable_…) is not a JWT and goes only as apikey; the old anon key (a JWT) also as the bearer
+  const bearer = tok || (/^eyJ/.test(c.supabaseAnon) ? c.supabaseAnon : null);
   const r = await fetch(c.supabaseUrl.replace(/\/$/, '') + '/rest/v1/rpc/' + fn, {method:'POST', keepalive:!!(opt && opt.keep),
-    headers:{'Content-Type':'application/json', apikey:c.supabaseAnon, Authorization:'Bearer ' + (tok || c.supabaseAnon)}, body:JSON.stringify(args || {})});
+    headers:{'Content-Type':'application/json', apikey:c.supabaseAnon, ...(bearer ? {Authorization:'Bearer ' + bearer} : {})}, body:JSON.stringify(args || {})});
   if (!r.ok) throw new Error(fn + ' ' + r.status);
   const t = await r.text(); return t ? JSON.parse(t) : null;
 }
