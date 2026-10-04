@@ -10,8 +10,9 @@ Laget 04.10.2026, da spillet fikk navnet Det Store Blå og domenet detstorebla.n
   - e-post med passord og Magic Auth
   - Google med egne nøkler, i et Google-prosjekt som er publisert («In production»)
 - **Supabase-prosjektet** har ref `xcqbqzrsgycpeoyclakm`. Adressen og den publiserbare nøkkelen står i `src/data/cloud.json`.
+- **WorkOS er lagt inn som Third-Party Auth i Supabase** (issuer `https://api.workos.com/user_management/client_01M449YCKA9VJST0W0FY0HP62E`, ENABLED).
 - **Jonas gjør i Supabase-dashbordet:**
-  - WorkOS som Third-Party Auth, med issuer `https://api.workos.com/user_management/client_01M449YCKA9VJST0W0FY0HP62E`
+  - sjekker at TOTP er på under Multi-Factor
   - sin egen admin-bruker, og han sender UID-en
   - slår av «Allow new users to sign up»
 - **MCP-tilgang:** Jonas har gitt Claude tilgang til Supabase via MCP (04.10.2026). Koblingen legges til som connector på claude.ai, avgrenset til dette prosjektet, og virker fra neste økt.
