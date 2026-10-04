@@ -220,7 +220,7 @@ Dette er den eneste tilsiktede endringen i oppførsel i kartfasen. Spillets ramm
   - hyse i februar: snittet over havet 0,169 mot 0,178 (−5 %), og den beste prosenten 0,495 mot 0,557
   - snittet tar også med de smale trekantene i hjørnene av boksen, så det er 9 % flere sjøceller
   - `geartest` måler nå linefisket på de åtte beste hysestedene i stedet for det ene beste, fordi ett sted alene svinger fra 50 til 110 kg per balje
-- **Krabbeområdet** er et belte fra 35 til 75 km sør for 69,72° N, som før, nå som y i den nye rammen. **Fiskerifeltene** (`fieldCode`) og offshore-strøklengden utenfor kartet (`offMapFetch`) regner fortsatt i gamle km gjennom `LGI`.
+- **Krabbeområdet** var et belte fra 35 til 75 km sør for 69,72° N. Fra 04.10.2026 er det kongekrabbens utbredelse (`kingArea`, se «Kongekrabbe» under redskapene). **Fiskerifeltene** (`fieldCode`) og offshore-strøklengden utenfor kartet (`offMapFetch`) regner fortsatt i gamle km gjennom `LGI`.
 - **Bestanden** er glissen: `S.stock` og `S.cstk` holder bare 2 km-rutene under 1, med `gridKey` i den nasjonale rammen (`stkGet`, `stkSet`, `stockFill`). `stockHour` går over disse rutene og naboene deres.
 - **Lagringen v2:**
   - Nøkkelen er `kystfiske_v2`. Et spill i `kystfiske_proto_v1` (v1) leses én gang og flyttes over med `migrateV2`, og v1-lagringen blir stående.
@@ -916,8 +916,8 @@ Mister du juksa, fisker bare juksamaskinene til du kjøper ny i Fiskeutstyr. `mo
   - **I 3D:** Bløggekar og sløyebenk står på etterdekket. Den som jobber, står ved benken og sløyer, og sloet går over babord ripe mens måkene stuper etter det. Alene går skipperen fra rattet.
   - **Større fartøy** med fabrikk om bord kommer senere.
 - **Sluttseddelen** viser art, størrelse, kvalitet, kilo, kilopris, lever og rogn, inndragning, ferskfiskordningen, bestillinger og fangstfelt.
-  - Hver linje står i hele kroner og kilo, og totalen er summen av linjene (A7). Linjene står med full verdi, og det som inndras, står som egne trekk: torsk over kvote eller bifangstgrensen, krabbe under minstemålet og trekket for rognkrabbe. Tillegg for bestillinger og innloggingsbonusen har egne linjer.
-  - Under totalen kommer trekkene i oppgjøret, så «Lott til mannskapet» og «Til kassa». Kassa får nøyaktig total minus trekk og lott. Gebyret for småkrabbe står som en merknad under, fordi det kommer fra Fiskeridirektoratet og ikke står på seddelen.
+  - Hver linje står i hele kroner og kilo, og totalen er summen av linjene (A7). Linjene står med full verdi, og det som inndras, står som egne trekk: torsk over kvote eller bifangstgrensen, og død kongekrabbe (0 kr). Gamle sedler kan ha krabbe under minstemålet og trekket for rognkrabbe fra taskekrabbens tid. Tillegg for bestillinger og innloggingsbonusen har egne linjer.
+  - Under totalen kommer trekkene i oppgjøret, så «Lott til mannskapet» og «Til kassa». Kassa får nøyaktig total minus trekk og lott. Gebyret for småkrabbe står som en merknad under på gamle sedler. Kongekrabben har ikke noe slikt gebyr.
   - **Trekkene** (E2 av økonomiplanen, 04.10.2026, `TREKK` og `trekkOf` i `03-simulation.js`), som Råfisklaget trekker dem:
     - **Lagsavgift:** 0,43 % av totalen (ferske produkter fra 1.7.2026).
     - **Av totalen minus lagsavgiften:**
@@ -1341,7 +1341,7 @@ Inspirert av Fishing: Barents Sea. Den gamle handlingslinja `#actbar` er borte, 
 Inspirert av Fishing: Barents Sea.
 
 - **Fanene** (`#bkTabs`) står på venstre kant av boka: Dagbok, Sesonger, Hendelser, Utstyr og Salg. Hver fane er sin egen sideliste i `BOOK` (`ui/06-logbook.js`), og sidene for alle fanene unntatt Dagbok lages av `bookTabPages(fane)` i `ui/06b-book-tabs.js`. Alt står eldst først, så en fane åpner på nyeste side. `BOOK.open('salg', i)` åpner sluttseddel nummer `i` i `S.sales`.
-  - **Sesonger:** årets regler (kveitefredningen, skreisesongen, maksimalkvotene i åpen gruppe, uer på juksa, ferskfiskordningen, krabbesesongen fra `SPECIES.krabbe.av`) og prissesongene: måneder der `SPECIES[art].pm` ligger minst 10 % over eller under årssnittet. Det som er over, krysses ut (klassen `over`; `x` er opptatt av lukkeknapper).
+  - **Sesonger:** årets regler (kveitefredningen, skreisesongen, maksimalkvotene i åpen gruppe, uer på juksa, ferskfiskordningen) og prissesongene, også kongekrabbens: måneder der `SPECIES[art].pm` ligger minst 10 % over eller under årssnittet. Det som er over, krysses ut (klassen `over`; `x` er opptatt av lukkeknapper).
   - **Hendelser:** de siste fire ukene. Ukens prisbevegelse per art når `weekDev` er minst ±8 %, uværsdager med toppris (`supplyFactor` ≥ 1,025), og regelendringer.
   - **Utstyr:** et kort per sett fra `S.gearLog` (hele rederiet, de siste 60), som skrives i `finishSet` og oppdateres i `finishHaul` og når redskap går tapt. Ståtid som tellestreker opp til 40 t.
   - **Salg:** sluttseddelen per levering. `sell()` lagrer den i `S.sales[i].d`: linjer `[art, klasse, kvalitet, sløyd, kg, kr, antall]`, lever og rogn, innloggingsbonus, oppdragstillegg, inndratt, trekk for rognkrabbe, mannskapet med andel, lott, gebyr og et løpenummer (`S.saleSeq`). Bare de siste 60 salgene beholder `d`. Eldre salg vises med kg og kroner per art.
@@ -1743,7 +1743,13 @@ Brukerens ønske: en frivillig mulighet til å styre båten selv, med gass og ra
   - Kveite er fredet 20.12–20.4 nord for 62° N og hele året sør for.
   - Uer er bare lov med juksa fra båt under 15 m, 1.6–31.8.
   - Disse to stopper ikke spillet ennå. `kveiteClosed` og `uerOpen` i simuleringen styrer det som før.
-- **§ 47:** minstemål etter sted for torsk, hyse, sei, kveite, uer og taskekrabbe.
+- **§ 47:** minstemål etter sted for torsk, hyse, sei, kveite og uer. Taskekrabben er ute av spillet fra 04.10.2026.
+- **Kongekrabbe** (J-136-2026 og J-138-2026 fra Fiskeridirektoratet, § 2 er lik i begge; `kcQuota` og regelene `kc2`, `kc10` og `kc5`):
+  - **Kvoteområdet** ligger øst for linja ved 26° Ø, med hele Porsangerfjorden, Kamøyfjorden og Magerøysundet sørøst for linja. Bare båter registrert i Finnmark, med eier bosatt der i minst to år, kan fiske der. Spilleren er fra Senja, så svaret er «Nei».
+    - `kcQuota(ll)` er en tilnærming til linjene i lat/lon: øst for 26° Ø opp til 71°30′ N, og vest for 26° Ø havet sør for Magerøya (øst for 25°32′ Ø sør for 71,02° N, øst for 24°51′ Ø sør for 70,93° N). Det er ikke de nøyaktige punktene i § 2.
+  - **Fritt fiske vest for linja** (J-138 § 5): ingen kvote og intet minstemål, men all kongekrabbe som fanges, skal landes (det er forbudt å sette den ut igjen), og teinene skal være uten fluktåpning.
+  - **Stengt 1.–9. november 2026** i boksen 71°09′–71°14′ N, 25°20′–26° Ø (J-138 § 10).
+  - Om det finnes et tak på antall teiner i fritt område, er ikke sjekket.
 
 **I spillet:**
 - **Juksa:** Juksa og fisket med båten (`08-actions.js`, `05-vessels.js`) stopper der `ruBlockMsg` sier nei, med grunnen i loggen.
@@ -1848,7 +1854,7 @@ Jonas' liste: oppgraderinger, kvotehandel, kikkert, raskere fangst, fortøying, 
   - **Beholdningen** er `pgear.bait`, gruppert etter slag (`baitOf`). Ei gammel lagring blir makrell, fordi teksten var «Sild og makrell».
   - **Valgt slag** (`pgear.baitPref`) bestemmer hva egnebua og egningen bruker, og hva teinene tar.
   - **Stampene husker agnet:** `lines[lk].bt` holder slag → stamper, og et lineset får `baitW`. Teineset får `bait`.
-  - **Egen sei og krabbe** kan tas fra lasten i havn før levering (`baitFromHold`). Seien teller på kvoten (`quotaState().sei`).
+  - **Egen sei** kan tas fra lasten i havn før levering (`baitFromHold`), og den teller på kvoten (`quotaState().sei`). Kongekrabbe er for dyr til agn (`BAIT_OWN = ['sei']`). Agnslaget «Krabbe» er strandkrabbe som kjøpes.
     - **Antakelse, ikke bekreftet:** fangst til eget bruk skal føres på landingsseddelen etter landingsforskriften. Lovdata var sperret fra arbeidsmiljøet 04.10.2026, og søk ga ikke noe klart svar.
   - Makrell finnes ikke som art i spillet ennå, så den kan bare kjøpes.
 - **Inn til kai og ut igjen** (`berthPath`, `berthBlocked`, `berthClear` i `07-harbours.js`):
@@ -1857,7 +1863,7 @@ Jonas' liste: oppgraderinger, kvotehandel, kikkert, raskere fangst, fortøying, 
   - **3D:** `moorStep` følger banen, glattet med `pathM`/`pathAt`. Ved avgang går båten baklengs ut fra kaia og så banen ut til havnepunktet (`DEP` i `updateBoat`), før følgeren tar over.
   - **Test:** `harbourtest` sjekker banen inn til hver kaiplass for tre båttyper, fra havnepunktet og fra innseilingen.
 - **Fiskeslagene fra Blender** (`tools/fish/fisk.py`, `src/data/fish.b64`, 363 KB):
-  - **Artene:** torsk, sei, hyse, lyr, lange, brosme, uer, kveite og taskekrabbe, hver som én del i GLB-en.
+  - **Artene:** torsk, sei, hyse, lyr, lange, brosme, uer, kveite og kongekrabbe (delen heter fortsatt `krabbe`), hver som én del i GLB-en.
   - **Fiskene** er 1 m lange, med hodet mot −z, ryggen opp og høyre side mot +x. Spillet skalerer dem etter vekta. Krabben er 1 m over beina.
   - **Kjennetegnene** er tatt med slik de ses på dekk:
     - torsk: skjeggtråd, overkjeve over underkjeve, flekker og lys sidelinje
@@ -1935,7 +1941,7 @@ Jonas' liste: oppgraderinger, kvotehandel, kikkert, raskere fangst, fortøying, 
 | Røkting | Høstingsforskriften kap. V | Garn og line for kveite og breiflabb minst hver 4. dag. Hvert fartøy røkter egne teiner |
 | Trål | Høstingsforskriften kap. XIII | Forbudt innenfor 12 nm, med unntak. Ikke i spillet ennå |
 | Tapt redskap | Fiskeridirektoratet, «Meld tapt redskap» | Meldes til Kystvakten med type, mengde og posisjon |
-| Taskekrabbe | Høstingsforskriften kap. X; HI 2023–24; Råfisklaget rundskriv 8/2025 | Minst 13 cm skallbredde nord for 59°30'. Mye krabbe sør for Senja. Pris etter hann/hunn med hele klør (kronetallene ikke hentet) |
+| Kongekrabbe | Fiskeridirektoratet J-136-2026 og J-138-2026; Råfisklagets minstepriser fra 5.10.2026 og prisstatistikk; Havforskningsinstituttets tokt 2023–2026 | Kvoteområde øst for 26° Ø for Finnmark. Fritt fiske vest for linja uten kvote og minstemål, alt skal landes. Stengt 1.–9.11 ved Nordkapp. Minstepris for levende krabbe per klasse, død krabbe 0 kr. Nesten ingen i Troms, mest vest for Nordkapp og i kvoteområdet |
 | Line | Store norske leksikon, «line» | Ca. 300 kroker per stamp bankline og 700 hyseline. Snøreline står 3–4 t, annen line over natta |
 | Deltakelse | Deltakerforskriften 2025/2026 (Lovdata) | Eier med ≥ 50 % i båt i lukket gruppe gjør at andre båter ikke kan være i åpen gruppe. Eier med båt i åpen gruppe kan ikke ha flere der |
 | Eier om bord | Fiskeridirektoratets høringsnotat 26.03.2026 | I åpen gruppe må eieren selv være høvedsmann om bord (unntak ved sykdom, graviditet med mer) |
@@ -2137,7 +2143,7 @@ Jonas' valg: alle tre kystredskapene i samme runde, ståtid for line som avveiin
 - **Tilstand:**
   - `S.pgear` er per båt (i `VKEYS`): garnlenker `{id, mesh, n, cond}`, stamper `{n, baited}` per linetype, teiner per størrelse, agn i kg, blåsesett og det som ligger på land (egnebu, bøteri).
   - `S.sets` er for hele rederiet: redskap i sjøen `{id, vid, kind, a, b, n, tSet, acc, dead, lost, heavy, …}`, slik at kartet og 3D tegner alle båtenes blåser.
-  - `S.cstk` er et eget bestandslag for krabbe.
+  - `S.cstk` er et eget bestandslag for krabbe (kongekrabbe fra 04.10.2026).
 - **Riggen** (`b.rig`, `RIGS` i `10-gear.js`, fra 01.10.2026, brukerens valg): Båten er rigget for én type fiske om gangen.
 
   | Rigg | Krever |
@@ -2172,11 +2178,16 @@ Jonas' valg: alle tre kystredskapene i samme runde, ståtid for line som avveiin
 - **Egning:**
   - Egnebua ved mottakene (antatt) tar 500 kr per stamp hyseline og 300 for bankline, pluss agn, og er klar etter 3 t pluss 20 min per stamp.
   - Egen egning går med ca. 560 kroker per time per person.
-- **Krabbe:**
-  - Holdes levende, sløyes ikke og ises ikke.
-  - Sorteres ved trekking. «Sorter nøye» sender småkrabbe og rognkrabbe ut igjen.
-  - Slurv gir inndragning og gebyr (2 000 kr + 100 kr per krabbe, plassholder), og 10 % trekk for rognkrabbe.
-  - Krabbe har ingen kvote og teller ikke i ferskfiskordningen (antakelse).
+- **Krabbe** (taskekrabbe til 04.10.2026, så kongekrabbe; brukerens ord: «Taskekrabbe skal fjernes fra spillet. Det er kongekrabbe som gjelder innen fiskerinæringen»):
+  - Artsnøkkelen er fortsatt `'krabbe'`, så lagringer, `S.cstk`, `ALLSP`-rekkefølgen (frøene) og delen i `fish.b64` holder seg. Navnet er «Kongekrabbe».
+  - **Hvor den finnes** (`kingArea` i `10-gear.js`, etter Havforskningsinstituttet): nesten ingen i Troms (0,004; 0–0,01 krabbe per teine på toktene 2023–2026), litt i Balsfjorden og ved Håkøya (0,03), stigende fra 19,6° Ø til 0,15 ved 22° Ø, 0,7 ved 24° Ø og 1,2 ved 26° Ø. Nord for 72° N er det mindre. Dybden er `dep:[80, 0.8]`.
+  - **Fangsten** (`KC` i `10-gear.js`): `KC.q = 3` ganger den gamle krabbefangsten per teine, snittvekt 1,5 kg. Store teiner i 24 timer i september i Vest-Finnmark gir 2–12 kg per teine (`geartest`, anslag). Alt som kommer opp, beholdes (J-138 § 5): 40 % hunner (snitt 1,1 kg), 5 % skadde hanner, hannene etter vekt. Klassene er Råfisklagets.
+  - **Prisen** (`SPECIES.krabbe`): minstepris for levende krabbe fra 5.10.2026 per klasse: hann over 3,2 kg 296, 2,2–3,2 kg 291, 1,6–2,2 kg 246, 0,8–1,6 kg 66, hunn 80 og skadd hann 100 kr/kg. Under 0,8 kg er fri prising (20 kr er et anslag). Markedsprisen følger måneden (`pm`) etter Råfisklagets statistikk: 2025 i snitt 436 kr/kg, fra 151 i april til 614 i januar. Månedene mellom de kjente er anslått.
+  - **Levende eller død:** krabben holdes levende og sløyes og ises ikke. Uten krabbekar faller friskheten 2,5 per time (den lever rundt et døgn), med `EQUIP.krabbekar` (28 000 kr, anslag) 0,4 per time. Under friskhet 40 er den død (`KC.dead`), og død krabbe vrakes til 0 kr med en melding fra mottaket og en linje på seddelen.
+  - **Teinene** (`POTS`): små kongekrabbeteiner 1 400 kr (20 krabber), store 2 200 kr (40 krabber, krever teinehaler). Plassen om bord (`gearMax.teine`) er en tredel av det den var for taskekrabbe. Prisene er anslag.
+  - Krabbe har ingen kvote i fritt område og teller ikke i ferskfiskordningen.
+  - **Gamle lagringer** (`S.kc` i `bootGame`): taskekrabbe i lasten fjernes, med en linje i loggen.
+  - **Leveringen:** kongekrabben kan leveres ved alle mottakene i spillet. Mottakene i Finnmark kommer med M2.
 - **Driftsplan:** Et veipunkt med redskap blir en stasjon: trekk og sett ut igjen langs samme strek, sett nytt om ingenting står der, og ta alt med hjem ved kuling innen 36 t.
   - Garn krever to om bord.
   - Line går til egnebua etter levering.
@@ -2357,9 +2368,8 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
   - Utstyr som ikke passer en ny båt, forsvinner ved båtbytte uten refusjon (som før). Teksten i Utstyr-appen sier det nå.
 
 - **Redskap, åpne punkter:**
-  - Minsteprisene for taskekrabbe (Råfisklaget, rundskriv 8/2025) er ikke hentet, fordi siden er blokkert herfra. Hunn 17 og hann 14 kr/kg er plassholdere.
+  - Kongekrabbe: fangsten per teine, hvor lenge krabben lever om bord, teineprisene, prisen under 0,8 kg og månedsprisene mellom de kjente er anslag. Linjene for kvoteområdet er tilnærmet.
   - Hvilke havner som har egnebu, og hva egning koster, er antakelser.
-  - Gebyret for småkrabbe er en plassholder.
   - Kvotetillegg for landegnet line er ikke bekreftet og ikke bygget inn.
   - NPC-båtene har ikke egne blåser ennå.
 

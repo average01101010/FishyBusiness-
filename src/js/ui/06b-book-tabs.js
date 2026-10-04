@@ -26,10 +26,9 @@ function bookSeasons(){
   const sd = codStopDoy(y); E(D(y, 0, 1), sd != null ? D(y, 0, 1 + sd) - 1 : D(y, 11, 31) + 1439, ['Maksimalkvoter i åpen gruppe', 'Maximum quotas in the open group'], ['Båtene i åpen gruppe kan fiske mot maksimalkvoten. Etter stoppen gjelder bare den garanterte kvoten.', 'Open-group boats may fish towards the maximum quota. After the stop only the guaranteed quota applies.']);
   E(D(y, 5, 1), D(y, 7, 31) + 1439, ['Uer på juksa', 'Redfish on the jig'], ['Båter under 15 meter kan fiske uer med juksa. Resten av året er uer bare tillatt som bifangst.', 'Boats under 15 m may jig for redfish. The rest of the year redfish is bycatch only.']);
   E(D(y, 5, 29), D(y, 11, 31) + 1439, ['Ferskfiskordningen', 'The fresh-fish scheme'], ['Torsk tilsvarende 20 % av det du lander fersk hver uke kommer utenom kvoten. Noen år øker andelen om høsten.', 'Cod up to 20 % of what you land fresh each week comes on top of the quota. Some years the share is raised in the autumn.']);
-  // the crab season and the price seasons, from the monthly curves: months in a row that stand out
+  // the price seasons (the king crab's too), from the monthly curves: months in a row that stand out
   const runs = (vals, ok) => { const r = []; for (let m = 0; m < 12; m++) if (ok(vals[m]) && !ok(vals[(m + 11) % 12])){ let e = m; while (ok(vals[(e + 1) % 12]) && e - m < 11) e++; r.push([m, e]); } return r; };
-  for (const [m, e] of runs(SPECIES.krabbe.av, v => v >= 0.6)) E(D(y, m, 1), D(y, e + 1, 1) - 1, ['Krabbesesongen', 'Crab season'], ['Taskekrabben går i teinene, mest sør på Senja. Krabbe under 13 cm skal slippes, og rognkrabbe likeså.', 'Brown crab comes into the pots, mostly south on Senja. Crab under 13 cm goes back, and so does berried crab.']);
-  for (const sp of SP){
+  for (const sp of [...SP, 'krabbe']){
     const pm = SPECIES[sp].pm, mean = pm.reduce((a, v) => a + v, 0) / 12, n0 = SPECIES[sp].no.toLowerCase(), n1 = SPECIES[sp].en.toLowerCase();
     for (const [hi, ok] of [[true, v => v >= mean * 1.1], [false, v => v <= mean * 0.9]]) for (const [m, e] of runs(pm, ok)){
       const ms = []; for (let k = m; k <= e; k++) ms.push(pm[k % 12]); const dv = (ms.reduce((a, v) => a + v, 0) / ms.length / mean - 1) * 100;

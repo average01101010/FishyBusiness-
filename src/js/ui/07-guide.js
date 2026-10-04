@@ -268,6 +268,7 @@ function portSlip(){
     const codKg = ls.codKg != null ? ls.codKg : ls.confKg, codKr = ls.codKr != null ? ls.codKr : ls.confKr;
     if (codKg > 0.5) h.push(row(ls.acc === 'none' ? LN('Inndratt over bifangstgrensen', 'Over the bycatch limit, confiscated') : LN('Inndratt torsk over kvote', 'Cod over quota, confiscated'), fmt(codKg, 0), '−' + fmt(codKr, 0)));
     if (ls.crabKg > 0.05) h.push(row(LN('Krabbe under minstemål, inndratt', 'Undersized crab, confiscated'), fmt(ls.crabKg, 1), '−' + fmt(ls.crabKr, 0)));
+    if (ls.crabDead > 0.05) h.push(row(LN('Død kongekrabbe, vraket', 'Dead king crab, discarded'), fmt(ls.crabDead, 1), '0'));
     if (ls.roeCut > 0.5) h.push(row(LN('Trekk for rognkrabbe (dårlig sortering)', 'Deduction for berried crab (poor sorting)'), '', '−' + fmt(ls.roeCut, 0)));
     if (ls.ordKr > 0.5) h.push(row(LN('Tillegg for bestillinger', 'Order premiums'), '', fmt(ls.ordKr, 0)));
     if (ls.streak && ls.streak.kr > 0) h.push(row(LN('Innloggingsbonus +', 'Login bonus +') + fmt(ls.streak.pct, 0) + ' %', '', fmt(ls.streak.kr, 0)));

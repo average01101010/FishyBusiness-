@@ -1,7 +1,7 @@
 from _env import GAME, boot
 # Passive gear (R1–R7): nets, line and pots that stand in the sea. Buying and room aboard, rules at setting (two aboard for nets, the fjord
 # line's 80 nets and 5,000 hooks), where the string goes, soak curves (line: more over a day, amphipods after; pots: 20 hours, dying after
-# 48; nets: fish spoils faster in summer), mesh size, hauling into the deck-work pipeline, crab sorting with fine and deduction, storm loss
+# 48; nets: fish spoils faster in summer), mesh size, hauling into the deck-work pipeline, king crab kept and sorted by class, dead crab worth nothing, storm loss
 # and reporting, tending reminders, wear, mending and the net loft, baiting at the shed and by the crew, the standing plan's stations,
 # save and reload, the chart's buoys, 3D without page errors, and the calibration numbers. Math.random is seeded so the runs repeat.
 import asyncio, json
@@ -16,15 +16,16 @@ PREP = """(()=>{ S.tut = 0; S.cash = 1e7; S.settings.autoOn = false; S.stock = i
   window.atSea = p => { const b = S.boat; b.status = 'idle'; b.port = null; b.pos = {...p}; b.heading = 1.2; b.gop = null; };
   window.hStep = (n) => { for (let i = 0; i < n && S.boat.gop; i++) step(); };
   window.HOUR = (y, m, d, h) => (Date.UTC(y, m, d, h) - EPOCH) / 3.6e6;
-  // a shallow crab spot south on Senja
-  let spot = null; for (let y = 60; y < 70 && !spot; y += 0.5) for (let x = 20; x < 60; x += 0.5){ const q = LG(x, y); if (!isLand(q) && depthF(q) > 12 && depthF(q) < 35){ spot = q; break; } }
-  window.CRABSPOT = spot;
 })()"""
+# a king crab spot in West Finnmark (free fishing west of 26° E), 40-150 m deep near 71°03' N 24°54' E; its tiles are loaded before each use
+CRABP = """async () => { const c = P(71.05, 24.9); await mapNeed(c, MAPD.simR); let spot = null;
+  for (let r = 0; r <= 40 && !spot; r++) for (let k = 0; k < Math.max(1, r * 6); k++){ const t = k / Math.max(1, r * 6) * 2 * Math.PI, q = {x:c.x + Math.cos(t) * r * 0.1, y:c.y + Math.sin(t) * r * 0.1}; if (!isLand(q) && depthF(q) > 40 && depthF(q) < 150){ spot = q; break; } }
+  window.CRABSPOT = spot; window.crabReady = () => mapNeed(window.CRABSPOT, MAPD.simR); }"""
 
 async def fresh(br):
     pg = await (await br.new_context(viewport={'width':1100, 'height':800})).new_page(); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
     await boot(pg)
-    await pg.evaluate(SEED); await pg.evaluate(PREP)
+    await pg.evaluate(SEED); await pg.evaluate(PREP); await pg.evaluate(CRABP)
     return pg, errs
 
 async def main():
@@ -33,6 +34,7 @@ async def main():
         pg, errs = await fresh(br)
 
         # 1. crab is not a fish: the jig never takes it; buying in the phone app, sized to the room aboard
+        await pg.evaluate("crabReady()")
         r = await pg.evaluate("""(()=>{ const R = {};
           R.spNoCrab = !SP.includes('krabbe') && ALLSP.includes('krabbe') && SPECIES.krabbe.shell;
           S.t = Math.round(HOUR(2028, 7, 10, 6) * 60); const b = S.boat; b.gear = true;
@@ -43,15 +45,15 @@ async def main():
           const click = sel => { const e = document.querySelector(sel); if (e && !e.disabled) e.click(); return !!(e && !e.disabled); };
           R.clicked = [click('[data-pa=grbuy][data-w=net][data-s="156"]'), click('[data-pa=grbuy][data-w=stamp][data-s=hyse]'), click('[data-pa=grbuy][data-w=pot][data-s=small]'), click('[data-pa=grbuy][data-w=kit]'), click('[data-pa=grbuy][data-w=bait][data-n="20"]')];
           R.pg = {nets:S.pgear.nets.map(l => l.n), hyse:S.pgear.lines.hyse.n, pots:S.pgear.pots.small, kits:S.pgear.kits.n, bait:baitKg(S.pgear)};
-          R.spent = Math.round(c0 - S.cash); R.expect = 6 * GPRICE.net + 4 * LINE_KINDS.hyse.price + 20 * POTS.small.price + GPRICE.kit + 20 * GPRICE.bait;
+          R.spent = Math.round(c0 - S.cash); R.potRoom = VESSELS.skiff.gearMax.teine; R.expect = 6 * GPRICE.net + 4 * LINE_KINDS.hyse.price + R.potRoom * POTS.small.price + GPRICE.kit + 20 * GPRICE.bait;
           R.fullNets = document.querySelector('[data-pa=grbuy][data-w=net]').disabled;
           // haulers: the small electric one is not for a sjark
           PHONE.open('utstyr'); R.elSkiff = !!document.querySelector('[data-pa=equip][data-k=elhaler]') || document.body.innerHTML.includes('Elektrisk haler');
           b.type = 'sjark'; applyVessel(); PHONE.open('utstyr'); R.elSjark = document.getElementById('drawerBody').innerHTML.includes('Elektrisk haler'); R.garnhalerSjark = document.getElementById('drawerBody').innerHTML.includes('Hydraulisk garnhaler');
           PHONE.show(false); b.type = 'skiff'; applyVessel(); return R; })()""")
         print('buy:', json.dumps(r, ensure_ascii=False))
-        print(ok(r['spNoCrab'] and r['jigCrab'] == 0 and r['jigKg'] > 0), 'brown crab is outside the fish list, and a day of jigging on a crab spot takes no crab')
-        print(ok(all(r['clicked']) and r['pg'] == {'nets':[6], 'hyse':4, 'pots':20, 'kits':1, 'bait':20} and r['spent'] == r['expect'] and r['fullNets']), 'buying in the Gear app: nets, tubs, pots, a buoy set and bait, sized to the skiff’s room, paid exactly')
+        print(ok(r['spNoCrab'] and r['jigCrab'] == 0 and r['jigKg'] > 0), 'king crab is outside the fish list, and a day of jigging on a crab spot takes no crab')
+        print(ok(all(r['clicked']) and r['pg'] == {'nets':[6], 'hyse':4, 'pots':r['potRoom'], 'kits':1, 'bait':20} and r['spent'] == r['expect'] and r['fullNets']), 'buying in the Gear app: nets, tubs, pots, a buoy set and bait, sized to the skiff’s room, paid exactly')
         print(ok(r['elSkiff'] and not r['elSjark'] and r['garnhalerSjark']), 'the electric hauler is for small boats, the hydraulic net hauler for the sjark')
 
         # 2. rules at setting: two aboard for nets, the fjord line's limits, both ends at sea
@@ -72,6 +74,7 @@ async def main():
         print(ok(all(all(g[:4]) for g in r['geo']) and all(1150 <= g[4] <= 1250 for g in r['geo'])), 'each string lies at sea between its buoys, clear of land, on at least 5 m, 30 m a net')
 
         # 3. soak curves and mesh size (dry sets, no stock taken)
+        await pg.evaluate("crabReady()")
         r = await pg.evaluate("""(()=>{ const R = {}, Hf = HOUR(2028, 1, 10, 6), Hs = HOUR(2028, 6, 10, 6), Hc = HOUR(2028, 8, 10, 6);
           let best = null, bd = 0; for (const g of GROUNDS) for (let k = 0; k < 60; k++){ const a = k * 2.4, r0 = g.r * (k % 6) / 5, q = {x:g.p.x + Math.cos(a) * r0, y:g.p.y + Math.sin(a) * r0}; if (isLand(q)) continue; const d = density('hyse', q, Hf); if (d > bd){ bd = d; best = q; } }
           const L = h => dry('line', {lk:'hyse', hooks:700, n:1}, best, Hf, h); R.line = [4, 12, 24, 48].map(h => Math.round(kgOf(L(h))));
@@ -92,7 +95,8 @@ async def main():
         print(ok(r['pots'][0] >= 0.45 * r['pots'][1] and r['dead60'] > 0), 'pots: half the catch by 20 hours, and crab dies after two days')
         print(ok(r['mesh'][1] >= 1.3 * r['mesh'][0]), '200 mm nets take bigger cod than 156 mm')
 
-        # 4. hauling: into the deck work, hook flags, wear; crab sorting, fine and roe deduction; crab outside the fresh-fish scheme
+        # 4. hauling: into the deck work, hook flags, wear; king crab kept and sorted, paid by class while alive; crab outside the fresh-fish scheme
+        await pg.evaluate("crabReady()")
         r = await pg.evaluate("""(()=>{ const R = {}, b = S.boat; S.sets = []; S.hold = []; S.pgear = newPGear(); S.pgear.kits.n = 4; S.crew = [hand()]; S.me = S.cur;
           S.equip.garnhaler = true; S.equip.linehaler = true; S.equip.teinehaler = true; S.t = Math.round(HOUR(2028, 2, 5, 6) * 60); S.settings.gut = true; S.settings.ice = true; b.ice = 500;
           S.pgear.nets.push({id:'n1', mesh:180, n:10, cond:1}); S.pgear.lines.hyse = {n:2, baited:2};
@@ -102,21 +106,25 @@ async def main():
           const sn = S.sets.find(s => s.kind === 'garn'), sl = S.sets.find(s => s.kind === 'line');
           atSea(sn.a); startHaul(sn.id); hStep(900); R.afterNet = {hook:S.hold.filter(x => x.sp !== 'krabbe').every(x => x.hook === false), pend:Math.round(deckPending()), kg:Math.round(holdTotal()), nets:S.pgear.nets.map(l => [l.n, l.cond]), left:S.sets.length};
           S.hold = []; atSea(sl.a); startHaul(sl.id); hStep(900); R.afterLine = {hook:S.hold.every(x => x.hook === true), kg:Math.round(holdTotal()), un:S.pgear.lines.hyse.n - S.pgear.lines.hyse.baited};
-          // crab: careful sorting leaves no small or berried crab; quick sorting brings the fine and the deduction
-          S.hold = []; S.t = Math.round(HOUR(2028, 8, 10, 6) * 60); S.pgear.pots.big = 60; S.pgear.bait = 60;
-          const crabRun = (careful) => { S.settings.crabSort = careful; atSea(window.CRABSPOT); b.heading = Math.PI / 2; b.rig = 'teiner'; startSet('teine', {pot:'big', n:60}, 0); hStep(400); for (let k = 0; k < 30 * 60; k++) step();
-            const s = S.sets.find(x => x.kind === 'teine'); atSea(s.a); startHaul(s.id); hStep(900); return S.hold.filter(x => x.sp === 'krabbe').map(x => [x.cls, Math.round(x.kg * 10) / 10, Math.round(x.n)]); };
-          R.careful = crabRun(true); R.carefulBad = R.careful.filter(x => x[0] >= 2).length; S.hold = []; S.pgear.bait = 60;
-          // quick sorting, and a forced small and berried crab so the landing shows both rules
-          R.quick = crabRun(false); addCatch('krabbe', 0.35, 2, false, {}); addCatch('krabbe', 0.8, 3, false, {}); { const h0 = S.hold; S.hold = h0.filter(x => x.sp === 'krabbe'); R.crabPend = deckPending(); S.hold = h0; } R.nonCrab = S.hold.filter(x => x.sp !== 'krabbe' && grade(x.fresh) !== 'V').reduce((a, x) => a + x.kg, 0);
+          // king crab: all that comes up is kept (J-138-2026 § 5), in Råfisklaget's classes by sex, weight and damage
+          S.hold = []; S.t = Math.round(HOUR(2028, 8, 10, 6) * 60); S.pgear.pots.big = 40; S.pgear.bait = 60;
+          atSea(window.CRABSPOT); b.heading = Math.PI / 2; b.rig = 'teiner'; R.potSet = startSet('teine', {pot:'big', n:40}, 0); hStep(400); for (let k = 0; k < 30 * 60; k++) step();
+          { const s = S.sets.find(x => x.kind === 'teine'); atSea(s.a); startHaul(s.id); hStep(900); }
+          const cr = S.hold.filter(x => x.sp === 'krabbe');
+          R.crab = {n:cr.reduce((a, x) => a + x.n, 0), kg:+cr.reduce((a, x) => a + x.kg, 0).toFixed(1), cls:[...new Set(cr.map(x => x.cls))].sort(),
+            clsOk:cr.every(x => { const w = x.kg / x.n; return [w >= 3.2, w >= 2.2 && w < 3.2, w >= 1.6 && w < 2.2, w >= 0.8 && w < 1.6, true, true, w < 0.8][x.cls]; })};
+          // and a lot of crab that died in the hold (a lot of its own: lots caught in the same hour share their freshness)
+          S.hold.push({sp:'krabbe', cls:1, kg:1.2, n:1, bled:true, iced:false, hr:-1, fresh:20, gut:false, hook:false}); { const h0 = S.hold; S.hold = h0.filter(x => x.sp === 'krabbe'); R.crabPend = deckPending(); S.hold = h0; } R.nonCrab = S.hold.filter(x => x.sp !== 'krabbe' && grade(x.fresh) !== 'V').reduce((a, x) => a + x.kg, 0);
           b.status = 'port'; b.port = 'senjahopen'; b.pos = {...portById('senjahopen').p}; const q = quotaState(), ff0 = q.ffTot, m0 = S.msgs.length; sell();
-          R.sale = {fine:S.lastSale.crabFine, roe:Math.round(S.lastSale.roeCut), conf:+S.lastSale.confKg.toFixed(2), ffAdd:quotaState().ffTot - ff0, gear:S.lastSale.gear, msgs:S.msgs.slice(m0).map(m => m.from)};
-          S.settings.crabSort = true; return R; })()""")
+          const ls = S.lastSale, live = ls.lines.filter(r => r.sp === 'krabbe' && r.g !== 'X' && r.g !== 'V');
+          R.sale = {fine:ls.crabFine, dead:+(ls.crabDead || 0).toFixed(2), minOk:live.length > 0 && live.every(r => r.sum >= r.kg * SPECIES.krabbe.cls[r.c][1] - 1), krPerKg:Math.round(live.reduce((a, r) => a + r.sum, 0) / Math.max(0.1, live.reduce((a, r) => a + r.kg, 0))),
+            ffAdd:quotaState().ffTot - ff0, gear:ls.gear, msgs:S.msgs.slice(m0).map(m => m.from)};
+          return R; })()""")
         print('haul:', json.dumps(r, ensure_ascii=False))
         print(ok(r['afterNet']['hook'] and r['afterNet']['kg'] > 50 and r['afterNet']['pend'] > 0 and r['afterNet']['left'] == 1 and r['afterNet']['nets'][0][1] < 1), 'nets come up: net fish is not hook-caught, it goes to the bleeding tub, the nets are aboard again and worn a little')
         print(ok(r['afterLine']['hook'] and r['afterLine']['kg'] > 20 and r['afterLine']['un'] == 2), 'line comes up hook-caught, and the tubs are unbaited')
-        print(ok(r['careful'] and r['carefulBad'] == 0), 'careful sorting puts back all small and berried crab')
-        print(ok(r['crabPend'] == 0 and r['sale']['fine'] >= 2000 and r['sale']['roe'] > 0 and r['sale']['conf'] > 0 and r['sale']['ffAdd'] <= r['nonCrab'] + 0.01 and 'Fiskeridirektoratet' in r['sale']['msgs'] and 'teine' in r['sale']['gear']), 'crab is kept alive; small crab is confiscated with a fine, berried crab costs 10 %, and crab is outside the fresh-fish scheme')
+        print(ok(r['potSet'] is None and r['crab']['n'] >= 20 and r['crab']['clsOk'] and len(r['crab']['cls']) >= 4), 'king crab: all of it is kept (J-138-2026 § 5) and sorted by sex, weight and damage into Råfisklaget’s classes')
+        print(ok(r['crabPend'] == 0 and not r['sale']['fine'] and abs(r['sale']['dead'] - 1.2) < 0.02 and r['sale']['minOk'] and r['sale']['ffAdd'] <= r['nonCrab'] + 0.01 and 'Fiskeridirektoratet' not in r['sale']['msgs'] and 'teine' in r['sale']['gear']), 'live king crab is paid at least the minimum price of its class and dead crab nothing; no fine, and crab is outside the fresh-fish scheme')
 
         # 5. weather, deadlines, wear and mending, baiting
         r = await pg.evaluate("""(()=>{ const R = {}, b = S.boat; S.sets = []; S.hold = []; S.msgs = []; S.log = [];
@@ -198,13 +206,14 @@ async def main():
         r = await pg.evaluate("""(()=>{ const b = S.boat; b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; b.gop = null; S.sets = []; S.pgear = newPGear(); S.pgear.kits.n = 1; S.pgear.nets.push({id:'nz', mesh:200, n:5, cond:0.8});
           S.sets.push({id:'sz', vid:S.cur, kind:'teine', pot:'big', n:10, a:LG(30, 60), b:LG(30.2, 60), tSet:S.t, acc:{}, dead:0, lost:null, rep:false, warn:0, heavy:false, depth:20});
           const v2 = newVesselObj('snekke', 'husoy'); storeVessel(curVessel()); delete v2.pgear; save(); return {n:S.fleet.length}; })()""")
-        await pg.reload(); await pg.wait_for_timeout(1800); await pg.evaluate(SEED); await pg.evaluate(PREP)
+        await pg.reload(); await pg.wait_for_timeout(1800); await pg.evaluate(SEED); await pg.evaluate(PREP); await pg.evaluate(CRABP)
         r = await pg.evaluate("""(()=>({sets:S.sets.map(s => s.id), nets:S.pgear.nets.map(l => [l.id, l.n, l.cond]), v2:!!vget(S.fleet[1], 'pgear') && Array.isArray(vget(S.fleet[1], 'pgear').nets)}))()""")
         print('reload:', json.dumps(r))
         print(ok(r['sets'] == ['sz'] and r['nets'] == [['nz', 5, 0.8]] and r['v2']), 'gear in the sea and aboard survives a reload; an old save gets a gear locker on every vessel')
 
         # 8. the chart shows two buoys a set; 3D draws buoys and the work without page errors
         r = await pg.evaluate("""(()=>{ S.fleet = [S.fleet[0]]; bindVessel(S.fleet[0]); G3.show(false); view.cx = 30; view.cy = 60; view.z = 6; applyView(); renderDyn(); return {buoys:document.querySelectorAll('#gDyn .buoy').length}; })()""")
+        await pg.evaluate("crabReady()")
         b3 = await pg.evaluate("""(()=>{ const b = S.boat; b.type = 'sjark'; applyVessel(); S.crew = [hand()]; S.equip.teinehaler = true; S.pgear.pots.big = 10; S.pgear.bait = 10; S.pgear.kits.n = 2;
           atSea(window.CRABSPOT || GROUNDS[3].p); b.heading = Math.PI / 2; b.rig = 'teiner'; const why = startSet('teine', {pot:'big', n:10}, 0); G3.show(true); return {why}; })()""")
         await pg.wait_for_timeout(5000)
@@ -213,6 +222,7 @@ async def main():
         print(ok(r['buoys'] == 2 and b3['why'] is None), 'the chart draws two buoys for the set, and setting pots runs in 3D')
 
         # 9. calibration (start values): kg per unit and the jig day for comparison
+        await pg.evaluate("crabReady()")
         r = await pg.evaluate("""(()=>{ S.stock = initStock(); const R = {}, Hf = HOUR(2028, 1, 10, 6), Hm = HOUR(2028, 2, 5, 6), Hc = HOUR(2028, 8, 10, 6);
           // the eight best haddock spots on the grounds: one spot alone swings from 50 to 110 kg a tub with where the fish's patches lie
           const C = []; for (const g of GROUNDS) for (let k = 0; k < 60; k++){ const a = k * 2.4, r0 = g.r * (k % 6) / 5, q = {x:g.p.x + Math.cos(a) * r0, y:g.p.y + Math.sin(a) * r0}; if (isLand(q)) continue; C.push([density('hyse', q, Hf), q]); }
@@ -226,7 +236,7 @@ async def main():
         print('calibration:', json.dumps(r))
         print(ok(70 <= r['linePerTub'] <= 115 and r['lineHyse'] >= 50), 'haddock line, 12 hours in February on the eight best haddock spots: 70–115 kg a tub, mostly haddock')
         print(ok(20 <= r['netPerNet'] <= 45), 'cod nets of 180 mm, 20 hours in March west of Gryllefjord: 20–45 kg a net')
-        print(ok(1.0 <= r['potPerPot'] <= 2.5), 'big pots, 24 hours in September south on Senja: 1–2.5 kg a pot')
+        print(ok(2.0 <= r['potPerPot'] <= 12), 'big king crab pots, 24 hours in September in West Finnmark: 2–12 kg a pot (an estimate)')
         # bait (04.10.2026): five kinds with their own species, a set line keeps the tubs' bait, and own saithe as bait counts on the quota
         bt = await pg.evaluate("""(()=>{ const R = {f:[baitF('reke', 'torsk'), baitF('krill', 'uer'), baitF('krill', 'torsk'), baitF('krabbe', 'lange'), baitF('sei', 'kveite'), baitF('makrell', 'sei')]};
           const pg = S.pgear; pg.lines.hyse = {n:3, baited:3, bt:{reke:2, krill:1}}; pg.baitPref = 'reke';

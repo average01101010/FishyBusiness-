@@ -225,7 +225,8 @@ function vesselStep(H){
   const b = S.boat;
   const clean = S.tripBuff && S.tripBuff.hold ? 0.75 : 1;
   workMinute();
-  for (const x of S.hold){ const r = SPECIES[x.sp].live ? 0.4 : x.bled ? (x.iced ? 0.9 : 3.0) : (x.iced ? 2.2 : 6.0); x.fresh = Math.max(0, x.fresh - r * clean / 60); }
+  const kar = S.equip && S.equip.krabbekar;
+  for (const x of S.hold){ const r = SPECIES[x.sp].live ? (kar ? 0.4 : 2.5) : x.bled ? (x.iced ? 0.9 : 3.0) : (x.iced ? 2.2 : 6.0); x.fresh = Math.max(0, x.fresh - r * clean / 60); }
   deckMinute();
   // work queue at the yard and on the quay: runs while the boat is in port
   if (S.jobs && S.jobs.length && b.status === 'port'){ const j = jobOk(S.jobs[0]); if (j.until == null) j.until = S.t + j.h * 60; if (S.t >= j.until){ finishJob(j); S.jobs.shift(); if (S.jobs.length) S.jobs[0].until = S.t + S.jobs[0].h * 60; } }

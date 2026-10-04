@@ -14,8 +14,8 @@ the decked boats' tub, and in the charm. One part per species, each 1 m long (th
     uer     redfish (Sebastes norvegicus): deep, a big head with large eyes, a spiny dorsal, red-orange
     kveite  Atlantic halibut (Hippoglossus hippoglossus): a flatfish, both eyes on its right side, olive-brown above with paler mottling,
             white below, long dorsal and anal fins along the edges, a concave tail; the lateral line arched over the pectoral
-    krabbe  brown crab (Cancer pagurus, taskekrabbe): the pie-crust shell, red-brown above and cream below, two black-tipped claws
-            and four pairs of walking legs; 1 m across the legs
+    krabbe  king crab (Paralithodes camtschaticus, kongekrabbe; the brown crab before 04.10.2026): the spiny pear-shaped shell, brick
+            red above and cream below, the right claw the bigger, three pairs of long spiny walking legs; 1 m across the legs
 
     pip install bpy==4.5.4
     python3 tools/fish/fisk.py          -> src/data/fish.b64, renders in tools/fish/out/
@@ -310,47 +310,57 @@ def build_fish(sp):
     for p in parts: apply_all(p)
     return join(parts, sp)
 
-# ---------- the brown crab: the pie-crust shell, the claws and the legs ----------
-def build_crab():
-    C = {'top': mat('crab_top', (0.60, 0.30, 0.16), 0.45), 'rim': mat('crab_rim', (0.52, 0.25, 0.13), 0.45), 'under': mat('crab_under', (0.90, 0.80, 0.62), 0.35),
-         'leg': mat('crab_leg', (0.66, 0.36, 0.20), 0.45), 'tip': mat('crab_tip', (0.10, 0.07, 0.05), 0.6), 'eye': mat('fish_pupil', (0.02, 0.02, 0.02), 0.9)}
-    AX, AY = 0.30, 0.20; NT = 32
-    def edge(th):
-        s = math.sin(th); lob = 0.035 * abs(math.sin(5 * th)) if s > -0.15 else 0.0      # the front's pie-crust lobes
-        return (AX * math.cos(th) * (1 + lob), AY * s * (1 + lob * 0.5) + 0.02 * (1 - abs(math.cos(th))) * (1 if s > 0 else 0))
-    RHO_T = [0.0, 0.25, 0.5, 0.7, 0.85, 0.95, 1.0]; RHO_B = [1.0, 0.92, 0.7, 0.4, 0.0]
+# ---------- the king crab (kongekrabbe, Paralithodes camtschaticus): the spiny pear-shaped shell, the long legs and the claws, the
+# right one the bigger; brick red above, cream below; 1 m across the legs (the game scales it) ----------
+def build_kingcrab():
+    C = {'top': mat('kc_top', (0.50, 0.09, 0.08), 0.45), 'rim': mat('kc_rim', (0.42, 0.07, 0.07), 0.45), 'under': mat('kc_under', (0.93, 0.85, 0.70), 0.35),
+         'leg': mat('kc_leg', (0.52, 0.11, 0.09), 0.45), 'spine': mat('kc_spine', (0.80, 0.42, 0.30), 0.5), 'tip': mat('kc_tip', (0.12, 0.05, 0.04), 0.6),
+         'eye': mat('fish_pupil', (0.02, 0.02, 0.02), 0.9)}
+    AX, AY = 0.115, 0.13; NT = 32
+    def edge(th):   # a pear: wider behind, narrowing towards the rostrum at the front (+y)
+        s, c = math.sin(th), math.cos(th); w = 1.0 - 0.25 * max(0.0, s) ** 2
+        return (AX * c * w, AY * s)
+    RHO_T = [0.0, 0.3, 0.55, 0.75, 0.9, 1.0]; RHO_B = [1.0, 0.85, 0.5, 0.0]
     G = []
     for k, rho in enumerate(RHO_T + RHO_B[1:]):
         top = k < len(RHO_T); row = []
         for j in range(NT):
             th = 2 * math.pi * j / NT; ex, ey = edge(th)
-            z = 0.075 * (1 - rho * rho) ** 0.55 + 0.006 if top else -0.035 * (1 - rho * rho) ** 0.5 - 0.004
+            z = 0.062 * (1 - rho * rho) ** 0.6 + 0.005 if top else -0.03 * (1 - rho * rho) ** 0.5 - 0.004
             if top and rho >= 1.0: z = 0.0
             row.append((ex * rho, ey * rho, z))
         G.append(row)
     nt = len(RHO_T)
-    shell = grid('crab_shell', G, lambda i, j: C['top'] if i < nt - 2 else (C['rim'] if i < nt else C['under']), closed_v=True, angle=60, out=lambda c: (c.x, c.y, c.z))
-    parts = [shell]
+    shell = grid('kc_shell', G, lambda i, j: C['top'] if i < nt - 2 else (C['rim'] if i < nt else C['under']), closed_v=True, angle=60, out=lambda c: (c.x, c.y, c.z))
+    parts = [shell, cyl('kc_rost', V((0, AY * 0.9, 0.03)), V((0, AY + 0.035, 0.04)), 0.008, C['top'], seg=6, r1=0.001)]
+    # the spines on the shell, in a fixed spiral (the model is the same at every build)
+    for i in range(36):
+        a = i * 2.39996; r = math.sqrt((i + 0.5) / 36) * 0.85; x = AX * r * math.cos(a); y = AY * r * math.sin(a)
+        rho = math.hypot(x / AX, y / AY); z = 0.062 * max(0.0, 1 - rho * rho) ** 0.6 + 0.005
+        n = V((x / AX / AX * 0.02, y / AY / AY * 0.02, 1.0)).normalized(); p0 = V((x, y, z - 0.002))
+        parts.append(cyl('kc_spine', p0, p0 + n * 0.014, 0.0045, C['spine'], seg=5, r1=0.0006))
     for sd in (1, -1):
-        # the eyes on short stalks at the front
-        parts.append(sphere('crab_eye', (sd * 0.035, AY + 0.015, 0.03), 0.009, C['eye'], seg=8, rings=4))
-        # the claw: arm, wrist, the swollen hand and the two black-tipped fingers
-        a0 = V((sd * 0.16, 0.14, -0.005)); a1 = V((sd * 0.26, 0.24, -0.002)); a2 = V((sd * 0.24, 0.33, 0.0))
-        parts.append(tube('crab_arm', [a0, a1], 0.028, C['leg'], seg=8)); parts.append(tube('crab_wrist', [a1, a2], 0.032, C['leg'], seg=8))
-        h0 = a2; h1 = V((sd * 0.13, 0.40, 0.003))
-        # the hand: built round the origin, turned along the claw and then moved to its place (turning it in place swung it off the arm)
-        hand = sphere('crab_hand', (0, 0, 0), 0.05, C['leg'], scale=(1.5, 0.75, 0.6), seg=12, rings=6); d = (h1 - h0).normalized()
-        hand.rotation_euler = (0, 0, math.atan2(d.y, d.x)); hand.location = (h0 + h1) / 2; apply_all(hand); parts.append(hand)
-        f0 = h1 + V((0, 0, 0.012)); f1 = f0 + V((-sd * 0.09, 0.03, 0.0)); g0 = h1 + V((0, 0, -0.012)); g1 = g0 + V((-sd * 0.085, 0.022, 0.0))
-        parts.append(cyl('crab_dact', f0, f0 + (f1 - f0) * 0.55, 0.016, C['leg'], seg=6, r1=0.012)); parts.append(cyl('crab_dact2', f0 + (f1 - f0) * 0.55, f1, 0.012, C['tip'], seg=6, r1=0.002))
-        parts.append(cyl('crab_fix', g0, g0 + (g1 - g0) * 0.55, 0.016, C['leg'], seg=6, r1=0.012)); parts.append(cyl('crab_fix2', g0 + (g1 - g0) * 0.55, g1, 0.012, C['tip'], seg=6, r1=0.002))
-        # four walking legs: out from under the shell, up to the knee and down to the dark tip
-        for k in range(4):
-            th = math.radians(18 - k * 26); base = V((sd * AX * 0.75 * math.cos(th), AY * 0.75 * math.sin(th), -0.01))
-            dirv = V((sd * math.cos(th), math.sin(th) * 0.8, 0.0)).normalized()
-            knee = base + dirv * 0.15 + V((0, 0, 0.06)); ank = knee + dirv * 0.13 + V((0, -0.01 * k, -0.04)); tip = ank + dirv * 0.06 + V((0, -0.02, -0.06))
-            parts.append(tube('crab_leg', [base, knee], 0.017, C['leg'], seg=6)); parts.append(tube('crab_leg2', [knee, ank], 0.014, C['leg'], seg=6))
-            parts.append(cyl('crab_leg3', ank, tip, 0.011, C['tip'], seg=6, r1=0.002))
+        parts.append(sphere('kc_eye', (sd * 0.022, AY + 0.005, 0.035), 0.007, C['eye'], seg=8, rings=4))
+        # the claw: the right one (sd = 1) much the bigger
+        s = 1.0 if sd > 0 else 0.7
+        a0 = V((sd * 0.06, AY * 0.8, 0.0)); a1 = V((sd * 0.14, AY + 0.06, 0.02)); a2 = V((sd * 0.12, AY + 0.15 * s, 0.01))
+        parts.append(tube('kc_arm', [a0, a1], 0.020 * s, C['leg'], seg=8)); parts.append(tube('kc_wrist', [a1, a2], 0.022 * s, C['leg'], seg=8))
+        d = (a2 - a1).normalized()
+        hand = sphere('kc_hand', (0, 0, 0), 0.04 * s, C['leg'], scale=(0.75, 1.6, 0.7), seg=10, rings=6)
+        hand.rotation_euler = (0, 0, math.atan2(d.y, d.x) - math.pi / 2); hand.location = a2 + d * 0.05 * s; apply_all(hand); parts.append(hand)
+        f0 = a2 + d * 0.10 * s
+        parts.append(cyl('kc_dact', f0 + V((sd * 0.008, 0, 0.006)), f0 + d * 0.07 * s + V((-sd * 0.01, 0, 0.004)), 0.011 * s, C['tip'], seg=6, r1=0.002))
+        parts.append(cyl('kc_fix', f0 + V((-sd * 0.008, 0, -0.004)), f0 + d * 0.065 * s + V((sd * 0.006, 0, -0.004)), 0.011 * s, C['tip'], seg=6, r1=0.002))
+        # three pairs of long walking legs, splayed out and down to stand on (the fourth pair is small and hidden under the shell)
+        for k in range(3):
+            th = math.radians(40 - k * 38); base = V((sd * AX * 0.85 * math.cos(th), AY * 0.85 * math.sin(th), -0.008))
+            dirv = V((sd * math.cos(th), math.sin(th) * 0.9, 0.0)).normalized()
+            knee = base + dirv * 0.16 + V((0, 0, 0.07)); ank = knee + dirv * 0.11 + V((0, 0, -0.03)); foot = ank + dirv * 0.11 + V((0, 0, -0.07)); tip = foot + dirv * 0.04 + V((0, 0, -0.03))
+            parts.append(tube('kc_leg', [base, knee], 0.019, C['leg'], seg=7)); parts.append(tube('kc_leg2', [knee, ank], 0.016, C['leg'], seg=7))
+            parts.append(tube('kc_leg3', [ank, foot], 0.013, C['leg'], seg=6)); parts.append(cyl('kc_leg4', foot, tip, 0.009, C['tip'], seg=6, r1=0.0015))
+            for t in (0.3, 0.6, 0.85):   # the spines along the legs' upper side
+                p = base + (knee - base) * t; parts.append(cyl('kc_lsp', p + V((0, 0, 0.012)), p + V((0, 0, 0.026)), 0.004, C['spine'], seg=5, r1=0.0006))
+                p = knee + (ank - knee) * t; parts.append(cyl('kc_lsp', p + V((0, 0, 0.010)), p + V((0, 0, 0.022)), 0.0035, C['spine'], seg=5, r1=0.0006))
     for p in parts: apply_all(p)
     return join(parts, 'krabbe')
 
@@ -359,7 +369,7 @@ SPECIES = ['torsk', 'sei', 'hyse', 'lyr', 'lange', 'brosme', 'uer', 'kveite']
 def main():
     os.makedirs(OUT, exist_ok=True)
     reset()
-    objs = {sp: build_fish(sp) for sp in SPECIES}; objs['krabbe'] = build_crab()
+    objs = {sp: build_fish(sp) for sp in SPECIES}; objs['krabbe'] = build_kingcrab()
     parts = [(sp, mesh_arrays(o, to_game, to_game_n, ao=False), 1.0) for sp, o in objs.items()]
     ex = {'frame': 'kystfiske fish: x right, y up, z back (the head at -z, the halibut eyed side +x); 1 m long from z -0.5 to 0.5; the crab 1 m across its legs',
           'species': list(objs)}

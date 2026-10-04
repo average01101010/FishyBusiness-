@@ -308,7 +308,7 @@ function denSp(sp, q, H, T){
   let av = T[sp].av;
   if (sp === 'torsk'){ if (q.skr < 0) q.skr = skreiSpot(p, q.d, q.E); av += T[sp].skrei * q.skr; }
   if (sp === 'uer' && !T.uerOpen) av *= 0.15;
-  if (s.shell) v *= crabArea(p); else v *= school(sp, p, H);
+  if (s.shell) v *= kingArea(p); else v *= school(sp, p, H);
   return 1.6 * s.k * v * day * av * depthFactor(sp, q.d) * stockAt(p, sp) + tutBonus(sp, p);   // k: calibration to 2025 catches per boat in Lofoten–Tromsø
 }
 function density(sp, p, H){ const q = denPlace(p); return q ? denSp(sp, q, H, denTime(H)) : 0; }

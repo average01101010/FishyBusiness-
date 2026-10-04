@@ -1478,7 +1478,7 @@ const G3 = (() => {
       if (n > 0 && SK && SK.fishM){ const cum = []; let acc = 0; for (const sp of ALLSP){ acc += S.hold.filter(x => x.sp === sp).reduce((a, x) => a + x.kg, 0); cum.push([sp, acc / all]); }
         const pick = r => (cum.find(c => r <= c[1] + 1e-9) || cum[0])[0];
         for (let i = 0; i < n; i++){ const sp = pick(hash(i * 7 + 5)), z = ((i % 3) - 1) * 0.2, lay = Math.floor(i / 3);
-          drawN(fishOf(sp), chain(BMrel, M4.T(ux, d.y, uz), M4.S(ts), M4.T((hash(i * 3) - 0.5) * 0.12, 0.5 + lay * 0.05, z), M4.RY(Math.PI / 2 + (i % 2 ? Math.PI : 0) + (hash(i * 9) - 0.5) * 0.3), M4.RZ(sp === 'krabbe' ? 0 : Math.PI / 2 * (hash(i * 11) > 0.5 ? 1 : -1)), M4.S(0.48 + hash(i * 13) * 0.1))); }
+          drawN(fishOf(sp), chain(BMrel, M4.T(ux, d.y, uz), M4.S(ts), M4.T((hash(i * 3) - 0.5) * 0.12, 0.5 + lay * 0.05, z), M4.RY(Math.PI / 2 + (i % 2 ? Math.PI : 0) + (hash(i * 9) - 0.5) * 0.3), M4.RZ(sp === 'krabbe' ? 0 : Math.PI / 2 * (hash(i * 11) > 0.5 ? 1 : -1)), M4.S((0.48 + hash(i * 13) * 0.1) * (sp === 'krabbe' ? 1.7 : 1)))); }
         if (!DK.on) drawN(fishOf(pick(0.3)), chain(BMrel, M4.T(tx, d.y + 0.885, tz + 0.25), M4.RY(0.2), M4.RZ(Math.PI / 2), M4.S(0.5))); } }
     if (!DK.on) return;
     const wl = xf(BMrel, [tx + 0.62, d.y, tz]), wy = wl[1] + eye[1], P = {gy:() => wy, bare:true, spray:0, kit:DK.alone ? 'skipper' : null}, head = bv.head - Math.PI / 2;
@@ -1921,7 +1921,7 @@ const G3 = (() => {
       f.tri([0, 0, 0.47], [0, 0.11, 0.6], [0, -0.11, 0.6], back); f.tri([0, 0.07, -0.15], [0, 0.15, 0.05], [0, 0.07, 0.1], back);
       if (sp === 'hyse') f.box(0.068, 0.005, 0.0, 0.004, 0.012, 0.7, [0.05, 0.05, 0.06, 0.3]);
       fishM[sp] = f.mesh(); }
-    // the catch from tools/fish (fisk.py): one part per species and the brown crab, 1 m long with the head at -z, in place of the
+    // the catch from tools/fish (fisk.py): one part per species and the king crab, 1 m long with the head at -z, in place of the
     // procedural fish above (which stand in when the data is missing)
     if (typeof glbHas === 'function' && glbHas('fish')) for (const sp of [...Object.keys(FC), 'krabbe']){ const o = glbPart('fish', sp);
       if (o) fishM[sp] = {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3}; }
@@ -2072,7 +2072,7 @@ const G3 = (() => {
     // the catch in the tub: one fish per ~5 kg, species in proportion to the hold; fish still in the air are not in it yet
     { const all = S.hold.reduce((a, x) => a + x.kg, 0), tot = Math.max(0, all - airKg), n = Math.min(40, Math.ceil(tot / 5)); if (n > 0){ const cum = []; let acc = 0; for (const sp of ALLSP){ acc += S.hold.filter(x => x.sp === sp).reduce((a, x) => a + x.kg, 0); cum.push([sp, acc / all]); }
       for (let i = 0; i < n; i++){ const r = hash(i * 7 + 3), sp = (cum.find(c => r <= c[1] + 1e-9) || cum[0])[0], lay = Math.floor(i / 8), k = i % 8, x = SKA.tub[0] - 0.18 + (k % 2) * 0.36 + (hash(i * 3 + 1) - 0.5) * 0.06, z = SKA.tub[2] - 0.16 + Math.floor(k / 2) * 0.11;
-        drawN(fishOf(sp), chain(BMrel, M4.T(x, SKA.tub[1] + 0.05 + lay * 0.05, z), M4.RY(Math.PI / 2 + (k % 2 ? Math.PI : 0) + (hash(i * 5) - 0.5) * 0.4), M4.RZ(sp === 'krabbe' ? 0 : Math.PI / 2 * (hash(i * 11) > 0.5 ? 1 : -1)), M4.S(0.42 + hash(i * 13) * 0.12))); } } }
+        drawN(fishOf(sp), chain(BMrel, M4.T(x, SKA.tub[1] + 0.05 + lay * 0.05, z), M4.RY(Math.PI / 2 + (k % 2 ? Math.PI : 0) + (hash(i * 5) - 0.5) * 0.4), M4.RZ(sp === 'krabbe' ? 0 : Math.PI / 2 * (hash(i * 11) > 0.5 ? 1 : -1)), M4.S((0.42 + hash(i * 13) * 0.12) * (sp === 'krabbe' ? 1.7 : 1)))); } } }
     // luck aboard: a charm swinging from the grab rail
     if (S.haill && haillF() > 0){ const CM = chain(BMrel, M4.T(CHARM_AT[0], CHARM_AT[1], CHARM_AT[2]), M4.RZ(Math.sin(T * 1.3) * 0.18), M4.RX(Math.sin(T * 0.9) * 0.12)); drawN(SK.cstr, CM);
       if (S.haill.type === 'luksus') drawN(SK.shoe, CM); else drawN(SK.fishM.torsk, chain(CM, M4.T(0, -0.17, 0), M4.RX(Math.PI / 2), M4.S(0.16))); }

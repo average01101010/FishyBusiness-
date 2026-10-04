@@ -1,8 +1,8 @@
 // ===== passive gear: nets, line and pots that stand in the sea while the boat is away =====
 // Rules: cod nets north of 62° N have at least 156 mm mesh (maskeviddeforskriften); inside the fjord line at most 80 cod nets and 5,000
 // hooks, and no vessel of 15 m or more (høstingsforskriften kap. VI); nets and line for halibut and monkfish are tended at least every
-// 4th day, and each vessel hauls only its own pots (kap. V); lost gear must be reported (Fiskeridirektoratet, "Meld tapt redskap"); brown
-// crab at least 13 cm across the shell (kap. X). A tub (stamp) holds about 300 hooks of bank line or 700 of haddock line; hand line stands
+// 4th day, and each vessel hauls only its own pots (kap. V); lost gear must be reported (Fiskeridirektoratet, "Meld tapt redskap"); king
+// crab west of 26° E has no minimum size and all of it is landed (J-138-2026 § 5). A tub (stamp) holds about 300 hooks of bank line or 700 of haddock line; hand line stands
 // 3–4 hours and other line overnight (Store norske leksikon, "line"). Catch rates, times, wear and prices are start values for play-testing.
 // Gear aboard each vessel is S.pgear (a VKEY); gear in the sea is S.sets for the whole company, so the map and 3D can draw every buoy.
 const GEAR = {
@@ -11,10 +11,10 @@ const GEAR = {
   teine:{no:'Teiner', en:'Pots', u:['teine', 'teiner', 'pot', 'pots'], km:0.025, set:0.9, haul:1.2, hand:2.5, crewMin:1, haulers:['teinehaler', 'elhaler'], q:0.12, skill:'teiner'}
 };
 const LINE_KINDS = {hyse:{no:'Hyseline', en:'Haddock line', hooks:700, price:2100, egn:500, baitKg:5}, bank:{no:'Bankline', en:'Bank line', hooks:300, price:1700, egn:300, baitKg:3}};
-const POTS = {small:{no:'Små teiner', en:'Small pots', price:550, cap:8, f:1}, big:{no:'Store teiner', en:'Big pots', price:850, cap:15, f:1.4, big:true}};
+// king crab pots (a frame of steel and netting, 1.5-2 m across; the prices are estimates): cap is the crabs a pot holds
+const POTS = {small:{no:'Små kongekrabbeteiner', en:'Small king crab pots', price:1400, cap:20, f:1}, big:{no:'Store kongekrabbeteiner', en:'Big king crab pots', price:2200, cap:40, f:1.4, big:true}};
 const MESHES = [156, 180, 200];                                  // legal cod nets north of 62° N; bigger mesh, bigger fish
-const GPRICE = {net:1500, kit:2500, heavy:1500, bait:18, potBait:0.4, bot:180, egnRate:560};   // kr, kg bait per pot, bøteri kr per net per 0.1, hooks baited per hour
-const GFINE = {crab:2000, perCrab:100};                          // overtredelsesgebyr for undersized crab: a placeholder, not checked against a source
+const GPRICE = {net:1500, kit:2500, heavy:1500, bait:18, potBait:0.6, bot:180, egnRate:560};   // kr, kg bait per pot, bøteri kr per net per 0.1, hooks baited per hour
 // how well each gear takes each species, relative to the jig (1 for every fish); pots take crab and a little cod and tusk
 const SELQ = {
   garn:{torsk:1.0, hyse:0.45, sei:0.7, lyr:0.6, lange:0.35, brosme:0.25, uer:0.3, kveite:0.35},
@@ -23,18 +23,26 @@ const SELQ = {
   teine:{torsk:0.012, brosme:0.008}
 };
 const GK = {torsk:1, hyse:1.05, sei:1, lyr:1, lange:0.8, brosme:0.95, uer:1.15, kveite:0.7};   // body shape in the mesh: optimal length per mm mesh
-const CRAB = {roeM:[0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.08, 0.04, 0.03, 0.06, 0.1, 0.1], claws:[0.97, 0.92], slack:[0.06, 0.12]};   // berried share of females; intact claws careful/quick; kept by quick sorting (undersized, berried)
+// king crab as it comes up in pots without escape vents (west of 26° E they are not allowed): the share of females and of damaged males,
+// the weights (kg) [median, log-spread] of males and females, the mean weight, how many more crabs than the old brown crab came, and the
+// freshness under which a crab is dead (an estimate from HI's catches in Porsanger 2020 and Varanger 2021: many small crabs and females)
+const KC = {fem:0.4, hurt:0.05, wm:[1.5, 0.55], wf:[1.1, 0.35], mean:1.5, q:3, dead:40};
 const gearKey = s => s.kind === 'line' ? 'line:' + s.lk : s.kind;
 const setMid = s => ({x:(s.a.x + s.b.x) / 2, y:(s.a.y + s.b.y) / 2});
 const tideRate = H => Math.abs(tideH(H + 0.5) - tideH(H - 0.5));
-// brown crab is common south of Senja and thin north of it (IMR 2023–24): from 35 to 75 km south of 69.72 N
-const CRAB_Y = [LG(LEGF.W / 2, 35).y, LG(LEGF.W / 2, 75).y];
-function crabArea(p){ return 0.35 + 0.9 * sstep(CRAB_Y[0], CRAB_Y[1], p.y); }
+// where the king crab is (HI): hardly any in Troms (0-0.01 crab a pot in its surveys 2023-2026; small stocks in Balsfjorden and at
+// Håkøya), more from Loppa and Sørøya, most west of Nordkapp and in the quota area east of 26° E, where only Finnmark's own may fish
+function kingArea(p){
+  const ll = natLL(p), lon = ll.lon, lat = ll.lat;
+  let a = lon < 19.6 ? 0.004 : lon < 22 ? 0.004 + 0.15 * sstep(19.6, 22, lon) : lon < 24 ? 0.15 + 0.55 * sstep(22, 24, lon) : 0.7 + 0.5 * sstep(24, 26, lon);
+  if (lon > 18.6 && lon < 19.4 && lat > 69.25 && lat < 69.8) a = Math.max(a, 0.03);
+  return lat > 72 ? a * 0.3 : a;
+}
 function newPGear(){ return {nets:[], lines:{hyse:{n:0, baited:0, bt:{}}, bank:{n:0, baited:0, bt:{}}}, pots:{small:0, big:0}, bait:{}, baitPref:'makrell', kits:{n:0, heavy:0}, shore:[]}; }
 // ---- bait (the user's list 04.10.2026): five kinds, each good for its own. Krabbe is the cheapest and fair on everything; reke is for
 // cod and skrei, partly saithe and haddock; krill for redfish; makrell for saithe and fair on haddock, cod and crab; sei for halibut and
 // crab. A tub remembers what it was baited with (bt: kind -> tubs), the pots take the kind chosen on the bait page (baitPref). Own saithe
-// and crab can be bait, taken from the hold in port before landing; the saithe counts on the quota (our reading of the landing rules:
+// can be bait, taken from the hold in port before landing; it counts on the quota (our reading of the landing rules:
 // what is kept for own use goes on the landing note; not confirmed). The prices are the game's (makrell keeps the old 18 kr/kg)
 const BAITS = {
   makrell:{no:'Makrell', en:'Mackerel', kr:18, f:{sei:1.4, hyse:1.0, torsk:1.0, krabbe:1.0}, d:0.8},
@@ -42,7 +50,7 @@ const BAITS = {
   reke:{no:'Reke', en:'Shrimp', kr:28, f:{torsk:1.4, hyse:1.1, sei:1.1}, d:0.8},
   sei:{no:'Sei', en:'Saithe', kr:12, f:{kveite:1.6, krabbe:1.2}, d:0.7},
   krill:{no:'Krill', en:'Krill', kr:22, f:{uer:1.8}, d:0.6}};
-const BAIT_OWN = ['sei', 'krabbe'];
+const BAIT_OWN = ['sei'];   // king crab is far too dear for bait (the bait crab is shore crab, bought)
 const baitF = (k, sp) => { const B = BAITS[k]; return !B ? 1 : B.f[sp] != null ? B.f[sp] : B.d; };
 // the pool by kind (an old save's single pool was herring and mackerel: makrell), and a line's baited tubs by kind
 function baitOf(pg){ if (!pg.bait || typeof pg.bait !== 'object') pg.bait = {makrell:+pg.bait || 0}; return pg.bait; }
@@ -153,7 +161,7 @@ function gearRules(kind, spec, p){
   else { if (!(pg.pots[spec.pot] >= spec.n) || spec.n < 1) return [gL('Du har ikke så mange teiner om bord.', 'You do not have that many pots aboard.')]; if (!baitPick(pg, spec.n * GPRICE.potBait)) return [gL('Teinene trenger agn: ' + fmt(spec.n * GPRICE.potBait, 0) + ' kg.', 'The pots need bait: ' + fmt(spec.n * GPRICE.potBait, 0) + ' kg.')]; }
   // the rules where the gear goes (03e-rules.js): the fjord lines by length, the baseline zones, closed areas; then the limits on gear
   // in the sea inside the fjord lines (§ 33 hooks, in six Finnmark fjords inside their own lines in winter; § 33a cod nets)
-  const rb = ruBlockMsg({p, len:BOAT.len, gear:kind, sp:kind === 'teiner' ? 'krabbe' : null}); if (rb) return [rb];
+  const rb = ruBlockMsg({p, len:BOAT.len, gear:kind === 'teine' ? 'teiner' : kind, sp:kind === 'teine' ? 'krabbe' : null}); if (rb) return [rb];
   const lim = fjordLimits(p);
   if (lim){
     const inside = mySets().filter(s => fjordLimits(setMid(s)));
@@ -180,7 +188,7 @@ function gopUnitMin(g, H, hs){
   let base = g.op === 'set' ? G.set : G.haul;
   if (g.kind === 'line') base = g.op === 'set' ? G.set * g.hooksPer / 700 : G.haul * g.hooksPer;
   const hand = g.op === 'haul' && !hasHauler(g.kind) ? G.hand : 1;
-  const sort = g.op === 'haul' && g.kind === 'teine' && S.settings.crabSort !== false && !workTeam('sort', 'sort').n ? 1.3 : 1;
+  const sort = g.op === 'haul' && g.kind === 'teine' && !workTeam('sort', 'sort').n ? 1.3 : 1;   // the haulers sort the crab by class themselves
   return base * hand * sort * (1 + coldPen(H, hs)) / crewF;
 }
 // hdg: the course drawn on the chart; the gear goes out exactly there or not at all. Without it the string follows the course
@@ -315,19 +323,15 @@ function retain(sp, key, mesh, w){
   return 1;
 }
 function sampleSel(sp, key, mesh, p, H){ let w = 0; for (let i = 0; i < 24; i++){ w = sampleFish(sp, p, H); if (Math.random() < retain(sp, key, mesh, w)) return w; } return w; }
-// crabs: sex, width, roe and claws are drawn as they come up; sorting sends the small and berried ones back
-function crabW(cw){ return Math.round(0.00018 * cw * cw * cw * 100) / 100; }
+// king crab: sex, weight and damage are drawn as each comes up, and all of it is kept (west of 26° E it is forbidden to put king crab
+// back, J-138-2026 § 5), in Råfisklaget's classes (SPECIES.krabbe.cls)
 function landCrabs(g, n, kg){
-  const H = S.t / 60, m = gDate(H).getUTCMonth(), careful = S.settings.crabSort !== false, ST = workTeam('sort', 'sort'), sk = clamp(ST.n ? ST.eff : teamEff(crewAboard(), meAboard(), 'teiner'), 0.6, 1.3);
   S.gacc = S.gacc || {}; S.gacc.crabN = (S.gacc.crabN || 0) + n; let room = capHold() - holdTotal();
   while (S.gacc.crabN >= 1 && room > 0.05){
     S.gacc.crabN -= 1;
-    const cw = SPECIES.krabbe.cw[0] * Math.exp(SPECIES.krabbe.cw[1] * gauss(Math.random(), Math.random())), w = crabW(cw), fem = Math.random() < 0.5;
-    const small = cw < SPECIES.krabbe.minCw, roe = fem && Math.random() < CRAB.roeM[m];
-    let cls = small ? 2 : roe ? 3 : fem ? 0 : 1;
-    if (small || roe){ const keep = !careful && Math.random() < (small ? CRAB.slack[0] : CRAB.slack[1]) / sk; if (!keep){ S.stats.released = (S.stats.released || 0) + 1; g.rel++; continue; } }
-    const claws = Math.random() < CRAB.claws[careful ? 0 : 1];
-    const k = Math.min(w, room); room -= k; addCatch('krabbe', k, cls, false, {fresh:claws ? 100 : 60}); g.kg += k;
+    const fem = Math.random() < KC.fem, W = fem ? KC.wf : KC.wm, w = Math.max(0.3, Math.round(W[0] * Math.exp(W[1] * gauss(Math.random(), Math.random())) * 100) / 100);
+    const hurt = !fem && Math.random() < KC.hurt, cls = fem ? 4 : hurt ? 5 : w >= 3.2 ? 0 : w >= 2.2 ? 1 : w >= 1.6 ? 2 : w >= 0.8 ? 3 : 6;
+    const k = Math.min(w, room); room -= k; addCatch('krabbe', k, cls, false, {fresh:100}); g.kg += k;
     if (typeof window !== 'undefined'){ const cq = window.CATCHQ || (window.CATCHQ = []); if (cq.length < 30) cq.push({sp:'krabbe', kg:k, t:performance.now()}); }
   }
   void kg;
@@ -403,8 +407,8 @@ function soakHour(s, H){
   const add = (sp, kg, n) => { const A = acc[sp] || (acc[sp] = {kg:0, n:0, ts:0}); A.kg += kg; A.n += n; A.ts += kg * H; };
   if (s.kind === 'teine'){
     const P = POTS[s.pot], A = acc.krabbe || {n:0}, cap = P.cap * s.n, g = Math.min(1, a / 6) * Math.exp(-a / 40);
-    const lam = GEAR.teine.q * 30 * s.n * P.f * density('krabbe', mid, H) * luck('krabbe') * baitF(s.bait || 'makrell', 'krabbe') * g * Math.max(0, 1 - A.n / cap);
-    const mw = crabW(SPECIES.krabbe.cw[0]);
+    const lam = KC.q * GEAR.teine.q * 30 * s.n * P.f * density('krabbe', mid, H) * luck('krabbe') * baitF(s.bait || 'makrell', 'krabbe') * g * Math.max(0, 1 - A.n / cap);
+    const mw = KC.mean;
     if (lam > 0){ add('krabbe', lam * mw, lam); tot += lam * mw; takeStock(mid, lam * mw, 'krabbe'); }
     for (const sp in SELQ.teine){ const r = 30 * GEAR.teine.q * s.n * SELQ.teine[sp] * density(sp, mid, H) * g; if (r > 0) add(sp, r, r / SPECIES[sp].size[0]); }
     // after two days the crab starts to die in the pots

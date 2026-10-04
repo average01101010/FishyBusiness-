@@ -61,7 +61,6 @@ function gearPanel(){
     h.push('<div class="btns">' + (s ? '<button class="btn primary" data-act="ghaul" data-id="' + s.id + '">' + GL('Trekk ', 'Haul ') + setLabel(s, true).toLowerCase() + '</button>' : '') + ch.map((c, i) => '<button class="btn" data-act="gset" data-c="' + i + '">' + GL('Sett ', 'Set ') + GL(c.lbl[0], c.lbl[1]) + '</button>').join('') + '</div>'); }
   const mine = (S.sets || []).filter(s => s.vid === S.cur);
   if (mine.length) h.push('<ul class="wps">' + mine.map(s => '<li><span class="n" style="background:' + SETCOL[s.kind] + '"></span><span class="lbl">' + setLabel(s) + '<small>' + coordStr(setMid(s)) + ' · ' + fmt(dist(b.pos, setMid(s)) / NM, 1) + ' nm</small></span></li>').join('') + '</ul>');
-  h.push('<label class="tog"><input type="checkbox" id="setCrabSort"' + (S.settings.crabSort !== false ? ' checked' : '') + '><span>' + GL('Sorter krabben nøye', 'Sort the crab carefully') + '<small>' + GL('Småkrabbe under 13 cm og rognkrabbe går ut igjen. Det tar litt lengre tid, men slurv gir bot og prisfradrag.', 'Crab under 13 cm and berried crab go back. It takes a little longer, but sloppy sorting brings a fine and a price cut.') + '</small></span></label>');
   return h.join('');
 }
 // the chart: two buoys and the string between them, for every vessel in the company

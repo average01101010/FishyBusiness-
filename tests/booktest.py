@@ -74,9 +74,9 @@ async def run(p, w, h, tag):
     # Sesonger: this year, the halibut closure that ended in April crossed out
     await tap_el('#bkTabs [data-t=ses]'); await pg.wait_for_timeout(400)
     r = json.loads(await pg.evaluate("""JSON.stringify((() => { const all = bookTabPages('ses').join(''), d = document.createElement('div'); d.innerHTML = all;
-      const es = [...d.querySelectorAll('.bk-e')], k = es.find(e => /Kveita er fredet/.test(e.textContent)), skrei = es.find(e => /Skreisesongen/.test(e.textContent)), crab = es.find(e => /Krabbesesongen/.test(e.textContent));
-      return {tab:BOOK.tab, n:es.length, kveiteX:!!k && k.classList.contains('over'), skreiX:!!skrei && skrei.classList.contains('over'), crabNow:!!crab && crab.classList.contains('now'), price:es.filter(e => /pris på/.test(e.textContent)).length}; })())"""))
-    check(r['tab'] == 'ses' and r['kveiteX'] and r['skreiX'] and r['crabNow'] and r['price'] >= 3, 'Sesonger: kveitefredningen og skreisesongen er krysset ut i oktober, krabbesesongen gjelder nå, og prissesongene står der', r)
+      const es = [...d.querySelectorAll('.bk-e')], k = es.find(e => /Kveita er fredet/.test(e.textContent)), skrei = es.find(e => /Skreisesongen/.test(e.textContent));
+      return {tab:BOOK.tab, n:es.length, kveiteX:!!k && k.classList.contains('over'), skreiX:!!skrei && skrei.classList.contains('over'), price:es.filter(e => /pris på/.test(e.textContent)).length}; })())"""))
+    check(r['tab'] == 'ses' and r['kveiteX'] and r['skreiX'] and r['price'] >= 3, 'Sesonger: kveitefredningen og skreisesongen er krysset ut i oktober, og prissesongene står der', r)
     await pg.screenshot(path='book_ses_' + tag + '.png')
 
     # Hendelser: one entry per week and species that moved 8 % or more, with the same percent as the price model

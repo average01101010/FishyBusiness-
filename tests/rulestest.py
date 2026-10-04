@@ -1,7 +1,8 @@
 from _env import boot
 # The rules along the coast (core/03e-rules.js, R2 of the rules plan, 05.10.2026) on src/data/rules.json (tools/rules/regler.py, R1):
 # the zones of the fjord lines, the baseline and its distance, the statistics areas, and the answers of rulesAt() for høstingsforskriften
-# § 31, § 33, § 39 and J-161-2026 § 32 at points picked in tools/rules (sea in the game's land, the zone and area as the data have them).
+# § 31, § 33, § 39 and J-161-2026 § 32 at points picked in tools/rules (sea in the game's land, the zone and area as the data have them),
+# and the king crab's quota area, free fishing and November closure (J-136-2026 and J-138-2026, 04.10.2026).
 import asyncio, json
 from playwright.async_api import async_playwright
 
@@ -9,7 +10,8 @@ ok = lambda c: 'OK  ' if c else 'FEIL'
 
 PTS = {'malangen': (69.50, 18.40), 'vfInner': (68.0, 15.3), 'vfOuter': (67.9, 14.3), 'open': (69.6, 16.5), 'oslo': (59.25, 10.4833),
        'porsInner': (70.2, 25.05), 'porsOuter': (70.95, 26.0), 'senjaBL': (69.1333, 16.0667), 'a05lt4': (69.275, 15.7),
-       'finn24': (70.875, 29.375), 'finn02': (70.875, 29.25), 'henn': (68.1442, 14.42), 'darupW': (70.75, 21.5)}
+       'finn24': (70.875, 29.375), 'finn02': (70.875, 29.25), 'henn': (68.1442, 14.42), 'darupW': (70.75, 21.5),
+       'kcFree': (71.05, 24.9), 'kcVar': (70.1, 30.2), 'kcBox': (71.19, 25.6)}
 
 RULES = """(() => { const R = {}, Q = __Q__, at = (m, d) => (Date.UTC(2027, m - 1, d, 12) - EPOCH) / 36e5, p = k => P(...Q[k]);
   const ks = r => r.items.map(i => i.v + ':' + i.k), has = (r, k) => r.items.some(i => i.k === k);
@@ -30,7 +32,9 @@ RULES = """(() => { const R = {}, Q = __Q__, at = (m, d) => (Date.UTC(2027, m - 
   R.kveite = {mar:has(q('open', 9, 'kveite', 'juksa', at(3, 1)), 'kv39'), jun:has(q('open', 9, 'kveite', 'juksa', at(6, 1)), 'kv39'), south:has(q('oslo', 9, 'kveite', 'juksa', at(6, 1)), 'kv39')};
   R.uer = {small:has(q('open', 12, 'uer', 'juksa', at(7, 1)), 'uer39'), big:has(q('open', 20, 'uer', 'juksa', at(7, 1)), 'uer39'), may:has(q('open', 12, 'uer', 'juksa', at(5, 1)), 'uer39')};
   R.limits = {malangen:fjordLimits(p('malangen'), at(12, 1)), porsOuterDec:fjordLimits(p('porsOuter'), at(12, 1)), porsOuterJun:fjordLimits(p('porsOuter'), at(6, 1)), porsInnerDec:fjordLimits(p('porsInner'), at(12, 1)), open:fjordLimits(p('open'), at(12, 1))};
-  R.size = {codIn:ruMinSize('torsk', p('senjaBL')), codOut:ruMinSize('torsk', p('open')), codSouth:ruMinSize('torsk', p('oslo')), crabSouth:ruMinSize('krabbe', p('oslo')), crabNorth:ruMinSize('krabbe', p('malangen'))};
+  R.size = {codIn:ruMinSize('torsk', p('senjaBL')), codOut:ruMinSize('torsk', p('open')), codSouth:ruMinSize('torsk', p('oslo')), kc:ruMinSize('krabbe', p('kcFree'))};
+  R.kc = {free:ks(q('kcFree', 11, 'krabbe', 'teiner', at(9, 1))), varanger:has(q('kcVar', 11, 'krabbe', 'teiner', at(9, 1)), 'kc2'), pors:has(q('porsInner', 11, 'krabbe', 'teiner', at(9, 1)), 'kc2'),
+          boxNov:has(q('kcBox', 11, 'krabbe', 'teiner', at(11, 5)), 'kc10'), boxDec:has(q('kcBox', 11, 'krabbe', 'teiner', at(12, 5)), 'kc10'), cod:has(q('kcFree', 11, 'torsk', 'juksa', at(9, 1)), 'kc5')};
   R.field = fieldCode(GROUNDS[0].p);
   R.block = {small:ruBlockMsg({p:p('malangen'), len:9, gear:'juksa', sp:null}), big:!!ruBlockMsg({p:p('malangen'), len:16, gear:'juksa', sp:null})};
   // speed: the cells along the coast and the full answer
@@ -82,7 +86,9 @@ async def main():
         lm = R['limits']
         print(ok(lm['malangen'] == {'nets': 80, 'hooks': 5000} and lm['porsOuterDec'] == {'nets': 80, 'hooks': None} and lm['porsOuterJun']['hooks'] == 5000 and lm['porsInnerDec']['hooks'] == 5000 and lm['open'] is None), '§ 33 and § 33a: 80 cod nets and 5,000 hooks inside the fjord lines; the outer Porsanger is free of the hook limit 1.11-30.4', lm)
         s = R['size']
-        print(ok(s == {'codIn': 55, 'codOut': 44, 'codSouth': 40, 'crabSouth': 11, 'crabNorth': 13}), '§ 47 minimum sizes by place', s)
+        print(ok(s == {'codIn': 55, 'codOut': 44, 'codSouth': 40, 'kc': None}), '§ 47 minimum sizes by place, and none for king crab in the free area', s)
+        kc = R['kc']
+        print(ok('ok:kc5' in kc['free'] and not any(x.endswith(':kc2') for x in kc['free']) and kc['varanger'] and kc['pors'] and kc['boxNov'] and not kc['boxDec'] and not kc['cod']), 'king crab: free west of 26° E, the quota area in Varanger and Porsanger is closed to a Senja boat, the box off Nordkapp closed 1-9 November (J-136-2026 § 2, J-138-2026 § 5 and § 10)', kc)
         print(ok(R['field'].startswith('05-') and len(R['field']) == 5), 'the landing note\'s location from Fiskeridirektoratet\'s locations', R['field'])
         print(ok(R['block']['small'] is None and R['block']['big']), 'what the game stops: a 16 m boat jigging in Malangen, not a 9 m one', R['block'])
         print(ok(R['tBits'] < 400 and R['tRules'] < 400 and R['tBlocks'] < 3000), 'speed: 20,000 cells round Senja (60 x 60 km), 300 full answers, and 400 cells spread over northern Norway, each in a new 10 km block (ms)', R['tBits'], R['tRules'], R['tBlocks'])

@@ -7,7 +7,7 @@ Utkast til godkjenning · Sep 28, 2026 · @Jonas
 Fiskerisystemet skal gi et realistisk kystfiske fra Senja for en båt i åpen gruppe, bygget på faktiske tall for 2025–2026. Spilleren starter i Finnsnes med en 5,8 m skiff, altså i lengdegruppen under 8 meter, og fisker med juksa.
 
 - **Med i første versjon:** fersk fisk levert til mottak i Troms. Torsk, hyse og sei er hovedarter, og lange, brosme, lyr, uer og kveite er sekundærarter og bifangst.
-- **Utenfor første versjon:** frossen fisk og havflåten, trål og not, reker og hummer. Taskekrabbe med teiner kom med redskapsrunden 30.09.2026.
+- **Utenfor første versjon:** frossen fisk og havflåten, trål og not, reker og hummer. Taskekrabbe med teiner kom med redskapsrunden 30.09.2026 og ble byttet med kongekrabbe 04.10.2026.
 - **Alle tall er startverdier** som justeres i spilltesting.
 
 | Kilde | Hva vi bruker den til |
@@ -180,7 +180,7 @@ Fangsten regnes ut per time for hver art og kalibreres slik at en god skreidag m
 \text{fangst per time} = \text{grunnrate} \times \text{tilgjengelighet} \times \text{habitat} \times \text{felt} \times \text{vær} \times \text{innsats} \times \text{dyktighet} \times \text{tilfeldighet}
 ```
 
-- **Grunnrate:** Per redskap og art. Juksa fanger torsk, sei, lyr og litt hyse. Line tar mest hyse (hyseline) eller lange, brosme og kveite (bankline), garn mest torsk, sei og lyr, og teiner taskekrabbe (`SELQ` i `10-gear.js`).
+- **Grunnrate:** Per redskap og art. Juksa fanger torsk, sei, lyr og litt hyse. Line tar mest hyse (hyseline) eller lange, brosme og kveite (bankline), garn mest torsk, sei og lyr, og teiner kongekrabbe (`SELQ` i `10-gear.js`).
 - **Tilgjengelighet:** Månedsindeksen fra sesongtabellen.
 - **Habitat:** Dybden må passe artens dybdeområde. Kanter og skråninger gir mer fisk, og eksponering vektes per art. Vi bygger på dybde-, skrånings- og eksponeringsdataene som allerede er i spillet.
 - **Felt:** De navngitte feltene gir ekstra fisk, og skreien samles der i januar–april.
@@ -235,7 +235,7 @@ Hyse- og seikvotene gjelder båter med største lengde under 11 meter. Tallene e
 1. **Redskap:** Spilleren starter med en vanlig fiskestang, som er stangfisket som allerede finnes i spillet. Så kjøper spilleren juksa, og velger deretter selv om neste steg er garn eller line.
    - *Line:* hyse, lange, brosme og kveite.
    - *Garn:* skrei, blåkveite, rognkjeks og breiflabb.
-   - *Teiner:* taskekrabbe i juli–oktober og kongekrabbe.
+   - *Teiner:* kongekrabbe (fra 04.10.2026; taskekrabben er ute).
 2. **Større båt i åpen gruppe:** 8–9,99 m gir 5,6 tonn torsk og 10 m eller mer gir 6,4 tonn.
 3. **Lukket gruppe:** Spilleren kjøper en båt med deltakeradgang. Riksrevisjonen anslo kvoteprisen for en 9-meters hjemmel til knapt 1,8 millioner kr i 2017, og i 2025 ble en sjark med to kvotesett solgt for 17,5 millioner kr (rundt 270 kr/kg torsk). Spillet regner 260 kr/kg, så inngangen (gammel tresnekke med hjemmel under 7 m) koster rundt 2,5 millioner kr og hjemmelen 10–10,9 m rundt 9,5 millioner kr med båt. Kjøpet krever blad B i fiskermanntallet (forenklet: 10 landingsdager og 1 G), banken låner 80 %, og Innovasjon Norge toppfinansierer det første kjøpet med 15 %. Stigen fortsetter til kystbåter på 15 og 21 m og havfiskeflåten, som kommer når kartet utvides vestover. Se «Fartøystigen» i overleveringen.
 4. **Nye arter:** blåkveite, rognkjeks og breiflabb, som er viktige for åpen gruppe i regionen, og senere kongekrabbe og reker.

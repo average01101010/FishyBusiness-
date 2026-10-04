@@ -77,6 +77,10 @@ const RU_HF = 'https://lovdata.no/forskrift/2021-12-23-3910', RU_J161 = 'https:/
 const RU_VF = [P(67 + 49.61 / 60, 12 + 49.25 / 60), P(67 + 15.20 / 60, 14 + 18.90 / 60)], RU_SVV = P(68.234, 14.568);
 const ruVfIn = p => { const [a, b] = RU_VF, s = q => Math.sign((b.x - a.x) * (q.y - a.y) - (b.y - a.y) * (q.x - a.x)); return s(p) === s(RU_SVV); };
 const RU_COD = ['torsk', 'hyse', 'sei'], RU_CONV = ['juksa', 'line', 'garn', 'teiner'];
+const RU_KC1 = 'https://www.fiskeridir.no/yrkesfiske/j-meldinger/j-136-2026', RU_KC2 = 'https://www.fiskeridir.no/yrkesfiske/j-meldinger/J-138-2026';
+// the king crab's quota area (J-136-2026 § 2), by an approximation of its lines in lat/lon: east of 26° E up to 71°30′ N, and west of
+// it the sea south of Magerøya (Porsangerfjorden, and Kamøyfjorden and Magerøysundet east of 25°32′ E)
+function kcQuota(ll){ const {lat, lon} = ll; return (lon >= 26 && lat <= 71.5) || (lon >= 25.53 && lon < 26 && lat < 71.02) || (lon >= 24.85 && lon < 26 && lat < 70.93); }
 // The rules at a place. q: {p, H, len (m), gear ('juksa' | 'line' | 'garn' | 'teiner' | null), sp (a species key or null for any),
 // hand (a hand jig, which counts as a hand line)}. Each reason: {v:'no' | 'warn' | 'ok' | 'info', k, no, en, ref, url, block}, where
 // block marks what the game stops you doing today; the answer is the worst of them.
@@ -146,6 +150,17 @@ function rulesAt(q){
     if (ruAt(7, p).some(f => /kveite/i.test(f.a.navn || ''))) add('no', 'kv40', 'Forbudsområde for kveite.', 'No-fishing area for halibut.', 'Høstingsforskriften § 40', RU_HF, true);
   }
   if (sp === 'uer' && n62 && !(len < 15 && gear === 'juksa' && ruIn2(md, 601, 831))) add('no', 'uer39', 'Uer kan bare fiskes med juksa fra båt under 15 m, 1. juni–31. august, nord for 62° N.', 'Redfish may only be fished by jig from a boat under 15 m, 1 June–31 August, north of 62° N.', 'Høstingsforskriften § 39', RU_HF);
+  // king crab (J-136-2026 and J-138-2026, § 2 the same in both): east of the line at 26° E, with all of Porsangerfjorden and
+  // Kamøyfjorden and Magerøysundet south-east of its line, is the quota area, for vessels registered in Finnmark whose owner lives there;
+  // west of it the fishing is free: no quota and no minimum size, but all king crab caught must be landed (§ 5: it is forbidden to put
+  // it back) and the pots must be without escape vents. Closed 1-9 November 2026 in the box 71°09′-71°14′ N, 25°20′-26° E (§ 10).
+  if (sp === 'krabbe' && (!gear || gear === 'teiner')){
+    if (kcQuota(ll)) add('no', 'kc2', 'Kvoteregulert område for kongekrabbe: bare båter registrert i Finnmark, med eier bosatt der i minst to år. Du er fra Senja.', 'The quota area for king crab: only vessels registered in Finnmark, with an owner who has lived there for at least two years. You are from Senja.', 'J-136-2026 § 2', RU_KC1, true);
+    else {
+      if (ruIn2(md, 1101, 1109) && ll.lat > 71.15 && ll.lat < 71.2334 && ll.lon > 25.3333 && ll.lon < 26) add('no', 'kc10', 'Stengt for kongekrabbe 1.–9. november (71°09′–71°14′ N, 25°20′–26° Ø).', 'Closed to king crab 1–9 November (71°09′–71°14′ N, 25°20′–26° E).', 'J-138-2026 § 10', RU_KC2, true);
+      add('ok', 'kc5', 'Fritt fiske etter kongekrabbe vest for 26° Ø: ingen kvote og intet minstemål, men all kongekrabbe skal landes, og teinene skal være uten fluktåpning.', 'Free king crab fishing west of 26° E: no quota and no minimum size, but all king crab must be landed, and the pots must be without escape vents.', 'J-138-2026 § 5', RU_KC2);
+    }
+  }
   const rank = {no:3, warn:2, ok:1, info:0}, v = out.reduce((a, r) => rank[r.v] > rank[a] ? r.v : a, 'ok');
   return {v:v === 'info' ? 'ok' : v, items:out, bits, inBL, F, nm, hom, lat:ll.lat, n62};
 }
@@ -160,7 +175,6 @@ function ruMinSize(sp, p){
     case 'sei': return n62 ? 45 : 40;
     case 'kveite': return 84;
     case 'uer': return nm < 12 ? 32 : 30;
-    case 'krabbe': return ll.lat < 59.85 || (ll.lon > 9 && ll.lat < 60.2) ? 11 : 13;
     default: return null;
   }
 }
@@ -175,9 +189,10 @@ const RU_SHORT = {f31:['Ikke torsk her', 'No cod here'], j32b:['Ikke innenfor gr
   oslog:['Bare håndredskap her', 'Hand gear only here'], lopp:['Verneområde', 'Protected area'], kv39:['Kveita er fredet', 'Halibut is protected'], kv40:['Forbudsområde for kveite', 'No-fishing area for halibut'],
   uer39:['Uer er ikke lov', 'Redfish not allowed'], f33:['Høyst 5 000 kroker', 'At most 5,000 hooks'], f33a:['Høyst 80 torskegarn', 'At most 80 cod nets'], j32by:['Bifangst høyst 20 %', 'Bycatch at most 20%'],
   lofot:['Felleshav: om bord 10–17', 'Common ground: aboard 10–17'], raet:['Raet: egne regler', 'Raet: own rules'], oslot:['Høyst 10 teiner', 'At most 10 pots'],
+  kc2:['Kvoteområde for kongekrabbe', 'King crab quota area'], kc10:['Stengt for kongekrabbe', 'Closed to king crab'], kc5:['Fritt fiske: alt landes', 'Free fishing: land all'],
   f31h:['Andre arter enn torsk er lov', 'Species other than cod allowed'], f31a:['Andre arter enn torsk er lov', 'Species other than cod allowed'], f33b:['Ingen krokgrense nå', 'No hook limit now']};
 function ruCtx(){ const b = S.boat; return {p:b.status === 'port' && typeof portById === 'function' && b.port ? portById(b.port).p : b.pos, len:BOAT.len, gear:b.rig || 'juksa',
-  sp:S.target === 'kveite' ? 'kveite' : null, hand:!(S.equip && S.equip.jukse > 0)}; }
+  sp:b.rig === 'teiner' ? 'krabbe' : S.target === 'kveite' ? 'kveite' : null, hand:!(S.equip && S.equip.jukse > 0)}; }
 // the answer for your boat now, kept for 10 game minutes and 50 m
 let RU_NOW = null;
 function ruNow(){ const q = ruCtx(), k = [q.len, q.gear, q.sp, q.hand].join('|');
