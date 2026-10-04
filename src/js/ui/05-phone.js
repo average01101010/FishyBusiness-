@@ -369,7 +369,8 @@ const PHONE = (() => {
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
     ['p15', '05.10.2026', 'Det Store Blå', 'Det Store Blå', [
-      ['Spillet heter nå Det Store Blå. Lagringen din er den samme.', 'The game is now called Det Store Blå. Your save is the same.']]],
+      ['Spillet heter nå Det Store Blå. Lagringen din er den samme.', 'The game is now called Det Store Blå. Your save is the same.'],
+      ['Ny logo og nye app-ikoner, laget i Blender: sjarken i blåtimen under tindene på Senja.', 'A new logo and new app icons, made in Blender: the sjark at the blue hour under the peaks of Senja.']]],
     ['p14', '05.10.2026', 'Kongekrabbe', 'King crab', [
       ['Taskekrabben er ute av spillet. Teinene fisker kongekrabbe, som nesten bare finnes i Vest-Finnmark. Vest for 26° Ø er fisket fritt, uten kvote og minstemål, men all krabbe skal landes. Øst for linja er kvoteområdet for dem som bor i Finnmark.', 'Brown crab is out of the game. The pots fish king crab, found almost only in West Finnmark. West of 26° E the fishing is free, with no quota and no minimum size, but all crab must be landed. East of the line is the quota area for those who live in Finnmark.'],
       ['Krabben leveres levende og betales etter Råfisklagets minstepris for klassen sin, og prisen følger måneden: høyest rundt nyttår, lavest i april. Død krabbe er verdiløs. Krabbekaret med sjøvann i Utstyr holder den levende i flere døgn.', 'The crab is landed alive and paid at least the minimum price of its class, and the price follows the month: highest round New Year, lowest in April. Dead crab is worthless. The live crab tank in Equipment keeps it alive for days.'],
