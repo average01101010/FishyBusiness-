@@ -13,8 +13,8 @@
 #   quay   the faces a boat can lie at (where the NPC boats berth, the user's wish 03.10.2026): the straight edges of 10 m and more of
 #          the piers (a pier mapped as a line counts as 4.2 m wide), the quays' lines, and the straight coast (1 m) of 25 m and more
 #          within 150 m of a pier or quay or 30 m of a big industrial building (a fish plant); X, Y of the middle (u16, m), the angle of the normal towards the water (u16, of 2 pi, from
-#          x towards y), length (u8, as bld), the depth off it (u8, quarter metres: the most of the tile's 50 m depth 25, 50 and 75 m
-#          out; 0 where the depth has no water there, which the game reads as unknown) and kind (u8: 0 pier, 1 pier line, 2 quay, 3
+#          x towards y), length (u8, as bld), the depth off it (u8, quarter metres: the tile's 50 m depth at the first of 25, 50 and 75 m
+#          out that has water; 0 where none has, which the game reads as unknown) and kind (u8: 0 pier, 1 pier line, 2 quay, 3
 #          coast). How big a boat fits is the game's to say (VESSELS); the depth is coarse, a 50 m grid at a quay
 #   coast  the land polygons simplified to 3 m and cut to the tile and 500 m round it: n, then per ring its point count and steps
 import math, numpy as np
@@ -179,7 +179,7 @@ def build(tx, ty, near_sea=None, L=None):
             return
         mx, my = (ax_ + bx_) / 2, (ay_ + by_) / 2
         if not inside(mx, my) or land(mx + nx * 20, my + ny * 20): return
-        d = max(depth(mx + nx * r, my + ny * r) for r in (25, 50, 75))
+        d = next((v for v in (depth(mx + nx * r, my + ny * r) for r in (25, 50, 75)) if v > 0), 0.0)   # the nearest water (the deepest of the three was too kind)
         F.append((mx, my, math.atan2(ny, nx) % (2 * math.pi), ln, d, k))
     near = []
     for k, poly, cs in pgeo:
