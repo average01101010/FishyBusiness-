@@ -311,6 +311,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p9', '05.10.2026', 'Rettinger', 'Fixes', [
+      ['Alene i båten sløyer skipperen selv, og den som haler, er skipperen når det er hans jobb, i stedet for en annen figur.', 'Alone in the boat the skipper guts the catch himself, and the one hauling is the skipper when it is his job, not another figure.']]],
     ['p8', '05.10.2026', 'Kvotesystemet', 'The quota system', [
       ['Kvotene følger forskriften fra 1. oktober 2026 (J-161-2026), og regnes ut år for år fra totalkvoten og bestanden.', 'The quotas follow the regulation from 1 October 2026 (J-161-2026), worked out year by year from the total quota and the stock.'],
       ['Rundt 2 100 båter fisker ned gruppekvoten i åpen gruppe. Stoppen kommer når kvoten er tatt, med en ukes varsel. Noen år blir det ingen stopp, og maksimalkvotene kan økes.', 'About 2,100 boats fish down the open group\'s quota. The stop comes when it is taken, with a week\'s notice. Some years there is no stop, and the maximum quotas may be raised.'],
