@@ -137,11 +137,16 @@ function chartVectors(V){
   const ctx = cv.getContext('2d'); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, H);
   chartCoast(ctx, x0, y0, kx, ky, W, H, dpr, fish);
   chartGrid(ctx, x0, y0, kx, ky, W, H, dpr, fish);
-  // fjord line for coastal cod: dashed violet, as regulation lines are drawn on official charts
-  ctx.save(); ctx.strokeStyle = 'rgba(150,40,170,0.85)'; ctx.lineWidth = 1.6 * dpr; ctx.setLineDash([7 * dpr, 5 * dpr]); ctx.beginPath();
-  FJORD.forEach((q, i) => { const X = (q.x - x0) / kx, Y = (q.y - y0) / ky; i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); }); ctx.stroke(); ctx.setLineDash([]);
-  if (view.z > 1.6){ const a = FJORD[2], b2 = FJORD[3], X = ((a.x + b2.x) / 2 - x0) / kx, Y = ((a.y + b2.y) / 2 - y0) / ky; ctx.font = 'italic ' + Math.round(11 * dpr) + 'px sans-serif'; ctx.fillStyle = 'rgba(130,30,150,0.9)'; ctx.fillText(S.lang === 'no' ? 'Fjordlinje' : 'Fjord line', X + 6 * dpr, Y); }
-  ctx.restore();
+  // the fjord lines for coastal cod along the coast (høstingsforskriften vedlegg 4, rules.json): dashed violet, as regulation lines
+  // are drawn on official charts, named when zoomed in
+  const FL = RU.L[2]; if (!FL) return;
+  ctx.save(); ctx.strokeStyle = 'rgba(150,40,170,0.85)'; ctx.lineWidth = 1.6 * dpr; ctx.setLineDash([7 * dpr, 5 * dpr]);
+  ctx.font = 'italic ' + Math.round(11 * dpr) + 'px sans-serif'; ctx.fillStyle = 'rgba(130,30,150,0.9)';
+  const xb = x0 + W * kx, yb = y0 + H * ky;
+  for (const f of FL.f){ const b = f.bb; if (b[2] < x0 || b[0] > xb || b[3] < y0 || b[1] > yb) continue;
+    for (const l of f.ls){ ctx.beginPath(); for (let i = 0; i < l.length; i += 2){ const X = (l[i] - x0) / kx, Y = (l[i + 1] - y0) / ky; i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); } ctx.stroke();
+      if (view.z > 1.6 && l.length >= 4){ const m = (l.length >> 2) << 1, X = (l[m] - x0) / kx, Y = (l[m + 1] - y0) / ky; ctx.fillText(S.lang === 'no' ? 'Fjordlinje' : 'Fjord line', X + 6 * dpr, Y); } } }
+  ctx.setLineDash([]); ctx.restore();
 }
 // The raster under the coast: PW x PH samples from (x0, y0) km, pkx/pky km apart, into d (RGBA). Off the tiles with detail (or before
 // their pack has come: st.prov) the national core's land and the depth model; on them the depth (a B-spline where a sample is finer

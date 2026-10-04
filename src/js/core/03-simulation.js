@@ -254,14 +254,11 @@ function school(sp, p, H){
 }
 // where a species' schools are heading (radians, map north up), for the sonar
 function schoolHeading(sp){ return 2 * Math.PI * h2(ALLSP.indexOf(sp), 740); }
-// The coastal-cod fjord line (høstingsforskriften vedlegg 4), traced from Fiskeridirektoratet's map: Andøya – Skrolsvik – Gryllefjord – Hekkingen – Sommarøy – Kvaløya.
-// Vessels of 15 m or more may not fish inside it; seine is banned inside; at most 5000 hooks on line and 80 nets for cod.
-const FJORD = [[-21.8,67.2],[10.1,67.1],[12.6,39.2],[37.4,14.5],[50.6,14.0],[59.6,-1.0],[62.1,-3.2],[63.3,-4.4],[82.5,-23.1]].map(q => LG(q[0], q[1]));
-const FJORD_POLY = FJORD.concat([LG(140, -23.1), LG(140, 140), LG(-21.8, 140)]);
-function insideFjord(p){ let c = false; for (let i = 0, j = FJORD_POLY.length - 1; i < FJORD_POLY.length; j = i++){ const a = FJORD_POLY[i], b = FJORD_POLY[j]; if ((a.y > p.y) !== (b.y > p.y) && p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x) c = !c; } return c; }
-// Fiskeridirektoratet's statistical locations (approximate: nearest representative point)
+// The fjord lines for coastal cod along the whole coast (insideFjord) and the other rules are in 03e-rules.js.
+// Fiskeridirektoratet's statistical locations: the location's polygon from rules.json (03e-rules.js), or near Senja the nearest
+// representative point when there are no rule data
 const FIELDS = [['05-25', 6, 45], ['05-29', 14, 8], ['05-30', 44, 8], ['05-31', 72, 4], ['05-40', 58, 36], ['05-41', 42, 68], ['05-42', 12, 80]];
-function fieldCode(p){ const q = LGI(p); if (!insideFjord(p) && q.x < 16) return q.y < 30 ? '05-29' : '05-25'; let best = FIELDS[0], bd = 1e9; for (const f of FIELDS){ if (!insideFjord(p) && (f[0] === '05-40' || f[0] === '05-41')) continue; const d = Math.hypot(q.x - f[1], q.y - f[2]); if (d < bd){ bd = d; best = f; } } return best[0]; }
+function fieldCode(p){ const c = RU.ok && ruLok(p); if (c) return c; const q = LGI(p); if (!insideFjord(p) && q.x < 16) return q.y < 30 ? '05-29' : '05-25'; let best = FIELDS[0], bd = 1e9; for (const f of FIELDS){ if (!insideFjord(p) && (f[0] === '05-40' || f[0] === '05-41')) continue; const d = Math.hypot(q.x - f[1], q.y - f[2]); if (d < bd){ bd = d; best = f; } } return best[0]; }
 // where the spawning cod gathers: exposed banks 40–250 m outside the fjords, and the known grounds
 function skreiSpot(p, d = depthF(p), E = exposure(p)){
   let v = sstep(0.15, 0.6, E) * sstep(30, 60, d) * (1 - sstep(220, 320, d));

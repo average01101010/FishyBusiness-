@@ -342,8 +342,10 @@ function fish(H, W, hs){
   // setting or hauling passive gear takes the place of jigging
   if (b.gop){ gearOpMinute(H, W, hs); return; }
   if (!rigJig()) return;   // rigged for passive gear: the boat has no jig out, and the fishing hours are spent waiting
-  // vessels of 15 m or more may not fish inside the fjord line (høstingsforskriften): the boat waits
-  if (BOAT.len >= 15 && insideFjord(b.pos)){ if ((S.fjordWarn || -1e9) < S.t - 720){ S.fjordWarn = S.t; log('Fartøy på 15 meter eller mer kan ikke fiske innenfor fjordlinja. Båten venter.', 'Vessels of 15 m or more may not fish inside the fjord line. The boat waits.'); } return; }
+  // where the rules stop the boat (03e-rules.js: the fjord lines by length, the baseline zones of J-161-2026 § 32, closed areas): it waits
+  { const rq = {p:b.pos, len:BOAT.len, gear:'juksa', sp:S.target === 'kveite' ? 'kveite' : null, hand:!(S.equip && S.equip.jukse > 0)}, rb = (S.ruAt && S.ruAt.t > S.t - 10 && dist(S.ruAt.p, b.pos) < 0.05) ? S.ruAt.m : ruBlockMsg(rq);
+    S.ruAt = {t:S.t, p:{x:b.pos.x, y:b.pos.y}, m:rb};
+    if (rb){ if ((S.fjordWarn || -1e9) < S.t - 720){ S.fjordWarn = S.t; log(rb + ' Båten venter.', rb + ' The boat waits.'); } return; } }
   const {eff, keff, wpen, pen, jig} = catchFactors(H, W, hs);
   if (!S.fsess || dist(S.fsess, b.pos) > 0.3) S.fsess = {x:b.pos.x, y:b.pos.y, t0:S.t, kg:0};
   let got = 0;

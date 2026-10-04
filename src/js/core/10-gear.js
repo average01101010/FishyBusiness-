@@ -14,7 +14,6 @@ const LINE_KINDS = {hyse:{no:'Hyseline', en:'Haddock line', hooks:700, price:210
 const POTS = {small:{no:'Små teiner', en:'Small pots', price:550, cap:8, f:1}, big:{no:'Store teiner', en:'Big pots', price:850, cap:15, f:1.4, big:true}};
 const MESHES = [156, 180, 200];                                  // legal cod nets north of 62° N; bigger mesh, bigger fish
 const GPRICE = {net:1500, kit:2500, heavy:1500, bait:18, potBait:0.4, bot:180, egnRate:560};   // kr, kg bait per pot, bøteri kr per net per 0.1, hooks baited per hour
-const FJORD_MAX = {nets:80, hooks:5000};
 const GFINE = {crab:2000, perCrab:100};                          // overtredelsesgebyr for undersized crab: a placeholder, not checked against a source
 // how well each gear takes each species, relative to the jig (1 for every fish); pots take crab and a little cod and tusk
 const SELQ = {
@@ -152,11 +151,14 @@ function gearRules(kind, spec, p){
   if (kind === 'garn'){ const l = pg.nets.find(x => x.id === spec.nid); if (!l) return [gL('Velg ei garnlenke.', 'Choose a string of nets.')]; nets = l.n; }
   else if (kind === 'line'){ const L0 = pg.lines[spec.lk]; if (!L0 || spec.n < 1 || L0.baited < spec.n) return [gL('Du har ikke så mange egnede stamper om bord.', 'You do not have that many baited tubs aboard.')]; hooks = spec.n * LINE_KINDS[spec.lk].hooks; }
   else { if (!(pg.pots[spec.pot] >= spec.n) || spec.n < 1) return [gL('Du har ikke så mange teiner om bord.', 'You do not have that many pots aboard.')]; if (!baitPick(pg, spec.n * GPRICE.potBait)) return [gL('Teinene trenger agn: ' + fmt(spec.n * GPRICE.potBait, 0) + ' kg.', 'The pots need bait: ' + fmt(spec.n * GPRICE.potBait, 0) + ' kg.')]; }
-  if (insideFjord(p)){
-    if (BOAT.len >= 15) return [gL('Fartøy på 15 meter eller mer kan ikke fiske innenfor fjordlinja.', 'Vessels of 15 m or more may not fish inside the fjord line.')];
-    const inside = mySets().filter(s => insideFjord(setMid(s)));
-    if (nets && inside.filter(s => s.kind === 'garn').reduce((a, s) => a + s.n, 0) + nets > FJORD_MAX.nets) return [gL('Innenfor fjordlinja kan du ha høyst 80 torskegarn i sjøen.', 'Inside the fjord line you may have at most 80 cod nets in the sea.')];
-    if (hooks && inside.filter(s => s.kind === 'line').reduce((a, s) => a + s.hooks, 0) + hooks > FJORD_MAX.hooks) return [gL('Innenfor fjordlinja kan du ha høyst 5 000 kroker i sjøen.', 'Inside the fjord line you may have at most 5,000 hooks in the sea.')];
+  // the rules where the gear goes (03e-rules.js): the fjord lines by length, the baseline zones, closed areas; then the limits on gear
+  // in the sea inside the fjord lines (§ 33 hooks, in six Finnmark fjords inside their own lines in winter; § 33a cod nets)
+  const rb = ruBlockMsg({p, len:BOAT.len, gear:kind, sp:kind === 'teiner' ? 'krabbe' : null}); if (rb) return [rb];
+  const lim = fjordLimits(p);
+  if (lim){
+    const inside = mySets().filter(s => fjordLimits(setMid(s)));
+    if (nets && lim.nets && inside.filter(s => s.kind === 'garn').reduce((a, s) => a + s.n, 0) + nets > lim.nets) return [gL('Innenfor fjordlinja kan du ha høyst 80 torskegarn i sjøen.', 'Inside the fjord line you may have at most 80 cod nets in the sea.')];
+    if (hooks && lim.hooks && inside.filter(s => s.kind === 'line').reduce((a, s) => a + s.hooks, 0) + hooks > lim.hooks) return [gL('Innenfor fjordlinja kan du ha høyst 5 000 kroker i sjøen.', 'Inside the fjord line you may have at most 5,000 hooks in the sea.')];
   }
   return null;
 }

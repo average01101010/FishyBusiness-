@@ -1575,6 +1575,56 @@ Brukerens ønske: en frivillig mulighet til å styre båten selv, med gass og ra
   - **Mannskapet:** de som står på «Haling» i arbeidskjedene, står ved haleren, ved enden av renna og ved binge eller balje. Skipperen er med når det er hans jobb, og forlater da rattet.
   - `haultest.py` tar bilder og sjekker at skiva går rundt.
 
+### 5.28 Regelmotoren langs hele kysten (R2 av regelplanen, 05.10.2026)
+
+`core/03e-rules.js` leser `src/data/rules.json` (se 4.17) og svarer på «kan jeg fiske her?».
+
+**Oppslag:**
+- `rulesAt({p, H, len, gear, sp, hand})` gir `{v, items}`. `v` er det verste av `no`, `warn` og `ok`. Hver grunn har tekst på norsk og engelsk, paragraf og kilde, og `block` når spillet stopper deg i dag.
+- `ruBlockMsg(q)` gir teksten for det første stoppet, eller `null`.
+- `insideFjord(p)`, `insideBaseline(p)`, `blDist(p)`/`blNm(p)`, `ruHom(p)`, `ruLok(p)`, `fjordLimits(p, H)` og `ruMinSize(sp, p)`.
+- **Hurtigoppslaget:** Sonene og grunnlinja legges i celler på 100 m, en blokk på 10 km om gangen første gang den trengs. Det gjøres med skannlinjer over ringene. 20 000 oppslag tar noen få millisekunder.
+
+**Reglene, skrevet ut fra forskriftene:**
+- **Høstingsforskriften § 31:** Fartøy på 15 m eller mer kan ikke fiske torsk innenfor fjordlinjene.
+  - Under 21 m kan de fiske andre arter med konvensjonelle redskap (bokstav h).
+  - Sør for 68° 15,6′ N kan de fiske annet enn torsk (bokstav a).
+  - Ellers er det ikke lov.
+- **§ 33 og § 33a:** høyst 5 000 kroker og 80 torskegarn innenfor fjordlinjene. Fra 1.11 til 30.4 er yttersidene av kroklinjene i seks fjorder i Finnmark unntatt krokgrensa.
+- **J-161-2026 § 32**, nord for 62° N med konvensjonelle redskap:
+  - **21–27,99 m:** ikke torsk, hyse eller sei innenfor grunnlinja.
+    - I område 00, 06 og 07 gjelder forbudet bare torsk.
+    - Torsk er lov inn til fjordlinjene 1.1–1.5 i 00, og 1.1–10.4 i 06 og 07.
+  - **28 m og over:** ikke innenfor 4 nm.
+    - I 06 og 07 gjelder det bare torsk.
+    - I 00 er hyse og sei lov utenfor linja i Vestfjorden (og torsk 1.3–14.4), men ikke innenfor fjordlinjene.
+    - Fra område 05 til Russland er det lov inn til grunnlinja 1.1–30.6.
+    - Øst for Darupskjæret er det lov inn til 2 nm 1.7–31.12.
+  - **Henningsværboksen** er stengt 1.1–30.6 for fartøy over 11 m.
+  - **Borgundfjorden** er stengt 1.3–31.5, unntatt for håndsnøre.
+  - **Bifangst:** Grensene på 5 % og 20 % vises som advarsel.
+- **De andre områdene:**
+  - stengte felt for line og garn
+  - gytefeltene for kysttorsk i sør, 1.1–30.4
+  - Oslofjorden: ikke torsk, og bare håndholdte redskap for fisk
+  - nullfiskeområdene og Lopphavet
+  - Raet, som gir en advarsel
+  - de fleksible felleshavene i Lofoten: faste redskap skal være om bord kl. 10–17
+- **§ 39:**
+  - Kveite er fredet 20.12–20.4 nord for 62° N og hele året sør for.
+  - Uer er bare lov med juksa fra båt under 15 m, 1.6–31.8.
+  - Disse to stopper ikke spillet ennå. `kveiteClosed` og `uerOpen` i simuleringen styrer det som før.
+- **§ 47:** minstemål etter sted for torsk, hyse, sei, kveite, uer og taskekrabbe.
+
+**I spillet:**
+- **Juksa:** Juksa og fisket med båten (`08-actions.js`, `05-vessels.js`) stopper der `ruBlockMsg` sier nei, med grunnen i loggen.
+- **Faste redskap:** Setting av redskap (`10-gear.js`) stopper på samme måte, og grensene for garn og kroker følger `fjordLimits`.
+- **Kartet:** Kartet tegner fjordlinjene langs hele kysten.
+- **Sluttsedler:** Sluttseddelen bruker Fiskeridirektoratets lokasjon (`ruLok`).
+- **Senja:** Den håndtegnede Senja-linja (`FJORD`) er borte.
+
+`tests/rulestest.py` sjekker punkter langs kysten (sonene, områdene og avstanden til grunnlinja) og svarene for hver regel, med datoer og lengder.
+
 ### 5.27 Forslagslista 04.10.2026 (natta til 05.10)
 
 Jonas' liste: oppgraderinger, kvotehandel, kikkert, raskere fangst, fortøying, snurring ved siste veipunkt, stanga ut, drivstoffpriser, jukse-spill, nattmodus, salg for ekte penger, Blender-modeller, åpningstider, flytrafikk, ny haill og agn. Svarene hans: håndjuksa omtrent dobbelt så rask, luksushaill +200 % (kan justeres ned), motoroppgraderinger på verftet og speed-boost i en egen telefonapp for ekte penger.
@@ -1715,7 +1765,10 @@ Jonas' liste: oppgraderinger, kvotehandel, kikkert, raskere fangst, fortøying, 
 | Strukturkvoter | Forskrift om spesielle kvoteordninger for kystfiskeflåten (J-244-2025), og høringsnotatet om strukturgevinst 2026 | 11–27,99 m, samme gruppe, 10 % avkorting, 20 år, kvotetak 3× (11–14,99) og 4× (15–27,99). Særlig kvoteordning under 11 m fra 2025 |
 | Åpen gruppe og ferskfisk, historikk | Saksdokumentene 2019–2025 | Stopp 24.3.2019, 20.4.2020, 1.5.2023, 15.5.2025, 16.4.2026; ingen i 2021, 2022, 2024. Ferskfisk 2017–2025 |
 | Maskevidde i torskegarn | Maskeviddeforskriften (Lovdata 1989-10-10-1095) | Minst 156 mm nord for 62° N. Spillet selger 156, 180 og 200 mm |
-| Fjordlinja og redskap | Høstingsforskriften kap. VI | Innenfor: høyst 80 torskegarn og 5 000 kroker, ikke snurrevad, ikke fartøy på 15 m eller mer. Håndheves når du setter redskap |
+| Fjordlinja og redskap | Høstingsforskriften kap. VI (§ 31, 33, 33a, lest 04.10.2026) | Innenfor: høyst 80 torskegarn og 5 000 kroker (yttersidene av kroklinjene i Finnmark unntatt 1.11–30.4), ikke snurrevad. 15 m eller mer: ikke torsk; under 21 m andre arter, sør for 68° 15,6′ N annet enn torsk. Se 5.28 |
+| Kysttorsk etter lengde | J-161-2026 § 32 (lest 04.10.2026) | 21–27,99 m ikke innenfor grunnlinja, 28 m og over ikke innenfor 4 nm, med unntak etter område og dato. Henningsværboksen og Borgundfjorden. Se 5.28 |
+| Grunnlinja og sonene | Kartverket, Norges maritime grenser (Geonorge, 25833) | Grunnlinja, 1, 4, 6, 10, 12 og 24 nm. Se 4.17 |
+| Reguleringskartet | Fiskeridirektoratet, Yggdrasil/Fiskerireguleringer (38 lag) og Statistikområder | Fjordlinjer, kroklinjer, stengte felt, gytefelt, Oslofjorden, Lofoten, kongekrabbe. Se 4.17 |
 | Røkting | Høstingsforskriften kap. V | Garn og line for kveite og breiflabb minst hver 4. dag. Hvert fartøy røkter egne teiner |
 | Trål | Høstingsforskriften kap. XIII | Forbudt innenfor 12 nm, med unntak. Ikke i spillet ennå |
 | Tapt redskap | Fiskeridirektoratet, «Meld tapt redskap» | Meldes til Kystvakten med type, mengde og posisjon |
