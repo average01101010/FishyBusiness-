@@ -68,7 +68,7 @@ async def main():
           // the 8.9 m sjark is in the open group's 8–9.99 m quota group: the year's maximum quota for it (5.6 t in 2026)
           const t0 = b.type; b.type = 'jukesjark'; applyVessel(); R.jukGroup = [lenGroup(), codLimits().max, Math.round((yearQuota(yearH(S.t / 60)).open.max[1] + openMaxAdd(S.t / 60)) * 1000)]; b.type = 'kyst21'; applyVessel();
           const inside = GROUNDS.find(g => insideFjord(g.p) && depthF(g.p) > 20).p; b.status = 'fishing'; b.port = null; b.pos = {...inside}; b.gop = null; b.rig = 'juksa'; b.gear = true; b.fishUntil = S.t + 120; S.hold = []; S.crew = [];
-          for (let i = 0; i < 60; i++) step(); R.fjord = {kg:Math.round(holdTotal()), warn:S.log.slice(-40).some(e => /fjordlinja/.test(e.no))};
+          for (let i = 0; i < 60; i++) step(); R.fjord = {kg:Math.round(holdTotal()), warn:S.log.slice(-40).some(e => /fjordlinj/.test(e.no))};
           b.type = t0; applyVessel(); b.status = 'idle'; return R; })()""")
         print('ladder:', json.dumps(r, ensure_ascii=False))
         # the hold rebuilt at the yard in three steps (04.10.2026): +25 %, +60 %, twice; the ice room grows with it, and a type's own numbers stay
