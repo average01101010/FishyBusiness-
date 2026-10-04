@@ -104,6 +104,7 @@ const DOCK = (() => {
       b.deckStop && !b.deckEnd ? I('deckgo', 'videre', 'Fisk videre', 'Fish on', {act:'deckgo', pri:true}) : !b.deckStop && deckPending() > 0.5 ? I('deckstop', 'sloy', 'Stopp og sløy', 'Stop and gut', {act:'deckstop'}) : null,
       G3.isActive() && window.JIGG && (window.jigActive || window.JIGG.ok()) ? I('jigg', 'juks', window.jigActive ? 'Slutt å jukse' : 'Jukse selv', window.jigActive ? 'Stop jigging' : 'Jig yourself', {act:'jigg', pri:!window.jigActive, on:!!window.jigActive}) : null, crew, work, beh].filter(Boolean);
     if (b.status === 'sailing') return [I('stop', 'stopp', 'Stopp båten', 'Stop', {act:'stop'}), nav, crew, work, beh].filter(Boolean);
+    if (b.status === 'tow') return [I('towfast', 'videre', 'Spol fram til havn', 'Fast forward to harbour', {act:'towfast', pri:true}), beh];
     if (b.status === 'adrift' || b.status === 'engine' || b.status === 'aground') return [I('hjelp', 'hjelp', 'Hjelp', 'Help', {run:() => PHONE.open('redning'), warn:true}), beh];
     return [beh];
   }

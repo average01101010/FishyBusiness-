@@ -243,6 +243,7 @@ function vesselStep(H){
   }
   if (b.status === 'unmooring'){ if (S.t >= b.castUntil){ const pid = b.port; b.status = 'sailing'; b.port = null; helmCastDone(pid); } return; }
   if (b.status === 'port'){ if (b.landWait && b.port === b.landWait && mottakOpen(H)){ const pid = b.landWait; b.landWait = null; opsLanded(pid); } return; }
+  if (b.status === 'tow'){ towStep(H); return; }        // the rescue boat comes and tows (rescue)
   const W = windAt(H), hs = hsAt(b.pos, H);
   if (['sailing', 'fishing', 'idle'].includes(b.status)) stabTick(H);
   if (b.status === 'engine' && S.t >= b.engineUntil){ b.status = b.prev || 'idle'; b.prev = null; log('Motoren startet igjen.', 'The engine is running again.'); }
@@ -463,12 +464,80 @@ function risk(W, hs){
 }
 function hullRepair(){ const b = S.boat; if (!b.damage) return; b.damage = 0; const cost = Math.round(VESSELS[b.type].price * 0.035); S.cash -= cost; S.stats.costs += cost; queueJob({kind:'repair', h:8, no:'Reparasjon av skroget', en:'Hull repair'}); msg('Verkstedet', 'Skroget har fått skader etter grunnstøtingen. Reparasjonen koster ' + cost + ' kr og tar 8 timer.', 'The hull was damaged when you ran aground. The repair costs NOK ' + cost + ' and takes 8 hours.'); }
 function svcOverdue(){ const b = S.boat; return Math.max(0, ((b.engH || 0) - (b.svcAt || 0)) / BOAT.svcH - 1); }
+// ---------- the rescue boat (plan E3, 05.10.2026) ----------
+// It is called out from the nearest rescue station (the nearest harbour beyond 60 km of one), musters in TOW.muster minutes, comes at 25
+// knots by the fairway, makes fast and tows you at 6 knots to the nearest harbour. The catch is kept with a tow and lost in a distress
+// call; the cost is paid at the call. The ways are found by leiaRoute while the crew musters (TOWBUSY); a straight line when none is
+// found. towPose gives where the rescue boat and your boat are between the minutes for the 3D (tools/boats/redning.py) and livePose.
+const TOW = {come:25, tow:6, muster:10, hook:5, line:0.06};
+const RSTATIONS = [['Finnsnes', 'finnsnes'], ['Gryllefjord', 'gryllefjord']];
+function rescueBase(p){
+  let best = null;
+  for (const [n, id] of RSTATIONS){ const q = portById(id); if (!q) continue; const d = dist(q.p, p); if (!best || d < best.d) best = {n, id, p:q.p, d}; }
+  if (!best || best.d > 60){ const q = nearestPort(p); best = {n:q.name, id:q.id, p:q.p, d:dist(q.p, p)}; }
+  return best;
+}
 function rescue(keepCatch){
   if (S.boat.gop) gopAbort('return');
-  const b = S.boat, port = nearestPort(b.pos), fee = S.member ? 0 : keepCatch ? PRICE.tow : PRICE.rescue;
+  const b = S.boat, port = nearestPort(b.pos), base = rescueBase(b.pos), fee = S.member ? 0 : keepCatch ? PRICE.tow : PRICE.rescue;
   S.cash -= fee; S.stats.costs += fee;
   let lost = 0; if (!keepCatch){ lost = Math.round(holdTotal()); S.hold = []; }
-  b.prev = null; b.tripBad = true; if (meAboard()) tatAdd('rescued', 1); dock(port.id); hullRepair();
-  if (keepCatch) log('Slept inn til ' + port.name + '. Kostnad ' + fee + ' kr.', 'Towed to ' + port.name + '. Cost NOK ' + fee + '.');
-  else log('Redningsskøyte slepte båten til ' + port.name + ' i farlig sjø. Kostnad ' + fee + ' kr, mistet ' + lost + ' kg fisk.', 'A rescue boat towed you to ' + port.name + ' in dangerous seas. Cost NOK ' + fee + ', lost ' + lost + ' kg of fish.');
+  b.prev = null; b.tripBad = true; if (meAboard()){ tatAdd('rescued', 1); checkTattoos(); }
+  const t = {ph:'muster', t0:S.t, keep:keepCatch, fee, lost, port:port.id, base:base.n, baseId:base.id, bp:{x:base.p.x, y:base.p.y}, at:{x:b.pos.x, y:b.pos.y}, P1:null, P2:null, r:0, s:0};
+  if (b.status === 'port' || b.status === 'unmooring'){ t.port = b.port || port.id; towDone(t); return; }
+  if (helmOn()) helmOff();
+  S.plan = null; b.v = 0; b.status = 'tow'; b.tow = t;
+  towRoutes(b);
+  const eta = Math.round(base.d / (TOW.come * NM) * 60) + TOW.muster;
+  log('Redningsskøyta går fra ' + base.n + ' og er hos deg om rundt ' + eta + ' min. Den sleper deg til ' + port.name + '.', 'The rescue boat leaves ' + base.n + ' and will be with you in about ' + eta + ' min. It tows you to ' + port.name + '.');
 }
+const TOWBUSY = new Set(), TOWR = new WeakMap();
+const towR = (t, k) => { let r = TOWR.get(t[k]); if (!r){ r = prepRoute(t[k]); TOWR.set(t[k], r); } return r; };
+// a point at sea by p: a boat on the rocks is towed off from the nearest water
+function towSea(p){
+  try { if (!isLand(p)) return p;
+    for (let r = 0.025; r <= 0.4; r += 0.025) for (let k = 0; k < 16; k++){ const a = k / 16 * Math.PI * 2, q = {x:p.x + Math.sin(a) * r, y:p.y - Math.cos(a) * r}; if (!isLand(q)) return q; } } catch (e){}
+  return p;
+}
+function towRoutes(b){
+  const t = b.tow; if (!t || TOWBUSY.has(t)) return; TOWBUSY.add(t);
+  const port = portById(t.port), sea = towSea(t.at), arr = w => w.map(q => [Math.round(q.x * 1e5) / 1e5, Math.round(q.y * 1e5) / 1e5]);
+  const way = (a, c, aP, cP) => { let pr; try { pr = leiaRoute(a, c, aP, cP); } catch (e){ pr = Promise.resolve(null); }
+    return pr.then(r => r && r.wps && !r.why ? [a].concat(r.wps) : [a, c]).catch(() => [a, c]); };
+  Promise.all([way(t.bp, sea, t.baseId, null), way(sea, port.p, null, port.id)]).then(([w1, w2]) => {
+    TOWBUSY.delete(t); if (b.tow !== t) return;
+    t.P1 = arr(w1); t.P2 = arr(dist(sea, t.at) > 0.002 ? [t.at].concat(w2) : w2);
+  });
+}
+// one minute of the rescue: the crew musters while the ways are found, the boat comes, makes fast, and tows
+function towStep(H){
+  const b = S.boat, t = b.tow;
+  if (!t){ b.status = 'idle'; return; }
+  b.v = 0;
+  if (!t.P1 || !t.P2){ towRoutes(b); return; }
+  const R1 = towR(t, 'P1'), R2 = towR(t, 'P2'), km = k => k * NM / 60, stop = Math.max(0, R1.len - TOW.line);
+  if (t.ph === 'muster'){ if (S.t - t.t0 >= TOW.muster){ t.ph = 'come'; t.r = 0; } else return; }
+  if (t.ph === 'come'){ t.r = Math.min(stop, t.r + km(TOW.come)); if (t.r >= stop - 1e-9){ t.ph = 'hook'; t.th = S.t; log('Redningsskøyta er fremme og setter slepet.', 'The rescue boat is here and makes the tow fast.'); } return; }
+  if (t.ph === 'hook'){ if (S.t - t.th >= TOW.hook){ t.ph = 'tow'; t.s = 0; } return; }
+  t.s = Math.min(R2.len, t.s + km(TOW.tow)); const a = atRoute(R2, t.s); b.pos = {x:a.p.x, y:a.p.y}; b.heading = a.hd; b.v = TOW.tow;
+  if (R2.len - t.s < 0.02) towDone(t);
+}
+function towDone(t){
+  const b = S.boat, port = portById(t.port); b.tow = null; TOWBUSY.delete(t); dock(port.id); hullRepair();
+  if (t.keep) log('Slept inn til ' + port.name + '. Kostnad ' + t.fee + ' kr.', 'Towed to ' + port.name + '. Cost NOK ' + t.fee + '.');
+  else log('Redningsskøyta slepte båten til ' + port.name + ' i farlig sjø. Kostnad ' + t.fee + ' kr, mistet ' + t.lost + ' kg fisk.', 'A rescue boat towed you to ' + port.name + ' in dangerous seas. Cost NOK ' + t.fee + ', lost ' + t.lost + ' kg of fish.');
+}
+// where the rescue boat (r) and the towed boat (b, under tow only) are a fraction of a minute on: {r:{p, hd, v}, b, ph, slack}
+function towPose(frac){
+  const b = S.boat, t = b && b.tow; if (!t) return null; frac = frac || 0;
+  if (!t.P1 || !t.P2) return {r:{p:{x:t.bp.x, y:t.bp.y}, hd:0, v:0}, b:null, ph:t.ph};
+  const R1 = towR(t, 'P1'), R2 = towR(t, 'P2'), km = k => k * NM / 60 * frac, stop = Math.max(0, R1.len - TOW.line);
+  if (t.ph === 'muster'){ const a = atRoute(R1, 0); return {r:{p:a.p, hd:a.hd, v:0}, b:null, ph:t.ph}; }
+  if (t.ph === 'come'){ const a = atRoute(R1, Math.min(stop, t.r + km(TOW.come))); return {r:{p:a.p, hd:a.hd, v:TOW.come}, b:null, ph:t.ph}; }
+  if (t.ph === 'hook'){ const u = clamp((S.t - t.th + frac) / TOW.hook, 0, 1), e = u * u * (3 - 2 * u), a = atRoute(R1, stop), c = atRoute(R2, TOW.line), dh = ((c.hd - a.hd + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+    return {r:{p:{x:a.p.x + (c.p.x - a.p.x) * e, y:a.p.y + (c.p.y - a.p.y) * e}, hd:a.hd + dh * e, v:3}, b:null, ph:t.ph, slack:1 - e}; }
+  const s = Math.min(R2.len, t.s + km(TOW.tow)), a = atRoute(R2, s), c = atRoute(R2, s + TOW.line);
+  return {r:{p:c.p, hd:c.hd, v:TOW.tow}, b:{p:a.p, hd:a.hd}, ph:t.ph};
+}
+// fast forward to the harbour (the button while you wait or are towed): false while the ways are still being found
+function towFast(){ const b = S.boat; if (!b.tow || !b.tow.P1 || !b.tow.P2) return false; for (let i = 0; i < 1440 && b.tow; i++){ if (!simAreaReady()) break; step(); } return !b.tow; }

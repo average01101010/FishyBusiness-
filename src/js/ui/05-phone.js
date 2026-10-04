@@ -266,7 +266,8 @@ const PHONE = (() => {
       ['Ny app «Trim»: justert dieselpumpe, ladeluftkjøling og økt turbotrykk for båter med dieselmotor (test, ingen betaling ennå).', 'New app «Tuning»: a tuned injection pump, charge air cooling and higher boost pressure for diesel boats (test, no payment yet).'],
       ['Fem slag agn til line og teiner: reke (torsk og skrei), krabbe (billig, ok på alt), krill (uer), makrell (sei) og sei (kveite og krabbe). Egen sei og krabbe kan bli agn før levering.', 'Five kinds of bait for line and pots: shrimp (cod and skrei), crab (cheap, fair on everything), krill (redfish), mackerel (saithe) and saithe (halibut and crab). Own saithe and crab can be bait before landing.'],
       ['Båten finner veien inn til kaiplassen og ut igjen uten å gå gjennom land, brygger og kaier, og går baklengs ut fra kaia.', 'The boat finds its way in to the berth and out again without going through land, piers and quays, and backs out from the quay.'],
-      ['Nye fiskemodeller fra Blender: torsk, sei, hyse, lyr, lange, brosme, uer, kveite og taskekrabbe, i baljen, på jukselina og på dekk.', 'New fish models from Blender: cod, saithe, haddock, pollack, ling, tusk, redfish, halibut and brown crab, in the tub, on the jig line and on deck.']]],
+      ['Nye fiskemodeller fra Blender: torsk, sei, hyse, lyr, lange, brosme, uer, kveite og taskekrabbe, i baljen, på jukselina og på dekk.', 'New fish models from Blender: cod, saithe, haddock, pollack, ling, tusk, redfish, halibut and brown crab, in the tub, on the jig line and on deck.'],
+      ['Redningsskøyta kommer ut fra stasjonen i 25 knop og sleper deg inn i 6 knop. Du kan spole fram til havn.', 'The rescue boat comes out from its station at 25 knots and tows you in at 6 knots. You can fast forward to harbour.']]],
     ['p6', '04.10.2026', 'Færre fiskebåter, spredt utover', 'Fewer fishing boats, spread out', [
       ['Rundt 4 300 båter langs kysten i stedet for 19 000, omtrent som de 4 614 aktive fiskefartøyene i 2024.', 'About 4,300 boats along the coast instead of 19,000, close to the 4,614 active fishing vessels of 2024.'],
       ['Hver båt fisker på sin egen plass på feltet, og driften går aldri opp på land.', 'Each boat fishes its own spot on the ground, and the drift never goes ashore.'],
@@ -439,12 +440,12 @@ const PHONE = (() => {
     h.push('</div>'); return h.join('');
   }
   // --- rescue
-  const STATIONS = [{n:'Finnsnes', p:() => PORTS[0].p}, {n:'Gryllefjord', p:() => portById('gryllefjord').p}];
   function redning(){
     const b = S.boat, bars = inPort() ? 4 : coverage(b.pos), can = bars > 0 || S.equip.vhf, np = nearestPort(b.pos), H = S.t / 60, lvl = riskLevel(windAt(H), hsAt(b.pos, H));
-    const st = STATIONS.map(q => ({n:q.n, d:dist(q.p(), b.pos)})).sort((a, c) => a.d - c.d)[0], eta = Math.round(st.d / (25 * NM) * 60) + 10;
+    const st = rescueBase(b.pos), eta = Math.round(st.d / (TOW.come * NM) * 60) + TOW.muster;
     const h = ['<div class="ph-c"><div class="ph-card"><h4>' + L('Din posisjon', 'Your position') + '</h4><p>' + coordStr(b.pos) + '</p>' + kv(L('Nærmeste havn', 'Nearest port'), np.name + ', ' + fmt(dist(np.p, b.pos) / NM, 1) + ' nm') + kv(L('Dekning', 'Coverage'), bars ? bars + '/4' : L('Ingen', 'None')) + kv('VHF', S.equip.vhf ? L('Ja, kanal 16', 'Yes, channel 16') : L('Ikke montert', 'Not fitted')) + '</div>'];
     if (inPort()) h.push('<div class="ph-card"><p>' + L('Du ligger trygt i havn.', 'You are safely in port.') + '</p></div>');
+    else if (b.status === 'tow' && b.tow) h.push('<div class="ph-card"><h4>' + statusText() + '</h4><p>' + L('Redningsskøyta fra ' + b.tow.base + ' sleper deg til ' + portById(b.tow.port).name + '.', 'The rescue boat from ' + b.tow.base + ' tows you to ' + portById(b.tow.port).name + '.') + '</p></div>');
     else {
       h.push('<div class="ph-card"><h4>' + L('Be om slep', 'Request a tow') + '</h4><p>' + L('For motorstopp, tom tank eller annen hjelp uten fare for liv. Nærmeste redningsskøyte ligger i ' + st.n + ', ca. ' + eta + ' min unna.', 'For engine failure, an empty tank or other help without danger to life. The nearest rescue boat is in ' + st.n + ', about ' + eta + ' min away.') + '</p>' + kv(L('Pris', 'Cost'), S.member ? L('Gratis (medlem)', 'Free (member)') : kr(PRICE.tow)) + '<button class="ph-btn" data-pa="tow"' + (can ? '' : ' disabled') + '>' + L('Ring etter slep', 'Call for a tow') + '</button></div>');
       h.push('<div class="ph-card"><h4>' + L('Nødanrop', 'Distress call') + '</h4><p>' + L('Bare når liv er i fare. Mannskapet og båten hentes, men fangsten går tapt.', 'Only when lives are in danger. Crew and vessel are rescued, but the catch is lost.') + '</p>' + (lvl === 2 ? '<p class="r2">' + L('Farlige forhold der du er nå.', 'Dangerous conditions where you are.') + '</p>' : '') + (confirmMayday ? '<button class="ph-btn red" data-pa="mayday2">' + L('Bekreft: send MAYDAY', 'Confirm: send MAYDAY') + '</button><button class="ph-btn alt" data-pa="mayday0">' + L('Avbryt', 'Cancel') + '</button>' : '<button class="ph-btn red" data-pa="mayday"' + (can ? '' : ' disabled') + '>MAYDAY</button>') + '</div>');
@@ -815,10 +816,10 @@ const PHONE = (() => {
     else if (a === 'admFuel'){ const b = S.boat, add = Math.max(0, BOAT.fuelCap - b.fuel); b.fuel = BOAT.fuelCap; if (b.status === 'adrift' && add > 0) b.status = 'idle'; log('Admin: tanken fylt (' + fmt(add) + ' L).', 'Admin: the tank filled (' + fmt(add) + ' L).'); }
     else if (a === 'sub'){ sub[app] = d.s; }
     else if (a === 'salgW'){ sub.salgW = d.s; }
-    else if (a === 'tow'){ rescue(true); toast(L('Redningsskøyta slepte deg inn.', 'The rescue boat towed you in.')); }
+    else if (a === 'tow'){ rescue(true); toast(L('Redningsskøyta er på vei.', 'The rescue boat is on its way.')); }
     else if (a === 'mayday'){ confirmMayday = true; }
     else if (a === 'mayday0'){ confirmMayday = false; }
-    else if (a === 'mayday2'){ confirmMayday = false; rescue(false); toast(L('Redningsskøyta har hentet deg.', 'The rescue boat has picked you up.')); }
+    else if (a === 'mayday2'){ confirmMayday = false; rescue(false); toast(L('Redningsskøyta er på vei.', 'The rescue boat is on its way.')); }
     else if (a === 'member'){ if (S.cash < PRICE.member){ toast(t('no_cash')); return; } S.cash -= PRICE.member; S.stats.costs += PRICE.member; S.member = true; log('Ble medlem i redningstjenesten.', 'Joined the rescue service.'); }
     else if (a === 'svc'){ const c = d.m === 'self' ? Math.round(VESSELS[b.type].svcCost * 0.35) : VESSELS[b.type].svcCost, hh = d.m === 'self' ? Math.round(VESSELS[b.type].svcJobH * 2.5) : VESSELS[b.type].svcJobH; if (S.cash < c){ toast(t('no_cash')); return; } if (!queueJob({kind:'svc', h:hh, no:d.m === 'self' ? 'Egen service på motoren' : 'Service på verkstedet', en:d.m === 'self' ? 'Servicing the engine yourself' : 'Engine service at the yard'})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } S.cash -= c; S.stats.costs += c; }
     else if (a === 'prep'){ const P2 = PREP[d.k]; if (S.cash < P2.cost){ toast(t('no_cash')); return; } if (!queueJob({kind:'prep', k:d.k, h:P2.h, no:P2.no, en:P2.en})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } S.cash -= P2.cost; S.stats.costs += P2.cost; }

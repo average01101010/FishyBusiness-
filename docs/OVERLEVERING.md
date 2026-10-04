@@ -1561,6 +1561,23 @@ Jonas' liste: oppgraderinger, kvotehandel, kikkert, raskere fangst, fortøying, 
     - som fangst i blødekaret og på sløyebordet på dekkede båter (`drawDeck`, inntil 8 fisk etter artene i lasten)
   - Krabbene ligger flatt i baljen.
   - **Test:** `vesseltest` sjekker at alle ni delene finnes, at fiskene er 1 m fra snuten ved −z, at kveita er flat og at krabben er rundt 1 m bred.
+- **Redningsskøyta som forløp** (`rescue`, `towStep`, `towPose`, `rescueBase` i `05-vessels.js`; `tools/boats/redning.py`, `src/data/boat-redning.b64`):
+  - **Hvor den kommer fra:** nærmeste redningsstasjon (Finnsnes eller Gryllefjord). Er stasjonen mer enn 60 km unna, kommer den fra nærmeste havn.
+  - **Forløpet** (`TOW`):
+    1. Mannskapet mønstrer på 10 minutter.
+    2. Skøyta går 25 knop langs leia.
+    3. Slepet settes på 5 minutter.
+    4. Den sleper deg i 6 knop til nærmeste havn.
+  - **Veiene** finnes med `leiaRoute` mens mannskapet mønstrer. Finnes ingen vei, går den rett. En båt på grunn dras først ut til nærmeste vann (`towSea`).
+  - **Pris og fangst:** prisen trekkes ved anropet. Fangsten beholdes ved slep og går tapt ved nødanrop, som før.
+  - **I spillet:** statusen viser hva som skjer: venter på redningsskøyta, den er på vei, slepet settes, eller under slep i 6 kn. «Spol fram til havn» står i skuffen og i panelet, og Redning-appen viser slepet i stedet for knappene.
+  - **3D:** en generisk redningsskøyte på 16,5 m, uten merker fra Redningsselskapet:
+    - oransje skrog, hvitt styrhus og svart fenderlist
+    - mast med radar og blålys som blinker
+    - lanterner som lyser om natta
+    - slepetauet går fra slepekroken til baugen din
+    - den høres som en stor båt
+  - **Test:** `towtest.py` sjekker oppmønstringen, farten, at veiene aldri går over land, pris og fangst, båt på grunn, spoling og statusteksten.
 
 ## 6. Regelverk og kilder
 

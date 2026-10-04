@@ -2,7 +2,7 @@
 const T = {
 no:{title:'Kystfiske', proto:'Prototype, steg 1', pace:'Tempo', pace1:'6× (normalt)',
  tab_route:'Rute', tab_fish:'Fiske', tab_hold:'Last', tab_wx:'Vær', tab_port:'Havn', tab_log:'Logg',
- st_port:'I havn i {0}', st_sailing:'Underveis, {0} kn', st_returning:'Returnerer, {0} kn', st_fishing:'Fisker', st_idle:'Ligger stille', st_adrift:'Drivende uten drivstoff', st_engine:'Motorstopp', st_unmooring:'Kaster loss', st_landing:'Losser i {0}', st_shift:'Forhaler i {0}', st_fueling:'Bunkrer i {0}',
+ st_port:'I havn i {0}', st_sailing:'Underveis, {0} kn', st_returning:'Returnerer, {0} kn', st_fishing:'Fisker', st_idle:'Ligger stille', st_adrift:'Drivende uten drivstoff', st_tow_muster:'Venter på redningsskøyta', st_tow_come:'Redningsskøyta er på vei', st_tow_hook:'Slepet settes', st_tow_tow:'Under slep, {0} kn', st_engine:'Motorstopp', st_unmooring:'Kaster loss', st_landing:'Losser i {0}', st_shift:'Forhaler i {0}', st_fueling:'Bunkrer i {0}',
  fuel:'Drivstoff', ice:'Is', hold:'Last', wind:'Vind', waves:'Bølger',
  risk0:'trygt', risk1:'krevende', risk2:'farlig',
  route_hint:'Trykk på kartet for å sette veipunkter, og dra et punkt for å flytte det. Trykk nær en havn for å avslutte ruten der. Legg inn fisketid på veipunktene, så kjører båten hele turen selv, også når du er borte.',
@@ -44,7 +44,7 @@ no:{title:'Kystfiske', proto:'Prototype, steg 1', pace:'Tempo', pace1:'6× (norm
  intro_go:'Gå om bord', today:'I dag', zin:'Zoom inn', zout:'Zoom ut', zboat:'Vis båten', empty_log:'Loggboka er tom.'},
 en:{title:'Kystfiske', proto:'Prototype, step 1', pace:'Pace', pace1:'6× (normal)',
  tab_route:'Route', tab_fish:'Fishing', tab_hold:'Hold', tab_wx:'Weather', tab_port:'Harbour', tab_log:'Log',
- st_port:'In harbour at {0}', st_sailing:'Under way, {0} kn', st_returning:'Returning, {0} kn', st_fishing:'Fishing', st_idle:'Stopped', st_adrift:'Adrift, out of fuel', st_engine:'Engine failure', st_unmooring:'Casting off', st_landing:'Landing at {0}', st_shift:'Moving along the quay at {0}', st_fueling:'Filling fuel at {0}',
+ st_port:'In harbour at {0}', st_sailing:'Under way, {0} kn', st_returning:'Returning, {0} kn', st_fishing:'Fishing', st_idle:'Stopped', st_adrift:'Adrift, out of fuel', st_tow_muster:'Waiting for the rescue boat', st_tow_come:'The rescue boat is on its way', st_tow_hook:'Making the tow fast', st_tow_tow:'Under tow, {0} kn', st_engine:'Engine failure', st_unmooring:'Casting off', st_landing:'Landing at {0}', st_shift:'Moving along the quay at {0}', st_fueling:'Filling fuel at {0}',
  fuel:'Fuel', ice:'Ice', hold:'Hold', wind:'Wind', waves:'Waves',
  risk0:'safe', risk1:'rough', risk2:'dangerous',
  route_hint:'Tap the chart to set waypoints, and drag a point to move it. Tap near a harbour to end the route there. Add fishing time to waypoints and the boat runs the whole trip on its own, even while you are away.',

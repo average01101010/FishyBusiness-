@@ -23,6 +23,7 @@ function statusText(){
   if (b.status === 'port') return t(b.land ? 'st_landing' : b.shift ? 'st_shift' : b.fueling ? 'st_fueling' : 'st_port', portById(b.port).name);
   if (b.status === 'sailing') return t(S.plan && S.plan.returning ? 'st_returning' : 'st_sailing', fmt(b.v, 0));
   if (b.gop){ const g = gopText(); return GL(g[2], g[3]); }
+  if (b.status === 'tow' && b.tow) return t('st_tow_' + b.tow.ph, fmt(b.v, 0));
   return t('st_' + b.status);
 }
 // the most imminent event for the boat you are looking at: what and when (game minutes)
@@ -74,6 +75,7 @@ function livePose(frac){
   if (frac === undefined) frac = liveFrac();
   const b = S.boat; let p = {x:b.pos.x, y:b.pos.y}, hd = b.heading;
   if (helmOn()) return helmPose(frac);
+  if (b.status === 'tow'){ const q = towPose(frac); if (q && q.b) return {p:q.b.p, hd:q.b.hd, frac}; }
   if (b.status === 'sailing' && S.plan){
     let left = sailV(S.t / 60) * NM / 60 * frac, idx = S.plan.idx;
     while (left > 1e-9 && idx < S.plan.wps.length){
@@ -130,7 +132,7 @@ const INSTR = (() => {
   const GPSC = {k:'', nx:null, st:null};
   function renderGPS(){
     const v3 = document.body.classList.contains('v3d'); if (!v3 && !document.body.classList.contains('vplot')) return;
-    const pose = livePose(), b = S.boat, H = (S.t + pose.frac) / 60, sog = b.status === 'sailing' ? b.v : 0, ll = gpsLL(pose.p), no = S.lang === 'no', nv = navOf(pose, H, sog);
+    const pose = livePose(), b = S.boat, H = (S.t + pose.frac) / 60, sog = b.status === 'sailing' || (b.status === 'tow' && b.tow && b.tow.ph === 'tow') ? b.v : 0, ll = gpsLL(pose.p), no = S.lang === 'no', nv = navOf(pose, H, sog);
     if (v3){ render3d(pose, H, sog, ll, nv); return; }
     const nav = !!nv;
     if (document.body.classList.contains('navon') !== nav) document.body.classList.toggle('navon', nav);

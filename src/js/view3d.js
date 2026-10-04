@@ -2454,6 +2454,10 @@ const G3 = (() => {
         const vDes = past ? 0 : arriving ? Math.min(vs, Math.max(0, dEnd - 1) * 0.8) : clamp(vs + (ex * fx + ez * fz) * 0.5, vs * (0.25 + 0.3 * Math.max(0, Math.cos(err))), vs * 1.25 + 3), aMax = Math.max(3, vs / 4);
         bv.spd += clamp(vDes - bv.spd, -aMax * 1.4 * dt, aMax * dt);
         bv.px += fx * bv.spd * dt; bv.pz += fz * bv.spd * dt;
+      } else if (b.status === 'tow' && b.tow && b.tow.ph === 'tow'){
+        // under tow (the rescue boat, core towPose): she keeps close behind the tow line's end, with way on
+        const k = 1 - Math.exp(-dt * 6); bv.px += (tx - bv.px) * k; bv.pz += (tz - bv.pz) * k; bv.cog += angDiff(bv.cog, pr.hd) * (1 - Math.exp(-dt * 2));
+        bv.spd = TOW.tow * KNV(); bv.yr *= Math.exp(-dt * 2);
       } else {
         // in port, fishing or drifting: glide to the spot, coast to a stop and swing slowly to the new heading
         bv.spd *= Math.exp(-dt * 1.2); bv.yr *= Math.exp(-dt * 2);
@@ -2638,7 +2642,7 @@ const G3 = (() => {
       // the ground's heights and the forest (map/, the view packs): until they are in, the land is a flat stand-in
       HG = true;   // the ground comes in packs round the boat as it goes (stream3d); until a pack is in, its land is a stand-in
       try { BLD = await loadBuildings(); } catch (e){ console.error(e); BLD = null; }
-      buildTerrain(); buildStatics(); buildBoat(); buildSkiff(); buildFlag(); buildSea(); buildWild(); buildNPC(); buildHarbourFittings(); buildMooring(); buildPlants(); buildPlantParts(); buildBunkers();
+      buildTerrain(); buildStatics(); buildBoat(); buildSkiff(); buildFlag(); buildSea(); buildWild(); buildNPC(); buildRescue(); buildHarbourFittings(); buildMooring(); buildPlants(); buildPlantParts(); buildBunkers();
       canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); ready = false; failed = true; show(false); });
       buildLabels();
       ready = true; return true;
@@ -2852,6 +2856,35 @@ const G3 = (() => {
       if (n.st === 'fishing') for (let i = 0; i < 2 && i < G.crewSpots.length; i++) drawN(P.crew, at(G.crewSpots[i], G.crewSpots[i][3]));
     }
     gl.disableVertexAttribArray(2); gl.useProgram(PL.p);
+  }
+  // ---------- the rescue boat (tools/boats/redning.py) and its tow line, where core/05-vessels.js towPose says ----------
+  let RB = null;
+  function buildRescue(){
+    if (typeof glbHas !== 'function' || !glbHas('redning')) return;
+    const G = glbLoad('redning'), up = nm => { const o = glbPart('redning', nm); return o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null; };
+    const r = NB(); r.tube([[0, 0, 0], [0, 0, 1]], 1, [0.95, 0.72, 0.12, 0.2], 6);
+    RB = {hull:up('hull'), blue:up('blue'), rope:r.mesh(), ex:(G && G.ex) || {}, M:null, q:null};
+  }
+  function drawRescue(BMrel, eye, VP, t){
+    if (!RB) return; RB.M = null; RB.q = null;
+    const q = S.boat.status === 'tow' && typeof towPose === 'function' ? towPose(liveFrac()) : null; if (!q || !RB.hull) return;
+    const x = q.r.p.x * 1000, z = q.r.p.y * 1000; if (Math.hypot(x - eye[0], z - eye[2]) > 12000) return;
+    const y = (env.tide || 0) + (seaH(x, z, t) - (env.tide || 0)) * 0.7;
+    RB.q = q; RB.M = model(x - eye[0], y - eye[1], z - eye[2], -q.r.hd, Math.sin(t * 0.8 + z) * 0.02, Math.sin(t * 1.0 + x) * 0.03 * (0.3 + WV.hs));
+    nSetup(VP); drawN(RB.hull, RB.M); if (RB.blue && Math.floor(t * 2.5) % 2 === 0) drawN(RB.blue, RB.M);
+    // the tow line from the hook to your bow: slack while it is made fast, near taut under tow
+    if ((q.ph === 'hook' && q.slack < 0.7) || q.ph === 'tow'){
+      const G = GEO(vtype()), A = xf(BMrel, [0, (G.gw || 1) + 0.15, G.bow + 0.3]), B = xf(RB.M, RB.ex.tow || [0, 2, 5]);
+      const d = Math.hypot(B[0] - A[0], B[1] - A[1], B[2] - A[2]), sag = q.ph === 'tow' ? 0.01 * d + 0.3 : q.slack * 0.3 * d + 0.5;
+      let prev = A; for (let k = 1; k <= 10; k++){ const s = k / 10, P = [A[0] + (B[0] - A[0]) * s, A[1] + (B[1] - A[1]) * s - sag * 4 * s * (1 - s), A[2] + (B[2] - A[2]) * s]; drawN(RB.rope, limbM(prev, P, 0.035)); prev = P; }
+    }
+  }
+  function drawRescueLights(VP, t){
+    if (!RB || !RB.M || !RB.ex.lights) return;
+    const flash = Math.floor(t * 2.5) % 2 === 0, BL = [0.25, 0.45, 1];
+    gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.depthMask(false);
+    for (const [lx, ly, lz, c] of RB.ex.lights){ if (c === 'b' ? !flash : env.night < 0.05) continue; const q = xf(RB.M, [lx, ly, lz]); PB[0] = q[0]; PB[1] = q[1]; PB[2] = q[2]; PA[0] = c === 'b' ? Math.max(0.6, env.night) : env.night; drawPts(1, gl.POINTS, VP, c === 'b' ? BL : NLC[c], c === 'b' ? 900 : 500, true); }
+    gl.depthMask(true); gl.disable(gl.BLEND);
   }
   function drawNPCGlass(VP){ for (const n of npcNow) if (n.K && n.K.glass) drawGlass(n.K.glass, chain(n.M, n.K.S), VP); }
   function drawNPCLights(VP){
@@ -3086,7 +3119,7 @@ const G3 = (() => {
     if (VG.hand){ drawSkiff(BMrel, VPn, dt, !cam.helm && !awaySk, deckCrew > 0); gl.useProgram(PL.p); }
     else drawVessel(VT, VG, BMrel, VPn, !cam.helm && !awaySk, deckCrew);
     if (SHOW){ const y = (env.tide || 0) + (seaH(SHOW.x, SHOW.z, t) - (env.tide || 0)) * 0.8; SHOW.M = model(SHOW.x - eye[0], y - eye[1], SHOW.z - eye[2], -SHOW.h, Math.sin(t * 0.7) * 0.02, Math.sin(t * 0.9) * 0.03); drawVessel(SHOW.t, GEO(SHOW.t), SHOW.M, VPn, true, 2); }
-    if (STATN){ nSetup(VPn); drawN(STATN, TM); if (BUNKN) drawN(BUNKN, TM); } drawMooring(BMrel, eye, VPn, t); if (PM) drawDeck(BMrel, eye, VPn, t, DECKACT); drawGearOp(BMrel, eye, VPn, t);
+    if (STATN){ nSetup(VPn); drawN(STATN, TM); if (BUNKN) drawN(BUNKN, TM); } drawMooring(BMrel, eye, VPn, t); drawRescue(BMrel, eye, VPn, t); if (PM) drawDeck(BMrel, eye, VPn, t, DECKACT); drawGearOp(BMrel, eye, VPn, t);
     const plant = PM ? nearestPlant(eye) : null; drawUnits(eye, VPn, true, nearFar, plant && plant.id);
     const pr = plant ? drawPlant(plant, eye, VPn, t, BMrel) : null, bunk = PM ? nearestBunker(eye) : null; if (bunk) bunk.last = drawBunker(bunk, eye, VPn, t, BMrel); gl.useProgram(PL.p);
     wildSpawn(t); drawNPC(eye, t, H, VPn); drawGearSea(eye, t, VPn, H); drawWild(eye, t, dt);
@@ -3099,7 +3132,7 @@ const G3 = (() => {
     drawSea(VPn, eye, t, false);
     drawBeams(VPn, eye, t);
     if (BLD && env.night > 0.02){ gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.depthMask(false); drawChunkLights(VPn, eye); gl.depthMask(true); gl.disable(gl.BLEND); }
-    drawEffects(VPn, eye, BMabs, dt, t); drawBlows(VPn, eye, dt); drawNPCLights(VPn); drawSeaLights(VPn, eye, t, true);
+    drawEffects(VPn, eye, BMabs, dt, t); drawBlows(VPn, eye, dt); drawNPCLights(VPn); drawRescueLights(VPn, t); drawSeaLights(VPn, eye, t, true);
     if (VG.hand) drawSkiffGlass(BMrel, VPn); else drawGlass(pvm(VT).glass, BMrel, VPn);
     if (SHOW && SHOW.M) drawGlass(pvm(SHOW.t).glass, SHOW.M, VPn);
     drawNPCGlass(VPn);
@@ -3285,7 +3318,7 @@ const G3 = (() => {
     ear(){ return active && performance.now() - earT < 2000 ? {x:lastEye[0], y:lastEye[1], z:lastEye[2], fx:camFwd[0], fz:camFwd[1]} : null; },
     sndSrc(){ const b = S.boat, P = b.port ? PLANTS.find(q => q.id === b.port) : null, B = b.port ? BUNKERS.find(q => q.id === b.port) : null;
       return {boat:[bv.x, (bv.y || 0) + 1, bv.z], crane:P ? [P.crane[0], 9, P.crane[1]] : null, chute:P ? [P.drop[0], 4, P.drop[1]] : null, pump:B ? [B.pump[0], 2, B.pump[1]] : null,
-        npc:npcNow.map(n => ({x:n.p.x * 1000, z:n.p.y * 1000, v:n.v || 0, st:n.st, big:n.type === 'coastal' || n.type === 'ferry'}))}; },
+        npc:npcNow.map(n => ({x:n.p.x * 1000, z:n.p.y * 1000, v:n.v || 0, st:n.st, big:n.type === 'coastal' || n.type === 'ferry'})).concat(RB && RB.q ? [{x:RB.q.r.p.x * 1000, z:RB.q.r.p.y * 1000, v:RB.q.r.v * 1.4, st:'sailing', big:true}] : [])}; },
     zoom(f){ if (cam.helm) cam.fov = clamp(cam.fov * f, 12, 75); else cam.dist = clamp(cam.dist * f, 7, 8000); }, reset(){ if (cam.helm){ cam.hy = 0; cam.hp = -0.07; cam.fov = 55; } else { cam.yaw = 0.55; cam.pitch = 0.26; cam.dist = 21; } },
     vesselChanged(){ bv.init = false; bv.st = null; TRAIL.length = 0; },
     showroom, get showing(){ return SHOW ? SHOW.t : null; },

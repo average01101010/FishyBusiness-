@@ -29,6 +29,12 @@ function chartSettings(){
 function panelRoute(){
   const b = S.boat, h = [];
   // the chart's and the echo sounder's settings are under «Innstillinger» in the top bar (08-actions.js plotSetRender)
+  if (b.status === 'tow' && b.tow){
+    const tw = b.tow, no = S.lang === 'no', port = portById(tw.port);
+    h.push('<h3>' + statusText() + '</h3><p>' + (no ? 'Redningsskøyta fra ' + tw.base + ' sleper deg til ' + port.name + '.' : 'The rescue boat from ' + tw.base + ' tows you to ' + port.name + '.') + '</p>');
+    h.push('<div class="btns"><button class="btn primary" data-act="towfast"' + (tw.P1 && tw.P2 ? '' : ' disabled') + '>' + (no ? 'Spol fram til havn' : 'Fast forward to harbour') + '</button></div>');
+    return h.join('');
+  }
   if (b.status === 'adrift'){
     h.push('<h3>' + t('st_adrift') + '</h3><p class="bad">' + t('adrift_msg') + '</p>');
     h.push('<div class="btns"><button class="btn primary" data-act="tow">' + t('tow', kr(PRICE.tow)) + '</button></div>');
