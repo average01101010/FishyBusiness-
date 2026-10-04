@@ -706,6 +706,52 @@ Jonas: «Det neste vi må finne ut da er hvor grunnlinjen går langs hele kysten
   - holmene og de smale sundene
   - kroklinjene i Finnmark
 
+### 4.18 Fiskemottakene langs hele kysten (M1, 04.10.2026)
+
+Jonas ville ha et register over alle fiskemottak i Norge, med kaimottaket fra Blender ved hvert av dem (M2 og M3). Han ba også om at prisene ikke tas fra gamle sluttsedler: «Husk bare at prisene har utviklet seg mye med årene.»
+
+**Kildene** (`tools/mottak/mottak.py`, til `tools/mottak/cache/`, ikke i git):
+- **Fiskeridirektoratets kjøperregister** (NLOD): alle førstehåndskjøpernes anlegg, med type, kommune, adresse, koordinater og Mattilsynets godkjenningsnummer.
+- **Fangstdata (seddel)** for de to siste hele årene (NLOD, rundt 1 million linjer i året).
+  - Nøkkelen mellom registeret og sedlene er `Mottaksstasjon`, som er godkjenningsnummeret.
+  - Bare landinger fra norske fartøy telles.
+- **Norges Råfisklags mottakskart** (Nordmøre til Finnmark): type (fiskemottak, fryselager) og sone.
+  - Kontaktperson, e-post og telefon tas ikke med.
+- **Kartverkets adresseregister:** For anlegg uten koordinater i noen av kildene finnes punktet fra adressen.
+
+**Resultatet** er `src/data/mottak.json` (0,12 MB) med 310 mottak (5 ble ikke funnet på kartet). For hvert mottak:
+- **Hvem og hvor:**
+  - navn, type og kommune
+  - lat/lon og punktet i spillets ramme
+- **Hva det tar imot i året:**
+  - kilo, antall landinger og antall båter
+  - redskapsgruppene
+  - andelen fra båter under 15 m
+- **Per art,** for spillets arter (torsk, hyse, sei, lyr, lange, brosme, uer, kveite, taskekrabbe og kongekrabbe):
+  - kilo i året
+  - andelen levert levende
+  - månedene det tas imot, som maske
+  - prisindeksen
+- **Kaia** (`q`):
+  - Det er nærmeste kaifront innen 600 m fra vec-pakkene (4.15). Kai eller brygge på minst 15 m med minst 2 m vann foretrekkes framfor kystlinje.
+  - Feltene er punktet, normalens vinkel, lengden, dybden, typen og avstanden fra registerets punkt.
+- **Tallene:** 266 mottak har spillets arter og er et fast anlegg (ordinært anlegg eller kaiselger). 255 av dem har en kai.
+- **Kongekrabbe** tas imot ved 48 mottak, nesten alle i Øst- og Vest-Finnmark, med andel levende 0,9–1,0. Nord Senja Fisk har litt.
+- **Prisindeksen** er det mottaket betalte for arten, delt på det de samme kiloene ville kostet til gjennomsnittsprisen for arten samme måned samme år. 1,00 er snittet.
+  - Indeksen sier hvem som betaler godt eller dårlig, ikke hva fisken koster.
+  - Spillet beholder sine egne priser (`SPECIES.pm`, Råfisklagets minstepriser).
+
+**Oppdatering:**
+- `.github/workflows/mottak.yml` legger resultatet som release `mottak-N`, og den nyeste kopieres til `src/data/mottak.json`.
+- Den kjører den 3. hver måned, når `mottak.py` endres, eller for hånd.
+- Kaiene trenger kartpakkene fra `tools/map/game.py`.
+
+**Svakheter:**
+- **Registerets punkt** er av og til kontoret og ikke kaia. Da kan kaia innen 600 m være feil kai.
+- **Typen:** 15 anlegg har typen «NOT_TRANSLATED» i registeret, mest fryselagre og terminaler.
+  - De som Råfisklaget kaller fiskemottak, regnes som ordinært anlegg. Resten blir «Annet anlegg».
+- **Snitt over to år:** Kilo og landinger er snittet for de to årene. Et mottak som startet eller stengte i perioden, ser derfor halvt så stort ut.
+
 ## 5. Systemer i spillet
 
 ### 5.1 Båter og utstyr

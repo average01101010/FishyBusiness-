@@ -1,0 +1,38 @@
+# The fish receivers along the coast (M1, 04.10.2026): tools/mottak/mottak.py joins Fiskeridirektoratet's buyer register and landing
+# notes (NLOD) with Norges Råfisklag's map of its receivers, and finds each one's quay in the game's vector packs (the newest kart-
+# release joined by tools/map/game.py). The result is kept as a release mottak-<run number> (mottak.json), which goes into
+# src/data/mottak.json. The notes of the year before come in full early in the new year; the register changes now and then.
+# Started by a push that changes tools/mottak/mottak.py (on any branch), on the 3rd of every month (on the default branch), or by hand
+# from the Actions tab once this file is on main.
+name: Mottak langs kysten
+on:
+  push:
+    paths: ['tools/mottak/mottak.py']
+  schedule:
+    - cron: '41 5 3 * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+env:
+  PYTHONUNBUFFERED: '1'
+jobs:
+  mottak:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy requests
+      - name: The game's map packs (the newest kart- release, joined with Senja's)
+        run: python3 tools/map/game.py
+      - name: mottak.json
+        run: KYST_MOTTAK=mottak.json python3 tools/mottak/mottak.py
+      - name: The release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=mottak-${{ github.run_number }}
+          gh release create "$TAG" mottak.json --target "${{ github.sha }}" --title "Mottak $TAG" \
+            --notes "Fiskeridirektoratets kjøperregister og fangstdata (seddel) (NLOD) og Norges Råfisklags mottakskart, i spillets ramme (tools/mottak/mottak.py), commit ${{ github.sha }}."
