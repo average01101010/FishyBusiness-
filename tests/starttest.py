@@ -66,7 +66,7 @@ async def main():
         await pg.click('#stGo')
         await pg.wait_for_function("!document.getElementById('startPick')", timeout=90000)
         mv = await pg.evaluate("(() => { PHONE.open('innst'); return {port:S.boat.port, home:S.home, moved:S.moved, again:!!document.querySelector('[data-pa=move]'), log:S.log.slice(-3).map(e => e.no).join(' | ')}; })()")
-        print(ok(mv['port'] == to and mv['home'] == to and mv['moved'] and not mv['again'] and 'Flyttet fra Finnsnes' in mv['log']), 'a game from before moves once along the coast from Settings, and the button is gone', mv)
+        print(ok(mv['port'] == 'finnsnes' and mv['home'] == to and mv['moved'] and not mv['again'] and 'Nytt hjemsted' in mv['log']), 'a game from before chooses a new home once from Settings; the boat stays in Finnsnes (no fast travel), and the button is gone', mv)
         # 4. wherever you start (Jonas 05.10.2026): Father's naust by the plant, the tackle shop by the naust, and the first trip's patch
         # near enough that the start boat fishes and sells on the fuel she has; every 8th plant along the coast
         sv = await pg.evaluate("""(async () => { const C = PORTS.filter(q => q.coastal), out = [], b = S.boat, v = Math.max(3, BOAT.vmax * 0.8);

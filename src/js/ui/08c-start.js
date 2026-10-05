@@ -70,7 +70,11 @@ function tutFieldNear(pt){
   return best ? {p:{x:Math.round(best.p.x * 1000) / 1000, y:Math.round(best.p.y * 1000) / 1000}, r:1.2} : null;
 }
 // move a new game to the harbour: its waters loaded first, then the boat, the trail, the first trip's patch and landing
+// a game from before moving its home (Settings, «Hjemsted»): only the home and Father's naust go there; the boat stays where she is and
+// is sailed there (Jonas 05.10.2026: «Fast travel er ikke mulig i spillet, punktum.»)
+let START_HOMEONLY = false;
 async function chooseStart(pt){
+  if (START_HOMEONLY){ START_HOMEONLY = false; S.home = pt.id; S.naust = null; view.cx = pt.p.x; view.cy = pt.p.y; save(); refreshAll(); return; }
   S.home = pt.id; S.naust = null; S.boat.berth = 'naust';   // the boat lies at Father's naust (07c-naust.js); the plant's quay until it is found
   if (pt.id === S.boat.port && S.boat.status === 'port') return;   // a new game is in Finnsnes already
   await mapNeed(pt.p, Math.max(MAPD.simR, 7.5));   // the first trip's patch is looked for up to 6 km out (tutFieldNear)
