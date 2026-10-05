@@ -38,6 +38,60 @@ Laget 04.10.2026, da spillet fikk navnet Det Store Blå og domenet detstorebla.n
     - Den andre kjøringen av «Appen på Hetzner» (run 37240712788) lastet opp spillet på 19 s.
     - Jonas logger inn med SSH-nøkkelen fra iMacen. Termux og Termius på nettbrettet fikk ikke inn passordet.
   - **Første ekte innlogging (05.10.2026, 01:45):** Jonas logget inn med Google på https://detstorebla.no. Supabase har da 1 spiller med samtykke, 1 økt, 1 hendelse, 1 bildetaktmåling og 0 feil. Lagringen i skyen kommer etter 3 minutters spill eller når siden lukkes.
+- **Push-varsler (05.10.2026, punkt 9 på lista):**
+  - **Bygget og lagt inn:**
+    - Spillet (`ui/10g-push.js`) og service worker-en.
+    - Tabellene `push_subs` og `push_queue` og funksjonene `push_sub` og `push_claim`, kjørt med MCP som `push_1_tables`.
+    - Edge Function-en `push-send`, deployet med MCP med `verify_jwt` av. Den sender bare det som er forfalt.
+    - Jobben `push-send` i pg_cron hvert femte minutt (`push_3_cron`).
+  - Sjekket gjennom pg_net:
+    - GET `?key` svarer `{"key": null}`.
+    - POST svarer `"no VAPID keys"`.
+  - Før nøklene finnes, viser ikke spillet bryteren.
+  - **Det Jonas gjør, i denne rekkefølgen:**
+    1. **SQL Editor i Supabase:** lim inn og kjør bit 2 nedenfor. Den har DELETE, og da kommer ikke bekreftelsen fram i Claude-appen. Lim inn akkurat det som står i blokka, og ingenting annet.
+    2. **Lag nøklene på iMacen.** Skriv `npx web-push generate-vapid-keys` i Terminal.
+       - Svarer den `command not found`, installerer du Node fra nodejs.org først.
+       - Den skriver ut en «Public Key» og en «Private Key».
+    3. **Supabase → Edge Functions → Secrets**, tre nye hemmeligheter:
+       - `VAPID_PUBLIC_KEY` = den offentlige nøkkelen
+       - `VAPID_PRIVATE_KEY` = den private nøkkelen
+       - `VAPID_SUBJECT` = `https://detstorebla.no`
+    4. Åpne appen på telefonen og gå til Innstillinger → Konto. Slå på «Varsler når appen er lukket», tillat varsler, legg ut garn, og lukk appen.
+  - **Den private nøkkelen sendes aldri i chatten og legges aldri i repoet.**
+  - Bit 2 (samme som i `supabase/migrations/20261005120000_push.sql`):
+
+```sql
+create or replace function public.push_unsub(endpoint text) returns void
+language plpgsql security definer set search_path = public as $$
+declare p text := pid();
+begin
+  if p is null then raise exception 'not signed in'; end if;
+  delete from push_subs s where s.endpoint = push_unsub.endpoint and s.player_id = p;
+  if not exists (select 1 from push_subs s where s.player_id = p) then delete from push_queue q where q.player_id = p and q.sent_at is null; end if;
+end $$;
+create or replace function public.push_plan(items jsonb) returns int
+language plpgsql security definer set search_path = public as $$
+declare p text := pid(); n int := 0;
+begin
+  if p is null then raise exception 'not signed in'; end if;
+  delete from push_queue q where q.player_id = p and q.sent_at is null;
+  if jsonb_typeof(items) <> 'array' or not exists (select 1 from push_subs s where s.player_id = p) then return 0; end if;
+  insert into push_queue (player_id, send_at, tag, title, body)
+    select p, (i ->> 'at')::timestamptz, left(i ->> 'tag', 40), left(i ->> 'title', 80), left(i ->> 'body', 240)
+    from (select i from jsonb_array_elements(items) i limit 24) x
+    where (i ->> 'at')::timestamptz between now() - interval '1 minute' and now() + interval '2 days'
+      and coalesce(i ->> 'title', '') <> '' and coalesce(i ->> 'body', '') <> '' and coalesce(i ->> 'tag', '') <> '';
+  get diagnostics n = row_count;
+  return n;
+end $$;
+create or replace function public.push_tidy() returns void language sql security definer set search_path = public as $$
+  delete from push_queue where sent_at < now() - interval '7 days'
+$$;
+revoke all on function public.push_unsub(text), public.push_plan(jsonb), public.push_tidy() from public, anon, authenticated;
+grant execute on function public.push_unsub(text), public.push_plan(jsonb) to authenticated;
+grant execute on function public.push_tidy() to service_role;
+```
 - **Etterpå:** Stripe.
 
 ## A. Det du må gjøre selv

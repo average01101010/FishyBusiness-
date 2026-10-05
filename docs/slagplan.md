@@ -16,7 +16,7 @@ Ferdig og pushet i natt (patchnotes p18–p23 på telefonen):
 - Fase 4: butikken står på kaia i Finnsnes, og innlastingen og innloggingen har fått et bilde fra Blender (fars naust i blåtimen) og ny skrift (p24).
 
 Gjenstår:
-- Push-varsler (9). Jonas må lage VAPID-nøklene og legge dem som hemmeligheter i Supabase. Jeg lager ingen nøkler.
+- Push-varsler (9): bygget og lagt inn i Supabase, men står av. Jonas må kjøre bit 2 i SQL Editor, lage VAPID-nøklene og legge dem som hemmeligheter. Se `docs/lansering.md`. Jeg lager ingen nøkler.
 - To nye mottaksmodeller og M3, kongekrabbeteinen.
 - Fase 5.
 

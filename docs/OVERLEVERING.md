@@ -1963,6 +1963,41 @@ Jonas valgte dem fra lista (nr. 5 og 7).
   - Klassene ligger i `styles.css` (`.cg-card`, `.cg-btn`), ikke inline.
 - **Ikke gjort ennå:** innlastingsteksten er alltid norsk. Spillets språk er ikke lest inn ennå når den vises.
 
+### 5.25h Push-varsler (05.10.2026)
+
+- **Hvorfor de planlegges i spillet:** spillet kjører i nettleseren, så serveren vet ikke hva som skjer i det.
+  - Når appen går i bakgrunnen (`visibilitychange` til `hidden`, og `pagehide`), regner `pushItems()` i `ui/10g-push.js` ut hva som skjer mens den er borte.
+  - Klokka går videre med `GAME_RATE` (6 spillminutter per minutt) når spillet er lukket, opp til `CATCHUP_CAP` (72 spilltimer, altså 12 timer) (`ui/08-actions.js`). Spilltid T blir derfor `nå + (T − S.t) / 6` minutter.
+  - `push_plan` legger planen ut på serveren og erstatter den forrige.
+  - Tilbake i appen tømmes planen, så ingenting kommer mens du spiller.
+- **Det som varsles:**
+  - Redskap som har stått lenge nok: line 10 t, garn 20 t, teiner 40 t (`PUSH_SOAK`, etter `soakHour` i `core/10-gear.js`).
+  - En båt på rute når den er framme i havna, regnet som ETA i ruta.
+  - Sesongnyhetene kl. 07 den dagen de kommer, fra Kystradio.
+  - Skreifestivalen dagen før.
+  - Høyst 24 varsler, og bare innen to døgn.
+- **Serveren** (`supabase/migrations/20261005120000_push.sql`):
+  - `push_subs` og `push_queue` er stengt for spillere.
+  - `push_sub` godtar bare nettleserens egne varseltjenester (Google, Mozilla, Microsoft og Apple), så funksjonen poster aldri til en adresse spilleren velger.
+  - `push_claim` tar det som er forfalt og merker det sendt i samme operasjon (`for update skip locked`). Bare service-rollen kan kalle den.
+  - En slettet spiller tar med seg abonnementene og køen (`on delete cascade`).
+- **Sendingen** (`supabase/functions/push-send`):
+  - Den bruker `npm:web-push` med VAPID-nøklene som hemmeligheter, som bare Jonas lager.
+  - pg_cron kaller den hvert femte minutt.
+  - Et abonnement tjenesten melder borte (404 eller 410), slettes. Et som feiler over 50 ganger, slettes også.
+  - `GET ?key` gir den offentlige nøkkelen. Uten nøkler viser ikke spillet bryteren.
+- **I spillet:**
+  - Bryteren «Varsler når appen er lukket» står på kontokortet under Innstillinger. Den vises bare innlogget, i appen og med nøkkelen på plass.
+  - Service worker-en (`src/pwa/sw.js`) viser varselet med appens ikon, og et trykk henter appen fram.
+  - Personvernerklæringen har et eget avsnitt om varsler.
+- **Tester:**
+  - `pushtest.py`: ingen bryter uten nøkkel, slå på og av, tidene i planen, og at planen legges ut i bakgrunnen og tømmes i appen.
+  - `sqltest.py`: bare varseltjenestene, ingen plan uten abonnement, høyst to døgn, at det forfalte tas én gang, og at alt slettes med kontoen.
+- **Status:**
+  - Med MCP er bit 1, funksjonen og jobben lagt inn.
+  - Bit 2 (med DELETE) og nøklene står igjen for Jonas, se `docs/lansering.md`.
+  - På iPhone virker varslene bare når appen er lagt på hjemskjermen.
+
 ### 5.26 Måker og halere fra Blender (03.10.2026)
 
 - **Måkene** (`tools/wild/maake.py`, `src/data/gull.b64`):

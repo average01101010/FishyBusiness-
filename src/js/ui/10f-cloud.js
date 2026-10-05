@@ -108,6 +108,7 @@ function cloudStart(){
   if (CLOUD.consent == null){ const iv = setInterval(() => { const m = document.getElementById('modal'); if (S.intro && S.boatName && m && m.hidden){ clearInterval(iv); setTimeout(cloudAsk, 1500); } }, 2000); }
   else if (CLOUD.consent) cloudBegin();
   setInterval(cloudSaveSoon, 180000);
+  pushStart();
   window.addEventListener('pagehide', () => { cloudSaveSoon(true); if (CLOUD.sid) cloudFlush(true); });
 }
 function cloudAsk(){
@@ -192,11 +193,12 @@ function cloudCard(){
   const u = CLOUD.user, L2 = cloudL;
   return '<div class="ph-card"><h4>' + L2('Konto', 'Account') + '</h4><p class="ph-note">' + L2('Logget inn som ', 'Signed in as ') + (u.email || '').replace(/</g, '&lt;') + '. ' +
     L2('Spillet lagres også på kontoen.', 'The game is also saved to the account.') + '</p>' +
-    '<label><span>' + L2('Del bruksstatistikk', 'Share usage statistics') + '</span><input type="checkbox" data-pa="cloudStat"' + (CLOUD.consent ? ' checked' : '') + '></label>' +
+    '<label><span>' + L2('Del bruksstatistikk', 'Share usage statistics') + '</span><input type="checkbox" data-pa="cloudStat"' + (CLOUD.consent ? ' checked' : '') + '></label>' + pushCardRow() +
     '<button class="ph-btn alt" data-pa="cloudOut">' + L2('Logg ut', 'Sign out') + '</button><button class="ph-btn alt" data-pa="cloudDel">' + L2('Slett kontoen', 'Delete the account') + '</button></div>';
 }
 function cloudAct(a){
   if (a === 'cloudStat'){ cloudConsent(!CLOUD.consent, null); return true; }
+  if (a === 'cloudPush'){ pushToggle(); return true; }
   if (a === 'cloudOut'){ cloudSaveSoon(); localStorage.removeItem(CLOUD_SIGNED); CLOUD.ak.signOut({returnTo:location.origin + location.pathname}); return true; }
   if (a === 'cloudDel'){
     if (!confirm(cloudL('Slette kontoen? Spillet på kontoen, statistikken og innloggingen slettes. Kjøp beholdes uten navn i regnskapet. Spillet på denne enheten blir liggende.', 'Delete the account? The game on the account, the statistics and the sign-in are deleted. Purchases are kept without a name for the books. The game on this device stays.'))) return true;

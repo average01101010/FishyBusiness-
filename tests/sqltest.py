@@ -97,7 +97,22 @@ def main():
         # «slett kontoen»
         sql("insert into public.products values ('boat-skin-1', 'skin', 'Rød skrog', 'Red hull', 49, null, true, '{}')")
         sql("insert into public.purchases (id, player_id, product_id, amount_nok, status, paid_at) values ('cs_test_1', 'user_01AAA', 'boat-skin-1', 49, 'paid', now())")
+        # push notifications (20261005120000_push.sql): only the browsers' push services, a plan only with a subscription and only two
+        # days ahead, the tables closed to players, and the sender (service role) takes what is due once
+        import datetime as _dt
+        ts = lambda sec: (_dt.datetime.now(_dt.timezone.utc) + _dt.timedelta(seconds=sec)).isoformat()
+        plan = lambda *secs: "select public.push_plan('%s')" % json.dumps([{'at': ts(x), 'tag': 'gear-%d' % i, 'title': 'Snekka', 'body': 'Garnene har stått i 20 timer.'} for i, x in enumerate(secs)])
+        R['pushBad'] = sql("select public.push_sub('https://evil.example/x', 'k', 'a', 'no')", A, 'authenticated', expect_err=True)
+        R['pushNoSub'] = sql(plan(-30), A, 'authenticated')
+        sql("select public.push_sub('https://fcm.googleapis.com/fcm/send/abc', 'BPkey', 'authkey', 'no')", A, 'authenticated')
+        R['pushPlan'] = sql(plan(-30, 3600, 5 * 86400), A, 'authenticated')
+        R['pushAnon'] = sql("select public.push_plan('[]')", {}, 'anon', expect_err=True)
+        R['pushClaimPl'] = sql("select count(*) from public.push_claim(10)", A, 'authenticated', expect_err=True)
+        R['pushRead'] = sql("select count(*) from public.push_subs", A, 'authenticated', expect_err=True)
+        R['pushClaim'] = sql("select count(*) from public.push_claim(10)", None, 'service_role') + '/' + sql("select count(*) from public.push_claim(10)", None, 'service_role')
+        R['pushReplan'] = sql(plan(600), A, 'authenticated') + '/' + sql("select count(*) from public.push_queue where sent_at is null")
         sql("select public.delete_me()", A, 'authenticated')
+        R['pushGone'] = sql("select count(*) || '/' || (select count(*) from public.push_queue) from public.push_subs")
         R['deleted'] = sql("select (select count(*) from public.players where id = 'user_01AAA') || '/' || (select count(*) from public.events) || '/' || (select count(*) from public.saves) || '/' || (select coalesce(player_id, 'anon') from public.purchases)")
         # a yes taken back: the sessions, events, device, state and year of birth go, the account and the save stay
         C = {'sub': 'user_01CCC', 'role': 'authenticated'}; sid = '22222222-2222-4222-8222-222222222222'
@@ -123,6 +138,9 @@ def main():
         print(ok(all(k in D for k in keys) and D['overview']['players'] == 2 and D['overview']['sessions'] == 1 and D['rage']['share'] == 1 and D['trips']['avg_kr'] == 5400 and R['adminRead'] == '4'),
               'the admin with aal2 gets every panel of the dashboard and reads the tables', {k: D[k] for k in ('overview', 'rage', 'trips')})
         print(ok(all(R[k][0] for k in ('anonTrunc', 'plTrunc', 'anonSave', 'anonSeq'))), "Supabase's default rights are taken back: no one empties the admin list, and the anonymous call no player function and touch no sequence", [R[k][1][:45] for k in ('anonTrunc', 'plTrunc', 'anonSave', 'anonSeq')])
+        print(ok(R['pushBad'][0] and R['pushNoSub'] == '0' and R['pushPlan'] == '2' and all(R[k][0] for k in ('pushAnon', 'pushClaimPl', 'pushRead')) and R['pushClaim'] == '1/0' and R['pushReplan'] == '1/1'),
+              'push: only the browsers\' push services; no plan without a subscription; only what is due within two days; players never read the tables or claim; the sender takes what is due once; a new plan replaces the old', {k: R[k] for k in ('pushNoSub', 'pushPlan', 'pushClaim', 'pushReplan')})
+        print(ok(R['pushGone'] == '0/0'), 'deleting the account takes the push subscriptions and the queue', R['pushGone'])
         print(ok(R['deleted'] == '0/0/0/anon'), 'deleting the account takes the player, the events and the save; the purchase stays without a name for the books', R['deleted'])
     finally:
         run(*as_pg([os.path.join(BIN, 'pg_ctl'), '-D', data, '-m', 'immediate', 'stop']))

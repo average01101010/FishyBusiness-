@@ -35,3 +35,15 @@ self.addEventListener('fetch', e => {
     return r;
   }).catch(async () => (await caches.match(req)) || (req.mode === 'navigate' ? caches.match('index.html') : Response.error())));
 });
+// push notifications (05.10.2026; ui/10g-push.js, supabase/functions/push-send): shown with the app's icon; a tap brings the app up
+self.addEventListener('push', e => {
+  let d = {}; try { d = e.data ? e.data.json() : {}; } catch (x){ d = {body:e.data ? e.data.text() : ''}; }
+  e.waitUntil(self.registration.showNotification(d.title || 'Det Store Blå', {body:d.body || '', tag:d.tag || 'dsb', icon:'icon-192.png', lang:'no'}));
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil((async () => {
+    for (const c of await self.clients.matchAll({type:'window', includeUncontrolled:true})) if ('focus' in c) return c.focus();
+    return self.clients.openWindow('./');
+  })());
+});
