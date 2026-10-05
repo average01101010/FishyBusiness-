@@ -68,9 +68,9 @@ async def main():
           for (let i = 0; i < 130; i++) tick(0.1, 60, now += 100); out.push(Q.lvl); now += 120000; for (let i = 0; i < 130; i++) tick(0.1, 60, now += 100); out.push(Q.lvl);
           Q.fix = true; Q.lvl = 2; return out; }""")
         check(a[:3] == [1, 0, 0] and a[3] >= 1, 'Auto: ned ett nivå etter 4 s under 28 bilder/s, ikke straks opp igjen, opp etter 30 s med god margin', a)
-        # the setting on the phone: Auto, Lav, Middels, Høy
+        # the setting on the phone: Auto, Lav, Middels, Høy, Ultra
         await pg.evaluate("PHONE.open('innst')"); nb = await pg.evaluate("document.querySelectorAll('#phView [data-pa=q3d]').length"); await pg.evaluate("PHONE.show(false)")
-        check(nb == 4, 'Innstillinger på telefonen har grafikkvalget (Auto, Lav, Middels, Høy)', nb)
+        check(nb == 5, 'Innstillinger på telefonen har grafikkvalget (Auto, Lav, Middels, Høy, Ultra)', nb)
         check(not errs, 'ingen sidefeil', errs[:3])
         await b.close()
 

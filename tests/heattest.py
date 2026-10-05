@@ -160,7 +160,7 @@ async def sonar(pg):
       R.refund = S.cash - c1; R.skiffSonar = !!S.equip.sonar; DOCK.close();
       return R; })())"""))
     check(r['skiff'] is None and r['snekke'] is None and r['sjark'] and r['sjarkny'], 'sonaren tilbys bare på sjark og ny sjark', {k: r[k] for k in ('skiff', 'snekke', 'sjark', 'sjarkny')})
-    check('16 t' in (r['sjark'] or '') and 'undefined' not in (r['sjark'] or ''), 'knappen viser monteringstida 16 t', r['sjark'])
+    check('30 min' in (r['sjark'] or '') and 'undefined' not in (r['sjark'] or ''), 'knappen viser monteringstida i ekte tid (verftsjobbene tar 30 minutter)', r['sjark'])
     check(r['paid'] == 150000 and r['queued'] and r['fitted'] and r['tier'] == 'sonar' and abs(r['r'] - 2.778) < 0.001 and r['listed'], 'kjøpt og montert: sonaren gir varmekart 3 nm i diameter og står under Båten i Beholdning', {k: r[k] for k in ('paid', 'tier', 'r', 'listed')})
     check(r['refund'] == 150000 and not r['skiffSonar'], 'en montering som venter mens båten byttes til en som ikke passer, betales tilbake', {k: r[k] for k in ('refund', 'skiffSonar')})
 

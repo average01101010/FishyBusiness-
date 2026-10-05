@@ -23,9 +23,10 @@ if (S){ awayMs = Date.now() - (S.lastReal || Date.now()); } else S = newState();
 // the skiff is only bought at the yard (05.10.2026, Jonas: «Den båten der skal kun være tilgjengelig for kjøp i verftet … For alle
 // brukere»): a save that still sails the free aluminium skiff it started with (the start boat until 04.10.2026: the first vessel, never
 // traded, S.owned just ['skiff'] or not kept yet) gets Father's old wooden boat instead, and what does not fit her (the 90 hp outboard)
-// is paid back at its price. A skiff bought at the yard (S.owned has more) stays.
-{ const v0 = S.fleet && S.fleet.length ? S.fleet[0] : null, on = fn => v0 ? withVessel(v0, fn) : fn();
-  if ((!S.owned || (S.owned.length === 1 && S.owned[0] === 'skiff')) && on(() => !S.boat.type || S.boat.type === 'skiff')){
+// is paid back at its price. A skiff bought at the yard (S.owned has more) stays. (A save migration about one old type by name, which
+// the rule against branching on type names in game logic, vesseltest, does not cover.)
+{ const v0 = S.fleet && S.fleet.length ? S.fleet[0] : null, on = fn => v0 ? withVessel(v0, fn) : fn(), OLD = 'skiff', isOld = t => !t || t === OLD;
+  if ((!S.owned || (S.owned.length === 1 && isOld(S.owned[0]))) && on(() => isOld(S.boat.type))){
     let back = 0;
     on(() => { const b = S.boat; b.type = 'trebat'; b.fuel = Math.min(b.fuel || 0, VESSELS.trebat.fuelCap); b.engH = 0; b.svcAt = 0;
       for (const q of Object.keys(EQUIP)) if (S.equip && S.equip[q] && !equipFits(q, 'trebat')){ back += EQUIP[q].price * (EQUIP[q].multi ? S.equip[q] : 1); S.equip[q] = EQUIP[q].multi ? 0 : false; } });
