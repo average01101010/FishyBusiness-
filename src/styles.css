@@ -642,3 +642,44 @@ body.kino-clean .ov.kino,body.kino-clean .ov.kino2{opacity:.35}
 @keyframes ltFloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-5px) rotate(.4deg)}}
 @keyframes ltFlicker{0%,100%{opacity:.92}46%{opacity:1}51%{opacity:.84}55%{opacity:.97}}
 @keyframes ltDust{0%{transform:translate(0,0);opacity:0}15%{opacity:.8}85%{opacity:.55}100%{transform:translate(34px,-96px);opacity:0}}
+
+/* ---------- every screen: phones upright and on their side, tablets and PCs (Jonas 05.10.2026: «optimalisere hele spillets UI for både
+   mobil, nettbrett og pc»; tests/uishots.py looks for text cut off, controls off the screen, blocks on each other and small buttons) ---------- */
+/* the echo sounder's scale is gone when the echo sounder is off (its field had kept its place) */
+#heatBox[hidden]{display:none!important}
+/* the 3D compass never reaches the info box beside it */
+body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 24px)))}
+/* buttons a finger can hit in the phone's apps */
+@media (pointer:coarse){.ph-sub button{min-height:36px;padding:6px 13px;font-size:13px}}
+/* a phone upright */
+@media (max-width:560px){
+  /* the phone in the game fills the screen: a phone on a phone needs no frame */
+  #phone{left:0;right:0;top:0;bottom:0;width:auto;height:auto;filter:none}
+  #phone .ph-body{border-radius:0;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);border:0;background:#0b1622}
+  #phone .ph-cam{display:none} #phone .ph-screen{border-radius:0}
+  /* the compass along the top, the info box under it */
+  body.v3d #compass3d{left:8px;right:64px;width:auto;transform:none}
+  body.v3d #hud{top:calc(env(safe-area-inset-top,0px) + 40px)}
+  /* the action row from the deck log's tab to the phone button, a name on two lines when it must */
+  #dock{left:38px;right:58px;bottom:calc(env(safe-area-inset-bottom,0px) + 20px)}
+  .dk-b{width:56px;font-size:10px} .dk-b .dk-i{width:44px;height:44px} .dk-b .dk-i svg{width:22px;height:22px}
+  .dk-b .dk-l{white-space:normal;max-width:60px;text-align:center;line-height:1.05;font-size:9.5px;letter-spacing:-.15px}
+  #dockInfo,#dockFan{bottom:calc(env(safe-area-inset-bottom,0px) + 94px)}
+  /* the chart plotter's top row: the echo sounder's scale under it on the right, settings and close as symbols */
+  body.vplot #ecdisTop .ec-f{padding:0 5px}
+  body.vplot #ecdisTop #heatBox{position:absolute;top:calc(env(safe-area-inset-top,0px) + 50px);right:8px;border-radius:8px;padding:4px 8px;border:1px solid #1f3a4c}
+  #ecdisTop .ec-b{gap:4px;padding:0 6px}
+  #ecdisTop #ecSet,#ecdisTop #ecClose{min-width:40px;font-size:0}
+  #ecdisTop #ecSet::before{content:'⚙';font-size:17px} #ecdisTop #ecClose::before{content:'✕';font-size:16px}
+  #ecdisTop #ecRoute{min-width:44px;padding:0 8px}
+}
+/* a phone on its side: the info box a little smaller, no mini chart (the chart is a tap away), the GPS box right under the info, and
+   the phone in the game as tall as the screen without its frame */
+@media (max-height:520px){
+  body.v3d #hud{zoom:.86}
+  body.v3d #miniPlot{display:none}
+  body.v3d #gps3d:not([hidden]){top:calc(var(--gpsTop,130px) + 6px)}
+  #phone{top:0;bottom:0;right:0;height:auto;width:min(380px,62vw);filter:drop-shadow(0 0 30px rgba(0,0,0,.5))}
+  #phone .ph-body{border-radius:0;padding:0;border:0;background:#0b1622} #phone .ph-cam{display:none} #phone .ph-screen{border-radius:0}
+  #logbook{bottom:calc(env(safe-area-inset-bottom,0px) + 4px)!important;height:92px!important}
+}
