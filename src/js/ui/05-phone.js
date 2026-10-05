@@ -372,7 +372,8 @@ const PHONE = (() => {
     ['p16', '05.10.2026', 'Kaia på Finnsnes', 'The quay at Finnsnes', [
       ['Båten lå inne i et bygg ved kaia på Finnsnes. Bygg på kaidekket og over liggeplassen er borte, så du ser båten og kaia når du starter.', 'The boat lay inside a building at the Finnsnes quay. Buildings on the quay deck and over the berth are gone, so you see the boat and the quay when you start.'],
       ['Snøen er stille. Før suste den som hvit støy.', 'Snow is silent. It used to hiss like white noise.'],
-      ['Admin-appen på telefonen er bare for utvikleren. Den er borte for alle andre kontoer.', 'The Admin app on the phone is for the developer only. It is gone for every other account.']]],
+      ['Admin-appen på telefonen er bare for utvikleren. Den er borte for alle andre kontoer.', 'The Admin app on the phone is for the developer only. It is gone for every other account.'],
+      ['3D på telefoner: Shaderne ber bare om høy presisjon der telefonen har det. Mister telefonen grafikken før 3D er i gang, prøver den igjen, og feilmeldingen sier mer.', '3D on phones: the shaders ask for high precision only where the phone has it. If the phone loses its graphics before 3D has started, it tries again, and the error message says more.']]],
     ['p15', '05.10.2026', 'Det Store Blå', 'Det Store Blå', [
       ['Spillet heter nå Det Store Blå. Lagringen din er den samme.', 'The game is now called Det Store Blå. Your save is the same.'],
       ['Ny logo og nye app-ikoner, laget i Blender: sjarken i blåtimen under tindene på Senja.', 'A new logo and new app icons, made in Blender: the sjark at the blue hour under the peaks of Senja.'],

@@ -216,11 +216,21 @@ const G3 = (() => {
   const PT_FS = 'precision mediump float;uniform vec3 uCol;uniform float uRound;varying float vA;' +
     'void main(){float a=vA;if(uRound>0.5){vec2 c=gl_PointCoord-0.5;float r=dot(c,c);if(r>0.25)discard;a*=1.0-r*4.0;}gl_FragColor=vec4(uCol,a);}';
 
-  function compile(type, src){ const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
-  function program(vs, fs, attrs){
-    const p = gl.createProgram(); gl.attachShader(p, compile(gl.VERTEX_SHADER, vs)); gl.attachShader(p, compile(gl.FRAGMENT_SHADER, fs));
+  // A fragment shader asks for highp only where the device has it (some phones' GPUs have mediump only there); a shader that fails
+  // says which one, and whether the context was lost, since a lost context fails every compile with no log (the user's phone
+  // 05.10.2026: «shadere: Error», nothing more)
+  const FS_HP = '\n#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\n';
+  const glWhy = (log, nm) => nm + ': ' + (gl.isContextLost() ? 'konteksten er mistet' : (log && log.trim()) || 'ingen logg fra driveren');
+  function compile(type, src, nm){
+    if (type === gl.FRAGMENT_SHADER) src = src.replace('precision highp float;', FS_HP);
+    const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(glWhy(gl.getShaderInfoLog(s), nm + (type === gl.VERTEX_SHADER ? ' VS' : ' FS')));
+    return s;
+  }
+  function program(vs, fs, attrs, nm = '?'){
+    const p = gl.createProgram(); gl.attachShader(p, compile(gl.VERTEX_SHADER, vs, nm)); gl.attachShader(p, compile(gl.FRAGMENT_SHADER, fs, nm));
     attrs.forEach((a, i) => gl.bindAttribLocation(p, i, a)); gl.linkProgram(p);
-    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(glWhy(gl.getProgramInfoLog(p), nm + ' link'));
     const u = {}, n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
     for (let i = 0; i < n; i++){ const info = gl.getActiveUniform(p, i); u[info.name.replace(/\[0\]$/, '')] = gl.getUniformLocation(p, info.name); }
     return {p, u};
@@ -2732,20 +2742,30 @@ const G3 = (() => {
   // ---------- setup ----------
   // What stopped the 3D view, shown with the message so a device it fails on tells why (the user's phone 04.10.2026: «3D-visning
   // støttes ikke» with no more to go on): the step and the error, or the shader's log
-  let failWhy = '', stage = '';
+  let failWhy = '', stage = '', GPU = '', glWatch = false;
   const opt = (nm, f) => { try { f(); } catch (e){ console.error(nm, e); } };    // a part the view can do without
   async function init(){
     if (ready) return true; if (failed) return false;
     try {
       stage = 'webgl';
       gl = canvas.getContext('webgl', {antialias:true, alpha:false, powerPreference:'high-performance'}) || canvas.getContext('experimental-webgl');
-      if (!gl) throw new Error('ingen WebGL-kontekst'); if (!gl.getExtension('OES_standard_derivatives')) throw new Error('mangler OES_standard_derivatives');
+      if (!gl) throw new Error('ingen WebGL-kontekst');
+      { const dbg = gl.getExtension('WEBGL_debug_renderer_info'); GPU = String((dbg && gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL)) || gl.getParameter(gl.RENDERER) || '').slice(0, 80); }
+      if (!glWatch){
+        // a lost context: the view stops; lost before it was ready (a phone short of memory, or a GPU process that restarted), it
+        // starts again when the browser gives the context back
+        glWatch = true; let wasReady = false;
+        canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); wasReady = ready; ready = false; failed = true; failWhy = 'WebGL-konteksten ble mistet'; show(false); });
+        canvas.addEventListener('webglcontextrestored', () => { if (wasReady){ toast(S.lang === 'en' ? 'The 3D view was lost. Reload the page to get it back.' : '3D-visningen ble borte. Last siden på nytt for å få den tilbake.'); return; } failed = false; failWhy = ''; show(true); });
+      }
+      if (gl.isContextLost()){ stage = 'webgl'; throw new Error('konteksten er mistet (venter på at nettleseren gir den tilbake)'); }
+      if (!gl.getExtension('OES_standard_derivatives')) throw new Error('mangler OES_standard_derivatives');
       stage = 'shadere';
-      PL = program(LIT_VS, LIT_FS, ['aPos', 'aCol']); PT = program(TER_VS, TER_FS, ['aPos', 'aCol', 'aNor', 'aShd']); PRGN = program(LITN_VS, LITN_FS, ['aPos', 'aNor', 'aCol']); PRGX = program(TEX_VS, TEX_FS, ['aPos', 'aUV']); PRGW = program(WK_VS, WK_FS, ['aPos', 'aW', 'aS']);
+      PL = program(LIT_VS, LIT_FS, ['aPos', 'aCol'], 'lit'); PT = program(TER_VS, TER_FS, ['aPos', 'aCol', 'aNor', 'aShd'], 'terreng'); PRGN = program(LITN_VS, LITN_FS, ['aPos', 'aNor', 'aCol'], 'modell'); PRGX = program(TEX_VS, TEX_FS, ['aPos', 'aUV'], 'tekstur'); PRGW = program(WK_VS, WK_FS, ['aPos', 'aW', 'aS'], 'kjølvann');
       WKB = {p:new Float32Array(9000 * 3), w:new Float32Array(9000 * 4), s:new Float32Array(9000), pb:buf(new Float32Array(9000 * 3), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), wb:buf(new Float32Array(9000 * 4), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), sb:buf(new Float32Array(9000), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW)}; // the waves read the sea-state texture in the vertex shader where the GPU can (#novtf in the address tries without)
       SST_VS = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS) >= 2 && !/novtf/.test(location.hash);
-      PS = program((SST_VS ? '' : '#define NOSST\n') + SEA_VS, SEA_FS, ['aXZ']); PSF = program('#define NOSST\n' + SEA_VS, '#define FAR\n' + SEA_FS, ['aXZ']);
-      SSDUMMY = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, SSDUMMY); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255])); PK = program(SKY_VS, SKY_FS, ['aP']); PP = program(PT_VS, PT_FS, ['aPos', 'aA']);
+      PS = program((SST_VS ? '' : '#define NOSST\n') + SEA_VS, SEA_FS, ['aXZ'], 'sjø'); PSF = program('#define NOSST\n' + SEA_VS, '#define FAR\n' + SEA_FS, ['aXZ'], 'sjø langt');
+      SSDUMMY = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, SSDUMMY); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255])); PK = program(SKY_VS, SKY_FS, ['aP'], 'himmel'); PP = program(PT_VS, PT_FS, ['aPos', 'aA'], 'punkter');
       DYNP = buf(new Float32Array(4000 * 3), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); DYNA = buf(new Float32Array(4000), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW);
       // the ground's heights and the forest (map/, the view packs): until they are in, the land is a flat stand-in
       HG = true;   // the ground comes in packs round the boat as it goes (stream3d); until a pack is in, its land is a stand-in
@@ -2753,10 +2773,14 @@ const G3 = (() => {
       for (const [nm, f] of [['terreng', buildTerrain], ['kai', buildStatics], ['båt', buildBoat], ['skiff', buildSkiff], ['flagg', buildFlag], ['sjø', buildSea]]){ stage = nm; f(); }
       opt('wild', buildWild); opt('npc', buildNPC); opt('air', buildAir); opt('rescue', buildRescue);
       for (const [nm, f] of [['havn', buildHarbourFittings], ['fortøying', buildMooring], ['mottak', buildPlants], ['folk', buildPlantParts], ['bunkers', buildBunkers]]){ stage = nm; f(); }
-      canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); ready = false; failed = true; failWhy = 'WebGL-konteksten ble mistet'; show(false); });
       buildLabels();
       ready = true; return true;
-    } catch (e){ console.error(e); failed = true; failWhy = stage + ': ' + String(e && e.message || e).replace(/\s+/g, ' ').slice(0, 160); return false; }
+    } catch (e){
+      console.error(e); failed = true; failWhy = stage + ': ' + String(e && e.message || e).replace(/\s+/g, ' ').slice(0, 160) + (GPU ? ' · ' + GPU : '');
+      // to the cloud's error log with the GPU and its limits, so a phone it fails on can be looked into
+      if (typeof cloudErr === 'function'){ let lim = ''; try { lim = ['MAX_FRAGMENT_UNIFORM_VECTORS', 'MAX_VERTEX_UNIFORM_VECTORS', 'MAX_VARYING_VECTORS', 'MAX_VERTEX_TEXTURE_IMAGE_UNITS'].map(k => k.replace('MAX_', '').toLowerCase() + '=' + gl.getParameter(gl[k])).join(' '); } catch (e2){} cloudErr('3D ' + failWhy, 'view3d init', lim + '\n' + String(e && e.stack || '')); }
+      return false;
+    }
   }
   let labelEls = [];
   function buildLabels(){ labelsEl.innerHTML = ''; labelEls = PORTS.map(p => { const d = document.createElement('div'); d.className = 'lbl3d'; d.textContent = p.name; labelsEl.appendChild(d); return d; }); }
