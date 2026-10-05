@@ -89,6 +89,12 @@ async def main():
         home = await pg.evaluate("(document.querySelector('#phone .ph-goal') || {}).textContent || ''")
         check(first == 'Neste mål' and 'Første juksamaskin' in home, 'Neste mål øverst i Båthandel og på hjemskjermen', [first, home])
         await pg.screenshot(path='shop_home.png')
+        # on a narrow phone the goal's name, what is left and the bar stay inside its card (Jonas 05.10.2026: «ser rotete ut»)
+        await pg.set_viewport_size({'width': 360, 'height': 780}); await pg.evaluate("PHONE.open('home')"); await pg.wait_for_timeout(300)
+        gf = await pg.evaluate("""(() => { const g = document.querySelector('#phone .ph-goal'); if (!g) return null; const q = g.getBoundingClientRect();
+          return {w:Math.round(q.width), out:[...g.querySelectorAll('*')].filter(e => { const r = e.getBoundingClientRect(); return r.width && (r.right > q.right + 1 || r.left < q.left - 1); }).map(e => e.tagName + '.' + e.className)}; })()""")
+        check(gf and not gf['out'], 'on a narrow phone the next goal fits its card: name, what is left and the bar under each other', gf)
+        await pg.set_viewport_size({'width': 1000, 'height': 700}); await pg.wait_for_timeout(200)
 
         # A8: minimum prices with two decimals
         await pg.evaluate("PHONE.open('salg')"); await pg.wait_for_timeout(200)
