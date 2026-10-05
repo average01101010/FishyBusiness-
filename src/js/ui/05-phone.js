@@ -388,6 +388,10 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p41', '05.10.2026', 'Rykk-knappen og ny konto', 'The strike button and a new account', [
+      ['Når du jukser selv, står knappen høyere opp, over statuslinja. Det står «Vent på napp …» over den, og på knappen står det «Rykk». Den blir rød når fisken biter.', 'When you jig yourself, the button sits higher, above the status line. «Wait for a bite …» stands above it and «Strike» on it, and it turns red when the fish bites.'],
+      ['Sletter du kontoen, slettes også spillet på enheten. Neste gang begynner du på nytt med brevet fra far og naustet.', 'Deleting the account also deletes the game on the device. Next time you begin again with Father’s letter and the boathouse.'],
+      ['Stopper båten midt i første tur, viser veiledningen deg hvordan du lager ruta på nytt i stedet for å låse deg.', 'If the boat stops in the middle of the first trip, the guide shows you how to make the route again instead of locking you in.']]],
     ['p40', '05.10.2026', 'Første tur viser mer', 'The first trip shows more', [
       ['Når du kommer fram til feltet første gang, får du vite hva fiskelykke er, før du henter haillen i Haill-appen.', 'When you reach the grounds the first time, you learn what luck is before you fetch the haill in the Luck app.'],
       ['På vei inn til mottaket viser veiledningen deg rundt: statusboksen, dekksdagboka, kameraet og broa, appene på telefonen, været og innstillingene.', 'On the way in to the plant the guide shows you round: the status box, the deck log, the camera and the bridge, the apps on the phone, the weather and the settings.']]],
@@ -523,7 +527,7 @@ const PHONE = (() => {
     ['p7', '05.10.2026', 'Fra forslagslista', 'From the wish list', [
       ['Båten snurrer ikke lenger rundt siste veipunkt. Den bremser inn og stopper der.', 'The boat no longer spins round the last waypoint. It slows down and stops there.'],
       ['Håndjuksa og juksamaskinene fisker dobbelt så mye som før.', 'The hand jig and the jigging reels catch twice as much as before.'],
-      ['Stanga er borte. «Jukse selv»: når det napper, trykk «Rykk!» mens nåla er midt på. Midt på gir to fisk, bom gir halvparten.', 'The rod is gone. «Jig yourself»: when it bites, tap «Strike!» as the needle is in the middle. The middle gives two fish, a miss half.'],
+      ['Stanga er borte. «Jukse selv»: når det napper, trykk «Rykk» mens nåla er midt på. Midt på gir to fisk, bom gir halvparten.', 'The rod is gone. «Jig yourself»: when it bites, tap «Strike» as the needle is in the middle. The middle gives two fish, a miss half.'],
       ['Nattmodus i kartplotteren: mørke farger etter sola, eller Dag/Natt under Innstillinger i kartet.', 'Night mode in the chart plotter: dark colours by the sun, or Day/Night under the chart\'s settings.'],
       ['Kikkert i bro-visningen: dra to fingre fra hverandre for opptil 8×. Dobbelttrykk går tilbake.', 'Binoculars in the bridge view: spread two fingers for up to 8×. A double tap goes back.'],
       ['Fiskemottakene har åpningstider: hverdager 06–18, lørdag 08–14, og 05–22 hver dag i skreisesongen. «Vent til åpning» spoler fram.', 'The fish plants have opening hours: weekdays 06–18, Saturday 08–14, and 05–22 every day in the skrei season. «Wait for opening» runs the clock on.'],

@@ -1,6 +1,6 @@
 // ---------- the jig game: jigging by hand yourself, and the buttons and hooks around it ----------
 // The rod is gone (the user's list 04.10.2026). While you play, your own share of the hand-jig catch (jigMeShare) is left out of the
-// automatic catch and comes through your bites instead, at the same rate on average: at a bite a needle sweeps over a bar, and «Rykk!»
+// automatic catch and comes through your bites instead, at the same rate on average: at a bite a needle sweeps over a bar, and «Rykk»
 // with it in the middle sets the hook. The hit gives 2×, 1.5×, 1× or 0.5× what the bite is worth: the pilk and a fly hook both took,
 // half the time one more on a fly, one fish, or it slipped half the time (no tap at all is a slip too).
 window.JIGG = (() => {
@@ -49,9 +49,10 @@ window.JIGG = (() => {
     const u = st === 'bite' ? clamp((ts - t0) / 1000 / SWEEP, 0, 1) : 0.5;
     needle.style.left = (u * 100).toFixed(1) + '%';
     const res = got ? (got.n ? (got.m === 2 ? L('2× · to på kroken!', '2× · two on the hooks!') : got.m === 1.5 ? L('1,5× · godt rykk', '1.5× · a good strike') : got.m === 1 ? L('1× · fisk', '1× · a fish') : L('0,5× · tidlig eller seint', '0.5× · early or late')) + ' · ' + fmt(got.kg || 0, 1) + ' kg' : L('Fisken slapp', 'It got away')) : '';
-    msgEl.textContent = st === 'bite' ? L('NAPP! Rykk når nåla er midt på', 'BITE! Strike as the needle is in the middle') : st === 'res' ? res : L('Rykk med juksa og kjenn etter napp …', 'Jig the line and feel for a bite …');
+    msgEl.textContent = st === 'bite' ? L('NAPP! Rykk når nåla er midt på', 'BITE! Strike as the needle is in the middle') : st === 'res' ? res : L('Vent på napp …', 'Wait for a bite …');
     el.dataset.st = st; el.querySelector('.jig-bar').style.visibility = st === 'bite' ? 'visible' : 'hidden';
-    btn.textContent = st === 'bite' ? L('Rykk!', 'Strike!') : L('Juks', 'Jig'); btn.disabled = st === 'res';
+    // always «Rykk»; red when it bites (Jonas 05.10.2026)
+    btn.textContent = L('Rykk', 'Strike'); btn.disabled = st === 'res';
   }
   function press(e){ if (e) e.preventDefault(); const now = performance.now(); if (st !== 'bite') return; mult = grade((now - t0) / 1000 - SWEEP / 2); land(mult); set('res', now); render(now); }
   btn.addEventListener('pointerdown', press);
