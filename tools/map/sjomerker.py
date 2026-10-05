@@ -6,10 +6,12 @@
 #   marks  [x, y, type, category]: M lighthouse, m minor light, P pile or post, D stake (a danger or special mark), L lateral beacon,
 #           B buoy, C cardinal buoy, S cardinal beacon, K cairn; category port/starb or north/east/south/west
 #   rocks  [x, y]
-# Overpass is closed to the cloud session and open in Actions (.github/workflows/sjomerker.yml, started by a change to
-# tools/map/sjomerker.json): the release sjomerker-<run number> has sjomerker.json.gz, which tools/map/release.py fetches and
-# tools/map/game.py puts into each tile's chart pack as its 'marks' entry.
-#   python3 tools/map/sjomerker.py fetch out/sjomerker.json      the bands over the frame from Overpass
+# From Geofabrik's extract of Norway (with its waters), filtered by osmium; Overpass timed out on the coast's bands (504, 05.10.2026)
+# and is kept as a fallback. Both are closed to the cloud session and open in Actions (.github/workflows/sjomerker.yml, started by a
+# change to tools/map/sjomerker.json): the release sjomerker-<run number> has sjomerker.json.gz, which tools/map/release.py fetches
+# and tools/map/game.py puts into each tile's chart pack as its 'marks' entry.
+#   python3 tools/map/sjomerker.py pbf norway-latest.osm.pbf out/sjomerker.json    from the extract (osmium-tool on the path)
+#   python3 tools/map/sjomerker.py fetch out/sjomerker.json                         the bands over the frame from Overpass
 import os, sys, re, json, time, gzip
 import requests
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
@@ -112,12 +114,40 @@ def convert(els):
         if L: lights.append(L)
     return {'lights': lights, 'marks': marks, 'rocks': rocks}
 
+# the extract's seamarks as Overpass-like elements: osmium keeps the objects with the tags, and exports them as GeoJSON lines with
+# their tags; a way's or an area's middle is the mean of its points
+def from_pbf(pbf):
+    import subprocess, tempfile
+    tmp = tempfile.mkdtemp(); flt = os.path.join(tmp, 'sm.osm.pbf'); gj = os.path.join(tmp, 'sm.geojsonseq')
+    subprocess.run(['osmium', 'tags-filter', pbf, 'nwr/seamark:type', 'n/seamark:light:colour', 'n/seamark:light:1:colour', '-o', flt, '--overwrite'], check=True)
+    subprocess.run(['osmium', 'export', flt, '-f', 'geojsonseq', '-o', gj, '--overwrite', '--add-unique-id=type_id', '-x', 'print_record_separator=false'], check=True)
+    els = []
+    for line in open(gj, encoding='utf-8'):
+        line = line.strip().lstrip('\x1e')
+        if not line: continue
+        f = json.loads(line); g = f.get('geometry') or {}; c = g.get('coordinates')
+        if not c: continue
+        pts = []
+        def walk(v):
+            if isinstance(v[0], (int, float)): pts.append(v)
+            else:
+                for w in v: walk(w)
+        walk(c)
+        lon = sum(p[0] for p in pts) / len(pts); lat = sum(p[1] for p in pts) / len(pts)
+        uid = str(f.get('id', ''))
+        els.append({'type': {'n': 'node', 'w': 'way', 'r': 'relation', 'a': 'way'}.get(uid[:1], 'node'), 'id': uid, 'lat': lat, 'lon': lon, 'tags': f.get('properties') or {}})
+    return els
+
 if __name__ == '__main__':
-    if len(sys.argv) < 3 or sys.argv[1] != 'fetch': sys.exit('python3 tools/map/sjomerker.py fetch out/sjomerker.json')
-    out = sys.argv[2]; els = []
-    for b in BANDS:
-        e = query(*[b[0], b[2], b[1], b[3]]); print('band', b, len(e), flush=True); els += e; time.sleep(10)
-    d = convert(els); d['src'] = 'OpenStreetMap (ODbL) seamark tags via Overpass, ' + time.strftime('%Y-%m-%d')
+    if len(sys.argv) >= 4 and sys.argv[1] == 'pbf':
+        out = sys.argv[3]; els = from_pbf(sys.argv[2]); print('extract', len(els), flush=True)
+        d = convert(els); d['src'] = 'OpenStreetMap (ODbL) seamark tags from Geofabrik\'s Norway extract, ' + time.strftime('%Y-%m-%d')
+    elif len(sys.argv) >= 3 and sys.argv[1] == 'fetch':
+        out = sys.argv[2]; els = []
+        for b in BANDS:
+            e = query(*[b[0], b[2], b[1], b[3]]); print('band', b, len(e), flush=True); els += e; time.sleep(10)
+        d = convert(els); d['src'] = 'OpenStreetMap (ODbL) seamark tags via Overpass, ' + time.strftime('%Y-%m-%d')
+    else: sys.exit('python3 tools/map/sjomerker.py pbf norway-latest.osm.pbf out/sjomerker.json | fetch out/sjomerker.json')
     os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
     json.dump(d, open(out, 'w'), separators=(',', ':'), ensure_ascii=False)
     with gzip.open(out + '.gz', 'wt', encoding='utf-8') as g: json.dump(d, g, separators=(',', ':'), ensure_ascii=False)
