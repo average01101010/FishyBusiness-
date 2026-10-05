@@ -60,7 +60,7 @@ function panelRoute(){
     h.push('<div class="btns">' + (S.plan.returning || tutOn() ? '' : '<button class="btn" data-act="retrace">' + t('retrace') + '</button>') + (b.status === 'sailing' ? '<button class="btn" data-act="stop">' + t('stop') + '</button>' : '') + '</div>');
     return h.join('');
   }
-  h.push('<p class="note">' + t('route_hint') + (S.marks.length ? ' ' + t('marks_n') : '') + '</p>');
+  h.push('<p class="note">' + t('route_hint') + (S.marks.some(markLive) ? ' ' + t('marks_n') : '') + '</p>');
   if (LEIA_BUSY || LEIA_ARM) h.push('<p class="leiahint">' + (LEIA_BUSY ? (S.lang === 'no' ? 'Finner leia …' : 'Finding the fairway …') : (S.lang === 'no' ? 'Autonav: trykk i kartet der du vil. Båten holder seg unna land, grunner og skjær. Så trykker du «Kast loss».' : 'Autonav: tap the chart where you want to go. The boat keeps off land, shallows and rocks. Then tap «Cast off».')) + '</p>');
   if (!S.draft.length){ h.push('<p>' + t(b.status === 'port' && b.port === 'finnsnes' ? 'route_empty_fs' : 'route_empty') + '</p>'); return h.join(''); }
   const tl = draftTimeline(), L = (no, en) => S.lang === 'no' ? no : en, when = T => hm(T / 60) + ' <small>' + inReal(T - S.t) + '</small>';

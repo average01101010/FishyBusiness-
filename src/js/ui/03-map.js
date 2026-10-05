@@ -262,6 +262,8 @@ function updateMapButtons(){
   $('ecRoute').textContent = S.lang === 'no' ? 'Rute' : 'Route'; $('ecSet').textContent = S.lang === 'no' ? 'Innstillinger' : 'Settings'; $('ecClose').textContent = S.lang === 'no' ? 'Lukk' : 'Close'; $('plotStyle').classList.toggle('locked', !S.equip.plotter);
   $('camBtn').classList.toggle('on', g3 && G3.isHelm()); $('camBtn').setAttribute('aria-label', g3 && G3.isHelm() ? t('cam_follow') : t('cam_helm'));
 }
+const MARK_LIFE = 12 * 60, markLive = mk => S.t - mk.t < MARK_LIFE;
+let markEnd = Infinity;
 function renderStatic(){
   if (document.body.classList.contains('vplot')) scheduleChart();
   const u = 1 / view.px, g = [];
@@ -280,8 +282,10 @@ function renderStatic(){
   const mR = Math.max(vx1 - vx0, vy1 - vy0) / 2 + 1, mX = (vx0 + vx1) / 2, mY = (vy0 + vy1) / 2;   // the coast's marks too (01e-marks.js)
   if (view.z > 3.5) for (const mk of marksNear('marks', mX, mY, mR)){ if (!inV(mk[0], mk[1]) || mk[2] === 'M' || mk[2] === 'm') continue; const c = mk[2] === 'L' || mk[2] === 'B' ? (mk[3] === 'starb' ? '#1f8a3c' : '#c8231c') : mk[2] === 'C' || mk[2] === 'S' ? '#d6a800' : '#333'; g.push('<circle cx="' + mk[0] + '" cy="' + mk[1] + '" r="' + (2 * u) + '" fill="' + c + '" stroke="#fff" stroke-width="' + (0.6 * u) + '"/>'); }
   if (view.z > 2) for (const L of marksNear('lights', mX, mY, mR)){ if (!inV(L[0], L[1])) continue; const s0 = (L[6] === 'M' ? 9 : 6.5) * u; g.push('<path d="M' + L[0] + ',' + L[1] + 'q' + (s0 * 0.35) + ',' + (-s0 * 0.5) + ' ' + (s0 * 0.12) + ',' + (-s0) + 'q' + (-s0 * 0.5) + ',' + (s0 * 0.3) + ' ' + (-s0 * 0.12) + ',' + s0 + 'z" class="lightsym"/><circle cx="' + L[0] + '" cy="' + L[1] + '" r="' + (1.3 * u) + '" class="lightdot" stroke-width="' + (0.8 * u) + '"/>'); }
-  // own catch marks, coloured by kilos per hour
-  for (const mk of S.marks){ const col = mk.kgph >= 40 ? '#d7301f' : mk.kgph >= 20 ? '#f08a24' : mk.kgph >= 8 ? '#e5c12b' : '#5b8db8';
+  // own catch marks, coloured by kilos per hour; each is gone from the chart 12 game hours after it was made (Jonas 05.10.2026: «Prikkene
+  // med fangst-rate skal forsvinne etter 12 in-game timer»), and renderDyn redraws when the next one runs out
+  markEnd = Infinity;
+  for (const mk of S.marks){ if (!markLive(mk)) continue; markEnd = Math.min(markEnd, mk.t + MARK_LIFE); const col = mk.kgph >= 40 ? '#d7301f' : mk.kgph >= 20 ? '#f08a24' : mk.kgph >= 8 ? '#e5c12b' : '#5b8db8';
     g.push('<circle cx="' + mk.x + '" cy="' + mk.y + '" r="' + (4.2 * u) + '" fill="' + col + '" stroke="#fff" stroke-width="' + (1.2 * u) + '"/>');
     if (view.z > 3.5) g.push(txt({x:mk.x + 6 * u, y:mk.y + 3.5 * u}, mk.kgph + ' kg/t', 'lbl-ground', 9.5 * u, 'stroke-width="' + (2.5 * u) + '"')); }
   // Father's marks (ui/06c-notebook.js)
@@ -327,6 +331,7 @@ function aisInfo(n){
 function renderAisCard(){ const el = $('aisCard'); if (!AISSEL){ el.hidden = true; return; } const n = AISNOW.find(q => q.id === AISSEL); if (!n){ el.hidden = true; return; } el.innerHTML = aisInfo(n); el.hidden = false; $('aisX').onclick = () => { AISSEL = null; renderAisCard(); renderDyn(); }; }
 function renderDyn(){
   const u = 1 / view.px, b = S.boat, g = [];
+  if (S.t >= markEnd){ markEnd = Infinity; scheduleStatic(); }
   renderRouteTools();
   // trail
   if (b.status !== 'port' && S.trail.length){

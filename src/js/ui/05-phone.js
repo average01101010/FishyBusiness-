@@ -384,6 +384,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p33', '05.10.2026', 'Fangstprikkene blekner', 'The catch dots fade', [
+      ['De fargede prikkene med kilo i timen i kartplotteren forsvinner 12 spilltimer etter fisket, så kartet viser bare det som er ferskt.', 'The coloured dots with kilos per hour on the chart plotter are gone 12 game hours after the fishing, so the chart shows only what is fresh.']]],
     ['p32', '05.10.2026', 'Første tur kan ikke hoppes over', 'The first trip cannot be skipped', [
       ['Veiledningen «Første tur» må gjøres steg for steg. Knappen «Hopp over veiledningen» er borte. Lukker du spillet midt i, fortsetter den der du slapp.', 'The «First trip» guide is done step by step. The «Skip the guide» button is gone. If you close the game halfway, it goes on where you left off.']]],
     ['p31', '05.10.2026', 'Én klokke for alle', 'One clock for everyone', [
