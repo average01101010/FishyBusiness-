@@ -131,7 +131,8 @@ SEAMARKS.rocks.forEach((q, i) => { const k = gridKey(Math.floor(q[0]), Math.floo
 function rocksIn(x0, y0, x1, y1){
   const out = [];
   for (let gy = Math.floor(y0); gy <= Math.floor(y1); gy++) for (let gx = Math.floor(x0); gx <= Math.floor(x1); gx++){ const a = ROCKIDX.get(gridKey(gx, gy)); if (a) for (const i of a) out.push(i); }
-  out.sort((a, b) => a - b); return out.map(i => SEAMARKS.rocks[i]);
+  out.sort((a, b) => a - b); const r = out.map(i => SEAMARKS.rocks[i]), m = marksRocksIn(x0, y0, x1, y1);   // and the coast's (01e-marks.js)
+  return m && m.length ? r.concat(m) : r;
 }
 for (const q of BRIDGES) for (let i = 4; i + 1 < q.length; i += 2){ const g = LGm([q[i], q[i + 1]]); q[i] = g[0]; q[i + 1] = g[1]; }
 // distance from open water to the nearest shore (km): on the tiles' 100 m grid near the boats, else the national core's 200 m grid

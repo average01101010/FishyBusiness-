@@ -543,7 +543,7 @@ const G3 = (() => {
     // the fine coast round the camera (01d-coast.js): the ground meets the sea at its line, and the land mask is drawn from it
     for (const pk of mapPacksIn('chart', x - V, z - V, x + V, z + V)){ if (pk.coast || pk.want3d) continue; pk.want3d = true; coastEnsure(pk).then(() => { pk.want3d = false; staleOver(pk); }, e => { pk.want3d = false; console.error(e); }); }
     vecPrune([{x, y:z}, {x:lastEye[0] / 1000, y:lastEye[2] / 1000}]);
-    tileStatics();
+    tileStatics(); marksStatics();
   }
   // ---------- the coast's packs (01c-vec.js, part 4 of the coast-wide plan): buildings, roads, bridges, piers and breakwaters ----------
   // When a tile comes in (decoded in the worker), the 1 km chunks on it are built again with its buildings and roads. Its bridges, piers
@@ -580,7 +580,7 @@ const G3 = (() => {
     for (const k of [...CAMBLD]) if (typeof k === 'string' && tileOf(+k.slice(1)) === t.k) CAMBLD.delete(k);
     for (const [k, c] of CH) if (tileOf(k) === t.k){ freeChunk(c); CH.delete(k); }
   });
-  function drawTileStatics(TM, eye){ drawStones(STONES, TM, eye); for (const s of TST.values()){ if (s.mesh) drawLit(s.mesh, TM); drawStones(s.stones, TM, eye); } }
+  function drawTileStatics(TM, eye){ drawStones(STONES, TM, eye); for (const s of TST.values()){ if (s.mesh) drawLit(s.mesh, TM); drawStones(s.stones, TM, eye); } for (const mm of MKM.values()) if (mm) drawLit(mm, TM); }
   // One terrain mesh is rebuilt at a time, a few rows a frame (MESHMS ms; the near, middle and far meshes were each built in one
   // frame, all three whenever a pack came anywhere, 03.10.2026): the old mesh is drawn until the new one is done. A mesh that does not
   // cover the boat at all (a jump, the first build) is built at once.
@@ -728,6 +728,29 @@ const G3 = (() => {
   // the coast's receivers (06b-coastports.js) are built only within 40 km of the boat: their packs are only loaded there
   const nearHere = (x, z, km = 40) => !S || !S.boat ? true : Math.hypot(x / 1000 - S.boat.pos.x, z / 1000 - S.boat.pos.y) < km;
   const portHere = pt => !pt.coastal || nearHere(pt.p.x * 1000, pt.p.y * 1000);
+  // a sea mark [x, y (km), type, category] (SEAMARKS, 01-world.js; the coast's in 01e-marks.js): lighthouses, lights, beacons and buoys
+  function markInto(m, mk, tag){
+    const x = mk[0] * 1000, z = mk[1] * 1000, base = Math.max(terrH(x, z), 0.2), ty = mk[2], cat = mk[3];
+    if (ty === 'M'){ camSolid(x, z, 3.6, 3.6, 0.3, base, base + 15.4, tag); m.box(x, base, z, 3.4, 11, 3.4, [0.95, 0.95, 0.93], 0.3); m.box(x, base + 11, z, 3.6, 2.2, 3.6, [0.75, 0.1, 0.08], 0.3); m.box(x, base + 13.2, z, 2.2, 2.2, 2.2, [0.9, 0.92, 0.9], 0.3, [0.2, 0.2, 0.22]); }
+    else if (ty === 'm' || ty === 'P'){ m.box(x, base, z, 0.9, 4.2, 0.9, [0.94, 0.94, 0.92], 0); m.box(x, base + 4.2, z, 1.1, 0.9, 1.1, [0.8, 0.12, 0.1], 0); }
+    else if (ty === 'D'){ m.box(x, base, z, 0.5, 4.5, 0.5, [0.08, 0.08, 0.08], 0); m.box(x, base + 2.2, z, 0.56, 0.9, 0.56, [0.75, 0.1, 0.08], 0); }
+    else if (ty === 'L'){ m.box(x, base, z, 0.45, 4, 0.45, cat === 'starb' ? [0.1, 0.55, 0.2] : [0.8, 0.12, 0.08], 0); }
+    else if (ty === 'B'){ m.box(x, -0.6, z, 1.1, 2.1, 1.1, cat === 'starb' ? [0.1, 0.55, 0.2] : [0.8, 0.12, 0.08], 0.5); }
+    else if (ty === 'C'){ m.box(x, -0.6, z, 1.1, 1.1, 1.1, [0.08, 0.08, 0.08], 0.5); m.box(x, 0.5, z, 1.1, 1.1, 1.1, [0.95, 0.8, 0.1], 0.5); }
+    else if (ty === 'S'){ m.box(x, base, z, 0.5, 3.5, 0.5, [0.95, 0.8, 0.1], 0); }
+    else if (ty === 'K'){ m.box(x, base, z, 1.8, 2.6, 1.8, [0.85, 0.85, 0.83], 0.4, [0.8, 0.8, 0.78]); }
+  }
+  // the coast's sea marks (01e-marks.js): a mesh a tile, built when its marks and its ground are in
+  const MKM = new Map(); let MKV = -1;
+  function marksStatics(){
+    if (MKV === MARKS.ver) return; let all = true; const T = MAPD.man ? MAPD.man.tile * 1000 : 50000;
+    for (const t of MARKS.tiles.values()){
+      if (!t || MKM.has(t.k) || !t.marks.length) continue;
+      const vp = MAPD.byTile.get('view:' + t.k); if (vp && !vp.buf){ all = false; continue; }
+      const m = MB(); for (const mk of t.marks) markInto(m, mk, 'mk' + t.k); MKM.set(t.k, m.p.length ? m.mesh([(t.tx + 0.5) * T, (t.ty + 0.5) * T]) : null);
+    }
+    if (all) MKV = MARKS.ver;
+  }
   function buildStatics(){
     const m = MB(), R = rng(7), WALLS = [[0.62,0.18,0.14],[0.88,0.88,0.84],[0.85,0.68,0.3],[0.76,0.46,0.22],[0.5,0.56,0.6],[0.88,0.88,0.84]], ROOF = [[0.18,0.2,0.22],[0.3,0.2,0.18],[0.22,0.26,0.3]];
     LIGHTS = [];
@@ -739,17 +762,7 @@ const G3 = (() => {
     // bridges from OpenStreetMap
     for (const br of BRIDGES) bridgeInto(m, br);
     // lighthouses, lights, beacons and buoys
-    for (const mk of SEAMARKS.marks){
-      const x = mk[0] * 1000, z = mk[1] * 1000, base = Math.max(terrH(x, z), 0.2), ty = mk[2], cat = mk[3];
-      if (ty === 'M'){ camSolid(x, z, 3.6, 3.6, 0.3, base, base + 15.4); m.box(x, base, z, 3.4, 11, 3.4, [0.95, 0.95, 0.93], 0.3); m.box(x, base + 11, z, 3.6, 2.2, 3.6, [0.75, 0.1, 0.08], 0.3); m.box(x, base + 13.2, z, 2.2, 2.2, 2.2, [0.9, 0.92, 0.9], 0.3, [0.2, 0.2, 0.22]); }
-      else if (ty === 'm' || ty === 'P'){ m.box(x, base, z, 0.9, 4.2, 0.9, [0.94, 0.94, 0.92], 0); m.box(x, base + 4.2, z, 1.1, 0.9, 1.1, [0.8, 0.12, 0.1], 0); }
-      else if (ty === 'D'){ m.box(x, base, z, 0.5, 4.5, 0.5, [0.08, 0.08, 0.08], 0); m.box(x, base + 2.2, z, 0.56, 0.9, 0.56, [0.75, 0.1, 0.08], 0); }
-      else if (ty === 'L'){ m.box(x, base, z, 0.45, 4, 0.45, cat === 'starb' ? [0.1, 0.55, 0.2] : [0.8, 0.12, 0.08], 0); }
-      else if (ty === 'B'){ m.box(x, -0.6, z, 1.1, 2.1, 1.1, cat === 'starb' ? [0.1, 0.55, 0.2] : [0.8, 0.12, 0.08], 0.5); }
-      else if (ty === 'C'){ m.box(x, -0.6, z, 1.1, 1.1, 1.1, [0.08, 0.08, 0.08], 0.5); m.box(x, 0.5, z, 1.1, 1.1, 1.1, [0.95, 0.8, 0.1], 0.5); }
-      else if (ty === 'S'){ m.box(x, base, z, 0.5, 3.5, 0.5, [0.95, 0.8, 0.1], 0); }
-      else if (ty === 'K'){ m.box(x, base, z, 1.8, 2.6, 1.8, [0.85, 0.85, 0.83], 0.4, [0.8, 0.8, 0.78]); }
-    }
+    for (const mk of SEAMARKS.marks) markInto(m, mk);
     for (const pt of PORTS){
       if (pt.coastal) continue;
       const px = pt.p.x * 1000, pz = pt.p.y * 1000, cx = pt.coast.x * 1000, cz = pt.coast.y * 1000;
@@ -1170,14 +1183,17 @@ const G3 = (() => {
     gl.disable(gl.POLYGON_OFFSET_FILL);
   }
   const LCOL = {w:[1, 0.93, 0.78], r:[1, 0.14, 0.1], g:[0.12, 1, 0.42], y:[1, 0.82, 0.2]};
-  const LPER = SEAMARKS.lights.map((L, i) => { const per = L[4].reduce((a, v) => a + Math.abs(v), 0) || 1; return {per, ph:hash(i * 31 + 7) * per}; });
-  function lightOn(i, t){ const L = SEAMARKS.lights[i], P = LPER[i]; let tm = (t + P.ph) % P.per; for (const v of L[4]){ const d = Math.abs(v); if (tm < d) return v > 0; tm -= d; } return false; }
+  // a light's rhythm: its period and where in it the light starts (Senja's by their order, as before; the coast's by where they are)
+  const lightLP = (L, i) => L.lp || (L.lp = (() => { const per = L[4].reduce((a, v) => a + Math.abs(v), 0) || 1; return {per, ph:hash(i >= 0 ? i * 31 + 7 : Math.floor(L[0] * 1000) * 31 + Math.floor(L[1] * 1000) * 7) * per}; })());
+  SEAMARKS.lights.forEach((L, i) => lightLP(L, i));
+  const lightsHere = (eye, R) => marksNear('lights', eye[0] / 1000, eye[2] / 1000, R);
+  function lightOn(L, t){ const P = lightLP(L, -1); let tm = (t + P.ph) % P.per; for (const v of L[4]){ const d = Math.abs(v); if (tm < d) return v > 0; tm -= d; } return false; }
   function drawSeaLights(VP, eye, t, near){
     if (env.night < 0.05) return;
     const by = {w:[], r:[], g:[], y:[]};
-    SEAMARKS.lights.forEach((L, i) => {
+    lightsHere(eye, 50).forEach(L => {
       const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - eye[0], z - eye[2]); if (d > L[3] * 1852 * 1.3 + 500 || (near ? d > lightNF : d < lightNF * 0.8)) return;
-      if (!lightOn(i, t)) return;
+      if (!lightOn(L, t)) return;
       const brg = trueDeg(Math.atan2(x - eye[0], -(z - eye[2])), {x:L[0], y:L[1]});   // the sectors are true bearings
       const sec = L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1]); if (!sec) return;
       by[sec[2]].push(x - eye[0], Math.max(terrH(x, z), 0.2) + L[2] - eye[1], z - eye[2], Math.min(1, env.night * 1.2));
@@ -1197,8 +1213,8 @@ const G3 = (() => {
     const nt = env.night, cand = PLC, add = (k, x, y, z, R, c, s) => { if (Math.abs(x - eye[0]) > R + 2500 || Math.abs(z - eye[2]) > R + 2500) return; cand.push([k, x, y, z, R, c[0] * s * nt, c[1] * s * nt, c[2] * s * nt]); };
     // your own boat: a work light over the deck at the wheelhouse's top
     add(-1e9, bv.x, bv.y + 3.2, bv.z, 26, [1, 0.94, 0.82], 1.3);
-    SEAMARKS.lights.forEach((L, i) => {
-      const x = L[0] * 1000, z = L[1] * 1000; if (Math.abs(x - eye[0]) > 3500 || Math.abs(z - eye[2]) > 3500 || !lightOn(i, t)) return;
+    lightsHere(eye, 5).forEach(L => {
+      const x = L[0] * 1000, z = L[1] * 1000; if (Math.abs(x - eye[0]) > 3500 || Math.abs(z - eye[2]) > 3500 || !lightOn(L, t)) return;
       const c = LCOL[(L[5].find(q => q[2] === 'w') || L[5][0] || [0, 0, 'w'])[2]] || LCOL.w, R = L[6] === 'M' || L[3] >= 10 ? 170 : L[3] >= 6 ? 90 : 50;
       add(Math.hypot(x - eye[0], z - eye[2]) - R, x, Math.max(terrH(x, z), 0.2) + L[2], z, R, c, 2.4);
     });
@@ -1221,10 +1237,10 @@ const G3 = (() => {
   function drawBeams(VP, eye, t){
     BMN = 0; if (env.night < 0.1 || !SEAMARKS) return;
     let k = 0; const put = (p, a) => { BMV[k++] = p[0]; BMV[k++] = p[1]; BMV[k++] = p[2]; BMV[k++] = a; };
-    SEAMARKS.lights.forEach((L, i) => {
+    lightsHere(eye, 26).forEach(L => {
       if (!(L[6] === 'M' || L[3] >= 10) || k >= BMV.length - 96) return;
       const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - eye[0], z - eye[2]); if (d > 25000) return;
-      const y = Math.max(terrH(x, z), 0.2) + L[2] - eye[1], o = [x - eye[0], y, z - eye[2]], per = Math.max(6, LPER[i].per * 2), th0 = (t / per + LPER[i].ph) * Math.PI * 2;
+      const y = Math.max(terrH(x, z), 0.2) + L[2] - eye[1], o = [x - eye[0], y, z - eye[2]], LP = lightLP(L, -1), per = Math.max(6, LP.per * 2), th0 = (t / per + LP.ph) * Math.PI * 2;
       const a0 = 0.32 * env.night * (0.6 + 0.4 * Math.min(1, env.fogD * 2500)), Lb = 1600, w0 = 1.2, w1 = 70;
       for (const th of [th0, th0 + Math.PI]){
         const fx = Math.sin(th), fz = -Math.cos(th), rx = Math.cos(th), rz = Math.sin(th), far = [o[0] + fx * Lb, o[1] - 6, o[2] + fz * Lb];
@@ -3711,6 +3727,6 @@ const G3 = (() => {
     // the cinema: on or off (the HUD is the page's: body.kino-clean)
     kino(on){ if (on !== undefined){ KINO.on = !!on; KINO.shot = null; } return KINO.on; }, get kinoShot(){ return KINO.shot ? KINO.shot.type : null; },
     isHelm:() => cam.helm, setHelm(on){ const G = GEO(vtype()); cam.helm = !!on; cam.zoom = 1; cam.hy = 0; cam.hp = G.hp !== undefined ? G.hp : -0.07; cam.fov = G.fov || 55; },
-    _debug:{get fps(){ return FPS.v; }, get air(){ return airNow.map(a => ({kind:a.kind, w:a.w.map(Math.round)})); }, get airM(){ return !!(AIRM && AIRM.plane); }, get curFov(){ return curFov; }, cam, moundTop, bridgeInto, get statTris(){ return STAT ? STAT.n / 3 : 0; }, get vec(){ return {tiles:[...VEC.tiles.values()].map(t => ({k:t.k, bld:t.bld ? t.bld.n : 0, roads:t.roads.length, bridges:t.bridges.length, piers:t.piers.length, molos:t.molos.length, quays:t.quays.length, ms:Math.round(t.ms)})), statics:[...TST].map(([k, s]) => ({k, tris:s.tris, ms:Math.round(s.ms)})), chunks:CH.size}; }, moundInto, MB, haulModel, get haulA(){ return HAULA; }, gopHands, kinoNext(){ KINO.shot = null; }, get kino(){ const k = KINO.shot, e = KINO.eye, g = KINO.tgt; if (!k || !e) return null; const t = (performance.now() - T0) / 1000; return {type:k.type, up:e[1] - Math.max(terrH(e[0], e[2]), seaH(e[0], e[2], t)), free:camFree(g, e), d:Math.hypot(e[0] - bv.x, e[2] - bv.z)}; }, get PLA(){ return PLA; }, get PCA(){ return PCA; }, set noPL(v){ NOPL = !!v; }, get beams(){ return BMN; }, glErr(){ return gl ? gl.getError() : -1; }, QUAL, qualTick, TERRW, get TERR(){ return TERR; }, get MIDM(){ return MIDM; }, RO, SSL, WV, WK, ssAt, seaH, waves:(dt, H) => updateWaves(dt, H), get sstVS(){ return SST_VS; }, get seaLvl(){ return seaLvl; }, get seaBasic(){ return !!(PS && PS.basic); }, get seaOne(){ return PSF === PS; }, set seaDbg(v){ SEADBG = v; }, get drift(){ let c = 0; for (let i = 0; i < SDN; i++) if (SD.age[i] < SD.life[i]) c++; return c; }, get eye(){ return lastEye; }, camInside, camFree, get camPull(){ return camPull; }, get camLift(){ return camLift; }, get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, BUNKERS, nearestPlant, fkRun, legAt, terrH, terrRaw, unitModel, get UPATCH(){ return UPATCH; }, sitesNow, siteModel, onSite, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; SEAMARKS.lights.forEach((L, i) => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(i, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }}
+    _debug:{get fps(){ return FPS.v; }, get air(){ return airNow.map(a => ({kind:a.kind, w:a.w.map(Math.round)})); }, get airM(){ return !!(AIRM && AIRM.plane); }, get curFov(){ return curFov; }, cam, moundTop, bridgeInto, get statTris(){ return STAT ? STAT.n / 3 : 0; }, get vec(){ return {tiles:[...VEC.tiles.values()].map(t => ({k:t.k, bld:t.bld ? t.bld.n : 0, roads:t.roads.length, bridges:t.bridges.length, piers:t.piers.length, molos:t.molos.length, quays:t.quays.length, ms:Math.round(t.ms)})), statics:[...TST].map(([k, s]) => ({k, tris:s.tris, ms:Math.round(s.ms)})), chunks:CH.size}; }, moundInto, MB, haulModel, get haulA(){ return HAULA; }, gopHands, kinoNext(){ KINO.shot = null; }, get kino(){ const k = KINO.shot, e = KINO.eye, g = KINO.tgt; if (!k || !e) return null; const t = (performance.now() - T0) / 1000; return {type:k.type, up:e[1] - Math.max(terrH(e[0], e[2]), seaH(e[0], e[2], t)), free:camFree(g, e), d:Math.hypot(e[0] - bv.x, e[2] - bv.z)}; }, get PLA(){ return PLA; }, get PCA(){ return PCA; }, set noPL(v){ NOPL = !!v; }, get beams(){ return BMN; }, glErr(){ return gl ? gl.getError() : -1; }, QUAL, qualTick, TERRW, get TERR(){ return TERR; }, get MIDM(){ return MIDM; }, RO, SSL, WV, WK, ssAt, seaH, waves:(dt, H) => updateWaves(dt, H), get sstVS(){ return SST_VS; }, get seaLvl(){ return seaLvl; }, get seaBasic(){ return !!(PS && PS.basic); }, get seaOne(){ return PSF === PS; }, set seaDbg(v){ SEADBG = v; }, get drift(){ let c = 0; for (let i = 0; i < SDN; i++) if (SD.age[i] < SD.life[i]) c++; return c; }, get eye(){ return lastEye; }, camInside, camFree, get camPull(){ return camPull; }, get camLift(){ return camLift; }, get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, BUNKERS, nearestPlant, fkRun, legAt, terrH, terrRaw, unitModel, get UPATCH(){ return UPATCH; }, sitesNow, siteModel, onSite, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; lightsHere(e, 50).forEach(L => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(L, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }}
   };
 })();

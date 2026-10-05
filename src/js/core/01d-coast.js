@@ -133,7 +133,7 @@ function coastWorker(){
     return COAST.worker = w;
   } catch (e){ return COAST.worker = false; }
 }
-function coastDone(pk, r){ pk.coast = r; COAST.built++; COAST.last = null; return pk; }
+function coastDone(pk, r){ pk.coast = r; COAST.built++; COAST.last = null; marksAdd(pk); return pk; }   // and its sea marks (01e-marks.js)
 function coastBuildHere(pk){ const t0 = performance.now(), v = mapVec(pk, 'coast2'); const r = coastBuild(v ? v.b : null, MAPD.man.tile * 1000, COAST.CC, COAST.COX, COAST.COY); COAST.ms += performance.now() - t0; return coastDone(pk, r); }
 function coastEnsure(pk){
   if (pk.coast) return Promise.resolve(pk);

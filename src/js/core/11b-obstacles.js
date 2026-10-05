@@ -7,9 +7,9 @@
 //    are at or above, so where a route goes under, the drawn deck is at least as high
 //  - the piers and breakwaters on piles (PIERBOX and the packs' piers; not the quay decks, which stand on the land behind a face)
 //  - Father's naust's pile quay
-//  - the sea marks the 3D view builds: beacons, stakes, lights and buoys (SEAMARKS.marks, Senja only for now)
+//  - the sea marks the 3D view builds: beacons, stakes, lights and buoys (SEAMARKS.marks, and the coast's from the chart packs, 01e-marks.js)
 // A harbour unit's block and fill are land already (isLand). Each thing is a circle, a box or a piece of deck, indexed per 250 m cell;
-// the index is built again when the coast's packs change (VEC.ver), the naust moves or the boat changes.
+// the index is built again when the coast's packs or marks change (VEC.ver, MARKS.ver) or the naust moves.
 // obsSegHit(a, b) gives the first thing a straight leg comes too near (or null); obsDetour(a, b) the points that take a leg round it:
 // under a bridge between its piers, where the deck is high enough, and round a pier or a mark on the shorter side.
 const HIND = {C:250, idx:null, key:'', list:[], stamp:0, ctx:null, br:new WeakMap()};
@@ -43,7 +43,7 @@ function obsBridge(br){
 }
 // everything there is now, in a grid of 250 m cells (each thing in every cell within 40 m of it)
 function obsIndex(){
-  const nk = S.naust && S.naust.o ? S.naust.o.join(',') : '', key = VEC.ver + '|' + nk;
+  const nk = S.naust && S.naust.o ? S.naust.o.join(',') : '', key = VEC.ver + '|' + MARKS.ver + '|' + nk;
   if (HIND.idx && HIND.key === key) return HIND.idx;
   const idx = new Map(), list = [], C = HIND.C, pad = 40;
   const put = o => { let x0, z0, x1, z1;
@@ -58,7 +58,8 @@ function obsIndex(){
   for (const t of VEC.tiles.values()) for (const q of t.piers) box(q, 'pier');
   if (S.naust && S.naust.o){ const n = S.naust, f = {x:n.o[0] - n.u[0] * 0.5, z:n.o[1] - n.u[1] * 0.5}, nx = -n.u[1], nz = n.u[0];
     put({t:1, x:f.x - nx * 1.7, z:f.z - nz * 1.7, l:8.1, w:1.7, ux:n.u[0], uz:n.u[1], why:'naust'}); }
-  for (const mk of SEAMARKS.marks){ const r = obsMarkR[mk[2]]; if (r) put({t:0, x:mk[0] * 1000, z:mk[1] * 1000, r, why:'mark'}); }
+  const mark = mk => { const r = obsMarkR[mk[2]]; if (r) put({t:0, x:mk[0] * 1000, z:mk[1] * 1000, r, why:'mark'}); };
+  SEAMARKS.marks.forEach(mark); for (const t of MARKS.tiles.values()) if (t) t.marks.forEach(mark);   // and the coast's (01e-marks.js)
   HIND.idx = idx; HIND.list = list; HIND.key = key; return idx;
 }
 // the distance (m) from the leg a-b (metres) to a thing, 0 inside it
@@ -195,7 +196,7 @@ async function obsLoad(pts, ms = 4000){
 // waypoint and change of the packs; a way round goes in before the next waypoint. Any route, drawn or found.
 function obsSail(pl, b){
   if (pl.idx >= pl.wps.length) return;
-  const key = () => pl.idx + '|' + pl.wps.length + '|' + VEC.ver + '|' + (S.naust && S.naust.o ? S.naust.o.join(',') : '') + '|' + (BOAT.len || 0);
+  const key = () => pl.idx + '|' + pl.wps.length + '|' + VEC.ver + '|' + MARKS.ver + '|' + (S.naust && S.naust.o ? S.naust.o.join(',') : '') + '|' + (BOAT.len || 0);
   if (pl.obsK === key()) return; pl.obsK = key();
   const w = pl.wps[pl.idx], ctx = HIND.ctx; HIND.ctx = {free:[[b.pos.x * 1000, b.pos.y * 1000]].concat(w.port ? [[w.x * 1000, w.y * 1000]] : []), freeR:40};
   try {

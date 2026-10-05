@@ -27,7 +27,7 @@ const leiaIdx = (G, p) => { const i = Math.floor(p.x / G.c) - G.ix0, j = Math.fl
 // the rocks within 50 m of a cell (the 100 m grid only: the coarser ones keep off the shore anyway)
 function leiaRocks(G){
   if (G.rock) return G.rock; const g = G.rock = new Uint8Array(G.nx * G.ny), R = LEIA.rockR; if (!G.fine) return g;
-  for (const q of SEAMARKS.rocks){ if (inHarbour({x:q[0], y:q[1]})) continue;
+  for (const q of rocksIn(G.ix0 * G.c - R, G.iy0 * G.c - R, (G.ix0 + G.nx) * G.c + R, (G.iy0 + G.ny) * G.c + R)){ if (inHarbour({x:q[0], y:q[1]})) continue;
     for (let r = Math.max(0, Math.floor((q[1] - R) / G.c) - G.iy0); r <= Math.min(G.ny - 1, Math.floor((q[1] + R) / G.c) - G.iy0); r++)
       for (let c = Math.max(0, Math.floor((q[0] - R) / G.c) - G.ix0); c <= Math.min(G.nx - 1, Math.floor((q[0] + R) / G.c) - G.ix0); c++) g[r * G.nx + c] = 1; }
   return g;

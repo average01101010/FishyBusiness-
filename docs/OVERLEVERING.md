@@ -480,7 +480,7 @@ Jonas: «autoruter aldri skal gå gjennom 3d elementer eller landmasse». Båten
     - En bit som er lavere enn båten (`obsAir`, 0,35 × lengden, 2–16 m, pluss 1 m for tidevann og sjø), er en vegg. Bruer under 60 m ligger lavt hele veien.
   - **Kaier og moloer på påler**: `PIERBOX` og vec-pakkenes `t.piers`, som rektangler. Kaidekkene (`made`), som står på land bak en kaifront, er ikke med.
   - **Pålekaia ved fars naust.**
-  - **Sjømerkene** som 3D-visningen bygger (`SEAMARKS.marks`). De finnes foreløpig bare for Senja.
+  - **Sjømerkene** som 3D-visningen bygger (`SEAMARKS.marks` på Senja, kystens fra sjøkartpakkene, 4.12c).
   - Havneenhetens blokk og fylling er land allerede (`isLand`).
 - **Indeksen** (`obsIndex`) har 250 m-celler, og hver ting ligger i alle cellene innen 40 m. Den bygges på nytt når vec-pakkene endres (`VEC.ver`) eller naustet flyttes.
   - `obsSegHit(a, b)` går gjennom cellene etappen krysser (DDA) og gir den første tingen etappen kommer nærmere enn `obsClr` (halve bredden pluss 6 m).
@@ -503,7 +503,31 @@ Jonas: «autoruter aldri skal gå gjennom 3d elementer eller landmasse». Båten
   - En tegnet rute gjennom en pilar, rettet under seiling.
   - trip2-ruta under Gisundbrua og tilbake: rundt pilaren, ikke nærmere skjærene, tilbake i havn.
   - En lang bro i Tromsø-flisa (Ramfjordbrua) når bygget har vec-pakkene.
-- **Ikke gjort ennå:** sjømerker for hele kysten (se veikartet), og et ferdig leinett fra Kystverkets hovedleder og bileder. Med det ville Autonav nesten ikke trenge å regne, og rutene gå der ekte båter går.
+- **Ikke gjort ennå:** et ferdig leinett fra Kystverkets hovedleder og bileder. Med det ville Autonav nesten ikke trenge å regne, og rutene gå der ekte båter går.
+
+### 4.12c Sjømerker langs hele kysten (05.10.2026)
+
+Jonas: «Sjømerker må ordnes langs hele kysten. Alt senja har, må resten av norge ha også. Dette er ikke en senja-simulator».
+
+- **Kilden** er OpenStreetMaps seamark-tagger (OpenSeaMap; i Norge for det meste fra Kystverkets data), hentet med Overpass. Overpass er stengt for skyøkta, men åpen i Actions.
+  - `tools/map/sjomerker.py fetch` henter i ni bånd langs kysten og gjør dem om til den nasjonale rammen (km), i formatet til `src/data/seamarks.json`:
+    - **lykter** `[x, y, høyde m, rekkevidde nm, rytme (+ på, − av, sekunder), sektorer [[fra°, til°, farge]], 'M'|'m', navn]`. Sektorene er sanne peilinger fra sjøen mot lykta, som OpenSeaMap har dem. Rytmen kommer fra `sequence`, ellers fra karakter og periode (Fl, LFl, Oc, Iso, Q, VQ, F).
+    - **merker** `[x, y, type, kategori]`: M fyr, m lykt, P påle, D stake (fare eller spesialmerke), L lateralstake, B bøye, C kardinalbøye, S kardinalstake, K varde. Kategorien er port/starb eller north/east/south/west.
+    - **skjær** `[x, y]` (`seamark:type=rock`).
+  - `.github/workflows/sjomerker.yml` startes av en endring i `tools/map/sjomerker.json` eller `sjomerker.py`, og legger `sjomerker.json.gz` i releasen `sjomerker-N`.
+- **I kartpakkene:**
+  - `tools/map/release.py` henter den nyeste `sjomerker-N` sammen med kartreleasen.
+  - `tools/map/game.py` (`marks_by_tile`) legger hver flis' merker inn i flisas sjøkartpakke som oppføringen `marks` (JSON, raw deflate, ved flisas første blokk).
+  - Sjøkartpakkene er med i artifacten, så sjømerkene er det også. En ny release endrer bare sjøkartpakkene.
+- **I spillet** (`core/01e-marks.js`):
+  - `marksAdd` leser en flis' merker når pakkens kyst bygges (`coastDone`). Det skjer rundt alle båter og sett (simuleringens sperre), over kartplotterens vindu, langs Autonav-veien og rundt 3D-visningen.
+  - Inne i Senjas gamle rute gjelder de innebygde `SEAMARKS`.
+  - `marksNear(kind, x, y, R)` gir lyktene, merkene eller skjærene fra `SEAMARKS` og flisene innen R km.
+  - `rocksIn` tar med flisenes skjær per 1 km-celle (`marksRocksIn`). Dermed teller de for grunnstøting og for Autonav (`leiaRocks` bruker nå `rocksIn` over rutenettets boks).
+  - Kartplotteren tegner lykter og merker fra `marksNear`.
+  - Hindringene for rutene (`11b-obstacles.js`) tar med merkene, og indeksen bygges på nytt når `MARKS.ver` endres.
+  - **3D:** `markInto` bygger et merke som før. Kystens merker får et nett per flis (`marksStatics`) når flisas terreng er lastet. Lyktene blinker etter `lightLP`: Senjas fase er som før etter rekkefølgen, og kystens etter posisjonen. De tegnes fra `marksNear` rundt øyet (sektorlys innen 50 km, lys som lyser opp innen 5 km og fyrstråler innen 26 km).
+- **Testene** er `tests/marktest.py` (Tromsø: flisas merker lest, sektorer og rytme, ingen inne i Senja-ruta, skjær i `rocksIn`, hindringene og kartplotteren) og `tests/coast3d.py` (lyktene utenfor Tromsø om natta).
 
 ### 4.13 Hele kysten i bygget (03.10.2026)
 
