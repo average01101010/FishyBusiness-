@@ -24,9 +24,12 @@ async function worldTick(){
 // down: their open-group cod this year, what they delivered to each plant in the last day, and the fish they took since the last
 // time (the cursor S.wcur, kept in the save with the sea it was taken from). A sale the database refuses (400) is dropped, so one bad row
 // does not hold the rest; offline, it all waits in the save.
-const WSH2 = {busy:false, off:false, last:0};
+// A function the database does not have (404: before a migration, or while a new game and an old database meet) only pauses the
+// sharing for ten minutes: the sales and catches wait in the save and go when it is there (05.10.2026: a friend's sales stopped for the
+// rest of his session while the leaderboard's migration was on its way)
+const WSH2 = {busy:false, off:0, last:0};
 async function worldShare(){
-  if (!CLOUD.on || !CLOUD.user || WSH2.busy || WSH2.off || !S) return;
+  if (!CLOUD.on || !CLOUD.user || WSH2.busy || Date.now() < WSH2.off || !S) return;
   WSH2.busy = true;
   try {
     const Q = wq();
@@ -44,7 +47,7 @@ async function worldShare(){
       for (const [pid, sp, kg] of r.mkt || []) (WSH.mkt[pid] = WSH.mkt[pid] || {})[sp] = kg;
       for (const [k, kg] of r.cells || []) wshTake(k, kg);
       S.wcur = r.cur || S.wcur || 0; WSH2.last = Date.now(); }
-  } catch (e){ if (/ 404$/.test(e.message)){ WSH2.off = true; WSH.rec = false; } }
+  } catch (e){ if (/ 404$/.test(e.message)) WSH2.off = Date.now() + 600000; }
   finally { WSH2.busy = false; }
 }
 // ---- the leaderboards (05.10.2026; Salgslaget → Toppliste; supabase/migrations/20261006020000_toplist.sql): the players of the whole
