@@ -4,7 +4,7 @@
 //   engine   two oscillators at the firing rate from the speed (an outboard revs high; a diesel low, with the chug of its strokes),
 //            through a low-pass that opens with the load; idling when she lies still at sea, off in port, adrift or aground
 //   sea      the wash along the hull (pink noise, louder and brighter with speed and waves) and slaps on the hull now and then
-//   weather  the wind in band-passed noise that wanders with the gusts; rain (or the softer hiss of snow)
+//   weather  the wind in band-passed noise that wanders with the gusts; rain (snow falls silently: its hiss was a white noise, Jonas 05.10.2026)
 //   gulls    a cry now and then round the boat, often while the catch is gutted
 //   harbour  while the catch is landed the crane's whine and the forklift's reversing beeps; the pump while she is fuelled; the ice
 //            chute's rumble when ice comes aboard
@@ -46,7 +46,7 @@ const SND = (() => {
     { const g = gain(0, master), f = filt('lowpass', 800, 0.7); loop(PINK).connect(f); f.connect(g); L.sea = {g, f}; }
     // the wind
     { const g = gain(0, master), f = filt('bandpass', 700, 0.9); loop(PINK).connect(f); f.connect(g); L.wind = {g, f}; }
-    // rain or snow
+    // rain
     { const g = gain(0, master), f = filt('highpass', 2500, 0.5); loop(WHITE).connect(f); f.connect(g); L.rain = {g, f}; }
     // the hydraulics (the hauler), the crane's motor and the fuel pump: hums through band-passes
     for (const [k, type, fr, bp, q] of [['haul', 'sawtooth', 165, 520, 3], ['crane', 'sawtooth', 118, 380, 2], ['pump', 'triangle', 50, 120, 1.5], ['reel', 'sawtooth', 340, 900, 4]]){
@@ -108,7 +108,7 @@ const SND = (() => {
     const aW = at(boat, SNDREF.wash);
     set('sea', (atSea ? 0.03 + Math.min(0.2, v * 0.011) * aW.g + Math.min(0.12, hs * 0.06) : 0.012), 0.4); L.sea.f.frequency.setTargetAtTime(500 + v * 45 * aW.lp + hs * 120, now, 0.5);
     set('wind', Math.pow(clamp((W - 2.5) / 22, 0, 1), 1.3) * (atSea ? 0.28 : 0.14), 0.6); L.wind.f.frequency.setTargetAtTime(450 + W * 30 + Math.random() * 300, now, 0.8);
-    set('rain', rain > 0.15 ? (rain - 0.15) * (snow ? 0.05 : 0.16) : 0, 1);
+    set('rain', rain > 0.15 && !snow ? (rain - 0.15) * 0.16 : 0, 1);
     // hull slaps at sea, more in a sea and under way
     if (atSea && Math.random() < 0.01 + Math.min(0.06, hs * 0.03 + v * 0.002)){ const a = at(boat, SNDREF.slap); burst('lowpass', (180 + Math.random() * 160) * a.lp, 1, (0.08 + Math.min(0.25, hs * 0.1 + v * 0.008) * Math.random()) * a.g, 0.35, 0.006, a.pan); }
     // gulls: now and then round the boat, often while the catch is gutted (the offal)
