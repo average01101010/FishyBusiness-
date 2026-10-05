@@ -227,7 +227,9 @@ const PORTS = [
   {id:'torsken', name:'Torsken', xy:[21.856,42.58], shore:[21.863,42.548], pier:true, fuel:true, ice:true, mottak:true, pf:0.99},
   {id:'frovag', name:'Frovåg', xy:[19.651,71.922], shore:[19.607,71.915], pier:true, fuel:true, ice:true, mottak:true, pf:0.98}
 ].map((p, i) => ({...p, i, xy:LGa(p.xy), shore:LGa(p.shore), p:LG(p.xy[0], p.xy[1]), coast:LG(p.shore[0], p.shore[1])}));
-const portById = id => PORTS.find(p => p.id === id);
+// the rorbuer along the coast (07d-rorbu.js) are places you lie at too, but not harbours: portById knows them, PORTS does not
+const RBID = new Map();
+const portById = id => PORTS.find(p => p.id === id) || RBID.get(id);
 // ===== the harbour unit (02.10.2026) =====
 // One quay with the fish plant, the crane, the forklift, the ice silo and the bunker station, built in Blender
 // (tools/harbour/kaimottak.py, data/harbour-unit.b64) and set down in every harbour with a plant; Finnsnes keeps its quay. Its frame:

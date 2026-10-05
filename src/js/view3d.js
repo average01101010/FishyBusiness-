@@ -344,9 +344,22 @@ const G3 = (() => {
   const NBANK = [[-3.0, -2.9], [0.0, -2.6], [1.5, -1.6], [3.4, -0.45], [5.2, 0.55], [7.4, 1.45], [9.6, 2.1], [12.0, 2.75], [16.0, 3.3]];
   const nbank = y => { if (y <= NBANK[0][0]) return NBANK[0][1]; for (let i = 1; i < NBANK.length; i++) if (y <= NBANK[i][0]){ const [a, va] = NBANK[i - 1], [b, vb] = NBANK[i]; return va + (vb - va) * (y - a) / (b - a); } return NBANK[NBANK.length - 1][1]; };
   const SHOP_APRON = [-19, 19, 9.6, 27.5];
+  // the rorbu's bank (rorbu.py BANK, in its anchors): [y inland, height] from 3 m out to 21 m in, its half width x1
+  const bankAt = (P, y) => { if (y <= P[0][0]) return P[0][1]; for (let i = 1; i < P.length; i++) if (y <= P[i][0]){ const [a, va] = P[i - 1], [b, vb] = P[i]; return va + (vb - va) * (y - a) / (b - a); } return P[P.length - 1][1]; };
+  let RBB;
+  const RBANK = () => { if (RBB === undefined){ const M = siteModel('rorbu:r'), b = M && M.A.bank; RBB = b ? {x1:b.x1, y0:b.y0, y1:b.y1, prof:b.prof} : null; } return RBB; };
   let SITES = null, SITEK = '';
+  // the rorbuer near the boat, looked up again when she has moved 500 m or one more has been found (at most one new one is worked out
+  // in a frame: rorbuSoon)
+  const RBNEAR = {x:NaN, z:NaN, ver:-1, l:[], key:''};
+  function rorbuNow(){
+    if (!(Math.hypot(bv.x - RBNEAR.x, bv.z - RBNEAR.z) < 500) || RBNEAR.ver !== (RORBU.ver || 0) || RBNEAR.pend){
+      const r = rorbuSoon({x:bv.x / 1000, y:bv.z / 1000}, 4); RBNEAR.x = bv.x; RBNEAR.z = bv.z; RBNEAR.ver = RORBU.ver || 0; RBNEAR.l = r.l; RBNEAR.pend = r.pend; RBNEAR.key = r.l.map(R => R.id).join(',');
+    }
+    return RBNEAR.key;
+  }
   function sitesNow(){
-    const n = typeof naustSite === 'function' ? naustSite() : null, key = n ? n.o.join(',') : '-';
+    const n = typeof naustSite === 'function' ? naustSite() : null, key = (n ? n.o.join(',') : '-') + '|' + rorbuNow();
     if (SITES && SITEK === key) return SITES;
     SITEK = key; SITES = [];
     const sh = shopSite(); if (sh && glbHas('shop')) SITES.push({k:'shop', o:sh.o, u:sh.u, n:[-sh.u[1], sh.u[0]], clear:[[SHOP_APRON[0], SHOP_APRON[2] - 2, SHOP_APRON[1], SHOP_APRON[3]]]});
@@ -359,6 +372,12 @@ const G3 = (() => {
       else SITEK = '';   // the ground is not in yet: try again next frame
     }
     if (n && glbHas('naust')) SITES.push({k:'naust', o:n.o, u:n.u, n:[-n.u[1], n.u[0]], clear:[[-14, -1, 14, 16]]});
+    // the rorbuer within 4 km of the boat (07d-rorbu.js; tools/harbour/rorbu.py), each in its colour; the model's 'clear' is where the
+    // map's houses go
+    if (glbHas('rorbu')) for (const R of RBNEAR.l){ const o = R.site.o, u = R.site.u, n = [-u[1], u[0]], M = siteModel('rorbu:' + R.v);
+      SITES.push({k:'rorbu', v:R.v, id:R.id, o, u, n, clear:[[-15, -1, 15, 21]]});
+      // its bollards (the model's anchors, x along the face and z out to sea) take the mooring lines (drawMooring)
+      if (M && M.A.bollards) QB[faceKey({x:o[0], z:o[1]})] = M.A.bollards.map(q => ({x:o[0] + u[0] * q[0] + n[0] * q[2], z:o[1] + u[1] * q[0] + n[1] * q[2], a:q[0]})); }
     // a site that came after the ground round it was built: those terrain chunks and the near mesh are made again with its ground
     if (SITEK){ for (const [k, c] of CH) if (SITES.some(q => Math.hypot(c.x - q.o[0], c.z - q.o[1]) < 700)){ freeChunk(c); CH.delete(k); }
       if (NEARM) NEARM.stale = true; }
@@ -371,6 +390,11 @@ const G3 = (() => {
     for (const s of L){
       if (Math.abs(x - s.o[0]) > 70 || Math.abs(z - s.o[1]) > 70) continue;
       const [lx, y] = siteL(s, x, z), ax = Math.abs(lx);
+      if (s.k === 'rorbu'){
+        const B = RBANK(); if (!B) continue; const d = Math.hypot(Math.max(0, ax - B.x1), Math.max(0, B.y0 - y, y - B.y1)); if (d >= 8) continue;
+        const cap = bankAt(B.prof, clamp(y, B.y0, B.y1)) - 0.4 - (ax > B.x1 - 4 ? Math.min(1, (ax - B.x1 + 4) / 4) * 1.2 : 0);
+        return h <= cap ? h : cap + (h - cap) * sstep(0, 8, d);
+      }
       if (s.k === 'naust'){
         const d = Math.hypot(Math.max(0, ax - 17), Math.max(0, -3 - y, y - 16)); if (d >= 8) continue;
         const cap = nbank(clamp(y, -3, 16)) - 0.4 - (ax > 11 ? Math.min(1, (ax - 11) / 5) * 1.2 : 0);
@@ -1336,17 +1360,20 @@ const G3 = (() => {
   }
   // the naust and the shop (SITES, by the terrain above)
   const SMOD = {};
+  // a site's model; 'rorbu:o' is the rorbu with its cladding (paint zone 1) in ochre, 'rorbu:w' in white, 'rorbu:r' as it is (red)
+  const RBCOL = {o:[0.74, 0.5, 0.17], w:[0.86, 0.85, 0.81]};
   function siteModel(k){
     if (k in SMOD) return SMOD[k];
-    const G = glbHas(k) ? glbLoad(k) : null; if (!G || !G.parts.lod0) return SMOD[k] = false;
-    const P = G.parts, g = P.glass || {p:[], n:[], c:[]};
-    return SMOD[k] = {near:upA({p:P.lod0.p.concat(g.p), n:P.lod0.n.concat(g.n), c:P.lod0.c.concat(g.c)}), far:upA(P.lod1 || P.lod0), A:G.ex.anchors || {}};
+    const [t, v] = k.split(':'), G = glbHas(t) ? glbLoad(t) : null; if (!G || !G.parts.lod0) return SMOD[k] = false;
+    const col = RBCOL[v], paint = P => { if (!col || !P.zone) return P; const c = P.c.slice(); for (let i = 0; i < P.zone.length; i++) if (P.zone[i] === 1){ const a = P.ao[i]; c[i * 4] = col[0] * a; c[i * 4 + 1] = col[1] * a; c[i * 4 + 2] = col[2] * a; } return {p:P.p, n:P.n, c}; };
+    const P = G.parts, g = P.glass || {p:[], n:[], c:[]}, L0 = paint(P.lod0);
+    return SMOD[k] = {near:upA({p:L0.p.concat(g.p), n:L0.n.concat(g.n), c:L0.c.concat(g.c)}), far:upA(P.lod1 ? paint(P.lod1) : L0), A:G.ex.anchors || {}};
   }
   function drawSites(eye, VP, near, far){
     let set = false;
     for (const s of sitesNow()){
       const d = Math.hypot(s.o[0] - eye[0], s.o[1] - eye[2]); if (d > Math.min(far, 4000)) continue;
-      const M = siteModel(s.k); if (!M) continue; if (!set){ nSetup(VP); set = true; }
+      const M = siteModel(s.k === 'rorbu' ? 'rorbu:' + s.v : s.k); if (!M) continue; if (!set){ nSetup(VP); set = true; }
       drawN(near && d / ZF() < 900 * QUAL.lodK[QUAL.lvl] ? M.near : M.far, chain(M4.T(s.o[0] - eye[0], (s.lev !== undefined ? s.lev - (QTOP - 0.1) : 0) - eye[1], s.o[1] - eye[2]), M4.RY(Math.atan2(-s.u[1], s.u[0]))));
     }
     if (set){ gl.disableVertexAttribArray(2); gl.useProgram(PL.p); }
@@ -3491,7 +3518,8 @@ const G3 = (() => {
     const VT = vtype(), VG = GEO(VT), ncrew = Math.min(crewAboard().length, (VG.crewSpots || []).length); if (VG.hand) useHand(VT);
     drawTerrain(TM, eye, VPn, true); drawLit(STAT, TM); drawTileStatics(TM, eye); drawBuildings(TM);
     // whoever works the deck leaves their place: alone, the skipper leaves the wheel
-    DECKACT = deckActivity(); const awaySk = (DECKACT.on && DECKACT.alone) || gopMe(), awayCr = DECKACT.on && !DECKACT.alone ? 1 : 0;
+    // resting ashore in the naust or a rorbu (15-energy.js; Jonas 05.10.2026: «Ved hvile forsvinner skipperen fra båten») he is not aboard
+    DECKACT = deckActivity(); const awaySk = (DECKACT.on && DECKACT.alone) || gopMe() || (meAboard() && resting()), awayCr = DECKACT.on && !DECKACT.alone ? 1 : 0;
     // under way the crew are inside (the user: no reason for them to stand on deck all day, 03.10.2026); whoever guts is at the table
     // (drawDeck), and in an open boat they sit where they are. The one at the table leaves their place (a skiff drew them twice).
     const underway = S.boat.status === 'sailing' && !S.boat.gop, deckCrew = underway && !VG.open ? 0 : Math.max(0, ncrew - awayCr);

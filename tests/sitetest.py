@@ -41,7 +41,7 @@ async def main():
         print(ok(cs['found'] and cs['d'] < 400), 'a home along the coast gets its naust on the shore near the plant', cs)
         # the naust as a home: the roof before the stove, faster rest in the home harbour, the workbench's cheaper jig
         nu = await pg.evaluate("""(() => { const b = S.boat, q = portById('finnsnes'); b.status = 'port'; b.port = 'finnsnes'; b.pos = {x:q.p.x, y:q.p.y}; S.naustUp = {}; S.cash = 50000; S.adm = null; S.sleep = null;
-          const stoveFirst = naustWhy('ovn'), c0 = S.cash, t = naustBuy('tak'), paid = c0 - S.cash; S.energy = 50; energyMinute(); const dE = S.energy - 50;
+          const stoveFirst = naustWhy('ovn'), c0 = S.cash, t = naustBuy('tak'), paid = c0 - S.cash; S.energy = 50; restStart(); energyMinute(); const dE = S.energy - 50; restEnd(true);
           naustBuy('benk'); b.gear = false; const c1 = S.cash; shopBuy('jig', 0, false); const jig = c1 - S.cash;
           b.port = 'husoy'; const away = naustRest(b); b.port = 'finnsnes'; PHONE.open('notat');
           return {stoveFirst:stoveFirst && stoveFirst[0], t, paid, dE:+dE.toFixed(4), want:+(100 / 8 / 60 * 1.25).toFixed(4), jig, gear:PRICE.gear, away}; })()""")

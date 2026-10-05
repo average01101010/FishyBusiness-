@@ -1616,7 +1616,12 @@ Brukerens ønske: mannskapet skal være en levende og givende del av spillet, in
   - `sayHour` gir høyst én replikk per 1,5 timer per båt, med 55 % sjanse hver time. Hendelser (`crewSay`) kommer straks, men høyst én per 15 minutter.
   - Replikken vises som toast når du er om bord, står i Drift i dagboka, og de fem siste lagres på personen (`c.said`).
 - **Energien din** (`S.energy`, 0–100, `energyMinute` hvert minutt):
-  - Den synker 100/24 % per time når båten du er om bord på, ikke ligger ved kai, og stiger 100/8 % per time ved kai eller i land.
+  - Den synker 100/24 % per time når båten du er om bord på, ikke ligger ved kai.
+  - **Hvor du hviler** (Jonas 05.10.2026: «Man skal ikke kunne hvile i en åpen båt, da må man enten seile hjem til naustet sitt eller ta inn på en rorbu», `restRate` i `15-energy.js`):
+    - I land, når du har gått inn (`S.rest`, knappen «Hvil» i havn, `restStart`/`restEnd`): i fars naust i hjemhavna (ved begge liggeplassene) stiger den 100/8 % per time, med taket og ovnen raskere (`naustRest`). På en rorbu (5.25i) stiger den 100/6 % per time, for 150 kr natta.
+    - Om bord ved kai på en båt med køyer (`VESSELS` `berths` > 0) stiger den 100/8 % per time som før.
+    - I en åpen båt (ingen køyer) ved en annen kai står den stille. Advarselen ved 25 % peker på nærmeste rorbu.
+    - Mens du hviler i land, er skipperen borte fra båten i 3D (`awaySk` i `view3d.js`). «Gå om bord» eller å kaste loss (`depart`) avslutter hvilen.
   - HUD-raden heter «Energi».
   - Ved 25 % kommer en melding og en toast, og arbeidet ditt går med 0,75.
   - Under 15 % mørkner kantene på skjermen (`#vign`).
@@ -2094,6 +2099,23 @@ Jonas valgte dem fra lista (nr. 5 og 7).
   - Med MCP er bit 1, funksjonen og jobben lagt inn.
   - Bit 2 (med DELETE) og nøklene står igjen for Jonas, se `docs/lansering.md`.
   - På iPhone virker varslene bare når appen er lagt på hjemskjermen.
+
+### 5.25i Rorbuer langs kysten (05.10.2026)
+
+Jonas 05.10.2026: «Vi skal lage en blender-modell av en rorbu med kaiplass. Disse skal plasseres rundt om kring langs kysten slik at spillere kan hvile der, eller ligge til kai under uvær. De vil som regel ligge i områder som er litt beskyttet mot bølger og vær.» Og: «Rorbua må være billig. Energi skal kunne lade opp fra 0-100% på 6 timer in-game ved hvile på rorbuer», «Ved hvile forsvinner skipperen fra båten», og om antallet: «Kan sikkert halveres».
+
+- **Modellen** er `tools/harbour/rorbu.py` (rød rorbu på påler med altan, trapp ned til en pålekai med pullerter, stige, fendere og dekk, hane på mønet), i siden som `glb-rorbu` (`src/data/harbour-rorbu.b64`). Rammen er naustets: x langs kaifronten, fronten ved y = 0, y innover. Kledningen er malingssone 1, så spillet maler den oker eller hvit (`RBCOL` og `siteModel('rorbu:o')` i `view3d.js`). Fargen velges av id-en (`R.v`: r, o, w).
+- **Plassene** (`src/data/rorbuer.json`, laget av `tools/rorbu/rorbuer.py` fra `national.py` sine lag og stedsnavnene i sjøkartpakkene):
+  - **Én ved hvert fiskevær** (kind 0): mottakene som `06b-coastports.js` gjør til havner (samme filter og samme grupper på 1,2 km), 161 stykker.
+  - **Le-steder mellom** (kind 1): sjøceller i norsk sjøterritorium inntil land på 200 m, med åpenhet mot havet (`expo`) på høyst 0,3 og vann rundt (minst 8 av 25 celler innen 400 m), minst 14 km fra en annen rorbu, i fast stokket rekkefølge. Det gir 374 (med 10 km var det 696, og Jonas syntes de kunne halveres).
+  - **Navnet** er nærmeste tettsted i sjøkartet innen 6 km, ellers øy og så farvann.
+- **Fjæra** finnes første gang kartet der er lastet (`rorbuSite` i `core/07d-rorbu.js`, med `shoreSpot` som naustet): ved fiskeværet 150–700 m fra kaia, ellers så nær punktet som mulig, minst 110 m fra en havneenhet og 120 m fra naustet. Kaifronten står 4,4 m ute fra fjærelinja (der banken i `rorbu.py` krysser middelvann). Finnes ingen rett fjære, blir rorbua borte (`R.site = null`).
+- **Som sted** er rorbua ikke en havn i `PORTS`. `portById` kjenner den likevel (`RBID`), med `rorbu:true` og uten mottak, diesel, is eller butikk. Båten ligger ved den med `b.status = 'port'` og `b.port = 'rbN'`. `quayFace(id, 'main')` er `rorbuFace` (14 m front), og `berthPose` legger båten der. I havn har knappene bare Hvil, Arbeid og Beholdning. `shopBuy` avviser handel.
+- **Rute dit**: et trykk ved rorbua i kartplotteren eller med Autonav gjør den til rutas siste punkt (`rorbuSites` i `03-map.js` og `03b-route.js`). Kartplotteren tegner rorbuene som små røde hus fra regionnivå, og navnet nær. Kaia er en hindring for andre ruter (`11b-obstacles.js`).
+- **3D**: rorbuene innen 4 km står i `SITES` (`rorbuNow`, høyst én ny fjære regnes ut per bilde med `rorbuSoon`). Bakken skjæres etter bankens profil (`RBANK`, fra modellens ankere), og kartets hus der tas bort.
+- **Hvilen** står i 5.19. Den koster 150 kr natta, betalt når du går inn og så for hvert døgn. Har du ikke råd til neste natt, går du om bord.
+- **Tester**: `tests/rorbutest.py` (plassene, fjæra ved Gryllefjord og på et le-sted, Autonav dit, knappene, natt og hvile på 6 timer, neste natt, åpen båt ved mottakskai, kartplotteren, lagring) og `coast3d.py` (rorbua i 3D ved Gryllefjord, `coast_rorbu.png`).
+- **Ikke gjort ennå:** kameraet kan gå inn i huset, og lykta ved døra lyser ikke.
 
 ### 5.26 Måker og halere fra Blender (03.10.2026)
 

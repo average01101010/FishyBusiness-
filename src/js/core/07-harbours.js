@@ -33,6 +33,7 @@ function unitDredge(p, d){
 }
 function quayFace(pid, kind){
   if (kind === 'naust') return naustFace(pid);   // Father's pile quay in the home harbour (07c-naust.js)
+  if (RBID.has(pid)) return kind === 'main' ? rorbuFace(pid) : null;   // a rorbu's quay (07d-rorbu.js)
   const U = UNITS[pid];
   if (U){ const b = UNIT.berth[kind]; if (!b) return null; const c = unitW(U, b[0], 0); return {x:c[0], z:c[1], ux:U.u[0], uz:U.u[1], nx:U.n[0], nz:U.n[1], hl:b[1] / 2, depth:UNIT.B, unit:pid}; }
   const q = QUAYS[pid] && QUAYS[pid][kind]; if (!q) return null;
@@ -149,9 +150,9 @@ const CAST_MIN = 2;   // game minutes to take the lines in before the boat moves
 // the boat then lies as before.
 const BERTHPOSE = {};
 function berthPose(pid, type, kind = 'main'){
-  const key = pid + '|' + type + '|' + kind + (kind === 'naust' && S.naust && S.naust.o ? '|' + S.naust.o.join(',') : ''); if (key in BERTHPOSE) return BERTHPOSE[key];
+  const key = pid + '|' + type + '|' + kind + (kind === 'naust' && S.naust && S.naust.o ? '|' + S.naust.o.join(',') : '') + (RBID.has(pid) && RBID.get(pid).site ? '|' + RBID.get(pid).site.o.join(',') : ''); if (key in BERTHPOSE) return BERTHPOSE[key];
   const pt = portById(pid), px = pt.p.x * 1000, pz = pt.p.y * 1000, Lb = VESSELS[type].len, Bb = BEAM[type] || 3, qf = quayFace(pid, kind);
-  if (kind === 'naust' && !qf) return null;   // not cached: the naust is found once the home's map is in
+  if ((kind === 'naust' || RBID.has(pid)) && !qf) return null;   // not cached: the naust and a rorbu are found once their map is in
   let best = null;
   if (qf) best = {d:0, cx:qf.x + qf.nx * (Bb / 2 + 0.4), cz:qf.z + qf.nz * (Bb / 2 + 0.4), fx:qf.x, fz:qf.z, ux:qf.ux, uz:qf.uz, Nx:qf.nx, Nz:qf.nz, hl:qf.hl, a:0, depth:qf.depth, unit:qf.unit};
   else if (kind !== 'main'){ BERTHPOSE[key] = null; return null; }
@@ -338,6 +339,7 @@ const shopIceRoom = () => Math.max(0, Math.round(BOAT.iceCap - S.boat.ice));
 function shopBuy(k, kg, free){
   const b = S.boat, pt = portById(b.port), pay = c => { S.cash -= c; S.stats.costs += c; };
   if (b.status !== 'port' || !pt) return ['Butikken er på land. Handle når båten ligger i havn.', 'The shop is ashore. Buy when the boat is in port.'];
+  if (pt.rorbu) return ['Det er ingen butikk ved rorbua. Handle i en havn.', 'There is no shop at the rorbu. Buy in a harbour.'];   // 07d-rorbu.js
   if (k === 'jig' || k === 'kgear'){
     const have = k === 'jig' ? b.gear : b.kgear, c = free ? 0 : Math.round((k === 'jig' ? PRICE.gear : PRICE.kgear) * (naustHas('benk') && atHome(b) ? 0.75 : 1));   // Father's workbench (07c-naust.js)
     if (have) return ['Det har du allerede om bord.', 'You already have that aboard.'];

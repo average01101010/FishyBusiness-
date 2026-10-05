@@ -153,6 +153,7 @@ function depart(){
   // in the open group the owner must be the master aboard: with you aboard the trip is yours, also when it follows the standing plan,
   // and the hired skipper is ordinary crew on it
   S.tripOwner = meAboard();
+  if (b.status === 'port' && S.rest) restEnd();   // down from the naust or the rorbu and aboard (15-energy.js)
   if (b.status === 'port'){ S.stats.trips++; log('Kastet loss fra ' + portById(b.port).name + '.', 'Cast off from ' + portById(b.port).name + '.'); if (S.tripOwner) loreDepart(); tatTripStart(); }
   if (access() === 'none' && !(S.plan && S.plan.ops && !S.tripOwner) && !(S.target === 'kveite' && b.kgear)) log('Båten har ikke adgang til å fiske torsk, hyse og sei. De kan bare være bifangst, høyst 10 % av landingen.', 'The boat has no access to fish cod, haddock and saithe. They can only be bycatch, at most 10% of the landing.');
   S.tripBuff = Object.assign({}, S.prep || {}); S.prep = {};

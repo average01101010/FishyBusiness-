@@ -1,3 +1,5 @@
+// fast forward to the harbour (the button while you wait or are towed): false while the ways are still being found
+function towFast(){ const b = S.boat; if (!b.tow || !b.tow.P1 || !b.tow.P2) return false; for (let i = 0; i < 1440 && b.tow; i++){ if (!simAreaReady()) break; step(); } return !b.tow; }
 // ---------- other vessels (deterministic, so every player sees the same traffic) ----------
 const NPC_ROUTES = {"coastal":[[35.025,82.275],[41.875,68.925],[43.025,67.925],[56.525,59.825],[57.425,58.775],[56.275,55.625],[55.575,54.775],[55.725,54.525],[55.625,52.775],[56.275,45.125],[60.325,40.925],[60.725,39.775],[60.475,37.425],[62.125,28.775],[63.025,28.025],[78.375,19.375]],"coastalStop":7,"ferry":[[53.208,23.505],[53.225,23.475],[53.875,22.425],[57.575,12.575],[57.725,12.475],[58.425,12.425],[58.925,12.625],[59.025,12.775]],"sjark":[[[43.811,19.839],[43.825,19.875],[43.825,19.925],[43.825,19.975],[43.825,20.025],[43.725,20.075],[43.575,20.025],[43.175,19.275],[42.125,13.525],[42.925,9.425],[44.05,8.35]],[[36.662,25.316],[37.125,24.975],[37.025,23.075],[32.35,18.65]],[[19.851,39.709],[19.875,39.675],[19.825,39.625],[19.775,39.625],[19.625,39.575],[17.875,39.625],[17.325,40.125],[9.475,39.425],[9.15,39.15]],[[53.208,23.505],[53.275,23.475],[53.325,23.475],[53.375,23.475],[55.325,22.025],[59.65,19.35]]]};
 for (const k of ['coastal', 'ferry']) NPC_ROUTES[k] = NPC_ROUTES[k].map(LGa); NPC_ROUTES.sjark = NPC_ROUTES.sjark.map(r => r.map(LGa));   // legacy km into the game's frame
@@ -313,10 +315,11 @@ function dock(pid, berth){
   const wasOps = S.plan && S.plan.ops;
   S.plan = null; S.trail = [{x:port.p.x, y:port.p.y, port:pid}];
   if (b.berth === 'naust') log('Fortøyd ved naustet i ' + port.name + '.', 'Moored at the boathouse in ' + port.name + '.');
+  else if (port.rorbu) log('Fortøyd ved rorbua i ' + port.name + '.', 'Moored at the rorbu in ' + port.name + '.');   // 07d-rorbu.js
   else log('Fortøyd i ' + port.name + '.', 'Moored in ' + port.name + '.');
   tatTripEnd(pid);
   // the skipper starts landing and restocks straight away, on this vessel (a deferred call would act on whichever vessel is bound then)
-  if (wasOps){ opsLanded(pid); if (typeof refreshAll === 'function') setTimeout(refreshAll, 0); }
+  if (wasOps && !port.rorbu){ opsLanded(pid); if (typeof refreshAll === 'function') setTimeout(refreshAll, 0); }
 }
 // What the boat makes of the fish where it is, besides the fish itself: effort (people, jigs, machines, the team), weather and
 // sea, cold, hands busy on deck, and your own share while you play the jig game. fish() uses it, and so does the heat map's «Her nå» line.
@@ -549,5 +552,3 @@ function towPose(frac){
   const s = Math.min(R2.len, t.s + km(TOW.tow)), a = atRoute(R2, s), c = atRoute(R2, s + TOW.line);
   return {r:{p:c.p, hd:c.hd, v:TOW.tow}, b:{p:a.p, hd:a.hd}, ph:t.ph};
 }
-// fast forward to the harbour (the button while you wait or are towed): false while the ways are still being found
-function towFast(){ const b = S.boat; if (!b.tow || !b.tow.P1 || !b.tow.P2) return false; for (let i = 0; i < 1440 && b.tow; i++){ if (!simAreaReady()) break; step(); } return !b.tow; }

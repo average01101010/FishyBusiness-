@@ -47,8 +47,8 @@ async def main():
         check(not a2['zz'] and a2['en'] == 10 and a2['drowsy'], 'ACK vekker deg, trøtt og døsig (10 %)', a2)
         a3 = await pg.evaluate("(() => { let n = 0; while (!asleep() && n < 600){ step(); n++; } return {zz:asleep(), n, alarm:S.sleep && S.sleep.alarmAt - S.sleep.t0}; })()")
         check(a3['zz'] and a3['n'] < 300 and a3['alarm'] == 3, 'døsig døser du av igjen før lenge, og alarmen går igjen', a3)
-        a4 = await pg.evaluate("(() => { for (let i = 0; i < 3; i++) step(); alarmAck(); const b = S.boat, q = portById('finnsnes'); b.status = 'port'; b.port = 'finnsnes'; b.pos = {x:q.p.x, y:q.p.y}; let n = 0; while (S.drowsy && n < 600){ step(); n++; } return {drowsy:!!S.drowsy, en:Math.round(S.energy), n}; })()")
-        check(not a4['drowsy'] and a4['en'] >= 60, 'ved kai hviler du deg ut, og da er du ikke døsig lenger', a4)
+        a4 = await pg.evaluate("(() => { for (let i = 0; i < 3; i++) step(); alarmAck(); const b = S.boat, q = portById('finnsnes'); b.status = 'port'; b.port = 'finnsnes'; b.pos = {x:q.p.x, y:q.p.y}; restStart(); let n = 0; while (S.drowsy && n < 600){ step(); n++; } return {drowsy:!!S.drowsy, en:Math.round(S.energy), n}; })()")
+        check(not a4['drowsy'] and a4['en'] >= 60, 'i naustet hviler du deg ut, og da er du ikke døsig lenger', a4)
         # «Energi av» in Admin (the user's wish 03.10.2026): it wakes you, and 30 hours at sea give no sleep; on again, sleep is as before
         en = await pg.evaluate("""(() => { const b = S.boat; b.status = 'idle'; b.port = null; S.drowsy = false; S.equip.brovakt = false; S.energy = 0.001; step(); const z0 = asleep();
           PHONE.open('admin'); document.querySelector('[data-pa=admEnergy]').click(); const z1 = asleep(); let slept = false;

@@ -96,7 +96,10 @@ async def main():
           const hand = () => Object.assign(genCrew(), {bi:false, off:false, fatigue:10, morale:62, traits:['stolt'], known:[true, true]});
           const sea = st => { b.status = st; b.port = null; b.pos = {...g}; b.gop = null; b.deckStop = false; S.hold = []; S.plan = null; b.rig = 'juksa'; b.gear = true; b.drift = 0; };
           sea('idle'); S.crew = []; S.energy = 100; for (let i = 0; i < 60; i++) step(); R.seaHour = +(100 - S.energy).toFixed(2);
-          b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; S.energy = 50; for (let i = 0; i < 60; i++) step(); R.quayHour = +(S.energy - 50).toFixed(2);
+          // rest (15-energy.js, 05.10.2026): an open boat at a plant's quay gives none; in the naust at home eight hours to full; a boat with bunks at any quay
+          b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; S.energy = 50; for (let i = 0; i < 60; i++) step(); R.openQuay = +(S.energy - 50).toFixed(2);
+          R.bunks = +(restRate({status:'port', port:'husoy', type:'sjark'}) * 60).toFixed(2);
+          b.port = 'finnsnes'; b.pos = {...portById('finnsnes').p}; S.energy = 50; restStart(); for (let i = 0; i < 60; i++) step(); R.quayHour = +(S.energy - 50).toFixed(2); restEnd(true);
           // at 25 % your work goes slower
           sea('idle'); S.energy = 25.02; S.enWarn = false; step(); step(); R.warn = !!S.enWarn; addCatch('torsk', 10, null, true); R.slow = workTeam('sloy', 'sloy').sum;
           // alone at 0: asleep, the jig stops and the boat drifts; the screen goes black with a countdown
@@ -111,7 +114,7 @@ async def main():
           S.sleep = null; S.energy = 5; energyUi(); R.vign = +document.getElementById('vign').style.opacity; S.energy = 100; energyUi(); R.vignOff = +document.getElementById('vign').style.opacity;
           S.plan = null; return R; })()""")
         print('energy:', json.dumps(r, ensure_ascii=False))
-        print(ok(abs(r['seaHour'] - 100 / 24) < 0.02 and abs(r['quayHour'] - 12.5) < 0.05), 'energy: −100/24 an hour at sea, +100/8 at the quay')
+        print(ok(abs(r['seaHour'] - 100 / 24) < 0.02 and abs(r['quayHour'] - 12.5) < 0.05 and r['openQuay'] == 0 and abs(r['bunks'] - 12.5) < 0.05), 'energy: −100/24 an hour at sea, +100/8 resting in the naust or aboard a boat with bunks, nothing in an open boat at a plant\'s quay')
         print(ok(r['warn'] and abs(r['slow'] - 0.75) < 1e-6), 'at 25 % you are warned and work at three quarters of your pace')
         print(ok(r['asleep'] and r['alone'] and r['caught'] == 0 and (r['drift'] > 5 or r['st'] == 'aground') and r['work'] == 0), 'alone at 0 % you sleep: no fishing, and the boat drifts with the wind (or grounds)')
         print(ok(r['black'] and 'om' in r['count'] and not r['woke']['asleep'] and r['woke']['e'] == 60 and r['blackGone']), 'asleep the screen is black with a countdown; after eight hours you wake with 60 %')

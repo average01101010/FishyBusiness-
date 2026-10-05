@@ -12,6 +12,9 @@ from playwright.async_api import async_playwright
 
 PLAY = r"""(async ([every, days, hours]) => {
   S.tut = 0; S.settings.autoOn = false; S.settings.autoW = 14; S.stock = initStock(); S.quota = null; S.crew = []; S.ops = null; S.me = S.cur;
+  // Husøy is home: an open boat rests you only in the naust or a rorbu (15-energy.js, 05.10.2026), so the bot goes up to the naust
+  // after each landing and is rested for the next morning
+  S.home = 'husoy'; S.naust = null; S.rest = null;
   const b = S.boat, HP = portById('husoy'), Y = 2027;
   S.t = Math.round((Date.UTC(Y, 2, 1, 4) - EPOCH) / 6e4); S.cash = 15000; S.sales = []; S.fm = {n:0, last:-1, kr:0, b:false}; S.loan = S.loanIN = null; S.inUsed = false; S.lic = null;
   b.type = 'skiff'; applyVessel(); b.status = 'port'; b.port = 'husoy'; b.pos = {...HP.p}; b.gear = false; b.fuel = BOAT.fuelCap; b.ice = 0; S.hold = []; S.equip.jukse = 0; S.target = 'mix';
@@ -35,6 +38,7 @@ PLAY = r"""(async ([every, days, hours]) => {
       S.plan = {wps:route(), idx:0, speed:BOAT.vcruise || 16, returning:false, depAt:null, unsafe:[]}; depart();
       until(S.t + 22 * 60, () => b.status === 'port' && !S.plan);
       until(S.t + 300, () => { if (!b.land && !b.shift && holdTotal() > 0.5) startLanding(false); return !b.land && !b.shift && holdTotal() < 0.5; });
+      if (b.status === 'port') restStart();
       trips++; nextAt = d + every;
     }
     const q = quotaState(), x = deal(price, vesselValue(curVessel()), innOK()), reach = bladB() && x.ok;

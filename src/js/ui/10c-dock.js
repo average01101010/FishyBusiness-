@@ -50,9 +50,19 @@ const DOCK = (() => {
   // an item: id, icon, label [no, en], and what it does: run (a function), act (doAct), page (drawer) or menu (a fan)
   const I = (id, ic, no, en, o) => Object.assign({id, ic, lbl:[no, en]}, o || {});
   const port = () => S.boat.status === 'port' ? portById(S.boat.port) : null;
+  // resting ashore (15-energy.js): in Father's naust in the home harbour, or in a rorbu; the button goes in, and aboard again
+  function restItem(){
+    const b = S.boat, w = restWhere(b); if (!w) return null;
+    if (resting()) return I('rest', 'naust', 'Om bord', 'Aboard', {act:'restend'});
+    return I('rest', 'naust', 'Hvil', 'Rest', {act:'rest', pri:S.energy < (w === 'rorbu' ? 60 : 40)});
+  }
+  // at home the rest is in the Bygd fan, and on the dock itself when you are tired or resting (five buttons crowd a phone)
+  const restOnDock = () => resting() || S.energy < 40;
   function portItems(){
     const b = S.boat, p = port(), tot = holdTotal(), busy = portBusy(b);
-    return [
+    // a rorbu has a bed and a quay, nothing more (07d-rorbu.js)
+    if (p.rorbu) return [restItem(), crewAboard().length ? I('arbeid', 'arbeid', 'Arbeid', 'Work', {page:'arbeid'}) : null, I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'})].filter(Boolean);
+    return [restOnDock() ? restItem() : null,
       I('marked', 'marked', 'Marked', 'Market', {menu:'marked', dot:p.mottak && tot > 0.5 && !b.land}),
       I('bygd', 'bygd', 'Bygd', 'Village', {menu:'bygd'}),
       I('verft', 'verft', 'Verft', 'Yard', {menu:'verft', dot:svcOverdue() > 0}),
@@ -69,7 +79,7 @@ const DOCK = (() => {
       I('pub', 'pub', 'Pub', 'Pub', {act:'pub', off:tutOn() ? [L('Puben venter til etter første tur.', 'The pub waits until after the first trip.')] : !pubOpen(H) ? [L('Puben åpner klokka 15.', 'The pub opens at 15:00.')] : S.pubE === pubEvening(H) ? [L('Du har tatt en runde i kveld.', 'You have had a round tonight.')] : null}),
       I('bank', 'bank', 'Bank', 'Bank', {page:'bank'}),
       I('oppdrag', 'oppdrag', 'Oppdrag', 'Orders', {page:'oppdrag'}),
-      I('mannskap', 'mannskap', 'Mannskap', 'Crew', {page:'mannskap'})];
+      I('mannskap', 'mannskap', 'Mannskap', 'Crew', {page:'mannskap'}), restOnDock() ? null : restItem()].filter(Boolean);
     if (m === 'verft'){ const need = BOAT.fuelCap - b.fuel;
       return [
         I('batmarked', 'batmarked', 'Båthandel', 'Boats', {page:'fartoy'}),
@@ -114,6 +124,9 @@ const DOCK = (() => {
     const b = S.boat, out = [];
     if (S.plan && S.plan.depAt) out.push(L('Avgang ', 'Departs ') + hm(S.plan.depAt / 60));
     if (b.status === 'port'){ if (S.jobs && S.jobs.length) out.push(L('Verksted til ', 'Yard until ') + hm((jobsDone() || S.t) / 60)); if (b.land) out.push(landText(true)[0]); if (b.shift || b.fueling) out.push(quayText(true)[0]); }
+    if (b.status === 'port' && !resting() && restWhere(b) === 'rorbu') out.push(L('Rorbu: ' + kr(RORBU.kr) + ' natta', 'Rorbu: ' + kr(RORBU.kr) + ' a night'));
+    if (b.status === 'port' && resting()){ const r = restRate(b), m = r > 0 ? Math.ceil((100 - S.energy) / r) : 0;
+      out.push((S.rest.w === 'rorbu' ? L('Hviler på rorbua', 'Resting at the rorbu') : L('Hviler i naustet', 'Resting in the boathouse')) + ' · ' + Math.round(S.energy) + ' %' + (m > 0 ? L(', uthvilt kl. ', ', rested at ') + hm((S.t + m) / 60) : '')); }
     if (b.status === 'unmooring') out.push(L('Kaster loss …', 'Casting off …'));
     if (b.gop){ const g = gopText(); if (g) out.push(L(g[0], g[1])); }
     else if (b.status === 'fishing' && b.fishUntil != null) out.push((rigJig() ? L('Jukser, stopper ', 'Jigging, stops ') : L('Venter, går ', 'Waiting, leaves ')) + inReal(b.fishUntil - S.t));

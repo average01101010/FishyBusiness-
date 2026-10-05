@@ -132,6 +132,9 @@ async function leiaTo(pt){
   if (S.draft.length && S.draft[S.draft.length - 1].port){ toast(t('ends_port')); return; }
   const r = 22 / view.px; let near = null, bd = 1e9;
   for (const p of PORTS){ const d = dist(p.p, pt); if (d < r && d < bd){ bd = d; near = p; } }
+  // a rorbu's quay (07d-rorbu.js), when the chart is close enough to show its name and not in «Første tur» (a tap in the field's ring
+  // went to a rorbu by it)
+  if (view.z >= 2 && !tutOn()) for (const R of rorbuSites(pt, r + 0.05)){ const d = dist(R.p, pt); if (d < r && d < bd){ bd = d; near = R; } }
   const start = S.draft.length ? S.draft[S.draft.length - 1] : b.pos, aPort = !S.draft.length && b.status === 'port' ? b.port : null;
   // Father's naust as the end (07c-naust.js naustTarget); in its own harbour the way there is short, straight from the harbour point
   const nt = naustTarget(pt, r), atN = aPort && berthKind(b) === 'naust';
