@@ -469,6 +469,40 @@ Jonas valgte 02.10.2026 å la GitHub bygge og lagre de nasjonale kartdataene. Gi
   - Ingen bit tar over 16 ms. Søket leser klokka hver 8. ekspansjon. Med hver 32. ga Finnsnes–Tromsø 15,7 ms, og med detaljen for hele kysten ga Bergen–Florø 15 ms ved hver 16. Nå er den lengste biten 10,8 ms. Hver nasjonal rute er ferdig på under ett sekund.
   - Med hele kysten i bygget (4.13) går alle tre rutene på 100 m-celler: Bodø–Reine 94 km med 9 punkter, Bergen–Florø 153 km med 33. Endepunktene i testen velges nå med detaljen (300 m fra land og dypt nok). Startpunktet ved Bodø fra 200 m-kjernen lå på 1,1 m dyp.
 
+### 4.12b Hindringer i sjøen for rutene (05.10.2026)
+
+Jonas: «autoruter aldri skal gå gjennom 3d elementer eller landmasse». Båten hans seilte gjennom en pilar på Gisundbrua. Dette gjelder langs hele kysten: bruer, staker, påler, lykter, kardinal- og lateralmerker.
+
+- **`core/11b-obstacles.js`** samler det 3D-visningen bygger i sjøen, slik simuleringen ser det, i meter i den nasjonale rammen:
+  - **Bruer** (`BRIDGES` på Senja, `t.bridges` fra vec-pakkene ellers), regnet som `bridgeInto` i `view3d.js` gjør (`obsBridge`):
+    - Pilarene står i det 18 m lange steget der dekket passerer et multiplum av 70 m. De regnes som sirkler.
+    - Dekket er delt i biter på 8 m, hver med laveste underkant. Underkanten regnes med endene på 1 m, og 3D-visningens ender ligger like høyt eller høyere. Der ruta går under, er det tegnede dekket derfor minst så høyt.
+    - En bit som er lavere enn båten (`obsAir`, 0,35 × lengden, 2–16 m, pluss 1 m for tidevann og sjø), er en vegg. Bruer under 60 m ligger lavt hele veien.
+  - **Kaier og moloer på påler**: `PIERBOX` og vec-pakkenes `t.piers`, som rektangler. Kaidekkene (`made`), som står på land bak en kaifront, er ikke med.
+  - **Pålekaia ved fars naust.**
+  - **Sjømerkene** som 3D-visningen bygger (`SEAMARKS.marks`). De finnes foreløpig bare for Senja.
+  - Havneenhetens blokk og fylling er land allerede (`isLand`).
+- **Indeksen** (`obsIndex`) har 250 m-celler, og hver ting ligger i alle cellene innen 40 m. Den bygges på nytt når vec-pakkene endres (`VEC.ver`) eller naustet flyttes.
+  - `obsSegHit(a, b)` går gjennom cellene etappen krysser (DDA) og gir den første tingen etappen kommer nærmere enn `obsClr` (halve bredden pluss 6 m).
+- **Autonav** (`leiaRoute`):
+  - `leiaLegOk` krever at etappen er fri for hindringer. Utrettingen tar derfor ikke snarveier gjennom dem.
+  - Ingenting teller innen 40 m fra rutas start og mål (`HIND.ctx.free`), fordi en båt kan ligge inntil en kai eller skal til naustkaia.
+  - Før utrettingen lastes vec-pakkene langs veien (`obsLoad`, høyst 4 s).
+  - Etterpå går `obsRoute` gjennom etappene. En etappe som fortsatt treffer noe (søkets celler er 100 m og større, og nabocellene sjekkes ikke), får en omvei (`obsDetour`, opptil tre ting etter hverandre):
+    - **Under en bro:** midt i et løp mellom to pilarer der dekket er høyt nok, fra et punkt 45 m eller mer ut på hver side.
+    - **Rundt et merke:** på den korteste siden.
+    - **Rundt en kai:** om hjørnene.
+    - Hvert bein i omveien sjekkes mot land og hindringer.
+- **Under seiling** (`obsSail` i `sail`, `05-vessels.js`): etappen båten er på, sjekkes én gang per veipunkt og hver gang vec-pakkene endres. Treffer den noe, legges en omvei inn foran neste veipunkt. Det gjelder alle ruter, også de som er tegnet for hånd, og pakkene langt unna, som kommer først når båten nærmer seg.
+- **Testen** er `tests/obstest.py`:
+  - Gisundbruas pilarer.
+  - Autonav fra Finnsnes til Botnhamn under brua.
+  - En etappe gjennom en pilar og en gjennom et sjømerke.
+  - Korte bruer som vegg.
+  - En tegnet rute gjennom en pilar, rettet under seiling.
+  - En lang bro i Tromsø-flisa (Ramfjordbrua) når bygget har vec-pakkene.
+- **Ikke gjort ennå:** sjømerker for hele kysten (se veikartet), og et ferdig leinett fra Kystverkets hovedleder og bileder. Med det ville Autonav nesten ikke trenge å regne, og rutene gå der ekte båter går.
+
 ### 4.13 Hele kysten i bygget (03.10.2026)
 
 - **Releasen i spillets format** (`coast.py game`, `kart-2` og senere): per flis `sim` (maske 25 m med moloene, avstand 100 m, dybde 50 m), `view` (terreng 25 m, skog 50 m) og `chart` (kyst på 25 m og 3 m, stedsnavn), slik `region.py` lager Senja. `kart-1` var i K5-formatet (maske og avstand i en kjerne per flis, ingen sjøkart) og brukes ikke av bygget.

@@ -283,6 +283,7 @@ function sail(H, W, hs){
   const v = sailV(H, hs); b.v = v;
   let left = v * NM / 60;
   b.fuel = Math.max(0, b.fuel - fuelLph(v, W) / 60);
+  obsSail(pl, b);   // round a bridge's pier, a pier or a mark on the leg ahead (11b-obstacles.js)
   while (left > 1e-9 && pl.idx < pl.wps.length){
     const w = pl.wps[pl.idx], d = dist(b.pos, w);
     if (d > 1e-6) b.heading = Math.atan2(w.x - b.pos.x, -(w.y - b.pos.y));

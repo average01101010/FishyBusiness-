@@ -24,7 +24,7 @@ os.makedirs(LOGS, exist_ok=True)
 
 # draw 3D: they look at the 3D view itself (frames, camera, quays, cranes, pumps)
 D3 = ['dbg23o', 'sitetest', 'camtest', 'moortest', 'landtest', 'bunkertest', 'heattest', 'vessel3d', 'unittest', 'sea3d', 'teleport3d', 'lighttest', 'kinotest', 'haultest', 'vectest']
-LITE = ['sqltest', 'cloudtest', 'pushtest', 'admintest', 'tut', 'starttest', 'dreamtest', 'seasontest', 'uishots', 'quotatest', 'rulestest', 'npctest', 'tidetest', 'trip2', 'docktest', 'booktest', 'decktest', 'geartest', 'loretest', 'tattest', 'towtest', 'airtest', 'fleet2test', 'fleet3test', 'opsowntest', 'routetest',
+LITE = ['sqltest', 'cloudtest', 'pushtest', 'obstest', 'admintest', 'tut', 'starttest', 'dreamtest', 'seasontest', 'uishots', 'quotatest', 'rulestest', 'npctest', 'tidetest', 'trip2', 'docktest', 'booktest', 'decktest', 'geartest', 'loretest', 'tattest', 'towtest', 'airtest', 'fleet2test', 'fleet3test', 'opsowntest', 'routetest',
         'shoptest', 'selltest', 'timetest', 'worktest', 'vesseltest', 'streaktest', 'fixtest', 'hailltest', 'harbourtest', 'simday', 'calib', 'kvtest', 'progweek', 'seatest', 'stabtest', 'projtest', 'boottest', 'maptest', 'mig2test', 'charttest', 'helmtest', 'soundtest', 'sleeptest', 'pwatest']
 # they measure milliseconds, so they run alone at the end, when nothing else takes the CPU
 SOLO = ['routetest', 'heattest', 'landtest', 'charttest']
@@ -44,7 +44,7 @@ COVER = {
   'src/js/core/03c-stability.js':['stabtest', 'calib', 'simday', 'progweek', 'worktest', 'trip2', 'sea3d'],
   'src/js/core/04-crew.js':['fleet2test', 'opsowntest', 'worktest'], 'src/js/core/05-vessels.js':['decktest', 'trip2', 'heattest', 'worktest', 'vectest', 'npctest', 'towtest', 'tattest'], 'src/data/boat-redning.b64':['towtest', 'dbg23o'], 'src/js/core/06-services.js':['fixtest', 'fleet3test', 'opsowntest'],
   'src/js/core/07-harbours.js':['harbourtest', 'landtest', 'bunkertest', 'moortest', 'unittest', 'vectest'], 'src/js/core/08-lore.js':['loretest'], 'src/js/core/09-tattoos.js':['tattest'],
-  'src/js/core/10-gear.js':['geartest', 'booktest'], 'src/js/core/11-route.js':['routetest'], 'src/js/core/12-heat.js':['heattest'], 'src/js/core/13-work.js':['worktest', 'decktest', 'opsowntest'], 'src/js/core/14-crewlife.js':['worktest', 'fleet2test'], 'src/js/core/15-energy.js':['worktest', 'trip2', 'sleeptest'],
+  'src/js/core/10-gear.js':['geartest', 'booktest'], 'src/js/core/11-route.js':['routetest', 'obstest'], 'src/js/core/11b-obstacles.js':['obstest', 'routetest'], 'src/js/core/12-heat.js':['heattest'], 'src/js/core/13-work.js':['worktest', 'decktest', 'opsowntest'], 'src/js/core/14-crewlife.js':['worktest', 'fleet2test'], 'src/js/core/15-energy.js':['worktest', 'trip2', 'sleeptest'],
   'src/js/ui/01-i18n.js':[], 'src/js/ui/02-format-state.js':['timetest', 'mig2test', 'pwatest'], 'src/js/ui/03-map.js':['routetest', 'charttest', 'vectest', 'npctest'], 'src/js/ui/03a-chart.js':['charttest'], 'src/js/ui/03b-route.js':['routetest'],
   'src/js/ui/03c-heat.js':['heattest'], 'src/js/ui/03e-miniplot.js':['teleport3d', 'tut'], 'src/js/ui/03d-setmode.js':['docktest'], 'src/js/ui/04-panels-instruments.js':['heattest'],
   'src/js/ui/05-phone.js':['docktest', 'fleet3test', 'shoptest', 'vesseltest', 'teleport3d'], 'src/js/ui/05-tattoo-art.js':['tattest'], 'src/js/ui/05b-work.js':['worktest', 'sleeptest'], 'src/js/ui/06-logbook.js':['booktest'], 'src/js/ui/06b-book-tabs.js':['booktest'],

@@ -140,7 +140,7 @@ function leiaLegOk(p, q, sd, margin){
     if (margin > 0 && coastDist(pt) < margin && Math.min(dist(pt, p), dist(pt, q)) > margin) return false;
     if (depthF(pt) < sd + 1 && Math.min(dist(pt, p), dist(pt, q)) > 0.05) return false;
   }
-  return !coastSegHit(p, q) && legHazardMemo(p, q, sd).rocks === 0;
+  return !coastSegHit(p, q) && legHazardMemo(p, q, sd).rocks === 0 && obsClear(p, q);   // and no bridge pier, pier or mark (11b-obstacles.js)
 }
 // string-pulling: from each kept point, the furthest point along the path that a straight leg reaches (galloping, then halving)
 async function leiaStraighten(P, sd, margin, st){
@@ -167,7 +167,9 @@ async function leiaStraighten(P, sd, margin, st){
 // opt.tight: no keeping off the shore at all, the shortest way a hand-drawn route could take (for comparison in the tests)
 async function leiaRoute(a, b, aPort, bPort, opt){
   const tight = opt && opt.tight, shoreK = LEIA.shoreK, margins = LEIA.margins; if (tight){ LEIA.shoreK = 0; LEIA.margins = [0]; }
-  try { return await leiaRoute0(a, b, aPort, bPort); } finally { LEIA.shoreK = shoreK; LEIA.margins = margins; }
+  // the things in the water (11b-obstacles.js) count everywhere but by the route's ends: a boat lying by a pier, a route to the naust
+  const ctx = HIND.ctx; HIND.ctx = {free:[a, b].map(p => [p.x * 1000, p.y * 1000]), freeR:40};
+  try { return await leiaRoute0(a, b, aPort, bPort); } finally { LEIA.shoreK = shoreK; LEIA.margins = margins; HIND.ctx = ctx; }
 }
 async function leiaRoute0(a, b, aPort, bPort){
   const sd = safeDepth(), st = {slices:0, maxSlice:0, expanded:0, ms:0}, T0 = performance.now();
@@ -186,9 +188,12 @@ async function leiaRoute0(a, b, aPort, bPort){
   const all = [a].concat(laneOut, mid.slice(laneOut.length ? 1 : 0, laneIn.length ? -1 : undefined), laneIn, [b]);
   // drop repeats (the lane's end is also the search's start)
   const P = all.filter((q, i) => i === 0 || dist(q, all[i - 1]) > 0.001);
+  await obsLoad(P);   // the coast's packs along the way, with their bridges and piers
   let best = null, km = 0; for (let i = 1; i < P.length; i++) km += dist(P[i - 1], P[i]); const maxWp = st.maxWp = leiaMaxWp(km);
   for (const m of LEIA.margins){ const s2 = await leiaStraighten(P, sd, m, st); if (!best || s2.length < best.length) best = s2; if (s2.length - 1 <= maxWp) break; }
-  const wps = best.slice(1), nm = wps.reduce((acc, q, i) => acc + dist(i ? wps[i - 1] : a, q), 0) / NM;
+  // a leg that still passes a bridge's pier, a pier or a mark (the search's cells are 100 m and more) goes round it: under a bridge
+  // between its piers, round the rest on the shorter side
+  const wps = obsRoute(a, best.slice(1)), nm = wps.reduce((acc, q, i) => acc + dist(i ? wps[i - 1] : a, q), 0) / NM;
   st.ms = performance.now() - T0;
   return {wps, nm, st};
 }
