@@ -285,8 +285,14 @@ function cloudAct(a, d){
   if (a === 'cloudPush'){ pushToggle(); return true; }
   if (a === 'cloudOut'){ cloudSaveSoon(); localStorage.removeItem(CLOUD_SIGNED); CLOUD.ak.signOut({returnTo:location.origin + location.pathname}); return true; }
   if (a === 'cloudDel'){
-    if (!confirm(cloudL('Slette kontoen? Spillet på kontoen, statistikken og innloggingen slettes. Kjøp beholdes uten navn i regnskapet. Spillet på denne enheten blir liggende.', 'Delete the account? The game on the account, the statistics and the sign-in are deleted. Purchases are kept without a name for the books. The game on this device stays.'))) return true;
-    cloudRpc('delete_me', {}).then(() => { localStorage.removeItem(CLOUD_SIGNED); toast(cloudL('Kontoen er slettet.', 'The account is deleted.')); CLOUD.ak.signOut({returnTo:location.origin + location.pathname}); })
+    // the game on this device goes too (Jonas 05.10.2026: deleting the account to begin again kept the old game here, and the new
+    // account went on with it, without Father's letter or the boathouse); the next sign-in starts a new game with the letter
+    if (!confirm(cloudL('Slette kontoen? Spillet på kontoen og på denne enheten, statistikken og innloggingen slettes. Kjøp beholdes uten navn i regnskapet. Neste gang begynner du på nytt.', 'Delete the account? The game on the account and on this device, the statistics and the sign-in are deleted. Purchases are kept without a name for the books. Next time you begin again.'))) return true;
+    cloudRpc('delete_me', {}).then(() => {
+      SAVE_OFF = true;   // nothing saved again on the way out
+      for (const k of [KEY, KEY_V1, KEY_PREV, CLOUD_SIGNED, syncKey()]) try { localStorage.removeItem(k); } catch (e){}
+      try { sessionStorage.removeItem('dsb_pulled'); sessionStorage.removeItem('dsb_force'); } catch (e){}
+      toast(cloudL('Kontoen er slettet.', 'The account is deleted.')); CLOUD.ak.signOut({returnTo:location.origin + location.pathname}); })
       .catch(e => toast(cloudL('Kunne ikke slette kontoen nå. Prøv igjen.', 'Could not delete the account now. Try again.')));
     return true;
   }

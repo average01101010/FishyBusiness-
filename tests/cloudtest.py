@@ -137,6 +137,13 @@ async def main():
         r4 = await pg.evaluate("async () => { S.lastReal = Date.now(); save(); CLOUD.lastSave = 0; await cloudSaveSoon(); return {company:S.company}; }")
         puts4 = [c[1] for c in calls[n0:] if c[0] == 'save_put2']
         check(r4['company'] == 'Her AS' and puts4 and puts4[0]['force'] is True, '«Spillet på denne enheten» starts it and puts it up forced', {'company': r4['company'], 'puts': [(q['base'], q['force']) for q in puts4]})
+        # 5. deleting the account takes the game on this device too, so the next sign-in begins again with Father's letter (05.10.2026)
+        replies['delete_me'] = {'ok': True}
+        d5 = await pg.evaluate("""async () => { window.confirm = () => true; cloudAct('cloudDel'); await new Promise(r => setTimeout(r, 800));
+          return {game:localStorage.getItem(KEY), prev:localStorage.getItem(KEY_PREV), signed:localStorage.getItem('dsb_signed'), sync:localStorage.getItem('dsb_sync_user_test'), out:window.__signOut === 1}; }""")
+        await pg.wait_for_timeout(1500)
+        d5['after'] = await pg.evaluate("localStorage.getItem(KEY)")
+        check(d5['out'] and not d5['game'] and not d5['prev'] and not d5['signed'] and not d5['sync'] and not d5['after'], 'deleting the account takes the game on this device too, and nothing is saved again on the way out', d5)
         print('errors:', errs[:3]); await br.close()
 
 
