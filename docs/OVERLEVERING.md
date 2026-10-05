@@ -526,6 +526,18 @@ Jonas: «Sjømerker må ordnes langs hele kysten. Alt senja har, må resten av n
     - **merker** `[x, y, type, kategori]`: M fyr, m lykt, P påle, D stake (fare eller spesialmerke), L lateralstake, B bøye, C kardinalbøye, S kardinalstake, K varde. Kategorien er port/starb eller north/east/south/west.
     - **skjær** `[x, y]` (`seamark:type=rock`).
   - `.github/workflows/sjomerker.yml` startes av en endring i `tools/map/sjomerker.json` eller `sjomerker.py`, og legger `sjomerker.json.gz` i releasen `sjomerker-N`.
+  - **Kilden i Actions** er Geofabriks `norway-latest.osm.pbf` (1,4 GB), filtrert med osmium (`sjomerker.py pbf`). Overpass ga 504 på det første båndet langs kysten, og beholdes som reserve (`fetch`).
+  - **`sjomerker-2`** (05.10.2026) har 7 809 lykter, 23 878 merker og 98 056 skjær, 1,16 MB komprimert. Merkene fordeler seg slik:
+    - 13 520 staker (D)
+    - 3 267 lateralstaker (L)
+    - 2 338 lykter (m)
+    - 2 227 bøyer (B)
+    - 2 046 påler (P)
+    - 331 kardinalbøyer (C)
+    - 82 varder (K)
+    - 67 fyr (M)
+
+    Sjøkartpakkene vokste fra 9,6 til 10,8 MB.
 - **I kartpakkene:**
   - `tools/map/release.py` henter den nyeste `sjomerker-N` sammen med kartreleasen.
   - `tools/map/game.py` (`marks_by_tile`) legger hver flis' merker inn i flisas sjøkartpakke som oppføringen `marks` (JSON, raw deflate, ved flisas første blokk).
