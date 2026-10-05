@@ -211,7 +211,7 @@ function nearestPort(p){ let best = null, bd = 1e9; for (const q of PORTS){ cons
 
 function step(){
   if (!S.fleet || !S.fleet.length) ensureFleet();
-  if (S.t % 60 === 0){ ordersTick(S.t / 60); borsTick(S.t / 60); eachVessel(() => { crewTick(S.t / 60); if (!(S.jobs && S.jobs[0] && S.jobs[0].kind === 'hull' && S.jobs[0].until)) foulHour(S.t / 60); }); }   // (no fouling while she is on the slip)
+  if (S.t % 60 === 0){ ordersTick(S.t / 60); borsTick(S.t / 60); eachVessel(() => { crewTick(S.t / 60); if (!(S.jobs && S.jobs.some(j => j.kind === 'hull' && j.until))) foulHour(S.t / 60); }); }   // (no fouling while she is on the slip)
   S.t += 1; const H = S.t / 60;
   energyMinute();
   if (S.t % 60 === 0){ hourly(); eachVessel(navHour); eachVessel(loreHour); }
@@ -231,7 +231,8 @@ function vesselStep(H){
   for (const x of S.hold){ const r = SPECIES[x.sp].live ? (kar ? 0.4 : 2.5) : x.bled ? (x.iced ? 0.9 : 3.0) : (x.iced ? 2.2 : 6.0); x.fresh = Math.max(0, x.fresh - r * clean / 60); }
   deckMinute();
   // work queue at the yard and on the quay: runs while the boat is in port
-  if (S.jobs && S.jobs.length && b.status === 'port'){ const j = jobOk(S.jobs[0]); if (j.until == null) j.until = S.t + j.h * 60; if (S.t >= j.until){ finishJob(j); S.jobs.shift(); if (S.jobs.length) S.jobs[0].until = S.t + S.jobs[0].h * 60; } }
+  if (S.jobs && S.jobs.length && b.status === 'port'){ let done = null; for (const j of S.jobs){ jobOk(j); if (j.until == null) j.until = S.t + j.h * 60; if (S.t >= j.until) (done = done || []).push(j); }
+    if (done){ S.jobs = S.jobs.filter(j => !done.includes(j)); done.forEach(finishJob); } }   // all side by side (06-services.js queueJob)
   // the landing note comes when the catch is weighed in; the pump runs and the boat moves along the harbour
   if (b.land && S.t >= b.land.until) finishLanding();
   if (b.status === 'port'){ quayMinute(); shoreTick(); }
@@ -240,7 +241,7 @@ function vesselStep(H){
   if (S.plan && S.plan.depAt && S.t >= S.plan.depAt && (b.status === 'port' || b.status === 'idle')){
     const W0 = windAt(H);
     if (portBusy(b)){ S.plan.depAt = portBusy(b) + 1; log('Avgangen venter til arbeidet på kaia er ferdig.', 'Departure waits until the work at the quay is done.'); }
-    else if (S.jobs && S.jobs.length && b.status === 'port'){ S.plan.depAt = S.jobs[0].until + 1; log('Avgangen venter til verkstedet er ferdig.', 'Departure waits until the yard is done.'); }
+    else if (S.jobs && S.jobs.length && b.status === 'port'){ S.plan.depAt = (jobsDone() || S.t) + 1; log('Avgangen venter til verkstedet er ferdig.', 'Departure waits until the yard is done.'); }
     else if (S.settings.autoOn && W0 > S.settings.autoW && (S.plan.delays || 0) < 12){ S.plan.depAt += 60; S.plan.delays = (S.plan.delays || 0) + 1; log('Avgangen er utsatt en time. Vinden er ' + W0.toFixed(0) + ' m/s.', 'Departure postponed an hour. The wind is ' + W0.toFixed(0) + ' m/s.'); }
     else depart();
   }

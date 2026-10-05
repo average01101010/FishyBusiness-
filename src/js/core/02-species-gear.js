@@ -50,7 +50,7 @@ const SP = Object.keys(SPECIES).filter(sp => !SPECIES[sp].shell), SHELL = Object
 //  accel (kn a minute), turnR (m, 3D), planing, outboard, diesel, fuelK, risk [hs warn, hs danger, wind warn, wind danger], sea (speed
 //  lost per m of wave), crewMax (besides you), berths (bunks where the crew can rest at sea; none means only the quay counts as rest),
 //  tubCap (bleeding tub, kg), land ('box' or 'tub'), std (equipment it comes with), rigs (the kinds of fishing it can be rigged for),
-//  jukseMax, gearMax, svcH (engine hours between services), svcCost, svcJobH (yard hours), cls ('open', 'kyst' or 'hav': the market
+//  jukseMax, gearMax, svcH (engine hours between services), svcCost, svcJobH (yard hours until 05.10.2026; every yard job takes YARD_H now, core/06-services.js), cls ('open', 'kyst' or 'hav': the market
 //  tab), price, isNew (built to order), year, desc.
 const VESSELS = {
   skiff:{name:{no:'Aluminiumsbåt 19 fot (5,9 m), 60 hk påhengs', en:'19 ft aluminium boat (5.9 m), 60 hp outboard'}, len:5.9, beam:2.45, draft:0.6, disp:1.0, holdCap:350, iceCap:150, fuelCap:90, hp:60, engine:{no:'60 hk påhengsmotor, bensin', en:'60 hp petrol outboard'},

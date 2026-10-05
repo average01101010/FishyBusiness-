@@ -23,7 +23,7 @@ async def main():
         await pg.evaluate("document.querySelector('[data-pa=equip][data-k=elhaler]').click()"); await pg.wait_for_timeout(300)
         j = await pg.evaluate("JSON.stringify(S.jobs.map(j => ({k:j.k, h:j.h, until:j.until})))")
         jobs = json.loads(j)
-        check(len(jobs) == 1 and jobs[0]['h'] == 3 and isinstance(jobs[0]['until'], (int, float)), 'haleren får 3 t i verkstedet', j)
+        check(len(jobs) == 1 and jobs[0]['h'] == 3 and isinstance(jobs[0]['until'], (int, float)), 'haleren får 3 spilltimer i verkstedet (30 ekte minutter)', j)
         await pg.evaluate("for (let i = 0; i < 200; i++) step()")
         r = await pg.evaluate("JSON.stringify({jobs:S.jobs.length, fitted:!!S.equip.elhaler})")
         check(json.loads(r) == {'jobs': 0, 'fitted': True}, 'haleren er montert og køen er tom', r)
@@ -34,10 +34,22 @@ async def main():
         await pg.evaluate("S.equip.plotter = false; S.jobs = [{kind:'fit', k:'plotter', no:'Montering', en:'Fitting', until:null}]; save()")
         await pg.reload(); await pg.wait_for_timeout(1500)
         r = await pg.evaluate("JSON.stringify(S.jobs.map(j => ({h:j.h, until:j.until})))")
-        check(json.loads(r)[0]['h'] == 4, 'gammel jobb uten lengde får 4 t etter omlasting', r)
+        check(json.loads(r)[0]['h'] == 3, 'gammel jobb uten lengde får verkstedets halvtime etter omlasting', r)
         await pg.evaluate("for (let i = 0; i < 300; i++) step()")
         r = await pg.evaluate("JSON.stringify({jobs:S.jobs.length, fitted:!!S.equip.plotter})")
         check(json.loads(r) == {'jobs': 0, 'fitted': True}, 'den reparerte jobben blir ferdig', r)
+
+        # the yard's jobs run side by side, 30 real minutes each (05.10.2026, «Montering av utstyr og vedlikehold skal ta 30 ekte minutter, og
+        # man kan gjøre flere oppgaver samtidig»); overtime halves what is left of one of them; a job from before keeps no longer time
+        r = await pg.evaluate("""(() => { S.cash = 500000; S.equip.vhf = false; S.equip.ais = false; S.jobs = [{kind:'fit', k:'sonar', h:16, until:S.t + 900, no:'x', en:'x'}];
+          PHONE.open('utstyr'); for (const k of ['vhf', 'ais']) document.querySelector('[data-pa=equip][data-k=' + k + ']').click();
+          PHONE.open('verksted'); const t0 = S.t, until = S.jobs.map(j => j.until - t0), sonarH = S.jobs[0].h;
+          document.querySelector('[data-pa=jobOT][data-i="2"]').click(); const ot = S.jobs.map(j => j.until - t0), rush = !!document.querySelector('[data-pa=jobRush]');
+          for (let i = 0; i < 200; i++) step(); PHONE.show(false); if (typeof DOCK !== 'undefined') DOCK.close();
+          return {until, sonarH, ot, rush, left:S.jobs.length, fitted:!!S.equip.vhf && !!S.equip.ais}; })()""")
+        check(r['until'] == [180, 180, 180] and r['sonarH'] == 3 and r['ot'] == [180, 180, 90] and r['left'] == 0 and r['fitted'],
+              'verkstedjobbene går samtidig, 30 ekte minutter hver (også en lang jobb fra før), og overtid halverer det som er igjen av én', r)
+        check(r['rush'], '«Ferdig nå» vises for admin (artifacten og testbyggene)', r['rush'])
 
         # A3: the pub evening runs from 15:00 to 03:00 on the clock
         ev = await pg.evaluate("""(() => { const at = (d, h, m) => (Date.UTC(2027, 2, 1 + d, h, m) - EPOCH) / 36e5;

@@ -183,13 +183,20 @@ function finishJob(j){
   else if (j.kind === 'prep'){ S.prep = S.prep || {}; S.prep[j.k] = true; log('Ferdig: ' + PREP[j.k].no + '.', 'Done: ' + PREP[j.k].en + '.'); }
   msg(j.kind === 'prep' || j.kind === 'egn' || j.kind === 'mend' ? (S.lang === 'no' ? 'Kaia' : 'The quay') : 'Verkstedet', (j.no || '') + ' er ferdig.', (j.en || '') + ' is done.');
 }
-// hours at the yard to fit each piece of equipment; anything not listed takes three
-const FIT_H = {antigro:6, brovakt:2, vhf:2, ais:2, plotter:4, chirp:3, sonar:16, jukse:3, motor90:6, elhaler:3, linehaler:4, garnhaler:5, teinehaler:4};   // the sonar: on the slip for the hoist
-function fitHours(k){ return FIT_H[k] || 3; }
-// a job with no length would never finish and would keep the boat in port for good
-function jobOk(j){ if (!(j.h > 0)) j.h = j.kind === 'fit' ? fitHours(j.k) : 2; if (j.until != null && !Number.isFinite(j.until)) j.until = null; return j; }
-function queueJob(j){ S.jobs = S.jobs || []; if (S.jobs.length >= 6) return false; jobOk(j); S.jobs.push(j); if (S.jobs.length === 1 && S.boat.status === 'port') j.until = S.t + j.h * 60; return true; }
-function jobsDone(){ return S.jobs && S.jobs.length ? S.jobs[S.jobs.length - 1].until || null : null; }
+// The yard's jobs (fitting, service, the slip, the hold, the engine, repairs) take 30 real minutes each, whatever they are, and run all at
+// once (Jonas 05.10.2026: «Montering av utstyr og vedlikehold skal ta 30 ekte minutter, og man kan gjøre flere oppgaver samtidig»): 30
+// minutes at GAME_RATE game minutes a minute. Servicing the engine yourself (self) is cheaper and takes twice as long. The work on the
+// quay (rigging, baiting, mending) keeps its own hours, also side by side.
+const YARD_H = 30 * GAME_RATE / 60, YARD_KINDS = ['fit', 'svc', 'hull', 'hold', 'eng', 'repair'];
+function fitHours(k){ return YARD_H; }
+// a job with no length would never finish and would keep the boat in port for good; a yard job from before (when they took 2 to 16
+// hours) takes the yard's time now, also one already running
+function jobOk(j){
+  if (YARD_KINDS.includes(j.kind)){ j.h = j.self ? 2 * YARD_H : YARD_H; if (j.until != null && j.until > S.t + j.h * 60) j.until = S.t + j.h * 60; }
+  if (!(j.h > 0)) j.h = 2; if (j.until != null && !Number.isFinite(j.until)) j.until = null; return j; }
+// every job starts when it is ordered (or when the boat comes into port), side by side
+function queueJob(j){ S.jobs = S.jobs || []; if (S.jobs.length >= 6) return false; S.jobs.forEach(jobOk); jobOk(j); S.jobs.push(j); if (S.boat.status === 'port') j.until = S.t + j.h * 60; return true; }
+function jobsDone(){ if (!S.jobs || !S.jobs.length) return null; let m = null; for (const j of S.jobs) if (j.until != null) m = Math.max(m || 0, j.until); return m; }
 
 function startReturn(auto, W){
   const b = S.boat, tr = S.trail.slice().reverse(), wps = [];

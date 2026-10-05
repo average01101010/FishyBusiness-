@@ -1311,8 +1311,15 @@ Kvotesystemet ligger i `core/03d-quota.js` (04.10.2026, plan Q1–Q6). Grunnlage
 
 ### 5.12 Verksted
 
-- **Overtid** med spillkroner: halverer resten av tiden på jobben som pågår, for 950 kr per spart time.
-- **Hastejobb:** ferdig med én gang. Tenkt for ekte penger (15 kr), gratis i testmodus.
+- **Tid og samtidighet** (05.10.2026, Jonas: «Montering av utstyr og vedlikehold skal ta 30 ekte minutter, og man kan gjøre flere oppgaver samtidig»; `core/06-services.js`):
+  - Verftets jobber (`YARD_KINDS`: montering, service, skrogrens på slipp, lasterom, motorbytte og reparasjon) tar 30 ekte minutter hver: `YARD_H` = 30 × `GAME_RATE` / 60 = 3 spilltimer. Det gjelder uansett hva som gjøres, og `FIT_H` og `svcJobH` brukes ikke lenger.
+  - Service man gjør selv (`self`), koster 35 % og tar dobbelt så lang tid.
+  - Arbeidet på kaia (klargjøring, egning og bøting) beholder sine egne timer.
+  - Alle jobbene går samtidig. Hver får sin `until` når den bestilles i havn, eller når båten kommer i havn. `jobsDone()` er den siste av dem. Den brukes til avgangen, «Neste»-brikken og statusfeltet.
+  - `jobOk` gir jobber fra før (2–16 timer, også en som pågår) verftets halvtime.
+  - Køen har fortsatt plass til seks. En jobb som venter på havn, kan fjernes.
+- **Overtid** med spillkroner, per jobb: halverer resten av tiden på den jobben, for 950 kr per spart time.
+- **«Ferdig nå»** (før «Hastejobb», tenkt for ekte penger) er bare for admin (`adminOk()`).
 
 ### 5.13 Båtbevegelse og animasjoner
 
