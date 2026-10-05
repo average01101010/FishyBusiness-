@@ -11,6 +11,9 @@
 // is from the land round it; the shoreline is found on that line, and again half m to each side of it (the shore within o.bend m of
 // straight); there must be water o.out m out and land o.inl m in, nothing of o.avoid near, and no quay or pier (PIERBOX) on it.
 // {o (the shoreline's point, m), u (along the shore, with out to sea [-u[1], u[0]]), r} or null. Nearest to o.pref m first.
+// within r m of a harbour unit's middle (its block, fill and the ground it shapes round them reach about 100 m out: 01-world.js
+// UNITS, view3d.js unitTerr); the naust and the shop stand clear of it, as the coast's plants have units too (06b-coastports.js)
+const unitNear = (x, z, r) => UNITA.some(U => Math.abs(U.o[0] - x) < r && Math.abs(U.o[1] - z) < r && Math.hypot(U.o[0] - x, U.o[1] - z) < r);
 function shoreSpot(cx, cz, r0, r1, o){
   const land = (x, z) => isLand({x:x / 1000, y:z / 1000});
   const onPier = (x, z) => PIERBOX.some(q => { if (Math.abs(q.x - x) > q.l + q.w + 10 || Math.abs(q.z - z) > q.l + q.w + 10) return false;
@@ -42,7 +45,7 @@ function shoreSpot(cx, cz, r0, r1, o){
 function naustFind(pid){
   const pt = portById(pid); if (!pt) return {port:pid};
   const f = quayFace(pid, 'main'), cx = f ? f.x : pt.p.x * 1000, cz = f ? f.z : pt.p.y * 1000;
-  const avoid = (x, z) => PORTS.some(q => Math.hypot(q.p.x * 1000 - x, q.p.y * 1000 - z) < 70);
+  const avoid = (x, z) => PORTS.some(q => Math.hypot(q.p.x * 1000 - x, q.p.y * 1000 - z) < 70) || unitNear(x, z, 110);
   const sp = shoreSpot(cx, cz, 60, 360, {half:15, bend:6, out:[8, 16, 30], inl:[6, 14, 25], avoid, pref:120})
     || shoreSpot(cx, cz, 60, 360, {half:12, bend:9, out:[8, 16], inl:[6, 14], avoid, pref:120});
   if (!sp) return {port:pid};
@@ -70,7 +73,7 @@ function naustFace(pid){
 // Its frame is the Finnsnes shop's (butikk.py: x along the face, the face at y = 0, the yard 9.6-27.5 m in), with the face on the
 // shoreline; the 3D view levels the yard at the ground's own height there. Found once per naust (S.shopN).
 function shopNearFind(n){
-  const avoid = (x, z) => Math.hypot(x - n.o[0], z - n.o[1]) < 42 || PORTS.some(q => Math.hypot(q.p.x * 1000 - x, q.p.y * 1000 - z) < 40);
+  const avoid = (x, z) => Math.hypot(x - n.o[0], z - n.o[1]) < 42 || PORTS.some(q => Math.hypot(q.p.x * 1000 - x, q.p.y * 1000 - z) < 40) || unitNear(x, z, 110);
   const sp = shoreSpot(n.o[0], n.o[1], 45, 130, {half:18, bend:6, out:[6], inl:[10, 20, 30], avoid, pref:60})
     || shoreSpot(n.o[0], n.o[1], 45, 160, {half:14, bend:9, out:[4], inl:[10, 20], avoid, pref:60});
   return sp ? {o:sp.o.map(v => Math.round(v * 10) / 10), u:sp.u.map(v => Math.round(v * 1e4) / 1e4)} : null;

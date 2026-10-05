@@ -382,6 +382,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p26', '05.10.2026', 'Mottakene langs hele kysten', 'The plants along the whole coast', [
+      ['Alle de 153 fiskemottakene langs kysten har fått kaimottaket fra Blender, med kran, truck, is og bunkers, der mottaket ligger på ekte. Det finnes i tre utgaver: dagens mottak, et gammelt fiskebruk i rødmalt tre og et stort anlegg med fryselager. Hvert mottak får én av dem tilfeldig. Folkene og kranen arbeider når du leverer, som på Senja.', 'All 153 fish plants along the coast now have the harbour unit from Blender, with crane, forklift, ice and bunkers, where the plant really is. It comes in three looks: today’s plant, an old red-painted fish plant and a big plant with a cold store. Each plant gets one at random. The people and the crane work when you land your catch, as on Senja.']]],
     ['p25', '05.10.2026', 'Start ved fars naust', 'Start at Father’s boathouse', [
       ['Et nytt spill starter med båten ved fars naust, ikke ved mottaket. Utstyrsbutikken står et steinkast unna, uansett hvor langs kysten du starter, og mottaket er i nærheten, så første tur blir kort.', 'A new game starts with the boat at Father’s boathouse, not at the plant. The gear shop is a stone’s throw away wherever along the coast you start, and the plant is near by, so the first trip is short.'],
       ['Solveig i butikken har ei juksa og is til deg. Far betalte for dem i fjor høst, «til den som tar over».', 'Solveig in the shop has a jig and ice for you. Father paid for them last autumn, «for whoever takes over».'],

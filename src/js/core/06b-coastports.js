@@ -8,7 +8,8 @@
 // hand-made quay and unit, and takes the register's price index). Names are the postal town, with the company's first word where two
 // harbours would have the same name.
 // The quay is the register's face (q: the point, the normal's angle, the length; tools/mottak/mottak.py snap), as a QUAYS entry in
-// 07-harbours.js; the harbour point lies 15 m out from its middle and the shore point 30 m in. The price factor is the receiver's price
+// 07-harbours.js, and a harbour unit stands on it (UNITS, 01-world.js; its berths are the unit's); the harbour point lies 15 m out from
+// its middle and the shore point 30 m in. The price factor is the receiver's price
 // index (what it paid against the month's average, by kilo over the game's species) halfway to 1, between 0.94 and 1.06. Every coast
 // harbour has fuel and the shop; an ice chute where the plant takes in 1 000 t or more a year.
 const MOTTAK = /*@include(data/mottak.json)*/null;
@@ -43,6 +44,12 @@ const COASTQ = {};
     used[name] = 1;
     const id = 'm' + x.id;
     COASTQ[id] = {main:{a:[cx - ux * hl, cz - uz * hl], b:[cx + ux * hl, cz + uz * hl], n:[nx, nz]}};
+    // the harbour unit from Blender on the register's face (Jonas 05.10.2026: «3 modeller av ulike typer fiskemottak ... plasseres
+    // tilfeldig på stedene der fiskemottakene er på ekte»): its block behind the face, the basin in front, in one of the three looks
+    // (a today's plant, b the old fish plant, c the big plant), picked at random but the same every time for the receiver
+    let hv = 0; for (const ch of id) hv = (hv * 31 + ch.charCodeAt(0)) >>> 0;
+    const U = {id, o:[cx, cz], u:[nz, -nx], n:[nx, nz], f:[27.4, -24.4, 27.4, -28.4, -27.4, -28.4, -27.4, -24.4], v:'abc'[hv % 3], coastal:true};
+    UNITS[id] = U; UNITA.push(U);
     PORTS.push({id, name, xy:[q[0], q[1]], shore:[q[0], q[1]], pier:true, fuel:true, ice:kg >= 1e6, mottak:true, pf, coast:{x:(cx - nx * 30) / 1000, y:(cz - nz * 30) / 1000},
       p:{x:Math.round(cx + nx * 15) / 1000, y:Math.round(cz + nz * 15) / 1000}, i:PORTS.length, mk, coastal:true});
     // the plant posts orders too (03-simulation.js ordersTick, near where you fish): for what it takes in most of

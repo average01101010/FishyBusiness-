@@ -1563,7 +1563,17 @@ const G3 = (() => {
       P.spray = k; }
     return {night, spray:P.spray, lamps:P.lamps.map(L => rel(L[0], L[2] - 0.12, L[1]))};
   }
-  function nearestPlant(eye){ let best = null, bd = 900; for (const P of PLANTS){ const d = Math.hypot(P.drop[0] - eye[0], P.drop[1] - eye[2]); if (d < bd){ bd = d; best = P; } } return best; }
+  // the coast's plants (06b-coastports.js) are laid out when the eye comes within 1.5 km and their ground is in (the berths read it)
+  const PLANT_TRIED = new Set();
+  function plantsCoast(eye){
+    for (const U of UNITA){
+      if (!U.coastal || PLANT_TRIED.has(U.id) || Math.hypot(U.o[0] - eye[0], U.o[1] - eye[2]) > 1500) continue;
+      const pt = portById(U.id); if (!pt || !mapReadyAt(pt.p, 0.3)) continue; PLANT_TRIED.add(U.id);
+      try { const P = plantLayout(pt); if (!P) continue; PLANTS.push(P); const ry = Math.atan2(U.n[0], U.n[1]);
+        for (const [cx, cz, sx, sz, y0, y1] of unitModel(U.v).A.solids){ const c = unitW(U, cx, cz); camSolid(c[0], c[1], sx, sz, ry, y0, y1); } } catch (e){ console.error(e); }
+    }
+  }
+  function nearestPlant(eye){ plantsCoast(eye); let best = null, bd = 900; for (const P of PLANTS){ const d = Math.hypot(P.drop[0] - eye[0], P.drop[1] - eye[2]); if (d < bd){ bd = d; best = P; } } return best; }
 
   // ---------- work on deck: the bleeding tub and the gutting table on the after deck; whoever works the deck guts or ices there ----------
   let DECKACT = {on:false};

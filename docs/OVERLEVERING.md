@@ -795,6 +795,11 @@ Jonas 04.10.2026: «alle nye brukere skal få bestemme selv hvor i landet de øn
 - **Navnene:** `mottak.py` slår opp poststedet rundt hvert mottak i Kartverkets adresseregister (`punktsok`, det vanligste innen 800 m, i `cache/steder.json`) og legger det i feltet `v` (Båtsfjord, Senjahopen, Mo i Rana). `python3 tools/mottak/mottak.py steder` legger bare navnene inn i `src/data/mottak.json` som finnes.
 - **Havnene** (`core/06b-coastports.js`, før `07-harbours.js`): et fast anlegg (ordinært eller kaiselger) med kai, som tar imot minst 10 t i året av spillets arter, fra små båter (minst 5 %) eller med konvensjonelle redskap (minst 30 %). Det gir 202 mottak. Mottak innen 1,2 km av hverandre blir én havn (det største gir navnet), og de innen 2 km av en Senja-havn blir den havna (den beholder kaia og enheten, og får registerets prisindeks i `mk`). Resultatet er 153 nye havner (`coastal: true`, id `'m' + mottaksnummer`).
   - Kaia er registerets kaifront (`q`) som en `QUAYS`-oppføring (`COASTQ`, slått sammen etter konverteringen i `07-harbours.js`). Havnepunktet ligger 15 m ut fra midten, og strandpunktet 30 m inn.
+  - **Kaimottaket fra Blender står ved hvert mottak** (Jonas 05.10.2026: «3 modeller av ulike typer fiskemottak, men som har samme funksjon ... plasseres tilfeldig på stedene der fiskemottakene er på ekte»). Hver kysthavn får en `UNITS`-oppføring med blokkens front på registerets kaifront (`o` midt på, `u` langs, `n` ut mot sjøen) og en fylling på 4 m bak blokka.
+    - Utseendet (`v`) velges tilfeldig, men likt hver gang, ut fra en hash av id-en: `a` er dagens mottak, `b` det gamle fiskebruket og `c` det store anlegget. Av de 153 ble det 52 a, 45 b og 56 c.
+    - Alt som gjelder enhetene, gjelder også her: liggeplassene (`quayFace` gir enhetens landings- og bunkersplass), land under blokk og fylling (`onUnitGround`), det mudrede bassenget, terrenget rundt (`unitTerr`, `unitPatch`) og kartets hus som tas bort.
+    - Kranen, trucken og folkene legges ut når øyet kommer innen 1,5 km og bakken der er lastet (`plantsCoast` i `view3d.js`, kalt fra `nearestPlant`). Da arbeider de ved leveringen som på Senja.
+    - Stikkprøve på hvert tiende mottak: blokka står på land, og havnepunktet og liggeplassen ligger i sjøen ved alle. Bildene er `coast_plant_a.png`, `_b` og `_c` fra `tests/coast3d.py`.
   - Prisfaktoren er mottakets prisindeks halvveis mot 1, mellom 0,94 og 1,06. Alle har drivstoff og butikk, og isrenne der mottaket tar imot 1000 t eller mer i året.
   - Like navn får firmaets første ord i parentes, for eksempel «Vardø (Arctic)».
 - **De nærmeste:** `plantsNear(p, n)` gir de n nærmeste mottakene (bufret per halve km). Salgslaget viser de 10 nærmeste med avstand og pris for torsk, hyse og sei (fet er beste pris av dem). Snittprisen (`avgPrice`), morgentipset, verdianslaget og pristabellen i havneguiden bruker de 10 nærmeste, ikke alle.
@@ -1373,7 +1378,7 @@ Kvotesystemet ligger i `core/03d-quota.js` (04.10.2026, plan Q1–Q6). Grunnlage
     - at en truckrunde tar høyst to løft
     - at ingen brygge står på kaia
     - Den tar også bilder (`unit_<havn>.png`).
-  - **Data:** `src/data/harbour-unit.b64` (585 KB), i malen som `glb-harbour`.
+  - **Data:** `src/data/harbour-unit.b64` (585 KB), i malen som `glb-harbour`. Det gamle fiskebruket og det store anlegget (`kaimottak.py b` og `c`, 05.10.2026) ligger i `harbour-unit-b.b64` og `harbour-unit-c.b64` (635 og 598 KB GLB), i malen som `glb-harbour-b` og `glb-harbour-c`.
 
 
 ### 5.14 NPC-flåte og kartplotter
@@ -1975,6 +1980,7 @@ Jonas valgte dem fra lista (nr. 5 og 7).
   - **Naustet** finnes nå med `shoreSpot` (ringsøk etter rett fjære: sjøretning fra 12 prøver på 12 m, fjæra langs normalen, rett over ±halve lengden, vann ut og land inn, utenfor `PIERBOX`, poeng etter `pref`). Det står 60–360 m fra mottakets kaifront. Kystundersøkelsen i `starttest.py` (hvert 8. mottak langs kysten) fant det ved 20 av 20.
   - **Liggeplassen** `quayFace(pid, 'naust')` er `naustFace`: fra naustets midtpunkt, 8,1 m halv lengde og 3,4 m dyp, med sjøen ut. `berthKind` faller tilbake til `'main'` når naustet ikke er funnet.
   - **Butikken ved naustet** (`shopNear`, `S.shopN`) står 45–130 m fra naustet (ellers opp til 160 m), på bakkens høyde (`lev`, medianen av 9 prøver). `siteTerr` planerer plassen der, og `drawSites` løfter modellen. I Finnsnes brukes butikken på kaia.
+  - Naustet og butikken står minst 110 m fra midten av en havneenhet (`unitNear`). Enhetens blokk, fylling og terreng rundt rekker omtrent 100 m, og mottakene langs kysten har også enheter.
   - **Juksa og isen er gratis ved naustet**: far betalte for dem i fjor høst, og Solveig forteller det i en melding. Isen kommer i sekker.
   - **Ingen hurtigreise** (Jonas: «Fast travel er ikke mulig i spillet, punktum.»): `startShift` flytter aldri båten til eller fra naustet. Levering og diesel avvises ved naustet (`NAUST_SAIL`), og spilleren må seile til mottakskaia selv.
   - **Til naustet** går det med en rute: `naustTarget(pt, r)` gjør et trykk ved naustet i kartplotteren (`03-map.js`) eller med Autonav (`03b-route.js`) til rutas siste punkt `{port:hjem, berth:'naust'}`. `arrive` kaller `dock(pid, w.berth)`, som legger båten ved naustet. Autonav finner veien til havna og ender ved naustet. Fra havna selv går ruta rett dit.
