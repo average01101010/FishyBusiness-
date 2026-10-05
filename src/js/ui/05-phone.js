@@ -388,6 +388,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p38', '05.10.2026', 'Skiffen kjøpes på verftet', 'The skiff is bought at the yard', [
+      ['Aluminiumsskiffen er ikke lenger startbåt for noen. Hadde du den fra starten, har du nå fars gamle trebåt. Påhengsmotoren på 90 hk, som ikke passer i henne, er betalt tilbake. Skiffen kan kjøpes på verftet.', 'The aluminium skiff is no longer anyone’s start boat. If you had it from the start, you now have Father’s old wooden boat. The 90 hp outboard, which does not fit her, has been paid back. The skiff can be bought at the yard.']]],
     ['p37', '05.10.2026', 'Lagringen på kontoen er tryggere', 'Safer saves on your account', [
       ['Spiller du på flere enheter, skriver ikke lenger én enhet over spillet på en annen. Er det spilt begge steder, velger du selv hvilket spill du vil fortsette med, og ser dag, penger og båt for begge.', 'If you play on several devices, one no longer writes over the game on another. If both have been played, you choose which game to go on with, seeing the day, money and boat of each.'],
       ['Under Innstillinger → kontoen ligger «Tidligere lagringer». Der kan du hente tilbake et av de ti siste spillene på kontoen, eller det enheten hadde før.', 'Under Settings → the account is «Earlier saves». There you can take back one of the last ten games on the account, or the one the device had before.'],

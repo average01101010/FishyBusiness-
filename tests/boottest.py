@@ -25,5 +25,18 @@ async def main():
         print(json.dumps({'t0': t0, 'moved': moved, 'samplesBefore': len(before), 'stood': stood, 'depth': r['depth'], 'awayModal': r['away']}))
         print(ok(len(before) > 0 and stood), 'before the depths are in, the clock stands')
         print(ok(r['depth'] and 715 <= moved <= 730 and r['away']), 'then the two hours away are played (720 game minutes) with the depths loaded, and «Mens du var borte» shows')
+        # the free start skiff of an old save becomes Father's wooden boat, its 90 hp outboard paid back; a skiff bought at the yard stays
+        # (05.10.2026, «Den båten der skal kun være tilgjengelig for kjøp i verftet … For alle brukere»)
+        mk = """(owned => { SAVE_OFF = true; const o = JSON.parse(localStorage.getItem(KEY)), v = o.fleet && o.fleet.length ? o.fleet[0] : o; v.boat.type = 'skiff'; v.boat.fuel = 80; v.equip.motor90 = true;
+          o.owned = owned; o.cash = 20000; localStorage.setItem(KEY, JSON.stringify(o)); })"""
+        SK = "({type:S.boat.type, fuel:S.boat.fuel, motor:!!S.equip.motor90, cash:Math.round(S.cash), owned:S.owned, said:S.log.filter(l => /bare kjøpes på verftet/.test(l.no || '')).length})"
+        res = []
+        for owned in (['skiff'], ['trebat', 'skiff']):
+            await pg.evaluate(mk + '(' + json.dumps(owned) + ')'); await pg.reload()
+            await pg.wait_for_function("typeof SIMREADY !== 'undefined' && SIMREADY === true", timeout=60000); res.append(await pg.evaluate(SK))
+        a, c = res
+        print(ok(a['type'] == 'trebat' and a['fuel'] <= 60 and not a['motor'] and a['cash'] == 20000 + 148000 and a['owned'] == ['trebat'] and a['said'] == 1),
+              "an old save's free start skiff becomes Father's wooden boat, the 90 hp outboard paid back, and the log says why", a)
+        print(ok(c['type'] == 'skiff' and c['motor'] and c['cash'] == 20000 and c['said'] <= a['said']), 'a skiff bought at the yard stays (and no new line in the log)', {'kept': c, 'start': a})
         print('errors:', errs[:4]); await b.close()
 asyncio.run(main())
