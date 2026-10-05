@@ -303,6 +303,9 @@ const PHONE = (() => {
       // the sound (ui/10e-sound.js): off, or a volume
       '<div class="ph-card"><h4>' + L('Lyd', 'Sound') + '</h4><div class="ph-sub">' + [[0, L('Av', 'Off')], [0.25, '25 %'], [0.5, '50 %'], [0.75, '75 %'], [1, '100 %']].map(([v, l]) => { const cur = S.settings.sound === false ? 0 : (S.settings.vol == null ? 0.6 : S.settings.vol); return '<button class="' + (Math.abs(cur - v) < 0.13 ? 'on' : '') + '" data-pa="snd" data-v="' + v + '">' + l + '</button>'; }).join('') + '</div><p class="ph-note">' +
       L('Motor, sjø, vind og regn, måker, og arbeidet i havna og om bord. Lyden starter når du trykker på skjermen.', 'Engine, sea, wind and rain, gulls, and the work in the harbour and aboard. The sound starts when you touch the screen.') + '</p></div>' +
+      // the music on its own (Jonas 05.10.2026: «Må kunne skrus av i innstillinger»)
+      '<div class="ph-card"><h4>' + L('Musikk', 'Music') + '</h4><div class="ph-sub">' + [[0, L('Av', 'Off')], [0.2, L('Svak', 'Soft')], [0.35, L('Normal', 'Normal')], [0.6, L('Sterkere', 'Louder')]].map(([v, l]) => { const cur = S.settings.music == null ? 0.35 : S.settings.music; return '<button class="' + (Math.abs(cur - v) < 0.07 ? 'on' : '') + '" data-pa="mus" data-v="' + v + '">' + l + '</button>'; }).join('') + '</div><p class="ph-note">' +
+      L('Rolig musikk i bakgrunnen, laget mens den spiller: myke akkorder og en klokke nå og da. Mørkere om natta og i dårlig vær.', 'Quiet music in the background, made as it plays: soft chords and a bell now and then. Darker at night and in bad weather.') + '</p></div>' +
       // the hand on the helm: a throttle and a joystick in 3D (core/16-helm.js, ui/10d-helm.js)
       '<div class="ph-card"><h4>' + L('Manuell styring', 'Manual steering') + '</h4><div class="ph-sub"><button class="' + (S.settings.manual ? 'on' : '') + '" data-pa="manual" data-v="1">' + L('På', 'On') + '</button><button class="' + (S.settings.manual ? '' : 'on') + '" data-pa="manual" data-v="0">' + L('Av', 'Off') + '</button></div><p class="ph-note">' +
       L('Gass til høyre (fram, nøytral, bak; den blir stående der du slipper) og ratt til venstre (det går tilbake til midten) i 3D. Rører du dem på sjøen, tar du roret fra ruta eller Autonav. «Fortøy» kommer når du er sakte ved en kai, og «Kast loss» når du ligger fortøyd.', 'Throttle on the right (ahead, neutral, astern; it stays where you leave it) and wheel on the left (it springs back) in 3D. Touching them at sea takes the helm from the route or Autonav. «Moor» shows when you are slow at a quay, and «Cast off» when you lie moored.') + '</p></div>' +
@@ -328,6 +331,9 @@ const PHONE = (() => {
       // your own energy off, so you never tire or fall asleep while testing (the user's wish 03.10.2026)
       '<div class="ph-card"><h4>' + L('Energi', 'Energy') + '</h4>' + kv(L('Din energi', 'Your energy'), energyOff() ? L('av', 'off') : asleep() ? L('sover', 'asleep') : fmt(S.energy == null ? 100 : S.energy) + ' %') + '<button class="ph-btn' + (energyOff() ? ' alt' : '') + '" data-pa="admEnergy">' + (energyOff() ? L('Skru på energi', 'Turn energy on') : L('Skru av energi', 'Turn energy off')) + '</button>' +
       '<p class="ph-note">' + L('Av: du blir aldri sliten og sovner ikke.', 'Off: you never tire and do not fall asleep.') + '</p></div>' +
+      // the opening again: the letter alone, or a whole new game as a new player gets it (Jonas 05.10.2026: «jeg vil se hvordan konvolutt scenen ble»)
+      '<div class="ph-card"><h4>' + L('Åpningen', 'The opening') + '</h4><p class="ph-note">' + L('Se brevet fra far igjen, eller start et helt nytt spill slik en ny spiller får det: brevet, båtnavnet og «Første tur».', 'See the letter from Father again, or start a whole new game as a new player gets it: the letter, the boat name and «First trip».') + '</p>' +
+      '<button class="ph-btn" data-pa="admLetter">' + L('Vis brevet', 'Show the letter') + '</button> <button class="ph-btn red" data-pa="admNew">' + L('Start nytt spill', 'Start a new game') + '</button></div>' +
       '<p class="ph-note">' + L('Verktøy for testing. Appen fjernes før spillet får felles klokke.', 'Tools for testing. The app goes before the game gets a shared clock.') + '</p></div>';
   }
   function show(on, a){ isOpen = on; if (a) app = a === 'admin' && !adminOk() ? 'home' : a; if (on){ el.hidden = false; void el.offsetWidth; el.classList.remove('off'); render(); } else { el.classList.add('off'); setTimeout(() => { if (!isOpen) el.hidden = true; }, 300); } }
@@ -369,6 +375,18 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p19', '05.10.2026', 'Mobil, nettbrett og musikk', 'Phones, tablets and music', [
+      ['Spillet er gått gjennom på telefon, nettbrett og PC. På telefon fyller telefonen i spillet hele skjermen, handlingsknappene får plass, kartplotterens toppfelt vises helt, og kompasset ligger over infoboksen.', 'The game has been gone through on phones, tablets and PCs. On a phone the phone in the game fills the screen, the action buttons fit, the chart plotter’s top fields show in full, and the compass lies above the info box.'],
+      ['Knappene i appene er store nok for fingeren, og på en telefon på siden er infoboksen mindre og minikartet borte, så alt får plass.', 'The buttons in the apps are big enough for a finger, and on a phone on its side the info box is smaller and the mini chart gone, so everything fits.'],
+      ['Rolig musikk i bakgrunnen, laget mens den spiller: myke akkorder og en klokke nå og da, mørkere om natta og i dårlig vær. Skru den av eller opp i Innstillinger.', 'Quiet music in the background, made as it plays: soft chords and a bell now and then, darker at night and in bad weather. Turn it off or up in Settings.'],
+      ['3D på telefoner som ikke tar sjøen: sjøen har fått egne bølgetabeller, og får telefonen ikke til noen av sjøene, tegnes en enkel sjø i stedet for at 3D slutter å virke.', '3D on phones that will not take the sea: the sea has its own wave tables now, and if the phone can do none of the seas, a simple sea is drawn instead of 3D giving up.'],
+      ['Sjømann-appen viser bare lista med tatoveringer.', 'The Seaman app shows only the list of tattoos.'],
+      ['Admin: «Vis brevet» spiller åpningsscenen igjen, og «Start nytt spill» begynner helt på nytt, slik en ny spiller gjør.', 'Admin: «Show the letter» plays the opening again, and «Start a new game» begins all over, as a new player does.']]],
+    ['p18', '05.10.2026', 'Fars gamle trebåt', "Father's old wooden boat", [
+      ['Nye spillere starter med fars gamle trebåt: 23 fot, klinkbygd og spissgattet, med rorkult og en 8 hk semidiesel som går i 7 knop.', "New players start with Father's old wooden boat: 23 ft, clinker-built and double-ended, with a tiller and an 8 hp semi-diesel that makes 7 knots."],
+      ['Semidieselen dunker i takt med turtallet, 340 på tomgang og 850 på det meste, og for hvert tenn kommer en liten svart sky ut av eksosrøret.', 'The semi-diesel thumps with its revs, 340 at idle and 850 at most, and every firing puts a small black puff out of the exhaust.'],
+      ['Om bord står fiskekassene foran midttofta, og sløyebordet ligger over babord rekke. Roret svinger med rorkulten.', 'Aboard, the fish crates stand forward of the middle thwart, and the gutting table lies across the port gunwale. The rudder swings with the tiller.'],
+      ['Har du et spill fra før, beholder du båten din.', 'If you already have a game, you keep your boat.']]],
     ['p17', '05.10.2026', 'Brevet fra far', 'The letter from Father', [
       ['Et nytt spill begynner med en slitt konvolutt i mørket. Trykk på den, så åpner du brevet fra far.', 'A new game opens on a worn envelope in the dark. Tap it to open the letter from Father.'],
       ['Nye spillere gir bare båten et navn. Rederiet opprettes når du kjøper din første båt i lukket gruppe.', 'New players only name the boat. The company is founded when you buy your first boat in the closed group.'],
@@ -492,8 +510,8 @@ const PHONE = (() => {
   // --- the seaman's life: the tattoos you have earned, and the old ways at sea you have heard of
   function tattoos(){
     const got = S.tattoos || {}, c = tatCounts(), n = TATS.filter(T => got[T.id]).length;
-    const lock = {}; for (const T of TATS) if (T.lock) lock[T.id] = 1;
-    const h = ['<div class="ph-card"><h4>' + L('Tatoveringer', 'Tattoos') + '</h4><div class="ph-tatfig" role="img" aria-label="' + L('Sjømann med tatoveringer', 'Sailor with tattoos') + '">' + TATART.figure(got, lock) + '</div><p class="ph-note">' + L('Sjøfolkets gamle merker kommer av seg selv når du har gjort deg fortjent til dem. Du har ', 'The old marks of seafarers come by themselves when you have earned them. You have ') + n + L(' av ', ' of ') + TATS.length + '.</p></div>'];
+    // only the list (Jonas 05.10.2026: «Fjern sjømannen helt, jeg vil kun ha listen med tatoveringene»)
+    const h = ['<div class="ph-card"><h4>' + L('Tatoveringer', 'Tattoos') + '</h4><p class="ph-note">' + L('Sjøfolkets gamle merker kommer av seg selv når du har gjort deg fortjent til dem. Du har ', 'The old marks of seafarers come by themselves when you have earned them. You have ') + n + L(' av ', ' of ') + TATS.length + '.</p></div>'];
     for (const T of TATS){
       const icon = TATART.icon(T.id, !!got[T.id]);
       let foot;
@@ -995,8 +1013,15 @@ const PHONE = (() => {
     else if (a === 'lang'){ S.lang = S.lang === 'no' ? 'en' : 'no'; refreshAll(); }
     else if (a === 'q3d'){ S.settings.q3d = d.v; if (typeof G3 !== 'undefined' && G3.quality) G3.quality(d.v); }
     else if (a === 'fpsShow'){ S.settings.fpsShow = d.v === '1'; }
+    else if (a === 'mus'){ S.settings.music = +d.v; if (+d.v > 0) SND.start(); }
     else if (a === 'snd'){ const v = +d.v; S.settings.sound = v > 0; if (v > 0){ S.settings.vol = v; SND.start(); } }
     else if (a === 'manual'){ S.settings.manual = d.v === '1'; if (!S.settings.manual) helmOff(); }
+    else if (a === 'admLetter'){ show(false); showLetter(() => {}); return true; }
+    else if (a === 'admNew'){
+      if (!confirm(L('Starte et helt nytt spill? Alt du har nå blir borte, også lagringen i skyen.', 'Start a whole new game? Everything you have now is lost, the cloud save too.'))) return true;
+      const lang = S.lang, adm = S.adm; S = newState(); S.lang = lang; if (adm) S.adm = adm; S.draft = []; draftForget(true); ensureFleet(); LETTER.read = false; save(); refreshAll();
+      show(false); log('Admin: nytt spill.', 'Admin: a new game.'); showIntro(); return true;
+    }
     else if (a === 'admPace'){ S.mult = +d.v; $('pace').value = String(S.mult); }
     else if (a === 'admCash'){ S.cash += 100000; log('Admin: 100 000 kr lagt i kassa.', 'Admin: NOK 100,000 put in the cash.'); }
     else if (a === 'saveOut'){ saveCode().then(c => { saveBox = {mode:'out', text:c || ''}; render(); const ta = document.getElementById('saveCode'); if (ta){ ta.focus(); ta.select(); } if (c && navigator.clipboard) navigator.clipboard.writeText(c).then(() => toast(L('Lagringen er kopiert.', 'The save is copied.'))).catch(() => {}); }); return; }

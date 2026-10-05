@@ -1,6 +1,6 @@
 from _env import GAME, boot
 # Sailors' tattoos (T): rewards that come by themselves. The counters count what you do yourself, aboard; four tattoos need waters
-# beyond Senja and stay locked. The Seaman app shows them on a figure.
+# beyond Senja and stay locked. The Seaman app lists them, a drawing on each card.
 import asyncio, json
 from playwright.async_api import async_playwright
 
@@ -43,6 +43,6 @@ async def main():
         print(ok(not r['rope0'] and r['rope']), 'the rope round the wrist after 100 hours of your own deck work')
         print(ok(r['harpoon'] and r['rest']['rose'] and r['rest']['star'] and r['rest']['anchors']), 'harpoon for three vessels; the rose, the star and the crossed anchors for their counts')
         print(ok(r['locked'] and r['earned'] == 8 and r['msgs'] == 8), 'the four that need other waters stay locked; a message for each one earned')
-        print(ok(r['app']['text'] and r['app']['onFig'] == 12 and r['app']['inked'] == 8 and r['app']['svg'] == 12), 'the Seaman app shows the eight inked on the sailor, the other four as stencils, and a drawing on each card')
+        print(ok(r['app']['text'] and r['app']['onFig'] == 0 and r['app']['svg'] == 12), 'the Seaman app is the list only (no sailor, Jonas 05.10.2026): a drawing on each card, and how many you have')
         print('errors:', errs[:4]); await b.close()
 asyncio.run(main())

@@ -855,8 +855,8 @@ Båtene står i `VESSELS` (`core/02-species-gear.js`). Tallene er startverdier o
 
 | Nøkkel | Typenavn | L × B × T (m) | Vekt (t) | Last | Motor, marsj/topp | Mannskap / køyer | Pris | Gruppe |
 |---|---|---|---|---|---|---|---|---|
-| `skiff` | Aluminiumsbåt 19 fot (5,9 m), 60 hk påhengs (etter Plate Alloy 5.9m Adventurer) | 5,9 × 2,45 × 0,6 (skroget 0,3, med motorbeinet 0,6) | 1,0 | 350 kg | 60 hk, 18/24 kn | 1+1 / 0 | 95 000 | åpen under 8 m (startbåt) |
-| `trebat` | Gammel tresnekke 22 fot, 10 hk Sabb (1962) | 6,7 × 2,2 × 0,9 | 1,8 | 500 kg | 10 hk, 5,5/6,5 kn | 1+1 / 0 | 60 000 | åpen under 8 m |
+| `skiff` | Aluminiumsbåt 19 fot (5,9 m), 60 hk påhengs (etter Plate Alloy 5.9m Adventurer) | 5,9 × 2,45 × 0,6 (skroget 0,3, med motorbeinet 0,6) | 1,0 | 350 kg | 60 hk, 18/24 kn | 1+1 / 0 | 95 000 | åpen under 8 m (startbåt for spill fra før 05.10.2026) |
+| `trebat` | Trebåt 23 fot (7,0 m), 8 hk semidiesel (1956), fars gamle båt | 7,0 × 2,26 × 0,62 | 1,9 | 350 kg | 8 hk, 6/7 kn | 1+1 / 0 | 45 000 | åpen under 8 m (startbåt fra 05.10.2026) |
 | `snekke` | Plastsnekke 26 fot, 30 hk diesel | 7,9 × 2,7 × 1,2 | 3,0 | 900 kg | 30 hk, 7/8 kn | 1+2 / 0 | 245 000 | åpen under 8 m |
 | `jukesjark` | Plastsjark 29 fot (8,9 m) | 8,9 × 3,2 × 1,2 | 5,5 | 1 800 kg | 150 hk, 8,5/10 kn | 1+2 / 2 | 750 000 | åpen 8–9,99 m |
 | `sjark` | Havsjark 35 fot (10,6 m) med bakk og styrhus (etter Viksund Havsjark 35) | 10,57 × 4,1 × 1,6 | 12 | 6 500 kg | 180 hk, 8,5/10 kn | 1+3 / 2 | 1 150 000 | åpen 10 m og over |
@@ -1247,6 +1247,13 @@ Kvotesystemet ligger i `core/03d-quota.js` (04.10.2026, plan Q1–Q6). Grunnlage
   - **I spillet:** `glbModel` tar også starterbåten (før sjekken på `hand`), setter motoren og propellen på plass i den hele modellen (Båthandel og testene) og gir lokket som trekanter. `glbPart(type, navn)` gir én del. `view3d.js` bytter `VGEO.skiff` med geometrien fra GLB-en, og `buildSkiff` henter skrog, glass, lokk, motor og propell derfra. Ratt, gasshendel, motorens sving og vipp og propellens rotasjon er som før.
   - **Plassene:** `SKA` i `view3d.js` har plassene som de levende delene og folkene bruker (dørk, kar, fiskeren, haleren, håndjuksa, de tre juksamaskinene, redskapsstabelen og påfyllingen). Standardtallene er det gamle skrogets, og `anchors.skiff` i GLB-en overstyrer dem, sammen med ratt, gasshendel, motor, propell, sjarm, skipper, sete og navnebrettene. `anchors.work` gir plassene for sløyebordet og blødekaret (`drawDeck`), som ellers settes ut fra bredden.
   - **Kjøring:** `python3 tools/boats/skiff59.py` (med `check`, `fast` og `dry` som de andre). Overlegget trenger tegningen i `SKIFF_GA`. Dataene ligger i `src/data/boat-skiff59.b64` og `boat-skiff59-side.b64`, og i malen som `glb-skiff` og `pic-skiff`.
+- **Fars gamle trebåt (`trebat`, startbåten fra 05.10.2026):** `tools/boats/snekke23.py` bygger en klinkbygd spissgatter på 23 fot med innenbords semidiesel, etter Jonas' bilder av gamle snekker. Han valgte: topphastighet 7 knop, resten fiktivt etter skiffen; maks 850 o/min; slitt og gammel, ubehandlet trevirke («Gammelt trevirke»); ingen fendere, ikke noe stevnbånd; rorkult og aldri ratt i tillegg.
+  - **Modellen:** ni bord i hver side med landene, spant, kjøl, stevner, ripe og skvettlist; dørker rett over vannlinja (spillet tegner sjøen over alt under den), tre tofter, fordekk; motorkasse med sylinder, glødehode, eksosrør og eikehjul; høyt ror langs den skrå akterstevnen med rorkult; fiskekasser foran midttofta og sløyebord over babord rekke (renne, kniv, bøtte); fars presenning som tøy på fordekket. 17 948 trekanter, 854 KB.
+  - **Slitasjen** ligger i hvert hjørne (`Acc.done(tint=wear)` i `bpyutil.py`, attributtet `TINT` som GLB-skriveren ganger inn i fargen), så den glir over flatene i stedet for å følge dem i firkanter: grålig treverk i flekker og øverst, mørkt der det er vått, striper fra ripa, tjæret bunn, rust på jernet. Bildene fra Blender gjør spillets farger lineære, så de ser ut som i spillet.
+  - **Delene i GLB-en:** `cap` (lokket), `prop` og `tiller` (rorkulten med roret og flaggstanga, origo i rorhodet; de svinger sammen). Sløyebordet stikker 6 cm ut over ripa, uten renne, så skroget holder målene i `vessel3d.py`. `glbModel` setter rorkulten og propellen på plass i den hele modellen (Båthandelen, avstand). `anchors.skiff` har `tiller` (`post` og `grip`), `inboard`, `prop`, `sit`, skipperen på akterste tofte og ingen `wheel`; `anchors.work.own` sier at båten har sitt eget sløyebord (`top` er høyden på det), så `drawDeck` ikke tegner det vanlige. `anchors.exhaust` er munningen på eksosrøret.
+  - **I spillet:** hver åpen type med modell og håndankre får sitt eget håndsett (`HANDK`, `useHand(t)` og `handKit(t)` i `view3d.js`) med skrog, glass, lokk, propell, rorkult, navnebrett, skipper og mannskap. Uten ratt i ankrene tegnes verken ratt, gasshendel eller påhengsmotor, bare rorkulten som svinger med roret og propellen under akterstevnen.
+  - **Semidieselen:** `VESSELS.trebat.semi` og `rpm:[340, 850]`. Lyden (`ui/10e-sound.js`) er ett tenn hver andre omdreining (firetakt, T = 120/o/min): et dunk på 62→42 Hz med en overtone, et smell opp mot 1,5 kHz og et klakk 0,37 av syklusen etter, etter Jonas' video av en Sabb G (1 sylinder). Hvert tenn legges i `SND.FIRES`, og `drawSmoke` i `view3d.js` slipper en svart sky fra `anchors.exhaust` på samme tid (med egen klokke når lyden er av). Skyene stiger, vokser, tynnes og driver med vinden.
+  - **Kjøring:** `python3 tools/boats/snekke23.py` (med `fast` og `dry`). Dataene ligger i `src/data/boat-snekke23.b64` og `boat-snekke23-side.b64`, og i malen som `glb-trebat` og `pic-trebat`. Nye spill starter med `trebat` (`newState`); lagringer uten type blir fortsatt skiff.
 - **Folkene (`worker`, fra 02.10.2026):** `tools/harbour/arbeider.py` bygger én kropp i deler, etter Jonas' bilder.
   - **Delene:** overkropp (`torso` med glidelås og brystlommer, eller `sweater` med stripet hals), hode med ansikt (`head`), tre hodeplagg (`hardhat`, `skippercap` og `beanie`), overarm, underarm, lår, legg, støvel og hanske.
   - **Hvert koordinatsystem:**
@@ -1622,6 +1629,7 @@ Brukerens valg:
   - Fjernpassen bruker en egen variant med de fire lengste bølgene.
   - `#fps` i adressen viser bildetakten.
   - **Når 3D ikke starter** (Jonas' telefon 04.10.2026, Galaxy A52s): meldingen «3D-visning støttes ikke» sier nå også hvilket steg og hvilken feil som stoppet det (`failWhy`, `G3.failWhy`): WebGL-konteksten, en shader med loggen sin, et byggesteg eller en mistet kontekst. Dyr, NPC-båter, fly og redningsskøyta stopper ikke 3D om de feiler (`opt`).
+  - **Shaderne på telefoner** (05.10.2026): pikselskyggerne ber om høy presisjon bare der telefonen har det (`FS_HP`), en mistet kontekst før 3D er i gang prøver igjen (`glWatch`), og feilen går til skyen (`cloudErr`, med GPU og grenser). Jonas' Adreno 642L kompilerte alt, men lenket ikke sjøen, og driveren ga ingen logg. Sjøen prøver derfor i rekkefølge: med sjøtilstandsteksturen i hjørneskyggeren, uten den, og med fjernsjøens enklere bølger. Pikselskyggeren har sine egne kopier av bølgetabellene (`SEAF`: `uFWa`, `uFWb`, `uFGp`), fordi samme uniform-tabell i begge skyggerne var det eneste sjøen hadde som ingen annen skygger hadde. Lenkes ingen av dem, prøves hver halvdel alene for rapporten (VS alene, FS alene), og en enkel flat sjø med litt krusning, himmel og solglitter tar over (`BASIC_VS`/`BASIC_FS`, `PS.basic`). Skyen får vite hvilken sjø som ble brukt («3D sjø med reserve»). Prøvd ved å tvinge lenkingen til å feile i Chromium.
 - **Båtens egne bølger** (`WAKE_GLSL`, `updateWake`). Fartsregimet følger Froude-tallet Fr = v/√(gL) med lengden fra `VESSELS` og simuleringens fart gjennom vannet.
   - **Kelvin-kilen (19,47°):** tverrbølger 2πv²/g lange inne i kilen (faller som 1/√s) og skråbølger med fronter 35° på kursen (k = 1,5·k₀) langs kantene (faller som s^−1/3). De er høyest nær skrogfart (høyde ≈ 0,045·L, maks 0,6 m).
   - **Planende skrog (Fr > 1):** bare skråbølger, flatt hvitt propellvann og hanekam bak påhengsmotoren.
@@ -1774,6 +1782,27 @@ Brukerens ønske: en frivillig mulighet til å styre båten selv, med gass og ra
   - Med kameraet 21 m bak båten er motoren 62 % av full styrke, og 300 m unna 5,5 % (målt i 3D).
 - **Innstillinger:** Av, 25, 50, 75 eller 100 % (`S.settings.sound`, `S.settings.vol`). I 2D er lyden 60 % av styrken.
 - `soundtest.py` sjekker lagene, avstanden, panoreringen, alarmgulvet og NPC-motorene (med `SND.testEar`/`testSrc`), ikke hvordan det låter.
+- **Semidieselen** (trebåten, 05.10.2026): se 5.13. Nivået `LV.eng` er styrken på dunkene, som blir litt kraftigere når gassen er oppe.
+- **Musikken** (Jonas 05.10.2026: «rolig ambient instrumentaler som svak stemning i bakgrunnen. Må kunne skrus av i innstillinger»):
+  - Den lages mens den spiller (`musTick` i `SND`): myke flater (tre oscillatorer per tone gjennom et lavpass) i langsomme akkorder i D, dorisk om dagen og eolisk om natta, over en lav grunntone. Hver akkord varer 19–25 s og glir over i den neste.
+  - Nå og da kommer en kort frase på en myk klokke (en til tre toner fra akkorden, en eller to oktaver opp), gjennom et langt ekko og et rom (en konvolver med fire sekunder støy som dør ut).
+  - Mørkere om natta (lavere lavpass) og i dårlig vær, og sjeldnere klokker i storm.
+  - Den har egen vei ut (ikke `master`), så den spiller også når lydeffektene er av. Styrken er `S.settings.music` (Av, Svak 0,2, Normal 0,35, som er standard, og Sterkere 0,6), og ganget med 0,2 er den aldri høy.
+  - Ingen filer eller lisenser. `soundtest.py` sjekker at den spiller med egen styrke og blir stille med Av.
+
+### 5.25b Telefon, nettbrett og PC (05.10.2026)
+
+Jonas: «vi må uansett optimalisere hele spillets UI for både mobil, nettbrett og pc». `tests/uishots.py` går gjennom hovedvisningene (havn, sjø i 3D, kartplotter, rute, telefonen, Salgslaget, Innstillinger, boka og menyen i havn) i fem størrelser: telefon stående (390 × 844) og liggende, nettbrett stående (800 × 1280) og liggende, og PC (1440 × 900). Den tar bilder (`tests/out/ui_<visning>_<størrelse>.png`) og finner selv tekst som er kuttet, knapper utenfor skjermen (ikke det som ligger i en boks som ruller, og ikke Dekksdagboka, som stikker ut med vilje), de store blokkene oppå hverandre, og knapper under 32 × 30 px på berøringsskjermer. Første runde fant 181 ting, nå 0.
+
+Hva som ble gjort (siste blokk i `styles.css`):
+- **Telefon stående** (`max-width: 560px`): telefonen i spillet fyller hele skjermen uten ramme. Kompasset ligger øverst, med infoboksen under. Handlingsknappene går fra Dekksdagboka til telefonknappen, og navnene kan gå over to linjer. Kartplotterens topprad har symboler for innstillinger (⚙) og lukk (✕), og ekkoloddskalaen ligger under raden til høyre.
+- **Telefon liggende** (`max-height: 520px`): infoboksen er litt mindre (`zoom`), minikartet er borte, GPS-boksen ligger rett under infoboksen, og telefonen i spillet er like høy som skjermen.
+- **Overalt:** kompasset når aldri infoboksen, og knappene i appene (`.ph-sub`) er minst 36 px høye på berøringsskjermer. Ekkoloddfeltet forsvinner når ekkoloddet er av.
+- `--gpsTop` og `--hudW` regnes fra infoboksen slik den er tegnet (`getBoundingClientRect`), så de stemmer med `zoom`.
+
+### 5.25c Admin: åpningen på nytt (05.10.2026)
+
+Admin-appen (bare Jonas' konto) har kortet «Åpningen»: «Vis brevet» spiller brevscenen igjen uten å endre noe, og «Start nytt spill» spør først og begynner så helt på nytt (lagringen i skyen også), med brevet, båtnavnet og «Første tur».
 
 ### 5.26 Måker og halere fra Blender (03.10.2026)
 

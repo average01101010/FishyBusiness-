@@ -128,6 +128,19 @@ const G3 = (() => {
   // one wave's slope, height and lost roughness in the fragment shader (W: whether it counts for the wind sea's crests)
   const SEA_WAVE = W => '{vec4 a=uWa[i];vec4 b=uWb[i];float att=smoothstep(2.0,7.0,6.2832/(a.z*px));float am=ampOf(a,b,S);float gr=grpOf(P,a,b,uGp[i]);float Q=steepOf(a,b,am);' +
     'float f=a.z*dot(a.xy,P)-b.y*uTime+b.z;float c=cos(f);float s=sin(f);float wa=a.z*am*gr;N.x-=a.x*wa*c*att;N.z-=a.y*wa*c*att;N.y-=Q*wa*s*att;lost+=wa*wa*(1.0-att);' + (W ? 'y+=am*gr*s*att;sa+=am*am*0.228;' : '') + '}';
+  // The fragment shader reads the waves from copies of its own (uFWa, uFWb, uFGp): the same uniform array in both stages is the only
+  // thing the sea has that no other program has, and the one guess left for the phone that would link none of its variants
+  // (Adreno 642L, 05.10.2026). drawSea sets both.
+  const SEAF = f => f.replace(/\buWa\b/g, 'uFWa').replace(/\buWb\b/g, 'uFWb').replace(/\buGp\b/g, 'uFGp');
+  // the last resort when no sea program links: a flat sea with a little ripple, the sky in it and the sun's glitter
+  const BASIC_VS = 'precision highp float;attribute vec2 aXZ;uniform mat4 uVP;uniform vec2 uOrigin;uniform vec3 uOriginRel;uniform vec2 uScale;varying vec3 vW;varying vec2 vXZ;' +
+    'void main(){vec2 lxz=aXZ*uScale;vec3 rel=uOriginRel+vec3(lxz.x,0.0,lxz.y);vW=rel;vXZ=uOrigin+lxz;gl_Position=uVP*vec4(rel,1.0);}';
+  const BASIC_FS = 'precision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;uniform vec3 uZen;uniform vec3 uHor;uniform vec3 uDeep;uniform float uTime;varying vec3 vW;varying vec2 vXZ;' +
+    'void main(){float d=length(vW);vec3 V=normalize(-vW);vec2 p=vXZ;' +
+    'vec3 N=normalize(vec3(0.05*sin(p.x*0.35+uTime*1.1)+0.03*sin(p.y*0.52-uTime*0.9)+0.02*sin((p.x+p.y)*1.7+uTime*2.3),1.0,0.05*cos(p.y*0.31+uTime*1.3)+0.03*cos(p.x*0.47+uTime*0.7)+0.02*cos((p.x-p.y)*1.9-uTime*2.1)));' +
+    'float fr=0.02+0.98*pow(1.0-max(dot(N,V),0.0),5.0);vec3 R=reflect(-V,N);vec3 sky=mix(uHor,uZen,clamp(R.y*1.5,0.0,1.0));' +
+    'vec3 body=uDeep*(uAmb*1.7+uSunCol*0.3*max(dot(N,uSun),0.0));vec3 col=mix(body,sky,fr)+uSunCol*pow(max(dot(R,uSun),0.0),220.0)*0.9;' +
+    'gl_FragColor=vec4(mix(uFog,col,exp(-uFogD*uFogD*d*d)),1.0);}';
   // FAR (the far pass beyond the near terrain): the four longest wind waves and the swell, the rest of the wind sea only as roughness, no ripples
   const SEA_FS = '#extension GL_OES_standard_derivatives : enable\n#ifdef FAR\n#define NWIND 4\n#else\n#define NWIND 10\n#endif\nprecision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;uniform vec3 uZen;uniform vec3 uHor;uniform vec3 uDeep;' +
     'uniform float uTime;uniform float uWind;uniform vec2 uWindDir;uniform float uFlat;uniform float uSpec;uniform vec4 uWa[13];uniform vec4 uWb[13];uniform sampler2D uHgt;uniform float uHOn;uniform float uTideL;uniform vec4 uSRect;uniform float uSOn;uniform float uPx;uniform float uDbg;' + PLG +
@@ -211,8 +224,8 @@ const G3 = (() => {
     'if(d.y>0.0){vec2 cp=d.xz/(d.y+0.08)*1.2+mod(uWindDir*uTime*0.004,64.0)+160.0;float c=ns(cp)*0.6+ns(cp*2.3)*0.3+ns(cp*5.1)*0.1;float cov=smoothstep(1.0-uCloud-0.05,1.0-uCloud+0.35,c);' +
     'vec3 cc=mix(uHor*0.85,vec3(0.9,0.92,0.95),0.35*uDay)*(0.3+0.7*uDay);col=mix(col,cc,cov*smoothstep(0.0,0.12,d.y)*0.95);}' +
     'gl_FragColor=vec4(col,1.0);}';
-  const PT_VS = 'attribute vec3 aPos;attribute float aA;uniform mat4 uVP;uniform vec3 uOff;uniform float uSize;uniform float uPull;varying float vA;' +
-    'void main(){vA=aA;vec3 r=aPos+uOff;r-=normalize(r+vec3(0.0,0.0,1e-4))*min(length(r)*0.5,uPull);vec4 p=uVP*vec4(r,1.0);gl_Position=p;gl_PointSize=clamp(uSize/max(p.w,0.1),1.0,48.0);}';
+  const PT_VS = 'attribute vec3 aPos;attribute float aA;uniform mat4 uVP;uniform vec3 uOff;uniform float uSize;uniform float uPull;uniform float uMax;varying float vA;' +
+    'void main(){vA=aA;vec3 r=aPos+uOff;r-=normalize(r+vec3(0.0,0.0,1e-4))*min(length(r)*0.5,uPull);vec4 p=uVP*vec4(r,1.0);gl_Position=p;gl_PointSize=clamp(uSize/max(p.w,0.1),1.0,uMax);}';
   const PT_FS = 'precision mediump float;uniform vec3 uCol;uniform float uRound;varying float vA;' +
     'void main(){float a=vA;if(uRound>0.5){vec2 c=gl_PointCoord-0.5;float r=dot(c,c);if(r>0.25)discard;a*=1.0-r*4.0;}gl_FragColor=vec4(uCol,a);}';
 
@@ -1490,14 +1503,16 @@ const G3 = (() => {
     nSetup(VP);
     // where they stand: by the beam on the after deck, or where a detailed model says (the starter boat has a seat and a bench aft)
     const W = G.work || null, tx = W ? W.table[0] : -(Bm / 2 - 0.42), ux = W ? W.tub[0] : Bm / 2 - 0.62, tz = W ? W.table[2] : d.z, uz = W ? W.tub[2] : d.z + 0.35;
-    drawN(PM.btub, chain(BMrel, M4.T(ux, d.y, uz), M4.S(W && W.s || 1))); drawN(PM.gtable, chain(BMrel, M4.T(tx, d.y, tz)));
+    // a model with its own gutting table (work.own, the old wooden boat's across the gunwale) has it drawn already, the fish on its top
+    const own = !!(W && W.own), topY = own && W.top != null ? W.top + 0.02 : d.y + 0.885;
+    drawN(PM.btub, chain(BMrel, M4.T(ux, d.y, uz), M4.S(W && W.s || 1))); if (!own) drawN(PM.gtable, chain(BMrel, M4.T(tx, d.y, tz)));
     // the catch on deck (tools/fish): fish in the bleeding tub in proportion to the hold's species, one on the gutting table
     { const all = S.hold.reduce((a, x) => a + x.kg, 0), n = Math.min(8, Math.ceil(all / 25)), ts = W && W.s || 1;
       if (n > 0 && SK && SK.fishM){ const cum = []; let acc = 0; for (const sp of ALLSP){ acc += S.hold.filter(x => x.sp === sp).reduce((a, x) => a + x.kg, 0); cum.push([sp, acc / all]); }
         const pick = r => (cum.find(c => r <= c[1] + 1e-9) || cum[0])[0];
         for (let i = 0; i < n; i++){ const sp = pick(hash(i * 7 + 5)), z = ((i % 3) - 1) * 0.2, lay = Math.floor(i / 3);
           drawN(fishOf(sp), chain(BMrel, M4.T(ux, d.y, uz), M4.S(ts), M4.T((hash(i * 3) - 0.5) * 0.12, 0.5 + lay * 0.05, z), M4.RY(Math.PI / 2 + (i % 2 ? Math.PI : 0) + (hash(i * 9) - 0.5) * 0.3), M4.RZ(sp === 'krabbe' ? 0 : Math.PI / 2 * (hash(i * 11) > 0.5 ? 1 : -1)), M4.S((0.48 + hash(i * 13) * 0.1) * (sp === 'krabbe' ? 1.7 : 1)))); }
-        if (!DK.on) drawN(fishOf(pick(0.3)), chain(BMrel, M4.T(tx, d.y + 0.885, tz + 0.25), M4.RY(0.2), M4.RZ(Math.PI / 2), M4.S(0.5))); } }
+        if (!DK.on) drawN(fishOf(pick(0.3)), chain(BMrel, M4.T(tx, topY, tz + (own ? 0 : 0.25)), M4.RY(0.2), M4.RZ(Math.PI / 2), M4.S(0.5))); } }
     if (!DK.on) return;
     const wl = xf(BMrel, [tx + 0.62, d.y, tz]), wy = wl[1] + eye[1], P = {gy:() => wy, bare:true, spray:0, kit:DK.alone ? 'skipper' : null}, head = bv.head - Math.PI / 2;
     drawWorker(P, {x:wl[0] + eye[0], z:wl[2] + eye[2], h:head, task:DK.task === 'gut' ? 'gut' : 'stack', walk:false, s:0}, eye, t, 7);
@@ -1764,6 +1779,36 @@ const G3 = (() => {
     attr(0, q.pb, 3); attr(1, q.ub, 2); gl.drawArrays(gl.TRIANGLES, 0, q.n || 6);
   }
 
+  // ---------- the open boats worked by hand: one kit per type ----------
+  // buildSkiff makes the skiff's kit (SK, SKA, CHARM_AT). Another type with a model and hand anchors (the old wooden boat,
+  // tools/boats/snekke23.py) gets its own from it: its hull, glass, lid, propeller and tiller, name boards, the skipper (seated at the
+  // tiller where it has one) and the crew, and its places; an inboard boat has no wheel, lever or outboard. useHand swaps the kit in.
+  let PERSON = null; const HANDK = {cur:null};
+  function useHand(t){
+    if (HANDK.cur === t || !SK) return;
+    if (!HANDK.skiff) HANDK.skiff = {SK, SKA:Object.assign({}, SKA), CHARM:CHARM_AT};
+    if (!HANDK[t]) HANDK[t] = handKit(t) || HANDK.skiff;
+    const k = HANDK[t]; SK = k.SK; for (const q of Object.keys(SKA)) delete SKA[q]; Object.assign(SKA, k.SKA); CHARM_AT = k.CHARM; HANDK.cur = t;
+  }
+  function handKit(t){
+    if (!glbHas(t) || !PERSON) return null;      // (the skiff's own kit is in HANDK already, under its name)
+    const G = geoOf(t), A = G && G.skiff; if (!A) return null;
+    const up = o => o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null;
+    const K = Object.assign({}, HANDK.skiff.SK, {wheelA:0, propA:0, headPrev:null, live:false});
+    K.hull = up(glbPart(t, 'lod0')); K.glass = up(glbPart(t, 'glass')); K.prop = up(glbPart(t, 'prop')); K.tiller = up(glbPart(t, 'tiller')); K.cap = null;
+    const cp = glbPart(t, 'cap'); if (cp){ const c = MB(); for (let i = 0; i < cp.p.length; i += 9) c.tri([cp.p[i], cp.p[i + 1], cp.p[i + 2]], [cp.p[i + 3], cp.p[i + 4], cp.p[i + 5]], [cp.p[i + 6], cp.p[i + 7], cp.p[i + 8]], [1, 1, 1]); K.cap = c.mesh(); }
+    K.propAt = A.prop; K.inboard = !!A.inboard; K.tillerAt = A.tiller ? A.tiller.post : null;
+    K.wheelAt = A.wheel || null; K.wheelTilt = A.wheelTilt || 0; K.leverAt = A.lever || null; K.motorAt = A.motor || null;
+    if (!A.wheel){ K.wheel = null; K.lever = null; K.motor = null; }
+    K.qName = A.names ? A.names.map(([B, T]) => texStrip(B, T)) : [];
+    const g = A.tiller && A.tiller.grip, sk = A.skipper;
+    // at a tiller: seated beside it, the right hand on its grip, the left on his knee
+    const hands = g ? [[sk[0] - 0.12, sk[1] + 0.56, sk[2] - 0.34], [g[0] - 0.03, g[1] + 0.03, g[2]]] : A.wheel ? [[A.wheel[0] - 0.14, A.wheel[1] + 0.14, A.wheel[2] + 0.05], [A.wheel[0] + 0.14, A.wheel[1] + 0.12, A.wheel[2] + 0.05]] : null;
+    const ps = NB(); PERSON(ps, sk[0], sk[1], sk[2], !!A.sit, hands, 'skipper'); K.skipper = ps.mesh();
+    const pc = NB(); PERSON(pc, A.seat[0], A.seat[1], A.seat[2], true, null, 'crew'); K.crew = pc.mesh();
+    const KA = Object.assign({}, HANDK.skiff.SKA); for (const k of ['sole', 'tub', 'fisher', 'haul', 'reel', 'mach', 'stack', 'filler']) if (A[k]) KA[k] = A[k];
+    return {SK:K, SKA:KA, CHARM:A.charm || HANDK.skiff.CHARM};
+  }
   function buildSkiff(){
     const L = 5.8, NS = 36;
     const CREAM = [0.94, 0.925, 0.86, 0.75], LINER = [0.9, 0.885, 0.82, 0.45], SOLE = [0.82, 0.815, 0.77, 0.12], NAVYB = [0.1, 0.14, 0.22, 0.55], RUB = [0.08, 0.09, 0.11, 0.3];
@@ -1900,7 +1945,7 @@ const G3 = (() => {
     const strip = (sg, from, to) => { const B = [], T = []; for (let k = 0; k <= 12; k++){ const s = from + (to - from) * k / 12, f = (s - sa) / (sb - sa); B.push(NP(sg, s, 0.31 + 0.02 * f)); T.push(NP(sg, s, 0.13 + 0.02 * f)); } return texStrip(B, T); };
     const nq = [strip(-1, sb, sa), strip(1, sa, sb)];
     // the skipper at the wheel and a crewman on the cooler seat, with rounded shapes
-    const person = (B, x, y, z, seated, hands, kit) => {
+    const person = PERSON = (B, x, y, z, seated, hands, kit) => {
       if (glbHas('worker')) return figureVB(B, x, y, z, seated, hands, kit);      // the detailed figure: the skipper in his cap, the crew in oilskins
       const JAC = [0.14, 0.26, 0.58, 0.25], VEST = [0.86, 0.16, 0.12, 0.35], TRS = [0.1, 0.12, 0.17, 0.2], SKN = [0.93, 0.74, 0.6, 0.25], HAT = [0.12, 0.16, 0.3, 0.15], BOOT = [0.06, 0.06, 0.07, 0.3];
       const hip = y + (seated ? 0.46 : 0.82);
@@ -2155,10 +2200,16 @@ const G3 = (() => {
         drawN(SK.limb, chain(BMrel, limbM(Sw, E, 0.056))); drawN(SK.limb, chain(BMrel, limbM(E, Hc, 0.048))); drawN(SK.hand, chain(BMrel, M4.T(Hc[0], Hc[1], Hc[2]))); };
       arm(shR, hR, 1); arm(shL, hL, -1);
     }
-    drawN(SK.wheel, chain(BMrel, M4.T(...SK.wheelAt), M4.RX(-SK.wheelTilt), M4.RZ(SK.wheelA)));
-    drawN(SK.lever, chain(BMrel, M4.T(...SK.leverAt), M4.RX(-(0.1 + frac * 0.9))));
-    const MM = chain(BMrel, M4.T(...SK.motorAt), M4.RY(-SK.wheelA * 0.1), M4.RX(on ? 0.05 : 0));
-    drawN(SK.motor, MM); drawN(SK.prop, chain(MM, M4.T(...(SK.propAt || [0, -1.0, 0.54])), M4.RZ(SK.propA)));
+    if (SK.wheelAt){
+      drawN(SK.wheel, chain(BMrel, M4.T(...SK.wheelAt), M4.RX(-SK.wheelTilt), M4.RZ(SK.wheelA)));
+      drawN(SK.lever, chain(BMrel, M4.T(...SK.leverAt), M4.RX(-(0.1 + frac * 0.9))));
+      const MM = chain(BMrel, M4.T(...SK.motorAt), M4.RY(-SK.wheelA * 0.1), M4.RX(on ? 0.05 : 0));
+      drawN(SK.motor, MM); drawN(SK.prop, chain(MM, M4.T(...(SK.propAt || [0, -1.0, 0.54])), M4.RZ(SK.propA)));
+    } else {
+      // an inboard boat with a tiller: the tiller swings about the rudder head as she turns, the propeller turns under the stern
+      if (SK.tiller && SK.tillerAt) drawN(SK.tiller, chain(BMrel, M4.T(...SK.tillerAt), M4.RY(SK.wheelA * 0.3)));
+      if (SK.prop && SK.propAt) drawN(SK.prop, chain(BMrel, M4.T(...SK.propAt), M4.RZ(SK.propA * 0.35)));
+    }
     gl.disableVertexAttribArray(2);
     // screens and name boards up close
     const near = Math.hypot(BMrel[12], BMrel[13], BMrel[14]) < 45, now = performance.now();
@@ -2601,10 +2652,10 @@ const G3 = (() => {
   const WN = 260, wk = {x:new Float64Array(WN), y:new Float64Array(WN), z:new Float64Array(WN), vx:new Float64Array(WN), vy:new Float64Array(WN), vz:new Float64Array(WN), age:new Float64Array(WN).fill(99), life:new Float64Array(WN).fill(1), g:new Float64Array(WN), n:0, acc:0, sacc:0};
   function spawn(x, y, z, vx, vy, vz, life, g){ const i = wk.n = (wk.n + 1) % WN; wk.x[i] = x; wk.y[i] = y; wk.z[i] = z; wk.vx[i] = vx; wk.vy[i] = vy; wk.vz[i] = vz; wk.age[i] = 0; wk.life[i] = life; wk.g[i] = g; }
   const PB = new Float32Array(4000 * 3), PA = new Float32Array(4000);
-  function drawPts(n, mode, VP, col, size, round, off){
+  function drawPts(n, mode, VP, col, size, round, off, mx){
     if (!n) return;
     gl.useProgram(PP.p); const u = PP.u;
-    gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uOff, off || [0, 0, 0]); gl.uniform1f(u.uPull, 0); gl.uniform3fv(u.uCol, col); gl.uniform1f(u.uSize, size * ZF()); gl.uniform1f(u.uRound, round ? 1 : 0);
+    gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uOff, off || [0, 0, 0]); gl.uniform1f(u.uPull, 0); gl.uniform3fv(u.uCol, col); gl.uniform1f(u.uSize, size * ZF()); gl.uniform1f(u.uRound, round ? 1 : 0); gl.uniform1f(u.uMax, mx || 48);
     gl.bindBuffer(gl.ARRAY_BUFFER, DYNP); gl.bufferSubData(gl.ARRAY_BUFFER, 0, PB.subarray(0, n * 3)); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
     gl.bindBuffer(gl.ARRAY_BUFFER, DYNA); gl.bufferSubData(gl.ARRAY_BUFFER, 0, PA.subarray(0, n)); gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 0, 0);
     gl.drawArrays(mode, 0, n);
@@ -2715,7 +2766,7 @@ const G3 = (() => {
     const ub = WV.ub.slice(), gp = new Float32Array(13), TAU = 2 * Math.PI;
     for (let i = 0; i < 13; i++){ const c = WV.list[i]; if (!c) continue; const a = c.Dx * RO.x + c.Dz * RO.z, g = c.Dz * RO.x - c.Dx * RO.z;
       ub[i * 4 + 2] = (c.ph + c.k * a) % TAU; gp[i] = (i * 2.59 + c.k * (0.083 * a + 0.041 * g)) % TAU; }
-    gl.uniform4fv(u.uWa, WV.ua); gl.uniform4fv(u.uWb, ub); gl.uniform1fv(u.uGp, gp); plSet(u);
+    gl.uniform4fv(u.uWa, WV.ua); gl.uniform4fv(u.uWb, ub); gl.uniform1fv(u.uGp, gp); if (u.uFWa){ gl.uniform4fv(u.uFWa, WV.ua); gl.uniform4fv(u.uFWb, ub); gl.uniform1fv(u.uFGp, gp); } plSet(u);
     gl.uniform3fv(u.uSun, env.lightDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD);
     gl.uniform3fv(u.uZen, env.zen); gl.uniform3fv(u.uHor, env.hor); gl.uniform3fv(u.uDeep, [0.035, 0.14, 0.18]); gl.uniform1f(u.uWind, env.wind); gl.uniform2fv(u.uWindDir, env.windDir); gl.uniform1f(u.uSpec, env.spec);
     gl.uniform1f(u.uSOn, STEX ? 1 : 0); gl.uniform1f(u.uHOn, HTEX ? 1 : 0); gl.uniform1f(u.uTideL, env.tide || 0); if (HTEX){ gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, HTEX); gl.uniform1i(u.uHgt, 3); gl.activeTexture(gl.TEXTURE0); } if (STEX) gl.uniform4fv(u.uSRect, [SRECT[0] - eye[0], SRECT[1] - eye[2], SRECT[2], SRECT[3]]);
@@ -2770,13 +2821,21 @@ const G3 = (() => {
       const seaWhy = [], seaTry = [[!SST_VS, false], [true, false], [true, true]].filter((t, i, a) => a.findIndex(u => u[0] === t[0] && u[1] === t[1]) === i);
       PS = null;
       for (const [nosst, far] of seaTry){
-        try { PS = program((nosst ? '#define NOSST\n' : '') + SEA_VS, (far ? '#define FAR\n' : '') + SEA_FS, ['aXZ'], 'sjø'); SST_VS = !nosst; break; }
+        try { PS = program((nosst ? '#define NOSST\n' : '') + SEA_VS, SEAF((far ? '#define FAR\n' : '') + SEA_FS), ['aXZ'], 'sjø'); SST_VS = !nosst; break; }
         catch (e){ if (gl.isContextLost()) throw e; seaWhy.push(e.message); }
       }
-      if (!PS) throw new Error(seaWhy.join(' / '));
-      try { PSF = program('#define NOSST\n' + SEA_VS, '#define FAR\n' + SEA_FS, ['aXZ'], 'sjø langt'); }
+      let seaDiag = '';
+      if (!PS){
+        // which half the driver will not take, for the report: the sea's vertex shader with a plain fragment shader, and the other way round
+        const tryLink = (vs, fs) => { try { program(vs, fs, ['aXZ'], 'prøve'); return 'ok'; } catch (e){ return 'feil'; } };
+        seaDiag = ' · VS alene ' + tryLink('#define NOSST\n' + SEA_VS, 'precision highp float;varying vec3 vW;varying vec2 vXZ;void main(){gl_FragColor=vec4(fract(vW*0.01)+vec3(fract(vXZ*0.01),0.0),1.0);}') +
+          ', FS alene ' + tryLink(BASIC_VS, SEAF('#define FAR\n' + SEA_FS));
+        try { PS = program(BASIC_VS, BASIC_FS, ['aXZ'], 'enkel sjø'); PS.basic = true; SST_VS = false; seaDiag += ', enkel sjø ok'; }
+        catch (e){ throw new Error(seaWhy.join(' / ') + seaDiag); }
+      }
+      try { PSF = PS.basic ? PS : program('#define NOSST\n' + SEA_VS, SEAF('#define FAR\n' + SEA_FS), ['aXZ'], 'sjø langt'); }
       catch (e){ if (gl.isContextLost()) throw e; seaWhy.push(e.message); PSF = PS; }
-      if (seaWhy.length && typeof cloudErr === 'function') cloudErr('3D sjø med reserve (' + (SST_VS ? 'vtf' : 'novtf') + (PSF === PS ? ', én sjø' : '') + ') · ' + GPU, 'view3d init', seaWhy.join('\n'));
+      if (seaWhy.length && typeof cloudErr === 'function') cloudErr('3D sjø med reserve (' + (SST_VS ? 'vtf' : 'novtf') + (PSF === PS ? ', én sjø' : '') + seaDiag + ') · ' + GPU, 'view3d init', seaWhy.join('\n'));
       SSDUMMY = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, SSDUMMY); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255])); PK = program(SKY_VS, SKY_FS, ['aP'], 'himmel'); PP = program(PT_VS, PT_FS, ['aPos', 'aA'], 'punkter');
       DYNP = buf(new Float32Array(4000 * 3), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); DYNA = buf(new Float32Array(4000), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW);
       // the ground's heights and the forest (map/, the view packs): until they are in, the land is a flat stand-in
@@ -3296,7 +3355,7 @@ const G3 = (() => {
     }
     // near pass
     gl.clear(gl.DEPTH_BUFFER_BIT);
-    const VT = vtype(), VG = GEO(VT), ncrew = Math.min(crewAboard().length, (VG.crewSpots || []).length);
+    const VT = vtype(), VG = GEO(VT), ncrew = Math.min(crewAboard().length, (VG.crewSpots || []).length); if (VG.hand) useHand(VT);
     drawTerrain(TM, eye, VPn, true); drawLit(STAT, TM); drawTileStatics(TM, eye); drawBuildings(TM);
     // whoever works the deck leaves their place: alone, the skipper leaves the wheel
     DECKACT = deckActivity(); const awaySk = (DECKACT.on && DECKACT.alone) || gopMe(), awayCr = DECKACT.on && !DECKACT.alone ? 1 : 0;
@@ -3353,6 +3412,37 @@ const G3 = (() => {
     for (let i = 0; i < SDN; i++){ if (SD.age[i] >= SD.life[i]) continue; SD.age[i] += dt; SD.vy[i] -= 2.5 * dt; SD.x[i] += SD.vx[i] * dt; SD.y[i] += SD.vy[i] * dt; SD.z[i] += SD.vz[i] * dt;
       PB[n * 3] = SD.x[i] - eye[0]; PB[n * 3 + 1] = SD.y[i] - eye[1]; PB[n * 3 + 2] = SD.z[i] - eye[2]; PA[n] = Math.sin(Math.PI * Math.min(1, SD.age[i] / SD.life[i])) * 0.45; n++; }
     if (n) drawPts(n, gl.POINTS, VP, col, 90, true);
+  }
+  // The semi-diesel's black puffs (Jonas 05.10.2026: «svarte små eksos-skyer ut av eksosen hver gang motoren antenner»): one at each
+  // firing the sound schedules (SND.FIRES), on the view's own clock when there is no sound; from the exhaust's mouth (the model's
+  // anchor exhaust), leaving with some of the boat's way, rising, growing and thinning, carried off with the wind; darker and bigger
+  // when the throttle opens. Drawn as soft round points in four sizes by age.
+  const SMN = 90, SMK = {x:new Float32Array(SMN), y:new Float32Array(SMN), z:new Float32Array(SMN), vx:new Float32Array(SMN), vy:new Float32Array(SMN), vz:new Float32Array(SMN), age:new Float32Array(SMN).fill(9), life:new Float32Array(SMN), k:new Float32Array(SMN), n:0};
+  let smkPh = 0;
+  function drawSmoke(VP, eye, BM, dt){
+    const VG = GEO(vtype()), b = S.boat, run = ['sailing', 'unmooring', 'fishing', 'idle'].includes(b.status) || !!b.gop;
+    if (BOAT.semi && VG.exhaust && run){
+      const frac = clamp((b.v || 0) / Math.max(1, BOAT.vmax), 0, 1), now = performance.now(), F = typeof SND !== 'undefined' && SND.FIRES;
+      const fwd = (() => { const a = xf(BM, [0, 0, 0]), c = xf(BM, [0, 0, -1]); return [c[0] - a[0], c[2] - a[2]]; })(), sp = (b.v || 0) * 0.514;
+      const puff = k => { const p = xf(BM, VG.exhaust), i = SMK.n = (SMK.n + 1) % SMN;
+        SMK.x[i] = p[0]; SMK.y[i] = p[1]; SMK.z[i] = p[2]; SMK.vx[i] = fwd[0] * sp * 0.6 + (Math.random() - 0.5) * 0.2; SMK.vz[i] = fwd[1] * sp * 0.6 + (Math.random() - 0.5) * 0.2; SMK.vy[i] = 0.7 + 0.6 * k + Math.random() * 0.2;
+        SMK.age[i] = 0; SMK.life[i] = 2.2 + Math.random() + k * 0.6; SMK.k[i] = k; };
+      if (F && F.length){ while (F.length && F[0].at <= now){ const f = F.shift(); if (now - f.at < 400) puff(f.frac); } }
+      else { const R = BOAT.rpm || [340, 850]; smkPh += dt / (120 / (R[0] + frac * (R[1] - R[0]))); while (smkPh >= 1){ smkPh -= 1; puff(frac); } }
+    }
+    const wv = (env.wind || 0) * 0.8, wx = env.windDir[0] * wv, wz = env.windDir[1] * wv, dr = Math.min(1, dt * 1.4), col = [0.05 + env.amb[0] * 0.12, 0.05 + env.amb[1] * 0.12, 0.055 + env.amb[2] * 0.12];
+    const B = [[], [], [], []];
+    for (let i = 0; i < SMN; i++){
+      if (SMK.age[i] >= SMK.life[i]) continue;
+      SMK.age[i] += dt; SMK.vx[i] += (wx - SMK.vx[i]) * dr; SMK.vz[i] += (wz - SMK.vz[i]) * dr; SMK.vy[i] *= 1 - Math.min(1, dt * 0.6);
+      SMK.x[i] += SMK.vx[i] * dt; SMK.y[i] += SMK.vy[i] * dt; SMK.z[i] += SMK.vz[i] * dt;
+      const a = SMK.age[i] / SMK.life[i]; B[Math.min(3, Math.floor(a * 4))].push(i);
+    }
+    B.forEach((L, q) => {
+      let n = 0;
+      for (const i of L){ const a = SMK.age[i] / SMK.life[i]; PB[n * 3] = SMK.x[i] - eye[0]; PB[n * 3 + 1] = SMK.y[i] - eye[1]; PB[n * 3 + 2] = SMK.z[i] - eye[2]; PA[n] = Math.pow(1 - a, 1.3) * (0.38 + 0.3 * SMK.k[i]); n++; }
+      drawPts(n, gl.POINTS, VP, col, [260, 560, 900, 1300][q], true, null, 512);
+    });
   }
   function drawEffects(VP, eye, BM, dt, t){
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
@@ -3423,6 +3513,7 @@ const G3 = (() => {
     }
     if (QUAL.lvl) drawPts(n, gl.POINTS, VP, foamCol, 150, true);
     if (QUAL.lvl) driftSpray(VP, eye, dt, t, foamCol);
+    drawSmoke(VP, eye, BM, dt);
     // fishing lines
     if (S.boat.status === 'fishing' && GEO(vtype()).hand && SK){
       const segs = (SK.lines || []).slice();

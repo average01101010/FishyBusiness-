@@ -5,7 +5,7 @@ run from the fittings, slime and weed at the waterline, the bottom tarred; grey 
 built with nine strakes a side on bent frames, a small foredeck, three thwarts, the engine box amidships aft with the cylinder and its
 hot bulb up through the lid and the exhaust pipe beside it, the rudder on the sternpost with a long tiller, the propeller in the
 aperture; the old tarpaulin (Father's letter: «en slitt presenning») folded on the foredeck, oars, a bailer, two worn fenders.
-The gutting table across the port gunwale aft of the middle thwart, with its chute over the side, the knife and the bucket. Fish crates, faded blue and grey, on the floorboards forward of the middle thwart and a small one aft. The propeller is a part of its own (it turns in the game), and the exhaust's mouth is an anchor (the black puffs at each firing).
+The gutting table across the port gunwale aft of the middle thwart, its open end over the side, the knife and the bucket. Fish crates, faded blue and grey, on the floorboards forward of the middle thwart and a small one aft. The propeller is a part of its own (it turns in the game), and so are the tiller, the rudder and the flag pole on the rudder head (they swing together), and the exhaust's mouth is an anchor (the black puffs at each firing).
 
     pip install bpy==4.5.4
     python3 tools/boats/snekke23.py            -> src/data/boat-snekke23.b64 (+ the side picture), renders in tools/boats/out/
@@ -145,11 +145,11 @@ def keel_stem(A, fine=True):
         za, zb = zr(a), zr(b)
         obox(A, ((a + b) / 2, 0, za / 2), ((b - a) / 2, 0, 0), (0, w, 0), (0, 0, max(za, zb) / 2 + 0.01), C['anti2'] if max(za, zb) < WL else C['paint2'], skip=('-x', '+x'))
     # the stem: from the forefoot up the bow, painted where above the water
-    prof = [(5.9, 0.08), (6.3, 0.16), (6.6, 0.42), (6.82, 0.78), (6.97, 1.15), (7.04, 1.50), (7.07, 1.81)]
+    prof = [(5.9, 0.08), (6.3, 0.16), (6.6, 0.42), (6.82, 0.78), (6.97, 1.15), (7.0, 1.50), (7.02, 1.81)]
     for (xa, za), (xb, zb) in zip(prof, prof[1:]):
         m = C['anti2'] if (za + zb) / 2 < WL - 0.03 else C['chip']
         beam(A, (xa, 0, za), (xb, 0, zb), w * 1.6, 0.11, m, up=(0, 1, 0))
-    beam(A, (0.22, 0, 0.0), (-0.04, 0, 1.66), w * 1.8, 0.12, C['anti2'] if fine else C['chip'], up=(0, 1, 0))   # the sternpost
+    beam(A, (0.22, 0, 0.0), (0.0, 0, 1.66), w * 1.8, 0.12, C['anti2'] if fine else C['chip'], up=(0, 1, 0))   # the sternpost
     # the cap rail (on the sheer) and the half-round rubbing strake a hand below it
     xs = XS if fine else XS[::3] + [XS[-1]]
     for side in (1, -1):
@@ -236,27 +236,30 @@ def engine(A, fine=True):
         acyl(A, (x0 - 0.15, 0.36, Z_FLOOR), (x0 - 0.05, 0.36, Z_FLOOR + 0.62), 0.016, lambda zz: C['iron'], 6)
         arock(A, (x0 - 0.05, 0.36, Z_FLOOR + 0.64), 0.035, (1, 1, 1), random.Random(4), lambda c_, n_: C['wood_dk'], 1)
 
-def steering(A, fine=True):
-    """the rudder on the sternpost with its iron pintles, the stock up through the stern deck, the long tiller forward over the seat"""
-    pts = [(0.15, 0.05), (-0.27, 0.08), (-0.38, 0.5), (-0.36, 1.0), (-0.16, 1.36), (-0.06, 1.38)]   # tall and narrow, along the raked sternpost
+def rudder(A):
+    """the rudder: tall and narrow along the raked sternpost, its stock up to the head where the tiller goes in"""
+    pts = [(0.15, 0.05), (-0.27, 0.08), (-0.38, 0.5), (-0.36, 1.0), (-0.16, 1.36), (-0.06, 1.38)]
     th = 0.025
     poly = [V((x, 0, z)) for x, z in pts]
     A.poly([p + V((0, th, 0)) for p in poly], C['chip2'], (0, 1, 0)); A.poly([p - V((0, th, 0)) for p in poly], C['chip2'], (0, -1, 0))
     for a, b in zip(poly, poly[1:]):
         A.poly([a + V((0, th, 0)), b + V((0, th, 0)), b - V((0, th, 0)), a - V((0, th, 0))], C['chip2'], ((a + b) / 2 - V((-0.12, 0, 0.7))))
+    acyl(A, (-0.05, 0, 1.3), (-0.05, 0, 1.72), 0.03, lambda zz: C['wood_dk'], 8)
+
+def steering(A, fine=True):
+    """the iron gudgeons on the sternpost (the rudder itself turns with the tiller, tiller_part); the far model keeps a rudder of its own"""
     if fine:
         for z in (0.35, 0.8, 1.25): obox(A, (0.15 - 0.16 * z, 0, z), (0.06, 0, 0), (0, 0.035, 0), (0, 0, 0.025), C['rust'])
-    acyl(A, (-0.05, 0, 1.3), (-0.05, 0, 1.72), 0.03, lambda zz: C['wood_dk'], 8)
-    if fine:
-        # the flag pole lashed to the rudder head's side, a little aft
-        acyl(A, (-0.12, 0.08, 1.35), (-0.15, 0.1, 2.35), 0.018, lambda zz: C['wood_dk'], 6)
+    else: rudder(A)
 
 def tiller_part():
-    """the tiller (its own part: it swings with the rudder), from the rudder head forward over the stern seat"""
+    """the tiller, the rudder and the flag pole lashed to the rudder head (their own part: they swing together about the rudder head)"""
     A = Acc('tiller')
     beam(A, TILLER[0], TILLER[1], 0.045, 0.05, C['wood_in'])
     acyl(A, (TILLER[1][0] - 0.03, 0, TILLER[1][2] + 0.003), (TILLER[1][0] + 0.07, 0, TILLER[1][2] - 0.013), 0.028, lambda zz: C['wood_dk'], 8)
-    return A.done()
+    rudder(A)
+    acyl(A, (-0.12, 0.08, 1.35), (-0.15, 0.1, 2.35), 0.018, lambda zz: C['wood_dk'], 6)
+    return A.done(tint=wear)
 
 def deck_gear(A, fine=True):
     rr = random.Random(11)
@@ -325,12 +328,11 @@ def crates(A):
 
 def gutting_table(A):
     """the gutting table across the port gunwale aft of the middle thwart: a scrubbed board with a rim on three sides, open over the
-    side with a short chute so the guts go overboard, on a leg to the floor; the knife, a whetstone, the bucket for liver and roe"""
+    side so the guts go overboard, on legs to the floor; the knife, a whetstone, the bucket for liver and roe"""
     x0, x1 = 3.42, 4.08; zt = zs(3.75) + 0.05; yo = hb(3.75) + 0.06; yi = 0.50
     abox(A, x0, x1, yi, yo, zt - 0.04, zt, C['table'])                                                   # the board, scrubbed pale
     for (a, b, c_, d) in ((x0, x0 + 0.03, yi, yo - 0.08), (x1 - 0.03, x1, yi, yo - 0.08), (x0, x1, yi, yi + 0.03)):
         abox(A, a, b, c_, d, zt, zt + 0.05, C['wood_dk'])                                               # the rim
-    board(A, [V((3.62, yo - 0.02, zt - 0.005)), V((3.88, yo - 0.02, zt - 0.005)), V((3.86, yo + 0.16, zt - 0.11)), V((3.64, yo + 0.16, zt - 0.11))], (0, 0.5, 1), 0.02, C['table'])   # the chute
     abox(A, 3.47, 3.53, yi + 0.02, yi + 0.08, Z_FLOOR, zt - 0.04, C['wood_dk'])                          # the leg
     abox(A, 4.01, 4.07, yi + 0.02, yi + 0.08, Z_FLOOR, zt - 0.04, C['wood_dk'])
     abox(A, 3.66, 3.80, yi + 0.12, yi + 0.17, zt, zt + 0.018, C['wood_dk'])                              # the knife's handle
@@ -354,6 +356,17 @@ def build(fine=True):
     hull(A, fine); keel_stem(A, fine); interior(A, fine); engine(A, fine); steering(A, fine)
     if fine: frames(A); deck_gear(A, fine); crates(A); gutting_table(A)
     return [A.done(40, tint=wear)], [box('noglass', 0, 0.01, 0, 0.01, -50, -49.99, C['glass'])]
+
+
+def cap_obj():
+    """the lid inside the gunwales (drawn into depth only in the game, so the sea does not show inside the open boat when she rolls)"""
+    xs = [x for x in XS if 0.06 <= x <= 6.96]
+    yi = lambda x: max(0.004, hb(x) - PLANK - 0.02)
+    ring = [(x, -yi(x), zs(x) - 0.03) for x in xs] + [(x, yi(x), zs(x) - 0.03) for x in reversed(xs)]
+    bm = bmesh.new(); f = bm.faces.new([bm.verts.new(p) for p in ring]); f.normal_update()
+    if f.normal.z < 0: f.normal_flip()
+    o = obj_from_bm('CAP', bm, [C['paint2']]); o.hide_render = True
+    return o
 
 
 def to_game(p): return (-p[1], p[2] - WL, -(p[0] - XM))
@@ -393,7 +406,7 @@ def main():
     pr = propeller(); tl = tiller_part()
     if 'fast' not in sys.argv and 'dry' not in sys.argv: beauty(OUT, 'snekke', WL, SHOTS)
     rel = lambda c: (lambda p: tuple(a - b for a, b in zip(to_game(p), to_game(c))))
-    more = [{'name': 'prop', 'obj': pr, 'xf_p': rel(PROP), 'xf_n': to_game_n, 'ao': False, 'show': True},
+    more = [{'name': 'cap', 'obj': cap_obj}, {'name': 'prop', 'obj': pr, 'xf_p': rel(PROP), 'xf_n': to_game_n, 'ao': False, 'show': True},
             {'name': 'tiller', 'obj': tl, 'xf_p': rel(TILLER[0]), 'xf_n': to_game_n, 'ao': True, 'show': True}]
     ex = {'frame': 'kystfiske: x starboard, y up from the waterline, z aft; metres', 'type': 'snekke23', 'name': 'Trebåt 23 fot med semidiesel (7,0 m)', 'len': L, 'beam': 2.26, 'draft': WL,
           'anchors': anchors()}

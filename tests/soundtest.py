@@ -56,6 +56,10 @@ async def main():
         check(off['master'] == 0, 'med lyden av i innstillingene er alt stille', off['master'])
         has = await pg.evaluate("(() => { PHONE.open('innst'); return document.querySelectorAll('[data-pa=snd]').length; })()")
         check(has == 5, 'Innstillinger har lydvalget (av og fire styrker)', has)
+        # the music: on its own volume, playing with the sound effects off, a chord under way; off in the settings is silent
+        mu = await pg.evaluate("""(() => { S.settings.sound = false; S.settings.music = 0.35; SND.tick(); const on = {lv:SND.LV.music, chord:!!SND.MUS.chord, out:!!SND.MUS.out};
+          document.querySelector('[data-pa=mus][data-v="0"]').click(); SND.tick(); return {on, off:SND.LV.music, buttons:document.querySelectorAll('[data-pa=mus]').length}; })()""")
+        check(mu['on']['lv'] > 0 and mu['on']['chord'] and mu['off'] == 0 and mu['buttons'] == 4, 'musikken spiller med egen styrke (også med lydeffektene av), og Av i Innstillinger gjør den stille', mu)
         print('errors:', errs[:5])
         await b.close()
 

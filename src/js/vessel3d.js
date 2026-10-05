@@ -388,6 +388,12 @@ function glbModel(type, lod, liv){
     if (G.parts.prop){ add(G.parts.prop, sk.motor.map((v, i) => v + sk.prop[i])); n.push(...G.parts.prop.n); c.push(...G.parts.prop.c); }
     o = {p, n, c};
   }
+  // an inboard boat steered by a tiller: the tiller with its rudder (they swing about the rudder head) and the propeller, in place
+  else if (lod >= 1 && sk && sk.tiller && G.parts.tiller){
+    const p = o.p.slice(), n = o.n.slice(), c = o.c.slice(), add = (P, at) => { for (let i = 0; i < P.p.length; i += 3) p.push(P.p[i] + at[0], P.p[i + 1] + at[1], P.p[i + 2] + at[2]); n.push(...P.n); c.push(...P.c); };
+    add(G.parts.tiller, sk.tiller.post); if (G.parts.prop && sk.prop) add(G.parts.prop, sk.prop);
+    o = {p, n, c};
+  }
   // the lid inside an open boat's gunwales, as triangles (drawn into depth only, so the sea does not show inside)
   let cap = null; const L = G.parts.cap;
   if (L){ cap = []; for (let i = 0; i < L.p.length; i += 9) cap.push([[L.p[i], L.p[i + 1], L.p[i + 2]], [L.p[i + 3], L.p[i + 4], L.p[i + 5]], [L.p[i + 6], L.p[i + 7], L.p[i + 8]]]); }
