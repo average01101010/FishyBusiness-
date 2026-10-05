@@ -391,6 +391,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p50', '05.10.2026', 'Feilrettinger', 'Fixes', [
+      ['Havet i 3D er skrevet om, så flere Android-telefoner og PC-er med Windows skal få det fulle havet. Går ikke det, prøves et lettere hav før det flate.', 'The sea in 3D is rewritten so more Android phones and Windows PCs should get the full sea. If not, a lighter sea is tried before the flat one.']]],
     ['p49', '05.10.2026', 'Varsler som betyr noe', 'Notifications that matter', [
       ['Slår du på varsler under Innstillinger, får du bare beskjed om det som betyr noe: redskap som har stått lenge nok, fisk som snart blir dårligere, båten framme med fangst, verftet ferdig, kvotestopp i åpen gruppe, når noen går forbi deg på topplista, hvordan uka endte, og sesongene.', 'If you turn on notifications in Settings, you are only told what matters: gear that has soaked long enough, fish about to lose quality, the boat in with its catch, the yard done, a quota stop in the open group, someone passing you on the leaderboard, how the week ended, and the seasons.'],
       ['Høyst fire i døgnet, aldri mellom 22 og 08, og det som kommer samtidig, samles i ett varsel. Du velger selv hvilke typer du vil ha.', 'At most four a day, never between 22 and 08, and what comes at once is gathered in one. You choose which kinds you want.'],

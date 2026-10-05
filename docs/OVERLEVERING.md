@@ -1826,6 +1826,10 @@ Brukerens valg:
     - Etter en feil uten logg venter `glSettle` 80 ms og ser om konteksten er mistet, før neste forsøk.
     - Uten WebGL-kontekst forteller feilteksten at nettleseren må lukkes helt og åpnes igjen.
     - Test: `tests/seatrytest.py` (D3).
+  - **Bølgeløkkene skrevet ut** (05.10.2026, etter feilloggen): Adreno 642L lenket fortsatt ingen sjø, og hjørneskyggeren alene feilte. Den var den eneste skyggeren i spillet som slo opp i uniform-tabeller med en løkkevariabel. Løkkene over de 13 bølgene er derfor skrevet ut med faste indekser i både hjørne- og pikselskyggeren (`SEA_VS_WAVE`, `SEA_WAVE(W, i)`). Bølgene er de samme.
+    - Før den flate sjøen prøves en lett hjørneskygger med de fire lengste vindbølgene og dønningen, uten kjølvann i geometrien (`SEA_VS_LITE`, `PS.lite`, `#sealite` i adressen tvinger den).
+    - Varianten som virket når den fulle ikke gjorde det, huskes på enheten for denne utgaven av skyggerne (`dsb_sea_ok`, `SEA_VER`), så telefonen ikke lenker de som feilet ved hver start. Endres skyggerne, endres `SEA_VER`, og alle prøver den fulle sjøen igjen.
+    - Test: `tests/sea3d.py` (den lette sjøen tegnes uten GL-feil).
 - **Båtens egne bølger** (`WAKE_GLSL`, `updateWake`). Fartsregimet følger Froude-tallet Fr = v/√(gL) med lengden fra `VESSELS` og simuleringens fart gjennom vannet.
   - **Kelvin-kilen (19,47°):** tverrbølger 2πv²/g lange inne i kilen (faller som 1/√s) og skråbølger med fronter 35° på kursen (k = 1,5·k₀) langs kantene (faller som s^−1/3). De er høyest nær skrogfart (høyde ≈ 0,045·L, maks 0,6 m).
   - **Planende skrog (Fr > 1):** bare skråbølger, flatt hvitt propellvann og hanekam bak påhengsmotoren.

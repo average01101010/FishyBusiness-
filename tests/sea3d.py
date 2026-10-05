@@ -163,6 +163,12 @@ async def main():
             await pl.wait_for_function("G3.isActive()", timeout=300000); await pl.wait_for_timeout(2500)
             R['lvl'][lv] = await pl.evaluate("({lvl:G3._debug.seaLvl, basic:G3._debug.seaBasic, one:G3._debug.seaOne, gl:G3._debug.glErr(), fps:G3._debug.fps > 0})"); R['lvl'][lv]['errs'] = el[:2]
             await pl.screenshot(path='sea_lvl%d.png' % lv); await pl.close()
+        # the lite sea (#sealite): the four longest wind waves and the swell in the geometry, the last try before the flat sea (sea_lite.png)
+        pl = await b.new_page(viewport={'width': 640, 'height': 400}); el = []; pl.on('pageerror', lambda e: el.append(str(e)))
+        await boot(pl, GAME_TUT + '#notut,sealite'); await pl.evaluate(SETUP)
+        await pl.wait_for_function("G3.isActive()", timeout=300000); await pl.wait_for_timeout(2500)
+        R['lite'] = await pl.evaluate("({lite:G3._debug.seaLite, basic:G3._debug.seaBasic, one:G3._debug.seaOne, gl:G3._debug.glErr(), fps:G3._debug.fps > 0})"); R['lite']['errs'] = el[:2]
+        await pl.screenshot(path='sea_lite.png'); await pl.close()
         print(json.dumps(R, ensure_ascii=False))
         print(ok(R['ramp']['maxWave'] < 0.05 and R['ramp']['maxHs'] < 0.08), 'from calm to hurricane in steps of 0.1 m/s no wave changes by more than 5 cm, and the height by less than 8 cm: no jumps between the Beaufort forces')
         print(ok(R['sudden']['perFrameWind'] < 0.2 and R['sudden']['perFrameHs'] < 0.08 and R['sudden']['perFrameDirDeg'] < 0.5 and R['sudden']['reached'] > 23), 'a sudden change of wind (5 to 25 m/s, SW to S) reaches the sea over some seconds, a little each frame')
@@ -174,6 +180,7 @@ async def main():
         print(ok(L['wind'][0] > 4 and L['lee'][0] < 0.3 * L['wind'][0] and L['harbour'][0] < 0.2 * L['wind'][0] and L['harbour'][1] < 0.3), 'in a gale from NW the ground off Husøy has the full sea, the lee from the south a fraction, the harbour almost none')
         print(ok(R['novtf']['vtf'] is False and not R['novtfErrors']), 'without textures in the vertex shader (#novtf) the sea is drawn from the values at the boat, with no errors')
         V = R['lvl']
+        T = R['lite']; print(ok(T['lite'] and T['one'] and not T['basic'] and T['gl'] == 0 and T['fps'] and not T['errs']), 'the lite sea, the last try before the flat sea, is drawn with no GL errors', T)
         print(ok(V[1]['lvl'] == 1 and V[1]['one'] and not V[1]['basic'] and V[2]['lvl'] == 2 and V[2]['basic'] and all(V[k]['gl'] == 0 and V[k]['fps'] and not V[k]['errs'] for k in V)), 'a device that lost the context on the full sea steps down: the simpler sea for both passes, then the flat sea, both drawn with no GL errors', V)
         W = R['wake']
         print(ok(all(W[k]['on'] == 1 for k in W) and W['skiff']['trans'] < 0.1 and W['sjark']['trans'] > 0.9 and W['kyst21']['trans'] > 0.9), 'a planing skiff leaves divergent waves only; the displacement hulls also the transverse waves behind the stern')
