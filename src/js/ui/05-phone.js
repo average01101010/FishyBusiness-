@@ -405,6 +405,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p53', '05.10.2026', 'Feilrettinger', 'Fixes', [
+      ['Mister PC-en eller telefonen 3D-visningen midt i spillet, lagres spillet og lastes på nytt av seg selv. PC-er som ikke fikk 3D i det hele tatt, prøver nå enklere innstillinger først.', 'If the PC or phone loses the 3D view in play, the game is saved and loads again by itself. PCs that got no 3D at all now try plainer settings first.']]],
     ['p52', '05.10.2026', 'Teiner og regler', 'Pots and rules', [
       ['Kongekrabbeteinene er nye fra Blender. Med teinehaler kommer teina opp over blokka på davitten, svinges inn på dekk, tømmes i krabbekaret, agnes og stables akter. Ved setting vippes den ut over rekka og synker.', 'The king crab pots are new from Blender. With a pot hauler the pot comes up over the block on the davit, swings in on deck, is emptied into the crab tank, baited and stacked aft. Setting, it is tipped over the rail and sinks.'],
       ['Regler-appen sier nå tydelig at reglene i spillet er forenklet, og at Fiskeridirektoratets regler gjelder til ekte fiske.', 'The Regler app now says plainly that the rules in the game are simplified, and that the Directorate of Fisheries\' rules apply to real fishing.']]],

@@ -1,6 +1,7 @@
 """The sea level the 3D view starts at, learnt from a try that never came back (05.10.2026, view3d.js SEA_TRY): on Windows with Direct3D 11
 the full sea has taken the GPU process with it (Intel Iris Xe in Chrome, NVIDIA GTX 980 in Firefox) before the browser said the context was
 lost. The level being tried is written down first and cleared when it worked; a load that finds it still there starts a level down.
+A context lost in play (#218): when the browser gives it back, the game saves and loads the page again, once in ten minutes.
 Prints OK or FEIL per check."""
 import asyncio, json
 from _env import GAME, boot
@@ -21,5 +22,17 @@ async def main():
         print(json.dumps({'after_crash': a, 'normal': b, 'errs': errs[:3]}))
         print(('OK  ' if a['sea'] == '1' and a['tryLeft'] is None and not a['why'] else 'FEIL') + ' a load after a try that never came back starts the sea a level down, and clears the mark when it works')
         print(('OK  ' if b['sea'] is None and b['tryLeft'] is None and not b['why'] and not errs else 'FEIL') + ' a normal load leaves no mark and keeps the full sea')
+        # a context lost in play and given back: the page loads again with the game saved, and 3D is back; a second loss soon after does not reload
+        await pg.evaluate("sessionStorage.removeItem('dsb_gl_reload'); S.cash = 123456; window.__mark = 1; const x = document.getElementById('gl').getContext('webgl').getExtension('WEBGL_lose_context'); window.__lc = x; x.loseContext()")
+        await pg.wait_for_timeout(800)
+        lost = await pg.evaluate("({active:G3.isActive(), why:G3.failWhy || ''})")
+        await pg.evaluate("window.__lc.restoreContext()")
+        await pg.wait_for_function("!window.__mark && typeof G3 !== 'undefined' && G3.isActive()", timeout=90000); await pg.wait_for_timeout(2000)
+        c = await pg.evaluate("({cash:S.cash, at:+sessionStorage.getItem('dsb_gl_reload') > 0, why:G3.failWhy || ''})")
+        await pg.evaluate("window.__mark2 = 1; const x = document.getElementById('gl').getContext('webgl').getExtension('WEBGL_lose_context'); x.loseContext(); setTimeout(() => x.restoreContext(), 500)")
+        await pg.wait_for_timeout(4000)
+        d = await pg.evaluate("({still:!!window.__mark2, toast:(document.getElementById('toast') || {}).textContent || ''})")
+        print(json.dumps({'lost': lost, 'back': c, 'again': d}))
+        print(('OK  ' if not lost['active'] and c['cash'] == 123456 and c['at'] and not c['why'] and d['still'] else 'FEIL') + ' a context lost in play: the game is saved, the page loads again and 3D is back; a second loss soon after does not reload the page')
         await br.close()
 asyncio.run(main())
