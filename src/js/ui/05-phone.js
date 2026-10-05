@@ -388,6 +388,10 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p37', '05.10.2026', 'Lagringen på kontoen er tryggere', 'Safer saves on your account', [
+      ['Spiller du på flere enheter, skriver ikke lenger én enhet over spillet på en annen. Er det spilt begge steder, velger du selv hvilket spill du vil fortsette med, og ser dag, penger og båt for begge.', 'If you play on several devices, one no longer writes over the game on another. If both have been played, you choose which game to go on with, seeing the day, money and boat of each.'],
+      ['Under Innstillinger → kontoen ligger «Tidligere lagringer». Der kan du hente tilbake et av de ti siste spillene på kontoen, eller det enheten hadde før.', 'Under Settings → the account is «Earlier saves». There you can take back one of the last ten games on the account, or the one the device had before.'],
+      ['Spillet lastes opp hvert minutt mens du spiller, og når du legger appen bort.', 'The game is uploaded each minute while you play, and when you put the app away.']]],
     ['p36', '05.10.2026', 'Snø ved rorbua, Fortøy, og mindre HUD', 'Snow at the rorbu, Moor, and a smaller HUD', [
       ['Rorbuene og fars naust har snø på bakken og taket om vinteren, som terrenget rundt, i stedet for grønt gress.', 'The rorbuer and Father’s boathouse have snow on the ground and the roof in winter, like the land around, instead of green grass.'],
       ['Ligger du stille nær en kai, en rorbu eller naustet, står «Fortøy» i knapperaden. Båten finner veien inn og legger til, så du kan hvile.', 'Lying still near a quay, a rorbu or the boathouse, «Moor» is in the button row. The boat finds the way in and moors, so you can rest.'],
@@ -1113,7 +1117,7 @@ const PHONE = (() => {
     else if (a === 'admCash'){ S.cash += 100000; log('Admin: 100 000 kr lagt i kassa.', 'Admin: NOK 100,000 put in the cash.'); }
     else if (a === 'saveOut'){ saveCode().then(c => { saveBox = {mode:'out', text:c || ''}; render(); const ta = document.getElementById('saveCode'); if (ta){ ta.focus(); ta.select(); } if (c && navigator.clipboard) navigator.clipboard.writeText(c).then(() => toast(L('Lagringen er kopiert.', 'The save is copied.'))).catch(() => {}); }); return; }
     else if (a === 'saveIn'){ saveBox = {mode:'in', text:''}; }
-    else if (a.startsWith('cloud') && cloudAct(a)){ /* the account card (ui/10f-cloud.js) */ }
+    else if (a.startsWith('cloud') && cloudAct(a, d)){ /* the account card (ui/10f-cloud.js) */ }
     else if (a === 'saveLoad'){ const ta = document.getElementById('saveCode'); loadCode(ta ? ta.value : '').then(() => { toast(L('Spillet er lest inn. Siden lastes på nytt.', 'The game is read in. The page loads again.')); setTimeout(() => location.reload(), 700); }).catch(() => toast(L('Koden kunne ikke leses.', 'The code could not be read.'))); return; }
     else if (a === 'admEnergy'){ S.adm = S.adm || {}; S.adm.noEnergy = !S.adm.noEnergy;
       if (S.adm.noEnergy){ S.sleep = null; S.energy = 100; S.drowsy = false; S.enWarn = false; log('Admin: energien er skrudd av. Du blir ikke sliten og sovner ikke.', 'Admin: energy is off. You do not tire or fall asleep.'); }

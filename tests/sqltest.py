@@ -129,10 +129,27 @@ def main():
         R['fbMine2'] = json.loads(sql("select public.fb_mine()", A, 'authenticated'))
         for i in range(20): sql("select public.fb_send('other', 'nr %d', null, null, '{}')" % i, B, 'authenticated')
         R['fbLimit'] = sql("select public.fb_send('other', 'nr 21', null, null, '{}')", B, 'authenticated', expect_err=True)
+        # the cloud save by revision (20261005200000_save_sync.sql): a device that has not met the cloud's newest save cannot write over
+        # it (the phone left open with an old game), a forced save keeps the one it replaces, and the history is the player's own
+        PD = {'sub': 'user_01DDD', 'role': 'authenticated'}; sql("select public.tm_hello('{}')", PD, 'authenticated')
+        put2 = lambda data, at, base, force='false': json.loads(sql("select public.save_put2('%s', '%s', %d, %s, %s, '{\"day\":%d}')" % (data, at, 100, "'%s'" % base if base else 'null', force, len(data)), PD, 'authenticated'))
+        R['sv1'] = put2('KYST2:TABLET1', '2026-10-05T10:00:00Z', None)
+        r1 = R['sv1'].get('saved_at')
+        R['sv2'] = put2('KYST2:TABLET2', '2026-10-05T10:03:00Z', r1); r2 = R['sv2'].get('saved_at')
+        R['svPhone'] = put2('KYST2:PHONEOLD', '2026-10-05T11:00:00Z', None)              # the phone, never met the cloud
+        R['svStale'] = put2('KYST2:PHONEOLD', '2026-10-05T11:03:00Z', r1)               # or met it at the first save only
+        R['svCloud'] = json.loads(sql("select public.save_get()", PD, 'authenticated'))
+        R['svForce'] = put2('KYST2:PHONEOLD', '2026-10-05T11:06:00Z', None, 'true')
+        R['svHist'] = json.loads(sql("select public.save_hist_list()", PD, 'authenticated'))
+        hid = [h['id'] for h in R['svHist'] if h['saved_at'].startswith('2026-10-05T10:03')]
+        R['svBack'] = json.loads(sql("select public.save_hist_get(%d)" % (hid[0] if hid else 0), PD, 'authenticated'))
+        R['svOther'] = sql("select public.save_hist_get(%d)" % (hid[0] if hid else 0), B, 'authenticated')
+        R['svRead'] = sql("select count(*) from public.save_hist", PD, 'authenticated', expect_err=True)
+        R['svOld'] = json.loads(sql("select public.save_put('KYST2:OLDPAGE', '2026-10-05T12:00:00Z', 5, false)", PD, 'authenticated'))   # an old page left open
         sql("select public.delete_me()", A, 'authenticated')
         R['fbGone'] = sql("select count(*) from public.feedback where player_id = 'user_01AAA'")
         R['pushGone'] = sql("select count(*) || '/' || (select count(*) from public.push_queue) from public.push_subs")
-        R['deleted'] = sql("select (select count(*) from public.players where id = 'user_01AAA') || '/' || (select count(*) from public.events) || '/' || (select count(*) from public.saves) || '/' || (select coalesce(player_id, 'anon') from public.purchases)")
+        R['deleted'] = sql("select (select count(*) from public.players where id = 'user_01AAA') || '/' || (select count(*) from public.events) || '/' || (select count(*) from public.saves where player_id = 'user_01AAA') || '/' || (select coalesce(player_id, 'anon') from public.purchases)")
         # a yes taken back: the sessions, events, device, state and year of birth go, the account and the save stay
         C = {'sub': 'user_01CCC', 'role': 'authenticated'}; sid = '22222222-2222-4222-8222-222222222222'
         sql("select public.tm_hello('{}')", C, 'authenticated'); sql("select public.tm_consent(true, 1985)", C, 'authenticated')
@@ -153,6 +170,11 @@ def main():
         print(ok(R['save1']['ok'] and not R['save2']['ok'] and R['save3']['ok'] and R['getA']['data'] == 'KYST2:OLD' and R['getB'] is None), 'the cloud save: the newest wins, an older one is refused unless forced, and each sees only his own')
         print(ok(R['readEv'] == '0' and R['readPl'] == '0' and all(R[k][0] for k in ('readAnon', 'writePl', 'dashPlayer', 'dashAal1', 'anonDash'))), 'the lock: a player sees no rows and cannot write a table or open the dashboard, the admin without the second factor is refused, the anonymous too',
               [R[k][1][:50] for k in ('writePl', 'dashPlayer', 'dashAal1')])
+        print(ok(R['sv1'].get('ok') and R['sv2'].get('ok') and not R['svPhone'].get('ok') and not R['svStale'].get('ok') and R['svStale'].get('cloud', {}).get('summary', {}).get('day') == 13
+                 and R['svCloud']['data'] == 'KYST2:TABLET2' and not R['svOld'].get('ok')), 'the cloud save: a device that has not met the newest save cannot write over it (the old phone, also an old page), and is told what the cloud has',
+              {k: R[k] for k in ('sv1', 'sv2', 'svPhone', 'svStale')})
+        print(ok(R['svForce'].get('ok') and R['svBack'] and R['svBack']['data'] == 'KYST2:TABLET2' and R['svOther'] == 'null' and R['svRead'][0] and len(R['svHist']) >= 2),
+              'a forced save keeps the game it replaced in the history, and only the player can take it back', {'hist': len(R['svHist']), 'back': (R['svBack'] or {}).get('data'), 'other': R['svOther']})
         print(ok(R['fbSend'].isdigit() and all(R[k][0] for k in ('fbBadImg', 'fbBadTopic', 'fbAnon')) and len(R['fbMineA']) == 1 and R['fbMineA'][0]['img'] is True and 'data:' not in json.dumps(R['fbMineA']) and R['fbMineB'] == []),
               'feedback: a player sends one with a picture and sees only their own, without the picture; a bad picture, an unknown topic and the anonymous are refused', [R[k][1][:40] for k in ('fbBadImg', 'fbBadTopic', 'fbAnon')])
         print(ok(all(R[k][0] for k in ('fbRead', 'fbAdmPl', 'fbAdm1')) and F['rows'] and F['rows'][0]['meta'].get('version') == 't1' and F['topics'].get('bug') == 1 and R['fbImg'] == str(len(IMG)) and R['fbMine2'][0]['status'] == 'fixed' and R['fbMine2'][0]['reply'] == 'Takk, rettet!'),

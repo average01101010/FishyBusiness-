@@ -80,9 +80,18 @@ async function saveCode(){
   return 'KYST2:' + b64of(z);
 }
 // a code read in: checked, then stored in place of the game here (the page is loaded again after it, ui/05-phone.js)
-async function loadCode(code){
+// a save code read without loading it: the game as JSON text and as an object
+async function codeRead(code){
   const m = /^KYST2:([A-Za-z0-9+/=\s]+)$/.exec((code || '').trim()); if (!m) throw new Error('not a save code');
   const raw = await new Response(new Blob([b64bytes(m[1].replace(/\s/g, ''))]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
   const o = JSON.parse(raw); if (!o || o.v !== 2 || !(o.boat || (o.fleet && o.fleet.length))) throw new Error('not a game of this version');
-  SAVE_OFF = true; localStorage.setItem(KEY, raw); return o;
+  return {raw, o};
+}
+// the game on this device before another was loaded over it (cloud pulls, a code, a game taken back), so it can be had again
+const KEY_PREV = 'kystfiske_v2_prev';
+async function loadCode(code){
+  const {raw, o} = await codeRead(code);
+  try { const cur = localStorage.getItem(KEY); if (cur && cur !== raw) localStorage.setItem(KEY_PREV, cur); } catch (e){}
+  // (two games may not fit the browser's storage: the game being loaded goes first)
+  SAVE_OFF = true; try { localStorage.setItem(KEY, raw); } catch (e){ localStorage.removeItem(KEY_PREV); localStorage.setItem(KEY, raw); } return o;
 }

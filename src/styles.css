@@ -123,6 +123,8 @@ body.vplot #gps::after{display:none}
 .cg-card a{color:#a9cdf0}
 .cg-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px}
 .cg-btn{min-height:46px;padding:0 24px;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:rgba(36,72,111,.75);color:#eef4fb;font:600 15.5px var(--sans);letter-spacing:.01em;cursor:pointer}
+.cg-btn.pick{display:block;width:100%;margin:10px 0 0;padding:10px 14px;text-align:left;line-height:1.35}.cg-btn.pick b{display:block}.cg-btn.pick span{display:block;font:400 13px/1.4 var(--sans);opacity:.85;margin-top:2px}
+.ph-kv.hrow span{white-space:normal;min-width:0}.ph-kv.hrow small{opacity:.75}
 .cg-btn.pri{background:#f2b33d;border-color:#f2b33d;color:#1b1407}
 @media (max-height:520px){.ld-t{font-size:clamp(34px,6vw,60px)} .ld,#cloudGate{padding-top:max(4vh,calc(env(safe-area-inset-top) + 14px))}}
 @media (max-width:480px){.ld-k{font-size:10px;letter-spacing:.2em;gap:9px;white-space:nowrap} .ld-k::before,.ld-k::after{width:18px} .ld-t{font-size:max(40px,11.4vw)}}

@@ -903,7 +903,7 @@ Jonas' valg: gratis å spille med kjøp via Stripe, påkrevd innlogging med Work
 - **Databasen** (`supabase/migrations/20261004120000_cloud.sql`):
   - Tabellene er spillere, lagringer, økter, hendelser, feil, bildetakt, produkter, kjøp og rettigheter.
   - Alle tabellene har RLS, med lesetilgang bare for `is_admin()`. Det krever Supabase Auth-ID-en til Jonas i `admins` og totrinnsinnlogging (`aal2`).
-  - Spillet skriver bare gjennom funksjonene `tm_hello`, `tm_consent`, `tm_batch`, `tm_error`, `tm_perf`, `save_get`, `save_put` og `delete_me` (security definer). Funksjonene sjekker WorkOS-ID-en (`pid()`, tokenets `sub`) og samtykket.
+  - Spillet skriver bare gjennom funksjonene `tm_hello`, `tm_consent`, `tm_batch`, `tm_error`, `tm_perf`, `save_get`, `save_put2` (før `save_put`), `save_hist_list`, `save_hist_get` og `delete_me` (security definer). Funksjonene sjekker WorkOS-ID-en (`pid()`, tokenets `sub`) og samtykket.
   - Under 13 år teller ikke et ja som samtykke.
   - **Admin-appen i spillet** (05.10.2026, Jonas: «admin-appen på telefonen skal kun være tilgjengelig på min konto»):
     - `players.game_admin` er satt for WorkOS-kontoen til Jonas, og bare der. Ingen spiller kan sette den selv, fordi tabellen ikke har skrivetilgang for spillere.
@@ -916,7 +916,7 @@ Jonas' valg: gratis å spille med kjøp via Stripe, påkrevd innlogging med Work
   - `admin_dashboard(days)` gir alle tallene til dashbordet i ett svar.
   - **Test:** `sqltest` kjører skjemaet på en lokal PostgreSQL med Supabases `auth.jwt()`.
 - **I spillet** (`ui/10f-cloud.js`, og AuthKit i `src/vendor/authkit.js`, MIT):
-  - `bootMap().then(cloudGate)`: uten innlogging stopper innloggingsskjermen spillet. Med innlogging hilser spillet (`tm_hello`), og er lagringen på kontoen nyere enn den her, blir den lest inn og siden lastet på nytt.
+  - `bootMap().then(cloudGate)`: uten innlogging stopper innloggingsskjermen spillet. Med innlogging hilser spillet (`tm_hello`), og `cloudSync` avgjør hvilket spill som går videre (se lagringen under).
   - En enhet som har vært logget inn før, kan spille uten nett.
   - **Samtykket** spørres én gang, fire sekunder etter start, sammen med fødselsåret.
   - **Målingen** starter med et ja:
@@ -926,7 +926,22 @@ Jonas' valg: gratis å spille med kjøp via Stripe, påkrevd innlogging med Work
     - feil, opptil 20 ulike per økt
     - bildetakten, anonymt
   - **Rage quit:** en økt som slutter innen ett minutt etter en grunnstøting eller en dårlig levering.
-  - **Lagringen** går opp som lagringskode hvert tredje minutt og når siden lukkes. Avviser skyen den fordi en nyere ligger der, velger spilleren hvilken som skal beholdes.
+  - **Lagringen mellom enhetene** (05.10.2026, `supabase/migrations/20261005200000_save_sync.sql`, etter at Jonas mistet et spill: «Har plutselig mistet progresjon og fått denne båten igjen. Hvorfor?»):
+    - **Årsaken var:** den nyeste lagringen etter klokka vant. En enhet med et gammelt spill åpent (en telefon i bakgrunnen) lagret det hvert tredje minutt og var derfor alltid «nyest». Neste start på nettbrettet hentet det over spillet der.
+    - **Nå** husker hver enhet hvilken skylagring spillet kommer fra (`dsb_sync_<bruker>` i `localStorage`: skyens `saved_at` som `rev`, og tiden på den lokale lagringen da som `at`). `save_put2` får den som `base` og avviser lagringen når skyen har gått videre siden (en annen enhet har lagret).
+    - **Ved start** (`cloudSync`):
+      - Ingen spill her: kontoens hentes.
+      - Kontoen har spillet herfra (`rev` stemmer): videre med det.
+      - Ikke spilt her siden sist i takt (opptil 150 sekunder, det siste minuttet som kanskje ikke nådde opp da siden ble lukket): kontoens hentes.
+      - Spilt begge steder: spilleren velger før spillet starter, og ser begge (dag, penger, båtnavn og type, antall båter, om første tur pågår; `saveSum`, sendt med hver lagring som `summary`).
+    - **Under spillet:** avviser skyen en lagring, kommer det samme valget som en dialog, og ingenting sendes før spilleren har valgt. «Spillet på denne enheten» sendes med `force`.
+    - **Ingenting går tapt:**
+      - Spillet som blir erstattet på enheten, legges i `kystfiske_v2_prev` (`loadCode`).
+      - Skyen tar vare på de ti siste lagringene i `save_hist`: høyst én per halvtime, og alltid den en tvungen lagring skriver over.
+      - Begge kan hentes tilbake under Innstillinger → kontokortet → «Tidligere lagringer» (`cloudHist`, `cloudRestore`). Spillet som byttes ut, tas vare på på samme måte.
+    - **Den gamle `save_put`** virker for sider som fortsatt har den gamle koden, men skriver aldri over en lagring fra den nye uten `force` (den har `summary`).
+    - **Opplastingen** går hvert minutt når spillet er endret (Jonas: «Kan progresjon lastes opp oftere til database?», før hvert tredje), når appen legges i bakgrunnen og når siden lukkes. Android avslutter ofte en side i bakgrunnen uten `pagehide`.
+    - **Plass:** ti historikklagringer per spiller er opptil rundt 1 MB. Det må følges med når spillerne blir mange (gratisplanen i Supabase har 500 MB).
   - **Kontokortet** i Innstillinger har e-posten, statistikkbryteren, «Logg ut» og «Slett kontoen».
   - **Innloggingsdomenet:** WorkOS bruker utviklermodus (fornyelsesnøkkelen ligger i `localStorage`) til et eget innloggingsdomene som `auth.detstorebla.no` er satt opp og ført inn som `workosApiHostname`.
   - **Test:** `cloudtest` bruker stand-ins for WorkOS og Supabase.

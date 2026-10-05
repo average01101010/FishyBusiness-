@@ -235,7 +235,8 @@ const SND = (() => {
     try { build(); started = true; setInterval(tick, 100); } catch (e){ console.warn('sound', e); }
   }
   // the first touch starts it; a hidden page is silent
-  document.addEventListener('pointerdown', () => { if (!started) start(); else if (ac && ac.state === 'suspended' && !document.hidden) ac.resume(); }, true);
+  // (a tap at the sign-in gate comes before the game is there: the sound waits for it)
+  document.addEventListener('pointerdown', () => { if (!started){ if (S && S.settings) start(); } else if (ac && ac.state === 'suspended' && !document.hidden) ac.resume(); }, true);
   document.addEventListener('visibilitychange', () => { if (!ac) return; if (document.hidden) ac.suspend(); else ac.resume(); });
   // testEar / testSrc (for the tests): an ear and the places, as G3.ear and G3.sndSrc give them in 3D
   return {start, FIRES, MUS, get started(){ return started; }, get state(){ return ac ? ac.state : 'none'; }, LV, tick, at:(q, ref, e) => { const k = EAR; EAR = e; const r = at(q, ref); EAR = k; return r; }, testEar:null, testSrc:null};
