@@ -2438,7 +2438,7 @@ Jonas' liste: oppgraderinger, kvotehandel, kikkert, raskere fangst, fortøying, 
     |---|---|---|---|
     | Justert dieselpumpe | +50 % | 24 t | 29 kr |
     | Ladeluftkjøling | +75 % | 48 t | 39 kr |
-    | Økt turbotrykk | +100 % | 72 t | 49 kr (Jonas har ikke satt prisen, så 49 kr er en plassholder) |
+    | Økt turbotrykk | +100 % | 72 t | 49 kr (Jonas 05.10.2026) |
 
     - Farten gjelder toppfart og marsjfart, og akselerasjonen øker like mye (`applyVessel`). Hestekreftene vises som før.
     - Én trim om gangen på en båt. En ny tar plassen til den som er på. Når tida er ute, går farten tilbake og loggen sier fra (`vesselStep`).
