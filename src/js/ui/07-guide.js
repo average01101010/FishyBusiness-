@@ -212,8 +212,14 @@ function landText(short){
 function deckText(short){
   const L = (no, en) => S.lang === 'no' ? no : en, kg = deckPending(), hands = deckHands(), b = S.boat;
   if (kg < 0.5) return short ? '' : L('Karet er tomt. Alt er tatt unna.', 'The tub is empty. Everything is seen to.');
-  const eta = deckEta(hands), when = hands ? (eta < 1 ? L('under ett minutt', 'under a minute') : dur(eta / 60)) : null;
-  if (short) return [L('Dekk: ', 'Deck: ') + fmt(kg, 0) + ' kg' + (when ? ' · ' + when : ''), fmt(kg, 0) + ' kg'];
+  // in real time (it said game minutes), and what is going on: gutting now and how long, or the tub filling towards the stop to gut
+  // (Adrian 05.10.2026: «han begynne bare å sløye plutselig … Burde vært en timing på sløying og fiskinga så æ vet om det skjer nokka»)
+  const eta = deckEta(hands), when = hands && eta < Infinity ? realDur(eta) : null;
+  if (short){
+    if (b.deckStop) return [L('Sløyer ', 'Gutting ') + fmt(kg, 0) + ' kg' + (when ? L(', ferdig om ', ', done in ') + when : '') + (b.deckEnd ? '' : L(', så fisker du videre', ', then you fish on')), fmt(kg, 0) + ' kg'];
+    if (!hands && b.status === 'fishing') return [L('Bløggekar ', 'Bleeding tub ') + fmt(kg, 0) + ' / ' + fmt(tubCap(), 0) + ' kg' + L(', sløyer når det er fullt', ', gutting when full'), fmt(kg, 0) + ' kg'];
+    return [L('Dekk: ', 'Deck: ') + fmt(kg, 0) + ' kg' + (when ? ' · ' + when : ''), fmt(kg, 0) + ' kg'];
+  }
   return L(fmt(kg, 0) + ' kg i bløggekaret. ', fmt(kg, 0) + ' kg in the bleeding tub. ') + (hands ? L(hands + (hands > 1 ? ' mann' : ' mann') + ' på dekk, ferdig om ' + when + '.', hands + (hands > 1 ? ' hands' : ' hand') + ' on deck, done in ' + when + '.')
     : b.status === 'fishing' ? L('Alene kan du ikke sløye og fiske samtidig.', 'Alone you cannot gut and fish at once.') : L('Alene kan du ikke sløye mens du kjører.', 'Alone you cannot gut while you steer.'));
 }

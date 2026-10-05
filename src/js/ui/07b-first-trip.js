@@ -150,6 +150,9 @@ function tutDriftTip(d){
   return {el:vis('#rAuto'), noOk:true, no:'Trykk «Autonav», og så på ' + (into ? tutLandN() : 'ringen ' + tutAt().no) + ' i kartet. Båten finner en trygg vei.', en:'Tap «Autonav», then ' + (into ? tutLandN() : 'the ring ' + tutAt().en) + ' on the chart. The boat finds a safe way.'};
 }
 let tutCur = null;
+// a small tip only tells what is going on (the boat is on its way, the hold is filling): it goes after nine seconds, or at a tap on it,
+// and comes back when the text changes (a player 05.10.2026: «Den teksten der går ikke bort, den e litt irriterende»)
+const TUTSM = {txt:'', t0:0, hid:false};
 // the step's tip; when it points at something outside the phone while the phone is open, close the phone first
 function tutTip(st){
   const drift = tutAdrift(), T0 = drift ? tutDriftTip(drift) : st.tip() || {};
@@ -214,6 +217,7 @@ function tutUpdate(){
   if (window.jigActive) tutMark('jigOn');
   const T0 = tutTip(st), txt = S.lang === 'no' ? T0.no : T0.en; tutCur = {st, T0};
   if (JIG_OPEN()){ hide(); return; }   // the jig game has its own controls on screen
+  if (T0.small){ if (TUTSM.txt !== txt){ TUTSM.txt = txt; TUTSM.t0 = Date.now(); TUTSM.hid = false; } if (TUTSM.hid || Date.now() - TUTSM.t0 > 9000){ hide(); return; } }
   if ($('tipText').textContent !== txt) $('tipText').textContent = txt || '';
   const ok = (st.ok && !T0.noOk) || T0.okAct; $('tipOk').hidden = !ok;
   $('tipOk').textContent = T0.okText ? (S.lang === 'no' ? T0.okText[0] : T0.okText[1]) : (S.lang === 'no' ? 'Skjønner' : 'Got it');
@@ -229,5 +233,6 @@ function tutUpdate(){
   ar.style.left = clamp(R.x + R.w / 2 - x - 7, 12, tw - 26) + 'px'; ar.style.top = above ? (th - 7) + 'px' : '-7px';
 }
 const JIG_OPEN = () => !!window.jigActive && !$('jigUI').hidden;
+$('tip').addEventListener('click', e => { if (!e.target.closest('#tipOk') && tutCur && tutCur.T0.small){ TUTSM.hid = true; tutUpdate(); } });
 $('tipOk').onclick = () => { if (!tutCur) return; const {st, T0} = tutCur; if (T0.okAct){ T0.okAct(); tutUpdate(); return; } if (st.id === 'goal'){ tutMark('goal'); tutFinish(); return; } tutMark(st.id); tutUpdate(); };
 

@@ -391,6 +391,11 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p44', '05.10.2026', 'Fra spillerne: røyk, sløying og tips', 'From the players: smoke, gutting and tips', [
+      ['Røyken fra semidieselen er myke, grå dotter som blekner, ikke svarte prikker, og den tegnes ikke langt unna.', 'The semi-diesel\'s smoke is soft grey puffs that fade, not black dots, and it is not drawn far off.'],
+      ['Statuslinja viser hvor fullt bløggekaret er, og når du sløyer: hvor lenge det tar i ekte tid, og at du fisker videre etterpå. Du får beskjed når sløyingen starter og slutter.', 'The status line shows how full the bleeding tub is, and when you gut: how long it takes in real time, and that you fish on after. You are told when the gutting starts and ends.'],
+      ['Rykker du ikke på to napp etter hverandre når du jukser selv, fisker juksa av seg selv igjen.', 'If you do not strike at two bites in a row when you jig yourself, the jig fishes on its own again.'],
+      ['Små tips i første tur, som «Båten er på vei ut», forsvinner etter noen sekunder eller når du trykker på dem.', 'Small tips on the first trip, like «The boat is on its way out», go after a few seconds or when you tap them.']]],
     ['p43', '05.10.2026', 'Du ser de andre spillerne', 'You see the other players', [
       ['Båtene til andre spillere i nærheten vises nå på sjøen i 3D og som AIS-mål i kartplotteren, med båtnavnet. De har sin egen gule farge, og AIS-kortet viser båttypen.', 'The other players\' boats near you now show on the water in 3D and as AIS targets on the chart plotter, with the boat\'s name. They have their own yellow colour, and the AIS card shows the boat type.'],
       ['Under Innstillinger, på kontokortet, kan du skru av «Vis båten min for andre spillere».', 'In Settings, on the account card, you can turn off «Show my boat to other players».']]],

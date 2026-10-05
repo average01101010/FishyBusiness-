@@ -236,7 +236,7 @@ const G3 = (() => {
   const PT_VS = 'attribute vec3 aPos;attribute float aA;uniform mat4 uVP;uniform vec3 uOff;uniform float uSize;uniform float uPull;uniform float uMax;varying float vA;' +
     'void main(){vA=aA;vec3 r=aPos+uOff;r-=normalize(r+vec3(0.0,0.0,1e-4))*min(length(r)*0.5,uPull);vec4 p=uVP*vec4(r,1.0);gl_Position=p;gl_PointSize=clamp(uSize/max(p.w,0.1),1.0,uMax);}';
   const PT_FS = 'precision mediump float;uniform vec3 uCol;uniform float uRound;varying float vA;' +
-    'void main(){float a=vA;if(uRound>0.5){vec2 c=gl_PointCoord-0.5;float r=dot(c,c);if(r>0.25)discard;a*=1.0-r*4.0;}gl_FragColor=vec4(uCol,a);}';
+    'void main(){float a=vA;if(uRound>0.5){vec2 c=gl_PointCoord-0.5;float r=dot(c,c);if(r>0.25)discard;a*=uRound>1.5?exp(-r*14.0)*(1.0-r*4.0):1.0-r*4.0;}gl_FragColor=vec4(uCol,a);}';
 
   // A fragment shader asks for highp only where the device has it (some phones' GPUs have mediump only there); a shader that fails
   // says which one, and whether the context was lost, since a lost context fails every compile with no log (the user's phone
@@ -2820,7 +2820,7 @@ const G3 = (() => {
   function drawPts(n, mode, VP, col, size, round, off, mx){
     if (!n) return;
     gl.useProgram(PP.p); const u = PP.u;
-    gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uOff, off || [0, 0, 0]); gl.uniform1f(u.uPull, 0); gl.uniform3fv(u.uCol, col); gl.uniform1f(u.uSize, size * ZF()); gl.uniform1f(u.uRound, round ? 1 : 0); gl.uniform1f(u.uMax, mx || 48);
+    gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uOff, off || [0, 0, 0]); gl.uniform1f(u.uPull, 0); gl.uniform3fv(u.uCol, col); gl.uniform1f(u.uSize, size * ZF()); gl.uniform1f(u.uRound, round === 2 ? 2 : round ? 1 : 0); gl.uniform1f(u.uMax, mx || 48);
     gl.bindBuffer(gl.ARRAY_BUFFER, DYNP); gl.bufferSubData(gl.ARRAY_BUFFER, 0, PB.subarray(0, n * 3)); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
     gl.bindBuffer(gl.ARRAY_BUFFER, DYNA); gl.bufferSubData(gl.ARRAY_BUFFER, 0, PA.subarray(0, n)); gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 0, 0);
     gl.drawArrays(mode, 0, n);
@@ -3635,18 +3635,20 @@ const G3 = (() => {
       if (F && F.length){ while (F.length && F[0].at <= now){ const f = F.shift(); if (now - f.at < 400) puff(f.frac); } }
       else { const R = BOAT.rpm || [340, 850]; smkPh += dt / (120 / (R[0] + frac * (R[1] - R[0]))); while (smkPh >= 1){ smkPh -= 1; puff(frac); } }
     }
-    const wv = (env.wind || 0) * 0.8, wx = env.windDir[0] * wv, wz = env.windDir[1] * wv, dr = Math.min(1, dt * 1.4), col = [0.05 + env.amb[0] * 0.12, 0.05 + env.amb[1] * 0.12, 0.055 + env.amb[2] * 0.12];
+    // charcoal grey taking the light round it, soft and thinning (Adrian 05.10.2026 on an iPhone: «Kommer noen sånne svarte prikka å hop over
+    // skjermen av og til»: they were hard black discs, and tiny black dots from far off), and not drawn beyond 250 m
+    const wv = (env.wind || 0) * 0.8, wx = env.windDir[0] * wv, wz = env.windDir[1] * wv, dr = Math.min(1, dt * 1.4), col = [0.16 + env.amb[0] * 0.3, 0.16 + env.amb[1] * 0.3, 0.17 + env.amb[2] * 0.3];
     const B = [[], [], [], []];
     for (let i = 0; i < SMN; i++){
       if (SMK.age[i] >= SMK.life[i]) continue;
       SMK.age[i] += dt; SMK.vx[i] += (wx - SMK.vx[i]) * dr; SMK.vz[i] += (wz - SMK.vz[i]) * dr; SMK.vy[i] *= 1 - Math.min(1, dt * 0.6);
       SMK.x[i] += SMK.vx[i] * dt; SMK.y[i] += SMK.vy[i] * dt; SMK.z[i] += SMK.vz[i] * dt;
-      const a = SMK.age[i] / SMK.life[i]; B[Math.min(3, Math.floor(a * 4))].push(i);
+      const a = SMK.age[i] / SMK.life[i]; if (Math.hypot(SMK.x[i] - eye[0], SMK.z[i] - eye[2]) < 250) B[Math.min(3, Math.floor(a * 4))].push(i);
     }
     B.forEach((L, q) => {
       let n = 0;
-      for (const i of L){ const a = SMK.age[i] / SMK.life[i]; PB[n * 3] = SMK.x[i] - eye[0]; PB[n * 3 + 1] = SMK.y[i] - eye[1]; PB[n * 3 + 2] = SMK.z[i] - eye[2]; PA[n] = Math.pow(1 - a, 1.3) * (0.38 + 0.3 * SMK.k[i]); n++; }
-      drawPts(n, gl.POINTS, VP, col, [260, 560, 900, 1300][q], true, null, 512);
+      for (const i of L){ const a = SMK.age[i] / SMK.life[i]; PB[n * 3] = SMK.x[i] - eye[0]; PB[n * 3 + 1] = SMK.y[i] - eye[1]; PB[n * 3 + 2] = SMK.z[i] - eye[2]; PA[n] = Math.pow(1 - a, 1.6) * (0.3 + 0.22 * SMK.k[i]); n++; }
+      drawPts(n, gl.POINTS, VP, col, [320, 700, 1150, 1700][q], 2, null, 512);
     });
   }
   function drawEffects(VP, eye, BM, dt, t){
