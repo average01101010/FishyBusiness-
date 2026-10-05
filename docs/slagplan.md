@@ -13,11 +13,11 @@ Ferdig og pushet i natt (patchnotes p18–p23 på telefonen):
   - Sesongene som hendelser, med Skreifestivalen (5).
   - Folk på kaia (7).
   - Musikken (10).
-- Fase 4: butikken står på kaia i Finnsnes.
+- Fase 4: butikken står på kaia i Finnsnes, og innlastingen og innloggingen har fått et bilde fra Blender (fars naust i blåtimen) og ny skrift (p24).
 
 Gjenstår:
 - Push-varsler (9). Jonas må lage VAPID-nøklene og legge dem som hemmeligheter i Supabase. Jeg lager ingen nøkler.
-- Innloggings- og innlastingsskjerm i Blender, to nye mottaksmodeller og M3, kongekrabbeteinen.
+- To nye mottaksmodeller og M3, kongekrabbeteinen.
 - Fase 5.
 
 ## Fase 0: I gang nå (natt til 05.10)

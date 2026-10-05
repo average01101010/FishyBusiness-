@@ -48,13 +48,14 @@ async function cloudRpc(fn, args, opt){
 
 // ---------- the gate: before the game starts ----------
 function cloudGateShow(html){
+  // the same picture and type as the loading screen (styles.css): the name over the sky, the text and the buttons in a card over the water
   let g = document.getElementById('cloudGate');
-  if (!g){ g = document.createElement('div'); g.id = 'cloudGate'; g.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;background:radial-gradient(ellipse at 50% 30%,#163a63,#06101c 70%);color:#eef4fb;font:16px/1.45 Archivo,system-ui,sans-serif;text-align:center'; document.body.appendChild(g); }
-  g.innerHTML = '<div style="max-width:420px"><h1 style="font:600 40px/1.1 \'Source Serif 4\',Georgia,serif;margin:0 0 6px">Det Store Blå</h1>' + html + '</div>';
+  if (!g){ g = document.createElement('div'); g.id = 'cloudGate'; g.className = 'dsb-bg'; document.body.appendChild(g); }
+  g.innerHTML = '<div class="ld-top"><span class="ld-k">' + cloudL('Kystfiske langs norskekysten', 'Coastal fishing in Norway') + '</span><h1 class="ld-t">Det Store Blå</h1></div><div class="cg-card">' + html + '</div>';
   return g;
 }
 function cloudGateHide(){ const g = document.getElementById('cloudGate'); if (g) g.remove(); }
-const cloudBtn = (id, label, primary) => '<button id="' + id + '" style="margin:14px 6px 0;padding:12px 22px;border-radius:12px;border:0;font:600 16px Archivo,system-ui,sans-serif;cursor:pointer;' + (primary ? 'background:#f2b33d;color:#1b1407' : 'background:#24486f;color:#eef4fb') + '">' + label + '</button>';
+const cloudBtn = (id, label, primary) => '<button id="' + id + '" type="button" class="cg-btn' + (primary ? ' pri' : '') + '">' + label + '</button>';
 async function cloudGate(){
   if (!cloudOn()) return;
   CLOUD.on = true;
@@ -69,16 +70,16 @@ async function cloudGate(){
     console.error(e);
     // no network: a device that has signed in before plays on with its own save, and the cloud waits
     if (localStorage.getItem(CLOUD_SIGNED)){ CLOUD.on = false; return; }
-    cloudGateShow('<p>' + cloudL('Innloggingen svarer ikke. Sjekk nettet og prøv igjen.', 'Sign-in is not answering. Check the network and try again.') + '</p>' + cloudBtn('cgRetry', cloudL('Prøv igjen', 'Try again'), true));
+    cloudGateShow('<p>' + cloudL('Innloggingen svarer ikke. Sjekk nettet og prøv igjen.', 'Sign-in is not answering. Check the network and try again.') + '</p><div class="cg-btns">' + cloudBtn('cgRetry', cloudL('Prøv igjen', 'Try again'), true) + '</div>');
     document.getElementById('cgRetry').onclick = () => location.reload();
     return new Promise(() => {});
   }
   if (!CLOUD.user){
-    cloudGateShow('<p>' + cloudL('Kystfiske langs norskekysten, fra sjarken og opp.', 'Coastal fishing along the coast of Norway, from the sjark up.') + '</p><p style="opacity:.8;font-size:14px">' +
+    cloudGateShow('<p class="cg-lead">' + cloudL('Fars gamle naust venter. Båten ligger fortøyd.', 'Father’s old boathouse is waiting. The boat lies moored.') + '</p><p class="cg-small">' +
       cloudL('Logg inn med Google, Apple eller e-post for å spille. Spillet lagres på kontoen din, så du kan fortsette på en annen enhet.', 'Sign in with Google, Apple or e-mail to play. The game is saved to your account, so you can go on from another device.') + '</p>' +
-      cloudBtn('cgIn', cloudL('Logg inn', 'Sign in'), true) + cloudBtn('cgUp', cloudL('Lag konto', 'Create account')) +
-      '<p style="opacity:.7;font-size:12px;margin-top:18px">' + cloudL('Når du lager konto, godtar du <a href="vilkar.html" style="color:#9cc4ec">vilkårene</a>. Les hvordan vi behandler opplysninger i <a href="personvern.html" style="color:#9cc4ec">personvernerklæringen</a>.',
-        'By creating an account you accept the <a href="vilkar.html" style="color:#9cc4ec">terms</a>. Read how we handle your data in the <a href="personvern.html" style="color:#9cc4ec">privacy policy</a>.') + '</p>');
+      '<div class="cg-btns">' + cloudBtn('cgIn', cloudL('Logg inn', 'Sign in'), true) + cloudBtn('cgUp', cloudL('Lag konto', 'Create account')) + '</div>' +
+      '<p class="cg-fine">' + cloudL('Når du lager konto, godtar du <a href="vilkar.html">vilkårene</a>. Les hvordan vi behandler opplysninger i <a href="personvern.html">personvernerklæringen</a>.',
+        'By creating an account you accept the <a href="vilkar.html">terms</a>. Read how we handle your data in the <a href="personvern.html">privacy policy</a>.') + '</p>');
     document.getElementById('cgIn').onclick = () => CLOUD.ak.signIn();
     document.getElementById('cgUp').onclick = () => CLOUD.ak.signUp();
     return new Promise(() => {});

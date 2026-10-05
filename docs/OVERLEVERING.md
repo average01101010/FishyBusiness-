@@ -1940,6 +1940,29 @@ Jonas valgte dem fra lista (nr. 5 og 7).
 - **Ikke gjort ennå:** båten kan ikke legge til ved naustet (det er ingen kaifront i `QUAYS`), kameraet kan gå inn i husene, og lyktene i ankrene brukes ikke.
 
 
+### 5.25g Innlastingen og innloggingen (05.10.2026)
+
+- **Bildet** (`tools/brand/loader.py`, `src/data/loader-land.b64` og `loader-port.b64`):
+  - Fars naust på pålekaia i blåtimen, laget av de samme modellene som i spillet (`tools/harbour/naust.py` og `tools/boats/snekke23.py`).
+  - Lampa over loftsdøra og vinduene lyser varmt, og trebåten ligger fortøyd med to tau.
+  - Bak står Senja-tinder med snø i skyggeleggeren: høyt og ikke for bratt, brutt opp av støy. Fjellene er laget av ridged-støy.
+  - I det åpne partiet til venstre står en blek fjellrekke i det siste lyset. Noen naboer har lys i vinduene langs stranda, og det er stjerner høyt oppe.
+  - Det er to bilder:
+    - Liggende: 1600 × 1000, med naustet i midten.
+    - Stående: 960 × 1600, med naustet litt over midten, slik at innloggingskortet ligger over sjøen.
+  - Bildene er WebP med kvalitet 84 (54 og 49 KB). De legges i siden som CSS (`.dsb-bg` i `src/index.html`), og `@media (orientation:portrait)` velger det stående.
+  - `python3 tools/brand/loader.py quick` gir en rask prøve. `land` eller `port` renderer bare det ene bildet, på rundt to minutter.
+- **Innlastingen** (`#loader`):
+  - Bildet er mørkere øverst og nederst.
+  - Øverst står «Kystfiske langs norskekysten» i sperrede versaler mellom to streker, og navnet stort i Source Serif 4.
+  - Nederst løper en tynn lysstripe, med «Laster kysten …» under.
+  - `.gone` toner den ut og skjuler den etterpå (`visibility`), og da stopper stripa.
+- **Innloggingen** (`cloudGateShow` i `ui/10f-cloud.js`):
+  - Den har samme bilde og tittel.
+  - Teksten og knappene står i et halvgjennomsiktig kort med uskarp bakgrunn. På telefon og nettbrett ligger kortet nederst. På brede skjermer (minst 900 × 600, liggende) står det til venstre, så naustet synes.
+  - Klassene ligger i `styles.css` (`.cg-card`, `.cg-btn`), ikke inline.
+- **Ikke gjort ennå:** innlastingsteksten er alltid norsk. Spillets språk er ikke lest inn ennå når den vises.
+
 ### 5.26 Måker og halere fra Blender (03.10.2026)
 
 - **Måkene** (`tools/wild/maake.py`, `src/data/gull.b64`):

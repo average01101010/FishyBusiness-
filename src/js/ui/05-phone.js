@@ -381,6 +381,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p24', '05.10.2026', 'Ny innlasting og innlogging', 'New loading and sign-in screens', [
+      ['Innlastingen og innloggingen har fått et bilde fra Blender: fars naust i blåtimen, med lampa tent og trebåten fortøyd, og Senjas tinder med snø bak. Ny skrift og en tynn lysstripe som viser at spillet laster.', 'The loading and sign-in screens have a picture from Blender: Father’s boathouse at the blue hour, the lamp lit and the wooden boat moored, with Senja’s snowy peaks behind. New type, and a thin running light while the game loads.']]],
     ['p23', '05.10.2026', 'Fars naust og butikken på kaia', 'Father’s boathouse and the shop on the quay', [
       ['Fars gamle naust står ved hjemhavna di i 3D, med den slitne kaia på påler, på en rett strekning av fjæra like ved mottaket. I kartplotteren står det som «Fars naust».', 'Father’s old boathouse stands by your home harbour in 3D, with its worn pile quay, on a straight stretch of shore near the plant. On the chart plotter it is marked «Father’s boathouse».'],
       ['Utstyrsbutikken og båtforhandleren står på kaia i Finnsnes, med plassen foran planert og kartets hus flyttet bort.', 'The gear shop and boat dealer stand on the quay in Finnsnes, with the yard in front levelled and the map’s houses moved out of the way.'],

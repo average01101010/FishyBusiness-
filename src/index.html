@@ -17,6 +17,9 @@
 /* the letter's handwriting (ui/08b-letter.js), in the page so it is there offline: Caveat (SIL Open Font License 1.1), Rock Salt (Apache License 2.0) */
 @font-face{font-family:'Caveat';font-style:normal;font-weight:400 700;font-display:swap;src:url(data:font/woff2;base64,@include(data/font-caveat.b64)) format('woff2')}
 @font-face{font-family:'Rock Salt';font-style:normal;font-weight:400;font-display:swap;src:url(data:font/woff2;base64,@include(data/font-rocksalt.b64)) format('woff2')}
+/* the picture behind the loading screen and the sign-in: Father's naust at the blue hour (tools/brand/loader.py), one for each orientation */
+.dsb-bg{background:#0b1a2e url(data:image/webp;base64,@include(data/loader-land.b64)) 50% 60%/cover no-repeat}
+@media (orientation:portrait){.dsb-bg{background-image:url(data:image/webp;base64,@include(data/loader-port.b64));background-position:50% 66%}}
 </style>
 <style>
 @include(styles.css)
@@ -53,7 +56,7 @@
       <div id="dockInfo" hidden></div><div id="dockFan" hidden></div><div id="dock"></div>
       <aside id="drawer" hidden><div class="dr-head"><b id="drawerTitle"></b><button id="drawerClose" type="button" aria-label="Lukk">✕</button></div><div id="drawerTabs" class="ph-sub" hidden></div><div id="drawerBody"></div></aside>
       <button id="phoneFab" class="ov fab" type="button" aria-label="Mobil"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2.8"/><path d="M10.5 18.3h3"/></svg><i id="phoneBadge2" hidden></i></button>
-      <div id="loader"><div><b>Det Store Blå</b><span>Laster Senja …</span></div></div>
+      <div id="loader" class="dsb-bg"><div class="ld"><div class="ld-top"><span class="ld-k">Kystfiske langs norskekysten</span><b class="ld-t">Det Store Blå</b></div><div class="ld-bot"><i class="ld-bar"></i><span class="ld-s">Laster kysten …</span></div></div></div>
       <canvas id="miniPlot" role="button" aria-label="Kartplotter"></canvas><canvas id="compass3d" aria-hidden="true"></canvas><div id="gps3d"></div>
       <button id="logbook" type="button" aria-label="Dekksdagbok"><span class="lbk-tab">DEKKSDAGBOK</span></button>
       <button id="modeBtn" class="mapbtn" type="button"></button>
