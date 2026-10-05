@@ -984,7 +984,15 @@ Jonas: «det er viktig at alle har en delt klokke fordi dette er et online-spill
 - **Ingen egen fart:** `simRate()` ser bort fra `S.mult`. Admin-appen viser «Felles klokke» med verdens tid i stedet for fartsknappene. Spoling er fjernet fra før (p31).
 - **Samme verden:** `S.qseed` = `WORLD_SEED` for alle, så kvoteårene, bestandene, ferskfiskplanene og kjøperne er like. Været, tidevannet, sola og årstidene regnes fra klokka og er derfor felles av seg selv.
 - **Nye spill** begynner på verdens minutt (`newState`). Første tur virker uansett tid på døgnet, fordi mottaket alltid tar imot den første fangsten (`mottakOpen`).
-- **Ennå ikke felles (V2 og V3):** bestanden der du fisker, flåtens fangst i åpen gruppe og prisene etter leveransene regnes fortsatt per spiller. Andre spillere vises ikke ennå.
+- **V3, spillerne ser hverandre** (`ui/10h-world.js`, `supabase/migrations/20261005220000_presence.sql`):
+  - Hvert 15. sekund, mens spillet er åpent, synlig og innlogget, sendes båten du følger med `pos_put`: posisjon (km i spillets ramme), kurs (radianer i rutenettet), fart, status, båtnavn og type. Det er én rad per spiller i `presence`, og den skrives over.
+  - `pos_near(x, y, 25 km)` gir de andre båtene som er hørt de siste to minuttene, de nærmeste først. Id-en er en hash, aldri kontoen.
+  - De havner i `PEERS`, og `peerStates()` (`core/05-vessels.js`) legger dem til i `npcStates`. Slik vises de av AIS-en i kartplotteren (gul, `ais player`, eget AIS-kort med båttype og størrelse) og av 3D-visningen, der modellen velges etter lengde og bredde (`npcKit`). Mellom meldingene glir de videre langs kursen i opptil 30 sekunder.
+  - «Vis båten min for andre spillere» på kontokortet (`S.settings.showMe`) stopper sendingen, og `pos_off` sletter raden med en gang.
+  - Uten nett, eller før migreringen, sendes ingenting, og båtene forsvinner etter et minutt.
+  - Personvernsiden har et eget avsnitt.
+  - **Test:** `sqltest` (funksjonene og låsen) og `cloudtest` (sendingen, en båt i nærheten med AIS-kort, og avskrudd visning).
+- **Ennå ikke felles (V2):** bestanden der du fisker, flåtens fangst i åpen gruppe og prisene etter leveransene regnes fortsatt per spiller.
 
 ## 5. Systemer i spillet
 

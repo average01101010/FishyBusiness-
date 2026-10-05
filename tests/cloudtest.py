@@ -104,6 +104,20 @@ async def main():
         h = await pg.evaluate("""(() => { const r = document.querySelector('#phone [data-pa=cloudRestore][data-id="7"]').closest('.hrow'); const q = r.getBoundingClientRect(), p = document.getElementById('phone').getBoundingClientRect(); return {text:r.innerText, fits:q.right <= p.right + 1}; })()""")
         check('Dag 40' in h['text'] and 'Havørn' in h['text'] and h['fits'], "«Tidligere lagringer» in Settings lists the account's earlier saves, each with «Hent»", h)
         await pg.evaluate("PHONE.show(false)")
+        # the shared world V3: my boat goes up, the other players' boats near by come down and show on the AIS (05.10.2026)
+        pos = await pg.evaluate("({x:S.boat.pos.x, y:S.boat.pos.y})")
+        replies['pos_put'] = 'null'; replies['pos_off'] = 'null'
+        replies['pos_near'] = [{'id': 'abc1234567', 'boat': 'Fjordbris', 'vtype': 'skiff', 'x': pos['x'] + 0.5, 'y': pos['y'] + 0.5, 'hd': 1.2, 'v': 5, 'st': 'sailing', 'age': 1}]
+        n0 = len(calls)
+        w = await pg.evaluate("""async () => { S.boatName = S.boatName || 'Havbris'; await worldTick(); const n = npcStates(S.t / 60).find(q => q.player);
+          return {n:n && {name:n.name, type:n.type, L:n.L, st:n.st, d:Math.hypot(n.p.x - S.boat.pos.x, n.p.y - S.boat.pos.y)}, card:n ? aisInfo(n) : ''}; }""")
+        wp = [c[1] for c in calls[n0:] if c[0] == 'pos_put']; wn = [c[1] for c in calls[n0:] if c[0] == 'pos_near']
+        check(wp and wp[0]['boat'] and wp[0]['vtype'] and abs(wp[0]['x'] - pos['x']) < 0.01 and wn and w['n'] and w['n']['name'] == 'Fjordbris' and w['n']['L'] > 5 and 'Spiller' in w['card'] and 'Fjordbris' in w['card'],
+              "the shared world: my boat's place, name and type go up, and another player's boat near by shows among the boats, with its own AIS card", {'put': wp[0] if wp else None, 'peer': w['n']})
+        n0 = len(calls)
+        await pg.evaluate("async () => { cloudAct('cloudShowMe'); await new Promise(r => setTimeout(r, 300)); await worldTick(); }")
+        wo = [c[0] for c in calls[n0:]]
+        check('pos_off' in wo and 'pos_put' not in wo and 'pos_near' in wo, '«Vis båten min for andre spillere» off: the boat is taken away at once, and no place goes up after (the others are still seen)', wo)
         # a database without the migration yet (save_put2 is not there): the old put, so the game is still saved
         replies['save_put2'] = 404; replies['save_put'] = {'ok': True}; n0 = len(calls)
         await pg.evaluate("async () => { S.lastReal = Date.now() + 9; save(); CLOUD.lastSave = 0; await cloudSaveSoon(); S.lastReal = Date.now() + 19; save(); await cloudSaveSoon(); }")

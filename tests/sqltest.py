@@ -146,6 +146,18 @@ def main():
         R['svOther'] = sql("select public.save_hist_get(%d)" % (hid[0] if hid else 0), B, 'authenticated')
         R['svRead'] = sql("select count(*) from public.save_hist", PD, 'authenticated', expect_err=True)
         R['svOld'] = json.loads(sql("select public.save_put('KYST2:OLDPAGE', '2026-10-05T12:00:00Z', 5, false)", PD, 'authenticated'))   # an old page left open
+        # the shared world V3: where the boats are (20261005220000_presence.sql)
+        sql("select public.pos_put(850, 350, 90, 7, 'sailing', 'Havbris', 'trebat')", A, 'authenticated')
+        sql("select public.pos_put(851, 350.5, 180, 0, 'fishing', 'Fjordbris', 'skiff')", B, 'authenticated')
+        R['nearB'] = json.loads(sql("select public.pos_near(850, 350, 20)", B, 'authenticated'))
+        R['nearA'] = json.loads(sql("select public.pos_near(850, 350, 20)", A, 'authenticated'))
+        R['nearFar'] = json.loads(sql("select public.pos_near(100, 100, 20)", B, 'authenticated'))
+        sql("update public.presence set at = now() - interval '5 minutes' where player_id = 'user_01BBB'")
+        R['nearStale'] = json.loads(sql("select public.pos_near(850, 350, 20)", A, 'authenticated'))
+        R['posRead'] = sql("select count(*) from public.presence", A, 'authenticated', expect_err=True)
+        R['posBad'] = sql("select public.pos_put('NaN', 1, 0, 0, '', '', '')", A, 'authenticated', expect_err=True)
+        R['posAnon'] = sql("select public.pos_near(850, 350, 20)", {}, 'anon', expect_err=True)
+        sql("select public.pos_off()", A, 'authenticated'); R['posOff'] = sql("select count(*) from public.presence where player_id = 'user_01AAA'")
         sql("select public.delete_me()", A, 'authenticated')
         R['fbGone'] = sql("select count(*) from public.feedback where player_id = 'user_01AAA'")
         R['pushGone'] = sql("select count(*) || '/' || (select count(*) from public.push_queue) from public.push_subs")
@@ -180,6 +192,12 @@ def main():
         print(ok(all(R[k][0] for k in ('fbRead', 'fbAdmPl', 'fbAdm1')) and F['rows'] and F['rows'][0]['meta'].get('version') == 't1' and F['topics'].get('bug') == 1 and R['fbImg'] == str(len(IMG)) and R['fbMine2'][0]['status'] == 'fixed' and R['fbMine2'][0]['reply'] == 'Takk, rettet!'),
               'feedback: no player reads the table or the list, nor the admin without the second factor; the admin lists them, opens the picture, sets the status and answers, and the player sees it', {'topics': F.get('topics'), 'img': R['fbImg'], 'mine': R['fbMine2'][0] if R['fbMine2'] else None})
         print(ok(R['fbLimit'][0] and R['fbGone'] == '0'), 'feedback: at most 20 a day, and they go with the account', [R['fbLimit'][1][:40], R['fbGone']])
+        nb = R['nearB'][0] if R['nearB'] else {}
+        print(ok(len(R['nearB']) == 1 and nb.get('boat') == 'Havbris' and nb.get('vtype') == 'trebat' and len(nb.get('id', '')) == 10 and 'user_' not in json.dumps(R['nearB'])
+                 and len(R['nearA']) == 1 and R['nearA'][0]['boat'] == 'Fjordbris' and R['nearFar'] == [] and R['nearStale'] == []),
+              'the shared world: each player sees the other boats near by (name, type, place, heading, speed), never their own or an account, and not one gone quiet for two minutes', {'B': nb, 'far': R['nearFar'], 'stale': R['nearStale']})
+        print(ok(R['posRead'][0] and R['posBad'][0] and R['posAnon'][0] and R['posOff'] == '0'),
+              'the shared world: no one reads the table, a bad position and the anonymous are refused, and «hide my boat» takes it away', [R[k][1][:40] for k in ('posRead', 'posBad', 'posAnon')] + [R['posOff']])
         keys = ['overview', 'daily', 'heatmap', 'churn', 'rage', 'features', 'gear', 'boats', 'groundings', 'trips', 'economy', 'money', 'tech', 'geo']
         print(ok(all(k in D for k in keys) and D['overview']['players'] == 2 and D['overview']['sessions'] == 1 and D['rage']['share'] == 1 and D['trips']['avg_kr'] == 5400 and R['adminRead'] == '4'),
               'the admin with aal2 gets every panel of the dashboard and reads the tables', {k: D[k] for k in ('overview', 'rage', 'trips')})

@@ -391,6 +391,9 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p43', '05.10.2026', 'Du ser de andre spillerne', 'You see the other players', [
+      ['Båtene til andre spillere i nærheten vises nå på sjøen i 3D og som AIS-mål i kartplotteren, med båtnavnet. De har sin egen gule farge, og AIS-kortet viser båttypen.', 'The other players\' boats near you now show on the water in 3D and as AIS targets on the chart plotter, with the boat\'s name. They have their own yellow colour, and the AIS card shows the boat type.'],
+      ['Under Innstillinger, på kontokortet, kan du skru av «Vis båten min for andre spillere».', 'In Settings, on the account card, you can turn off «Show my boat to other players».']]],
     ['p42', '05.10.2026', 'Én klokke for hele verden', 'One clock for the whole world', [
       ['Nå går alle spillerne på nøyaktig samme klokke og dato, på alle enheter. Klokka hentes fra serveren, så en telefon med feil tid er likevel i takt. Verden startet 1. mars 2027 kl. 06 i dag kl. 17 norsk tid, og går 6 ganger fortere enn virkeligheten.', 'Now every player is on exactly the same clock and date, on every device. The clock comes from the server, so a phone with the wrong time is still in step. The world began at 06:00 on 1 March 2027 today at 17:00 Norwegian time, and runs 6 times real time.'],
       ['Kvoteårene, bestandene, ferskfiskordningen og kjøperne er de samme for alle.', 'The quota years, the stocks, the fresh-fish scheme and the buyers are the same for everyone.'],

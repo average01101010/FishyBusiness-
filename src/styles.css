@@ -145,7 +145,7 @@ body.vplot #gps::after{display:none}
 /* chart */
 .offmap{fill:var(--chrome)} .sea{fill:var(--sea)} .grid{stroke:var(--grid)}
 .shallow{fill:var(--shallow);stroke:var(--shallow);stroke-linejoin:round}
-.ais{fill:rgba(31,154,103,.18);stroke:#1f9a67} .ais.fish{fill:#ff8a65;stroke:#7a2e14} .ais.pass{fill:#4c8df0;stroke:#123a78} .ais.sel{stroke:#ffe14d} .ais.moor{opacity:.7} .aistrack{fill:none;stroke:#ff8a65}
+.ais{fill:rgba(31,154,103,.18);stroke:#1f9a67} .ais.fish{fill:#ff8a65;stroke:#7a2e14} .ais.pass{fill:#4c8df0;stroke:#123a78} .ais.player{fill:#f2b33d;stroke:#6b4a00} .ais.sel{stroke:#ffe14d} .ais.moor{opacity:.7} .aistrack{fill:none;stroke:#ff8a65}
 #aisCard{position:absolute;z-index:7;left:8px;bottom:14px;width:250px;background:rgba(10,22,32,.94);color:#e7f4ee;border:1px solid #2c5870;border-radius:10px;padding:8px 10px;font:12.5px var(--sans);box-shadow:0 6px 18px rgba(0,0,0,.35)}
 #aisCard[hidden]{display:none}
 .cold{color:#8fd3ff}

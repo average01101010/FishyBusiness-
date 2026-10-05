@@ -115,7 +115,7 @@ function cloudStart(){
   // goes to the background: Android often ends a page in the background without a pagehide
   setInterval(cloudSaveSoon, 60000);
   document.addEventListener('visibilitychange', () => { if (document.hidden) cloudSaveSoon(true); });
-  pushStart();
+  pushStart(); worldStart();
   window.addEventListener('pagehide', () => { cloudSaveSoon(true); if (CLOUD.sid) cloudFlush(true); });
 }
 function cloudAsk(){
@@ -275,6 +275,7 @@ function cloudCard(){
   return '<div class="ph-card"><h4>' + L2('Konto', 'Account') + '</h4><p class="ph-note">' + L2('Logget inn som ', 'Signed in as ') + (u.email || '').replace(/</g, '&lt;') + '. ' +
     L2('Spillet lagres også på kontoen.', 'The game is also saved to the account.') + '</p>' + histRows() +
     '<label><span>' + L2('Del bruksstatistikk', 'Share usage statistics') + '</span><input type="checkbox" data-pa="cloudStat"' + (CLOUD.consent ? ' checked' : '') + '></label>' + pushCardRow() +
+    '<label><span>' + L2('Vis båten min for andre spillere', 'Show my boat to other players') + '</span><input type="checkbox" data-pa="cloudShowMe"' + (S.settings.showMe !== false ? ' checked' : '') + '></label>' +
     '<button class="ph-btn alt" data-pa="cloudOut">' + L2('Logg ut', 'Sign out') + '</button><button class="ph-btn alt" data-pa="cloudDel">' + L2('Slett kontoen', 'Delete the account') + '</button></div>';
 }
 // the earlier saves, once asked for: the one this device had before, and the account's last ten
@@ -290,6 +291,7 @@ function cloudAct(a, d){
   if (a === 'cloudHist'){ cloudHist(); return true; }
   if (a === 'cloudRestore'){ cloudRestore(d && d.id); return true; }
   if (a === 'cloudStat'){ cloudConsent(!CLOUD.consent, null); return true; }
+  if (a === 'cloudShowMe'){ worldShowMe(S.settings.showMe === false); return true; }
   if (a === 'cloudPush'){ pushToggle(); return true; }
   if (a === 'cloudOut'){ cloudSaveSoon(); localStorage.removeItem(CLOUD_SIGNED); CLOUD.ak.signOut({returnTo:location.origin + location.pathname}); return true; }
   if (a === 'cloudDel'){
