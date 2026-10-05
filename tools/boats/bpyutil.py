@@ -25,6 +25,13 @@ def mat(name, rgb, gloss=0.4, zone=0, metal=0.0, emit=0.0):
     b.inputs['Roughness'].default_value = max(0.05, 1 - 0.85 * gloss)
     b.inputs['Metallic'].default_value = metal
     if emit: b.inputs['Emission Color'].default_value = (rgb[0], rgb[1], rgb[2], 1); b.inputs['Emission Strength'].default_value = emit
+    # the per-corner tint (Acc.done(tint=...)): multiplies the colour where its alpha is 1, nothing where the mesh has none
+    # (the game shades its colours as they are, in display space; the renders take them to linear so they look the same)
+    nt = m.node_tree; at = nt.nodes.new('ShaderNodeAttribute'); at.attribute_name = 'TINT'
+    ga = nt.nodes.new('ShaderNodeGamma'); ga.inputs['Gamma'].default_value = 2.2; nt.links.new(at.outputs['Color'], ga.inputs['Color'])
+    mx = nt.nodes.new('ShaderNodeMix'); mx.data_type = 'RGBA'; mx.blend_type = 'MULTIPLY'
+    mx.inputs[6].default_value = (rgb[0] ** 2.2, rgb[1] ** 2.2, rgb[2] ** 2.2, 1)
+    nt.links.new(at.outputs['Alpha'], mx.inputs[0]); nt.links.new(ga.outputs['Color'], mx.inputs[7]); nt.links.new(mx.outputs[2], b.inputs['Base Color'])
     m['rgb'] = list(rgb); m['gloss'] = gloss; m['zone'] = zone
     MATS[name] = m; return m
 
@@ -264,6 +271,7 @@ def mesh_arrays(o, xf_p, xf_n, ao=True):
     dg = bpy.context.evaluated_depsgraph_get(); oe = o.evaluated_get(dg); me = oe.to_mesh()
     me.calc_loop_triangles(); M = o.matrix_world; R = M.to_3x3()
     aoa = me.color_attributes.get('AO') if ao else None
+    tia = me.color_attributes.get('TINT')
     slots = [s.material for s in o.material_slots]
     pos = []; nor = []; col = []; pnt = []; idx = []; seen = {}
     for t in me.loop_triangles:
@@ -274,7 +282,9 @@ def mesh_arrays(o, xf_p, xf_n, ao=True):
             l = me.loops[li]; p = xf_p(M @ me.vertices[l.vertex_index].co); n = xf_n((R @ me.corner_normals[li].vector).normalized())
             a = aoa.data[li].color[0] if aoa else 1.0
             a = 0.3 + 0.7 * a
-            c = (int(round(min(1, rgb[0] * a) * 255)), int(round(min(1, rgb[1] * a) * 255)), int(round(min(1, rgb[2] * a) * 255)), int(round(gl * 255)))
+            tc = tia.data[li].color if tia else None
+            tt = (tc[0], tc[1], tc[2]) if tc is not None and tc[3] > 0.5 else (1.0, 1.0, 1.0)
+            c = (int(round(max(0, min(1, rgb[0] * tt[0] * a)) * 255)), int(round(max(0, min(1, rgb[1] * tt[1] * a)) * 255)), int(round(max(0, min(1, rgb[2] * tt[2] * a)) * 255)), int(round(gl * 255)))
             key = (round(p[0], 4), round(p[1], 4), round(p[2], 4), round(n[0], 2), round(n[1], 2), round(n[2], 2), c, zn)
             if key not in seen:
                 seen[key] = len(pos); pos.append(p); nor.append(n); col.append(c); pnt.append((zn, int(round(a * 255)), 0, 0))
@@ -474,3 +484,98 @@ def export_boat(build, to_game, to_game_n, out_dir, glb_name, data_b64, extras, 
     tri = lambda A: len(A['idx']) // 3
     print('GLB %.0f KB, lod0 %d tris / %d verts, glass %d tris, lod1 %d tris / %d verts; side picture %s' % (n / 1024, tri(A0), len(A0['pos']), tri(AG), tri(A1), len(A1['pos']), size_pic))
     return A0, A1
+
+
+# ---------- one mesh for many small parts: faces with a material each (from tools/harbour/naust.py) ----------
+class Acc:
+    def __init__(self, name):
+        self.name = name; self.bm = bmesh.new(); self.mats = []; self.ix = {}
+    def mi(self, m):
+        if m.name not in self.ix: self.ix[m.name] = len(self.mats); self.mats.append(m)
+        return self.ix[m.name]
+    def v(self, p): return self.bm.verts.new(p)
+    def f(self, vs, m, out=None):
+        try: fc = self.bm.faces.new(vs)
+        except ValueError: return None
+        fc.material_index = self.mi(m)
+        if out is not None:
+            fc.normal_update()
+            if fc.normal.dot(V(out)) < 0: fc.normal_flip()
+        return fc
+    def poly(self, pts, m, out=None): return self.f([self.v(V(p)) for p in pts], m, out)
+    def done(self, angle=35, tint=None):
+        """the object; tint(point, material, normal) -> an rgb multiplier (or None) at every corner, for wear that runs across faces"""
+        if not len(self.bm.faces): self.bm.free(); return None
+        if tint:
+            lay = self.bm.loops.layers.float_color.new('TINT')
+            for fc in self.bm.faces:
+                m = self.mats[fc.material_index]; fc.normal_update()
+                for l in fc.loops:
+                    t = tint(l.vert.co, m, fc.normal)
+                    if t is not None: l[lay] = (t[0], t[1], t[2], 1.0)
+        return shade(obj_from_bm(self.name, self.bm, self.mats), angle)
+
+
+def obox(A, c, ax, ay, az, m, skip=()):
+    """a box round c with half-extent vectors ax, ay, az; skip faces by name ('-z', '+y' ...)"""
+    c = V(c); ax = V(ax); ay = V(ay); az = V(az)
+    P = lambda i, j, k: c + ax * i + ay * j + az * k
+    for nm, pts, out in (('-x', [P(-1, -1, -1), P(-1, 1, -1), P(-1, 1, 1), P(-1, -1, 1)], -ax), ('+x', [P(1, -1, -1), P(1, 1, -1), P(1, 1, 1), P(1, -1, 1)], ax),
+                         ('-y', [P(-1, -1, -1), P(1, -1, -1), P(1, -1, 1), P(-1, -1, 1)], -ay), ('+y', [P(-1, 1, -1), P(1, 1, -1), P(1, 1, 1), P(-1, 1, 1)], ay),
+                         ('-z', [P(-1, -1, -1), P(1, -1, -1), P(1, 1, -1), P(-1, 1, -1)], -az), ('+z', [P(-1, -1, 1), P(1, -1, 1), P(1, 1, 1), P(-1, 1, 1)], az)):
+        if nm not in skip: A.poly(pts, m, out)
+
+def abox(A, x0, x1, y0, y1, z0, z1, m, skip=()):
+    obox(A, ((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2), ((x1 - x0) / 2, 0, 0), (0, (y1 - y0) / 2, 0), (0, 0, (z1 - z0) / 2), m, skip)
+
+def beam(A, p0, p1, w, h, m, up=(0, 0, 1), skip=()):
+    """a squared timber from p0 to p1, w wide and h high (h along up)"""
+    p0 = V(p0); p1 = V(p1); d = p1 - p0; L = d.length; d.normalize(); u = V(up); s = d.cross(u).normalized(); u = s.cross(d).normalized()
+    obox(A, (p0 + p1) / 2, d * (L / 2), s * (w / 2), u * (h / 2), m, skip)
+
+def board(A, P, n, t, m, edges=True):
+    """a board from its four front corners P (round it, bottom edge first) facing n, t thick behind; its back is left open, and
+    edges='v' gives it only its two long sides"""
+    P = [V(p) for p in P]; n = V(n); c = sum(P, V()) / 4
+    A.poly(P, m, n)
+    if edges:
+        for i in ((1, 3) if edges == 'v' else range(4)):
+            a, b = P[i], P[(i + 1) % 4]; A.poly([a, b, b - n * t, a - n * t], m, (a + b) / 2 - c)
+
+def acyl(A, p0, p1, r, mf, seg=8, cuts=(), cap=True, r1=None, lean=None):
+    """a round timber from p0 to p1 cut in bands at the heights in cuts; mf(z) gives a band's material; the top is capped"""
+    p0 = V(p0); p1 = V(p1); s, u, d = frame_of(p1 - p0); r1 = r if r1 is None else r1
+    ts = [0.0] + sorted(t for t in ((z - p0.z) / (p1.z - p0.z) if abs(p1.z - p0.z) > 1e-6 else -1 for z in cuts) if 0.0 < t < 1.0) + [1.0]
+    rings = []
+    for t in ts:
+        c = p0 + (p1 - p0) * t; rr = r + (r1 - r) * t
+        rings.append([A.v(c + (s * math.cos(a) + u * math.sin(a)) * rr) for a in [2 * math.pi * k / seg for k in range(seg)]])
+    for i in range(len(rings) - 1):
+        zc = p0.z + (p1.z - p0.z) * (ts[i] + ts[i + 1]) / 2; m = mf(zc)
+        for k in range(seg):
+            j = (k + 1) % seg; A.f([rings[i][k], rings[i][j], rings[i + 1][j], rings[i + 1][k]], m, (rings[i][k].co + rings[i][j].co) / 2 - (p0 + (p1 - p0) * ts[i]))
+    if cap: A.f(list(rings[-1]), mf(p1.z), d)
+
+def arock(A, c, r, sc, rr, mf, sub=1):
+    """a boulder: a lumpy icosphere at c, radius r, scaled by sc; mf(centre, normal) gives a face's material"""
+    t = bmesh.new(); bmesh.ops.create_icosphere(t, subdivisions=sub, radius=1.0)
+    c = V(c); vm = {}
+    for v in t.verts:
+        k = 1 + rr.uniform(-0.22, 0.22); p = v.co * k
+        vm[v] = A.v(c + V((p.x * r * sc[0], p.y * r * sc[1], p.z * r * sc[2])))
+    for fc in t.faces:
+        vs = [vm[v] for v in fc.verts]; cen = sum((v.co for v in vs), V()) / len(vs); nrm = (cen - c).normalized()
+        A.f(vs, mf(cen, nrm), nrm)
+    t.free()
+
+def atorus(A, c, ax, R, r, mf, seg=16, rseg=6, a0=0.0, a1=2 * math.pi):
+    """a ring round the axis ax (mf(angle) for each segment's material), or an arc of it from a0 to a1"""
+    c = V(c); s, u, d = frame_of(ax); full = abs(a1 - a0 - 2 * math.pi) < 1e-6; n = seg if full else seg + 1
+    rings = []
+    for i in range(n):
+        a = a0 + (a1 - a0) * i / seg; e = s * math.cos(a) + u * math.sin(a); cc = c + e * R
+        rings.append((a, cc, [A.v(cc + (e * math.cos(b) + d * math.sin(b)) * r) for b in [2 * math.pi * k / rseg for k in range(rseg)]]))
+    for i in range(seg if full else seg):
+        a, cc, ra = rings[i]; _, _, rb = rings[(i + 1) % n]
+        for k in range(rseg):
+            j = (k + 1) % rseg; A.f([ra[k], ra[j], rb[j], rb[k]], mf(a), (ra[k].co + rb[j].co) / 2 - cc)
