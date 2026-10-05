@@ -1,8 +1,13 @@
 // ---------- the little chart in 3D (the user's wish 02.10.2026) ----------
 // Under the status box: the chart round the boat as far as the echo sounder reaches (its ring's diameter across; half a nautical
 // mile either way without one), north up, with the fish the sounder sees (03c-heat.js heatDrawInto), the route and the boat. A tap
-// opens the chart plotter (it replaces the GPS button and the dock's «Planlegg»). Painted once a second while the 3D view shows, over a background kept until the boat has moved.
+// opens the chart plotter (it replaces the GPS button and the dock's «Planlegg»). Painted once a second while the 3D view shows (as a GPS
+// gives its fix), over a background kept until the boat has moved.
 const MINIP = {el:$('miniPlot'), n:64, img:null, off:document.createElement('canvas'), bg:document.createElement('canvas'), key:'', c:null, at:0};
+// the GPS in the little chart's foot (Jonas 05.10.2026, on the phone: «kan gps-data legges inn i den lille kartplotteren for å spare
+// plass?»): speed, course and position, and the next waypoint on a route; INSTR.render3d (04-panels-instruments.js) keeps them here.
+// The GPS box under the chart is then only shown where the little chart is not (a phone on its side, styles.css).
+let GPS3D = null;
 function miniRadius(){ const tier = typeof heatTier === 'function' ? heatTier() : null; return tier ? HEAT.tiers[tier].r : 0.5 * NM; }
 // the background (sea, land and coast) for twice the box round c: drawn again only when the boat has moved a fifth of the radius, the
 // box or the radius has changed, or every 20 s (packs come in); painting the coast twice a second slowed a software GPU a lot
@@ -43,8 +48,18 @@ function miniPaint(){
   const s = 7 * dpr; ctx.save(); ctx.translate(W / 2, H / 2); ctx.rotate(pose.hd);
   ctx.beginPath(); ctx.moveTo(0, -s * 1.3); ctx.lineTo(s * 0.7, s); ctx.lineTo(0, s * 0.55); ctx.lineTo(-s * 0.7, s); ctx.closePath();
   ctx.fillStyle = '#d02878'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5 * dpr; ctx.fill(); ctx.stroke(); ctx.restore();
-  // north, and how far across
+  // north
   ctx.fillStyle = chartNight() ? 'rgba(200,215,225,.85)' : 'rgba(20,40,55,.8)'; ctx.font = '600 ' + Math.round(10 * dpr) + 'px sans-serif'; ctx.textAlign = 'right'; ctx.fillText('N ↑', W - 6 * dpr, 13 * dpr);
-  ctx.textAlign = 'left'; ctx.fillText(fmt(2 * R / NM, 1) + ' nm', 6 * dpr, H - 6 * dpr);
+  // the GPS along the foot: speed and course with how far across, the position (on two lines when it is too wide), the next waypoint
+  const G = GPS3D, fs = Math.round(10.5 * dpr), lh = Math.round(12.5 * dpr), pad = 5 * dpr, L = [];
+  ctx.font = '600 ' + fs + 'px sans-serif';
+  if (G){
+    L.push([G.kn + '  ' + G.crs, fmt(2 * R / NM, 1) + ' nm']);
+    const pos = G.ll[0] + ' ' + G.ll[1]; if (ctx.measureText(pos).width <= W - 2 * pad) L.push([pos]); else L.push([G.ll[0]], [G.ll[1]]);
+    if (G.nv){ const a = 'WPT ' + G.nv.n + ' ' + G.nv.wpt, b = 'ETA ' + G.nv.eta; if (ctx.measureText(a + '  ' + b).width <= W - 2 * pad) L.push([a, b]); else L.push([a], [b]); }
+  } else L.push(['', fmt(2 * R / NM, 1) + ' nm']);
+  const h = L.length * lh + pad; ctx.fillStyle = 'rgba(6,16,24,.66)'; ctx.fillRect(0, H - h, W, h);
+  ctx.fillStyle = '#eef4f7';
+  L.forEach((r, i) => { const y = H - h + pad * 0.6 + (i + 0.78) * lh; ctx.textAlign = 'left'; ctx.fillText(r[0], pad, y); if (r[1]){ ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(230,240,245,.7)'; ctx.fillText(r[1], W - pad, y); ctx.fillStyle = '#eef4f7'; } });
 }
 if (MINIP.el){ MINIP.el.addEventListener('click', () => openPlotter()); setInterval(() => { if (!document.hidden) miniPaint(); }, 1000); }

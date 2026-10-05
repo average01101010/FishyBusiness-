@@ -570,6 +570,8 @@ body.v3d #instr{display:none!important}
 /* the GPS box in 3D, under the little chart: the status box's width and look (the user's wish 02.10.2026) */
 #gps3d{display:none}
 body.v3d #gps3d:not([hidden]){display:block;position:absolute;z-index:4;left:8px;top:calc(var(--gpsTop,130px) + min(var(--hudW,176px),26vh) + 6px);width:var(--hudW,176px);box-sizing:border-box;padding:6px 9px 7px;border-radius:8px;border:1px solid rgba(255,255,255,.14);background:rgba(6,16,24,.38);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#eef4f7;font-size:12.5px;pointer-events:none}
+/* the little chart carries the GPS in its foot (03e-miniplot.js, Jonas 05.10.2026): the box is only shown where the chart is not */
+@media (min-height:521px){ body.v3d #gps3d:not([hidden]){display:none} }
 #gps3d .row{display:flex;justify-content:space-between;gap:10px;font-variant-numeric:tabular-nums;line-height:1.45} #gps3d .row > span{color:rgba(230,240,245,.68);white-space:nowrap} #gps3d .row b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* play and pause for the route (the user's wish 02.10.2026) */
 .zoom button.rt.play{width:56px;height:56px;border-radius:50%;background:var(--mag);border-color:var(--mag);color:#fff;align-self:flex-end;box-shadow:0 4px 14px rgba(208,40,120,.45)}
@@ -685,6 +687,15 @@ body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 2
   /* the compass along the top, the info box under it */
   body.v3d #compass3d{left:8px;right:64px;width:auto;transform:none}
   body.v3d #hud{top:calc(env(safe-area-inset-top,0px) + 40px)}
+  /* a standing phone (Jonas 05.10.2026: «Det tar jo opp halve skjermen ... Alle vinduene må rett og slett bli mindre eller smalere»):
+     the info box smaller and at most about a third of the width (Jonas: «Tar jo halve skjermen i bredden»), a long line wrapping and
+     a long value cut; the little chart under it as wide and no taller than a fifth of the screen */
+  body.v3d #hud{zoom:.74;max-width:47vw;min-width:0!important;top:calc((env(safe-area-inset-top,0px) + 40px) / .74)}   /* zoom scales the offset too */
+  body.v3d #hud .st.nx{white-space:normal;line-height:1.2}
+  body.v3d #hud .row{gap:6px;line-height:1.28}
+  body.v3d #hud .row > span{flex:none}
+  body.v3d #hud .row b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  body.v3d #miniPlot{height:min(var(--hudW,176px),20vh)}
   /* the action row from the deck log's tab to the phone button, a name on two lines when it must */
   #dock{left:38px;right:58px;bottom:calc(env(safe-area-inset-bottom,0px) + 20px)}
   .dk-b{width:56px;font-size:10px} .dk-b .dk-i{width:44px;height:44px} .dk-b .dk-i svg{width:22px;height:22px}

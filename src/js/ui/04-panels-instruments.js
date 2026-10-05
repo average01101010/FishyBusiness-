@@ -126,7 +126,9 @@ const INSTR = (() => {
   }
   // the box under the little chart in 3D (the user's wish 02.10.2026): the same width and look as the status box over it
   function render3d(pose, H, sog, ll, nv){
-    const el = $('gps3d'), no = S.lang === 'no', on = S.boat.status !== 'port'; if (!el) return;
+    const el = $('gps3d'), no = S.lang === 'no', on = S.boat.status !== 'port';
+    GPS3D = {kn:fmt(sog, 1) + ' kn', crs:deg3(pose.hd), ll, nv};   // the little chart's foot (03e-miniplot.js)
+    if (!el) return;
     if (el.hidden === on) el.hidden = !on; if (!on) return;
     const row = (k, v) => '<div class="row"><span>' + k + '</span><b>' + v + '</b></div>';
     setHtml(el, row(no ? 'Fart' : 'Speed', fmt(sog, 1) + ' kn') + row(no ? 'Kurs' : 'Course', deg3(pose.hd)) + row('POS', ll[0]) + row('', ll[1]) +
