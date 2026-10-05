@@ -3,7 +3,7 @@
 // Spilleren skal så kunne åpne konvolutten ved å trykke på den, og den vil da åpne seg på en tilfredsstillende måte. Ut kommer det et
 // brettet brev som åpnes.» A new game opens on it: a tap turns the envelope over, the flap opens, the folded letter slides out, comes
 // forward and unfolds, and «Ta over» goes on to naming the boat (showIntro). The paper is Blender's (tools/opening/brev.py, the
-// pictures pic-letter-*), the handwriting the page's (Caveat and Rock Salt from Google Fonts), so it is sharp on any screen and has
+// pictures pic-letter-*), the handwriting the page's (Caveat and Rock Salt, in the page), so it is sharp on any screen and has
 // both languages; the paper sounds are made here from noise. The letter's words are Jonas's.
 const LETTER = {
   read:false,
@@ -33,7 +33,7 @@ function letterSound(kind){
   const st = S.settings || {}; if (st.sound === false) return; const vol = st.vol == null ? 0.6 : st.vol;
   const P = {lift:[0.18, 1600, 0.7, 0.2], flip:[0.3, 2300, 0.8, 0.5], peel:[0.6, 3400, 0.45, 1.6], slide:[0.95, 1300, 0.6, 0.25], unfold:[0.42, 2700, 0.55, 1.0], fold:[0.35, 1900, 0.6, 0.6]}[kind]; if (!P) return;
   try {
-    LETTER_AC = LETTER_AC || new (window.AudioContext || window.webkitAudioContext)(); const ac = LETTER_AC; if (ac.state === 'suspended') ac.resume();
+    LETTER_AC = LETTER_AC || new (window.AudioContext || window.webkitAudioContext)(); const ac = LETTER_AC; if (ac.state !== 'running') ac.resume().catch(() => {});
     const [dur, f, q, crack] = P, n = Math.floor(ac.sampleRate * dur), b = ac.createBuffer(1, n, ac.sampleRate), d = b.getChannelData(0);
     for (let i = 0; i < n; i++){ const t = i / n, env = Math.pow(Math.sin(Math.PI * Math.min(1, t * 1.1)), 1.4); let x = Math.random() * 2 - 1; if (Math.random() < crack * 0.004) x *= 5; d[i] = x * env * (0.55 + 0.45 * Math.random()); }
     const src = ac.createBufferSource(); src.buffer = b; const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = f; bp.Q.value = q;

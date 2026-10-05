@@ -236,8 +236,11 @@ const SND = (() => {
   }
   // the first touch starts it; a hidden page is silent
   // (a tap at the sign-in gate comes before the game is there: the sound waits for it)
-  document.addEventListener('pointerdown', () => { if (!started){ if (S && S.settings) start(); } else if (ac && ac.state === 'suspended' && !document.hidden) ac.resume(); }, true);
-  document.addEventListener('visibilitychange', () => { if (!ac) return; if (document.hidden) ac.suspend(); else ac.resume(); });
+  // iOS refuses to resume outside a tap, after a call or with the phone's audio taken («Failed to start the audio device», seen in
+  // the error log 05.10.2026), and may leave the context «interrupted»: such a refusal is quiet, and the next tap tries again
+  const quiet = p => { if (p && p.catch) p.catch(() => {}); };
+  document.addEventListener('pointerdown', () => { if (!started){ if (S && S.settings) start(); } else if (ac && ac.state !== 'running' && ac.state !== 'closed' && !document.hidden) quiet(ac.resume()); }, true);
+  document.addEventListener('visibilitychange', () => { if (!ac || ac.state === 'closed') return; quiet(document.hidden ? ac.suspend() : ac.resume()); });
   // testEar / testSrc (for the tests): an ear and the places, as G3.ear and G3.sndSrc give them in 3D
   return {start, FIRES, MUS, get started(){ return started; }, get state(){ return ac ? ac.state : 'none'; }, LV, tick, at:(q, ref, e) => { const k = EAR; EAR = e; const r = at(q, ref); EAR = k; return r; }, testEar:null, testSrc:null};
 })();
