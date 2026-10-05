@@ -287,6 +287,14 @@ function histRows(){
   const rows = (H.prev ? [row('local', H.prev.at, H.prev.summary, L2('denne enheten', 'this device'))] : []).concat(H.list.map(h => row(h.id, h.saved_at, h.summary, L2('kontoen', 'account'))));
   return '<h4>' + L2('Tidligere lagringer', 'Earlier saves') + '</h4>' + (rows.length ? rows.join('') : '<p class="ph-note">' + L2('Ingen ennå.', 'None yet.') + '</p>');
 }
+// the player's own feedback videos out of the Storage bucket (supabase/migrations/20261006010000_feedback_media.sql); quietly nothing
+// where the database does not have the list yet
+async function cloudMediaDel(){
+  try { const l = await cloudRpc('fb_media_list', {}); if (!l || !l.length) return;
+    const tok = await cloudToken(), c = CLOUD_CFG;
+    await fetch(c.supabaseUrl.replace(/\/$/, '') + '/storage/v1/object/feedback-media', {method:'DELETE', headers:{'Content-Type':'application/json', apikey:c.supabaseAnon, ...(tok ? {Authorization:'Bearer ' + tok} : {})}, body:JSON.stringify({prefixes:l})});
+  } catch (e){ console.warn('feedback media', e); }
+}
 function cloudAct(a, d){
   if (a === 'cloudHist'){ cloudHist(); return true; }
   if (a === 'cloudRestore'){ cloudRestore(d && d.id); return true; }
@@ -298,7 +306,8 @@ function cloudAct(a, d){
     // the game on this device goes too (Jonas 05.10.2026: deleting the account to begin again kept the old game here, and the new
     // account went on with it, without Father's letter or the boathouse); the next sign-in starts a new game with the letter
     if (!confirm(cloudL('Slette kontoen? Spillet på kontoen og på denne enheten, statistikken og innloggingen slettes. Kjøp beholdes uten navn i regnskapet. Neste gang begynner du på nytt.', 'Delete the account? The game on the account and on this device, the statistics and the sign-in are deleted. Purchases are kept without a name for the books. Next time you begin again.'))) return true;
-    cloudRpc('delete_me', {}).then(() => {
+    // the videos sent with feedback go first, through Storage (which does not take deletes made in the database)
+    cloudMediaDel().then(() => cloudRpc('delete_me', {})).then(() => {
       SAVE_OFF = true;   // nothing saved again on the way out
       for (const k of [KEY, KEY_V1, KEY_PREV, CLOUD_SIGNED, syncKey()]) try { localStorage.removeItem(k); } catch (e){}
       try { sessionStorage.removeItem('dsb_pulled'); sessionStorage.removeItem('dsb_force'); } catch (e){}

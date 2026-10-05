@@ -2216,6 +2216,18 @@ Jonas 05.10.2026: «Lag en feedback-app i telefonen hvor brukerne kan komme med 
   - Slettes med spilleren (`on delete cascade`), ellers etter to år (`dsb-feedback` i pg_cron). Personvernerklæringen har et eget avsnitt.
 - **Admin-dashbordet** (`/admin`, fanen Tilbakemeldinger): tall, fordeling per emne, filter, hver tilbakemelding med bilde ved trykk, det som fulgte med (posisjonen som lenke til Norgeskart), og status og svar som lagres per rad. Fanen hentes ikke på nytt hvert minutt, så et svar som skrives, blir stående.
 - **Test:** `tests/feedbacktest.py` (LITE) med en stand-in for Supabase: appen, emnene, teksten mellom tegningene, et bilde som gjøres mindre, sendingen med det som følger med, og listen med svar. `G3.snap` testes ikke der (ingen 3D).
+- **Flere bilder og video** (05.10.2026; Jonas: «Litt viktig at spillet tillater skjermbilder og skjermopptak. Dette er essensielt ved logging av feilmeldinger», så «Kjør på med video og flere bilder»; `supabase/migrations/20261006010000_feedback_media.sql`):
+  - En nettside eller PWA kan ikke sperre skjermbilder eller skjermopptak på Android. Det gjør bare Chrome selv i inkognitofaner. Appen forklarer hvordan man tar dem.
+  - **Appen:** opptil fire bilder (`D.imgs`, «Velg bilder eller video» med `multiple`, og «Bilde av spillet») og to videoer (`D.vids`) på inntil to minutter, vist som miniatyrer med ×.
+    - En video over 50 MB (gratisplanens største fil), eller i et format bøtta ikke tar, spilles én gang gjennom et lerret på høyst 1280 px og tas opp igjen med `MediaRecorder` (MP4 der nettleseren kan, ellers WebM). Bitraten velges så filen havner under grensen, høyst 2,5 Mbit/s. Det tar like lang tid som videoen, med prosent på skjermen.
+  - **Sendingen:** `fb_send2` tar teksten og bildene. Det første bildet ligger i `feedback.img` som før, resten i `feedback_img`. Uten migreringen (404) brukes `fb_send` med det første bildet, uten video.
+    - Deretter tar hver video `fb_media_slot` (navnet `<spiller>/<id>-<n>-<tilfeldig>.<ext>` i spillerens egen mappe, for en tilbakemelding fra siste time, høyst to per tilbakemelding og seks per døgn), opplasting med fremdrift (`XMLHttpRequest` til `/storage/v1/object/feedback-media/…`, `x-upsert: false`) og `fb_media_done`.
+    - Feiler en opplasting, er teksten og bildene allerede inne. Skjemaet beholder videoene og viser «Send videoen på nytt». Navnet fra forsøket som feilet, gir plass til det nye.
+  - **Storage:** den private bøtta `feedback-media` (50 MB per fil, bare videotyper). Policyene: opplasting bare til et navn `fb_media_slot` har gitt ut og som ikke er brukt (`fb_media_ok`), lesing og sletting i egen mappe (`fb_media_own`) eller for admin (`is_admin()`).
+  - **Sletting:** Storage godtar ikke sletting fra SQL (`storage.protect_delete`). Spillet sletter derfor spillerens videoer gjennom Storage (`cloudMediaDel`, `fb_media_list`) før `delete_me`.
+    - En fil som har mistet raden sin, for eksempel etter to år eller hvis slettingen i spillet feilet, telles som «uten tilbakemelding» i admin og kan slettes der (`admin_media_orphans`).
+  - **Admin:** «Vis n bilder» (`admin_feedback_imgs`), «Spill av video» (signert lenke i en time), «Slett videoen» (Storage og så `admin_media_gone`), og MB video av 1 024 MB på gratisplanen.
+  - **Test:** `sqltest` (bildene, navnene, grensene, låsen og admin) og `feedbacktest` (to bilder, en video som beholdes, en over grensen som gjøres mindre, en opplasting som feiler og sendes på nytt, og listen med 📷 og 🎬). Policyene i Storage kan bare testes på ekte Supabase.
 
 ### 5.26 Måker og halere fra Blender (03.10.2026)
 

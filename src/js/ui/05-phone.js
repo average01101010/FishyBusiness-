@@ -391,6 +391,9 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p46', '05.10.2026', 'Video og flere bilder i Tilbakemelding', 'Video and more pictures in Feedback', [
+      ['I Tilbakemelding kan du nå legge ved opptil fire bilder og to videoer, for eksempel et skjermopptak av en feil. Store opptak gjøres mindre før de sendes, og du ser hvor langt sendingen har kommet.', 'In Feedback you can now add up to four pictures and two videos, for example a screen recording of a bug. Large recordings are made smaller before they are sent, and you see how far the sending has come.'],
+      ['Skjermbilde: av/på og volum ned samtidig. Skjermopptak: dra ned hurtigmenyen og velg «Skjermopptak».', 'Screenshot: power and volume down together. Screen recording: pull down the quick settings and choose «Screen recorder».']]],
     ['p45', '05.10.2026', 'Én sjø, én kvote og ett marked', 'One sea, one quota and one market', [
       ['Fisken de andre spillerne tar, er borte fra sjøen din også. Fisker noen et felt tomt, er det tomt for alle til det har vokst til igjen.', 'The fish the other players take is gone from your sea too. If someone fishes a ground empty, it is empty for everyone until it has grown back.'],
       ['Torsken spillerne lander i åpen gruppe, teller med i gruppekvoten, så stoppen kan komme tidligere. Kvote-appen viser hvor mye de andre spillerne har landet i år.', 'The cod the players land in the open group counts in the group quota, so the stop can come earlier. The Quota app shows how much the other players have landed this year.'],
@@ -1290,7 +1293,7 @@ const PHONE = (() => {
   }
   view.addEventListener('click', e => { const t0 = e.target.closest('[data-pa],[data-act]'); if (!t0 || t0.disabled) return; if (t0.dataset.pa) act(t0.dataset.pa, t0.dataset); else { doAct(t0); render(); } });
   view.addEventListener('input', e => { if (e.target.id === 'coName') coDraft = e.target.value; else if (e.target.id === 'fbBody') return FEEDBACK.input(e.target.value); panelInput(e); });
-  view.addEventListener('change', e => { if (e.target.id === 'fbFile') return FEEDBACK.pick(e.target.files && e.target.files[0]); panelChange(e); if (e.target.id === 'setAuto') render(); });
+  view.addEventListener('change', e => { if (e.target.id === 'fbFile') return FEEDBACK.pick(e.target.files); panelChange(e); if (e.target.id === 'setAuto') render(); });
   el.querySelector('.ph-nav').addEventListener('click', e => { const t0 = e.target.closest('[data-pa]'); if (t0) act(t0.dataset.pa, t0.dataset); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && isOpen) show(false); });
   el.classList.add('off');

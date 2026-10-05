@@ -127,6 +127,31 @@ def main():
         R['fbImg'] = sql("select length(public.admin_feedback_img(%d))" % fid, AD2, 'authenticated')
         sql("select public.admin_feedback_set(%d, 'fixed', 'Takk, rettet!')" % fid, AD2, 'authenticated')
         R['fbMine2'] = json.loads(sql("select public.fb_mine()", A, 'authenticated'))
+        # several pictures and video (20261006010000_feedback_media.sql)
+        I2 = 'data:image/png;base64,' + 'B' * 300; I3 = 'data:image/webp;base64,' + 'C' * 200
+        R['fb2'] = sql("""select public.fb_send2('bug', 'Tre bilder', null, '["%s", "%s", "%s"]', '{}')""" % (IMG, I2, I3), A, 'authenticated')
+        R['fb2Bad'] = sql("""select public.fb_send2('bug', 'Feil bilde', null, '["%s", "javascript:x"]', '{}')""" % IMG, A, 'authenticated', expect_err=True)
+        R['fb2Five'] = sql("""select public.fb_send2('bug', 'Fem bilder', null, '["%s", "%s", "%s", "%s", "%s"]', '{}')""" % ((IMG,) * 5), A, 'authenticated', expect_err=True)
+        R['fb2None'] = sql("select public.fb_send2('idea', 'Uten bilder', null, null, '{}')", A, 'authenticated')
+        f2 = int(R['fb2'])
+        R['slot1'] = sql("select public.fb_media_slot(%d, 'video/mp4', 30000000, 42)" % f2, A, 'authenticated')
+        R['slotOk'] = sql("select public.fb_media_ok('%s')" % R['slot1'], A, 'authenticated') + '/' + sql("select public.fb_media_ok('%s')" % R['slot1'], B, 'authenticated') + '/' + sql("select public.fb_media_own('%s')" % R['slot1'], A, 'authenticated') + '/' + sql("select public.fb_media_own('%s')" % R['slot1'], B, 'authenticated')
+        sql("select public.fb_media_done('%s')" % R['slot1'], A, 'authenticated')
+        R['slotDone'] = sql("select public.fb_media_ok('%s')" % R['slot1'], A, 'authenticated')
+        R['slot2a'] = sql("select public.fb_media_slot(%d, 'video/webm', 1000, 2)" % f2, A, 'authenticated')
+        R['slot2'] = sql("select public.fb_media_slot(%d, 'video/webm', 1000, 2)" % f2, A, 'authenticated')   # the first try failed: a new name in its place
+        sql("select public.fb_media_done('%s')" % R['slot2'], A, 'authenticated')
+        R['slot3'] = sql("select public.fb_media_slot(%d, 'video/mp4', 1000, 2)" % f2, A, 'authenticated', expect_err=True)
+        R['slotBig'] = sql("select public.fb_media_slot(%d, 'video/mp4', 60000000, 2)" % int(R['fb2None']), A, 'authenticated', expect_err=True)
+        R['slotType'] = sql("select public.fb_media_slot(%d, 'text/html', 1000, 2)" % int(R['fb2None']), A, 'authenticated', expect_err=True)
+        R['slotOther'] = sql("select public.fb_media_slot(%d, 'video/mp4', 1000, 2)" % f2, B, 'authenticated', expect_err=True)
+        R['mediaList'] = json.loads(sql("select public.fb_media_list()", A, 'authenticated')); R['mediaListB'] = json.loads(sql("select public.fb_media_list()", B, 'authenticated'))
+        R['mine2'] = [m for m in json.loads(sql("select public.fb_mine()", A, 'authenticated')) if m['id'] == f2]
+        R['admImgs'] = json.loads(sql("select public.admin_feedback_imgs(%d)" % f2, AD2, 'authenticated'))
+        R['admImgsPl'] = sql("select public.admin_feedback_imgs(%d)" % f2, A, 'authenticated', expect_err=True)
+        F2 = json.loads(sql("select public.admin_feedback(50, null, null)", AD2, 'authenticated')); R['admRow2'] = [r for r in F2['rows'] if r['id'] == f2]; R['admVmb'] = F2.get('vmb'); R['admOrph'] = F2.get('orphans')
+        sql("select public.admin_media_gone('%s')" % R['slot2'], AD2, 'authenticated'); R['mediaAfterGone'] = json.loads(sql("select public.fb_media_list()", A, 'authenticated'))
+        R['mediaRead'] = sql("select count(*) from public.feedback_media", A, 'authenticated', expect_err=True)
         for i in range(20): sql("select public.fb_send('other', 'nr %d', null, null, '{}')" % i, B, 'authenticated')
         R['fbLimit'] = sql("select public.fb_send('other', 'nr 21', null, null, '{}')", B, 'authenticated', expect_err=True)
         # the cloud save by revision (20261005200000_save_sync.sql): a device that has not met the cloud's newest save cannot write over
@@ -210,6 +235,14 @@ def main():
         print(ok(all(R[k][0] for k in ('fbRead', 'fbAdmPl', 'fbAdm1')) and F['rows'] and F['rows'][0]['meta'].get('version') == 't1' and F['topics'].get('bug') == 1 and R['fbImg'] == str(len(IMG)) and R['fbMine2'][0]['status'] == 'fixed' and R['fbMine2'][0]['reply'] == 'Takk, rettet!'),
               'feedback: no player reads the table or the list, nor the admin without the second factor; the admin lists them, opens the picture, sets the status and answers, and the player sees it', {'topics': F.get('topics'), 'img': R['fbImg'], 'mine': R['fbMine2'][0] if R['fbMine2'] else None})
         print(ok(R['fbLimit'][0] and R['fbGone'] == '0'), 'feedback: at most 20 a day, and they go with the account', [R['fbLimit'][1][:40], R['fbGone']])
+        a2 = R['admRow2'][0] if R['admRow2'] else {}; m2 = R['mine2'][0] if R['mine2'] else {}
+        print(ok(R['fb2'].isdigit() and R['fb2Bad'][0] and R['fb2Five'][0] and R['fb2None'].isdigit() and R['admImgs'] == [IMG, I2, I3] and R['admImgsPl'][0] and m2.get('nimg') == 3 and a2.get('nimg') == 3),
+              'feedback: up to four pictures, each checked; the admin gets them all in order, a player not', {'mine': m2, 'bad': R['fb2Bad'][1][:30], 'five': R['fb2Five'][1][:30]})
+        print(ok(R['slot1'].startswith('user_01AAA/%d-1-' % f2) and R['slot1'].endswith('.mp4') and R['slotOk'] == 't/f/t/f' and R['slotDone'] == 'f' and R['slot2'].endswith('.webm')
+                 and all(R[k][0] for k in ('slot3', 'slotBig', 'slotType', 'slotOther', 'mediaRead')) and R['mediaListB'] == [] and m2.get('vids') == 2
+                 and len(a2.get('vids', [])) == 2 and R['admVmb'] == 28.6 and R['slot2a'] != R['slot2'] and R['slot2a'] not in [v['path'] for v in a2.get('vids', [])] and R['admOrph'] == 0 and R['mediaAfterGone'] == [R['slot1']]),
+              "feedback video: a name in the player's own folder for their own feedback, which only they may upload to and only once; two a feedback, 50 MB, video types only; the admin sees them and drops a deleted one",
+              {'slot': R['slot1'], 'ok': R['slotOk'], 'refused': [R[k][1][:30] for k in ('slot3', 'slotBig', 'slotType', 'slotOther')], 'vmb': R['admVmb'], 'vids': a2.get('vids')})
         nb = R['nearB'][0] if R['nearB'] else {}
         print(ok(len(R['nearB']) == 1 and nb.get('boat') == 'Havbris' and nb.get('vtype') == 'trebat' and len(nb.get('id', '')) == 10 and 'user_' not in json.dumps(R['nearB'])
                  and len(R['nearA']) == 1 and R['nearA'][0]['boat'] == 'Fjordbris' and R['nearFar'] == [] and R['nearStale'] == []),
