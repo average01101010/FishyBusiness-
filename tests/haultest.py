@@ -27,8 +27,12 @@ async def main():
         await pg.wait_for_function("G3.isActive()", timeout=90000); await pg.wait_for_timeout(3000)
         for kind in ['garn', 'line']:
             await pg.evaluate(SET, kind); await pg.wait_for_timeout(2500)
-            a0 = await pg.evaluate("G3._debug.haulA"); await pg.wait_for_timeout(2000); a1 = await pg.evaluate("G3._debug.haulA")
-            st = await pg.evaluate("({deckStop:!!S.boat.deckStop, op:S.boat.gop && S.boat.gop.op, status:S.boat.status})")
+            # the sheave turns frame by frame: wait for frames (SwiftShader can take over a second for one), not a fixed time
+            a0 = await pg.evaluate("G3._debug.haulA")
+            try: await pg.wait_for_function("a => G3._debug.haulA > a + 0.05", arg=a0, timeout=20000)
+            except Exception: pass
+            a1 = await pg.evaluate("G3._debug.haulA")
+            st = await pg.evaluate("({deckStop:!!S.boat.deckStop, op:S.boat.gop && S.boat.gop.op, status:S.boat.status, fps:Math.round(G3._debug.fps * 10) / 10})")
             m = await pg.evaluate(f"(() => {{ const M = G3._debug.haulModel('{kind}'); return M ? {{r:M.r, n:M.path.length, parts:[!!M.frame, !!M.sheave, !!M.stripper]}} : null; }})()")
             await pg.screenshot(path=f'haul_{kind}.png')
             check(m and all(m['parts']) and a1 > a0, kind + 'haleren fra Blender står ved ripa, og skiva går rundt mens det hales', (m, round(a0, 2), round(a1, 2), st))
