@@ -345,10 +345,27 @@ function stockAt(p, sp){
   if (sp && SPECIES[sp].shell) return S && S.cstk ? stkGet(S.cstk, stockIdx(p)) : 1;
   if (!S || !S.stock) return 1; let v = 0; for (const [k, w] of stockW(p)) v += stkGet(S.stock, k) * w; return v;
 }
-function takeStock(p, kg, sp){
+// npc: the local fleet's take (stockHour), which every game works out for itself; what the player's own boats take is also kept for
+// the other players (the shared world V2)
+function takeStock(p, kg, sp, npc){
   if (sp && SPECIES[sp].shell){ if (!S.cstk) S.cstk = {}; const k = stockIdx(p); stkSet(S.cstk, k, Math.max(0.1, stkGet(S.cstk, k) - kg / (STK.K * 0.25))); return; }
-  if (!S.stock) return; for (const [k, w] of stockW(p)) if (w > 0) stkSet(S.stock, k, Math.max(0.12, stkGet(S.stock, k) - kg * w / STK.K));
+  if (!S.stock) return; const q = !npc && WSH.rec ? wq().c : null;
+  for (const [k, w] of stockW(p)) if (w > 0){ stkSet(S.stock, k, Math.max(0.12, stkGet(S.stock, k) - kg * w / STK.K)); if (q && (q[k] != null || Object.keys(q).length < 3000)) q[k] = (q[k] || 0) + kg * w; }
 }
+// ---- the shared world V2 (05.10.2026; ui/10h-world.js, supabase/migrations/20261006000000_world_v2.sql): one sea, one quota and one
+// market. WSH holds what came down last of what the other players have done: their open-group cod this year (t, counted with the
+// fleet's in 03d-quota.js) and how many boats, and what they delivered to each plant (kg at game hour mH, decaying 3 % an hour as
+// S.market does). The fish they took comes down cell by cell and is taken from this game's sea at once (wshTake). S.wq holds what
+// goes up: the cells this game's boats took fish from, and its sales. rec is on only with the cloud. ----
+const WSH = {rec:false, y:0, open:0, boats:0, mkt:{}, mH:0};
+function wq(){ return S.wq || (S.wq = {c:{}, l:[]}); }
+function wshOpen(y){ return WSH.y === y ? WSH.open : 0; }
+function wshSat(pid, sp, H){ const m = WSH.mkt[pid]; return m && m[sp] ? m[sp] * Math.pow(0.97, Math.max(0, H - WSH.mH)) : 0; }
+function wshTake(k, kg){ if (S.stock && kg > 0) stkSet(S.stock, k, Math.max(0.12, stkGet(S.stock, k) - kg / STK.K)); }
+// a sale for the others: kilos a species, and the cod counted on the open group's quota
+function wshLand(port, H, acc, kgSp, codQ){ if (!WSH.rec) return; const Q = wq(); if (Q.l.length >= 200) return;
+  const items = Object.entries(kgSp).filter(([, kg]) => kg > 0.01).slice(0, 24).map(([sp, kg]) => ({sp, kg:+kg.toFixed(1), kgq:sp === 'torsk' && acc === 'open' ? +codQ.toFixed(1) : 0}));
+  if (items.length) Q.l.push({gh:+H.toFixed(2), y:yearH(H), port, acc, items}); }
 function initStock(){
   const a = {};
   // the famous grounds are already worked by the local fleet when the game starts
@@ -371,9 +388,9 @@ function stockHour(H){
   // crab comes back more slowly, and does not wander far
   if (S.cstk){ const c = {}; for (const k in S.cstk){ const v = S.cstk[k]; stkSet(c, k, Math.round(Math.min(1, v + Math.max((1 - v) * 0.0015, 0.0001)) * 1e4) / 1e4); } S.cstk = c; }
   // the local fleet works the known grounds on fishable days
-  for (const q of npcStates(H)) if (q.fleet && q.st === 'fishing') takeStock(q.p, 18);
+  for (const q of npcStates(H)) if (q.fleet && q.st === 'fishing') takeStock(q.p, 18, null, true);
   const hr = gDate(H).getUTCHours();
-  if (hr >= 6 && hr < 15 && windAt(H) < 12) for (const g of GROUNDS.slice(0, 3)) for (let k = 0; k < 5; k++){ const a = k * 1.26 + H * 0.07, q = {x:g.p.x + Math.cos(a) * g.r * 0.45 * (k ? 1 : 0), y:g.p.y + Math.sin(a) * g.r * 0.45 * (k ? 1 : 0)}; if (!isLandFar(q)) takeStock(q, 12); }
+  if (hr >= 6 && hr < 15 && windAt(H) < 12) for (const g of GROUNDS.slice(0, 3)) for (let k = 0; k < 5; k++){ const a = k * 1.26 + H * 0.07, q = {x:g.p.x + Math.cos(a) * g.r * 0.45 * (k ? 1 : 0), y:g.p.y + Math.sin(a) * g.r * 0.45 * (k ? 1 : 0)}; if (!isLandFar(q)) takeStock(q, 12, null, true); }
 }
 // preferred depth (m) and spread per species: cod and saithe on the banks, haddock deeper, ling and tusk deep
 const DPREF = Object.fromEntries(ALLSP.map(sp => [sp, SPECIES[sp].dep]));
@@ -417,7 +434,7 @@ function marketPrice(sp, H){ return seasonal(SPECIES[sp].pm, H) * (1 + weekDev(s
 // price per kg round weight for one size class at one buyer; the minimum price (with the hook-caught premium) is the floor
 function clsPrice(port, sp, c, H, hook){
   const s = SPECIES[sp], cl = s.cls[c], ref = s.cls[s.ref];
-  const sat = (S && S.market && S.market[port.id] && S.market[port.id][sp]) || 0;
+  const sat = ((S && S.market && S.market[port.id] && S.market[port.id][sp]) || 0) + wshSat(port.id, sp, H);   // the other players' too
   const mk = marketPrice(sp, H) * port.pf * folkPf(port.id) * supplyFactor(H) * (cl[1] / ref[1]) * Math.max(0.9, 1 - sat / 40000);
   return Math.round(Math.max(cl[1] * (hook !== false && cl[3] ? cl[3] : 1), mk) * 100) / 100;
 }

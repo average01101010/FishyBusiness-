@@ -118,6 +118,30 @@ async def main():
         await pg.evaluate("async () => { cloudAct('cloudShowMe'); await new Promise(r => setTimeout(r, 300)); await worldTick(); }")
         wo = [c[0] for c in calls[n0:]]
         check('pos_off' in wo and 'pos_put' not in wo and 'pos_near' in wo, '«Vis båten min for andre spillere» off: the boat is taken away at once, and no place goes up after (the others are still seen)', wo)
+        # the shared world V2: my sale and the fish my boat took go up; the other players' open-group cod, deliveries and catch come down
+        k = await pg.evaluate("stockIdx(S.boat.pos)")
+        replies['land_put'] = 'null'; replies['catch_put'] = 'null'; n0 = len(calls)
+        w2 = await pg.evaluate("""async () => { const pt = plantsNear(S.boat.pos, 1)[0].pt, H = S.t / 60, k = stockIdx(S.boat.pos), y = yearH(H);
+          S.wcur = 0; S.wq = {c:{}, l:[]}; const rec = WSH.rec; takeStock(S.boat.pos, 100); const pend = Object.keys(S.wq.c).length;
+          wshLand(pt.id, H, 'open', {torsk:120, hyse:30}, 110); takeStock(S.boat.pos, 100, null, true); const pend2 = Object.keys(S.wq.c).length;
+          const before = {st:stkGet(S.stock, k), sat:wshSat(pt.id, 'torsk', H), pr:price(pt, 'torsk', H)};
+          window.__cell = k; return {rec, pend, pend2, before, pid:pt.id, y}; }""")
+        replies['world_get'] = {'open': 25000, 'boats': 3, 'mkt': [[w2['pid'], 'torsk', 30000]], 'cells': [[k, 1300]], 'cur': 42}
+        w3 = await pg.evaluate("""async () => { await worldShare(); const pt = plantsNear(S.boat.pos, 1)[0].pt, H = S.t / 60;
+          PHONE.open('kvote'); document.querySelector('#phone [data-pa=sub][data-s=open]').click(); const txt = document.getElementById('phone').innerText; PHONE.show(false);
+          return {st:stkGet(S.stock, window.__cell), sat:wshSat(pt.id, 'torsk', H), pr:price(pt, 'torsk', H), open:wshOpen(yearH(H)), cur:S.wcur, q:S.wq, txt:txt.includes('Andre spillere har landet') && txt.includes('3 båter')}; }""")
+        lp = [c[1] for c in calls[n0:] if c[0] == 'land_put']; cp = [c[1] for c in calls[n0:] if c[0] == 'catch_put']; wg = [c[1] for c in calls[n0:] if c[0] == 'world_get']
+        it = {i['sp']: i for i in (lp[0]['items'] if lp else [])}
+        check(w2['rec'] and w2['pend'] >= 1 and w2['pend2'] == w2['pend'] and lp and lp[0]['port'] == w2['pid'] and lp[0]['acc'] == 'open' and it.get('torsk', {}).get('kgq') == 110 and it.get('hyse', {}).get('kgq') == 0
+              and cp and abs(sum(c[1] for c in cp[0]['cells']) - 100) < 0.5 and wg and wg[0]['since'] == 0 and w3['q'] == {'c': {}, 'l': []},
+              "the shared world V2: a sale (kilos a species, the cod on the open group's quota) and the fish my boat took (by cell; not the local fleet's) go up, and the queue empties",
+              {'land': lp[0] if lp else None, 'cells': cp[0]['cells'] if cp else None, 'get': wg[0] if wg else None})
+        check(abs(w3['open'] - 25) < 1e-6 and w3['txt'] and abs(w3['sat'] - 30000) < 300 and w3['pr'] <= w2['before']['pr'] and abs((w2['before']['st'] - w3['st']) - 0.5) < 0.02 and w3['cur'] == 42,
+              "the shared world V2: the other players' open-group cod counts in the group's catch (shown in Kvote), their deliveries fill the plant and its price, and the fish they took is gone from my sea",
+              {'before': w2['before'], 'after': {k2: w3[k2] for k2 in ('st', 'sat', 'pr', 'open', 'cur')}})
+        n0 = len(calls); await pg.evaluate("worldShare()"); await pg.wait_for_timeout(500)
+        wg = [c[1] for c in calls[n0:] if c[0] == 'world_get']
+        check(wg and wg[0]['since'] == 42 and not [c for c in calls[n0:] if c[0] in ('land_put', 'catch_put')], 'the shared world V2: the next ask goes on from the cursor, and nothing already sent goes again', wg)
         # a database without the migration yet (save_put2 is not there): the old put, so the game is still saved
         replies['save_put2'] = 404; replies['save_put'] = {'ok': True}; n0 = len(calls)
         await pg.evaluate("async () => { S.lastReal = Date.now() + 9; save(); CLOUD.lastSave = 0; await cloudSaveSoon(); S.lastReal = Date.now() + 19; save(); await cloudSaveSoon(); }")

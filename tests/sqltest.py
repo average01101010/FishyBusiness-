@@ -158,7 +158,25 @@ def main():
         R['posBad'] = sql("select public.pos_put('NaN', 1, 0, 0, '', '', '')", A, 'authenticated', expect_err=True)
         R['posAnon'] = sql("select public.pos_near(850, 350, 20)", {}, 'anon', expect_err=True)
         sql("select public.pos_off()", A, 'authenticated'); R['posOff'] = sql("select count(*) from public.presence where player_id = 'user_01AAA'")
+        # the shared world V2: one quota, one market and one sea (20261006000000_world_v2.sql)
+        sql("""select public.land_put(1000, 2027, 'finnsnes', 'open', '[{"sp":"torsk","kg":500,"kgq":500},{"sp":"hyse","kg":100,"kgq":0}]')""", A, 'authenticated')
+        sql("""select public.land_put(1000, 2027, 'finnsnes', 'open', '[{"sp":"torsk","kg":300,"kgq":300}]')""", B, 'authenticated')
+        R['wB'] = json.loads(sql("select public.world_get(0, 2027, 1010)", B, 'authenticated'))
+        R['wA'] = json.loads(sql("select public.world_get(0, 2027, 1000)", A, 'authenticated'))
+        sql("""select public.land_put(1001, 2027, 'senjahopen', 'open', '[{"sp":"torsk","kg":90000,"kgq":90000}]')""", A, 'authenticated')
+        R['wCap'] = json.loads(sql("select public.world_get(0, 2027, 1001)", B, 'authenticated'))
+        R['wOtherY'] = json.loads(sql("select public.world_get(0, 2028, 1001)", B, 'authenticated'))
+        sql("select public.catch_put(1000, '[[549755813890, 200], [549755813891, 50]]')", A, 'authenticated')
+        R['cB'] = json.loads(sql("select public.world_get(0, 2027, 1000)", B, 'authenticated'))
+        R['cB2'] = json.loads(sql("select public.world_get(%d, 2027, 1000)" % R['cB']['cur'], B, 'authenticated'))
+        R['cA'] = json.loads(sql("select public.world_get(0, 2027, 1000)", A, 'authenticated'))
+        R['wBadT'] = sql("select public.land_put('NaN', 2027, 'x', 'open', '[]')", A, 'authenticated', expect_err=True)
+        R['wBadC'] = sql("select public.catch_put(1, (select jsonb_agg(jsonb_build_array(i, 1)) from generate_series(1, 601) i))", A, 'authenticated', expect_err=True)
+        R['wRead'] = sql("select count(*) from public.landings", A, 'authenticated', expect_err=True)
+        R['wAnon'] = sql("select public.world_get(0, 2027, 1)", {}, 'anon', expect_err=True)
+        R['wAdmPl'] = sql("select public.admin_world()", A, 'authenticated', expect_err=True)
         sql("select public.delete_me()", A, 'authenticated')
+        R['wGone'] = sql("select (select count(*) from public.landings where player_id = 'user_01AAA') || '/' || (select count(*) from public.catches where player_id = 'user_01AAA') || '/' || (select count(*) from public.landings)")
         R['fbGone'] = sql("select count(*) from public.feedback where player_id = 'user_01AAA'")
         R['pushGone'] = sql("select count(*) || '/' || (select count(*) from public.push_queue) from public.push_subs")
         R['deleted'] = sql("select (select count(*) from public.players where id = 'user_01AAA') || '/' || (select count(*) from public.events) || '/' || (select count(*) from public.saves where player_id = 'user_01AAA') || '/' || (select coalesce(player_id, 'anon') from public.purchases)")
@@ -198,6 +216,17 @@ def main():
               'the shared world: each player sees the other boats near by (name, type, place, heading, speed), never their own or an account, and not one gone quiet for two minutes', {'B': nb, 'far': R['nearFar'], 'stale': R['nearStale']})
         print(ok(R['posRead'][0] and R['posBad'][0] and R['posAnon'][0] and R['posOff'] == '0'),
               'the shared world: no one reads the table, a bad position and the anonymous are refused, and «hide my boat» takes it away', [R[k][1][:40] for k in ('posRead', 'posBad', 'posAnon')] + [R['posOff']])
+        mk = {(a, b): c for a, b, c in R['wB']['mkt']}
+        print(ok(R['wB']['open'] == 500 and R['wA']['open'] == 300 and R['wB']['boats'] == 1 and abs(mk.get(('finnsnes', 'torsk'), 0) - 500 * 0.97 ** 10) < 0.2
+                 and abs(mk.get(('finnsnes', 'hyse'), 0) - 100 * 0.97 ** 10) < 0.2 and R['wCap']['open'] == 60000 and R['wOtherY']['open'] == 0),
+              "the shared world: each player gets the others' open-group cod this year (capped at 60 t a player) and what they delivered to each plant, decayed by the game hours since",
+              {'B': R['wB'], 'cap': R['wCap']['open']})
+        cl = {a: b for a, b in R['cB']['cells']}
+        print(ok(cl.get(549755813890) == 200 and cl.get(549755813891) == 50 and R['cB']['cur'] > 0 and R['cB2']['cells'] == [] and R['cA']['cells'] == []),
+              "the shared world: the fish another player took comes cell by cell once (the cursor), never one's own", {'B': R['cB']['cells'], 'again': R['cB2']['cells'], 'A': R['cA']['cells']})
+        print(ok(all(R[k][0] for k in ('wBadT', 'wBadC', 'wRead', 'wAnon', 'wAdmPl')) and R['wGone'].startswith('0/0/')),
+              'the shared world: a bad time, too many cells, reading the tables, the anonymous and a player asking the admin sums are refused; the landings and catches go with the account',
+              [R[k][1][:40] for k in ('wBadT', 'wBadC', 'wRead', 'wAnon', 'wAdmPl')] + [R['wGone']])
         keys = ['overview', 'daily', 'heatmap', 'churn', 'rage', 'features', 'gear', 'boats', 'groundings', 'trips', 'economy', 'money', 'tech', 'geo']
         print(ok(all(k in D for k in keys) and D['overview']['players'] == 2 and D['overview']['sessions'] == 1 and D['rage']['share'] == 1 and D['trips']['avg_kr'] == 5400 and R['adminRead'] == '4'),
               'the admin with aal2 gets every panel of the dashboard and reads the tables', {k: D[k] for k in ('overview', 'rage', 'trips')})

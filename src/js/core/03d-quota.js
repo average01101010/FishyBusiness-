@@ -131,7 +131,8 @@ function stockF(sp, H){ if (!STOCK[sp] || !S) return 1; return clamp(Math.sqrt(s
 // of it, and opens free fishing in the autumn when even that is not enough (2019–2026: stopped between 24 March and 15 May in five
 // years; raised and free fishing in 2021 and 2022; neither in 2024). How many boats are out and how hard they fish is drawn for each
 // year, so some years have no stop. Calibrated so that 2026's quotas give a stop between early April and mid-May in half the years. A year is worked out a day at a time
-// up to today and kept in S.qy, so a stop announced stays announced, and your own landings count in the group's catch. ----
+// up to today and kept in S.qy, so a stop announced stays announced, and your own landings and the other players' (wshOpen) count in the
+// group's catch. ----
 const OPENF = {n:2100, mix:[0.45, 0.35, 0.20], k:0.02, ov:[0.85, 0.3], season:[0.8, 1.0, 1.3, 1.2, 0.8, 0.6, 0.4, 0.5, 0.6, 0.6, 0.5, 0.3]};
 const doyOf = (y, m, d) => Math.floor((Date.UTC(y, m - 1, d) - Date.UTC(y, 0, 1)) / 864e5);
 const hOfDoy = (y, d) => (Date.UTC(y, 0, 1) + d * 864e5 - EPOCH) / 36e5;
@@ -148,10 +149,10 @@ function qyStep(Y, y, d){
   const dc = Y.n * OPENF.k * e * Math.max(0, cap - Y.c / Y.n); Y.c += dc; Y.r = 0.7 * Y.r + 0.3 * dc;
   if (Y.stop != null || Y.free != null) return;
   // (the stops came between 24 March and 15 May; later in the year the boats' own maximum quotas hold the catch)
-  if (d >= 14 && d < doyOf(y, 6, 1) && Y.c + Y.me + 7 * Y.r >= Qf){ Y.stop = d + 7; Y.ann = d; Y.log.push([d, 'stop', Y.stop]); return; }
+  if (d >= 14 && d < doyOf(y, 6, 1) && Y.c + Y.me + wshOpen(y) + 7 * Y.r >= Qf){ Y.stop = d + 7; Y.ann = d; Y.log.push([d, 'stop', Y.stop]); return; }
   // on 1 May and 1 June: a raise when what the boats can take on their maximum quotas falls short of the group quota, and free
   // fishing in the autumn when even the raised quotas will not take it
-  const got = Y.c + Y.me, proj = Math.max(got, Y.n * Y.act * mx * 0.97);
+  const got = Y.c + Y.me + wshOpen(y), proj = Math.max(got, Y.n * Y.act * mx * 0.97);
   if ((d === doyOf(y, 5, 1) || d === doyOf(y, 6, 1)) && proj < 0.95 * Qf){ const s = Math.max(0.5, Math.round((Qf - proj) / Y.n / Y.act * 2) / 2); Y.add += s; Y.log.push([d, 'raise', s]); }
   if (d === Y.freeDay && got < 0.85 * Qf){ Y.free = d; Y.log.push([d, 'free']); }
 }

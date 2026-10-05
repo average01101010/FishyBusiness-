@@ -968,7 +968,7 @@ Jonas' valg: gratis å spille med kjøp via Stripe, påkrevd innlogging med Work
   - Det som står igjen, og hullet med WorkOS-brukeren ved «slett kontoen», står i `docs/lansering.md` under «Juridisk».
 
 
-### 4.21 Felles verden V1: én klokke for alle (05.10.2026)
+### 4.21 Felles verden V1–V3: én klokke, én sjø og spillerne på kartet (05.10.2026)
 
 Jonas: «det er viktig at alle har en delt klokke fordi dette er et online-spill». Planen V1–V3 er godkjent: verden starter ved utrullingen, går i 6×, og spillerne skal kunne se hverandre.
 
@@ -992,7 +992,16 @@ Jonas: «det er viktig at alle har en delt klokke fordi dette er et online-spill
   - Uten nett, eller før migreringen, sendes ingenting, og båtene forsvinner etter et minutt.
   - Personvernsiden har et eget avsnitt.
   - **Test:** `sqltest` (funksjonene og låsen) og `cloudtest` (sendingen, en båt i nærheten med AIS-kort, og avskrudd visning).
-- **Ennå ikke felles (V2):** bestanden der du fisker, flåtens fangst i åpen gruppe og prisene etter leveransene regnes fortsatt per spiller.
+- **V2, felles sjø, kvote og marked** (05.10.2026; `core/03-simulation.js` `WSH`, `ui/10h-world.js` `worldShare`, `supabase/migrations/20261006000000_world_v2.sql`):
+  - **Opp:** hvert salg (`sell`, `wshLand`) legges i `S.wq.l`: mottaket, spilltimen på den felles klokka, året, tilgangsgruppa, kilo per art og torsken som teller på kvoten i åpen gruppe. Fisken spillerens egne båter tar fra sjøen (`takeStock`, ikke lokalflåtens i `stockHour`), legges i `S.wq.c` per 2 × 2 km-celle med de samme vektene som bestanden. Køen ligger i lagringen og sendes hvert tiende minutt, og fire sekunder etter et salg (`land_put`, `catch_put` i bunker på 500 celler). En rad databasen avviser (400), droppes. Uten nett venter alt.
+  - **Ned** (`world_get`, hvert tiende minutt):
+    - De andre spillernes torsk i åpen gruppe i år. Den legges til flåtens fangst (`wshOpen` i `qyStep`), så stopp, økning og fritt fiske regnes med spillerne. Kvote-appen viser «Andre spillere har landet» med antall båter.
+    - Hva de har levert til hvert mottak det siste døgnet, avskrevet med 3 % per spilltime som `S.market`. Det fyller mottaket og senker prisen (`wshSat` i `clsPrice`).
+    - Fisken de har tatt siden forrige gang, per celle, avskrevet med 0,4 % per spilltime som gjenveksten. Den trekkes fra bestanden din med en gang (`wshTake`). Markøren `S.wcur` ligger i lagringen sammen med bestanden. Et nytt spill får de siste tre døgnene.
+  - **Tak per spiller** (mot tull fra en endret klient): 60 t torsk i åpen gruppe per år, 40 t per mottak og 5 t per celle. Fangstradene slettes etter fire døgn, og leveransene blir stående for årstallene.
+  - Ingen ser hvem, bare summer. Tabellene har ingen policy, og radene går med kontoen. Admin har `admin_world()` med leveranser, kilo, spillere og celler det siste døgnet.
+  - **Ikke felles ennå:** gytebestanden og totalkvoten (spillerne er en dråpe mot 285 000 t), registeret over lukket gruppe (`REGN`) og krabbebestanden.
+  - **Test:** `sqltest` (summer, tak, markør, lås, sletting) og `cloudtest` (salg og celler opp, kvote, pris og bestand ned, markøren).
 
 ## 5. Systemer i spillet
 

@@ -220,13 +220,13 @@ const PHONE = (() => {
   const MNS = () => S.lang === 'no' ? ['januar','februar','mars','april','mai','juni','juli','august','september','oktober','november','desember'] : ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const doyStr = (y, d) => { const t = new Date(Date.UTC(y, 0, 1 + d)); return t.getUTCDate() + (S.lang === 'no' ? '. ' : ' ') + MNS()[t.getUTCMonth()]; };
   function kvOpen(H){
-    const y = yearH(H), d = doyH(H), Y = qyAt(H), O = yearQuota(y).open, got = Y.c + Y.me, h = [], add = openMaxAdd(H);
+    const y = yearH(H), d = doyH(H), Y = qyAt(H), O = yearQuota(y).open, pl = wshOpen(y), got = Y.c + Y.me + pl, h = [], add = openMaxAdd(H);
     const st = Y.stop != null && d >= Y.stop ? L('Stoppet ' + doyStr(y, Y.stop) + '. Bare de garanterte kvotene gjelder.', 'Stopped on ' + doyStr(y, Y.stop) + '. Only the guaranteed quotas apply.')
       : Y.stop != null ? L('Stopp varslet til ' + doyStr(y, Y.stop) + '.', 'Stop announced for ' + doyStr(y, Y.stop) + '.')
       : Y.free != null ? L('Fritt fiske siden ' + doyStr(y, Y.free) + '.', 'Free fishing since ' + doyStr(y, Y.free) + '.') : L('Fisket på maksimalkvotene er åpent.', 'Fishing on the maximum quotas is open.');
     h.push('<div class="ph-card"><h4>' + L('Åpen gruppe ', 'Open group ') + y + '</h4>' + kv(L('Gruppekvote, torsk', 'Group quota, cod'), fmt(O.Q, 0) + ' t') + kv(L('Herav til ferskfiskordningen', 'Of which for the fresh-fish scheme'), fmt(O.ff, 0) + ' t') +
       kv(L('Fisket så langt', 'Fished so far'), fmt(got, 0) + ' t · ' + Math.round(got / Math.max(1, O.Q - O.ff) * 100) + ' %') + '<div class="qbar"><i style="width:' + Math.min(100, got / Math.max(1, O.Q - O.ff) * 100).toFixed(1) + '%"></i></div>' +
-      kv(L('Båter som fisker', 'Boats fishing'), L('ca. ', 'about ') + fmt(Math.round(Y.n / 50) * 50, 0)) + kv(L('Du har landet', 'You have landed'), fmt(Y.me, 2) + ' t') + '<p class="ph-note">' + st + '</p></div>');
+      kv(L('Båter som fisker', 'Boats fishing'), L('ca. ', 'about ') + fmt(Math.round(Y.n / 50) * 50, 0)) + kv(L('Du har landet', 'You have landed'), fmt(Y.me, 2) + ' t') + (WSH.y === y && WSH.boats ? kv(L('Andre spillere har landet', 'Other players have landed'), fmt(pl, 2) + ' t · ' + WSH.boats + L(' båter', ' boats')) : '') + '<p class="ph-note">' + st + '</p></div>');
     h.push('<div class="ph-card"><h4>' + L('Kvoter per båt, torsk', 'Quotas a boat, cod') + '</h4><table class="ph-tbl"><tr><th>' + L('Lengde', 'Length') + '</th><th class="n">' + L('Maks', 'Max') + '</th><th class="n">' + L('Garantert', 'Guaranteed') + '</th></tr>' +
       [L('under 8 m', 'under 8 m'), '8–9,99 m', L('10 m og over', '10 m and over')].map((n, i) => '<tr><td>' + n + '</td><td class="n">' + (isFinite(add) ? fmt(O.max[i] + add, 1) + ' t' : L('fritt', 'free')) + '</td><td class="n">' + fmt(O.guar[i], 1) + ' t</td></tr>').join('') + '</table>' +
       (Y.log.filter(e => e[1] === 'raise').length ? '<p class="ph-note">' + Y.log.filter(e => e[1] === 'raise').map(e => L('Økt med ' + fmt(e[2], 1) + ' t ' + doyStr(y, e[0]) + '.', 'Raised by ' + fmt(e[2], 1) + ' t on ' + doyStr(y, e[0]) + '.')).join(' ') + '</p>' : '') + '</div>');
@@ -391,6 +391,10 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p45', '05.10.2026', 'Én sjø, én kvote og ett marked', 'One sea, one quota and one market', [
+      ['Fisken de andre spillerne tar, er borte fra sjøen din også. Fisker noen et felt tomt, er det tomt for alle til det har vokst til igjen.', 'The fish the other players take is gone from your sea too. If someone fishes a ground empty, it is empty for everyone until it has grown back.'],
+      ['Torsken spillerne lander i åpen gruppe, teller med i gruppekvoten, så stoppen kan komme tidligere. Kvote-appen viser hvor mye de andre spillerne har landet i år.', 'The cod the players land in the open group counts in the group quota, so the stop can come earlier. The Quota app shows how much the other players have landed this year.'],
+      ['Leverer mange til samme mottak, går prisen der ned for alle. Et annet mottak kan gi bedre betalt.', 'When many deliver to the same plant, its price goes down for everyone. Another plant may pay better.']]],
     ['p44', '05.10.2026', 'Fra spillerne: røyk, sløying og tips', 'From the players: smoke, gutting and tips', [
       ['Røyken fra semidieselen er myke, grå dotter som blekner, ikke svarte prikker, og den tegnes ikke langt unna.', 'The semi-diesel\'s smoke is soft grey puffs that fade, not black dots, and it is not drawn far off.'],
       ['Statuslinja viser hvor fullt bløggekaret er, og når du sløyer: hvor lenge det tar i ekte tid, og at du fisker videre etterpå. Du får beskjed når sløyingen starter og slutter.', 'The status line shows how full the bleeding tub is, and when you gut: how long it takes in real time, and that you fish on after. You are told when the gutting starts and ends.'],
