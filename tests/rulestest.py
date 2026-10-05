@@ -48,7 +48,7 @@ RULES = """(() => { const R = {}, Q = __Q__, at = (m, d) => (Date.UTC(2027, m - 
   R.app = {here:/Kan jeg fiske her|Can I fish here/.test(v()), grid:document.querySelectorAll('.ru-grid tr').length, cells:document.querySelectorAll('.ru-c').length};
   const cell = document.querySelector('.ru-c[data-v="hyse:line"]'); if (cell) cell.click();
   R.app.check = {tab:/Svar|Answer/.test(v()), sp:(document.querySelector('.ru-chips button.on[data-k="sp"]') || {}).dataset ? document.querySelector('.ru-chips button.on[data-k="sp"]').dataset.v : null, gear:(document.querySelector('.ru-chips button.on[data-k="gear"]') || {dataset:{}}).dataset.v};
-  const lb = document.querySelector('.ph-sub button[data-s="laer"]'); if (lb) lb.click(); R.app.learn = document.querySelectorAll('.ph-c .ph-card').length;
+  const lb = document.querySelector('.ph-sub button[data-s="laer"]'); if (lb) lb.click(); R.app.learn = document.querySelectorAll('.ph-c .ph-card').length; R.app.fine = /forenklet og kan være utdaterte|simplified and may be out of date/.test(v());
   PHONE.show(false); S.boat.pos = P0; S.boat.status = st0; RU_NOW = null;
   const qm = p('malangen'), bx = Math.floor(qm.x / 10), by = Math.floor(qm.y / 10), cnt = (A, v) => A.reduce((a, x) => a + (x === v ? 1 : 0), 0);
   t0 = performance.now(); const A16 = ruLayerBlock(bx, by, {len:16, gear:'juksa', sp:null, hand:false}); R.tLayer = Math.round(performance.now() - t0);
@@ -95,6 +95,7 @@ async def main():
         a = R['app']
         print(ok(R['hud'] and ('Ikke torsk' in R['hud'] or '✓' in R['hud'] or '!' in R['hud'])), 'R3: the status box has a rules line at sea that opens the Regler app', R['hud'])
         print(ok(a['here'] and a['grid'] == 8 and a['cells'] == 19 and a['check']['tab'] and a['check']['sp'] == 'hyse' and a['check']['gear'] == 'line' and a['learn'] == 8), 'R3: the Regler app: here and now with the grid of species and gear, a tap shows the check, and eight rules told plainly', a)
+        print(ok(a['fine']), 'the Regler app says the rules are simplified and that the Directorate\'s rules apply to real fishing')
         l = R['layer']
         print(ok(l['no16'] > l['sea'] * 0.5 and l['no9'] < l['no16'] * 0.1 and R['tLayer'] < 300), 'R3: the chart\'s rule layer is red inside Malangen for a 16 m boat and not for a 9 m one (cells, ms)', l, R['tLayer'])
         print('errors:', errs[:5]); await br.close()

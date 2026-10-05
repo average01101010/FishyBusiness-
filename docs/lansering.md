@@ -199,7 +199,7 @@ Lista er amerikansk («so your app doesn't get sued»). Her er hvert punkt vurde
 | 9 | Ingen mørke mønstre | Ja (markedsføringsloven, EUs regler for forbrukerbeskyttelse) | Ingen falske nedtellinger eller press. Et abonnement skal være like lett å si opp som å starte |
 | 10 | Ingen skjulte gebyrer | Ja: forbrukerpriser skal vises med MVA (prisopplysningsforskriften) | Prisen med MVA vises før kjøpet |
 | 11 | Ingen falske anmeldelser | Ja (markedsføringsloven) | Vi har ingen |
-| 12 | Ingen udokumenterte påstander | Ja | Ikke antyd at Fiskeridirektoratet, Råfisklaget eller Kartverket står bak spillet. Regler-appen må si at reglene er forenklet og kan være utdaterte, og at Fiskeridirektoratet gjelder for ekte fiske (Claude) |
+| 12 | Ingen udokumenterte påstander | Ja | Ikke antyd at Fiskeridirektoratet, Råfisklaget eller Kartverket står bak spillet. Regler-appen sier under hver fane at reglene er forenklet og kan være utdaterte, og at Fiskeridirektoratets regler gjelder for ekte fiske (gjort 05.10.2026) |
 | 13–15 | Alt-tekst, kontrast og tastatur | Delvis: forskriften om universell utforming av IKT (WCAG 2.1 AA) gjelder nettløsninger for allmennheten. Om spillet selv er unntatt, er ikke avklart (sjekk). | Kjøp, konto og vilkårssidene skal oppfylle WCAG. Menyene i spillet forbedres etter hvert (Claude) |
 | 16 | Firmaopplysninger | Ja (ehandelsloven § 8): navn, adresse, e-post og organisasjonsnummer | På Kontakt-siden og i butikkene (du gir opplysningene, Claude lager siden) |
 | 17 | Alder | Ja: barn under 13 år kan ikke samtykke selv (personopplysningsloven § 5). Butikkene krever også en aldersgrense (IARC/PEGI-skjemaet, gratis). | Spør om alder når kontoen lages. Du fyller ut IARC-skjemaet. |
@@ -207,7 +207,7 @@ Lista er amerikansk («so your app doesn't get sued»). Her er hvert punkt vurde
 | 19 | Lisenser for skrift og bilder | Ja | Skriftene (Archivo og Source Serif 4) har OFL-lisens og er i orden. Modellene er laget selv i Blender. Kartdata og kilder må oppgis (se A5). En side med kildene (Claude) |
 | 20 | Sletting av data | Ja (GDPR art. 17). Google Play og App Store krever også at kontoen kan slettes inne i appen. | En knapp for å slette kontoen, som sletter lagringen og personopplysningene. Kjøpene beholdes så lenge bokføringsloven krever (Claude) |
 
-**Det som kan gjøres nå, uten å vente på valgene:** legge skriftene i appen, sette inn forbeholdet i Regler-appen og lage siden med kildene.
+**Gjort 05.10.2026:** skriftene ligger i appen, forbeholdet står i Regler-appen, og sidene med kildene (`kilder.html`) og kontaktopplysningene (`kontakt.html`) er laget.
 
 ## E. Admin-dashbordet (plan, venter på klarsignal)
 

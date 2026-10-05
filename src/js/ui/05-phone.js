@@ -214,7 +214,10 @@ const PHONE = (() => {
     return T.map(([hn, he, tn, te, ref, url]) => '<div class="ph-card"><h4>' + L(hn, he) + '</h4><p>' + L(tn, te) + '</p><p class="ph-note">' + ref + ' · <a href="' + url + '" target="_blank" rel="noopener">' + L('kilde', 'source') + '</a></p></div>').join(''); }
   function regler(){ const t = ['her', 'sjekk', 'laer'].includes(sub.regler) ? sub.regler : 'her';
     const top = subs('regler', [['her', 'Her og nå', 'Here and now'], ['sjekk', 'Sjekk', 'Check'], ['laer', 'Lær mer', 'Learn']]);
-    return top + '<div class="ph-c">' + (t === 'her' ? ruHere() : t === 'sjekk' ? ruCheck() : ruLearn()) + '</div>'; }
+    // the disclaimer under every tab (docs/lansering.md D12): the rules are a game's, simplified, and nobody official stands behind them
+    const fine = '<p class="ph-note">' + L('Reglene i spillet er forenklet og kan være utdaterte. Til ekte fiske gjelder Fiskeridirektoratets regler (fiskeridir.no). Spillet er ikke laget av eller sammen med Fiskeridirektoratet, Råfisklaget eller Kartverket.',
+      'The rules in the game are simplified and may be out of date. For real fishing the Directorate of Fisheries\' rules apply (fiskeridir.no). The game is not made by or with the Directorate of Fisheries, Råfisklaget or Kartverket.') + '</p>';
+    return top + '<div class="ph-c">' + (t === 'her' ? ruHere() : t === 'sjekk' ? ruCheck() : ruLearn()) + fine + '</div>'; }
   // the Kvote app: your quotas, the open group's season, the stocks, and the market for rights (core/03d-quota.js)
   function kvote(){ const t = ['mine', 'open', 'stock', 'mkt'].includes(sub.kvote) ? sub.kvote : 'mine', H = S.t / 60;
     const top = subs('kvote', [['mine', 'Mine kvoter', 'My quotas'], ['open', 'Åpen gruppe', 'Open group'], ['stock', 'Bestand', 'Stock'], ['mkt', 'Marked', 'Market']]);
@@ -402,6 +405,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p52', '05.10.2026', 'Teiner og regler', 'Pots and rules', [
+      ['Regler-appen sier nå tydelig at reglene i spillet er forenklet, og at Fiskeridirektoratets regler gjelder til ekte fiske.', 'The Regler app now says plainly that the rules in the game are simplified, and that the Directorate of Fisheries\' rules apply to real fishing.']]],
     ['p51', '05.10.2026', 'Mer fisk og mer fart', 'More fish and more speed', [
       ['Haill gir nå dobbel fiskelykke et helt døgn, og luksushaill tredobbel. Så blekner den i døgn-trinn: luksushaill varer i fire døgn og vanlig haill i tre. Tida er spilltid.', 'Luck now gives double luck for a whole day, and luxury luck triple. Then it fades a day at a time: luxury luck lasts four days and luck three. The time is game time.'],
       ['Trim gir båten mye mer fart for en tid: +50 % i et døgn, +75 % i to døgn eller dobbel fart i tre døgn.', 'Tuning gives the boat much more speed for a while: +50% for a day, +75% for two days or double speed for three days.'],
