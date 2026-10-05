@@ -177,9 +177,9 @@ def shop(fine=True):
     o.append(box('door_split', DOOR - 0.04, DOOR + 0.04, y0 - 0.1, y0 - 0.04, FLOOR, FLOOR + 2.35, C['trim']))
     for s_ in (-1, 1): o.append(box('door_bar', DOOR + s_ * 0.3 - 0.02, DOOR + s_ * 0.3 + 0.02, y0 - 0.16, y0 - 0.12, FLOOR + 0.9, FLOOR + 1.5, C['galv']))
     o.append(box('step', DOOR - 1.8, DOOR + 1.8, y0 - 1.3, y0, QTOP, FLOOR, C['conc']))
-    # the canopy over the doors on two tie rods
+    # the canopy over the doors on two struts under it (tie rods above would cross the sign)
     o.append(box('canopy', DOOR - 1.9, DOOR + 1.9, y0 - 1.5, y0, QTOP + 3.0, QTOP + 3.14, C['trim']))
-    for s_ in (-1, 1): o.append(cyl('tie', (DOOR + s_ * 1.6, y0 - 1.4, QTOP + 3.14), (DOOR + s_ * 1.6, y0, QTOP + 4.2), 0.025, C['galv'], 6))
+    for s_ in (-1, 1): o.append(cyl('strut', (DOOR + s_ * 1.6, y0 - 1.35, QTOP + 3.0), (DOOR + s_ * 1.6, y0, QTOP + 2.45), 0.03, C['galv'], 6))
     o.append(box('board', -12.4, 0.4, y0 - 0.12, y0, QTOP + 3.2, QTOP + 4.15, C['sign']))
     o.append(box('board_rim_t', -12.5, 0.5, y0 - 0.16, y0, QTOP + 4.15, QTOP + 4.22, C['letters']))
     o.append(box('board_rim_b', -12.5, 0.5, y0 - 0.16, y0, QTOP + 3.13, QTOP + 3.2, C['letters']))
