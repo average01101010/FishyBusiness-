@@ -190,6 +190,7 @@ function finishJob(j){
 // minutes at GAME_RATE game minutes a minute. Servicing the engine yourself (self) is cheaper and takes twice as long. The work on the
 // quay (rigging, baiting, mending) keeps its own hours, also side by side.
 const YARD_H = 30 * GAME_RATE / 60, YARD_KINDS = ['fit', 'svc', 'hull', 'hold', 'eng', 'repair'];
+const YARD_NOW_NOK = 19;   // the yard's work done at once, for real money (Jonas 05.10.2026; ui/05-phone.js «Ferdig nå»)
 function fitHours(k){ return YARD_H; }
 // a job with no length would never finish and would keep the boat in port for good; a yard job from before (when they took 2 to 16
 // hours) takes the yard's time now, also one already running

@@ -970,7 +970,6 @@ Jonas' valg: gratis å spille med kjøp via Stripe, påkrevd innlogging med Work
   - **Skriftene ligger i siden** (05.10.2026): Archivo og Source Serif 4 er lagt inn som latinsk delmengde (`src/data/font-archivo.b64`, `font-serif.b64`, `font-serif-i.b64`, hentet fra Google Fonts med `curl`), som Caveat og Rock Salt fra før. Spillet henter ingenting fra Google lenger, og skriftene virker uten nett.
 
 
-
 ### 4.21 Felles verden V1–V3: én klokke, én sjø og spillerne på kartet (05.10.2026)
 
 Jonas: «det er viktig at alle har en delt klokke fordi dette er et online-spill». Planen V1–V3 er godkjent: verden starter ved utrullingen, går i 6×, og spillerne skal kunne se hverandre.
@@ -1331,8 +1330,11 @@ Kvotesystemet ligger i `core/03d-quota.js` (04.10.2026, plan Q1–Q6). Grunnlage
 
 | Type | Pris | Trinn (fiskelykke på alle arter og alt redskap) |
 |---|---|---|
-| Haill | 29 kr | fersk +100 % til 48 t, mellomhaill +50 % til 72 t, gammelhaill +25 % til 96 t, borte |
-| Luksushaill | 59 kr | +200 % til 48 t, så fersk +100 % til 96 t, mellom +50 % til 120 t, gammel +25 % til 144 t, borte |
+| Haill | 29 kr | fersk +100 % til 24 t, mellomhaill +50 % til 48 t, gammelhaill +25 % til 72 t, borte |
+| Luksushaill | 59 kr | +200 % til 24 t, så fersk +100 % til 48 t, mellom +50 % til 72 t, gammel +25 % til 96 t, borte |
+
+- **Trinnene er 24 spilltimer hver** (Jonas 05.10.2026: «All tidseffekt er oppgitt i spilltid»). 24 timer i spillet er 4 ekte timer. Før var de 48 timer.
+- **Tekstene skal selge** (Jonas: «Formuler dette på en intuitiv måte som fremmer salg»): de starter med det spilleren får («Dobbel fiskelykke et helt døgn!», «Tredobbel fiskelykke det første døgnet!»), og så trinnene. De sier aldri «kjøp nå», fordi direkte kjøpsoppfordringer til barn er forbudt (markedsføringsloven og UCPD vedlegg I nr. 28).
 
 - `luck(sp)` = 1 + `haillBoost()`. Trinnene står i `steps`. `haillStage()` gir navnet, og `haillLeft()` gir timene som er igjen.
 - **Beholdning:** et kjøp eller en pubpremie legges i `S.haillInv` (`giveHaill`). «Aktiver» i Haill-appen tar en derfra (`useHaill`). Er det allerede haill om bord, må du bekrefte at den byttes ut. **Haill aktiveres aldri av seg selv.**
@@ -2252,6 +2254,37 @@ Jonas 05.10.2026: «Lag en feedback-app i telefonen hvor brukerne kan komme med 
   - **Admin:** «Vis n bilder» (`admin_feedback_imgs`), «Spill av video» (signert lenke i en time), «Slett videoen» (Storage og så `admin_media_gone`), og MB video av 1 024 MB på gratisplanen.
   - **Test:** `sqltest` (bildene, navnene, grensene, låsen og admin) og `feedbacktest` (to bilder, en video som beholdes, en over grensen som gjøres mindre, en opplasting som feiler og sendes på nytt, og listen med 📷 og 🎬). Policyene i Storage kan bare testes på ekte Supabase.
 
+### 5.25k Butikken: haill, trim og verftet for ekte penger (05.10.2026)
+
+Jonas: «hele spillet skal være free-to-play, men med betalte boostere i form av haill-appen og trim-appen og betaling for å hoppe over verkstedtid». Først «Ja til Managed Payments», så «Nei til managed payments. Vi kan eventuelt aktivere dette når vi går internasjonalt». Om samtykket: «Gjør dette på en intuitiv måte som tar fokuset bort fra handlingen, vi må tenke salg salg salg», «gjør det nesten usynlig».
+
+- **Varene** (`products` i databasen, `supabase/migrations/20261006040000_shop.sql`):
+
+  | id | Vare | Pris |
+  |---|---|---|
+  | `haill`, `luksus` | Haill, luksushaill | 29 kr, 59 kr |
+  | `trim_pump`, `trim_ic`, `trim_turbo` | Trim +50 % / +75 % / dobbel fart | 29 kr, 39 kr, 49 kr |
+  | `verft_na` | Verftet ferdig nå | 19 kr |
+
+  Prisen som trekkes, står i databasen. Spillet viser sine egne (`HAILL`, `BOOSTS`, `YARD_NOW_NOK`), så de må stemme overens.
+- **Kjøpet** (`ui/10i-shop.js`):
+  1. Kjøpsknappen går rett til betalingen, uten noe vindu imellom (`shopBuy`, `shopGo`).
+  2. Edge Function `shop-checkout` henter varen med spillerens egen innlogging (`shop_quote`), lager en Stripe Checkout-side i NOK med prisen inkludert MVA og skatteklassen `txcd_10201001`, og skriver kjøpet som åpent (`purchases`, med båten i `data`).
+  3. Stripe sender spilleren tilbake med `?kjop=<økt>`.
+- **Bokføringen** (Edge Function `stripe-webhook`, signaturen sjekkes først):
+  - Betalt: `shop_paid` bokfører kjøpet og lager én `grants`-rad per kjøp, uansett hvor mange ganger Stripe sier fra.
+  - Utløpt eller feilet: `shop_ended`.
+  - Refundert i sin helhet: `shop_refund` tar tilbake en vare spillet ikke har gitt ennå.
+- **Leveringen:** spillet spør `shop_pending` ved start, når det kommer tilbake fra Stripe (flere ganger de første 45 sekundene) og når det blir synlig igjen. Det gir varen (`shopGive`: haill i beholdningen, trim på båten kjøpet gjaldt, eller verftet ferdig på den båten), husker id-ene i `S.shopGiven`, så ingenting gis to ganger, og sier fra med `shop_done`.
+- **Hvem som får kjøpe** (`shopMode`):
+  - `live`: innlogget, og Stripe er satt opp (`GET shop-checkout` gir `ready`).
+  - `test`: uten skyen (artifacten og testene), og for admin før Stripe er satt opp. Varen gis med én gang, uten betaling.
+  - `off`: «Snart i salg». Ingen får noe gratis på detstorebla.no.
+  - Den gratis luksushaillen i «Første tur» går utenom butikken som før.
+- **Angreretten:** en liten, dempet linje under hver kjøpsknapp (`shopFine`, `.shop-fine`) og den samme setningen ved betalingsknappen hos Stripe (`custom_text`): varen leveres med én gang, og angreretten faller da bort (angrerettloven § 22 bokstav n). Linja må være lesbar for at samtykket skal gjelde.
+- **Brytere** (hemmeligheter i Supabase): `STRIPE_SECRET_KEY` og `STRIPE_WEBHOOK_SECRET`. `STRIPE_MANAGED=1` gjør Stripe til selger (Managed Payments), og er av. `STRIPE_TAX=1` lar Stripe Tax legge på MVA når foretaket er MVA-registrert.
+- **Tester:** `tests/kjoptest.py` (spillet med stand-ins for Stripe og Supabase) og `tests/sqltest.py` (databasen).
+
 ### 5.26 Måker og halere fra Blender (03.10.2026)
 
 - **Måkene** (`tools/wild/maake.py`, `src/data/gull.b64`):
@@ -2397,9 +2430,20 @@ Jonas' liste: oppgraderinger, kvotehandel, kikkert, raskere fangst, fortøying, 
     - `fuelK` × (1 + 0,4·(P−1)).
   - **Begroing** (`foulHour`, `S.boat.foul`): vokser hver time i sjøen, 0,012 per døgn i juni–september og 0,004 ellers, og ×0,3 med `EQUIP.antigro` (18 000 kr, 6 t). Full begroing gir −15 % fart og +25 % drivstoff. Jobben `hull` («Skrogrens på slipp», 1 500 kr + 400 kr per meter, 6 t) nullstiller den.
     - Ikke nøkkelen `clean`, som slettes ved oppstart.
-  - **Trim-appen** (`BOOSTS`, `S.boat.boost`, bare diesel og ikke påhengsmotor): justert dieselpumpe +10 %, ladeluftkjøling +8 % og økt turbotrykk +12 % effekt, med en tidel bedre akselerasjon hver.
-    - Til sammen gir det +10 % toppfart på en deplasementsbåt og +15 % på en planende båt.
-    - Kjøpet er i testmodus som haillen. Prisene (49, 59 og 79 kr) er plassholdere.
+  - **Trim-appen** (`BOOSTS`, `S.boat.trim` = {k, t0}, `trimOn`, `trimLeft`, bare diesel og ikke påhengsmotor). Fra 05.10.2026 er trim fart for en tid, kjøpt for ekte penger (Jonas: «Trim er tidsbegrenset oppgradering av farten»), og tida er spilltid:
+
+    | Trim | Fart | Varer | Pris |
+    |---|---|---|---|
+    | Justert dieselpumpe | +50 % | 24 t | 29 kr |
+    | Ladeluftkjøling | +75 % | 48 t | 39 kr |
+    | Økt turbotrykk | +100 % | 72 t | 49 kr (Jonas har ikke satt prisen, så 49 kr er en plassholder) |
+
+    - Farten gjelder toppfart og marsjfart, og akselerasjonen øker like mye (`applyVessel`). Hestekreftene vises som før.
+    - Én trim om gangen på en båt. En ny tar plassen til den som er på. Når tida er ute, går farten tilbake og loggen sier fra (`vesselStep`).
+    - Dieselen følger farten (`fuelLph`), så mer fart bruker mer diesel. Det står i appen.
+    - Den gamle trimmen var varig og gratis i testen. Den tas bort ved lasting (`11-boot.js`).
+    - Kjøpet er i testmodus som haillen til butikken med Stripe er på plass.
+  - **Ferdig nå på verftet** (`YARD_NOW_NOK` = 19 kr, Jonas 05.10.2026): alle verftsjobbene båten har gående (`YARD_KINDS`), gjøres ferdig med én gang. Knappen står over arbeidskøen i Verksted, i testmodus til butikken er på plass. «Overtid, halv tid» for spillpenger finnes fortsatt.
     - **Effektene er vårt forslag:** Jonas skrev at han hadde oppgitt dem, men de står ikke i meldingene hans.
 
 - **Agn til line og teiner** (`BAITS` i `10-gear.js`):

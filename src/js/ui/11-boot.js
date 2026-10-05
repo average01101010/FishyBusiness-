@@ -61,6 +61,8 @@ for (const v of S.fleet) withVessel(v, () => { if (!S.pgear) S.pgear = newPGear(
 // «Kaffe på kaia» was replaced by the daily login bonus on 01.10.2026: unused free pub rounds are paid out, borrowed deck tubs
 // and the clean-hull bonus are gone, and the bonus starts at zero
 if (S.daily){ const v = S.daily.pubV || 0; if (v > 0){ S.cash += v * PUB_COST; log('Kaffe på kaia er lagt ned. Du fikk ' + kr(v * PUB_COST) + ' for ' + v + (v > 1 ? ' ubrukte pubrunder.' : ' ubrukt pubrunde.'), '«Coffee on the quay» is gone. You got ' + kr(v * PUB_COST) + ' for ' + v + ' unused pub round' + (v > 1 ? 's.' : '.')); } delete S.daily; }
+// trim was for good and free to try until 05.10.2026; now it is for a while and bought (core BOOSTS): the old fittings go
+for (const v of S.fleet || []) if (v.boat) delete v.boat.boost; if (S.boat) delete S.boat.boost;
 if (!S.haillInv) S.haillInv = {haill:0, luksus:0}; if (S.haill && !HAILL[S.haill.type]) S.haill.type = 'haill';   // the halibut luck is gone (04.10.2026)
 // brown crab is out of the game (04.10.2026): what an old save has in its holds goes, and the key now means king crab
 if (!S.kc){ S.kc = 1; let kg = 0;

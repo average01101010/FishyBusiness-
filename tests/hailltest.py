@@ -14,9 +14,9 @@ async def main():
               for (let i = 0; i < 90 && S.boat.status === 'fishing'; i++){ S.t++; fish(S.t / 60, 5, 0.5); deckMinute(); }
               tot.torsk += S.hold.filter(x => x.sp === 'torsk').reduce((a, x) => a + x.kg, 0); tot.all += holdTotal(); } return {torsk:Math.round(tot.torsk), all:Math.round(tot.all)}; };
           const r = {none:run(null), haill:run('haill'), luksus:run('luksus')}; BOAT.holdCap = cap0; BOAT.tubCap = tub0;
-          // the stages (04.10.2026): haill +100 % to 48 h, +50 % to 72 h, +25 % to 96 h; luksushaill +200 % for 48 h in front of that
+          // the stages (Jonas 05.10.2026, game hours): haill +100 % to 24 h, +50 % to 48 h, +25 % to 72 h; luksushaill +200 % for 24 h in front
           const at = (type, hs) => hs.map(h => { S.haill = {type, t0:S.t - h * 60}; return haillBoost(); });
-          r.haillSteps = at('haill', [0, 47, 49, 71, 73, 95, 97]); r.luksusSteps = at('luksus', [0, 47, 49, 95, 97, 119, 121, 143, 145]);
+          r.haillSteps = at('haill', [0, 23, 25, 47, 49, 71, 73]); r.luksusSteps = at('luksus', [0, 23, 25, 47, 49, 71, 73, 95, 97]);
           S.haill = null; S.stock = stock0; S.boat.status = 'port'; S.boat.port = 'husoy'; S.boat.pos = {...portById('husoy').p}; S.hold = []; return r; })()""")
         print('luck:', json.dumps(eff))
         # shop

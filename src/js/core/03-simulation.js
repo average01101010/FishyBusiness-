@@ -48,16 +48,21 @@ const upPrice = pc => Math.max(5000, Math.round(VESSELS[S.boat.type || 'skiff'].
 // speed: a planing hull its square root, a displacement hull its cube root but held under +12 % by its hull speed. The effects of the
 // boosts are our proposal (the user named them, not their effects): power +10 %, +8 % and +12 %, a tenth more acceleration each
 const ENGUP = [{p:0.2, pc:0.06, h:12}, {p:0.4, pc:0.11, h:24}];
-const BOOSTS = {pump:{p:0.10, nok:49, no:'Justert dieselpumpe', en:'Tuned injection pump'}, ic:{p:0.08, nok:59, no:'Ladeluftkjøling', en:'Charge air cooling'}, turbo:{p:0.12, nok:79, no:'Økt turbotrykk', en:'Higher boost pressure'}};
+// Trim (Jonas 05.10.2026): more speed for the boat for a while, sold for real money, the time in game hours. One at a time on a boat
+// (a new one takes the place of the one on, b.trim {k, t0}), diesel engines only. x: top and cruising speed.
+const BOOSTS = {pump:{x:1.5, h:24, nok:29, no:'Justert dieselpumpe', en:'Tuned injection pump'}, ic:{x:1.75, h:48, nok:39, no:'Ladeluftkjøling', en:'Charge air cooling'}, turbo:{x:2, h:72, nok:49, no:'Økt turbotrykk', en:'Higher boost pressure'}};
 const canBoost = V => !!(V && V.diesel && !V.outboard);
-function powerX(b){ const V = VESSELS[b.type || 'skiff']; let p = 1 + (b.engLv && !V.outboard ? ENGUP[b.engLv - 1].p : 0); if (canBoost(V)) for (const k in BOOSTS) if (b.boost && b.boost[k]) p *= 1 + BOOSTS[k].p; return p; }
+const trimOn = b => { const T = b && b.trim && BOOSTS[b.trim.k]; return T && S.t < b.trim.t0 + T.h * 60 ? T : null; };
+const trimLeft = b => trimOn(b) ? (b.trim.t0 + BOOSTS[b.trim.k].h * 60 - S.t) / 60 : 0;   // game hours
+function powerX(b){ const V = VESSELS[b.type || 'skiff']; return 1 + (b.engLv && !V.outboard ? ENGUP[b.engLv - 1].p : 0); }
 const speedOfPower = (P, planing) => planing ? Math.sqrt(P) : Math.min(1.12, Math.cbrt(P));
 function applyVessel(){
   const b = S.boat; Object.assign(BOAT, VESSELS[b.type || 'skiff']);
   for (const k in EQUIP) if (EQUIP[k].boost && S.equip && S.equip[k] && equipFits(k, b.type || 'skiff')) Object.assign(BOAT, EQUIP[k].boost);
   const hx = holdX(b); BOAT.holdCap = Math.round(BOAT.holdCap * hx); BOAT.iceCap = Math.round(BOAT.iceCap * hx);
-  const P = powerX(b); if (P > 1){ const sx = speedOfPower(P, BOAT.planing), nb = Object.keys(BOOSTS).filter(k => b.boost && b.boost[k] && canBoost(BOAT)).length;
-    BOAT.vmax *= sx; BOAT.vcruise *= sx; BOAT.fuelK *= 1 + 0.4 * (P - 1); BOAT.accel *= 1 + 0.1 * nb + (b.engLv ? 0.3 * ENGUP[b.engLv - 1].p : 0); BOAT.hp = Math.round(BOAT.hp * P); }
+  const P = powerX(b); if (P > 1){ const sx = speedOfPower(P, BOAT.planing);
+    BOAT.vmax *= sx; BOAT.vcruise *= sx; BOAT.fuelK *= 1 + 0.4 * (P - 1); BOAT.accel *= 1 + (b.engLv ? 0.3 * ENGUP[b.engLv - 1].p : 0); BOAT.hp = Math.round(BOAT.hp * P); }
+  const T = canBoost(BOAT) && trimOn(b); if (T){ BOAT.vmax *= T.x; BOAT.vcruise *= T.x; BOAT.accel *= T.x; }
   b.fuel = Math.min(b.fuel, BOAT.fuelCap); b.ice = Math.min(b.ice, BOAT.iceCap);
 }
 // fishing effort per person: a hand jig (pilk and four fly hooks; there is no rod, and without a jig nobody fishes by hand); an
@@ -587,12 +592,13 @@ function codOpen(H){ if (S.lic) return true; const sd = codStopDoy(yearH(H)); re
 function codLimitNow(H){ const l = codLimits(H); return codOpen(H) ? l.max : l.guar; }
 // ---- haill: luck from the quay. Fresh goods: full effect for two days, fading to nothing on day seven. Sold for real money only (test mode now) or won at the pub. ----
 // Two kinds (the user's list 04.10.2026), bought (for real money; a test now) or won at the pub, and kept in a store until you switch one
-// on yourself: never by itself. Haill is fresh the first 48 hours (+100 % luck on every species), then «mellomhaill» to 72 hours
-// (+50 %) and «gammelhaill» to 96 hours (+25 %), gone after that. Luksushaill puts 48 hours at +200 % in front (gone after 144 hours).
+// on yourself: never by itself. Haill is fresh the first 24 hours (+100 % luck on every species), then «mellomhaill» to 48 hours
+// (+50 %) and «gammelhaill» to 72 hours (+25 %), gone after that. Luksushaill puts 24 hours at +200 % in front (gone after 96 hours).
+// Game hours (Jonas 05.10.2026).
 // The luck multiplies what every gear catches (the jig, line, nets and pots). The halibut luck is gone.
 const HAILL = {
-  haill:{no:'Haill', en:'Luck', nok:29, steps:[[48, 1], [72, 0.5], [96, 0.25]], d:{no:'Fersk haill gir +100 % fiskelykke på alle arter de første 48 timene. Så blir den mellomhaill (+50 %) til 72 timer og gammelhaill (+25 %) til 96 timer.', en:'Fresh luck gives +100% luck on every species for the first 48 hours. Then it is middle luck (+50%) to 72 hours and old luck (+25%) to 96 hours.'}},
-  luksus:{no:'Luksushaill', en:'Luxury luck', nok:59, steps:[[48, 2], [96, 1], [120, 0.5], [144, 0.25]], d:{no:'Eksklusiv: +200 % fiskelykke de første 48 timene, så fersk haill (+100 %) i 48 timer, mellomhaill og gammelhaill. Borte etter 144 timer.', en:'Exclusive: +200% luck for the first 48 hours, then fresh luck (+100%) for 48 hours, middle and old luck. Gone after 144 hours.'}}
+  haill:{no:'Haill', en:'Luck', nok:29, steps:[[24, 1], [48, 0.5], [72, 0.25]], d:{no:'Dobbel fiskelykke et helt døgn! Fersk haill gir +100 % fiskelykke på alle arter i 24 timer, så alt redskapet ditt fanger dobbelt så mye. Etterpå holder den seg som mellomhaill (+50 %) i 24 timer og gammelhaill (+25 %) i 24 timer til: tre døgn med ekstra fangst.', en:'Double luck for a whole day! Fresh luck gives +100% luck on every species for 24 hours, so all your gear catches twice as much. After that it lasts as middle luck (+50%) for 24 hours and old luck (+25%) for 24 more: three days of extra catch.'}},
+  luksus:{no:'Luksushaill', en:'Luxury luck', nok:59, steps:[[24, 2], [48, 1], [72, 0.5], [96, 0.25]], d:{no:'Tredobbel fiskelykke det første døgnet! Luksushaill gir +200 % fiskelykke i 24 timer. Så følger fersk haill (+100 %), mellomhaill (+50 %) og gammelhaill (+25 %) i 24 timer hver: fire døgn med ekstra fangst, og mest av alt når du trenger det.', en:'Triple luck the first day! Luxury luck gives +200% luck for 24 hours. Then come fresh luck (+100%), middle luck (+50%) and old luck (+25%) for 24 hours each: four days of extra catch, the most when you need it.'}}
 };
 const HAILL_STAGE = [[2, 'Luksushaill', 'Luxury luck'], [1, 'Fersk haill', 'Fresh luck'], [0.5, 'Mellomhaill', 'Middle luck'], [0.25, 'Gammelhaill', 'Old luck']];
 const haillAge = () => S.haill ? (S.t - S.haill.t0) / 60 : 1e9;   // hours since it was switched on

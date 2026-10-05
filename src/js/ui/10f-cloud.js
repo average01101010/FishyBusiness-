@@ -115,7 +115,7 @@ function cloudStart(){
   // goes to the background: Android often ends a page in the background without a pagehide
   setInterval(cloudSaveSoon, 60000);
   document.addEventListener('visibilitychange', () => { if (document.hidden) cloudSaveSoon(true); });
-  pushStart(); worldStart();
+  pushStart(); worldStart(); shopStart();
   window.addEventListener('pagehide', () => { cloudSaveSoon(true); if (CLOUD.sid) cloudFlush(true); });
 }
 function cloudAsk(){

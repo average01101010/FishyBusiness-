@@ -239,11 +239,25 @@ def main():
         R['wRead'] = sql("select count(*) from public.landings", A, 'authenticated', expect_err=True)
         R['wAnon'] = sql("select public.world_get(0, 2027, 1)", {}, 'anon', expect_err=True)
         R['wAdmPl'] = sql("select public.admin_world()", A, 'authenticated', expect_err=True)
+        # the shop (20261006040000_shop.sql): a quote only for a signed-in player and a real product; a paid purchase books one grant
+        # however often Stripe tells it; the game takes it and says done; a refund takes back what is not given yet; no player books a payment
+        R['sQuote'] = json.loads(sql("select public.shop_quote('trim_turbo')", A, 'authenticated'))
+        R['sNoProd'] = sql("select public.shop_quote('gratis')", A, 'authenticated', expect_err=True)
+        R['sAnon'] = sql("select public.shop_quote('haill')", {}, 'anon', expect_err=True)
+        sql("insert into public.purchases (id, player_id, product_id, amount_nok, status, data) values ('cs_s1', 'user_01AAA', 'trim_turbo', 49, 'open', '{\"boat\":\"v1\"}'), ('cs_s2', 'user_01AAA', 'haill', 29, 'open', '{}')")
+        R['sPaid1'] = sql("select public.shop_paid('cs_s1', 'pi_1')"); R['sPaid2'] = sql("select public.shop_paid('cs_s1', 'pi_1')")
+        R['sPend'] = json.loads(sql("select public.shop_pending()", A, 'authenticated')); R['sPendB'] = json.loads(sql("select public.shop_pending()", B, 'authenticated'))
+        R['sPlPaid'] = sql("select public.shop_paid('cs_s2', 'pi_2')", A, 'authenticated', expect_err=True)
+        R['sPlRead'] = sql("select count(*) from public.grants", A, 'authenticated', expect_err=True)
+        if R['sPend']: sql("select public.shop_done(array[%d]::bigint[])" % R['sPend'][0]['id'], A, 'authenticated')
+        sql("select public.shop_paid('cs_s2', 'pi_2')"); sql("select public.shop_refund('pi_2')"); sql("select public.shop_ended('cs_s9', 'expired')")
+        R['sAfter'] = sql("select (select count(*) from public.grants where player_id = 'user_01AAA' and done_at is null and revoked_at is null) || '/' || (select status from public.purchases where id = 'cs_s2') || '/' || (select count(*) from public.grants where revoked_at is not null) || '/' || (select count(*) from public.grants where done_at is not null)")
+        R['sEnd'] = json.loads(sql("select public.shop_pending()", A, 'authenticated'))
         sql("select public.delete_me()", A, 'authenticated')
         R['wGone'] = sql("select (select count(*) from public.landings where player_id = 'user_01AAA') || '/' || (select count(*) from public.catches where player_id = 'user_01AAA') || '/' || (select count(*) from public.landings)")
         R['fbGone'] = sql("select count(*) from public.feedback where player_id = 'user_01AAA'")
         R['pushGone'] = sql("select count(*) || '/' || (select count(*) from public.push_queue where player_id = 'user_01AAA') from public.push_subs where player_id = 'user_01AAA'")
-        R['deleted'] = sql("select (select count(*) from public.players where id = 'user_01AAA') || '/' || (select count(*) from public.events) || '/' || (select count(*) from public.saves where player_id = 'user_01AAA') || '/' || (select coalesce(player_id, 'anon') from public.purchases)")
+        R['deleted'] = sql("select (select count(*) from public.players where id = 'user_01AAA') || '/' || (select count(*) from public.events) || '/' || (select count(*) from public.saves where player_id = 'user_01AAA') || '/' || (select string_agg(distinct coalesce(player_id, 'anon'), ',') from public.purchases)")
         # a yes taken back: the sessions, events, device, state and year of birth go, the account and the save stay
         C = {'sub': 'user_01CCC', 'role': 'authenticated'}; sid = '22222222-2222-4222-8222-222222222222'
         sql("select public.tm_hello('{}')", C, 'authenticated'); sql("select public.tm_consent(true, 1985)", C, 'authenticated')
@@ -323,6 +337,12 @@ def main():
         print(ok(len(pp) == 1 and pp[0]['kind'] == 'srv' and '«Havbris» gikk forbi deg i åpen gruppe' in pp[0]['b'] and 'nr. 2 i Norge' in pp[0]['b'] and R['pPrefs'] == '0'
                  and R['pWeek'].startswith('2/') and 'Du ble nr. 1 av 2 i åpen gruppe med 1400 kg. Norges beste båt!' in R['pWeek'] and 'Du ble nr. 2 av 2' in R['pWeek'] and R['pWeekPl'][0]),
               "push from the server: passed on the leaderboard (not with it turned off), and the week's result for each who landed; players cannot call it", {'pass': pp, 'prefs': R['pPrefs'], 'week': R['pWeek']})
+        q, pd = R['sQuote'], R['sPend']
+        print(ok(q.get('price_nok') == 49 and q.get('data', {}).get('k') == 'turbo' and R['sNoProd'][0] and R['sAnon'][0] and R['sPaid1'] == 't' and R['sPaid2'] == 'f'
+                 and len(pd) == 1 and pd[0]['product'] == 'trim_turbo' and pd[0]['data'].get('give') == 'trim' and pd[0]['data'].get('boat') == 'v1' and R['sPendB'] == []
+                 and R['sPlPaid'][0] and R['sPlRead'][0] and R['sAfter'] == '0/refunded/1/1' and R['sEnd'] == []),
+              'the shop: a quote only for a real product and a signed-in player, one grant per paid purchase however often Stripe tells it, given and done once, a refund takes back what is not given, and no player books a payment or reads the grants',
+              {'quote': q, 'paid': (R['sPaid1'], R['sPaid2']), 'pending': pd, 'after': R['sAfter'], 'end': R['sEnd']})
         print(ok(R['deleted'] == '0/0/0/anon'), 'deleting the account takes the player, the events and the save; the purchase stays without a name for the books', R['deleted'])
     finally:
         run(*as_pg([os.path.join(BIN, 'pg_ctl'), '-D', data, '-m', 'immediate', 'stop']))

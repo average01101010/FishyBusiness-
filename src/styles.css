@@ -224,6 +224,8 @@ body.v3d #aisCard{display:none} .lbl-ais{font-family:var(--sans);font-weight:600
 .ph-kv{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;padding:2px 0} .ph-kv span:last-child{white-space:nowrap;text-align:right} .ph-kv span:first-child{color:#5b6c76}
 .ph-btn{display:inline-block;margin:6px 6px 0 0;border:0;border-radius:10px;padding:8px 12px;background:#15252f;color:#fff;font:600 13px var(--sans);cursor:pointer} .ph-btn.alt{background:#e3eaee;color:#15252f} .ph-btn.red{background:#d63a2a} .ph-btn:disabled{opacity:.4;cursor:default}
 .ph-note{font-size:12px;color:#5b6c76;margin:6px 0}
+/* the shop's consent line under a buy button (ui/10i-shop.js shopFine): small and quiet, but readable (it must be, to count) */
+.ph-note.shop-fine{font-size:10px;line-height:1.25;opacity:.5;margin:4px 2px 0}
 /* the feedback app (ui/06e-feedback.js) */
 .fb .ph-card h4 small{font-weight:400;color:#5b6c76;font-size:11px}
 .fb-topics{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px} .fb-chip{border:1px solid #c9d5dc;background:#f4f7f9;color:#15252f;border-radius:16px;padding:7px 11px;min-height:36px;font:600 12px var(--sans);cursor:pointer} .fb-chip.on{background:#d0672f;border-color:#d0672f;color:#fff}

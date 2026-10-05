@@ -244,6 +244,8 @@ function step(){
 // one vessel's minute: the catch keeps, the yard works, plans start, and the boat sails or fishes
 function vesselStep(H){
   const b = S.boat;
+  // a trim that has run its time (core BOOSTS): the speed goes back
+  if (b.trim && !trimOn(b)){ const T = BOOSTS[b.trim.k]; delete b.trim; applyVessel(); if (T) log(T.no + ' er gått ut. Toppfarten er tilbake på ' + fmt(BOAT.vmax, 1) + ' knop.', 'The ' + T.en.toLowerCase() + ' has run out. Top speed is back at ' + fmt(BOAT.vmax, 1) + ' knots.'); }
   const clean = S.tripBuff && S.tripBuff.hold ? 0.75 : 1;
   workMinute();
   const kar = S.equip && S.equip.krabbekar;

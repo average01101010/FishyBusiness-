@@ -78,15 +78,15 @@ async def main():
           return {out, spec:VESSELS.skiff.holdCap, ice:VESSELS.skiff.iceCap, job}; })()""")
         # weight, the engine, the boosts and fouling (04.10.2026): a full hold costs 5-15 % top speed, a bigger engine and the boosts help a
         # displacement boat at most 12 % and a planing one more, the outboard skiff takes none of the diesel boosts, fouling costs 15 % and 25 % fuel
-        wt = await pg.evaluate("""(()=>{ const b = S.boat, keep = {type:b.type, hold:S.hold, eng:b.engLv, boost:b.boost, foul:b.foul, fuel:b.fuel}, R = {};
+        wt = await pg.evaluate("""(()=>{ const b = S.boat, keep = {type:b.type, hold:S.hold, eng:b.engLv, trim:b.trim, foul:b.foul, fuel:b.fuel}, R = {};
           const sp = () => +speedCap(0.3).toFixed(2), fill = kg => { S.hold = kg ? [{sp:'torsk', cls:1, kg, n:Math.round(kg / 4), bled:true, iced:true, hr:0, fresh:95, gut:false, hook:true}] : []; };
-          for (const t of ['skiff', 'sjark']){ b.type = t; b.engLv = 0; b.boost = {}; b.foul = 0; applyVessel(); b.fuel = BOAT.fuelCap / 2; fill(0); const v0 = sp(); fill(BOAT.holdCap); R[t] = {empty:v0, full:sp(), spec:VESSELS[t].vmax}; fill(0);
-            b.engLv = 2; applyVessel(); R[t].eng = +BOAT.vmax.toFixed(2); b.engLv = 0; b.boost = {pump:true, ic:true, turbo:true}; applyVessel(); R[t].boost = +BOAT.vmax.toFixed(2); b.boost = {};
+          for (const t of ['skiff', 'sjark']){ b.type = t; b.engLv = 0; delete b.trim; b.foul = 0; applyVessel(); b.fuel = BOAT.fuelCap / 2; fill(0); const v0 = sp(); fill(BOAT.holdCap); R[t] = {empty:v0, full:sp(), spec:VESSELS[t].vmax}; fill(0);
+            b.engLv = 2; applyVessel(); R[t].eng = +BOAT.vmax.toFixed(2); b.engLv = 0; b.trim = {k:'turbo', t0:S.t}; applyVessel(); R[t].boost = +BOAT.vmax.toFixed(2); b.trim = {k:'turbo', t0:S.t - 73 * 60}; applyVessel(); R[t].gone = +BOAT.vmax.toFixed(2); delete b.trim;
             b.foul = 1; applyVessel(); const vf = sp(), ff = fuelLph(5, 0); b.foul = 0; R[t].foul = [+(vf / v0).toFixed(3), +(ff / fuelLph(5, 0)).toFixed(3)]; }
-          Object.assign(b, {type:keep.type, engLv:keep.eng, boost:keep.boost, foul:keep.foul, fuel:keep.fuel}); S.hold = keep.hold; applyVessel(); return R; })()""")
+          Object.assign(b, {type:keep.type, engLv:keep.eng, trim:keep.trim, foul:keep.foul, fuel:keep.fuel}); S.hold = keep.hold; applyVessel(); return R; })()""")
         sk, sj = wt['skiff'], wt['sjark']
         print(ok(0.80 <= sk['full'] / sk['empty'] <= 0.95 and 0.85 <= sj['full'] / sj['empty'] <= 0.95), 'a full hold costs top speed, more on the planing skiff than on the sjark', {k: (v['empty'], v['full']) for k, v in wt.items()})
-        print(ok(sj['eng'] <= sj['spec'] * 1.12 + 1e-6 and sj['eng'] > sj['spec'] and sj['boost'] > sj['spec'] * 1.05 and sk['eng'] == sk['spec'] and sk['boost'] == sk['spec']), 'a bigger engine and the boosts help the sjark (at most +12 %), the outboard skiff takes neither', {k: (v['spec'], v['eng'], v['boost']) for k, v in wt.items()})
+        print(ok(sj['eng'] <= sj['spec'] * 1.12 + 1e-6 and sj['eng'] > sj['spec'] and abs(sj['boost'] - sj['spec'] * 2) < 0.02 and sj['gone'] == sj['spec'] and sk['eng'] == sk['spec'] and sk['boost'] == sk['spec']), 'a bigger engine helps the sjark (at most +12 %), turbo trim doubles her speed for 72 game hours and then it is gone, the outboard skiff takes neither', {k: (v['spec'], v['eng'], v['boost'], v['gone']) for k, v in wt.items()})
         print(ok(all(abs(v['foul'][0] - 0.85) < 0.01 and abs(v['foul'][1] - 1.25) < 0.01 for v in wt.values())), 'a fully fouled hull costs 15 % speed and 25 % fuel', {k: v['foul'] for k, v in wt.items()})
         print(ok([x[0] for x in hd['out']] == [hd['spec'], round(hd['spec'] * 1.25), round(hd['spec'] * 1.6), hd['spec'] * 2] and hd['out'][3][1] == hd['ice'] * 2 and all(x[0] == x[2] for x in hd['out']) and hd['job'] == 1), 'the hold rebuilt in three steps: +25 %, +60 %, twice, the ice room with it', hd)
         lens = [x[1] for x in r['ladder'] if x[2] != 'hav']

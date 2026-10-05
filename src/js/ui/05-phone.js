@@ -54,8 +54,8 @@ const PHONE = (() => {
     const gift = tutFree('haill');
     if (gift) h.push('<div class="ph-card haillc"><h4>' + L('Første gang er luksushaill gratis', 'The first luxury luck is free') + '</h4><p class="ph-note">' + L('Ellers koster haill 29 kr og luksushaill 59 kr. Du kan også være heldig på puben.', 'Otherwise luck is NOK 29 and luxury luck NOK 59. You can also get lucky at the pub.') + '</p></div>');
     for (const k of ['haill', 'luksus']){ const X = HAILL[k], free = gift && k === 'luksus';
-      h.push('<div class="ph-card haillc"><h4>' + X[S.lang] + '</h4><p>' + X.d[S.lang] + '</p><div class="ph-kv"><span>' + L('Pris', 'Price') + '</span><span><b>' + (free ? L('gratis nå', 'free now') : X.nok + ' kr') + '</b></span></div><button class="ph-btn p" data-pa="haillbuy" data-k="' + k + '"' + (gift && !free ? ' disabled' : '') + '>' + (free ? L('Hent gratis luksushaill', 'Fetch a free luxury luck') : L('Kjøp (test, ingen betaling)', 'Buy (test, no payment)')) + '</button></div>'); }
-    h.push('<p class="ph-note">' + L('Haill selges bare for ekte penger. Betaling kommer når spillet får egen server. Du kan også være heldig på puben.', 'Luck is sold for real money only. Payment comes when the game gets its own server. You can also get lucky at the pub.') + '</p></div>');
+      h.push('<div class="ph-card haillc"><h4>' + X[S.lang] + '</h4><p>' + X.d[S.lang] + '</p><div class="ph-kv"><span>' + L('Pris', 'Price') + '</span><span><b>' + (free ? L('gratis nå', 'free now') : X.nok + ' kr') + '</b></span></div><button class="ph-btn p" data-pa="haillbuy" data-k="' + k + '"' + (gift && !free ? ' disabled' : '') + '>' + (free ? L('Hent gratis luksushaill', 'Fetch a free luxury luck') : shopLabel(X.nok)) + '</button>' + (free ? '' : shopFine()) + '</div>'); }
+    h.push('<p class="ph-note">' + L('Du kan også være heldig på puben. Tida er spilltid: 24 timer i spillet er ' + fmt(24 / GAME_RATE, 0) + ' timer i virkeligheten.', 'You can also get lucky at the pub. The time is game time: 24 hours in the game is ' + fmt(24 / GAME_RATE, 0) + ' hours in real life.') + '</p></div>');
     return h.join('');
   }
   // --- the tackle shop on the quay: a purchase takes two taps, the second one confirms the price
@@ -94,6 +94,9 @@ const PHONE = (() => {
         kv(L('Fart', 'Speed'), '−' + fmt(15 * f, 1) + ' %') + kv(L('Drivstoff', 'Fuel'), '+' + fmt(25 * f, 1) + ' %') + '<p class="ph-note">' + L('Groe og rur vokser på skroget, raskest om sommeren. ', 'Weed and barnacles grow on the hull, fastest in summer. ') + (S.equip.antigro ? L('Antigro-belegget holder det nede.', 'The antifouling coat keeps it down.') : L('Antigro-belegg under Oppgrader gjør at det gror tre ganger så sakte.', 'An antifouling coat under Upgrade makes it grow three times as slowly.')) + '</p>' +
         (queued ? '<p><b>' + L('På slippen', 'On the slip') + '</b></p>' : '<button class="ph-btn p" data-pa="hullclean"' + (!inPort() || S.cash < c || f < 0.02 ? ' disabled' : '') + '>' + L('Skrogrens på slipp · ', 'Hull cleaning on the slip · ') + kr(c) + ' · ' + realDur(YARD_H * 60) + '</button>') + '</div>'); }
     h.push('<div class="ph-card"><h4>' + L('Arbeidskø', 'Work queue') + ' (' + jobs.length + '/6)</h4>');
+    // Jonas 05.10.2026: shortening the wait is sold for real money, 19 kr for all the boat's running jobs at once
+    if (jobs.some(j => YARD_KINDS.includes(j.kind) && j.until != null && j.until > S.t + 1)) h.push('<div class="ph-card haillc"><h4>' + L('Ferdig nå', 'Done now') + ' · ' + YARD_NOW_NOK + ' kr</h4><p>' + L('Hopp over ventetida: verftet gjør alle jobbene ferdig med én gang, så du kommer deg ut på sjøen nå mens fisken biter.', 'Skip the wait: the yard finishes all the jobs at once, so you get out on the water now while the fish are biting.') + '</p>' +
+      '<button class="ph-btn p" data-pa="yardnow">' + shopLabel(YARD_NOW_NOK) + '</button>' + shopFine() + '</div>');
     if (!jobs.length) h.push('<p class="ph-note">' + L('Ingen jobber.', 'No jobs.') + '</p>');
     jobs.forEach((j, i) => {
       const run = j.until != null, pct = run ? clamp(1 - (j.until - S.t) / (j.h * 60), 0, 1) : 0;
@@ -378,19 +381,32 @@ const PHONE = (() => {
     if (done){ save(); renderHud(); renderClock(); panelDirty = true; render(); }
     return cur;
   }
-  // --- Trim: the speed boosts for the boat you are aboard (core BOOSTS; the user's list 04.10.2026: sold for real money in their own
-  // app; a test without payment until the game has a server), diesel engines only
+  // --- Trim: more speed for the boat you are aboard for a while (core BOOSTS; Jonas 05.10.2026: sold for real money, the time in game
+  // hours, one at a time); a test without payment until the shop is in, diesel engines only
+  const TRIM_SELL = {pump:['En rask start: +50 % fart i et helt døgn. Du er tidligere ute på feltet og tidligere inne med fersk fisk.', 'A quick start: +50% speed for a whole day. Out on the grounds sooner, and in sooner with fresh fish.'],
+    ic:['+75 % fart i to døgn. Rekk flere turer før været snur, og lever mens prisen er god.', '+75% speed for two days. Fit in more trips before the weather turns, and land while the price is good.'],
+    turbo:['Dobbel fart i tre døgn! Nå de fjerne feltene og vær hjemme før de andre.', 'Double speed for three days! Reach the far grounds and be home before the others.']};
   function trim(){
-    const b = S.boat, V = VESSELS[b.type], h = ['<div class="ph-c">'];
-    h.push('<div class="ph-card"><h4>«' + S.boatName + '» · ' + V.name[S.lang] + '</h4>' + kv(L('Motor', 'Engine'), BOAT.hp + ' hk') + kv(L('Toppfart', 'Top speed'), fmt(BOAT.vmax, 1) + ' kn') + kv(L('Med lasten og skroget nå', 'With the load and hull now'), fmt(speedCap(0.3), 1) + ' kn') + '</div>');
+    const b = S.boat, V = VESSELS[b.type], on = trimOn(b), h = ['<div class="ph-c">'], hrs = x => fmt(x, 0) + L(' timer', ' hours');
+    h.push('<div class="ph-card"><h4>«' + S.boatName + '» · ' + V.name[S.lang] + '</h4>' + kv(L('Toppfart', 'Top speed'), fmt(BOAT.vmax, 1) + ' kn') + kv(L('Med lasten og skroget nå', 'With the load and hull now'), fmt(speedCap(0.3), 1) + ' kn') +
+      (on ? kv(L('På nå', 'On now'), '<b>' + on[S.lang] + ' +' + Math.round((on.x - 1) * 100) + ' %</b>') + kv(L('Går ut om', 'Ends in'), hrs(trimLeft(b))) : '') + '</div>');
     if (!canBoost(V)) h.push('<div class="ph-card"><p class="ph-note">' + L('Trim krever dieselmotor. Påhengsmotoren på denne båten har verken dieselpumpe, ladeluftkjøling eller turbo. Den største påhengsmotoren får du under Oppgrader på verftet.', 'Tuning needs a diesel engine. This boat\'s outboard has no injection pump, charge air cooling or turbo. The biggest outboard is under Upgrade at the yard.') + '</p></div>');
-    else for (const [k, B] of Object.entries(BOOSTS)){ const have = b.boost && b.boost[k], P1 = powerX(Object.assign({}, b, {boost:Object.assign({}, b.boost, {[k]:true})})), v1 = V.vmax * speedOfPower(P1, V.planing);
-      h.push('<div class="ph-card haillc"><h4>' + B[S.lang] + '</h4><p>' + L('+' + Math.round(B.p * 100) + ' % effekt og raskere akselerasjon.', '+' + Math.round(B.p * 100) + '% power and quicker acceleration.') + '</p>' + (have ? '<p><b>' + L('Montert', 'Fitted') + '</b></p>' : kv(L('Toppfart med denne', 'Top speed with it'), fmt(v1, 1) + ' kn') + kv(L('Pris', 'Price'), B.nok + ' kr') + '<button class="ph-btn p" data-pa="trimbuy" data-k="' + k + '">' + L('Kjøp (test, ingen betaling)', 'Buy (test, no payment)') + '</button>') + '</div>'); }
-    h.push('<p class="ph-note">' + L('Trim selges bare for ekte penger og følger båten. Betaling kommer når spillet får egen server. Effektene er et forslag som justeres i spilltest.', 'Tuning is sold for real money only and stays with the boat. Payment comes when the game gets its own server. The effects are a proposal to be tuned in play tests.') + '</p></div>');
+    else for (const [k, B] of Object.entries(BOOSTS)){ const v1 = BOAT.vmax / (on ? on.x : 1) * B.x;
+      h.push('<div class="ph-card haillc"><h4>' + B[S.lang] + ' · +' + Math.round((B.x - 1) * 100) + ' % ' + L('fart', 'speed') + '</h4><p>' + TRIM_SELL[k][S.lang === 'en' ? 1 : 0] + '</p>' +
+        kv(L('Toppfart med den', 'Top speed with it'), '<b>' + fmt(v1, 1) + ' kn</b>') + kv(L('Varer', 'Lasts'), hrs(B.h)) + kv(L('Pris', 'Price'), B.nok + ' kr') +
+        (on ? '<p class="ph-note">' + L('Erstatter ' + on.no.toLowerCase() + ', som er på nå.', 'Replaces the ' + on.en.toLowerCase() + ' on now.') + '</p>' : '') +
+        '<button class="ph-btn p" data-pa="trimbuy" data-k="' + k + '">' + shopLabel(B.nok) + '</button>' + shopFine() + '</div>'); }
+    h.push('<p class="ph-note">' + L('Trim gjelder båten du er om bord i. Tida er spilltid: 24 timer i spillet er ' + fmt(24 / GAME_RATE, 0) + ' timer i virkeligheten. Mer fart bruker mer diesel.',
+      'Tuning goes with the boat you are aboard. The time is game time: 24 hours in the game is ' + fmt(24 / GAME_RATE, 0) + ' hours in real life. More speed burns more diesel.') + '</p></div>');
     return h.join('');
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p51', '05.10.2026', 'Mer fisk og mer fart', 'More fish and more speed', [
+      ['Haill gir nå dobbel fiskelykke et helt døgn, og luksushaill tredobbel. Så blekner den i døgn-trinn: luksushaill varer i fire døgn og vanlig haill i tre. Tida er spilltid.', 'Luck now gives double luck for a whole day, and luxury luck triple. Then it fades a day at a time: luxury luck lasts four days and luck three. The time is game time.'],
+      ['Trim gir båten mye mer fart for en tid: +50 % i et døgn, +75 % i to døgn eller dobbel fart i tre døgn.', 'Tuning gives the boat much more speed for a while: +50% for a day, +75% for two days or double speed for three days.'],
+      ['Nytt på verftet: «Ferdig nå» gjør alle jobbene på båten ferdig med én gang.', 'New at the yard: «Done now» finishes all the jobs on the boat at once.'],
+      ['Haill, trim og «Ferdig nå» kan kjøpes for ekte penger når butikken åpner. Det du kjøper, kommer i spillet med én gang.', 'Luck, tuning and «Done now» can be bought for real money when the shop opens. What you buy comes in the game at once.']]],
     ['p50', '05.10.2026', 'Feilrettinger', 'Fixes', [
       ['Lyden på iPhone kommer tilbake ved neste trykk etter en samtale eller når appen har vært i bakgrunnen, i stedet for å gi en feilmelding.', 'The sound on iPhone comes back with the next tap after a call or when the app has been in the background, instead of giving an error.'],
       ['Havet i 3D er skrevet om, så flere Android-telefoner og PC-er med Windows skal få det fulle havet. Går ikke det, prøves et lettere hav før det flate.', 'The sea in 3D is rewritten so more Android phones and Windows PCs should get the full sea. If not, a lighter sea is tried before the flat one.'],
@@ -1227,7 +1243,7 @@ const PHONE = (() => {
       if (!queueJob({kind:'eng', lv, h:nx.h, no:'Motorbytte', en:'Engine change'})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } S.cash -= c; S.stats.costs += c; log('Bestilte større motor, ' + kr(c) + '.', 'Ordered a bigger engine, ' + kr(c) + '.'); }
     else if (a === 'hullclean'){ if (!inPort() || (S.jobs || []).some(j => j.kind === 'hull')) return; const c = 1500 + Math.round(BOAT.len * 400 / 100) * 100; if (S.cash < c) return;
       if (!queueJob({kind:'hull', h:6, no:'Skrogrens på slipp', en:'Hull cleaning on the slip'})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } S.cash -= c; S.stats.costs += c; log('Bestilte skrogrens på slipp, ' + kr(c) + '.', 'Ordered a hull cleaning on the slip, ' + kr(c) + '.'); }
-    else if (a === 'trimbuy'){ const b = S.boat, B = BOOSTS[d.k]; if (!B || !canBoost(VESSELS[b.type]) || (b.boost && b.boost[d.k])) return; b.boost = Object.assign({}, b.boost, {[d.k]:true}); applyVessel(); log(B.no + ' er montert. Toppfart nå ' + fmt(BOAT.vmax, 1) + ' knop.', B.en + ' is fitted. Top speed now ' + fmt(BOAT.vmax, 1) + ' knots.'); toast(L(B.no + ' montert: ', B.en + ' fitted: ') + fmt(BOAT.vmax, 1) + ' kn'); }
+    else if (a === 'trimbuy'){ const b = S.boat, B = BOOSTS[d.k]; if (!B || !canBoost(VESSELS[b.type])) return; shopBuy(d.k, () => { b.trim = {k:d.k, t0:S.t}; applyVessel(); log(B.no + ' er på i ' + B.h + ' timer. Toppfart nå ' + fmt(BOAT.vmax, 1) + ' knop.', B.en + ' is on for ' + B.h + ' hours. Top speed now ' + fmt(BOAT.vmax, 1) + ' knots.'); toast(L(B.no + ': ', B.en + ': ') + fmt(BOAT.vmax, 1) + ' kn'); }); }
     else if (a === 'equip'){ const E = EQUIP[d.k]; if (!inPort() || S.cash < E.price) return; if (!queueJob({kind:'fit', k:d.k, h:fitHours(d.k), no:'Montering av ' + E.name.no.toLowerCase(), en:'Fitting the ' + E.name.en})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } S.cash -= E.price; S.stats.costs += E.price; log('Kjøpt ' + E.name.no + '. Monteres i verkstedet.', 'Bought the ' + E.name.en + '. Being fitted at the yard.'); } else if (a === 'equipOLD'){ const E = EQUIP[d.k]; if (E.multi) S.equip[d.k] = (S.equip[d.k] || 0) + 1; else S.equip[d.k] = true; applyVessel(); log('Montert: ' + E.name.no + '.', 'Fitted: ' + E.name.en + '.'); updateMapButtons(); INSTR.show(); }
     else if (a === 'ops_on'){ if (!S.ops) return; if (!S.ops.on && !opsSkipper()){ toast(L('Velg en skipper først.', 'Choose a skipper first.')); return; } S.ops.on = !S.ops.on; log(S.ops.on ? 'Fast driftsplan slått på.' : 'Fast driftsplan slått av.', S.ops.on ? 'Standing plan switched on.' : 'Standing plan switched off.'); }
     else if (a === 'ops_dep'){ S.ops.dep = (S.ops.dep + (+d.d) + 24) % 24; }
@@ -1290,11 +1306,13 @@ const PHONE = (() => {
       for (const c of S.crew) c.morale = clamp(c.morale, 0, 100); S.cevt = null; }
     else if (a === 'ordtake'){ const O = ordState(), o = O.offers.find(x => x.id === +d.id); if (!o || O.active.length >= 3) return; O.offers.splice(O.offers.indexOf(o), 1); o.due = S.t + o.days * 1440; O.active.push(o); log('Tok en bestilling fra ' + CUSTOMERS.find(c => c.id === o.cust).no + '.', 'Took an order from ' + CUSTOMERS.find(c => c.id === o.cust).no + '.'); }
     else if (a === 'cloth'){ const C = CLOTHES[d.k], people = 1 + S.crew.length, have = (S.clothes || {})[d.k] || 0; if (!C || have >= people) return; if (S.cash < C.price){ toast(t('no_cash')); return; } S.cash -= C.price; S.stats.costs += C.price; S.clothes = S.clothes || {olje:0, varme:0}; S.clothes[d.k] = have + 1; log('Kjøpte ' + C.no.toLowerCase() + '.', 'Bought ' + C.en.toLowerCase() + '.'); }
-    else if (a === 'haillbuy'){ if (tutFree('haill') && d.k !== 'luksus') return; giveHaill(d.k, 'shop'); if (tutFree('haill')) tutMark('free_haill'); toast(HAILL[d.k][S.lang] + L(' ligger i beholdningen. Trykk «Aktiver» når du vil bruke den.', ' is in store. Tap «Switch on» when you want it.')); }
+    else if (a === 'haillbuy'){ if (tutFree('haill') && d.k !== 'luksus') return; const k = d.k, got = () => { giveHaill(k, 'shop'); toast(HAILL[k][S.lang] + L(' ligger i beholdningen. Trykk «Aktiver» når du vil bruke den.', ' is in store. Tap «Switch on» when you want it.')); };
+      if (tutFree('haill')){ tutMark('free_haill'); got(); } else shopBuy(k, got); }
     else if (a === 'haillon'){ if (S.haill && haillStage() && haillPend !== d.k){ haillPend = d.k; return true; } haillPend = null; if (useHaill(d.k)) toast(HAILL[d.k][S.lang] + L(' er aktivert: +', ' is on: +') + Math.round(haillBoost() * 100) + ' %.'); }
     else if (a === 'haill0'){ haillPend = null; }
     else if (a === 'jobOT'){ const j = (S.jobs || [])[+d.i]; if (!j || j.until == null || j.ot) return; const left = Math.max(0, j.until - S.t) / 60, c = Math.round(left / 2 * 950 / 10) * 10; if (S.cash < c){ toast(t('no_cash')); return; }
       S.cash -= c; S.stats.costs += c; j.until = S.t + (j.until - S.t) / 2; j.ot = true; log('Leide inn mekaniker på overtid for ' + c + ' kr.', 'Hired a mechanic on overtime for NOK ' + c + '.'); }
+    else if (a === 'yardnow'){ shopBuy('yard', () => { let n = 0; for (const j of S.jobs || []) if (YARD_KINDS.includes(j.kind) && j.until != null && j.until > S.t){ j.until = S.t; n++; } if (n){ log('Verftet gjorde ' + (n > 1 ? n + ' jobber' : 'jobben') + ' ferdig med én gang.', 'The yard finished ' + (n > 1 ? n + ' jobs' : 'the job') + ' straight away.'); toast(L('Verftet er ferdig', 'The yard is done')); } }); }
     else if (a === 'jobRush'){ const j = (S.jobs || [])[+d.i]; if (!j || j.until == null || !adminOk()) return; j.until = S.t; log('Admin: jobben ble gjort ferdig med én gang.', 'Admin: the job was finished straight away.'); }
     else if (a === 'struct'){
       // a structure quota: buy a right in the same group, scrap the boat, and add its quota factor less 10 % (03d-quota.js)
