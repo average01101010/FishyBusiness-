@@ -122,7 +122,7 @@ async def main():
         k = await pg.evaluate("stockIdx(S.boat.pos)")
         replies['land_put'] = 'null'; replies['catch_put'] = 'null'; n0 = len(calls)
         w2 = await pg.evaluate("""async () => { const pt = plantsNear(S.boat.pos, 1)[0].pt, H = S.t / 60, k = stockIdx(S.boat.pos), y = yearH(H);
-          S.wcur = 0; S.wq = {c:{}, l:[]}; const rec = WSH.rec; takeStock(S.boat.pos, 100); const pend = Object.keys(S.wq.c).length;
+          S.wcur = 0; S.wq = {c:{}, l:[]}; S.boatName = 'Havbris'; S.settings.showMe = true; const rec = WSH.rec; takeStock(S.boat.pos, 100); const pend = Object.keys(S.wq.c).length;
           wshLand(pt.id, H, 'open', {torsk:120, hyse:30}, 110); takeStock(S.boat.pos, 100, null, true); const pend2 = Object.keys(S.wq.c).length;
           const before = {st:stkGet(S.stock, k), sat:wshSat(pt.id, 'torsk', H), pr:price(pt, 'torsk', H)};
           window.__cell = k; return {rec, pend, pend2, before, pid:pt.id, y}; }""")
@@ -139,6 +139,18 @@ async def main():
         check(abs(w3['open'] - 25) < 1e-6 and w3['txt'] and abs(w3['sat'] - 30000) < 300 and w3['pr'] <= w2['before']['pr'] and abs((w2['before']['st'] - w3['st']) - 0.5) < 0.02 and w3['cur'] == 42,
               "the shared world V2: the other players' open-group cod counts in the group's catch (shown in Kvote), their deliveries fill the plant and its price, and the fish they took is gone from my sea",
               {'before': w2['before'], 'after': {k2: w3[k2] for k2 in ('st', 'sat', 'pr', 'open', 'cur')}})
+        # the open group's leaderboard: the players under their boats' names, and a name that tries to make markup is not markup
+        replies['world_top'] = {'rows': [{'rank': 1, 'boat': '<b onclick=x>Snøgg</b>', 'port': 'botnhamn', 'kg': 900, 'me': False}, {'rank': 2, 'boat': 'Havbris', 'port': 'finnsnes', 'kg': 120, 'me': True}], 'mine': {'rank': 2, 'kg': 120}, 'n': 2}
+        t = await pg.evaluate("""async () => { S.boatName = 'Havbris'; PHONE.open('salg'); document.querySelector('#phone [data-pa=sub][data-s=top]').click();
+          for (let i = 0; i < 40 && !document.querySelector('#phone .ph-tbl td'); i++) await new Promise(r => setTimeout(r, 100));
+          await new Promise(r => setTimeout(r, 200)); const tb = document.querySelector('#phone .ph-tbl'), rows = tb ? [...tb.querySelectorAll('tr')].slice(1).map(r => r.innerText.replace(/\\s+/g, ' ').trim()) : [];
+          const out = {rows, img:tb ? tb.querySelectorAll('td b, td img').length : -1, xss:!!window.__xss, me:tb && tb.querySelector('tr.me') ? tb.querySelector('tr.me').innerText : null, head:document.querySelector('#phone .ph-card h4') && document.querySelector('#phone .ph-card h4').textContent};
+          PHONE.show(false); return out; }""")
+        wt = [c[1] for c in calls if c[0] == 'world_top']
+        check(t['head'] == 'Åpen gruppe' and len(t['rows']) == 2 and 'Snøgg' in t['rows'][0] and 'Botnhamn' in t['rows'][0] and t['img'] == 0 and not t['xss'] and t['me'] and 'Havbris' in t['me'] and '(deg)' in t['me']
+              and wt and isinstance(wt[0].get('w'), int) and lp and lp[0].get('boat') == 'Havbris',
+              "the open group's leaderboard: the players under their boats' names and plants, yourself marked, a name with markup only text; each sale carries the boat's name",
+              {'t': t, 'ask': wt[:1], 'boat': lp[0].get('boat') if lp else None})
         n0 = len(calls); await pg.evaluate("worldShare()"); await pg.wait_for_timeout(500)
         wg = [c[1] for c in calls[n0:] if c[0] == 'world_get']
         check(wg and wg[0]['since'] == 42 and not [c for c in calls[n0:] if c[0] in ('land_put', 'catch_put')], 'the shared world V2: the next ask goes on from the cursor, and nothing already sent goes again', wg)

@@ -35,7 +35,9 @@ function npcWeekKg(i, w){
 function myKg(H0, H1){ return S.sales.filter(x => x.t / 60 >= H0 && x.t / 60 < H1).reduce((a, x) => a + x.kg, 0); }
 function toplist(w){
   const rows = SKIPPERS.map((s, i) => ({name:s[0], port:s[1], kg:npcWeekKg(i, w)}));
-  rows.push({name:S.company || (S.lang === 'no' ? 'Deg' : 'You'), port:'Finnsnes', kg:Math.round(myKg(w * 168, (w + 1) * 168)), me:true});
+  // you under your boat's name (Jonas 05.10.2026: «ikke … med rederi, men med båtnavn») and your home harbour
+  const hp = portById(S.home || 'finnsnes');
+  rows.push({name:S.boatName || (S.lang === 'no' ? 'Deg' : 'You'), port:hp ? hp.name : 'Finnsnes', kg:Math.round(myKg(w * 168, (w + 1) * 168)), me:true});
   return rows.sort((a, b) => b.kg - a.kg);
 }
 // local news, generated from the same world everyone plays in

@@ -365,7 +365,8 @@ function wshTake(k, kg){ if (S.stock && kg > 0) stkSet(S.stock, k, Math.max(0.12
 // a sale for the others: kilos a species, and the cod counted on the open group's quota
 function wshLand(port, H, acc, kgSp, codQ){ if (!WSH.rec) return; const Q = wq(); if (Q.l.length >= 200) return;
   const items = Object.entries(kgSp).filter(([, kg]) => kg > 0.01).slice(0, 24).map(([sp, kg]) => ({sp, kg:+kg.toFixed(1), kgq:sp === 'torsk' && acc === 'open' ? +codQ.toFixed(1) : 0}));
-  if (items.length) Q.l.push({gh:+H.toFixed(2), y:yearH(H), port, acc, items}); }
+  // the boat's name goes with it for the open group's leaderboard, unless the player has hidden the boat from the others
+  if (items.length) Q.l.push({gh:+H.toFixed(2), y:yearH(H), port, acc, items, boat:S.settings && S.settings.showMe === false ? '' : String(S.boatName || '').slice(0, 24)}); }
 function initStock(){
   const a = {};
   // the famous grounds are already worked by the local fleet when the game starts

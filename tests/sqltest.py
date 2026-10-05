@@ -195,6 +195,17 @@ def main():
         R['cB'] = json.loads(sql("select public.world_get(0, 2027, 1000)", B, 'authenticated'))
         R['cB2'] = json.loads(sql("select public.world_get(%d, 2027, 1000)" % R['cB']['cur'], B, 'authenticated'))
         R['cA'] = json.loads(sql("select public.world_get(0, 2027, 1000)", A, 'authenticated'))
+        # the open group's leaderboard (20261006020000_toplist.sql): game week 5 is game hours 840-1008, so A's landings above are in it
+        sql("""select public.land_put(1002, 2027, 'botnhamn', 'open', '[{"sp":"torsk","kg":200,"kgq":200}]', 'Fjordbris')""", B, 'authenticated')
+        sql("""select public.land_put(1003, 2027, 'botnhamn', 'lukket', '[{"sp":"torsk","kg":9999,"kgq":0}]', 'Fjordbris')""", B, 'authenticated')
+        sql("""select public.land_put(1005, 2027, 'finnsnes', 'open', '[{"sp":"torsk","kg":100,"kgq":100}]', 'Havbris')""", A, 'authenticated')
+        R['topB'] = json.loads(sql("select public.world_top(5)", B, 'authenticated')); R['topA'] = json.loads(sql("select public.world_top(5)", A, 'authenticated'))
+        R['top4'] = json.loads(sql("select public.world_top(4)", B, 'authenticated'))
+        R['topAnon'] = sql("select public.world_top(5)", {}, 'anon', expect_err=True)
+        sql("""select public.land_put(1200, 2027, 'botnhamn', 'open', '[{"sp":"torsk","kg":50,"kgq":50}]', '<i>Ond</i>')""", B, 'authenticated')
+        R['topEvil'] = json.loads(sql("select public.world_top(7)", A, 'authenticated'))['rows']
+        sql("select public.pos_put(860, 350, 0, 0, 'sailing', '<img src=x>Ond', 'skiff')", B, 'authenticated')
+        R['posEvil'] = [q['boat'] for q in json.loads(sql("select public.pos_near(860, 350, 20)", A, 'authenticated'))]
         R['wBadT'] = sql("select public.land_put('NaN', 2027, 'x', 'open', '[]')", A, 'authenticated', expect_err=True)
         R['wBadC'] = sql("select public.catch_put(1, (select jsonb_agg(jsonb_build_array(i, 1)) from generate_series(1, 601) i))", A, 'authenticated', expect_err=True)
         R['wRead'] = sql("select count(*) from public.landings", A, 'authenticated', expect_err=True)
@@ -257,6 +268,12 @@ def main():
         cl = {a: b for a, b in R['cB']['cells']}
         print(ok(cl.get(549755813890) == 200 and cl.get(549755813891) == 50 and R['cB']['cur'] > 0 and R['cB2']['cells'] == [] and R['cA']['cells'] == []),
               "the shared world: the fish another player took comes cell by cell once (the cursor), never one's own", {'B': R['cB']['cells'], 'again': R['cB2']['cells'], 'A': R['cA']['cells']})
+        tb = R['topB']['rows']
+        print(ok(len(tb) == 2 and tb[0]['boat'] == 'Havbris' and tb[0]['kg'] == 10700 and tb[0]['port'] == 'senjahopen' and not tb[0]['me'] and tb[1]['boat'] == 'Fjordbris' and tb[1]['kg'] == 500
+                 and tb[1]['port'] == 'finnsnes' and tb[1]['me'] and R['topB']['mine'] == {'rank': 2, 'kg': 500} and R['topA']['mine']['rank'] == 1 and R['topA']['rows'][0]['me'] and R['top4']['rows'] == [] and R['topAnon'][0]
+                 and 'user_' not in json.dumps(R['topB']) and R['topEvil'] and R['topEvil'][0]['boat'] == 'iOnd/i' and R['posEvil'] == ['img src=xOnd']),
+              "the open group's leaderboard: the players by what they landed in the open group that game week, under the boat's latest name and the plant they delivered most to (a closed-group landing does not count, a landing at most 10 t), with one's own rank, never an account; a boat's name loses anything that could make markup (also on the AIS)",
+              R['topB'])
         print(ok(all(R[k][0] for k in ('wBadT', 'wBadC', 'wRead', 'wAnon', 'wAdmPl')) and R['wGone'].startswith('0/0/')),
               'the shared world: a bad time, too many cells, reading the tables, the anonymous and a player asking the admin sums are refused; the landings and catches go with the account',
               [R[k][1][:40] for k in ('wBadT', 'wBadC', 'wRead', 'wAnon', 'wAdmPl')] + [R['wGone']])

@@ -30,7 +30,9 @@ async function worldShare(){
   WSH2.busy = true;
   try {
     const Q = wq();
+    const sold = Q.l.length;
     while (Q.l.length){ try { await cloudRpc('land_put', Q.l[0]); } catch (e){ if (!/ 400$/.test(e.message)) throw e; } Q.l.shift(); }
+    if (sold) for (const k in WTOP) WTOP[k].at = 0;   // the leaderboard is fetched again with them
     // the cells are taken out of the queue while they go, so fish taken meanwhile waits for the next time, and what did not go goes back
     const C = Q.c, cells = Object.entries(C).filter(([, kg]) => kg >= 0.05), gh = +(S.t / 60).toFixed(2); Q.c = {};
     try { for (let i = 0; i < cells.length; i += 500){ const part = cells.slice(i, i + 500);
@@ -44,6 +46,20 @@ async function worldShare(){
       S.wcur = r.cur || S.wcur || 0; WSH2.last = Date.now(); }
   } catch (e){ if (/ 404$/.test(e.message)){ WSH2.off = true; WSH.rec = false; } }
   finally { WSH2.busy = false; }
+}
+// ---- the open group's leaderboard (05.10.2026; Salgslaget → Toppliste; supabase/migrations/20261006020000_toplist.sql): the players
+// ranked by what they landed in the open group in a game week, under their boats' names. Fetched when the list is shown, at most once a
+// minute a week, and again after this game's sales have gone up; null without the cloud (the phone then shows the Senja fleet). ----
+const WTOP = {};
+function worldTop(w){
+  if (typeof CLOUD === 'undefined' || !CLOUD.on || !CLOUD.user) return null;
+  const e = WTOP[w] || (WTOP[w] = {at:0, data:null, busy:false, err:false});
+  if (!e.busy && Date.now() - e.at > 60000){
+    e.busy = true;
+    cloudRpc('world_top', {w}).then(d => { e.data = d; e.err = false; }).catch(() => { e.err = true; })
+      .finally(() => { e.busy = false; e.at = Date.now(); if (PHONE.isOpen() && PHONE.app === 'salg') PHONE.render(); });
+  }
+  return e;
 }
 function worldStart(){
   if (!CLOUD.on) return;
