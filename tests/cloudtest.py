@@ -51,6 +51,12 @@ async def main():
             out[a.getAttribute('href')] = r.status + ' ' + ((t.match(/<h1>([^<]+)/) || [])[1] || '') + (t.includes('<!--@css-->') ? ' nocss' : ''); }
           return out; }""")
         check(legal.get('vilkar.html') == '200 Vilkår' and legal.get('personvern.html') == '200 Personvernerklæring', 'the gate links the terms and the privacy page, and both are there', legal)
+        # the sources and the contact page (ehandelsloven § 8) are there too, and the page fetches no type from Google (it is in the page)
+        more = await pg.evaluate("""async () => { const out = {};
+          for (const f of ['kilder.html', 'kontakt.html']){ const r = await fetch(f); const t = await r.text(); out[f] = r.status + ' ' + ((t.match(/<h1>([^<]+)/) || [])[1] || '') + (t.includes('<!--@css-->') ? ' nocss' : ''); }
+          out.google = [...document.querySelectorAll('link[href]')].some(l => /fonts\\.(googleapis|gstatic)/.test(l.href));
+          out.fonts = ['Archivo', 'Source Serif 4'].map(f => document.fonts.check('16px "' + f + '"')); return out; }""")
+        check(more.get('kilder.html') == '200 Kilder' and more.get('kontakt.html') == '200 Kontakt' and not more['google'] and all(more['fonts']), 'the sources and the contact page are there, and the type is in the page, not fetched from Google', more)
         await ctx.close()
 
         # 2. signed in: hello, consent, events, errors, rage quit, the save

@@ -10,10 +10,12 @@
 <meta property="og:image" content="https://detstorebla.no/og-image.jpg">
 <meta property="og:url" content="https://detstorebla.no/">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
 <style>
+/* the game's type, in the page so nothing is fetched from Google (it saw every player's IP address) and it is there offline: Archivo
+   (width 75-125 %, weight 400-700) and Source Serif 4 (400-600, upright and italic), the Latin subset, all SIL Open Font License 1.1 */
+@font-face{font-family:'Archivo';font-style:normal;font-weight:400 700;font-stretch:75% 125%;font-display:swap;src:url(data:font/woff2;base64,@include(data/font-archivo.b64)) format('woff2')}
+@font-face{font-family:'Source Serif 4';font-style:normal;font-weight:400 600;font-display:swap;src:url(data:font/woff2;base64,@include(data/font-serif.b64)) format('woff2')}
+@font-face{font-family:'Source Serif 4';font-style:italic;font-weight:400 600;font-display:swap;src:url(data:font/woff2;base64,@include(data/font-serif-i.b64)) format('woff2')}
 /* the letter's handwriting (ui/08b-letter.js), in the page so it is there offline: Caveat (SIL Open Font License 1.1), Rock Salt (Apache License 2.0) */
 @font-face{font-family:'Caveat';font-style:normal;font-weight:400 700;font-display:swap;src:url(data:font/woff2;base64,@include(data/font-caveat.b64)) format('woff2')}
 @font-face{font-family:'Rock Salt';font-style:normal;font-weight:400;font-display:swap;src:url(data:font/woff2;base64,@include(data/font-rocksalt.b64)) format('woff2')}

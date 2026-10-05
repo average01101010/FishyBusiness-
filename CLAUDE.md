@@ -56,7 +56,7 @@ Et kystfiskespill fra Senja som kjører som én selvstendig HTML-side, publisert
 
 ## Begrensninger
 
-- Siden må forbli én fil. Den eneste eksterne ressursen er Google Fonts, og alt annet er innebygd, bortsett fra kartpakkene i `map/` (fra kystplanens fase K3), som ligger ved siden av siden i samme artifact. Et framtidig PWA-bygg på GitHub Pages kan ha flere filer (manifest, service worker, ikoner, kartsoner), se veikartet «PWA og hele kysten» i overleveringen.
+- Siden må forbli én fil. Alt er innebygd, også skriftene (fra 05.10.2026), bortsett fra kartpakkene i `map/` (fra kystplanens fase K3), som ligger ved siden av siden i samme artifact. Et framtidig PWA-bygg på GitHub Pages kan ha flere filer (manifest, service worker, ikoner, kartsoner), se veikartet «PWA og hele kysten» i overleveringen.
 - Tallene i spesifikasjonen og overleveringen er startverdier som justeres i spilltesting.
 
 ## Publisering

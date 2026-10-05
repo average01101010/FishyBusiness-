@@ -966,6 +966,9 @@ Jonas' valg: gratis å spille med kjøp via Stripe, påkrevd innlogging med Work
   - Innloggingsskjermen og samtykket lenker dit. Tekstene beskriver det databasen faktisk gjør, så en endring i hva som lagres må også inn der.
   - Uten samtykke lagrer `tm_hello` bare kontoen. Utstyret, landet og fødselsåret kommer først med et ja, og et nei i `tm_consent` sletter det igjen.
   - Det som står igjen, og hullet med WorkOS-brukeren ved «slett kontoen», står i `docs/lansering.md` under «Juridisk».
+  - **Kilder og kontakt** (05.10.2026): `kilder.html` har dataene, skriftene og programvaren med lisensene, og `kontakt.html` foretaket etter ehandelsloven § 8. Alle fire sidene lenkes fra kontokortet i Innstillinger (ny fane) og fra hverandre. Kommer det nye data inn i spillet, må de også stå på kildesiden.
+  - **Skriftene ligger i siden** (05.10.2026): Archivo og Source Serif 4 er lagt inn som latinsk delmengde (`src/data/font-archivo.b64`, `font-serif.b64`, `font-serif-i.b64`, hentet fra Google Fonts med `curl`), som Caveat og Rock Salt fra før. Spillet henter ingenting fra Google lenger, og skriftene virker uten nett.
+
 
 
 ### 4.21 Felles verden V1–V3: én klokke, én sjø og spillerne på kartet (05.10.2026)

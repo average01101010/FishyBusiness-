@@ -140,7 +140,7 @@ Spillet skal ligge på Hetzner-serveren din, ikke på GitHub Pages (se G).
   - Aktiviteten i Enhetsregisteret er skipper- og matrostjenester. Spillsalg bør legges til med Samordnet registermelding i Altinn (sjekk næringskoden for utgivelse av dataspill).
   - regionen Supabase-prosjektet ligger i
   - varselet før nedleggelse (forslaget er 90 dager)
-  - Google Fonts-linja går ut når skriftene ligger på vår egen server (punkt 181), og kildesiden må lages
+  - Google Fonts er borte: skriftene ligger i appen (05.10.2026). Kildesiden (`kilder.html`) og kontaktsiden (`kontakt.html`) er laget, og lenkes fra kontokortet i Innstillinger og fra vilkårene og personvernerklæringen.
   - når du godkjenner, fjernes utkastbanneret
 - **Hull som må tettes før lansering:** «Slett kontoen» sletter alt hos oss, men ikke brukeren hos WorkOS (e-post og navn). Det krever et kall med WorkOS-hemmeligheten fra serveren, og det lages som en Supabase Edge Function sammen med Stripe-webhooken.
 - **Tvister:** Mekling skjer i Forbrukertilsynet (ikke lenger Forbrukerrådet). Forbrukerklageutvalget kan bare avgjøre saker om varer, håndverkertjenester og angreretten, ikke om digitale ytelser ellers ([Forbrukertilsynet](https://www.forbrukertilsynet.no/forbrukerklageutvalget/behandling-forbrukerklageutvalget)). EUs klageportal (ODR) ble lagt ned 20.07.2025 og skal ikke nevnes.

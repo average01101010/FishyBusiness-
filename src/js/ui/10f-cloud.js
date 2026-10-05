@@ -276,7 +276,10 @@ function cloudCard(){
     L2('Spillet lagres også på kontoen.', 'The game is also saved to the account.') + '</p>' + histRows() +
     '<label><span>' + L2('Del bruksstatistikk', 'Share usage statistics') + '</span><input type="checkbox" data-pa="cloudStat"' + (CLOUD.consent ? ' checked' : '') + '></label>' + pushCardRow() +
     '<label><span>' + L2('Vis båten min for andre spillere', 'Show my boat to other players') + '</span><input type="checkbox" data-pa="cloudShowMe"' + (S.settings.showMe !== false ? ' checked' : '') + '></label>' +
-    '<button class="ph-btn alt" data-pa="cloudOut">' + L2('Logg ut', 'Sign out') + '</button><button class="ph-btn alt" data-pa="cloudDel">' + L2('Slett kontoen', 'Delete the account') + '</button></div>';
+    '<button class="ph-btn alt" data-pa="cloudOut">' + L2('Logg ut', 'Sign out') + '</button><button class="ph-btn alt" data-pa="cloudDel">' + L2('Slett kontoen', 'Delete the account') + '</button>' +
+    // the pages beside the game (src/legal/), in a tab of their own so the game stays where it is
+    '<p class="ph-note">' + [['vilkar', 'Vilkår', 'Terms'], ['personvern', 'Personvern', 'Privacy'], ['kilder', 'Kilder', 'Sources'], ['kontakt', 'Kontakt', 'Contact']]
+      .map(([f, no, en]) => '<a href="' + f + '.html" target="_blank" rel="noopener">' + L2(no, en) + '</a>').join(' · ') + '</p></div>';
 }
 // the earlier saves, once asked for: the one this device had before, and the account's last ten
 function histRows(){
