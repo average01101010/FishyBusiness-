@@ -3,7 +3,8 @@
 // follows what the boat does and where she is, every 100 ms:
 //   engine   two oscillators at the firing rate from the speed (an outboard revs high; a diesel low, with the chug of its strokes),
 //            through a low-pass that opens with the load; idling when she lies still at sea, off in port, adrift or aground
-//   sea      the wash along the hull (pink noise, louder and brighter with speed and waves) and slaps on the hull now and then
+//   sea      a soft hiss of the sea round you, the wash along the hull (louder and brighter with speed), small waves lapping now and
+//            then, and slaps on the hull in a sea
 //   weather  the wind in band-passed noise that wanders with the gusts; rain (snow falls silently: its hiss was a white noise, Jonas 05.10.2026)
 //   gulls    a cry now and then round the boat, often while the catch is gutted
 //   harbour  while the catch is landed the crane's whine and the forklift's reversing beeps; the pump while she is fuelled; the ice
@@ -46,7 +47,9 @@ const SND = (() => {
     { const {g, p} = pgain(), f = filt('lowpass', 600, 0.8), am = gain(0.6, f), o = osc('sawtooth', 82), og = gain(0.12, f), lfo = osc('sine', 0.3), lg = gain(0.05);
       loop(PINK).connect(am); o.connect(og); lfo.connect(lg); lg.connect(am.gain); f.connect(g); L.air = {g, p, f, o, lfo, lg}; }
     // the wash and the sea round her
-    { const g = gain(0, master), f = filt('lowpass', 800, 0.7); loop(PINK).connect(f); f.connect(g); L.sea = {g, f}; }
+    // (a soft hiss through a band-pass, not the low rumble it was: Jonas 05.10.2026, «Jeg vil ikke at havet skal rumle så masse, heller
+    // litt bølgeskvulp bare»; the lapping is single waves, below)
+    { const g = gain(0, master), f = filt('bandpass', 900, 0.7); loop(PINK).connect(f); f.connect(g); L.sea = {g, f}; }
     // the wind
     { const g = gain(0, master), f = filt('bandpass', 700, 0.9); loop(PINK).connect(f); f.connect(g); L.wind = {g, f}; }
     // rain
@@ -187,11 +190,15 @@ const SND = (() => {
     // height, so far up only the music is left: Jonas 05.10.2026, «Det burde være nesten helt stille når jeg zoomer så langt unna»)
     const hF = ref => EAR ? Math.min(1, Math.pow(ref / Math.max(ref, EAR.y - 2), 1.4)) : 1; LV.hSea = hF(15);
     const aW = at(boat, SNDREF.wash);
-    set('sea', (atSea ? (0.03 + Math.min(0.12, hs * 0.06)) * hF(15) + Math.min(0.2, v * 0.011) * aW.g : 0.012 * hF(15)), 0.4); L.sea.f.frequency.setTargetAtTime(500 + v * 45 * aW.lp + hs * 120, now, 0.5);
+    set('sea', (atSea ? (0.01 + Math.min(0.03, hs * 0.015)) * hF(15) + Math.min(0.16, v * 0.009) * aW.g : 0.004 * hF(15)), 0.4); L.sea.f.frequency.setTargetAtTime(850 + v * 50 * aW.lp + hs * 60, now, 0.5);
+    // the lapping: single small waves against the hull or the quay, now and then, a little more often and louder in a sea
+    LV.lapP = (atSea ? 0.06 + Math.min(0.08, hs * 0.04) : 0.035) * (hF(15) > 0.05 ? 1 : 0);
+    if (Math.random() < LV.lapP){ const a = at(boat, SNDREF.wash), k = hF(15) * Math.max(a.g, 0.35);
+      burst('bandpass', 520 + Math.random() * 900, 0.9, (atSea ? 0.035 + Math.min(0.05, hs * 0.025) : 0.025) * (0.4 + Math.random() * 0.6) * k, 0.35 + Math.random() * 0.5, 0.06 + Math.random() * 0.1, (Math.random() - 0.5) * 1.2); }
     set('wind', Math.pow(clamp((W - 2.5) / 22, 0, 1), 1.3) * (atSea ? 0.28 : 0.14) * hF(40), 0.6); L.wind.f.frequency.setTargetAtTime(450 + W * 30 + Math.random() * 300, now, 0.8);
     set('rain', rain > 0.15 && !snow ? (rain - 0.15) * 0.16 * hF(25) : 0, 1);
     // hull slaps at sea, more in a sea and under way
-    if (atSea && Math.random() < 0.01 + Math.min(0.06, hs * 0.03 + v * 0.002)){ const a = at(boat, SNDREF.slap); burst('lowpass', (180 + Math.random() * 160) * a.lp, 1, (0.08 + Math.min(0.25, hs * 0.1 + v * 0.008) * Math.random()) * a.g, 0.35, 0.006, a.pan); }
+    if (atSea && Math.random() < 0.01 + Math.min(0.06, hs * 0.03 + v * 0.002)){ const a = at(boat, SNDREF.slap); burst('lowpass', (300 + Math.random() * 220) * a.lp, 1, (0.05 + Math.min(0.16, hs * 0.07 + v * 0.006) * Math.random()) * a.g, 0.3, 0.006, a.pan); }
     // gulls: now and then round the boat, often while the catch is gutted (the offal)
     const gut = atSea && S.hold && S.hold.some(x => !x.gut) && typeof catchGut === 'function' && catchGut();
     if (Math.random() < (gut ? 0.05 : b.status === 'port' ? 0.012 : atSea && v < 12 ? 0.006 : 0.002)){

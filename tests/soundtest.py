@@ -45,9 +45,10 @@ async def main():
         check(near['eng'] > far['eng'] * 5 and far['eng'] > 0, 'motoren er tydelig svakere med kameraet 400 m unna enn 21 m', (round(near['eng'], 4), round(far['eng'], 4)))
         # high up in the air only the music is left: the sea round you, the wind and the rain die away with the camera's height (Jonas
         # 05.10.2026, a clip of steady low noise from far up)
-        hi = await pg.evaluate("""(() => { WX_FORCE = {w:20, d:225}; const r = {}; for (const y of [3, 60, 400]){ SND.testEar = {x:0, y, z:21, fx:0, fz:-1}; SND.testSrc = {boat:[0, 1, 0]}; SND.tick(); r[y] = {sea:SND.LV.sea, wind:SND.LV.wind, rain:SND.LV.rain, mus:SND.LV.music}; } WX_FORCE = null; return r; })()""")
+        hi = await pg.evaluate("""(() => { WX_FORCE = {w:20, d:225}; const r = {}; for (const y of [3, 60, 400]){ SND.testEar = {x:0, y, z:21, fx:0, fz:-1}; SND.testSrc = {boat:[0, 1, 0]}; SND.tick(); r[y] = {sea:SND.LV.sea, wind:SND.LV.wind, rain:SND.LV.rain, mus:SND.LV.music, lap:SND.LV.lapP}; } WX_FORCE = null; return r; })()""")
         lo, top = hi['3'], hi['400']
         check(lo['wind'] > 0.05 and top['sea'] < lo['sea'] * 0.25 and top['wind'] < lo['wind'] * 0.1 and top['rain'] < lo['rain'] * 0.05 + 1e-9 and hi['60']['wind'] < lo['wind'], 'høyt oppe dør sjøen, vinden og regnet ut, bare musikken blir igjen', hi)
+        check(lo['lap'] > 0.05 and top['lap'] == 0 and lo['sea'] < 0.12, 'nede ved sjøen skvulper små bølger, havet er et svakt sus og ikke en rumling, og høyt oppe er skvulpet borte', {k: hi[k]['lap'] for k in hi})
         right = await pg.evaluate("(() => { SND.testEar = {x:-20, y:2, z:0, fx:0, fz:-1}; SND.tick(); return SND.LV.engPan; })()")
         left = await pg.evaluate("(() => { SND.testEar = {x:20, y:2, z:0, fx:0, fz:-1}; SND.tick(); return SND.LV.engPan; })()")
         check(right > 0.5 and left < -0.5, 'båten øst for et kamera som ser nordover høres til høyre, vest for det til venstre', (round(right, 2), round(left, 2)))
