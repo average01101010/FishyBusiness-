@@ -51,7 +51,10 @@ C = {}
 
 
 def colours():
-    w = lambda n, rgb, g=0.12: C.__setitem__(n, mat(n, rgb, g))
+    # zone 2: takes snow where it faces up (rock above the high water, the roof); zone 3: grass and heather, snow on it and straw-coloured
+    # tufts in winter (view3d.js siteSnow)
+    Z = {'tile1': 2, 'tile2': 2, 'tile3': 2, 'lichen': 2, 'moss_y': 2, 'moss_g': 2, 'rock1': 2, 'rock2': 2, 'lichrock': 2, 'grass': 3, 'grass2': 3, 'heather': 3}
+    w = lambda n, rgb, g=0.12: C.__setitem__(n, mat(n, rgb, g, zone=Z.get(n, 0)))
     w('w1', (0.44, 0.425, 0.395)); w('w2', (0.36, 0.345, 0.32)); w('w3', (0.50, 0.48, 0.445)); w('w4', (0.31, 0.295, 0.27))
     w('w5', (0.41, 0.365, 0.31)); w('w6', (0.25, 0.24, 0.22)); w('wdark', (0.22, 0.21, 0.195)); w('wwet', (0.17, 0.16, 0.14), 0.3); w('trim', (0.52, 0.51, 0.47))
     w('inside', (0.05, 0.045, 0.04), 0.05); w('sark', (0.17, 0.15, 0.13), 0.05)

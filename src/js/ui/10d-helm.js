@@ -40,7 +40,7 @@ const HUI = (() => {
     document.body.classList.toggle('helm', on && (helmOn() || helmCan()));
     const moor = on && helmMoorable(), cast = on && b.status === 'port' && !portBusy(b) && !(S.plan && S.plan.depAt);
     btn.hidden = !(moor || cast);
-    if (moor){ btn.dataset.a = 'moor'; btn.textContent = (S.lang === 'no' ? 'Fortøy i ' : 'Moor in ') + moor.name; }
+    if (moor){ btn.dataset.a = 'moor'; btn.textContent = (moor.kind === 'port' ? (S.lang === 'no' ? 'Fortøy i ' : 'Moor in ') : (S.lang === 'no' ? 'Fortøy ved ' : 'Moor at ')) + moor.name; }
     else if (cast){ btn.dataset.a = 'cast'; btn.textContent = S.lang === 'no' ? 'Kast loss' : 'Cast off'; }
     if (on) show();
   }

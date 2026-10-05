@@ -41,6 +41,12 @@ async def main():
           S.plan = {wps, idx:0, speed:BOAT.cruise || 6, returning:false}; b.status = 'sailing'; let n = 0; while (b.status !== 'port' && n < 600){ step(); n++; }
           return {n, st:b.status, port:b.port, berth:berthKind(b), log:(S.log || []).slice(-6).map(l => l.no || l[1] || '').join(' | ')}; })""", rid)
         check(r.get('st') == 'port' and r.get('port') == rid, 'Autonav takes the boat from Gryllefjord to the rorbu, and she lies at its quay', r)
+        # 3b. «Fortøy» in the dock when she lies still off the quay (Jonas 05.10.2026: «Det må også være mulig å fortøye i kaia»)
+        await pg.evaluate("""(rid => { const R = RBID.get(rid), b = S.boat, N = [-R.site.u[1], R.site.u[0]]; restEnd && restEnd(); S.plan = null; b.status = 'idle'; b.port = null; b.v = 0;
+          b.pos = {x:R.p.x + N[0] * 0.15, y:R.p.y + N[1] * 0.15}; DOCK.tick && DOCK.tick(); renderActs && renderActs(); const el = [...document.querySelectorAll('#dock button')].find(e => e.textContent.trim() === 'Fortøy'); if (el) el.click(); })""", rid)
+        await pg.wait_for_timeout(2500)
+        r = await pg.evaluate("""(rid => { const b = S.boat, st0 = b.status; let n = 0; while (b.status !== 'port' && n < 200){ step(); n++; } return {st0, n, st:b.status, port:b.port}; })""", rid)
+        check(r['st0'] == 'sailing' and r['st'] == 'port' and r['port'] == rid, 'lying still 150 m off the rorbu, «Fortøy» in the dock takes her in to its quay', r)
         # 4. the dock: rest, no market, no shop; Gryllefjord's plant is not here
         r = await pg.evaluate("""(() => { DOCK.tick && DOCK.tick(); renderActs && renderActs(); const t = [...document.querySelectorAll('#dock button')].map(b => b.textContent.trim()).join('|');
           return {t, shop:shopBuy('jig', 0, false), mottak:!!portById(S.boat.port).mottak}; })()""")

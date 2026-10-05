@@ -63,7 +63,10 @@ C = {}
 
 
 def colours():
-    w = lambda n, rgb, g=0.12: C.__setitem__(n, mat(n, rgb, g))
+    # zone 2: takes snow where it faces up (rock above the high water, the roof); zone 3: grass and heather, snow on it and straw-coloured
+    # tufts in winter (view3d.js siteSnow)
+    Z = {'roof': 2, 'rock1': 2, 'rock2': 2, 'lichrock': 2, 'grass': 3, 'grass2': 3, 'heather': 3}
+    w = lambda n, rgb, g=0.12: C.__setitem__(n, mat(n, rgb, g, zone=Z.get(n, 0)))
     C['clad'] = mat('clad', (0.55, 0.09, 0.07), 0.2, zone=1)    # all the red cladding (the game repaints zone 1)
     w('trim', (0.92, 0.91, 0.87), 0.3); w('door', (0.40, 0.065, 0.055), 0.35)
     w('roof', (0.30, 0.31, 0.32), 0.35); w('flash', (0.17, 0.175, 0.18), 0.35); w('soffit', (0.36, 0.32, 0.27), 0.1)

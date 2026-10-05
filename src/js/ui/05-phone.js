@@ -385,6 +385,9 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p36', '05.10.2026', 'Snø ved rorbua, og Fortøy', 'Snow at the rorbu, and Moor', [
+      ['Rorbuene og fars naust har snø på bakken og taket om vinteren, som terrenget rundt, i stedet for grønt gress.', 'The rorbuer and Father’s boathouse have snow on the ground and the roof in winter, like the land around, instead of green grass.'],
+      ['Ligger du stille nær en kai, en rorbu eller naustet, står «Fortøy» i knapperaden. Båten finner veien inn og legger til, så du kan hvile.', 'Lying still near a quay, a rorbu or the boathouse, «Moor» is in the button row. The boat finds the way in and moors, so you can rest.']]],
     ['p35', '05.10.2026', '3D på Windows-PC', '3D on Windows PCs', [
       ['3D-visningen startet ikke på noen Windows-PC-er (Chrome og Firefox): sjøen ble for tung for grafikkdriveren. Nå starter de med en litt enklere sjø, og går driveren likevel i stå, prøver spillet en enklere neste gang.', 'The 3D view did not start on some Windows PCs (Chrome and Firefox): the sea was too heavy for the graphics driver. They now start with a slightly simpler sea, and if the driver still gives up, the game tries a simpler one next time.'],
       ['Står det «ingen WebGL-kontekst», har nettleseren slått av 3D etter en driverfeil. Lukk nettleseren helt og åpne den igjen.', 'If it says «no WebGL context», the browser has turned 3D off after a driver error. Close the browser fully and open it again.']]],

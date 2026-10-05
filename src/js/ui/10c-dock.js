@@ -106,9 +106,12 @@ const DOCK = (() => {
       const haul = s ? (s.kind === 'line' ? I('taopp', 'taopp', 'Ta opp', 'Haul', {act:'ghaul', data:{id:s.id}, pri:true}) : I('taopp', 'taopp', 'Ta opp', 'Haul', {menu:'taopp', pri:true}))
         : I('taopp', 'taopp', 'Ta opp', 'Haul', {off:[nb ? L('Nærmeste blåse er ' + fmt(nb.d / NM, 1) + ' nm unna. Bruk Auto-nav og trykk på blåsa.', 'The nearest buoy is ' + fmt(nb.d / NM, 1) + ' nm away. Use auto-nav and tap the buoy.') : L('Du har ikke redskap i sjøen.', 'You have no gear in the sea.')]});
       // «Jukse» only on a boat rigged for jigging (the user's wish 02.10.2026)
+      // a quay within 400 m: «Fortøy» takes her in (moorGo), to a rorbu's, the naust's or a harbour's (16-helm.js moorNear)
+      const mo = moorNear(b.pos, 0.4), moor = mo && I('fortoy', 'naust', 'Fortøy', 'Moor', {run:() => moorGo(mo), pri:mo.kind === 'rorbu' || mo.kind === 'naust' || S.energy < 40});
       return [rigJig() && I('jukse', 'jukse', 'Jukse', 'Jig', {menu:'jukse', pri:!s}),
         I('settut', 'settut', 'Sett ut', 'Set', {menu:'settut', off:rigJig() ? [L('Båten er rigget for juksa. Rigg om til line, garn eller teiner på verftet.', 'The boat is rigged for jigging. Re-rig for line, nets or pots at the yard.')] : !ch.length && [S.pgear && (S.pgear.nets.length || S.pgear.lines.hyse.n || S.pgear.lines.bank.n || S.pgear.pots.small || S.pgear.pots.big) ? L('Redskapet om bord er ikke klart: line må egnes, og teiner trenger agn og blåsesett.', 'The gear aboard is not ready: line must be baited, and pots need bait and buoy sets.') : L('Du har ikke garn, line eller teiner om bord.', 'You have no nets, line or pots aboard.')]}),
-        haul, nav, crew, work, beh].filter(Boolean);
+        // by a quay with no buoy near, «Fortøy» takes the place of the greyed «Ta opp», so the row stays five wide on a phone
+        s || !moor ? haul : null, moor, nav, crew, work, beh].filter(Boolean);
     }
     if (b.status === 'fishing' && b.gop) return [I('gstop', 'stopp', 'Stopp arbeidet', 'Stop the work', {act:'gstop'}), work, beh].filter(Boolean);
     if (b.status === 'fishing') return [I('stopfish', 'stopp', 'Stopp', 'Stop', {act:'stopfish'}),
@@ -175,6 +178,19 @@ const DOCK = (() => {
     if (S.draft.length) draftEdit(() => { S.draft = []; });
     close(); openPlotter();
     leiaTo(buoyStandoff(s, dist(b.pos, s.a) <= dist(b.pos, s.b) ? s.a : s.b));
+  }
+  // «Fortøy»: the way in to the quay found as Autonav finds it, and off she goes, without the chart
+  async function moorGo(mo){
+    const b = S.boat; menu = null;
+    if (b.status !== 'idle' || (S.plan && S.plan.depAt)){ toast(L('Båten er opptatt. Stopp det den holder på med først.', 'The boat is busy. Stop what it is doing first.')); return; }
+    if (!meAboard() && !crewAboard().length){ toast(L('Båten har ikke mannskap. Uten deg om bord trenger den folk.', 'The boat has no crew. Without you aboard it needs hands.')); return; }
+    let res; try { res = await leiaRoute({x:b.pos.x, y:b.pos.y}, {x:mo.x, y:mo.y}, null, mo.id); } catch (e){ console.error(e); res = {why:['Fant ingen vei inn.', 'Found no way in.']}; }
+    if (res.why){ toast(L(res.why[0], res.why[1])); return; }
+    if (b.status !== 'idle') return;   // something else started while the way was found
+    if (S.draft.length) draftEdit(() => { S.draft = []; });
+    const wps = res.wps.map((q, i) => i === res.wps.length - 1 ? {x:mo.x, y:mo.y, port:mo.id, berth:mo.berth, fish:0} : {x:q.x, y:q.y, port:null, fish:0, leia:true});
+    S.plan = {wps, idx:0, speed:S.draftSpeed || BOAT.cruise || 6, returning:false}; b.status = 'sailing';
+    toast(L('Legger til ved ' + mo.name + '.', 'Coming in to ' + mo.name + '.')); save(); refreshAll();
   }
   // Auto-nav: the chart opens with Autonav ready; a tap on a buoy or the sea makes the route there, and «Kast loss» sets off
   function autoNav(){

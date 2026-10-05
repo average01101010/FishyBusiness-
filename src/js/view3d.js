@@ -1362,13 +1362,35 @@ const G3 = (() => {
   const SMOD = {};
   // a site's model; 'rorbu:o' is the rorbu with its cladding (paint zone 1) in ochre, 'rorbu:w' in white, 'rorbu:r' as it is (red)
   const RBCOL = {o:[0.74, 0.5, 0.17], w:[0.86, 0.85, 0.81]};
+  // Its own ground takes the snow as the terrain round it does (Jonas 05.10.2026: «Ser jo rart ut at det er grønt gress rundt rorbua, så
+  // er det snø overalt ellers»): paint zone 2 (rock above the high-water line, the roof) gets snow where it faces up, zone 3 (grass and
+  // heather) too, and its upright tufts go the colour of straw; how much by recolor's rule, the snow line (snowNow) against the height
+  // with a little noise, so it lies in patches. Made again when the snow line moves (it moves in steps of 20 m).
+  const SNOWC = [0.9, 0.92, 0.95], STRAW = [0.56, 0.5, 0.36];
+  function siteSnow(P, snow){
+    if (snow < 0 || !P.zone) return P;
+    const c = P.c.slice(); let any = false;
+    for (let i = 0; i < P.zone.length; i++){
+      const z = P.zone[i]; if (z !== 2 && z !== 3) continue;
+      const x = P.p[i * 3], y = P.p[i * 3 + 1], q = P.p[i * 3 + 2], hn = Math.abs(Math.sin(x * 12.9898 + q * 78.233) * 43758.5453) % 1;
+      const sn = sstep(snow - 60, snow + 60, y + hn * 90); if (sn < 0.02) continue;
+      const up = sstep(0.4, 0.8, P.n[i * 3 + 1]), a = P.ao[i], k = sn * up;
+      for (let j = 0; j < 3; j++){ let v = c[i * 4 + j]; if (z === 3) v += (STRAW[j] * a - v) * sn * (1 - up) * 0.8; c[i * 4 + j] = v + (SNOWC[j] * a - v) * k; }
+      any = true;
+    }
+    return any ? {p:P.p, n:P.n, c, zone:P.zone, ao:P.ao} : P;
+  }
   function siteModel(k){
-    if (k in SMOD) return SMOD[k];
+    const key = k + '|' + snowNow, E = SMOD[k];
+    if (E === false) return false; if (E && E.key === key) return E.M;
     const [t, v] = k.split(':'), G = glbHas(t) ? glbLoad(t) : null; if (!G || !G.parts.lod0) return SMOD[k] = false;
-    const col = RBCOL[v], paint = P => { if (!col || !P.zone) return P; const c = P.c.slice(); for (let i = 0; i < P.zone.length; i++) if (P.zone[i] === 1){ const a = P.ao[i]; c[i * 4] = col[0] * a; c[i * 4 + 1] = col[1] * a; c[i * 4 + 2] = col[2] * a; } return {p:P.p, n:P.n, c}; };
+    if (E){ freeMesh(E.M.near); freeMesh(E.M.far); }
+    const col = RBCOL[v], paint = P => { P = siteSnow(P, snowNow); if (!col || !P.zone) return P; const c = P.c.slice(); for (let i = 0; i < P.zone.length; i++) if (P.zone[i] === 1){ const a = P.ao[i]; c[i * 4] = col[0] * a; c[i * 4 + 1] = col[1] * a; c[i * 4 + 2] = col[2] * a; } return {p:P.p, n:P.n, c}; };
     const P = G.parts, g = P.glass || {p:[], n:[], c:[]}, L0 = paint(P.lod0);
-    return SMOD[k] = {near:upA({p:L0.p.concat(g.p), n:L0.n.concat(g.n), c:L0.c.concat(g.c)}), far:upA(P.lod1 ? paint(P.lod1) : L0), A:G.ex.anchors || {}};
-  }  function drawSites(eye, VP, near, far){
+    const M = {near:upA({p:L0.p.concat(g.p), n:L0.n.concat(g.n), c:L0.c.concat(g.c)}), far:upA(P.lod1 ? paint(P.lod1) : L0), A:G.ex.anchors || {}};
+    SMOD[k] = {key, M}; return M;
+  }
+  function drawSites(eye, VP, near, far){
     let set = false;
     for (const s of sitesNow()){
       const d = Math.hypot(s.o[0] - eye[0], s.o[1] - eye[2]); if (d > Math.min(far, 4000)) continue;
