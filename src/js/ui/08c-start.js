@@ -71,9 +71,9 @@ function tutFieldNear(pt){
 }
 // move a new game to the harbour: its waters loaded first, then the boat, the trail, the first trip's patch and landing
 async function chooseStart(pt){
-  S.home = pt.id;
+  S.home = pt.id; S.naust = null; S.boat.berth = 'naust';   // the boat lies at Father's naust (07c-naust.js); the plant's quay until it is found
   if (pt.id === S.boat.port && S.boat.status === 'port') return;   // a new game is in Finnsnes already
-  await mapNeed(pt.p, MAPD.simR);
+  await mapNeed(pt.p, Math.max(MAPD.simR, 7.5));   // the first trip's patch is looked for up to 6 km out (tutFieldNear)
   const b = S.boat; b.port = pt.id; b.status = 'port'; b.pos = {x:pt.p.x, y:pt.p.y}; b.v = 0; S.trail = [{x:pt.p.x, y:pt.p.y, port:pt.id}]; S.draft = []; S.plan = null;
   // the first trip (made when the boat gets her name, tutNew) starts from here
   if (pt.id === 'finnsnes') S.tutStart = null;   // Senja's own first trip: Gisundet nord and Botnhamn

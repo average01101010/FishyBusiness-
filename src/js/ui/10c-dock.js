@@ -37,6 +37,7 @@ const DOCK = (() => {
     arbeid:SVG('<circle cx="7" cy="6" r="2.5"/><path d="M3 20v-3a4 4 0 0 1 8 0v3"/><path d="M14 7h7"/><path d="M18 4l3 3-3 3"/><path d="M14 15h7"/><path d="M18 12l3 3-3 3"/>'),
     rigg:SVG('<path d="M12 3v18"/><path d="M5 21h14"/><path d="M12 4l7 11h-7"/><path d="M12 7L6 15h6"/>'),
     vedlikehold:SVG('<path d="M4 20l7-7"/><path d="M13.5 4.5l6 6-3 3-6-6z"/><path d="M10.5 7.5l6 6"/>'),
+    naust:SVG('<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/><path d="M2 21h20"/>'),
     bunker:SVG('<path d="M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16"/><path d="M3 21h14"/><path d="M7.5 8h5"/><path d="M15 9h2a2 2 0 0 1 2 2v5a1.5 1.5 0 0 0 3 0V8l-3-3"/>')};
   // the drawer's pages: title, and the pages that share a row of tabs
   const TITLE = {lever:['Lever fangst', 'Land the catch'], is:['Is', 'Ice'], agn:['Agn og egning', 'Bait and baiting'], bank:['Kystbanken', 'The bank'], oppdrag:['Oppdrag', 'Orders'],
@@ -140,7 +141,7 @@ const DOCK = (() => {
     const h = items.map(x => btn(x)).join(''), it = infoText();
     if (h !== html){ html = h; bar.innerHTML = h; }
     if (info.textContent !== it){ info.textContent = it; info.hidden = !it; }
-    fanItems = menu && menu !== 'jukse' ? menuItems(menu) : [];
+    fanItems = menu && menu !== 'jukse' ? menuItems(menu).filter(Boolean) : [];
     const fh = !menu ? '' : menu === 'jukse' ? jigCard() : fanItems.map(x => btn(x, true)).join('');
     if (fh !== fanHtml){ fanHtml = fh; fan.innerHTML = fh; }
     fan.hidden = !menu; if (menu) placeFan();
@@ -227,7 +228,7 @@ const DOCK = (() => {
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && page && !PHONE.isOpen()) close(); });
   // the buttons as text, for the tests: the labels, and the status above them
   const text = () => items0().map(x => L(x.lbl[0], x.lbl[1])).join(' | ') + (infoText() ? ' | ' + infoText() : '');
-  return {render, open, close, tick, text, goTo, items:m => m ? menuItems(m) : items0(), menu:m => setMenu(m), get page(){ return page; }, get menuOpen(){ return menu; }};
+  return {render, open, close, tick, text, goTo, items:m => m ? menuItems(m).filter(Boolean) : items0(), menu:m => setMenu(m), get page(){ return page; }, get menuOpen(){ return menu; }};
 })();
 // the old name: everything that changes what the boat does asks for the buttons again
 function renderActs(){ DOCK.render(); }

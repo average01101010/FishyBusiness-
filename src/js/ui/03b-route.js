@@ -133,13 +133,19 @@ async function leiaTo(pt){
   const r = 22 / view.px; let near = null, bd = 1e9;
   for (const p of PORTS){ const d = dist(p.p, pt); if (d < r && d < bd){ bd = d; near = p; } }
   const start = S.draft.length ? S.draft[S.draft.length - 1] : b.pos, aPort = !S.draft.length && b.status === 'port' ? b.port : null;
-  if (near && aPort === near.id){ toast(t('already_here')); return; }
-  if (!near && isLandUI(pt)){ toast(t('on_land')); return; }
+  // Father's naust as the end (07c-naust.js naustTarget); in its own harbour the way there is short, straight from the harbour point
+  const nt = naustTarget(pt, r), atN = aPort && berthKind(b) === 'naust';
+  if (nt && atN){ toast(t('already_here')); return; }
+  if (!nt && near && aPort === near.id && !atN){ toast(t('already_here')); return; }
+  if (!near && !nt && isLandUI(pt)){ toast(t('on_land')); return; }
+  if (nt && (aPort === nt.port || (!aPort && dist(start, nt) < 1))){ draftEdit(() => S.draft.push({x:nt.x, y:nt.y, port:nt.port, berth:'naust', fish:0})); if (tab !== 'route') setTab('route'); routeChanged(); save(); return; }
+  if (nt){ near = portById(nt.port); }
   const before = JSON.stringify(S.draft); LEIA_BUSY = true; panelDirty = true; renderPanel(); renderRouteTools();
   let res; try { res = await leiaRoute({x:start.x, y:start.y}, near ? near.p : pt, aPort, near ? near.id : null); } finally { LEIA_BUSY = false; }
   if (JSON.stringify(S.draft) !== before){ routeChanged(); return; }   // the route was changed while the way was being found
   if (res.why){ toast(S.lang === 'no' ? res.why[0] : res.why[1]); routeChanged(); return; }
-  draftEdit(() => res.wps.forEach((q, i) => { const last = i === res.wps.length - 1; S.draft.push(last && near ? {x:near.p.x, y:near.p.y, port:near.id, fish:0} : {x:q.x, y:q.y, port:null, fish:0, leia:true}); }));
+  draftEdit(() => { res.wps.forEach((q, i) => { const last = i === res.wps.length - 1; S.draft.push(last && near ? {x:near.p.x, y:near.p.y, port:near.id, fish:0} : {x:q.x, y:q.y, port:null, fish:0, leia:true}); });
+    if (nt){ const e = S.draft[S.draft.length - 1]; Object.assign(e, {x:nt.x, y:nt.y, berth:'naust'}); } });   // on to the naust from its harbour's way in
   if (near && window.innerWidth <= 700) document.body.classList.add('drawer');
   if (tab !== 'route') setTab('route');
   routeChanged(); save();

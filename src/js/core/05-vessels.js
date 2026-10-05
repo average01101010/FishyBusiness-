@@ -295,7 +295,7 @@ function sail(H, W, hs){
 function arrive(w){
   const b = S.boat, pl = S.plan;
   S.trail.push({x:w.x, y:w.y, port:w.port || null});
-  if (w.port){ dock(w.port); return true; }
+  if (w.port){ dock(w.port, w.berth); return true; }
   pl.idx++;
   if (!(w.fish > 0) && pl.idx < pl.wps.length){ const nw = pl.wps[pl.idx], c = Math.round(trueDeg(Math.atan2(nw.x - w.x, -(nw.y - w.y)), w)) % 360; log('WP' + pl.idx + ' passert. Ny kurs ' + String(c).padStart(3, '0') + '°.', 'WP' + pl.idx + ' passed. New course ' + String(c).padStart(3, '0') + '°.', 'nav'); }
   // work with passive gear at this waypoint: set or haul, then any fishing hours with the jig
@@ -305,12 +305,14 @@ function arrive(w){
   if (pl.idx >= pl.wps.length){ S.plan = null; b.status = 'idle'; b.v = 0; log('Fremme ved siste veipunkt. Ligger stille.', 'Reached the last waypoint. Stopped.'); return true; }
   return false;
 }
-function dock(pid){
+function dock(pid, berth){
   const b = S.boat, port = portById(pid); S.tripBuff = null; if (b.gop) gopAbort('dock');
-  b.status = 'port'; b.port = pid; b.v = 0; b.fishUntil = null; b.pos = {x:port.p.x, y:port.p.y}; b.moorT = S.t; b.berth = 'main'; b.shift = b.fueling = b.after = null;
+  b.status = 'port'; b.port = pid; b.v = 0; b.fishUntil = null; b.pos = {x:port.p.x, y:port.p.y}; b.moorT = S.t; b.shift = b.fueling = b.after = null;
+  b.berth = berth === 'naust' && quayFace(pid, 'naust') ? 'naust' : 'main';   // a route can end at Father's naust (07c-naust.js)
   const wasOps = S.plan && S.plan.ops;
   S.plan = null; S.trail = [{x:port.p.x, y:port.p.y, port:pid}];
-  log('Fortøyd i ' + port.name + '.', 'Moored in ' + port.name + '.');
+  if (b.berth === 'naust') log('Fortøyd ved naustet i ' + port.name + '.', 'Moored at the boathouse in ' + port.name + '.');
+  else log('Fortøyd i ' + port.name + '.', 'Moored in ' + port.name + '.');
   tatTripEnd(pid);
   // the skipper starts landing and restocks straight away, on this vessel (a deferred call would act on whichever vessel is bound then)
   if (wasOps){ opsLanded(pid); if (typeof refreshAll === 'function') setTimeout(refreshAll, 0); }

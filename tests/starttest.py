@@ -67,6 +67,20 @@ async def main():
         await pg.wait_for_function("!document.getElementById('startPick')", timeout=90000)
         mv = await pg.evaluate("(() => { PHONE.open('innst'); return {port:S.boat.port, home:S.home, moved:S.moved, again:!!document.querySelector('[data-pa=move]'), log:S.log.slice(-3).map(e => e.no).join(' | ')}; })()")
         print(ok(mv['port'] == to and mv['home'] == to and mv['moved'] and not mv['again'] and 'Flyttet fra Finnsnes' in mv['log']), 'a game from before moves once along the coast from Settings, and the button is gone', mv)
+        # 4. wherever you start (Jonas 05.10.2026): Father's naust by the plant, the tackle shop by the naust, and the first trip's patch
+        # near enough that the start boat fishes and sells on the fuel she has; every 8th plant along the coast
+        sv = await pg.evaluate("""(async () => { const C = PORTS.filter(q => q.coastal), out = [], b = S.boat, v = Math.max(3, BOAT.vmax * 0.8);
+          for (let i = 0; i < C.length; i += 8){ const pt = C[i]; await mapNeed(pt.p, 7.5); S.home = pt.id; S.naust = null; S.shopN = null;
+            const n = naustSite(), sh = n ? shopNear() : null, f = tutFieldNear(pt), dkm = f ? dist(f.p, pt.p) : null;
+            const needL = dkm == null ? null : 2 * dkm / (v * NM) * fuelLph(v, 5) + 2 * fuelLph(0.5, 5);
+            out.push({id:pt.id, name:pt.name, naust:n ? Math.round(Math.hypot(n.o[0] - pt.p.x * 1000, n.o[1] - pt.p.y * 1000)) : null,
+              shop:n && sh ? Math.round(Math.hypot(sh.o[0] - n.o[0], sh.o[1] - n.o[1])) : null, field:dkm == null ? null : +dkm.toFixed(1), needL:needL == null ? null : Math.round(needL)}); }
+          S.home = 'finnsnes'; S.naust = null; S.shopN = null; return {cap:BOAT.fuelCap, type:b.type, out}; })()""")
+        O = sv['out']; nN = sum(1 for o in O if o['naust'] is not None); nS = sum(1 for o in O if o['shop'] is not None)
+        print(json.dumps({'n': len(O), 'naust': nN, 'shop': nS, 'cap': sv['cap'], 'missing': [o['name'] for o in O if o['naust'] is None or o['shop'] is None], 'far': [o for o in O if o['field'] is None or o['field'] > 6 or (o['needL'] or 0) > sv['cap'] * 0.6]}, ensure_ascii=False))
+        print(ok(all(o['naust'] is None or o['naust'] <= 400 for o in O) and all(o['shop'] is None or 40 <= o['shop'] <= 170 for o in O)), 'Father\'s naust stands within 400 m of the plant, and the tackle shop 45-160 m from the naust, wherever they are found', [(o['name'], o['naust'], o['shop']) for o in O][:12])
+        print(ok(nN >= len(O) * 0.7 and nS >= nN * 0.7), 'along the coast most homes get the naust and the shop by it (the rest start at the plant\'s quay, with the shop in the harbour)', (nN, nS, len(O)))
+        print(ok(all(o['field'] is not None and o['field'] <= 6 and o['needL'] <= sv['cap'] * 0.6 for o in O)), 'from every home the first trip\'s patch is at most 6 km out, and there and back takes at most 60 % of the start boat\'s tank', [(o['name'], o['field'], o['needL']) for o in O][:12])
         print('errors:', errs[:3]); await b.close()
 
 asyncio.run(main())

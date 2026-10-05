@@ -1937,7 +1937,15 @@ Jonas valgte dem fra lista (nr. 5 og 7).
   - Fars arbeidsbenk (7 500 kr) gir håndjuksa og kveiteutstyr en firedel billigere i hjemhavna (`shopBuy`).
   - Troféveggen (3 000 kr) er bare pynt i notatboka.
   - Regnet på taket (lyd) er ikke laget ennå.
-- **Ikke gjort ennå:** båten kan ikke legge til ved naustet (det er ingen kaifront i `QUAYS`), kameraet kan gå inn i husene, og lyktene i ankrene brukes ikke.
+- **Start ved naustet** (Jonas 05.10.2026, #207): et nytt spill starter med båten ved naustets pålekai (`S.boat.berth = 'naust'` i `chooseStart`, `ui/08c-start.js`, som også laster kartet 7,5 km rundt havna).
+  - **Naustet** finnes nå med `shoreSpot` (ringsøk etter rett fjære: sjøretning fra 12 prøver på 12 m, fjæra langs normalen, rett over ±halve lengden, vann ut og land inn, utenfor `PIERBOX`, poeng etter `pref`). Det står 60–360 m fra mottakets kaifront. Kystundersøkelsen i `starttest.py` (hvert 8. mottak langs kysten) fant det ved 20 av 20.
+  - **Liggeplassen** `quayFace(pid, 'naust')` er `naustFace`: fra naustets midtpunkt, 8,1 m halv lengde og 3,4 m dyp, med sjøen ut. `berthKind` faller tilbake til `'main'` når naustet ikke er funnet.
+  - **Butikken ved naustet** (`shopNear`, `S.shopN`) står 45–130 m fra naustet (ellers opp til 160 m), på bakkens høyde (`lev`, medianen av 9 prøver). `siteTerr` planerer plassen der, og `drawSites` løfter modellen. I Finnsnes brukes butikken på kaia.
+  - **Juksa og isen er gratis ved naustet**: far betalte for dem i fjor høst, og Solveig forteller det i en melding. Isen kommer i sekker.
+  - **Ingen hurtigreise** (Jonas: «Fast travel er ikke mulig i spillet, punktum.»): `startShift` flytter aldri båten til eller fra naustet. Levering og diesel avvises ved naustet (`NAUST_SAIL`), og spilleren må seile til mottakskaia selv.
+  - **Til naustet** går det med en rute: `naustTarget(pt, r)` gjør et trykk ved naustet i kartplotteren (`03-map.js`) eller med Autonav (`03b-route.js`) til rutas siste punkt `{port:hjem, berth:'naust'}`. `arrive` kaller `dock(pid, w.berth)`, som legger båten ved naustet. Autonav finner veien til havna og ender ved naustet. Fra havna selv går ruta rett dit.
+  - Testene er `sitetest.py` (start ved naustet, Solveig, ingen flytting, ruta som ender ved naustet) og `starttest.py` (kystundersøkelsen: naustet ≤ 400 m, butikken 40–170 m, feltet ≤ 6 km og dieselen for første tur ≤ 60 % av tanken).
+- **Ikke gjort ennå:** kameraet kan gå inn i husene, og lyktene i ankrene brukes ikke.
 
 
 ### 5.25g Innlastingen og innloggingen (05.10.2026)

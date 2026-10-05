@@ -32,6 +32,7 @@ function unitDredge(p, d){
   return d;
 }
 function quayFace(pid, kind){
+  if (kind === 'naust') return naustFace(pid);   // Father's pile quay in the home harbour (07c-naust.js)
   const U = UNITS[pid];
   if (U){ const b = UNIT.berth[kind]; if (!b) return null; const c = unitW(U, b[0], 0); return {x:c[0], z:c[1], ux:U.u[0], uz:U.u[1], nx:U.n[0], nz:U.n[1], hl:b[1] / 2, depth:UNIT.B, unit:pid}; }
   const q = QUAYS[pid] && QUAYS[pid][kind]; if (!q) return null;
@@ -148,8 +149,9 @@ const CAST_MIN = 2;   // game minutes to take the lines in before the boat moves
 // the boat then lies as before.
 const BERTHPOSE = {};
 function berthPose(pid, type, kind = 'main'){
-  const key = pid + '|' + type + '|' + kind; if (key in BERTHPOSE) return BERTHPOSE[key];
+  const key = pid + '|' + type + '|' + kind + (kind === 'naust' && S.naust && S.naust.o ? '|' + S.naust.o.join(',') : ''); if (key in BERTHPOSE) return BERTHPOSE[key];
   const pt = portById(pid), px = pt.p.x * 1000, pz = pt.p.y * 1000, Lb = VESSELS[type].len, Bb = BEAM[type] || 3, qf = quayFace(pid, kind);
+  if (kind === 'naust' && !qf) return null;   // not cached: the naust is found once the home's map is in
   let best = null;
   if (qf) best = {d:0, cx:qf.x + qf.nx * (Bb / 2 + 0.4), cz:qf.z + qf.nz * (Bb / 2 + 0.4), fx:qf.x, fz:qf.z, ux:qf.ux, uz:qf.uz, Nx:qf.nx, Nz:qf.nz, hl:qf.hl, a:0, depth:qf.depth, unit:qf.unit};
   else if (kind !== 'main'){ BERTHPOSE[key] = null; return null; }
@@ -250,6 +252,7 @@ function mottakWhen(H, no){
 function startLanding(ops){
   const b = S.boat, pt = portById(b.port), kg = holdTotal();
   if (b.status !== 'port' || !pt || !pt.mottak || b.land || b.shift || kg < 0.5 || !mottakOpen(S.t / 60)) return false;
+  if (berthKind(b) === 'naust'){ log(NAUST_SAIL[0], NAUST_SAIL[1]); return false; }
   if (berthKind(b) !== 'main') return startShift('main', ops ? 'landops' : 'land');   // the crane is at the plant's quay
   const lp = landPlan(b.type, kg), unit = lp.kind === 'tub' ? ['kar', 'tubs'] : ['kasser', 'boxes'];
   b.land = {pid:pt.id, t0:S.t, until:S.t + lp.dur, kind:lp.kind, n:lp.n, lifts:lp.lifts, kg:Math.round(kg), ops:!!ops};
@@ -272,17 +275,21 @@ function iceChute(kg){ const b = S.boat; b.iceUntil = Math.max(b.iceUntil || 0, 
 // about 45 litres a minute of petrol and 90 of diesel (guesses from small-boat bunker pumps), and pays as it runs.
 const SHIFT_MPM = 3 * 1852 / 60;   // metres a minute at 3 knots in the harbour
 const PUMP = {petrol:45, diesel:90, hose:1.5, stow:1};   // litres a minute; minutes to get the hose out and the nozzle in, and to stow it
-const berthKind = b => b.berth || 'main';
+// where she lies: 'main' (the plant's quay), 'bunker' or 'naust' (Father's pile quay in the home harbour; 'main' until it is found)
+const berthKind = b => b.berth === 'naust' && !quayFace(b.port, 'naust') ? 'main' : (b.berth || 'main');
+const NAUST_SAIL = ['Båten ligger ved naustet. Seil bort til mottakskaia først: trykk på havna i kartplotteren og kast loss.', 'The boat lies at the boathouse. Sail over to the plant\'s quay first: tap the harbour on the chart plotter and cast off.'];
+const BERTHN = {main:['mottakskaia', 'the plant\'s quay'], bunker:['bunkerskaia', 'the bunker quay'], naust:['naustet', 'the boathouse']};
 const hasBunker = pid => !!quayFace(pid, 'bunker');
 // busy at the quay: landing, moving or filling; a departure waits for it
 function portBusy(b){ const u = Math.max(b.land ? b.land.until : 0, b.shift ? b.shift.until : 0, b.fueling ? b.fueling.until : 0); return u > 0 || b.after ? Math.max(u, S.t) : 0; }
 function startShift(to, after){
   const b = S.boat, pt = portById(b.port), from = berthKind(b);
-  if (b.status !== 'port' || !pt || b.shift || b.land || b.fueling || from === to || (to === 'bunker' && !hasBunker(pt.id))) return false;
+  // (never to or from Father's naust: you sail there and back by a route, Jonas 05.10.2026: «Fast travel er ikke mulig i spillet, punktum»)
+  if (b.status !== 'port' || !pt || b.shift || b.land || b.fueling || from === to || from === 'naust' || to === 'naust' || (to === 'bunker' && !hasBunker(pt.id))) return false;
   const A = berthPose(pt.id, b.type, from), B = berthPose(pt.id, b.type, to); if (!A || !B) return false;
   const move = Math.max(1.5, Math.hypot(A.x - B.x, A.y - B.y) * 1000 * 1.3 / SHIFT_MPM);
   b.shift = {from, to, t0:S.t, castUntil:S.t + CAST_MIN, arriveAt:S.t + CAST_MIN + move, until:S.t + CAST_MIN * 2 + move}; b.after = after || null;
-  log(to === 'bunker' ? 'Kaster loss og går bort til bunkerskaia.' : 'Kaster loss og går tilbake til mottakskaia.', to === 'bunker' ? 'Casting off for the bunker quay.' : 'Casting off for the plant\'s quay.');
+  log('Kaster loss og går ' + (to === 'main' ? 'tilbake ' : 'bort ') + 'til ' + BERTHN[to][0] + '.', 'Casting off for ' + BERTHN[to][1] + '.');
   return true;
 }
 function startFueling(ops){
@@ -290,6 +297,7 @@ function startFueling(ops){
   if (b.status !== 'port' || !pt || !pt.fuel || b.land || b.fueling || b.shift) return false;
   if (BOAT.fuelCap - b.fuel < 0.5) return false;
   if (hasBunker(pt.id) && berthKind(b) !== 'bunker') return startShift('bunker', ops ? 'fuelops' : 'fuel');
+  if (berthKind(b) === 'naust'){ log(NAUST_SAIL[0], NAUST_SAIL[1]); return false; }   // no pump at the naust: sail over first
   const lpm = BOAT.diesel ? PUMP.diesel : PUMP.petrol, l = Math.min(BOAT.fuelCap - b.fuel, Math.max(0, S.cash) / fuelPrice());
   if (l < 0.5){ log('Har ikke penger til drivstoff.', 'No money for fuel.'); return false; }
   b.fueling = {t0:S.t, pumpAt:S.t + PUMP.hose, until:S.t + PUMP.hose + l / lpm + PUMP.stow, liters:l, lpm, done:0, ops:!!ops};
@@ -306,7 +314,7 @@ function quayMinute(){
   const s = b.shift;
   if (s && S.t >= s.until){
     b.shift = null; b.berth = s.to; const pt = portById(b.port), a = b.after; b.after = null;
-    log('Fortøyd ved ' + (s.to === 'bunker' ? 'bunkerskaia' : 'mottakskaia') + ' i ' + pt.name + '.', 'Made fast at the ' + (s.to === 'bunker' ? 'bunker quay' : 'plant\'s quay') + ' in ' + pt.name + '.');
+    log('Fortøyd ved ' + BERTHN[s.to][0] + ' i ' + pt.name + '.', 'Made fast at ' + BERTHN[s.to][1] + ' in ' + pt.name + '.');
     if (a === 'fuel' || a === 'fuelops') startFueling(a === 'fuelops');
     else if (a === 'land' || a === 'landops') startLanding(a === 'landops');
     else if (a === 'ice'){ buyIce(b.iceKg || 50, b.iceFree); b.iceKg = b.iceFree = null; }
@@ -324,7 +332,7 @@ function buyIce(kg, free){
 // ---------- the tackle shop on the quay, in every harbour: hand jig, ice and halibut gear ----------
 // Where there is no plant (Finnsnes) the shop sells bagged ice and carries it aboard; elsewhere the ice comes down the plant's chute.
 // PRICE.iceBag is our assumption: dearer than chute ice, not checked against a price list.
-const shopIceKr = () => { const pt = portById(S.boat.port); return pt && pt.ice ? PRICE.ice : PRICE.iceBag * folkIce(); };
+const shopIceKr = () => { const pt = portById(S.boat.port); return pt && pt.ice && berthKind(S.boat) !== 'naust' ? PRICE.ice : PRICE.iceBag * folkIce(); };
 const shopIceRoom = () => Math.max(0, Math.round(BOAT.iceCap - S.boat.ice));
 // buys one thing; returns null, or why not as [no, en]. free: the first-trip tutorial hands it out
 function shopBuy(k, kg, free){
@@ -334,14 +342,17 @@ function shopBuy(k, kg, free){
     const have = k === 'jig' ? b.gear : b.kgear, c = free ? 0 : Math.round((k === 'jig' ? PRICE.gear : PRICE.kgear) * (naustHas('benk') && atHome(b) ? 0.75 : 1));   // Father's workbench (07c-naust.js)
     if (have) return ['Det har du allerede om bord.', 'You already have that aboard.'];
     if (c > S.cash) return ['Du har ikke nok penger.', 'Not enough money.'];
-    if (k === 'jig'){ b.gear = true; pay(c); log('Kjøpte håndjuksa med pilk og markkroker for ' + kr(c) + '.', 'Bought a hand jig with pilk and fly hooks for ' + kr(c) + '.'); }
+    if (k === 'jig'){ b.gear = true; pay(c); log('Kjøpte håndjuksa med pilk og markkroker for ' + kr(c) + '.', 'Bought a hand jig with pilk and fly hooks for ' + kr(c) + '.');
+      // the first trip's jig and ice are Father's: he paid for them before he went (the letter leaves nothing else)
+      if (free) msg(FOLK_NAMES.shop + ' i butikken', 'Så det er du som har tatt over naustet. Faren din var innom her i fjor høst og betalte for ei ny juksa og is til den første turen. «Til den som tar over», sa han. Den har ligget her og venta på deg. Gutten bærer issekkene ned til båten.',
+        'So you’re the one who has taken over the boathouse. Your father came in here last autumn and paid for a new jig and ice for the first trip. «For whoever takes over», he said. It has been lying here waiting for you. The boy will carry the ice down to the boat.'); }
     else { b.kgear = true; pay(c); log('Kjøpte kveiteutstyr for ' + kr(c) + ': stor pilk, kraftig snøre og gaff.', 'Bought halibut gear for ' + kr(c) + ': big pilk, heavy line and gaff.'); }
     if (c > 0) folkShop(); return null;
   }
   if (k === 'ice'){
     kg = Math.round(Math.min(kg, shopIceRoom())); if (kg < 1) return ['Iskassa er full.', 'The ice box is full.'];
     const c = free ? 0 : Math.round(kg * shopIceKr()); if (c > S.cash) return ['Du har ikke nok penger.', 'Not enough money.'];
-    if (pt.ice){
+    if (pt.ice && berthKind(b) !== 'naust'){
       if (b.shift || b.land && berthKind(b) !== 'main') return ['Vent til båten ligger ved mottakskaia.', 'Wait until the boat lies at the plant\'s quay.'];
       return buyIce(kg, free) ? null : ['Isrenna er opptatt. Prøv igjen litt senere.', 'The ice chute is busy. Try again a little later.'];
     }

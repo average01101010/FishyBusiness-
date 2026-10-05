@@ -50,6 +50,36 @@ async def main():
         print(json.dumps(nu, ensure_ascii=False))
         print(ok(nu['stoveFirst'] == 'Taket må tettes først.' and nu['t'] is None and nu['paid'] == 6000 and abs(nu['dE'] - nu['want']) < 1e-3 and nu['away'] == 1), 'the naust\'s roof (before the stove) makes you rest 25 % faster in the home harbour, and only there')
         print(ok(nu['jig'] == round(nu['gear'] * 0.75) and nu['txt']), 'Father\'s workbench makes the hand jig a quarter cheaper at home; the notebook lists the steps', nu['jig'])
+        # the start at Father's naust (Jonas 05.10.2026): a new game's boat lies at the naust's pile quay in the water; the jig and the ice
+        # are Father's (Solveig tells it, the ice comes in bags); no fast travel (Jonas 05.10.2026): the boat is never shifted between the
+        # naust and the plant's quay for you, landing and fuel only at the plant's quay, and a route that ends at the naust (the chart plotter's
+        # tap by it) docks the boat there; the picture from the water
+        st = await pg.evaluate("""(async () => { const b = S.boat, q = portById('finnsnes'); S.adm = null; S.sleep = null; b.status = 'port'; b.port = 'finnsnes'; b.pos = {x:q.p.x, y:q.p.y}; await chooseStart(q);
+          b.gear = false; b.ice = 0; S.cash = 15000; b.land = b.shift = b.fueling = null;
+          const bp = berthPose('finnsnes', b.type, 'naust'), kind = berthKind(b), ends = bp ? [1, -1, 0].map(k => isLand({x:bp.x + bp.fwd.x * k * bp.Lb / 2000, y:bp.y + bp.fwd.z * k * bp.Lb / 2000})) : null;
+          const m0 = S.msgs.length, j = shopBuy('jig', 0, true), i = shopBuy('ice', 150, true), sol = S.msgs.slice(m0).filter(m => /Solveig/.test(m.from)).map(m => m.no).join(' ');
+          const sh = startShift('main'), land = startLanding({}), fuel = startFueling({}), k1 = berthKind(b);
+          const tg = naustTarget({x:bp.x + 0.004, y:bp.y}, 0.05), far = naustTarget({x:bp.x + 0.2, y:bp.y}, 0.05);
+          dock('finnsnes'); const k2 = berthKind(b); dock('finnsnes', 'naust'); const k3 = berthKind(b), pose = berthPose('finnsnes', b.type, 'naust');
+          return {kind, bp:!!bp, ends, j, i, gear:b.gear, ice:b.ice, father:/faren din/i.test(sol), sh, land, fuel, k1, tg, far, k2, k3, at:Math.round(Math.hypot(b.pos.x - pose.x, b.pos.y - pose.y) * 1000), log:S.log.slice(-2).map(e => e.no)}; })()""")
+        print(json.dumps(st, ensure_ascii=False))
+        print(ok(st['kind'] == 'naust' and st['bp'] and st['ends'] and not any(st['ends'])), 'a new game\'s boat lies at Father\'s naust, along its pile quay and in the water', st['ends'])
+        print(ok(st['j'] is None and st['i'] is None and st['gear'] and st['ice'] >= 149 and st['father']), 'at the naust the shop gives the jig and the ice Father paid for, and Solveig tells of it')
+        print(ok(not st['sh'] and not st['land'] and not st['fuel'] and st['k1'] == 'naust'), 'no fast travel: from the naust the boat is not shifted to the plant\'s quay, and landing and fuel are refused there', [st['sh'], st['land'], st['fuel']])
+        print(ok(st['tg'] and st['tg'].get('berth') == 'naust' and st['tg'].get('port') == 'finnsnes' and st['far'] is None and st['k2'] == 'main' and st['k3'] == 'naust' and st['at'] < 30 and any('naustet' in l for l in st['log'])), 'a tap by the naust makes it a route\'s end, and a route that ends there docks the boat at the naust', {'tg':st['tg'], 'k2':st['k2'], 'k3':st['k3'], 'at':st['at'], 'log':st['log']})
+        await pg.evaluate("""(() => { const c = G3._debug.cam; c.helm = false; c.dist = 34; c.pitch = 0.2; const n = G3._debug.sitesNow().find(s => s.k === 'naust'), b = S.boat; c.yaw = Math.atan2(-n.n[0], n.n[1]) - b.heading + 0.5; })()""")
+        await pg.wait_for_timeout(6000); await pg.screenshot(path='site_start.png')
+        # a home along the coast in 3D: the naust and the shop by it, the shop's yard at the ground's height
+        cz = await pg.evaluate("""(async () => { const pt = PORTS.find(q => q.coastal && /Reine/.test(q.name)) || PORTS.find(q => q.coastal); const b = S.boat; await chooseStart(pt);
+          b.status = 'port'; b.port = pt.id; b.pos = {x:pt.p.x, y:pt.p.y}; return {id:pt.id, name:pt.name}; })()""")
+        await pg.wait_for_timeout(15000)
+        cs2 = await pg.evaluate("""(() => { const L = G3._debug.sitesNow(), n = L.find(s => s.k === 'naust'), sh = L.find(s => s.k === 'shop' && s.near);
+          const yard = sh ? [[0, 15], [-12, 20], [12, 24]].map(([x, y]) => +(G3._debug.terrH(sh.o[0] + sh.u[0] * x - sh.n[0] * y, sh.o[1] + sh.u[1] * x - sh.n[1] * y) - sh.lev).toFixed(2)) : null;
+          return {kinds:L.map(s => s.k + (s.near ? '+' : '')), d:n && sh ? Math.round(Math.hypot(n.o[0] - sh.o[0], n.o[1] - sh.o[1])) : null, lev:sh ? +sh.lev.toFixed(1) : null, yard, berth:berthKind(S.boat)}; })()""")
+        print(json.dumps(cs2, ensure_ascii=False))
+        print(ok(cs2['d'] is not None and 40 <= cs2['d'] <= 170 and cs2['yard'] and all(abs(v) < 0.15 for v in cs2['yard']) and cs2['berth'] == 'naust'), 'at a home along the coast (%s) the shop stands by the naust, its yard levelled at the ground\'s height, and the boat at the naust' % cz['name'], cs2)
+        await pg.evaluate("""(() => { const c = G3._debug.cam; c.helm = false; c.dist = 70; c.pitch = 0.3; const n = G3._debug.sitesNow().find(s => s.k === 'naust'), b = S.boat; c.yaw = Math.atan2(-n.n[0], n.n[1]) - b.heading + 0.3; })()""")
+        await pg.wait_for_timeout(6000); await pg.screenshot(path='site_coast.png')
         print('errors:', errs[:3]); await b.close()
 
 asyncio.run(main())

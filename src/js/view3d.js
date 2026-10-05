@@ -341,7 +341,18 @@ const G3 = (() => {
     if (SITES && SITEK === key) return SITES;
     SITEK = key; SITES = [];
     const sh = shopSite(); if (sh && glbHas('shop')) SITES.push({k:'shop', o:sh.o, u:sh.u, n:[-sh.u[1], sh.u[0]], clear:[[SHOP_APRON[0], SHOP_APRON[2] - 2, SHOP_APRON[1], SHOP_APRON[3]]]});
+    // the shop by the naust along the coast (07c-naust.js shopNear): its yard levelled at the ground's own height there (not the deck's),
+    // and the model lifted to it; the ground's height is read before the site is in SITES (terrRaw goes through siteTerr)
+    const sn = typeof shopNear === 'function' ? shopNear() : null;
+    if (sn && glbHas('shop')){ const nn = [-sn.u[1], sn.u[0]], hs = [];
+      for (const x of [-15, 0, 15]) for (const y of [12, 19, 26]){ const h = terrRaw(sn.o[0] + sn.u[0] * x - nn[0] * y, sn.o[1] + sn.u[1] * x - nn[1] * y); if (h === h) hs.push(h); }
+      if (hs.length === 9){ hs.sort((a, b) => a - b); SITES.push({k:'shop', near:true, o:sn.o, u:sn.u, n:nn, lev:clamp(hs[4], 1.2, 30), clear:[[SHOP_APRON[0], 0, SHOP_APRON[1], SHOP_APRON[3]]]}); }
+      else SITEK = '';   // the ground is not in yet: try again next frame
+    }
     if (n && glbHas('naust')) SITES.push({k:'naust', o:n.o, u:n.u, n:[-n.u[1], n.u[0]], clear:[[-14, -1, 14, 16]]});
+    // a site that came after the ground round it was built: those terrain chunks and the near mesh are made again with its ground
+    if (SITEK){ for (const [k, c] of CH) if (SITES.some(q => Math.hypot(c.x - q.o[0], c.z - q.o[1]) < 700)){ freeChunk(c); CH.delete(k); }
+      if (NEARM) NEARM.stale = true; }
     return SITES;
   }
   // a point in a site's frame: [x along the face, y inland]
@@ -357,7 +368,8 @@ const G3 = (() => {
         return h <= cap ? h : cap + (h - cap) * sstep(0, 8, d);
       }
       const A = SHOP_APRON, d = Math.hypot(Math.max(0, A[0] - lx, lx - A[1]), Math.max(0, A[2] - y, y - A[3])); if (d >= 12) continue;
-      const top = QTOP - 0.1; return top + (h - top) * sstep(0, 12, d);
+      if (s.lev !== undefined && y < A[2] - 4) continue;   // by the naust: the shore in front of the yard stays as it is
+      const top = s.lev !== undefined ? s.lev : QTOP - 0.1; return top + (h - top) * sstep(0, 12, d);
     }
     return h;
   }
@@ -1307,7 +1319,7 @@ const G3 = (() => {
     for (const s of sitesNow()){
       const d = Math.hypot(s.o[0] - eye[0], s.o[1] - eye[2]); if (d > Math.min(far, 4000)) continue;
       const M = siteModel(s.k); if (!M) continue; if (!set){ nSetup(VP); set = true; }
-      drawN(near && d / ZF() < 900 ? M.near : M.far, chain(M4.T(s.o[0] - eye[0], -eye[1], s.o[1] - eye[2]), M4.RY(Math.atan2(-s.u[1], s.u[0]))));
+      drawN(near && d / ZF() < 900 ? M.near : M.far, chain(M4.T(s.o[0] - eye[0], (s.lev !== undefined ? s.lev - (QTOP - 0.1) : 0) - eye[1], s.o[1] - eye[2]), M4.RY(Math.atan2(-s.u[1], s.u[0]))));
     }
     if (set){ gl.disableVertexAttribArray(2); gl.useProgram(PL.p); }
   }

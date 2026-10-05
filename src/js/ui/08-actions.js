@@ -52,10 +52,10 @@ function doAct(el){
   else if (act === 'stopfish'){ if (b.gop) gopAbort('stop'); b.fishUntil = S.t; S.plan = null; endFishing('done'); }
   else if (act === 'deckstop'){ if (b.status === 'fishing'){ b.deckStop = true; log('Stopper fisket for å sløye og ise.', 'Stopping fishing to gut and ice.'); } }
   else if (act === 'deckgo'){ b.deckStop = false; b.deckEnd = null; }
-  else if (act === 'sell'){ if (!tutAllow('sell')) return; if (!mottakOpen(S.t / 60)){ toast(L('Mottaket er stengt. Det åpner ', 'The plant is closed. It opens ') + mottakWhen(S.t / 60, S.lang === 'no') + '.'); return; } startLanding(false); }
+  else if (act === 'sell'){ if (!tutAllow('sell')) return; if (berthKind(b) === 'naust'){ toast(L(NAUST_SAIL[0], NAUST_SAIL[1])); return; } if (!mottakOpen(S.t / 60)){ toast(L('Mottaket er stengt. Det åpner ', 'The plant is closed. It opens ') + mottakWhen(S.t / 60, S.lang === 'no') + '.'); return; } startLanding(false); }
   else if (act === 'towfast'){ if (!towFast()) toast(L('Redningsskøyta finner veien. Prøv igjen om litt.', 'The rescue boat is finding the way. Try again in a moment.')); }
   else if (act === 'waitopen'){ const n = Math.max(0, Math.round((mottakNext(S.t / 60) - S.t / 60) * 60)); playMinutes(n); toast(L('Mottaket har åpnet.', 'The plant has opened.')); }
-  else if (act === 'fuel'){ if (S.cash <= 0){ toast(t('no_cash')); return; } startFueling(false); }
+  else if (act === 'fuel'){ if (S.cash <= 0){ toast(t('no_cash')); return; } if (berthKind(b) === 'naust'){ toast(L(NAUST_SAIL[0], NAUST_SAIL[1])); return; } startFueling(false); }
   else if (act === 'ice'){ const why = shopBuy('ice', +el.dataset.kg || 50); if (why){ toast(L(why[0], why[1])); return; } }
   else if (act === 'gear' || act === 'kgear'){ PHONE.open('fiske'); return; }
   else if (act === 'reset'){ if (confirm(t('reset_q'))){ const lang = S.lang; S = newState(); S.lang = lang; S.intro = true; S.draft = []; draftForget(true); S.tut = NOTUT ? 0 : tutNew(); ensureFleet(); save(); refreshAll(); } return; }

@@ -428,13 +428,17 @@ function addWaypoint(pt){
   if (S.draft.length && S.draft[S.draft.length - 1].port){ toast(t('ends_port')); return; }
   const r = 22 / view.px; let near = null, bd = 1e9;
   for (const p of PORTS){ const d = dist(p.p, pt); if (d < r && d < bd){ bd = d; near = p; } }
-  if (near && b.status === 'port' && b.port === near.id && !S.draft.length){ toast(t('already_here')); return; }
-  if (!near && isLandUI(pt)){ toast(t('on_land')); return; }
+  // Father's naust: a route can end there (you sail to it; 07c-naust.js naustTarget)
+  const nt = naustTarget(pt, r), atN = b.status === 'port' && berthKind(b) === 'naust';
+  if (nt && atN && !S.draft.length){ toast(t('already_here')); return; }
+  if (!nt && near && b.status === 'port' && b.port === near.id && !S.draft.length && !atN){ toast(t('already_here')); return; }
+  if (!near && !nt && isLandUI(pt)){ toast(t('on_land')); return; }
   draftEdit(() => {
     const wp = (q, auto) => S.draft.push({x:q.x, y:q.y, port:null, fish:0, auto});
     // out of the harbour first, the way the boats go, when the first leg would cut across a breakwater or a point
-    if (!S.draft.length && b.status === 'port') exitWps(portById(b.port), near ? near.p : pt).forEach(q => wp(q, 'out'));
-    if (near){
+    if (!S.draft.length && b.status === 'port' && !(nt && b.port === nt.port)) exitWps(portById(b.port), nt || (near ? near.p : pt)).forEach(q => wp(q, 'out'));
+    if (nt) S.draft.push({x:nt.x, y:nt.y, port:nt.port, berth:'naust', fish:0});
+    else if (near){
       const prev = S.draft.length ? S.draft[S.draft.length - 1] : b.pos;
       entryWps(near, prev).forEach(q => wp(q, 'in'));
       S.draft.push({x:near.p.x, y:near.p.y, port:near.id, fish:0});
