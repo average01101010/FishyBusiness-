@@ -330,7 +330,7 @@ const PHONE = (() => {
       '<p class="ph-note">' + L('Av: du blir aldri sliten og sovner ikke.', 'Off: you never tire and do not fall asleep.') + '</p></div>' +
       '<p class="ph-note">' + L('Verktøy for testing. Appen fjernes før spillet får felles klokke.', 'Tools for testing. The app goes before the game gets a shared clock.') + '</p></div>';
   }
-  function show(on, a){ isOpen = on; if (a) app = a; if (on){ el.hidden = false; void el.offsetWidth; el.classList.remove('off'); render(); } else { el.classList.add('off'); setTimeout(() => { if (!isOpen) el.hidden = true; }, 300); } }
+  function show(on, a){ isOpen = on; if (a) app = a === 'admin' && !adminOk() ? 'home' : a; if (on){ el.hidden = false; void el.offsetWidth; el.classList.remove('off'); render(); } else { el.classList.add('off'); setTimeout(() => { if (!isOpen) el.hidden = true; }, 300); } }
   function status(){
     const H = (S.t + liveFrac()) / 60, bars = S.boat.status === 'port' ? 4 : coverage(S.boat.pos);
     tEl.textContent = hm(H);
@@ -371,7 +371,8 @@ const PHONE = (() => {
   const PATCH = [
     ['p16', '05.10.2026', 'Kaia på Finnsnes', 'The quay at Finnsnes', [
       ['Båten lå inne i et bygg ved kaia på Finnsnes. Bygg på kaidekket og over liggeplassen er borte, så du ser båten og kaia når du starter.', 'The boat lay inside a building at the Finnsnes quay. Buildings on the quay deck and over the berth are gone, so you see the boat and the quay when you start.'],
-      ['Snøen er stille. Før suste den som hvit støy.', 'Snow is silent. It used to hiss like white noise.']]],
+      ['Snøen er stille. Før suste den som hvit støy.', 'Snow is silent. It used to hiss like white noise.'],
+      ['Admin-appen på telefonen er bare for utvikleren. Den er borte for alle andre kontoer.', 'The Admin app on the phone is for the developer only. It is gone for every other account.']]],
     ['p15', '05.10.2026', 'Det Store Blå', 'Det Store Blå', [
       ['Spillet heter nå Det Store Blå. Lagringen din er den samme.', 'The game is now called Det Store Blå. Your save is the same.'],
       ['Ny logo og nye app-ikoner, laget i Blender: sjarken i blåtimen under tindene på Senja.', 'A new logo and new app icons, made in Blender: the sjark at the blue hour under the peaks of Senja.'],
@@ -476,7 +477,7 @@ const PHONE = (() => {
     return '<div class="ph-homescr"><div class="ph-clock">' + hm(H) + '</div><div class="ph-date">' + dayStr(H) + '</div>' +
       '<div class="ph-widget"><span class="w1">' + dirName(windDir(H)) + ' ' + fmt(W, 0) + ' m/s · ' + fmt(Math.round(airTemp(H)) || 0, 0) + ' °C</span><span class="w2">' + kr(S.cash) + '</span></div>' +
       ((g => g ? '<button class="ph-goal" data-pa="open" data-a="fartoy"><span>' + L('Neste mål: ', 'Next goal: ') + '<b>' + g.n + '</b></span><small>' + (g.txt || kr(Math.min(Math.max(0, S.cash), g.need)) + ' / ' + kr(g.need)) + '</small><span class="gb"><i style="width:' + (g.pc * 100).toFixed(1) + '%"></i></span></button>' : '')(goals()[0])) +
-      '<div class="ph-grid">' + APPS.map(a => '<button class="ph-app" data-pa="open" data-a="' + a[0] + '"><span class="ic" style="background:linear-gradient(160deg,' + a[3] + ',' + a[3] + 'cc)">' + IC[a[0]] + '</span>' + L(a[1], a[2]) + (a[0] === 'meld' && n ? '<span class="bd">' + n + '</span>' : '') + (a[0] === 'ordl' && ordState().active.length ? '<span class="bd">' + ordState().active.length + '</span>' : '') + (a[0] === 'rederi' && na ? '<span class="bd">' + na + '</span>' : '') + (a[0] === 'patch' && np ? '<span class="bd">' + np + '</span>' : '') + '</button>').join('') + '</div></div>';
+      '<div class="ph-grid">' + APPS.filter(a => a[0] !== 'admin' || adminOk()).map(a => '<button class="ph-app" data-pa="open" data-a="' + a[0] + '"><span class="ic" style="background:linear-gradient(160deg,' + a[3] + ',' + a[3] + 'cc)">' + IC[a[0]] + '</span>' + L(a[1], a[2]) + (a[0] === 'meld' && n ? '<span class="bd">' + n + '</span>' : '') + (a[0] === 'ordl' && ordState().active.length ? '<span class="bd">' + ordState().active.length + '</span>' : '') + (a[0] === 'rederi' && na ? '<span class="bd">' + na + '</span>' : '') + (a[0] === 'patch' && np ? '<span class="bd">' + np + '</span>' : '') + '</button>').join('') + '</div></div>';
   }
   const kv = (a, b) => '<div class="ph-kv"><span>' + a + '</span><span>' + b + '</span></div>';
   const tq = (kg, d) => isFinite(kg) ? fmt(kg / 1000, d) + ' t' : L('ingen grense', 'no limit');   // a quota in tonnes, or no limit
@@ -972,6 +973,7 @@ const PHONE = (() => {
   function act0(a, d){
     const b = S.boat;
     if (a !== 'shop') shopPend = null;
+    if ((/^adm/.test(a) || (a === 'open' && d.a === 'admin')) && !adminOk()) return false;   // the Admin app is only Jonas's (adminOk)
     if (a === 'open'){ app = d.a; confirmMayday = false; }
     else if (a === 'home'){ app = 'home'; }
     else if (a === 'back'){ app = 'home'; }

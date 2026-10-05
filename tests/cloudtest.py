@@ -2,7 +2,8 @@
 player who is not signed in; signed in, the game starts and says hello; the consent is asked with the year of birth; with a yes the
 events (an app opened, a grounding) go up in a batch, an error is reported, a session that ends a minute after grounding counts as a
 rage quit; the save goes up as a save code, a newer save on the account is offered when the cloud refuses an older one, and a newer
-cloud save replaces the one on a new device; the account card is in Settings. Prints OK or FEIL."""
+cloud save replaces the one on a new device; the account card is in Settings; the Admin app only for the flagged account. Prints OK or
+FEIL."""
 from _env import GAME, boot
 import asyncio, json, time
 from playwright.async_api import async_playwright
@@ -63,7 +64,8 @@ async def main():
           runAground({...S.boat.pos}); await cloudFlush(true);
           S.lastReal = Date.now(); save(); CLOUD.lastSave = 0; await cloudSaveSoon();
           PHONE.open('innst'); const card = document.body.innerText.includes('jonas@test.no'); PHONE.show(false);
-          return {sid:CLOUD.sid, consent:CLOUD.consent, card}; }""")
+          PHONE.open('home'); const admIcon = !!document.querySelector('#phView [data-a=admin]'); PHONE.open('admin'); const admApp = PHONE.app === 'admin'; PHONE.show(false);
+          return {sid:CLOUD.sid, consent:CLOUD.consent, card, admIcon, admApp}; }""")
         batches = [c[1] for c in calls if c[0] == 'tm_batch']; ev = [e['k'] for b in batches for e in b.get('evs', [])]
         apps = [e['d'].get('app') for b in batches for e in b.get('evs', []) if e['k'] == 'app']
         errc = [c[1] for c in calls if c[0] == 'tm_error']; puts = [c[1] for c in calls if c[0] == 'save_put']
@@ -75,6 +77,7 @@ async def main():
         check(any('cloudtest boom' in e['msg'] for e in errc), 'an error in the page is reported', [e['msg'] for e in errc])
         check(len(puts) == 1 and puts[0]['data'].startswith('KYST2:') and puts[0]['force'] is False, 'the save goes up as a save code, not forced', {k: (v[:12] if isinstance(v, str) else v) for k, v in (puts[0] if puts else {}).items()})
         check(r['card'], 'the account card is in Settings, with the e-mail')
+        check(not r['admIcon'] and not r['admApp'], 'an account without the admin flag has no Admin app on the phone and cannot open it', {'icon': r['admIcon'], 'app': r['admApp']})
         # the cloud refuses an older save: the player is asked which to keep
         replies['save_put'] = {'ok': False, 'cloud': {'saved_at': '2030-01-01T10:00:00Z', 'game_t': 99999}}
         c2 = await pg.evaluate("async () => { S.lastReal = Date.now() + 5; CLOUD.lastSave = 0; await cloudSaveSoon(); return !document.getElementById('modal').hidden && /Nyere lagring|newer save/.test(document.getElementById('modal').innerText); }")
@@ -83,11 +86,13 @@ async def main():
         print('errors:', errs[:3]); await ctx.close()
 
         # 3. a new device: the account's save replaces the empty one here
-        calls = []; replies = {'tm_hello': {'consent': True, 'owned': []}, 'save_get': {'data': code, 'saved_at': '2030-01-01T10:00:00Z', 'game_t': 1}}
+        calls = []; replies = {'tm_hello': {'consent': True, 'owned': [], 'admin': True}, 'save_get': {'data': code, 'saved_at': '2030-01-01T10:00:00Z', 'game_t': 1}}
         ctx, pg, errs = await page(br, calls, replies)
         await pg.goto(GAME); await pg.wait_for_function("typeof SIMREADY !== 'undefined' && SIMREADY && S.company === 'Skytest AS'", timeout=120000)
         n = await pg.evaluate("S.company")
         check(n == 'Skytest AS', 'on a new device the newer save on the account replaces the one here', n)
+        adm = await pg.evaluate("(() => { PHONE.open('home'); const i = !!document.querySelector('#phView [data-a=admin]'); PHONE.open('admin'); const a = PHONE.app === 'admin'; PHONE.show(false); return i && a; })()")
+        check(adm, "Jonas's account (flagged in the database) has the Admin app")
         print('errors:', errs[:3]); await br.close()
 
 

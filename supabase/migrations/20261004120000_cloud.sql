@@ -30,8 +30,12 @@ create table if not exists public.players (
   consent_at timestamptz,
   birth_year int,                               -- the 13-year limit for consent (personopplysningsloven § 5)
   lang text, tz text, country text, platform text, browser text, pwa boolean,
-  home text, boat text, cash bigint, fleet int, fleet_value bigint, streak int, game_days int   -- the latest state, for the economy panels
+  home text, boat text, cash bigint, fleet int, fleet_value bigint, streak int, game_days int,  -- the latest state, for the economy panels
+  game_admin boolean not null default false    -- the game's Admin app (ui/05-phone.js): set by hand for Jonas's account only
 );
+-- (05.10.2026, «admin-appen på telefonen skal kun være tilgjengelig på min konto»: no player can set it, the table has no write
+-- grant or policy for players; set in the SQL Editor with: update public.players set game_admin = true where id = '<WorkOS user id>')
+alter table public.players add column if not exists game_admin boolean not null default false;
 create table if not exists public.saves (
   player_id text primary key references public.players(id) on delete cascade,
   data text not null, saved_at timestamptz not null, game_t bigint, bytes int, updated_at timestamptz not null default now()
@@ -109,7 +113,7 @@ begin
     country = coalesce(left(nullif(current_setting('request.headers', true)::json ->> 'cf-ipcountry', ''), 2), country)
     where id = p and consent is true;
   select * into r from players where id = p;
-  return jsonb_build_object('consent', r.consent, 'created', r.created_at, 'birth_year', r.birth_year,
+  return jsonb_build_object('consent', r.consent, 'created', r.created_at, 'birth_year', r.birth_year, 'admin', coalesce(r.game_admin, false),
     'owned', coalesce((select jsonb_agg(product_id) from entitlements where player_id = p), '[]'::jsonb));
 end $$;
 

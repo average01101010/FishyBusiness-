@@ -5,11 +5,19 @@
 // is off and the game starts as before. Supabase is reached by fetch on its REST API, only through the functions in
 // supabase/migrations/ (security definer: each checks the player and the consent); the tables themselves are the admin's to read.
 const CLOUD_CFG = (typeof window !== 'undefined' && window.DSB_CLOUD) || /*@include(data/cloud.json)*/null;
-const CLOUD = {on:false, ak:null, user:null, consent:null, sid:null, q:[], active:0, sent:0, lastSave:0, neg:null, trip:null, errs:0, errSeen:{}, fps:[], owned:[]};
+const CLOUD = {on:false, ak:null, user:null, consent:null, sid:null, q:[], active:0, sent:0, lastSave:0, neg:null, trip:null, errs:0, errSeen:{}, fps:[], owned:[], admin:false};
 const CLOUD_SIGNED = 'dsb_signed';   // set after a sign-in, so the game can start offline on this device later
 function cloudOn(){
   const c = CLOUD_CFG; if (!c || !c.supabaseUrl || !c.supabaseAnon || !c.workosClientId || typeof location === 'undefined') return false;
   return (c.hosts || []).includes(location.hostname) && !/nocloud/.test(location.hash);
+}
+// the game's Admin app (ui/05-phone.js) only on Jonas's account (05.10.2026, «admin-appen på telefonen skal kun være tilgjengelig på
+// min konto»): on the cloud's hosts only for the account flagged in the database (players.game_admin, told by tm_hello; hidden there
+// also with #nocloud and offline), never on the public copy on GitHub Pages; the artifact (his own, private) and local test builds
+// keep it. The game runs in the browser, so this hides the tools from players; what must hold in a shared world is checked on the server.
+function adminOk(){
+  const h = typeof location !== 'undefined' ? location.hostname : '';
+  return !(/\.github\.io$/i.test(h) || (CLOUD_CFG && (CLOUD_CFG.hosts || []).includes(h))) || CLOUD.admin === true;
 }
 function cloudS(){ try { return S; } catch (e){ return null; } }
 const cloudL = (no, en) => { const s = cloudS(); return s && s.lang === 'en' ? en : no; };
@@ -77,7 +85,7 @@ async function cloudGate(){
   }
   localStorage.setItem(CLOUD_SIGNED, '1');
   try {
-    const h = await cloudRpc('tm_hello', {meta:cloudMeta()}); CLOUD.consent = h ? h.consent : null; CLOUD.owned = (h && h.owned) || [];
+    const h = await cloudRpc('tm_hello', {meta:cloudMeta()}); CLOUD.consent = h ? h.consent : null; CLOUD.owned = (h && h.owned) || []; CLOUD.admin = !!(h && h.admin === true);
     // the save: the cloud's when it is newer than the one here (a new device, or played elsewhere since)
     const cs = await cloudRpc('save_get', {});
     const localRaw = localStorage.getItem(KEY), local = localRaw ? (JSON.parse(localRaw).lastReal || 0) : 0;

@@ -799,6 +799,12 @@ Jonas' valg: gratis å spille med kjøp via Stripe, påkrevd innlogging med Work
   - Alle tabellene har RLS, med lesetilgang bare for `is_admin()`. Det krever Supabase Auth-ID-en til Jonas i `admins` og totrinnsinnlogging (`aal2`).
   - Spillet skriver bare gjennom funksjonene `tm_hello`, `tm_consent`, `tm_batch`, `tm_error`, `tm_perf`, `save_get`, `save_put` og `delete_me` (security definer). Funksjonene sjekker WorkOS-ID-en (`pid()`, tokenets `sub`) og samtykket.
   - Under 13 år teller ikke et ja som samtykke.
+  - **Admin-appen i spillet** (05.10.2026, Jonas: «admin-appen på telefonen skal kun være tilgjengelig på min konto»):
+    - `players.game_admin` er satt for WorkOS-kontoen til Jonas, og bare der. Ingen spiller kan sette den selv, fordi tabellen ikke har skrivetilgang for spillere.
+    - `tm_hello` gir `admin`, og `adminOk()` i `ui/10f-cloud.js` skjuler appen og handlingene uten flagget. Det gjelder på vertene i `cloud.json` (også med `#nocloud` og uten nett) og på GitHub Pages.
+    - Artifacten og lokale bygg for testene har appen.
+    - En ny admin settes i SQL Editor: `update public.players set game_admin = true where id = '<WorkOS-ID>'`.
+    - Spillet kjører i nettleseren, så dette skjuler verktøyene for spillerne. Det stopper ikke noen som endrer siden. Det som må holde i en felles verden, må sjekkes på serveren.
   - Når kontoen slettes, forsvinner alt om spilleren. Kjøpene blir stående uten navn, fordi bokføringsloven krever det.
   - Rådata slettes etter 13 måneder (`pg_cron`).
   - `admin_dashboard(days)` gir alle tallene til dashbordet i ett svar.
