@@ -119,14 +119,14 @@ function mapToClient(p){ const m = svg.getScreenCTM(); return {x:m.a * p.x + m.c
 
 // --- «Autonav» (the button in the chart plotter, and the dock's Auto-nav): the next tap on the chart is where to go, and the route
 // there follows the fairway (core/11-route.js). The skipper casts off himself with «Kast loss» (the user's wish 02.10.2026).
-let LEIA_ARM = false, LEIA_BUSY = false;
+let LEIA_ARM = false, LEIA_BUSY = false, LEIA_RU = null;   // LEIA_RU: the closed place tapped last, so a second tap goes there after all
 function leiaArm(on){
   if (on && !tutAllow('waypoint')) return;
   if (on && S.draft.length && S.draft[S.draft.length - 1].port){ toast(t('ends_port')); return; }
   LEIA_ARM = on && canEditDraft(); if (LEIA_ARM) toast(S.lang === 'no' ? 'Autonav: trykk i kartet der du vil. Båten finner en trygg vei dit.' : 'Autonav: tap the chart where you want to go. The boat finds a safe way there.');
   panelDirty = true; renderPanel(); renderRouteTools();
 }
-async function leiaTo(pt){
+async function leiaTo(pt, buoy){   // buoy: to a set's buoy, to haul it (the rules are not asked)
   const b = S.boat; LEIA_ARM = false;
   if (!canEditDraft() || LEIA_BUSY) return;
   if (S.draft.length && S.draft[S.draft.length - 1].port){ toast(t('ends_port')); return; }
@@ -143,8 +143,17 @@ async function leiaTo(pt){
   if (!near && !nt && isLandUI(pt)){ toast(t('on_land')); return; }
   if (nt && (aPort === nt.port || (!aPort && dist(start, nt) < 1))){ draftEdit(() => S.draft.push({x:nt.x, y:nt.y, port:nt.port, berth:'naust', fish:0})); if (tab !== 'route') setTab('route'); routeChanged(); save(); return; }
   if (nt){ near = portById(nt.port); }
+  // R4: a place where the rules stop your boat fishing (the fjord lines by length, the baseline zones, closed fields): Autonav goes to
+  // the nearest place within 3 km where it may, and says why; the same place tapped again within a minute goes there after all
+  let goal = pt;
+  if (!near && !buoy && !tutOn() && RU.ok){ const c = ruCtx(), q = {p:pt, len:c.len, gear:c.gear, sp:c.sp, hand:c.hand}, rb = ruBlockMsg(q), L = (no, en) => S.lang === 'no' ? no : en;
+    const again = LEIA_RU && dist(LEIA_RU.p, pt) < 0.3 && Date.now() - LEIA_RU.t < 60000; LEIA_RU = null;
+    if (rb && !again){ const o = ruOpenNear(pt, q, 3);
+      if (o){ goal = o; LEIA_RU = {p:{x:pt.x, y:pt.y}, t:Date.now()}; const m = Math.round(dist(o, pt) * 1000 / 50) * 50;
+        toast(rb + L(' Autonav går til nærmeste sted der du kan fiske, ' + m + ' m unna. Trykk samme sted igjen for å gå helt dit.', ' Autonav goes to the nearest place where you may fish, ' + m + ' m away. Tap the same place again to go all the way.')); }
+      else toast(rb + L(' Du kan seile dit, men ikke fiske der.', ' You may sail there, but not fish there.')); } }
   const before = JSON.stringify(S.draft); LEIA_BUSY = true; panelDirty = true; renderPanel(); renderRouteTools();
-  let res; try { res = await leiaRoute({x:start.x, y:start.y}, near ? near.p : pt, aPort, near ? near.id : null); } finally { LEIA_BUSY = false; }
+  let res; try { res = await leiaRoute({x:start.x, y:start.y}, near ? near.p : goal, aPort, near ? near.id : null); } finally { LEIA_BUSY = false; }
   if (JSON.stringify(S.draft) !== before){ routeChanged(); return; }   // the route was changed while the way was being found
   if (res.why){ toast(S.lang === 'no' ? res.why[0] : res.why[1]); routeChanged(); return; }
   draftEdit(() => { res.wps.forEach((q, i) => { const last = i === res.wps.length - 1; S.draft.push(last && near ? {x:near.p.x, y:near.p.y, port:near.id, fish:0} : {x:q.x, y:q.y, port:null, fish:0, leia:true}); });

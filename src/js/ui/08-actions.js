@@ -6,8 +6,9 @@ function doAct(el){
   const act = el.dataset.act, i = +el.dataset.i, b = S.boat, L = (no, en) => S.lang === 'no' ? no : en;
   if (act === 'gset' || act === 'ghaul' || act === 'gstop') gearDoAct(act, el);
   // every change to the draft is a step in the route history (03b-route.js)
-  else if (act === 'gwp') draftEdit(() => gearDoAct(act, el));
-  else if (act === 'fp' || act === 'fm') draftEdit(() => { const w = S.draft[i]; if (w) w.fish = clamp((w.fish || 0) + (act === 'fp' ? 1 : -1), 0, 12); });
+  else if (act === 'gwp'){ draftEdit(() => gearDoAct(act, el)); const rb = ruWpMsg(S.draft[i]); if (rb) toast(rb); }
+  else if (act === 'fp' || act === 'fm'){ const w = S.draft[i], f0 = w ? w.fish || 0 : 0; draftEdit(() => { if (w) w.fish = clamp((w.fish || 0) + (act === 'fp' ? 1 : -1), 0, 12); });
+    if (w && !f0 && w.fish > 0){ const rb = ruWpMsg(w); if (rb) toast(rb + L(' Båten vil vente der uten å fiske.', ' The boat will wait there without fishing.')); } }
   else if (act === 'rm') draftEdit(() => S.draft.splice(i, 1));
   else if (act === 'undo') draftUndo();
   else if (act === 'redo') draftRedo();
@@ -15,6 +16,11 @@ function doAct(el){
   else if (act === 'start'){
     if (!S.draft.length || !['port', 'idle'].includes(b.status)) return;
     if (!tutAllow('start')) return;
+    if (!el.dataset.ruok && !tutOn()){ const bad = S.draft.map((w, k) => [k, ruWpMsg(w)]).filter(x => x[1]);
+      if (bad.length){ modal('<h3>' + L('Reglene stopper båten på ruta', 'The rules stop the boat on the route') + '</h3>' + bad.map(([k, m]) => '<p class="bad"><b>' + wpName(k + 1) + ':</b> ' + m + '</p>').join('') +
+        '<p class="note">' + L('Der venter båten uten å fiske eller sette redskap. Flytt punktet, eller kast loss likevel.', 'There the boat waits without fishing or setting gear. Move the point, or cast off anyway.') + '</p>' +
+        '<div class="btns"><button class="btn primary" data-close>' + L('Endre ruta', 'Change the route') + '</button><button class="btn" id="ruGo">' + L('Kast loss likevel', 'Cast off anyway') + '</button></div>');
+        $('ruGo').onclick = () => { $('modal').hidden = true; doAct({dataset:{act:'start', ruok:'1'}, disabled:false}); }; return; } }
     if (!meAboard() && !crewAboard().length){ toast(L('Båten har ikke mannskap. Uten deg om bord trenger den folk.', 'The boat has no crew. Without you aboard it needs hands.')); return; }
     const later = S.draftDep && S.draftDep > S.t ? S.draftDep : null;
     if (!later && b.status === 'port' && S.jobs && S.jobs.length){ toast(t('yard_busy', hm((jobsDone() || S.t) / 60))); return; }
@@ -78,11 +84,10 @@ function panelChange(e){
 }
 panel.addEventListener('input', panelInput);
 panel.addEventListener('change', panelChange);
-function sell(){
-  const b = S.boat, port = portById(b.port); if (!port || !port.mottak) return;
-  const H = S.t / 60, q = quotaState(), lines = {}, extra = [], acc = access(), kgOf = sp => S.hold.filter(x => x.sp === sp).reduce((a, x) => a + x.kg, 0);
-  let kg = 0;
-  const wk = weekOfH(H); if (q.ffW !== wk){ q.ffW = wk; q.ffTot = 0; q.ffCod = 0; }
+// what the sales organisation confiscates of the hold if it is landed now (cod beyond the fresh-fish allowance and the quota, bycatch
+// over its limits): the share of each species. Apart from sell() so the quay can show it before you land (R4); q is not changed
+function landConf(H, q, acc){
+  const kgOf = sp => S.hold.filter(x => x.sp === sp).reduce((a, x) => a + x.kg, 0), wk = weekOfH(H), ffTot = q.ffW === wk ? q.ffTot : 0, ffCod = q.ffW === wk ? q.ffCod : 0;
   // the fresh-fish allowance counts fish only (assumed: shellfish do not count)
   const saleKg = S.hold.reduce((a, x) => a + (SPECIES[x.sp].shell || (x.sp === 'hyse' && x.cls === 2) ? 0 : grade(x.fresh) === 'V' ? 0 : x.kg), 0);
   const codKg = kgOf('torsk'), confBy = {};   // share of each species that is confiscated
@@ -95,7 +100,7 @@ function sell(){
     if (codConf > 0.001) confBy.torsk = codConf / codKg;
   } else {
     // cod: the fresh-fish allowance first, then the quota; the rest is confiscated by the sales organisation
-    const pct = ffPct(H), ffAllow = pct ? Math.max(0, pct * (q.ffTot + saleKg) - q.ffCod) : 0;
+    const pct = ffPct(H), ffAllow = pct ? Math.max(0, pct * (ffTot + saleKg) - ffCod) : 0;
     codFF = Math.min(codKg, ffAllow); codQ = Math.min(codKg - codFF, codRoom(H)); codConf = codKg - codFF - codQ;
     if (codKg > 0 && codConf > 0) confBy.torsk = codConf / codKg;
     // the closed group's haddock and saithe: the maximum quota, then up to 30 % haddock and 20 % saithe as bycatch in each landing
@@ -103,6 +108,14 @@ function sell(){
     if (acc === 'lukket'){ const LQ = licQ(S.lic, H), all = holdTotal();
       for (const [sp, share] of [['hyse', 0.3], ['sei', 0.2]]){ const k = kgOf(sp), ok = Math.min(k, Math.max(LQ[sp][0] - q[sp], share * all)); if (k > 0 && ok < k - 0.01) confBy[sp] = 1 - Math.max(0, ok) / k; } }
   }
+  return {saleKg, codKg, confBy, codFF, codQ, codConf, byCod};
+}
+function sell(){
+  const b = S.boat, port = portById(b.port); if (!port || !port.mottak) return;
+  const H = S.t / 60, q = quotaState(), lines = {}, extra = [], acc = access(), kgOf = sp => S.hold.filter(x => x.sp === sp).reduce((a, x) => a + x.kg, 0);
+  let kg = 0;
+  const wk = weekOfH(H); if (q.ffW !== wk){ q.ffW = wk; q.ffTot = 0; q.ffCod = 0; }
+  const {saleKg, codKg, confBy, codFF, codQ, codConf, byCod} = landConf(H, q, acc);
   // The landing note lists each lot at its full value and takes what is confiscated off in rows of its own; every row is whole
   // kroner and the total is the sum of the rows, so the note adds up and the cash gets exactly the total less the crew's share.
   let confKr = 0, confKg = 0, crabKr = 0, ordKr = 0, crabSmall = 0, crabDead = 0;
@@ -260,7 +273,7 @@ function tick(){
   if (S.t !== CHN.t){ CHN.t = S.t; if (chartNight() !== CHN.v && document.body.classList.contains('vplot')) renderBase(); }
   const pnow = performance.now();
   if ((panelDirty || pnow - lastPanel > 1000) && !panelBusy()){ renderPanel(); lastPanel = pnow; panelDirty = false; }
-  if (now - lastSave > 5000){ save(); lastSave = now; if (streakTouch()) refreshAll(); }
+  if (now - lastSave > 5000){ save(); lastSave = now; if (streakTouch()) refreshAll(); ruTips(); }
 }
 // the yard hands over a new build in Finnsnes: in exchange for the vessel it was ordered against (once she is moored there), or as an
 // extra vessel for the fleet (vid null)

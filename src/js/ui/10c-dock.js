@@ -177,7 +177,7 @@ const DOCK = (() => {
     if (!['idle', 'port'].includes(b.status) || (S.plan && S.plan.depAt)){ toast(L('Båten er opptatt. Stopp det den holder på med først.', 'The boat is busy. Stop what it is doing first.')); return; }
     if (S.draft.length) draftEdit(() => { S.draft = []; });
     close(); openPlotter();
-    leiaTo(buoyStandoff(s, dist(b.pos, s.a) <= dist(b.pos, s.b) ? s.a : s.b));
+    leiaTo(buoyStandoff(s, dist(b.pos, s.a) <= dist(b.pos, s.b) ? s.a : s.b), true);
   }
   // «Fortøy»: the way in to the quay found as Autonav finds it, and off she goes, without the chart
   async function moorGo(mo){

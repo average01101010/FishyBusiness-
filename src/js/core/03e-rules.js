@@ -211,3 +211,35 @@ function ruLayerBlock(bx, by, q, budget){
   if (RU_LAYER.size > 400) RU_LAYER.delete(RU_LAYER.keys().next().value);
   RU_LAYER.set(key, A); return A;
 }
+// R4 (05.10.2026, Jonas: «Ja, kjør på»): a warning before the mistake, not after it. The question for a planned stop: a fishing point
+// asks for the jig (the boat jigs on its fishing hours), a point that sets gear asks for that gear
+function ruWpQ(w){ const c = ruCtx(), p = {x:w.x, y:w.y};
+  if (w.act && (w.act.op === 'set' || w.act.op === 'cycle') && w.act.kind){ const k = w.act.kind; return {p, len:c.len, gear:k === 'teine' ? 'teiner' : k, sp:k === 'teine' ? 'krabbe' : null, hand:c.hand}; }
+  return {p, len:c.len, gear:'juksa', sp:S.target === 'kveite' ? 'kveite' : null, hand:c.hand}; }
+// what stops the boat at a planned stop (null when it may fish or set there), kept per point, boat and day
+const RU_WP = new Map();
+function ruWpMsg(w){
+  if (!RU.ok || !w || w.port || !((w.fish || 0) > 0 || (w.act && (w.act.op === 'set' || w.act.op === 'cycle')))) return null;
+  const q = ruWpQ(w), k = [q.p.x.toFixed(3), q.p.y.toFixed(3), q.len, q.gear, q.sp, q.hand, S.lang, ruMD(S.t / 60)].join('|');
+  if (RU_WP.has(k)) return RU_WP.get(k);
+  const m = ruBlockMsg(q); if (RU_WP.size > 300) RU_WP.delete(RU_WP.keys().next().value); RU_WP.set(k, m); return m;
+}
+// the nearest place within maxKm where the question q is not stopped, at sea: rings out from p, sixteen ways round (null if none)
+function ruOpenNear(p, q, maxKm){
+  for (const r of [0.15, 0.3, 0.5, 0.75, 1, 1.5, 2, 3, 4, 5]){ if (r > maxKm) break; let best = null;
+    for (let i = 0; i < 16; i++){ const a = i * Math.PI / 8, c = {x:p.x + Math.sin(a) * r, y:p.y - Math.cos(a) * r};
+      if (isLandUI(c) || ruBlockMsg({...q, p:c})) continue; best = c; break; }
+    if (best) return best; }
+  return null;
+}
+// the first time a rule concerns your boat at sea, a tip about it: a message in the phone with the whole text and where it comes from,
+// and a short word on the screen (S.ruSeen keeps the ones told; not in «Første tur», which has enough to say)
+function ruTips(){
+  if (!RU.ok || (typeof tutOn === 'function' && tutOn())) return;
+  const b = S.boat; if (!['sailing', 'fishing', 'idle'].includes(b.status) || b.port) return;
+  const seen = S.ruSeen || (S.ruSeen = {}), r = ruNow(), it = r.items.find(i => (i.v === 'no' || i.v === 'warn') && seen[i.k] == null); if (!it) return;
+  seen[it.k] = S.t || 1;
+  msg('Regler', it.no + ' (' + it.ref + ') Regler-appen viser hva som gjelder der du er, og regellaget i kartplotteren viser det på kartet.',
+    it.en + ' (' + it.ref + ') The Regler app shows what applies where you are, and the rule layer in the chart plotter shows it on the chart.');
+  if (typeof toast === 'function') toast(gL('Ny regel her: ', 'A new rule here: ') + ruShort(it) + gL('. Se meldingen i telefonen.', '. See the message in the phone.'));
+}

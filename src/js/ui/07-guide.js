@@ -70,7 +70,7 @@ function panelRoute(){
     const gch = w.port ? '' : '<button class="gchip' + (w.act ? ' on' : '') + '" data-act="gwp" data-i="' + i + '">' + wpActLabel(w.act) + '</button>';
     return '<li class="wpc' + (w.auto ? ' auto' : '') + '" data-i="' + i + '"><div class="wh"><span class="n' + (wpStop(w) && !w.port ? ' f' : '') + '">' + wpName(i + 1) + '</span><span class="lbl">' + lbl + (w.auto ? '<small>' + wpTag(w) + '</small>' : w.port ? '' : '') + '</span><button class="x" data-act="rm" data-i="' + i + '" aria-label="×">×</button></div>' +
       '<div class="wg"><span>' + L('Kurs ', 'Course ') + '<b>' + deg3s(lg.crs) + '</b></span><span><b>' + fmt(lg.nm, lg.nm < 10 ? 2 : 1) + '</b> nm</span><span>ETA <b>' + when(lg.arrive) + '</b></span></div>' +
-      (w.port ? '' : '<div class="wf">' + ctl + gch + '</div>') + '</li>';
+      (w.port ? '' : '<div class="wf">' + ctl + gch + '</div>') + ((rb => rb ? '<p class="bad wrule">✕ ' + rb + '</p>' : '')(ruWpMsg(w))) + '</li>';
   }).join('') + '</ul>');
   const e = estimate();
   h.push('<div class="range"><input type="range" min="2" max="' + BOAT.vmax + '" step="1" value="' + Math.min(S.draftSpeed, BOAT.vmax) + '" id="spd" aria-label="' + t('speed') + '"><output id="spdOut">' + S.draftSpeed + ' kn, ' + t('lpnm', fmt(fuelLph(S.draftSpeed, windAt(S.t / 60)) / S.draftSpeed, 2)) + '</output></div>');
@@ -297,6 +297,20 @@ function portSlip(){
   return h.join('');
 }
 // the market's landing page: land the catch, what is in the hold, and the landing note afterwards
+// R4: what the sales organisation will confiscate if the hold is landed here now (08-actions.js landConf), said before «Lever»
+function landWarn(p){
+  if (!S.hold.length) return '';
+  const H = S.t / 60, acc = access(), C = landConf(H, quotaState(), acc), LN = (no, en) => S.lang === 'no' ? no : en;
+  let kg = 0, sum = 0;
+  for (const x of S.hold){ const cs = C.confBy[x.sp] || 0; if (!cs) continue; const c = x.cls != null ? x.cls : SPECIES[x.sp].ref, g = grade(x.fresh);
+    kg += x.kg * cs; sum += x.kg * cs * (g === 'V' ? 1 : clsPrice(p, x.sp, c, H, x.hook) * GM[g]); }
+  if (kg < 0.5) return '';
+  const why = acc === 'none' ? LN('Båten har ikke adgang til å fiske torsk, hyse og sei, så bare 10 % av landingen kan være bifangst.', 'The vessel has no access to fish cod, haddock and saithe, so only 10% of the landing may be bycatch.')
+    : C.codConf > 0.5 ? LN('Du har ikke torskekvote igjen for ' + fmt(C.codConf, 0) + ' kg av torsken.', 'You have no cod quota left for ' + fmt(C.codConf, 0) + ' kg of the cod.')
+    : LN('Maksimalkvoten for hyse eller sei er fisket, så bare 30 % hyse og 20 % sei kan være bifangst.', 'The maximum quota for haddock or saithe is fished, so only 30% haddock and 20% saithe may be bycatch.');
+  return '<p class="bad landwarn">' + LN('Leverer du nå, blir ca. ' + fmt(kg, 0) + ' kg inndratt, verdi ca. ' + kr(Math.round(sum)) + '. ', 'If you land now, about ' + fmt(kg, 0) + ' kg is confiscated, worth about ' + kr(Math.round(sum)) + '. ') + why +
+    LN(' Se Kvote-appen.', ' See the Kvote app.') + '</p>';
+}
 function landPage(){
   const b = S.boat, h = [], LN = (no, en) => S.lang === 'no' ? no : en;
   if (b.status !== 'port') return '<p class="note">' + t('not_port') + '</p>';
@@ -305,7 +319,7 @@ function landPage(){
   else if (b.shift || b.fueling) h.push('<p class="note">' + quayText(false) + '</p>');
   else if (!p.mottak) h.push('<p class="note">' + t('no_mottak') + '</p>');
   else if (tutOn() && p.id !== tutLand()) h.push('<p class="note">' + LN('På første tur leverer du i ' + tutLandN() + '.', 'On the first trip you land in ' + tutLandN() + '.') + '</p>');
-  else if (tot > 0.5) h.push('<div class="btns">' + (mottakOpen(S.t / 60) ? '<button class="btn primary" data-act="sell">' + t('sell', fmt(tot, 0)) + '</button>' : mottakShut()) + '</div>');
+  else if (tot > 0.5) h.push(landWarn(p) + '<div class="btns">' + (mottakOpen(S.t / 60) ? '<button class="btn primary" data-act="sell">' + t('sell', fmt(tot, 0)) + '</button>' : mottakShut()) + '</div>');
   h.push('<h3>' + LN('Lasterom', 'Hold') + '</h3>' + panelHold());
   h.push(portSlip());
   return h.join('');

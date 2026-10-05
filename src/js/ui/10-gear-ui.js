@@ -84,7 +84,7 @@ function buoyStandoff(s, e){
 function gearTap(hit){
   const b = S.boat, s = hit.s;
   // with Autonav the way goes to a point just off the buoy, where «Ta opp» can haul it
-  if (LEIA_ARM && s.vid === S.cur && !s.lost){ leiaTo(buoyStandoff(s, hit.e)); return; }
+  if (LEIA_ARM && s.vid === S.cur && !s.lost){ leiaTo(buoyStandoff(s, hit.e), true); return; }
   if (s.vid === S.cur && !s.lost && ['port', 'idle'].includes(b.status)){
     addWaypoint(hit.e); const w = S.draft[S.draft.length - 1];
     if (w && !w.port && dist(w, hit.e) < 0.01){ w.act = {op:'haul', sid:s.id, kind:s.kind}; toast(GL('Trekk av ' + GEAR[s.kind].no.toLowerCase() + ' er lagt i ruta.', 'Hauling the ' + GEAR[s.kind].en.toLowerCase() + ' is in the route.')); panelDirty = true; }

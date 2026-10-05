@@ -2386,6 +2386,21 @@ Jonas: «mange som skal spille dette har kanskje ikke så mye erfaring med fiske
   - Laget tegnes mykt over sjøen, med fjordlinjene skarpt oppå.
   - Det slås av og på under innstillingene til kartplotteren («Regellag på / Av»). Standard er på.
 
+### 5.29b Varsel før feil (R4 av regelplanen, 05.10.2026)
+
+Jonas: «Ja, kjør på». Spillet sier fra før du gjør feil, ikke bare etterpå.
+
+- **Ruta:** et punkt med fisketid, eller med redskap som skal settes, der reglene stopper båten, får en rød linje med grunnen (`ruWpMsg`, holdt per punkt, båt og dag i `RU_WP`).
+  - Fisketid spør om juksa, slik båten fisker på fiskeøktene. Redskap spør om det redskapet.
+  - Første gang du gir et slikt punkt fisketid eller redskap, kommer grunnen også som en melding på skjermen.
+- **«Kast loss»** med et slikt punkt på ruta spør først: «Reglene stopper båten på ruta», med punktene og grunnene. «Endre ruta» lukker, og «Kast loss likevel» kaster loss. Der venter båten uten å fiske, som før. Ikke i «Første tur».
+- **Autonav:** et trykk der reglene stopper båten fra å fiske med redskapet hun er rigget med, går til nærmeste sted innen 3 km der hun kan (`ruOpenNear`: ringer ut fra stedet, 16 retninger, ikke på land). Meldingen sier hvorfor og hvor langt. Trykker du samme sted igjen innen ett minutt, går Autonav helt dit (`LEIA_RU`). Finnes det ikke noe sted innen 3 km, går ruta dit du trykket, med beskjed om at du kan seile dit, men ikke fiske der.
+  - Havner og naustet spørres ikke. Autonav til en blåse for å trekke (`leiaTo(p, true)`) spør heller ikke.
+- **Kaia før «Lever»:** sier hvor mye som blir inndratt hvis du leverer nå, verdien, og hvorfor: ingen adgang (10 % bifangst), ingen torskekvote igjen, eller maksimalkvoten for hyse eller sei fisket i lukket gruppe (`landWarn` i `07-guide.js`).
+  - Utregningen er skilt ut av `sell` i `landConf` (`08-actions.js`), så kaia og sluttseddelen regner likt. `landConf` endrer ikke kvotetallene.
+- **Tips første gang:** første gang en regel med ✕ eller ! gjelder båten på sjøen, kommer en melding i telefonen fra «Regler» med hele teksten og kilden, og en kort beskjed på skjermen (`ruTips`, hvert femte sekund sammen med lagringen). Hver regel én gang (`S.ruSeen`), ett tips om gangen. Ikke i «Første tur».
+- **Test:** `r4test` (16 m båt i Malangen: punktet i ruta, spørsmålet ved «Kast loss», Autonav til nærmeste lovlige sted og helt dit ved andre trykk, kaia før levering og sluttseddelen etter, og tipsene).
+
 ### 5.27 Forslagslista 04.10.2026 (natta til 05.10)
 
 Jonas' liste: oppgraderinger, kvotehandel, kikkert, raskere fangst, fortøying, snurring ved siste veipunkt, stanga ut, drivstoffpriser, jukse-spill, nattmodus, salg for ekte penger, Blender-modeller, åpningstider, flytrafikk, ny haill og agn. Svarene hans: håndjuksa omtrent dobbelt så rask, luksushaill +200 % (kan justeres ned), motoroppgraderinger på verftet og speed-boost i en egen telefonapp for ekte penger.
