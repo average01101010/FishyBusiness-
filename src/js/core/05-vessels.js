@@ -218,6 +218,8 @@ function step(){
   if (S.t % 60 === 0) for (const pid in S.market) for (const sp in S.market[pid]) S.market[pid][sp] *= 0.97;
   if (S.t % 60 === 0 && S.stock) stockHour(H);
   if (S.t % 60 === 0) gearHour(H);
+  if (S.t % 60 === 0) seasonDay(H);   // the seasons' news and the skrei festival (09c-seasons.js)
+  folkPort(H);                        // Edvard on the quay in the home harbour (09d-folk.js)
   eachVessel(() => vesselStep(H));
 }
 // one vessel's minute: the catch keeps, the yard works, plans start, and the boat sails or fishes
@@ -395,6 +397,7 @@ function endFishing(why){
 // until someone guts and ices it
 function addCatch(sp, kg, cls, hook, opt){
   if (cls == null) cls = SPECIES[sp].ref;
+  festCatch(sp, kg);   // the skrei festival's biggest cod (09c-seasons.js)
   const bled = true, iced = false, gut = false, hr = Math.floor(S.t / 60), start = opt && opt.fresh != null ? opt.fresh : 100; hook = hook !== false;
   let x = S.hold.find(h => h.sp === sp && h.cls === cls && h.bled === bled && h.iced === iced && h.hr === hr && !!h.gut === gut && h.hook === hook);
   if (!x){ x = {sp, cls, kg:0, n:0, bled, iced, hr, fresh:start, gut, hook}; S.hold.push(x); }

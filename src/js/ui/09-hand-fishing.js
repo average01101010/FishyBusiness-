@@ -26,7 +26,7 @@ window.PUBW = (() => {
     // after a reload the round is already decided: show what came of it
     if (!msg && !spinning && S.pubLast && S.pubLast.e === pubEvening(H) && S.pubE === S.pubLast.e) msg = S.pubLast.m;
     el.innerHTML = '<div class="pubbox"><h3>🍺 ' + L('Puben i ', 'The pub in ') + (portById(S.boat.port) || {}).name + '</h3>' + wheel +
-      '<p class="pubmsg">' + (msg || L('Spander en runde og hør hva folk har å si. Kanskje går du hjem med haill.', 'Buy a round and hear what people say. Maybe you go home with some luck.')) + '</p>' +
+      '<p class="pubmsg">' + (msg || ((t => t ? L(t[0], t[1]) + ' ' : '')(seasonTalk(H)) + L('Spander en runde og hør hva folk har å si. Kanskje går du hjem med haill.', 'Buy a round and hear what people say. Maybe you go home with some luck.'))) + '</p>' +
       '<div class="pubbtns"><button class="pri" data-p="spin"' + (can && !spinning ? '' : ' disabled') + '>' + L('Spander en runde', 'Buy a round') + ' · ' + kr(PUB_COST) + '</button><button data-p="close">' + L('Gå hjem', 'Go home') + '</button></div>' +
       (!can && !spinning && why(H) ? '<p class="pubwhy">' + why(H) + '</p>' : '') + '<p class="pubodds">' + odds() + '</p></div>';
   }

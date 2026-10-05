@@ -324,7 +324,7 @@ function buyIce(kg, free){
 // ---------- the tackle shop on the quay, in every harbour: hand jig, ice and halibut gear ----------
 // Where there is no plant (Finnsnes) the shop sells bagged ice and carries it aboard; elsewhere the ice comes down the plant's chute.
 // PRICE.iceBag is our assumption: dearer than chute ice, not checked against a price list.
-const shopIceKr = () => { const pt = portById(S.boat.port); return pt && pt.ice ? PRICE.ice : PRICE.iceBag; };
+const shopIceKr = () => { const pt = portById(S.boat.port); return pt && pt.ice ? PRICE.ice : PRICE.iceBag * folkIce(); };
 const shopIceRoom = () => Math.max(0, Math.round(BOAT.iceCap - S.boat.ice));
 // buys one thing; returns null, or why not as [no, en]. free: the first-trip tutorial hands it out
 function shopBuy(k, kg, free){
@@ -336,7 +336,7 @@ function shopBuy(k, kg, free){
     if (c > S.cash) return ['Du har ikke nok penger.', 'Not enough money.'];
     if (k === 'jig'){ b.gear = true; pay(c); log('Kjøpte håndjuksa med pilk og markkroker for ' + kr(c) + '.', 'Bought a hand jig with pilk and fly hooks for ' + kr(c) + '.'); }
     else { b.kgear = true; pay(c); log('Kjøpte kveiteutstyr for ' + kr(c) + ': stor pilk, kraftig snøre og gaff.', 'Bought halibut gear for ' + kr(c) + ': big pilk, heavy line and gaff.'); }
-    return null;
+    if (c > 0) folkShop(); return null;
   }
   if (k === 'ice'){
     kg = Math.round(Math.min(kg, shopIceRoom())); if (kg < 1) return ['Iskassa er full.', 'The ice box is full.'];
@@ -347,7 +347,7 @@ function shopBuy(k, kg, free){
     }
     b.ice += kg; pay(c);
     log('Kjøpte ' + kg + ' kg is i sekker for ' + kr(c) + '. Butikken bar den om bord.', 'Bought ' + kg + ' kg of bagged ice for ' + kr(c) + '. The shop carried it aboard.');
-    return null;
+    if (c > 0) folkShop(); return null;
   }
   return ['Ukjent vare.', 'Unknown item.'];
 }

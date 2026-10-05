@@ -1869,6 +1869,52 @@ Jonas valgte dem fra lista over det som får folk til å spille videre (nr. 2 og
 
 **Usikkert:** tallene for hvor ofte storfisken kommer og hvor vanskelig kampen er, er ikke prøvd av en spiller ennå.
 
+### 5.25e Sesongene som hendelser, og folk på kaia (05.10.2026)
+
+Jonas valgte dem fra lista (nr. 5 og 7).
+
+**Sesongene** (`core/09c-seasons.js`):
+- Hver sesong (`SEASON_EV`) begynner på sin egen dag hvert år, i et vindu av noen dager. Dagen er den samme for alle (`seasonDoy`, fra `h2`):
+  - Skreien kommer (rundt 20. januar).
+  - Høysesong på feltene (rundt 1. mars).
+  - Skreien drar (rundt 10. april).
+  - Loddetorsk i Finnmark (rundt 25. april).
+  - Seisommer (rundt 10. juni).
+  - Høsthyse (rundt 5. september).
+  - Sild og hval i fjordene (rundt 10. november).
+  - Julefiske (15. desember).
+- Hver sesong har tre kanaler:
+  - Kystradio over VHF: en melding på dagen, fra `seasonDay`, som går hver time.
+  - Kystposten (`seasonNews` i `newsForDay`).
+  - Praten på puben (`seasonTalk`).
+- Regelverkets egne datoer står også i kalenderen (`SEASON_FIXED`). Nyhetene om dem ligger fortsatt i `06-services.js`.
+- **Skreifestivalen:** andre helg i mars, fra lørdag 00 til søndag 18.
+  - Største torsk som noen av båtene dine lander (`festCatch` i `addCatch`), mot sju skippere fra kysten (`festField`).
+  - Premiene er 15 000, 7 500 og 3 000 kr, og resultatet kommer søndag kveld.
+  - En drømmeskrei vinner nesten alltid.
+- Telefonappen Sesong (`ui/06d-season-folk.js`) viser:
+  - sesongen nå
+  - festivaltavla fra en uke før til tre dager etter
+  - det som kommer
+  - en fiskekalender med 7 arter × 12 måneder, laget av `SPECIES[sp].av` (skrei lagt til for torsk)
+
+**Folk på kaia** (`core/09d-folk.js`):
+- **Edvard**, som kjente far, hilser i hjemhavna én gang om dagen mellom 08 og 20 (`folkPort` i `step`). Første gang sier han hvem han er. Siden snakker han om:
+  - far og været, uten å gjenta seg på fem dager
+  - veien til et méd du ikke har funnet (40 % av dagene)
+  - storfisken du fikk
+- **Mottakssjefen** (et navn per mottak, `folkPlantName`) teller det du lander der (`folkSold` i `sell`).
+  - Etter 2, 10 og 30 tonn er du fast leverandør. Mottaket betaler da 1, 2 og 3 % mer på markedsprisen (`folkPf` i `clsPrice`).
+  - Minsteprisen endres ikke.
+- **Solveig i butikken** teller kjøp med pris (`folkShop`):
+  - etter 5 kjøp er kaffen gratis (bare tekst)
+  - fra 15 kjøp er sekkeisen 10 % billigere (`folkIce` i `shopIceKr`)
+- Telefonappen Folk viser dem, hvor langt det er til neste trinn, og hva Edvard sa sist.
+
+**Oppdrag langs kysten:** mottakene langs kysten er også kunder (`CUSTOMERS`, lagt til i `06b-coastports.js` med de tre artene de tar imot mest av). `custNear` gir bestillinger fra kunder innen 60 km fra hjemhavna eller 40 km fra båten. Med Senja som hjem gjelder Senjas egne kunder som før. Omdømmekortet viser bare kundene i nærheten og dem du har handlet med.
+
+**Usikkert:** prosentene for faste leverandører er et anslag. Mottakene gir ofte bonus eller bedre vilkår til faste leverandører, men tallene er ikke sjekket mot noen avtale. Premiene i festivalen er satt av oss.
+
 ### 5.26 Måker og halere fra Blender (03.10.2026)
 
 - **Måkene** (`tools/wild/maake.py`, `src/data/gull.b64`):

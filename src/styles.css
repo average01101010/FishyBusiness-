@@ -741,3 +741,13 @@ body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 2
 @media (max-height:520px){#dreamUI{bottom:8px;padding:10px 12px;gap:4px} #dreamUI .dr-btn{width:80px;height:80px;margin-top:4px} #dreamUI .dr-sub{min-height:0}}
 #dreamUI .dr-btn.on{background:#2c7fb3;transform:scale(.94)}
 .nb-story{font-size:18px;color:#5a3b1c;margin-top:4px;padding-left:8px;border-left:2px solid #cdbb94}
+/* the Sesong and Folk apps (ui/06d-season-folk.js) */
+.sn-now{border-left:4px solid #1e8c6e} .sn-now small{font:700 11px var(--sans);text-transform:uppercase;letter-spacing:.06em;color:#1e8c6e}
+.sn-fest{border-left:4px solid #c9a227}
+.sn-grid{display:grid;grid-template-columns:minmax(64px,auto) repeat(12,1fr);gap:3px;align-items:center;font-size:11px;margin-top:6px}
+.sn-grid .sn-m{text-align:center;color:var(--mut,#6b7680)} .sn-grid .sn-m.on{color:inherit;font-weight:800}
+.sn-grid .sn-sp{font-size:12px;white-space:nowrap;padding-right:4px}
+.sn-grid i{display:block;height:18px;border-radius:3px} .sn-grid i.on{outline:2px solid currentColor;outline-offset:-1px}
+.fk-h{display:flex;gap:10px;align-items:center;margin-bottom:6px} .fk-h h4{margin:0} .fk-h small{color:var(--mut,#6b7680)}
+.fk-av{flex:0 0 38px;height:38px;border-radius:50%;display:grid;place-items:center;font:700 17px var(--serif);color:#fff;background:#6b4a2b} .fk-av.p{background:#1e8c6e} .fk-av.s{background:#2f7fd0}
+.fk-q{font:italic 14px/1.45 var(--serif);margin:6px 0 2px}

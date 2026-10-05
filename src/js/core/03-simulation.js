@@ -418,7 +418,7 @@ function marketPrice(sp, H){ return seasonal(SPECIES[sp].pm, H) * (1 + weekDev(s
 function clsPrice(port, sp, c, H, hook){
   const s = SPECIES[sp], cl = s.cls[c], ref = s.cls[s.ref];
   const sat = (S && S.market && S.market[port.id] && S.market[port.id][sp]) || 0;
-  const mk = marketPrice(sp, H) * port.pf * supplyFactor(H) * (cl[1] / ref[1]) * Math.max(0.9, 1 - sat / 40000);
+  const mk = marketPrice(sp, H) * port.pf * folkPf(port.id) * supplyFactor(H) * (cl[1] / ref[1]) * Math.max(0.9, 1 - sat / 40000);
   return Math.round(Math.max(cl[1] * (hook !== false && cl[3] ? cl[3] : 1), mk) * 100) / 100;
 }
 function price(port, sp, H){ return clsPrice(port, sp, SPECIES[sp].ref, H, true); }
@@ -637,6 +637,13 @@ const CUSTOMERS = [
 const QN = {E:{no:'Ekstra', en:'Extra'}, A:{no:'A eller bedre', en:'A or better'}, B:{no:'B eller bedre', en:'B or better'}};
 function gradeOk(g, q){ return q === 'E' ? g === 'E' : q === 'A' ? (g === 'E' || g === 'A') : (g === 'E' || g === 'A' || g === 'B'); }
 function ordState(){ return S.orders || (S.orders = {offers:[], active:[], done:[], seq:0}); }
+// the customers that post orders to you: those within 60 km of the home harbour or 40 km of the boat (a start along the coast,
+// 05.10.2026: the coast's plants are customers too, 06b-coastports.js); from Senja, all of Senja's own as before
+function custNear(c){
+  const q = portById(c.port), home = portById(S.home || 'finnsnes'); if (!q) return false;
+  if (!c.coastal && !(home && home.coastal)) return true;
+  return (home && dist(q.p, home.p) < 60) || dist(q.p, S.boat.pos) < 40;
+}
 function repOf(id){ return (S.rep && S.rep[id] != null) ? S.rep[id] : 50; }
 function spCatchable(sp, H){ if (sp === 'kveite' && kveiteClosed(H)) return false; if (sp === 'uer' && !uerOpen(H)) return false; if (sp === 'kveite' && !S.boat.kgear) return false;
   const s = SPECIES[sp]; let a = seasonal(s.av, H); if (sp === 'torsk') a += seasonal(s.skrei, H); return a >= 0.6; }
@@ -652,7 +659,7 @@ function ordersTick(H){
   if (gDate(H).getUTCHours() !== 6 || O.offers.length >= 3) return;
   const n = 1 + (h2(Math.floor(H / 24), 1301) < 0.4 ? 1 : 0);
   for (let k = 0; k < n && O.offers.length < 3; k++){
-    const pool = CUSTOMERS.map(c => ({c, w:(0.5 + repOf(c.id) / 100) * (c.sp.some(sp => spCatchable(sp, H)) ? 1 : 0)})).filter(x => x.w > 0); if (!pool.length) return;
+    const pool = CUSTOMERS.filter(custNear).map(c => ({c, w:(0.5 + repOf(c.id) / 100) * (c.sp.some(sp => spCatchable(sp, H)) ? 1 : 0)})).filter(x => x.w > 0); if (!pool.length) return;
     let r = Math.random() * pool.reduce((a, x) => a + x.w, 0), c = pool[0].c; for (const x of pool){ r -= x.w; if (r <= 0){ c = x.c; break; } }
     const sps = c.sp.filter(sp => spCatchable(sp, H) && (sp !== 'torsk' || codRoom(H) > 150)); if (!sps.length) continue;
     const sp = sps[Math.floor(Math.random() * sps.length)], cap = capHold();
