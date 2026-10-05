@@ -369,6 +369,9 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p16', '05.10.2026', 'Kaia på Finnsnes', 'The quay at Finnsnes', [
+      ['Båten lå inne i et bygg ved kaia på Finnsnes. Bygg på kaidekket og over liggeplassen er borte, så du ser båten og kaia når du starter.', 'The boat lay inside a building at the Finnsnes quay. Buildings on the quay deck and over the berth are gone, so you see the boat and the quay when you start.'],
+      ['Snøen er stille. Før suste den som hvit støy.', 'Snow is silent. It used to hiss like white noise.']]],
     ['p15', '05.10.2026', 'Det Store Blå', 'Det Store Blå', [
       ['Spillet heter nå Det Store Blå. Lagringen din er den samme.', 'The game is now called Det Store Blå. Your save is the same.'],
       ['Ny logo og nye app-ikoner, laget i Blender: sjarken i blåtimen under tindene på Senja.', 'A new logo and new app icons, made in Blender: the sjark at the blue hour under the peaks of Senja.'],

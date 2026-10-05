@@ -917,8 +917,16 @@ const G3 = (() => {
     }
     return B;
   }
+  // the quays in QUAYS without a harbour unit (Finnsnes, Frovåg): a mapped building on the deck or out over the berth goes, so the boat
+  // does not lie inside it (Jonas 05.10.2026); the strip runs 8 m past the face's ends, from 8 m behind the deck out to 30 m over the water
+  let QSTRIP = null;
+  function onQuayStrip(x, z){
+    if (!QSTRIP) QSTRIP = Object.keys(QUAYS).flatMap(pid => UNITS[pid] ? [] : Object.keys(QUAYS[pid]).map(k => quayFace(pid, k))).filter(Boolean);
+    for (const f of QSTRIP){ const dx = x - f.x, dz = z - f.z, u = dx * f.ux + dz * f.uz, v = dx * f.nx + dz * f.nz; if (Math.abs(u) <= f.hl + 8 && v >= -(f.depth + 8) && v <= 30) return true; }
+    return false;
+  }
   function bldOnUnit(B, i){ const ca = Math.cos(B.a[i]), sa = Math.sin(B.a[i]), nu = Math.ceil(B.l[i] / 3), nv = Math.ceil(B.w[i] / 3);
-    for (let p = 0; p <= nu; p++) for (let q = 0; q <= nv; q++){ const u = p / nu - 0.5, v = q / nv - 0.5; if (onUnit(B.x[i] + ca * u * B.l[i] - sa * v * B.w[i], B.z[i] + sa * u * B.l[i] + ca * v * B.w[i], 3)) return true; } return false; }
+    for (let p = 0; p <= nu; p++) for (let q = 0; q <= nv; q++){ const u = p / nu - 0.5, v = q / nv - 0.5; if (onQuayStrip(B.x[i] + ca * u * B.l[i] - sa * v * B.w[i], B.z[i] + sa * u * B.l[i] + ca * v * B.w[i])) return true; if (onUnit(B.x[i] + ca * u * B.l[i] - sa * v * B.w[i], B.z[i] + sa * u * B.l[i] + ca * v * B.w[i], 3)) return true; } return false; }
   const PAL_HOUSE = [[0.9,0.9,0.87],[0.9,0.9,0.87],[0.62,0.18,0.14],[0.87,0.72,0.35],[0.78,0.52,0.25],[0.72,0.74,0.73],[0.6,0.7,0.78],[0.55,0.62,0.52],[0.9,0.9,0.87]];
   const PAL_CABIN = [[0.33,0.25,0.19],[0.55,0.17,0.13],[0.36,0.3,0.24],[0.78,0.52,0.25],[0.2,0.18,0.16]];
   const PAL_NAUST = [[0.62,0.17,0.13],[0.58,0.16,0.12],[0.55,0.34,0.2],[0.3,0.23,0.18],[0.88,0.88,0.85]];
