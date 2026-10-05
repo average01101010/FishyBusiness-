@@ -2268,7 +2268,7 @@ Jonas: «hele spillet skal være free-to-play, men med betalte boostere i form a
 
   Prisen som trekkes, står i databasen. Spillet viser sine egne (`HAILL`, `BOOSTS`, `YARD_NOW_NOK`), så de må stemme overens.
 - **Kjøpet** (`ui/10i-shop.js`):
-  1. Kjøpsknappen går rett til betalingen, uten noe vindu imellom (`shopBuy`, `shopGo`).
+  1. Kjøpsknappen går rett til betalingen, uten noe vindu imellom (`payBuy`, `shopGo`, ikke `shopBuy`, som er butikken på kaia).
   2. Edge Function `shop-checkout` henter varen med spillerens egen innlogging (`shop_quote`), lager en Stripe Checkout-side i NOK med prisen inkludert MVA og skatteklassen `txcd_10201001`, og skriver kjøpet som åpent (`purchases`, med båten i `data`).
   3. Stripe sender spilleren tilbake med `?kjop=<økt>`.
 - **Bokføringen** (Edge Function `stripe-webhook`, signaturen sjekkes først):

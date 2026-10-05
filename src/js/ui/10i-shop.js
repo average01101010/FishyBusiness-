@@ -31,7 +31,7 @@ function shopWhat(k){
 // a buy button: at once in a test, straight to Stripe when the shop is live (Jonas 05.10.2026: «Gjør dette på en intuitiv måte som tar
 // fokuset bort fra handlingen, vi må tenke salg salg salg»): no dialog in between. The consent to delivery at once is the line under
 // the button (shopFine) and the same words by Stripe's pay button (shop-checkout custom_text)
-function shopBuy(k, give){
+function payBuy(k, give){
   const m = shopMode();
   if (m === 'test'){ give(); return; }
   if (m === 'off'){ toast(shopL('Butikken åpner snart.', 'The shop opens soon.')); return; }
