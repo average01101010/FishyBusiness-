@@ -1,30 +1,36 @@
 // ---------- the heat map on the chart plotter (cells: core/12-heat.js) ----------
 // A canvas between the depth chart (#chartcv) and the vector chart (svg#map): land, coast, contours, names, route and boat lie
 // crisply on top, so the heat never covers land. Only the fish shows (the user's wish 02.10.2026): no disk or ring for the range,
-// and the colours run from clear where there is next to no fish through light turquoise and blue to purple where it is densest,
+// and the colours run from clear where there is next to no fish (the chart's white) through blue and green to red where it is densest,
 // on a log scale (the simple sounder shows four steps), over the afterglow of what the boat has passed. The player never sees a
 // number for the fish: the map shows where it is dense, not how much a boat would take. Nothing here runs at load except making
 // the canvas, and other files call heatPaint() only through window.heatReady, so the `let`s below are always set up first.
 const heatCv = document.createElement('canvas'); heatCv.id = 'heatcv'; svg.parentNode.insertBefore(heatCv, svg);
 const HEATPAL = (() => {
   // 256 colours: index 0 is under 3 kg/h (nothing), then a log ramp from 4.5 to 150 kg/h (HEAT_TOP)
-  // clear, then light turquoise, blue and purple (the user's wishes 02.10.2026): the hue tells the amounts apart, and the colour is
-  // solid from about 40 kg/h, so how much stands there reads at a glance
-  const stops = [[0, [150, 236, 226]], [0.28, [52, 200, 210]], [0.52, [38, 120, 222]], [0.76, [96, 44, 196]], [1, [62, 0, 118]]], out = new Uint8ClampedArray(256 * 4);
+  // five steps as an echo sounder (Jonas 05.10.2026: «hvit, blått, grønt, gult, rødt», and «første trinn må være hvit, eller så blir
+  // hele ekkoloddringen farget»): clear under 10 kg/h, so the chart's white shows, then blue, green, yellow and red from the steps in
+  // HEAT_STEPS; the better sounders blend between them, the simple one shows the steps as they are
+  const T0 = Math.log(10 / 4.5) / Math.log(150 / 4.5);   // where 10 kg/h, the first step (HEAT_STEPS, set below), sits on the scale
+  // each colour pure where its step begins (10, 20, 40 and 80 kg/h sit at 0.23, 0.43, 0.62 and 0.82 on the scale)
+  const stops = [[0.26, [38, 104, 232]], [0.43, [22, 178, 70]], [0.63, [244, 204, 28]], [0.83, [214, 22, 30]], [1, [170, 10, 22]]], out = new Uint8ClampedArray(256 * 4);
   for (let i = 1; i < 256; i++){
     const t = (i - 1) / 254, k = i * 4; let j = 0; while (j < stops.length - 2 && t > stops[j + 1][0]) j++;
-    const [ta, a] = stops[j], [tb, c] = stops[j + 1], u = (t - ta) / (tb - ta);
+    const [ta, a] = stops[j], [tb, c] = stops[j + 1], u = Math.min(1, Math.max(0, (t - ta) / (tb - ta)));
     for (let q = 0; q < 3; q++) out[k + q] = a[q] + (c[q] - a[q]) * u;
-    out[k + 3] = 255 * Math.pow(Math.min(1, Math.max(0, (t - 0.06) / 0.56)), 1.15);   // thin fish stays clear, so the schools stand out
+    out[k + 3] = 255 * Math.min(1, Math.max(0, (t - T0 + 0.02) / 0.06));   // white under the first step, a soft edge, then solid
   }
   out[7] = 0;   // the faintest trace: clear
   return out;
 })();
-const HEAT_TOP = 150, HEAT_STEPS = [4.5, 13.5, 30, 60];   // the scale's top, and the simple sounder's four steps (kg/h)
+// the scale's top, the steps (kg/h) where blue, green, yellow and red begin (under the first: white), and where on the colours each
+// step of the simple sounder sits
+const HEAT_TOP = 150, HEAT_STEPS = [10, 20, 40, 80], HEAT_STEP_POS = [0.27, 0.43, 0.63, 0.83];
 function heatIndex(v, steps){
   if (!(v >= 3)) return 0;
   if (v < 4.5) return 1;   // the faint edge of anything worth a look
-  if (steps){ let s = 0; for (let i = 0; i < HEAT_STEPS.length; i++) if (v >= HEAT_STEPS[i]) s = i; return 1 + Math.round(heatPos(HEAT_STEPS[s] * 1.25) * 254); }
+  // the simple sounder: white, blue, green, yellow and red (Jonas 05.10.2026)
+  if (steps){ if (v < HEAT_STEPS[0]) return 0; let s = 0; for (let i = 0; i < HEAT_STEPS.length; i++) if (v >= HEAT_STEPS[i]) s = i; return 1 + Math.round(HEAT_STEP_POS[s] * 254); }
   return 1 + Math.round(heatPos(v) * 254);
 }
 // the cells as one small picture, one pixel a cell, with the afterglow faded in its alpha; rebuilt when the cells, the species or
@@ -97,11 +103,13 @@ function heatReadout(){
 const heatPos = v => clamp(Math.log(v / 4.5) / Math.log(HEAT_TOP / 4.5), 0, 1);
 function heatBar(steps){
   const col = i => 'rgba(' + HEATPAL[i * 4] + ',' + HEATPAL[i * 4 + 1] + ',' + HEATPAL[i * 4 + 2] + ',' + (HEATPAL[i * 4 + 3] / 255).toFixed(2) + ')';
-  if (steps){ const st = HEAT_STEPS.map((v, i) => [heatPos(v), heatPos(HEAT_STEPS[i + 1] || HEAT_TOP), col(heatIndex(v, true))]); return 'linear-gradient(90deg,' + st.map(([a, c, k]) => k + ' ' + (a * 100).toFixed(1) + '%,' + k + ' ' + (c * 100).toFixed(1) + '%').join(',') + ')'; }
-  return 'linear-gradient(90deg,' + [0, 0.25, 0.5, 0.75, 1].map(f => col(1 + Math.round(f * 254)) + ' ' + f * 100 + '%').join(',') + ')';
+  // white first, as the chart where there is little or no fish (Jonas 05.10.2026), then the steps or the colours as they blend
+  const w0 = (heatPos(HEAT_STEPS[0]) * 100).toFixed(1) + '%', white = '#ffffff 0%,#ffffff ' + w0;
+  if (steps){ const st = HEAT_STEPS.map((v, i) => [heatPos(v), heatPos(HEAT_STEPS[i + 1] || HEAT_TOP), col(heatIndex(v, true)).replace(/,[\d.]+\)$/, ',1)')]); return 'linear-gradient(90deg,' + white + ',' + st.map(([a, c, k]) => k + ' ' + (a * 100).toFixed(1) + '%,' + k + ' ' + (c * 100).toFixed(1) + '%').join(',') + ')'; }
+  return 'linear-gradient(90deg,' + white + ',' + [0.27, 0.43, 0.63, 0.83, 1].map(f => col(1 + Math.round(f * 254)).replace(/,[\d.]+\)$/, ',1)') + ' ' + (f * 100).toFixed(1) + '%').join(',') + ')';
 }
 // the echo sounder's field in the chart plotter's top bar (the user's wish 02.10.2026): its name and range, the scale from clear to
-// dark purple over the sea's colour, and the species button; what it says besides (heatReadout) is its tooltip and under «Innstillinger»
+// red over the sea's colour, and the species button; what it says besides (heatReadout) is its tooltip and under «Innstillinger»
 function heatBox(on){
   const el = $('heatBox'); if (!el) return;
   if (!on){ if (!el.hidden) el.hidden = true; return; }
