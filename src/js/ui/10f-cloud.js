@@ -301,6 +301,7 @@ function cloudAct(a, d){
   if (a === 'cloudStat'){ cloudConsent(!CLOUD.consent, null); return true; }
   if (a === 'cloudShowMe'){ worldShowMe(S.settings.showMe === false); return true; }
   if (a === 'cloudPush'){ pushToggle(); return true; }
+  if (a === 'cloudPushCat'){ pushCatToggle(d && d.k); return true; }
   if (a === 'cloudOut'){ cloudSaveSoon(); localStorage.removeItem(CLOUD_SIGNED); CLOUD.ak.signOut({returnTo:location.origin + location.pathname}); return true; }
   if (a === 'cloudDel'){
     // the game on this device goes too (Jonas 05.10.2026: deleting the account to begin again kept the old game here, and the new

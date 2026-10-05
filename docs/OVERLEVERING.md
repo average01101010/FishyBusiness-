@@ -2154,15 +2154,20 @@ Jonas valgte dem fra lista (nr. 5 og 7).
 
 - **Hvorfor de planlegges i spillet:** spillet kjører i nettleseren, så serveren vet ikke hva som skjer i det.
   - Når appen går i bakgrunnen (`visibilitychange` til `hidden`, og `pagehide`), regner `pushItems()` i `ui/10g-push.js` ut hva som skjer mens den er borte.
-  - Klokka går videre med `GAME_RATE` (6 spillminutter per minutt) når spillet er lukket, opp til `CATCHUP_CAP` (72 spilltimer, altså 12 timer) (`ui/08-actions.js`). Spilltid T blir derfor `nå + (T − S.t) / 6` minutter.
+  - Den felles klokka går videre med `GAME_RATE` (6 spillminutter per minutt) når spillet er lukket. Spilltid T blir derfor `nå + (T − S.t) / 6` minutter. Planen ser 40 ekte timer fram (`PUSH_AHEAD`).
   - `push_plan` legger planen ut på serveren og erstatter den forrige.
   - Tilbake i appen tømmes planen, så ingenting kommer mens du spiller.
-- **Det som varsles:**
-  - Redskap som har stått lenge nok: line 10 t, garn 20 t, teiner 40 t (`PUSH_SOAK`, etter `soakHour` i `core/10-gear.js`).
-  - En båt på rute når den er framme i havna, regnet som ETA i ruta.
-  - Sesongnyhetene kl. 07 den dagen de kommer, fra Kystradio.
-  - Skreifestivalen dagen før.
-  - Høyst 24 varsler, og bare innen to døgn.
+- **Det som varsles** (05.10.2026; Jonas: «Varselet må ha betydning», «Vi skal sende 4 pushvarsel i døgnet. kjør på med alle forslagene»). Hver type hører til en gruppe spilleren kan slå av på kontokortet (`S.settings.pushCat`), og har en tid den slutter å bety noe (`exp`):
+  - *Fangst og båter:*
+    - Redskap som har stått lenge nok: line 10 t, garn 20 t, teiner 40 t (`PUSH_SOAK`, etter `soakHour` i `core/10-gear.js`).
+    - Fisk i lasterommet som snart går ned et kvalitetstrinn, to spilltimer før. Fallet regnes som i `vesselStep` (blødd og iset 0,9 per time osv.). Ikke når båten er på vei inn, for det dekker neste punkt.
+    - En båt på rute når den er framme i havna med fisk, regnet som ETA i ruta. Uten fisk kommer det ikke.
+  - *Verftet:* verftsjobbene på en båt er ferdige (`YARD_KINDS`).
+  - *Kvoter:* Fiskeridirektoratet varsler stopp i åpen gruppe. Året regnes videre dag for dag på en kopi av `S.qy` (`qyStep`), med det som er igjen av kvoten (`codRoom`).
+  - *Topplista* (serveren selv): når en annen spillers levering tar dem forbi deg i gruppa denne spilluka (`push_passed` i `land_put`, høyst én i døgnet), og ukeresultatet når spilluka er over (`push_week`, hver time i pg_cron, «Norges beste båt!» for nummer 1). Bare når spilleren ikke er i spillet (presence de siste to minuttene) og har topplista på (`push_prefs`).
+  - *Sesonger:* sesongnyhetene kl. 07 den dagen de kommer, fra Kystradio, og skreifestivalen dagen før.
+  - Høyst 24 i planen.
+- **Reglene på serveren** (`supabase/migrations/20261006030000_push_rules.sql`, `push_claim`): høyst fire meldinger per spiller i døgnet. Det som forfaller samtidig, blir én melding med en linje per varsel. Ingenting går mellom 22 og 08 norsk tid. Det som har gått ut på dato, droppes usendt. `push_plan` erstatter bare spillets egne (`kind` = `plan`), ikke serverens (`srv`). `dsb.clock` lar testene sette klokka.
 - **Serveren** (`supabase/migrations/20261005120000_push.sql`):
   - `push_subs` og `push_queue` er stengt for spillere.
   - `push_sub` godtar bare nettleserens egne varseltjenester (Google, Mozilla, Microsoft og Apple), så funksjonen poster aldri til en adresse spilleren velger.
