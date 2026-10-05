@@ -331,7 +331,7 @@ function shopBuy(k, kg, free){
   const b = S.boat, pt = portById(b.port), pay = c => { S.cash -= c; S.stats.costs += c; };
   if (b.status !== 'port' || !pt) return ['Butikken er på land. Handle når båten ligger i havn.', 'The shop is ashore. Buy when the boat is in port.'];
   if (k === 'jig' || k === 'kgear'){
-    const have = k === 'jig' ? b.gear : b.kgear, c = free ? 0 : k === 'jig' ? PRICE.gear : PRICE.kgear;
+    const have = k === 'jig' ? b.gear : b.kgear, c = free ? 0 : Math.round((k === 'jig' ? PRICE.gear : PRICE.kgear) * (naustHas('benk') && atHome(b) ? 0.75 : 1));   // Father's workbench (07c-naust.js)
     if (have) return ['Det har du allerede om bord.', 'You already have that aboard.'];
     if (c > S.cash) return ['Du har ikke nok penger.', 'Not enough money.'];
     if (k === 'jig'){ b.gear = true; pay(c); log('Kjøpte håndjuksa med pilk og markkroker for ' + kr(c) + '.', 'Bought a hand jig with pilk and fly hooks for ' + kr(c) + '.'); }

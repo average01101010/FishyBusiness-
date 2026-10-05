@@ -27,7 +27,7 @@ function energyMinute(){
   if (energyOff()){ S.energy = 100; S.sleep = null; S.drowsy = false; S.enWarn = false; return; }
   if (S.sleep){ if (S.t >= S.sleep.until) wakeUp(); return; }
   const v = myVessel(), b = v && vget(v, 'boat'), quay = !b || b.status === 'port';
-  S.energy = clamp(S.energy + (quay ? ENERGY.quay : -ENERGY.sea), 0, 100);
+  S.energy = clamp(S.energy + (quay ? ENERGY.quay * naustRest(b) : -ENERGY.sea), 0, 100);   // the naust's roof and stove (07c-naust.js)
   if (S.energy > ENERGY.warn + 5) S.enWarn = false;
   if (S.drowsy && quay && S.energy >= BNWAS.rested){ S.drowsy = false; log('Du har hvilt deg ut ved kai.', 'You have had a proper rest at the quay.'); }
   if (quay) return;

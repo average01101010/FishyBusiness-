@@ -1915,6 +1915,31 @@ Jonas valgte dem fra lista (nr. 5 og 7).
 
 **Usikkert:** prosentene for faste leverandører er et anslag. Mottakene gir ofte bonus eller bedre vilkår til faste leverandører, men tallene er ikke sjekket mot noen avtale. Premiene i festivalen er satt av oss.
 
+### 5.25f Fars naust og butikken på kaia i 3D (05.10.2026)
+
+- Modellene kommer fra `tools/harbour/naust.py` og `butikk.py`, og hvor de står, regner `core/07c-naust.js` ut. De ligger i siden som `glb-naust` og `glb-shop`.
+- **Naustet** (`naustFind`) står ved hjemhavna (`S.home`, ellers Finnsnes), på en fjærestrekning 60–240 m til en av sidene langs mottakets kaifront. Strekningen må oppfylle disse kravene:
+  - fjæra er nesten rett over 30 m (høyst 6 m bue)
+  - det er åpent vann 8, 16 og 30 m ut, og land 6, 14 og 25 m inn
+  - det er minst 70 m til et havnepunkt
+- Pålekaiens front står 4 m ute fra fjærelinja, parallelt med den.
+- Plassen regnes ut én gang per hjemsted (`S.naust`, `naustSite`), når kartet rundt havna er lastet.
+- **Butikken** (`shopSite`) står bak kaifronten i Finnsnes, med x = 0 midt på fronten.
+- `view3d.js` har `SITES`, som brukes slik:
+  - `sitesNow` gir plassene, og modellene tegnes av `drawSites`, fullt innen 900 m og enkelt ut til 4 km.
+  - Bakken (`siteTerr` i `terrRaw`) skjæres 0,4 m under naustets egen fjærebanke (`NBANK` = `BANK` i `naust.py`, fra 3 m ute til 16 m inne) og går tilbake til det den var innen 8 m.
+  - Butikkens plass (fra 9,6 m til 27,5 m inn) planeres 0,1 m under kaidekket og går tilbake til det den var innen 12 m.
+  - Kartets hus og trærne der modellene står, tas bort (`onSite`, med `clear`-rektanglene fra modellenes ankere).
+- Kartplotteren viser naustet som et lite hus med navnet «Fars naust» (`NOTEBOOK.svg`).
+- Testen er `tests/sitetest.py`, med bildene `site_naust.png` og `site_shop.png`.
+- **Naustet som hjem** (Jonas' valg nr. 4, `NAUST_UP` i `07c-naust.js`): stegene kjøpes én gang i Notatbok, mens båten ligger i hjemhavna.
+  - Tett taket (6 000 kr) og vedovn (9 000 kr, etter taket) gir hver 25 % raskere hvile i hjemhavna (`naustRest` i `energyMinute`).
+  - Fars arbeidsbenk (7 500 kr) gir håndjuksa og kveiteutstyr en firedel billigere i hjemhavna (`shopBuy`).
+  - Troféveggen (3 000 kr) er bare pynt i notatboka.
+  - Regnet på taket (lyd) er ikke laget ennå.
+- **Ikke gjort ennå:** båten kan ikke legge til ved naustet (det er ingen kaifront i `QUAYS`), kameraet kan gå inn i husene, og lyktene i ankrene brukes ikke.
+
+
 ### 5.26 Måker og halere fra Blender (03.10.2026)
 
 - **Måkene** (`tools/wild/maake.py`, `src/data/gull.b64`):

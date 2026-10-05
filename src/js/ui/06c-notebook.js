@@ -48,10 +48,17 @@ const NOTEBOOK = (() => {
         '<div class="nb-row">' + (f ? '<span class="nb-stamp">✓ ' + L('Funnet ', 'Found ') + day(f) + '</span>' : '<span class="nb-sp">' + SPECIES[m.sp][S.lang] + '</span>') +
         '<button class="ph-btn alt" data-pa="notshow" data-id="' + m.id + '">' + L('Vis i kartet', 'Show on the chart') + '</button></div></div>');
     }
+    // the naust: set it to rights step by step (core/07c-naust.js)
+    h.push('<h3 class="nb-hand nb-h">' + L('Naustet', 'The boathouse') + '</h3><p class="nb-lead">' + L('Naustet trenger en hånd. Snekkeren tar jobben når du ligger i hjemhavna.', 'The boathouse needs a hand. The carpenter does the work while you lie in the home harbour.') + '</p>');
+    for (const U of NAUST_UP){ const done = naustHas(U.k), why = done ? null : naustWhy(U.k);
+      h.push('<div class="nb-up' + (done ? ' done' : '') + '"><div><b>' + L(U.no, U.en) + '</b><small>' + L(U.d[0], U.d[1]) + '</small></div>' + (done ? '<span class="nb-stamp">✓ ' + L('Gjort', 'Done') + '</span>' :
+        '<button class="ph-btn' + (why ? ' alt' : ' p') + '" data-pa="naustbuy" data-k="' + U.k + '"' + (why ? ' disabled title="' + L(why[0], why[1]) + '"' : '') + '>' + kr(U.kr) + '</button>') + '</div>');
+    }
+    { const w = NAUST_UP.map(U => !naustHas(U.k) && naustWhy(U.k)).find(Boolean); if (w && w[0] !== 'Du har ikke nok penger.') h.push('<p class="ph-note">' + L(w[0], w[1]) + '</p>'); }
     // the trophy wall
     const T = (S.trophies || []).slice(), rec = {};
     for (const x of T) if (!rec[x.sp] || x.kg > rec[x.sp].kg) rec[x.sp] = x;
-    h.push('<h3 class="nb-hand nb-h">' + L('Trofeveggen', 'The trophy wall') + '</h3>');
+    h.push('<h3 class="nb-hand nb-h">' + L('Trofeveggen', 'The trophy wall') + '</h3>' + (naustHas('vegg') ? '<p class="nb-lead">' + L('Den henger i naustet nå.', 'It hangs in the boathouse now.') + '</p>' : ''));
     if (!T.length) h.push('<p class="nb-lead">' + L('Ingen storfisk ennå. Noen ganger tar noe stort juksa: en kveite på over hundre kilo, en skrei på 30 eller en lange på 25. Sveiv når snøret tåler det, og slipp når fisken drar.', 'No big fish yet. Sometimes something big takes the jig: a halibut of over a hundred kilos, a skrei of 30 or a ling of 25. Reel when the line can take it, and let go when the fish runs.') + '</p>');
     else {
       h.push('<div class="nb-recs">' + Object.values(rec).sort((a, b) => b.kg - a.kg).map(x => '<div class="nb-rec"><b>' + SPECIES[x.sp][S.lang] + '</b><span>' + fmt(x.kg, 1) + ' kg</span><small>' + x.at + ' · ' + day(x.t) + '</small></div>').join('') + '</div>');
@@ -71,8 +78,12 @@ const NOTEBOOK = (() => {
   }
   // on the chart: the found marks as a pencil cross with the name, the circles looked up and not found yet
   function svg(u, inV){
-    const N = S.notes; if (!N || !N.marks) return '';
     const g = [];
+    // Father's naust (core/07c-naust.js): a small house on the shore by the home harbour
+    const ns = S.naust && S.naust.o; if (ns && view.z > 2.2){ const x = ns[0] / 1000, y = ns[1] / 1000, s = 4.5 * u; if (inV(x, y)){
+      g.push('<path d="M' + (x - s) + ',' + (y + s * 0.8) + 'v' + (-s * 1.1) + 'l' + s + ',' + (-s * 0.9) + 'l' + s + ',' + (s * 0.9) + 'v' + (s * 1.1) + 'z" class="nbh" stroke-width="' + (1.2 * u) + '"/>');
+      if (view.z > 3) g.push(txt({x:x + 7 * u, y:y + 4 * u}, S.lang === 'no' ? 'Fars naust' : 'Father\u2019s boathouse', 'lbl-nb', 12 * u, 'stroke-width="' + (2.5 * u) + '"')); } }
+    const N = S.notes; if (!N || !N.marks) return g.join('');
     for (const m of N.marks){
       const nm = NOTE_NAME[m.sp][S.lang === 'no' ? 0 : 1];
       if (N.found[m.id]){ if (!inV(m.p.x, m.p.y)) continue; const s = 5 * u;

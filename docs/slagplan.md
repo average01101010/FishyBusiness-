@@ -2,6 +2,24 @@
 
 Alt som er diskutert fram til natt til 05.10.2026, i den rekkefølgen jeg vil gjøre det. Status oppdateres her etter hvert. Tallene i parentes viser til forslagslista Jonas valgte fra (2, 3, 4, 5, 7, 9 og musikken).
 
+## Status morgenen 05.10.2026
+
+Ferdig og pushet i natt (patchnotes p18–p23 på telefonen):
+- Fase 0 og fase 1 (UI-runden).
+- Fase 2: kyststarten med 153 mottak, «Hvor står fars naust?», de 10 nærmeste mottakene i Salgslaget, og én gratis flytting for gamle spill. Naustet står ved hjemhavna i 3D. Oppdragene kommer fra mottakene nær hjemhavna.
+- Fase 3, alt unntatt push:
+  - Fars notatbok og drømmefisken med trofévegg (2 og 3).
+  - Naustet som hjem, med oppgraderinger (4). Regnlyd på taket mangler.
+  - Sesongene som hendelser, med Skreifestivalen (5).
+  - Folk på kaia (7).
+  - Musikken (10).
+- Fase 4: butikken står på kaia i Finnsnes.
+
+Gjenstår:
+- Push-varsler (9). Jonas må lage VAPID-nøklene og legge dem som hemmeligheter i Supabase. Jeg lager ingen nøkler.
+- Innloggings- og innlastingsskjerm i Blender, to nye mottaksmodeller og M3, kongekrabbeteinen.
+- Fase 5.
+
 ## Fase 0: I gang nå (natt til 05.10)
 
 | Oppgave | Status |

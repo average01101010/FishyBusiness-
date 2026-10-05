@@ -381,6 +381,10 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p23', '05.10.2026', 'Fars naust og butikken på kaia', 'Father’s boathouse and the shop on the quay', [
+      ['Fars gamle naust står ved hjemhavna di i 3D, med den slitne kaia på påler, på en rett strekning av fjæra like ved mottaket. I kartplotteren står det som «Fars naust».', 'Father’s old boathouse stands by your home harbour in 3D, with its worn pile quay, on a straight stretch of shore near the plant. On the chart plotter it is marked «Father’s boathouse».'],
+      ['Utstyrsbutikken og båtforhandleren står på kaia i Finnsnes, med plassen foran planert og kartets hus flyttet bort.', 'The gear shop and boat dealer stand on the quay in Finnsnes, with the yard in front levelled and the map’s houses moved out of the way.'],
+      ['Sett i stand naustet, i Notatbok: tett taket og sett inn vedovn, så hviler du raskere i hjemhavna. Fars arbeidsbenk gjør juksa og kveiteutstyr billigere der, og storfisken kan henge på en trofévegg.', 'Put the boathouse to rights, in Notebook: make the roof tight and put in a stove, and you rest faster in the home harbour. Father’s workbench makes jigs and halibut gear cheaper there, and the big fish can hang on a trophy wall.']]],
     ['p22', '05.10.2026', 'Sesonger og folk på kaia', 'Seasons and people on the quay', [
       ['Sesongene kommer som hendelser: «Skreien er kommet» på VHF, i Kystposten og på puben, og så høysesong, loddetorsk i Finnmark, seisommer, høsthyse, sild og hval, og julefiske. Datoene flytter seg litt fra år til år.', 'The seasons come as events: «The skrei has come» on the VHF, in Kystposten and at the pub, then the high season, capelin cod in Finnmark, the saithe summer, autumn haddock, herring and whales, and the Christmas fishing. The dates shift a little from year to year.'],
       ['Skreifestivalen andre helg i mars: største torsk fra lørdag til søndag kl. 18 vinner 15 000 kr. Andreplass gir 7 500 og tredjeplass 3 000.', 'The skrei festival on the second weekend of March: the biggest cod from Saturday to Sunday 18:00 wins NOK 15,000. Second place gets 7,500 and third 3,000.'],
@@ -1038,6 +1042,7 @@ const PHONE = (() => {
     else if (a === 'shopgear'){ app = 'redskap'; sub.redskap = 'kjop'; }
     else if (a === 'close'){ show(false); return; }
     else if (a === 'notshow'){ NOTEBOOK.show(d.id); return false; }
+    else if (a === 'naustbuy'){ const why = naustBuy(d.k); if (why) toast(L(why[0], why[1])); }
     else if (a === 'lang'){ S.lang = S.lang === 'no' ? 'en' : 'no'; refreshAll(); }
     else if (a === 'q3d'){ S.settings.q3d = d.v; if (typeof G3 !== 'undefined' && G3.quality) G3.quality(d.v); }
     else if (a === 'fpsShow'){ S.settings.fpsShow = d.v === '1'; }

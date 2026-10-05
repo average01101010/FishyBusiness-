@@ -39,6 +39,15 @@ FIND = """([blocks, touch]) => {
       if (ix > 3 && iy > 3){ const ea = B[i][0], eb = B[j][0]; if (document.querySelector(ea).contains(document.querySelector(eb)) || document.querySelector(eb).contains(document.querySelector(ea))) continue; out.over.push(ea + ' / ' + eb + ' ' + Math.round(ix) + 'x' + Math.round(iy)); }
     }
   }
+  // an opaque layer over most of the screen, outside the 3D view, the chart and the route panel (a sheet on a phone) (05.10.2026: a class name the start picker shared with
+  // the status line laid one over the whole 3D view, and nothing here saw it)
+  if (!inModal){ const gl = document.getElementById('gl');
+    for (const e of document.querySelectorAll('body *')){
+      if (['gl', 'mapwrap', 'map', 'app', 'chartcv', 'heatcv', 'labels', 'loader', 'side'].includes(e.id) || e.tagName === 'MAIN' || (gl && e.contains(gl)) || e.closest('#map') || !vis(e)) continue;
+      const r = e.getBoundingClientRect(); if (r.width * r.height < W * H * 0.5) continue;
+      const st = getComputedStyle(e); if (st.backgroundImage !== 'none' || !/rgba\(0, 0, 0, 0\)|transparent/.test(st.backgroundColor)) out.over.push('dekker skjermen: ' + name(e));
+    }
+  }
   return out;
 }"""
 VIEWS = [
