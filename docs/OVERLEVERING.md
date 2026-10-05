@@ -2167,6 +2167,11 @@ Jonas valgte dem fra lista (nr. 5 og 7).
   - *Topplista* (serveren selv): når en annen spillers levering tar dem forbi deg i gruppa denne spilluka (`push_passed` i `land_put`, høyst én i døgnet), og ukeresultatet når spilluka er over (`push_week`, hver time i pg_cron, «Norges beste båt!» for nummer 1). Bare når spilleren ikke er i spillet (presence de siste to minuttene) og har topplista på (`push_prefs`).
   - *Sesonger:* sesongnyhetene kl. 07 den dagen de kommer, fra Kystradio, og skreifestivalen dagen før.
   - Høyst 24 i planen.
+- **På for nye spillere** (05.10.2026; Jonas: «jeg ønsker at varsler skal være på by default for nye brukere»). Ingen side kan sende varsler før spilleren har sagt ja til nettleserens egen spørsmål, og på iPhone kan spørsmålet bare komme fra et trykk. Derfor:
+  - Har nettleseren allerede gitt lov, slår spillet dem på av seg selv (`pushAuto`).
+  - Ellers spør det med et eget vindu når «Første tur» er ferdig og etter en levering (`pushAsk`), høyst tre ganger og med minst et døgn mellom (`S.settings.pushAsk`).
+  - Det spør aldri igjen når spilleren har sagt nei i nettleseren eller slått varslene av i Innstillinger (`S.settings.push` = false).
+  - «Slå på varsler» spør nettleseren før noe annet venter (`pushOn`), så trykket fortsatt gjelder.
 - **Reglene på serveren** (`supabase/migrations/20261006030000_push_rules.sql`, `push_claim`): høyst fire meldinger per spiller i døgnet. Det som forfaller samtidig, blir én melding med en linje per varsel. Ingenting går mellom 22 og 08 norsk tid. Det som har gått ut på dato, droppes usendt. `push_plan` erstatter bare spillets egne (`kind` = `plan`), ikke serverens (`srv`). `dsb.clock` lar testene sette klokka.
 - **Serveren** (`supabase/migrations/20261005120000_push.sql`):
   - `push_subs` og `push_queue` er stengt for spillere.

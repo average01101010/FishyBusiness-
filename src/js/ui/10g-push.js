@@ -35,8 +35,11 @@ const pushB64 = s => { const b = atob((s + '='.repeat((4 - s.length % 4) % 4)).r
 // turn on: ask the browser, subscribe with the key, tell the server; null when it went well, else the reason to show
 async function pushOn(){
   if (!pushHas()) return cloudL('Varsler virker bare i appen når du er logget inn.', 'Notifications only work in the app while signed in.');
+  if (PUSH.key === null) return cloudL('Varslene er ikke satt opp ennå.', 'Notifications are not set up yet.');
+  // the browser's question first, while the tap still counts (Safari asks only from a tap, and an await before it can lose it)
+  const perm = Notification.permission === 'granted' ? 'granted' : Notification.requestPermission();
   const key = await pushKey(); if (!key) return cloudL('Varslene er ikke satt opp ennå.', 'Notifications are not set up yet.');
-  if (await Notification.requestPermission() !== 'granted') return cloudL('Du må tillate varsler for appen. Det gjøres i nettleserens innstillinger for nettstedet.', 'You must allow notifications for the app, in the browser’s settings for the site.');
+  if (await perm !== 'granted') return cloudL('Du må tillate varsler for appen. Det gjøres i nettleserens innstillinger for nettstedet.', 'You must allow notifications for the app, in the browser’s settings for the site.');
   try {
     const reg = await navigator.serviceWorker.ready; let sub = await reg.pushManager.getSubscription();
     if (!sub) sub = await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:pushB64(key)});
@@ -47,6 +50,26 @@ async function pushOn(){
 async function pushOff(){
   S.settings.push = false; save();
   try { const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription(); if (sub){ await cloudRpc('push_unsub', {endpoint:sub.endpoint}); await sub.unsubscribe(); } } catch (e){ console.error(e); }
+}
+// On for new players (Jonas 05.10.2026: «jeg ønsker at varsler skal være på by default for nye brukere»). No page may send
+// notifications before the player has said yes to the browser's own question, so where the browser already allows them the game turns
+// them on by itself (pushAuto), and else it asks when the first trip is done and after a landing (pushAsk): at most three times, a day
+// apart, and never again once the player has said no in the browser or turned them off in Settings (S.settings.push false).
+const PUSH_ASKS = 3;
+const pushUndecided = () => S.settings.push === undefined && pushHas() && !!PUSH.key;
+function pushAuto(){
+  if (pushUndecided() && Notification.permission === 'granted') pushOn().then(err => { if (err) console.warn(err); });
+}
+function pushAsk(){
+  if (!pushUndecided() || Notification.permission !== 'default' || tutOn() || !S.boatName) return;
+  const a = S.settings.pushAsk || {n:0, at:0}, m = $('modal');
+  if (a.n >= PUSH_ASKS || Date.now() - a.at < 20 * 36e5 || !m || !m.hidden) return;
+  S.settings.pushAsk = {n:a.n + 1, at:Date.now()}; save();
+  modal('<div class="ob"><h2>' + cloudL('Vil du ha beskjed?', 'Shall we let you know?') + '</h2><p>' +
+    cloudL('Havet går videre når appen er lukket. Vi sier fra når garnet har stått lenge nok, når fisken i lasterommet snart blir dårligere, når båten er framme med fangst, og når noen går forbi deg på topplista.', 'The sea goes on while the app is closed. We tell you when the nets have soaked long enough, when the fish in the hold is about to lose quality, when the boat is in with the catch, and when someone passes you on the leaderboard.') +
+    '</p><p class="note">' + cloudL('Høyst fire i døgnet, aldri mellom 22 og 08. Du velger bort det du ikke vil ha i Innstillinger.', 'At most four a day, never between 22 and 08. You turn off what you do not want in Settings.') + '</p>' +
+    '<div class="btns"><button class="btn" id="paNo" data-close>' + cloudL('Ikke nå', 'Not now') + '</button><button class="btn primary" id="paYes" data-close>' + cloudL('Slå på varsler', 'Turn on notifications') + '</button></div></div>');
+  $('paYes').addEventListener('click', () => pushOn().then(err => { toast(err || cloudL('Varsler er på.', 'Notifications are on.')); if (PHONE.isOpen()) PHONE.render(); }));
 }
 // what will happen while the app is away: [{at, exp (ISO), tag, title, body}], soonest first, at most 24
 function pushItems(now){
@@ -116,7 +139,7 @@ function pushPlan(away){
 }
 function pushStart(){
   if (!pushHas()) return;
-  pushKey();
+  pushKey().then(pushAuto);
   document.addEventListener('visibilitychange', () => pushPlan(document.visibilityState === 'hidden'));
   window.addEventListener('pagehide', () => pushPlan(true));
   pushPlan(false);

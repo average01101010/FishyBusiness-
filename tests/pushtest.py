@@ -2,7 +2,7 @@
 without the VAPID key the switch is not shown; with it the account card has it, and turning it on asks the browser, subscribes and
 tells the server; going to the background lays out what will happen while away (gear that has soaked long enough, the boat at its
 harbour with fish, fish about to drop a grade, the yard done, the open group's stop, the season's news) at the right real times, each
-group can be turned off, and coming back clears it. Prints OK or FEIL."""
+group can be turned off, and coming back clears it; a new player is asked to turn them on. Prints OK or FEIL."""
 from _env import GAME, boot
 import asyncio, json
 from playwright.async_api import async_playwright
@@ -110,6 +110,27 @@ async def main():
         await pg.evaluate("pushToggle()"); await pg.wait_for_timeout(600)
         off = await pg.evaluate("({push:S.settings.push, sub:window.__sub})")
         check(not off['push'] and off['sub'] is None and any(c[0] == 'push_unsub' for c in calls), 'turning it off unsubscribes and tells the server', off)
-        print('errors:', errs[:3]); await ctx.close(); await br.close()
+        errs0 = errs; await ctx.close()
+        # 3. on for new players: asked after the first trip and after a landing, at most three times and a day apart, and turned on by
+        # itself where the browser already allows notifications
+        calls = []; ctx, pg, errs = await page(br, calls, 'BKeytest-abc_d12')
+        await boot(pg, GAME + '#notut'); await pg.wait_for_timeout(1500)
+        r = await pg.evaluate("""(async () => { const u = S.settings.push === undefined, m = document.getElementById('modal');
+          pushAsk(); const shown = !m.hidden && !!document.getElementById('paYes');
+          document.getElementById('paNo').click(); pushAsk(); const again = !m.hidden;
+          S.settings.pushAsk.at -= 21 * 36e5; pushAsk(); const later = !m.hidden && !!document.getElementById('paYes');
+          document.getElementById('paYes').click(); await new Promise(r => setTimeout(r, 600));
+          return {u, shown, again, later, n:S.settings.pushAsk.n, push:S.settings.push, asked:window.__asked === 1, hidden:m.hidden}; })()""")
+        sub = [c for c in calls if c[0] == 'push_sub']
+        check(r['u'] and r['shown'] and not r['again'] and r['later'] and r['n'] == 2 and r['push'] is True and r['asked'] and r['hidden'] and sub,
+              'a new player is asked; «Ikke nå» waits a day, and «Slå på varsler» asks the browser, subscribes and tells the server', r)
+        r = await pg.evaluate("""(async () => { const m = document.getElementById('modal');
+          S.settings.push = undefined; S.settings.pushAsk = {n:3, at:0}; pushAsk(); const fourth = !m.hidden;
+          S.settings.push = false; S.settings.pushAsk = null; pushAsk(); const off = !m.hidden;
+          S.settings.push = undefined; window.__sub = null; window.__asked = 0; Notification.permission = 'granted'; pushAuto(); await new Promise(r => setTimeout(r, 600));
+          return {fourth, off, push:S.settings.push, asked:window.__asked, sub:!!window.__sub}; })()""")
+        check(not r['fourth'] and not r['off'] and r['push'] is True and r['asked'] == 0 and r['sub'],
+              'never a fourth time, never when turned off in Settings, and on without a question where the browser already allows it', r)
+        print('errors:', (errs0 + errs)[:3]); await ctx.close(); await br.close()
 
 asyncio.run(main())

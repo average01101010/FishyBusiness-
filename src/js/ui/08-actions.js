@@ -184,6 +184,7 @@ function sell(){
   if (S.tut && S.tut.catch) S.tut.catch = false;   // the first-trip guarantee ends with the first landing
   for (const x of S.hold) delete x._used;
   log('Leverte ' + Math.round(kg) + ' kg i ' + port.name + ' for ' + kr(total) + '.', 'Landed ' + Math.round(kg) + ' kg at ' + port.name + ' for ' + kr(total) + '.');
+  setTimeout(pushAsk, 3000);   // notifications, if the player has not been asked (10g-push.js)
 
 }
 
