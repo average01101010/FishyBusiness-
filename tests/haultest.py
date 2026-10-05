@@ -13,7 +13,7 @@ def check(ok, what, extra=''):
 
 SET = """(kind => { const b = S.boat, g = GROUNDS[0].p; S.t = Math.round((Date.UTC(2027, 5, 12, 11) - EPOCH) / 6e4); b.type = 'sjark'; applyVessel(); G3.vesselChanged();
   if (!S.crew.length) S.crew = [Object.assign(genCrew(), {bi:false, off:false, fatigue:10, morale:62, traits:[]})]; S.me = S.cur; b.rig = kind; S.equip[kind === 'garn' ? 'garnhaler' : 'linehaler'] = true;   // nets need two hands
-  b.status = 'fishing'; b.port = null; b.pos = {x:g.x, y:g.y}; b.heading = 0.4; b.v = 0; b.fishUntil = S.t + 600; S.plan = null; S.mult = 0;
+  b.status = 'fishing'; b.port = null; b.deckStop = false; b.deckEnd = null; S.hold = []; b.pos = {x:g.x, y:g.y}; b.heading = 0.4; b.v = 0; b.fishUntil = S.t + 600; S.plan = null; S.mult = 0;
   b.gop = {op:'haul', kind, sid:'t', n:6, done:2, prog:0.4, a:{x:g.x, y:g.y}, b:{x:g.x + 0.5, y:g.y}, kg:0, rel:0, dead:0, hooksPer:kind === 'line' ? 100 : 0};
   const c = G3._debug.cam; c.helm = false; c.dist = 7.5; c.pitch = 0.3; c.yaw = -1.4; })"""
 
@@ -28,9 +28,10 @@ async def main():
         for kind in ['garn', 'line']:
             await pg.evaluate(SET, kind); await pg.wait_for_timeout(2500)
             a0 = await pg.evaluate("G3._debug.haulA"); await pg.wait_for_timeout(2000); a1 = await pg.evaluate("G3._debug.haulA")
+            st = await pg.evaluate("({deckStop:!!S.boat.deckStop, op:S.boat.gop && S.boat.gop.op, status:S.boat.status})")
             m = await pg.evaluate(f"(() => {{ const M = G3._debug.haulModel('{kind}'); return M ? {{r:M.r, n:M.path.length, parts:[!!M.frame, !!M.sheave, !!M.stripper]}} : null; }})()")
             await pg.screenshot(path=f'haul_{kind}.png')
-            check(m and all(m['parts']) and a1 > a0, kind + 'haleren fra Blender står ved ripa, og skiva går rundt mens det hales', (m, round(a0, 2), round(a1, 2)))
+            check(m and all(m['parts']) and a1 > a0, kind + 'haleren fra Blender står ved ripa, og skiva går rundt mens det hales', (m, round(a0, 2), round(a1, 2), st))
         # the skipper on «Haling»: three hands at the gear
         n = await pg.evaluate("(() => { const A = () => { const c = Object.assign(genCrew(), {bi:false, off:false, fatigue:10, morale:62, traits:[]}); return c; }; S.crew = [A(), A()]; S.me = S.cur; S.myJob = ['haling']; S.crew.forEach(c => c.job = ['haling']); return G3._debug.gopHands(); })()")
         await pg.wait_for_timeout(1500); await pg.screenshot(path='haul_crew.png')
