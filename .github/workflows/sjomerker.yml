@@ -1,0 +1,30 @@
+# The sea marks along the whole coast (tools/map/sjomerker.py): Overpass is closed to the cloud session, open here. Started by a push
+# that changes tools/map/sjomerker.json (on any branch), or by hand; kept as a release sjomerker-<run number> with sjomerker.json.gz.
+name: Sjømerker langs kysten
+on:
+  push:
+    paths: ['tools/map/sjomerker.json', 'tools/map/sjomerker.py']
+  workflow_dispatch:
+permissions:
+  contents: write
+env:
+  PYTHONUNBUFFERED: '1'
+jobs:
+  marks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy requests pyproj
+      - name: Fetch
+        run: python3 tools/map/sjomerker.py fetch out/sjomerker.json
+      - name: The release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=sjomerker-${{ github.run_number }}
+          gh release create "$TAG" out/sjomerker.json.gz --target "${{ github.sha }}" --title "Sjømerker $TAG" \
+            --notes "Sjømerker, lykter og skjær langs kysten fra OpenStreetMap (ODbL, © OpenStreetMap-bidragsytere) via Overpass, tools/map/sjomerker.py, commit ${{ github.sha }}."
