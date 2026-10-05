@@ -77,6 +77,16 @@ async def main():
             print(ok(all(0.8 <= x <= 1.25 for x in sc) and all(k[2] for k in npc['kits'])), 'every boat in the local fleet gets a kit model within 20 % of her length and beam', [k[:3] for k in npc['kits']])
             print(ok(all(v[1] <= (120000 if v[3] else 25000) and v[2] <= (10000 if v[3] else 6000) for v in npc['verts']) and npc['liv'] > 0), 'near versions under 25 000 points (detailed GLB models 120 000), middle under 6 000 (GLB 10 000), and the liveries change the colours', npc['verts'])
             print(ok(bool(npc.get('npc'))), 'found a boat on her ground for the screenshots', npc.get('npc'))
+        # another player's boat: her own type's model, not the box boat (Jonas 05.10.2026: a friend in the same old wooden boat showed white)
+        if not ONLY or 'peer' in ONLY:
+            await pg.evaluate("""(() => { const b = S.boat; b.type = 'trebat'; applyVessel(); G3.vesselChanged(); b.status = 'idle'; b.port = null; S.mult = 0;
+              PEERS.length = 0; PEERS.push({id:'testpeer01', boat:'Fjordbris', vtype:'trebat', x:b.pos.x + Math.cos(b.heading) * 0.018, y:b.pos.y + Math.sin(b.heading) * 0.018, hd:b.heading + 0.6, v:0, st:'fishing', at:Date.now() + 36e5});
+              const c = G3._debug.cam; c.helm = false; c.dist = 30; c.pitch = 0.25; c.yaw = 1.2; })()""")
+            await pg.wait_for_timeout(2500)
+            pr = await pg.evaluate("G3._debug.peers")
+            await pg.screenshot(path=os.path.join(OUT, 'vessel_peer.png'))
+            print(ok(pr and pr[0]['t'] == 'trebat' and pr[0]['glass']), "another player's boat is drawn with her own type's model (the old wooden boat), near and with her people", pr)
+            await pg.evaluate("PEERS.length = 0; S.mult = 1")
         print('errors:', errs[:5]); await br.close()
 
 asyncio.run(main())

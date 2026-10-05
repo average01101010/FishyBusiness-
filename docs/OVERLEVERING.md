@@ -987,7 +987,8 @@ Jonas: «det er viktig at alle har en delt klokke fordi dette er et online-spill
 - **V3, spillerne ser hverandre** (`ui/10h-world.js`, `supabase/migrations/20261005220000_presence.sql`):
   - Hvert 15. sekund, mens spillet er åpent, synlig og innlogget, sendes båten du følger med `pos_put`: posisjon (km i spillets ramme), kurs (radianer i rutenettet), fart, status, båtnavn og type. Det er én rad per spiller i `presence`, og den skrives over.
   - `pos_near(x, y, 25 km)` gir de andre båtene som er hørt de siste to minuttene, de nærmeste først. Id-en er en hash, aldri kontoen.
-  - De havner i `PEERS`, og `peerStates()` (`core/05-vessels.js`) legger dem til i `npcStates`. Slik vises de av AIS-en i kartplotteren (gul, `ais player`, eget AIS-kort med båttype og størrelse) og av 3D-visningen, der modellen velges etter lengde og bredde (`npcKit`). Mellom meldingene glir de videre langs kursen i opptil 30 sekunder.
+  - De havner i `PEERS`, og `peerStates()` (`core/05-vessels.js`) legger dem til i `npcStates`. Slik vises de av AIS-en i kartplotteren (gul, `ais player`, eget AIS-kort med båttype og størrelse) og av 3D-visningen. Mellom meldingene glir de videre langs kursen i opptil 30 sekunder.
+  - I 3D tegnes en annen spillers båt med modellen til sin egen båttype (`npcType` i `view3d.js`, også GLB-modellene), med skipper og mannskap som lokalflåten. Før 05.10.2026 fikk de boksmodellen, så en venn i trebåten så ut som en hvit plastbåt. `vessel3d.py peer` sjekker det.
   - «Vis båten min for andre spillere» på kontokortet (`S.settings.showMe`) stopper sendingen, og `pos_off` sletter raden med en gang.
   - Uten nett, eller før migreringen, sendes ingenting, og båtene forsvinner etter et minutt.
   - Personvernsiden har et eget avsnitt.
