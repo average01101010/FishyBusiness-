@@ -712,7 +712,8 @@ body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 2
   #phone .ph-body{border-radius:0;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);border:0;background:#0b1622}
   #phone .ph-cam{display:none} #phone .ph-screen{border-radius:0}
   /* the compass along the top, the info box under it */
-  body.v3d #compass3d{left:8px;right:64px;width:auto;transform:none}
+  /* a canvas does not stretch between left and right (width:auto takes its own drawing's shape: 60 px at 30 px tall, iPhone 05.10.2026) */
+  body.v3d #compass3d{left:8px;right:auto;width:calc(100vw - 72px);transform:none}
   body.v3d #hud{top:calc(env(safe-area-inset-top,0px) + 40px)}
   /* a standing phone (Jonas 05.10.2026: «Det tar jo opp halve skjermen ... Alle vinduene må rett og slett bli mindre eller smalere»):
      the info box smaller and at most about a third of the width (Jonas: «Tar jo halve skjermen i bredden»), a long line wrapping and

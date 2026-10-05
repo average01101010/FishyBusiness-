@@ -25,6 +25,8 @@ async def main():
         await boot(pg, GAME + '#notut'); await pg.wait_for_timeout(800)
         await pg.evaluate("(() => { if (!document.body.classList.contains('v3d') && typeof G3 !== 'undefined') G3.show(true); S.boat.status = 'idle'; S.boat.port = null; renderHud(); })()"); await pg.wait_for_timeout(800)
         a = await pg.evaluate(BOX)
+        # 0. on a phone upright the compass line runs along the top (a canvas between left and right had shrunk to 60 px, iPhone 05.10.2026)
+        check(a['compass'] and a['compass']['w'] >= 412 - 80 and a['compass']['top'] < 20, 'on a phone upright the compass line spans the top of the screen', a['compass'])
         # 1. the status box folds to a strip and opens again
         await pg.click('#hud .hmin'); await pg.wait_for_timeout(400); b = await pg.evaluate(BOX)
         check(a['hud'] and b['hud'] and b['hud']['h'] < 40 and b['hud']['h'] < a['hud']['h'] / 3 and ':' in b['text'] and 'kr' in b['text'] and 'hudmin' in b['cls'],
