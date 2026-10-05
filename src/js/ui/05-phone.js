@@ -385,6 +385,9 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p35', '05.10.2026', '3D på Windows-PC', '3D on Windows PCs', [
+      ['3D-visningen startet ikke på noen Windows-PC-er (Chrome og Firefox): sjøen ble for tung for grafikkdriveren. Nå starter de med en litt enklere sjø, og går driveren likevel i stå, prøver spillet en enklere neste gang.', 'The 3D view did not start on some Windows PCs (Chrome and Firefox): the sea was too heavy for the graphics driver. They now start with a slightly simpler sea, and if the driver still gives up, the game tries a simpler one next time.'],
+      ['Står det «ingen WebGL-kontekst», har nettleseren slått av 3D etter en driverfeil. Lukk nettleseren helt og åpne den igjen.', 'If it says «no WebGL context», the browser has turned 3D off after a driver error. Close the browser fully and open it again.']]],
     ['p34', '05.10.2026', 'Ny app: Tilbakemelding', 'New app: Feedback', [
       ['Si fra om feil, ønsker og ideer rett fra telefonen i spillet: velg hva det gjelder, skriv, gi stjerner og legg ved et bilde fra galleriet eller av spillet.', 'Report bugs, wishes and ideas straight from the phone in the game: pick what it is about, write, give stars and add a picture from your gallery or of the game.'],
       ['Nederst i appen ser du det du har sendt, om det er lest eller fikset, og svaret fra oss.', 'At the bottom of the app you see what you have sent, whether it is read or fixed, and our answer.']]],

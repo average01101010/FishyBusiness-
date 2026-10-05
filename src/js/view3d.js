@@ -1368,8 +1368,7 @@ const G3 = (() => {
     const col = RBCOL[v], paint = P => { if (!col || !P.zone) return P; const c = P.c.slice(); for (let i = 0; i < P.zone.length; i++) if (P.zone[i] === 1){ const a = P.ao[i]; c[i * 4] = col[0] * a; c[i * 4 + 1] = col[1] * a; c[i * 4 + 2] = col[2] * a; } return {p:P.p, n:P.n, c}; };
     const P = G.parts, g = P.glass || {p:[], n:[], c:[]}, L0 = paint(P.lod0);
     return SMOD[k] = {near:upA({p:L0.p.concat(g.p), n:L0.n.concat(g.n), c:L0.c.concat(g.c)}), far:upA(P.lod1 ? paint(P.lod1) : L0), A:G.ex.anchors || {}};
-  }
-  function drawSites(eye, VP, near, far){
+  }  function drawSites(eye, VP, near, far){
     let set = false;
     for (const s of sitesNow()){
       const d = Math.hypot(s.o[0] - eye[0], s.o[1] - eye[2]); if (d > Math.min(far, 4000)) continue;
@@ -2945,15 +2944,27 @@ const G3 = (() => {
   // its context (Intel Iris Xe, Chrome on Windows, 05.10.2026: «sjø link: ingen logg», then every later try failed and «WebGL-konteksten
   // ble mistet»). A context lost while the shaders are made sets the next level for the next try (the restored context, or a reload);
   // Intel on Direct3D starts at 1. #sealvl=N in the address forces one (the tests).
-  const SEA_KEY = 'dsb_sea'; let seaLvl = 0;
-  const seaLvlGet = () => { const m = /sealvl=(\d)/.exec(location.hash); if (m) return Math.min(2, +m[1]); let v = 0; try { v = +localStorage.getItem(SEA_KEY) || 0; } catch (e){} return Math.min(2, (/Direct3D/i.test(GPU) && /Intel/i.test(GPU)) ? Math.max(v, 1) : v); };
+  // Every Direct3D 11 so far has lost it on the full sea, whatever the maker (Intel Iris Xe in Chrome, NVIDIA GTX 980 in Firefox,
+  // 05.10.2026), so Direct3D starts at 1. And as the driver may take the whole GPU process with it before the browser says the context
+  // is lost (Firefox: every compile after it fails with no log, isContextLost still false), the level being tried is written down first
+  // (SEA_TRY) and cleared when it has worked: a try that never came back puts the next load a level down.
+  const SEA_KEY = 'dsb_sea', SEA_TRY = 'dsb_sea_try'; let seaLvl = 0, seaBumped = false;
+  const seaLvlGet = () => { const m = /sealvl=(\d)/.exec(location.hash); if (m) return Math.min(2, +m[1]); let v = 0, t = null;
+    try { v = +localStorage.getItem(SEA_KEY) || 0; t = localStorage.getItem(SEA_TRY); } catch (e){}
+    if (t !== null && +t + 1 > v){ v = Math.min(2, +t + 1); seaBumped = true; try { localStorage.setItem(SEA_KEY, String(v)); } catch (e){} }
+    return Math.min(2, /Direct3D/i.test(GPU) ? Math.max(v, 1) : v); };
+  const seaTryMark = on => { if (/sealvl=/.test(location.hash)) return; try { if (on) localStorage.setItem(SEA_TRY, String(seaLvl)); else localStorage.removeItem(SEA_TRY); } catch (e){} };
+  // after a compile or link that failed with no word why: a moment for the browser to notice a lost context, before trying the next
+  const glSettle = async () => { await new Promise(r => setTimeout(r, 80)); if (gl.isContextLost()) throw new Error('konteksten er mistet'); };
   const opt = (nm, f) => { try { f(); } catch (e){ console.error(nm, e); } };    // a part the view can do without
   async function init(){
     if (ready) return true; if (failed) return false;
     try {
       stage = 'webgl';
       gl = canvas.getContext('webgl', {antialias:true, alpha:false, powerPreference:'high-performance'}) || canvas.getContext('experimental-webgl');
-      if (!gl) throw new Error('ingen WebGL-kontekst');
+      // none at all: the browser has 3D off for the page, most often after the driver gave up here once (Chrome keeps it off until it is
+      // closed and opened again), or for the machine
+      if (!gl) throw new Error(S.lang === 'en' ? 'no WebGL context (the browser has turned 3D off, often after a driver error: close the browser fully and open it again)' : 'ingen WebGL-kontekst (nettleseren har slått av 3D, ofte etter en driverfeil: lukk nettleseren helt og åpne den igjen)');
       { const dbg = gl.getExtension('WEBGL_debug_renderer_info'); GPU = String((dbg && gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL)) || gl.getParameter(gl.RENDERER) || '').slice(0, 80); }
       if (!glWatch){
         // a lost context: the view stops; lost before it was ready (a phone short of memory, or a GPU process that restarted), it
@@ -2976,12 +2987,13 @@ const G3 = (() => {
       // The sea is the heaviest program, and a phone's driver may refuse to link it with no word why (Adreno 642L, 05.10.2026: «sjø link:
       // ingen logg fra driveren»): then it tries without the texture in the vertex shader, then with the far pass's simpler waves, and
       // tells the cloud which one it took
-      seaLvl = seaLvlGet();
+      seaLvl = seaLvlGet(); seaTryMark(true);
+      if (seaBumped && typeof cloudErr === 'function') cloudErr('3D sjønivå ' + seaLvl + ' etter et forsøk som ikke kom tilbake · ' + GPU, 'view3d init', '');
       const seaWhy = [], seaTry = (seaLvl >= 2 ? [] : seaLvl === 1 ? [[true, true]] : [[!SST_VS, false], [true, false], [true, true]]).filter((t, i, a) => a.findIndex(u => u[0] === t[0] && u[1] === t[1]) === i);
       PS = null;
       for (const [nosst, far] of seaTry){
         try { PS = program((nosst ? '#define NOSST\n' : '') + SEA_VS, SEAF((far ? '#define FAR\n' : '') + SEA_FS), ['aXZ'], 'sjø'); SST_VS = !nosst; break; }
-        catch (e){ if (gl.isContextLost()) throw e; seaWhy.push(e.message); }
+        catch (e){ if (gl.isContextLost()) throw e; seaWhy.push(e.message); if (/ingen logg/.test(e.message)) await glSettle(); }
       }
       let seaDiag = '';
       if (!PS && seaLvl < 2){
@@ -2995,6 +3007,7 @@ const G3 = (() => {
       if (!PS){ PS = program(BASIC_VS, BASIC_FS, ['aXZ'], 'enkel sjø'); PS.basic = true; SST_VS = false; }
       try { PSF = PS.basic || seaLvl === 1 ? PS : program('#define NOSST\n' + SEA_VS, SEAF('#define FAR\n' + SEA_FS), ['aXZ'], 'sjø langt'); }
       catch (e){ if (gl.isContextLost()) throw e; seaWhy.push(e.message); PSF = PS; }
+      await glSettle(); seaTryMark(false);   // the sea came through and the context is still there
       if (seaWhy.length && typeof cloudErr === 'function') cloudErr('3D sjø med reserve (' + (SST_VS ? 'vtf' : 'novtf') + (PSF === PS ? ', én sjø' : '') + seaDiag + ') · ' + GPU, 'view3d init', seaWhy.join('\n'));
       SSDUMMY = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, SSDUMMY); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255])); PK = program(SKY_VS, SKY_FS, ['aP'], 'himmel'); PP = program(PT_VS, PT_FS, ['aPos', 'aA'], 'punkter');
       DYNP = buf(new Float32Array(4000 * 3), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); DYNA = buf(new Float32Array(4000), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW);
