@@ -391,6 +391,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p48', '05.10.2026', 'Norges beste båter', 'Norway\'s best boats', [
+      ['Topplista i Salgslaget gjelder nå hele kysten, med de ekte spillerne. Den har to lister: åpen gruppe, der båtene står med navnet sitt, og lukket gruppe, der både fartøy og rederi står. Den som ligger øverst, har Norges beste båt den uka.', 'The leaderboard in Sales now covers the whole coast, with the real players. It has two lists: the open group, where the boats are listed by name, and the closed group, where both vessel and company are shown. The one at the top has Norway\'s best boat that week.']]],
     ['p47', '05.10.2026', 'Toppliste for åpen gruppe', 'Leaderboard for the open group', [
       ['Salgslaget → Toppliste viser nå de ekte spillerne i åpen gruppe, rangert etter hvor mye de har landet denne uka og forrige uke. Alle står med båtnavnet sitt og mottaket de har levert mest til, ikke med firmanavnet.', 'Sales → Leaderboard now shows the real players in the open group, ranked by how much they have landed this week and last week. Everyone is listed by their boat\'s name and the plant they delivered most to, not by the company name.'],
       ['Har du skrudd av «Vis båten min for andre spillere», står du som ukjent båt for de andre.', 'If you have turned off «Show my boat to other players», you show as an unknown boat to the others.'],
@@ -751,24 +753,32 @@ const PHONE = (() => {
       if (Object.keys(tot).length) h.push('<div class="ph-card"><h4>' + L('Per art', 'By species') + '</h4>' + SP.filter(sp => tot[sp]).map(sp => kv(spName(sp), fmt(tot[sp], 0) + ' kg')).join('') + '</div>');
       h.push('<div class="ph-card"><h4>' + L('Sluttsedler', 'Landing notes') + '</h4>' + (S.sales.length ? '<table class="ph-tbl"><tr><th>' + L('Dato', 'Date') + '</th><th>' + L('Mottak', 'Plant') + '</th><th class="n">kg</th><th class="n">kr</th></tr>' + S.sales.slice().reverse().slice(0, 30).map(x => '<tr><td>' + dayStr(x.t / 60).replace(/^\S+ /, '') + '</td><td>' + portById(x.port).name + '</td><td class="n">' + fmt(x.kg, 0) + '</td><td class="n">' + fmt(x.total, 0) + '</td><td class="n"><button class="ph-btn alt" style="margin:0;padding:3px 8px" data-pa="book" data-i="' + S.sales.indexOf(x) + '" aria-label="' + L('Åpne i dekksdagboka', 'Open in the deck log') + '">📖</button></td></tr>').join('') + '</table>' : '<p class="ph-note">' + L('Ingen landinger ennå.', 'No landings yet.') + '</p>') + '</div>');
     } else {
-      const w = weekOf(H), which = sub.salgW === 'prev' ? w - 1 : w, T = typeof worldTop === 'function' ? worldTop(Math.max(0, which)) : null;
+      // the leaderboards of the whole coast, one for each group (Jonas 05.10.2026: «Det er snakk om Norges beste båt om du ligger øverst»)
+      const w = weekOf(H), which = sub.salgW === 'prev' ? w - 1 : w, grp = sub.salgG || (S.lic ? 'lukket' : 'open'), T = typeof worldTop === 'function' ? worldTop(Math.max(0, which), grp) : null;
+      h.push('<div class="ph-sub" style="padding:0 0 6px"><button class="' + (grp === 'open' ? 'on' : '') + '" data-pa="salgG" data-s="open">' + L('Åpen gruppe', 'Open group') + '</button><button class="' + (grp === 'lukket' ? 'on' : '') + '" data-pa="salgG" data-s="lukket">' + L('Lukket gruppe', 'Closed group') + '</button></div>');
       h.push('<div class="ph-sub" style="padding:0 0 8px"><button class="' + (which === w ? 'on' : '') + '" data-pa="salgW" data-s="now">' + L('Denne uka', 'This week') + '</button><button class="' + (which !== w ? 'on' : '') + '" data-pa="salgW" data-s="prev">' + L('Forrige uke', 'Last week') + '</button></div>');
       const escT = v => String(v).replace(/[&<>"]/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'})[c]), me = escT(S.boatName || L('Deg', 'You')) + ' <small>(' + L('deg', 'you') + ')</small>';
+      const co = c => c ? '<br><small class="ph-note">' + escT(c) + '</small>' : '';
       if (T && !T.err){
-        // the open group's leaderboard: the players under their boats' names (Jonas 05.10.2026), from the server
-        const d = T.data, rows = d ? d.rows || [] : null, pn = id => { const q = id && portById(id); return escT(q ? q.name : id || '–'); };
-        h.push('<div class="ph-card"><h4>' + L('Åpen gruppe', 'Open group') + '</h4>' + (!d ? '<p class="ph-note">' + L('Henter topplista …', 'Fetching the leaderboard …') + '</p>'
-          : !rows.length ? '<p class="ph-note">' + (which === w ? L('Ingen har landet i åpen gruppe denne uka ennå.', 'No one has landed in the open group this week yet.') : L('Ingen landet i åpen gruppe forrige uke.', 'No one landed in the open group last week.')) + '</p>'
+        const d = T.data, rows = d ? d.rows || [] : null, pn = id => { const q = id && portById(id); return escT(q ? q.name : id || '–'); }, cl = grp === 'lukket';
+        const mine = cl && S.lic && S.company ? co(S.company) : '';
+        h.push('<div class="ph-card"><h4>' + L('Norges beste båter', 'Norway\'s best boats') + ' · ' + (cl ? L('lukket gruppe', 'closed group') : L('åpen gruppe', 'open group')) + '</h4>' + (!d ? '<p class="ph-note">' + L('Henter topplista …', 'Fetching the leaderboard …') + '</p>'
+          : !rows.length ? '<p class="ph-note">' + (which === w ? L('Ingen har landet i ' + (cl ? 'lukket' : 'åpen') + ' gruppe denne uka ennå.', 'No one has landed in the ' + (cl ? 'closed' : 'open') + ' group this week yet.') : L('Ingen landet i ' + (cl ? 'lukket' : 'åpen') + ' gruppe forrige uke.', 'No one landed in the ' + (cl ? 'closed' : 'open') + ' group last week.')) + '</p>'
           : '<table class="ph-tbl"><tr><th>#</th><th>' + L('Båt', 'Boat') + '</th><th>' + L('Mottak', 'Plant') + '</th><th class="n">kg</th></tr>' +
-            rows.map(r => '<tr class="' + (r.me ? 'me' : '') + '"><td>' + r.rank + '</td><td>' + (r.me ? me : escT(peerName(r.boat) === '–' ? L('Ukjent båt', 'Unknown boat') : peerName(r.boat))) + '</td><td>' + pn(r.port) + '</td><td class="n">' + fmt(r.kg, 0) + '</td></tr>').join('') +
-            (d.mine && d.mine.rank > rows.length ? '<tr class="me"><td>' + d.mine.rank + '</td><td>' + me + '</td><td></td><td class="n">' + fmt(d.mine.kg, 0) + '</td></tr>' : '') + '</table>') +
-          '<p class="ph-note">' + L('Spillerne i åpen gruppe etter hvor mye de har landet i spilluka, med båtnavnet og mottaket de har levert mest til.' + (d && d.n ? ' ' + d.n + (d.n === 1 ? ' båt' : ' båter') + ' har landet.' : '') + ' En som har skrudd av «Vis båten min for andre spillere», står som ukjent båt.',
-            'The players in the open group by how much they have landed this game week, with the boat\'s name and the plant they delivered most to.' + (d && d.n ? ' ' + d.n + (d.n === 1 ? ' boat has' : ' boats have') + ' landed.' : '') + ' Someone who has turned off «Show my boat to other players» shows as an unknown boat.') +
-          (S.lic ? ' ' + L('Du fisker i lukket gruppe og er ikke med her.', 'You fish in the closed group and are not on this list.') : '') + '</p></div>');
+            rows.map(r => { const bn = peerName(r.boat), cn = cl ? (peerName(r.company) === '–' ? L('Ukjent rederi', 'Unknown company') : peerName(r.company)) : '';
+              return '<tr class="' + (r.me ? 'me' : '') + '"><td>' + r.rank + '</td><td>' + (r.me ? me + (mine || co(cn)) : escT(bn === '–' ? L('Ukjent båt', 'Unknown boat') : bn) + co(cn)) + '</td><td>' + pn(r.port) + '</td><td class="n">' + fmt(r.kg, 0) + '</td></tr>'; }).join('') +
+            (d.mine && d.mine.rank > rows.length ? '<tr class="me"><td>' + d.mine.rank + '</td><td>' + me + mine + '</td><td></td><td class="n">' + fmt(d.mine.kg, 0) + '</td></tr>' : '') + '</table>') +
+          '<p class="ph-note">' + (cl ? L('Hele kysten: spillerne i lukket gruppe etter hvor mye de har landet i spilluka, med fartøyet, rederiet og mottaket de har levert mest til.', 'The whole coast: the players in the closed group by how much they have landed this game week, with the vessel, the company and the plant they delivered most to.')
+              : L('Hele kysten: spillerne i åpen gruppe etter hvor mye de har landet i spilluka, med båtnavnet og mottaket de har levert mest til.', 'The whole coast: the players in the open group by how much they have landed this game week, with the boat\'s name and the plant they delivered most to.')) +
+            (d && d.n ? ' ' + L(d.n + (d.n === 1 ? ' båt' : ' båter') + ' har landet.', d.n + (d.n === 1 ? ' boat has' : ' boats have') + ' landed.') : '') +
+            ' ' + L('En som har skrudd av «Vis båten min for andre spillere», står som ukjent.', 'Someone who has turned off «Show my boat to other players» shows as unknown.') +
+            (cl && !S.lic ? ' ' + L('Du fisker i åpen gruppe og er ikke med her.', 'You fish in the open group and are not on this list.') : !cl && S.lic ? ' ' + L('Du fisker i lukket gruppe og er ikke med her.', 'You fish in the closed group and are not on this list.') : '') + '</p></div>');
+      } else if (grp === 'lukket'){
+        h.push('<div class="ph-card"><p class="ph-note">' + L('Topplista for lukket gruppe, med alle spillerne langs kysten, vises når du er logget inn på detstorebla.no eller i appen.', 'The closed group\'s leaderboard, with all the players along the coast, shows when you are signed in on detstorebla.no or in the app.') + '</p></div>');
       } else {
         const rows = toplist(Math.max(0, which));
-        h.push('<div class="ph-card"><table class="ph-tbl"><tr><th>#</th><th>' + L('Fartøy', 'Vessel') + '</th><th>' + L('Havn', 'Port') + '</th><th class="n">kg</th></tr>' + rows.map((r, i) => '<tr class="' + (r.me ? 'me' : '') + '"><td>' + (i + 1) + '</td><td>' + (r.me ? me : r.name) + '</td><td>' + r.port + '</td><td class="n">' + fmt(r.kg, 0) + '</td></tr>').join('') + '</table><p class="ph-note">' + L('Landet kvantum hos mottakene i Senja-området. Topplista for åpen gruppe med de andre spillerne vises når du er logget inn på detstorebla.no eller i appen.', 'Landed weight at the plants around Senja. The open group\'s leaderboard with the other players shows when you are signed in on detstorebla.no or in the app.') + '</p></div>');
-      };
+        h.push('<div class="ph-card"><table class="ph-tbl"><tr><th>#</th><th>' + L('Fartøy', 'Vessel') + '</th><th>' + L('Havn', 'Port') + '</th><th class="n">kg</th></tr>' + rows.map((r, i) => '<tr class="' + (r.me ? 'me' : '') + '"><td>' + (i + 1) + '</td><td>' + (r.me ? me : r.name) + '</td><td>' + r.port + '</td><td class="n">' + fmt(r.kg, 0) + '</td></tr>').join('') + '</table><p class="ph-note">' + L('Landet kvantum hos mottakene rundt Senja. Den nasjonale topplista med de andre spillerne vises når du er logget inn på detstorebla.no eller i appen.', 'Landed weight at the plants around Senja. The national leaderboard with the other players shows when you are signed in on detstorebla.no or in the app.') + '</p></div>');
+      }
     }
     h.push('</div>'); return h.join('');
   }
@@ -1127,7 +1137,7 @@ const PHONE = (() => {
     log('Overtok ' + VESSELS[k].name.no + '. ' + old.name.no + ' er solgt.', 'Took over the ' + VESSELS[k].name.en + '. The ' + old.name.en + ' has been sold.');
     if (typeof G3 !== 'undefined') G3.vesselChanged();
   }
-  const NAV = new Set(['open', 'home', 'back', 'close', 'lang', 'sub', 'shop0', 'shopgear', 'salgW', 'vsel', 'goto', 'vfollow', 'vboard', 'vname', 'vsell']);
+  const NAV = new Set(['open', 'home', 'back', 'close', 'lang', 'sub', 'shop0', 'shopgear', 'salgW', 'salgG', 'vsel', 'goto', 'vfollow', 'vboard', 'vname', 'vsell']);
   function act(a, d){
     const was = app, done = SEL_APPS.includes(app) && !NAV.has(a) ? withSel(() => act0(a, d)) : act0(a, d);
     // a link to a page that lives in the drawer now (Neste mål, Rederi's «Åpne») closes the phone and opens the drawer
@@ -1180,6 +1190,7 @@ const PHONE = (() => {
     else if (a === 'sub'){ sub[app] = d.s; }
     else if (a === 'ruchk'){ const c = ruChk(); c[d.k] = /^-?\d+(\.\d+)?$/.test(d.v) ? +d.v : d.v === 'null' ? null : d.v; S.ruChk = c; sub.regler = 'sjekk'; }
     else if (a === 'salgW'){ sub.salgW = d.s; }
+    else if (a === 'salgG'){ sub.salgG = d.s; }
     else if (a === 'tow'){ rescue(true); toast(L('Redningsskøyta er på vei.', 'The rescue boat is on its way.')); }
     else if (a === 'mayday'){ confirmMayday = true; }
     else if (a === 'mayday0'){ confirmMayday = false; }

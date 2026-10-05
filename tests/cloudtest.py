@@ -146,9 +146,15 @@ async def main():
           await new Promise(r => setTimeout(r, 200)); const tb = document.querySelector('#phone .ph-tbl'), rows = tb ? [...tb.querySelectorAll('tr')].slice(1).map(r => r.innerText.replace(/\\s+/g, ' ').trim()) : [];
           const out = {rows, img:tb ? tb.querySelectorAll('td b, td img').length : -1, xss:!!window.__xss, me:tb && tb.querySelector('tr.me') ? tb.querySelector('tr.me').innerText : null, head:document.querySelector('#phone .ph-card h4') && document.querySelector('#phone .ph-card h4').textContent};
           PHONE.show(false); return out; }""")
+        replies['world_top'] = {'grp': 'lukket', 'rows': [{'rank': 1, 'boat': 'Nordkapp', 'company': 'Nordkapp Havfiske AS', 'port': 'botnhamn', 'kg': 24000, 'me': False}], 'mine': None, 'n': 1}
+        tl = await pg.evaluate("""async () => { PHONE.open('salg'); document.querySelector('#phone [data-pa=sub][data-s=top]').click(); document.querySelector('#phone [data-pa=salgG][data-s=lukket]').click();
+          for (let i = 0; i < 40 && !(document.querySelector('#phone .ph-tbl td') && document.querySelector('#phone .ph-card h4').textContent.includes('lukket')); i++) await new Promise(r => setTimeout(r, 100));
+          const tb = document.querySelector('#phone .ph-tbl'), out = {head:document.querySelector('#phone .ph-card h4').textContent, row:tb ? tb.querySelectorAll('tr')[1].innerText.replace(/\\s+/g, ' ') : null}; PHONE.show(false); return out; }""")
         wt = [c[1] for c in calls if c[0] == 'world_top']
-        check(t['head'] == 'Åpen gruppe' and len(t['rows']) == 2 and 'Snøgg' in t['rows'][0] and 'Botnhamn' in t['rows'][0] and t['img'] == 0 and not t['xss'] and t['me'] and 'Havbris' in t['me'] and '(deg)' in t['me']
-              and wt and isinstance(wt[0].get('w'), int) and lp and lp[0].get('boat') == 'Havbris',
+        check(tl['head'].endswith('lukket gruppe') and tl['row'] and 'Nordkapp' in tl['row'] and 'Nordkapp Havfiske AS' in tl['row'] and any(a.get('grp') == 'lukket' for a in wt),
+              "the closed group's leaderboard: the vessel and the company of each player along the coast", tl)
+        check(t['head'] == "Norges beste båter · åpen gruppe" and len(t['rows']) == 2 and 'Snøgg' in t['rows'][0] and 'Botnhamn' in t['rows'][0] and t['img'] == 0 and not t['xss'] and t['me'] and 'Havbris' in t['me'] and '(deg)' in t['me']
+              and wt and isinstance(wt[0].get('w'), int) and wt[0].get('grp') == 'open' and lp and lp[0].get('boat') == 'Havbris' and lp[0].get('company') == '',
               "the open group's leaderboard: the players under their boats' names and plants, yourself marked, a name with markup only text; each sale carries the boat's name",
               {'t': t, 'ask': wt[:1], 'boat': lp[0].get('boat') if lp else None})
         n0 = len(calls); await pg.evaluate("worldShare()"); await pg.wait_for_timeout(500)

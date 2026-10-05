@@ -47,16 +47,18 @@ async function worldShare(){
   } catch (e){ if (/ 404$/.test(e.message)){ WSH2.off = true; WSH.rec = false; } }
   finally { WSH2.busy = false; }
 }
-// ---- the open group's leaderboard (05.10.2026; Salgslaget → Toppliste; supabase/migrations/20261006020000_toplist.sql): the players
-// ranked by what they landed in the open group in a game week, under their boats' names. Fetched when the list is shown, at most once a
-// minute a week, and again after this game's sales have gone up; null without the cloud (the phone then shows the Senja fleet). ----
+// ---- the leaderboards (05.10.2026; Salgslaget → Toppliste; supabase/migrations/20261006020000_toplist.sql): the players of the whole
+// coast ranked by what they landed in the open or the closed group (grp) in a game week, under their boats' names, and in the closed
+// group their companies'. Fetched when a list is shown, at most once a minute a list, and again after this game's sales have gone up;
+// null without the cloud (the phone then shows the Senja fleet). ----
 const WTOP = {};
-function worldTop(w){
+function worldTop(w, grp){
   if (typeof CLOUD === 'undefined' || !CLOUD.on || !CLOUD.user) return null;
-  const e = WTOP[w] || (WTOP[w] = {at:0, data:null, busy:false, err:false});
+  grp = grp === 'lukket' ? 'lukket' : 'open';
+  const key = w + '|' + grp, e = WTOP[key] || (WTOP[key] = {at:0, data:null, busy:false, err:false});
   if (!e.busy && Date.now() - e.at > 60000){
     e.busy = true;
-    cloudRpc('world_top', {w}).then(d => { e.data = d; e.err = false; }).catch(() => { e.err = true; })
+    cloudRpc('world_top', {w, grp}).then(d => { e.data = d; e.err = false; }).catch(() => { e.err = true; })
       .finally(() => { e.busy = false; e.at = Date.now(); if (PHONE.isOpen() && PHONE.app === 'salg') PHONE.render(); });
   }
   return e;
