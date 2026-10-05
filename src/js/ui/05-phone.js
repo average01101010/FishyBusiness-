@@ -296,11 +296,13 @@ const PHONE = (() => {
   function innst(){
     const chk = (id, on) => '<input type="checkbox" id="' + id + '"' + (on ? ' checked' : '') + '>';
     // the 3D view's quality (view3d.js QUAL): automatic steps down when the frames get slow, and back up when there is room
-    const q3 = S.settings.q3d || 'auto', ql = [['auto', L('Auto', 'Auto')], ['low', L('Lav', 'Low')], ['mid', L('Middels', 'Medium')], ['high', L('Høy', 'High')]], now = typeof G3 !== 'undefined' && G3.quality ? G3.quality() : null;
+    const q3 = S.settings.q3d || 'auto', ql = [['auto', L('Auto', 'Auto')], ['low', L('Lav', 'Low')], ['mid', L('Middels', 'Medium')], ['high', L('Høy', 'High')], ['ultra', L('Ultra', 'Ultra')]], now = typeof G3 !== 'undefined' && G3.quality ? G3.quality() : null;
     return '<div class="ph-c"><div class="ph-card ph-set"><h4>' + L('Spill', 'Game') + '</h4><label>' + L('Språk', 'Language') + '<button class="ph-btn alt" data-pa="lang" style="margin:0">' + (S.lang === 'no' ? 'English' : 'Norsk') + '</button></label></div>' +
       '<div class="ph-card"><h4>' + L('Grafikk i 3D', '3D graphics') + '</h4><div class="ph-sub">' + ql.map(([v, l]) => '<button class="' + (q3 === v ? 'on' : '') + '" data-pa="q3d" data-v="' + v + '">' + l + '</button>').join('') + '</div><p class="ph-note">' +
       L('Lav tegner med færre piksler, kortere detaljer rundt båten, uten skygger og sjørokk. Auto går ned et nivå når bildene kommer for sjelden, og opp igjen når det er god margin.', 'Low draws fewer pixels and less detail round the boat, without shadows and spray. Auto steps down a level when the frames come too slowly, and back up when there is room.') +
-      (now ? ' ' + L('Nå: ', 'Now: ') + ['Lav', 'Middels', 'Høy'][now.lvl] + (now.fps ? ' · ' + Math.round(now.fps) + ' bilder/s' : '') : '') + '</p>' +
+      ' ' + L('Ultra er for de kraftigste telefonene og PC-ene: skjermens fulle oppløsning, tettere terreng og sjø, 160 km terreng og sikt til 90 km i klarvær, og bygg, trær og båter i full detalj lenger ut. Den går aldri på av seg selv, og telefonen kan bli varm.', 'Ultra is for the most powerful phones and PCs: the screen’s full resolution, denser terrain and sea, 160 km of terrain and a view of 90 km in clear weather, and buildings, trees and boats in full detail further out. It never comes on by itself, and the phone may get warm.') +
+      (now && now.ultra === false ? ' ' + L('Denne enheten kan ikke bruke Ultra.', 'This device cannot use Ultra.') : '') +
+      (now ? ' ' + L('Nå: ', 'Now: ') + ['Lav', 'Middels', 'Høy', 'Ultra'][now.lvl] + (now.fps ? ' · ' + Math.round(now.fps) + ' bilder/s' : '') : '') + '</p>' +
       // the frame rate in a corner of the 3D view, to measure on the tablet (#fps in the address does not reach the artifact's page)
       '<div class="ph-sub"><button class="' + (S.settings.fpsShow ? 'on' : '') + '" data-pa="fpsShow" data-v="1">' + L('Vis bildetakt', 'Show frame rate') + '</button><button class="' + (S.settings.fpsShow ? '' : 'on') + '" data-pa="fpsShow" data-v="0">' + L('Skjul', 'Hide') + '</button></div></div>' +
       // the sound (ui/10e-sound.js): off, or a volume
@@ -382,6 +384,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p28', '05.10.2026', 'Ultra-grafikk', 'Ultra graphics', [
+      ['Nytt nivå i Grafikk i 3D: Ultra, for de kraftigste telefonene og PC-ene. Det gir skjermens fulle oppløsning, tettere terreng og sjø med bølger hver 2. meter, og terreng 160 km bredt. Sikten er opptil 90 km i klarvær, og bygg, trær og båter vises i full detalj lenger ut. Slå på «Vis bildetakt» for å se hvor mye telefonen tåler.', 'New level in 3D graphics: Ultra, for the most powerful phones and PCs. It gives the screen’s full resolution, denser terrain and a sea with waves every 2 metres, and terrain 160 km wide. The view reaches up to 90 km in clear weather, and buildings, trees and boats show in full detail further out. Turn on «Show frame rate» to see how much the phone can take.']]],
     ['p27', '05.10.2026', 'Sjømerker langs hele kysten', 'Sea marks along the whole coast', [
       ['Lykter med sektorer og blink, fyr, staker, bøyer, kardinalmerker, varder og skjær langs hele kysten, ikke bare på Senja. De står i 3D, blinker om natta, vises i kartplotteren, og Autonav går utenom dem. Skjærene kan du gå på grunn på. Dataene kommer fra OpenStreetMap, som har dem fra Kystverket.', 'Lights with sectors and flashes, lighthouses, stakes, buoys, cardinal marks, cairns and rocks along the whole coast, not only on Senja. They stand in 3D, flash at night, show on the chart plotter, and Autonav keeps clear of them. You can run aground on the rocks. The data comes from OpenStreetMap, which has it from the Norwegian Coastal Administration.']]],
     ['p26', '05.10.2026', 'Mottakene langs hele kysten', 'The plants along the whole coast', [

@@ -423,15 +423,26 @@ Jonas valgte 02.10.2026 å la GitHub bygge og lagre de nasjonale kartdataene. Gi
   - Fjernterrenget (`TERR`) er et vindu på 100 km rundt båten, på et rutenett av 10 km. Det bygges på nytt når båten er 20 km fra midten (`TERRW`).
   - Det vide sjøtilstandskartet og havet langt ute følger det samme vinduet.
   - Senja-kvadratet (`HOME`) brukes nå bare til startutsnittet, zoommålet i 2D og de faste meshene for Senja-havnene.
-- **Kvalitetsnivåer** (`QUAL`, valget Grafikk i 3D i Innstillinger på telefonen: Auto, Lav, Middels, Høy):
+- **Kvalitetsnivåer** (`QUAL`, valget Grafikk i 3D i Innstillinger på telefonen: Auto, Lav, Middels, Høy, Ultra):
 
-  | | Lav | Middels | Høy |
-  |---|---|---|---|
-  | Største `dpr` | 1 | 1,25 | 1,5 |
-  | Nærterreng (nær / langt kamera) | 3 / 6 km | 6 / 12 km | 6 / 12 km |
-  | Skygger på terrenget | av | på | på |
-  | Havskyggeren | fjernvarianten helt inn til bølgefeltet | full | full |
-  | Sjørokk og sprut i lufta | av | på | på |
+  | | Lav | Middels | Høy | Ultra |
+  |---|---|---|---|---|
+  | Største `dpr` | 1 | 1,25 | 1,5 | 3 (skjermens egne) |
+  | Nærterreng (nær / langt kamera) | 3 / 6 km | 6 / 12 km | 6 / 12 km | 9 / 18 km |
+  | Punkter per side: nær / midt / fjern | 256 / 256 / 255 | 256 / 256 / 255 | 256 / 256 / 255 | 384 / 384 / 511 |
+  | Finbakken (1 km rundt båten) | 768 m, 192 | 1024 m, 256 | 1024 m, 256 | 1024 m, 384 (2,7 m) |
+  | Fjernterrengets vindu | 100 km | 100 km | 100 km | 160 km |
+  | Kameraets fjerngrense og klarværssikt | 170 / 50 km | 170 / 50 km | 170 / 50 km | 260 / 90 km |
+  | Landmasken | 2048 | 2048 | 2048 | 4096 |
+  | Bølgefeltet (600 m) | 4 m | 4 m | 4 m | 2 m |
+  | Bygg og trær | 1,3 km | 1,3 km | 1,3 km | 2,2 km |
+  | Mottak, naust og båter i full detalj | 1 × | 1 × | 1 × | 1,8 × |
+  | Tid til nett og skygger per bilde | 3+2 ms | 4+3 ms | 5+4 ms | 9+8 ms |
+  | Skygger på terrenget | av | på | på | på |
+  | Havskyggeren | fjernvarianten helt inn til bølgefeltet | full | full | full |
+  | Sjørokk og sprut i lufta | av | på | på | på |
+
+  - **Ultra** (Jonas 05.10.2026: «en ultra grafikk setting ... finne ut hvor grensa ligger for flagship-modeller») velges bare for hånd, aldri av Auto. Det krever 32-bits indekser (`OES_element_index_uint`, `UINT`), ellers blir det Høy. Nettene over 65 536 punkter får `Uint32`-indekser (`i32`), og tegnekallene velger type etter det. Bildetakten vises med «Vis bildetakt» i Innstillinger. Testen er `tests/ultratest.py`.
 
   - Auto går ned et nivå etter 4 s under 28 bilder/s og opp et nivå etter 12 s over 50, men ikke tilbake til et nivå den forlot før det har gått to minutter.
   - `#qfix` i adressen holder nivået på Høy. Testene bruker det (`_env.py`), fordi SwiftShader bare gir noen få bilder/s.
