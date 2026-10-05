@@ -10,7 +10,7 @@
 const HELM = {t:0, nm:0};   // the wall time of the last helm step (ms), so the pose between ticks follows on; the distance for the tattoos
 function helmOn(){ const b = S.boat; return !!(S.settings && S.settings.manual && S.helm && S.helm.on && !S.plan && b.status === 'sailing'); }
 // game minutes per real minute (the pace S.mult is the admin's, for tests)
-function simRate(){ return GAME_RATE * (S.mult || 1); }
+function simRate(){ return GAME_RATE * (WCLOCK.on ? 1 : (S.mult || 1)); }   // (one clock for everyone: no pace of one's own, core/01-world.js)
 function helmCan(){ const b = S.boat; return !!(S.settings && S.settings.manual) && ['sailing', 'idle'].includes(b.status) && !b.gop && !sleepAlone(); }
 // the controls were touched: the hand takes the helm (from a route, Autonav or lying still), at the speed she has
 function helmTake(){

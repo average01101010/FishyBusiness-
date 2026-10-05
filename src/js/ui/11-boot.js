@@ -46,7 +46,9 @@ if (S){ awayMs = Date.now() - (S.lastReal || Date.now()); } else S = newState();
   } }
 { const d = newState(); for (const k of ['equip', 'crew', 'loan', 'member', 'msgs', 'sales', 'order', 'owned', 'stock', 'marks', 'jobs', 'prep', 'tripBuff', 'draftDep', 'navrows', 'company', 'boatName', 'tut', 'incidents', 'lore', 'tattoos', 'tat', 'sets', 'gseq', 'ops', 'lic', 'qseed', 'haill', 'pubE', 'target', 'streak', 'clothes', 'orders', 'rep', 'bors', 'cevt', 'workLog']) if (S[k] === undefined || (k === 'stock' && !S[k])) S[k] = d[k];
   if (!S.fm) S.fm = fmInit();   // blad B from the landing notes kept, and at once for a company that already has a closed-group right
-  if (!adminOk()){ S.mult = 1; if (S.adm) S.adm.noEnergy = false; }   // the Admin app's pace and energy are only Jonas's (cloud adminOk)
+  if (!adminOk()){ S.mult = 1; if (S.adm) S.adm.noEnergy = false; }
+  // one clock for everyone (core/01-world.js): no pace of one's own, and the world's seed for the quota years, stocks and sellers
+  if (WCLOCK.on){ S.mult = 1; S.qseed = WORLD_SEED; }   // the Admin app's pace and energy are only Jonas's (cloud adminOk)
   if (!S.boat.type) S.boat.type = 'trebat'; if (S.boat.engH === undefined){ S.boat.engH = 0; S.boat.svcAt = 0; }
   delete S.settings.bleed;   // never used; the fish is always bled at the rail
   if (typeof S.tut === 'number') S.tut = 0;   // saves from before «Første tur» are not sent through it
@@ -76,6 +78,7 @@ if (!S.intro) showIntro();
 else if (!S.boatName) showIntro(true);
 // the catch-up waits for the simulation's data (simReady below), so the time away is played with the real depths
 AWAY = !S.intro || !S.boatName ? 0 : awayMs > 6000 ? awayMs : 0;
+if (WCLOCK.on && S.intro && S.boatName && worldT() - S.t > 1) AWAY = Math.max(AWAY, 6001);   // behind the world's clock: catchUp plays the gap
 lastWall = Date.now();
 streakTouch();
 refreshAll();

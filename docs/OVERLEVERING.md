@@ -968,6 +968,24 @@ Jonas' valg: gratis å spille med kjøp via Stripe, påkrevd innlogging med Work
   - Det som står igjen, og hullet med WorkOS-brukeren ved «slett kontoen», står i `docs/lansering.md` under «Juridisk».
 
 
+### 4.21 Felles verden V1: én klokke for alle (05.10.2026)
+
+Jonas: «det er viktig at alle har en delt klokke fordi dette er et online-spill». Planen V1–V3 er godkjent: verden starter ved utrullingen, går i 6×, og spillerne skal kunne se hverandre.
+
+- **Klokka** (`core/01-world.js`):
+  - Spillminutt 0 (1. mars 2027 kl. 06, `EPOCH`) var `WORLD_T0` = 5.10.2026 kl. 15:00 UTC.
+  - Verdens minutt er `worldT()` = (nå − `WORLD_T0`) × `GAME_RATE` / 60 000.
+  - «Nå» er serverens tid: `worldSync` (`ui/10f-cloud.js`) leser `Date` fra en ny HEAD av siden og legger forskjellen i `WCLOCK.off`. Uten nett brukes enhetens egen klokke.
+  - Klokka gjelder overalt, også i artifacten og på GitHub Pages, men ikke for testene på en lokal server. Der går hvert spill fra 0 som før, med mindre adressen har `#world` (`worldtest`).
+- **Spillet følger verdens minutt** (`tick` i `ui/08-actions.js`):
+  - Hver tikk går simuleringen fram til verdens minutt, og `acc` er brøkdelen til den glatte bevegelsen.
+  - Er spillet mer enn ti spillminutter bak (fanen har sovet), spilles fraværet med `catchUp`, også mer enn 72 timer. Mer enn to uker hoppes over til de siste to (`WORLD_SIM_MAX`).
+  - Er spillet foran verdens klokke (en lagring fra før), går det med halv fart til verden har tatt det igjen. Ingenting stilles tilbake. Det gjelder bare de fire lagringene fra før start, som var høyst 0,6 spilldøgn foran.
+- **Ingen egen fart:** `simRate()` ser bort fra `S.mult`. Admin-appen viser «Felles klokke» med verdens tid i stedet for fartsknappene. Spoling er fjernet fra før (p31).
+- **Samme verden:** `S.qseed` = `WORLD_SEED` for alle, så kvoteårene, bestandene, ferskfiskplanene og kjøperne er like. Været, tidevannet, sola og årstidene regnes fra klokka og er derfor felles av seg selv.
+- **Nye spill** begynner på verdens minutt (`newState`). Første tur virker uansett tid på døgnet, fordi mottaket alltid tar imot den første fangsten (`mottakOpen`).
+- **Ennå ikke felles (V2 og V3):** bestanden der du fisker, flåtens fangst i åpen gruppe og prisene etter leveransene regnes fortsatt per spiller. Andre spillere vises ikke ennå.
+
 ## 5. Systemer i spillet
 
 ### 5.1 Båter og utstyr

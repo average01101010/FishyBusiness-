@@ -1,6 +1,19 @@
 const EPOCH = Date.UTC(2027, 2, 1, 6, 0, 0);
 // game minutes per real minute: 6 makes a fishing trip one evening, the skrei season two real weeks and a year about two months
 const GAME_RATE = 6;
+// ---------- one clock for everyone (05.10.2026, the shared world V1) ----------
+// Jonas: «det er viktig at alle har en delt klokke fordi dette er et online-spill». Game minute 0, 1 March 2027 06:00 (EPOCH), was at
+// WORLD_T0 in real time, and the world's minute now is (now − WORLD_T0) × GAME_RATE / 60 000 on the server's clock (WCLOCK.off, from
+// the Date of the page's own server: ui/10f-cloud.js worldSync). Every game runs on it, on every device and host, so all players have
+// the same date and hour, and nothing can move one player's clock on (no fast forward, no admin pace). The tests on a local server
+// keep their own clock from 0, unless the address has #world. The world's quota years, stocks, fresh-fish plans and sellers come from
+// one seed (WORLD_SEED) instead of one per player. The game itself steps on to the world's minute (ui/08-actions.js tick), plays the
+// time away when it is behind, and goes at half pace when a save from before is ahead, until the world has caught up with it.
+const WORLD_T0 = Date.UTC(2026, 9, 5, 15, 0, 0), WORLD_SEED = 20270301;
+const WCLOCK = {off:0, on:typeof location === 'undefined' ? false : !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) || /(^#|[#,])world\b/.test(location.hash)};
+const worldNow = () => Date.now() + WCLOCK.off;
+const worldTf = () => Math.max(0, (worldNow() - WORLD_T0) * GAME_RATE / 60000);
+const worldT = () => Math.floor(worldTf());
 const NM = 1.852;
 // The game's frame is the national one (phase K4 of the coast plan): UTM zone 33 in km, x = (E + 250 km) / 1000 east and
 // y = (8 050 km - N) / 1000 south (00-proj.js). Senja lies at x 810-892, y 311-397. Grid north is not true north: a true bearing is

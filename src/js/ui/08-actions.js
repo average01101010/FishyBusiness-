@@ -221,8 +221,12 @@ const CATCHUP_CAP = 72 * 60;
 // CATCH_LEFT and is played by the tick once the packs are in, so a slow network makes the clock wait, never guess.
 let CATCH_LEFT = 0;
 function playMinutes(n){ let i = 0; for (; i < n; i++){ if (!simAreaReady()){ CATCH_LEFT += n - i; break; } step(); } return i; }
+// on the world's clock (core/01-world.js) the time away is what the game is behind it, all of it; more than two weeks is skipped to the
+// last two (the clock moves on, the simulation plays the last two weeks)
+const WORLD_SIM_MAX = 14 * 24 * 60;
 function catchUp(realMs){
-  const mins = Math.min(CATCHUP_CAP, Math.floor(realMs / 1000 / 60 * GAME_RATE));
+  let mins = Math.min(CATCHUP_CAP, Math.floor(realMs / 1000 / 60 * GAME_RATE));
+  if (WCLOCK.on){ const w = worldT(); mins = Math.max(0, w - S.t); if (mins > WORLD_SIM_MAX){ S.t = w - WORLD_SIM_MAX; mins = WORLD_SIM_MAX; } realMs = mins / GAME_RATE * 60000; }
   if (mins < 1) return;
   const idx = S.log.length;
   playMinutes(mins);
@@ -234,7 +238,18 @@ let lastWall = Date.now(), acc = 0, lastPanel = 0, lastSave = 0, WAKE_BACK = fal
 function tick(){
   const now = Date.now(), dt = (now - lastWall) / 1000; lastWall = now;
   // (until the simulation's data is in, the clock waits: 11-boot.js)
-  if (SIMREADY){ if (CATCH_LEFT > 0){ const n = Math.min(CATCH_LEFT, 3000); CATCH_LEFT -= n; playMinutes(n); panelDirty = true; } else if (dt > 6) catchUp(dt * 1000); else { if (helmOn() && !sleepAlone()) helmStep(dt); acc += dt * simRate() / 60; let n = 0; while (acc >= 1 && n < 3000 && simAreaReady()){ step(); acc -= 1; n++; } } }
+  if (SIMREADY){ if (CATCH_LEFT > 0){ const n = Math.min(CATCH_LEFT, 3000); CATCH_LEFT -= n; playMinutes(n); panelDirty = true; }
+  else if (WCLOCK.on){
+    // one clock for everyone: step on to the world's minute; more than ten minutes behind (the tab slept) is time away; a save from
+    // before that is ahead goes at half pace until the world has caught up with it
+    const wf = worldTf(), gap = wf - S.t;
+    if (gap > 10) catchUp(0);
+    else { if (helmOn() && !sleepAlone()) helmStep(dt); let n = 0;
+      if (gap >= 0){ while (S.t + 1 <= wf && n < 3000 && simAreaReady()){ step(); n++; } acc = clamp(wf - S.t, 0, 0.999); }
+      else { acc += dt * GAME_RATE / 120; while (acc >= 1 && n < 3000 && simAreaReady()){ step(); acc -= 1; n++; } }
+      if (n) panelDirty = true; }
+  }
+  else if (dt > 6) catchUp(dt * 1000); else { if (helmOn() && !sleepAlone()) helmStep(dt); acc += dt * simRate() / 60; let n = 0; while (acc >= 1 && n < 3000 && simAreaReady()){ step(); acc -= 1; n++; } } }
   if (WAKE_BACK && !CATCH_LEFT){ WAKE_BACK = false; if (asleep()) wakeEarly(true); }
   heatTick();
   if (!G3.isActive()){ renderDyn(); if (AISSEL) renderAisCard(); heatPaint(); } renderHud(); renderClock(); renderActs(); DOCK.tick(); HUI.tick(); energyUi(); INSTR.renderGPS(); renderRouteTools(); tutUpdate(); PHONE.status(); PHONE.tickHome();

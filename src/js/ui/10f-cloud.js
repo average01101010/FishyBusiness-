@@ -56,7 +56,15 @@ function cloudGateShow(html){
 }
 function cloudGateHide(){ const g = document.getElementById('cloudGate'); if (g) g.remove(); }
 const cloudBtn = (id, label, primary) => '<button id="' + id + '" type="button" class="cg-btn' + (primary ? ' pri' : '') + '">' + label + '</button>';
+// the world's clock from the page's own server (core/01-world.js): the Date of a fresh HEAD of the page, to the second, against the
+// middle of the round trip, so a device with a wrong clock is on the same minute as everyone else; offline the device's own clock
+async function worldSync(){
+  if (!WCLOCK.on || typeof fetch === 'undefined' || !/^https?:/.test(location.protocol)) return;
+  try { const t0 = Date.now(), r = await fetch(location.origin + location.pathname + '?clock=' + t0, {method:'HEAD', cache:'no-store'}), t1 = Date.now(), d = Date.parse(r.headers.get('Date') || '');
+    if (d && t1 - t0 < 5000) WCLOCK.off = d + 500 - (t0 + t1) / 2; } catch (e){}
+}
 async function cloudGate(){
+  await worldSync();
   if (!cloudOn()) return;
   CLOUD.on = true;
   const c = CLOUD_CFG;

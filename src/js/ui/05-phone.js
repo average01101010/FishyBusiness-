@@ -336,8 +336,11 @@ const PHONE = (() => {
   function admin(){
     const pace = [[0, L('Pause', 'Pause')], [1, '6×'], [30, fmt(GAME_RATE * 30) + '×'], [300, fmt(GAME_RATE * 300) + '×'], [1800, fmt(GAME_RATE * 1800) + '×']];
     const day = S.mult ? 1440 / (GAME_RATE * S.mult) : 0, dur = day >= 60 ? fmt(day / 60, 1) + ' t' : day >= 1 ? fmt(day) + ' min' : fmt(day * 60) + ' s';
-    return '<div class="ph-c"><div class="ph-card"><h4>' + L('Tidsskala', 'Time scale') + '</h4><div class="ph-sub">' + pace.map(([v, l]) => '<button class="' + (S.mult === v ? 'on' : '') + '" data-pa="admPace" data-v="' + v + '">' + l + '</button>').join('') + '</div>' +
-      '<p class="ph-note">' + (S.mult ? L('Klokka går ' + fmt(GAME_RATE * S.mult) + ' ganger fortere enn ekte tid, så et døgn i spillet tar ' + dur + '.', 'The clock runs ' + fmt(GAME_RATE * S.mult) + ' times real time, so a day in the game takes ' + dur + '.') : L('Tida står stille.', 'Time stands still.')) + '</p></div>' +
+    // on the world's clock (core/01-world.js) the time scale is everyone's: the card says so, and only the tests have the pace buttons
+    const wh = worldTf() / 60, clockCard = WCLOCK.on ? '<div class="ph-card"><h4>' + L('Felles klokke', 'One clock for all') + '</h4>' + kv(L('Verdens tid', 'World time'), dayStr(wh) + ' ' + hm(wh)) + kv(L('Spillet her', 'This game'), dayStr(S.t / 60) + ' ' + hm(S.t / 60)) +
+      '<p class="ph-note">' + L('Alle spillerne går på samme klokke, 6 ganger fortere enn ekte tid. Den kan ikke stilles eller spoles fram.', 'Every player is on the same clock, 6 times real time. It cannot be set or moved on.') + '</p></div>' : null;
+    return '<div class="ph-c">' + (clockCard || '<div class="ph-card"><h4>' + L('Tidsskala', 'Time scale') + '</h4><div class="ph-sub">' + pace.map(([v, l]) => '<button class="' + (S.mult === v ? 'on' : '') + '" data-pa="admPace" data-v="' + v + '">' + l + '</button>').join('') + '</div>' +
+      '<p class="ph-note">' + (S.mult ? L('Klokka går ' + fmt(GAME_RATE * S.mult) + ' ganger fortere enn ekte tid, så et døgn i spillet tar ' + dur + '.', 'The clock runs ' + fmt(GAME_RATE * S.mult) + ' times real time, so a day in the game takes ' + dur + '.') : L('Tida står stille.', 'Time stands still.')) + '</p></div>') +
       '<div class="ph-card"><h4>' + L('Penger', 'Money') + '</h4>' + kv(L('Kasse', 'Cash'), kr(S.cash)) + '<button class="ph-btn" data-pa="admCash">+ 100 000 kr</button></div>' +
       // a full tank anywhere, for trips along the coast before there are fuel quays outside Senja (the user's wish 03.10.2026)
       '<div class="ph-card"><h4>' + L('Drivstoff', 'Fuel') + '</h4>' + kv(L('Tanken', 'Tank'), fmt(S.boat.fuel) + ' / ' + fmt(BOAT.fuelCap) + ' L') + '<button class="ph-btn" data-pa="admFuel">' + L('Fyll tanken', 'Fill the tank') + '</button></div>' +
@@ -388,6 +391,10 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p42', '05.10.2026', 'Én klokke for hele verden', 'One clock for the whole world', [
+      ['Nå går alle spillerne på nøyaktig samme klokke og dato, på alle enheter. Klokka hentes fra serveren, så en telefon med feil tid er likevel i takt. Verden startet 1. mars 2027 kl. 06 i dag kl. 17 norsk tid, og går 6 ganger fortere enn virkeligheten.', 'Now every player is on exactly the same clock and date, on every device. The clock comes from the server, so a phone with the wrong time is still in step. The world began at 06:00 on 1 March 2027 today at 17:00 Norwegian time, and runs 6 times real time.'],
+      ['Kvoteårene, bestandene, ferskfiskordningen og kjøperne er de samme for alle.', 'The quota years, the stocks, the fresh-fish scheme and the buyers are the same for everyone.'],
+      ['Spill fra før som lå foran verdens klokke, går med halv fart til verden har tatt dem igjen. Spill som lå bak, spoles fram.', 'Games from before that were ahead of the world\'s clock go at half pace until the world has caught up. Games that were behind are played forward.']]],
     ['p41', '05.10.2026', 'Rykk-knappen og ny konto', 'The strike button and a new account', [
       ['Når du jukser selv, står knappen høyere opp, over statuslinja. Det står «Vent på napp …» over den, og på knappen står det «Rykk». Den blir rød når fisken biter.', 'When you jig yourself, the button sits higher, above the status line. «Wait for a bite …» stands above it and «Strike» on it, and it turns red when the fish bites.'],
       ['Sletter du kontoen, slettes også spillet på enheten. Neste gang begynner du på nytt med brevet fra far og naustet.', 'Deleting the account also deletes the game on the device. Next time you begin again with Father’s letter and the boathouse.'],
@@ -1125,7 +1132,7 @@ const PHONE = (() => {
       const lang = S.lang, adm = S.adm; S = newState(); S.lang = lang; if (adm) S.adm = adm; S.draft = []; draftForget(true); ensureFleet(); LETTER.read = false; save(); refreshAll();
       show(false); log('Admin: nytt spill.', 'Admin: a new game.'); showIntro(); return true;
     }
-    else if (a === 'admPace'){ S.mult = +d.v; $('pace').value = String(S.mult); }
+    else if (a === 'admPace'){ if (WCLOCK.on){ toast(L('Alle går på samme klokke. Farten kan ikke endres.', 'Everyone is on one clock. The pace cannot be changed.')); return true; } S.mult = +d.v; $('pace').value = String(S.mult); }
     else if (a === 'admCash'){ S.cash += 100000; log('Admin: 100 000 kr lagt i kassa.', 'Admin: NOK 100,000 put in the cash.'); }
     else if (a === 'saveOut'){ saveCode().then(c => { saveBox = {mode:'out', text:c || ''}; render(); const ta = document.getElementById('saveCode'); if (ta){ ta.focus(); ta.select(); } if (c && navigator.clipboard) navigator.clipboard.writeText(c).then(() => toast(L('Lagringen er kopiert.', 'The save is copied.'))).catch(() => {}); }); return; }
     else if (a === 'saveIn'){ saveBox = {mode:'in', text:''}; }
