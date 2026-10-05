@@ -2245,7 +2245,7 @@ Jonas' liste: oppgraderinger, kvotehandel, kikkert, raskere fangst, fortøying, 
 - **Åpningstider på mottakene** (`mottakOpen`, `mottakNext`, `mottakWhen` i `07-harbours.js`):
   - Mottakene publiserer ingen tider (søkt 04.10.2026: Nergård i Senjahopen oppgir telefon, og Råfisklaget lister mottakene uten tider). Derfor typiske tider: hverdager 06–18, lørdag 08–14, stengt søndag, og 05–22 hver dag i skreisesongen (januar–april).
   - Første tur venter aldri.
-  - «Lever» viser når mottaket åpner og har knappen «Vent til åpning» (`playMinutes`).
+  - «Lever» viser når mottaket åpner. Knappen «Vent til åpning» er fjernet (Jonas 05.10.2026: alle spillerne går på samme klokke og dato, så ingenting kan spole tiden fram). Bare `catchUp` kjører simuleringen fram, til den felles klokka etter at spillet har vært lukket.
   - Driftsplanen venter ved kaia (`b.landWait`) og losser når mottaket åpner.
 - **Drivstoffprisen** (`fuelPrice(H, pid, diesel)` i `02-species-gear.js`):
   - Grunnprisen × en ukeskurve (AR(1) over ukene som fiskeprisene, ±12 %, lik i alle havner) × havnefaktor (±4 % etter navnet).
@@ -2319,7 +2319,7 @@ Jonas' liste: oppgraderinger, kvotehandel, kikkert, raskere fangst, fortøying, 
     4. Den sleper deg i 6 knop til nærmeste havn.
   - **Veiene** finnes med `leiaRoute` mens mannskapet mønstrer. Finnes ingen vei, går den rett. En båt på grunn dras først ut til nærmeste vann (`towSea`).
   - **Pris og fangst:** prisen trekkes ved anropet. Fangsten beholdes ved slep og går tapt ved nødanrop, som før.
-  - **I spillet:** statusen viser hva som skjer: venter på redningsskøyta, den er på vei, slepet settes, eller under slep i 6 kn. «Spol fram til havn» står i skuffen og i panelet, og Redning-appen viser slepet i stedet for knappene.
+  - **I spillet:** statusen viser hva som skjer: venter på redningsskøyta, den er på vei, slepet settes, eller under slep i 6 kn. «Spol fram til havn» er fjernet (05.10.2026, én klokke for alle), så slepet tar den tiden det tar. Redning-appen viser slepet i stedet for knappene.
   - **3D:** en generisk redningsskøyte på 16,5 m, uten merker fra Redningsselskapet:
     - oransje skrog, hvitt styrhus og svart fenderlist
     - mast med radar og blålys som blinker

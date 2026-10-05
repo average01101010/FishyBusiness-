@@ -384,6 +384,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p31', '05.10.2026', 'Én klokke for alle', 'One clock for everyone', [
+      ['Alle spillerne går på samme klokke og dato, så ingenting spoler tiden fram lenger: «Vent til åpning» ved et stengt mottak og «Spol fram til havn» under slep er fjernet. Mottaket viser når det åpner, og slepet tar den tiden det tar.', 'Every player is on the same clock and date, so nothing moves time on any more: «Wait for opening» at a closed plant and «Fast forward to harbour» under tow are gone. The plant shows when it opens, and the tow takes the time it takes.']]],
     ['p30', '05.10.2026', 'Mindre vinduer på telefonen', 'Smaller boxes on the phone', [
       ['Fart, kurs og posisjon står nå nederst i den lille kartplotteren, med neste veipunkt og ETA på en rute. GPS-boksen under er borte, bortsett fra når telefonen ligger, der kartplotteren er skjult.', 'Speed, course and position are now along the foot of the little chart plotter, with the next waypoint and ETA on a route. The GPS box under it is gone, except with the phone on its side, where the little chart is hidden.'],
       ['På en stående telefon tar statusboksen og den lille kartplotteren rundt en tredjedel av bredden, ikke halve skjermen.', 'On a standing phone the status box and the little chart plotter take about a third of the width, not half the screen.']]],

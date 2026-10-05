@@ -4,8 +4,10 @@ function renderClock(){
 }
 
 // the fishing chart needs the plotter on the vessel you follow; the wish is kept, so it comes back on a vessel that has one
-// the plant is closed: when it opens, and a button to wait for it (the clock runs on to the opening)
-function mottakShut(){ const no = S.lang === 'no'; return '<button class="btn" disabled>' + (no ? 'Mottaket er stengt · åpner ' : 'The plant is closed · opens ') + mottakWhen(S.t / 60, no) + '</button><button class="btn primary" data-act="waitopen">' + (no ? 'Vent til åpning' : 'Wait for opening') + '</button>'; }
+// the plant is closed: when it opens. There is no button to wait for it: every player is on the same clock, and nothing moves it on
+// for one of them (Jonas 05.10.2026: «alle spillerne skal gå på samme klokke og dato i spillet så da kan man under ingen
+// omstendigheter tulle med tiden»)
+function mottakShut(){ const no = S.lang === 'no'; return '<button class="btn" disabled>' + (no ? 'Mottaket er stengt · åpner ' : 'The plant is closed · opens ') + mottakWhen(S.t / 60, no) + '</button>'; }
 function chartMode(){ return S.settings.chart === 'fish' && S.equip.plotter ? 'fish' : 'nav'; }
 // the chart's night colours (the user's list 04.10.2026): on, off, or by the sun where the boat is (below 4 degrees under the horizon)
 function chartNight(){ const m = S.settings.chartNight || 'auto'; if (m !== 'auto') return m === 'night'; try { return sunAt(S.t / 60, S.boat.pos).el < -4; } catch (e){ return false; } }
@@ -33,7 +35,7 @@ function panelRoute(){
   if (b.status === 'tow' && b.tow){
     const tw = b.tow, no = S.lang === 'no', port = portById(tw.port);
     h.push('<h3>' + statusText() + '</h3><p>' + (no ? 'Redningsskøyta fra ' + tw.base + ' sleper deg til ' + port.name + '.' : 'The rescue boat from ' + tw.base + ' tows you to ' + port.name + '.') + '</p>');
-    h.push('<div class="btns"><button class="btn primary" data-act="towfast"' + (tw.P1 && tw.P2 ? '' : ' disabled') + '>' + (no ? 'Spol fram til havn' : 'Fast forward to harbour') + '</button></div>');
+    // no fast forward: the tow takes the time it takes on the clock everyone shares
     return h.join('');
   }
   if (b.status === 'adrift'){

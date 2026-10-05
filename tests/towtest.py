@@ -1,7 +1,7 @@
 from _env import GAME, boot
 # The rescue boat as a process (plan E3, 05.10.2026): called out from the nearest rescue station, it musters, comes at 25 knots by the
 # fairway, makes fast and tows you at 6 knots to the nearest harbour. Checks the speeds, the ways (never over land), the cost and the
-# catch, a boat on the rocks, fast forward and the status text.
+# catch, a boat on the rocks, the tow to the end (no fast forward: one clock for everyone) and the status text.
 import asyncio, json
 from playwright.async_api import async_playwright
 
@@ -21,7 +21,7 @@ RUN = """async (mode) => {
   // (the harbour's own point at the quay may lie in a land cell of the 25 m mask: 60 m at the harbour ends are left out)
   const landOn = (P, s0, s1) => { const Rt = prepRoute(P); let n = 0; for (let s = s0; s <= Rt.len - s1; s += 0.02) if (isLand(atRoute(Rt, s).p)) n++; return n; };
   R.land = [landOn(t.P1, 0.06, 0), landOn(t.P2, mode === 'aground' ? 0.1 : 0, 0.06)];
-  if (mode === 'fast'){ R.fast = towFast(); R.end = {st:b.status, port:b.port, tow:!!b.tow}; return R; }
+  if (mode === 'fast'){ for (let i = 0; i < 1440 && b.tow; i++) step(); R.fast = !b.tow; R.end = {st:b.status, port:b.port, tow:!!b.tow}; return R; }   // the tow on the clock (no fast forward in the game: one clock for everyone)
   const ph = {}, gap = []; let n = 0, dr = 0, ds = 0;
   while (b.tow && n < 2000){ const th = b.tow.ph, r0 = b.tow.r, s0 = b.tow.s; ph[th] = (ph[th] || 0) + 1; const pz = towPose(0); if (th === 'tow') gap.push(dist(pz.r.p, pz.b.p));
     if (n === 12) R.mid = statusText(); step(); n++; if (b.tow){ dr = Math.max(dr, b.tow.r - r0); ds = Math.max(ds, b.tow.s - s0); } }
@@ -48,7 +48,7 @@ async def main():
         ag = await pg.evaluate(RUN, 'aground'); print('aground:', json.dumps(ag, ensure_ascii=False)[:600])
         print(ok(ag['start']['st'] == 'tow' and ag['land'] == [0, 0] and ag['end']['st'] == 'port' and not ag['end']['tow']), 'on the rocks: pulled off to the water and towed in', ag['land'], ag['end'])
         fa = await pg.evaluate(RUN, 'fast'); print('fast:', json.dumps(fa, ensure_ascii=False)[:400])
-        print(ok(fa['fast'] and fa['end']['st'] == 'port' and not fa['end']['tow']), 'fast forward takes you to the harbour')
+        print(ok(fa['fast'] and fa['end']['st'] == 'port' and not fa['end']['tow']), 'the tow takes you to the harbour on the clock (there is no fast forward)')
         print('errors:', errs[:5]); await br.close()
 
 asyncio.run(main())
