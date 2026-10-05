@@ -23,7 +23,7 @@ async def main():
             seen[t] = await pg.evaluate("document.querySelector('main').innerText.length")
             if t in ('oversikt', 'tid', 'penger'): await pg.screenshot(path='admin_%s.png' % t, full_page=True)
         demo = await pg.evaluate("!!document.querySelector('.demo') && !document.getElementById('login')")
-        check(len(tabs) == 9 and all(v > 40 for v in seen.values()), 'every tab of the dashboard draws in the demo', seen)
+        check(len(tabs) == 10 and all(v > 40 for v in seen.values()), 'every tab of the dashboard draws in the demo', seen)
         check(demo, 'without keys (or with ?demo) the numbers are marked made-up and there is no sign-in')
         # with keys: the sign-in comes first, nothing is fetched before it
         await pg.add_init_script("")

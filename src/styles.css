@@ -220,6 +220,17 @@ body.v3d #aisCard{display:none} .lbl-ais{font-family:var(--sans);font-weight:600
 .ph-kv{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;padding:2px 0} .ph-kv span:last-child{white-space:nowrap;text-align:right} .ph-kv span:first-child{color:#5b6c76}
 .ph-btn{display:inline-block;margin:6px 6px 0 0;border:0;border-radius:10px;padding:8px 12px;background:#15252f;color:#fff;font:600 13px var(--sans);cursor:pointer} .ph-btn.alt{background:#e3eaee;color:#15252f} .ph-btn.red{background:#d63a2a} .ph-btn:disabled{opacity:.4;cursor:default}
 .ph-note{font-size:12px;color:#5b6c76;margin:6px 0}
+/* the feedback app (ui/06e-feedback.js) */
+.fb .ph-card h4 small{font-weight:400;color:#5b6c76;font-size:11px}
+.fb-topics{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px} .fb-chip{border:1px solid #c9d5dc;background:#f4f7f9;color:#15252f;border-radius:16px;padding:7px 11px;min-height:36px;font:600 12px var(--sans);cursor:pointer} .fb-chip.on{background:#d0672f;border-color:#d0672f;color:#fff}
+.fb textarea{width:100%;box-sizing:border-box;margin-top:6px;border:1px solid #c9d5dc;border-radius:10px;padding:8px 10px;font:14px/1.4 var(--sans);resize:vertical;min-height:110px;background:#fbfcfd;color:#15252f}
+.fb-n{text-align:right;margin:2px 0 0} .fb-img{display:block;max-width:100%;max-height:220px;margin:6px auto;border-radius:8px;object-fit:contain;background:#eef2f4}
+.fb-file{text-align:center;min-height:40px;box-sizing:border-box;line-height:24px} .fb .ph-row2 .ph-btn{min-height:40px}
+.fb-stars{display:flex;gap:4px;margin-top:4px} .fb-star{border:0;background:none;font-size:30px;line-height:1;color:#c9d5dc;cursor:pointer;padding:4px 6px;min-width:44px;min-height:44px} .fb-star.on{color:#e0a92b}
+.fb-send{display:block;width:100%;min-height:46px;margin:4px 0 12px;font-size:15px;background:#d0672f} .fb-err{color:#b3261e} .fb-ok{background:#eaf6ee}
+.fb-mine{border-top:1px solid #e3eaee;padding:6px 0} .fb-mine:first-of-type{border-top:0} .fb-mine p{margin:4px 0;font-size:13px;white-space:pre-wrap;word-break:break-word}
+.fb-st{padding:1px 8px;border-radius:9px;background:#e3eaee;font:700 11px var(--sans)} .fb-st.fixed{background:#2e9e5b;color:#fff} .fb-st.planned{background:#2f7fd0;color:#fff} .fb-st.seen{background:#c9d5dc} .fb-st.no{background:#8a96a0;color:#fff}
+.fb-reply{background:#f4f7f9;border-left:3px solid #d0672f;padding:5px 8px;border-radius:0 6px 6px 0}
 .patchc .ph-note{margin:0 0 4px} .patchc ul{margin:0;padding-left:18px;font-size:13px;line-height:1.4} .patchc li{margin:4px 0} .pnew{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:9px;background:#5a4fa3;color:#fff;font:700 10px var(--sans);vertical-align:2px}
 .ph-tbl{width:100%;border-collapse:collapse;font-size:12.5px} .ph-tbl th{text-align:left;color:#5b6c76;font-weight:600;padding:4px 3px;border-bottom:1px solid #dde5ea} .ph-tbl td{padding:5px 3px;border-bottom:1px solid #eef2f4} .ph-tbl td.n,.ph-tbl th.n{text-align:right} .ph-tbl tr.me td{background:#fff5d6;font-weight:700}
 .ph-paper{background:#f7f3ea;color:#1c1a16} .ph-mast{font:700 26px/1 var(--serif);text-align:center;padding:12px 0 2px;letter-spacing:.01em} .ph-mdate{text-align:center;font-size:11px;color:#6b6357;border-bottom:2px solid #1c1a16;padding-bottom:8px;margin:0 14px}

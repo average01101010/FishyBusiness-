@@ -2118,6 +2118,25 @@ Jonas 05.10.2026: «Vi skal lage en blender-modell av en rorbu med kaiplass. Dis
 - **Tester**: `tests/rorbutest.py` (plassene, fjæra ved Gryllefjord og på et le-sted, Autonav dit, knappene, natt og hvile på 6 timer, neste natt, åpen båt ved mottakskai, kartplotteren, lagring) og `coast3d.py` (rorbua i 3D ved Gryllefjord, `coast_rorbu.png`).
 - **Ikke gjort ennå:** kameraet kan gå inn i huset, og lykta ved døra lyser ikke.
 
+### 5.25j Tilbakemelding: appen for spillernes tilbakemeldinger (05.10.2026)
+
+Jonas 05.10.2026: «Lag en feedback-app i telefonen hvor brukerne kan komme med tilbakemeldinger, gjerne sortert etter hva tilbakemeldingen gjelder. La dem også laste opp bilde. På denne måten kan vi samle inn masse viktig data».
+
+- **Appen** (`ui/06e-feedback.js`, `FEEDBACK`, appen `tilbake` på telefonen):
+  - Emne (`TOPICS`): Feil, Knapper og skjerm, Grafikk og fart, Fiske og fangst, Penger og priser, Båter og utstyr, Kart, vær og verden, Første tur, Idé eller ønske, Annet.
+  - Tekst (høyst 4000 tegn, minst 3), hvor fornøyd spilleren er (1–5 stjerner, valgfritt) og ett bilde (valgfritt).
+  - **Bildet:** fra galleriet eller kameraet (`<input type=file accept=image/*>`), eller «Bilde av spillet»: telefonen går bort et øyeblikk, og `G3.snap()` (`view3d.js`) tar det neste 3D-bildet i samme bilde som det tegnes (uten knappene). Begge gjøres mindre i nettleseren: høyst 1600 px på den lengste siden, JPEG under 540 000 tegn (rundt 400 kB).
+  - **Med følger** (`FEEDBACK.meta`): `cloudMeta()` (versjon, nettleser, plattform, app, grafikkvalg, båt, penger, flåte, spilldager, økt) og skjermen, 3D eller kart, kvalitetsnivå og bildetakt, båtens status, havn og posisjon (lat/lon med tre desimaler), spilltid, veiledningssteg og energi. Appen sier hva som sendes.
+  - Teksten holdes mellom tegningene (siden tegnes på nytt ved hvert trykk), som firmanavnet.
+  - **Dine tilbakemeldinger** nederst viser de 30 siste med status (Mottatt, Lest, Kommer, Fikset, Ikke nå) og svaret fra Jonas.
+  - Sendes bare når skyen er på (innlogget på detstorebla.no eller i appen, `CLOUD.on`). I artifacten og testene står det hvor den kan sendes fra.
+- **Serveren** (`supabase/migrations/20261005180000_feedback.sql`):
+  - Tabellen `feedback` er stengt for spillere, som resten av skyen. `fb_send` skriver (sjekker innlogging, at spilleren finnes, høyst 20 per døgn, emnet, lengdene og at bildet er en data-URL for JPEG, PNG eller WebP). `fb_mine` gir spillerens egne uten bilder.
+  - Admin (`is_admin()`): `admin_feedback` (liste, filter, antall per emne og status, snittkarakter og MB bilder), `admin_feedback_img` og `admin_feedback_set` (status og svar).
+  - Slettes med spilleren (`on delete cascade`), ellers etter to år (`dsb-feedback` i pg_cron). Personvernerklæringen har et eget avsnitt.
+- **Admin-dashbordet** (`/admin`, fanen Tilbakemeldinger): tall, fordeling per emne, filter, hver tilbakemelding med bilde ved trykk, det som fulgte med (posisjonen som lenke til Norgeskart), og status og svar som lagres per rad. Fanen hentes ikke på nytt hvert minutt, så et svar som skrives, blir stående.
+- **Test:** `tests/feedbacktest.py` (LITE) med en stand-in for Supabase: appen, emnene, teksten mellom tegningene, et bilde som gjøres mindre, sendingen med det som følger med, og listen med svar. `G3.snap` testes ikke der (ingen 3D).
+
 ### 5.26 Måker og halere fra Blender (03.10.2026)
 
 - **Måkene** (`tools/wild/maake.py`, `src/data/gull.b64`):

@@ -103,7 +103,7 @@ async def run(p, w, h, tag):
     # the phone has only the apps that are left, and Kvote is one of them
     await pg.evaluate("PHONE.open('home')"); await pg.wait_for_timeout(400)
     apps = await pg.evaluate("[...document.querySelectorAll('#phone .ph-app')].map(x => x.dataset.a)")
-    BASE = ['vaer', 'post', 'meld', 'rederi', 'salg', 'kvote', 'regler', 'ordl', 'haill', 'sjomann', 'redning', 'trim', 'patch', 'innst', 'admin']   # and since 05.10.2026 Notatbok, Sesong and Folk among them
+    BASE = ['vaer', 'post', 'meld', 'rederi', 'salg', 'kvote', 'regler', 'ordl', 'haill', 'sjomann', 'redning', 'trim', 'patch', 'tilbake', 'innst', 'admin']   # and since 05.10.2026 Notatbok, Sesong and Folk among them, and Tilbakemelding
     check([a for a in apps if a in BASE] == BASE and all(a in BASE + ['notat', 'sesong', 'folk'] for a in apps), 'telefonen har appene, med Kvote, Regler, Oppdrag, Trim, Patchnotes og Admin i rekkefølge', apps)
     # the patch notes: a badge until the app is opened, then the latest updates as short lists, newest first
     pn = await pg.evaluate("""(() => { const bd = () => { const e = document.querySelector('#phone .ph-app[data-a=patch] .bd'); return e ? e.textContent : null; }, b0 = bd();

@@ -111,7 +111,26 @@ def main():
         R['pushRead'] = sql("select count(*) from public.push_subs", A, 'authenticated', expect_err=True)
         R['pushClaim'] = sql("select count(*) from public.push_claim(10)", None, 'service_role') + '/' + sql("select count(*) from public.push_claim(10)", None, 'service_role')
         R['pushReplan'] = sql(plan(600), A, 'authenticated') + '/' + sql("select count(*) from public.push_queue where sent_at is null")
+        # feedback (20261005180000_feedback.sql): a player sends and reads only their own, without the pictures; no player reads the
+        # table or the list; the admin with aal2 lists them, opens a picture, sets the status and answers; at most 20 a day; a picture
+        # that is not an image data URL, an unknown topic and the anonymous are refused; they go with the account
+        IMG = 'data:image/jpeg;base64,' + 'A' * 400
+        R['fbSend'] = sql("select public.fb_send('bug', 'Båten gikk på land', 4, '%s', '{\"version\":\"t1\",\"pos\":[69.5,17.6]}')" % IMG, A, 'authenticated')
+        R['fbBadImg'] = sql("select public.fb_send('idea', 'Hei der', null, 'https://evil.example/x.png', '{}')", A, 'authenticated', expect_err=True)
+        R['fbBadTopic'] = sql("select public.fb_send('spam', 'Hei der', null, null, '{}')", A, 'authenticated', expect_err=True)
+        R['fbAnon'] = sql("select public.fb_send('bug', 'Hei der', null, null, '{}')", {}, 'anon', expect_err=True)
+        R['fbMineA'] = json.loads(sql("select public.fb_mine()", A, 'authenticated')); R['fbMineB'] = json.loads(sql("select public.fb_mine()", B, 'authenticated'))
+        R['fbRead'] = sql("select count(*) from public.feedback", A, 'authenticated', expect_err=True)
+        R['fbAdmPl'] = sql("select public.admin_feedback(10, null, null)", A, 'authenticated', expect_err=True)
+        R['fbAdm1'] = sql("select public.admin_feedback(10, null, null)", AD1, 'authenticated', expect_err=True)
+        F = json.loads(sql("select public.admin_feedback(10, null, null)", AD2, 'authenticated')); fid = F['rows'][0]['id'] if F['rows'] else 0
+        R['fbImg'] = sql("select length(public.admin_feedback_img(%d))" % fid, AD2, 'authenticated')
+        sql("select public.admin_feedback_set(%d, 'fixed', 'Takk, rettet!')" % fid, AD2, 'authenticated')
+        R['fbMine2'] = json.loads(sql("select public.fb_mine()", A, 'authenticated'))
+        for i in range(20): sql("select public.fb_send('other', 'nr %d', null, null, '{}')" % i, B, 'authenticated')
+        R['fbLimit'] = sql("select public.fb_send('other', 'nr 21', null, null, '{}')", B, 'authenticated', expect_err=True)
         sql("select public.delete_me()", A, 'authenticated')
+        R['fbGone'] = sql("select count(*) from public.feedback where player_id = 'user_01AAA'")
         R['pushGone'] = sql("select count(*) || '/' || (select count(*) from public.push_queue) from public.push_subs")
         R['deleted'] = sql("select (select count(*) from public.players where id = 'user_01AAA') || '/' || (select count(*) from public.events) || '/' || (select count(*) from public.saves) || '/' || (select coalesce(player_id, 'anon') from public.purchases)")
         # a yes taken back: the sessions, events, device, state and year of birth go, the account and the save stay
@@ -134,6 +153,11 @@ def main():
         print(ok(R['save1']['ok'] and not R['save2']['ok'] and R['save3']['ok'] and R['getA']['data'] == 'KYST2:OLD' and R['getB'] is None), 'the cloud save: the newest wins, an older one is refused unless forced, and each sees only his own')
         print(ok(R['readEv'] == '0' and R['readPl'] == '0' and all(R[k][0] for k in ('readAnon', 'writePl', 'dashPlayer', 'dashAal1', 'anonDash'))), 'the lock: a player sees no rows and cannot write a table or open the dashboard, the admin without the second factor is refused, the anonymous too',
               [R[k][1][:50] for k in ('writePl', 'dashPlayer', 'dashAal1')])
+        print(ok(R['fbSend'].isdigit() and all(R[k][0] for k in ('fbBadImg', 'fbBadTopic', 'fbAnon')) and len(R['fbMineA']) == 1 and R['fbMineA'][0]['img'] is True and 'data:' not in json.dumps(R['fbMineA']) and R['fbMineB'] == []),
+              'feedback: a player sends one with a picture and sees only their own, without the picture; a bad picture, an unknown topic and the anonymous are refused', [R[k][1][:40] for k in ('fbBadImg', 'fbBadTopic', 'fbAnon')])
+        print(ok(all(R[k][0] for k in ('fbRead', 'fbAdmPl', 'fbAdm1')) and F['rows'] and F['rows'][0]['meta'].get('version') == 't1' and F['topics'].get('bug') == 1 and R['fbImg'] == str(len(IMG)) and R['fbMine2'][0]['status'] == 'fixed' and R['fbMine2'][0]['reply'] == 'Takk, rettet!'),
+              'feedback: no player reads the table or the list, nor the admin without the second factor; the admin lists them, opens the picture, sets the status and answers, and the player sees it', {'topics': F.get('topics'), 'img': R['fbImg'], 'mine': R['fbMine2'][0] if R['fbMine2'] else None})
+        print(ok(R['fbLimit'][0] and R['fbGone'] == '0'), 'feedback: at most 20 a day, and they go with the account', [R['fbLimit'][1][:40], R['fbGone']])
         keys = ['overview', 'daily', 'heatmap', 'churn', 'rage', 'features', 'gear', 'boats', 'groundings', 'trips', 'economy', 'money', 'tech', 'geo']
         print(ok(all(k in D for k in keys) and D['overview']['players'] == 2 and D['overview']['sessions'] == 1 and D['rage']['share'] == 1 and D['trips']['avg_kr'] == 5400 and R['adminRead'] == '4'),
               'the admin with aal2 gets every panel of the dashboard and reads the tables', {k: D[k] for k in ('overview', 'rage', 'trips')})

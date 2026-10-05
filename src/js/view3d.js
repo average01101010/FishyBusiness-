@@ -3552,6 +3552,15 @@ const G3 = (() => {
       gl.depthMask(true); gl.disable(gl.BLEND);
     }
     updateLabels(VPf, eye, W, Hh);
+    if (SNAP) snapTake();
+  }
+  // a picture of the frame just drawn, for the feedback app (ui/06e-feedback.js): read in the same task as the drawing, while the
+  // drawing buffer still holds it (the context keeps no copy, preserveDrawingBuffer is off), at most w px on the long side
+  let SNAP = null;
+  function snapTake(){
+    const s = SNAP; SNAP = null;
+    try { const k = Math.min(1, s.w / Math.max(canvas.width, canvas.height)), c = document.createElement('canvas'); c.width = Math.round(canvas.width * k); c.height = Math.round(canvas.height * k);
+      c.getContext('2d').drawImage(canvas, 0, 0, c.width, c.height); s.res(c.toDataURL('image/jpeg', 0.85)); } catch (e){ console.error(e); s.res(null); }
   }
   function drawRoute(VP, eye){
     if (!S.plan) return;
@@ -3757,6 +3766,9 @@ const G3 = (() => {
     // the quality: with a setting ('auto', 'low', 'mid', 'high') it applies it; returns the level now and the frame rate
     quality(v){ if (v){ S.settings.q3d = v; QUAL.bad = QUAL.good = 0; QUAL.cap = 2; qualSet(); } return {lvl:QUAL.lvl, set:S.settings.q3d || 'auto', fps:FPS.v, ultra:UINT}; },
     show, toggle(){ return show(!active); }, isActive:() => active, get failWhy(){ return failWhy; },
+    // the next frame as a JPEG data URL (or null when no frame comes within 2 s)
+    snap(w){ return new Promise(res => { if (!active || NO3D || !canvas){ res(null); return; } if (SNAP) SNAP.res(null); const me = SNAP = {w:w || 1600, res};
+      setTimeout(() => { if (SNAP === me){ SNAP = null; res(null); } }, 2000); }); },
     // for the sound (ui/10e-sound.js): the ear is the camera of the last frame drawn (metres; x east, z south; its direction on the
     // level), and where the sounds are: your boat, the crane and the ice chute of the plant she lies at, its pump, and the fleet near by
     ear(){ return active && performance.now() - earT < 2000 ? {x:lastEye[0], y:lastEye[1], z:lastEye[2], fx:camFwd[0], fz:camFwd[1]} : null; },
