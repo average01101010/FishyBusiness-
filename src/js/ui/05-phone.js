@@ -371,7 +371,8 @@ const PHONE = (() => {
   const PATCH = [
     ['p17', '05.10.2026', 'Brevet fra far', 'The letter from Father', [
       ['Et nytt spill begynner med en slitt konvolutt i mørket. Trykk på den, så åpner du brevet fra far.', 'A new game opens on a worn envelope in the dark. Tap it to open the letter from Father.'],
-      ['Nye spillere gir bare båten et navn. Rederiet opprettes når du kjøper din første båt i lukket gruppe.', 'New players only name the boat. The company is founded when you buy your first boat in the closed group.']]],
+      ['Nye spillere gir bare båten et navn. Rederiet opprettes når du kjøper din første båt i lukket gruppe.', 'New players only name the boat. The company is founded when you buy your first boat in the closed group.'],
+      ['3D på telefoner med Adreno-grafikk: Vil ikke telefonen ta sjøen, prøver spillet en enklere sjø i stedet for å gi opp.', '3D on phones with Adreno graphics: if the phone will not take the sea, the game tries a simpler sea instead of giving up.']]],
     ['p16', '05.10.2026', 'Kaia på Finnsnes', 'The quay at Finnsnes', [
       ['Båten lå inne i et bygg ved kaia på Finnsnes. Bygg på kaidekket og over liggeplassen er borte, så du ser båten og kaia når du starter.', 'The boat lay inside a building at the Finnsnes quay. Buildings on the quay deck and over the berth are gone, so you see the boat and the quay when you start.'],
       ['Snøen er stille. Før suste den som hvit støy.', 'Snow is silent. It used to hiss like white noise.'],

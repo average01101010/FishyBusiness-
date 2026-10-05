@@ -2764,7 +2764,19 @@ const G3 = (() => {
       PL = program(LIT_VS, LIT_FS, ['aPos', 'aCol'], 'lit'); PT = program(TER_VS, TER_FS, ['aPos', 'aCol', 'aNor', 'aShd'], 'terreng'); PRGN = program(LITN_VS, LITN_FS, ['aPos', 'aNor', 'aCol'], 'modell'); PRGX = program(TEX_VS, TEX_FS, ['aPos', 'aUV'], 'tekstur'); PRGW = program(WK_VS, WK_FS, ['aPos', 'aW', 'aS'], 'kjølvann');
       WKB = {p:new Float32Array(9000 * 3), w:new Float32Array(9000 * 4), s:new Float32Array(9000), pb:buf(new Float32Array(9000 * 3), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), wb:buf(new Float32Array(9000 * 4), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), sb:buf(new Float32Array(9000), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW)}; // the waves read the sea-state texture in the vertex shader where the GPU can (#novtf in the address tries without)
       SST_VS = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS) >= 2 && !/novtf/.test(location.hash);
-      PS = program((SST_VS ? '' : '#define NOSST\n') + SEA_VS, SEA_FS, ['aXZ'], 'sjø'); PSF = program('#define NOSST\n' + SEA_VS, '#define FAR\n' + SEA_FS, ['aXZ'], 'sjø langt');
+      // The sea is the heaviest program, and a phone's driver may refuse to link it with no word why (Adreno 642L, 05.10.2026: «sjø link:
+      // ingen logg fra driveren»): then it tries without the texture in the vertex shader, then with the far pass's simpler waves, and
+      // tells the cloud which one it took
+      const seaWhy = [], seaTry = [[!SST_VS, false], [true, false], [true, true]].filter((t, i, a) => a.findIndex(u => u[0] === t[0] && u[1] === t[1]) === i);
+      PS = null;
+      for (const [nosst, far] of seaTry){
+        try { PS = program((nosst ? '#define NOSST\n' : '') + SEA_VS, (far ? '#define FAR\n' : '') + SEA_FS, ['aXZ'], 'sjø'); SST_VS = !nosst; break; }
+        catch (e){ if (gl.isContextLost()) throw e; seaWhy.push(e.message); }
+      }
+      if (!PS) throw new Error(seaWhy.join(' / '));
+      try { PSF = program('#define NOSST\n' + SEA_VS, '#define FAR\n' + SEA_FS, ['aXZ'], 'sjø langt'); }
+      catch (e){ if (gl.isContextLost()) throw e; seaWhy.push(e.message); PSF = PS; }
+      if (seaWhy.length && typeof cloudErr === 'function') cloudErr('3D sjø med reserve (' + (SST_VS ? 'vtf' : 'novtf') + (PSF === PS ? ', én sjø' : '') + ') · ' + GPU, 'view3d init', seaWhy.join('\n'));
       SSDUMMY = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, SSDUMMY); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255])); PK = program(SKY_VS, SKY_FS, ['aP'], 'himmel'); PP = program(PT_VS, PT_FS, ['aPos', 'aA'], 'punkter');
       DYNP = buf(new Float32Array(4000 * 3), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); DYNA = buf(new Float32Array(4000), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW);
       // the ground's heights and the forest (map/, the view packs): until they are in, the land is a flat stand-in
