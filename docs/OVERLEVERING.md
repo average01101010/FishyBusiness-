@@ -1822,6 +1822,53 @@ Hva som ble gjort (siste blokk i `styles.css`):
 
 Admin-appen (bare Jonas' konto) har kortet «Åpningen»: «Vis brevet» spiller brevscenen igjen uten å endre noe, og «Start nytt spill» spør først og begynner så helt på nytt (lagringen i skyen også), med brevet, båtnavnet og «Første tur».
 
+### 5.25d Fars notatbok og drømmefisken (05.10.2026)
+
+Jonas valgte dem fra lista over det som får folk til å spille videre (nr. 2 og 3). Reglene ligger i `core/09b-dream.js`, og appen, kartmerkene og kampen i `ui/06c-notebook.js`. Testen er `tests/dreamtest.py`.
+
+**Notatboka:**
+- `notesMake()` lager fem méd rundt hjemhavna (`S.home`, ellers Finnsnes), én gang, når kartet rundt havna er lastet. Appen Notatbok laster kartet selv første gang.
+- Hvert méd ligger der arten står best innen 2–12 km, på sin dybde, og minst 1,5 km fra de andre:
+  - torsk på 20–80 m
+  - hyse på 60–160 m
+  - sei på 20–120 m
+  - lange på 150–350 m
+  - kveite på 40–140 m
+- Teksten har retning og avstand fra havna, nærmeste stedsnavn, dybden i favner (m / 1,83) og et råd fra far (`FATHER`).
+- Medene lagres i `S.notes` (`marks`, `found`, `shown`). En flytting (`S.home` endres) lager nye.
+- Fisker du innen 400 m fra et méd, er det funnet (`dreamTick`). Da kommer en melding, og arten biter 30 % bedre der (`noteBoost` i `fish()`).
+- Et funnet méd viser fars historie om stedet (`FATHER_STORY`). Når alle fem er funnet, gir «fars gamle pilk» 5 % bedre fangst overalt (`noteAll`).
+- «Vis i kartet» tegner en stiplet sirkel med radius 500 m (`m.c`, inntil 350 m fra medet) og holder den på kartet. Funne méd får et blyantkryss med navnet.
+- Første gang du fisker selv (etter «Første tur», eller i et spill fra før), kommer meldingen fra «Naustet».
+
+**Drømmefisken:**
+- Den rulles hvert fiskeminutt med juksa (`dreamTick`), når det er minst 30 kg plass. Arten veies etter tettheten der, og fisken må stå på sin dybde:
+
+  | Art | Vekt | Merknad |
+  |---|---|---|
+  | Kveite | 60–180 kg | |
+  | Skrei | 25–42 kg | En firedel så ofte utenfor januar–april |
+  | Lange | 18–30 kg | |
+  | Sei | 16–24 kg | |
+  | Uer | 8–13 kg | |
+  | Brosme | 10–16 kg | |
+
+- **Hvor ofte:** sannsynligheten er `min(0,02, Σtetthet / 2 / 1800)` per minutt. I juni gir det rundt 1 per 100 timer på fars torskeméd og 6 på Kveitebakken (`dreamP`). På Kveitebakken er den åtte ganger så høy, og der er det kveite 60 % av gangene.
+- Er du om bord og siden er synlig, kjemper du selv (`DREAMUI`). Ellers tar mannskapet den, og de får den inn halvparten av gangene.
+- **Kampen:**
+  - En rad viser belastningen og en annen hvor mye line som er ute (40 m ved start).
+  - Hold «Sveiv» (eller mellomrom) for å ta inn line, 4,2 m/s. Belastningen stiger da 0,32 per sekund, og mye mer om fisken drar samtidig.
+  - Fisken drar ut på måfå, oftere og lenger mens den har krefter, og telefonen vibrerer.
+  - Fisken mister krefter mens belastningen er over 30 %.
+  - Snøret ryker når belastningen har vært rød i et halvt sekund. Tar fisken 120 m line, er den borte.
+  - Er lina inne og fisken sliten (krefter under 35 %), blir den gaffet. Har den krefter igjen, dykker den.
+  - 20 sekunder uten berøring, eller at siden skjules, gir fisken til mannskapet.
+- Det som landes, går i lasten (så mye det er plass til) og på trofeveggen (`S.trophies`), og meldes i Kystposten.
+- Kveite i fredningstida (`kveiteClosed`) settes ut igjen, men kommer likevel på veggen.
+- En kamp som er igjen fra en side som ble lukket, er tapt.
+
+**Usikkert:** tallene for hvor ofte storfisken kommer og hvor vanskelig kampen er, er ikke prøvd av en spiller ennå.
+
 ### 5.26 Måker og halere fra Blender (03.10.2026)
 
 - **Måkene** (`tools/wild/maake.py`, `src/data/gull.b64`):

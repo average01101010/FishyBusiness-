@@ -24,6 +24,7 @@ const PHONE = (() => {
     rederi:SVG('<path d="M4 20V10l6-3v13"/><path d="M10 20V5l9 4v11"/><path d="M2 20h20"/><path d="M13 10h3M13 13h3M13 16h3M6 13h2M6 16h2"/>'),
     redskap:SVG('<circle cx="12" cy="16" r="4.5"/><path d="M12 11.5V3l5 2-5 2"/><path d="M3 21c3-1.5 6-1.5 9 0s6 1.5 9 0"/>'),
     sjomann:SVG('<circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.9 2.9M15.5 15.5l2.9 2.9M5.6 18.4l2.9-2.9M15.5 8.5l2.9-2.9"/>'),
+    notat:SVG('<path d="M6 3h11a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H6z"/><path d="M6 3v18M4 7h4M4 12h4M4 17h4"/><path d="M11 8h4M11 11.5h4"/>'),
     ordl:SVG('<path d="M8.5 3.5h7v3h-7z"/><path d="M8 5H5v16h14V5h-3"/><path d="M8 11l1.5 1.5L12 10M8 16l1.5 1.5L12 15M14 11h3M14 16h3"/>'),
     regler:SVG('<path d="M6 3h11a2 2 0 0 1 2 2v14H8a2 2 0 0 1-2-2z"/><path d="M6 17a2 2 0 0 1 2-2h11"/><path d="M9.5 8.6l1.8 1.8L15 6.7"/>'),
     kvote:SVG('<path d="M12 3a9 9 0 1 0 9 9h-9z"/><path d="M15 2.6A9 9 0 0 1 21.4 9H15z"/>'),
@@ -31,7 +32,7 @@ const PHONE = (() => {
     patch:SVG('<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 12h7M9 15.5h7M9 19h4"/>'),
     innst:SVG('<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>'),
     admin:SVG('<path d="M14.5 6.5a4 4 0 0 0 5 5L12 19a2.1 2.1 0 0 1-3-3l7.5-7.5"/><path d="M14.5 6.5L17 4l3 3-2.5 2.5"/><path d="M5 3l3 3M3 5l3 3"/>')};
-  const APPS = [['vaer', 'Vær', 'Weather', '#2f7fd0'], ['post', 'Kystposten', 'Coast Post', '#b8402f'], ['meld', 'Meldinger', 'Messages', '#29a36a'], ['rederi', 'Rederi', 'Company', '#1f4e79'], ['salg', 'Salgslaget', 'Sales', '#1e8c6e'], ['kvote', 'Kvote', 'Quota', '#8a6a1c'], ['regler', 'Regler', 'Rules', '#2d6a4f'], ['ordl', 'Oppdrag', 'Orders', '#2e7d4f'], ['haill', 'Haill', 'Luck', '#c9a227'], ['sjomann', 'Sjømann', 'Seaman', '#23506b'], ['redning', 'Redning', 'Rescue', '#e0562b'], ['trim', 'Trim', 'Tuning', '#b3261e'], ['patch', 'Patchnotes', 'Patch notes', '#5a4fa3'], ['innst', 'Innstillinger', 'Settings', '#4a5560'], ['admin', 'Admin', 'Admin', '#7a2e8f']];
+  const APPS = [['vaer', 'Vær', 'Weather', '#2f7fd0'], ['post', 'Kystposten', 'Coast Post', '#b8402f'], ['meld', 'Meldinger', 'Messages', '#29a36a'], ['rederi', 'Rederi', 'Company', '#1f4e79'], ['salg', 'Salgslaget', 'Sales', '#1e8c6e'], ['kvote', 'Kvote', 'Quota', '#8a6a1c'], ['regler', 'Regler', 'Rules', '#2d6a4f'], ['ordl', 'Oppdrag', 'Orders', '#2e7d4f'], ['haill', 'Haill', 'Luck', '#c9a227'], ['notat', 'Notatbok', 'Notebook', '#6b4a2b'], ['sjomann', 'Sjømann', 'Seaman', '#23506b'], ['redning', 'Redning', 'Rescue', '#e0562b'], ['trim', 'Trim', 'Tuning', '#b3261e'], ['patch', 'Patchnotes', 'Patch notes', '#5a4fa3'], ['innst', 'Innstillinger', 'Settings', '#4a5560'], ['admin', 'Admin', 'Admin', '#7a2e8f']];
   const unread = () => S.msgs.filter(m => !m.read).length;
   function setBadge(){ const n = unread(); for (const bd of [badge, $('phoneBadge2')]){ bd.hidden = !n; bd.textContent = n; } }
   // --- workshop: service, fitting and getting the gear ready, one job after the other while the boat is in port
@@ -354,9 +355,9 @@ const PHONE = (() => {
   let shown = '';
   function render(){ status(); setBadge(); if (!isOpen) return; if (app === 'patch' && S.settings.patchSeen !== PATCH[0][0]){ S.settings.patchLast = S.settings.patchSeen; S.settings.patchSeen = PATCH[0][0]; } const key = app + '|' + (sub[app] || ''), y = key === shown ? view.scrollTop : 0; view.innerHTML = app === 'home' ? home() : shell(app); shown = key; view.scrollTop = y; }
   // every page by name: the phone apps, and the pages that open in the dock's drawer instead (DRAWER)
-  const PAGES = () => ({vaer, post, salg, kvote, regler, redning, rederi, meld, haill, logg, sjomann, trim, patch, innst, admin,
+  const PAGES = () => ({vaer, post, salg, kvote, regler, redning, rederi, meld, haill, logg, sjomann, notat:() => NOTEBOOK.page(), trim, patch, innst, admin,
     ordl, rigg, arbeid:() => WORK.page(), fiske, fartoy:() => fartoy('marked'), utstyr, redskap, mannskap, bors, bank, verksted, havn, last, lever, is:isApp, agn, oppdrag, beholdning});
-  function shell(a){ const d = APPS.find(x => x[0] === a) || [a, a, a, '#28507f'], f = PAGES()[a]; return '<div class="ph-appv' + (a === 'post' ? ' ph-paper' : '') + '"><div class="ph-top" style="background:' + d[3] + '"><span class="ic">' + (IC[a] || '') + '</span>' + L(d[1], d[2]) + '</div>' + (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) + '</div>'; }
+  function shell(a){ const d = APPS.find(x => x[0] === a) || [a, a, a, '#28507f'], f = PAGES()[a]; return '<div class="ph-appv' + (a === 'post' || a === 'notat' ? ' ph-paper' : '') + '"><div class="ph-top" style="background:' + d[3] + '"><span class="ic">' + (IC[a] || '') + '</span>' + L(d[1], d[2]) + '</div>' + (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) + '</div>'; }
   // a page for the drawer, and an action tapped there: it runs as if that page were the open app, and says which page shows next
   function page(a){ const f = PAGES()[a]; return f ? (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) : ''; }
   function dact(cur, a, d){
@@ -378,6 +379,11 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p21', '05.10.2026', 'Fars notatbok og storfisken', 'Father’s notebook and the big fish', [
+      ['Ny app på telefonen: Notatbok. Far skrev ned fem méd rundt havna di, med retning, avstand, dybde i favner og et råd om fisken. Fisk innen 400 m fra et méd for å finne det. Der biter fisken 30 % bedre, og far skrev en liten historie ved hvert av dem. Finner du alle fem, får du fars gamle pilk.', 'New app on the phone: Notebook. Father wrote down five marks round your harbour, with the bearing, distance, depth in fathoms and a word about the fish. Fish within 400 m of a mark to find it. There the fish bite 30 % better, and Father wrote a little story beside each. Find all five and you get his old jig.'],
+      ['«Vis i kartet» tegner sirkelen méden ligger i på kartplotteren. Funne méd får et blyantkryss med navnet.', '«Show on the chart» draws the circle the mark lies in on the chart plotter. Found marks get a pencil cross with the name.'],
+      ['Storfisk: nå og da tar noe stort juksa. Det kan være en kveite på opptil 180 kg, en skrei på over 30 kg eller en stor lange, sei, uer eller brosme. Hold «Sveiv» for å ta inn line, og slipp når fisken drar eller belastningen blir rød. På fars Kveitebakke kommer storfisken oftere.', 'Big fish: now and then something big takes the jig. It can be a halibut of up to 180 kg, a skrei of over 30 kg, or a big ling, saithe, redfish or tusk. Hold «Reel» to take in line, and let go when the fish runs or the strain goes red. On Father’s halibut bank the big fish comes more often.'],
+      ['Trofeveggen i notatboka viser all storfisken du har fått, med rekorden for hvert slag. Kveite i fredningstida settes ut igjen, men kommer likevel på veggen. Uten deg om bord tar mannskapet storfisken, og de får den inn halvparten av gangene.', 'The trophy wall in the notebook shows every big fish you have landed, with the record for each kind. Halibut in the closed season goes back, but still goes on the wall. Without you aboard the crew takes the big fish, and they get it in half the time.']]],
     ['p20', '05.10.2026', 'Hele kysten', 'The whole coast', [
       ['Nye spillere velger selv hvor fars naust står: alle fiskemottakene langs kysten som tar imot fisk fra små båter, på et kart og i en liste etter region. Stjernene er de to beste stedene for torsk i hver region.', 'New players choose where Father’s boathouse stands: every fish plant along the coast that takes fish from small boats, on a map and in a list by region. The stars are the two best places for cod in each region.'],
       ['153 nye mottak langs hele kysten, fra Lindesnes til Kjøllefjord, med kai, drivstoff og priser etter hva mottaket betaler. Du kan levere ved alle.', '153 new plants along the whole coast, from Lindesnes to Kjøllefjord, with a quay, fuel and prices after what the plant pays. You can land at all of them.'],
@@ -1023,6 +1029,7 @@ const PHONE = (() => {
     else if (a === 'shop0'){ }
     else if (a === 'shopgear'){ app = 'redskap'; sub.redskap = 'kjop'; }
     else if (a === 'close'){ show(false); return; }
+    else if (a === 'notshow'){ NOTEBOOK.show(d.id); return false; }
     else if (a === 'lang'){ S.lang = S.lang === 'no' ? 'en' : 'no'; refreshAll(); }
     else if (a === 'q3d'){ S.settings.q3d = d.v; if (typeof G3 !== 'undefined' && G3.quality) G3.quality(d.v); }
     else if (a === 'fpsShow'){ S.settings.fpsShow = d.v === '1'; }

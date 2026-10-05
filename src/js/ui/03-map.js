@@ -283,6 +283,8 @@ function renderStatic(){
   for (const mk of S.marks){ const col = mk.kgph >= 40 ? '#d7301f' : mk.kgph >= 20 ? '#f08a24' : mk.kgph >= 8 ? '#e5c12b' : '#5b8db8';
     g.push('<circle cx="' + mk.x + '" cy="' + mk.y + '" r="' + (4.2 * u) + '" fill="' + col + '" stroke="#fff" stroke-width="' + (1.2 * u) + '"/>');
     if (view.z > 3.5) g.push(txt({x:mk.x + 6 * u, y:mk.y + 3.5 * u}, mk.kgph + ' kg/t', 'lbl-ground', 9.5 * u, 'stroke-width="' + (2.5 * u) + '"')); }
+  // Father's marks (ui/06c-notebook.js)
+  g.push(NOTEBOOK.svg(u, inV));
   // ports, their names when the view is closer than the whole region; the place names (03a-chart.js) keep clear of them
   const taken = [], pl = view.z >= 0.5;
   for (const p of PORTS){

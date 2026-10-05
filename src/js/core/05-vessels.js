@@ -355,7 +355,7 @@ function fish(H, W, hs){
   S.facc = S.facc || {}; S.fnext = S.fnext || {};
   for (const sp of SP){
     const dn = density(sp, b.pos, H); dsum += dn; tsum += tutBonus(sp, b.pos);
-    S.facc[sp] = (S.facc[sp] || 0) + 30 * (S.target === 'kveite' && b.kgear ? keff : eff) * dn * luck(sp) * targetF(sp, H) * wpen * pen * (0.5 + Math.random()) / 60;
+    S.facc[sp] = (S.facc[sp] || 0) + 30 * (S.target === 'kveite' && b.kgear ? keff : eff) * dn * luck(sp) * targetF(sp, H) * noteBoost(sp, b.pos) * wpen * pen * (0.5 + Math.random()) / 60;
     if (!S.fnext[sp]) S.fnext[sp] = sampleFish(sp, b.pos, H);
     while (S.facc[sp] >= S.fnext[sp] && room > 0){
       const w = S.fnext[sp]; S.facc[sp] -= w; S.fnext[sp] = sampleFish(sp, b.pos, H);
@@ -364,6 +364,7 @@ function fish(H, W, hs){
       if (typeof window !== 'undefined'){ const cq = window.CATCHQ || (window.CATCHQ = []); if (cq.length < 30) cq.push({sp, kg, t:performance.now()}); }
     }
   }
+  if (!(S.tut && S.tut.catch)) dreamTick(H, b.pos, room);   // Father's marks and the dream fish (09b-dream.js)
   if (S.tut && S.tut.catch && room > 0){
     const left = Math.max(1, (b.fishUntil != null ? b.fishUntil : S.t) - S.t), want = (capHold() - holdTotal()) / left, mix = [['torsk', 0.72], ['sei', 0.18], ['hyse', 0.1]];
     for (let k = 0; got < want && room > 0.01 && k < 40; k++){
