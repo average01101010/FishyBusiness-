@@ -492,7 +492,8 @@ Jonas: «autoruter aldri skal gå gjennom 3d elementer eller landmasse». Båten
     - **Under en bro:** midt i et løp mellom to pilarer der dekket er høyt nok, fra et punkt 45 m eller mer ut på hver side.
     - **Rundt et merke:** på den korteste siden.
     - **Rundt en kai:** om hjørnene.
-    - Hvert bein i omveien sjekkes mot land og hindringer.
+    - Hvert bein i omveien sjekkes mot land og hindringer, og det skal ikke være farligere enn etappen det erstatter (`obsSafe`): like dypt, og uten skjær innen 25 m. Gikk etappen selv forbi skjær, skal beinet være minst 15 m fra dem, eller like langt unna som etappen. trip2-ruta tilbake under Gisundbrua gikk på grunn på et skjær før denne regelen. Under en bro kan omveien også gå tilbake til etappens egen linje rett etter brua.
+    - Finnes ingen trygg omvei, beholdes etappen slik den er.
 - **Under seiling** (`obsSail` i `sail`, `05-vessels.js`): etappen båten er på, sjekkes én gang per veipunkt og hver gang vec-pakkene endres. Treffer den noe, legges en omvei inn foran neste veipunkt. Det gjelder alle ruter, også de som er tegnet for hånd, og pakkene langt unna, som kommer først når båten nærmer seg.
 - **Testen** er `tests/obstest.py`:
   - Gisundbruas pilarer.
@@ -500,6 +501,7 @@ Jonas: «autoruter aldri skal gå gjennom 3d elementer eller landmasse». Båten
   - En etappe gjennom en pilar og en gjennom et sjømerke.
   - Korte bruer som vegg.
   - En tegnet rute gjennom en pilar, rettet under seiling.
+  - trip2-ruta under Gisundbrua og tilbake: rundt pilaren, ikke nærmere skjærene, tilbake i havn.
   - En lang bro i Tromsø-flisa (Ramfjordbrua) når bygget har vec-pakkene.
 - **Ikke gjort ennå:** sjømerker for hele kysten (se veikartet), og et ferdig leinett fra Kystverkets hovedleder og bileder. Med det ville Autonav nesten ikke trenge å regne, og rutene gå der ekte båter går.
 

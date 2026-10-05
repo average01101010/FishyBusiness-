@@ -2,7 +2,7 @@
 bridge's piers as the 3D view sets them, Autonav from Finnsnes to Botnhamn under Gisundbrua between its piers, a leg through a pier
 and one through a sea mark taken round, the low deck of a short bridge as a wall, and a drawn route through a pier changed under
 way. Along the coast (when the build has the vec packs) a long bridge in the Tromsø tile the same. Prints OK or FEIL per check."""
-from _env import GAME, boot
+from _env import GAME, ROUTES, boot
 import asyncio, json
 from playwright.async_api import async_playwright
 
@@ -57,7 +57,18 @@ async def main():
           let dp = 1e9; for (let i = 1; i < track.length; i++) for (const p of B.piers) if (!isLand({x:p.x / 1000, y:p.z / 1000})) dp = Math.min(dp, obsDist(p, track[i - 1].x * 1000, track[i - 1].y * 1000, track[i].x * 1000, track[i].y * 1000));
           return {dp:Math.round(dp), clr:obsClr(), end:Math.round(dist(bt.pos, b) * 1000), st:bt.status}; })()""")
         check(r['dp'] >= r['clr'] - 0.5 and r['end'] < 30, 'a drawn route through a pier: under way the boat goes round it under the deck and on to the end', r)
-        # 7. along the coast: a bridge from the vec packs, with Autonav under it
+        # 7. a drawn route out under Gisundbrua and back (routes.json 4, as trip2 sails it): it passes a pier, and goes round it under the deck
+        # without coming nearer the skerries by the way than the route itself (it ran aground on one, 05.10.2026), and is back in Finnsnes
+        R = json.load(open(ROUTES))['4']
+        r = await pg.evaluate("""(w => { const bt = S.boat, q = portById('finnsnes'), br = BRIDGES.find(x => x[2] === 'Gisundbrua'), B = obsBridge(br); S.settings.autoOn = false; S.plan = null;
+          bt.status = 'port'; bt.port = 'finnsnes'; bt.pos = {...q.p}; bt.fuel = 200; bt.damage = 0;
+          S.draft = w.map((p, i) => ({x:p.x, y:p.y, port:null, fish:i === w.length - 1 ? 1 : 0})); w.slice(0, -1).reverse().forEach(p => S.draft.push({x:p.x, y:p.y, port:null, fish:0})); S.draft.push({x:q.p.x, y:q.p.y, port:'finnsnes', fish:0});
+          doAct({dataset:{act:'start'}}); const track = [{...bt.pos}]; let det = 0;
+          for (let k = 0; k < 600 && bt.status !== 'port' && bt.status !== 'aground'; k++){ playMinutes(1); track.push({...bt.pos}); if (S.plan) det = Math.max(det, S.plan.wps.filter(x => x.obs).length); }
+          let dp = 1e9; for (let i = 1; i < track.length; i++) for (const p of B.piers) if (!isLand({x:p.x / 1000, y:p.z / 1000})) dp = Math.min(dp, obsDist(p, track[i - 1].x * 1000, track[i - 1].y * 1000, track[i].x * 1000, track[i].y * 1000));
+          return {st:bt.status, det, dp:Math.round(dp), clr:obsClr()}; })""", R)
+        check(r['st'] == 'port' and r['det'] > 0 and r['dp'] >= r['clr'] - 0.5, 'a drawn route under Gisundbrua and back (trip2\'s): round the pier under the deck, no nearer the skerries, and back in Finnsnes', r)
+        # 8. along the coast: a bridge from the vec packs, with Autonav under it
         has = await pg.evaluate("!!(MAPD.man && [...MAPD.byTile.keys()].some(k => k.startsWith('vec:')))")
         if not has:
             print('OK   along the coast: this build has no vec packs (the artifact\'s), so only Senja\'s bridges count here')

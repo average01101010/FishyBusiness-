@@ -103,8 +103,24 @@ function obsSegHit(a, b, clr){
   return best;
 }
 const obsClear = (a, b, clr) => !obsSegHit(a, b, clr);
-// a leg the boat can sail: no land, nothing too near
-const obsLegOk = (a, b) => legClear(a, b) && obsClear(a, b);
+// a new leg of a way round: no land, nothing too near, and no more dangerous than the leg it stands in for (ref, legHazard of it): as
+// deep, and clear of rocks, or where that leg passed rocks within 25 m, at least 15 m from them or as far as that leg (groundCheck runs
+// aground within 12 m; trip2's way back under Gisundbrua passed 7 m nearer a rock than the drawn leg and ran onto it, 05.10.2026)
+function obsRock(a, b){
+  const dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy || 1e-12; let m = Infinity;
+  for (const q of rocksIn(Math.min(a.x, b.x) - 0.03, Math.min(a.y, b.y) - 0.03, Math.max(a.x, b.x) + 0.03, Math.max(a.y, b.y) + 0.03)){
+    const u = clamp(((q[0] - a.x) * dx + (q[1] - a.y) * dy) / L2, 0, 1); m = Math.min(m, Math.hypot(a.x + dx * u - q[0], a.y + dy * u - q[1])); }
+  return m;
+}
+function obsSafe(a, b, ref){
+  const sd = safeDepth(), h = legHazardMemo(a, b, sd);
+  if (h.minD < Math.min(sd, ref ? ref.minD : sd) - 0.2) return false;
+  if (h.rocks === 0) return true;
+  if (!ref || !ref.rocks) return false;
+  if (ref.rock === undefined) ref.rock = obsRock(ref.a, ref.b);
+  return obsRock(a, b) >= Math.min(0.015, ref.rock - 0.001);
+}
+const obsLegOk = (a, b, ref) => legClear(a, b) && obsClear(a, b) && obsSafe(a, b, ref);
 // the ways round the thing o that a-b hits: lists of points (km), shortest first
 function obsWays(o, a, b){
   const clr = obsClr(), ax = a.x * 1000, az = a.y * 1000, bx = b.x * 1000, bz = b.y * 1000, out = [], km = (x, z) => ({x:x / 1000, y:z / 1000});
@@ -116,10 +132,16 @@ function obsWays(o, a, b){
     if (s0 !== null) cut.push([s0, B.tot]);
     for (const [c0, c1] of cut){ let p = c0; const ps = B.piers.filter(q => q.s > c0 && q.s < c1).map(q => q.s).sort((x, y) => x - y);
       for (const s of ps.concat([c1])){ const e0 = p + (p === c0 ? need : 1.5 + need), e1 = s - (s === c1 ? need : 1.5 + need); if (e1 > e0) gaps.push((e0 + e1) / 2); p = s; } }
+    const lx = bx - ax, lz = bz - az, LL = Math.hypot(lx, lz) || 1;
     for (const s of gaps){
       const d = B.deck.find(q => s >= q.s0 && s <= q.s1); if (!d) continue;
       const u = (s - d.s0) / Math.max(0.01, d.s1 - d.s0), mx = d.ax + (d.bx - d.ax) * u, mz = d.az + (d.bz - d.az) * u, nx = -d.uz, nz = d.ux, sd = (ax - mx) * nx + (az - mz) * nz >= 0 ? 1 : -1;
-      out.push([km(mx + nx * D * sd, mz + nz * D * sd), km(mx - nx * D * sd, mz - nz * D * sd)]);
+      const p1 = km(mx + nx * D * sd, mz + nz * D * sd), p2 = km(mx - nx * D * sd, mz - nz * D * sd);
+      out.push([p1, p2]);
+      // and back onto the leg itself a little beyond the bridge (and off it a little before), so the way on is the leg's own
+      const u0 = ((mx - ax) * lx + (mz - az) * lz) / (LL * LL), du = (D + 25) / LL, on = t => km(ax + lx * t, az + lz * t);
+      if (u0 + du < 0.97) out.push([p1, p2, on(u0 + du)]);
+      if (u0 + du < 0.97 && u0 - du > 0.03) out.push([on(u0 - du), p1, p2, on(u0 + du)]);
     }
   } else if (o.t === 0){
     // round a mark or a pile: on either side of the leg, off it by its size and the margin
@@ -131,18 +153,19 @@ function obsWays(o, a, b){
     for (let i = 0; i < 4; i++){ out.push([km(K[i][0], K[i][1])]); out.push([km(K[i][0], K[i][1]), km(K[(i + 1) % 4][0], K[(i + 1) % 4][1])]); out.push([km(K[(i + 1) % 4][0], K[(i + 1) % 4][1]), km(K[i][0], K[i][1])]); }
   }
   const len = w => { let s = dist(a, w[0]); for (let i = 1; i < w.length; i++) s += dist(w[i - 1], w[i]); return s + dist(w[w.length - 1], b); };
-  return out.filter(w => w.every(p => !isLand(p))).sort((x, y) => len(x) - len(y)).slice(0, 6);
+  return out.filter(w => w.every(p => !isLand(p))).sort((x, y) => len(x) - len(y)).slice(0, 9);
 }
 // the points to put between a and b so every leg keeps clear of land and of the things (depth: how many things in a row it goes
 // round); [] when a-b is clear already, null when no way was found
-function obsDetour(a, b, depth = 3){
-  if (!legClear(a, b)) return null;
+function obsDetour(a, b, depth = 3, ref){
+  if (!legClear(a, b) || (ref && !obsSafe(a, b, ref))) return null;   // the legs it makes are no worse than the one given (the route's)
+  if (!ref){ const h = legHazardMemo(a, b, safeDepth()); ref = {minD:h.minD, rocks:h.rocks, a, b}; }
   const o = obsSegHit(a, b); if (!o) return [];
   if (depth <= 0) return null;
   for (const w of obsWays(o, a, b)){
-    let ok = true; for (let i = 1; i < w.length && ok; i++) ok = obsLegOk(w[i - 1], w[i]); if (!ok) continue;
-    const left = obsDetour(a, w[0], depth - 1); if (!left) continue;
-    const right = obsDetour(w[w.length - 1], b, depth - 1); if (!right) continue;
+    let ok = true; for (let i = 1; i < w.length && ok; i++) ok = obsLegOk(w[i - 1], w[i], ref); if (!ok) continue;
+    const left = obsDetour(a, w[0], depth - 1, ref); if (!left) continue;
+    const right = obsDetour(w[w.length - 1], b, depth - 1, ref); if (!right) continue;
     return left.concat(w, right);
   }
   return null;
