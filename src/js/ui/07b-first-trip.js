@@ -1,12 +1,11 @@
 // ---------- «Første tur»: the guided first trip every new player goes through ----------
 // A new game, also after a reset, starts with S.tut = {v:2, m:{}, catch:true, pAt}: the milestones reached (m, game minute), whether
-// the first catch is still guaranteed (core: fish(), risk(), the jig game), and when the player last got further (real ms, for the skip
-// button, which only shows after 20 minutes without progress). The step shown is the first one not yet done, and «done» is read from
+// the first catch is still guaranteed (core: fish(), risk(), the jig game), and when the player last got further (real ms). It cannot be
+// skipped (Jonas 05.10.2026: «Spillere skal ikke kunne hoppe over tutorial»; the skip button after 20 minutes without progress is gone). The step shown is the first one not yet done, and «done» is read from
 // the game state as well as the milestones, so the guide survives reloads and surprises. Saves from before it are not sent through.
 // While it runs, a dimmed layer with a hole and a pulsing ring shows where to tap (z-index 61–62, over the phone), with the tip above.
 const tutOn = () => !!(S.tut && S.tut.v === 2);
 const tutNew = () => ({v:2, m:{}, catch:true, pAt:Date.now(), ...(S && S.tutStart ? S.tutStart : {})});   // a start along the coast brings its patch and plant (ui/08c-start.js)
-const TUT_SKIP_MS = 20 * 60 * 1000;
 const tutField = () => tutFieldAt();   // Gisundet nord, or near a start along the coast (core: the skrei patch while the catch is guaranteed)
 // where the first catch is landed: Botnhamn from Finnsnes, the start's own plant elsewhere (ui/08c-start.js); the field's name for the tips
 const tutLand = () => (S.tut && S.tut.land) || 'botnhamn', tutLandN = () => (portById(tutLand()) || {name:'Botnhamn'}).name;
@@ -99,8 +98,16 @@ function tutTip(st){
   return T0;
 }
 // where the guide points: the hole in the dimmed layer and the ring, round a button or round a place on the chart
+// scroll a button into view, and clear of the sticky bar at the foot of its list (the route's «Tøm»/«Kast loss», .btns.rbar), which
+// would otherwise lie over it and take the tap
+function tutReveal(el){
+  el.scrollIntoView({block:'nearest'});
+  const bar = !el.closest('.rbar') && [...document.querySelectorAll('.btns.rbar')].find(b => b.offsetParent && b.parentElement.contains(el)); if (!bar) return;
+  const over = el.getBoundingClientRect().bottom - bar.getBoundingClientRect().top + 8; if (over <= 0) return;
+  for (let p = el.parentElement; p; p = p.parentElement) if (p.scrollHeight > p.clientHeight + 1 && /auto|scroll/.test(getComputedStyle(p).overflowY)){ p.scrollTop += over; return; }
+}
 function tutRect(T0){
-  if (T0.el){ if (T0.scroll) T0.el.scrollIntoView({block:'nearest'}); const q = T0.el.getBoundingClientRect(); return {R:{x:q.left - 6, y:q.top - 6, w:q.width + 12, h:q.height + 12}, round:false}; }
+  if (T0.el){ if (T0.scroll) tutReveal(T0.el); const q = T0.el.getBoundingClientRect(); return {R:{x:q.left - 6, y:q.top - 6, w:q.width + 12, h:q.height + 12}, round:false}; }
   if (T0.map && inPlot()){ const c = mapToClient(T0.map.p), rp = Math.max(28, T0.map.r * view.px); return {R:{x:c.x - rp, y:c.y - rp, w:rp * 2, h:rp * 2}, round:true}; }
   return {R:null, round:false};
 }
@@ -145,7 +152,7 @@ function tutUpdate(){
   if ($('tipText').textContent !== txt) $('tipText').textContent = txt || '';
   const ok = (st.ok && !T0.noOk) || T0.okAct; $('tipOk').hidden = !ok;
   $('tipOk').textContent = T0.okText ? (S.lang === 'no' ? T0.okText[0] : T0.okText[1]) : (S.lang === 'no' ? 'Skjønner' : 'Got it');
-  $('tipSkip').hidden = Date.now() - (S.tut.pAt || Date.now()) < TUT_SKIP_MS; $('tipSkip').textContent = S.lang === 'no' ? 'Hopp over veiledningen' : 'Skip the guide';
+  $('tipSkip').hidden = true;   // no skipping: every step is done (Jonas 05.10.2026)
   tip.hidden = false; tip.classList.toggle('small', !!T0.small);
   const {R, round} = tutRect(T0);
   const place = (el, cls) => { el.hidden = !R; if (!R) return; el.style.left = R.x + 'px'; el.style.top = R.y + 'px'; el.style.width = R.w + 'px'; el.style.height = R.h + 'px'; el.classList.toggle('round', round); };
@@ -158,4 +165,4 @@ function tutUpdate(){
 }
 const JIG_OPEN = () => !!window.jigActive && !$('jigUI').hidden;
 $('tipOk').onclick = () => { if (!tutCur) return; const {st, T0} = tutCur; if (T0.okAct){ T0.okAct(); tutUpdate(); return; } if (st.id === 'goal'){ tutMark('goal'); tutFinish(); return; } tutMark(st.id); tutUpdate(); };
-$('tipSkip').onclick = () => { if (confirm(S.lang === 'no' ? 'Hoppe over resten av veiledningen?' : 'Skip the rest of the guide?')){ if (S.tut) S.tut.catch = false; tutFinish(); } };
+

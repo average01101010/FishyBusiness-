@@ -190,7 +190,9 @@ function sell(){
 // every [data-close] button closes the dialog (the cloud's consent and save dialogs have two); the first one gets the focus
 function modal(html){ const m = $('modal'); m.innerHTML = '<div class="box" role="dialog" aria-modal="true">' + html + '</div>'; m.hidden = false; const bs = m.querySelectorAll('[data-close]'); bs.forEach(b => { b.onclick = () => { m.hidden = true; }; }); if (bs[0]) bs[0].focus(); }
 // «#notut» in the address starts a new game without the first-trip tutorial (the automated tests use it)
-const NOTUT = /notut/.test(location.hash);
+// «#notut» skips «Første tur» for the tests only (served from this machine): a player cannot skip it (Jonas 05.10.2026: «Spillere skal ikke
+// kunne hoppe over tutorial. Hvert steg må gjennomføres»)
+const NOTUT = /notut/.test(location.hash) && /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
 // a new game: Father's letter first (ui/08b-letter.js; the tests with #notut go straight on), then the boat's name. No company: a
 // new player is a fisherman with a boat, and the company is founded when buying into the closed group (Jonas 05.10.2026: «nye
 // spillere skal ikke lage rederi, kun gi båten et navn»)

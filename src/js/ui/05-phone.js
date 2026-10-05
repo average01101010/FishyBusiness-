@@ -384,6 +384,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p32', '05.10.2026', 'Første tur kan ikke hoppes over', 'The first trip cannot be skipped', [
+      ['Veiledningen «Første tur» må gjøres steg for steg. Knappen «Hopp over veiledningen» er borte. Lukker du spillet midt i, fortsetter den der du slapp.', 'The «First trip» guide is done step by step. The «Skip the guide» button is gone. If you close the game halfway, it goes on where you left off.']]],
     ['p31', '05.10.2026', 'Én klokke for alle', 'One clock for everyone', [
       ['Alle spillerne går på samme klokke og dato, så ingenting spoler tiden fram lenger: «Vent til åpning» ved et stengt mottak og «Spol fram til havn» under slep er fjernet. Mottaket viser når det åpner, og slepet tar den tiden det tar.', 'Every player is on the same clock and date, so nothing moves time on any more: «Wait for opening» at a closed plant and «Fast forward to harbour» under tow are gone. The plant shows when it opens, and the tow takes the time it takes.']]],
     ['p30', '05.10.2026', 'Mindre vinduer på telefonen', 'Smaller boxes on the phone', [

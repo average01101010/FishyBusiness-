@@ -1482,7 +1482,7 @@ Jonas: «Skjermen er helt svart, med en slitt konvolutt med røff håndskrift hv
   3. Konvolutten faller bort, og brevet kommer fram og brettes ut, først øverste og så nederste tredjedel.
   4. «Ta over» går videre til båtnavnet.
 - **Lyd:** Papirlyden lages av støy med båndpass og spredte klikk (`letterSound`) og følger lydinnstillingen.
-- **Når den ikke vises:** `#notut` hopper over brevet, slik testene gjør. Nullstilling (`reset`) viser det heller ikke.
+- **Når den ikke vises:** `#notut` hopper over brevet, slik testene gjør (bare fra testmaskinen). Nullstilling (`reset`) viser det heller ikke.
 - **Papiret** er fra Blender (`tools/opening/brev.py`). Det er fem WebP-bilder, til sammen rundt 150 kB, i `pic-letter-*`:
   - konvoluttens forside, lomme, innside og klaff
   - selve arket
@@ -1500,7 +1500,7 @@ Jonas: «Skjermen er helt svart, med en slitt konvolutt med røff håndskrift hv
 
 ### 5.16 Veiledningen «Første tur» (01.10.2026)
 
-- **Obligatorisk** for nye spill, også etter nullstilling. Eldre lagringer sendes ikke gjennom den. `#notut` i adressen hopper over den (testene bruker det).
+- **Obligatorisk** for nye spill, også etter nullstilling, og den kan ikke hoppes over (Jonas 05.10.2026: «Hvert steg må gjennomføres, og om spillet lukkes mens tutorial pågår skal den fortsette der den slapp»). Eldre lagringer sendes ikke gjennom den. `#notut` i adressen hopper over den bare når spillet kjøres fra testmaskinen (`127.0.0.1` eller `localhost`, `NOTUT` i `08-actions.js`).
 - **Tilstand:** `S.tut = {v:2, m:{…}, catch:true, pAt}`. `m` er milepælene. Steget som vises, er det første som ikke er gjort, og «gjort» leses også av spilltilstanden, så veiledningen tåler omlasting. Rutestegene (`live`) leses på nytt hver gang til båten har kastet loss.
 - **Stegene** (`TSTEPS` i `ui/07b-first-trip.js`): butikken (håndjuksa og 150 kg is gratis), kartplotteren, rute til ringen ved Gisundet nord (med «Autonav» fremhevet), minst 2 timer fisketid, «Kast loss», gratis luksushaill mens båten går ut, fisket og «Jukse selv», dekksarbeidet, full last, rute til Botnhamn med «Autonav», «Kast loss», «Neste»-brikka, levering, sluttseddelen og «Neste mål».
 - **Visning:** Et dempet lag med hull rundt målet og en pulserende ring (z-index 61–62, over telefonen), med tipset over (63). `tutRect()` gir målet.
@@ -1509,7 +1509,7 @@ Jonas: «Skjermen er helt svart, med en slitt konvolutt med røff håndskrift hv
   - `risk()` og snuing for vind er slått av, og i jukse-spillet kommer nappet etter 4–8 s. Flagget nullstilles ved første levering.
 - **Haill:** Kommer båten fram før haillen er hentet, venter den på feltet (`b.tutWait`) og begynner å fiske når haillen er om bord.
 - **Sperrer** (`tutAllow`): «Kast loss», nye punkter og levering bare på sine steg. Puben, kveiteutstyret, driftsplanen, «Hjem samme vei» og levering andre steder enn Botnhamn er skjult til veiledningen er ferdig.
-- **Nødutgang:** «Hopp over veiledningen» vises først etter 20 minutter uten fremgang.
+- **Ingen nødutgang:** knappen «Hopp over veiledningen» (etter 20 minutter uten fremgang) er fjernet. Steget leses fra spilltilstanden og milepælene i `S.tut`, som lagres, så veiledningen fortsetter der den slapp etter at spillet har vært lukket.
 - **Knappelinja:** Veiledningen peker på Verft og så Fiskeutstyr (`dockApp()`), på «Jukse selv» og statusfeltet i knappelinja, og på Marked, Lever og «Lever» i skuffen. Sluttseddelen vises i skuffen under Marked, Lever.
 
 ### 5.17 Knappelinja, skuffen og «Sett ut» (01.10.2026)
