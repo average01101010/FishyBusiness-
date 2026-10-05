@@ -382,6 +382,7 @@ const PHONE = (() => {
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
     ['p24', '05.10.2026', 'Ny innlasting og innlogging', 'New loading and sign-in screens', [
+      ['Lyden: sjøbruset, vinden og regnet dør ut når kameraet går høyt opp i lufta, så bare musikken høres der oppe.', 'Sound: the sea, the wind and the rain die away as the camera rises high into the air, so only the music is heard up there.'],
       ['3D på PC med Intel-grafikk: spillet starter med en enklere sjø der. Gir grafikkdriveren opp mens 3D starter, husker spillet det og prøver en enklere sjø neste gang siden lastes.', '3D on PCs with Intel graphics: the game starts with a simpler sea there. If the graphics driver gives up while 3D starts, the game remembers it and tries a simpler sea the next time the page loads.'],
       ['Innlastingen og innloggingen har fått et bilde fra Blender: fars naust i blåtimen, med lampa tent og trebåten fortøyd, og Senjas tinder med snø bak. Ny skrift og en tynn lysstripe som viser at spillet laster.', 'The loading and sign-in screens have a picture from Blender: Father’s boathouse at the blue hour, the lamp lit and the wooden boat moored, with Senja’s snowy peaks behind. New type, and a thin running light while the game loads.']]],
     ['p23', '05.10.2026', 'Fars naust og butikken på kaia', 'Father’s boathouse and the shop on the quay', [

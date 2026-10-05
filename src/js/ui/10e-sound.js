@@ -14,7 +14,8 @@
 // Where you hear it from (the user's wish 03.10.2026): in 3D the ear is the camera (G3.ear), and what has a place (your boat's engine,
 // wash, hauler, reel and slaps, the gulls round her, the plant's crane, forklift and ice chute, the pump, the three nearest boats of
 // the fleet; G3.sndSrc) is fainter with the distance, (ref / d)^0.9 from ref metres out, duller (a lower low-pass) and to the left or
-// right as it lies from the camera. The wind, the rain and the sea round you are where you are. The bridge watch alarm is never under
+// right as it lies from the camera. The wind, the rain and the sea round you are where the camera is, fading as it rises (gone well up
+// in the air, where only the music is left). The bridge watch alarm is never under
 // half. In the 2D chart the ear is aboard, as before.
 const SNDREF = {eng:12, wash:10, haul:5, reel:4, slap:8, gull:12, crane:18, beep:20, chute:15, pump:6, alarm:8, npc:12, npcBig:30, air:350};
 const SND = (() => {
@@ -182,10 +183,13 @@ const SND = (() => {
       while (semiT < now + 0.25){ thump(semiT, T, aB, frac); semiT += T * (0.96 + Math.random() * 0.08); }
     } else semiT = 0;
     // the sea round you, and the wash along her hull from where she is; the wind, the rain
+    // (the sea, the wind and the rain are round the ear when it is down by the water; up in the air they die away with the camera's
+    // height, so far up only the music is left: Jonas 05.10.2026, «Det burde være nesten helt stille når jeg zoomer så langt unna»)
+    const hF = ref => EAR ? Math.min(1, Math.pow(ref / Math.max(ref, EAR.y - 2), 1.4)) : 1; LV.hSea = hF(15);
     const aW = at(boat, SNDREF.wash);
-    set('sea', (atSea ? 0.03 + Math.min(0.2, v * 0.011) * aW.g + Math.min(0.12, hs * 0.06) : 0.012), 0.4); L.sea.f.frequency.setTargetAtTime(500 + v * 45 * aW.lp + hs * 120, now, 0.5);
-    set('wind', Math.pow(clamp((W - 2.5) / 22, 0, 1), 1.3) * (atSea ? 0.28 : 0.14), 0.6); L.wind.f.frequency.setTargetAtTime(450 + W * 30 + Math.random() * 300, now, 0.8);
-    set('rain', rain > 0.15 && !snow ? (rain - 0.15) * 0.16 : 0, 1);
+    set('sea', (atSea ? (0.03 + Math.min(0.12, hs * 0.06)) * hF(15) + Math.min(0.2, v * 0.011) * aW.g : 0.012 * hF(15)), 0.4); L.sea.f.frequency.setTargetAtTime(500 + v * 45 * aW.lp + hs * 120, now, 0.5);
+    set('wind', Math.pow(clamp((W - 2.5) / 22, 0, 1), 1.3) * (atSea ? 0.28 : 0.14) * hF(40), 0.6); L.wind.f.frequency.setTargetAtTime(450 + W * 30 + Math.random() * 300, now, 0.8);
+    set('rain', rain > 0.15 && !snow ? (rain - 0.15) * 0.16 * hF(25) : 0, 1);
     // hull slaps at sea, more in a sea and under way
     if (atSea && Math.random() < 0.01 + Math.min(0.06, hs * 0.03 + v * 0.002)){ const a = at(boat, SNDREF.slap); burst('lowpass', (180 + Math.random() * 160) * a.lp, 1, (0.08 + Math.min(0.25, hs * 0.1 + v * 0.008) * Math.random()) * a.g, 0.35, 0.006, a.pan); }
     // gulls: now and then round the boat, often while the catch is gutted (the offal)
