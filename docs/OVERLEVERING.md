@@ -1527,7 +1527,20 @@ Jonas: «Skjermen er helt svart, med en slitt konvolutt med røff håndskrift hv
 
 - **Obligatorisk** for nye spill, også etter nullstilling, og den kan ikke hoppes over (Jonas 05.10.2026: «Hvert steg må gjennomføres, og om spillet lukkes mens tutorial pågår skal den fortsette der den slapp»). Eldre lagringer sendes ikke gjennom den. `#notut` i adressen hopper over den bare når spillet kjøres fra testmaskinen (`127.0.0.1` eller `localhost`, `NOTUT` i `08-actions.js`).
 - **Tilstand:** `S.tut = {v:2, m:{…}, catch:true, pAt}`. `m` er milepælene. Steget som vises, er det første som ikke er gjort, og «gjort» leses også av spilltilstanden, så veiledningen tåler omlasting. Rutestegene (`live`) leses på nytt hver gang til båten har kastet loss.
-- **Stegene** (`TSTEPS` i `ui/07b-first-trip.js`): butikken (håndjuksa og 150 kg is gratis), kartplotteren, rute til ringen ved Gisundet nord (med «Autonav» fremhevet), minst 2 timer fisketid, «Kast loss», gratis luksushaill mens båten går ut, fisket og «Jukse selv», dekksarbeidet, full last, rute til Botnhamn med «Autonav», «Kast loss», «Neste»-brikka, levering, sluttseddelen og «Neste mål».
+- **Stegene** (`TSTEPS` i `ui/07b-first-trip.js`): butikken (håndjuksa og 150 kg is gratis), kartplotteren, rute til ringen ved Gisundet nord (med «Autonav» fremhevet), minst 2 timer fisketid, «Kast loss», «Neste»-brikka og ventingen mens båten går ut, fisket og «Jukse selv», dekksarbeidet, full last, rute til Botnhamn med «Autonav», «Kast loss», gjennomgangen på vei inn, levering, sluttseddelen og «Neste mål».
+- **Fiskelykke og haill like før første fiske** (05.10.2026, Jonas: «Spilleren burde introduseres for "fiskelykke" og haill-appen like før han skal fiske første gangen»):
+  - Båten venter på feltet til luksushaillen er aktivert (`tutWait`, `core/05-vessels.js`).
+  - Der forklarer `luck` hva fiskelykke er, og `haill` henter den gratis luksushaillen i Haill-appen.
+  - `luckhud` viser haill-linja i statusboksen, som blekner trinn for trinn.
+- **Gjennomgangen på vei til mottaket** (05.10.2026, Jonas: «… når brukeren har fisket og er på tur til nærmeste fiskemottak. Da må det tas en gjennomgang på alt fra statusfanen, dekksdagboken, appene, kamera, innstillinger, værsystemer»):
+  - `tour` og `hud`: statusboksen og «–»/«+».
+  - `book`: dekksdagboka. Steget er gjort når den åpnes, fordi tipset er skjult mens boka er åpen.
+  - `cam` og `cam2`: til broa med kameraknappen og tilbake. Steget hoppes over uten 3D. Kinoknappen nevnes.
+  - `apps`: telefonens hjemskjerm.
+  - `vaer`: Vær-appen med varselet for 48 timer og risikofargene.
+  - `innst`: innstillingene.
+  - Hvert av disse stegene leses ferdig med «Skjønner». Båten seiler videre imens, og venter ved kaia hvis den kommer fram først.
+- **Lagringer midt i første tur:** et steg regnes som gjort når et senere steg er merket (`tutStep`). Da møter ikke en lagring fra før endringen nye steg bak seg.
 - **Visning:** Et dempet lag med hull rundt målet og en pulserende ring (z-index 61–62, over telefonen), med tipset over (63). `tutRect()` gir målet.
 - **Garantert første fangst** (`S.tut.catch`): Så lenge flagget er satt, ligger det en ekte skreiflekk på feltet i Gisundet nord (`tutBonus`, `TUTB`, `TUT_FIELD`). Den gir rundt 175 kg/t for én person i sentrum og en tidel ved kanten av ringen, i samme miks som påfyllingen (72 % torsk, 18 % sei, 10 % hyse). Flekken legges oppå bestanden og fiskes ikke ned, så ekkoloddet og varmekartet viser det båten får.
   - `fish()` fyller fortsatt på, så lasten er full når fisketida er ute, men påfyllingen er nå et sikkerhetsnett: rundt en firedel av fangsten i stedet for ni tideler (`window.TUTTOP` teller den i testene). Bare bestandens egen andel av fangsten trekkes fra bestanden.

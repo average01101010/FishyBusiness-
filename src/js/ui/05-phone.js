@@ -388,6 +388,9 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p40', '05.10.2026', 'Første tur viser mer', 'The first trip shows more', [
+      ['Når du kommer fram til feltet første gang, får du vite hva fiskelykke er, før du henter haillen i Haill-appen.', 'When you reach the grounds the first time, you learn what luck is before you fetch the haill in the Luck app.'],
+      ['På vei inn til mottaket viser veiledningen deg rundt: statusboksen, dekksdagboka, kameraet og broa, appene på telefonen, været og innstillingene.', 'On the way in to the plant the guide shows you round: the status box, the deck log, the camera and the bridge, the apps on the phone, the weather and the settings.']]],
     ['p39', '05.10.2026', 'Verkstedet på en halvtime', 'The yard in half an hour', [
       ['Montering av utstyr, service, skrogrens, lasterom og motorbytte tar nå 30 minutter hver, og alle jobbene i køen går samtidig.', 'Fitting equipment, servicing, cleaning the hull, the hold and an engine change now take 30 minutes each, and all the jobs in the queue run at the same time.'],
       ['Overtid kan kjøpes for hver jobb for seg. Service du gjør selv, er billigere og tar en time.', 'Overtime can be bought for each job on its own. Servicing it yourself is cheaper and takes an hour.']]],

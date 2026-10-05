@@ -1,6 +1,8 @@
 """«Første tur», the guided first trip, played through the way a player would: tap the middle of the ring the guide shows, tap its
 button when it has one, and wait while the boat works. Touch goes through CDP; landscape 1293 × 830 and portrait 915 × 1208, with
-three reloads on the way. It opens on Father's letter (tapped open, read, «Ta over») and the boat's name, no company. The game runs
+three reloads on the way. On the way out the «Next» chip, at the grounds what the luck is, the free luxury luck and where it shows;
+on the way in a look round: the status box, the deck log, the camera (the bridge and back), the phone's apps, the weather and the
+settings (05.10.2026). It opens on Father's letter (tapped open, read, «Ta over») and the boat's name, no company. The game runs
 at test pace (S.mult) to save time. Checks: every step comes in order, the guide ends with
 "tut":0, the jig and ice were free, the free luxury luck, a full hold at landing, and a login bonus row on the landing note.
 Prints OK or FEIL per check and ends with the old summary line {"tut":0, …} and the page errors."""
@@ -8,7 +10,10 @@ from _env import GAME_TUT as GAME
 import asyncio, json, time
 from playwright.async_api import async_playwright
 
-ORDER = ['shop', 'gps', 'route1', 'fish2', 'cast1', 'haill', 'fish', 'deck', 'full', 'route2', 'cast2', 'chip', 'land', 'slip', 'goal']
+ORDER = ['shop', 'gps', 'route1', 'fish2', 'cast1', 'chip', 'sail', 'luck', 'haill', 'luckhud', 'fish', 'deck', 'full', 'route2', 'cast2',
+         'tour', 'hud', 'book', 'cam', 'cam2', 'apps', 'vaer', 'innst', 'land', 'slip', 'goal']
+# the steps read with «Skjønner» while the ring shows what they are about
+OK_RING = ('deck', 'chip', 'slip', 'goal', 'luckhud', 'hud', 'apps', 'vaer', 'innst')
 
 
 def check(ok, what, extra=''):
@@ -18,7 +23,7 @@ def check(ok, what, extra=''):
 # the target is worked out afresh (the ring on screen slides there over 0.2 s)
 STATE = """JSON.stringify((() => { const st = tutOn() ? tutStep() : null, q = st && !$('tutRing').hidden ? tutRect(tutTip(st)).R : null;
   return {id:st ? st.id : null, tut:S.tut && S.tut.v ? 'v2' : S.tut, ring:q && {x:q.x + q.w / 2, y:q.y + q.h / 2, w:q.w}, ok:!$('tipOk').hidden && !$('tip').hidden, okText:$('tipOk').textContent,
-    tip:$('tip').hidden ? '' : $('tipText').textContent, rod:!!window.jigActive, st:S.boat.status, hold:Math.round(holdTotal()), busy:LEIA_BUSY, skip:!$('tipSkip').hidden}; })())"""
+    tip:$('tip').hidden ? '' : $('tipText').textContent, rod:!!window.jigActive, book:BOOK.isOpen(), st:S.boat.status, hold:Math.round(holdTotal()), busy:LEIA_BUSY, skip:!$('tipSkip').hidden}; })())"""
 
 
 async def play(p, W, H, tag):
@@ -68,12 +73,14 @@ async def play(p, W, H, tag):
         if sid is None: break
         stuck += 1
         if stuck and stuck % 30 == 0: print('    ', tag, 'still', sid, json.dumps({k: s[k] for k in ('ring', 'ok', 'okText', 'st', 'hold', 'rod')}), (await pg.evaluate("JSON.stringify({open:PHONE.isOpen(), app:PHONE.app, tip:tutStep() && tutTip(tutStep()).el ? tutTip(tutStep()).el.outerHTML.slice(0, 80) : null, wait:S.boat.tutWait, plan:!!S.plan})")), flush=True)
+        if s['book']:   # the deck log, opened on its step: leaf once and close it
+            await pg.wait_for_timeout(600); await pg.evaluate("BOOK.close()"); await pg.wait_for_timeout(300); continue
         if s['rod'] and sid != 'fish':
             await pg.evaluate("JIGG.stop(); renderActs()"); continue
         if sid == 'land' and s['st'] == 'port' and hold_at_land is None: hold_at_land = s['hold']
         if sid in ('route2',) and s['busy']:
             await pg.wait_for_timeout(300); continue
-        if s['ok'] and (not s['ring'] or sid in ('deck', 'chip', 'slip', 'goal')) and not (sid == 'slip' and not s['ring'] and s['okText'].startswith('Skjønner')):
+        if s['ok'] and (not s['ring'] or sid in OK_RING) and not (sid == 'slip' and not s['ring'] and s['okText'].startswith('Skjønner')):
             await tap_el('#tipOk'); await pg.wait_for_timeout(400); continue
         if s['ring']:
             await tap(s['ring']['x'], s['ring']['y']); await pg.wait_for_timeout(350 if sid != 'route2' else 700); continue
