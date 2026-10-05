@@ -209,7 +209,7 @@ async def main():
         pg = await b.new_page(viewport={'width': 900, 'height': 700})
         await boot(pg)
         r = json.loads(await pg.evaluate("""(() => { const R = {n:0, out:0, inn:0, bad:[]}; let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-          for (const pt of PORTS){ approachPath(pt); for (let k = 0; k < 150; k++){ const a = rnd() * 6.283, r = 0.4 + rnd() * 4, to = {x:pt.p.x + Math.cos(a) * r, y:pt.p.y + Math.sin(a) * r}; if (isLand(to)) continue; R.n++;
+          for (const pt of PORTS.filter(q => !q.coastal)){ approachPath(pt); for (let k = 0; k < 150; k++){ const a = rnd() * 6.283, r = 0.4 + rnd() * 4, to = {x:pt.p.x + Math.cos(a) * r, y:pt.p.y + Math.sin(a) * r}; if (isLand(to)) continue; R.n++;
             const ex = exitWps(pt, to), en = entryWps(pt, to); if (ex.length) R.out++; if (en.length) R.inn++;
             const chain = [pt.p].concat(ex, [to]); for (let i = 1; i < chain.length; i++) if (ex.length && !clearLine(chain[i - 1], chain[i])) { R.bad.push([pt.id, 'out', i]); break; }
             if (ex.some(q => dist(q, pt.p) < 0.002) || en.some(q => dist(q, pt.p) < 0.002)) R.bad.push([pt.id, 'harbour point']);

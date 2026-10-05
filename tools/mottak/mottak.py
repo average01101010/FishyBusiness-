@@ -134,7 +134,28 @@ def geocode(e):
         if a: p = a[0]['representasjonspunkt']; return [round(p['lat'], 5), round(p['lon'], 5)]
     except (requests.RequestException, ValueError, KeyError): pass
     return None
+# the receiver's place as people say it (05.10.2026, for the ports along the coast): the postal town of the addresses round its point
+# in Kartverket's address register (Båtsfjord, Senjahopen, Mo i Rana), the most common within 800 m; cached in cache/steder.json
+PUNKT = 'https://ws.geonorge.no/adresser/v1/punktsok'
+def town_case(s):
+    w = s.lower().split(' '); return ' '.join(x if (i and x in ('i', 'på', 'og', 'ved')) else '-'.join(p[:1].upper() + p[1:] for p in x.split('-')) for i, x in enumerate(w))
+def places(out):
+    f = os.path.join(CACHE, 'steder.json'); C = json.load(open(f)) if os.path.exists(f) else {}
+    for x in out:
+        k = '%.4f,%.4f' % tuple(x['ll'])
+        if k not in C:
+            try:
+                r = requests.get(PUNKT, params=dict(lat=x['ll'][0], lon=x['ll'][1], radius=800, treffPerSide=10, utkoordsys=4258), timeout=30).json()
+                ps = [a.get('poststed') for a in r.get('adresser') or [] if a.get('poststed')]
+                C[k] = town_case(max(set(ps), key=ps.count)) if ps else None
+            except (requests.RequestException, ValueError): continue
+        if C.get(k): x['v'] = C[k]
+    os.makedirs(CACHE, exist_ok=True); json.dump(C, open(f, 'w'), ensure_ascii=False, indent=0)
 def main():
+    if sys.argv[1:] == ['steder']:
+        # only the places, into the receivers already made (src/data/mottak.json)
+        f = os.environ.get('KYST_MOTTAK') or os.path.join(ROOT, 'src', 'data', 'mottak.json'); d = json.load(open(f)); places(d['m'])
+        json.dump(d, open(f, 'w'), ensure_ascii=False, separators=(',', ':')); print(sum(1 for x in d['m'] if x.get('v')), 'of', len(d['m']), 'with a place'); return
     Y = int(time.strftime('%Y')); years = [int(a) for a in sys.argv[1:]] or [Y - 2, Y - 1]
     os.makedirs(CACHE, exist_ok=True); os.makedirs(OUT, exist_ok=True)
     reg = register(); rf = rafisklaget(); agg = notes(years); ny = len(years)
@@ -156,7 +177,7 @@ def main():
         x, y = frame.to_nat(e['ll'][1], e['ll'][0]); x, y = float(x), float(y)
         out.append(dict(id=mt, n=e['n'], t=e['t'], k=e['k'], ll=e['ll'], p=[round(x, 4), round(y, 4)], q=snap(Q, x, y) if Q else None, src=e['src'], kg=round(kg), n_land=round(a['docs'] / ny), boats=round(a['boats'] / ny),
                         sp=sp, gear=gear, small=round(a['small'] / a['kg'], 3) if a['kg'] else 0, rf=[f['type'], f['zone']] if f else None))
-    out.sort(key=lambda x: -x['kg'])
+    out.sort(key=lambda x: -x['kg']); places(out)
     meta = dict(made=time.strftime('%Y-%m-%d'), years=years, src='Fiskeridirektoratet: kjøperregisteret og fangstdata (seddel), NLOD; Norges Råfisklag: mottakskartet',
                 n=len(out), nogeo=nogeo)
     json.dump(dict(meta=meta, m=out), open(os.environ.get('KYST_MOTTAK') or os.path.join(OUT, 'mottak.json'), 'w'), ensure_ascii=False, separators=(',', ':'))

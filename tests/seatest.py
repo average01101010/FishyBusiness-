@@ -18,7 +18,7 @@ async def main():
           const R = {}, D = [0, 45, 90, 135, 180, 225, 270, 315], r1 = v => Math.round(v * 10) / 10;
           let s = 0; for (let x = 0.2; x < 78; x += 0.37) for (let y = 0.2; y < 82; y += 0.41) s += exposure(LG(x, y)); R.expo = Math.round(s * 1e4) / 1e4;
           R.rose = {}; for (const g of GROUNDS) R.rose[g.name.no] = D.map(d => r1(fetchAt(g.p, d)));
-          for (const q of PORTS) R.rose[q.id] = D.map(d => r1(fetchAt(q.p, d)));
+          for (const q of PORTS.filter(q => !q.coastal)) R.rose[q.id] = D.map(d => r1(fetchAt(q.p, d)));
           // smooth: the cached field over a full turn in 1 degree steps, and against fetchAt
           // (the root of the fetch, which the wind sea goes as, steps no more per degree than a tenth of the step between two 10 degree sectors)
           const g0 = GROUNDS[0].p, rf = d => Math.sqrt(fetchField(g0, d)); let jump = 0, prev = rf(0), dev = 0, sec = 0;

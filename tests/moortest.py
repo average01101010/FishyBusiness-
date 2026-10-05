@@ -12,7 +12,7 @@ async def main():
         errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
         await pg.goto(GAME); await pg.wait_for_timeout(1200); await pg.click('#obGo')
         await pg.wait_for_function("G3.isActive()", timeout=90000); await pg.wait_for_timeout(1000)
-        berths = await pg.evaluate("""JSON.stringify(PORTS.map(q => Object.keys(BEAM).map(t => { const b = berthPose(q.id, t); return b ? {ok:b.face.hl * 2 >= b.Lb + 2 && (QUAYS[q.id] || !isLand({x:b.x, y:b.y})), d:Math.round(Math.hypot(b.x - q.p.x, b.y - q.p.y) * 1000)} : null; })).flat())""")
+        berths = await pg.evaluate("""JSON.stringify(PORTS.filter(q => !q.coastal).map(q => Object.keys(BEAM).map(t => { const b = berthPose(q.id, t); return b ? {ok:b.face.hl * 2 >= b.Lb + 2 && (QUAYS[q.id] || !isLand({x:b.x, y:b.y})), d:Math.round(Math.hypot(b.x - q.p.x, b.y - q.p.y) * 1000)} : null; })).flat())""")
         B = json.loads(berths)
         print(ok(all(x and x['ok'] and x['d'] < 120 for x in B)), 'every harbour has a berth for every vessel type, in the water, on a long enough face, near the harbour point (the real quays are checked against the 3D coastline in harbourtest)')
         # coming alongside at Husøy

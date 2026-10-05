@@ -306,6 +306,9 @@ const PHONE = (() => {
       // the music on its own (Jonas 05.10.2026: «Må kunne skrus av i innstillinger»)
       '<div class="ph-card"><h4>' + L('Musikk', 'Music') + '</h4><div class="ph-sub">' + [[0, L('Av', 'Off')], [0.2, L('Svak', 'Soft')], [0.35, L('Normal', 'Normal')], [0.6, L('Sterkere', 'Louder')]].map(([v, l]) => { const cur = S.settings.music == null ? 0.35 : S.settings.music; return '<button class="' + (Math.abs(cur - v) < 0.07 ? 'on' : '') + '" data-pa="mus" data-v="' + v + '">' + l + '</button>'; }).join('') + '</div><p class="ph-note">' +
       L('Rolig musikk i bakgrunnen, laget mens den spiller: myke akkorder og en klokke nå og da. Mørkere om natta og i dårlig vær.', 'Quiet music in the background, made as it plays: soft chords and a bell now and then. Darker at night and in bad weather.') + '</p></div>' +
+      // where you are at home on the coast: a game from before the start along the coast may move once, free (05.10.2026)
+      '<div class="ph-card"><h4>' + L('Hjemsted', 'Home') + '</h4>' + kv(L('Holder til i', 'Based in'), (portById(S.home || 'finnsnes') || PORTS[0]).name) +
+        (S.moved ? '<p class="ph-note">' + L('Du har brukt den gratis flyttingen.', 'You have used the free move.') + '</p>' : '<button class="ph-btn alt" data-pa="move">' + L('Flytt til et annet sted langs kysten', 'Move elsewhere along the coast') + '</button><p class="ph-note">' + L('Én gang gratis. Båten må ligge i havn, uten redskap i sjøen.', 'Once, free. The boat must lie in harbour, with no gear in the sea.') + '</p>') + '</div>' +
       // the hand on the helm: a throttle and a joystick in 3D (core/16-helm.js, ui/10d-helm.js)
       '<div class="ph-card"><h4>' + L('Manuell styring', 'Manual steering') + '</h4><div class="ph-sub"><button class="' + (S.settings.manual ? 'on' : '') + '" data-pa="manual" data-v="1">' + L('På', 'On') + '</button><button class="' + (S.settings.manual ? '' : 'on') + '" data-pa="manual" data-v="0">' + L('Av', 'Off') + '</button></div><p class="ph-note">' +
       L('Gass til høyre (fram, nøytral, bak; den blir stående der du slipper) og ratt til venstre (det går tilbake til midten) i 3D. Rører du dem på sjøen, tar du roret fra ruta eller Autonav. «Fortøy» kommer når du er sakte ved en kai, og «Kast loss» når du ligger fortøyd.', 'Throttle on the right (ahead, neutral, astern; it stays where you leave it) and wheel on the left (it springs back) in 3D. Touching them at sea takes the helm from the route or Autonav. «Moor» shows when you are slow at a quay, and «Cast off» when you lie moored.') + '</p></div>' +
@@ -375,6 +378,12 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p20', '05.10.2026', 'Hele kysten', 'The whole coast', [
+      ['Nye spillere velger selv hvor fars naust står: alle fiskemottakene langs kysten som tar imot fisk fra små båter, på et kart og i en liste etter region. Stjernene er de to beste stedene for torsk i hver region.', 'New players choose where Father’s boathouse stands: every fish plant along the coast that takes fish from small boats, on a map and in a list by region. The stars are the two best places for cod in each region.'],
+      ['153 nye mottak langs hele kysten, fra Lindesnes til Kjøllefjord, med kai, drivstoff og priser etter hva mottaket betaler. Du kan levere ved alle.', '153 new plants along the whole coast, from Lindesnes to Kjøllefjord, with a quay, fuel and prices after what the plant pays. You can land at all of them.'],
+      ['Salgslaget viser de 10 nærmeste mottakene med avstand og pris for torsk, hyse og sei.', 'Salgslaget shows the 10 nearest plants with distance and price for cod, haddock and saithe.'],
+      ['«Første tur» går fra stedet du valgte: til det beste torskefeltet i nærheten, og inn til mottaket der.', '«First trip» goes from the place you chose: to the best cod ground near by, and in to the plant there.'],
+      ['Har du et spill fra før, kan du flytte til et annet sted langs kysten én gang gratis, under Innstillinger.', 'If you already have a game, you can move elsewhere along the coast once for free, in Settings.']]],
     ['p19', '05.10.2026', 'Mobil, nettbrett og musikk', 'Phones, tablets and music', [
       ['Spillet er gått gjennom på telefon, nettbrett og PC. På telefon fyller telefonen i spillet hele skjermen, handlingsknappene får plass, kartplotterens toppfelt vises helt, og kompasset ligger over infoboksen.', 'The game has been gone through on phones, tablets and PCs. On a phone the phone in the game fills the screen, the action buttons fit, the chart plotter’s top fields show in full, and the compass lies above the info box.'],
       ['Knappene i appene er store nok for fingeren, og på en telefon på siden er infoboksen mindre og minikartet borte, så alt får plass.', 'The buttons in the apps are big enough for a finger, and on a phone on its side the info box is smaller and the mini chart gone, so everything fits.'],
@@ -597,7 +606,11 @@ const PHONE = (() => {
       h.push('<div class="ph-card"><h4>' + L('Førstehåndspriser, kr/kg', 'First-hand prices, NOK/kg') + '</h4><table class="ph-tbl"><tr><th>' + L('Art', 'Species') + '</th><th class="n">' + L('I dag', 'Today') + '</th><th class="n">' + L('7 døgn', '7 days') + '</th><th class="n">' + L('Minstepris', 'Minimum') + '</th></tr>');
       SP.forEach(sp => { const a1 = avgPrice(sp, H, 1), a7 = avgPrice(sp, H, 7), ar = a1 > a7 * 1.02 ? ' ▲' : a1 < a7 * 0.98 ? ' ▼' : ''; h.push('<tr><td>' + spName(sp) + '</td><td class="n">' + fmt(a1, 2) + ar + '</td><td class="n">' + fmt(a7, 2) + '</td><td class="n">' + fmt((SPECIES[sp].cls[SPECIES[sp].ref][1] * (SPECIES[sp].cls[SPECIES[sp].ref][3] || 1)), 2) + '</td></tr>'); });
       h.push('</table><p class="ph-note">' + L('Snitt av mottakene for A-kvalitet. Mottakene må betale minst minsteprisen.', 'Average across the fish plants for grade A. Plants must pay at least the minimum price.') + '</p></div>');
-      h.push('<div class="ph-card"><h4>' + L('Mottak i dag', 'Plants today') + '</h4><table class="ph-tbl"><tr><th></th>' + SP.map(sp => '<th class="n">' + spName(sp).slice(0, 4) + '</th>').join('') + '</tr>' + PORTS.filter(q => q.mottak).map(q => '<tr><td>' + q.name + '</td>' + SP.map(sp => '<td class="n">' + fmt(price(q, sp, H), 0) + '</td>').join('') + '</tr>').join('') + '</table></div>');
+      // the ten plants nearest the boat, with the way there (Jonas 04.10.2026: «salgslaget på telefonen må vise de 8-10 nærmeste fiskemottakene»)
+      { const near = plantsNear(S.boat.pos, 10), S3 = ['torsk', 'hyse', 'sei'], best = sp => Math.max(...near.map(x => price(x.pt, sp, H)));
+        h.push('<div class="ph-card"><h4>' + L('Nærmeste mottak i dag', 'Nearest plants today') + '</h4><table class="ph-tbl"><tr><th></th><th class="n">nm</th>' + S3.map(sp => '<th class="n">' + spName(sp).slice(0, 5) + '</th>').join('') + '</tr>' +
+          near.map(({pt, d}) => '<tr' + (S.boat.port === pt.id ? ' class="here"' : '') + '><td>' + pt.name + '</td><td class="n">' + fmt(d / NM, d / NM < 10 ? 1 : 0) + '</td>' + S3.map(sp => { const v = price(pt, sp, H); return '<td class="n">' + (v >= best(sp) - 0.005 ? '<b>' + fmt(v, 0) + '</b>' : fmt(v, 0)) + '</td>'; }).join('') + '</tr>').join('') +
+          '</table><p class="ph-note">' + L('Kr/kg for A-kvalitet. Fet skrift er beste pris av disse. Avstanden er i rett linje.', 'NOK/kg for grade A. Bold is the best price of these. The distance is as the crow flies.') + '</p></div>'); }
     } else if (s0 === 'best'){
       const O = ordState(), cn = id => CUSTOMERS.find(c => c.id === id);
       const card = (o, act) => { const c = cn(o.cust), pr = price(portById(o.port), o.sp, H);
@@ -1013,6 +1026,13 @@ const PHONE = (() => {
     else if (a === 'lang'){ S.lang = S.lang === 'no' ? 'en' : 'no'; refreshAll(); }
     else if (a === 'q3d'){ S.settings.q3d = d.v; if (typeof G3 !== 'undefined' && G3.quality) G3.quality(d.v); }
     else if (a === 'fpsShow'){ S.settings.fpsShow = d.v === '1'; }
+    else if (a === 'move'){
+      if (S.moved) return true;
+      if (S.boat.status !== 'port' || (S.sets || []).length || S.plan){ toast(L('Båten må ligge i havn uten redskap i sjøen og uten rute.', 'The boat must lie in harbour, with no gear in the sea and no route.')); return true; }
+      show(false); const from = (portById(S.home || S.boat.port) || PORTS[0]).name;
+      showStart(() => { S.moved = true; const to = (portById(S.home) || PORTS[0]).name; log('Flyttet fra ' + from + ' til ' + to + '.', 'Moved from ' + from + ' to ' + to + '.'); save(); refreshAll(); });
+      return true;
+    }
     else if (a === 'mus'){ S.settings.music = +d.v; if (+d.v > 0) SND.start(); }
     else if (a === 'snd'){ const v = +d.v; S.settings.sound = v > 0; if (v > 0){ S.settings.vol = v; SND.start(); } }
     else if (a === 'manual'){ S.settings.manual = d.v === '1'; if (!S.settings.manual) helmOff(); }

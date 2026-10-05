@@ -316,10 +316,12 @@ function density(sp, p, H){ const q = denPlace(p); return q ? denSp(sp, q, H, de
 // the echo sounder show what the boat gets. It comes on top of the stock and is not fished down; the species mix is the mix the
 // guarantee tops up with. Full strength within half the ring's radius, a tenth at its edge.
 const TUT_FIELD = 4;   // Gisundet nord
+// the first trip's patch: where a start along the coast put it (S.tut.f, ui/08c-start.js), else Gisundet nord
+const tutFieldAt = () => (typeof S !== 'undefined' && S && S.tut && S.tut.f) ? S.tut.f : GROUNDS[TUT_FIELD];
 const TUTB = {peak:5.2, mix:{torsk:0.72, sei:0.18, hyse:0.1}};
 function tutBonus(sp, p){
   const m = TUTB.mix[sp]; if (!m || !(S && S.tut && S.tut.catch)) return 0;
-  const g = GROUNDS[TUT_FIELD], d = dist(p, g.p), x = Math.max(0, d - g.r * 0.5) / (g.r * 0.33);
+  const g = tutFieldAt(), d = dist(p, g.p), x = Math.max(0, d - g.r * 0.5) / (g.r * 0.33);
   return TUTB.peak * m * Math.exp(-x * x);
 }
 // local stock of fish in 2 x 2 km cells of the national frame (1 = untouched): fishing takes it down, it recovers over weeks. S.stock
@@ -420,7 +422,8 @@ function clsPrice(port, sp, c, H, hook){
   return Math.round(Math.max(cl[1] * (hook !== false && cl[3] ? cl[3] : 1), mk) * 100) / 100;
 }
 function price(port, sp, H){ return clsPrice(port, sp, SPECIES[sp].ref, H, true); }
-function avgPrice(sp, H, days){ let s = 0, n = 0; for (let d = 0; d < days; d++) for (const q of PORTS) if (q.mottak){ s += price(q, sp, H - d * 24); n++; } return s / n; }
+// the average over the ten plants nearest the boat (the whole coast's are too many, and too far to matter)
+function avgPrice(sp, H, days){ let s = 0, n = 0; const near = plantsNear(S.boat.pos, 10); for (let d = 0; d < days; d++) for (const {pt:q} of near){ s += price(q, sp, H - d * 24); n++; } return n ? s / n : 0; }
 // ---------- quotas north of 62° N: the regulation and the year's figures are in 03d-quota.js ----------
 function doyH(H){ const g = gDate(H); return Math.floor((g - Date.UTC(g.getUTCFullYear(), 0, 1)) / 864e5); }
 function yearH(H){ return gDate(H).getUTCFullYear(); }

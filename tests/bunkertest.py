@@ -15,8 +15,8 @@ async def main():
         r = await pg.evaluate("""(()=>{
           S.tut = 0; S.cash = 1e6; S.t = Math.round((Date.UTC(2027, 2, 9, 10) - EPOCH) / 6e4); const R = {}, b = S.boat, run = n => { for (let i = 0; i < n; i++) step(); };
           const at = pid => { const q = portById(pid); b.status = 'port'; b.port = pid; b.pos = {...q.p}; b.berth = 'main'; b.shift = b.fueling = b.land = b.after = null; S.plan = null; };
-          // Husøy, a skiff with 10 L of petrol: over to the bunker quay, then 80 L at 45 L/min
-          at('husoy'); b.fuel = 10; const c0 = S.cash; renderActs(); R.btn = DOCK.items('verft').some(x => x.id === 'bunker' && !x.off);
+          // Husøy, a skiff with 10 L of petrol: over to the bunker quay, then 80 L at 45 L/min (a new game has the wooden boat: the skiff here)
+          b.type = 'skiff'; applyVessel(); at('husoy'); b.fuel = 10; const c0 = S.cash; renderActs(); R.btn = DOCK.items('verft').some(x => x.id === 'bunker' && !x.off);
           doAct({dataset:{act:'fuel'}, disabled:false}); R.shift = b.shift && {to:b.shift.to, cast:b.shift.castUntil - S.t, total:Math.round((b.shift.until - S.t) * 10) / 10}; R.fuel0 = b.fuel;
           renderActs(); R.bar = DOCK.text();
           const T = b.shift.until - S.t; run(Math.ceil(T)); R.berth = b.berth; R.fueling = b.fueling && {liters:Math.round(b.fueling.liters), lpm:b.fueling.lpm, dur:Math.round((b.fueling.until - b.fueling.t0) * 10) / 10};
@@ -51,7 +51,9 @@ async def main():
         print(ok(r['sjark'] and r['sjark']['lpm'] == 90), 'a sjark takes diesel at 90 L/min')
         # in 3D: a bunker station at each bunker quay and in Finnsnes; the move follows the game clock; the meter counts while the pump runs
         await pg.wait_for_function("G3.isActive()", timeout=90000); await pg.wait_for_timeout(1000)
-        st = await pg.evaluate("JSON.stringify(G3._debug.BUNKERS.map(B => B.id + '|' + B.kind))")
+        st = await pg.evaluate("JSON.stringify(G3._debug.BUNKERS.filter(B => !portById(B.id).coastal).map(B => B.id + '|' + B.kind))")
+        # the coast's receivers near by have their station at the quay (core/06b-coastports.js)
+        cst = await pg.evaluate("JSON.stringify(G3._debug.BUNKERS.filter(B => portById(B.id).coastal).map(B => B.kind))")
         await pg.evaluate("""(()=>{ S.mult = 0.00001; S.cash = 1e6; const q = portById('husoy'), b = S.boat; b.status = 'port'; b.port = 'husoy'; b.pos = {...q.p}; b.berth = 'main'; b.shift = b.fueling = b.land = b.after = null; S.plan = null; G3.vesselChanged();
           const t0 = performance.now() / 1000; for (let i = 0; i < 60; i++) G3._debug.stepBoat(0.05, t0 + i * 0.05, 0); b.fuel = 5; startFueling(false); window.SH = {...b.shift}; const c = G3._debug.cam; c.dist = 14; c.yaw = 1.3; c.pitch = 0.3; })()""")
         ph = []
@@ -63,8 +65,9 @@ async def main():
           const t0 = performance.now() / 1000; for (let i = 0; i < 80; i++) G3._debug.stepBoat(0.05, t0 + i * 0.05, 0); })()""")
         await pg.wait_for_timeout(4000)
         meter = await pg.evaluate("JSON.stringify((G3._debug.BUNKERS.find(B => B.id === 'husoy') || {}).last)")
-        print('stations:', st, 'phases:', ph, 'meter:', meter)
+        print('stations:', st, 'coast:', cst, 'phases:', ph, 'meter:', meter)
         print(ok(sorted(json.loads(st)) == sorted(['finnsnes|main'] + [k + '|bunker' for k in ['husoy', 'senjahopen', 'gryllefjord', 'botnhamn', 'torsken', 'sommaroy', 'brensholmen', 'frovag']])), 'a bunker station at every harbour unit\'s bunker berth, and at the quay in Finnsnes')
+        print(ok(all(k == 'main' for k in json.loads(cst))), 'the coast\'s receivers near by fill at their quay', len(json.loads(cst)))
         print(ok(ph == ['out', 'in', 'lines']), 'in 3D the move follows the game clock: lines in, over, lines on')
         m = json.loads(meter) if meter else {}
         print(ok(m.get('here') and 15 <= m.get('liters', 0) <= 30), 'the pump meter counts the litres while the nozzle is in')

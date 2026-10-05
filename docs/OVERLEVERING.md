@@ -754,6 +754,24 @@ Jonas ville ha et register over alle fiskemottak i Norge, med kaimottaket fra Bl
   - De som Råfisklaget kaller fiskemottak, regnes som ordinært anlegg. Resten blir «Annet anlegg».
 - **Snitt over to år:** Kilo og landinger er snittet for de to årene. Et mottak som startet eller stengte i perioden, ser derfor halvt så stort ut.
 
+### 4.18b Mottakene som havner, og start langs hele kysten (M2, 05.10.2026)
+
+Jonas 04.10.2026: «alle nye brukere skal få bestemme selv hvor i landet de ønsker å starte spillet ... de burde jo få en anbefaling om å starte en plass der det er torsk ... salgslaget på telefonen må vise de 8-10 nærmeste fiskemottakene». Han lot meg velge resten (05.10.2026, «Du får litt frie tøyler»): alle mottak med kai som passer en kystfisker, og spill fra før blir der de er, med én gratis flytting.
+
+- **Navnene:** `mottak.py` slår opp poststedet rundt hvert mottak i Kartverkets adresseregister (`punktsok`, det vanligste innen 800 m, i `cache/steder.json`) og legger det i feltet `v` (Båtsfjord, Senjahopen, Mo i Rana). `python3 tools/mottak/mottak.py steder` legger bare navnene inn i `src/data/mottak.json` som finnes.
+- **Havnene** (`core/06b-coastports.js`, før `07-harbours.js`): et fast anlegg (ordinært eller kaiselger) med kai, som tar imot minst 10 t i året av spillets arter, fra små båter (minst 5 %) eller med konvensjonelle redskap (minst 30 %). Det gir 202 mottak. Mottak innen 1,2 km av hverandre blir én havn (det største gir navnet), og de innen 2 km av en Senja-havn blir den havna (den beholder kaia og enheten, og får registerets prisindeks i `mk`). Resultatet er 153 nye havner (`coastal: true`, id `'m' + mottaksnummer`).
+  - Kaia er registerets kaifront (`q`) som en `QUAYS`-oppføring (`COASTQ`, slått sammen etter konverteringen i `07-harbours.js`). Havnepunktet ligger 15 m ut fra midten, og strandpunktet 30 m inn.
+  - Prisfaktoren er mottakets prisindeks halvveis mot 1, mellom 0,94 og 1,06. Alle har drivstoff og butikk, og isrenne der mottaket tar imot 1000 t eller mer i året.
+  - Like navn får firmaets første ord i parentes, for eksempel «Vardø (Arctic)».
+- **De nærmeste:** `plantsNear(p, n)` gir de n nærmeste mottakene (bufret per halve km). Salgslaget viser de 10 nærmeste med avstand og pris for torsk, hyse og sei (fet er beste pris av dem). Snittprisen (`avgPrice`), morgentipset, verdianslaget og pristabellen i havneguiden bruker de 10 nærmeste, ikke alle.
+- **Kartdata:** `bootMap` laster bare rundt Senja-havnene, feltene, det som er lagret og den lagrede hjemhavna (`saved.home`), ikke rundt alle mottakene. 3D bygger kaidekk, kaiutstyr og bunkring bare for kysthavner innen 40 km fra båten (`portHere`), og navnelappene slår ikke opp terrenghøyden for havner mer enn 14 km unna. Kysthavnene har ikke havneenheten eller mottaksanlegget i 3D ennå (M3).
+- **«Hvor står fars naust?»** (`ui/08c-start.js`, etter brevet og før båtnavnet): et lite kart over kysten (prikker etter lengde- og breddegrad) og en liste per region (Øst-Finnmark … Rogaland og Sørlandet). Stjernene er de to beste i hver region etter tonn torsk i året, om det tas imot torsk denne måneden, og andelen fra små båter. Finnsnes står først (spillets eget startsted med «Første tur» på Senja).
+  - «Start her» laster kartet rundt havna (`mapNeed`), flytter båten dit, setter `S.home` og sentrerer kartet. 3D venter mens valget er åpent.
+  - **«Første tur»** fra et annet sted: `S.tutStart` har feltet (det beste torskefeltet 1,5–6 km fra havna, på 20–150 m vann, r 1,2 km) og leveringshavna (havna selv). `tutNew` tar dem med, og tipsene sier for eksempel «utenfor Kjøllefjord» i stedet for «ved Gisundet nord». Uten `S.tutStart` er det Gisundet nord og Botnhamn som før.
+  - **Spill fra før:** Innstillinger har kortet «Hjemsted» med én gratis flytting (`S.moved`). Båten må ligge i havn uten redskap i sjøen og uten rute.
+- `tests/starttest.py` sjekker havnene, Salgslaget, hele veien fra brevet til båtnavnet med start i nord, feltet og tipsene der, et salg ved kystmottaket og flyttingen.
+- **Svakheter:** Bestillingene (`CUSTOMERS`), mannskapets hjemsteder, NPC-flåten og avisa er fortsatt Senja. Kysthavnene får ikke kaiutstyr i 3D når båten kommer dit etter at 3D er bygget, før siden lastes på nytt. Naustet er ikke plassert ennå.
+
 ### 4.19 Vektorkysten gjelder (04.10.2026)
 
 Jonas: «Jeg vil ha bort det som er i magenta», og vannlinja skal være nøyaktig nok til at skjær og moloer stemmer. Fra nå er vektorkysten (`coast2`) fasiten for land og sjø i hele spillet, ikke 25 m-masken.

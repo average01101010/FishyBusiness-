@@ -68,7 +68,15 @@ async function loadRoads(){
 }
 // rocks awash and underwater (skjær/båer): route warnings and chart symbols
 // harbour areas are dredged and buoyed: no depth hazards there, so every vessel can land its catch
-function inHarbour(p){ for (const pt of PORTS){ if (dist(p, pt.p) < 0.6) return true; if (pt.app && dist(p, pt.app) < 0.35) return true; } return false; }
+// (looked up in 1 km cells: with the coast's receivers there are 160 harbours, and Autonav asks this every 30 m of every leg it tries;
+// a harbour's way in, set later by approachPath, makes the cells be built again)
+let PCELL = null;
+function inHarbour(p){
+  if (!PCELL){ PCELL = new Map(); const add = (q, pt) => { for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++){ const k = (Math.floor(q.x) + a) * 65536 + Math.floor(q.y) + b; let L = PCELL.get(k); if (!L) PCELL.set(k, L = []); if (!L.includes(pt)) L.push(pt); } };
+    for (const pt of PORTS){ add(pt.p, pt); if (pt.app) add(pt.app, pt); } }
+  const L = PCELL.get(Math.floor(p.x) * 65536 + Math.floor(p.y)); if (!L) return false;
+  for (const pt of L){ if (dist(p, pt.p) < 0.6) return true; if (pt.app && dist(p, pt.app) < 0.35) return true; } return false;
+}
 const safeDepth = () => S.settings.safeDepth || Math.max(2, Math.ceil(BOAT.draft + 1.5));
 function legHazard(a, c, sd){
   const L = dist(a, c), n = Math.max(1, Math.ceil(L / 0.03)); let minD = 1e9;
@@ -166,13 +174,16 @@ function isLandUI(p){ if (mapSimAt(p) && !mapReadyAt(p, 0)){ mapNeed(p, 0).catch
 // coast of 2026 lies 30-45 m out from the face drawn from the pictures, phase K5 of the coast plan)
 const POCKET = 50;
 let QPOCK = null;
-function inHarbourPocket(p){ const x = p.x * 1000, z = p.y * 1000; return harbourNear(x, z) && pocketHit(UNITA, qPockets(), x, z); }
+function inHarbourPocket(p){ const x = p.x * 1000, z = p.y * 1000; if (!harbourNear(x, z)) return false; const c = HCELL.get(Math.floor(x / 200) * 65536 + Math.floor(z / 200)); return !!c && pocketHit(c.U, c.Q, x, z); }
+// the units and quay pockets within 200 m of each 200 m cell (harbourNear builds it): with the coast's receivers there are some 160 faces,
+// and a point near one harbour looked at all of them
 // whether x, z (m) lies within 200 m of a harbour unit or a quay pocket: a set of 200 m cells, so the ground and the sea far from the
 // harbours skip the loops over them (the 3D view asks for every point of its meshes and every step of the shadows)
-let HNEAR = null;
+let HNEAR = null; const HCELL = new Map();
 function harbourNear(x, z){
-  if (!HNEAR){ HNEAR = new Set(); const add = (cx, cz) => { for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) HNEAR.add((Math.floor(cx / 200) + a) * 65536 + Math.floor(cz / 200) + b); };
-    for (const U of UNITA) add(U.o[0], U.o[1]); for (const f of qPockets()) add(f.x, f.z); }
+  if (!HNEAR){ HNEAR = new Set(); const add = (cx, cz, o, k) => { for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++){ const key = (Math.floor(cx / 200) + a) * 65536 + Math.floor(cz / 200) + b; HNEAR.add(key);
+      let c = HCELL.get(key); if (!c) HCELL.set(key, c = {U:[], Q:[]}); c[k].push(o); } };
+    for (const U of UNITA) add(U.o[0], U.o[1], U, 'U'); for (const f of qPockets()) add(f.x, f.z, f, 'Q'); }
   return HNEAR.has(Math.floor(x / 200) * 65536 + Math.floor(z / 200));
 }
 function qPockets(){ if (!QPOCK){ QPOCK = []; for (const pid in QUAYS) for (const kind in QUAYS[pid]) if (!UNITS[pid]) QPOCK.push(quayFace(pid, kind)); } return QPOCK; }

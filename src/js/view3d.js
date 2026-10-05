@@ -671,12 +671,15 @@ const G3 = (() => {
     for (const q of list){ const dx = Math.max(q.x0 - eye[0], 0, eye[0] - q.x1), dz = Math.max(q.z0 - eye[2], 0, eye[2] - q.z1); if (dx * dx + dz * dz < STONE_R * STONE_R) drawLit(q.mesh, TM); }
   }
   // ---------- villages and quays ----------
+  // the coast's receivers (06b-coastports.js) are built only within 40 km of the boat: their packs are only loaded there
+  const nearHere = (x, z, km = 40) => !S || !S.boat ? true : Math.hypot(x / 1000 - S.boat.pos.x, z / 1000 - S.boat.pos.y) < km;
+  const portHere = pt => !pt.coastal || nearHere(pt.p.x * 1000, pt.p.y * 1000);
   function buildStatics(){
     const m = MB(), R = rng(7), WALLS = [[0.62,0.18,0.14],[0.88,0.88,0.84],[0.85,0.68,0.3],[0.76,0.46,0.22],[0.5,0.56,0.6],[0.88,0.88,0.84]], ROOF = [[0.18,0.2,0.22],[0.3,0.2,0.18],[0.22,0.26,0.3]];
     LIGHTS = [];
     // piers, quays and breakwaters from OpenStreetMap, as listed in PIERBOX (the berths use the same boxes); the breakwaters as rubble
     // mounds, those a harbour unit has not taken
-    for (const q of PIERBOX) pierInto(m, q);
+    for (const q of PIERBOX){ if (q.quay && q.quay[0] === 'm' && !nearHere(q.x, q.z)) continue; pierInto(m, q); }
     const bwLeft = new Set(PIERBOX.filter(q => q.bw).map(q => q.src));
     PIERS.forEach((pr, i) => { if (pr[0] === 1 && bwLeft.has(i)) stonesOf(STONES, sm => moundInto(m, Array.from({length:(pr.length - 1) / 2}, (_, k) => [pr[1 + k * 2] * 1000, pr[2 + k * 2] * 1000]), i * 7919 + 13, true, undefined, sm)); });
     // bridges from OpenStreetMap
@@ -694,6 +697,7 @@ const G3 = (() => {
       else if (ty === 'K'){ m.box(x, base, z, 1.8, 2.6, 1.8, [0.85, 0.85, 0.83], 0.4, [0.8, 0.8, 0.78]); }
     }
     for (const pt of PORTS){
+      if (pt.coastal) continue;
       const px = pt.p.x * 1000, pz = pt.p.y * 1000, cx = pt.coast.x * 1000, cz = pt.coast.y * 1000;
       const dxp = cx - px, dzp = cz - pz, L = Math.hypot(dxp, dzp), ux = dxp / L, uz = dzp / L, ang = Math.atan2(ux, uz);
       // quay from the shore out to the berth
@@ -891,7 +895,7 @@ const G3 = (() => {
     const nb = NB(), TYRE = [0.07, 0.07, 0.08, 0.05], CHAIN = [0.55, 0.56, 0.58, 0.6], BOLL = [0.12, 0.13, 0.14, 0.4], WOOD = [0.36, 0.26, 0.18, 0.1], YEL = [0.95, 0.78, 0.1, 0.2];
     const done = new Set();
     for (const pt of PORTS) for (const kind of ['main', 'bunker']) for (const ty of Object.keys(BEAM)){
-      const bp = berthPose(pt.id, ty, kind); if (!bp) continue; const f = bp.face, key = faceKey(f); if (done.has(key)) continue; done.add(key);
+      if (!portHere(pt)) continue; const bp = berthPose(pt.id, ty, kind); if (!bp) continue; const f = bp.face, key = faceKey(f); if (done.has(key)) continue; done.add(key);
       if (f.unit){ const M = unitModel(UNITS[f.unit].v); if (M) QB[key] = M.A.bollards.map(q => { const w = unitW(UNITS[f.unit], q[0], q[2]); return {x:w[0], z:w[1], a:(w[0] - f.x) * f.ux + (w[1] - f.z) * f.uz}; }); continue; }
       const u = [f.ux, f.uz], n = [f.nx, f.nz], a0 = Math.max(-f.hl + 1, bp.a - 30), a1 = Math.min(f.hl - 1, bp.a + 30), am = (a0 + a1) / 2, len = a1 - a0;
       const at = (a, o) => [f.x + u[0] * a + n[0] * o, f.z + u[1] * a + n[1] * o];
@@ -1264,7 +1268,7 @@ const G3 = (() => {
     PLANTS.length = 0;
     const ry = U => Math.atan2(U.n[0], U.n[1]);
     for (const pt of PORTS){
-      if (!pt.mottak) continue; const P = plantLayout(pt); if (!P) continue; PLANTS.push(P);
+      if (!pt.mottak || pt.coastal) continue; const P = plantLayout(pt); if (!P) continue; PLANTS.push(P);
       // the camera stays out of the quay's block, the plant, the silo and the tank
       for (const [cx, cz, sx, sz, y0, y1] of unitModel(P.unit.v).A.solids){ const c = unitW(P.unit, cx, cz); camSolid(c[0], c[1], sx, sz, ry(P.unit), y0, y1); }
     }
@@ -1667,7 +1671,7 @@ const G3 = (() => {
     BUNKERS.length = 0; const nb = NB();
     const TANK = [0.9, 0.91, 0.9, 0.35], RED = [0.78, 0.12, 0.1, 0.35], CONC = [0.62, 0.62, 0.6, 0.05], DK = [0.14, 0.15, 0.16, 0.3], STEEL = [0.7, 0.72, 0.74, 0.5], POLE = [0.45, 0.47, 0.5, 0.4];
     for (const pt of PORTS){
-      if (!pt.fuel) continue; const kind = hasBunker(pt.id) ? 'bunker' : 'main', bp = berthPose(pt.id, 'skiff', kind); if (!bp) continue;
+      if (!pt.fuel || !portHere(pt)) continue; const kind = hasBunker(pt.id) ? 'bunker' : 'main', bp = berthPose(pt.id, 'skiff', kind); if (!bp) continue;
       const f = bp.face, u = [f.ux, f.uz], n = [f.nx, f.nz], at = (a, o) => [f.x + u[0] * a + n[0] * o, f.z + u[1] * a + n[1] * o], depth = f.depth || 6;
       const pa = clamp(bp.a + 2.4, -f.hl + 1, f.hl - 1), B = {id:pt.id, kind, bp, f, u, n, at, pa, pump:at(pa, -1.5), gy:() => QTOP, spray:0};
       B.outlet = at(pa, -1.15); B.sign = at(clamp(bp.a - 3.5, -f.hl + 0.5, f.hl - 0.5), -0.9);
@@ -3545,10 +3549,11 @@ const G3 = (() => {
   function updateLabels(VP, eye, W, Hh){
     const r = wrap.getBoundingClientRect(), sx = r.width / W, sy = r.height / Hh;
     PORTS.forEach((p, i) => {
-      const x = p.coast.x * 1000 - eye[0], y = Math.max(0, terrH(p.coast.x * 1000, p.coast.y * 1000)) + 35 - eye[1], z = p.coast.y * 1000 - eye[2];
+      const x = p.coast.x * 1000 - eye[0], z = p.coast.y * 1000 - eye[2], d = Math.hypot(x, z), el = labelEls[i];
+      if (d > 14000){ if (el.style.display !== 'none') el.style.display = 'none'; return; }   // (the coast's harbours far off: no ground lookups where no packs are)
+      const y = Math.max(0, terrH(p.coast.x * 1000, p.coast.y * 1000)) + 35 - eye[1];
       const cx = VP[0] * x + VP[4] * y + VP[8] * z + VP[12], cy = VP[1] * x + VP[5] * y + VP[9] * z + VP[13], cw = VP[3] * x + VP[7] * y + VP[11] * z + VP[15];
-      const d = Math.hypot(x, z), el = labelEls[i];
-      if (cw <= 0 || d > 14000){ el.style.display = 'none'; return; }
+      if (cw <= 0){ el.style.display = 'none'; return; }
       const ly = (1 - (cy / cw * 0.5 + 0.5)) * Hh * sy; if (ly < 70){ el.style.display = 'none'; return; }
       el.style.display = ''; el.style.opacity = (1 - 0.65 * sstep(5000, 14000, d)).toFixed(2); el.style.left = ((cx / cw * 0.5 + 0.5) * W * sx) + 'px'; el.style.top = ((1 - (cy / cw * 0.5 + 0.5)) * Hh * sy) + 'px';
     });

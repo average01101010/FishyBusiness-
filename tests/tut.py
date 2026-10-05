@@ -42,7 +42,11 @@ async def play(p, W, H, tag):
     await pg.wait_for_selector('#ltEnv', timeout=90000); await pg.wait_for_timeout(2200); await tap_el('#ltEnv')
     await pg.wait_for_selector('#ltGo.on', timeout=40000); await pg.wait_for_timeout(300); await pg.screenshot(path='letter_%s.png' % tag)
     lt = await pg.evaluate("(() => { const t = document.querySelector('#letter .lt-p2 .lt-txt'), r = document.getElementById('ltPaper').getBoundingClientRect(); return {text:t ? t.innerText : '', flat:document.getElementById('ltPaper').classList.contains('flat'), fits:t.scrollHeight <= t.clientHeight + 2, w:Math.round(r.width), h:Math.round(r.height), font:parseFloat(t.style.fontSize)}; })()")
-    await tap_el('#ltGo'); await pg.wait_for_selector('#obGo', state='visible', timeout=15000)
+    # «Hvor står fars naust?» (ui/08c-start.js): Finnsnes is picked to begin with; «Start her» goes on to the boat's name
+    await tap_el('#ltGo'); await pg.wait_for_selector('#stGo', state='visible', timeout=20000); await pg.wait_for_timeout(300); await pg.screenshot(path='start_%s.png' % tag)
+    sp = await pg.evaluate("(() => { const b = document.getElementById('stGo').getBoundingClientRect(), l = document.querySelector('#startPick .st-list').getBoundingClientRect(); return {go:b.bottom <= innerHeight + 1 && b.top >= 0, list:l.height > 60, n:document.querySelectorAll('#startPick .st-it').length}; })()")
+    check(sp['go'] and sp['list'] and sp['n'] >= 150, tag + ': the start lists the coast\'s plants, and «Start her» is on the screen', sp)
+    await tap_el('#stGo'); await pg.wait_for_selector('#obGo', state='visible', timeout=60000)
     co = await pg.evaluate("({co:!!document.getElementById('obCo'), boat:!!document.getElementById('obBoat'), letter:!!document.getElementById('letter')})")
     check(lt['flat'] and lt['text'].startswith('Til deg som står igjen på kaia') and '– Far' in lt['text'] and lt['fits'] and lt['font'] >= 11, tag + ': the envelope opens with a tap, the letter unfolds whole and readable', {k: lt[k] for k in ('flat', 'fits', 'w', 'h', 'font')})
     check(co['boat'] and not co['co'] and not co['letter'], tag + ': then only the boat is named, no company', co)

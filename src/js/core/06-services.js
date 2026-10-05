@@ -14,7 +14,7 @@ function hourly(){
       msg(vhf ? 'Kystradio' : 'Værvarsel', kind[0] + ' ventet fra ' + dirName(windDir(at)) + ' rundt ' + hm(at) + ', ' + Math.round(mx) + ' m/s (styrke ' + bft + ').', kind[1] + ' expected from ' + DIRS.en[Math.round(windDir(at) / 45) % 8] + ' around ' + hm(at) + ', ' + Math.round(mx) + ' m/s (force ' + bft + ').'); }
   }
   // morning tip from the fish plant paying most for cod
-  if (hr === 7){ let best = null; for (const q of PORTS) if (q.mottak){ const pr = price(q, 'torsk', H); if (!best || pr > best.pr) best = {q, pr}; }
+  if (hr === 7){ let best = null; for (const {pt:q} of plantsNear(S.boat.pos, 10)){ const pr = price(q, 'torsk', H); if (!best || pr > best.pr) best = {q, pr}; }
     if (best && bars > 0) msg(best.q.name + ' Fisk', 'God morgen! Vi betaler ' + Math.round(best.pr) + ' kr/kg for torsk i dag (A-kvalitet).', 'Good morning! We pay NOK ' + Math.round(best.pr) + '/kg for cod today (grade A).'); }
   // monthly loan payment
   for (const k of ['loan', 'loanIN']){ const L = S[k]; if (!L || S.t < L.next) continue; const r = L.rate / 12, int = L.bal * r, pay = Math.min(L.bal + int, L.pay); L.bal = L.bal + int - pay; S.cash -= pay; S.stats.costs += int; L.next += 30 * 24 * 60;

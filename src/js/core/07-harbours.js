@@ -16,6 +16,7 @@ const QUAYS = {
   frovag:{main:{a:[19636, 71906], b:[19631, 71932], n:[0.987, 0.163]}}
 };
 for (const pid in QUAYS) for (const kind in QUAYS[pid]){ const f = QUAYS[pid][kind]; f.a = LGm(f.a); f.b = LGm(f.b); }   // legacy metres into the game's frame
+Object.assign(QUAYS, COASTQ);   // the receivers' quays along the coast (06b-coastports.js), in the game's metres already
 const QUAY_DEPTH = 10;   // how far the quay deck reaches in from the face (m)
 // The harbour unit (UNIT, UNITS in 01-world.js) is the quay in every harbour with a plant: its berths, its dredged basin.
 // the depth below chart datum at p (km) where a unit stands: 0 on the quay itself and its fill, at least the dredged depth in the basin, rising
@@ -128,7 +129,7 @@ function approachPath(pt){
   const path = [cells[0]];
   for (let i = 0; i < cells.length - 1;){ let j = cells.length - 1; while (j > i + 1 && !clearLine(cells[i], cells[j])) j--; if (j === cells.length - 1) break; path.push(cells[j]); i = j; }
   APPROACH[pt.id] = path.map(q => ({x:Math.round(q.x * 1000) / 1000, y:Math.round(q.y * 1000) / 1000}));
-  pt.app = APPROACH[pt.id][0];   // the harbour's safe zone reaches out to the start of the way in (inHarbour)
+  pt.app = APPROACH[pt.id][0]; PCELL = null;   // the harbour's safe zone reaches out to the start of the way in (inHarbour)
   return APPROACH[pt.id];
 }
 // the waypoints a route needs to get out of harbour towards `to`, and in to a harbour from `from` (the part of the way in that it

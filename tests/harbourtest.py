@@ -1,5 +1,6 @@
 from _env import GAME, boot
 # Harbours (B1): the eight fish plants, ice only at the plants, fuel only at the bunker quays; the quays where the plants and bunker quays really are.
+# Senja's own harbours only: the coast's receivers (core/06b-coastports.js) need their map loaded and are tested in starttest.py.
 import asyncio, json
 from playwright.async_api import async_playwright
 
@@ -17,7 +18,7 @@ async def main():
         r = await pg.evaluate("""(()=>{
           S.tut = 0; S.cash = 1e6; S.t = Math.round((Date.UTC(2027, 2, 9, 10) - EPOCH) / 6e4); const R = {ports:{}};
           const can = (m, id) => DOCK.items(m).some(x => x.id === id && !x.off);
-          for (const q of PORTS){
+          for (const q of PORTS.filter(q => !q.coastal)){
             const b = S.boat; b.status = 'port'; b.port = q.id; b.pos = {...q.p}; b.ice = 0; b.fuel = 10; S.plan = null; b.berth = 'main'; b.shift = b.fueling = b.land = b.after = null;
             S.hold = [{sp:'torsk', cls:2, kg:100, n:25, bled:true, iced:true, hr:0, fresh:95, gut:false, hook:true}];
             renderActs(); const a = {ice:can('marked', 'is'), fuel:can('verft', 'bunker'), sell:can('marked', 'lever')};
@@ -49,12 +50,12 @@ async def main():
           // the fine coast has land: at Husøy the unit stands on the shore (the user's wish 03.10.2026)
           const land = (x, z) => !inHarbourPocket({x:x / 1000, y:z / 1000}) && FINE.some(P => x >= P.bb[0] && x <= P.bb[2] && z >= P.bb[1] && z <= P.bb[3] && inPoly(P, x, z));
           const R = {};
-          for (const pid of PORTS.map(q => q.id)) for (const kind of ['main', 'bunker']) for (const t of Object.keys(BEAM)){
+          for (const pid of PORTS.filter(q => !q.coastal).map(q => q.id)) for (const kind of ['main', 'bunker']) for (const t of Object.keys(BEAM)){
             const f = quayFace(pid, kind); if (!f) continue; const b = berthPose(pid, t, kind), fx = Math.sin(b.hd), fz = -Math.cos(b.hd), sx = Math.cos(b.hd), sz = Math.sin(b.hd), X = b.x * 1000, Z = b.y * 1000;
             const pts = [[0, 0], [b.Lb / 2 - 0.5, 0], [-b.Lb / 2 + 0.5, 0], [0, b.Bb / 2], [0, -b.Bb / 2]].map(([l, s]) => [X + fx * l + sx * s, Z + fz * l + sz * s]);
             const off = (X - f.x) * f.nx + (Z - f.z) * f.nz, starb = sx * -f.nx + sz * -f.nz;
             R[pid + '|' + kind + '|' + t] = {wet:pts.every(([x, z]) => !land(x, z)), off:Math.round(off * 10) / 10, bb:b.Bb, starb:starb > 0.99, fits:f.hl * 2 >= b.Lb + 2}; }
-          R.near = PORTS.filter(q => quayFace(q.id, 'main')).map(q => { const f = quayFace(q.id, 'main'); return [q.id, Math.round(Math.hypot(q.p.x * 1000 - f.x, q.p.y * 1000 - f.z))]; });
+          R.near = PORTS.filter(q => !q.coastal && quayFace(q.id, 'main')).map(q => { const f = quayFace(q.id, 'main'); return [q.id, Math.round(Math.hypot(q.p.x * 1000 - f.x, q.p.y * 1000 - f.z))]; });
           return R; })()""")
         bad = [k for k, v in q.items() if k != 'near' and not (v['wet'] and v['fits'] and v['starb'] and abs(v['off'] - (v['bb'] / 2 + 0.4)) < 0.6)]
         ntypes = len({k.split('|')[2] for k in q if k != 'near'})
@@ -65,7 +66,7 @@ async def main():
         print(ok(all(d < 30 for _, d in q['near'])), 'the harbour point lies off the landing berth (Finnsnes: the quay by the net loft)')
         # the plotter: a tap on a harbour, or on the sea when leaving one, routes round the breakwaters on the way in and out
         rt = await pg.evaluate("""(()=>{ const px0 = view.px; view.px = 400; const R = {}, b = S.boat, legs = () => { let a = b.pos, ok = true; for (const w of S.draft){ if (!clearLine(a, w)) ok = false; a = w; } return ok; };
-          for (const q of PORTS){ const out = approachPath(q)[0], sea = {x:out.x + (out.x - q.p.x) * 0.2, y:out.y + (out.y - q.p.y) * 0.2};
+          for (const q of PORTS.filter(q => !q.coastal)){ const out = approachPath(q)[0], sea = {x:out.x + (out.x - q.p.x) * 0.2, y:out.y + (out.y - q.p.y) * 0.2};
             b.status = 'port'; b.port = q.id; b.pos = {...q.p}; S.draft = []; addWaypoint(sea); const o = {n:S.draft.length, clear:legs()};
             b.status = 'idle'; b.port = null; b.pos = sea; S.draft = []; addWaypoint(q.p); R[q.id] = {out:o, in:{n:S.draft.length, clear:legs(), end:(S.draft[S.draft.length - 1] || {}).port}}; }
           view.px = px0; S.draft = []; const q = portById('husoy'); b.status = 'port'; b.port = 'husoy'; b.pos = {...q.p}; return R; })()""")
@@ -74,7 +75,7 @@ async def main():
         # the way in to each berth and out of it (04.10.2026): from the harbour point and from 400 m out on the way in, every step of it
         # clear of land, the piers' boxes and the units' quay blocks (berthBlocked), ending at the berth
         bp = await pg.evaluate("""(()=>{ const R = {n:0, bad:[], pts:0};
-          for (const q of PORTS) for (const kind of ['main', 'bunker']) for (const t of ['skiff', 'sjark', 'kyst15']){ const P = berthPose(q.id, t, kind); if (!P) continue;
+          for (const q of PORTS.filter(q => !q.coastal)) for (const kind of ['main', 'bunker']) for (const t of ['skiff', 'sjark', 'kyst15']){ const P = berthPose(q.id, t, kind); if (!P) continue;
             const a = approachPath(q), far = a.length ? a[0] : q.p;
             for (const from of [q.p, far]){ R.n++; const path = berthPath(from, P), m = P.Bb / 2; let ok = Math.hypot(path[path.length - 1].x - P.x, path[path.length - 1].y - P.y) < 1e-6;
               for (let i = 1; i < path.length && ok; i++){ const A = path[i - 1], B2 = path[i], n = Math.max(1, Math.ceil(dist(A, B2) / 0.004)); for (let k = 1; k < n; k++){ R.pts++; const p = {x:A.x + (B2.x - A.x) * k / n, y:A.y + (B2.y - A.y) * k / n}; if (berthBlocked(p, i === path.length - 1 ? 0.3 : m * 0.5)){ ok = false; break; } } }

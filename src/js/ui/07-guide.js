@@ -135,7 +135,7 @@ function panelFish(){
   h.push(gearPanel());
   return h.join('');
 }
-function valueEst(sp, g){ const H = S.t / 60, ps = PORTS.filter(p => p.mottak).map(p => price(p, sp, H)); return ps.reduce((a, c) => a + c, 0) / ps.length * GM[g]; }
+function valueEst(sp, g){ const H = S.t / 60, ps = plantsNear(S.boat.pos, 8).map(x => price(x.pt, sp, H)); return ps.reduce((a, c) => a + c, 0) / ps.length * GM[g]; }
 function panelHold(){
   const b = S.boat, tot = holdTotal(), h = [];
   h.push('<div class="kv"><span>' + t('load') + '</span><span>' + fmt(tot, 0) + ' / ' + capHold() + ' kg</span></div><div class="bar"><i style="width:' + (100 * tot / BOAT.holdCap).toFixed(1) + '%"></i></div>');
@@ -242,7 +242,7 @@ function panelPort(){
     h.push(portSlip());
   } else h.push('<p class="note">' + t('not_port') + '</p>');
   h.push('<h3>' + t('prices') + '</h3><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>' + t('port_col') + '</th>' + SP.map(sp => '<th>' + spName(sp) + '</th>').join('') + '</tr></thead><tbody>');
-  PORTS.filter(p => p.mottak).forEach(p => h.push('<tr' + (b.port === p.id && b.status === 'port' ? ' class="here"' : '') + '><td>' + p.name + '</td>' + SP.map(sp => '<td>' + fmt(price(p, sp, H), 0) + '</td>').join('') + '</tr>'));
+  plantsNear(S.boat.pos, 10).map(x => x.pt).forEach(p => h.push('<tr' + (b.port === p.id && b.status === 'port' ? ' class="here"' : '') + '><td>' + p.name + '</td>' + SP.map(sp => '<td>' + fmt(price(p, sp, H), 0) + '</td>').join('') + '</tr>'));
   h.push('</tbody></table></div><p class="note">' + t('prices_n') + '</p>');
   h.push('<h3>' + t('stats') + '</h3>');
   h.push('<div class="kv"><span>' + t('rev') + '</span><span>' + kr(S.stats.revenue) + '</span></div>');
@@ -296,7 +296,7 @@ function landPage(){
   if (b.land) h.push('<p class="note"><b>' + LN('Lossing: ', 'Landing: ') + '</b>' + landText(false) + ' ' + LN('Sluttseddelen kommer ca. kl. ', 'The landing note comes at about ') + whenTxt(b.land.until) + '.</p>');
   else if (b.shift || b.fueling) h.push('<p class="note">' + quayText(false) + '</p>');
   else if (!p.mottak) h.push('<p class="note">' + t('no_mottak') + '</p>');
-  else if (tutOn() && p.id !== 'botnhamn') h.push('<p class="note">' + LN('På første tur leverer du i Botnhamn.', 'On the first trip you land in Botnhamn.') + '</p>');
+  else if (tutOn() && p.id !== tutLand()) h.push('<p class="note">' + LN('På første tur leverer du i ' + tutLandN() + '.', 'On the first trip you land in ' + tutLandN() + '.') + '</p>');
   else if (tot > 0.5) h.push('<div class="btns">' + (mottakOpen(S.t / 60) ? '<button class="btn primary" data-act="sell">' + t('sell', fmt(tot, 0)) + '</button>' : mottakShut()) + '</div>');
   h.push('<h3>' + LN('Lasterom', 'Hold') + '</h3>' + panelHold());
   h.push(portSlip());

@@ -196,6 +196,8 @@ const NOTUT = /notut/.test(location.hash);
 function showIntro(namesOnly){
   const L = (no, en) => S.lang === 'no' ? no : en;
   if (!namesOnly && !NOTUT && !LETTER.read){ showLetter(() => { LETTER.read = true; showIntro(); }); return; }
+  // then where Father's boathouse stands: the start along the coast (ui/08c-start.js)
+  if (!namesOnly && !NOTUT && !S.intro && !S.home){ showStart(() => showIntro()); return; }
   modal('<div class="ob"><h2>' + L('Gi båten et navn', 'Name your boat') + '</h2><p>' + (namesOnly ? L('Dekksdagboka trenger et båtnavn.', 'The deck log needs a boat name.') : L('Båten etter far har ikke noe navn på skroget. Hva skal hun hete?', 'Father\'s boat has no name on her hull. What will she be called?')) + '</p>' +
     '<label for="obBoat">' + L('Båtens navn', 'Boat name') + '</label><input id="obBoat" maxlength="20" autocomplete="off" placeholder="' + L('F.eks. Havbris', 'e.g. Havbris') + '" value="' + (S.boatName || '').replace(/"/g, '') + '">' +
     '<div class="btns"><button class="btn primary" data-close id="obGo">' + t('intro_go') + '</button></div></div>');

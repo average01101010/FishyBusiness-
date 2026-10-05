@@ -10,8 +10,10 @@ async function bootMap(){
   for (const v of saved && saved.fleet && saved.fleet.length ? saved.fleet : saved ? [saved] : []){
     const b = v.boat; if (b && b.pos) pts.push(b.pos); for (const w of [...((v.plan && v.plan.wps) || []), ...((v.ops && v.ops.wps) || []), ...(v.draft || [])]) pts.push(w); }
   for (const s of (saved && saved.sets) || []) if (s.a && s.b) pts.push(setMid(s));
-  // the harbours (a new game starts in one, and every boat can go home) and the grounds (the talk on the quay weighs them all)
-  for (const q of PORTS) pts.push(q.p); for (const g of GROUNDS) pts.push(g.p);
+  // Senja's harbours (a new game starts in Finnsnes before the player picks a place, ui/08c-start.js), the saved home and the grounds
+  // (the talk on the quay weighs them all); not the coast's receivers, which would be the whole coast's packs
+  for (const q of PORTS) if (!q.coastal) pts.push(q.p); for (const g of GROUNDS) pts.push(g.p);
+  { const h = saved && saved.home && portById(saved.home); if (h) pts.push(h.p); }
   await Promise.all([mapLoad(MAPD.core), ...pts.map(p => mapNeed(p, MAPD.simR))]);
   DEPTH = true;
 }
@@ -54,6 +56,7 @@ for (const v of S.fleet) withVessel(v, () => { for (const j of S.jobs || []) job
 // before 30.09.2026 a standing-plan trip with you aboard counted as the hired skipper's, and the landing lost its access
 for (const v of S.fleet) withVessel(v, () => { const b = S.boat; if (S.plan && S.plan.ops && (b.status !== 'port' || b.land) && meAboard()) S.tripOwner = true; });
 view.cx = HOME.x0 + MAP_W * 0.56; view.cy = HOME.y0 + MAP_H * 0.5;
+{ const bp = S.boat.pos; if (bp.x < HOME.x0 || bp.x > HOME.x1 || bp.y < HOME.y0 || bp.y > HOME.y1){ view.cx = bp.x; view.cy = bp.y; } }   // a boat away from Senja: the chart round her
 { const r = svg.getBoundingClientRect(); const asp = (r.width / r.height) || 1; view.z = clamp(MAP_H * asp / MAP_W, 0.8, 1.6); }
 refreshAll();
 if (!S.intro) showIntro();
@@ -68,7 +71,7 @@ INSTR.show(); tab = 'route'; setBodyView(true);
 // G3 comes from a later <script> (view3d.js): the clock starts when the whole page is read (it may be read already)
 // the 3D view starts after Father's letter is put down: building it takes the main thread for seconds, and the letter's animation
 // stood still meanwhile (ui/08b-letter.js)
-mapOnReady(() => { setInterval(tick, 200); const go3d = () => { if (document.getElementById('letter')) setTimeout(go3d, 400); else G3.show(true, true); }; go3d(); });
+mapOnReady(() => { setInterval(tick, 200); const go3d = () => { if (document.getElementById('letter') || document.getElementById('startPick')) setTimeout(go3d, 400); else G3.show(true, true); }; go3d(); });
 // the simulation's data are in (bootMap), so the clock may run, and the time away is played
 SIMREADY = true; CONT_D = null; renderBase(); panelDirty = true;
 if (AWAY){ catchUp(AWAY + Date.now() - BOOT_T); AWAY = 0; refreshAll(); } lastWall = Date.now();
