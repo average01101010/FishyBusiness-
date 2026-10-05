@@ -306,6 +306,9 @@ const PHONE = (() => {
       (now ? ' ' + L('Nå: ', 'Now: ') + ['Lav', 'Middels', 'Høy', 'Ultra'][now.lvl] + (now.fps ? ' · ' + Math.round(now.fps) + ' bilder/s' : '') : '') + '</p>' +
       // the frame rate in a corner of the 3D view, to measure on the tablet (#fps in the address does not reach the artifact's page)
       '<div class="ph-sub"><button class="' + (S.settings.fpsShow ? 'on' : '') + '" data-pa="fpsShow" data-v="1">' + L('Vis bildetakt', 'Show frame rate') + '</button><button class="' + (S.settings.fpsShow ? '' : 'on') + '" data-pa="fpsShow" data-v="0">' + L('Skjul', 'Hide') + '</button></div></div>' +
+      // the boxes on the screen (Jonas 05.10.2026: «Legg også inn muligheten for fjerning av HUD i innstillingene»); each folds to a strip with its «–»
+      '<div class="ph-card"><h4>HUD</h4><div class="ph-sub"><button class="' + (S.settings.hudOff ? '' : 'on') + '" data-pa="hudShow" data-v="1">' + L('Vis HUD', 'Show HUD') + '</button><button class="' + (S.settings.hudOff ? 'on' : '') + '" data-pa="hudShow" data-v="0">' + L('Skjul HUD', 'Hide HUD') + '</button></div><p class="ph-note">' +
+      L('Statusboksen, den lille kartplotteren og kompasset. Hver boks kan også minimeres til en tynn stripe med «–» i hjørnet.', 'The status box, the little chart plotter and the compass. Each box can also be folded to a thin strip with «–» in its corner.') + '</p></div>' +
       // the sound (ui/10e-sound.js): off, or a volume
       '<div class="ph-card"><h4>' + L('Lyd', 'Sound') + '</h4><div class="ph-sub">' + [[0, L('Av', 'Off')], [0.25, '25 %'], [0.5, '50 %'], [0.75, '75 %'], [1, '100 %']].map(([v, l]) => { const cur = S.settings.sound === false ? 0 : (S.settings.vol == null ? 0.6 : S.settings.vol); return '<button class="' + (Math.abs(cur - v) < 0.13 ? 'on' : '') + '" data-pa="snd" data-v="' + v + '">' + l + '</button>'; }).join('') + '</div><p class="ph-note">' +
       L('Motor, sjø, vind og regn, måker, og arbeidet i havna og om bord. Lyden starter når du trykker på skjermen.', 'Engine, sea, wind and rain, gulls, and the work in the harbour and aboard. The sound starts when you touch the screen.') + '</p></div>' +
@@ -385,9 +388,10 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
-    ['p36', '05.10.2026', 'Snø ved rorbua, og Fortøy', 'Snow at the rorbu, and Moor', [
+    ['p36', '05.10.2026', 'Snø ved rorbua, Fortøy, og mindre HUD', 'Snow at the rorbu, Moor, and a smaller HUD', [
       ['Rorbuene og fars naust har snø på bakken og taket om vinteren, som terrenget rundt, i stedet for grønt gress.', 'The rorbuer and Father’s boathouse have snow on the ground and the roof in winter, like the land around, instead of green grass.'],
-      ['Ligger du stille nær en kai, en rorbu eller naustet, står «Fortøy» i knapperaden. Båten finner veien inn og legger til, så du kan hvile.', 'Lying still near a quay, a rorbu or the boathouse, «Moor» is in the button row. The boat finds the way in and moors, so you can rest.']]],
+      ['Ligger du stille nær en kai, en rorbu eller naustet, står «Fortøy» i knapperaden. Båten finner veien inn og legger til, så du kan hvile.', 'Lying still near a quay, a rorbu or the boathouse, «Moor» is in the button row. The boat finds the way in and moors, so you can rest.'],
+      ['Trykk «–» på statusboksen eller det lille kartet for å gjøre dem til en tynn stripe. Under Innstillinger kan du skjule HUD helt.', 'Tap «–» on the status box or the little chart to fold it to a thin strip. In Settings you can hide the HUD altogether.']]],
     ['p35', '05.10.2026', '3D på Windows-PC', '3D on Windows PCs', [
       ['3D-visningen startet ikke på noen Windows-PC-er (Chrome og Firefox): sjøen ble for tung for grafikkdriveren. Nå starter de med en litt enklere sjø, og går driveren likevel i stå, prøver spillet en enklere neste gang.', 'The 3D view did not start on some Windows PCs (Chrome and Firefox): the sea was too heavy for the graphics driver. They now start with a slightly simpler sea, and if the driver still gives up, the game tries a simpler one next time.'],
       ['Står det «ingen WebGL-kontekst», har nettleseren slått av 3D etter en driverfeil. Lukk nettleseren helt og åpne den igjen.', 'If it says «no WebGL context», the browser has turned 3D off after a driver error. Close the browser fully and open it again.']]],
@@ -1089,6 +1093,7 @@ const PHONE = (() => {
     else if (a === 'lang'){ S.lang = S.lang === 'no' ? 'en' : 'no'; refreshAll(); }
     else if (a === 'q3d'){ S.settings.q3d = d.v; if (typeof G3 !== 'undefined' && G3.quality) G3.quality(d.v); }
     else if (a === 'fpsShow'){ S.settings.fpsShow = d.v === '1'; }
+    else if (a === 'hudShow'){ S.settings.hudOff = d.v !== '1'; hudClasses(); }
     else if (a === 'move'){
       if (S.moved) return true;
       show(false); const from = (portById(S.home || S.boat.port) || PORTS[0]).name; START_HOMEONLY = true;

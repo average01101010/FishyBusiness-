@@ -52,8 +52,17 @@ function renderHud(){
   const lvl = riskLevel(W, hs);
   const dot = b.status === 'adrift' || b.status === 'engine' ? 'bad' : (b.status === 'sailing' || b.status === 'fishing') ? 'go' : '';
   document.body.classList.toggle('sailing', b.status === 'sailing');
+  hudClasses();
+  // minimised (Jonas 05.10.2026: «Spillere skal kunne trykke minimer på disse, som gjør slik at bare basisinformasjonen vises på en tynn
+  // stripe»): the time, what the boat is doing and the money on one line, and only the warnings that matter (the sea, low energy)
+  if (S.settings.hudMin){
+    const e = S.energy == null ? 100 : S.energy, no = S.lang === 'no';
+    const warn = (atSea && lvl >= 1 ? '<b class="r' + lvl + '">' + fmt(hs, 1) + ' m</b>' : '') + (!energyOff() && (asleep() || e < ENERGY.warn) ? '<b class="' + (asleep() || e < ENERGY.dim ? 'r2' : 'r1') + '">⚡' + Math.round(e) + ' %</b>' : '');
+    setHtml(hud, '<div class="hstrip"><span class="ht">' + hm(S.t / 60) + '</span><i class="dot ' + dot + '"></i><span class="hs">' + statusText() + '</span>' + warn +
+      '<b class="' + (S.cash < 0 ? 'r2' : '') + '">' + kr(S.cash) + '</b><button type="button" class="hmin" data-hmin="hud" aria-label="' + (no ? 'Vis alt' : 'Show all') + '">+</button></div>');
+  } else {
   const nx = nextEvent();
-  setHtml(hud, '<div class="hd"><span>' + dayStr(S.t / 60) + ' ' + hm(S.t / 60) + '</span><b class="' + (S.cash < 0 ? 'r2' : '') + '">' + kr(S.cash) + '</b></div><div class="st"><i class="dot ' + dot + '"></i>' + statusText() + '</div>' + (nx ? '<div class="st nx">⏱ ' + nx.txt + ' ' + inReal(nx.t - S.t) + ' <small>(' + hm(nx.t / 60) + ')</small></div>' : '') +
+  setHtml(hud, '<div class="hd"><span>' + dayStr(S.t / 60) + ' ' + hm(S.t / 60) + '</span><b class="' + (S.cash < 0 ? 'r2' : '') + '">' + kr(S.cash) + '</b><button type="button" class="hmin" data-hmin="hud" aria-label="' + (S.lang === 'no' ? 'Minimer' : 'Minimise') + '">–</button></div><div class="st"><i class="dot ' + dot + '"></i>' + statusText() + '</div>' + (nx ? '<div class="st nx">⏱ ' + nx.txt + ' ' + inReal(nx.t - S.t) + ' <small>(' + hm(nx.t / 60) + ')</small></div>' : '') +
     (S.fleet && S.fleet.length > 1 ? '<div class="row"><span>' + (S.lang === 'no' ? 'Båt' : 'Vessel') + '</span><b>' + S.boatName + (meAboard() ? ' ⚓' : '') + '</b></div>' : '') +
     '<div class="row"><span>' + t('wind') + '</span><b>' + dirName(windDir(H)) + ' ' + fmt(W, 1) + ' m/s</b></div>' +
     '<div class="row"><span>' + t('waves') + '</span><b>' + fmt(hs, 1) + ' m' + (atSea ? ' <span class="r' + lvl + '">' + t('risk' + lvl) + '</span>' : '') + '</b></div>' +
@@ -68,6 +77,7 @@ function renderHud(){
     (streakPct() > 0 ? '<div class="row"><span>' + (S.lang === 'no' ? 'Bonus' : 'Bonus') + '</span><b>+' + fmt(streakPct(), 0) + ' %</b></div>' : '') +
     (() => { const cp = coldPen(S.t / 60); return cp > 0.03 ? '<div class="row"><span>' + (S.lang === 'no' ? 'Kulde' : 'Cold') + '</span><b class="cold">−' + Math.round(cp * 100) + ' % · ' + Math.round(effTemp(S.t / 60)) + ' °C</b></div>' : ''; })() +
     (haillStage() ? '<div class="row"><span>' + (S.lang === 'no' ? 'Haill' : 'Luck') + '</span><b class="haill">' + haillStage()[S.lang] + ' +' + Math.round(haillBoost() * 100) + ' %</b></div>' : ''));
+  }
   // the boxes under the status box in 3D take their place and width from it: measured when its content has changed and every 2 s (setting
   // them on the chart's parent every tick restyled the whole chart)
   if (hud.dataset.v !== hudV || performance.now() - hudT > 2000){ hudV = hud.dataset.v; hudT = performance.now(); requestAnimationFrame(() => { const mw = $('mapwrap').style, hr = hud.getBoundingClientRect(), top = Math.round(hr.bottom - $('mapwrap').getBoundingClientRect().top + 6) + 'px', w = Math.round(hr.width) + 'px'; if (mw.getPropertyValue('--gpsTop') !== top) mw.setProperty('--gpsTop', top); if (mw.getPropertyValue('--hudW') !== w) mw.setProperty('--hudW', w); }); }
@@ -129,6 +139,9 @@ const INSTR = (() => {
     const el = $('gps3d'), no = S.lang === 'no', on = S.boat.status !== 'port';
     GPS3D = {kn:fmt(sog, 1) + ' kn', crs:deg3(pose.hd), ll, nv};   // the little chart's foot (03e-miniplot.js)
     if (!el) return;
+    if (S.settings.plotMin){ if (el.hidden) el.hidden = false; const pm = $('plotMin'); if (pm.textContent !== '+'){ pm.textContent = '+'; pm.setAttribute('aria-label', no ? 'Vis kartplotteren' : 'Show the chart plotter'); }
+      setHtml(el, '<div class="gstrip"><b>' + fmt(sog, 1) + ' kn</b><b>' + deg3(pose.hd) + '</b><span>' + ll[0] + ' ' + ll[1] + '</span></div>'); return; }
+    { const pm = $('plotMin'); if (pm.textContent !== '–'){ pm.textContent = '–'; pm.setAttribute('aria-label', no ? 'Minimer kartplotteren' : 'Minimise the chart plotter'); } }
     if (el.hidden === on) el.hidden = !on; if (!on) return;
     const row = (k, v) => '<div class="row"><span>' + k + '</span><b>' + v + '</b></div>';
     setHtml(el, row(no ? 'Fart' : 'Speed', fmt(sog, 1) + ' kn') + row(no ? 'Kurs' : 'Course', deg3(pose.hd)) + row('POS', ll[0]) + row('', ll[1]) +
@@ -157,4 +170,17 @@ const INSTR = (() => {
   return {show, renderGPS, echoOn};
 })();
 // a tap on the rules line in the status box opens the Regler app
-hud.addEventListener('click', e => { if (e.target.closest('.rlink')) PHONE.open('regler'); });
+hud.addEventListener('click', e => { const m = e.target.closest('[data-hmin]'); if (m){ e.stopPropagation(); hudFold('hud'); return; } if (e.target.closest('.rlink')) PHONE.open('regler'); });
+// the status box and the little chart each fold to a strip (S.settings.hudMin, plotMin), and «Vis HUD» in the settings takes them all
+// away (hudOff): the status box, the little chart, its GPS strip and the compass
+function hudClasses(){
+  const st = S.settings || {}, c = document.body.classList;
+  if (c.contains('hudmin') !== !!st.hudMin) c.toggle('hudmin', !!st.hudMin);
+  if (c.contains('plotmin') !== !!st.plotMin) c.toggle('plotmin', !!st.plotMin);
+  if (c.contains('hudoff') !== !!st.hudOff) c.toggle('hudoff', !!st.hudOff);
+}
+function hudFold(which){
+  if (which === 'hud') S.settings.hudMin = !S.settings.hudMin; else S.settings.plotMin = !S.settings.plotMin;
+  save(); renderHud(); if (typeof renderGPS === 'function') renderGPS();
+}
+$('plotMin').addEventListener('click', e => { e.stopPropagation(); hudFold('plot'); });

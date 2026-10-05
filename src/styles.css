@@ -584,6 +584,19 @@ body.v3d #gps3d:not([hidden]){display:block;position:absolute;z-index:4;left:8px
 /* the little chart carries the GPS in its foot (03e-miniplot.js, Jonas 05.10.2026): the box is only shown where the chart is not */
 @media (min-height:521px){ body.v3d #gps3d:not([hidden]){display:none} }
 #gps3d .row{display:flex;justify-content:space-between;gap:10px;font-variant-numeric:tabular-nums;line-height:1.45} #gps3d .row > span{color:rgba(230,240,245,.68);white-space:nowrap} #gps3d .row b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* folding the boxes (S.settings.hudMin, plotMin; 04-panels-instruments.js hudFold) and «Vis HUD» off (hudOff) */
+#hud{--hz:1} #hud .hmin,#plotMin{flex:none;width:calc(32px / var(--hz,1));height:calc(30px / var(--hz,1));margin:-3px -6px -3px 2px;padding:0;border:0;color:#fff;font:700 calc(15px / var(--hz,1))/1 var(--sans);text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;
+  background:radial-gradient(circle,rgba(6,16,24,.85) 0 calc(10.5px / var(--hz,1)),rgba(255,255,255,.32) calc(10.5px / var(--hz,1)) calc(11.5px / var(--hz,1)),transparent calc(12px / var(--hz,1)))}   /* a finger's target (uishots: 32 × 30 on the screen) round a small disc */
+#hud .hmin{pointer-events:auto} #hud .hd{padding-right:calc(20px / var(--hz,1))} #hud .hd .hmin{position:absolute;top:0;right:0;margin:0}
+#hud .hstrip{display:flex;align-items:center;gap:7px;white-space:nowrap;font-variant-numeric:tabular-nums;font-size:12px}
+#hud .hstrip .ht{color:rgba(230,240,245,.78)} #hud .hstrip .hs{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:650}
+body.hudmin #hud{padding:2px 8px 2px 9px!important}
+#plotMin{display:none}
+body.v3d #plotMin{display:block;position:absolute;z-index:5;margin:0;top:calc(var(--gpsTop,130px) + 2px);left:9px}
+body.v3d.plotmin #miniPlot{display:none}
+body.v3d.plotmin #gps3d:not([hidden]){display:block;top:var(--gpsTop,130px);padding:3px 9px 3px 36px}
+#gps3d .gstrip{display:flex;flex-wrap:wrap;column-gap:8px;align-items:baseline;white-space:nowrap;font-variant-numeric:tabular-nums;line-height:1.2} #gps3d .gstrip span{flex:1 0 100%;overflow:hidden;text-overflow:ellipsis;min-width:0;font-size:10.5px;color:rgba(230,240,245,.78)}
+body.hudoff #hud,body.hudoff #miniPlot,body.hudoff #gps3d,body.hudoff #compass3d,body.hudoff #plotMin{display:none!important}
 /* play and pause for the route (the user's wish 02.10.2026) */
 .zoom button.rt.play{width:56px;height:56px;border-radius:50%;background:var(--mag);border-color:var(--mag);color:#fff;align-self:flex-end;box-shadow:0 4px 14px rgba(208,40,120,.45)}
 .zoom button.rt.play .i-pause{display:none} .zoom button.rt.play.pause .i-play{display:none} .zoom button.rt.play.pause .i-pause{display:block}
@@ -616,7 +629,7 @@ body.v3d.helm #helmThr,body.v3d.helm #helmJoy{display:block}
 .ov.kino.on{background:#c0392b!important;color:#fff;border-color:#fff}
 .ov.kino2{top:calc(env(safe-area-inset-top,0px) + 114px);right:10px;height:34px;padding:0 12px;border-radius:12px;font:700 13px var(--sans)}
 .ov.kino2[hidden],body.vplot .ov.kino,body.vplot .ov.kino2{display:none}
-body.kino-clean #hud,body.kino-clean #gps3d,body.kino-clean #miniPlot,body.kino-clean #compass3d,body.kino-clean #dock,body.kino-clean #dockInfo,body.kino-clean #dockFan,body.kino-clean #phoneFab,body.kino-clean #logbook,body.kino-clean #camBtn,body.kino-clean #helmThr,body.kino-clean #helmJoy,body.kino-clean #helmAct,body.kino-clean #modeBtn,body.kino-clean #instrBtn,body.kino-clean #labels,body.kino-clean .attr{display:none!important}
+body.kino-clean #hud,body.kino-clean #gps3d,body.kino-clean #miniPlot,body.kino-clean #plotMin,body.kino-clean #compass3d,body.kino-clean #dock,body.kino-clean #dockInfo,body.kino-clean #dockFan,body.kino-clean #phoneFab,body.kino-clean #logbook,body.kino-clean #camBtn,body.kino-clean #helmThr,body.kino-clean #helmJoy,body.kino-clean #helmAct,body.kino-clean #modeBtn,body.kino-clean #instrBtn,body.kino-clean #labels,body.kino-clean .attr{display:none!important}
 body.kino-clean .ov.kino,body.kino-clean .ov.kino2{opacity:.35}
 /* the sleep screen's «Spol fram» (05b-work.js) */
 #slSkip{margin-top:18px;padding:10px 20px;border-radius:20px;border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.08);color:#dfe6ec;font:600 15px var(--sans)}
@@ -701,7 +714,7 @@ body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 2
   /* a standing phone (Jonas 05.10.2026: «Det tar jo opp halve skjermen ... Alle vinduene må rett og slett bli mindre eller smalere»):
      the info box smaller and at most about a third of the width (Jonas: «Tar jo halve skjermen i bredden»), a long line wrapping and
      a long value cut; the little chart under it as wide and no taller than a fifth of the screen */
-  body.v3d #hud{zoom:.74;max-width:47vw;min-width:0!important;top:calc((env(safe-area-inset-top,0px) + 40px) / .74)}   /* zoom scales the offset too */
+  body.v3d #hud{zoom:.74;--hz:.74;max-width:47vw;min-width:0!important;top:calc((env(safe-area-inset-top,0px) + 40px) / .74)}   /* zoom scales the offset too */
   body.v3d #hud .st.nx{white-space:normal;line-height:1.2}
   body.v3d #hud .row{gap:6px;line-height:1.28}
   body.v3d #hud .row > span{flex:none}
@@ -723,7 +736,7 @@ body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 2
 /* a phone on its side: the info box a little smaller, no mini chart (the chart is a tap away), the GPS box right under the info, and
    the phone in the game as tall as the screen without its frame */
 @media (max-height:520px){
-  body.v3d #hud{zoom:.86}
+  body.v3d #hud{zoom:.86;--hz:.86}
   body.v3d #miniPlot{display:none}
   body.v3d #gps3d:not([hidden]){top:calc(var(--gpsTop,130px) + 6px)}
   #phone{top:0;bottom:0;right:0;height:auto;width:min(380px,62vw);filter:drop-shadow(0 0 30px rgba(0,0,0,.5))}
