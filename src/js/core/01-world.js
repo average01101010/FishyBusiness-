@@ -197,9 +197,12 @@ function pocketHit(US, QS, x, z){
 // a unit's block or fill (land on the chart), 0 elsewhere
 function pocketsIn(x0, y0, x1, y1){
   const m = 0.2, near = (x, z) => x / 1000 > x0 - m && x / 1000 < x1 + m && z / 1000 > y0 - m && z / 1000 < y1 + m;
-  const US = UNITA.filter(U => near(U.o[0], U.o[1])), QS = qPockets().filter(f => near(f.x, f.z));
-  return US.length || QS.length ? (x, y) => { const X = x * 1000, Z = y * 1000; if (pocketHit(US, QS, X, Z)) return 1;
-    for (const U of US){ if (Math.abs(X - U.o[0]) > 120 || Math.abs(Z - U.o[1]) > 120) continue; const [lx, lz] = unitL(U, X, Z); if (groundOut(U, lx, lz) === 0) return 2; } return 0; } : null;
+  if (!UNITA.some(U => near(U.o[0], U.o[1])) && !qPockets().some(f => near(f.x, f.z))) return null;
+  // per point only the units and pockets of its 200 m cell (HCELL): with the coast's 160 units a chart tile of the whole country
+  // looked at all of them for every pixel (05.10.2026)
+  return (x, y) => { const X = x * 1000, Z = y * 1000; if (!harbourNear(X, Z)) return 0; const c = HCELL.get(Math.floor(X / 200) * 65536 + Math.floor(Z / 200)); if (!c) return 0;
+    if (pocketHit(c.U, c.Q, X, Z)) return 1;
+    for (const U of c.U){ if (Math.abs(X - U.o[0]) > 120 || Math.abs(Z - U.o[1]) > 120) continue; const [lx, lz] = unitL(U, X, Z); if (groundOut(U, lx, lz) === 0) return 2; } return 0; };
 }
 function legClear(a, b){
   const d = dist(a, b), n = Math.max(1, Math.ceil(d / 0.04));
