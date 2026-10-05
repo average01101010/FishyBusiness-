@@ -190,16 +190,18 @@ function sell(){
 function modal(html){ const m = $('modal'); m.innerHTML = '<div class="box" role="dialog" aria-modal="true">' + html + '</div>'; m.hidden = false; const bs = m.querySelectorAll('[data-close]'); bs.forEach(b => { b.onclick = () => { m.hidden = true; }; }); if (bs[0]) bs[0].focus(); }
 // «#notut» in the address starts a new game without the first-trip tutorial (the automated tests use it)
 const NOTUT = /notut/.test(location.hash);
+// a new game: Father's letter first (ui/08b-letter.js; the tests with #notut go straight on), then the boat's name. No company: a
+// new player is a fisherman with a boat, and the company is founded when buying into the closed group (Jonas 05.10.2026: «nye
+// spillere skal ikke lage rederi, kun gi båten et navn»)
 function showIntro(namesOnly){
   const L = (no, en) => S.lang === 'no' ? no : en;
-  modal('<div class="ob"><h2>' + (namesOnly ? L('Gi båten et navn', 'Name your boat') : t('intro_h')) + '</h2>' + (namesOnly ? '<p>' + L('Dekksdagboka trenger et båtnavn.', 'The deck log needs a boat name.') + '</p>' : '<p>' + t('intro1') + '</p>') +
-    '<label for="obCo">' + L('Firmanavn', 'Company name') + '</label><input id="obCo" maxlength="28" autocomplete="off" placeholder="' + L('F.eks. Senja Kystfiske', 'e.g. Senja Coastal Fishing') + '" value="' + (S.company || '').replace(/"/g, '') + '">' +
+  if (!namesOnly && !NOTUT && !LETTER.read){ showLetter(() => { LETTER.read = true; showIntro(); }); return; }
+  modal('<div class="ob"><h2>' + L('Gi båten et navn', 'Name your boat') + '</h2><p>' + (namesOnly ? L('Dekksdagboka trenger et båtnavn.', 'The deck log needs a boat name.') : L('Båten etter far har ikke noe navn på skroget. Hva skal hun hete?', 'Father\'s boat has no name on her hull. What will she be called?')) + '</p>' +
     '<label for="obBoat">' + L('Båtens navn', 'Boat name') + '</label><input id="obBoat" maxlength="20" autocomplete="off" placeholder="' + L('F.eks. Havbris', 'e.g. Havbris') + '" value="' + (S.boatName || '').replace(/"/g, '') + '">' +
-    (namesOnly ? '' : '<p>' + t('intro2') + '</p><p class="note">' + t('intro3') + '</p>') + '<div class="btns"><button class="btn primary" data-close id="obGo">' + t('intro_go') + '</button></div></div>');
+    '<div class="btns"><button class="btn primary" data-close id="obGo">' + t('intro_go') + '</button></div></div>');
   $('obGo').addEventListener('click', () => {
-    const co = $('obCo').value.trim().slice(0, 28), bn = $('obBoat').value.trim().slice(0, 20);
-    S.company = co || L('Senja Kystfiske', 'Senja Coastal Fishing'); S.boatName = bn || 'Havbris';
-    if (!S.intro){ S.tut = NOTUT ? 0 : tutNew(); log('Overtok «' + S.boatName + '» i Finnsnes for ' + S.company + '.', 'Took over the «' + S.boatName + '» in Finnsnes for ' + S.company + '.'); }
+    const bn = $('obBoat').value.trim().slice(0, 20); S.boatName = bn || 'Havbris';
+    if (!S.intro){ S.tut = NOTUT ? 0 : tutNew(); log('Tok over «' + S.boatName + '» etter far.', 'Took over the «' + S.boatName + '» from Father.'); }
     S.intro = true; save(); refreshAll();
   });
 }

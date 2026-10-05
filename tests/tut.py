@@ -1,6 +1,7 @@
 """«Første tur», the guided first trip, played through the way a player would: tap the middle of the ring the guide shows, tap its
 button when it has one, and wait while the boat works. Touch goes through CDP; landscape 1293 × 830 and portrait 915 × 1208, with
-three reloads on the way. The game runs at test pace (S.mult) to save time. Checks: every step comes in order, the guide ends with
+three reloads on the way. It opens on Father's letter (tapped open, read, «Ta over») and the boat's name, no company. The game runs
+at test pace (S.mult) to save time. Checks: every step comes in order, the guide ends with
 "tut":0, the jig and ice were free, the free luxury luck, a full hold at landing, and a login bonus row on the landing note.
 Prints OK or FEIL per check and ends with the old summary line {"tut":0, …} and the page errors."""
 from _env import GAME_TUT as GAME
@@ -36,7 +37,16 @@ async def play(p, W, H, tag):
         if r: await tap(r['x'], r['y'])
         return r
 
-    await pg.goto(GAME); await pg.wait_for_timeout(1200); await tap_el('#obGo'); await pg.wait_for_timeout(600)
+    await pg.goto(GAME)
+    # Father's letter (ui/08b-letter.js): a tap on the envelope opens it, the letter unfolds, «Ta over» goes on to the boat's name only
+    await pg.wait_for_selector('#ltEnv', timeout=90000); await pg.wait_for_timeout(2200); await tap_el('#ltEnv')
+    await pg.wait_for_selector('#ltGo.on', timeout=40000); await pg.wait_for_timeout(300); await pg.screenshot(path='letter_%s.png' % tag)
+    lt = await pg.evaluate("(() => { const t = document.querySelector('#letter .lt-p2 .lt-txt'), r = document.getElementById('ltPaper').getBoundingClientRect(); return {text:t ? t.innerText : '', flat:document.getElementById('ltPaper').classList.contains('flat'), fits:t.scrollHeight <= t.clientHeight + 2, w:Math.round(r.width), h:Math.round(r.height), font:parseFloat(t.style.fontSize)}; })()")
+    await tap_el('#ltGo'); await pg.wait_for_selector('#obGo', state='visible', timeout=15000)
+    co = await pg.evaluate("({co:!!document.getElementById('obCo'), boat:!!document.getElementById('obBoat'), letter:!!document.getElementById('letter')})")
+    check(lt['flat'] and lt['text'].startswith('Til deg som står igjen på kaia') and '– Far' in lt['text'] and lt['fits'] and lt['font'] >= 11, tag + ': the envelope opens with a tap, the letter unfolds whole and readable', {k: lt[k] for k in ('flat', 'fits', 'w', 'h', 'font')})
+    check(co['boat'] and not co['co'] and not co['letter'], tag + ': then only the boat is named, no company', co)
+    await pg.wait_for_timeout(400); await tap_el('#obGo'); await pg.wait_for_timeout(600)
     await pg.wait_for_function("G3.isActive() || document.body.classList.contains('vplot')", timeout=90000); await pg.wait_for_timeout(800)
     await pg.evaluate("S.mult = 30; save()")
     seen, reloads, hold_at_land, free, t0, stuck = [], 0, None, {}, time.time(), 0

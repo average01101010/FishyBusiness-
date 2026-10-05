@@ -9,7 +9,7 @@ async def run(w,h,tag,dpr):
         logs=[]; pg.on('pageerror', lambda e: logs.append('ERR '+str(e)))
         await pg.goto(GAME)
         await pg.wait_for_timeout(700)
-        await pg.fill('#obCo', 'Johansen Kystfiske'); await pg.fill('#obBoat', 'Senjaværing')
+        await pg.fill('#obBoat', 'Senjaværing')
         await pg.screenshot(path=f'{tag}_ob.png')
         await pg.click('#obGo')
         await pg.wait_for_function("G3.isActive()", timeout=40000); await pg.wait_for_timeout(1500)

@@ -66,7 +66,9 @@ refreshAll();
 document.addEventListener('visibilitychange', () => { if (!document.hidden && streakTouch()){ save(); refreshAll(); } });
 INSTR.show(); tab = 'route'; setBodyView(true);
 // G3 comes from a later <script> (view3d.js): the clock starts when the whole page is read (it may be read already)
-mapOnReady(() => { setInterval(tick, 200); G3.show(true, true); });
+// the 3D view starts after Father's letter is put down: building it takes the main thread for seconds, and the letter's animation
+// stood still meanwhile (ui/08b-letter.js)
+mapOnReady(() => { setInterval(tick, 200); const go3d = () => { if (document.getElementById('letter')) setTimeout(go3d, 400); else G3.show(true, true); }; go3d(); });
 // the simulation's data are in (bootMap), so the clock may run, and the time away is played
 SIMREADY = true; CONT_D = null; renderBase(); panelDirty = true;
 if (AWAY){ catchUp(AWAY + Date.now() - BOOT_T); AWAY = 0; refreshAll(); } lastWall = Date.now();

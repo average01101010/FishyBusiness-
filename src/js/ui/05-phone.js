@@ -369,6 +369,9 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p17', '05.10.2026', 'Brevet fra far', 'The letter from Father', [
+      ['Et nytt spill begynner med en slitt konvolutt i mørket. Trykk på den, så åpner du brevet fra far.', 'A new game opens on a worn envelope in the dark. Tap it to open the letter from Father.'],
+      ['Nye spillere gir bare båten et navn. Rederiet opprettes når du kjøper din første båt i lukket gruppe.', 'New players only name the boat. The company is founded when you buy your first boat in the closed group.']]],
     ['p16', '05.10.2026', 'Kaia på Finnsnes', 'The quay at Finnsnes', [
       ['Båten lå inne i et bygg ved kaia på Finnsnes. Bygg på kaidekket og over liggeplassen er borte, så du ser båten og kaia når du starter.', 'The boat lay inside a building at the Finnsnes quay. Buildings on the quay deck and over the berth are gone, so you see the boat and the quay when you start.'],
       ['Snøen er stille. Før suste den som hvit støy.', 'Snow is silent. It used to hiss like white noise.'],
@@ -502,7 +505,7 @@ const PHONE = (() => {
   // the papers a fisher carries: shown, not checked by the game. The health declaration is made up (a fictional doctor); the names of
   // the certificates follow Sjøfartsdirektoratet, but which one a skipper under 15 m needs is not confirmed (OVERLEVERING kap. 10)
   function papers(){
-    const t0 = S.log.length ? S.log[0].t : S.t, who = L('Skipper i ', 'Skipper of ') + (S.company || 'Senja Kystfiske'), no = k => String(1000 + Math.floor(h2(k, 517) * 9000)) + ' ' + String(100000 + Math.floor(h2(k, 518) * 900000));
+    const t0 = S.log.length ? S.log[0].t : S.t, who = S.company ? L('Skipper i ', 'Skipper of ') + S.company : L('Skipper på «', 'Skipper of the «') + (S.boatName || 'Havbris') + '»', no = k => String(1000 + Math.floor(h2(k, 517) * 9000)) + ' ' + String(100000 + Math.floor(h2(k, 518) * 900000));
     const until = t0 + 2 * 365 * 1440, ok = S.t < until, vhf = S.fleet.some(v => (vget(v, 'equip') || {}).vhf);
     const card = (col, title, rows, note) => '<div class="ph-card papc"><div class="pap-h" style="background:' + col + '">' + title + '</div>' + rows.map(([a, b]) => kv(a, b)).join('') + (note ? '<p class="ph-note">' + note + '</p>' : '') + '</div>';
     return '<p class="ph-note">' + L('Papirene du har med deg om bord.', 'The papers you carry aboard.') + '</p>' +
@@ -563,6 +566,8 @@ const PHONE = (() => {
   }
   // --- sales organisation
   // s: one part on its own (the orders in the village, the quota as its own app)
+  // the company's name while it is being typed on the sheet (a render must not lose it), and a name to offer
+  let coDraft = null; const coDefault = () => (S.boatName || 'Havbris') + L(' Fiskeri', ' Fishing');
   function salg(s){
     const H = S.t / 60, s0 = s || (['pris', 'land', 'top'].includes(sub.salg) ? sub.salg : 'pris'), h = [s ? '' : subs('salg', [['pris', 'Priser', 'Prices'], ['land', 'Mine landinger', 'My landings'], ['top', 'Toppliste', 'Leaderboard']]), '<div class="ph-c">'];
     if (s0 === 'pris'){
@@ -714,6 +719,9 @@ const PHONE = (() => {
       else if (!bb) h.push('<p class="ph-note"><b>' + L('Krever blad B i fiskermanntallet.', 'Needs blad B of the fishermen\'s register.') + '</b> ' + L('Du har ' + F.n + ' av ' + BLADB.days + ' landingsdager med deg om bord og ' + kr(F.kr) + ' av ' + kr(BLADB.kr) + ' i førstehåndsverdi. Se Papirer i Sjømann-appen.', 'You have ' + F.n + ' of ' + BLADB.days + ' landing days with you aboard and ' + kr(F.kr) + ' of ' + kr(BLADB.kr) + ' in first-hand value. See Papers in the Sailor app.') + '</p>');
       else h.push((inn ? '<p class="ph-note">' + L('Første båt i lukket gruppe: Innovasjon Norge toppfinansierer ' + Math.round(INN * 100) + ' % med et risikolån (8,9 %, 10 år), så du trenger bare ' + Math.round((0.2 - INN) * 100) + ' % egenkapital.', 'First boat in the closed group: Innovasjon Norge tops up ' + Math.round(INN * 100) + '% with a risk loan (8.9%, 10 years), so you only need ' + Math.round((0.2 - INN) * 100) + '% equity.') + '</p>' : '') + payNote(A, 'Mellomlegg med ' + bn + ' i bytte: ', 'To pay with ' + bn + ' traded in: ', 'lån over 15 år ', '15-year loan ') + '<button class="ph-btn' + (A.ok ? ' p' : '') + '" data-pa="buylic" data-ti="1" data-id="' + O.id + '"' + (A.ok && free && !tiLocked(curVessel()) ? '' : ' disabled') + '>' + L('Kjøp og bytt inn ' + bn, 'Buy, trading in ' + bn) + '</button>' +
         payNote(B, 'Til flåten, uten innbytte: ', 'For the fleet, no trade-in: ', 'lån over 15 år ', '15-year loan ') + '<button class="ph-btn" data-pa="buylic" data-ti="0" data-id="' + O.id + '"' + (B.ok && free ? '' : ' disabled') + '>' + L('Kjøp til flåten', 'Buy for the fleet') + '</button>');
+      // the first closed-group boat founds the company (until then the player fishes in his own name)
+      if (bb && !mineO && !S.company) h.push('<div class="ph-card"><h4>' + L('Rederiet', 'The company') + '</h4><p class="ph-note">' + L('En båt med hjemmel i lukket gruppe eies av et rederi. Det opprettes når du kjøper, med navnet her.', 'A boat with a closed-group right is owned by a company. It is founded when you buy, with the name here.') + '</p>' +
+        '<label class="ph-kv"><span>' + L('Navn', 'Name') + '</span><input id="coName" maxlength="28" autocomplete="off" value="' + String(coDraft != null ? coDraft : coDefault()).replace(/"/g, '') + '"></label></div>');
       const ov = openVesselId(); if (ov && !mineO) h.push('<p class="ph-note">' + L('Et rederi med en båt i lukket gruppe kan ikke ha noen båt i åpen gruppe. «' + vget(vesselById(ov), 'boatName') + '» mister plassen der, men kan fiske kveite og krabbe.', 'A company with a closed-group vessel can have no vessel in the open group. «' + vget(vesselById(ov), 'boatName') + '» loses its place there, but can fish halibut and crab.') + '</p>'); }
     else { const A = deal(V.price, ti), B = deal(V.price, 0), verb = V.isNew ? L('Bestill', 'Order') : L('Kjøp', 'Buy'), openOnly = V.len < 11 && !hasLic();
       h.push(payNote(A, 'Mellomlegg med ' + bn + ' i bytte: ', 'To pay with ' + bn + ' traded in: ') + '<button class="ph-btn p" data-pa="buy" data-ti="1" data-k="' + k + '"' + (A.ok && free && !tiLocked(curVessel()) ? '' : ' disabled') + '>' + verb + L(' og bytt inn ' + bn, ', trading in ' + bn) + '</button>');
@@ -1119,7 +1127,9 @@ const PHONE = (() => {
       const O = LIC_OFFERS.find(x => x.id === d.id); if (!O || !inPort() || S.order) return;
       const price = VESSELS[O.ves].price + licValue(O), ti = d.ti === '0' ? 0 : tradeIn(); if (ti && S.lic && S.lic.id === O.id) return;
       if (!bladB()){ toast(L('Du må stå på blad B i fiskermanntallet for å kjøpe en båt med hjemmel. Se Papirer.', 'You must be on blad B of the fishermen\'s register to buy a boat with a right. See Papers.')); return; }
-      const inn = innOK(), x = deal(price, ti, inn); if (!x.ok){ toast(whyText(x) || t('no_cash')); return; } finance(x, 180); if (inn) S.inUsed = true;
+      const inn = innOK(), x = deal(price, ti, inn); if (!x.ok){ toast(whyText(x) || t('no_cash')); return; }
+      if (!S.company){ const el = document.getElementById('coName'); S.company = String((el && el.value) || coDraft || '').trim().slice(0, 28) || coDefault(); coDraft = null; log('Rederiet ' + S.company + ' er opprettet.', 'The company ' + S.company + ' is founded.'); }
+      finance(x, 180); if (inn) S.inUsed = true;
       const sl = regSeller(O.id, S.t / 60), lic = {id:O.id, hl:O.hl, kpk:O.kpk, since:yearH(S.t / 60), from:sl.name + ', ' + sl.home}, ov = openVesselId(), lost = ov && !(ti && ov === S.cur) ? vget(vesselById(ov), 'boatName') : null;
       let nm;
       let fished; regTake(O.id);   // the NPC owner leaves the register (03d-quota.js)
@@ -1130,7 +1140,7 @@ const PHONE = (() => {
     return true;
   }
   view.addEventListener('click', e => { const t0 = e.target.closest('[data-pa],[data-act]'); if (!t0 || t0.disabled) return; if (t0.dataset.pa) act(t0.dataset.pa, t0.dataset); else { doAct(t0); render(); } });
-  view.addEventListener('input', e => panelInput(e));
+  view.addEventListener('input', e => { if (e.target.id === 'coName') coDraft = e.target.value; panelInput(e); });
   view.addEventListener('change', e => { panelChange(e); if (e.target.id === 'setAuto') render(); });
   el.querySelector('.ph-nav').addEventListener('click', e => { const t0 = e.target.closest('[data-pa]'); if (t0) act(t0.dataset.pa, t0.dataset); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && isOpen) show(false); });

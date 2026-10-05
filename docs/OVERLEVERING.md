@@ -1359,6 +1359,32 @@ Kvotesystemet ligger i `core/03d-quota.js` (04.10.2026, plan Q1–Q6). Grunnlage
   - **Det lille kartet** (`#miniPlot`, `ui/03e-miniplot.js`) under statusboksen, like bredt som den: nord opp, så stort at ekkoloddringens diameter fyller det (en halv nautisk mil hver vei uten ekkolodd), med fisken (`heatDrawInto` uten uskarphet), ruta som gjenstår og båten. Det tegnes en gang i sekundet over en bakgrunn (sjø, land og kyst for to ganger utsnittet, `miniBg`) som tegnes på nytt bare når båten har flyttet seg en femdel av radien, eller hvert 20. sekund. Å tegne kysten hver gang gjorde skjermbildene i 3D-testene 5–8 ganger tregere med SwiftShader. Et trykk åpner kartplotteren. Det erstatter GPS-knappen og «Planlegg».
   - **GPS-boksen i 3D** (`#gps3d`, brukerens ønske 02.10.2026) under det lille kartet, like bred og like gjennomsiktig som statusboksen: fart, kurs og posisjon, og mens en rute seiles også WPT, XTE, tid til neste punkt og ETA. Den vises ikke i havn.
 
+### 5.15b Åpningsscenen: brevet fra far (05.10.2026)
+
+Jonas: «Skjermen er helt svart, med en slitt konvolutt med røff håndskrift hvor det står: "Til den som tar over" ... Ut kommer det et brettet brev som åpnes.» Teksten i brevet er Jonas sin.
+
+- **Flyt** (`ui/08b-letter.js`, `showLetter`):
+  1. Et nytt spill (`showIntro` uten `namesOnly`) åpner på en svart skjerm med lyskjegle, støv og filmkorn.
+  2. Spilleren trykker på konvolutten. Den snus, klaffen løsner og svinger opp, og brevet glir ut av lomma.
+  3. Konvolutten faller bort, og brevet kommer fram og brettes ut, først øverste og så nederste tredjedel.
+  4. «Ta over» går videre til båtnavnet.
+- **Lyd:** Papirlyden lages av støy med båndpass og spredte klikk (`letterSound`) og følger lydinnstillingen.
+- **Når den ikke vises:** `#notut` hopper over brevet, slik testene gjør. Nullstilling (`reset`) viser det heller ikke.
+- **Papiret** er fra Blender (`tools/opening/brev.py`). Det er fem WebP-bilder, til sammen rundt 150 kB, i `pic-letter-*`:
+  - konvoluttens forside, lomme, innside og klaff
+  - selve arket
+  
+  Bildene har ekte skrukker i geometrien, lys som streifer over arket og flekker i et fargelag. Kantene er slitt bort i alfakanalen.
+- **Håndskriften** er sidens egen tekst, så den er skarp og finnes på begge språk:
+  - Caveat (SIL OFL 1.1) i brevet og Rock Salt (Apache 2.0) på konvolutten
+  - Fontene ligger i siden som base64 (`src/data/font-*.b64`), så de virker uten nett.
+  - Skriftstørrelsen tilpasses arket, målt på en kopi utenfor skjermen.
+- **Båtnavnet uten rederi** (Jonas: «nye spillere skal ikke lage rederi, kun gi båten et navn. Rederi skal opprettes når man skal kjøpe seg inn i lukket gruppe»):
+  - Dialogen spør bare om båtnavnet, og `S.company` står tom.
+  - Arket for en båt med hjemmel i lukket gruppe har feltet «Rederiet» med et navneforslag. Navnet settes når kjøpet går gjennom (`buylic`).
+  - Stifter spilleren AS før det (`foundAS`), får rederiet navnet «båtnavn Fiskeri AS».
+- **Test:** `tut.py` åpner brevet med berøring, både liggende og stående. Den sjekker at brevet er helt utbrettet, at teksten får plass, og at dialogen etterpå bare har båtnavnet.
+
 ### 5.16 Veiledningen «Første tur» (01.10.2026)
 
 - **Obligatorisk** for nye spill, også etter nullstilling. Eldre lagringer sendes ikke gjennom den. `#notut` i adressen hopper over den (testene bruker det).
