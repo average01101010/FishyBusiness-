@@ -111,7 +111,9 @@ function chartNamesSvg(vx0, vy0, vx1, vy1, u, taken){
   cand.sort((a, b) => a[3] - b[3]);
   const g = [], hit = (b) => taken.some(t => b[0] < t[2] && b[2] > t[0] && b[1] < t[3] && b[3] > t[1]);
   for (const [x, y, k, r, n, ang] of cand){
-    if (k === 0 && PORTS.some(p => dist(p.p, {x, y}) < 3 && (p.name.startsWith(n) || n.startsWith(p.name)))) continue;
+    // a town with a harbour of its name: the harbour's label stands for it, but only as close in as the harbours have labels (view.z 0.5,
+    // 03-map.js); further out, with the coast's receivers named after their towns, Oslo, Bergen and Tromsø would be gone
+    if (k === 0 && view.z >= 0.5 && PORTS.some(p => dist(p.p, {x, y}) < 3 && (p.name.startsWith(n) || n.startsWith(p.name)))) continue;
     const sz = NAME_PX[k][r] * u, w = n.length * sz * (k === 2 ? 0.72 : 0.58), town = k === 0, a = (ang || 0) * Math.PI / 180;
     // a turned name takes the box round its turned rectangle
     const hw = (Math.abs(w * Math.cos(a)) + Math.abs(sz * Math.sin(a))) / 2, hh2 = (Math.abs(w * Math.sin(a)) + Math.abs(sz * Math.cos(a))) / 2;
