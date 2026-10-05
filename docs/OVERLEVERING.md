@@ -2511,6 +2511,22 @@ Jonas' liste: oppgraderinger, kvotehandel, kikkert, raskere fangst, fortøying, 
   - **Blåsestaken fra Blender** står i begge ender av hvert sett: oransje flottør, stang med blylodd under, svart flagg og radarreflektor. Dreggen har fire fliker.
   - **Trekking:** fisk kommer opp i maskene og på krokene, så mange som settet har igjen, med artene i forhold.
   - **Test:** ingen ny test, fordi det bare er tegning. Det er sjekket med skjermbilder.
+- **Teinene i 3D** (`drawPots`, `drawCrabTank`, `potDeck` i `view3d.js`; `tools/gear/teine.py`, `src/data/gear-pot.b64`, fra 04.10.2026, brukerens ønske: «Lager du blender-modeller av teiner og kongekrabbe? Og animasjoner for haling av teiner»):
+  - **Modellene fra Blender:**
+    - kongekrabbeteina: stålramme 1,4 × 1,4 × 0,65 m, notlin, en trakt inn i hver av to motsatte sider, agnboks i midten og luke i toppen (`teinedor`, med hengsel)
+    - teinehaleren på davitt: en stolpe ved rekka med en bøyd arm ut over siden og en blokk 2,1 m over dekk og 0,9 m utenfor stolpen, med hydraulisk V-skive som går rundt (`davitskive`)
+    - krabbekaret: et blått kar på 1,2 × 0,8 × 0,7 m med sjøvann og slange fra dekkspumpa
+    - Målene og fargene har jeg valgt selv. Det finnes ingen tegninger.
+  - **Haling** (én teine i den tida arbeidet tar, `gopUnitMin`, så den målte tida mellom teinene; syklusen starter på nytt når simuleringen teller en teine):
+    1. Teina kommer opp fra bunnen på tauet og ut av sjøen til blokka, med hanefoten fra hjørnene.
+    2. Den svinges inn over rekka og settes på dekk ved haleren.
+    3. Luka åpnes, og krabbene, så mange som settet har per teine, går én og én til krabbekaret (uten kar ned i lasten).
+    4. Agnboksen fylles, luka lukkes, og teina løftes bort i stabelen akter.
+  - **Setting:** teina tas fra toppen av stabelen, vippes ut over rekka og synker, og driver akterut mens båten går fram. Tauet følger med fra rekka.
+  - **Uten teinehaler** (skiffen og små båter) går tauet over rekka, og den gamle trommelen står der som før.
+  - **Små teiner** tegnes i 0,75 av størrelsen.
+  - **Dekket:** når båten er rigget for teiner, er blødekaret og sløyebordet tatt bort, så sant det ikke er fisk som venter på sløying. Krabbekaret står på babord side med krabbene fra lasten i seg.
+  - **Test:** `geartest` tar bildet `gear3d.png` mens teinene settes. Ellers er det sjekket med skjermbilder.
 - **Fly og helikopter** (`05c-air.js`; `tools/air/fly.py`, `src/data/air.b64`):
   - **Modellene** er generiske og uten flyselskap:
     - et regionalt propellfly: høyvinget, med T-hale, to motorer og firebladede propeller, 22 m langt og 26 m mellom vingetuppene, omtrent som Dash 8-100/200

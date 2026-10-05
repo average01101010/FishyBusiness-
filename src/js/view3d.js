@@ -1672,10 +1672,12 @@ const G3 = (() => {
     const W = G.work || null, tx = W ? W.table[0] : -(Bm / 2 - 0.42), ux = W ? W.tub[0] : Bm / 2 - 0.62, tz = W ? W.table[2] : d.z, uz = W ? W.tub[2] : d.z + 0.35;
     // a model with its own gutting table (work.own, the old wooden boat's across the gunwale) has it drawn already, the fish on its top
     const own = !!(W && W.own), topY = own && W.top != null ? W.top + 0.02 : d.y + 0.885;
-    drawN(PM.btub, chain(BMrel, M4.T(ux, d.y, uz), M4.S(W && W.s || 1))); if (!own) drawN(PM.gtable, chain(BMrel, M4.T(tx, d.y, tz)));
+    const potRig = b.rig === 'teiner' && !(typeof deckPending === 'function' && deckPending() > 0.5);
+    if (!G.hand){ if (!GB) buildGear(); drawCrabTank(BMrel, G, d, Bm / 2, G.hauler || [Bm / 2 * 0.92, d.y + 1, d.z - 1.3]); nSetup(VP); }
+    if (!potRig){ drawN(PM.btub, chain(BMrel, M4.T(ux, d.y, uz), M4.S(W && W.s || 1))); if (!own) drawN(PM.gtable, chain(BMrel, M4.T(tx, d.y, tz))); }
     // the catch on deck (tools/fish): fish in the bleeding tub in proportion to the hold's species, one on the gutting table
     { const all = S.hold.reduce((a, x) => a + x.kg, 0), n = Math.min(8, Math.ceil(all / 25)), ts = W && W.s || 1;
-      if (n > 0 && SK && SK.fishM){ const cum = []; let acc = 0; for (const sp of ALLSP){ acc += S.hold.filter(x => x.sp === sp).reduce((a, x) => a + x.kg, 0); cum.push([sp, acc / all]); }
+      if (n > 0 && SK && SK.fishM && !potRig){ const cum = []; let acc = 0; for (const sp of ALLSP){ acc += S.hold.filter(x => x.sp === sp).reduce((a, x) => a + x.kg, 0); cum.push([sp, acc / all]); }
         const pick = r => (cum.find(c => r <= c[1] + 1e-9) || cum[0])[0];
         for (let i = 0; i < n; i++){ const sp = pick(hash(i * 7 + 5)), z = ((i % 3) - 1) * 0.2, lay = Math.floor(i / 3);
           drawN(fishOf(sp), chain(BMrel, M4.T(ux, d.y, uz), M4.S(ts), M4.T((hash(i * 3) - 0.5) * 0.12, 0.5 + lay * 0.05, z), M4.RY(Math.PI / 2 + (i % 2 ? Math.PI : 0) + (hash(i * 9) - 0.5) * 0.3), M4.RZ(sp === 'krabbe' ? 0 : Math.PI / 2 * (hash(i * 11) > 0.5 ? 1 : -1)), M4.S((0.48 + hash(i * 13) * 0.1) * (sp === 'krabbe' ? 1.7 : 1)))); }
@@ -1711,6 +1713,9 @@ const G3 = (() => {
     // the blåse and the grapnel from tools/gear/blaase.py, in place of the drawn float above
     if (typeof glbHas === 'function' && glbHas('gear-marks')){ const up = nm => { const o = glbPart('gear-marks', nm); return o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null; };
       GB.buoy = up('blaase') || GB.buoy; GB.dregg = up('dregg'); }
+    // the king crab pot, its hatch, the pot hauler on its davit and the live crab tank from tools/gear/teine.py, in place of the drawn pot
+    if (typeof glbHas === 'function' && glbHas('gear-pot')){ const up = nm => { const o = glbPart('gear-pot', nm); return o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null; }, pg = glbLoad('gear-pot');
+      const pt = up('teine'); if (pt){ GB.pot = pt; GB.potB = true; GB.door = up('teinedor'); GB.davit = up('davit'); GB.davitSh = up('davitskive'); GB.tank = up('krabbekar'); GB.px = (pg && pg.ex) || {}; } }
   }
   // the buoys of every set within sight, bobbing on the waves, flags blowing downwind
   function drawGearSea(eye, t, VP, H){
@@ -1767,6 +1772,79 @@ const G3 = (() => {
   function gopHauls(){ return typeof workAssign === 'function' ? workAssign().filter(p => p.st === 'haling') : []; }
   const gopHands = () => gopHauls().length;
   const gopMe = () => { const b = S.boat; return !!(b.gop && b.status === 'fishing' && gopHauls().some(p => !p.c)); };
+  // Pots (the user's wish 04.10.2026): each comes up on the rope over the davit's block (by hand over the rail without the pot hauler),
+  // swings in onto the deck by the rail, is opened and emptied into the crab tank, baited, shut and stacked aft; setting, it goes from
+  // the stack over the side and sinks. The cycle has its own clock, one pot in the time the work takes (gopUnitMin, then the measured
+  // time between pots), and starts again when the simulation counts a pot done, so it never runs ahead of the catch.
+  const POTA = {g:null, done:-1, t0:0, dur:10, sh:0, st:0, fix:null};   // fix: a phase held for pictures (G3._debug.pota)
+  const potDavit = skiff => !skiff && !!(GB && GB.davit) && !!S.equip.teinehaler;
+  // where a pot of half width pw stands on deck: the spot by the rail where it is emptied, the tank across from it, the stack aft
+  function potDeck(G, HP, sx, d, pw){
+    const spot = [sx - 0.25 - pw, d.y, HP[2] + pw - 0.1], cols = Math.max(1, Math.floor((2 * sx - 0.3) / (2 * pw + 0.08)));
+    return {spot, cols, tank:[-(sx - 0.5), d.y, spot[2]], slot:i => { const L = Math.floor(i / cols), c = i % cols; return [spot[0] - c * (2 * pw + 0.08), d.y + L * (pw * 0.93 + 0.01), spot[2] + 2 * pw + 0.3]; }};
+  }
+  function drawPots(BMrel, t, g, G, HP, sx, d, skiff, seg){
+    const s = g.op === 'haul' ? (S.sets || []).find(x => x.id === g.sid) : g.s, ps = s && s.pot === 'small' ? 0.75 : 1, X = GB.px || {}, XP = X.pot || {};
+    const ph = (GB.potB ? XP.h || 0.65 : 0.4) * ps, pw = (GB.potB ? XP.half || 0.7 : 0.4) * ps, gw = G.gw || d.y + 0.9, D = potDeck(G, HP, sx, d, pw);
+    if (POTA.g !== g || g.done !== POTA.done){
+      if (POTA.g === g && g.done === POTA.done + 1) POTA.dur = clamp(t - POTA.t0, 2, 40);
+      else { let m = 1.2; try { m = gopUnitMin(g, S.t / 60, hsAt(S.boat.pos, S.t / 60)); } catch (e){} POTA.dur = clamp(m * 60 / simRate(), 2, 40); }
+      POTA.g = g; POTA.done = g.done; POTA.t0 = t; }
+    const u = POTA.fix != null ? POTA.fix : clamp((t - POTA.t0) / POTA.dur, 0, 1), sm = v => v * v * (3 - 2 * v), ph01 = (a, b) => sm(clamp((u - a) / (b - a), 0, 1)), lerp = (A, B, k) => [A[0] + (B[0] - A[0]) * k, A[1] + (B[1] - A[1]) * k, A[2] + (B[2] - A[2]) * k];
+    const DV = potDavit(skiff), P0 = [sx - 0.2, d.y, HP[2]], blk = DV && X.davit ? [P0[0] + X.davit.block[0], P0[1] + X.davit.block[1], P0[2] + X.davit.block[2]] : [sx + 0.05, gw + 0.05, HP[2]];
+    const potM = (p, rz, rx) => chain(BMrel, M4.T(p[0], p[1], p[2]), M4.RZ(rz || 0), M4.RX(rx || 0), M4.S(ps));
+    const ring = (p, rz) => [p[0] - Math.sin(rz || 0) * (ph + 0.45), p[1] + Math.cos(rz || 0) * (ph + 0.45), p[2]];
+    const bridle = p => { const R = ring(p); for (const c of XP.bridle || []) drawN(GB.float, chain(BMrel, limbM([p[0] + c[0] * ps, p[1] + c[1] * ps, p[2] + c[2] * ps], R, 0.006))); };
+    // the crabs in the pot now: the set's catch shared over its pots, at most five drawn
+    const crabN = s && s.acc && s.acc.krabbe ? Math.min(5, Math.round(s.acc.krabbe.n / Math.max(1, s.n))) : 0;
+    const crabsIn = (p, left) => { for (let k = 0; k < left; k++) drawN(fishOf('krabbe'), chain(BMrel, M4.T(p[0] + (hash(k * 5 + 1) - 0.5) * pw, p[1] + 0.02, p[2] + (hash(k * 7 + 2) - 0.5) * pw), M4.RY(hash(k * 3) * 6.3), M4.S(0.8 * (0.85 + 0.3 * hash(k * 11))))); };
+    // the hauler on its davit: the sheave turns while the rope runs
+    const running = g.op === 'haul' ? u < 0.55 : u > 0.55;
+    POTA.sh += (running ? 5 : 0) * clamp(t - POTA.st, 0, 0.1); POTA.st = t;
+    if (DV){ drawN(GB.davit, chain(BMrel, M4.T(P0[0], P0[1], P0[2]))); if (GB.davitSh && X.davit) drawN(GB.davitSh, chain(BMrel, M4.T(P0[0] + X.davit.sheave[0], P0[1] + X.davit.sheave[1], P0[2] + X.davit.sheave[2]), M4.RZ(-POTA.sh)));
+      if (X.davit) seg(blk, [P0[0] + X.davit.sheave[0] + 0.15, P0[1] + X.davit.sheave[1] + 0.12, P0[2]], 0.008, GB.float, 0); }
+    // the stack: the pots aboard but the one in hand
+    const nS = g.op === 'haul' ? g.done : Math.max(0, g.n - g.done - 1), nDraw = Math.min(D.cols * 4, nS);
+    for (let i = 0; i < nDraw; i++) drawN(GB.pot, potM(D.slot(i)));
+    if (g.done >= g.n) return;
+    const clear = gw + 0.12, out = [blk[0], 0, blk[2]];
+    if (g.op === 'haul'){
+      // up from the bottom, out of the water to the block, in over the rail, down on deck by it
+      let p, rz = 0; const sway = Math.sin(t * 1.3) * 0.08;
+      if (u < 0.42) p = [out[0] + sway, -9 + 8.4 * ph01(0, 0.42), out[2] + sway * 0.5];
+      else if (u < 0.55) p = [out[0] + sway * (1 - ph01(0.42, 0.55)), -0.6 + (clear + 0.6) * ph01(0.42, 0.55), out[2]];
+      else if (u < 0.62) p = [out[0] + (D.spot[0] - out[0]) * ph01(0.55, 0.62), clear, out[2] + (D.spot[2] - out[2]) * ph01(0.55, 0.62)];
+      else if (u < 0.66) p = [D.spot[0], clear + (D.spot[1] - clear) * ph01(0.62, 0.66), D.spot[2]];
+      else if (u < 0.9) p = D.spot.slice();
+      else { const k = ph01(0.9, 1), S2 = D.slot(g.done); p = lerp(D.spot, S2, k); p[1] += Math.sin(Math.PI * k) * (ph + 0.15); }
+      if (u < 0.62){ const R = ring(p); seg(R, blk, 0.008, GB.float, 0); bridle(p); }
+      // the hatch opens, the crabs go one by one to the tank (or down the hold), the bait box is filled, the hatch shuts
+      const open = ph01(0.66, 0.7) * (1 - ph01(0.85, 0.89)), tk = S.equip.krabbekar ? [D.tank[0], D.tank[1] + ((X.tank || {}).water || 0.58) + 0.05, D.tank[2]] : [0, d.y + 0.2, d.z];
+      let left = crabN; if (u > 0.7) for (let k = 0; k < crabN; k++){ const a = 0.7 + k * 0.13 / Math.max(1, crabN), f = clamp((u - a) / 0.05, 0, 1); if (f <= 0) continue; left--; if (f >= 1) continue;
+        const A = [p[0], p[1] + ph * 0.5, p[2]], Q = lerp(A, [tk[0] + (hash(k) - 0.5) * 0.4, tk[1], tk[2] + (hash(k + 3) - 0.5) * 0.6], f); Q[1] += Math.sin(Math.PI * f) * 0.7;
+        drawN(fishOf('krabbe'), chain(BMrel, M4.T(Q[0], Q[1], Q[2]), M4.RY(f * 3), M4.RX(0.5), M4.S(0.8))); }
+      if (u < 0.9) crabsIn(p, Math.max(0, left));
+      drawN(GB.pot, potM(p, rz));
+      if (GB.door && XP.hinge) drawN(GB.door, chain(potM(p, rz), M4.T(XP.hinge[0], XP.hinge[1], XP.hinge[2]), M4.RX(-1.9 * open)));
+      if (u > 0.82 && u < 0.86){ const f = (u - 0.82) / 0.04; drawN(GB.bait, chain(BMrel, M4.T(p[0] + 0.3 * (1 - f), p[1] + ph + 0.3 * (1 - f), p[2]), M4.S(3))); }
+    } else {
+      // from the top of the stack to the rail, over it (tipped outboard) and down to the bottom, drifting aft as the boat goes ahead
+      const S0 = D.slot(Math.max(0, g.n - g.done - 1)), rail = [sx - pw * 0.2, clear, D.spot[2]]; let p, rz = 0;
+      if (u < 0.35){ const k = ph01(0, 0.35); p = lerp(S0, rail, k); p[1] += Math.sin(Math.PI * k) * 0.3; }
+      else if (u < 0.55){ const k = ph01(0.35, 0.55); p = [rail[0] + (pw + 0.5) * k, clear + 0.2 * Math.sin(Math.PI * k) - 0.5 * k * k, rail[2]]; rz = -1.3 * k; }
+      else { const k = (u - 0.55) / 0.45; p = [rail[0] + pw + 0.5 + 0.3 * k, clear - 0.5 - (clear + 8.5) * k * k, rail[2] + 3 * k]; rz = -1.3 - 0.3 * k; }
+      if (u > 0.35){ seg([sx, gw + 0.05, D.spot[2]], ring(p, rz), 0.008, GB.float, u > 0.55 ? 0.6 : 0.1); }
+      if (p[1] > -6) drawN(GB.pot, potM(p, rz));
+    }
+  }
+  // the live crab tank on deck (EQUIP.krabbekar) with the crabs from the hold in it
+  function drawCrabTank(BMrel, G, d, sx, HP){
+    if (!S.equip.krabbekar || !GB || !GB.tank) return;
+    const pw = ((GB.px || {}).pot || {}).half || 0.7, D = potDeck(G, HP, sx, d, pw), T = (GB.px || {}).tank || {half:[0.36, 0.56], water:0.58};
+    drawN(GB.tank, chain(BMrel, M4.T(D.tank[0], D.tank[1], D.tank[2])));
+    const kg = S.hold.reduce((a, x) => a + (x.sp === 'krabbe' ? x.kg : 0), 0), n = Math.min(14, Math.ceil(kg / 4));
+    for (let k = 0; k < n; k++) drawN(fishOf('krabbe'), chain(BMrel, M4.T(D.tank[0] + (hash(k * 5 + 7) - 0.5) * T.half[0] * 1.5, D.tank[1] + T.water - 0.04 + Math.floor(k / 5) * 0.03, D.tank[2] + (hash(k * 7 + 9) - 0.5) * T.half[1] * 1.6), M4.RY(hash(k) * 6.3), M4.S(0.75)));
+  }
   function drawGearOp(BMrel, eye, VP, t){
     const b = S.boat, g = b.gop; if (!g || b.status !== 'fishing') return; if (!GB) buildGear();
     const vt = vtype(), G = GEO(vt), gw = G.gw || 1, sx = G.beam / 2, d = G.deck || {y:gw, z:1}, skiff = !!G.hand;
@@ -1774,7 +1852,7 @@ const G3 = (() => {
     const HP = skiff ? SKA.haul : G.hauler, turning = g.op === 'haul' && !(b.deckStop), DZ = skiff ? 0 : d.z - 0.6;
     nSetup(VP);
     const HM = !skiff && (g.kind === 'garn' || g.kind === 'line') ? haulModel(g.kind) : null, setting = g.op === 'set' && (g.kind === 'garn' || g.kind === 'line');
-    if (!HM && (!skiff || S.equip.elhaler)) drawN(GB.haul, chain(BMrel, M4.T(HP[0], HP[1], HP[2]), M4.RX(turning ? -t * 3 : 0)));
+    if (!HM && !(g.kind === 'teine' && potDavit(skiff)) && (!skiff || S.equip.elhaler)) drawN(GB.haul, chain(BMrel, M4.T(HP[0], HP[1], HP[2]), M4.RX(turning ? -t * 3 : 0)));
     // from the hauler down into the sea, outboard and a little ahead
     const W0 = [sx + (skiff ? 1.6 : 2.6), -0.35, HP[2] - (skiff ? 1.2 : 2.2)], seg = (A, Bp, r, m, sag) => { let prev = A; for (let i = 1; i <= 8; i++){ const u = i / 8, P = [A[0] + (Bp[0] - A[0]) * u, A[1] + (Bp[1] - A[1]) * u - sag * 4 * u * (1 - u), A[2] + (Bp[2] - A[2]) * u]; drawN(m, chain(BMrel, limbM(prev, P, r))); prev = P; } };
     if (HM){
@@ -1813,14 +1891,7 @@ const G3 = (() => {
       if (setting) drawSetting(BMrel, t, g, G, SKA.stack || [0, d.y, 0], -0.55); else seg(HP, W0, 0.008, GB.float, 0.2);
       const n = g.op === 'haul' ? g.done : g.n - g.done;
       for (let i = 0; i < Math.min(6, n); i++) drawN(GB.tub, chain(BMrel, M4.T((skiff ? SKA.stack[0] : sx * 0.25) - (i % 2) * 0.6, d.y + Math.floor(i / 2) * 0.33, (skiff ? SKA.stack[2] : DZ) + (Math.floor(i / 2) % 2) * 0.1)));
-    } else {
-      seg(HP, W0, 0.012, GB.float, 0.2);
-      const n = Math.min(12, g.op === 'haul' ? g.done : g.n - g.done);
-      for (let i = 0; i < n; i++) drawN(GB.pot, chain(BMrel, M4.T((skiff ? SKA.stack[0] : sx * 0.35) - (i % 2) * 0.85, d.y + Math.floor(i / 4) * 0.42, (skiff ? SKA.stack[2] + 0.1 : DZ) + (Math.floor(i / 2) % 2) * 0.65)));
-      // the next pot on its way up from the bottom (hauling) or over the side (setting)
-      const u = clamp(g.prog, 0, 1), up = g.op === 'haul' ? u : 1 - u, P = [W0[0] + (HP[0] - W0[0]) * up, -1.5 + (HP[1] + 0.2 + 1.5) * up, W0[2] + (HP[2] - W0[2]) * up];
-      if (P[1] > -1) drawN(GB.pot, chain(BMrel, M4.T(P[0], P[1] - 0.2, P[2])));
-    }
+    } else drawPots(BMrel, t, g, G, HP, sx, d, skiff, seg);
     // those on «Haling» in the work chains (the skipper too when it is his job; he then leaves the wheel, gopMe): the first at the
     // hauler taking the gear in, the next clearing it at the end of the tray, a third stacking it aft (the skiff's fisher is drawn with
     // the boat)
@@ -3842,6 +3913,6 @@ const G3 = (() => {
     // the cinema: on or off (the HUD is the page's: body.kino-clean)
     kino(on){ if (on !== undefined){ KINO.on = !!on; KINO.shot = null; } return KINO.on; }, get kinoShot(){ return KINO.shot ? KINO.shot.type : null; },
     isHelm:() => cam.helm, setHelm(on){ const G = GEO(vtype()); cam.helm = !!on; cam.zoom = 1; cam.hy = 0; cam.hp = G.hp !== undefined ? G.hp : -0.07; cam.fov = G.fov || 55; },
-    _debug:{get fps(){ return FPS.v; }, get peers(){ return npcNow.filter(n => n.player).map(n => ({id:n.id, vtype:n.vtype, t:n.K ? n.K.t : null, glass:!!(n.K && n.K.glass)})); }, get air(){ return airNow.map(a => ({kind:a.kind, w:a.w.map(Math.round)})); }, get airM(){ return !!(AIRM && AIRM.plane); }, get curFov(){ return curFov; }, cam, moundTop, bridgeInto, get statTris(){ return STAT ? STAT.n / 3 : 0; }, get vec(){ return {tiles:[...VEC.tiles.values()].map(t => ({k:t.k, bld:t.bld ? t.bld.n : 0, roads:t.roads.length, bridges:t.bridges.length, piers:t.piers.length, molos:t.molos.length, quays:t.quays.length, ms:Math.round(t.ms)})), statics:[...TST].map(([k, s]) => ({k, tris:s.tris, ms:Math.round(s.ms)})), chunks:CH.size}; }, moundInto, MB, haulModel, get haulA(){ return HAULA; }, gopHands, kinoNext(){ KINO.shot = null; }, get kino(){ const k = KINO.shot, e = KINO.eye, g = KINO.tgt; if (!k || !e) return null; const t = (performance.now() - T0) / 1000; return {type:k.type, up:e[1] - Math.max(terrH(e[0], e[2]), seaH(e[0], e[2], t)), free:camFree(g, e), d:Math.hypot(e[0] - bv.x, e[2] - bv.z)}; }, get PLA(){ return PLA; }, get PCA(){ return PCA; }, set noPL(v){ NOPL = !!v; }, get beams(){ return BMN; }, glErr(){ return gl ? gl.getError() : -1; }, QUAL, qualTick, TERRW, get TERR(){ return TERR; }, get MIDM(){ return MIDM; }, RO, SSL, WV, WK, ssAt, seaH, waves:(dt, H) => updateWaves(dt, H), get sstVS(){ return SST_VS; }, get seaLvl(){ return seaLvl; }, get seaBasic(){ return !!(PS && PS.basic); }, get seaOne(){ return PSF === PS; }, get seaLite(){ return !!(PS && PS.lite); }, set seaDbg(v){ SEADBG = v; }, get drift(){ let c = 0; for (let i = 0; i < SDN; i++) if (SD.age[i] < SD.life[i]) c++; return c; }, get eye(){ return lastEye; }, camInside, camFree, get camPull(){ return camPull; }, get camLift(){ return camLift; }, get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, BUNKERS, nearestPlant, fkRun, legAt, terrH, terrRaw, unitModel, get UPATCH(){ return UPATCH; }, sitesNow, siteModel, onSite, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; lightsHere(e, 50).forEach(L => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(L, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }, get FINEM(){ return FINEM; }, get seaNP(){ return NP; }, get dpr(){ return canvas ? canvas.width / Math.max(1, canvas.getBoundingClientRect().width) : 0; }}
+    _debug:{pota:POTA, get fps(){ return FPS.v; }, get peers(){ return npcNow.filter(n => n.player).map(n => ({id:n.id, vtype:n.vtype, t:n.K ? n.K.t : null, glass:!!(n.K && n.K.glass)})); }, get air(){ return airNow.map(a => ({kind:a.kind, w:a.w.map(Math.round)})); }, get airM(){ return !!(AIRM && AIRM.plane); }, get curFov(){ return curFov; }, cam, moundTop, bridgeInto, get statTris(){ return STAT ? STAT.n / 3 : 0; }, get vec(){ return {tiles:[...VEC.tiles.values()].map(t => ({k:t.k, bld:t.bld ? t.bld.n : 0, roads:t.roads.length, bridges:t.bridges.length, piers:t.piers.length, molos:t.molos.length, quays:t.quays.length, ms:Math.round(t.ms)})), statics:[...TST].map(([k, s]) => ({k, tris:s.tris, ms:Math.round(s.ms)})), chunks:CH.size}; }, moundInto, MB, haulModel, get haulA(){ return HAULA; }, gopHands, kinoNext(){ KINO.shot = null; }, get kino(){ const k = KINO.shot, e = KINO.eye, g = KINO.tgt; if (!k || !e) return null; const t = (performance.now() - T0) / 1000; return {type:k.type, up:e[1] - Math.max(terrH(e[0], e[2]), seaH(e[0], e[2], t)), free:camFree(g, e), d:Math.hypot(e[0] - bv.x, e[2] - bv.z)}; }, get PLA(){ return PLA; }, get PCA(){ return PCA; }, set noPL(v){ NOPL = !!v; }, get beams(){ return BMN; }, glErr(){ return gl ? gl.getError() : -1; }, QUAL, qualTick, TERRW, get TERR(){ return TERR; }, get MIDM(){ return MIDM; }, RO, SSL, WV, WK, ssAt, seaH, waves:(dt, H) => updateWaves(dt, H), get sstVS(){ return SST_VS; }, get seaLvl(){ return seaLvl; }, get seaBasic(){ return !!(PS && PS.basic); }, get seaOne(){ return PSF === PS; }, get seaLite(){ return !!(PS && PS.lite); }, set seaDbg(v){ SEADBG = v; }, get drift(){ let c = 0; for (let i = 0; i < SDN; i++) if (SD.age[i] < SD.life[i]) c++; return c; }, get eye(){ return lastEye; }, camInside, camFree, get camPull(){ return camPull; }, get camLift(){ return camLift; }, get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, BUNKERS, nearestPlant, fkRun, legAt, terrH, terrRaw, unitModel, get UPATCH(){ return UPATCH; }, sitesNow, siteModel, onSite, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; lightsHere(e, 50).forEach(L => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(L, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }, get FINEM(){ return FINEM; }, get seaNP(){ return NP; }, get dpr(){ return canvas ? canvas.width / Math.max(1, canvas.getBoundingClientRect().width) : 0; }}
   };
 })();

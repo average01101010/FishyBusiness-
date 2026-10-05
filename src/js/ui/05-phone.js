@@ -406,6 +406,7 @@ const PHONE = (() => {
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
     ['p52', '05.10.2026', 'Teiner og regler', 'Pots and rules', [
+      ['Kongekrabbeteinene er nye fra Blender. Med teinehaler kommer teina opp over blokka på davitten, svinges inn på dekk, tømmes i krabbekaret, agnes og stables akter. Ved setting vippes den ut over rekka og synker.', 'The king crab pots are new from Blender. With a pot hauler the pot comes up over the block on the davit, swings in on deck, is emptied into the crab tank, baited and stacked aft. Setting, it is tipped over the rail and sinks.'],
       ['Regler-appen sier nå tydelig at reglene i spillet er forenklet, og at Fiskeridirektoratets regler gjelder til ekte fiske.', 'The Regler app now says plainly that the rules in the game are simplified, and that the Directorate of Fisheries\' rules apply to real fishing.']]],
     ['p51', '05.10.2026', 'Mer fisk og mer fart', 'More fish and more speed', [
       ['Haill gir nå dobbel fiskelykke et helt døgn, og luksushaill tredobbel. Så blekner den i døgn-trinn: luksushaill varer i fire døgn og vanlig haill i tre. Tida er spilltid.', 'Luck now gives double luck for a whole day, and luxury luck triple. Then it fades a day at a time: luxury luck lasts four days and luck three. The time is game time.'],
