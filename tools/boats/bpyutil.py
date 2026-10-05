@@ -360,6 +360,12 @@ def camera(loc, look, ortho=None, lens=35):
 
 
 def render(path):
+    # mat() multiplies a colour by the per-corner TINT, and Cycles reads a mesh without one as black: such meshes get a neutral tint
+    # (white) before a render, which changes nothing in the export (rorbu.py found it, 05.10.2026)
+    for o in bpy.context.scene.objects:
+        if o.type == 'MESH' and 'TINT' not in o.data.color_attributes:
+            lay = o.data.color_attributes.new('TINT', 'FLOAT_COLOR', 'CORNER')
+            for d in lay.data: d.color = (1.0, 1.0, 1.0, 1.0)
     bpy.context.scene.render.filepath = path; bpy.ops.render.render(write_still=True)
 
 
