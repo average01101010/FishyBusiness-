@@ -2,12 +2,12 @@
 # notes (NLOD) with Norges Råfisklag's map of its receivers, and finds each one's quay in the game's vector packs (the newest kart-
 # release joined by tools/map/game.py). The result is kept as a release mottak-<run number> (mottak.json), which goes into
 # src/data/mottak.json. The notes of the year before come in full early in the new year; the register changes now and then.
-# Started by a push that changes tools/mottak/mottak.py (on any branch), on the 3rd of every month (on the default branch), or by hand
+# Started by a push that changes tools/mottak/mottak.py or this file (on any branch), on the 3rd of every month (on the default branch), or by hand
 # from the Actions tab once this file is on main.
 name: Mottak langs kysten
 on:
   push:
-    paths: ['tools/mottak/mottak.py']
+    paths: ['tools/mottak/mottak.py', '.github/workflows/mottak.yml']
   schedule:
     - cron: '41 5 3 * *'
   workflow_dispatch:
@@ -24,7 +24,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install numpy requests
+      - run: pip install numpy requests pyproj   # tools/map/frame.py turns the receivers into the game's frame
       - name: The game's map packs (the newest kart- release, joined with Senja's)
         run: python3 tools/map/game.py
       - name: mottak.json
