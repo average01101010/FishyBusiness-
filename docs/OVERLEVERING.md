@@ -610,6 +610,14 @@ Jonas: «Sjømerker må ordnes langs hele kysten. Alt senja har, må resten av n
   - Midtsommer har Senja, Bodø og Kirkenes midnattssol, og dagen er 19,2 timer i Bergen og 18,7 på Hvaler.
   - Midtvinter har Senja og Kirkenes mørketid, og dagen er 1,6 timer i Bodø, 5,8 i Bergen og 6,3 på Hvaler.
   - Sola regner lysbrytningen to ganger nær horisonten (`sunAt` legger den til høyden, og `sunTimes` bruker −0,83°). Dagene blir derfor noen minutter for lange. Det er gammelt og er ikke rettet.
+- **Nordlyset** (06.10.2026, Jonas' liste: «realistiske draperier med stråler, farger etter høyde og bevegelse»):
+  - **Når:** `auroraAt(H, p)` krever at sola står minst 7° under horisonten, at det er klart, og at aktiviteten (en langsom støy som av og til stiger til en storm) er høy nok der båten er. Nordlysovalen ligger over Nord-Norge de fleste aktive netter, så fra 67° N og nordover holder litt aktivitet. Lenger sør trengs sterkere netter: ved Oslo er det bare de sterkeste (`need`, lineært fra 67° N til 59,5° N). `aurorashot` teller 99 av 113 mørke, klare prøvetider med nordlys på Senja og 17 ved Oslo.
+  - **Slik ser det ut** (himmelskyggeren i `view3d.js`): tre gardiner langs den magnetiske øst-vest-retningen (12° fra rutenettet). Hver er et loddrett lag fra en skarp underkant 100 km oppe til rundt 300 km, og strålen fra øyet møter laget der den krysser det (to steg langs folden, så laget er sammenhengende i alle høyder).
+    - Gardinens linje folder seg og driver langs buen. Strålene står langs feltlinjene og flimrer, og lyset pulserer langsomt.
+    - Fargene: grønt (oksygen, 557,7 nm) fra underkanten, rødt (630 nm) høyt oppe, og en lilla kant under når det er sterkt.
+    - Et lag sett på skrå er lysere enn et sett rett forfra (lengre vei gjennom laget), og rett over hodet blir det en krone (taket er 4×).
+    - Svakt nordlys er en lav bue i nord. Sterkere nordlys kommer sørover og opp over hodet.
+  - **Test:** `aurorashot` tar bilder fra broa mot nord en klar januarnatt i tre styrker og uten. Den sjekker at himmelen blir grønnere jo sterkere natta er, at det tegnes uten GL-feil, og forskjellen mellom Senja og Oslo.
 - **Grunnstøting i sør** (`tidetest.py`): over samme grunne (1,0 m i kartet) ved høyvann går en båt med 1,8 m dypgang på grunn på Hvaler (1,66 m vann), men flyter i Bodø (3,15 m).
 
 ### 4.15 Hus, veier, bruer, brygger, moloer og kaier langs kysten (del 4, 03.10.2026)

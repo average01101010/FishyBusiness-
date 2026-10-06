@@ -405,6 +405,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p55', '06.10.2026', 'Nordlyset', 'The northern lights', [
+      ['Nordlyset er nytt: grønne draperier med stråler som folder seg og flimrer, rødt høyt oppe og en lilla kant når det er sterkt. Svakt nordlys er en lav bue i nord, og sterkt nordlys kommer over hodet. Lenger sør ser du det sjeldnere.', 'The northern lights are new: green curtains with rays that fold and shimmer, red high up and a purple fringe when strong. Weak lights are a low arc in the north, and strong ones come overhead. Further south you see them less often.']]],
     ['p54', '05.10.2026', 'Regler før du gjør feil', 'Rules before you make a mistake', [
       ['Et fiskepunkt i ruta der båten din ikke får fiske, er merket med grunnen, og «Kast loss» spør først.', 'A fishing point on the route where your boat may not fish is marked with the reason, and «Cast off» asks first.'],
       ['Autonav går til nærmeste sted der du kan fiske, og sier hvorfor. Trykk samme sted igjen for å gå helt dit.', 'Autonav goes to the nearest place where you may fish, and says why. Tap the same place again to go all the way.'],

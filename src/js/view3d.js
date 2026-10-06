@@ -234,8 +234,20 @@ const G3 = (() => {
     'if(uMoonA>0.01){float md=dot(d,uMoonD);float R=0.0095;if(md>cos(R*1.6)){vec3 up=abs(uMoonD.y)>0.99?vec3(1.0,0.0,0.0):vec3(0.0,1.0,0.0);vec3 rx=normalize(cross(up,uMoonD));vec3 ry=cross(uMoonD,rx);vec2 q=vec2(dot(d-uMoonD*md,rx),dot(d-uMoonD*md,ry))/R;float r2=dot(q,q);' +
     'if(r2<1.0){vec3 n=normalize(q.x*rx+q.y*ry-sqrt(1.0-r2)*uMoonD);float lit=smoothstep(-0.05,0.08,dot(n,uSunD));float mare=0.82+0.18*ns(q*3.0+7.0);col=mix(col,vec3(0.93,0.93,0.88)*mare*(0.06+0.94*lit),uMoonA*(1.0-uCloud*0.85));}' +
     'else col+=vec3(0.55,0.6,0.7)*uMoonA*0.06*exp(-(r2-1.0)*0.6)*(1.0-uCloud);}}' +
-    'if(uAur>0.01&&d.y>0.02){vec2 sp=d.xz/(d.y+0.2)+32.0;float band=ns(vec2(sp.x*0.7+uTime*0.02,sp.y*0.22));float cur=ns(vec2(sp.x*5.0+band*4.0+uTime*0.08,0.5));' +
-    'float a=smoothstep(0.32,0.8,band)*(0.35+0.65*cur)*smoothstep(0.02,0.14,d.y)*(1.0-smoothstep(0.4,0.9,d.y));col+=mix(vec3(0.1,0.95,0.45),vec3(0.6,0.2,0.75),smoothstep(0.18,0.65,d.y))*a*uAur*1.7;}' +
+    // the aurora (Jonas' list 04.10.2026, «realistiske draperier med stråler»): curtains along the magnetic east-west (12° from the
+    // grid), each a vertical sheet from a sharp lower edge 100 km up to some 300 km, met by the ray where it crosses the sheet (two
+    // steps of the fold, so it is one smooth sheet at every elevation). The sheet's line folds and drifts along the arc; rays stand
+    // along the field lines (the same stripes at every height) and shimmer; the light is green (557.7 nm oxygen) from the lower edge
+    // and red (630 nm) high up, with a purple fringe under it when strong; a sheet seen edge on is brightest. Stronger activity
+    // brings the curtains south, overhead (core auroraAt: activity, darkness, clouds and how far north the boat is)
+    'if(uAur>0.01&&d.y>0.004){vec2 E=vec2(0.978,0.208),N=vec2(-E.y,E.x);vec2 g=d.xz/max(d.y,0.004);float gE=dot(g,E),gN=dot(g,N),T=uTime;vec3 acc=vec3(0.0);' +
+    'for(int k=0;k<3;k++){float fk=float(k);float c0=-2.6-fk*1.1+uAur*1.9+0.35*sin(T*0.011+fk*2.3);' +
+    'float alt=c0/(abs(gN)>1e-4?gN:1e-4);for(int it=0;it<2;it++){float u=alt*gE;float fo=0.5*sin(u*0.3+T*0.04+fk*3.1)+0.3*sin(u*0.9-T*0.065+fk)+0.7*(ns(vec2(u*0.2-T*0.018,fk*7.0))-0.5);alt=(c0+fo)/(abs(gN)>1e-4?gN:1e-4);}' +
+    'if(alt>0.9&&alt<3.4){float u=alt*gE;float r=ns(vec2(u*7.0+T*0.3+fk*13.0,fk))*0.65+ns(vec2(u*19.0-T*0.55,fk+3.0))*0.35;r=0.2+1.1*r*r;' +
+    'float pulse=0.55+0.45*ns(vec2(u*0.35+T*0.09,fk*5.0+T*0.025));float hp=smoothstep(0.92,1.02,alt)*(exp(-(alt-1.0)*1.7)+0.22*smoothstep(1.6,2.6,alt)*(1.0-smoothstep(2.8,3.4,alt)));' +
+    'vec3 hc=mix(vec3(0.13,1.0,0.45),vec3(0.9,0.14,0.3),smoothstep(1.55,2.5,alt))+vec3(0.55,0.0,0.6)*uAur*(1.0-smoothstep(0.95,1.08,alt));' +
+    'float edge=min(4.0,0.85/max(abs(dot(d.xz,N)),0.2));acc+=hc*hp*r*pulse*edge*(1.0-fk*0.3);}}' +
+    'col+=acc*uAur*0.5*smoothstep(0.0,0.05,d.y)+vec3(0.03,0.16,0.08)*uAur*smoothstep(0.0,0.35,d.y)*(1.0-smoothstep(0.35,0.9,d.y))*0.35;}' +
     'if(d.y>0.0){vec2 cp=d.xz/(d.y+0.08)*1.2+mod(uWindDir*uTime*0.004,64.0)+160.0;float c=ns(cp)*0.6+ns(cp*2.3)*0.3+ns(cp*5.1)*0.1;float cov=smoothstep(1.0-uCloud-0.05,1.0-uCloud+0.35,c);' +
     'vec3 cc=mix(uHor*0.85,vec3(0.9,0.92,0.95),0.35*uDay)*(0.3+0.7*uDay);col=mix(col,cc,cov*smoothstep(0.0,0.12,d.y)*0.95);}' +
     'gl_FragColor=vec4(col,1.0);}';
