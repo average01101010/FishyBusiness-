@@ -1,0 +1,33 @@
+# The climate along the coast (V1 of the weather plan): tools/climate/fetch.py fetches the monthly means at the points of
+# tools/climate/klima.json from Open-Meteo (ERA5 and the marine API); the result is kept as a release klima-<run number> (climate.json),
+# which goes into src/data/climate.json. Open-Meteo is closed to the cloud session, open here. Not live weather: the average the game's
+# simulated weather varies around.
+# Started by a push that changes tools/climate/klima.json (on any branch), or by hand from the Actions tab once this file is on main.
+name: Klima langs kysten
+on:
+  push:
+    paths: ['tools/climate/klima.json']
+  workflow_dispatch:
+permissions:
+  contents: write
+env:
+  PYTHONUNBUFFERED: '1'
+jobs:
+  climate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests
+      - name: Open-Meteo's monthly means
+        run: python3 tools/climate/fetch.py climate.json
+      - name: The release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=klima-${{ github.run_number }}
+          gh release create "$TAG" climate.json --target "${{ github.sha }}" --title "Klima $TAG" \
+            --notes "Klimaet langs kysten, månedsmidler fra Open-Meteo (CC BY 4.0): ERA5-reanalysen (Copernicus/ECMWF) og marine-API-et (tools/climate/fetch.py), commit ${{ github.sha }}."
