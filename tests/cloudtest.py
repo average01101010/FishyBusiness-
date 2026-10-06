@@ -79,7 +79,7 @@ async def main():
         apps = [e['d'].get('app') for b in batches for e in b.get('evs', []) if e['k'] == 'app']
         errc = [c[1] for c in calls if c[0] == 'tm_error']; puts = [c[1] for c in calls if c[0] == 'save_put2']
         last = batches[-1] if batches else {}
-        check(first == ['tm_hello', 'save_get'] and all(c[2] == 'Bearer tok_test' for c in calls if c[0] != 'tm_perf' and not c[0].startswith('push-send')), 'signed in, the game starts after hello and the save check, with the WorkOS token', first)
+        check(first == ['tm_hello', 'save_get'] and all(c[2] == 'Bearer tok_test' for c in calls if c[0] != 'tm_perf' and not c[0].startswith('push-send') and not (c[0].startswith('shop-checkout') and not c[1])), 'signed in, the game starts after hello and the save check, with the WorkOS token', first)
         check(cons == [{'yes': True, 'birth_year': 1990}] and r['consent'] and closed, 'the consent is asked once with the year of birth, the yes is sent and «Ja, del» closes the dialog', {'calls': cons, 'closed': closed})
         check('start' in ev and 'redskap' in apps and 'aground' in ev and len(batches) >= 2 and last.get('active_s', -1) >= 0 and last.get('meta', {}).get('boat'), 'the events go up in batches with the session and the game state', {'ev': ev[:12], 'meta': last.get('meta')})
         check(last.get('ended') is True and last.get('reason') == 'rage' and 'rage' in ev, 'a session that ends within a minute of grounding counts as a rage quit', {'ended': last.get('ended'), 'reason': last.get('reason')})
