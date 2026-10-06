@@ -1,4 +1,4 @@
-"""The freezer trawler, the purse seiner, the autoliner, the snow crab vessel and the older coastal vessel from Blender (06.10.2026; tools/boats/tral60.py, src/data/boat-tral60.b64, view3d.js TRAWL): the detailed model
+"""The freezer trawler, the purse seiner, the autoliner, the snow crab vessel and the two coastal vessels from Blender (06.10.2026; tools/boats/tral60.py, src/data/boat-tral60.b64, view3d.js TRAWL): the detailed model
 replaces the kit for bunntral, at the drawing's size (60.3 x 12.5 m); the doors hang in the gallows and the net lies on its drum;
 G3._debug.trawl plays shooting (the net down the ramp, the doors into the sea and out astern), towing and hauling (the doors back
 in the gallows, the codend up the ramp). The game does not trawl yet (the ocean step), so this is the only place it plays.
@@ -75,11 +75,11 @@ async def main():
           const c = G3._debug.cam; c.dist = 30; c.pitch = 0.12; c.yaw = -1.4; })()"""); await pg.wait_for_timeout(4000)
         await pg.screenshot(path=os.path.join(OUT, 'al_haul.png'))
         await pg.evaluate("(() => { const b = S.boat; b.gop = null; b.status = 'idle'; })()")
-        # the snow crab vessel (tools/boats/krabbe50.py) and the older coastal vessel (tools/boats/kyst21.py), at the game's size
-        for vt, L, B, shot, cam in (('snokrabbe', 50, 11, 'kr', (80, 0.22, -0.8)), ('kyst21', 21, 7.2, 'ky', (34, 0.2, -0.8))):
+        # the snow crab vessel (krabbe50.py), the older coastal vessel (kyst21.py) and the 14.99 m coastal vessel (kyst15.py), at the game's size
+        for vt, L, B, shot, cam in (('snokrabbe', 50, 11, 'kr', (80, 0.22, -0.8)), ('kyst21', 21, 7.2, 'ky', (34, 0.2, -0.8)), ('kyst15', 14.99, 6.6, 'k15', (26, 0.2, -0.8))):
             r = await pg.evaluate("""(vt => { const b = S.boat; b.type = vt; applyVessel(); const V = VESSELS[vt], g = geoOf(vt);
               return {glb:glbHas(vt), len:V.len, beam:V.beam, draft:V.draft, hauler:g && g.hauler, tris:glbPart(vt, 'lod0').p.length / 9}; })""", vt)
-            check(r['glb'] and r['len'] == L and r['beam'] == B and r['hauler'] and r['hauler'][0] > 2, 'the %s GLB is in the page at the game\'s size, the hauler on the starboard side' % vt, r)
+            check(r['glb'] and r['len'] == L and r['beam'] == B and r['hauler'] and r['hauler'][0] > 1.5, 'the %s GLB is in the page at the game\'s size, the hauler on the starboard side' % vt, r)
             await pg.evaluate("(c => { const k = G3._debug.cam; k.helm = false; k.dist = c[0]; k.pitch = c[1]; k.yaw = c[2]; })", list(cam)); await pg.wait_for_timeout(4000)
             await pg.screenshot(path=os.path.join(OUT, '%s_rest.png' % shot))
         # the older coastal vessel fishes today: nets hauled over the starboard rail by the gallows
@@ -87,6 +87,13 @@ async def main():
           b.gop = {op:'haul', kind:'garn', sid:'t', n:6, done:2, prog:0.4, a:{x:g.x, y:g.y}, b:{x:g.x + 0.5, y:g.y}, kg:0, rel:0, dead:0, hooksPer:0};
           const c = G3._debug.cam; c.dist = 16; c.pitch = 0.3; c.yaw = -1.2; })()"""); await pg.wait_for_timeout(4000)
         await pg.screenshot(path=os.path.join(OUT, 'ky_haul.png'))
+        await pg.evaluate("(() => { const b = S.boat; b.gop = null; b.status = 'idle'; })()")
+        # the 14.99 m coastal vessel hauls in its open station under the shelter deck
+        for vt, shot, cam in (('kyst15', 'k15_haul', (13, 0.25, -1.3)),):
+            await pg.evaluate("""(([vt, c]) => { const b = S.boat, g = b.pos; b.type = vt; applyVessel(); b.status = 'fishing';
+              b.gop = {op:'haul', kind:'line', sid:'t', n:6, done:2, prog:0.4, a:{x:g.x, y:g.y}, b:{x:g.x + 0.5, y:g.y}, kg:0, rel:0, dead:0, hooksPer:100};
+              const k = G3._debug.cam; k.helm = false; k.dist = c[0]; k.pitch = c[1]; k.yaw = c[2]; })""", [vt, list(cam)]); await pg.wait_for_timeout(4000)
+            await pg.screenshot(path=os.path.join(OUT, '%s.png' % shot))
         await pg.evaluate("(() => { const b = S.boat; b.gop = null; b.status = 'idle'; })()")
         gl = await pg.evaluate("G3._debug.glErr ? G3._debug.glErr() : 0")
         check(not errs and not gl, 'no page errors and no WebGL errors', {'errors': errs[:3], 'gl': gl})

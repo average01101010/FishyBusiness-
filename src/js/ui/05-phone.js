@@ -407,6 +407,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p64', '06.10.2026', 'Kystbåten på 14,99 m fra Blender', 'The 14.99 m coastal vessel from Blender', [
+      ['Kystbåt 14,99 m er bygget i Blender: rødt skrog, hvitt baksdekk med åpen halestasjon på styrbord side, styrhus forut, rød kran og mesanmast med rødt seil. Bare utsiden er modellert.', 'The 14.99 m coastal vessel is built in Blender: a red hull, a white shelter deck with an open hauling station on the starboard side, the wheelhouse forward, a red crane and a mizzen with a red sail. Only the outside is modelled.']]],
     ['p63', '06.10.2026', 'Den eldre kystbåten fra Blender', 'The older coastal vessel from Blender', [
       ['Eldre kystbåt 21 m er bygget på nytt i Blender: en stålbåt fra 70-tallet med hvit bakk, rundgatt, galge, mast med lastebom, styrhus i teak akter og skorstein. Skroget er oksblodrødt med hvit ripestripe. Bare utsiden er modellert.', 'The older 21 m coastal vessel is rebuilt in Blender: a steel boat from the seventies with a white forecastle, a cruiser stern, a gallows, a mast with a derrick, a teak wheelhouse aft and a funnel. The hull is oxblood with a white sheer line. Only the outside is modelled.']]],
     ['p62', '06.10.2026', 'Snøkrabbefartøyet fra Blender', 'The snow crab vessel from Blender', [
