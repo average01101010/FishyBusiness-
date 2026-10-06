@@ -663,6 +663,10 @@ const G3 = (() => {
       if (MJOB && MJOB.kind === kind){ const B = MJOB.B; if (B.x0 < x0 + T && B.x0 + B.sx > x0 && B.z0 < z0 + T && B.z0 + B.sz > z0) MJOB.dirty = true; }
       if (m && m.x0 < x0 + T && m.x0 + m.sx > x0 && m.z0 < z0 + T && m.z0 + m.sz > z0) m.stale = true;
     }
+    // the buildings over the tile stood on the heights there were before: they are built again on the new ground (the houses
+    // stood in the snow, sunk into the ground they were built over)
+    const tk = pk.tile[0] + ':' + pk.tile[1];
+    for (const [k, c] of CH) if (tileOf(k) === tk){ freeChunk(c); CH.delete(k); }
   }
   function updateFar(){
     if (TERR && !TERR.stale && TERR.sx === TERRW.spans[QUAL.lvl] && TERR.gn === QUAL.farN[QUAL.lvl] && Math.abs(bv.x - TERR.cx) < TERRW.move && Math.abs(bv.z - TERR.cz) < TERRW.move) return;
@@ -1219,6 +1223,8 @@ const G3 = (() => {
     const cand = [];
     for (let gz = Math.floor((cz - half) / 1000); gz <= Math.floor((cz + half) / 1000); gz++) for (let gx = Math.floor((cx - half) / 1000); gx <= Math.floor((cx + half) / 1000); gx++){
       const k = gridKey(gx, gz); if (CH.has(k)) continue;
+      // not before the tile's ground (25 m) is in, as the piers wait for it (tileStatics): on the stand-in heights the houses sank
+      const vp = MAPD.byTile.get('view:' + tileOf(k)); if (vp && !vp.buf) continue;
       const mx = gx * 1000 + 500, mz = gz * 1000 + 500; cand.push([Math.hypot(mx - bv.x, mz - bv.z), k, mx, mz]);
     }
     cand.sort((a, b) => a[0] - b[0]);

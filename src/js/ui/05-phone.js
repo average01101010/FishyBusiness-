@@ -407,6 +407,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p68', '06.10.2026', 'Husene står på bakken', 'The houses stand on the ground', [
+      ['Husene langs kysten sank av og til ned i bakken og snøen, fordi de ble bygd før terrenget rundt var lastet. Nå venter de på terrenget og bygges på nytt når det kommer. Takk for tipset!', 'The houses along the coast sometimes sank into the ground and the snow, because they were built before the terrain round them had loaded. Now they wait for the terrain and are built again when it comes. Thanks for the tip!']]],
     ['p67', '06.10.2026', 'Plass i styrhuset', 'Room in the wheelhouse', [
       ['Styrhuset på plastsnekka er høyere, så skipperen ikke lenger stikker hodet gjennom taket.', 'The wheelhouse on the fibreglass snekke is taller, so the skipper no longer puts his head through the roof.'],
       ['Når du jukser fra en åpen båt med styrhus, eller er alene om bord, står skipperen ute ved rekka og ikke ved rattet. Takk for tipsene!', 'When you jig from an open boat with a wheelhouse, or are alone aboard, the skipper stands out at the rail and not at the wheel. Thanks for the tips!']]],

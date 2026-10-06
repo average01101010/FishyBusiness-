@@ -670,6 +670,7 @@ Jonas sto i Tromsø og så ingen hus. Før dette fantes bygg, veier, bruer og br
   - `stream3d` laster `vec` innenfor 14 km.
   - Byggene leses gjennom `bldCells(key)`: Senjas `BLD` og pakkens, hver med egne tabeller og eget frø, slik at Senjas hus ser ut som før.
   - Når en flis kommer, bygges km-bitene på den på nytt.
+  - Km-bitene med hus bygges først når flisas bakkehøyder (25 m, `view`) er inne, og bygges på nytt når høyder eller kystlinje for flisa kommer (`staleOver`). Før det sto husene på reservehøydene og sank ned i bakken og snøen (06.10.2026).
   - Kameraets hindringer har flisa som merke og forsvinner med den.
 - **Bruer, brygger og moloer per flis** (`tileStatics`, `tileStep`): bygges når flisas høyder er inne, noen få per bilde innenfor de ledige millisekundene (`MESHMS`). Tromsø-flisa var et halvt sekund i én jafs. Hver flis får sitt eget nett.
 - **Brygger kartlagt som flater** (`slabInto`): tegnes i sin egen form, med dekke i striper på 1 m (kuttet der omrisset krysser stripas midte) og kaivegger langs kantene. Rektangelet rundt dem, slik Senjas små brygger er tegnet, la seg ut over vannet ved et stort kaiområde i Bergen. Kameraets hindringer er striper på 4 m.
