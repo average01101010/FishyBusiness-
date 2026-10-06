@@ -27,7 +27,7 @@ OP0, OP1 = 4.6, 7.8         # the open hauling station in the starboard side (on
 LOW = [(XA, 2.35), (1.5, 1.6), (3.0, 1.0), (5.0, 0.82), (10.0, 0.82), (12.5, 1.1), (13.4, 1.4)]
 def z_low(x): return interp(LOW, x)
 # the stem (z, x): a round forefoot running out to a nose by the waterline, then raked and flaring to the bulwark
-STEM = [(1.4, 13.4), (1.8, 13.95), (2.3, 14.25), (2.7, 14.33), (3.2, 14.28), (4.0, 14.4), (5.0, 14.65), (6.55, XF)]
+STEM = [(1.4, 13.4), (1.8, 13.95), (2.3, 14.3), (2.7, 14.45), (3.2, 14.5), (4.0, 14.62), (5.0, 14.78), (6.55, XF)]
 def x_stem(z): return interp(STEM, z)
 TOP = [(XA, 5.9), (9.0, 5.9), (12.0, 6.05), (13.5, 6.3), (XF, 6.55)]
 def z_top(x): return interp(TOP, x)

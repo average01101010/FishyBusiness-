@@ -28,10 +28,10 @@ def z_low(x): return interp(LOW, x)
 SHEER = [(XS, 5.55), (2.0, 5.25), (8.0, 5.1), (12.0, 5.3), (15.0, 5.8), (17.5, 6.4), (XF, 6.9)]
 def z_top(x): return interp(SHEER, x)
 # the stem (z, x): a round forefoot, then straight and raked
-STEM = [(0.35, 15.6), (0.8, 17.0), (1.6, 17.8), (WL, 18.4), (5.0, 19.0), (6.9, XF)]
+STEM = [(0.35, 15.6), (0.8, 17.0), (1.6, 17.85), (WL, 18.55), (4.0, 18.85), (5.0, 19.12), (6.9, XF)]
 def x_stem(z): return interp(STEM, z)
 # the cruiser stern (z, x): the hull closes on the sternpost under water and overhangs above it, round in plan
-STERN = [(0.0, 1.0), (1.9, 1.0), (2.5, 0.3), (WL, -0.5), (4.2, -1.15), (5.0, -1.45), (5.55, XS)]
+STERN = [(0.0, 1.0), (1.9, 1.0), (2.5, 0.3), (WL, -0.55), (4.2, -1.22), (5.0, -1.5), (5.55, XS)]
 def x_sternp(z): return interp(STERN, z)
 HBW = [(X_RUN, 3.40), (8.0, 3.45), (X_ENT, 3.40)]
 HBD = [(X_RUN, 3.55), (8.0, 3.6), (X_ENT, 3.58)]
