@@ -50,7 +50,8 @@ async function auth(path, body, tok){
 async function rpc(fn, args){
   const r = await fetch(CFG.supabaseUrl.replace(/\/$/, '') + '/rest/v1/rpc/' + fn, {method:'POST', headers:{'Content-Type':'application/json', apikey:CFG.supabaseAnon, Authorization:'Bearer ' + SES.access_token}, body:JSON.stringify(args)});
   if (r.status === 401){ SES = null; sessionStorage.removeItem('dsbAdmin'); render(); throw new Error('utlogget'); }
-  if (!r.ok) throw new Error((await r.text()).slice(0, 200)); return r.json();
+  // a function that returns nothing (admin_feedback_set) answers 204 with an empty body: that is a success, not bad JSON
+  const tx = await r.text(); if (!r.ok) throw new Error(tx.slice(0, 200)); return tx ? JSON.parse(tx) : null;
 }
 function keep(s){ SES = s; sessionStorage.setItem('dsbAdmin', JSON.stringify(s)); }
 
