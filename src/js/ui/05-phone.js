@@ -408,7 +408,8 @@ const PHONE = (() => {
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
     ['p69', '06.10.2026', 'Juksamaskin og egne merker', 'Jigging machines and your own marks', [
-      ['Med juksamaskiner om bord passer du maskinene, så «Jukse selv» er borte. På båter uten maskin jukser du selv som før.', 'With jigging machines aboard you tend the machines, so «Jig yourself» is gone. On boats without machines you jig by hand as before.']]],
+      ['Med juksamaskiner om bord passer du maskinene, så «Jukse selv» er borte. På båter uten maskin jukser du selv som før.', 'With jigging machines aboard you tend the machines, so «Jig yourself» is gone. On boats without machines you jig by hand as before.'],
+      ['Egne merker i kartplotteren: hold fingeren stille på kartet, så settes et flagg. Trykk på det for å gi det navn, legge rute dit eller slette det. Merkene blir liggende.', 'Your own marks in the chart plotter: hold a finger still on the chart to set a flag. Tap it to name it, lay a route to it or delete it. The marks stay.']]],
     ['p68', '06.10.2026', 'Husene står på bakken', 'The houses stand on the ground', [
       ['Husene langs kysten sank av og til ned i bakken og snøen, fordi de ble bygd før terrenget rundt var lastet. Nå venter de på terrenget og bygges på nytt når det kommer. Takk for tipset!', 'The houses along the coast sometimes sank into the ground and the snow, because they were built before the terrain round them had loaded. Now they wait for the terrain and are built again when it comes. Thanks for the tip!']]],
     ['p67', '06.10.2026', 'Plass i styrhuset', 'Room in the wheelhouse', [

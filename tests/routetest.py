@@ -60,6 +60,15 @@ async def run(p, W, H, tag):
     await T.tap(tools[0]['x'] + 22, tools[0]['y'] + 22); f0 = await J("i => S.draft[i].fish", last)
     await T.tap(tools[1]['x'] + 22, tools[1]['y'] + 22); f2 = await J("i => S.draft[i].fish", last)
     check(f1 == 1 and f0 == 0 and f2 == 1, tag + ': fisketid kan angres og gjøres om', [f1, f0, f2])
+    # your own mark: a finger held still sets it (no waypoint), the card names it, «Slett» takes it away
+    c = await J("(() => mapToClient(LG(57.0, 51.5)))"); nd = await n(); np0 = await J("(S.pins || []).length")
+    await T.ev('touchStart', [(0, (c['x'], c['y']))]); await asyncio.sleep(0.8); await T.ev('touchEnd', []); await asyncio.sleep(0.3)
+    pin = json.loads(await J("JSON.stringify({n:(S.pins || []).length, draft:S.draft.length, card:!$('pinCard').hidden, flag:document.querySelectorAll('.pinflag').length})"))
+    await pg.fill('#pinCard input', 'Torskehølet'); await J("$('pinCard').querySelector('input').dispatchEvent(new Event('change'))")
+    named = await J("S.pins[S.pins.length - 1].name")
+    db = await J("(() => { const r = $('pinCard').querySelector('[data-p=del]').getBoundingClientRect(); return {x:r.x + r.width / 2, y:r.y + r.height / 2}; })()")
+    await T.tap(db['x'], db['y']); gone = await J("(S.pins || []).length")
+    check(pin['n'] == np0 + 1 and pin['draft'] == nd and pin['card'] and pin['flag'] >= 1 and named == 'Torskehølet' and gone == np0, tag + ': hold fingeren stille gir et eget merke med navn (ikke et veipunkt), og det kan slettes', [pin, named, gone])
 
     # drag the middle point with a finger to open sea, then undo
     mid = n0 - 2

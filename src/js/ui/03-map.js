@@ -288,6 +288,10 @@ function renderStatic(){
   for (const mk of S.marks){ if (!markLive(mk)) continue; markEnd = Math.min(markEnd, mk.t + MARK_LIFE); const col = mk.kgph >= 40 ? '#d7301f' : mk.kgph >= 20 ? '#f08a24' : mk.kgph >= 8 ? '#e5c12b' : '#5b8db8';
     g.push('<circle cx="' + mk.x + '" cy="' + mk.y + '" r="' + (4.2 * u) + '" fill="' + col + '" stroke="#fff" stroke-width="' + (1.2 * u) + '"/>');
     if (view.z > 3.5) g.push(txt({x:mk.x + 6 * u, y:mk.y + 3.5 * u}, mk.kgph + ' kg/t', 'lbl-ground', 9.5 * u, 'stroke-width="' + (2.5 * u) + '"')); }
+  // your own marks: a flag with its name, set by holding a finger on the chart (Jonas 06.10.2026); they stay until you delete them
+  for (const pn of S.pins || []){ if (!inV(pn.x, pn.y)) continue; const s = 6 * u;
+    g.push('<path d="M' + pn.x + ',' + pn.y + 'v' + (-2.2 * s) + 'l' + (1.3 * s) + ',' + (0.45 * s) + 'l' + (-1.3 * s) + ',' + (0.45 * s) + '" class="pinflag' + (pn.id === PINSEL ? ' sel' : '') + '" stroke-width="' + (1.4 * u) + '"/><circle cx="' + pn.x + '" cy="' + pn.y + '" r="' + (1.8 * u) + '" class="pinfoot"/>');
+    if (view.z > 1.2 && pn.name) g.push(txt({x:pn.x + 4 * u, y:pn.y + 4 * u}, pinEsc(pn.name), 'lbl-pin', 11 * u, 'stroke-width="' + (2.5 * u) + '"')); }
   // Father's marks (ui/06c-notebook.js)
   g.push(NOTEBOOK.svg(u, inV));
   // ports, their names when the view is closer than the whole region; the place names (03a-chart.js) keep clear of them
@@ -395,11 +399,40 @@ function renderDyn(){
   gDyn.innerHTML = g.join('');
 }
 
+// your own marks on the chart (S.pins, kept with the game and not per vessel): hold a finger still to set one, tap it to name it,
+// lay a route to it or delete it
+const PIN_HOLD = 550, PIN_MAX = 60; let PINSEL = null;
+const pinEsc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'})[c]);
+const pinCard = document.createElement('div'); pinCard.id = 'pinCard'; pinCard.hidden = true; $('aisCard').after(pinCard);
+function pinAdd(mp){
+  const P = S.pins = S.pins || []; if (P.length >= PIN_MAX) P.shift();
+  const id = (S.pinN = (S.pinN || 0) + 1), pn = {id, x:Math.round(mp.x * 1000) / 1000, y:Math.round(mp.y * 1000) / 1000, name:(S.lang === 'no' ? 'Merke ' : 'Mark ') + id, t:S.t};
+  P.push(pn); try { navigator.vibrate && navigator.vibrate(25); } catch (e) {} save(); pinOpen(id, true);
+}
+function pinOpen(id, fresh){
+  const pn = (S.pins || []).find(q => q.id === id); PINSEL = pn ? id : null; scheduleStatic();
+  if (!pn){ pinCard.hidden = true; return; }
+  if (AISSEL){ AISSEL = null; renderAisCard(); }
+  const no = S.lang === 'no', ll = natLL(pn), deg = (v, h) => { const a = Math.abs(v), d = Math.floor(a); return d + '\u00b0' + ((a - d) * 60).toFixed(3).replace('.', no ? ',' : '.') + '\u2032' + h; };
+  pinCard.innerHTML = '<div class="ai-h"><b>' + (no ? 'Eget merke' : 'Your mark') + '</b><button type="button" data-p="x" aria-label="' + (no ? 'Lukk' : 'Close') + '">\u00d7</button></div>' +
+    '<input type="text" maxlength="28" value="' + pinEsc(pn.name) + '" aria-label="' + (no ? 'Navn' : 'Name') + '">' +
+    '<div class="ai-t">' + deg(ll.lat, 'N') + ' ' + deg(ll.lon, ll.lon < 0 ? 'V' : no ? '\u00d8' : 'E') + ' \u00b7 ' + (dist(S.boat.pos, pn) / 1.852).toFixed(1).replace('.', no ? ',' : '.') + ' nm</div>' +
+    '<div class="pin-b"><button type="button" data-p="go">' + (no ? 'Rute hit' : 'Route here') + '</button><button type="button" data-p="del">' + (no ? 'Slett' : 'Delete') + '</button></div>';
+  pinCard.hidden = false; const inp = pinCard.querySelector('input');
+  inp.oninput = () => { pn.name = inp.value.slice(0, 28); scheduleStatic(); }; inp.onchange = () => save();
+  pinCard.querySelector('[data-p=x]').onclick = () => { PINSEL = null; pinCard.hidden = true; save(); scheduleStatic(); };
+  pinCard.querySelector('[data-p=go]').onclick = () => { PINSEL = null; pinCard.hidden = true; save(); addWaypoint({x:pn.x, y:pn.y}); };
+  pinCard.querySelector('[data-p=del]').onclick = () => { S.pins = S.pins.filter(q => q.id !== id); PINSEL = null; pinCard.hidden = true; save(); scheduleStatic(); };
+  if (fresh) setTimeout(() => { try { inp.focus(); inp.select(); } catch (e) {} }, 30);
+}
+
 // pointer: pan, pinch, tap
 const ptrs = new Map(); let drag = null, pinch = null;
 svg.addEventListener('pointerdown', e => {
   svg.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
-  if (ptrs.size === 1){ drag = {sx:e.clientX, sy:e.clientY, cx:view.cx, cy:view.cy, moved:false}; const mp = toMap(e.clientX, e.clientY); drag.set = setGrab(mp); drag.wp = drag.set ? null : routeGrab(mp); }
+  if (ptrs.size === 1){ drag = {sx:e.clientX, sy:e.clientY, cx:view.cx, cy:view.cy, moved:false}; const mp = toMap(e.clientX, e.clientY); drag.set = setGrab(mp); drag.wp = drag.set ? null : routeGrab(mp);
+    // a finger held still sets your own mark (and the lift after it is not a tap)
+    if (!drag.set && !drag.wp && !SETM){ const d = drag; d.hold = setTimeout(() => { if (drag !== d || d.moved || ptrs.size !== 1) return; d.moved = true; pinAdd(mp); }, PIN_HOLD); } }
   else if (ptrs.size === 2){ const [a, c] = [...ptrs.values()]; pinch = {d:Math.hypot(a.x - c.x, a.y - c.y) || 1, z:view.z}; if (drag){ drag.moved = true; if (drag.wp){ routeDragCancel(drag.wp); drag.wp = null; drag.cx = view.cx; drag.cy = view.cy; } } }
 });
 svg.addEventListener('pointermove', e => {
@@ -410,17 +443,18 @@ svg.addEventListener('pointermove', e => {
     const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
     if (drag.set){ drag.moved = true; setAim(toMap(e.clientX, e.clientY)); return; }
     if (drag.wp){ if (drag.wp.moved || Math.hypot(dx, dy) > 5) routeDragMove(drag.wp, toMap(e.clientX, e.clientY)); return; }
-    if (Math.hypot(dx, dy) > 7) drag.moved = true;
+    if (Math.hypot(dx, dy) > 7){ drag.moved = true; clearTimeout(drag.hold); }
     if (drag.moved){ view.cx = drag.cx - dx / view.px; view.cy = drag.cy - dy / view.px; applyView(); }
   }
 });
 function ptrUp(e){
+  if (drag) clearTimeout(drag.hold);
   if (drag && drag.set){ ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; if (ptrs.size === 0) drag = null; return; }
   if (drag && drag.wp){ const g = drag.wp; drag.wp = null; ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; if (ptrs.size === 0) drag = null; if (e.type === 'pointerup') routeDragEnd(g); else routeDragCancel(g); return; }
   const tap = drag && !drag.moved && ptrs.size === 1 && e.type === 'pointerup';
   ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null;
   if (tap && SETM){ setAim(toMap(e.clientX, e.clientY)); if (ptrs.size === 0) drag = null; return; }
-  if (tap){ const mp = toMap(e.clientX, e.clientY), rr = 16 / view.px; const gh = gearHit(mp, rr * 0.8); if (gh){ gearTap(gh); renderDyn(); return; } let hit = null, bd = 1e9; for (const n of AISNOW){ const d = dist(n.p, mp); if (d < rr && d < bd){ bd = d; hit = n; } } if (hit && (hit.st === 'port' || hit.v === 0) && PORTS.some(q => dist(q.p, mp) < rr * 1.6)) hit = null; if (hit){ AISSEL = hit.id; renderDyn(); renderAisCard(); return; } addWaypoint(mp); }
+  if (tap){ const mp = toMap(e.clientX, e.clientY), rr = 16 / view.px; const ph = (S.pins || []).find(q => dist(q, mp) < rr); if (ph){ pinOpen(ph.id); return; } const gh = gearHit(mp, rr * 0.8); if (gh){ gearTap(gh); renderDyn(); return; } let hit = null, bd = 1e9; for (const n of AISNOW){ const d = dist(n.p, mp); if (d < rr && d < bd){ bd = d; hit = n; } } if (hit && (hit.st === 'port' || hit.v === 0) && PORTS.some(q => dist(q.p, mp) < rr * 1.6)) hit = null; if (hit){ AISSEL = hit.id; renderDyn(); renderAisCard(); return; } addWaypoint(mp); }
   if (ptrs.size === 0) drag = null;
   else { const [p] = [...ptrs.values()]; drag = {sx:p.x, sy:p.y, cx:view.cx, cy:view.cy, moved:true}; }
 }
