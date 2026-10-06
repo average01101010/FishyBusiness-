@@ -261,11 +261,13 @@ function panelPort(){
   h.push('<div class="btns"><button class="btn" data-act="reset">' + t('reset') + '</button></div>');
   return h.join('');
 }
-// the landing note of the last landing here, for a few hours after it
+// the landing note of the last landing here, for a few hours after it; on the first trip for as long as the guide waits for it
+// (tilbakemelding #15: the note went after four game hours, and the guide's «Vis sluttseddelen» then had nothing to show)
+const slipHere = () => { const ls = S.lastSale; return !!ls && S.boat.status === 'port' && ls.port === S.boat.port && (S.t - ls.t < 240 || tutOn()); };
 function portSlip(){
-  const b = S.boat, h = [];
+  const h = [];
   const ls = S.lastSale;
-  if (ls && ls.port === b.port && S.t - ls.t < 240){
+  if (slipHere()){
     const LN = (no, en) => S.lang === 'no' ? no : en;
     h.push('<h3>' + t('slip', portById(ls.port).name) + (ls.field ? ' · ' + LN('fangstfelt', 'field') + ' ' + ls.field : '') + (ls.gear && ls.gear.length ? ' · ' + ls.gear.map(k => k === 'juksa' ? LN('juksa', 'jig') : GEAR[k][S.lang].toLowerCase()).join(', ') : '') + '</h3><div style="overflow-x:auto"><table class="tbl slipt"><thead><tr><th>' + t('species') + '</th><th>' + LN('Størrelse', 'Size') + '</th><th>' + t('quality') + '</th><th>' + t('kg') + '</th><th>kr/kg</th><th>kr</th></tr></thead><tbody>');
     // every row is whole kilos and kroner, and the sums are the sums of the rows as shown

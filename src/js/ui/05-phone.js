@@ -407,6 +407,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p70', '06.10.2026', 'Sluttseddelen på første tur', 'The landing note on the first trip', [
+      ['På første tur ble veiledningen stående fast hvis det gikk mer enn fire timer i spillet før du åpnet sluttseddelen. Nå blir sluttseddelen liggende så lenge veiledningen venter på den. Takk for tipset!', 'On the first trip the guide got stuck if more than four hours went by in the game before you opened the landing note. Now the note stays for as long as the guide waits for it. Thanks for the tip!']]],
     ['p69', '06.10.2026', 'Juksamaskin og egne merker', 'Jigging machines and your own marks', [
       ['Med juksamaskiner om bord passer du maskinene, så «Jukse selv» er borte. På båter uten maskin jukser du selv som før.', 'With jigging machines aboard you tend the machines, so «Jig yourself» is gone. On boats without machines you jig by hand as before.'],
       ['Egne merker i kartplotteren: hold fingeren stille på kartet, så settes et flagg. Trykk på det for å gi det navn, legge rute dit eller slette det. Merkene blir liggende.', 'Your own marks in the chart plotter: hold a finger still on the chart to set a flag. Tap it to name it, lay a route to it or delete it. The marks stay.']]],

@@ -119,6 +119,7 @@ const TSTEPS = [
       return {...dockApp('marked', 'lever', 'lever', '#drawerBody [data-act=sell]'), no:'Fremme i ' + tutLandN() + '. Trykk Marked, så Lever, og «Lever» for å levere fisken.', en:'Arrived at ' + tutLandN() + '. Tap Market, then Land, and «Land» to land the catch.'}; }},
   {id:'slip', ok:true, done:() => false,
     tip:() => { if (S.boat.land) return {el:vis('#hud .st.nx'), no:'Kranen løfter fisken på land. Sluttseddelen kommer når lossingen er ferdig.', en:'The crane lifts the catch ashore. The landing note comes when the landing is done.', small:true, noOk:true};
+      if (!slipHere()) return {no:'Fisken er levert. Hva du fikk betalt, står i dekksdagboka.', en:'The catch is landed. What you were paid is in the deck log.'};
       if (DOCK.page !== 'lever' || !vis('#drawerBody .slipt')) return {okText:['Vis sluttseddelen', 'Show the landing note'], okAct:() => { DOCK.open('lever'); setTimeout(tutScrollSlip, 350); }, no:'Fisken er levert. Sluttseddelen viser hva du fikk betalt.', en:'The catch is landed. The landing note shows what you were paid.'};
       return {el:vis('#drawerBody .slipt'), no:'Her er prisen per kilo for hver størrelse og kvalitet, og innloggingsbonusen din. Hver dag du åpner spillet, gir 1 % mer på fisken.', en:'Here is the price per kilo for each size and grade, and your login bonus. Each day you open the game adds 1 % on the fish.'}; }},
   {id:'goal', ok:true, done:() => false,
