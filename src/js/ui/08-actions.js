@@ -48,7 +48,12 @@ function doAct(el){
     toast(S.lang === 'no' ? 'Lagret som fast driftsplan. Slå den på under Bygd, Mannskap.' : 'Saved as the standing plan. Switch it on under Village, Crew.'); PHONE.open('mannskap');
   }
   else if (act === 'depcancel'){ S.plan = null; log('Avgangen er avlyst.', 'Departure cancelled.'); }
-  else if (act === 'stop'){ S.plan = null; helmOff(); b.status = 'idle'; b.v = 0; log('Stoppet båten.', 'Stopped the boat.'); }
+  else if (act === 'stop'){
+    // on a route she slacks off and stops a little ahead on it (core haltPlan); by hand, or already slacking off, she stops here
+    const h = !helmOn() && S.plan && !S.plan.halt ? haltPlan(G3.haltNeed()) : null;
+    if (h){ S.plan = h; log('Slakker av og stopper.', 'Easing off to a stop.'); }
+    else if (!(S.plan && S.plan.halt && b.status === 'sailing')){ S.plan = null; helmOff(); b.status = 'idle'; b.v = 0; log('Stoppet båten.', 'Stopped the boat.'); }
+  }
   else if (act === 'retrace'){ if (tutOn()) return; startReturn(false); }
   else if (act === 'tow') rescue(true);
   else if (act === 'fh+' || act === 'fh-') S.fishPlanH = clamp(S.fishPlanH + (act === 'fh+' ? 1 : -1), 1, 12);

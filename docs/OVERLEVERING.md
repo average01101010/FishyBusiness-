@@ -1423,13 +1423,36 @@ Kvotesystemet ligger i `core/03d-quota.js` (04.10.2026, plan Q1–Q6). Grunnlage
   - 5 kn innenfor 250 m fra en havn.
   - Bremsing før neste stopp (havn eller fiskeplass) langs ruta.
   - `livePose` bruker samme fart som neste steg.
-- **3D-følgeren** (`updateBoat`):
-  - Styrer mot et punkt litt lenger fremme på ruta (pure pursuit).
-  - Svingradius `turnR` i `VESSELS`: skiff 35, tresnekke 30, snekke 45, 8,9-metersjark 50, sjark 70, hurtigsjark 75, ny sjark 80, bred sjark 85, kystbåtene 110 og 150 m.
+- **3D-båten på ruta** (`trkOn`/`trkStep` i `view3d.js`, fra 06.10.2026). Jonas: «båten strengt må følge rutestreken som lages i kartplotteren», «ganske nøyaktige kursendringer», og «slakker av og stopper nøyaktig der den skal».
+  - **Linja** er i meter:
+    - ut fra kaia båten ligger ved, med `berthPath` baklengs
+    - rutas veipunkter slik kartplotteren tegner dem
+    - inn til kaia der ruta ender, med samme kaiplass som `berthNow`
+    - Linja går bare fram til første havn på ruta, fordi `dock` avslutter ruta der.
+  - **Farten** er simuleringens (`sailV`). Ligger båten bak simuleringen, tar den igjen (inntil 1,5 × + 3 m/s). Simuleringen starter ved havnepunktet, så båten ligger bak etter avgang. Ligger den foran, saktner den.
+  - **Stopp:** båten bremser slik at den står nøyaktig på hvert stopp simuleringen ikke har nådd ennå (fiskeplass, setting, havn) og på slutten.
+    - Bremsen er fart/6 m/s², minst 1,2.
+    - Har simuleringen stoppet (slutten av ruta, fiske, setting eller Stopp), går båten fram dit simuleringen står. Har den alt passert punktet, bremser den så mykt den kan.
+  - **Hjørnene** rundes over 6 m på hver side (`TRK_R`), unntatt ved et stopp, der den står på punktet. Kursen er linja mellom punktene 6 m før og 6 m etter.
+  - **Ved kaia:**
+    - Ut fra kaia går den sakte baklengs (3 kn) med kaias kurs, og snur over 1,5 båtlengder (minst 10 m).
+    - Inn til kaia går den sakte (4 kn).
+    - Når den er inne, går fortøyningen rett på (`MO.phase = 'lines'`).
+  - **Ny eller endret rute** gir en ny linje fra der båten er, med farten den har. Endringene i veipunktene sjekkes hvert 30. bilde.
   - Dreiepunktet ligger en tredel fra baugen, så hekken slår ut.
   - Sideskrens: β = 0,14·yawrate, begrenset til 0,18 rad.
   - Planende båter krenger innover (−0,18·yaw), deplasementsbåter utover (+0,06·yaw).
   - Båten flyttes direkte til simuleringens posisjon hvis den er mer enn 900 m unna.
+  - **Før:** en følger styrte mot et punkt lenger fremme på ruta (pure pursuit, svingradius `turnR`), med egne animasjoner ut (5–45 s, `DEP`) og inn (8–60 s, `MO.phase = 'in'`). Den skar hjørnene i trange havner og gled forbi sluttpunktet. I Senjahopen lå båten ved mottakskaia mens turen til rorbua alt var ferdig (tilbakemelding #3).
+  - `turnR` i `VESSELS` gjelder nå bare manuell styring: skiff 35, tresnekke 30, snekke 45, 8,9-metersjark 50, sjark 70, hurtigsjark 75, ny sjark 80, bred sjark 85, kystbåtene 110 og 150 m.
+  - `moorStep` med fasen `in` brukes fortsatt når båten kommer til kai uten rute, for eksempel etter slep.
+- **Stopp under en rute** (`haltPlan` i `05-vessels.js`, fra 06.10.2026):
+  - Knappen lager en ny rute til et punkt litt lenger fram på ruta, 0,012 km per knop (30–300 m).
+  - Simuleringen og 3D-båten slakker av og stopper der, og loggen sier «Stoppet båten».
+  - Et nytt trykk mens båten slakker av gjør ingenting.
+  - Ved manuell styring stopper båten med en gang, som før.
+- **Kartplotteren** tegner egen båt, sporet og første etappe av ruta der `livePose` sier båten er, ved hver tegning (5 ganger i sekundet). Før skjedde det bare hvert spillminutt. `livePose` gir også `idx`, neste veipunkt derfra. Minikartplotteren i 3D tegnes 4 ganger i sekundet mens båten går, og én gang i sekundet når den ligger.
+- **Test:** `trackfollow.py` kjører fra mottakskaia i Senjahopen til rorbua rb129, så Stopp på sjøen, så en rute som ender på sjøen, og til slutt kartplotteren.
   - `G3._debug.stepBoat(dt, t, frac)` brukes til frakoblet testing med 60 bilder i sekundet.
 - **Fiskeanimasjoner:**
   - Håndjuksa: snelle med sveiv på ripa, og én til fem fisk på pilk og markkroker.
@@ -2541,7 +2564,7 @@ Jonas' liste: oppgraderinger, kvotehandel, kikkert, raskere fangst, fortøying, 
 - **Inn til kai og ut igjen** (`berthPath`, `berthBlocked`, `berthClear` i `07-harbours.js`):
   - Et punkt er sperret når det er land i 25 m-masken eller ligger innenfor halv bredde av en bryggeboks (`PIERBOX`) eller en havneenhets kaiblokk.
   - **Banen går** fra båten til et punkt 1,5 båtlengder akter for kaiplassen og en bredde ut fra kaia, og så langs kaia inn. Er det fritt, går den rett. Ellers søker den over maskens celler innenfor 1,5 km og strammer linja.
-  - **3D:** `moorStep` følger banen, glattet med `pathM`/`pathAt`. Ved avgang går båten baklengs ut fra kaia og så banen ut til havnepunktet (`DEP` i `updateBoat`), før følgeren tar over.
+  - **3D:** under en rute er banen ut fra kaia og inn til kaia en del av linja båten følger (`trkStep`, se «3D-båten på ruta»). Uten rute følger `moorStep` banen, glattet med `pathM`/`pathAt`.
   - **Test:** `harbourtest` sjekker banen inn til hver kaiplass for tre båttyper, fra havnepunktet og fra innseilingen.
 - **Fiskeslagene fra Blender** (`tools/fish/fisk.py`, `src/data/fish.b64`, 363 KB):
   - **Artene:** torsk, sei, hyse, lyr, lange, brosme, uer, kveite og kongekrabbe (delen heter fortsatt `krabbe`), hver som én del i GLB-en.

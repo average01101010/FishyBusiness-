@@ -407,6 +407,11 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p58', '06.10.2026', 'Båten følger rutestreken', 'The boat follows the route line', [
+      ['Båten i 3D følger nå streken i kartplotteren nøyaktig: ut fra kaia, langs ruta med myke, men presise svinger, og inn til kaia. Den slakker av og stopper akkurat på siste punkt, uten å gli forbi og hoppe tilbake.', 'The boat in 3D now follows the line on the chart plotter exactly: out from the quay, along the route with smooth but precise turns, and in to the quay. It eases off and stops right on the last point, without sliding past and jumping back.'],
+      ['Stopp underveis bråstopper ikke lenger. Båten slakker av og stopper litt lenger fram på ruta.', 'Stop under way no longer stops dead. The boat eases off and stops a little further along the route.'],
+      ['Båten henger ikke lenger ved mottakskaia i Senjahopen når du går til rorbua. Takk for tipset!', 'The boat no longer hangs at the plant quay in Senjahopen when you go to the rorbu. Thanks for the tip!'],
+      ['Egen båt flytter seg jevnt i kartplotteren, flere ganger i sekundet.', 'Your own boat moves smoothly on the chart plotter, several times a second.']]],
     ['p57', '06.10.2026', 'Været etter hvor du er', 'The weather where you are', [
       ['Været og sjøen følger nå klimaet der du er langs kysten: mildere og våtere vintre i sør, kaldere sjø i øst, mer nedbør på Vestlandet og mindre i Finnmark. Ved Senja er alt som før.', 'The weather and the sea now follow the climate where you are along the coast: milder, wetter winters in the south, a colder sea in the east, more rain in the west and less in Finnmark. At Senja everything is as before.']]],
     ['p56', '06.10.2026', 'Takk-haill for gode tips', 'Thank-you luck for good tips', [
