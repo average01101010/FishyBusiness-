@@ -2,7 +2,7 @@
 
 En Claude Code-rutine kjører dette kl. 05.58, 11.58, 17.58 og 23.58 (Oslo-tid), hver gang i en ny økt. Den ble satt opp 06.10.2026 etter at Jonas ba om det: «koble deg opp mot detstorebla.no/admin slik at du kan hente ut alt av tilbakemeldinger 4 ganger i døgnet og gjøre eventuelle tiltak». Se 4.22 i `docs/OVERLEVERING.md`.
 
-Oppgaven er å lese de nye tilbakemeldingene fra spillerne og vekte dem. Rutinen foreslår status og svar, skriver en rapport til Jonas og, fra 13.10.2026, retter små og klare feil i en PR. Jonas bestemmer alltid selv: han sender svarene i `/admin` og merger eller lukker PR-ene.
+Oppgaven er å lese de nye tilbakemeldingene fra spillerne og vekte dem. Rutinen foreslår status og svar, skriver en rapport til Jonas og retter feil i PR-er. Jonas 06.10.2026: «den skal endre koden 4 ganger om dagen om den må. Viktig at vi utbedrer feil kjapt.» Jonas bestemmer alltid selv: han sender svarene i `/admin` og merger eller lukker PR-ene.
 
 ## Absolutte regler
 
@@ -15,13 +15,16 @@ Oppgaven er å lese de nye tilbakemeldingene fra spillerne og vekte dem. Rutinen
 
 ## Hver kjøring
 
-1. **Kode:** `git fetch origin ccr-5e1ba2f4-pusvyd`, og les `CLAUDE.md`.
+1. **Kode og verktøy:**
+   - Har økta ikke repoet med skrivetilgang, kobler du det til med `add_repo` (eier `average01101010`, repo `FishyBusiness-`, `access: push`) og kloner slik svaret sier. Går ikke det, kloner du det offentlige repoet og kan bare notere og rapportere. Da sier du det i rapporten.
+   - `git fetch origin ccr-5e1ba2f4-pusvyd`, og les `CLAUDE.md`.
+   - Før du tester: `pip install playwright==1.56.0` (nettleseren ligger i `/opt/pw-browsers`). `node build.mjs` bygger med Senja når kartet for hele kysten mangler. Trenger en test hele kysten (feilen sier at en blokk ikke er lastet), henter du det med `python3 tools/map/release.py && python3 tools/map/game.py`.
 2. **Hent:** `python3 tools/feedback/agent.py list --imgs --out <scratchpad-mappa>/fb`. Utskriften viser én linje per ny tilbakemelding. Hele dataene ligger i `feedback.json`:
    - `rows` er de nye.
    - `noted` er det som er notert de siste 60 dagene og ikke er ferdig.
    - `last_run` er forrige rapport.
 
-   Er det ingen nye, skriver du bare «Ingen nye tilbakemeldinger» og avslutter, uten rapport. Står det at `FEEDBACK_AGENT_TOKEN` mangler, eller at nettverket stopper kallet, skriver du det kort og avslutter.
+   Er det ingen nye og ingen feil i `noted` som kan rettes (se punkt 6), skriver du bare «Ingen nye tilbakemeldinger» og avslutter, uten rapport. Står det at `FEEDBACK_AGENT_TOKEN` mangler, eller at nettverket stopper kallet, skriver du det kort og avslutter.
 3. **Forstå** hver tilbakemelding:
    - Se på bildene, og les koden der det hjelper.
    - `meta` sier hvor og hvordan det ble spilt: versjon, enhet, skjerm, 3D-nivå og bildetakt, båt, status, havn, posisjon, spilltid i minutter (`t`) og steget i veiledningen (`tut`).
@@ -49,12 +52,12 @@ Oppgaven er å lese de nye tilbakemeldingene fra spillerne og vekte dem. Rutinen
      - Be aldri om personopplysninger.
      - Ingen svarforslag til spam eller mistenkelige meldinger.
 6. **Rett:**
-   - **Til og med 12.10.2026:** ingen kodeendringer og ingen PR. Bare noter og rapporter.
-   - **Fra 13.10.2026:** høyst to PR-er per kjøring, bare for små og klare feil som du kan se i koden eller gjenskape:
+   - Ta feilene etter `score`, de nye og de i `noted` som ikke er rettet. Hopp over en sak som allerede har en åpen PR: søk i de åpne PR-ene mot `ccr-5e1ba2f4-pusvyd` etter `tilbakemelding #id`.
+   - Høyst to PR-er per kjøring, for feil du kan se i koden eller gjenskape. En feil som krever et valg fra Jonas (spilldesign, økonomi, store omskrivinger), går i rapporten og ikke i en PR.
      - **Gren:** arbeid på grenen økta har fått. Lag den fra `origin/ccr-5e1ba2f4-pusvyd` (`git checkout -B <gren> origin/ccr-5e1ba2f4-pusvyd`). Har økta ikke fått noen gren, bruker du `fb/ÅÅÅÅ-MM-DD-kort-navn`.
      - **Testing:** følg `CLAUDE.md`, med `node --check`, bygg, `python3 tests/run.py changed` og en patchnote. Det er én commit per retting.
      - **PR:** mot `ccr-5e1ba2f4-pusvyd`, med norsk tittel og beskrivelse: hva som var feil, hva som er endret, hvordan det er testet og hvilke tilbakemeldinger det gjelder (`#id`). Ingen sitater.
-     - **Svar:** sett `--status planned` og et svar som sier at en retting er på vei.
+     - **Svar:** noter saken på nytt med `--status planned`, PR-lenken i `--note` og et svar som sier at en retting er på vei.
 7. **Rapporter:** skriv en rapport i Markdown på norsk i scratchpad-mappa, ikke i repoet. Send den med `python3 tools/feedback/agent.py run --report <fil> --n <antall nye> [--pr URL "tittel"]…`. Rapporten skal ha:
    - **Øverst:** én til tre linjer med det viktigste.
    - **Topp 5:** etter `score`, med #id, hva det gjelder, `score` og foreslått tiltak.

@@ -1023,7 +1023,7 @@ Jonas: «det er viktig at alle har en delt klokke fordi dette er et online-spill
 
 Jonas ba om det slik: «koble deg opp mot detstorebla.no/admin slik at du kan hente ut alt av tilbakemeldinger 4 ganger i døgnet og gjøre eventuelle tiltak». Han ga klarsignal til planen med «Ja, du kan kjøre det slik … kl. 06-12-18-00».
 
-- **Rutinen** er en Claude Code-rutine (Routine) som starter en ny økt kl. 05.58, 11.58, 17.58 og 23.58 Oslo-tid, to minutter før hver hel time Jonas ba om. Den følger `tools/feedback/RUTINE.md` på arbeidsgrenen. Instruksene kan altså endres med en push, uten å røre rutinen. Rutinen er `trig_01U6Q88HroVFLRYZJiYm9ko5` og varsler med push. Den nye økta har ikke repoet fra start og kloner arbeidsgrenen selv, fordi repoet er offentlig. Før 13.10.2026 må vi sjekke at en slik økt kan pushe en gren og åpne en PR. Hvis ikke, oppretter Jonas rutinen på nytt fra claude.ai med repoet koblet til.
+- **Rutinen** er en Claude Code-rutine (Routine) som starter en ny økt kl. 05.58, 11.58, 17.58 og 23.58 Oslo-tid, to minutter før hver hel time Jonas ba om. Den følger `tools/feedback/RUTINE.md` på arbeidsgrenen. Instruksene kan altså endres med en push, uten å røre rutinen. Rutinen er `trig_01U6Q88HroVFLRYZJiYm9ko5` og varsler med push. Den nye økta har ikke repoet fra start og kloner arbeidsgrenen selv, fordi repoet er offentlig. For å pushe og åpne PR-er kobler den repoet til seg selv med `add_repo`.
 - **Veien inn** er Edge-funksjonen `feedback-agent`, med egen nøkkel `FEEDBACK_AGENT_TOKEN`. Jonas lager nøkkelen og legger den inn som hemmelighet i Supabase og som API-legitimasjon i Claude Code-miljøet (ikke som miljøvariabel, for den er synlig for alle som bruker miljøet). Funksjonen kaller bare `agent_*`-funksjonene i `20261006120000_feedback_agent.sql`, så nøkkelen gir ingen tilgang til spillere, lagringer eller kjøp. Rutinen bruker ikke Supabase-koblingen.
 - **Hva agenten ser** (`agent_feedback`):
   - Den ser teksten, emnet, karakteren og bildene. Videoene ser den ikke, bare hvor mange det er.
@@ -1037,8 +1037,7 @@ Jonas ba om det slik: «koble deg opp mot detstorebla.no/admin slik at du kan he
   - Vekten er alvor (5 krasj eller tapt lagring, 3 feil, 2 forvirring eller ytelse, 1 ønske) × antall ulike spillere med samme sak. Den får +0,5 for over 20 timers spilletid og +0,5 for saker som gjelder starten.
   - Agenten svarer aldri spillerne selv.
 - **Kode:**
-  - **Til og med 12.10.2026:** bare rapport og svarforslag (Jonas' valg).
-  - **Deretter:** høyst to PR-er per kjøring mot arbeidsgrenen, aldri en push til den.
+  - **Fra 06.10.2026:** høyst to PR-er per kjøring mot arbeidsgrenen, aldri en push til den (Jonas: «den skal endre koden 4 ganger om dagen om den må. Viktig at vi utbedrer feil kjapt.»). Saker fra tidligere kjøringer som ikke er rettet, tas også, høyest vekt først. Rutinen kobler repoet til seg selv med `add_repo` (skrivetilgang) og kjører på Opus 5.5.
   - **Aldri:** endringer i `.github/`, `supabase/`, admin, `src/legal/`, serveren eller agenten selv.
   - **Repoet er offentlig:** tilbakemeldingene havner aldri i git, i en commit-melding eller i en PR. `agent.py` nekter å lagre dem inne i repoet.
 - **I `/admin`:**
