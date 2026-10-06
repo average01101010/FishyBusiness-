@@ -177,7 +177,7 @@ VIEW.tilbake = () => {
   return '<div class="grid">' + kpi('Tilbakemeldinger', nf(all, 0), nf((FB.status || {}).new || 0, 0) + ' nye') + kpi('Snittkarakter siste 30 dager', FB.rating == null ? '–' : nf(FB.rating, 2) + ' / 5') + kpi('Bilder', nf(FB.mb, 1) + ' MB') + kpi('Video i lagringen', nf(FB.vmb || 0, 1) + ' MB', 'av 1 024 MB på gratisplanen' + (FB.orphans ? ' · ' + FB.orphans + ' uten tilbakemelding <button id="fbOrph">Slett dem</button>' : '')) + '</div>' +
     card('Hva det gjelder', bars(Object.fromEntries(Object.entries(FB.topics || {}).map(([k, v]) => [FBT[k] || k, v])))) +
     '<div class="card"><select id="fbT">' + opts(FBT, FBF.topic, 'Alle emner') + '</select> <select id="fbS">' + opts(FBS, FBF.status, 'Alle statuser') + '</select> <button id="fbR">Oppdater</button></div>' +
-    (FB.rows.length ? FB.rows.map(r => '<div class="card fbrow" data-id="' + r.id + '"><h3>' + esc(FBT[r.topic] || r.topic) + (r.rating ? ' · ' + '★'.repeat(r.rating) + '<span class="note">' + '★'.repeat(5 - r.rating) + '</span>' : '') +
+    (FB.rows.length ? FB.rows.map(r => '<div class="card fbrow" data-id="' + r.id + '"><h3>#' + r.id + ' · ' + esc(FBT[r.topic] || r.topic) + (r.rating ? ' · ' + '★'.repeat(r.rating) + '<span class="note">' + '★'.repeat(5 - r.rating) + '</span>' : '') +
       ' <span class="note">· ' + new Date(r.ts).toLocaleString('nb-NO') + ' · ' + esc(String(r.player).slice(-8)) + '</span>' + (r.rewarded ? ' <span class="note">· 🎁 takk-haill sendt</span>' : '') + '</h3><p class="fbbody">' + esc(r.body) + '</p>' +
       (r.img ? (FBIMG[r.id] ? FBIMG[r.id].map(u => '<img class="fbimg" src="' + u + '" alt="">').join('') : '<button data-fbimg="' + r.id + '">' + ((r.nimg || 1) > 1 ? 'Vis ' + r.nimg + ' bilder' : 'Vis bilde (' + r.kb + ' kB)') + '</button>') : '') +
       (r.vids || []).map(v => !v.done ? '<p class="note">Video som ikke kom fram (' + nf(v.mb, 1) + ' MB)</p>' : FBVID[v.path] ? '<video class="fbimg" controls playsinline src="' + esc(FBVID[v.path]) + '"></video><button data-fbvdel="' + esc(v.path) + '">Slett videoen</button>'
@@ -188,10 +188,12 @@ VIEW.tilbake = () => {
 };
 // what the feedback agent noted (tools/feedback/RUTINE.md): its weight and note, and the status and reply it suggests; «Bruk forslaget»
 // only fills them in, Jonas saves
+// the links to the pull requests the agent opened, clickable (the text is escaped first; only github.com links)
+const links = t => t.replace(/https:\/\/github\.com\/[\w.\/#-]+/g, u => '<a href="' + u + '" target="_blank" rel="noopener">' + u.replace('https://github.com/average01101010/FishyBusiness-/pull/', 'PR #') + '</a>');
 function fbAi(r){
   const a = r.ai; if (!a) return '';
   return '<div class="fbai"><b>Agenten</b>' + (a.score != null ? ' · vekt ' + nf(a.score, 1) : '') + (a.status ? ' · foreslår «' + esc(FBS[a.status] || a.status) + '»' : '') +
-    '<p class="fbbody">' + esc(a.note || '') + '</p>' + (a.reply ? '<p class="fbbody note">Svarforslag: ' + esc(a.reply) + '</p>' : '') +
+    '<p class="fbbody">' + links(esc(a.note || '')) + '</p>' + (a.reply ? '<p class="fbbody note">Svarforslag: ' + esc(a.reply) + '</p>' : '') +
     (a.reply || a.status ? '<button data-fbai="' + r.id + '">Bruk forslaget</button>' : '') + '</div>';
 }
 function fbWire(){
