@@ -407,6 +407,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p61', '06.10.2026', 'Autolineren fra Blender', 'The autoliner from Blender', [
+      ['Autolineren er bygget på nytt etter en ekte generaltegning: 45 m med rund forfot, haleport på styrbord side der lina kommer inn, styrhus midtskips med radarkupler, skorstein, MOB-båt og skrå formast. Hun har tegningens mål, 45,4 × 10,45 m og 3,8 m dypgående. Bare utsiden er modellert.', 'The autoliner is rebuilt from a real general arrangement: 45 m with a round forefoot, a hauling port on the starboard side where the line comes in, a wheelhouse amidships with radar domes, a funnel, a rescue boat and a raked foremast. She has the drawing\'s size, 45.4 × 10.45 m and a 3.8 m draft. Only the outside is modelled.']]],
     ['p60', '06.10.2026', 'Ringnotsnurperen fra Blender', 'The purse seiner from Blender', [
       ['Ringnot- og pelagisk tråleren er bygget på nytt etter ekte tegninger: blått skrog, notbinge med kraftblokk akter, trålrull og tråldører, styrhus midtskips og formast. Bare utsiden er modellert.', 'The purse seiner and pelagic trawler is rebuilt from real drawings: a blue hull, the seine bin with the power block aft, the trawl drum and doors, the wheelhouse amidships and the foremast. Only the outside is modelled.']]],
     ['p59', '06.10.2026', 'Frysetråleren fra Blender', 'The freezer trawler from Blender', [

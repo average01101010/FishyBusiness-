@@ -104,7 +104,7 @@ const VESSELS = {
     rigs:['teiner'], jukseMax:0, gearMax:{garn:0, stamp:0, teine:7000}, svcH:600, svcCost:400000, svcJobH:72, cls:'hav', price:60000000, year:2001, lock:true,
     crew:{key:['skipper', 'styrmann', 'maskinsjef', '2. maskinist', 'kokk', 'bas'], teams:[{role:'dekk', n:4}, {role:'fabrikk', n:4}], rot:2},
     desc:{no:'Teinefartøy for snøkrabbe i Barentshavet, med fryseri om bord. Krever snøkrabbetillatelse.', en:'Pot vessel for snow crab in the Barents Sea, with a freezing plant aboard. Needs a snow crab licence.'}},
-  autoliner:{name:{no:'Autoliner 45 m med frysing', en:'45 m autoliner with freezing'}, len:45, beam:10.5, draft:6, disp:1500, holdCap:400000, iceCap:0, fuelCap:300000, hp:3000, engine:{no:'3 000 hk diesel', en:'3,000 hp diesel'},
+  autoliner:{name:{no:'Autoliner 45 m med frysing', en:'45 m autoliner with freezing'}, len:45.4, beam:10.45, draft:3.8, disp:1050, holdCap:400000, iceCap:0, fuelCap:300000, hp:3000, engine:{no:'3 000 hk diesel', en:'3,000 hp diesel'},
     vmax:13, vcruise:11, accel:1, turnR:280, planing:false, outboard:false, diesel:true, fuelK:35, risk:[6, 9, 24, 30], sea:0.04, crewMax:14, berths:16, tubCap:2000, land:'tub', std:['plotter', 'vhf', 'ais', 'chirp', 'sonar'],
     rigs:['line'], jukseMax:0, gearMax:{garn:0, stamp:0, teine:4}, autoHooks:40000, svcH:600, svcCost:350000, svcJobH:72, cls:'hav', price:70000000, priceNew:300000000, year:1999, lock:true,
     crew:{key:['skipper', 'styrmann', 'maskinsjef', '2. maskinist', 'kokk', 'bas'], teams:[{role:'dekk', n:4}, {role:'fabrikk', n:4}], rot:2},

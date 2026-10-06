@@ -1,4 +1,4 @@
-"""The freezer trawler from Blender (06.10.2026; tools/boats/tral60.py, src/data/boat-tral60.b64, view3d.js TRAWL): the detailed model
+"""The freezer trawler, the purse seiner and the autoliner from Blender (06.10.2026; tools/boats/tral60.py, src/data/boat-tral60.b64, view3d.js TRAWL): the detailed model
 replaces the kit for bunntral, at the drawing's size (60.3 x 12.5 m); the doors hang in the gallows and the net lies on its drum;
 G3._debug.trawl plays shooting (the net down the ramp, the doors into the sea and out astern), towing and hauling (the doors back
 in the gallows, the codend up the ramp). The game does not trawl yet (the ocean step), so this is the only place it plays.
@@ -64,7 +64,18 @@ async def main():
         await pg.screenshot(path=os.path.join(OUT, 'not_trawl.png')); t1 = await pg.evaluate("G3._debug.trawlNow")
         check(t1 and t1['mode'] == 'shoot' and t1['lo'] == 1, 'she shoots the pelagic trawl too, the doors from the stern quarters', t1)
         await pg.evaluate("G3._debug.trawl(null)")
-        gl = await pg.evaluate("G3._debug.glErr ? G3._debug.glErr() : 0")
+        # the autoliner (tools/boats/al45.py): her model at the drawing's size, and the line coming in through the hauling port
+        r = await pg.evaluate("""(() => { const b = S.boat; b.type = 'autoliner'; applyVessel(); const V = VESSELS.autoliner, g = geoOf('autoliner');
+          return {glb:glbHas('autoliner'), len:V.len, beam:V.beam, draft:V.draft, hauler:g && g.hauler, tris:glbPart('autoliner', 'lod0').p.length / 9}; })()""")
+        check(r['glb'] and r['len'] == 45.4 and r['beam'] == 10.45 and r['hauler'] and r['hauler'][0] > 4, 'the autoliner\'s GLB is in the page at the drawing\'s size, the hauler at the starboard hauling port', r)
+        await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.dist = 75; c.pitch = 0.2; c.yaw = 0.9; })()"); await pg.wait_for_timeout(4000)
+        await pg.screenshot(path=os.path.join(OUT, 'al_rest.png'))
+        await pg.evaluate("""(() => { const b = S.boat, g = b.pos; b.status = 'fishing';
+          b.gop = {op:'haul', kind:'line', sid:'t', n:6, done:2, prog:0.4, a:{x:g.x, y:g.y}, b:{x:g.x + 0.5, y:g.y}, kg:0, rel:0, dead:0, hooksPer:100};
+          const c = G3._debug.cam; c.dist = 30; c.pitch = 0.12; c.yaw = -1.4; })()"""); await pg.wait_for_timeout(4000)
+        await pg.screenshot(path=os.path.join(OUT, 'al_haul.png'))
+        await pg.evaluate("(() => { const b = S.boat; b.gop = null; b.status = 'idle'; })()")
+        gl =await pg.evaluate("G3._debug.glErr ? G3._debug.glErr() : 0")
         check(not errs and not gl, 'no page errors and no WebGL errors', {'errors': errs[:3], 'gl': gl})
         print('errors:', errs[:5])
         await br.close()

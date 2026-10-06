@@ -1079,7 +1079,7 @@ Båtene står i `VESSELS` (`core/02-species-gear.js`). Tallene er startverdier o
 | `kyst15` | Kystbåt 14,99 m med lugarer | 14,99 × 6,6 × 3,0 | 75 | 28 t | 750 hk, 10/11,5 kn | 1+5 / 6 | 18 000 000 | bare lukket gruppe |
 | `kyst21` | Eldre kystbåt 21 m (1978) | 21 × 7,2 × 3,4 | 190 | 55 t | 900 hk, 10/11 kn | 1+6 / 8 | 9 000 000 | bare lukket, ikke innenfor fjordlinja |
 | `snokrabbe` 🔒 | Snøkrabbefartøy 50 m med fryseri | 50 × 11 × 6 | 1 800 | 500 t fryst | 3 600 hk, 11/13,5 kn | 14 / 18 | 60 mill. | havfiske, konsesjon |
-| `autoliner` 🔒 | Autoliner 45 m med frysing | 45 × 10,5 × 6 | 1 500 | 400 t fryst | 3 000 hk, 11/13 kn | 14 / 16 | 70 mill. (ny 300) | havfiske, konsesjon |
+| `autoliner` 🔒 | Autoliner 45 m med frysing | 45,4 × 10,45 × 3,8 | 1 050 | 400 t fryst | 3 000 hk, 11/13 kn | 14 / 16 | 70 mill. (ny 300) | havfiske, konsesjon |
 | `bunntral` 🔒 | Frysetråler 60 m med akterslipp | 60,3 × 12,5 × 5,1 | 2 200 | 800 t fryst | 8 000 hk, 12/15 kn | 25 / 30 | 150 mill. (ny 500) | havfiske, konsesjon |
 | `pelagisk` 🔒 | Ringnot- og pelagisk tråler 75 m | 75 × 15,5 × 7,5 | 5 000 | 2 000 t RSW | 9 000 hk, 14/17 kn | 12 / 16 | 250 mill. (ny 800) | havfiske, konsesjon |
 
@@ -1528,6 +1528,18 @@ Kvotesystemet ligger i `core/03d-quota.js` (04.10.2026, plan Q1–Q6). Grunnlage
     - Korkene og fisken er punkter på sjøen i båtens vannrette ramme.
   - **Trålen** spilles som for tråleren (`TRAWL`), over hekkrullen og med dørene fra hekkhjørnene. Spillet fisker ikke med not eller trål ennå (havsteget), og Båthandelen viser ikke animasjonene.
   - **Test:** `tral3d.py` (begge havbåtene). Kjøring: `python3 tools/boats/not75.py` (med `fast` og `dry`). Dataene ligger i `src/data/boat-not75.b64` og `boat-not75-side.b64`, og i malen som `glb-pelagisk` og `pic-pelagisk`.
+- **Autolineren (`autoliner`, fra 06.10.2026):** `tools/boats/al45.py` bygger en autoliner på 45 m, etter generalarrangementet Jonas viste («45 m Longliner», prosjekt 6161, tegning 101-002, 1:100). Tegningen er ikke i repoet.
+  - **Målene på tegningen:** 45,38 m over alt, 41,05 m mellom perpendikulærene, bredde 10,45 m, dybde til hoveddekket 4,75 m, 2. dekk 7,15 m og 3. dekk 9,55 m, 16 køyer. Spillet har nå 45,4 × 10,45 m.
+  - **Dypgående:** vannlinja på tegningen ligger 3,3 m over basislinja og 3,75 m over kjølskoen, så spillet har 3,8 m (før 6 m). Med 6 m ville hoveddekket på 4,75 m ligget under vann. Deplasementet er satt ned fra 1 500 til 1 050 t, så fyldigheten blir 0,57 og under grensen i `vesseltest.py`. Pris, lasterom, motor og fart er som før.
+  - **Det som er målt** (47,46 px/m, spant 0 i akterkant):
+    - stevnen er sporet av tegningen: forfoten går rund og full fram til nesa på 42,7 m i vannlinja, stevnen svinger inn til 41,1 m 6,3 m opp og flarer ut til skansen på 43,4 m. Det er ingen egen bulb.
+    - speilet på −2,0 m, styrhuset på 10,9–19,1 m med vinduer på 12,4–13,3 m og tak på 14,05 m, skorsteinen på 6,0–9,6 m
+    - haleporten på styrbord side på 20,7–23,5 m, 5,5–7,05 m over basislinja
+  - **Baugen** er en flate av rader fra spantet på 26 m fram til stevnen (`bow_pt`). Radene ligger vannrett over vannlinja og følger den skrå kjølen nederst. Stasjoner på tvers ville gitt trappetrinn der stevnen svinger tilbake.
+  - **På dekk:** skorsteinen med to eksosrør, MOB-båten og kranen på babord side akter, kranen foran styrhuset med bommen lagt forover, plattformen med ankervinsjen og den skrå formasta forut, rekker hele veien og radarmasta med to kupler på styrhustaket. Skroget er marineblått til 2. dekk og hvitt over (våre farger).
+  - **Lina:** haleren (`hauler`) står innenfor haleporten på hoveddekket (`deck`). Lina går fra sjøen inn gjennom den mørke åpningen. Haleren, balene og settingen er inne i skroget og synes ikke, som på en ekte autoliner.
+  - Fila er rundt 14 000 trekanter nær og 2 600 på avstand, 448 KB. Bare utsiden er modellert.
+  - **Test:** `tral3d.py`. Kjøring: `python3 tools/boats/al45.py` (med `fast` og `dry`). Dataene ligger i `src/data/boat-al45.b64` og `boat-al45-side.b64`, og i malen som `glb-autoliner` og `pic-autoliner`.
 - **Fars gamle trebåt (`trebat`, startbåten fra 05.10.2026):** `tools/boats/snekke23.py` bygger en klinkbygd spissgatter på 23 fot med innenbords semidiesel, etter Jonas' bilder av gamle snekker. Han valgte: topphastighet 7 knop, resten fiktivt etter skiffen; maks 850 o/min; slitt og gammel, ubehandlet trevirke («Gammelt trevirke»); ingen fendere, ikke noe stevnbånd; rorkult og aldri ratt i tillegg.
   - **Modellen:** ni bord i hver side med landene, spant, kjøl, stevner, ripe og skvettlist; dørker rett over vannlinja (spillet tegner sjøen over alt under den), tre tofter, fordekk; motorkasse med sylinder, glødehode, eksosrør og eikehjul; høyt ror langs den skrå akterstevnen med rorkult; fiskekasser foran midttofta og sløyebord over babord rekke (renne, kniv, bøtte); fars presenning som tøy på fordekket. 17 948 trekanter, 854 KB.
   - **Slitasjen** ligger i hvert hjørne (`Acc.done(tint=wear)` i `bpyutil.py`, attributtet `TINT` som GLB-skriveren ganger inn i fargen), så den glir over flatene i stedet for å følge dem i firkanter: grålig treverk i flekker og øverst, mørkt der det er vått, striper fra ripa, tjæret bunn, rust på jernet. Bildene fra Blender gjør spillets farger lineære, så de ser ut som i spillet.
