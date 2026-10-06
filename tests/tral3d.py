@@ -46,6 +46,24 @@ async def main():
         # and run on to the end by itself
         await pg.evaluate("G3._debug.trawl('haul', 53)"); await pg.wait_for_timeout(4000); h3 = await pg.evaluate("G3._debug.trawlNow")
         check(h3 is None, 'and then all is as before: the doors in the gallows, the net on the drum', h3)
+        # the purse seiner and pelagic trawler (tools/boats/not75.py): her model, the seine shot, pursed, hauled and pumped, her trawl
+        r = await pg.evaluate("""(() => { const b = S.boat; b.type = 'pelagisk'; applyVessel(); const g = geoOf('pelagisk'), V = VESSELS.pelagisk;
+          return {glb:glbHas('pelagisk'), seine:!!(g && g.seine), trawl:!!(g && g.trawl), door:!!glbPart('pelagisk', 'door'), len:V.len, tris:glbPart('pelagisk', 'lod0').p.length / 9}; })()""")
+        check(r['glb'] and r['seine'] and r['trawl'] and r['door'], 'the purse seiner\'s GLB is in the page, with the seine\'s places and the trawl\'s doors', r)
+        await pg.evaluate("G3._debug.trawl(null); (() => { const c = G3._debug.cam; c.helm = false; c.dist = 150; c.pitch = 0.42; c.yaw = -0.9; })()"); await pg.wait_for_timeout(4000)
+        await pg.screenshot(path=os.path.join(OUT, 'not_rest.png'))
+        async def sat(mode, u, shot):
+            await pg.evaluate("G3._debug.seine('%s', %f, true)" % (mode, u)); await pg.wait_for_timeout(2500)
+            st = await pg.evaluate("G3._debug.seineNow"); await pg.screenshot(path=os.path.join(OUT, 'not_%s.png' % shot)); return st
+        n1 = await sat('shoot', 20, 'shoot'); n2 = await sat('purse', 10, 'purse'); n3 = await sat('haul', 25, 'haul'); n4 = await sat('pump', 8, 'pump')
+        check(n1 and n1['mode'] == 'shoot' and 0.3 < n1['k'] < 0.7, 'the seine is shot over the stern, its corks a ring on the sea', n1)
+        check(n2 and n2['mode'] == 'purse' and n3 and n3['mode'] == 'haul' and n4 and n4['mode'] == 'pump', 'then pursed, hauled in through the power block, and the fish pumped from the bunt alongside', [n2, n3, n4])
+        await pg.evaluate("G3._debug.seine('pump', 19)"); await pg.wait_for_timeout(4000); n5 = await pg.evaluate("G3._debug.seineNow")
+        check(n5 is None, 'and then the seine is back in its bin', n5)
+        await pg.evaluate("G3._debug.seine(null); G3._debug.trawl('shoot', 30, true)"); await pg.wait_for_timeout(2500)
+        await pg.screenshot(path=os.path.join(OUT, 'not_trawl.png')); t1 = await pg.evaluate("G3._debug.trawlNow")
+        check(t1 and t1['mode'] == 'shoot' and t1['lo'] == 1, 'she shoots the pelagic trawl too, the doors from the stern quarters', t1)
+        await pg.evaluate("G3._debug.trawl(null)")
         gl = await pg.evaluate("G3._debug.glErr ? G3._debug.glErr() : 0")
         check(not errs and not gl, 'no page errors and no WebGL errors', {'errors': errs[:3], 'gl': gl})
         print('errors:', errs[:5])

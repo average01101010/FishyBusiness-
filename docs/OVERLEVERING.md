@@ -1507,6 +1507,27 @@ Kvotesystemet ligger i `core/03d-quota.js` (04.10.2026, plan Q1–Q6). Grunnlage
     - **Opptak (50 s):** dørene kommer inn og opp i galgen. Så kommer trålen inn på trommelen, og posen, full, opp slippen.
     - Spillet tråler ikke ennå, fordi det hører til havsteget (Jonas' valg 06.10.2026: «Bare modeller og animasjoner»). Båthandelen viser ikke animasjonene (CLAUDE.md).
   - **Test:** `tral3d.py`. Kjøring: `python3 tools/boats/tral60.py` (med `fast` og `dry`). Dataene ligger i `src/data/boat-tral60.b64` og `boat-tral60-side.b64`, og i malen som `glb-bunntral` og `pic-bunntral`.
+- **Ringnot- og pelagisk tråleren (`pelagisk`, fra 06.10.2026):** `tools/boats/not75.py` bygger en snurper og pelagisk tråler på rundt 75 m, etter profiltegningene av en dansk snurper som Jonas viste («Denne kan både bruke ringnot og trål»). Tegningene er ikke i repoet.
+  - **Målene:** tegningen har bare spantskala (0–120) og ingen tall. Med vanlig spantavstand på 0,60 m blir den 75,5 m over alt, som spillets 75 m, så spillets tall (75 × 15,5 × 7,5 m) står. Bredden står ikke på tegningen.
+  - **Det som er målt** (19,17 px/m):
+    - vannlinja 7,6 m over basislinja
+    - springen på det blå skroget: 13,7 m akter, 12,65 m midtskips og 16,5 m ved stevnen, med hvit skansekledning over
+    - bulbens nese på 72,1 m, 5,4 m opp
+    - styrhuset med vinduer på 17,6–19,4 m og tak på 20,7 m, mastene og skorsteinen
+  - **På dekk:**
+    - notbingen akter, med nota og korkene og kraftblokkranen over styrbord side
+    - tårnkranen på styrbord hekkhjørne og snurpedaviten midtskips på styrbord
+    - trålrullen og trålvinsjene, og tråldørene i galger på hekkhjørnene
+    - overbygningen midtskips med MOB-båt i en nisje på styrbord side, den skrå masta, skorsteinen med to eksosrør, og kranen og formasta forut
+  - Dør, pose og trålrull er de samme delene som i tråleren (`tral60.py`). Fila er rundt 15 600 trekanter nær og 4 400 på avstand, 602 KB. Bare utsiden er modellert.
+  - **Nota i 3D** (`SEINE`, `drawSeine` i `view3d.js`): `G3._debug.seine('shoot' | 'purse' | 'haul' | 'pump')` spiller fasene etter hverandre.
+    - **Notkast (40 s):** nota går ut over hekkrullen fra bingen. Korkene legger seg i en ring på 62 m fra hekken rundt til styrbord side midtskips.
+    - **Snurping (25 s):** snurpelina går fra daviten ned i sjøen.
+    - **Hiving (45 s):** nota går gjennom kraftblokka og ned i bingen, og ringen krymper inn mot styrbord side.
+    - **Pumping (20 s):** posen ligger ved siden med fisk som koker i den, og pumpeslangen går ned i den.
+    - Korkene og fisken er punkter på sjøen i båtens vannrette ramme.
+  - **Trålen** spilles som for tråleren (`TRAWL`), over hekkrullen og med dørene fra hekkhjørnene. Spillet fisker ikke med not eller trål ennå (havsteget), og Båthandelen viser ikke animasjonene.
+  - **Test:** `tral3d.py` (begge havbåtene). Kjøring: `python3 tools/boats/not75.py` (med `fast` og `dry`). Dataene ligger i `src/data/boat-not75.b64` og `boat-not75-side.b64`, og i malen som `glb-pelagisk` og `pic-pelagisk`.
 - **Fars gamle trebåt (`trebat`, startbåten fra 05.10.2026):** `tools/boats/snekke23.py` bygger en klinkbygd spissgatter på 23 fot med innenbords semidiesel, etter Jonas' bilder av gamle snekker. Han valgte: topphastighet 7 knop, resten fiktivt etter skiffen; maks 850 o/min; slitt og gammel, ubehandlet trevirke («Gammelt trevirke»); ingen fendere, ikke noe stevnbånd; rorkult og aldri ratt i tillegg.
   - **Modellen:** ni bord i hver side med landene, spant, kjøl, stevner, ripe og skvettlist; dørker rett over vannlinja (spillet tegner sjøen over alt under den), tre tofter, fordekk; motorkasse med sylinder, glødehode, eksosrør og eikehjul; høyt ror langs den skrå akterstevnen med rorkult; fiskekasser foran midttofta og sløyebord over babord rekke (renne, kniv, bøtte); fars presenning som tøy på fordekket. 17 948 trekanter, 854 KB.
   - **Slitasjen** ligger i hvert hjørne (`Acc.done(tint=wear)` i `bpyutil.py`, attributtet `TINT` som GLB-skriveren ganger inn i fargen), så den glir over flatene i stedet for å følge dem i firkanter: grålig treverk i flekker og øverst, mørkt der det er vått, striper fra ripa, tjæret bunn, rust på jernet. Bildene fra Blender gjør spillets farger lineære, så de ser ut som i spillet.

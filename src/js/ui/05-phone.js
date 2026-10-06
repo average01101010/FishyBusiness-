@@ -407,6 +407,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p60', '06.10.2026', 'Ringnotsnurperen fra Blender', 'The purse seiner from Blender', [
+      ['Ringnot- og pelagisk tråleren er bygget på nytt etter ekte tegninger: blått skrog, notbinge med kraftblokk akter, trålrull og tråldører, styrhus midtskips og formast. Bare utsiden er modellert.', 'The purse seiner and pelagic trawler is rebuilt from real drawings: a blue hull, the seine bin with the power block aft, the trawl drum and doors, the wheelhouse amidships and the foremast. Only the outside is modelled.']]],
     ['p59', '06.10.2026', 'Frysetråleren fra Blender', 'The freezer trawler from Blender', [
       ['Frysetråleren er bygget på nytt etter en ekte generaltegning: 60 m med akterslipp, galge med tråldører på hekken, nettrommel, trålvinsjer og styrhus på toppen. Den heter nå «Frysetråler 60 m» og har tegningens mål.', 'The freezer trawler is rebuilt from a real general arrangement: 60 m with a stern ramp, a gantry with the trawl doors on the stern, a net drum, trawl winches and the wheelhouse on top. It is now the «60 m freezer trawler», with the drawing\'s size.']]],
     ['p58', '06.10.2026', 'Båten følger rutestreken', 'The boat follows the route line', [
