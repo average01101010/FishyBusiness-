@@ -16,6 +16,7 @@ Et kystfiskespill langs hele norskekysten (det begynte på Senja) som kjører so
 - En ny fil i `src/` legges inn i `COVER` i `run.py` med testen som dekker den.
 - **Båtmodeller** (Jonas 06.10.2026): bare utsiden som spillerne ser, ingen innredning, fabrikk eller rom under dekk. Båthandelen viser ikke animasjoner av hva båtene kan gjøre («høyst unødvendig»).
 - Patchnotes-appen på telefonen (`PATCH` i `src/js/ui/05-phone.js`, fra 04.10.2026) skal vise det nyeste. Når en endring som merkes i spillet pushes, legg den inn som en ny oppføring øverst eller som en linje i den nyeste, kort og på norsk og engelsk.
+- **Patchnotes nevner aldri** taktisk spilldesign, psykologi, ekte penger eller salgsstrategi (Jonas 06.10.2026). Det blir mellom oss. Ingen 💎, priser i kroner for ekte penger, butikk, gaver for å registrere seg, tellinger før registrering eller grunner til hvorfor noe er laget slik. En funksjon som koster ekte penger, beskrives bare ved hva den gjør i spillet, om den nevnes i det hele tatt.
 - Vær ærlig om svake tester, antakelser og usikre regler. Sjekk regelverk mot kildene (Lovdata, Fiskeridirektoratet, Råfisklaget) før det bygges inn, og oppgi kilden.
 - Brukeren tester på Android-nettbrett, så UI må fungere med berøring i både stående og liggende format.
 
