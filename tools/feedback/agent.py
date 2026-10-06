@@ -1,7 +1,7 @@
 """The feedback agent's hands (06.10.2026; tools/feedback/RUTINE.md, supabase/functions/feedback-agent, docs/OVERLEVERING.md 4.22).
 
-Talks to the Edge Function feedback-agent with the token in the environment variable FEEDBACK_AGENT_TOKEN (Jonas sets it in the
-Claude Code environment; it is never written anywhere). What it fetches is the players' feedback: it goes to a folder outside the repo
+Talks to the Edge Function feedback-agent with the token FEEDBACK_AGENT_TOKEN (Jonas sets it as an API credential in the Claude
+Code environment, which sessions use without seeing it; it is never written anywhere). What it fetches is the players' feedback: it goes to a folder outside the repo
 (--out, by default a temporary folder) and never into git.
 
     python3 tools/feedback/agent.py list [--lim 40] [--out DIR] [--imgs]     the new feedback to DIR/feedback.json (pictures to DIR/img/)
@@ -15,16 +15,18 @@ URL = json.load(open(os.path.join(ROOT, 'src', 'data', 'cloud.json')))['supabase
 
 
 def call(op, **kw):
+    # an API credential in the Claude Code environment: the session may see the variable only as a stand-in, which the proxy swaps
+    # for the real token on its way to Supabase; without the variable the call goes bare, in case the proxy adds the header itself
     tok = os.environ.get('FEEDBACK_AGENT_TOKEN', '')
-    if not tok:
-        sys.exit('FEEDBACK_AGENT_TOKEN is not set: Jonas adds it as an environment variable in the Claude Code environment (and as a secret in Supabase)')
-    req = urllib.request.Request(URL, data=json.dumps({'op': op, **kw}).encode(), method='POST',
-                                 headers={'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json'})
+    hdr = {'Content-Type': 'application/json', **({'Authorization': 'Bearer ' + tok} if tok else {})}
+    req = urllib.request.Request(URL, data=json.dumps({'op': op, **kw}).encode(), method='POST', headers=hdr)
     try:
         with urllib.request.urlopen(req, timeout=120) as r:
             out = json.load(r)
     except urllib.error.HTTPError as e:
         body = e.read().decode(errors='replace')[:300]
+        if e.code == 401:
+            sys.exit('feedback-agent %s: the token was not accepted%s. Jonas sets FEEDBACK_AGENT_TOKEN as an API credential in the Claude Code environment, the same as the secret in Supabase' % (op, '' if tok else ' (FEEDBACK_AGENT_TOKEN is not in the environment)'))
         sys.exit('feedback-agent %s: HTTP %d %s' % (op, e.code, body))
     except urllib.error.URLError as e:
         sys.exit('feedback-agent %s: %s (is %s allowed in the environment\'s network access?)' % (op, e.reason, URL.split('/')[2]))
