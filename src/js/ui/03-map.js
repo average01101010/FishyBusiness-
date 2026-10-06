@@ -431,8 +431,9 @@ const ptrs = new Map(); let drag = null, pinch = null;
 svg.addEventListener('pointerdown', e => {
   svg.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
   if (ptrs.size === 1){ drag = {sx:e.clientX, sy:e.clientY, cx:view.cx, cy:view.cy, moved:false}; const mp = toMap(e.clientX, e.clientY); drag.set = setGrab(mp); drag.wp = drag.set ? null : routeGrab(mp);
-    // a finger held still sets your own mark (and the lift after it is not a tap)
-    if (!drag.set && !drag.wp && !SETM){ const d = drag; d.hold = setTimeout(() => { if (drag !== d || d.moved || ptrs.size !== 1) return; d.moved = true; pinAdd(mp); }, PIN_HOLD); } }
+    // a finger held still sets your own mark: told at the lift by the events' own times, not by a timer, which on a slow frame ran
+    // before the lift of a plain tap and turned a waypoint into a mark (tut.py, 06.10.2026)
+    drag.t0 = e.timeStamp; drag.pin = !drag.set && !drag.wp && !SETM; }
   else if (ptrs.size === 2){ const [a, c] = [...ptrs.values()]; pinch = {d:Math.hypot(a.x - c.x, a.y - c.y) || 1, z:view.z}; if (drag){ drag.moved = true; if (drag.wp){ routeDragCancel(drag.wp); drag.wp = null; drag.cx = view.cx; drag.cy = view.cy; } } }
 });
 svg.addEventListener('pointermove', e => {
@@ -443,16 +444,16 @@ svg.addEventListener('pointermove', e => {
     const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
     if (drag.set){ drag.moved = true; setAim(toMap(e.clientX, e.clientY)); return; }
     if (drag.wp){ if (drag.wp.moved || Math.hypot(dx, dy) > 5) routeDragMove(drag.wp, toMap(e.clientX, e.clientY)); return; }
-    if (Math.hypot(dx, dy) > 7){ drag.moved = true; clearTimeout(drag.hold); }
+    if (Math.hypot(dx, dy) > 7) drag.moved = true;
     if (drag.moved){ view.cx = drag.cx - dx / view.px; view.cy = drag.cy - dy / view.px; applyView(); }
   }
 });
 function ptrUp(e){
-  if (drag) clearTimeout(drag.hold);
   if (drag && drag.set){ ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; if (ptrs.size === 0) drag = null; return; }
   if (drag && drag.wp){ const g = drag.wp; drag.wp = null; ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; if (ptrs.size === 0) drag = null; if (e.type === 'pointerup') routeDragEnd(g); else routeDragCancel(g); return; }
   const tap = drag && !drag.moved && ptrs.size === 1 && e.type === 'pointerup';
   ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null;
+  if (tap && drag.pin && e.timeStamp - drag.t0 >= PIN_HOLD){ pinAdd(toMap(e.clientX, e.clientY)); if (ptrs.size === 0) drag = null; return; }
   if (tap && SETM){ setAim(toMap(e.clientX, e.clientY)); if (ptrs.size === 0) drag = null; return; }
   if (tap){ const mp = toMap(e.clientX, e.clientY), rr = 16 / view.px; const ph = (S.pins || []).find(q => dist(q, mp) < rr); if (ph){ pinOpen(ph.id); return; } const gh = gearHit(mp, rr * 0.8); if (gh){ gearTap(gh); renderDyn(); return; } let hit = null, bd = 1e9; for (const n of AISNOW){ const d = dist(n.p, mp); if (d < rr && d < bd){ bd = d; hit = n; } } if (hit && (hit.st === 'port' || hit.v === 0) && PORTS.some(q => dist(q.p, mp) < rr * 1.6)) hit = null; if (hit){ AISSEL = hit.id; renderDyn(); renderAisCard(); return; } addWaypoint(mp); }
   if (ptrs.size === 0) drag = null;
