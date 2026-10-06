@@ -305,7 +305,7 @@ function applyLang(){
   $('view3d').textContent = (typeof G3 !== 'undefined' && G3.isActive()) ? t('view_chart') : '3D';
   $('lang').setAttribute('aria-label', S.lang === 'no' ? 'Switch to English' : 'Bytt til norsk');
   $('zin').setAttribute('aria-label', t('zin')); $('zout').setAttribute('aria-label', t('zout')); $('zboat').setAttribute('aria-label', t('zboat'));
-  svg.setAttribute('aria-label', S.lang === 'no' ? 'Sjøkart over Senja' : 'Chart of Senja');
+  svg.setAttribute('aria-label', S.lang === 'no' ? 'Sjøkart' : 'Sea chart');
 }
 $('view3d').onclick = () => G3.toggle();
 // ---------- screens: full-screen 3D, or the chart plotter for route planning ----------

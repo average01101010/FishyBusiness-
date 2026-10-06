@@ -61,7 +61,7 @@ function festDays(y){
 const festOn = H => { const F = festDays(yearH(H)); return H >= F.H0 && H < F.H1 ? F : null; };
 // the coast's other entries: their biggest cod, the same for everyone in a year
 function festField(y){
-  return SKIPPERS.slice(0, 7).map((s, i) => ({name:s[0], port:s[1], kg:Math.round((14 + 13 * h2(y, 7800 + i) + (h2(y, 7820 + i) < 0.15 ? 9 : 0)) * 10) / 10}));
+  return SKIPPERS.slice(0, 7).map((s, i) => ({name:s[0], port:skipPort(i), kg:Math.round((14 + 13 * h2(y, 7800 + i) + (h2(y, 7820 + i) < 0.15 ? 9 : 0)) * 10) / 10}));
 }
 // a cod landed by one of your boats during the festival (addCatch)
 function festCatch(sp, kg){

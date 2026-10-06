@@ -12,10 +12,10 @@ const TATS = [
   {id:'harpun', n:['Harpun', 'Harpoon'], m:['For hvalfangst, eller for å høre til en fiskeriflåte.', 'For whaling, or for belonging to a fishing fleet.'], r:['Et rederi med tre båter', 'A company with three vessels'], p:c => [c.fleet, 3]},
   {id:'grishane', n:['Gris og hane', 'Pig and rooster'], m:['På fotbladene, mot drukning. Grisen og hanen sto i trekasser om bord, og kassene fløt når skuta gikk ned.', 'On the feet, against drowning. The pig and the rooster travelled in wooden crates, and the crates floated when the ship went down.'], r:['Reddet etter grunnstøting, motorstopp eller drift', 'Rescued after running aground, an engine failure or drifting'], p:c => [c.rescued, 1]},
   {id:'rose', n:['Kniv gjennom rose', 'Dagger through a rose'], m:['For lojalitet.', 'For loyalty.'], r:['Samme mann om bord i ett år, eller 50 leveranser til samme mottak', 'The same hand aboard for a year, or 50 landings at the same plant'], p:c => [Math.max(Math.floor(c.tenure / 365 * 50), c.plant), 50]},
-  {id:'anker', lock:true, n:['Anker', 'Anchor'], m:['For å ha krysset Atlanterhavet.', 'For having crossed the Atlantic.'], r:['Krever farvann utenfor Senja', 'Needs waters beyond Senja']},
-  {id:'skilpadde', lock:true, n:['Skilpadde', 'Turtle'], m:['For å ha krysset ekvator.', 'For having crossed the equator.'], r:['Krever farvann utenfor Senja', 'Needs waters beyond Senja']},
-  {id:'hula', lock:true, n:['Hulajente', 'Hula girl'], m:['For å ha vært på Hawaii.', 'For having been to Hawaii.'], r:['Krever farvann utenfor Senja', 'Needs waters beyond Senja']},
-  {id:'neptun', lock:true, n:['Kong Neptun', 'King Neptune'], m:['For linjedåpen, når man krysser ekvator.', 'For the line-crossing ceremony at the equator.'], r:['Krever farvann utenfor Senja', 'Needs waters beyond Senja']}
+  {id:'anker', lock:true, n:['Anker', 'Anchor'], m:['For å ha krysset Atlanterhavet.', 'For having crossed the Atlantic.'], r:['Krever farvann utenfor Norge', 'Needs waters beyond Norway']},
+  {id:'skilpadde', lock:true, n:['Skilpadde', 'Turtle'], m:['For å ha krysset ekvator.', 'For having crossed the equator.'], r:['Krever farvann utenfor Norge', 'Needs waters beyond Norway']},
+  {id:'hula', lock:true, n:['Hulajente', 'Hula girl'], m:['For å ha vært på Hawaii.', 'For having been to Hawaii.'], r:['Krever farvann utenfor Norge', 'Needs waters beyond Norway']},
+  {id:'neptun', lock:true, n:['Kong Neptun', 'King Neptune'], m:['For linjedåpen, når man krysser ekvator.', 'For the line-crossing ceremony at the equator.'], r:['Krever farvann utenfor Norge', 'Needs waters beyond Norway']}
 ];
 function tatCounts(){
   const c = S.tat || {}, H = S.t / 60;

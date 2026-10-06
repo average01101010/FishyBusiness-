@@ -25,7 +25,7 @@ function access(){ if (S.lic) return 'lukket'; return S.cur === openVesselId() &
 const BYCATCH = {share:0.1, cod:2000};
 function vesselValue(v){ const b = vget(v, 'boat'), eq = vget(v, 'equip') || {}; return Math.round(VESSELS[b.type].price * 0.7 + (eq.motor90 ? EQUIP.motor90.price * 0.5 : 0) + licValue(vget(v, 'lic')) * 0.95); }
 // a vessel added to the fleet: default state, in port with 40 % fuel; the bigger boats come with a plotter and VHF
-const VNAMES = ['Senjaværing', 'Nordlys', 'Malangen', 'Gisund', 'Havglimt', 'Skreien', 'Fjordbris', 'Straumen', 'Hekkingen', 'Kvitskjær'];
+const VNAMES = ['Kystværing', 'Nordlys', 'Vestfjord', 'Nordkyn', 'Havglimt', 'Skreien', 'Fjordbris', 'Straumen', 'Hekkingen', 'Kvitskjær'];
 function newVesselObj(type, pid, lic){
   const d = newState(), V = VESSELS[type], p = portById(pid).p, n = Math.max(0, ...S.fleet.map(x => +String(x.id).slice(1) || 0)) + 1, v = {id:'v' + n};
   for (const k of VKEYS) v[k] = d[k];

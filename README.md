@@ -3,7 +3,7 @@ Game-development
 
 ## Kystfiske
 
-Kystfiske er et spill om kystfiske fra Senja. Det har kartplotter, 3D-visning i ren WebGL, mobil og dekksdagbok. Spillet kjører som én selvstendig HTML-side og publiseres som artifacten [«Kystfiske – prototype»](https://claude.ai/artifact/HHehndJQmtCYBJpQ1b8L6f).
+Det Store Blå er et spill om kystfiske langs hele norskekysten. Det har kartplotter, 3D-visning i ren WebGL, mobil og dekksdagbok. Spillet kjører som én selvstendig HTML-side og publiseres som artifacten [«Kystfiske – prototype»](https://claude.ai/artifact/HHehndJQmtCYBJpQ1b8L6f).
 
 ### Bygg
 
@@ -22,7 +22,7 @@ Byggeskriptet setter sammen `src/` til `dist/index.html`, som kan åpnes direkte
 | `src/js/core/` | Simulering: verden, arter og utstyr, vær, fangst, priser, kvoter, mannskap, andre fartøy og tjenester |
 | `src/js/ui/` | Grensesnitt: språk, kart, instrumenter, mobil, dekksdagbok, guide, handlinger, håndfiske, «Kaffe på kaia» og oppstart |
 | `src/js/view3d.js` | 3D-visning |
-| `src/data/` | Kartdata for Senja (komprimert, base64) og sjømerker og kaier (JSON) |
+| `src/data/` | Kartdata (Senja innebygd, hele kysten som kartpakker), sjømerker, mottak, regler og kaier (JSON) |
 | `docs/OVERLEVERING.md` | Overlevering fra chatten: visjon, arkitektur, systemer, regelverk og flåteplanen |
 | `docs/spesifikasjon.md` | Spesifikasjon for fiskerisystemet |
 | `tests/` | Playwright-tester i Python, som kjøres mot `dist/index.html` |

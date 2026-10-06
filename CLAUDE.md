@@ -1,6 +1,6 @@
 # Det Store Blå (Kystfiske)
 
-Et kystfiskespill fra Senja som kjører som én selvstendig HTML-side, publisert som artifact. Spillet heter **Det Store Blå** (brukerens valg 04.10.2026, domenet detstorebla.no). Et engelsk navn for lansering i utlandet er ikke valgt ennå, så den engelske utgaven heter også Det Store Blå. Repoet, lagringsnøklene (`kystfiske_v2`) og andre interne navn heter fortsatt kystfiske og skal ikke endres, fordi lagringene da ville forsvinne. Brukeren skriver norsk; svar på norsk. Koden og kommentarene i den er på engelsk.
+Et kystfiskespill langs hele norskekysten (det begynte på Senja) som kjører som én selvstendig HTML-side, publisert som artifact. Spillet heter **Det Store Blå** (brukerens valg 04.10.2026, domenet detstorebla.no). Et engelsk navn for lansering i utlandet er ikke valgt ennå, så den engelske utgaven heter også Det Store Blå. Repoet, lagringsnøklene (`kystfiske_v2`) og andre interne navn heter fortsatt kystfiske og skal ikke endres, fordi lagringene da ville forsvinne. Brukeren skriver norsk; svar på norsk. Koden og kommentarene i den er på engelsk.
 
 **Les `docs/OVERLEVERING.md` før du endrer spillet.** Den har visjonen, arbeidsmåten, arkitekturen, alle systemene med tall, regelverket, kjente problemer og flåteplanen. Spesifikasjonen for fiskerisystemet ligger i `docs/spesifikasjon.md`.
 

@@ -46,6 +46,6 @@ async def main():
         print(ok(r['goto']['app'] == 'mannskap' and r['goto']['sel'] == 'v2' and r['goto']['cur'] == 'v1' and r['goto']['crewShown']), 'an alert opens the crew page in the drawer on the second vessel, following stays on the first')
         print(ok(r['equip']['v2jobs'] == ['fit:chirp'] and r['equip']['v1jobs'] == [] and r['equip']['cur'] == 'v1'), 'equipment bought with the selector goes to the selected vessel')
         print(ok(r['sale']['v'] == 'v2' and r['incomeShown']), 'the landing is booked on the vessel and shows as its income today')
-        print(ok(any(m.startswith('«Senjaværing»') for m in r['svcMsgs']) and any(m.startswith('«Havbris»') for m in r['svcMsgs'])), 'service reminders per vessel, with the vessel name')
+        print(ok(any(m.startswith('«Kystværing»') for m in r['svcMsgs']) and any(m.startswith('«Havbris»') for m in r['svcMsgs'])), 'service reminders per vessel, with the vessel name')
         print('errors:', errs[:4]); await b.close()
 asyncio.run(main())

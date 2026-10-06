@@ -155,7 +155,7 @@ function rulesAt(q){
   // west of it the fishing is free: no quota and no minimum size, but all king crab caught must be landed (§ 5: it is forbidden to put
   // it back) and the pots must be without escape vents. Closed 1-9 November 2026 in the box 71°09′-71°14′ N, 25°20′-26° E (§ 10).
   if (sp === 'krabbe' && (!gear || gear === 'teiner')){
-    if (kcQuota(ll)) add('no', 'kc2', 'Kvoteregulert område for kongekrabbe: bare båter registrert i Finnmark, med eier bosatt der i minst to år. Du er fra Senja.', 'The quota area for king crab: only vessels registered in Finnmark, with an owner who has lived there for at least two years. You are from Senja.', 'J-136-2026 § 2', RU_KC1, true);
+    if (kcQuota(ll)) add('no', 'kc2', 'Kvoteregulert område for kongekrabbe: bare båter registrert i Finnmark, med eier bosatt der i minst to år.', 'The quota area for king crab: only vessels registered in Finnmark, with an owner who has lived there for at least two years.', 'J-136-2026 § 2', RU_KC1, true);
     else {
       if (ruIn2(md, 1101, 1109) && ll.lat > 71.15 && ll.lat < 71.2334 && ll.lon > 25.3333 && ll.lon < 26) add('no', 'kc10', 'Stengt for kongekrabbe 1.–9. november (71°09′–71°14′ N, 25°20′–26° Ø).', 'Closed to king crab 1–9 November (71°09′–71°14′ N, 25°20′–26° E).', 'J-138-2026 § 10', RU_KC2, true);
       add('ok', 'kc5', 'Fritt fiske etter kongekrabbe vest for 26° Ø: ingen kvote og intet minstemål, men all kongekrabbe skal landes, og teinene skal være uten fluktåpning.', 'Free king crab fishing west of 26° E: no quota and no minimum size, but all king crab must be landed, and the pots must be without escape vents.', 'J-138-2026 § 5', RU_KC2);

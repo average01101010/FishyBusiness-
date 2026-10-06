@@ -33,7 +33,7 @@ function showStart(done){
   const W = 300, H = 360, X = lo => (lo - 4.5) / 27 * W, Y = la => (71.4 - la) / 13.6 * H;
   const dots = ports.map(x => '<circle class="st-dot' + (rec.has(x.pt.id) ? ' rec' : '') + (x.pt.id === 'finnsnes' ? ' home' : '') + '" data-id="' + x.pt.id + '" cx="' + X(x.lo).toFixed(1) + '" cy="' + Y(x.la).toFixed(1) + '" r="' + (rec.has(x.pt.id) || x.pt.id === 'finnsnes' ? 5 : 3.2) + '"/>').join('');
   const item = x => '<button class="st-it' + (rec.has(x.pt.id) ? ' rec' : '') + '" data-id="' + x.pt.id + '"><b>' + (rec.has(x.pt.id) ? '★ ' : '') + x.pt.name + '</b><small>' +
-    (x.pt.id === 'finnsnes' ? L('Spillets eget startsted, med «Første tur» på Senja', 'The game’s own start, with «First trip» on Senja') :
+    (x.pt.id === 'finnsnes' ? L('Fars naust i Finnsnes, med «Første tur»', 'Father’s boathouse at Finnsnes, with «First trip»') :
       (x.codT >= 1 ? L('Torsk ', 'Cod ') + fmt(x.codT, 0) + L(' t i året', ' t a year') : L('Lite torsk', 'Little cod')) + (x.inSeason ? L(' · i sesong nå', ' · in season now') : '') + ' · ' + fmt(x.small * 100, 0) + L(' % fra små båter', ' % from small boats')) + '</small></button>';
   const byReg = REGIONS.map(r => { const xs = ports.filter(x => x.region === r[0] && x.pt.id !== 'finnsnes').sort((a, b) => b.score - a.score); return xs.length ? '<details class="st-reg"' + (xs.some(x => rec.has(x.pt.id)) ? ' open' : '') + '><summary>' + L(r[1], r[2]) + ' <span>' + xs.length + '</span></summary>' + xs.map(item).join('') + '</details>' : ''; }).join('');
   const el = document.createElement('div'); el.id = 'startPick'; el.className = 'stp';   // not 'st': that is the HUD's status line
