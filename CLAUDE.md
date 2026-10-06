@@ -19,6 +19,24 @@ Et kystfiskespill langs hele norskekysten (det begynte på Senja) som kjører so
 - Vær ærlig om svake tester, antakelser og usikre regler. Sjekk regelverk mot kildene (Lovdata, Fiskeridirektoratet, Råfisklaget) før det bygges inn, og oppgi kilden.
 - Brukeren tester på Android-nettbrett, så UI må fungere med berøring i både stående og liggende format.
 
+## Engasjement og inntekt
+
+Spillet skal tjene penger, og Jonas skal kunne leve av det (06.10.2026). Grunnlaget, arbeidslista i rekkefølge og det vi ikke gjør, står i `docs/engasjement.md`. Reglene som gjelder i hver avgjørelse:
+
+- **Haill for ekte penger beholdes** og er trolig hovedproduktet. Luksushaill gis bare som gave ved registrering og som takk for tilbakemelding.
+- **Krokene er ekte.** Kjernesløyfen (napp, rykk, varierende fangst, været), metasløyfen (båtstigen, Neste mål, papirer, mannskap, samlinger) og den sosiale sløyfen (felles verden, topplista, sesonger) styrkes i alt nytt. Hver ny funksjon skal svare på: hva gir den spilleren å gjøre nå, i dag og denne uka?
+- **Friction for Flow: betaling korter ned ekte avstander, aldri oppdiktede.** Friksjonen er simuleringens egen (avstand, vær, ståtid, slitasje, hviletid, verftstid). Det vi selger (haill, trim, «Ferdig nå», kosmetikk), letter en friksjon som finnes av en annen grunn enn salget. Vi legger aldri inn ventetid, energi eller trøtthet for å selge oss forbi den, og forlenger aldri en ventetid for å selge mer. Ventetid for ekte penger skal være kortere enn en vanlig pause mellom økter.
+- **Innholdet legges der betalingen blir fristende av seg selv** (Jonas' eksempel: turoppdrag ut fra der spilleren er, lange turer med god belønning, som gjør trim attraktivt). Turen skal være verdt å ta uten trim, og belønningen stå i forhold til turen uten trim.
+- **Alt kan nås uten å betale.** Hvert oppdrag, hver belønning og hvert mål er mulig og morsomt å nå med tid og dyktighet; betaling er fart og bekvemmelighet. Balanser med hyppige belønninger og synlig progresjon for den som ikke betaler.
+- **Endowed progress:** nye ting starter aldri på null. Kort, samlinger og stiger viser det som alt er oppnådd, og første steg er lett.
+- **Variabel belønning kommer fra sjøen, ikke fra lommeboka.** Sjeldne hendelser er tilfeldige og gratis. Ingen tilfeldig utfall for ekte penger: ingen loot boxes, gacha, pakker med ukjent innhold eller pity-systemer. Det vi selger, er kjent på forhånd.
+- **Pris i kroner med 💎**, ingen fiktiv valuta, ingen pakker som skjuler prisen, ingen nedtelling i butikken. Sesongting kan fortjenes eller kjøpes igjen senere.
+- **Ingen straff for fravær.** Innloggingsbonusen tærer, den nulles ikke. Ingen push om tapt bonus eller tapt plass. Push er hendelser i verden, høyst 4 i døgnet, ingenting 22–08.
+- **Sosialt er additivt.** Topplister, fiskarlag og felles mål gjør aldri at én spillers fravær skader andre. Verving uten spam. Ingen reklame.
+- **Kosmetikk er varig og synlig for andre.** Det du kjøper, er ditt.
+- **Gjester kan ikke kjøpe.** Butikken åpner ved registrering. 13-årsgrensen for samtykke står.
+- **Mål og se.** Hver engasjementsendring skal kunne leses av i trakten i admin-dashbordet (konvolutt → første fangst → første levering → tredje levering → registrert → dag 1/7/30) før neste vurderes.
+
 ## Bygg og sjekk
 
 - `node build.mjs` setter sammen `src/` til `dist/index.html` og kopierer kartpakkene fra `src/data/map/` til `dist/map/`. Kartpakkene lages av kartrørledningen: `python3 tools/map/region.py senja` (Overture og Terrarium over nettet, med mellomlager i `tools/map/cache/`). Se 4.6–4.8 i overleveringen. `dist/` er ikke i git. Med `KYST_DIST=<mappe>` bygges det dit i stedet.
