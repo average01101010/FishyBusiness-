@@ -119,7 +119,7 @@ Spillet skal ligge på Hetzner-serveren din, ikke på GitHub Pages (se G).
 
 ### 3. Stripe (betaling)
 
-**Status 06.10.2026:** butikken virker i testmodus. Testkjøpet av en haill gikk hele veien: Stripe Checkout, webhooken i sandkassen «Det Store Blå sandbox», kjøpet bokført og haillen gitt i spillet. `STRIPE_SECRET_KEY` (`sk_test_`) og `STRIPE_WEBHOOK_SECRET` står i Supabase. Webhooken må ligge i **samme** Stripe-konto som nøkkelen. Den første ble laget i hovedkontoen og fikk derfor ingen hendelser. Før lansering: en begrenset live-nøkkel (`rk_live_`), en webhook i live-modus med de samme fem hendelsene, og de to hemmelighetene byttet til live-verdiene.
+**Status 06.10.2026:** butikken virker i testmodus. Testkjøpet av en haill gikk hele veien: Stripe Checkout, webhooken i sandkassen «Det Store Blå sandbox», kjøpet bokført og haillen gitt i spillet. `STRIPE_SECRET_KEY` (`sk_test_`) og `STRIPE_WEBHOOK_SECRET` står i Supabase. Webhooken må ligge i **samme** Stripe-konto som nøkkelen. Den første ble laget i hovedkontoen og fikk derfor ingen hendelser. **Live fra 06.10.2026:** den begrensede live-nøkkelen (`rk_live_`, Checkout Sessions, Products og Prices: Write) og webhooken i hovedkontoen står i Supabase, og et ekte kjøp av en haill kom fram i spillet. Nøkkelen limes inn selv, ikke ID-en (`mk_…`) som står ved siden av i Stripe. En refusjon i Stripe trekker tilbake det som ikke er levert ennå. Det som allerede er gitt i spillet, blir værende.
 
 1. Opprett konto på stripe.com med organisasjonsnummer, bedriftskonto og BankID.
 2. Slå på Stripe Tax.
