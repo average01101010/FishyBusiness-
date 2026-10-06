@@ -1074,7 +1074,7 @@ Båtene står i `VESSELS` (`core/02-species-gear.js`). Tallene er startverdier o
 | `jukesjark` | Plastsjark 29 fot (8,9 m) | 8,9 × 3,2 × 1,2 | 5,5 | 1 800 kg | 150 hk, 8,5/10 kn | 1+2 / 2 | 750 000 | åpen 8–9,99 m |
 | `sjark` | Havsjark 35 fot (10,6 m) med bakk og styrhus (etter Viksund Havsjark 35) | 10,57 × 4,1 × 1,6 | 12 | 6 500 kg | 180 hk, 8,5/10 kn | 1+3 / 2 | 1 150 000 | åpen 10 m og over |
 | `hurtigsjark` | Brukt hurtigsjark 10,99 m, 500 hk | 10,99 × 3,9 × 1,6 | 12 | 5 000 kg | 500 hk, 17/22 kn | 1+3 / 2 | 4 900 000 | åpen 10 m og over |
-| `sjarkny` | Ny hurtigsjark 10,99 m, 650 hk | 10,99 × 4,3 × 1,8 | 15 | 7 000 kg | 650 hk, 20/25 kn | 1+3 / 3 | 10 500 000, 45 døgn på verftet | åpen 10 m og over |
+| `sjarkny` | Ny hurtigsjark 10,99 m, 650 hk | 10,99 × 4,68 × 2,06 | 15 | 7 000 kg | 650 hk, 20/25 kn | 1+3 / 3 | 10 500 000, 45 døgn på verftet | åpen 10 m og over |
 | `breisjark` | Sjark 36 fot med bakk og ly (etter Malo 36) | 10,99 × 4,2 × 2,0 | 20 | 10 000 kg (19 m³) | 300 hk, 9,5/10,5 kn | 1+4 / 4 | 9 000 000 | åpen 10 m og over |
 | `kyst15` | Kystbåt 14,99 m med lugarer | 14,99 × 6,6 × 3,0 | 75 | 28 t | 750 hk, 10/11,5 kn | 1+5 / 6 | 18 000 000 | bare lukket gruppe |
 | `kyst21` | Eldre kystbåt 21 m (1978) | 21 × 7,2 × 3,4 | 190 | 55 t | 900 hk, 10/11 kn | 1+6 / 8 | 9 000 000 | bare lukket, ikke innenfor fjordlinja |
@@ -1561,6 +1561,18 @@ Kvotesystemet ligger i `core/03d-quota.js` (04.10.2026, plan Q1–Q6). Grunnlage
   - **Halestasjonen er åpen:** åpningen er skåret ut av skroget, med gulv, innside av skansen, vegger, dør og hvitt tak innenfor. Haleren og mannskapet synes der inne. `grid` i `bpyutil.py` hopper over en celle når materialfunksjonen gir `None`.
   - Fila er rundt 9 250 trekanter nær og 1 800 på avstand, 327 KB. Bare utsiden er modellert.
   - **Test:** `tral3d.py`, som også haler line i halestasjonen. Kjøring: `python3 tools/boats/kyst15.py` (med `fast` og `dry`). Dataene ligger i `src/data/boat-kyst15.b64` og `boat-kyst15-side.b64`, og i malen som `glb-kyst15` og `pic-kyst15`.
+- **Den nye hurtigsjarken (`sjarkny`, fra 06.10.2026):** `tools/boats/hs11.py` bygger en sjark på 10,99 m etter tegningen og bildet Jonas viste: et fiskefartøy for kystfiske, fisk i bulk. Tegningen er ikke i repoet.
+  - **Målene på tegningen:** 10,99 m over alt, 10,79 m i vannlinja, 4,68 m bredde over alt, 2,06 m største dypgående, 2,40 m dybde, 42 t lastet. Spillet har nå 10,99 × 4,68 m og 2,06 m (før 4,3 og 1,8). Deplasementet (15 t), pris, motor og fart er som før.
+  - **Målt** (131 px/m på det forstørrede profilbildet):
+    - vannlinja 1,18 m over basislinja
+    - kjølen faller 0,3 m forover fra speilet, med hardt slag fra 0,38 m ved speilet og opp til vannlinja ved stevnen
+    - dekket 2,11 m opp akter og siden 3,10 m forut
+    - stevnen nesten loddrett, styrhustaket på 4,41 m
+    - skjegget 0,88 m under basislinja, med propellen i dyse
+  - **Dekksplass:** Jonas ba om plass til redskap («husk at det må være dekksplass for utstyr»). Huset på tegningens akterdekk er derfor tatt bort, og arbeidsdekket går fritt fra speilet til det korte huset bak styrhuset. Det har flat luke og lensporter. Kranen står på babord hekkhjørne, og haleren står ved styrbord rekke under takets overheng.
+  - **Fargene:** Jonas lot oss velge. Skroget er petrolblått med hvit skvettlist, overbyggene hvite, takkanten og kranen oransje.
+  - Fila er rundt 6 000 trekanter nær og 1 500 på avstand, 217 KB. Bare utsiden er modellert.
+  - **Test:** `tral3d.py`, som også haler line på dekket. Kjøring: `python3 tools/boats/hs11.py` (med `fast` og `dry`). Dataene ligger i `src/data/boat-hs11.b64` og `boat-hs11-side.b64`, og i malen som `glb-sjarkny` og `pic-sjarkny`.
 - **Fars gamle trebåt (`trebat`, startbåten fra 05.10.2026):** `tools/boats/snekke23.py` bygger en klinkbygd spissgatter på 23 fot med innenbords semidiesel, etter Jonas' bilder av gamle snekker. Han valgte: topphastighet 7 knop, resten fiktivt etter skiffen; maks 850 o/min; slitt og gammel, ubehandlet trevirke («Gammelt trevirke»); ingen fendere, ikke noe stevnbånd; rorkult og aldri ratt i tillegg.
   - **Modellen:** ni bord i hver side med landene, spant, kjøl, stevner, ripe og skvettlist; dørker rett over vannlinja (spillet tegner sjøen over alt under den), tre tofter, fordekk; motorkasse med sylinder, glødehode, eksosrør og eikehjul; høyt ror langs den skrå akterstevnen med rorkult; fiskekasser foran midttofta og sløyebord over babord rekke (renne, kniv, bøtte); fars presenning som tøy på fordekket. 17 948 trekanter, 854 KB.
   - **Slitasjen** ligger i hvert hjørne (`Acc.done(tint=wear)` i `bpyutil.py`, attributtet `TINT` som GLB-skriveren ganger inn i fargen), så den glir over flatene i stedet for å følge dem i firkanter: grålig treverk i flekker og øverst, mørkt der det er vått, striper fra ripa, tjæret bunn, rust på jernet. Bildene fra Blender gjør spillets farger lineære, så de ser ut som i spillet.

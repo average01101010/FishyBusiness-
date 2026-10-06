@@ -407,6 +407,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p65', '06.10.2026', 'Den nye hurtigsjarken fra Blender', 'The new speed sjark from Blender', [
+      ['Ny hurtigsjark 10,99 m er bygget i Blender etter en ekte tegning: hardt slag, styrhus forut og et fritt arbeidsdekk akter med luke, kran og haler. Den har tegningens mål, 4,68 m bred og 2,06 m dypgående. Petrolblått skrog med hvite overbygg. Bare utsiden er modellert.', 'The new 10.99 m speed sjark is built in Blender from a real drawing: a hard chine, the wheelhouse forward and a clear working deck aft with a hatch, a crane and a hauler. She has the drawing\'s size, 4.68 m wide and a 2.06 m draft. A petrol hull with white superstructure. Only the outside is modelled.']]],
     ['p64', '06.10.2026', 'Kystbåten på 14,99 m fra Blender', 'The 14.99 m coastal vessel from Blender', [
       ['Kystbåt 14,99 m er bygget i Blender: rødt skrog, hvitt baksdekk med åpen halestasjon på styrbord side, styrhus forut, rød kran og mesanmast med rødt seil. Bare utsiden er modellert.', 'The 14.99 m coastal vessel is built in Blender: a red hull, a white shelter deck with an open hauling station on the starboard side, the wheelhouse forward, a red crane and a mizzen with a red sail. Only the outside is modelled.']]],
     ['p63', '06.10.2026', 'Den eldre kystbåten fra Blender', 'The older coastal vessel from Blender', [

@@ -80,7 +80,7 @@ const VESSELS = {
     vmax:22, vcruise:17, accel:9, turnR:75, planing:true, outboard:false, diesel:true, fuelK:4.2, risk:[2.3, 3.6, 14.8, 18.5], sea:0.15, crewMax:3, berths:2, tubCap:350, land:'tub', std:['plotter', 'vhf'],
     rigs:['juksa', 'line', 'garn', 'teiner'], jukseMax:6, gearMax:{garn:50, stamp:26, teine:60}, svcH:300, svcCost:18000, svcJobH:9, cls:'open', price:4900000, year:2009,
     desc:{no:'Planende sjark i glassfiber med styrhus forut. Rask til feltet og hjem igjen, men tørst.', en:'Planing fibreglass sjark with the wheelhouse forward. Fast to the grounds and home again, but thirsty.'}},
-  sjarkny:{name:{no:'Ny hurtigsjark 10,99 m, 650 hk', en:'New 10.99 m speed sjark, 650 hp'}, len:10.99, beam:4.3, draft:1.8, disp:15, holdCap:7000, iceCap:2400, fuelCap:2000, hp:650, engine:{no:'650 hk diesel', en:'650 hp diesel'},
+  sjarkny:{name:{no:'Ny hurtigsjark 10,99 m, 650 hk', en:'New 10.99 m speed sjark, 650 hp'}, len:10.99, beam:4.68, draft:2.06, disp:15, holdCap:7000, iceCap:2400, fuelCap:2000, hp:650, engine:{no:'650 hk diesel', en:'650 hp diesel'},
     vmax:25, vcruise:20, accel:10, turnR:80, planing:true, outboard:false, diesel:true, fuelK:5.5, risk:[2.4, 3.8, 15, 19], sea:0.14, crewMax:3, berths:3, tubCap:400, land:'tub', std:['plotter', 'vhf'],
     rigs:['juksa', 'line', 'garn', 'teiner'], jukseMax:6, gearMax:{garn:60, stamp:30, teine:67}, svcH:300, svcCost:22000, svcJobH:10, cls:'open', price:10500000, isNew:true, year:2027,
     desc:{no:'Nybygd hurtigsjark fra verftet i Finnsnes, med styrhus forut og stort arbeidsdekk. Planende skrog og stor motor.', en:'Newly built speed sjark from the yard in Finnsnes, wheelhouse forward and a big working deck. Planing hull and a big engine.'}},
