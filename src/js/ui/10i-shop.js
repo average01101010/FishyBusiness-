@@ -17,10 +17,12 @@ function shopMode(){
   if (CLOUD.user && SHOP.ready) return 'live';
   return adminOk() ? 'test' : 'off';
 }
+// a price in real money, marked with 💎 so it never looks like the game's kroner (a player could not tell them apart, 06.10.2026)
+function realKr(nok){ return '<span class="realkr" title="' + shopL('Ekte penger', 'Real money') + '">\u{1F48E} ' + nok + ' kr</span>'; }
 // the label of a buy button for a price in kroner
 function shopLabel(nok){
   const m = shopMode();
-  return m === 'live' ? shopL('Kjøp · ', 'Buy · ') + nok + ' kr' : m === 'test' ? shopL('Kjøp (test, ingen betaling)', 'Buy (test, no payment)') : shopL('Snart i salg', 'On sale soon');
+  return m === 'live' ? shopL('Kjøp · ', 'Buy · ') + realKr(nok) : m === 'test' ? shopL('Kjøp (test, ingen betaling)', 'Buy (test, no payment)') : shopL('Snart i salg', 'On sale soon');
 }
 // what a key is and costs, for the consent and the receipt in the log
 function shopWhat(k){
@@ -39,7 +41,7 @@ function payBuy(k, give){
 }
 // the small line under a buy button when the shop is live
 function shopFine(){
-  return shopMode() === 'live' ? '<p class="ph-note shop-fine">' + shopL('Leveres i spillet med én gang. Når du kjøper, ber du om det, og angreretten faller da bort.', 'Delivered in the game at once. By buying you ask for that, and the right of withdrawal then ends.') + '</p>' : '';
+  return shopMode() === 'live' ? '<p class="ph-note shop-fine">' + shopL('\u{1F48E} betyr ekte penger, betalt med kort. ', '\u{1F48E} means real money, paid by card. ') + shopL('Leveres i spillet med én gang. Når du kjøper, ber du om det, og angreretten faller da bort.', 'Delivered in the game at once. By buying you ask for that, and the right of withdrawal then ends.') + '</p>' : '';
 }
 async function shopGo(k){
   if (SHOP.busy) return; SHOP.busy = true; toast(shopL('Åpner betalingen …', 'Opening the payment …'));
