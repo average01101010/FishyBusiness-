@@ -79,7 +79,9 @@ const DOCK = (() => {
       I('pub', 'pub', 'Pub', 'Pub', {act:'pub', off:tutOn() ? [L('Puben venter til etter første tur.', 'The pub waits until after the first trip.')] : !pubOpen(H) ? [L('Puben åpner klokka 15.', 'The pub opens at 15:00.')] : S.pubE === pubEvening(H) ? [L('Du har tatt en runde i kveld.', 'You have had a round tonight.')] : null}),
       I('bank', 'bank', 'Bank', 'Bank', {page:'bank'}),
       I('oppdrag', 'oppdrag', 'Oppdrag', 'Orders', {page:'oppdrag'}),
-      I('mannskap', 'mannskap', 'Mannskap', 'Crew', {page:'mannskap'}), restOnDock() ? null : restItem()].filter(Boolean);
+      I('mannskap', 'mannskap', 'Mannskap', 'Crew', {page:'mannskap'}), restOnDock() ? null : restItem(),
+      // Father's naust in the home harbour: setting it to rights is in the notebook (core/07c-naust.js, ui/06c-notebook.js)
+      atHome(b) ? I('naustup', 'naust', 'Naustet', 'Boathouse', {run:() => PHONE.open('notat')}) : null].filter(Boolean);
     if (m === 'verft'){ const need = BOAT.fuelCap - b.fuel;
       return [
         I('batmarked', 'batmarked', 'Båthandel', 'Boats', {page:'fartoy'}),
@@ -128,8 +130,10 @@ const DOCK = (() => {
     if (S.plan && S.plan.depAt) out.push(L('Avgang ', 'Departs ') + hm(S.plan.depAt / 60));
     if (b.status === 'port'){ if (S.jobs && S.jobs.length) out.push(L('Verksted til ', 'Yard until ') + hm((jobsDone() || S.t) / 60)); if (b.land) out.push(landText(true)[0]); if (b.shift || b.fueling) out.push(quayText(true)[0]); }
     if (b.status === 'port' && !resting() && restWhere(b) === 'rorbu') out.push(L('Rorbu: ' + kr(RORBU.kr) + ' natta', 'Rorbu: ' + kr(RORBU.kr) + ' a night'));
-    if (b.status === 'port' && resting()){ const r = restRate(b), m = r > 0 ? Math.ceil((100 - S.energy) / r) : 0;
-      out.push((S.rest.w === 'rorbu' ? L('Hviler på rorbua', 'Resting at the rorbu') : L('Hviler i naustet', 'Resting in the boathouse')) + ' · ' + Math.round(S.energy) + ' %' + (m > 0 ? L(', uthvilt kl. ', ', rested at ') + hm((S.t + m) / 60) : '')); }
+    // in the home harbour, which of the two berths she lies at: Father's naust or the plant's quay (07-harbours.js berthKind)
+    if (b.status === 'port' && !resting() && atHome(b) && quayFace(b.port, 'naust')){ const k = BERTHN[berthKind(b)] || BERTHN.main; out.push(L('Ved ' + k[0], 'At ' + k[1])); }
+    if (b.status === 'port' && resting()){ const r = restRate(b), m = r > 0 ? Math.ceil((100 - S.energy) / r) : 0, up = S.rest.w === 'naust' ? Math.round((naustRest(b) - 1) * 100) : 0;
+      out.push((S.rest.w === 'rorbu' ? L('Hviler på rorbua', 'Resting at the rorbu') : L('Hviler i naustet', 'Resting in the boathouse')) + ' · ' + Math.round(S.energy) + ' %' + (up > 0 ? L(' · ' + up + ' % raskere', ' · ' + up + ' % faster') : '') + (m > 0 ? L(', uthvilt kl. ', ', rested at ') + hm((S.t + m) / 60) : '')); }
     if (b.status === 'unmooring') out.push(L('Kaster loss …', 'Casting off …'));
     if (b.gop){ const g = gopText(); if (g) out.push(L(g[0], g[1])); }
     else if (b.status === 'fishing' && b.fishUntil != null) out.push((rigJig() ? L('Jukser, stopper ', 'Jigging, stops ') : L('Venter, går ', 'Waiting, leaves ')) + inReal(b.fishUntil - S.t));
