@@ -1048,8 +1048,14 @@ const G3 = (() => {
   function bldCells(key){
     const out = [], a = BLD && BLD.cells.get(key); if (a) out.push([BLD, a]);
     const T = MAPD.man ? MAPD.man.tile : 50, t = vecTile(Math.floor(gridKeyX(key) / T), Math.floor(gridKeyY(key) / T));
-    if (t && t.bld){ const b = t.bld.cells.get(key); if (b) out.push([t.bld, b]); }
+    if (t && t.bld){ const b = vecBldIn(t, key); if (b && b.length) out.push([t.bld, b]); }
     return out;
+  }
+  // a pack's buildings in a km cell, without those where a harbour unit, a quay strip or a site stands (as Senja's are left out at
+  // load): the map's real plant at Kjøllefjord stood over the unit's quay, a wall the boat lay against (06.10.2026). Kept per tile.
+  function vecBldIn(t, key){
+    const c = t.bldOk || (t.bldOk = new Map()); let r = c.get(key); if (r) return r;
+    const b = t.bld.cells.get(key); r = b ? b.filter(i => !bldOnUnit(t.bld, i)) : []; c.set(key, r); return r;
   }
   async function loadBuildings(){
     const el = document.getElementById('bld');
@@ -3657,7 +3663,7 @@ const G3 = (() => {
     const vk = 'v' + key; if (CAMBLD.has(vk)) return;
     const T = MAPD.man ? MAPD.man.tile : 50, tx = Math.floor(gridKeyX(key) / T), ty = Math.floor(gridKeyY(key) / T), t = vecTile(tx, ty);
     if (!t && vecHas(tx, ty)) return;
-    CAMBLD.add(vk); if (t && t.bld) camBld(t.bld, t.bld.cells.get(key), t.k);
+    CAMBLD.add(vk); if (t && t.bld) camBld(t.bld, vecBldIn(t, key), t.k);
   }
   function camBld(B, idx, tag){
     for (const i of idx || []){
