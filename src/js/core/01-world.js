@@ -128,6 +128,7 @@ function groundCheck(a, c){
 function runAground(p){
   const b = S.boat, pl = nearestPlace(p); b.pos = {x:p.x, y:p.y}; b.status = 'aground'; b.v = 0; b.damage = 1; b.tripBad = true;
   log('Gikk på grunn ' + pl.no + '. Skroget er skadet.', 'Ran aground ' + pl.en + '. The hull is damaged.', 'nav');
+  if (typeof FEEDBACK !== 'undefined') setTimeout(() => FEEDBACK.nudge('aground'), 2500);   // was it the game's fault? (ui/06e-feedback.js)
   S.incidents = S.incidents || []; S.incidents.push({t:S.t, k:'aground', boat:S.boatName || 'Havbris', no:pl.no, en:pl.en}); if (S.incidents.length > 60) S.incidents.shift();
   if (hooks.onAground) hooks.onAground();
 }

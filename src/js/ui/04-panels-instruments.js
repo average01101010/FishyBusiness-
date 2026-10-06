@@ -86,11 +86,11 @@ function renderHud(){
 function liveFrac(){ return clamp(acc + (Date.now() - lastWall) / 1000 * simRate() / 60, 0, 0.999); }
 function livePose(frac){
   if (frac === undefined) frac = liveFrac();
-  const b = S.boat; let p = {x:b.pos.x, y:b.pos.y}, hd = b.heading;
+  const b = S.boat; let p = {x:b.pos.x, y:b.pos.y}, hd = b.heading, idx = S.plan ? S.plan.idx : 0;
   if (helmOn()) return helmPose(frac);
   if (b.status === 'tow'){ const q = towPose(frac); if (q && q.b) return {p:q.b.p, hd:q.b.hd, frac}; }
   if (b.status === 'sailing' && S.plan){
-    let left = sailV(S.t / 60) * NM / 60 * frac, idx = S.plan.idx;
+    let left = sailV(S.t / 60) * NM / 60 * frac;
     while (left > 1e-9 && idx < S.plan.wps.length){
       const w = S.plan.wps[idx], d = dist(p, w);
       if (d > 1e-6) hd = Math.atan2(w.x - p.x, -(w.y - p.y));
@@ -98,7 +98,7 @@ function livePose(frac){
       else { p = {x:p.x + (w.x - p.x) / d * left, y:p.y + (w.y - p.y) / d * left}; left = 0; }
     }
   }
-  return {p, hd, frac};
+  return {p, hd, frac, idx};   // idx: the next waypoint from there
 }
 function vnoise2(x, y, s){
   const ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy, ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy);

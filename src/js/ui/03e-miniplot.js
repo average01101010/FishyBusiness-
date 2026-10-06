@@ -43,7 +43,7 @@ function miniPaint(){
   const X = x => (x - x0) * k, Y = y => (y - y0) * k;
   if (S.plan && S.plan.idx < S.plan.wps.length){
     ctx.strokeStyle = 'rgba(208,40,120,.9)'; ctx.lineWidth = 2 * dpr; ctx.setLineDash([6 * dpr, 4 * dpr]); ctx.beginPath(); ctx.moveTo(X(p.x), Y(p.y));
-    for (const w of S.plan.wps.slice(S.plan.idx)) ctx.lineTo(X(w.x), Y(w.y)); ctx.stroke(); ctx.setLineDash([]);
+    for (const w of S.plan.wps.slice(Math.max(S.plan.idx, pose.idx || 0))) ctx.lineTo(X(w.x), Y(w.y)); ctx.stroke(); ctx.setLineDash([]);
   }
   const s = 7 * dpr; ctx.save(); ctx.translate(W / 2, H / 2); ctx.rotate(pose.hd);
   ctx.beginPath(); ctx.moveTo(0, -s * 1.3); ctx.lineTo(s * 0.7, s); ctx.lineTo(0, s * 0.55); ctx.lineTo(-s * 0.7, s); ctx.closePath();
@@ -62,4 +62,6 @@ function miniPaint(){
   ctx.fillStyle = '#eef4f7';
   L.forEach((r, i) => { const y = H - h + pad * 0.6 + (i + 0.78) * lh; ctx.textAlign = 'left'; ctx.fillText(r[0], pad, y); if (r[1]){ ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(230,240,245,.7)'; ctx.fillText(r[1], W - pad, y); ctx.fillStyle = '#eef4f7'; } });
 }
-if (MINIP.el){ MINIP.el.addEventListener('click', () => openPlotter()); setInterval(() => { if (!document.hidden) miniPaint(); }, 1000); }
+// four times a second while she moves, so her position on it keeps up (once a second when she lies still)
+if (MINIP.el){ MINIP.el.addEventListener('click', () => openPlotter()); let last = 0;
+  setInterval(() => { if (document.hidden || !S || !window.chartReady) return; const now = performance.now(), st = S.boat.status; if ((now - last < 950 && !(st === 'sailing' || st === 'tow' || helmOn()))) return; last = now; miniPaint(); }, 250); }

@@ -21,6 +21,23 @@ function adminOk(){
 }
 function cloudS(){ try { return S; } catch (e){ return null; } }
 const cloudL = (no, en) => { const s = cloudS(); return s && s.lang === 'en' ? en : no; };
+// the device, for the frame rate and the errors (supabase/migrations/20261006160000_device_data.sql; Jonas 06.10.2026: «optimalisere
+// spillet for så mange enheter som mulig»): the graphics chip, asked once of a small WebGL context that is let go at once (so it is known
+// also where the 3D view failed), the cores and memory the browser tells, the screen, and the 3D level and view now. Never who.
+let CLOUD_GPU = null;
+function cloudGpu(){
+  if (CLOUD_GPU !== null) return CLOUD_GPU; CLOUD_GPU = '';
+  try { const c = document.createElement('canvas'), gl = c.getContext('webgl') || c.getContext('experimental-webgl');
+    if (gl){ const d = gl.getExtension('WEBGL_debug_renderer_info'); CLOUD_GPU = String((d && gl.getParameter(d.UNMASKED_RENDERER_WEBGL)) || gl.getParameter(gl.RENDERER) || '').slice(0, 80);
+      const l = gl.getExtension('WEBGL_lose_context'); if (l) l.loseContext(); } } catch (e){}
+  return CLOUD_GPU;
+}
+function cloudDev(){
+  const g = typeof G3 !== 'undefined' ? G3 : null, q = g && g.quality ? g.quality() : {}, s = window.screen || {};
+  return {gpu:cloudGpu(), cores:navigator.hardwareConcurrency || null, mem:navigator.deviceMemory || null,
+    scr:Math.round(s.width || innerWidth) + 'x' + Math.round(s.height || innerHeight) + '@' + Math.round((devicePixelRatio || 1) * 10) / 10,
+    lvl:q.lvl == null ? null : q.lvl, view:g && g.isActive && g.isActive() ? '3d' : 'kart'};
+}
 function cloudMeta(){
   // at the gate the game is not loaded yet (S comes in bootGame)
   const S = cloudS() || {}, ua = navigator.userAgent, b = S.boat || {};
@@ -106,7 +123,8 @@ async function cloudGate(){
 // ---------- after the start: hooks, measurements, the save ----------
 function cloudStart(){
   if (!CLOUD.on) return;
-  window.addEventListener('error', e => cloudErr(e.message, (e.filename || '') + ':' + (e.lineno || ''), e.error && e.error.stack));
+  window.addEventListener('error', e => { cloudErr(e.message, (e.filename || '') + ':' + (e.lineno || ''), e.error && e.error.stack);
+    if (e.error && typeof FEEDBACK !== 'undefined') setTimeout(() => FEEDBACK.nudge('err'), 2000); });   // what the player saw helps (06e-feedback.js)
   window.addEventListener('unhandledrejection', e => cloudErr(String(e.reason && e.reason.message || e.reason), 'promise', e.reason && e.reason.stack));
   // the question waits until the first-start dialog (company and boat names) is done and no other dialog is open
   if (CLOUD.consent == null){ const iv = setInterval(() => { const m = document.getElementById('modal'); if (S.intro && S.boatName && m && m.hidden){ clearInterval(iv); setTimeout(cloudAsk, 1500); } }, 2000); }
@@ -149,13 +167,13 @@ async function cloudFlush(end){
   if (end){ reason = CLOUD.neg && Date.now() - CLOUD.neg.t < 60000 ? 'rage' : 'close'; if (reason === 'rage') cloudEv('rage', {after:CLOUD.neg.k, x:CLOUD.neg.x, y:CLOUD.neg.y}); }
   const evs = CLOUD.q.splice(0, 400), act = CLOUD.active; CLOUD.active = 0;
   try { await cloudRpc('tm_batch', {sid:CLOUD.sid, meta:cloudMeta(), active_s:act, evs, ended:!!end, reason}, {keep:end});
-    if (CLOUD.fps.length >= 3){ const f = CLOUD.fps.splice(0); cloudRpc('tm_perf', {fps:f.reduce((a, v) => a + v, 0) / f.length, low:Math.min(...f), drops:f.filter(v => v < 20).length, meta:cloudMeta()}, {anon:true}).catch(() => {}); }
+    if (CLOUD.fps.length >= 3){ const f = CLOUD.fps.splice(0); cloudRpc('tm_perf', {fps:f.reduce((a, v) => a + v, 0) / f.length, low:Math.min(...f), drops:f.filter(v => v < 20).length, meta:{...cloudMeta(), ...cloudDev()}}, {anon:true}).catch(() => {}); }
   } catch (e){ CLOUD.q = evs.concat(CLOUD.q).slice(0, 500); CLOUD.active += act; }
 }
 function cloudErr(msg, src, stack){
   if (!CLOUD.on || !msg || CLOUD.errs >= 20 || CLOUD.errSeen[msg]) return;
   CLOUD.errSeen[msg] = 1; CLOUD.errs++;
-  cloudRpc('tm_error', {msg:String(msg).slice(0, 400), src:String(src || '').slice(0, 200), stack:String(stack || '').slice(0, 2000), meta:cloudMeta()}).catch(() => {});
+  cloudRpc('tm_error', {msg:String(msg).slice(0, 400), src:String(src || '').slice(0, 200), stack:String(stack || '').slice(0, 2000), meta:{...cloudMeta(), ...cloudDev()}}).catch(() => {});
 }
 // the save goes up when it has changed (every three minutes and when the page closes); an older one than the cloud's is refused,
 // and then the player chooses

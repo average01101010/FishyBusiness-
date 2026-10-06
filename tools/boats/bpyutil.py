@@ -64,7 +64,7 @@ def orient(o, out):
 
 
 def grid(name, G, matf, closed_v=False, flip=False, angle=35, out=None):
-    """G[i][j]: rows i (along the length) of points j (across); matf(i, j) gives a material for the cell"""
+    """G[i][j]: rows i (along the length) of points j (across); matf(i, j) gives a material for the cell, or None for a hole"""
     bm = bmesh.new(); R = len(G); C = len(G[0]); vs = [[bm.verts.new(G[i][j]) for j in range(C)] for i in range(R)]
     mats = []; mi = {}
     for i in range(R - 1):
@@ -78,9 +78,10 @@ def grid(name, G, matf, closed_v=False, flip=False, angle=35, out=None):
                 if not u or (v.co - u[-1].co).length > 1e-6: u.append(v)
             if len(u) > 2 and (u[0].co - u[-1].co).length < 1e-6: u.pop()
             if len(u) < 3: continue
+            m = matf(i, j)
+            if m is None: continue          # an opening: no face here
             try: f = bm.faces.new(u)
             except ValueError: continue
-            m = matf(i, j)
             if m.name not in mi: mi[m.name] = len(mats); mats.append(m)
             f.material_index = mi[m.name]
     bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-5)

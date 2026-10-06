@@ -315,6 +315,19 @@ function sail(H, W, hs){
     else { b.pos = to; left = 0; }
   }
 }
+// «Stopp» under way: the route from here to a point a little ahead on it, far enough to slack off and stop there (about a boat's
+// stopping way at the speed she has; Jonas 06.10.2026: not «bråstoppe»). The 3D boat follows it and stops exactly on the point;
+// need (km) is how far ahead she needs it to stop gently from where she is on the screen (G3.haltNeed).
+function haltPlan(need){
+  const b = S.boat, pl = S.plan; if (!pl || b.status !== 'sailing' || pl.idx >= pl.wps.length) return null;
+  let left = Math.max(clamp((b.v || 0) * 0.012, 0.03, 0.3), need || 0), p0 = b.pos; const wps = [];
+  for (let i = pl.idx; i < pl.wps.length; i++){
+    const w = pl.wps[i], d = dist(p0, w);
+    if (d >= left || w.port || i === pl.wps.length - 1){ const f = Math.min(1, left / Math.max(d, 1e-9)); wps.push({x:p0.x + (w.x - p0.x) * f, y:p0.y + (w.y - p0.y) * f}); break; }
+    wps.push({x:w.x, y:w.y}); left -= d; p0 = w;
+  }
+  return {wps, idx:0, speed:pl.speed, returning:false, depAt:null, unsafe:[], halt:true};
+}
 function arrive(w){
   const b = S.boat, pl = S.plan;
   S.trail.push({x:w.x, y:w.y, port:w.port || null});
@@ -325,7 +338,7 @@ function arrive(w){
   if (w.act){ b.status = 'idle'; const why = w.act.op === 'cycle' ? gearCycle(w, w.fish) : w.act.op === 'haul' ? startHaul(w.act.sid, w.act.reset, w.fish) : startSet(w.act.kind, w.act.spec, w.fish); if (!why) return true; log(why[0], why[0]); if (!(w.fish > 0)) b.status = 'sailing'; }
   if (w.fish > 0 && S.tut && S.tut.v === 2 && !(S.haill && S.haill.type === 'luksus')){ b.status = 'idle'; b.v = 0; b.tutWait = w.fish; log('Fremme på feltet. Venter med fisket til haillen er hentet.', 'Arrived on the grounds. Waiting to fish until the luck is fetched.'); return true; }
   if (w.fish > 0){ b.status = 'fishing'; b.fishUntil = S.t + w.fish * 60; if (rigJig()) log('Fremme på feltet. Starter fiske i ' + w.fish + ' t.', 'Arrived on the grounds. Fishing for ' + w.fish + ' h.'); else log('Fremme. Båten er rigget for ' + rigName(rigOf()).toLowerCase() + ', så den ligger og venter i ' + w.fish + ' t.', 'Arrived. The boat is rigged for ' + rigName(rigOf()).toLowerCase() + ', so it waits for ' + w.fish + ' h.'); return true; }
-  if (pl.idx >= pl.wps.length){ S.plan = null; b.status = 'idle'; b.v = 0; log('Fremme ved siste veipunkt. Ligger stille.', 'Reached the last waypoint. Stopped.'); return true; }
+  if (pl.idx >= pl.wps.length){ S.plan = null; b.status = 'idle'; b.v = 0; if (pl.halt) log('Stoppet båten.', 'Stopped the boat.'); else log('Fremme ved siste veipunkt. Ligger stille.', 'Reached the last waypoint. Stopped.'); return true; }
   return false;
 }
 function dock(pid, berth){

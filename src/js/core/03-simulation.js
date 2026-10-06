@@ -133,10 +133,35 @@ function fcWind(H, now){ return windAt(H) * (1 + fcErr(H, now, 900)); }
 const BF = [0.3,1.6,3.4,5.5,8.0,10.8,13.9,17.2,20.8,24.5,28.5,32.7];
 function beaufort(W){ let b = 0; while (b < 12 && W >= BF[b]) b++; return b; }
 const AIRT = [-2.5,-2.5,-1.5,1.5,5.5,9,12,11.5,8,3.5,0.5,-1.5];
-function airTemp(H){ const d = gDate(H), hr = d.getUTCHours() + d.getUTCMinutes() / 60; return seasonal(AIRT, H) + (vn(H / 20, 81) - 0.5) * 6 + 1.5 * Math.sin((hr - 9) / 24 * 2 * Math.PI) - Math.max(0, windAt(H) - 10) * 0.15; }
-function precipAt(H){ return clamp((vn(H / 8, 71) - 0.56) * 2.6 + (windAt(H) - 10) / 14, 0, 1); }
-function cloudAt(H){ return clamp(0.3 + precipAt(H) * 0.9 + (vn(H / 14, 91) - 0.5) * 1.4, 0, 1); }
-function visibility(H){ const p = precipAt(H), snow = airTemp(H) < 1; return clamp(45 - p * (snow ? 42 : 28) - cloudAt(H) * 8, 1.2, 50); }
+// V1 of the weather plan (06.10.2026; Jonas: «Vi skal jo ikke ha ekte live-vær, men vi må kunne simulere været langs hele kysten på
+// en god måte, med variasjoner fra sted til sted»). The climate at 19 points along the coast (src/data/climate.json from
+// tools/climate/fetch.py: monthly means from ERA5 2006-2020 and Open-Meteo's marine API 2023-2025). The simulated weather keeps its own
+// ups and downs and is moved by how the place differs from Senja, where the game was calibrated, so Senja itself is as before:
+// the air by the difference in temperature, the sea by the difference in sea temperature, the rain and snow by the ratio of the
+// precipitation, the cloud by the difference in cover. Between the points, the three nearest by distance (1/d²); p is where it is
+// asked for, else the boat you follow.
+const CLIM_D = /*@include(data/climate.json)*/null;
+const CLIM = (() => { const D = CLIM_D && CLIM_D.pts; if (!D || !D.length) return null;
+  const pts = D.filter(q => q.t && q.p).map(q => ({...q, at:P(q.lat, q.lon), sst:q.sst || null})), ref = pts.find(q => q.n === 'Senja') || pts[0];
+  return {pts, ref}; })();
+let CLIMQ = {k:'', w:null};
+// the weights of the nearest points for p, kept for a 5 km cell
+function climW(p){ if (!CLIM) return null; const q = p || herePos(); if (!q) return [[CLIM.ref, 1]];
+  const k = Math.round(q.x / 5) + ':' + Math.round(q.y / 5); if (CLIMQ.k === k) return CLIMQ.w;
+  const near = CLIM.pts.map(c => [c, Math.hypot(c.at.x - q.x, c.at.y - q.y)]).sort((a, b) => a[1] - b[1]).slice(0, 3);
+  let w = near[0][1] < 1 ? [[near[0][0], 1]] : near.map(([c, d]) => [c, 1 / (d * d)]); const s = w.reduce((a, x) => a + x[1], 0); w = w.map(([c, x]) => [c, x / s]);
+  CLIMQ = {k, w}; return w; }
+// a monthly series (key) at p and H, between the months as seasonal() does, and its difference from Senja
+function climV(key, H, p){ const w = climW(p); if (!w) return null; let v = 0, s = 0; for (const [c, x] of w){ const a = c[key]; if (!a || a.some(x => x == null)) continue; v += seasonal(a, H) * x; s += x; } return s ? v / s : null; }
+function climDiff(key, H, p){ if (!CLIM) return 0; const v = climV(key, H, p), r = CLIM.ref[key] ? seasonal(CLIM.ref[key], H) : null; return v == null || r == null ? 0 : v - r; }
+function climRatio(key, H, p){ if (!CLIM) return 1; const v = climV(key, H, p), r = CLIM.ref[key] ? seasonal(CLIM.ref[key], H) : null; return v == null || !r ? 1 : clamp(v / r, 0.3, 3); }
+function airTemp(H, p){ const d = gDate(H), hr = d.getUTCHours() + d.getUTCMinutes() / 60; return seasonal(AIRT, H) + climDiff('t', H, p) + (vn(H / 20, 81) - 0.5) * 6 + 1.5 * Math.sin((hr - 9) / 24 * 2 * Math.PI) - Math.max(0, windAt(H) - 10) * 0.15; }
+// more precipitation a month makes the wet spells come oftener: the threshold of the noise moves with the ratio
+function precipAt(H, p){ const r = climRatio('p', H, p); return clamp((vn(H / 8, 71) - 0.56 + 0.18 * Math.log(r)) * 2.6 + (windAt(H) - 10) / 14, 0, 1); }
+function cloudAt(H, p){ return clamp(0.3 + precipAt(H, p) * 0.9 + (vn(H / 14, 91) - 0.5) * 1.4 + climDiff('cloud', H, p) / 100, 0, 1); }
+function visibility(H, p){ const pr = precipAt(H, p), snow = airTemp(H, p) < 1; return clamp(45 - pr * (snow ? 42 : 28) - cloudAt(H, p) * 8, 1.2, 50); }
+// the sea's temperature at the surface where p is (°C): Senja's year moved by the difference in the marine API's monthly means
+function seaTemp(H, p){ return seasonal(SST, H) + climDiff('sst', H, p); }
 const RAD = Math.PI / 180, OBS = {lat:69.35 * RAD, lw:-17.6 * RAD}, OBL = 23.4397 * RAD;
 const jdays = H => (gDate(H).getTime() - 3600000) / 86400000 + 2440587.5 - 2451545;   // days since J2000 (UTC)
 // where the sky and the tide are reckoned (phase K10 of the coast plan): the place asked for, else the boat you follow; OBS (Senja)
@@ -605,11 +630,18 @@ const HAILL = {
   haill:{no:'Haill', en:'Luck', nok:29, steps:[[24, 1], [48, 0.5], [72, 0.25]], d:{no:'Dobbel fiskelykke et helt døgn! Fersk haill gir +100 % fiskelykke på alle arter i 24 timer, så alt redskapet ditt fanger dobbelt så mye. Etterpå holder den seg som mellomhaill (+50 %) i 24 timer og gammelhaill (+25 %) i 24 timer til: tre døgn med ekstra fangst.', en:'Double luck for a whole day! Fresh luck gives +100% luck on every species for 24 hours, so all your gear catches twice as much. After that it lasts as middle luck (+50%) for 24 hours and old luck (+25%) for 24 more: three days of extra catch.'}},
   luksus:{no:'Luksushaill', en:'Luxury luck', nok:59, steps:[[24, 2], [48, 1], [72, 0.5], [96, 0.25]], d:{no:'Tredobbel fiskelykke det første døgnet! Luksushaill gir +200 % fiskelykke i 24 timer. Så følger fersk haill (+100 %), mellomhaill (+50 %) og gammelhaill (+25 %) i 24 timer hver: fire døgn med ekstra fangst, og mest av alt når du trenger det.', en:'Triple luck the first day! Luxury luck gives +200% luck for 24 hours. Then come fresh luck (+100%), middle luck (+50%) and old luck (+25%) for 24 hours each: four days of extra catch, the most when you need it.'}}
 };
+// the thank-you for feedback that helped the game (Jonas 06.10.2026: «12 spilltimer med 100% "haill" i belønning om tilbakemeldingen er
+// av verdi for utviklingen av spillet. Haillet skal ikke gradvis miste effekt …, det skal vare 12timer, så ferdig»): +100 % for 12 game
+// hours and then gone, with no weaker stages. Never sold: only the server gives it (supabase/migrations/20261006140000_feedback_reward.sql,
+// ui/10i-shop.js shopClaim), into the store like the others.
+HAILL.takk = {no:'Takk-haill', en:'Thank-you luck', nok:0, reward:true, steps:[[12, 1]], stage:['Takk-haill', 'Thank-you luck'],
+  d:{no:'Takk for tilbakemeldingen! Takk-haill gir +100 % fiskelykke på alle arter i 12 timer, hele tida like sterk, og så er den borte.', en:'Thank you for your feedback! Thank-you luck gives +100 % luck on every species for 12 hours, as strong all the time, and then it is gone.'}};
 const HAILL_STAGE = [[2, 'Luksushaill', 'Luxury luck'], [1, 'Fersk haill', 'Fresh luck'], [0.5, 'Mellomhaill', 'Middle luck'], [0.25, 'Gammelhaill', 'Old luck']];
 const haillAge = () => S.haill ? (S.t - S.haill.t0) / 60 : 1e9;   // hours since it was switched on
 function haillBoost(){ const h = S.haill, X = h && HAILL[h.type]; if (!X) return 0; const a = haillAge(); for (const [t, v] of X.steps) if (a < t) return v; return 0; }
 function haillLeft(){ const h = S.haill, X = h && HAILL[h.type]; return X ? Math.max(0, X.steps[X.steps.length - 1][0] - haillAge()) : 0; }   // hours till it is gone
-function haillStage(){ const v = haillBoost(), s = HAILL_STAGE.find(x => x[0] === v); return s ? {v, no:s[1], en:s[2]} : null; }
+function haillStage(){ const v = haillBoost(), X = S.haill && HAILL[S.haill.type]; if (v > 0 && X && X.stage) return {v, no:X.stage[0], en:X.stage[1]};
+  const s = HAILL_STAGE.find(x => x[0] === v); return s ? {v, no:s[1], en:s[2]} : null; }
 function haillF(){ return haillBoost() > 0 ? 1 : 0; }   // luck aboard or not
 function luck(sp){ return 1 + haillBoost(); }
 // a purchase or a pub prize goes into the store; switching one on takes it from there (and replaces the one aboard)

@@ -294,7 +294,7 @@ function haulUnit(g, H){
     if (sp === 'krabbe'){ landCrabs(g, n, kg); continue; }
     const age = kg > 0 ? S.t / 60 - ts / kg : 0;
     let fresh = s.kind === 'line' ? 100 - 2.5 * Math.max(0, age - 5) - 4 * Math.max(0, g.soak - 24)
-      : s.kind === 'garn' ? 84 - (1 + 0.3 * Math.max(0, seasonal(SST, H) - 3)) * age - 3 * Math.max(0, g.soak - 24) : 90;
+      : s.kind === 'garn' ? 84 - (1 + 0.3 * Math.max(0, seaTemp(H, setMid(s)) - 3)) * age - 3 * Math.max(0, g.soak - 24) : 90;
     fresh = clamp(fresh, 5, 100);
     g.kg += landFish(sp, kg, gearKey(s), s.mesh, mid, H, hook, fresh, g);
   }

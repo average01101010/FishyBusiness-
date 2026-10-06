@@ -1,12 +1,12 @@
 {
-  "note": "V1 of the weather plan (06.10.2026): the climate along the coast, the average the game's simulated weather varies around. Changing this file starts .github/workflows/klima.yml. 15 years and not the 30 of a normal period: Open-Meteo counts a long request as many calls, and 19 points over 30 years would pass its daily limit.",
+  "note": "V1 of the weather plan (06.10.2026): the climate along the coast, the average the game's simulated weather varies around. Changing this file starts .github/workflows/klima.yml. 15 years and not the 30 of a normal period: Open-Meteo counts a long request as many calls, and 19 points over 30 years would pass its daily limit. Bodø, Tromsø and Kirkenes moved out to sea for klima-2: in klima-1 their ERA5 cells were mostly land, with winters far colder than on the coast.",
   "period": [2006, 2020],
   "sst_years": [2023, 2025],
   "points": [
     ["Færder", 59.03, 10.53], ["Lindesnes", 58.0, 7.05], ["Utsira", 59.31, 4.88], ["Marstein", 60.13, 5.0],
     ["Kråkenes", 62.03, 5.0], ["Vigra", 62.56, 6.11], ["Kristiansund", 63.11, 7.73], ["Ørland", 63.7, 9.6],
-    ["Sklinna", 65.2, 11.0], ["Træna", 66.5, 12.1], ["Bodø", 67.27, 14.36], ["Skrova", 68.15, 14.65],
-    ["Andøya", 69.3, 16.1], ["Senja", 69.45, 17.35], ["Tromsø", 69.65, 18.94], ["Hasvik", 70.48, 22.15],
-    ["Honningsvåg", 70.98, 25.97], ["Vardø", 70.37, 31.1], ["Kirkenes", 69.73, 30.05]
+    ["Sklinna", 65.2, 11.0], ["Træna", 66.5, 12.1], ["Bodø", 67.25, 13.95], ["Skrova", 68.15, 14.65],
+    ["Andøya", 69.3, 16.1], ["Senja", 69.45, 17.35], ["Tromsø", 69.95, 18.65], ["Hasvik", 70.48, 22.15],
+    ["Honningsvåg", 70.98, 25.97], ["Vardø", 70.37, 31.1], ["Kirkenes", 69.95, 30.15]
   ]
 }

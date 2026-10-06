@@ -2714,7 +2714,6 @@ const G3 = (() => {
 
   // ---------- mooring: in along the quay, then the lines: aft spring first, bow line, stern line, fore spring (and in reverse when casting off) ----------
   const MO = {key:'', phase:'', t:0, from:null, dur:0, lines:0, len:[0, 0, 0, 0], init:false};
-  let DEP = null;        // casting off: the way astern out from the quay and on to the harbour point (updateBoat)
   const LINE_S = 1.8;   // seconds for each line to go on
   let ROPEM = null, FENDM = null;
   function buildMooring(){ const r = NB(); r.tube([[0, 0, 0], [0, 0, 1]], 1, [0.2, 0.36, 0.72, 0.15], 6); ROPEM = r.mesh(); const f = NB(); f.tube([[0, -0.26, 0], [0, 0.26, 0]], 0.12, [0.93, 0.93, 0.9, 0.35], 10); FENDM = f.mesh(); }
@@ -2808,13 +2807,126 @@ const G3 = (() => {
   // the boat in 3D follows the simulated track like a real boat: it speeds up and slows down gradually, turns on an arc,
   // pivots about a point a third of its length from the bow (so the stern swings out), skids a little in turns and banks
   const KNV = () => 1852 / 3600 * simRate();      // on-screen metres per real second per knot (real time with the hand on the helm)
-  function updateBoat(dt, t, frac){
+  // ---------- along the route (Jonas 06.10.2026: «båten strengt må følge rutestreken som lages i kartplotteren», «Svingingen kan være
+  // litt smooth akkurat der båten endrer kurs, men det må være ganske nøyaktige kursendringer», «båten må stoppe på nøyaktig den plassen
+  // siste endepunkt er … at den slakker av og stopper nøyaktig der den skal», and «Stopp» underway the same, not all at once) ----------
+  // One line in metres: out from the quay she lies at (core berthPath, astern first), the route's waypoints as the chart plotter draws
+  // them, and in to the quay where the route ends. She runs along it at the simulation's speed, catching up when she is behind (the
+  // simulation starts at the harbour point), not ahead of it, and brakes to stand exactly on every stop she has not been let past: the
+  // end, a fishing ground, a set to work. The simulation is on the same line, so the chart, the simulation and the 3D boat agree. The
+  // corners are rounded over TRK_R metres either side. A new or changed route starts a new line from where she is, keeping her way.
+  // (It replaced a follower that steered for a point ahead with the boat's turning radius: in a narrow harbour it cut the corners, and
+  // its own 45 s way out and 60 s way in left her lying at the plant's quay in Senjahopen while the trip to the rorbu was long done.)
+  let TRK = null;
+  const TRK_R = 6;
+  const trkSig = pl => pl.wps.length + ':' + pl.wps.map(w => w.x.toFixed(5) + ',' + w.y.toFixed(5) + (w.port || '')).join(';');
+  function trkBuild(pl, dep){
+    const vt = vtype(), P = [], wpAt = [];
+    const add = (x, z) => { const q = P[P.length - 1]; if (!q || Math.hypot(q[0] - x, q[1] - z) > 0.3) P.push([x, z]); };
+    let back = 0, hd0 = null, endBp = null;
+    let iOut = 0;
+    if (dep){ const pt = portById(dep.pid); let W = pt ? berthPath(pt.p, dep.bp).reverse() : [dep.bp];
+      // from the last turn out from the quay straight on to the route when that is clear: the harbour point can lie by the berth
+      // (Senjahopen), and going back to it had her back out and then run in past the quay again
+      const w1 = pl.wps[pl.idx]; if (W.length > 2 && w1 && berthClear(W[W.length - 2], w1, (dep.bp.Bb || 3) / 2)) W = W.slice(0, -1);
+      for (const q of W) add(q.x * 1000, q.y * 1000); hd0 = dep.bp.hd; iOut = P.length - 1;
+      if (P.length > 1) back = Math.hypot(P[1][0] - P[0][0], P[1][1] - P[0][1]); }   // the first stretch astern, out from the quay
+    else add(bv.px, bv.pz);
+    // up to the first harbour on it: she docks there and the route is over (core dock)
+    let iEnd = pl.wps.length - 1; for (let i = pl.idx; i < pl.wps.length; i++) if (pl.wps[i].port){ iEnd = i; break; }
+    for (let i = pl.idx; i <= iEnd; i++){ const w = pl.wps[i]; add(w.x * 1000, w.y * 1000); wpAt[i] = P.length - 1; }
+    const last = pl.wps[iEnd];
+    // in to the quay she will lie at, the same as berthNow once she is in
+    if (last && last.port){ endBp = berthPose(last.port, vt, last.berth === 'naust' && quayFace(last.port, 'naust') ? 'naust' : 'main') || berthPose(last.port, vt);
+      if (endBp){ const W = berthPath({x:last.x, y:last.y}, endBp); for (let k = 1; k < W.length; k++) add(W[k].x * 1000, W[k].y * 1000); } }
+    const L = [0]; for (let i = 1; i < P.length; i++) L.push(L[i - 1] + Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1]));
+    const stops = []; for (let i = pl.idx; i <= iEnd; i++) if (wpStop(pl.wps[i]) && wpAt[i] != null) stops.push({i, s:L[wpAt[i]]});
+    // where the way in to the quay begins (slow from there), and how far she turns over once she is clear astern
+    const sIn = endBp && wpAt[iEnd] != null ? L[wpAt[iEnd]] : 1e9, turnL = Math.max(10, ((dep && dep.bp.Lb) || 8) * 1.5);
+    return {plan:pl, n:pl.wps.length, sig:trkSig(pl), chk:0, P, L, end:L[L.length - 1], stops, s:0, v:0, vc:0, back, turnL, hd0, endBp, sIn, sOut:L[iOut], done:false};
+  }
+  // the point s metres along the line
+  function trkAt(T, s){
+    const L = T.L, n = L.length; if (n < 2) return T.P[0]; s = clamp(s, 0, T.end);
+    let lo = 1, hi = n - 1; while (lo < hi){ const m = (lo + hi) >> 1; if (L[m] < s) lo = m + 1; else hi = m; }
+    const a = T.P[lo - 1], c = T.P[lo], f = (s - L[lo - 1]) / Math.max(1e-6, L[lo] - L[lo - 1]); return [a[0] + (c[0] - a[0]) * f, a[1] + (c[1] - a[1]) * f];
+  }
+  // how far along the line a point is, looked for from s0 on (a line that comes back on itself is no trouble)
+  function trkProj(T, x, z, s0, back = 30){
+    let best = s0, bd = 1e18;
+    for (let i = 1; i < T.P.length; i++){
+      if (T.L[i] < s0 - back) continue; if (T.L[i - 1] > s0 + 4000) break;
+      const a = T.P[i - 1], c = T.P[i], vx = c[0] - a[0], vz = c[1] - a[1], l2 = vx * vx + vz * vz || 1, u = clamp(((x - a[0]) * vx + (z - a[1]) * vz) / l2, 0, 1);
+      const d = (x - a[0] - u * vx) ** 2 + (z - a[1] - u * vz) ** 2; if (d < bd){ bd = d; best = T.L[i - 1] + u * Math.sqrt(l2); }
+    }
+    return best;
+  }
+  // under way on a route, or not yet in at the end of the last one; a new or changed route starts a new line
+  function trkOn(){
+    const b = S.boat, pl = S.plan;
+    if (helmOn() || b.status === 'tow'){ TRK = null; return false; }
+    if (b.status === 'sailing' && pl && pl.wps.length > pl.idx){
+      if (!TRK || TRK.plan !== pl || TRK.n !== pl.wps.length || ((TRK.chk = (TRK.chk + 1) % 30) === 0 && trkSig(pl) !== TRK.sig)){
+        // from the quay she has just cast off from (moorStep's MO.dep), else from where she is
+        const d0 = !TRK && MO.dep && Math.hypot(MO.dep.bp.x * 1000 - bv.px, MO.dep.bp.y * 1000 - bv.pz) < 60 ? MO.dep : null, v = TRK ? TRK.v : d0 ? 0 : bv.spd || 0, vc = TRK ? TRK.vc : 0;
+        MO.dep = null; TRK = trkBuild(pl, d0); TRK.v = v; TRK.vc = vc;
+      }
+      return true;
+    }
+    if (TRK && !TRK.done) return true;
+    TRK = null; return false;
+  }
+  const trkDn = vc => Math.max(1.2, vc / 6);   // how hard she brakes (m/s per s) from the speed she cruises at
+  // «Stopp»: how far ahead of the simulation (km, along the route) she needs to stop gently from where she is and the way she has on
+  function trkHaltNeed(){
+    const T = TRK, b = S.boat; if (!T || T.plan !== S.plan || b.status !== 'sailing') return 0;
+    const sSim = trkProj(T, b.pos.x * 1000, b.pos.y * 1000, T.s, 3000), vc = Math.max(T.vc, 3 * KNV());
+    return Math.max(0, T.s + T.v * T.v / (2 * trkDn(vc)) + 5 - sSim) / 1000;
+  }
+  function trkStep(dt, pr){
+    const T = TRK, b = S.boat, pl = S.plan, live = pl === T.plan && b.status === 'sailing';
+    const vs = live ? sailV(S.t / 60) * KNV() : 0; if (vs > 0.5) T.vc = vs; const vc = Math.max(T.vc, 3 * KNV());
+    // where the simulation is on the line: under way she keeps up with it; when it has come in to a quay she runs on to the berth;
+    // when it has stopped elsewhere (the end of the route, a ground, a set, Stopp) she runs on to where it stands
+    const dock = b.status === 'port' && T.endBp, sT = dock ? T.end : trkProj(T, pr.p.x * 1000, pr.p.y * 1000, Math.max(T.s, T.sOut));
+    const aUp = Math.max(1.2, vc / 5), aDn = trkDn(vc);
+    // the stop she must not pass: under way the first stop waypoint the simulation has not reached yet, else the end; stopped, where it
+    // stands (if she has already run past it, she slows down as gently as she can)
+    let sStop = T.end, vDes = vc;
+    if (live){ for (const q of T.stops) if (q.i >= pl.idx && q.s >= T.s - 0.5){ sStop = q.s; break; }
+      // out from the quay at manoeuvring speed whatever the simulation does (it starts at the harbour point, which can lie by the berth)
+      vDes = T.s < T.sOut ? vc : clamp(vs + (sT - T.s) * 0.6, 0, vs * 1.5 + 3 + Math.max(0, sT - T.s - 60) * 0.05); }
+    else if (!dock){ if (sT > T.s) sStop = Math.min(T.end, sT); else { vDes = 0; sStop = Math.min(T.end, T.s + T.v * T.v / (2 * aDn) + 0.01); } }
+    // slow astern out from the quay and while she turns, and slow on the way in to the quay
+    if (T.s < T.back + T.turnL || T.s > T.sIn) vDes = Math.min(vDes, (T.s > T.sIn ? 4 : 3) * KNV());
+    // speed: up and down gradually, and never more than she can brake from to stand at the stop
+    T.v += clamp(vDes - T.v, -aDn * dt, aUp * dt); T.v = clamp(T.v, 0, Math.sqrt(2 * aDn * Math.max(0, sStop - T.s)));
+    T.s = Math.min(T.s + T.v * dt, sStop);
+    if (sStop - T.s < 0.05){ T.s = sStop; T.v = 0; }
+    // stopped where the simulation is (it takes over from here: the quay's lines, or lying still)
+    if (!live && T.v < 0.02 && (T.s >= sStop - 0.05 || vDes === 0)) T.done = true;
+    // on the line, the corners rounded; the heading along it (astern out from the quay at first, then turning to the way out)
+    // (not near a stop: there she stands exactly on the waypoint)
+    let r = Math.min(TRK_R, T.s, T.end - T.s); for (const q of T.stops) r = Math.min(r, Math.abs(q.s - T.s));
+    const A = trkAt(T, T.s - r), C = trkAt(T, T.s + r), Q = r > 0.01 ? [(A[0] + C[0]) / 2, (A[1] + C[1]) / 2] : trkAt(T, T.s);
+    const rh = Math.max(2, TRK_R), A2 = trkAt(T, T.s - rh), C2 = trkAt(T, T.s + rh);
+    let hd = Math.hypot(C2[0] - A2[0], C2[1] - A2[1]) > 0.1 ? Math.atan2(C2[0] - A2[0], -(C2[1] - A2[1])) : bv.cog;
+    if (T.back > 0 && T.hd0 != null) hd = T.hd0 + angDiff(T.hd0, hd) * sstep(0, 1, (T.s - T.back) / T.turnL);
+    const c0 = bv.cog; bv.px = Q[0]; bv.pz = Q[1]; bv.cog = hd; bv.spd = T.v;
+    bv.yr += (clamp(angDiff(c0, hd) / Math.max(dt, 1e-3), -1.5, 1.5) - bv.yr) * (1 - Math.exp(-dt * 6));
+    // in at the quay: the lines go on (moorStep takes it from here)
+    if (T.done && T.endBp && b.status === 'port'){ MO.key = S.cur + '|' + b.port + '|' + vtype() + '|' + (b.moorT || 0); MO.init = true; MO.phase = 'lines'; MO.t = 0; MO.lines = 0; MO.len = [0, 0, 0, 0]; }
+  }
+  function updateBoat(dt, t, frac, rdt){
     const b = S.boat, pr = predict(frac), tx = pr.p.x * 1000, tz = pr.p.y * 1000, sailing = b.status === 'sailing' && S.plan, G = GEO(vtype());
     const zp = (G.bow || -2.2) + ((G.stern || 3.1) - (G.bow || -2.2)) / 3;   // pivot point, local z (negative = forward)
-    if (!bv.init || Math.hypot(tx - (bv.px || 0), tz - (bv.pz || 0)) > 900){ bv.px = tx; bv.pz = tz; bv.cog = pr.hd; bv.head = pr.hd; bv.spd = sailing ? b.v * KNV() : 0; bv.yr = 0; bv.beta = 0; bv.init = true; bv.osc = false; bv.st = null; TRAIL.length = 0; WV.init = false; }
+    if (!bv.init || Math.hypot(tx - (bv.px || 0), tz - (bv.pz || 0)) > 900){ TRK = null; bv.px = tx; bv.pz = tz; bv.cog = pr.hd; bv.head = pr.hd; bv.spd = sailing ? b.v * KNV() : 0; bv.yr = 0; bv.beta = 0; bv.init = true; bv.osc = false; bv.st = null; TRAIL.length = 0; WV.init = false; }
     else if (dt > 0){
       const bp = berthNow();
-      if (bp) moorStep(dt, bp);
+      // under a route, and until she has come in to where it ends: along the line the chart plotter draws (trkStep)
+      // (with the time that has really gone, up to 30 s: a slow frame or a stall must not leave her behind the simulation for good)
+      if (trkOn()) trkStep(Math.min(30, rdt || dt), pr);
+      else if (bp) moorStep(dt, bp);
       else if (helmOn()){
         // by hand (16-helm.js): she is where the simulation puts her every tick, so she follows it closely; the turn (a game second's,
         // so times the rate on the screen) and the way she
@@ -2823,38 +2935,7 @@ const G3 = (() => {
         bv.px += (tx - bv.px) * k; bv.pz += (tz - bv.pz) * k; bv.cog += angDiff(bv.cog, pr.hd) * k;
         bv.yr += (h.yaw * simRate() - bv.yr) * (1 - Math.exp(-dt * 3)); bv.spd = Math.abs(h.v) * KNV();
       }
-      else if (sailing && (MO.dep || DEP)){
-        // cast off: astern out from the quay, then the way out to the harbour point clear of piers and the unit; the follower takes
-        // over from there (the simulation starts at the harbour point)
-        if (MO.dep){ const d0 = MO.dep, pt = portById(d0.pid); MO.dep = null; const M = pt ? pathM(berthPath(pt.p, d0.bp).reverse()) : null;
-          DEP = M && M.len > 5 ? {M, t:0, dur:clamp(M.len / 1.8, 5, 45), back:Math.hypot(M.P[0][0] - M.P[Math.min(4, M.P.length - 1)][0], M.P[0][1] - M.P[Math.min(4, M.P.length - 1)][1]), hd:d0.bp.hd} : null; }
-        if (DEP){ const sp = Math.max(1, S.mult || 1); DEP.t += dt * sp; const u0 = clamp(DEP.t / DEP.dur, 0, 1), s = u0 * u0 * (3 - 2 * u0) * DEP.M.len, q = pathAt(DEP.M, s);
-          bv.px = q.x; bv.pz = q.z; bv.cog += angDiff(bv.cog, s < DEP.back ? DEP.hd : q.h) * Math.min(1, dt * 2.5); bv.spd = DEP.M.len * 6 * u0 * (1 - u0) * sp / DEP.dur; bv.yr = 0; if (u0 >= 1) DEP = null; }
-      }
-      else if (sailing){
-        const vs = sailV(S.t / 60) * KNV(), la = livePose(frac + clamp(1.6 * GAME_RATE * (S.mult || 1) / 60, 0.04, 0.6)).p, cx = la.x * 1000, cz = la.y * 1000;
-        // the next stop or the route's end: when the point ahead has reached it, she comes in to it and stops there instead of keeping
-        // way on past it and circling back (the user's test 04.10.2026: she spun round the last waypoint until the next tick)
-        const pl = S.plan; let endW = null;
-        if (pl) for (let i = pl.idx; i < pl.wps.length; i++){ const w = pl.wps[i]; if (wpStop(w) || i === pl.wps.length - 1){ endW = w; break; } }
-        const arriving = !!endW && Math.hypot(cx - endW.x * 1000, cz - endW.y * 1000) < 1, ax = arriving ? endW.x * 1000 - bv.px : 0, az = arriving ? endW.y * 1000 - bv.pz : 0, dEnd = Math.hypot(ax, az);
-        const f0x = Math.sin(bv.cog), f0z = -Math.cos(bv.cog), past = arriving && (dEnd < 3 || ax * f0x + az * f0z < 0);
-        // the point she steers for has fallen behind her (the simulation braked for a stop harder than she can, 23 to 8 knots in a
-        // minute): she keeps her course along the track and slows down until it is ahead again, instead of turning round for it (the
-        // user's test 04.10.2026: a pirouette before the stop)
-        const lead = (cx - bv.px) * Math.sin(pr.hd) - (cz - bv.pz) * Math.cos(pr.hd), behind = !past && !arriving && lead < 2;
-        // steer for a point a little ahead on the track, turning no faster than the turning radius allows
-        const want = past ? bv.cog : behind ? pr.hd : Math.hypot(cx - bv.px, cz - bv.pz) > 1 ? Math.atan2(cx - bv.px, -(cz - bv.pz)) : pr.hd;
-        const wmax = clamp(bv.spd / ((VESSELS[vtype()] || {}).turnR || 40), 0.6, 1.4), err = angDiff(bv.cog, want), rDes = clamp(err * 2.2, -wmax, wmax);
-        bv.yr += (rDes - bv.yr) * (1 - Math.exp(-dt * 3)); bv.cog += bv.yr * dt;
-        // speed: keep up with the simulated position, with limits on acceleration and braking
-        const fx = Math.sin(bv.cog), fz = -Math.cos(bv.cog), rx = Math.cos(bv.cog), rz = Math.sin(bv.cog), ex = tx - bv.px, ez = tz - bv.pz;
-        // always keep some way on while turning (like a boat swinging out from the quay), and catch up without racing; coming in to the end,
-        // slow down with the distance left and stop at it
-        const vDes = past ? 0 : arriving ? Math.min(vs, Math.max(0, dEnd - 1) * 0.8) : behind ? vs * clamp(0.6 + lead / 50, 0.1, 0.6) : clamp(vs + (ex * fx + ez * fz) * 0.5, vs * (0.25 + 0.3 * Math.max(0, Math.cos(err))), vs * 1.25 + 3), aMax = Math.max(3, Math.max(vs, bv.spd) / 4);
-        bv.spd += clamp(vDes - bv.spd, -aMax * 1.4 * dt, aMax * dt);
-        bv.px += fx * bv.spd * dt; bv.pz += fz * bv.spd * dt;
-      } else if (b.status === 'tow' && b.tow && b.tow.ph === 'tow'){
+      else if (b.status === 'tow' && b.tow && b.tow.ph === 'tow'){
         // under tow (the rescue boat, core towPose): she keeps close behind the tow line's end, with way on
         const k = 1 - Math.exp(-dt * 6); bv.px += (tx - bv.px) * k; bv.pz += (tz - bv.pz) * k; bv.cog += angDiff(bv.cog, pr.hd) * (1 - Math.exp(-dt * 2));
         bv.spd = TOW.tow * KNV(); bv.yr *= Math.exp(-dt * 2);
@@ -3325,10 +3406,116 @@ const G3 = (() => {
     if (PERS) return PERS; const mk = (hands, suit, kit) => { const b = VB(); b.lod = 0.6; personVB(b, 0, 0, 0, false, hands, suit, kit); return {pb:buf(new Float32Array(b.p)), nb:buf(new Float32Array(b.n)), cb:buf(new Float32Array(b.c)), n:b.p.length / 3}; };
     return PERS = {skip:mk([[-0.16, 1.08, -0.42], [0.16, 1.08, -0.42]], [0.93, 0.4, 0.1, 0.3], 'skipper'), crew:mk(null, [0.95, 0.75, 0.15, 0.3], 'crew')};
   }
+  // ---------- the trawl (tools/boats/tral60.py; Jonas 06.10.2026: «en tråler har slike tråldører på hekken som senkes i havet ved
+  // tråling. Lag også animasjoner for utsett, og opptak av trål»): the doors hang in the gallows either side of the stern ramp and the
+  // net lies on its drum. Shooting pays the net out down the ramp, codend first, lowers the doors into the sea and runs them out astern
+  // on the warps; towing leaves the warps running from the blocks down into the sea; hauling brings the doors up into the gallows and
+  // the net in, the codend full of fish last, up the ramp. The game does not trawl yet (that comes with the ocean step); until then
+  // G3._debug.trawl('shoot' | 'tow' | 'haul') plays it, for the tests. Times in real seconds. ----------
+  const TRAWL = {mode:null, t0:0, hold:null}, TRM = {}, SHOOT_S = 46, HAUL_S = 50;
+  function trawlKit(t){
+    if (t in TRM) return TRM[t];
+    const door = upA(glbPart(t, 'door')); if (!door) return TRM[t] = null;
+    const w = NB(); w.tube([[0, 0, 0], [0, 0, 1]], 1, [0.16, 0.17, 0.18, 0.6], 6);
+    const n = NB(); n.tube([[0, 0, 0], [0, 0, 1]], 1, [0.16, 0.30, 0.20, 0.1], 8);
+    return TRM[t] = {door, roll:upA(glbPart(t, 'netroll')), cod:upA(glbPart(t, 'codend')), warp:w.mesh(), net:n.mesh()};
+  }
+  // a frame at A whose z runs along the unit d, its y as near up as it goes
+  function alongM(A, d){
+    const up = Math.abs(d[1]) > 0.95 ? [1, 0, 0] : [0, 1, 0]; let x = [up[1] * d[2] - up[2] * d[1], up[2] * d[0] - up[0] * d[2], up[0] * d[1] - up[1] * d[0]];
+    const l = Math.hypot(x[0], x[1], x[2]) || 1; x = x.map(v => v / l); const y = [d[1] * x[2] - d[2] * x[1], d[2] * x[0] - d[0] * x[2], d[0] * x[1] - d[1] * x[0]];
+    return new Float32Array([x[0], x[1], x[2], 0, y[0], y[1], y[2], 0, d[0], d[1], d[2], 0, A[0], A[1], A[2], 1]);
+  }
+  const lerp3 = (a, b, k) => [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k];
+  // where things stand at a moment: the doors lowered (lo) and run out (ro), the net paid out (net), the codend along its way (cod)
+  function trawlState(now){
+    const u = TRAWL.hold != null ? TRAWL.hold : now - TRAWL.t0;
+    if (TRAWL.mode === 'shoot' && u > SHOOT_S){ TRAWL.mode = 'tow'; TRAWL.t0 = now; }
+    if (TRAWL.mode === 'haul' && u > HAUL_S + 4) TRAWL.mode = null;
+    if (TRAWL.mode === 'shoot') return {lo:sstep(12, 22, u), ro:sstep(22, SHOOT_S, u), net:sstep(0, 16, u), cod:sstep(0, 16, u), full:false};
+    if (TRAWL.mode === 'tow') return {lo:1, ro:1, net:1, cod:1, full:false, tow:true};
+    if (TRAWL.mode === 'haul') return {lo:1 - sstep(20, 30, u), ro:1 - sstep(0, 22, u), net:1 - sstep(30, HAUL_S, u), cod:u > HAUL_S + 2 ? -1 : 1 - 0.85 * sstep(28, HAUL_S, u), full:true};
+    return {lo:0, ro:0, net:0, cod:-1, full:false};
+  }
+  function drawTrawl(t, A, BMrel, now){
+    const K = trawlKit(t); if (!K) return;
+    const st = trawlState(now), at = (p, M) => drawN(p, chain(BMrel, M));
+    // the net's way: off the drum, down the ramp, into the sea astern and away down; the codend's place on it by stages
+    const W = [[A.drum[0], A.drum[1] - 0.9, A.drum[2] + 1.0], [A.rampTop[0], A.rampTop[1] + 0.3, A.rampTop[2]], [A.rampFoot[0], A.rampFoot[1] + 0.2, A.rampFoot[2]],
+      [A.rampFoot[0], -1.5, A.rampFoot[2] + 9], [A.rampFoot[0], -12, A.rampFoot[2] + 60]], WT = [0, 0.15, 0.5, 0.7, 1];
+    const way = p => { let i = 1; while (i < WT.length - 1 && WT[i] < p) i++; const k = clamp((p - WT[i - 1]) / (WT[i] - WT[i - 1]), 0, 1); return {p:lerp3(W[i - 1], W[i], k), i}; };
+    if (K.roll) at(K.roll, chain(M4.T(A.drum[0], A.drum[1], A.drum[2]), new Float32Array([1, 0, 0, 0, 0, 1 - 0.62 * st.net, 0, 0, 0, 0, 1 - 0.62 * st.net, 0, 0, 0, 0, 1])));
+    if (st.cod >= 0 && K.cod){
+      const c = way(st.cod), c2 = way(Math.min(1, st.cod + 0.01)).p, d = [c2[0] - c.p[0], c2[1] - c.p[1], c2[2] - c.p[2]], dl = Math.hypot(d[0], d[1], d[2]);
+      const dir = dl > 1e-4 ? d.map(v => v / dl) : [0, 0, 1], sw = st.full ? 1 : 0.55;
+      at(K.cod, chain(alongM(c.p, dir), new Float32Array([sw, 0, 0, 0, 0, sw, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])));
+      // the net from the drum to the codend
+      let prev = W[0]; for (let i = 1; i < c.i; i++){ at(K.net, limbM(prev, W[i], 0.32)); prev = W[i]; } at(K.net, limbM(prev, c.p, 0.32));
+    }
+    for (const sg of [-1, 1]){
+      const S0 = [sg * Math.abs(A.door[0]), A.door[1], A.door[2]], Wn = [sg * Math.abs(A.winch[0]), A.winch[1] + 0.7, A.winch[2]];
+      at(K.warp, limbM(Wn, [S0[0], S0[1] + 0.55, S0[2] + 0.2], 0.025));            // from the winch to the block
+      const D0 = [S0[0], S0[1] - 0.7, S0[2]];
+      const D = [D0[0] + sg * (0.9 * st.lo + 7 * st.ro), D0[1] - (D0[1] + 0.4) * st.lo - 16 * st.ro, D0[2] + 3 * st.lo + 58 * st.ro];
+      if (st.tow){ D[0] += Math.sin(now * 0.4 + sg) * 0.8; D[1] = -22; D[2] = D0[2] + 70; }
+      at(K.warp, limbM([S0[0], S0[1] - 0.5, S0[2]], D, 0.025));
+      if (!st.tow && st.ro < 0.35) at(K.door, chain(M4.T(D[0], D[1], D[2]), M4.RY((sg > 0 ? Math.PI : 0) - Math.PI / 2 * st.lo)));
+    }
+  }
+  // ---------- the purse seine (tools/boats/not75.py; Jonas 06.10.2026: «Denne kan både bruke ringnot og trål og trenger dermed
+  // animasjoner for begge deler»): shooting pays the seine out over the stern roller from the bin, its corks a ring on the sea round the
+  // school from the stern to the starboard side; pursing hauls the purse line in through the davit's blocks; hauling brings the net in
+  // through the power block and down into the bin, the ring closing in to the starboard side; then the bunt alongside, the fish
+  // boiling in it and the pump's hose in. Not used by the game yet (the ocean step); G3._debug.seine(mode) plays it. Real seconds. ----------
+  const SEINE = {mode:null, t0:0, hold:null}, SEINE_S = {shoot:40, purse:25, haul:45, pump:20}, SEINE_NEXT = {shoot:'purse', purse:'haul', haul:'pump', pump:null};
+  function seineState(now){
+    if (!SEINE.mode) return null;
+    let u = SEINE.hold != null ? SEINE.hold : now - SEINE.t0;
+    while (SEINE.mode && SEINE.hold == null && u > SEINE_S[SEINE.mode]){ SEINE.t0 += SEINE_S[SEINE.mode]; u -= SEINE_S[SEINE.mode]; SEINE.mode = SEINE_NEXT[SEINE.mode]; }
+    return SEINE.mode ? {mode:SEINE.mode, k:clamp(u / SEINE_S[SEINE.mode], 0, 1), u} : null;
+  }
+  function drawSeine(t, A, BMrel, VP, now){
+    const st = seineState(now); if (!st) return;
+    const K = trawlKit(t); if (!K) return;
+    const at = (p, M) => drawN(p, chain(BMrel, M)), R0 = 62, Rb = 9;
+    // the ring in the boat's level frame (x to starboard, z aft): through the stern and the starboard side amidships, the long way round
+    const S = [A.stern[0], 0, A.stern[2]], P = [A.side[0] + 1.5, 0, A.side[2]], M = [(S[0] + P[0]) / 2, 0, (S[2] + P[2]) / 2], dx = P[0] - S[0], dz = P[2] - S[2], d = Math.hypot(dx, dz);
+    let nx = dz / d, nz = -dx / d; if (nx < 0){ nx = -nx; nz = -nz; }
+    const h = Math.sqrt(Math.max(1, R0 * R0 - d * d / 4)), C0 = [M[0] + nx * h, 0, M[2] + nz * h];
+    // the ring now: shooting it grows from the stern; hauling it shrinks to the bunt, always through the side point
+    let R = R0, Cn = C0, f = 1, from = S;
+    if (st.mode === 'shoot') f = sstep(0, 1, st.k);
+    if (st.mode === 'haul' || st.mode === 'pump'){
+      const k = st.mode === 'pump' ? 1 : sstep(0, 1, st.k), dl = Math.hypot(C0[0] - P[0], C0[2] - P[2]); R = R0 + (Rb - R0) * k;
+      Cn = [P[0] + (C0[0] - P[0]) / dl * R, 0, P[2] + (C0[2] - P[2]) / dl * R]; from = P;
+    }
+    const aS = Math.atan2(from[2] - Cn[2], from[0] - Cn[0]), aP = Math.atan2(P[2] - Cn[2], P[0] - Cn[0]);
+    let sweep = st.mode === 'shoot' || st.mode === 'purse' ? ((aP - aS) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) : 2 * Math.PI - 0.12;
+    if (st.mode === 'shoot' || st.mode === 'purse'){ const mid = aS + sweep / 2, mx = Cn[0] + Math.cos(mid) * R, mz = Cn[2] + Math.sin(mid) * R; if (Math.hypot(mx - M[0], mz - M[2]) < R) sweep -= 2 * Math.PI; }
+    // the net over the stern roller, the purse line, the net in through the power block, the pump hose
+    if (st.mode === 'shoot'){ at(K.net, limbM(A.bin, A.stern, 0.3)); at(K.net, limbM(A.stern, [S[0], -0.5, S[2] + 1.5], 0.3)); }
+    if (st.mode === 'purse') at(K.warp, limbM(A.purse, [A.purse[0] + 4, -10, A.purse[2]], 0.035));
+    if (st.mode === 'haul'){ at(K.net, limbM([P[0] + 0.5, -0.3, P[2]], A.block, 0.35)); at(K.net, limbM(A.block, A.bin, 0.35)); }
+    if (st.mode === 'pump') at(K.warp, limbM(A.block, [Cn[0], -0.8, Cn[2]], 0.18));
+    // the corks (and the fish in the bunt) as points on the sea, in the boat's level frame
+    const ex = [BMrel[0], BMrel[2]], el = Math.hypot(ex[0], ex[1]) || 1, ux = ex[0] / el, uz = ex[1] / el, T0 = [BMrel[12], BMrel[13], BMrel[14]];
+    const W = (x, y, z) => [T0[0] + ux * x - uz * z, T0[1] + y, T0[2] + uz * x + ux * z];
+    let n = 0; const L = Math.abs(sweep) * R * f, N = Math.min(600, Math.max(2, Math.round(L / 2.4)));
+    for (let i = 0; i <= N; i++){ const a = aS + sweep * f * i / N, q = W(Cn[0] + Math.cos(a) * R, 0.12, Cn[2] + Math.sin(a) * R); PB[n * 3] = q[0]; PB[n * 3 + 1] = q[1]; PB[n * 3 + 2] = q[2]; PA[n] = 1; n++; }
+    drawPts(n, gl.POINTS, VP, [0.96, 0.46, 0.10], 520, true);
+    if (st.mode === 'pump' || (st.mode === 'haul' && st.k > 0.75)){
+      n = 0; for (let i = 0; i < 160; i++){ const a = hash(i) * 6.283, r = Math.sqrt(hash(i + 999)) * (R - 1.2), b = Math.abs(Math.sin(now * (3 + hash(i + 7) * 4) + i));
+        const q = W(Cn[0] + Math.cos(a) * r, 0.05 + 0.35 * b, Cn[2] + Math.sin(a) * r); PB[n * 3] = q[0]; PB[n * 3 + 1] = q[1]; PB[n * 3 + 2] = q[2]; PA[n] = 0.5 + 0.5 * b; n++; }
+      drawPts(n, gl.POINTS, VP, [0.82, 0.86, 0.9], 300, true);
+    }
+    nSetup(VP);
+  }
   function drawVessel(t, G, BMrel, VP, skipper, ncrew){
     const m = pvm(t); if (!m) return; const P = people(); nSetup(VP); drawN(m.hull, BMrel);
     if (skipper) drawN(P.skip, chain(BMrel, M4.T(G.skipperAt[0], G.skipperAt[1], G.skipperAt[2])));
     for (let i = 0; i < ncrew && i < G.crewSpots.length; i++){ const c = G.crewSpots[i]; drawN(P.crew, chain(BMrel, M4.T(c[0], c[1], c[2]), M4.RY(c[3] || 0))); }
+    if (G.trawl) drawTrawl(t, G.trawl, BMrel, performance.now() / 1000);
+    if (G.seine) drawSeine(t, G.seine, BMrel, VP, performance.now() / 1000);
     gl.disableVertexAttribArray(2); gl.useProgram(PL.p);
   }
   // the local fleet near you: the kit model nearest each boat (vessel3d.js npcKit), scaled to her length and beam, at lod 1 within
@@ -3591,7 +3778,7 @@ const G3 = (() => {
     const now = performance.now(), dt = Math.min(0.1, (now - lastF) / 1000), rdt = Math.max(1e-3, (now - lastF) / 1000); lastF = now;
     FPS.v = FPS.v ? FPS.v * 0.95 + 0.05 / rdt : 1 / rdt; FRAMEMS = FRAMEMS * 0.8 + Math.min(500, rdt * 1000) * 0.2; qualTick(dt, FPS.v, now); if (now - FPS.at > 500){ FPS.at = now; const fe = fpsEl(); if (fe) fe.textContent = Math.round(FPS.v) + ' bilder/s · ' + (1000 / FPS.v).toFixed(1) + ' ms · ' + ['Lav', 'Middels', 'Høy', 'Ultra'][QUAL.lvl]; }
     const t = (now - T0) / 1000, frac = currentFrac(), H = (S.t + frac) / 60;
-    computeEnv(H); updateBoat(dt, t, frac); updateWaves(dt, H); updateWake(); updateNear(); ssStep(rdt); updateShadows(); updateChunks(CH.size ? 2 : 999);
+    computeEnv(H); updateBoat(dt, t, frac, rdt); updateWaves(dt, H); updateWake(); updateNear(); ssStep(rdt); updateShadows(); updateChunks(CH.size ? 2 : 999);
     // camera
     let eye, V, kfov = 0;
     if (KINO.on && !SHOW){
@@ -3915,7 +4102,7 @@ const G3 = (() => {
   return {
     // the quality: with a setting ('auto', 'low', 'mid', 'high') it applies it; returns the level now and the frame rate
     quality(v){ if (v){ S.settings.q3d = v; QUAL.bad = QUAL.good = 0; QUAL.cap = 2; qualSet(); } return {lvl:QUAL.lvl, set:S.settings.q3d || 'auto', fps:FPS.v, ultra:UINT}; },
-    show, toggle(){ return show(!active); }, isActive:() => active, get failWhy(){ return failWhy; },
+    show, toggle(){ return show(!active); }, isActive:() => active, haltNeed:() => active ? trkHaltNeed() : 0, get failWhy(){ return failWhy; },
     // the next frame as a JPEG data URL (or null when no frame comes within 2 s)
     snap(w){ return new Promise(res => { if (!active || NO3D || !canvas){ res(null); return; } if (SNAP) SNAP.res(null); const me = SNAP = {w:w || 1600, res};
       setTimeout(() => { if (SNAP === me){ SNAP = null; res(null); } }, 2000); }); },
@@ -3935,6 +4122,6 @@ const G3 = (() => {
     // the cinema: on or off (the HUD is the page's: body.kino-clean)
     kino(on){ if (on !== undefined){ KINO.on = !!on; KINO.shot = null; } return KINO.on; }, get kinoShot(){ return KINO.shot ? KINO.shot.type : null; },
     isHelm:() => cam.helm, setHelm(on){ const G = GEO(vtype()); cam.helm = !!on; cam.zoom = 1; cam.hy = 0; cam.hp = G.hp !== undefined ? G.hp : -0.07; cam.fov = G.fov || 55; },
-    _debug:{pota:POTA, get fps(){ return FPS.v; }, get peers(){ return npcNow.filter(n => n.player).map(n => ({id:n.id, vtype:n.vtype, t:n.K ? n.K.t : null, glass:!!(n.K && n.K.glass)})); }, get air(){ return airNow.map(a => ({kind:a.kind, w:a.w.map(Math.round)})); }, get airM(){ return !!(AIRM && AIRM.plane); }, get curFov(){ return curFov; }, cam, moundTop, bridgeInto, get statTris(){ return STAT ? STAT.n / 3 : 0; }, get vec(){ return {tiles:[...VEC.tiles.values()].map(t => ({k:t.k, bld:t.bld ? t.bld.n : 0, roads:t.roads.length, bridges:t.bridges.length, piers:t.piers.length, molos:t.molos.length, quays:t.quays.length, ms:Math.round(t.ms)})), statics:[...TST].map(([k, s]) => ({k, tris:s.tris, ms:Math.round(s.ms)})), chunks:CH.size}; }, moundInto, MB, haulModel, get haulA(){ return HAULA; }, gopHands, kinoNext(){ KINO.shot = null; }, get kino(){ const k = KINO.shot, e = KINO.eye, g = KINO.tgt; if (!k || !e) return null; const t = (performance.now() - T0) / 1000; return {type:k.type, up:e[1] - Math.max(terrH(e[0], e[2]), seaH(e[0], e[2], t)), free:camFree(g, e), d:Math.hypot(e[0] - bv.x, e[2] - bv.z)}; }, get PLA(){ return PLA; }, get PCA(){ return PCA; }, set noPL(v){ NOPL = !!v; }, get beams(){ return BMN; }, glErr(){ return gl ? gl.getError() : -1; }, QUAL, qualTick, TERRW, get TERR(){ return TERR; }, get MIDM(){ return MIDM; }, RO, SSL, WV, WK, ssAt, seaH, waves:(dt, H) => updateWaves(dt, H), get sstVS(){ return SST_VS; }, get seaLvl(){ return seaLvl; }, get seaBasic(){ return !!(PS && PS.basic); }, get seaOne(){ return PSF === PS; }, get seaLite(){ return !!(PS && PS.lite); }, set seaDbg(v){ SEADBG = v; }, get drift(){ let c = 0; for (let i = 0; i < SDN; i++) if (SD.age[i] < SD.life[i]) c++; return c; }, get eye(){ return lastEye; }, camInside, camFree, get camPull(){ return camPull; }, get camLift(){ return camLift; }, get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, BUNKERS, nearestPlant, fkRun, legAt, terrH, terrRaw, unitModel, get UPATCH(){ return UPATCH; }, sitesNow, siteModel, onSite, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; lightsHere(e, 50).forEach(L => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(L, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }, get FINEM(){ return FINEM; }, get seaNP(){ return NP; }, get dpr(){ return canvas ? canvas.width / Math.max(1, canvas.getBoundingClientRect().width) : 0; }}
+    _debug:{pota:POTA, get fps(){ return FPS.v; }, trawl(mode, at, hold){ TRAWL.mode = mode || null; TRAWL.t0 = performance.now() / 1000 - (at || 0); TRAWL.hold = hold ? at || 0 : null; return mode; }, seine(mode, at, hold){ SEINE.mode = mode || null; SEINE.t0 = performance.now() / 1000 - (at || 0); SEINE.hold = hold ? at || 0 : null; return mode; }, get seineNow(){ return seineState(performance.now() / 1000); }, get trawlNow(){ const st = trawlState(performance.now() / 1000); return TRAWL.mode ? Object.assign({mode:TRAWL.mode}, st) : null; }, get trk(){ return TRK && {s:TRK.s, v:TRK.v, vc:TRK.vc, end:TRK.end, sIn:TRK.sIn, back:TRK.back, turnL:TRK.turnL, done:TRK.done, stops:TRK.stops.map(q => q.s), P:TRK.P}; }, get peers(){ return npcNow.filter(n => n.player).map(n => ({id:n.id, vtype:n.vtype, t:n.K ? n.K.t : null, glass:!!(n.K && n.K.glass)})); }, get air(){ return airNow.map(a => ({kind:a.kind, w:a.w.map(Math.round)})); }, get airM(){ return !!(AIRM && AIRM.plane); }, get curFov(){ return curFov; }, cam, moundTop, bridgeInto, get statTris(){ return STAT ? STAT.n / 3 : 0; }, get vec(){ return {tiles:[...VEC.tiles.values()].map(t => ({k:t.k, bld:t.bld ? t.bld.n : 0, roads:t.roads.length, bridges:t.bridges.length, piers:t.piers.length, molos:t.molos.length, quays:t.quays.length, ms:Math.round(t.ms)})), statics:[...TST].map(([k, s]) => ({k, tris:s.tris, ms:Math.round(s.ms)})), chunks:CH.size}; }, moundInto, MB, haulModel, get haulA(){ return HAULA; }, gopHands, kinoNext(){ KINO.shot = null; }, get kino(){ const k = KINO.shot, e = KINO.eye, g = KINO.tgt; if (!k || !e) return null; const t = (performance.now() - T0) / 1000; return {type:k.type, up:e[1] - Math.max(terrH(e[0], e[2]), seaH(e[0], e[2], t)), free:camFree(g, e), d:Math.hypot(e[0] - bv.x, e[2] - bv.z)}; }, get PLA(){ return PLA; }, get PCA(){ return PCA; }, set noPL(v){ NOPL = !!v; }, get beams(){ return BMN; }, glErr(){ return gl ? gl.getError() : -1; }, QUAL, qualTick, TERRW, get TERR(){ return TERR; }, get MIDM(){ return MIDM; }, RO, SSL, WV, WK, ssAt, seaH, waves:(dt, H) => updateWaves(dt, H), get sstVS(){ return SST_VS; }, get seaLvl(){ return seaLvl; }, get seaBasic(){ return !!(PS && PS.basic); }, get seaOne(){ return PSF === PS; }, get seaLite(){ return !!(PS && PS.lite); }, set seaDbg(v){ SEADBG = v; }, get drift(){ let c = 0; for (let i = 0; i < SDN; i++) if (SD.age[i] < SD.life[i]) c++; return c; }, get eye(){ return lastEye; }, camInside, camFree, get camPull(){ return camPull; }, get camLift(){ return camLift; }, get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, BUNKERS, nearestPlant, fkRun, legAt, terrH, terrRaw, unitModel, get UPATCH(){ return UPATCH; }, sitesNow, siteModel, onSite, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; lightsHere(e, 50).forEach(L => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(L, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }, get FINEM(){ return FINEM; }, get seaNP(){ return NP; }, get dpr(){ return canvas ? canvas.width / Math.max(1, canvas.getBoundingClientRect().width) : 0; }}
   };
 })();

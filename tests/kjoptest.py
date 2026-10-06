@@ -75,6 +75,15 @@ async def main():
         await pg2.evaluate("shopClaim()"); await pg2.wait_for_timeout(600)
         r2 = await pg2.evaluate("({inv:(S.haillInv || {}).haill || 0})")
         check(r2['inv'] == inv1, 'the same grants asked for again are not given twice', {'before': inv1, 'after': r2['inv']})
+        # 3b. the thank-you for feedback (20261006140000_feedback_reward.sql): into the store with its own words, 12 hours at +100 % and then gone
+        st['pending'] = [{'id': 21, 'product': 'fb_haill', 'data': {'give': 'haill', 'type': 'takk', 'reward': True, 'fid': 5}}]
+        r3 = await pg2.evaluate("""(async () => { const n0 = (S.haillInv || {}).takk || 0, m0 = S.msgs.length; await shopClaim();
+          const inv = (S.haillInv || {}).takk || 0, m = S.msgs[S.msgs.length - 1], t0 = S.t; useHaill('takk');
+          const at = h => { S.t = t0 + h * 60; return haillBoost(); }, b = [at(0.1), at(6), at(11.9), at(12.1)]; S.t = t0 + 60; const st = haillStage(); S.t = t0;
+          PHONE.open('haill'); await new Promise(r => setTimeout(r, 300)); const card = !!document.querySelector('#phone .fb-gift [data-pa=fbOpen]'); PHONE.show(false);
+          return {got:inv - n0, msg:m && m.no, newMsg:S.msgs.length - m0, boost:b, stage:st && st.no, card, haill:(S.haillInv || {}).haill || 0}; })()""")
+        check(r3['got'] == 1 and 'Takk for tilbakemeldingen' in (r3['msg'] or '') and r3['boost'] == [1, 1, 1, 0] and r3['stage'] == 'Takk-haill' and r3['card'] and r3['haill'] == inv1,
+              'a thank-you for feedback goes into the store as takk-haill with its own message (no «Takk for kjøpet»), +100 % all through 12 hours and then gone; the Luck app tells of it', r3)
         # 4. a cancelled payment says so
         st['pending'] = []
         pg3 = await ctx.new_page(); pg3.on('pageerror', lambda e: errs.append(str(e))); await pg2.close()

@@ -1040,6 +1040,18 @@ Jonas ba om det slik: «koble deg opp mot detstorebla.no/admin slik at du kan he
   - **Fra 06.10.2026:** høyst to PR-er per kjøring mot arbeidsgrenen, aldri en push til den (Jonas: «den skal endre koden 4 ganger om dagen om den må. Viktig at vi utbedrer feil kjapt.»). Saker fra tidligere kjøringer som ikke er rettet, tas også, høyest vekt først. Rutinen kobler repoet til seg selv med `add_repo` (skrivetilgang) og kjører på Opus 5.5.
   - **Aldri:** endringer i `.github/`, `supabase/`, admin, `src/legal/`, serveren eller agenten selv.
   - **Repoet er offentlig:** tilbakemeldingene havner aldri i git, i en commit-melding eller i en PR. `agent.py` nekter å lagre dem inne i repoet.
+- **Teknikk og enheter** (06.10.2026; Jonas: «vi må samle inn så mye viktig data vi kan og analysere for å optimalisere spillet for så mange enheter som mulig»; `20261006160000_device_data.sql`):
+  - Bildetaktmålingene (`perf`, aldri med spiller) og feilrapportene (`errors`) har nå enheten: grafikkbrikken (`gpu`, slik WebGL navngir den), kjerner og minne slik nettleseren oppgir dem, skjermen (`scr`, f.eks. `412x915@2.6`), 3D-nivået og visningen. Spillet sender det med `cloudDev` i `ui/10f-cloud.js`. Grafikkbrikken leses én gang per økt fra en liten WebGL-kontekst som slippes med en gang, så den er kjent også der 3D-visningen ikke starter.
+  - `tech_view(days)` slår sammen feilene per melding (antall, økter, spillere som tall, versjoner, plattformer, nettlesere, de fem vanligste grafikkbrikkene og én stack) og bildetakten per plattform, nettleser og grafikkbrikke, og per versjon. Agenten leser det med `agent.py tech` (`agent_tech`, via `feedback-agent`), og admin i fanen Teknikk (`admin_devices`): bildetakt per enhet, rødt under 25 og gult under 45.
+  - Rutinen går gjennom feilene og bildetakten i hver kjøring (punkt 3 i `RUTINE.md`), og retter for de enhetene det gjelder, uten å senke grafikken for alle.
+- **Takk-haill** (06.10.2026; Jonas: «12 spilltimer med 100% "haill" i belønning om tilbakemeldingen er av verdi for utviklingen av spillet. Haillet skal ikke gradvis miste effekt …, det skal vare 12timer, så ferdig»):
+  - Når admin setter en tilbakemelding til «Kommer» eller «Fikset» første gang, får spilleren én takk-haill (`HAILL.takk` i `core/03-simulation.js`: +100 % i 12 spilltimer, så borte, uten svakere trinn). Den kommer som en grant (`admin_feedback_set` i `20261006140000_feedback_reward.sql`), samme vei som butikken, og går i Haill-appens beholdning. Spilleren får en melding i telefonen og et push-varsel hvis varsler er på. Produktet `fb_haill` kan ikke kjøpes (`active` er false).
+  - `shopClaim` (`ui/10i-shop.js`) henter også hvert tiende minutt mens spillet er åpent, så takken kommer uten omstart.
+  - Tilbakemelding-appen og Haill-appen sier at gode tips belønnes. I «Dine tilbakemeldinger» står 🎁 ved dem som har gitt takk-haill.
+- **Påminnelsen** (`FEEDBACK.nudge` i `ui/06e-feedback.js`; Jonas: «Vi må bevisstgjøre dem»): en melding på skjermen med «Gi tilbakemelding» rett til appen.
+  - Etter en levering, høyst hver andre dag, og ikke de to første dagene etter at spilleren har sendt en.
+  - Etter en grunnstøting eller en feil i spillet, høyst én gang i døgnet hver. Da er emnet «Feil» valgt på forhånd.
+  - Minst seks timer mellom to påminnelser, aldri i første tur, aldri over et annet vindu eller telefonen, og bare der tilbakemeldinger kan sendes. Hver påminnelse telles som hendelsen `fb_nudge`.
 - **I `/admin`:**
   - Under hver tilbakemelding står det agenten foreslår. Knappen «Bruk forslaget» fyller inn status og svar, og Jonas trykker Lagre.
   - Fanen Agent viser rapportene (`admin_agent_runs`) og lenker til PR-ene.
@@ -1062,13 +1074,13 @@ Båtene står i `VESSELS` (`core/02-species-gear.js`). Tallene er startverdier o
 | `jukesjark` | Plastsjark 29 fot (8,9 m) | 8,9 × 3,2 × 1,2 | 5,5 | 1 800 kg | 150 hk, 8,5/10 kn | 1+2 / 2 | 750 000 | åpen 8–9,99 m |
 | `sjark` | Havsjark 35 fot (10,6 m) med bakk og styrhus (etter Viksund Havsjark 35) | 10,57 × 4,1 × 1,6 | 12 | 6 500 kg | 180 hk, 8,5/10 kn | 1+3 / 2 | 1 150 000 | åpen 10 m og over |
 | `hurtigsjark` | Brukt hurtigsjark 10,99 m, 500 hk | 10,99 × 3,9 × 1,6 | 12 | 5 000 kg | 500 hk, 17/22 kn | 1+3 / 2 | 4 900 000 | åpen 10 m og over |
-| `sjarkny` | Ny hurtigsjark 10,99 m, 650 hk | 10,99 × 4,3 × 1,8 | 15 | 7 000 kg | 650 hk, 20/25 kn | 1+3 / 3 | 10 500 000, 45 døgn på verftet | åpen 10 m og over |
+| `sjarkny` | Ny hurtigsjark 10,99 m, 650 hk | 10,99 × 4,68 × 2,06 | 15 | 7 000 kg | 650 hk, 20/25 kn | 1+3 / 3 | 10 500 000, 45 døgn på verftet | åpen 10 m og over |
 | `breisjark` | Sjark 36 fot med bakk og ly (etter Malo 36) | 10,99 × 4,2 × 2,0 | 20 | 10 000 kg (19 m³) | 300 hk, 9,5/10,5 kn | 1+4 / 4 | 9 000 000 | åpen 10 m og over |
 | `kyst15` | Kystbåt 14,99 m med lugarer | 14,99 × 6,6 × 3,0 | 75 | 28 t | 750 hk, 10/11,5 kn | 1+5 / 6 | 18 000 000 | bare lukket gruppe |
 | `kyst21` | Eldre kystbåt 21 m (1978) | 21 × 7,2 × 3,4 | 190 | 55 t | 900 hk, 10/11 kn | 1+6 / 8 | 9 000 000 | bare lukket, ikke innenfor fjordlinja |
 | `snokrabbe` 🔒 | Snøkrabbefartøy 50 m med fryseri | 50 × 11 × 6 | 1 800 | 500 t fryst | 3 600 hk, 11/13,5 kn | 14 / 18 | 60 mill. | havfiske, konsesjon |
-| `autoliner` 🔒 | Autoliner 45 m med frysing | 45 × 10,5 × 6 | 1 500 | 400 t fryst | 3 000 hk, 11/13 kn | 14 / 16 | 70 mill. (ny 300) | havfiske, konsesjon |
-| `bunntral` 🔒 | Frysetråler 62 m med akterslipp | 62 × 14 × 6,5 | 3 000 | 800 t fryst | 8 000 hk, 12/15 kn | 25 / 30 | 150 mill. (ny 500) | havfiske, konsesjon |
+| `autoliner` 🔒 | Autoliner 45 m med frysing | 45,4 × 10,45 × 3,8 | 1 050 | 400 t fryst | 3 000 hk, 11/13 kn | 14 / 16 | 70 mill. (ny 300) | havfiske, konsesjon |
+| `bunntral` 🔒 | Frysetråler 60 m med akterslipp | 60,3 × 12,5 × 5,1 | 2 200 | 800 t fryst | 8 000 hk, 12/15 kn | 25 / 30 | 150 mill. (ny 500) | havfiske, konsesjon |
 | `pelagisk` 🔒 | Ringnot- og pelagisk tråler 75 m | 75 × 15,5 × 7,5 | 5 000 | 2 000 t RSW | 9 000 hk, 14/17 kn | 12 / 16 | 250 mill. (ny 800) | havfiske, konsesjon |
 
 - **Feltene:** `len`, `beam`, `draft`, `disp`, `holdCap`, `iceCap`, `fuelCap`, `hp`, `engine`, `vcruise`, `vmax`, `accel`, `turnR`, `planing`, `outboard`, `diesel`, `fuelK`, `risk`, `crewMax`, `berths`, `tubCap` (bløggekaret), `land` (kasser eller kar ved levering), `std` (utstyr som følger med), `rigs`, `jukseMax`, `gearMax`, `svcH`, `svcCost`, `svcJobH`, `cls` (`open`, `kyst`, `hav`), `price`, `isNew`, `year` og `desc`. Havbåtene har også `priceNew`, `lock`, `crew` (nøkkelfolk og lag, bare data til havsteget) og `autoHooks`.
@@ -1411,13 +1423,36 @@ Kvotesystemet ligger i `core/03d-quota.js` (04.10.2026, plan Q1–Q6). Grunnlage
   - 5 kn innenfor 250 m fra en havn.
   - Bremsing før neste stopp (havn eller fiskeplass) langs ruta.
   - `livePose` bruker samme fart som neste steg.
-- **3D-følgeren** (`updateBoat`):
-  - Styrer mot et punkt litt lenger fremme på ruta (pure pursuit).
-  - Svingradius `turnR` i `VESSELS`: skiff 35, tresnekke 30, snekke 45, 8,9-metersjark 50, sjark 70, hurtigsjark 75, ny sjark 80, bred sjark 85, kystbåtene 110 og 150 m.
+- **3D-båten på ruta** (`trkOn`/`trkStep` i `view3d.js`, fra 06.10.2026). Jonas: «båten strengt må følge rutestreken som lages i kartplotteren», «ganske nøyaktige kursendringer», og «slakker av og stopper nøyaktig der den skal».
+  - **Linja** er i meter:
+    - ut fra kaia båten ligger ved, med `berthPath` baklengs
+    - rutas veipunkter slik kartplotteren tegner dem
+    - inn til kaia der ruta ender, med samme kaiplass som `berthNow`
+    - Linja går bare fram til første havn på ruta, fordi `dock` avslutter ruta der.
+  - **Farten** er simuleringens (`sailV`). Ligger båten bak simuleringen, tar den igjen (inntil 1,5 × + 3 m/s). Simuleringen starter ved havnepunktet, så båten ligger bak etter avgang. Ligger den foran, saktner den.
+  - **Stopp:** båten bremser slik at den står nøyaktig på hvert stopp simuleringen ikke har nådd ennå (fiskeplass, setting, havn) og på slutten.
+    - Bremsen er fart/6 m/s², minst 1,2.
+    - Har simuleringen stoppet (slutten av ruta, fiske, setting eller Stopp), går båten fram dit simuleringen står. Har den alt passert punktet, bremser den så mykt den kan.
+  - **Hjørnene** rundes over 6 m på hver side (`TRK_R`), unntatt ved et stopp, der den står på punktet. Kursen er linja mellom punktene 6 m før og 6 m etter.
+  - **Ved kaia:**
+    - Ut fra kaia går den sakte baklengs (3 kn) med kaias kurs, og snur over 1,5 båtlengder (minst 10 m).
+    - Inn til kaia går den sakte (4 kn).
+    - Når den er inne, går fortøyningen rett på (`MO.phase = 'lines'`).
+  - **Ny eller endret rute** gir en ny linje fra der båten er, med farten den har. Endringene i veipunktene sjekkes hvert 30. bilde.
   - Dreiepunktet ligger en tredel fra baugen, så hekken slår ut.
   - Sideskrens: β = 0,14·yawrate, begrenset til 0,18 rad.
   - Planende båter krenger innover (−0,18·yaw), deplasementsbåter utover (+0,06·yaw).
   - Båten flyttes direkte til simuleringens posisjon hvis den er mer enn 900 m unna.
+  - **Før:** en følger styrte mot et punkt lenger fremme på ruta (pure pursuit, svingradius `turnR`), med egne animasjoner ut (5–45 s, `DEP`) og inn (8–60 s, `MO.phase = 'in'`). Den skar hjørnene i trange havner og gled forbi sluttpunktet. I Senjahopen lå båten ved mottakskaia mens turen til rorbua alt var ferdig (tilbakemelding #3).
+  - `turnR` i `VESSELS` gjelder nå bare manuell styring: skiff 35, tresnekke 30, snekke 45, 8,9-metersjark 50, sjark 70, hurtigsjark 75, ny sjark 80, bred sjark 85, kystbåtene 110 og 150 m.
+  - `moorStep` med fasen `in` brukes fortsatt når båten kommer til kai uten rute, for eksempel etter slep.
+- **Stopp under en rute** (`haltPlan` i `05-vessels.js`, fra 06.10.2026):
+  - Knappen lager en ny rute til et punkt litt lenger fram på ruta, 0,012 km per knop (30–300 m).
+  - Simuleringen og 3D-båten slakker av og stopper der, og loggen sier «Stoppet båten».
+  - Et nytt trykk mens båten slakker av gjør ingenting.
+  - Ved manuell styring stopper båten med en gang, som før.
+- **Kartplotteren** tegner egen båt, sporet og første etappe av ruta der `livePose` sier båten er, ved hver tegning (5 ganger i sekundet). Før skjedde det bare hvert spillminutt. `livePose` gir også `idx`, neste veipunkt derfra. Minikartplotteren i 3D tegnes 4 ganger i sekundet mens båten går, og én gang i sekundet når den ligger.
+- **Test:** `trackfollow.py` kjører fra mottakskaia i Senjahopen til rorbua rb129, så Stopp på sjøen, så en rute som ender på sjøen, og til slutt kartplotteren.
   - `G3._debug.stepBoat(dt, t, frac)` brukes til frakoblet testing med 60 bilder i sekundet.
 - **Fiskeanimasjoner:**
   - Håndjuksa: snelle med sveiv på ripa, og én til fem fisk på pilk og markkroker.
@@ -1458,6 +1493,86 @@ Kvotesystemet ligger i `core/03d-quota.js` (04.10.2026, plan Q1–Q6). Grunnlage
   - **I spillet:** `glbModel` tar også starterbåten (før sjekken på `hand`), setter motoren og propellen på plass i den hele modellen (Båthandel og testene) og gir lokket som trekanter. `glbPart(type, navn)` gir én del. `view3d.js` bytter `VGEO.skiff` med geometrien fra GLB-en, og `buildSkiff` henter skrog, glass, lokk, motor og propell derfra. Ratt, gasshendel, motorens sving og vipp og propellens rotasjon er som før.
   - **Plassene:** `SKA` i `view3d.js` har plassene som de levende delene og folkene bruker (dørk, kar, fiskeren, haleren, håndjuksa, de tre juksamaskinene, redskapsstabelen og påfyllingen). Standardtallene er det gamle skrogets, og `anchors.skiff` i GLB-en overstyrer dem, sammen med ratt, gasshendel, motor, propell, sjarm, skipper, sete og navnebrettene. `anchors.work` gir plassene for sløyebordet og blødekaret (`drawDeck`), som ellers settes ut fra bredden.
   - **Kjøring:** `python3 tools/boats/skiff59.py` (med `check`, `fast` og `dry` som de andre). Overlegget trenger tegningen i `SKIFF_GA`. Dataene ligger i `src/data/boat-skiff59.b64` og `boat-skiff59-side.b64`, og i malen som `glb-skiff` og `pic-skiff`.
+- **Frysetråleren (`bunntral`, fra 06.10.2026):** `tools/boats/tral60.py` bygger en hekktråler på 60 m med akterslipp, etter generalarrangementet Jonas viste («Fish processing vessel 60 m, bottom and pelagic trawling», tegning 101-001, 1:100). Tegningen er ikke i repoet.
+  - **Målene fra tegningen:** lengde over alt 60,30 m, mellom perpendikulærene 53,50 m, bredde 12,50 m, dekkene på 5,8, 8,6, 11,0 og 13,3 m, spantavstand 0,60 m. Profilen og planene ble målt i Jonas' bilde (rundt 18,1 px/m, spant 0 i AP). Vannlinja er satt til 4,7 m over basislinja, og dypgangen med skeg og sko er 5,1 m.
+  - **Spillets tall** følger tegningen (Jonas' valg 06.10.2026): «Frysetråler 60 m med akterslipp», 60,3 × 12,5 × 5,1 m. Deplasementet er satt ned fra 3 000 til 2 200 t, så fyldigheten holder seg under 0,6 (`vesseltest`). Pris, rom, motor og fart står som før.
+  - **Skroget:** spantseksjoner med superellipse-kimming bak x = 36 m. Foran det ender hver vannlinje i stevnelinja, med y = Ymid(z)·(1 − (1 − s)^p), der p er tilpasset dekksplanen (4,6 ved dekk 3, 3,1 i vannlinja). Bulben, skegen, skoen, dysa med propell og roret er egne deler.
+  - **Hekken:** slippen er 4,2 m bred og går fra 5,7 m i speilet opp til dekk 3 ved x = 6,6 m. På hver side av den står kasser opp til galgedekket. Galgen har to bein og en tverrbjelke med blokkene, og tråldørene henger der på hver side av slippen, som på Jonas' bilde.
+  - **Annet på dekk:** A-masta over trållinja (med eksosen og løfteblokka), nettrommelen, delte trålvinsjer, hovedvinsj, knekkbomkran, MOB-båt med davit og redningsflåter. Overbygningen står fra x = 28 m, med styrhus på dekk 4 og mast med radarer.
+  - **Bare utsiden** (Jonas: «ikke … fabrikken under dekk»). Bak vinduene i styrhuset er det et mørkt rom, så glasset ser ut som glass.
+  - **Fila:** rundt 12 800 trekanter nær og 4 500 på avstand, 565 KB. GLB-en har også delene `door` (én tråldør, origo i sjakkelen), `codend` (posen full av fisk, origo i munningen) og `netroll` (trålen på trommelen, akse på tvers).
+  - **Trålen i 3D** (`TRAWL`, `drawTrawl` i `view3d.js`): dørene henger i galgen og trålen ligger på trommelen. `G3._debug.trawl('shoot' | 'tow' | 'haul')` spiller utsett, slep og opptak.
+    - **Utsett (46 s):** trålen går ut av trommelen og ned slippen med posen først. Etter 12 s senkes dørene, dreies ut og går akterover på varpene.
+    - **Slep:** varpene går fra blokkene ned i sjøen.
+    - **Opptak (50 s):** dørene kommer inn og opp i galgen. Så kommer trålen inn på trommelen, og posen, full, opp slippen.
+    - Spillet tråler ikke ennå, fordi det hører til havsteget (Jonas' valg 06.10.2026: «Bare modeller og animasjoner»). Båthandelen viser ikke animasjonene (CLAUDE.md).
+  - **Test:** `tral3d.py`. Kjøring: `python3 tools/boats/tral60.py` (med `fast` og `dry`). Dataene ligger i `src/data/boat-tral60.b64` og `boat-tral60-side.b64`, og i malen som `glb-bunntral` og `pic-bunntral`.
+- **Ringnot- og pelagisk tråleren (`pelagisk`, fra 06.10.2026):** `tools/boats/not75.py` bygger en snurper og pelagisk tråler på rundt 75 m, etter profiltegningene av en dansk snurper som Jonas viste («Denne kan både bruke ringnot og trål»). Tegningene er ikke i repoet.
+  - **Målene:** tegningen har bare spantskala (0–120) og ingen tall. Med vanlig spantavstand på 0,60 m blir den 75,5 m over alt, som spillets 75 m, så spillets tall (75 × 15,5 × 7,5 m) står. Bredden står ikke på tegningen.
+  - **Det som er målt** (19,17 px/m):
+    - vannlinja 7,6 m over basislinja
+    - springen på det blå skroget: 13,7 m akter, 12,65 m midtskips og 16,5 m ved stevnen, med hvit skansekledning over
+    - bulbens nese på 72,1 m, 5,4 m opp
+    - styrhuset med vinduer på 17,6–19,4 m og tak på 20,7 m, mastene og skorsteinen
+  - **På dekk:**
+    - notbingen akter, med nota og korkene og kraftblokkranen over styrbord side
+    - tårnkranen på styrbord hekkhjørne og snurpedaviten midtskips på styrbord
+    - trålrullen og trålvinsjene, og tråldørene i galger på hekkhjørnene
+    - overbygningen midtskips med MOB-båt i en nisje på styrbord side, den skrå masta, skorsteinen med to eksosrør, og kranen og formasta forut
+  - Dør, pose og trålrull er de samme delene som i tråleren (`tral60.py`). Fila er rundt 15 600 trekanter nær og 4 400 på avstand, 602 KB. Bare utsiden er modellert.
+  - **Nota i 3D** (`SEINE`, `drawSeine` i `view3d.js`): `G3._debug.seine('shoot' | 'purse' | 'haul' | 'pump')` spiller fasene etter hverandre.
+    - **Notkast (40 s):** nota går ut over hekkrullen fra bingen. Korkene legger seg i en ring på 62 m fra hekken rundt til styrbord side midtskips.
+    - **Snurping (25 s):** snurpelina går fra daviten ned i sjøen.
+    - **Hiving (45 s):** nota går gjennom kraftblokka og ned i bingen, og ringen krymper inn mot styrbord side.
+    - **Pumping (20 s):** posen ligger ved siden med fisk som koker i den, og pumpeslangen går ned i den.
+    - Korkene og fisken er punkter på sjøen i båtens vannrette ramme.
+  - **Trålen** spilles som for tråleren (`TRAWL`), over hekkrullen og med dørene fra hekkhjørnene. Spillet fisker ikke med not eller trål ennå (havsteget), og Båthandelen viser ikke animasjonene.
+  - **Test:** `tral3d.py` (begge havbåtene). Kjøring: `python3 tools/boats/not75.py` (med `fast` og `dry`). Dataene ligger i `src/data/boat-not75.b64` og `boat-not75-side.b64`, og i malen som `glb-pelagisk` og `pic-pelagisk`.
+- **Autolineren (`autoliner`, fra 06.10.2026):** `tools/boats/al45.py` bygger en autoliner på 45 m, etter generalarrangementet Jonas viste («45 m Longliner», prosjekt 6161, tegning 101-002, 1:100). Tegningen er ikke i repoet.
+  - **Målene på tegningen:** 45,38 m over alt, 41,05 m mellom perpendikulærene, bredde 10,45 m, dybde til hoveddekket 4,75 m, 2. dekk 7,15 m og 3. dekk 9,55 m, 16 køyer. Spillet har nå 45,4 × 10,45 m.
+  - **Dypgående:** vannlinja på tegningen ligger 3,3 m over basislinja og 3,75 m over kjølskoen, så spillet har 3,8 m (før 6 m). Med 6 m ville hoveddekket på 4,75 m ligget under vann. Deplasementet er satt ned fra 1 500 til 1 050 t, så fyldigheten blir 0,57 og under grensen i `vesseltest.py`. Pris, lasterom, motor og fart er som før.
+  - **Det som er målt** (47,46 px/m, spant 0 i akterkant):
+    - stevnen er sporet av tegningen: forfoten går rund og full fram til nesa på 42,7 m i vannlinja, stevnen svinger inn til 41,1 m 6,3 m opp og flarer ut til skansen på 43,4 m. Det er ingen egen bulb.
+    - speilet på −2,0 m, styrhuset på 10,9–19,1 m med vinduer på 12,4–13,3 m og tak på 14,05 m, skorsteinen på 6,0–9,6 m
+    - haleporten på styrbord side på 20,7–23,5 m, 5,5–7,05 m over basislinja
+  - **Baugen** er en flate av rader fra spantet på 26 m fram til stevnen (`bow_pt`). Radene ligger vannrett over vannlinja og følger den skrå kjølen nederst. Stasjoner på tvers ville gitt trappetrinn der stevnen svinger tilbake.
+  - **På dekk:** skorsteinen med to eksosrør, MOB-båten og kranen på babord side akter, kranen foran styrhuset med bommen lagt forover, plattformen med ankervinsjen og den skrå formasta forut, rekker hele veien og radarmasta med to kupler på styrhustaket. Skroget er marineblått til 2. dekk og hvitt over (våre farger).
+  - **Lina:** haleren (`hauler`) står innenfor haleporten på hoveddekket (`deck`). Lina går fra sjøen inn gjennom den mørke åpningen. Haleren, balene og settingen er inne i skroget og synes ikke, som på en ekte autoliner.
+  - Fila er rundt 14 000 trekanter nær og 2 600 på avstand, 448 KB. Bare utsiden er modellert.
+  - **Test:** `tral3d.py`. Kjøring: `python3 tools/boats/al45.py` (med `fast` og `dry`). Dataene ligger i `src/data/boat-al45.b64` og `boat-al45-side.b64`, og i malen som `glb-autoliner` og `pic-autoliner`.
+- **Snøkrabbefartøyet (`snokrabbe`, fra 06.10.2026):** `tools/boats/krabbe50.py` bygger et teinefartøy på 50 m etter bildene Jonas viste av en moderne krabbebåt (et verfts renderinger av en 57 × 12 m-design, fra siden, forfra og skrått). Bildene er ikke i repoet.
+  - **Målene:** bildene har ingen tall, så spillets mål står (50 × 11 m, 6,0 m dypgående). Proporsjonene er tatt fra sidebildet og skalert ned.
+  - **Formen:** lavt teinedekk akter med skansen 4,6 m over vannet, og bakken hever seg fra 28 m og forover. Styrhuset står på et dekkshus på bakken, med vinduer rundt fronten og vinger som er bredere enn huset under. Masta står på taket. Stevnen er nesten loddrett, med rund forfot. Baugen er den samme flaten av rader som på autolineren.
+  - **På dekk:** portalen der teinene kommer opp på styrbord side, med transportbåndet akterover, knekkbomkranen og en høy kran ved siden av. Taket over teinedekket akter står på stolper, med dekkshuset tvers over hekken. Eksosrørene står på babord hekkhjørne, MOB-båten på en plattform på babord side og rennen for teinene på styrbord hekkhjørne.
+  - **Fargene:** Jonas ville ha et annet design enn bildene («som ikke ligner denne»): antrasittgrått skrog med okergul ripestripe og vannlinje, nesten svart bunn, kremhvite overbygg og okergule bånd på portalen.
+  - **Teinene:** haleren (`hauler`) står under portalen ved styrbord rekke, og dekket (`deck`) er teinedekket. Fila er rundt 14 600 trekanter nær og 3 200 på avstand, 496 KB. Bare utsiden er modellert.
+  - **Test:** `tral3d.py`. Kjøring: `python3 tools/boats/krabbe50.py` (med `fast` og `dry`). Dataene ligger i `src/data/boat-krabbe50.b64` og `boat-krabbe50-side.b64`, og i malen som `glb-snokrabbe` og `pic-snokrabbe`.
+- **Den eldre kystbåten (`kyst21`, fra 06.10.2026):** `tools/boats/kyst21.py` bygger en stålbåt på 21 m fra 70-tallet etter bildene Jonas viste av gamle kystbåter (Hindholmen, Erkna). Hun har bakk, rundgatt og galge. Spillets mål står (21 × 7,2 m, 3,4 m dypgående).
+  - **Skroget:** ripa stiger mot baugen. Endene er flater av rader fra spantene på 5 og 10 m, som på autolineren (`end_pt`). Radene nær bunnen følger kjølen, og radene over vannlinja følger ripa. Akter lukker radene seg som en ellipse i plan, rundgattet, og under vann går de inn mot akterstevnen.
+  - **Bakken** har en hvit hvalrygg, plating fra ripa opp til skansen på bakken, som en egen flate (`whaleback`).
+  - **På dekk:** masta ved bakkebrekket med to skrå bein og lastebommen lagt akterover og opp, galgen på styrbord side, luka midtskips og fiskekasser. Akter står dekkshuset med koøyer, styrhuset i lakkert teak med vinduer rundt, skorsteinen (krem med rødt bånd og svart topp) og mesanmasta. Ankervinsjen står på bakken.
+  - **Fargene:** Jonas lot oss velge («Skroget trenger ikke være grønt»): oksblodrødt skrog med hvit ripestripe, svart bunn og kremgule master og bom.
+  - **Redskapet:** båten fisker i spillet i dag. Haleren står ved styrbord rekke ved galgen, og redskapet ligger på det åpne arbeidsdekket midtskips. Fila er rundt 9 000 trekanter nær og 2 300 på avstand, 321 KB. Bare utsiden er modellert.
+  - **Test:** `tral3d.py`. Kjøring: `python3 tools/boats/kyst21.py` (med `fast` og `dry`). Dataene ligger i `src/data/boat-kyst21.b64` og `boat-kyst21-side.b64`, og i malen som `glb-kyst21` og `pic-kyst21`.
+- **Kystbåten på 14,99 m (`kyst15`, fra 06.10.2026):** `tools/boats/kyst15.py` bygger en moderne kystbåt etter bildene Jonas viste av en rød og hvit 15-meter, sett forfra, fra siden og skrått bakfra. Spillets mål står (14,99 × 6,6 m, 3,0 m dypgående).
+  - **Skroget:** rødt med hvit vannlinje og hvit skvettlist. Det røde stiger mot baugen, og over det er skansen hvit. Baugen er en flate av rader som på autolineren, med rund forfot under en skrå stevn.
+  - **Baksdekket:** et hvitt overbygg over arbeidsdekket. Styrbord side har en åpen halestasjon over den røde skansen, der redskapet kommer inn. Haleren (`hauler`) står der, og dekket (`deck`) er arbeidsdekket under baksdekket.
+  - **Oppå baksdekket:** styrhuset forut med skrå frontvinduer, og masta på taket med radar, GPS-kuppel og lyskastere. Den røde knekkbomkranen står akter, og mesanmasta på hekken har rødt støttesegl og bom ut over hekken. Rekka går rundt hele dekket, og det henger livbøyer på den.
+  - **Halestasjonen er åpen:** åpningen er skåret ut av skroget, med gulv, innside av skansen, vegger, dør og hvitt tak innenfor. Haleren og mannskapet synes der inne. `grid` i `bpyutil.py` hopper over en celle når materialfunksjonen gir `None`.
+  - Fila er rundt 9 250 trekanter nær og 1 800 på avstand, 327 KB. Bare utsiden er modellert.
+  - **Test:** `tral3d.py`, som også haler line i halestasjonen. Kjøring: `python3 tools/boats/kyst15.py` (med `fast` og `dry`). Dataene ligger i `src/data/boat-kyst15.b64` og `boat-kyst15-side.b64`, og i malen som `glb-kyst15` og `pic-kyst15`.
+- **Den nye hurtigsjarken (`sjarkny`, fra 06.10.2026):** `tools/boats/hs11.py` bygger en sjark på 10,99 m etter tegningen og bildet Jonas viste: et fiskefartøy for kystfiske, fisk i bulk. Tegningen er ikke i repoet.
+  - **Målene på tegningen:** 10,99 m over alt, 10,79 m i vannlinja, 4,68 m bredde over alt, 2,06 m største dypgående, 2,40 m dybde, 42 t lastet. Spillet har nå 10,99 × 4,68 m og 2,06 m (før 4,3 og 1,8). Deplasementet (15 t), pris, motor og fart er som før.
+  - **Målt** (131 px/m på det forstørrede profilbildet):
+    - vannlinja 1,18 m over basislinja
+    - kjølen faller 0,3 m forover fra speilet, med hardt slag fra 0,38 m ved speilet og opp til vannlinja ved stevnen
+    - dekket 2,11 m opp akter og siden 3,10 m forut
+    - stevnen nesten loddrett, styrhustaket på 4,41 m
+    - skjegget 0,88 m under basislinja, med propellen i dyse
+  - **Dekksplass:** Jonas ba om plass til redskap («husk at det må være dekksplass for utstyr»). Huset på tegningens akterdekk er derfor tatt bort, og arbeidsdekket går fritt fra speilet til det korte huset bak styrhuset. Det har flat luke og lensporter. Kranen står på babord hekkhjørne, og haleren står ved styrbord rekke under takets overheng.
+  - **Fargene:** Jonas lot oss velge. Skroget er petrolblått med hvit skvettlist, overbyggene hvite, takkanten og kranen oransje.
+  - Fila er rundt 6 000 trekanter nær og 1 500 på avstand, 217 KB. Bare utsiden er modellert.
+  - **Test:** `tral3d.py`, som også haler line på dekket. Kjøring: `python3 tools/boats/hs11.py` (med `fast` og `dry`). Dataene ligger i `src/data/boat-hs11.b64` og `boat-hs11-side.b64`, og i malen som `glb-sjarkny` og `pic-sjarkny`.
 - **Fars gamle trebåt (`trebat`, startbåten fra 05.10.2026):** `tools/boats/snekke23.py` bygger en klinkbygd spissgatter på 23 fot med innenbords semidiesel, etter Jonas' bilder av gamle snekker. Han valgte: topphastighet 7 knop, resten fiktivt etter skiffen; maks 850 o/min; slitt og gammel, ubehandlet trevirke («Gammelt trevirke»); ingen fendere, ikke noe stevnbånd; rorkult og aldri ratt i tillegg.
   - **Modellen:** ni bord i hver side med landene, spant, kjøl, stevner, ripe og skvettlist; dørker rett over vannlinja (spillet tegner sjøen over alt under den), tre tofter, fordekk; motorkasse med sylinder, glødehode, eksosrør og eikehjul; høyt ror langs den skrå akterstevnen med rorkult; fiskekasser foran midttofta og sløyebord over babord rekke (renne, kniv, bøtte); fars presenning som tøy på fordekket. 17 948 trekanter, 854 KB.
   - **Slitasjen** ligger i hvert hjørne (`Acc.done(tint=wear)` i `bpyutil.py`, attributtet `TINT` som GLB-skriveren ganger inn i fargen), så den glir over flatene i stedet for å følge dem i firkanter: grålig treverk i flekker og øverst, mørkt der det er vått, striper fra ripa, tjæret bunn, rust på jernet. Bildene fra Blender gjør spillets farger lineære, så de ser ut som i spillet.
@@ -1764,6 +1879,14 @@ Brukerens ønske: mannskapet skal være en levende og givende del av spillet, in
   - **«Energi av» i Admin** (`S.adm.noEnergy`, `energyOff`; Jonas 03.10.2026, for testing): energien holdes på 100 %, du sovner ikke og døser ikke av, og knappen vekker deg om du sover. HUD-raden viser «av». `sleeptest.py` sjekker den.
 
 ### 5.20 Vær og hav (02.10.2026)
+
+**Klima etter sted (V1, 06.10.2026;** Jonas: «Vi skal jo ikke ha ekte live-vær, men vi må kunne simulere været langs hele kysten på en god måte, med variasjoner fra sted til sted»):
+- `src/data/climate.json` har månedsmidler for 19 punkter fra Færder til Kirkenes: lufttemperatur, nedbør, snø, sterkeste vind, andel kulingdager og skydekke fra ERA5 2006–2020, og sjøtemperatur fra Open-Meteos marine data 2023–2025. Dataene hentes av `tools/climate/fetch.py` i `.github/workflows/klima.yml` (startes ved å endre `tools/climate/klima.json`) og ligger som releaser `klima-N`.
+- Spillets eget vær er uendret, men flyttes med hvor stedet avviker fra Senja, der spillet er kalibrert. Lufta og sjøen flyttes med forskjellen i temperatur, nedbøren med forholdet i månedsnedbør, og skydekket med forskjellen. Ved Senja er alt nøyaktig som før.
+- Mellom punktene vektes de tre nærmeste med 1/d², lagret per rute på 5 km (`climW`).
+- `airTemp`, `precipAt`, `cloudAt`, `visibility` og `seaTemp` tar et valgfritt sted `p` og bruker ellers båten. Begroingen på redskap regner sjøtemperaturen der redskapet står, og Vær-appen viser sjøtemperaturen der båten er.
+- Bodø, Tromsø og Kirkenes ligger ute på sjøen fra `klima-2`. I `klima-1` var rutene deres mest land, med altfor kalde vintre (Tromsø −8,1 °C i januar mot −4,1 °C nå).
+- **Test:** `climtest`.
 
 Brukerens ønske: havet skal se ut og oppføre seg slik Beaufort-skalaen beskriver det, og vindretningen mot land skal telle (le og lo). Kjølvann, hekkbølge og baugbølge skal være realistiske. Overgangene skal være jevne.
 
@@ -2521,7 +2644,7 @@ Jonas' liste: oppgraderinger, kvotehandel, kikkert, raskere fangst, fortøying, 
 - **Inn til kai og ut igjen** (`berthPath`, `berthBlocked`, `berthClear` i `07-harbours.js`):
   - Et punkt er sperret når det er land i 25 m-masken eller ligger innenfor halv bredde av en bryggeboks (`PIERBOX`) eller en havneenhets kaiblokk.
   - **Banen går** fra båten til et punkt 1,5 båtlengder akter for kaiplassen og en bredde ut fra kaia, og så langs kaia inn. Er det fritt, går den rett. Ellers søker den over maskens celler innenfor 1,5 km og strammer linja.
-  - **3D:** `moorStep` følger banen, glattet med `pathM`/`pathAt`. Ved avgang går båten baklengs ut fra kaia og så banen ut til havnepunktet (`DEP` i `updateBoat`), før følgeren tar over.
+  - **3D:** under en rute er banen ut fra kaia og inn til kaia en del av linja båten følger (`trkStep`, se «3D-båten på ruta»). Uten rute følger `moorStep` banen, glattet med `pathM`/`pathAt`.
   - **Test:** `harbourtest` sjekker banen inn til hver kaiplass for tre båttyper, fra havnepunktet og fra innseilingen.
 - **Fiskeslagene fra Blender** (`tools/fish/fisk.py`, `src/data/fish.b64`, 363 KB):
   - **Artene:** torsk, sei, hyse, lyr, lange, brosme, uer, kveite og kongekrabbe (delen heter fortsatt `krabbe`), hver som én del i GLB-en.

@@ -75,7 +75,16 @@ def main():
         # errors also without consent, then without a name
         sql("select public.tm_error('TypeError: x', 'view3d.js:1', 'at f', '{\"version\":\"t1\"}')", B, 'authenticated')
         sql("select public.tm_error('TypeError: y', 'core.js:2', '', '{}')", {}, 'anon')
-        R['errors'] = sql("select count(*) || '/' || count(player_id) from public.errors")
+        # the device behind the frame rate and the errors (20261006160000_device_data.sql), and the agent's and the admin's view of them
+        dev = '{"version":"t2","platform":"android","browser":"chrome","gpu":"Adreno (TM) 642L","cores":"8","mem":"6","scr":"412x915@2.6","lvl":"1","view":"3d"}'
+        sql("select public.tm_perf(41.5, 18, 3, '%s')" % dev, {}, 'anon'); sql("select public.tm_perf(55, 40, 0, '%s')" % dev.replace('"cores":"8"', '"cores":"lots"'), {}, 'anon')
+        sql("select public.tm_error('WebGL: shader x', 'view3d.js:9', 'at s', '%s')" % dev, {}, 'anon')
+        R['devPerf'] = sql("select string_agg(gpu || '|' || coalesce(cores::text, '-') || '|' || mem || '|' || scr || '|' || lvl || '|' || view, ' ; ' order by id) from public.perf where gpu is not null")
+        TV = json.loads(sql("select public.agent_tech(7)", None, 'service_role'))
+        R['devTech'] = {'err': [e for e in TV['errors'] if e['msg'] == 'WebGL: shader x'], 'fps': [f for f in TV['fps_device'] if f['gpu'] == 'Adreno (TM) 642L'], 'keys': sorted(TV)}
+        R['devPl'] = sql("select public.agent_tech(7)", B, 'authenticated', expect_err=True); R['devAdm1'] = sql("select public.admin_devices(7)", AD1, 'authenticated', expect_err=True)
+        R['devAdm'] = sorted(json.loads(sql("select public.admin_devices(7)", AD2, 'authenticated')))
+        R['errors'] = sql("select count(*) || '/' || count(player_id) from public.errors where msg <> 'WebGL: shader x'")
         # the cloud save: newer wins, older is refused unless forced, and each player sees only his own
         R['save1'] = json.loads(sql("select public.save_put('KYST2:AAA', '2026-10-04T10:00:00Z', 100, false)", A, 'authenticated'))
         R['save2'] = json.loads(sql("select public.save_put('KYST2:OLD', '2026-10-04T09:00:00Z', 90, false)", A, 'authenticated'))
@@ -168,6 +177,17 @@ def main():
         R['agRunPl'] = sql("select public.agent_run('x', '[]', 0)", A, 'authenticated', expect_err=True)
         R['agRuns'] = json.loads(sql("select public.admin_agent_runs(5)", AD2, 'authenticated')); R['agRunsPl'] = sql("select public.admin_agent_runs(5)", A, 'authenticated', expect_err=True)
         R['agAdmRow'] = [r for r in json.loads(sql("select public.admin_feedback(50, null, null)", AD2, 'authenticated'))['rows'] if r['id'] == int(R['agMail'])]
+        # the thank-you (20261006140000_feedback_reward.sql): «Kommer» or «Fikset» gives the player one takk-haill grant, once per feedback
+        fA = int(R['agMail']); cnt = lambda f: sql("select count(*) from public.grants where product_id = 'fb_haill' and (data->>'fid')::bigint = %d" % f)
+        sql("select public.admin_feedback_set(%d, 'seen', null)" % fA, AD2, 'authenticated'); R['rwSeen'] = cnt(fA)
+        sql("select public.admin_feedback_set(%d, 'planned', 'Kommer snart')" % fA, AD2, 'authenticated'); sql("select public.admin_feedback_set(%d, 'fixed', 'Rettet!')" % fA, AD2, 'authenticated')
+        R['rwOnce'] = cnt(fA); R['rwFirst'] = cnt(fid)
+        R['rwPend'] = [g for g in json.loads(sql("select public.shop_pending()", A, 'authenticated')) if g['product'] == 'fb_haill']
+        R['rwMine'] = {m['id']: m.get('rewarded') for m in json.loads(sql("select public.fb_mine()", A, 'authenticated'))}
+        R['rwBuy'] = sql("select public.shop_quote('fb_haill')", A, 'authenticated', expect_err=True)
+        R['rwAdm'] = [r.get('rewarded') for r in json.loads(sql("select public.admin_feedback(50, null, null)", AD2, 'authenticated'))['rows'] if r['id'] == fA]
+        R['rwPl'] = sql("select public.admin_feedback_set(%d, 'fixed', null)" % fA, A, 'authenticated', expect_err=True)
+        if R['rwPend']: sql("select public.shop_done(array[%s]::bigint[])" % ','.join(str(g['id']) for g in R['rwPend']), A, 'authenticated')
         for i in range(20): sql("select public.fb_send('other', 'nr %d', null, null, '{}')" % i, B, 'authenticated')
         R['fbLimit'] = sql("select public.fb_send('other', 'nr 21', null, null, '{}')", B, 'authenticated', expect_err=True)
         # the cloud save by revision (20261005200000_save_sync.sql): a device that has not met the cloud's newest save cannot write over
@@ -266,7 +286,7 @@ def main():
         R['sPlRead'] = sql("select count(*) from public.grants", A, 'authenticated', expect_err=True)
         if R['sPend']: sql("select public.shop_done(array[%d]::bigint[])" % R['sPend'][0]['id'], A, 'authenticated')
         sql("select public.shop_paid('cs_s2', 'pi_2')"); sql("select public.shop_refund('pi_2')"); sql("select public.shop_ended('cs_s9', 'expired')")
-        R['sAfter'] = sql("select (select count(*) from public.grants where player_id = 'user_01AAA' and done_at is null and revoked_at is null) || '/' || (select status from public.purchases where id = 'cs_s2') || '/' || (select count(*) from public.grants where revoked_at is not null) || '/' || (select count(*) from public.grants where done_at is not null)")
+        R['sAfter'] = sql("select (select count(*) from public.grants where player_id = 'user_01AAA' and done_at is null and revoked_at is null) || '/' || (select status from public.purchases where id = 'cs_s2') || '/' || (select count(*) from public.grants where revoked_at is not null and product_id <> 'fb_haill') || '/' || (select count(*) from public.grants where done_at is not null and product_id <> 'fb_haill')")
         R['sEnd'] = json.loads(sql("select public.shop_pending()", A, 'authenticated'))
         sql("select public.delete_me()", A, 'authenticated')
         R['wGone'] = sql("select (select count(*) from public.landings where player_id = 'user_01AAA') || '/' || (select count(*) from public.catches where player_id = 'user_01AAA') || '/' || (select count(*) from public.landings)")
@@ -303,6 +323,10 @@ def main():
         print(ok(all(R[k][0] for k in ('fbRead', 'fbAdmPl', 'fbAdm1')) and F['rows'] and F['rows'][0]['meta'].get('version') == 't1' and F['topics'].get('bug') == 1 and R['fbImg'] == str(len(IMG)) and R['fbMine2'][0]['status'] == 'fixed' and R['fbMine2'][0]['reply'] == 'Takk, rettet!'),
               'feedback: no player reads the table or the list, nor the admin without the second factor; the admin lists them, opens the picture, sets the status and answers, and the player sees it', {'topics': F.get('topics'), 'img': R['fbImg'], 'mine': R['fbMine2'][0] if R['fbMine2'] else None})
         print(ok(R['fbLimit'][0] and R['fbGone'] == '0'), 'feedback: at most 20 a day, and they go with the account', [R['fbLimit'][1][:40], R['fbGone']])
+        dt = R['devTech']; de = dt['err'][0] if dt['err'] else {}; df = dt['fps'][0] if dt['fps'] else {}
+        print(ok(R['devPerf'] == 'Adreno (TM) 642L|8|6|412x915@2.6|1|3d ; Adreno (TM) 642L|-|6|412x915@2.6|1|3d' and de.get('n') == 1 and de.get('gpus') == ['Adreno (TM) 642L'] and de.get('platforms') == {'android': 1}
+                 and df.get('n') == 2 and df.get('fps') == 48.3 and 'user_' not in json.dumps(dt) and R['devPl'][0] and R['devAdm1'][0] and R['devAdm'] == dt['keys']),
+              'the device: the frame rate and the errors keep the graphics chip, cores, memory, screen and 3D level (a bad number left out); the agent and the admin with aal2 see them put together, never who, and no player does', {'perf': R['devPerf'], 'err': de.get('gpus'), 'fps': df})
         ar = R['agRow']; aa = (R['agAdmRow'][0] if R['agAdmRow'] else {}).get('ai') or {}
         print(ok(R['agRows'] >= 3 and ar and not R['agWho'] and len(ar.get('who', '')) == 6 and '@' not in ar.get('body', '') and '912' not in ar.get('body', '') and '[e-post]' in ar.get('body', '')
                  and ar.get('meta') == {'version': 't2', 'boat': 'skiff'} and R['agPl'][0] and R['agAdm'][0] and len(R['agImgs']) == 3),
@@ -310,6 +334,11 @@ def main():
         print(ok(not R['agAfter'] and R['agNoted'] and R['agNoted'][0].get('note', '').startswith('Knappen') and R['agNoteBad'][0] and R['agNotePl'][0] and R['agRun'].isdigit() and R['agRunPl'][0]
                  and R['agRuns'] and R['agRuns'][0]['prs'][0]['url'].endswith('/pull/1') and R['agRunsPl'][0] and aa.get('reply') == 'Takk! Vi ser på det.' and aa.get('status') == 'seen'),
               'feedback agent: a note takes the feedback out of the new ones and into what it noted; its report and suggested reply reach the admin, and no player writes or reads them', {'ai': aa, 'runs': len(R['agRuns'])})
+        rp = R['rwPend']
+        print(ok(R['rwSeen'] == '0' and R['rwOnce'] == '1' and R['rwFirst'] == '1' and len(rp) == 2 and all(g['data'].get('type') == 'takk' and g['data'].get('reward') for g in rp)
+                 and R['rwMine'].get(fA) is True and R['rwMine'].get(fid) is True and R['rwBuy'][0] and R['rwAdm'] == [True] and R['rwPl'][0]),
+              'the thank-you: «Kommer» or «Fikset» gives the player one takk-haill grant per feedback («Lest» none, both statuses one), the player and the admin see it was given, it cannot be bought, and no player sets it',
+              {'seen': R['rwSeen'], 'once': R['rwOnce'], 'pend': len(rp), 'mine': R['rwMine'], 'buy': R['rwBuy'][1][:40]})
         a2 = R['admRow2'][0] if R['admRow2'] else {}; m2 = R['mine2'][0] if R['mine2'] else {}
         print(ok(R['fb2'].isdigit() and R['fb2Bad'][0] and R['fb2Five'][0] and R['fb2None'].isdigit() and R['admImgs'] == [IMG, I2, I3] and R['admImgsPl'][0] and m2.get('nimg') == 3 and a2.get('nimg') == 3),
               'feedback: up to four pictures, each checked; the admin gets them all in order, a player not', {'mine': m2, 'bad': R['fb2Bad'][1][:30], 'five': R['fb2Five'][1][:30]})
