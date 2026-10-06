@@ -35,7 +35,8 @@ window.JIGG = (() => {
     debt = Math.min(0, left); got = {n, m, kg:kgSum}; S.jigN = (S.jigN || 0) + 1;
   }
   function set(s2, now){ st = s2; t0 = now; }
-  function ok(){ const b = S.boat; return b.status === 'fishing' && !b.gop && !b.deckStop && G3.isActive() && rigJig() && S.target !== 'kveite' && jigMeShare() > 0; }
+  // not with jigging machines aboard: then you tend them (Jonas 06.10.2026)
+  function ok(){ const b = S.boat; return b.status === 'fishing' && !b.gop && !b.deckStop && G3.isActive() && rigJig() && S.target !== 'kveite' && !(S.equip && S.equip.jukse > 0) && jigMeShare() > 0; }
   function loop(ts){
     raf = 0; if (!on) return; raf = requestAnimationFrame(loop); const dt = last ? Math.min(0.1, (ts - last) / 1000) : 0; last = ts;
     if (!ok()){ stop(); return; }
