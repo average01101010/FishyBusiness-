@@ -1019,6 +1019,36 @@ Jonas: «det er viktig at alle har en delt klokke fordi dette er et online-spill
   - **Ikke felles ennå:** gytebestanden og totalkvoten (spillerne er en dråpe mot 285 000 t), registeret over lukket gruppe (`REGN`) og krabbebestanden.
   - **Test:** `sqltest` (summer, tak, markør, lås, sletting) og `cloudtest` (salg og celler opp, kvote, pris og bestand ned, markøren).
 
+### 4.22 Tilbakemeldingsagenten (06.10.2026)
+
+Jonas ba om det slik: «koble deg opp mot detstorebla.no/admin slik at du kan hente ut alt av tilbakemeldinger 4 ganger i døgnet og gjøre eventuelle tiltak». Han ga klarsignal til planen med «Ja, du kan kjøre det slik … kl. 06-12-18-00».
+
+- **Rutinen** er en Claude Code-rutine (Routine) som starter en ny økt kl. 05.58, 11.58, 17.58 og 23.58 Oslo-tid, to minutter før hver hel time Jonas ba om. Den følger `tools/feedback/RUTINE.md` på arbeidsgrenen. Instruksene kan altså endres med en push, uten å røre rutinen.
+- **Veien inn** er Edge-funksjonen `feedback-agent`, med egen nøkkel `FEEDBACK_AGENT_TOKEN`. Jonas lager nøkkelen og legger den inn som hemmelighet i Supabase og som miljøvariabel i Claude Code-miljøet. Funksjonen kaller bare `agent_*`-funksjonene i `20261006120000_feedback_agent.sql`, så nøkkelen gir ingen tilgang til spillere, lagringer eller kjøp. Rutinen bruker ikke Supabase-koblingen.
+- **Hva agenten ser** (`agent_feedback`):
+  - Den ser teksten, emnet, karakteren og bildene. Videoene ser den ikke, bare hvor mange det er.
+  - Den ser også en fast liste med nøkler fra `meta`: versjon, enhet, skjerm, 3D-nivå, bildetakt, båt, status, havn, posisjon, spilltid og veiledningssteg.
+  - Den ser spilletida som et intervall og hvor mange tilbakemeldinger spilleren har sendt før.
+  - Spilleren er en kode på 6 tegn som bare gjelder i én lesing. E-postadresser og norske telefonnumre i teksten blir maskert (`agent_scrub`).
+  - Ny er det agenten ikke har notert (`ai_at` er tom). En kjøring som stopper underveis, tar resten neste gang.
+- **Hva agenten gjør:**
+  - Den noterer hver tilbakemelding med `agent_note`: notat, vekt (`ai_score`), foreslått status og foreslått svar.
+  - Den skriver en rapport med `agent_run` (tabellen `agent_runs`, som holdes ett år).
+  - Vekten er alvor (5 krasj eller tapt lagring, 3 feil, 2 forvirring eller ytelse, 1 ønske) × antall ulike spillere med samme sak. Den får +0,5 for over 20 timers spilletid og +0,5 for saker som gjelder starten.
+  - Agenten svarer aldri spillerne selv.
+- **Kode:**
+  - **Til og med 12.10.2026:** bare rapport og svarforslag (Jonas' valg).
+  - **Deretter:** høyst to PR-er per kjøring mot arbeidsgrenen, aldri en push til den.
+  - **Aldri:** endringer i `.github/`, `supabase/`, admin, `src/legal/`, serveren eller agenten selv.
+  - **Repoet er offentlig:** tilbakemeldingene havner aldri i git, i en commit-melding eller i en PR. `agent.py` nekter å lagre dem inne i repoet.
+- **I `/admin`:**
+  - Under hver tilbakemelding står det agenten foreslår. Knappen «Bruk forslaget» fyller inn status og svar, og Jonas trykker Lagre.
+  - Fanen Agent viser rapportene (`admin_agent_runs`) og lenker til PR-ene.
+- **Personvern:** personvernerklæringen sier at Claude fra Anthropic (USA) leser tilbakemeldingene uten navn, e-post eller bruker-ID, og Anthropic står på lista over databehandlere.
+- **Test:**
+  - `sqltest`: bare service_role leser, uten spiller-ID og med maskering; et notat tar tilbakemeldingen ut av de nye; rapporten og forslaget kommer fram til admin; spillere og admin-innloggingen slipper ikke inn.
+  - `admintest`: Agent-fanen og «Bruk forslaget».
+
 ## 5. Systemer i spillet
 
 ### 5.1 Båter og utstyr

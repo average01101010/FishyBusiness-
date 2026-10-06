@@ -82,7 +82,7 @@
 <h3>Tilbakemeldinger du sender</h3>
 <dl>
 <dt>Hva</dt><dd>Det du skriver i appen Tilbakemelding i spillet: hva det gjelder, teksten, hvor fornøyd du er (valgfritt), opptil fire bilder (fra enheten din eller av spillet, gjort mindre før de sendes) og opptil to videoer, for eksempel skjermopptak (gjort mindre hvis de er over 50 MB). Videoene lagres i et lukket lagringsområde hos Supabase i EU som bare utvikleren kan se. Med følger versjonen av spillet, nettleseren, typen enhet, skjermstørrelsen, grafikknivået og bildetakten, og hvor båten din er i spillet og hva den gjør, koblet til bruker-ID-en din. Ikke legg ved bilder eller video av andre personer eller av noe privat, og pass på at skjermopptaket ikke viser varsler eller meldinger fra andre apper.</dd>
-<dt>Hvorfor</dt><dd>For å forstå hva som er feil eller kan bli bedre, finne feilen igjen og svare deg i appen.</dd>
+<dt>Hvorfor</dt><dd>For å forstå hva som er feil eller kan bli bedre, finne feilen igjen og svare deg i appen. Fire ganger i døgnet leser en KI-assistent (Claude fra Anthropic) de nye tilbakemeldingene for å sortere dem, finne feil i koden og foreslå svar. Den får teksten, bildene og opplysningene om spillet, men ikke navnet ditt, e-postadressen eller bruker-ID-en, og e-postadresser og telefonnumre i teksten blir skjult før den leser. Svaret til deg sender utvikleren selv.</dd>
 <dt>Grunnlag</dt><dd>Vår berettigede interesse i å forbedre spillet (art. 6 nr. 1 f). Du velger selv om og hva du sender.</dd>
 <dt>Hvor lenge</dt><dd>To år, eller til du sletter kontoen. Da slettes tilbakemeldingene, bildene og videoene med en gang. Videoene slettes også når saken er ferdig behandlet.</dd>
 </dl>
@@ -139,6 +139,7 @@
 <li><strong>WorkOS, Inc.</strong> (USA) står for innloggingen. WorkOS lagrer e-postadressen, navnet og innloggingshistorikken (tidspunkt, IP-adresse og nettleser).</li>
 <li><strong>Supabase, Inc.</strong> står for databasen med kontoen, lagringen, statistikken og kjøpene. Dataene ligger i EU (<mark>[region, for eksempel Stockholm]</mark>).</li>
 <li><strong>Hetzner Online GmbH</strong> (Tyskland) driver serveren som leverer nettsiden. Serveren fører ingen logg over besøk.</li>
+<li><strong>Anthropic, PBC</strong> (USA) leverer KI-assistenten Claude, som leser tilbakemeldingene (teksten, bildene og opplysningene om spillet, uten navn, e-post eller bruker-ID) for å sortere dem og foreslå rettinger og svar.</li>
 </ul>
 <p>Noen behandler opplysninger som selvstendig ansvarlige, etter sine egne personvernerklæringer:</p>
 <ul>
@@ -148,7 +149,7 @@
 </ul>
 
 <h2>Overføring ut av EØS</h2>
-<p>WorkOS holder til i USA, og noen av underleverandørene til Supabase og Stripe kan også gjøre det. Overføringene skjer etter EU-kommisjonens standardavtaler for overføring av personopplysninger (standard contractual clauses, beslutning (EU) 2021/914), som er en del av databehandleravtalene.</p>
+<p>WorkOS og Anthropic holder til i USA, og noen av underleverandørene til Supabase og Stripe kan også gjøre det. Overføringene skjer etter EU-kommisjonens standardavtaler for overføring av personopplysninger (standard contractual clauses, beslutning (EU) 2021/914), som er en del av databehandleravtalene.</p>
 
 <h2>Barn</h2>
 <p>Er du under 13 år, kan du ikke samtykke til statistikk selv (personopplysningsloven § 5). Spillet regner da et ja som et nei, og ingen statistikk samles om deg. Om kjøp for deg under 18 år, se <a href="vilkar.html">vilkårene</a>.</p>

@@ -153,6 +153,21 @@ def main():
         F2 = json.loads(sql("select public.admin_feedback(50, null, null)", AD2, 'authenticated')); R['admRow2'] = [r for r in F2['rows'] if r['id'] == f2]; R['admVmb'] = F2.get('vmb'); R['admOrph'] = F2.get('orphans')
         sql("select public.admin_media_gone('%s')" % R['slot2'], AD2, 'authenticated'); R['mediaAfterGone'] = json.loads(sql("select public.fb_media_list()", A, 'authenticated'))
         R['mediaRead'] = sql("select count(*) from public.feedback_media", A, 'authenticated', expect_err=True)
+        # the feedback agent (20261006120000_feedback_agent.sql): only service_role (the Edge Function feedback-agent) reads, without who wrote it
+        R['agMail'] = sql("select public.fb_send('ui', 'Skriv til ola.nordmann@example.no eller 912 34 567, knappen virker ikke', 2, null, '{\"version\":\"t2\",\"boat\":\"skiff\",\"email\":\"x@y.no\"}')", A, 'authenticated')
+        AG = json.loads(sql("select public.agent_feedback(50)", None, 'service_role')); agm = [r for r in AG['rows'] if r['id'] == int(R['agMail'])]
+        R['agRows'] = len(AG['rows']); R['agRow'] = agm[0] if agm else {}; R['agWho'] = 'user_01' in json.dumps(AG)
+        R['agPl'] = sql("select public.agent_feedback(5)", A, 'authenticated', expect_err=True); R['agAdm'] = sql("select public.agent_feedback(5)", AD2, 'authenticated', expect_err=True)
+        R['agImgs'] = json.loads(sql("select public.agent_feedback_imgs(%d)" % f2, None, 'service_role'))
+        sql("select public.agent_note(%s, 'Knappen i UI virker ikke (1 spiller)', 3, 'seen', 'Takk! Vi ser på det.')" % R['agMail'], None, 'service_role')
+        R['agNoteBad'] = sql("select public.agent_note(%s, 'x', 1, 'deleted', null)" % R['agMail'], None, 'service_role', expect_err=True)
+        R['agNotePl'] = sql("select public.agent_note(%s, 'x', 1, 'seen', null)" % R['agMail'], A, 'authenticated', expect_err=True)
+        AG2 = json.loads(sql("select public.agent_feedback(50)", None, 'service_role'))
+        R['agAfter'] = [r['id'] for r in AG2['rows'] if r['id'] == int(R['agMail'])]; R['agNoted'] = [n for n in AG2['noted'] if n['id'] == int(R['agMail'])]
+        R['agRun'] = sql("select public.agent_run('# Rapport\n1 ny', '[{\"url\":\"https://github.com/x/pull/1\",\"title\":\"t\"}]', 1)", None, 'service_role')
+        R['agRunPl'] = sql("select public.agent_run('x', '[]', 0)", A, 'authenticated', expect_err=True)
+        R['agRuns'] = json.loads(sql("select public.admin_agent_runs(5)", AD2, 'authenticated')); R['agRunsPl'] = sql("select public.admin_agent_runs(5)", A, 'authenticated', expect_err=True)
+        R['agAdmRow'] = [r for r in json.loads(sql("select public.admin_feedback(50, null, null)", AD2, 'authenticated'))['rows'] if r['id'] == int(R['agMail'])]
         for i in range(20): sql("select public.fb_send('other', 'nr %d', null, null, '{}')" % i, B, 'authenticated')
         R['fbLimit'] = sql("select public.fb_send('other', 'nr 21', null, null, '{}')", B, 'authenticated', expect_err=True)
         # the cloud save by revision (20261005200000_save_sync.sql): a device that has not met the cloud's newest save cannot write over
@@ -288,6 +303,13 @@ def main():
         print(ok(all(R[k][0] for k in ('fbRead', 'fbAdmPl', 'fbAdm1')) and F['rows'] and F['rows'][0]['meta'].get('version') == 't1' and F['topics'].get('bug') == 1 and R['fbImg'] == str(len(IMG)) and R['fbMine2'][0]['status'] == 'fixed' and R['fbMine2'][0]['reply'] == 'Takk, rettet!'),
               'feedback: no player reads the table or the list, nor the admin without the second factor; the admin lists them, opens the picture, sets the status and answers, and the player sees it', {'topics': F.get('topics'), 'img': R['fbImg'], 'mine': R['fbMine2'][0] if R['fbMine2'] else None})
         print(ok(R['fbLimit'][0] and R['fbGone'] == '0'), 'feedback: at most 20 a day, and they go with the account', [R['fbLimit'][1][:40], R['fbGone']])
+        ar = R['agRow']; aa = (R['agAdmRow'][0] if R['agAdmRow'] else {}).get('ai') or {}
+        print(ok(R['agRows'] >= 3 and ar and not R['agWho'] and len(ar.get('who', '')) == 6 and '@' not in ar.get('body', '') and '912' not in ar.get('body', '') and '[e-post]' in ar.get('body', '')
+                 and ar.get('meta') == {'version': 't2', 'boat': 'skiff'} and R['agPl'][0] and R['agAdm'][0] and len(R['agImgs']) == 3),
+              'feedback agent: only service_role reads the new ones, without the player id, with e-mail and phone masked and only the known meta; not a player, not the admin login', {'body': ar.get('body'), 'meta': ar.get('meta'), 'who': ar.get('who')})
+        print(ok(not R['agAfter'] and R['agNoted'] and R['agNoted'][0].get('note', '').startswith('Knappen') and R['agNoteBad'][0] and R['agNotePl'][0] and R['agRun'].isdigit() and R['agRunPl'][0]
+                 and R['agRuns'] and R['agRuns'][0]['prs'][0]['url'].endswith('/pull/1') and R['agRunsPl'][0] and aa.get('reply') == 'Takk! Vi ser på det.' and aa.get('status') == 'seen'),
+              'feedback agent: a note takes the feedback out of the new ones and into what it noted; its report and suggested reply reach the admin, and no player writes or reads them', {'ai': aa, 'runs': len(R['agRuns'])})
         a2 = R['admRow2'][0] if R['admRow2'] else {}; m2 = R['mine2'][0] if R['mine2'] else {}
         print(ok(R['fb2'].isdigit() and R['fb2Bad'][0] and R['fb2Five'][0] and R['fb2None'].isdigit() and R['admImgs'] == [IMG, I2, I3] and R['admImgsPl'][0] and m2.get('nimg') == 3 and a2.get('nimg') == 3),
               'feedback: up to four pictures, each checked; the admin gets them all in order, a player not', {'mine': m2, 'bad': R['fb2Bad'][1][:30], 'five': R['fb2Five'][1][:30]})

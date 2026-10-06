@@ -23,7 +23,15 @@ async def main():
             seen[t] = await pg.evaluate("document.querySelector('main').innerText.length")
             if t in ('oversikt', 'tid', 'penger'): await pg.screenshot(path='admin_%s.png' % t, full_page=True)
         demo = await pg.evaluate("!!document.querySelector('.demo') && !document.getElementById('login')")
-        check(len(tabs) == 10 and all(v > 40 for v in seen.values()), 'every tab of the dashboard draws in the demo', seen)
+        check(len(tabs) == 11 and all(v > 40 for v in seen.values()), 'every tab of the dashboard draws in the demo', seen)
+        # the feedback agent: its report in the Agent tab, and under a feedback its suggestion, which «Bruk forslaget» only fills in
+        await pg.click('nav button[data-t="agent"]'); await pg.wait_for_timeout(150); ag = await pg.evaluate("document.querySelector('main').innerText")
+        await pg.click('nav button[data-t="tilbake"]'); await pg.wait_for_selector('[data-fbai]', timeout=5000)
+        before = await pg.evaluate("document.querySelector('.fbrow [data-fbre]').value"); await pg.click('[data-fbai]')
+        after = await pg.evaluate("[document.querySelector('.fbrow [data-fbst]').value, document.querySelector('.fbrow [data-fbre]').value]")
+        await pg.screenshot(path='admin_agent.png', full_page=True)
+        check('Gibostad' in ag and 'Åpne PR-er' in ag and before == '' and after == ['seen', 'Takk! Vi ser på Autonav ved Gibostad.'],
+              'the Agent tab shows the reports, and «Bruk forslaget» fills in the suggested status and reply without saving', {'after': after})
         check(demo, 'without keys (or with ?demo) the numbers are marked made-up and there is no sign-in')
         # with keys: the sign-in comes first, nothing is fetched before it
         await pg.add_init_script("")

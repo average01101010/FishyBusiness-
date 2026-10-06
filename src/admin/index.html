@@ -27,7 +27,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:5px 6px;b
 #login{max-width:380px;margin:12vh auto;padding:0 16px}#login .card{padding:20px}#login label{display:block;margin:10px 0 4px;color:var(--dim)}#login input{width:100%}
 svg text{fill:var(--dim);font-size:10px}
 .demo{background:#3a2a07;color:var(--acc);padding:6px 16px;font-size:13px}
-.fbbody{white-space:pre-wrap;word-break:break-word;margin:6px 0}.fbimg{display:block;max-width:100%;max-height:70vh;border-radius:8px;margin:6px 0}.fbset{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;margin-top:6px}.fbset textarea{flex:1 1 260px;min-height:38px;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+.fbbody{white-space:pre-wrap;word-break:break-word;margin:6px 0}.fbimg{display:block;max-width:100%;max-height:70vh;border-radius:8px;margin:6px 0}.fbai{border-left:3px solid var(--acc);padding:4px 10px;margin:6px 0;font-size:13px}.fbset{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;margin-top:6px}.fbset textarea{flex:1 1 260px;min-height:38px;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
 </style>
 </head>
 <body>
@@ -78,7 +78,7 @@ async function load(){
   try { DATA = DEMO ? demo() : await rpc('admin_dashboard', {days:DAYS}); render(); }
   catch (e){ if (SES) $('#app').innerHTML = '<main><div class="card warn">' + esc(e.message) + '</div><button onclick="SES=null;sessionStorage.clear();render()">Logg inn på nytt</button></main>'; }
 }
-const TABS = [['oversikt', 'Oversikt'], ['tid', 'Spilletid'], ['frafall', 'Frafall'], ['bruk', 'Spillbruk'], ['okonomi', 'Økonomi i spillet'], ['penger', 'Penger'], ['teknikk', 'Teknikk'], ['geo', 'Geografi'], ['tilbake', 'Tilbakemeldinger'], ['kommer', 'Kommer']];
+const TABS = [['oversikt', 'Oversikt'], ['tid', 'Spilletid'], ['frafall', 'Frafall'], ['bruk', 'Spillbruk'], ['okonomi', 'Økonomi i spillet'], ['penger', 'Penger'], ['teknikk', 'Teknikk'], ['geo', 'Geografi'], ['tilbake', 'Tilbakemeldinger'], ['agent', 'Agent'], ['kommer', 'Kommer']];
 function render(){
   if (!DEMO && !SES) return loginView();
   if (!DATA) { $('#app').innerHTML = '<main class="note">Henter …</main>'; return load(); }
@@ -90,6 +90,7 @@ function render(){
   document.querySelectorAll('nav button').forEach(b => b.onclick = () => { TAB = b.dataset.t; render(); });
   if ($('#out')) $('#out').onclick = () => { auth('logout', {}, SES.access_token).catch(() => {}); SES = null; sessionStorage.clear(); render(); };
   if (TAB === 'tilbake') fbWire();
+  if (TAB === 'agent') agWire();
 }
 
 const kpi = (label, v, sub) => '<div class="card kpi"><b>' + v + '</b><span>' + label + (sub ? '<br>' + sub : '') + '</span></div>';
@@ -163,10 +164,20 @@ VIEW.tilbake = () => {
       (r.img ? (FBIMG[r.id] ? FBIMG[r.id].map(u => '<img class="fbimg" src="' + u + '" alt="">').join('') : '<button data-fbimg="' + r.id + '">' + ((r.nimg || 1) > 1 ? 'Vis ' + r.nimg + ' bilder' : 'Vis bilde (' + r.kb + ' kB)') + '</button>') : '') +
       (r.vids || []).map(v => !v.done ? '<p class="note">Video som ikke kom fram (' + nf(v.mb, 1) + ' MB)</p>' : FBVID[v.path] ? '<video class="fbimg" controls playsinline src="' + esc(FBVID[v.path]) + '"></video><button data-fbvdel="' + esc(v.path) + '">Slett videoen</button>'
         : '<button data-fbvid="' + esc(v.path) + '">Spill av video (' + nf(v.secs, 0) + ' s, ' + nf(v.mb, 1) + ' MB)</button> ').join('') +
-      '<p class="note">' + fbMeta(r.meta) + '</p><div class="fbset"><select data-fbst>' + Object.entries(FBS).map(([k, v]) => '<option value="' + k + '"' + (k === r.status ? ' selected' : '') + '>' + v + '</option>').join('') + '</select>' +
+      '<p class="note">' + fbMeta(r.meta) + '</p>' + fbAi(r) + '<div class="fbset"><select data-fbst>' + Object.entries(FBS).map(([k, v]) => '<option value="' + k + '"' + (k === r.status ? ' selected' : '') + '>' + v + '</option>').join('') + '</select>' +
       '<textarea data-fbre rows="2" placeholder="Svar til spilleren (vises i appen)">' + esc(r.reply || '') + '</textarea><button data-fbsave="' + r.id + '">Lagre</button></div></div>').join('') : '<p class="note">Ingen tilbakemeldinger her ennå.</p>');
 };
+// what the feedback agent noted (tools/feedback/RUTINE.md): its weight and note, and the status and reply it suggests; «Bruk forslaget»
+// only fills them in, Jonas saves
+function fbAi(r){
+  const a = r.ai; if (!a) return '';
+  return '<div class="fbai"><b>Agenten</b>' + (a.score != null ? ' · vekt ' + nf(a.score, 1) : '') + (a.status ? ' · foreslår «' + esc(FBS[a.status] || a.status) + '»' : '') +
+    '<p class="fbbody">' + esc(a.note || '') + '</p>' + (a.reply ? '<p class="fbbody note">Svarforslag: ' + esc(a.reply) + '</p>' : '') +
+    (a.reply || a.status ? '<button data-fbai="' + r.id + '">Bruk forslaget</button>' : '') + '</div>';
+}
 function fbWire(){
+  document.querySelectorAll('[data-fbai]').forEach(b => b.onclick = () => { const row = b.closest('.fbrow'), r = FB.rows.find(x => x.id === +b.dataset.fbai), a = (r && r.ai) || {};
+    if (a.status) row.querySelector('[data-fbst]').value = a.status; if (a.reply) row.querySelector('[data-fbre]').value = a.reply; });
   if ($('#fbT')) $('#fbT').onchange = e => { FBF.topic = e.target.value; FB = null; render(); };
   if ($('#fbS')) $('#fbS').onchange = e => { FBF.status = e.target.value; FB = null; render(); };
   if ($('#fbR')) $('#fbR').onclick = () => { FB = null; render(); };
@@ -180,9 +191,33 @@ function fbWire(){
   document.querySelectorAll('[data-fbsave]').forEach(b => b.onclick = async () => { const id = +b.dataset.fbsave, row = b.closest('.fbrow'), st = row.querySelector('[data-fbst]').value, re = row.querySelector('[data-fbre]').value;
     b.disabled = true; try { if (!DEMO) await rpc('admin_feedback_set', {fid:id, st, answer:re}); const r = FB.rows.find(x => x.id === id); if (r){ r.status = st; r.reply = re.trim() || null; } b.textContent = 'Lagret'; } catch (e){ alert(e.message); b.disabled = false; } });
 }
+// ---------- the feedback agent's reports (supabase/migrations/20261006120000_feedback_agent.sql, tools/feedback/RUTINE.md) ----------
+// Four times a day a Claude Code routine reads the new feedback without who wrote it, notes each (shown under it in Tilbakemeldinger)
+// and writes a report here, with the pull requests it opened; Jonas merges or closes them in GitHub.
+let AG = null;
+async function agLoad(){ await null; try { AG = DEMO ? agDemo() : await rpc('admin_agent_runs', {lim:30}); } catch (e){ AG = {err:e.message}; } if (TAB === 'agent') render(); }
+const md = t => esc(t).split('\n').map(l => /^#{1,4} /.test(l) ? '<b>' + l.replace(/^#+ /, '') + '</b>' : l).join('\n').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+const PRS = 'https://github.com/average01101010/FishyBusiness-/pulls';
+VIEW.agent = () => {
+  if (!AG){ agLoad(); return '<p class="note">Henter …</p>'; }
+  if (AG.err) return card('Agent', '<p class="warn">' + esc(AG.err) + '</p>', 'Er migreringen supabase/migrations/20261006120000_feedback_agent.sql kjørt?');
+  const last = AG[0];
+  return '<div class="grid">' + kpi('Siste kjøring', last ? new Date(last.ts).toLocaleString('nb-NO') : '–', last ? nf(last.n, 0) + ' nye tilbakemeldinger' : 'Ingen ennå') +
+    kpi('Kjøringer med noe nytt', nf(AG.length, 0), 'de siste 30') + kpi('PR-er åpnet', nf(AG.reduce((a, r) => a + (r.prs || []).length, 0), 0), '<a href="' + PRS + '" target="_blank" rel="noopener">Åpne PR-er i GitHub</a>') + '</div>' +
+    '<div class="card"><button id="agR">Oppdater</button> <span class="note">Agenten leser de nye tilbakemeldingene kl. 05.58, 11.58, 17.58 og 23.58, uten å vite hvem som skrev dem. Den svarer aldri spillerne selv: forslagene står under hver tilbakemelding.</span></div>' +
+    (AG.length ? AG.map(r => '<div class="card"><h3>' + new Date(r.ts).toLocaleString('nb-NO') + ' · ' + nf(r.n, 0) + ' nye</h3><div class="fbbody">' + md(r.report) + '</div>' +
+      ((r.prs || []).length ? '<p>' + r.prs.map(x => '<a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + esc(x.title || x.url) + '</a>').join('<br>') + '</p>' : '') + '</div>').join('')
+      : '<p class="note">Ingen rapporter ennå.</p>');
+};
+function agWire(){ if ($('#agR')) $('#agR').onclick = () => { AG = null; render(); }; }
+function agDemo(){
+  return [{id:2, ts:new Date(Date.now() - 2 * 36e5).toISOString(), n:3, report:'## Det viktigste\nTo spillere melder at båten går på land ved Gibostad med Autonav (#3, #5).\n\n## Topp 5\n- **#3** Autonav på land ved Gibostad · vekt 6,5 · se på leia i 03c-route.js\n- **#4** Ønske: dorg etter sei · vekt 1', prs:[{url:PRS, title:'Autonav: hold avstand til land ved Gibostad'}]},
+    {id:1, ts:new Date(Date.now() - 8 * 36e5).toISOString(), n:1, report:'## Det viktigste\nÉn ny: et ønske om flere båtfarger (#2).', prs:[]}];
+}
 function fbDemo(){
   const now = Date.now(), m = {version:'p34', platform:'android', browser:'chrome', pwa:true, w:412, h:915, dpr:2.6, view:'3d', lvl:1, fps:38, quality:'auto', boat:'trebat', st:'fishing', port:null, t:4380, pos:[69.512, 17.693]};
-  return {rows:[{id:3, ts:new Date(now - 36e5).toISOString(), player:'user_01HDEMO0003', topic:'bug', rating:4, body:'Båten la seg på land ved Gibostad da jeg brukte Autonav.', img:true, kb:212, nimg:3, vids:[{path:'user_01HDEMO0003/3-1-demo.mp4', mime:'video/mp4', mb:18.4, secs:41, done:true}], meta:m, status:'new', reply:null},
+  return {rows:[{id:3, ts:new Date(now - 36e5).toISOString(), player:'user_01HDEMO0003', topic:'bug', rating:4, body:'Båten la seg på land ved Gibostad da jeg brukte Autonav.', img:true, kb:212, nimg:3, vids:[{path:'user_01HDEMO0003/3-1-demo.mp4', mime:'video/mp4', mb:18.4, secs:41, done:true}], meta:m, status:'new', reply:null,
+      ai:{score:6.5, status:'seen', note:'Autonav legger leia for nær land ved Gibostad (som #5). Sannsynlig årsak: avstanden til land i leia.', reply:'Takk! Vi ser på Autonav ved Gibostad.', at:new Date(now - 7e6).toISOString()}},
     {id:2, ts:new Date(now - 864e5).toISOString(), player:'user_01HDEMO0002', topic:'idea', rating:5, body:'Kunne det vært mulig å fiske sei med dorg?', img:false, kb:0, meta:{...m, st:'port', port:'botnhamn'}, status:'planned', reply:'God idé, den kommer!'}],
     topics:{bug:7, idea:4, perf:3, ui:2}, status:{new:9, seen:4, planned:2, fixed:1}, rating:4.1, mb:3.2, vmb:18.4, orphans:0};
 }
@@ -202,7 +237,7 @@ function demo(){
     tech:{errors:[{msg:'TypeError: Cannot read properties of null', n:12, last:new Date().toISOString(), versions:['p15']}], fps:[{platform:'android', quality:'auto', fps:41.2, low:18, drops:3.1, n:220}, {platform:'windows', quality:'high', fps:58.9, low:44, drops:0.2, n:140}], browsers:{chrome:1100, samsung:450, safari:250, firefox:40}, platforms:{android:1200, windows:380, ios:220, mac:40}},
     geo:{countries:{NO:380, SE:14, DE:9}, timezones:{'Europe/Oslo':388, 'Europe/Stockholm':14}, homes:{husoy:160, senjahopen:120, finnsnes:80}}};
 }
-render(); setInterval(() => { if (DATA && (DEMO || SES) && TAB !== 'tilbake') { DATA = null; load(); } }, 60000);
+render(); setInterval(() => { if (DATA && (DEMO || SES) && TAB !== 'tilbake' && TAB !== 'agent') { DATA = null; load(); } }, 60000);
 </script>
 </body>
 </html>
