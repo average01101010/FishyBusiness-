@@ -125,10 +125,28 @@ const VIEW = {
     kpi('Gjenkjøp', pct(m.repurchase)) + kpi('Tid til første kjøp', nf(m.ttfp_days) + ' dager') + kpi('Refusjoner', pct(m.refund_rate)) + kpi('Forlatt kasse', pct(m.abandon_rate)) + '</div>' +
     card('Boostere', bars(m.boosters)) + card('Transaksjonslogg (Stripe)', table(m.log, [['at', 'Tid', v => esc(new Date(v).toLocaleString('nb-NO'))], ['player', 'Spiller'], ['product', 'Produkt'], ['nok', 'Kr'], ['status', 'Status'], ['id', 'Stripe-økt']]), 'Fylles når Stripe-webhooken er koblet på.'); },
   teknikk: D => card('Feil og krasj', table(D.tech.errors, [['msg', 'Melding'], ['n', 'Antall'], ['last', 'Sist', v => esc(new Date(v).toLocaleString('nb-NO'))], ['versions', 'Versjoner', v => esc((v || []).join(', '))]])) +
-    card('Bildetakt', table(D.tech.fps, [['platform', 'Plattform'], ['quality', 'Kvalitet'], ['fps', 'Snitt'], ['low', 'Lavest'], ['drops', 'Hakk (< 20)'], ['n', 'Målinger']])) + card('Nettlesere', bars(D.tech.browsers)) + card('Plattformer', bars(D.tech.platforms)),
+    card('Bildetakt', table(D.tech.fps, [['platform', 'Plattform'], ['quality', 'Kvalitet'], ['fps', 'Snitt'], ['low', 'Lavest'], ['drops', 'Hakk (< 20)'], ['n', 'Målinger']])) + card('Nettlesere', bars(D.tech.browsers)) + card('Plattformer', bars(D.tech.platforms)) + devCard(),
   geo: D => card('Land (fra nettverket, IP-adressen lagres ikke)', bars(D.geo.countries)) + card('Tidssoner', bars(D.geo.timezones)) + card('Hjemhavn i spillet', bars(D.geo.homes)),
   kommer: () => card('Venter på funksjoner i spillet', '<ul><li>Push-varsler: åpningsrate</li><li>Venner og deling: sosial klyngedynamikk, nettverkskoeffisient, viralitet, invite-to-churn og den sosiale utløseren for kjøp</li><li>Betalte boostere: bruken (tabellen er klar)</li></ul>', 'Se docs/lansering.md E.')
 };
+// ---------- the devices (supabase/migrations/20261006160000_device_data.sql): the frame rate by graphics chip, and the errors with the chips they hit ----------
+let DEV = null;
+async function devLoad(){ await null; try { DEV = DEMO ? devDemo() : await rpc('admin_devices', {days:DAYS}); } catch (e){ DEV = {err:e.message}; } if (TAB === 'teknikk') render(); }
+function devCard(){
+  if (!DEV || DEV.days !== Math.min(90, DAYS) && !DEV.err){ if (!DEV || !DEV.loading){ DEV = {loading:true, days:-1}; devLoad(); } return card('Enheter', '<p class="note">Henter …</p>'); }
+  if (DEV.err) return card('Enheter', '<p class="warn">' + esc(DEV.err) + '</p>', 'Er migreringen supabase/migrations/20261006160000_device_data.sql kjørt?');
+  const sl = v => v >= 45 ? '' : v >= 25 ? ' class="warn"' : ' style="color:var(--bad)"';
+  return card('Bildetakt per enhet', table(DEV.fps_device, [['gpu', 'Grafikkbrikke'], ['platform', 'Plattform'], ['browser', 'Nettleser'], ['fps', 'Snitt', v => '<span' + sl(v) + '>' + nf(v, 1) + '</span>'], ['low', 'Lavest'], ['drops', 'Hakk'], ['lvl', '3D-nivå'], ['cores', 'Kjerner'], ['mem', 'Minne (GB)'], ['scr', 'Skjerm'], ['n', 'Målinger']]),
+      'Rødt under 25 bilder i sekundet, gult under 45. Agenten leser det samme i hver kjøring.') +
+    card('Bildetakt per versjon', table(DEV.fps_version, [['version', 'Versjon'], ['fps', 'Snitt'], ['low', 'Lavest'], ['slow', 'Andel under 20', v => pct(v)], ['n', 'Målinger']])) +
+    card('Feil per grafikkbrikke', table(DEV.errors, [['msg', 'Melding'], ['n', 'Antall'], ['sessions', 'Økter'], ['gpus', 'Grafikkbrikker', v => esc((v || []).join(' · '))], ['platforms', 'Plattformer', v => esc(Object.entries(v || {}).map(([k, n]) => k + ' ' + n).join(', '))]]));
+}
+function devDemo(){
+  return {days:Math.min(90, DAYS), fps_device:[{gpu:'Adreno (TM) 642L', platform:'android', browser:'chrome', fps:31.4, low:14, drops:4.2, lvl:1, cores:8, mem:4, scr:'412x915@2.6', n:220},
+      {gpu:'Mali-G57 MC2', platform:'android', browser:'samsung', fps:22.8, low:9, drops:9.1, lvl:0, cores:8, mem:4, scr:'360x800@3', n:90}, {gpu:'Apple GPU', platform:'ios', browser:'safari', fps:57.2, low:44, drops:0.1, lvl:2, cores:6, mem:null, scr:'390x844@3', n:140}],
+    fps_version:[{version:'p56', fps:41.2, low:20, slow:0.08, n:300}, {version:'p55', fps:39.9, low:19, slow:0.1, n:410}],
+    errors:[{msg:'3D konteksten mistet under spill', n:12, sessions:9, gpus:['Mali-G57 MC2'], platforms:{android:12}}]};
+}
 // ---------- the players' feedback (the game's Tilbakemelding app, supabase/migrations/20261005180000_feedback.sql) ----------
 // A list of its own, newest first, filtered by topic and status; a picture is fetched when asked for; the status and the answer are
 // saved per row, and the player sees them in the app. Not refreshed by the minute, so an answer being written is not lost.

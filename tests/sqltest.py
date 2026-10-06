@@ -75,7 +75,16 @@ def main():
         # errors also without consent, then without a name
         sql("select public.tm_error('TypeError: x', 'view3d.js:1', 'at f', '{\"version\":\"t1\"}')", B, 'authenticated')
         sql("select public.tm_error('TypeError: y', 'core.js:2', '', '{}')", {}, 'anon')
-        R['errors'] = sql("select count(*) || '/' || count(player_id) from public.errors")
+        # the device behind the frame rate and the errors (20261006160000_device_data.sql), and the agent's and the admin's view of them
+        dev = '{"version":"t2","platform":"android","browser":"chrome","gpu":"Adreno (TM) 642L","cores":"8","mem":"6","scr":"412x915@2.6","lvl":"1","view":"3d"}'
+        sql("select public.tm_perf(41.5, 18, 3, '%s')" % dev, {}, 'anon'); sql("select public.tm_perf(55, 40, 0, '%s')" % dev.replace('"cores":"8"', '"cores":"lots"'), {}, 'anon')
+        sql("select public.tm_error('WebGL: shader x', 'view3d.js:9', 'at s', '%s')" % dev, {}, 'anon')
+        R['devPerf'] = sql("select string_agg(gpu || '|' || coalesce(cores::text, '-') || '|' || mem || '|' || scr || '|' || lvl || '|' || view, ' ; ' order by id) from public.perf where gpu is not null")
+        TV = json.loads(sql("select public.agent_tech(7)", None, 'service_role'))
+        R['devTech'] = {'err': [e for e in TV['errors'] if e['msg'] == 'WebGL: shader x'], 'fps': [f for f in TV['fps_device'] if f['gpu'] == 'Adreno (TM) 642L'], 'keys': sorted(TV)}
+        R['devPl'] = sql("select public.agent_tech(7)", B, 'authenticated', expect_err=True); R['devAdm1'] = sql("select public.admin_devices(7)", AD1, 'authenticated', expect_err=True)
+        R['devAdm'] = sorted(json.loads(sql("select public.admin_devices(7)", AD2, 'authenticated')))
+        R['errors'] = sql("select count(*) || '/' || count(player_id) from public.errors where msg <> 'WebGL: shader x'")
         # the cloud save: newer wins, older is refused unless forced, and each player sees only his own
         R['save1'] = json.loads(sql("select public.save_put('KYST2:AAA', '2026-10-04T10:00:00Z', 100, false)", A, 'authenticated'))
         R['save2'] = json.loads(sql("select public.save_put('KYST2:OLD', '2026-10-04T09:00:00Z', 90, false)", A, 'authenticated'))
@@ -314,6 +323,10 @@ def main():
         print(ok(all(R[k][0] for k in ('fbRead', 'fbAdmPl', 'fbAdm1')) and F['rows'] and F['rows'][0]['meta'].get('version') == 't1' and F['topics'].get('bug') == 1 and R['fbImg'] == str(len(IMG)) and R['fbMine2'][0]['status'] == 'fixed' and R['fbMine2'][0]['reply'] == 'Takk, rettet!'),
               'feedback: no player reads the table or the list, nor the admin without the second factor; the admin lists them, opens the picture, sets the status and answers, and the player sees it', {'topics': F.get('topics'), 'img': R['fbImg'], 'mine': R['fbMine2'][0] if R['fbMine2'] else None})
         print(ok(R['fbLimit'][0] and R['fbGone'] == '0'), 'feedback: at most 20 a day, and they go with the account', [R['fbLimit'][1][:40], R['fbGone']])
+        dt = R['devTech']; de = dt['err'][0] if dt['err'] else {}; df = dt['fps'][0] if dt['fps'] else {}
+        print(ok(R['devPerf'] == 'Adreno (TM) 642L|8|6|412x915@2.6|1|3d ; Adreno (TM) 642L|-|6|412x915@2.6|1|3d' and de.get('n') == 1 and de.get('gpus') == ['Adreno (TM) 642L'] and de.get('platforms') == {'android': 1}
+                 and df.get('n') == 2 and df.get('fps') == 48.3 and 'user_' not in json.dumps(dt) and R['devPl'][0] and R['devAdm1'][0] and R['devAdm'] == dt['keys']),
+              'the device: the frame rate and the errors keep the graphics chip, cores, memory, screen and 3D level (a bad number left out); the agent and the admin with aal2 see them put together, never who, and no player does', {'perf': R['devPerf'], 'err': de.get('gpus'), 'fps': df})
         ar = R['agRow']; aa = (R['agAdmRow'][0] if R['agAdmRow'] else {}).get('ai') or {}
         print(ok(R['agRows'] >= 3 and ar and not R['agWho'] and len(ar.get('who', '')) == 6 and '@' not in ar.get('body', '') and '912' not in ar.get('body', '') and '[e-post]' in ar.get('body', '')
                  and ar.get('meta') == {'version': 't2', 'boat': 'skiff'} and R['agPl'][0] and R['agAdm'][0] and len(R['agImgs']) == 3),

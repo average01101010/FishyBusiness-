@@ -7,6 +7,7 @@ Code environment, which sessions use without seeing it; it is never written anyw
     python3 tools/feedback/agent.py list [--lim 40] [--out DIR] [--imgs]     the new feedback to DIR/feedback.json (pictures to DIR/img/)
     python3 tools/feedback/agent.py note ID --score 6 --status seen --note "..." [--reply "..."]
     python3 tools/feedback/agent.py run --report RAPPORT.md [--pr URL "title"]... [--n 12]
+    python3 tools/feedback/agent.py tech [--days 7] [--out DIR]                 the errors and the frame rate by device to DIR/tech.json
 """
 import argparse, base64, json, os, sys, tempfile, urllib.error, urllib.request
 
@@ -42,6 +43,7 @@ def main():
     a.add_argument('--imgs', action='store_true')
     n = sub.add_parser('note'); n.add_argument('id', type=int); n.add_argument('--score', type=float); n.add_argument('--status', choices=['new', 'seen', 'fixed', 'planned', 'no'])
     n.add_argument('--note', required=True); n.add_argument('--reply')
+    tc = sub.add_parser('tech'); tc.add_argument('--days', type=int, default=7); tc.add_argument('--out', default=os.path.join(tempfile.gettempdir(), 'dsb-feedback'))
     r = sub.add_parser('run'); r.add_argument('--report', required=True); r.add_argument('--pr', nargs=2, action='append', metavar=('URL', 'TITLE'), default=[])
     r.add_argument('--n', type=int, default=0)
     o = ap.parse_args()
@@ -64,6 +66,18 @@ def main():
                     head, _, b64 = u.partition(',')
                     ext = 'png' if 'png' in head else 'webp' if 'webp' in head else 'jpg'
                     p = os.path.join(o.out, 'img', '%s-%d.%s' % (x['id'], k, ext)); open(p, 'wb').write(base64.b64decode(b64)); print('   picture', p)
+    elif o.cmd == 'tech':
+        d = call('tech', days=o.days) or {}
+        os.makedirs(o.out, exist_ok=True); json.dump(d, open(os.path.join(o.out, 'tech.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+        s = d.get('sessions') or {}
+        print('the last %s days: %s sessions, %s rage quits, %s min on average; written to %s' % (d.get('days'), s.get('n'), s.get('rage'), s.get('avg_min'), os.path.join(o.out, 'tech.json')))
+        print('errors (most first):')
+        for e in (d.get('errors') or [])[:15]:
+            print('  %4d × in %d sessions, %d players  %s  [%s]  %s' % (e['n'], e['sessions'], e['players'], ' '.join(str(e['msg']).split())[:110], ','.join(e.get('versions') or []), ' · '.join(e.get('gpus') or [])[:80]))
+        print('frame rate by device (most measured first):')
+        for f in (d.get('fps_device') or [])[:15]:
+            print('  %5s fps (low %s, drops %s, 3D level %s)  %s / %s / %s  n=%s' % (f.get('fps'), f.get('low'), f.get('drops'), f.get('lvl'), f.get('platform'), f.get('browser'), f.get('gpu'), f.get('n')))
+        print('by version:', ', '.join('%s %s fps (%s under 20)' % (v['version'], v['fps'], v['slow']) for v in d.get('fps_version') or []))
     elif o.cmd == 'note':
         call('note', fid=o.id, note=o.note, score=o.score, st=o.status, reply=o.reply); print('noted', o.id)
     else:
