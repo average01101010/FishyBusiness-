@@ -407,6 +407,9 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p60', '06.10.2026', 'Plass i styrhuset', 'Room in the wheelhouse', [
+      ['Styrhuset på plastsnekka er høyere, så skipperen ikke lenger stikker hodet gjennom taket.', 'The wheelhouse on the fibreglass snekke is taller, so the skipper no longer puts his head through the roof.'],
+      ['Når du jukser fra en åpen båt med styrhus, eller er alene om bord, står skipperen ute ved rekka og ikke ved rattet. Takk for tipsene!', 'When you jig from an open boat with a wheelhouse, or are alone aboard, the skipper stands out at the rail and not at the wheel. Thanks for the tips!']]],
     ['p59', '06.10.2026', 'Frysetråleren fra Blender', 'The freezer trawler from Blender', [
       ['Frysetråleren er bygget på nytt etter en ekte generaltegning: 60 m med akterslipp, galge med tråldører på hekken, nettrommel, trålvinsjer og styrhus på toppen. Den heter nå «Frysetråler 60 m» og har tegningens mål.', 'The freezer trawler is rebuilt from a real general arrangement: 60 m with a stern ramp, a gantry with the trawl doors on the stern, a net drum, trawl winches and the wheelhouse on top. It is now the «60 m freezer trawler», with the drawing\'s size.']]],
     ['p58', '06.10.2026', 'Båten følger rutestreken', 'The boat follows the route line', [

@@ -3404,7 +3404,7 @@ const G3 = (() => {
   }
   function people(){
     if (PERS) return PERS; const mk = (hands, suit, kit) => { const b = VB(); b.lod = 0.6; personVB(b, 0, 0, 0, false, hands, suit, kit); return {pb:buf(new Float32Array(b.p)), nb:buf(new Float32Array(b.n)), cb:buf(new Float32Array(b.c)), n:b.p.length / 3}; };
-    return PERS = {skip:mk([[-0.16, 1.08, -0.42], [0.16, 1.08, -0.42]], [0.93, 0.4, 0.1, 0.3], 'skipper'), crew:mk(null, [0.95, 0.75, 0.15, 0.3], 'crew')};
+    return PERS = {skip:mk([[-0.16, 1.08, -0.42], [0.16, 1.08, -0.42]], [0.93, 0.4, 0.1, 0.3], 'skipper'), skipDeck:mk(null, [0.93, 0.4, 0.1, 0.3], 'skipper'), crew:mk(null, [0.95, 0.75, 0.15, 0.3], 'crew')};
   }
   // ---------- the trawl (tools/boats/tral60.py; Jonas 06.10.2026: «en tråler har slike tråldører på hekken som senkes i havet ved
   // tråling. Lag også animasjoner for utsett, og opptak av trål»): the doors hang in the gallows either side of the stern ramp and the
@@ -3462,9 +3462,12 @@ const G3 = (() => {
       if (!st.tow && st.ro < 0.35) at(K.door, chain(M4.T(D[0], D[1], D[2]), M4.RY((sg > 0 ? Math.PI : 0) - Math.PI / 2 * st.lo)));
     }
   }
-  function drawVessel(t, G, BMrel, VP, skipper, ncrew){
+  // onDeck: the skipper jigs himself, so he stands at the first deck place the crew leave free (at the wheel when there is none)
+  function drawVessel(t, G, BMrel, VP, skipper, ncrew, onDeck){
     const m = pvm(t); if (!m) return; const P = people(); nSetup(VP); drawN(m.hull, BMrel);
-    if (skipper) drawN(P.skip, chain(BMrel, M4.T(G.skipperAt[0], G.skipperAt[1], G.skipperAt[2])));
+    const ds = onDeck && G.crewSpots && ncrew < G.crewSpots.length ? G.crewSpots[ncrew] : null;
+    if (skipper && ds) drawN(P.skipDeck, chain(BMrel, M4.T(ds[0], ds[1], ds[2]), M4.RY(ds[3] || 0)));
+    else if (skipper) drawN(P.skip, chain(BMrel, M4.T(G.skipperAt[0], G.skipperAt[1], G.skipperAt[2])));
     for (let i = 0; i < ncrew && i < G.crewSpots.length; i++){ const c = G.crewSpots[i]; drawN(P.crew, chain(BMrel, M4.T(c[0], c[1], c[2]), M4.RY(c[3] || 0))); }
     if (G.trawl) drawTrawl(t, G.trawl, BMrel, performance.now() / 1000);
     gl.disableVertexAttribArray(2); gl.useProgram(PL.p);
@@ -3810,7 +3813,10 @@ const G3 = (() => {
     // (drawDeck), and in an open boat they sit where they are. The one at the table leaves their place (a skiff drew them twice).
     const underway = S.boat.status === 'sailing' && !S.boat.gop, deckCrew = underway && !VG.open ? 0 : Math.max(0, ncrew - awayCr);
     if (VG.hand){ drawSkiff(BMrel, VPn, dt, !cam.helm && !awaySk, deckCrew > 0); gl.useProgram(PL.p); }
-    else drawVessel(VT, VG, BMrel, VPn, !cam.helm && !awaySk, deckCrew);
+    // jigging from a boat with a wheelhouse, the skipper leaves the wheel for the rail when the boat is open or he is alone (the
+    // hand-worked boats do the same in drawSkiff)
+    else { const jig = S.boat.status === 'fishing' && !S.boat.gop && !S.boat.deckStop && (VG.open || ncrew === 0);
+      drawVessel(VT, VG, BMrel, VPn, !cam.helm && !awaySk, deckCrew, jig); }
     if (SHOW){ const y = (env.tide || 0) + (seaH(SHOW.x, SHOW.z, t) - (env.tide || 0)) * 0.8; SHOW.M = model(SHOW.x - eye[0], y - eye[1], SHOW.z - eye[2], -SHOW.h, Math.sin(t * 0.7) * 0.02, Math.sin(t * 0.9) * 0.03); drawVessel(SHOW.t, GEO(SHOW.t), SHOW.M, VPn, true, 2); }
     if (STATN){ nSetup(VPn); drawN(STATN, TM); if (BUNKN) drawN(BUNKN, TM); } drawMooring(BMrel, eye, VPn, t); drawRescue(BMrel, eye, VPn, t); if (PM) drawDeck(BMrel, eye, VPn, t, DECKACT); drawGearOp(BMrel, eye, VPn, t);
     const plant = PM ? nearestPlant(eye) : null; drawUnits(eye, VPn, true, nearFar, plant && plant.id); drawSites(eye, VPn, true, nearFar);
