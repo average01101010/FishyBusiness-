@@ -407,6 +407,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p59', '06.10.2026', 'Frysetråleren fra Blender', 'The freezer trawler from Blender', [
+      ['Frysetråleren er bygget på nytt etter en ekte generaltegning: 60 m med akterslipp, galge med tråldører på hekken, nettrommel, trålvinsjer og styrhus på toppen. Den heter nå «Frysetråler 60 m» og har tegningens mål.', 'The freezer trawler is rebuilt from a real general arrangement: 60 m with a stern ramp, a gantry with the trawl doors on the stern, a net drum, trawl winches and the wheelhouse on top. It is now the «60 m freezer trawler», with the drawing\'s size.']]],
     ['p58', '06.10.2026', 'Båten følger rutestreken', 'The boat follows the route line', [
       ['Båten i 3D følger nå streken i kartplotteren nøyaktig: ut fra kaia, langs ruta med myke, men presise svinger, og inn til kaia. Den slakker av og stopper akkurat på siste punkt, uten å gli forbi og hoppe tilbake.', 'The boat in 3D now follows the line on the chart plotter exactly: out from the quay, along the route with smooth but precise turns, and in to the quay. It eases off and stops right on the last point, without sliding past and jumping back.'],
       ['Stopp underveis bråstopper ikke lenger. Båten slakker av og stopper litt lenger fram på ruta.', 'Stop under way no longer stops dead. The boat eases off and stops a little further along the route.'],
