@@ -265,7 +265,7 @@ const SPEC3D = {
       col:{hull:VC.cream, bottom:VC.navy, boot:VC.navy, deck:VC.inner}}, open:true, parts:[['block', {zf:-0.1, za:0.55, w:0.8, h:0.85, col:VC.white}]], work:{z:1.6}, crew:[]},
   snekke:{hull:{form:'round', F:0.72, fr:0.34, ar:0.24, rake:0.45, srake:0.4, tw:0, smax:0.5, entry:2.0, run:1.8, Tc:0.62, n:2.0, flare:0.06, soleY:0.32, bulH:0, NS:36,
       col:{hull:VC.cream, stripe:VC.green, bottom:VC.afRed, boot:VC.green, deck:VC.wood, inner:VC.cream, rail:VC.teak}, stripeW:0.12, railR:0.05},
-    open:true, parts:[['house', {zf:-1.15, za:0.55, w:1.55, h:1.62, rake:0.25, sill:0.82, nwin:2, nside:1, col:VC.white, roof:VC.green, deckY:0.32}], ['mast', {z:0.3, h:1.4, radar:'dome', on:'house'}],
+    open:true, parts:[['house', {zf:-1.15, za:0.55, w:1.55, h:1.85, rake:0.25, sill:0.82, nwin:2, nside:1, col:VC.white, roof:VC.green, deckY:0.32}], ['mast', {z:0.3, h:1.4, radar:'dome', on:'house'}],
       ['engine', {z:1.3, w:0.7, l:0.9, h:0.5}], ['tubs', {z:2.4, n:2}], ['fenders', {at:[0.35, 0.6]}]],
     work:{z:2.3}, crew:[[0.55, 2.2, -1.7], [-0.55, 2.8, 1.6]]},
   sjark:{hull:{form:'round', F:0.95, fr:0.55, ar:0.22, rake:0.95, srake:0.3, tw:0.68, smax:0.46, entry:2.2, run:2.2, Tc:1.0, n:2.4, flare:0.08, trise:0.2, bulH:0.55, NS:40,
