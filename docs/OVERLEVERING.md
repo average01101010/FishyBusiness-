@@ -1777,6 +1777,14 @@ Brukerens ønske: mannskapet skal være en levende og givende del av spillet, in
 
 ### 5.20 Vær og hav (02.10.2026)
 
+**Klima etter sted (V1, 06.10.2026;** Jonas: «Vi skal jo ikke ha ekte live-vær, men vi må kunne simulere været langs hele kysten på en god måte, med variasjoner fra sted til sted»):
+- `src/data/climate.json` har månedsmidler for 19 punkter fra Færder til Kirkenes: lufttemperatur, nedbør, snø, sterkeste vind, andel kulingdager og skydekke fra ERA5 2006–2020, og sjøtemperatur fra Open-Meteos marine data 2023–2025. Dataene hentes av `tools/climate/fetch.py` i `.github/workflows/klima.yml` (startes ved å endre `tools/climate/klima.json`) og ligger som releaser `klima-N`.
+- Spillets eget vær er uendret, men flyttes med hvor stedet avviker fra Senja, der spillet er kalibrert. Lufta og sjøen flyttes med forskjellen i temperatur, nedbøren med forholdet i månedsnedbør, og skydekket med forskjellen. Ved Senja er alt nøyaktig som før.
+- Mellom punktene vektes de tre nærmeste med 1/d², lagret per rute på 5 km (`climW`).
+- `airTemp`, `precipAt`, `cloudAt`, `visibility` og `seaTemp` tar et valgfritt sted `p` og bruker ellers båten. Begroingen på redskap regner sjøtemperaturen der redskapet står, og Vær-appen viser sjøtemperaturen der båten er.
+- **Kjent svakhet:** punktene Bodø, Tromsø og Kirkenes i `klima-1` ligger i ERA5-ruter med mye land og har for kalde vintre (Tromsø −8,1 °C i januar mot rundt −4 °C på kysten). `klima.json` er rettet til punkter ute på sjøen, og `klima-2` erstatter dataene når den er hentet.
+- **Test:** `climtest`.
+
 Brukerens ønske: havet skal se ut og oppføre seg slik Beaufort-skalaen beskriver det, og vindretningen mot land skal telle (le og lo). Kjølvann, hekkbølge og baugbølge skal være realistiske. Overgangene skal være jevne.
 
 Brukerens valg:
