@@ -13,6 +13,7 @@ Et kystfiskespill fra Senja som kjører som én selvstendig HTML-side, publisert
 - **Full regresjon** (`python3 tests/run.py full`, rundt en time, med 3D-testene alene etter de andre) kjøres bare før publisering. Feil som dukker opp da, rettes samlet.
 - Kjør aldri samme test to ganger for å lese utskriften på en annen måte. Loggene ligger i `tests/out/logs/`. Lange tester kjøres i bakgrunnen mens arbeidet går videre.
 - En ny fil i `src/` legges inn i `COVER` i `run.py` med testen som dekker den.
+- **Båtmodeller** (Jonas 06.10.2026): bare utsiden som spillerne ser, ingen innredning, fabrikk eller rom under dekk. Båthandelen viser ikke animasjoner av hva båtene kan gjøre («høyst unødvendig»).
 - Patchnotes-appen på telefonen (`PATCH` i `src/js/ui/05-phone.js`, fra 04.10.2026) skal vise det nyeste. Når en endring som merkes i spillet pushes, legg den inn som en ny oppføring øverst eller som en linje i den nyeste, kort og på norsk og engelsk.
 - Vær ærlig om svake tester, antakelser og usikre regler. Sjekk regelverk mot kildene (Lovdata, Fiskeridirektoratet, Råfisklaget) før det bygges inn, og oppgi kilden.
 - Brukeren tester på Android-nettbrett, så UI må fungere med berøring i både stående og liggende format.
