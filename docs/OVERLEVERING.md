@@ -1782,7 +1782,7 @@ Brukerens ønske: mannskapet skal være en levende og givende del av spillet, in
 - Spillets eget vær er uendret, men flyttes med hvor stedet avviker fra Senja, der spillet er kalibrert. Lufta og sjøen flyttes med forskjellen i temperatur, nedbøren med forholdet i månedsnedbør, og skydekket med forskjellen. Ved Senja er alt nøyaktig som før.
 - Mellom punktene vektes de tre nærmeste med 1/d², lagret per rute på 5 km (`climW`).
 - `airTemp`, `precipAt`, `cloudAt`, `visibility` og `seaTemp` tar et valgfritt sted `p` og bruker ellers båten. Begroingen på redskap regner sjøtemperaturen der redskapet står, og Vær-appen viser sjøtemperaturen der båten er.
-- **Kjent svakhet:** punktene Bodø, Tromsø og Kirkenes i `klima-1` ligger i ERA5-ruter med mye land og har for kalde vintre (Tromsø −8,1 °C i januar mot rundt −4 °C på kysten). `klima.json` er rettet til punkter ute på sjøen, og `klima-2` erstatter dataene når den er hentet.
+- Bodø, Tromsø og Kirkenes ligger ute på sjøen fra `klima-2`. I `klima-1` var rutene deres mest land, med altfor kalde vintre (Tromsø −8,1 °C i januar mot −4,1 °C nå).
 - **Test:** `climtest`.
 
 Brukerens ønske: havet skal se ut og oppføre seg slik Beaufort-skalaen beskriver det, og vindretningen mot land skal telle (le og lo). Kjølvann, hekkbølge og baugbølge skal være realistiske. Overgangene skal være jevne.
