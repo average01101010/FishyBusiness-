@@ -24,7 +24,7 @@ Oppgaven er å lese de nye tilbakemeldingene fra spillerne og vekte dem. Rutinen
    - `noted` er det som er notert de siste 60 dagene og ikke er ferdig.
    - `last_run` er forrige rapport.
 
-   Er det ingen nye tilbakemeldinger, ingen feil i `noted` og ingen tekniske saker (punkt 3) som kan rettes (se punkt 7), skriver du bare «Ingen nye tilbakemeldinger» og avslutter, uten rapport. Står det at `FEEDBACK_AGENT_TOKEN` mangler, eller at nettverket stopper kallet, skriver du det kort og avslutter.
+   Er det ingen nye tilbakemeldinger, ingen feil i `noted`, ingen sak med en PR som er merget (punkt 6) og ingen tekniske saker (punkt 3) som kan rettes (se punkt 7), skriver du bare «Ingen nye tilbakemeldinger» og avslutter, uten rapport. Står det at `FEEDBACK_AGENT_TOKEN` mangler, eller at nettverket stopper kallet, skriver du det kort og avslutter.
 3. **Teknikk:** `python3 tools/feedback/agent.py tech --out <scratchpad-mappa>/fb`. Den viser hva spillet selv har meldt de siste 7 dagene, uten noe om hvem: feilene slått sammen per melding (hvor mange ganger, økter og spillere, versjoner, plattformer, grafikkbrikker og én stack), bildetakten per plattform, nettleser og grafikkbrikke, og per versjon. Jonas: «vi må samle inn så mye viktig data vi kan og analysere for å optimalisere spillet for så mange enheter som mulig.»
    - En feil teller som en sak med alvor etter hva den gjør (krasj eller 3D som ikke starter: 5) × antall økter den har rammet. Feil som er nye i siste versjon, går først.
    - Bildetakt under 25 i snitt på en grafikkbrikke med mange målinger er en sak (alvor 2 × antall målinger / 50). Se om 3D-nivået allerede er lavest der, og hva som koster mest (overleveringen kapittel 6 om ytelse). Ikke senk grafikken for alle: rett det for de enhetene det gjelder (CLAUDE.md: «Grafikken er nesten det viktigste»).
@@ -50,6 +50,7 @@ Oppgaven er å lese de nye tilbakemeldingene fra spillerne og vekte dem. Rutinen
      - `planned` for et klart ønske som passer visjonen i overleveringen.
      - `fixed` bare når det er rettet i koden allerede (se `git log`).
      - `no` for spam, mistenkelige meldinger og det som ikke kan gjøres.
+     - **Etter merge:** har en sak i `noted` en PR som nå er merget inn i `ccr-5e1ba2f4-pusvyd` (se `git log origin/ccr-5e1ba2f4-pusvyd --grep 'tilbakemelding #id'`, eller at PR-en med `#id` er lukket som merget), noterer du den på nytt med `--status fixed` og et svar som sier at det er rettet i spillet nå. Rettingen er da ute på detstorebla.no. Jonas trykker «Bruk forslaget» og «Lagre» i `/admin`, og da ser spilleren svaret i Tilbakemelding-appen. En PR som fortsatt er åpen, venter på Jonas: la saken stå som `planned`.
      - `planned` og `fixed` gir spilleren 12 timer med fullt haill når Jonas lagrer dem (én gang per tilbakemelding). Foreslå dem bare for tilbakemeldinger som hjelper utviklingen av spillet, og si i rapporten hvilke du mener fortjener belønningen.
    - `--reply` er et forslag til svar til spilleren:
      - Kort, vennlig og på samme språk som spilleren skrev.
@@ -65,6 +66,7 @@ Oppgaven er å lese de nye tilbakemeldingene fra spillerne og vekte dem. Rutinen
        - Aldri force-push, og aldri rebase en gren som allerede er pushet.
        - Har økta ikke fått noen gren, bruker du `fb/ÅÅÅÅ-MM-DD-kort-navn`.
      - **Testing:** følg `CLAUDE.md`, med `node --check`, bygg, `python3 tests/run.py changed` og en patchnote. Det er én commit per retting.
+     - **Patchnoten** får neste ledige nummer: ett mer enn det høyeste `pNN` i `PATCH` (`src/js/ui/05-phone.js`) på `origin/ccr-5e1ba2f4-pusvyd` og i de åpne PR-ene mot den. Sjekk på nytt rett før du pusher, og flett inn `origin/ccr-5e1ba2f4-pusvyd` først hvis den har gått videre. To like numre gir flettekonflikter (06.10.2026: #2 og #3 tok `p56` og `p60`, som alt var brukt).
      - **PR:** mot `ccr-5e1ba2f4-pusvyd`, med norsk tittel og beskrivelse: hva som var feil, hva som er endret, hvordan det er testet og hvilke tilbakemeldinger det gjelder (`#id`). Ingen sitater.
      - **Svar:** noter saken på nytt med `--status planned`, PR-lenken i `--note` og et svar som sier at en retting er på vei.
 8. **Rapporter:** skriv en rapport i Markdown på norsk i scratchpad-mappa, ikke i repoet. Send den én gang per kjøring, når alt annet er gjort. Send den med `python3 tools/feedback/agent.py run --report <fil> --n <antall nye> [--pr URL "tittel"]…`. Rapporten skal ha:
