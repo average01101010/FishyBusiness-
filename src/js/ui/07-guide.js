@@ -265,7 +265,8 @@ function panelPort(){
 function portSlip(){
   const b = S.boat, h = [];
   const ls = S.lastSale;
-  if (ls && ls.port === b.port && S.t - ls.t < 240){
+  // in the first trip it stays until the guide has shown it: a player who slept after landing was stuck on «Vis sluttseddelen»
+  if (ls && ls.port === b.port && (S.t - ls.t < 240 || (tutOn() && !S.tut.m.slip))){
     const LN = (no, en) => S.lang === 'no' ? no : en;
     h.push('<h3>' + t('slip', portById(ls.port).name) + (ls.field ? ' · ' + LN('fangstfelt', 'field') + ' ' + ls.field : '') + (ls.gear && ls.gear.length ? ' · ' + ls.gear.map(k => k === 'juksa' ? LN('juksa', 'jig') : GEAR[k][S.lang].toLowerCase()).join(', ') : '') + '</h3><div style="overflow-x:auto"><table class="tbl slipt"><thead><tr><th>' + t('species') + '</th><th>' + LN('Størrelse', 'Size') + '</th><th>' + t('quality') + '</th><th>' + t('kg') + '</th><th>kr/kg</th><th>kr</th></tr></thead><tbody>');
     // every row is whole kilos and kroner, and the sums are the sums of the rows as shown

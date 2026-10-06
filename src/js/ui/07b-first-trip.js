@@ -117,9 +117,10 @@ const TSTEPS = [
     tip:() => { if (!(S.boat.status === 'port' && S.boat.port === tutLand())) return {el:vis('#hud .st.nx'), no:'Båten er på vei til ' + tutLandN() + '.', en:'The boat is on its way to ' + tutLandN() + '.', small:true};
       if (inPlot()) return {el:vis('#ecClose'), no:'Fremme! Trykk «Lukk» og lever i 3D.', en:'Arrived! Tap «Close» and land the catch in 3D.'};
       return {...dockApp('marked', 'lever', 'lever', '#drawerBody [data-act=sell]'), no:'Fremme i ' + tutLandN() + '. Trykk Marked, så Lever, og «Lever» for å levere fisken.', en:'Arrived at ' + tutLandN() + '. Tap Market, then Land, and «Land» to land the catch.'}; }},
-  {id:'slip', ok:true, done:() => false,
+  // done of itself when there is no landing note here to show (the boat has left the plant), so the guide can never hang on it
+  {id:'slip', ok:true, done:() => !S.boat.land && !(S.lastSale && S.lastSale.port === S.boat.port),
     tip:() => { if (S.boat.land) return {el:vis('#hud .st.nx'), no:'Kranen løfter fisken på land. Sluttseddelen kommer når lossingen er ferdig.', en:'The crane lifts the catch ashore. The landing note comes when the landing is done.', small:true, noOk:true};
-      if (DOCK.page !== 'lever' || !vis('#drawerBody .slipt')) return {okText:['Vis sluttseddelen', 'Show the landing note'], okAct:() => { DOCK.open('lever'); setTimeout(tutScrollSlip, 350); }, no:'Fisken er levert. Sluttseddelen viser hva du fikk betalt.', en:'The catch is landed. The landing note shows what you were paid.'};
+      if (DOCK.page !== 'lever' || !vis('#drawerBody .slipt')) return {okText:['Vis sluttseddelen', 'Show the landing note'], okAct:() => { DOCK.open('lever'); setTimeout(() => { tutScrollSlip(); if (!vis('#drawerBody .slipt')) tutMark('slip'); }, 350); }, no:'Fisken er levert. Sluttseddelen viser hva du fikk betalt.', en:'The catch is landed. The landing note shows what you were paid.'};
       return {el:vis('#drawerBody .slipt'), no:'Her er prisen per kilo for hver størrelse og kvalitet, og innloggingsbonusen din. Hver dag du åpner spillet, gir 1 % mer på fisken.', en:'Here is the price per kilo for each size and grade, and your login bonus. Each day you open the game adds 1 % on the fish.'}; }},
   {id:'goal', ok:true, done:() => false,
     tip:() => { if (!(PHONE.isOpen() && PHONE.app === 'home')) return {okText:['Vis neste mål', 'Show the next goal'], okAct:() => PHONE.open('home'), no:'Godt levert! Nå kan du spare til neste steg.', en:'Well landed! Now you can save up for the next step.'};
