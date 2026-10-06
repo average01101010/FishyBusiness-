@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
   const URL_ = Deno.env.get('SUPABASE_URL')!;
   const user = createClient(URL_, Deno.env.get('SUPABASE_ANON_KEY')!, {global: {headers: {Authorization: auth}}, auth: {persistSession: false}});
   const {data: q, error} = await user.rpc('shop_quote', {product});
-  if (error || !q) return json({error: error ? error.message : 'no such product'}, 400);
+  if (error || !q){ if (error) console.error('shop_quote', error.message); return json({error: 'unavailable'}, 400); }
 
   const stripe = new Stripe(SK, {httpClient: Stripe.createFetchHttpClient()});
   const params: Stripe.Checkout.SessionCreateParams = {
@@ -61,10 +61,11 @@ Deno.serve(async (req) => {
   if (MANAGED) params.managed_payments = {enabled: true}; else if (TAX) params.automatic_tax = {enabled: true};
   let s: Stripe.Checkout.Session;
   try { s = await stripe.checkout.sessions.create(params); }
-  catch (e){ return json({error: 'stripe: ' + ((e as Error).message || 'failed')}, 502); }
+  // what went wrong stays in the function's log; the player is told only that the payment is not available (no keys or ids shown)
+  catch (e){ console.error('stripe', (e as Error).message); return json({error: 'unavailable'}, 502); }
 
   const admin = createClient(URL_, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {auth: {persistSession: false}});
   const {error: e2} = await admin.from('purchases').insert({id: s.id, player_id: q.pid, product_id: q.id, amount_nok: q.price_nok, currency: 'nok', status: 'open', data: boat ? {boat} : {}});
-  if (e2) return json({error: e2.message}, 500);
+  if (e2){ console.error('purchases', e2.message); return json({error: 'unavailable'}, 500); }
   return json({url: s.url});
 });

@@ -48,7 +48,7 @@ async function shopGo(k){
     const r = await fetch(shopFn(), {method:'POST', headers:{'Content-Type':'application/json', apikey:CLOUD_CFG.supabaseAnon, Authorization:'Bearer ' + tok},
       body:JSON.stringify({product:SHOP_PRODUCT[k], boat:S.cur, lang:S.lang, back:location.origin + location.pathname})});
     const j = await r.json().catch(() => ({}));
-    if (!r.ok || !j.url) throw new Error(j.error || String(r.status));
+    if (!r.ok || !j.url) throw new Error(j.error === 'unavailable' || r.status >= 500 ? shopL('betalingen er ikke tilgjengelig akkurat nå. Prøv igjen senere.', 'the payment is not available just now. Try again later.') : j.error || String(r.status));
     save(); if (typeof cloudSaveSoon === 'function') cloudSaveSoon(true);   // the game as it is, before the page goes to Stripe
     location.href = j.url;
   } catch (e){
