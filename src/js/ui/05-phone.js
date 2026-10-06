@@ -407,6 +407,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p62', '06.10.2026', 'Snøkrabbefartøyet fra Blender', 'The snow crab vessel from Blender', [
+      ['Snøkrabbefartøyet er bygget på nytt i Blender: lavt teinedekk under tak akter, portal og kraner for teinene, bakk med styrhus på toppen. Antrasittgrått skrog med okergul stripe og kremhvite overbygg. Bare utsiden er modellert.', 'The snow crab vessel is rebuilt in Blender: a low pot deck under a roof aft, a portal and cranes for the pots, a forecastle with the wheelhouse on top. An anthracite hull with an ochre stripe and cream superstructure. Only the outside is modelled.']]],
     ['p61', '06.10.2026', 'Autolineren fra Blender', 'The autoliner from Blender', [
       ['Autolineren er bygget på nytt etter en ekte generaltegning: 45 m med rund forfot, haleport på styrbord side der lina kommer inn, styrhus midtskips med radarkupler, skorstein, MOB-båt og skrå formast. Hun har tegningens mål, 45,4 × 10,45 m og 3,8 m dypgående. Bare utsiden er modellert.', 'The autoliner is rebuilt from a real general arrangement: 45 m with a round forefoot, a hauling port on the starboard side where the line comes in, a wheelhouse amidships with radar domes, a funnel, a rescue boat and a raked foremast. She has the drawing\'s size, 45.4 × 10.45 m and a 3.8 m draft. Only the outside is modelled.']]],
     ['p60', '06.10.2026', 'Ringnotsnurperen fra Blender', 'The purse seiner from Blender', [
