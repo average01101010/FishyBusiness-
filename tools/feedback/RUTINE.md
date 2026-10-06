@@ -46,6 +46,7 @@ Oppgaven er å lese de nye tilbakemeldingene fra spillerne og vekte dem. Rutinen
      - `planned` for et klart ønske som passer visjonen i overleveringen.
      - `fixed` bare når det er rettet i koden allerede (se `git log`).
      - `no` for spam, mistenkelige meldinger og det som ikke kan gjøres.
+     - `planned` og `fixed` gir spilleren 12 timer med fullt haill når Jonas lagrer dem (én gang per tilbakemelding). Foreslå dem bare for tilbakemeldinger som hjelper utviklingen av spillet, og si i rapporten hvilke du mener fortjener belønningen.
    - `--reply` er et forslag til svar til spilleren:
      - Kort, vennlig og på samme språk som spilleren skrev.
      - Lov aldri noe bestemt («vi ser på det», ikke «kommer i morgen») med mindre en PR er åpnet.
@@ -54,11 +55,15 @@ Oppgaven er å lese de nye tilbakemeldingene fra spillerne og vekte dem. Rutinen
 6. **Rett:**
    - Ta feilene etter `score`, de nye og de i `noted` som ikke er rettet. Hopp over en sak som allerede har en åpen PR: søk i de åpne PR-ene mot `ccr-5e1ba2f4-pusvyd` etter `tilbakemelding #id`.
    - Høyst to PR-er per kjøring, for feil du kan se i koden eller gjenskape. En feil som krever et valg fra Jonas (spilldesign, økonomi, store omskrivinger), går i rapporten og ikke i en PR.
-     - **Gren:** arbeid på grenen økta har fått. Lag den fra `origin/ccr-5e1ba2f4-pusvyd` (`git checkout -B <gren> origin/ccr-5e1ba2f4-pusvyd`). Har økta ikke fått noen gren, bruker du `fb/ÅÅÅÅ-MM-DD-kort-navn`.
+     - **Gren:** arbeid på grenen økta har fått. Rutinen får samme gren hver gang, så sjekk først om det finnes en åpen PR fra den.
+       - Finnes det ingen, lager du grenen fra `origin/ccr-5e1ba2f4-pusvyd` (`git checkout -B <gren> origin/ccr-5e1ba2f4-pusvyd`).
+       - Finnes det en, bygger du videre på den: `git fetch origin <gren> && git checkout -B <gren> origin/<gren> && git merge origin/ccr-5e1ba2f4-pusvyd`. Nye rettinger legges til i samme PR, og tittelen og beskrivelsen oppdateres.
+       - Aldri force-push, og aldri rebase en gren som allerede er pushet.
+       - Har økta ikke fått noen gren, bruker du `fb/ÅÅÅÅ-MM-DD-kort-navn`.
      - **Testing:** følg `CLAUDE.md`, med `node --check`, bygg, `python3 tests/run.py changed` og en patchnote. Det er én commit per retting.
      - **PR:** mot `ccr-5e1ba2f4-pusvyd`, med norsk tittel og beskrivelse: hva som var feil, hva som er endret, hvordan det er testet og hvilke tilbakemeldinger det gjelder (`#id`). Ingen sitater.
      - **Svar:** noter saken på nytt med `--status planned`, PR-lenken i `--note` og et svar som sier at en retting er på vei.
-7. **Rapporter:** skriv en rapport i Markdown på norsk i scratchpad-mappa, ikke i repoet. Send den med `python3 tools/feedback/agent.py run --report <fil> --n <antall nye> [--pr URL "tittel"]…`. Rapporten skal ha:
+7. **Rapporter:** skriv en rapport i Markdown på norsk i scratchpad-mappa, ikke i repoet. Send den én gang per kjøring, når alt annet er gjort. Send den med `python3 tools/feedback/agent.py run --report <fil> --n <antall nye> [--pr URL "tittel"]…`. Rapporten skal ha:
    - **Øverst:** én til tre linjer med det viktigste.
    - **Topp 5:** etter `score`, med #id, hva det gjelder, `score` og foreslått tiltak.
    - **Mønstre:** saker der flere spillere skriver om det samme, og ytelse per enhet eller nettleser.
