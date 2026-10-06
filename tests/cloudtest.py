@@ -24,7 +24,8 @@ window.DSB_AUTHKIT = {createClient: async () => ({getUser: () => (window.__noUse
 async def page(br, calls, replies, no_user=False):
     ctx = await br.new_context(viewport={'width': 1100, 'height': 800}); pg = await ctx.new_page(); errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)) if 'cloudtest boom' not in str(e) else None)
-    await pg.add_init_script(STUB + ("window.__noUser = 1;" if no_user else ""))
+    # (without a user: a device signed in before, which meets the gate; a new player starts as a guest, guesttest.py)
+    await pg.add_init_script(STUB + ("window.__noUser = 1; localStorage.setItem('dsb_signed', '1');" if no_user else ""))
     async def handle(route):
         req = route.request; fn = req.url.rsplit('/', 1)[-1]
         try: body = json.loads(req.post_data or '{}')
@@ -40,7 +41,7 @@ async def page(br, calls, replies, no_user=False):
 async def main():
     async with async_playwright() as p:
         br = await p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
-        # 1. not signed in: the gate, and no game
+        # 1. signed in before on this device but not now: the gate, and no game
         calls = []; ctx, pg, errs = await page(br, calls, {}, no_user=True)
         await pg.goto(GAME); await pg.wait_for_selector('#cloudGate #cgIn', timeout=90000); await pg.wait_for_timeout(1500)
         g = await pg.evaluate("(() => { document.getElementById('cgIn').click(); return {gate:!!document.getElementById('cloudGate'), signIn:window.__signIn === 1, ready:typeof SIMREADY !== 'undefined' && SIMREADY}; })()")

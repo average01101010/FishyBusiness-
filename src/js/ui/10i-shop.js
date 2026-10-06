@@ -34,6 +34,7 @@ function shopWhat(k){
 // fokuset bort fra handlingen, vi må tenke salg salg salg»): no dialog in between. The consent to delivery at once is the line under
 // the button (shopFine) and the same words by Stripe's pay button (shop-checkout custom_text)
 function payBuy(k, give){
+  if (typeof isGuest === 'function' && isGuest()){ guestAsk('shop'); return; }   // real money only on an account (ui/10f-cloud.js)
   const m = shopMode();
   if (m === 'test'){ give(); return; }
   if (m === 'off'){ toast(shopL('Butikken åpner snart.', 'The shop opens soon.')); return; }

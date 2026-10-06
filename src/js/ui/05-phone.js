@@ -409,6 +409,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p74', '06.10.2026', 'Spill som gjest', 'Play as a guest', [
+      ['Nye spillere kan begynne rett på brevet fra far, uten å logge inn. De tre første leveringene skjer på fars papirer. Etter det registrerer du deg i fiskermanntallet med Google, Apple eller e-post, og spillet ditt blir med. En luksushaill følger med som velkomstgave.', 'New players can start right at Father’s letter without signing in. The first three landings are on Father’s papers. After that you register in the fishermen’s register with Google, Apple or e-mail, and your game comes along. A luxury luck comes as a welcome gift.']]],
     ['p73', '06.10.2026', 'Mannskapet hviler med deg', 'The crew rest with you', [
       ['Når du hviler på rorbua eller i naustet, går mannskapet også i land, og de hviler seg opp like fort som deg: fra helt utslitt til uthvilt på seks timer.', 'When you rest at the rorbu or in the boathouse, the crew go ashore too, and they recover as fast as you: from worn out to rested in six hours.']]],
     ['p72', '06.10.2026', 'Rederi-appen kommer med rederiet', 'The Company app comes with the company', [

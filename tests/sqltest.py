@@ -395,6 +395,22 @@ def main():
               'the shop: a quote only for a real product and a signed-in player, one grant per paid purchase however often Stripe tells it, given and done once, a refund takes back what is not given, and no player books a payment or reads the grants',
               {'quote': q, 'paid': (R['sPaid1'], R['sPaid2']), 'pending': pd, 'after': R['sAfter'], 'end': R['sEnd']})
         print(ok(R['deleted'] == '0/0/0/anon'), 'deleting the account takes the player, the events and the save; the purchase stays without a name for the books', R['deleted'])
+        # guests (20261006180000_guest.sql): an anonymous sign-in plays and saves like a player, cannot buy, and registering moves it all
+        G = {'sub': '9a1c2a3e-0000-4000-8000-0000000000aa', 'role': 'authenticated', 'is_anonymous': True}; C = {'sub': 'user_01GGG', 'role': 'authenticated'}
+        sql("select public.tm_hello('{}')", G, 'authenticated'); sql("select public.tm_consent(true, 1990)", G, 'authenticated')
+        sql("select public.save_put2('KYST2:guest', '2026-10-06T10:00:00Z', 100, null, false, '{\"day\":3}')", G, 'authenticated')
+        gNoShop = sql("select public.shop_quote('trim_turbo')", G, 'authenticated', expect_err=True)
+        gNotGuest = sql("select public.guest_claim()", A, 'authenticated', expect_err=True)
+        code = sql("select public.guest_claim()", G, 'authenticated')
+        gSelf = sql("select public.guest_merge('%s')" % code, G, 'authenticated', expect_err=True)
+        gMerge = json.loads(sql("select public.guest_merge('%s')" % code, C, 'authenticated'))
+        gAfter = sql("select (select count(*) from public.players where id = '%s') || '/' || (select data from public.saves where player_id = 'user_01GGG') || '/' || (select consent from public.players where id = 'user_01GGG')" % G['sub'])
+        gAgain = json.loads(sql("select public.guest_merge('%s')" % code, C, 'authenticated'))
+        gRead = sql("select count(*) from public.guest_links", A, 'authenticated', expect_err=True)
+        print(ok(gNoShop[0] and 'guest' in gNoShop[1] and gNotGuest[0] and len(code) >= 32 and gSelf[0] and gMerge == {'merged': True, 'save': True} and gAfter == '0/KYST2:guest/true'
+                 and gAgain.get('merged') is False and gRead[0]),
+              'guests: an anonymous sign-in plays and saves, cannot buy; registering with its one-time code moves the save and the consent to the account and the guest is gone; the code works once and no player reads the codes',
+              {'shop': gNoShop, 'merge': gMerge, 'after': gAfter, 'again': gAgain})
     finally:
         run(*as_pg([os.path.join(BIN, 'pg_ctl'), '-D', data, '-m', 'immediate', 'stop']))
         shutil.rmtree(tmp, ignore_errors=True)

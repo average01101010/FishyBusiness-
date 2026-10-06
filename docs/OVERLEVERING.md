@@ -925,7 +925,14 @@ Jonas' valg: gratis å spille med kjøp via Stripe, påkrevd innlogging med Work
   - `admin_dashboard(days)` gir alle tallene til dashbordet i ett svar.
   - **Test:** `sqltest` kjører skjemaet på en lokal PostgreSQL med Supabases `auth.jwt()`.
 - **I spillet** (`ui/10f-cloud.js`, og AuthKit i `src/vendor/authkit.js`, MIT):
-  - `bootMap().then(cloudGate)`: uten innlogging stopper innloggingsskjermen spillet. Med innlogging hilser spillet (`tm_hello`), og `cloudSync` avgjør hvilket spill som går videre (se lagringen under).
+  - `bootMap().then(cloudGate)`: en ny spiller starter som **gjest** (fra 06.10.2026, se under). En enhet som har vært logget inn før, møter innloggingsskjermen når innloggingen er borte. Med innlogging hilser spillet (`tm_hello`), og `cloudSync` avgjør hvilket spill som går videre (se lagringen under).
+  - **Gjester** (Jonas 06.10.2026: «nye brukere ikke trenger å logge inn til å starte med», kontoen etter tredje levering, «vær svært bevisst i måten det gjøres på»):
+    - Anonym innlogging i Supabase i bakgrunnen (`guestStart`, nøkkelen i `dsb_guest`). Gjesten er med i den felles verdenen og lagres i skyen som alle andre.
+    - Myke kort i spillets egne ord: etter «Første tur» («Ta vare på «Havbris»») og etter andre levering («Én landing til på fars papirer»).
+    - Etter tredje levering (`S.landN`, `GUEST_LANDS`) venter «Kast loss» på et brev fra Fiskeridirektoratet om fiskermanntallet. Brevet viser båten, pengene og fisken, sier ærlig at spillet bare ligger i nettleseren, og gir en luksushaill. «Ikke nå» lukker alltid. Uten nett venter ingenting.
+    - Gjester kan ikke kjøpe med ekte penger (`payBuy` og `shop_quote`).
+    - «Registrer meg»: spillet lastes opp, `guest_claim()` gir en engangskode som ligger på enheten (`dsb_guest_code`), og så kommer WorkOS. Tilbake som konto flytter `guest_merge(code)` alt fra gjesten til kontoen før lagringen hentes, og velkomstgaven ligger om bord.
+    - Databasen: `supabase/migrations/20261006180000_guest.sql`. Testene: `guesttest.py` og gjestedelen av `sqltest`.
   - En enhet som har vært logget inn før, kan spille uten nett.
   - **Samtykket** spørres én gang, fire sekunder etter start, sammen med fødselsåret.
   - **Målingen** starter med et ja:

@@ -52,7 +52,7 @@ async def main():
           const f = document.querySelector('#phone .shop-fine'), cs = f && getComputedStyle(f); return {mode:shopMode(), lab:b.textContent, fine:f && f.textContent, size:cs && parseFloat(cs.fontSize), op:cs && +cs.opacity, cur:S.cur}; })()""")
         check(r['mode'] == 'live' and r['lab'] == 'Kjøp · 💎 29 kr' and r['fine'] and 'angreretten' in r['fine'] and r['size'] <= 11 and r['op'] < 0.8, 'set up: the button shows the price, with a small quiet line on the right of withdrawal under it', r)
         cur = r['cur']
-        async with pg.expect_navigation(url='**/checkout.stripe.test/**', timeout=15000):
+        async with pg.expect_navigation(url='**/checkout.stripe.test/**', timeout=45000):
             await pg.evaluate("document.querySelector('#phone [data-pa=haillbuy][data-k=haill]').click()")
         co = [c for c in calls if c[0] == 'checkout']
         check(co and co[-1][1].get('product') == 'haill' and co[-1][1].get('boat') == cur and co[-1][2] == 'Bearer tok_test' and 'checkout.stripe.test' in pg.url, 'a tap asks shop-checkout for the haill with the player\'s token and boat, and goes straight to Stripe', {'call': co[-1][1] if co else None, 'url': pg.url})

@@ -177,6 +177,7 @@ function sell(){
   for (const c of aboardNow) c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, net * c.share]]);
   for (const c of S.crew) c.off = false;
   if (meAboard()) fmLand(total);
+  S.landN = (S.landN || 0) + 1;   // the landings, for a guest's papers (ui/10f-cloud.js: registering after the third)
   S.cash += net - lott - coopKr; S.stats.revenue += total; S.stats.costs += tk.sum + lott + coopKr;
   if (coopKr > 0) log(S.lic.coop.name + ' fikk ' + kr(coopKr) + ' for torsken på kvoten hans.', S.lic.coop.name + ' got ' + kr(coopKr) + ' for the cod on his quota.'); S.stats.kg += kg; S.hold = [];
   const fs = S.marks.length ? S.marks[S.marks.length - 1] : null, field = fieldCode(S.fsess || fs || b.pos);

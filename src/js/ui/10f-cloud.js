@@ -52,7 +52,36 @@ function cloudMeta(){
 }
 
 // ---------- talking to Supabase ----------
-async function cloudToken(){ try { return CLOUD.ak ? await CLOUD.ak.getAccessToken() : null; } catch (e){ return null; } }
+async function cloudToken(){ try { return CLOUD.guest ? await guestToken() : CLOUD.ak ? await CLOUD.ak.getAccessToken() : null; } catch (e){ return null; } }
+// ---------- guests (06.10.2026; Jonas: «nye brukere ikke trenger å logge inn til å starte med», the account after the third landing) ----------
+// A new player starts at the envelope with no sign-in: a Supabase anonymous sign-in in the background (supabase/migrations/
+// 20261006180000_guest.sql), so the guest is in the shared world like everyone else and the game is kept in the cloud too. Registering
+// (WorkOS) takes it all along: guest_claim() gives a one-time code here, kept on the device over the sign-in, and guest_merge(code) moves
+// everything to the account. A device that has been signed in before (CLOUD_SIGNED) meets the gate as before.
+const GUEST_KEY = 'dsb_guest', GUEST_CODE = 'dsb_guest_code', REG_GIFT = 'dsb_reg_gift', GUEST_LANDS = 3;
+function guestGet(){ try { return JSON.parse(localStorage.getItem(GUEST_KEY) || 'null'); } catch (e){ return null; } }
+async function guestAuth(path, body){
+  const c = CLOUD_CFG, r = await fetch(c.supabaseUrl.replace(/\/$/, '') + '/auth/v1/' + path, {method:'POST', headers:{'Content-Type':'application/json', apikey:c.supabaseAnon}, body:JSON.stringify(body)});
+  if (!r.ok){ const e = new Error('guest ' + r.status); e.status = r.status; throw e; }
+  const j = await r.json(), g = {at:j.access_token, rt:j.refresh_token, exp:j.expires_at || Math.round(Date.now() / 1000 + (j.expires_in || 3600)), id:(j.user || {}).id};
+  if (!g.at || !g.id) throw new Error('guest token');
+  try { localStorage.setItem(GUEST_KEY, JSON.stringify(g)); } catch (e){}
+  return g;
+}
+async function guestToken(){
+  let g = guestGet(); if (!g) return null;
+  if (g.exp - Date.now() / 1000 < 90){
+    try { g = await guestAuth('token?grant_type=refresh_token', {refresh_token:g.rt}); }
+    catch (e){ if (e.status >= 400 && e.status < 500){ g = await guestAuth('signup', {data:{}}); CLOUD.user = {id:g.id, guest:true, email:''}; } else return g.at; }   // the refresh gone: a new guest (the game is on the device)
+  }
+  return g.at;
+}
+async function guestStart(){
+  let g = guestGet();
+  if (!g) g = await guestAuth('signup', {data:{}}); else { await guestToken(); g = guestGet(); }
+  CLOUD.guest = true; CLOUD.user = {id:g.id, guest:true, email:''};
+}
+const isGuest = () => !!(CLOUD.on && CLOUD.guest);
 async function cloudRpc(fn, args, opt){
   const c = CLOUD_CFG, tok = opt && opt.anon ? null : await cloudToken();
   // a publishable key (sb_publishable_…) is not a JWT and goes only as apikey; the old anon key (a JWT) also as the bearer
@@ -99,6 +128,13 @@ async function cloudGate(){
     document.getElementById('cgRetry').onclick = () => location.reload();
     return new Promise(() => {});
   }
+  // a new player: the envelope at once, as a guest (a device signed in before meets the gate below)
+  if (!CLOUD.user && !localStorage.getItem(CLOUD_SIGNED)){
+    try { await guestStart(); }
+    catch (e){ console.error(e); CLOUD.on = false; return; }   // no anonymous sign-in to be had (no network): the game on the device alone
+    try { const h = await cloudRpc('tm_hello', {meta:cloudMeta()}); CLOUD.consent = h ? h.consent : null; } catch (e){ console.error(e); }
+    return;
+  }
   if (!CLOUD.user){
     cloudGateShow('<p class="cg-lead">' + cloudL('Fars gamle naust venter. Båten ligger fortøyd.', 'Father’s old boathouse is waiting. The boat lies moored.') + '</p><p class="cg-small">' +
       cloudL('Logg inn med Google, Apple eller e-post for å spille. Spillet lagres på kontoen din, så du kan fortsette på en annen enhet.', 'Sign in with Google, Apple or e-mail to play. The game is saved to your account, so you can go on from another device.') + '</p>' +
@@ -110,6 +146,13 @@ async function cloudGate(){
     return new Promise(() => {});
   }
   localStorage.setItem(CLOUD_SIGNED, '1');
+  // back from registering as a guest: what the guest had moves to the account first, so the save below is the guest's game
+  const gc = (() => { try { return JSON.parse(localStorage.getItem(GUEST_CODE) || 'null'); } catch (e){ return null; } })();
+  if (gc && gc.code){
+    try { const m = await cloudRpc('guest_merge', {code:gc.code});
+      if (m && m.merged && m.save){ const gs = localStorage.getItem('dsb_sync_' + gc.gid); if (gs) localStorage.setItem(syncKey(), gs); } } catch (e){ console.error(e); }
+    try { localStorage.setItem(REG_GIFT, '1'); localStorage.removeItem(GUEST_CODE); localStorage.removeItem(GUEST_KEY); if (gc.gid) localStorage.removeItem('dsb_sync_' + gc.gid); } catch (e){}
+  }
   try {
     const h = await cloudRpc('tm_hello', {meta:cloudMeta()}); CLOUD.consent = h ? h.consent : null; CLOUD.owned = (h && h.owned) || []; CLOUD.admin = !!(h && h.admin === true);
     // the save: which of the game here and the account's goes on (cloudSync)
@@ -133,7 +176,7 @@ function cloudStart(){
   // goes to the background: Android often ends a page in the background without a pagehide
   setInterval(cloudSaveSoon, 60000);
   document.addEventListener('visibilitychange', () => { if (document.hidden) cloudSaveSoon(true); });
-  pushStart(); worldStart(); shopStart();
+  pushStart(); worldStart(); shopStart(); guestGift();
   window.addEventListener('pagehide', () => { cloudSaveSoon(true); if (CLOUD.sid) cloudFlush(true); });
 }
 function cloudAsk(){
@@ -275,6 +318,12 @@ function cloudHooks(){
   if (!CLOUD.on) return;
   const wrap = (name, after) => { const f = window[name]; if (typeof f !== 'function') return; window[name] = function(){ const r = f.apply(this, arguments); try { after.call(this, r, arguments); } catch (e){} return r; }; };
   wrap('depart', () => { CLOUD.trip = S.t; cloudEv('depart', {port:(S.boat || {}).port || null}); });
+  // a guest after the third landing: casting off waits for registering (the letter, at most every half minute; offline nothing waits)
+  { const f = window.depart; if (typeof f === 'function') window.depart = function(){
+    if (guestDue() && navigator.onLine !== false){ const m = document.getElementById('modal'); if ((!m || m.hidden) && Date.now() - (CLOUD.regT || 0) > 30000){ CLOUD.regT = Date.now(); guestAsk('cast'); } return false; }
+    return f.apply(this, arguments); }; }
+  wrap('tutFinish', () => guestNudge(1));
+  wrap('sell', () => { const s = S.lastSale; if (!s || s.t !== S.t || !isGuest()) return; const n = S.landN || 0; if (n >= GUEST_LANDS) guestNudge(3); else if (n === GUEST_LANDS - 1) guestNudge(2); });
   wrap('sell', () => { const s = S.lastSale; if (!s || s.t !== S.t) return; const kg = (s.lines || []).reduce((a, r) => a + (r.kg || 0), 0);
     cloudEv('sale', {kr:Math.round(s.total || 0), kg:Math.round(kg), port:s.port, field:s.field || null, tripMin:CLOUD.trip != null ? Math.round(S.t - CLOUD.trip) : null, acc:s.acc});
     if ((s.confKg || 0) > 0.5 || (s.crabDead || 0) > 0.05) CLOUD.neg = {t:Date.now(), k:'sale', x:(S.boat.pos || {}).x, y:(S.boat.pos || {}).y}; CLOUD.trip = null; });
@@ -290,6 +339,12 @@ function cloudHooks(){
 function cloudCard(){
   if (!CLOUD.on || !CLOUD.user) return '';
   const u = CLOUD.user, L2 = cloudL;
+  if (CLOUD.guest) return '<div class="ph-card"><h4>' + L2('Konto', 'Account') + '</h4><p class="ph-note">' + L2('Du spiller som gjest. Spillet ligger bare i denne nettleseren til du registrerer deg.', 'You play as a guest. The game lives only in this browser until you register.') + '</p>' +
+    '<button class="ph-btn p" data-pa="cloudReg">' + L2('Registrer meg', 'Register') + '</button>' +
+    '<label><span>' + L2('Del bruksstatistikk', 'Share usage statistics') + '</span><input type="checkbox" data-pa="cloudStat"' + (CLOUD.consent ? ' checked' : '') + '></label>' +
+    '<label><span>' + L2('Vis båten min for andre spillere', 'Show my boat to other players') + '</span><input type="checkbox" data-pa="cloudShowMe"' + (S.settings.showMe !== false ? ' checked' : '') + '></label>' +
+    '<p class="ph-note">' + [['vilkar', 'Vilkår', 'Terms'], ['personvern', 'Personvern', 'Privacy'], ['kilder', 'Kilder', 'Sources'], ['kontakt', 'Kontakt', 'Contact']]
+      .map(([f, no, en]) => '<a href="' + f + '.html" target="_blank" rel="noopener">' + L2(no, en) + '</a>').join(' · ') + '</p></div>';
   return '<div class="ph-card"><h4>' + L2('Konto', 'Account') + '</h4><p class="ph-note">' + L2('Logget inn som ', 'Signed in as ') + (u.email || '').replace(/</g, '&lt;') + '. ' +
     L2('Spillet lagres også på kontoen.', 'The game is also saved to the account.') + '</p>' + histRows() +
     '<label><span>' + L2('Del bruksstatistikk', 'Share usage statistics') + '</span><input type="checkbox" data-pa="cloudStat"' + (CLOUD.consent ? ' checked' : '') + '></label>' + pushCardRow() +
@@ -317,6 +372,7 @@ async function cloudMediaDel(){
   } catch (e){ console.warn('feedback media', e); }
 }
 function cloudAct(a, d){
+  if (a === 'cloudReg'){ guestAsk(guestDue() ? 'due' : 'soft'); return true; }
   if (a === 'cloudHist'){ cloudHist(); return true; }
   if (a === 'cloudRestore'){ cloudRestore(d && d.id); return true; }
   if (a === 'cloudStat'){ cloudConsent(!CLOUD.consent, null); return true; }
@@ -338,4 +394,64 @@ function cloudAct(a, d){
     return true;
   }
   return false;
+}
+
+// ---------- registering, for a guest: in the game's own words, never a wall before the third landing ----------
+// Jonas 06.10.2026: «krev innlogging etter 3 landing … vær svært bevist i måten det gjøres på slik at spilleren ikke bare lukker spillet».
+// So: the first trip and two more landings are on Father's papers. After the first trip a quiet card, after the second landing
+// one that says a landing is left, and after the third a letter from Fiskeridirektoratet: to sell fish in your own name you must be in
+// fiskermanntallet. It shows what is the player's now (the boat, the money, the fish), says honestly that a guest's game lives only in
+// this browser, and gives a luxury luck for registering. «Ikke nå» always closes it: the player can look round, rest and sell what is
+// aboard; only casting off waits (and offline nothing waits). Registering takes about ten seconds, and the game comes along.
+const gEsc = v => String(v == null ? '' : v).replace(/[&<>"]/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'})[c]);
+const guestDue = () => isGuest() && (S.landN || 0) >= GUEST_LANDS;
+function guestHave(){
+  const n = x => String(Math.round(x || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  return '<div class="reg-have"><div><b>«' + gEsc(S.boatName || 'Havbris') + '»</b><span>' + cloudL('båten din', 'your boat') + '</span></div>' +
+    '<div><b>' + n(S.cash) + ' kr</b><span>' + cloudL('på konto', 'in the bank') + '</span></div>' +
+    '<div><b>' + n((S.stats && S.stats.kg) || 0) + ' kg</b><span>' + cloudL('fisk levert', 'fish landed') + '</span></div></div>';
+}
+function guestAsk(why){
+  if (!isGuest()) return false;
+  const due = why === 'due' || why === 'cast', left = Math.max(0, GUEST_LANDS - (S.landN || 0));
+  const head = due ? cloudL('Fiskermanntallet', 'The fishermen’s register') : why === 'shop' ? cloudL('Kjøp krever registrering', 'Buying needs registering') : cloudL('Ta vare på «' + gEsc(S.boatName || 'Havbris') + '»', 'Keep «' + gEsc(S.boatName || 'Havbris') + '» safe');
+  const lead = due ? cloudL('Du har levert ' + (S.landN || 0) + ' ganger på fars papirer. For å selge fisk i eget navn må du føres i fiskermanntallet. Det tar ti sekunder.', 'You have landed ' + (S.landN || 0) + ' times on Father’s papers. To sell fish in your own name you must be in the fishermen’s register. It takes ten seconds.')
+    : why === 'shop' ? cloudL('Et kjøp må knyttes til en konto, så du har kvitteringen og får det du kjøper på alle enhetene dine.', 'A purchase must be tied to an account, so you have the receipt and get what you buy on all your devices.')
+    : left === 1 ? cloudL('Én landing til på fars papirer. Etter den må du føres i fiskermanntallet for å selge fisk i eget navn.', 'One more landing on Father’s papers. After it you must be in the fishermen’s register to sell fish in your own name.')
+    : cloudL('Godt levert! Nå har du noe å ta vare på.', 'Well landed! Now you have something to keep.');
+  modal('<div class="ob reg"><p class="reg-from">' + (due ? cloudL('Fiskeridirektoratet', 'The Directorate of Fisheries') : 'Det Store Blå') + '</p><h2>' + head + '</h2><p>' + lead + '</p>' + guestHave() +
+    '<p class="reg-warn">' + cloudL('Nå ligger alt dette bare i denne nettleseren. Nettlesere sletter slikt, på iPhone etter en uke uten besøk, og da er det borte for godt.', 'Right now all this lives only in this browser. Browsers clear such things, an iPhone after a week without a visit, and then it is gone for good.') + '</p>' +
+    '<ul class="reg-get"><li>' + cloudL('Båten, pengene og fangsten blir med deg', 'The boat, the money and the catch come with you') + '</li><li>' + cloudL('Spill videre på mobil, nettbrett og PC', 'Play on from phone, tablet and PC') + '</li><li>' + cloudL('<b>Luksushaill</b> om bord som velkomstgave', 'A <b>luxury luck</b> aboard as a welcome gift') + '</li></ul>' +
+    '<div class="btns"><button class="btn" id="regLater" data-close>' + (due ? cloudL('Ikke nå', 'Not now') : cloudL('Senere', 'Later')) + '</button><button class="btn primary" id="regGo">' + cloudL('Registrer meg', 'Register') + '</button></div>' +
+    '<p class="note">' + cloudL('Med Google, Apple eller e-post. ', 'With Google, Apple or e-mail. ') + '<a href="#" id="regIn">' + cloudL('Har du konto? Logg inn', 'Have an account? Sign in') + '</a>' +
+    (due ? '<br>' + cloudL('Til da kan du se deg rundt, hvile og levere det som er om bord, men båten går ikke ut.', 'Until then you can look round, rest and land what is aboard, but the boat does not go out.') : '') +
+    ' · <a href="personvern.html" target="_blank" rel="noopener">' + cloudL('Personvern', 'Privacy') + '</a></p></div>');
+  document.getElementById('regGo').onclick = () => guestRegister(false);
+  document.getElementById('regIn').onclick = e => { e.preventDefault(); guestRegister(true); };
+  cloudEv('reg_ask', {why, lands:S.landN || 0});
+  return true;
+}
+// a card waits for the screen to be free (no dialog, the tutorial over) and is shown once per step
+function guestNudge(step){
+  if (!isGuest() || tutOn() || (S.regAsk || 0) >= step) return;
+  const go = () => { const m = document.getElementById('modal'); if (m && !m.hidden){ setTimeout(go, 4000); return; } if ((S.regAsk || 0) >= step) return; S.regAsk = step; save(); guestAsk(step >= 3 ? 'due' : 'soft'); };
+  setTimeout(go, step === 1 ? 8000 : 2500);   // after the first trip the push question comes first (tutFinish)
+}
+async function guestRegister(signIn){
+  toast(cloudL('Åpner registreringen …', 'Opening the registration …'));
+  try {
+    save(); await cloudSaveSoon(true);   // the guest's game up first, so it is on the account at once after
+    const code = await cloudRpc('guest_claim', {});
+    localStorage.setItem(GUEST_CODE, JSON.stringify({code, gid:CLOUD.user && CLOUD.user.id}));
+    cloudEv('reg_go', {lands:S.landN || 0}); if (CLOUD.sid) await cloudFlush(true);
+    if (signIn) CLOUD.ak.signIn(); else CLOUD.ak.signUp();
+  } catch (e){ console.error(e); toast(cloudL('Kunne ikke åpne registreringen nå. Sjekk nettet og prøv igjen.', 'Could not open the registration now. Check the network and try again.')); }
+}
+// once back from registering: the welcome gift
+function guestGift(){
+  if (!CLOUD.on || CLOUD.guest || !localStorage.getItem(REG_GIFT)) return;
+  try { localStorage.removeItem(REG_GIFT); } catch (e){}
+  giveHaill('luksus', 'gift'); save();
+  msg('Fiskeridirektoratet', 'Du er ført i fiskermanntallet i eget navn. Spillet ditt er lagret på kontoen, og en luksushaill ligger om bord som velkomstgave. God tur!', 'You are in the fishermen’s register in your own name. Your game is saved to the account, and a luxury luck is aboard as a welcome gift. Good fishing!');
+  toast(cloudL('Registrert! Luksushaill om bord.', 'Registered! A luxury luck aboard.'));
 }
