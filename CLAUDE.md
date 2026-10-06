@@ -33,6 +33,7 @@ Spillet skal tjene penger, og Jonas skal kunne leve av det (06.10.2026). Grunnla
 - **Pris i kroner med 💎**, ingen fiktiv valuta, ingen pakker som skjuler prisen, ingen nedtelling i butikken. Sesongting kan fortjenes eller kjøpes igjen senere.
 - **Ingen straff for fravær.** Innloggingsbonusen tærer, den nulles ikke. Ingen push om tapt bonus eller tapt plass. Push er hendelser i verden, høyst 4 i døgnet, ingenting 22–08.
 - **Sosialt er additivt.** Topplister, fiskarlag og felles mål gjør aldri at én spillers fravær skader andre. Verving uten spam. Ingen reklame.
+- **Haill gir plass på topplista, men synes aldri** (Jonas 06.10.2026). Den som kjøper, er med på topplista med alt de har levert. At noen har brukt haill, vises aldri for andre: ingen felt om haill i det som deles (posisjon, landinger, topplista, AIS, Kystposten).
 - **Kosmetikk er varig og synlig for andre.** Det du kjøper, er ditt.
 - **Gjester kan ikke kjøpe.** Butikken åpner ved registrering. 13-årsgrensen for samtykke står.
 - **Mål og se.** Hver engasjementsendring skal kunne leses av i trakten i admin-dashbordet (konvolutt → første fangst → første levering → tredje levering → registrert → dag 1/7/30) før neste vurderes.

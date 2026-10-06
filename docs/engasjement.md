@@ -24,16 +24,16 @@ Spillet skal tjene penger, og Jonas skal kunne leve av det. Dette er grunnlaget 
 - **Gjestestarten:** gratis juksa, is og luksushaill, registrering etter tredje levering, i spillets egne ord.
 - **Haill** (29 kr, +100 % i 24 t, så avtagende over 72 t) og **luksushaill** (59 kr, +200 % første døgn, over 96 t). **Trim** (29/39/49 kr, ×1,5/1,75/2 fart i 24/48/72 t). **«Ferdig nå»** på verftet (19 kr).
 
-## To ting å rette ved det vi har
+## Avgjort om det vi har
 
-1. **Topplista og haill.** Haill dobler eller tredobler fangsten, og topplista rangerer på kilo levert, så den som kjøper, klatrer. Forslaget er at topplista teller fangst uten haill-effekten (andelen er kjent når fisken tas), så haill forblir din egen fart mens rangeringen er ærlig. Haill selges uansett. **Jonas avgjør.**
+1. **Topplista og haill** (Jonas 06.10.2026): den som kjøper haill, er med på topplista som alle andre, med alt de har levert. Det er pay-to-win, og det er et valg: uten det forsvinner mye av grunnen til å kjøpe. **Haill-bruk vises aldri for andre**, verken på topplista, i AIS-kortet, i posisjonen til de andre, i Kystposten eller noe annet sted. For alt de andre vet, har den beste båten funnet en skikkelig god fiskeplass. Ingen felt om haill skal inn i det som deles (`pos_put`, `landings`, topplista).
 2. **«Ferdig nå»** beholdes, med regelen over: ventetiden forlenges aldri for å selge mer.
 
 ## Arbeidslista, i rekkefølge
 
 Alt bygges for hele kysten. Hver endring skal kunne leses av i trakten (punkt 8) før neste vurderes.
 
-1. **Malerverkstedet** på verftet: kosmetikk for ekte penger. Skrogfarger og fargeskjemaer, navnebrett, vimpler og flagg, stil på registreringsmerket, slitt eller nylakkert. Varig, 19–79 kr, synlig for andre spillere i den felles verdenen og i sidebildet i Båthandel. Mekanismen finnes: GLB-båtene har malesone 1 for skroget (`glbModel(type, lod, liv)`), byggesettbåtene har `col`-tabeller, og NPC-båtene bruker `LIVERY` i dag. Det som mangler, er UI, lagring per båt, salg gjennom butikken og at fargen følger `pos_put` til de andre.
+1. **Malerverkstedet** (Jonas 06.10.2026): egen knapp under Verft. Skrogfarge for spillpenger, og første fargevalg er gratis. For ekte penger: malingsdesign på skroget, nasjon og form på flagget (eventuelt egen logo), rederilogo på skroget (lastet opp eller generert) og registreringsmerket. Varig og synlig for andre spillere i den felles verdenen og i sidebildet i Båthandel. Mekanismen finnes: GLB-båtene har malesone 1 for skroget (`glbModel(type, lod, liv)`), byggesettbåtene har `col`-tabeller, NPC-båtene bruker `LIVERY`, navnet på skroget er et bilde på en stripe langs siden (`texStrip`, `A.names`), og flagget i akterenden er et eget nett (`buildFlag`). Det som mangler, er UI, lagring per båt, salg gjennom butikken og at malingen følger `pos_put` til de andre.
 2. **«Første uke på sjøen»:** et kort med 8–10 milepæler uten tidsfrist (første fangst, første levering, første storm, første natt på rorbu, første mann hyret, første 10 000 kr, fars første merke funnet). To er krysset av fra første tur. Metasløyfen i de tre første dagene.
 3. **Turoppdrag fra der du er** (Jonas' tillegg): lange turer med gode belønninger ut fra hjemhavna og mottakene rundt, som gjør trim attraktivt. Belønningen står i forhold til turen uten trim.
 4. **Sjeldne hendelser på sjøen** som gratis variabel belønning: drømmefisken, hvalen, en rekordfisk, en tapt garnlenke med fisk i, omtale i Kystposten.
