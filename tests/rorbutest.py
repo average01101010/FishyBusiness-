@@ -53,11 +53,12 @@ async def main():
         check('Hvil' in r['t'] and 'Marked' not in r['t'] and 'Verft' not in r['t'] and r['shop'] and 'rorbua' in r['shop'][0] and not r['mottak'],
               'at the rorbu the dock has «Hvil» and no market, yard or shop', r)
         # 5. a night for 150 kr, full in six hours, the skipper ashore; the next night paid; aboard again when she leaves
-        r = await pg.evaluate("""(() => { const b = S.boat; S.cash = 1000; S.energy = 0; S.drowsy = false; const why = restStart(), c1 = S.cash;
-          const t0 = S.t; let n = 0; while (S.energy < 100 && n < 800){ step(); n++; } const full = n, rest = resting();
+        r = await pg.evaluate("""(() => { const b = S.boat; S.cash = 1000; S.energy = 0; S.drowsy = false; const cw = genCrew(); cw.fatigue = 100; S.crew.push(cw); const why = restStart(), c1 = S.cash;
+          const t0 = S.t; let n = 0; while (S.energy < 100 && n < 800){ step(); n++; } const full = n, rest = resting(), crewF = Math.round(crewById(cw.id).fatigue);
           DOCK.tick && DOCK.tick(); const info = (document.getElementById('dockInfo') || {}).textContent || '';
-          while (S.t < t0 + 24 * 60 + 2) step(); const c2 = S.cash; depart(); return {why, paid:1000 - c1, full, rest, info, night2:c1 - c2, after:!!S.rest, st:b.status}; })()""")
+          while (S.t < t0 + 24 * 60 + 2) step(); const c2 = S.cash; depart(); S.crew = S.crew.filter(c => c.id !== cw.id); return {why, paid:1000 - c1, full, rest, crewF, info, night2:c1 - c2, after:!!S.rest, st:b.status}; })()""")
         check(not r['why'] and r['paid'] == 150 and 355 <= r['full'] <= 362 and r['rest'], 'a night at the rorbu costs 150 kr and rests you from 0 to 100 % in six hours, ashore (the skipper is gone from the boat)', r)
+        check(r['crewF'] <= 5, 'the crew rest ashore with the skipper: worn out (100) to rested in the same six hours', r['crewF'])
         check(r['night2'] == 150 and not r['after'] and r['st'] == 'unmooring', 'the next night is paid when the day has gone, and casting off you go aboard again', r)
         # 6. an open boat at a plant's quay gives no rest; with bunks it does; at home the naust
         r = await pg.evaluate("""(() => { const b = S.boat, q = portById('husoy'); S.plan = null; b.status = 'port'; b.port = 'husoy'; b.pos = {x:q.p.x, y:q.p.y}; S.rest = null;

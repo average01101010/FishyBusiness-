@@ -103,11 +103,14 @@ function crewTick(H){
   { const ids = Object.keys(viols); if (ids.length && (S.restWarn || -1e9) < S.t - 1440){ S.restWarn = S.t; const who = ids.map(id => crewById(id).name.split(' ')[0]).join(', '), r = REST_RULE[viols[ids[0]]];
     msg('Mannskapet', who + ' har brutt hviletidsreglene: ' + r[0] + ' (forskrift om arbeids- og hviletid på fiskefartøy).' + (BOAT.berths ? '' : ' Uten køyer om bord teller bare tid ved kai som hvile.') + ' Folk blir fort slitne.', who + ' ' + (ids.length > 1 ? 'have' : 'has') + ' broken the rest rules: ' + r[1] + ' (the working-time rules for fishing vessels).' + (BOAT.berths ? '' : ' Without berths aboard, only time at the quay counts as rest.') + ' People tire quickly.');
     crewSay(crewById(ids[0]), 'rest'); } }
+  // resting ashore with the skipper (the naust or a rorbu, 15-energy.js) they come back as fast as he does: 0 to 100 in six hours in a
+  // rorbu (Jonas 06.10.2026: «Så begge sover på en måte i rorbuen»)
+  const restC = meAboard() && resting() ? restRate(b) * 60 : 0;
   for (const c of S.crew.slice()){
     const here = onIds.has(c.id) && atSea, viol = !!viols[c.id];
     // the share of the hour spent working: a break at sea tires less, but is not rest
     const wm = Object.values(c.wk || {}).reduce((a, m) => a + m, 0), workF = c.wk ? clamp(wm / 60, 0, 1) : 1;
-    c.fatigue = here ? clamp(c.fatigue + (fishing ? 6 : 3) * (0.4 + 0.6 * workF) * (1.4 - 0.16 * c.attr.uth) * (night ? 1.25 : 1) * (viol ? 1.5 : 1), 0, 100) : clamp(c.fatigue - 8 * (night ? 1.5 : 1), 0, 100);
+    c.fatigue = here ? clamp(c.fatigue + (fishing ? 6 : 3) * (0.4 + 0.6 * workF) * (1.4 - 0.16 * c.attr.uth) * (night ? 1.25 : 1) * (viol ? 1.5 : 1), 0, 100) : clamp(c.fatigue - Math.max(8 * (night ? 1.5 : 1), restC), 0, 100);
     if (onIds.has(c.id) && b.status !== 'port') learnHour(c);
     c.wk = {};
     if (here){ c.seaH = (c.seaH || 0) + 1; const k = c.traits.includes('laerevillig') ? 2 : 1;

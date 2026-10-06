@@ -409,6 +409,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p73', '06.10.2026', 'Mannskapet hviler med deg', 'The crew rest with you', [
+      ['Når du hviler på rorbua eller i naustet, går mannskapet også i land, og de hviler seg opp like fort som deg: fra helt utslitt til uthvilt på seks timer.', 'When you rest at the rorbu or in the boathouse, the crew go ashore too, and they recover as fast as you: from worn out to rested in six hours.']]],
     ['p72', '06.10.2026', 'Rederi-appen kommer med rederiet', 'The Company app comes with the company', [
       ['Rederi-appen ligger på telefonen først når du har stiftet Rederi AS i banken, eller har mer enn én båt. Lånene står i Bank-appen som før.', 'The Company app is on the phone once you have founded a company in the bank, or own more than one vessel. The loans are in the Bank app as before.']]],
     ['p71', '06.10.2026', '💎 = ekte penger', '💎 = real money', [

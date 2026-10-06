@@ -3872,7 +3872,8 @@ const G3 = (() => {
     DECKACT = deckActivity(); const awaySk = (DECKACT.on && DECKACT.alone) || gopMe() || (meAboard() && resting()), awayCr = DECKACT.on && !DECKACT.alone ? 1 : 0;
     // under way the crew are inside (the user: no reason for them to stand on deck all day, 03.10.2026); whoever guts is at the table
     // (drawDeck), and in an open boat they sit where they are. The one at the table leaves their place (a skiff drew them twice).
-    const underway = S.boat.status === 'sailing' && !S.boat.gop, deckCrew = underway && !VG.open ? 0 : Math.max(0, ncrew - awayCr);
+    // and while the skipper rests ashore the crew are up there too (Jonas 06.10.2026: both sleep in the rorbu)
+    const underway = S.boat.status === 'sailing' && !S.boat.gop, ashore = meAboard() && resting(), deckCrew = (underway && !VG.open) || ashore ? 0 : Math.max(0, ncrew - awayCr);
     if (VG.hand){ drawSkiff(BMrel, VPn, dt, !cam.helm && !awaySk, deckCrew > 0); gl.useProgram(PL.p); }
     // jigging from a boat with a wheelhouse, the skipper leaves the wheel for the rail when the boat is open or he is alone (the
     // hand-worked boats do the same in drawSkiff)
