@@ -198,6 +198,7 @@ function sell(){
   for (const x of S.hold) delete x._used;
   log('Leverte ' + Math.round(kg) + ' kg i ' + port.name + ' for ' + kr(total) + '.', 'Landed ' + Math.round(kg) + ' kg at ' + port.name + ' for ' + kr(total) + '.');
   setTimeout(pushAsk, 3000);   // notifications, if the player has not been asked (10g-push.js)
+  setTimeout(() => FEEDBACK.nudge('land'), 3500);   // the reminder of the feedback app and its thank-you, if no other window is up (06e-feedback.js)
 
 }
 

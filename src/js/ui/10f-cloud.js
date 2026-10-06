@@ -106,7 +106,8 @@ async function cloudGate(){
 // ---------- after the start: hooks, measurements, the save ----------
 function cloudStart(){
   if (!CLOUD.on) return;
-  window.addEventListener('error', e => cloudErr(e.message, (e.filename || '') + ':' + (e.lineno || ''), e.error && e.error.stack));
+  window.addEventListener('error', e => { cloudErr(e.message, (e.filename || '') + ':' + (e.lineno || ''), e.error && e.error.stack);
+    if (e.error && typeof FEEDBACK !== 'undefined') setTimeout(() => FEEDBACK.nudge('err'), 2000); });   // what the player saw helps (06e-feedback.js)
   window.addEventListener('unhandledrejection', e => cloudErr(String(e.reason && e.reason.message || e.reason), 'promise', e.reason && e.reason.stack));
   // the question waits until the first-start dialog (company and boat names) is done and no other dialog is open
   if (CLOUD.consent == null){ const iv = setInterval(() => { const m = document.getElementById('modal'); if (S.intro && S.boatName && m && m.hidden){ clearInterval(iv); setTimeout(cloudAsk, 1500); } }, 2000); }

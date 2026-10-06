@@ -70,13 +70,21 @@ function shopGive(g){
 async function shopClaim(){
   if (!CLOUD.on || !CLOUD.user) return 0;
   let list; try { list = await cloudRpc('shop_pending', {}); } catch (e){ return 0; }
-  const given = S.shopGiven || (S.shopGiven = []), ids = [], names = [];
-  for (const g of list || []){ if (!given.includes(g.id)){ const nm = shopGive(g); if (nm) names.push(nm); given.push(g.id); } ids.push(g.id); }
+  const given = S.shopGiven || (S.shopGiven = []), ids = [], names = []; let thanks = 0;
+  for (const g of list || []){ if (!given.includes(g.id)){
+      // the thank-you for feedback that helped the game (supabase/migrations/20261006140000_feedback_reward.sql): no purchase, its own words
+      if ((g.data || {}).reward && HAILL[g.data.type]){ giveHaill(g.data.type, 'fb'); thanks++; }
+      else { const nm = shopGive(g); if (nm) names.push(nm); }
+      given.push(g.id); }
+    ids.push(g.id); }
   if (given.length > 200) given.splice(0, given.length - 200);
   if (!ids.length) return 0;
   save(); if (typeof cloudSaveSoon === 'function') cloudSaveSoon(true);
   try { await cloudRpc('shop_done', {ids}); } catch (e){ console.error(e); }
   if (names.length) toast(shopL('Takk for kjøpet! ', 'Thank you for your purchase! ') + names.join(', '));
+  if (thanks){ const no = 'Takk for tilbakemeldingen! Den hjalp oss å gjøre spillet bedre. ' + (thanks > 1 ? thanks + ' takk-haill' : 'Takk-haill') + ' med 12 timer fullt haill ligger i Haill-appen. Aktiver det når du vil.',
+      en = 'Thank you for your feedback! It helped us make the game better. ' + (thanks > 1 ? thanks + ' thank-you lucks' : 'Thank-you luck') + ' with 12 hours of full luck ' + (thanks > 1 ? 'are' : 'is') + ' in the Luck app. Switch it on when you like.';
+    msg('Det Store Blå', no, en); toast(shopL(no, en)); }
   if (typeof PHONE !== 'undefined' && PHONE.isOpen()) PHONE.render(); if (typeof refreshAll === 'function') refreshAll();
   return names.length;
 }
@@ -92,4 +100,5 @@ function shopStart(){
   // still nothing after the last try: say so, rather than nothing (it is given at the next start, or when the game is opened again)
   if (SHOP.ret) setTimeout(() => { if (!SHOP.ret) return; SHOP.ret = null; toast(shopL('Betalingen er ikke bekreftet ennå. Det du kjøpte, kommer så snart den er det, også neste gang du åpner spillet.', 'The payment is not confirmed yet. What you bought comes as soon as it is, also the next time you open the game.')); }, 52000);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') shopClaim(); });
+  setInterval(() => { if (document.visibilityState === 'visible') shopClaim(); }, 10 * 60000);   // a thank-you given while the game is open
 }

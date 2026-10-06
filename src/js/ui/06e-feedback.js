@@ -150,7 +150,7 @@ const FEEDBACK = (() => {
         await upload(path, v.blob, v.mime, p => vProg(p, L2('Sender videoen', 'Sending the video')));
         await cloudRpc('fb_media_done', {path}); D.vids.shift(); D.vBusy = null;
       }
-      D.fid = null; D.up = null; D.vBusy = null; D.done = true;
+      D.fid = null; D.up = null; D.vBusy = null; D.done = true; S.settings.fbSent = Date.now(); save();
       toast(L2('Takk! Tilbakemeldingen er sendt.', 'Thank you! Your feedback is sent.'));
       loadMine();
     } catch (e){ console.error(e); D.vBusy = null; D.up = null;
@@ -169,7 +169,9 @@ const FEEDBACK = (() => {
     if (CLOUD.on && D.mine === null) loadMine();
     const h = ['<div class="ph-c fb">'];
     if (!CLOUD.on) h.push('<div class="ph-card"><p>' + L2('Tilbakemeldinger sendes fra spillet på <b>detstorebla.no</b> eller i appen, når du er logget inn.', 'Feedback is sent from the game on <b>detstorebla.no</b> or in the app, when you are signed in.') + '</p></div>');
-    if (D.done && !D.body) h.push('<div class="ph-card fb-ok"><p><b>' + L2('Takk!', 'Thank you!') + '</b> ' + L2('Vi leser alt som kommer inn. Svaret ser du nederst her.', 'We read everything that comes in. You will see the answer at the bottom here.') + '</p></div>');
+    if (D.done && !D.body) h.push('<div class="ph-card fb-ok"><p><b>' + L2('Takk!', 'Thank you!') + '</b> ' + L2('Vi leser alt som kommer inn. Svaret ser du nederst her, og er tipset til hjelp, kommer takk-haillet i Haill-appen.', 'We read everything that comes in. You will see the answer at the bottom here, and if the tip helps, the thank-you luck comes in the Luck app.') + '</p></div>');
+    // the thank-you (Jonas 06.10.2026: 12 game hours of full luck for feedback that helps the game; supabase/migrations/20261006140000_feedback_reward.sql)
+    else h.push('<div class="ph-card fb-gift"><p>🎁 ' + L2('<b>Gode tips belønnes.</b> Hjelper tilbakemeldingen din oss å gjøre spillet bedre, får du 12 timer med fullt haill (+100 % fiskelykke) som takk. Det kommer i Haill-appen.', '<b>Good tips are rewarded.</b> If your feedback helps us make the game better, you get 12 hours of full luck (+100 % catch luck) as a thank-you. It comes in the Luck app.') + '</p></div>');
     h.push('<div class="ph-card"><h4>' + L2('Hva gjelder det?', 'What is it about?') + '</h4><div class="fb-topics">' +
       TOPICS.map(([k, no, en]) => '<button class="fb-chip' + (D.topic === k ? ' on' : '') + '" data-pa="fbTopic" data-k="' + k + '">' + L2(no, en) + '</button>').join('') + '</div></div>');
     h.push('<div class="ph-card"><h4>' + L2('Fortell', 'Tell us') + '</h4><textarea id="fbBody" rows="6" maxlength="' + MAXTXT + '" placeholder="' +
@@ -197,7 +199,8 @@ const FEEDBACK = (() => {
       else if (!D.mine.length) h.push('<p class="ph-note">' + L2('Ingen ennå.', 'None yet.') + '</p>');
       else for (const f of D.mine){ const tp = TOPICS.find(x => x[0] === f.topic), st = STATUS[f.status] || STATUS.new;
         h.push('<div class="fb-mine"><div class="ph-kv"><span>' + new Date(f.ts).toLocaleDateString(S.lang === 'en' ? 'en-GB' : 'nb-NO') + ' · ' + (tp ? L2(tp[1], tp[2]) : f.topic) + (f.nimg > 1 ? ' · 📷 ' + f.nimg : f.img ? ' · 📷' : '') + (f.vids ? ' · 🎬' + (f.vids > 1 ? ' ' + f.vids : '') : '') + '</span><span class="fb-st ' + f.status + '">' + L2(st[0], st[1]) + '</span></div>' +
-          '<p>' + esc(f.body) + '</p>' + (f.reply ? '<p class="fb-reply"><b>' + L2('Svar:', 'Answer:') + '</b> ' + esc(f.reply) + '</p>' : '') + '</div>'); }
+          '<p>' + esc(f.body) + '</p>' + (f.reply ? '<p class="fb-reply"><b>' + L2('Svar:', 'Answer:') + '</b> ' + esc(f.reply) + '</p>' : '') +
+          (f.rewarded ? '<p class="fb-gift">🎁 ' + L2('Takk-haill: 12 timer med fullt haill', 'Thank-you luck: 12 hours of full luck') + '</p>' : '') + '</div>'); }
       h.push('</div>');
     }
     h.push('</div>');
@@ -211,10 +214,38 @@ const FEEDBACK = (() => {
     if (a === 'fbNoVid'){ if (!D.fid) D.vids.splice(+d.i || 0, 1); return true; }
     if (a === 'fbSnap'){ snap(); return false; }
     if (a === 'fbSend'){ send(); return false; }
+    if (a === 'fbOpen'){ PHONE.open('tilbake'); return false; }
     return false;
+  }
+  // the reminder on the screen (Jonas 06.10.2026: «Gjør sånn at det kommer opp en melding på skjermen som minner spillerne på at de kan
+  // gi tilbakemeldinger og potensielt få haill. Vi må bevisstgjøre dem»): after a landing, a calm moment (at most once in two days, and
+  // not for two days after the player sent one), and when something went wrong: aground, or an error in the game (at most once a day
+  // each). Six hours at least between any two; never in the first trip, over another window or the phone, or where nothing can be sent.
+  const NUDGE = {land:48, aground:20, err:20};   // real hours between two of a kind
+  const NUDGE_T = {
+    land:['Hva synes du om spillet?', 'What do you think of the game?', 'Det Store Blå blir til mens du spiller. Har du funnet en feil, noe som er vanskelig å forstå, eller en idé til noe som mangler? Skriv det i Tilbakemelding-appen på telefonen. Vi leser alt.',
+      'Det Store Blå is being made while you play. Found a bug, something hard to understand, or an idea for something missing? Write it in the Feedback app on the phone. We read everything.'],
+    aground:['Gikk du på grunn?', 'Did you run aground?', 'Var det spillets skyld, for eksempel at kartet eller ruta ikke stemte med det du så? Meld fra i Tilbakemelding-appen, gjerne med et bilde av spillet, så retter vi det.',
+      'Was it the game\'s fault, for instance the chart or the route not matching what you saw? Tell us in the Feedback app, with a picture of the game if you can, and we will fix it.'],
+    err:['Noe gikk galt', 'Something went wrong', 'Spillet fikk en feil, og den er sendt til oss. Merket du noe rart, for eksempel at noe frøs eller forsvant? Skriv det i Tilbakemelding-appen. Det du så, hjelper oss å finne feilen.',
+      'The game hit an error, and it has been sent to us. Did you notice anything odd, for instance something freezing or disappearing? Write it in the Feedback app. What you saw helps us find the bug.']};
+  function nudge(why){
+    if (!NUDGE[why] || !CLOUD.on || !CLOUD.user || tutOn() || !S.boatName) return false;
+    const m = $('modal'); if (!m || !m.hidden || PHONE.isOpen()) return false;
+    const st = S.settings, now = Date.now(), last = st.fbNudge || {};
+    if ((now - (last.at || 0)) / 36e5 < 6 || (now - (last[why] || 0)) / 36e5 < NUDGE[why]) return false;
+    if (why === 'land' && (now - (st.fbSent || 0)) / 36e5 < 48) return false;
+    st.fbNudge = {...last, at:now, [why]:now}; save();
+    const T = NUDGE_T[why];
+    modal('<div class="ob fb-nudge"><h2>' + L2(T[0], T[1]) + '</h2><p>' + L2(T[2], T[3]) + '</p><p class="note">🎁 ' +
+      L2('Hjelper tipset ditt oss å gjøre spillet bedre, får du 12 timer med fullt haill (+100 % fiskelykke) som takk.', 'If your tip helps us make the game better, you get 12 hours of full luck (+100 % catch luck) as a thank-you.') + '</p>' +
+      '<div class="btns"><button class="btn" data-close>' + L2('Ikke nå', 'Not now') + '</button><button class="btn primary" id="fbGo" data-close>' + L2('Gi tilbakemelding', 'Give feedback') + '</button></div></div>');
+    $('fbGo').addEventListener('click', () => { if (why !== 'land' && !D.topic) D.topic = 'bug'; PHONE.open('tilbake'); });
+    if (typeof cloudEv === 'function') cloudEv('fb_nudge', {why});
+    return true;
   }
   // typing keeps the text between redraws (the page is drawn anew on every tap), and the count follows
   function input(v){ D.body = String(v).slice(0, MAXTXT); D.done = false; const n = document.querySelector('#phone .fb-n'); if (n) n.textContent = D.body.length + ' / ' + MAXTXT;
     const b = document.querySelector('#phone .fb-send'); if (b) b.disabled = !canSend(); }
-  return {page, act, input, pick, meta, TOPICS, LIM, get draft(){ return D; }};
+  return {page, act, input, pick, meta, nudge, TOPICS, LIM, get draft(){ return D; }};
 })();

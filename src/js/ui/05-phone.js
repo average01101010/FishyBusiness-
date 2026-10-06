@@ -44,17 +44,19 @@ const PHONE = (() => {
     const h = ['<div class="ph-c">'], a = S.haill, st = haillStage(), inv = S.haillInv || {haill:0, luksus:0}, hr = v => v >= 48 ? fmt(v / 24, 1) + L(' døgn', ' days') : fmt(v, 0) + L(' t', ' h');
     if (a && st){ const X = HAILL[a.type], tot = X.steps[X.steps.length - 1][0], left = haillLeft(), nx = X.steps.find(q => haillAge() < q[0]);
       h.push('<div class="ph-card haillc"><h4>' + st[S.lang] + ' ' + L('om bord', 'aboard') + '</h4>' + kv(L('Fiskelykke nå', 'Luck now'), '+' + Math.round(st.v * 100) + ' %') + '<div class="qbar"><i style="width:' + (left / tot * 100).toFixed(0) + '%;background:#c9a227"></i></div>' +
-        kv(L('Neste trinn om', 'Next stage in'), hr(nx[0] - haillAge())) + kv(L('Borte om', 'Gone in'), hr(left)) + '</div>'); }
+        (X.steps.length > 1 ? kv(L('Neste trinn om', 'Next stage in'), hr(nx[0] - haillAge())) : '') + kv(L('Borte om', 'Gone in'), hr(left)) + '</div>'); }
     else h.push('<div class="ph-card"><p class="ph-note">' + L('Ingen haill om bord. Haill er ferskvare: sterkest de første timene, så svakere trinn for trinn til den er borte. Den virker på alt du fisker.', 'No luck aboard. Luck is fresh goods: strongest the first hours, then weaker stage by stage until it is gone. It works on everything you fish.') + '</p></div>');
     // the store: switched on only when you say so
-    if (inv.haill > 0 || inv.luksus > 0){ h.push('<div class="ph-card haillc"><h4>' + L('Beholdning', 'In store') + '</h4>');
-      for (const k of ['luksus', 'haill']) if (inv[k] > 0){ const pend = haillPend === k && a && st;
+    if (inv.haill > 0 || inv.luksus > 0 || inv.takk > 0){ h.push('<div class="ph-card haillc"><h4>' + L('Beholdning', 'In store') + '</h4>');
+      for (const k of ['takk', 'luksus', 'haill']) if (inv[k] > 0){ const pend = haillPend === k && a && st;
         h.push(kv(HAILL[k][S.lang], '× ' + inv[k]) + (pend ? '<div class="ph-row2"><button class="ph-btn p" data-pa="haillon" data-k="' + k + '">' + L('Bytt ut den om bord', 'Replace the one aboard') + '</button><button class="ph-btn alt" data-pa="haill0">' + L('Avbryt', 'Cancel') + '</button></div>' : '<button class="ph-btn p" data-pa="haillon" data-k="' + k + '">' + L('Aktiver ', 'Switch on ') + HAILL[k][S.lang].toLowerCase() + '</button>')); }
       h.push('<p class="ph-note">' + L('Haill blir aldri aktivert av seg selv. En ny haill erstatter den som er om bord.', 'Luck is never switched on by itself. A new one replaces the one aboard.') + '</p></div>'); }
     const gift = tutFree('haill');
     if (gift) h.push('<div class="ph-card haillc"><h4>' + L('Første gang er luksushaill gratis', 'The first luxury luck is free') + '</h4><p class="ph-note">' + L('Ellers koster haill 29 kr og luksushaill 59 kr. Du kan også være heldig på puben.', 'Otherwise luck is NOK 29 and luxury luck NOK 59. You can also get lucky at the pub.') + '</p></div>');
     for (const k of ['haill', 'luksus']){ const X = HAILL[k], free = gift && k === 'luksus';
       h.push('<div class="ph-card haillc"><h4>' + X[S.lang] + '</h4><p>' + X.d[S.lang] + '</p><div class="ph-kv"><span>' + L('Pris', 'Price') + '</span><span><b>' + (free ? L('gratis nå', 'free now') : X.nok + ' kr') + '</b></span></div><button class="ph-btn p" data-pa="haillbuy" data-k="' + k + '"' + (gift && !free ? ' disabled' : '') + '>' + (free ? L('Hent gratis luksushaill', 'Fetch a free luxury luck') : shopLabel(X.nok)) + '</button>' + (free ? '' : shopFine()) + '</div>'); }
+    // the thank-you for feedback (Jonas 06.10.2026): said where the luck is, with the way to the feedback app
+    h.push('<div class="ph-card haillc fb-gift"><h4>' + L('Gratis haill for gode tips', 'Free luck for good tips') + '</h4><p>' + L('Har du funnet en feil eller har en idé? Skriv det i Tilbakemelding-appen. Hjelper tipset oss å gjøre spillet bedre, får du 12 timer med fullt haill (+100 %) som takk.', 'Found a bug or have an idea? Write it in the Feedback app. If your tip helps us make the game better, you get 12 hours of full luck (+100 %) as a thank-you.') + '</p><button class="ph-btn" data-pa="fbOpen">' + L('Gi tilbakemelding', 'Give feedback') + '</button></div>');
     h.push('<p class="ph-note">' + L('Du kan også være heldig på puben. Tida er spilltid: 24 timer i spillet er ' + fmt(24 / GAME_RATE, 0) + ' timer i virkeligheten.', 'You can also get lucky at the pub. The time is game time: 24 hours in the game is ' + fmt(24 / GAME_RATE, 0) + ' hours in real life.') + '</p></div>');
     return h.join('');
   }
@@ -405,6 +407,9 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p56', '06.10.2026', 'Takk-haill for gode tips', 'Thank-you luck for good tips', [
+      ['Hjelper en tilbakemelding oss å gjøre spillet bedre, får du 12 timer med fullt haill (+100 % fiskelykke) som takk, like sterkt hele tida. Det kommer i Haill-appen, og du aktiverer det når du vil.', 'If your feedback helps us make the game better, you get 12 hours of full luck (+100 % catch luck) as a thank-you, as strong all the time. It comes in the Luck app, and you switch it on when you like.'],
+      ['Spillet minner deg av og til på Tilbakemelding-appen, etter en levering og når noe har gått galt.', 'The game now and then reminds you of the Feedback app, after a landing and when something has gone wrong.']]],
     ['p55', '06.10.2026', 'Nordlyset', 'The northern lights', [
       ['Nordlyset er nytt: grønne draperier med stråler som folder seg og flimrer, rødt høyt oppe og en lilla kant når det er sterkt. Svakt nordlys er en lav bue i nord, og sterkt nordlys kommer over hodet. Lenger sør ser du det sjeldnere.', 'The northern lights are new: green curtains with rays that fold and shimmer, red high up and a purple fringe when strong. Weak lights are a low arc in the north, and strong ones come overhead. Further south you see them less often.']]],
     ['p54', '05.10.2026', 'Regler før du gjør feil', 'Rules before you make a mistake', [

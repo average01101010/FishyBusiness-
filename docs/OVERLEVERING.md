@@ -1040,6 +1040,14 @@ Jonas ba om det slik: «koble deg opp mot detstorebla.no/admin slik at du kan he
   - **Fra 06.10.2026:** høyst to PR-er per kjøring mot arbeidsgrenen, aldri en push til den (Jonas: «den skal endre koden 4 ganger om dagen om den må. Viktig at vi utbedrer feil kjapt.»). Saker fra tidligere kjøringer som ikke er rettet, tas også, høyest vekt først. Rutinen kobler repoet til seg selv med `add_repo` (skrivetilgang) og kjører på Opus 5.5.
   - **Aldri:** endringer i `.github/`, `supabase/`, admin, `src/legal/`, serveren eller agenten selv.
   - **Repoet er offentlig:** tilbakemeldingene havner aldri i git, i en commit-melding eller i en PR. `agent.py` nekter å lagre dem inne i repoet.
+- **Takk-haill** (06.10.2026; Jonas: «12 spilltimer med 100% "haill" i belønning om tilbakemeldingen er av verdi for utviklingen av spillet. Haillet skal ikke gradvis miste effekt …, det skal vare 12timer, så ferdig»):
+  - Når admin setter en tilbakemelding til «Kommer» eller «Fikset» første gang, får spilleren én takk-haill (`HAILL.takk` i `core/03-simulation.js`: +100 % i 12 spilltimer, så borte, uten svakere trinn). Den kommer som en grant (`admin_feedback_set` i `20261006140000_feedback_reward.sql`), samme vei som butikken, og går i Haill-appens beholdning. Spilleren får en melding i telefonen og et push-varsel hvis varsler er på. Produktet `fb_haill` kan ikke kjøpes (`active` er false).
+  - `shopClaim` (`ui/10i-shop.js`) henter også hvert tiende minutt mens spillet er åpent, så takken kommer uten omstart.
+  - Tilbakemelding-appen og Haill-appen sier at gode tips belønnes. I «Dine tilbakemeldinger» står 🎁 ved dem som har gitt takk-haill.
+- **Påminnelsen** (`FEEDBACK.nudge` i `ui/06e-feedback.js`; Jonas: «Vi må bevisstgjøre dem»): en melding på skjermen med «Gi tilbakemelding» rett til appen.
+  - Etter en levering, høyst hver andre dag, og ikke de to første dagene etter at spilleren har sendt en.
+  - Etter en grunnstøting eller en feil i spillet, høyst én gang i døgnet hver. Da er emnet «Feil» valgt på forhånd.
+  - Minst seks timer mellom to påminnelser, aldri i første tur, aldri over et annet vindu eller telefonen, og bare der tilbakemeldinger kan sendes. Hver påminnelse telles som hendelsen `fb_nudge`.
 - **I `/admin`:**
   - Under hver tilbakemelding står det agenten foreslår. Knappen «Bruk forslaget» fyller inn status og svar, og Jonas trykker Lagre.
   - Fanen Agent viser rapportene (`admin_agent_runs`) og lenker til PR-ene.

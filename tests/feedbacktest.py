@@ -97,6 +97,21 @@ async def main():
         # 5. fits the phone: nothing wider than the screen
         r = await pg.evaluate("""(() => { const w = innerWidth; return [...document.querySelectorAll('#phone .fb *')].filter(e => { const q = e.getBoundingClientRect(); return q.width && q.right > w + 1; }).map(e => e.className || e.tagName).slice(0, 5); })()""")
         check(not r, 'on a phone in portrait nothing in the app is wider than the screen', r)
+        # 6. the thank-you (Jonas 06.10.2026: 12 game hours of full luck for good tips): the app says so, a rewarded one shows it, and the
+        # reminder on the screen comes after a landing (not twice, not just after one was sent) and after running aground, with «Feil» chosen
+        r = await pg.evaluate("""(async () => { const D = FEEDBACK.draft, md = document.getElementById('modal'); D.done = false;
+          D.mine = [{id:7, ts:new Date().toISOString(), topic:'bug', body:'Båten gikk på land', status:'fixed', reply:'Takk', rewarded:true}];
+          PHONE.open('tilbake'); const gift = (document.querySelector('#phone .fb > .fb-gift') || {}).textContent || '', badge = !!document.querySelector('#phone .fb-mine .fb-gift');
+          PHONE.show(false); md.hidden = true; CLOUD.user = CLOUD.user || {id:'user_test'}; S.settings.fbNudge = {}; S.settings.fbSent = 0; D.topic = null;
+          CLOUD.on = false; const off = FEEDBACK.nudge('land'); CLOUD.on = true;
+          const land = FEEDBACK.nudge('land'), txt = md.hidden ? '' : md.textContent; md.hidden = true; const again = FEEDBACK.nudge('land');
+          S.settings.fbNudge = {}; S.settings.fbSent = Date.now(); const sent = FEEDBACK.nudge('land'), ag = FEEDBACK.nudge('aground'), agShown = !md.hidden;
+          document.getElementById('fbGo').click(); await new Promise(r => setTimeout(r, 300));
+          return {gift, badge, off, land, txt:txt.slice(0, 300), again, sent, ag, agShown, open:PHONE.isOpen() && PHONE.app === 'tilbake', topic:D.topic, gone:md.hidden}; })()""")
+        check('12 timer' in r['gift'] and 'Haill-appen' in r['gift'] and r['badge'], 'the app says good tips give 12 hours of full luck, and a rewarded feedback shows it', r)
+        check(r['off'] is False and r['land'] is True and '12 timer' in r['txt'] and 'Tilbakemelding-appen' in r['txt'] and r['again'] is False and r['sent'] is False and r['ag'] is True and r['agShown']
+              and r['open'] and r['topic'] == 'bug' and r['gone'], 'the reminder: after a landing with the thank-you named, not without the cloud, not twice, not just after one was sent; after running aground it opens the app with «Feil» chosen', r)
+        await pg.screenshot(path='feedback_gift.png')
         print('errors:', errs[:3]); await ctx.close(); await br.close()
 
 asyncio.run(main())
