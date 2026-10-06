@@ -407,6 +407,11 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p67', '06.10.2026', 'Plass i styrhuset', 'Room in the wheelhouse', [
+      ['Styrhuset på plastsnekka er høyere, så skipperen ikke lenger stikker hodet gjennom taket.', 'The wheelhouse on the fibreglass snekke is taller, so the skipper no longer puts his head through the roof.'],
+      ['Når du jukser fra en åpen båt med styrhus, eller er alene om bord, står skipperen ute ved rekka og ikke ved rattet. Takk for tipsene!', 'When you jig from an open boat with a wheelhouse, or are alone aboard, the skipper stands out at the rail and not at the wheel. Thanks for the tips!']]],
+    ['p66', '06.10.2026', 'Naustet og mottakskaia', 'The boathouse and the plant’s quay', [
+      ['I hjemhavna står det over knappene om båten ligger ved naustet eller ved mottakskaia. Under Bygd er det en ny knapp, Naustet, som åpner notatboka der du setter i stand naustet. Når du hviler i naustet, ser du hvor mye raskere tett tak og vedovn gjør det.', 'In the home harbour the line above the buttons says whether the boat lies at the boathouse or at the plant’s quay. Under Village there is a new button, Boathouse, that opens the notebook where you put the boathouse to rights. Resting in the boathouse, you see how much faster the tight roof and the stove make it.']]],
     ['p65', '06.10.2026', 'Den nye hurtigsjarken fra Blender', 'The new speed sjark from Blender', [
       ['Ny hurtigsjark 10,99 m er bygget i Blender etter en ekte tegning: hardt slag, styrhus forut og et fritt arbeidsdekk akter med luke, kran og haler. Den har tegningens mål, 4,68 m bred og 2,06 m dypgående. Petrolblått skrog med hvite overbygg. Bare utsiden er modellert.', 'The new 10.99 m speed sjark is built in Blender from a real drawing: a hard chine, the wheelhouse forward and a clear working deck aft with a hatch, a crane and a hauler. She has the drawing\'s size, 4.68 m wide and a 2.06 m draft. A petrol hull with white superstructure. Only the outside is modelled.']]],
     ['p64', '06.10.2026', 'Kystbåten på 14,99 m fra Blender', 'The 14.99 m coastal vessel from Blender', [

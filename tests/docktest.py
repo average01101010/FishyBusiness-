@@ -42,7 +42,7 @@ async def run(p, w, h, tag):
     check(lbl[:3] == ['Marked', 'Bygd', 'Verft'], 'knappene har kort tekst under ikonet', lbl)
 
     # the fans (at home Bygd also has «Hvil», the rest in Father's naust: 15-energy.js, 05.10.2026)
-    for m, want in (('marked', ['lever', 'is', 'agn']), ('bygd', ['pub', 'bank', 'oppdrag', 'mannskap', 'rest']), ('verft', ['batmarked', 'oppgr', 'fiskeutstyr', 'rigg', 'vedlikehold', 'bunker'])):
+    for m, want in (('marked', ['lever', 'is', 'agn']), ('bygd', ['pub', 'bank', 'oppdrag', 'mannskap', 'rest', 'naustup']), ('verft', ['batmarked', 'oppgr', 'fiskeutstyr', 'rigg', 'vedlikehold', 'bunker'])):
         await tap_el('#dock [data-dk=' + m + ']'); await pg.wait_for_timeout(250)
         f = await pg.evaluate("[...document.querySelectorAll('#dockFan [data-dk]')].map(x => x.dataset.dk)")
         vis = await pg.evaluate("!document.getElementById('dockFan').hidden")
