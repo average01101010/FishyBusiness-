@@ -685,7 +685,7 @@ function flagOf(L){ const f = L && L.flag || {}; return {code:FLAGS[f.c] || f.c 
 // that face out to starboard are cut at each station, which gives the topsides' top and bottom there and the hull's breadth at any
 // height. The strip is as tall as the topsides allow (at most 0.025 L + 5 cm, 16 cm to 90 cm), a quarter of it below the top, and four
 // times as long as it is tall, so the 512 × 128 name reads undistorted; its middle is a quarter of the hull's length from the stem
-// (the registration mark gets the stem's end). Like the skiff's anchors (texStrip): bow to stern on starboard, stern to bow on port.
+// (the registration mark gets the stem's end). Like the skiff's anchors (texStrip): stern to bow on starboard, bow to stern on port.
 // A model with its own name anchors (tools/boats) keeps them. ----
 const NAMESTRIP = {};
 // the hull's triangles that face out to starboard (their normals' sideways part over 0.35; the inside of a bulwark faces the other way)
@@ -727,8 +727,10 @@ function sideStrip(type, frac, hMax, aspect){
     const yT = top(sg) - h * 0.25, yB = yT - h, xT = xAt(sg, yT), xB = xAt(sg, yB); if (xT < 0 || xB < 0 || yB < bot(sg) - 1e-3) return null;
     B.push([xB + off, yB, z]); Tp.push([xT + off, yT, z]);
   }
-  const port = a => a.map(p => [-p[0], p[1], p[2]]).reverse();
-  return [[B, Tp], [port(B), port(Tp)]];
+  // the bow is at -z and starboard at +x: seen from starboard the bow is on the right, so the text runs stern to bow there and bow to
+  // stern on port (the rows ran the other way, and the mark, the name and the logo read mirrored on both sides: tilbakemelding #26)
+  const port = a => a.map(p => [-p[0], p[1], p[2]]);
+  return [[B.slice().reverse(), Tp.slice().reverse()], [port(B), port(Tp)]];
 }
 function nameStrips(type){
   if (type in NAMESTRIP) return NAMESTRIP[type];
