@@ -169,7 +169,8 @@ async def console3d(pg):
     # the skiff's console in 3D shows the same heat, and «EKKOLODD AV» when the echo sounder is off
     await pg.evaluate(SETUP, ['chirp', 'nav', 2, 0, True, True])
     await pg.evaluate("(() => { S.boat.type = 'skiff'; applyVessel(); G3.show(true); })()")
-    await pg.wait_for_function(DONE, timeout=20000); await pg.wait_for_timeout(4000)
+    # with 3D drawn in SwiftShader the heat takes 20-25 s here (07.10.2026, the same before the paint shop), so a minute
+    await pg.wait_for_function(DONE, timeout=60000); await pg.wait_for_timeout(4000)
     import base64
     for name, echo in [('heat_konsoll.png', True), ('heat_konsoll_av.png', False)]:
         await pg.evaluate(f"(() => {{ S.settings.echo = {'true' if echo else 'false'}; G3._debug.SK.tP = 0; }})()"); await pg.wait_for_timeout(1500)
