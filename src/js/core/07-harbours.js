@@ -278,6 +278,12 @@ const SHIFT_MPM = 3 * 1852 / 60;   // metres a minute at 3 knots in the harbour
 const PUMP = {petrol:45, diesel:90, hose:1.5, stow:1};   // litres a minute; minutes to get the hose out and the nozzle in, and to stow it
 // where she lies: 'main' (the plant's quay), 'bunker' or 'naust' (Father's pile quay in the home harbour; 'main' until it is found)
 const berthKind = b => b.berth === 'naust' && !quayFace(b.port, 'naust') ? 'main' : (b.berth || 'main');
+// where the boat lies: at Father's naust its berth, not the harbour point the simulation keeps her at (tilbakemelding #20: Autonav
+// and the chart plotter started the route at the plant); else her position
+function quayPos(b){
+  if ((b.status === 'port' || b.status === 'unmooring') && b.port && berthKind(b) === 'naust'){ const bp = berthPose(b.port, b.type || 'skiff', 'naust'); if (bp) return {x:bp.x, y:bp.y}; }
+  return b.pos;
+}
 const NAUST_SAIL = ['Båten ligger ved naustet. Seil bort til mottakskaia først: trykk på havna i kartplotteren og kast loss.', 'The boat lies at the boathouse. Sail over to the plant\'s quay first: tap the harbour on the chart plotter and cast off.'];
 const BERTHN = {main:['mottakskaia', 'the plant\'s quay'], bunker:['bunkerskaia', 'the bunker quay'], naust:['naustet', 'the boathouse']};
 const hasBunker = pid => !!quayFace(pid, 'bunker');

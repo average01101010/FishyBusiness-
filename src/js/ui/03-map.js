@@ -340,7 +340,7 @@ function renderAisCard(){ const el = $('aisCard'); if (!AISSEL){ el.hidden = tru
 function renderDyn(){
   // the boat where she is between the simulation's minutes (livePose), so she moves on the chart at every redraw (5 a second), not
   // every game minute (Jonas 06.10.2026: «posisjonen til eget fartøy oppdateres oftere i kartplotteren»)
-  const u = 1 / view.px, b = S.boat, g = [], lp = b.status === 'port' ? {p:b.pos, hd:b.heading} : livePose(), bp = lp.p;
+  const u = 1 / view.px, b = S.boat, g = [], lp = b.status === 'port' ? {p:quayPos(b), hd:b.heading} : livePose(), bp = lp.p;
   if (S.t >= markEnd){ markEnd = Infinity; scheduleStatic(); }
   renderRouteTools();
   // trail
@@ -356,7 +356,7 @@ function renderDyn(){
   }
   // draft: the legs, the «+» handle on each long leg, the points named WP1 … and the start WP0
   if (S.draft.length){
-    let a = b.pos;
+    const a0 = quayPos(b); let a = a0;
     const hz = draftHazards();
     S.draft.forEach((w, i) => {
       const ok = legClear(a, w), un = hz[i] && hz[i].unsafe;
@@ -364,7 +364,7 @@ function renderDyn(){
       a = w;
     });
     if (!RDRAG) for (const hd of insHandles()) g.push('<g class="wpins"><circle cx="' + hd.p.x + '" cy="' + hd.p.y + '" r="' + (8 * u) + '" stroke-width="' + (1.5 * u) + '"/><path d="M' + (hd.p.x - 4 * u) + ',' + hd.p.y + 'h' + (8 * u) + 'M' + hd.p.x + ',' + (hd.p.y - 4 * u) + 'v' + (8 * u) + '" stroke-width="' + (1.8 * u) + '"/></g>');
-    g.push(txt({x:b.pos.x + 9 * u, y:b.pos.y + 16 * u}, wpName(0), 'wpn wp0', 11 * u, 'stroke-width="' + (3 * u) + '"'));
+    g.push(txt({x:a0.x + 9 * u, y:a0.y + 16 * u}, wpName(0), 'wpn wp0', 11 * u, 'stroke-width="' + (3 * u) + '"'));
     S.draft.forEach((w, i) => {
       const drg = RDRAG && RDRAG.i === i, cls = 'wp' + (w.fish > 0 ? ' fish' : '') + (w.auto ? ' auto' : '') + (drg ? ' drag' + (RDRAG.land ? ' landed' : '') : '');
       if (!w.port) g.push('<circle cx="' + w.x + '" cy="' + w.y + '" r="' + ((drg ? 9 : w.auto ? 4.5 : 6) * u) + '" class="' + cls + '" stroke-width="' + (2 * u) + '"/>');
@@ -399,7 +399,7 @@ function renderDyn(){
   if (SETM) g.push(setSvg(u));
   // boat
   const s = 9 * u, deg = lp.hd * 180 / Math.PI;
-  if (b.status === 'port'){ g.push('<circle cx="' + b.pos.x + '" cy="' + b.pos.y + '" r="' + (11 * u) + '" class="fishring" stroke-width="' + (2.5 * u) + '"/>'); gDyn.innerHTML = g.join(''); return; }
+  if (b.status === 'port'){ g.push('<circle cx="' + bp.x + '" cy="' + bp.y + '" r="' + (11 * u) + '" class="fishring" stroke-width="' + (2.5 * u) + '"/>'); gDyn.innerHTML = g.join(''); return; }
   if (b.status === 'fishing') g.push('<circle cx="' + b.pos.x + '" cy="' + b.pos.y + '" r="' + (15 * u) + '" class="fishring" stroke-width="' + (1.5 * u) + '" stroke-dasharray="' + (3 * u) + ' ' + (3 * u) + '"/>');
   g.push('<g transform="translate(' + bp.x + ' ' + bp.y + ') rotate(' + deg.toFixed(1) + ')"><path d="M0,' + (-s) + ' L' + (0.62 * s) + ',' + s + ' L0,' + (0.5 * s) + ' L' + (-0.62 * s) + ',' + s + ' Z" class="boat" stroke-width="' + (1.5 * u) + '"/></g>');
   gDyn.innerHTML = g.join('');
@@ -500,7 +500,7 @@ function addWaypoint(pt){
     if (!S.draft.length && b.status === 'port' && !(nt && b.port === nt.port)) exitWps(portById(b.port), nt || (near ? near.p : pt)).forEach(q => wp(q, 'out'));
     if (nt) S.draft.push({x:nt.x, y:nt.y, port:nt.port, berth:'naust', fish:0});
     else if (near){
-      const prev = S.draft.length ? S.draft[S.draft.length - 1] : b.pos;
+      const prev = S.draft.length ? S.draft[S.draft.length - 1] : quayPos(b);
       entryWps(near, prev).forEach(q => wp(q, 'in'));
       S.draft.push({x:near.p.x, y:near.p.y, port:near.id, fish:0});
       if (window.innerWidth <= 700) document.body.classList.add('drawer');

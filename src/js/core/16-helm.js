@@ -76,8 +76,8 @@ function helmCast(){
   S.helm = {on:true, thr:0, rud:0, v:0, yaw:0, berth:true}; return true;
 }
 // when the lines are in (vesselStep): she starts from where she lay, not from the harbour point
-function helmCastDone(pid){
+function helmCastDone(pid, kind){
   const h = S.helm; if (!h || !h.berth) return; h.berth = false;
-  const b = S.boat, bp = berthPose(pid, b.type || 'skiff'); if (bp){ b.pos = {x:bp.x, y:bp.y}; b.heading = bp.hd; }
+  const b = S.boat, bp = berthPose(pid, b.type || 'skiff', kind) || berthPose(pid, b.type || 'skiff'); if (bp){ b.pos = {x:bp.x, y:bp.y}; b.heading = bp.hd; }
   HELM.t = Date.now();
 }

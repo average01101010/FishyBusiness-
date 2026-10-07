@@ -86,7 +86,7 @@ function renderHud(){
 function liveFrac(){ return clamp(acc + (Date.now() - lastWall) / 1000 * simRate() / 60, 0, 0.999); }
 function livePose(frac){
   if (frac === undefined) frac = liveFrac();
-  const b = S.boat; let p = {x:b.pos.x, y:b.pos.y}, hd = b.heading, idx = S.plan ? S.plan.idx : 0;
+  const b = S.boat, q0 = quayPos(b); let p = {x:q0.x, y:q0.y}, hd = b.heading, idx = S.plan ? S.plan.idx : 0;   // at the naust, its berth
   if (helmOn()) return helmPose(frac);
   if (b.status === 'tow'){ const q = towPose(frac); if (q && q.b) return {p:q.b.p, hd:q.b.hd, frac}; }
   if (b.status === 'sailing' && S.plan){
