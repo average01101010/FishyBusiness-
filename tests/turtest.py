@@ -43,6 +43,17 @@ async def main():
         check(not any(c in ('lang', 'sesong') for c in w['newbie']) and w['hiOld'] == 18 and w['hiNew'] == 12 and (not w['sp'] or not w['takes'] or w['sp'] == 'hyse')
               and (not w['kg'] or 50 <= w['kg'] <= 300) and (w['rep'] is None or 1.45 < w['rep'] < 1.55),
               "weighed by the player's own record: a newcomer gets no long trip and no season's move, an old hand's long trips go to three hours; the order is for the species the player lands, about a usual landing; a known skipper is paid more", w)
+        # 1c. the quotas: without access no mission asks for cod, haddock or saithe (bycatch only), and the lost gear holds none;
+        #     with the cod quota fished no mission asks for cod; an order never asks for more than is left
+        qu = await pg.evaluate("""(() => { const o = turHere(), H = S.t / 60, acc0 = access, q = quotaState(), t0 = q.torsk, fs = fsState(), p0 = fs.p; fs.p = fsNeed(4);
+          const sps = () => { const r = []; for (let i = 0; i < 6; i++){ for (const c of ['kort', 'mid', 'lang']){ const m = turBest(o, c, new Set()); if (m) r.push([m.sp, m.kg]); } const s = turSesong(o); if (s) r.push([s.sp, s.kg]); } return r; };
+          window.access = () => 'none'; const none = sps(); const g = turGarn(o); let gearSp = []; if (g){ g.id = -1; turSpawn(g); const s = S.sets.find(x => x.tur === -1); gearSp = Object.keys(s.acc); S.sets = S.sets.filter(x => x !== s); }
+          window.access = acc0; q.torsk = codLimitNow(H) - 200; const tight = sps(); q.torsk = codLimitNow(H); const full = sps(); q.torsk = t0; fs.p = p0;
+          return {none, gearSp, tight, full, room:Math.round(turRoom('torsk', H))}; })()""")
+        ths = ('torsk', 'hyse', 'sei')
+        check(not any(s in ths for s, k in qu['none']) and not any(s in ths for s in qu['gearSp']) and not any(s == 'torsk' for s, k in qu['full'])
+              and all(k <= 160 for s, k in qu['tight'] if s == 'torsk'),
+              'the quotas: without access no mission asks for cod, haddock or saithe and the lost gear holds none; with the cod quota fished none asks for cod; an order is never more than is left', qu)
         # 2. only what the boat can do: on a small tank nothing long is offered; a new board when she has moved more than 20 nm
         f = await pg.evaluate("""(() => { const cap = BOAT.fuelCap; BOAT.fuelCap = 3; turEnsure(true); const short = S.turer.board.every(m => m.nm * (m.k === 'garn' ? 2 : 1) <= 0.75 * turRange() + 0.5);
           BOAT.fuelCap = cap; turEnsure(true); const at = S.turer.at.t; S.t += 5; const same = turEnsure().at.t === at;
@@ -64,11 +75,11 @@ async def main():
         fr = await pg.evaluate("""(() => { const T = turState(); S.hold = []; S.boat.status = 'port'; S.boat.port = S.home || PORTS[0].id; S.boat.pos = {...portById(S.boat.port).p};
           const o = turHere(); let m = null; for (const c of ['kort', 'mid', 'lang']){ m = turFrakt(o, c, new Set()); if (m) break; }
           if (!m) return {none:true};
-          m.id = ++T.seq; m.until = S.t + 1440; T.board.push(m); const h0 = holdTotal(); const err = turTake(m.id); const loaded = holdTotal() - h0;
+          m.id = ++T.seq; m.until = S.t + 1440; T.board.push(m); const c0 = capHold(); const err = turTake(m.id); const loaded = c0 - capHold(), fish = holdTotal();
           const cash0 = S.cash; dock(m.to); const done = T.done.find(d => d.id === m.id);
-          return {err, kg:m.kg, loaded, after:holdTotal(), done:!!(done && done.ok), gain:S.cash - cash0, pay:m.pay, msg:S.msgs ? S.msgs.length : null}; })()""")
-        check(fr.get('none') or (fr['err'] is None and abs(fr['loaded'] - fr['kg']) < 0.5 and fr['after'] < 0.5 and fr['done'] and fr['gain'] == fr['pay']),
-              'freight is loaded at the quay and takes room in the hold; delivered, it leaves the hold and pays', fr)
+          return {err, kg:m.kg, loaded, fish, after:cargoKg(), done:!!(done && done.ok), gain:S.cash - cash0, pay:m.pay}; })()""")
+        check(fr.get('none') or (fr['err'] is None and abs(fr['loaded'] - fr['kg']) < 0.5 and fr['fish'] < 0.5 and fr['after'] < 0.5 and fr['done'] and fr['gain'] == fr['pay']),
+              'freight is loaded at the quay and takes room in the hold (it is no part of the catch); delivered, it leaves the hold and pays', fr)
         # 5. lost gear: a line (one aboard can haul it) with fish in it near the coast; hauled, the fish is aboard and the owner pays
         g = await pg.evaluate("""(() => { const T = turState(); S.hold = []; S.cargo = []; S.boat.status = 'idle'; S.boat.port = null; const o = {...S.boat.pos};
           const m = turGarn(o); if (!m) return {none:true};

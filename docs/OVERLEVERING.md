@@ -1253,6 +1253,12 @@ Punkt 4 i `docs/engasjement.md`. Jonas: en blanding av korte og lange oppdrag ut
   - **Under ti år:** de lange går opp til 12 spilltimer (`turHi`). Fra ti år går de helt opp til 18, og bestillingene kan kreve ekstra kvalitet til 20 % tillegg.
   - **Bestillinger:** arten er en spilleren lander, og mengden er omtrent en vanlig landing i denne båten. Omdømmet hos mottaket (`repOf`) gir 0,8–1,2 ganger bonusen.
   - **Rekkefølgen** (`turOrder`): nye spillere får steder de kjenner først, erfarne (fra fem år) nye steder først.
+- **Kvotene** (`turRoom`, Jonas 07.10.2026): det som er igjen å lande av hver art.
+  - **Uten adgang:** ingen oppdrag ber om torsk, hyse eller sei, siden de bare kan være bifangst. Den tapte redskapen har da lange og brosme i stedet.
+  - **Torsk:** det som er igjen under maksimalkvoten mens åpen gruppe er åpen, og av garantert kvote etter stoppen. I lukket gruppe er det fartøykvoten (`codRoom`). Ferskfisktillegget kommer i tillegg, men regnes ikke med.
+  - **Hyse og sei i lukket gruppe:** maksimalkvotene (`licQ`).
+  - **Kongekrabbe** gis aldri som oppdrag.
+  - Et oppdrag ber aldri om mer enn 80 % av det som er igjen. Bestillinger trenger minst 150 kg igjen, og sesongflyttingen 1 000 kg. Mottakenes vanlige bestillinger (`ordersTick`) bruker den samme sjekken.
 - **Treffsikkert** (`turCan`): et oppdrag tilbys bare når båten klarer det.
   - **Drivstoff:** turen må gå på 75 % av en full tank (tur-retur for tapt redskap). Mottakene selger diesel.
   - **Åpne båter** holder seg innaskjærs: eksponeringen langs linja må være høyst 0,7, lest fra kjernekartet.
@@ -1261,7 +1267,7 @@ Punkt 4 i `docs/engasjement.md`. Jonas: en blanding av korte og lange oppdrag ut
 - **Belønningen** (`turPay`) er det båten tjener i timen (`turRate`: 9 000 kr i trebåten, etter lasterommet opphøyd i 0,6) ganger timene uten trim, ganget med 1,1, 1,3, 1,6 og 2 for sesongen. Fristen er minst 2,5 ganger tiden uten trim, og den flyttes aldri.
 - **Typene:**
   - **Bestilling** (`turBest`): en ordre i ordresystemet (`S.orders`, med `tur`). Turens betaling er bonusen, og `sell` betaler den sammen med fisken.
-  - **Frakt** (`turFrakt`, `TUR_GOODS`): varer i `S.cargo`, som er per fartøy (`VKEYS`) og teller i `holdTotal` og vekten. Varene hentes ved kai, og hvis båten ikke ligger der, går «Kjør dit» innom. De betales når de leveres (`turDock` i `dock`).
+  - **Frakt** (`turFrakt`, `TUR_GOODS`): varer i `S.cargo`, som er per fartøy (`VKEYS`). De tar plass fra `capHold` og teller i vekten (`boatTons`), men er ikke en del av fangsten (`holdTotal`) eller landingen. Varene hentes ved kai, og hvis båten ikke ligger der, går «Kjør dit» innom. De betales når de leveres (`turDock` i `dock`).
   - **Tapt redskap** (`turGarn`, `turSpawn`): et sett med `tur` og fisk i, 0,9–6 km fra land med begge ender i åpent vann. Det er garn når to kan trekke dem og spilleren har garn, ellers en line som én kan trekke. Når det er trukket (`finishHaul` → `turHauled`), går redskapet til eieren og ikke til `pgear`, og eieren betaler finnerlønn (halvparten, siden fisken er spillerens). Fristen løper ikke ut mens redskapet hales.
   - **Sesongflytting** (`turSesong`): mottaket 40–250 nm unna som lander mest av en art som er i sesong (`mk.sp[sp].months`). Spilleren skal levere tre lastrom (halvannen gang så mye fra ti år, torsk innenfor 80 % av kvoten) ved mottakene innen 30 km før uka er ute. `turSale` i `sell` teller det som leveres.
 - **Avgangen** (`turDepart` i `depart`): ved turer på 20 minutter eller mer skriver loggen når båten er fremme. Ved turer på en time eller mer sier noen noe om turen (Jonas: mange legger fra seg telefonen når båten går).

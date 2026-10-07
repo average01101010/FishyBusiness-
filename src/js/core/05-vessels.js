@@ -227,7 +227,7 @@ function navHour(){
   S.navrows.push({t:S.t, port:b.status === 'port' ? b.port : null, st:b.status, hd:Math.round(trueDeg(b.heading, b.pos)) % 360, v:Math.round((b.status === 'sailing' ? b.v : 0) * 10) / 10, x:Math.round(b.pos.x * 1000) / 1000, y:Math.round(b.pos.y * 1000) / 1000, W:Math.round(windAt(H) * 10) / 10, wd:Math.round(windDir(H)), hs:Math.round(hsAt(b.pos, H) * 10) / 10, vis:Math.round(visibility(H))});
   while (S.navrows.length && S.navrows[0].t < S.t - KEEP_MIN) S.navrows.shift();
 }
-const holdTotal = () => S.hold.reduce((a, x) => a + x.kg, 0) + cargoKg();   // freight for a mission takes room in the hold too (09g-turer.js)
+const holdTotal = () => S.hold.reduce((a, x) => a + x.kg, 0);
 function nearestPort(p){ let best = null, bd = 1e9; for (const q of PORTS){ const d = dist(p, q.p); if (d < bd){ bd = d; best = q; } } return best; }
 
 function step(){

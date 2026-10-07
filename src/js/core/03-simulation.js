@@ -256,7 +256,7 @@ function riskLevel(W, hs){ const r = BOAT.risk; if (hs >= r[1] || W >= r[3]) ret
 // hull's resistance at a speed goes with the weight to the 2/3, so at the same power the speed goes with (D0/D)^(2/9), about ^0.22
 // (+50 % weight: −9 %); a planing hull feels it more, ^0.5. The fuel at a speed goes with (D/D0)^(2/3)
 const FUEL_KG = d => d ? 0.84 : 0.74;   // kg a litre, diesel and petrol
-function boatTons(){ const b = S.boat, V = VESSELS[b.type] || VESSELS.skiff; return V.disp + (holdTotal() + (b.ice || 0) + (b.fuel || 0) * FUEL_KG(V.diesel) + 90 * Math.max(1, handsAboard())) / 1000; }
+function boatTons(){ const b = S.boat, V = VESSELS[b.type] || VESSELS.skiff; return V.disp + (holdTotal() + (typeof cargoKg === 'function' ? cargoKg() : 0) + (b.ice || 0) + (b.fuel || 0) * FUEL_KG(V.diesel) + 90 * Math.max(1, handsAboard())) / 1000; }
 function boatTons0(){ const V = VESSELS[S.boat.type] || VESSELS.skiff; return V.disp + (V.holdCap * 0.25 + V.fuelCap * 0.5 * FUEL_KG(V.diesel) + 90) / 1000; }
 function loadF(){ return clamp(Math.pow(boatTons0() / Math.max(0.1, boatTons()), BOAT.planing ? 0.5 : 0.22), 0.55, 1.08); }
 // ---- fouling: weed and barnacles on the hull (S.boat.foul, 0 to 1) slow her up to 15 % and cost up to 25 % more fuel; it grows in
@@ -662,7 +662,7 @@ const EPOCH_HR = new Date(EPOCH).getUTCHours();
 function pubEvening(H){ return Math.floor((H + EPOCH_HR - 15) / 24); }
 function pubOpen(H){ const hr = gDate(H).getUTCHours(); return hr >= 15 || hr < 3; }
 // the hold (borrowed deck tubs from «Kaffe på kaia» are gone since 01.10.2026)
-function capHold(){ return BOAT.holdCap; }
+function capHold(){ return Math.max(0, BOAT.holdCap - (typeof cargoKg === 'function' ? cargoKg() : 0)); }   // the room for fish: freight for a mission takes its part (09g-turer.js)
 // ---- the daily login bonus: each real calendar day you open the game adds a point to a bonus on the fish price; each day
 // you stay away takes three off, never below zero. No ceiling for now (decided 30.09.2026); change STREAK to add one. ----
 const STREAK = {step:1, decay:3, max:Infinity};
@@ -731,10 +731,11 @@ function ordersTick(H){
   for (let k = 0; k < n && O.offers.length < 3; k++){
     const pool = CUSTOMERS.filter(custNear).map(c => ({c, w:(0.5 + repOf(c.id) / 100) * (c.sp.some(sp => spCatchable(sp, H)) ? 1 : 0)})).filter(x => x.w > 0); if (!pool.length) return;
     let r = Math.random() * pool.reduce((a, x) => a + x.w, 0), c = pool[0].c; for (const x of pool){ r -= x.w; if (r <= 0){ c = x.c; break; } }
-    const sps = c.sp.filter(sp => spCatchable(sp, H) && (sp !== 'torsk' || codRoom(H) > 150)); if (!sps.length) continue;
+    const sps = c.sp.filter(sp => spCatchable(sp, H) && turRoom(sp, H) > 150); if (!sps.length) continue;   // within the access and the quotas (09g-turer.js)
     const sp = sps[Math.floor(Math.random() * sps.length)], cap = capHold();
     let kg = c.big ? Math.round(clamp(cap * (0.4 + Math.random() * 0.5), 100, 800) / 10) * 10 : Math.round((20 + Math.random() * 60) / 5) * 5;
     if (sp === 'kveite') kg = 20 + Math.round(Math.random() * 3) * 10;
+    kg = Math.max(10, Math.min(kg, Math.round(turRoom(sp, H) * 0.8 / 10) * 10));
     const rf = 0.8 + repOf(c.id) / 250, prem = Math.round((c.big ? 0.1 + Math.random() * 0.1 : 0.2 + Math.random() * 0.2) * rf * 100) / 100;
     O.offers.push({id:++O.seq, cust:c.id, port:c.port, sp, kg, left:kg, q:c.q, prem, bonus:Math.round((c.big ? 1500 + Math.random() * 1500 : 1000 + Math.random() * 1000) * rf / 100) * 100, offerUntil:S.t + 1440, days:c.big ? 3 : 2});
   }
