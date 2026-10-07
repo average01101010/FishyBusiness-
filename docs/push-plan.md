@@ -48,6 +48,15 @@ Aldri: tapt innloggingsbonus, «du har ikke spilt på en stund», tilbud, nedtel
 - **Dempere:** har spilleren latt fem varsler på rad ligge uåpnet, sender vi høyst to i døgnet til hun åpner appen igjen. Ingen mas.
 - **Ikke mens hun spiller:** planen tømmes ved retur (finnes). Et varsel som er sendt, men der spilleren åpner appen av seg selv før hun trykker, skal ikke ligge igjen.
 
+## Eget varsel for ei rute du selv har sendt (Jonas 07.10.2026)
+
+Jonas: en spiller som lager en rute, sender båten avgårde og lukker telefonen, vil sannsynligvis sette pris på et varsel hver gang båten er framme. Det er handlingsbasert og i hennes egen interesse. Enig, med disse justeringene:
+
+- **«Hver gang» er hver gang båten stopper og venter på deg:** slutten på ruta, og stopp i havn der hun må gjøre noe. Fiskestopp og mellompunkt er planen hennes og får ikke eget varsel. Går båten automatisk fram og tilbake etter en driftsplan, sendes ett varsel når planen stopper eller trenger henne, ikke ett per ankomst.
+- **Eget tak:** verdenshendelsene (kvote, sesong, topplista, redskap som har stått for lenge) beholder taket på 4 i døgnet. Rutevarsler får et eget, høyere tak (forslag: 8), slik at femte ankomst ikke forsvinner uten at spilleren skjønner hvorfor. Valget er Jonas', fordi det avviker fra «4 i døgnet» fra 05.10.2026.
+- **Natt:** ankomst mellom 22 og 08 kommer som «Mens du sov» kl. 08. En bryter «Varsle også om natta for båten min» er av som standard.
+- **Åpenhet:** ved «Kast loss» står «Du får beskjed når Havbris er framme», med en liten knapp for å slå det av for akkurat denne turen.
+
 ## Klikk og innstillinger
 
 - **Dypere lenke:** varselet bærer en side (`lever`, `verft`, `beholdning` …). Når spilleren trykker, åpner spillet rett på siden hvis båten ligger i havn, ellers på kartet. Service worker sender siden med (`notificationclick`).
