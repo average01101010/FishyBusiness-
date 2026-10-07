@@ -378,7 +378,7 @@ const PHONE = (() => {
   function render(){ status(); setBadge(); if (!isOpen) return; if (app === 'patch' && S.settings.patchSeen !== PATCH[0][0]){ S.settings.patchLast = S.settings.patchSeen; S.settings.patchSeen = PATCH[0][0]; } const key = app + '|' + (sub[app] || ''), y = key === shown ? view.scrollTop : 0; view.innerHTML = app === 'home' ? home() : shell(app); shown = key; view.scrollTop = y; }
   // every page by name: the phone apps, and the pages that open in the dock's drawer instead (DRAWER)
   const PAGES = () => ({vaer, post, salg, kvote, regler, redning, rederi, meld, haill, logg, sjomann, notat:() => NOTEBOOK.page(), sesong:() => SEASONAPP.page(), folk:() => FOLKAPP.page(), trim, patch, tilbake:() => FEEDBACK.page(), innst, admin,
-    ordl, rigg, arbeid:() => WORK.page(), fiske, fartoy:() => fartoy('marked'), utstyr, redskap, mannskap, bors, bank, verksted, havn, last, lever, is:isApp, agn, oppdrag, beholdning});
+    ordl, rigg, arbeid:() => WORK.page(), fiske, fartoy:() => fartoy('marked'), maler:() => PAINT.page(), utstyr, redskap, mannskap, bors, bank, verksted, havn, last, lever, is:isApp, agn, oppdrag, beholdning});
   function shell(a){ const d = APPS.find(x => x[0] === a) || [a, a, a, '#28507f'], f = PAGES()[a]; return '<div class="ph-appv' + (a === 'post' || a === 'notat' ? ' ph-paper' : '') + '"><div class="ph-top" style="background:' + d[3] + '"><span class="ic">' + (IC[a] || '') + '</span>' + L(d[1], d[2]) + '</div>' + (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) + '</div>'; }
   // a page for the drawer, and an action tapped there: it runs as if that page were the open app, and says which page shows next
   function page(a){ const f = PAGES()[a]; return f ? (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) : ''; }
@@ -409,6 +409,11 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p76', '07.10.2026', 'Malerverkstedet og båtnavn', 'The paint shop and boat names', [
+      ['Nytt under Verft: Malerverkstedet. Velg blant 16 skrogfarger og se fargen på båten din i 3D før du maler.', 'New under Yard: the paint shop. Choose from 16 hull colours and see the colour on your boat in 3D before you paint.'],
+      ['Trebåten kan nå males, også plankene.', 'The wooden boat can now be painted, planks and all.'],
+      ['Båtnavnet står på skroget på alle båtene, lyst på et mørkt skrog og mørkt på et lyst. Båtene rundt deg viser også navnet sitt.', 'The boat\'s name is on the hull of every boat, light on a dark hull and dark on a light one. The boats around you show their names too.'],
+      ['Andre spillere ser fargen på båten din.', 'Other players see the colour of your boat.']]],
     ['p75', '06.10.2026', 'Hele kysten', 'The whole coast', [
       ['Nyhetene i Kystposten, topplista, nye folk på Mannskapsbørsen og mottakene i nyhetene følger nå hjemhavna di, hvor du enn starter langs kysten. Ingen tekster later lenger som om spillet bare er på Senja.', 'The news in the Coast Post, the leaderboard, new hands at the crew exchange and the plants in the news now follow your home harbour, wherever you start along the coast. No text pretends any more that the game is only on Senja.']]],
     ['p74', '06.10.2026', 'Spill som gjest', 'Play as a guest', [
@@ -1004,7 +1009,7 @@ const PHONE = (() => {
   }
   // --- the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
   const SEL_APPS = ['fartoy', 'utstyr', 'redskap', 'mannskap', 'bors', 'verksted'];
-  const DRAWER = new Set(['arbeid', 'rigg', 'fiske', 'fartoy', 'utstyr', 'redskap', 'mannskap', 'bors', 'bank', 'verksted', 'havn', 'last', 'lever', 'is', 'agn', 'oppdrag', 'beholdning']);
+  const DRAWER = new Set(['arbeid', 'rigg', 'fiske', 'fartoy', 'utstyr', 'redskap', 'mannskap', 'bors', 'bank', 'verksted', 'havn', 'last', 'lever', 'is', 'agn', 'oppdrag', 'beholdning', 'maler']);
   let selV = null;
   const selVessel = () => (selV && vesselById(selV)) || curVessel();
   const withSel = fn => withVessel(selVessel(), fn);
@@ -1218,7 +1223,7 @@ const PHONE = (() => {
   // --- actions
   function switchVessel(k){
     const b = S.boat, old = VESSELS[b.type];
-    b.type = k; for (const q of Object.keys(EQUIP)) if (!equipFits(q, k)) S.equip[q] = EQUIP[q].multi ? Math.min(S.equip[q] || 0, VESSELS[k].jukseMax || 0) : false; applyVessel(); loreNewBoat(S.boatName);
+    b.type = k; delete b.liv; for (const q of Object.keys(EQUIP)) if (!equipFits(q, k)) S.equip[q] = EQUIP[q].multi ? Math.min(S.equip[q] || 0, VESSELS[k].jukseMax || 0) : false; applyVessel(); loreNewBoat(S.boatName);
     S.equip.jukse = Math.min(S.equip.jukse, BOAT.jukseMax); b.fuel = BOAT.fuelCap * 0.4; b.ice = 0; b.engH = 0; b.svcAt = 0; S.svcTold = false;
     while (S.crew.length > BOAT.crewMax) S.crew.pop();
     if (!S.owned.includes(k)) S.owned.push(k);
@@ -1244,7 +1249,8 @@ const PHONE = (() => {
     else if (a === 'shopgear'){ app = 'redskap'; sub.redskap = 'kjop'; }
     else if (a === 'close'){ show(false); return; }
     else if (a === 'notshow'){ NOTEBOOK.show(d.id); return false; }
-    else if (/^fb[A-Z]/.test(a)){ if (!FEEDBACK.act(a, d)) return false; }   // the feedback app (ui/06e-feedback.js)
+    else if (/^fb[A-Z]/.test(a)){ if (!FEEDBACK.act(a, d)) return false; }
+    else if (/^pnt/.test(a)){ if (!PAINT.act(a, d)) return false; }   // the paint shop (ui/10j-paint.js)   // the feedback app (ui/06e-feedback.js)
     else if (a === 'naustbuy'){ const why = naustBuy(d.k); if (why) toast(L(why[0], why[1])); }
     else if (a === 'lang'){ S.lang = S.lang === 'no' ? 'en' : 'no'; refreshAll(); }
     else if (a === 'q3d'){ S.settings.q3d = d.v; if (typeof G3 !== 'undefined' && G3.quality) G3.quality(d.v); }

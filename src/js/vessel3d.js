@@ -376,10 +376,16 @@ function glbLoad(type){
 }
 // one part of a type's GLB ({p, n, c}): the starter boat's hull, glass, lid, outboard and propeller are drawn by view3d.js one by one
 function glbPart(type, name){ const G = glbLoad(type); return (G && G.parts[name]) || null; }
+// a detailed model's part with the hull painted: paint zone 1 takes the colour, with the shade baked into it (ao) kept
+function glbPaint(part, liv){
+  if (!liv || !liv.hull || !part.zone) return part;
+  const c = part.c.slice(); for (let i = 0; i < part.zone.length; i++) if (part.zone[i] === 1){ const a = part.ao[i]; c[i * 4] = liv.hull[0] * a; c[i * 4 + 1] = liv.hull[1] * a; c[i * 4 + 2] = liv.hull[2] * a; }
+  return {p:part.p, n:part.n, c};
+}
 function glbModel(type, lod, liv){
   const G = glbLoad(type); if (!G || !G.parts.lod0) return null;
   const part = lod >= 1 ? G.parts.lod0 : (G.parts.lod1 || G.parts.lod0); let o = part;
-  if (liv && liv.hull){ const c = part.c.slice(); for (let i = 0; i < part.zone.length; i++) if (part.zone[i] === 1){ const a = part.ao[i]; c[i * 4] = liv.hull[0] * a; c[i * 4 + 1] = liv.hull[1] * a; c[i * 4 + 2] = liv.hull[2] * a; } o = {p:part.p, n:part.n, c}; }
+  if (liv && liv.hull) o = glbPaint(part, liv);
   // an outboard and its propeller are parts of their own, in their own frames (they turn in the game): the whole boat carries them in place
   const sk = G.ex.anchors && G.ex.anchors.skiff;
   if (lod >= 1 && sk && G.parts.outboard){
@@ -407,7 +413,7 @@ function buildVesselModel(type, lod, liv){
   { const g = glbModel(type, lod, liv); if (g) return g; }       // a detailed model, also for the hand-steered starter boat
   if (sp.hand) return null;
   const H = Object.assign({L:V.len, B:V.beam, T:V.draft}, sp.hull, liv ? {col:Object.assign({}, sp.hull.col, liv)} : null), hs = hullShape(H), o = VB(), gb = VB(); o.lod = lod; gb.lod = lod;
-  hullBuild(o, hs, lod);
+  hullBuild(o, hs, lod); const hullN = o.p.length;   // the hull's own triangles come first (nameStrips reads them)
   let house = null, roofY = null; const anch = {};
   for (const [kind, p] of sp.parts){
     const base = p.on === 'house' && house ? house.roofY : p.on === 'block' && anch.top ? anch.top : null;
@@ -439,7 +445,7 @@ function buildVesselModel(type, lod, liv){
     else if (kind === 'drum') partDrum(o, hs, p);
   }
   const geo = vesselGeo(type, hs, sp, house, anch);
-  return {o, glass:gb, cap:sp.open ? hullCap(hs) : null, geo, hs};
+  return {o, glass:gb, cap:sp.open ? hullCap(hs) : null, geo, hs, hullN};
 }
 // where things sit on the boat for the 3D view (what view3d.js calls VGEO): helm and eye, deck work area, lights, flag, hauler, crew
 function vesselGeo(type, hs, sp, house, anch){
@@ -459,9 +465,95 @@ function geoOf(type){ const m = vesselModel(type); return m ? m.geo : null; }
 // the local fleet in 3D: each boat gets the decked coastal model nearest her in length and beam (view3d.js scales it to her own
 // size), in one of four liveries for the hull and its stripe; near at lod 1, at middle distance at lod 0.3
 const LIVERY = [null, {hull:VC.navy, stripe:VC.white}, {hull:VC.red, stripe:VC.white, rail:VC.white}, {hull:VC.teal, stripe:VC.yellow}];
+// ---- the paint shop (ui/10j-paint.js; Jonas 06.10.2026): the hull colours a player can paint their own boat in, in VC's scale. A boat's
+// paint is b.liv = {hull:key}; hullLiv gives what the models take ({hull:[r, g, b, gloss]}), and PAINTPRE (the colour being tried in
+// the paint shop) shows on the boat you are aboard before it is paid for. 'orig' is the colour the boat came with. ----
+const HULLPAL = [
+  ['orig', 'Original', 'Original', null],
+  ['hvit', 'Hvit', 'White', [0.93, 0.94, 0.93]], ['krem', 'Kremhvit', 'Cream', [0.92, 0.9, 0.82]], ['lysgra', 'Lys grå', 'Light grey', [0.7, 0.73, 0.75]],
+  ['antrasitt', 'Antrasitt', 'Anthracite', [0.19, 0.21, 0.23]], ['sort', 'Sort', 'Black', [0.07, 0.08, 0.09]], ['marine', 'Marineblå', 'Navy', [0.08, 0.16, 0.3]],
+  ['kobolt', 'Koboltblå', 'Cobalt', [0.1, 0.25, 0.55]], ['himmel', 'Himmelblå', 'Sky blue', [0.42, 0.62, 0.8]], ['petrol', 'Petrol', 'Petrol', [0.06, 0.32, 0.36]],
+  ['flaske', 'Flaskegrønn', 'Bottle green', [0.08, 0.26, 0.16]], ['mose', 'Mosegrønn', 'Moss green', [0.32, 0.4, 0.24]], ['oksblod', 'Oksblodrød', 'Oxblood', [0.42, 0.08, 0.07]],
+  ['rod', 'Rød', 'Red', [0.7, 0.12, 0.1]], ['oransje', 'Oransje', 'Orange', [0.95, 0.42, 0.08]], ['gul', 'Gul', 'Yellow', [0.95, 0.74, 0.12]], ['oker', 'Okergul', 'Ochre', [0.78, 0.56, 0.18]]];
+let PAINTPRE = null;
+function hullLiv(b){
+  const k = PAINTPRE && typeof S !== 'undefined' && b === S.boat ? PAINTPRE : b && b.liv && b.liv.hull, e = k && HULLPAL.find(x => x[0] === k);
+  return e && e[3] ? {hull:[e[3][0], e[3][1], e[3][2], 0.6]} : null;
+}
+function livKey(liv){ return liv && liv.hull ? liv.hull.join(',') : ''; }
+// the paint as it goes to the other players with the position (ui/10h-world.js pos_put, supabase/migrations/20261007090000_livery.sql):
+// 'h:<colour>'; and back again into what the models take. Only colours in HULLPAL count, so nothing else can be painted on a boat.
+function livStr(b){ const k = b && b.liv && b.liv.hull; return k && k !== 'orig' && HULLPAL.some(x => x[0] === k) ? 'h:' + k : ''; }
+function livParse(s){ const m = /(?:^|;)h:([a-z]+)/.exec(String(s || '')), e = m && HULLPAL.find(x => x[0] === m[1]); return e && e[3] ? {hull:[e[3][0], e[3][1], e[3][2], 0.6]} : null; }
+// ---- the boat's name on her hull (Jonas 07.10.2026: «Pass på at båtnavnet vises godt på skroget på alle båtene»): a strip on each side
+// forward, on the hull's own surface, found from the model: the hull's triangles (a detailed model's paint zone 1, a kit model's hull)
+// that face out to starboard are cut at each station, which gives the topsides' top and bottom there and the hull's breadth at any
+// height. The strip is as tall as the topsides allow (at most 0.025 L + 5 cm, 16 cm to 90 cm), a quarter of it below the top, and four
+// times as long as it is tall, so the 512 × 128 name reads undistorted; its middle is a quarter of the hull's length from the stem
+// (the registration mark gets the stem's end). Like the skiff's anchors (texStrip): bow to stern on starboard, stern to bow on port.
+// A model with its own name anchors (tools/boats) keeps them. ----
+const NAMESTRIP = {};
+// the hull's triangles that face out to starboard (their normals' sideways part over 0.35; the inside of a bulwark faces the other way)
+function hullTris(type){
+  const G = glbHas(type) ? glbLoad(type) : null, out = [], m = G ? null : vesselModel(type);
+  const P = G && G.parts.lod0 ? G.parts.lod0 : m ? m.o : null, n = G ? (P && P.p.length) : m && m.hullN; if (!P || !n || (G && !P.zone)) return out;
+  for (let v = 0; v * 3 + 9 <= n; v += 3){
+    if (G && !(P.zone[v] === 1 && P.zone[v + 1] === 1 && P.zone[v + 2] === 1)) continue;
+    const t = P.p.slice(v * 3, v * 3 + 9); if (t[0] + t[3] + t[6] <= 0) continue;
+    const nx = (P.n[v * 3] + P.n[v * 3 + 3] + P.n[v * 3 + 6]) / 3, nl = Math.hypot(nx, (P.n[v * 3 + 1] + P.n[v * 3 + 4] + P.n[v * 3 + 7]) / 3, (P.n[v * 3 + 2] + P.n[v * 3 + 5] + P.n[v * 3 + 8]) / 3) || 1;
+    if (nx / nl > 0.35) out.push(t);
+  }
+  return out;
+}
+function nameStrips(type){
+  if (type in NAMESTRIP) return NAMESTRIP[type];
+  const m = vesselModel(type); if (!m) return NAMESTRIP[type] = null;
+  if (m.geo && m.geo.names) return NAMESTRIP[type] = m.geo.names;
+  const T = hullTris(type);
+  if (T.length < 8) return NAMESTRIP[type] = null;
+  let z0 = Infinity, z1 = -Infinity; for (const t of T) for (const k of [2, 5, 8]){ z0 = Math.min(z0, t[k]); z1 = Math.max(z1, t[k]); }
+  // the hull cut at station z: segments [y, x, y, x]
+  const cut = z => { const seg = [];
+    for (const t of T){ const pts = [];
+      for (const [a, b] of [[0, 3], [3, 6], [6, 0]]){ const za = t[a + 2], zb = t[b + 2]; if ((za - z) * (zb - z) > 0 || za === zb) continue; const f = (z - za) / (zb - za); pts.push(t[a + 1] + (t[b + 1] - t[a + 1]) * f, t[a] + (t[b] - t[a]) * f); }
+      if (pts.length >= 4) seg.push(pts.slice(0, 4)); }
+    return seg; };
+  const top = sg => Math.max(...sg.map(q => Math.max(q[0], q[2]))), bot = sg => Math.min(...sg.map(q => Math.min(q[0], q[2])));
+  // the breadth at height y; across a small gap in the surface (a scupper, a port) the nearest edge within 40 cm stands in
+  const xAt = (sg, y) => { let x = -1, gd = 0.4, gx = -1;
+    for (const q of sg){ const lo = Math.min(q[0], q[2]), hi = Math.max(q[0], q[2]);
+      if (y < lo - 1e-4 || y > hi + 1e-4){ for (const k of [0, 2]){ const d = Math.abs(q[k] - y); if (d < gd){ gd = d; gx = q[k + 1]; } } continue; }
+      const f = hi - lo < 1e-6 ? 0.5 : (y - q[0]) / (q[2] - q[0]); x = Math.max(x, q[1] + (q[3] - q[1]) * f); }
+    return x >= 0 ? x : gx; };
+  const L = z1 - z0, V = VESSELS[type] || {len:L}, hMax = Math.min(0.9, Math.max(0.16, 0.025 * V.len + 0.05)), mid = z0 + 0.25 * L;
+  const s0 = cut(mid); if (!s0.length) return NAMESTRIP[type] = null;
+  const h = Math.min(hMax, (top(s0) - Math.max(0.05, bot(s0))) * 0.6); if (h < 0.08) return NAMESTRIP[type] = null;
+  const len = 4 * h, off = 0.01 + 0.0006 * V.len, N = 12, B = [], Tp = [];
+  for (let i = 0; i <= N; i++){
+    const z = mid - len / 2 + len * i / N, sg = cut(z); if (!sg.length) return NAMESTRIP[type] = null;
+    const yT = top(sg) - h * 0.25, yB = yT - h, xT = xAt(sg, yT), xB = xAt(sg, yB); if (xT < 0 || xB < 0 || yB < bot(sg) - 1e-3) return NAMESTRIP[type] = null;
+    B.push([xB + off, yB, z]); Tp.push([xT + off, yT, z]);
+  }
+  const port = a => a.map(p => [-p[0], p[1], p[2]]).reverse();
+  return NAMESTRIP[type] = [[B, Tp], [port(B), port(Tp)]];
+}
+// the hull's colour as it is painted (liv) or as she came (a detailed model's paint zone 1 on average, a kit's hull colour): the name
+// is written light on a dark hull and dark on a light one
+const HULLRGB = {};
+function hullRGB(type, liv){
+  if (liv && liv.hull) return liv.hull.slice(0, 3);
+  if (type in HULLRGB) return HULLRGB[type];
+  const G = glbHas(type) ? glbLoad(type) : null; let c = [0.5, 0.5, 0.5];
+  if (G && G.parts.lod0 && G.parts.lod0.zone){ const P = G.parts.lod0; let n = 0; const a = [0, 0, 0];
+    for (let i = 0; i < P.zone.length; i++) if (P.zone[i] === 1 && P.ao[i] > 0.05){ for (let k = 0; k < 3; k++) a[k] += P.c[i * 4 + k] / P.ao[i]; n++; }
+    if (n) c = a.map(v => v / n); }
+  else { const sp = vesselSpec(type); if (sp && sp.hull && sp.hull.col && sp.hull.col.hull) c = sp.hull.col.hull.slice(0, 3); }
+  return HULLRGB[type] = c;
+}
 function npcKit(L, B){ let best = null, bd = 1e9; for (const t in SPEC3D){ const V = VESSELS[t], sp = SPEC3D[t]; if (!V || sp.hand || sp.open || V.cls === 'hav') continue; const d = Math.abs(Math.log(V.len / L)) + 0.7 * Math.abs(Math.log(V.beam / B)); if (d < bd){ bd = d; best = t; } } return best; }
 const NPCMOD = {};
-function npcModel(type, lod, liv){ const k = type + '|' + lod + '|' + liv; if (!(k in NPCMOD)) NPCMOD[k] = buildVesselModel(type, lod, LIVERY[liv % LIVERY.length]); return NPCMOD[k]; }
+// liv: one of LIVERY for the local fleet, or another player's paint as it came with her position (livStr)
+function npcModel(type, lod, liv){ const k = type + '|' + lod + '|' + liv; if (!(k in NPCMOD)) NPCMOD[k] = buildVesselModel(type, lod, typeof liv === 'string' ? livParse(liv) : LIVERY[liv % LIVERY.length]); return NPCMOD[k]; }
 // a person in oilskins, built facing -z (as the skiff's crew): standing or seated, hands where given (or down by the sides)
 function personVB(B, x, y, z, seated, hands, suit, kit){
   if (kit && glbHas('worker')) return figureVB(B, x, y, z, seated, hands, kit);       // the detailed figure (tools/harbour/arbeider.py)

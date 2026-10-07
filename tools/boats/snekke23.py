@@ -51,11 +51,12 @@ XS = [0.02 + (L - 0.04) * (1 - math.cos(math.pi * i / 52)) / 2 for i in range(53
 
 
 def colours():
-    w = lambda n, rgb, g=0.15: C.__setitem__(n, mat(n, rgb, g))
+    w = lambda n, rgb, g=0.15, z=0: C.__setitem__(n, mat(n, rgb, g, zone=z))
     # bare old wood outside (Jonas 05.10.2026: «Kan du gjøre båten trefarget? Gammelt trevirke»): planks a shade apart, the top strake
     # darker with old oil, the laps in shadow; the bottom tarred
-    w('hull', (0.42, 0.32, 0.22), 0.12); w('hull2', (0.37, 0.28, 0.19), 0.12); w('hull3', (0.46, 0.36, 0.26), 0.1); w('hull_e', (0.24, 0.18, 0.12), 0.1)
-    w('hulltop', (0.30, 0.22, 0.15), 0.2); w('paint2', (0.36, 0.28, 0.20), 0.12)
+    # the planks are paint zone 1: the paint shop (Jonas 06.10.2026) paints over them, and the laps stay dark between
+    w('hull', (0.42, 0.32, 0.22), 0.12, 1); w('hull2', (0.37, 0.28, 0.19), 0.12, 1); w('hull3', (0.46, 0.36, 0.26), 0.1, 1); w('hull_e', (0.24, 0.18, 0.12), 0.1)
+    w('hulltop', (0.30, 0.22, 0.15), 0.2, 1); w('paint2', (0.36, 0.28, 0.20), 0.12)
     w('chip', (0.40, 0.33, 0.25)); w('chip2', (0.34, 0.27, 0.20))
     w('anti', (0.14, 0.11, 0.09), 0.3); w('anti2', (0.17, 0.13, 0.10), 0.25); w('slime', (0.22, 0.27, 0.14), 0.35); w('weedline', (0.30, 0.30, 0.15), 0.3)
     w('rust', (0.33, 0.17, 0.09), 0.2); w('iron', (0.13, 0.13, 0.14), 0.35); w('brass', (0.55, 0.44, 0.22), 0.6)

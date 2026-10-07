@@ -1068,6 +1068,40 @@ Jonas ba om det slik: «koble deg opp mot detstorebla.no/admin slik at du kan he
   - `sqltest`: bare service_role leser, uten spiller-ID og med maskering; et notat tar tilbakemeldingen ut av de nye; rapporten og forslaget kommer fram til admin; spillere og admin-innloggingen slipper ikke inn.
   - `admintest`: Agent-fanen og «Bruk forslaget».
 
+### 4.23 Malerverkstedet og navnet på skroget (06.–07.10.2026)
+
+Jonas' bestilling ligger i `docs/engasjement.md`, arbeidslista punkt 1. Steg 1 og 2 er bygget: skrogfarge, navn på alle båter og malingen til andre spillere. Malingsdesign, flagg, registreringsmerke og rederilogo kommer etter.
+
+- **Malerverkstedet** (`ui/10j-paint.js`) er en egen knapp i Verft-vifta og åpner en side i skuffen (`maler`).
+  - 16 skrogfarger i `HULLPAL` (`vessel3d.js`), og «Original».
+  - Fargen koster spillpenger: rundt 1 % av båtprisen, minst 1 500 kr (`PAINT.price`). Første fargevalg på hver båt er gratis.
+  - Malingen lagres i båtens egen tilstand: `b.liv = {hull:key}` i `S.boat`, som følger fartøyet i flåten og i lagringen. En båt som tas i innbytte (`switchVessel`), og en ny båt i flåten starter uten maling.
+  - Det legges ikke inn ventetid: fargen gjelder med en gang.
+- **Forhåndsvisningen:** fargen du trykker på, settes i `PAINTPRE` og vises på båten før du betaler (`hullLiv`).
+  - `G3.paintView` lar kameraet gå sakte rundt egen båt og legger båten midt i det skuffen lar være fritt (`paintAim`).
+  - Skuffen styrer det: `DOCK` kaller `PAINT.live` når siden åpnes og lukkes.
+- **I 3D:**
+  - En detaljert modell males i sone 1 (`glbPaint`), med den innbakte skyggen beholdt.
+  - En byggesettbåt får fargen i `col.hull`.
+  - Egen båt har egne buffere (`pvm(t, liv)`, nøkkel `type|own`). Bare fargebufferen lastes opp på nytt når fargen endres, så å prøve farger bygger ingenting nytt. Den håndstyrte båten gjør det samme med `paintHand`.
+  - Trebåten (`snekke23.py`) har fått sone 1 på plankene og er eksportert på nytt.
+- **Navnet på skroget** (Jonas 07.10.2026: «vises godt på skroget på alle båtene»):
+  - `nameStrips(type)` finner en stripe på hver side forut ut fra modellen selv. Skrogets trekanter som vender ut mot styrbord, kuttes ved hver stasjon. Det gir toppen og bunnen av skutesiden og bredden i hver høyde. Små hull i flaten, som spylegatt, bygges det bro over.
+  - Stripa er inntil 0,025 L + 5 cm høy (16–90 cm), fire ganger så lang som høy, og midten står en firedel av lengden fra stevnen. Enden ved stevnen holdes av til registreringsmerket.
+  - Bokstavene er lyse på mørkt skrog og mørke på lyst (`hullRGB`, `isLight`).
+  - Egen båt tegnes i `drawVessel(..., named)`, den håndstyrte med sine egne ankre.
+  - De seks nærmeste andre båtene innenfor 250 m (fiskeflåten, kysttrafikken og andre spillere) får navnet sitt med teksturer fra et lite lager (`nameTex`, høyst 10).
+- **Andre spillere ser malingen** (`supabase/migrations/20261007090000_livery.sql`):
+  - `presence.liv` er en kort kode (`'h:kobolt'`, senere også design, flagg, merke og logo). Den er begrenset til bokstaver, tall og noen skilletegn, og til 160 tegn.
+  - `pos_put` har fått argumentet `liv` med standardverdi, og den gamle versjonen med sju argumenter er fjernet. `pos_near` leverer feltet videre.
+  - Spillet sender `livStr(S.boat)` bare når båten er malt. Svarer serveren 404 på et kall med `liv`, sendes posisjonen uten (`WORLDP.noLiv`), så den felles verdenen aldri slås av.
+  - `peerStates` tar `liv` med, og `npcModel` bygger modellen med `livParse(liv)`. Bare farger fra `HULLPAL` godtas.
+- **Test:**
+  - `maletest`: knappen, siden, prøvefargen, at første fargevalg er gratis, prisen, for lite penger, lagringen, lukking og innbytte.
+  - `cloudtest`: malingen går opp og ned, og en server uten den ennå gir ingen avbrudd.
+  - `sqltest`: feltet vaskes, kortes og leveres videre.
+  - Navnene er sjekket på bilder fra siden for alle båttypene.
+
 ## 5. Systemer i spillet
 
 ### 5.1 Båter og utstyr

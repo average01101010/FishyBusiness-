@@ -32,6 +32,7 @@ async def page(br, calls, replies, no_user=False):
         except Exception: body = {}
         calls.append((fn, body, req.headers.get('authorization', '')))
         r = replies.get(fn, '')
+        if callable(r): r = r(body)   # a reply that depends on what was sent
         if r == 404: return await route.fulfill(status=404, content_type='application/json', body='{"code":"PGRST202"}')   # a function the database does not have
         await route.fulfill(status=200, content_type='application/json', body=r if isinstance(r, str) else json.dumps(r))
     await pg.route('https://sb.test/**', handle)
@@ -121,6 +122,17 @@ async def main():
         wp = [c[1] for c in calls[n0:] if c[0] == 'pos_put']; wn = [c[1] for c in calls[n0:] if c[0] == 'pos_near']
         check(wp and wp[0]['boat'] and wp[0]['vtype'] and abs(wp[0]['x'] - pos['x']) < 0.01 and wn and w['n'] and w['n']['name'] == 'Fjordbris' and w['n']['L'] > 5 and 'Spiller' in w['card'] and 'Fjordbris' in w['card'],
               "the shared world: my boat's place, name and type go up, and another player's boat near by shows among the boats, with its own AIS card", {'put': wp[0] if wp else None, 'peer': w['n']})
+        # the paint goes along (20261007090000_livery.sql), and the other player's paint comes down to her model; a server without it yet
+        # (404 for a call with liv) gets the place without the paint, and the shared world stays on
+        replies['pos_near'][0]['liv'] = 'h:gul'; n0 = len(calls)
+        lv = await pg.evaluate("async () => { S.boat.liv = {hull:'kobolt'}; WORLDP.last = 0; await worldTick(); const n = npcStates(S.t / 60).find(q => q.player); return {liv:n && n.liv, parsed:n && livParse(n.liv)}; }")
+        wl = [c[1].get('liv') for c in calls[n0:] if c[0] == 'pos_put']
+        replies['pos_put'] = lambda b: 404 if 'liv' in b else 'null'; n0 = len(calls)
+        old = await pg.evaluate("async () => { await worldTick(); return {off:!!WORLDP.off, noLiv:!!WORLDP.noLiv, peers:PEERS.length}; }")
+        wo2 = [('liv' in c[1]) for c in calls[n0:] if c[0] == 'pos_put']
+        check(wl == ['h:kobolt'] and lv['liv'] == 'h:gul' and lv['parsed'] and abs(lv['parsed']['hull'][0] - 0.95) < 1e-6 and wo2 == [True, False] and not old['off'] and old['noLiv'] and old['peers'] == 1,
+              "the boat's paint goes up with her place and another player's paint comes down to her model; a server without paint yet gets the place without it, and the shared world stays on", {'up': wl, 'peer': lv, 'old': old, 'calls': wo2})
+        replies['pos_put'] = 'null'; S_reset = await pg.evaluate("(() => { delete S.boat.liv; WORLDP.noLiv = false; return 1; })()")
         n0 = len(calls)
         await pg.evaluate("async () => { cloudAct('cloudShowMe'); await new Promise(r => setTimeout(r, 300)); await worldTick(); }")
         wo = [c[0] for c in calls[n0:]]

@@ -11,8 +11,11 @@ async function worldTick(){
   WORLDP.busy = true;
   try {
     const b = S.boat;
-    if (S.settings.showMe !== false) await cloudRpc('pos_put', {x:+b.pos.x.toFixed(4), y:+b.pos.y.toFixed(4), hd:+(b.heading || 0).toFixed(3),
-      v:+(b.status === 'sailing' ? b.v || 0 : 0).toFixed(1), st:String(b.status || ''), boat:S.boatName || '', vtype:b.type || ''});
+    // the paint goes along when there is any (vessel3d.js livStr); a server without it yet (404) gets the position without it
+    if (S.settings.showMe !== false){ const a = {x:+b.pos.x.toFixed(4), y:+b.pos.y.toFixed(4), hd:+(b.heading || 0).toFixed(3),
+      v:+(b.status === 'sailing' ? b.v || 0 : 0).toFixed(1), st:String(b.status || ''), boat:S.boatName || '', vtype:b.type || ''}, lv = livStr(b);
+      if (lv && !WORLDP.noLiv){ try { await cloudRpc('pos_put', Object.assign({liv:lv}, a)); } catch (e){ if (!/ 404$/.test(e.message)) throw e; WORLDP.noLiv = true; await cloudRpc('pos_put', a); } }
+      else await cloudRpc('pos_put', a); }
     const list = await cloudRpc('pos_near', {x:b.pos.x, y:b.pos.y, r:WORLD_R}) || [], now = Date.now();
     PEERS.length = 0; for (const q of list) PEERS.push({...q, at:now - (q.age || 0) * 1000});
     WORLDP.last = now; WORLDP.err = 0;

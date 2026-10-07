@@ -243,6 +243,11 @@ def main():
         R['topEvil'] = json.loads(sql("select public.world_top(7)", A, 'authenticated'))['rows']
         sql("select public.pos_put(860, 350, 0, 0, 'sailing', '<img src=x>Ond', 'skiff')", B, 'authenticated')
         R['posEvil'] = [q['boat'] for q in json.loads(sql("select public.pos_near(860, 350, 20)", A, 'authenticated'))]
+        # the paint goes along (20261007090000_livery.sql): kept to its own characters and length, and handed on
+        sql("select public.pos_put(860, 350, 0, 0, 'sailing', 'Fjordbris', 'skiff', 'h:kobolt<script>' || repeat('x', 300))", B, 'authenticated')
+        R['posLiv'] = [q.get('liv') for q in json.loads(sql("select public.pos_near(860, 350, 20)", A, 'authenticated'))]
+        sql("select public.pos_put(860, 350, 0, 0, 'sailing', 'Fjordbris', 'skiff')", B, 'authenticated')
+        R['posLiv0'] = [q.get('liv') for q in json.loads(sql("select public.pos_near(860, 350, 20)", A, 'authenticated'))]
         # push rules (20261006030000_push_rules.sql): one message for what is due at once, four a day, nothing in the night, nothing stale,
         # and the server's own: passed on the leaderboard, and the week's result
         sql("select public.push_sub('https://fcm.googleapis.com/fcm/send/bbb', 'BPkey2', 'authkey2', 'no')", B, 'authenticated')
@@ -369,6 +374,9 @@ def main():
                  and R['topEvil'] and R['topEvil'][0]['boat'] == 'iOnd/i' and R['posEvil'] == ['img src=xOnd']),
               "the leaderboards: the players of the whole coast by what they landed in the open or the closed group that game week (the closed group with the company's name); in the open in the open group that game week, under the boat's latest name and the plant they delivered most to (a closed-group landing does not count, a landing at most 10 t), with one's own rank, never an account; a boat's name loses anything that could make markup (also on the AIS)",
               R['topB'])
+        lv = (R['posLiv'] or [''])[0] or ''
+        print(ok(lv.startswith('h:koboltscript') and len(lv) == 160 and '<' not in lv and R['posLiv0'] == ['']),
+              "a boat's paint goes along with her position, kept to letters, digits and separators and 160 characters, and empty when the game sends none", {'liv': lv[:30], 'n': len(lv), 'none': R['posLiv0']})
         print(ok(all(R[k][0] for k in ('wBadT', 'wBadC', 'wRead', 'wAnon', 'wAdmPl')) and R['wGone'].startswith('0/0/')),
               'the shared world: a bad time, too many cells, reading the tables, the anonymous and a player asking the admin sums are refused; the landings and catches go with the account',
               [R[k][1][:40] for k in ('wBadT', 'wBadC', 'wRead', 'wAnon', 'wAdmPl')] + [R['wGone']])

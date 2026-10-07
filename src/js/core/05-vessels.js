@@ -187,7 +187,7 @@ function npcStates(H, only){
   if (!only || only[0] === 'p') for (const n of peerStates()) if (!only || only === n.id) out.push(n);
   return out;
 }
-// The other players' boats as the server last told them (ui/10h-world.js fills PEERS every 15 s: {id, boat, vtype, x, y, hd, v, st, at}),
+// The other players' boats as the server last told them (ui/10h-world.js fills PEERS every 15 s: {id, boat, vtype, x, y, hd, v, st, liv, at}),
 // carried on along their heading at their speed for up to 30 real seconds since they were heard, so they glide between reports. They
 // look like the boat type they are (its length and beam pick the model, view3d.js npcKit) and carry the boat's name on the AIS.
 const PEERS = [];
@@ -199,7 +199,7 @@ function peerStates(){
   for (const q of PEERS){
     const V = VESSELS[q.vtype] || VESSELS.trebat, dt = Math.min(30, Math.max(0, (now - q.at) / 1000)), moving = q.st === 'sailing' && q.v > 0.2;
     const d = moving ? q.v * NM * dt * GAME_RATE / 3600 : 0, p = {x:q.x + Math.sin(q.hd) * d, y:q.y - Math.cos(q.hd) * d};
-    out.push({id:'p' + q.id, name:peerName(q.boat), type:V.len >= 11 ? 'kyst' : 'sjark', p, hd:q.hd, cog:q.hd, v:moving ? q.v : 0, st:q.st === 'fishing' ? 'fishing' : q.st === 'port' ? 'port' : 'out', player:true, vtype:q.vtype, L:V.len, B:V.beam || V.len / 3, liv:0});
+    out.push({id:'p' + q.id, name:peerName(q.boat), type:V.len >= 11 ? 'kyst' : 'sjark', p, hd:q.hd, cog:q.hd, v:moving ? q.v : 0, st:q.st === 'fishing' ? 'fishing' : q.st === 'port' ? 'port' : 'out', player:true, vtype:q.vtype, L:V.len, B:V.beam || V.len / 3, liv:String(q.liv || '').slice(0, 160)});
   }
   return out;
 }

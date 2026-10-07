@@ -9,6 +9,7 @@ const DOCK = (() => {
   const IC = {
     marked:SVG('<path d="M3 9l2-5h14l2 5"/><path d="M3 9h18v1.5a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0z"/><path d="M5 13.5V20h14v-6.5"/><path d="M10 20v-4h4v4"/>'),
     bygd:SVG('<path d="M3 20v-9l5-4 5 4v9"/><path d="M13 20v-6l4-3 4 3v6"/><path d="M2 20h20"/><path d="M7 20v-4h2v4"/>'),
+    maler:SVG('<rect x="3" y="3" width="14" height="6" rx="1.5"/><path d="M17 6h3v5h-8v3"/><rect x="10.5" y="14" width="3" height="7" rx="1"/>'),
     verft:SVG('<path d="M6 21V3"/><path d="M3 21h7"/><path d="M6 4h14"/><path d="M6 9l5-5"/><path d="M17 4v6"/><path d="M15 12h4v1.5a2 2 0 0 1-4 0z"/>'),
     kart:SVG('<path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/>'),
     beh:SVG('<path d="M3 8l9-4 9 4v9l-9 4-9-4z"/><path d="M3 8l9 4 9-4M12 12v9"/>'),
@@ -41,7 +42,7 @@ const DOCK = (() => {
     bunker:SVG('<path d="M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16"/><path d="M3 21h14"/><path d="M7.5 8h5"/><path d="M15 9h2a2 2 0 0 1 2 2v5a1.5 1.5 0 0 0 3 0V8l-3-3"/>')};
   // the drawer's pages: title, and the pages that share a row of tabs
   const TITLE = {lever:['Lever fangst', 'Land the catch'], is:['Is', 'Ice'], agn:['Agn og egning', 'Bait and baiting'], bank:['Kystbanken', 'The bank'], oppdrag:['Oppdrag', 'Orders'],
-    mannskap:['Mannskap', 'Crew'], bors:['Mannskap', 'Crew'], fartoy:['Båthandel', 'Boat market'], utstyr:['Oppgraderinger', 'Upgrades'], fiske:['Fiskeutstyr', 'Tackle'],
+    mannskap:['Mannskap', 'Crew'], bors:['Mannskap', 'Crew'], fartoy:['Båthandel', 'Boat market'], maler:['Malerverksted', 'Paint shop'], utstyr:['Oppgraderinger', 'Upgrades'], fiske:['Fiskeutstyr', 'Tackle'],
     redskap:['Redskap', 'Gear'], rigg:['Rigg', 'Rig'], arbeid:['Arbeid om bord', 'Work aboard'], verksted:['Vedlikehold', 'Maintenance'], havn:['Havn', 'Harbour'], last:['Lasterom', 'Hold'], beholdning:['Beholdning', 'Inventory']};
   const TABS = {mannskap:[['mannskap', 'Om bord', 'Aboard'], ['bors', 'Mannskapsbørs', 'Crew exchange']], bors:null};
   TABS.bors = TABS.mannskap;
@@ -89,6 +90,7 @@ const DOCK = (() => {
         I('fiskeutstyr', 'fiskeutstyr', 'Fiskeutstyr', 'Tackle', {page:'fiske'}),
         I('rigg', 'rigg', 'Rigg: ' + RIGS[rigOf()].no, 'Rig: ' + RIGS[rigOf()].en, {page:'rigg'}),
         I('vedlikehold', 'vedlikehold', 'Vedlikehold', 'Maintenance', {page:'verksted', dot:svcOverdue() > 0}),
+        I('maler', 'maler', 'Malerverksted', 'Paint shop', {page:'maler'}),
         I('bunker', 'bunker', 'Bunkring', 'Fuel', {act:'fuel', off:!p.fuel ? [L('Det er ikke drivstoff å få i ' + p.name + '.', 'There is no fuel to be had in ' + p.name + '.')] : need < 0.5 ? [L('Tanken er full.', 'The tank is full.')] : portBusy(b) ? [L('Vent til arbeidet på kaia er ferdig.', 'Wait until the work on the quay is done.')] : null})]; }
     if (m === 'settut') return setChoices().map((c, i) => I('set' + i, 'settut', c.lbl[0], c.lbl[1], {act:'gset', data:{c:i}, wide:true}));
     if (m === 'taopp'){ const s = nearSet(b.pos, 0.3); if (!s) return [];
@@ -231,6 +233,7 @@ const DOCK = (() => {
   }
   let shown = '';
   function draw(keep){
+    if (PAINT) PAINT.live(page === 'maler' && !dr.hidden);   // the paint shop's camera and colour go with its page (ui/10j-paint.js)
     if (!page) return;
     const y = keep ? dBody.scrollTop : 0, t0 = TITLE[page] || [page, page];
     dTitle.textContent = L(t0[0], t0[1]); drawTabs();
@@ -242,7 +245,7 @@ const DOCK = (() => {
     if (sb) PHONE.dact(pg, 'sub', {s:sb});
     dr.hidden = false; document.body.classList.add('dk-open'); shown = ''; draw(was === pg); render();
   }
-  function close(){ page = null; dr.hidden = true; document.body.classList.remove('dk-open'); shown = ''; html = ''; render(); }
+  function close(){ page = null; dr.hidden = true; document.body.classList.remove('dk-open'); shown = ''; html = ''; if (PAINT) PAINT.live(false); render(); }
   dTabs.addEventListener('click', e => { const el = e.target.closest('[data-pg]'); if (el){ page = el.dataset.pg; shown = ''; draw(false); } });
   $('drawerClose').addEventListener('click', close);
   dBody.addEventListener('click', e => {
