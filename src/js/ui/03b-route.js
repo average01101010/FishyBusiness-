@@ -126,7 +126,7 @@ function leiaArm(on){
   LEIA_ARM = on && canEditDraft(); if (LEIA_ARM) toast(S.lang === 'no' ? 'Autonav: trykk i kartet der du vil. Båten finner en trygg vei dit.' : 'Autonav: tap the chart where you want to go. The boat finds a safe way there.');
   panelDirty = true; renderPanel(); renderRouteTools();
 }
-async function leiaTo(pt, buoy){   // buoy: to a set's buoy, to haul it (the rules are not asked)
+async function leiaTo(pt, buoy, act){   // buoy: to a set's buoy, to haul it (the rules are not asked); act: what the boat does there (a haul)
   const b = S.boat; LEIA_ARM = false;
   if (!canEditDraft() || LEIA_BUSY) return;
   if (S.draft.length && S.draft[S.draft.length - 1].port){ toast(t('ends_port')); return; }
@@ -160,6 +160,8 @@ async function leiaTo(pt, buoy){   // buoy: to a set's buoy, to haul it (the rul
   if (res.why){ toast(S.lang === 'no' ? res.why[0] : res.why[1]); routeChanged(); return; }
   draftEdit(() => { res.wps.forEach((q, i) => { const last = i === res.wps.length - 1; S.draft.push(last && near ? {x:near.p.x, y:near.p.y, port:near.id, fish:0} : {x:q.x, y:q.y, port:null, fish:0, leia:true}); });
     if (nt){ const e = S.draft[S.draft.length - 1]; Object.assign(e, {x:nt.x, y:nt.y, berth:'naust'}); } });   // on to the naust from its harbour's way in
+  // at a set's buoy the haul starts on arrival (tilbakemelding #31: «skal båten automatisk starte å trekke lina»)
+  if (act && !near && S.draft.length){ const e = S.draft[S.draft.length - 1]; e.act = act; e.leia = false; }
   if (near && window.innerWidth <= 700) document.body.classList.add('drawer');
   if (tab !== 'route') setTab('route');
   routeChanged(); save();

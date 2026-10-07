@@ -83,8 +83,8 @@ function buoyStandoff(s, e){
 // a tap on a buoy: while planning, the haul goes into the route; otherwise the set is described
 function gearTap(hit){
   const b = S.boat, s = hit.s;
-  // with Autonav the way goes to a point just off the buoy, where «Ta opp» can haul it
-  if (LEIA_ARM && s.vid === S.cur && !s.lost){ leiaTo(buoyStandoff(s, hit.e), true); return; }
+  // with Autonav the way goes to a point just off the buoy, and the haul starts there
+  if (LEIA_ARM && s.vid === S.cur && !s.lost){ leiaTo(buoyStandoff(s, hit.e), true, {op:'haul', sid:s.id, kind:s.kind}).then(() => { const w = S.draft[S.draft.length - 1]; if (w && w.act && w.act.sid === s.id) toast(GL('Trekk av ' + GEAR[s.kind].no.toLowerCase() + ' er lagt i ruta. Det starter når du er framme.', 'Hauling the ' + GEAR[s.kind].en.toLowerCase() + ' is in the route. It starts when you get there.')); }); return; }
   if (s.vid === S.cur && !s.lost && ['port', 'idle'].includes(b.status)){
     addWaypoint(hit.e); const w = S.draft[S.draft.length - 1];
     if (w && !w.port && dist(w, hit.e) < 0.01){ w.act = {op:'haul', sid:s.id, kind:s.kind}; toast(GL('Trekk av ' + GEAR[s.kind].no.toLowerCase() + ' er lagt i ruta.', 'Hauling the ' + GEAR[s.kind].en.toLowerCase() + ' is in the route.')); panelDirty = true; }

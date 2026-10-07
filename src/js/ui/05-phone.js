@@ -416,6 +416,7 @@ const PHONE = (() => {
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
     ['p88', '07.10.2026', 'Rettinger', 'Fixes', [
+      ['Med Autonav til ei blåse starter båten å trekke lina, garna eller teinene selv når den er framme.', 'With Autonav to a buoy, the boat starts hauling the line, the nets or the pots by itself when she gets there.'],
       ['Redningsskøyta har stasjoner langs hele kysten, fra Hvaler til Kirkenes, og den nærmeste rykker ut. Mens den er ute etter deg, vises den på AIS.', 'The rescue boat has stations along the whole coast, from Hvaler to Kirkenes, and the nearest one turns out. While she is out for you, she shows on the AIS.'],
       ['Ligger båten ved fars naust, starter Autonav og ruta i kartplotteren ved naustet, og båten går rett derfra. Før startet ruta ved mottaket.', 'When the boat lies at Father\'s boathouse, Autonav and the route on the chart plotter start at the boathouse, and the boat leaves straight from there. Before, the route started at the plant.'],
       ['Ligger flere kaier innen rekkevidde, for eksempel rorbua og mottaket like ved, viser «Fortøy» alle, så du kan velge hvor båten skal legge til. Før gikk den alltid til den nærmeste.', 'When several quays are within reach, say the rorbu and the plant close by, «Moor» shows them all, so you can choose where the boat goes in. Before, she always went to the nearest.'],
