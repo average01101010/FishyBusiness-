@@ -45,6 +45,9 @@ function rorbuSite(R){
   // the harbour point 15 m out from the face (where a route ends and the way in starts), the shore point 20 m in
   R.p = {x:Math.round(o[0] + N[0] * 15) / 1000, y:Math.round(o[1] + N[1] * 15) / 1000}; R.coast = {x:(sp.o[0] - N[0] * 20) / 1000, y:(sp.o[1] - N[1] * 20) / 1000};
   R.xy = [R.p.x, R.p.y]; RORBU.ver = (RORBU.ver || 0) + 1;
+  // a boat moored here before the shore was found lay at the candidate point, by the plant's quay: the chart and the routes put her there
+  // while the 3D view had her at the rorbu (tilbakemelding #34)
+  if (S && S.fleet) for (const v of S.fleet){ const b = vget(v, 'boat'); if (b && b.status === 'port' && b.port === R.id){ b.pos = {x:R.p.x, y:R.p.y}; if (v.id === S.cur) S.trail = [{x:R.p.x, y:R.p.y, port:R.id}]; } }
   return R.site;
 }
 const isRorbu = pid => RBID.has(pid);

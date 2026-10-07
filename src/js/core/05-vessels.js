@@ -352,6 +352,7 @@ function arrive(w){
 }
 function dock(pid, berth){
   const b = S.boat, port = portById(pid); S.tripBuff = null; if (b.gop) gopAbort('dock');
+  if (port.rorbu) rorbuSite(port);   // its berth is found before the boat is put there (07d-rorbu.js)
   b.status = 'port'; b.port = pid; b.v = 0; b.fishUntil = null; b.pos = {x:port.p.x, y:port.p.y}; b.moorT = S.t; b.shift = b.fueling = b.after = null;
   b.berth = berth === 'naust' && quayFace(pid, 'naust') ? 'naust' : 'main';   // a route can end at Father's naust (07c-naust.js)
   const wasOps = S.plan && S.plan.ops;

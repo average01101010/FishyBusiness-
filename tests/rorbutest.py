@@ -85,6 +85,13 @@ async def main():
           await new Promise(res => setTimeout(res, 1500)); const n = document.querySelectorAll('#map .rorbu').length, lbl = [...document.querySelectorAll('#map text')].some(t => t.textContent.startsWith('Rorbu '));
           return {n, lbl, z:view.z}; })""", rid)
         check(r['n'] >= 1 and r['lbl'], 'the chart plotter draws the rorbuer as little houses with their names', r)
+        # 7b. moored at a rorbu before its shore was found (tilbakemelding #34): the boat was put by the plant's quay while the 3D view had
+        # her at the rorbu; now the position follows the berth, in a game saved that way and when docking
+        r = await pg.evaluate("""(async rid => { const R = RBID.get(rid), b = S.boat; await mapNeed(R.cand, 2); const out = {};
+          R.site = undefined; R.p = {...R.cand}; b.status = 'port'; b.port = rid; b.pos = {...R.cand}; S.plan = null; rorbuSite(R); out.saved = Math.round(dist(b.pos, R.p) * 1000); out.moved = Math.round(dist(R.cand, R.p) * 1000);
+          R.site = undefined; R.p = {...R.cand}; b.status = 'idle'; b.port = null; b.pos = {x:R.cand.x + 0.2, y:R.cand.y}; dock(rid); out.dock = Math.round(dist(b.pos, R.p) * 1000); out.far = Math.round(dist(b.pos, R.cand) * 1000);
+          return out; })""", rid)
+        check(r['saved'] == 0 and r['dock'] == 0 and r['moved'] > 20 and r['far'] > 20, 'a boat moored at a rorbu lies at its berth, not at the plant\'s quay: also in a game saved before the shore was found, and when docking', r)
         # 8. a save at the rorbu is loaded again
         await pg.evaluate("""(rid => { const R = RBID.get(rid), b = S.boat; b.status = 'port'; b.port = rid; b.pos = {x:R.p.x, y:R.p.y}; S.plan = null; S.rest = null; restStart(); save(); })""", rid)
         await pg.reload(); await pg.wait_for_function("typeof S !== 'undefined' && !!S.boat", timeout=90000); await pg.wait_for_timeout(1500)
