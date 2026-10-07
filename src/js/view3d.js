@@ -1637,11 +1637,11 @@ const G3 = (() => {
     const slots = deckSlots(L.kind), wpos = q => { const r = xf(BMrel, q); return [r[0] + eye[0], r[1] + eye[1], r[2] + eye[2]]; }, K = wpos(slots[0]), D = P.drop;
     const pd = poseTo(P, D[0], D[1], HOOK_UP), pk = poseTo(P, K[0], K[2], HOOK_UP), idle = craneIdle(P, T), tR = j => pr + (j + hk) * lf;
     let pose, hang = null, i = -1, u = 0;
-    if (e < pr) pose = poseMix(idle, pd, ease(seg(e, 1.5, 3.5)));
+    if (e < pr) pose = poseMix(idle, pk, ease(seg(e, 0, pr)));   // straight over to the first load
     else if (e < pr + n * lf){
       i = Math.min(n - 1, Math.floor((e - pr) / lf)); u = (e - pr) / lf - i;
       const yk = K[1] + hh(i) + 0.1, yd = QTOP + (i % 2 ? hh(i - 1) : 0) + hh(i) + 0.1;
-      if (u < 0.18) pose = poseMix(pd, pk, ease(seg(u, 0, 0.18)));
+      if (u < 0.18) pose = i === 0 ? pk : poseMix(pd, pk, ease(seg(u, 0, 0.18)));
       else if (u < 0.32) pose = {...pk, hook:HOOK_UP + (yk - HOOK_UP) * ease(seg(u, 0.18, 0.32))};
       else if (u < 0.42) pose = {...pk, hook:yk};
       else if (u < 0.56) pose = {...pk, hook:yk + (HOOK_UP - yk) * ease(seg(u, 0.42, 0.56))};
@@ -2883,9 +2883,10 @@ const G3 = (() => {
 
   // ---------- mooring: in along the quay, then the lines: aft spring first, bow line, stern line, fore spring (and in reverse when casting off) ----------
   const MO = {key:'', phase:'', t:0, from:null, dur:0, lines:0, len:[0, 0, 0, 0], init:false};
-  const LINE_S = 1.8;   // seconds for each line to go on
+  const LINE_S = 1.2;   // seconds for each line to go on
   let ROPEM = null, FENDM = null;
-  function buildMooring(){ const r = NB(); r.tube([[0, 0, 0], [0, 0, 1]], 1, [0.2, 0.36, 0.72, 0.15], 6); ROPEM = r.mesh(); const f = NB(); f.tube([[0, -0.26, 0], [0, 0.26, 0]], 0.12, [0.93, 0.93, 0.9, 0.35], 10); FENDM = f.mesh(); }
+  function buildMooring(){ const r = NB(); r.tube([[0, 0, 0], [0, 0, 1]], 1, [0.46, 0.33, 0.19, 0.12], 6);   // brown mooring lines (tilbakemelding #22)
+    ROPEM = r.mesh(); const f = NB(); f.tube([[0, -0.26, 0], [0, 0.26, 0]], 0.12, [0.93, 0.93, 0.9, 0.35], 10); FENDM = f.mesh(); }
   function berthNow(){
     const b = S.boat; if (!((b.status === 'port' || b.status === 'unmooring') && b.port)) return null;
     const sh = b.shift, kind = sh ? (S.t + currentFrac() < sh.castUntil ? sh.from : sh.to) : berthKind(b);
@@ -2926,7 +2927,7 @@ const G3 = (() => {
     if (MO.key !== key){
       const d = Math.hypot(bv.px - X, bv.pz - Z); MO.key = key; MO.len = [0, 0, 0, 0];
       if (d < 3 || b.status === 'unmooring' || !MO.init){ MO.phase = 'moored'; MO.lines = 4; }
-      else { MO.phase = 'in'; MO.t = 0; MO.from = {x:bv.px, z:bv.pz, h:bv.cog}; MO.path = pathM(berthPath({x:bv.px / 1000, y:bv.pz / 1000}, bp)); MO.dur = clamp(MO.path.len / 1.6, 8, 60); MO.lines = 0; }
+      else { MO.phase = 'in'; MO.t = 0; MO.from = {x:bv.px, z:bv.pz, h:bv.cog}; MO.path = pathM(berthPath({x:bv.px / 1000, y:bv.pz / 1000}, bp)); MO.dur = clamp(MO.path.len / 2.2, 6, 45); MO.lines = 0; }
       MO.init = true;
     }
     if (b.status === 'unmooring'){ MO.phase = 'out'; MO.lines = clamp(4 * (b.castUntil - S.t - currentFrac()) / CAST_MIN, 0, 4); MO.dep = {bp, pid:b.port, naust:berthKind(b) === 'naust'}; }

@@ -32,9 +32,9 @@ async def main():
           b.status = 'port'; b.port = 'husoy'; b.pos = {...q.p}; S.plan = null; b.ice = 0; b.iceUntil = 0; doAct({dataset:{act:'ice'}, disabled:false}); R.ice = {kg:b.ice, run:b.iceUntil - S.t};
           return R; })()""")
         print(json.dumps(r, ensure_ascii=False))
-        print(ok(r['btn'] and r['plan'] == {'kind':'box', 'n':8, 'lifts':1, 'dur':12.5} and r['stillHold'] == 300 and 'kranen' in r['bar']), 'the Land button starts a landing: 8 boxes in one lift, 12.5 game minutes, the fish stays aboard until then')
+        print(ok(r['btn'] and r['plan'] == {'kind':'box', 'n':8, 'lifts':1, 'dur':await pg.evaluate('LANDING.prep + LANDING.lift + LANDING.note')} and r['stillHold'] == 300 and 'kranen' in r['bar'].lower()), 'the Land button starts a landing: 8 boxes in one lift (the crane swings straight over, one lift, the note), the fish stays aboard until then')
         print(ok(r['depAt'] == 1 and r['midPort'] and r['holdBefore'] == 300), 'a route set during the landing leaves the minute after it is done')
-        print(ok(r['landed'] and r['after'] == 'unmooring'), 'the landing note comes at the end, then she casts off')
+        print(ok(r['landed'] and r['after'] in ('unmooring', 'sailing')), 'the landing note comes at the end, then she casts off (one minute for the lines)')
         print(ok(r['sjark']['kind'] == 'tub' and r['sjark']['lifts'] == 9 and r['sjarkny']['lifts'] == 20 and r['snekke']['lifts'] == 3), 'sjarks land in tubs of 300 kg, skiffs and snekker in boxes of 40 kg, nine to a lift')
         print(ok(r['ice']['kg'] == 50 and r['ice']['run'] == 1), 'ice runs down the chute')
         # in 3D: the hook is over the deck when a load is hooked on and over the drop spot when it is let go, and every plant's
@@ -47,14 +47,16 @@ async def main():
         # the sjark's model and the landing scene take a moment to come (2.6 s here): wait for them instead of a fixed pause
         await pg.wait_for_function("!!G3._debug.PLANTS.find(q => q.id === 'torsken').scene", timeout=120000)
         S3 = []
-        for e in [5 + 0.40 * 2.5, 5 + 0.90 * 2.5, 5 + 1.40 * 2.5, 5 + 1.90 * 2.5]:
+        pr = await pg.evaluate('LANDING.prep')
+        for e in [pr + 0.40 * 2.5, pr + 0.90 * 2.5, pr + 1.40 * 2.5, pr + 1.90 * 2.5]:
             # set the landing's clock, and wait for a frame that shows it (a fixed pause was too short when the frames are slow)
             await pg.evaluate(f"S.boat.land.t0 = S.t + liveFrac() - {e}")
-            await pg.wait_for_function("(e) => { const s = G3._debug.PLANTS.find(q => q.id === 'torsken').scene; return !!s && Math.abs(s.e - e) < 0.3; }", arg=e, timeout=180000); await pg.wait_for_timeout(300)
-            S3.append(await pg.evaluate("""(()=>{ const P = G3._debug.PLANTS.find(q => q.id === 'torsken'), s = P.scene; if (!s) return null;
+            # read the frame that shows it, in the same check (a later frame can be a minute on)
+            h = await pg.wait_for_function("""(e) => { const P = G3._debug.PLANTS.find(q => q.id === 'torsken'), s = P.scene; if (!s || Math.abs(s.e - e) >= 0.3) return null;
               const tip = [P.crane[0] + Math.sin(s.pose.a) * s.pose.r, P.crane[1] + Math.cos(s.pose.a) * s.pose.r];
-              return {i:s.i, u:Math.round(s.u * 100) / 100, hang:!!s.hang, deck:s.deck.length, quay:s.quay.length, toK:Math.round(Math.hypot(tip[0] - s.K[0], tip[1] - s.K[2]) * 100) / 100, hookOverDeck:Math.round((s.pose.hook - s.K[1]) * 100) / 100,
-                toD:Math.round(Math.hypot(tip[0] - P.drop[0], tip[1] - P.drop[1]) * 100) / 100, busy:s.busy.map(q => q.task)}; })()"""))
+              return {e:Math.round(s.e * 100) / 100, i:s.i, u:Math.round(s.u * 100) / 100, hang:!!s.hang, deck:s.deck.length, quay:s.quay.length, toK:Math.round(Math.hypot(tip[0] - s.K[0], tip[1] - s.K[2]) * 100) / 100, hookOverDeck:Math.round((s.pose.hook - s.K[1]) * 100) / 100,
+                toD:Math.round(Math.hypot(tip[0] - P.drop[0], tip[1] - P.drop[1]) * 100) / 100, busy:s.busy.map(q => q.task)}; }""", arg=e, timeout=180000)
+            S3.append(await h.json_value())
         print('runs:', runs); print('scenes:', json.dumps(S3))
         hooked = [S3[0], S3[2]]; down = [S3[1], S3[3]]
         print(ok(all(s and s['hang'] and s['toK'] < 0.3 and abs(s['hookOverDeck'] - 0.95) < 0.05 for s in hooked)), 'in 3D the hook is over the tub on deck when it is hooked on')

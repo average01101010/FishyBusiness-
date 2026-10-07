@@ -42,7 +42,7 @@ async def main():
           return R; })()""")
         print(json.dumps(r, ensure_ascii=False))
         print(ok(r['price']['min'] >= 14.5 * 0.84 and r['price']['max'] <= 14.5 * 1.16 and r['price']['weeks'] > 10 and r['price']['ports'] > 3), 'diesel price moves from week to week within ±16 % of 14,50 kr/l and differs between ports', r['price'])
-        print(ok(r['btn'] and r['shift'] and r['shift']['to'] == 'bunker' and r['shift']['cast'] == 2 and r['fuel0'] == 10 and 'bunkerskaia' in r['bar']), 'Refuel at Husøy casts off for the bunker quay (lines in for two minutes, then over)')
+        print(ok(r['btn'] and r['shift'] and r['shift']['to'] == 'bunker' and r['shift']['cast'] == await pg.evaluate('CAST_MIN') and r['fuel0'] == 10 and 'bunkerskaia' in r['bar']), 'Refuel at Husøy casts off for the bunker quay (lines in first, then over)')
         print(ok(r['berth'] == 'bunker' and r['fueling'] and r['fueling']['lpm'] == 45 and r['fueling']['liters'] == 80), 'made fast at the bunker quay, the pump starts: 80 L of petrol at 45 L/min')
         print(ok(r['flow'][0] <= 10 and r['flow'][-1] == 90 and len(set(r['flow'])) >= 3 and not r['after']['fueling'] and abs(r['after']['paid'] - r['after']['price']) <= 1), 'the fuel runs in over a few minutes and is paid as it fills')
         print(ok(r['back'] == 'main' and r['landing']), "landing from the bunker quay: back to the plant's quay, then the crane starts")

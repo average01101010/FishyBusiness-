@@ -204,7 +204,7 @@ function landText(short){
   const L0 = S.boat.land; if (!L0) return '';
   const st = landState(L0, S.t), L = (no, en) => S.lang === 'no' ? no : en, u = L0.kind === 'tub' ? L('kar', 'tubs') : L('kasser', 'boxes'), at = hm(L0.until / 60);
   // the action bar: a line for wide screens and a short one for narrow
-  if (short) return st.phase === 'prep' ? [L('Gjør klar kranen', 'Rigging the crane'), L('Kran', 'Crane')] : st.phase === 'note' ? [L('Veier inn · seddel ', 'Weighing · note ') + at, L('Seddel ', 'Note ') + at] : [L('Losser ', 'Landing ') + st.units + '/' + L0.n + ' ' + u, st.units + '/' + L0.n + ' ' + u];
+  if (short) return st.phase === 'prep' ? [L('Kranen svinger inn', 'The crane swings in'), L('Kran', 'Crane')] : st.phase === 'note' ? [L('Veier inn · seddel ', 'Weighing · note ') + at, L('Seddel ', 'Note ') + at] : [L('Losser ', 'Landing ') + st.units + '/' + L0.n + ' ' + u, st.units + '/' + L0.n + ' ' + u];
   return st.phase === 'prep' ? L('Mottaket gjør klar kranen og trucken.', 'The plant is getting the crane and the forklift ready.') : st.phase === 'note' ? L('Alt er på kaia. Fangsten veies inn.', 'Everything is ashore. The catch is being weighed in.')
     : L(st.units + ' av ' + L0.n + ' ' + u + ' er på kaia.', st.units + ' of ' + L0.n + ' ' + u + ' are ashore.');
 }

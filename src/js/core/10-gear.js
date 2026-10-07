@@ -485,7 +485,8 @@ function egnSelf(lk, n){
   if (b.status !== 'port') return [gL('Lina egnes i havn.', 'The line is baited in port.')];
   if (n < 1 || free < n) return [gL('Du har ikke så mange uegnede stamper om bord.', 'You do not have that many unbaited tubs aboard.')];
   const bk = baitPick(pg, kg); if (!bk) return [gL('Du trenger ' + fmt(kg, 0) + ' kg agn av samme slag.', 'You need ' + fmt(kg, 0) + ' kg of bait of one kind.')];
-  const hands = handsAboard(), eff = hands * teamEff(crewAboard(), meAboard(), 'line'); if (!hands) return [gL('Ingen om bord kan egne.', 'Nobody aboard can bait.')];
+  // two aboard bait twice as fast as one, three two and a half times (Jonas 07.10.2026, tilbakemelding #28), each further hand half a tub more
+  const hands = handsAboard(), eff = (hands <= 2 ? hands : 2 + 0.5 * (hands - 2)) * teamEff(crewAboard(), meAboard(), 'line'); if (!hands) return [gL('Ingen om bord kan egne.', 'Nobody aboard can bait.')];
   const h = Math.round(n * LINE_KINDS[lk].hooks / (GPRICE.egnRate * eff) * 10) / 10;
   if (!queueJob({kind:'egn', lk, n, h, bait:bk, no:'Egne ' + n + ' stamper med ' + BAITS[bk].no.toLowerCase(), en:'Bait ' + n + ' tubs with ' + BAITS[bk].en.toLowerCase()})) return [gL('Verkstedkøen er full.', 'The work queue is full.')];
   baitOf(pg)[bk] -= kg; L0.n -= n; pg.shore.push({kind:'egnself', lk, n});

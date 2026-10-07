@@ -416,6 +416,8 @@ const PHONE = (() => {
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
     ['p88', '07.10.2026', 'Rettinger', 'Fixes', [
+      ['Egning går dobbelt så fort med to om bord og to og en halv gang så fort med tre. Kranen på kaia svinger rett over og henter lasten, fortøying og kast loss går raskere, og tauene er brune.', 'Baiting goes twice as fast with two aboard and two and a half times as fast with three. The crane on the quay swings straight over for the load, mooring and casting off are quicker, and the lines are brown.'],
+      ['Salgslaget viser åpningstidene til mottakene, også de lengre tidene i skreisesongen.', 'The Sales app shows the plants\' opening hours, the longer ones in the skrei season too.'],
       ['Om bord vises aldri flere folk enn mannskapet og deg. Den som iser, skuffer is fra iskassa over fisken med spade, og den første blåsa går ut akter når du setter.', 'Aboard there are never more people than the crew and you. Whoever ices shovels ice from the ice bin over the fish, and the first buoy goes out astern when you set.'],
       ['Fangstmerket etter et trekk viser kilo per line, per garn og per teine. Garn som er satt sammen, regnes som ett garn.', 'The catch mark after a haul shows kilos per line, per net and per pot. Nets joined together count as one net.'],
       ['Med Autonav til ei blåse starter båten å trekke lina, garna eller teinene selv når den er framme.', 'With Autonav to a buoy, the boat starts hauling the line, the nets or the pots by itself when she gets there.'],

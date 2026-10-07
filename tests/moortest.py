@@ -31,7 +31,8 @@ async def main():
           for (let i = 0; i < 3; i++){ step(); R.st.push(b.status); }
           return R; })()""")
         print('cast off:', json.dumps(c))
-        print(ok(c['st0'] == 'unmooring' and c['until'] == 2 and c['st'] == ['unmooring', 'sailing', 'sailing']), 'casting off takes two game minutes, then she sails')
+        cm = await pg.evaluate('CAST_MIN')
+        print(ok(c['st0'] == 'unmooring' and c['until'] == cm and c['st'] == ['unmooring'] * (cm - 1) + ['sailing'] * (4 - cm)), 'casting off takes CAST_MIN game minutes, then she sails', cm)
         pl = json.loads(await pg.evaluate("JSON.stringify(G3._debug.PLANTS.map(P => P.id))"))
         print(ok(sorted(pl) == sorted(['husoy', 'senjahopen', 'botnhamn', 'gryllefjord', 'sommaroy', 'brensholmen', 'torsken', 'frovag'])), 'all eight fish plants are laid out in 3D (plant, silo, crane, people)')
         print('errors:', errs[:4]); await b.close()

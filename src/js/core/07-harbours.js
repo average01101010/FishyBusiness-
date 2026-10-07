@@ -143,7 +143,7 @@ function entryWps(pt, from){ if (clearLine(from, pt.p)) return []; const a = app
 // beam (m) of the player's vessels, for lying alongside
 // beam by vessel type, for the berths and the 3D view (the ocean vessels get their berths at the ocean step)
 const BEAM = Object.fromEntries(Object.entries(VESSELS).filter(([k, V]) => V.cls !== 'hav').map(([k, V]) => [k, V.beam]));
-const CAST_MIN = 2;   // game minutes to take the lines in before the boat moves
+const CAST_MIN = 1;   // game minutes to take the lines in before the boat moves (quicker, tilbakemelding #22)
 // Where a vessel lies in a harbour: alongside the quay in QUAYS (kind 'main' or 'bunker'), or else the quay face nearest the harbour's
 // berth point; parallel to it with the quay to starboard (where the skipper stands), off the face by half the beam and the fenders.
 // Returned in km like the rest of the chart, with the face (metres) for the bollards and fenders. null when there is no quay near:
@@ -221,7 +221,8 @@ function berthPath(from, bp){
 // The catch goes up with the quay crane: boxes of about 40 kg fish, nine to a pallet, from skiffs and snekker; tubs of about 300 kg
 // from the sjarks. The forklift takes two loads at a time into the plant, and the landing note comes when the catch is weighed in.
 // Game minutes; the 3D view plays the same timeline, so what you see is what the clock says. The times are guesses, to be tuned.
-const LANDING = {prep:5, lift:2.5, note:5, boxKg:40, perLift:9, tubKg:300, hooked:0.86};
+// prep: the crane swings straight over to the boat for the first load (Jonas 07.10.2026, tilbakemelding #22: no rigging first)
+const LANDING = {prep:1, lift:2.5, note:5, boxKg:40, perLift:9, tubKg:300, hooked:0.86};
 function landPlan(type, kg){
   const tub = (VESSELS[type] || {}).land === 'tub', n = Math.max(1, Math.ceil(kg / (tub ? LANDING.tubKg : LANDING.boxKg))), lifts = tub ? n : Math.ceil(n / LANDING.perLift);
   return {kind:tub ? 'tub' : 'box', n, lifts, dur:LANDING.prep + lifts * LANDING.lift + LANDING.note};
