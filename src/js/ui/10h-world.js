@@ -24,8 +24,27 @@ async function worldTick(){
     const list = await cloudRpc('pos_near', {x:b.pos.x, y:b.pos.y, r:WORLD_R}) || [], now = Date.now();
     PEERS.length = 0; for (const q of list) PEERS.push({...q, at:now - (q.age || 0) * 1000});
     WORLDP.last = now; WORLDP.err = 0;
+    await gearSync(now);
   } catch (e){ if (/ 404$/.test(e.message)) WORLDP.off = true; if (++WORLDP.err > 3 || WORLDP.off) PEERS.length = 0; }
   finally { WORLDP.busy = false; }
+}
+// the sets standing in the sea (tilbakemelding #35: «slik at man ikke setter på tvers av hverandre»): this company's go up when they
+// change and every five minutes (supabase/migrations/20261007200000_gear.sql: the kind and the two buoys, no name), and the other
+// players' near the boat come down once a minute, or when the boat has gone 5 km. A database without it (404) is left alone.
+const GEARP = {sig:'', put:0, got:0, at:null, off:false};
+const GEAR_R = 30;
+async function gearSync(now){
+  if (GEARP.off || !S) return;
+  try {
+    const mine = (S.sets || []).filter(s => !s.lost && s.a && s.b).slice(0, 60).map(s => [String(s.id), s.kind, +s.a.x.toFixed(4), +s.a.y.toFixed(4), +s.b.x.toFixed(4), +s.b.y.toFixed(4)]), sig = JSON.stringify(mine);
+    if (sig !== GEARP.sig || now - GEARP.put > 300000){ await cloudRpc('gear_put', {sets:mine}); GEARP.sig = sig; GEARP.put = now; }
+    const b = S.boat;
+    if (now - GEARP.got > 60000 || !GEARP.at || dist(GEARP.at, b.pos) > 5){
+      const list = await cloudRpc('gear_near', {x:b.pos.x, y:b.pos.y, r:GEAR_R}) || [];
+      PEERGEAR.length = 0; for (const q of list) if (Array.isArray(q) && q.length === 5) PEERGEAR.push({k:q[0], a:{x:q[1], y:q[2]}, b:{x:q[3], y:q[4]}});
+      GEARP.got = now; GEARP.at = {x:b.pos.x, y:b.pos.y};
+    }
+  } catch (e){ if (/ 404$/.test(e.message)){ GEARP.off = true; PEERGEAR.length = 0; } }
 }
 // another player's uploaded logo (supabase/migrations/20261007110000_logos.sql logo_get): fetched once per player and version as she comes
 // near, kept for the session (at most 40); one the admin has taken away comes back empty, and her boat goes without
