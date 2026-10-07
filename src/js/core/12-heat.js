@@ -9,7 +9,7 @@ const HEAT = {
     basic:{r:0.5 * NM, cs:0.1, every:10, pick:false},    // the simple sounder every boat has: 1 nm across, coarse
     chirp:{r:0.75 * NM, cs:0.06, every:5, pick:true},    // CHIRP: 1.5 nm across, sharper, and it tells the species apart
     sonar:{r:1.5 * NM, cs:0.08, every:2, pick:true}},    // sonar: 3 nm across, and quick enough to see the schools move
-  glow:30, slice:5, sp:['torsk', 'hyse', 'sei', 'blakveite'], maxCells:40000};
+  glow:30, slice:5, sp:['torsk', 'hyse', 'sei', 'lyr', 'lange', 'brosme', 'uer', 'kveite', 'blakveite'], maxCells:40000};
 
 // which instrument draws the heat now, if any: the sonar when it is fitted and on, else the echo sounder unless it is off
 function heatTier(){
@@ -20,15 +20,17 @@ function heatTier(){
 }
 // the species shown: only CHIRP and sonar tell them apart
 function heatSpecies(){ const t = heatTier(), v = S.settings && S.settings.heatSp; return t && HEAT.tiers[t].pick && HEAT.sp.includes(v) ? v : 'all'; }
-// kg an hour for one person with a hand jig at a point: cod, haddock, saithe, the other fish together, and the Greenland halibut on its
-// own (the sounder sees it on the edge, though the jig hardly takes it; 07.10.2026)
+// kg an hour for one person with a hand jig at a point: cod, haddock, saithe, the other fish together (3), and the Greenland halibut
+// (4) on its own (the sounder sees it on the edge, though the jig hardly takes it; 07.10.2026), then each of the other species for the
+// picker (5 to 9, tilbakemelding #41: pollack, ling, tusk, redfish and halibut on the CHIRP); the sum of all is the first five
+const HEATI = {torsk:0, hyse:1, sei:2, blakveite:4, lyr:5, lange:6, brosme:7, uer:8, kveite:9};
 function heatSample(p, H){
-  const out = new Float64Array(5), q = denPlace(p); if (!q) return out;
+  const out = new Float64Array(10), q = denPlace(p); if (!q) return out;
   const T = denTime(H);
-  for (const sp of SP){ const i = sp === 'torsk' ? 0 : sp === 'hyse' ? 1 : sp === 'sei' ? 2 : sp === 'blakveite' ? 4 : 3; out[i] += 30 * denSp(sp, q, H, T); }
+  for (const sp of SP){ const k = 30 * denSp(sp, q, H, T), i = HEATI[sp]; if (i === undefined || i > 4) out[3] += k; if (i !== undefined) out[i] += k; }
   return out;
 }
-function heatValue(v, sp){ return sp === 'torsk' ? v[0] : sp === 'hyse' ? v[1] : sp === 'sei' ? v[2] : sp === 'blakveite' ? v[4] || 0 : v[0] + v[1] + v[2] + v[3] + (v[4] || 0); }
+function heatValue(v, sp){ const i = HEATI[sp]; return i !== undefined ? v[i] || 0 : v[0] + v[1] + v[2] + v[3] + (v[4] || 0); }
 
 // the cells: key → {x, y (centre), v, t (game minute worked out), h (stock hour), seen (game minute last inside the disk)}
 const HEATC = {key:'', tier:null, cs:0, cells:new Map(), queue:[], qi:0, busy:false, t:-1, rev:0, lastTick:0, stats:{slices:0, maxSlice:0, n:0, ms:0}};

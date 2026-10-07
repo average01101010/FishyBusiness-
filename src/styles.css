@@ -528,7 +528,7 @@ body.vplot #instr{flex-wrap:wrap-reverse;max-width:calc(100% - var(--sidew) - 84
 body:not(.vplot) #plotSet{display:none!important}
 @media (min-width:701px){body.vplot:not(.routing) #side{display:none} body.vplot:not(.routing) #map{width:100%} body.vplot:not(.routing) .zoom{right:12px!important}}
 @media (max-width:980px){#ecdisTop .ec-echo .hb-lab{display:none} #ecdisTop .ec-echo .hb-bar{width:70px}}
-.ecs .kv.ek{align-items:center;border-bottom:0;padding:2px 0} .ecs .seg.sm{flex:0 0 128px;margin:0} .seg.sm button,.seg.hsp button{min-height:40px}
+.ecs .kv.ek{align-items:center;border-bottom:0;padding:2px 0} .ecs .seg.sm{flex:0 0 128px;margin:0} .seg.sm button,.seg.hsp button{min-height:40px} .seg.hsp{flex-wrap:wrap} .seg.hsp button{flex:1 0 30%}
 /* «Sett ut»: the gear drawn on the chart before it is set (ui/03d-setmode.js) */
 .setline{stroke:var(--mag);fill:none;stroke-linecap:round} .setline.bad{stroke:#e5484d}
 .setbuoy{fill:#ffb020;stroke:#0d1b24} .setbuoy.bad{fill:#e5484d}

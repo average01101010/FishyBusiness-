@@ -17,7 +17,7 @@ function echoSettings(){
   const onoff = (act, on) => '<div class="seg sm"><button type="button" data-act="' + act + '" data-on="1" class="' + (on ? 'on' : '') + '">' + L('På', 'On') + '</button><button type="button" data-act="' + act + '" data-on="0" class="' + (on ? '' : 'on') + '">' + L('Av', 'Off') + '</button></div>';
   let h = '<div class="kv ek"><span>' + (S.equip.chirp ? L('CHIRP-ekkolodd', 'CHIRP echo sounder') : L('Ekkolodd', 'Echo sounder')) + '</span>' + onoff('echo', st.echo !== false) + '</div>';
   if (S.equip.sonar) h += '<div class="kv ek"><span>' + L('Sonar', 'Sonar') + '</span>' + onoff('sonar', st.sonar !== false) + '</div>';
-  if (tier && HEAT.tiers[tier].pick) h += '<div class="seg hsp">' + [['all', L('Alle', 'All')], ['torsk', L('Torsk', 'Cod')], ['hyse', L('Hyse', 'Haddock')], ['sei', L('Sei', 'Saithe')]].map(([k, n]) => '<button type="button" data-act="hsp" data-s="' + k + '" class="' + (sp === k ? 'on' : '') + '">' + n + '</button>').join('') + '</div>';
+  if (tier && HEAT.tiers[tier].pick) h += '<div class="seg hsp">' + [['all', L('Alle', 'All')]].concat(HEAT.sp.map(k => [k, L(SPECIES[k].no, SPECIES[k].en)])).map(([k, n]) => '<button type="button" data-act="hsp" data-s="' + k + '" class="' + (sp === k ? 'on' : '') + '">' + n + '</button>').join('') + '</div>';
   else if (tier) h += '<p class="note">' + L('Artsvalg krever CHIRP-ekkolodd eller sonar.', 'Choosing the species needs a CHIRP echo sounder or a sonar.') + '</p>';
   return h;
 }

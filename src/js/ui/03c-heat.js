@@ -88,14 +88,14 @@ function heatDrawInto(g, p, ox, oy, k, plain){
 // ---------- the box with the instrument, its range, the species and the scale ----------
 const COMPASS = {no:['N', 'NØ', 'Ø', 'SØ', 'S', 'SV', 'V', 'NV'], en:['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']};
 const compassOf = a => COMPASS[S.lang === 'no' ? 'no' : 'en'][Math.round((((a * 180 / Math.PI) % 360) + 360) % 360 / 45) % 8];
-const SPNAME = {all:['all fisk', 'all fish'], torsk:['torsk', 'cod'], hyse:['hyse', 'haddock'], sei:['sei', 'saithe'], blakveite:['blåkveite', 'Greenland halibut']};
+const SPNAME = new Proxy({all:['all fisk', 'all fish']}, {get:(o, k) => o[k] || (SPECIES[k] ? [SPECIES[k].no.toLowerCase(), SPECIES[k].en.toLowerCase()] : o.all)});   // the picker's names, from the species
 // what the box says besides the scale: never a number for the fish, only the guide's promise and where the schools are heading
 function heatReadout(){
   const L = (no, en) => S.lang === 'no' ? no : en;
   if (S.boat.status === 'port') return '<p class="hr-note">' + t('echo_off') + '</p>';
   let h = '';
   if (S.tut && S.tut.catch) h += '<p class="hr-note">' + L('Første tur: full last er garantert.', 'First trip: a full hold is guaranteed.') + '</p>';
-  if (HEATC.tier === 'sonar'){ const sp = heatSpecies(), s2 = sp === 'all' ? 'torsk' : sp, nm = {torsk:['Torskestimene', 'The cod schools'], hyse:['Hysestimene', 'The haddock schools'], sei:['Seistimene', 'The saithe schools'], blakveite:['Blåkveita', 'The Greenland halibut']}[s2];
+  if (HEATC.tier === 'sonar'){ const sp = heatSpecies(), s2 = sp === 'all' ? 'torsk' : sp, nm = {torsk:['Torskestimene', 'The cod schools'], hyse:['Hysestimene', 'The haddock schools'], sei:['Seistimene', 'The saithe schools'], blakveite:['Blåkveita', 'The Greenland halibut']}[s2] || [SPECIES[s2].no.replace(/^./, c => c.toUpperCase()) + 'stimene', 'The ' + SPECIES[s2].en.toLowerCase() + ' schools'];
     h += '<p class="hr-note">' + nm[S.lang === 'no' ? 0 : 1] + L(' trekker mot ', ' are heading ') + compassOf(schoolDrift(s2).a) + '.</p>'; }
   return h;
 }
@@ -115,7 +115,7 @@ function heatBox(on){
   if (!on){ if (!el.hidden) el.hidden = true; return; }
   const now = performance.now(), tier = heatTier(), sp = heatSpecies(), key = [tier, sp, S.lang, S.boat.status].join('|');
   if (!el.hidden && key === HP.box && now - HP.last < 1000) return; HP.last = now; HP.box = key; el.hidden = false;
-  const L = (no, en) => S.lang === 'no' ? no : en, pick = HEAT.tiers[tier].pick, nx = {all:'torsk', torsk:'hyse', hyse:'sei', sei:'blakveite', blakveite:'all'}[sp];
+  const L = (no, en) => S.lang === 'no' ? no : en, pick = HEAT.tiers[tier].pick, nx = sp === 'all' ? HEAT.sp[0] : HEAT.sp[HEAT.sp.indexOf(sp) + 1] || 'all';
   const title = tier === 'sonar' ? L('Sonar', 'Sonar') : tier === 'chirp' ? L('CHIRP-ekkolodd', 'CHIRP echo sounder') : L('Ekkolodd', 'Echo sounder');
   const range = fmt(HEAT.tiers[tier].r * 2 / NM, 1) + ' nm';
   el.innerHTML = '<small>' + title.toUpperCase() + ' · ' + range + '</small><span class="hb-row"><span class="hb-lab">' + L('lite', 'little') + '</span><span class="hb-bar" style="background-image:' + heatBar(tier === 'basic') + '"></span><span class="hb-lab">' + L('mye fisk', 'much fish') + '</span>' +
