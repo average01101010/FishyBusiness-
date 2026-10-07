@@ -15,6 +15,7 @@ RUN = """async (mode) => {
   const cash0 = S.cash, R = {mode};
   rescue(mode !== 'mayday');
   R.start = {st:b.status, ph:b.tow && b.tow.ph, paid:cash0 - S.cash, hold:Math.round(holdTotal()), base:b.tow && b.tow.base, port:b.tow && b.tow.port, txt:statusText()};
+  R.ais = npcStates(S.t / 60).filter(n => n.rs).map(n => n.name);   // the rescue boat on the AIS while she is out
   for (let i = 0; i < 200 && !(b.tow.P1 && b.tow.P2); i++) await new Promise(r => setTimeout(r, 50));
   const t = b.tow; R.ways = {p1:t.P1 ? t.P1.length : 0, p2:t.P2 ? t.P2.length : 0};
   // the ways sampled every 20 m: no point on land (a boat on the rocks is pulled off over the first 100 m)
@@ -26,7 +27,7 @@ RUN = """async (mode) => {
   while (b.tow && n < 2000){ const th = b.tow.ph, r0 = b.tow.r, s0 = b.tow.s; ph[th] = (ph[th] || 0) + 1; const pz = towPose(0); if (th === 'tow') gap.push(dist(pz.r.p, pz.b.p));
     if (n === 12) R.mid = statusText(); step(); n++; if (b.tow){ dr = Math.max(dr, b.tow.r - r0); ds = Math.max(ds, b.tow.s - s0); } }
   R.ph = ph; R.come = +(dr / NM * 60).toFixed(2); R.tow = +(ds / NM * 60).toFixed(2); R.gap = gap.length ? +Math.max(...gap).toFixed(3) : 0; R.mins = n;
-  R.end = {st:b.status, port:b.port, tow:!!b.tow, hold:Math.round(holdTotal()), log:S.log.slice(-3).map(e => e.no).join(' | ')};
+  R.end = {st:b.status, port:b.port, tow:!!b.tow, hold:Math.round(holdTotal()), log:S.log.slice(-3).map(e => e.no).join(' | '), ais:npcStates(S.t / 60).filter(n => n.rs).length};
   return R; }"""
 
 async def main():
@@ -43,6 +44,14 @@ async def main():
         print(ok(tow['ph'].get('muster', 0) >= 10 and tow['ph'].get('hook', 0) == 5 and 24 <= tow['come'] <= 25.5 and 5.8 <= tow['tow'] <= 6.2), 'it musters for 10 min, comes at 25 knots, makes fast in 5 min and tows at 6 knots', tow['ph'], tow['come'], tow['tow'])
         print(ok(0.04 <= tow['gap'] <= 0.0605 and tow['mid'] in ('Redningsskøyta er på vei', 'Slepet settes', 'Under slep, 6 kn')), 'under tow the rescue boat is 60 m of tow line ahead, and the status says what happens', tow['gap'], tow['mid'])
         print(ok(e['st'] == 'port' and e['port'] == 'finnsnes' and not e['tow'] and e['hold'] == 120 and 'Slept inn til' in e['log']), 'towed in and moored in Finnsnes with the catch', e)
+        print(ok(len(tow['ais']) == 1 and 'Finnsnes' in tow['ais'][0] and e['ais'] == 0), 'the rescue boat is on the AIS while she is out for you, and not after', tow['ais'], e['ais'])
+        # the stations along the whole coast (tilbakemelding #18): the nearest sails, and no plant is far from one
+        nat = await pg.evaluate("""() => { const B = rescueBases(), C = PORTS.filter(q => q.coastal), far = C.map(q => Math.min(...B.map(r => dist(r.p, q.p)))).sort((a, b) => a - b);
+          const at = (a, b) => { const c = natP(a, b), r = rescueBase(c); return Math.round(dist(r.p, c)); };
+          return {n:B.length, max:Math.round(far[far.length - 1]), p90:Math.round(far[Math.floor(far.length * 0.9)]), bergen:at(60.3, 5.0), lofoten:at(68.1, 13.3), kirkenes:at(69.8, 30.2), finnmark:at(70.9, 27.5),
+            missing:RSTATIONS.filter(r => !B.some(x => x.st === r[0])).map(r => r[0])}; }""")
+        print(ok(nat['n'] >= 34 and nat['p90'] <= 60 and nat['max'] <= 110 and max(nat['bergen'], nat['lofoten'], nat['kirkenes'], nat['finnmark']) <= 45),
+              'rescue stations along the whole coast: the nearest one sails (within 45 km of Bergen, Lofoten, Kirkenes and Finnmark), and nine in ten plants have one within 60 km', nat)
         md = await pg.evaluate(RUN, 'mayday'); print('mayday:', json.dumps(md, ensure_ascii=False)[:600])
         print(ok(md['start']['hold'] == 0 and md['start']['paid'] == await pg.evaluate('PRICE.rescue') and md['end']['st'] == 'port' and 'mistet 120 kg' in md['end']['log']), 'a distress call: the catch is lost at once, and the boat is towed in all the same')
         ag = await pg.evaluate(RUN, 'aground'); print('aground:', json.dumps(ag, ensure_ascii=False)[:600])

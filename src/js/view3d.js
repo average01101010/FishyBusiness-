@@ -3699,7 +3699,7 @@ const G3 = (() => {
   let npcNow = [];
   function drawNPC(eye, t, H, VP){
     if (!NPCM) return;
-    npcNow = npcStates(H).filter(n => Math.hypot(n.p.x * 1000 - eye[0], n.p.y * 1000 - eye[2]) < 16000);
+    npcNow = npcStates(H).filter(n => !n.rs && Math.hypot(n.p.x * 1000 - eye[0], n.p.y * 1000 - eye[2]) < 16000);   // the rescue boat has her own model (RB)
     const kit = [];
     for (const n of npcNow){
       // a boat on your tow line (core/09g-turer.js): placed astern of your boat as the view shows her, 30 m of line from your stern

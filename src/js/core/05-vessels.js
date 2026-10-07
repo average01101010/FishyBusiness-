@@ -187,6 +187,8 @@ function npcStates(H, only){
   if (!only || only[0] === 't') for (const n of turNpcs()) if (!only || only === n.id) out.push(n);
   // the other players' boats near by (the shared world V3, ui/10h-world.js)
   if (!only || only[0] === 'p') for (const n of peerStates()) if (!only || only === n.id) out.push(n);
+  // the rescue boat on her way to you and with you on the tow
+  if (!only || only === 'rs'){ const r = rescueAis(H); if (r) out.push(r); }
   return out;
 }
 // The other players' boats as the server last told them (ui/10h-world.js fills PEERS every 15 s: {id, boat, vtype, x, y, hd, v, st, liv,
@@ -527,12 +529,39 @@ function svcOverdue(){ const b = S.boat; return Math.max(0, ((b.engH || 0) - (b.
 // call; the cost is paid at the call. The ways are found by leiaRoute while the crew musters (TOWBUSY); a straight line when none is
 // found. towPose gives where the rescue boat and your boat are between the minutes for the 3D (tools/boats/redning.py) and livePose.
 const TOW = {come:25, tow:6, muster:10, hook:5, line:0.06};
-const RSTATIONS = [['Finnsnes', 'finnsnes'], ['Gryllefjord', 'gryllefjord']];
+// The rescue stations along the whole coast (Jonas 07.10.2026: «stasjonert på strategiske plasser langs hele kysten slik at redningen
+// alltid er relativt nær»): the towns of Redningsselskapet's stations from Hvaler to Kirkenes, about 50–100 km apart along the coast
+// (redningsselskapet.no, Stasjoner; the list is the towns, not each station's boats, and to be checked against it). A station sails
+// from the game's harbour nearest its town (within 35 km) and goes by that harbour's name; one without a harbour near (the inner
+// Oslofjord has no fish plant) is left out, and two by the same harbour are one. Finnsnes and Gryllefjord are Senja's own harbours.
+const RSTATIONS = [['Hvaler', 59.06, 11.02], ['Horten', 59.42, 10.48], ['Stavern', 59.00, 10.04], ['Kragerø', 58.87, 9.41], ['Arendal', 58.46, 8.77],
+  ['Kristiansand', 58.15, 8.00], ['Farsund', 58.10, 6.80], ['Egersund', 58.45, 5.99], ['Tananger', 58.94, 5.58], ['Skudeneshavn', 59.15, 5.26],
+  ['Haugesund', 59.41, 5.27], ['Bømlo', 59.78, 5.20], ['Bergen', 60.39, 5.32], ['Fedje', 60.78, 4.72], ['Florø', 61.60, 5.03], ['Måløy', 61.93, 5.11],
+  ['Ålesund', 62.47, 6.15], ['Bud', 62.91, 6.91], ['Kristiansund', 63.11, 7.73], ['Frøya', 63.73, 8.83], ['Rørvik', 64.86, 11.24], ['Brønnøysund', 65.47, 12.21],
+  ['Sandnessjøen', 66.02, 12.63], ['Ørnes', 66.87, 13.70], ['Bodø', 67.28, 14.40], ['Værøy', 67.67, 12.69], ['Ballstad', 68.07, 13.54], ['Svolvær', 68.23, 14.57],
+  ['Andenes', 69.32, 16.12], ['Harstad', 68.80, 16.54], ['Finnsnes', 'finnsnes'], ['Gryllefjord', 'gryllefjord'], ['Tromsø', 69.65, 18.96],
+  ['Skjervøy', 70.03, 20.97], ['Øksfjord', 70.24, 22.35], ['Hammerfest', 70.66, 23.68], ['Havøysund', 70.99, 24.66], ['Honningsvåg', 70.98, 25.97],
+  ['Mehamn', 71.04, 27.85], ['Berlevåg', 70.86, 29.09], ['Båtsfjord', 70.63, 29.72], ['Vardø', 70.37, 31.11], ['Kirkenes', 69.73, 30.05]];
+let RSBASES = null;
+function rescueBases(){
+  if (RSBASES) return RSBASES; RSBASES = [];
+  for (const [n, a, b] of RSTATIONS){
+    let q = typeof a === 'string' ? portById(a) : null;
+    if (!q && typeof a === 'number'){ const c = natP(a, b); let bd = 35; for (const pt of PORTS){ const d = dist(pt.p, c); if (d < bd){ bd = d; q = pt; } } }
+    if (q && !RSBASES.some(r => r.id === q.id)) RSBASES.push({n:q.name, id:q.id, p:q.p, st:n});
+  }
+  return RSBASES;
+}
 function rescueBase(p){
   let best = null;
-  for (const [n, id] of RSTATIONS){ const q = portById(id); if (!q) continue; const d = dist(q.p, p); if (!best || d < best.d) best = {n, id, p:q.p, d}; }
-  if (!best || best.d > 60){ const q = nearestPort(p); best = {n:q.name, id:q.id, p:q.p, d:dist(q.p, p)}; }
+  for (const r of rescueBases()){ const d = dist(r.p, p); if (!best || d < best.d) best = {n:r.n, id:r.id, p:r.p, d}; }
+  if (!best || best.d > 100){ const q = nearestPort(p); best = {n:q.name, id:q.id, p:q.p, d:dist(q.p, p)}; }
   return best;
+}
+// the rescue boat on the AIS while she is out for you, from the call to the quay (not at her station otherwise)
+function rescueAis(H){
+  const t = S.boat && S.boat.tow, q = t && towPose(clamp(H * 60 - S.t, 0, 0.999)); if (!q) return null;
+  return {id:'rs', name:'Redningsskøyta ' + t.base, type:'rescue', p:q.r.p, hd:q.r.hd, cog:q.r.hd, v:q.r.v, st:t.ph === 'muster' ? 'port' : t.ph, rs:true, base:t.base, to:t.port};
 }
 function rescue(keepCatch){
   if (S.boat.gop) gopAbort('return');
