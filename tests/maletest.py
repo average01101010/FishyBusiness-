@@ -51,6 +51,16 @@ async def main():
         check(tr['liv'] and tr['liv'].get('ripe') and tr['note'] and tr['buy'] and not tr['own'] and af['own'] and af['liv'].get('d', {}).get('ripe') == 'hvit' and 'r:hvit' in af['str']
               and dz['nCut'] > dz['nBase'] and dz['white'] > 30 and all(f for t, f in dz['fits']),
               'a design is tried on the boat before it is bought, then it is yours, on the boat and in what the others see; its stripe is cut into the hull, and every type can wear some', {'tried': tr, 'after': af, 'n': [dz['nBase'], dz['nCut'], dz['white']], 'fits': dz['fits']})
+        # the flag: Norway's rectangle as she came; another nation and shape tried, then the flags bought (a test), on the boat and in what the
+        # others see; Norway's swallowtail is not offered (lov om Norges flagg); the picture keeps the notch clear
+        fl = await pg.evaluate("""(() => { const q = s => document.querySelector('#drawerBody ' + s); const n0 = q('[data-pa=pntfs][data-k=splitt]').disabled;
+          q('.pnt-fl[data-k=SE]').click(); q('[data-pa=pntfs][data-k=vimpel]').click(); const tried = {f:flagOf(PAINTPRE), buy:!!q('[data-pa=pntbuy][data-d=flagg]'), price:(q('[data-pa=pntbuy][data-d=flagg]') || {}).textContent};
+          q('[data-pa=pntbuy][data-d=flagg]').click(); const after = {own:PAINT.owned('flagg'), flag:S.boat.liv && S.boat.liv.flag, str:livStr(S.boat)};
+          const cv = document.createElement('canvas'); cv.width = 100; cv.height = 75; flagCanvas(cv, 'DK', 'splitt'); const g = cv.getContext('2d'), notch = g.getImageData(95, 37, 1, 1).data[3], body = g.getImageData(20, 10, 1, 1).data[3];
+          return {n0, tried, after, notch, body, n:Object.keys(FLAGS).length}; })()""")
+        check(fl['n0'] and fl['tried']['f'] == {'code': 'SE', 'shape': 'vimpel'} and fl['tried']['buy'] and fl['after']['own'] and fl['after']['flag'] == {'c': 'SE', 's': 'vimpel'}
+              and 'f:SE.vimpel' in fl['after']['str'] and fl['notch'] == 0 and fl['body'] == 255 and fl['n'] >= 40,
+              "the flag: Norway's swallowtail is not offered, another nation and shape show on the boat when tried, and once the flags are yours she flies it and the others see it", fl)
         # too little money: the button is off
         c = await pg.evaluate("""(() => { S.cash = 100; document.querySelector('#drawerBody .pnt-sw[data-k=gul]').click(); const btn = document.querySelector('#drawerBody [data-pa=pntgo]');
           return {dis:btn.disabled, note:document.getElementById('drawerBody').innerText.includes('ikke nok penger')}; })()""")

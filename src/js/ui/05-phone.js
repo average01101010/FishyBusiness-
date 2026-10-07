@@ -409,6 +409,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p78', '07.10.2026', 'Flagg', 'Flags', [
+      ['Velg flagget i akterenden i Malerverkstedet: over 40 nasjoner, også det samiske og det kvenske, som rektangel, vimpel eller splitt. Flagget blafrer i vinden som før.', 'Choose the flag at the stern in the paint shop: over 40 nations, the Sámi and the Kven flags too, as a rectangle, a pennant or a swallowtail. The flag flutters in the wind as before.']]],
     ['p77', '07.10.2026', 'Malingsdesign', 'Paint designs', [
       ['Malerverkstedet har fått malingsdesign: ripestripe, totone, vannlinjestripe, stripefarge og nylakkert. Velg fargen selv og prøv designet på båten din før du bestemmer deg. Linjene følger skroget.', 'The paint shop has paint designs: a sheer stripe, two-tone, a boot stripe, a stripe colour and fresh gloss. Choose the colour yourself and try the design on your boat before you decide. The lines follow the hull.']]],
     ['p76', '07.10.2026', 'Malerverkstedet og båtnavn', 'The paint shop and boat names', [

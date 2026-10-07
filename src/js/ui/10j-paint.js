@@ -12,8 +12,14 @@ var PAINT = (() => {
     totone:['Totone', 'Two-tone', 'Den nedre delen av skutesiden i en annen farge.', 'The lower part of the topsides in another colour.'],
     vann:['Vannlinjestripe', 'Boot stripe', 'En stripe langs vannlinja.', 'A stripe along the waterline.'],
     stripe:['Stripefarge', 'Stripe colour', 'Båtens egen stripe i en annen farge.', 'The boat\'s own stripe in another colour.'],
-    lakk:['Nylakkert', 'Fresh gloss', 'Blank, nylakkert skutesid som speiler lyset.', 'Glossy, freshly varnished topsides that catch the light.']};
-  const DNOK = 29;
+    lakk:['Nylakkert', 'Fresh gloss', 'Blank, nylakkert skutesid som speiler lyset.', 'Glossy, freshly varnished topsides that catch the light.'],
+    flagg:['Flagg', 'Flags', 'Alle nasjonene og formene: rektangel, vimpel og splitt.', 'All the nations and shapes: rectangle, pennant and swallowtail.']};
+  const DNOK = 29, NOK = {flagg:19}, nok = k => NOK[k] || DNOK;
+  const SHAPE = {rekt:['Rektangel', 'Rectangle'], vimpel:['Vimpel', 'Pennant'], splitt:['Splitt', 'Swallowtail']};
+  // the flags as small pictures for the picker, drawn once
+  const FPIC = {}; const fpic = (code, shape) => { const k = code + '|' + shape; if (!FPIC[k]){ const cv = document.createElement('canvas'); cv.width = 64; cv.height = 47; flagCanvas(cv, code, shape); FPIC[k] = cv.toDataURL(); } return FPIC[k]; };
+  const flagCh = (b, p) => { const a = flagOf(p), c = flagOf(b.liv); return a.code !== c.code || a.shape !== c.shape; };
+  const flagFree = p => { const f = flagOf(p); return f.code === 'NO' && f.shape === 'rekt'; };
   const price = b => Math.max(1500, Math.round((VESSELS[b.type].price || 0) * 0.01 / 100) * 100);
   const cur = b => (b.liv && b.liv.hull) || 'orig';
   const curD = (b, k) => (b.liv && b.liv.d && b.liv.d[k]) || null;
@@ -33,8 +39,9 @@ var PAINT = (() => {
     const b = S.boat; if (!pre){ pre = copy(b.liv); PAINTPRE = pre; }
     if (b.status !== 'port') return '<div class="ph-c"><p class="ph-note">' + L('Båten må ligge i havn for å males.', 'The boat must be in port to be painted.') + '</p></div>';
     const c = cur(b), s = pre.hull || 'orig', e = HULLPAL.find(x => x[0] === s) || HULLPAL[0], free = !(b.liv && b.liv.hull), pr = price(b);
-    const hullCh = s !== c, dCh = DESIGNS.some(k => owned(k) && (pre.d[k] || null) !== curD(b, k)), cost = hullCh && !free ? pr : 0, short = cost > S.cash;
-    const tried = DESIGNS.filter(k => !owned(k) && pre.d[k] && designFits(b.type, k));
+    const fCh = flagCh(b, pre) && (owned('flagg') || flagFree(pre));
+    const hullCh = s !== c, dCh = DESIGNS.some(k => owned(k) && (pre.d[k] || null) !== curD(b, k)) || fCh, cost = hullCh && !free ? pr : 0, short = cost > S.cash;
+    const tried = DESIGNS.filter(k => !owned(k) && pre.d[k] && designFits(b.type, k)).concat(!owned('flagg') && !flagFree(pre) ? ['flagg'] : []);
     const h = ['<div class="ph-c"><div class="ph-card"><h4>' + L('Skrogfarge', 'Hull colour') + '</h4>' +
       '<p class="ph-note">' + L('Trykk på en farge, så vises den på skroget. Du betaler først når du maler.', 'Tap a colour and it shows on the hull. You pay only when you paint.') + '</p>' +
       '<div class="pnt-pal">' + HULLPAL.map(x => sw('pntsel', '', x[0], s, c, x)).join('') + '</div>' +
@@ -52,6 +59,14 @@ var PAINT = (() => {
               '<button class="pnt-sw off' + (v ? '' : ' on') + '" data-pa="pntd" data-d="' + k + '" data-k="" title="' + L('Av', 'Off') + '" aria-label="' + L('Av', 'Off') + '">' + L('Av', 'Off') + '</button></div>') +
           (!has && v ? '<button class="ph-btn" data-pa="pntbuy" data-d="' + k + '">' + shopLabel(DNOK) + '</button>' + shopFine() : '') + '</div>'); }
     }
+    // the flag at the stern: Norway's in a rectangle as she came, any nation and shape when the flags are yours
+    { const f = flagOf(pre), has = owned('flagg'), N = DNAME.flagg;
+      h.push('<div class="ph-card pnt-d"><h4>' + L(N[0], N[1]) + '<span class="pnt-own">' + (has ? L('Dine', 'Yours') : realKr(nok('flagg'))) + '</span></h4><p class="ph-note">' + L(N[2], N[3]) + '</p>' +
+        '<div class="pnt-flags">' + Object.keys(FLAGS).map(k => '<button class="pnt-fl' + (k === f.code ? ' on' : '') + '" data-pa="pntf" data-k="' + k + '" title="' + L(FLAGS[k][0], FLAGS[k][1]) + '" aria-label="' + L(FLAGS[k][0], FLAGS[k][1]) + '"><img alt="" src="' + fpic(k, 'rekt') + '"></button>').join('') + '</div>' +
+        '<p class="pnt-name"><b>' + L(FLAGS[f.code][0], FLAGS[f.code][1]) + '</b></p><div class="pnt-row">' +
+        FLAGSHAPES.map(k => '<button class="ph-btn sm' + (k === f.shape ? ' on' : '') + '" data-pa="pntfs" data-k="' + k + '"' + (k === 'splitt' && f.code === 'NO' ? ' disabled' : '') + '>' + L(SHAPE[k][0], SHAPE[k][1]) + '</button>').join(' ') + '</div>' +
+        (f.code === 'NO' ? '<p class="ph-note">' + L('Det norske splittflagget er statsflagget og brukes bare av staten.', 'The Norwegian swallow-tailed flag is the state\'s flag and is flown only by the state.') + '</p>' : '') +
+        (!has && !flagFree(pre) ? '<button class="ph-btn" data-pa="pntbuy" data-d="flagg">' + shopLabel(nok('flagg')) + '</button>' + shopFine() : '') + '</div>'); }
     h.push('<div class="ph-card pnt-go">' + (tried.length ? '<p class="ph-note">' + L('Du prøver ' + tried.map(k => DNAME[k][0].toLowerCase()).join(' og ') + '. Kjøp designet for å beholde det.',
         'You are trying ' + tried.map(k => DNAME[k][1].toLowerCase()).join(' and ') + '. Buy the design to keep it.') + '</p>' : '') +
       '<button class="ph-btn" data-pa="pntgo"' + (!hullCh && !dCh || short ? ' disabled' : '') + '>' + (hullCh ? L('Mal skroget', 'Paint the hull') + ' · ' + (free ? L('gratis', 'free') : kr(cost)) :
@@ -63,6 +78,7 @@ var PAINT = (() => {
   function apply(b){
     const s = pre.hull || 'orig', d = {}; for (const k of DESIGNS) if (owned(k) && pre.d[k] && designFits(b.type, k)) d[k] = pre.d[k];
     const liv = {}; if (s !== cur(b) || (b.liv && b.liv.hull)) liv.hull = s; if (Object.keys(d).length) liv.d = d;
+    const f = flagOf(owned('flagg') || flagFree(pre) ? pre : b.liv); if (f.code !== 'NO' || f.shape !== 'rekt') liv.flag = {c:f.code, s:f.shape};
     if (Object.keys(liv).length) b.liv = liv; else delete b.liv;
   }
   function act(a, d){
@@ -71,8 +87,10 @@ var PAINT = (() => {
     if (a === 'pntd'){ const k = d.d; if (!DESIGNS.includes(k)) return false;
       if (!d.k) delete pre.d[k]; else if (k === 'lakk') pre.d[k] = 1; else if (HULLPAL.some(x => x[0] === d.k && x[3])) pre.d[k] = d.k; else return false;
       PAINTPRE = pre; return true; }
-    if (a === 'pntbuy'){ const k = d.d; if (!DESIGNS.includes(k) || owned(k)) return false;
-      S.cosWant = Object.assign({}, S.cosWant, {[k]:pre.d[k] || 1});   // what to put on when the design comes back from the payment
+    if (a === 'pntf'){ if (!FLAGS[d.k]) return false; const f = flagOf(pre); pre.flag = {c:d.k, s:d.k === 'NO' && f.shape === 'splitt' ? 'rekt' : f.shape}; PAINTPRE = pre; return true; }
+    if (a === 'pntfs'){ if (!FLAGSHAPES.includes(d.k)) return false; const f = flagOf(pre); if (f.code === 'NO' && d.k === 'splitt') return false; pre.flag = {c:f.code, s:d.k}; PAINTPRE = pre; return true; }
+    if (a === 'pntbuy'){ const k = d.d; if (!COS.includes(k) || owned(k)) return false;
+      S.cosWant = Object.assign({}, S.cosWant, {[k]:k === 'flagg' ? Object.assign({}, pre.flag) : pre.d[k] || 1});   // what to put on when it comes back from the payment
       payBuy('des_' + k, () => { giveCos(k); pre = copy(S.boat.liv); PAINTPRE = pre; if (typeof DOCK !== 'undefined') DOCK.render(); });
       return true; }
     if (a === 'pntgo'){
@@ -87,14 +105,15 @@ var PAINT = (() => {
     }
     return false;
   }
-  return {page, act, live, price, owned, DNAME, DNOK};
+  return {page, act, live, price, owned, DNAME, nok};
 })();
 // a design is yours (the shop's grant, ui/10i-shop.js shopGive, or a test): on every boat from now on, and on this one at once if it was
 // being tried when it was bought
 function giveCos(k){
-  if (!DESIGNS.includes(k)) return null; S.cos = Object.assign({}, S.cos, {[k]:1});
+  if (!COS.includes(k)) return null; S.cos = Object.assign({}, S.cos, {[k]:1});
   const want = S.cosWant && S.cosWant[k], b = S.boat; if (S.cosWant) delete S.cosWant[k];
-  if (want && designFits(b.type, k)){ b.liv = Object.assign({}, b.liv); b.liv.d = Object.assign({}, b.liv.d, {[k]:want}); }
+  if (want && k === 'flagg' && want.c){ b.liv = Object.assign({}, b.liv, {flag:{c:want.c, s:want.s || 'rekt'}}); }
+  else if (want && designFits(b.type, k)){ b.liv = Object.assign({}, b.liv); b.liv.d = Object.assign({}, b.liv.d, {[k]:want}); }
   const N = PAINT.DNAME[k]; log('Malingsdesignet «' + N[0] + '» er ditt.', 'The paint design «' + N[1] + '» is yours.');
   return S.lang === 'en' ? N[1] : N[0];
 }

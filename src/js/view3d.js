@@ -2563,7 +2563,16 @@ const G3 = (() => {
       const k = blue ? [0, 0.13, 0.36] : white ? [0.95, 0.95, 0.95] : [0.73, 0.05, 0.18];
       for (let v = 0; v < 6; v++) col.push(k[0], k[1], k[2]);
     }
-    FLAGM = {pb:buf(new Float32Array(FW * FH * 18), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), cb:buf(new Float32Array(col)), n:FW * FH * 6, pos:new Float32Array(FW * FH * 18)};
+    // the picture's coordinates for the cloth (vessel3d.js flagCanvas: the hoist at u = 0, the top of the picture at the top)
+    const uv = []; for (let j = 0; j < FH; j++) for (let i = 0; i < FW; i++){ const u0 = i / FW, u1 = (i + 1) / FW, v0 = 1 - j / FH, v1 = 1 - (j + 1) / FH; uv.push(u0, v0, u1, v0, u1, v1, u0, v0, u1, v1, u0, v1); }
+    FLAGM = {pb:buf(new Float32Array(FW * FH * 18), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), cb:buf(new Float32Array(col)), ub:buf(new Float32Array(uv)), n:FW * FH * 6, pos:new Float32Array(FW * FH * 18), tex:null, key:''};
+  }
+  // the ensign the boat flies (Malerverkstedet: the nation and the shape, b.liv.flag; tried on while the paint shop is open)
+  function flagTex(){
+    const f = flagOf(PAINTPRE || S.boat.liv), k = f.code + '|' + f.shape;
+    if (FLAGM.key !== k){ FLAGM.key = k; if (!FLAGM.tex) FLAGM.tex = mkTex(); if (!FLAGM.cv){ FLAGM.cv = document.createElement('canvas'); FLAGM.cv.width = 256; FLAGM.cv.height = 188; }
+      flagCanvas(FLAGM.cv, f.code, f.shape); upTex(FLAGM.tex, FLAGM.cv); }
+    return f;
   }
   function updateFlag(t, appW){
     const droop = (1 - sstep(1.5, 8, appW)) * 1.25, amp = 0.03 + 0.09 * sstep(2, 16, appW), om = 4 + appW * 1.1;
@@ -3937,8 +3946,8 @@ const G3 = (() => {
     const pr = plant ? drawPlant(plant, eye, VPn, t, BMrel) : null, bunk = PM ? nearestBunker(eye) : null; if (bunk) bunk.last = drawBunker(bunk, eye, VPn, t, BMrel); gl.useProgram(PL.p);
     wildSpawn(t); drawNPC(eye, t, H, VPn); drawAir(eye, t, H, VPn); drawGearSea(eye, t, VPn, H); drawWild(eye, t, dt);
 
-    const pole = xf(BMrel, VG.pole);
-    drawLit(FLAGM, model(pole[0], pole[1], pole[2], Math.PI / 2 - appB, 0, 0));
+    const pole = xf(BMrel, VG.pole), fl = flagTex(), FM = model(pole[0], pole[1], pole[2], Math.PI / 2 - appB, 0, 0);
+    gl.disableVertexAttribArray(2); drawTexQuad(FLAGM, FLAGM.tex, fl.shape === 'vimpel' ? chain(FM, new Float32Array([1.7, 0, 0, 0, 0, 0.8, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])) : FM, VPn, true, [0, 0.6, 0]); gl.useProgram(PL.p);
     if (SHOW && SHOW.M && GEO(SHOW.t).open && pvm(SHOW.t).cap){ gl.colorMask(false, false, false, false); drawLit(pvm(SHOW.t).cap, SHOW.M); gl.colorMask(true, true, true, true); }
     { const cap = VG.hand ? (SK ? SK.cap : CAPM) : VG.open ? pvm(VT, hullLiv(S.boat)).cap : null; if (cap){ gl.colorMask(false, false, false, false); drawLit(cap, BMrel); gl.colorMask(true, true, true, true); } }
     drawSea(VPn, eye, t, nearFar, 0);

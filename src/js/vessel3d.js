@@ -478,7 +478,7 @@ const HULLPAL = [
 // A boat's paint (b.liv): {hull:<colour>, d:{ripe, totone, vann, stripe: <colour>, lakk:1}}; what the models take (modelLiv):
 // {hull:[r, g, b, gloss], ripe:[r, g, b], ..., lakk:true}. PAINTPRE is the paint being tried in the paint shop on the boat you are aboard.
 let PAINTPRE = null;
-const DESIGNS = ['ripe', 'totone', 'vann', 'stripe', 'lakk'];
+const DESIGNS = ['ripe', 'totone', 'vann', 'stripe', 'lakk'], COS = [...DESIGNS, 'flagg'];   // COS: what the paint shop sells (ui/10j-paint.js)
 const palRGB = k => { const e = k && HULLPAL.find(x => x[0] === k); return e && e[3] ? e[3].slice() : null; };
 function modelLiv(L){
   if (!L) return null; const o = {}, h = palRGB(L.hull); let any = false;
@@ -492,16 +492,17 @@ function livKey(liv){ return liv ? ['hull', ...DESIGNS].map(k => liv[k] ? (liv[k
 function livGeo(liv){ return liv ? ['ripe', 'totone', 'vann'].filter(k => liv[k]).join(',') : ''; }
 // the paint as it goes to the other players with the position (ui/10h-world.js pos_put, supabase/migrations/20261007090000_livery.sql):
 // 'h:<colour>;r:..;t:..;v:..;s:..;g:1'; and back again. Only colours in HULLPAL count, so nothing else can be painted on a boat.
-const LIVS = {hull:'h', ripe:'r', totone:'t', vann:'v', stripe:'s', lakk:'g'};
+const LIVS = {hull:'h', ripe:'r', totone:'t', vann:'v', stripe:'s', lakk:'g', flag:'f'};
 function livStr(b){
   const L = b && b.liv; if (!L) return ''; const out = [];
   if (L.hull && L.hull !== 'orig' && palRGB(L.hull)) out.push('h:' + L.hull);
   for (const k of DESIGNS){ const v = L.d && L.d[k]; if (k === 'lakk' ? v : v && palRGB(v)) out.push(LIVS[k] + ':' + (k === 'lakk' ? 1 : v)); }
+  if (L.flag && /^[A-Z]{2,4}$/.test(L.flag.c || '') && /^[a-z]+$/.test(L.flag.s || '')) out.push('f:' + L.flag.c + '.' + L.flag.s);
   return out.join(';');
 }
 function livParse(s){
   const L = {d:{}}; for (const part of String(s || '').split(';')){ const [a, v] = part.split(':'), k = Object.keys(LIVS).find(q => LIVS[q] === a); if (!k || !v) continue;
-    if (k === 'hull') L.hull = v; else L.d[k] = k === 'lakk' ? 1 : v; }
+    if (k === 'hull') L.hull = v; else if (k === 'flag'){ const [c, sh] = v.split('.'); L.flag = {c, s:sh}; } else L.d[k] = k === 'lakk' ? 1 : v; }
   return modelLiv(L);
 }
 // ---- paint designs (Malerverkstedet): a stripe under the sheer (ripe), a second colour on the lower topsides (totone), a stripe at the
@@ -576,6 +577,67 @@ function designFits(type, k){
 // a kit model's colours from the paint: the hull, the sheer stripe and the boot stripe (and what a fleet livery sets as it is)
 function kitLiv(liv){ const o = {}; if (liv.hull) o.hull = liv.hull; if (liv.ripe) o.stripe = liv.ripe.concat([0.5]); if (liv.vann) o.boot = liv.vann.concat([0.5]);
   for (const k of ['stripe', 'rail', 'boot']) if (liv[k] && !o[k] && Array.isArray(liv[k]) && liv[k].length === 4) o[k] = liv[k]; return o; }
+// ---- flags (Malerverkstedet, 07.10.2026): the ensign at the stern as a picture, so any nation and shape can fly. Each flag is drawn here
+// from a few shapes (Nordic crosses, stripes, and the few that need their own), the same on every device. Norway's swallow-tailed flag
+// is the state's flag (lov om Norges flagg, 1898; regjeringen.no) and is not offered; the Sámi and the Kven flags are. ----
+const FLAGS = (() => {
+  const nordic = (bg, c1, c2) => (g, W, H) => { g.fillStyle = bg; g.fillRect(0, 0, W, H); const x = W * 0.36, w = H * 0.25; g.fillStyle = c1; g.fillRect(x - w / 2, 0, w, H); g.fillRect(0, H / 2 - w / 2, W, w);
+    if (c2){ const w2 = w * 0.5; g.fillStyle = c2; g.fillRect(x - w2 / 2, 0, w2, H); g.fillRect(0, H / 2 - w2 / 2, W, w2); } };
+  const hs = (cs, ws) => (g, W, H) => { const t = (ws || cs.map(() => 1)).reduce((a, b) => a + b, 0); let y = 0; cs.forEach((c, i) => { const h = H * (ws ? ws[i] : 1) / t; g.fillStyle = c; g.fillRect(0, y, W, h + 1); y += h; }); };
+  const vs = (cs, ws) => (g, W, H) => { const t = (ws || cs.map(() => 1)).reduce((a, b) => a + b, 0); let x = 0; cs.forEach((c, i) => { const w = W * (ws ? ws[i] : 1) / t; g.fillStyle = c; g.fillRect(x, 0, w + 1, H); x += w; }); };
+  const disc = (bg, c, r, cx) => (g, W, H) => { g.fillStyle = bg; g.fillRect(0, 0, W, H); g.fillStyle = c; g.beginPath(); g.arc(W * (cx || 0.5), H / 2, H * r, 0, 7); g.fill(); };
+  const star = (g, x, y, r, c) => { g.fillStyle = c; g.beginPath(); for (let i = 0; i < 10; i++){ const a = -Math.PI / 2 + i * Math.PI / 5, q = i % 2 ? r * 0.4 : r; g.lineTo(x + Math.cos(a) * q, y + Math.sin(a) * q); } g.fill(); };
+  const uk = (g, W, H) => { g.fillStyle = '#012169'; g.fillRect(0, 0, W, H); g.lineCap = 'butt';
+    g.strokeStyle = '#fff'; g.lineWidth = H * 0.2; g.beginPath(); g.moveTo(0, 0); g.lineTo(W, H); g.moveTo(W, 0); g.lineTo(0, H); g.stroke();
+    g.strokeStyle = '#C8102E'; g.lineWidth = H * 0.067; g.beginPath(); g.moveTo(0, 0); g.lineTo(W, H); g.moveTo(W, 0); g.lineTo(0, H); g.stroke();
+    g.fillStyle = '#fff'; g.fillRect(W / 2 - H * 0.167, 0, H * 0.333, H); g.fillRect(0, H / 2 - H * 0.167, W, H * 0.333);
+    g.fillStyle = '#C8102E'; g.fillRect(W / 2 - H * 0.1, 0, H * 0.2, H); g.fillRect(0, H / 2 - H * 0.1, W, H * 0.2); };
+  const ensign = (bg, stars) => (g, W, H) => { g.fillStyle = bg; g.fillRect(0, 0, W, H); g.save(); g.beginPath(); g.rect(0, 0, W / 2, H / 2); g.clip(); g.scale(0.5, 0.5); uk(g, W, H); g.restore(); for (const [x, y, r, c] of stars) star(g, W * x, H * y, H * r, c); };
+  return {
+    NO:['Norge', 'Norway', nordic('#BA0C2F', '#fff', '#00205B')], SE:['Sverige', 'Sweden', nordic('#006AA7', '#FECC00')], DK:['Danmark', 'Denmark', nordic('#C8102E', '#fff')],
+    FI:['Finland', 'Finland', nordic('#fff', '#002F6C')], IS:['Island', 'Iceland', nordic('#02529C', '#fff', '#DC1E35')], FO:['Færøyene', 'Faroe Islands', nordic('#fff', '#0065BD', '#EF303E')],
+    AX:['Åland', 'Åland', nordic('#0064AD', '#FFD300', '#DA0E15')],
+    SAMI:['Sápmi', 'Sápmi', (g, W, H) => { vs(['#D30000', '#007229', '#FFCE00', '#0035AD'], [7, 1, 1, 9])(g, W, H); g.lineWidth = H * 0.07; g.beginPath(); g.arc(W * 0.4, H / 2, H * 0.3, Math.PI / 2, Math.PI * 1.5); g.strokeStyle = '#0035AD'; g.stroke(); g.beginPath(); g.arc(W * 0.4, H / 2, H * 0.3, -Math.PI / 2, Math.PI / 2); g.strokeStyle = '#D30000'; g.stroke(); }],
+    KVEN:['Kvener', 'Kvens', (g, W, H) => { hs(['#0058A8', '#fff', '#0058A8'])(g, W, H); g.fillStyle = '#FECB00'; g.beginPath(); g.arc(W * 0.33, H / 2, H * 0.22, 0, 7); g.fill(); }],
+    GL:['Grønland', 'Greenland', (g, W, H) => { hs(['#fff', '#C8102E'])(g, W, H); const cx = W * 0.37, r = H * 0.33; g.fillStyle = '#C8102E'; g.beginPath(); g.arc(cx, H / 2, r, Math.PI, 0); g.fill(); g.fillStyle = '#fff'; g.beginPath(); g.arc(cx, H / 2, r, 0, Math.PI); g.fill(); }],
+    GB:['Storbritannia', 'United Kingdom', uk], IE:['Irland', 'Ireland', vs(['#169B62', '#fff', '#FF883E'])], DE:['Tyskland', 'Germany', hs(['#000', '#DD0000', '#FFCE00'])],
+    NL:['Nederland', 'Netherlands', hs(['#AE1C28', '#fff', '#21468B'])], BE:['Belgia', 'Belgium', vs(['#000', '#FAE042', '#ED2939'])], FR:['Frankrike', 'France', vs(['#002395', '#fff', '#ED2939'])],
+    ES:['Spania', 'Spain', hs(['#AA151B', '#F1BF00', '#AA151B'], [1, 2, 1])], PT:['Portugal', 'Portugal', (g, W, H) => { vs(['#006600', '#FF0000'], [2, 3])(g, W, H); g.fillStyle = '#FFCC00'; g.beginPath(); g.arc(W * 0.4, H / 2, H * 0.2, 0, 7); g.fill(); }],
+    IT:['Italia', 'Italy', vs(['#009246', '#fff', '#CE2B37'])], AT:['Østerrike', 'Austria', hs(['#ED2939', '#fff', '#ED2939'])], CH:['Sveits', 'Switzerland', (g, W, H) => { g.fillStyle = '#D52B1E'; g.fillRect(0, 0, W, H); g.fillStyle = '#fff'; g.fillRect(W / 2 - H * 0.09, H * 0.2, H * 0.18, H * 0.6); g.fillRect(W / 2 - H * 0.3, H / 2 - H * 0.09, H * 0.6, H * 0.18); }],
+    PL:['Polen', 'Poland', hs(['#fff', '#DC143C'])], EE:['Estland', 'Estonia', hs(['#0072CE', '#000', '#fff'])], LV:['Latvia', 'Latvia', hs(['#9E3039', '#fff', '#9E3039'], [2, 1, 2])], LT:['Litauen', 'Lithuania', hs(['#FDB913', '#006A44', '#C1272D'])],
+    UA:['Ukraina', 'Ukraine', hs(['#0057B7', '#FFD700'])], CZ:['Tsjekkia', 'Czechia', (g, W, H) => { hs(['#fff', '#D7141A'])(g, W, H); g.fillStyle = '#11457E'; g.beginPath(); g.moveTo(0, 0); g.lineTo(W * 0.5, H / 2); g.lineTo(0, H); g.fill(); }],
+    HU:['Ungarn', 'Hungary', hs(['#CE2939', '#fff', '#477050'])], HR:['Kroatia', 'Croatia', hs(['#FF0000', '#fff', '#171796'])], GR:['Hellas', 'Greece', (g, W, H) => { hs(['#0D5EAF', '#fff', '#0D5EAF', '#fff', '#0D5EAF', '#fff', '#0D5EAF', '#fff', '#0D5EAF'])(g, W, H); g.fillStyle = '#0D5EAF'; g.fillRect(0, 0, H * 5 / 9, H * 5 / 9); g.fillStyle = '#fff'; g.fillRect(H * 2 / 9, 0, H / 9, H * 5 / 9); g.fillRect(0, H * 2 / 9, H * 5 / 9, H / 9); }],
+    US:['USA', 'United States', (g, W, H) => { hs(Array.from({length:13}, (_, i) => i % 2 ? '#fff' : '#B22234'))(g, W, H); g.fillStyle = '#3C3B6E'; g.fillRect(0, 0, W * 0.4, H * 7 / 13); for (let r = 0; r < 5; r++) for (let c = 0; c < 6; c++) star(g, W * 0.4 * (c + 0.5) / 6, H * 7 / 13 * (r + 0.5) / 5, H * 0.03, '#fff'); }],
+    CA:['Canada', 'Canada', (g, W, H) => { vs(['#D80621', '#fff', '#D80621'], [1, 2, 1])(g, W, H); g.fillStyle = '#D80621'; const x = W / 2, y = H / 2, s = H * 0.3; g.beginPath(); [[0, -1], [0.18, -0.62], [0.42, -0.72], [0.36, -0.28], [0.72, -0.4], [0.62, -0.1], [0.82, 0.04], [0.42, 0.32], [0.48, 0.5], [0.06, 0.44], [0.06, 0.9], [-0.06, 0.9], [-0.06, 0.44], [-0.48, 0.5], [-0.42, 0.32], [-0.82, 0.04], [-0.62, -0.1], [-0.72, -0.4], [-0.36, -0.28], [-0.42, -0.72], [-0.18, -0.62]].forEach(([a, b]) => g.lineTo(x + a * s, y + b * s)); g.fill(); }],
+    JP:['Japan', 'Japan', disc('#fff', '#BC002D', 0.3)], AU:['Australia', 'Australia', ensign('#012169', [[0.25, 0.75, 0.13, '#fff'], [0.75, 0.25, 0.06, '#fff'], [0.85, 0.45, 0.06, '#fff'], [0.75, 0.8, 0.06, '#fff'], [0.65, 0.42, 0.06, '#fff']])],
+    NZ:['New Zealand', 'New Zealand', ensign('#012169', [[0.75, 0.25, 0.07, '#C8102E'], [0.85, 0.45, 0.07, '#C8102E'], [0.75, 0.75, 0.07, '#C8102E'], [0.65, 0.48, 0.07, '#C8102E']])],
+    CL:['Chile', 'Chile', (g, W, H) => { hs(['#fff', '#D52B1E'])(g, W, H); g.fillStyle = '#0039A6'; g.fillRect(0, 0, H / 2, H / 2); star(g, H / 4, H / 4, H * 0.12, '#fff'); }],
+    AR:['Argentina', 'Argentina', (g, W, H) => { hs(['#74ACDF', '#fff', '#74ACDF'])(g, W, H); g.fillStyle = '#F6B40E'; g.beginPath(); g.arc(W / 2, H / 2, H * 0.1, 0, 7); g.fill(); }],
+    BR:['Brasil', 'Brazil', (g, W, H) => { g.fillStyle = '#009C3B'; g.fillRect(0, 0, W, H); g.fillStyle = '#FFDF00'; g.beginPath(); g.moveTo(W / 2, H * 0.1); g.lineTo(W * 0.92, H / 2); g.lineTo(W / 2, H * 0.9); g.lineTo(W * 0.08, H / 2); g.fill(); g.fillStyle = '#002776'; g.beginPath(); g.arc(W / 2, H / 2, H * 0.22, 0, 7); g.fill(); }],
+    ZA:['Sør-Afrika', 'South Africa', (g, W, H) => { hs(['#E03C31', '#001489'])(g, W, H); g.fillStyle = '#fff'; g.beginPath(); g.moveTo(0, 0); g.lineTo(W * 0.45, H * 0.42); g.lineTo(W, H * 0.42); g.lineTo(W, H * 0.58); g.lineTo(W * 0.45, H * 0.58); g.lineTo(0, H); g.fill(); g.fillStyle = '#007749'; g.beginPath(); g.moveTo(0, H * 0.1); g.lineTo(W * 0.4, H * 0.45); g.lineTo(W, H * 0.45); g.lineTo(W, H * 0.55); g.lineTo(W * 0.4, H * 0.55); g.lineTo(0, H * 0.9); g.fill(); g.fillStyle = '#000'; g.beginPath(); g.moveTo(0, H * 0.22); g.lineTo(W * 0.3, H / 2); g.lineTo(0, H * 0.78); g.fill(); }],
+    KR:['Sør-Korea', 'South Korea', (g, W, H) => { g.fillStyle = '#fff'; g.fillRect(0, 0, W, H); g.fillStyle = '#CD2E3A'; g.beginPath(); g.arc(W / 2, H / 2, H * 0.25, Math.PI, 0); g.fill(); g.fillStyle = '#0047A0'; g.beginPath(); g.arc(W / 2, H / 2, H * 0.25, 0, Math.PI); g.fill(); }],
+    IN:['India', 'India', (g, W, H) => { hs(['#FF9933', '#fff', '#138808'])(g, W, H); g.strokeStyle = '#000080'; g.lineWidth = H * 0.02; g.beginPath(); g.arc(W / 2, H / 2, H * 0.12, 0, 7); g.stroke(); }],
+    PH:['Filippinene', 'Philippines', (g, W, H) => { hs(['#0038A8', '#CE1126'])(g, W, H); g.fillStyle = '#fff'; g.beginPath(); g.moveTo(0, 0); g.lineTo(W * 0.43, H / 2); g.lineTo(0, H); g.fill(); g.fillStyle = '#FCD116'; g.beginPath(); g.arc(W * 0.15, H / 2, H * 0.08, 0, 7); g.fill(); }],
+    TH:['Thailand', 'Thailand', hs(['#A51931', '#F4F5F8', '#2D2A4A', '#F4F5F8', '#A51931'], [1, 1, 2, 1, 1])], VN:['Vietnam', 'Vietnam', (g, W, H) => { g.fillStyle = '#DA251D'; g.fillRect(0, 0, W, H); star(g, W / 2, H / 2, H * 0.3, '#FFFF00'); }],
+    TR:['Tyrkia', 'Türkiye', (g, W, H) => { g.fillStyle = '#E30A17'; g.fillRect(0, 0, W, H); g.fillStyle = '#fff'; g.beginPath(); g.arc(W * 0.38, H / 2, H * 0.25, 0, 7); g.fill(); g.fillStyle = '#E30A17'; g.beginPath(); g.arc(W * 0.42, H / 2, H * 0.2, 0, 7); g.fill(); star(g, W * 0.56, H / 2, H * 0.1, '#fff'); }],
+    SO:['Somalia', 'Somalia', (g, W, H) => { g.fillStyle = '#4189DD'; g.fillRect(0, 0, W, H); star(g, W / 2, H / 2, H * 0.25, '#fff'); }],
+    ER:['Eritrea', 'Eritrea', (g, W, H) => { hs(['#12AD2B', '#4189DD'])(g, W, H); g.fillStyle = '#EA0437'; g.beginPath(); g.moveTo(0, 0); g.lineTo(W, H / 2); g.lineTo(0, H); g.fill(); }],
+    SY:['Syria', 'Syria', (g, W, H) => { hs(['#CE1126', '#fff', '#000'])(g, W, H); star(g, W * 0.38, H / 2, H * 0.1, '#007A3D'); star(g, W * 0.62, H / 2, H * 0.1, '#007A3D'); }],
+    PK:['Pakistan', 'Pakistan', (g, W, H) => { vs(['#fff', '#01411C'], [1, 3])(g, W, H); g.fillStyle = '#fff'; g.beginPath(); g.arc(W * 0.6, H / 2, H * 0.24, 0, 7); g.fill(); g.fillStyle = '#01411C'; g.beginPath(); g.arc(W * 0.64, H * 0.45, H * 0.2, 0, 7); g.fill(); }],
+    CN:['Kina', 'China', (g, W, H) => { g.fillStyle = '#EE1C25'; g.fillRect(0, 0, W, H); star(g, W * 0.17, H * 0.27, H * 0.15, '#FFFF00'); for (const [x, y] of [[0.33, 0.1], [0.4, 0.2], [0.4, 0.35], [0.33, 0.45]]) star(g, W * x, H * y, H * 0.05, '#FFFF00'); }]};
+})();
+const FLAGSHAPES = ['rekt', 'vimpel', 'splitt'];
+// a flag on a canvas: its picture in the shape (outside the shape stays clear, which the 3D view leaves out)
+function flagCanvas(cv, code, shape){
+  const F = FLAGS[code] || FLAGS.NO, g = cv.getContext('2d'), W = cv.width, H = cv.height; g.clearRect(0, 0, W, H);
+  if (code === 'NO' && shape === 'splitt') shape = 'rekt';   // the state's flag is not for others (lov om Norges flagg)
+  g.save(); g.beginPath();
+  if (shape === 'vimpel'){ g.moveTo(0, 0); g.lineTo(W, H * 0.42); g.lineTo(W, H * 0.58); g.lineTo(0, H); }
+  else if (shape === 'splitt'){ g.moveTo(0, 0); g.lineTo(W, 0); g.lineTo(W * 0.72, H / 2); g.lineTo(W, H); g.lineTo(0, H); }
+  else g.rect(0, 0, W, H);
+  g.closePath(); g.clip(); F[2](g, W, H); g.restore();
+}
+function flagOf(L){ const f = L && L.flag || {}; return {code:FLAGS[f.c] ? f.c : 'NO', shape:FLAGSHAPES.includes(f.s) ? f.s : 'rekt'}; }
 // ---- the boat's name on her hull (Jonas 07.10.2026: «Pass på at båtnavnet vises godt på skroget på alle båtene»): a strip on each side
 // forward, on the hull's own surface, found from the model: the hull's triangles (a detailed model's paint zone 1, a kit model's hull)
 // that face out to starboard are cut at each station, which gives the topsides' top and bottom there and the hull's breadth at any

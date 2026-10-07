@@ -848,3 +848,7 @@ body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 2
 .pnt-pal.sm .pnt-sw{height:34px;border-radius:8px}
 .pnt-sw.off{background:#e8edf1;color:#2a3a46;font:600 12px/1 system-ui,sans-serif}
 .pnt-row{margin:8px 0}
+.pnt-flags{display:grid;grid-template-columns:repeat(auto-fill,minmax(48px,1fr));gap:6px;margin:8px 0;max-height:190px;overflow:auto}
+.pnt-fl{padding:2px;border:2px solid rgba(0,0,0,.12);border-radius:6px;background:#fff;cursor:pointer;line-height:0}
+.pnt-fl img{width:100%;height:auto;border-radius:2px}
+.pnt-fl.on{outline:3px solid #1e6fd9;outline-offset:1px}

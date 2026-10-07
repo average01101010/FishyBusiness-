@@ -1,4 +1,4 @@
--- The paint shop's designs (07.10.2026; ui/10j-paint.js): bought once for real money and then the player's on every boat and every
+-- The paint shop's designs and flags (07.10.2026; ui/10j-paint.js): bought once for real money and then the player's on every boat and every
 -- device. A paid design is a grant like the boosters (the game gives it, ui/10i-shop.js shopGive 'cos') and an entitlement on the account
 -- (tm_hello's owned list), which a refund takes away again. Prices are here; the game shows the same (PAINT.DNOK).
 insert into public.products (id, kind, name_no, name_en, price_nok, data) values
@@ -6,7 +6,8 @@ insert into public.products (id, kind, name_no, name_en, price_nok, data) values
   ('des_totone', 'skin', 'Malingsdesign: totone', 'Paint design: two-tone', 29, '{"give":"cos","k":"totone"}'),
   ('des_vann', 'skin', 'Malingsdesign: vannlinjestripe', 'Paint design: boot stripe', 29, '{"give":"cos","k":"vann"}'),
   ('des_stripe', 'skin', 'Malingsdesign: stripefarge', 'Paint design: stripe colour', 29, '{"give":"cos","k":"stripe"}'),
-  ('des_lakk', 'skin', 'Malingsdesign: nylakkert', 'Paint design: fresh gloss', 29, '{"give":"cos","k":"lakk"}')
+  ('des_lakk', 'skin', 'Malingsdesign: nylakkert', 'Paint design: fresh gloss', 29, '{"give":"cos","k":"lakk"}'),
+  ('des_flagg', 'skin', 'Flagg: alle nasjoner og former', 'Flags: all nations and shapes', 19, '{"give":"cos","k":"flagg"}')
 on conflict (id) do update set kind = excluded.kind, name_no = excluded.name_no, name_en = excluded.name_en, price_nok = excluded.price_nok, data = excluded.data, active = true;
 
 create or replace function public.shop_paid(sid text, pi text) returns boolean

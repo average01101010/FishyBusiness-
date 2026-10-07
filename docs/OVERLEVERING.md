@@ -1105,6 +1105,12 @@ Jonas' bestilling ligger i `docs/engasjement.md`, arbeidslista punkt 1. Steg 1 o
   - Egen båt får nye buffere når et design endrer formen (`livGeo`), ellers lastes bare fargene opp på nytt.
   - En byggesettbåt tar ripestripe og vannlinjestripe som `col.stripe` og `col.boot` (`kitLiv`). `designFits` sier hva hver type kan ha.
   - `livStr` sender designene til de andre spillerne (`'h:..;r:..;t:..;v:..;s:..;g:1'`).
+- **Flagg** (steg 4, 07.10.2026):
+  - Flagget i akterenden er et bilde (`flagCanvas`) på den blafrende duken (`FLAGM`, med `ub` og `drawTexQuad`). Det som ligger utenfor formen, er gjennomsiktig og tegnes ikke.
+  - `FLAGS` i `vessel3d.js` har 50 nasjoner, også Sápmi og kvenene, tegnet av noen få former, så de ser like ut på alle enheter.
+  - Formene er rektangel, vimpel (strukket 1,7 × 0,8) og splitt. Det norske splittflagget er statsflagget og tilbys ikke (lov om Norges flagg).
+  - Norge i rektangel er gratis og det båten kommer med. Alle nasjoner og former er ett kjøp: `des_flagg`, 19 kr, `S.cos.flagg`.
+  - Flagget lagres i `b.liv.flag = {c, s}` og går til de andre som `f:SE.vimpel`. Andre spilleres flagg tegnes ikke ennå.
 - **Test:**
   - `maletest`: knappen, siden, prøvefargen, at første fargevalg er gratis, prisen, for lite penger, lagringen, lukking og innbytte.
   - `cloudtest`: malingen går opp og ned, og en server uten den ennå gir ingen avbrudd.
