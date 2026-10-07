@@ -660,6 +660,24 @@ body.kino-clean .ov.kino,body.kino-clean .ov.kino2{opacity:.35}
 #turMeas .tm-r{min-height:22px;margin:8px 2px;font:700 15px var(--sans)}
 #turMeas .tm-b{display:flex;gap:8px;justify-content:flex-end}
 .ph-art img.ph-foto{width:100%;border-radius:8px;margin:6px 0 2px;display:block}
+/* Kystposten (ui/05g-press.js): each story a button to read on, the day over its stories, and a story opened */
+.ph-paper .ph-sub{margin:8px 14px 2px}
+.pa-day{font:700 11px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:#6b6357;padding:10px 14px 2px}
+.pa-loc{margin:6px 14px 0}
+button.ph-art.pa-btn{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid #ddd5c6;color:inherit;font:inherit;cursor:pointer}
+button.ph-art.pa-btn:active{background:#efe8d8}
+.pa-btn.pa-big h4{font-size:18px}
+.pa-btn.pa-me{border-left:3px solid #b8402f;padding-left:11px}
+.pa-kick{display:block;font:700 10.5px var(--sans);letter-spacing:.05em;text-transform:uppercase;color:#b8402f;margin-bottom:2px}
+.pa-more{display:block;font:600 12px var(--sans);color:#6b6357;margin-top:4px}
+.pa-art{padding:10px 14px 18px}
+.pa-art h3{font:700 22px/1.2 var(--serif);margin:4px 0 8px}
+.pa-art p{font-size:14px;line-height:1.45;margin:0 0 10px}
+.pa-art p.pa-ing{font-weight:700}
+.pa-art img.ph-foto{width:100%;border-radius:8px;margin:2px 0 10px;display:block}
+.pa-back{margin-bottom:8px}
+.pa-boat{margin:2px 0 10px;background:#e9e2d2;border-radius:8px;padding:6px;text-align:center}
+.pa-boat img,.pa-boat svg{max-width:100%;height:auto}
 /* the sleep screen's «Spol fram» (05b-work.js) */
 #slSkip{margin-top:18px;padding:10px 20px;border-radius:20px;border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.08);color:#dfe6ec;font:600 15px var(--sans)}
 /* the bridge watch alarm on the sleep screen: a red flashing ACK (05b-work.js) */

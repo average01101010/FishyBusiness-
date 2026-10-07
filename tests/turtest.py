@@ -185,8 +185,8 @@ async def main():
           b.pos = {...m.p}; r.away = turFotoTake(m, {front:false, clear:true}, null); r.hidden = turFotoTake(m, {front:true, clear:false}, null);
           if (m.lys){ const ok = TUR_LYS[m.lys].ok; TUR_LYS[m.lys].ok = () => false; r.wrong = turFotoTake(m, {front:true, clear:true}, null); TUR_LYS[m.lys].ok = ok; m.lys = null; }
           const cash0 = S.cash; r.why = turFotoTake(m, {front:true, clear:true}, 'data:image/jpeg;base64,AAAA');
-          const d = T.done.find(x => x.id === m.id), news = newsForDay(Math.floor(S.t / 1440)).find(a => a.img === m.id);
-          Object.assign(r, {done:!!(d && d.ok), gain:S.cash - cash0, pay:m.pay, news:news ? news.h.no : null, src:turFotoSrc(m.id) === 'data:image/jpeg;base64,AAAA', no3d:turFotoAt() ? true : false});
+          const d = T.done.find(x => x.id === m.id), news = pressList(false).find(s => s.kind === 'foto' && s.img && s.img.foto === m.id);
+          Object.assign(r, {done:!!(d && d.ok), gain:S.cash - cash0, pay:m.pay, news:news ? news.h[0] : null, src:turFotoSrc(m.id) === 'data:image/jpeg;base64,AAAA', no3d:turFotoAt() ? true : false});
           return r; })()""")
         check(fo.get('none') or (fo['lysOk'] and fo['far'] and fo['away'] and fo['hidden'] and (not fo['lys'] or fo['wrong']) and fo['why'] is None and fo['done'] and fo['gain'] == fo['pay'] and fo['news'] and fo['src'] and 400 <= fo['d'] <= 1300),
               "the lighthouse picture: a light it asks for comes before the deadline; too far, out of the picture, behind something or in the wrong light it is not taken; taken, Kystposten prints it with the picture and pays", fo)

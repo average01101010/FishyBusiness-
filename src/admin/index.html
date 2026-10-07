@@ -81,7 +81,7 @@ async function load(){
   try { DATA = DEMO ? demo() : await rpc('admin_dashboard', {days:DAYS}); render(); }
   catch (e){ if (SES) $('#app').innerHTML = '<main><div class="card warn">' + esc(e.message) + '</div><button onclick="SES=null;sessionStorage.clear();render()">Logg inn på nytt</button></main>'; }
 }
-const TABS = [['oversikt', 'Oversikt'], ['trakt', 'Trakt'], ['tid', 'Spilletid'], ['frafall', 'Frafall'], ['bruk', 'Spillbruk'], ['okonomi', 'Økonomi i spillet'], ['penger', 'Penger'], ['teknikk', 'Teknikk'], ['geo', 'Geografi'], ['tilbake', 'Tilbakemeldinger'], ['agent', 'Agent'], ['logoer', 'Logoer'], ['navn', 'Brukernavn'], ['merker', 'Merker'], ['kommer', 'Kommer']];
+const TABS = [['oversikt', 'Oversikt'], ['trakt', 'Trakt'], ['tid', 'Spilletid'], ['frafall', 'Frafall'], ['bruk', 'Spillbruk'], ['okonomi', 'Økonomi i spillet'], ['penger', 'Penger'], ['teknikk', 'Teknikk'], ['geo', 'Geografi'], ['tilbake', 'Tilbakemeldinger'], ['agent', 'Agent'], ['logoer', 'Logoer'], ['navn', 'Brukernavn'], ['avis', 'Kystposten'], ['merker', 'Merker'], ['kommer', 'Kommer']];
 function render(){
   if (!DEMO && !SES) return loginView();
   if (!DATA) { $('#app').innerHTML = '<main class="note">Henter …</main>'; return load(); }
@@ -96,6 +96,7 @@ function render(){
   if (TAB === 'agent') agWire();
   if (TAB === 'logoer') lgWire();
   if (TAB === 'navn') nmWire();
+  if (TAB === 'avis') nwWire();
   if (TAB === 'merker' && $('#acR')) $('#acR').onclick = () => { AC = null; render(); };
   if (TAB === 'trakt' && $('#fnR')) $('#fnR').onclick = () => { FN = null; render(); };
 }
@@ -280,6 +281,27 @@ VIEW.navn = () => {
       (r.removed ? '<span class="warn">Tatt bort' + (r.reason ? ': ' + esc(r.reason) : '') + '</span>' : '<input data-nmre maxlength="300" placeholder="Hvorfor (spilleren ser dette)"> <button data-nmdel="' + esc(r.who) + '">Ta bort</button>') + '</td></tr>').join('') + '</table>')
       : '<p class="note">Ingen brukernavn ennå.</p>');
 };
+// ---------- Kystposten's stories (supabase/migrations/20261007170000_news.sql; the game's core/09h-press.js) ----------
+// What the players' games have put in the shared paper: the kind, the boat's and the company's names and the numbers. The words are
+// written in each reader's game. One that should not be there is taken away for everyone.
+let NW = null;
+const NW_KIND = {boat:'Båtkjøp', name:'Båtdåp', aground:'Grunnstøting', rescue:'Redning', salv:'Berging', foto:'Fyrbilde', fish:'Storfisk', fs:'Fartstid', ach:'Merker', as:'Aksjeselskap'};
+async function nwLoad(){ await null; try { NW = DEMO ? [{id:1, at:new Date(Date.now() - 36e5).toISOString(), kind:'aground', boat:'Havørn', company:'', d:{type:'sjark'}, removed:false, user:'Havfisker88'}] : await rpc('admin_news', {lim:200}); } catch (e){ NW = {err:e.message}; } if (TAB === 'avis') render(); }
+VIEW.avis = () => {
+  if (!NW){ nwLoad(); return '<p class="note">Henter …</p>'; }
+  if (NW.err) return card('Kystposten', '<p class="warn">' + esc(NW.err) + '</p>', 'Er migreringen supabase/migrations/20261007170000_news.sql kjørt?');
+  const live = NW.filter(r => !r.removed), by = {}; for (const r of live) by[r.kind] = (by[r.kind] || 0) + 1;
+  return '<div class="grid">' + kpi('Saker', nf(live.length, 0), nf(NW.length - live.length, 0) + ' tatt bort') + Object.entries(by).map(([k, n]) => kpi(NW_KIND[k] || k, nf(n, 0), '')).join('') + '</div>' +
+    '<div class="card"><button id="nwR">Oppdater</button> <span class="note">Sakene spillene har lagt i den felles avisa. Tar du en bort, forsvinner den for alle.</span></div>' +
+    (NW.length ? card('Sakene', '<table><tr><th>Når</th><th>Sak</th><th>Båt</th><th>Rederi</th><th>Tall</th><th>Spiller</th><th></th></tr>' + NW.map(r => '<tr><td class="note">' + new Date(r.at).toLocaleString('nb-NO') + '</td><td>' + esc(NW_KIND[r.kind] || r.kind) + '</td><td>' + esc(r.boat) + '</td><td>' + esc(r.company) + '</td><td class="note">' + esc(JSON.stringify(r.d)) + '</td><td class="note">' + esc(r.user) + '</td><td>' +
+      (r.removed ? '<span class="warn">Tatt bort</span>' : '<button data-nwdel="' + r.id + '">Ta bort</button>') + '</td></tr>').join('') + '</table>') : '<p class="note">Ingen saker ennå.</p>');
+};
+function nwWire(){
+  if ($('#nwR')) $('#nwR').onclick = () => { NW = null; render(); };
+  document.querySelectorAll('[data-nwdel]').forEach(b => b.onclick = async () => {
+    b.disabled = true; try { if (!DEMO) await rpc('admin_news_remove', {id:+b.dataset.nwdel}); else NW.find(x => x.id === +b.dataset.nwdel).removed = true; NW = DEMO ? NW : null; render(); }
+    catch (e){ b.disabled = false; alert(e.message); } });
+}
 // ---------- the funnel (supabase/migrations/20261007150000_funnel.sql; docs/engasjement.md point 9) ----------
 // From the envelope to the third landing and the registration, and how many come back: each step's count, its share of those who
 // started and of the step before. The largest fall is marked; that is where the next change goes, and the weeks below show whether

@@ -227,7 +227,7 @@ const NOTUT = /notut/.test(location.hash) && /^(localhost|127\.0\.0\.1|\[::1\])$
 // No company: a new player is a fisherman with a boat (Jonas 05.10.2026).
 function boatUnnamed(){ S.unnamed = true; S.boatName = regText(regOf(S.boat)) || 'T-0-LK'; }
 function boatChristen(nm){ nm = String(nm || '').trim().slice(0, 20); if (!nm) return false; const was = S.boatName; S.boatName = nm; delete S.unnamed;
-  log('Døpte båten «' + nm + '». Navnet er malt på skroget.', 'Named the boat «' + nm + '». The name is painted on the hull.'); if (typeof loreRename === 'function') loreRename(nm); save(); refreshAll(); return was !== nm; }
+  log('Døpte båten «' + nm + '». Navnet er malt på skroget.', 'Named the boat «' + nm + '». The name is painted on the hull.'); if (was !== nm) pressPut('name', {type:S.boat.type}); if (typeof loreRename === 'function') loreRename(nm); save(); refreshAll(); return was !== nm; }
 function showIntro(namesOnly){
   const L = (no, en) => S.lang === 'no' ? no : en;
   if (!namesOnly && !NOTUT && !LETTER.read){ showLetter(() => { LETTER.read = true; showIntro(); }); return; }

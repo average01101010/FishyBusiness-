@@ -91,6 +91,7 @@ function worldStart(){
   if (!CLOUD.on) return;
   WSH.rec = true; setTimeout(worldShare, 20000); setInterval(worldShare, 600000);
   setTimeout(worldTick, 3000); setInterval(worldTick, 15000);
+  if (typeof pressStart === 'function') pressStart();   // Kystposten's stories to and from the cloud (ui/05g-press.js)
   document.addEventListener('visibilitychange', () => { if (!document.hidden) worldTick(); });
   setInterval(() => { if (PEERS.length && Date.now() - WORLDP.last > 60000) PEERS.length = 0; }, 10000);   // gone quiet (offline)
 }

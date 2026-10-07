@@ -1296,7 +1296,46 @@ Punkt 4 i `docs/engasjement.md`. Jonas: en blanding av korte og lange oppdrag ut
 - **Måling:** `cloudEv` sender `tur_take`, `tur_done` og `tur_fail` (med type, klasse, nm og om trim var på) og `crew_tip` (hvilken kommentar).
 - **Skjermen:** fanen «Turer» i Oppdrag-appen viser «Dine oppdrag», tavla og tidligere oppdrag. Bestillingene har egen fane. Kartet viser en stiplet ring der hvert oppdrag går (`turSvg`).
 - **Tavla** trekker nå blant typene med vekter (`draw` i `turMake`): de korte mellom bestilling, frakt, prøvefiske og fyrbilde, middels også med slep, og lange mellom bestilling, frakt og fyrbilde. Høyst ett prøvefiske og ett fyrbilde om gangen.
-- **Neste:** Kystposten som felles avis (plan til Jonas 07.10.2026).
+- **Neste:** se Kystposten (4.27).
+
+### 4.27 Kystposten: den felles avisa (07.10.2026)
+
+Jonas: «båtnavn eller rederiene til andre brukere må komme offentlig i avisen. Det må også være varselprikk på appen og varsel i spillet. Jeg ønsker at spillere skal kunne trykke på en nyhetssak å lese litt mer». Etter planen svarte han: uhell skal i avisa («Det er realistisk»), andres fyrbilder skal ikke, og det skal være en lokalfane. Kjernen ligger i `core/09h-press.js`, skjermen i `ui/05g-press.js`, skyen i `supabase/migrations/20261007170000_news.sql` (og `…171000_news_get_fix.sql`), og testen i `tests/posttest.py`.
+
+- **Saker** (`pressPut`) lages der det skjer:
+  - **boat:** kjøp av båt (`buy` i telefonen, og kjøp med kvote i lukket gruppe);
+  - **name:** båtdåp (`boatChristen`);
+  - **aground:** grunnstøting (`runAground`);
+  - **rescue:** slep fra Redningsselskapet (`rescue`);
+  - **salv:** bergelønn (`turDock`);
+  - **foto:** fyrbilde (`turFotoTake`);
+  - **fish:** storfisk (drømmefisken);
+  - **fs:** fartstid hvert tiende år (`fsYear`);
+  - **ach:** kapittel i Merker (`achChapter`);
+  - **as:** aksjeselskap.
+  - Hver sak har type, sted (km), båtnavnet (og rederiet i lukket gruppe, som på topplista) og noen tall og koder (båttype, havne-id, art, indeks i `FYR` og `TUR_BOATS`).
+  - Ingen saker lages i «Første tur». Gjester sender ingen saker.
+- **Ordene** (`pressStory`) skrives i leserens spill, likt for egne og andres saker: overskrift, ingress og brødtekst på norsk og engelsk. Stedsnavnene kommer fra `nearestPlace` og havnenavnene fra `portById`. En sak med en type eller nøkkel spillet ikke kjenner, vises ikke. Båtkjøp viser sidebildet av båten (`vesselSVG`). Fyrbilder vises bare i egen avis.
+- **Skyen:**
+  - `news_put` tar bare typens egne nøkler: tall, og koder som matcher `^[A-Za-z0-9_-]{1,24}$`. Fritekst kommer aldri inn. Båtnavn og rederi renses som i `land_put`. Grensen er 12 saker i timen og to av samme type på ti minutter. Gjester får nei.
+  - `news_get` gir sakene fra den siste spilluka langs hele kysten (60) og innen 150 km (40), og dagens største landinger (30) fra `landings`, uten gjester, med båtnavn og rederi i lukket gruppe.
+  - `admin_news`/`admin_news_remove` brukes av fanen «Kystposten» i admin. Den viser sakene med brukernavnet og har en knapp som tar en sak bort for alle.
+  - Røyktestet med MCP i en transaksjon som ble rullet tilbake: ukjente nøkler og fritekst forsvinner.
+- **Klienten** (`pressFlush`, `pressFetch`): egne saker ligger i en kø (`S.press.q`, de 20 siste) og sendes straks og hvert annet minutt. En sak som avvises (400), droppes. Andres saker hentes hvert tredje minutt og når avisa åpnes.
+- **Avisa:**
+  - **Forsiden** har hele kysten: spillernes saker, dagens største landing og de nasjonale sakene fra `newsForDay` (kvoter og regulering, `nat`), pluss de to første lokale sakene i dag.
+  - **Lokalt** har det som er innen 150 km fra hjemhavna, med distriktets største landing.
+  - Hver sak er en knapp. «Les mer» åpner artikkelen, som har tilbakeknapp (`sub.postArt`).
+- **Varsler:**
+  - Appen viser antall uleste saker (`pressUnread`: nyere enn sist avisa ble åpnet).
+  - En egen sak varsles i spillet med en toast etter fire sekunder.
+  - Når andres saker hentes, varsles én ny stor sak eller én ny sak nær hjemhavna, høyst hvert tredje minutt.
+  - Push er ikke brukt.
+- **Personvern:** `src/legal/personvern.html` har fått avsnittet «Saker i Kystposten». Haill står aldri i sakene. Brukernavnet står ikke i avisa, bare i admin.
+- **Neste:**
+  - push når du selv er i avisa (innenfor reglene for push);
+  - ukas toppfisker fra den felles topplista i stedet for den lokale;
+  - flere sakstyper, for eksempel nye mottak, rekordpriser og sesongens første skrei.
 
 ## 5. Systemer i spillet
 

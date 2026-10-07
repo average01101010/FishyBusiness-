@@ -52,12 +52,15 @@ function workAssign(as){
   // nobody at the helm: someone resting, else the best seaman (you before the crew)
   const sjo = p => p.c ? p.c.attr.sjo : 9;
   if (ctx.ror && !helm){ const q = P.filter(p => p.st === 'pause'), who = (q.length ? q : P).slice().sort((a, b) => sjo(b) - sjo(a))[0]; who.st = 'ror'; }
-  // gear half out cannot wait: someone resting hauls, else whoever is on deck
-  if (ctx.haling && !P.some(p => p.st === 'haling')){ const who = P.find(p => p.st === 'pause') || P.find(p => p.st === 'sloy' || p.st === 'is' || p.st === 'sort'); if (who) who.st = 'haling'; }
+  // gear half out cannot wait: someone resting hauls, else whoever is on deck. Alone aboard with the tub full (stopped to gut), the
+  // haul waits while the one aboard guts and ices, and goes on after (07.10.2026: before, the one aboard was taken off the deck to the
+  // hauler, the deck work never came, and the haul stood still between «tub full» and «deck work done» for good)
+  const alone = P.length < 2 && ctx.stop && (ctx.sloy || ctx.is);
+  if (ctx.haling && !alone && !P.some(p => p.st === 'haling')){ const who = P.find(p => p.st === 'pause') || P.find(p => p.st === 'sloy' || p.st === 'is' || p.st === 'sort'); if (who) who.st = 'haling'; }
   // a meal is due and nobody has the galley in the chain: the best cook among those on a break, if they can cook (3 or more)
   if (ctx.kokk && !cook){ const q = P.filter(p => p.st === 'pause' && p.c && p.c.attr.kokk >= MEAL.ok).sort((a, b) => b.c.attr.kokk - a.c.attr.kokk)[0]; if (q) q.st = 'kokk'; }
   // stopped to gut: everyone free goes on deck
-  if (ctx.stop) for (const p of P) if (p.st === 'pause' && (ctx.sloy || ctx.is)) p.st = ctx.sloy ? 'sloy' : 'is';
+  if (ctx.stop) for (const p of P) if ((p.st === 'pause' || (alone && p.st === 'haling')) && (ctx.sloy || ctx.is)) p.st = ctx.sloy ? 'sloy' : 'is';
   return P;
 }
 // the people on a station and what they do there together: n, the sum of their efficiency for skill g, and the mean

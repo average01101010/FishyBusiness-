@@ -548,6 +548,7 @@ function rescue(keepCatch){
   if (b.status === 'port' || b.status === 'unmooring'){ t.port = b.port || port.id; towDone(t); return; }
   if (helmOn()) helmOff();
   S.plan = null; b.v = 0; b.status = 'tow'; b.tow = t;
+  pressPut('rescue', {base:base.id, port:port.id, type:b.type});   // Kystposten (09h-press.js)
   towRoutes(b);
   const eta = Math.round(base.d / (TOW.come * NM) * 60) + TOW.muster;
   log('Redningsskøyta går fra ' + base.n + ' og er hos deg om rundt ' + eta + ' min. Den sleper deg til ' + port.name + '.', 'The rescue boat leaves ' + base.n + ' and will be with you in about ' + eta + ' min. It tows you to ' + port.name + '.');

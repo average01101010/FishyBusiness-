@@ -415,11 +415,16 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
-    ['p87', '07.10.2026', 'Rettinger', 'Fixes', [
+    ['p88', '07.10.2026', 'Rettinger', 'Fixes', [
       ['Den som får fri neste tur, blir på land den turen, også når fangsten fortsatt ble levert da du ga fri.', 'Crew given the next trip off stay ashore for that trip, also when the catch was still being landed when you gave them the time off.'],
       ['Skipperen går også på dekk og sløyer når linetrekket stopper fordi bløggekaret er fullt.', 'The skipper also goes on deck to gut when hauling the line stops because the bleeding tub is full.'],
       ['Registreringsmerket, navnet og logoen på skroget leses riktig vei på begge sider.', 'The registration mark, the name and the logo on the hull read the right way on both sides.'],
       ['Eget merke i kartet flytter seg opp over tastaturet mens du skriver navnet.', 'Your own mark on the chart moves up above the keyboard while you type its name.']]],
+    ['p87', '07.10.2026', 'Kystposten', 'Kystposten', [
+      ['Kystposten er avisa for hele kysten: båtkjøp, båtdåp, grunnstøtinger, redninger, berginger, storfisk, fyrbilder og dagens største landinger, også fra de andre båtene langs kysten.', 'Kystposten is the paper for the whole coast: boats bought and named, groundings, rescues, salvage, big fish, lighthouse pictures and the day\'s biggest landings, from the other boats along the coast too.'],
+      ['Trykk på en sak for å lese mer. Fanen Lokalt viser det som skjer innen 150 km fra hjemhavna.', 'Tap a story to read more. The Local tab shows what happens within 150 km of your home harbour.'],
+      ['Appen viser hvor mange saker du ikke har lest, og spillet sier fra når du er i avisa eller noe skjer i nærheten.', 'The app shows how many stories you have not read, and the game tells you when you are in the paper or something happens nearby.'],
+      ['Alene om bord: blir blødekaret fullt mens du haler, sløyer du først og haler videre etterpå. Før kunne halingen bli stående.', 'Alone aboard: when the bleeding tub fills while you haul, you gut first and haul on after. Before, the haul could stand still.']]],
     ['p86', '07.10.2026', 'Havforskere og fyr', 'Scientists and lighthouses', [
       ['Nytt på tavla: prøvefiske for Havforskningsinstituttet. Fisk ved en stasjon og mål ti fisk på målebrettet, eller kjør en ekkoloddlinje gjennom tre punkter. Fangsten er din.', 'New on the board: survey fishing for the Institute of Marine Research. Fish at a station and measure ten fish on the board, or run an echo sounder line through three points. The catch is yours.'],
       ['Kystposten vil ha bilder av fyrene langs kysten, noen ganger i lav sol, mens fyret lyser, under nordlyset eller i uvær. Trykk på utløseren når fyret er i bildet, så står bildet i avisa.', 'Kystposten wants pictures of the lighthouses along the coast, sometimes in low sun, with the light lit, under the northern lights or in heavy weather. Press the shutter when the lighthouse is in the picture, and it is printed in the paper.'],
@@ -757,12 +762,12 @@ const PHONE = (() => {
     return h.join('');
   }
   function home(){
-    const H = S.t / 60, W = windAt(H), n = unread(), na = alerts().length, np = patchNew();
+    const H = S.t / 60, W = windAt(H), n = unread(), na = alerts().length, np = patchNew(), npost = pressUnread();
     return '<div class="ph-homescr"><div class="ph-clock">' + hm(H) + '</div><div class="ph-date">' + dayStr(H) + '</div>' +
       '<div class="ph-widget"><span class="w1">' + dirName(windDir(H)) + ' ' + fmt(W, 0) + ' m/s · ' + fmt(Math.round(airTemp(H)) || 0, 0) + ' °C</span><span class="w2">' + kr(S.cash) + '</span></div>' +
       ((g => g ? '<button class="ph-goal" data-pa="open" data-a="fartoy"><span>' + L('Neste mål: ', 'Next goal: ') + '<b>' + g.n + '</b></span><small>' + (g.txt || kr(Math.min(Math.max(0, S.cash), g.need)) + ' / ' + kr(g.need)) + '</small><span class="gb"><i style="width:' + (g.pc * 100).toFixed(1) + '%"></i></span></button>' : '')(goals()[0])) +
       (typeof achChip === 'function' ? achChip() : '') + fsChip() +
-      '<div class="ph-grid">' + APPS.filter(a => (a[0] !== 'admin' || adminOk()) && (a[0] !== 'rederi' || rederiOpen())).map(a => '<button class="ph-app" data-pa="open" data-a="' + a[0] + '"><span class="ic" style="background:linear-gradient(160deg,' + a[3] + ',' + a[3] + 'cc)">' + IC[a[0]] + '</span>' + L(a[1], a[2]) + (a[0] === 'meld' && n ? '<span class="bd">' + n + '</span>' : '') + (a[0] === 'ordl' && ordState().active.length ? '<span class="bd">' + ordState().active.length + '</span>' : '') + (a[0] === 'rederi' && na ? '<span class="bd">' + na + '</span>' : '') + (a[0] === 'patch' && np ? '<span class="bd">' + np + '</span>' : '') + '</button>').join('') + '</div></div>';
+      '<div class="ph-grid">' + APPS.filter(a => (a[0] !== 'admin' || adminOk()) && (a[0] !== 'rederi' || rederiOpen())).map(a => '<button class="ph-app" data-pa="open" data-a="' + a[0] + '"><span class="ic" style="background:linear-gradient(160deg,' + a[3] + ',' + a[3] + 'cc)">' + IC[a[0]] + '</span>' + L(a[1], a[2]) + (a[0] === 'meld' && n ? '<span class="bd">' + n + '</span>' : '') + (a[0] === 'ordl' && ordState().active.length ? '<span class="bd">' + ordState().active.length + '</span>' : '') + (a[0] === 'rederi' && na ? '<span class="bd">' + na + '</span>' : '') + (a[0] === 'patch' && np ? '<span class="bd">' + np + '</span>' : '') + (a[0] === 'post' && npost ? '<span class="bd">' + npost + '</span>' : '') + '</button>').join('') + '</div></div>';
   }
   const kv = (a, b) => '<div class="ph-kv"><span>' + a + '</span><span>' + b + '</span></div>';
   const tq = (kg, d) => isFinite(kg) ? fmt(kg / 1000, d) + ' t' : L('ingen grense', 'no limit');   // a quota in tonnes, or no limit
@@ -852,12 +857,12 @@ const PHONE = (() => {
     return h.join('');
   }
   // --- newspaper
+  // the paper (ui/05g-press.js, core/09h-press.js): the front page and the local tab, and a story opened to read
   function post(){
-    const day = Math.floor(S.t / 60 / 24), h = ['<div class="ph-mast">Kystposten</div><div class="ph-mdate">' + dayStr(S.t / 60) + ' · ' + L('Nyheter langs kysten', 'News along the coast') + '</div>'];
-    let n = 0;
-    for (let d = day; d >= Math.max(0, day - 6); d--) for (const a of newsForDay(d)){ n++; const im = a.img != null ? turFotoSrc(a.img) : null; h.push('<div class="ph-art"><time>' + dayStr(d * 24) + '</time><h4>' + a.h[S.lang] + '</h4>' + (im ? '<img class="ph-foto" alt="" src="' + im + '">' : '') + '<p>' + a.b[S.lang] + '</p></div>'); }
-    if (!n) h.push('<div class="ph-art"><p>' + L('Ingen nyheter ennå.', 'No news yet.') + '</p></div>');
-    return h.join('');
+    pressSeen(); if (typeof pressFetch === 'function') pressFetch(false);
+    if (sub.postArt){ const s = pressFind(sub.postArt); if (s) return pressArticle(s); sub.postArt = null; }
+    return '<div class="ph-mast">Kystposten</div><div class="ph-mdate">' + dayStr(S.t / 60) + ' · ' + L('Nyheter langs kysten', 'News along the coast') + '</div>' +
+      subs('post', [['for', 'Forsiden', 'Front page'], ['lok', 'Lokalt', 'Local']]) + pressPage(sub.post === 'lok');
   }
   // --- sales organisation
   // s: one part on its own (the orders in the village, the quota as its own app)
@@ -1305,7 +1310,7 @@ const PHONE = (() => {
     const b = S.boat;
     if (a !== 'shop') shopPend = null;
     if ((/^adm/.test(a) || (a === 'open' && d.a === 'admin')) && !adminOk()) return false;   // the Admin app is only Jonas's (adminOk)
-    if (a === 'open'){ app = d.a; confirmMayday = false; if (d.s) sub[d.a] = d.s; }
+    if (a === 'open'){ app = d.a; confirmMayday = false; if (d.s) sub[d.a] = d.s; if (d.a === 'post') sub.postArt = null; }
     else if (a === 'home'){ app = 'home'; }
     else if (a === 'back'){ app = 'home'; }
     else if (a === 'shop'){ const k = d.k, kg = +d.kg || 0; if (!shopPend || shopPend.k !== k || shopPend.kg !== kg){ shopPend = {k, kg}; return true; } shopPend = null; const free = tutFree(k), why = shopBuy(k, kg, free); if (why){ toast(L(why[0], why[1])); } else if (free) tutMark('free_' + k); }
@@ -1345,7 +1350,9 @@ const PHONE = (() => {
       if (S.adm.noEnergy){ S.sleep = null; S.energy = 100; S.drowsy = false; S.enWarn = false; log('Admin: energien er skrudd av. Du blir ikke sliten og sovner ikke.', 'Admin: energy is off. You do not tire or fall asleep.'); }
       else log('Admin: energien er skrudd på igjen.', 'Admin: energy is on again.'); }
     else if (a === 'admFuel'){ const b = S.boat, add = Math.max(0, BOAT.fuelCap - b.fuel); b.fuel = BOAT.fuelCap; if (b.status === 'adrift' && add > 0) b.status = 'idle'; log('Admin: tanken fylt (' + fmt(add) + ' L).', 'Admin: the tank filled (' + fmt(add) + ' L).'); }
-    else if (a === 'sub'){ sub[app] = d.s; }
+    else if (a === 'sub'){ sub[app] = d.s; if (app === 'post') sub.postArt = null; }
+    else if (a === 'art'){ sub.postArt = d.k; }
+    else if (a === 'artback'){ sub.postArt = null; }
     else if (a === 'ruchk'){ const c = ruChk(); c[d.k] = /^-?\d+(\.\d+)?$/.test(d.v) ? +d.v : d.v === 'null' ? null : d.v; S.ruChk = c; sub.regler = 'sjekk'; }
     else if (a === 'salgW'){ sub.salgW = d.s; }
     else if (a === 'salgG'){ sub.salgG = d.s; }
@@ -1399,6 +1406,7 @@ const PHONE = (() => {
       if (V2.isNew){ S.order = {type:d.k, due:S.t + 45 * 24 * 60, vid:ti ? S.cur : null}; log('Bestilte ' + V2.name.no + '. Levering om 45 døgn' + (ti ? ', mot «' + S.boatName + '» i bytte.' : ' til flåten.'), 'Ordered the ' + V2.name.en + '. Delivery in 45 days' + (ti ? ', with «' + S.boatName + '» traded in.' : ' for the fleet.')); }
       else if (ti) switchVessel(d.k);
       else { const v = newVesselObj(d.k, S.boat.port); log('Kjøpte ' + V2.name.no + ' til flåten. Hun heter «' + v.boatName + '» og ligger i ' + portById(S.boat.port).name + '.', 'Bought the ' + V2.name.en + ' for the fleet. She is called «' + v.boatName + '» and lies at ' + portById(S.boat.port).name + '.'); }
+      pressPut('boat', {type:d.k, nb:V2.isNew ? 1 : 0, price:V2.price});   // Kystposten (core/09h-press.js)
       if (ti && S.lic){ log('Kvoten i lukket gruppe fulgte med den gamle båten.', 'The closed-group quota went with the old vessel.'); S.lic = null; freshQuota(); openUsedLoad(); }
     }
     else if (a === 'vsel'){ selV = d.id; }
@@ -1483,6 +1491,7 @@ const PHONE = (() => {
       let fished; regTake(O.id);   // the NPC owner leaves the register (03d-quota.js)
       if (ti){ if (!S.lic && S.cur === ov) openUsedSave(S.quota); switchVessel(O.ves); S.lic = lic; fished = licStart(lic); nm = S.boatName; }
       else { if (ov) openUsedSave(vget(vesselById(ov), 'quota')); const v = newVesselObj(O.ves, S.boat.port, lic); fished = withVessel(v, () => licStart(lic)); nm = v.boatName; log('Kjøpte ' + O.no.toLowerCase() + ' til flåten. Hun heter «' + nm + '».', 'Bought a ' + O.en.toLowerCase() + ' for the fleet. She is called «' + nm + '».'); }
+      pressPut('boat', {type:O.ves, lic:1});
       msg('Fiskeridirektoratet', 'Deltakeradgangen i lukket gruppe (hjemmelslengde ' + O.hl + ') er registrert på «' + nm + '». Fartøykvoten for torsk i år er ' + fmt(O.cod / 1000, 2) + ' tonn. Selgeren har fisket ' + fmt(fished / 1000, 2) + ' tonn av den, og det trekkes fra (§ 29).' + (lost ? ' Rederiet har nå en båt i lukket gruppe, så «' + lost + '» kan ikke lenger delta i åpen gruppe. Hun kan fortsatt fiske kveite, krabbe og annet enn torsk, hyse og sei.' : ''), 'The closed-group participation right (quota length ' + O.hl + ') is registered to the «' + nm + '». The vessel quota for cod this year is ' + fmt(O.cod / 1000, 2) + ' t. The seller has fished ' + fmt(fished / 1000, 2) + ' t of it, which comes off (§ 29).' + (lost ? ' The company now has a vessel in the closed group, so the «' + lost + '» can no longer take part in the open group. She can still fish halibut, crab and anything but cod, haddock and saithe.' : ''));
     }
     return true;

@@ -256,12 +256,13 @@ function turProve(o, cls){
         try { ok = !isLandFar(q) && !isLandFar({x:(q.x + q0.x) / 2, y:(q.y + q0.y) / 2}) && coastDistFar(q) >= 0.4; } catch (e){ ok = false; } pts.push(q); }
       if (!ok) continue;
       const len = (dist(pts[0], pts[1]) + dist(pts[1], pts[2])) / NM, h = turNm(o, p) / v + len / Math.min(v, TUR.ekkoV);
-      if (h < c.h[0] || h >= c.h[1] || !turCan(o, p, h, false)) continue;
+      // out, along the line and home again on her tank (it ends at sea, as the lost gear does)
+      if (h < c.h[0] || h >= c.h[1] || 2 * (turNm(o, p) + len) > 0.75 * turRange() || !turCan(o, p, h, true)) continue;
       return {k:'prove', kind:'ekko', cls, p, pts, at:0, nm:Math.round(turNm(o, p) + len), h, pay:turPay(h, c.f), hTot:h * 2.5 + 12};
     }
     // a station: fish there an hour (two on a middle trip), where fishing with the jig is allowed
     const need = cls === 'kort' ? 60 : 120, h = turNm(o, p) / v + need / 60;
-    if (h < c.h[0] || h >= c.h[1] || !turCan(o, p, h, false)) continue;
+    if (h < c.h[0] || h >= c.h[1] || !turCan(o, p, h, true)) continue;
     try { if (typeof ruBlockMsg === 'function' && ruBlockMsg({p, len:BOAT.len, gear:'juksa', sp:null, hand:!(S.equip && S.equip.jukse > 0)})) continue; } catch (e){}
     const pay = turPay(h, c.f);
     return {k:'prove', kind:'stasjon', cls, p, need, min:0, nm:Math.round(turNm(o, p)), h, pay, bonusMax:Math.round(pay * 0.2 / 100) * 100, hTot:h * 2.5 + 12};
@@ -316,7 +317,7 @@ function turFoto(o, cls){
     let ap = null;
     for (let k = 0; k < 12 && !ap; k++){ const a = k * Math.PI / 6 + Math.random() * 0.4, r = 0.5 + Math.random() * 0.7, q = {x:L.x + Math.sin(a) * r, y:L.y - Math.cos(a) * r};
       try { if (!isLandFar(q) && coastDistFar(q) >= 0.15) ap = q; } catch (e){} }
-    if (!ap || !turCan(o, ap, h, false)) continue;
+    if (!ap || !turCan(o, ap, h, true)) continue;   // out and home again
     // a light it asks for only when it comes (an hour of it at least) between arriving and the deadline; heavy weather not for an open
     // boat, nor more sea than she is rated for
     const hTot = h * 2.5 + 12, can = k => { if (k === 'uvaer' && open) return false; let n2 = 0;
@@ -338,9 +339,11 @@ function turFotoTake(m, seen, img){
   else if (d > TUR.fotoNo3d) return turL('Gå nærmere fyret, innen 1,5 km.', 'Go closer to the lighthouse, within 1.5 km.');
   if (m.lys && !TUR_LYS[m.lys].ok(H, m.fyr)){ const t = turLysNext(m, H);
     return turL('Kystposten vil ha bildet ' + TUR_LYS[m.lys].no + '.' + (t != null ? ' Det kommer ca. kl. ' + hm(t) + (Math.floor(t / 24) !== Math.floor(H / 24) ? ' ' + dayStr(t) : '') + '.' : ''), 'The paper wants the picture ' + TUR_LYS[m.lys].en + '.' + (t != null ? ' It comes at about ' + hm(t) + (Math.floor(t / 24) !== Math.floor(H / 24) ? ' ' + dayStr(t) : '') + '.' : '')); }
-  const T = turState(), name = turFyrName(m), how = m.lys ? [' ' + TUR_LYS[m.lys].no, ' ' + TUR_LYS[m.lys].en] : ['', ''], who = S.boatName ? '«' + S.boatName + '»' : (S.company || turL('en lokal fisker', 'a local fisher'));
+  const name = turFyrName(m), how = m.lys ? [' ' + TUR_LYS[m.lys].no, ' ' + TUR_LYS[m.lys].en] : ['', ''];
   if (img && typeof turFotoKeep === 'function') turFotoKeep(m.id, img);
-  T.press = (T.press || []).concat([{t:S.t, id:img ? m.id : null, h:[name + how[0], name + how[1]], b:['Foto: ' + who + '.', 'Photo: ' + who + '.']}]).slice(-12);
+  // in the paper (09h-press.js): the others read of it, the picture is only in one's own
+  const fi = FYR.findIndex(f => f[3] === m.fyr.name && Math.abs(f[0] - m.fyr.x) < 0.01 && Math.abs(f[1] - m.fyr.y) < 0.01);
+  pressPut('foto', m.lys ? {fyr:fi, lys:m.lys} : {fyr:fi}, img ? {img:m.id} : null);
   turPayOut(m, 'Kystposten', 'Takk for bildet av ' + name + how[0] + '. Det står i avisa i dag.', 'Thank you for the picture of ' + name + how[1] + '. It is in the paper today.');
   return null;
 }
@@ -445,6 +448,7 @@ function turDock(pid){
       turPayOut(m, portById(pid).name, 'Takk for at du kom med ' + m.what[0] + '.', 'Thank you for bringing the ' + m.what[1] + '.'); } }
   for (const m of T.act.slice()) if (m.k === 'slep' && m.vid === S.cur && m.stage === 'tow' && pid === m.to){
     m.pay = turSalvage(m, m.danger || 0);
+    pressPut('salv', {towed:TUR_BOATS.indexOf(m.boat), port:pid, pay:m.pay, val:m.value});   // Kystposten (09h-press.js)
     msg(m.owner, '«' + m.boat + '» ligger trygt ved kai i ' + portById(pid).name + '. Tusen takk for hjelpen.', 'The «' + m.boat + '» lies safe at the quay in ' + portById(pid).name + '. Thank you so much for the help.');
     turPayOut(m, 'Forsikringsselskapet', 'Bergelønn for «' + m.boat + '» etter sjøloven, avtalt med eierens forsikring: båtens verdi ' + kr(m.value) + ', faren og tiden du brukte.', 'Salvage reward for the «' + m.boat + '» under the Maritime Code, agreed with the owner\'s insurer: the boat\'s value ' + kr(m.value) + ', the danger and the time you spent.'); }
 }
