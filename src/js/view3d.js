@@ -1743,9 +1743,11 @@ const G3 = (() => {
   function deckActivity(){
     const b = S.boat; if (!b || b.land || typeof deckHands !== 'function' || !S.hold || !S.hold.length) return {on:false};
     if (deckHands() < 1 || deckPending() < 0.5) return {on:false};
-    // who stands at the table: the skipper when alone, or when the work chains put him there and none of the crew (13-work.js workAssign)
+    // who stands on the deck work (13-work.js workAssign): the skipper when alone or when the work chains put him there, and one of the crew
+    // at the tub when they are on it too (tilbakemelding #42: with both on «Sløying» the skipper was left at the wheel while the one hand
+    // gutted alone)
     const alone = handsAboard() === 1, WA = !alone && typeof workAssign === 'function' ? workAssign().filter(p => p.st === 'sloy' || p.st === 'is') : [];
-    return {on:true, alone, me:alone || (WA.length > 0 && !WA.some(p => p.c)), task:catchGut() && S.hold.some(x => !x.gut && !x.iced) ? 'gut' : 'ice'};
+    return {on:true, alone, me:alone || WA.some(p => !p.c), crew:WA.some(p => p.c), task:catchGut() && S.hold.some(x => !x.gut && !x.iced) ? 'gut' : 'ice'};
   }
   function drawDeck(BMrel, eye, VP, t, DK){
     const vt = vtype(), G = GEO(vt), d = G.deck || {y:G.gw, z:2}, Bm = G.beam, b = S.boat; DK.pt = null;
@@ -1768,6 +1770,9 @@ const G3 = (() => {
     if (!DK.on) return;
     const wl = xf(BMrel, [tx + 0.62, d.y, tz]), wy = wl[1] + eye[1], P = {gy:() => wy, bare:true, spray:0, kit:DK.me ? 'skipper' : null}, head = bv.head - Math.PI / 2;
     drawWorker(P, {x:wl[0] + eye[0], z:wl[2] + eye[2], h:head, task:DK.task === 'gut' ? 'gut' : 'ice', walk:false, s:0}, eye, t, 7);
+    // the skipper and a hand both on the deck work: the hand stands inboard of the bleeding tub, facing it
+    if (DK.me && DK.crew && !DK.alone){ const w2 = xf(BMrel, [ux + (ux > tx ? -0.62 : 0.62), d.y, uz]), y2 = w2[1] + eye[1];
+      drawWorker({gy:() => y2, bare:true, spray:0, kit:null}, {x:w2[0] + eye[0], z:w2[2] + eye[2], h:bv.head + (ux > tx ? 1 : -1) * Math.PI / 2, task:DK.task === 'gut' ? 'gut' : 'ice', walk:false, s:0}, eye, t, 8); }
     // the offal goes over the port rail into the water, where the gulls come down for it
     const out = [-Math.cos(bv.head), -Math.sin(bv.head)], a = xf(BMrel, [tx - 0.15, d.y + 1.0, tz]), wat = (env.tide || 0) - eye[1];
     DK.pt = [a[0] + eye[0] + out[0] * 2.6, (env.tide || 0), a[2] + eye[2] + out[1] * 2.6];
@@ -4071,7 +4076,7 @@ const G3 = (() => {
     // resting ashore in the naust or a rorbu (15-energy.js; Jonas 05.10.2026: «Ved hvile forsvinner skipperen fra båten») he is not aboard
     // never more people aboard than the crew list (tilbakemelding #24): the crew at the hauler and the one at the table leave their
     // places, and with you ashore one of the crew is at the wheel
-    DECKACT = deckActivity(); const awaySk = (DECKACT.on && DECKACT.me) || gopMe() || (meAboard() && resting()), awayCr = DECKACT.on && !DECKACT.me ? 1 : 0;
+    DECKACT = deckActivity(); const awaySk = (DECKACT.on && DECKACT.me) || gopMe() || (meAboard() && resting()), awayCr = DECKACT.on && DECKACT.crew ? 1 : 0;
     const gHaul = S.boat.gop && !VG.hand ? Math.min(3, gopHands()) - (gopMe() ? 1 : 0) : 0, helmCr = !meAboard() && !awaySk ? 1 : 0;
     // under way the crew are inside (the user: no reason for them to stand on deck all day, 03.10.2026); whoever guts is at the table
     // (drawDeck), and in an open boat they sit where they are. The one at the table leaves their place (a skiff drew them twice).

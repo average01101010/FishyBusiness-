@@ -415,6 +415,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p90', '07.10.2026', 'Rettelser etter tilbakemeldinger', 'Fixes from your feedback', [
+      ['Når både du og mannskapet står på sløying, står nå begge på dekk: du ved bordet og en av mannskapet ved bløggekaret. Før ble du stående ved rattet mens mannskapet jobbet alene.', 'When you and the crew are both on gutting, both now stand on deck: you at the table and one hand at the bleeding tub. Before, you stayed at the wheel while the crew worked alone.']]],
     ['p89', '07.10.2026', 'Blåkveite', 'Greenland halibut', [
       ['Blåkveite er ny art. Den står på eggakanten på 500–1000 m dyp, mest fra Lofoten til Tromsøflaket utenfor Vesterålen, Andøya og Senja, mindre langs Finnmark og lite fra Storegga til Helgeland. Fjordene i Troms har en liten bestand. Om vinteren trekker gytefisken nordover.', 'Greenland halibut is a new species. It stands on the shelf edge at 500–1000 m, most from Lofoten to Tromsøflaket off Vesterålen, Andøya and Senja, less along Finnmark and little from Storegga to Helgeland. The fjords of Troms have a small stock. In winter the spawning fish move north.'],
       ['Havdypet er lagt inn langs hele kysten, så ekkoloddet, sonaren og kartplotteren viser eggakanten også langt ute.', 'The depth of the open sea is in along the whole coast, so the echo sounder, the sonar and the chart plotter show the shelf edge far out too.'],
