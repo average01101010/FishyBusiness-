@@ -32,7 +32,7 @@ async def main():
           const m = {}; for (const s of TSTEPS) { if (s.id === 'ice' || s.id === 'goal') break; m[s.id] = 1; }
           S.tut = {v:2, m, catch:false, pAt:Date.now()}; S.lastSale = {port:'botnhamn', total:1000}; b.land = null; tutUpdate();
           const st = tutStep(), T = st && tutTip(st); return {step:st && st.id, tip:T && T.no}; })()""")
-        check(d['step'] == 'ice' and 'Marked' in (d['tip'] or ''), 'after the landing the guide asks for the ice, pointing to the market', d)
+        check(d['step'] == 'ice' and 'Mottak' in (d['tip'] or ''), 'after the landing the guide asks for the ice, pointing to the market', d)
         await pg.evaluate("DOCK.open('is')"); await pg.wait_for_timeout(400)
         e = await pg.evaluate("""(() => { const bt = document.querySelector('#drawerBody [data-pa=shop][data-k=ice][data-fill]'); const T = tutTip(tutStep()); return {btn:bt ? bt.textContent : null, ring:T.el === bt}; })()""")
         check(e['btn'] and 'på huset' in e['btn'] and e['ring'], 'on the ice page the fill-up button is the guide\'s target and says it is on the house', e)

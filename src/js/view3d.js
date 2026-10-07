@@ -1730,7 +1730,7 @@ const G3 = (() => {
   const PLANT_TRIED = new Set();
   function plantsCoast(eye){
     for (const U of UNITA){
-      if (!U.coastal || PLANT_TRIED.has(U.id) || Math.hypot(U.o[0] - eye[0], U.o[1] - eye[2]) > 1500) continue;
+      if (!U.coastal || U.sted || PLANT_TRIED.has(U.id) || Math.hypot(U.o[0] - eye[0], U.o[1] - eye[2]) > 1500) continue;
       const pt = portById(U.id); if (!pt || !mapReadyAt(pt.p, 0.3)) continue; PLANT_TRIED.add(U.id);
       try { const P = plantLayout(pt); if (!P) continue; PLANTS.push(P); const ry = Math.atan2(U.n[0], U.n[1]);
         for (const [cx, cz, sx, sz, y0, y1] of unitModel(U.v).A.solids){ const c = unitW(U, cx, cz); camSolid(c[0], c[1], sx, sz, ry, y0, y1); } } catch (e){ console.error(e); }

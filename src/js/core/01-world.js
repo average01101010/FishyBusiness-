@@ -231,7 +231,7 @@ function legClear(a, b){
 const PORTS = [
   // the fish plants are where Råfisklaget lists landings on Senja and at Sommarøy and Brensholmen, each with the harbour unit and its bunker station (07-harbours.js); Finnsnes has a net loft and gear dealers but no plant and no ice chute (the tackle shop sells bagged ice).
   // The harbour point lies just off the plant's quay (Finnsnes: the quay by the net loft, south of the bridge); the quays themselves are QUAYS in 07-harbours.js.
-  {id:'finnsnes', name:'Finnsnes', xy:[56.035,53.611], shore:[56.066,53.623], pier:false, fuel:true, ice:false, mottak:false, pf:1, home:true},
+  {id:'finnsnes', name:'Finnsnes', xy:[56.035,53.611], shore:[56.066,53.623], pier:false, fuel:true, ice:false, mottak:false, pf:1, home:true, sted:'butikk verft'},
   {id:'botnhamn', name:'Botnhamn', xy:[53.288,23.495], shore:[53.285,23.527], pier:true, fuel:true, ice:true, mottak:true, pf:1.0},
   {id:'husoy', name:'Husøy', xy:[43.803,19.676], shore:[43.783,19.692], pier:true, fuel:true, ice:true, mottak:true, pf:1.03},
   {id:'senjahopen', name:'Senjahopen', xy:[36.807,25.119], shore:[36.791,25.09], pier:true, fuel:true, ice:true, mottak:true, pf:1.02},

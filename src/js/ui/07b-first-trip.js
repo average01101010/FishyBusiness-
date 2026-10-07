@@ -112,7 +112,7 @@ const TSTEPS = [
   {id:'land', done:() => !!S.boat.land || !!(S.lastSale && S.lastSale.port === tutLand()),
     tip:() => { if (!(S.boat.status === 'port' && S.boat.port === tutLand())) return {el:vis('#hud .st.nx'), no:'Båten er på vei til ' + tutLandN() + '.', en:'The boat is on its way to ' + tutLandN() + '.', small:true};
       if (inPlot()) return {el:vis('#ecClose'), no:'Fremme! Trykk «Lukk» og lever i 3D.', en:'Arrived! Tap «Close» and land the catch in 3D.'};
-      return {...dockApp('marked', 'lever', 'lever', '#drawerBody [data-act=sell]'), no:'Fremme i ' + tutLandN() + '. Trykk Marked, så Lever, og «Lever» for å levere fisken.', en:'Arrived at ' + tutLandN() + '. Tap Market, then Land, and «Land» to land the catch.'}; }},
+      return {...dockApp('marked', 'lever', 'lever', '#drawerBody [data-act=sell]'), no:'Fremme i ' + tutLandN() + '. Trykk Mottak, så Lever, og «Lever» for å levere fisken.', en:'Arrived at ' + tutLandN() + '. Tap Plant, then Land, and «Land» to land the catch.'}; }},
   // done of itself when there is no landing note here to show (the boat has left the plant), so the guide can never hang on it
   {id:'slip', ok:true, done:() => !S.boat.land && !(S.lastSale && S.lastSale.port === S.boat.port),
     tip:() => { if (S.boat.land) return {el:vis('#hud .st.nx'), no:'Kranen løfter fisken på land. Sluttseddelen kommer når lossingen er ferdig.', en:'The crane lifts the catch ashore. The landing note comes when the landing is done.', small:true, noOk:true};
@@ -124,11 +124,11 @@ const TSTEPS = [
     tip:() => { const open = DOCK.page === 'is';
       if (open) return {el:vis('#drawerBody [data-pa=shop][data-k=ice][data-fill]'), scroll:true, no:'Fyll opp iskassa: trykk på knappen, og en gang til for å bekrefte. Mottaket tar første fylling siden du er ny her og de kjenner igjen den gamle båten.', en:'Fill up the ice box: tap the button, and once more to confirm. The plant covers the first fill because you are new here and they recognise the old boat.'};
       if (S.boat.status !== 'port') return {no:'Mottaket selger is.', en:'The plant sells ice.', small:true};
-      return {...dockApp('marked', 'is', 'is', null), no:'Is holder fisken fersk og gir bedre pris. Før neste tur fyller du iskassa her: trykk Marked og så Is.', en:'Ice keeps the fish fresh and gets a better price. Before the next trip you fill the ice box here: tap Market and then Ice.'}; }},
+      return {...dockApp('marked', 'is', 'is', null), no:'Is holder fisken fersk og gir bedre pris. Før neste tur fyller du iskassa her: trykk Mottak og så Is.', en:'Ice keeps the fish fresh and gets a better price. Before the next trip you fill the ice box here: tap Plant and then Ice.'}; }},
   {id:'goal', ok:true, done:() => false,
     tip:() => { if (DOCK.page) DOCK.close();
       if (!(PHONE.isOpen() && PHONE.app === 'home')) return {okText:['Vis neste mål', 'Show the next goal'], okAct:() => PHONE.open('home'), no:'Godt levert! Nå kan du spare til neste steg.', en:'Well landed! Now you can save up for the next step.'};
-      return {el:vis('#phone .ph-goal'), okText:['Ferdig', 'Done'], no:'Neste mål er en juksamaskin. Den fisker like mye som to håndjukser. Målene står her og øverst i Båthandel under Verft. God tur!', en:'The next goal is a jigging machine. It fishes as much as two hand jigs. The goals are here and at the top of the boat market in the yard. Good fishing!'}; }}
+      return {el:vis('#phone .ph-goal'), okText:['Ferdig', 'Done'], no:'Neste mål er en juksamaskin. Den fisker like mye som to håndjukser. Målene står her og øverst i Båthandel på verftet. God tur!', en:'The next goal is a jigging machine. It fishes as much as two hand jigs. The goals are here and at the top of the boat market at the yard. Good fishing!'}; }}
 ];
 // adrift (Jonas 05.10.2026: «Båten stoppet midt i ruta og nå kommer jeg ingen vei fordi jeg er låst i tutorialen og kan ikke lage ny rute
 // til botnhamn»): «Stopp» stops the route as well, and the guide waited for a boat that would never come. Lying still at sea without a

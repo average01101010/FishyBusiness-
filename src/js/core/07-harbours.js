@@ -352,6 +352,7 @@ function shopBuy(k, kg, free){
   if (pt.rorbu) return ['Det er ingen butikk ved rorbua. Handle i en havn.', 'There is no shop at the rorbu. Buy in a harbour.'];   // 07d-rorbu.js
   if (berthKind(b) === 'naust') return NAUST_NOSHOP;   // Father's naust is a home: nothing is sold there (Jonas 07.10.2026)
   if (k === 'jig' || k === 'kgear'){
+    if (!portServices(pt, berthKind(b)).butikk) return ['Fiskeutstyr kjøper du i utstyrsbutikken.', 'You buy fishing gear at the tackle shop.'];
     const have = k === 'jig' ? b.gear : b.kgear, c = free ? 0 : Math.round((k === 'jig' ? PRICE.gear : PRICE.kgear) * (naustHas('benk') && atHome(b) ? 0.75 : 1));   // Father's workbench (07c-naust.js)
     if (have) return ['Det har du allerede om bord.', 'You already have that aboard.'];
     if (c > S.cash) return ['Du har ikke nok penger.', 'Not enough money.'];
@@ -363,6 +364,7 @@ function shopBuy(k, kg, free){
     if (c > 0) folkShop(); return null;
   }
   if (k === 'ice'){
+    if (!pt.mottak) return ['Is og agn selges på fiskemottaket.', 'Ice and bait are sold at the fish plant.'];
     kg = Math.round(Math.min(kg, shopIceRoom())); if (kg < 1) return ['Iskassa er full.', 'The ice box is full.'];
     const c = free ? 0 : Math.round(kg * shopIceKr()); if (c > S.cash) return ['Du har ikke nok penger.', 'Not enough money.'];
     if (pt.ice && berthKind(b) !== 'naust'){

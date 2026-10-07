@@ -43,13 +43,16 @@ async def main():
           b.status = 'port'; b.port = 'finnsnes'; b.pos = {...portById('finnsnes').p}; S.pgear = newPGear(); const c0 = S.cash;
           PHONE.open('redskap'); document.querySelector('[data-pa=sub][data-s=kjop]').click();
           const click = sel => { const e = document.querySelector(sel); if (e && !e.disabled) e.click(); return !!(e && !e.disabled); };
-          R.clicked = [click('[data-pa=grbuy][data-w=net][data-s="156"]'), click('[data-pa=grbuy][data-w=stamp][data-s=hyse]'), click('[data-pa=grbuy][data-w=pot][data-s=small]'), click('[data-pa=grbuy][data-w=kit]'), click('[data-pa=grbuy][data-w=bait][data-n="20"]')];
+          R.clicked = [click('[data-pa=grbuy][data-w=net][data-s="156"]'), click('[data-pa=grbuy][data-w=stamp][data-s=hyse]'), click('[data-pa=grbuy][data-w=pot][data-s=small]'), click('[data-pa=grbuy][data-w=kit]')];
+          // the bait is bought at the plant, not in the shop (Jonas 07.10.2026): over to Botnhamn for it, and the page is drawn again
+          const q = portById('botnhamn'); b.port = 'botnhamn'; b.pos = {x:q.p.x, y:q.p.y}; PHONE.open('redskap'); document.querySelector('[data-pa=sub][data-s=kjop]').click(); PHONE.open('agn'); R.clicked.push(click('[data-pa=grbuy][data-w=bait][data-n="20"]'));
+          b.port = 'finnsnes'; b.pos = {...portById('finnsnes').p}; PHONE.open('redskap'); document.querySelector('[data-pa=sub][data-s=kjop]').click();
           R.pg = {nets:S.pgear.nets.map(l => l.n), hyse:S.pgear.lines.hyse.n, pots:S.pgear.pots.small, kits:S.pgear.kits.n, bait:baitKg(S.pgear)};
           R.spent = Math.round(c0 - S.cash); R.potRoom = VESSELS.skiff.gearMax.teine; R.expect = 6 * GPRICE.net + 4 * LINE_KINDS.hyse.price + R.potRoom * POTS.small.price + GPRICE.kit + 20 * GPRICE.bait;
           R.fullNets = document.querySelector('[data-pa=grbuy][data-w=net]').disabled;
           // haulers: the small electric one is not for a sjark
-          PHONE.open('utstyr'); R.elSkiff = !!document.querySelector('[data-pa=equip][data-k=elhaler]') || document.body.innerHTML.includes('Elektrisk haler');
-          b.type = 'sjark'; applyVessel(); PHONE.open('utstyr'); R.elSjark = document.getElementById('drawerBody').innerHTML.includes('Elektrisk haler'); R.garnhalerSjark = document.getElementById('drawerBody').innerHTML.includes('Hydraulisk garnhaler');
+          PHONE.open('utstyrb'); R.elSkiff = !!document.querySelector('[data-pa=equip][data-k=elhaler]') || document.body.innerHTML.includes('Elektrisk haler');
+          b.type = 'sjark'; applyVessel(); PHONE.open('utstyrb'); R.elSjark = document.getElementById('drawerBody').innerHTML.includes('Elektrisk haler'); R.garnhalerSjark = document.getElementById('drawerBody').innerHTML.includes('Hydraulisk garnhaler');
           PHONE.show(false); b.type = 'skiff'; applyVessel(); return R; })()""")
         print('buy:', json.dumps(r, ensure_ascii=False))
         print(ok(r['spNoCrab'] and r['jigCrab'] == 0 and r['jigKg'] > 0), 'king crab is outside the fish list, and a day of jigging on a crab spot takes no crab')

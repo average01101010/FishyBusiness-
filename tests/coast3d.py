@@ -17,7 +17,7 @@ async def main():
         await boot(pg, GAME + '#notut')
         await pg.wait_for_function("G3.isActive()", timeout=90000); await pg.wait_for_timeout(2000)
         # one plant of each look, near Lofoten and Vesterålen where the packs are in the build
-        picks = await pg.evaluate("""(() => { const out = {}; for (const q of PORTS) if (q.coastal && UNITS[q.id] && !out[UNITS[q.id].v] && q.p.y > 300 && q.p.y < 520) out[UNITS[q.id].v] = {id:q.id, name:q.name}; return out; })()""")
+        picks = await pg.evaluate("""(() => { const out = {}; for (const q of PORTS) if (q.coastal && q.mottak && UNITS[q.id] && !out[UNITS[q.id].v] && q.p.y > 300 && q.p.y < 520) out[UNITS[q.id].v] = {id:q.id, name:q.name}; return out; })()""")
         print(json.dumps(picks, ensure_ascii=False))
         for v in ['a', 'b', 'c']:
             pk = picks.get(v)

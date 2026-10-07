@@ -31,8 +31,8 @@ async def main():
 
         # the dock in Finnsnes: the shop under Verft, ice under Marked
         await pg.evaluate("S.cash = 20000; renderActs()")
-        acts = await pg.evaluate("[DOCK.items('verft').map(x => x.id), DOCK.items('marked').map(x => x.id)]")
-        check('fiskeutstyr' in acts[0] and 'is' in acts[1], 'Fiskeutstyr ligger under Verft og is under Marked', acts)
+        acts = await pg.evaluate("[DOCK.items('butikk').map(x => x.id), DOCK.items('marked').map(x => x.id)]")
+        check('fiskeutstyr' in acts[0] and 'is' in acts[1], 'Fiskeutstyr ligger under Butikk og is under Mottak', acts)
 
         # the shop: title in Finnsnes, two taps to buy, a log line on the operations page
         await pg.evaluate("S.boat.gear = false; DOCK.open('fiske')"); await pg.wait_for_timeout(300)   # the jig comes with the boat; this is the one bought after losing it
@@ -48,19 +48,16 @@ async def main():
         await pg.evaluate("document.querySelector('#drawerBody [data-pa=shop][data-k=jig]').click()"); await pg.wait_for_timeout(200)
         r = json.loads(await J("{gear:S.boat.gear, cash:S.cash, log:S.log[S.log.length - 1].no, kind:logKind(S.log[S.log.length - 1])}"))
         check(r['gear'] and r['cash'] == 18100 and 'håndjuksa' in r['log'] and r['kind'] == 'drift', 'andre trykk kjøper juksa og skriver i driftsloggen', r)
-        # bagged ice in Finnsnes: fill up 150 kg at 2 kr
+        # ice is sold at the plant only: Finnsnes (the shop) refuses it and the page says where to go
         await pg.evaluate("DOCK.open('is')"); await pg.wait_for_timeout(300)
-        room = await pg.evaluate("[...document.querySelectorAll('#drawerBody [data-pa=shop][data-k=ice]')].map(x => x.textContent)")
-        await pg.evaluate("[...document.querySelectorAll('#drawerBody [data-pa=shop][data-k=ice]')].pop().click()"); await pg.wait_for_timeout(150)
-        await pg.evaluate("[...document.querySelectorAll('#drawerBody [data-pa=shop][data-k=ice]')].pop().click()"); await pg.wait_for_timeout(200)
-        r = json.loads(await J("{ice:S.boat.ice, cash:S.cash, log:S.log[S.log.length - 1].no}"))
-        check(r['ice'] == 150 and r['cash'] == 17800 and 'sekker' in r['log'], 'sekkeis i Finnsnes: fyll opp 150 kg for 300 kr', [room, r])
+        r = json.loads(await J("{btns:[...document.querySelectorAll('#drawerBody [data-pa=shop][data-k=ice]')].map(x => x.disabled), hint:!!document.querySelector('#drawerBody [data-pa=goplace]'), buy:shopBuy('ice', 50, false), ice:S.boat.ice}"))
+        check(r['btns'] and all(r['btns']) and r['hint'] and r['buy'] and r['ice'] == 0, 'is selges ikke i butikken i Finnsnes: knappene er grå, siden peker til nærmeste mottak, og kjøpet avvises', r)
         # the scroll position stays when a card further down asks to confirm
         await pg.evaluate("DOCK.open('fiske')"); await pg.wait_for_timeout(300)
         sc = json.loads(await J("(() => { const v = document.getElementById('drawerBody'); v.scrollTop = 9999; const y0 = v.scrollTop; document.querySelector('#drawerBody [data-pa=shop][data-k=kgear]').click(); return {y0, y1:v.scrollTop, btn:document.querySelector('#drawerBody [data-pa=shop][data-k=kgear]').textContent}; })()"))
         check(sc['y0'] > 0 and sc['y1'] == sc['y0'] and 'Bekreft' in sc['btn'], 'bekreftelsen lenger ned hopper ikke til toppen', sc)
         await pg.evaluate("document.querySelector('#drawerBody [data-pa=shop][data-k=kgear]').click()"); await pg.wait_for_timeout(200)
-        check(await pg.evaluate("S.boat.kgear && S.cash === 17800 - PRICE.kgear"), 'kveiteutstyret er kjøpt')
+        check(await pg.evaluate("S.boat.kgear && S.cash === 18100 - PRICE.kgear"), 'kveiteutstyret er kjøpt')
         await pg.screenshot(path='shop_fs.png')
 
         # at sea the shop can be looked at, not bought from

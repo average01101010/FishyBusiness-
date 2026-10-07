@@ -39,10 +39,11 @@ const DOCK = (() => {
     rigg:SVG('<path d="M12 3v18"/><path d="M5 21h14"/><path d="M12 4l7 11h-7"/><path d="M12 7L6 15h6"/>'),
     vedlikehold:SVG('<path d="M4 20l7-7"/><path d="M13.5 4.5l6 6-3 3-6-6z"/><path d="M10.5 7.5l6 6"/>'),
     naust:SVG('<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/><path d="M2 21h20"/>'),
+    butikk:SVG('<path d="M4 9l1.5-5h13L20 9"/><path d="M4 9v11h16V9"/><path d="M4 9a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0A2.7 2.7 0 0 0 20 9"/><path d="M10 20v-5h4v5"/>'),
     bunker:SVG('<path d="M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16"/><path d="M3 21h14"/><path d="M7.5 8h5"/><path d="M15 9h2a2 2 0 0 1 2 2v5a1.5 1.5 0 0 0 3 0V8l-3-3"/>')};
   // the drawer's pages: title, and the pages that share a row of tabs
   const TITLE = {lever:['Lever fangst', 'Land the catch'], is:['Is', 'Ice'], agn:['Agn og egning', 'Bait and baiting'], bank:['Kystbanken', 'The bank'], oppdrag:['Oppdrag', 'Orders'],
-    mannskap:['Mannskap', 'Crew'], bors:['Mannskap', 'Crew'], fartoy:['Båthandel', 'Boat market'], maler:['Malerverksted', 'Paint shop'], utstyr:['Oppgraderinger', 'Upgrades'], fiske:['Fiskeutstyr', 'Tackle'],
+    mannskap:['Mannskap', 'Crew'], bors:['Mannskap', 'Crew'], fartoy:['Båthandel', 'Boat market'], maler:['Malerverksted', 'Paint shop'], utstyr:['Oppgraderinger', 'Upgrades'], utstyrb:['Elektronikk og haler', 'Electronics and haulers'], fiske:['Fiskeutstyr', 'Tackle'],
     redskap:['Redskap', 'Gear'], rigg:['Rigg', 'Rig'], arbeid:['Mannskap', 'Crew'], verksted:['Vedlikehold', 'Maintenance'], havn:['Havn', 'Harbour'], last:['Lasterom', 'Hold'], beholdning:['Beholdning', 'Inventory']};
   const TABS = {mannskap:[['mannskap', 'Om bord', 'Aboard'], ['bors', 'Mannskapsbørs', 'Crew exchange']], bors:null};
   TABS.bors = TABS.mannskap;
@@ -66,19 +67,31 @@ const DOCK = (() => {
     // Father's naust is a home, not a place of trade (Jonas 07.10.2026): rest, the boathouse itself, the crew and the inventory; the
     // shop, the plant and the yard are at their own quays
     if (berthKind(b) === 'naust') return [restItem(), I('naustup', 'naust', 'Naustet', 'Boathouse', {run:() => PHONE.open('notat')}), S.crew.length || S.ops ? I('arbeid', 'arbeid', 'Mannskap', 'Crew', {page:'arbeid'}) : null, I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'})].filter(Boolean);
+    // the three places of trade (Jonas 07.10.2026): the plant (core/06c-steder.js portServices) takes the catch and sells ice, bait and fuel,
+    // the tackle shop sells gear and electronics, the yard sells and mends boats and sells fuel; each has its own button, and all three have the village
+    const sv = portServices(p, berthKind(b));
     return [restOnDock() ? restItem() : null,
-      I('marked', 'marked', 'Marked', 'Market', {menu:'marked', dot:p.mottak && tot > 0.5 && !b.land}),
+      sv.mottak ? I('marked', 'marked', 'Mottak', 'Plant', {menu:'marked', dot:p.mottak && tot > 0.5 && !b.land}) : null,
+      sv.butikk ? I('butikk', 'butikk', 'Butikk', 'Shop', {menu:'butikk'}) : null,
       I('bygd', 'bygd', 'Bygd', 'Village', {menu:'bygd'}),
-      I('verft', 'verft', 'Verft', 'Yard', {menu:'verft', dot:svcOverdue() > 0}),
+      sv.verft ? I('verft', 'verft', 'Verft', 'Yard', {menu:'verft', dot:svcOverdue() > 0}) : null,
       S.crew.length || S.ops ? I('arbeid', 'arbeid', 'Mannskap', 'Crew', {page:'arbeid'}) : null,
       I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'})].filter(Boolean);   // «Planlegg» went 02.10.2026: the little chart opens the plotter
   }
   function menuItems(m){
     const b = S.boat, p = port(), H = S.t / 60;
+    // fuel is sold at the plant and at the yard (Jonas 07.10.2026)
+    const bunkerItem = () => { const need = BOAT.fuelCap - b.fuel;
+      return I('bunker', 'bunker', 'Bunkring', 'Fuel', {act:'fuel', off:!p.fuel ? [L('Det er ikke drivstoff å få i ' + p.name + '.', 'There is no fuel to be had in ' + p.name + '.')] : need < 0.5 ? [L('Tanken er full.', 'The tank is full.')] : portBusy(b) ? [L('Vent til arbeidet på kaia er ferdig.', 'Wait until the work on the quay is done.')] : null}); };
     if (m === 'marked') return [
       I('lever', 'lever', 'Lever', 'Land', {page:'lever', off:!p.mottak && [L('Det er ikke noe fiskemottak i ' + p.name + '.', 'There is no fish plant in ' + p.name + '.')], pri:p.mottak && holdTotal() > 0.5 && !b.land}),
       I('is', 'is', 'Is', 'Ice', {page:'is'}),
-      I('agn', 'agn', 'Agn', 'Bait', {page:'agn'})];
+      I('agn', 'agn', 'Agn', 'Bait', {page:'agn'}),
+      bunkerItem()];
+    // the tackle shop: fishing gear, and the electronics and engines' small parts (the yard has the boat's own upgrades)
+    if (m === 'butikk') return [
+      I('fiskeutstyr', 'fiskeutstyr', 'Fiskeutstyr', 'Tackle', {page:'fiske'}),
+      I('elektronikk', 'oppgr', 'Elektronikk og haler', 'Electronics and haulers', {page:'utstyrb'})];
     if (m === 'bygd') return [
       I('pub', 'pub', 'Pub', 'Pub', {act:'pub', off:tutOn() ? [L('Puben venter til etter første tur.', 'The pub waits until after the first trip.')] : !pubOpen(H) ? [L('Puben åpner klokka 15.', 'The pub opens at 15:00.')] : S.pubE === pubEvening(H) ? [L('Du har tatt en runde i kveld.', 'You have had a round tonight.')] : null}),
       I('bank', 'bank', 'Bank', 'Bank', {page:'bank'}),
@@ -86,14 +99,12 @@ const DOCK = (() => {
       I('mannskap', 'mannskap', 'Ansatte', 'Employees', {page:'mannskap'}), restOnDock() ? null : restItem(),
       // Father's naust in the home harbour: setting it to rights is in the notebook (core/07c-naust.js, ui/06c-notebook.js)
       atHome(b) ? I('naustup', 'naust', 'Naustet', 'Boathouse', {run:() => PHONE.open('notat')}) : null].filter(Boolean);
-    if (m === 'verft'){ const need = BOAT.fuelCap - b.fuel;
-      return [
-        I('batmarked', 'batmarked', 'Båthandel', 'Boats', {page:'fartoy'}),
-        I('oppgr', 'oppgr', 'Oppgrader', 'Upgrade', {page:'utstyr'}),
-        I('fiskeutstyr', 'fiskeutstyr', 'Fiskeutstyr', 'Tackle', {page:'fiske'}),
-        I('vedlikehold', 'vedlikehold', 'Vedlikehold', 'Maintenance', {page:'verksted', dot:svcOverdue() > 0}),
-        I('maler', 'maler', 'Malerverksted', 'Paint shop', {page:'maler'}),
-        I('bunker', 'bunker', 'Bunkring', 'Fuel', {act:'fuel', off:!p.fuel ? [L('Det er ikke drivstoff å få i ' + p.name + '.', 'There is no fuel to be had in ' + p.name + '.')] : need < 0.5 ? [L('Tanken er full.', 'The tank is full.')] : portBusy(b) ? [L('Vent til arbeidet på kaia er ferdig.', 'Wait until the work on the quay is done.')] : null})]; }
+    if (m === 'verft') return [
+      I('batmarked', 'batmarked', 'Båthandel', 'Boats', {page:'fartoy'}),
+      I('oppgr', 'oppgr', 'Oppgrader', 'Upgrade', {page:'utstyr'}),
+      I('vedlikehold', 'vedlikehold', 'Vedlikehold', 'Maintenance', {page:'verksted', dot:svcOverdue() > 0}),
+      I('maler', 'maler', 'Malerverksted', 'Paint shop', {page:'maler'}),
+      bunkerItem()];
     if (m === 'settut') return setChoices().map((c, i) => I('set' + i, 'settut', c.lbl[0], c.lbl[1], {act:'gset', data:{c:i}, wide:true}));
     if (m === 'fortoy') return moorAll(b.pos, 0.4).map((q, i) => I('fortoy' + i, 'naust', q.name.charAt(0).toUpperCase() + q.name.slice(1), q.name.charAt(0).toUpperCase() + q.name.slice(1), {run:() => moorGo(q), wide:true}));
     if (m === 'taopp'){ const s = nearSet(b.pos, 0.3); if (!s) return [];

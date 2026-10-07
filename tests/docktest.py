@@ -33,16 +33,16 @@ async def run(p, w, h, tag):
     ids = lambda: pg.evaluate("[...document.querySelectorAll('#dock [data-dk]')].map(x => x.dataset.dk)")
     print('--', tag, w, 'x', h)
 
-    # in port: Marked, Bygd, Verft, Beholdning and Planlegg; the old action bar is gone
+    # in port at Finnsnes (the shop and the boat hall, no plant): Butikk, Bygd, Verft and Beholdning; the old action bar is gone (a plant has Mottak in place of Butikk and Verft, further down)
     await pg.evaluate("S.cash = 200000; renderActs()")
     d = await ids()
-    check(d == ['marked', 'bygd', 'verft', 'beh'], 'i havn: Marked, Bygd, Verft og Beholdning (Planlegg er borte: den lille kartplotteren åpner den store)', d)
+    check(d == ['butikk', 'bygd', 'verft', 'beh'], 'i Finnsnes: Butikk, Bygd, Verft og Beholdning (Planlegg er borte: den lille kartplotteren åpner den store)', d)
     check(not await pg.evaluate("!!document.getElementById('actbar')"), 'den gamle handlingslinja er borte')
     lbl = await pg.evaluate("[...document.querySelectorAll('#dock .dk-l')].map(x => x.textContent)")
-    check(lbl[:3] == ['Marked', 'Bygd', 'Verft'], 'knappene har kort tekst under ikonet', lbl)
+    check(lbl[:3] == ['Butikk', 'Bygd', 'Verft'], 'knappene har kort tekst under ikonet', lbl)
 
     # the fans (at home Bygd also has «Hvil», the rest in Father's naust: 15-energy.js, 05.10.2026)
-    for m, want in (('marked', ['lever', 'is', 'agn']), ('bygd', ['pub', 'bank', 'oppdrag', 'mannskap', 'rest', 'naustup']), ('verft', ['batmarked', 'oppgr', 'fiskeutstyr', 'vedlikehold', 'maler', 'bunker'])):
+    for m, want in (('butikk', ['fiskeutstyr', 'elektronikk']), ('bygd', ['pub', 'bank', 'oppdrag', 'mannskap', 'rest', 'naustup']), ('verft', ['batmarked', 'oppgr', 'vedlikehold', 'maler', 'bunker'])):
         await tap_el('#dock [data-dk=' + m + ']'); await pg.wait_for_timeout(250)
         f = await pg.evaluate("[...document.querySelectorAll('#dockFan [data-dk]')].map(x => x.dataset.dk)")
         vis = await pg.evaluate("!document.getElementById('dockFan').hidden")
@@ -51,28 +51,8 @@ async def run(p, w, h, tag):
         await tap_el('#dock [data-dk=' + m + ']'); await pg.wait_for_timeout(150)
     check(await pg.evaluate("document.getElementById('dockFan').hidden"), 'et nytt trykk lukker viften')
 
-    # a grey item says why: Finnsnes has no fish plant
-    await tap_el('#dock [data-dk=marked]'); await pg.wait_for_timeout(200)
-    off = await pg.evaluate("document.querySelector('#dockFan [data-dk=lever]').classList.contains('off')")
-    await tap_el('#dockFan [data-dk=lever]', force=True); await pg.wait_for_timeout(200)
-    t = await pg.evaluate("document.getElementById('toast').textContent")
-    check(off and 'mottak' in t, 'Lever er grått i Finnsnes og sier hvorfor', t)
-
-    # the drawer: ice from the market, at the side lying, from below standing, and the middle of the screen stays free
-    await tap_el('#dockFan [data-dk=is]'); await pg.wait_for_timeout(300)
-    r = json.loads(await J("(() => { const r = document.getElementById('drawer').getBoundingClientRect(); return {x:r.x, y:r.y, w:r.width, h:r.height, title:document.getElementById('drawerTitle').textContent, ice:!!document.querySelector('#drawerBody [data-pa=shop][data-k=ice]')}; })()"))
-    side = r['x'] > w * 0.55 if w > h else r['y'] > h * 0.3
-    check(r['title'] == 'Is' and r['ice'] and side, 'skuffen med is ' + ('ligger til høyre' if w > h else 'kommer nedenfra'), r)
-    await pg.screenshot(path='dock_drawer_' + tag + '.png')
-    ice0 = await pg.evaluate("S.boat.ice")
-    await tap_el('#drawerBody [data-pa=shop][data-k=ice][data-fill]'); await pg.wait_for_timeout(200)
-    await tap_el('#drawerBody [data-pa=shop][data-k=ice][data-fill]'); await pg.wait_for_timeout(300)
-    check(await pg.evaluate("S.boat.ice") > ice0, 'is kjøpes med to trykk i skuffen', [ice0, await pg.evaluate("S.boat.ice")])
-    await tap_el('#drawerClose'); await pg.wait_for_timeout(200)
-    check(await pg.evaluate("document.getElementById('drawer').hidden"), 'skuffen lukkes')
-
     # pages in the yard and the village
-    for m, it, title, sel in (('verft', 'oppgr', 'Oppgraderinger', '[data-pa=equip]'), ('verft', 'fiskeutstyr', 'Fiskeutstyr', '[data-pa=grbuy]'), ('verft', 'batmarked', 'Båthandel', '[data-pa=mksel]'),
+    for m, it, title, sel in (('verft', 'oppgr', 'Oppgraderinger', '[data-pa=equip]'), ('butikk', 'fiskeutstyr', 'Fiskeutstyr', '[data-pa=grbuy]'), ('butikk', 'elektronikk', 'Elektronikk og haler', '[data-pa=equip]'), ('verft', 'batmarked', 'Båthandel', '[data-pa=mksel]'),
                               ('verft', 'vedlikehold', 'Vedlikehold', '[data-pa=svc]'), ('bygd', 'bank', 'Kystbanken', '.ph-big'), ('bygd', 'oppdrag', 'Oppdrag', '.ph-card'), ('bygd', 'mannskap', 'Mannskap', '.ph-card')):
         await tap_el('#dock [data-dk=' + m + ']'); await pg.wait_for_timeout(200)
         await tap_el('#dockFan [data-dk=' + it + ']'); await pg.wait_for_timeout(300)
@@ -93,6 +73,29 @@ async def run(p, w, h, tag):
     await tap_el('#dock [data-dk=verft]'); await pg.wait_for_timeout(200)
     await tap_el('#dockFan [data-dk=bunker]'); await pg.wait_for_timeout(400)
     check(await pg.evaluate("!!S.boat.fueling || !!S.boat.shift || S.boat.fuel > 5"), 'Bunkring fyller tanken')
+
+    # at a plant: Mottak (not Butikk or Verft), with the landing, the ice, the bait and the fuel; Lever is not grey, and ice is bought in the drawer
+    await pg.evaluate("(() => { const q = portById('botnhamn'), b = S.boat; b.port = 'botnhamn'; b.pos = {x:q.p.x, y:q.p.y}; b.berth = 'main'; renderActs(); })()"); await pg.wait_for_timeout(300)
+    d2 = await ids()
+    check(d2 == ['marked', 'bygd', 'beh'] and await pg.evaluate("document.querySelector('#dock [data-dk=marked] .dk-l').textContent") == 'Mottak', 'ved et mottak: Mottak, Bygd og Beholdning, og ingen Butikk eller Verft', d2)
+    await tap_el('#dock [data-dk=marked]'); await pg.wait_for_timeout(250)
+    f = await pg.evaluate("[...document.querySelectorAll('#dockFan [data-dk]')].map(x => x.dataset.dk)")
+    off = await pg.evaluate("document.querySelector('#dockFan [data-dk=lever]').classList.contains('off')")
+    check(f == ['lever', 'is', 'agn', 'bunker'] and not off, 'viften for Mottak: Lever, Is, Agn og Bunkring', [f, off])
+
+    # the drawer: ice from the plant, at the side lying, from below standing, and the middle of the screen stays free
+    await tap_el('#dockFan [data-dk=is]'); await pg.wait_for_timeout(300)
+    r = json.loads(await J("(() => { const r = document.getElementById('drawer').getBoundingClientRect(); return {x:r.x, y:r.y, w:r.width, h:r.height, title:document.getElementById('drawerTitle').textContent, ice:!!document.querySelector('#drawerBody [data-pa=shop][data-k=ice]')}; })()"))
+    side = r['x'] > w * 0.55 if w > h else r['y'] > h * 0.3
+    check(r['title'] == 'Is' and r['ice'] and side, 'skuffen med is ' + ('ligger til høyre' if w > h else 'kommer nedenfra'), r)
+    await pg.screenshot(path='dock_drawer_' + tag + '.png')
+    ice0 = await pg.evaluate("S.boat.ice")
+    await tap_el('#drawerBody [data-pa=shop][data-k=ice][data-fill]'); await pg.wait_for_timeout(200)
+    await tap_el('#drawerBody [data-pa=shop][data-k=ice][data-fill]'); await pg.wait_for_timeout(300)
+    check(await pg.evaluate("S.boat.ice") > ice0, 'is kjøpes med to trykk i skuffen', [ice0, await pg.evaluate("S.boat.ice")])
+    await tap_el('#drawerClose'); await pg.wait_for_timeout(200)
+    check(await pg.evaluate("document.getElementById('drawer').hidden"), 'skuffen lukkes')
+
 
     # the inventory: three tabs
     await tap_el('#dock [data-dk=beh]'); await pg.wait_for_timeout(300)

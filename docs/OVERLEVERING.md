@@ -3066,6 +3066,17 @@ Jonas' liste: oppgraderinger, kvotehandel, kikkert, raskere fangst, fortøying, 
     - lyden er en dur som vokser og avtar, og helikopteret har rotorslag
   - **Test:** `airtest.py` sjekker rutetabellen, høydeprofilen, at ingen fly går om natta, at tabellen er lik hver gang, og målene på modellene.
 
+### 5.32 De tre handelsstedene (Jonas 07.10.2026)
+
+Regelen står i `docs/handelssteder.md`. Spillet har tre steder man handler: **fiskemottaket** (levere fisk, kjøpe is, agn og diesel), **utstyrsbutikken** (redskap, haler, juksamaskin, elektronikk, klær) og **verftet** (båter, motor og lasterom, antigro, vedlikehold, maling, diesel). Fars naust og rorbuene selger ingenting.
+
+- **Stedene** (`core/06c-steder.js`, `src/data/steder.json`, `tools/steder/steder.py`): butikker og verft er egne havner med egen kai, havneenhet og navn av byen (aldri et firma): «Egersund verft», «Avaldsnes utstyrsbutikk». De lages som kystmottakene (`COASTQ`, `UNITS` med utseendene `s` og `y`, `PORTS` med `sted:'butikk'|'verft'`, `coastal`). Data: Overture Maps places (punkter, ingen navn, adresser eller telefon) lagt på nærmeste kai i vec-pakkene (minst 25 m, 3 m vann, innen 1,2 km, minst 130 m fra andre kaier), og oppdiktede steder der et mottak er langt fra et verft (50 km) eller en butikk (28 km). Nå 103 butikker og 157 verft, 206 av dem ekte punkter. Det lengste fra et mottak til nærmeste verft er 34 nm og til butikk 25 nm (indre Finnmark). Finnsnes har butikken og båthallen i ett (`sted:'butikk verft'`). `python3 tools/steder/steder.py` lager filen på nytt (trenger vec-pakkene fra `tools/map/game.py` og nett).
+- **Hva et sted tilbyr** (`portServices(pt, berth)`): `{mottak, butikk, verft, bunker}`; ved naustet (berth `naust`) og rorbuer tom. `placesNear(p, kind, n)` gir de nærmeste.
+- **Knappene** (`ui/10c-dock.js`): Mottak (Lever, Is, Agn, Bunkring), Butikk (Fiskeutstyr, Elektronikk og haler) og Verft (Båthandel, Oppgrader, Vedlikehold, Malerverksted, Bunkring) vises bare der stedet har dem, og Bygd finnes alle steder. Siden `utstyr` ble delt i verftets (lasterom, motor, antigro, påhengsmotor) og butikkens (`utstyrb`: resten av utstyret og klærne).
+- **Kjøp bare der det hører til:** `shopBuy` (håndjuksa og kveiteutstyr bare i butikken, is bare på mottaket), `buyGear` (redskap i butikken, agn på mottaket) og telefonsidene (`atKind` i `ui/05-phone.js`). Siden sier hvor hun finner det, med nærmeste sted og «Autonav dit» (`nearHint`, handlingen `goplace`), også i Salgslaget.
+- **3D:** stedene bruker harbour-unit-utseendene `s` og `y` (`harbour-unit-s/y.b64`); til de er laget tegnes mottaksutseendet `a`. Stedene er ikke mottak (`U.sted`), så kran, truck og folk legges ikke ut der.
+- **Tester:** `stedertest.py` (stedene, tjenestene, knappene, kjøp og nærmeste), `docktest.py`, `shoptest.py` og `icestep.py`.
+
 ## 6. Regelverk og kilder
 
 | Tema | Kilde | Hovedpunkter |

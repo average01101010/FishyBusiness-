@@ -42,7 +42,8 @@ To steder uten handel:
 
 - **Gjort:** naustet selger ingenting (knappene Marked, Bygd og Verft vises ikke der; `shopBuy` avviser; telefonsidene for kjøp er av ved naustet via `atTrade`). Håndjuksa er montert fra start, første fiske går uten is, og veiledningen får steget `ice` etter første levering (første fylling på huset). Alle mottak selger is. Omrigging (juksa, line, garn, teiner) skjer om bord under Beholdning → Rigg, så lenge ingen redskap står i sjøen.
 - **Vedtatt (andre melding):** bunkring (diesel) på fiskemottak og verft. Verft kan stå på ekte steder der vi finner data, og på falske steder på strategiske plasser slik at nærmeste verft aldri er langt unna. Verftet bygges i Blender med dieselfylling og en dokk eller slipp som kan tørrlegge alle båtene, med animasjoner.
-- **Gjenstår:** utstyrsbutikk og verft som egne steder med egen kai (trinn 2), verftsmodellen i Blender med tørrlegging (trinn 3), hjelp til å finne nærmeste sted.
+- **Trinn 2 gjort (07.10.2026):** utstyrsbutikk og verft er egne havner med egen kai langs hele kysten (103 butikker og 157 verft, ekte punkter fra Overture der de finnes og oppdiktede der avstanden ble for lang), med egne knapper, kjøp bare på riktig sted og «nærmeste sted» med Autonav (se 5.32 i overleveringen). Bunkring er på mottak og verft. Utseendet er mottakets inntil modellene er laget.
+- **Gjenstår (trinn 3):** verftsmodellen i Blender med dieselfylling, skipsløft som tørrlegger alle båter, og animasjoner; butikkmodell med kai; folk og skilt.
 
 ## Å fylle på
 

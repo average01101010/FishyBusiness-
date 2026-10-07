@@ -7,8 +7,8 @@
 # are yards; boat_parts_store and hunting_and_fishing_store are shops), taken only as a point: no name, no address and no phone is kept
 # (no real company names in the game, Jonas 07.10.2026). Each point is put on the nearest quay face of the game's vector packs (a quay or
 # a pier of 25 m and more, 3 m of water, within 1.2 km), at least 130 m from every plant's and every other place's quay. Where the plants
-# along the coast are still far from a yard (70 km) or a shop (40 km), a made-up place is put on the nearest free quay face to the
-# plant: the largest first. Nothing here is a real firm.
+# along the coast are still far from a yard (50 km) or a shop (28 km), a made-up place is put on the nearest free quay face to the
+# plant (a good one within 4 km, else a usable one within 12 km): the largest first. Nothing here is a real firm.
 #   python3 tools/steder/steder.py        (the vector packs: python3 tools/map/game.py; the first run reads Overture's places, ~350 MB)
 import os, sys, json, math, time
 import numpy as np
@@ -21,13 +21,13 @@ YARD = {'boat_service', 'boat_and_ship_manufacturer', 'boat_dealer', 'boat_stora
 SHOP = {'boat_parts_store', 'hunting_and_fishing_store'}
 REACH = 1.2             # km from Overture's point to the nearest good quay face
 APART = 0.13            # km between a place's quay and any other quay of a plant or a place
-NEAR = {0: 40.0, 1: 70.0}   # km: how far a plant may be from a shop and from a yard before one is made up
+NEAR = {0: 28.0, 1: 50.0}   # km: how far a plant may be from a shop and from a yard before one is made up
 COAST_WF = ['torsk', 'hyse', 'sei', 'lyr', 'lange', 'brosme', 'uer', 'kveite', 'kongekrabbe', 'krabbe']
 OUT = os.path.join(ROOT, 'src', 'data', 'steder.json')
 
-def good(Q, i):
+def good(Q, i, soft=False):
     X, Y, A, Ln, D, K = Q
-    return Ln[i] >= 25 and (D[i] >= 3) and K[i] in (0, 2)
+    return (Ln[i] >= 15 and D[i] >= 2 and K[i] in (0, 2)) if soft else (Ln[i] >= 25 and D[i] >= 3 and K[i] in (0, 2))
 
 def main():
     md = os.environ.get('KYST_MAP') or os.path.join(ROOT, 'tools', 'map', 'out', 'game')
@@ -62,12 +62,14 @@ def main():
     for kind in (1, 0):
         for p in plants:
             if not far(p, kind): continue
-            d = np.hypot(X - p['q'][0], Y - p['q'][1]); order = np.argsort(d)
-            for j in order[:4000]:
-                if d[j] < APART or d[j] > 4.0: continue
-                if not good(Q, j) or not free(float(X[j]), float(Y[j])): continue
-                out.append([round(float(X[j]), 4), round(float(Y[j]), 4), round(float(A[j]), 3), round(float(Ln[j]), 1), round(float(D[j]), 2), kind, '', 0]); used.append((float(X[j]), float(Y[j])))
-                made[kind] += 1; break
+            d = np.hypot(X - p['q'][0], Y - p['q'][1]); order = np.argsort(d); done = False
+            for soft, reach in ((False, 4.0), (True, 12.0)):   # a good quay near the plant, else any usable one further off
+                for j in order[:20000]:
+                    if d[j] < APART or d[j] > reach: continue
+                    if not good(Q, j, soft) or not free(float(X[j]), float(Y[j])): continue
+                    out.append([round(float(X[j]), 4), round(float(Y[j]), 4), round(float(A[j]), 3), round(float(Ln[j]), 1), round(float(D[j]), 2), kind, '', 0]); used.append((float(X[j]), float(Y[j])))
+                    made[kind] += 1; done = True; break
+                if done: break
     print('made up:', made[0], 'shops,', made[1], 'yards', flush=True)
     # the postal towns, as for the plants (Kartverket's address register, cached in tools/mottak/cache/steder.json)
     rows = []

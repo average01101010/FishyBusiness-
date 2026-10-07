@@ -68,7 +68,7 @@ window.JIGG = (() => {
 hooks.onView = on => { if (on && SETM) setModeEnd(false, true); setBodyView(on); if (on) $('loader').classList.add('gone'); $('view3d').textContent = on ? t('view_chart') : '3D'; if (!on){ tab = 'route'; renderPanel(); applyView(); renderStatic(); renderDyn(); } $('legend').hidden = !S.settings.plotter || on; updateMapButtons(); panelDirty = true; };
 $('modeBtn').onclick = () => {
   if (G3.isActive()){ G3.setHelm(!G3.isHelm()); updateMapButtons(); return; }
-  if (!S.equip.plotter){ toast(t('need_plotter')); PHONE.open('utstyr'); return; }
+  if (!S.equip.plotter){ toast(t('need_plotter')); PHONE.open('utstyrb'); return; }
   S.settings.plotter = !S.settings.plotter; save(); renderBase(); scheduleStatic();
 };
 $('phoneBtn').onclick = () => PHONE.toggle();

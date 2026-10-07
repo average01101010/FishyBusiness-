@@ -121,6 +121,9 @@ function gearRoom(kind){ const m = (BOAT.gearMax || {})[kind === 'line' ? 'stamp
 function buyGear(what, spec, n){
   const pg = S.pgear, b = S.boat; n = Math.max(1, Math.round(n || 1));
   if (b.status !== 'port') return [gL('Redskap kjøpes i havn.', 'Gear is bought in port.')];
+  // gear in the tackle shop, bait at the plant (Jonas 07.10.2026; core/06c-steder.js portServices)
+  const sv = portServices(portById(b.port), berthKind(b));
+  if (what === 'bait' ? !sv.mottak : !sv.butikk) return what === 'bait' ? [gL('Agn kjøper du på fiskemottaket.', 'You buy bait at the fish plant.')] : [gL('Redskap kjøper du i utstyrsbutikken.', 'You buy gear in the tackle shop.')];
   let cost = 0, kind = null;
   if (what === 'net'){ kind = 'garn'; if (!MESHES.includes(spec)) return [gL('Torskegarn nord for 62° N skal ha minst 156 mm maskevidde.', 'Cod nets north of 62° N must have at least 156 mm mesh.')]; cost = n * GPRICE.net; }
   else if (what === 'stamp'){ kind = 'line'; cost = n * LINE_KINDS[spec].price; }

@@ -14,7 +14,7 @@ async def main():
         pg = await (await b.new_context(viewport={'width': 1100, 'height': 760})).new_page(); errs = []
         pg.on('pageerror', lambda e: errs.append(str(e)))
         await boot(pg, GAME)
-        r = await pg.evaluate("""(() => { const C = PORTS.filter(q => q.coastal), ids = new Set(PORTS.map(q => q.id));
+        r = await pg.evaluate("""(() => { const C = PORTS.filter(q => q.coastal && q.mottak), ids = new Set(PORTS.map(q => q.id));
           const faces = C.filter(q => quayFace(q.id, 'main')).length, named = C.filter(q => q.name && q.name.length > 1).length, pf = C.map(q => q.pf);
           const merged = PORTS.filter(q => !q.coastal && q.mk).map(q => q.id), near = plantsNear(portById('finnsnes').p, 10).map(x => x.pt.name);
           PHONE.open('salg'); const rows = document.querySelectorAll('.ph-appv .ph-tbl tr.here, .ph-appv .ph-tbl tr').length;
@@ -79,7 +79,7 @@ async def main():
         print(ok(mv['port'] == 'finnsnes' and mv['home'] == to and mv['moved'] and not mv['again'] and 'Nytt hjemsted' in mv['log']), 'a game from before chooses a new home once from Settings; the boat stays in Finnsnes (no fast travel), and the button is gone', mv)
         # 4. wherever you start (Jonas 05.10.2026): Father's naust by the plant, the tackle shop by the naust, and the first trip's patch
         # near enough that the start boat fishes and sells on the fuel she has; every 8th plant along the coast
-        sv = await pg.evaluate("""(async () => { const C = PORTS.filter(q => q.coastal), out = [], b = S.boat, v = Math.max(3, BOAT.vmax * 0.8);
+        sv = await pg.evaluate("""(async () => { const C = PORTS.filter(q => q.coastal && q.mottak), out = [], b = S.boat, v = Math.max(3, BOAT.vmax * 0.8);
           for (let i = 0; i < C.length; i += 8){ const pt = C[i]; await mapNeed(pt.p, 7.5); S.home = pt.id; S.naust = null; S.shopN = null;
             const n = naustSite(), sh = n ? shopNear() : null, f = tutFieldNear(pt), dkm = f ? dist(f.p, pt.p) : null;
             const needL = dkm == null ? null : 2 * dkm / (v * NM) * fuelLph(v, 5) + 2 * fuelLph(0.5, 5);
