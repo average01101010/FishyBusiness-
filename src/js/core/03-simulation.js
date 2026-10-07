@@ -442,8 +442,21 @@ const DPREF = Object.fromEntries(ALLSP.map(sp => [sp, SPECIES[sp].dep]));
 function depthFactor(sp, d){ const q = DPREF[sp]; return 0.3 + 0.7 * Math.exp(-((Math.log(Math.max(d, 2) / q[0]) / q[1]) ** 2)); }
 const SST = [3.6,3.1,3.2,3.9,5.6,8.2,10.8,11.4,9.8,7.8,6.0,4.6];
 // where a harbour unit stands (07-harbours.js) its quay is dry and its basin dredged
-// the depth below chart datum (m): the tiles' depth where they have it, else the model from the core (openness and the distance to the shore)
-function depthF(p){ return unitDredge(p, isLand(p) ? 0 : DEPTH && mapSimAt(p) ? Math.max(0.8, depthWater(p)) : depthModel(p)); }
+// the depth below chart datum (m): the tiles' depth where they have it, else the sea floor offshore from the core, else the model
+// (openness and the distance to the shore)
+function depthF(p){ return unitDredge(p, isLand(p) ? 0 : DEPTH && mapSimAt(p) ? Math.max(0.8, tileDepth(p, depthWater(p))) : offDepth(p)); }
+// the sea floor offshore (tools/map/deep.py, 07.10.2026, for the Greenland halibut on the shelf edge): Terrarium's on 1 km cells over the
+// whole frame, 0 on land and where it has none. The coast's tiles end 40-65 km out, and the model beyond them is never deeper than
+// about 260 m
+function deepAt(p){
+  const L = MAPD.L.deep; if (!L || !MAPD.core || !MAPD.core.buf) return 0;
+  const gx = p.x / L.c - 0.5, gy = p.y / L.c - 0.5; if (gx < 0 || gy < 0 || gx > L.nx - 1 || gy > L.ny - 1) return 0;
+  return rbil(L, p);
+}
+function offDepth(p){ const z = deepAt(p); return z > 5 ? z : depthModel(p); }
+// a tile's depth where Kartverket has no data is the model (coast.py fills it in): there, deep enough to be off the banks, the offshore
+// layer gives the real floor; Kartverket's own soundings are kept
+function tileDepth(p, d){ if (d < 150) return d; const z = deepAt(p); return z > d && Math.abs(d - depthModel(p)) <= 8 ? z : d; }   // the cheap read first: the model only when the sea floor is deeper
 // the tiles' depth between the four nearest cells that are water (the layer has 0 on the 25 m mask's land): the fine coast decides
 // what is land (01d-coast.js), so next to it the water keeps the depth of its own cells rather than running out to 0 (which grounded
 // boats in water the chart shows). Where all four are land, the water cells two round; where there are none, 2 m (a sound the mask closed).

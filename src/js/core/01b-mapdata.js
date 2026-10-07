@@ -2,8 +2,8 @@
 // map/manifest.json lists the layers and the packs (tools/mappack.mjs writes them at build). A pack is fetched once and kept in
 // IndexedDB by its hash, so a new publish (which moves every file to a new address) fetches only what changed. A block is unpacked
 // (fflate, synchronous) the first time it is read and kept while there is room (MAPD.budget; the least recently used goes first).
-//   core  land200, dc200, expo   the national core, always loaded (2.8 MB for the whole coast, phase K6): land at 200 m, the
-//                         distance to it and the openness. What looks far (the fetch rays, the local fleet's drift and fishing, the
+//   core  land200, dc200, expo, deep   the national core, always loaded (3.6 MB for the whole coast, phase K6): land at 200 m, the
+//                         distance to it, the openness, and the sea floor offshore on 1 km cells (tools/map/deep.py, 07.10.2026). What looks far (the fetch rays, the local fleet's drift and fishing, the
 //                         depth model) reads only these, and so does everything off the tiles that have detail.
 //   sim   mask, dc, depth the tiles' detail (land 25 m, distance 100 m, depth 50 m): loaded round the boats and the gear in the
 //                         sea before the clock runs (mapReadyAt, simAreaReady), within
@@ -40,7 +40,7 @@ async function mapStart(base){
   const man = MAPD.man = await (await fetch(MAPD.base + 'manifest.json', {cache:'no-cache'})).json();
   let id = 0;
   // k: what a cell's number is worth; the heights are kept as Int16 decimetres (phase K8), half the room of Float32
-  for (const name in man.layers) MAPD.L[name] = Object.assign({name, id:id++, bx:NaN, by:NaN, b:null, k:man.layers[name].dec === 'hgt' ? 0.1 : 1}, man.layers[name]);
+  for (const name in man.layers) MAPD.L[name] = Object.assign({name, id:id++, bx:NaN, by:NaN, b:null, k:man.layers[name].dec === 'hgt' ? 0.1 : man.layers[name].dec === 'x10' ? 10 : 1}, man.layers[name]);
   const dc = MAPD.L.dc; Object.assign(DC, {nx:dc.nx, ny:dc.ny, ix0:dc.ix0, iy0:dc.iy0});
   // a joined pack (tools/map/game.py: the far heights and the chart, several tiles a file) is filed under each of its tiles as a
   // pack of its own that loads through it
@@ -100,7 +100,7 @@ function mapDecode(L, raw){
   return out;
 }
 function mapBlock(L, bx, by){
-  const k = gridKey(bx, by) * 8 + L.id; let a = MAPD.blk.get(k);
+  const k = gridKey(bx, by) * 16 + L.id; let a = MAPD.blk.get(k);   // room for 16 layers (there are 10 with 'deep')
   if (a){ MAPD.blk.delete(k); MAPD.blk.set(k, a); return a; }
   const pk = mapPackOf(L, bx, by), e = pk && pk.idx && pk.idx.get(L.name + ':' + bx + ':' + by);
   if (!pk || !pk.buf || !e){ MAPD.miss++; throw new Error('map: ' + L.name + ' block ' + bx + ',' + by + (pk ? ' is not loaded (' + pk.file + ')' : ' has no pack')); }

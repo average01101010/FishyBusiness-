@@ -146,6 +146,8 @@ Forberedelser til hele kysten (planen står i `docs/kart/`). Fra K4 er spillets 
 
 ### 4.6 Kartdataene i pakker (kystplanen, fase K3, 02.10.2026)
 
+- **Dyp til havs (07.10.2026, for blåkveita):** kjernelaget `deep` er havbunnen fra Terrarium (ETOPO1 til havs) på 1 km celler over hele rammen, i 10 m steg (u8, `dec:'x10'`, opp til 2550 m, 0 = land eller ingen data). `tools/map/deep.py` skriver det inn i kjernepakken i `src/data/map` (navnet og manifestet endres), og `tools/map/game.py` tar den nye kjernen for hele kysten. Kjør `deep.py` på nytt etter at `region.py` har skrevet en ny kjerne. `depthF` bruker laget utenfor kystflisene (`offDepth`), og inne i flisene der flisa har modellens fyllverdi i stedet for Kartverkets dyp og er dypere enn 150 m (`tileDepth`). Blokkbufferen har plass til 16 lag (`gridKey * 16 + id`).
+
 Rasterkartene ligger ikke lenger i siden. Siden gikk fra 9,3 til 6,2 MB, og kartpakkene er 3,3 MB (2,8 MB i K3, før rammen ble 90 × 90 km i K4).
 
 - **Bygget:** `node build.mjs` kaller `writeMap` i `tools/mappack.mjs`.
