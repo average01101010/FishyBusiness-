@@ -113,6 +113,7 @@ async def main():
           const cr = S.hold.filter(x => x.sp === 'krabbe');
           R.crab = {n:cr.reduce((a, x) => a + x.n, 0), kg:+cr.reduce((a, x) => a + x.kg, 0).toFixed(1), cls:[...new Set(cr.map(x => x.cls))].sort(),
             clsOk:cr.every(x => { const w = x.kg / x.n; return [w >= 3.2, w >= 2.2 && w < 3.2, w >= 1.6 && w < 2.2, w >= 0.8 && w < 1.6, true, true, w < 0.8][x.cls]; })};
+          R.marks = S.marks.filter(m => m.g).slice(-2).map(m => ({g:m.g, kgu:m.kgu, q:m.q}));   // kilos per line and per pot on the chart (tilbakemelding #33)
           // and a lot of crab that died in the hold (a lot of its own: lots caught in the same hour share their freshness)
           S.hold.push({sp:'krabbe', cls:1, kg:1.2, n:1, bled:true, iced:false, hr:-1, fresh:20, gut:false, hook:false}); { const h0 = S.hold; S.hold = h0.filter(x => x.sp === 'krabbe'); R.crabPend = deckPending(); S.hold = h0; } R.nonCrab = S.hold.filter(x => x.sp !== 'krabbe' && grade(x.fresh) !== 'V').reduce((a, x) => a + x.kg, 0);
           b.status = 'port'; b.port = 'senjahopen'; b.pos = {...portById('senjahopen').p}; const q = quotaState(), ff0 = q.ffTot, m0 = S.msgs.length; sell();
@@ -124,6 +125,9 @@ async def main():
         print(ok(r['afterNet']['hook'] and r['afterNet']['kg'] > 50 and r['afterNet']['pend'] > 0 and r['afterNet']['left'] == 1 and r['afterNet']['nets'][0][1] < 1), 'nets come up: net fish is not hook-caught, it goes to the bleeding tub, the nets are aboard again and worn a little')
         print(ok(r['afterLine']['hook'] and r['afterLine']['kg'] > 20 and r['afterLine']['un'] == 2), 'line comes up hook-caught, and the tubs are unbaited')
         print(ok(r['potSet'] is None and r['crab']['n'] >= 20 and r['crab']['clsOk'] and len(r['crab']['cls']) >= 4), 'king crab: all of it is kept (J-138-2026 § 5) and sorted by sex, weight and damage into Råfisklaget’s classes')
+        mk = r.get('marks') or []
+        print(ok(len(mk) == 2 and mk[0]['g'] == 'line' and mk[1]['g'] == 'teine' and abs(mk[1]['kgu'] - r['crab']['kg'] / 40) < 0.2 and mk[0]['kgu'] >= mk[1]['kgu'] and all(m['q'] is not None for m in mk)),
+              'the catch mark gives kilos per line (the whole line) and per pot', mk, r['crab']['kg'])
         print(ok(r['crabPend'] == 0 and not r['sale']['fine'] and abs(r['sale']['dead'] - 1.2) < 0.02 and r['sale']['minOk'] and r['sale']['ffAdd'] <= r['nonCrab'] + 0.01 and 'Fiskeridirektoratet' not in r['sale']['msgs'] and 'teine' in r['sale']['gear']), 'live king crab is paid at least the minimum price of its class and dead crab nothing; no fine, and crab is outside the fresh-fish scheme')
 
         # 5. weather, deadlines, wear and mending, baiting
