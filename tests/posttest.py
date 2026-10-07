@@ -95,6 +95,25 @@ async def main():
           return {kinds, ok:own.every(Boolean), heads:own.filter(Boolean).map(x => x.h[0]), hole:/undefined|NaN/.test(JSON.stringify(own)), top:top && top.h[0], topBody:top && top.body.length, oldTop, noTop, told}; })()""")
         check(mo['kinds'] == ['tur:sesong', 'tur:best', 'kvote'] and mo['ok'] and not mo['hole'] and mo['top'] and 'Toppbåten' in mo['top'] and mo['topBody'] == 2 and not mo['oldTop'] and not mo['noTop'] and mo['told'] == 1,
               "more kinds: the season's move and a long trip done (not a short one), a structure quota; the week's top boats from the shared leaderboard in place of the local fleet's; the day's biggest landing told to its lander once", mo)
+        # 6. a record price (the highest in a year, the same day in every game) on the front page, told once; the year's first skrei from
+        #    the shared landings, the first north of Stad, told once and not asked for again once it has stood
+        rs = await pg.evaluate("""(async () => { window.__t = []; let d = -1; for (let k = 1; k < 900 && d < 0; k++) if (pressRecords(k).length) d = k;
+          if (d < 0) return {d}; S.t = d * 1440 + 180; const sp = pressRecords(d)[0];
+          const F = pressList(false), rec = F.find(x => x.kind === 'pris'), loc = pressList(true).some(x => x.kind === 'pris');
+          PRESS.toldAt = 0; pressDay(d * 24 + 3); await new Promise(r => setTimeout(r, 200)); PRESS.toldAt = 0; pressDay(d * 24 + 4); await new Promise(r => setTimeout(r, 200));
+          const toldRec = window.__t.filter(x => /Rekordpris/.test(x)).length;
+          const H0 = pressSkreiH(2028); S.t = (H0 + 10) * 60; window.__t = [];
+          const south = PORTS.find(q => q.mottak && natLL(q.p).lat < 62), home = S.home || 'finnsnes', calls = [];
+          const rpc0 = window.cloudRpc; window.cloudRpc = async (fn, a) => { calls.push(fn); return fn === 'news_first' ? [{gh:H0 + 2, port:south.id, kg:80, boat:'Sorbaten', company:'', me:false}, {gh:H0 + 3, port:home, kg:120, boat:'Nordbaten', company:'', me:true}] : null; };
+          CLOUD.on = true; CLOUD.user = {id:'u'}; CLOUD.guest = false; PRESS.toldAt = 0;
+          await pressSkreiFetch(); await new Promise(r => setTimeout(r, 4500)); await pressSkreiFetch();
+          window.cloudRpc = rpc0; CLOUD.on = false; CLOUD.user = null;
+          const sk = pressList(false).find(x => x.kind === 'skrei'), skl = pressList(true).some(x => x.kind === 'skrei');
+          return {d, sp, rec:rec && rec.h[0], recBody:rec && rec.body.length, loc, toldRec, hole:/undefined|NaN/.test(JSON.stringify([rec, sk])), first:PRESS.skrei && PRESS.skrei.first && PRESS.skrei.first.boat,
+            sk:sk && sk.h[0], skIng:sk && sk.ing[0], skMe:sk && sk.me, skl, toldSk:window.__t.filter(x => /første skrei/.test(x)).length, asked:calls.filter(c => c === 'news_first').length}; })()""")
+        check(rs['d'] > 0 and rs['rec'] and rs['rec'].startswith('Rekordpris på') and rs['recBody'] >= 3 and not rs['loc'] and rs['toldRec'] == 1 and not rs['hole']
+              and rs['first'] == 'Nordbaten' and rs['sk'] and 'Nordbaten' in rs['skIng'] and rs['skMe'] and rs['skl'] and rs['toldSk'] == 1 and rs['asked'] == 1,
+              "a record price on the front page (not the local tab), told once; the year's first skrei is the first landing north of Stad, in the paper and told once, not asked for again", rs)
         check(errs == [], 'sidefeil', errs[:3])
         await br.close()
 

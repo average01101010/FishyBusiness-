@@ -14,8 +14,9 @@
 //   fs       ten, twenty ... years of sea time      ach   a badge chapter done      as   a company made a limited company (AS)
 //   tur      a long trip or the season's move done (turoppdrag, 09g-turer.js)          kvote    a structure quota bought
 // The week's top boats come from the shared leaderboard (ui/10h-world.js worldTop), and the day's biggest landing tells its lander in
-// the game (and by push when away: supabase/migrations/20261007180000_news_more.sql push_paper).
-const PRESS = {R:150, keep:40, remote:[], land:[], at:0, told:{}, toldAt:0};
+// the game (and by push when away: supabase/migrations/20261007180000_news_more.sql push_paper). A record price (the highest in a
+// year) is reckoned in every game alike (pressRecords), and the year's first skrei comes from the shared landings (pressSkrei).
+const PRESS = {R:150, keep:40, remote:[], land:[], at:0, told:{}, toldAt:0, skrei:null};
 const PRESS_KINDS = ['boat', 'name', 'aground', 'rescue', 'salv', 'foto', 'fish', 'fs', 'ach', 'as', 'tur', 'kvote'];
 function pressState(){ const P = S.press || (S.press = {own:[], seen:0, n:0, q:[]}); P.q = P.q || []; return P; }
 const pressCompany = () => (typeof access === 'function' && access() === 'lukket') ? String(S.company || '').slice(0, 40) : '';
@@ -138,6 +139,46 @@ function pressLand(local){
     body:rest.length ? [['Også store landinger det siste døgnet: ' + rest.map(l => pressWho(l)[0] + ' med ' + fmt(l.kg, 0) + ' kg til ' + portById(l.port).name).join(', ') + '.', 'Other big landings in the last day: ' + rest.map(l => pressWho(l)[1] + ' with ' + fmt(l.kg, 0) + ' kg at ' + portById(l.port).name).join(', ') + '.']] : []});
   return out;
 }
+// ---- the market: a record price, the highest in a year (Jonas 07.10.2026: «Ta rekordpriser») ----
+// The coast's price index for a species on a day is the market price and the supply of 03-simulation.js (marketPrice, supplyFactor),
+// the same in every game on the shared clock, so a record comes on the same day for everyone; the kroner are those of the plants near
+// the reader's home. A record is a day above every day of the year before, printed when the species had none in the six days before.
+const PRESS_SP = ['torsk', 'hyse', 'sei'], PRESS_IX = {}, PRESS_HI = {};
+function pressIx(sp, d){ const k = sp + d; if (PRESS_IX[k] == null){ const H = d * 24 + 2; PRESS_IX[k] = marketPrice(sp, H) * supplyFactor(H); } return PRESS_IX[k]; }
+function pressHigh(sp, d){ const k = sp + d; if (PRESS_HI[k] == null){ const v = pressIx(sp, d); let m = 0; for (let i = 1; i <= 365; i++) m = Math.max(m, pressIx(sp, d - i)); PRESS_HI[k] = v > m * 1.002; } return PRESS_HI[k]; }
+function pressRecords(d){ return PRESS_SP.filter(sp => pressHigh(sp, d) && ![1, 2, 3, 4, 5, 6].some(i => pressHigh(sp, d - i))); }
+function pressPrice(sp, d){
+  const sx = SPECIES[sp], H = d * 24 + 2, hp = portById(S.home || '') || null, near = plantsNear(pressHome(), 10).map(x => x.pt); if (!sx || !near.length) return null;
+  const px = near.map(q => [q, price(q, sp, H)]).sort((a, b) => b[1] - a[1]), avg = px.reduce((s, a) => s + a[1], 0) / px.length;
+  const ch = Math.round((pressIx(sp, d) / pressIx(sp, d - 30) - 1) * 100), no = sx.no.toLowerCase(), en = sx.en.toLowerCase(), hn = hp ? hp.name : null;
+  const body = [['Best betalt i distriktet er ' + px[0][0].name + ' med ' + fmt(px[0][1], 2) + ' kr/kg.', 'The best price in the district is at ' + px[0][0].name + ', NOK ' + fmt(px[0][1], 2) + '/kg.']];
+  if (ch > 0) body.push(['Prisen er ' + ch + ' % høyere enn for en måned siden.', 'The price is ' + ch + '% higher than a month ago.']);
+  body.push(supplyFactor(H) >= 1.02 ? ['Vind og sjø har holdt mange båter i havn, så det kommer lite fisk inn til mottakene.', 'Wind and sea have kept many boats in port, so little fish comes in to the plants.']
+    : ['Kjøperne melder om god etterspørsel i markedene ute.', 'The buyers report good demand in the markets abroad.']);
+  body.push(['Prisen settes hver dag og kan snu fort.', 'The price is set every day and can turn quickly.']);
+  return {key:'p' + sp + d, t:Math.min(d * 1440 + 60, S.t), kind:'pris', x:null, y:null, me:false, big:sp === 'torsk', img:null, body,
+    h:['Rekordpris på ' + no + ': ' + fmt(avg, 2) + ' kr/kg', 'Record price for ' + en + ': NOK ' + fmt(avg, 2) + '/kg'],
+    ing:[sx.no + ' betales nå bedre enn på et helt år. Snittet hos mottakene rundt ' + (hn || 'hjemhavna') + ' er ' + fmt(avg, 2) + ' kr/kg.',
+      sx.en + ' is paid better now than at any time in a year. The average at the plants round ' + (hn || 'home') + ' is NOK ' + fmt(avg, 2) + '/kg.']};
+}
+// the day's records told in the game once (hourly from 05-vessels.js)
+function pressDay(H){
+  if (typeof tutOn === 'function' && tutOn()) return; const d = Math.floor(H / 24), P = pressState(); P.told = P.told || {};
+  for (const sp of pressRecords(d)){ const k = 'p' + sp + d; if (P.told[k]) continue; P.told[k] = 1; try { if (typeof pressNotify === 'function') pressNotify(pressPrice(sp, d)); } catch (e){ console.warn('press', e); } }
+}
+// ---- the year's first skrei: the first cod landing north of Stad (62° N) after the skrei season begins (09c-seasons.js), from the
+// shared landings (ui/05g-press.js pressSkreiFetch; supabase/migrations/20261007190000_news_skrei.sql news_first), the same for all ----
+function pressSkreiH(y){ const e = SEASON_EV.find(x => x.id === 'skrei'); return Math.round((Date.UTC(y, 0, 1) + seasonDoy(e, y) * 864e5 - EPOCH) / 36e5); }
+const pressSkreiPick = rows => (Array.isArray(rows) ? rows : []).find(r => { const q = r && portById(r.port); return q && natLL(q.p).lat >= 62; }) || null;
+function pressSkrei(){
+  const K = PRESS.skrei, a = K && K.first, q = a && portById(a.port), H = S.t / 60; if (!q || H - a.gh > 168 || a.gh > H + 1) return [];
+  const w = pressWho(a);
+  return [{key:'s' + K.y, t:Math.round(a.gh * 60), kind:'skrei', x:q.p.x, y:q.p.y, me:!!a.me, big:true, img:null,
+    h:['Årets første skrei er landet', 'The year\'s first skrei is landed'],
+    ing:[w[0] + ' leverte ' + fmt(a.kg, 0) + ' kg skrei til ' + q.name + '. Dermed er skreisesongen i gang.', w[1] + ' landed ' + fmt(a.kg, 0) + ' kg of skrei at ' + q.name + '. The skrei season is on.'],
+    body:[['Skreien er den kjønnsmodne torsken som vandrer fra Barentshavet for å gyte langs kysten fra januar til april, mest i Lofoten og Vesterålen.', 'The skrei is the mature cod that migrates from the Barents Sea to spawn along the coast from January to April, most of it in Lofoten and Vesterålen.'],
+      ['Kystposten gratulerer.', 'Congratulations from Kystposten.']]}];
+}
 // the paper: the front page (the whole coast) or the local tab (within 150 km of home), newest first; the player's own stories with the
 // others', the landings, and the day's news of 06-services.js newsForDay (the quota and regulation news on the front page, the rest local)
 function pressList(local){
@@ -146,8 +187,10 @@ function pressList(local){
   for (const it of P.own){ const s = pressStory(it); if (s && (!local || near(s))){ out.push(s); seen.add(it.kind + '|' + Math.round(it.t / 6)); } }
   for (const it of PRESS.remote){ if (it.me && seen.has(it.kind + '|' + Math.round(it.gh * 10))) continue; const s = pressStory(it); if (s && (!local || near(s))) out.push(s); }
   for (const s of pressLand(local)) out.push(s);
+  for (const s of pressSkrei()) if (!local || near(s)) out.push(s);
   const top = local ? [] : pressTop(); for (const s of top) out.push(s);
   const day = Math.floor(S.t / 1440);
+  if (!local) for (let dd = day; dd >= Math.max(0, day - 6); dd--) for (const sp of pressRecords(dd)){ const s = pressPrice(sp, dd); if (s) out.push(s); }
   for (let dd = day; dd >= Math.max(0, day - 6); dd--) newsForDay(dd).forEach((a, i) => { if (top.length && /^Ukas toppfisker/.test(a.h.no)) return;   // the shared leaderboard's, not the local fleet's
     if (!!a.nat === !local || (!local && dd === day && !a.nat && i < 2))
     out.push({key:'g' + dd + '_' + i + (local ? 'L' : 'N'), t:Math.min(dd * 1440 + 6 * 60, S.t), kind:'gen', me:false, big:false, img:a.img != null ? {foto:a.img} : null, h:[a.h.no, a.h.en], ing:[a.b.no, a.b.en], body:[]}); });

@@ -1,7 +1,7 @@
 // ---------- Kystposten on the phone (core/09h-press.js): the front page and the local tab, a story to read on, the unread count on
 // the app, a word in the game when one comes, and the stories to and from the cloud (supabase/migrations/20261007170000_news.sql) ----------
 const PRESS_KIND = {boat:['Båtkjøp', 'Boats'], name:['Båtdåp', 'Christening'], aground:['Ulykke', 'Accident'], rescue:['Redning', 'Rescue'], salv:['Berging', 'Salvage'],
-  foto:['Fyr', 'Lighthouses'], fish:['Fangst', 'Catch'], fs:['Folk', 'People'], ach:['Folk', 'People'], as:['Næring', 'Business'], tur:['Fiske', 'Fishing'], kvote:['Næring', 'Business'], top:['Toppliste', 'Leaderboard'], land:['Landing', 'Landings'], gen:['Nyheter', 'News']};
+  foto:['Fyr', 'Lighthouses'], fish:['Fangst', 'Catch'], fs:['Folk', 'People'], ach:['Folk', 'People'], as:['Næring', 'Business'], tur:['Fiske', 'Fishing'], kvote:['Næring', 'Business'], top:['Toppliste', 'Leaderboard'], land:['Landing', 'Landings'], pris:['Marked', 'Market'], skrei:['Fangst', 'Catch'], gen:['Nyheter', 'News']};
 const pressL = (s, k) => s[k][S.lang === 'en' ? 1 : 0];
 function pressImg(s, small){
   if (!s.img) return '';
@@ -56,8 +56,19 @@ async function pressFetch(force){
       // the day's biggest landing is one's own: told once
       const L0 = PRESS.land[0]; if (L0 && L0.me && !PRESS.told['l' + L0.gh]){ PRESS.told['l' + L0.gh] = 1; const s = pressLand(false)[0]; if (s){ s.me = true; pressNotify(s); } }
       if (!first) for (const it of PRESS.remote){ if (old.has(it.id) || it.me) continue; const s = pressStory(it); if (s && (s.big || (s.x != null && dist({x:s.x, y:s.y}, hp) <= PRESS.R))){ pressNotify(s); break; } }
+      await pressSkreiFetch();
       if (typeof PHONE !== 'undefined' && PHONE.isOpen() && PHONE.app === 'post') PHONE.render(); } }
   catch (e){ if (/ 404$/.test(e.message)) PRESS.off = true; }
   finally { PRESS.busy = false; }
+}
+// the year's first skrei (core/09h-press.js pressSkrei): asked for in the season's first 30 days until a first one has stood for a few
+// game hours (a landing reaches the cloud up to ten minutes late), and told in the game once a year
+async function pressSkreiFetch(){
+  const H = S.t / 60, y = yearH(H), H0 = pressSkreiH(y), K = PRESS.skrei; if (PRESS.skreiOff || H < H0 || H > H0 + 720) return;
+  if (K && K.y === y && K.first && H - K.first.gh > 3) return;
+  try { const first = pressSkreiPick(await cloudRpc('news_first', {since:H0})); PRESS.skrei = {y, first};
+    const P = pressState(); P.told = P.told || {};
+    if (first && !P.told['s' + y]){ const s = pressSkrei()[0]; if (s){ P.told['s' + y] = 1; pressNotify(s); } } }
+  catch (e){ if (/ 404$/.test(e.message)) PRESS.skreiOff = true; }
 }
 function pressStart(){ setTimeout(() => { pressFetch(true); pressFlush(); }, 8000); setInterval(() => pressFetch(false), 180000); setInterval(pressFlush, 120000); }

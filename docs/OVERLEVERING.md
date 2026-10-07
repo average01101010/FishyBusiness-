@@ -1300,7 +1300,7 @@ Punkt 4 i `docs/engasjement.md`. Jonas: en blanding av korte og lange oppdrag ut
 
 ### 4.27 Kystposten: den felles avisa (07.10.2026)
 
-Jonas: «båtnavn eller rederiene til andre brukere må komme offentlig i avisen. Det må også være varselprikk på appen og varsel i spillet. Jeg ønsker at spillere skal kunne trykke på en nyhetssak å lese litt mer». Etter planen svarte han: uhell skal i avisa («Det er realistisk»), andres fyrbilder skal ikke, og det skal være en lokalfane. Kjernen ligger i `core/09h-press.js`, skjermen i `ui/05g-press.js`, skyen i `supabase/migrations/20261007170000_news.sql` (og `…171000_news_get_fix.sql`), og testen i `tests/posttest.py`.
+Jonas: «båtnavn eller rederiene til andre brukere må komme offentlig i avisen. Det må også være varselprikk på appen og varsel i spillet. Jeg ønsker at spillere skal kunne trykke på en nyhetssak å lese litt mer». Etter planen svarte han: uhell skal i avisa («Det er realistisk»), andres fyrbilder skal ikke, og det skal være en lokalfane. Kjernen ligger i `core/09h-press.js`, skjermen i `ui/05g-press.js`, skyen i `supabase/migrations/20261007170000_news.sql` (og `…171000_news_get_fix.sql`, `…180000_news_more.sql`, `…190000_news_skrei.sql`), og testen i `tests/posttest.py`.
 
 - **Saker** (`pressPut`) lages der det skjer:
   - **boat:** kjøp av båt (`buy` i telefonen, og kjøp med kvote i lukket gruppe);
@@ -1337,8 +1337,21 @@ Jonas: «båtnavn eller rederiene til andre brukere må komme offentlig i avisen
   - I spillet får den med dagens største landing beskjed én gang når avisa hentes (`pressFetch`).
 - **Ukas toppfisker** (`pressTop`) kommer fra den felles topplista (`worldTop`) for åpen og lukket gruppe forrige uke, med nr. 2 og 3. Den lokale «Ukas toppfisker» fra `newsForDay` vises bare når skyen ikke har tall.
 - **Personvern:** `src/legal/personvern.html` har fått avsnittet «Saker i Kystposten». Haill står aldri i sakene. Brukernavnet står ikke i avisa, bare i admin.
-- **Neste:**
-  - flere sakstyper, for eksempel nye mottak, rekordpriser og sesongens første skrei langs kysten.
+- **Rekordpris** (`pressRecords`, `pressPrice`; Jonas: «Ta rekordpriser og sesongens første skrei. Det kommer ingen nye fiskemottak langs kysten»):
+  - Prisindeksen for en art en dag er `marketPrice × supplyFactor` kl. 08 (`pressIx`). Den er lik i alle spill på den felles klokka, så rekorden kommer samme dag for alle.
+  - Rekord betyr at dagen er høyere enn hver dag året før (365 dager, 0,2 % margin). Saken trykkes bare når arten ikke hadde rekord de seks dagene før, så en stigende uke gir én sak.
+  - Arter: torsk, hyse og sei. Saken står bare på forsiden (type `pris`, «Marked»), og torsk er en stor sak.
+  - Kronene i saken er leserens egne: snittet hos de ti mottakene nærmest hjemhavna, hvem som betaler best, endringen siden for en måned siden, og om været har holdt båtene i havn (`supplyFactor ≥ 1,02`).
+  - Dagens rekord varsles i spillet én gang (`pressDay`, hver spilltime fra `05-vessels.js`; `S.press.told`).
+  - Ordet «rekord» gjelder altså det høyeste på et år, og ingressen sier det.
+- **Årets første skrei** (`pressSkrei`, `pressSkreiFetch`):
+  - `news_first(since)` (`supabase/migrations/20261007190000_news_skrei.sql`) gir de ti første torskelandingene i 30 spilldøgn fra skreisesongens første dag (`SEASON_EV` skrei, `seasonDoy`). En landing er en spillers rader på samme tid og havn, minst 30 kg torsk, i åpen eller lukket gruppe, aldri en gjest, med båtnavnet og rederiet i lukket gruppe.
+  - Klienten tar den første ved en havn nord for 62° N (Stad, `natLL`). Havneregisteret er likt for alle, så det blir samme båt for alle.
+  - Den hentes med avisa i sesongens første 30 dager, til en første har stått i tre spilltimer, fordi landingene kan komme opp til ti minutter for sent til skyen.
+  - Saken (type `skrei`, «Fangst») står på forsiden og lokalt når havna er innen 150 km, i en uke. Den varsles én gang i året, med «Om deg» for den som landet.
+  - Uten sky finnes bare sesongsaken fra `newsForDay` («Skreien er her»).
+  - Røyktestet med MCP i en transaksjon som ble rullet tilbake: to rader på samme tid ble slått sammen til 45 kg, 10 kg og hyse kom ikke med.
+- **Ikke laget:** saker om nye mottak (Jonas: det kommer ingen nye fiskemottak langs kysten). Ingen push for første skrei ennå.
 
 ## 5. Systemer i spillet
 

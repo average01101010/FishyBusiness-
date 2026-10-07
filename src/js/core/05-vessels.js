@@ -242,7 +242,7 @@ function step(){
   if (S.t % 60 === 0) for (const pid in S.market) for (const sp in S.market[pid]) S.market[pid][sp] *= 0.97;
   if (S.t % 60 === 0 && S.stock) stockHour(H);
   if (S.t % 60 === 0) gearHour(H);
-  if (S.t % 60 === 0) seasonDay(H);   // the seasons' news and the skrei festival (09c-seasons.js)
+  if (S.t % 60 === 0){ seasonDay(H); pressDay(H); }   // the seasons' news and the skrei festival (09c-seasons.js), a record price (09h-press.js)
   folkPort(H);                        // Edvard on the quay in the home harbour (09d-folk.js)
   eachVessel(() => vesselStep(H));
   achMinute();                        // the badges: rough weather, night fishing, players met (09f-merker.js)
