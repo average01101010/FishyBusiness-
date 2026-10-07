@@ -221,7 +221,17 @@ function partHauler(o, hs, p){ const s = hs.sOf(p.z), y = hs.sh(s), x = hs.hbS(s
 function partDavit(o, hs, p){ const s = hs.sOf(p.z), y = hs.deckY(s), x = hs.hbS(s) - 0.2, h = p.h || 2.2;
   o.tube([[x, y, p.z], [x, y + h, p.z], [x + 0.9, y + h + 0.15, p.z]], 0.06, p.col || VC.yellow, 8); o.disc([x + 0.9, y + h, p.z], [0, 0, 1], 0.12, VC.dark, 10); }
 // fish tubs on deck, a stack of pots, a liferaft canister on the roof
-function partTubs(o, hs, p){ const s = hs.sOf(p.z), y = hs.deckY(s); for (let i = 0; i < (p.n || 2); i++) o.rbox((i % 2 ? -1 : 1) * Math.min(0.7, hs.xAt(s, y) * 0.45), y, p.z + Math.floor(i / 2) * 1.0, 0.85, 0.55, 0.85, 0.06, p.col || VC.tub); }
+// A tub (0.85 m) whose outer edge would stand outside the hull where it narrows (the snekke's stern: tilbakemelding #36, «kassen som går
+// igjennom båten») is pulled in, and moved towards amidships when there is no room for two side by side.
+function partTubs(o, hs, p){
+  for (let i = 0; i < (p.n || 2); i++){
+    const sg = i % 2 ? -1 : 1; let z = p.z + Math.floor(i / 2) * 1.0, s = hs.sOf(z), y = hs.deckY(s), x = Math.min(0.7, hs.xAt(s, y) * 0.45);
+    const room = zz => { const s0 = hs.sOf(zz), y0 = hs.deckY(s0); return Math.min(hs.xAt(hs.sOf(zz - 0.43), y0), hs.xAt(hs.sOf(zz + 0.43), y0), hs.xAt(s0, y0)) - 0.5; };   // the half-width left for the tub's centre
+    for (let k = 0; k < 14 && x > room(z); k++){ x = Math.min(x, room(z)); if (x >= 0.36 || (p.n || 2) < 2) break; z -= Math.sign(z || 1) * 0.15; s = hs.sOf(z); y = hs.deckY(s); x = Math.min(0.7, hs.xAt(s, y) * 0.45); }
+    x = Math.max(0.05, Math.min(x, room(z)));
+    o.rbox(sg * x, y, z, 0.85, 0.55, 0.85, 0.06, p.col || VC.tub);
+  }
+}
 function partPots(o, hs, p){ const s = hs.sOf(p.z), y = hs.deckY(s), xs = hs.xAt(s, y) * 0.5, rows = p.rows || 2, cols = p.cols || 3, lay = p.lay || 2;
   for (let l = 0; l < lay; l++) for (let r = 0; r < rows; r++) for (let k = 0; k < cols; k++){ const x = -xs + (2 * xs) * (k + 0.5) / cols, z = p.z + r * 0.75, yy = y + l * 0.42;
     o.box(x, yy, z, 0.68, 0.4, 0.68, p.col || [0.15, 0.25, 0.2, 0.15]); } }
