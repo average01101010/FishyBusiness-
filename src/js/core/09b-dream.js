@@ -91,5 +91,6 @@ function dreamEnd(won, crew){
   S.trophies = S.trophies || []; S.trophies.push({sp:D.sp, kg:D.kg, t:S.t, at, boat:S.boatName || '', rel, crew:!!crew});
   log((crew ? 'Mannskapet' : 'Du') + ' fikk en ' + nm.no.toLowerCase() + ' på ' + fmt(D.kg, 1) + ' kg ved ' + at + (rel ? '. Kveita er fredet nå, så den gikk ut igjen.' : '!'), (crew ? 'The crew' : 'You') + ' landed a ' + nm.en.toLowerCase() + ' of ' + fmt(D.kg, 1) + ' kg off ' + at + (rel ? '. Halibut is protected now, so it went back.' : '!'));
   msg('Kystposten', 'Storfisk: ' + nm.no.toLowerCase() + ' på ' + fmt(D.kg, 0) + ' kg tatt på juksa ved ' + at + '.', 'Big fish: a ' + nm.en.toLowerCase() + ' of ' + fmt(D.kg, 0) + ' kg taken on the jig off ' + at + '.');
+  if (!rel) pressPut('fish', {sp:D.sp, kg:Math.round(D.kg)});   // and in the paper for the others (09h-press.js)
   return {won:true, rel, ...D};
 }

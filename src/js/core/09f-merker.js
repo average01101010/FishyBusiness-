@@ -162,6 +162,7 @@ function achChapter(ch){
   const what = ['Vimpelen er din: den henger i masta på båter med mast, og andre ser den.', 'Vimpelen blir lengre, og en haill ligger om bord.', 'Vimpelen blir enda lengre, og skrogfargen «Kystfisker» er din i Malerverkstedet.'][ch],
     whatEn = ['The pennant is yours: it flies from the mast of a boat with a mast, and others see it.', 'The pennant grows longer, and a luck is aboard.', 'The pennant grows longer still, and the hull colour «Kystfisker» is yours in the paint shop.'][ch];
   msg('Kystposten', 'Kapittel «' + ACH_CH[ch][0] + '» er fullført. ' + what, 'Chapter «' + ACH_CH[ch][1] + '» is complete. ' + whatEn);
+  pressPut('ach', {ch});   // in the paper for the others (09h-press.js)
 }
 // a game played before the badges came: ticked for what it has done, quietly, the gifts with them (shown together once)
 function achSeed(){

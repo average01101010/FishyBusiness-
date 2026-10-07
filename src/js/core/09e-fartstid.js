@@ -38,7 +38,7 @@ function fsYear(y){
   const t = fsText(fsNeed(y));
   log('Du har nå ' + t + '.', 'You now have ' + t + '.');
   if (!FS_AWAY && typeof toast === 'function') toast((S.lang === 'en' ? 'Sea time: ' : 'Fartstid: ') + t);
-  if (y % 10 === 0) msg('Kystposten', 'Kystposten gratulerer med ' + y + ' år på havet. Det er ikke mange forunt.', 'The Coast Post congratulates you on ' + y + ' years at sea. Not many get there.');
+  if (y % 10 === 0){ msg('Kystposten', 'Kystposten gratulerer med ' + y + ' år på havet. Det er ikke mange forunt.', 'The Coast Post congratulates you on ' + y + ' years at sea. Not many get there.'); pressPut('fs', {y}); };
 }
 // each game minute: an hour at sea with you aboard counts (rested time is used up only at sea)
 function fsMinute(){

@@ -130,6 +130,7 @@ function runAground(p){
   log('Gikk på grunn ' + pl.no + '. Skroget er skadet.', 'Ran aground ' + pl.en + '. The hull is damaged.', 'nav');
   if (typeof FEEDBACK !== 'undefined') setTimeout(() => FEEDBACK.nudge('aground'), 2500);   // was it the game's fault? (ui/06e-feedback.js)
   S.incidents = S.incidents || []; S.incidents.push({t:S.t, k:'aground', boat:S.boatName || 'Havbris', no:pl.no, en:pl.en}); if (S.incidents.length > 60) S.incidents.shift();
+  pressPut('aground', {type:b.type});   // Kystposten (09h-press.js; Jonas: «Uhell burde havne i avisen»)
   if (hooks.onAground) hooks.onAground();
 }
 function rocksNear(a, b, r){ let n = 0; const x0 = Math.min(a.x, b.x) - r, x1 = Math.max(a.x, b.x) + r, y0 = Math.min(a.y, b.y) - r, y1 = Math.max(a.y, b.y) + r, dx = b.x - a.x, dy = b.y - a.y, L2 = dx * dx + dy * dy || 1e-9;
