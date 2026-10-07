@@ -416,6 +416,7 @@ const PHONE = (() => {
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
     ['p88', '07.10.2026', 'Rettinger', 'Fixes', [
+      ['Om vinteren ligger snøen helt ned til fjæra, og langs hele kysten er det tang og rur i fjæresteinene. Snøgrensa følger klimaet langs kysten.', 'In winter the snow lies right down to the shore, and there is rockweed and barnacles on the shore rocks along the whole coast. The snow line follows the climate along the coast.'],
       ['Egning går dobbelt så fort med to om bord og to og en halv gang så fort med tre. Kranen på kaia svinger rett over og henter lasten, fortøying og kast loss går raskere, og tauene er brune.', 'Baiting goes twice as fast with two aboard and two and a half times as fast with three. The crane on the quay swings straight over for the load, mooring and casting off are quicker, and the lines are brown.'],
       ['Salgslaget viser åpningstidene til mottakene, også de lengre tidene i skreisesongen.', 'The Sales app shows the plants\' opening hours, the longer ones in the skrei season too.'],
       ['Om bord vises aldri flere folk enn mannskapet og deg. Den som iser, skuffer is fra iskassa over fisken med spade, og den første blåsa går ut akter når du setter.', 'Aboard there are never more people than the crew and you. Whoever ices shovels ice from the ice bin over the fish, and the first buoy goes out astern when you set.'],

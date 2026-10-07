@@ -5,7 +5,7 @@ const G3 = (() => {
   let gl = null, ready = false, failed = false, active = false, raf = 0, lastF = 0;
   let PL, PS, PSF, PK, PP, SST_VS = false, SSDUMMY = null, SEADBG = false;
   let TERR, STAT, BOATM, CAPM, RODM, FLAGM, SKYQ, PATCH, FARQ, DYNP, DYNA;
-  let HG = null, NEARM = null, MIDM = null, FINEM = null, loading = false, LIGHTS = [], snowNow = -1;
+  let HG = null, NEARM = null, MIDM = null, FINEM = null, loading = false, LIGHTS = [], snowNow = null;   // the snow line in use (m; below 0 in winter), null before the first frame
   // Quality (phase K8 of the coast plan): 0 low, 1 medium, 2 high, 3 ultra (Jonas 05.10.2026: «en ultra grafikk setting ... finne ut
   // hvor grensa ligger for flagship-modeller»; only when chosen, never by auto, and only where 32-bit indices are there: UINT).
   // 'auto' (the setting S.settings.q3d) steps down a level when the
@@ -223,6 +223,10 @@ const G3 = (() => {
     'float b1=ns(wp*0.045)-0.5;float b2=ns(wp.yx*0.045+13.0)-0.5;float b3=ns(wp*0.011+5.0)-0.5;vec3 n=normalize(vN);float st=1.0-n.y;' +
     'n=normalize(n+vec3(b1*0.5+b3,0.0,b2*0.5-b3*0.6)*(0.2+st*0.7)*det);vec3 c=vC*(0.92+0.16*ns(wp*0.018+2.0));float h=vP.y;vec2 uv=(vW.xz-uGRect.xy)*uGRect.zw;float ins=step(0.0,uv.x)*step(0.0,uv.y)*step(uv.x,1.0)*step(uv.y,1.0);float ef=smoothstep(0.0,0.06,min(min(uv.x,uv.y),min(1.0-uv.x,1.0-uv.y)));' +
     'float sand=(1.0-smoothstep(1.0,3.6,h+b1*1.6))*step(0.05,h);c=mix(c,uSand,sand*0.8);' +
+    // the tidal zone along the whole coast: rockweed up to about the high water and a pale band of barnacles above it, never under
+    // snow (Jonas 07.10.2026: «det ser litt dumt ut når den eneste plassen det er tang og rur i verden er rundt stolpene til naustet»)
+    'float wd=(1.0-smoothstep(0.9,1.5,h+b2*0.6))*step(-0.6,h);c=mix(c,mix(vec3(0.22,0.19,0.1),vec3(0.32,0.28,0.14),ns(wp*0.35)),wd*0.92);' +
+    'float br=smoothstep(1.0,1.45,h+b2*0.6)*(1.0-smoothstep(1.55,2.1,h+b1*0.8));c=mix(c,vec3(0.7,0.7,0.66),br*0.55);' +
     'if(uGOn>0.5&&ins>0.5){vec4 g=texture2D(uGround,uv);c=mix(c,g.rgb,g.a*ef);}' +
     'float dif=max(dot(n,uSun),0.0)*mix(0.08,1.0,smoothstep(0.15,0.85,vS));vec3 amb=mix(uGnd,uAmb,n.y*0.5+0.5);vec3 col=c*(amb+uSunCol*dif+pLit(vW,n));float f=1.0-exp(-uFogD*uFogD*d*d);gl_FragColor=vec4(mix(col,uFog,f),1.0);}';
   const SKY_VS = 'attribute vec2 aP;varying vec2 vP;void main(){vP=aP;gl_Position=vec4(aP,0.9999,1.0);}';
@@ -332,7 +336,11 @@ const G3 = (() => {
   }
 
   // ---------- terrain ----------
-  const SNOWLINE = [0,0,0,150,350,650,900,1000,850,450,120,0];
+  // Senja's snow line by month (m): below the sea in winter, so the snow lies right down to the shore (tilbakemelding #2, #19: green
+  // grass along the water by the naust while all else was white). Along the coast it moves with how much warmer or colder the place is
+  // than Senja (core/03-simulation.js climDiff), about 150 m a degree (air cools some 0.65 °C per 100 m)
+  const SNOWLINE = [-120,-120,-80,150,350,650,900,1000,850,450,120,-80];
+  const snowLine = H => seasonal(SNOWLINE, H) + clamp(typeof climDiff === 'function' ? climDiff('t', H) : 0, -6, 8) * 150;
   // real ground height (m) at world x/z (m); sea floor is shaped from shore distance and exposure; where a harbour unit stands, its
   // ground (unitTerr)
   const COAST3 = {top:1.7};
@@ -526,7 +534,7 @@ const G3 = (() => {
     const big = N > 65536, idx = big ? new Uint32Array((n - 1) * (n - 1) * 6) : new Uint16Array((n - 1) * (n - 1) * 6); let q = 0;   // 32-bit on ultra (UINT)
     for (let j = 0; j < n - 1; j++) for (let i = 0; i < n - 1; i++){ const a = j * n + i, b = a + 1, c = a + n, d = c + 1; idx[q++] = a; idx[q++] = c; idx[q++] = b; idx[q++] = b; idx[q++] = c; idx[q++] = d; }
     const col = new Float32Array(N * 3), m = {pb:buf(pos), cb:buf(col, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), nb:buf(nor), ib:buf(idx, gl.ELEMENT_ARRAY_BUFFER), n:idx.length, i32:big, h, nz, slope, fo, col, x0, z0, sx, sz, pos, nor, gn:n, o:[x0, z0], sh:new Float32Array(N).fill(1)}; m.sb = buf(m.sh, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); m.shKey = '';
-    recolor(m, snowNow < 0 ? 0 : snowNow);
+    recolor(m, snowNow == null ? 0 : snowNow);
     return m;
   }
   function makeMesh(x0, z0, sx, sz, n, hf){ const B = meshBegin(x0, z0, sx, sz, n, hf); meshRows(B, Infinity); return meshEnd(B); }
@@ -564,7 +572,7 @@ const G3 = (() => {
       const a = j * nx + i, b = a + 1, c = a + nx, d = c + 1; idx.push(a, c, b, b, c, d); }
     const col = new Float32Array(N * 3), m = {pb:buf(pos), cb:buf(col, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), nb:buf(nor), ib:buf(new Uint16Array(idx), gl.ELEMENT_ARRAY_BUFFER), n:idx.length, h, nz:nzA, slope, fo, pv, col, pos, nor, unit:U.id, o:[U.o[0], U.o[1]], sh:new Float32Array(N).fill(1)};
     m.sb = buf(m.sh, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); m.shKey = '';
-    recolor(m, snowNow < 0 ? 0 : snowNow);
+    recolor(m, snowNow == null ? 0 : snowNow);
     return m;
   }
   function buildPatches(){
@@ -746,8 +754,9 @@ const G3 = (() => {
     if (!NEARM) return;
     const span = FINEW.span[QUAL.lvl], n = FINEW.n[QUAL.lvl], snap = span / 8, cx = Math.round(bv.x / snap) * snap, cz = Math.round(bv.z / snap) * snap;
     if (FINEM && !FINEM.stale && FINEM.sx === span && FINEM.gn === n && Math.abs(cx - FINEM.cx) < span / 5 && Math.abs(cz - FINEM.cz) < span / 5) return;
-    meshTask('fine', FINEM && FINEM.sx === span && FINEM.gn === n ? FINEM : null, cx - span / 2, cz - span / 2, span, n, terrCoarse, (M, dirty) => { const old = FINEM; FINEM = M; FINEM.cx = cx; FINEM.cz = cz; FINEM.stale = dirty; shSeed(FINEM, old); if (old) freeMesh(old); if (snowNow >= 0) recolor(FINEM, snowNow); });
+    meshTask('fine', FINEM && FINEM.sx === span && FINEM.gn === n ? FINEM : null, cx - span / 2, cz - span / 2, span, n, terrCoarse, (M, dirty) => { const old = FINEM; FINEM = M; FINEM.cx = cx; FINEM.cz = cz; FINEM.stale = dirty; shSeed(FINEM, old); if (old) freeMesh(old); if (snowNow != null) recolor(FINEM, snowNow); });
   }
+  const WEED = [0.27, 0.24, 0.13], WEED2 = [0.22, 0.2, 0.12], BARN = [0.66, 0.66, 0.62];   // rockweed and barnacles in the tidal zone
   function recolor(m, snow){
     const {slope, nz, col, h, fo} = m;
     const grass = [0.36, 0.43, 0.28], birch = [0.25, 0.33, 0.22], rock = [0.33, 0.35, 0.37], snowC = [0.9, 0.92, 0.95], shore = [0.5, 0.49, 0.44], bed = [0.3, 0.3, 0.27];
@@ -758,9 +767,13 @@ const G3 = (() => {
       else {
         c = mix3(rock, mix3(grass, birch, n), y < 280 ? 1 : sstep(420, 280, y));
         if (y < 6) c = mix3(shore, c, y / 6);
+        // the tidal zone along the whole coast, as under Father's naust (Jonas 07.10.2026: «det ser litt dumt ut når den eneste plassen det
+        // er tang og rur i verden er rundt stolpene til naustet»): rockweed up to about the high water, a pale band of barnacles above it
+        const tw = 1 - sstep(0.9, 1.5, y), tb = sstep(0.9, 1.4, y) * (1 - sstep(1.7, 2.3, y));
+        if (tw > 0 || tb > 0){ c = mix3(c, mix3(WEED, WEED2, sstep(0.4, 0.7, n)), tw * (1 - sstep(0.5, 0.85, slope[i]) * 0.5)); c = mix3(c, BARN, tb * 0.55); }
         // birch woods below the tree line stay dark through the snow; steep faces show bare rock
         const rs = sstep(0.32, 0.7, slope[i]), wood = Math.max(y < 320 ? sstep(0.42, 0.62, n) * sstep(320, 200, y) : 0, fo ? fo[i] * sstep(420, 260, y) * 0.9 : 0) * (1 - rs);
-        const p = pv ? pv[i] : 0, sn = sstep(snow - 60, snow + 60, y + n * 90) * (1 - rs * 0.85) * (1 - wood * 0.55) * (1 - p * 0.6);
+        const p = pv ? pv[i] : 0, sn = sstep(snow - 60, snow + 60, y + n * 90) * (1 - rs * 0.85) * (1 - wood * 0.55) * (1 - p * 0.6) * sstep(1.5, 2.3, y);   // no snow where the tide comes
         c = mix3(mix3(c, rock, rs * 0.75), birch, wood * 0.6);
         if (p) c = mix3(c, mix3(asph, gravel, sstep(0.4, 0.75, n) * 0.7 + (1 - p) * 0.3), p);
         c = mix3(c, snowC, sn);
@@ -1243,7 +1256,7 @@ const G3 = (() => {
   function freeChunk(c){ const del = mm => { if (mm.parts) mm.parts.forEach(del); else { gl.deleteBuffer(mm.pb); gl.deleteBuffer(mm.cb); } }; for (const mm of [c.rd, c.mesh, c.dm, c.gd, c.gl]) if (mm) del(mm); if (c.lights) gl.deleteBuffer(c.lights); }
   function updateChunks(maxBuilds){
     if (!NEARM) return;
-    const sf = (snowNow < 80 ? 1 : 0) + 10 * treeSeason();
+    const sf = (snowNow == null || snowNow < 80 ? 1 : 0) + 10 * treeSeason();
     if (sf !== chunkSnow){ for (const c of CH.values()) freeChunk(c); CH.clear(); chunkSnow = sf; }
     const half = NEARM.sx / 2 - 400, cx = NEARM.cx, cz = NEARM.cz;
     const want = (mx, mz) => Math.hypot(mx - bv.x, mz - bv.z) < QUAL.chunkR[QUAL.lvl] * Math.min(3, ZF());
@@ -1423,13 +1436,14 @@ const G3 = (() => {
   // with a little noise, so it lies in patches. Made again when the snow line moves (it moves in steps of 20 m).
   const SNOWC = [0.9, 0.92, 0.95], STRAW = [0.56, 0.5, 0.36];
   function siteSnow(P, snow){
-    if (snow < 0 || !P.zone) return P;
+    if (snow == null || !P.zone) return P;
     const c = P.c.slice(); let any = false;
     for (let i = 0; i < P.zone.length; i++){
       const z = P.zone[i]; if (z !== 2 && z !== 3) continue;
       const x = P.p[i * 3], y = P.p[i * 3 + 1], q = P.p[i * 3 + 2], hn = Math.abs(Math.sin(x * 12.9898 + q * 78.233) * 43758.5453) % 1;
       const sn = sstep(snow - 60, snow + 60, y + hn * 90); if (sn < 0.02) continue;
-      const up = sstep(0.4, 0.8, P.n[i * 3 + 1]), a = P.ao[i], k = sn * up;
+      // grass and heather hold the snow on the steep banks too (only bare rock sheds it), so the bank down to the water is white
+      const up = sstep(0.4, 0.8, P.n[i * 3 + 1]), a = P.ao[i], k = sn * (z === 3 ? Math.max(up, 0.85) : up);
       for (let j = 0; j < 3; j++){ let v = c[i * 4 + j]; if (z === 3) v += (STRAW[j] * a - v) * sn * (1 - up) * 0.8; c[i * 4 + j] = v + (SNOWC[j] * a - v) * k; }
       any = true;
     }
@@ -2877,7 +2891,7 @@ const G3 = (() => {
     if (mlight > 0.02){ const ml = [0.62, 0.7, 0.9].map(v => v * mlight * 0.32); env.sunCol = env.sunCol.map((v, k) => v + ml[k]); env.amb = env.amb.map((v, k) => v + [0.02, 0.025, 0.04][k] * mlight); const my = Math.max(env.moonDir[1], 0.25), mll = Math.hypot(env.moonDir[0], my, env.moonDir[2]); env.lightDir = [env.moonDir[0] / mll, my / mll, env.moonDir[2] / mll]; }
     env.shadowDir = el > -1 ? env.sunDir : mlight > 0.02 ? env.moonDir : null;
     env.tide = tideH(H);
-    const sn = Math.round(seasonal(SNOWLINE, H) / 20) * 20; if (sn !== snowNow){ snowNow = sn; recolor(TERR, sn); if (NEARM) recolor(NEARM, sn); if (FINEM) recolor(FINEM, sn); for (const m of UPATCH) recolor(m, sn); }
+    const sn = Math.round(snowLine(H) / 20) * 20; if (sn !== snowNow){ snowNow = sn; recolor(TERR, sn); if (NEARM) recolor(NEARM, sn); if (FINEM) recolor(FINEM, sn); for (const m of UPATCH) recolor(m, sn); }
   }
 
 
@@ -3182,7 +3196,7 @@ const G3 = (() => {
   function drawTerrain(TM, eye, VP, near){
     gl.useProgram(PT.p); const u = PT.u; plSet(u);
     gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uSun, env.lightDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb); gl.uniform3fv(u.uGnd, env.gnd); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD);
-    gl.uniform3fv(u.uSand, snowNow < 5 ? [0.84, 0.86, 0.88] : [0.74, 0.71, 0.6]); gl.uniformMatrix4fv(u.uM, false, TM);
+    gl.uniform3fv(u.uSand, snowNow == null || snowNow < 5 ? [0.84, 0.86, 0.88] : [0.74, 0.71, 0.6]); gl.uniformMatrix4fv(u.uM, false, TM);
     const one = (m, hole, ground) => {
       gl.uniformMatrix4fv(u.uM, false, relM(m)); gl.uniform3fv(u.uPO, [m.o[0] - RO.x, 0, m.o[1] - RO.z]); gl.uniform4fv(u.uHole, hole || NOHOLE); gl.uniform1f(u.uGOn, ground && GTEX ? 1 : 0); gl.uniform1f(u.uLOn, ground && LMTEX && LMON ? 1 : 0); gl.uniform1f(u.uTideY, env.tide || 0);
       if (ground && LMTEX){ gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, LMTEX); gl.uniform1i(u.uLand, 2); gl.activeTexture(gl.TEXTURE0); }
