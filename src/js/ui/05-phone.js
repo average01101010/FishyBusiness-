@@ -415,6 +415,10 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p86', '07.10.2026', 'Havforskere og fyr', 'Scientists and lighthouses', [
+      ['Nytt på tavla: prøvefiske for Havforskningsinstituttet. Fisk ved en stasjon og mål ti fisk på målebrettet, eller kjør en ekkoloddlinje gjennom tre punkter. Fangsten er din.', 'New on the board: survey fishing for the Institute of Marine Research. Fish at a station and measure ten fish on the board, or run an echo sounder line through three points. The catch is yours.'],
+      ['Kystposten vil ha bilder av fyrene langs kysten, noen ganger i lav sol, mens fyret lyser, under nordlyset eller i uvær. Trykk på utløseren når fyret er i bildet, så står bildet i avisa.', 'Kystposten wants pictures of the lighthouses along the coast, sometimes in low sun, with the light lit, under the northern lights or in heavy weather. Press the shutter when the lighthouse is in the picture, and it is printed in the paper.'],
+      ['Fyrene langs kysten har fått ordentlige tårn i 3D, og lyset står i riktig høyde over havet.', 'The lighthouses along the coast have proper towers in 3D, and the light sits at the right height over the sea.']]],
     ['p85', '07.10.2026', 'Turer', 'Trips', [
       ['Nytt i Oppdrag-appen: turoppdrag laget ut fra der båten er. Korte og lange turer, bestillinger fra mottak lenger unna, frakt langs kysten, tapt redskap med fisk i, og sesongflytting når fisken står et annet sted.', 'New in the Orders app: trip missions made from where the boat is. Short and long trips, orders from plants farther off, freight along the coast, lost gear with fish in it, and following the season when the fish is somewhere else.'],
       ['Oppdragene passer båten og deg: rekkevidden på en tank, været, hva du pleier å lande og hvor lenge du har vært på sjøen. «Kjør dit» finner veien.', 'The missions suit the boat and you: the range on a tank, the weather, what you usually land and how long you have been at sea. «Go there» finds the way.'],
@@ -846,7 +850,7 @@ const PHONE = (() => {
   function post(){
     const day = Math.floor(S.t / 60 / 24), h = ['<div class="ph-mast">Kystposten</div><div class="ph-mdate">' + dayStr(S.t / 60) + ' · ' + L('Nyheter langs kysten', 'News along the coast') + '</div>'];
     let n = 0;
-    for (let d = day; d >= Math.max(0, day - 6); d--) for (const a of newsForDay(d)){ n++; h.push('<div class="ph-art"><time>' + dayStr(d * 24) + '</time><h4>' + a.h[S.lang] + '</h4><p>' + a.b[S.lang] + '</p></div>'); }
+    for (let d = day; d >= Math.max(0, day - 6); d--) for (const a of newsForDay(d)){ n++; const im = a.img != null ? turFotoSrc(a.img) : null; h.push('<div class="ph-art"><time>' + dayStr(d * 24) + '</time><h4>' + a.h[S.lang] + '</h4>' + (im ? '<img class="ph-foto" alt="" src="' + im + '">' : '') + '<p>' + a.b[S.lang] + '</p></div>'); }
     if (!n) h.push('<div class="ph-art"><p>' + L('Ingen nyheter ennå.', 'No news yet.') + '</p></div>');
     return h.join('');
   }
@@ -1431,6 +1435,8 @@ const PHONE = (() => {
     else if (a === 'turtake'){ const e = turTake(+d.id); if (e) toast(e); }
     else if (a === 'turdrop'){ turDrop(+d.id); }
     else if (a === 'turgo'){ turGo(+d.id); show(false); return false; }
+    else if (a === 'turmeas'){ show(false); turMeasure(+d.id); return false; }
+    else if (a === 'turfoto'){ turFotoShoot(+d.id); }
     else if (a === 'ordtake'){ const O = ordState(), o = O.offers.find(x => x.id === +d.id); if (!o || O.active.length >= 3) return; O.offers.splice(O.offers.indexOf(o), 1); o.due = S.t + o.days * 1440; O.active.push(o); log('Tok en bestilling fra ' + CUSTOMERS.find(c => c.id === o.cust).no + '.', 'Took an order from ' + CUSTOMERS.find(c => c.id === o.cust).no + '.'); }
     else if (a === 'cloth'){ const C = CLOTHES[d.k], people = 1 + S.crew.length, have = (S.clothes || {})[d.k] || 0; if (!C || have >= people) return; if (S.cash < C.price){ toast(t('no_cash')); return; } S.cash -= C.price; S.stats.costs += C.price; S.clothes = S.clothes || {olje:0, varme:0}; S.clothes[d.k] = have + 1; log('Kjøpte ' + C.no.toLowerCase() + '.', 'Bought ' + C.en.toLowerCase() + '.'); }
     else if (a === 'haillbuy'){ if (tutFree('haill') && d.k !== 'luksus') return; const k = d.k, got = () => { giveHaill(k, 'shop'); toast(HAILL[k][S.lang] + L(' ligger i beholdningen. Trykk «Aktiver» når du vil bruke den.', ' is in store. Tap «Switch on» when you want it.')); };

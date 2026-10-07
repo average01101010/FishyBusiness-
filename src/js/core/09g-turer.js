@@ -15,10 +15,20 @@
 //           the danger and the time and costs, never above the boat's value (§ 446), and nothing if she drifts ashore first (no cure,
 //           no pay). The owner's insurer pays
 //   sesong  the season's move: land so many kilos of a species at the plants near a place before the week is out
+//   prove   survey fishing for Havforskningsinstituttet, after its coastal reference fleet (Kystreferanseflåten, since 2005: 20-25
+//           coastal boats along the whole coast, paid by the institute to log their catches and to take samples; the whole catch is
+//           measured for length, hi.no): fish a while at a station and measure ten fish on the board (a small game in the Oppdrag
+//           app), or run an echo sounder line through three points at no more than 8 knots. The institute pays for the time; the
+//           catch is the player's
+//   foto    a picture of a lighthouse for Kystposten (src/data/fyr.json, tools/map/fyr.py), now and then in a light it asks for:
+//           low sun, the light lit, the northern lights or heavy weather, offered only when that light comes within the deadline.
+//           Within 3 km, the lighthouse in the 3D view's picture and nothing in front of it (G3.seen), the shutter takes it (G3.snap)
+//           and the paper prints it (T.press, newsForDay)
 // The crew talks about the trip as it starts (turDepart): the time it takes, and now and then the engine (the trim app's words).
 const TUR = {
   cls:{kort:{h:[0.4, 3], f:1.1}, mid:{h:[3, 7.5], f:1.3}, lang:{h:[7.5, 18], f:1.6}},   // travel in game hours (6 a real hour) and the pay factor
-  seasonF:2, detour:1.25, rate0:9000, move:37, sesongR:30, tipGap:20 * 3600e3, mechGap:72 * 3600e3
+  seasonF:2, detour:1.25, rate0:9000, move:37, sesongR:30, tipGap:20 * 3600e3, mechGap:72 * 3600e3,
+  stasjonR:1, ekkoV:7, ekkoMax:8, fotoR:3, fotoNo3d:1.5
 };
 const TUR_GOODS = [
   {kg:[20, 60], no:'medisiner til legekontoret', en:'medicine for the surgery'}, {kg:[30, 120], no:'post og pakker', en:'mail and parcels'},
@@ -170,7 +180,7 @@ function turNpcs(){
 function turMinute(){
   const T = S.turer; if (!T || !T.act.length) return;
   const b = S.boat;
-  for (const m of T.act.slice()){ if (m.k !== 'slep') continue;
+  for (const m of T.act.slice()){ if (m.k === 'prove' && m.vid === S.cur) turProveMinute(m, b); if (m.k !== 'slep') continue;
     // she drifts with the wind, about 3 % of it, toward the side it blows to; never so fast that she reaches land before three times
     // the time it takes to get to her (so it is always done without trim), and on land she is lost and there is no salvage
     if (m.stage === 'reach'){ const H = S.t / 60, W = windAt(H), from = windDir(H) + 180 - gridGamma(m.p), a = from * Math.PI / 180;
@@ -190,6 +200,28 @@ function turMinute(){
     if (m.stage === 'tow' && b.status === 'tow'){ msg(m.owner, 'Vi får vente på Redningsselskapet. Takk for forsøket.', 'We will wait for the rescue service. Thank you for trying.'); turEnd(m, false, null); }
   }
 }
+// the survey's minute: fishing at the station counts its time (and what came up from then); the echo line counts its points, passed in
+// order at no more than 8 knots (she slows to 7 as she comes to the line)
+function turProveMinute(m, b){
+  if (m.kind === 'stasjon' && m.stage === 'fish' && b.status === 'fishing' && dist(b.pos, m.p) < TUR.stasjonR){
+    const now = turHoldSp(); if (!m.h0) m.h0 = now; m.min = (m.min || 0) + 1;
+    if (m.min < m.need) return;
+    m.got = {}; for (const sp in now){ const d = now[sp] - (m.h0[sp] || 0); if (d > 0.5) m.got[sp] = Math.round(d); }
+    if (!Object.keys(m.got).length){ m.bonusMax = 0; turPayOut(m, 'Havforskningsinstituttet', 'Stasjonen ga ingen fisk denne gangen. En tom stasjon er også en prøve.', 'The station gave no fish this time. An empty station is a sample too.'); return; }
+    m.stage = 'measure';
+    msg('Havforskningsinstituttet', 'Fint. Mål ti fisk på målebrettet og send oss lengdene. Målebrettet ligger på oppdraget i Oppdrag-appen.', 'Good. Measure ten fish on the board and send us the lengths. The board is on the mission in the Oppdrag app.');
+    if (typeof toast === 'function') toast(turL('Stasjonen er fisket. Mål ti fisk i Oppdrag-appen.', 'The station is fished. Measure ten fish in the Oppdrag app.'));
+  }
+  if (m.kind === 'ekko' && m.stage === 'line'){ const q = m.pts[m.at]; if (!q) return; const d = dist(b.pos, q);
+    if (d < 1 && S.plan && (S.plan.speed || 0) > TUR.ekkoV && b.status === 'sailing'){ S.plan.speed = TUR.ekkoV; log('Slakker av til ' + TUR.ekkoV + ' knop for ekkoloddlinja.', 'Slowing to ' + TUR.ekkoV + ' knots for the echo line.'); }
+    if (d >= 0.2) return;
+    if ((b.v || 0) > TUR.ekkoMax + 0.5){ if (m.fast !== m.at){ m.fast = m.at; if (typeof toast === 'function') toast(turL('For fort for et godt ekkoloddbilde. Hold høyst 8 knop.', 'Too fast for a good echo picture. Keep to 8 knots at most.')); } return; }
+    m.at++;
+    if (m.at < m.pts.length){ log('Punkt ' + m.at + ' av 3 på ekkoloddlinja.', 'Point ' + m.at + ' of 3 on the echo line.'); return; }
+    const saw = turEkkoSaw(m);
+    turPayOut(m, 'Havforskningsinstituttet', 'Ekkoloddlinja er kommet inn. ' + saw[0], 'The echo line has come in. ' + saw[1]);
+  }
+}
 // the season's move: where a species is landed most this month, 40 to 250 nm off, and it is in season and catchable
 function turSesong(o){
   const H = S.t / 60, mon = gDate(H).getUTCMonth(), v = turV(), cand = [];
@@ -206,20 +238,130 @@ function turSesong(o){
   const hTot = left >= h * 2.5 + 48 ? left : left + 168;
   return {k:'sesong', cls:'sesong', to:best.q.id, p:best.q.p, nm:Math.round(best.nm), h, sp:best.sp, kg, got:0, pay:turPay(h, TUR.seasonF) + turPay(12, 1), hTot};
 }
+// ---- survey fishing for Havforskningsinstituttet ----
+// the lengths the board sees (cm, total length) of each species, a catch's usual span
+const TUR_LEN = {torsk:[45, 95], hyse:[38, 62], sei:[45, 85], lange:[60, 120], brosme:[40, 70], kveite:[70, 140], steinbit:[45, 85], uer:[28, 45], breiflabb:[50, 100], lysing:[40, 80], makrell:[30, 40], sild:[25, 35], blakveite:[50, 90], rognkjeks:[30, 45], flyndre:[25, 40]};
+const turGearOk = () => !!(S.boat.gear || (S.equip && S.equip.jukse > 0));
+const turHoldSp = () => (S.hold || []).reduce((a, x) => (a[x.sp] = (a[x.sp] || 0) + x.kg, a), {});
+function turProve(o, cls){
+  const c = TUR.cls[cls], v = turV(), ekko = !turGearOk() || Math.random() < 0.4;
+  for (let tries = 0; tries < 40; tries++){
+    const a = Math.random() * Math.PI * 2, nm = 1 + Math.random() * Math.max(0.5, Math.min(c.h[1] * v * 0.6, 40) - 1), d = nm * NM / TUR.detour;
+    const p = {x:o.x + Math.sin(a) * d, y:o.y - Math.cos(a) * d};
+    try { if (isLandFar(p)) continue; const cd = coastDistFar(p); if (cd < 0.6 || cd > 15) continue; } catch (e){ continue; }
+    if (ekko){
+      // three points on, each 0.8-1.6 km from the last, in open water all the way
+      const pts = [p]; let ok = true, ang = Math.random() * Math.PI * 2;
+      for (let k = 1; k < 3 && ok; k++){ ang += (Math.random() - 0.5) * 1.2; const L = 0.8 + Math.random() * 0.8, q0 = pts[k - 1], q = {x:q0.x + Math.sin(ang) * L, y:q0.y - Math.cos(ang) * L};
+        try { ok = !isLandFar(q) && !isLandFar({x:(q.x + q0.x) / 2, y:(q.y + q0.y) / 2}) && coastDistFar(q) >= 0.4; } catch (e){ ok = false; } pts.push(q); }
+      if (!ok) continue;
+      const len = (dist(pts[0], pts[1]) + dist(pts[1], pts[2])) / NM, h = turNm(o, p) / v + len / Math.min(v, TUR.ekkoV);
+      if (h < c.h[0] || h >= c.h[1] || !turCan(o, p, h, false)) continue;
+      return {k:'prove', kind:'ekko', cls, p, pts, at:0, nm:Math.round(turNm(o, p) + len), h, pay:turPay(h, c.f), hTot:h * 2.5 + 12};
+    }
+    // a station: fish there an hour (two on a middle trip), where fishing with the jig is allowed
+    const need = cls === 'kort' ? 60 : 120, h = turNm(o, p) / v + need / 60;
+    if (h < c.h[0] || h >= c.h[1] || !turCan(o, p, h, false)) continue;
+    try { if (typeof ruBlockMsg === 'function' && ruBlockMsg({p, len:BOAT.len, gear:'juksa', sp:null, hand:!(S.equip && S.equip.jukse > 0)})) continue; } catch (e){}
+    const pay = turPay(h, c.f);
+    return {k:'prove', kind:'stasjon', cls, p, need, min:0, nm:Math.round(turNm(o, p)), h, pay, bonusMax:Math.round(pay * 0.2 / 100) * 100, hTot:h * 2.5 + 12};
+  }
+  return null;
+}
+// the ten fish on the board: of the species caught at the station, by weight, at lengths of their span (the same each time it is opened)
+function turProveFish(m){
+  if (m.fish) return m.fish;
+  const got = Object.entries(m.got || {}).filter(([sp]) => SPECIES[sp]), tot = got.reduce((a, x) => a + x[1], 0) || 1, out = [];
+  for (let i = 0; i < 10; i++){
+    let r = h2(m.id * 31 + i, 517) * tot, sp = got.length ? got[0][0] : 'torsk'; for (const [k, kg] of got){ if (r < kg){ sp = k; break; } r -= kg; }
+    const R = TUR_LEN[sp] || [30, 70], cm = Math.round((R[0] + (R[1] - R[0]) * Math.pow(h2(m.id * 31 + i, 733), 0.8)) * 10) / 10;
+    out.push({sp, cm, c0:Math.floor(cm - 24 * (0.3 + 0.45 * h2(m.id * 31 + i, 911)))});
+  }
+  m.meas = m.meas || []; return m.fish = out;
+}
+// the measurements sent: the institute pays the time, and up to a fifth more the closer the board was read (within half a centimetre all)
+function turProveDone(m){
+  if (!m.fish || (m.meas || []).length < m.fish.length) return;
+  const err = m.fish.reduce((a, f, i) => a + Math.abs(m.meas[i] - f.cm), 0) / m.fish.length, bonus = Math.round((m.bonusMax || 0) * clamp(1 - (err - 0.5) / 2.5, 0, 1) / 100) * 100;
+  m.err = Math.round(err * 10) / 10; m.pay += bonus;
+  turPayOut(m, 'Havforskningsinstituttet', 'Takk for prøvene fra stasjonen ved ' + coordStr(m.p) + '. Ti fisk målt, i snitt ' + fmt(err, 1) + ' cm fra riktig lengde.', 'Thank you for the samples from the station at ' + coordStr(m.p) + '. Ten fish measured, on average ' + fmt(err, 1) + ' cm from the right length.');
+}
+// what the echo sounder saw along the line: where the fish stood thickest, by the fish model's own density (12-heat.js heatSample)
+function turEkkoSaw(m){
+  try { let best = null; const H = S.t / 60, nm = ['torsk', 'hyse', 'sei'];
+    for (let k = 0; k < 2; k++) for (let i = 0; i <= 6; i++){ const f = i / 6, a = m.pts[k], b = m.pts[k + 1], v = heatSample({x:a.x + (b.x - a.x) * f, y:a.y + (b.y - a.y) * f}, H);
+      for (let j = 0; j < 3; j++) if (!best || v[j] > best.v) best = {v:v[j], sp:nm[j], leg:k}; }
+    if (!best || best.v < 0.5) return ['Linja viste lite fisk i dag, og det er også et svar.', 'The line showed little fish today, and that is an answer too.'];
+    return ['Ekkoloddet viste mest ' + SPECIES[best.sp].no.toLowerCase() + ' mellom punkt ' + (best.leg + 1) + ' og ' + (best.leg + 2) + '.', 'The echo sounder showed most ' + SPECIES[best.sp].en.toLowerCase() + ' between points ' + (best.leg + 1) + ' and ' + (best.leg + 2) + '.'];
+  } catch (e){ return ['', '']; }
+}
+// ---- a picture of a lighthouse for Kystposten ----
+const FYR = /*@include(data/fyr.json)*/null;
+const TUR_LYS = {
+  sol:{no:'i lav sol', en:'in low sun', ok:(H, p) => { const e = sunAt(H, p).el; return e > -1 && e < 6; }},
+  natt:{no:'mens fyret lyser', en:'with the light lit', ok:(H, p) => sunAt(H, p).el < -4},
+  nordlys:{no:'under nordlyset', en:'under the northern lights', ok:(H, p) => auroraAt(H, p) >= 0.3},
+  uvaer:{no:'i uvær', en:'in heavy weather', ok:H => windAt(H) >= 10.8}
+};
+const turFyrName = m => /fyr/i.test(m.fyr.name) ? m.fyr.name : m.fyr.name + ' fyr';
+// the next time the light it asks for comes, within the deadline (game hours), or null
+function turLysNext(m, from){ if (!m.lys) return from; const end = (m.due || S.t + m.hTot * 60) / 60; for (let t = from; t <= end; t += 0.25) if (TUR_LYS[m.lys].ok(t, m.fyr)) return t; return null; }
+function turFoto(o, cls){
+  if (!FYR || !FYR.length) return null;
+  const c = TUR.cls[cls], v = turV(), H = S.t / 60, open = (VESSELS[S.boat.type] || {}).cls === 'open', warn = (BOAT.risk || [1.5])[0];
+  const cand = FYR.map(f => ({f, h:turNm(o, {x:f[0], y:f[1]}) / v + 0.3})).filter(x => x.h >= c.h[0] && x.h < c.h[1]);
+  for (let n = 0; n < 12 && cand.length; n++){
+    const {f, h} = cand.splice(Math.floor(Math.random() * cand.length), 1)[0], L = {x:f[0], y:f[1]};
+    // where to take it from: open water half a kilometre to a kilometre and a bit off the light
+    let ap = null;
+    for (let k = 0; k < 12 && !ap; k++){ const a = k * Math.PI / 6 + Math.random() * 0.4, r = 0.5 + Math.random() * 0.7, q = {x:L.x + Math.sin(a) * r, y:L.y - Math.cos(a) * r};
+      try { if (!isLandFar(q) && coastDistFar(q) >= 0.15) ap = q; } catch (e){} }
+    if (!ap || !turCan(o, ap, h, false)) continue;
+    // a light it asks for only when it comes (an hour of it at least) between arriving and the deadline; heavy weather not for an open
+    // boat, nor more sea than she is rated for
+    const hTot = h * 2.5 + 12, can = k => { if (k === 'uvaer' && open) return false; let n2 = 0;
+      for (let t = H + h; t <= H + hTot - 0.5; t += 0.5) if (TUR_LYS[k].ok(t, L) && (k !== 'uvaer' || hsAtFc(ap, t, H) <= warn)) n2++; return n2 >= 2; };
+    const want = Math.random() < 0.55 ? ['nordlys', 'sol', 'natt', 'uvaer'].filter(can) : [], lys = want.length ? want[Math.floor(Math.random() * want.length)] : null;
+    return {k:'foto', cls, p:ap, fyr:{x:L.x, y:L.y, h:f[2], name:f[3]}, lys, nm:Math.round(turNm(o, ap)), h, pay:Math.round(turPay(h, c.f) * (lys ? 1.25 : 1) / 100) * 100, hTot};
+  }
+  return null;
+}
+// the lighthouse mission the boat is near enough to take its picture
+function turFotoAt(){ const T = S.turer; return T && T.act.find(m => m.k === 'foto' && m.vid === S.cur && dist(S.boat.pos, m.fyr) <= TUR.fotoR) || null; }
+// the picture: seen is the 3D view's word on it (G3.seen: in front and nothing in the way), null without the 3D view (then 1.5 km is
+// near enough); img the picture itself (kept on this device only, for the paper). A reason it is not taken, or null when it is
+function turFotoTake(m, seen, img){
+  const H = S.t / 60, d = dist(S.boat.pos, m.fyr);
+  if (d > TUR.fotoR) return turL('Gå nærmere fyret, innen 3 km.', 'Go closer to the lighthouse, within 3 km.');
+  if (seen){ if (!seen.front) return turL('Fyret er ikke i bildet. Snu kameraet mot det.', 'The lighthouse is not in the picture. Turn the camera toward it.');
+    if (!seen.clear) return turL('Noe står i veien for fyret. Finn et sted der du ser det.', 'Something stands in front of the lighthouse. Find a place where you see it.'); }
+  else if (d > TUR.fotoNo3d) return turL('Gå nærmere fyret, innen 1,5 km.', 'Go closer to the lighthouse, within 1.5 km.');
+  if (m.lys && !TUR_LYS[m.lys].ok(H, m.fyr)){ const t = turLysNext(m, H);
+    return turL('Kystposten vil ha bildet ' + TUR_LYS[m.lys].no + '.' + (t != null ? ' Det kommer ca. kl. ' + hm(t) + (Math.floor(t / 24) !== Math.floor(H / 24) ? ' ' + dayStr(t) : '') + '.' : ''), 'The paper wants the picture ' + TUR_LYS[m.lys].en + '.' + (t != null ? ' It comes at about ' + hm(t) + (Math.floor(t / 24) !== Math.floor(H / 24) ? ' ' + dayStr(t) : '') + '.' : '')); }
+  const T = turState(), name = turFyrName(m), how = m.lys ? [' ' + TUR_LYS[m.lys].no, ' ' + TUR_LYS[m.lys].en] : ['', ''], who = S.boatName ? '«' + S.boatName + '»' : (S.company || turL('en lokal fisker', 'a local fisher'));
+  if (img && typeof turFotoKeep === 'function') turFotoKeep(m.id, img);
+  T.press = (T.press || []).concat([{t:S.t, id:img ? m.id : null, h:[name + how[0], name + how[1]], b:['Foto: ' + who + '.', 'Photo: ' + who + '.']}]).slice(-12);
+  turPayOut(m, 'Kystposten', 'Takk for bildet av ' + name + how[0] + '. Det står i avisa i dag.', 'Thank you for the picture of ' + name + how[1] + '. It is in the paper today.');
+  return null;
+}
 function turMake(){
   const T = turState(), o = turHere(), used = new Set(T.act.map(m => m.to).filter(Boolean)), B = [], me = turMe();
   const add = m => { if (m){ m.id = ++T.seq; m.until = S.t + 1440; B.push(m); if (m.to) used.add(m.to); } };
+  // the first of a weighted draw that the boat can do (a weight's key Math.random() ** (1 / w): the heavier, the likelier first)
+  const has = k => T.act.some(m => m.k === k) || B.some(m => m.k === k);
+  const draw = list => { for (const [, f] of list.filter(x => x[0] > 0).map(x => [Math.pow(Math.random(), 1 / x[0]), x[1]]).sort((a, b) => b[0] - a[0])){ const m = f(); if (m) return m; } return null; };
+  const prove = cls => () => has('prove') ? null : turProve(o, cls), foto = cls => () => has('foto') ? null : turFoto(o, cls);
   try {
     const garn = !T.act.some(m => m.k === 'garn');
-    add(Math.random() < 0.5 ? turBest(o, 'kort', used) || turFrakt(o, 'kort', used) : turFrakt(o, 'kort', used) || turBest(o, 'kort', used));
+    add(draw([[1, () => turBest(o, 'kort', used)], [1, () => turFrakt(o, 'kort', used)], [0.6, prove('kort')], [0.5, foto('kort')]]));
     // help at sea: lost gear or a boat with engine trouble, one of each at most
     const slep = !T.act.some(m => m.k === 'slep'), help = () => (Math.random() < 0.5 ? (garn && turGarn(o)) || (slep && turSlep(o, 'kort')) : (slep && turSlep(o, 'kort')) || (garn && turGarn(o))) || null;
     add(help() || turFrakt(o, 'kort', used) || turBest(o, 'kort', used));
-    if (B.filter(m => m.cls === 'kort').length < 2) add(turFrakt(o, 'kort', used) || (slep && !B.some(m => m.k === 'slep') && turSlep(o, 'kort')) || null);
-    add(Math.random() < 0.6 ? turBest(o, 'mid', used) || turFrakt(o, 'mid', used) : (slep && !B.some(m => m.k === 'slep') && Math.random() < 0.4 && turSlep(o, 'mid')) || turFrakt(o, 'mid', used) || turBest(o, 'mid', used));
+    if (B.filter(m => m.cls === 'kort').length < 2) add(draw([[1, () => turFrakt(o, 'kort', used)], [0.6, prove('kort')], [0.6, foto('kort')], [0.5, () => slep && !has('slep') ? turSlep(o, 'kort') : null]]));
+    add(draw([[1, () => turBest(o, 'mid', used)], [1, () => turFrakt(o, 'mid', used)], [0.4, () => slep && !has('slep') ? turSlep(o, 'mid') : null], [0.6, prove('mid')], [0.6, foto('mid')]]));
     // the newcomer, until the first trip is done: one more short instead of the long; the season's move from the second day
     if (me.y < 1) add(turFrakt(o, 'kort', used) || turBest(o, 'kort', used));
-    else add(Math.random() < 0.5 ? turBest(o, 'lang', used) || turFrakt(o, 'lang', used) : turFrakt(o, 'lang', used) || turBest(o, 'lang', used));
+    else add(draw([[1, () => turBest(o, 'lang', used)], [1, () => turFrakt(o, 'lang', used)], [0.8, foto('lang')]]));
     if (me.y >= 3 && !T.act.some(m => m.k === 'sesong')) add(turSesong(o));
   } catch (e){ console.warn('turMake', e); }
   T.board = B; T.at = {t:S.t, x:o.x, y:o.y};
@@ -241,6 +383,10 @@ function turTake(id){
   if (m.k === 'best'){ const O = ordState(); O.active.push({id:++O.seq, cust:m.cust, port:m.to, sp:m.sp, kg:m.kg, left:m.kg, q:m.q, prem:m.prem || 0.1, bonus:m.pay, offerUntil:S.t, days:Math.ceil(m.hTot / 24), due:m.due, tur:m.id}); m.ord = O.seq; }
   if (m.k === 'frakt'){ m.stage = 'pick'; if (S.boat.status === 'port' && S.boat.port === m.from) turLoad(m); }
   if (m.k === 'garn') turSpawn(m);
+  if (m.k === 'prove'){ m.stage = m.kind === 'ekko' ? 'line' : 'fish';
+    msg('Havforskningsinstituttet', m.kind === 'ekko' ? 'Takk! Kjør linja gjennom de tre punktene i rekkefølge, høyst 8 knop, så ekkoloddet får et godt bilde.' : 'Takk! Fisk ved stasjonen ' + coordStr(m.p) + ' i ' + turMinR(m.need / 60) + ' minutter, og mål ti fisk etterpå.',
+      m.kind === 'ekko' ? 'Thank you! Run the line through the three points in order, at 8 knots at most, so the echo sounder gets a good picture.' : 'Thank you! Fish at the station ' + coordStr(m.p) + ' for ' + turMinR(m.need / 60) + ' minutes, and measure ten fish after.'); }
+  if (m.k === 'foto') msg('Kystposten', 'Fint at du tar den. Vi vil ha et bilde av ' + turFyrName(m) + (m.lys ? ' ' + TUR_LYS[m.lys].no : '') + '. Snu kameraet mot fyret og trykk på utløseren når du er innen 3 km.', 'Good that you take it. We want a picture of ' + turFyrName(m) + (m.lys ? ' ' + TUR_LYS[m.lys].en : '') + '. Turn the camera to the lighthouse and press the shutter when you are within 3 km.');
   if (m.k === 'slep'){ m.stage = 'reach'; msg(m.owner, 'Takk for at du kommer! «' + m.boat + '» har motorstopp og ligger og driver ved ' + coordStr(m.p) + '.', 'Thank you for coming! The «' + m.boat + '» has engine trouble and is drifting at ' + coordStr(m.p) + '.'); }
   T.act.push(m);
   if (typeof cloudEv === 'function') cloudEv('tur_take', {k:m.k, cls:m.cls, nm:m.nm, min:turMinR(m.h)});
@@ -325,6 +471,7 @@ function turHour(){
     if (m.k === 'best'){ if (!ordState().active.some(o => o.tur === m.id)) turEnd(m, false, null); continue; }
     if (m.k === 'garn' && (S.sets || []).some(s => s.tur === m.id && s.hauling)) continue;   // the haul under way finishes
     if (m.k === 'slep' && m.stage === 'tow') continue;   // and the tow under way
+    if (m.k === 'prove' && m.stage === 'measure') continue;   // the fish are caught; the board waits
     msg(m.k === 'garn' ? m.owner : 'Oppdrag', 'Fristen gikk ut: ' + turWhat(m)[0] + '. Ta et nytt fra tavla når det passer.', 'The deadline passed: ' + turWhat(m)[1] + '. Take a new one from the board when it suits you.');
     turEnd(m, false, null);
   }
@@ -336,6 +483,8 @@ function turWhat(m){
   if (m.k === 'frakt') return [fmt(m.kg, 0) + ' kg ' + m.what[0] + ' til ' + to, fmt(m.kg, 0) + ' kg of ' + m.what[1] + ' to ' + to];
   if (m.k === 'garn') return [(m.kind === 'garn' ? 'Tapt garnlenke' : 'Tapt line') + ' for ' + m.owner, (m.kind === 'garn' ? 'Lost string of nets' : 'Lost line') + ' for ' + m.owner];
   if (m.k === 'slep') return ['Slep «' + m.boat + '» til ' + to, 'Tow the «' + m.boat + '» to ' + to];
+  if (m.k === 'prove') return m.kind === 'ekko' ? ['Ekkoloddlinje for Havforskningsinstituttet', 'Echo line for the Institute of Marine Research'] : ['Prøvefiske for Havforskningsinstituttet', 'Survey fishing for the Institute of Marine Research'];
+  if (m.k === 'foto') return ['Bilde av ' + turFyrName(m) + ' for Kystposten', 'A picture of ' + turFyrName(m) + ' for Kystposten'];
   return ['Sesong: ' + fmt(m.kg, 0) + ' kg ' + SPECIES[m.sp].no.toLowerCase() + ' ved ' + to, 'Season: ' + fmt(m.kg, 0) + ' kg of ' + SPECIES[m.sp].en.toLowerCase() + ' at ' + to];
 }
 const turDur = hGame => { const m = turMinR(hGame); return m < 60 ? m + ' min' : Math.floor(m / 60) + ' t ' + String(m % 60).padStart(2, '0') + ' min'; };

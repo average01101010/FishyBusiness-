@@ -99,7 +99,8 @@ function newsForDay(day){
   for (const ic of (S && S.incidents || []).filter(x => dayOf2(x.t) === day)) if (ic.k === 'aground') out.push([L('«' + ic.boat + '» gikk på grunn ' + ic.no, '«' + ic.boat + '» ran aground ' + ic.en), L('Skipperen måtte tilkalle redningsskøyta. Ingen kom til skade, men båten er slept til kai og må på verksted.', 'The skipper had to call the rescue boat. Nobody was hurt, but the boat has been towed in and needs repairs.')]);
   const mine = myKg(H0, H0 + 24); if (mine >= 150) out.push([L((S.company || 'Finnsnes-skipper') + ' med fin landing', (S.company || 'Finnsnes skipper') + ' lands a good catch'), L('Det ble levert ' + Math.round(mine) + ' kg i løpet av dagen.', Math.round(mine) + ' kg was landed during the day.')]);
   for (const x of seasonNews(day)) out.push(x);   // the seasons and the skrei festival (09c-seasons.js)
-  return out.map(a => ({day, h:a[0], b:a[1]}));
+  for (const q of (S && S.turer && S.turer.press) || []) if (Math.floor(q.t / 1440) === day) out.push([L(q.h[0], q.h[1]), L(q.b[0], q.b[1]), q.id]);   // the player's lighthouse pictures (09g-turer.js)
+  return out.map(a => ({day, h:a[0], b:a[1], img:a[2] != null ? a[2] : null}));
 }
 
 // ---- standing operations plan: a hired skipper runs a saved route on set days, lands the catch and restocks ----

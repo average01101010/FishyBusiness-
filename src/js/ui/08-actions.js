@@ -311,7 +311,7 @@ function tick(){
   else if (dt > 6) catchUp(dt * 1000); else { if (helmOn() && !sleepAlone()) helmStep(dt); acc += dt * simRate() / 60; let n = 0; while (acc >= 1 && n < 3000 && simAreaReady()){ step(); acc -= 1; n++; } } }
   if (WAKE_BACK && !CATCH_LEFT){ WAKE_BACK = false; if (asleep()) wakeEarly(true); }
   heatTick();
-  if (!G3.isActive()){ renderDyn(); if (AISSEL) renderAisCard(); heatPaint(); } renderHud(); renderClock(); renderActs(); DOCK.tick(); HUI.tick(); energyUi(); INSTR.renderGPS(); renderRouteTools(); tutUpdate(); PHONE.status(); PHONE.tickHome();
+  if (!G3.isActive()){ renderDyn(); if (AISSEL) renderAisCard(); heatPaint(); } renderHud(); renderClock(); renderActs(); DOCK.tick(); HUI.tick(); energyUi(); turFotoUi(); INSTR.renderGPS(); renderRouteTools(); tutUpdate(); PHONE.status(); PHONE.tickHome();
   if (S.order && S.t >= S.order.due) deliverOrder();
   // the chart's night colours follow the sun: drawn again when they change
   if (S.t !== CHN.t){ CHN.t = S.t; if (chartNight() !== CHN.v && document.body.classList.contains('vplot')) renderBase(); }
@@ -371,6 +371,7 @@ function kinoUi(){ const on = G3.kino(); $('kinoBtn').classList.toggle('on', on)
   $('kinoHud').textContent = document.body.classList.contains('kino-clean') ? (S.lang === 'no' ? 'Vis' : 'Show') : (S.lang === 'no' ? 'Skjul' : 'Hide'); }
 $('kinoBtn').onclick = () => { G3.kino(!G3.kino()); kinoUi(); };
 $('kinoHud').onclick = () => { document.body.classList.toggle('kino-clean'); kinoUi(); };
+$('fotoBtn').onclick = () => turFotoShoot(null);
 $('phoneFab').onclick = () => PHONE.toggle();
 $('plotStyle').onclick = () => {};
 hooks.on3dFail = () => { setBodyView(false); $('loader').classList.add('gone'); $('plotClose').hidden = true; tab = 'route'; renderPanel(); applyView(); renderStatic(); renderDyn(); };

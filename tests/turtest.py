@@ -149,6 +149,57 @@ async def main():
           return {cards, tav:/Tavla/.test(txt), act, dine:/Dine oppdrag/.test(txt2), best:/Bestillinger/.test(best), ring:/turmk/.test(svg)}; })()""")
         check(u['cards'] >= 3 and u['tav'] and u['act'] == 1 and u['dine'] and u['best'] and u['ring'],
               "the Oppdrag app shows the board, a mission is taken from it, the orders have their own tab, and the chart rings where it goes", u)
+        # 10. survey fishing for Havforskningsinstituttet: an hour at the station counts what comes up from then; ten fish on the board,
+        #     read within half a centimetre, pay the time and the whole bonus; an empty station is a sample too
+        pv = await pg.evaluate("""(() => { S.equip = S.equip || {}; S.equip.jukse = Math.max(1, S.equip.jukse || 0);   // a jigging reel aboard, so a station can be offered
+          const T = turState(); T.act = []; S.hold = []; S.cargo = []; const b = S.boat; b.status = 'idle'; b.port = null; S.plan = null; const o = {...b.pos};
+          let m = null; for (let i = 0; i < 40 && !(m && m.kind === 'stasjon'); i++) m = turProve(o, i % 2 ? 'mid' : 'kort'); if (!m || m.kind !== 'stasjon') return {none:true, gear:turGearOk()};
+          m.id = ++T.seq; m.until = S.t + 1440; T.board.push(m); turTake(m.id); const stage0 = m.stage;
+          b.pos = {...m.p}; b.status = 'fishing'; turProveMinute(m, b); S.hold.push({sp:'torsk', cls:0, kg:40, n:10, fresh:S.t}, {sp:'hyse', cls:0, kg:12, n:6, fresh:S.t});
+          for (let i = 1; i < m.need; i++) turProveMinute(m, b);
+          const r = {stage0, stage:m.stage, got:m.got, fish:turProveFish(m).length, sps:[...new Set(m.fish.map(f => f.sp))], span:m.fish.every(f => f.cm >= TUR_LEN[f.sp][0] && f.cm <= TUR_LEN[f.sp][1] && f.c0 <= f.cm && f.cm <= f.c0 + 24)};
+          const cash0 = S.cash; m.meas = m.fish.map(f => Math.round(f.cm)); const base = m.pay; turProveDone(m);
+          const d = T.done.find(x => x.id === m.id); Object.assign(r, {done:!!(d && d.ok), gain:S.cash - cash0, base, bonusMax:m.bonusMax, err:m.err, hi:S.msgs.some(x => x.from === 'Havforskningsinstituttet' && /Ti fisk/.test(x.no))});
+          // an empty station
+          let e = null; for (let i = 0; i < 40 && !(e && e.kind === 'stasjon'); i++) e = turProve(o, 'kort'); if (e && e.kind === 'stasjon'){ e.id = ++T.seq; T.board.push(e); turTake(e.id); const c1 = S.cash; b.pos = {...e.p}; for (let i = 0; i < e.need; i++) turProveMinute(e, b); const d2 = T.done.find(x => x.id === e.id); r.empty = !!(d2 && d2.ok) && S.cash - c1 === e.pay; }
+          b.status = 'idle'; S.hold = []; return r; })()""")
+        check(pv.get('none') or (pv['stage0'] == 'fish' and pv['stage'] == 'measure' and pv['got'].get('torsk') == 40 and pv['fish'] == 10 and pv['span'] and pv['done'] and pv['gain'] == pv['base'] + pv['bonusMax'] and pv['err'] <= 0.5 and pv['hi'] and pv.get('empty', True)),
+              'survey fishing: an hour at the station counts what came up from then; ten fish of those species on the board, read within half a centimetre, pay the time and the whole bonus; an empty station is a sample too', pv)
+        # 11. the echo line: the three points in order at 8 knots at most (too fast does not count), and the institute says what it saw
+        ek = await pg.evaluate("""(() => { const T = turState(), b = S.boat; T.act = []; b.status = 'sailing'; const o = {...b.pos};
+          let m = null; for (let i = 0; i < 60 && !(m && m.kind === 'ekko'); i++) m = turProve(o, i % 2 ? 'mid' : 'kort'); if (!m || m.kind !== 'ekko') return {none:true};
+          m.id = ++T.seq; T.board.push(m); turTake(m.id); const cash0 = S.cash;
+          b.pos = {...m.pts[0]}; b.v = 12; turProveMinute(m, b); const fast = m.at;
+          const ats = []; for (const q of m.pts){ b.pos = {...q}; b.v = 6.5; turProveMinute(m, b); ats.push(m.at); }
+          const d = T.done.find(x => x.id === m.id); b.status = 'idle'; b.v = 0;
+          return {fast, ats, done:!!(d && d.ok), gain:S.cash - cash0, pay:m.pay, msg:(S.msgs.find(x => x.from === 'Havforskningsinstituttet' && /Ekkoloddlinja/.test(x.no)) || {}).no || null}; })()""")
+        check(ek.get('none') or (ek['fast'] == 0 and ek['ats'][:2] == [1, 2] and ek['done'] and ek['gain'] == ek['pay'] and ek['msg']),
+              'the echo line: the three points in order at no more than 8 knots (too fast does not count); the institute pays and says what the echo sounder saw', ek)
+        # 12. the lighthouse picture: a light it asks for comes before the deadline; too far, out of the picture or in the wrong light it is
+        #     not taken (and says when the light comes); taken, the paper prints it with the picture and pays
+        fo = await pg.evaluate("""(() => { const T = turState(), b = S.boat; T.act = []; b.status = 'idle'; const o = {...b.pos};
+          let m = null; for (const c of ['kort', 'mid', 'lang', 'kort', 'mid']){ m = turFoto(o, c); if (m) break; } if (!m) return {none:true};
+          m.id = ++T.seq; T.board.push(m); turTake(m.id); const r = {name:turFyrName(m), lys:m.lys, d:Math.round(dist(m.p, m.fyr) * 1000)};
+          r.lysOk = !m.lys || turLysNext(m, S.t / 60 + m.h) != null;
+          b.pos = {x:m.fyr.x + 5, y:m.fyr.y}; r.far = turFotoTake(m, {front:true, clear:true}, null);
+          b.pos = {...m.p}; r.away = turFotoTake(m, {front:false, clear:true}, null); r.hidden = turFotoTake(m, {front:true, clear:false}, null);
+          if (m.lys){ const ok = TUR_LYS[m.lys].ok; TUR_LYS[m.lys].ok = () => false; r.wrong = turFotoTake(m, {front:true, clear:true}, null); TUR_LYS[m.lys].ok = ok; m.lys = null; }
+          const cash0 = S.cash; r.why = turFotoTake(m, {front:true, clear:true}, 'data:image/jpeg;base64,AAAA');
+          const d = T.done.find(x => x.id === m.id), news = newsForDay(Math.floor(S.t / 1440)).find(a => a.img === m.id);
+          Object.assign(r, {done:!!(d && d.ok), gain:S.cash - cash0, pay:m.pay, news:news ? news.h.no : null, src:turFotoSrc(m.id) === 'data:image/jpeg;base64,AAAA', no3d:turFotoAt() ? true : false});
+          return r; })()""")
+        check(fo.get('none') or (fo['lysOk'] and fo['far'] and fo['away'] and fo['hidden'] and (not fo['lys'] or fo['wrong']) and fo['why'] is None and fo['done'] and fo['gain'] == fo['pay'] and fo['news'] and fo['src'] and 400 <= fo['d'] <= 1300),
+              "the lighthouse picture: a light it asks for comes before the deadline; too far, out of the picture, behind something or in the wrong light it is not taken; taken, Kystposten prints it with the picture and pays", fo)
+        # 13. the board has the new kinds now and then, never two of one, and the measuring board takes a reading from a tap
+        bd = await pg.evaluate("""(() => { const T = turState(), b = S.boat; T.act = []; const kinds = {}; let two = false;
+          for (let i = 0; i < 14; i++){ turEnsure(true); const ks = T.board.map(m => m.k); ks.forEach(k => kinds[k] = (kinds[k] || 0) + 1); if (ks.filter(k => k === 'prove').length > 1 || ks.filter(k => k === 'foto').length > 1) two = true; }
+          let m = null; for (let i = 0; i < 40 && !(m && m.kind === 'stasjon'); i++) m = turProve({...b.pos}, 'kort'); let tap = null;
+          if (m && m.kind === 'stasjon'){ m.id = ++T.seq; T.board.push(m); turTake(m.id); m.stage = 'measure'; m.got = {torsk:30}; turMeasure(m.id);
+            const sv = document.querySelector('#turMeas svg'), r = sv.getBoundingClientRect(), f = m.fish[0], X = r.left + (f.cm - f.c0) * 15 / 360 * r.width;
+            sv.onpointerdown({clientX:X}); document.querySelector('#turMeas [data-x=ok]').click(); tap = {got:m.meas[0], cm:f.cm}; document.querySelector('#turMeas [data-x=later]') && document.querySelector('#turMeas [data-x=later]').click(); }
+          return {kinds, two, tap}; })()""")
+        check(bd['kinds'].get('prove', 0) > 0 and bd['kinds'].get('foto', 0) > 0 and not bd['two'] and (bd['tap'] is None or abs(bd['tap']['got'] - bd['tap']['cm']) <= 1),
+              'the board offers survey fishing and lighthouse pictures now and then, never two of one kind; a tap on the measuring board reads the length there', bd)
         check(errs == [], 'sidefeil', errs[:3])
         await br.close()
 

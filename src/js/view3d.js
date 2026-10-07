@@ -787,8 +787,28 @@ const G3 = (() => {
   const nearHere = (x, z, km = 40) => !S || !S.boat ? true : Math.hypot(x / 1000 - S.boat.pos.x, z / 1000 - S.boat.pos.y) < km;
   const portHere = pt => !pt.coastal || nearHere(pt.p.x * 1000, pt.p.y * 1000);
   // a sea mark [x, y (km), type, category] (SEAMARKS, 01-world.js; the coast's in 01e-marks.js): lighthouses, lights, beacons and buoys
+  // a lighthouse of the register (core FYR, Kystposten's pictures, 09g-turer.js): a round tower, white with a red band under the
+  // gallery, the dark gallery with its rail, the lantern's glass and a red roof. The lantern stands where the light shines (lightY: its
+  // height over the sea), so the tower is as tall as that over the ground; the coast's box tower is left out where one stands
+  const fyrNear = (x, z) => typeof FYR !== 'undefined' && FYR && FYR.some(f => Math.abs(f[0] * 1000 - x) < 80 && Math.abs(f[1] * 1000 - z) < 80);
+  function fyrInto(m, f){
+    const x = f[0] * 1000, z = f[1] * 1000, g = Math.max(terrH(x, z), 0.2), Ht = Math.max(2.5, Math.min(40, lightY(f, x, z) - g - 1.45)), N = 16;
+    const W = [0.93, 0.92, 0.88], R = [0.72, 0.12, 0.09], D = [0.2, 0.22, 0.23], GL = [0.42, 0.5, 0.5], RF = [0.6, 0.1, 0.08];
+    const ring = (r, y) => { const a = []; for (let j = 0; j <= N; j++){ const an = j / N * Math.PI * 2; a.push([x + Math.cos(an) * r, g + y, z + Math.sin(an) * r]); } return a; };
+    const band = (r0, y0, r1, y1, k) => { const A = ring(r0, y0), B = ring(r1, y1); for (let j = 0; j < N; j++) m.quad(A[j], A[j + 1], B[j + 1], B[j], k); };
+    const cap = (r, y, k) => { const A = ring(r, y), c = [x, g + y, z]; for (let j = 0; j < N; j++) m.tri(c, A[j], A[j + 1], k); };
+    const rb = 1.7 + Ht * 0.05, rt = rb * 0.72, rAt = y => rb + (rt - rb) * y / Ht;
+    band(rb + 0.25, -2, rb, 0, W); band(rb, 0, rAt(Ht * 0.6), Ht * 0.6, W); band(rAt(Ht * 0.6), Ht * 0.6, rAt(Ht * 0.84), Ht * 0.84, R); band(rAt(Ht * 0.84), Ht * 0.84, rt, Ht, W);
+    // the gallery: a dark deck wider than the tower, with a rail
+    band(rt, Ht, rt + 0.7, Ht + 0.05, D); band(rt + 0.7, Ht + 0.05, rt + 0.7, Ht + 0.3, D); cap(rt + 0.7, Ht + 0.3, D);
+    band(rt + 0.66, Ht + 0.3, rt + 0.66, Ht + 1.25, [0.28, 0.3, 0.31]);
+    // the lantern and its roof
+    const rl = Math.max(1, rt * 0.62); band(rl, Ht + 0.3, rl, Ht + 0.6, D); band(rl, Ht + 0.6, rl, Ht + 2.3, GL); band(rl, Ht + 2.3, rl + 0.15, Ht + 2.45, D);
+    band(rl + 0.15, Ht + 2.45, 0.18, Ht + 3.5, RF); band(0.18, Ht + 3.5, 0.12, Ht + 3.9, D); cap(0.12, Ht + 3.9, D);
+  }
   function markInto(m, mk, tag){
     const x = mk[0] * 1000, z = mk[1] * 1000, base = Math.max(terrH(x, z), 0.2), ty = mk[2], cat = mk[3];
+    if (ty === 'M' && fyrNear(x, z)) return;
     if (ty === 'M'){ camSolid(x, z, 3.6, 3.6, 0.3, base, base + 15.4, tag); m.box(x, base, z, 3.4, 11, 3.4, [0.95, 0.95, 0.93], 0.3); m.box(x, base + 11, z, 3.6, 2.2, 3.6, [0.75, 0.1, 0.08], 0.3); m.box(x, base + 13.2, z, 2.2, 2.2, 2.2, [0.9, 0.92, 0.9], 0.3, [0.2, 0.2, 0.22]); }
     else if (ty === 'm' || ty === 'P'){ m.box(x, base, z, 0.9, 4.2, 0.9, [0.94, 0.94, 0.92], 0); m.box(x, base + 4.2, z, 1.1, 0.9, 1.1, [0.8, 0.12, 0.1], 0); }
     else if (ty === 'D'){ m.box(x, base, z, 0.5, 4.5, 0.5, [0.08, 0.08, 0.08], 0); m.box(x, base + 2.2, z, 0.56, 0.9, 0.56, [0.75, 0.1, 0.08], 0); }
@@ -802,10 +822,11 @@ const G3 = (() => {
   const MKM = new Map(); let MKV = -1;
   function marksStatics(){
     if (MKV === MARKS.ver) return; let all = true; const T = MAPD.man ? MAPD.man.tile * 1000 : 50000;
+    const Tk = T / 1000, fyrIn = t => typeof FYR !== 'undefined' && FYR ? FYR.filter(f => Math.floor(f[0] / Tk) === t.tx && Math.floor(f[1] / Tk) === t.ty && !inSenja(f[0], f[1])) : [];
     for (const t of MARKS.tiles.values()){
-      if (!t || MKM.has(t.k) || !t.marks.length) continue;
+      if (!t || MKM.has(t.k)) continue; const fy = fyrIn(t); if (!t.marks.length && !fy.length) continue;
       const vp = MAPD.byTile.get('view:' + t.k); if (vp && !vp.buf){ all = false; continue; }
-      const m = MB(); for (const mk of t.marks) markInto(m, mk, 'mk' + t.k); MKM.set(t.k, m.p.length ? m.mesh([(t.tx + 0.5) * T, (t.ty + 0.5) * T]) : null);
+      const m = MB(); for (const mk of t.marks) markInto(m, mk, 'mk' + t.k); for (const f of fy) fyrInto(m, f); MKM.set(t.k, m.p.length ? m.mesh([(t.tx + 0.5) * T, (t.ty + 0.5) * T]) : null);
     }
     if (all) MKV = MARKS.ver;
   }
@@ -821,6 +842,7 @@ const G3 = (() => {
     for (const br of BRIDGES) bridgeInto(m, br);
     // lighthouses, lights, beacons and buoys
     for (const mk of SEAMARKS.marks) markInto(m, mk);
+    if (typeof FYR !== 'undefined' && FYR) for (const f of FYR) if (inSenja(f[0], f[1])) fyrInto(m, f);   // the register's lighthouses in Senja's square
     for (const pt of PORTS){
       if (pt.coastal) continue;
       const px = pt.p.x * 1000, pz = pt.p.y * 1000, cx = pt.coast.x * 1000, cz = pt.coast.y * 1000;
@@ -1253,6 +1275,9 @@ const G3 = (() => {
   const lightLP = (L, i) => L.lp || (L.lp = (() => { const per = L[4].reduce((a, v) => a + Math.abs(v), 0) || 1; return {per, ph:hash(i >= 0 ? i * 31 + 7 : Math.floor(L[0] * 1000) * 31 + Math.floor(L[1] * 1000) * 7) * per}; })());
   SEAMARKS.lights.forEach((L, i) => lightLP(L, i));
   const lightsHere = (eye, R) => marksNear('lights', eye[0] / 1000, eye[2] / 1000, R);
+  // where a light shines: its height is over the sea (the seamark's focal height), but never less than 4 m over the ground the terrain
+  // has there (07.10.2026; before, it was over the ground, and a lighthouse on a hill had its light far over the tower)
+  function lightY(L, x, z){ return Math.max(Math.max(terrH(x, z), 0.2) + 4, L[2]); }
   function lightOn(L, t){ const P = lightLP(L, -1); let tm = (t + P.ph) % P.per; for (const v of L[4]){ const d = Math.abs(v); if (tm < d) return v > 0; tm -= d; } return false; }
   function drawSeaLights(VP, eye, t, near){
     if (env.night < 0.05) return;
@@ -1262,7 +1287,7 @@ const G3 = (() => {
       if (!lightOn(L, t)) return;
       const brg = trueDeg(Math.atan2(x - eye[0], -(z - eye[2])), {x:L[0], y:L[1]});   // the sectors are true bearings
       const sec = L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1]); if (!sec) return;
-      by[sec[2]].push(x - eye[0], Math.max(terrH(x, z), 0.2) + L[2] - eye[1], z - eye[2], Math.min(1, env.night * 1.2));
+      by[sec[2]].push(x - eye[0], lightY(L, x, z) - eye[1], z - eye[2], Math.min(1, env.night * 1.2));
     });
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.depthMask(false);
     for (const k in by){ const a = by[k], n = a.length / 4; if (!n) continue; for (let i = 0; i < n; i++){ PB[i * 3] = a[i * 4]; PB[i * 3 + 1] = a[i * 4 + 1]; PB[i * 3 + 2] = a[i * 4 + 2]; PA[i] = a[i * 4 + 3]; } drawPts(n, gl.POINTS, VP, LCOL[k], near ? 3800 : 8000, true); }
@@ -1282,7 +1307,7 @@ const G3 = (() => {
     lightsHere(eye, 5).forEach(L => {
       const x = L[0] * 1000, z = L[1] * 1000; if (Math.abs(x - eye[0]) > 3500 || Math.abs(z - eye[2]) > 3500 || !lightOn(L, t)) return;
       const c = LCOL[(L[5].find(q => q[2] === 'w') || L[5][0] || [0, 0, 'w'])[2]] || LCOL.w, R = L[6] === 'M' || L[3] >= 10 ? 170 : L[3] >= 6 ? 90 : 50;
-      add(Math.hypot(x - eye[0], z - eye[2]) - R, x, Math.max(terrH(x, z), 0.2) + L[2], z, R, c, 2.4);
+      add(Math.hypot(x - eye[0], z - eye[2]) - R, x, lightY(L, x, z), z, R, c, 2.4);
     });
     // the quays' floodlights, at the berth of each harbour near by
     for (const q of PORTS){
@@ -1306,7 +1331,7 @@ const G3 = (() => {
     lightsHere(eye, 26).forEach(L => {
       if (!(L[6] === 'M' || L[3] >= 10) || k >= BMV.length - 96) return;
       const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - eye[0], z - eye[2]); if (d > 25000) return;
-      const y = Math.max(terrH(x, z), 0.2) + L[2] - eye[1], o = [x - eye[0], y, z - eye[2]], LP = lightLP(L, -1), per = Math.max(6, LP.per * 2), th0 = (t / per + LP.ph) * Math.PI * 2;
+      const y = lightY(L, x, z) - eye[1], o = [x - eye[0], y, z - eye[2]], LP = lightLP(L, -1), per = Math.max(6, LP.per * 2), th0 = (t / per + LP.ph) * Math.PI * 2;
       const a0 = 0.32 * env.night * (0.6 + 0.4 * Math.min(1, env.fogD * 2500)), Lb = 1600, w0 = 1.2, w1 = 70;
       for (const th of [th0, th0 + Math.PI]){
         const fx = Math.sin(th), fz = -Math.cos(th), rx = Math.cos(th), rz = Math.sin(th), far = [o[0] + fx * Lb, o[1] - 6, o[2] + fz * Lb];
@@ -4274,6 +4299,12 @@ const G3 = (() => {
     quality(v){ if (v){ S.settings.q3d = v; QUAL.bad = QUAL.good = 0; QUAL.cap = 2; qualSet(); } return {lvl:QUAL.lvl, set:S.settings.q3d || 'auto', fps:FPS.v, ultra:UINT}; },
     show, toggle(){ return show(!active); }, isActive:() => active, haltNeed:() => active ? trkHaltNeed() : 0, get failWhy(){ return failWhy; },
     // the next frame as a JPEG data URL (or null when no frame comes within 2 s)
+    // whether a point (km, and metres above the ground) is in the picture the camera shows now: in front within the picture's width,
+    // and no ground between (Kystposten's lighthouse pictures, ui/05f-turer.js)
+    seen(xk, yk, hm){ if (!active || NO3D || !canvas) return null; const e = lastEye, x = xk * 1000, z = yk * 1000, y = Math.max(terrH(x, z), 0.2) + (hm || 10), dx = x - e[0], dz = z - e[2], d = Math.hypot(dx, dz) || 1;
+      const asp = canvas.width / Math.max(1, canvas.height), half = Math.atan(Math.tan(curFov / 2) * asp), fl = Math.hypot(camFwd[0], camFwd[1]) || 1, ang = Math.acos(Math.max(-1, Math.min(1, (dx * camFwd[0] + dz * camFwd[1]) / (d * fl))));
+      let clear = true; for (let i = 1; i < 32 && clear; i++){ const f = i / 32; if (d * (1 - f) < 150) break; if (terrH(e[0] + dx * f, e[2] + dz * f) > e[1] + (y - e[1]) * f + 2) clear = false; }
+      return {d:Math.round(d), ang:Math.round(ang * 180 / Math.PI), half:Math.round(half * 180 / Math.PI), front:ang < half * 0.9, clear}; },
     snap(w){ return new Promise(res => { if (!active || NO3D || !canvas){ res(null); return; } if (SNAP) SNAP.res(null); const me = SNAP = {w:w || 1600, res};
       setTimeout(() => { if (SNAP === me){ SNAP = null; res(null); } }, 2000); }); },
     // for the sound (ui/10e-sound.js): the ear is the camera of the last frame drawn (metres; x east, z south; its direction on the
