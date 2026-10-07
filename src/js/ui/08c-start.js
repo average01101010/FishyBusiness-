@@ -49,7 +49,7 @@ function showStart(done){
     el.querySelectorAll('.on').forEach(e => e.classList.remove('on')); el.querySelectorAll('[data-id="' + id + '"]').forEach(e => e.classList.add('on'));
     const p = el.querySelector('#stPick'); p.hidden = false;
     el.querySelector('#stPickTx').innerHTML = '<b>' + sel.pt.name + '</b> · ' + L(REGIONS.find(r => r[0] === sel.region)[1], REGIONS.find(r => r[0] === sel.region)[2]) +
-      (sel.pt.mk ? '<br><small>' + sel.pt.mk.names.slice(0, 2).join(', ') + '</small>' : '');
+      (sel.pt.mk ? '<br><small>' + sel.pt.mk.ids.length + L(' mottak · ', ' receivers · ') + fmt(sel.pt.mk.kg / 1000, 0) + L(' t i året', ' t a year') + '</small>' : '');
   };
   el.addEventListener('click', e => { const t = e.target.closest('[data-id]'); if (t) pick(t.dataset.id); });
   pick('finnsnes');

@@ -2,13 +2,15 @@
 # register (kjøperregisteret, NLOD), with what it has taken in by the landing notes (sluttsedler, «fangstdata (seddel)», NLOD) and, from
 # Nordmøre to Finnmark, Norges Råfisklag's own map of its receivers (type and zone). The key between them is Mattilsynet's approval
 # number (Mottaksstasjon on the notes). Out: tools/mottak/out/mottak.json (and src/data/mottak.json), one entry per receiver:
-#   id (the approval number), n (name), t (type), k (kommune), ll [lat, lon], src ('reg' the register's coordinates, 'adr' the address
+#   id (the approval number), t (type), k (kommune), ll [lat, lon], src ('reg' the register's coordinates, 'adr' the address
 #   found in Kartverket's address register, 'rf' Råfisklaget's), kg (all landed, kg a year), n_land (landings a
 #   year), boats (vessels a year), sp {species: [kg a year, share live, price index, months as a 12-bit mask]}, gear {group: share},
 #   p [x, y] in the game's frame (km), q the quay face it lies at from the game's vector packs [x, y, the normal's angle, length m,
 #   depth m, kind, metres from the register's point] or null when none is within 600 m,
 #   small (share of the landings from boats under 15 m), rf (Råfisklaget's type and zone)
 # Personal data in Råfisklaget's map (contact, e-mail, phone) is dropped as it is read.
+# No company names (Jonas 07.10.2026: «vi må fjerne alle ekte firma-navn fra fiskemottakene ... Jeg orker ikke å bli saksøkt»): the register's
+# name of the firm is used to find the receiver but never written out; the game names a receiver by its place (v, the postal town).
 # Prices have moved a lot over the years (Jonas 04.10.2026), so the notes give no prices in kroner: the price index is what the receiver
 # paid for the species against what all receivers paid for it the same month of the same year (1.00 = the average), and the game keeps
 # its own prices (Råfisklaget's minimum prices, SPECIES.pm).
@@ -176,7 +178,7 @@ def main():
         sp = {k: [round(v[0] / ny), round(v[1] / v[0], 2) if v[0] else 0, round(v[2], 2), v[3]] for k, v in a['sp'].items() if v[0] / ny >= 50}
         gear = {k: round(v / a['kg'], 3) for k, v in sorted(a['gear'].items(), key=lambda kv: -kv[1]) if a['kg'] and v / a['kg'] >= 0.02}
         x, y = frame.to_nat(e['ll'][1], e['ll'][0]); x, y = float(x), float(y)
-        out.append(dict(id=mt, n=e['n'], t=e['t'], k=e['k'], ll=e['ll'], p=[round(x, 4), round(y, 4)], q=snap(Q, x, y) if Q else None, src=e['src'], kg=round(kg), n_land=round(a['docs'] / ny), boats=round(a['boats'] / ny),
+        out.append(dict(id=mt, t=e['t'], k=e['k'], ll=e['ll'], p=[round(x, 4), round(y, 4)], q=snap(Q, x, y) if Q else None, src=e['src'], kg=round(kg), n_land=round(a['docs'] / ny), boats=round(a['boats'] / ny),
                         sp=sp, gear=gear, small=round(a['small'] / a['kg'], 3) if a['kg'] else 0, rf=[f['type'], f['zone']] if f else None))
     out.sort(key=lambda x: -x['kg']); places(out)
     meta = dict(made=time.strftime('%Y-%m-%d'), years=years, src='Fiskeridirektoratet: kjøperregisteret og fangstdata (seddel), NLOD; Norges Råfisklag: mottakskartet',

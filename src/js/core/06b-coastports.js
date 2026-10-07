@@ -5,8 +5,9 @@
 // receiver; the ones a coastal fisher can sell to become harbours here: a fixed plant (ordinary or quay seller) at a quay, that takes in at
 // least 10 t a year of the game's species, from small boats (5 % or more) or by conventional gear (30 % or more). Receivers within 1.2 km of
 // each other are one harbour (the biggest names it); those within 2 km of a harbour of Senja's own are that harbour (it keeps its
-// hand-made quay and unit, and takes the register's price index). Names are the postal town, with the company's first word where two
-// harbours would have the same name.
+// hand-made quay and unit, and takes the register's price index). Names are the postal town, with the side of the first (north, south,
+// east, west) where two harbours would have the same name. No company names are kept anywhere (Jonas 07.10.2026: «vi må fjerne alle
+// ekte firma-navn fra fiskemottakene ... Jeg orker ikke å bli saksøkt»): the register's file has none, and a receiver is its place.
 // The quay is the register's face (q: the point, the normal's angle, the length; tools/mottak/mottak.py snap), as a QUAYS entry in
 // 07-harbours.js, and a harbour unit stands on it (UNITS, 01-world.js; its berths are the unit's); the harbour point lies 15 m out from
 // its middle and the shore point 30 m in. The price factor is the receiver's price
@@ -58,7 +59,7 @@ const COASTQ = {};
     // the price index by kilo over the game's species
     let ws = 0, wi = 0; for (const r of all) for (const s of COAST_WF){ const v = r.sp[s]; if (v && v[2]){ ws += v[0]; wi += v[0] * v[2]; } }
     const idx = ws ? wi / ws : 1, pf = Math.round(clamp(1 + (idx - 1) * 0.5, 0.94, 1.06) * 1000) / 1000;
-    const mk = {ids:all.map(r => r.id), names:all.map(r => r.n), k:x.k, kg:Math.round(kg), small:x.small, boats:all.reduce((a, r) => a + (r.boats || 0), 0),
+    const mk = {ids:all.map(r => r.id), k:x.k, kg:Math.round(kg), small:x.small, boats:all.reduce((a, r) => a + (r.boats || 0), 0),
       sp:Object.fromEntries(COAST_WF.filter(s => all.some(r => r.sp[s])).map(s => [s, {kg:all.reduce((a, r) => a + ((r.sp[s] || [0])[0] || 0), 0), months:all.reduce((a, r) => a | ((r.sp[s] || [0, 0, 0, 0])[3] || 0), 0)}])), idx:Math.round(idx * 100) / 100};
     // every plant north of 62° N takes Greenland halibut (Jonas 07.10.2026: «Alle mottak skal kunne ta i mot blåkveite»), with what
     // the register says it took in (kg, and in which months; else all year, the direct fishery's period decides): for the orders
@@ -67,9 +68,11 @@ const COASTQ = {};
     const near = own.find(pt => dist(pt.p, {x:x.p[0], y:x.p[1]}) < 2);
     if (near){ if (!near.mk) near.mk = mk; continue; }
     const q = x.q, nx = Math.cos(q[2]), nz = Math.sin(q[2]), cx = q[0] * 1000, cz = q[1] * 1000, hl = Math.max(8, q[3] / 2), ux = -nz, uz = nx;
-    let name = x.v || (x.k ? x.k.replace(/^./, c => c.toUpperCase()) : x.n);
-    if (used[name]) name += ' (' + x.n.split(/[\s,]/)[0] + ')';
-    used[name] = 1;
+    let name = x.v || (x.k ? x.k.replace(/^./, c => c.toUpperCase()) : 'Mottak ' + x.id);
+    // a second harbour in one town is named by the side of the first it lies on (the grid's x is east, y south); the register holds
+    // no company names (Jonas 07.10.2026), so a harbour is only ever its place
+    if (used[name]){ const f = used[name], dx = x.p[0] - f[0], dy = x.p[1] - f[1]; name += Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? ' øst' : ' vest') : (dy > 0 ? ' sør' : ' nord'); for (let n = 2; used[name]; n++) name = name.replace(/ \d+$/, '') + ' ' + n; }
+    used[name] = x.p;
     const id = 'm' + x.id;
     COASTQ[id] = {main:{a:[cx - ux * hl, cz - uz * hl], b:[cx + ux * hl, cz + uz * hl], n:[nx, nz]}};
     // the harbour unit from Blender on the register's face (Jonas 05.10.2026: «3 modeller av ulike typer fiskemottak ... plasseres

@@ -817,9 +817,11 @@ Jonas ville ha et register over alle fiskemottak i Norge, med kaimottaket fra Bl
   - Kontaktperson, e-post og telefon tas ikke med.
 - **Kartverkets adresseregister:** For anlegg uten koordinater i noen av kildene finnes punktet fra adressen.
 
+**Ingen ekte firmanavn** (Jonas 07.10.2026: «vi må fjerne alle ekte firma-navn fra fiskemottakene rundt om i landet. Jeg orker ikke å bli saksøkt»). Registeret leser firmaets navn for å finne mottaket, men skriver det aldri ut: `mottak.json` har ingen `n`, og spillet kaller et mottak ved stedet (`v`, poststedet). Samme regel gjelder alt annet i spillet, i data, tekster, modeller og skilt: bare steder, aldri et firma som finnes. Regelen står i `CLAUDE.md`.
+
 **Resultatet** er `src/data/mottak.json` (0,12 MB) med 310 mottak (5 ble ikke funnet på kartet). For hvert mottak:
 - **Hvem og hvor:**
-  - navn, type og kommune
+  - type og kommune (ingen firmanavn, se under)
   - lat/lon og punktet i spillets ramme
 - **Hva det tar imot i året:**
   - kilo, antall landinger og antall båter
@@ -863,7 +865,7 @@ Jonas 04.10.2026: «alle nye brukere skal få bestemme selv hvor i landet de øn
     - Kranen, trucken og folkene legges ut når øyet kommer innen 1,5 km og bakken der er lastet (`plantsCoast` i `view3d.js`, kalt fra `nearestPlant`). Da arbeider de ved leveringen som på Senja.
     - Stikkprøve på hvert tiende mottak: blokka står på land, og havnepunktet og liggeplassen ligger i sjøen ved alle. Bildene er `coast_plant_a.png`, `_b` og `_c` fra `tests/coast3d.py`.
   - Prisfaktoren er mottakets prisindeks halvveis mot 1, mellom 0,94 og 1,06. Alle har drivstoff og butikk, og isrenne der mottaket tar imot 1000 t eller mer i året.
-  - Like navn får firmaets første ord i parentes, for eksempel «Vardø (Arctic)».
+  - Like navn får siden av den første de ligger på, for eksempel «Vardø øst» (08c: i stedet for firmanavn viser startvalget antall mottak og tonn i året).
 - **De nærmeste:** `plantsNear(p, n)` gir de n nærmeste mottakene (bufret per halve km). Salgslaget viser de 10 nærmeste med avstand og pris for torsk, hyse og sei (fet er beste pris av dem). Snittprisen (`avgPrice`), morgentipset, verdianslaget og pristabellen i havneguiden bruker de 10 nærmeste, ikke alle.
 - **Kartdata:** `bootMap` laster bare rundt Senja-havnene, feltene, det som er lagret og den lagrede hjemhavna (`saved.home`), ikke rundt alle mottakene. 3D bygger kaidekk, kaiutstyr og bunkring bare for kysthavner innen 40 km fra båten (`portHere`), og navnelappene slår ikke opp terrenghøyden for havner mer enn 14 km unna. Kysthavnene har ikke havneenheten eller mottaksanlegget i 3D ennå (M3).
 - **«Hvor står fars naust?»** (`ui/08c-start.js`, etter brevet og før båtnavnet): et lite kart over kysten (prikker etter lengde- og breddegrad) og en liste per region (Øst-Finnmark … Rogaland og Sørlandet). Stjernene er de to beste i hver region etter tonn torsk i året, om det tas imot torsk denne måneden, og andelen fra små båter. Finnsnes står først (spillets eget startsted med «Første tur» på Senja).
@@ -2928,7 +2930,7 @@ Jonas' liste: oppgraderinger, kvotehandel, kikkert, raskere fangst, fortøying, 
   - Kikkertrammen er `#binoc`, som viser «4×».
 - **Øyet ved rattet** (Jonas' video 04.10.2026, skiff i 24 kn): Rekka og konsollen hoppet i snitt 3,7 px per bilde mot øyet, mens horisonten sto stille. Øyet ble plassert med glattet hiv og stamp (0,3 s), mens båten ble tegnet uten. Nå sitter øyet fast på skroget, og bare blikkretningen følger stamp og rull dempet (70 %, 0,3 s). Hiv flytter ikke horisonten. Rettingen er ikke målt i spillet ennå.
 - **Åpningstider på mottakene** (`mottakOpen`, `mottakNext`, `mottakWhen` i `07-harbours.js`):
-  - Mottakene publiserer ingen tider (søkt 04.10.2026: Nergård i Senjahopen oppgir telefon, og Råfisklaget lister mottakene uten tider). Derfor typiske tider: hverdager 06–18, lørdag 08–14, stengt søndag, og 05–22 hver dag i skreisesongen (januar–april).
+  - Mottakene publiserer ingen tider (søkt 04.10.2026: mottaket i Senjahopen oppgir telefon, og Råfisklaget lister mottakene uten tider). Derfor typiske tider: hverdager 06–18, lørdag 08–14, stengt søndag, og 05–22 hver dag i skreisesongen (januar–april).
   - Første tur venter aldri.
   - «Lever» viser når mottaket åpner. Knappen «Vent til åpning» er fjernet (Jonas 05.10.2026: alle spillerne går på samme klokke og dato, så ingenting kan spole tiden fram). Bare `catchUp` kjører simuleringen fram, til den felles klokka etter at spillet har vært lukket.
   - Driftsplanen venter ved kaia (`b.landWait`) og losser når mottaket åpner.
@@ -3195,7 +3197,7 @@ Flåteoversikt med status, posisjon, last, drivstoff, skipper, driftsplan og dag
 
 **Fra 02.10.2026 står havneenheten i alle de åtte mottakshavnene** (se 5.13). Den erstatter de genererte mottakene i B3, bunkerskaiene i B5 og kaifrontene i `QUAYS` for disse havnene. Sommarøy, Brensholmen og Frovåg har nå også bunkers. Tidslinjene for landing, forhaling, bunkring og is er de samme. Finnsnes har som før sin kai i `QUAYS` og fyller der båten ligger.
 
-Mottakene ligger der Jonas har funnet dem i Råfisklagets leveranseoversikt: Husøy, Senjahopen, Botnhamn, Gryllefjord, Sommarøy, Brensholmen, Torsken og Frovåg (Brødrene Karlsen Senja, avd. Frovåg). Finnsnes har ikke mottak eller is i virkeligheten, bare bøteri og forhandler av fiskeutstyr og båter. Bunkerskai: Husøy, Senjahopen, Gryllefjord, Botnhamn og Torsken, fra Jonas' satellittbilder. Finnsnes beholder drivstoff inntil videre (se åpne spørsmål).
+Mottakene ligger der Jonas har funnet dem i Råfisklagets leveranseoversikt: Husøy, Senjahopen, Botnhamn, Gryllefjord, Sommarøy, Brensholmen, Torsken og Frovåg. Finnsnes har ikke mottak eller is i virkeligheten, bare bøteri og forhandler av fiskeutstyr og båter. Bunkerskai: Husøy, Senjahopen, Gryllefjord, Botnhamn og Torsken, fra Jonas' satellittbilder. Finnsnes beholder drivstoff inntil videre (se åpne spørsmål).
 
 1. **B1 Havnene (ferdig):** Åtte mottak. De fire nye (Sommarøy, Brensholmen, Torsken, Frovåg) ligger ved OpenStreetMap-kaia nærmest det største industribygget. Frovåg er funnet fra sjømerket «Frovåghamn» og veien Frovågneset. Is bare på mottakene, drivstoff i Finnsnes, Husøy, Senjahopen og Gryllefjord. Driftsplanen fyller bare det havna selger, og de nye mottakene legger ut bestillinger. Prisfaktorene for de nye (0,98–1,0) er anslag.
 2. **B2 Fortøyning (ferdig):**

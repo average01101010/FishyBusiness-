@@ -264,7 +264,7 @@ const portById = id => PORTS.find(p => p.id === id) || RBID.get(id);
 // 4 m deep all along the back (where the shore turns away at a corner, the block's back wall stands on that apron), simplified to 1 m.
 // Its sides slope down to the seabed (view3d.js unitTerr); in the simulation it is land, as the block is.
 // v is the plant's look (tools/harbour/kaimottak.py; a when left out): c the big plant where the register's receiver takes in over
-// 5 000 t a year (Senjahopen: Nergård, Husøy: Brødrene Karlsen), b the old fish plant where it takes under 1 000 t, mostly from
+// 5 000 t a year (Senjahopen, Husøy), b the old fish plant where it takes under 1 000 t, mostly from
 // small boats (Gryllefjord, Torsken, Brensholmen), a the plant of today elsewhere (src/data/mottak.json, 04.10.2026)
 const UNIT = {E:27.4, B:24.4, bot:-9, basinX:33.4, basinZ:26, dredge:6.6, berth:{main:[-5, 24], bunker:[16.5, 23]}};
 const UNITS = {

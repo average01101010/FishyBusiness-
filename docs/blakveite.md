@@ -145,7 +145,7 @@ Tidligere år [S8]:
 | Lofoten og Salten | 1 030 | 21 % |
 | Finnmark | 214 | – |
 
-- De største kjøperne i 2025 var Myre, Stø, Moskenes, Kamøyvær, Oldervik, Torsvåg, Steinfjorden Sjømat (Senja), Aqua Drift (Vengsøy) og Sufi. [R25]
+- De største kjøperne i 2025 var Myre, Stø, Moskenes, Kamøyvær, Oldervik, Torsvåg, Steinfjorden (Senja) og Vengsøy. [R25]
 - **Andøya:** eggakanten (Bleiksdjupet) ligger nærmest land her, 6–7 nm ut på 600–1000 m dyp (søketreff). Spermhval tar fisk av redskapen under hiving. [HVAL]
 - **Senja:** avstanden er ikke funnet i noen kilde. Den kan leses av dybdedataene i spillet.
 

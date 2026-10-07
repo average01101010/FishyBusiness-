@@ -233,7 +233,7 @@ function landState(L, t){
   const units = L.kind === 'tub' ? up : Math.min(L.n, up * LANDING.perLift);
   return {e, up, units, phase:e < LANDING.prep ? 'prep' : e < LANDING.prep + L.lifts * LANDING.lift ? 'lift' : 'note'};
 }
-// The plants' opening hours (the user's list 04.10.2026). The plants publish none (looked up 04.10.2026: Nergård in Senjahopen gives
+// The plants' opening hours (the user's list 04.10.2026). The plants publish none (looked up 04.10.2026: the plant in Senjahopen gives
 // a phone number, Råfisklaget lists the plants without hours), so these are typical ones: weekdays 06-18 and Saturday 08-14, closed
 // on Sunday, and every day 05-22 in the skrei season (January to April), when the boats land late. The first trip never waits.
 function mottakOpen(H){
