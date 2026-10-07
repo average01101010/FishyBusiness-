@@ -409,6 +409,9 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p80', '07.10.2026', 'Rederilogo', 'Company logo', [
+      ['I Malerverkstedet kan du lage en rederilogo av et tegn, bokstaver og to farger, eller laste opp et eget bilde. Logoen står midtskips på skroget til båtene dine, og kan heises som rederiflagg.', 'In the paint shop you can make a company logo from a sign, letters and two colours, or upload a picture of your own. The logo sits midships on the hull of your boats and can be flown as a house flag.'],
+      ['Andre spillere i nærheten ser logoen og flagget ditt.', 'Other players nearby see your logo and flag.']]],
     ['p79', '07.10.2026', 'Registreringsmerke', 'Registration mark', [
       ['Båten har fått registreringsmerke ved baugen på begge sider, slik forskriften krever: fylkets bokstaver, et løpenummer og kommunens bokstaver, med hjemhavna som utgangspunkt. Merket står også på ervervstillatelsen under Papirer.', 'The boat now carries a registration mark near the bow on both sides, as the regulations require: the county\'s letters, a serial number and the municipality\'s letters, from the home harbour. The mark is on the fishing permit under Papers too.'],
       ['I Malerverkstedet kan du velge løpenummeret selv, så lenge ingen annen båt har det.', 'In the paint shop you can choose the serial number yourself, as long as no other boat has it.']]],

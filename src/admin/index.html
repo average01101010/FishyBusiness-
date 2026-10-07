@@ -27,6 +27,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:5px 6px;b
 #login{max-width:380px;margin:12vh auto;padding:0 16px}#login .card{padding:20px}#login label{display:block;margin:10px 0 4px;color:var(--dim)}#login input{width:100%}
 svg text{fill:var(--dim);font-size:10px}
 .demo{background:#3a2a07;color:var(--acc);padding:6px 16px;font-size:13px}
+.lggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}.lgimg{display:block;width:128px;height:128px;object-fit:contain;background:repeating-conic-gradient(#8884 0 25%,transparent 0 50%) 0 0/16px 16px;border-radius:6px}.lgoff .lgimg{opacity:.35}.lgrow textarea{width:100%;box-sizing:border-box}
 .fbbody{white-space:pre-wrap;word-break:break-word;margin:6px 0}.fbimg{display:block;max-width:100%;max-height:70vh;border-radius:8px;margin:6px 0}.fbai{border-left:3px solid var(--acc);padding:4px 10px;margin:6px 0;font-size:13px}.fbset{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;margin-top:6px}.fbset textarea{flex:1 1 260px;min-height:38px;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
 </style>
 </head>
@@ -79,7 +80,7 @@ async function load(){
   try { DATA = DEMO ? demo() : await rpc('admin_dashboard', {days:DAYS}); render(); }
   catch (e){ if (SES) $('#app').innerHTML = '<main><div class="card warn">' + esc(e.message) + '</div><button onclick="SES=null;sessionStorage.clear();render()">Logg inn på nytt</button></main>'; }
 }
-const TABS = [['oversikt', 'Oversikt'], ['tid', 'Spilletid'], ['frafall', 'Frafall'], ['bruk', 'Spillbruk'], ['okonomi', 'Økonomi i spillet'], ['penger', 'Penger'], ['teknikk', 'Teknikk'], ['geo', 'Geografi'], ['tilbake', 'Tilbakemeldinger'], ['agent', 'Agent'], ['kommer', 'Kommer']];
+const TABS = [['oversikt', 'Oversikt'], ['tid', 'Spilletid'], ['frafall', 'Frafall'], ['bruk', 'Spillbruk'], ['okonomi', 'Økonomi i spillet'], ['penger', 'Penger'], ['teknikk', 'Teknikk'], ['geo', 'Geografi'], ['tilbake', 'Tilbakemeldinger'], ['agent', 'Agent'], ['logoer', 'Logoer'], ['kommer', 'Kommer']];
 function render(){
   if (!DEMO && !SES) return loginView();
   if (!DATA) { $('#app').innerHTML = '<main class="note">Henter …</main>'; return load(); }
@@ -92,6 +93,7 @@ function render(){
   if ($('#out')) $('#out').onclick = () => { auth('logout', {}, SES.access_token).catch(() => {}); SES = null; sessionStorage.clear(); render(); };
   if (TAB === 'tilbake') fbWire();
   if (TAB === 'agent') agWire();
+  if (TAB === 'logoer') lgWire();
 }
 
 const kpi = (label, v, sub) => '<div class="card kpi"><b>' + v + '</b><span>' + label + (sub ? '<br>' + sub : '') + '</span></div>';
@@ -231,6 +233,35 @@ VIEW.agent = () => {
       ((r.prs || []).length ? '<p>' + r.prs.map(x => '<a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + esc(x.title || x.url) + '</a>').join('<br>') + '</p>' : '') + '</div>').join('')
       : '<p class="note">Ingen rapporter ennå.</p>');
 };
+// ---------- the players' logos (Malerverkstedet; supabase/migrations/20261007110000_logos.sql) ----------
+// Every uploaded picture, newest first. One that is offensive is taken away with a reason: the player reads it in the game and may put
+// up another without paying again; the boats near show none until then.
+let LG = null;
+async function lgLoad(){ await null; try { LG = DEMO ? lgDemo() : await rpc('admin_logos', {lim:200}); } catch (e){ LG = {err:e.message}; } if (TAB === 'logoer') render(); }
+VIEW.logoer = () => {
+  if (!LG){ lgLoad(); return '<p class="note">Henter …</p>'; }
+  if (LG.err) return card('Logoer', '<p class="warn">' + esc(LG.err) + '</p>', 'Er migreringen supabase/migrations/20261007110000_logos.sql kjørt?');
+  const live = LG.filter(r => !r.removed);
+  return '<div class="grid">' + kpi('Opplastede logoer', nf(live.length, 0), nf(LG.length - live.length, 0) + ' tatt bort') + '</div>' +
+    '<div class="card"><button id="lgR">Oppdater</button> <span class="note">Spillerne ser logoene på skroget og i flagget til båtene i nærheten. Tar du en bort, får spilleren grunnen du skriver, og kan laste opp et nytt bilde uten å betale igjen.</span></div>' +
+    (LG.length ? '<div class="lggrid">' + LG.map(r => '<div class="card lgrow' + (r.removed ? ' lgoff' : '') + '" data-who="' + esc(r.who) + '"><img class="lgimg" alt="" src="' + (/^data:image\/(webp|png|jpeg);base64,/.test(r.img || '') ? r.img : '') + '">' +
+      '<p class="note">' + esc(r.who) + ' · v' + nf(r.ver, 0) + ' · ' + new Date(r.at).toLocaleString('nb-NO') + '</p>' +
+      (r.removed ? '<p class="warn">Tatt bort ' + new Date(r.removed).toLocaleString('nb-NO') + (r.reason ? ': ' + esc(r.reason) : '') + '</p>'
+        : '<textarea data-lgre rows="2" maxlength="300" placeholder="Hvorfor (spilleren ser dette)"></textarea><button data-lgdel="' + esc(r.who) + '">Ta bort</button>') + '</div>').join('') + '</div>'
+      : '<p class="note">Ingen logoer ennå.</p>');
+};
+function lgWire(){
+  if ($('#lgR')) $('#lgR').onclick = () => { LG = null; render(); };
+  document.querySelectorAll('[data-lgdel]').forEach(b => b.onclick = async () => {
+    const box = b.closest('.lgrow'), why = box.querySelector('[data-lgre]').value.trim();
+    if (!why){ box.querySelector('[data-lgre]').focus(); return; }
+    b.disabled = true; try { if (!DEMO) await rpc('admin_logo_remove', {who:b.dataset.lgdel, reason:why}); else { const r = LG.find(x => x.who === b.dataset.lgdel); r.removed = new Date().toISOString(); r.reason = why; } LG = DEMO ? LG : null; render(); }
+    catch (e){ b.disabled = false; alert(e.message); } });
+}
+function lgDemo(){
+  const cv = document.createElement('canvas'); cv.width = cv.height = 64; const g = cv.getContext('2d'); g.fillStyle = '#1d3b6b'; g.fillRect(0, 0, 64, 64); g.fillStyle = '#fff'; g.font = 'bold 26px sans-serif'; g.textAlign = 'center'; g.fillText('JH', 32, 42);
+  return [{who:'a1b2c3d4e5', img:cv.toDataURL('image/png'), ver:2, at:new Date(Date.now() - 36e5).toISOString(), removed:null, reason:null}];
+}
 function agWire(){ if ($('#agR')) $('#agR').onclick = () => { AG = null; render(); }; }
 function agDemo(){
   return [{id:2, ts:new Date(Date.now() - 2 * 36e5).toISOString(), n:3, report:'## Det viktigste\nTo spillere melder at båten går på land ved Gibostad med Autonav (#3, #5).\n\n## Topp 5\n- **#3** Autonav på land ved Gibostad · vekt 6,5 · se på leia i 03c-route.js\n- **#4** Ønske: dorg etter sei · vekt 1', prs:[{url:PRS, title:'Autonav: hold avstand til land ved Gibostad'}]},

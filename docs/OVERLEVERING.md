@@ -1070,7 +1070,7 @@ Jonas ba om det slik: «koble deg opp mot detstorebla.no/admin slik at du kan he
 
 ### 4.23 Malerverkstedet og navnet på skroget (06.–07.10.2026)
 
-Jonas' bestilling ligger i `docs/engasjement.md`, arbeidslista punkt 1. Steg 1 og 2 er bygget: skrogfarge, navn på alle båter og malingen til andre spillere. Malingsdesign, flagg, registreringsmerke og rederilogo kommer etter.
+Jonas' bestilling ligger i `docs/engasjement.md`, arbeidslista punkt 1. Alle seks stegene er bygget: skrogfarge, navn på alle båter, malingen til andre spillere, malingsdesign, flagg, registreringsmerke og rederilogo.
 
 - **Malerverkstedet** (`ui/10j-paint.js`) er en egen knapp i Verft-vifta og åpner en side i skuffen (`maler`).
   - 16 skrogfarger i `HULLPAL` (`vessel3d.js`), og «Original».
@@ -1120,10 +1120,19 @@ Jonas' bestilling ligger i `docs/engasjement.md`, arbeidslista punkt 1. Steg 1 o
   - Fargene er hvitt på mørkt skrog og svart på lyst, slik § 23 sier (hvitt på svart eller svart på hvitt).
   - Merket står også på ervervstillatelsen under Papirer, og andre spillere ser det (`m:T.112.LK`, der Æ, Ø og Å reiser som 1, 2 og 3).
   - Ønskenummer (`des_reg`, 29 kr): nummeret kan ikke være en ekte båts. Serveren gir hvert merke til én spiller (`reg_claims`, `reg_claim`), høyst ti per spiller.
+- **Rederilogo** (steg 6, 07.10.2026; `des_logo`, 49 kr; `supabase/migrations/20261007110000_logos.sql`):
+  - Logoen er rederiets (`S.logo`), ikke båtens, og står på alle båtene. Den lages av ett av seks tegn (`LOGOSYM`), opptil tre bokstaver og to farger fra skrogpaletten (`{kind:'g', sym, txt, c1, c2}`), eller er et opplastet bilde (`{kind:'u', img, ver}`).
+  - Et opplastet bilde gjøres 256 × 256 (hele bildet, resten gjennomsiktig) og WebP, ellers PNG, på høyst 58 000 tegn (`upload` i `10j-paint.js`). Det prøves på båten før kjøpet, som alt annet.
+  - Logoen står midtskips på begge sider (`logoStrips`, en kvadratisk stripe ved halve lengden, høyst 0,06 L + 0,3 m) og kan heises som rederiflagg (flaggkoden `LOGO`, som krever logoen og ikke flaggene).
+  - Andre ser den gjennom malingskoden: en laget logo reiser i sin helhet (`l:g.anker.JH.marine.hvit`), et bilde bare som versjon (`l:u.3`), og hentes med `logo_get` etter spillerens id i den felles verdenen (`peerLogo` i `10h-world.js`, mellomlagret per spiller og versjon).
+  - Serveren tar ett bilde per spiller (`logos`, `logo_put` krever kjøpet, høyst 30 opplastinger om dagen, bare data-URL for WebP, PNG eller JPEG). Uten skyen (artifacten, testene) blir bildet bare på enheten.
+  - Jonas (07.10.2026): «spillere kan laste opp hva de vil, men la meg eventuelt kunne fjerne det i admin-dashboard om det er støtende, samtidig som jeg gir en forklaring på hvorfor. Spilleren skal dermed kunne velge et nytt bilde gratis.» Admin-fanen **Logoer** viser alle bildene og tar et bort med en grunn (`admin_logos`, `admin_logo_remove`). Da får ingen bildet lenger. Ved neste start ser spillet det (`logoCheck`, `logo_mine`), tar logoen av båtene og flagget og sender en melding med grunnen. Kjøpet er spillerens, så et nytt bilde koster ingenting.
+  - Vilkårene (punkt 5) og personvernsiden («Rederilogoen du laster opp») sier dette.
 - **Test:**
-  - `maletest`: knappen, siden, prøvefargen, at første fargevalg er gratis, prisen, for lite penger, lagringen, lukking og innbytte.
+  - `maletest`: knappen, siden, prøvefargen, at første fargevalg er gratis, prisen, for lite penger, lagringen, lukking og innbytte, designene, flagget, registreringsmerket, logoen (laget, opplastet og tatt bort).
   - `cloudtest`: malingen går opp og ned, og en server uten den ennå gir ingen avbrudd.
-  - `sqltest`: feltet vaskes, kortes og leveres videre.
+  - `sqltest`: feltet vaskes, kortes og leveres videre; designene etter kjøp og refusjon; ønskenummeret; logoen (bare etter kjøp, henting, fjerning med grunn og nytt bilde).
+  - `admintest`: fanen Logoer tegnes i demoen.
   - Navnene er sjekket på bilder fra siden for alle båttypene.
 
 ## 5. Systemer i spillet

@@ -172,6 +172,7 @@ function cloudStart(){
   // the question waits until the first-start dialog (company and boat names) is done and no other dialog is open
   if (CLOUD.consent == null){ const iv = setInterval(() => { const m = document.getElementById('modal'); if (S.intro && S.boatName && m && m.hidden){ clearInterval(iv); setTimeout(cloudAsk, 1500); } }, 2000); }
   else if (CLOUD.consent) cloudBegin();
+  setTimeout(() => { if (typeof logoCheck === 'function') logoCheck(); }, 5000);   // a logo the admin took away (ui/10j-paint.js)
   // each minute when the game has changed (Jonas 05.10.2026: «Kan progresjon lastes opp oftere til database?»; was three), and when the app
   // goes to the background: Android often ends a page in the background without a pagehide
   setInterval(cloudSaveSoon, 60000);

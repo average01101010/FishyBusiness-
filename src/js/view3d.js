@@ -2385,6 +2385,22 @@ const G3 = (() => {
     if (!txt) return null; if (MARKT.key !== key){ MARKT.key = key; if (!MARKT.tex){ MARKT.tex = mkTex(); MARKT.cv = document.createElement('canvas'); MARKT.cv.width = 512; MARKT.cv.height = 128; } markCanvas(MARKT.cv, txt, light); upTex(MARKT.tex, MARKT.cv); }
     return MARKT.tex;
   }
+  // the company logo: on the own boat the one being tried in the paint shop, else the company's once it is theirs; another player's from
+  // her paint code (made ones drawn here, pictures fetched by her id, ui/10h-world.js peerLogo). Textures in a small pool by what they show.
+  const LOGOIMG = {}, LTX = new Map(); let LCV = null;
+  function imgOf(src){ if (!src) return null; let im = LOGOIMG[src]; if (!im){ im = LOGOIMG[src] = new Image(); im.src = src; } return im; }
+  function curLogo(){ return PAINTPRE && PAINTPRE.logo !== undefined ? PAINTPRE.logo : COSOWN('logo') ? S.logo : null; }
+  function logoTexOf(L, img){
+    if (!L) return null; const ready = L.kind !== 'u' || (img && img.complete && img.naturalWidth); if (!ready) return null;
+    const k = L.kind === 'u' ? 'u:' + img.src.length + ':' + img.src.slice(-24) : logoStr(L); let e = LTX.get(k);
+    if (!e){ if (LTX.size >= 8){ let old = null; for (const [kk, v] of LTX) if (!old || v.used < old[1].used) old = [kk, v]; gl.deleteTexture(old[1].tex); LTX.delete(old[0]); }
+      if (!LCV){ LCV = document.createElement('canvas'); LCV.width = LCV.height = 256; } logoCanvas(LCV, L, img); e = {tex:mkTex(), cv:null}; upTex(e.tex, LCV); LTX.set(k, e); }
+    e.used = performance.now(); return e.tex;
+  }
+  const LOGOQ = {};
+  function logoQ(t){ if (!(t in LOGOQ)){ const st = logoStrips(t); LOGOQ[t] = st ? st.map(([B, T]) => texStrip(B, T)) : null; } return LOGOQ[t]; }
+  function drawLogo(t, M, VP, L, img){ const q = L && logoQ(t), tex = q && logoTexOf(L, img); if (!tex) return; gl.disableVertexAttribArray(2); for (const s of q) drawTexQuad(s, tex, M, VP, true, [0, 0.2, 0]); }
+  const ownLogo = () => { const L = curLogo(); return [L, L && L.kind === 'u' ? imgOf(L.img) : null]; };
   const MARKQ = {};
   function markQ(t){ if (!(t in MARKQ)){ const st = markStrips(t); MARKQ[t] = st ? st.map(([B, T]) => texStrip(B, T)) : null; } return MARKQ[t]; }
   function drawMark(t, M, VP, liv){ const q = markQ(t), tex = q && markTex(t, liv); if (!tex) return; gl.disableVertexAttribArray(2); for (const s of q) drawTexQuad(s, tex, M, VP, true, [0, 0.2, 0]); }
@@ -2414,6 +2430,7 @@ const G3 = (() => {
       const tex = nameTex(String(n.name).slice(0, 24), isLight(c)), M = chain(n.M, n.K.S);
       for (const s of q) drawTexQuad(s, tex, M, VP, true, [0, 0.2, 0]);
       const mk = n.player && livMark(n.liv), mq = mk && markQ(t); if (mq){ const mt = nameTex(mk, isLight(c), true); for (const s of mq) drawTexQuad(s, mt, M, VP, true, [0, 0.2, 0]); }
+      const lg = n.player && logoParse(n.liv); if (lg) drawLogo(t, M, VP, lg, lg.kind === 'u' && typeof peerLogo === 'function' ? peerLogo(String(n.id).slice(1), lg.ver) : null);
     }
   }
   // the name strips of a type that is not steered by hand (vessel3d.js nameStrips), built once
@@ -2533,7 +2550,7 @@ const G3 = (() => {
     const near = Math.hypot(BMrel[12], BMrel[13], BMrel[14]) < 45, now = performance.now();
     paintName();
     for (const q of SK.qName) drawTexQuad(q, SK.tName, BMrel, VP, true, [0, 0.2, 0]);
-    drawMark(SK.hullT || vtype(), BMrel, VP);
+    drawMark(SK.hullT || vtype(), BMrel, VP); drawLogo(SK.hullT || vtype(), BMrel, VP, ...ownLogo());
     if (near && SK.live !== false){
       if (now - SK.tP > 500){ SK.tP = now; paintPlotter(); if (S.equip.vhf) paintVhf(); }
       if (now - SK.tG > 90){ paintGauges((now - SK.tG) / 1000); SK.tG = now; }
@@ -2586,9 +2603,12 @@ const G3 = (() => {
   }
   // the ensign the boat flies (Malerverkstedet: the nation and the shape, b.liv.flag; tried on while the paint shop is open)
   function flagTex(){
-    const f = flagOf(PAINTPRE || S.boat.liv), k = f.code + '|' + f.shape;
+    const f = flagOf(PAINTPRE || S.boat.liv); let L = null, img = null, lk = '';
+    if (f.code === 'LOGO'){ [L, img] = ownLogo(); if (L && (L.kind !== 'u' || (img && img.complete && img.naturalWidth))) lk = L.kind === 'u' ? 'u' + (L.img || '').length : logoStr(L); else f.code = 'NO'; }
+    const k = f.code + '|' + f.shape + '|' + lk;
     if (FLAGM.key !== k){ FLAGM.key = k; if (!FLAGM.tex) FLAGM.tex = mkTex(); if (!FLAGM.cv){ FLAGM.cv = document.createElement('canvas'); FLAGM.cv.width = 256; FLAGM.cv.height = 188; }
-      flagCanvas(FLAGM.cv, f.code, f.shape); upTex(FLAGM.tex, FLAGM.cv); }
+      let lc = null; if (lk){ lc = document.createElement('canvas'); lc.width = lc.height = 256; logoCanvas(lc, L, img); }
+      flagCanvas(FLAGM.cv, f.code, f.shape, lc); upTex(FLAGM.tex, FLAGM.cv); }
     return f;
   }
   function updateFlag(t, appW){
@@ -3606,7 +3626,7 @@ const G3 = (() => {
     if (G.trawl) drawTrawl(t, G.trawl, BMrel, performance.now() / 1000);
     if (G.seine) drawSeine(t, G.seine, BMrel, VP, performance.now() / 1000);
     gl.disableVertexAttribArray(2);
-    if (named && SK){ const q = nameQ(t); if (q){ paintName(t, liv); for (const s of q) drawTexQuad(s, SK.tName, BMrel, VP, true, [0, 0.2, 0]); } drawMark(t, BMrel, VP, liv); }
+    if (named && SK){ const q = nameQ(t); if (q){ paintName(t, liv); for (const s of q) drawTexQuad(s, SK.tName, BMrel, VP, true, [0, 0.2, 0]); } drawMark(t, BMrel, VP, liv); drawLogo(t, BMrel, VP, ...ownLogo()); }
     gl.useProgram(PL.p);
   }
   // the local fleet near you: the kit model nearest each boat (vessel3d.js npcKit), scaled to her length and beam, at lod 1 within

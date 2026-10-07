@@ -478,7 +478,8 @@ const HULLPAL = [
 // A boat's paint (b.liv): {hull:<colour>, d:{ripe, totone, vann, stripe: <colour>, lakk:1}}; what the models take (modelLiv):
 // {hull:[r, g, b, gloss], ripe:[r, g, b], ..., lakk:true}. PAINTPRE is the paint being tried in the paint shop on the boat you are aboard.
 let PAINTPRE = null;
-const DESIGNS = ['ripe', 'totone', 'vann', 'stripe', 'lakk'], COS = [...DESIGNS, 'flagg', 'reg'];   // COS: what the paint shop sells (ui/10j-paint.js)
+const DESIGNS = ['ripe', 'totone', 'vann', 'stripe', 'lakk'], COS = [...DESIGNS, 'flagg', 'reg', 'logo'];
+const COSOWN = k => !!((typeof S !== 'undefined' && S.cos && S.cos[k]) || (typeof CLOUD !== 'undefined' && (CLOUD.owned || []).includes('des_' + k)));   // a paint shop thing is the player's   // COS: what the paint shop sells (ui/10j-paint.js)
 const palRGB = k => { const e = k && HULLPAL.find(x => x[0] === k); return e && e[3] ? e[3].slice() : null; };
 function modelLiv(L){
   if (!L) return null; const o = {}, h = palRGB(L.hull); let any = false;
@@ -492,7 +493,7 @@ function livKey(liv){ return liv ? ['hull', ...DESIGNS].map(k => liv[k] ? (liv[k
 function livGeo(liv){ return liv ? ['ripe', 'totone', 'vann'].filter(k => liv[k]).join(',') : ''; }
 // the paint as it goes to the other players with the position (ui/10h-world.js pos_put, supabase/migrations/20261007090000_livery.sql):
 // 'h:<colour>;r:..;t:..;v:..;s:..;g:1'; and back again. Only colours in HULLPAL count, so nothing else can be painted on a boat.
-const LIVS = {hull:'h', ripe:'r', totone:'t', vann:'v', stripe:'s', lakk:'g', flag:'f', mark:'m'};
+const LIVS = {hull:'h', ripe:'r', totone:'t', vann:'v', stripe:'s', lakk:'g', flag:'f', mark:'m', logo:'l'};
 const MARKENC = s => String(s).replace(/Æ/g, '1').replace(/Ø/g, '2').replace(/Å/g, '3'), MARKDEC = s => String(s).replace(/1/g, 'Æ').replace(/2/g, 'Ø').replace(/3/g, 'Å');
 function livStr(b){
   const L = (b && b.liv) || {}, out = [];
@@ -500,13 +501,14 @@ function livStr(b){
   for (const k of DESIGNS){ const v = L.d && L.d[k]; if (k === 'lakk' ? v : v && palRGB(v)) out.push(LIVS[k] + ':' + (k === 'lakk' ? 1 : v)); }
   if (L.flag && /^[A-Z]{2,4}$/.test(L.flag.c || '') && /^[a-z]+$/.test(L.flag.s || '')) out.push('f:' + L.flag.c + '.' + L.flag.s);
   const r = typeof regOf === 'function' && b === S.boat ? regOf(b) : b.reg; if (r && r.f) out.push('m:' + MARKENC(r.f) + '.' + r.n + '.' + MARKENC(r.k));   // the registration mark (core/06b-coastports.js)
+  const lg = typeof S !== 'undefined' && b === S.boat && S.logo && COSOWN('logo') ? logoStr(S.logo) : ''; if (lg) out.push('l:' + lg);   // the company's logo (all its boats)
   return out.join(';');
 }
 // another player's registration mark from her paint code ('m:T.112.LK'), as text
 function livMark(s){ const m = /(?:^|;)m:([A-Z0-9]{1,3})\.(\d{1,4})\.([A-Z0-9]{1,3})(?:;|$)/.exec(String(s || '')); return m ? MARKDEC(m[1]) + '-' + m[2] + '-' + MARKDEC(m[3]) : ''; }
 function livParse(s){
   const L = {d:{}}; for (const part of String(s || '').split(';')){ const [a, v] = part.split(':'), k = Object.keys(LIVS).find(q => LIVS[q] === a); if (!k || !v) continue;
-    if (k === 'hull') L.hull = v; else if (k === 'flag'){ const [c, sh] = v.split('.'); L.flag = {c, s:sh}; } else if (k === 'mark') continue; else L.d[k] = k === 'lakk' ? 1 : v; }
+    if (k === 'hull') L.hull = v; else if (k === 'flag'){ const [c, sh] = v.split('.'); L.flag = {c, s:sh}; } else if (k === 'mark' || k === 'logo') continue; else L.d[k] = k === 'lakk' ? 1 : v; }
   return modelLiv(L);
 }
 // ---- paint designs (Malerverkstedet): a stripe under the sheer (ripe), a second colour on the lower topsides (totone), a stripe at the
@@ -630,9 +632,39 @@ const FLAGS = (() => {
     PK:['Pakistan', 'Pakistan', (g, W, H) => { vs(['#fff', '#01411C'], [1, 3])(g, W, H); g.fillStyle = '#fff'; g.beginPath(); g.arc(W * 0.6, H / 2, H * 0.24, 0, 7); g.fill(); g.fillStyle = '#01411C'; g.beginPath(); g.arc(W * 0.64, H * 0.45, H * 0.2, 0, 7); g.fill(); }],
     CN:['Kina', 'China', (g, W, H) => { g.fillStyle = '#EE1C25'; g.fillRect(0, 0, W, H); star(g, W * 0.17, H * 0.27, H * 0.15, '#FFFF00'); for (const [x, y] of [[0.33, 0.1], [0.4, 0.2], [0.4, 0.35], [0.33, 0.45]]) star(g, W * x, H * y, H * 0.05, '#FFFF00'); }]};
 })();
+// ---- the company logo (Malerverkstedet, 07.10.2026): made here from a sign, initials and two colours, or the player's own picture
+// (ui/10j-paint.js, supabase/migrations/20261007110000_logos.sql). On the hull midships, and on the house flag ('LOGO'). ----
+const LOGOSYM = {
+  anker:(g, c) => { g.strokeStyle = c; g.lineWidth = 14; g.lineCap = 'round'; g.beginPath(); g.moveTo(128, 50); g.lineTo(128, 200); g.moveTo(90, 80); g.lineTo(166, 80);
+    g.moveTo(60, 150); g.quadraticCurveTo(70, 205, 128, 205); g.quadraticCurveTo(186, 205, 196, 150); g.stroke(); g.beginPath(); g.arc(128, 40, 14, 0, 7); g.stroke(); },
+  fisk:(g, c) => { g.fillStyle = c; g.beginPath(); g.moveTo(40, 128); g.quadraticCurveTo(110, 60, 180, 128); g.quadraticCurveTo(110, 196, 40, 128); g.fill(); g.beginPath(); g.moveTo(170, 128); g.lineTo(220, 92); g.lineTo(220, 164); g.fill(); },
+  bolge:(g, c) => { g.strokeStyle = c; g.lineWidth = 16; g.lineCap = 'round'; for (const y of [96, 136, 176]){ g.beginPath(); g.moveTo(36, y); for (let x = 36; x <= 220; x += 46) g.quadraticCurveTo(x + 11, y - 22, x + 23, y), g.quadraticCurveTo(x + 34, y + 22, x + 46, y); g.stroke(); } },
+  stjerne:(g, c) => { g.fillStyle = c; g.beginPath(); for (let i = 0; i < 10; i++){ const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 40 : 96; g.lineTo(128 + Math.cos(a) * r, 132 + Math.sin(a) * r); } g.fill(); },
+  ring:(g, c) => { g.strokeStyle = c; g.lineWidth = 22; g.beginPath(); g.arc(128, 128, 82, 0, 7); g.stroke(); },
+  kompass:(g, c) => { g.fillStyle = c; g.beginPath(); for (let i = 0; i < 8; i++){ const a = -Math.PI / 2 + i * Math.PI / 4, r = i % 2 ? 34 : 104; g.lineTo(128 + Math.cos(a) * r, 128 + Math.sin(a) * r); } g.fill(); }};
+// a logo on a 256 × 256 canvas: the made one (sign, letters, colours) or the picture (an Image)
+function logoCanvas(cv, L, img){
+  const g = cv.getContext('2d'), W = cv.width; g.clearRect(0, 0, W, W); if (!L) return; g.save(); g.scale(W / 256, W / 256);
+  if (L.kind === 'u'){ if (img && img.complete && img.naturalWidth){ const k = Math.min(256 / img.naturalWidth, 256 / img.naturalHeight), w = img.naturalWidth * k, h = img.naturalHeight * k; g.drawImage(img, (256 - w) / 2, (256 - h) / 2, w, h); } g.restore(); return; }
+  const c1 = palRGB(L.c1) || [0.08, 0.16, 0.3], c2 = palRGB(L.c2) || [0.93, 0.94, 0.93], css = c => 'rgb(' + c.map(v => Math.round(v * 255)).join(',') + ')';
+  g.fillStyle = css(c1); g.beginPath(); g.arc(128, 128, 124, 0, 7); g.fill();
+  (LOGOSYM[L.sym] || LOGOSYM.anker)(g, css(c2));
+  const t = String(L.txt || '').slice(0, 3); if (t){ g.fillStyle = css(c2); g.strokeStyle = css(c1); g.lineWidth = 8; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '800 ' + (t.length > 2 ? 64 : 80) + 'px Georgia, serif'; g.strokeText(t, 128, 136); g.fillText(t, 128, 136); }
+  g.restore();
+}
+// the logo's place on the hull: a square midships, as tall as the topsides allow (at most 0.06 L + 0.3 m, 1.6 m)
+const LOGOSTRIP = {};
+function logoStrips(type){ if (!(type in LOGOSTRIP)){ const V = VESSELS[type] || {len:10}; LOGOSTRIP[type] = sideStrip(type, 0.5, Math.min(1.6, 0.06 * V.len + 0.3), 1) || sideStrip(type, 0.42, Math.min(1.6, 0.06 * V.len + 0.3), 1); } return LOGOSTRIP[type]; }
+// the logo as it goes to the others: 'g.anker.JH.marine.hvit' (made) or 'u.3' (a picture, fetched by the player's id and version)
+function logoStr(L){ if (!L) return ''; if (L.kind === 'u') return L.ver ? 'u.' + (L.ver | 0) : ''; return 'g.' + (LOGOSYM[L.sym] ? L.sym : 'anker') + '.' + MARKENC(String(L.txt || '').toUpperCase().replace(/[^A-ZÆØÅ]/g, '').slice(0, 3)) + '.' + (palRGB(L.c1) ? L.c1 : 'marine') + '.' + (palRGB(L.c2) ? L.c2 : 'hvit'); }
+function logoParse(s){ const m = /(?:^|;)l:([^;]+)/.exec(String(s || '')); if (!m) return null; const a = m[1].split('.');
+  if (a[0] === 'u') return {kind:'u', ver:+a[1] || 0}; if (a[0] !== 'g') return null; return {kind:'g', sym:LOGOSYM[a[1]] ? a[1] : 'anker', txt:MARKDEC(a[2] || ''), c1:a[3], c2:a[4]}; }
 const FLAGSHAPES = ['rekt', 'vimpel', 'splitt'];
 // a flag on a canvas: its picture in the shape (outside the shape stays clear, which the 3D view leaves out)
-function flagCanvas(cv, code, shape){
+function flagCanvas(cv, code, shape, logo){
+  if (code === 'LOGO' && logo){ const g = cv.getContext('2d'), W = cv.width, H = cv.height; g.clearRect(0, 0, W, H); g.save(); g.beginPath();
+    if (shape === 'vimpel'){ g.moveTo(0, 0); g.lineTo(W, H * 0.42); g.lineTo(W, H * 0.58); g.lineTo(0, H); } else if (shape === 'splitt'){ g.moveTo(0, 0); g.lineTo(W, 0); g.lineTo(W * 0.72, H / 2); g.lineTo(W, H); g.lineTo(0, H); } else g.rect(0, 0, W, H);
+    g.closePath(); g.clip(); g.fillStyle = '#f4f4f0'; g.fillRect(0, 0, W, H); const sz = H * 0.86; g.drawImage(logo, (shape === 'vimpel' ? W * 0.08 : W / 2 - sz / 2), (H - sz) / 2, sz, sz); g.restore(); return; }   // the house flag
   const F = FLAGS[code] || FLAGS.NO, g = cv.getContext('2d'), W = cv.width, H = cv.height; g.clearRect(0, 0, W, H);
   if (code === 'NO' && shape === 'splitt') shape = 'rekt';   // the state's flag is not for others (lov om Norges flagg)
   g.save(); g.beginPath();
@@ -641,7 +673,7 @@ function flagCanvas(cv, code, shape){
   else g.rect(0, 0, W, H);
   g.closePath(); g.clip(); F[2](g, W, H); g.restore();
 }
-function flagOf(L){ const f = L && L.flag || {}; return {code:FLAGS[f.c] ? f.c : 'NO', shape:FLAGSHAPES.includes(f.s) ? f.s : 'rekt'}; }
+function flagOf(L){ const f = L && L.flag || {}; return {code:FLAGS[f.c] || f.c === 'LOGO' ? f.c : 'NO', shape:FLAGSHAPES.includes(f.s) ? f.s : 'rekt'}; }
 // ---- the boat's name on her hull (Jonas 07.10.2026: «Pass på at båtnavnet vises godt på skroget på alle båtene»): a strip on each side
 // forward, on the hull's own surface, found from the model: the hull's triangles (a detailed model's paint zone 1, a kit model's hull)
 // that face out to starboard are cut at each station, which gives the topsides' top and bottom there and the hull's breadth at any

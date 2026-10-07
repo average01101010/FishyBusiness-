@@ -76,6 +76,34 @@ async def main():
         check(rg['r0']['f'] == 'T' and rg['r0']['k'] == 'LK' and not rg['used'] and rg['card'] and rg['refused'] and rg2['r']['n'] == rg['n'] and want in rg2['papers']
               and rg['back'] in (want, 'T-%d-LK' % rg['r0']['n']) and rg['oe'] == 'N-12-BØ' and rg['strips'] >= rg['types'] - 1,
               "the registration mark: Senja's letters (T-..-LK) and a number no real boat there has; a real boat's number is refused, one's own goes on the boat and the permit; it travels to the others", {'rg': rg, 'r': rg2['r']})
+        # the company logo: made from a sign, letters and two colours, tried on the boat and as the house flag before it is bought; bought (a
+        # test), it is the company's and goes to the others in the paint code; a picture uploaded is made 256 px and small enough to share;
+        # one the admin took away is gone from the boat at the next start, and the player is told why
+        lg = await pg.evaluate("""(async () => { const q = s => document.querySelector('#drawerBody ' + s);
+          const nSym = document.querySelectorAll('#drawerBody [data-pa=pntlg]').length; q('[data-pa=pntlg][data-k=fisk]').click(); q('#pntLogoTxt').value = 'jh'; q('[data-pa=pntlgt]').click();
+          q('.pnt-sw[data-pa=pntlgc][data-d=c1][data-k=oksblod]').click(); const tried = {L:PAINTPRE.logo, own:PAINT.owned('logo'), buy:!!q('[data-pa=pntbuy][data-d=logo]'), house:!!q('.pnt-fl[data-k=LOGO]'), strips:Object.keys(VESSELS).filter(t => logoStrips(t)).length, types:Object.keys(VESSELS).length};
+          q('.pnt-fl[data-k=LOGO]').click(); tried.flag = flagOf(PAINTPRE).code;
+          q('[data-pa=pntbuy][data-d=logo]').click(); await new Promise(r => setTimeout(r, 50)); q('[data-pa=pntgo]') && !q('[data-pa=pntgo]').disabled && q('[data-pa=pntgo]').click();
+          const after = {own:PAINT.owned('logo'), L:S.logo, flag:S.boat.liv && S.boat.liv.flag, str:livStr(S.boat), back:logoParse(livStr(S.boat))};
+          const cv = document.createElement('canvas'); cv.width = 900; cv.height = 500; const g = cv.getContext('2d'); for (let i = 0; i < 400; i++){ g.fillStyle = 'hsl(' + (i * 37 % 360) + ',70%,50%)'; g.fillRect(Math.random() * 900, Math.random() * 500, 60, 40); }
+          const blob = await new Promise(r => cv.toBlob(r, 'image/png')), dt = new DataTransfer(); dt.items.add(new File([blob], 'logo.png', {type:'image/png'}));
+          DOCK.open('maler'); const inp = q('#pntLogoFile'); inp.files = dt.files; inp.dispatchEvent(new Event('change', {bubbles:true}));
+          for (let i = 0; i < 50 && !(PAINTPRE && PAINTPRE.logo && PAINTPRE.logo.kind === 'u'); i++) await new Promise(r => setTimeout(r, 100));
+          const up = PAINTPRE && PAINTPRE.logo; const upInfo = up ? {kind:up.kind, len:(up.img || '').length, type:(up.img || '').slice(0, 15)} : null;
+          let wh = null; if (up && up.img){ const im = new Image(); im.src = up.img; await im.decode(); wh = [im.naturalWidth, im.naturalHeight]; }
+          q('[data-pa=pntgo]').click(); await new Promise(r => setTimeout(r, 50)); const upSet = S.logo && S.logo.kind;
+          const rpc0 = cloudRpc, on0 = CLOUD.on, u0 = CLOUD.user, msgs0 = S.msgs.length; CLOUD.on = true; CLOUD.user = {id:'x'}; window.cloudRpc = async fn => fn === 'logo_mine' ? {ver:3, removed:true, reason:'Støtende innhold'} : null;
+          await logoCheck(); const removed = {L:S.logo, flag:S.boat.liv && S.boat.liv.flag || null, msg:(S.msgs.slice(msgs0)[0] || {}).no || '', own:PAINT.owned('logo')};
+          window.cloudRpc = rpc0; CLOUD.on = on0; CLOUD.user = u0; DOCK.open('maler');
+          return {nSym, nLogo:Object.keys(LOGOSYM).length, tried, after, upInfo, wh, upSet, removed}; })()""")
+        tr, af, rm = lg['tried'], lg['after'], lg['removed']
+        check(lg['nSym'] == lg['nLogo'] and tr['L'] == {'kind': 'g', 'sym': 'fisk', 'txt': 'JH', 'c1': 'oksblod', 'c2': 'hvit'} and not tr['own'] and tr['buy'] and tr['house'] and tr['flag'] == 'LOGO'
+              and tr['strips'] >= tr['types'] - 1 and af['own'] and af['L'] and af['L'].get('sym') == 'fisk' and (af['flag'] or {}).get('c') == 'LOGO' and 'l:g.fisk.JH.oksblod.hvit' in af['str'] and af['back'] and af['back'].get('txt') == 'JH',
+              'the company logo: a sign, letters and colours tried on the boat and as the house flag, then bought it is the company\'s, flies as her flag and goes to the others', {'tried': tr, 'after': af})
+        check(lg['upInfo'] and lg['upInfo']['kind'] == 'u' and lg['upInfo']['len'] <= 58000 and lg['upInfo']['type'].startswith('data:image/') and lg['wh'] == [256, 256] and lg['upSet'] == 'u',
+              'an uploaded picture is made 256 × 256 and small enough to share, tried on the boat and then put on', {k: lg[k] for k in ('upInfo', 'wh', 'upSet')})
+        check(rm['L'] is None and rm['flag'] == {'c': 'NO', 's': 'rekt'} and 'Støtende innhold' in rm['msg'] and 'uten å betale' in rm['msg'] and rm['own'],
+              'a picture the admin took away is gone from the boat and the flag at the next start, the player is told why and may upload another without paying', rm)
         # too little money: the button is off
         c = await pg.evaluate("""(() => { S.cash = 100; document.querySelector('#drawerBody .pnt-sw[data-k=gul]').click(); const btn = document.querySelector('#drawerBody [data-pa=pntgo]');
           return {dis:btn.disabled, note:document.getElementById('drawerBody').innerText.includes('ikke nok penger')}; })()""")

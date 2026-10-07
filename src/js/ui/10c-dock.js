@@ -264,7 +264,8 @@ const DOCK = (() => {
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && page && !PHONE.isOpen()) close(); });
   // the buttons as text, for the tests: the labels, and the status above them
   const text = () => items0().map(x => L(x.lbl[0], x.lbl[1])).join(' | ') + (infoText() ? ' | ' + infoText() : '');
-  return {render, open, close, tick, text, goTo, items:m => m ? menuItems(m).filter(Boolean) : items0(), menu:m => setMenu(m), get page(){ return page; }, get menuOpen(){ return menu; }};
+  const redraw = () => { if (page){ lastDraw = performance.now(); draw(true); } };   // at once, after something that came later (a picture read, a payment)
+  return {render, redraw, open, close, tick, text, goTo, items:m => m ? menuItems(m).filter(Boolean) : items0(), menu:m => setMenu(m), get page(){ return page; }, get menuOpen(){ return menu; }};
 })();
 // the old name: everything that changes what the boat does asks for the buttons again
 function renderActs(){ DOCK.render(); }

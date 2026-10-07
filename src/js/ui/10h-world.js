@@ -22,6 +22,19 @@ async function worldTick(){
   } catch (e){ if (/ 404$/.test(e.message)) WORLDP.off = true; if (++WORLDP.err > 3 || WORLDP.off) PEERS.length = 0; }
   finally { WORLDP.busy = false; }
 }
+// another player's uploaded logo (supabase/migrations/20261007110000_logos.sql logo_get): fetched once per player and version as she comes
+// near, kept for the session (at most 40); one the admin has taken away comes back empty, and her boat goes without
+const PLOGO = new Map();
+function peerLogo(hid, ver){
+  if (!hid || !ver || !CLOUD.on || !CLOUD.user) return null; let e = PLOGO.get(hid);
+  if (e && e.ver === ver) return e.img;
+  if (e && e.busy) return e.img;
+  if (PLOGO.size >= 40) PLOGO.delete(PLOGO.keys().next().value);
+  e = {ver, img:e ? e.img : null, busy:true}; PLOGO.set(hid, e);
+  cloudRpc('logo_get', {hid}).then(r => { e.busy = false; e.ver = ver;
+    if (r && /^data:image\//.test(r.img || '')){ const im = new Image(); im.src = r.img; e.img = im; } else e.img = null; }).catch(() => { e.busy = false; e.ver = ver; });
+  return e.img;
+}
 // ---- the shared world V2 (05.10.2026; core/03-simulation.js WSH): one sea, one quota and one market. Every ten minutes, and soon
 // after a sale, this game's sales and the cells its boats took fish from go up (S.wq), and what the other players have done comes
 // down: their open-group cod this year, what they delivered to each plant in the last day, and the fish they took since the last

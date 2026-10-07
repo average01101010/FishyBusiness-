@@ -302,6 +302,22 @@ def main():
         R['rgA'] = sql("select public.reg_claim('T-777-LK')", A, 'authenticated'); R['rgB'] = sql("select public.reg_claim('T-777-LK')", B, 'authenticated')
         R['rgA2'] = sql("select public.reg_claim('T-777-LK')", A, 'authenticated'); R['rgBad'] = sql("select public.reg_claim('<b>')", A, 'authenticated', expect_err=True)
         R['rgRead'] = sql("select count(*) from public.reg_claims", A, 'authenticated', expect_err=True)
+        # the company logo (20261007110000_logos.sql): only an account that owns it puts up a picture; the others get it by the id the world
+        # gives; the admin takes it away with a reason, then nobody gets it, the player is told why and may put up another at no cost
+        import hashlib; hidA = hashlib.md5(b'dsbuser_01AAA').hexdigest()[:10]; LIMG = 'data:image/png;base64,iVBORw0KGgo='
+        R['lgNo'] = sql("select public.logo_put('%s')" % LIMG, A, 'authenticated', expect_err=True)
+        sql("insert into public.purchases (id, player_id, product_id, amount_nok, status, data) values ('cs_l1', 'user_01AAA', 'des_logo', 49, 'open', '{}')"); sql("select public.shop_paid('cs_l1', 'pi_l1')")
+        R['lgV'] = [sql("select public.logo_put('%s')" % LIMG, A, 'authenticated'), sql("select public.logo_put('%s')" % LIMG, A, 'authenticated')]
+        R['lgBad'] = sql("select public.logo_put('<svg onload=x>')", A, 'authenticated', expect_err=True)
+        R['lgGet'] = json.loads(sql("select public.logo_get('%s')" % hidA, B, 'authenticated') or 'null')
+        R['lgRead'] = sql("select count(*) from public.logos", B, 'authenticated', expect_err=True)
+        R['lgAdmPl'] = sql("select public.admin_logos(10)", A, 'authenticated', expect_err=True)
+        R['lgAdm'] = json.loads(sql("select public.admin_logos(10)", AD2, 'authenticated'))
+        R['lgRmPl'] = sql("select public.admin_logo_remove('%s', 'x')" % hidA, B, 'authenticated', expect_err=True)
+        R['lgRm'] = sql("select public.admin_logo_remove('%s', 'Støtende innhold')" % hidA, AD2, 'authenticated')
+        R['lgGone'] = sql("select coalesce(public.logo_get('%s')::text, 'null')" % hidA, B, 'authenticated')
+        R['lgMine'] = json.loads(sql("select public.logo_mine()", A, 'authenticated'))
+        R['lgAgain'] = sql("select public.logo_put('%s')" % LIMG, A, 'authenticated'); R['lgMine2'] = json.loads(sql("select public.logo_mine()", A, 'authenticated'))
         sql("select public.delete_me()", A, 'authenticated')
         R['wGone'] = sql("select (select count(*) from public.landings where player_id = 'user_01AAA') || '/' || (select count(*) from public.catches where player_id = 'user_01AAA') || '/' || (select count(*) from public.landings)")
         R['fbGone'] = sql("select count(*) from public.feedback where player_id = 'user_01AAA'")
@@ -411,6 +427,11 @@ def main():
                  and R['sPlPaid'][0] and R['sPlRead'][0] and R['sAfter'] == '0/refunded/1/1' and R['sEnd'] == []),
               'the shop: a quote only for a real product and a signed-in player, one grant per paid purchase however often Stripe tells it, given and done once, a refund takes back what is not given, and no player books a payment or reads the grants',
               {'quote': q, 'paid': (R['sPaid1'], R['sPaid2']), 'pending': pd, 'after': R['sAfter'], 'end': R['sEnd']})
+        print(ok(R['lgNo'][0] and R['lgV'] == ['1', '2'] and R['lgBad'][0] and R['lgGet'] and R['lgGet'].get('img', '').startswith('data:image/png') and R['lgRead'][0] and R['lgAdmPl'][0] and R['lgRmPl'][0]
+                 and len(R['lgAdm']) == 1 and R['lgAdm'][0]['who'] == hidA and R['lgRm'] == 't' and R['lgGone'] == 'null' and R['lgMine'].get('removed') is True and R['lgMine'].get('reason') == 'Støtende innhold'
+                 and R['lgAgain'] == '3' and R['lgMine2'].get('removed') is False),
+              "the logo: put up only once owned, a bad picture refused, the others get it by the world's id; only the admin lists and takes it away, then nobody gets it, the player is told why and may put up another",
+              {k: R[k] for k in ('lgV', 'lgRm', 'lgGone', 'lgMine', 'lgAgain', 'lgMine2')})
         print(ok(R['rgA'] == 't' and R['rgB'] == 'f' and R['rgA2'] == 't' and R['rgBad'][0] and R['rgRead'][0]), "one's own registration number: the first player's, refused to another, kept for the first; a bad mark and reading the claims are refused", {k: R[k] for k in ('rgA', 'rgB', 'rgA2')})
         print(ok(R['dOwn'] == ['des_ripe'] and R['dGive'] == ['cos'] and R['dGone'] == []), 'a paint design: paid, it is the account\'s on every device (owned) and a grant for the game; a refund takes it away', {'own': R['dOwn'], 'give': R['dGive'], 'gone': R['dGone']})
         print(ok(R['deleted'] == '0/0/0/anon'), 'deleting the account takes the player, the events and the save; the purchase stays without a name for the books', R['deleted'])
