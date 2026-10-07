@@ -53,7 +53,7 @@ function showLetter(done){
         '<span class="lt-to">' + T(LETTER.to) + '</span><svg class="lt-ul" viewBox="0 0 200 12" preserveAspectRatio="none"><path d="M3 7 C 40 3, 80 10, 120 5 S 180 4, 197 8" /></svg></div></button>' +
       '<div class="lt-back" id="ltBack" hidden>' +
         '<div class="lt-inside" style="background-image:' + letterPic('env-inside') + '"></div>' +
-        '<div class="lt-flap" id="ltFlap"><div class="lt-flap-o" style="background-image:' + letterPic('env-flap') + '"></div><div class="lt-flap-i" style="background-image:' + letterPic('env-flap') + '"></div></div>' +
+        '<div class="lt-flap" id="ltFlap"><div class="lt-flap-o" style="background-image:' + letterPic('env-flap') + '"></div><div class="lt-flap-i"><div class="lt-flap-ii" style="background-image:' + letterPic('env-flap') + '"></div></div></div>' +
         '<div class="lt-paper" id="ltPaper"><div class="lt-p lt-p1" id="ltP1">' + face(0) + face(0, true) + '</div><div class="lt-p lt-p2">' + face(1) + '</div><div class="lt-p lt-p3" id="ltP3">' + face(2) + face(2, true) + '</div></div>' +
         '<div class="lt-pocket" style="background-image:' + letterPic('env-pocket') + '"></div>' +
       '</div>' +
@@ -104,7 +104,8 @@ function showLetter(done){
     await anim(paper, [{transform:'translate(-50%,-50%) translateY(' + y0() + 'px) scale(' + s0() + ')'}, {transform:'translate(-50%,-50%) translateY(' + up + 'px) scale(' + s0() + ')'}], {duration:950, easing:'cubic-bezier(.45,0,.3,1)'});
     paper.classList.add('out');
     // the envelope falls away and the letter comes forward, still folded
-    for (const el of back.querySelectorAll('.lt-inside,.lt-flap,.lt-pocket')) anim(el, [{transform:getComputedStyle(el).transform === 'none' ? 'none' : getComputedStyle(el).transform, opacity:1}, {transform:'translateY(70vh) rotate(9deg)', opacity:0}], {duration:900, easing:'cubic-bezier(.5,0,.8,.4)'});
+    // (the flap stays turned over while it falls: the same function list at both ends, so it does not swing back shut on the way down)
+    for (const el of back.querySelectorAll('.lt-inside,.lt-flap,.lt-pocket')) anim(el, el === flap ? [{transform:'translateY(0) rotate(0deg) perspective(900px) rotateX(180deg)', opacity:1}, {transform:'translateY(70vh) rotate(9deg) perspective(900px) rotateX(180deg)', opacity:0}] : [{transform:getComputedStyle(el).transform === 'none' ? 'none' : getComputedStyle(el).transform, opacity:1}, {transform:'translateY(70vh) rotate(9deg)', opacity:0}], {duration:900, easing:'cubic-bezier(.5,0,.8,.4)'});
     await anim(paper, [{transform:'translate(-50%,-50%) translateY(' + up + 'px) scale(' + s0() + ')'}, {transform:'translate(-50%,-50%) translateY(0) scale(1)'}], {duration:950, easing:'cubic-bezier(.3,.6,.2,1)'});
     // and unfolds: the top third, then the bottom
     await wait(150); letterSound('unfold');

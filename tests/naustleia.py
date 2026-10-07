@@ -27,6 +27,14 @@ async def main():
         print(ok(r['kind'] == 'naust' and r['naustD'] > 30), 'the boat lies at Father\'s naust, away from the harbour point', r['naustD'])
         print(ok(r['n'] > 0 and r['nearPlant'] == 0 and r['first'] < 200 and r['legOk']), 'Autonav from the naust starts at its berth, not by the plant', (r['n'], r['first'], r['nearPlant'], r['legOk']))
         print(ok(r['st1'] == 'sailing' and r['from'] < 30), 'when the lines are in, she sails from the naust', (r['st0'], r['st1'], r['from']))
+        # Øksfjord (tilbakemelding #39): the naust lies in a basin the 100 m grid sees as shut to the sea, so no way was found to the first
+        # trip's ring; the way out is then the harbour's own approach path
+        r = json.loads(await pg.evaluate("""(async () => { const pt = portById('mTF4'), R = {}; await chooseStart(pt); const f = S.tutStart.f, b = S.boat; S.tut = null; S.plan = null; S.draft = [];
+          R.kind = berthKind(b); await leiaTo({x:f.p.x, y:f.p.y}); R.n = S.draft.length; const q = quayPos(b), pts = [q].concat(S.draft); R.wet = true;
+          for (let i = 1; i < pts.length; i++) for (let k = 0; k <= 40; k++){ const u = k / 40; if (isLand({x:pts[i - 1].x + (pts[i].x - pts[i - 1].x) * u, y:pts[i - 1].y + (pts[i].y - pts[i - 1].y) * u})) R.wet = false; }
+          R.end = S.draft.length ? Math.round(dist(S.draft[S.draft.length - 1], f.p) * 1000) : null; return JSON.stringify(R); })()"""))
+        print(json.dumps(r))
+        print(ok(r['kind'] == 'naust' and r['n'] >= 2 and r['wet'] and r['end'] is not None and r['end'] < 50), 'Autonav from Father\'s naust in Øksfjord finds the way to the first trip\'s ring, over water all the way', r)
         print('sidefeil', errs)
         await br.close()
 

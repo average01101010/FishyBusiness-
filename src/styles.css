@@ -720,6 +720,8 @@ button.ph-art.pa-btn:active{background:#efe8d8}
 .lt-flap.open{z-index:1}
 .lt-flap-o,.lt-flap-i{position:absolute;inset:0;background-size:100% 100%;-webkit-backface-visibility:hidden;backface-visibility:hidden}
 .lt-flap-i{transform:rotateX(180deg);filter:brightness(.7) sepia(.2)}
+/* the inside seen when the flap lies open above the hinge: its tip is away from the hinge, so the picture is the outside's turned over */
+.lt-flap-ii{position:absolute;inset:0;background-size:100% 100%;transform:scaleY(-1)}
 .lt-paper{position:absolute;left:50%;top:50%;width:var(--W);height:var(--H);transform-style:preserve-3d;perspective:1800px;z-index:3}
 .lt-paper.out{z-index:6}
 .lt-p{position:absolute;left:0;width:100%;height:calc(var(--H) / 3);transform-style:preserve-3d}

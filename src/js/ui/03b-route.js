@@ -155,7 +155,11 @@ async function leiaTo(pt, buoy, act){   // buoy: to a set's buoy, to haul it (th
         toast(rb + L(' Autonav går til nærmeste sted der du kan fiske, ' + m + ' m unna. Trykk samme sted igjen for å gå helt dit.', ' Autonav goes to the nearest place where you may fish, ' + m + ' m away. Tap the same place again to go all the way.')); }
       else toast(rb + L(' Du kan seile dit, men ikke fiske der.', ' You may sail there, but not fish there.')); } }
   const before = JSON.stringify(S.draft); LEIA_BUSY = true; panelDirty = true; renderPanel(); renderRouteTools();
-  let res; try { res = await leiaRoute({x:start.x, y:start.y}, near ? near.p : goal, aPort, near ? near.id : null); } finally { LEIA_BUSY = false; }
+  let res; try { res = await leiaRoute({x:start.x, y:start.y}, near ? near.p : goal, aPort, near ? near.id : null);
+    // Father's naust in a basin the 100 m grid sees as shut to the sea (Øksfjord, tilbakemelding #39: no way found to the first trip's
+    // ring): the way out is then the harbour's own, by its approach path
+    if (res.why && atN && b.port && approachPath(portById(b.port)).length) res = await leiaRoute({x:start.x, y:start.y}, near ? near.p : goal, b.port, near ? near.id : null); }
+  finally { LEIA_BUSY = false; }
   if (JSON.stringify(S.draft) !== before){ routeChanged(); return; }   // the route was changed while the way was being found
   if (res.why){ toast(S.lang === 'no' ? res.why[0] : res.why[1]); routeChanged(); return; }
   draftEdit(() => { res.wps.forEach((q, i) => { const last = i === res.wps.length - 1; S.draft.push(last && near ? {x:near.p.x, y:near.p.y, port:near.id, fish:0} : {x:q.x, y:q.y, port:null, fish:0, leia:true}); });
