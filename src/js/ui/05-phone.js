@@ -409,6 +409,10 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p81', '07.10.2026', 'Fartstid', 'Sea time', [
+      ['Du samler nå fartstid, fra 0 til 40 år. Den tjenes om bord, med hver time til sjøs og hver levering. Det mannskapet ditt gjør mens du er borte, teller også, men mindre. Fartstiden står på telefonen og i Sjømann-appen.', 'You now gather sea time, from 0 to 40 years. It is earned aboard, with every hour at sea and every landing. What your crew does while you are away counts too, but less. Your sea time is on the phone and in the Seaman app.'],
+      ['Når du har vært borte, er du uthvilt: de neste timene til sjøs gir dobbel fartstid.', 'After time away you are rested: the next hours at sea give double sea time.'],
+      ['«Mens du var borte» viser nå hva som ble levert, fartstiden du fikk og det viktigste som skjedde.', '«While you were away» now shows what was landed, the sea time you gained and the main things that happened.']]],
     ['p80', '07.10.2026', 'Rederilogo', 'Company logo', [
       ['I Malerverkstedet kan du lage en rederilogo av et tegn, bokstaver og to farger, eller laste opp et eget bilde. Logoen står midtskips på skroget til båtene dine, og kan heises som rederiflagg.', 'In the paint shop you can make a company logo from a sign, letters and two colours, or upload a picture of your own. The logo sits midships on the hull of your boats and can be flown as a house flag.'],
       ['Andre spillere i nærheten ser logoen og flagget ditt.', 'Other players nearby see your logo and flag.'],
@@ -723,6 +727,7 @@ const PHONE = (() => {
     return '<div class="ph-homescr"><div class="ph-clock">' + hm(H) + '</div><div class="ph-date">' + dayStr(H) + '</div>' +
       '<div class="ph-widget"><span class="w1">' + dirName(windDir(H)) + ' ' + fmt(W, 0) + ' m/s · ' + fmt(Math.round(airTemp(H)) || 0, 0) + ' °C</span><span class="w2">' + kr(S.cash) + '</span></div>' +
       ((g => g ? '<button class="ph-goal" data-pa="open" data-a="fartoy"><span>' + L('Neste mål: ', 'Next goal: ') + '<b>' + g.n + '</b></span><small>' + (g.txt || kr(Math.min(Math.max(0, S.cash), g.need)) + ' / ' + kr(g.need)) + '</small><span class="gb"><i style="width:' + (g.pc * 100).toFixed(1) + '%"></i></span></button>' : '')(goals()[0])) +
+      fsChip() +
       '<div class="ph-grid">' + APPS.filter(a => (a[0] !== 'admin' || adminOk()) && (a[0] !== 'rederi' || rederiOpen())).map(a => '<button class="ph-app" data-pa="open" data-a="' + a[0] + '"><span class="ic" style="background:linear-gradient(160deg,' + a[3] + ',' + a[3] + 'cc)">' + IC[a[0]] + '</span>' + L(a[1], a[2]) + (a[0] === 'meld' && n ? '<span class="bd">' + n + '</span>' : '') + (a[0] === 'ordl' && ordState().active.length ? '<span class="bd">' + ordState().active.length + '</span>' : '') + (a[0] === 'rederi' && na ? '<span class="bd">' + na + '</span>' : '') + (a[0] === 'patch' && np ? '<span class="bd">' + np + '</span>' : '') + '</button>').join('') + '</div></div>';
   }
   const kv = (a, b) => '<div class="ph-kv"><span>' + a + '</span><span>' + b + '</span></div>';
@@ -766,10 +771,17 @@ const PHONE = (() => {
         L('Du trenger verken ENK eller AS for å fiske. Når salget passerer 50 000 kr på tolv måneder, må foretaket i Merverdiavgiftsregisteret (merverdiavgiftsloven § 2-1). Da legges MVA på 11,11 % på oppgjøret, og den går videre til staten. Org.nr. er fiktivt.', 'You need neither a sole proprietorship nor a company to fish. When the sales pass NOK 50,000 in twelve months, the business must enter the VAT register. Then 11.11 % VAT comes with the settlement and goes on to the state. The org. no. is fictional.')))(S.mva) +
       card('#5b6770', L('Begrenset radiosertifikat (SRC)', 'Short Range Certificate (SRC)'), [[L('Navn', 'Name'), who], ['Status', vhf ? '<span class="r0">' + L('Gyldig', 'Valid') + '</span>' : L('Ikke tatt, trengs for VHF om bord', 'Not taken, needed for VHF aboard')]]);
   }
+  // the sea time (core/09e-fartstid.js): the years and days, the bar to the next year, and the rest built up while away
+  function fsChip(){ const F = fsState(), o = fsOf(F.p), rest = Math.round(F.rest / 60);
+    return '<button class="ph-goal ph-fs" data-pa="open" data-a="sjomann"><span><b>' + fsText(F.p, true) + '</b></span><small>' + (rest > 0 ? L('Uthvilt: ' + rest + ' t med dobbel fartstid', 'Rested: ' + rest + ' h of double sea time') : L('Neste år: ' + (365 - o.d) + ' døgn igjen', 'Next year: ' + (365 - o.d) + ' days to go')) + '</small><span class="gb"><i style="width:' + (o.f * 100).toFixed(1) + '%"></i></span></button>'; }
+  function fsCard(){ const F = fsState(), o = fsOf(F.p), rest = Math.round(F.rest / 60);
+    return '<div class="ph-card"><h4>' + L('Fartstid', 'Sea time') + '</h4><div class="ph-big">' + fsText(F.p, true) + '</div><span class="gb fsbar"><i style="width:' + (o.f * 100).toFixed(1) + '%"></i></span>' +
+      '<p class="ph-note">' + L('Fartstid tjenes om bord: hver time til sjøs og hver levering. Det mannskapet gjør mens du er borte, teller en firedel. Når du har vært borte, gir de neste timene til sjøs dobbel fartstid.', 'Sea time is earned aboard: every hour at sea and every landing. What the crew does while you are away counts a quarter. After time away, the next hours at sea give double sea time.') +
+      (rest > 0 ? ' <b>' + L('Uthvilt: ' + rest + ' t igjen.', 'Rested: ' + rest + ' h left.') + '</b>' : '') + '</p></div>'; }
   function sjomann(){
     const tab = sub.sjomann || 'tatover';
     if (tab === 'papir') return '<div class="ph-c">' + subs('sjomann', [['tatover', 'Tatoveringer', 'Tattoos'], ['overtro', 'Fra gamle dager', 'The old ways'], ['papir', 'Papirer', 'Papers']]) + papers() + '</div>';
-    if (tab === 'tatover') return '<div class="ph-c">' + subs('sjomann', [['tatover', 'Tatoveringer', 'Tattoos'], ['overtro', 'Fra gamle dager', 'The old ways'], ['papir', 'Papirer', 'Papers']]) + tattoos() + '</div>';
+    if (tab === 'tatover') return '<div class="ph-c">' + subs('sjomann', [['tatover', 'Tatoveringer', 'Tattoos'], ['overtro', 'Fra gamle dager', 'The old ways'], ['papir', 'Papirer', 'Papers']]) + fsCard() + tattoos() + '</div>';
     const heard = S.lore || {}, ids = Object.keys(LORE), n = ids.filter(id => heard[id]).length;
     const h = ['<div class="ph-c">' + subs('sjomann', [['tatover', 'Tatoveringer', 'Tattoos'], ['overtro', 'Fra gamle dager', 'The old ways'], ['papir', 'Papirer', 'Papers']]) + '<div class="ph-card"><h4>' + L('Fra gamle dager', 'The old ways') + '</h4><p class="ph-note">' + L('Sjøfolk og fiskere har alltid vært overtroiske. Det du hører om bord, på kaia og på puben, samles her. Du har hørt ', 'Seafarers and fishermen have always been superstitious. What you hear aboard, on the quay and at the pub is kept here. You have heard ') + n + L(' av ', ' of ') + ids.length + L(' fortellinger.', ' stories.') + '</p></div>'];
     for (const id of ids){ const E = LORE[id], w = heard[id];

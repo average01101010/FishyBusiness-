@@ -240,6 +240,7 @@ function step(){
   if (S.t % 60 === 0) seasonDay(H);   // the seasons' news and the skrei festival (09c-seasons.js)
   folkPort(H);                        // Edvard on the quay in the home harbour (09d-folk.js)
   eachVessel(() => vesselStep(H));
+  fsMinute();                         // sea time with you aboard (09e-fartstid.js)
 }
 // one vessel's minute: the catch keeps, the yard works, plans start, and the boat sails or fishes
 function vesselStep(H){

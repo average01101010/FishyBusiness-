@@ -859,3 +859,25 @@ body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 2
 .pnt-lg img{width:100%;height:auto;border-radius:4px}
 .pnt-lg.on{outline:3px solid #1e6fd9;outline-offset:1px}
 .pnt-up{display:inline-flex;align-items:center;cursor:pointer}
+/* sea time (core/09e-fartstid.js): the chip on the phone's home, the bar in its card, and the report on opening */
+.ph-goal.ph-fs{margin-top:-6px}
+.ph-goal.ph-fs .gb i{background:linear-gradient(90deg,#f2b33d,#ffd77a)}
+.fsbar{display:block;height:6px;border-radius:3px;background:rgba(0,0,0,.1);overflow:hidden;margin:6px 0 4px}
+.fsbar i{display:block;height:100%;background:linear-gradient(90deg,#f2b33d,#ffd77a)}
+.aw{text-align:center}
+.aw-h{margin:0 0 6px;font:600 13px var(--sans);opacity:.7;text-transform:uppercase;letter-spacing:.04em}
+.aw-big{margin:4px 0 12px}
+.aw-big span{display:block;font:800 40px/1.1 var(--sans);color:#1e8c6e;font-variant-numeric:tabular-nums}
+.aw-big small{font:500 13px var(--sans);opacity:.75}
+.aw-fs{text-align:left;margin:0 0 12px}
+.aw-fl{display:flex;justify-content:space-between;align-items:baseline;font:600 14px var(--sans);margin-bottom:5px}
+.aw-fl span{color:#b8860b;font-weight:700}
+.aw-fl.aw-up b{color:#b8860b;animation:awPop .6s ease-out}
+@keyframes awPop{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
+.aw-bar{height:10px;border-radius:5px;background:rgba(0,0,0,.1);overflow:hidden}
+.aw-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#f2b33d,#ffd77a);transition:width .9s cubic-bezier(.2,.8,.2,1)}
+.aw-ts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 10px}
+.aw-t{background:rgba(0,0,0,.05);border-radius:10px;padding:8px 6px;display:flex;flex-direction:column;gap:3px}
+.aw-t b{font:700 15px var(--sans)}
+.aw-t span{font:500 11px/1.25 var(--sans);opacity:.75}
+.aw-log{text-align:left;max-height:30vh;overflow:auto}

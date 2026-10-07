@@ -19,7 +19,7 @@ async def main():
         await pg.add_init_script("window.__early = []; const iv = setInterval(() => { try { window.__early.push([typeof S !== 'undefined' && S ? S.t : null, typeof SIMREADY !== 'undefined' && SIMREADY, typeof DEPTH !== 'undefined' && !!DEPTH]); } catch (e) {} if (window.__early.length > 400) clearInterval(iv); }, 5);")
         await pg.reload()
         await pg.wait_for_function("typeof SIMREADY !== 'undefined' && SIMREADY === true", timeout=60000)
-        r = await pg.evaluate("({t:S.t, away:!!document.querySelector('#modal:not([hidden]) .log, #modal:not([hidden]) h2'), depth:!!DEPTH, early:window.__early})")
+        r = await pg.evaluate("({t:S.t, away:!!document.querySelector('#modal:not([hidden]) .aw'), depth:!!DEPTH, early:window.__early})")
         early = r['early']; before = [e for e in early if not e[1]]
         stood = all(e[0] is None or e[0] == t0 for e in before); moved = r['t'] - t0
         print(json.dumps({'t0': t0, 'moved': moved, 'samplesBefore': len(before), 'stood': stood, 'depth': r['depth'], 'awayModal': r['away']}))

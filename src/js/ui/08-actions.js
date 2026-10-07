@@ -177,6 +177,7 @@ function sell(){
   for (const c of aboardNow) c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, net * c.share]]);
   for (const c of S.crew) c.off = false;
   if (meAboard()) fmLand(total);
+  fsLand(total);   // sea time for the landing (core/09e-fartstid.js)
   S.landN = (S.landN || 0) + 1;   // the landings, for a guest's papers (ui/10f-cloud.js: registering after the third)
   S.cash += net - lott - coopKr; S.stats.revenue += total; S.stats.costs += tk.sum + lott + coopKr;
   if (coopKr > 0) log(S.lic.coop.name + ' fikk ' + kr(coopKr) + ' for torsken på kvoten hans.', S.lic.coop.name + ' got ' + kr(coopKr) + ' for the cod on his quota.'); S.stats.kg += kg; S.hold = [];
@@ -232,9 +233,38 @@ function showIntro(namesOnly){
     S.intro = true; save(); refreshAll();
   });
 }
-function showAway(mins, fromIdx){
-  const ev = S.log.slice(fromIdx);
-  modal('<h2>' + t('away') + '</h2><p class="note">' + t('away_n', dur(mins / 60)) + '</p>' + (ev.length ? '<ul class="log">' + ev.map(e => '<li><time>' + hm(e.t / 60) + '</time><span>' + (S.lang === 'no' ? e.no : e.en) + '</span></li>').join('') + '</ul>' : '') + '<div class="btns"><button class="btn primary" data-close>' + t('ok') + '</button></div>');
+// ---------- «Mens du var borte» (Jonas 07.10.2026: «en følelse av instant-belønning») ----------
+// What the time away brought, gains only: one big number counting up (what was landed, or the sea time), the sea-time bar filling
+// from where it was, tiles for the landings, the best landing and the rest built up, and the few things that happened. Nothing about
+// what was missed, no countdown; a tap closes it. A short absence with nothing landed and no new year shows nothing.
+let AWAYR = null;
+function awayStart(mins, realMs){ AWAYR = {mins, realMs, idx:S.log.length, t0:S.t, rev:S.stats.revenue, kg:S.stats.kg, cash:S.cash, fs:fsState().p}; FS_AWAY = true; fsRested(realMs); }
+function awayEnd(){ FS_AWAY = false; const A = AWAYR; AWAYR = null; if (A) showAway(A); }
+function showAway(A){
+  const en = S.lang === 'en', L2 = (no, e) => en ? e : no, F = fsState();
+  const sales = S.sales.filter(s => s.t > A.t0), rev = Math.max(0, S.stats.revenue - A.rev), kg = Math.max(0, S.stats.kg - A.kg);
+  const o0 = fsOf(A.fs), o1 = fsOf(F.p), days = (o1.y * 365 + o1.d) - (o0.y * 365 + o0.d), up = o1.y > o0.y, rest = Math.round(F.rest / 60);
+  if (!sales.length && !up && A.realMs < 5 * 60000) return;
+  const best = sales.reduce((m, s) => !m || s.total > m.total ? s : m, null), ev = S.log.slice(A.idx).slice(-6).reverse();
+  const big = rev > 0 ? {v:rev, k:'kr', lbl:L2('levert mens du var borte', 'landed while you were away')} : {v:Math.max(0, days), k:'d', lbl:L2('døgn fartstid', 'days at sea')};
+  const tile = (v, l) => '<div class="aw-t"><b>' + v + '</b><span>' + l + '</span></div>';
+  modal('<div class="aw"><p class="aw-h">' + t('away') + ' · ' + dur(A.mins / 60) + '</p>' +
+    '<div class="aw-big"><span id="awNum">+0</span><small>' + big.lbl + '</small></div>' +
+    '<div class="aw-fs"><div class="aw-fl"><b id="awYr">' + fsText(A.fs) + '</b><span>' + (days > 0 ? '+' + fmt(days) + L2(' døgn', ' days') : '') + '</span></div><div class="aw-bar"><i id="awBar" style="width:' + (o0.f * 100).toFixed(1) + '%"></i></div></div>' +
+    '<div class="aw-ts">' + tile(sales.length ? fmt(Math.round(kg)) + ' kg' : '–', sales.length ? sales.length + L2(sales.length === 1 ? ' levering' : ' leveringer', sales.length === 1 ? ' landing' : ' landings') : L2('ingen leveringer', 'no landings')) +
+      tile(best ? kr(best.total) : '–', best ? L2('beste levering, ', 'best landing, ') + (portById(best.port) || {}).name : L2('beste levering', 'best landing')) +
+      tile(rest > 0 ? rest + ' t' : '–', L2('uthvilt: dobbel fartstid til sjøs', 'rested: double sea time at sea')) + '</div>' +
+    (ev.length ? '<ul class="log aw-log">' + ev.map(e => '<li><time>' + hm(e.t / 60) + '</time><span>' + (en ? e.en : e.no) + '</span></li>').join('') + '</ul>' : '') +
+    '<div class="btns"><button class="btn primary" data-close>' + L2('Til sjøs!', 'To sea!') + '</button></div></div>');
+  // the number counts up and the bar fills (a new year: to the end, then on from the start of the next)
+  const el = $('awNum'), bar = $('awBar'), yr = $('awYr'), t0 = performance.now(), T = 1300;
+  const fmtBig = v => big.k === 'kr' ? '+' + kr(v) : '+' + fmt(v);
+  const run = now => { const q = Math.min(1, (now - t0) / T), e = 1 - Math.pow(1 - q, 3); if (!el || !el.isConnected) return; el.textContent = fmtBig(Math.round(big.v * e));
+    if (q < 1) requestAnimationFrame(run); else if (navigator.vibrate && big.v > 0) try { navigator.vibrate(30); } catch (x){} };
+  requestAnimationFrame(run);
+  setTimeout(() => { if (!bar || !bar.isConnected) return; bar.style.width = (up ? 100 : o1.f * 100).toFixed(1) + '%';
+    if (up) setTimeout(() => { if (!bar.isConnected) return; bar.style.transition = 'none'; bar.style.width = '0%'; yr.textContent = fsText(F.p); yr.parentNode.classList.add('aw-up');
+      requestAnimationFrame(() => { bar.style.transition = ''; bar.style.width = (o1.f * 100).toFixed(1) + '%'; }); }, 900); }, 250);
 }
 
 // ---------- time ----------
@@ -250,17 +280,17 @@ function catchUp(realMs){
   let mins = Math.min(CATCHUP_CAP, Math.floor(realMs / 1000 / 60 * GAME_RATE));
   if (WCLOCK.on){ const w = worldT(); mins = Math.max(0, w - S.t); if (mins > WORLD_SIM_MAX){ S.t = w - WORLD_SIM_MAX; mins = WORLD_SIM_MAX; } realMs = mins / GAME_RATE * 60000; }
   if (mins < 1) return;
-  const idx = S.log.length;
+  if (mins >= 10) awayStart(mins, realMs);
   playMinutes(mins);
   panelDirty = true;
-  if (mins >= 10) showAway(mins, idx);
+  if (!CATCH_LEFT && AWAYR) awayEnd();
   if (realMs >= 5 * 60000) WAKE_BACK = true;
 }
 let lastWall = Date.now(), acc = 0, lastPanel = 0, lastSave = 0, WAKE_BACK = false;
 function tick(){
   const now = Date.now(), dt = (now - lastWall) / 1000; lastWall = now;
   // (until the simulation's data is in, the clock waits: 11-boot.js)
-  if (SIMREADY){ if (CATCH_LEFT > 0){ const n = Math.min(CATCH_LEFT, 3000); CATCH_LEFT -= n; playMinutes(n); panelDirty = true; }
+  if (SIMREADY){ if (CATCH_LEFT > 0){ const n = Math.min(CATCH_LEFT, 3000); CATCH_LEFT -= n; playMinutes(n); panelDirty = true; if (!CATCH_LEFT && AWAYR) awayEnd(); }
   else if (WCLOCK.on){
     // one clock for everyone: step on to the world's minute; more than ten minutes behind (the tab slept) is time away; a save from
     // before that is ahead goes at half pace until the world has caught up with it

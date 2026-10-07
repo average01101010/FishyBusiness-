@@ -1135,6 +1135,28 @@ Jonas' bestilling ligger i `docs/engasjement.md`, arbeidslista punkt 1. Alle sek
   - `admintest`: fanen Logoer tegnes i demoen.
   - Navnene er sjekket på bilder fra siden for alle båttypene.
 
+### 4.24 Fartstid og «Mens du var borte» (07.10.2026)
+
+Jonas' avgjørelser står i `docs/engasjement.md`, arbeidslista punkt 1. Dette er del 1 av 4.
+
+- **Fartstid** (`core/09e-fartstid.js`, `S.fs = {p, rest, away}`):
+  - Den går fra 0 til 40 år, uten rangnavn. Den er bare status og låser ingenting.
+  - Poengene til år N er `fsNeed(N) = 1 000 000 · (N/40)^2,8`: 33 til første år, 20 617 til tiende, 143 587 til tjuende og 1 000 000 til førtiende. Etter 40 koster hvert år like mye som det førtiende, og det vises som stjerner.
+  - `fsOf(p)` gir år, døgn (0–364) og andelen av året. `fsText` lager «12 år fartstid», eller «12 år og 143 døgn fartstid».
+  - Om bord tjenes 80 poeng per spilltime til sjøs (`fsMinute` i `step`) og 3·√kr per levering (`fsLand` i `sell`). Fangst tatt med haill teller.
+  - Mens du er borte (`FS_AWAY`, mens borte-tida spilles i `catchUp`), og når et mannskap leverer uten deg, teller det en firedel («rederierfaring», `S.fs.away`).
+  - **Uthvilt:** hver ekte time borte gir 2 spilltimer dobbel fartstid til sjøs, høyst 18 (`fsRested`). Hvilen brukes bare opp til sjøs og forsvinner aldri ved å vente.
+  - Et lagret spill uten fartstid får den regnet ut fra det som er gjort (`fsSeed`): nautiske mil med deg om bord, antall turer og inntekten.
+  - Et nytt år gir en linje i loggen og en toast. Hvert tiende år gir en melding fra Kystposten.
+  - Tempoet er kalibrert for omtrent 1000 poeng per ekte spilletime. Det gir år 3 første dag, år 5 første uke, år 10 etter rundt en måned og år 40 etter 2–3 år. Tallene justeres i spilltesting.
+- **Visningen:** en brikke under «Neste mål» på telefonen viser år og døgn, uthvilt eller døgn til neste år, med en linje. Et kort øverst i Sjømann-appen forklarer hvordan fartstid tjenes.
+- **«Mens du var borte»** (`awayStart`, `awayEnd` og `showAway` i `ui/08-actions.js`):
+  - `catchUp` tar et øyeblikksbilde før borte-tida spilles, også når den spilles i bolker (`CATCH_LEFT`).
+  - Rapporten viser ett stort tall som teller opp: det som ble levert, eller døgnene med fartstid hvis ingenting ble levert. Fartstidslinja fylles, og ved et nytt år fylles den til enden og starter på nytt. Tre ruter viser levert, beste levering og uthvilt, og under står de seks siste hendelsene. Knappen heter «Til sjøs!».
+  - Den viser bare det som er vunnet. Etter et kort fravær (under 5 ekte minutter) uten levering eller nytt år vises den ikke.
+- **Test:** `fartstidtest` (kurven, utregningen fra statistikk, om bord, uthvilt, borte, levering, rapporten, kort fravær og telefonen).
+- **Neste:** den navnløse båten med registrering og brukernavn (del 2), synlighet i AIS med eier og fartstid (del 3), så achievements.
+
 ## 5. Systemer i spillet
 
 ### 5.1 Båter og utstyr
