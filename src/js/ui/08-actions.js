@@ -175,7 +175,9 @@ function sell(){
   // those on hyre have their day wage (payHyre) and no share
   const aboardNow = crewAboard().filter(c => c.pay !== 'hyre'), lott = Math.round(aboardNow.reduce((a, c) => a + c.share, 0) * net);
   for (const c of aboardNow) c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, net * c.share]]);
-  for (const c of S.crew) c.off = false;
+  // back aboard after the trip they sat out; not at a landing that was still going when they were given time off, which put them
+  // straight back aboard for the next trip (tilbakemelding #32)
+  for (const c of S.crew) if (c.offTrip){ c.off = false; delete c.offTrip; }
   if (meAboard()) fmLand(total);
   fsLand(total);   // sea time for the landing (core/09e-fartstid.js)
   nameNudge();     // naming the boat without the cloud, after the second landing (ui/10f-cloud.js)

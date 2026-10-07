@@ -415,6 +415,11 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p88', '07.10.2026', 'Rettinger', 'Fixes', [
+      ['Den som får fri neste tur, blir på land den turen, også når fangsten fortsatt ble levert da du ga fri.', 'Crew given the next trip off stay ashore for that trip, also when the catch was still being landed when you gave them the time off.'],
+      ['Skipperen går også på dekk og sløyer når linetrekket stopper fordi bløggekaret er fullt.', 'The skipper also goes on deck to gut when hauling the line stops because the bleeding tub is full.'],
+      ['Registreringsmerket, navnet og logoen på skroget leses riktig vei på begge sider.', 'The registration mark, the name and the logo on the hull read the right way on both sides.'],
+      ['Eget merke i kartet flytter seg opp over tastaturet mens du skriver navnet.', 'Your own mark on the chart moves up above the keyboard while you type its name.']]],
     ['p87', '07.10.2026', 'Kystposten', 'Kystposten', [
       ['Kystposten er avisa for hele kysten: båtkjøp, båtdåp, grunnstøtinger, redninger, berginger, storfisk, fyrbilder og dagens største landinger, også fra de andre båtene langs kysten.', 'Kystposten is the paper for the whole coast: boats bought and named, groundings, rescues, salvage, big fish, lighthouse pictures and the day\'s biggest landings, from the other boats along the coast too.'],
       ['Trykk på en sak for å lese mer. Fanen Lokalt viser det som skjer innen 150 km fra hjemhavna.', 'Tap a story to read more. The Local tab shows what happens within 150 km of your home harbour.'],
@@ -1429,7 +1434,7 @@ const PHONE = (() => {
         else { B.pool.splice(B.pool.indexOf(c), 1); toast(L(c.name.split(' ')[0] + ' takket nei og tok hyre et annet sted.', c.name.split(' ')[0] + ' said no and took a berth elsewhere.')); } }
       else { B.pool.splice(B.pool.indexOf(c), 1); c.hiredT = S.t; c.earn = []; delete c.until; S.crew.push(c); achAdd('crew'); log(c.name + ' har mønstret på som ' + c.lv + ' med ' + Math.round(c.share * 100) + ' % lott.', c.name + ' signed on as ' + c.lvEn + ' on a ' + Math.round(c.share * 100) + '% share.'); } }
     else if (a === 'foundas'){ if (!foundAS()) toast(t('no_cash')); }
-    else if (a === 'coff'){ const c = crewById(d.id); if (c){ c.off = !c.off; if (c.off){ c.morale = Math.min(100, c.morale + 2); } } }
+    else if (a === 'coff'){ const c = crewById(d.id); if (c){ c.off = !c.off; if (c.off){ c.morale = Math.min(100, c.morale + 2); } else delete c.offTrip; } }
     // lott or hyre (E3): the day wage is the one asked for when the agreement is changed
     else if (a === 'cpay'){ const c = crewById(d.id); if (c){ if (c.pay === 'hyre') c.pay = 'lott'; else { c.pay = 'hyre'; c.hyre = hyreAsk(c); }
       log(c.name + (c.pay === 'hyre' ? ' går over på hyre: ' + kr(c.hyre) + ' per dag.' : ' går over på lott: ' + Math.round(c.share * 100) + ' %.'), c.name + (c.pay === 'hyre' ? ' moves to a wage: ' + kr(c.hyre) + ' a day.' : ' moves to a share: ' + Math.round(c.share * 100) + ' %.')); } }
