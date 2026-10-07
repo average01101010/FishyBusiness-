@@ -15,8 +15,8 @@ async def main():
         await boot(pg)
         await pg.evaluate("""(()=>{ S.tut = 0; S.cash = 1e6; S.t = Math.round((Date.UTC(2027, 7, 9, 12) - EPOCH) / 6e4); S.mult = 0.00001; })()""")
         await pg.wait_for_function("G3.isActive() && typeof DEPTH !== 'undefined' && DEPTH", timeout=90000); await pg.wait_for_timeout(800)
-        # the 3D ground's packs at every unit (the heights round the ones far from the boat are not in otherwise)
-        await pg.evaluate("Promise.all(UNITA.map(U => Promise.all(mapPacksIn('view', U.o[0] / 1000 - 0.3, U.o[1] / 1000 - 0.3, U.o[0] / 1000 + 0.3, U.o[1] / 1000 + 0.3).map(mapLoad))))")
+        # the 3D ground's packs and the simulation's (the depth) at every unit (the ones far from the boat are not in otherwise)
+        await pg.evaluate("Promise.all(UNITA.map(U => Promise.all(['view', 'sim'].flatMap(k => mapPacksIn(k, U.o[0] / 1000 - 0.3, U.o[1] / 1000 - 0.3, U.o[0] / 1000 + 0.3, U.o[1] / 1000 + 0.3)).map(mapLoad))))")
         r = await pg.evaluate("""(()=>{
           // the lowest tide at each unit: all the constituents of its place at their low together (phase K10: the tide per place)
           const D = G3._debug, lowAt = p => -tidePlace(p).C.reduce((s, c) => s + c[0], 0), R = {low:-1e9, units:{}};
