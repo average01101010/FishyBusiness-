@@ -196,6 +196,9 @@ function npcStates(H, only){
 // carried on along their heading at their speed for up to 30 real seconds since they were heard, so they glide between reports. They
 // look like the boat type they are (its length and beam pick the model, view3d.js npcKit) and carry the boat's name on the AIS.
 const PEERS = [];
+// The other players' sets standing in the sea near this boat (ui/10h-world.js, supabase gear_near): {k (garn, line, teine), a:{x, y}, b:{x, y}}, with
+// nothing of the owner (tilbakemelding #35). The chart draws them in grey and the 3D view their buoys.
+const PEERGEAR = [];
 // another player's boat name goes into the chart's SVG and the AIS card as HTML, so nothing that could make markup is kept (the
 // server strips the same, supabase/migrations/20261006020000_toplist.sql)
 function peerName(s){ return String(s || '').replace(/[<>&"'`\\]/g, '').trim().slice(0, 24) || '–'; }

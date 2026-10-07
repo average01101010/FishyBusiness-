@@ -1808,6 +1808,7 @@ const G3 = (() => {
   // the buoys of every set within sight, bobbing on the waves, flags blowing downwind
   function drawGearSea(eye, t, VP, H){
     const L = []; for (const s of S.sets || []) if (!s.lost){ L.push(s.a); L.push(s.b); }
+    for (const s of PEERGEAR){ L.push(s.a); L.push(s.b); }   // the other players' buoys (tilbakemelding #35)
     // setting, the first buoy goes over the stern and lies astern of her until she has run clear of it (tilbakemelding #25: «bøya skal
     // ligge på siden eller bak båten når settingen starter»)
     const g = S.boat.gop; if (g && g.op === 'set' && g.done >= 0){ const back = ((GEO(vtype()).stern || 3) + 5) / 1000, d = Math.hypot(bv.x / 1000 - g.a.x, bv.z / 1000 - g.a.y);

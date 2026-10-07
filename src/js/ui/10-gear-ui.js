@@ -67,6 +67,12 @@ function gearPanel(){
 // the chart: two buoys and the string between them, for every vessel in the company
 function gearSvg(u){
   const g = [];
+  // the other players' sets, in grey and without a name (tilbakemelding #35): under ours, and not tappable, so a route can go by them
+  for (const s of PEERGEAR){
+    const dash = s.k === 'line' ? ' stroke-dasharray="' + (5 * u) + ' ' + (3 * u) + '"' : s.k === 'teine' ? ' stroke-dasharray="' + (1.5 * u) + ' ' + (3 * u) + '"' : '';
+    g.push('<line x1="' + s.a.x + '" y1="' + s.a.y + '" x2="' + s.b.x + '" y2="' + s.b.y + '" class="gline peer" stroke="#8d9aa3" stroke-width="' + (1.8 * u) + '"' + dash + '/>');
+    for (const e of [s.a, s.b]) g.push('<circle cx="' + e.x + '" cy="' + e.y + '" r="' + (3.2 * u) + '" class="buoy peer" fill="#a9b4bb" stroke-width="' + (1.1 * u) + '"/>');
+  }
   for (const s of S.sets || []){
     const st = setState(s), c = SETCOL[s.kind], dash = s.kind === 'line' ? ' stroke-dasharray="' + (5 * u) + ' ' + (3 * u) + '"' : s.kind === 'teine' ? ' stroke-dasharray="' + (1.5 * u) + ' ' + (3 * u) + '"' : '';
     g.push('<line x1="' + s.a.x + '" y1="' + s.a.y + '" x2="' + s.b.x + '" y2="' + s.b.y + '" class="gline ' + st + '" stroke="' + c + '" stroke-width="' + (2.2 * u) + '"' + dash + '/>');

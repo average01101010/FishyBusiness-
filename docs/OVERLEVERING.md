@@ -2777,6 +2777,14 @@ Jonas: «hele spillet skal være free-to-play, men med betalte boostere i form a
   - **Mannskapet:** de som står på «Haling» i arbeidskjedene, står ved haleren, ved enden av renna og ved binge eller balje. Skipperen er med når det er hans jobb, og forlater da rattet.
   - `haultest.py` tar bilder og sjekker at skiva går rundt.
 
+### 5.31 De andres redskap i havet (tilbakemelding #35, 07.10.2026)
+
+- **Hva:** garn, liner og teiner som andre spillere har stående, vises uten eier: grå streker med bøyer i kartplotteren (`gearSvg`, `10-gear-ui.js`) og bøyene i 3D (`drawGearSea`). Det er bare visning: de kan ikke trykkes på, og de stopper ikke setting eller ruter.
+- **Server** (`supabase/migrations/20261007200000_gear.sql`): tabellen `gear_sets` (spiller, id, slag og de to bøyene), uten policy. `gear_put(sets)` skriver over spillerens egne (høyst 60), `gear_near(x, y, r)` gir de andres innenfor r km (høyst 60) som `[slag, x1, y1, x2, y2]`, nærmest først, høyst 300, uten gjester og uten noe om eieren (ingen id, ingen navn). Sett som ikke er fornyet på 14 døgn, hoppes over.
+- **Klient** (`gearSync` i `10h-world.js`, kalt fra `worldTick` hvert 15. sekund): egne sett går opp når de endrer seg og hvert 5. minutt, de andres hentes én gang i minuttet eller når båten har gått 5 km. `PEERGEAR` (`05-vessels.js`) er listen. En database uten funksjonene (404) lar spillet være i fred.
+- **Å gjøre:** migrasjonen må kjøres (Supabase-MCP-en ble avbrutt da den skulle legges inn). Til da vises ingenting av de andres redskap.
+- **Test:** `peergear.py` (en etterligning av databasen står i stedet for den).
+
 ### 5.28 Regelmotoren langs hele kysten (R2 av regelplanen, 05.10.2026)
 
 - **Blåkveite (07.10.2026):** for line og garn (eller arten) nord for 62° N på 400 m og dypere: `bk5o` (åpent, med perioden og maksimalkvoten), `bk5c` (stengt: bare bifangst, 7 %), `bkB` (uten blad B), `bk7` (28 m og over: bare bifangst). Dypere enn 1000 m blokkeres bunnredskap (`bk1000`: «nye fiskeområder» krever egen tillatelse etter forskrift om bunnredskap). Minstemål 45 cm i `ruMinSize`. Regler-appen har arten som eget valg.
