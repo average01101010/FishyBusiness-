@@ -415,6 +415,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p87', '07.10.2026', 'Rettinger', 'Fixes', [
+      ['Den som får fri neste tur, blir på land den turen, også når fangsten fortsatt ble levert da du ga fri.', 'Crew given the next trip off stay ashore for that trip, also when the catch was still being landed when you gave them the time off.']]],
     ['p86', '07.10.2026', 'Havforskere og fyr', 'Scientists and lighthouses', [
       ['Nytt på tavla: prøvefiske for Havforskningsinstituttet. Fisk ved en stasjon og mål ti fisk på målebrettet, eller kjør en ekkoloddlinje gjennom tre punkter. Fangsten er din.', 'New on the board: survey fishing for the Institute of Marine Research. Fish at a station and measure ten fish on the board, or run an echo sounder line through three points. The catch is yours.'],
       ['Kystposten vil ha bilder av fyrene langs kysten, noen ganger i lav sol, mens fyret lyser, under nordlyset eller i uvær. Trykk på utløseren når fyret er i bildet, så står bildet i avisa.', 'Kystposten wants pictures of the lighthouses along the coast, sometimes in low sun, with the light lit, under the northern lights or in heavy weather. Press the shutter when the lighthouse is in the picture, and it is printed in the paper.'],
@@ -1416,7 +1418,7 @@ const PHONE = (() => {
         else { B.pool.splice(B.pool.indexOf(c), 1); toast(L(c.name.split(' ')[0] + ' takket nei og tok hyre et annet sted.', c.name.split(' ')[0] + ' said no and took a berth elsewhere.')); } }
       else { B.pool.splice(B.pool.indexOf(c), 1); c.hiredT = S.t; c.earn = []; delete c.until; S.crew.push(c); achAdd('crew'); log(c.name + ' har mønstret på som ' + c.lv + ' med ' + Math.round(c.share * 100) + ' % lott.', c.name + ' signed on as ' + c.lvEn + ' on a ' + Math.round(c.share * 100) + '% share.'); } }
     else if (a === 'foundas'){ if (!foundAS()) toast(t('no_cash')); }
-    else if (a === 'coff'){ const c = crewById(d.id); if (c){ c.off = !c.off; if (c.off){ c.morale = Math.min(100, c.morale + 2); } } }
+    else if (a === 'coff'){ const c = crewById(d.id); if (c){ c.off = !c.off; if (c.off){ c.morale = Math.min(100, c.morale + 2); } else delete c.offTrip; } }
     // lott or hyre (E3): the day wage is the one asked for when the agreement is changed
     else if (a === 'cpay'){ const c = crewById(d.id); if (c){ if (c.pay === 'hyre') c.pay = 'lott'; else { c.pay = 'hyre'; c.hyre = hyreAsk(c); }
       log(c.name + (c.pay === 'hyre' ? ' går over på hyre: ' + kr(c.hyre) + ' per dag.' : ' går over på lott: ' + Math.round(c.share * 100) + ' %.'), c.name + (c.pay === 'hyre' ? ' moves to a wage: ' + kr(c.hyre) + ' a day.' : ' moves to a share: ' + Math.round(c.share * 100) + ' %.')); } }
