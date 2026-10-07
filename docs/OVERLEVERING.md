@@ -1232,6 +1232,10 @@ Jonas' avgjørelser står i `docs/engasjement.md`, arbeidslista punkt 1.5 og 3. 
   - Brikka på hjemskjermen viser «Første uke n / 21» og nærmeste milepæl, til kapittel 3 er fullført.
 - **I testene** (`#notut`) gis ingen gaver eller bannere uten `window.__achOn`.
 - **Trakten** i admin-fanen «Merker» viser hvor mange som nådde hver milepæl, og kapitlene som er fullført. Kilden er spillets hendelser `ach` og `ach_ch`, så bare spillere som deler statistikk telles. `admin_ach` ligger i `supabase/migrations/20261007140000_ach.sql`.
+- **Den store trakten** (admin-fanen «Trakt», `admin_funnel(weeks)` i `supabase/migrations/20261007150000_funnel.sql`, `docs/engasjement.md` punkt 9) følger spilleren fra første økt (konvolutten) til første fangst, første og tredje levering, konto, og tilbake etter 1, 7 og 30 dager.
+  - Første fangst er milepælen `fish`, eller en levering for spill fra før merkene. Leveringene er spillets `sale`-hendelser, én per levering. Konto er en WorkOS-id (`user_…`) som ikke er gjest.
+  - «Tilbake etter N dager» er en økt startet minst N dager etter den første. Den regnes bare av dem som startet for minst N dager siden (`d1n`, `d7n`, `d30n`).
+  - Tallene vises totalt og per uke spillerne startet (de siste 8). Steget med størst frafall er merket. Bare spillere som deler statistikk, er med, siden bare de har økter og hendelser.
 - **Tester:**
   - `merketest`: alt over.
   - `sqltest`: trakten.

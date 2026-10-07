@@ -516,6 +516,21 @@ def main():
               'r': json.loads(sql("select public.admin_ach()", AD2, 'authenticated'))}
         print(ok(AC['pl'][0] and AC['mfa'][0] and AC['r']['ms'].get('took') == 2 and AC['r']['ms'].get('fish') == 1 and AC['r']['ch'].get('0') == 1 and isinstance(AC['r']['players'], int)),
               "the badges' funnel: each milestone counted once per player, the chapters finished; only the admin with MFA reads it", AC['r'])
+        # the funnel (20261007150000_funnel.sql): from the first session to the third landing and the account, and coming back after
+        # 1, 7 and 30 days of those who have had that long; counted as the change three new players make
+        F0 = json.loads(sql("select public.admin_funnel(8)", AD2, 'authenticated'))['all']
+        sql("""insert into public.players (id, guest) values ('user_01FN1', false), ('33333333-3333-4333-8333-333333333333', true), ('user_01FN3', false);
+          insert into public.sessions (id, player_id, started_at) values ('44444444-4444-4444-8444-444444444441', 'user_01FN1', now() - interval '10 days'),
+            ('44444444-4444-4444-8444-444444444442', 'user_01FN1', now() - interval '2 days'), ('44444444-4444-4444-8444-444444444443', '33333333-3333-4333-8333-333333333333', now() - interval '2 hours'),
+            ('44444444-4444-4444-8444-444444444444', 'user_01FN3', now() - interval '3 days'), ('44444444-4444-4444-8444-444444444445', 'user_01FN3', now() - interval '36 hours');
+          insert into public.events (player_id, kind, data) values ('user_01FN1', 'ach', '{"id":"fish"}'), ('user_01FN1', 'sale', '{}'), ('user_01FN1', 'sale', '{}'), ('user_01FN1', 'sale', '{}'),
+            ('user_01FN3', 'sale', '{}'), ('33333333-3333-4333-8333-333333333333', 'ach', '{"id":"took"}')""")
+        F1 = json.loads(sql("select public.admin_funnel(8)", AD2, 'authenticated'))
+        FD = {k: F1['all'][k] - F0.get(k, 0) for k in F1['all']}
+        FX = {'pl': sql("select public.admin_funnel(8)", B, 'authenticated', expect_err=True), 'mfa': sql("select public.admin_funnel(8)", AD1, 'authenticated', expect_err=True)}
+        print(ok(FD == {'start': 3, 'catch': 2, 'land1': 2, 'land3': 1, 'reg': 2, 'd1': 2, 'd1n': 2, 'd7': 1, 'd7n': 1, 'd30': 0, 'd30n': 0} and FX['pl'][0] and FX['mfa'][0]
+                 and F1['weeks'] and sum(w['start'] for w in F1['weeks']) >= 3),
+              "the funnel: started, first catch, first and third landing, an account, and back after 1, 7 and 30 days of those who have had that long; by the week they started; only the admin with MFA reads it", FD)
     finally:
         run(*as_pg([os.path.join(BIN, 'pg_ctl'), '-D', data, '-m', 'immediate', 'stop']))
         shutil.rmtree(tmp, ignore_errors=True)

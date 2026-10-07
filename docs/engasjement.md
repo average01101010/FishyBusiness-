@@ -56,7 +56,7 @@ Alt bygges for hele kysten. Hver endring skal kunne leses av i trakten (punkt 9)
 6. **Ukerytmen:** søndagskort og én push, «Ukas fangst», med plassering, beste dag og hva naboene leverte. Sesongvimpler som fortjenes («Skreisesongen 2027»), men som også kan fortjenes neste år: sesong uten FOMO.
 7. **Kystkartet:** samling for hele landet. Mottak du har levert til (av 153), lykter du har passert, arter du har fanget. Fullførelsestrangen er ærlig når samlingen er ekte.
 8. **«Kystfiskerpakken»**, ett kjøp (for eksempel 199 kr): alle dagens fargeskjemaer, supportervimpel og navnet ditt på kildesiden. Ingen spillfordeler. Et alternativ til småkjøp for dem som heller betaler én gang.
-9. **Trakten i admin-dashbordet:** konvolutt → første fangst → første levering → tredje levering → registrert → tilbake dag 1, 7 og 30. Hendelsene finnes (start, sale, reg_ask, reg_go). Uten dette gjetter vi.
+9. **Trakten i admin-dashbordet** (bygd 07.10.2026, fanen «Trakt», `admin_funnel` i `supabase/migrations/20261007150000_funnel.sql`): konvolutt → første fangst → første levering → tredje levering → registrert → tilbake etter 1, 7 og 30 dager, totalt og per uke spillerne startet. Det største frafallet er merket. Bare spillere som deler statistikk telles. Bygd før punkt 4, fordi hver endring skal kunne leses av her.
 
 **Vurderes senere:** fiskarlag per hjemhavn (felles ukemål og oppslag, aldri slik at én spillers fravær skader andre), innholdsutvidelser som havsteget med blåkveite (legitimt så lenge grunnspillet føles komplett), abonnement («Rederi-medlemskap») med bekvemmeligheter der ingenting går tapt ved oppsigelse (vent til betalingsviljen for kosmetikk er kjent).
 
