@@ -2772,7 +2772,7 @@ const G3 = (() => {
       else { MO.phase = 'in'; MO.t = 0; MO.from = {x:bv.px, z:bv.pz, h:bv.cog}; MO.path = pathM(berthPath({x:bv.px / 1000, y:bv.pz / 1000}, bp)); MO.dur = clamp(MO.path.len / 1.6, 8, 60); MO.lines = 0; }
       MO.init = true;
     }
-    if (b.status === 'unmooring'){ MO.phase = 'out'; MO.lines = clamp(4 * (b.castUntil - S.t - currentFrac()) / CAST_MIN, 0, 4); MO.dep = {bp, pid:b.port}; }
+    if (b.status === 'unmooring'){ MO.phase = 'out'; MO.lines = clamp(4 * (b.castUntil - S.t - currentFrac()) / CAST_MIN, 0, 4); MO.dep = {bp, pid:b.port, naust:berthKind(b) === 'naust'}; }
     if (MO.phase === 'in'){
       MO.t += dt * sp; const u0 = clamp(MO.t / MO.dur, 0, 1);
       // along the way in (clear of land, piers and the unit's quay), turning to lie along the quay at the end
@@ -2837,7 +2837,8 @@ const G3 = (() => {
     const add = (x, z) => { const q = P[P.length - 1]; if (!q || Math.hypot(q[0] - x, q[1] - z) > 0.3) P.push([x, z]); };
     let back = 0, hd0 = null, endBp = null;
     let iOut = 0;
-    if (dep){ const pt = portById(dep.pid); let W = pt ? berthPath(pt.p, dep.bp).reverse() : [dep.bp];
+    // (from Father's naust straight out to the route's first point: the harbour point is the plant's, tilbakemelding #20)
+    if (dep){ const pt = portById(dep.pid), w0 = pl.wps[pl.idx], from = dep.naust && w0 ? w0 : pt && pt.p; let W = from ? berthPath(from, dep.bp).reverse() : [dep.bp];
       // from the last turn out from the quay straight on to the route when that is clear: the harbour point can lie by the berth
       // (Senjahopen), and going back to it had her back out and then run in past the quay again
       const w1 = pl.wps[pl.idx]; if (W.length > 2 && w1 && berthClear(W[W.length - 2], w1, (dep.bp.Bb || 3) / 2)) W = W.slice(0, -1);

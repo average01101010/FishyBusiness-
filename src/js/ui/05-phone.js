@@ -409,6 +409,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p76', '07.10.2026', 'Autonav fra naustet', 'Autonav from the boathouse', [
+      ['Ligger båten ved fars naust, starter Autonav og ruta i kartplotteren ved naustet, og båten går rett derfra. Før startet ruta ved mottaket.', 'When the boat lies at Father\'s boathouse, Autonav and the route on the chart plotter start at the boathouse, and the boat leaves straight from there. Before, the route started at the plant.']]],
     ['p75', '06.10.2026', 'Hele kysten', 'The whole coast', [
       ['Nyhetene i Kystposten, topplista, nye folk på Mannskapsbørsen og mottakene i nyhetene følger nå hjemhavna di, hvor du enn starter langs kysten. Ingen tekster later lenger som om spillet bare er på Senja.', 'The news in the Coast Post, the leaderboard, new hands at the crew exchange and the plants in the news now follow your home harbour, wherever you start along the coast. No text pretends any more that the game is only on Senja.']]],
     ['p74', '06.10.2026', 'Spill som gjest', 'Play as a guest', [

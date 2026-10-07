@@ -266,7 +266,7 @@ function vesselStep(H){
     else if (S.settings.autoOn && W0 > S.settings.autoW && (S.plan.delays || 0) < 12){ S.plan.depAt += 60; S.plan.delays = (S.plan.delays || 0) + 1; log('Avgangen er utsatt en time. Vinden er ' + W0.toFixed(0) + ' m/s.', 'Departure postponed an hour. The wind is ' + W0.toFixed(0) + ' m/s.'); }
     else depart();
   }
-  if (b.status === 'unmooring'){ if (S.t >= b.castUntil){ const pid = b.port; b.status = 'sailing'; b.port = null; helmCastDone(pid); } return; }
+  if (b.status === 'unmooring'){ if (S.t >= b.castUntil){ const pid = b.port, q = quayPos(b), kind = berthKind(b); b.pos = {x:q.x, y:q.y}; b.status = 'sailing'; b.port = null; helmCastDone(pid, kind); } return; }
   if (b.status === 'port'){ if (b.landWait && b.port === b.landWait && mottakOpen(H)){ const pid = b.landWait; b.landWait = null; opsLanded(pid); } return; }
   if (b.status === 'tow'){ towStep(H); return; }        // the rescue boat comes and tows (rescue)
   const W = windAt(H), hs = hsAt(b.pos, H);
