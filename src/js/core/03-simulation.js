@@ -751,7 +751,12 @@ function custNear(c){
   return (home && dist(q.p, home.p) < 60) || dist(q.p, S.boat.pos) < 40;
 }
 function repOf(id){ return (S.rep && S.rep[id] != null) ? S.rep[id] : 50; }
-function spCatchable(sp, H){ if (sp === 'kveite' && kveiteClosed(H)) return false; if (sp === 'uer' && !uerOpen(H)) return false; if (sp === 'kveite' && !S.boat.kgear) return false;
+// Greenland halibut is ordered in the direct fishery, until the stop is announced, by a boat that may fish it and has line or nets
+function bkOrderable(H){ const s = bkSeason(yearH(H)), g = S.pgear; return H >= s.open && H < s.notice && bladB() && BOAT.len < 28 && !!g && (!!(g.nets && g.nets.length) || ['bank', 'hyse'].some(k => g.lines && g.lines[k] && g.lines[k].n > 0)); }
+// every plant north of 62° N orders it (Jonas 07.10.2026: «Alle mottak skal kunne ta i mot blåkveite»)
+function bkPlant(id){ const q = portById(id); return !!(q && q.mottak !== false && natLL(q.p).lat >= 62); }
+function custSp(c){ return c.big && bkPlant(c.port) && !c.sp.includes('blakveite') ? c.sp.concat('blakveite') : c.sp; }
+function spCatchable(sp, H){ if (sp === 'blakveite') return bkOrderable(H); if (sp === 'kveite' && kveiteClosed(H)) return false; if (sp === 'uer' && !uerOpen(H)) return false; if (sp === 'kveite' && !S.boat.kgear) return false;
   const s = SPECIES[sp]; let a = seasonal(s.av, H); if (sp === 'torsk') a += seasonal(s.skrei, H); return a >= 0.6; }
 function ordersTick(H){
   const O = ordState();
@@ -765,14 +770,15 @@ function ordersTick(H){
   if (gDate(H).getUTCHours() !== 6 || O.offers.length >= 3) return;
   const n = 1 + (h2(Math.floor(H / 24), 1301) < 0.4 ? 1 : 0);
   for (let k = 0; k < n && O.offers.length < 3; k++){
-    const pool = CUSTOMERS.filter(custNear).map(c => ({c, w:(0.5 + repOf(c.id) / 100) * (c.sp.some(sp => spCatchable(sp, H)) ? 1 : 0)})).filter(x => x.w > 0); if (!pool.length) return;
+    const pool = CUSTOMERS.filter(custNear).map(c => ({c, w:(0.5 + repOf(c.id) / 100) * (custSp(c).some(sp => spCatchable(sp, H)) ? 1 : 0)})).filter(x => x.w > 0); if (!pool.length) return;
     let r = Math.random() * pool.reduce((a, x) => a + x.w, 0), c = pool[0].c; for (const x of pool){ r -= x.w; if (r <= 0){ c = x.c; break; } }
-    const sps = c.sp.filter(sp => spCatchable(sp, H) && turRoom(sp, H) > 150); if (!sps.length) continue;   // within the access and the quotas (09g-turer.js)
+    const sps = custSp(c).filter(sp => spCatchable(sp, H) && turRoom(sp, H) > 150); if (!sps.length) continue;   // within the access and the quotas (09g-turer.js)
     const sp = sps[Math.floor(Math.random() * sps.length)], cap = capHold();
     let kg = c.big ? Math.round(clamp(cap * (0.4 + Math.random() * 0.5), 100, 800) / 10) * 10 : Math.round((20 + Math.random() * 60) / 5) * 5;
     if (sp === 'kveite') kg = 20 + Math.round(Math.random() * 3) * 10;
+    if (sp === 'blakveite') kg = Math.round(clamp(cap * (0.6 + Math.random() * 0.6), 300, 3000) / 50) * 50;   // a set or two on the edge
     kg = Math.max(10, Math.min(kg, Math.round(turRoom(sp, H) * 0.8 / 10) * 10));
     const rf = 0.8 + repOf(c.id) / 250, prem = Math.round((c.big ? 0.1 + Math.random() * 0.1 : 0.2 + Math.random() * 0.2) * rf * 100) / 100;
-    O.offers.push({id:++O.seq, cust:c.id, port:c.port, sp, kg, left:kg, q:c.q, prem, bonus:Math.round((c.big ? 1500 + Math.random() * 1500 : 1000 + Math.random() * 1000) * rf / 100) * 100, offerUntil:S.t + 1440, days:c.big ? 3 : 2});
+    O.offers.push({id:++O.seq, cust:c.id, port:c.port, sp, kg, left:kg, q:c.q, prem, bonus:Math.round((c.big ? 1500 + Math.random() * 1500 : 1000 + Math.random() * 1000) * rf / 100) * 100, offerUntil:S.t + 1440, days:sp === 'blakveite' ? 4 : c.big ? 3 : 2});
   }
 }

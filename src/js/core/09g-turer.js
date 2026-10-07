@@ -74,6 +74,7 @@ function turCan(a, b, hGame, back, fc = true){
 const TUR_THS = ['torsk', 'hyse', 'sei'];
 function turRoom(sp, H){
   if (sp === 'krabbe') return 0;
+  if (sp === 'blakveite') return Math.max(0, bkMax(BOAT.len, yearH(H)) - bkUsed(H));   // the maximum quota (03d-quota.js)
   const acc = access(); if (!TUR_THS.includes(sp)) return Infinity; if (acc === 'none') return 0;
   if (sp === 'torsk') return codRoom(H);
   if (acc === 'lukket'){ const LQ = licQ(S.lic, H); return Math.max(0, ((LQ[sp] || [0])[0] || 0) - (quotaState()[sp] || 0)); }
@@ -99,7 +100,7 @@ function turBest(o, cls, used, me = turMe()){
   for (const {q, h} of turOrder(cand, me)){
     const cust = CUSTOMERS.find(z => z.port === q.id && z.big); if (!cust) continue;
     const sps = q.mk && q.mk.sp ? Object.entries(q.mk.sp).filter(([sp, r]) => SPECIES[sp] && (r.months & (1 << mon)) && spCatchable(sp, H) && turRoom(sp, H) >= 150).sort((a, b) => b[1].kg - a[1].kg).map(r => r[0])
-      : cust.sp.filter(sp => spCatchable(sp, H) && turRoom(sp, H) >= 150);
+      : custSp(cust).filter(sp => spCatchable(sp, H) && turRoom(sp, H) >= 150);
     if (!sps.length || !turCan(o, q.p, h, false)) continue;
     // a species the player lands, if the plant takes it; about a usual landing, or part of the hold for one who has not landed yet
     const sp = sps.slice().sort((a, b) => (me.sp[b] || 0) - (me.sp[a] || 0))[0], base = me.kg > 30 ? me.kg * (0.8 + Math.random() * 0.5) : BOAT.holdCap * (0.4 + Math.random() * 0.4);

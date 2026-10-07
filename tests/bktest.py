@@ -58,7 +58,7 @@ async def main():
 
         # 4. the direct fishery and the landing: 7 % bycatch outside the period, the maximum quota inside it (with blad B)
         r = await pg.evaluate("""(() => { const R = {}, y = 2028, ss = bkSeason(y), d = gDate(ss.open);
-          R.open = [d.getUTCMonth() + 1, d.getUTCDate(), d.getUTCHours()]; R.days = ss.days; R.max = [bkMax(10.5), bkMax(14), bkMax(19.99), bkMax(25), bkMax(40)];
+          R.open = [d.getUTCMonth() + 1, d.getUTCDate(), d.getUTCHours()]; R.days = ss.days; R.max = [bkMax(10.5, 2026), bkMax(14, 2026), bkMax(19.99, 2026), bkMax(25, 2026), bkMax(40, 2026)]; R.max28 = bkMax(10.5, 2028); R.f28 = +bkTacF(2028).toFixed(3);
           const fill = () => { S.hold = [{sp:'torsk', cls:2, kg:100, n:30, bled:true, iced:true, hr:0, fresh:90, gut:true, hook:true}, {sp:'blakveite', cls:1, kg:100, n:50, bled:true, iced:true, hr:0, fresh:90, gut:false, hook:true}]; };
           S.bkq = null; S.fm = {b:true}; const q = quotaState();
           fill(); const Hm = HOUR(y, 2, 10, 12); R.marchConf = +(landConf(Hm, q, access()).confBy.blakveite || 0).toFixed(3);
@@ -68,6 +68,7 @@ async def main():
           S.hold = []; S.bkq = null; return R; })()""")
         print('quota:', json.dumps(r))
         print(ok(r['open'][:2] == [5, 25] and 30 <= r['days'] <= 97 and r['max'] == [9700, 10900, 10900, 12100, 12100]), 'the direct fishery opens on 25 May for 30-97 days; maximum quotas 9.7, 10.9 and 12.1 t by length (J-241-2025 § 6)')
+        print(ok(abs(r['max28'] - round(9700 * r['f28'] / 100) * 100) < 1 and 0.5 < r['f28'] < 1.6), 'from 2027 the maximum quotas follow the total quota', r['max28'], r['f28'])
         print(ok(abs(r['marchConf'] - 0.86) < 0.01 and r['juneConf'] == 0 and abs(r['juneNoB'] - 0.86) < 0.01 and abs(r['overMax'] - 0.6) < 0.01), 'outside the period (or without blad B) all but 7 % of the landing is confiscated; inside it up to the maximum quota', r)
 
         # 5. the rules where you are
@@ -75,6 +76,27 @@ async def main():
           const R = {june:ks(ss.open + 48, E, true), march:ks(HOUR(y, 2, 10, 12), E, true), noB:ks(ss.open + 48, E, false), deep:ks(ss.open + 48, window.DEEP, true), min:ruMinSize('blakveite', E)}; S.fm = null; return R; })()""")
         print('rules:', json.dumps(r))
         print(ok(r['june'] == ['bk5o'] and r['march'] == ['bk5c'] and r['noB'] == ['bkB'] and r['deep'] == ['bk1000!'] and r['min'] == 45), 'the rules: open in the period, bycatch only outside it or without blad B, no bottom gear deeper than 1000 m, minimum size 45 cm')
+
+        # 6. the stock year by year (STOCK.blakveite), the Coast Post on the opening, the stop notice, the stop, the advice and the total quota
+        r = await pg.evaluate("""(() => { const R = {}, y = 2028, ss = bkSeason(y), day = H => Math.floor(H / 24), tt = H => newsForDay(day(H) + (H % 24 ? 1 : 0)).map(n => (n.h || n[0] || {}).no || JSON.stringify(n)).join(' | ');
+          R.s26 = stockYear('blakveite', 2026); R.s27 = stockYear('blakveite', 2027); R.s30 = stockYear('blakveite', 2030); R.f = +stockF('blakveite', HOUR(2030, 5, 1, 0)).toFixed(3);
+          R.open = tt(ss.open); R.notice = tt(ss.notice); R.stop = tt(ss.stop); R.adv = tt(HOUR(y, 5, 26, 0)); R.tac = tt(HOUR(y, 9, 17, 0)); return R; })()""")
+        print('stock:', json.dumps({k: r[k] for k in ('s26', 's27', 's30', 'f')}))
+        print(ok(r['s26']['ssb'] == 55174 and r['s26']['tac'] == 19000 and r['s27']['adv'] == 19610 and r['s27']['ssb'] == 52635 and r['s30']['ssb'] > 20000 and 0.6 <= r['f'] <= 1.6), 'the stock: 2026 and the advice for 2027 from HI, a model after that, and it moves the fish (stockF)')
+        print(ok('Blåkveitefisket er i gang' in r['open'] and 'Blåkveitefisket stopper' in r['notice'] and 'Blåkveitefisket er stoppet' in r['stop'] and 'blåkveite' in r['adv'] and 'Totalkvoten for blåkveite' in r['tac']), 'the Coast Post: the opening, the stop three days ahead, the stop day, the advice in June and the total quota in October', {k: r[k][:160] for k in ('open', 'notice', 'stop')})
+
+        # 7. the orders: every plant north of 62° N orders Greenland halibut in the direct fishery, for a boat with line or nets on blad B
+        r = await pg.evaluate("""(() => { const R = {}, y = 2028, ss = bkSeason(y), b = S.boat; S.fm = {b:true}; S.bkq = null; b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p};
+          S.pgear = newPGear(); S.pgear.lines.bank = {n:20, baited:0, bt:{}}; S.rep = S.rep || {};
+          const run = H => { const sp = {}; for (let i = 0; i < 40; i++){ const O = ordState(); O.offers = []; O.active = []; ordersTick(H); for (const o of O.offers) if (o.sp === 'blakveite') sp[o.id] = o; } return Object.values(sp); };
+          const at6 = H => { let h = Math.floor(H); while (gDate(h).getUTCHours() !== 6) h++; return h; }, Hin = at6(ss.open + 24), Hout = at6(ss.open - 96);
+          const inn = run(Hin); R.inN = inn.length; R.kg = inn.map(o => o.kg).slice(0, 5); R.days = inn.length ? inn[0].days : null;
+          R.outN = run(Hout).length; S.pgear = newPGear(); R.noGearN = run(Hin).length; S.pgear.nets.push({id:'n1', mesh:200, n:20, cond:1}); S.fm = {b:false}; R.noBN = run(Hin).length; S.fm = {b:true};
+          R.plants = {husoy:bkPlant('husoy'), south:PORTS.filter(q => q.mottak && natLL(q.p).lat < 61).slice(0, 1).map(q => bkPlant(q.id))[0], north:PORTS.filter(q => q.coastal && q.mottak && natLL(q.p).lat >= 62).length, withBk:PORTS.filter(q => q.coastal && q.mottak && q.mk && q.mk.sp && q.mk.sp.blakveite).length};
+          R.room = turRoom('blakveite', Hin); S.pgear = newPGear(); const O = ordState(); O.offers = []; O.active = []; S.fm = null; return R; })()""")
+        print('orders:', json.dumps(r))
+        print(ok(r['inN'] > 0 and all(300 <= k <= 3000 for k in r['kg']) and r['days'] == 4 and r['outN'] == 0 and r['noGearN'] == 0 and r['noBN'] == 0), 'orders for Greenland halibut in the direct fishery only, for a boat on blad B with line or nets: 300-3000 kg in four days')
+        print(ok(r['plants']['husoy'] and r['plants']['south'] is False and r['plants']['north'] > 50 and r['plants']['withBk'] == r['plants']['north']), 'every plant north of 62° N takes it (and none south of it orders it)')
         print('errors:', errs[:5]); await br.close()
 
 asyncio.run(main())

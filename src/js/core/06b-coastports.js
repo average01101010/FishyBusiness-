@@ -60,6 +60,9 @@ const COASTQ = {};
     const idx = ws ? wi / ws : 1, pf = Math.round(clamp(1 + (idx - 1) * 0.5, 0.94, 1.06) * 1000) / 1000;
     const mk = {ids:all.map(r => r.id), names:all.map(r => r.n), k:x.k, kg:Math.round(kg), small:x.small, boats:all.reduce((a, r) => a + (r.boats || 0), 0),
       sp:Object.fromEntries(COAST_WF.filter(s => all.some(r => r.sp[s])).map(s => [s, {kg:all.reduce((a, r) => a + ((r.sp[s] || [0])[0] || 0), 0), months:all.reduce((a, r) => a | ((r.sp[s] || [0, 0, 0, 0])[3] || 0), 0)}])), idx:Math.round(idx * 100) / 100};
+    // every plant north of 62° N takes Greenland halibut (Jonas 07.10.2026: «Alle mottak skal kunne ta i mot blåkveite»), with what
+    // the register says it took in (kg, and in which months; else all year, the direct fishery's period decides): for the orders
+    if (natLL({x:x.p[0], y:x.p[1]}).lat >= 62){ const r = all.map(z => z.sp.blakveite).filter(Boolean); mk.sp.blakveite = {kg:r.reduce((a, v) => a + (v[0] || 0), 0), months:r.length ? r.reduce((a, v) => a | (v[3] || 0), 0) || 4095 : 4095}; }
     // one of Senja's own harbours: it keeps its quay and unit and takes what the register knows
     const near = own.find(pt => dist(pt.p, {x:x.p[0], y:x.p[1]}) < 2);
     if (near){ if (!near.mk) near.mk = mk; continue; }
@@ -78,7 +81,8 @@ const COASTQ = {};
     PORTS.push({id, name, xy:[q[0], q[1]], shore:[q[0], q[1]], pier:true, fuel:true, ice:kg >= 1e6, mottak:true, pf, coast:{x:(cx - nx * 30) / 1000, y:(cz - nz * 30) / 1000},
       p:{x:Math.round(cx + nx * 15) / 1000, y:Math.round(cz + nz * 15) / 1000}, i:PORTS.length, mk, coastal:true});
     // the plant posts orders too (03-simulation.js ordersTick, near where you fish): for what it takes in most of
-    const csp = Object.entries(mk.sp).filter(([s]) => SPECIES[s] && !SPECIES[s].shell).sort((a, b) => b[1].kg - a[1].kg).map(e => e[0]).slice(0, 3);
+    const csp = Object.entries(mk.sp).filter(([s]) => SPECIES[s] && !SPECIES[s].shell && s !== 'blakveite')   // its orders: 03-simulation.js bkPlant
+      .sort((a, b) => b[1].kg - a[1].kg).map(e => e[0]).slice(0, 3);
     CUSTOMERS.push({id:'c' + id, no:'Mottaket i ' + name, port:id, sp:csp.length ? csp : ['torsk', 'sei', 'hyse'], big:true, q:'A', coastal:true});
   }
 })();

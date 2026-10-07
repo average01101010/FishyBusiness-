@@ -104,7 +104,14 @@ const STOCK = {
     adv27:180336, Blim:50000, Bpa:80000, Bm:250000, a:0.2, sd:0.22, cap:0.2, slack:0.12},
   // saithe: the SSB series was not found; 2027 and the 2028 projection (223 227 t) are ICES's
   sei:{ssb:{2026:205000, 2027:197518}, tac:{2014:119000, 2015:122000, 2016:140000, 2017:150000, 2018:172500, 2019:149550, 2020:171982, 2021:197779, 2022:197212, 2023:226794, 2024:223123, 2025:193117, 2026:164149},
-    adv27:127807, Blim:93923, Bpa:131492, Bm:300000, a:0.25, sd:0.18, cap:0.15, slack:0}
+    adv27:127807, Blim:93923, Bpa:131492, Bm:300000, a:0.25, sd:0.18, cap:0.15, slack:0},
+  // Greenland halibut (07.10.2026): the female spawning stock from JRN-AFWG 2026 (the years between are not in the text; 2027 is the
+  // start of the year in the advice), the total quotas 2020-2026 from the Norwegian-Russian commission (regjeringen.no and the
+  // Directorate's regulation papers; the years before were not found). Long-lived and slow: it drifts back slowly with small year-class
+  // luck, and the agreed quota has been far over the advice (2025: 19 000 t against 12 431 t)
+  blakveite:{ssb:{2015:93020, 2019:89902, 2021:80283, 2023:68445, 2025:58116, 2026:55174, 2027:52635},
+    tac:{2020:27000, 2021:27000, 2022:25000, 2023:25000, 2024:21250, 2025:19000, 2026:19000},
+    adv27:19610, Blim:33391, Bpa:46747, Bm:75000, a:0.1, sd:0.06, cap:0.2, slack:0.1}
 };
 const STKY = {};
 function stockYear(sp, y){
@@ -222,7 +229,10 @@ function bkSeason(y){ const k = y + ':' + (S.qseed || 0); if (BKC[k]) return BKC
   const o = hOfDoy(y, doyOf(y, BKQ.open[0], BKQ.open[1])), u = h2(y * 13 + (S.qseed || 0) % 977, 8800), days = Math.round(BKQ.days[0] + (BKQ.days[1] - BKQ.days[0]) * u * u);
   return BKC[k] = {open:o, stop:o + days * 24, notice:o + (days - BKQ.notice) * 24, days}; }
 function bkOpen(H){ const s = bkSeason(yearH(H)); return H >= s.open && H < s.stop; }
-const bkMax = len => { for (const [l, kg] of BKQ.max) if (len < l) return kg; return BKQ.over28; };
+// from 2027 the group quota and the maximum quotas follow the total quota (STOCK, against 19 000 t in 2026), to the nearest 100 kg
+const bkTacF = y => y <= 2026 ? 1 : stockYear('blakveite', y).tac / STOCK.blakveite.tac[2026];
+const bkGroup = y => Math.round(BKQ.group * bkTacF(y));
+const bkMax = (len, y) => { const f = bkTacF(y == null ? yearH(S.t / 60) : y); for (const [l, kg] of BKQ.max) if (len < l) return Math.round(kg * f / 100) * 100; return Math.round(BKQ.over28 * f / 100) * 100; };
 // the direct fishery for this vessel: open (a landing two days after the stop still counts: the gear had to be ashore by then), blad B, under 28 m
 function bkDirect(H, len){ const s = bkSeason(yearH(H)); return H >= s.open && H < s.stop + 48 && bladB() && len < 28; }
 // what each vessel has landed this year (kg), and this week's landings for the 7 % rule
@@ -230,7 +240,7 @@ function bkState(H){ const y = yearH(H); if (!S.bkq || S.bkq.y !== y) S.bkq = {y
 const bkUsed = H => bkState(H).v[S.cur] || 0;
 // the Greenland halibut a landing may keep (kg) of bk in the hold, all being the landing's total
 function bkAllow(H, bk, all){
-  const B = bkState(H), room = Math.max(0, bkMax(BOAT.len) - bkUsed(H)); if (bkDirect(H, BOAT.len)) return Math.min(bk, room);
+  const B = bkState(H), room = Math.max(0, bkMax(BOAT.len, yearH(H)) - bkUsed(H)); if (bkDirect(H, BOAT.len)) return Math.min(bk, room);
   const wk = weekOfH(H), wtot = B.wk === wk ? B.wtot : 0, wbk = B.wk === wk ? B.wbk : 0;
   return Math.min(bk, room, Math.max(0, BKQ.by * (wtot + all) - wbk));
 }
@@ -238,7 +248,7 @@ function bkLanded(H, bk, all){ const B = bkState(H), wk = weekOfH(H); if (B.wk !
 // the announcements: the opening on the day, the stop 3 days before (Kystposten and a message from Fiskeridirektoratet)
 function bkNews(H){
   const y = yearH(H), s = bkSeason(y), B = bkState(H); B.told = B.told || 0;
-  if (!(B.told & 1) && H >= s.open && H < s.stop){ B.told |= 1; msg('Fiskeridirektoratet', 'Direktefisket etter blåkveite er åpnet for fartøy under 28 m. Maksimalkvoten er ' + fmt(bkMax(BOAT.len) / 1000, 1) + ' tonn for din båt. Fisket stoppes når gruppekvoten er tatt.', 'The direct fishery for Greenland halibut is open for vessels under 28 m. The maximum quota is ' + fmt(bkMax(BOAT.len) / 1000, 1) + ' tonnes for your boat. It is stopped when the group quota is taken.'); }
+  if (!(B.told & 1) && H >= s.open && H < s.stop){ B.told |= 1; msg('Fiskeridirektoratet', 'Direktefisket etter blåkveite er åpnet for fartøy under 28 m. Maksimalkvoten er ' + fmt(bkMax(BOAT.len, y) / 1000, 1) + ' tonn for din båt. Fisket stoppes når gruppekvoten er tatt.', 'The direct fishery for Greenland halibut is open for vessels under 28 m. The maximum quota is ' + fmt(bkMax(BOAT.len, y) / 1000, 1) + ' tonnes for your boat. It is stopped when the group quota is taken.'); }
   if (!(B.told & 2) && H >= s.notice && H < s.stop){ B.told |= 2; msg('Fiskeridirektoratet', 'Direktefisket etter blåkveite stoppes ' + dayStr(s.stop) + '. Redskapen skal være på land innen da.', 'The direct fishery for Greenland halibut stops ' + dayStr(s.stop) + '. The gear must be ashore by then.'); }
 }
 
