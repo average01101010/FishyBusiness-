@@ -436,6 +436,7 @@ function turEnd(m, ok, why){
 }
 function turPayOut(m, from, no, en){
   if (m.k !== 'best'){ S.cash += m.pay; S.stats.revenue += m.pay; }
+  if ((m.cls === 'lang' || m.k === 'sesong') && ['sesong', 'best', 'frakt'].includes(m.k)) pressPut('tur', {k:m.k, to:m.to || '', from:m.from || undefined, sp:m.sp || undefined, kg:Math.round(m.k === 'sesong' ? m.got || m.kg : m.kg || 0), nm:m.nm || 0});   // Kystposten (09h-press.js)
   msg(from, no + ' ' + turL('Du får ', 'You get ') + kr(m.pay) + '.', en + ' You get ' + kr(m.pay) + '.');
   turEnd(m, true, turL('Oppdrag fullført: ', 'Mission done: ') + turWhat(m)[S.lang === 'en' ? 1 : 0] + ', ' + kr(m.pay) + '.');
 }

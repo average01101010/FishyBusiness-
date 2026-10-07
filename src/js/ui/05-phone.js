@@ -419,6 +419,8 @@ const PHONE = (() => {
       ['Kystposten er avisa for hele kysten: båtkjøp, båtdåp, grunnstøtinger, redninger, berginger, storfisk, fyrbilder og dagens største landinger, også fra de andre båtene langs kysten.', 'Kystposten is the paper for the whole coast: boats bought and named, groundings, rescues, salvage, big fish, lighthouse pictures and the day\'s biggest landings, from the other boats along the coast too.'],
       ['Trykk på en sak for å lese mer. Fanen Lokalt viser det som skjer innen 150 km fra hjemhavna.', 'Tap a story to read more. The Local tab shows what happens within 150 km of your home harbour.'],
       ['Appen viser hvor mange saker du ikke har lest, og spillet sier fra når du er i avisa eller noe skjer i nærheten.', 'The app shows how many stories you have not read, and the game tells you when you are in the paper or something happens nearby.'],
+      ['Nye saker: sesongfiske og lange turer, kjøp av strukturkvote, og ukas toppfisker fra topplista for hele kysten.', 'New stories: following the season and long trips, structure quotas bought, and the top boat of the week from the leaderboard for the whole coast.'],
+      ['Er landingen din dagens største langs kysten, får du vite det, også med et varsel når du er borte fra spillet.', 'When your landing is the day\'s biggest along the coast, you hear of it, with a notification too when you are away from the game.'],
       ['Alene om bord: blir blødekaret fullt mens du haler, sløyer du først og haler videre etterpå. Før kunne halingen bli stående.', 'Alone aboard: when the bleeding tub fills while you haul, you gut first and haul on after. Before, the haul could stand still.']]],
     ['p86', '07.10.2026', 'Havforskere og fyr', 'Scientists and lighthouses', [
       ['Nytt på tavla: prøvefiske for Havforskningsinstituttet. Fisk ved en stasjon og mål ti fisk på målebrettet, eller kjør en ekkoloddlinje gjennom tre punkter. Fangsten er din.', 'New on the board: survey fishing for the Institute of Marine Research. Fish at a station and measure ten fish on the board, or run an echo sounder line through three points. The catch is yours.'],
@@ -1458,7 +1460,7 @@ const PHONE = (() => {
     else if (a === 'struct'){
       // a structure quota: buy a right in the same group, scrap the boat, and add its quota factor less 10 % (03d-quota.js)
       const l = S.lic; if (!l || !structRoom(l, d.id) || !inPort()) return; const pr = structPrice(d.id, S.t / 60), x = deal(pr, 0); if (!x.ok){ toast(whyText(x) || t('no_cash')); return; } finance(x, 180);
-      const sl = regSeller(d.id, S.t / 60), k = structIn(l, d.id, S.t / 60);
+      const sl = regSeller(d.id, S.t / 60), k = structIn(l, d.id, S.t / 60); pressPut('kvote', {kf:Math.round(k * 10000), type:S.boat.type});
       msg('Fiskeridirektoratet', 'Strukturkvoten er tildelt «' + S.boatName + '»: kvotefaktor ' + fmt(k, 4) + ' fra båten til ' + sl.name + ' (' + HJ[d.id].hl + '), som er tatt ut av registeret. Den gjelder i 20 år.', 'The structure quota is granted to the «' + S.boatName + '»: quota factor ' + fmt(k, 4) + ' from ' + sl.name + '\'s boat (' + HJ[d.id].hl + '), which is struck off the register. It runs for 20 years.'); }
     else if (a === 'two'){
       // the special scheme under 11 m: one boat fishes both quotas, the other right is given up and the boat sold

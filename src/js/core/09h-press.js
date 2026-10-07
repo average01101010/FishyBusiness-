@@ -12,8 +12,11 @@
 //   aground  run aground                rescue   towed in by the rescue service              salv     a boat with engine trouble saved
 //   foto     a lighthouse picture (the picture only in one's own paper)                         fish     a big fish
 //   fs       ten, twenty ... years of sea time      ach   a badge chapter done      as   a company made a limited company (AS)
+//   tur      a long trip or the season's move done (turoppdrag, 09g-turer.js)          kvote    a structure quota bought
+// The week's top boats come from the shared leaderboard (ui/10h-world.js worldTop), and the day's biggest landing tells its lander in
+// the game (and by push when away: supabase/migrations/20261007180000_news_more.sql push_paper).
 const PRESS = {R:150, keep:40, remote:[], land:[], at:0, told:{}, toldAt:0};
-const PRESS_KINDS = ['boat', 'name', 'aground', 'rescue', 'salv', 'foto', 'fish', 'fs', 'ach', 'as'];
+const PRESS_KINDS = ['boat', 'name', 'aground', 'rescue', 'salv', 'foto', 'fish', 'fs', 'ach', 'as', 'tur', 'kvote'];
 function pressState(){ const P = S.press || (S.press = {own:[], seen:0, n:0, q:[]}); P.q = P.q || []; return P; }
 const pressCompany = () => (typeof access === 'function' && access() === 'lukket') ? String(S.company || '').slice(0, 40) : '';
 // a story of the player's own; loc holds what stays on this device (a picture's id)
@@ -92,8 +95,37 @@ function pressStory(it){
     s.h = P2('Nytt aksjeselskap: ' + it.company, 'New limited company: ' + it.company);
     s.ing = P2(it.company + ' er registrert som aksjeselskap' + (it.boat ? ' og driver «' + it.boat + '»' : '') + '.', it.company + ' is registered as a limited company' + (it.boat ? ' and runs the «' + it.boat + '»' : '') + '.');
     s.body.push(P2('Rederiet har skilt driften fra skipperens egen økonomi.', 'The company has parted the business from the skipper\'s own money.')); }
+  else if (it.kind === 'tur'){ const port = pressPort(d.to), sp = SPECIES[d.sp];
+    if (d.k === 'sesong'){ if (!port || !sp || !(d.kg > 0)) return null;
+      s.h = P2('Sesongfiske: ' + w[0] + ' leverte ' + fmt(d.kg, 0) + ' kg i ' + port, 'Following the season: ' + w[1] + ' landed ' + fmt(d.kg, 0) + ' kg at ' + port);
+      s.ing = P2(w[0] + ' fulgte ' + sp.no.toLowerCase() + 'en og leverte ' + fmt(d.kg, 0) + ' kg ved mottakene rundt ' + port + '.', w[1] + ' followed the ' + sp.en.toLowerCase() + ' and landed ' + fmt(d.kg, 0) + ' kg at the plants round ' + port + '.');
+      s.body.push(P2('Mange følger fisken langs kysten gjennom året, slik fiskere alltid har gjort.', 'Many follow the fish along the coast through the year, as fishers always have.')); s.big = true; }
+    else if (d.k === 'best'){ if (!port || !sp) return null;
+      s.h = P2(w[0] + ' kom med ' + sp.no.toLowerCase() + ' til ' + port, w[1] + ' brought ' + sp.en.toLowerCase() + ' to ' + port);
+      s.ing = P2('Mottaket i ' + port + ' hadde bestilt ' + fmt(d.kg || 0, 0) + ' kg ' + sp.no.toLowerCase() + ', og ' + w[0] + ' leverte' + (d.nm > 0 ? ' etter ' + fmt(d.nm, 0) + ' nautiske mil' : '') + '.', 'The plant at ' + port + ' had ordered ' + fmt(d.kg || 0, 0) + ' kg of ' + sp.en.toLowerCase() + ', and ' + w[1] + ' delivered' + (d.nm > 0 ? ' after ' + fmt(d.nm, 0) + ' nautical miles' : '') + '.'); }
+    else if (d.k === 'frakt'){ if (!port) return null;
+      s.h = P2(w[0] + ' fraktet varer til ' + port, w[1] + ' carried goods to ' + port);
+      s.ing = P2(w[0] + ' kom til ' + port + ' med ' + fmt(d.kg || 0, 0) + ' kg last' + (pressPort(d.from) ? ' fra ' + pressPort(d.from) : '') + '.', w[1] + ' came to ' + port + ' with ' + fmt(d.kg || 0, 0) + ' kg of freight' + (pressPort(d.from) ? ' from ' + pressPort(d.from) : '') + '.'); }
+    else return null;
+    s.body.push(P2('Turen var på rundt ' + fmt(d.nm || 0, 0) + ' nautiske mil.', 'The trip was about ' + fmt(d.nm || 0, 0) + ' nautical miles.')); }
+  else if (it.kind === 'kvote'){ if (!(d.kf > 0)) return null;
+    s.h = P2(w[0] + ' kjøper strukturkvote', w[1] + ' buys a structure quota');
+    s.ing = P2(w[0] + ' har kjøpt strukturkvote og får kvotefaktor ' + fmt(d.kf / 10000, 2) + ' mer i 20 år.', w[1] + ' has bought a structure quota and gets ' + fmt(d.kf / 10000, 2) + ' more in quota factor for 20 years.');
+    s.body.push(P2('Strukturkvote betyr at en annen båt tas ut av fisket, og kvoten følger med til kjøperen, med et trekk.', 'A structure quota means another boat leaves the fishery, and its quota goes to the buyer, less a cut.')); s.big = true; }
   else return null;
   return s;
+}
+// the week's top boats in the open and the closed group, from the shared leaderboard (ui/10h-world.js worldTop: it fetches as asked)
+function pressTop(){
+  const out = [], wk = typeof weekOf === 'function' ? weekOf(S.t / 60) - 1 : -1; if (wk < 0 || typeof worldTop !== 'function') return out;
+  for (const g of ['open', 'lukket']){ const e = worldTop(wk, g), rows = e && e.data && e.data.rows || []; if (!rows.length) continue;
+    const a = rows[0], w = pressWho(a), q = pressPort(a.port), gn = g === 'lukket' ? ['lukket', 'closed'] : ['åpen', 'open'];
+    out.push({key:'w' + wk + g, t:Math.min(S.t, (wk + 1) * 168 * 60), kind:'top', x:null, y:null, me:!!a.me, big:true, img:null,
+      h:['Ukas toppfisker i ' + gn[0] + ' gruppe: ' + w[0], 'Top boat of the week in the ' + gn[1] + ' group: ' + w[1]],
+      ing:[w[0] + ' landet ' + fmt(a.kg, 0) + ' kg forrige uke' + (q ? ', mest til ' + q : '') + '.', w[1] + ' landed ' + fmt(a.kg, 0) + ' kg last week' + (q ? ', mostly at ' + q : '') + '.'],
+      body:[rows.length > 1 ? ['Bak fulgte ' + rows.slice(1, 3).map(r => pressWho(r)[0] + ' med ' + fmt(r.kg, 0) + ' kg').join(' og ') + '.', 'Behind came ' + rows.slice(1, 3).map(r => pressWho(r)[1] + ' with ' + fmt(r.kg, 0) + ' kg').join(' and ') + '.'] : null,
+        ['Hele topplista for kysten står i Salgslaget.', 'The whole leaderboard for the coast is in the Sales app.']].filter(Boolean)}); }
+  return out;
 }
 // the biggest landings of the last day: along the whole coast, and near home
 function pressLand(local){
@@ -114,8 +146,10 @@ function pressList(local){
   for (const it of P.own){ const s = pressStory(it); if (s && (!local || near(s))){ out.push(s); seen.add(it.kind + '|' + Math.round(it.t / 6)); } }
   for (const it of PRESS.remote){ if (it.me && seen.has(it.kind + '|' + Math.round(it.gh * 10))) continue; const s = pressStory(it); if (s && (!local || near(s))) out.push(s); }
   for (const s of pressLand(local)) out.push(s);
+  const top = local ? [] : pressTop(); for (const s of top) out.push(s);
   const day = Math.floor(S.t / 1440);
-  for (let dd = day; dd >= Math.max(0, day - 6); dd--) newsForDay(dd).forEach((a, i) => { if (!!a.nat === !local || (!local && dd === day && !a.nat && i < 2))
+  for (let dd = day; dd >= Math.max(0, day - 6); dd--) newsForDay(dd).forEach((a, i) => { if (top.length && /^Ukas toppfisker/.test(a.h.no)) return;   // the shared leaderboard's, not the local fleet's
+    if (!!a.nat === !local || (!local && dd === day && !a.nat && i < 2))
     out.push({key:'g' + dd + '_' + i + (local ? 'L' : 'N'), t:Math.min(dd * 1440 + 6 * 60, S.t), kind:'gen', me:false, big:false, img:a.img != null ? {foto:a.img} : null, h:[a.h.no, a.h.en], ing:[a.b.no, a.b.en], body:[]}); });
   return out.sort((a, b) => Math.floor(b.t / 1440) - Math.floor(a.t / 1440) || (b.kind !== 'gen') - (a.kind !== 'gen') || b.t - a.t);
 }

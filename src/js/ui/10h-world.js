@@ -83,7 +83,7 @@ function worldTop(w, grp){
   if (!e.busy && Date.now() - e.at > 60000){
     e.busy = true;
     cloudRpc('world_top', {w, grp}).then(d => { e.data = d; e.err = false; }).catch(() => { e.err = true; })
-      .finally(() => { e.busy = false; e.at = Date.now(); if (PHONE.isOpen() && PHONE.app === 'salg') PHONE.render(); });
+      .finally(() => { e.busy = false; e.at = Date.now(); if (PHONE.isOpen() && (PHONE.app === 'salg' || PHONE.app === 'post')) PHONE.render(); });
   }
   return e;
 }

@@ -1,7 +1,7 @@
 // ---------- Kystposten on the phone (core/09h-press.js): the front page and the local tab, a story to read on, the unread count on
 // the app, a word in the game when one comes, and the stories to and from the cloud (supabase/migrations/20261007170000_news.sql) ----------
 const PRESS_KIND = {boat:['Båtkjøp', 'Boats'], name:['Båtdåp', 'Christening'], aground:['Ulykke', 'Accident'], rescue:['Redning', 'Rescue'], salv:['Berging', 'Salvage'],
-  foto:['Fyr', 'Lighthouses'], fish:['Fangst', 'Catch'], fs:['Folk', 'People'], ach:['Folk', 'People'], as:['Næring', 'Business'], land:['Landing', 'Landings'], gen:['Nyheter', 'News']};
+  foto:['Fyr', 'Lighthouses'], fish:['Fangst', 'Catch'], fs:['Folk', 'People'], ach:['Folk', 'People'], as:['Næring', 'Business'], tur:['Fiske', 'Fishing'], kvote:['Næring', 'Business'], top:['Toppliste', 'Leaderboard'], land:['Landing', 'Landings'], gen:['Nyheter', 'News']};
 const pressL = (s, k) => s[k][S.lang === 'en' ? 1 : 0];
 function pressImg(s, small){
   if (!s.img) return '';
@@ -53,6 +53,8 @@ async function pressFetch(force){
   PRESS.busy = true;
   try { const hp = pressHome(), r = await cloudRpc('news_get', {gh:+(S.t / 60).toFixed(2), x:hp.x, y:hp.y, r:PRESS.R});
     if (r){ const first = !PRESS.at, old = new Set(PRESS.remote.map(x => x.id)); PRESS.remote = r.news || []; PRESS.land = r.land || []; PRESS.at = Date.now();
+      // the day's biggest landing is one's own: told once
+      const L0 = PRESS.land[0]; if (L0 && L0.me && !PRESS.told['l' + L0.gh]){ PRESS.told['l' + L0.gh] = 1; const s = pressLand(false)[0]; if (s){ s.me = true; pressNotify(s); } }
       if (!first) for (const it of PRESS.remote){ if (old.has(it.id) || it.me) continue; const s = pressStory(it); if (s && (s.big || (s.x != null && dist({x:s.x, y:s.y}, hp) <= PRESS.R))){ pressNotify(s); break; } }
       if (typeof PHONE !== 'undefined' && PHONE.isOpen() && PHONE.app === 'post') PHONE.render(); } }
   catch (e){ if (/ 404$/.test(e.message)) PRESS.off = true; }

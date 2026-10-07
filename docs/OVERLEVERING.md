@@ -1312,13 +1312,16 @@ Jonas: «båtnavn eller rederiene til andre brukere må komme offentlig i avisen
   - **fish:** storfisk (drømmefisken);
   - **fs:** fartstid hvert tiende år (`fsYear`);
   - **ach:** kapittel i Merker (`achChapter`);
-  - **as:** aksjeselskap.
+  - **as:** aksjeselskap;
+  - **tur:** lang tur eller sesongflytting fullført (`turPayOut`, klassen `lang` eller sesong; bestilling, frakt og sesong);
+  - **kvote:** strukturkvote kjøpt (`struct`, kvotefaktoren i titusendeler).
   - Hver sak har type, sted (km), båtnavnet (og rederiet i lukket gruppe, som på topplista) og noen tall og koder (båttype, havne-id, art, indeks i `FYR` og `TUR_BOATS`).
   - Ingen saker lages i «Første tur». Gjester sender ingen saker.
 - **Ordene** (`pressStory`) skrives i leserens spill, likt for egne og andres saker: overskrift, ingress og brødtekst på norsk og engelsk. Stedsnavnene kommer fra `nearestPlace` og havnenavnene fra `portById`. En sak med en type eller nøkkel spillet ikke kjenner, vises ikke. Båtkjøp viser sidebildet av båten (`vesselSVG`). Fyrbilder vises bare i egen avis.
 - **Skyen:**
   - `news_put` tar bare typens egne nøkler: tall, og koder som matcher `^[A-Za-z0-9_-]{1,24}$`. Fritekst kommer aldri inn. Båtnavn og rederi renses som i `land_put`. Grensen er 12 saker i timen og to av samme type på ti minutter. Gjester får nei.
   - `news_get` gir sakene fra den siste spilluka langs hele kysten (60) og innen 150 km (40), og dagens største landinger (30) fra `landings`, uten gjester, med båtnavn og rederi i lukket gruppe.
+  - `supabase/migrations/20261007180000_news_more.sql` legger til `tur` og `kvote` og `push_paper`.
   - `admin_news`/`admin_news_remove` brukes av fanen «Kystposten» i admin. Den viser sakene med brukernavnet og har en knapp som tar en sak bort for alle.
   - Røyktestet med MCP i en transaksjon som ble rullet tilbake: ukjente nøkler og fritekst forsvinner.
 - **Klienten** (`pressFlush`, `pressFetch`): egne saker ligger i en kø (`S.press.q`, de 20 siste) og sendes straks og hvert annet minutt. En sak som avvises (400), droppes. Andres saker hentes hvert tredje minutt og når avisa åpnes.
@@ -1330,12 +1333,12 @@ Jonas: «båtnavn eller rederiene til andre brukere må komme offentlig i avisen
   - Appen viser antall uleste saker (`pressUnread`: nyere enn sist avisa ble åpnet).
   - En egen sak varsles i spillet med en toast etter fire sekunder.
   - Når andres saker hentes, varsles én ny stor sak eller én ny sak nær hjemhavna, høyst hvert tredje minutt.
-  - Push er ikke brukt.
+  - **Push** (`push_paper`, pg_cron hver time, minutt 9): når et spilldøgn (fire ekte timer) er over, får den med dagens største landing langs kysten (minst 200 kg, ikke gjester) «Du står i avisa». Det går gjennom `push_srv`, så samme regler gjelder som for topplista: varslene for topplista må være på, ikke mens spilleren er i spillet, høyst fire i døgnet og ingenting 22–08. Bare det siste døgnet sendes.
+  - I spillet får den med dagens største landing beskjed én gang når avisa hentes (`pressFetch`).
+- **Ukas toppfisker** (`pressTop`) kommer fra den felles topplista (`worldTop`) for åpen og lukket gruppe forrige uke, med nr. 2 og 3. Den lokale «Ukas toppfisker» fra `newsForDay` vises bare når skyen ikke har tall.
 - **Personvern:** `src/legal/personvern.html` har fått avsnittet «Saker i Kystposten». Haill står aldri i sakene. Brukernavnet står ikke i avisa, bare i admin.
 - **Neste:**
-  - push når du selv er i avisa (innenfor reglene for push);
-  - ukas toppfisker fra den felles topplista i stedet for den lokale;
-  - flere sakstyper, for eksempel nye mottak, rekordpriser og sesongens første skrei.
+  - flere sakstyper, for eksempel nye mottak, rekordpriser og sesongens første skrei langs kysten.
 
 ## 5. Systemer i spillet
 

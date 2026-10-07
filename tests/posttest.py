@@ -74,6 +74,27 @@ async def main():
           return {told, keys, dk, boat:put && put[1].boat, haill:put ? /haill/i.test(JSON.stringify(put[1])) : null, guest, q, got}; })()""")
         check(cl['told'] >= 1 and cl['keys'] == 'boat,company,d,gh,kind,x,y' and cl['dk'] == 'kg,sp' and cl['boat'] and cl['haill'] is False and cl['guest'] == 0 and cl['q'] == 0 and cl['got'],
               "a story is told in the game; one's own goes to the cloud with only its kind's keys and the boat's name, never anything of haill, and not from a guest; the others' come down", cl)
+        # 5. more kinds: a long trip or the season's move done, a structure quota bought; the week's top boats from the shared leaderboard
+        #    (the local fleet's «Ukas toppfisker» gives way); the day's biggest landing told to its lander once
+        mo = await pg.evaluate("""(async () => { window.__t = []; const P = pressState(), n0 = P.own.length, port = S.home || 'finnsnes', T = turState();
+          const m = {id:++T.seq, k:'sesong', cls:'sesong', to:port, sp:'torsk', kg:4000, got:4200, nm:120, pay:300000, h:20, t0:S.t}; T.act.push(m); turPayOut(m, 'Kystposten', 'x', 'x');
+          const b = {id:++T.seq, k:'best', cls:'lang', to:port, sp:'hyse', kg:600, nm:80, pay:9000, h:10, t0:S.t}; T.act.push(b); turPayOut(b, 'x', 'x', 'x');
+          const k = {id:++T.seq, k:'frakt', cls:'kort', to:port, kg:60, nm:5, pay:900, h:1, t0:S.t, what:['post', 'mail']}; T.act.push(k); turPayOut(k, 'x', 'x', 'x');
+          pressPut('kvote', {kf:1234, type:S.boat.type});
+          const own = P.own.slice(n0).map(pressStory), kinds = P.own.slice(n0).map(x => x.kind + (x.d.k ? ':' + x.d.k : ''));
+          const wt0 = window.worldTop, wk = weekOf(S.t / 60) - 1;
+          S.t = Math.max(S.t, 2 * 168 * 60 + 600);
+          window.worldTop = (w, g) => ({data:{rows:g === 'open' ? [{rank:1, boat:'Toppbåten', company:'', port:port, kg:9100, me:false}, {rank:2, boat:'Nummer To', company:'', port:port, kg:7000, me:false}] : []}});
+          const F = pressList(false), top = F.find(x => x.kind === 'top'), oldTop = F.some(x => x.kind === 'gen' && /^Ukas toppfisker/.test(x.h[0]));
+          window.worldTop = () => null; const noTop = pressList(false).some(x => x.kind === 'top'); window.worldTop = wt0;
+          PRESS.land = [{gh:S.t / 60 - 1, port:port, acc:'open', kg:1500, sp:'torsk', boat:'Meg', company:'', me:true}];
+          const rpc0 = window.cloudRpc; window.cloudRpc = async fn => fn === 'news_get' ? {news:[], land:PRESS.land} : null; CLOUD.on = true; CLOUD.user = {id:'u'}; CLOUD.guest = false;
+          PRESS.toldAt = 0; PRESS.at = 0; await pressFetch(true); PRESS.at = 0; await pressFetch(true); window.cloudRpc = rpc0; CLOUD.on = false; CLOUD.user = null;
+          await new Promise(r => setTimeout(r, 4500));
+          const told = window.__t.filter(x => /Dagens største landing/.test(x)).length;
+          return {kinds, ok:own.every(Boolean), heads:own.filter(Boolean).map(x => x.h[0]), hole:/undefined|NaN/.test(JSON.stringify(own)), top:top && top.h[0], topBody:top && top.body.length, oldTop, noTop, told}; })()""")
+        check(mo['kinds'] == ['tur:sesong', 'tur:best', 'kvote'] and mo['ok'] and not mo['hole'] and mo['top'] and 'Toppbåten' in mo['top'] and mo['topBody'] == 2 and not mo['oldTop'] and not mo['noTop'] and mo['told'] == 1,
+              "more kinds: the season's move and a long trip done (not a short one), a structure quota; the week's top boats from the shared leaderboard in place of the local fleet's; the day's biggest landing told to its lander once", mo)
         check(errs == [], 'sidefeil', errs[:3])
         await br.close()
 
