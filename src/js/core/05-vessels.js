@@ -183,6 +183,8 @@ function npcStates(H, only){
   });
   // the coast's boats within AIS range of the boat you follow (part 5)
   if (!only || only[0] === 'c') for (const n of coastNear(H, only)) out.push(n);
+  // a boat in a mission: drifting with engine trouble, or on the tow line (09g-turer.js)
+  if (!only || only[0] === 't') for (const n of turNpcs()) if (!only || only === n.id) out.push(n);
   // the other players' boats near by (the shared world V3, ui/10h-world.js)
   if (!only || only[0] === 'p') for (const n of peerStates()) if (!only || only === n.id) out.push(n);
   return out;
@@ -235,6 +237,7 @@ function step(){
   if (S.t % 60 === 0){ ordersTick(S.t / 60); turHour(); borsTick(S.t / 60); eachVessel(() => { crewTick(S.t / 60); if (!(S.jobs && S.jobs.some(j => j.kind === 'hull' && j.until))) foulHour(S.t / 60); }); }   // (no fouling while she is on the slip)
   S.t += 1; const H = S.t / 60;
   energyMinute();
+  turMinute();   // a tow made fast (09g-turer.js)
   if (S.t % 60 === 0){ hourly(); eachVessel(navHour); eachVessel(loreHour); }
   if (S.t % 60 === 0) for (const pid in S.market) for (const sp in S.market[pid]) S.market[pid][sp] *= 0.97;
   if (S.t % 60 === 0 && S.stock) stockHour(H);

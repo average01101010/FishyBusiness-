@@ -3,7 +3,7 @@
 // as Autonav does and sets off (from the quay too); the chart rings the places the missions go to.
 const turEsc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'})[c]);
 const TUR_CLS = {kort:['Kort', 'Short'], mid:['Middels', 'Medium'], lang:['Lang', 'Long'], sesong:['Sesong', 'Season']};
-const TUR_KIND = {best:['Bestilling', 'Order'], frakt:['Frakt', 'Freight'], garn:['Hjelp på sjøen', 'Help at sea'], sesong:['Sesongflytting', 'Following the season']};
+const TUR_KIND = {best:['Bestilling', 'Order'], frakt:['Frakt', 'Freight'], garn:['Hjelp på sjøen', 'Help at sea'], slep:['Hjelp på sjøen', 'Help at sea'], sesong:['Sesongflytting', 'Following the season']};
 function turCard(m, act){
   const L0 = (no, en) => S.lang === 'en' ? en : no, w = turWhat(m), kv0 = (k, v) => '<div class="kv"><span>' + k + '</span><b>' + v + '</b></div>';
   let extra = '';
@@ -11,15 +11,19 @@ function turCard(m, act){
   if (m.k === 'best') extra += kv0(L0('Kvalitet', 'Quality'), QN[m.q][S.lang === 'en' ? 'en' : 'no']);
   if (m.k === 'sesong') extra = kv0(L0('Levert der', 'Landed there'), fmt(m.got || 0, 0) + ' / ' + fmt(m.kg, 0) + ' kg') + kv0(L0('Mottak innen', 'Plants within'), TUR.sesongR + ' km');
   if (m.k === 'frakt') extra = kv0(L0('Hentes i', 'Picked up at'), portById(m.from).name + (act ? ' · ' + (m.stage === 'go' ? L0('om bord', 'aboard') : L0('venter på kaia', 'waits on the quay')) : ''));
+  if (m.k === 'slep'){ let cd = null; try { cd = coastDistFar(m.p); } catch (e){}
+    extra = kv0(L0('Båten', 'The boat'), '«' + turEsc(m.boat) + '», ' + fmt(m.L, 1) + ' m · ' + kr(m.value)) + kv0(L0(m.stage === 'tow' ? 'På slep til' : 'Driver ved', m.stage === 'tow' ? 'In tow to' : 'Drifting at'), m.stage === 'tow' ? turEsc(portById(m.to).name) : coordStr(m.p)) +
+      (m.stage !== 'tow' && cd != null ? kv0(L0('Til land', 'To land'), fmt(cd, 1) + ' km') : ''); }
   if (m.k === 'garn') extra = kv0(L0('Sist sett', 'Last seen'), coordStr(m.p)) + kv0(L0('Om bord', 'Aboard'), m.kind === 'garn' ? L0('to til å trekke garn', 'two to haul nets') : L0('én kan trekke lina', 'one can haul the line'));
   const desc = {best:['Mottaket betaler ' + kr(m.pay) + ' i bonus for turen, i tillegg til fisken.', 'The plant pays a bonus of ' + kr(m.pay) + ' for the trip, on top of the fish.'],
     frakt:['Lasta tar plass i lasterommet til den er levert.', 'The freight takes room in the hold until it is delivered.'],
     garn:['Fisken i redskapet er din. Eieren betaler finnerlønn når det er trukket.', 'The fish in the gear is yours. The owner pays a finder\'s fee when it is hauled.'],
-    sesong:['Fisken står der nå. Lever ved mottakene der innen fristen.', 'The fish is there now. Land at the plants there before the deadline.']}[m.k];
+    sesong:['Fisken står der nå. Lever ved mottakene der innen fristen.', 'The fish is there now. Land at the plants there before the deadline.'],
+    slep:['Motorstopp, og hun driver mot land. Legg deg stille ved siden av henne, så går slepet over (høyst 5,5 knop). Ingen avtale på forhånd: berger du henne, har du krav på bergelønn etter sjøloven, etter båtens verdi, faren og tiden. Driver hun på land først, blir det ingen.', 'Engine trouble, and she is drifting toward land. Lie still beside her and the tow line goes over (5.5 knots at most). No agreement beforehand: if you save her, you are owed a salvage reward under the Maritime Code, by the boat\'s value, the danger and the time. If she drifts ashore first, there is none.']}[m.k];
   return '<div class="ph-card tur ' + m.cls + '"><div class="tur-h"><span class="tur-c">' + L0(TUR_CLS[m.cls][0], TUR_CLS[m.cls][1]) + '</span><small>' + L0(TUR_KIND[m.k][0], TUR_KIND[m.k][1]) + '</small></div>' +
     '<h4>' + turEsc(L0(w[0], w[1])) + '</h4><p class="ph-note">' + L0(desc[0], desc[1]) + '</p>' +
     kv0(L0('Avstand', 'Distance'), fmt(m.nm, 0) + ' nm') + kv0(L0('Seiling', 'Sailing'), L0('ca. ', 'about ') + turDur(m.h)) + extra +
-    kv0(L0('Belønning', 'Reward'), kr(m.pay)) + (act ? kv0(L0('Frist', 'Deadline'), dayStr(m.due / 60) + ' ' + hm(m.due / 60) + ' · ' + inReal(m.due - S.t)) : kv0(L0('Tid til rådighet', 'Time allowed'), L0('ca. ', 'about ') + turDur(m.hTot))) +
+    kv0(m.k === 'slep' ? L0('Bergelønn', 'Salvage') : L0('Belønning', 'Reward'), m.k === 'slep' && m.stage !== 'tow' ? kr(m.payLo) + ' – ' + kr(m.payHi) : kr(m.k === 'slep' ? turSalvage(m, m.danger || 0) : m.pay)) + (act ? kv0(L0('Frist', 'Deadline'), dayStr(m.due / 60) + ' ' + hm(m.due / 60) + ' · ' + inReal(m.due - S.t)) : kv0(L0('Tid til rådighet', 'Time allowed'), L0('ca. ', 'about ') + turDur(m.hTot))) +
     '<div class="tur-b">' + (act ? '<button class="ph-btn p" data-pa="turgo" data-id="' + m.id + '">' + L0('Kjør dit', 'Go there') + '</button><button class="ph-btn" data-pa="turdrop" data-id="' + m.id + '">' + L0('Gi fra deg', 'Give up') + '</button>'
       : '<button class="ph-btn p" data-pa="turtake" data-id="' + m.id + '">' + L0('Ta oppdraget', 'Take the mission') + '</button>') + '</div></div>';
 }
@@ -39,8 +43,8 @@ async function turGo(id){
   const L0 = (no, en) => S.lang === 'en' ? en : no;
   if (!['idle', 'port'].includes(b.status) || (S.plan && S.plan.depAt)){ toast(L0('Båten er opptatt. Stopp det den holder på med først.', 'The boat is busy. Stop what it is doing first.')); return; }
   if (!meAboard() && !crewAboard().length){ toast(L0('Båten har ikke mannskap. Uten deg om bord trenger den folk.', 'The boat has no crew. Without you aboard it needs hands.')); return; }
-  const toPort = m.k === 'frakt' && m.stage === 'pick' ? m.from : m.k === 'garn' ? null : m.to, q = toPort ? portById(toPort) : null;
-  const end = q ? q.p : {x:m.p.x + 0.12, y:m.p.y}, aPort = b.status === 'port' ? b.port : null;
+  const toPort = m.k === 'frakt' && m.stage === 'pick' ? m.from : m.k === 'garn' || (m.k === 'slep' && m.stage !== 'tow') ? null : m.to, q = toPort ? portById(toPort) : null;
+  const end = q ? q.p : {x:m.p.x + (m.k === 'slep' ? 0.06 : 0.12), y:m.p.y}, aPort = b.status === 'port' ? b.port : null;
   if (q && aPort === toPort){ toast(L0('Du er allerede der.', 'You are there already.')); return; }
   toast(L0('Finner veien …', 'Finding the way …'));
   let res; try { res = await leiaRoute({x:b.pos.x, y:b.pos.y}, end, aPort, toPort); } catch (e){ console.error(e); res = {why:['Fant ingen vei dit.', 'Found no way there.']}; }
@@ -56,7 +60,7 @@ async function turGo(id){
 function turSvg(u, inV){
   const T = S.turer; if (!T || !T.act.length) return '';
   const g = [];
-  for (const m of T.act){ const p = m.k === 'frakt' && m.stage === 'pick' ? portById(m.from).p : m.p; if (!p || !inV(p.x, p.y)) continue;
+  for (const m of T.act){ const p = m.k === 'frakt' && m.stage === 'pick' ? portById(m.from).p : m.k === 'slep' && m.stage === 'tow' ? portById(m.to).p : m.p; if (!p || !inV(p.x, p.y)) continue;
     g.push('<circle cx="' + p.x + '" cy="' + p.y + '" r="' + (11 * u) + '" class="turmk" stroke-width="' + (2 * u) + '" stroke-dasharray="' + (4 * u) + ' ' + (3 * u) + '"/>');
     if (view.z > 0.8){ const w = turWhat(m); g.push(txt({x:p.x + 13 * u, y:p.y - 9 * u}, turEsc(S.lang === 'en' ? w[1] : w[0]), 'lbl-tur', 10.5 * u, 'stroke-width="' + (2.5 * u) + '"')); } }
   return g.join('');

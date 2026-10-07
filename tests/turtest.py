@@ -21,7 +21,8 @@ async def main():
         pg.on('pageerror', lambda e: errs.append(str(e)))
         await boot(pg)
         # 1. the board: classes by the time to sail, pay by the boat's hourly earnings, deadlines beyond the time without trim
-        b = await pg.evaluate("""(() => { S.boat.fuel = BOAT.fuelCap; fsState().p = fsNeed(4); const T = turEnsure(true), B = T.board;
+        # the missions, not the skipper's sleep, are tested here: no energy (as in Admin), so a long haul does not end in sleep and the shore
+        b = await pg.evaluate("""(() => { S.adm = Object.assign(S.adm || {}, {noEnergy:true}); S.boat.fuel = BOAT.fuelCap; fsState().p = fsNeed(4); const T = turEnsure(true), B = T.board;
           return {n:B.length, cls:B.map(m => m.cls), kinds:B.map(m => m.k), rate:Math.round(turRate()), v:turV(), range:Math.round(turRange()),
             ok:B.every(m => m.pay >= 500 && m.hTot >= m.h * 2.5 && (m.cls === 'sesong' || (m.h >= TUR.cls[m.cls].h[0] && m.h < TUR.cls[m.cls].h[1] * (m.k === 'garn' ? 1.6 : 1)))),
             perH:Object.fromEntries(B.filter(m => m.k !== 'garn').map(m => [m.cls, Math.round(m.pay / m.h)])), mins:B.map(m => turMinR(m.h))}; })()""")
@@ -96,6 +97,25 @@ async def main():
           return {kind:m.kind, why, set:true, gone:!S.sets.some(x => x.tur === m.id), kg:Math.round(holdTotal()), done:!!(done && done.ok), fee:S.cash - cash0, pay:m.pay, log:S.log.slice(-5).map(l => l.no)}; })()""")
         check(g.get('none') or (g['set'] and not g['why'] and g['gone'] and g['kg'] > 0 and g['done'] and g['fee'] >= g['pay'] * 0.99),
               "lost gear with fish in it near the coast: hauled, the fish is aboard, the gear goes to its owner and the finder's fee is paid", g)
+        # 5b. a boat with engine trouble: lying still beside her the line goes over, she follows astern at 5.5 knots at most and the
+        #     engine burns more; brought to the harbour nearest her, the owner pays
+        sl = await pg.evaluate("""(() => { const T = turState(); S.hold = []; S.cargo = []; S.boat.status = 'idle'; S.boat.port = null; S.plan = null; const o = {...S.boat.pos};
+          let m = null; for (let i = 0; i < 6 && !m; i++) m = turSlep(o, 'kort') || turSlep(o, 'mid'); if (!m) return {none:true};
+          m.id = ++T.seq; m.until = S.t + 1440; T.board.push(m); turTake(m.id); const npc0 = turNpcs().find(n => n.id === 't' + m.id);
+          window.__f0 = [fuelLph(6, 5), speedCap(0.3)];   // before the line is fast (the game runs on while the map loads)
+          S.boat.pos = {x:m.p.x + 0.05, y:m.p.y}; S.boat.v = 0; window.__ts = m; return {stage0:m.stage, npc0:!!(npc0 && npc0.st === 'idle' && npc0.coast)}; })()""")
+        if not sl.get('none'):
+            await pg.wait_for_function("mapReadyAt(S.boat.pos, MAPD.simR)", polling=500, timeout=90000)
+            sl.update(await pg.evaluate("""(() => { const m = window.__ts, [f0, v0] = window.__f0; step();
+              const npc = turNpcs().find(n => n.id === 't' + m.id), behind = npc ? dist(npc.p, S.boat.pos) : null;
+              const r = {stage:m.stage, behind:behind && Math.round(behind * 1000), cap:speedCap(0.3), v0, fuelX:Math.round(fuelLph(6, 5) / f0 * 100) / 100, msg:S.msgs.some(x => x.from === m.owner)};
+              const cash0 = S.cash; S.plan = null; dock(m.to); const d = T => T.done.find(x => x.id === m.id); r.done = !!(d(turState()) && d(turState()).ok); r.gain = S.cash - cash0; r.pay = m.pay; r.lo = m.payLo; r.hi = m.payHi; r.value = m.value; r.ins = S.msgs.some(x => x.from === 'Forsikringsselskapet' && /Bergelønn/.test(x.no)); r.gone = !turNpcs().some(n => n.id === 't' + m.id);
+              // no cure, no pay: one that drifts ashore before help comes is lost, and there is nothing
+              let m2 = null; for (let i = 0; i < 6 && !m2; i++) m2 = turSlep({...S.boat.pos}, 'kort'); if (m2){ m2.id = ++turState().seq; turState().board.push(m2); turTake(m2.id); const cdf = coastDistFar, c1 = S.cash; window.coastDistFar = () => 0.01; turMinute(); window.coastDistFar = cdf; const d2 = turState().done.find(x => x.id === m2.id); r.ashore = !!(d2 && !d2.ok) && S.cash === c1; }
+              return r; })()"""))
+        check(sl.get('none') or (sl['stage0'] == 'reach' and sl['npc0'] and sl['stage'] == 'tow' and 20 < (sl['behind'] or 0) < 80 and sl['cap'] <= 5.5 and sl['fuelX'] >= 1.4
+              and sl['done'] and sl['gain'] == sl['pay'] and sl['lo'] <= sl['pay'] <= sl['hi'] <= sl['value'] and sl['ins'] and sl['gone'] and sl.get('ashore', True)),
+              'a boat with engine trouble drifts until you are beside her; then she follows astern on the line, at 5.5 knots at most and with more fuel burnt; brought in, the insurer pays a salvage reward by her value and the danger, never above her value; ashore first, nothing', sl)
         # 6. the season's move (a decked sjark; the open boat keeps to sheltered water): land enough near the place before the week is out
         se = await pg.evaluate("""(() => { const T = turState(), ty = S.boat.type; S.boat.type = 'sjark'; applyVessel(); const m = turSesong(turHere()); S.boat.type = ty; applyVessel(); if (!m) return {none:true};
           m.id = ++T.seq; m.until = S.t + 1440; T.board.push(m); turTake(m.id); const cash0 = S.cash;

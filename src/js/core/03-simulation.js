@@ -265,8 +265,8 @@ function loadF(){ return clamp(Math.pow(boatTons0() / Math.max(0.1, boatTons()),
 // was a different thing and is gone
 function foulHour(H){ const b = S.boat, m = gDate(H).getUTCMonth(), r = (m >= 5 && m <= 8 ? 0.012 : 0.004) / 24 * (S.equip && S.equip.antigro ? 0.3 : 1); b.foul = Math.min(1, (b.foul || 0) + r); }
 const foulSpeed = () => 1 - 0.15 * ((S.boat && S.boat.foul) || 0), foulFuel = () => 1 + 0.25 * ((S.boat && S.boat.foul) || 0);
-function fuelLph(v, W){ const base = BOAT.planing ? 1.0 + 0.03 * v * v + 3 * Math.exp(-(((v - BOAT.vmax * 0.42) / 3) ** 2)) : 1 + 0.1 * v * v + (v > BOAT.vmax * 0.9 ? (v - BOAT.vmax * 0.9) * 6 : 0); return base * BOAT.fuelK * (1 + 0.015 * W) * Math.pow(boatTons() / boatTons0(), 2 / 3) * foulFuel(); }
-function speedCap(hs){ return BOAT.vmax * clamp(1 - (hs - 0.3) * BOAT.sea, 0.2, 1) * loadF() * foulSpeed(); }
+function fuelLph(v, W){ const base = BOAT.planing ? 1.0 + 0.03 * v * v + 3 * Math.exp(-(((v - BOAT.vmax * 0.42) / 3) ** 2)) : 1 + 0.1 * v * v + (v > BOAT.vmax * 0.9 ? (v - BOAT.vmax * 0.9) * 6 : 0); return base * BOAT.fuelK * (1 + 0.015 * W) * Math.pow(boatTons() / boatTons0(), 2 / 3) * foulFuel() * (typeof turTowing === 'function' && turTowing() ? 1.5 : 1); }
+function speedCap(hs){ const v = BOAT.vmax * clamp(1 - (hs - 0.3) * BOAT.sea, 0.2, 1) * loadF() * foulSpeed(); return typeof turTowing === 'function' && turTowing() ? Math.min(v, TUR_TOWV) : v; }   // with a boat in tow (09g-turer.js)
 
 // fish
 function noise2(x, y, s){

@@ -1269,6 +1269,14 @@ Punkt 4 i `docs/engasjement.md`. Jonas: en blanding av korte og lange oppdrag ut
   - **Bestilling** (`turBest`): en ordre i ordresystemet (`S.orders`, med `tur`). Turens betaling er bonusen, og `sell` betaler den sammen med fisken.
   - **Frakt** (`turFrakt`, `TUR_GOODS`): varer i `S.cargo`, som er per fartøy (`VKEYS`). De tar plass fra `capHold` og teller i vekten (`boatTons`), men er ikke en del av fangsten (`holdTotal`) eller landingen. Varene hentes ved kai, og hvis båten ikke ligger der, går «Kjør dit» innom. De betales når de leveres (`turDock` i `dock`).
   - **Tapt redskap** (`turGarn`, `turSpawn`): et sett med `tur` og fisk i, 0,9–6 km fra land med begge ender i åpent vann. Det er garn når to kan trekke dem og spilleren har garn, ellers en line som én kan trekke. Når det er trukket (`finishHaul` → `turHauled`), går redskapet til eieren og ikke til `pgear`, og eieren betaler finnerlønn (halvparten, siden fisken er spillerens). Fristen løper ikke ut mens redskapet hales.
+  - **Slep av båt med motorstopp** (`turSlep`, Jonas 07.10.2026: bergelønn etter sjøloven kap. 16). En NPC-båt (`turNpcs`, i `npcStates`, tegnet med byggesettet) ligger 1,5–14 nm unna, 0,5–8 km fra land, og er 0,75–0,95 ganger spillerens egen lengde. Hun skal til nærmeste havn med kai.
+    - **Drift** (`turMinute` i `step`): hun driver med vinden, 3 % av vindfarten (et anslag for en liten båt uten fart). Farten er begrenset, så hun tidligst når land etter tre ganger tiden det tar å komme dit uten trim. Når hun når land, er oppdraget tapt, og det blir ingen bergelønn.
+    - **Slepet** går over når spillerens båt ligger stille (under 1,5 kn) innen 150 m. Da gjelder høyst 5,5 kn (`TUR_TOWV`, `speedCap`), dieselforbruket ganges med 1,5 (`fuelLph`), og hun følger etter i tauet. I 3D tegner `drawTowLine` tauet fra hekken til baugen hennes med litt bukt.
+    - **Bergelønnen** (`turSalvage`) betales av eierens forsikring når hun er levert i havn (`turDock`). Den er tiden etter tavlas timepris (`turPay`) pluss 3–15 % av båtens verdi etter faren (`turDanger`: 1 innen et par hundre meter fra land, 0 fra rundt 2 km). Den er aldri høyere enn verdien.
+    - **Verdien** (`turValue`) er et anslag for en brukt båt: 60 % av nypris etter lengden (`TUR_VAL`). Kortet viser spennet før slepet og summen når faren er satt.
+    - **Etter loven:** § 445 sier at bergelønn bare gis ved et nyttig resultat, og at den aldri kan være høyere enn verdien av det som er berget. § 446 lister det bergelønnen måles etter: verdien, dyktighet og innsats, faren, tiden, kostnadene og risikoen. Etter § 450 gir arbeid etter en avtale inngått før faren oppsto, ingen bergelønn. Derfor er det ingen avtalt pris på kortet, og slepet er frivillig. I praksis gjøres oppgjøret med eierens forsikringsselskap.
+    - **Kilder:** [sjøloven kap. 16 på Lovdata](https://lovdata.no/dokument/NL/lov/1994-06-24-39/KAPITTEL_16), [SNL: bergelønn](https://snl.no/bergel%C3%B8nn), [SNL: no cure, no pay](https://snl.no/no_cure,_no_pay).
+    - **Antakelser:** driften, verdiene og fordelingen mellom tid og verdi er anslag til spilltesting.
   - **Sesongflytting** (`turSesong`): mottaket 40–250 nm unna som lander mest av en art som er i sesong (`mk.sp[sp].months`). Spilleren skal levere tre lastrom (halvannen gang så mye fra ti år, torsk innenfor 80 % av kvoten) ved mottakene innen 30 km før uka er ute. `turSale` i `sell` teller det som leveres.
 - **Avgangen** (`turDepart` i `depart`): ved turer på 20 minutter eller mer skriver loggen når båten er fremme. Ved turer på en time eller mer sier noen noe om turen (Jonas: mange legger fra seg telefonen når båten går).
   - Ved annenhver lange tur i dieselbåter uten trim kan motoren nevnes med ordene fra Trim-appen (`TUR_TUNE`: pumpe, ladeluftkjøling, turbo; semidiesel bare pumpe), høyst én gang per 20 ekte timer.
@@ -1277,7 +1285,7 @@ Punkt 4 i `docs/engasjement.md`. Jonas: en blanding av korte og lange oppdrag ut
   - Ingenting av dette står i patchnotes.
 - **Måling:** `cloudEv` sender `tur_take`, `tur_done` og `tur_fail` (med type, klasse, nm og om trim var på) og `crew_tip` (hvilken kommentar).
 - **Skjermen:** fanen «Turer» i Oppdrag-appen viser «Dine oppdrag», tavla og tidligere oppdrag. Bestillingene har egen fane. Kartet viser en stiplet ring der hvert oppdrag går (`turSvg`).
-- **Neste:** slep av en båt med motorstopp (krever en NPC som kan slepes), prøvefiske for havforskerne og bilder for Kystposten.
+- **Neste:** prøvefiske for havforskerne og bilder for Kystposten.
 
 ## 5. Systemer i spillet
 
