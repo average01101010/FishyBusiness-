@@ -53,16 +53,19 @@ function helmPose(frac){
   const b = S.boat, h = S.helm, s = Math.min(0.5, (Date.now() - HELM.t) / 1000) * simRate(), hd = b.heading + h.yaw * s, d = h.v * NM / 3600 * s;
   return {p:{x:b.pos.x + Math.sin(hd) * d, y:b.pos.y - Math.cos(hd) * d}, hd, frac};
 }
-// the nearest place to lie within r km of p: a harbour (its berth or its harbour point), Father's naust or a rorbu's quay (07d-rorbu.js;
-// Jonas 05.10.2026: «Det må også være mulig å fortøye i kaia, for å hvile»): {id, name, x, y (where the way there ends), d, berth, kind}
-function moorNear(p, r){
-  const t = S.boat.type || 'skiff'; let best = null;
-  const take = (id, name, at, d, berth, kind) => { if (d < r && (!best || d < best.d)) best = {id, name, x:at.x, y:at.y, d, berth, kind}; };
+// the places to lie within r km of p, nearest first: a harbour (its berth or its harbour point), Father's naust or a rorbu's quay
+// (07d-rorbu.js; Jonas 05.10.2026: «Det må også være mulig å fortøye i kaia, for å hvile»): [{id, name, x, y (where the way there
+// ends), d, berth, kind}]. All of them, so the dock can offer the plant a few hundred metres off and not only the rorbu she just left
+// (tilbakemelding #23)
+function moorAll(p, r){
+  const t = S.boat.type || 'skiff', out = [];
+  const take = (id, name, at, d, berth, kind) => { if (d < r) out.push({id, name, x:at.x, y:at.y, d, berth, kind}); };
   for (const q of PORTS){ if (dist(p, q.p) > r + 0.5) continue; const bp = berthPose(q.id, t); take(q.id, q.name, q.p, bp ? Math.min(dist(p, bp), dist(p, q.p)) : dist(p, q.p), undefined, 'port'); }
   const nt = naustTarget(p, r); if (nt) take(nt.port, S.lang === 'en' ? 'the boathouse' : 'naustet', nt, dist(p, nt), 'naust', 'naust');
   for (const R of rorbuSites(p, r + 0.1)){ const bp = berthPose(R.id, t, 'main'); if (bp) take(R.id, (S.lang === 'en' ? 'the rorbu at ' : 'rorbua i ') + R.name, R.p, dist(p, bp), undefined, 'rorbu'); }
-  return best;
+  return out.sort((a, b) => a.d - b.d);
 }
+const moorNear = (p, r) => moorAll(p, r)[0] || null;
 // the place she can moor at under the hand: slow (under 3 knots), within 120 m
 function helmMoorable(){
   if (!helmOn() || Math.abs(S.helm.v) > 3) return null;

@@ -43,10 +43,25 @@ async def main():
         check(r.get('st') == 'port' and r.get('port') == rid, 'Autonav takes the boat from Gryllefjord to the rorbu, and she lies at its quay', r)
         # 3b. «Fortøy» in the dock when she lies still off the quay (Jonas 05.10.2026: «Det må også være mulig å fortøye i kaia»)
         await pg.evaluate("""(rid => { const R = RBID.get(rid), b = S.boat, N = [-R.site.u[1], R.site.u[0]]; restEnd && restEnd(); S.plan = null; b.status = 'idle'; b.port = null; b.v = 0;
-          b.pos = {x:R.p.x + N[0] * 0.15, y:R.p.y + N[1] * 0.15}; DOCK.tick && DOCK.tick(); renderActs && renderActs(); const el = [...document.querySelectorAll('#dock button')].find(e => e.textContent.trim() === 'Fortøy'); if (el) el.click(); })""", rid)
+          b.pos = {x:R.p.x + N[0] * 0.15, y:R.p.y + N[1] * 0.15}; DOCK.tick && DOCK.tick(); renderActs && renderActs(); const el = [...document.querySelectorAll('#dock button')].find(e => e.textContent.trim() === 'Fortøy'); if (el) el.click();
+          const f = [...document.querySelectorAll('#dockFan button')].find(e => e.textContent.trim().toLowerCase().startsWith('rorbua')); if (f) f.click(); })""", rid)
         await pg.wait_for_timeout(2500)
         r = await pg.evaluate("""(rid => { const b = S.boat, st0 = b.status; let n = 0; while (b.status !== 'port' && n < 200){ step(); n++; } return {st0, n, st:b.status, port:b.port}; })""", rid)
         check(r['st0'] == 'sailing' and r['st'] == 'port' and r['port'] == rid, 'lying still 150 m off the rorbu, «Fortøy» in the dock takes her in to its quay', r)
+        # 3c. cast off from a rorbu by a plant without a route: «Fortøy» offers both quays, and the plant takes her there (tilbakemelding #23:
+        # she only ever went back to the rorbu)
+        r = await pg.evaluate("""(async () => { const g = portById('gryllefjord'), b = S.boat, R0 = b.port; let R = null, K = null;
+          for (const e of rorbuNear(g.p, 80)){ if (e.R.kind !== 0) continue; await mapNeed(e.R.cand, 2); if (!rorbuSite(e.R)) continue;
+            const q = moorAll(e.R.p, 0.4).find(m => m.kind === 'port'); if (q){ R = e.R; K = q; break; } }
+          if (!R) return {none:true};
+          S.rest = null; S.plan = null; S.draft = []; dock(R.id); S.plan = null; depart(); let n = 0; while (b.status !== 'idle' && n < 20){ step(); n++; }
+          DOCK.tick && DOCK.tick(); renderActs && renderActs(); const el = [...document.querySelectorAll('#dock button')].find(e => e.textContent.trim() === 'Fortøy'); if (el) el.click();
+          await new Promise(res => setTimeout(res, 300)); const fan = [...document.querySelectorAll('#dockFan button')].map(e => e.textContent.trim());
+          const f = [...document.querySelectorAll('#dockFan button')].find(e => e.textContent.trim() === K.name); if (f) f.click();
+          await new Promise(res => setTimeout(res, 2500)); const st0 = b.status; n = 0; while (b.status !== 'port' && n < 300){ step(); n++; }
+          const out = {rid:R.id, kid:K.id, fan, st0, st:b.status, port:b.port}; S.plan = null; dock(R0); return out; })()""")
+        check(not r.get('none') and len(r['fan']) >= 2 and r['st0'] == 'sailing' and r['st'] == 'port' and r['port'] == r['kid'],
+              'cast off from a rorbu by a plant, «Fortøy» offers both quays, and picking the plant takes her there', r)
         # 4. the dock: rest, no market, no shop; Gryllefjord's plant is not here
         r = await pg.evaluate("""(() => { DOCK.tick && DOCK.tick(); renderActs && renderActs(); const t = [...document.querySelectorAll('#dock button')].map(b => b.textContent.trim()).join('|');
           return {t, shop:shopBuy('jig', 0, false), mottak:!!portById(S.boat.port).mottak}; })()""")
