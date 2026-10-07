@@ -2777,6 +2777,10 @@ Jonas: «hele spillet skal være free-to-play, men med betalte boostere i form a
   - **Mannskapet:** de som står på «Haling» i arbeidskjedene, står ved haleren, ved enden av renna og ved binge eller balje. Skipperen er med når det er hans jobb, og forlater da rattet.
   - `haultest.py` tar bilder og sjekker at skiva går rundt.
 
+### 5.29b Handelssteder (regel, 07.10.2026)
+
+- Tre steder handler man: utstyrsbutikken, fiskemottaket og verftet. Fars naust og rorbuene selger ingenting. Hele regelen, den vedtatte første turen og det som mangler (verftsmodellen, plassering av butikker og verft langs kysten), står i `docs/handelssteder.md`. Dagens spill har fortsatt alt på kaia i hver havn, også fra naustet.
+
 ### 5.30 Rettelser etter tilbakemeldingene #34–#42 (07.10.2026)
 
 - **#42 Skipperen og mannskapet på sløying:** `deckActivity` i `view3d.js` gir nå `me` og `crew` hver for seg. Står begge på «Sløying» eller «Ising» i `workAssign`, står skipperen ved bordet og en av mannskapet ved bløggekaret (`drawDeck`), og skipperen forlater rattet. Før ble han stående ved rattet.
