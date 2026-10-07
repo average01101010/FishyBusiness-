@@ -1241,6 +1241,38 @@ Jonas' avgjørelser står i `docs/engasjement.md`, arbeidslista punkt 1.5 og 3. 
   - `sqltest`: trakten.
   - `towtest`: slepet med betaling (`S.free` satt).
 
+### 4.26 Turoppdrag fra der du er (07.10.2026)
+
+Punkt 4 i `docs/engasjement.md`. Jonas: en blanding av korte og lange oppdrag ut fra der spilleren er. De lange skal friste til trim, gi god belønning og alltid kunne nås uten. Kjernen ligger i `core/09g-turer.js`, skjermen i `ui/05f-turer.js` og testen i `tests/turtest.py`.
+
+- **Tavla** (`turEnsure`, `turMake`) lages fra der båten er (`turHere`). En ny tavle kommer hver spillmorgen, når båten har flyttet seg mer enn 20 nm (`TUR.move`), og når tavla er tom.
+  - Den har to korte, ett middels og ett langt oppdrag. Klassen avgjøres av seilingstiden uten trim (`TUR.cls`, i spilltimer): kort 0,4–3 (opptil en halvtime i ekte tid), middels 3–7,5, lang 7,5–18 (opptil tre timer). `GAME_RATE` er 6.
+  - Fra tre års fartstid kommer også sesongflyttingen.
+- **Vektet etter spilleren** (`turMe`, Jonas 07.10.2026). Grunnlaget er spillerens egen lagring, som har det samme som skyen. Spillet leser aldri databasen per spiller.
+  - **Under ett år fartstid** (før første tur er ferdig): ingen lange oppdrag, bare et kort til.
+  - **Under ti år:** de lange går opp til 12 spilltimer (`turHi`). Fra ti år går de helt opp til 18, og bestillingene kan kreve ekstra kvalitet til 20 % tillegg.
+  - **Bestillinger:** arten er en spilleren lander, og mengden er omtrent en vanlig landing i denne båten. Omdømmet hos mottaket (`repOf`) gir 0,8–1,2 ganger bonusen.
+  - **Rekkefølgen** (`turOrder`): nye spillere får steder de kjenner først, erfarne (fra fem år) nye steder først.
+- **Treffsikkert** (`turCan`): et oppdrag tilbys bare når båten klarer det.
+  - **Drivstoff:** turen må gå på 75 % av en full tank (tur-retur for tapt redskap). Mottakene selger diesel.
+  - **Åpne båter** holder seg innaskjærs: eksponeringen langs linja må være høyst 0,7, lest fra kjernekartet.
+  - **Været:** varselet (`hsAtFc`) skal ligge under båtens egen varselgrense i timene turen tar. Sesongflyttingen sjekker ikke varselet, siden spilleren selv velger dagene.
+  - **Avstanden** er den rette linja ganget med 1,25 (`TUR.detour`). «Kjør dit» (`turGo`) finner den virkelige veien med `leiaRoute` og drar, også fra kaia.
+- **Belønningen** (`turPay`) er det båten tjener i timen (`turRate`: 9 000 kr i trebåten, etter lasterommet opphøyd i 0,6) ganger timene uten trim, ganget med 1,1, 1,3, 1,6 og 2 for sesongen. Fristen er minst 2,5 ganger tiden uten trim, og den flyttes aldri.
+- **Typene:**
+  - **Bestilling** (`turBest`): en ordre i ordresystemet (`S.orders`, med `tur`). Turens betaling er bonusen, og `sell` betaler den sammen med fisken.
+  - **Frakt** (`turFrakt`, `TUR_GOODS`): varer i `S.cargo`, som er per fartøy (`VKEYS`) og teller i `holdTotal` og vekten. Varene hentes ved kai, og hvis båten ikke ligger der, går «Kjør dit» innom. De betales når de leveres (`turDock` i `dock`).
+  - **Tapt redskap** (`turGarn`, `turSpawn`): et sett med `tur` og fisk i, 0,9–6 km fra land med begge ender i åpent vann. Det er garn når to kan trekke dem og spilleren har garn, ellers en line som én kan trekke. Når det er trukket (`finishHaul` → `turHauled`), går redskapet til eieren og ikke til `pgear`, og eieren betaler finnerlønn (halvparten, siden fisken er spillerens). Fristen løper ikke ut mens redskapet hales.
+  - **Sesongflytting** (`turSesong`): mottaket 40–250 nm unna som lander mest av en art som er i sesong (`mk.sp[sp].months`). Spilleren skal levere tre lastrom (halvannen gang så mye fra ti år, torsk innenfor 80 % av kvoten) ved mottakene innen 30 km før uka er ute. `turSale` i `sell` teller det som leveres.
+- **Avgangen** (`turDepart` i `depart`): ved turer på 20 minutter eller mer skriver loggen når båten er fremme. Ved turer på en time eller mer sier noen noe om turen (Jonas: mange legger fra seg telefonen når båten går).
+  - Ved annenhver lange tur i dieselbåter uten trim kan motoren nevnes med ordene fra Trim-appen (`TUR_TUNE`: pumpe, ladeluftkjøling, turbo; semidiesel bare pumpe), høyst én gang per 20 ekte timer.
+  - Er spilleren alene om bord, er det minnet om far som snakker. Med trim på kan noen si «Hør hvor fint hun går nå».
+  - Aldri til gjester, aldri i veiledningen, aldri i hardt vær eller med lite diesel. Mekanikeren nevner pumpa etter service høyst hver tredje ekte dag (`turMechanic`).
+  - Ingenting av dette står i patchnotes.
+- **Måling:** `cloudEv` sender `tur_take`, `tur_done` og `tur_fail` (med type, klasse, nm og om trim var på) og `crew_tip` (hvilken kommentar).
+- **Skjermen:** fanen «Turer» i Oppdrag-appen viser «Dine oppdrag», tavla og tidligere oppdrag. Bestillingene har egen fane. Kartet viser en stiplet ring der hvert oppdrag går (`turSvg`).
+- **Neste:** slep av en båt med motorstopp (krever en NPC som kan slepes), prøvefiske for havforskerne og bilder for Kystposten.
+
 ## 5. Systemer i spillet
 
 ### 5.1 Båter og utstyr

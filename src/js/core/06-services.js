@@ -169,6 +169,7 @@ function depart(){
   if (S.plan) S.plan.depAt = null;
   // from the quay the lines come in first; the boat moves when they are aboard
   if (b.status === 'port'){ b.status = 'unmooring'; b.castUntil = S.t + CAST_MIN; } else { b.status = 'sailing'; b.port = null; }
+  turDepart();   // when she will be there, and a word about the trip (09g-turer.js)
   return true;
 }
 // jobs: yard service, fitting equipment, preparing gear
@@ -179,7 +180,7 @@ const PREP = {
 };
 function finishJob(j){
   const b = S.boat;
-  if (j.kind === 'svc'){ b.svcAt = b.engH || 0; S.svcTold = false; log('Service på motoren er ferdig.', 'The engine service is done.'); }
+  if (j.kind === 'svc'){ b.svcAt = b.engH || 0; S.svcTold = false; log('Service på motoren er ferdig.', 'The engine service is done.'); turMechanic(); }
   else if (j.kind === 'fit'){ const E = EQUIP[j.k];
     // the boat may have been traded for one the equipment does not suit while it waited: the yard pays back
     if (!equipFits(j.k, b.type)){ S.cash += E.price; log(E.name.no + ' passer ikke denne båten. Verkstedet betalte tilbake ' + kr(E.price) + '.', E.name.en + ' does not suit this vessel. The yard paid back ' + kr(E.price) + '.'); }

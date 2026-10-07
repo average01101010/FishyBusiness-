@@ -114,7 +114,7 @@ async def run(p, w, h, tag):
         # an order taken in the village shows in the phone's order list, with its deadline
         r = json.loads(await pg.evaluate("""JSON.stringify((() => { const O = ordState(); O.active = []; O.offers = [{id:501, cust:CUSTOMERS[1].id, port:'botnhamn', sp:'hyse', kg:40, left:40, q:'A', prem:0.25, bonus:1200, offerUntil:S.t + 600, days:2}];
           DOCK.open('oppdrag'); const b = document.querySelector('#drawerBody [data-pa=ordtake]'); if (b) b.click(); DOCK.close();
-          PHONE.open('ordl'); const t = document.getElementById('phView').innerText; PHONE.show(false);
+          PHONE.open('ordl'); PHONE.dact('ordl', 'sub', {s:'best'}); PHONE.render(); const t = document.getElementById('phView').innerText; PHONE.show(false);   // the orders' tab (Turer is first)
           return {active:O.active.length, name:t.includes(CUSTOMERS[1].no), deadline:/Frist/.test(t), earlier:/Tidligere/.test(t)}; })())"""))
         check(r['active'] == 1 and r['name'] and r['deadline'] and r['earlier'], 'et oppdrag tatt i Bygd står i oppdragslista på telefonen med frist, og de tidligere under', r)
         # the papers in the Seaman app

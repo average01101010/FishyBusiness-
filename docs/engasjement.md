@@ -51,7 +51,7 @@ Alt bygges for hele kysten. Hver endring skal kunne leses av i trakten (punkt 9)
    - **De langsiktige merkene** tar over etter uka, så kortet aldri bare tar slutt.
    - **Første slep og første reparasjon er gratis** (Jonas: «slik at spillerne lærer, men ikke får konsekvenser»).
    - **Trakten per milepæl** ligger i admin under «Merker». Der tallet faller mest, er neste sted å gjøre noe.
-4. **Turoppdrag fra der du er** (Jonas' tillegg): lange turer med gode belønninger ut fra hjemhavna og mottakene rundt, som gjør trim attraktivt. Belønningen står i forhold til turen uten trim.
+4. **Turoppdrag fra der du er** (Jonas' tillegg; første runde bygd 07.10.2026, OVERLEVERING 4.26): korte og lange turer ut fra der båten er, med gode belønninger, som gjør trim attraktivt. Belønningen står i forhold til turen uten trim. Typene er bestilling, frakt, tapt redskap og sesongflytting, vektet etter spillerens fartstid og egne landinger. Mannskapet nevner motoren ved avgangen på lange turer, sjelden og stillferdig.
 5. **Sjeldne hendelser på sjøen** som gratis variabel belønning: drømmefisken, hvalen, en rekordfisk, en tapt garnlenke med fisk i, omtale i Kystposten.
 6. **Ukerytmen:** søndagskort og én push, «Ukas fangst», med plassering, beste dag og hva naboene leverte. Sesongvimpler som fortjenes («Skreisesongen 2027»), men som også kan fortjenes neste år: sesong uten FOMO.
 7. **Kystkartet:** samling for hele landet. Mottak du har levert til (av 153), lykter du har passert, arter du har fanget. Fullførelsestrangen er ærlig når samlingen er ekte.

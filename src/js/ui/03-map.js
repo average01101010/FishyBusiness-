@@ -294,6 +294,7 @@ function renderStatic(){
     if (view.z > 1.2 && pn.name) g.push(txt({x:pn.x + 4 * u, y:pn.y + 4 * u}, pinEsc(pn.name), 'lbl-pin', 11 * u, 'stroke-width="' + (2.5 * u) + '"')); }
   // Father's marks (ui/06c-notebook.js)
   g.push(NOTEBOOK.svg(u, inV));
+  g.push(turSvg(u, inV));   // where the missions go (ui/05f-turer.js)
   // ports, their names when the view is closer than the whole region; the place names (03a-chart.js) keep clear of them
   const taken = [], pl = view.z >= 0.5;
   for (const p of PORTS){

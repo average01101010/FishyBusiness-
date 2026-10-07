@@ -345,8 +345,8 @@ function finishHaul(g, H){
   let tore = 0;
   if (s.kind === 'garn' && cond < 0.25){ const p = Math.min(1, 3 * (0.25 - cond) + (cond <= 0 ? 1 : 0)); for (let i = 0; i < s.n; i++) if (Math.random() < p) tore++; }
   const back = s.n - tore;
-  gearBack(s, back, cond);
-  S.pgear.kits.n++; if (s.heavy) S.pgear.kits.heavy++;
+  if (s.tur) turHauled(s);   // found gear goes back to its owner (09g-turer.js)
+  else { gearBack(s, back, cond); S.pgear.kits.n++; if (s.heavy) S.pgear.kits.heavy++; }
   const what = GEAR[s.kind].no.toLowerCase(), whatEn = GEAR[s.kind].en.toLowerCase();
   log('Trakk ' + what + ': ' + fmt(g.kg, 0) + ' kg, sto ' + fmt(g.soak, 0) + ' t' + (g.rel ? ', ' + g.rel + (s.kind === 'teine' ? ' krabber satt ut igjen' : ' fisk sluppet') : '') + (g.dead >= 1 ? ', ' + Math.round(g.dead) + ' døde krabber kastet' : '') + '.',
     'Hauled ' + whatEn + ': ' + fmt(g.kg, 0) + ' kg, soaked ' + fmt(g.soak, 0) + ' h' + (g.rel ? ', ' + g.rel + (s.kind === 'teine' ? ' crabs put back' : ' fish released') : '') + (g.dead >= 1 ? ', ' + Math.round(g.dead) + ' dead crabs thrown' : '') + '.');

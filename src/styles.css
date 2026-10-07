@@ -925,4 +925,12 @@ body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 2
 .ach-pen::after{background:#00205b;clip-path:polygon(0 42%,100% 49.2%,100% 50.8%,0 58%)}
 .ach-pen.p2{width:185px}
 .ach-pen.p3{width:220px}
+/* Turoppdrag in the Oppdrag app (ui/05f-turer.js) */
+.tur-sec{margin:10px 2px 4px}.tur-n{margin:0 2px 8px}
+.ph-card.tur{border-left:4px solid #2e7d4f}.ph-card.tur.mid{border-left-color:#c9971c}.ph-card.tur.lang{border-left-color:#b8402f}.ph-card.tur.sesong{border-left-color:#1f4e79}
+.tur-h{display:flex;align-items:center;gap:8px;margin-bottom:2px}.tur-h small{opacity:.7}
+.tur-c{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:9px;background:#2e7d4f;color:#fff}
+.tur.mid .tur-c{background:#c9971c}.tur.lang .tur-c{background:#b8402f}.tur.sesong .tur-c{background:#1f4e79}
+.tur-b{display:flex;gap:8px;margin-top:8px}.tur-b .ph-btn{flex:1}
+.turmk{fill:none;stroke:#2e7d4f}.lbl-tur{fill:#1d5c38;font-weight:600;paint-order:stroke;stroke:#fff}
 .ph-goal.ph-ach{margin-top:-6px}

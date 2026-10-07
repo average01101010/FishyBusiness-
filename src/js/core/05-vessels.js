@@ -227,12 +227,12 @@ function navHour(){
   S.navrows.push({t:S.t, port:b.status === 'port' ? b.port : null, st:b.status, hd:Math.round(trueDeg(b.heading, b.pos)) % 360, v:Math.round((b.status === 'sailing' ? b.v : 0) * 10) / 10, x:Math.round(b.pos.x * 1000) / 1000, y:Math.round(b.pos.y * 1000) / 1000, W:Math.round(windAt(H) * 10) / 10, wd:Math.round(windDir(H)), hs:Math.round(hsAt(b.pos, H) * 10) / 10, vis:Math.round(visibility(H))});
   while (S.navrows.length && S.navrows[0].t < S.t - KEEP_MIN) S.navrows.shift();
 }
-const holdTotal = () => S.hold.reduce((a, x) => a + x.kg, 0);
+const holdTotal = () => S.hold.reduce((a, x) => a + x.kg, 0) + cargoKg();   // freight for a mission takes room in the hold too (09g-turer.js)
 function nearestPort(p){ let best = null, bd = 1e9; for (const q of PORTS){ const d = dist(p, q.p); if (d < bd){ bd = d; best = q; } } return best; }
 
 function step(){
   if (!S.fleet || !S.fleet.length) ensureFleet();
-  if (S.t % 60 === 0){ ordersTick(S.t / 60); borsTick(S.t / 60); eachVessel(() => { crewTick(S.t / 60); if (!(S.jobs && S.jobs.some(j => j.kind === 'hull' && j.until))) foulHour(S.t / 60); }); }   // (no fouling while she is on the slip)
+  if (S.t % 60 === 0){ ordersTick(S.t / 60); turHour(); borsTick(S.t / 60); eachVessel(() => { crewTick(S.t / 60); if (!(S.jobs && S.jobs.some(j => j.kind === 'hull' && j.until))) foulHour(S.t / 60); }); }   // (no fouling while she is on the slip)
   S.t += 1; const H = S.t / 60;
   energyMinute();
   if (S.t % 60 === 0){ hourly(); eachVessel(navHour); eachVessel(loreHour); }
@@ -355,6 +355,7 @@ function dock(pid, berth){
   else if (port.rorbu) log('Fortøyd ved rorbua i ' + port.name + '.', 'Moored at the rorbu in ' + port.name + '.');   // 07d-rorbu.js
   else log('Fortøyd i ' + port.name + '.', 'Moored in ' + port.name + '.');
   tatTripEnd(pid);
+  turDock(pid);   // freight picked up or delivered (09g-turer.js)
   // the skipper starts landing and restocks straight away, on this vessel (a deferred call would act on whichever vessel is bound then)
   if (wasOps && !port.rorbu){ opsLanded(pid); if (typeof refreshAll === 'function') setTimeout(refreshAll, 0); }
 }

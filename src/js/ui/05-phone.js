@@ -154,7 +154,12 @@ const PHONE = (() => {
   }
   function oppdrag(){ return salg('best'); }
   function ordl(){
-    const O = ordState(), cn = id => (CUSTOMERS.find(c => c.id === id) || {no:id}).no, H = S.t / 60, h = ['<div class="ph-c">'];
+    const tab = sub.ordl || 'turer', tabs = subs('ordl', [['turer', 'Turer', 'Trips'], ['best', 'Bestillinger', 'Orders']]);
+    if (tab === 'turer') return '<div class="ph-c">' + tabs + turPage() + '</div>';
+    return ordlBest(tabs);
+  }
+  function ordlBest(tabs){
+    const O = ordState(), cn = id => (CUSTOMERS.find(c => c.id === id) || {no:id}).no, H = S.t / 60, h = ['<div class="ph-c">' + (tabs || '')];
     if (!O.active.length) h.push('<div class="ph-card"><p class="ph-note">' + L('Ingen aktive oppdrag. Nye oppdrag tar du under Bygd, Oppdrag, når båten ligger i havn.', 'No active orders. You take new ones under Village, Orders, when the boat is in port.') + '</p></div>');
     for (const o of O.active){ const got = o.kg - o.left, late = o.due - S.t < 360;
       h.push('<div class="ph-card ordq"><h4>' + cn(o.cust) + '</h4><p>' + L('Lever ' + fmt(o.kg, 0) + ' kg ' + SPECIES[o.sp].no.toLowerCase() + ' i ' + portById(o.port).name, 'Deliver ' + fmt(o.kg, 0) + ' kg of ' + SPECIES[o.sp].en.toLowerCase() + ' at ' + portById(o.port).name) + '</p>' +
@@ -410,6 +415,10 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p85', '07.10.2026', 'Turer', 'Trips', [
+      ['Nytt i Oppdrag-appen: turoppdrag laget ut fra der båten er. Korte og lange turer, bestillinger fra mottak lenger unna, frakt langs kysten, tapt redskap med fisk i, og sesongflytting når fisken står et annet sted.', 'New in the Orders app: trip missions made from where the boat is. Short and long trips, orders from plants farther off, freight along the coast, lost gear with fish in it, and following the season when the fish is somewhere else.'],
+      ['Oppdragene passer båten og deg: rekkevidden på en tank, været, hva du pleier å lande og hvor lenge du har vært på sjøen. «Kjør dit» finner veien.', 'The missions suit the boat and you: the range on a tank, the weather, what you usually land and how long you have been at sea. «Go there» finds the way.'],
+      ['Når du legger ut på en lengre tur, står det i loggen når du er framme.', 'When you set out on a longer trip, the log says when you will be there.']]],
     ['p84', '07.10.2026', 'Merker', 'Badges', [
       ['Ny app: Merker. «Første uke på sjøen» har 21 milepæler i tre kapitler. Hver gir en gave fra noen på kysten, og hvert kapittel sin egen belønning: den norske vimpelen i masta, som andre ser og som blir lengre for hvert kapittel, en haill og skrogfargen «Kystfisker».', 'New app: Badges. «The first week at sea» has 21 milestones in three chapters. Each gives a gift from someone on the coast, and each chapter its own reward: the Norwegian pennant at the mast, which others see and which grows longer with each chapter, a luck and the hull colour «Kystfisker».'],
       ['Merkene går videre etter uka: største levering, levert i alt, fartstid, mottak, arter, sjømil og flere.', 'The badges go on after the week: biggest landing, landed in all, sea time, plants, species, miles and more.'],
@@ -1418,6 +1427,9 @@ const PHONE = (() => {
       else if (o === 'listen'){ if (ev.topic === 'lott'){ A.share = Math.round((A.share + 0.01) * 100) / 100; } else if (ev.topic === 'hvile'){ A.off = true; } A.morale += ev.topic === 'lott' ? 12 : 8; }
       else if (o === 'firm'){ A.morale -= 10; if (A.traits.includes('kranglefant') || A.traits.includes('stolt')) A.morale -= 6; }
       for (const c of S.crew) c.morale = clamp(c.morale, 0, 100); S.cevt = null; }
+    else if (a === 'turtake'){ const e = turTake(+d.id); if (e) toast(e); }
+    else if (a === 'turdrop'){ turDrop(+d.id); }
+    else if (a === 'turgo'){ turGo(+d.id); show(false); return false; }
     else if (a === 'ordtake'){ const O = ordState(), o = O.offers.find(x => x.id === +d.id); if (!o || O.active.length >= 3) return; O.offers.splice(O.offers.indexOf(o), 1); o.due = S.t + o.days * 1440; O.active.push(o); log('Tok en bestilling fra ' + CUSTOMERS.find(c => c.id === o.cust).no + '.', 'Took an order from ' + CUSTOMERS.find(c => c.id === o.cust).no + '.'); }
     else if (a === 'cloth'){ const C = CLOTHES[d.k], people = 1 + S.crew.length, have = (S.clothes || {})[d.k] || 0; if (!C || have >= people) return; if (S.cash < C.price){ toast(t('no_cash')); return; } S.cash -= C.price; S.stats.costs += C.price; S.clothes = S.clothes || {olje:0, varme:0}; S.clothes[d.k] = have + 1; log('Kjøpte ' + C.no.toLowerCase() + '.', 'Bought ' + C.en.toLowerCase() + '.'); }
     else if (a === 'haillbuy'){ if (tutFree('haill') && d.k !== 'luksus') return; const k = d.k, got = () => { giveHaill(k, 'shop'); toast(HAILL[k][S.lang] + L(' ligger i beholdningen. Trykk «Aktiver» når du vil bruke den.', ' is in store. Tap «Switch on» when you want it.')); };
