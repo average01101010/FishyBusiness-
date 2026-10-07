@@ -1,8 +1,10 @@
 // ---------- the shared world V3: the other players' boats (05.10.2026; supabase/migrations/20261005220000_presence.sql) ----------
 // Jonas: «fokuset nå må være å få koblet sammen spillerne i verden med felles tid … Dette er nesten et mmorpg spill». Every 15 s while
 // the game is open, seen and signed in, where the boat you follow is goes up (her place, heading, speed, what she does, her name and
-// type; not when «Vis båten min for andre spillere» is off on the account card), and the other players' boats within about the AIS range
-// come down into PEERS (core/05-vessels.js peerStates), which the chart's AIS and the 3D view show like the other boats on the water.
+// type, and your sea time), and the other players' boats within about the AIS range come down into PEERS (core/05-vessels.js
+// peerStates), which the chart's AIS and the 3D view show like the other boats on the water, with the owner's player name and sea time.
+// There is no hiding the boat (Jonas 07.10.2026: «Det skal ikke være mulig å skjule båten sin posisjon for andre spillere, det er et
+// krav»); a guest's boat is left out for the others by the server (supabase/migrations/20261007130000_seen.sql).
 // Without the database function (before the migration) or offline, nothing goes, and the boats heard last go after a minute.
 const WORLDP = {last:0, busy:false, err:0, off:false};
 const WORLD_R = 25;   // km round the boat: about the AIS range
@@ -11,11 +13,14 @@ async function worldTick(){
   WORLDP.busy = true;
   try {
     const b = S.boat;
-    // the paint goes along when there is any (vessel3d.js livStr); a server without it yet (404) gets the position without it
-    if (S.settings.showMe !== false){ const a = {x:+b.pos.x.toFixed(4), y:+b.pos.y.toFixed(4), hd:+(b.heading || 0).toFixed(3),
+    // the paint (vessel3d.js livStr) and the sea time (core/09e-fartstid.js) go along; a server without them yet (404) gets the
+    // position without the newest first, then without the paint
+    const a = {x:+b.pos.x.toFixed(4), y:+b.pos.y.toFixed(4), hd:+(b.heading || 0).toFixed(3),
       v:+(b.status === 'sailing' ? b.v || 0 : 0).toFixed(1), st:String(b.status || ''), boat:S.boatName || '', vtype:b.type || ''}, lv = livStr(b);
-      if (lv && !WORLDP.noLiv){ try { await cloudRpc('pos_put', Object.assign({liv:lv}, a)); } catch (e){ if (!/ 404$/.test(e.message)) throw e; WORLDP.noLiv = true; await cloudRpc('pos_put', a); } }
-      else await cloudRpc('pos_put', a); }
+    if (lv && !WORLDP.noLiv) a.liv = lv;
+    if (!WORLDP.noFs && typeof fsState === 'function') a.fs = Math.round(fsState().p);
+    for (;;){ try { await cloudRpc('pos_put', a); break; } catch (e){ if (!/ 404$/.test(e.message)) throw e;
+      if ('fs' in a){ WORLDP.noFs = true; delete a.fs; } else if ('liv' in a){ WORLDP.noLiv = true; delete a.liv; } else throw e; } }
     const list = await cloudRpc('pos_near', {x:b.pos.x, y:b.pos.y, r:WORLD_R}) || [], now = Date.now();
     PEERS.length = 0; for (const q of list) PEERS.push({...q, at:now - (q.age || 0) * 1000});
     WORLDP.last = now; WORLDP.err = 0;
@@ -89,5 +94,3 @@ function worldStart(){
   document.addEventListener('visibilitychange', () => { if (!document.hidden) worldTick(); });
   setInterval(() => { if (PEERS.length && Date.now() - WORLDP.last > 60000) PEERS.length = 0; }, 10000);   // gone quiet (offline)
 }
-// «Vis båten min for andre spillere» (the account card): off takes the boat away from the others at once
-async function worldShowMe(on){ S.settings.showMe = !!on; save(); if (!on){ try { await cloudRpc('pos_off', {}); } catch (e){} } else worldTick(); }

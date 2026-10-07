@@ -409,10 +409,14 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p83', '07.10.2026', 'Synlig på sjøen', 'Seen at sea', [
+      ['De andre spillerne er nå gule med en ring i kartet og kartplotteren, større enn de andre båtene, og navnet vises tidligere.', 'The other players are now gold with a ring on the chart and the plotter, larger than the other boats, and their names show sooner.'],
+      ['Trykk på en spillers båt for å se hvem som eier den og hvor mye fartstid de har. Brukernavnet står også på topplista.', 'Tap a player\'s boat to see who owns it and how much sea time they have. The player name is on the leaderboard too.'],
+      ['Alle registrerte spillere er synlige for hverandre, slik båter med AIS er det. Valget for å skjule båten er fjernet.', 'All registered players are visible to each other, as boats with AIS are. The choice to hide the boat is gone.']]],
     ['p82', '07.10.2026', 'Båten etter far', 'Father\'s boat', [
       ['Båten etter far har ikke noe navn på skroget når du tar henne over. Til da kjennes hun på registreringsmerket.', 'Father\'s boat has no name on her hull when you take her over. Until then she goes by her registration mark.'],
-      ['Når du blir ført i fiskermanntallet etter den andre leveringen, døper du båten selv og kan velge et brukernavn som andre spillere ser.', 'When you are entered in the fishermen\'s register after the second landing, you name the boat yourself and may choose a player name other players see.'],
-      ['Brukernavnet kan endres under Innstillinger, Konto.', 'The player name can be changed in Settings, Account.']]],
+      ['Når du blir ført i fiskermanntallet etter den andre leveringen, døper du båten selv og velger et brukernavn som andre spillere ser.', 'When you are entered in the fishermen\'s register after the second landing, you name the boat yourself and choose a player name other players see.'],
+      ['Alle registrerte spillere har et brukernavn. Har du konto fra før, blir du bedt om å velge et. Det kan endres under Innstillinger, Konto.', 'Every registered player has a player name. If you already have an account, you are asked to choose one. It can be changed in Settings, Account.']]],
     ['p81', '07.10.2026', 'Fartstid', 'Sea time', [
       ['Du samler nå fartstid, fra 0 til 40 år. Den tjenes om bord, med hver time til sjøs og hver levering. Det mannskapet ditt gjør mens du er borte, teller også, men mindre. Fartstiden står på telefonen og i Sjømann-appen.', 'You now gather sea time, from 0 to 40 years. It is earned aboard, with every hour at sea and every landing. What your crew does while you are away counts too, but less. Your sea time is on the phone and in the Seaman app.'],
       ['Når du har vært borte, er du uthvilt: de neste timene til sjøs gir dobbel fartstid.', 'After time away you are rested: the next hours at sea give double sea time.'],
@@ -886,12 +890,12 @@ const PHONE = (() => {
           : !rows.length ? '<p class="ph-note">' + (which === w ? L('Ingen har landet i ' + (cl ? 'lukket' : 'åpen') + ' gruppe denne uka ennå.', 'No one has landed in the ' + (cl ? 'closed' : 'open') + ' group this week yet.') : L('Ingen landet i ' + (cl ? 'lukket' : 'åpen') + ' gruppe forrige uke.', 'No one landed in the ' + (cl ? 'closed' : 'open') + ' group last week.')) + '</p>'
           : '<table class="ph-tbl"><tr><th>#</th><th>' + L('Båt', 'Boat') + '</th><th>' + L('Mottak', 'Plant') + '</th><th class="n">kg</th></tr>' +
             rows.map(r => { const bn = peerName(r.boat), cn = cl ? (peerName(r.company) === '–' ? L('Ukjent rederi', 'Unknown company') : peerName(r.company)) : '';
-              return '<tr class="' + (r.me ? 'me' : '') + '"><td>' + r.rank + '</td><td>' + (r.me ? me + (mine || co(cn)) : escT(bn === '–' ? L('Ukjent båt', 'Unknown boat') : bn) + co(cn)) + '</td><td>' + pn(r.port) + '</td><td class="n">' + fmt(r.kg, 0) + '</td></tr>'; }).join('') +
+              const un = r.user ? peerName(r.user) : '';   // the owner's player name (supabase/migrations/20261007130000_seen.sql)
+              return '<tr class="' + (r.me ? 'me' : '') + '"><td>' + r.rank + '</td><td>' + (r.me ? me + (mine || co(cn)) : escT(bn === '–' ? L('Ukjent båt', 'Unknown boat') : bn) + co([un, cn].filter(Boolean).join(' · '))) + '</td><td>' + pn(r.port) + '</td><td class="n">' + fmt(r.kg, 0) + '</td></tr>'; }).join('') +
             (d.mine && d.mine.rank > rows.length ? '<tr class="me"><td>' + d.mine.rank + '</td><td>' + me + mine + '</td><td></td><td class="n">' + fmt(d.mine.kg, 0) + '</td></tr>' : '') + '</table>') +
           '<p class="ph-note">' + (cl ? L('Hele kysten: spillerne i lukket gruppe etter hvor mye de har landet i spilluka, med fartøyet, rederiet og mottaket de har levert mest til.', 'The whole coast: the players in the closed group by how much they have landed this game week, with the vessel, the company and the plant they delivered most to.')
               : L('Hele kysten: spillerne i åpen gruppe etter hvor mye de har landet i spilluka, med båtnavnet og mottaket de har levert mest til.', 'The whole coast: the players in the open group by how much they have landed this game week, with the boat\'s name and the plant they delivered most to.')) +
             (d && d.n ? ' ' + L(d.n + (d.n === 1 ? ' båt' : ' båter') + ' har landet.', d.n + (d.n === 1 ? ' boat has' : ' boats have') + ' landed.') : '') +
-            ' ' + L('En som har skrudd av «Vis båten min for andre spillere», står som ukjent.', 'Someone who has turned off «Show my boat to other players» shows as unknown.') +
             (cl && !S.lic ? ' ' + L('Du fisker i åpen gruppe og er ikke med her.', 'You fish in the open group and are not on this list.') : !cl && S.lic ? ' ' + L('Du fisker i lukket gruppe og er ikke med her.', 'You fish in the closed group and are not on this list.') : '') + '</p></div>');
       } else if (grp === 'lukket'){
         h.push('<div class="ph-card"><p class="ph-note">' + L('Topplista for lukket gruppe, med alle spillerne langs kysten, vises når du er logget inn på detstorebla.no eller i appen.', 'The closed group\'s leaderboard, with all the players along the coast, shows when you are signed in on detstorebla.no or in the app.') + '</p></div>');

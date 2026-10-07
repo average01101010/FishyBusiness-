@@ -1158,7 +1158,7 @@ Jonas' avgjørelser står i `docs/engasjement.md`, arbeidslista punkt 1. Dette e
 - **Del 2: den navnløse båten, registreringen og brukernavnet** (Jonas: «Det gir en følelse av eierskap når man får døpe en navnløs båt selv»):
   - Et nytt spill starter uten båtnavn (`boatUnnamed` i `ui/08-actions.js`): `S.unnamed = true`, og `S.boatName` er registreringsmerket, så alt som viser navnet, viser merket. Navnestripa på skroget tegnes ikke (`view3d.js`). Kortet «Båten etter far» har bare knappen «Ta over båten» (`#obGo`).
   - `boatChristen(navn)` døper båten: navnet males på skroget, det står i loggen, og overtroen får det nye navnet (`loreRename`).
-  - **Registreringen** (`ui/10f-cloud.js`): `GUEST_LANDS = 2`. Etter første levering sier et kort at én levering er igjen. Etter den andre, eller ved andre åpning av spillet (`S.opens`, `guestOpenAsk`), kommer brevet fra Fiskeridirektoratet. Det ber om båtens navn (`#regBoat`, bare når båten er navnløs) og et valgfritt brukernavn (`#regUser`, 3–20 tegn, `NAME_RE`). Navnene holdes på enheten (`dsb_names`) til kontoen finnes. Da døper `namesApply` båten og tar brukernavnet med `name_claim`.
+  - **Registreringen** (`ui/10f-cloud.js`): `GUEST_LANDS = 2`. Etter første levering sier et kort at én levering er igjen. Etter den andre, eller ved andre åpning av spillet (`S.opens`, `guestOpenAsk`), kommer brevet fra Fiskeridirektoratet. Det ber om båtens navn (`#regBoat`, bare når båten er navnløs) og et brukernavn (`#regUser`, 3–20 tegn, `NAME_RE`). Brukernavnet er påkrevd (Jonas: «Alle registrerte brukere må ha et brukernavn. Det skal ikke være valgfritt»), og det sjekkes mot `name_free` før registreringen. «Har du konto? Logg inn» krever det ikke. Navnene holdes på enheten (`dsb_names`) til kontoen finnes. Da døper `namesApply` båten og tar brukernavnet med `name_claim`.
   - Uten skyen (artifacten) spør `nameNudge` om båtens navn på samme tidspunkt. Testene (`#notut`) får det bare når de ber om det.
   - **Brukernavnet** (`supabase/migrations/20261007120000_names.sql`):
     - Tabellen `names` har ett navn per spiller, unikt uansett store og små bokstaver. Ingen spiller leser tabellen.
@@ -1171,7 +1171,27 @@ Jonas' avgjørelser står i `docs/engasjement.md`, arbeidslista punkt 1. Dette e
     - `guesttest`: kortet etter første levering, og brevet med navnefeltene etter den andre. Et ugyldig brukernavn avvises, og navnene holdes på enheten og tas i bruk på kontoen.
     - `sqltest`: brukernavnene.
     - `tut`: åpningen.
-- **Neste:** synlighet i AIS med eier og fartstid (del 3), så achievements.
+- **Del 3: synlig på sjøen** (Jonas: «Det skal ikke være mulig å skjule båten sin posisjon for andre spillere, det er et krav»):
+  - Valget «Vis båten min for andre spillere» er borte, sammen med `worldShowMe` og `pos_off`. `worldTick` (`ui/10h-world.js`) legger alltid ut posisjonen, og en levering har alltid båtnavnet (`wshLand`).
+  - `pos_put` tar også fartstiden i poeng (`fs`). En server uten den (404) får posisjonen uten fartstid, og så uten maling (`WORLDP.noFs`, `WORLDP.noLiv`).
+  - **Migrasjonen** `supabase/migrations/20261007130000_seen.sql`:
+    - `players.guest` merkes i `pos_put` og av en trigger på `landings`. Gjestene fra før merkes etter id-formatet: uuid for Supabase-gjester, `user_` for WorkOS.
+    - `pos_near` utelater gjester og gir eierens brukernavn (`user`) og fartstid (`fs`).
+    - `world_top` utelater gjester, unntatt spilleren selv, og gir brukernavnet.
+    - **Kontrollen av fartstiden:** første melding godtas opp til 65 000 poeng (15 år). Deretter vokser den med høyst 5 000 poeng per ekte time siden forrige melding, og den synker aldri. Spillet beholder sine egne poeng, og serveren tar dem igjen etter hvert.
+  - **AIS-kortet** for en spiller (`aisInfo` i `ui/03-map.js`) viser eier og fartstid før båttypen.
+  - **Kartet:** spillerne tegnes til slutt, gule og større, med en ring. Navnet vises fra `view.z > 1,5` og kommer først blant navnene. Kartplotteren (`#map.plot`) har egne farger, og minikartplotteren i 3D gjør det samme.
+  - Topplista viser brukernavnet under båtnavnet.
+  - **Alle kontoer har et brukernavn:** `nameCheck` henter navnet fra serveren (`name_mine`), også når det er tatt på en annen enhet.
+    - Har kontoen ikke noe navn, spør `nameAsk`. Det gjelder kontoer fra før brukernavnene, navn som admin har tatt bort, og navn som en annen tok før kontoen var klar.
+    - Kortet har ingen «Senere». Det venter til andre dialoger er lukket, og kommer tilbake hvis en annen dialog tar plassen.
+    - Bare når serveren ikke kan ta navnet nå (frakoblet, eller før migrasjonen), går spillet videre. Da spør det igjen ved neste åpning.
+  - Personvern og vilkår er oppdatert: alle registrerte er synlige, med brukernavn og fartstid, og det kan ikke skrus av. Gjester er bare synlige for seg selv.
+  - **Tester:**
+    - `cloudtest`: fartstiden går opp, eier og fartstid står på AIS-kortet, serveren uten fartstid, ingen skjuling, og det påkrevde brukernavnet (hentes, spørres om uten vei rundt, tatt bort).
+    - `guesttest`: registreringen krever et ledig brukernavn.
+    - `sqltest`: gjester skjult på AIS og topplista, eier og fartstid, kontrollen av fartstiden, `pos_off` borte.
+- **Neste:** achievements («Første uke på sjøen»).
 
 ## 5. Systemer i spillet
 

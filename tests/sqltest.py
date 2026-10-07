@@ -218,7 +218,7 @@ def main():
         R['posRead'] = sql("select count(*) from public.presence", A, 'authenticated', expect_err=True)
         R['posBad'] = sql("select public.pos_put('NaN', 1, 0, 0, '', '', '')", A, 'authenticated', expect_err=True)
         R['posAnon'] = sql("select public.pos_near(850, 350, 20)", {}, 'anon', expect_err=True)
-        sql("select public.pos_off()", A, 'authenticated'); R['posOff'] = sql("select count(*) from public.presence where player_id = 'user_01AAA'")
+        R['posOff'] = sql("select public.pos_off()", A, 'authenticated', expect_err=True)   # no hiding the boat (20261007130000_seen.sql)
         # the shared world V2: one quota, one market and one sea (20261006000000_world_v2.sql)
         sql("""select public.land_put(1000, 2027, 'finnsnes', 'open', '[{"sp":"torsk","kg":500,"kgq":500},{"sp":"hyse","kg":100,"kgq":0}]')""", A, 'authenticated')
         sql("""select public.land_put(1000, 2027, 'finnsnes', 'open', '[{"sp":"torsk","kg":300,"kgq":300}]')""", B, 'authenticated')
@@ -381,8 +381,8 @@ def main():
         print(ok(len(R['nearB']) == 1 and nb.get('boat') == 'Havbris' and nb.get('vtype') == 'trebat' and len(nb.get('id', '')) == 10 and 'user_' not in json.dumps(R['nearB'])
                  and len(R['nearA']) == 1 and R['nearA'][0]['boat'] == 'Fjordbris' and R['nearFar'] == [] and R['nearStale'] == []),
               'the shared world: each player sees the other boats near by (name, type, place, heading, speed), never their own or an account, and not one gone quiet for two minutes', {'B': nb, 'far': R['nearFar'], 'stale': R['nearStale']})
-        print(ok(R['posRead'][0] and R['posBad'][0] and R['posAnon'][0] and R['posOff'] == '0'),
-              'the shared world: no one reads the table, a bad position and the anonymous are refused, and «hide my boat» takes it away', [R[k][1][:40] for k in ('posRead', 'posBad', 'posAnon')] + [R['posOff']])
+        print(ok(R['posRead'][0] and R['posBad'][0] and R['posAnon'][0] and R['posOff'][0]),
+              'the shared world: no one reads the table, a bad position and the anonymous are refused, and there is no hiding the boat', [R[k][1][:40] for k in ('posRead', 'posBad', 'posAnon', 'posOff')])
         mk = {(a, b): c for a, b, c in R['wB']['mkt']}
         print(ok(R['wB']['open'] == 500 and R['wA']['open'] == 300 and R['wB']['boats'] == 1 and abs(mk.get(('finnsnes', 'torsk'), 0) - 500 * 0.97 ** 10) < 0.2
                  and abs(mk.get(('finnsnes', 'hyse'), 0) - 100 * 0.97 ** 10) < 0.2 and R['wCap']['open'] == 60000 and R['wOtherY']['open'] == 0),
@@ -478,6 +478,35 @@ def main():
                  and N['new'] == 'ok' and N['mine2'] == {'name': 'Havfisker88', 'removed': False, 'reason': None}),
               "the player's name: an account takes one, a guest cannot, a bad one is refused, the same name in another case is taken; no player reads the names; only the admin (with MFA) lists and takes one away with a reason the player reads, the name is barred for good, and a new one is free",
               N)
+        # seen by the others (20261007130000_seen.sql): every account's boat with the owner's name and sea time; a guest's boat and landings
+        # only for the guest; the sea time held to what the real time allows
+        V = {}
+        sql("select public.pos_put(900, 300, 0, 3, 'sailing', 'Gjestebåt', 'trebat', '', 100)", G2, 'authenticated')
+        sql("select public.pos_put(900.5, 300, 0, 3, 'sailing', 'Fjordbris', 'skiff', '', 40000)", B, 'authenticated')
+        V['first'] = sql("select fs from public.players where id = 'user_01BBB'")
+        sql("select public.pos_put(900.5, 300, 0, 3, 'sailing', 'Fjordbris', 'skiff', '', 900000)", B, 'authenticated')
+        V['jump'] = sql("select round(fs) from public.players where id = 'user_01BBB'")
+        sql("update public.players set fs_at = now() - interval '2 hours' where id = 'user_01BBB'")
+        sql("select public.pos_put(900.5, 300, 0, 3, 'sailing', 'Fjordbris', 'skiff', '', 900000)", B, 'authenticated')
+        V['later'] = sql("select round(fs / 100) * 100 from public.players where id = 'user_01BBB'")
+        sql("select public.pos_put(900.5, 300, 0, 3, 'sailing', 'Fjordbris', 'skiff', '', 10)", B, 'authenticated')
+        V['down'] = sql("select round(fs / 100) * 100 from public.players where id = 'user_01BBB'")
+        sql("select public.pos_put(901, 300, 0, 0, 'port', 'Havørn', 'sjark')", C, 'authenticated')
+        V['nearC'] = json.loads(sql("select public.pos_near(900, 300, 20)", C, 'authenticated'))
+        V['nearG'] = json.loads(sql("select public.pos_near(900, 300, 20)", G2, 'authenticated'))
+        V['flag'] = sql("select string_agg(id || '=' || guest, ',' order by id) from public.players where id in ('user_01BBB', '%s')" % G2['sub'])
+        sql("""select public.land_put(1200, 2027, 'finnsnes', 'open', '[{"sp":"torsk","kg":800,"kgq":800}]', 'Gjestebåt')""", G2, 'authenticated')
+        sql("""select public.land_put(1201, 2027, 'finnsnes', 'open', '[{"sp":"torsk","kg":300,"kgq":300}]', 'Fjordbris')""", B, 'authenticated')
+        V['topG'] = json.loads(sql("select public.world_top(7)", G2, 'authenticated'))
+        V['topB'] = json.loads(sql("select public.world_top(7)", B, 'authenticated'))
+        nb = [q for q in V['nearC'] if q['boat'] == 'Fjordbris']
+        print(ok(V['first'] == '40000' and V['jump'] == '40000' and V['later'] == '50000' and V['down'] == '50000'
+                 and len(V['nearC']) == 1 and nb and nb[0]['user'] == 'Havfisker88' and nb[0]['fs'] == 50000
+                 and sorted(q['boat'] for q in V['nearG']) == ['Fjordbris', 'Havørn'] and V['flag'] == '%s=true,user_01BBB=false' % G2['sub']
+                 and [r['boat'] for r in V['topG']['rows']] == ['Gjestebåt', 'Fjordbris'] and V['topG']['rows'][0]['me'] and V['topG']['rows'][1]['user'] == 'Havfisker88'
+                 and [r['boat'] for r in V['topB']['rows']] == ['Fjordbris'] and V['topB']['n'] == 1),
+              "seen by the others: an account's boat comes with the owner's name and sea time, a guest's only to the guest (on the AIS and the leaderboard); the sea time starts as reported, grows at most 5 000 an hour and never falls",
+              V)
     finally:
         run(*as_pg([os.path.join(BIN, 'pg_ctl'), '-D', data, '-m', 'immediate', 'stop']))
         shutil.rmtree(tmp, ignore_errors=True)

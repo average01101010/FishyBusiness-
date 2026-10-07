@@ -343,13 +343,11 @@ function cloudCard(){
   if (CLOUD.guest) return '<div class="ph-card"><h4>' + L2('Konto', 'Account') + '</h4><p class="ph-note">' + L2('Du spiller som gjest. Spillet ligger bare i denne nettleseren til du registrerer deg.', 'You play as a guest. The game lives only in this browser until you register.') + '</p>' +
     '<button class="ph-btn p" data-pa="cloudReg">' + L2('Registrer meg', 'Register') + '</button>' +
     '<label><span>' + L2('Del bruksstatistikk', 'Share usage statistics') + '</span><input type="checkbox" data-pa="cloudStat"' + (CLOUD.consent ? ' checked' : '') + '></label>' +
-    '<label><span>' + L2('Vis båten min for andre spillere', 'Show my boat to other players') + '</span><input type="checkbox" data-pa="cloudShowMe"' + (S.settings.showMe !== false ? ' checked' : '') + '></label>' +
     '<p class="ph-note">' + [['vilkar', 'Vilkår', 'Terms'], ['personvern', 'Personvern', 'Privacy'], ['kilder', 'Kilder', 'Sources'], ['kontakt', 'Kontakt', 'Contact']]
       .map(([f, no, en]) => '<a href="' + f + '.html" target="_blank" rel="noopener">' + L2(no, en) + '</a>').join(' · ') + '</p></div>';
   return '<div class="ph-card"><h4>' + L2('Konto', 'Account') + '</h4><p class="ph-note">' + L2('Logget inn som ', 'Signed in as ') + (u.email || '').replace(/</g, '&lt;') + '. ' +
     L2('Spillet lagres også på kontoen.', 'The game is also saved to the account.') + '</p>' + histRows() +
     '<label><span>' + L2('Del bruksstatistikk', 'Share usage statistics') + '</span><input type="checkbox" data-pa="cloudStat"' + (CLOUD.consent ? ' checked' : '') + '></label>' + pushCardRow() +
-    '<label><span>' + L2('Vis båten min for andre spillere', 'Show my boat to other players') + '</span><input type="checkbox" data-pa="cloudShowMe"' + (S.settings.showMe !== false ? ' checked' : '') + '></label>' +
     '<div class="acc-name"><label for="accUser">' + L2('Brukernavn', 'Player name') + (S.user ? ': <b>' + gEsc(S.user) + '</b>' : '') + '</label><input id="accUser" maxlength="20" autocomplete="off" placeholder="' + L2('Vises ved båten din', 'Shown beside your boat') + '"><button class="ph-btn alt" data-pa="cloudName">' + L2('Lagre', 'Save') + '</button></div>' +
     (S.unnamed ? '<div class="acc-name"><label for="accBoat">' + L2('Døp båten', 'Name the boat') + '</label><input id="accBoat" maxlength="20" autocomplete="off" placeholder="' + L2('F.eks. Havbris', 'e.g. Havbris') + '"><button class="ph-btn alt" data-pa="cloudBoat">' + L2('Døp', 'Name') + '</button></div>' : '') +
     '<button class="ph-btn alt" data-pa="cloudOut">' + L2('Logg ut', 'Sign out') + '</button><button class="ph-btn alt" data-pa="cloudDel">' + L2('Slett kontoen', 'Delete the account') + '</button>' +
@@ -381,7 +379,6 @@ function cloudAct(a, d){
   if (a === 'cloudBoat'){ const v = String(($('accBoat') || {}).value || '').trim(); if (!v) return false; boatChristen(v); return true; }
   if (a === 'cloudRestore'){ cloudRestore(d && d.id); return true; }
   if (a === 'cloudStat'){ cloudConsent(!CLOUD.consent, null); return true; }
-  if (a === 'cloudShowMe'){ worldShowMe(S.settings.showMe === false); return true; }
   if (a === 'cloudPush'){ pushToggle(); return true; }
   if (a === 'cloudPushCat'){ pushCatToggle(d && d.k); return true; }
   if (a === 'cloudOut'){ cloudSaveSoon(); localStorage.removeItem(CLOUD_SIGNED); CLOUD.ak.signOut({returnTo:location.origin + location.pathname}); return true; }
@@ -427,7 +424,7 @@ function guestAsk(why){
     : cloudL('Godt levert! Nå har du noe å ta vare på.', 'Well landed! Now you have something to keep.');
   const nk = namesKept();
   const fields = '<div class="reg-names">' + (S.unnamed ? '<label for="regBoat">' + cloudL('Døp båten', 'Name the boat') + '</label><input id="regBoat" maxlength="20" autocomplete="off" placeholder="' + cloudL('F.eks. Havbris', 'e.g. Havbris') + '" value="' + gEsc(nk.boat || '') + '">' : '') +
-    '<label for="regUser">' + cloudL('Brukernavn (valgfritt)', 'Player name (optional)') + '</label><input id="regUser" maxlength="20" autocomplete="off" placeholder="' + cloudL('F.eks. Havfisker88', 'e.g. Seafarer88') + '" value="' + gEsc(nk.user || '') + '">' +
+    '<label for="regUser">' + cloudL('Brukernavn', 'Player name') + '</label><input id="regUser" maxlength="20" autocomplete="off" placeholder="' + cloudL('F.eks. Havfisker88', 'e.g. Seafarer88') + '" value="' + gEsc(nk.user || '') + '">' +
     '<p class="note">' + cloudL('Vises for andre spillere ved båten din. Bruk ikke fullt navn. 3–20 bokstaver, tall, punktum, bindestrek eller understrek.', 'Shown to other players beside your boat. Do not use your full name. 3–20 letters, digits, dots, hyphens or underscores.') + '</p></div>';
   modal('<div class="ob reg"><p class="reg-from">' + (due ? cloudL('Fiskeridirektoratet', 'The Directorate of Fisheries') : 'Det Store Blå') + '</p><h2>' + head + '</h2><p>' + lead + '</p>' + guestHave() + fields +
     '<p class="reg-warn">' + cloudL('Nå ligger alt dette bare i denne nettleseren. Nettlesere sletter slikt, på iPhone etter en uke uten besøk, og da er det borte for godt.', 'Right now all this lives only in this browser. Browsers clear such things, an iPhone after a week without a visit, and then it is gone for good.') + '</p>' +
@@ -436,11 +433,15 @@ function guestAsk(why){
     '<p class="note">' + cloudL('Med Google, Apple eller e-post. ', 'With Google, Apple or e-mail. ') + '<a href="#" id="regIn">' + cloudL('Har du konto? Logg inn', 'Have an account? Sign in') + '</a>' +
     (due ? '<br>' + cloudL('Til da kan du se deg rundt, hvile og levere det som er om bord, men båten går ikke ut.', 'Until then you can look round, rest and land what is aboard, but the boat does not go out.') : '') +
     ' · <a href="personvern.html" target="_blank" rel="noopener">' + cloudL('Personvern', 'Privacy') + '</a></p></div>');
-  const keep = () => { const b = (document.getElementById('regBoat') || {}).value, u = String((document.getElementById('regUser') || {}).value || '').trim();
-    if (u && !NAME_RE.test(u)){ toast(cloudL('Brukernavnet kan ha 3–20 bokstaver, tall, punktum, bindestrek eller understrek.', 'The player name may have 3–20 letters, digits, dots, hyphens or underscores.')); return false; }
+  // every account has a player name (Jonas 07.10.2026): registering needs one that is free; signing in to an account that has one does
+  // not (an account without one is asked for it after, nameCheck)
+  const keep = async need => { const b = (document.getElementById('regBoat') || {}).value, u = String((document.getElementById('regUser') || {}).value || '').trim();
+    if ((u || need) && !NAME_RE.test(u)){ toast(u ? cloudL('Brukernavnet kan ha 3–20 bokstaver, tall, punktum, bindestrek eller understrek.', 'The player name may have 3–20 letters, digits, dots, hyphens or underscores.') : cloudL('Velg et brukernavn først.', 'Choose a player name first.')); return false; }
+    if (u){ let free = null; try { free = await cloudRpc('name_free', {name:u}); } catch (e){}
+      if (free === false){ toast(cloudL('Brukernavnet «' + u + '» er tatt. Velg et annet.', 'The player name «' + u + '» is taken. Choose another.')); return false; } }
     namesKeep({boat:String(b || '').trim().slice(0, 20), user:u}); return true; };
-  document.getElementById('regGo').onclick = () => { if (keep()) guestRegister(false); };
-  document.getElementById('regIn').onclick = e => { e.preventDefault(); if (keep()) guestRegister(true); };
+  document.getElementById('regGo').onclick = async () => { if (await keep(true)) guestRegister(false); };
+  document.getElementById('regIn').onclick = async e => { e.preventDefault(); if (await keep(false)) guestRegister(true); };
   cloudEv('reg_ask', {why, lands:S.landN || 0});
   return true;
 }
@@ -453,22 +454,55 @@ async function namesApply(){
   if (!CLOUD.on || !CLOUD.user || CLOUD.guest) return;
   const k = namesKept(); if (!k.boat && !k.user) return;
   if (k.boat && S.unnamed) boatChristen(k.boat); delete k.boat;
-  if (k.user){ const r = await nameTake(k.user); if (r === 'ok' || r === 'taken' || r === 'bad') delete k.user; }
+  let r = null; if (k.user){ r = await nameTake(k.user, true); if (r === 'ok' || r === 'taken' || r === 'bad') delete k.user; }
   if (k.user) namesKeep(k); else try { localStorage.removeItem(NAMES_KEY); } catch (e){}
+  if (r === 'taken' || r === 'bad') nameAsk(r);
 }
-async function nameTake(n){
+async function nameTake(n, quiet){
   let r = null; try { r = await cloudRpc('name_claim', {name:n}); } catch (e){ return /404$/.test(e.message) ? 'wait' : 'err'; }
   r = String(r || '').replace(/"/g, '');
   if (r === 'ok'){ S.user = n; save(); toast(cloudL('Brukernavnet ditt er ' + n + '.', 'Your player name is ' + n + '.')); }
-  else if (r === 'taken') msg('Det Store Blå', 'Brukernavnet «' + n + '» er tatt. Velg et annet under Innstillinger, Konto.', 'The player name «' + n + '» is taken. Choose another in Settings, Account.');
+  else if (r === 'taken' && !quiet) toast(cloudL('Brukernavnet «' + n + '» er tatt. Velg et annet.', 'The player name «' + n + '» is taken. Choose another.'));
   if (typeof PHONE !== 'undefined' && PHONE.isOpen && PHONE.isOpen()) PHONE.render();
   return r;
 }
-// on start: a name the admin has taken away is gone, and the player is told why (a new one is free)
+// on start: an account without a name here gets the one it took on another device; a name the admin has taken away is gone, and the
+// player is told why; an account without a name is asked for one (nameAsk)
 async function nameCheck(){
-  if (!CLOUD.on || !CLOUD.user || CLOUD.guest || !S.user) return;
-  let r = null; try { r = await cloudRpc('name_mine', {}); } catch (e){ return; }
-  if (r && r.removed){ S.user = null; save(); msg('Det Store Blå', 'Brukernavnet ditt er tatt bort' + (r.reason ? ': ' + r.reason : '.') + ' Velg et nytt under Innstillinger, Konto.', 'Your player name has been taken away' + (r.reason ? ': ' + r.reason : '.') + ' Choose a new one in Settings, Account.'); }
+  if (!CLOUD.on || !CLOUD.user || CLOUD.guest) return;
+  let r = null; try { r = await cloudRpc('name_mine', {}); } catch (e){ return; }   // offline, or a server without names (404): the next start
+  if (r && r.removed){ const had = S.user; S.user = null; save();
+    if (had) msg('Det Store Blå', 'Brukernavnet ditt er tatt bort' + (r.reason ? ': ' + r.reason : '.') + ' Velg et nytt.', 'Your player name has been taken away' + (r.reason ? ': ' + r.reason : '.') + ' Choose a new one.');
+    if (!NOTUT) nameAsk('removed', r.reason); return; }
+  if (r && r.name){ if (S.user !== r.name){ S.user = r.name; save(); } return; }
+  if (!S.user && !namesKept().user && !NOTUT) nameAsk();   // the tests (#notut) ask for it themselves
+}
+// Every account has a player name (Jonas 07.10.2026: «Alle registrerte brukere må ha et brukernavn. Det skal ikke være valgfritt»). An
+// account without one (registered before the names came, a name the admin took away, one another took first) is asked until it has
+// one: the card has no «Later», waits for another dialog to close, and comes back if one takes its place. Only a server that cannot take
+// names now (offline, or before the migration) lets the game go on, and it asks again at the next start.
+let NAME_ASK = null;
+function nameAsk(why, reason){
+  if (NAME_ASK) return;
+  const lead = why === 'removed' ? cloudL('Brukernavnet ditt er tatt bort' + (reason ? ': ' + gEsc(reason) : '.') + ' Velg et nytt.', 'Your player name has been taken away' + (reason ? ': ' + gEsc(reason) : '.') + ' Choose a new one.')
+    : why === 'taken' ? cloudL('Brukernavnet du valgte, ble tatt av en annen før kontoen var klar. Velg et annet.', 'The player name you chose was taken by another before the account was ready. Choose another.')
+    : cloudL('Alle registrerte spillere har et brukernavn. Andre spillere ser det ved båten din, sammen med fartstiden din.', 'Every registered player has a player name. Other players see it beside your boat, with your sea time.');
+  const stop = () => { clearInterval(NAME_ASK.iv); NAME_ASK = null; };
+  const show = () => {
+    modal('<div class="ob"><h2>' + cloudL('Velg et brukernavn', 'Choose a player name') + '</h2><p>' + lead + '</p>' +
+      '<label for="nmUser">' + cloudL('Brukernavn', 'Player name') + '</label><input id="nmUser" maxlength="20" autocomplete="off" placeholder="' + cloudL('F.eks. Havfisker88', 'e.g. Seafarer88') + '">' +
+      '<p class="note" id="nmUserNote">' + cloudL('Bruk ikke fullt navn. 3–20 bokstaver, tall, punktum, bindestrek eller understrek. Du kan endre det senere under Innstillinger, Konto.', 'Do not use your full name. 3–20 letters, digits, dots, hyphens or underscores. You can change it later in Settings, Account.') + '</p>' +
+      '<div class="btns"><button class="btn primary" id="nmUserGo">' + cloudL('Lagre', 'Save') + '</button></div></div>');
+    const note = document.getElementById('nmUserNote'), go = document.getElementById('nmUserGo');
+    go.onclick = async () => { const v = String(document.getElementById('nmUser').value || '').trim();
+      if (!NAME_RE.test(v)){ note.textContent = cloudL('3–20 bokstaver, tall, punktum, bindestrek eller understrek, uten mellomrom.', '3–20 letters, digits, dots, hyphens or underscores, without spaces.'); return; }
+      go.disabled = true; const r = await nameTake(v, true); go.disabled = false;
+      if (r === 'ok'){ document.getElementById('modal').hidden = true; stop(); }
+      else if (r === 'taken') note.textContent = cloudL('«' + v + '» er tatt. Velg et annet.', '«' + v + '» is taken. Choose another.');
+      else if (r === 'bad') note.textContent = cloudL('Det navnet går ikke. Velg et annet.', 'That name will not do. Choose another.');
+      else { document.getElementById('modal').hidden = true; stop(); toast(cloudL('Kunne ikke lagre brukernavnet nå. Du blir spurt igjen neste gang.', 'Could not save the player name now. You will be asked again next time.')); } };
+  };
+  NAME_ASK = {iv:setInterval(() => { if (S.user || !CLOUD.on || CLOUD.guest){ stop(); return; } if (tutOn()) return; const m = document.getElementById('modal'); if (m && m.hidden) show(); }, 4000)};
 }
 // the second opening of the game as a guest: the letter, once a session, when the screen is free
 function guestOpenAsk(){

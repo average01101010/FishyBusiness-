@@ -59,21 +59,29 @@ async def main():
           return {r, st0, st:b.status, t, wide, plan:!!S.plan, unnamed:S.unnamed === true, mark:S.boatName, boat:!!document.getElementById('regBoat'), user:!!document.getElementById('regUser')}; })()""")
         await pg.click('#regLater'); closed = await pg.evaluate("document.getElementById('modal').hidden")
         check(d['r'] is False and d['st'] == d['st0'] == 'port' and 'fiskermanntallet' in d['t'] and 'levert 2 ganger' in d['t'] and d['unnamed'] and d['mark'] in d['t'] and '«' not in d['t'].split('båten din')[0][-30:]
-              and d['boat'] and d['user'] and 'Brukernavn (valgfritt)' in d['t'] and '23 456 kr' in d['t'] and '789 kg' in d['t']
+              and d['boat'] and d['user'] and 'Brukernavn' in d['t'] and 'valgfritt' not in d['t'] and '23 456 kr' in d['t'] and '789 kg' in d['t']
               and 'denne nettleseren' in d['t'] and 'Luksushaill' in d['t'] and 'Registrer meg' in d['t'] and closed,
-              'after the second landing casting off waits: the letter from Fiskeridirektoratet shows the nameless boat by her mark, the money and the fish, asks to name the boat and for an optional player name, says the game lives only in this browser, offers a luxury luck, and «Ikke nå» closes it', d['t'][:300])
+              'after the second landing casting off waits: the letter from Fiskeridirektoratet shows the nameless boat by her mark, the money and the fish, asks to name the boat and for a player name (required), says the game lives only in this browser, offers a luxury luck, and «Ikke nå» closes it', d['t'][:300])
         # 4. a guest cannot buy, and the account card says what a guest is
         g = await pg.evaluate("""(() => { payBuy('haill', () => { window.__given = 1; }); const t = (document.querySelector('#modal .ob.reg') || {}).innerText || ''; document.getElementById('modal').hidden = true;
           PHONE.open('innst'); const card = document.getElementById('phView').innerText; PHONE.show(false); return {t, given:!!window.__given, card:card.includes('Du spiller som gjest') && card.includes('Registrer meg')}; })()""")
         check('Kjøp krever registrering' in g['t'] and not g['given'] and g['card'], 'a guest cannot buy with real money (the letter asks to register instead), and Settings says the game lives in this browser until then', g)
         # 5. «Registrer meg»: the game up first, a one-time code kept on the device, then WorkOS
         await pg.evaluate("(() => { CLOUD.regT = 0; depart(); })()"); await pg.wait_for_selector('#regGo', timeout=10000)
-        bad = await pg.evaluate("(() => { document.getElementById('regBoat').value = 'Havbris'; document.getElementById('regUser').value = 'a b'; document.getElementById('regGo').click(); return {open:!document.getElementById('modal').hidden, kept:localStorage.getItem('dsb_names')}; })()")
+        # the player name is required (Jonas 07.10.2026: «Alle registrerte brukere må ha et brukernavn»): none, a bad one or a taken one waits
+        replies['name_free'] = 'false'
+        bad = await pg.evaluate("""async () => { const w = () => new Promise(r => setTimeout(r, 400)), go = v => { document.getElementById('regUser').value = v; document.getElementById('regGo').click(); };
+          document.getElementById('regBoat').value = 'Havbris'; const out = {};
+          go(''); await w(); out.none = !document.getElementById('modal').hidden && !window.__signUp;
+          go('a b'); await w(); out.space = !document.getElementById('modal').hidden && !window.__signUp;
+          go('Kystjenta'); await w(); out.taken = !document.getElementById('modal').hidden && !window.__signUp; out.kept = localStorage.getItem('dsb_names'); return out; }""")
+        replies['name_free'] = 'true'
         await pg.evaluate("S.lastReal = Date.now(); CLOUD.lastSave = 0; document.getElementById('regUser').value = 'Kystjenta'; document.getElementById('regGo').click()")
         await pg.wait_for_function("window.__signUp === 1", timeout=15000)
         names = await pg.evaluate("JSON.parse(localStorage.getItem('dsb_names') || 'null')")
-        check(bad['open'] and not bad['kept'] and names == {'boat': 'Havbris', 'user': 'Kystjenta'},
-              'the letter refuses a player name with a space, and keeps the boat\'s name and the player name on the device until the account is there', {'bad': bad, 'names': names})
+        free = [c[1] for c in calls if c[0] == 'name_free']
+        check(bad['none'] and bad['space'] and bad['taken'] and not bad['kept'] and free[-1] == {'name': 'Kystjenta'} and names == {'boat': 'Havbris', 'user': 'Kystjenta'},
+              'registering needs a player name: none, one with a space or one that is taken waits; a free one is kept on the device with the boat\'s name until the account is there', {'bad': bad, 'names': names})
         kept = await pg.evaluate("JSON.parse(localStorage.getItem('dsb_guest_code') || 'null')")
         claim = [c for c in calls if c[0] == 'guest_claim']; puts = [c for c in calls if c[0] == 'save_put2']
         check(kept == {'code': 'code_abc', 'gid': 'g-1'} and claim and claim[0][2] == 'Bearer gtok' and puts and calls.index(puts[-1]) < calls.index(claim[0]),

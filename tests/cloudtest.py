@@ -114,34 +114,62 @@ async def main():
         await pg.evaluate("PHONE.show(false)")
         # the shared world V3: my boat goes up, the other players' boats near by come down and show on the AIS (05.10.2026)
         pos = await pg.evaluate("({x:S.boat.pos.x, y:S.boat.pos.y})")
-        replies['pos_put'] = 'null'; replies['pos_off'] = 'null'
-        replies['pos_near'] = [{'id': 'abc1234567', 'boat': 'Fjordbris', 'vtype': 'skiff', 'x': pos['x'] + 0.5, 'y': pos['y'] + 0.5, 'hd': 1.2, 'v': 5, 'st': 'sailing', 'age': 1}]
+        replies['pos_put'] = 'null'
+        replies['pos_near'] = [{'id': 'abc1234567', 'boat': 'Fjordbris', 'vtype': 'skiff', 'x': pos['x'] + 0.5, 'y': pos['y'] + 0.5, 'hd': 1.2, 'v': 5, 'st': 'sailing', 'age': 1, 'user': 'Kystjenta', 'fs': 40000}]
         n0 = len(calls)
         w = await pg.evaluate("""async () => { S.boatName = S.boatName || 'Havbris'; await worldTick(); const n = npcStates(S.t / 60).find(q => q.player);
           return {n:n && {name:n.name, type:n.type, L:n.L, st:n.st, d:Math.hypot(n.p.x - S.boat.pos.x, n.p.y - S.boat.pos.y)}, card:n ? aisInfo(n) : ''}; }""")
         wp = [c[1] for c in calls[n0:] if c[0] == 'pos_put']; wn = [c[1] for c in calls[n0:] if c[0] == 'pos_near']
-        check(wp and wp[0]['boat'] and wp[0]['vtype'] and abs(wp[0]['x'] - pos['x']) < 0.01 and wn and w['n'] and w['n']['name'] == 'Fjordbris' and w['n']['L'] > 5 and 'Spiller' in w['card'] and 'Fjordbris' in w['card'],
-              "the shared world: my boat's place, name and type go up, and another player's boat near by shows among the boats, with its own AIS card", {'put': wp[0] if wp else None, 'peer': w['n']})
+        check(wp and wp[0]['boat'] and wp[0]['vtype'] and abs(wp[0]['x'] - pos['x']) < 0.01 and isinstance(wp[0].get('fs'), int) and wn and w['n'] and w['n']['name'] == 'Fjordbris' and w['n']['L'] > 5
+              and 'Spiller' in w['card'] and 'Fjordbris' in w['card'] and 'Eier' in w['card'] and 'Kystjenta' in w['card'] and '12 år og' in w['card'],
+              "the shared world: my boat's place, name, type and sea time go up, and another player's boat near by shows among the boats, with an AIS card that names the owner and the sea time", {'put': wp[0] if wp else None, 'peer': w['n']})
         # the paint goes along (20261007090000_livery.sql), and the other player's paint comes down to her model; a server without it yet
         # (404 for a call with liv) gets the place without the paint, and the shared world stays on
         replies['pos_near'][0]['liv'] = 'h:gul'; n0 = len(calls)
         lv = await pg.evaluate("async () => { S.boat.liv = {hull:'kobolt'}; WORLDP.last = 0; await worldTick(); const n = npcStates(S.t / 60).find(q => q.player); return {liv:n && n.liv, parsed:n && livParse(n.liv)}; }")
         wl = [c[1].get('liv') for c in calls[n0:] if c[0] == 'pos_put']
-        replies['pos_put'] = lambda b: 404 if 'liv' in b else 'null'; n0 = len(calls)
+        # a server without the sea time yet (404 for a call with fs) gets the place and the paint without it; one without the paint
+        # either gets the place alone, and the shared world stays on
+        replies['pos_put'] = lambda b: 404 if 'fs' in b else 'null'; n0 = len(calls)
+        nofs = await pg.evaluate("async () => { await worldTick(); return {noFs:!!WORLDP.noFs, noLiv:!!WORLDP.noLiv}; }")
+        wf = [('fs' in c[1], 'liv' in c[1]) for c in calls[n0:] if c[0] == 'pos_put']
+        replies['pos_put'] = lambda b: 404 if 'liv' in b or 'fs' in b else 'null'; n0 = len(calls)
         old = await pg.evaluate("async () => { await worldTick(); return {off:!!WORLDP.off, noLiv:!!WORLDP.noLiv, peers:PEERS.length}; }")
         wo2 = [('liv' in c[1]) for c in calls[n0:] if c[0] == 'pos_put']
-        check(len(wl) == 1 and wl[0].startswith('h:kobolt;m:') and lv['liv'] == 'h:gul' and lv['parsed'] and abs(lv['parsed']['hull'][0] - 0.95) < 1e-6 and wo2 == [True, False] and not old['off'] and old['noLiv'] and old['peers'] == 1,
-              "the boat's paint goes up with her place and another player's paint comes down to her model; a server without paint yet gets the place without it, and the shared world stays on", {'up': wl, 'peer': lv, 'old': old, 'calls': wo2})
-        replies['pos_put'] = 'null'; S_reset = await pg.evaluate("(() => { delete S.boat.liv; WORLDP.noLiv = false; return 1; })()")
+        check(len(wl) == 1 and wl[0].startswith('h:kobolt;m:') and lv['liv'] == 'h:gul' and lv['parsed'] and abs(lv['parsed']['hull'][0] - 0.95) < 1e-6 and wf == [(True, True), (False, True)] and nofs['noFs'] and not nofs['noLiv']
+              and wo2 == [True, False] and not old['off'] and old['noLiv'] and old['peers'] == 1,
+              "the boat's paint goes up with her place and another player's paint comes down to her model; a server without sea time or paint yet gets the place without them, and the shared world stays on", {'up': wl, 'peer': lv, 'nofs': wf, 'old': old, 'calls': wo2})
+        replies['pos_put'] = 'null'; S_reset = await pg.evaluate("(() => { delete S.boat.liv; WORLDP.noLiv = false; WORLDP.noFs = false; return 1; })()")
         n0 = len(calls)
-        await pg.evaluate("async () => { cloudAct('cloudShowMe'); await new Promise(r => setTimeout(r, 300)); await worldTick(); }")
+        hide = await pg.evaluate("async () => { S.settings.showMe = false; PHONE.open('innst'); const card = document.getElementById('phView').innerText; PHONE.show(false); await worldTick(); return {card:card.includes('Vis båten min'), hasOff:typeof worldShowMe !== 'undefined'}; }")
         wo = [c[0] for c in calls[n0:]]
-        check('pos_off' in wo and 'pos_put' not in wo and 'pos_near' in wo, '«Vis båten min for andre spillere» off: the boat is taken away at once, and no place goes up after (the others are still seen)', wo)
+        check(not hide['card'] and not hide['hasOff'] and 'pos_put' in wo and 'pos_off' not in wo and 'pos_near' in wo,
+              'there is no hiding the boat: Settings has no such choice, and the place goes up even with the old setting off', {'hide': hide, 'calls': wo})
+        # every account has a player name (07.10.2026): the name it took elsewhere comes down; without one it is asked for, with no «later»,
+        # until a free one is taken; one the admin took away is gone, with the reason
+        replies['name_mine'] = {'name': 'Kystjenta', 'removed': False}
+        nmc = await pg.evaluate("async () => { S.user = null; await nameCheck(); return S.user; }")
+        replies['name_claim'] = '"taken"'; n0 = len(calls)
+        await pg.evaluate("(() => { S.user = null; document.getElementById('modal').hidden = true; nameAsk(); })()")
+        # the card waits for other dialogs (the error report from «cloudtest boom» above): they are closed here as a player would
+        await pg.wait_for_function("(() => { const m = document.getElementById('modal'); if (!document.getElementById('nmUser') && !m.hidden) m.hidden = true; return !!document.getElementById('nmUser'); })()", polling=300, timeout=15000)
+        ask = await pg.evaluate("""async () => { const m = document.getElementById('modal'), t = m.innerText, closers = m.querySelectorAll('[data-close]').length, w = ms => new Promise(r => setTimeout(r, ms));
+          document.getElementById('nmUser').value = 'a b'; document.getElementById('nmUserGo').click(); await w(200); const bad = document.getElementById('nmUserNote').textContent, open1 = !m.hidden;
+          document.getElementById('nmUser').value = 'Havørn_1'; document.getElementById('nmUserGo').click(); await w(400); const taken = document.getElementById('nmUserNote').textContent, open2 = !m.hidden;
+          return {t, closers, bad, open1, taken, open2}; }""")
+        replies['name_claim'] = '"ok"'
+        ok2 = await pg.evaluate("async () => { document.getElementById('nmUser').value = 'Havørn_2'; document.getElementById('nmUserGo').click(); await new Promise(r => setTimeout(r, 400)); return {user:S.user, closed:document.getElementById('modal').hidden, asking:!!NAME_ASK}; }")
+        nc = [c[1] for c in calls[n0:] if c[0] == 'name_claim']
+        replies['name_mine'] = {'name': 'Havørn_2', 'removed': True, 'reason': 'Upassende'}
+        rm = await pg.evaluate("async () => { await nameCheck(); return {user:S.user, msg:S.msgs.some(q => /tatt bort: Upassende/.test(q.no))}; }")
+        check(nmc == 'Kystjenta' and 'Velg et brukernavn' in ask['t'] and ask['closers'] == 0 and 'Senere' not in ask['t'] and ask['open1'] and 'mellomrom' in ask['bad'] and ask['open2'] and 'tatt' in ask['taken']
+              and nc == [{'name': 'Havørn_1'}, {'name': 'Havørn_2'}] and ok2 == {'user': 'Havørn_2', 'closed': True, 'asking': False} and rm == {'user': None, 'msg': True},
+              'every account has a player name: one taken on another device comes down; without one the card has no way round it, refuses a bad or taken name and closes on a free one; one the admin took away is gone with the reason', {'mine': nmc, 'ask': ask, 'ok': ok2, 'claim': nc, 'removed': rm})
         # the shared world V2: my sale and the fish my boat took go up; the other players' open-group cod, deliveries and catch come down
         k = await pg.evaluate("stockIdx(S.boat.pos)")
         replies['land_put'] = 'null'; replies['catch_put'] = 'null'; n0 = len(calls)
         w2 = await pg.evaluate("""async () => { const pt = plantsNear(S.boat.pos, 1)[0].pt, H = S.t / 60, k = stockIdx(S.boat.pos), y = yearH(H);
-          S.wcur = 0; S.wq = {c:{}, l:[]}; S.boatName = 'Havbris'; S.settings.showMe = true; const rec = WSH.rec; takeStock(S.boat.pos, 100); const pend = Object.keys(S.wq.c).length;
+          S.wcur = 0; S.wq = {c:{}, l:[]}; S.boatName = 'Havbris'; const rec = WSH.rec; takeStock(S.boat.pos, 100); const pend = Object.keys(S.wq.c).length;
           wshLand(pt.id, H, 'open', {torsk:120, hyse:30}, 110); takeStock(S.boat.pos, 100, null, true); const pend2 = Object.keys(S.wq.c).length;
           const before = {st:stkGet(S.stock, k), sat:wshSat(pt.id, 'torsk', H), pr:price(pt, 'torsk', H)};
           window.__cell = k; return {rec, pend, pend2, before, pid:pt.id, y}; }""")

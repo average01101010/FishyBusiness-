@@ -325,9 +325,10 @@ function aisTrack(id, H){ const ck = id + '|' + Math.floor(H * 30); if (trackCac
 function aisInfo(n){
   const L = (no, en) => S.lang === 'no' ? no : en, f = n.fleet ? FLEET[n.fi] : null;
   const st = n.st === 'port' || n.v === 0 ? L('Fortøyd', 'Moored') : n.st === 'fishing' ? (n.v > 2.5 ? L('Fisker, går opp for ny drift', 'Fishing, steaming back for a new drift') : L('Fisker, driver over grunnen', 'Fishing, drifting over the bank')) : n.st === 'out' ? L('På vei til feltet', 'Heading to the grounds') : n.st === 'in' ? L('På vei hjem', 'Heading home') : L('Underveis', 'Under way');
-  // another player's boat (the shared world V3): its type and size, nothing about the player
+  // another player's boat (the shared world V3): the owner's player name and sea time (Jonas 07.10.2026), the type and size
   const VP = n.player ? VESSELS[n.vtype] : null;
-  const rows = VP ? [[L('Båttype', 'Boat type'), String(L(VP.name.no, VP.name.en)).split(' (')[0]], [L('Størrelse', 'Size'), fmt(VP.len, 1) + ' × ' + fmt(VP.beam || VP.len / 3, 1) + ' m']] : f ? [[L('Kallesignal', 'Call sign'), f.cs], [L('Fiskerimerke', 'Registration'), f.reg], [L('Rederi', 'Owner'), f.own], [L('Størrelse', 'Size'), fmt(f.L, 2) + ' × ' + fmt(f.B, 1) + ' m'], [L('Dypgående', 'Draught'), fmt(f.T, 1) + ' m'], [L('Hjemmehavn', 'Home port'), f.homeName]]
+  const rows = VP ? [[L('Eier', 'Owner'), n.user || '–'], [L('Fartstid', 'Sea time'), n.fs ? fsText(n.fs, true).replace(/ (fartstid|at sea)$/, '') : '–'],
+      [L('Båttype', 'Boat type'), String(L(VP.name.no, VP.name.en)).split(' (')[0]], [L('Størrelse', 'Size'), fmt(VP.len, 1) + ' × ' + fmt(VP.beam || VP.len / 3, 1) + ' m']] : f ? [[L('Kallesignal', 'Call sign'), f.cs], [L('Fiskerimerke', 'Registration'), f.reg], [L('Rederi', 'Owner'), f.own], [L('Størrelse', 'Size'), fmt(f.L, 2) + ' × ' + fmt(f.B, 1) + ' m'], [L('Dypgående', 'Draught'), fmt(f.T, 1) + ' m'], [L('Hjemmehavn', 'Home port'), f.homeName]]
     : n.coast ? [[L('Størrelse', 'Size'), fmt(n.L, 1) + ' × ' + fmt(n.B, 1) + ' m'], [L('Dypgående', 'Draught'), fmt(n.T, 1) + ' m']]
     : n.type === 'coastal' ? [[L('Kallesignal', 'Call sign'), 'LAKY'], [L('Rederi', 'Owner'), 'Kystruta AS'], [L('Størrelse', 'Size'), '121,8 × 21,0 m'], [L('Dypgående', 'Draught'), '4,9 m']] : [[L('Kallesignal', 'Call sign'), 'LMSB'], [L('Rederi', 'Owner'), 'Senja Ferjedrift AS'], [L('Størrelse', 'Size'), '49,9 × 12,4 m'], [L('Dypgående', 'Draught'), '3,1 m']];
   const dg = r => String(Math.round(((r * 180 / Math.PI) % 360 + 360) % 360) % 360).padStart(3, '0') + '°';
@@ -377,17 +378,21 @@ function renderDyn(){
   if (AISSEL){ const tr = aisTrack(AISSEL, Hn); if (tr.length > 1) g.push('<polyline points="' + tr.map(q => q.x.toFixed(3) + ',' + q.y.toFixed(3)).join(' ') + '" class="aistrack" stroke-width="' + (1.6 * u) + '" stroke-dasharray="' + (4 * u) + ' ' + (3 * u) + '"/>'); }
   // names: the coast's boats only when the chart is under 4 km tall, and none on top of another (a grid of label cells)
   const lblAt = new Set(), lw = 70 * u, lh = 14 * u, coastLbl = MAP_H / view.z < 4;
-  for (const n of AISNOW){
-    const cls = n.player ? 'ais player' : n.fleet || n.coast ? 'ais fish' : 'ais pass', sel = AISSEL === n.id ? ' sel' : '', moored = n.st === 'port' || (!n.fleet && !n.coast && n.v === 0);
-    const sw = (sel ? 2.4 : 1.1) * u;
-    if (moored) g.push('<circle cx="' + n.p.x + '" cy="' + n.p.y + '" r="' + (3.2 * u) + '" class="' + cls + sel + ' moor" stroke-width="' + sw + '"/>');
-    else { const k = (n.type === 'coastal' ? 10 : n.type === 'ferry' ? 8.5 : n.fleet || n.coast ? 5.2 + n.L * 0.13 : 6.5) * u, dg = (n.cog !== undefined ? n.cog : n.hd) * 180 / Math.PI;
+  // the other players last, on top, with a ring, a larger mark and their names from further out (they come first among the names)
+  const aisOrd = AISNOW.filter(n => !n.player).concat(AISNOW.filter(n => n.player)), plLbl = [], aisLbl = [];
+  for (const n of aisOrd){
+    const pl = n.player, cls = pl ? 'ais player' : n.fleet || n.coast ? 'ais fish' : 'ais pass', sel = AISSEL === n.id ? ' sel' : '', moored = n.st === 'port' || (!n.fleet && !n.coast && n.v === 0);
+    const sw = (sel ? 2.4 : pl ? 1.6 : 1.1) * u;
+    if (pl) g.push('<circle cx="' + n.p.x + '" cy="' + n.p.y + '" r="' + ((moored ? 7 : 12) * u) + '" class="ais-halo" stroke-width="' + (1.4 * u) + '"/>');
+    if (moored) g.push('<circle cx="' + n.p.x + '" cy="' + n.p.y + '" r="' + ((pl ? 4.4 : 3.2) * u) + '" class="' + cls + sel + ' moor" stroke-width="' + sw + '"/>');
+    else { const k = (n.type === 'coastal' ? 10 : n.type === 'ferry' ? 8.5 : pl ? 8.2 : n.fleet || n.coast ? 5.2 + n.L * 0.13 : 6.5) * u, dg = (n.cog !== undefined ? n.cog : n.hd) * 180 / Math.PI;
       g.push('<g transform="translate(' + n.p.x + ' ' + n.p.y + ') rotate(' + dg.toFixed(1) + ')"><path d="M0,' + (-k * 1.25) + ' L' + (0.55 * k) + ',' + (k * 0.8) + ' L0,' + (k * 0.45) + ' L' + (-0.55 * k) + ',' + (k * 0.8) + ' Z" class="' + cls + sel + '" stroke-width="' + sw + '"/></g>'); }
-    if (sel || (view.z > 5 && (!n.coast || coastLbl))){
-      const kx = Math.floor(n.p.x / lw), ky = Math.floor(n.p.y / lh);
-      if (!sel && [-1, 0, 1].some(d => lblAt.has((kx + d) + ',' + ky))) continue;
-      lblAt.add(kx + ',' + ky); g.push(txt({x:n.p.x + 8 * u, y:n.p.y - 6 * u}, n.name, 'lbl-ais', 10 * u, 'stroke-width="' + (3 * u) + '"'));
-    }
+    if (pl ? sel || view.z > 1.5 : sel || (view.z > 5 && (!n.coast || coastLbl))) (pl ? plLbl : aisLbl).push(n);
+  }
+  for (const n of plLbl.concat(aisLbl)){
+    const sel = AISSEL === n.id, kx = Math.floor(n.p.x / lw), ky = Math.floor(n.p.y / lh);
+    if (!sel && [-1, 0, 1].some(d => lblAt.has((kx + d) + ',' + ky))) continue;
+    lblAt.add(kx + ',' + ky); g.push(txt({x:n.p.x + (n.player ? 11 : 8) * u, y:n.p.y - (n.player ? 9 : 6) * u}, n.name, 'lbl-ais' + (n.player ? ' pl' : ''), (n.player ? 11 : 10) * u, 'stroke-width="' + (3 * u) + '"'));
   }
   // gear being drawn out
   if (SETM) g.push(setSvg(u));

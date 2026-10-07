@@ -175,6 +175,9 @@ body.vplot #gps::after{display:none}
 .ops-days button{min-width:28px;padding:3px 4px;margin:1px} .ph-kv button.on,.ops-days button.on{background:#1e8c6e;color:#fff;border-color:#1e8c6e} #aisCard .ai-h{display:flex;justify-content:space-between;align-items:center;font-size:15px} #aisCard .ai-h button{background:none;border:0;color:#cde;font-size:16px;cursor:pointer} #aisCard .ai-t{color:#8fc7e4;font-size:11.5px;margin-bottom:5px} #aisCard .ai-r{display:flex;justify-content:space-between;gap:10px;padding:2px 0;border-bottom:1px solid rgba(255,255,255,.07)} #aisCard .ai-r span:first-child{color:#9bb6c4} #aisCard .ai-n{font-size:10.5px;color:#8fa6b2;margin-top:5px}
 body.v3d #aisCard{display:none} .lbl-ais{font-family:var(--sans);font-weight:600;fill:#1f9a67;paint-order:stroke;stroke:var(--sea)}
 #map.plot .ais{fill:rgba(120,255,190,.15);stroke:#7dffc0} #map.plot .lbl-ais{fill:#b8ffd9;stroke:#0b1a2a}
+/* the other players stand out from the coast's own boats (Jonas 07.10.2026): gold, larger, a ring round them and their names early */
+.ais-halo{fill:none;stroke:#f2b33d;opacity:.6} .lbl-ais.pl{fill:#8a5a00;font-weight:700}
+#map.plot .ais.player{fill:#ffc94a;stroke:#fff1b8} #map.plot .ais-halo{stroke:#ffc94a} #map.plot .lbl-ais.pl{fill:#ffd36b}
 .route.unsafe{stroke:#f2b705!important}
 #chartcv{position:absolute;pointer-events:none;display:none} body.vplot #chartcv{display:block} body.vplot #map .sea,body.vplot #map .offmap{fill:transparent!important} 
 .road{fill:none;stroke:rgba(120,110,95,.75);stroke-linejoin:round;stroke-linecap:round} #map.plot .road{stroke:rgba(200,190,170,.35)}
