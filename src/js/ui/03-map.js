@@ -429,8 +429,19 @@ function pinOpen(id, fresh){
   pinCard.querySelector('[data-p=x]').onclick = () => { PINSEL = null; pinCard.hidden = true; save(); scheduleStatic(); };
   pinCard.querySelector('[data-p=go]').onclick = () => { PINSEL = null; pinCard.hidden = true; save(); addWaypoint({x:pn.x, y:pn.y}); };
   pinCard.querySelector('[data-p=del]').onclick = () => { S.pins = S.pins.filter(q => q.id !== id); PINSEL = null; pinCard.hidden = true; save(); scheduleStatic(); };
+  inp.onfocus = () => setTimeout(pinKb, 300); inp.onblur = () => setTimeout(pinKb, 300);
+  pinKb();
   if (fresh) setTimeout(() => { try { inp.focus(); inp.select(); } catch (e) {} }, 30);
 }
+// the on-screen keyboard covered the card at the bottom of the chart (tablet PWA): while it is up, lift the card into the part of
+// the screen that is still visible (visualViewport), and let it fall back when the keyboard goes
+function pinKb(){
+  pinCard.style.transform = '';
+  const vv = window.visualViewport; if (pinCard.hidden || !vv || document.activeElement !== pinCard.querySelector('input')) return;
+  const r = pinCard.getBoundingClientRect(), bot = vv.offsetTop + vv.height - 8;
+  if (r.bottom > bot) pinCard.style.transform = 'translateY(' + Math.round(Math.max(bot - r.bottom, vv.offsetTop + 8 - r.top)) + 'px)';
+}
+if (window.visualViewport){ visualViewport.addEventListener('resize', pinKb); visualViewport.addEventListener('scroll', pinKb); }
 
 // pointer: pan, pinch, tap
 const ptrs = new Map(); let drag = null, pinch = null;
