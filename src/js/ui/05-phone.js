@@ -416,7 +416,8 @@ const PHONE = (() => {
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
     ['p87', '07.10.2026', 'Rettinger', 'Fixes', [
-      ['Den som får fri neste tur, blir på land den turen, også når fangsten fortsatt ble levert da du ga fri.', 'Crew given the next trip off stay ashore for that trip, also when the catch was still being landed when you gave them the time off.']]],
+      ['Den som får fri neste tur, blir på land den turen, også når fangsten fortsatt ble levert da du ga fri.', 'Crew given the next trip off stay ashore for that trip, also when the catch was still being landed when you gave them the time off.'],
+      ['Skipperen går også på dekk og sløyer når linetrekket stopper fordi bløggekaret er fullt.', 'The skipper also goes on deck to gut when hauling the line stops because the bleeding tub is full.']]],
     ['p86', '07.10.2026', 'Havforskere og fyr', 'Scientists and lighthouses', [
       ['Nytt på tavla: prøvefiske for Havforskningsinstituttet. Fisk ved en stasjon og mål ti fisk på målebrettet, eller kjør en ekkoloddlinje gjennom tre punkter. Fangsten er din.', 'New on the board: survey fishing for the Institute of Marine Research. Fish at a station and measure ten fish on the board, or run an echo sounder line through three points. The catch is yours.'],
       ['Kystposten vil ha bilder av fyrene langs kysten, noen ganger i lav sol, mens fyret lyser, under nordlyset eller i uvær. Trykk på utløseren når fyret er i bildet, så står bildet i avisa.', 'Kystposten wants pictures of the lighthouses along the coast, sometimes in low sun, with the light lit, under the northern lights or in heavy weather. Press the shutter when the lighthouse is in the picture, and it is printed in the paper.'],

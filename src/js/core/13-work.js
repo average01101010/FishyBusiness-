@@ -29,13 +29,13 @@ function workChains(){ const L = []; if (meAboard()) L.push(jobOf(null)); crewAb
 function catchGut(){ const v = S.settings.gut; return v === true || v === false ? v : workChains().some(j => j.includes('sloy')); }
 function catchIce(){ const v = S.settings.ice; return v === true || v === false ? v : workChains().some(j => j.includes('is')); }
 
-// what has work now. as = 'fishing': as if the boat were jigging where it lies (for the fishing effort outside the fishing minute)
+// what has work now (the hauler waits while the boat is stopped to gut, so those on it go on deck: tilbakemelding #29). as = 'fishing': as if the boat were jigging where it lies (for the fishing effort outside the fishing minute)
 function workCtx(as){
   const b = S.boat, st = S.settings, s = as === 'fishing' ? 'fishing' : b.status, g = as === 'fishing' ? null : b.gop, stop = as === 'fishing' ? false : !!b.deckStop;
   const icing = catchIce() && b.ice > 0.5, cg = catchGut(); let gut = 0, ice = 0, pend = 0;
   for (const x of S.hold){ if (SPECIES[x.sp].live || x.iced) continue; if (cg && !x.gut) gut += x.kg; else if (icing) ice += x.kg; if ((cg && !x.gut) || icing) pend += x.kg; }
   const deck = s !== 'aground' && pend > 0.5;
-  return {s, stop, ror:s === 'sailing' || s === 'unmooring' || s === 'engine', fiske:s === 'fishing' && !g && !stop && rigJig(), haling:!!g,
+  return {s, stop, ror:s === 'sailing' || s === 'unmooring' || s === 'engine', fiske:s === 'fishing' && !g && !stop && rigJig(), haling:!!g && !stop,
     sort:!!g && g.kind === 'teine' && g.op === 'haul', sloy:deck && gut > 0.01, is:deck && ice > 0.01, kokk:as !== 'fishing' && mealDue(), pause:true};
 }
 // who stands where: [{c (null for you), st}], you first
