@@ -415,6 +415,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p91', '07.10.2026', 'Autonav langt til havs', 'Autonav far out at sea', [
+      ['Autonav kunne stoppe uten rute når veien gikk langt til havs, der kystkartet slutter (for eksempel ut mot eggakanten). Dybden leses nå riktig helt ut til kanten.', 'Autonav could stop without a route when the way went far out to sea, where the coastal chart ends (for example out towards the shelf edge). The depth is now read right out to the edge.']]],
     ['p90', '07.10.2026', 'Rettelser etter tilbakemeldinger', 'Fixes from your feedback', [
       ['Når både du og mannskapet står på sløying, står nå begge på dekk: du ved bordet og en av mannskapet ved bløggekaret. Før ble du stående ved rattet mens mannskapet jobbet alene.', 'When you and the crew are both on gutting, both now stand on deck: you at the table and one hand at the bleeding tub. Before, you stayed at the wheel while the crew worked alone.'],
       ['Ligger du ved en rorbu, står båten nå ved rorbuas kai i kartet og i ruteleggingen, ikke ved fiskemottaket ved siden av. Det gjaldt alle rorbuer langs kysten.', 'Moored at a rorbu, the boat now lies at the rorbu\'s quay in the chart and when you plan a route, not at the fish plant next to it. It affected every rorbu along the coast.'],

@@ -483,14 +483,19 @@ function tileDepth(p, d){ if (d < 150) return d; const z = deepAt(p); return z >
 // the tiles' depth between the four nearest cells that are water (the layer has 0 on the 25 m mask's land): the fine coast decides
 // what is land (01d-coast.js), so next to it the water keeps the depth of its own cells rather than running out to 0 (which grounded
 // boats in water the chart shows). Where all four are land, the water cells two round; where there are none, 2 m (a sound the mask closed).
+// At the outer edge of the tiles (40-65 km out) the cells past it are in a tile with no sim pack: they count as no water, like land
+// (before, Autonav's search out there threw «has no pack»)
+const depthCell = (L, ix, iy) => mapPackOf(L, Math.floor(ix / L.n), Math.floor(iy / L.n)) ? rcell(L, ix, iy) : 0;
 function depthWater(p){
   const L = MAPD.L.depth, gx = clamp(p.x / L.c - 0.5, L.ix0, L.ix0 + L.nx - 1.001), gy = clamp(p.y / L.c - 0.5, L.iy0, L.iy0 + L.ny - 1.001), ix = Math.floor(gx), iy = Math.floor(gy), fx = gx - ix, fy = gy - iy;
-  const a = rcell(L, ix, iy), b = rcell(L, ix + 1, iy), c = rcell(L, ix, iy + 1), d = rcell(L, ix + 1, iy + 1);
+  // the four cells are in one block (and p's tile) but where they straddle a block's edge
+  const B = L.n, rd = Math.floor(ix / B) === Math.floor((ix + 1) / B) && Math.floor(iy / B) === Math.floor((iy + 1) / B) ? rcell : depthCell;
+  const a = rd(L, ix, iy), b = rd(L, ix + 1, iy), c = rd(L, ix, iy + 1), d = rd(L, ix + 1, iy + 1);
   if (a > 0 && b > 0 && c > 0 && d > 0) return ((a * (1 - fx) + b * fx) * (1 - fy) + (c * (1 - fx) + d * fx) * fy) * L.k;
   const wa = a > 0 ? (1 - fx) * (1 - fy) : 0, wb = b > 0 ? fx * (1 - fy) : 0, wc = c > 0 ? (1 - fx) * fy : 0, wd = d > 0 ? fx * fy : 0, w = wa + wb + wc + wd;
   if (w > 1e-6) return (a * wa + b * wb + c * wc + d * wd) / w * L.k;
   let s = 0, n = 0;
-  for (let j = iy - 1; j <= iy + 2; j++) for (let i = ix - 1; i <= ix + 2; i++){ if (!mapIn(L, i, j)) continue; const v = rcell(L, i, j); if (v > 0){ s += v; n++; } }
+  for (let j = iy - 1; j <= iy + 2; j++) for (let i = ix - 1; i <= ix + 2; i++){ if (!mapIn(L, i, j)) continue; const v = depthCell(L, i, j); if (v > 0){ s += v; n++; } }
   return n ? s / n * L.k : 2;
 }
 function depthAt(p){ return Math.round(depthF(p)); }
