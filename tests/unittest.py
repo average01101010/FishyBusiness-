@@ -16,11 +16,11 @@ async def main():
         await pg.evaluate("""(()=>{ S.tut = 0; S.cash = 1e6; S.t = Math.round((Date.UTC(2027, 7, 9, 12) - EPOCH) / 6e4); S.mult = 0.00001; })()""")
         await pg.wait_for_function("G3.isActive() && typeof DEPTH !== 'undefined' && DEPTH", timeout=90000); await pg.wait_for_timeout(800)
         # the 3D ground's packs and the simulation's (the depth) at every unit (the ones far from the boat are not in otherwise)
-        await pg.evaluate("Promise.all(UNITA.map(U => Promise.all(['view', 'sim'].flatMap(k => mapPacksIn(k, U.o[0] / 1000 - 0.3, U.o[1] / 1000 - 0.3, U.o[0] / 1000 + 0.3, U.o[1] / 1000 + 0.3)).map(mapLoad))))")
+        await pg.evaluate("Promise.all(UNITA.filter(U => !U.coastal).map(U => Promise.all(['view', 'sim'].flatMap(k => mapPacksIn(k, U.o[0] / 1000 - 0.3, U.o[1] / 1000 - 0.3, U.o[0] / 1000 + 0.3, U.o[1] / 1000 + 0.3)).map(mapLoad))))")
         r = await pg.evaluate("""(()=>{
           // the lowest tide at each unit: all the constituents of its place at their low together (phase K10: the tide per place)
           const D = G3._debug, lowAt = p => -tidePlace(p).C.reduce((s, c) => s + c[0], 0), R = {low:-1e9, units:{}};
-          for (const U of UNITA){
+          for (const U of UNITA.filter(U => !U.coastal)){   // the eight harbours with a plant (the coast's receivers, coastal, have their own tests)
             const at = (lx, lz) => { const w = unitW(U, lx, lz); return {x:w[0] / 1000, y:w[1] / 1000, w}; }, up = at(0, 0), low = lowAt(up), ZC = tideZC(up); R.low = Math.max(R.low, Math.round(low * 100) / 100);
             // the water along the face (both berths) at the lowest tide: charted depth plus the tide above chart datum
             let face = 1e9; for (let lx = -UNIT.E + 1; lx <= UNIT.E - 1; lx += 2) for (const lz of [0.5, 2, 4, 8]){ const q = at(lx, lz); face = Math.min(face, depthF(q) + low + ZC); }
@@ -44,7 +44,7 @@ async def main():
             Object.assign(R.units[U.id], {back:Math.round(back * 100) / 100, simB, fill:Math.round(fill * 100) / 100, lift:Math.round(lift * 100) / 100});
           }
           // no mapped building or pier stands on a unit's ground
-          R.piers = PIERBOX.filter(q => !q.made && UNITA.some(U => { const [lx, lz] = unitL(U, q.x, q.z); return Math.abs(lx) <= UNIT.E && lz <= 0 && lz >= -UNIT.B; })).length;
+          R.piers = PIERBOX.filter(q => !q.made && UNITA.filter(U => !U.coastal).some(U => { const [lx, lz] = unitL(U, q.x, q.z); return Math.abs(lx) <= UNIT.E && lz <= 0 && lz >= -UNIT.B; })).length;
           return R; })()""")
         print(json.dumps(r))
         U = r['units']
