@@ -2777,6 +2777,17 @@ Jonas: «hele spillet skal være free-to-play, men med betalte boostere i form a
   - **Mannskapet:** de som står på «Haling» i arbeidskjedene, står ved haleren, ved enden av renna og ved binge eller balje. Skipperen er med når det er hans jobb, og forlater da rattet.
   - `haultest.py` tar bilder og sjekker at skiva går rundt.
 
+### 5.30 Rettelser etter tilbakemeldingene #34–#42 (07.10.2026)
+
+- **#42 Skipperen og mannskapet på sløying:** `deckActivity` i `view3d.js` gir nå `me` og `crew` hver for seg. Står begge på «Sløying» eller «Ising» i `workAssign`, står skipperen ved bordet og en av mannskapet ved bløggekaret (`drawDeck`), og skipperen forlater rattet. Før ble han stående ved rattet.
+- **#34 Båten ved rorbua:** en båt fortøyd ved en rorbu før kysten var funnet (`rorbuSite`) ble satt ved kandidatpunktet, ved mottakets kai, mens 3D tegnet den ved rorbua. `dock` finner nå kaia først, og `rorbuSite` flytter en båt som alt ligger der (også i en gammel lagring). Gjaldt alle rorbuer. Test: `rorbutest.py` 7b.
+- **#39 Første tur fra naustet:** (1) Autonav fra fars naust i Øksfjord fant ingen vei: naustet ligger i en vik 100 m-rutenettet ser som lukket mot sjøen. `leiaTo` prøver da på nytt med havnas innseilingsvei (`approachPath`). Test: `naustleia.py`. (2) Konvoluttens klaff lå med tuppen mot lommen og svingte lukket igjen mens konvolutten falt (`.lt-flap-ii`, `08b-letter.js`). (3) **Åpent:** butikken kan brukes fra naustet. Jonas mener det ikke skal gå an. Å stenge den betyr at båten må legges til kai i havna før man handler, og et nytt steg i første tur. Ikke endret.
+- **#38 COG og XTE** er fjernet fra plotterlinja, instrumentpanelet og 3D-skjermen. COG var lik HDG, og XTE var alltid null.
+- **#40 Bro-visningen:** å dra ned ser nå ned (`cam.hp` minus dra), som å dra til høyre ser til høyre.
+- **#37 Rutepanelet på mobil** (under 700 px): panel nederst, over hele bredden og høyst 42 % av høyden, med veipunktene i to kolonner (`body.vplot #side` i `styles.css`).
+- **#41 Ekkoloddet:** `HEAT.sp` har alle artene, og `heatSample` gir en verdi per art (`HEATI`: 0–2 og 4 som før, 5–9 for lyr, lange, brosme, uer og kveite; 3 er fortsatt summen av de andre). Knappen på kartet og innstillingene går gjennom dem. Test: `heatpick.py`.
+- **#36 Fiskekarene** (`partTubs`, `vessel3d.js`): et kar som ville stått utenfor skroget (snekka akterut) trekkes inn, og flyttes mot midten når det ikke er plass til to. Andre båter er uendret.
+
 ### 5.31 De andres redskap i havet (tilbakemelding #35, 07.10.2026)
 
 - **Hva:** garn, liner og teiner som andre spillere har stående, vises uten eier: grå streker med bøyer i kartplotteren (`gearSvg`, `10-gear-ui.js`) og bøyene i 3D (`drawGearSea`). Det er bare visning: de kan ikke trykkes på, og de stopper ikke setting eller ruter.
