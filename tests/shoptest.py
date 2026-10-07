@@ -35,7 +35,7 @@ async def main():
         check('fiskeutstyr' in acts[0] and 'is' in acts[1], 'Fiskeutstyr ligger under Verft og is under Marked', acts)
 
         # the shop: title in Finnsnes, two taps to buy, a log line on the operations page
-        await pg.evaluate("DOCK.open('fiske')"); await pg.wait_for_timeout(300)
+        await pg.evaluate("S.boat.gear = false; DOCK.open('fiske')"); await pg.wait_for_timeout(300)   # the jig comes with the boat; this is the one bought after losing it
         title = await pg.evaluate("document.querySelector('#drawerBody .ph-card h4').textContent")
         check(title == 'Fiskeutstyr på kaia i Finnsnes', 'butikken heter Fiskeutstyr på kaia i Finnsnes', title)
         await pg.evaluate("document.querySelector('#drawerBody [data-pa=shop][data-k=jig]').click()"); await pg.wait_for_timeout(200)

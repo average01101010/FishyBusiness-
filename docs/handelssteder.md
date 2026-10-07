@@ -38,6 +38,12 @@ To steder uten handel:
 
 Åpne brevet → se båten for første gang (**juksa ligger montert i båten fra start**) → åpne kartplotteren → lære Autonav og egne ruter → til fiskeplassen spilleren «har hørt om» (fars notatbok) → fiske båten full raskt med juksa, **uten is** → til nærmeste fiskemottak → levere første fangst → **kjøpe is for nedkjøling** (første fylling er spandert av mottaket: spilleren er ny kunde, og de kjenner igjen den gamle båten; prisen på isen nevnes ikke) → første tur på egen hånd. Ising introduseres altså etter første levering.
 
+## Status (07.10.2026)
+
+- **Gjort:** naustet selger ingenting (knappene Marked, Bygd og Verft vises ikke der; `shopBuy` avviser; telefonsidene for kjøp er av ved naustet via `atTrade`). Håndjuksa er montert fra start, første fiske går uten is, og veiledningen får steget `ice` etter første levering (første fylling på huset). Alle mottak selger is. Omrigging (juksa, line, garn, teiner) skjer om bord under Beholdning → Rigg, så lenge ingen redskap står i sjøen.
+- **Vedtatt (andre melding):** bunkring (diesel) på fiskemottak og verft. Verft kan stå på ekte steder der vi finner data, og på falske steder på strategiske plasser slik at nærmeste verft aldri er langt unna. Verftet bygges i Blender med dieselfylling og en dokk eller slipp som kan tørrlegge alle båtene, med animasjoner.
+- **Gjenstår:** utstyrsbutikk og verft som egne steder med egen kai (trinn 2), verftsmodellen i Blender med tørrlegging (trinn 3), hjelp til å finne nærmeste sted.
+
 ## Å fylle på
 
 - Foreslått, ikke vedtatt: diesel (bunkring) hører til mottaket (bunkerkaia står alt ved mottakene), og omrigging hører til utstyrsbutikken. Telefonen kan ikke brukes til å kjøpe fysiske ting borte fra stedet. En hjelp for å finne nærmeste butikk, verft og mottak (kartlag med avstand og Autonav dit).

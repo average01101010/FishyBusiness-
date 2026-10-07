@@ -12,7 +12,7 @@
 // 07-harbours.js, and a harbour unit stands on it (UNITS, 01-world.js; its berths are the unit's); the harbour point lies 15 m out from
 // its middle and the shore point 30 m in. The price factor is the receiver's price
 // index (what it paid against the month's average, by kilo over the game's species) halfway to 1, between 0.94 and 1.06. Every coast
-// harbour has fuel and the shop; an ice chute where the plant takes in 1 000 t or more a year.
+// harbour has fuel, and every plant sells ice (Jonas 07.10.2026: «Fiskemottaket - kun levering av fisk, salg av is og agn»).
 const MOTTAK = /*@include(data/mottak.json)*/null;
 const COAST_WF = ['torsk', 'hyse', 'sei', 'lyr', 'lange', 'brosme', 'uer', 'kveite', 'kongekrabbe', 'krabbe'];
 // ---- the registration mark (Malerverkstedet, 07.10.2026): the county's letters, a serial number and the municipality's letters,
@@ -81,7 +81,7 @@ const COASTQ = {};
     let hv = 0; for (const ch of id) hv = (hv * 31 + ch.charCodeAt(0)) >>> 0;
     const U = {id, o:[cx, cz], u:[nz, -nx], n:[nx, nz], f:[27.4, -24.4, 27.4, -28.4, -27.4, -28.4, -27.4, -24.4], v:'abc'[hv % 3], coastal:true};
     UNITS[id] = U; UNITA.push(U);
-    PORTS.push({id, name, xy:[q[0], q[1]], shore:[q[0], q[1]], pier:true, fuel:true, ice:kg >= 1e6, mottak:true, pf, coast:{x:(cx - nx * 30) / 1000, y:(cz - nz * 30) / 1000},
+    PORTS.push({id, name, xy:[q[0], q[1]], shore:[q[0], q[1]], pier:true, fuel:true, ice:true, mottak:true, pf, coast:{x:(cx - nx * 30) / 1000, y:(cz - nz * 30) / 1000},
       p:{x:Math.round(cx + nx * 15) / 1000, y:Math.round(cz + nz * 15) / 1000}, i:PORTS.length, mk, coastal:true});
     // the plant posts orders too (03-simulation.js ordersTick, near where you fish): for what it takes in most of
     const csp = Object.entries(mk.sp).filter(([s]) => SPECIES[s] && !SPECIES[s].shell && s !== 'blakveite')   // its orders: 03-simulation.js bkPlant

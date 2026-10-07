@@ -219,7 +219,7 @@ function newState(){
   const home = PORTS[0];
   // a new game begins at the world's minute (core/01-world.js), on the seed everyone shares
   return {v:2, frame:'utm33', t:WCLOCK.on ? worldT() : 0, lastReal:Date.now(), mult:1, lang:'no', cash:15000,
-    boat:{type:'trebat', pos:{x:home.p.x, y:home.p.y}, heading:0, v:0, fuel:60, ice:0, gear:false, status:'port', port:home.id, prev:null, engineUntil:0, fishUntil:null, engH:0, svcAt:0},
+    boat:{type:'trebat', pos:{x:home.p.x, y:home.p.y}, heading:0, v:0, fuel:60, ice:0, gear:true, status:'port', port:home.id, prev:null, engineUntil:0, fishUntil:null, engH:0, svcAt:0},
     equip:{vhf:false, ais:false, plotter:false, chirp:false, sonar:false, jukse:0, motor90:false}, crew:[], loan:null, member:false, msgs:[], sales:[], order:null, owned:['trebat'], lic:null, qseed:WCLOCK.on ? WORLD_SEED : Math.floor(Math.random() * 1e9), fm:{n:0, last:-1, kr:0, b:false}, haill:null, haillInv:{haill:0, luksus:0}, pubE:-1e9, target:'mix', streak:null, clothes:{olje:0, varme:0}, orders:null, rep:{}, bors:null, cevt:null, workLog:[], stock:initStock(), marks:[], navrows:[], incidents:[], lore:{}, tattoos:{}, tat:{}, pgear:newPGear(), sets:[], gseq:0, ops:null, company:'', boatName:'', tut:0, jobs:[], prep:{}, tripBuff:null, draftDep:null,
     plan:null, draft:[], draftSpeed:16, trail:[{x:home.p.x, y:home.p.y, port:home.id}],
     settings:{deckFirst:true, autoOn:true, autoW:11, catchByWork:true},
@@ -517,7 +517,7 @@ function risk(W, hs){
       log('Motorstopp i grov sjø.', 'Engine failure in rough seas.');
     }
   } else if (r < 0.85){
-    if (b.gear && b.status === 'fishing' && !b.gop){ b.gear = false; log('Mistet juksa i sjøen. Uten juksa fisker bare juksamaskinene. Kjøp ny juksa i butikken.', 'Lost the jig line overboard. Without a jig only the reels fish. Buy a new jig in the shop.'); if (typeof window !== 'undefined' && window.JIGG) window.JIGG.stop(); }
+    if (b.gear && b.status === 'fishing' && !b.gop && !(typeof tutOn === 'function' && tutOn())){ b.gear = false; log('Mistet juksa i sjøen. Uten juksa fisker bare juksamaskinene. Kjøp ny juksa i butikken.', 'Lost the jig line overboard. Without a jig only the reels fish. Buy a new jig in the shop.'); if (typeof window !== 'undefined' && window.JIGG) window.JIGG.stop(); }
     else log('Kraftig rulling, men ingen skade.', 'Heavy rolling, but no damage.');
   } else {
     if (lvl === 2) rescue(false); else log('Kraftig rulling, men ingen skade.', 'Heavy rolling, but no damage.');

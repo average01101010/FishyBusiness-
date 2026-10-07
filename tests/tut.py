@@ -4,14 +4,14 @@ three reloads on the way. On the way out the «Next» chip, at the grounds what 
 on the way in a look round: the status box, the deck log, the camera (the bridge and back), the phone's apps, the weather and the
 settings (05.10.2026). It opens on Father's letter (tapped open, read, «Ta over») and the boat's name, no company. The game runs
 at test pace (S.mult) to save time. Checks: every step comes in order, the guide ends with
-"tut":0, the jig and ice were free, the free luxury luck, a full hold at landing, and a login bonus row on the landing note.
+"tut":0, the jig aboard from the start, the first fill of ice on the plant after the landing, the free luxury luck, a full hold at landing, and a login bonus row on the landing note.
 Prints OK or FEIL per check and ends with the old summary line {"tut":0, …} and the page errors."""
 from _env import GAME_TUT as GAME
 import asyncio, json, time
 from playwright.async_api import async_playwright
 
-ORDER = ['shop', 'gps', 'route1', 'fish2', 'cast1', 'chip', 'sail', 'luck', 'haill', 'luckhud', 'fish', 'deck', 'full', 'route2', 'cast2',
-         'tour', 'hud', 'book', 'cam', 'cam2', 'apps', 'vaer', 'innst', 'land', 'slip', 'goal']
+ORDER = ['gps', 'route1', 'fish2', 'cast1', 'chip', 'sail', 'luck', 'haill', 'luckhud', 'fish', 'deck', 'full', 'route2', 'cast2',
+         'tour', 'hud', 'book', 'cam', 'cam2', 'apps', 'vaer', 'innst', 'land', 'slip', 'ice', 'goal']
 # the steps read with «Skjønner» while the ring shows what they are about
 OK_RING = ('deck', 'chip', 'slip', 'goal', 'luckhud', 'hud', 'apps', 'vaer', 'innst')
 
@@ -65,7 +65,7 @@ async def play(p, W, H, tag):
         sid = s['id']
         if not seen or seen[-1] != sid:
             seen.append(sid); stuck = -1; print('   ', tag, sid, '·', s['tip'][:70], flush=True)
-            # three reloads on the way: after the shop, on the way out, and during the landing
+            # three reloads on the way: at the start, on the way out, and during the landing
             if sid in ('gps', 'haill', 'slip') and reloads < 3:
                 if sid == 'gps': free = json.loads(await pg.evaluate("JSON.stringify({cash:S.cash, gear:S.boat.gear, ice:S.boat.ice})"))
                 await pg.evaluate("save()"); await pg.reload(); await pg.wait_for_timeout(1500); reloads += 1
@@ -86,14 +86,15 @@ async def play(p, W, H, tag):
         if s['ring']:
             await tap(s['ring']['x'], s['ring']['y']); await pg.wait_for_timeout(350 if sid != 'route2' else 700); continue
         await pg.wait_for_timeout(500)
-    end = json.loads(await pg.evaluate("JSON.stringify({tut:S.tut, haill:S.haill && S.haill.type, sale:S.lastSale && {port:S.lastSale.port, total:S.lastSale.total, streak:S.lastSale.streak}, catchFlag:!!(S.tut && S.tut.catch), log:S.log.slice(-8).map(e => e.no)})"))
+    end = json.loads(await pg.evaluate("JSON.stringify({tut:S.tut, haill:S.haill && S.haill.type, sale:S.lastSale && {port:S.lastSale.port, total:S.lastSale.total, streak:S.lastSale.streak}, catchFlag:!!(S.tut && S.tut.catch), ice:S.boat.ice, gear:S.boat.gear, log:S.log.slice(-8).map(e => e.no)})"))
     await pg.evaluate("PHONE.show(false); DOCK.open('lever')"); await pg.wait_for_timeout(600)
     bonus_row = await pg.evaluate("[...document.querySelectorAll('#drawerBody .slipt td')].some(td => /Innloggingsbonus/.test(td.textContent))")
     await pg.screenshot(path='tut_' + tag + '.png')
     order = [x for x in seen if x]
     check(order == ORDER, tag + ': alle stegene kom i rekkefølge', order)
     check(end['tut'] == 0 and 'Første tur er fullført' in ' '.join(end['log']), tag + ': veiledningen er fullført', end['log'])
-    check(free.get('gear') and free.get('ice', 0) >= 149 and free.get('cash') == 15000, tag + ': juksa og 150 kg is var gratis', free)
+    check(free.get('gear') and free.get('ice', 1) == 0 and free.get('cash') == 15000, tag + ': juksa satt på fra start, og ingen is før første fiske', free)
+    check(end['ice'] >= 149 and end['gear'], tag + ': første fylling is fra mottaket etter første levering (15 000 kr igjen)', {k: end[k] for k in ('ice', 'gear')})
     check(end['haill'] == 'luksus', tag + ': gratis luksushaill om bord')
     check(hold_at_land is not None and hold_at_land >= 349, tag + ': full last ved levering', hold_at_land)
     check(end['sale'] and end['sale']['port'] == 'botnhamn' and bonus_row, tag + ': levert i Botnhamn med bonuslinje på sluttseddelen', end['sale'])

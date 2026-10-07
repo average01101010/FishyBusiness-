@@ -285,6 +285,7 @@ function quayPos(b){
   if ((b.status === 'port' || b.status === 'unmooring') && b.port && berthKind(b) === 'naust'){ const bp = berthPose(b.port, b.type || 'skiff', 'naust'); if (bp) return {x:bp.x, y:bp.y}; }
   return b.pos;
 }
+const NAUST_NOSHOP = ['Naustet er et hjem, ikke en butikk. Seil til mottaket for is og agn, til utstyrsbutikken for utstyr og til verftet for båt og vedlikehold.', 'The boathouse is a home, not a shop. Sail to the plant for ice and bait, to the tackle shop for gear and to the yard for boats and upkeep.'];
 const NAUST_SAIL = ['Båten ligger ved naustet. Seil bort til mottakskaia først: trykk på havna i kartplotteren og kast loss.', 'The boat lies at the boathouse. Sail over to the plant\'s quay first: tap the harbour on the chart plotter and cast off.'];
 const BERTHN = {main:['mottakskaia', 'the plant\'s quay'], bunker:['bunkerskaia', 'the bunker quay'], naust:['naustet', 'the boathouse']};
 const hasBunker = pid => !!quayFace(pid, 'bunker');
@@ -335,6 +336,8 @@ function buyIce(kg, free){
   kg = Math.round(Math.min(kg, BOAT.iceCap - b.ice)); const c = free ? 0 : Math.round(kg * PRICE.ice); if (kg <= 0 || c > S.cash) return false;
   b.ice += kg; S.cash -= c; S.stats.costs += c; iceChute(kg);
   log('Kjøpte ' + kg + ' kg is fra isrenna for ' + kr(c) + '.', 'Bought ' + kg + ' kg of ice from the chute for ' + kr(c) + '.');
+  // the first fill is on the plant (Jonas 07.10.2026): a new customer, and they know the old boat
+  if (free) msg(FOLK_NAMES.plant[0] + ' på mottaket', 'Så det er du som har tatt over naustet! Faren din var innom her i fjor høst og snakket om deg. Første fylling is er på huset: vi kjenner igjen den gamle båten.', 'So you’re the one who has taken over the boathouse! Your father dropped in last autumn and talked about you. The first fill of ice is on the house: we know the old boat.');
   return true;
 }
 // ---------- the tackle shop on the quay, in every harbour: hand jig, ice and halibut gear ----------
@@ -347,6 +350,7 @@ function shopBuy(k, kg, free){
   const b = S.boat, pt = portById(b.port), pay = c => { S.cash -= c; S.stats.costs += c; };
   if (b.status !== 'port' || !pt) return ['Butikken er på land. Handle når båten ligger i havn.', 'The shop is ashore. Buy when the boat is in port.'];
   if (pt.rorbu) return ['Det er ingen butikk ved rorbua. Handle i en havn.', 'There is no shop at the rorbu. Buy in a harbour.'];   // 07d-rorbu.js
+  if (berthKind(b) === 'naust') return NAUST_NOSHOP;   // Father's naust is a home: nothing is sold there (Jonas 07.10.2026)
   if (k === 'jig' || k === 'kgear'){
     const have = k === 'jig' ? b.gear : b.kgear, c = free ? 0 : Math.round((k === 'jig' ? PRICE.gear : PRICE.kgear) * (naustHas('benk') && atHome(b) ? 0.75 : 1));   // Father's workbench (07c-naust.js)
     if (have) return ['Det har du allerede om bord.', 'You already have that aboard.'];
