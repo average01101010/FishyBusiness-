@@ -40,7 +40,11 @@ async def main():
         await pg.evaluate("(() => { S.boat.heading -= Math.PI / 2; })()")
         box = await pg.locator('#helmThr').bounding_box()
         await pg.mouse.move(box['x'] + box['width'] / 2, box['y'] + 22); await pg.mouse.down(); await pg.mouse.up()
-        s0 = await pg.evaluate(ST); await pg.wait_for_timeout(8000); s1 = await pg.evaluate(ST)
+        # the start boat's old semi-diesel gathers way slowly (BOAT.accel): hold on until she is over 3 knots, at most 40 s
+        s0 = await pg.evaluate(ST)
+        try: await pg.wait_for_function("Math.abs(S.helm.v) > 3.2", timeout=40000)
+        except Exception: pass
+        s1 = await pg.evaluate(ST)
         moved = ((s1['x'] - s0['x']) ** 2 + (s1['y'] - s0['y']) ** 2) ** 0.5 * 1000
         check(s0['thr'] > 0.9 and s1['hv'] > 2 and moved > 10 and s1['fuel'] < s0['fuel'], 'gassen helt fram gir fart og fremdrift, og drivstoff går', {'thr': s0['thr'], 'kn': round(s1['hv'], 1), 'm': round(moved), 'fuel': round(s0['fuel'] - s1['fuel'], 3)})
         check(s1['rate'] == s0['rate'] == 6, 'klokka er den felles: den går som ellers mens du styrer', (s0['rate'], s1['rate']))
