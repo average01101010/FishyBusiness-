@@ -78,7 +78,7 @@ function hasHauler(kind){ return GEAR[kind].haulers.some(k => S.equip && S.equip
 
 // ---- the rig: a boat is rigged for one kind of fishing at a time. Jigging needs a hand jig or reels; line and pots
 // need a hauler that takes them, nets a net hauler. Fitting a hauler the first time is a yard job; once it is aboard, the rig is
-// changed at the yard in port, free and at once, when all the gear is out of the sea
+// changed aboard (Beholdning → Rigg, Jonas 07.10.2026), anywhere, free and at once, when none of the boat's nets, lines or pots are in the sea
 const RIGS = {juksa:{no:'Juksa', en:'Jigging', kind:null}, line:{no:'Line', en:'Longline', kind:'line'}, garn:{no:'Garn', en:'Nets', kind:'garn'}, teiner:{no:'Teiner', en:'Pots', kind:'teine'}};
 const rigOfKind = kind => Object.keys(RIGS).find(r => RIGS[r].kind === kind) || 'juksa';
 // an old save has no rig: the kind of gear in the sea or in the standing plan, otherwise jigging
@@ -92,12 +92,12 @@ const rigJig = () => rigOf() === 'juksa';
 function rigHas(r){ return !RIGS[r].kind || hasHauler(RIGS[r].kind); }
 const rigName = r => gL(RIGS[r].no, RIGS[r].en);
 const lc1 = x => x[0].toLowerCase() + x.slice(1);
-function rigWrong(kind){ return [gL('Båten er rigget for ' + rigName(rigOf()).toLowerCase() + '. Rigg om til ' + rigName(rigOfKind(kind)).toLowerCase() + ' på verftet.', 'The boat is rigged for ' + rigName(rigOf()).toLowerCase() + '. Re-rig for ' + rigName(rigOfKind(kind)).toLowerCase() + ' at the yard.')]; }
+function rigWrong(kind){ return [gL('Båten er rigget for ' + rigName(rigOf()).toLowerCase() + '. Rigg om til ' + rigName(rigOfKind(kind)).toLowerCase() + ' under Beholdning.', 'The boat is rigged for ' + rigName(rigOf()).toLowerCase() + '. Re-rig for ' + rigName(rigOfKind(kind)).toLowerCase() + ' under Inventory.')]; }
 // why the rig cannot be changed to r now, or null
 function rigBlock(r){
   const b = S.boat;
   if (r === rigOf()) return [gL('Båten er allerede rigget for dette.', 'The boat is already rigged for this.')];
-  if (b.status !== 'port') return [gL('Båten rigges om på verftet, ved kai.', 'The boat is re-rigged at the yard, at the quay.')];
+  if (b.status === 'tow') return [gL('Båten er under slep.', 'The boat is under tow.')];
   if (mySets().length) return [gL('Trekk alt redskap i sjøen først.', 'Haul all the gear in the sea first.')];
   if (b.gop) return [gL('Redskapsarbeidet er i gang.', 'Gear work is going on.')];
   if (!rigHas(r)){ const k = RIGS[r].kind, hs = GEAR[k].haulers.filter(h => equipFits(h, b.type || 'skiff'));

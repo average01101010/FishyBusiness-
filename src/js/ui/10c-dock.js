@@ -88,7 +88,6 @@ const DOCK = (() => {
         I('batmarked', 'batmarked', 'Båthandel', 'Boats', {page:'fartoy'}),
         I('oppgr', 'oppgr', 'Oppgrader', 'Upgrade', {page:'utstyr'}),
         I('fiskeutstyr', 'fiskeutstyr', 'Fiskeutstyr', 'Tackle', {page:'fiske'}),
-        I('rigg', 'rigg', 'Rigg: ' + RIGS[rigOf()].no, 'Rig: ' + RIGS[rigOf()].en, {page:'rigg'}),
         I('vedlikehold', 'vedlikehold', 'Vedlikehold', 'Maintenance', {page:'verksted', dot:svcOverdue() > 0}),
         I('maler', 'maler', 'Malerverksted', 'Paint shop', {page:'maler'}),
         I('bunker', 'bunker', 'Bunkring', 'Fuel', {act:'fuel', off:!p.fuel ? [L('Det er ikke drivstoff å få i ' + p.name + '.', 'There is no fuel to be had in ' + p.name + '.')] : need < 0.5 ? [L('Tanken er full.', 'The tank is full.')] : portBusy(b) ? [L('Vent til arbeidet på kaia er ferdig.', 'Wait until the work on the quay is done.')] : null})]; }
@@ -115,7 +114,7 @@ const DOCK = (() => {
       // than one in reach it opens a fan with each, nearest first (tilbakemelding #23: by a rorbu it only ever went back to the rorbu)
       const ml = moorAll(b.pos, 0.4), mo = ml[0], moor = mo && I('fortoy', 'naust', 'Fortøy', 'Moor', Object.assign(ml.length > 1 ? {menu:'fortoy'} : {run:() => moorGo(mo)}, {pri:mo.kind === 'rorbu' || mo.kind === 'naust' || S.energy < 40}));
       return [rigJig() && I('jukse', 'jukse', 'Jukse', 'Jig', {menu:'jukse', pri:!s}),
-        I('settut', 'settut', 'Sett ut', 'Set', {menu:'settut', off:rigJig() ? [L('Båten er rigget for juksa. Rigg om til line, garn eller teiner på verftet.', 'The boat is rigged for jigging. Re-rig for line, nets or pots at the yard.')] : !ch.length && [S.pgear && (S.pgear.nets.length || S.pgear.lines.hyse.n || S.pgear.lines.bank.n || S.pgear.pots.small || S.pgear.pots.big) ? L('Redskapet om bord er ikke klart: line må egnes, og teiner trenger agn og blåsesett.', 'The gear aboard is not ready: line must be baited, and pots need bait and buoy sets.') : L('Du har ikke garn, line eller teiner om bord.', 'You have no nets, line or pots aboard.')]}),
+        I('settut', 'settut', 'Sett ut', 'Set', {menu:'settut', off:rigJig() ? [L('Båten er rigget for juksa. Rigg om til line, garn eller teiner under Beholdning.', 'The boat is rigged for jigging. Re-rig for line, nets or pots under Inventory.')] : !ch.length && [S.pgear && (S.pgear.nets.length || S.pgear.lines.hyse.n || S.pgear.lines.bank.n || S.pgear.pots.small || S.pgear.pots.big) ? L('Redskapet om bord er ikke klart: line må egnes, og teiner trenger agn og blåsesett.', 'The gear aboard is not ready: line must be baited, and pots need bait and buoy sets.') : L('Du har ikke garn, line eller teiner om bord.', 'You have no nets, line or pots aboard.')]}),
         // by a quay with no buoy near, «Fortøy» takes the place of the greyed «Ta opp», so the row stays five wide on a phone
         s || !moor ? haul : null, moor, nav, crew, work, beh].filter(Boolean);
     }

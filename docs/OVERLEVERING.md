@@ -3296,7 +3296,7 @@ Jonas' valg: alle tre kystredskapene i samme runde, ståtid for line som avveiin
   | `garn` | garnhaler |
   | `teiner` | teinehaler eller elektrisk haler |
 
-  - Første montering av en haler er en verftsjobb under Oppgrader. Når utstyret er om bord, byttes riggen gratis og med en gang på siden «Rigg» under Verft (`rigBlock`, `rigSet`). Det skjer bare i havn, og bare når alt eget redskap er trukket.
+  - Første montering av en haler er en verftsjobb under Oppgrader. Når utstyret er om bord, byttes riggen gratis og med en gang om bord, i fanen «Rigg» under Beholdning (`rigBlock`, `rigSet`; Jonas 07.10.2026, før lå den under Verft og krevde kai). Det kan gjøres hvor som helst, så lenge ingen av egne garn, liner eller teiner står i sjøen.
   - Riggen styrer `gearRules` (feil rigg gir «Rigg om på verftet»), `setChoices`, valgene i ruta, driftsplanens stasjoner og knappene. «Jukse» er av uten juksarigg, og «Sett ut» er av med juksarigg.
   - Med passiv rigg gir fisketimer i ruta og etter setting ingen juksefangst. Båten venter («Venter, går …»).
   - Trekking sjekkes ikke mot riggen, slik at gamle lagringer med blandet redskap i sjøen kan trekkes.

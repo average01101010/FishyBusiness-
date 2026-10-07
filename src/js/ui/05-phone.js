@@ -291,9 +291,9 @@ const PHONE = (() => {
         '<p class="ph-note">' + L('To båter under 11 m med ulike eiere. Begge eierne må være om bord, så han mønstrer på hos deg. Hans båt ligger til kai resten av året, og han får halvparten av verdien av det som landes på hans kvote. Du må ha hatt hjemmelen siden i fjor.', 'Two boats under 11 m with different owners. Both owners must be aboard, so he signs on with you. His boat lies still for the rest of the year, and he gets half the value of what is landed on his quota. You must have had the right since last year.') + '</p></div>'); }
     return h.join('');
   }
-  // the rig: one kind of fishing at a time, changed here in port when the gear is out of the sea
+  // the rig: one kind of fishing at a time, changed here aboard (under Beholdning) when none of the boat's gear is in the sea
   function rigg(){
-    const cur = rigOf(), h = ['<div class="ph-c"><p class="ph-note">' + L('Båten er rigget for én type fiske om gangen. Første gang en haler monteres, er det en jobb på verftet (Oppgrader). Har du utstyret, bytter du rigg her gratis og med en gang.', 'The boat is rigged for one kind of fishing at a time. Fitting a hauler the first time is a yard job (Upgrade). Once the gear is aboard, you change the rig here, free and at once.') + '</p>'];
+    const cur = rigOf(), h = ['<div class="ph-c"><p class="ph-note">' + L('Båten er rigget for én type fiske om gangen. Første gang en haler monteres, er det en jobb på verftet (Oppgrader). Har du utstyret, bytter du rigg her om bord, gratis og med en gang, så lenge ingen garn, liner eller teiner står i sjøen.', 'The boat is rigged for one kind of fishing at a time. Fitting a hauler the first time is a yard job (Upgrade). Once the gear is aboard, you change the rig here, aboard, free and at once, as long as none of your nets, lines or pots are in the sea.') + '</p>'];
     const need = {juksa:L('Håndjuksa eller juksamaskin.', 'A hand jig or jigging reels.'), line:L('Linehaler eller elektrisk haler.', 'A line hauler or an electric hauler.'), garn:L('Garnhaler.', 'A net hauler.'), teiner:L('Teinehaler eller elektrisk haler.', 'A pot hauler or an electric hauler.')};
     for (const r of Object.keys(RIGS)){
       const why = r === cur ? null : rigBlock(r);
@@ -304,7 +304,8 @@ const PHONE = (() => {
   }
   // what the boat has: gear aboard and in the sea, the hold, and the boat herself
   function beholdning(){
-    const tab = sub.beholdning || 'gear', head = subs('beholdning', [['gear', 'Redskap', 'Gear'], ['last', 'Lasterom', 'Hold'], ['boat', 'Båten', 'The boat']]);
+    const tab = sub.beholdning || 'gear', head = subs('beholdning', [['gear', 'Redskap', 'Gear'], ['rigg', 'Rigg', 'Rig'], ['last', 'Lasterom', 'Hold'], ['boat', 'Båten', 'The boat']]);
+    if (tab === 'rigg') return head + rigg();
     if (tab === 'last') return head + last();
     if (tab === 'boat') return head + fartoy('min');
     return head + (S.pgear ? redskap('bord') + redskap('sjo') : '');
@@ -416,6 +417,7 @@ const PHONE = (() => {
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
     ['p90', '07.10.2026', 'Rettelser etter tilbakemeldinger', 'Fixes from your feedback', [
+      ['Du bytter nå rigg mellom juksa, line, garn og teiner om bord, i fanen «Rigg» under Beholdning, og det går an hvor som helst så lenge ingen av garnene, linene eller teinene dine står i sjøen. Du trenger ikke lenger legge til kai på verftet.', 'You now change the rig between jigging, longline, nets and pots aboard, in the «Rig» tab under Inventory, and you can do it anywhere as long as none of your nets, lines or pots are in the sea. You no longer have to go to a quay at the yard.'],
       ['Fiskemottakene heter nå bare etter stedet de ligger på, for eksempel «Mottaket i Båtsfjord». Der to mottak ligger i samme sted, får det andre siden av det første (Vardø øst). Når du velger startsted, ser du hvor mange mottak som er der og hvor mange tonn de tar imot i året.', 'The fish plants are now named only by the place they lie at, for example «The plant in Båtsfjord». Where two plants lie in the same place, the second gets its side of the first (Vardø east). When you pick a starting place you see how many plants are there and how many tonnes they take in a year.'],
       ['Når både du og mannskapet står på sløying, står nå begge på dekk: du ved bordet og en av mannskapet ved bløggekaret. Før ble du stående ved rattet mens mannskapet jobbet alene.', 'When you and the crew are both on gutting, both now stand on deck: you at the table and one hand at the bleeding tub. Before, you stayed at the wheel while the crew worked alone.'],
       ['Ligger du ved en rorbu, står båten nå ved rorbuas kai i kartet og i ruteleggingen, ikke ved fiskemottaket ved siden av. Det gjaldt alle rorbuer langs kysten.', 'Moored at a rorbu, the boat now lies at the rorbu\'s quay in the chart and when you plan a route, not at the fish plant next to it. It affected every rorbu along the coast.'],

@@ -188,7 +188,7 @@ async def main():
           S.equip.elhaler = true; R.toLine = rigSet('line'); R.line = rigOf();
           S.pgear = newPGear(); S.pgear.kits.n = 2; S.pgear.lines.hyse = {n:2, baited:2}; S.pgear.nets.push({id:'nr', mesh:156, n:5, cond:1}); S.pgear.pots.small = 5; S.pgear.bait = 5;
           R.choices = [...new Set(setChoices().map(c => c.kind))];
-          atSea(GROUNDS[2].p); R.atSea = (rigBlock('teiner') || [''])[0]; R.netRule = (gearRules('garn', {nid:'nr'}, b.pos) || [''])[0];
+          atSea(GROUNDS[2].p); R.atSea = rigBlock('teiner'); R.netRule = (gearRules('garn', {nid:'nr'}, b.pos) || [''])[0];
           R.setLine = startSet('line', {lk:'hyse', n:1}, 0); hStep(300); b.status = 'idle';
           // fishing hours with a line rig: the boat waits, no jig catch
           S.hold = []; b.status = 'fishing'; b.fishUntil = S.t + 60; for (let i = 0; i < 50; i++) step(); R.jigKg = Math.round(holdTotal() * 10) / 10; endFishing('done');
@@ -202,7 +202,7 @@ async def main():
         print('rig:', json.dumps(r, ensure_ascii=False))
         print(ok(r['def'] == 'juksa' and r['juksa'] and 'haler' in r['noHauler'] and 'passer ikke' in r['garnSkiff']), 'a new boat is rigged for jigging; line needs a hauler, and nets do not fit a skiff')
         print(ok(r['toLine'] is None and r['line'] == 'line' and r['choices'] == ['line'] and 'rigget for line' in r['netRule']), 'with the electric hauler the skiff rigs for line, and only line can be set')
-        print(ok('verftet' in r['atSea'] and r['setLine'] is None and r['jigKg'] == 0 and r['dockJig'] == 1), 'at sea the rig stays; fishing hours with a line rig catch nothing on the jig, and the Jig button is gone')
+        print(ok(r['atSea'] is None and r['setLine'] is None and r['jigKg'] == 0 and r['dockJig'] == 1), 'at sea the rig can be changed aboard when nothing is in the sea; fishing hours with a line rig catch nothing on the jig, and the Jig button is gone')
         print(ok('Trekk alt' in r['inSea'] and r['guess'] == 'teiner'), 'gear in the sea blocks re-rigging; an old save takes the rig from the gear in the sea')
         print(ok(r['page'] == 2 and 'Teiner' in r['pageOn'] and r['byTap'] == 'juksa' and 'linehaler' in r['sjarkLine']), 'the Rig page in the drawer offers what the skiff can rig (not nets) and re-rigs on a tap; a sjark needs the hydraulic line hauler')
 
