@@ -31,6 +31,8 @@ Dette er en plan, ikke bygget. Den bygger på det som finnes (`ui/10g-push.js`, 
 | Lasten er full og fisket har stoppet | Båten | 1 | 6 t | «Lasten på Havbris er full. Tid for å gå inn.» |
 | Redskap har stått lenge nok (finnes) | Fangst og båter | 1 | 6 t | som i dag |
 | Fisk går snart ned en kvalitet (finnes) | Fangst og båter | 1 | 2 t | som i dag |
+| Montering av utstyr ferdig (butikk eller verft) | Verftet | 2 | 12 t | «Ekkoloddet er montert. Havbris er klar.» |
+| Kulingvarsel mens båten er ute eller redskap står i sjøen | Båten | 1 | 6 t | «Kuling i natt. Havbris ligger ute ved Gisundet, og garnene står.» |
 | Verftsjobb ferdig (finnes); med dokka: «Klar til sjøsetting» | Verftet | 2 | 12 t | «Verftet er ferdig med skrogrensen. Havbris er klar til å gå ut.» |
 | Uthvilt i naust eller rorbu | Båten | 3 | 12 t | «Du er uthvilt. Havbris ligger klar i Finnsnes.» |
 | Turoppdrag utløper (bare antatte oppdrag), 6 spilletimer før | Båten | 3 | 6 t | «Oppdraget fra Vardø går ut i kveld.» |
@@ -39,14 +41,27 @@ Dette er en plan, ikke bygget. Den bygger på det som finnes (`ui/10g-push.js`, 
 
 Aldri: tapt innloggingsbonus, «du har ikke spilt på en stund», tilbud, nedtellinger, andre spilleres navn utover topplista, noe om haill eller kjøp.
 
-## Takten
+## Takten (revidert 07.10.2026, Jonas: «dynamisk tilnærming … 24 i døgnet så lenge de er knyttet direkte til driften»)
 
-- **Taket:** 4 varsler i døgnet per spiller, som i dag. Når flere er klare, tas laveste prioritetstall først, så eldste. Det trenger en liten SQL-endring (`pri` i `push_queue` og sortering i `push_claim`).
-- **Natt:** 22–08 som i dag, valgfritt lengre (20–10).
-- **Samling:** varsler som forfaller samtidig blir ett, som i dag. Natta samles til ett varsel kl. 08.
-- **Båter i flåten:** ett varsel per rederi, ikke ett per båt, når de forfaller samtidig.
-- **Dempere:** har spilleren latt fem varsler på rad ligge uåpnet, sender vi høyst to i døgnet til hun åpner appen igjen. Ingen mas.
-- **Ikke mens hun spiller:** planen tømmes ved retur (finnes). Et varsel som er sendt, men der spilleren åpner appen av seg selv før hun trykker, skal ikke ligge igjen.
+To grupper, to tak:
+
+- **Drift** (egen båt og eget redskap, noe spilleren selv har satt i gang): framme, lasten full, motorstopp, uthvilt, montering og verftsjobb ferdig, redskap som har stått lenge, fisk som snart blir dårligere, driftsplan som stoppet, kulingvarsel mens båten er ute eller redskap står i sjøen. **Tak etter hvor aktiv spilleren er:** 6 i døgnet som grunnlag, 12 med to økter om dagen de siste tre døgnene, opptil 24 med fire eller flere. 24 er et tak, ikke et mål. Tallene er forslag.
+- **Verden** (kvote som rammer spillerens gruppe, sesong, festival, topplista): fortsatt høyst 4 i døgnet til sammen, og de teller ikke mot driftstaket.
+- **Dempere:** fem uåpnede på rad gir høyst 2 i døgnet til hun åpner appen igjen. Taket styres av det spilleren bruker, ikke av at vi vil ha henne inn.
+- **Samling:** drift-varsler om samme båt som forfaller innen 15 minutter blir ett. Flere samtidige blir ett (som i dag).
+- **Valg for spilleren:** «Få, Normal eller Mange» i Innstillinger, som skrur driftstaket ned eller opp. Grupper kan slås av hver for seg.
+- **Natt:** 22–08 som i dag (valgfritt lengre); det som forfaller da kommer som ett «Mens du sov» kl. 08. «Varsle også om natta for båten min» er av som standard.
+- **Prioritet** når taket nås: motorstopp, så båten som venter (framme, full, ruta slutt), så redskap og fisk, så verft og montering, så uthvilt.
+- Serveren trenger: `level` i `push_subs` (få/normal/mange), `kind` ('drift' eller 'verden') og `pri` i `push_queue`, og `push_claim` som teller de to gruppene hver for seg. Antall økter siste tre døgn finnes alt i målingen (sessions).
+
+## Kystposten og verdensnytt
+
+Ingen push for vanlige artikler: det blir støy. Appen får en prikk, som i dag. Bare to typer får push:
+
+1. **Saken handler om spilleren:** «Kystposten skriver om Havbris: ukas største torsk». Sjelden og hyggelig, og kommer av noe hun har gjort. Verden-taket.
+2. **Det endrer hva hun kan gjøre i dag og gjelder hennes gruppe eller felt:** kvotestopp som rammer gruppa hennes, et felt som stenges der redskapet står.
+
+Valgfritt, av som standard: «Ukas Kystpost», ett varsel i uka. Topplista (noen gikk forbi deg) er av som standard, siden den ikke er drift.
 
 ## Eget varsel for ei rute du selv har sendt (Jonas 07.10.2026)
 
