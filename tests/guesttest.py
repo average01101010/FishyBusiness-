@@ -46,7 +46,9 @@ async def main():
         hello = [c for c in calls if c[0] == 'tm_hello']
         check(not st['gate'] and st['guest'] and st['id'] == 'g-1' and st['on'] and any(c[0] == 'signup' for c in calls) and hello and hello[0][2] == 'Bearer gtok',
               'a new player starts at once as a guest: no gate, an anonymous sign-in, and the cloud with the guest\'s token', st)
-        # 2. one landing left: a card that says so, with «Senere»
+        # 2. one landing left: a card that says so, with «Senere» (after the statistics question, which comes first and is answered here)
+        try: await pg.wait_for_selector('#cgNo', timeout=8000); await pg.click('#cgNo')
+        except Exception: pass
         await pg.evaluate("(() => { S.tut = 0; S.landN = 2; S.regAsk = 1; guestNudge(2); })()"); await pg.wait_for_selector('#modal .ob.reg', timeout=15000)
         soft = await pg.evaluate("(() => { const t = document.querySelector('#modal .ob.reg').innerText; document.getElementById('regLater').click(); return {t, closed:document.getElementById('modal').hidden}; })()")
         check('Én landing til' in soft['t'] and 'Senere' in soft['t'] and soft['closed'], 'after the second landing a card says one landing is left on Father\'s papers, and «Senere» closes it', soft['t'][:160])
