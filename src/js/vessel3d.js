@@ -474,7 +474,10 @@ const HULLPAL = [
   ['antrasitt', 'Antrasitt', 'Anthracite', [0.19, 0.21, 0.23]], ['sort', 'Sort', 'Black', [0.07, 0.08, 0.09]], ['marine', 'Marineblå', 'Navy', [0.08, 0.16, 0.3]],
   ['kobolt', 'Koboltblå', 'Cobalt', [0.1, 0.25, 0.55]], ['himmel', 'Himmelblå', 'Sky blue', [0.42, 0.62, 0.8]], ['petrol', 'Petrol', 'Petrol', [0.06, 0.32, 0.36]],
   ['flaske', 'Flaskegrønn', 'Bottle green', [0.08, 0.26, 0.16]], ['mose', 'Mosegrønn', 'Moss green', [0.32, 0.4, 0.24]], ['oksblod', 'Oksblodrød', 'Oxblood', [0.42, 0.08, 0.07]],
-  ['rod', 'Rød', 'Red', [0.7, 0.12, 0.1]], ['oransje', 'Oransje', 'Orange', [0.95, 0.42, 0.08]], ['gul', 'Gul', 'Yellow', [0.95, 0.74, 0.12]], ['oker', 'Okergul', 'Ochre', [0.78, 0.56, 0.18]]];
+  ['rod', 'Rød', 'Red', [0.7, 0.12, 0.1]], ['oransje', 'Oransje', 'Orange', [0.95, 0.42, 0.08]], ['gul', 'Gul', 'Yellow', [0.95, 0.74, 0.12]], ['oker', 'Okergul', 'Ochre', [0.78, 0.56, 0.18]],
+  // earned, not bought: «Kystfisker» comes with the third chapter of «Første uke på sjøen» (core/09f-merker.js), free to paint
+  ['kystfisker', 'Kystfisker', 'Coast fisher', [0.03, 0.29, 0.4], 'ach']];
+const palOk = x => x[4] !== 'ach' || !!(typeof S !== 'undefined' && S.ach && S.ach.colour);
 // A boat's paint (b.liv): {hull:<colour>, d:{ripe, totone, vann, stripe: <colour>, lakk:1}}; what the models take (modelLiv):
 // {hull:[r, g, b, gloss], ripe:[r, g, b], ..., lakk:true}. PAINTPRE is the paint being tried in the paint shop on the boat you are aboard.
 let PAINTPRE = null;
@@ -502,8 +505,11 @@ function livStr(b){
   if (L.flag && /^[A-Z]{2,4}$/.test(L.flag.c || '') && /^[a-z]+$/.test(L.flag.s || '')) out.push('f:' + L.flag.c + '.' + L.flag.s);
   const r = typeof regOf === 'function' && b === S.boat ? regOf(b) : b.reg; if (r && r.f) out.push('m:' + MARKENC(r.f) + '.' + r.n + '.' + MARKENC(r.k));   // the registration mark (core/06b-coastports.js)
   const lg = typeof S !== 'undefined' && b === S.boat && S.logo && COSOWN('logo') ? logoStr(S.logo) : ''; if (lg) out.push('l:' + lg);   // the company's logo (all its boats)
+  const pn = typeof S !== 'undefined' && b === S.boat && S.ach && S.ach.pen ? Math.min(3, S.ach.pen | 0) : 0; if (pn) out.push('p:' + pn);   // the week's pennants (core/09f-merker.js)
   return out.join(';');
 }
+// another player's pennants from her paint code ('p:2'): the chapters of «Første uke på sjøen» she has finished
+function livPen(s){ const m = /(?:^|;)p:([1-3])(?:;|$)/.exec(String(s || '')); return m ? +m[1] : 0; }
 // another player's registration mark from her paint code ('m:T.112.LK'), as text
 function livMark(s){ const m = /(?:^|;)m:([A-Z0-9]{1,3})\.(\d{1,4})\.([A-Z0-9]{1,3})(?:;|$)/.exec(String(s || '')); return m ? MARKDEC(m[1]) + '-' + m[2] + '-' + MARKDEC(m[3]) : ''; }
 function livParse(s){

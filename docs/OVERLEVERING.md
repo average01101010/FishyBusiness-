@@ -1111,6 +1111,8 @@ Jonas' bestilling ligger i `docs/engasjement.md`, arbeidslista punkt 1. Alle sek
   - Formene er rektangel, vimpel (strukket 1,7 × 0,8) og splitt. Det norske splittflagget er statsflagget og tilbys ikke (lov om Norges flagg).
   - Norge i rektangel er gratis og det båten kommer med. Alle nasjoner og former er ett kjøp: `des_flagg`, 19 kr, `S.cos.flagg`.
   - Flagget lagres i `b.liv.flag = {c, s}` og går til de andre som `f:SE.vimpel`. Andre spilleres flagg tegnes ikke ennå.
+  - **Flaggtidene** (`flagUp(H, p)` i `core/03-simulation.js`, Jonas 07.10.2026): flagget er oppe fra kl. 08 (mars–oktober) eller kl. 09 (november–februar) til solnedgang, senest kl. 21. I Nordland, Troms og Finnmark (nord for 65° N) er det oppe kl. 10–15 fra november til februar. Det følger flaggforskriften fra 1927, som gjelder offentlig flagging. Malerverkstedet viser flagget uansett tid. Vimpelen (4.25) har ingen tider og henger oppe døgnet rundt.
+  - Usikkert: noen kilder om flaggskikk til sjøs sier at flagget kan føres hele døgnet under fart. Det har vi ikke kunnet bekrefte i en primærkilde, så spillet bruker de samme tidene til sjøs og i havn.
 - **Registreringsmerke** (steg 5, 07.10.2026):
   - Merket består av fylkets bokstaver, et løpenummer og kommunens bokstaver, malt på begge sider nær stevnen (ervervstillatelsesforskriften §§ 22–23).
   - Bokstavene hentes fra `src/data/regmerke.json` (`tools/regmerke/regmerke.py`). For hver av 193 kystkommuner er det bokstavene de fleste av kommunens fartøy har i Fiskeridirektoratets sluttsedler, og løpenumrene som er i bruk.
@@ -1191,7 +1193,49 @@ Jonas' avgjørelser står i `docs/engasjement.md`, arbeidslista punkt 1. Dette e
     - `cloudtest`: fartstiden går opp, eier og fartstid står på AIS-kortet, serveren uten fartstid, ingen skjuling, og det påkrevde brukernavnet (hentes, spørres om uten vei rundt, tatt bort).
     - `guesttest`: registreringen krever et ledig brukernavn.
     - `sqltest`: gjester skjult på AIS og topplista, eier og fartstid, kontrollen av fartstiden, `pos_off` borte.
-- **Neste:** achievements («Første uke på sjøen»).
+- **Neste:** achievements («Første uke på sjøen»), se 4.25.
+
+### 4.25 Merker: «Første uke på sjøen» og de langsiktige merkene (07.10.2026)
+
+Jonas' avgjørelser står i `docs/engasjement.md`, arbeidslista punkt 1.5 og 3. Milepælene er kalibrert etter når de to første spillerne som leverte, gjorde ting. Ingen av dem hadde prøvd garn eller line, eller levert til et annet mottak, før dag 3. Ingen hadde levert over 100 000 kr på én gang.
+
+- **Kjernen** (`core/09f-merker.js`, `S.ach = {d, g, ch, l, c, sp, peers, owe, seed, best, pen, colour}`):
+  - `ACH` har 21 milepæler i tre kapitler, `ACH_CH`: «Fars båt» (første timer), «Egen skipper» (dag 1–2) og «Kjent på kysten» (resten av uka).
+  - Hver milepæl er en funksjon `p()` av tilstanden. Den gir `true` eller `[har, trenger]`.
+  - Noen bruker tellere i `S.ach.c`, som `achAdd` setter fra spillet: `sleep` (`restStart`, `fallAsleep`), `equip` (utstyr og redskap kjøpt), `crew` (hyret), `boat` (kjøpt), `haul` (`gearBack`), `storm` (en tur i kuling, Beaufort 6 og mer, hjem uten slep, `achTripEnd` fra `tatTripEnd`), `big` (torsk over 9 kg, `achCatch` i `addCatch`) og `night`.
+  - To er skjulte, «???» med et hint: første uvær og storfisken.
+  - `achCheck` går hvert tiende spilleminutt (`achMinute` i `step`), ved salg (`achSale` i `sell`), ved turens slutt, når båten tas over og når Merker-appen åpnes.
+- **Kapitlene:** et kapittel åpner det neste når fem av sju er tatt (`ACH_OPEN`), så ingen står fast på én de ikke vil ta.
+  - Milepæler som er nådd i et kapittel som ikke er åpent, er krysset av når kapittelet åpnes, og gavene kommer da.
+  - Når alle sju er tatt, kommer belønningen (`achChapter`) og en melding fra Kystposten:
+    - **Kapittel 1:** vimpelen (`pen` = 1).
+    - **Kapittel 2:** lengre vimpel (`pen` = 2) og en vanlig haill.
+    - **Kapittel 3:** enda lengre vimpel (`pen` = 3) og skrogfargen «Kystfisker» (`HULLPAL` med merket `ach`, `palOk`, gratis å male).
+  - Vimpelen går i malingskoden til de andre (`p:N` i `livStr`, `livPen` i `vessel3d.js`). AIS-kortet nevner den ikke (Jonas 07.10.2026).
+  - Den er den norske vimpelen (Jonas 07.10.2026): rød og spiss, med korsets hvite og blå på langs ut til tuppen (`penTex` i `view3d.js`, `.ach-pen` i `styles.css`).
+  - Den henger fra mastetoppen (`mastTop`: høyeste lanterne + 0,3 m, når den er over flaggstanga) på flaggets klut (`FLAGM`), som blafrer med den tilsynelatende vinden. Båter uten mast, som trebåten, har ingen vimpel, bare flagget (Jonas 07.10.2026: «ser jo teit ut med 2 flagg på hverandre»).
+  - Kapitlet vises bare med lengden: omtrent 1,7, 2 og 2,4 m (`PEN_S`). `tests/penshot.py` tar bilder fra siden i frisk bris.
+- **Gavene («drypp»)** gis ved `achGive`:
+  - **Trekningen:** `achPool(skala)` gir det som passer nå: agn bare med line eller teiner, bøting bare med garn som er slitt, skrogrens bare når båten er begrodd, motorservice når den er over 30 % av intervallet, is og diesel når det er plass. Så kommer penger.
+  - **Nivåene:** 7 av 10 vanlige, 2 av 10 gode (full tank, bøting, skrogrens, service, 5 000–10 000 kr), 1 av 10 sjeldne (utstyr som båten ikke har, montert gratis av verkstedet, eller 15 000–25 000 kr).
+  - **Skala:** ×1, ×1,5 og ×2,5 per kapittel, og ×3 for de langsiktige merkene.
+  - **Trekningen er fast per spill** (`achRnd`, hash av `S.ach.seed` og milepælen). Gaven gis og lagres med en gang, så en omlasting gir ikke ny trekning.
+  - **Under første tur** (`tutOn`) venter gavene i `S.ach.owe` og kommer når turen er over.
+- **De langsiktige merkene** (`ACHL`) har trinn, og hvert trinn gir en gave. Merkene er største levering (100 000 kr til 1 million), levert i alt (10 til 1000 t), fartstid (10 til 40 år), mottak, arter, nautiske mil, nattfiske, fars merker og andre spillere møtt på sjøen.
+- **Et spill som er spilt før** (`achSeed`) blir krysset av for det det har gjort, og får ukas gaver. De langsiktige merkene starter der spillet er, uten gaver for det som alt er gjort.
+- **Første slep og første reparasjon er gratis** (`freeFirst` i `rescue` og `hullRepair`). Ved første slep får spilleren beholde fangsten, også ved nødanrop. En melding forklarer hvordan det kan unngås, og hva det koster neste gang.
+- **Det spilleren ser** (`ui/05e-merker.js`):
+  - Et banner øverst med milepælen og gaven. Det tar ikke imot trykk, og spillet går videre under det.
+  - Et kort når et kapittel er fullført.
+  - Ett samlet kort når mange kommer på en gang, som for et spill som er spilt før.
+  - Merker-appen har tre faner: «Første uke», «Merker» (med fartstiden) og «Tatoveringer» (flyttet fra Sjømann). Sjømann har nå «Fra gamle dager» og «Papirer».
+  - Brikka på hjemskjermen viser «Første uke n / 21» og nærmeste milepæl, til kapittel 3 er fullført.
+- **I testene** (`#notut`) gis ingen gaver eller bannere uten `window.__achOn`.
+- **Trakten** i admin-fanen «Merker» viser hvor mange som nådde hver milepæl, og kapitlene som er fullført. Kilden er spillets hendelser `ach` og `ach_ch`, så bare spillere som deler statistikk telles. `admin_ach` ligger i `supabase/migrations/20261007140000_ach.sql`.
+- **Tester:**
+  - `merketest`: alt over.
+  - `sqltest`: trakten.
+  - `towtest`: slepet med betaling (`S.free` satt).
 
 ## 5. Systemer i spillet
 

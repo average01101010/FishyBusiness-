@@ -15,6 +15,7 @@ async def main():
         r = await pg.evaluate("""(()=>{
           const R = {}, q = s => document.querySelector(s), view = () => document.getElementById('phView').innerText;
           S.tut = 0; S.cash = 500000; S.t = Math.round((Date.UTC(2027, 5, 7, 10) - EPOCH) / 6e4);
+          S.boatName = 'Havbris'; delete S.unnamed;   // a new game's boat is nameless until named (08-actions.js boatUnnamed)
           const v1 = curVessel(), v2 = newVesselObj('snekke', 'husoy');
           // something to report on each vessel
           S.boat.engH = 150; S.boat.svcAt = 0;

@@ -49,8 +49,8 @@ async def main():
               'the report counts up what was landed, fills the bar to a new year, and shows the landing, the best landing and eight hours rested', r)
         q = await pg.evaluate("""(() => { const m = document.getElementById('modal'); m.hidden = true; S.t += 2; awayStart(20, 120000); awayEnd(); return {shown:!m.hidden}; })()""")
         check(not q['shown'], 'a short absence with nothing landed and no new year shows no report', q)
-        h = await pg.evaluate("""(() => { PHONE.show(true); PHONE.open('home'); const t = document.getElementById('phView').innerText; PHONE.open('sjomann'); const s = document.getElementById('phView').innerText; PHONE.show(false); return {home:t, sjo:s.slice(0, 300)}; })()""")
-        check('år og' in h['home'] and 'døgn fartstid' in h['home'] and 'Fartstid tjenes om bord' in h['sjo'], "the phone's home shows the years and days, and the Sjømann app explains how sea time is earned", h['home'][:200])
+        h = await pg.evaluate("""(() => { PHONE.show(true); PHONE.open('home'); const t = document.getElementById('phView').innerText; PHONE.open('merker'); PHONE.dact('merker', 'sub', {s:'merker'}); PHONE.render(); const s = document.getElementById('phView').innerText; PHONE.show(false); return {home:t, sjo:s.slice(0, 300)}; })()""")
+        check('år og' in h['home'] and 'døgn fartstid' in h['home'] and 'Fartstid tjenes om bord' in h['sjo'], "the phone's home shows the years and days, and the Merker app explains how sea time is earned", h['home'][:200])
         check(errs == [], 'sidefeil', errs)
         await br.close()
 

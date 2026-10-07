@@ -507,6 +507,15 @@ def main():
                  and [r['boat'] for r in V['topB']['rows']] == ['Fjordbris'] and V['topB']['n'] == 1),
               "seen by the others: an account's boat comes with the owner's name and sea time, a guest's only to the guest (on the AIS and the leaderboard); the sea time starts as reported, grows at most 5 000 an hour and never falls",
               V)
+        # the badges' funnel (20261007140000_ach.sql): the milestones reached and the chapters finished, by player, for the admin only
+        for who, ev in ((B, '{"id":"took","ch":0}'), (B, '{"id":"fish","ch":0}'), (C, '{"id":"took","ch":0}')):
+            sql("insert into public.events (player_id, kind, data) values ('%s', 'ach', '%s')" % (who['sub'], ev))
+        sql("insert into public.events (player_id, kind, data) values ('%s', 'ach', '{\"id\":\"took\",\"ch\":0}')" % B['sub'])
+        sql("insert into public.events (player_id, kind, data) values ('%s', 'ach_ch', '{\"ch\":0}')" % B['sub'])
+        AC = {'pl': sql("select public.admin_ach()", B, 'authenticated', expect_err=True), 'mfa': sql("select public.admin_ach()", AD1, 'authenticated', expect_err=True),
+              'r': json.loads(sql("select public.admin_ach()", AD2, 'authenticated'))}
+        print(ok(AC['pl'][0] and AC['mfa'][0] and AC['r']['ms'].get('took') == 2 and AC['r']['ms'].get('fish') == 1 and AC['r']['ch'].get('0') == 1 and isinstance(AC['r']['players'], int)),
+              "the badges' funnel: each milestone counted once per player, the chapters finished; only the admin with MFA reads it", AC['r'])
     finally:
         run(*as_pg([os.path.join(BIN, 'pg_ctl'), '-D', data, '-m', 'immediate', 'stop']))
         shutil.rmtree(tmp, ignore_errors=True)

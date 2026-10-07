@@ -242,6 +242,7 @@ function step(){
   if (S.t % 60 === 0) seasonDay(H);   // the seasons' news and the skrei festival (09c-seasons.js)
   folkPort(H);                        // Edvard on the quay in the home harbour (09d-folk.js)
   eachVessel(() => vesselStep(H));
+  achMinute();                        // the badges: rough weather, night fishing, players met (09f-merker.js)
   fsMinute();                         // sea time with you aboard (09e-fartstid.js)
 }
 // one vessel's minute: the catch keeps, the yard works, plans start, and the boat sails or fishes
@@ -440,6 +441,7 @@ function endFishing(why){
 function addCatch(sp, kg, cls, hook, opt){
   if (cls == null) cls = SPECIES[sp].ref;
   festCatch(sp, kg);   // the skrei festival's biggest cod (09c-seasons.js)
+  achCatch(sp, cls);   // «Storfisken» (09f-merker.js)
   const bled = true, iced = false, gut = false, hr = Math.floor(S.t / 60), start = opt && opt.fresh != null ? opt.fresh : 100; hook = hook !== false;
   let x = S.hold.find(h => h.sp === sp && h.cls === cls && h.bled === bled && h.iced === iced && h.hr === hr && !!h.gut === gut && h.hook === hook);
   if (!x){ x = {sp, cls, kg:0, n:0, bled, iced, hr, fresh:start, gut, hook}; S.hold.push(x); }
@@ -511,7 +513,9 @@ function risk(W, hs){
     if (lvl === 2) rescue(false); else log('Kraftig rulling, men ingen skade.', 'Heavy rolling, but no damage.');
   }
 }
-function hullRepair(){ const b = S.boat; if (!b.damage) return; b.damage = 0; const cost = Math.round(VESSELS[b.type].price * 0.035); S.cash -= cost; S.stats.costs += cost; queueJob({kind:'repair', h:8, no:'Reparasjon av skroget', en:'Hull repair'}); msg('Verkstedet', 'Skroget har fått skader etter grunnstøtingen. Reparasjonen koster ' + cost + ' kr og tar 8 timer.', 'The hull was damaged when you ran aground. The repair costs NOK ' + cost + ' and takes 8 hours.'); }
+function hullRepair(){ const b = S.boat; if (!b.damage) return; b.damage = 0; const full = Math.round(VESSELS[b.type].price * 0.035), first = freeFirst('rep'), cost = first ? 0 : full; S.cash -= cost; S.stats.costs += cost; queueJob({kind:'repair', h:8, no:'Reparasjon av skroget', en:'Hull repair'});
+  if (first) msg('Verkstedet', 'Skroget har fått skader etter grunnstøtingen. Den første reparasjonen tar vi gratis, den tar 8 timer. Neste gang koster den ' + full + ' kr. Følg dybdene i kartet og hold avstand til skjær og grunner.', 'The hull was damaged when you ran aground. The first repair is on us; it takes 8 hours. Next time it costs NOK ' + full + '. Watch the depths on the chart and keep clear of rocks and shoals.');
+  else msg('Verkstedet', 'Skroget har fått skader etter grunnstøtingen. Reparasjonen koster ' + cost + ' kr og tar 8 timer.', 'The hull was damaged when you ran aground. The repair costs NOK ' + cost + ' and takes 8 hours.'); }
 function svcOverdue(){ const b = S.boat; return Math.max(0, ((b.engH || 0) - (b.svcAt || 0)) / BOAT.svcH - 1); }
 // ---------- the rescue boat (plan E3, 05.10.2026) ----------
 // It is called out from the nearest rescue station (the nearest harbour beyond 60 km of one), musters in TOW.muster minutes, comes at 25
@@ -528,7 +532,11 @@ function rescueBase(p){
 }
 function rescue(keepCatch){
   if (S.boat.gop) gopAbort('return');
-  const b = S.boat, port = nearestPort(b.pos), base = rescueBase(b.pos), fee = S.member ? 0 : keepCatch ? PRICE.tow : PRICE.rescue;
+  // the first is free, with the catch kept (core/09f-merker.js freeFirst; Jonas 07.10.2026: learn without the consequences)
+  const first = !S.member && freeFirst('tow'); if (first) keepCatch = true;
+  const b = S.boat, port = nearestPort(b.pos), base = rescueBase(b.pos), fee = S.member || first ? 0 : keepCatch ? PRICE.tow : PRICE.rescue;
+  if (first) msg('Redningsselskapet', 'Det første slepet er gratis, og fangsten får du beholde. Neste gang koster et slep ' + kr(PRICE.tow) + ', og et nødanrop i farlig sjø ' + kr(PRICE.rescue) + ' og fangsten. Hold øye med dieselen og værmeldingen. Som medlem slipper du å betale.',
+    'The first tow is free, and you keep the catch. Next time a tow costs ' + kr(PRICE.tow) + ', and a distress call in dangerous seas ' + kr(PRICE.rescue) + ' and the catch. Keep an eye on the diesel and the forecast. Members pay nothing.');
   S.cash -= fee; S.stats.costs += fee;
   let lost = 0; if (!keepCatch){ lost = Math.round(holdTotal()); S.hold = []; }
   b.prev = null; b.tripBad = true; if (meAboard()){ tatAdd('rescued', 1); checkTattoos(); }

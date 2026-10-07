@@ -49,11 +49,11 @@ var PAINT = (() => {
     if (b.status !== 'port') return '<div class="ph-c"><p class="ph-note">' + L('Båten må ligge i havn for å males.', 'The boat must be in port to be painted.') + '</p></div>';
     const c = cur(b), s = pre.hull || 'orig', e = HULLPAL.find(x => x[0] === s) || HULLPAL[0], free = !(b.liv && b.liv.hull), pr = price(b);
     const fCh = flagCh(b, pre) && flagOk(pre), lgCh = pre.logo !== undefined && owned('logo') && logoStr(pre.logo) !== logoStr(S.logo);
-    const hullCh = s !== c, dCh = DESIGNS.some(k => owned(k) && (pre.d[k] || null) !== curD(b, k)) || fCh || lgCh, cost = hullCh && !free ? pr : 0, short = cost > S.cash;
+    const hullCh = s !== c, dCh = DESIGNS.some(k => owned(k) && (pre.d[k] || null) !== curD(b, k)) || fCh || lgCh, cost = hullCh && !free && e[4] !== 'ach' ? pr : 0, short = cost > S.cash;
     const tried = DESIGNS.filter(k => !owned(k) && pre.d[k] && designFits(b.type, k)).concat(!flagOk(pre) ? ['flagg'] : []).concat(!owned('logo') && pre.logo ? ['logo'] : []);
     const h = ['<div class="ph-c"><div class="ph-card"><h4>' + L('Skrogfarge', 'Hull colour') + '</h4>' +
       '<p class="ph-note">' + L('Trykk på en farge, så vises den på skroget. Du betaler først når du maler.', 'Tap a colour and it shows on the hull. You pay only when you paint.') + '</p>' +
-      '<div class="pnt-pal">' + HULLPAL.map(x => sw('pntsel', '', x[0], s, c, x)).join('') + '</div>' +
+      '<div class="pnt-pal">' + HULLPAL.filter(palOk).map(x => sw('pntsel', '', x[0], s, c, x)).join('') + '</div>' +
       '<p class="pnt-name"><b>' + L(e[1], e[2]) + '</b>' + (s === c ? ' · ' + L('nå', 'now') : '') + '</p>' +
       '<p class="ph-note">' + (free ? L('Første fargevalg på denne båten er gratis.', 'The first choice of colour on this boat is free.') :
         L('Å male skroget koster ' + kr(pr) + ' for ' + (S.boatName || 'båten') + '.', 'Painting the hull costs ' + kr(pr) + ' for ' + (S.boatName || 'the boat') + '.')) + '</p></div>'];
@@ -64,7 +64,7 @@ var PAINT = (() => {
       for (const k of ks){ const N = DNAME[k], v = pre.d[k] || null, has = owned(k);
         h.push('<div class="ph-card pnt-d"><h4>' + L(N[0], N[1]) + '<span class="pnt-own">' + (has ? L('Din', 'Yours') : realKr(DNOK)) + '</span></h4><p class="ph-note">' + L(N[2], N[3]) + '</p>' +
           (k === 'lakk' ? '<div class="pnt-row"><button class="ph-btn sm' + (v ? ' on' : '') + '" data-pa="pntd" data-d="lakk" data-k="' + (v ? '' : '1') + '">' + (v ? L('På', 'On') : L('Prøv', 'Try')) + '</button></div>'
-            : '<div class="pnt-pal sm">' + HULLPAL.filter(x => x[3]).map(x => sw('pntd', k, x[0], v, curD(b, k), x)).join('') +
+            : '<div class="pnt-pal sm">' + HULLPAL.filter(x => x[3] && palOk(x)).map(x => sw('pntd', k, x[0], v, curD(b, k), x)).join('') +
               '<button class="pnt-sw off' + (v ? '' : ' on') + '" data-pa="pntd" data-d="' + k + '" data-k="" title="' + L('Av', 'Off') + '" aria-label="' + L('Av', 'Off') + '">' + L('Av', 'Off') + '</button></div>') +
           (!has && v ? '<button class="ph-btn" data-pa="pntbuy" data-d="' + k + '">' + shopLabel(DNOK) + '</button>' + shopFine() : '') + '</div>'); }
     }
@@ -85,7 +85,7 @@ var PAINT = (() => {
         '<button class="ph-btn sm" data-pa="pntreg">' + (has ? L('Bruk nummeret', 'Use the number') : shopLabel(nok('reg'))) + '</button></div>' + (has ? '' : shopFine()) + '</div>'); }
     // the company logo (all the company's boats): made, or a picture of one's own; shown to the others, so the admin may take it away
     { const has = owned('logo'), lg = pre.logo !== undefined ? pre.logo : S.logo, N = DNAME.logo, g = lg && lg.kind === 'g' ? lg : {kind:'g', sym:'anker', txt:initials(), c1:'marine', c2:'hvit'};
-      const pal = (d, now) => '<div class="pnt-pal sm">' + HULLPAL.filter(x => x[3]).map(x => sw('pntlgc', d, x[0], now, null, x)).join('') + '</div>';
+      const pal = (d, now) => '<div class="pnt-pal sm">' + HULLPAL.filter(x => x[3] && palOk(x)).map(x => sw('pntlgc', d, x[0], now, null, x)).join('') + '</div>';
       h.push('<div class="ph-card pnt-d"><h4>' + L(N[0], N[1]) + '<span class="pnt-own">' + (has ? L('Din', 'Yours') : realKr(nok('logo'))) + '</span></h4><p class="ph-note">' + L(N[2], N[3]) + '</p>' +
         '<div class="pnt-logos">' + Object.keys(LOGOSYM).map(k => '<button class="pnt-lg' + (lg && lg.kind === 'g' && lg.sym === k ? ' on' : '') + '" data-pa="pntlg" data-k="' + k + '" title="' + L(LGNAME[k][0], LGNAME[k][1]) + '" aria-label="' + L(LGNAME[k][0], LGNAME[k][1]) + '"><img alt="" src="' + logoPic(Object.assign({}, g, {sym:k})) + '"></button>').join('') + '</div>' +
         '<div class="pnt-row"><input id="pntLogoTxt" class="pnt-num" maxlength="3" value="' + esc(g.txt || '') + '" aria-label="' + L('Bokstaver', 'Letters') + '"> <button class="ph-btn sm" data-pa="pntlgt">' + L('Bruk bokstavene', 'Use the letters') + '</button></div>' +
@@ -111,7 +111,7 @@ var PAINT = (() => {
   }
   function act(a, d){
     const b = S.boat; if (!pre) pre = copy(b.liv);
-    if (a === 'pntsel'){ if (!HULLPAL.some(x => x[0] === d.k)) return false; pre.hull = d.k; PAINTPRE = pre; return true; }
+    if (a === 'pntsel'){ if (!HULLPAL.some(x => x[0] === d.k && palOk(x))) return false; pre.hull = d.k; PAINTPRE = pre; return true; }
     if (a === 'pntd'){ const k = d.d; if (!DESIGNS.includes(k)) return false;
       if (!d.k) delete pre.d[k]; else if (k === 'lakk') pre.d[k] = 1; else if (HULLPAL.some(x => x[0] === d.k && x[3])) pre.d[k] = d.k; else return false;
       PAINTPRE = pre; return true; }
@@ -134,7 +134,7 @@ var PAINT = (() => {
       payBuy('des_' + k, () => { giveCos(k); const was = pre; pre = copy(S.boat.liv); if (k === 'logo' && was && flagOf(was).code === 'LOGO') pre.flag = was.flag; PAINTPRE = pre; if (typeof DOCK !== 'undefined'){ DOCK.render(); DOCK.redraw(); } });
       return true; }
     if (a === 'pntgo'){
-      if (b.status !== 'port') return false; const s = pre.hull || 'orig', free = !(b.liv && b.liv.hull), cost = s !== cur(b) && !free ? price(b) : 0; if (cost > S.cash) return false;
+      if (b.status !== 'port') return false; const s = pre.hull || 'orig', free = !(b.liv && b.liv.hull) || (HULLPAL.find(x => x[0] === s) || [])[4] === 'ach', cost = s !== cur(b) && !free ? price(b) : 0; if (cost > S.cash) return false;
       const was = cur(b); if (cost){ S.cash -= cost; S.stats.costs += cost; }
       apply(b); pre = copy(b.liv); PAINTPRE = pre;
       if (s !== was){ const e = HULLPAL.find(x => x[0] === s);

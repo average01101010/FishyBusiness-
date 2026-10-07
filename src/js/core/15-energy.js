@@ -45,7 +45,7 @@ function restStart(){
     S.cash -= RORBU.kr; S.stats.costs += RORBU.kr;
     log('Du tok inn på rorbua i ' + pt.name + ' for ' + kr(RORBU.kr) + ' natta.', 'You took a room at the rorbu in ' + pt.name + ' for ' + kr(RORBU.kr) + ' a night.');
   } else log('Du gikk opp i naustet for å hvile.', 'You went up to the boathouse to rest.');
-  S.rest = {port:b.port, w, t0:S.t, paid:S.t + RORBU.night};
+  S.rest = {port:b.port, w, t0:S.t, paid:S.t + RORBU.night}; achAdd('sleep');
   if (hooks.onEnergy) hooks.onEnergy('rest');
   return null;
 }
@@ -84,7 +84,7 @@ function energyMinute(){
   if (S.energy <= 0) fallAsleep(v);
 }
 function fallAsleep(v, doze){
-  S.sleep = {t0:S.t, until:S.t + ENERGY.sleep, v:v.id};
+  S.sleep = {t0:S.t, until:S.t + ENERGY.sleep, v:v.id}; achAdd('sleep');
   onVessel(v, () => {
     const on = crewAboard(), b = S.boat; S.sleep.alone = !on.length;
     if (S.equip && S.equip.brovakt && b.status !== 'port') S.sleep.alarmAt = S.t + BNWAS.after;

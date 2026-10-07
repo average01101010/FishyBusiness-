@@ -276,6 +276,7 @@ function gearBack(s, n, cond){
   if (s.kind === 'garn'){ if (n > 0) pg.nets.push({id:s.lid && !pg.nets.some(l => l.id === s.lid) ? s.lid : gid('n'), mesh:s.mesh, n, cond:cond != null ? cond : s.cond}); }
   else if (s.kind === 'line') pg.lines[s.lk].n += n;
   else pg.pots[s.pot] += n;
+  if (n > 0 && (s.kind === 'garn' || s.kind === 'line')) achAdd('haul');   // «Garn eller line satt og trukket» (09f-merker.js)
 }
 // wear on a string of nets from one haul: more with a heavy catch, crab in the net, rough sea and long soaks; a worn net can go to pieces
 function wearNets(s, g){

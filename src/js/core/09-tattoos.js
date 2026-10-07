@@ -31,12 +31,12 @@ function tatTripEnd(pid){
   const b = S.boat; if (!b.tripMe) return; b.tripMe = false;
   if (!b.tripBad) tatAdd('safe', 1);
   if (BOAT.crewMax >= 1 && crewAboard().length >= BOAT.crewMax) tatAdd('full', 1);
-  checkTattoos();
+  checkTattoos(); achTripEnd(b.tripBad);   // a gale weathered (09f-merker.js)
 }
 function tatLanding(pid){ if (!meAboard()) return; S.tat = S.tat || {}; S.tat.plant = S.tat.plant || {}; S.tat.plant[pid] = (S.tat.plant[pid] || 0) + 1; }
-// hand them out: a message, and the tattoo shows on the figure in the Seaman app
+// hand them out: a message, and the tattoo shows in the Merker app (ui/05e-merker.js)
 function checkTattoos(){
   S.tattoos = S.tattoos || {}; const c = tatCounts();
   for (const T of TATS){ if (T.lock || S.tattoos[T.id]) continue; const [have, need] = T.p(c); if (have < need) continue;
-    S.tattoos[T.id] = S.t; msg('Sjømann', 'Du har gjort deg fortjent til en ny tatovering: ' + T.n[0].toLowerCase() + '. ' + T.m[0] + ' Se den i Sjømann-appen.', 'You have earned a new tattoo: ' + T.n[1].toLowerCase() + '. ' + T.m[1] + ' See it in the Seaman app.'); }
+    S.tattoos[T.id] = S.t; msg('Sjømann', 'Du har gjort deg fortjent til en ny tatovering: ' + T.n[0].toLowerCase() + '. ' + T.m[0] + ' Se den i Merker-appen.', 'You have earned a new tattoo: ' + T.n[1].toLowerCase() + '. ' + T.m[1] + ' See it in the Badges app.'); }
 }

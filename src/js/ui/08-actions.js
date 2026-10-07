@@ -179,7 +179,8 @@ function sell(){
   if (meAboard()) fmLand(total);
   fsLand(total);   // sea time for the landing (core/09e-fartstid.js)
   nameNudge();     // naming the boat without the cloud, after the second landing (ui/10f-cloud.js)
-  S.landN = (S.landN || 0) + 1;   // the landings, for a guest's papers (ui/10f-cloud.js: registering after the third)
+  S.landN = (S.landN || 0) + 1;   // the landings, for a guest's papers (ui/10f-cloud.js: registering after the second)
+  achSale(total, Object.values(lines).map(r => r.sp));   // the badges (core/09f-merker.js)
   S.cash += net - lott - coopKr; S.stats.revenue += total; S.stats.costs += tk.sum + lott + coopKr;
   if (coopKr > 0) log(S.lic.coop.name + ' fikk ' + kr(coopKr) + ' for torsken på kvoten hans.', S.lic.coop.name + ' got ' + kr(coopKr) + ' for the cod on his quota.'); S.stats.kg += kg; S.hold = [];
   const fs = S.marks.length ? S.marks[S.marks.length - 1] : null, field = fieldCode(S.fsess || fs || b.pos);
@@ -235,7 +236,7 @@ function showIntro(namesOnly){
     '<div class="btns"><button class="btn primary" data-close id="obGo">' + L('Ta over båten', 'Take over the boat') + '</button></div></div>');
   $('obGo').addEventListener('click', () => {
     if (!S.intro){ S.tut = NOTUT ? 0 : tutNew(); log('Tok over båten etter far.', 'Took over Father\'s boat.'); }
-    S.intro = true; save(); refreshAll();
+    S.intro = true; save(); refreshAll(); achCheck();   // «Tok over båten» (core/09f-merker.js)
   });
 }
 // ---------- «Mens du var borte» (Jonas 07.10.2026: «en følelse av instant-belønning») ----------

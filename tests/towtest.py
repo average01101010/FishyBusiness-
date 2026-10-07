@@ -8,7 +8,7 @@ from playwright.async_api import async_playwright
 ok = lambda c: 'OK  ' if c else 'FEIL'
 
 RUN = """async (mode) => {
-  S.tut = 0; S.cash = 1e6; S.member = false; S.settings.autoOn = false; S.t = Math.round((Date.UTC(2027, 5, 9, 8) - EPOCH) / 6e4);
+  S.tut = 0; S.cash = 1e6; S.member = false; S.settings.autoOn = false; S.free = {tow:1, rep:1};   // the first tow and repair are free (core/09f-merker.js; merketest) S.t = Math.round((Date.UTC(2027, 5, 9, 8) - EPOCH) / 6e4);
   const b = S.boat, q = portById('finnsnes'), lq = LGI(q.p), W = LG(lq.x - 1.5, lq.y + 0.3);
   b.status = 'idle'; b.port = null; b.pos = {...W}; S.plan = null; S.hold = [{sp:'torsk', kg:120, fresh:10, bled:true, iced:true, c:1, g:'A'}];
   if (mode === 'aground'){ let p = null; for (let r = 0.05; r < 2 && !p; r += 0.05) for (let k = 0; k < 24 && !p; k++){ const a = k / 24 * 6.283, c = {x:W.x + Math.sin(a) * r, y:W.y - Math.cos(a) * r}; if (isLand(c)) p = c; } runAground(p); }

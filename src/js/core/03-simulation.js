@@ -199,6 +199,14 @@ function sunTimes(H, p){
   for (let m = 5; m <= 24 * 60; m += 5){ const e = sunAt(d0 + m / 60, p).el; maxEl = Math.max(maxEl, e); minEl = Math.min(minEl, e); if (prev < -0.83 && e >= -0.83 && up === null) up = d0 + m / 60; if (prev >= -0.83 && e < -0.83 && dn === null) dn = d0 + m / 60; prev = e; }
   return {up, dn, always:minEl > -0.83, never:maxEl < -0.83};
 }
+// the ensign's hours (flaggforskriften, 1927: hoisted at 08 from March to October and at 09 from November to February, lowered at sunset
+// and at 21 at the latest; in Nordland, Troms and Finnmark from 10 to 15 from November to February). The pennant has no hours: it flies
+// day and night, the year round (Jonas 07.10.2026)
+function flagUp(H, p){
+  p = p || herePos(); const m = gDate(H).getUTCMonth(), h = hodOf(H), winter = m >= 10 || m <= 1;
+  if (winter && LL(p).lat > 65) return h >= 10 && h < 15;
+  return h >= (winter ? 9 : 8) && h < 21 && !(h >= 12 && sunAt(H, p).el < -0.83);
+}
 // ---------- tide: harmonic prediction per place (phase K10 of the coast plan) ----------
 // tools/tide/fetch.py fits the constants to Kartverket's prediction for a year at a sea point of each coast tile (data/tide.json:
 // x, y, the mean sea level above chart datum zc, and amplitude (m) and phase (degrees) of M2, S2, N2, K2, K1 and O1). At a place the

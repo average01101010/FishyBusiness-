@@ -32,7 +32,7 @@ async def main():
           // the four that need other waters stay locked
           S.tat.nm = 1e6; checkTattoos(); R.locked = ['anker', 'skilpadde', 'hula', 'neptun'].every(id => !S.tattoos[id]);
           R.msgs = S.msgs.slice(m0).filter(m => m.from === 'Sjømann').length; R.earned = Object.keys(S.tattoos).length;
-          PHONE.open('sjomann'); const v = document.querySelector('.ph-appv'); R.app = {svg:v.querySelectorAll('svg[viewBox="-32 -32 64 64"]').length, onFig:v.querySelectorAll('.ph-tatfig [data-tat]').length, inked:v.querySelectorAll('.ph-tatfig [data-tat]:not([opacity])').length, text:v.innerText.includes('Du har 8 av 12')};
+          PHONE.open('merker'); PHONE.dact('merker', 'sub', {s:'tatover'}); PHONE.render(); const v = document.querySelector('.ph-appv'); R.app = {svg:v.querySelectorAll('svg[viewBox="-32 -32 64 64"]').length, onFig:v.querySelectorAll('.ph-tatfig [data-tat]').length, inked:v.querySelectorAll('.ph-tatfig [data-tat]:not([opacity])').length, text:v.innerText.includes('Du har 8 av 12')};
           return R; })()""")
         print(json.dumps(r, ensure_ascii=False))
         await pg.screenshot(path='tattoos.png')
