@@ -36,7 +36,7 @@ function workCtx(as){
   for (const x of S.hold){ if (SPECIES[x.sp].live || x.iced) continue; if (cg && !x.gut) gut += x.kg; else if (icing) ice += x.kg; if ((cg && !x.gut) || icing) pend += x.kg; }
   const deck = s !== 'aground' && pend > 0.5;
   return {s, stop, ror:s === 'sailing' || s === 'unmooring' || s === 'engine', fiske:s === 'fishing' && !g && !stop && rigJig(), haling:!!g && !stop,
-    sort:!!g && g.kind === 'teine' && g.op === 'haul', sloy:deck && gut > 0.01, is:deck && ice > 0.01, kokk:as !== 'fishing' && mealDue(), pause:true};
+    sort:!!g && g.kind === 'teine' && g.op === 'haul', hands:g && g.kind === 'garn' && g.op === 'haul' ? 2 : 1, sloy:deck && gut > 0.01, is:deck && ice > 0.01, kokk:as !== 'fishing' && mealDue(), pause:true};
 }
 // who stands where: [{c (null for you), st}], you first
 function workAssign(as){
@@ -56,7 +56,11 @@ function workAssign(as){
   // haul waits while the one aboard guts and ices, and goes on after (07.10.2026: before, the one aboard was taken off the deck to the
   // hauler, the deck work never came, and the haul stood still between «tub full» and «deck work done» for good)
   const alone = P.length < 2 && ctx.stop && (ctx.sloy || ctx.is);
-  if (ctx.haling && !alone && !P.some(p => p.st === 'haling')){ const who = P.find(p => p.st === 'pause') || P.find(p => p.st === 'sloy' || p.st === 'is' || p.st === 'sort'); if (who) who.st = 'haling'; }
+  // hauling a net takes two at the hauler: one pulls and one bleeds the fish as it comes over the rail (tilbakemelding #30), so with two
+  // aboard nobody guts during the haul and the bleeding tub fills (the haul then goes slower, haulSlow in 10-gear.js); a third hand guts
+  if (ctx.haling && !alone) for (let n = ctx.hands; n > 0 && P.filter(p => p.st === 'haling').length < Math.min(ctx.hands, P.length); n--){
+    const who = P.find(p => p.st === 'pause') || P.find(p => p.st === 'sloy' || p.st === 'is' || p.st === 'sort'); if (!who) break; who.st = 'haling'; }
+  if (ctx.hands > 1) P.filter(p => p.st === 'haling').forEach((p, i) => { p.bl = i > 0; });   // the second at the hauler bleeds
   // a meal is due and nobody has the galley in the chain: the best cook among those on a break, if they can cook (3 or more)
   if (ctx.kokk && !cook){ const q = P.filter(p => p.st === 'pause' && p.c && p.c.attr.kokk >= MEAL.ok).sort((a, b) => b.c.attr.kokk - a.c.attr.kokk)[0]; if (q) q.st = 'kokk'; }
   // stopped to gut: everyone free goes on deck

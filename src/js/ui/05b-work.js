@@ -48,7 +48,7 @@ const WORK = (() => {
   }
   function row(p, i){
     const id = pid(p.c), ed = edit && edit.id === id, job = ed ? edit.chain : jobOf(p.c, i), auto = p.c ? !p.c.job : !S.myJob;
-    let h = '<div class="ph-card wk-p' + (ed ? ' ed' : '') + '"><div class="wk-top"><button class="wk-name" data-pa="wk-card" data-id="' + id + '">' + (p.c ? p.c.name : L('Du (skipper)', 'You (skipper)')) + '</button><span class="wk-now">' + STATIONS[p.st].ing[S.lang === 'no' ? 0 : 1] + restLine(p.c) + '</span></div>';
+    let h = '<div class="ph-card wk-p' + (ed ? ' ed' : '') + '"><div class="wk-top"><button class="wk-name" data-pa="wk-card" data-id="' + id + '">' + (p.c ? p.c.name : L('Du (skipper)', 'You (skipper)')) + '</button><span class="wk-now">' + (p.bl ? L('Bløgger', 'Bleeding') : STATIONS[p.st].ing[S.lang === 'no' ? 0 : 1]) + restLine(p.c) + '</span></div>';
     h += '<div class="wk-chain">' + (job.length ? chips(job, p.st) : '<span class="ph-note">' + L('Trykk stasjonene i den rekkefølgen du vil ha dem.', 'Tap the stations in the order you want them.') + '</span>') + (auto && !ed ? '<span class="wk-auto">Auto</span>' : '') + '</div>';
     if (ed) h += '<div class="wk-pick">' + WORK_ST.map(k => '<button class="' + (job.includes(k) ? 'on' : '') + '" data-pa="wk-add" data-k="' + k + '">' + (job.includes(k) ? (job.indexOf(k) + 1) + ' ' : '') + sn(k) + '</button>').join('') + '</div>' +
       '<div class="ph-btnrow"><button class="ph-btn p" data-pa="wk-done">' + L('Ferdig', 'Done') + '</button><button class="ph-btn" data-pa="wk-auto">Auto</button></div>';

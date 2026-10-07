@@ -184,7 +184,8 @@ function setGeomExact(p, hdg, km){ const e = {x:p.x + Math.sin(hdg) * km, y:p.y 
 function gopUnitMin(g, H, hs){
   // the people at the Haling station; with someone at Krabbesortering the haulers do not stop to sort
   const G = GEAR[g.kind], T = workTeam('haling', G.skill), w = T.n; if (!w) return Infinity;
-  const crewF = T.eff * (1 + (g.kind === 'garn' ? 0.4 : 0.3) * (w - 1));
+  // on a net haul one of those at the hauler bleeds and does not pull, so the pace is that of the others
+  const pull = g.kind === 'garn' && g.op === 'haul' ? Math.max(1, w - 1) : w, crewF = T.eff * (1 + (g.kind === 'garn' ? 0.4 : 0.3) * (pull - 1));
   let base = g.op === 'set' ? G.set : G.haul;
   if (g.kind === 'line') base = g.op === 'set' ? G.set * g.hooksPer / 700 : G.haul * g.hooksPer;
   const hand = g.op === 'haul' && !hasHauler(g.kind) ? G.hand : 1;
@@ -225,17 +226,31 @@ function startHaul(sid, reset, fishAfter){
   s.hauling = true;
   const from = da <= db ? s.a : s.b, to = da <= db ? s.b : s.a;
   b.status = 'fishing'; b.fishUntil = null; b.deckStop = false; b.deckEnd = null;
-  b.gop = {op:'haul', kind:s.kind, sid, n:s.n, done:0, prog:0, a:{...from}, b:{...to}, reset:!!reset, fishAfter:fishAfter || 0, kg:0, rel:0, dead:0, hooksPer:s.kind === 'line' ? s.hooks / s.n : 0, soak:(S.t - s.tSet) / 60};
+  b.gop = {op:'haul', kind:s.kind, sid, n:s.n, done:0, prog:0, a:{...from}, b:{...to}, reset:!!reset, fishAfter:fishAfter || 0, kg:0, rel:0, dead:0, hooksPer:s.kind === 'line' ? s.hooks / s.n : 0, soak:(S.t - s.tSet) / 60, sub:0, sl:HAUL_SLICES(s.kind, s.kind === 'line' ? s.hooks / s.n : 0)};
   S.gacc = {}; S.gnext = {};
   log('Trekker ' + GEAR[s.kind].no.toLowerCase() + ': ' + s.n + ' ' + unitName(s.kind, s.n) + ', sto ' + fmt(b.gop.soak, 0) + ' t.', 'Hauling ' + GEAR[s.kind].en.toLowerCase() + ': ' + s.n + ' ' + unitName(s.kind, s.n) + ', soaked ' + fmt(b.gop.soak, 0) + ' h.');
   return null;
+}
+// the haul slows as the bleeding tub fills (tilbakemelding #30: «man får heller trekke saktere siden bløggekaret fylles opp»): the fish is
+// bled as it comes over the rail and waits in the tub for the gutters, so from half a tub the string comes in slower, to a fifth of
+// the pace at a full tub (where the haul stops, as before, until it is gutted and iced)
+function haulSlow(g){
+  if (!g || g.op !== 'haul') return 1;
+  const f = deckPending() / Math.max(1, tubCap());
+  return f <= 0.5 ? 1 : Math.max(0.2, 1 - (f - 0.5) * 1.6);
 }
 function gearOpMinute(H, W, hs){
   const b = S.boat, g = b.gop;
   if (handsAboard() < GEAR[g.kind].crewMin){ gopAbort('crew'); return; }
   if (g.op === 'haul' && holdTotal() >= capHold() - 0.01){ log('Lasten er full. Resten av redskapet står igjen.', 'The hold is full. The rest of the gear stays in the sea.'); gopAbort('full'); return; }
-  g.prog += 1 / gopUnitMin(g, H, hs);
-  while (g.prog >= 1 && g.done < g.n){ g.prog -= 1; g.done++; if (g.op === 'haul') haulUnit(g, H); }
+  // the catch of one unit comes aboard in slices as the string comes over the rail, not all at the end (tilbakemelding #30: «fisken
+  // kommer om bord etter hvert, så man kan sløye underveis»): per 100 hooks on a line, in thirds on a net, a pot at once
+  g.prog += haulSlow(g) / gopUnitMin(g, H, hs);
+  const SL = g.op === 'haul' ? g.sl || 1 : 1; g.sub = g.sub || 0;
+  while (g.done < g.n && g.prog >= (g.sub + 1) / SL){
+    if (g.op === 'haul') haulUnit(g, H, SL);
+    g.sub++; if (g.sub >= SL){ g.sub = 0; g.prog -= 1; g.done++; }
+  }
   const f = Math.min(1, (g.done + g.prog) / g.n); b.pos = {x:g.a.x + (g.b.x - g.a.x) * f, y:g.a.y + (g.b.y - g.a.y) * f};
   if (Math.hypot(g.b.x - g.a.x, g.b.y - g.a.y) > 1e-6) b.heading = Math.atan2(g.b.x - g.a.x, -(g.b.y - g.a.y));
   b.v = 2.5;
@@ -285,10 +300,12 @@ function wearNets(s, g){
   const w = 0.05 * (1 + kgpn / 60) * (hs > 2 ? 1.4 : 1) * ((g.soak || 0) > 48 ? 1.5 : 1) * crab;
   return Math.max(0, Math.round((s.cond - w) * 100) / 100);
 }
-// one unit (net, tub, pot) over the rail: its share of what the string has caught
-function haulUnit(g, H){
+// the slices one unit is hauled in: a tub per 100 hooks (3 for a bank-line tub, 7 for haddock line), a net in thirds, a pot whole
+const HAUL_SLICES = (kind, hooks) => kind === 'line' ? Math.max(1, Math.round(hooks / 100)) : kind === 'garn' ? 3 : 1;
+// one slice of a unit (net, tub, pot) over the rail: its share of what the string has caught
+function haulUnit(g, H, SL){
   const b = S.boat, s = S.sets.find(x => x.id === g.sid); if (!s) return;
-  const left = s.n - g.done + 1, f = 1 / left, mid = setMid(s), hook = s.kind === 'line';
+  SL = SL || 1; const left = (s.n - g.done) * SL - (g.sub || 0), f = 1 / left, mid = setMid(s), hook = s.kind === 'line';
   (b.tripGear = b.tripGear || {})[s.kind] = 1;
   for (const sp in s.acc){
     const A = s.acc[sp], kg = A.kg * f, n = A.n * f, ts = A.ts * f; A.kg -= kg; A.n -= n; A.ts -= ts; if (kg <= 0) continue;

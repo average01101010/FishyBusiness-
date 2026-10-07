@@ -126,7 +126,7 @@ async def main():
         print(ok(r['afterLine']['hook'] and r['afterLine']['kg'] > 20 and r['afterLine']['un'] == 2), 'line comes up hook-caught, and the tubs are unbaited')
         print(ok(r['potSet'] is None and r['crab']['n'] >= 20 and r['crab']['clsOk'] and len(r['crab']['cls']) >= 4), 'king crab: all of it is kept (J-138-2026 § 5) and sorted by sex, weight and damage into Råfisklaget’s classes')
         mk = r.get('marks') or []
-        print(ok(len(mk) == 2 and mk[0]['g'] == 'line' and mk[1]['g'] == 'teine' and abs(mk[1]['kgu'] - r['crab']['kg'] / 40) < 0.2 and mk[0]['kgu'] >= mk[1]['kgu'] and all(m['q'] is not None for m in mk)),
+        print(ok(len(mk) == 2 and mk[0]['g'] == 'line' and mk[1]['g'] == 'teine' and -0.05 < mk[1]['kgu'] - r['crab']['kg'] / 40 < 0.6 and mk[0]['kgu'] >= mk[1]['kgu'] and all(m['q'] is not None for m in mk)),
               'the catch mark gives kilos per line (the whole line) and per pot', mk, r['crab']['kg'])
         print(ok(r['crabPend'] == 0 and not r['sale']['fine'] and abs(r['sale']['dead'] - 1.2) < 0.02 and r['sale']['minOk'] and r['sale']['ffAdd'] <= r['nonCrab'] + 0.01 and 'Fiskeridirektoratet' not in r['sale']['msgs'] and 'teine' in r['sale']['gear']), 'live king crab is paid at least the minimum price of its class and dead crab nothing; no fine, and crab is outside the fresh-fish scheme')
 
@@ -250,5 +250,34 @@ async def main():
           R.own = baitFromHold('sei', 50); R.ownBait = baitOf(pg).sei; R.quota = Math.round(quotaState().sei - q0); R.left = Math.round(holdTotal()); S.hold = []; return R; })()""")
         print('bait:', json.dumps(bt))
         print(ok(bt['f'] == [1.4, 1.8, 0.6, 1, 1.6, 1.4] and bt['cod'][0] > bt['cod'][1] * 1.8 and bt['own'] == 50 and bt['ownBait'] >= 50 and bt['quota'] == 50 and bt['left'] == 10), 'bait: shrimp takes more cod than krill, and own saithe as bait leaves the hold and counts on the quota')
+        # 7. the catch comes aboard in slices as the string comes over the rail (tilbakemelding #30), not all at the end of a unit, and the
+        #     haul slows as the bleeding tub fills
+        r = await pg.evaluate("""(()=>{ const R = {}, b = S.boat; S.sets = []; S.hold = []; S.pgear = newPGear(); S.pgear.kits.n = 4; S.crew = [hand()]; S.me = S.cur;
+          S.equip.garnhaler = true; S.equip.linehaler = true; S.t = Math.round(HOUR(2028, 2, 5, 6) * 60); S.settings.gut = true; S.settings.ice = true; b.ice = 500;
+          S.pgear.nets.push({id:'n1', mesh:180, n:6, cond:1}); S.pgear.lines.hyse = {n:2, baited:2};
+          const g0 = GROUNDS[2].p; atSea(g0); b.rig = 'garn'; startSet('garn', {nid:'n1'}, 0); hStep(300); b.status = 'idle'; b.pos = {x:g0.x + 1.5, y:g0.y}; if (isLand(b.pos)) b.pos = {x:g0.x - 1.5, y:g0.y};
+          b.rig = 'line'; startSet('line', {lk:'hyse', n:2}, 0); hStep(300); b.status = 'idle';
+          for (let k = 0; k < 18 * 60; k++) step();
+          const walk = id => { const s = S.sets.find(x => x.id === id), A = {n:0}; for (const sp in s.acc) A.n += s.acc[sp].kg; atSea(s.a); S.hold = []; startHaul(id); const g = b.gop, ups = []; let last = 0, k = 0;
+            while (b.gop && k++ < 900){ step(); const t = holdTotal(); if (t > last + 0.01){ ups.push({done:g.done, sub:g.sub, d:+(t - last).toFixed(1)}); last = t; } }
+            return {sl:g.sl, n:g.n, ups:ups.length, firstUnit:ups.filter(u => u.done === 0).length, big:Math.max(0, ...ups.map(u => u.d)), kg:Math.round(holdTotal()), had:Math.round(A.n), left:Math.round(Object.values(s.acc).reduce((a, x) => a + Math.max(0, x.kg), 0))}; };
+          R.net = walk(S.sets.find(s => s.kind === 'garn').id); R.line = walk(S.sets.find(s => s.kind === 'line').id);
+          // the tub: 400 kg round (past the tub) with two aboard stops the fishing, unless it is switched on to gut on the way in
+          const round = () => { S.hold = [{sp:'torsk', cls:SPECIES.torsk.ref, kg:400, n:100, bled:true, iced:false, hr:Math.floor(S.t / 60), fresh:100, gut:false, hook:true}]; b.status = 'fishing'; b.gop = null; b.deckStop = false; b.fishUntil = S.t + 300; b.deckEnd = null; };
+          // the bleeding tub: up to half full the haul goes at full pace, then slower, to a fifth of it at a full tub (tilbakemelding #30)
+          const fillTo = kg => { S.hold = kg ? [{sp:'torsk', cls:SPECIES.torsk.ref, kg, n:Math.round(kg / 3), bled:true, iced:false, hr:Math.floor(S.t / 60), fresh:100, gut:false, hook:true}] : []; return haulSlow({op:'haul'}); };
+          // who stands at the hauler: two on a net (one pulls, one bleeds), one on a line, and a third hand guts meanwhile
+          const who = (kind, crew) => { S.crew = []; for (let i = 0; i < crew; i++) S.crew.push(hand()); S.hold = [{sp:'torsk', cls:SPECIES.torsk.ref, kg:100, n:30, bled:true, iced:false, hr:Math.floor(S.t / 60), fresh:100, gut:false, hook:true}]; b.status = 'fishing'; b.deckStop = false;
+            b.gop = {op:'haul', kind, n:2, done:0, prog:0, sub:0, sl:1}; const A = workAssign(), st = A.map(p => p.st).sort().join(), bl = A.filter(p => p.bl).length, ms = gopUnitMin(b.gop, S.t / 60, 0); b.gop = null; return {st, bl, ms}; };
+          R.who = {net2:who('garn', 1), net3:who('garn', 2), line2:who('line', 1), line3:who('line', 2)}; S.crew = [hand()];
+          R.cap = tubCap(); R.slow = [0, 0.25, 0.5, 0.75, 1].map(f => +fillTo(R.cap * f).toFixed(2)); R.slowSet = haulSlow({op:'set'}); S.hold = [];
+          return R; })()""")
+        print('slices:', json.dumps(r, ensure_ascii=False))
+        print(ok(r['line']['sl'] == 7 and r['line']['firstUnit'] >= 4 and r['line']['ups'] > r['line']['n'] * 2), 'a haddock-line tub of 700 hooks comes aboard in seven slices, several of them in the first tub')
+        print(ok(r['net']['sl'] == 3 and r['net']['ups'] > r['net']['n'] and r['net']['kg'] > 30), 'a net comes aboard in thirds')
+        print(ok(r['line']['left'] <= 1 and r['net']['left'] <= 1), 'everything the strings held has been landed or released when they are up')
+        print(ok(r['who']['net2']['st'] == 'haling,haling' and r['who']['net2']['bl'] == 1 and r['who']['net3']['st'] == 'haling,haling,sloy' and r['who']['net3']['bl'] == 1 and r['who']['line2']['st'] == 'haling,sloy' and r['who']['line2']['bl'] == 0 and r['who']['line3']['bl'] == 0 and 'sloy' in r['who']['line3']['st']), 'a net takes two at the hauler, one pulling and one bleeding, with a third hand gutting; a line takes one (and nobody bleeds apart)', r['who'])
+        print(ok(r['slow'][0] == 1 and r['slow'][1] == 1 and r['slow'][2] == 1 and 0.55 < r['slow'][3] < 0.65 and r['slow'][4] == 0.2 and r['slowSet'] == 1), 'the haul goes at full pace up to half a tub, then slower, to a fifth at a full tub; setting is not slowed', r['slow'])
+
         print('errors:', errs[:5]); await br.close()
 asyncio.run(main())

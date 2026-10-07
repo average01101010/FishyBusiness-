@@ -1841,10 +1841,12 @@ const G3 = (() => {
   // fish in the meshes or on the hooks coming up while hauling (plan E2): as many as the set still holds, the species in proportion
   function haulFish(g){
     const s = (S.sets || []).find(x => x.id === g.sid); if (!s || g.op !== 'haul') return null;
-    let kg = 0; const cum = []; for (const sp in s.acc){ if (sp === 'krabbe') continue; const k = s.acc[sp].kg || 0; if (k > 0){ kg += k; cum.push([sp, kg]); } }
+    let kg = 0, nF = 0; const cum = []; for (const sp in s.acc){ if (sp === 'krabbe') continue; const k = s.acc[sp].kg || 0; if (k > 0){ kg += k; nF += s.acc[sp].n || k / 3; cum.push([sp, kg]); } }
     if (kg <= 0) return null;
-    const left = Math.max(1, g.n - g.done), unit = g.kind === 'garn' ? 30 : Math.max(10, (g.hooksPer || 30) * 1.4);
-    return {p:clamp(kg / left / 3 / unit, 0, 0.85), sp:r => (cum.find(c => r * kg <= c[1] + 1e-9) || cum[0])[0]};
+    // the real fish per hook (per metre of net) on what is left of the string, shown a little thicker so it reads at a glance, and at
+    // least one in eight while anything is left (tilbakemelding #30: «flere fisk synes på krokene»)
+    const left = Math.max(0.2, (g.n - g.done) - (g.sub || 0) / (g.sl || 1)), unit = g.kind === 'garn' ? 30 : Math.max(10, g.hooksPer || 30);
+    return {p:clamp(nF / left / unit * 3, nF >= 1 ? 0.125 : 0, 0.85), sp:r => (cum.find(c => r * kg <= c[1] + 1e-9) || cum[0])[0]};
   }
   function haulModel(kind){
     if (kind in HAULM) return HAULM[kind]; HAULM[kind] = null; const type = 'haul-' + kind;
