@@ -12,6 +12,23 @@ Et kystfiskespill langs hele norskekysten (det begynte på Senja) som kjører so
 - Ved større funksjoner med uklare valg: legg fram en kort plan og vent på klarsignal. Enkle endringer bygges rett. «Snakk uten å bygge» betyr at ingenting skal bygges. «Kjør på» betyr bygg, test og lever.
 - **Bare de testene som er strengt nødvendige** (brukerens krav 01.10.2026: tid er penger). Under byggingen: `node --check`, bygg, og `python3 tests/run.py changed`. Den kjører bare testene som dekker filene som er endret siden forrige commit (`COVER` i `run.py`), uten 3D. Rene tekst- og dokumentasjonsendringer kjører ingen tester. Én commit per endring.
 - **Full regresjon** (`python3 tests/run.py full`, rundt en time, med 3D-testene alene etter de andre) kjøres bare før publisering. Feil som dukker opp da, rettes samlet.
+- **Spør før hver test** (Jonas 07.10.2026, etter en natt med 2,5 timer 3D-tester for Malerverkstedet): «Dekker testen en fil jeg har endret, og kan endringen min få den til å feile?» Er svaret nei, kjøres den ikke. En push venter ikke på hele 3D-lista. De lange testene og når de er nødvendige:
+
+  | Test | Tid | Nødvendig når dette endres |
+  |---|---|---|
+  | `tut` | 40 min | veiledningen «Første tur», åpningen (brev, startsted) eller knappene den trykker på |
+  | `heattest` | 30 min | varmekartet, ekkoloddet, sonaren eller fiskemodellen |
+  | `vessel3d` | 24 min | båtmodellene eller malingen |
+  | `sea3d` | 15 min | havskyggeren eller sjøtilstanden |
+  | `trackfollow` | 13 min | styringen, Autonav eller rutene |
+  | `tral3d` | 12 min | trål eller not |
+  | `vectest` | 11 min | vec-pakkene (bygg, veier, bruer, kaier) |
+  | `teleport3d` | 8 min | kartlasteren eller 3D-terrenget |
+  | `kinotest` | 6 min | kameraet |
+  | `unittest` | 5 min | havner og mottak (kai, kran, truck, tidevann) |
+  | `coast3d`, `sitetest` | 4–5 min | terrenget, kartdataene eller mottaksregisteret |
+  | `kjoptest` | 3,5 min | butikken |
+  | `lighttest`, `ultratest`, `uishots`, `haultest` | 2–3 min | lys, ultra-grafikk, UI-oppsett, haling |
 - Kjør aldri samme test to ganger for å lese utskriften på en annen måte. Loggene ligger i `tests/out/logs/`. Lange tester kjøres i bakgrunnen mens arbeidet går videre.
 - En ny fil i `src/` legges inn i `COVER` i `run.py` med testen som dekker den.
 - **Båtmodeller** (Jonas 06.10.2026): bare utsiden som spillerne ser, ingen innredning, fabrikk eller rom under dekk. Båthandelen viser ikke animasjoner av hva båtene kan gjøre («høyst unødvendig»).
