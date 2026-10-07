@@ -308,7 +308,7 @@ const PHONE = (() => {
     const chk = (id, on) => '<input type="checkbox" id="' + id + '"' + (on ? ' checked' : '') + '>';
     // the 3D view's quality (view3d.js QUAL): automatic steps down when the frames get slow, and back up when there is room
     const q3 = S.settings.q3d || 'auto', ql = [['auto', L('Auto', 'Auto')], ['low', L('Lav', 'Low')], ['mid', L('Middels', 'Medium')], ['high', L('Høy', 'High')], ['ultra', L('Ultra', 'Ultra')]], now = typeof G3 !== 'undefined' && G3.quality ? G3.quality() : null;
-    return '<div class="ph-c"><div class="ph-card ph-set"><h4>' + L('Spill', 'Game') + '</h4><label>' + L('Språk', 'Language') + '<button class="ph-btn alt" data-pa="lang" style="margin:0">' + (S.lang === 'no' ? 'English' : 'Norsk') + '</button></label></div>' +
+    return '<div class="ph-c"><div class="ph-card ph-set"><h4>' + L('Spill', 'Game') + '</h4><div class="ph-lbl">' + L('Språk', 'Language') + '<button class="ph-btn alt" data-pa="lang" style="margin:0">' + (S.lang === 'no' ? 'English' : 'Norsk') + '</button></div></div>' +
       '<div class="ph-card"><h4>' + L('Grafikk i 3D', '3D graphics') + '</h4><div class="ph-sub">' + ql.map(([v, l]) => '<button class="' + (q3 === v ? 'on' : '') + '" data-pa="q3d" data-v="' + v + '">' + l + '</button>').join('') + '</div><p class="ph-note">' +
       L('Lav tegner med færre piksler, kortere detaljer rundt båten, uten skygger og sjørokk. Auto går ned et nivå når bildene kommer for sjelden, og opp igjen når det er god margin.', 'Low draws fewer pixels and less detail round the boat, without shadows and spray. Auto steps down a level when the frames come too slowly, and back up when there is room.') +
       ' ' + L('Ultra er for de kraftigste telefonene og PC-ene: skjermens fulle oppløsning, tettere terreng og sjø, 160 km terreng og sikt til 90 km i klarvær, og bygg, trær og båter i full detalj lenger ut. Den går aldri på av seg selv, og telefonen kan bli varm.', 'Ultra is for the most powerful phones and PCs: the screen’s full resolution, denser terrain and sea, 160 km of terrain and a view of 90 km in clear weather, and buildings, trees and boats in full detail further out. It never comes on by itself, and the phone may get warm.') +
@@ -411,7 +411,8 @@ const PHONE = (() => {
   const PATCH = [
     ['p80', '07.10.2026', 'Rederilogo', 'Company logo', [
       ['I Malerverkstedet kan du lage en rederilogo av et tegn, bokstaver og to farger, eller laste opp et eget bilde. Logoen står midtskips på skroget til båtene dine, og kan heises som rederiflagg.', 'In the paint shop you can make a company logo from a sign, letters and two colours, or upload a picture of your own. The logo sits midships on the hull of your boats and can be flown as a house flag.'],
-      ['Andre spillere i nærheten ser logoen og flagget ditt.', 'Other players nearby see your logo and flag.']]],
+      ['Andre spillere i nærheten ser logoen og flagget ditt.', 'Other players nearby see your logo and flag.'],
+      ['Et trykk på «Språk» i Innstillinger bytter ikke lenger språk. Det gjør bare knappen.', 'Tapping «Language» in Settings no longer switches the language. Only the button does.']]],
     ['p79', '07.10.2026', 'Registreringsmerke', 'Registration mark', [
       ['Båten har fått registreringsmerke ved baugen på begge sider, slik forskriften krever: fylkets bokstaver, et løpenummer og kommunens bokstaver, med hjemhavna som utgangspunkt. Merket står også på ervervstillatelsen under Papirer.', 'The boat now carries a registration mark near the bow on both sides, as the regulations require: the county\'s letters, a serial number and the municipality\'s letters, from the home harbour. The mark is on the fishing permit under Papers too.'],
       ['I Malerverkstedet kan du velge løpenummeret selv, så lenge ingen annen båt har det.', 'In the paint shop you can choose the serial number yourself, as long as no other boat has it.']]],
@@ -1259,8 +1260,8 @@ const PHONE = (() => {
     else if (a === 'shopgear'){ app = 'redskap'; sub.redskap = 'kjop'; }
     else if (a === 'close'){ show(false); return; }
     else if (a === 'notshow'){ NOTEBOOK.show(d.id); return false; }
-    else if (/^fb[A-Z]/.test(a)){ if (!FEEDBACK.act(a, d)) return false; }
-    else if (/^pnt/.test(a)){ if (!PAINT.act(a, d)) return false; }   // the paint shop (ui/10j-paint.js)   // the feedback app (ui/06e-feedback.js)
+    else if (/^fb[A-Z]/.test(a)){ if (!FEEDBACK.act(a, d)) return false; }   // the feedback app (ui/06e-feedback.js)
+    else if (/^pnt/.test(a)){ if (!PAINT.act(a, d)) return false; }   // the paint shop (ui/10j-paint.js)
     else if (a === 'naustbuy'){ const why = naustBuy(d.k); if (why) toast(L(why[0], why[1])); }
     else if (a === 'lang'){ S.lang = S.lang === 'no' ? 'en' : 'no'; refreshAll(); }
     else if (a === 'q3d'){ S.settings.q3d = d.v; if (typeof G3 !== 'undefined' && G3.quality) G3.quality(d.v); }
