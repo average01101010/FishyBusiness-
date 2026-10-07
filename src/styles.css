@@ -881,3 +881,10 @@ body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 2
 .aw-t b{font:700 15px var(--sans)}
 .aw-t span{font:500 11px/1.25 var(--sans);opacity:.75}
 .aw-log{text-align:left;max-height:30vh;overflow:auto}
+/* naming the boat and the player's name in the register letter and on the account card (ui/10f-cloud.js) */
+.ob.reg .reg-names{text-align:left;margin:4px 0 8px}
+.ob.reg .reg-names label{display:block;font:600 13px var(--sans);margin:8px 0 3px}
+.ob.reg .reg-names input,.acc-name input{width:100%;box-sizing:border-box;min-height:40px;font-size:16px;padding:6px 10px;border:1px solid #9aa9b4;border-radius:8px}
+.ob.reg .reg-names .note{margin:4px 0 0;font-size:12px}
+.acc-name{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;margin:8px 0}
+.acc-name label{grid-column:1/-1;font-size:13.5px}

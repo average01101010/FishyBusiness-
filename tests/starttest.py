@@ -39,14 +39,18 @@ async def main():
           t.click(); return {rec:it.length, dots, name:t.querySelector('b').textContent.replace('★ ', ''), id:t.dataset.id}; })()""")
         print(ok(pick['rec'] >= 8 and pick['dots'] >= 150), 'the start shows the coast\'s plants on the map, with recommended ones', {k: pick[k] for k in ('rec', 'dots', 'name')})
         await pg.click('#stGo')
-        await pg.wait_for_selector('#obBoat', timeout=90000)
+        await pg.wait_for_selector('#obGo', timeout=90000)
         st = await pg.evaluate("""(() => { const b = S.boat, pt = portById(S.home), f = S.tutStart && S.tutStart.f;
           return {home:S.home, port:b.port, st:b.status, atPort:pt && dist(b.pos, pt.p) < 0.01, f:!!f, fd:f && pt ? +dist(f.p, pt.p).toFixed(2) : null, land:S.tutStart && S.tutStart.land, center:pt ? +Math.hypot(view.cx - pt.p.x, view.cy - pt.p.y).toFixed(2) : null, startGone:!document.getElementById('startPick')}; })()""")
         print(json.dumps(st, ensure_ascii=False))
         print(ok(st['home'] == pick['id'] and st['port'] == pick['id'] and st['atPort'] and st['st'] == 'port' and st['startGone']), 'picking a place moves the new game\'s boat there, into the harbour', pick['name'])
         print(ok(st['f'] and 1 <= st['fd'] <= 6.5 and st['land'] == pick['id'] and st['center'] is not None and st['center'] < 1), 'the first trip goes to a patch of cod near there and lands at its plant; the chart is round it', st['fd'])
-        await pg.fill('#obBoat', 'Testbris'); await pg.click('#obGo')
+        # the boat has no name: the card says she goes by her registration mark until the player names her (Jonas 07.10.2026)
+        nm = await pg.evaluate("({card:document.getElementById('modal').innerText, input:!!document.getElementById('obBoat'), mark:regText(regOf(S.boat)), name:S.boatName, unnamed:!!S.unnamed})")
+        await pg.click('#obGo')
         await pg.wait_for_function("S.intro === true && document.getElementById('modal').hidden", timeout=30000)
+        print(ok(not nm['input'] and nm['unnamed'] and nm['name'] == nm['mark'] and nm['mark'] in nm['card'] and 'fiskermanntallet' in nm['card']),
+              'the boat has no name: she goes by her registration mark, and the card says she is named once in fiskermanntallet', {k: nm[k] for k in ('mark', 'name', 'unnamed', 'input')})
         # the first trip's route step names the place, not Gisundet; then a sale at the coast plant
         tip = await pg.evaluate("""(() => { setBodyView(false); const s = TSTEPS.find(x => x.id === 'route1'); LEIA_ARM = true; const t = s.tip(); LEIA_ARM = false; return ((t && t.no) || '') + ' | ' + JSON.stringify(S.tut.f || null).slice(0, 60); })()""")
         print(ok('Gisundet' not in tip and pick['name'].split(' (')[0] in tip), 'the first trip\'s tips name the new place', tip[:90])
@@ -54,6 +58,12 @@ async def main():
           const c0 = S.cash; S.t = Math.floor(S.t / 1440) * 1440 + 10 * 60 + 1440; sell(); return {c0, c1:S.cash, last:S.lastSale ? S.lastSale.port : null, hold:holdTotal()}; })()""")
         print(json.dumps(sale))
         print(ok(sale['c1'] > sale['c0'] and sale['last'] == pick['id'] and sale['hold'] < 1), 'the catch sells at the coast plant', sale['c1'] - sale['c0'])
+        await pg.evaluate("(() => { S.landN = 2; document.getElementById('modal').hidden = true; nameNudge(true); })()")
+        # the 3D view is up here, where Playwright's own waits (by animation frame) do not come round in the test machine's lite mode
+        await pg.wait_for_function("!!document.getElementById('nmBoat')", polling=500, timeout=25000)
+        await pg.evaluate("(() => { document.getElementById('nmBoat').value = 'Testbris'; document.getElementById('nmGo').click(); })()")
+        ch = await pg.evaluate("({name:S.boatName, unnamed:!!S.unnamed, log:S.log.slice(-1)[0].no})")
+        print(ok(ch['name'] == 'Testbris' and not ch['unnamed'] and 'Døpte båten «Testbris»' in ch['log']), 'without the cloud the boat is named in a dialog of its own after the second landing', ch)
         print('errors:', errs[:3]); await pg.close()
 
         # 3. a game from before (in Finnsnes, no home): one move along the coast, free, from Settings

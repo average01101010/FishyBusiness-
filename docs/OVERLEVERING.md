@@ -1155,7 +1155,23 @@ Jonas' avgjørelser står i `docs/engasjement.md`, arbeidslista punkt 1. Dette e
   - Rapporten viser ett stort tall som teller opp: det som ble levert, eller døgnene med fartstid hvis ingenting ble levert. Fartstidslinja fylles, og ved et nytt år fylles den til enden og starter på nytt. Tre ruter viser levert, beste levering og uthvilt, og under står de seks siste hendelsene. Knappen heter «Til sjøs!».
   - Den viser bare det som er vunnet. Etter et kort fravær (under 5 ekte minutter) uten levering eller nytt år vises den ikke.
 - **Test:** `fartstidtest` (kurven, utregningen fra statistikk, om bord, uthvilt, borte, levering, rapporten, kort fravær og telefonen).
-- **Neste:** den navnløse båten med registrering og brukernavn (del 2), synlighet i AIS med eier og fartstid (del 3), så achievements.
+- **Del 2: den navnløse båten, registreringen og brukernavnet** (Jonas: «Det gir en følelse av eierskap når man får døpe en navnløs båt selv»):
+  - Et nytt spill starter uten båtnavn (`boatUnnamed` i `ui/08-actions.js`): `S.unnamed = true`, og `S.boatName` er registreringsmerket, så alt som viser navnet, viser merket. Navnestripa på skroget tegnes ikke (`view3d.js`). Kortet «Båten etter far» har bare knappen «Ta over båten» (`#obGo`).
+  - `boatChristen(navn)` døper båten: navnet males på skroget, det står i loggen, og overtroen får det nye navnet (`loreRename`).
+  - **Registreringen** (`ui/10f-cloud.js`): `GUEST_LANDS = 2`. Etter første levering sier et kort at én levering er igjen. Etter den andre, eller ved andre åpning av spillet (`S.opens`, `guestOpenAsk`), kommer brevet fra Fiskeridirektoratet. Det ber om båtens navn (`#regBoat`, bare når båten er navnløs) og et valgfritt brukernavn (`#regUser`, 3–20 tegn, `NAME_RE`). Navnene holdes på enheten (`dsb_names`) til kontoen finnes. Da døper `namesApply` båten og tar brukernavnet med `name_claim`.
+  - Uten skyen (artifacten) spør `nameNudge` om båtens navn på samme tidspunkt. Testene (`#notut`) får det bare når de ber om det.
+  - **Brukernavnet** (`supabase/migrations/20261007120000_names.sql`):
+    - Tabellen `names` har ett navn per spiller, unikt uansett store og små bokstaver. Ingen spiller leser tabellen.
+    - `name_claim` gir 'ok', 'taken' eller 'bad'. Gjester kan ikke ta et navn.
+    - `name_free` og `name_mine` (med grunnen hvis navnet er tatt bort).
+    - Admin-fanen «Brukernavn» (`admin_names`, `admin_name_remove`) tar bort et navn med en grunn som spilleren leser i spillet (`nameCheck`). Navnet sperres for godt i `names_banned`, og et nytt navn er gratis.
+  - Kontokortet under Innstillinger har brukernavnet og, mens båten er navnløs, båtens navn. Personvernsiden forklarer brukernavnet.
+  - **Tester:**
+    - `starttest`: den navnløse starten og dåpen.
+    - `guesttest`: kortet etter første levering, og brevet med navnefeltene etter den andre. Et ugyldig brukernavn avvises, og navnene holdes på enheten og tas i bruk på kontoen.
+    - `sqltest`: brukernavnene.
+    - `tut`: åpningen.
+- **Neste:** synlighet i AIS med eier og fartstid (del 3), så achievements.
 
 ## 5. Systemer i spillet
 

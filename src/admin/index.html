@@ -80,7 +80,7 @@ async function load(){
   try { DATA = DEMO ? demo() : await rpc('admin_dashboard', {days:DAYS}); render(); }
   catch (e){ if (SES) $('#app').innerHTML = '<main><div class="card warn">' + esc(e.message) + '</div><button onclick="SES=null;sessionStorage.clear();render()">Logg inn på nytt</button></main>'; }
 }
-const TABS = [['oversikt', 'Oversikt'], ['tid', 'Spilletid'], ['frafall', 'Frafall'], ['bruk', 'Spillbruk'], ['okonomi', 'Økonomi i spillet'], ['penger', 'Penger'], ['teknikk', 'Teknikk'], ['geo', 'Geografi'], ['tilbake', 'Tilbakemeldinger'], ['agent', 'Agent'], ['logoer', 'Logoer'], ['kommer', 'Kommer']];
+const TABS = [['oversikt', 'Oversikt'], ['tid', 'Spilletid'], ['frafall', 'Frafall'], ['bruk', 'Spillbruk'], ['okonomi', 'Økonomi i spillet'], ['penger', 'Penger'], ['teknikk', 'Teknikk'], ['geo', 'Geografi'], ['tilbake', 'Tilbakemeldinger'], ['agent', 'Agent'], ['logoer', 'Logoer'], ['navn', 'Brukernavn'], ['kommer', 'Kommer']];
 function render(){
   if (!DEMO && !SES) return loginView();
   if (!DATA) { $('#app').innerHTML = '<main class="note">Henter …</main>'; return load(); }
@@ -94,6 +94,7 @@ function render(){
   if (TAB === 'tilbake') fbWire();
   if (TAB === 'agent') agWire();
   if (TAB === 'logoer') lgWire();
+  if (TAB === 'navn') nmWire();
 }
 
 const kpi = (label, v, sub) => '<div class="card kpi"><b>' + v + '</b><span>' + label + (sub ? '<br>' + sub : '') + '</span></div>';
@@ -261,6 +262,28 @@ function lgWire(){
 function lgDemo(){
   const cv = document.createElement('canvas'); cv.width = cv.height = 64; const g = cv.getContext('2d'); g.fillStyle = '#1d3b6b'; g.fillRect(0, 0, 64, 64); g.fillStyle = '#fff'; g.font = 'bold 26px sans-serif'; g.textAlign = 'center'; g.fillText('JH', 32, 42);
   return [{who:'a1b2c3d4e5', img:cv.toDataURL('image/png'), ver:2, at:new Date(Date.now() - 36e5).toISOString(), removed:null, reason:null}];
+}
+// ---------- the players' names (supabase/migrations/20261007120000_names.sql): shown to others beside the boat ----------
+// Taken away with a reason the player reads; that name cannot be had again, and choosing a new one costs nothing.
+let NM = null;
+async function nmLoad(){ await null; try { NM = DEMO ? [{who:'a1b2c3d4e5', name:'Havfisker88', at:new Date(Date.now() - 36e5).toISOString(), removed:null, reason:null}] : await rpc('admin_names', {lim:500}); } catch (e){ NM = {err:e.message}; } if (TAB === 'navn') render(); }
+VIEW.navn = () => {
+  if (!NM){ nmLoad(); return '<p class="note">Henter …</p>'; }
+  if (NM.err) return card('Brukernavn', '<p class="warn">' + esc(NM.err) + '</p>', 'Er migreringen supabase/migrations/20261007120000_names.sql kjørt?');
+  const live = NM.filter(r => !r.removed);
+  return '<div class="grid">' + kpi('Brukernavn', nf(live.length, 0), nf(NM.length - live.length, 0) + ' tatt bort') + '</div>' +
+    '<div class="card"><button id="nmR">Oppdater</button> <span class="note">Navnene vises for andre spillere ved båten. Tar du et bort, får spilleren grunnen du skriver, navnet kan ikke brukes igjen, og et nytt koster ingenting.</span></div>' +
+    (NM.length ? card('Navnene', '<table><tr><th>Navn</th><th>Spiller</th><th>Valgt</th><th></th></tr>' + NM.map(r => '<tr class="nmrow"><td>' + esc(r.name) + '</td><td class="note">' + esc(r.who) + '</td><td class="note">' + new Date(r.at).toLocaleString('nb-NO') + '</td><td>' +
+      (r.removed ? '<span class="warn">Tatt bort' + (r.reason ? ': ' + esc(r.reason) : '') + '</span>' : '<input data-nmre maxlength="300" placeholder="Hvorfor (spilleren ser dette)"> <button data-nmdel="' + esc(r.who) + '">Ta bort</button>') + '</td></tr>').join('') + '</table>')
+      : '<p class="note">Ingen brukernavn ennå.</p>');
+};
+function nmWire(){
+  if ($('#nmR')) $('#nmR').onclick = () => { NM = null; render(); };
+  document.querySelectorAll('[data-nmdel]').forEach(b => b.onclick = async () => {
+    const row = b.closest('.nmrow'), why = row.querySelector('[data-nmre]').value.trim();
+    if (!why){ row.querySelector('[data-nmre]').focus(); return; }
+    b.disabled = true; try { if (!DEMO) await rpc('admin_name_remove', {who:b.dataset.nmdel, reason:why}); else { const r = NM.find(x => x.who === b.dataset.nmdel); r.removed = new Date().toISOString(); r.reason = why; } NM = DEMO ? NM : null; render(); }
+    catch (e){ b.disabled = false; alert(e.message); } });
 }
 function agWire(){ if ($('#agR')) $('#agR').onclick = () => { AG = null; render(); }; }
 function agDemo(){

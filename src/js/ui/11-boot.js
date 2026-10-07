@@ -79,6 +79,7 @@ view.cx = HOME.x0 + MAP_W * 0.56; view.cy = HOME.y0 + MAP_H * 0.5;
 refreshAll();
 if (!S.intro) showIntro();
 else if (!S.boatName) showIntro(true);
+else { S.opens = (S.opens || 0) + 1; setTimeout(nameNudge, 8000); }   // the openings of a started game (registering, naming the boat: ui/10f-cloud.js)
 // the catch-up waits for the simulation's data (simReady below), so the time away is played with the real depths
 AWAY = !S.intro || !S.boatName ? 0 : awayMs > 6000 ? awayMs : 0;
 if (WCLOCK.on && S.intro && S.boatName && worldT() - S.t > 1) AWAY = Math.max(AWAY, 6001);   // behind the world's clock: catchUp plays the gap

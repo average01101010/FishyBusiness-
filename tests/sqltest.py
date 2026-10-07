@@ -451,6 +451,33 @@ def main():
                  and gAgain.get('merged') is False and gRead[0]),
               'guests: an anonymous sign-in plays and saves, cannot buy; registering with its one-time code moves the save and the consent to the account and the guest is gone; the code works once and no player reads the codes',
               {'shop': gNoShop, 'merge': gMerge, 'after': gAfter, 'again': gAgain})
+        # the player's name (20261007120000_names.sql): an account takes one, unique whatever the case; a guest cannot; the admin takes an
+        # offensive one away with a reason, it is barred for good, and a new one is free
+        G2 = {'sub': '9a1c2a3e-0000-4000-8000-0000000000bb', 'role': 'authenticated', 'is_anonymous': True}; sql("select public.tm_hello('{}')", G2, 'authenticated')
+        hidB = hashlib.md5(b'dsbuser_01BBB').hexdigest()[:10]
+        N = {}
+        N['free0'] = sql("select public.name_free('Kystjenta')", G2, 'authenticated')
+        N['guest'] = sql("select public.name_claim('Kystjenta')", G2, 'authenticated', expect_err=True)
+        N['bad'] = sql("select public.name_claim('a b')", B, 'authenticated')
+        N['ok'] = sql("select public.name_claim('Kystjenta')", B, 'authenticated')
+        N['again'] = sql("select public.name_claim('Kystjenta')", B, 'authenticated')
+        N['taken'] = sql("select public.name_claim('KYSTJENTA')", C, 'authenticated')
+        N['free1'] = sql("select public.name_free('kystjenta')", C, 'authenticated') + sql("select public.name_free('kystjenta')", B, 'authenticated')
+        N['read'] = sql("select count(*) from public.names", B, 'authenticated', expect_err=True)
+        N['admPl'] = sql("select public.admin_names(10)", B, 'authenticated', expect_err=True)
+        N['adm1'] = sql("select public.admin_names(10)", AD1, 'authenticated', expect_err=True)
+        N['list'] = json.loads(sql("select public.admin_names(10)", AD2, 'authenticated'))
+        N['rmPl'] = sql("select public.admin_name_remove('%s', 'x')" % hidB, C, 'authenticated', expect_err=True)
+        N['rm'] = sql("select public.admin_name_remove('%s', 'Upassende navn')" % hidB, AD2, 'authenticated')
+        N['mine'] = json.loads(sql("select public.name_mine()", B, 'authenticated'))
+        N['barred'] = sql("select public.name_claim('kystJENTA')", C, 'authenticated') + '/' + sql("select public.name_claim('Kystjenta')", B, 'authenticated')
+        N['new'] = sql("select public.name_claim('Havfisker88')", B, 'authenticated'); N['mine2'] = json.loads(sql("select public.name_mine()", B, 'authenticated'))
+        print(ok(N['free0'] == 't' and N['guest'][0] and N['bad'] == 'bad' and N['ok'] == 'ok' and N['again'] == 'ok' and N['taken'] == 'taken' and N['free1'] == 'ft'
+                 and N['read'][0] and N['admPl'][0] and N['adm1'][0] and len(N['list']) == 1 and N['list'][0]['who'] == hidB and N['list'][0]['name'] == 'Kystjenta'
+                 and N['rmPl'][0] and N['rm'] == 't' and N['mine'] == {'name': 'Kystjenta', 'removed': True, 'reason': 'Upassende navn'} and N['barred'] == 'taken/taken'
+                 and N['new'] == 'ok' and N['mine2'] == {'name': 'Havfisker88', 'removed': False, 'reason': None}),
+              "the player's name: an account takes one, a guest cannot, a bad one is refused, the same name in another case is taken; no player reads the names; only the admin (with MFA) lists and takes one away with a reason the player reads, the name is barred for good, and a new one is free",
+              N)
     finally:
         run(*as_pg([os.path.join(BIN, 'pg_ctl'), '-D', data, '-m', 'immediate', 'stop']))
         shutil.rmtree(tmp, ignore_errors=True)

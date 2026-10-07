@@ -409,6 +409,10 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p82', '07.10.2026', 'Båten etter far', 'Father\'s boat', [
+      ['Båten etter far har ikke noe navn på skroget når du tar henne over. Til da kjennes hun på registreringsmerket.', 'Father\'s boat has no name on her hull when you take her over. Until then she goes by her registration mark.'],
+      ['Når du blir ført i fiskermanntallet etter den andre leveringen, døper du båten selv og kan velge et brukernavn som andre spillere ser.', 'When you are entered in the fishermen\'s register after the second landing, you name the boat yourself and may choose a player name other players see.'],
+      ['Brukernavnet kan endres under Innstillinger, Konto.', 'The player name can be changed in Settings, Account.']]],
     ['p81', '07.10.2026', 'Fartstid', 'Sea time', [
       ['Du samler nå fartstid, fra 0 til 40 år. Den tjenes om bord, med hver time til sjøs og hver levering. Det mannskapet ditt gjør mens du er borte, teller også, men mindre. Fartstiden står på telefonen og i Sjømann-appen.', 'You now gather sea time, from 0 to 40 years. It is earned aboard, with every hour at sea and every landing. What your crew does while you are away counts too, but less. Your sea time is on the phone and in the Seaman app.'],
       ['Når du har vært borte, er du uthvilt: de neste timene til sjøs gir dobbel fartstid.', 'After time away you are rested: the next hours at sea give double sea time.'],

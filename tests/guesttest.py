@@ -49,25 +49,31 @@ async def main():
         # 2. one landing left: a card that says so, with «Senere» (after the statistics question, which comes first and is answered here)
         try: await pg.wait_for_selector('#cgNo', timeout=8000); await pg.click('#cgNo')
         except Exception: pass
-        await pg.evaluate("(() => { S.tut = 0; S.landN = 2; S.regAsk = 1; guestNudge(2); })()"); await pg.wait_for_selector('#modal .ob.reg', timeout=15000)
+        await pg.evaluate("(() => { S.tut = 0; S.landN = 1; S.regAsk = 1; guestNudge(2); })()"); await pg.wait_for_selector('#modal .ob.reg', timeout=15000)
         soft = await pg.evaluate("(() => { const t = document.querySelector('#modal .ob.reg').innerText; document.getElementById('regLater').click(); return {t, closed:document.getElementById('modal').hidden}; })()")
-        check('Én landing til' in soft['t'] and 'Senere' in soft['t'] and soft['closed'], 'after the second landing a card says one landing is left on Father\'s papers, and «Senere» closes it', soft['t'][:160])
-        # 3. after the third landing: casting off waits, the letter shows what is the player's, «Ikke nå» closes it
-        d = await pg.evaluate("""(() => { const b = S.boat; S.landN = 3; S.cash = 23456; S.stats.kg = 789; S.boatName = 'Havbris'; CLOUD.regT = 0; const st0 = b.status, r = depart();
+        check('Én landing til' in soft['t'] and 'Senere' in soft['t'] and soft['closed'], 'after the first landing a card says one landing is left on Father\'s papers, and «Senere» closes it', soft['t'][:160])
+        # 3. after the second landing: casting off waits, the letter shows what is the player's (the boat still by her mark), asks for the
+        # boat's name and a player name, and «Ikke nå» closes it
+        d = await pg.evaluate("""(() => { const b = S.boat; S.landN = 2; S.cash = 23456; S.stats.kg = 789; CLOUD.regT = 0; const st0 = b.status, r = depart();
           const box = document.querySelector('#modal .ob.reg'), t = box ? box.innerText : ''; const wide = box ? box.querySelector('.reg-have').getBoundingClientRect().width : 0;
-          return {r, st0, st:b.status, t, wide, plan:!!S.plan}; })()""")
+          return {r, st0, st:b.status, t, wide, plan:!!S.plan, unnamed:S.unnamed === true, mark:S.boatName, boat:!!document.getElementById('regBoat'), user:!!document.getElementById('regUser')}; })()""")
         await pg.click('#regLater'); closed = await pg.evaluate("document.getElementById('modal').hidden")
-        check(d['r'] is False and d['st'] == d['st0'] == 'port' and 'fiskermanntallet' in d['t'] and '«Havbris»' in d['t'] and '23 456 kr' in d['t'] and '789 kg' in d['t']
+        check(d['r'] is False and d['st'] == d['st0'] == 'port' and 'fiskermanntallet' in d['t'] and 'levert 2 ganger' in d['t'] and d['unnamed'] and d['mark'] in d['t'] and '«' not in d['t'].split('båten din')[0][-30:]
+              and d['boat'] and d['user'] and 'Brukernavn (valgfritt)' in d['t'] and '23 456 kr' in d['t'] and '789 kg' in d['t']
               and 'denne nettleseren' in d['t'] and 'Luksushaill' in d['t'] and 'Registrer meg' in d['t'] and closed,
-              'after the third landing casting off waits: the letter from Fiskeridirektoratet shows the boat, the money and the fish, says the game lives only in this browser, offers a luxury luck, and «Ikke nå» closes it', d['t'][:300])
+              'after the second landing casting off waits: the letter from Fiskeridirektoratet shows the nameless boat by her mark, the money and the fish, asks to name the boat and for an optional player name, says the game lives only in this browser, offers a luxury luck, and «Ikke nå» closes it', d['t'][:300])
         # 4. a guest cannot buy, and the account card says what a guest is
         g = await pg.evaluate("""(() => { payBuy('haill', () => { window.__given = 1; }); const t = (document.querySelector('#modal .ob.reg') || {}).innerText || ''; document.getElementById('modal').hidden = true;
           PHONE.open('innst'); const card = document.getElementById('phView').innerText; PHONE.show(false); return {t, given:!!window.__given, card:card.includes('Du spiller som gjest') && card.includes('Registrer meg')}; })()""")
         check('Kjøp krever registrering' in g['t'] and not g['given'] and g['card'], 'a guest cannot buy with real money (the letter asks to register instead), and Settings says the game lives in this browser until then', g)
         # 5. «Registrer meg»: the game up first, a one-time code kept on the device, then WorkOS
         await pg.evaluate("(() => { CLOUD.regT = 0; depart(); })()"); await pg.wait_for_selector('#regGo', timeout=10000)
-        await pg.evaluate("S.lastReal = Date.now(); CLOUD.lastSave = 0; document.getElementById('regGo').click()")
+        bad = await pg.evaluate("(() => { document.getElementById('regBoat').value = 'Havbris'; document.getElementById('regUser').value = 'a b'; document.getElementById('regGo').click(); return {open:!document.getElementById('modal').hidden, kept:localStorage.getItem('dsb_names')}; })()")
+        await pg.evaluate("S.lastReal = Date.now(); CLOUD.lastSave = 0; document.getElementById('regUser').value = 'Kystjenta'; document.getElementById('regGo').click()")
         await pg.wait_for_function("window.__signUp === 1", timeout=15000)
+        names = await pg.evaluate("JSON.parse(localStorage.getItem('dsb_names') || 'null')")
+        check(bad['open'] and not bad['kept'] and names == {'boat': 'Havbris', 'user': 'Kystjenta'},
+              'the letter refuses a player name with a space, and keeps the boat\'s name and the player name on the device until the account is there', {'bad': bad, 'names': names})
         kept = await pg.evaluate("JSON.parse(localStorage.getItem('dsb_guest_code') || 'null')")
         claim = [c for c in calls if c[0] == 'guest_claim']; puts = [c for c in calls if c[0] == 'save_put2']
         check(kept == {'code': 'code_abc', 'gid': 'g-1'} and claim and claim[0][2] == 'Bearer gtok' and puts and calls.index(puts[-1]) < calls.index(claim[0]),
@@ -76,12 +82,16 @@ async def main():
         await ctx.close()
 
         # 6. back from registering: the guest's things move to the account first, then the welcome gift
-        calls = []; replies = {'tm_hello': {'consent': True, 'owned': []}, 'save_get': 'null', 'guest_merge': {'merged': True, 'save': True}}
-        ctx, pg, errs = await page(br, calls, replies, "localStorage.setItem('dsb_guest_code', JSON.stringify({code:'code_abc', gid:'g-1'})); localStorage.setItem('dsb_guest', JSON.stringify({at:'gtok', rt:'grt', exp:9e9, id:'g-1'}));")
+        calls = []; replies = {'tm_hello': {'consent': True, 'owned': []}, 'save_get': 'null', 'guest_merge': {'merged': True, 'save': True}, 'name_claim': '"ok"'}
+        ctx, pg, errs = await page(br, calls, replies, "localStorage.setItem('dsb_guest_code', JSON.stringify({code:'code_abc', gid:'g-1'})); localStorage.setItem('dsb_guest', JSON.stringify({at:'gtok', rt:'grt', exp:9e9, id:'g-1'})); if (!sessionStorage.getItem('n')){ sessionStorage.setItem('n', 1); localStorage.setItem('dsb_names', JSON.stringify({boat:'Havbris', user:'Kystjenta'})); }")
         await boot(pg)
-        await pg.wait_for_function("S.haillInv && S.haillInv.luksus >= 1", timeout=20000)
+        await pg.wait_for_function("S.haillInv && S.haillInv.luksus >= 1 && S.user === 'Kystjenta'", timeout=20000)
         r = await pg.evaluate("""({code:localStorage.getItem('dsb_guest_code'), guestKey:localStorage.getItem('dsb_guest'), gift:localStorage.getItem('dsb_reg_gift'), guest:!!CLOUD.guest,
           msg:S.msgs.some(m => m.from === 'Fiskeridirektoratet' && /fiskermanntallet/.test(m.no))})""")
+        nm = await pg.evaluate("({boat:S.boatName, unnamed:!!S.unnamed, user:S.user, kept:localStorage.getItem('dsb_names')})")
+        claim = [c for c in calls if c[0] == 'name_claim']
+        check(nm['boat'] == 'Havbris' and not nm['unnamed'] and nm['user'] == 'Kystjenta' and not nm['kept'] and claim and claim[0][1] == {'name': 'Kystjenta'} and claim[0][2] == 'Bearer tok_test',
+              'on the account the boat is named «Havbris» and the player name is taken (as the account), and the names are gone from the device', {'nm': nm, 'claim': claim[:1]})
         order = [c[0] for c in calls if c[0] in ('guest_merge', 'tm_hello', 'save_get')]; mg = [c for c in calls if c[0] == 'guest_merge']
         check(order[:3] == ['guest_merge', 'tm_hello', 'save_get'] and mg[0][1] == {'code': 'code_abc'} and mg[0][2] == 'Bearer tok_test' and not r['code'] and not r['guestKey'] and not r['gift'] and not r['guest'] and r['msg'],
               'back as an account: the guest\'s things move over first (with the code, as the account), the guest is forgotten on the device, and a luxury luck and a message from Fiskeridirektoratet are aboard', {'order': order, 'r': r})

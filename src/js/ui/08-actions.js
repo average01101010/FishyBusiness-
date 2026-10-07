@@ -178,6 +178,7 @@ function sell(){
   for (const c of S.crew) c.off = false;
   if (meAboard()) fmLand(total);
   fsLand(total);   // sea time for the landing (core/09e-fartstid.js)
+  nameNudge();     // naming the boat without the cloud, after the second landing (ui/10f-cloud.js)
   S.landN = (S.landN || 0) + 1;   // the landings, for a guest's papers (ui/10f-cloud.js: registering after the third)
   S.cash += net - lott - coopKr; S.stats.revenue += total; S.stats.costs += tk.sum + lott + coopKr;
   if (coopKr > 0) log(S.lic.coop.name + ' fikk ' + kr(coopKr) + ' for torsken på kvoten hans.', S.lic.coop.name + ' got ' + kr(coopKr) + ' for the cod on his quota.'); S.stats.kg += kg; S.hold = [];
@@ -216,20 +217,24 @@ function modal(html){ const m = $('modal'); m.innerHTML = '<div class="box" role
 // «#notut» skips «Første tur» for the tests only (served from this machine): a player cannot skip it (Jonas 05.10.2026: «Spillere skal ikke
 // kunne hoppe over tutorial. Hvert steg må gjennomføres»)
 const NOTUT = /notut/.test(location.hash) && /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
-// a new game: Father's letter first (ui/08b-letter.js; the tests with #notut go straight on), then the boat's name. No company: a
-// new player is a fisherman with a boat, and the company is founded when buying into the closed group (Jonas 05.10.2026: «nye
-// spillere skal ikke lage rederi, kun gi båten et navn»)
+// a new game: Father's letter first (ui/08b-letter.js; the tests with #notut go straight on), then where his boathouse stands, then the
+// boat. She has no name yet (Jonas 07.10.2026: «La båten være navnløs inntil registrering. Det gir en følelse av eierskap når man får
+// døpe en navnløs båt selv»): she goes by her registration mark until the player is in fiskermanntallet and names her (ui/10f-cloud.js).
+// No company: a new player is a fisherman with a boat (Jonas 05.10.2026).
+function boatUnnamed(){ S.unnamed = true; S.boatName = regText(regOf(S.boat)) || 'T-0-LK'; }
+function boatChristen(nm){ nm = String(nm || '').trim().slice(0, 20); if (!nm) return false; const was = S.boatName; S.boatName = nm; delete S.unnamed;
+  log('Døpte båten «' + nm + '». Navnet er malt på skroget.', 'Named the boat «' + nm + '». The name is painted on the hull.'); if (typeof loreRename === 'function') loreRename(nm); save(); refreshAll(); return was !== nm; }
 function showIntro(namesOnly){
   const L = (no, en) => S.lang === 'no' ? no : en;
   if (!namesOnly && !NOTUT && !LETTER.read){ showLetter(() => { LETTER.read = true; showIntro(); }); return; }
   // then where Father's boathouse stands: the start along the coast (ui/08c-start.js)
   if (!namesOnly && !NOTUT && !S.intro && !S.home){ showStart(() => showIntro()); return; }
-  modal('<div class="ob"><h2>' + L('Gi båten et navn', 'Name your boat') + '</h2><p>' + (namesOnly ? L('Dekksdagboka trenger et båtnavn.', 'The deck log needs a boat name.') : L('Båten etter far har ikke noe navn på skroget. Hva skal hun hete?', 'Father\'s boat has no name on her hull. What will she be called?')) + '</p>' +
-    '<label for="obBoat">' + L('Båtens navn', 'Boat name') + '</label><input id="obBoat" maxlength="20" autocomplete="off" placeholder="' + L('F.eks. Havbris', 'e.g. Havbris') + '" value="' + (S.boatName || '').replace(/"/g, '') + '">' +
-    '<div class="btns"><button class="btn primary" data-close id="obGo">' + t('intro_go') + '</button></div></div>');
+  if (!S.boatName || S.unnamed) boatUnnamed();
+  modal('<div class="ob"><h2>' + L('Båten etter far', 'Father\'s boat') + '</h2><p>' + L('Båten har ikke noe navn på skroget ennå. Til da kjennes hun på registreringsmerket <b>' + S.boatName + '</b>. Du døper henne selv når du er ført i fiskermanntallet i eget navn.',
+      'The boat has no name on her hull yet. Until then she goes by her registration mark <b>' + S.boatName + '</b>. You name her yourself once you are in the fishermen\'s register in your own name.') + '</p>' +
+    '<div class="btns"><button class="btn primary" data-close id="obGo">' + L('Ta over båten', 'Take over the boat') + '</button></div></div>');
   $('obGo').addEventListener('click', () => {
-    const bn = $('obBoat').value.trim().slice(0, 20); S.boatName = bn || 'Havbris';
-    if (!S.intro){ S.tut = NOTUT ? 0 : tutNew(); log('Tok over «' + S.boatName + '» etter far.', 'Took over the «' + S.boatName + '» from Father.'); }
+    if (!S.intro){ S.tut = NOTUT ? 0 : tutNew(); log('Tok over båten etter far.', 'Took over Father\'s boat.'); }
     S.intro = true; save(); refreshAll();
   });
 }
