@@ -416,6 +416,7 @@ const PHONE = (() => {
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
     ['p88', '07.10.2026', 'Rettinger', 'Fixes', [
+      ['Om bord vises aldri flere folk enn mannskapet og deg. Den som iser, skuffer is fra iskassa over fisken med spade, og den første blåsa går ut akter når du setter.', 'Aboard there are never more people than the crew and you. Whoever ices shovels ice from the ice bin over the fish, and the first buoy goes out astern when you set.'],
       ['Fangstmerket etter et trekk viser kilo per line, per garn og per teine. Garn som er satt sammen, regnes som ett garn.', 'The catch mark after a haul shows kilos per line, per net and per pot. Nets joined together count as one net.'],
       ['Med Autonav til ei blåse starter båten å trekke lina, garna eller teinene selv når den er framme.', 'With Autonav to a buoy, the boat starts hauling the line, the nets or the pots by itself when she gets there.'],
       ['Redningsskøyta har stasjoner langs hele kysten, fra Hvaler til Kirkenes, og den nærmeste rykker ut. Mens den er ute etter deg, vises den på AIS.', 'The rescue boat has stations along the whole coast, from Hvaler to Kirkenes, and the nearest one turns out. While she is out for you, she shows on the AIS.'],

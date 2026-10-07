@@ -1489,6 +1489,12 @@ const G3 = (() => {
       palN:[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(nb => mk(b => { b.box(0, 0, 0, 1.2, 0.14, 0.8, [0.66, 0.53, 0.36, 0.05]); for (let k = 0; k < nb; k++) b.box((k % 3 - 1) * 0.4, 0.14 + Math.floor(k / 3) * 0.29, 0, 0.38, 0.28, 0.78, [0.18, 0.4, 0.74, 0.25]); })),
       tub:mk(b => { b.box(0, 0, 0, 1.2, 0.85, 1.0, [0.2, 0.36, 0.62, 0.25]); b.box(0, 0.84, 0, 1.24, 0.05, 1.04, [0.16, 0.3, 0.52, 0.25]); b.box(0, 0.8, 0, 1.08, 0.06, 0.88, [0.93, 0.96, 0.98, 0.5]); }),
       board:mk(b => b.box(0, 0, 0, 0.24, 0.3, 0.02, [0.92, 0.9, 0.84, 0.1])),
+      // icing on deck (tilbakemelding #24): an aluminium ice shovel, a scoop of ice, the insulated ice bin and a box of fish to ice
+      shovel:mk(b => { b.box(0, 0, 0, 0.26, 0.015, 0.3, [0.74, 0.77, 0.8, 0.7]); b.box(0, 0.015, -0.14, 0.26, 0.06, 0.015, [0.74, 0.77, 0.8, 0.7]); b.box(-0.125, 0.015, 0, 0.015, 0.05, 0.28, [0.74, 0.77, 0.8, 0.7]); b.box(0.125, 0.015, 0, 0.015, 0.05, 0.28, [0.74, 0.77, 0.8, 0.7]); }),
+      icebit:mk(b => b.box(0, 0, 0, 0.035, 0.03, 0.035, [0.95, 0.98, 1, 0.6])),
+      scoop:mk(b => { b.box(0, 0, 0, 0.2, 0.05, 0.2, [0.93, 0.96, 0.99, 0.6]); b.box(0.03, 0.04, -0.02, 0.12, 0.03, 0.12, [0.96, 0.98, 1, 0.6]); }),
+      icebin:mk(b => { b.box(0, 0, 0, 0.62, 0.48, 0.48, [0.93, 0.93, 0.9, 0.2]); b.box(0, 0.47, 0, 0.56, 0.03, 0.42, [0.9, 0.95, 0.99, 0.6]); b.box(0.05, 0.49, 0.02, 0.36, 0.03, 0.28, [0.96, 0.98, 1, 0.6]); }),
+      icebox:mk(b => { b.box(0, 0, 0, 0.78, 0.28, 0.38, [0.18, 0.4, 0.74, 0.25]); b.box(0, 0.27, 0, 0.72, 0.012, 0.32, [0.55, 0.57, 0.5, 0.4]); b.box(0, 0.282, 0, 0.66, 0.012, 0.28, [0.92, 0.96, 0.99, 0.6]); }),
       // on deck: the bleeding tub with its bloody water, the gutting table, a cod in the hand, a gob of offal, a bare head
       btub:mk(b => { b.box(0, 0, 0, 0.95, 0.55, 0.7, [0.2, 0.38, 0.62, 0.25]); b.box(0, 0.47, 0, 0.87, 0.04, 0.62, [0.32, 0.08, 0.07, 0.6]); }),
       gtable:mk(b => { b.box(0, 0.82, 0, 0.5, 0.05, 0.95, [0.72, 0.74, 0.76, 0.6]); for (const [x, z] of [[-0.2, -0.42], [0.2, -0.42], [-0.2, 0.42], [0.2, 0.42]]) b.box(x, 0, z, 0.04, 0.82, 0.04, [0.6, 0.62, 0.64, 0.5]); }),
@@ -1529,7 +1535,7 @@ const G3 = (() => {
     for (const s of [-1, 1]){ const hip = W(0, 0.92, s * 0.11), foot = W(sw * s * 0.28, 0.08 + Math.max(0, Math.cos(ph) * s) * 0.07 * (st.walk ? 1 : 0), s * 0.12), knee = [(hip[0] + foot[0]) / 2 + F[0] * 0.07, (hip[1] + foot[1]) / 2, (hip[2] + foot[2]) / 2 + F[1] * 0.07];
       if (K){ drawN(K.thigh, limbM(hip, knee, 1)); drawN(K.shin, limbM(knee, foot, 1)); drawN(K.boot, chain(M4.T(foot[0], foot[1] - 0.08, foot[2]), M4.RY(-h))); continue; }
       drawN(PM.leg, limbM(hip, knee, 0.075)); drawN(PM.leg, limbM(knee, foot, 0.065)); drawN(PM.boot, chain(M4.T(foot[0], foot[1] - 0.08, foot[2]), M4.RY(-h))); }
-    const bend = st.task === 'hose' || st.task === 'coil' || st.task === 'stack' || st.task === 'gut' ? 0.12 : 0;
+    const bend = st.task === 'hose' || st.task === 'coil' || st.task === 'stack' || st.task === 'gut' ? 0.12 : st.task === 'ice' ? 0.22 : 0;
     const tc = W(bend * 0.4, 1.2, 0); drawN(K ? K.torso : PM.torso, chain(M4.T(tc[0], tc[1] - 0.28, tc[2]), M4.RY(-h), M4.RX(-bend)));
     const hd = W(bend, 1.6, 0), HM = chain(M4.T(hd[0], hd[1] - 0.1, hd[2]), M4.RY(-h + (st.task === 'look' ? Math.sin(T * 0.4 + idx) * 0.5 : 0)));
     if (K){ drawN(K.head, HM); drawN(K.hat, HM); } else drawN(P.bare ? PM.headB : PM.head, HM);
@@ -1540,6 +1546,11 @@ const G3 = (() => {
       case 'coil': { const a = t * 3; hands = [W(0.35 + Math.cos(a) * 0.12, 1.05 + Math.sin(a) * 0.15, 0.12), W(0.3, 1.0, -0.15)]; break; }
       case 'stack': { const k = (Math.sin(t * 1.4) + 1) / 2; hands = [W(0.35, 0.7 + k * 0.6, 0.2), W(0.35, 0.7 + k * 0.6, -0.2)]; break; }
       case 'carry': hands = [W(0.3, 1.0, 0.2), W(0.3, 1.0, -0.2)]; break;
+      // icing: the shovel goes into the ice bin on his left, swings over to the box of fish on his right and tips the ice over the fish
+      case 'ice': { const c = ((T + idx * 1.7) % 2.6) / 2.6, e = u => u * u * (3 - 2 * u), sw0 = c < 0.3 ? 0 : c < 0.55 ? e((c - 0.3) / 0.25) : c < 0.75 ? 1 : 1 - e((c - 0.75) / 0.25);
+        const lo = c < 0.3 ? Math.sin(c / 0.3 * Math.PI) : 0, r = -0.5 + sw0 * 1.0, up = 0.62 - lo * 0.12 + Math.sin(sw0 * Math.PI) * 0.3;
+        st.blade = W(0.55, up, r); st.tip = c >= 0.55 && c < 0.75 ? Math.sin((c - 0.55) / 0.2 * Math.PI) : 0; st.full = c >= 0.22 && c < 0.62; st.c = c;
+        const G = W(0.08, 1.02, r * 0.35); hands = [[G[0] + (st.blade[0] - G[0]) * 0.5, G[1] + (st.blade[1] - G[1]) * 0.5, G[2] + (st.blade[2] - G[2]) * 0.5], G]; break; }
       case 'sweep': { const k = Math.sin(t * 2.2) * 0.25; hands = [W(0.25 + k * 0.3, 1.0, 0.1 + k), W(0.35 + k * 0.3, 0.8, -0.05 + k)]; break; }
       case 'coffee': { const k = Math.max(0, Math.sin(t * 0.5)) ** 8; hands = [W(0.18 + (1 - k) * 0.1, 1.05 + k * 0.45, 0.14 - k * 0.1), W(0.05, 0.85, -0.25)]; break; }
       // at a landing: hand signals to the crane driver, reaching for a load coming down, unhooking it, counting, and the radio remote
@@ -1560,6 +1571,13 @@ const G3 = (() => {
     if (st.task === 'coffee') drawN(PM.cup, M4.T(hands[0][0], hands[0][1] + 0.02, hands[0][2]));
     if (st.task === 'gut'){ const c = [(hands[0][0] + hands[1][0]) / 2, Math.min(hands[0][1], hands[1][1]) - 0.02, (hands[0][2] + hands[1][2]) / 2]; if (SK && SK.fishM) drawN(fishOf('torsk'), chain(M4.T(c[0], c[1], c[2]), M4.RY(-h + Math.PI / 2), M4.RZ(Math.PI / 2), M4.S(0.46))); else drawN(PM.fish, chain(M4.T(c[0], c[1], c[2]), M4.RY(-h + Math.PI / 2))); }
     if (st.task === 'tally' || st.task === 'remote'){ const c = [(hands[0][0] + hands[1][0]) / 2, (hands[0][1] + hands[1][1]) / 2, (hands[0][2] + hands[1][2]) / 2]; drawN(st.task === 'tally' ? PM.board : PM.remote, chain(M4.T(c[0], c[1] - 0.05, c[2]), M4.RY(-h), M4.RX(st.task === 'tally' ? -0.5 : 0))); }
+    if (st.task === 'ice'){ const G = hands[1], B = st.blade, dx = B[0] - G[0], dz = B[2] - G[2], yaw = Math.atan2(dx, -dz);
+      drawN(PM.broom, limbM(G, B, 0.018));
+      const BM = chain(M4.T(B[0], B[1], B[2]), M4.RY(-yaw), M4.RZ(st.tip * 1.1)); drawN(PM.shovel, BM); if (st.full) drawN(PM.scoop, chain(BM, M4.T(0, 0.01, 0)));
+      const bin = W(0.15, 0, -0.62), box = W(0.15, 0, 0.62); drawN(PM.icebin, chain(M4.T(bin[0], bin[1], bin[2]), M4.RY(-h))); drawN(PM.icebox, chain(M4.T(box[0], box[1], box[2]), M4.RY(-h)));
+      // the ice falls from the shovel into the box as it tips
+      if (st.tip > 0.05) for (let i = 0; i < 10; i++){ const q = (st.c - 0.55) / 0.2 * 1.4 - hash(i) * 0.4; if (q < 0 || q > 1) continue;
+        drawN(PM.icebit, M4.T(B[0] + (box[0] - B[0]) * q * 0.4 + (hash(i + 3) - 0.5) * 0.18, B[1] - q * q * Math.max(0, B[1] - box[1] - 0.3), B[2] + (box[2] - B[2]) * q * 0.4 + (hash(i + 9) - 0.5) * 0.18)); } }
     if (st.task === 'carry' || st.task === 'stack'){ const c = [(hands[0][0] + hands[1][0]) / 2, (hands[0][1] + hands[1][1]) / 2 - 0.1, (hands[0][2] + hands[1][2]) / 2]; drawN(PM.fbox, chain(M4.T(c[0], c[1], c[2]), M4.RY(-h + Math.PI / 2))); }
     if (st.task === 'sweep'){ const top = hands[0], foot = [top[0] + F[0] * 0.55, y - eye[1] + 0.02, top[2] + F[1] * 0.55]; drawN(PM.broom, limbM(top, foot, 0.02)); drawN(PM.fbox, chain(M4.T(foot[0], foot[1], foot[2]), M4.RY(-h), M4.S(0.5))); }
     if (st.task === 'hose'){ const nz = hands[0]; drawN(PM.hose, limbM(W(-0.4, 0.05, 0.4), nz, 0.025));
@@ -1711,7 +1729,9 @@ const G3 = (() => {
   function deckActivity(){
     const b = S.boat; if (!b || b.land || typeof deckHands !== 'function' || !S.hold || !S.hold.length) return {on:false};
     if (deckHands() < 1 || deckPending() < 0.5) return {on:false};
-    return {on:true, alone:handsAboard() === 1, task:catchGut() && S.hold.some(x => !x.gut && !x.iced) ? 'gut' : 'ice'};
+    // who stands at the table: the skipper when alone, or when the work chains put him there and none of the crew (13-work.js workAssign)
+    const alone = handsAboard() === 1, WA = !alone && typeof workAssign === 'function' ? workAssign().filter(p => p.st === 'sloy' || p.st === 'is') : [];
+    return {on:true, alone, me:alone || (WA.length > 0 && !WA.some(p => p.c)), task:catchGut() && S.hold.some(x => !x.gut && !x.iced) ? 'gut' : 'ice'};
   }
   function drawDeck(BMrel, eye, VP, t, DK){
     const vt = vtype(), G = GEO(vt), d = G.deck || {y:G.gw, z:2}, Bm = G.beam, b = S.boat; DK.pt = null;
@@ -1732,8 +1752,8 @@ const G3 = (() => {
           drawN(fishOf(sp), chain(BMrel, M4.T(ux, d.y, uz), M4.S(ts), M4.T((hash(i * 3) - 0.5) * 0.12, 0.5 + lay * 0.05, z), M4.RY(Math.PI / 2 + (i % 2 ? Math.PI : 0) + (hash(i * 9) - 0.5) * 0.3), M4.RZ(sp === 'krabbe' ? 0 : Math.PI / 2 * (hash(i * 11) > 0.5 ? 1 : -1)), M4.S((0.48 + hash(i * 13) * 0.1) * (sp === 'krabbe' ? 1.7 : 1)))); }
         if (!DK.on) drawN(fishOf(pick(0.3)), chain(BMrel, M4.T(tx, topY, tz + (own ? 0 : 0.25)), M4.RY(0.2), M4.RZ(Math.PI / 2), M4.S(0.5))); } }
     if (!DK.on) return;
-    const wl = xf(BMrel, [tx + 0.62, d.y, tz]), wy = wl[1] + eye[1], P = {gy:() => wy, bare:true, spray:0, kit:DK.alone ? 'skipper' : null}, head = bv.head - Math.PI / 2;
-    drawWorker(P, {x:wl[0] + eye[0], z:wl[2] + eye[2], h:head, task:DK.task === 'gut' ? 'gut' : 'stack', walk:false, s:0}, eye, t, 7);
+    const wl = xf(BMrel, [tx + 0.62, d.y, tz]), wy = wl[1] + eye[1], P = {gy:() => wy, bare:true, spray:0, kit:DK.me ? 'skipper' : null}, head = bv.head - Math.PI / 2;
+    drawWorker(P, {x:wl[0] + eye[0], z:wl[2] + eye[2], h:head, task:DK.task === 'gut' ? 'gut' : 'ice', walk:false, s:0}, eye, t, 7);
     // the offal goes over the port rail into the water, where the gulls come down for it
     const out = [-Math.cos(bv.head), -Math.sin(bv.head)], a = xf(BMrel, [tx - 0.15, d.y + 1.0, tz]), wat = (env.tide || 0) - eye[1];
     DK.pt = [a[0] + eye[0] + out[0] * 2.6, (env.tide || 0), a[2] + eye[2] + out[1] * 2.6];
@@ -1769,7 +1789,10 @@ const G3 = (() => {
   // the buoys of every set within sight, bobbing on the waves, flags blowing downwind
   function drawGearSea(eye, t, VP, H){
     const L = []; for (const s of S.sets || []) if (!s.lost){ L.push(s.a); L.push(s.b); }
-    const g = S.boat.gop; if (g && g.op === 'set' && g.done >= 0) L.push(g.a);
+    // setting, the first buoy goes over the stern and lies astern of her until she has run clear of it (tilbakemelding #25: «bøya skal
+    // ligge på siden eller bak båten når settingen starter»)
+    const g = S.boat.gop; if (g && g.op === 'set' && g.done >= 0){ const back = ((GEO(vtype()).stern || 3) + 5) / 1000, d = Math.hypot(bv.x / 1000 - g.a.x, bv.z / 1000 - g.a.y);
+      L.push(bv.init && d < back ? {x:(bv.x - Math.sin(bv.head) * back * 1000 + Math.cos(bv.head) * 1.5) / 1000, y:(bv.z + Math.cos(bv.head) * back * 1000 + Math.sin(bv.head) * 1.5) / 1000} : g.a); }
     if (!L.length) return; if (!GB) buildGear();
     nSetup(VP); const wd = (windDir(H) - gridGamma({x:bv.x / 1000, y:bv.z / 1000}) + 180) * DEG;
     for (const e of L){ const x = e.x * 1000, z = e.y * 1000; if (Math.hypot(x - eye[0], z - eye[2]) > 4000) continue;
@@ -1944,7 +1967,7 @@ const G3 = (() => {
     // those on «Haling» in the work chains (the skipper too when it is his job; he then leaves the wheel, gopMe): the first at the
     // hauler taking the gear in, the next clearing it at the end of the tray, a third stacking it aft (the skiff's fisher is drawn with
     // the boat)
-    if (!skiff){ const n = clamp(gopHands(), 1, 3), spots = [[HP[0] - 0.55, HP[2] + 0.2, 'coil', Math.PI / 2], [HP[0] - 1.25, HP[2] + 0.75, 'stack', Math.PI * 0.6], [sx * 0.3 + 0.5, DZ + 0.2, 'stack', Math.PI]];
+    if (!skiff){ const n = clamp(gopHands(), 0, 3), spots = [[HP[0] - 0.55, HP[2] + 0.2, 'coil', Math.PI / 2], [HP[0] - 1.25, HP[2] + 0.75, 'stack', Math.PI * 0.6], [sx * 0.3 + 0.5, DZ + 0.2, 'stack', Math.PI]];
       for (let k = 0; k < n; k++){ const [x, z, task, a] = spots[k], wl = xf(BMrel, [x, d.y, z]), wy = wl[1] + eye[1], P = {gy:() => wy, bare:true, spray:0, kit:k === 0 && gopMe() ? 'skipper' : null};
         drawWorker(P, {x:wl[0] + eye[0], z:wl[2] + eye[2], h:bv.head + a, task, walk:false, s:0}, eye, t, 9 + k); } }
   }
@@ -4029,11 +4052,14 @@ const G3 = (() => {
     drawTerrain(TM, eye, VPn, true); drawLit(STAT, TM); drawTileStatics(TM, eye); drawBuildings(TM);
     // whoever works the deck leaves their place: alone, the skipper leaves the wheel
     // resting ashore in the naust or a rorbu (15-energy.js; Jonas 05.10.2026: «Ved hvile forsvinner skipperen fra båten») he is not aboard
-    DECKACT = deckActivity(); const awaySk = (DECKACT.on && DECKACT.alone) || gopMe() || (meAboard() && resting()), awayCr = DECKACT.on && !DECKACT.alone ? 1 : 0;
+    // never more people aboard than the crew list (tilbakemelding #24): the crew at the hauler and the one at the table leave their
+    // places, and with you ashore one of the crew is at the wheel
+    DECKACT = deckActivity(); const awaySk = (DECKACT.on && DECKACT.me) || gopMe() || (meAboard() && resting()), awayCr = DECKACT.on && !DECKACT.me ? 1 : 0;
+    const gHaul = S.boat.gop && !VG.hand ? Math.min(3, gopHands()) - (gopMe() ? 1 : 0) : 0, helmCr = !meAboard() && !awaySk ? 1 : 0;
     // under way the crew are inside (the user: no reason for them to stand on deck all day, 03.10.2026); whoever guts is at the table
     // (drawDeck), and in an open boat they sit where they are. The one at the table leaves their place (a skiff drew them twice).
     // and while the skipper rests ashore the crew are up there too (Jonas 06.10.2026: both sleep in the rorbu)
-    const underway = S.boat.status === 'sailing' && !S.boat.gop, ashore = meAboard() && resting(), deckCrew = (underway && !VG.open) || ashore ? 0 : Math.max(0, ncrew - awayCr);
+    const underway = S.boat.status === 'sailing' && !S.boat.gop, ashore = meAboard() && resting(), deckCrew = (underway && !VG.open) || ashore ? 0 : Math.max(0, ncrew - awayCr - Math.max(0, gHaul) - helmCr);
     if (VG.hand){ drawSkiff(BMrel, VPn, dt, !cam.helm && !awaySk, deckCrew > 0); gl.useProgram(PL.p); }
     // jigging from a boat with a wheelhouse, the skipper leaves the wheel for the rail when the boat is open or he is alone (the
     // hand-worked boats do the same in drawSkiff)
