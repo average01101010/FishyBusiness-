@@ -112,7 +112,7 @@ function microBottom(p, d){ return (vnoise2(p.x * 40, p.y * 40, 3) - 0.5) * Math
 const INSTR = (() => {
   // the GPS's readings in the chart plotter's top bar (#ecdisTop); the GPS box and the little echogram box beside it went on
   // 02.10.2026 (the user's wishes: the box's lines are in the bar, the echo sounder's fish shows on the chart with its scale in the
-  // bar). WPT, XTE and ETA show while a route is sailed (body.navon). echoOn: the echo sounder's setting, which the heat map and
+  // bar). WPT and ETA show while a route is sailed (body.navon). echoOn: the echo sounder's setting, which the heat map and
   // the skiff's console follow
   const echoOn = () => !S.settings || S.settings.echo !== false;
   function show(){ renderGPS(); }
@@ -128,10 +128,7 @@ const INSTR = (() => {
     const wps = S.plan.wps.slice(S.plan.idx), w = wps[0], dw = dist(pose.p, w), brg = Math.atan2(w.x - pose.p.x, -(w.y - pose.p.y));
     let tot = 0, a = pose.p, fishH = 0; wps.forEach((q, i) => { tot += dist(a, q); a = q; if (i && q.fish > 0) fishH += q.fish; });
     const v = (sog || S.plan.speed || 10) * NM, last = wps[wps.length - 1], H0 = S.plan.depAt ? Math.max(H, S.plan.depAt / 60) : H;
-    // off the leg from the last point to the next, to starboard (R) or port (L)
-    const p0 = S.plan.idx > 0 ? S.plan.wps[S.plan.idx - 1] : null, lx = p0 ? w.x - p0.x : 0, ly = p0 ? w.y - p0.y : 0, ll2 = Math.hypot(lx, ly);
-    const xt = ll2 > 1e-6 ? (lx * (pose.p.y - p0.y) - ly * (pose.p.x - p0.x)) / ll2 : 0;
-    return {n:S.plan.idx + 1, wpt:fmt(dw / NM, 2) + ' nm ' + deg3(brg), at:hm(H0 + dw / v), xte:fmt(Math.abs(xt) / NM, 2) + ' nm' + (Math.abs(xt) < 0.005 ? '' : xt > 0 ? ' R' : ' L'),
+    return {n:S.plan.idx + 1, wpt:fmt(dw / NM, 2) + ' nm ' + deg3(brg), at:hm(H0 + dw / v),
       dest:last.port ? portById(last.port).name : 'WPT ' + S.plan.wps.length, eta:hm(H0 + tot / v + fishH)};
   }
   // the box under the little chart in 3D (the user's wish 02.10.2026): the same width and look as the status box over it
@@ -145,7 +142,7 @@ const INSTR = (() => {
     if (el.hidden === on) el.hidden = !on; if (!on) return;
     const row = (k, v) => '<div class="row"><span>' + k + '</span><b>' + v + '</b></div>';
     setHtml(el, row(no ? 'Fart' : 'Speed', fmt(sog, 1) + ' kn') + row(no ? 'Kurs' : 'Course', deg3(pose.hd)) + row('POS', ll[0]) + row('', ll[1]) +
-      (nv ? row('WPT ' + nv.n, nv.wpt) + row('XTE', nv.xte) + row(no ? 'Neste' : 'Next', nv.at) + row('ETA ' + nv.dest, nv.eta) : ''));
+      (nv ? row('WPT ' + nv.n, nv.wpt) + row(no ? 'Neste' : 'Next', nv.at) + row('ETA ' + nv.dest, nv.eta) : ''));
   }
   const GPSC = {k:'', nx:null, st:null};
   function renderGPS(){
@@ -155,10 +152,10 @@ const INSTR = (() => {
     const nav = !!nv;
     if (document.body.classList.contains('navon') !== nav) document.body.classList.toggle('navon', nav);
     if (nav){
-      $('ecWptL').textContent = 'WPT ' + nv.n + ' · ' + nv.at; $('ecWpt').textContent = nv.wpt; $('ecXte').textContent = nv.xte;
+      $('ecWptL').textContent = 'WPT ' + nv.n + ' · ' + nv.at; $('ecWpt').textContent = nv.wpt;
       $('ecEtaL').textContent = 'ETA · ' + nv.dest.toUpperCase(); $('ecEta').textContent = nv.eta;
     }
-    $('ecHdg').textContent = deg3(pose.hd); $('ecCog').textContent = deg3(pose.hd); $('ecSog').textContent = fmt(sog, 1) + ' kn'; $('ecPos').innerHTML = ll[0] + '<br>' + ll[1]; $('ecDepL').textContent = no ? 'DYBDE' : 'DEPTH'; $('ecDep').textContent = b.status === 'port' ? '–' : fmt(depthF(pose.p) + tideCD(H), 1) + ' m';
+    $('ecHdg').textContent = deg3(pose.hd); $('ecSog').textContent = fmt(sog, 1) + ' kn'; $('ecPos').innerHTML = ll[0] + '<br>' + ll[1]; $('ecDepL').textContent = no ? 'DYBDE' : 'DEPTH'; $('ecDep').textContent = b.status === 'port' ? '–' : fmt(depthF(pose.p) + tideCD(H), 1) + ' m';
     // the next tide and the sun's day change slowly: worked out again every 10 game minutes or km
     const tk = Math.floor(S.t / 10) + ':' + Math.round(pose.p.x) + ':' + Math.round(pose.p.y);
     if (GPSC.k !== tk){ GPSC.k = tk; GPSC.nx = tideEvents(H, 14)[0]; GPSC.st = sunTimes(H); }
