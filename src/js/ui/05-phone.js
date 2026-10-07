@@ -409,6 +409,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p77', '07.10.2026', 'Malingsdesign', 'Paint designs', [
+      ['Malerverkstedet har fått malingsdesign: ripestripe, totone, vannlinjestripe, stripefarge og nylakkert. Velg fargen selv og prøv designet på båten din før du bestemmer deg. Linjene følger skroget.', 'The paint shop has paint designs: a sheer stripe, two-tone, a boot stripe, a stripe colour and fresh gloss. Choose the colour yourself and try the design on your boat before you decide. The lines follow the hull.']]],
     ['p76', '07.10.2026', 'Malerverkstedet og båtnavn', 'The paint shop and boat names', [
       ['Nytt under Verft: Malerverkstedet. Velg blant 16 skrogfarger og se fargen på båten din i 3D før du maler.', 'New under Yard: the paint shop. Choose from 16 hull colours and see the colour on your boat in 3D before you paint.'],
       ['Trebåten kan nå males, også plankene.', 'The wooden boat can now be painted, planks and all.'],

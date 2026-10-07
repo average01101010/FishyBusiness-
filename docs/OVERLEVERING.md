@@ -1096,6 +1096,15 @@ Jonas' bestilling ligger i `docs/engasjement.md`, arbeidslista punkt 1. Steg 1 o
   - `pos_put` har fått argumentet `liv` med standardverdi, og den gamle versjonen med sju argumenter er fjernet. `pos_near` leverer feltet videre.
   - Spillet sender `livStr(S.boat)` bare når båten er malt. Svarer serveren 404 på et kall med `liv`, sendes posisjonen uten (`WORLDP.noLiv`), så den felles verdenen aldri slås av.
   - `peerStates` tar `liv` med, og `npcModel` bygger modellen med `livParse(liv)`. Bare farger fra `HULLPAL` godtas.
+- **Malingsdesign** (steg 3, 07.10.2026):
+  - Fem design, `DESIGNS` i `vessel3d.js`: ripestripe, totone, vannlinjestripe, stripefarge (modellens sone 2) og nylakkert (glans).
+  - Hvert design kjøpes én gang og er ditt på alle båter: `S.cos`, og på kontoen `entitlements`, som kommer som `CLOUD.owned` i `tm_hello`.
+  - Produktene `des_*` (type `skin`) står i `supabase/migrations/20261007100000_designs.sql`. `shop_paid` legger også inn eierskapet, og `shop_refund` tar det bort. Spillet gir designet med `giveCos` (`shopGive`, `give:'cos'`).
+  - Et design kan prøves på båten før kjøpet. Det som ble prøvd, settes på når kjøpet kommer tilbake (`S.cosWant`).
+  - Linjene kuttes inn i skrogets egne trekanter (`glbDesign`) langs skutesidens profil (`topsides`, 96 stasjoner fra sone 1). Kantene blir skarpe uansett hvor fint modellen er delt opp.
+  - Egen båt får nye buffere når et design endrer formen (`livGeo`), ellers lastes bare fargene opp på nytt.
+  - En byggesettbåt tar ripestripe og vannlinjestripe som `col.stripe` og `col.boot` (`kitLiv`). `designFits` sier hva hver type kan ha.
+  - `livStr` sender designene til de andre spillerne (`'h:..;r:..;t:..;v:..;s:..;g:1'`).
 - **Test:**
   - `maletest`: knappen, siden, prøvefargen, at første fargevalg er gratis, prisen, for lite penger, lagringen, lukking og innbytte.
   - `cloudtest`: malingen går opp og ned, og en server uten den ennå gir ingen avbrudd.

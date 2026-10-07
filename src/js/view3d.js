@@ -2406,8 +2406,12 @@ const G3 = (() => {
   // the hand-steered boat's paint (vessel3d.js hullLiv): the hull's colours uploaded again when it changes
   function paintHand(){
     const lv = hullLiv(S.boat), k = livKey(lv); if ((SK.livK || '') === k || !SK.hullT) return; SK.livK = k;
-    const part = glbPart(SK.hullT, 'lod0'); if (!part || part.c.length !== SK.hull.n * 4) return;
-    gl.bindBuffer(gl.ARRAY_BUFFER, SK.hull.cb); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(glbPaint(part, lv).c), gl.STATIC_DRAW);
+    const part = glbPart(SK.hullT, 'lod0'); if (!part) return;
+    const o = lv && DESIGNS.some(q => lv[q]) ? glbDesign(SK.hullT, part, lv) : glbPaint(part, lv);
+    if (o.p.length === SK.hull.n * 3){ gl.bindBuffer(gl.ARRAY_BUFFER, SK.hull.cb); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(o.c), gl.STATIC_DRAW); return; }
+    // a design that cuts the hull: new buffers for the shape (the old ones go)
+    for (const b of [SK.hull.pb, SK.hull.nb, SK.hull.cb]) gl.deleteBuffer(b);
+    SK.hull = {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3};
   }
   function limbM(A, B, r){ const d = [B[0] - A[0], B[1] - A[1], B[2] - A[2]], L = Math.hypot(d[0], d[1], d[2]) || 1e-6, z = d.map(v => v / L), up = Math.abs(z[1]) > 0.9 ? [1, 0, 0] : [0, 1, 0];
     let x = [up[1] * z[2] - up[2] * z[1], up[2] * z[0] - up[0] * z[2], up[0] * z[1] - up[1] * z[0]]; const xl = Math.hypot(x[0], x[1], x[2]) || 1; x = x.map(v => v / xl); const y = [z[1] * x[2] - z[2] * x[1], z[2] * x[0] - z[0] * x[2], z[0] * x[1] - z[1] * x[0]];
@@ -3448,10 +3452,12 @@ const G3 = (() => {
   // again when the paint changes (the shape is the same), so trying colours in the paint shop builds nothing new
   function pvm(t, liv){
     const key = liv ? t + '|own' : t; let E = PVM[key];
+    // a design that cuts the hull (vessel3d.js livGeo) is a new shape: the own buffers are built again
+    if (E && liv && E.geoK !== livGeo(liv)){ for (const b of [E.hull.pb, E.hull.nb, E.hull.cb]) gl.deleteBuffer(b); E = PVM[key] = null; }
     if (!E){ const m = liv ? buildVesselModel(t, 1, liv) : vesselModel(t); if (!m) return null;
       const up = o => ({pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3});
       let cap = null; if (m.cap){ const c = MB(); for (const tr of m.cap) c.tri(tr[0], tr[1], tr[2], [0, 0, 0]); cap = c.mesh(); }
-      E = PVM[key] = {hull:up(m.o), glass:up(m.glass), cap, livK:livKey(liv)}; }
+      E = PVM[key] = {hull:up(m.o), glass:up(m.glass), cap, livK:livKey(liv), geoK:livGeo(liv)}; }
     if (liv){ const k = livKey(liv); if (E.livK !== k){ E.livK = k; const m = buildVesselModel(t, 1, liv);
       if (m && m.o.c.length === E.hull.n * 4){ gl.bindBuffer(gl.ARRAY_BUFFER, E.hull.cb); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(m.o.c), gl.STATIC_DRAW); } } }
     return E;

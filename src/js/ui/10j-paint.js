@@ -1,51 +1,100 @@
 // ===== THE PAINT SHOP (Malerverkstedet; Jonas 06.10.2026, docs/engasjement.md): a button of its own under Verft. Your own boat lies
-// in 3D with the camera turning slowly round her (G3.paintView), and the colour you tap shows on her hull at once (vessel3d.js PAINTPRE),
-// before anything is paid. The hull's colour costs game money, about 1 % of what the boat costs (at least 1 500 kr), and every boat's
-// first choice is free: b.liv is unset until she is painted the first time (a bought boat starts without it). The paint is the boat's
-// (b.liv, in the vessel's state), so it follows her through the fleet and into the save. =====
+// in 3D with the camera turning slowly round her (G3.paintView), and what you choose shows on her at once (vessel3d.js PAINTPRE), before
+// anything is paid. The hull's colour costs game money, about 1 % of what the boat costs (at least 1 500 kr), and every boat's first
+// colour is free: b.liv.hull is unset until she is painted the first time (a bought boat starts without it). The designs (the stripe
+// under the sheer, two-tone, the waterline stripe, the stripe colour and fresh gloss) are bought once for real money and are then yours
+// on every boat (S.cos, and the account's entitlements as CLOUD.owned); they can be tried on before they are bought. The paint is the
+// boat's (b.liv = {hull, d:{design: colour}}, in the vessel's state), so it follows her through the fleet and into the save. =====
 // (a var: the dock, earlier in the same script, asks it on every page it draws, and must find nothing rather than fail before this runs)
 var PAINT = (() => {
   const L = (no, en) => S.lang === 'en' ? en : no;
+  const DNAME = {ripe:['Ripestripe', 'Sheer stripe', 'En stripe like under rekka, i fargen du velger.', 'A stripe just under the sheer, in the colour you choose.'],
+    totone:['Totone', 'Two-tone', 'Den nedre delen av skutesiden i en annen farge.', 'The lower part of the topsides in another colour.'],
+    vann:['Vannlinjestripe', 'Boot stripe', 'En stripe langs vannlinja.', 'A stripe along the waterline.'],
+    stripe:['Stripefarge', 'Stripe colour', 'Båtens egen stripe i en annen farge.', 'The boat\'s own stripe in another colour.'],
+    lakk:['Nylakkert', 'Fresh gloss', 'Blank, nylakkert skutesid som speiler lyset.', 'Glossy, freshly varnished topsides that catch the light.']};
+  const DNOK = 29;
   const price = b => Math.max(1500, Math.round((VESSELS[b.type].price || 0) * 0.01 / 100) * 100);
   const cur = b => (b.liv && b.liv.hull) || 'orig';
-  const css = e => e[3] ? 'rgb(' + e[3].map(v => Math.round(v * 255)).join(',') + ')' : '';
-  let sel = null, on = false;
-  // the drawer page is open or not: the camera and the colour being tried go with it
+  const curD = (b, k) => (b.liv && b.liv.d && b.liv.d[k]) || null;
+  const owned = k => !!((S.cos && S.cos[k]) || (typeof CLOUD !== 'undefined' && (CLOUD.owned || []).includes('des_' + k)));
+  const css = e => e && e[3] ? 'rgb(' + e[3].map(v => Math.round(v * 255)).join(',') + ')' : '';
+  const copy = x => { const o = JSON.parse(JSON.stringify(x || {})); o.d = o.d || {}; return o; };
+  let pre = null, on = false;
+  // the drawer page is open or not: the camera and the paint being tried go with it
   function live(want){
     if (want === on) return; on = want;
-    if (!want){ sel = null; PAINTPRE = null; }
+    pre = want ? copy(S.boat.liv) : null; PAINTPRE = pre;
     if (typeof G3 !== 'undefined' && G3.paintView) G3.paintView(want);
   }
+  const sw = (pa, d, k, sel, now, e) => '<button class="pnt-sw' + (k === sel ? ' on' : '') + (k === now ? ' cur' : '') + (e[3] ? '' : ' orig') + '" data-pa="' + pa + '"' + (d ? ' data-d="' + d + '"' : '') +
+    ' data-k="' + k + '" title="' + L(e[1], e[2]) + '" aria-label="' + L(e[1], e[2]) + '"' + (e[3] ? ' style="background:' + css(e) + '"' : '') + '></button>';
   function page(){
-    const b = S.boat, c = cur(b), s = sel || c, e = HULLPAL.find(x => x[0] === s) || HULLPAL[0], free = !b.liv, pr = price(b);
+    const b = S.boat; if (!pre){ pre = copy(b.liv); PAINTPRE = pre; }
     if (b.status !== 'port') return '<div class="ph-c"><p class="ph-note">' + L('Båten må ligge i havn for å males.', 'The boat must be in port to be painted.') + '</p></div>';
-    const sw = HULLPAL.map(x => '<button class="pnt-sw' + (x[0] === s ? ' on' : '') + (x[0] === c ? ' cur' : '') + (x[3] ? '' : ' orig') + '" data-pa="pntsel" data-k="' + x[0] + '" title="' + L(x[1], x[2]) +
-      '" aria-label="' + L(x[1], x[2]) + '"' + (x[3] ? ' style="background:' + css(x) + '"' : '') + '></button>').join('');
-    const same = s === c, cost = free ? 0 : pr, short = cost > S.cash;
-    return '<div class="ph-c"><div class="ph-card"><h4>' + L('Skrogfarge', 'Hull colour') + '</h4>' +
+    const c = cur(b), s = pre.hull || 'orig', e = HULLPAL.find(x => x[0] === s) || HULLPAL[0], free = !(b.liv && b.liv.hull), pr = price(b);
+    const hullCh = s !== c, dCh = DESIGNS.some(k => owned(k) && (pre.d[k] || null) !== curD(b, k)), cost = hullCh && !free ? pr : 0, short = cost > S.cash;
+    const tried = DESIGNS.filter(k => !owned(k) && pre.d[k] && designFits(b.type, k));
+    const h = ['<div class="ph-c"><div class="ph-card"><h4>' + L('Skrogfarge', 'Hull colour') + '</h4>' +
       '<p class="ph-note">' + L('Trykk på en farge, så vises den på skroget. Du betaler først når du maler.', 'Tap a colour and it shows on the hull. You pay only when you paint.') + '</p>' +
-      '<div class="pnt-pal">' + sw + '</div>' +
+      '<div class="pnt-pal">' + HULLPAL.map(x => sw('pntsel', '', x[0], s, c, x)).join('') + '</div>' +
       '<p class="pnt-name"><b>' + L(e[1], e[2]) + '</b>' + (s === c ? ' · ' + L('nå', 'now') : '') + '</p>' +
-      '<button class="ph-btn" data-pa="pntgo"' + (same || short ? ' disabled' : '') + '>' + (same ? L('Båten har denne fargen', 'The boat has this colour') :
-        L('Mal skroget', 'Paint the hull') + ' · ' + (free ? L('gratis', 'free') : kr(cost))) + '</button>' +
-      (short && !same ? '<p class="ph-note r2">' + L('Du har ikke nok penger.', 'You do not have enough money.') + '</p>' : '') +
       '<p class="ph-note">' + (free ? L('Første fargevalg på denne båten er gratis.', 'The first choice of colour on this boat is free.') :
-        L('Å male skroget koster ' + kr(pr) + ' for ' + (S.boatName || 'båten') + '.', 'Painting the hull costs ' + kr(pr) + ' for ' + (S.boatName || 'the boat') + '.')) + '</p></div></div>';
+        L('Å male skroget koster ' + kr(pr) + ' for ' + (S.boatName || 'båten') + '.', 'Painting the hull costs ' + kr(pr) + ' for ' + (S.boatName || 'the boat') + '.')) + '</p></div>'];
+    // the designs this boat can wear
+    const ks = DESIGNS.filter(k => designFits(b.type, k));
+    if (ks.length){
+      h.push('<h4 class="pnt-h">' + L('Malingsdesign', 'Paint designs') + '</h4>');
+      for (const k of ks){ const N = DNAME[k], v = pre.d[k] || null, has = owned(k);
+        h.push('<div class="ph-card pnt-d"><h4>' + L(N[0], N[1]) + '<span class="pnt-own">' + (has ? L('Din', 'Yours') : realKr(DNOK)) + '</span></h4><p class="ph-note">' + L(N[2], N[3]) + '</p>' +
+          (k === 'lakk' ? '<div class="pnt-row"><button class="ph-btn sm' + (v ? ' on' : '') + '" data-pa="pntd" data-d="lakk" data-k="' + (v ? '' : '1') + '">' + (v ? L('På', 'On') : L('Prøv', 'Try')) + '</button></div>'
+            : '<div class="pnt-pal sm">' + HULLPAL.filter(x => x[3]).map(x => sw('pntd', k, x[0], v, curD(b, k), x)).join('') +
+              '<button class="pnt-sw off' + (v ? '' : ' on') + '" data-pa="pntd" data-d="' + k + '" data-k="" title="' + L('Av', 'Off') + '" aria-label="' + L('Av', 'Off') + '">' + L('Av', 'Off') + '</button></div>') +
+          (!has && v ? '<button class="ph-btn" data-pa="pntbuy" data-d="' + k + '">' + shopLabel(DNOK) + '</button>' + shopFine() : '') + '</div>'); }
+    }
+    h.push('<div class="ph-card pnt-go">' + (tried.length ? '<p class="ph-note">' + L('Du prøver ' + tried.map(k => DNAME[k][0].toLowerCase()).join(' og ') + '. Kjøp designet for å beholde det.',
+        'You are trying ' + tried.map(k => DNAME[k][1].toLowerCase()).join(' and ') + '. Buy the design to keep it.') + '</p>' : '') +
+      '<button class="ph-btn" data-pa="pntgo"' + (!hullCh && !dCh || short ? ' disabled' : '') + '>' + (hullCh ? L('Mal skroget', 'Paint the hull') + ' · ' + (free ? L('gratis', 'free') : kr(cost)) :
+        dCh ? L('Bruk designet', 'Use the design') : L('Båten har denne malingen', 'The boat has this paint')) + '</button>' +
+      (short ? '<p class="ph-note r2">' + L('Du har ikke nok penger.', 'You do not have enough money.') + '</p>' : '') + '</div></div>');
+    return h.join('');
+  }
+  // what the paint shop puts on: the hull (paid for when it changes) and the designs that are yours
+  function apply(b){
+    const s = pre.hull || 'orig', d = {}; for (const k of DESIGNS) if (owned(k) && pre.d[k] && designFits(b.type, k)) d[k] = pre.d[k];
+    const liv = {}; if (s !== cur(b) || (b.liv && b.liv.hull)) liv.hull = s; if (Object.keys(d).length) liv.d = d;
+    if (Object.keys(liv).length) b.liv = liv; else delete b.liv;
   }
   function act(a, d){
-    const b = S.boat;
-    if (a === 'pntsel'){ if (!HULLPAL.some(x => x[0] === d.k)) return false; sel = d.k; PAINTPRE = d.k; return true; }
+    const b = S.boat; if (!pre) pre = copy(b.liv);
+    if (a === 'pntsel'){ if (!HULLPAL.some(x => x[0] === d.k)) return false; pre.hull = d.k; PAINTPRE = pre; return true; }
+    if (a === 'pntd'){ const k = d.d; if (!DESIGNS.includes(k)) return false;
+      if (!d.k) delete pre.d[k]; else if (k === 'lakk') pre.d[k] = 1; else if (HULLPAL.some(x => x[0] === d.k && x[3])) pre.d[k] = d.k; else return false;
+      PAINTPRE = pre; return true; }
+    if (a === 'pntbuy'){ const k = d.d; if (!DESIGNS.includes(k) || owned(k)) return false;
+      S.cosWant = Object.assign({}, S.cosWant, {[k]:pre.d[k] || 1});   // what to put on when the design comes back from the payment
+      payBuy('des_' + k, () => { giveCos(k); pre = copy(S.boat.liv); PAINTPRE = pre; if (typeof DOCK !== 'undefined') DOCK.render(); });
+      return true; }
     if (a === 'pntgo'){
-      const s = sel || cur(b); if (s === cur(b) || b.status !== 'port') return false;
-      const free = !b.liv, cost = free ? 0 : price(b); if (cost > S.cash) return false;
-      if (cost){ S.cash -= cost; S.stats.costs += cost; }
-      b.liv = Object.assign({}, b.liv, {hull:s}); sel = null; PAINTPRE = null;
-      const e = HULLPAL.find(x => x[0] === s);
-      log((S.boatName || 'Båten') + ' er malt ' + (s === 'orig' ? 'tilbake i originalfargen' : e[1].toLowerCase()) + (cost ? ' for ' + fmt(cost) + ' kr' : '') + '.',
-        (S.boatName || 'The boat') + ' is painted ' + (s === 'orig' ? 'back in her original colour' : e[2].toLowerCase()) + (cost ? ' for NOK ' + fmt(cost) : '') + '.');
+      if (b.status !== 'port') return false; const s = pre.hull || 'orig', free = !(b.liv && b.liv.hull), cost = s !== cur(b) && !free ? price(b) : 0; if (cost > S.cash) return false;
+      const was = cur(b); if (cost){ S.cash -= cost; S.stats.costs += cost; }
+      apply(b); pre = copy(b.liv); PAINTPRE = pre;
+      if (s !== was){ const e = HULLPAL.find(x => x[0] === s);
+        log((S.boatName || 'Båten') + ' er malt ' + (s === 'orig' ? 'tilbake i originalfargen' : e[1].toLowerCase()) + (cost ? ' for ' + fmt(cost) + ' kr' : '') + '.',
+          (S.boatName || 'The boat') + ' is painted ' + (s === 'orig' ? 'back in her original colour' : e[2].toLowerCase()) + (cost ? ' for NOK ' + fmt(cost) : '') + '.'); }
+      else log((S.boatName || 'Båten') + ' har fått ny maling.', (S.boatName || 'The boat') + ' has new paint.');
       return true;
     }
     return false;
   }
-  return {page, act, live, price};
+  return {page, act, live, price, owned, DNAME, DNOK};
 })();
+// a design is yours (the shop's grant, ui/10i-shop.js shopGive, or a test): on every boat from now on, and on this one at once if it was
+// being tried when it was bought
+function giveCos(k){
+  if (!DESIGNS.includes(k)) return null; S.cos = Object.assign({}, S.cos, {[k]:1});
+  const want = S.cosWant && S.cosWant[k], b = S.boat; if (S.cosWant) delete S.cosWant[k];
+  if (want && designFits(b.type, k)){ b.liv = Object.assign({}, b.liv); b.liv.d = Object.assign({}, b.liv.d, {[k]:want}); }
+  const N = PAINT.DNAME[k]; log('Malingsdesignet «' + N[0] + '» er ditt.', 'The paint design «' + N[1] + '» is yours.');
+  return S.lang === 'en' ? N[1] : N[0];
+}

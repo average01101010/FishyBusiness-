@@ -385,7 +385,7 @@ function glbPaint(part, liv){
 function glbModel(type, lod, liv){
   const G = glbLoad(type); if (!G || !G.parts.lod0) return null;
   const part = lod >= 1 ? G.parts.lod0 : (G.parts.lod1 || G.parts.lod0); let o = part;
-  if (liv && liv.hull) o = glbPaint(part, liv);
+  if (liv && DESIGNS.some(k => liv[k])) o = glbDesign(type, part, liv); else if (liv && liv.hull) o = glbPaint(part, liv);
   // an outboard and its propeller are parts of their own, in their own frames (they turn in the game): the whole boat carries them in place
   const sk = G.ex.anchors && G.ex.anchors.skiff;
   if (lod >= 1 && sk && G.parts.outboard){
@@ -412,7 +412,7 @@ function buildVesselModel(type, lod, liv){
   lod = lod || 1; const V = VESSELS[type], sp = vesselSpec(type); if (!V || !sp) return null;
   { const g = glbModel(type, lod, liv); if (g) return g; }       // a detailed model, also for the hand-steered starter boat
   if (sp.hand) return null;
-  const H = Object.assign({L:V.len, B:V.beam, T:V.draft}, sp.hull, liv ? {col:Object.assign({}, sp.hull.col, liv)} : null), hs = hullShape(H), o = VB(), gb = VB(); o.lod = lod; gb.lod = lod;
+  const H = Object.assign({L:V.len, B:V.beam, T:V.draft}, sp.hull, liv ? {col:Object.assign({}, sp.hull.col, kitLiv(liv))} : null), hs = hullShape(H), o = VB(), gb = VB(); o.lod = lod; gb.lod = lod;
   hullBuild(o, hs, lod); const hullN = o.p.length;   // the hull's own triangles come first (nameStrips reads them)
   let house = null, roofY = null; const anch = {};
   for (const [kind, p] of sp.parts){
@@ -475,16 +475,107 @@ const HULLPAL = [
   ['kobolt', 'Koboltblå', 'Cobalt', [0.1, 0.25, 0.55]], ['himmel', 'Himmelblå', 'Sky blue', [0.42, 0.62, 0.8]], ['petrol', 'Petrol', 'Petrol', [0.06, 0.32, 0.36]],
   ['flaske', 'Flaskegrønn', 'Bottle green', [0.08, 0.26, 0.16]], ['mose', 'Mosegrønn', 'Moss green', [0.32, 0.4, 0.24]], ['oksblod', 'Oksblodrød', 'Oxblood', [0.42, 0.08, 0.07]],
   ['rod', 'Rød', 'Red', [0.7, 0.12, 0.1]], ['oransje', 'Oransje', 'Orange', [0.95, 0.42, 0.08]], ['gul', 'Gul', 'Yellow', [0.95, 0.74, 0.12]], ['oker', 'Okergul', 'Ochre', [0.78, 0.56, 0.18]]];
+// A boat's paint (b.liv): {hull:<colour>, d:{ripe, totone, vann, stripe: <colour>, lakk:1}}; what the models take (modelLiv):
+// {hull:[r, g, b, gloss], ripe:[r, g, b], ..., lakk:true}. PAINTPRE is the paint being tried in the paint shop on the boat you are aboard.
 let PAINTPRE = null;
-function hullLiv(b){
-  const k = PAINTPRE && typeof S !== 'undefined' && b === S.boat ? PAINTPRE : b && b.liv && b.liv.hull, e = k && HULLPAL.find(x => x[0] === k);
-  return e && e[3] ? {hull:[e[3][0], e[3][1], e[3][2], 0.6]} : null;
+const DESIGNS = ['ripe', 'totone', 'vann', 'stripe', 'lakk'];
+const palRGB = k => { const e = k && HULLPAL.find(x => x[0] === k); return e && e[3] ? e[3].slice() : null; };
+function modelLiv(L){
+  if (!L) return null; const o = {}, h = palRGB(L.hull); let any = false;
+  if (h){ o.hull = [h[0], h[1], h[2], 0.6]; any = true; }
+  for (const k of DESIGNS){ const v = L.d && L.d[k]; if (!v) continue; if (k === 'lakk'){ o.lakk = true; any = true; } else { const c = palRGB(v); if (c){ o[k] = c; any = true; } } }
+  return any ? o : null;
 }
-function livKey(liv){ return liv && liv.hull ? liv.hull.join(',') : ''; }
+function hullLiv(b){ return modelLiv(PAINTPRE && typeof S !== 'undefined' && b === S.boat ? PAINTPRE : b && b.liv); }
+function livKey(liv){ return liv ? ['hull', ...DESIGNS].map(k => liv[k] ? (liv[k] === true ? 1 : liv[k].join(',')) : '').join('|') : ''; }
+// the designs that cut the hull's triangles (a change of these is a new shape; the others are only colours)
+function livGeo(liv){ return liv ? ['ripe', 'totone', 'vann'].filter(k => liv[k]).join(',') : ''; }
 // the paint as it goes to the other players with the position (ui/10h-world.js pos_put, supabase/migrations/20261007090000_livery.sql):
-// 'h:<colour>'; and back again into what the models take. Only colours in HULLPAL count, so nothing else can be painted on a boat.
-function livStr(b){ const k = b && b.liv && b.liv.hull; return k && k !== 'orig' && HULLPAL.some(x => x[0] === k) ? 'h:' + k : ''; }
-function livParse(s){ const m = /(?:^|;)h:([a-z]+)/.exec(String(s || '')), e = m && HULLPAL.find(x => x[0] === m[1]); return e && e[3] ? {hull:[e[3][0], e[3][1], e[3][2], 0.6]} : null; }
+// 'h:<colour>;r:..;t:..;v:..;s:..;g:1'; and back again. Only colours in HULLPAL count, so nothing else can be painted on a boat.
+const LIVS = {hull:'h', ripe:'r', totone:'t', vann:'v', stripe:'s', lakk:'g'};
+function livStr(b){
+  const L = b && b.liv; if (!L) return ''; const out = [];
+  if (L.hull && L.hull !== 'orig' && palRGB(L.hull)) out.push('h:' + L.hull);
+  for (const k of DESIGNS){ const v = L.d && L.d[k]; if (k === 'lakk' ? v : v && palRGB(v)) out.push(LIVS[k] + ':' + (k === 'lakk' ? 1 : v)); }
+  return out.join(';');
+}
+function livParse(s){
+  const L = {d:{}}; for (const part of String(s || '').split(';')){ const [a, v] = part.split(':'), k = Object.keys(LIVS).find(q => LIVS[q] === a); if (!k || !v) continue;
+    if (k === 'hull') L.hull = v; else L.d[k] = k === 'lakk' ? 1 : v; }
+  return modelLiv(L);
+}
+// ---- paint designs (Malerverkstedet): a stripe under the sheer (ripe), a second colour on the lower topsides (totone), a stripe at the
+// waterline (vann), the model's own stripe zone in a colour of one's choice (stripe) and fresh gloss (lakk). The lines are cut into the
+// hull's own triangles (a detailed model's paint zone 1) along the topsides' profile, so their edges are sharp whatever the mesh. ----
+const TOPS = {};
+function topsides(type){
+  if (type in TOPS) return TOPS[type];
+  const T = hullTris(type); if (T.length < 8) return TOPS[type] = null;
+  let z0 = Infinity, z1 = -Infinity; for (const t of T) for (const k of [2, 5, 8]){ if (t[k] < z0) z0 = t[k]; if (t[k] > z1) z1 = t[k]; }
+  const N = 96, top = new Array(N + 1).fill(-Infinity), bot = new Array(N + 1).fill(Infinity), st = i => z0 + (z1 - z0) * i / N;
+  for (const t of T){
+    const za = Math.min(t[2], t[5], t[8]), zb = Math.max(t[2], t[5], t[8]);
+    for (let i = Math.max(0, Math.ceil((za - z0) / (z1 - z0) * N)); i <= N && st(i) <= zb; i++){ const z = st(i);
+      for (const [a, b] of [[0, 3], [3, 6], [6, 0]]){ const zA = t[a + 2], zB = t[b + 2]; if ((zA - z) * (zB - z) > 0) continue;
+        const ys = zA === zB ? [t[a + 1], t[b + 1]] : [t[a + 1] + (t[b + 1] - t[a + 1]) * (z - zA) / (zB - zA)];
+        for (const y of ys){ if (y > top[i]) top[i] = y; if (y < bot[i]) bot[i] = y; } } }
+  }
+  for (let i = 0; i <= N; i++) if (!isFinite(top[i])){ let j = 1; while (j <= N && !(i - j >= 0 && isFinite(top[i - j])) && !(i + j <= N && isFinite(top[i + j]))) j++;
+    const k = i - j >= 0 && isFinite(top[i - j]) ? i - j : i + j; if (k >= 0 && k <= N && isFinite(top[k])){ top[i] = top[k]; bot[i] = bot[k]; } }
+  return TOPS[type] = {z0, z1, N, top, bot};
+}
+// the lines of the designs as heights along the hull: under the sheer a stripe (about 8 % of the freeboard, 4 to 40 cm, a little down
+// from the top), the second colour below 42 % of the topsides, the waterline stripe at the bottom of them (about 7 %, 4 to 30 cm)
+function designLines(TS, liv){
+  const at = (arr, z) => { const f = Math.max(0, Math.min(1, (z - TS.z0) / ((TS.z1 - TS.z0) || 1))) * TS.N, i = Math.min(TS.N - 1, Math.floor(f)), u = f - i; return arr[i] * (1 - u) + arr[i + 1] * u; };
+  const top = z => at(TS.top, z), bot = z => at(TS.bot, z), fb = z => Math.max(0.05, top(z) - bot(z)), cl = (v, a, b) => Math.max(a, Math.min(b, v));
+  const L = {};
+  if (liv.ripe){ L.r1 = z => top(z) - Math.max(0.03, 0.05 * fb(z)); L.r2 = z => L.r1(z) - cl(0.08 * fb(z), 0.04, 0.4); }
+  if (liv.totone) L.t = z => bot(z) + 0.42 * fb(z);
+  if (liv.vann) L.v = z => bot(z) + cl(0.07 * fb(z), 0.04, 0.3);
+  return L;
+}
+function glbDesign(type, part, liv){
+  const TS = topsides(type), L = TS ? designLines(TS, liv) : {}, cuts = Object.values(L), Z = part.zone, A = part.ao;
+  const P = part.p, Nn = part.n, C = part.c, op = [], on = [], oc = [];
+  // the colour of a piece by where its middle is; null keeps the model's own
+  const colAt = (y, z) => { let c = liv.hull ? liv.hull : null;
+    if (L.t && y < L.t(z)) c = liv.totone; if (L.v && y < L.v(z)) c = liv.vann; if (L.r1 && y < L.r1(z) && y > L.r2(z)) c = liv.ripe; return c; };
+  const emit = (v, col, gloss) => { op.push(v.p[0], v.p[1], v.p[2]); on.push(v.n[0], v.n[1], v.n[2]);
+    if (col) oc.push(col[0] * v.a, col[1] * v.a, col[2] * v.a, gloss); else oc.push(v.c[0], v.c[1], v.c[2], gloss); };
+  const lerp = (u, w, t) => ({p:u.p.map((x, i) => x + (w.p[i] - x) * t), n:u.n.map((x, i) => x + (w.n[i] - x) * t), c:u.c.map((x, i) => x + (w.c[i] - x) * t), a:u.a + (w.a - u.a) * t});
+  for (let v = 0; v + 2 < P.length / 3; v += 3){
+    const z0 = Z ? Z[v] : 0, all1 = Z && Z[v] === 1 && Z[v + 1] === 1 && Z[v + 2] === 1, all2 = Z && Z[v] === 2 && Z[v + 1] === 2 && Z[v + 2] === 2;
+    const V = [0, 1, 2].map(k => { const i = v + k; return {p:[P[i * 3], P[i * 3 + 1], P[i * 3 + 2]], n:[Nn[i * 3], Nn[i * 3 + 1], Nn[i * 3 + 2]], c:[C[i * 4], C[i * 4 + 1], C[i * 4 + 2], C[i * 4 + 3]], a:A ? A[i] : 1}; });
+    if (all2 && liv.stripe){ for (const q of V) emit(q, liv.stripe, q.c[3]); continue; }
+    if (!all1){ for (const q of V) emit(q, null, q.c[3]); continue; }
+    const gloss = liv.lakk ? Math.max(V[0].c[3], 0.85) : V[0].c[3];
+    // cut the triangle by each line in turn (Sutherland–Hodgman on both sides), then each piece takes its colour
+    let polys = [V];
+    for (const h of cuts){ const next = [];
+      for (const poly of polys){ const d = poly.map(q => q.p[1] - h(q.p[2])); if (d.every(x => x >= 0) || d.every(x => x <= 0)){ next.push(poly); continue; }
+        const up = [], dn = [];
+        for (let i = 0; i < poly.length; i++){ const a = poly[i], b = poly[(i + 1) % poly.length], da = d[i], db = d[(i + 1) % poly.length];
+          (da >= 0 ? up : dn).push(a); if ((da > 0 && db < 0) || (da < 0 && db > 0)){ const m = lerp(a, b, da / (da - db)); up.push(m); dn.push(m); } }
+        if (up.length >= 3) next.push(up); if (dn.length >= 3) next.push(dn); }
+      polys = next; }
+    for (const poly of polys){ let cy = 0, cz = 0; for (const q of poly){ cy += q.p[1]; cz += q.p[2]; } cy /= poly.length; cz /= poly.length;
+      const col = colAt(cy, cz);
+      for (let i = 1; i + 1 < poly.length; i++){ emit(poly[0], col, gloss); emit(poly[i], col, gloss); emit(poly[i + 1], col, gloss); } }
+  }
+  return {p:op, n:on, c:oc};
+}
+// which designs a type can wear: a detailed model with topsides has the lines and gloss, the stripe colour where it has a stripe zone;
+// a kit model its own stripe (col.stripe) and boot stripe (col.boot)
+function designFits(type, k){
+  const G = glbHas(type) ? glbLoad(type) : null;
+  if (G && G.parts.lod0){ if (k === 'lakk') return true; if (k === 'stripe') return !!(G.parts.lod0.zone && G.parts.lod0.zone.includes(2)); return !!topsides(type); }
+  const sp = vesselSpec(type), col = sp && sp.hull && sp.hull.col; if (!col) return false;
+  return k === 'ripe' ? !!col.stripe : k === 'vann' ? !!col.boot : false;
+}
+// a kit model's colours from the paint: the hull, the sheer stripe and the boot stripe (and what a fleet livery sets as it is)
+function kitLiv(liv){ const o = {}; if (liv.hull) o.hull = liv.hull; if (liv.ripe) o.stripe = liv.ripe.concat([0.5]); if (liv.vann) o.boot = liv.vann.concat([0.5]);
+  for (const k of ['stripe', 'rail', 'boot']) if (liv[k] && !o[k] && Array.isArray(liv[k]) && liv[k].length === 4) o[k] = liv[k]; return o; }
 // ---- the boat's name on her hull (Jonas 07.10.2026: «Pass på at båtnavnet vises godt på skroget på alle båtene»): a strip on each side
 // forward, on the hull's own surface, found from the model: the hull's triangles (a detailed model's paint zone 1, a kit model's hull)
 // that face out to starboard are cut at each station, which gives the topsides' top and bottom there and the hull's breadth at any

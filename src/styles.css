@@ -841,3 +841,10 @@ body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 2
 .pnt-sw.on{outline:3px solid #1e6fd9;outline-offset:2px}
 .pnt-sw.cur::after{content:'✓';position:absolute;right:4px;bottom:2px;font:700 14px/1 system-ui,sans-serif;color:#fff;text-shadow:0 0 3px #000}
 .pnt-name{margin:6px 0 10px}
+.pnt-h{margin:14px 4px 6px}
+.pnt-d h4{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pnt-own{font-weight:600;font-size:13px;opacity:.85}
+.pnt-pal.sm{grid-template-columns:repeat(auto-fill,minmax(34px,1fr));gap:6px}
+.pnt-pal.sm .pnt-sw{height:34px;border-radius:8px}
+.pnt-sw.off{background:#e8edf1;color:#2a3a46;font:600 12px/1 system-ui,sans-serif}
+.pnt-row{margin:8px 0}
