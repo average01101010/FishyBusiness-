@@ -478,7 +478,7 @@ const HULLPAL = [
 // A boat's paint (b.liv): {hull:<colour>, d:{ripe, totone, vann, stripe: <colour>, lakk:1}}; what the models take (modelLiv):
 // {hull:[r, g, b, gloss], ripe:[r, g, b], ..., lakk:true}. PAINTPRE is the paint being tried in the paint shop on the boat you are aboard.
 let PAINTPRE = null;
-const DESIGNS = ['ripe', 'totone', 'vann', 'stripe', 'lakk'], COS = [...DESIGNS, 'flagg'];   // COS: what the paint shop sells (ui/10j-paint.js)
+const DESIGNS = ['ripe', 'totone', 'vann', 'stripe', 'lakk'], COS = [...DESIGNS, 'flagg', 'reg'];   // COS: what the paint shop sells (ui/10j-paint.js)
 const palRGB = k => { const e = k && HULLPAL.find(x => x[0] === k); return e && e[3] ? e[3].slice() : null; };
 function modelLiv(L){
   if (!L) return null; const o = {}, h = palRGB(L.hull); let any = false;
@@ -492,17 +492,21 @@ function livKey(liv){ return liv ? ['hull', ...DESIGNS].map(k => liv[k] ? (liv[k
 function livGeo(liv){ return liv ? ['ripe', 'totone', 'vann'].filter(k => liv[k]).join(',') : ''; }
 // the paint as it goes to the other players with the position (ui/10h-world.js pos_put, supabase/migrations/20261007090000_livery.sql):
 // 'h:<colour>;r:..;t:..;v:..;s:..;g:1'; and back again. Only colours in HULLPAL count, so nothing else can be painted on a boat.
-const LIVS = {hull:'h', ripe:'r', totone:'t', vann:'v', stripe:'s', lakk:'g', flag:'f'};
+const LIVS = {hull:'h', ripe:'r', totone:'t', vann:'v', stripe:'s', lakk:'g', flag:'f', mark:'m'};
+const MARKENC = s => String(s).replace(/Æ/g, '1').replace(/Ø/g, '2').replace(/Å/g, '3'), MARKDEC = s => String(s).replace(/1/g, 'Æ').replace(/2/g, 'Ø').replace(/3/g, 'Å');
 function livStr(b){
-  const L = b && b.liv; if (!L) return ''; const out = [];
+  const L = (b && b.liv) || {}, out = [];
   if (L.hull && L.hull !== 'orig' && palRGB(L.hull)) out.push('h:' + L.hull);
   for (const k of DESIGNS){ const v = L.d && L.d[k]; if (k === 'lakk' ? v : v && palRGB(v)) out.push(LIVS[k] + ':' + (k === 'lakk' ? 1 : v)); }
   if (L.flag && /^[A-Z]{2,4}$/.test(L.flag.c || '') && /^[a-z]+$/.test(L.flag.s || '')) out.push('f:' + L.flag.c + '.' + L.flag.s);
+  const r = typeof regOf === 'function' && b === S.boat ? regOf(b) : b.reg; if (r && r.f) out.push('m:' + MARKENC(r.f) + '.' + r.n + '.' + MARKENC(r.k));   // the registration mark (core/06b-coastports.js)
   return out.join(';');
 }
+// another player's registration mark from her paint code ('m:T.112.LK'), as text
+function livMark(s){ const m = /(?:^|;)m:([A-Z0-9]{1,3})\.(\d{1,4})\.([A-Z0-9]{1,3})(?:;|$)/.exec(String(s || '')); return m ? MARKDEC(m[1]) + '-' + m[2] + '-' + MARKDEC(m[3]) : ''; }
 function livParse(s){
   const L = {d:{}}; for (const part of String(s || '').split(';')){ const [a, v] = part.split(':'), k = Object.keys(LIVS).find(q => LIVS[q] === a); if (!k || !v) continue;
-    if (k === 'hull') L.hull = v; else if (k === 'flag'){ const [c, sh] = v.split('.'); L.flag = {c, s:sh}; } else L.d[k] = k === 'lakk' ? 1 : v; }
+    if (k === 'hull') L.hull = v; else if (k === 'flag'){ const [c, sh] = v.split('.'); L.flag = {c, s:sh}; } else if (k === 'mark') continue; else L.d[k] = k === 'lakk' ? 1 : v; }
   return modelLiv(L);
 }
 // ---- paint designs (Malerverkstedet): a stripe under the sheer (ripe), a second colour on the lower topsides (totone), a stripe at the
@@ -658,12 +662,10 @@ function hullTris(type){
   }
   return out;
 }
-function nameStrips(type){
-  if (type in NAMESTRIP) return NAMESTRIP[type];
-  const m = vesselModel(type); if (!m) return NAMESTRIP[type] = null;
-  if (m.geo && m.geo.names) return NAMESTRIP[type] = m.geo.names;
-  const T = hullTris(type);
-  if (T.length < 8) return NAMESTRIP[type] = null;
+// a strip on each side at a share of the length from the stem (frac), at most hMax tall, aspect times as long as tall
+function sideStrip(type, frac, hMax, aspect){
+  const m = vesselModel(type); if (!m) return null;
+  const T = hullTris(type); if (T.length < 8) return null;
   let z0 = Infinity, z1 = -Infinity; for (const t of T) for (const k of [2, 5, 8]){ z0 = Math.min(z0, t[k]); z1 = Math.max(z1, t[k]); }
   // the hull cut at station z: segments [y, x, y, x]
   const cut = z => { const seg = [];
@@ -678,17 +680,32 @@ function nameStrips(type){
       if (y < lo - 1e-4 || y > hi + 1e-4){ for (const k of [0, 2]){ const d = Math.abs(q[k] - y); if (d < gd){ gd = d; gx = q[k + 1]; } } continue; }
       const f = hi - lo < 1e-6 ? 0.5 : (y - q[0]) / (q[2] - q[0]); x = Math.max(x, q[1] + (q[3] - q[1]) * f); }
     return x >= 0 ? x : gx; };
-  const L = z1 - z0, V = VESSELS[type] || {len:L}, hMax = Math.min(0.9, Math.max(0.16, 0.025 * V.len + 0.05)), mid = z0 + 0.25 * L;
-  const s0 = cut(mid); if (!s0.length) return NAMESTRIP[type] = null;
-  const h = Math.min(hMax, (top(s0) - Math.max(0.05, bot(s0))) * 0.6); if (h < 0.08) return NAMESTRIP[type] = null;
-  const len = 4 * h, off = 0.01 + 0.0006 * V.len, N = 12, B = [], Tp = [];
+  const L = z1 - z0, V = VESSELS[type] || {len:L}, mid = z0 + frac * L;
+  const s0 = cut(mid); if (!s0.length) return null;
+  const h = Math.min(hMax, (top(s0) - Math.max(0.05, bot(s0))) * 0.6); if (h < 0.08) return null;
+  const len = aspect * h, off = 0.01 + 0.0006 * V.len, N = 12, B = [], Tp = [];
   for (let i = 0; i <= N; i++){
-    const z = mid - len / 2 + len * i / N, sg = cut(z); if (!sg.length) return NAMESTRIP[type] = null;
-    const yT = top(sg) - h * 0.25, yB = yT - h, xT = xAt(sg, yT), xB = xAt(sg, yB); if (xT < 0 || xB < 0 || yB < bot(sg) - 1e-3) return NAMESTRIP[type] = null;
+    const z = mid - len / 2 + len * i / N, sg = cut(z); if (!sg.length) return null;
+    const yT = top(sg) - h * 0.25, yB = yT - h, xT = xAt(sg, yT), xB = xAt(sg, yB); if (xT < 0 || xB < 0 || yB < bot(sg) - 1e-3) return null;
     B.push([xB + off, yB, z]); Tp.push([xT + off, yT, z]);
   }
   const port = a => a.map(p => [-p[0], p[1], p[2]]).reverse();
-  return NAMESTRIP[type] = [[B, Tp], [port(B), port(Tp)]];
+  return [[B, Tp], [port(B), port(Tp)]];
+}
+function nameStrips(type){
+  if (type in NAMESTRIP) return NAMESTRIP[type];
+  const m = vesselModel(type); if (!m) return NAMESTRIP[type] = null;
+  if (m.geo && m.geo.names) return NAMESTRIP[type] = m.geo.names;
+  const V = VESSELS[type] || {len:10};
+  return NAMESTRIP[type] = sideStrip(type, 0.25, Math.min(0.9, Math.max(0.16, 0.025 * V.len + 0.05)), 4);
+}
+// the registration mark's strip near the stem: the letters as tall as § 23 asks by the boat's length (45 cm from 15 m, 25 cm from 9 m,
+// else 15 cm), the strip a little taller round them; a tenth of the length from the stem, ahead of the name
+const MARKSTRIP = {};
+function markStrips(type){
+  if (type in MARKSTRIP) return MARKSTRIP[type];
+  const V = VESSELS[type] || {len:10}, lh = V.len >= 15 ? 0.45 : V.len >= 9 ? 0.25 : 0.15;
+  return MARKSTRIP[type] = sideStrip(type, 0.11, lh * 1.35, 4) || sideStrip(type, 0.14, lh * 1.35, 4);
 }
 // the hull's colour as it is painted (liv) or as she came (a detailed model's paint zone 1 on average, a kit's hull colour): the name
 // is written light on a dark hull and dark on a light one

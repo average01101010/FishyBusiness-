@@ -1111,6 +1111,15 @@ Jonas' bestilling ligger i `docs/engasjement.md`, arbeidslista punkt 1. Steg 1 o
   - Formene er rektangel, vimpel (strukket 1,7 × 0,8) og splitt. Det norske splittflagget er statsflagget og tilbys ikke (lov om Norges flagg).
   - Norge i rektangel er gratis og det båten kommer med. Alle nasjoner og former er ett kjøp: `des_flagg`, 19 kr, `S.cos.flagg`.
   - Flagget lagres i `b.liv.flag = {c, s}` og går til de andre som `f:SE.vimpel`. Andre spilleres flagg tegnes ikke ennå.
+- **Registreringsmerke** (steg 5, 07.10.2026):
+  - Merket består av fylkets bokstaver, et løpenummer og kommunens bokstaver, malt på begge sider nær stevnen (ervervstillatelsesforskriften §§ 22–23).
+  - Bokstavene hentes fra `src/data/regmerke.json` (`tools/regmerke/regmerke.py`). For hver av 193 kystkommuner er det bokstavene de fleste av kommunens fartøy har i Fiskeridirektoratets sluttsedler, og løpenumrene som er i bruk.
+  - Kommunen er hjemhavnas. En kysthavn er et mottak med kommunen sin. De gamle Senja-havnene står i `PORTK`, der Sommarøy og Brensholmen ligger i Tromsø.
+  - `regOf(b)` gir båten et nummer ingen ekte båt i kommunen har, og lagrer det i `b.reg`.
+  - Bokstavhøyden følger § 23: 45 cm fra 15 m, 25 cm fra 9 m, ellers 15 cm. Stripa ligger en tidel fra stevnen (`markStrips`, `sideStrip`).
+  - Fargene er hvitt på mørkt skrog og svart på lyst, slik § 23 sier (hvitt på svart eller svart på hvitt).
+  - Merket står også på ervervstillatelsen under Papirer, og andre spillere ser det (`m:T.112.LK`, der Æ, Ø og Å reiser som 1, 2 og 3).
+  - Ønskenummer (`des_reg`, 29 kr): nummeret kan ikke være en ekte båts. Serveren gir hvert merke til én spiller (`reg_claims`, `reg_claim`), høyst ti per spiller.
 - **Test:**
   - `maletest`: knappen, siden, prøvefargen, at første fargevalg er gratis, prisen, for lite penger, lagringen, lukking og innbytte.
   - `cloudtest`: malingen går opp og ned, og en server uten den ennå gir ingen avbrudd.

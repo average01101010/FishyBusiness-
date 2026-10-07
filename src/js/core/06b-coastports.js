@@ -14,6 +14,31 @@
 // harbour has fuel and the shop; an ice chute where the plant takes in 1 000 t or more a year.
 const MOTTAK = /*@include(data/mottak.json)*/null;
 const COAST_WF = ['torsk', 'hyse', 'sei', 'lyr', 'lange', 'brosme', 'uer', 'kveite', 'kongekrabbe', 'krabbe'];
+// ---- the registration mark (Malerverkstedet, 07.10.2026): the county's letters, a serial number and the municipality's letters,
+// painted on both sides of the hull near the stem (ervervstillatelsesforskriften §§ 22–23, FOR-2012-12-07-1144). The letters are those
+// most vessels of the home harbour's municipality carry (tools/regmerke/regmerke.py, from Fiskeridirektoratet's landing notes); the
+// number is one no real vessel there has, so no player's boat wears a real boat's mark. A boat keeps hers (b.reg); a number of one's own
+// choosing (the paint shop's «ønskenummer») replaces it. ----
+const REGM = /*@include(data/regmerke.json)*/null;
+// the home harbour's municipality: a coast harbour is a plant's ('m' + its id, with its municipality), the old Senja harbours are named
+// here (Sommarøy and Brensholmen are in Tromsø), anything else takes the nearest plant's
+const PORTK = {finnsnes:'senja', botnhamn:'senja', husoy:'senja', senjahopen:'senja', gryllefjord:'senja', torsken:'senja', frovag:'senja', sommaroy:'tromsø', brensholmen:'tromsø'};
+function regLetters(pt){
+  if (!REGM || !REGM.k || !MOTTAK || !MOTTAK.m || !pt) return null;
+  const own = PORTK[pt.id] || (/^m/.test(pt.id) && (MOTTAK.m.find(m => 'm' + m.id === pt.id) || {}).k); if (own && REGM.k[own]) return REGM.k[own];
+  let best = null, bd = Infinity; for (const m of MOTTAK.m){ const e = REGM.k[m.k]; if (!e) continue; const d = Math.hypot(m.p[0] - pt.p.x, m.p[1] - pt.p.y); if (d < bd){ bd = d; best = e; } }
+  return best;
+}
+function regUsed(f, k, n){ const e = REGM && Object.values(REGM.k).find(x => x[0] === f && x[1] === k); return !!(e && e[2].includes(n)); }
+function regOf(b){
+  if (b.reg && b.reg.f) return b.reg;
+  const hp = portById(S.home || 'finnsnes') || PORTS[0], e = regLetters(hp); if (!e) return null;
+  let h = 0; for (const c of String(S.boatName || '') + (S.cur || '') + (b.type || '')) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  let n = 100 + h % 800; while (e[2].includes(n) && n < 9999) n++;
+  return b.reg = {f:e[0], n, k:e[1]};
+}
+const regText = r => r ? r.f + '-' + r.n + '-' + r.k : '';
+
 const COASTQ = {};
 (() => {
   if (!MOTTAK || !MOTTAK.m) return;

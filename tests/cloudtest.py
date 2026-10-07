@@ -130,7 +130,7 @@ async def main():
         replies['pos_put'] = lambda b: 404 if 'liv' in b else 'null'; n0 = len(calls)
         old = await pg.evaluate("async () => { await worldTick(); return {off:!!WORLDP.off, noLiv:!!WORLDP.noLiv, peers:PEERS.length}; }")
         wo2 = [('liv' in c[1]) for c in calls[n0:] if c[0] == 'pos_put']
-        check(wl == ['h:kobolt'] and lv['liv'] == 'h:gul' and lv['parsed'] and abs(lv['parsed']['hull'][0] - 0.95) < 1e-6 and wo2 == [True, False] and not old['off'] and old['noLiv'] and old['peers'] == 1,
+        check(len(wl) == 1 and wl[0].startswith('h:kobolt;m:') and lv['liv'] == 'h:gul' and lv['parsed'] and abs(lv['parsed']['hull'][0] - 0.95) < 1e-6 and wo2 == [True, False] and not old['off'] and old['noLiv'] and old['peers'] == 1,
               "the boat's paint goes up with her place and another player's paint comes down to her model; a server without paint yet gets the place without it, and the shared world stays on", {'up': wl, 'peer': lv, 'old': old, 'calls': wo2})
         replies['pos_put'] = 'null'; S_reset = await pg.evaluate("(() => { delete S.boat.liv; WORLDP.noLiv = false; return 1; })()")
         n0 = len(calls)

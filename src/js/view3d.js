@@ -2373,6 +2373,21 @@ const G3 = (() => {
     if (SK.nameKey === key) return; SK.nameKey = key;
     nameCanvas(SK.cvN, nm, light); upTex(SK.tName, SK.cvN);
   }
+  // the registration mark: block letters, white on a dark hull and black on a light one (§ 23: white on black or black on white)
+  function markCanvas(cv, txt, light){
+    const g = cv.getContext('2d'); g.clearRect(0, 0, 512, 128); g.fillStyle = light ? '#f6f6f2' : '#101215'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    let fs = 96; g.font = '800 ' + fs + 'px "Arial Narrow", Arial, sans-serif'; while (g.measureText(txt).width > 470 && fs > 30){ fs -= 4; g.font = '800 ' + fs + 'px "Arial Narrow", Arial, sans-serif'; }
+    g.fillText(txt, 256, 68);
+  }
+  const MARKT = {tex:null, cv:null, key:''};
+  function markTex(t, liv){
+    const txt = regText(regOf(S.boat)), c = hullRGB(t || vtype(), liv !== undefined ? liv : hullLiv(S.boat)), light = isLight(c), key = txt + (light ? '|l' : '|d');
+    if (!txt) return null; if (MARKT.key !== key){ MARKT.key = key; if (!MARKT.tex){ MARKT.tex = mkTex(); MARKT.cv = document.createElement('canvas'); MARKT.cv.width = 512; MARKT.cv.height = 128; } markCanvas(MARKT.cv, txt, light); upTex(MARKT.tex, MARKT.cv); }
+    return MARKT.tex;
+  }
+  const MARKQ = {};
+  function markQ(t){ if (!(t in MARKQ)){ const st = markStrips(t); MARKQ[t] = st ? st.map(([B, T]) => texStrip(B, T)) : null; } return MARKQ[t]; }
+  function drawMark(t, M, VP, liv){ const q = markQ(t), tex = q && markTex(t, liv); if (!tex) return; gl.disableVertexAttribArray(2); for (const s of q) drawTexQuad(s, tex, M, VP, true, [0, 0.2, 0]); }
   function nameCanvas(cv, nm, light){
     const g = cv.getContext('2d'); g.clearRect(0, 0, 512, 128); g.fillStyle = light ? '#f3f1e8' : '#14233d'; g.textAlign = 'center'; g.textBaseline = 'middle';
     g.shadowColor = light ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.3)'; g.shadowBlur = 3;
@@ -2382,11 +2397,11 @@ const G3 = (() => {
   const isLight = c => 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2] < 0.5;
   // the names of the other boats: a small pool of textures by name and shade (the boats near you change seldom), the oldest let go
   const NTX = new Map(); let NCV = null;
-  function nameTex(nm, light){
-    const k = nm + (light ? '|l' : '|d'); let e = NTX.get(k);
-    if (!e){ if (NTX.size >= 10){ let old = null; for (const [kk, v] of NTX) if (!old || v.used < old[1].used) old = [kk, v]; gl.deleteTexture(old[1].tex); NTX.delete(old[0]); }
+  function nameTex(nm, light, mark){
+    const k = (mark ? 'M:' : '') + nm + (light ? '|l' : '|d'); let e = NTX.get(k);
+    if (!e){ if (NTX.size >= 14){ let old = null; for (const [kk, v] of NTX) if (!old || v.used < old[1].used) old = [kk, v]; gl.deleteTexture(old[1].tex); NTX.delete(old[0]); }
       if (!NCV){ NCV = document.createElement('canvas'); NCV.width = 512; NCV.height = 128; }
-      nameCanvas(NCV, nm, light); e = {tex:mkTex()}; upTex(e.tex, NCV); NTX.set(k, e); }
+      (mark ? markCanvas : nameCanvas)(NCV, nm, light); e = {tex:mkTex()}; upTex(e.tex, NCV); NTX.set(k, e); }
     e.used = performance.now(); return e.tex;
   }
   // the six nearest boats within 250 m that are drawn near (their glass is in) carry their names on the hull, light or dark by her paint
@@ -2398,6 +2413,7 @@ const G3 = (() => {
       const lv = n.player ? livParse(n.liv) : LIVERY[(n.liv || 0) % LIVERY.length], c = lv && lv.hull ? lv.hull : hullRGB(t);
       const tex = nameTex(String(n.name).slice(0, 24), isLight(c)), M = chain(n.M, n.K.S);
       for (const s of q) drawTexQuad(s, tex, M, VP, true, [0, 0.2, 0]);
+      const mk = n.player && livMark(n.liv), mq = mk && markQ(t); if (mq){ const mt = nameTex(mk, isLight(c), true); for (const s of mq) drawTexQuad(s, mt, M, VP, true, [0, 0.2, 0]); }
     }
   }
   // the name strips of a type that is not steered by hand (vessel3d.js nameStrips), built once
@@ -2517,6 +2533,7 @@ const G3 = (() => {
     const near = Math.hypot(BMrel[12], BMrel[13], BMrel[14]) < 45, now = performance.now();
     paintName();
     for (const q of SK.qName) drawTexQuad(q, SK.tName, BMrel, VP, true, [0, 0.2, 0]);
+    drawMark(SK.hullT || vtype(), BMrel, VP);
     if (near && SK.live !== false){
       if (now - SK.tP > 500){ SK.tP = now; paintPlotter(); if (S.equip.vhf) paintVhf(); }
       if (now - SK.tG > 90){ paintGauges((now - SK.tG) / 1000); SK.tG = now; }
@@ -3589,7 +3606,7 @@ const G3 = (() => {
     if (G.trawl) drawTrawl(t, G.trawl, BMrel, performance.now() / 1000);
     if (G.seine) drawSeine(t, G.seine, BMrel, VP, performance.now() / 1000);
     gl.disableVertexAttribArray(2);
-    if (named && SK){ const q = nameQ(t); if (q){ paintName(t, liv); for (const s of q) drawTexQuad(s, SK.tName, BMrel, VP, true, [0, 0.2, 0]); } }
+    if (named && SK){ const q = nameQ(t); if (q){ paintName(t, liv); for (const s of q) drawTexQuad(s, SK.tName, BMrel, VP, true, [0, 0.2, 0]); } drawMark(t, BMrel, VP, liv); }
     gl.useProgram(PL.p);
   }
   // the local fleet near you: the kit model nearest each boat (vessel3d.js npcKit), scaled to her length and beam, at lod 1 within

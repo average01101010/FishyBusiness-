@@ -61,6 +61,21 @@ async def main():
         check(fl['n0'] and fl['tried']['f'] == {'code': 'SE', 'shape': 'vimpel'} and fl['tried']['buy'] and fl['after']['own'] and fl['after']['flag'] == {'c': 'SE', 's': 'vimpel'}
               and 'f:SE.vimpel' in fl['after']['str'] and fl['notch'] == 0 and fl['body'] == 255 and fl['n'] >= 40,
               "the flag: Norway's swallowtail is not offered, another nation and shape show on the boat when tried, and once the flags are yours she flies it and the others see it", fl)
+        # the registration mark: the home harbour's municipality's letters and a number no real vessel there has; a real boat's number is
+        # refused; one's own number (a test purchase) goes on the boat, on the permit and to the others; Ø travels as 2 and comes back
+        rg = await pg.evaluate("""(() => { const r0 = Object.assign({}, regOf(S.boat)), real = REGM.k.senja[2][2], q = s => document.querySelector('#drawerBody ' + s);
+          const card = document.getElementById('drawerBody').innerText.includes(regText(r0));
+          q('#pntNum').value = real; q('[data-pa=pntreg]').click(); const refused = regOf(S.boat).n === r0.n;
+          let n = 777; while (REGM.k.senja[2].includes(n)) n++; q('#pntNum').value = n; q('[data-pa=pntreg]').click();
+          return {r0, used:REGM.k.senja[2].includes(r0.n), card, refused, n, r1:regOf(S.boat), own:PAINT.owned('reg'), str:livStr(S.boat), back:livMark(livStr(S.boat)), oe:livMark('m:N.12.B2'),
+            strips:Object.keys(VESSELS).filter(t => markStrips(t)).length, types:Object.keys(VESSELS).length}; })()""")
+        await pg.wait_for_function("regOf(S.boat).n !== %d" % rg['r0']['n'], timeout=10000)
+        rg2 = await pg.evaluate("({r:regOf(S.boat), papers:(PHONE.dact('home', 'papers', {}), PHONE.open('sjomann'), document.getElementById('phView').innerText)})")
+        await pg.evaluate("PHONE.show(false)")
+        want = 'T-%d-LK' % rg['n']
+        check(rg['r0']['f'] == 'T' and rg['r0']['k'] == 'LK' and not rg['used'] and rg['card'] and rg['refused'] and rg2['r']['n'] == rg['n'] and want in rg2['papers']
+              and rg['back'] in (want, 'T-%d-LK' % rg['r0']['n']) and rg['oe'] == 'N-12-BØ' and rg['strips'] >= rg['types'] - 1,
+              "the registration mark: Senja's letters (T-..-LK) and a number no real boat there has; a real boat's number is refused, one's own goes on the boat and the permit; it travels to the others", {'rg': rg, 'r': rg2['r']})
         # too little money: the button is off
         c = await pg.evaluate("""(() => { S.cash = 100; document.querySelector('#drawerBody .pnt-sw[data-k=gul]').click(); const btn = document.querySelector('#drawerBody [data-pa=pntgo]');
           return {dis:btn.disabled, note:document.getElementById('drawerBody').innerText.includes('ikke nok penger')}; })()""")
