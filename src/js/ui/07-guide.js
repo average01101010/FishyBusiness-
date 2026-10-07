@@ -132,8 +132,8 @@ function panelFish(){
   h.push('<h3>' + t('handling') + '</h3>');
   h.push('<p class="note">' + (S.lang === 'no' ? 'Fisken blør du idet den kommer over ripa, og så ligger den i bløggekaret til den blir sløyd og iset.' : 'The fish is bled as it comes over the rail and lies in the bleeding tub until it is gutted and iced.') + '</p>');
   if (holdTotal() > 0.5) h.push('<p class="note"><b>' + deckText(false) + '</b></p>');
-  // who guts and who ices is set in the work menu (Arbeid), not here (the user's wish 03.10.2026)
-  h.push('<p class="note">' + (S.lang === 'no' ? 'Hvem som sløyer og iser, setter du under «Arbeid».' : 'Who guts and who ices is set under «Work».') + '</p>');
+  // who guts and who ices is set in the crew menu (Mannskap), not here (the user's wish 03.10.2026)
+  h.push('<p class="note">' + (S.lang === 'no' ? 'Hvem som sløyer og iser, setter du under «Mannskap».' : 'Who guts and who ices is set under «Crew».') + '</p>');
   h.push(gearPanel());
   return h.join('');
 }

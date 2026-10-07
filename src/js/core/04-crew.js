@@ -111,7 +111,8 @@ function crewTick(H){
     crewSay(crewById(ids[0]), 'rest'); } }
   // resting ashore with the skipper (the naust or a rorbu, 15-energy.js) they come back as fast as he does: 0 to 100 in six hours in a
   // rorbu (Jonas 06.10.2026: «Så begge sover på en måte i rorbuen»)
-  const restC = meAboard() && resting() ? restRate(b) * 60 : 0;
+  // and at a rorbu they sleep there too, with you or without you (tilbakemelding #11)
+  const restC = meAboard() && resting() ? restRate(b) * 60 : b.status === 'port' && typeof isRorbu === 'function' && isRorbu(b.port) ? RORBU.rate * 60 : 0;
   for (const c of S.crew.slice()){
     const here = onIds.has(c.id) && atSea, viol = !!viols[c.id];
     // the share of the hour spent working: a break at sea tires less, but is not rest

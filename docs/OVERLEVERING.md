@@ -2082,7 +2082,7 @@ Inspirert av Fishing: Barents Sea.
 
 Brukerens ønske: mannskapet skal være en levende og givende del av spillet, inspirert av Fishing: Barents Sea. Ingen portretter.
 
-- **Filer:** `core/13-work.js` (stasjoner og kjeder), `core/14-crewlife.js` (læring, mat, hviletid og replikker), `core/15-energy.js` (energien din og søvnen) og `ui/05b-work.js` (skuffesiden «Arbeid», toastene og søvnskjermen).
+- **Filer:** `core/13-work.js` (stasjoner og kjeder), `core/14-crewlife.js` (læring, mat, hviletid og replikker), `core/15-energy.js` (energien din og søvnen) og `ui/05b-work.js` (skuffesiden «Mannskap», toastene og søvnskjermen).
 - **Stasjoner** (`STATIONS`): Ror, Fiske, Haling, Krabbesortering, Sløying, Ising, Kokk og Pause. Hvert minutt går hver person om bord til den første stasjonen i kjeden sin som har arbeid (`workAssign`, `workCtx`):
 
   | Stasjon | Har arbeid når … |
@@ -2111,8 +2111,10 @@ Brukerens ønske: mannskapet skal være en levende og givende del av spillet, in
   - Haling: `gopUnitMin` med snittet av halerne og antallet som haler. Ingen ved halingen betyr ingen framdrift.
   - Du teller som 1, eller 0,75 med energi under 25 %.
 - **Ferdige oppsett** (`JOB_PRESETS`): «Én på dekk» (standard), «Alle fisker» og «Alle på dekk».
-- **Menyen «Arbeid»** (knappelinja, i havn og på sjøen, bare med mannskap om bord):
-  - Øverst er flyten for riggen: Ror → Fiske/Haling (→ Krabbe) → Sløying → Ising, med Kokk og Pause ved siden av. Hvert kort viser hvem som står der og hva som venter: kg, redskap trukket, eller tid til måltidet og matstellet.
+- **Menyen «Mannskap»** (knappelinja, i havn og på sjøen, så snart du har mannskap eller en driftsplan; het «Arbeid» til 07.10.2026, tilbakemelding #11; ansettelser ligger under Bygd, «Ansatte»):
+  - Øverst er «Mannskapet»: deg og hver person, med status (mønstret på «båten» ved kai, til sjøs eller hvilende i rorbua/naustet; fri denne turen; fri i dag for biyrke), slitenhet, trivsel, hvilt siste døgn og hviletidsregelen. Mannskapet er mønstret på båten og følger den dit den ligger: driftsplanen (`opsStep`) går også fra en rorbu eller et annet sted enn planens havn, ved at skipperen først tar leia (`leiaRoute`, mellomlagret i `OPS_PRE`) derfra til planens første punkt. Ligger båten ved en rorbu, hviler mannskapet der med `RORBU.rate` også når du ikke er om bord (`crewTick`).
+  - Nederst er kortet «Fast driftsplan» (det samme som før lå under Bygd, Mannskap): på/av, avgang, dager, maks vind og skipper, og knappen «Lag driftsplan av ruta i kartplotteren» når båten ligger i havn og ruta ender i en havn.
+  - Flyten for riggen (bare med mannskap om bord): Ror → Fiske/Haling (→ Krabbe) → Sløying → Ising, med Kokk og Pause ved siden av. Hvert kort viser hvem som står der og hva som venter: kg, redskap trukket, eller tid til måltidet og matstellet.
   - Under er det én rad per person, med deg først. Raden viser hva personen gjør nå, kjeden som nummererte brikker, energien din, og «Må hvile innen X t» når det er 6 timer eller mindre igjen.
   - «Endre»: trykk stasjonene i den rekkefølgen du vil ha dem. Et nytt trykk tar en stasjon ut. «Ferdig» lagrer, og «Auto» går tilbake til standarden.
   - Et trykk på navnet åpner personkortet med ferdighetsstreker (juksa, line, garn, teiner, sløying, ising, krabbesortering, matlaging, sjømannskap og styrke), slitenhet, trivsel, hvor fort personen lærer, og de tre siste replikkene.
@@ -3562,7 +3564,7 @@ Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farv
   - `harbourtest.py`: havnene. Mottak, is og drivstoff per havn. De ekte kaiene: alle båttyper ligger langs kaifronten i sjøen i 3D-kystlinja, og ruta inn og ut av hver havn går fri av land.
   - `tattest.py`: tatoveringene. Nautiske mil og trygge turer bare med deg om bord, grunnstøting og slep, alle kravene, de låste og appen.
   - `loretest.py`: overtroen. Fredagsavreise, at samme fortelling ikke gjentas, omdøping, mastemynt, fortellinger på sjøen og på puben, uendret humør og appen «Sjømann».
-  - `worktest.py`: arbeid om bord (5.19). Den sjekker kjedene og hvem som står hvor, sløyefarten per person, oppsettene, roret og halingen som alltid får folk, krabbesortering, læring etter alder og trivsel, måltider og brødskiver, mat mot trivsel, 14-timersregelen og natt ved kai, replikker og avstanden mellom dem, energien til sjøs og ved kai, søvn alene (driver) og med mannskap (turen går videre), og menyen «Arbeid» liggende og stående med knapper på minst 44 px.
+  - `worktest.py`: arbeid om bord (5.19). Den sjekker kjedene og hvem som står hvor, sløyefarten per person, oppsettene, roret og halingen som alltid får folk, krabbesortering, læring etter alder og trivsel, måltider og brødskiver, mat mot trivsel, 14-timersregelen og natt ved kai, replikker og avstanden mellom dem, energien til sjøs og ved kai, søvn alene (driver) og med mannskap (turen går videre), og menyen «Mannskap» liggende og stående med knapper på minst 44 px.
   - `decktest.py`: arbeidet på dekk. Bløggekaret, sløyefart, stopp når karet er fullt, én mann mot to, «ta unna før du går» og kvalitetstapet.
   - `geartest.py`: redskap i sjøen. Den har 27 sjekker:
     - kjøp i Redskap-appen etter plassen om bord

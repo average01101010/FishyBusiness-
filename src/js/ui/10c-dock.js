@@ -43,7 +43,7 @@ const DOCK = (() => {
   // the drawer's pages: title, and the pages that share a row of tabs
   const TITLE = {lever:['Lever fangst', 'Land the catch'], is:['Is', 'Ice'], agn:['Agn og egning', 'Bait and baiting'], bank:['Kystbanken', 'The bank'], oppdrag:['Oppdrag', 'Orders'],
     mannskap:['Mannskap', 'Crew'], bors:['Mannskap', 'Crew'], fartoy:['Båthandel', 'Boat market'], maler:['Malerverksted', 'Paint shop'], utstyr:['Oppgraderinger', 'Upgrades'], fiske:['Fiskeutstyr', 'Tackle'],
-    redskap:['Redskap', 'Gear'], rigg:['Rigg', 'Rig'], arbeid:['Arbeid om bord', 'Work aboard'], verksted:['Vedlikehold', 'Maintenance'], havn:['Havn', 'Harbour'], last:['Lasterom', 'Hold'], beholdning:['Beholdning', 'Inventory']};
+    redskap:['Redskap', 'Gear'], rigg:['Rigg', 'Rig'], arbeid:['Mannskap', 'Crew'], verksted:['Vedlikehold', 'Maintenance'], havn:['Havn', 'Harbour'], last:['Lasterom', 'Hold'], beholdning:['Beholdning', 'Inventory']};
   const TABS = {mannskap:[['mannskap', 'Om bord', 'Aboard'], ['bors', 'Mannskapsbørs', 'Crew exchange']], bors:null};
   TABS.bors = TABS.mannskap;
   let menu = null, page = null, html = '', fanHtml = '', items = [], fanItems = [];
@@ -62,12 +62,12 @@ const DOCK = (() => {
   function portItems(){
     const b = S.boat, p = port(), tot = holdTotal(), busy = portBusy(b);
     // a rorbu has a bed and a quay, nothing more (07d-rorbu.js)
-    if (p.rorbu) return [restItem(), crewAboard().length ? I('arbeid', 'arbeid', 'Arbeid', 'Work', {page:'arbeid'}) : null, I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'})].filter(Boolean);
+    if (p.rorbu) return [restItem(), S.crew.length || S.ops ? I('arbeid', 'arbeid', 'Mannskap', 'Crew', {page:'arbeid'}) : null, I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'})].filter(Boolean);
     return [restOnDock() ? restItem() : null,
       I('marked', 'marked', 'Marked', 'Market', {menu:'marked', dot:p.mottak && tot > 0.5 && !b.land}),
       I('bygd', 'bygd', 'Bygd', 'Village', {menu:'bygd'}),
       I('verft', 'verft', 'Verft', 'Yard', {menu:'verft', dot:svcOverdue() > 0}),
-      crewAboard().length ? I('arbeid', 'arbeid', 'Arbeid', 'Work', {page:'arbeid'}) : null,
+      S.crew.length || S.ops ? I('arbeid', 'arbeid', 'Mannskap', 'Crew', {page:'arbeid'}) : null,
       I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'})].filter(Boolean);   // «Planlegg» went 02.10.2026: the little chart opens the plotter
   }
   function menuItems(m){
@@ -80,7 +80,7 @@ const DOCK = (() => {
       I('pub', 'pub', 'Pub', 'Pub', {act:'pub', off:tutOn() ? [L('Puben venter til etter første tur.', 'The pub waits until after the first trip.')] : !pubOpen(H) ? [L('Puben åpner klokka 15.', 'The pub opens at 15:00.')] : S.pubE === pubEvening(H) ? [L('Du har tatt en runde i kveld.', 'You have had a round tonight.')] : null}),
       I('bank', 'bank', 'Bank', 'Bank', {page:'bank'}),
       I('oppdrag', 'oppdrag', 'Oppdrag', 'Orders', {page:'oppdrag'}),
-      I('mannskap', 'mannskap', 'Mannskap', 'Crew', {page:'mannskap'}), restOnDock() ? null : restItem(),
+      I('mannskap', 'mannskap', 'Ansatte', 'Employees', {page:'mannskap'}), restOnDock() ? null : restItem(),
       // Father's naust in the home harbour: setting it to rights is in the notebook (core/07c-naust.js, ui/06c-notebook.js)
       atHome(b) ? I('naustup', 'naust', 'Naustet', 'Boathouse', {run:() => PHONE.open('notat')}) : null].filter(Boolean);
     if (m === 'verft'){ const need = BOAT.fuelCap - b.fuel;
@@ -102,8 +102,8 @@ const DOCK = (() => {
   function nearestBuoy(){ let best = null; for (const s of mySets()) for (const e of [s.a, s.b]){ const d = dist(S.boat.pos, e); if (!best || d < best.d) best = {s, d}; } return best; }
   function seaItems(){
     // a quarrel aboard waits for an answer, also at sea
-    const crew = S.cevt && I('mannskap', 'mannskap', 'Mannskap', 'Crew', {page:'mannskap', dot:true});
-    const work = crewAboard().length && I('arbeid', 'arbeid', 'Arbeid', 'Work', {page:'arbeid'});
+    const crew = S.cevt && I('mannskap', 'mannskap', 'Ansatte', 'Employees', {page:'mannskap', dot:true});
+    const work = (S.crew.length || S.ops) && I('arbeid', 'arbeid', 'Mannskap', 'Crew', {page:'arbeid'});
     const b = S.boat, beh = I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'});   // no «Hjem» (the user's wish 02.10.2026: Autonav to the harbour, or «Returner samme vei» in the plotter)
     const nav = I('nav', 'nav', 'Auto-nav', 'Auto-nav', {run:autoNav});
     if (b.status === 'idle'){

@@ -116,13 +116,28 @@ function autoRestock(){
   if (pt.fuel && BOAT.fuelCap - b.fuel > 0.5 && S.cash > 0) startFueling(true);
   if (!b.gear && PRICE.gear <= S.cash){ b.gear = true; S.cash -= PRICE.gear; S.stats.costs += PRICE.gear; }
 }
+let OPS_PRE = null;   // the way from where she lies to the plan's start, while it is found (not saved)
 function opsStep(H){
   const o = S.ops, b = S.boat; if (!o || !o.on || !o.wps || !o.wps.length) return;
   const g = gDate(H), day = Math.floor((H + 6) / 24), wd = (g.getUTCDay() + 6) % 7, hod = g.getUTCHours() + g.getUTCMinutes() / 60;
   if (b.status !== 'port' || portBusy(b) || S.plan || o.last === day || !o.days[wd] || hod < o.dep || hod > o.dep + 2) return;
-  const sk = opsSkipper(); o.last = day;
-  if (!sk){ msg('Driftsplan', 'Driftsplanen står: ingen skipper er satt. Velg en skipper under Bygd, Mannskap.', 'The operations plan is idle: no skipper is set. Choose one under Crew.'); return; }
-  if (b.port !== o.home){ msg(sk.name, 'Båten ligger ikke i ' + portById(o.home).name + ', så jeg går ikke ut på den faste planen i dag.', 'The boat is not in ' + portById(o.home).name + ', so I am not running the plan today.'); return; }
+  const sk = opsSkipper();
+  if (!sk){ o.last = day; msg('Driftsplan', 'Driftsplanen står: ingen skipper er satt. Velg en skipper under Mannskap.', 'The operations plan is idle: no skipper is set. Choose one under Crew.'); return; }
+  // the crew are signed on the boat and go where she lies (tilbakemelding #11: at a rorbu they did not think she was where the plan
+  // starts): away from the plan's harbour, the skipper first takes the fairway from her berth to the plan's first point
+  let pre = [];
+  if (b.port !== o.home){
+    if (!OPS_PRE || OPS_PRE.day !== day || OPS_PRE.from !== b.port){
+      const w0 = o.wps[0], P = OPS_PRE = {day, from:b.port, wps:null};
+      Promise.resolve().then(() => leiaRoute({x:b.pos.x, y:b.pos.y}, {x:w0.x, y:w0.y}, b.port, w0.port || null))
+        .then(r => { P.wps = r && r.wps && !r.why ? r.wps.slice(0, -1).map(q => ({x:q.x, y:q.y, port:null, fish:0, leia:true})) : false; }).catch(() => { P.wps = false; });
+      return;
+    }
+    if (OPS_PRE.wps === null) return;   // the way is being found
+    if (OPS_PRE.wps === false){ o.last = day; msg(sk.name, 'Fant ingen vei fra ' + portById(b.port).name + ' til driftsplanen, så jeg går ikke ut i dag.', 'Found no way from ' + portById(b.port).name + ' to the plan, so I am not going out today.'); return; }
+    pre = OPS_PRE.wps;
+  }
+  o.last = day; OPS_PRE = null;
   if (S.jobs && S.jobs.length){ msg(sk.name, 'Verkstedet jobber på båten, så jeg venter til i morgen.', 'The yard is working on the boat, so I will wait until tomorrow.'); return; }
   let wmax = 0, hmax = 0; const dur = o.hours || 8; for (let k = 0; k <= dur; k += 1){ wmax = Math.max(wmax, windAt(H + k)); hmax = Math.max(hmax, hsOpen(H + k)); }
   if (wmax > o.maxWind || hmax > BOAT.risk[1] * 0.85){ msg(sk.name, 'Blir på land i dag. Varselet gir ' + fmt(wmax, 0) + ' m/s og ' + fmt(hmax, 1) + ' m sjø, over grensa på ' + o.maxWind + ' m/s.', 'Staying ashore today. The forecast gives ' + fmt(wmax, 0) + ' m/s and ' + fmt(hmax, 1) + ' m seas, above the ' + o.maxWind + ' m/s limit.'); log(sk.name + ' ble på land på grunn av været.', sk.name + ' stayed ashore because of the weather.'); return; }
@@ -132,7 +147,7 @@ function opsStep(H){
   // With you aboard you are the master, and you fish as on your own trips
   const me = meAboard();
   if (!me && !S.lic && b.kgear && !kveiteClosed(H)) S.target = 'kveite';
-  S.plan = {wps:o.wps.map(w => ({...w})), idx:0, speed:o.speed, returning:false, depAt:null, ops:true, unsafe:[]};
+  S.plan = {wps:pre.concat(o.wps.map(w => ({...w}))), idx:0, speed:o.speed, returning:false, depAt:null, ops:true, unsafe:[]};
   if (me) log('Gikk ut på fast driftsplan med deg som høvedsmann. ' + sk.name + ' er mannskap på turen.', 'Went out on the standing plan with you as master. ' + sk.name + ' is crew on this trip.');
   else log(sk.name + ' gikk ut på fast driftsplan.', sk.name + ' went out on the standing plan.');
   depart();

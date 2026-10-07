@@ -1,4 +1,5 @@
-// ===== the Arbeid page in the drawer: the boat's work as a flow of stations, and each person's chain of them =====
+// ===== the Mannskap page in the drawer (once «Arbeid»): the crew at a glance, the boat's work as a flow of stations, each person's
+// chain of them, and the standing plan (ui/05-phone.js opsCard) =====
 // Tap Endre on a person, then the stations in the order you want them; Auto puts them back on the default chain. Tap the name
 // for the person card: skills, fatigue, morale and rest.
 const WORK = (() => {
@@ -55,9 +56,21 @@ const WORK = (() => {
     if (card === id) h += personCard(p.c);
     return h + '</div>';
   }
+  // everyone at a glance (tilbakemelding #11: «en total oversikt over alt som har med mannskap og arbeidsoppgaver å gjøre»): signed on
+  // the boat and where, or off; fatigue, the rest in the last day and how long until the rest rule is broken
+  function overview(){
+    const b = S.boat, at = b.status === 'port', rb = at && typeof isRorbu === 'function' && isRorbu(b.port), shore = meAboard() && typeof resting === 'function' && resting();
+    const on = new Set(crewAboard().map(c => c.id)), bn = S.boatName ? '«' + S.boatName + '»' : L('båten', 'the boat'), lie = rb ? L('rorbua', 'the rorbu') : L('naustet', 'the boathouse');
+    const where = at ? (shore || rb ? L(' · hviler i ', ' · resting in ') + lie : L(' · ved kai', ' · at the quay')) : L(' · til sjøs', ' · at sea');
+    const st = c => c.off ? L('Fri denne turen', 'Off this trip') : !on.has(c.id) ? L('Fri i dag (biyrke)', 'Off today (part-time)') : L('Mønstret på ', 'Signed on ') + bn + where;
+    const me = meAboard() ? '<div class="ph-kv"><span><b>' + L('Du (skipper)', 'You (skipper)') + '</b></span><span>' + (shore ? L('Hviler i ', 'Resting in ') + lie : at ? L('Om bord, ved kai', 'Aboard, at the quay') : L('Om bord', 'Aboard')) + restLine(null) + '</span></div>' : '<div class="ph-kv"><span><b>' + L('Du', 'You') + '</b></span><span>' + L('Ikke om bord', 'Not aboard') + '</span></div>';
+    const rows = S.crew.map(c => { const d = restLog(c).slice(-24).reduce((a, v) => a + v, 0);
+      return '<div class="ph-kv"><span><b>' + c.name.split(' ')[0] + '</b></span><span>' + st(c) + '<br>' + L('Slitenhet ', 'Fatigue ') + Math.round(c.fatigue) + ' · ' + L('trivsel ', 'morale ') + Math.round(c.morale) + ' · ' + L('hvilt ', 'rested ') + d + L(' t siste døgn', ' h in the last day') + restLine(c) + '</span></div>'; }).join('');
+    return '<div class="ph-card"><h4>' + L('Mannskapet', 'The crew') + '</h4>' + me + rows + (S.crew.length ? '<p class="ph-note">' + L('Den som er mønstret på, følger båten dit den ligger, og hviler i rorbua når båten ligger der.', 'Those signed on follow the boat wherever she lies, and rest in the rorbu when she lies there.') + '</p>' : '<p class="ph-note">' + L('Ingen mannskap ennå. Finn folk under Bygd, Ansatte.', 'No crew yet. Find people under Village, Employees.') + '</p>') + '</div>';
+  }
   function page(){
-    const team = crewAboard(), A = workAssign(), h = ['<div class="ph-c wk">'];
-    if (!team.length) return '<div class="ph-c"><p class="ph-note">' + L('Ingen mannskap om bord. Finn folk under Bygd, Mannskap.', 'No crew aboard. Find people under Village, Crew.') + '</p></div>';
+    const team = crewAboard(), A = workAssign(), h = ['<div class="ph-c wk">', overview()];
+    if (!team.length) return h.join('') + '</div>';
     h.push(flow(A));
     h.push('<div class="wk-pre">' + Object.keys(JOB_PRESETS).map(k => '<button class="ph-btn" data-pa="wk-pre" data-k="' + k + '">' + JOB_PRESETS[k][S.lang] + '</button>').join('') + '</div>');
     const ix = new Map(team.map((c, i) => [c.id, i]));
