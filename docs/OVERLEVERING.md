@@ -1426,15 +1426,27 @@ Mister du juksa, fisker bare juksamaskinene til du kjøper ny i Fiskeutstyr. `mo
 
 ### 5.3 Fiskerimodellen
 
-- **Arter** (`SPECIES`): torsk (kysttorsk og skrei), hyse, sei, lyr, lange, brosme, uer og kveite.
+- **Arter** (`SPECIES`): torsk (kysttorsk og skrei), hyse, sei, lyr, lange, brosme, uer, kveite og blåkveite (fra 07.10.2026, se «Blåkveite» under).
   - Hver art har månedlig tilgjengelighet (`av`), dybde (`dep`), eksponering (`prod`) og markedspris (`pm`).
   - Den har også ukentlig prisvariasjon (`sig`), størrelsesfordeling (`size`, lognormal), minstemål (`minKg`) og størrelsesklasser med minstepris (`cls`).
   - Fra sløyd uten hode til rund vekt regnes det med `uh`. Lever og rogn har egne priser.
 - **Kalibreringsfaktor per art** (`k`):
 
-| Torsk | Hyse | Sei | Lyr | Lange | Brosme | Uer | Kveite |
-|---|---|---|---|---|---|---|---|
-| 0,37 | 0,3 | 0,6 | 0,3 | 0,3 | 0,35 | 0,5 | 0,35 |
+| Torsk | Hyse | Sei | Lyr | Lange | Brosme | Uer | Kveite | Blåkveite |
+|---|---|---|---|---|---|---|---|---|
+| 0,37 | 0,3 | 0,6 | 0,3 | 0,3 | 0,35 | 0,5 | 0,35 | 0,6 |
+
+- **Blåkveite** (07.10.2026, tilbakemelding #10; researchen i `docs/blakveite.md`, planen i `docs/plan-blakveite.md`):
+  - **Hvor:** eggakanten. `eggaArea` (`03-simulation.js`, via feltet `area:'egga'`) gir null grunnere enn 280–400 m og dypere enn 1000–1150 m, null sør for 62° N, 0,15 fra Storegga til Helgeland, full styrke fra Lofoten (67,6–68,8° N) og nordover, × 0,4 i Vest-Finnmark og × 0,6 øst for 26,5° Ø (sluttseddelene 2025 per område). Vestfjorden × 0,15, de skjermede fjordbassengene i Troms × 0,12 (usikkert). Om vinteren (nov–feb) tynnes det sør for 70° N (inntil −45 %) og fylles nord for (+30 %), fordi gytefisken samles på kanten fra 70 til 75° N.
+  - **Dypet** kommer fra kjernelaget `deep` (`tools/map/deep.py`, se 4.6): kystflisene slutter 40–65 km ut, og modellen utenfor dem ble aldri dypere enn rundt 260 m.
+  - **Eget bestandslag** `S.bstk` (feltet `stk`), som vokser tilbake saktere enn krabbens (0,1 % av underskuddet i timen).
+  - **Frøene:** feltet `late` legger arten sist i `ALLSP`, etter krabben, så ingen andre arters hotspots, dagsstøy og ukepriser flytter seg.
+  - **Størrelse** `size:[2.0, 0.4]` (Råfisklaget 2026: 4 % under 1 kg, 46 % 1–2 kg, 50 % over 2 kg), minstemål 45 cm = 0,9 kg. **Pris:** minstepris 46/47/48 kr under 1,2, 1,2–2,4 og over 2,4 kg (uke 27 2026), snitt 61 kr. `uh` 1,3 er et anslag.
+  - **Redskap:** juksa tar nesten ingen (`jig:0.03`, arten finnes ikke i juksastatistikken). Bankline 5,0, hyseline 2,5 og garn 3,2 (`SELQ`); line er 49 % og garn 40 % av kystfangsten i 2026. Kalibrert grovt (07.10.2026): med 4,0 ga ti stamper bankline i 20 timer på kanten ved Andøya i juni 300–320 kg (rundt 100 kg per 1000 kroker), og med 5,0 blir det rundt 125 kg, så 30 stamper om dagen gir en båt under 14 m rundt 7 t den første uka (målet i planen er 7,5 t). Spermhvalen tok 20–28 % i to av tre trekk ved Andøya. En hel uke er ikke kjørt, og om halvparten av båtene fisker opp maksimalkvoten, er ikke målt.
+  - **Bestanden** på kanten tas fra `S.bstk` (også fra line og garn, `soakHour`): ett sett på ti stamper tar rundt 30 % av ruta, så man må flytte seg langs kanten. Den vokser tilbake med 0,1 % av underskuddet i timen. Makrell 1,3 og sei 1,1 som agn.
+  - **Dypt vann:** endetauene går ned og opp før første enhet (`endLines` i `10-gear.js`): 60 m i minuttet ned, 40 med haler og 25 for hånd opp, begge ender. På 700 m blir det rundt 23 min setting og 35 min før trekket kommer i gang.
+  - **Tjuver på lina** (`thiefOf`): spermhval ved Andøya (68,9–70° N, 14,6–17,2° Ø) tar 20–50 % av lina i en fjerdedel av trekkene (HI, rapport 2024-10), og håkjerring tar 5–15 % i 8 % av trekkene på over 300 m.
+  - **Røkting:** redskap på over 300 m får påminnelse etter to døgn (høstingsforskriften § 18).
 
 - **Skreipulsen** (`skrei`): 0,6 / 2,0 / 2,5 / 0,8 for januar–april, 0,1 i desember. Den virker bare på eksponerte banker på 40–250 m og på de tre ytre feltene (`skreiSpot`).
 - **`density(sp, p, H)`** er den ene kilden for fisk i spillet: fangst, ekkolodd, varmekart, garn, line, jukse-spillet og pubrykter. 30 × `density` × innsats er kg i timen (én person med håndjuksa har innsats 2). Den er delt i `denPlace(p)` (det alle arter deler: land, dybde, eksponering, helling og avstand til feltene), `denTime(H)` (sesongtallene, lagret for én time) og `denSp()` (artens egen sum). Delingen ga nøyaktig de samme tallene (kontrollsum over rutenett rundt alle feltene).
@@ -1519,6 +1531,8 @@ Mister du juksa, fisker bare juksamaskinene til du kjøper ny i Fiskeutstyr. `mo
 - Alle priser i spillet er per kilo **rund vekt**.
 
 ### 5.5 Kvoter og regulering
+
+- **Blåkveite (07.10.2026, J-241-2025, `03d-quota.js` `BKQ`):** direktefisket for fartøy under 28 m åpner 25. mai kl. 00 og stoppes når gruppekvoten (5 230 t) er beregnet oppfisket. Lengden trekkes per år mellom 30 dager (2026) og 97 (2025), oftest kort (`bkSeason`), og stoppen varsles tre dager før (`bkNews`, melding fra Fiskeridirektoratet). Åpen gruppe med eier og høvedsmann på blad B (`bladB()`). Maksimalkvote etter største lengde: 9,7 t (0–13,99 m), 10,9 t (14–19,99 m), 12,1 t (20–27,99 m), ikke overførbar; 28 m og over bare bifangst, høyst 12,1 t. Utenom perioden (og uten blad B) høyst 7 % blåkveite i ukas landinger, regnet mandag til søndag og trukket fra maksimalkvoten (`bkAllow`, `landConf` inndrar resten). En landing inntil to døgn etter stoppen regnes med i perioden (redskapen skulle være på land da). Kvote-appen har et kort for blåkveite.
 
 Kvotesystemet ligger i `core/03d-quota.js` (04.10.2026, plan Q1–Q6). Grunnlaget er forskriften slik den sto fra 1. oktober 2026 (J-161-2026, fiskeridir.no), Fiskeridirektoratets saksdokument 5/2025 til reguleringsmøtet og kvoterådene fra Havforskningsinstituttet. Kildenotatet med alle tall og lenker ligger under kapittel 6.
 
@@ -2762,6 +2776,8 @@ Jonas: «hele spillet skal være free-to-play, men med betalte boostere i form a
 
 ### 5.28 Regelmotoren langs hele kysten (R2 av regelplanen, 05.10.2026)
 
+- **Blåkveite (07.10.2026):** for line og garn (eller arten) nord for 62° N på 400 m og dypere: `bk5o` (åpent, med perioden og maksimalkvoten), `bk5c` (stengt: bare bifangst, 7 %), `bkB` (uten blad B), `bk7` (28 m og over: bare bifangst). Dypere enn 1000 m blokkeres bunnredskap (`bk1000`: «nye fiskeområder» krever egen tillatelse etter forskrift om bunnredskap). Minstemål 45 cm i `ruMinSize`. Regler-appen har arten som eget valg.
+
 `core/03e-rules.js` leser `src/data/rules.json` (se 4.17) og svarer på «kan jeg fiske her?».
 
 **Oppslag:**
@@ -2944,8 +2960,8 @@ Jonas' liste: oppgraderinger, kvotehandel, kikkert, raskere fangst, fortøying, 
   - **Banen går** fra båten til et punkt 1,5 båtlengder akter for kaiplassen og en bredde ut fra kaia, og så langs kaia inn. Er det fritt, går den rett. Ellers søker den over maskens celler innenfor 1,5 km og strammer linja.
   - **3D:** under en rute er banen ut fra kaia og inn til kaia en del av linja båten følger (`trkStep`, se «3D-båten på ruta»). Uten rute følger `moorStep` banen, glattet med `pathM`/`pathAt`.
   - **Test:** `harbourtest` sjekker banen inn til hver kaiplass for tre båttyper, fra havnepunktet og fra innseilingen.
-- **Fiskeslagene fra Blender** (`tools/fish/fisk.py`, `src/data/fish.b64`, 363 KB):
-  - **Artene:** torsk, sei, hyse, lyr, lange, brosme, uer, kveite og kongekrabbe (delen heter fortsatt `krabbe`), hver som én del i GLB-en.
+- **Fiskeslagene fra Blender** (`tools/fish/fisk.py`, `src/data/fish.b64`, 612 KB):
+  - **Artene:** torsk, sei, hyse, lyr, lange, brosme, uer, kveite, blåkveite og kongekrabbe (delen heter fortsatt `krabbe`), hver som én del i GLB-en.
   - **Fiskene** er 1 m lange, med hodet mot −z, ryggen opp og høyre side mot +x. Spillet skalerer dem etter vekta. Krabben er 1 m over beina.
   - **Kjennetegnene** er tatt med slik de ses på dekk:
     - torsk: skjeggtråd, overkjeve over underkjeve, flekker og lys sidelinje
@@ -2955,6 +2971,7 @@ Jonas' liste: oppgraderinger, kvotehandel, kikkert, raskere fangst, fortøying, 
     - lange og brosme: lange kropper og lange finner. Brosmen har mørkt bånd og hvit kant på finnene.
     - uer: rød, med piggete ryggfinne og store øyne
     - kveite: flatfisk med begge øynene på høyre side, mørk oppe og hvit under
+    - blåkveite (07.10.2026): flatfisk som kveita, men mørk grå-brun på begge sider, og det venstre øyet sitter på ryggkanten (`eye2`), fordi den svømmer mer opprett
   - **Kroppen** er ringer langs fisken med et smalt bånd for sidelinja. Finnene er tynne plater. Farger og flekker ligger i hjørnefargene.
   - **I spillet** erstatter de de prosedyrale fiskene (`FC`/`fishM`, som står igjen som reserve) gjennom `fishOf(sp)` i `view3d.js`:
     - i baljen på skiffen

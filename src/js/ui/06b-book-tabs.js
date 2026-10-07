@@ -95,7 +95,7 @@ function bookGear(){
 
 // --- sales: the landing notes, one to a page
 const BKFISH = (sp) => {
-  const S0 = {torsk:['#b8a479', 1], hyse:['#9a9ea6', 2], sei:['#5d6b6a', 0], lyr:['#8f7d4f', 0], lange:['#8a6a46', 3], brosme:['#7d5a38', 4], uer:['#e2673c', 5], kveite:['#7b6a52', 6], krabbe:['#c8743a', 7]}[sp] || ['#999', 0];
+  const S0 = {torsk:['#b8a479', 1], hyse:['#9a9ea6', 2], sei:['#5d6b6a', 0], lyr:['#8f7d4f', 0], lange:['#8a6a46', 3], brosme:['#7d5a38', 4], uer:['#e2673c', 5], kveite:['#7b6a52', 6], blakveite:['#3f3b37', 6], krabbe:['#c8743a', 7]}[sp] || ['#999', 0];
   const c = S0[0], k = S0[1];
   if (k === 6) return '<svg viewBox="0 0 70 34"><path d="M6 17C18 3 42 3 54 17 42 31 18 31 6 17z" fill="' + c + '"/><path d="M54 17l12-9v18z" fill="' + c + '"/><circle cx="16" cy="13" r="1.6" fill="#222"/></svg>';
   if (k === 7) return '<svg viewBox="0 0 70 34"><ellipse cx="35" cy="20" rx="17" ry="10" fill="' + c + '"/><path d="M20 16l-9-8 4 9M50 16l9-8-4 9M22 24l-8 5M48 24l8 5M24 27l-5 6M46 27l5 6" stroke="' + c + '" stroke-width="2.4" fill="none"/></svg>';

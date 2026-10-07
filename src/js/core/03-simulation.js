@@ -352,9 +352,28 @@ function denSp(sp, q, H, T){
   if (sp === 'torsk'){ if (q.skr < 0) q.skr = skreiSpot(p, q.d, q.E); av += T[sp].skrei * q.skr; }
   if (sp === 'uer' && !T.uerOpen) av *= 0.15;
   if (s.shell) v *= kingArea(p); else v *= school(sp, p, H);
+  if (s.area) v *= AREAS[s.area](p, q.d, H, q.E);
   return 1.6 * s.k * v * day * av * depthFactor(sp, q.d) * stockAt(p, sp) + tutBonus(sp, p);   // k: calibration to 2025 catches per boat in Lofoten–Tromsø
 }
 function density(sp, p, H){ const q = denPlace(p); return q ? denSp(sp, q, H, denTime(H)) : 0; }
+// Where the Greenland halibut is (07.10.2026, docs/plan-blakveite.md 1-2): the shelf edge between 300 and 1100 m (none shallower, none
+// deeper, which depthFactor alone cannot do, as it never drops below 0.3), from the landing notes of 2025 by area: next to none south of
+// 62° N, a little from Storegga to Helgeland and Træna, stray fish in Vestfjorden, the main grounds from Lofoten by Vesterålen, Andøya
+// (Bleiksdjupet), Malangsdjupet and Fugløybanken to Tromsøflaket, and less along Finnmark (most in the east: Leira by Berlevåg, the
+// Tana fjord, Vardø). In the deep fjord basins of Troms (Malangen, Ullsfjorden, Lyngen) a small, steady stock, which is poorly
+// documented. In winter the spawning fish gather on the edge from 70 to 75° N, so the south thins and the north fills.
+function eggaArea(p, d, H, E){
+  const win = sstep(280, 400, d) * (1 - sstep(1000, 1150, d)); if (win <= 0) return 0;
+  const ll = natLL(p), lat = ll.lat, lon = ll.lon; if (lat < 62) return 0;
+  let a = 0.15 + 0.85 * sstep(67.6, 68.8, lat);
+  if (lat > 70.3) a *= lon > 26.5 ? 0.6 : 0.4;
+  if (lat > 67.4 && lat < 68.4 && lon > 13.6 && lon < 16.5) a *= 0.15;      // Vestfjorden, inside the Lofoten wall
+  if (E < 0.4 && lat > 68.8) a *= 0.12;                                     // the sheltered fjord basins
+  const w = seasonal([1, 0.8, 0.4, 0.1, 0, 0, 0, 0, 0.1, 0.4, 0.8, 1], H);
+  a *= lat < 70 ? 1 - 0.45 * w : 1 + 0.3 * w;
+  return a * win;
+}
+const AREAS = {egga:eggaArea};
 // The first trip's guaranteed catch is a real patch of skrei on the guide's ground while the guarantee lasts, so the heat map and
 // the echo sounder show what the boat gets. It comes on top of the stock and is not fished down; the species mix is the mix the
 // guarantee tops up with. Full strength within half the ring's radius, a tenth at its edge.
@@ -386,12 +405,14 @@ function stockFill(v){ const m = {}; for (let iy = Math.floor(HOME.y0 / STK.c) -
 // days and work the cell as a patch, the heat map does not show crab, and the pot calibration rests on it.
 function stockAt(p, sp){
   if (sp && SPECIES[sp].shell) return S && S.cstk ? stkGet(S.cstk, stockIdx(p)) : 1;
+  if (sp && SPECIES[sp].stk) return S && S[SPECIES[sp].stk] ? stkGet(S[SPECIES[sp].stk], stockIdx(p)) : 1;   // the Greenland halibut's own
   if (!S || !S.stock) return 1; let v = 0; for (const [k, w] of stockW(p)) v += stkGet(S.stock, k) * w; return v;
 }
 // npc: the local fleet's take (stockHour), which every game works out for itself; what the player's own boats take is also kept for
 // the other players (the shared world V2)
 function takeStock(p, kg, sp, npc){
   if (sp && SPECIES[sp].shell){ if (!S.cstk) S.cstk = {}; const k = stockIdx(p); stkSet(S.cstk, k, Math.max(0.1, stkGet(S.cstk, k) - kg / (STK.K * 0.25))); return; }
+  if (sp && SPECIES[sp].stk){ const n = SPECIES[sp].stk; if (!S[n]) S[n] = {}; const k = stockIdx(p); stkSet(S[n], k, Math.max(0.1, stkGet(S[n], k) - kg / (STK.K * 0.4))); return; }
   if (!S.stock) return; const q = !npc && WSH.rec ? wq().c : null;
   for (const [k, w] of stockW(p)) if (w > 0){ stkSet(S.stock, k, Math.max(0.12, stkGet(S.stock, k) - kg * w / STK.K)); if (q && (q[k] != null || Object.keys(q).length < 3000)) q[k] = (q[k] || 0) + kg * w; }
 }
@@ -432,6 +453,8 @@ function stockHour(H){
   S.stock = nx;
   // crab comes back more slowly, and does not wander far
   if (S.cstk){ const c = {}; for (const k in S.cstk){ const v = S.cstk[k]; stkSet(c, k, Math.round(Math.min(1, v + Math.max((1 - v) * 0.0015, 0.0001)) * 1e4) / 1e4); } S.cstk = c; }
+  // the Greenland halibut grows slowly and lives long (M 0.12-0.16): its cells come back slower still
+  if (S.bstk){ const c = {}; for (const k in S.bstk){ const v = S.bstk[k]; stkSet(c, k, Math.round(Math.min(1, v + Math.max((1 - v) * 0.001, 0.0001)) * 1e4) / 1e4); } S.bstk = c; }
   // the local fleet works the known grounds on fishable days
   for (const q of npcStates(H)) if (q.fleet && q.st === 'fishing') takeStock(q.p, 18, null, true);
   const hr = gDate(H).getUTCHours();

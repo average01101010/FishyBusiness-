@@ -78,6 +78,7 @@ const RU_VF = [P(67 + 49.61 / 60, 12 + 49.25 / 60), P(67 + 15.20 / 60, 14 + 18.9
 const ruVfIn = p => { const [a, b] = RU_VF, s = q => Math.sign((b.x - a.x) * (q.y - a.y) - (b.y - a.y) * (q.x - a.x)); return s(p) === s(RU_SVV); };
 const RU_COD = ['torsk', 'hyse', 'sei'], RU_CONV = ['juksa', 'line', 'garn', 'teiner'];
 const RU_KC1 = 'https://www.fiskeridir.no/yrkesfiske/j-meldinger/j-136-2026', RU_KC2 = 'https://www.fiskeridir.no/yrkesfiske/j-meldinger/J-138-2026';
+const RU_BK = 'https://www.fiskeridir.no/yrkesfiske/j-meldinger/j-241-2025', RU_BUNN = 'https://lovdata.no/dokument/LTI/forskrift/2019-03-29-416';
 // the king crab's quota area (J-136-2026 § 2), by an approximation of its lines in lat/lon: east of 26° E up to 71°30′ N, and west of
 // it the sea south of Magerøya (Porsangerfjorden, and Kamøyfjorden and Magerøysundet east of 25°32′ E)
 function kcQuota(ll){ const {lat, lon} = ll; return (lon >= 26 && lat <= 71.5) || (lon >= 25.53 && lon < 26 && lat < 71.02) || (lon >= 24.85 && lon < 26 && lat < 70.93); }
@@ -149,6 +150,21 @@ function rulesAt(q){
     else if (ruIn2(md, 1220, 420)) add('no', 'kv39', 'Kveita er fredet nord for 62° N fra 20. desember til 20. april.', 'Halibut is protected north of 62° N from 20 December to 20 April.', 'Høstingsforskriften § 39', RU_HF);
     if (ruAt(7, p).some(f => /kveite/i.test(f.a.navn || ''))) add('no', 'kv40', 'Forbudsområde for kveite.', 'No-fishing area for halibut.', 'Høstingsforskriften § 40', RU_HF, true);
   }
+  // Greenland halibut (J-241-2025, 07.10.2026): line and nets on its grounds (400 m and deeper north of 62° N, or when you fish for it).
+  // In the direct fishery up to the maximum quota, otherwise only bycatch (at most 7 % a week); nothing deeper than 1000 m with bottom
+  // gear: «nye fiskeområder» need a permit of their own (the bottom gear regulation), shut in the game. Depth from the map where it
+  // is in (a reader far from the boats may not have it)
+  if (gear === 'line' || gear === 'garn' || sp === 'blakveite'){
+    let dep = null; try { dep = depthF(p); } catch (e){}
+    if (dep != null && dep > 1000 && gear !== 'juksa') add('no', 'bk1000', 'Dypere enn 1000 m er nye fiskeområder: bunnredskap, også garn og line, krever egen tillatelse.', 'Deeper than 1000 m is new fishing ground: bottom gear, nets and line too, needs a permit of its own.', 'Forskrift om bunnredskap', RU_BUNN, true);
+    else if (n62 && (sp === 'blakveite' || (dep != null && dep >= 400))){
+      const ss = bkSeason(yearH(H)), open = H >= ss.open && H < ss.stop;
+      if (len >= 28) add('warn', 'bk7', 'Fartøy på 28 m og over kan bare ta blåkveite som bifangst, høyst 12,1 tonn i året.', 'Vessels of 28 m and over may only take Greenland halibut as bycatch, at most 12.1 tonnes a year.', 'J-241-2025 § 7', RU_BK);
+      else if (!open) add('warn', 'bk5c', 'Direktefisket etter blåkveite er stengt (det åpner 25. mai). Blåkveite er bare lov som bifangst, høyst 7 % av ukas landinger.', 'The direct fishery for Greenland halibut is closed (it opens on 25 May). It is only allowed as bycatch, at most 7% of the week\'s landings.', 'J-241-2025 §§ 5, 7', RU_BK);
+      else if (!bladB()) add('warn', 'bkB', 'Direktefisket etter blåkveite er åpent, men du må stå på blad B. Uten det er blåkveite bare bifangst (høyst 7 %).', 'The direct fishery for Greenland halibut is open, but you must be on blad B. Without it, it is only bycatch (at most 7%).', 'J-241-2025, deltakerforskriften', RU_BK);
+      else add('ok', 'bk5o', 'Direktefisket etter blåkveite er åpent til ' + dayStr(ss.stop) + '. Maksimalkvoten for båten er ' + fmt(bkMax(len) / 1000, 1) + ' tonn. Minstemål 45 cm, og redskapen røktes annenhver dag.', 'The direct fishery for Greenland halibut is open until ' + dayStr(ss.stop) + '. The boat\'s maximum quota is ' + fmt(bkMax(len) / 1000, 1) + ' tonnes. Minimum size 45 cm, and the gear is tended every other day.', 'J-241-2025 §§ 5, 6', RU_BK);
+    }
+  }
   if (sp === 'uer' && n62 && !(len < 15 && gear === 'juksa' && ruIn2(md, 601, 831))) add('no', 'uer39', 'Uer kan bare fiskes med juksa fra båt under 15 m, 1. juni–31. august, nord for 62° N.', 'Redfish may only be fished by jig from a boat under 15 m, 1 June–31 August, north of 62° N.', 'Høstingsforskriften § 39', RU_HF);
   // king crab (J-136-2026 and J-138-2026, § 2 the same in both): east of the line at 26° E, with all of Porsangerfjorden and
   // Kamøyfjorden and Magerøysundet south-east of its line, is the quota area, for vessels registered in Finnmark whose owner lives there;
@@ -174,6 +190,7 @@ function ruMinSize(sp, p){
     case 'hyse': return n62 ? 40 : 32;
     case 'sei': return n62 ? 45 : 40;
     case 'kveite': return 84;
+    case 'blakveite': return 45;
     case 'uer': return nm < 12 ? 32 : 30;
     default: return null;
   }
@@ -190,6 +207,8 @@ const RU_SHORT = {f31:['Ikke torsk her', 'No cod here'], j32b:['Ikke innenfor gr
   uer39:['Uer er ikke lov', 'Redfish not allowed'], f33:['Høyst 5 000 kroker', 'At most 5,000 hooks'], f33a:['Høyst 80 torskegarn', 'At most 80 cod nets'], j32by:['Bifangst høyst 20 %', 'Bycatch at most 20%'],
   lofot:['Felleshav: om bord 10–17', 'Common ground: aboard 10–17'], raet:['Raet: egne regler', 'Raet: own rules'], oslot:['Høyst 10 teiner', 'At most 10 pots'],
   kc2:['Kvoteområde for kongekrabbe', 'King crab quota area'], kc10:['Stengt for kongekrabbe', 'Closed to king crab'], kc5:['Fritt fiske: alt landes', 'Free fishing: land all'],
+  bk1000:['Over 1000 m: egen tillatelse', 'Over 1000 m: permit needed'], bk5o:['Blåkveite: direktefiske åpent', 'Greenland halibut: open'], bk5c:['Blåkveite: bare bifangst', 'Greenland halibut: bycatch only'],
+  bkB:['Blåkveite: krever blad B', 'Greenland halibut: needs blad B'], bk7:['Blåkveite: bare bifangst over 28 m', 'Greenland halibut: bycatch only over 28 m'],
   f31h:['Andre arter enn torsk er lov', 'Species other than cod allowed'], f31a:['Andre arter enn torsk er lov', 'Species other than cod allowed'], f33b:['Ingen krokgrense nå', 'No hook limit now']};
 function ruCtx(){ const b = S.boat; return {p:b.status === 'port' && typeof portById === 'function' && b.port ? portById(b.port).p : b.pos, len:BOAT.len, gear:b.rig || 'juksa',
   sp:b.rig === 'teiner' ? 'krabbe' : S.target === 'kveite' ? 'kveite' : null, hand:!(S.equip && S.equip.jukse > 0)}; }

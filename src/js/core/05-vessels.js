@@ -244,7 +244,7 @@ function step(){
   if (S.t % 60 === 0) for (const pid in S.market) for (const sp in S.market[pid]) S.market[pid][sp] *= 0.97;
   if (S.t % 60 === 0 && S.stock) stockHour(H);
   if (S.t % 60 === 0) gearHour(H);
-  if (S.t % 60 === 0){ seasonDay(H); pressDay(H); }   // the seasons' news and the skrei festival (09c-seasons.js), a record price (09h-press.js)
+  if (S.t % 60 === 0){ seasonDay(H); pressDay(H); bkNews(H); }   // ... and the Greenland halibut's opening and stop (03d-quota.js)   // the seasons' news and the skrei festival (09c-seasons.js), a record price (09h-press.js)
   folkPort(H);                        // Edvard on the quay in the home harbour (09d-folk.js)
   eachVessel(() => vesselStep(H));
   achMinute();                        // the badges: rough weather, night fishing, players met (09f-merker.js)
@@ -406,7 +406,7 @@ function fish(H, W, hs){
   S.facc = S.facc || {}; S.fnext = S.fnext || {};
   for (const sp of SP){
     const dn = density(sp, b.pos, H); dsum += dn; tsum += tutBonus(sp, b.pos);
-    S.facc[sp] = (S.facc[sp] || 0) + 30 * (S.target === 'kveite' && b.kgear ? keff : eff) * dn * luck(sp) * targetF(sp, H) * noteBoost(sp, b.pos) * wpen * pen * (0.5 + Math.random()) / 60;
+    S.facc[sp] = (S.facc[sp] || 0) + 30 * (S.target === 'kveite' && b.kgear ? keff : eff) * dn * luck(sp) * targetF(sp, H) * noteBoost(sp, b.pos) * (SPECIES[sp].jig != null ? SPECIES[sp].jig : 1) * wpen * pen * (0.5 + Math.random()) / 60;   // jig: what the jig takes of a species (the Greenland halibut next to none)
     if (!S.fnext[sp]) S.fnext[sp] = sampleFish(sp, b.pos, H);
     while (S.facc[sp] >= S.fnext[sp] && room > 0){
       const w = S.fnext[sp]; S.facc[sp] -= w; S.fnext[sp] = sampleFish(sp, b.pos, H);

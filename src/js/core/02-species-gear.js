@@ -28,6 +28,17 @@ const SPECIES = {
   kveite:{no:'Kveite', en:'Halibut', k:0.35, base:0.05, prod:0.7, dep:[120, 0.9], av:[0.6,0.6,0.6,0.7,0.8,0.8,0.6,0.9,1.5,1.3,1.7,1.8],
     pm:[64.6,63.7,65.5,77.9,87.6,91.2,90.3,93.8,84.1,91.2,98.2,100.9], sig:0.03, size:[12, 0.8], minKg:7.2, maxKg:100, uh:1.13,
     cls:[[67.8, 50.4, 'Over 60 kg'], [45.2, 59.3, '40–60 kg'], [22.6, 68.1, '20–40 kg'], [0, 72.6, '5,3–20 kg']], ref:3},
+  // Greenland halibut (blåkveite, Reinhardtius hippoglossoides; 07.10.2026, tilbakemelding #10; the research and the plan in
+  // docs/blakveite.md and docs/plan-blakveite.md). A fish of the shelf edge at 500-1000 m (HI): area 'egga' gives where it is along
+  // the coast and its depth window (eggaArea in 03-simulation.js), stk its own stock layer, so cod fishing on the banks does not thin
+  // it. Size from the coastal catch of 2026 (Råfisklaget: 4 % under 1 kg, 46 % 1-2 kg, 50 % over 2 kg: median 2 kg, spread 0.4);
+  // minKg 0.9 kg is the minimum size of 45 cm (W = 4.06e-6 L^3.245, an East Greenland curve). cls: Råfisklaget's minimum prices for
+  // fresh round A, week 27 2026 (46/47/48 kr under 1.2, 1.2-2.4 and over 2.4 kg); pm: 61 kr/kg was the season's mean in 2026, the
+  // months around it an estimate. 98 % is landed round; uh 1.3 (round per gutted kg without head) is an estimate. late: its seeds come
+  // after the crab's, so no other species' hotspots, day noise and prices move
+  blakveite:{no:'Blåkveite', en:'Greenland halibut', late:true, area:'egga', stk:'bstk', jig:0.03, k:0.6, base:0.5, prod:0.6, dep:[700, 0.3],
+    av:[0.8,0.8,0.8,0.9,1.1,1.25,1.25,1.15,1.0,0.9,0.85,0.8], pm:[58,58,58,58,60,61,61,62,62,60,58,58], sig:0.04, size:[2.0, 0.4], minKg:0.9, uh:1.3,
+    cls:[[2.4, 48, 'Over 2,4 kg'], [1.2, 47, '1,2–2,4 kg'], [0, 46, 'Under 1,2 kg']], ref:1},
   // king crab (kongekrabbe, Paralithodes camtschaticus; the key stays 'krabbe' so saves carry over), the user 04.10.2026: «Det er
   // kongekrabbe som gjelder innen fiskerinæringen». Caught in pots and landed alive: Råfisklaget's minimum prices are for live crab
   // only, and dead crab is 0 kr (sell). West of the line at 26° E the fishing is free (J-138-2026: no quota, no minimum size, all king
@@ -41,9 +52,10 @@ const SPECIES = {
     pm:[610,560,380,190,300,460,450,420,400,420,470,560], sig:0.05, size:[1.5, 0.45], minKg:0, uh:1,
     cls:[[3.2, 296, 'Hann over 3,2 kg'], [2.2, 291, 'Hann 2,2–3,2 kg'], [1.6, 246, 'Hann 1,6–2,2 kg'], [0.8, 66, 'Hann 0,8–1,6 kg'], [0, 80, 'Hunnkrabbe'], [0, 100, 'Skadd hann'], [0, 20, 'Under 0,8 kg']], ref:1}
 };
-// fish are caught by jig, line and net; shellfish only in pots. Everything that loops over fish uses SP; ALLSP adds the shellfish last,
-// so the per-species seeds (SP.indexOf) keep their values
-const SP = Object.keys(SPECIES).filter(sp => !SPECIES[sp].shell), SHELL = Object.keys(SPECIES).filter(sp => SPECIES[sp].shell), ALLSP = SP.concat(SHELL);
+// fish are caught by jig, line and net; shellfish only in pots. Everything that loops over fish uses SP; ALLSP adds the shellfish after
+// the first fish and the late ones (added after the crab) last, so the per-species seeds (ALLSP.indexOf) keep their values
+const SP = Object.keys(SPECIES).filter(sp => !SPECIES[sp].shell), SHELL = Object.keys(SPECIES).filter(sp => SPECIES[sp].shell),
+  ALLSP = SP.filter(sp => !SPECIES[sp].late).concat(SHELL, SP.filter(sp => SPECIES[sp].late));
 // ---------- vessels, equipment, crew ----------
 // The vessels, from the open starter boat to the ocean fleet. Every rule reads these fields, never the key:
 //  len, beam, draft (m), disp (displacement loaded, tonnes; an estimate), holdCap, iceCap (kg), fuelCap (L), hp, vmax, vcruise (kn),

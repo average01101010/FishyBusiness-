@@ -25,7 +25,7 @@ Tilleggskilder: [Nærings- og fiskeridepartementets rapport om åpen gruppe](htt
 
 ## Arter
 
-Torsken deles i kysttorsk som står ved kysten hele året og skrei som kommer inn for å gyte i januar–april. Hyse og sei er de andre hovedartene, og fem arter kommer som sekundærarter og bifangst.
+Torsken deles i kysttorsk som står ved kysten hele året og skrei som kommer inn for å gyte i januar–april. Hyse og sei er de andre hovedartene, og seks arter kommer som sekundærarter og bifangst.
 
 | Art | Rolle | Habitat | Redskap i første versjon | Typisk størrelse | Minstemål og prisgrense |
 | --- | --- | --- | --- | --- | --- |
@@ -38,6 +38,7 @@ Torsken deles i kysttorsk som står ved kysten hele året og skrei som kommer in
 | Brosme | Bifangst | 150–500 m, steinbunn | Senere line | 1–4 kg | Under 1 kg 4 kr/kg |
 | Uer | Bifangst | 100–500 m | Bare juksa i juni–august, ellers bare bifangst | 0,5–1,5 kg | Minstepris fra 0,7 kg |
 | Kveite | Sekundærart | 50–300 m, bankekanter | Kveiteutstyr med stor pilk, senere line | 7–60 kg | 84 cm og 7,2 kg ved salg, fredet 20. desember–20. april, slippes over 200 cm |
+| Blåkveite | Sekundærart, direktefiske fra 25. mai | 300–1100 m på eggakanten nord for 62° N, mest fra Lofoten og nordover | Line og garn (juksa tar nesten ingen) | 1–4 kg | 45 cm, 7 % bifangst utenom direktefisket |
 
 Kveite kan fiskes målrettet med eget utstyr og biter best rundt strømstille, og kveithaill forsterker dette. Minstemål og prisgrenser kommer fra Råfisklaget, og kveitereglene fra høstingsforskriften § 39. Habitat og størrelser er fagverdier som ikke står i kildene og bør sjekkes.
 

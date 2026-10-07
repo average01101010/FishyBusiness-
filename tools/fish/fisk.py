@@ -14,6 +14,8 @@ the decked boats' tub, and in the charm. One part per species, each 1 m long (th
     uer     redfish (Sebastes norvegicus): deep, a big head with large eyes, a spiny dorsal, red-orange
     kveite  Atlantic halibut (Hippoglossus hippoglossus): a flatfish, both eyes on its right side, olive-brown above with paler mottling,
             white below, long dorsal and anal fins along the edges, a concave tail; the lateral line arched over the pectoral
+    blakveite  Greenland halibut (Reinhardtius hippoglossoides): longer and thicker than the halibut, dark grey-brown on both sides,
+            the upper eye on the dorsal edge of the head, a big mouth, a straight lateral line
     krabbe  king crab (Paralithodes camtschaticus, kongekrabbe; the brown crab before 04.10.2026): the spiny pear-shaped shell, brick
             red above and cream below, the right claw the bigger, three pairs of long spiny walking legs; 1 m across the legs
 
@@ -119,6 +121,18 @@ SPEC = {
     spots=0.4, lat=[(0.2, 0.62), (0.3, 0.7), (0.45, 0.25), (0.6, 0.05), (0.84, 0.0)], bands=(-9, 9),
     dors=[(0.07, 0.82, 0.07, 1.0)], anal=[(0.24, 0.82, 0.065, 1.0)],
     tail=('concave', 0.15), pect=(0.2, 0.08, 0.035), pelv=(0.16, 0.035), eye=(0.075, 0.018, 0.55), barbel=0.0, mouth=(0.11, -0.25)),
+  # Greenland halibut (blåkveite, 07.10.2026): longer and thicker than the halibut, dark grey-brown on both sides (the blind side only
+  # a little paler, which the species is known for), the upper eye up on the dorsal edge of the head, a big mouth to below the eyes,
+  # the dorsal fin starting behind the eyes, a straight lateral line and a nearly square tail
+  'blakveite': dict(tp=0.85, belly=1.0, ex=0.82, flat=True,
+    w=[(0, 0.0), (0.02, 0.016), (0.08, 0.034), (0.2, 0.046), (0.4, 0.048), (0.6, 0.04), (0.76, 0.024), (0.85, 0.013)],
+    h=[(0, 0.0), (0.02, 0.028), (0.08, 0.07), (0.2, 0.112), (0.4, 0.128), (0.6, 0.108), (0.76, 0.058), (0.85, 0.03)],
+    zc=[(0, -0.008), (0.08, 0.0), (0.85, 0.0)],
+    col=dict(back=(0.17, 0.16, 0.15), side=(0.17, 0.16, 0.15), belly=(0.33, 0.31, 0.29), fin=(0.13, 0.12, 0.11), under=(0.33, 0.31, 0.29),
+             line=(0.27, 0.26, 0.24), spot=(0.13, 0.12, 0.11), spot2=(0.23, 0.22, 0.20), iris=(0.68, 0.64, 0.50)),
+    spots=0.15, lat=[(0.2, 0.06), (0.85, 0.0)], bands=(-9, 9),
+    dors=[(0.16, 0.82, 0.06, 1.0)], anal=[(0.27, 0.82, 0.058, 1.0)],
+    tail=('concave', 0.125), pect=(0.21, 0.08, 0.035), pelv=(0.17, 0.035), eye=(0.075, 0.019, 0.2), eye2=(0.0, 1.25), barbel=0.0, mouth=(0.14, -0.3)),
 }
 
 M = {}
@@ -287,7 +301,8 @@ def build_fins(sp, S, C):
 def build_head(sp, S, C):
     parts = []; flat = S.get('flat')
     te, r, phe = S['eye']
-    eyes = [(te, phe, 1), (te + 0.025, phe - 0.75, 1)] if flat else [(te, phe, 1), (te, phe, -1)]
+    e2 = S.get('eye2', (0.025, -0.75))   # the second eye from the first (t, angle): the halibut's below it, the Greenland halibut's on the edge
+    eyes = [(te, phe, 1), (te + e2[0], phe + e2[1], 1)] if flat else [(te, phe, 1), (te, phe, -1)]
     for k, (t, ph, sd) in enumerate(eyes):
         p, n = surf(S, t, ph, sd, -0.25 * r)
         parts.append(sphere('%s_eye%d' % (sp, k), p, r, C['iris'], seg=10, rings=5))
@@ -364,7 +379,7 @@ def build_kingcrab():
     for p in parts: apply_all(p)
     return join(parts, 'krabbe')
 
-SPECIES = ['torsk', 'sei', 'hyse', 'lyr', 'lange', 'brosme', 'uer', 'kveite']
+SPECIES = ['torsk', 'sei', 'hyse', 'lyr', 'lange', 'brosme', 'uer', 'kveite', 'blakveite']
 
 def main():
     os.makedirs(OUT, exist_ok=True)
@@ -378,13 +393,13 @@ def main():
     print('fish GLB %.1f KB, %s' % (n / 1024, ', '.join('%s %d' % (p[0], len(p[1]['idx']) // 3) for p in parts)))
     if 'fast' in sys.argv: return
     # renders: the species side by side on a light deck, from the side and from above at an angle
-    for k, (sp, o) in enumerate(objs.items()):
-        o.location = (0.0, (k % 3) * 1.25 - 1.25, -(k // 3) * 0.55 + 0.55) if sp != 'krabbe' else (0.0, 1.25, -0.55)
+    for k, (sp, o) in enumerate(objs.items()):   # four to a row, the crab last
+        o.location = (0.0, (k % 4) * 1.2 - 1.8, -(k // 4) * 0.55 + 0.55)
         if sp == 'krabbe': o.rotation_euler = (0, 1.0, 0)      # the fish from their right side, the crab tilted to show its shell
     setup_render(1600, 1000, samples=24)
     bpy.context.scene.world.node_tree.nodes.get('Background').inputs['Color'].default_value = (0.70, 0.76, 0.82, 1)
-    camera((4.2, 0.0, 0.0), (0.0, 0.0, 0.0), ortho=4.1); render(os.path.join(OUT, 'fish_side.png'))
-    camera((3.0, 1.6, 1.3), (0.0, 0.0, 0.0), lens=40); render(os.path.join(OUT, 'fish_3q.png'))
+    camera((4.2, 0.0, 0.0), (0.0, 0.0, 0.0), ortho=5.6); render(os.path.join(OUT, 'fish_side.png'))
+    camera((3.6, 2.0, 1.6), (0.0, 0.0, 0.0), lens=34); render(os.path.join(OUT, 'fish_3q.png'))
 
 if __name__ == '__main__':
     main()

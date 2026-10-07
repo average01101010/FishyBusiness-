@@ -113,14 +113,17 @@ function landConf(H, q, acc){
     if (acc === 'lukket'){ const LQ = licQ(S.lic, H), all = holdTotal();
       for (const [sp, share] of [['hyse', 0.3], ['sei', 0.2]]){ const k = kgOf(sp), ok = Math.min(k, Math.max(LQ[sp][0] - q[sp], share * all)); if (k > 0 && ok < k - 0.01) confBy[sp] = 1 - Math.max(0, ok) / k; } }
   }
-  return {saleKg, codKg, confBy, codFF, codQ, codConf, byCod};
+  // Greenland halibut: the maximum quota in the direct fishery, otherwise at most 7 % of the week's landings (03d-quota.js bkAllow)
+  const bkKg = kgOf('blakveite'), bkOk = bkKg > 0 ? bkAllow(H, bkKg, holdTotal()) : 0;
+  if (bkKg > 0 && bkOk < bkKg - 0.01) confBy.blakveite = 1 - bkOk / bkKg;
+  return {saleKg, codKg, confBy, codFF, codQ, codConf, byCod, bkOk};
 }
 function sell(){
   const b = S.boat, port = portById(b.port); if (!port || !port.mottak) return;
   const H = S.t / 60, q = quotaState(), lines = {}, extra = [], acc = access(), kgOf = sp => S.hold.filter(x => x.sp === sp).reduce((a, x) => a + x.kg, 0);
   let kg = 0;
   const wk = weekOfH(H); if (q.ffW !== wk){ q.ffW = wk; q.ffTot = 0; q.ffCod = 0; }
-  const {saleKg, codKg, confBy, codFF, codQ, codConf, byCod} = landConf(H, q, acc);
+  const {saleKg, codKg, confBy, codFF, codQ, codConf, byCod, bkOk} = landConf(H, q, acc);
   // The landing note lists each lot at its full value and takes what is confiscated off in rows of its own; every row is whole
   // kroner and the total is the sum of the rows, so the note adds up and the cash gets exactly the total less the crew's share.
   let confKr = 0, confKg = 0, crabKr = 0, ordKr = 0, crabSmall = 0, crabDead = 0;
@@ -164,6 +167,7 @@ function sell(){
   q.torsk += codQ; q.hyse += kgOf('hyse') * (1 - (confBy.hyse || 0)); q.sei += kgOf('sei') * (1 - (confBy.sei || 0)); q.byCod = (q.byCod || 0) + byCod;
   if (acc !== 'none'){ q.ffTot += saleKg; q.ffCod += codFF; }
   if (acc === 'open') qyAt(H).me += codQ / 1000;   // your landings count in the open group's catch (03d-quota.js)
+  bkLanded(H, bkOk || 0, holdTotal());   // the Greenland halibut's maximum quota and the week's 7 %
   { const ks = {}; for (const x of S.hold) ks[x.sp] = (ks[x.sp] || 0) + x.kg; wshLand(port.id, H, acc, ks, codQ); if (WSH.rec) setTimeout(worldShare, 4000); }   // for the other players
   q.conf += confKg + crabSmall; q.confKr += confKr + crabKr;
   const arr = Object.values(lines).sort((a, c) => ALLSP.indexOf(a.sp) - ALLSP.indexOf(c.sp) || a.c - c.c || 'EABXV'.indexOf(a.g) - 'EABXV'.indexOf(c.g));

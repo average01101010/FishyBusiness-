@@ -83,7 +83,7 @@ function turSvg(u, inV){
 // ---- the measuring board (Havforskningsinstituttet's sample, core turProveFish): each fish lies with its snout against the board's
 // stop, and the board shows the 24 cm round the tail. Tap where the tail ends; the length is read in whole centimetres, total length
 // (the reference fleet measures the whole catch so). The fish's colour by species, a forked tail where it has one.
-const TUR_FISHC = {torsk:'#8b7d55', hyse:'#7f8892', sei:'#4f5e5b', lange:'#7a6b4b', brosme:'#8d6c3e', kveite:'#6b5b47', uer:'#c2553d', steinbit:'#6f7375', makrell:'#3f7290', lysing:'#8e9599', breiflabb:'#6a5a44'};
+const TUR_FISHC = {torsk:'#8b7d55', hyse:'#7f8892', sei:'#4f5e5b', lange:'#7a6b4b', brosme:'#8d6c3e', kveite:'#6b5b47', blakveite:'#3f3b37', uer:'#c2553d', steinbit:'#6f7375', makrell:'#3f7290', lysing:'#8e9599', breiflabb:'#6a5a44'};
 const TUR_FORK = ['sei', 'makrell', 'hyse', 'sild', 'lysing'];
 function turMeasure(id){
   const m = ((S.turer && S.turer.act) || []).find(x => x.id === id); if (!m || m.stage !== 'measure') return;

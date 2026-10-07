@@ -17,12 +17,13 @@ const MESHES = [156, 180, 200];                                  // legal cod ne
 const GPRICE = {net:1500, kit:2500, heavy:1500, bait:18, potBait:0.6, bot:180, egnRate:560};   // kr, kg bait per pot, bøteri kr per net per 0.1, hooks baited per hour
 // how well each gear takes each species, relative to the jig (1 for every fish); pots take crab and a little cod and tusk
 const SELQ = {
-  garn:{torsk:1.0, hyse:0.45, sei:0.7, lyr:0.6, lange:0.35, brosme:0.25, uer:0.3, kveite:0.35},
-  'line:hyse':{torsk:0.7, hyse:2.6, sei:0.15, lyr:0.2, lange:0.8, brosme:1.0, uer:0.3, kveite:0.6},
-  'line:bank':{torsk:0.8, hyse:0.8, sei:0.1, lyr:0.15, lange:2.4, brosme:2.8, uer:0.4, kveite:1.8},
+  garn:{torsk:1.0, hyse:0.45, sei:0.7, lyr:0.6, lange:0.35, brosme:0.25, uer:0.3, kveite:0.35, blakveite:3.2},
+  'line:hyse':{torsk:0.7, hyse:2.6, sei:0.15, lyr:0.2, lange:0.8, brosme:1.0, uer:0.3, kveite:0.6, blakveite:2.5},
+  'line:bank':{torsk:0.8, hyse:0.8, sei:0.1, lyr:0.15, lange:2.4, brosme:2.8, uer:0.4, kveite:1.8, blakveite:5.0},   // the Greenland halibut: line 49 %, nets 40 % of the coastal catch in 2026 (Råfisklaget); about 125 kg per
+  // 1000 hooks over 20 h on the edge off Andøya, so 30 tubs a day give a boat under 14 m about 7 t in its first week (docs/plan-blakveite.md B7)
   teine:{torsk:0.012, brosme:0.008}
 };
-const GK = {torsk:1, hyse:1.05, sei:1, lyr:1, lange:0.8, brosme:0.95, uer:1.15, kveite:0.7};   // body shape in the mesh: optimal length per mm mesh
+const GK = {torsk:1, hyse:1.05, sei:1, lyr:1, lange:0.8, brosme:0.95, uer:1.15, kveite:0.7, blakveite:0.8};   // body shape in the mesh: optimal length per mm mesh
 // king crab as it comes up in pots without escape vents (west of 26° E they are not allowed): the share of females and of damaged males,
 // the weights (kg) [median, log-spread] of males and females, the mean weight, how many more crabs than the old brown crab came, and the
 // freshness under which a crab is dead (an estimate from HI's catches in Porsanger 2020 and Varanger 2021: many small crabs and females)
@@ -45,10 +46,10 @@ function newPGear(){ return {nets:[], lines:{hyse:{n:0, baited:0, bt:{}}, bank:{
 // can be bait, taken from the hold in port before landing; it counts on the quota (our reading of the landing rules:
 // what is kept for own use goes on the landing note; not confirmed). The prices are the game's (makrell keeps the old 18 kr/kg)
 const BAITS = {
-  makrell:{no:'Makrell', en:'Mackerel', kr:18, f:{sei:1.4, hyse:1.0, torsk:1.0, krabbe:1.0}, d:0.8},
+  makrell:{no:'Makrell', en:'Mackerel', kr:18, f:{sei:1.4, hyse:1.0, torsk:1.0, krabbe:1.0, blakveite:1.3}, d:0.8},
   krabbe:{no:'Krabbe', en:'Crab', kr:10, f:{}, d:1.0},
   reke:{no:'Reke', en:'Shrimp', kr:28, f:{torsk:1.4, hyse:1.1, sei:1.1}, d:0.8},
-  sei:{no:'Sei', en:'Saithe', kr:12, f:{kveite:1.6, krabbe:1.2}, d:0.7},
+  sei:{no:'Sei', en:'Saithe', kr:12, f:{kveite:1.6, krabbe:1.2, blakveite:1.1}, d:0.7},
   krill:{no:'Krill', en:'Krill', kr:22, f:{uer:1.8}, d:0.6}};
 const BAIT_OWN = ['sei'];   // king crab is far too dear for bait (the bait crab is shore crab, bought)
 const baitF = (k, sp) => { const B = BAITS[k]; return !B ? 1 : B.f[sp] != null ? B.f[sp] : B.d; };
@@ -210,7 +211,7 @@ function startSet(kind, spec, fishAfter, hdg){
   Object.assign(s, {n, heavy});
   if (hdg != null) b.heading = hdg;
   b.status = 'fishing'; b.fishUntil = null; b.deckStop = false; b.deckEnd = null;
-  b.gop = {op:'set', kind, s, n, done:0, prog:0, a:geo.a, b:geo.b, fishAfter:fishAfter || 0, hooksPer:kind === 'line' ? LINE_KINDS[spec.lk].hooks : 0};
+  b.gop = {op:'set', kind, s, n, done:0, prog:0, a:geo.a, b:geo.b, fishAfter:fishAfter || 0, hooksPer:kind === 'line' ? LINE_KINDS[spec.lk].hooks : 0, lead:endLines('set', kind, depthF(geo.a))};
   log('Setter ' + n + ' ' + unitName(kind, n) + '.', 'Setting ' + n + ' ' + unitName(kind, n) + '.');
   return null;
 }
@@ -226,9 +227,21 @@ function startHaul(sid, reset, fishAfter){
   s.hauling = true;
   const from = da <= db ? s.a : s.b, to = da <= db ? s.b : s.a;
   b.status = 'fishing'; b.fishUntil = null; b.deckStop = false; b.deckEnd = null;
-  b.gop = {op:'haul', kind:s.kind, sid, n:s.n, done:0, prog:0, a:{...from}, b:{...to}, reset:!!reset, fishAfter:fishAfter || 0, kg:0, rel:0, dead:0, hooksPer:s.kind === 'line' ? s.hooks / s.n : 0, soak:(S.t - s.tSet) / 60, sub:0, sl:HAUL_SLICES(s.kind, s.kind === 'line' ? s.hooks / s.n : 0)};
+  b.gop = {op:'haul', kind:s.kind, sid, n:s.n, done:0, prog:0, a:{...from}, b:{...to}, reset:!!reset, fishAfter:fishAfter || 0, kg:0, rel:0, dead:0, hooksPer:s.kind === 'line' ? s.hooks / s.n : 0, soak:(S.t - s.tSet) / 60, sub:0, sl:HAUL_SLICES(s.kind, s.kind === 'line' ? s.hooks / s.n : 0), lead:endLines('haul', s.kind, s.depth || depthF(from)), thief:thiefOf(s)};
   S.gacc = {}; S.gnext = {};
   log('Trekker ' + GEAR[s.kind].no.toLowerCase() + ': ' + s.n + ' ' + unitName(s.kind, s.n) + ', sto ' + fmt(b.gop.soak, 0) + ' t.', 'Hauling ' + GEAR[s.kind].en.toLowerCase() + ': ' + s.n + ' ' + unitName(s.kind, s.n) + ', soaked ' + fmt(b.gop.soak, 0) + ' h.');
+  return null;
+}
+// the end lines on deep water (07.10.2026, for the Greenland halibut on 500-1000 m): before the first unit the dregg and the buoy line go
+// down (about 60 m a minute) or come up (40 m a minute with a hauler, 25 by hand), both ends; nothing to speak of in shallow water
+function endLines(op, kind, d){ if (kind === 'teine' || !(d > 150)) return 0; return Math.round(2 * d / (op === 'set' ? 60 : hasHauler(kind) ? 40 : 25)); }
+// what takes fish off a line on the way up: sperm whales off Andøya follow the boats and strip the hooks (HI, rapport 2024-10), and the
+// Greenland shark takes fish on the deep lines (a share of the catch, fixed for the haul)
+function thiefOf(s){
+  if (s.kind !== 'line' || !(s.depth > 300)) return null;
+  const ll = natLL(setMid(s)), whale = ll.lat > 68.9 && ll.lat < 70 && ll.lon > 14.6 && ll.lon < 17.2;
+  if (whale && Math.random() < 0.25) return {k:'hval', f:0.2 + Math.random() * 0.3};
+  if (Math.random() < 0.08) return {k:'hakj', f:0.05 + Math.random() * 0.1};
   return null;
 }
 // the haul slows as the bleeding tub fills (tilbakemelding #30: «man får heller trekke saktere siden bløggekaret fylles opp»): the fish is
@@ -245,6 +258,7 @@ function gearOpMinute(H, W, hs){
   if (g.op === 'haul' && holdTotal() >= capHold() - 0.01){ log('Lasten er full. Resten av redskapet står igjen.', 'The hold is full. The rest of the gear stays in the sea.'); gopAbort('full'); return; }
   // the catch of one unit comes aboard in slices as the string comes over the rail, not all at the end (tilbakemelding #30: «fisken
   // kommer om bord etter hvert, så man kan sløye underveis»): per 100 hooks on a line, in thirds on a net, a pot at once
+  if (g.lead > 0){ g.lead--; b.v = 0.3; return; }   // the end lines first
   g.prog += haulSlow(g) / gopUnitMin(g, H, hs);
   const SL = g.op === 'haul' ? g.sl || 1 : 1; g.sub = g.sub || 0;
   while (g.done < g.n && g.prog >= (g.sub + 1) / SL){
@@ -314,6 +328,7 @@ function haulUnit(g, H, SL){
     let fresh = s.kind === 'line' ? 100 - 2.5 * Math.max(0, age - 5) - 4 * Math.max(0, g.soak - 24)
       : s.kind === 'garn' ? 84 - (1 + 0.3 * Math.max(0, seaTemp(H, setMid(s)) - 3)) * age - 3 * Math.max(0, g.soak - 24) : 90;
     fresh = clamp(fresh, 5, 100);
+    if (g.thief){ const t = kg * g.thief.f; g.stolen = (g.stolen || 0) + t; if (!g.told){ g.told = true; log(g.thief.k === 'hval' ? 'Spermhvalen følger båten og tar fisk av lina.' : 'Håkjerring har tatt fisk av lina.', g.thief.k === 'hval' ? 'A sperm whale is following the boat and taking fish off the line.' : 'Greenland sharks have taken fish off the line.'); } g.kg += landFish(sp, kg - t, gearKey(s), s.mesh, mid, H, hook, fresh, g); continue; }
     g.kg += landFish(sp, kg, gearKey(s), s.mesh, mid, H, hook, fresh, g);
   }
   if (s.dead > 0){ const d = s.dead * f; s.dead -= d; g.dead += d; }
@@ -442,8 +457,9 @@ function soakHour(s, H){
   const units = s.kind === 'line' ? s.hooks / 100 : s.n, cond = s.kind === 'garn' ? 0.5 + 0.5 * (s.cond || 1) : 1;
   // a line's bait: the tubs' kinds weighed by how many (an old set without them: makrell, as the old bait)
   const bw = s.kind === 'line' ? (s.baitW || {makrell:s.n}) : null, bwN = bw ? Object.values(bw).reduce((a, v) => a + v, 0) || 1 : 1, lineB = sp => { if (!bw) return 1; let v = 0; for (const k in bw) v += bw[k] * baitF(k, sp); return v / bwN; };
-  for (const sp in sel){ const r = 30 * G.q * units * sel[sp] * density(sp, mid, H) * luck(sp) * lineB(sp) * f * cond; if (r > 0){ add(sp, r, r / SPECIES[sp].size[0]); tot += r; } }
-  if (!s.dry) takeStock(mid, tot);
+  let gen = 0;   // a species with its own stock layer (the Greenland halibut, stk) is taken from that, the rest from the common one
+  for (const sp in sel){ const r = 30 * G.q * units * sel[sp] * density(sp, mid, H) * luck(sp) * lineB(sp) * f * cond; if (r > 0){ add(sp, r, r / SPECIES[sp].size[0]); tot += r; if (!SPECIES[sp].stk) gen += r; else if (!s.dry) takeStock(mid, r, sp); } }
+  if (!s.dry) takeStock(mid, gen);
   // amphipods (marflo) and hagfish eat what hangs dead in the gear after the first day
   const loss = (s.kind === 'line' ? 0.07 : 0.03) * sstep(20, 28, a);
   if (loss > 0) for (const sp in acc){ const A = acc[sp]; A.kg *= 1 - loss; A.n *= 1 - loss; A.ts *= 1 - loss; }
@@ -470,6 +486,9 @@ function gearHour(H){
     }
     // deadlines
     if (a >= 48 && !(s.warn & 1)){ s.warn |= 1; setLog(s, s.kind === 'teine' ? 'Teinene har stått i to døgn. Krabben begynner å dø.' : 'Redskapet har stått i to døgn. Fisken blir dårlig.', s.kind === 'teine' ? 'The pots have stood for two days. The crab is starting to die.' : 'The gear has stood for two days. The fish is spoiling.'); }
+    // the Greenland halibut's gear on the edge is tended at least every other day (Høstingsforskriften § 18; Fiskeridirektoratet's
+    // information on the fishery in 2026)
+    if (a >= 48 && s.kind !== 'teine' && s.depth > 300 && !(s.warn & 4)){ s.warn |= 4; msg('Fiskeridirektoratet', 'Påminnelse: garn og line på blåkveitefeltene skal røktes minst annenhver dag. ' + GEAR[s.kind].no + ' ved ' + coordStr(mid) + ' har stått i to døgn.', 'Reminder: nets and line on the Greenland halibut grounds must be tended at least every other day. The ' + GEAR[s.kind].en.toLowerCase() + ' at ' + coordStr(mid) + ' has stood for two days.'); }
     if (a >= 96 && s.kind !== 'teine' && !(s.warn & 2)){ s.warn |= 2; msg('Fiskeridirektoratet', 'Påminnelse: garn og line for kveite og breiflabb skal røktes minst hver fjerde dag. ' + GEAR[s.kind].no + ' ved ' + coordStr(mid) + ' har stått i ' + fmt(a / 24, 0) + ' døgn.', 'Reminder: nets and line for halibut and monkfish must be tended at least every fourth day. ' + GEAR[s.kind].en + ' at ' + coordStr(mid) + ' has stood for ' + fmt(a / 24, 0) + ' days.'); }
   }
   // shore work that is ready: a message to the vessel

@@ -104,7 +104,7 @@ function seasonTalk(H){ const e = seasonNow(H), F = festOn(H); return F ? ['Skre
 // how good each kind of fish is each month (0-1), from SPECIES' months (av, and skrei for cod), for the calendar
 function seasonGrid(){
   const out = {};
-  for (const sp of ['torsk', 'hyse', 'sei', 'lange', 'brosme', 'uer', 'kveite']){
+  for (const sp of ['torsk', 'hyse', 'sei', 'lange', 'brosme', 'uer', 'kveite', 'blakveite']){
     const S0 = SPECIES[sp], v = S0.av.map((a, i) => a + (sp === 'torsk' ? (S0.skrei[i] || 0) : 0)), mx = Math.max(...v);
     out[sp] = v.map(x => mx ? x / mx : 0);
   }

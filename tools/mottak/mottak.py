@@ -23,9 +23,10 @@ NOTES = 'https://register.fiskeridir.no/uttrekk/fangstdata_{}.csv.zip'
 RF = 'https://rafisklaget.no/umbraco/Surface/Map/GetData/'
 ADR = 'https://ws.geonorge.no/adresser/v1/sok'
 # the game's species by the notes' «Art - gruppe» and «Art - FDIR» (and king crab, which is coming): cod of either stock, haddock,
-# saithe, pollack, ling, tusk, common redfish (not beaked), Atlantic halibut (not Greenland), brown crab of either sex, king crab
+# saithe, pollack, ling, tusk, common redfish (not beaked), Atlantic halibut, Greenland halibut (blåkveite, 07.10.2026), brown crab
+# of either sex, king crab
 GROUP = {'Torsk': 'torsk', 'Hyse': 'hyse', 'Sei': 'sei', 'Taskekrabbe': 'krabbe', 'Kongekrabbe, han': 'kongekrabbe', 'Kongekrabbe, annen': 'kongekrabbe'}
-ART = {'Lyr': 'lyr', 'Lange': 'lange', 'Brosme': 'brosme', 'Uer (vanlig)': 'uer', 'Kveite': 'kveite'}
+ART = {'Lyr': 'lyr', 'Lange': 'lange', 'Brosme': 'brosme', 'Uer (vanlig)': 'uer', 'Kveite': 'kveite', 'Blåkveite': 'blakveite'}
 def species(art, group): return GROUP.get(group) or ART.get(art)
 def get(url, f, **kw):
     if os.path.exists(f): return f
@@ -181,6 +182,6 @@ def main():
     meta = dict(made=time.strftime('%Y-%m-%d'), years=years, src='Fiskeridirektoratet: kjøperregisteret og fangstdata (seddel), NLOD; Norges Råfisklag: mottakskartet',
                 n=len(out), nogeo=nogeo)
     json.dump(dict(meta=meta, m=out), open(os.environ.get('KYST_MOTTAK') or os.path.join(OUT, 'mottak.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
-    game = [x for x in out if any(s in x['sp'] for s in ('torsk', 'hyse', 'sei', 'krabbe', 'kongekrabbe', 'kveite')) and x['t'] in ('Ordinært anlegg', 'Kaiselger')]
+    game = [x for x in out if any(s in x['sp'] for s in ('torsk', 'hyse', 'sei', 'krabbe', 'kongekrabbe', 'kveite', 'blakveite')) and x['t'] in ('Ordinært anlegg', 'Kaiselger')]
     print(json.dumps(meta, ensure_ascii=False), 'with the game\'s species at a fixed place:', len(game), 'of them at a quay:', sum(1 for x in game if x['q']))
 if __name__ == '__main__': main()

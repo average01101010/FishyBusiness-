@@ -209,3 +209,36 @@ function twoOK(la, lb, y){ return !!(la && lb && la !== lb && HJ[la.id] && HJ[lb
 const COOP = {share:0.5};
 function coopOffer(H){ const ids = ['u7', 'h7', 'h8', 'h9', 'h10'], w = weekOfH(H), id = ids[Math.floor(h2(w * 13, 8300) * ids.length)]; return {id, ...regSeller(id + 'c', H)}; }
 function coopOK(l, y){ return !!(l && HJ[l.id] && HJ[l.id].grp === 'u11' && !l.two && (l.since || 0) < y && !(l.coop && l.coop.y === y)); }
+
+// ---- Greenland halibut (blåkveite) for vessels under 28 m (J-241-2025, the regulation for 2026; docs/blakveite.md 2-3, 07.10.2026) ----
+// The direct fishery is one period from 25 May 00:00 until Fiskeridirektoratet stops it when the group quota (5 230 t) is reckoned
+// fished, announced 2-3 days before with a time limit for taking up the gear (2026: 30 days, 2025: 97 days; here each year's length is
+// drawn between them, more often short). Open group: owner and master on blad B. Maximum quota by the vessel's greatest length (0-13.99 m
+// 9.7 t, 14-19.99 m 10.9 t, 20-27.99 m 12.1 t), not transferable; 28 m and over only bycatch, at most 12.1 t. Outside the direct fishery
+// at most 7 % Greenland halibut in a week's landings (Monday to Sunday), counted against the maximum quota.
+const BKQ = {open:[5, 25], days:[30, 97], notice:3, max:[[14, 9700], [20, 10900], [28, 12100]], over28:12100, by:0.07, group:5230};
+const BKC = {};
+function bkSeason(y){ const k = y + ':' + (S.qseed || 0); if (BKC[k]) return BKC[k];
+  const o = hOfDoy(y, doyOf(y, BKQ.open[0], BKQ.open[1])), u = h2(y * 13 + (S.qseed || 0) % 977, 8800), days = Math.round(BKQ.days[0] + (BKQ.days[1] - BKQ.days[0]) * u * u);
+  return BKC[k] = {open:o, stop:o + days * 24, notice:o + (days - BKQ.notice) * 24, days}; }
+function bkOpen(H){ const s = bkSeason(yearH(H)); return H >= s.open && H < s.stop; }
+const bkMax = len => { for (const [l, kg] of BKQ.max) if (len < l) return kg; return BKQ.over28; };
+// the direct fishery for this vessel: open (a landing two days after the stop still counts: the gear had to be ashore by then), blad B, under 28 m
+function bkDirect(H, len){ const s = bkSeason(yearH(H)); return H >= s.open && H < s.stop + 48 && bladB() && len < 28; }
+// what each vessel has landed this year (kg), and this week's landings for the 7 % rule
+function bkState(H){ const y = yearH(H); if (!S.bkq || S.bkq.y !== y) S.bkq = {y, v:{}, wk:-1, wtot:0, wbk:0}; return S.bkq; }
+const bkUsed = H => bkState(H).v[S.cur] || 0;
+// the Greenland halibut a landing may keep (kg) of bk in the hold, all being the landing's total
+function bkAllow(H, bk, all){
+  const B = bkState(H), room = Math.max(0, bkMax(BOAT.len) - bkUsed(H)); if (bkDirect(H, BOAT.len)) return Math.min(bk, room);
+  const wk = weekOfH(H), wtot = B.wk === wk ? B.wtot : 0, wbk = B.wk === wk ? B.wbk : 0;
+  return Math.min(bk, room, Math.max(0, BKQ.by * (wtot + all) - wbk));
+}
+function bkLanded(H, bk, all){ const B = bkState(H), wk = weekOfH(H); if (B.wk !== wk){ B.wk = wk; B.wtot = 0; B.wbk = 0; } B.wtot += all; B.wbk += bk; B.v[S.cur] = (B.v[S.cur] || 0) + bk; }
+// the announcements: the opening on the day, the stop 3 days before (Kystposten and a message from Fiskeridirektoratet)
+function bkNews(H){
+  const y = yearH(H), s = bkSeason(y), B = bkState(H); B.told = B.told || 0;
+  if (!(B.told & 1) && H >= s.open && H < s.stop){ B.told |= 1; msg('Fiskeridirektoratet', 'Direktefisket etter blåkveite er åpnet for fartøy under 28 m. Maksimalkvoten er ' + fmt(bkMax(BOAT.len) / 1000, 1) + ' tonn for din båt. Fisket stoppes når gruppekvoten er tatt.', 'The direct fishery for Greenland halibut is open for vessels under 28 m. The maximum quota is ' + fmt(bkMax(BOAT.len) / 1000, 1) + ' tonnes for your boat. It is stopped when the group quota is taken.'); }
+  if (!(B.told & 2) && H >= s.notice && H < s.stop){ B.told |= 2; msg('Fiskeridirektoratet', 'Direktefisket etter blåkveite stoppes ' + dayStr(s.stop) + '. Redskapen skal være på land innen da.', 'The direct fishery for Greenland halibut stops ' + dayStr(s.stop) + '. The gear must be ashore by then.'); }
+}
+

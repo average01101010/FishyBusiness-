@@ -94,7 +94,7 @@ async def main():
         print(ok(R['tBits'] < 400 and R['tRules'] < 400 and R['tBlocks'] < 3000), 'speed: 20,000 cells round Senja (60 x 60 km), 300 full answers, and 400 cells spread over northern Norway, each in a new 10 km block (ms)', R['tBits'], R['tRules'], R['tBlocks'])
         a = R['app']
         print(ok(R['hud'] and ('Ikke torsk' in R['hud'] or '✓' in R['hud'] or '!' in R['hud'])), 'R3: the status box has a rules line at sea that opens the Regler app', R['hud'])
-        print(ok(a['here'] and a['grid'] == 8 and a['cells'] == 19 and a['check']['tab'] and a['check']['sp'] == 'hyse' and a['check']['gear'] == 'line' and a['learn'] == 8), 'R3: the Regler app: here and now with the grid of species and gear, a tap shows the check, and eight rules told plainly', a)
+        print(ok(a['here'] and a['grid'] == 9 and a['cells'] == 22 and a['check']['tab'] and a['check']['sp'] == 'hyse' and a['check']['gear'] == 'line' and a['learn'] == 8), 'R3: the Regler app: here and now with the grid of species and gear, a tap shows the check, and eight rules told plainly', a)
         print(ok(a['fine']), 'the Regler app says the rules are simplified and that the Directorate\'s rules apply to real fishing')
         l = R['layer']
         print(ok(l['no16'] > l['sea'] * 0.5 and l['no9'] < l['no16'] * 0.1 and R['tLayer'] < 300), 'R3: the chart\'s rule layer is red inside Malangen for a 16 m boat and not for a 9 m one (cells, ms)', l, R['tLayer'])
