@@ -101,11 +101,11 @@ async def ui(pg, tag):
         r = json.loads(await pg.evaluate("""JSON.stringify((() => { const b = S.boat, H = S.t / 60, s = heatSample(b.pos, H), sum = 30 * SP.reduce((a, sp) => a + density(sp, b.pos, H), 0);
           const cs = HEATC.cs, cc = HEATC.cells.get(heatKey(Math.floor(b.pos.x / cs), Math.floor(b.pos.y / cs))), at = cc.v, ctr = heatSample(cc, cc.t / 60);   // the cell, at the time it was worked out
           return {tier:heatTier(), r:HEAT.tiers[heatTier()].r, px:+heatCv.dataset.r, want:HEAT.tiers[heatTier()].r * view.px, s:heatValue(s, 'all'), sum, cell:heatValue(at, 'all'), ctr:heatValue(ctr, 'all'),
-            pick:(plotSetOpen(true), document.querySelectorAll('#plotSet .seg.hsp button').length), note:/Artsvalg krever/.test(document.querySelector('#plotSet .ecs').textContent), box:(plotSetOpen(false), !$('heatBox').hidden), echo:!document.getElementById('echoWrap')}; })())"""))
+            pick:(plotSetOpen(true), document.querySelectorAll('#plotSet .seg.hsp button').length), spn:HEAT.sp.length + 1, note:/Artsvalg krever/.test(document.querySelector('#plotSet .ecs').textContent), box:(plotSetOpen(false), !$('heatBox').hidden), echo:!document.getElementById('echoWrap')}; })())"""))
         check(r['tier'] == tier and abs(r['r'] - R[tier]) < 1e-9, f'{tag}: {tier} har radius {R[tier]:.3f} km ({R[tier] * 2 / 1.852:g} nm i diameter)', r['r'])
         check(abs(r['px'] - r['want']) < 1.5, f'{tag}: {tier}: sirkelen på skjermen er r·view.px', {k: round(r[k], 1) for k in ('px', 'want')})
         check(abs(r['s'] - r['sum']) < 1e-9 and abs(r['cell'] - r['ctr']) < 1e-9, f'{tag}: {tier}: varmen ved båten er 30·Σdensity, og ruta på kartet har verdien i sentrum', {k: round(r[k], 2) for k in ('s', 'sum', 'cell', 'ctr')})
-        check((r['pick'] == 4) == (tier != 'basic') and r['note'] == (tier == 'basic'), f'{tag}: {tier}: artsvalg {"finnes" if tier != "basic" else "krever CHIRP eller sonar"}', r['pick'])
+        check((r['pick'] == r['spn'] and r['spn'] >= 10) == (tier != 'basic') and r['note'] == (tier == 'basic'), f'{tag}: {tier}: artsvalg {"finnes" if tier != "basic" else "krever CHIRP eller sonar"}', r['pick'])
         check(r['box'] and r['echo'], f'{tag}: {tier}: skalaen står i toppbaren, og den lille ekkoloddboksen er borte')
         await pg.screenshot(path=f'heat_{tag}_{tier}_nav.png')
     # the fishing chart with CHIRP, for the screenshots
