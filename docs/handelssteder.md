@@ -18,6 +18,15 @@ To steder uten handel:
 - **Fars naust** er hjemmet spilleren kommer tilbake til med jevne mellomrom. Der hviler man, ser til mannskapet og beholdningen, og kan restaurere naustet til god standard (notatboka). Det selges ingenting der. Det går ikke an å kjøpe fiskeutstyr, is eller noe annet fra naustet.
 - **Rorbuene** selger heller ingenting. De er bare en plass å hvile eller søke ly for været.
 
+## Knappene ved hvert sted (Jonas 07.10.2026, andre melding)
+
+- **Fiskemottaket** har ikke lenger knappene Marked og Verft. Det tar bare imot fisk og selger is og agn, så knappene er Lever, Is og Agn (og Mannskap og Beholdning som ellers).
+- **Utstyrsbutikken** er den som står på kaia i Finnsnes i dag (modellen finnes: `tools/harbour/butikk.py`). Den skal settes ut på strategiske steder langs hele landet.
+- **Verftet** er et eget sted med egen modell (finnes ikke ennå), også satt ut på strategiske steder langs kysten.
+- **Alt som i dag ligger under Marked og Verft fordeles på de tre stedene**, etter listene over. Kartet over dagens menyer: Marked (Lever, Is, Agn) går til mottaket. Verft (Båthandel, Vedlikehold, Malerverksted og antigro/bunnsmøring og motor under Oppgrader) går til verftet. Fiskeutstyr, haler, juksamaskin, elektronikk og redning under Oppgrader, og klær, går til utstyrsbutikken.
+- **Alle tre handelsstedene har fortsatt knappen Bygd** (pub, bank, oppdrag, ansatte). Naustet og rorbuene har ingen handelsknapper.
+- Hensikten er at spilleren alltid skal vite hvor hun finner det hun trenger å kjøpe: ett sted per slags vare.
+
 ## Slik er det i dag (07.10.2026), og hva som mangler
 
 - Dagens spill har butikken (`shopBuy`, siden «Fiskeutstyr»), isen, agnet og verftet som menyer på kaia i **hver** havn, og alt kan nås også fra naustet. Det er det som skal rives opp.
@@ -31,5 +40,6 @@ To steder uten handel:
 
 ## Å fylle på
 
+- Foreslått, ikke vedtatt: diesel (bunkring) hører til mottaket (bunkerkaia står alt ved mottakene), og omrigging hører til utstyrsbutikken. Telefonen kan ikke brukes til å kjøpe fysiske ting borte fra stedet. En hjelp for å finne nærmeste butikk, verft og mottak (kartlag med avstand og Autonav dit).
 - Åpne spørsmål: hvor hører **bunkring** (diesel), **riggen** (omrigging mellom juksa, line, garn og teiner), **kveiteutstyret**, **klær** og **pub, bank, oppdrag og ansatte** hjemme under denne inndelingen? Foreløpig står de som i dag.
 - Hvordan finner vi gode steder for verft og utstyrsbutikker langs kysten (virkelige verft og båtutstyrsbutikker fra kartdata, som mottakene)?
