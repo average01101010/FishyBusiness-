@@ -18,7 +18,7 @@ async def main():
           const f = q => crewDialect({homePort:q && q.id}, t), nord = crewDialect({homePort:'botnhamn'}, t);
           return {nord, vest:f(so), mor:f(mo), tro:f(tr), same:nord === t}; })()""")
         print(json.dumps(r, ensure_ascii=False))
-        print(ok(r['same'] and 'eg' in r['mor'].lower() and 'kven' in r['mor'] and 'fisken' in r['mor'] and 'itj' in r['tro'] and 'Æ' in r['tro'] and 'Eg' in r['vest'] and 'korleis' in r['vest']), 'the lines stand in the dialect of where the hand is from: Northern Norwegian as it is, Trøndelag, Møre and the west in their own words')
+        print(ok(r['same'] and 'eg' in r['mor'].lower() and 'kven' in r['mor'].lower() and 'fisken' in r['mor'] and 'itj' in r['tro'] and 'Æ' in r['tro'] and 'Eg' in r['vest'] and 'korleis' in r['vest']), 'the lines stand in the dialect of where the hand is from: Northern Norwegian as it is, Trøndelag, Møre and the west in their own words')
         await pg.wait_for_function("G3.isActive()", timeout=120000); await pg.wait_for_timeout(1500)
         s = await pg.evaluate("""(async () => { S.tut = 0; const c = genCrew(); c.name = 'Stian Testesen'; c.homePort = 'botnhamn'; S.crew = [c]; S.sayT = -1e9; S.boat.status = 'port'; const m0 = S.msgs.length;
           const say = crewSay(c, 'chat'); await new Promise(r => setTimeout(r, 800)); const el = document.querySelector('.say3d'), vis = el && el.style.display !== 'none', txt = el ? el.textContent : '';
