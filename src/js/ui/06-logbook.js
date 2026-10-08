@@ -31,7 +31,7 @@ const BOOK = (() => {
   }
   function driftPage(day){
     const ev = S.log.filter(e => dayOf(e.t) === day && logKind(e) === 'drift');
-    let h = '<div class="pg-h"><span class="pg-t">' + L('Drift', 'Operations') + '</span><span class="pg-d">' + longDate(day) + '</span></div><div class="pg-v">' + (S.company || '') + '</div><div class="dr">';
+    let h = '<div class="pg-h"><span class="pg-t">' + L('Driftsplan', 'Operations plan') + '</span><span class="pg-d">' + longDate(day) + '</span></div><div class="pg-v">' + (S.company || '') + '</div><div class="dr">';
     h += ev.length ? ev.map(e => '<p class="hw"><b>' + hm(e.t / 60) + '</b>' + (S.lang === 'no' ? e.no : e.en) + '</p>').join('') : '<p class="hw">' + L('Ingen føringer denne dagen.', 'No entries this day.') + '</p>';
     h += '</div>';
     const sales = S.sales.filter(x => dayOf(x.t) === day);

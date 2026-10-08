@@ -1074,3 +1074,7 @@ body.vplot .depc{display:none}
 .anchal.on{opacity:1;box-shadow:0 0 22px rgba(255,60,40,.7)}
 @media (prefers-reduced-motion:reduce){.anchal{transition:none}}
 #autoTo{min-height:32px}
+/* the plan's toggles (Driftsplan): off reads as a choice you can press, not as a locked one; a locked one is dashed */
+.dr-kv button,.ops-days button{background:#e3eaee;color:#15252f;border:1px solid #b9c7cf;border-radius:8px;font-weight:600}
+.dr-kv button.on,.ops-days button.on{background:#1e8c6e;color:#fff;border-color:#1e8c6e}
+.dr-kv button:disabled{background:transparent;color:#6c7d87;border:1px dashed #9aabb4;opacity:1}
