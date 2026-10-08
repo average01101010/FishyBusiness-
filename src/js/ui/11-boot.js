@@ -4,8 +4,10 @@
 let awayMs = 0, AWAY = 0, SIMREADY = false;
 const BOOT_T = Date.now();
 const g3Live = () => typeof G3 !== 'undefined' && G3.isActive();
-async function bootMap(){
-  await mapStart();
+async function bootMap(){ await mapStart(); await bootMapLoad(); }
+// The packs round everything the saved game holds. It runs again after the cloud gate (08.10.2026, a player on a new PC: the cloud save
+// is put in place only then, and its boat may lie in a tile the first round never asked for: «mask block 105,20 is not loaded»).
+async function bootMapLoad(){
   const saved = load(), pts = [];
   for (const v of saved && saved.fleet && saved.fleet.length ? saved.fleet : saved ? [saved] : []){
     const b = v.boat; if (b && b.pos) pts.push(b.pos); for (const w of [...((v.plan && v.plan.wps) || []), ...((v.ops && v.ops.wps) || []), ...(v.draft || [])]) pts.push(w); }
@@ -108,4 +110,4 @@ if (AWAY){ catchUp(AWAY + Date.now() - BOOT_T); AWAY = 0; refreshAll(); } lastWa
 loadRoads().then(r => { ROADS = r; scheduleStatic(); if (g3Live()) G3.roadsReady(); }).catch(e => console.error(e));
 loadFine().then(f => { FINE = f; if (g3Live()) G3.fineReady(); }).catch(e => console.error(e));
 }
-bootMap().then(cloudGate).then(() => { bootGame(); cloudHooks(); cloudStart(); }).catch(e => { console.error(e); const m = document.getElementById('modal'); if (m){ m.hidden = false; m.innerHTML = '<div class="card"><h2>Kartet lastet ikke</h2><p class="note">' + String(e && e.message || e) + '</p></div>'; } });
+bootMap().then(cloudGate).then(bootMapLoad).then(() => { bootGame(); cloudHooks(); cloudStart(); }).catch(e => { console.error(e); const m = document.getElementById('modal'); if (m){ m.hidden = false; m.innerHTML = '<div class="card"><h2>Kartet lastet ikke</h2><p class="note">' + String(e && e.message || e) + '</p></div>'; } });

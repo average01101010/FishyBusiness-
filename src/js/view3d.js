@@ -3230,6 +3230,7 @@ const G3 = (() => {
   }
   const NOHOLE = new Float32Array([1e9, 1e9, -1e9, -1e9]);
   function drawLit(m, M, hole){
+    if (!m) return;   // a mesh not built yet or an empty one (08.10.2026: «Cannot read properties of undefined (reading 'parts')» every frame, the game stopped)
     if (m.parts){ for (const q of m.parts) drawLit(q, M, hole); return; }
     gl.uniformMatrix4fv(PL.u.uM, false, m.o ? relM(m) : M); gl.uniform4fv(PL.u.uHole, hole || NOHOLE); attr(0, m.pb, 3); attr(1, m.cb, 3);
     if (m.ib){ gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, m.ib); gl.drawElements(gl.TRIANGLES, m.n, m.i32 ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT, 0); } else gl.drawArrays(gl.TRIANGLES, 0, m.n);
