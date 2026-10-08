@@ -205,6 +205,6 @@ function obsSail(pl, b){
   try {
     if (obsClear(b.pos, w)) return;
     const d = obsDetour(b.pos, w); if (!d || !d.length) return;
-    pl.wps.splice(pl.idx, 0, ...d.map(p => ({x:p.x, y:p.y, port:null, fish:0, obs:true}))); pl.obsK = key();
+    pl.wps.splice(pl.idx, 0, ...d.map(p => ({x:p.x, y:p.y, port:null, fish:0, obs:true}))); if (pl.unsafe) pl.unsafe.splice(pl.idx, 0, ...d.map(() => false)); pl.obsK = key();
   } finally { HIND.ctx = ctx; }
 }

@@ -144,6 +144,10 @@ async function leiaTo(pt, buoy, act){   // buoy: to a set's buoy, to haul it (th
   if (nt && atN){ toast(t('already_here')); return; }
   if (!nt && near && aPort === near.id && !atN){ toast(t('already_here')); return; }
   if (!near && !nt && isLandUI(pt)){ toast(t('on_land')); return; }
+  // a tap in water too shallow for the boat (by the shore): the nearest point within 500 m that is deep enough, with a word about it;
+  // none, no route (Autonav never ends on a shoal, 08.10.2026)
+  if (!near && !nt && !buoy){ const dq = deepNear(pt, 0.5); if (!dq){ toast(S.lang === 'no' ? 'For grunt der for båten. Trykk litt lenger ut.' : 'Too shallow there for the boat. Tap a little farther out.'); return; }
+    if (dq !== pt){ toast(S.lang === 'no' ? 'For grunt der. Autonav går til dypere vann ' + Math.round(dist(dq, pt) * 1000 / 50) * 50 + ' m unna.' : 'Too shallow there. Autonav goes to deeper water ' + Math.round(dist(dq, pt) * 1000 / 50) * 50 + ' m away.'); pt = dq; } }
   if (nt && (aPort === nt.port || (!aPort && dist(start, nt) < 1))){ draftEdit(() => S.draft.push({x:nt.x, y:nt.y, port:nt.port, berth:'naust', fish:0})); if (tab !== 'route') setTab('route'); routeChanged(); save(); return; }
   if (nt){ near = portById(nt.port); }
   // R4: a place where the rules stop your boat fishing (the fjord lines by length, the baseline zones, closed fields): Autonav goes to
@@ -170,6 +174,16 @@ async function leiaTo(pt, buoy, act){   // buoy: to a set's buoy, to haul it (th
   if (near && window.innerWidth <= 700) document.body.classList.add('drawer');
   if (tab !== 'route') setTab('route');
   routeChanged(); save();
+}
+// the point itself when it is deep enough for the boat (or its water is not loaded yet: the route finder then says), else the nearest
+// point within maxKm (rings of 16) at sea with the boat's safe depth, else null
+function deepNear(p, maxKm){
+  const sd = safeDepth(), ok = c => { if (isLandUI(c)) return false; if (!mapSimAt(c) || !mapReadyAt(c, 0)) return true; try { return depthF(c) >= sd + 1; } catch (e){ return true; } };
+  const okp = (() => { if (isLandUI(p)) return false; if (!mapSimAt(p) || !mapReadyAt(p, 0)) return true; try { return depthF(p) >= BOAT.draft + LEIA.minOver; } catch (e){ return true; } })();
+  if (okp) return p;
+  for (const r of [0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5]){ if (r > maxKm) break;
+    for (let i = 0; i < 16; i++){ const a = i * Math.PI / 8, c = {x:p.x + Math.sin(a) * r, y:p.y - Math.cos(a) * r}; if (ok(c) && clearLine(c, p)) return c; } }
+  return null;
 }
 // how the drawn route compares with following the fairway through the same stops: worked out in the background, then shown
 const LEIA_CMP = {key:'', res:null, busy:false, timer:0};

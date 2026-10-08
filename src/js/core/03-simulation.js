@@ -467,7 +467,14 @@ const SST = [3.6,3.1,3.2,3.9,5.6,8.2,10.8,11.4,9.8,7.8,6.0,4.6];
 // where a harbour unit stands (07-harbours.js) its quay is dry and its basin dredged
 // the depth below chart datum (m): the tiles' depth where they have it, else the sea floor offshore from the core, else the model
 // (openness and the distance to the shore)
-function depthF(p){ return unitDredge(p, isLand(p) ? 0 : DEPTH && mapSimAt(p) ? Math.max(0.8, tileDepth(p, depthWater(p))) : offDepth(p)); }
+function depthF(p){ return unitDredge(p, isLand(p) ? 0 : DEPTH && mapSimAt(p) && depthHas(p) ? Math.max(0.8, tileDepth(p, depthWater(p))) : offDepth(p)); }
+// whether the four cells depthWater reads at p all lie in blocks some pack has: at a tile's seaward edge the next cell's block can be
+// one no pack covers (open sea), and that is the model's water, not an error (Autonav over open sea threw «depth block has no
+// pack», 08.10.2026). A block a pack has but is not loaded yet still throws, as it should.
+function depthHas(p){
+  const L = MAPD.L.depth, ix = Math.floor(clamp(p.x / L.c - 0.5, L.ix0, L.ix0 + L.nx - 1.001)), iy = Math.floor(clamp(p.y / L.c - 0.5, L.iy0, L.iy0 + L.ny - 1.001));
+  return mapHasBlock(L, ix, iy) && mapHasBlock(L, ix + 1, iy) && mapHasBlock(L, ix, iy + 1) && mapHasBlock(L, ix + 1, iy + 1);
+}
 // the sea floor offshore (tools/map/deep.py, 07.10.2026, for the Greenland halibut on the shelf edge): Terrarium's on 1 km cells over the
 // whole frame, 0 on land and where it has none. The coast's tiles end 40-65 km out, and the model beyond them is never deeper than
 // about 260 m

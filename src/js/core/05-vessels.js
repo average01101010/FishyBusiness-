@@ -236,6 +236,8 @@ function navHour(){
 }
 const holdTotal = () => S.hold.reduce((a, x) => a + x.kg, 0);
 function nearestPort(p){ let best = null, bd = 1e9; for (const q of PORTS){ const d = dist(p, q.p); if (d < bd){ bd = d; best = q; } } return best; }
+// the nearest yard (portKind 'verft', 01-world.js): where a tow ends, since the hull wants mending after (Jonas 08.10.2026)
+function nearestYard(p){ let best = null, bd = 1e9; for (const q of PORTS){ if (portKind(q) !== 'verft') continue; const d = dist(p, q.p); if (d < bd){ bd = d; best = q; } } return best; }
 
 function step(){
   if (!S.fleet || !S.fleet.length) ensureFleet();
@@ -286,8 +288,9 @@ function vesselStep(H){
   if (b.status === 'engine' && S.t >= b.engineUntil){ b.status = b.prev || 'idle'; b.prev = null; log('Motoren startet igjen.', 'The engine is running again.'); }
   // the first trip waits in port for wind (the departure is put off) but does not turn back once out
   if (b.tutWait && (b.status !== 'idle' || (S.haill && S.haill.type === 'luksus'))){ if (b.status === 'idle'){ b.status = 'fishing'; b.fishUntil = S.t + b.tutWait * 60; log('Haillen er om bord. Starter fiske i ' + b.tutWait + ' t.', 'The luck is aboard. Fishing for ' + b.tutWait + ' h.'); } b.tutWait = null; }
-  // you are asleep alone aboard: nobody steers or fishes, and the boat drifts (core/15-energy.js)
-  if (sleepAlone() && ['sailing', 'fishing', 'idle'].includes(b.status)){ sleepDrift(H); risk(W, hs); return; }
+  // you are asleep alone aboard: nobody fishes, and the boat drifts (core/15-energy.js). On a route the autopilot holds her course and
+  // she goes on to the route's end (tilbakemeldinger #47 and #48, 08.10.2026: asleep on Autonav to Honningsvåg, she drifted ashore)
+  if (sleepAlone() && ['sailing', 'fishing', 'idle'].includes(b.status) && !(b.status === 'sailing' && S.plan)){ sleepDrift(H); risk(W, hs); return; }
   // (with the hand on the helm the skipper decides: no turning back by itself, 16-helm.js)
   if (S.settings.autoOn && W > S.settings.autoW && ['sailing','fishing','idle'].includes(b.status) && !(S.plan && S.plan.returning) && !(S.tut && S.tut.catch) && !helmOn()){
     startReturn(true, W);
@@ -314,6 +317,7 @@ function sail(H, W, hs){
   const b = S.boat, pl = S.plan;
   if (!pl){ b.status = 'idle'; b.v = 0; return; }
   if (b.fuel <= 0){ b.fuel = 0; b.status = 'adrift'; b.v = 0; log('Tom for drivstoff. Båten driver.', 'Out of fuel. The boat is adrift.'); return; }
+  if (pl.replan){ b.v = 0; return; }   // a way round shallow water ahead is being found (sailReplan)
   const v = sailV(H, hs); b.v = v;
   let left = v * NM / 60;
   b.fuel = Math.max(0, b.fuel - fuelLph(v, W) / 60);
@@ -322,10 +326,47 @@ function sail(H, W, hs){
     const w = pl.wps[pl.idx], d = dist(b.pos, w);
     if (d > 1e-6) b.heading = Math.atan2(w.x - b.pos.x, -(w.y - b.pos.y));
     const to = d <= left ? {x:w.x, y:w.y} : {x:b.pos.x + (w.x - b.pos.x) / d * left, y:b.pos.y + (w.y - b.pos.y) / d * left}, gp = groundCheck(b.pos, to);
-    if (gp){ runAground(gp); return; }
+    if (gp){ if (!sailReplan(pl, b, gp)) runAground(gp); return; }
     if (d <= left){ b.pos = to; left -= d; if (arrive(w)) return; }
     else { b.pos = to; left = 0; }
   }
+}
+// Shallow water or a skerry on the leg ahead, on a leg the route called safe (not one the player drew through it and cast off on
+// anyway: pl.unsafe, ui/08-actions.js): the boat never runs aground on it. She stops 25 m short, and Autonav finds a way round from
+// there to the next waypoint (leiaRoute, 11-route.js), spliced into the route; found none, she stops and the rest of the route goes
+// back to the draft. Three tries a leg at most. (Tilbakemeldinger #47 and #48, 08.10.2026: a boat on Autonav must never end up on
+// land. The legs are checked when the route is made; this is the net under them, also after a drift, a pause or a tow.)
+// Returns true when she is held back here, false when the leg is the player's own unsafe one (then she grounds as before).
+const SAIL_RP = {n:0, at:''};
+function sailReplan(pl, b, gp){
+  if (pl.unsafe && pl.unsafe[pl.idx]) return false;
+  const w = pl.wps[pl.idx], d = dist(b.pos, gp);
+  if (d > 0.03){ const f = (d - 0.025) / d, q = {x:b.pos.x + (gp.x - b.pos.x) * f, y:b.pos.y + (gp.y - b.pos.y) * f}; if (!groundCheck(b.pos, q)) b.pos = q; }
+  b.v = 0;
+  const key = pl.idx + '|' + pl.wps.length; if (SAIL_RP.at !== key){ SAIL_RP.at = key; SAIL_RP.n = 0; }
+  const none = ['Grunt vann forut, og Autonav fant ingen trygg vei rundt. Båten ligger stille. Legg en ny rute.', 'Shallow water ahead, and Autonav found no safe way round. The boat lies still. Set a new route.'];
+  if (++SAIL_RP.n > 3){ sailStop(pl, b, none); return true; }
+  pl.replan = {t:S.t};
+  log('Grunt vann forut. Autonav stopper og finner en vei rundt.', 'Shallow water ahead. Autonav stops and finds a way round.', 'nav');
+  const from = {x:b.pos.x, y:b.pos.y}, to = {x:w.x, y:w.y}, PL = pl, vid = S.cur;
+  // on this vessel's state when the way is found (the player may be aboard another by then)
+  const bound = fn => { const v = typeof vesselById === 'function' ? vesselById(vid) : null; if (v && v.id !== S.cur) onVessel(v, fn); else fn(); };
+  let pr; try { pr = leiaRoute(from, to, null, w.port || null); } catch (e){ pr = Promise.resolve(null); }
+  pr.then(res => bound(() => {
+    if (S.plan !== PL || !PL.replan) return;   // the route was changed meanwhile
+    PL.replan = null;
+    if (!res || res.why || !res.wps || !res.wps.length){ sailStop(PL, S.boat, none); return; }
+    const ins = res.wps.slice(0, -1).map(q => ({x:q.x, y:q.y, port:null, fish:0, leia:true, obs:true}));
+    PL.wps.splice(PL.idx, 0, ...ins); if (PL.unsafe) PL.unsafe.splice(PL.idx, 0, ...ins.map(() => false)); PL.obsK = null;
+    log('Autonav fant en vei rundt. Går videre.', 'Autonav found a way round. Going on.', 'nav');
+  })).catch(e => { console.error(e); bound(() => { if (S.plan === PL && PL.replan){ PL.replan = null; sailStop(PL, S.boat, none); } }); });
+  return true;
+}
+// the boat stops where she is, and what is left of the route goes back to the draft (as «pause» does, ui/03b-route.js routePause)
+function sailStop(pl, b, why){
+  S.draft = pl.wps.slice(pl.idx).map(w => ({...w})); S.draftSpeed = pl.speed || S.draftSpeed; if (typeof draftForget === 'function') draftForget();
+  S.plan = null; b.status = 'idle'; b.v = 0;
+  log(why[0], why[1], 'nav'); if (typeof toast === 'function') toast(S.lang === 'en' ? why[1] : why[0]);
 }
 // «Stopp» under way: the route from here to a point a little ahead on it, far enough to slack off and stop there (about a boat's
 // stopping way at the speed she has; Jonas 06.10.2026: not «bråstoppe»). The 3D boat follows it and stops exactly on the point;
@@ -571,7 +612,9 @@ function rescue(keepCatch){
   if (S.boat.gop) gopAbort('return');
   // the first is free, with the catch kept (core/09f-merker.js freeFirst; Jonas 07.10.2026: learn without the consequences)
   const first = !S.member && freeFirst('tow'); if (first) keepCatch = true;
-  const b = S.boat, port = nearestPort(b.pos), base = rescueBase(b.pos), fee = S.member || first ? 0 : keepCatch ? PRICE.tow : PRICE.rescue;
+  // the tow goes to the nearest yard, where the hull is mended (Jonas 08.10.2026: a tow to a plant left a player stuck there, #48);
+  // the nearest harbour of any kind only where there is no yard
+  const b = S.boat, port = nearestYard(b.pos) || nearestPort(b.pos), base = rescueBase(b.pos), fee = S.member || first ? 0 : keepCatch ? PRICE.tow : PRICE.rescue;
   if (first) msg('Redningsselskapet', 'Det første slepet er gratis, og fangsten får du beholde. Neste gang koster et slep ' + kr(PRICE.tow) + ', og et nødanrop i farlig sjø ' + kr(PRICE.rescue) + ' og fangsten. Hold øye med dieselen og værmeldingen. Som medlem slipper du å betale.',
     'The first tow is free, and you keep the catch. Next time a tow costs ' + kr(PRICE.tow) + ', and a distress call in dangerous seas ' + kr(PRICE.rescue) + ' and the catch. Keep an eye on the diesel and the forecast. Members pay nothing.');
   S.cash -= fee; S.stats.costs += fee;

@@ -126,10 +126,14 @@ function groundCheck(a, c){
   return null;
 }
 function runAground(p){
-  const b = S.boat, pl = nearestPlace(p); b.pos = {x:p.x, y:p.y}; b.status = 'aground'; b.v = 0; b.damage = 1; b.tripBad = true;
+  const b = S.boat, pl = nearestPlace(p), v0 = Math.round((b.v || 0) * 10) / 10;
+  // how she came to be there, for the telemetry (ui/10f-cloud.js; before 08.10.2026 the speed went up as 0, zeroed first): on an
+  // Autonav leg, on a drawn route, turning back, on the standing plan, by hand, asleep, or drifting
+  const w = S.plan && S.plan.wps[S.plan.idx], how = S.plan ? (w && (w.leia || w.obs || w.auto) ? 'leia' : S.plan.returning ? 'return' : S.plan.ops ? 'ops' : 'route') : (typeof helmOn === 'function' && helmOn()) ? 'helm' : (typeof asleep === 'function' && asleep()) ? 'sleep' : 'drift';
+  b.pos = {x:p.x, y:p.y}; b.status = 'aground'; b.v = 0; b.damage = 1; b.tripBad = true;
   log('Gikk på grunn ' + pl.no + '. Skroget er skadet.', 'Ran aground ' + pl.en + '. The hull is damaged.', 'nav');
   if (typeof FEEDBACK !== 'undefined') setTimeout(() => FEEDBACK.nudge('aground'), 2500);   // was it the game's fault? (ui/06e-feedback.js)
-  S.incidents = S.incidents || []; S.incidents.push({t:S.t, k:'aground', boat:S.boatName || 'Havbris', no:pl.no, en:pl.en}); if (S.incidents.length > 60) S.incidents.shift();
+  S.incidents = S.incidents || []; S.incidents.push({t:S.t, k:'aground', boat:S.boatName || 'Havbris', no:pl.no, en:pl.en, v:v0, how}); if (S.incidents.length > 60) S.incidents.shift();
   pressPut('aground', {type:b.type});   // Kystposten (09h-press.js; Jonas: «Uhell burde havne i avisen»)
   if (hooks.onAground) hooks.onAground();
 }

@@ -329,7 +329,7 @@ function cloudHooks(){
   wrap('sell', () => { const s = S.lastSale; if (!s || s.t !== S.t) return; const kg = (s.lines || []).reduce((a, r) => a + (r.kg || 0), 0);
     cloudEv('sale', {kr:Math.round(s.total || 0), kg:Math.round(kg), port:s.port, field:s.field || null, tripMin:CLOUD.trip != null ? Math.round(S.t - CLOUD.trip) : null, acc:s.acc});
     if ((s.confKg || 0) > 0.5 || (s.crabDead || 0) > 0.05) CLOUD.neg = {t:Date.now(), k:'sale', x:(S.boat.pos || {}).x, y:(S.boat.pos || {}).y}; CLOUD.trip = null; });
-  wrap('runAground', (r, a) => { const p = a[0] || S.boat.pos || {}; cloudEv('aground', {x:+(p.x || 0).toFixed(3), y:+(p.y || 0).toFixed(3), boat:S.boat.type, v:+(S.boat.v || 0).toFixed(1)}); CLOUD.neg = {t:Date.now(), k:'aground', x:p.x, y:p.y}; });
+  wrap('runAground', (r, a) => { const p = a[0] || S.boat.pos || {}, inc = (S.incidents || [])[(S.incidents || []).length - 1] || {}; cloudEv('aground', {x:+(p.x || 0).toFixed(3), y:+(p.y || 0).toFixed(3), boat:S.boat.type, v:+(inc.v != null ? inc.v : S.boat.v || 0).toFixed(1), how:inc.how || ''}); CLOUD.neg = {t:Date.now(), k:'aground', x:p.x, y:p.y}; });
   wrap('startSet', (r, a) => { if (!r) cloudEv('gear', {gear:a[0], op:'set'}); });
   wrap('startHaul', (r) => { const g = S.boat.gop; if (!r && g) cloudEv('gear', {gear:g.kind, op:'haul'}); });
   if (typeof PHONE !== 'undefined' && PHONE.open){ const o = PHONE.open; PHONE.open = function(app){ cloudEv('app', {app:String(app || '')}); return o.apply(this, arguments); }; }

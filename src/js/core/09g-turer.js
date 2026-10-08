@@ -181,6 +181,7 @@ function turNpcs(){
 function turMinute(){
   const T = S.turer; if (!T || !T.act.length) return;
   const b = S.boat;
+  turStuck(T, b);
   for (const m of T.act.slice()){ if (m.k === 'prove' && m.vid === S.cur) turProveMinute(m, b); if (m.k !== 'slep') continue;
     // she drifts with the wind, about 3 % of it, toward the side it blows to; never so fast that she reaches land before three times
     // the time it takes to get to her (so it is always done without trim), and on land she is lost and there is no salvage
@@ -200,6 +201,15 @@ function turMinute(){
     // the boat itself in tow (the rescue service, 05-vessels.js rescue): the line is let go and the other boat waits for help
     if (m.stage === 'tow' && b.status === 'tow'){ msg(m.owner, 'Vi får vente på Redningsselskapet. Takk for forsøket.', 'We will wait for the rescue service. Thank you for trying.'); turEnd(m, false, null); }
   }
+}
+// The time you are stuck does not count against a deadline: aground, under tow, and in port with the hull on the slip after it (the
+// deadline is the trip's, not the grounding's; tilbakemelding #48, 08.10.2026). Once, for the missions active when this came in, the
+// time lost to the last grounding before it is given back (up to two days).
+function turStuck(T, b){
+  if (!T.credit){ T.credit = 1; const inc = (S.incidents || []).filter(i => i.k === 'aground');
+    for (const m of T.act){ const i = inc.filter(x => x.t > (m.t0 || 0)).pop(); if (i && m.due) m.due += Math.min(48 * 60, Math.max(0, S.t - i.t)); } }
+  const stuck = b.status === 'aground' || b.status === 'tow' || (b.status === 'port' && (S.jobs || []).some(j => j.kind === 'repair'));
+  if (stuck) for (const m of T.act) if (m.due) m.due += 1;
 }
 // the survey's minute: fishing at the station counts its time (and what came up from then); the echo line counts its points, passed in
 // order at no more than 8 knots (she slows to 7 as she comes to the line)

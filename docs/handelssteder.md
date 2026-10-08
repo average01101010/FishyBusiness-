@@ -11,7 +11,7 @@ Spillet har **tre handelssteder**. Alt som kjøpes eller leveres, hører til ett
 |---|---|
 | **Utstyrsbutikken** | Fiskeutstyr: garn, liner, teiner, juksamaskin, garnhaler, linehaler. Alt av navigasjonsutstyr, ekkolodd, radio, 12 V-batteri og alt elektrisk. Redningsutstyr, varmekjeldress og oljehyre. Bøting av garn, trål og not. |
 | **Fiskemottaket** | Bare levering av fisk, salg av is og agn. |
-| **Verftet** | Kjøp av brukte og nye båter, motoroppgraderinger, reparasjoner, vedlikehold av båten, klassing for de fartøyene det gjelder, spyling og bunnsmøring, kosmetiske oppgraderinger (maling). |
+| **Verftet** | Kjøp av brukte og nye båter, motoroppgraderinger, reparasjoner, vedlikehold av båten, klassing for de fartøyene det gjelder, spyling og bunnsmøring, kosmetiske oppgraderinger (maling). Redningsskøyta sleper alltid til nærmeste verft (Jonas 08.10.2026), siden skroget skal repareres etterpå. |
 
 To steder uten handel:
 

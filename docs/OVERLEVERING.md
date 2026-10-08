@@ -518,6 +518,19 @@ Jonas: «autoruter aldri skal gå gjennom 3d elementer eller landmasse». Båten
   - En lang bro i Tromsø-flisa (Ramfjordbrua) når bygget har vec-pakkene.
 - **Ikke gjort ennå:** et ferdig leinett fra Kystverkets hovedleder og bileder. Med det ville Autonav nesten ikke trenge å regne, og rutene gå der ekte båter går.
 
+### 4.12d Autonav går aldri på land (08.10.2026, tilbakemeldingene #47 og #48)
+
+Jonas: «Autonav må fungere 10 av 10 ganger, og en bruker skal aldri havne i en slik situasjon pga. Autonav.» En spiller med mannskap om bord gikk på grunn på Autonav fra Vannareid til Honningsvåg. Gjenskapt i testen: ruta var for lang for ett 100 m-rutenett, så korridoren gikk på 200 m-celler, og et rått steg mellom to celler (aldri sjekket som linje) krysset land to etapper utenfor Vannareid.
+
+- **Korridoren i biter** (`leiaCorridor`, `leiaCorridor1` i `core/11-route.js`): etter det grove søket deles den grove veien i stykker som hver får plass i 2 × `LEIA.maxCells` celler på 100 m (200 m bare utenfor flisenes detalj). Rutenettene er lagt fast fra rammens origo, så et stykke slutter i samme celle som det neste begynner i. Vannareid–Honningsvåg (146 nm) går nå på 100 m-celler på 5–7 s.
+- **Hver etappe sjekkes som båten seiler den** (`leiaLegSafe`, `leiaMend`): etter utrettingen går hver etappe gjennom simuleringens egen regel (land, dybde under dypgang + `LEIA.minOver` (0,5 m) utenfor havnene, molo, skjær innen 12 m). En etappe som feiler, legges rundt via et punkt til siden av midten (40–300 m), ellers med et fint søk mellom endene; finnes ingenting, svarer Autonav «Fant ingen trygg leia dit» i stedet for å levere ei rute båten grunnstøter på.
+- **Celler grunnere enn dypgang + 0,5 m er stengt** (`leiaCost`), ikke bare dyre (før kostet de 30 ganger). Dybden sjekkes også de siste 50 m inn mot hvert punkt (`leiaLegOk`), unntatt når punktet selv ligger grunt (ei blåse, naustet). Et mål på grunt vann avvises («For grunt der for båten»), og kartplotteren flytter et slikt trykk ut til nærmeste dype punkt innen 500 m (`deepNear` i `ui/03b-route.js`).
+- **Kartet rundt begge endene lastes først** (`leiaRoute0`): `approachPath` for ei fjern havn kastet «mask block is not loaded» når flisene der ikke var inne.
+- **Sikkerhetsnettet i simuleringen** (`sailReplan`, `sailStop` i `core/05-vessels.js`): treffer `groundCheck` på en etappe ruta kalte trygg (ikke én spilleren tegnet gjennom grunna og kastet loss på, `pl.unsafe`), stopper båten 25 m før, og Autonav finner en vei rundt derfra til neste punkt (`leiaRoute`, spleiset inn i ruta, høyst tre forsøk per etappe). Finnes ingen, ligger båten stille og resten av ruta går tilbake til kladden. Det gjelder også etter en drift, en pause eller et slep, og driftsplanens og den automatiske returens etapper.
+- **Søvn:** sovner du alene mens Autonav går, holder autopiloten kursen og båten går fram til ruta er slutt (`vesselStep`). Uten rute driver hun som før, men stopper før land eller grunt vann (`sleepDrift`). Ingen grunnstøting i søvne.
+- **Telemetrien** om grunnstøting har nå farten før den ble nullstilt og `how` (leia, route, return, ops, helm, sleep, drift), i `S.incidents` og `cloudEv('aground')`. Den gamle farten var alltid 0.
+- **Test:** `tests/autonavtest.py` (søvn på rute, drift mot land, sikkerhetsnettet med og uten `unsafe`, fristen, grunt trykk, og fire nasjonale ruter der hver etappe sjekkes med `groundCheck` og `isLand` hver 5. m). 30 tilfeldige mottakspar langs kysten ble kjørt i tillegg (resultatet står i commit-meldingen).
+
 ### 4.12c Sjømerker langs hele kysten (05.10.2026)
 
 Jonas: «Sjømerker må ordnes langs hele kysten. Alt senja har, må resten av norge ha også. Dette er ikke en senja-simulator».
@@ -1270,7 +1283,7 @@ Punkt 4 i `docs/engasjement.md`. Jonas: en blanding av korte og lange oppdrag ut
   - **Åpne båter** holder seg innaskjærs: eksponeringen langs linja må være høyst 0,7, lest fra kjernekartet.
   - **Været:** varselet (`hsAtFc`) skal ligge under båtens egen varselgrense i timene turen tar. Sesongflyttingen sjekker ikke varselet, siden spilleren selv velger dagene.
   - **Avstanden** er den rette linja ganget med 1,25 (`TUR.detour`). «Kjør dit» (`turGo`) finner den virkelige veien med `leiaRoute` og drar, også fra kaia.
-- **Belønningen** (`turPay`) er det båten tjener i timen (`turRate`: 9 000 kr i trebåten, etter lasterommet opphøyd i 0,6) ganger timene uten trim, ganget med 1,1, 1,3, 1,6 og 2 for sesongen. Fristen er minst 2,5 ganger tiden uten trim, og den flyttes aldri.
+- **Belønningen** (`turPay`) er det båten tjener i timen (`turRate`: 9 000 kr i trebåten, etter lasterommet opphøyd i 0,6) ganger timene uten trim, ganget med 1,1, 1,3, 1,6 og 2 for sesongen. Fristen er minst 2,5 ganger tiden uten trim, og den flyttes aldri. Unntaket (`turStuck`, 08.10.2026, tilbakemelding #48): tiden båten står på grunn, slepes eller ligger i havn med skroget på slippen (`repair`-jobben), teller ikke; fristen skyves minutt for minutt. Én gang, for oppdragene som var aktive da dette kom inn (`T.credit`), gis tiden siden den siste grunnstøtingen etter at oppdraget ble tatt, tilbake, høyst to døgn.
 - **Typene:**
   - **Bestilling** (`turBest`): en ordre i ordresystemet (`S.orders`, med `tur`). Turens betaling er bonusen, og `sell` betaler den sammen med fisken.
   - **Frakt** (`turFrakt`, `TUR_GOODS`): varer i `S.cargo`, som er per fartøy (`VKEYS`). De tar plass fra `capHold` og teller i vekten (`boatTons`), men er ikke en del av fangsten (`holdTotal`) eller landingen. Varene hentes ved kai, og hvis båten ikke ligger der, går «Kjør dit» innom. De betales når de leveres (`turDock` i `dock`).
@@ -2180,7 +2193,7 @@ Brukerens ønske: mannskapet skal være en levende og givende del av spillet, in
   - Under 15 % mørkner kantene på skjermen (`#vign`).
   - **Ved 0 sovner du i 8 spilltimer** (`S.sleep`). `#sleep` (z 64) toner til svart og viser nedtellingen i ekte tid.
   - Med mannskap står du utenfor arbeidet, den med best sjømannskap tar roret, og turen går videre.
-  - Alene stopper fisket og redskapsarbeidet, og båten driver med vinden i 0,3–0,8 knop (`sleepDrift`). Den kan gå på grunn.
+  - Alene stopper fisket og redskapsarbeidet, og båten driver med vinden i 0,3–0,8 knop (`sleepDrift`). Fra 08.10.2026 (4.12d) stopper den før land eller grunt vann og blir liggende («Båten drev inn mot land og ble liggende der»), og på en rute holder autopiloten kursen og båten går fram til ruta er slutt. Den går aldri på grunn i søvne.
   - Du våkner med 60 %. Det er en antakelse.
   - Søvnen løper også mens spillet er lukket.
   - **Klokka er felles for alle spillerne** (Jonas 03.10.2026). Søvnen kan derfor ikke gå raskere eller spoles over. Den kan bare avbrytes, med mindre hvile:
@@ -3015,7 +3028,7 @@ Jonas' liste: oppgraderinger, kvotehandel, kikkert, raskere fangst, fortøying, 
     1. Mannskapet mønstrer på 10 minutter.
     2. Skøyta går 25 knop langs leia.
     3. Slepet settes på 5 minutter.
-    4. Den sleper deg i 6 knop til nærmeste havn.
+    4. Den sleper deg i 6 knop til nærmeste verft (`nearestYard`; fra 08.10.2026, Jonas: skroget skal repareres etterpå, og et slep til et mottak lot en spiller i åpen båt bli stående uten hvile, #48). Finnes ikke noe verft, til nærmeste havn.
   - **Veiene** finnes med `leiaRoute` mens mannskapet mønstrer. Finnes ingen vei, går den rett. En båt på grunn dras først ut til nærmeste vann (`towSea`).
   - **Pris og fangst:** prisen trekkes ved anropet. Fangsten beholdes ved slep og går tapt ved nødanrop, som før.
   - **I spillet:** statusen viser hva som skjer: venter på redningsskøyta, den er på vei, slepet settes, eller under slep i 6 kn. «Spol fram til havn» er fjernet (05.10.2026, én klokke for alle), så slepet tar den tiden det tar. Redning-appen viser slepet i stedet for knappene.
