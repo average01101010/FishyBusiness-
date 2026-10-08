@@ -445,6 +445,10 @@ function dock(pid, berth){
   if (b.berth === 'naust') log('Fortøyd ved naustet i ' + port.name + '.', 'Moored at the boathouse in ' + port.name + '.');
   else if (port.rorbu) log('Fortøyd ved rorbua i ' + port.name + '.', 'Moored at the rorbu in ' + port.name + '.');   // 07d-rorbu.js
   else log('Fortøyd i ' + port.name + '.', 'Moored in ' + port.name + '.');
+  // by Autonav (or any route) to a rorbu: the rest starts by itself on arrival when you are aboard and not rested (Jonas 08.10.2026);
+  // the plan's trips are the crew's, who sleep at a rorbu on their own
+  if (port.rorbu && !wasOps && meAboard() && !(S.tut) && typeof S.energy === 'number' && S.energy < 98 && typeof restStart === 'function' && !resting()){
+    const why = restStart(); if (why && typeof toast === 'function') toast(S.lang === 'no' ? why[0] : why[1]); }
   tatTripEnd(pid);
   turDock(pid);   // freight picked up or delivered (09g-turer.js)
   // the skipper starts landing and restocks straight away, on this vessel (a deferred call would act on whichever vessel is bound then)

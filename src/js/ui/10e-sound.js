@@ -233,6 +233,13 @@ const SND = (() => {
   // the cash register when a landing note is paid (Jonas 08.10.2026: «ka-ching»): the drawer's click (a short burst of noise through a
   // band-pass) and the bell struck twice (partials of a metal bell, each dying away), through the master so the volume is the player's.
   // coin(u) is one small tick of the count-up, higher as the count nears its end (u 0 to 1). Silent before the first touch or when off.
+  // the anchor alarm: a two-tone siren, three times (a drag at anchor)
+  function anchorAlarm(){
+    if (!ac || ac.state !== 'running' || !vol()) return;
+    const t = ac.currentTime;
+    for (let i = 0; i < 6; i++){ const o = ac.createOscillator(), g = gain(0, master), t0 = t + i * 0.32; o.type = 'square'; o.frequency.value = i % 2 ? 880 : 1175; o.connect(g);
+      g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.16, t0 + 0.02); g.gain.setValueAtTime(0.16, t0 + 0.24); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.3); o.start(t0); o.stop(t0 + 0.32); }
+  }
   function cash(kr){
     if (!ac || ac.state !== 'running' || !vol()) return;
     const t = ac.currentTime, big = Math.min(1, Math.log10(Math.max(10, kr)) / 6), amp = 0.28 + 0.22 * big;
@@ -261,5 +268,5 @@ const SND = (() => {
   document.addEventListener('pointerdown', () => { if (!started){ if (S && S.settings) start(); } else if (ac && ac.state !== 'running' && ac.state !== 'closed' && !document.hidden) quiet(ac.resume()); }, true);
   document.addEventListener('visibilitychange', () => { if (!ac || ac.state === 'closed') return; quiet(document.hidden ? ac.suspend() : ac.resume()); });
   // testEar / testSrc (for the tests): an ear and the places, as G3.ear and G3.sndSrc give them in 3D
-  return {start, cash, coin, FIRES, MUS, get started(){ return started; }, get state(){ return ac ? ac.state : 'none'; }, LV, tick, at:(q, ref, e) => { const k = EAR; EAR = e; const r = at(q, ref); EAR = k; return r; }, testEar:null, testSrc:null};
+  return {start, cash, coin, anchorAlarm, FIRES, MUS, get started(){ return started; }, get state(){ return ac ? ac.state : 'none'; }, LV, tick, at:(q, ref, e) => { const k = EAR; EAR = e; const r = at(q, ref); EAR = k; return r; }, testEar:null, testSrc:null};
 })();

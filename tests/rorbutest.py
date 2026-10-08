@@ -42,7 +42,7 @@ async def main():
           return {n, st:b.status, port:b.port, berth:berthKind(b), log:(S.log || []).slice(-6).map(l => l.no || l[1] || '').join(' | ')}; })""", rid)
         check(r.get('st') == 'port' and r.get('port') == rid, 'Autonav takes the boat from Gryllefjord to the rorbu, and she lies at its quay', r)
         # 3b. «Fortøy» in the dock when she lies still off the quay (Jonas 05.10.2026: «Det må også være mulig å fortøye i kaia»)
-        await pg.evaluate("""(rid => { const R = RBID.get(rid), b = S.boat, N = [-R.site.u[1], R.site.u[0]]; restEnd && restEnd(); S.plan = null; b.status = 'idle'; b.port = null; b.v = 0;
+        await pg.evaluate("""(rid => { const R = RBID.get(rid), b = S.boat, N = [-R.site.u[1], R.site.u[0]]; S.energy = 100; restEnd && restEnd(); S.plan = null; b.status = 'idle'; b.port = null; b.v = 0;
           b.pos = {x:R.p.x + N[0] * 0.15, y:R.p.y + N[1] * 0.15}; DOCK.tick && DOCK.tick(); renderActs && renderActs(); const el = [...document.querySelectorAll('#dock button')].find(e => e.textContent.trim() === 'Fortøy'); if (el) el.click();
           const f = [...document.querySelectorAll('#dockFan button')].find(e => e.textContent.trim().toLowerCase().startsWith('rorbua')); if (f) f.click(); })""", rid)
         await pg.wait_for_timeout(2500)

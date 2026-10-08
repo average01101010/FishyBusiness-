@@ -27,6 +27,12 @@ function anchorForecast(p, H, hours, spot){
   for (let k = 0; k <= Math.ceil(hours); k++){ m = Math.max(m, anchorLoad(windAt(H + k), hsAt(p, H + k), sp.expo)); }
   return m;
 }
+// the anchor alarm: a drag sounds it (06e hooks.onAnchorAlarm: the siren, the flashing light in 3D, the toast); a player asleep aboard is
+// woken by the same ring as the bridge watch alarm (15-energy.js: ACK to stop it)
+function anchorAlarm(kind, n){
+  if (typeof asleep === 'function' && asleep() && S.sleep && S.sleep.alarmAt == null) S.sleep.alarmAt = S.t;
+  if (typeof hooks !== 'undefined' && hooks.onAnchorAlarm) hooks.onAnchorAlarm(kind, n);
+}
 function anchorAwake(){ return (meAboard() && !(typeof asleep === 'function' && asleep())) || crewAboard().some(c => !c.sleepW && !c.rest); }
 function dropAnchor(auto){
   const b = S.boat; if (b.status === 'port' || b.anch) return false;
@@ -46,7 +52,7 @@ function anchorTick(H, W, hs){
   if (load <= ANCH.hold) return;
   const deepF = 1 + Math.max(0, a.depth - 20) / 40, p = clamp((load - ANCH.hold) * ANCH.rate * deepF, 0, 0.95) / 60;
   if (Math.random() >= p) return;
-  a.drags++;
+  a.drags++; anchorAlarm(load > ANCH.gale ? 'gale' : 'drag', a.drags);
   const h = (windDir(H) - gridGamma(b.pos) + 180) * Math.PI / 180, d = ANCH.reset, to = {x:b.pos.x + Math.sin(h) * d, y:b.pos.y - Math.cos(h) * d};
   let blocked = true; try { blocked = isLand(to) || !!groundCheck(b.pos, to); } catch (e){}
   if (anchorAwake()){

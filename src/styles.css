@@ -1067,3 +1067,8 @@ body.vplot .depc{display:none}
 .dr-ev.rest span:last-child{color:#29a36a}.dr-ev.land span:last-child{color:#2f7fd0}
 .dr-watch{font-size:13px;margin:4px 0 8px;line-height:1.5}.dr-watch b{display:inline-block;min-width:54px}
 .dr-kv{flex-wrap:wrap;gap:4px 8px}.dr-kv>span:last-child{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;align-items:center;max-width:100%}.dr-kv>span:last-child .ops-days{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}
+
+/* the anchor alarm in 3D (view3d.js ANCHAL) */
+.anchal{position:absolute;left:50%;top:18%;transform:translateX(-50%);padding:8px 16px;border-radius:8px;background:rgba(120,10,10,.85);color:#fff;font-weight:700;letter-spacing:.04em;font-size:15px;white-space:nowrap;pointer-events:none;border:2px solid #ff5a4a;opacity:.55;transition:opacity .12s}
+.anchal.on{opacity:1;box-shadow:0 0 22px rgba(255,60,40,.7)}
+@media (prefers-reduced-motion:reduce){.anchal{transition:none}}

@@ -26,6 +26,11 @@ JS = """(async () => {
   window.windAt = () => BOAT.risk[3] * 1.2; window.hsAt = () => BOAT.risk[1] * 1.2; b.status = 'idle'; b.port = null; b.pos = {x:spot.x, y:spot.y}; S.plan = null; b.anch = null; dropAnchor();
   let gone = false; for (let i = 0; i < 20 * 60 && !gone; i++){ step(); if (i % 20 === 0) await tick(); gone = !b.anch && (!!S.plan || b.status === 'sailing' || b.status === 'port'); } R.gale = gone;
   window.windAt = realW; window.hsAt = realH; b.anch = null;
+  // the alarm hook: a drag rings it, and the one asleep alone aboard is woken by the same ring as the bridge watch alarm
+  { let rang = 0; const keep = hooks.onAnchorAlarm; hooks.onAnchorAlarm = (k, n) => { rang++; }; anchorAlarm('drag', 1); R.alarmRang = rang === 1; hooks.onAnchorAlarm = keep; }
+  // a rorbu: arrival by a route starts the rest by itself (Jonas 08.10.2026), a tired skipper aboard, none when rested
+  { const rid = RORBUER[0].id; S.me = S.cur; S.energy = 40; S.rest = null; S.plan = {wps:[], idx:0}; b.status = 'sailing'; b.port = null; S.cash = 5e5; dock(rid); R.rorbuRest = !!S.rest && S.rest.w === 'rorbu';
+    S.rest = null; S.energy = 100; S.plan = {wps:[], idx:0}; b.status = 'sailing'; dock(rid); R.rorbuRested = !S.rest; S.rest = null; b.status = 'idle'; b.port = null; b.pos = {x:spot.x, y:spot.y}; S.plan = null; }
   // 3. a rest at anchor in the plan
   const W = q => ({x:q.x, y:q.y, port:null, fish:0}), rt = FLEET.find(f => f.home === 'husoy' && f.L < 15).rt[0].slice(1).map(q => ({x:q[0], y:q[1]}));
   const wps = exitWps(HP, rt[0]).map(W).concat(rt.map((q, i) => ({x:q.x, y:q.y, port:null, fish:i === rt.length - 1 ? 1 : 0}))); rt.slice(0, -1).reverse().forEach(q => wps.push(W(q)));
@@ -60,6 +65,8 @@ async def main():
         print(ok(r.get('dropped') and r.get('calmHeld')), 'i stille vær holder ankeret i 12 timer')
         print(ok(r.get('dragged')), 'i vær over båtens grenser slepper ankeret')
         print(ok(r.get('gale')), 'i kuling hiver båten og går til kai')
+        print(ok(r.get('alarmRang')), 'ankeralarmen ringer ved slep')
+        print(ok(r.get('rorbuRest') and r.get('rorbuRested')), 'ankomst til rorbu starter hvilen av seg selv (ikke når du er uthvilt)')
         c = r.get('calmPlan') or {}
         print(ok(c.get('anch') == 1 and c.get('reps') >= 2), 'planen: tur, hvile til ankers, tur fra ankeret, to leveringer')
         s = r.get('stormPlan') or {}
