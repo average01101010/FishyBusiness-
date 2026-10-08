@@ -46,17 +46,18 @@ DRIFT = """(() => { const R = {}, b = S.boat, g = GROUNDS[2].p; S.plan = null; S
   S.sleep = null; return R; })()"""
 
 # a shoal for a 3 m draught near the ground, and a deep point 400 m off with a clear line through the shoal and 100 m past it
-SHOAL = """(() => { const g = GROUNDS[2].p; BOAT.draft = 3; S.settings.safeDepth = 5; hzCache.k = ''; hzLegs.clear();
+SHOAL = """(() => { const g = GROUNDS[2].p, tl = tideCD(S.t / 60); BOAT.draft = 3; S.settings.safeDepth = 5; hzCache.k = ''; hzLegs.clear();
+  // (the simulation grounds at depth + tide below the draught: the shoal is sought with the tide of the hour)
   for (let r = 0.3; r < 12; r += 0.1) for (let k = 0; k < 36; k++){ const a = k * Math.PI / 18, z = {x:g.x + Math.sin(a) * r, y:g.y - Math.cos(a) * r};
-    try { if (!mapSimAt(z) || !mapReadyAt(z, 0) || isLand(z) || inHarbour(z) || depthF(z) >= 2.4 || depthF(z) < 0.9) continue; } catch (e){ continue; }
+    try { if (!mapSimAt(z) || !mapReadyAt(z, 0) || isLand(z) || inHarbour(z) || depthF(z) + tl >= 2.4 || depthF(z) < 0.9) continue; } catch (e){ continue; }
     for (let j = 0; j < 16; j++){ const h = j * Math.PI / 8, p = {x:z.x + Math.sin(h) * 0.3, y:z.y - Math.cos(h) * 0.3}, q = {x:z.x - Math.sin(h) * 0.08, y:z.y + Math.cos(h) * 0.08};
-      try { if (isLand(p) || inHarbour(p) || depthF(p) < 5 || !clearLine(p, q) || rocksNear(p, q, 0.03)) continue;
+      try { if (isLand(p) || inHarbour(p) || depthF(p) + tl < 5 || !clearLine(p, q) || rocksNear(p, q, 0.03)) continue;
         // the shoal is the first shallow water along the line, at least 100 m in
-        let ok = true; for (let u = 0.02; u < 0.1; u += 0.02){ const s = {x:p.x + (q.x - p.x) * u / 0.38, y:p.y + (q.y - p.y) * u / 0.38}; if (depthF(s) < 3.6){ ok = false; break; } }
+        let ok = true; for (let u = 0.02; u < 0.1; u += 0.02){ const s = {x:p.x + (q.x - p.x) * u / 0.38, y:p.y + (q.y - p.y) * u / 0.38}; if (depthF(s) + tl < 3.6){ ok = false; break; } }
         if (ok) return {z, p, q, dz:+depthF(z).toFixed(1), dp:+depthF(p).toFixed(1), fake:false}; } catch (e){} } }
   // no such shoal near the ground: a draught deeper than the water there makes every leg shallow (the stop branch of the net)
   const p = {...g}, q = [0, 1, 2, 3, 4, 5, 6, 7].map(k => ({x:g.x + 2 * Math.cos(k * Math.PI / 4), y:g.y + 2 * Math.sin(k * Math.PI / 4)})).find(t => legClear(g, t));
-  if (!q) return null; BOAT.draft = Math.ceil(depthF(g) + depthF(q)) + 5; S.settings.safeDepth = BOAT.draft + 2; hzCache.k = ''; hzLegs.clear();
+  if (!q) return null; BOAT.draft = Math.ceil(depthF(g) + depthF(q)) + 8; S.settings.safeDepth = BOAT.draft + 2; hzCache.k = ''; hzLegs.clear();
   return {z:q, p, q, dz:+depthF(q).toFixed(1), dp:+depthF(p).toFixed(1), fake:true}; })()"""
 
 NET = """(([p, q, unsafe]) => { const R = {}, b = S.boat; S.plan = null; S.sleep = null; S.crew = []; S.energy = 100; S.draft = [];

@@ -39,7 +39,7 @@ function leiaRocks(G){
 // the fine grid in their detail, else the core's 200 m cells; a coarse cell must be clear of land a third of its size round its middle
 function leiaShore(G, p){
   // (a cell at a tile's seaward edge can lie in a block no pack covers: the core's word then)
-  if (G.fine && mapSimAt(p) && mapHasBlock(MAPD.L.dc, Math.floor(p.x / 0.1), Math.floor(p.y / 0.1))) return rcell(MAPD.L.dc, Math.floor(p.x / 0.1), Math.floor(p.y / 0.1));
+  if (G.fine && mapSimAt(p)){ const L = MAPD.L.dc, ix = Math.floor(p.x / 0.1), iy = Math.floor(p.y / 0.1); if (mapBlockKnown(L, Math.floor(ix / L.n), Math.floor(iy / L.n))) return rcell(L, ix, iy); }
   const d = rcell(MAPD.L.dc200, Math.floor(p.x / 0.2), Math.floor(p.y / 0.2)) * 0.1;
   return G.c > 0.25 ? d - G.c * 0.35 : d;
 }
@@ -117,7 +117,9 @@ async function leiaFind1(from, to, sd, st, pad){
   let c = sim && area / 0.01 <= LEIA.maxCells ? 0.1 : 0.2, mask = null, wx = [x0, y0, x1, y1];
   if (area / (c * c) > LEIA.maxCells || (sim && c > 0.1)){
     // coarse first, then the fine grid in a corridor round its way
-    const cc = Math.ceil(Math.sqrt(area / LEIA.maxCells) / 0.2) * 0.2, CG = leiaGrid(x0, y0, x1, y1, cc), s = leiaNearCell(CG, from, sd), t = leiaNearCell(CG, to, sd);
+    // (the coarse cells by an island harbour are all shut, open only a third of their size from land: its ends are sought 3 km out,
+    // and the fine corridor joins the real ends to them)
+    const cc = Math.ceil(Math.sqrt(area / LEIA.maxCells) / 0.2) * 0.2, CG = leiaGrid(x0, y0, x1, y1, cc), s = leiaNearCell(CG, from, sd, 3), t = leiaNearCell(CG, to, sd, 3);
     if (s < 0 || t < 0) return {why:true};
     const way = await leiaSearch(CG, s, t, sd, st); if (!way) return null;
     // the corridor at 100 m where the tiles' detail is in (a 200 m grid misses the narrow sounds' land: its cells are open by their
@@ -182,9 +184,13 @@ function leiaLegOk(p, q, sd, margin){
 // fine coast has islets thinner than the 25 m mask) and nothing shallower than the draft plus LEIA.minOver, no breakwater and no
 // rock within 12 m. The hard rule under leiaLegOk's comfort. The first point where it fails, or null; the clock is read on the way
 // (a long leg has thousands of samples)
-async function leiaLegFail(p, q, tick){
+async function leiaLegFail(p, q, tick, endP, endQ){
   const L = dist(p, q), n = Math.max(1, Math.ceil(L / 0.004)), lim = BOAT.draft + LEIA.minOver;
-  for (let i = 1; i <= n; i++){ const pt = i === n ? q : {x:p.x + (q.x - p.x) * i / n, y:p.y + (q.y - p.y) * i / n}; if (!inHarbour(pt) && (isLand(pt) || depthF(pt) < lim)) return pt; if ((i & 255) === 0 && tick) await tick(); }
+  // land anywhere, a harbour's quay too, except the 20 m by the route's own end when it lies in a harbour (a boat at her berth has
+  // the quay's land cells beside her; endP, endQ); the depth only outside harbours, which are dredged
+  const hp = endP && inHarbour(p) ? 0.02 : 0, hq = endQ && inHarbour(q) ? 0.02 : 0;
+  for (let i = 1; i <= n; i++){ const pt = i === n ? q : {x:p.x + (q.x - p.x) * i / n, y:p.y + (q.y - p.y) * i / n}, s = L * i / n;
+    if (isLand(pt) ? !(s < hp || L - s < hq) : (!inHarbour(pt) && depthF(pt) < lim)) return pt; if ((i & 255) === 0 && tick) await tick(); }
   if (inHarbour(q)) return null;
   // a breakwater: the first 100 m of the leg that crosses it; a rock: the rock itself
   if (coastSegHit(p, q)){ const m = Math.max(1, Math.ceil(L / 0.1)); for (let i = 0; i < m; i++){ const a = {x:p.x + (q.x - p.x) * i / m, y:p.y + (q.y - p.y) * i / m}, b = {x:p.x + (q.x - p.x) * (i + 1) / m, y:p.y + (q.y - p.y) * (i + 1) / m}; if (coastSegHit(a, b)) return {x:(a.x + b.x) / 2, y:(a.y + b.y) / 2}; } return {x:(p.x + q.x) / 2, y:(p.y + q.y) / 2}; }
@@ -203,13 +209,18 @@ function rockOnLeg(a, b, r){
 async function leiaMend(P, sd, st){
   const out = [P[0]]; let t0 = performance.now();
   const tick = async () => { if (performance.now() - t0 > LEIA.slice){ leiaSlice(st, t0, 'mend'); await leiaYield(); t0 = performance.now(); } };
-  const safe = async (a, b) => !(await leiaLegFail(a, b, tick));
+  // (eA, eB: the leg's ends are the route's own start or end)
+  const fail = (a, b, eA, eB) => leiaLegFail(a, b, tick, eA, eB), safe = async (a, b, eA, eB) => !(await fail(a, b, eA, eB));
   for (let i = 1; i < P.length; i++){
-    const p = out[out.length - 1], q = P[i], f = await leiaLegFail(p, q, tick);
+    const p = out[out.length - 1], q = P[i], first = out.length === 1, last = i === P.length - 1, f = await fail(p, q, first, last);
     if (!f){ out.push(q); continue; }
+    // a cell's middle by the shore (a 100 m cell can hold a sliver of land): the point is dropped when the leg to the next one is clean
+    if (!last && !(await fail(p, P[i + 1], first, i + 1 === P.length - 1))){ st.dropped = (st.dropped || 0) + 1; continue; }
+    // (what failed, for the tests and the console: land, the depth there, a rock or a breakwater)
+    (st.mends = st.mends || []).push({x:+f.x.toFixed(3), y:+f.y.toFixed(3), land:isLand(f), z:+depthF(f).toFixed(1), rock:!!rockOnLeg(p, q, 0.012), wall:coastSegHit(p, q), km:+dist(p, q).toFixed(2)});
     let fix = null; const L = dist(p, q) || 1e-9, nx = -(q.y - p.y) / L, ny = (q.x - p.x) / L;
     for (const off of [0.04, -0.04, 0.08, -0.08, 0.12, -0.12, 0.2, -0.2, 0.3, -0.3, 0.5, -0.5]){ const v = {x:f.x + nx * off, y:f.y + ny * off};
-      if (!isLand(v) && await safe(p, v) && await safe(v, q) && obsClear(p, v) && obsClear(v, q)){ fix = [v]; break; } }
+      if (!isLand(v) && await safe(p, v, first, false) && await safe(v, q, false, last) && obsClear(p, v) && obsClear(v, q)){ fix = [v]; break; } }
     // a fine search between the ends with the failing spot's cells shut (two open cells can have a shoal, a rock or an islet between
     // them), again with the next failing spot shut too, in a wider window when the near one has no way
     if (!fix){ LEIA_AVOID.length = 0; let bad = f;
@@ -217,11 +228,12 @@ async function leiaMend(P, sd, st){
         for (const pad of [1.5, 4]){ r = await leiaFind1(p, q, sd, st, pad); if (r && !r.why && r.length) break; }
         if (!r || r.why || !r.length) break;
         const s2 = await leiaStraighten([p].concat(r, [q]), sd, 0, st), mid = s2.slice(1, -1);
-        for (let k = 0; k <= mid.length && !bad; k++) bad = await leiaLegFail(k ? mid[k - 1] : p, k < mid.length ? mid[k] : q, tick);
+        for (let k = 0; k <= mid.length && !bad; k++) bad = await fail(k ? mid[k - 1] : p, k < mid.length ? mid[k] : q, first && k === 0, last && k === mid.length);
         if (!bad) fix = mid; }
       LEIA_AVOID.length = 0; }
-    if (!fix){ st.mendFail = {p, q, f}; return null; }
-    out.push(...fix, q); st.mended = (st.mended || 0) + 1;
+    // nothing round it: a point on the way is dropped and the next leg takes it from here; the end itself has no way
+    if (!fix){ if (!last){ st.dropped = (st.dropped || 0) + 1; continue; } st.mendFail = {p, q, f}; return null; }
+    out.push(...fix, q); st.mended = (st.mended || 0) + 1; st.mendPts = (st.mendPts || 0) + fix.length;
   }
   return out;
 }

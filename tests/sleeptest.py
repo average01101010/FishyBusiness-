@@ -56,7 +56,7 @@ async def main():
           const r = {z0, z1, slept, en:Math.round(S.energy), btn:document.querySelector('[data-pa=admEnergy]').textContent};
           document.querySelector('[data-pa=admEnergy]').click(); S.energy = 0.001; step(); r.back = asleep(); PHONE.show(false); return r; })()""")
         check(en['z0'] and not en['z1'] and not en['slept'] and en['en'] == 100 and 'på' in en['btn'] and en['back'], '«Skru av energi» i Admin vekker deg, og 30 timer på sjøen gir ingen søvn; skrur du den på igjen, sovner du som før', en)
-        has = await pg.evaluate("(() => { PHONE.open('utstyr'); return [...document.querySelectorAll('.ph-card h4')].some(h => /Brovaktsalarm/.test(h.textContent)); })()")
+        has = await pg.evaluate("(() => { const b = S.boat, q = PORTS.find(p => portKind(p) === 'butikk') || portById('finnsnes'); b.status = 'port'; b.port = q.id; b.pos = {x:q.p.x, y:q.p.y}; PHONE.open('utstyrb'); return [...document.querySelectorAll('.ph-card h4')].some(h => /Brovaktsalarm/.test(h.textContent)); })()")
         check(has, 'brovaktsalarmen kan kjøpes i utstyrsappen', has)
         print('errors:', errs[:5])
         await b.close()

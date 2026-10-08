@@ -471,9 +471,13 @@ function depthF(p){ return unitDredge(p, isLand(p) ? 0 : DEPTH && mapSimAt(p) &&
 // whether the four cells depthWater reads at p all lie in blocks some pack has: at a tile's seaward edge the next cell's block can be
 // one no pack covers (open sea), and that is the model's water, not an error (Autonav over open sea threw «depth block has no
 // pack», 08.10.2026). A block a pack has but is not loaded yet still throws, as it should.
+// (asked for every depth read: the one block the four cells mostly share is remembered, so the usual read costs a few sums)
+const DHC = {k:null, v:true};
 function depthHas(p){
-  const L = MAPD.L.depth, ix = Math.floor(clamp(p.x / L.c - 0.5, L.ix0, L.ix0 + L.nx - 1.001)), iy = Math.floor(clamp(p.y / L.c - 0.5, L.iy0, L.iy0 + L.ny - 1.001));
-  return mapHasBlock(L, ix, iy) && mapHasBlock(L, ix + 1, iy) && mapHasBlock(L, ix, iy + 1) && mapHasBlock(L, ix + 1, iy + 1);
+  const L = MAPD.L.depth, n = L.n, ix = Math.floor(clamp(p.x / L.c - 0.5, L.ix0, L.ix0 + L.nx - 1.001)), iy = Math.floor(clamp(p.y / L.c - 0.5, L.iy0, L.iy0 + L.ny - 1.001));
+  const bx0 = Math.floor(ix / n), by0 = Math.floor(iy / n), bx1 = Math.floor((ix + 1) / n), by1 = Math.floor((iy + 1) / n);
+  if (bx0 === bx1 && by0 === by1){ const k = bx0 * 65536 + by0; if (DHC.k !== k){ DHC.k = k; DHC.v = mapBlockKnown(L, bx0, by0); } return DHC.v; }
+  return mapBlockKnown(L, bx0, by0) && mapBlockKnown(L, bx1, by0) && mapBlockKnown(L, bx0, by1) && mapBlockKnown(L, bx1, by1);
 }
 // the sea floor offshore (tools/map/deep.py, 07.10.2026, for the Greenland halibut on the shelf edge): Terrarium's on 1 km cells over the
 // whole frame, 0 on land and where it has none. The coast's tiles end 40-65 km out, and the model beyond them is never deeper than

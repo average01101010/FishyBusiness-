@@ -112,6 +112,9 @@ function mapBlock(L, bx, by){
 // whether a cell is in the layer (the readers that pick cells themselves keep to it)
 const mapIn = (L, ix, iy) => ix >= L.ix0 && iy >= L.iy0 && ix < L.ix0 + L.nx && iy < L.iy0 + L.ny;
 function mapHasBlock(L, bx, by){ const pk = mapPackOf(L, bx, by); return !!(pk && pk.buf && pk.idx.has(L.name + ':' + bx + ':' + by)); }
+// whether some pack has the block at all: a pack not loaded yet is taken to have it (its index is not in; rcell then says «not
+// loaded», as it should), no pack at all is the open sea beyond the tiles (08.10.2026)
+function mapBlockKnown(L, bx, by){ const pk = mapPackOf(L, bx, by); return !!pk && (!pk.buf || pk.idx.has(L.name + ':' + bx + ':' + by)); }
 // one cell (cell numbers from the frame's origin); the last block of each layer is kept at hand
 function rcell(L, ix, iy){
   const n = L.n, bx = Math.floor(ix / n), by = Math.floor(iy / n);
