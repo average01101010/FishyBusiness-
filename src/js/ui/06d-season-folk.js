@@ -19,7 +19,8 @@ const SEASONAPP = (() => {
     const G = seasonGrid();
     h.push('<div class="ph-card"><h4>' + L('Fiskekalender', 'Fish calendar') + '</h4><div class="sn-grid"><span></span>' + MON[S.lang === 'no' ? 0 : 1].map((m, i) => '<span class="sn-m' + (i === mon ? ' on' : '') + '">' + m.slice(0, 1) + '</span>').join('') +
       Object.entries(G).map(([sp, v]) => '<span class="sn-sp">' + SPECIES[sp][S.lang] + '</span>' + v.map((x, i) => '<i class="' + (i === mon ? 'on' : '') + '" style="background:rgba(30,140,110,' + (0.08 + 0.92 * x).toFixed(2) + ')" title="' + MON[S.lang === 'no' ? 0 : 1][i] + '"></i>').join('')).join('') + '</div>' +
-      '<p class="ph-note">' + L('Mørkere farge: mer fisk den måneden. For torsk er skreien med.', 'Darker: more fish that month. For cod, the skrei is included.') + '</p></div>');
+      '<p class="ph-note">' + L('Mørkere farge: mer fisk den måneden. For torsk er skreien med.', 'Darker: more fish that month. For cod, the skrei is included.') + '</p>' +
+      '<button class="ph-btn" data-pa="open" data-a="guide">' + L('Hvor skal jeg lete? Åpne Fiskeguiden', 'Where should I look? Open the Fish guide') + '</button></div>');
     h.push('</div>'); return h.join('');
   }
   return {page};

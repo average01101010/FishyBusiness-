@@ -106,8 +106,8 @@ async def run(p, w, h, tag):
     # the phone has only the apps that are left, and Kvote is one of them
     await pg.evaluate("PHONE.open('home')"); await pg.wait_for_timeout(400)
     apps = await pg.evaluate("[...document.querySelectorAll('#phone .ph-app')].map(x => x.dataset.a)")
-    BASE = ['vaer', 'post', 'meld', 'salg', 'kvote', 'regler', 'ordl', 'haill', 'merker', 'sjomann', 'redning', 'trim', 'patch', 'tilbake', 'innst', 'admin']   # and since 05.10.2026 Notatbok, Sesong and Folk among them, and Tilbakemelding
-    check([a for a in apps if a in BASE] == BASE and all(a in BASE + ['notat', 'sesong', 'folk'] for a in apps), 'telefonen har appene, med Kvote, Regler, Oppdrag, Trim, Patchnotes og Admin i rekkefølge', apps)
+    BASE = ['vaer', 'post', 'meld', 'salg', 'kvote', 'regler', 'ordl', 'haill', 'merker', 'sjomann', 'redning', 'trim', 'patch', 'tilbake', 'innst', 'admin']   # and since 05.10.2026 Notatbok, Sesong and Folk among them, and Tilbakemelding, and Fiskeguide from 08.10.2026
+    check([a for a in apps if a in BASE] == BASE and all(a in BASE + ['notat', 'sesong', 'guide', 'folk'] for a in apps), 'telefonen har appene, med Kvote, Regler, Oppdrag, Trim, Patchnotes og Admin i rekkefølge', apps)
     # the Rederi app only once the company is founded in the bank (Jonas 06.10.2026)
     rd = await pg.evaluate("(() => { const has = () => [...document.querySelectorAll('#phone .ph-app')].some(x => x.dataset.a === 'rederi'); const f0 = S.form, r0 = has(); S.form = 'AS'; PHONE.open('home'); const r1 = has(); S.form = f0; PHONE.open('home'); return [r0, r1]; })()")
     check(rd == [False, True], 'Rederi-appen kommer først når rederiet er stiftet', rd)

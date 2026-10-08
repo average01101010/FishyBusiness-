@@ -858,6 +858,35 @@ body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 2
 .sn-grid .sn-m{text-align:center;color:var(--mut,#6b7680)} .sn-grid .sn-m.on{color:inherit;font-weight:800}
 .sn-grid .sn-sp{font-size:12px;white-space:nowrap;padding-right:4px}
 .sn-grid i{display:block;height:18px;border-radius:3px} .sn-grid i.on{outline:2px solid currentColor;outline-offset:-1px}
+/* the Fiskeguide app (ui/06f-fishguide.js) */
+.gd .gd-tabs{padding:0 0 8px}
+.gd-mon{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin:0 0 10px}
+.gd-mon button{position:relative;border:1px solid #c9d5dc;background:#fff;border-radius:8px;min-height:42px;padding:0;font:600 10.5px var(--sans);color:#15252f;cursor:pointer}
+.gd-mon button.on{background:#15252f;color:#fff;border-color:#15252f}
+.gd-mon button.now::after{content:'';position:absolute;left:50%;bottom:4px;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:#1e8c6e}
+.gd-now{border-left:4px solid #1e8c6e} .gd-now small{font:700 11px var(--sans);text-transform:uppercase;letter-spacing:.06em;color:#1e8c6e} .gd-now h4{margin:2px 0}
+.gd-row{display:flex;align-items:center;gap:10px;width:100%;min-height:58px;text-align:left;background:#fff;border:0;border-radius:12px;padding:10px 12px;margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,.08);color:#15252f;font:inherit;cursor:pointer}
+.gd-row.dim{opacity:.6}
+.gd-dot{flex:0 0 12px;width:12px;height:12px;border-radius:50%;display:inline-block}
+.gd-nm{flex:1;min-width:0;display:flex;flex-direction:column} .gd-nm b{font:700 14px var(--sans)} .gd-nm small{font-size:11.5px;color:#5b6c76;line-height:1.25}
+.gd-st{flex:0 0 78px;display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.gd-bar{display:block;width:100%;height:8px;border-radius:4px;background:rgba(127,127,127,.22);overflow:hidden} .gd-bar u{display:block;height:100%;background:#1e8c6e;text-decoration:none}
+.gd-chip{font:700 10px var(--sans);font-style:normal;border-radius:9px;padding:1px 7px;background:#e4f2ec;color:#14684f;white-space:nowrap} .gd-chip.x{background:#f6e3e1;color:#9b2c24} .gd-chip.w{background:#f7edd3;color:#7a5a0c}
+.gd-yr{padding:8px 8px}
+.gd-yrow{display:grid;grid-template-columns:minmax(74px,auto) repeat(12,1fr);gap:3px;align-items:center;width:100%;border:0;background:none;padding:3px 0;color:#15252f;font:inherit;text-align:left;cursor:pointer}
+.gd-yh button{border:0;background:none;font:600 11px var(--sans);color:#5b6c76;min-height:30px;padding:0;cursor:pointer} .gd-yh button.on{color:#15252f;font-weight:800} .gd-yh button.now{color:#1e8c6e}
+.gd-sp{display:flex;align-items:center;gap:6px;font-size:12px;white-space:nowrap;padding-right:4px}
+.gd-yrow i{display:block;height:26px;border-radius:3px} .gd-yrow i.on{outline:2px solid #15252f;outline-offset:-1px}
+.gd-yrow i.cl{background:repeating-linear-gradient(45deg,#b9c3c9,#b9c3c9 3px,#e3e8eb 3px,#e3e8eb 6px)!important}
+.gd-yrow i.by{box-shadow:inset 0 0 0 1px rgba(21,37,47,.25)}
+.gd-back{display:block;border:0;background:none;font:700 13px var(--sans);color:#1f4e79;padding:2px 0 8px;min-height:36px;cursor:pointer}
+.gd-h p{margin:2px 0}
+.gd-bars{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;align-items:end;height:92px;margin:6px 0 2px}
+.gd-col{display:flex;flex-direction:column;justify-content:flex-end;height:100%;border:0;background:rgba(127,127,127,.1);border-radius:4px;padding:0;cursor:pointer}
+.gd-col u{display:block;width:100%;background:#1e8c6e;border-radius:3px 3px 0 0;text-decoration:none} .gd-col u.sk{background:#1f4e79;border-radius:0}
+.gd-col.cl u{background:repeating-linear-gradient(45deg,#b9c3c9,#b9c3c9 3px,#e3e8eb 3px,#e3e8eb 6px)} .gd-col.on{outline:2px solid #15252f;outline-offset:1px}
+.gd-bl{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;font-size:10.5px;text-align:center;color:#5b6c76;margin-bottom:8px} .gd-bl .on{color:#15252f;font-weight:800}
+.gd-dots{font-weight:400;letter-spacing:1px;color:#1e8c6e} .gd-dots span{color:#c3ccd2}
 .fk-h{display:flex;gap:10px;align-items:center;margin-bottom:6px} .fk-h h4{margin:0} .fk-h small{color:var(--mut,#6b7680)}
 .fk-av{flex:0 0 38px;height:38px;border-radius:50%;display:grid;place-items:center;font:700 17px var(--serif);color:#fff;background:#6b4a2b} .fk-av.p{background:#1e8c6e} .fk-av.s{background:#2f7fd0}
 .fk-q{font:italic 14px/1.45 var(--serif);margin:6px 0 2px}
