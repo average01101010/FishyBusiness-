@@ -110,7 +110,7 @@ function pushItems(now){
     }
     // fish in the hold about to drop a grade (not while she is on her way in: that is the line above), two game hours before
     if (kg > 20 && !(P && P.idx < P.wps.length)){
-      const clean = S.tripBuff && S.tripBuff.hold ? 0.75 : 1; let best = null;
+      const clean = 1; let best = null;
       for (const x of S.hold){ if (x.kg < 20 || SPECIES[x.sp].live) continue;
         const r = (x.bled ? (x.iced ? 0.9 : 3.0) : (x.iced ? 2.2 : 6.0)) * clean, f = x.fresh, nx = f >= 85 ? 85 : f >= 65 ? 65 : f >= 40 ? 40 : f >= 15 ? 15 : null;
         if (nx == null || r <= 0) continue; const T = S.t + (f - nx) / r * 60 - 120;

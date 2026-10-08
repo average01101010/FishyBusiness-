@@ -139,19 +139,14 @@ function depart(){
   if (b.status === 'port') for (const c of S.crew) if (c.off) c.offTrip = true;
   if (b.status === 'port'){ S.stats.trips++; log('Kastet loss fra ' + portById(b.port).name + '.', 'Cast off from ' + portById(b.port).name + '.'); if (S.tripOwner) loreDepart(); tatTripStart(); }
   if (access() === 'none' && !(S.plan && S.plan.ops && !S.tripOwner) && !(S.target === 'kveite' && b.kgear)) log('Båten har ikke adgang til å fiske torsk, hyse og sei. De kan bare være bifangst, høyst 10 % av landingen.', 'The boat has no access to fish cod, haddock and saithe. They can only be bycatch, at most 10% of the landing.');
-  S.tripBuff = Object.assign({}, S.prep || {}); S.prep = {};
+  S.tripBuff = null; S.prep = {};
   if (S.plan) S.plan.depAt = null;
   // from the quay the lines come in first; the boat moves when they are aboard
   if (b.status === 'port'){ b.status = 'unmooring'; b.castUntil = S.t + CAST_MIN; } else { b.status = 'sailing'; b.port = null; }
   turDepart();   // when she will be there, and a word about the trip (09g-turer.js)
   return true;
 }
-// jobs: yard service, fitting equipment, preparing gear
-const PREP = {
-  jig:{h:1, cost:250, no:'Rigge nye pilker og sjekke snøret', en:'Rig new jigs and check the line', fx:{no:'+15 % fangst neste tur', en:'+15% catch next trip'}},
-  reels:{h:2, cost:600, no:'Skifte kroker og søkk på juksamaskinene', en:'Replace hooks and sinkers on the reels', fx:{no:'+10 % fangst neste tur', en:'+10% catch next trip'}, need:() => S.equip.jukse > 0},
-  hold:{h:1, cost:150, no:'Vaske og desinfisere lasterommet', en:'Wash and disinfect the hold', fx:{no:'fisken holder seg bedre neste tur', en:'the fish keeps better next trip'}}
-};
+// jobs: yard service, fitting equipment (the old «Klargjøring til neste tur» jobs, 'prep', were taken out 08.10.2026: the gear's own wear and service replace them)
 function finishJob(j){
   const b = S.boat;
   if (j.kind === 'svc'){ b.svcAt = b.engH || 0; S.svcTold = false; log('Service på motoren er ferdig.', 'The engine service is done.'); turMechanic(); }
@@ -164,8 +159,8 @@ function finishJob(j){
   else if (j.kind === 'hull'){ b.foul = 0; log('Skroget er renset på slipp.', 'The hull is cleaned on the slip.'); }
   else if (j.kind === 'hold'){ b.holdLv = j.lv; applyVessel(); log('Lasterommet er bygd om: ' + fmt(BOAT.holdCap, 0) + ' kg.', 'The hold is rebuilt: ' + fmt(BOAT.holdCap, 0) + ' kg.'); }
   else if (gearJob(j)){}
-  else if (j.kind === 'prep'){ S.prep = S.prep || {}; S.prep[j.k] = true; log('Ferdig: ' + PREP[j.k].no + '.', 'Done: ' + PREP[j.k].en + '.'); }
-  msg(j.kind === 'prep' || j.kind === 'egn' || j.kind === 'mend' ? (S.lang === 'no' ? 'Kaia' : 'The quay') : 'Verkstedet', (j.no || '') + ' er ferdig.', (j.en || '') + ' is done.');
+  else if (j.kind === 'prep') return;   // a job from an old save: nothing to do
+  msg(j.kind === 'egn' || j.kind === 'mend' ? (S.lang === 'no' ? 'Kaia' : 'The quay') : 'Verkstedet', (j.no || '') + ' er ferdig.', (j.en || '') + ' is done.');
 }
 // The yard's jobs (fitting, service, the slip, the hold, the engine, repairs) take 30 real minutes each, whatever they are, and run all at
 // once (Jonas 05.10.2026: «Montering av utstyr og vedlikehold skal ta 30 ekte minutter, og man kan gjøre flere oppgaver samtidig»): 30

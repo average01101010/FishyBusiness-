@@ -260,7 +260,7 @@ function vesselStep(H){
   const b = S.boat;
   // a trim that has run its time (core BOOSTS): the speed goes back
   if (b.trim && !trimOn(b)){ const T = BOOSTS[b.trim.k]; delete b.trim; applyVessel(); if (T) log(T.no + ' er gått ut. Toppfarten er tilbake på ' + fmt(BOAT.vmax, 1) + ' knop.', 'The ' + T.en.toLowerCase() + ' has run out. Top speed is back at ' + fmt(BOAT.vmax, 1) + ' knots.'); }
-  const clean = S.tripBuff && S.tripBuff.hold ? 0.75 : 1;
+  const clean = 1;
   workMinute();
   const kar = S.equip && S.equip.krabbekar;
   for (const x of S.hold){ const r = SPECIES[x.sp].live ? (kar ? 0.4 : 2.5) : x.bled ? (x.iced ? 0.9 : 3.0) : (x.iced ? 2.2 : 6.0); x.fresh = Math.max(0, x.fresh - r * clean / 60); }
@@ -460,7 +460,7 @@ function dock(pid, berth){
 // sea, cold, hands busy on deck, and your own share while you play the jig game. fish() uses it, and so does the heat map's «Her nå» line.
 function catchFactors(H, W, hs){
   // fishing feels the boat's motions (03c-stability.js): the wave height given, scaled by how she moves here
-  const tb = S.tripBuff || {}, hw = hs * motionHere(H).f, wpen = Math.max(0.15, 1 - Math.max(0, hw - BOAT.risk[0] * 0.5) * 0.4 / (BOAT.risk[0] / 1.0) - Math.max(0, W - 8) * 0.03), eff = fishEffort() * (1 + (tb.jig ? 0.15 : 0) + (tb.reels && S.equip.jukse ? 0.1 : 0));
+  const hw = hs * motionHere(H).f, wpen = Math.max(0.15, 1 - Math.max(0, hw - BOAT.risk[0] * 0.5) * 0.4 / (BOAT.risk[0] / 1.0) - Math.max(0, W - 8) * 0.03), eff = fishEffort();
   // halibut is fished by hand on heavy gear: jigging machines do not help
   // the hands busy on deck are not at the rail: fishEffort counts only those at the Fiske station
   const keff = workTeam('fiske', 'juksa', 'fishing').sum;

@@ -114,12 +114,7 @@ const PHONE = (() => {
     h.push('<div class="ph-card"><h4>' + L('Motorservice', 'Engine service') + '</h4>' + kv(L('Neste service', 'Next service'), svcLeft > 0 ? L('om ', 'in ') + fmt(svcLeft, 0) + ' t' : '<span class="r2">' + L('forfalt', 'overdue') + '</span>') +
       '<button class="ph-btn" data-pa="svc" data-m="yard"' + (queuedSvc ? ' disabled' : '') + '>' + L('Verkstedet', 'The yard') + ' · ' + kr(V.svcCost) + ' · ' + realDur(YARD_H * 60) + '</button>' +
       '<button class="ph-btn alt" data-pa="svc" data-m="self"' + (queuedSvc ? ' disabled' : '') + '>' + L('Gjør det selv', 'Do it yourself') + ' · ' + kr(Math.round(V.svcCost * 0.35)) + ' · ' + realDur(2 * YARD_H * 60) + '</button></div>');
-    h.push('<div class="ph-card"><h4>' + L('Klargjøring til neste tur', 'Getting ready for the next trip') + '</h4>');
-    for (const [k, P2] of Object.entries(PREP)){
-      const ready = S.prep && S.prep[k], queued = jobs.some(j => j.kind === 'prep' && j.k === k), ok = !P2.need || P2.need();
-      h.push('<p><b>' + (S.lang === 'no' ? P2.no : P2.en) + '</b><br><span class="ph-note">' + P2.fx[S.lang] + ' · ' + P2.h + ' t · ' + kr(P2.cost) + '</span></p>' + (ready ? '<p class="r0"><b>' + L('Klart', 'Ready') + '</b></p>' : '<button class="ph-btn" data-pa="prep" data-k="' + k + '"' + (queued || !ok ? ' disabled' : '') + '>' + (queued ? L('I kø', 'Queued') : L('Legg i kø', 'Add to queue')) + '</button>'));
-    }
-    h.push('</div></div>');
+    h.push('</div>');
     return h.join('');
   }
   // the old tabs live on as phone apps
@@ -1477,7 +1472,6 @@ const PHONE = (() => {
     else if (a === 'mayday2'){ confirmMayday = false; rescue(false); toast(L('Redningsskøyta er på vei.', 'The rescue boat is on its way.')); }
     else if (a === 'member'){ if (S.cash < PRICE.member){ toast(t('no_cash')); return; } S.cash -= PRICE.member; S.stats.costs += PRICE.member; S.member = true; log('Ble medlem i redningstjenesten.', 'Joined the rescue service.'); }
     else if (a === 'svc'){ const c = d.m === 'self' ? Math.round(VESSELS[b.type].svcCost * 0.35) : VESSELS[b.type].svcCost, hh = d.m === 'self' ? 2 * YARD_H : YARD_H; if (S.cash < c){ toast(t('no_cash')); return; } if (!queueJob({kind:'svc', h:hh, self:d.m === 'self', no:d.m === 'self' ? 'Egen service på motoren' : 'Service på verkstedet', en:d.m === 'self' ? 'Servicing the engine yourself' : 'Engine service at the yard'})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } S.cash -= c; S.stats.costs += c; }
-    else if (a === 'prep'){ const P2 = PREP[d.k]; if (S.cash < P2.cost){ toast(t('no_cash')); return; } if (!queueJob({kind:'prep', k:d.k, h:P2.h, no:P2.no, en:P2.en})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } S.cash -= P2.cost; S.stats.costs += P2.cost; }
     else if (a.slice(0, 3) === 'wk-'){ if (!WORK.act(a, d)) return; }
     else if (a.slice(0, 3) === 'dr-'){ if (!DRIFTUI.act(a, d)) return; }
     // Autonav to a named place from the phone: the chart plotter opens on it and finds the way; «Kast loss» is for the player (Jonas 07.10.2026)

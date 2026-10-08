@@ -15,8 +15,6 @@ async def main():
         await pg.click('#phoneFab'); await pg.wait_for_timeout(500)
         await pg.evaluate("PHONE.open('verksted')"); await pg.wait_for_timeout(300)
         await pg.click('#phView [data-pa=svc][data-m=self]'); await pg.wait_for_timeout(200)
-        await pg.click('#phView [data-pa=prep][data-k=jig]'); await pg.wait_for_timeout(200)
-        await pg.click('#phView [data-pa=prep][data-k=hold]'); await pg.wait_for_timeout(300)
         await pg.screenshot(path='y1.png')
         await pg.evaluate("PHONE.show(false)"); await pg.wait_for_timeout(400)
         # plan a route with a later departure
