@@ -154,7 +154,7 @@ def camera(loc, look, lens, shift_x=0.0, shift_y=0.0):
 
 
 def render(path):
-    bpy.context.scene.render.filepath = path; bpy.ops.render.render(write_still=True)
+    import bpyutil; bpyutil.render(path)   # (it gives a mesh without the TINT corner colour a neutral one: Cycles reads it as black otherwise, 08.10.2026)
 
 
 def main():

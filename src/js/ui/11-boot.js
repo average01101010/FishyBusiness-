@@ -122,8 +122,9 @@ function bootFail(e){
   const msg = String(e && e.message || e), en = !/^no/.test((navigator.language || 'no').toLowerCase()) && !/^nb|^nn/.test((navigator.language || '').toLowerCase()), L = (no, eng) => en ? eng : no;
   try { if (typeof cloudErr === 'function') cloudErr('boot: ' + msg, 'boot', e && e.stack); } catch (e2){}
   const safe = /safe/.test(location.hash), prev = (() => { try { return !!localStorage.getItem(KEY_PREV); } catch (e2){ return false; } })();
+  const ld = document.getElementById('loader'); if (ld) ld.classList.add('gone');   // the loading screen lies over the dialog otherwise
   const m = document.getElementById('modal'); if (!m) return; m.hidden = false;
-  m.innerHTML = '<div class="card"><h2>' + L('Spillet startet ikke', 'The game did not start') + '</h2><p class="note">' + msg.replace(/</g, '&lt;') + '</p>' +
+  m.innerHTML = '<div class="box"><h2>' + L('Spillet startet ikke', 'The game did not start') + '</h2><p class="note">' + msg.replace(/</g, '&lt;') + '</p>' +
     '<p>' + L('Feilen er sendt til oss. Lagringen din er trygg.', 'The error has been sent to us. Your save is safe.') + '</p><div class="btns">' +
     '<button id="bfRetry" class="btn">' + L('Prøv igjen', 'Try again') + '</button>' +
     (safe ? '' : '<button id="bfSafe" class="btn">' + L('Start i sikker modus (uten 3D)', 'Start in safe mode (no 3D)') + '</button>') +
