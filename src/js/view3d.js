@@ -617,7 +617,15 @@ const G3 = (() => {
     for (const t of VEC.tiles.values()){
       if (TST.has(t.k)) continue;
       const vp = MAPD.byTile.get('view:' + t.k); if (vp && !vp.buf) continue;
-      const items = [...t.piers.map(q => m => pierInto(m, q, t.k)), ...t.slabs.map(pts => m => slabInto(m, pts, t.k)), ...t.molos.map((pts, i) => m => stonesOf(TJOB.stones, sm => moundInto(m, pts, (t.tx * 31 + t.ty) * 7919 + i * 104729, false, t.k, sm))), ...t.bridges.map(br => m => bridgeInto(m, br, t.k))];
+      // the piers, slabs and breakwaters that reach onto a harbour unit's ground or into its basin go, as Senja's do (PIERBOX,
+      // 07-harbours.js): the unit is its own quay (a pier mapped as an area ran out through the plant's and the yard's quays at
+      // Engenes, tilbakemelding #45 and #46)
+      const UN = UNITA.filter(U => U.o[0] > t.x0 - 300 && U.o[0] < t.x0 + MAPD.man.tile * 1000 + 300 && U.o[1] > t.z0 - 300 && U.o[1] < t.z0 + MAPD.man.tile * 1000 + 300);
+      const onU = (x, z) => UN.some(U => { const [lx, lz] = unitL(U, x, z), g = ugeo(U); return groundOut(U, lx, lz) <= 2 || (Math.abs(lx) <= g.basinX && lz >= 0 && lz <= g.basinZ); });
+      const lineOnU = pts => { for (let k = 0; k < pts.length; k++){ const [ax, az] = pts[k], [bx, bz] = pts[Math.min(k + 1, pts.length - 1)], n = Math.max(1, Math.ceil(Math.hypot(bx - ax, bz - az) / 3)); for (let s = 0; s <= n; s++) if (onU(ax + (bx - ax) * s / n, az + (bz - az) * s / n)) return true; } return false; };
+      const boxOnU = q => { const ax = Math.sin(q.ang), az = Math.cos(q.ang), nx = Math.cos(q.ang), nz = -Math.sin(q.ang); for (let s = -1; s <= 1; s += 0.25) for (const k of [-1, 0, 1]) if (onU(q.x + ax * s * q.l / 2 + nx * k * q.w / 2, q.z + az * s * q.l / 2 + nz * k * q.w / 2)) return true; return false; };
+      const piers = UN.length ? t.piers.filter(q => !boxOnU(q)) : t.piers, slabs = UN.length ? t.slabs.filter(pts => !lineOnU(pts)) : t.slabs, molos = t.molos.map((pts, i) => [pts, i]).filter(([pts]) => !UN.length || !lineOnU(pts));
+      const items = [...piers.map(q => m => pierInto(m, q, t.k)), ...slabs.map(pts => m => slabInto(m, pts, t.k)), ...molos.map(([pts, i]) => m => stonesOf(TJOB.stones, sm => moundInto(m, pts, (t.tx * 31 + t.ty) * 7919 + i * 104729, false, t.k, sm))), ...t.bridges.map(br => m => bridgeInto(m, br, t.k))];
       TJOB = {t, m:MB(), items, i:0, ms:0, stones:[]}; return;
     }
   }

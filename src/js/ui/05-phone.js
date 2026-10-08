@@ -417,6 +417,9 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p92', '08.10.2026', 'Kaiene ved mottak og verft', 'The quays at plants and yards', [
+      ['Kaier og moloer fra kartet stakk ut gjennom kaia ved enkelte mottak og verft langs kysten, blant annet på Engenes, og båten kunne bli liggende inne i dem. Nå står mottakets og verftets egen kai alene.', 'Quays and breakwaters from the map stuck out through the quay at some plants and yards along the coast, Engenes among them, and the boat could end up lying inside them. Now the plant’s and the yard’s own quay stands alone.']
+    ]],
     ['p91', '08.10.2026', 'Fars naust i Vangshamn', 'Father’s boathouse at Vangshamn', [
       ['Fars naust står nå i Vangshamn på Senja, ikke i Finnsnes. Første fangst leveres i Botnhamn, like ved. Har du spilt før, er hjemmet ditt flyttet til Vangshamn, og båten ligger der du forlot den.', 'Father’s boathouse now stands at Vangshamn on Senja, not in Finnsnes. The first catch is landed at Botnhamn, close by. If you have played before, your home has moved to Vangshamn, and the boat lies where you left her.'],
       ['Kartplotteren har en liten tab på kanten av rutelisten (ÅPNE/LUKK). Ett trykk skyver listen til siden, eller ned i stående format, så du ser hele kartet mens du seiler. Tab-en blir stående igjen, og et trykk henter listen tilbake. Knappen Rute øverst til høyre er borte i stående format.', 'The chart plotter has a small tab on the edge of the route list (OPEN/CLOSE). One tap slides the list aside, or down when upright, so you see the whole chart while you sail. The tab stays out, and a tap brings the list back. The Route button at the top right is gone when upright.'],
