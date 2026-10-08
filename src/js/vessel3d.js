@@ -710,10 +710,12 @@ function hullTris(type){
   }
   return out;
 }
+const HULLT = {};
 // a strip on each side at a share of the length from the stem (frac), at most hMax tall, aspect times as long as tall
 function sideStrip(type, frac, hMax, aspect){
   const m = vesselModel(type); if (!m) return null;
-  const T = hullTris(type); if (T.length < 8) return null;
+  // the hull's triangles once a type: the name's search tries many strips (nameStrips)
+  const T = HULLT[type] || hullTris(type); if (T.length < 8) return null; HULLT[type] = T;
   let z0 = Infinity, z1 = -Infinity; for (const t of T) for (const k of [2, 5, 8]){ z0 = Math.min(z0, t[k]); z1 = Math.max(z1, t[k]); }
   // the hull cut at station z: segments [y, x, y, x]
   const cut = z => { const seg = [];
@@ -746,8 +748,46 @@ function nameStrips(type){
   if (type in NAMESTRIP) return NAMESTRIP[type];
   const m = vesselModel(type); if (!m) return NAMESTRIP[type] = null;
   if (m.geo && m.geo.names) return NAMESTRIP[type] = m.geo.names;
-  const V = VESSELS[type] || {len:10};
-  return NAMESTRIP[type] = sideStrip(type, 0.25, Math.min(0.9, Math.max(0.16, 0.025 * V.len + 0.05)), 4);
+  const V = VESSELS[type] || {len:10}, h = Math.min(0.9, Math.max(0.16, 0.025 * V.len + 0.05));
+  // a quarter of the length from the stem, or the nearest place along the side where nothing stands proud of the hull in front of the
+  // letters, smaller if it must (down to six tenths), and clear of the registration mark (the aft porthole of the Havsjark sat in the middle of the
+  // name, tilbakemelding #51); where no place is clear, the quarter as before
+  const first = sideStrip(type, 0.25, h, 4); if (!first || !stripProud(type, first[0])) return NAMESTRIP[type] = first;
+  const zr = st => { const z = st[0][0].map(p => p[2]); return [Math.min(...z), Math.max(...z)]; }, mk = markStrips(type), mz = mk && zr(mk);
+  // a strip's stretch along the hull is known before it is cut (sideStrip's mid and len): the places where something stands out at the
+  // name's height anyway are skipped without cutting (the wooden boat's strakes run her whole length)
+  const T = HULLT[type]; let z0 = Infinity, z1 = -Infinity; for (const t of T) for (const k of [2, 5, 8]){ z0 = Math.min(z0, t[k]); z1 = Math.max(z1, t[k]); }
+  const [B0, T0] = first[0], y0 = Math.min(...B0.map(p => p[1])) - 0.1, y1 = Math.max(...T0.map(p => p[1])) + 0.1, x0 = 0.5 * Math.min(...B0.map(p => p[0]));
+  const pc = PROUD[type], busy = []; for (let k = 0; k < pc.length; k += 3) if (pc[k] > x0 && pc[k + 1] > y0 && pc[k + 1] < y1) busy.push(pc[k + 2]);
+  for (const hh of [h, h * 0.8, h * 0.6]) for (let d = 0.01; d <= 0.25; d += 0.01) for (const f of [0.25 + d, 0.25 - d]){
+    const a = z0 + f * (z1 - z0) - 2 * hh, b = a + 4 * hh; if (mz && a < mz[1] + 0.1 && b > mz[0] - 0.1) continue;
+    let n = 0; for (const z of busy) if (z > a && z < b) n++; if (n > 40) continue;
+    const st = sideStrip(type, f, hh, 4); if (!st) continue;
+    const z = zr(st); if (mz && z[0] < mz[1] + 0.1 && z[1] > mz[0] - 0.1) continue;
+    if (!stripProud(type, st[0])) return NAMESTRIP[type] = st;
+  }
+  return NAMESTRIP[type] = first;
+}
+// how many of a detailed model's triangles that face out to starboard stand proud of the hull under a strip's starboard side (a
+// porthole's rim, a fender, a step; the strip floats off above the hull by sideStrip's off): the strip's rows [B, T] from sideStrip; a kit's hull has nothing on its side
+const PROUD = {};
+function stripProud(type, st){
+  if (!(type in PROUD)){
+    // the candidates once a type: the centres of the triangles off the hull's paint zone that face out to starboard
+    const G = glbHas(type) ? glbLoad(type) : null, P = G && G.parts.lod0, c = [];
+    if (P && P.zone) for (let v = 0; v * 3 + 9 <= P.p.length; v += 3){
+      if (P.zone[v] === 1) continue; const q = v * 3, x = (P.p[q] + P.p[q + 3] + P.p[q + 6]) / 3;
+      if (x > 0 && P.n[q] + P.n[q + 3] + P.n[q + 6] >= 0.9) c.push(x, (P.p[q + 1] + P.p[q + 4] + P.p[q + 7]) / 3, (P.p[q + 2] + P.p[q + 5] + P.p[q + 8]) / 3);
+    }
+    PROUD[type] = c;
+  }
+  const c = PROUD[type], off = 0.01 + 0.0006 * (VESSELS[type] || {len:10}).len, [B, T] = st, N = B.length - 1, za = B[0][2], zb = B[N][2], z0 = Math.min(za, zb), z1 = Math.max(za, zb); let n = 0;
+  for (let k = 0; k < c.length; k += 3){
+    const x = c[k], y = c[k + 1], z = c[k + 2]; if (z < z0 || z > z1) continue;
+    const i = Math.round((z - za) / (zb - za) * N), b = B[i], t = T[i]; if (y < b[1] || y > t[1]) continue;
+    if (x > b[0] + (t[0] - b[0]) * (y - b[1]) / (t[1] - b[1]) - off + 0.004) n++;
+  }
+  return n;
 }
 // the registration mark's strip near the stem: the letters as tall as § 23 asks by the boat's length (45 cm from 15 m, 25 cm from 9 m,
 // else 15 cm), the strip a little taller round them; a tenth of the length from the stem, ahead of the name

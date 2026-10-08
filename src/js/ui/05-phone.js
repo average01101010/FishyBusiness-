@@ -418,6 +418,9 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p94', '08.10.2026', 'Navnet på sjarken', 'The name on the sjark', [
+      ['Navnet på havsjarken sto over det bakerste koøyet i baugen, så ringen lå midt i bokstavene. Nå står navnet mellom koøyene, og på alle båter flyttes det dit ingenting stikker ut fra skutesida.', 'The name on the sjark sat over the aft porthole in the bow, so the ring lay in the middle of the letters. Now the name stands between the portholes, and on every boat it moves to where nothing sticks out from the side.']
+    ]],
     ['p93', '08.10.2026', 'Drift: driftplan for hver båt', 'Drift: an operations plan for every boat', [
       ['Ny app, Drift, for driftsplanen til hver båt du eier. Du lager økter: turer med egen rute og avgangstid, og hvile ved kai eller rorbu. Flere turer i døgnet er mulig, så du kan levere mer fisk per døgn.', 'A new app, Drift, for the operations plan of each boat you own. You make sessions: trips with their own route and departure time, and rests at a quay or a rorbu. Several trips a day are possible, so you can land more fish per day.'],
       ['Én type utstyr per plan: juksa, line, garn eller teiner. Ved line, garn og teiner er ståtiden tiden mellom to runder, og appen sier fra om den blir for kort eller for lang. Trål, ringnot og snurrevad kommer med havsteget.', 'One type of gear per plan: jigging, longline, nets or pots. With line, nets and pots the soak is the time between two rounds, and the app tells you if it gets too short or too long. Trawl, purse seine and Danish seine come with the ocean step.'],
