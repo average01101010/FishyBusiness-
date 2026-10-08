@@ -37,7 +37,7 @@ function renderRouteTools(){
   const u = $('rUndo'), r = $('rRedo'); if (!u) return;
   // the side panel shows (on a wide screen) only when there is a route: drawn, being found, or being sailed (the user's wish 02.10.2026)
   const routing = S.draft.length > 0 || !!S.plan || LEIA_BUSY;
-  if (document.body.classList.contains('routing') !== routing){ document.body.classList.toggle('routing', routing); if (document.body.classList.contains('vplot')){ applyView(); scheduleStatic(); } }
+  if (document.body.classList.contains('routing') !== routing){ document.body.classList.toggle('routing', routing); if (routing) document.body.classList.remove('sidehide'); if (document.body.classList.contains('vplot')){ applyView(); scheduleStatic(); } }
   const h = rhist(), key = [S.cur, S.lang, canEditDraft(), S.draft.length, S.draft.length && S.draft[S.draft.length - 1].port, h.u.length, h.r.length, LEIA_ARM, LEIA_BUSY, document.body.classList.contains('v3d'), S.boat.status, !!S.plan].join('|');
   if (key === rtKey) return; rtKey = key;
   // play starts the route drawn; while the boat sails it, pause (the user's wish 02.10.2026)

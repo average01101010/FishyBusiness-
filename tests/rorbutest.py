@@ -48,20 +48,11 @@ async def main():
         await pg.wait_for_timeout(2500)
         r = await pg.evaluate("""(rid => { const b = S.boat, st0 = b.status; let n = 0; while (b.status !== 'port' && n < 200){ step(); n++; } return {st0, n, st:b.status, port:b.port}; })""", rid)
         check(r['st0'] == 'sailing' and r['st'] == 'port' and r['port'] == rid, 'lying still 150 m off the rorbu, «Fortøy» in the dock takes her in to its quay', r)
-        # 3c. cast off from a rorbu by a plant without a route: «Fortøy» offers both quays, and the plant takes her there (tilbakemelding #23:
-        # she only ever went back to the rorbu)
-        r = await pg.evaluate("""(async () => { const g = portById('gryllefjord'), b = S.boat, R0 = b.port; let R = null, K = null;
-          for (const e of rorbuNear(g.p, 80)){ if (e.R.kind !== 0) continue; await mapNeed(e.R.cand, 2); if (!rorbuSite(e.R)) continue;
-            const q = moorAll(e.R.p, 0.4).find(m => m.kind === 'port'); if (q){ R = e.R; K = q; break; } }
-          if (!R) return {none:true};
-          S.rest = null; S.plan = null; S.draft = []; dock(R.id); S.plan = null; depart(); let n = 0; while (b.status !== 'idle' && n < 20){ step(); n++; }
-          DOCK.tick && DOCK.tick(); renderActs && renderActs(); const el = [...document.querySelectorAll('#dock button')].find(e => e.textContent.trim() === 'Fortøy'); if (el) el.click();
-          await new Promise(res => setTimeout(res, 300)); const fan = [...document.querySelectorAll('#dockFan button')].map(e => e.textContent.trim());
-          const f = [...document.querySelectorAll('#dockFan button')].find(e => e.textContent.trim() === K.name); if (f) f.click();
-          await new Promise(res => setTimeout(res, 2500)); const st0 = b.status; n = 0; while (b.status !== 'port' && n < 300){ step(); n++; }
-          const out = {rid:R.id, kid:K.id, fan, st0, st:b.status, port:b.port}; S.plan = null; dock(R0); return out; })()""")
-        check(not r.get('none') and len(r['fan']) >= 2 and r['st0'] == 'sailing' and r['st'] == 'port' and r['port'] == r['kid'],
-              'cast off from a rorbu by a plant, «Fortøy» offers both quays, and picking the plant takes her there', r)
+        # 3c. the rorbuer stand 1.5-4 km from their plant (Jonas 08.10.2026), so the choice of quay to moor at never comes up from a rorbu
+        # (tilbakemelding #23 was that she only ever went back to the rorbu): within 400 m of one rorbu there is no plant's quay
+        r = await pg.evaluate("""(() => { let worst = 9, n = 0; for (const R of RORBUER){ if (R.kind !== 0) continue; n++; for (const q of PORTS) if (q.mottak || q.sted) worst = Math.min(worst, dist(q.p, R.cand)); }
+          return {n, worst:+worst.toFixed(2)}; })()""")
+        check(r['n'] >= 100 and r['worst'] >= 1.4, 'no rorbu stands within 1.4 km of a plant, shop or yard: the choice of quay to moor at does not come up', r)
         # 4. the dock: rest, no market, no shop; Gryllefjord's plant is not here
         r = await pg.evaluate("""(() => { DOCK.tick && DOCK.tick(); renderActs && renderActs(); const t = [...document.querySelectorAll('#dock button')].map(b => b.textContent.trim()).join('|');
           return {t, shop:shopBuy('jig', 0, false), mottak:!!portById(S.boat.port).mottak}; })()""")

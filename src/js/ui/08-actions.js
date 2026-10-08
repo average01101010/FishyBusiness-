@@ -242,6 +242,8 @@ function showIntro(namesOnly){
       'The boat has no name on her hull yet. Until then she goes by her registration mark <b>' + S.boatName + '</b>. You name her yourself once you are in the fishermen\'s register in your own name.') + '</p>' +
     '<div class="btns"><button class="btn primary" data-close id="obGo">' + L('Ta over båten', 'Take over the boat') + '</button></div></div>');
   $('obGo').addEventListener('click', () => {
+    // the tests' games (#notut) skip the start and keep the old Senja start: the boat and Father's naust in Finnsnes
+    if (!S.intro && NOTUT && !S.home) S.home = 'finnsnes';
     if (!S.intro){ S.tut = NOTUT ? 0 : tutNew(); log('Tok over båten etter far.', 'Took over Father\'s boat.'); }
     S.intro = true; save(); refreshAll(); achCheck();   // «Tok over båten» (core/09f-merker.js)
   });
@@ -371,6 +373,11 @@ $('plotSet').addEventListener('click', e => { if (e.target.closest('[data-x]')){
 $('plotClose').onclick = () => G3.show(true);
 $('ecClose').onclick = () => G3.show(true);
 $('ecRoute').onclick = () => document.body.classList.toggle('drawer');
+// the route list's tab: sideways the list slides off to the right, upright it goes down (and back); the map is laid out again
+{ const tab = document.createElement('button'); tab.id = 'sideTab'; tab.type = 'button'; tab.setAttribute('aria-label', 'Rute');
+  tab.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg><span class="st-t"></span>';
+  $('side').prepend(tab);
+  tab.onclick = e => { e.stopPropagation(); const b = document.body; if (window.innerWidth <= 700) b.classList.toggle('drawer'); else { b.classList.toggle('sidehide'); applyView(); scheduleStatic(); } }; }
 $('camBtn').onclick = () => { if (G3.kino()) G3.kino(false); G3.setHelm(!G3.isHelm()); kinoUi(); updateMapButtons(); };
 // the cinema (view3d.js KINO): the camera films the trip by itself; «Skjul» hides everything on the screen but these two buttons
 function kinoUi(){ const on = G3.kino(); $('kinoBtn').classList.toggle('on', on); $('kinoHud').hidden = !on; if (!on) document.body.classList.remove('kino-clean');

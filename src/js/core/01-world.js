@@ -245,6 +245,20 @@ const PORTS = [
   // bay south of the village (exposure 0.2, 30 m of water), 5.7 km from the plant in Botnhamn; nothing is sold here (07c-naust.js)
   {id:'vangshamn', name:'Vangshamn', xy:[57.395,27.563], shore:[57.340,27.540], pier:false, fuel:false, ice:false, mottak:false, pf:1}
 ].map((p, i) => ({...p, i, xy:LGa(p.xy), shore:LGa(p.shore), p:LG(p.xy[0], p.xy[1]), coast:LG(p.shore[0], p.shore[1])}));
+// A harbour's name on the chart and in lists: a plant is its place and what such a place is called (Jonas 08.10.2026: «Alle mottak må
+// hete stedet + fiskemottak/mottak eller andre variasjoner av hva et fiskemottak kan kalles»), by its look where it has a harbour unit
+// (b the old fish plant: fiskebruk) and otherwise by the id, the same every time; the yards and shops carry theirs already (06c-steder.js).
+// The prose keeps the place («til mottaket i Botnhamn»).
+const PLANT_WORD = ['fiskemottak', 'mottak', 'fiskemottak', 'fiskebruk'];
+function portLabel(p){
+  if (!p || !p.mottak) return p ? p.name : '';
+  if (p.label) return p.label;
+  const U = typeof UNITS !== 'undefined' && UNITS[p.id]; let h = 0; for (const ch of p.id) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return (p.label = p.name + ' ' + (U && U.v === 'b' ? 'fiskebruk' : PLANT_WORD[h % PLANT_WORD.length]));
+}
+// what kind of place a harbour is, for its sign on the chart: 'mottak', 'verft' (Finnsnes too, with its boat hall), 'butikk', 'naust'
+// (Father's home without trade) or '' (any other)
+const portKind = p => p.mottak ? 'mottak' : /verft/.test(p.sted || '') ? 'verft' : /butikk/.test(p.sted || '') ? 'butikk' : p.id === HOME0 ? 'naust' : '';
 // where Father's naust stands when the game has no home of its own (a new game picks one, ui/08c-start.js; older games are moved here)
 const HOME0 = 'vangshamn';
 // the rorbuer along the coast (07d-rorbu.js) are places you lie at too, but not harbours: portById knows them, PORTS does not

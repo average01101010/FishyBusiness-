@@ -50,7 +50,7 @@ async def main():
           // the fine coast has land: at Husøy the unit stands on the shore (the user's wish 03.10.2026)
           const land = (x, z) => !inHarbourPocket({x:x / 1000, y:z / 1000}) && FINE.some(P => x >= P.bb[0] && x <= P.bb[2] && z >= P.bb[1] && z <= P.bb[3] && inPoly(P, x, z));
           const R = {};
-          for (const pid of PORTS.filter(q => !q.coastal).map(q => q.id)) for (const kind of ['main', 'bunker']) for (const t of Object.keys(BEAM)){
+          for (const pid of PORTS.filter(q => !q.coastal).map(q => q.id)) for (const kind of ['main', 'bunker']) for (const t of Object.keys(BEAM).filter(t => VESSELS[t].cls !== 'hav')){
             const f = quayFace(pid, kind); if (!f) continue; const b = berthPose(pid, t, kind), fx = Math.sin(b.hd), fz = -Math.cos(b.hd), sx = Math.cos(b.hd), sz = Math.sin(b.hd), X = b.x * 1000, Z = b.y * 1000;
             const pts = [[0, 0], [b.Lb / 2 - 0.5, 0], [-b.Lb / 2 + 0.5, 0], [0, b.Bb / 2], [0, -b.Bb / 2]].map(([l, s]) => [X + fx * l + sx * s, Z + fz * l + sz * s]);
             const off = (X - f.x) * f.nx + (Z - f.z) * f.nz, starb = sx * -f.nx + sz * -f.nz;

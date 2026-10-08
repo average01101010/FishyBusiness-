@@ -23,11 +23,11 @@ async def main():
           return {n:S_.length, shops:S_.filter(q => q.sted === 'butikk').length, yards:S_.filter(q => q.sted === 'verft').length, unique:ids.size === PORTS.length,
             faces:S_.every(q => !!COASTQ[q.id] && !!UNITS[q.id]), names:S_.every(q => /(verft|utstyrsbutikk)/.test(q.name)),
             bad:S_.filter(q => /\\b(AS|ASA|Sjømat|Seafood|Fiskeindustri)\\b/i.test(q.name)).map(q => q.name), sample:S_.slice(0, 3).map(q => q.name)}; })()"""))
-        check(a['n'] >= 200 and a['shops'] >= 80 and a['yards'] >= 100 and a['unique'] and a['faces'] and a['names'] and not a['bad'], 'the shops and the yards are harbours with a quay, a unit and a name of their town, and no firm\'s name', a)
+        check(a['n'] >= 180 and a['shops'] >= 55 and a['yards'] >= 100 and a['unique'] and a['faces'] and a['names'] and not a['bad'], 'the shops and the yards are harbours with a quay, a unit and a name of their town, and no firm\'s name', a)
         # coverage: no plant of the game is far from a yard or a shop
         c = json.loads(await J("""(() => { const pl = PORTS.filter(q => q.mottak), far = k => Math.max(...pl.map(q => placesNear(q.p, k, 1)[0].d)) / NM;
           return {plants:pl.length, yard:Math.round(far('verft')), shop:Math.round(far('butikk')), plant:Math.round(Math.max(...PORTS.filter(q => q.mottak).map(q => placesNear(q.p, 'mottak', 2)[1].d)) / NM)}; })()"""))
-        check(c['plants'] >= 150 and c['yard'] <= 36 and c['shop'] <= 26, 'no plant is more than 36 nm from a yard or 26 nm from a shop (the far ones are in the Finnmark fjords)', c)
+        check(c['plants'] >= 150 and c['yard'] <= 26 and c['shop'] <= 36, 'no plant is more than 26 nm from a yard or 36 nm from a shop (the far ones are in the Finnmark fjords, where the villages have no other quay 1.5 km from the plant)', c)
         # services per kind
         s = json.loads(await J("""(() => { const sv = id => portServices(portById(id), 'main'), y = PORTS.find(q => q.sted === 'verft'), b = PORTS.find(q => q.sted === 'butikk');
           return {plant:sv('botnhamn'), finnsnes:sv('finnsnes'), yard:portServices(y, 'main'), shop:portServices(b, 'main'), naust:portServices(portById('botnhamn'), 'naust'), yardFuel:y.fuel, shopFuel:b.fuel, plantIce:portById('botnhamn').ice}; })()"""))

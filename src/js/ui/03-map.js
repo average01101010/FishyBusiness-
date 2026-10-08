@@ -259,6 +259,7 @@ function updateMapButtons(){
   $('modeBtn').textContent = g3 ? (G3.isHelm() ? t('cam_follow') : t('cam_helm')) : (S.settings.plotter ? t('mode_chart') : t('mode_plot'));
   $('instrBtn').classList.toggle('on', S.settings.instr !== false);
   $('modeBtn').classList.toggle('locked', !g3 && !S.equip.plotter);
+  { const st = document.querySelector('#sideTab .st-t'); if (st){ st.dataset.o = S.lang === 'no' ? 'ÅPNE' : 'OPEN'; st.dataset.c = S.lang === 'no' ? 'LUKK' : 'CLOSE'; } }
   $('ecRoute').textContent = S.lang === 'no' ? 'Rute' : 'Route'; $('ecSet').textContent = S.lang === 'no' ? 'Innstillinger' : 'Settings'; $('ecClose').textContent = S.lang === 'no' ? 'Lukk' : 'Close'; $('plotStyle').classList.toggle('locked', !S.equip.plotter);
   $('camBtn').classList.toggle('on', g3 && G3.isHelm()); $('camBtn').setAttribute('aria-label', g3 && G3.isHelm() ? t('cam_follow') : t('cam_helm'));
 }
@@ -302,8 +303,8 @@ function renderStatic(){
   const taken = [], pl = view.z >= 0.5;
   for (const p of PORTS){
     const s = (pl ? 5 : 3) * u; if (!inV(p.p.x, p.p.y)) continue;
-    g.push('<rect x="' + (p.p.x - s) + '" y="' + (p.p.y - s) + '" width="' + (2 * s) + '" height="' + (2 * s) + '" class="port' + (p.home ? ' home' : '') + '" stroke-width="' + (1.5 * u) + '" transform="rotate(45 ' + p.p.x + ' ' + p.p.y + ')"/>');
-    if (pl){ g.push(txt({x:p.p.x + 9 * u, y:p.p.y + 4 * u}, p.name, 'lbl-port', 13 * u, 'stroke-width="' + (3 * u) + '"')); taken.push([p.p.x - s, p.p.y - 9 * u, p.p.x + 9 * u + p.name.length * 7.5 * u, p.p.y + 6 * u]); }
+    g.push(portIcon(p, s * 1.25, u));
+    if (pl){ const nm = portLabel(p); g.push(txt({x:p.p.x + 10 * u, y:p.p.y + 4 * u}, nm, 'lbl-port', 13 * u, 'stroke-width="' + (3 * u) + '"')); taken.push([p.p.x - s, p.p.y - 9 * u, p.p.x + 10 * u + nm.length * 7.5 * u, p.p.y + 6 * u]); }
   }
   // the rorbuer (07d-rorbu.js): a little red house, the name when near
   if (view.z >= 0.5) for (const R of rorbuIn(vx0 - 1, vy0 - 1, vx1 + 1, vy1 + 1)){
@@ -314,6 +315,21 @@ function renderStatic(){
   }
   g.push(chartNamesSvg(vx0, vy0, vx1, vy1, u, taken));
   gStatic.innerHTML = g.join('');
+}
+// each kind of place its own sign on the chart (Jonas 08.10.2026: «forskjellige ikoner på kartene for de forskjellige forhandlerne»):
+// the plant a fish in a round blue sign, the tackle shop a hook in an orange square, the yard a hull on a lift in a green sign, Father's
+// naust a little house; any other harbour the old diamond. s is the sign's half width (chart units)
+function portIcon(p, s, u){
+  const k = portKind(p), x = p.p.x, y = p.p.y, sw = 'stroke-width="' + (1.3 * u) + '"', f = v => v.toFixed(2);
+  if (k === 'mottak') return '<circle cx="' + f(x) + '" cy="' + f(y) + '" r="' + f(s) + '" class="pi pi-m" ' + sw + '/>' +
+    '<path d="M' + f(x - s * 0.62) + ',' + f(y) + 'q' + f(s * 0.55) + ',' + f(-s * 0.5) + ' ' + f(s * 1.05) + ',0q' + f(-s * 0.5) + ',' + f(s * 0.5) + ' ' + f(-s * 1.05) + ',0zM' + f(x + s * 0.4) + ',' + f(y) + 'l' + f(s * 0.32) + ',' + f(-s * 0.3) + 'v' + f(s * 0.6) + 'z" class="pi-g"/>';
+  if (k === 'butikk') return '<rect x="' + f(x - s) + '" y="' + f(y - s) + '" width="' + f(2 * s) + '" height="' + f(2 * s) + '" rx="' + f(s * 0.3) + '" class="pi pi-b" ' + sw + '/>' +
+    '<path d="M' + f(x + s * 0.1) + ',' + f(y - s * 0.6) + 'v' + f(s * 0.9) + 'a' + f(s * 0.32) + ',' + f(s * 0.32) + ' 0 0 1 ' + f(-s * 0.64) + ',0v' + f(-s * 0.2) + '" class="pi-l" stroke-width="' + f(s * 0.2) + '"/>';
+  if (k === 'verft') return '<circle cx="' + f(x) + '" cy="' + f(y) + '" r="' + f(s) + '" class="pi pi-v" ' + sw + '/>' +
+    '<path d="M' + f(x - s * 0.62) + ',' + f(y - s * 0.12) + 'h' + f(s * 1.24) + 'l' + f(-s * 0.26) + ',' + f(s * 0.36) + 'h' + f(-s * 0.72) + 'z" class="pi-g"/>' +
+    '<path d="M' + f(x - s * 0.72) + ',' + f(y + s * 0.5) + 'h' + f(s * 1.44) + 'M' + f(x - s * 0.5) + ',' + f(y + s * 0.5) + 'v' + f(-s * 0.3) + 'M' + f(x + s * 0.5) + ',' + f(y + s * 0.5) + 'v' + f(-s * 0.3) + '" class="pi-l" stroke-width="' + f(s * 0.14) + '"/>';
+  if (k === 'naust') return '<path d="M' + f(x - s) + ',' + f(y + s * 0.8) + 'v' + f(-s * 0.9) + 'l' + f(s) + ',' + f(-s * 0.9) + 'l' + f(s) + ',' + f(s * 0.9) + 'v' + f(s * 0.9) + 'z" class="pi pi-n" ' + sw + '/>';
+  return '<rect x="' + f(x - s * 0.8) + '" y="' + f(y - s * 0.8) + '" width="' + f(1.6 * s) + '" height="' + f(1.6 * s) + '" class="port' + (p.home ? ' home' : '') + '" stroke-width="' + (1.5 * u) + '" transform="rotate(45 ' + x + ' ' + y + ')"/>';
 }
 let staticQueued = false;
 // a tile of the coast's packs decoded (01c-vec.js): its roads and bridges are drawn when the chart is near enough to show them

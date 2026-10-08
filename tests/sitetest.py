@@ -77,7 +77,7 @@ async def main():
           const yard = sh ? [[0, 15], [-12, 20], [12, 24]].map(([x, y]) => +(G3._debug.terrH(sh.o[0] + sh.u[0] * x - sh.n[0] * y, sh.o[1] + sh.u[1] * x - sh.n[1] * y) - sh.lev).toFixed(2)) : null;
           return {kinds:L.map(s => s.k + (s.near ? '+' : '')), d:n && sh ? Math.round(Math.hypot(n.o[0] - sh.o[0], n.o[1] - sh.o[1])) : null, lev:sh ? +sh.lev.toFixed(1) : null, yard, berth:berthKind(S.boat)}; })()""")
         print(json.dumps(cs2, ensure_ascii=False))
-        print(ok(cs2['d'] is not None and 40 <= cs2['d'] <= 170 and cs2['yard'] and all(abs(v) < 0.15 for v in cs2['yard']) and cs2['berth'] == 'naust'), 'at a home along the coast (%s) the shop stands by the naust, its yard levelled at the ground\'s height, and the boat at the naust' % cz['name'], cs2)
+        print(ok('naust' in cs2['kinds'] and 'shop+' not in cs2['kinds'] and cs2['berth'] == 'naust'), 'at a home along the coast (%s) the naust stands there and no shop beside it (Father\'s naust is only a home), and the boat lies at the naust' % cz['name'], cs2)
         await pg.evaluate("""(() => { const c = G3._debug.cam; c.helm = false; c.dist = 70; c.pitch = 0.3; const n = G3._debug.sitesNow().find(s => s.k === 'naust'), b = S.boat; c.yaw = Math.atan2(-n.n[0], n.n[1]) - b.heading + 0.3; })()""")
         await pg.wait_for_timeout(6000); await pg.screenshot(path='site_coast.png')
         print('errors:', errs[:3]); await b.close()

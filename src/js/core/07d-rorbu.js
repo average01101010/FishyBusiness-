@@ -2,12 +2,12 @@
 // Jonas 05.10.2026: «Disse skal plasseres rundt om kring langs kysten slik at spillere kan hvile der, eller ligge til kai under uvær»,
 // «Man skal ikke kunne hvile i en åpen båt, da må man enten seile hjem til naustet sitt eller ta inn på en rorbu. Rorbua må være billig.
 // Energi skal kunne lade opp fra 0-100% på 6 timer in-game ved hvile på rorbuer» and «Ved hvile forsvinner skipperen fra båten».
-// Where they are: src/data/rorbuer.json (tools/rorbu/rorbuer.py): one by each fishing harbour (kind 0, the plant's quay) and one on
+// Where they are: src/data/rorbuer.json (tools/rorbu/rorbuer.py): one by each fishing harbour (kind 0, sheltered shore 1.5-4 km from the
+// plant, never by its quay: Jonas 08.10.2026) and one on
 // sheltered shore between them (kind 1, at least 14 km apart, Jonas: «Kan sikkert halveres» of 10 km). Each is a place of its own you
 // lie at, like a harbour without services: portById knows it (RBID, 01-world.js) but it is not one of the PORTS, so nothing that goes
 // through the harbours (the plants, the fuel, the shop, the NPC boats) sees it. Its stretch of shore is found the first time its map is
-// in (shoreSpot, as Father's naust), the same for everyone as it comes from the map alone: by a harbour 150-700 m from the plant's quay,
-// elsewhere as near the point as there is a straight shore. The quay's face stands RORBU.out m out from the shoreline, parallel to it;
+// in (shoreSpot, as Father's naust), the same for everyone as it comes from the map alone: as near the point as there is a straight shore. The quay's face stands RORBU.out m out from the shoreline, parallel to it;
 // the house on its posts behind it. Three colours, picked by the id: r red, o ochre and w white (the 3D view paints the cladding, view3d.js siteModel).
 // Resting there (restStart, 15-energy.js) costs RORBU.kr a night, the first night when you go in, the next ones as the days go.
 const RORBU_D = /*@include(data/rorbuer.json)*/null;
@@ -36,7 +36,7 @@ function rorbuSite(R){
   if (!mapReadyAt(R.cand, 0.8)) return null;
   const cx = R.cand.x * 1000, cz = R.cand.y * 1000, home = S.naust && S.naust.o;
   const avoid = (x, z) => PORTS.some(q => Math.hypot(q.p.x * 1000 - x, q.p.y * 1000 - z) < 70) || unitNear(x, z, 110) || (home && Math.hypot(home[0] - x, home[1] - z) < 120);
-  const [r0, r1, pref] = R.kind === 0 ? [150, 700, 300] : [15, 600, 0];
+  const [r0, r1, pref] = [15, 600, 0];   // near its point: the point is 1.5-4 km from the plant already (rorbuer.py, Jonas 08.10.2026)
   const sp = shoreSpot(cx, cz, r0, r1, {half:14, bend:6, out:[8, 16, 30], inl:[6, 14, 25], avoid, pref})
     || shoreSpot(cx, cz, r0, r1, {half:11, bend:9, out:[8, 16], inl:[6, 14], avoid, pref});
   if (!sp){ R.site = null; return null; }

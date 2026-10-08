@@ -385,7 +385,7 @@ body.vplot .attr{display:block!important;left:6px;right:auto}
 .lbl-peak{font-family:var(--sans);font-style:italic;fill:var(--landEdge);paint-order:stroke;stroke:var(--land);stroke-linejoin:round}
 #map.nav .lbl-town{fill:#2c2416;stroke:#e8d7a6} #map.nav .townpt{fill:#2c2416} #map.nav .lbl-peak{fill:#6b5a36;stroke:#e8d7a6}
 #map.plot .lbl-town{fill:#e9eef0;stroke:#262b23} #map.plot .townpt{fill:#e9eef0} #map.plot .lbl-peak{fill:#a5b08f;stroke:#262b23}
-.port{fill:var(--sea);stroke:var(--ink)} .port.home{fill:var(--ink)} .rorbu{fill:#b8382a;stroke:var(--ink)}
+.port{fill:var(--sea);stroke:var(--ink)} .port.home{fill:var(--ink)} .pi{stroke:#fff} .pi-m{fill:#1f6fb2} .pi-b{fill:#d9822b} .pi-v{fill:#2f7d5b} .pi-n{fill:#8a5a3c} .pi-g{fill:#fff} .pi-l{fill:none;stroke:#fff;stroke-linecap:round} .rorbu{fill:#b8382a;stroke:var(--ink)}
 .ground{fill:rgba(47,109,134,.05);stroke:var(--water);opacity:.7}
 .route{fill:none;stroke:var(--mag);stroke-linecap:round;stroke-linejoin:round}
 .route.bad{stroke:var(--bad)}
@@ -1001,3 +1001,33 @@ body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 2
 .tur-b{display:flex;gap:8px;margin-top:8px}.tur-b .ph-btn{flex:1}
 .turmk{fill:none;stroke:#2e7d4f}.lbl-tur{fill:#1d5c38;font-weight:600;paint-order:stroke;stroke:#fff}
 .ph-goal.ph-ach{margin-top:-6px}
+
+/* the route list's tab (Jonas 08.10.2026: «en liten tab ... som skyver rutelisten til siden og skjuler den helt»): in the chart plotter the
+   list slides off to the right (sideways) or down (upright), and the tab stays out to open it again; the Rute button of the top bar is gone upright */
+#sideTab{display:none}
+body.vplot #sideTab{display:flex;position:absolute;z-index:7;align-items:center;justify-content:center;padding:0;border:1px solid #1f3a4c;background:#16354a;color:#e6f6ff;cursor:pointer}
+body.vplot #sideTab svg{transition:transform .25s}
+@media (min-width:701px){
+  body.vplot #sideTab{left:-30px;top:42%;width:30px;height:84px;border-radius:12px 0 0 12px;border-right:0}
+  body.vplot #side{transition:transform .25s}
+  body.vplot.sidehide #side{transform:translateX(100%)}
+  body.vplot.sidehide #map{width:100%}
+  body.vplot.sidehide .zoom{right:12px!important}
+  body.vplot.sidehide #sideTab svg{transform:rotate(180deg)}
+}
+@media (max-width:700px){
+  body.vplot #sideTab{top:-30px;left:50%;margin-left:-44px;width:88px;height:30px;border-radius:12px 12px 0 0;border-bottom:0}
+  body.vplot #sideTab svg{transform:rotate(90deg)}
+  body.vplot:not(.drawer) #sideTab svg{transform:rotate(-90deg)}
+  body.vplot #ecRoute{display:none}
+}
+#sideTab .st-t{font:700 11px var(--sans);letter-spacing:.1em}
+@media (min-width:701px){
+  body.vplot #sideTab{flex-direction:column;gap:8px;height:104px}
+  #sideTab .st-t{writing-mode:vertical-rl}
+  body.vplot:not(.sidehide) #sideTab .st-t::after{content:attr(data-c)} body.vplot.sidehide #sideTab .st-t::after{content:attr(data-o)}
+}
+@media (max-width:700px){
+  body.vplot #sideTab{gap:5px} body.vplot #sideTab svg{width:16px;height:16px}
+  body.vplot.drawer #sideTab .st-t::after{content:attr(data-c)} body.vplot:not(.drawer) #sideTab .st-t::after{content:attr(data-o)}
+}
