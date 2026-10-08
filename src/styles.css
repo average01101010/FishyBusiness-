@@ -1066,3 +1066,4 @@ body.vplot .depc{display:none}
 .dr-ev span:first-child{min-width:62px;font-variant-numeric:tabular-nums;font-weight:600}
 .dr-ev.rest span:last-child{color:#29a36a}.dr-ev.land span:last-child{color:#2f7fd0}
 .dr-watch{font-size:13px;margin:4px 0 8px;line-height:1.5}.dr-watch b{display:inline-block;min-width:54px}
+.dr-kv{flex-wrap:wrap;gap:4px 8px}.dr-kv>span:last-child{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;align-items:center;max-width:100%}.dr-kv>span:last-child .ops-days{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}

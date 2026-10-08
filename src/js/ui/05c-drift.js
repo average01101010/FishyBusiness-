@@ -8,7 +8,7 @@ const DRIFTUI = (() => {
   let prev = false, tplOpen = false, repOpen = false;
   const B = (a, label, extra, cls) => '<button class="ph-btn' + (cls ? ' ' + cls : '') + '" data-pa="' + a + '"' + (extra ? ' ' + extra : '') + '>' + label + '</button>';
   const T = (a, label, on, extra) => '<button data-pa="' + a + '" class="' + (on ? 'on' : '') + '"' + (extra ? ' ' + extra : '') + '>' + label + '</button>';
-  const kvr = (a, b) => '<div class="ph-kv"><span>' + a + '</span><span>' + b + '</span></div>';
+  const kvr = (a, b) => '<div class="ph-kv dr-kv"><span>' + a + '</span><span>' + b + '</span></div>';
   const sorted = o => o.sess.slice().sort((a, c) => a.dep - c.dep);
   const dur = h => h >= 48 ? fmt(h / 24, 1) + L(' døgn', ' days') : Math.floor(h) + L(' t ', ' h ') + (Math.round((h % 1) * 60) ? Math.round((h % 1) * 60) + ' min' : '');
   // ---- the day on a bar: work in blue, rest in green
