@@ -282,8 +282,8 @@ async function leiaRoute0(a, b, aPort, bPort){
   if (dist(from, to) < 30 && clearLine(from, to) && leiaLegOk(from, to, sd, LEIA.margins[0])) mid = [from, to];
   else {
     const cells = await leiaFind(from, to, sd, st);
-    if (cells && cells.why) return {why:['Fant ingen leia dit. Punktet ligger for trangt til.', 'Found no fairway there. The point is too tight in.'], st};
-    if (!cells) return {why:['Fant ingen leia dit.', 'Found no fairway there.'], st};
+    if (cells && cells.why) return {why:['Fant ingen rute dit. Punktet ligger for trangt til.', 'Found no route there. The point is too tight in.'], st};
+    if (!cells) return {why:['Fant ingen rute dit.', 'Found no route there.'], st};
     mid = [from].concat(cells, [to]);
   }
   // the end itself in water too shallow for the boat (a tap by the shore): no route ends on a shoal (the chart plotter moves such a
@@ -296,7 +296,7 @@ async function leiaRoute0(a, b, aPort, bPort){
   let best = null, km = 0; for (let i = 1; i < P.length; i++) km += dist(P[i - 1], P[i]); const maxWp = st.maxWp = leiaMaxWp(km);
   for (const m of LEIA.margins){ const s2 = await leiaStraighten(P, sd, m, st); if (!best || s2.length < best.length) best = s2; if (s2.length - 1 <= maxWp) break; }
   // every leg once more as the boat will sail it (leiaMend): none the boat can ground on leaves here
-  const safe = await leiaMend(best, sd, st); if (!safe) return {why:['Fant ingen trygg leia dit.', 'Found no safe fairway there.'], st};
+  const safe = await leiaMend(best, sd, st); if (!safe) return {why:['Fant ingen trygg rute dit.', 'Found no safe route there.'], st};
   // a leg that still passes a bridge's pier, a pier or a mark (the search's cells are 100 m and more) goes round it: under a bridge
   // between its piers, round the rest on the shorter side
   const wps = obsRoute(a, safe.slice(1)), nm = wps.reduce((acc, q, i) => acc + dist(i ? wps[i - 1] : a, q), 0) / NM;
