@@ -349,7 +349,7 @@ function applyLang(){
   document.querySelector('#plotTop .pt-title').textContent = S.lang === 'no' ? 'Kartplotter' : 'Chart plotter';
   $('view3d').textContent = (typeof G3 !== 'undefined' && G3.isActive()) ? t('view_chart') : '3D';
   $('lang').setAttribute('aria-label', S.lang === 'no' ? 'Switch to English' : 'Bytt til norsk');
-  $('zin').setAttribute('aria-label', t('zin')); $('zout').setAttribute('aria-label', t('zout')); $('zboat').setAttribute('aria-label', t('zboat'));
+  if ($('zin')) $('zin').setAttribute('aria-label', t('zin')); if ($('zout')) $('zout').setAttribute('aria-label', t('zout')); $('zboat').setAttribute('aria-label', t('zboat'));
   svg.setAttribute('aria-label', S.lang === 'no' ? 'Sjøkart' : 'Sea chart');
 }
 $('view3d').onclick = () => G3.toggle();

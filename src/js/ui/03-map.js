@@ -177,7 +177,13 @@ function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){
   const s2 = sd > 2.5 ? Math.min(2, sd / 2) : -1;
   // the night colours: dark sea in blues, dim land, as a chart plotter's night mode (the fishing chart is dark already)
   const OFF = fish || night ? [5, 9, 13] : [221, 227, 229], WHITE = night ? [9, 20, 33] : [249, 251, 252], U1 = night ? [16, 38, 62] : [167, 203, 235], U2 = night ? [22, 52, 84] : [134, 180, 223], SC = night ? [74, 112, 150] : [59, 106, 165], FS = fish ? [46, 54, 40] : night ? [38, 42, 33] : [204, 214, 172], LAND = fish ? [38, 43, 35] : night ? [42, 38, 30] : [232, 215, 166], FAR = fish || night ? [42, 38, 30] : [224, 206, 150], UG = fish || night ? [38, 43, 35] : [232, 215, 166];
-  const prev = new Float32Array(PW).fill(NaN), sh = 1 / (Math.max(pkx, 0.0005) * 10), smooth = lv > 0 && pkx < LD.c;
+  // the depth lines along the whole coast, down to 1000 m (Jonas 08.10.2026, tilbakemelding #43: «samme dybdelinjer som rundt senja langs
+  // hele kysten ned til 1000 meter»): a pixel is a line where its depth falls in another class than its left or upper neighbour's. The
+  // classes are Senja's own levels (CONTOUR_LEVELS and 1000), fewer the further out the view is, so the lines do not run together
+  const CL = pkx > 0.6 ? [200, 500, 1000] : pkx > 0.25 ? [50, 100, 200, 500, 1000] : pkx > 0.08 ? [20, 50, 100, 200, 300, 500, 800, 1000] : [5, 10, 20, 30, 50, 100, 150, 200, 300, 500, 800, 1000];
+  const LVT = new Uint8Array(1101); for (let z = 0; z < 1101; z++){ let n = 0; for (const l of CL) if (z >= l) n++; LVT[z] = n; }
+  const CC = night ? [78, 118, 160] : [112, 150, 188], cls = z => LVT[z < 0 ? 0 : z > 1100 ? 1100 : z | 0];
+  const prev = new Float32Array(PW).fill(NaN), VV = new Float32Array(PW * PH), SV = new Uint8Array(PW * PH), MK = new Uint8Array(PW * PH), CK = new Uint8Array(PW * PH), sh = 1 / (Math.max(pkx, 0.0005) * 10), smooth = lv > 0 && pkx < LD.c;
   const pocket = lv === 2 ? pocketsIn(x0, y0, x0 + PW * pkx, y0 + PH * pky) : null, T = MAPD.man.tile, LM = MAPD.L.mask, lc = LM.c;
   // deep inside the 25 m mask's land (the cell and its four neighbours) the vector coast's fill covers the pixel anyway: it is painted
   // in that fill's colour and its depth is not worked out (the B-spline's 16 cells a pixel for the land made the fjord's view 3x slower);
@@ -210,12 +216,12 @@ function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){
       const x = x0 + (i + 0.5) * pkx, o = (j * PW + i) * 4;
       if (x < MAPB.x0 || y < MAPB.y0 || x >= MAPB.x1 || y >= MAPB.y1){ put(o, OFF); prev[i] = NaN; left = NaN; continue; }
       const gx = clamp(x / c - 0.5, X0, X1 - 0.001), ix = Math.floor(gx), fx = gx - ix;
-      let v, land = 0;
+      let v, land = 0, sv = 0;   // sv: the depth is the tiles' (1) or the offshore layer's (0): no line where they meet (their floors differ)
       if (!simAt(x, y) || !(x >= X0 * c && y >= Y0 * c && x < (X1 + 1) * c && y < (Y1 + 1) * c)){
         const q = {x, y}; if (lv && isLandFar(q)){ put(o, FAR); prev[i] = NaN; left = NaN; continue; }
-        v = lv ? depthModel(q) : 15 + 220 * Math.pow(exposure(q), 1.6); }
+        v = offDepth(q); }
       else try {
-        { const pk = pocket ? pocket(x, y) : 0; if (pk === 2 || (!pk && lv && (deep(x, y) || coastAtIf({x, y}) > 0))) land = 1; }   // (the coast's index where it is in: 01d-coast.js)
+        sv = 1; { const pk = pocket ? pocket(x, y) : 0; if (pk === 2 || (!pk && lv && (deep(x, y) || coastAtIf({x, y}) > 0))) land = 1; }   // (the coast's index where it is in: 01d-coast.js)
         if (land >= 1){ put(o, UG); prev[i] = NaN; left = NaN; continue; }
         const gi = Math.floor(i / GS), gj = Math.floor(j / GS), go = gj * GW + gi;
         if (G && !isNaN(v = ((G[go] * (GS - i % GS) + G[go + 1] * (i % GS)) * (GS - j % GS) + (G[go + GW] * (GS - i % GS) + G[go + GW + 1] * (i % GS)) * (j % GS)) / (GS * GS))){ }
@@ -223,7 +229,7 @@ function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){
         else v = (D(ix, iy) * (1 - fx) + D(ix + 1, iy) * fx) * (1 - fy) + (D(ix, iy + 1) * (1 - fx) + D(ix + 1, iy + 1) * fx) * fy;
       } catch (e){
         // a cell across the edge of a tile whose pack has not come (or has none): the depth model here, painted again when it comes
-        if (st) st.prov = true; land = 0; const q = {x, y}; if (isLandFar(q)){ put(o, FAR); prev[i] = NaN; left = NaN; continue; } v = depthModel(q);
+        if (st) st.prov = true; land = 0; sv = 0; const q = {x, y}; if (isLandFar(q)){ put(o, FAR); prev[i] = NaN; left = NaN; continue; } v = offDepth(q);
       }
       if (fish){
         const dxv = isNaN(left) ? 0 : v - left, dyv = isNaN(prev[i]) ? 0 : v - prev[i], hs = clamp(0.8 + (dxv + dyv) * sh * 0.004, 0.45, 1.25), pc = plotCol(Math.max(v, 0.5));
@@ -232,8 +238,24 @@ function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){
         const edge = (v >= sd && ((left < sd) || (prev[i] < sd))) || (v < sd && ((left >= sd) || (prev[i] >= sd)));
         const k = edge ? SC : v < s2 ? U2 : v < sd ? U1 : WHITE; col[0] = k[0]; col[1] = k[1]; col[2] = k[2];
       }
+      if (lv && land < 1 && v >= 0){ const o2 = j * PW + i; VV[o2] = v; SV[o2] = sv + 1; MK[o2] = 1; CK[o2] = cls(v); }
       if (land > 0){ col[0] += (FS[0] - col[0]) * land; col[1] += (FS[1] - col[1]) * land; col[2] += (FS[2] - col[2]) * land; }
       put(o, col); prev[i] = v; left = v;
+    }
+  }
+  // the depth lines, in a pass over the finished depth (Jonas 08.10.2026, tilbakemelding #43: «samme dybdelinjer som rundt senja langs
+  // hele kysten ned til 1000 meter»): a pixel is a line where its depth falls in another class than its left or upper neighbour's, from the
+  // same source (the tiles' or the offshore layer's). Not where the stored depth steps steeper than a sea floor can (10 pixels across), as
+  // where the sources were joined
+  if (lv){
+    const lim = (3 + 150 * pkx) * 10, at = (i, j) => (i < 0 || j < 0 || i >= PW || j >= PH || !MK[j * PW + i]) ? NaN : VV[j * PW + i];
+    for (let j = 1; j < PH; j++) for (let i = 1; i < PW; i++){
+      const o = j * PW + i; if (!MK[o]) continue; const a = CK[o], l = MK[o - 1] && SV[o - 1] === SV[o] && CK[o - 1] !== a, u = MK[o - PW] && SV[o - PW] === SV[o] && CK[o - PW] !== a;
+      if (!l && !u) continue;
+      const gx = Math.max(Math.abs(at(i + 5, j) - at(i - 5, j)), Math.abs(at(i + 2, j) - at(i - 2, j)) * 2.5), gy = Math.max(Math.abs(at(i, j + 5) - at(i, j - 5)), Math.abs(at(i, j + 2) - at(i, j - 2)) * 2.5);
+      if (gx > lim || gy > lim) continue;
+      const p = o * 4;
+      if (fish){ d[p] *= 0.5; d[p + 1] *= 0.5; d[p + 2] *= 0.5; } else { d[p] = CC[0]; d[p + 1] = CC[1]; d[p + 2] = CC[2]; }
     }
   }
 }
@@ -313,6 +335,7 @@ function renderStatic(){
     g.push('<path d="M' + (q.x - s) + ',' + (q.y + s) + 'v' + (-s) + 'l' + s + ',' + (-s) + 'l' + s + ',' + s + 'v' + s + 'z" class="rorbu" stroke-width="' + (1.3 * u) + '"/>');
     if (view.z >= 2){ const nm = 'Rorbu ' + R.name; g.push(txt({x:q.x + 8 * u, y:q.y + 4 * u}, nm, 'lbl-ground', 11 * u, 'stroke-width="' + (2.5 * u) + '"')); taken.push([q.x - s, q.y - 8 * u, q.x + 8 * u + nm.length * 6.5 * u, q.y + 6 * u]); }
   }
+  g.push(soundingsSvg(vx0, vy0, vx1, vy1, u, taken));
   g.push(chartNamesSvg(vx0, vy0, vx1, vy1, u, taken));
   gStatic.innerHTML = g.join('');
 }
@@ -330,6 +353,25 @@ function portIcon(p, s, u){
     '<path d="M' + f(x - s * 0.72) + ',' + f(y + s * 0.5) + 'h' + f(s * 1.44) + 'M' + f(x - s * 0.5) + ',' + f(y + s * 0.5) + 'v' + f(-s * 0.3) + 'M' + f(x + s * 0.5) + ',' + f(y + s * 0.5) + 'v' + f(-s * 0.3) + '" class="pi-l" stroke-width="' + f(s * 0.14) + '"/>';
   if (k === 'naust') return '<path d="M' + f(x - s) + ',' + f(y + s * 0.8) + 'v' + f(-s * 0.9) + 'l' + f(s) + ',' + f(-s * 0.9) + 'l' + f(s) + ',' + f(s * 0.9) + 'v' + f(s * 0.9) + 'z" class="pi pi-n" ' + sw + '/>';
   return '<rect x="' + f(x - s * 0.8) + '" y="' + f(y - s * 0.8) + '" width="' + f(1.6 * s) + '" height="' + f(1.6 * s) + '" class="port' + (p.home ? ' home' : '') + '" stroke-width="' + (1.5 * u) + '" transform="rotate(45 ' + x + ' ' + y + ')"/>';
+}
+// the depth in figures here and there (Jonas 08.10.2026, #43: «det skal stå tall noen steder så man kan se i kartet hvor dypt der er»): the
+// water at the points of a grid that stays put as the view is dragged, about every 150 px, in whole metres (one decimal under 10), where
+// the depth is known (the tiles' and the offshore layer's) and nothing else is written
+function soundingsSvg(vx0, vy0, vx1, vy1, u, taken){
+  if (!DEPTH || !document.body.classList.contains('vplot') || vy1 - vy0 > 90 || view.z < 1.2) return '';
+  const sp = Math.max(0.12, 150 * u), out = [], pad = sp * 0.1;
+  const i0 = Math.floor(vx0 / sp), i1 = Math.ceil(vx1 / sp), j0 = Math.floor(vy0 / sp), j1 = Math.ceil(vy1 / sp);
+  if ((i1 - i0 + 1) * (j1 - j0 + 1) > 400) return '';
+  for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++){
+    const hsh = Math.sin(i * 127.1 + j * 311.7) * 43758.5453, fr = hsh - Math.floor(hsh), p = {x:(i + 0.5 + (j & 1 ? 0.25 : -0.25) + (fr - 0.5) * 0.3) * sp, y:(j + 0.5) * sp};
+    if (p.x < vx0 + pad || p.x > vx1 - pad || p.y < vy0 + pad || p.y > vy1 - pad) continue;
+    let d; try { if (isLand(p) || coastDistFar(p) < 0.12) continue; d = depthF(p); } catch (e){ continue; }
+    if (!(d >= 2)) continue;
+    const s = d < 10 ? d.toFixed(1).replace('.', ',') : String(Math.round(d)), w = s.length * 6 * u, bx = [p.x - w / 2, p.y - 7 * u, p.x + w / 2, p.y + 3 * u];
+    if (taken.some(t => bx[0] < t[2] && bx[2] > t[0] && bx[1] < t[3] && bx[3] > t[1])) continue;
+    out.push(txt({x:p.x, y:p.y + 3 * u}, s, 'lbl-depth', 9.5 * u, 'text-anchor="middle" stroke-width="' + (2.2 * u) + '"'));
+  }
+  return out.join('');
 }
 let staticQueued = false;
 // a tile of the coast's packs decoded (01c-vec.js): its roads and bridges are drawn when the chart is near enough to show them
@@ -503,8 +545,8 @@ svg.addEventListener('wheel', e => {
   const after = toMap(e.clientX, e.clientY);
   view.cx += before.x - after.x; view.cy += before.y - after.y; applyView(); scheduleStatic();
 }, {passive:false});
-$('zin').onclick = () => { if (G3.isActive()) return G3.zoom(1 / 1.4); view.z = clamp(view.z * 1.4, ZMIN, ZMAX); applyView(); scheduleStatic(); };
-$('zout').onclick = () => { if (G3.isActive()) return G3.zoom(1.4); view.z = clamp(view.z / 1.4, ZMIN, ZMAX); applyView(); scheduleStatic(); };
+if ($('zin')) $('zin').onclick = () => { if (G3.isActive()) return G3.zoom(1 / 1.4); view.z = clamp(view.z * 1.4, ZMIN, ZMAX); applyView(); scheduleStatic(); };
+if ($('zout')) $('zout').onclick = () => { if (G3.isActive()) return G3.zoom(1.4); view.z = clamp(view.z / 1.4, ZMIN, ZMAX); applyView(); scheduleStatic(); };
 $('zboat').onclick = () => { if (G3.isActive()) return G3.reset(); view.cx = S.boat.pos.x; view.cy = S.boat.pos.y; applyView(); scheduleStatic(); };
 window.addEventListener('resize', () => { applyView(); scheduleStatic(); });
 
@@ -540,6 +582,7 @@ function addWaypoint(pt){
   renderDyn(); renderRouteTools();
 }
 $('rUndo').onclick = () => routeUndoRedo(false);
+$('rClear').onclick = () => { if (canEditDraft() && S.draft.length) draftEdit(() => { S.draft = []; }); };   // deletes the route made (the draft)
 $('rAuto').onclick = () => leiaArm(!LEIA_ARM);
 $('rPlay').onclick = () => routePlay();
 $('rRedo').onclick = () => routeUndoRedo(true);

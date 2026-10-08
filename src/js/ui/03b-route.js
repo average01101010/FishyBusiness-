@@ -44,6 +44,7 @@ function renderRouteTools(){
   const pl = $('rPlay'), mode = routePlayMode(), L = (no, en) => S.lang === 'no' ? no : en;
   if (pl){ pl.hidden = !mode; pl.classList.toggle('pause', mode === 'pause'); pl.setAttribute('aria-label', mode === 'pause' ? L('Pause: stopp båten på ruta', 'Pause: stop the boat on the route') : L('Start ruta', 'Start the route')); }
   const on = canEditDraft() && (S.draft.length > 0 || h.u.length > 0 || h.r.length > 0), lb = $('rAuto');
+  { const cl = $('rClear'); if (cl){ cl.hidden = !(canEditDraft() && S.draft.length > 0); cl.setAttribute('aria-label', S.lang === 'no' ? 'Slett ruta' : 'Delete the route'); } }
   u.hidden = r.hidden = !on; u.disabled = !h.u.length; r.disabled = !h.r.length;
   if (lb){ lb.hidden = !canEditDraft() || document.body.classList.contains('v3d'); lb.disabled = LEIA_BUSY || !!(S.draft.length && S.draft[S.draft.length - 1].port); lb.classList.toggle('on', LEIA_ARM || LEIA_BUSY); lb.classList.toggle('busy', LEIA_BUSY); lb.setAttribute('aria-label', 'Autonav'); }
   u.setAttribute('aria-label', S.lang === 'no' ? 'Angre' : 'Undo'); r.setAttribute('aria-label', S.lang === 'no' ? 'Gjør om' : 'Redo');

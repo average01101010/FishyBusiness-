@@ -411,7 +411,7 @@ body.vplot .attr{display:block!important;left:6px;right:auto}
 .attr{position:absolute;left:6px;bottom:3px;white-space:nowrap;max-width:calc(100% - 70px);font:10px var(--sans);color:var(--muted);background:color-mix(in srgb,var(--paper) 75%,transparent);padding:1px 6px;border-radius:4px;pointer-events:none}
 .viewbtn{position:absolute;right:10px;top:10px;height:38px;min-width:58px;padding:0 12px;border-radius:8px;border:1px solid var(--mag);background:var(--mag);color:#fff;font-weight:650;font-size:14px;cursor:pointer}
 .zoom{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
-.zoom button{width:38px;height:38px;border-radius:8px;border:1px solid var(--line);background:var(--paper);font-size:18px;cursor:pointer;line-height:1}
+.zoom button{width:48px;height:48px;border-radius:8px;border:1px solid var(--line);background:var(--paper);font-size:18px;cursor:pointer;line-height:1}
 
 /* panel */
 #panel h3{font-family:var(--serif);font-style:italic;font-weight:600;font-size:17px;margin:14px 0 6px}
@@ -490,7 +490,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-nume
 .wpn.wp0{fill:var(--muted)}
 .wp.drag{fill:var(--mag);opacity:.85} .wp.drag.landed{fill:var(--bad);stroke:var(--bad)}
 .wpins circle{fill:var(--sea);stroke:var(--mag);opacity:.85} .wpins path{stroke:var(--mag);stroke-linecap:round}
-.zoom button.rt{width:44px;height:44px;margin-left:-6px;display:grid;place-items:center;color:var(--ink)}
+.zoom button.rt{width:48px;height:48px;margin-left:0;display:grid;place-items:center;color:var(--ink)}
 .zoom button.rt[hidden]{display:none} .zoom button.rt:disabled{opacity:.35;cursor:default}
 .zoom button.rt.on,.btn.leia.on{background:var(--mag);border-color:var(--mag);color:#fff}
 .zoom button.rt.busy svg{animation:leiaspin 1s linear infinite} .zoom button.rt.auto{position:absolute;right:calc(100% + 8px);bottom:0;width:auto;height:38px;margin-left:0;padding:0 12px 0 9px;grid-auto-flow:column;gap:6px;font:600 13px var(--sans);white-space:nowrap} @keyframes leiaspin{to{transform:rotate(360deg)}}
@@ -610,7 +610,7 @@ body.v3d.plotmin #gps3d:not([hidden]){display:block;top:var(--gpsTop,130px);padd
 #gps3d .gstrip{display:flex;flex-wrap:wrap;column-gap:8px;align-items:baseline;white-space:nowrap;font-variant-numeric:tabular-nums;line-height:1.2} #gps3d .gstrip span{flex:1 0 100%;overflow:hidden;text-overflow:ellipsis;min-width:0;font-size:10.5px;color:rgba(230,240,245,.78)}
 body.hudoff #hud,body.hudoff #miniPlot,body.hudoff #gps3d,body.hudoff #compass3d,body.hudoff #plotMin{display:none!important}
 /* play and pause for the route (the user's wish 02.10.2026) */
-.zoom button.rt.play{width:56px;height:56px;border-radius:50%;background:var(--mag);border-color:var(--mag);color:#fff;align-self:flex-end;box-shadow:0 4px 14px rgba(208,40,120,.45)}
+.zoom button.rt.play{width:48px;height:48px;border-radius:8px;background:var(--mag);border-color:var(--mag);color:#fff;align-self:flex-end;box-shadow:0 4px 14px rgba(208,40,120,.45)}
 .zoom button.rt.play .i-pause{display:none} .zoom button.rt.play.pause .i-play{display:none} .zoom button.rt.play.pause .i-pause{display:block}
 .zoom button.rt.play.pause{background:#0a1620;border-color:#2c5870;box-shadow:0 4px 14px rgba(0,0,0,.35)}
 /* 3D: no blurred backdrops (the sea under them changes every frame, so the blur was worked out again for every box each frame on the
@@ -1031,3 +1031,12 @@ body.vplot #sideTab svg{transition:transform .25s}
   body.vplot #sideTab{gap:5px} body.vplot #sideTab svg{width:16px;height:16px}
   body.vplot.drawer #sideTab .st-t::after{content:attr(data-c)} body.vplot:not(.drawer) #sideTab .st-t::after{content:attr(data-o)}
 }
+
+/* depth in figures on the chart and the depth lines of the chart itself (03-map.js): the vector lines of Senja's pack give way to them */
+.lbl-depth{font-family:var(--sans);font-style:italic;fill:#3b6f9c;paint-order:stroke;stroke:#f9fbfc;stroke-linejoin:round}
+#map.plot .lbl-depth{fill:#a9cdea;stroke:#0b1a2a}
+body.vplot .depc{display:none}
+
+/* the chart's side buttons all one size and square (Jonas 08.10.2026): play/pause, delete route, undo, redo and the boat arrow */
+.zoom button#zboat{display:grid;place-items:center;padding:0}
+.zoom button.rt svg,.zoom button#zboat svg{width:24px;height:24px}

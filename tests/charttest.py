@@ -73,7 +73,7 @@ async def run(p, w, h, tag, full):
                 await pg.evaluate("(m) => { S.settings.chartNight = m; renderBase(); }", m); await pg.evaluate(PAINT)
                 nc.append([await pg.evaluate(PIX, pts[1:]), await pg.evaluate("svg.classList.contains('plot')")])
             await pg.evaluate("() => { S.settings.chartNight = 'day'; renderBase(); }"); await pg.evaluate(PAINT)
-            dark = lambda c: c is None or sum(c) < 200
+            dark = lambda c: c is None or sum(c) < 200 or list(c) == [78, 118, 160]   # (a depth line in the night colours is no sea)
             check(all(dark(x) for x in nc[0][0]) and any(nc[0][0]) and nc[0][1] and not any(x and dark(x) for x in nc[1][0]) and not nc[1][1], 'nattmodus: sjøen er mørk om natta og lys om dagen, og merkene får den mørke stilen', nc)
             if full:
                 await pg.screenshot(path='chart_region.png')
