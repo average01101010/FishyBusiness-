@@ -33,7 +33,7 @@ function regLetters(pt){
 function regUsed(f, k, n){ const e = REGM && Object.values(REGM.k).find(x => x[0] === f && x[1] === k); return !!(e && e[2].includes(n)); }
 function regOf(b){
   if (b.reg && b.reg.f) return b.reg;
-  const hp = portById(S.home || 'finnsnes') || PORTS[0], e = regLetters(hp); if (!e) return null;
+  const hp = portById(S.home || HOME0) || PORTS[0], e = regLetters(hp); if (!e) return null;
   let h = 0; for (const c of String(S.boatName || '') + (S.cur || '') + (b.type || '')) h = (h * 31 + c.charCodeAt(0)) >>> 0;
   let n = 100 + h % 800; while (e[2].includes(n) && n < 9999) n++;
   return b.reg = {f:e[0], n, k:e[1]};

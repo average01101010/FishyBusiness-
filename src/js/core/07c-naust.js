@@ -54,7 +54,7 @@ function naustFind(pid){
 }
 // Father's naust at the home harbour: {o, u} or null where none was found (or its map is not in yet)
 function naustSite(){
-  const pid = S.home || 'finnsnes';
+  const pid = S.home || HOME0;
   if (S.naust && S.naust.port === pid) return S.naust.o ? S.naust : null;
   const pt = portById(pid); if (!pt || !mapReadyAt(pt.p, 0.4)) return null;
   S.naust = naustFind(pid); return S.naust.o ? S.naust : null;
@@ -63,7 +63,7 @@ function naustSite(){
 // liggeplass»): the face of its pile quay (naust.py QUAY: x -8.6 .. 7.6 along the face, the deck at QTOP), as quayFace gives the
 // harbours' faces; null away from home or before the home's map is in. The water under it is the bank's, 2.6 m at mean sea level.
 function naustFace(pid){
-  if (pid !== (S.home || 'finnsnes')) return null;
+  if (pid !== (S.home || HOME0)) return null;
   const n = naustSite(); if (!n) return null;
   return {x:n.o[0] - n.u[0] * 0.5, z:n.o[1] - n.u[1] * 0.5, ux:n.u[0], uz:n.u[1], nx:-n.u[1], nz:n.u[0], hl:8.1, depth:3.4, naust:true};
 }
@@ -79,7 +79,7 @@ function shopNearFind(n){
   return sp ? {o:sp.o.map(v => Math.round(v * 10) / 10), u:sp.u.map(v => Math.round(v * 1e4) / 1e4)} : null;
 }
 function shopNear(){
-  if ((S.home || 'finnsnes') === 'finnsnes') return null;   // in Finnsnes the shop stands on the quay (shopSite)
+  return null;   // Father's naust is a home and nothing else (Jonas 07.10.2026, docs/handelssteder.md): no shop beside it
   const n = naustSite(); if (!n) return null; const key = n.o.join(',');
   if (!S.shopN || S.shopN.key !== key){ const f = shopNearFind(n); S.shopN = Object.assign({key}, f || {}); }
   return S.shopN.o ? S.shopN : null;
@@ -87,7 +87,7 @@ function shopNear(){
 // Father's naust as where a route can end (the chart plotter and Autonav): the berth's point (km) when (x, y) is within r km of it
 // and nearer than any harbour point; {x, y, port, berth:'naust'} or null. You sail there and back; nothing moves the boat for you.
 function naustTarget(pt, r){
-  const pid = S.home || 'finnsnes', bp = quayFace(pid, 'naust') && berthPose(pid, S.boat.type, 'naust'); if (!bp) return null;
+  const pid = S.home || HOME0, bp = quayFace(pid, 'naust') && berthPose(pid, S.boat.type, 'naust'); if (!bp) return null;
   const d = dist(pt, bp); if (d >= r || PORTS.some(q => dist(q.p, pt) < d)) return null;
   return {x:bp.x, y:bp.y, port:pid, berth:'naust'};
 }
@@ -109,7 +109,7 @@ const NAUST_UP = [
   {k:'vegg', kr:3000, no:'Trofévegg', en:'Trophy wall', d:['Storfisken din henger på veggen i naustet.', 'Your big fish hang on the wall in the boathouse.']}
 ];
 const naustHas = k => !!(S.naustUp && S.naustUp[k]);
-const atHome = b => !!(b && b.status === 'port' && b.port === (S.home || 'finnsnes'));
+const atHome = b => !!(b && b.status === 'port' && b.port === (S.home || HOME0));
 // how much faster you rest in the home harbour
 function naustRest(b){ return atHome(b) ? 1 + (naustHas('tak') ? 0.25 : 0) + (naustHas('ovn') ? 0.25 : 0) : 1; }
 // what a step costs and why it cannot be bought now ([no, en]) or null

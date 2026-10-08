@@ -28,7 +28,7 @@ function hourly(){
 const SKIPPERS = [['Havørn', 'Husøy', 1.25], ['Mefjordingen', 'Senjahopen', 1.1], ['Grylle', 'Gryllefjord', 1.0], ['Botnværing', 'Botnhamn', 0.8], ['Nordstjerna', 'Husøy', 0.95], ['Kystbas', 'Senjahopen', 1.35], ['Kvitholmen', 'Gryllefjord', 0.7], ['Solbris', 'Finnsnes', 0.45], ['Tindvær', 'Husøy', 0.85], ['Laukvik', 'Gryllefjord', 0.6]];
 // the other skippers fish from the plants round your home harbour (the names above where the game began, at Senja)
 function skipPort(i){
-  const hp = portById(S.home || 'finnsnes'), f = portById('finnsnes'); if (!hp || !f || dist(hp.p, f.p) < 60) return SKIPPERS[i][1];
+  const hp = portById(S.home || HOME0), f = portById('finnsnes'); if (!hp || !f || dist(hp.p, f.p) < 60) return SKIPPERS[i][1];
   const near = plantsNear(hp.p, 6); return near.length ? near[i % near.length].pt.name : SKIPPERS[i][1];
 }
 function weekOf(H){ return Math.floor(H / (24 * 7)); }
@@ -41,7 +41,7 @@ function myKg(H0, H1){ return S.sales.filter(x => x.t / 60 >= H0 && x.t / 60 < H
 function toplist(w){
   const rows = SKIPPERS.map((s, i) => ({name:s[0], port:skipPort(i), kg:npcWeekKg(i, w)}));
   // you under your boat's name (Jonas 05.10.2026: «ikke … med rederi, men med båtnavn») and your home harbour
-  const hp = portById(S.home || 'finnsnes');
+  const hp = portById(S.home || HOME0);
   rows.push({name:S.boatName || (S.lang === 'no' ? 'Deg' : 'You'), port:hp ? hp.name : 'Finnsnes', kg:Math.round(myKg(w * 168, (w + 1) * 168)), me:true});
   return rows.sort((a, b) => b.kg - a.kg);
 }
@@ -90,7 +90,7 @@ function newsForDay(day){
   const p1 = avgPrice('torsk', H0, 1), p0 = avgPrice('torsk', H0 - 72, 1), ch = (p1 / p0 - 1) * 100;
   if (Math.abs(ch) > 4) out.push([L('Torskeprisen ' + (ch > 0 ? 'stiger' : 'faller'), 'Cod price ' + (ch > 0 ? 'rises' : 'falls')), L('Snittprisen for torsk hos mottakene er ' + Math.round(p1) + ' kr/kg, ' + (ch > 0 ? 'opp' : 'ned') + ' ' + Math.abs(Math.round(ch)) + ' % på tre dager.', 'The average cod price at the plants is NOK ' + Math.round(p1) + '/kg, ' + (ch > 0 ? 'up' : 'down') + ' ' + Math.abs(Math.round(ch)) + '% in three days.')]);
   // the news is from where you fish: the home harbour and the plants nearest it
-  const hp = portById(S.home || 'finnsnes') || PORTS[0], hn = hp.name, np = plantsNear(hp.p, 2).map(x => x.pt.name), atSenja = dist(hp.p, (portById('finnsnes') || hp).p) < 80;
+  const hp = portById(S.home || HOME0) || PORTS[0], hn = hp.name, np = plantsNear(hp.p, 2).map(x => x.pt.name), atSenja = dist(hp.p, (portById('finnsnes') || hp).p) < 80;
   const SEAS = [
     [L('Skreia er på vei inn', 'The skrei is coming in'), L('De første skreifangstene er landet. Sesongen tar seg opp utover måneden.', 'The first spawning cod has been landed. The season picks up through the month.')],
     [L('Skreia står på bankene', 'Spawning cod on the banks'), L('Skreisesongen er i gang, og det meldes om god fangst på juksa utenfor ' + hn + '.', 'The skrei season is on, with good catches on jigs off ' + hn + '.')],

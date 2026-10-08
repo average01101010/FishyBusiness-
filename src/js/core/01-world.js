@@ -240,8 +240,13 @@ const PORTS = [
   {id:'sommaroy', name:'Sommarøy', xy:[56.761,9.545], shore:[56.736,9.511], pier:true, fuel:true, ice:true, mottak:true, pf:1.0},
   {id:'brensholmen', name:'Brensholmen', xy:[58.589,12.628], shore:[58.626,12.649], pier:true, fuel:true, ice:true, mottak:true, pf:0.99},
   {id:'torsken', name:'Torsken', xy:[21.856,42.58], shore:[21.863,42.548], pier:true, fuel:true, ice:true, mottak:true, pf:0.99},
-  {id:'frovag', name:'Frovåg', xy:[19.651,71.922], shore:[19.607,71.915], pier:true, fuel:true, ice:true, mottak:true, pf:0.98}
+  {id:'frovag', name:'Frovåg', xy:[19.651,71.922], shore:[19.607,71.915], pier:true, fuel:true, ice:true, mottak:true, pf:0.98},
+  // Vangshamn, Father's home (Jonas 08.10.2026: «nærmere botnhamn, jeg tenker vi legger naustet i vangshamn på senja»): the sheltered
+  // bay south of the village (exposure 0.2, 30 m of water), 5.7 km from the plant in Botnhamn; nothing is sold here (07c-naust.js)
+  {id:'vangshamn', name:'Vangshamn', xy:[57.395,27.563], shore:[57.340,27.540], pier:false, fuel:false, ice:false, mottak:false, pf:1}
 ].map((p, i) => ({...p, i, xy:LGa(p.xy), shore:LGa(p.shore), p:LG(p.xy[0], p.xy[1]), coast:LG(p.shore[0], p.shore[1])}));
+// where Father's naust stands when the game has no home of its own (a new game picks one, ui/08c-start.js; older games are moved here)
+const HOME0 = 'vangshamn';
 // the rorbuer along the coast (07d-rorbu.js) are places you lie at too, but not harbours: portById knows them, PORTS does not
 const RBID = new Map();
 const portById = id => PORTS.find(p => p.id === id) || RBID.get(id);

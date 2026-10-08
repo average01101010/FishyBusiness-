@@ -18,6 +18,21 @@ To steder uten handel:
 - **Fars naust** er hjemmet spilleren kommer tilbake til med jevne mellomrom. Der hviler man, ser til mannskapet og beholdningen, og kan restaurere naustet til god standard (notatboka). Det selges ingenting der. Det går ikke an å kjøpe fiskeutstyr, is eller noe annet fra naustet.
 - **Rorbuene** selger heller ingenting. De er bare en plass å hvile eller søke ly for været.
 
+## Plassering av stedene (regel, Jonas 08.10.2026)
+
+Gjelder alle fiskemottak, verft, utstyrsbutikker, rorbuer og fars naust, og alle senere endringer og nye bygg. Jonas' ord: «Sjekk plassering av alle fiskemottak, verft, utstyrsbutikker og rorbuer. Disse skal ikke ligge for nært hverandre. Det skal i praksis være umulig å få opp knappen der man må velge mellom å fortøye i et fiskebruk eller en rorbue. Men de må være plassert på strategiske plasser langs kysten der de i stor grad har ly for vær og vind.»
+
+- **Avstand:** ingen to steder (mottak, verft, butikk, rorbu, naust) nærmere hverandre enn **1,5 km**, så valgknappen for fortøyning (to steder innen 120 m) i praksis aldri kommer opp. Det gjør ingenting at det tar litt tid å flytte båten.
+- **Ly:** stedene legges der de har ly for vær og vind (lav eksponering, innenfor holmer og i viker), og der det faktisk går an å seile dit (vann nok, ingen bro eller land i veien).
+- **Fiskemottakene** står på sine ekte plasser (Fiskeridirektoratets register og Råfisklaget). De flyttes ikke.
+- **Verftene** står på sine ekte plasser, men kan flyttes litt (noen hundre meter) når det gir en bedre plass. Når to eller flere ligger veldig nær hverandre, fjernes noen, så kartet ikke blir rotete. Der det er langt mellom dem, settes det inn oppdiktede verft på strategiske steder: **nærmeste verft er aldri mer enn 20 nautiske mil unna** langs kysten.
+- **Utstyrsbutikkene** plasseres fritt på strategiske steder, helst der det er folk (bygder og byer). **Én butikk per by** holder.
+- **Rorbuene** legges i ly, ikke så langt fra et fiskemottak, men ikke så nær at fortøyningen blir trøbbel (1,5–4 km fra mottaket). Spredningen langs kysten skal være som i dag.
+- **Bygningene:** der en Blender-modell settes ut, fjernes kartets egne bygg under den, så ingenting overlapper. Byggene plasseres realistisk (kai mot sjøen, bygg på land).
+- **Navn:** alle mottak heter etter stedet pluss «fiskemottak», «mottak», «fiskebruk» eller en annen vanlig variant, aldri etter et firma (se CLAUDE.md).
+- **Kartikoner:** hver slags sted har sitt eget ikon i kartplotteren (mottak, verft, butikk, rorbu, naust).
+- **Fars naust** står i Vangshamn på Senja (Jonas 08.10.2026), nær Botnhamn, der den første fangsten leveres. Startskjermen viser stedene uten kart, sortert etter hva det er å tjene akkurat nå, med søk.
+
 ## Knappene ved hvert sted (Jonas 07.10.2026, andre melding)
 
 - **Fiskemottaket** har ikke lenger knappene Marked og Verft. Det tar bare imot fisk og selger is og agn, så knappene er Lever, Is og Agn (og Mannskap og Beholdning som ellers).

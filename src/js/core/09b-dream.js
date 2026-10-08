@@ -15,7 +15,7 @@ const DREAM = {
 const NOTE_SP = [['torsk', 20, 80], ['hyse', 60, 160], ['sei', 20, 120], ['lange', 150, 350], ['kveite', 40, 140]];
 const NOTE_NAME = {torsk:['Torskegrunnen', 'The cod ground'], hyse:['Hyseflaket', 'The haddock flat'], sei:['Seistrømmen', 'The saithe current'], lange:['Langedjupet', 'The ling deep'], kveite:['Kveitebakken', 'The halibut bank']};
 const NOTE_DIRS = [['nord', 'north'], ['nordøst', 'north-east'], ['øst', 'east'], ['sørøst', 'south-east'], ['sør', 'south'], ['sørvest', 'south-west'], ['vest', 'west'], ['nordvest', 'north-west']];
-function noteHome(){ return portById(S.home || 'finnsnes') || PORTS[0]; }
+function noteHome(){ return portById(S.home || HOME0) || PORTS[0]; }
 // Father's marks round the home harbour (needs the map round it: made when the boat is there)
 function notesMake(){
   const home = noteHome(), H = S.t / 60, marks = [];

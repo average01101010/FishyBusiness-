@@ -34,10 +34,13 @@ async def main():
         await pg.wait_for_selector('#ltEnv', state='visible', timeout=90000); await pg.click('#ltEnv')
         await pg.wait_for_selector('#ltGo.on', timeout=60000); await pg.click('#ltGo')
         await pg.wait_for_selector('#startPick', timeout=20000)
-        pick = await pg.evaluate("""(() => { const it = [...document.querySelectorAll('#startPick .st-it.rec')], dots = document.querySelectorAll('#startPick .st-dot').length;
-          const t = it.find(e => /Båtsfjord|Honningsvåg|Ballstad|Stamsund|Henningsvær|Myre|Andenes|Berlevåg/.test(e.textContent)) || it[0];
-          t.click(); return {rec:it.length, dots, name:t.querySelector('b').textContent.replace('★ ', ''), id:t.dataset.id}; })()""")
-        print(ok(pick['rec'] >= 8 and pick['dots'] >= 150), 'the start shows the coast\'s plants on the map, with recommended ones', {k: pick[k] for k in ('rec', 'dots', 'name')})
+        pick = await pg.evaluate("""(() => { const it = [...document.querySelectorAll('#stAll > .st-it.rec')], dots = document.querySelectorAll('#startPick .st-dot').length, all = document.querySelectorAll('#stAll details .st-it').length;
+          const sc = [...document.querySelectorAll('#stAll > .st-it')].map(e => startInfo(portById(e.dataset.id)).score), sorted = sc.every((v, i) => !i || v <= sc[i - 1]);
+          const q = document.getElementById('stQ'); q.value = 'vangs'; q.dispatchEvent(new Event('input')); const hit = [...document.querySelectorAll('#stHits .st-it')].map(e => e.dataset.id);
+          q.value = ''; q.dispatchEvent(new Event('input'));
+          const t = it.find(e => /Båtsfjord|Honningsvåg|Ballstad|Stamsund|Henningsvær|Myre|Andenes|Berlevåg/.test(e.textContent)) || it.find(e => e.dataset.id !== HOME0);
+          t.click(); return {rec:it.length, dots, all, sorted, hit, name:t.querySelector('b').textContent.replace(/^\\d+\\. /, ''), id:t.dataset.id}; })()""")
+        print(ok(pick['rec'] == 12 and pick['dots'] == 0 and pick['all'] >= 150 and pick['sorted'] and pick['hit'][:1] == ['vangshamn']), 'the start has no map: the twelve places with most to earn now first, best first, all of them by region, and a search (Vangshamn)', {k: pick[k] for k in ('rec', 'all', 'sorted', 'hit', 'name')})
         await pg.click('#stGo')
         await pg.wait_for_selector('#obGo', timeout=90000)
         st = await pg.evaluate("""(() => { const b = S.boat, pt = portById(S.home), f = S.tutStart && S.tutStart.f;
@@ -58,11 +61,12 @@ async def main():
           const c0 = S.cash; S.t = Math.floor(S.t / 1440) * 1440 + 10 * 60 + 1440; sell(); return {c0, c1:S.cash, last:S.lastSale ? S.lastSale.port : null, hold:holdTotal()}; })()""")
         print(json.dumps(sale))
         print(ok(sale['c1'] > sale['c0'] and sale['last'] == pick['id'] and sale['hold'] < 1), 'the catch sells at the coast plant', sale['c1'] - sale['c0'])
-        await pg.evaluate("(() => { S.landN = 2; document.getElementById('modal').hidden = true; nameNudge(true); })()")
+        await pg.evaluate("(() => { S.landN = 2; S.tut = 0; NAME_ASKED = false; document.getElementById('modal').hidden = true; nameNudge(true); })()")
         # the 3D view is up here, where Playwright's own waits (by animation frame) do not come round in the test machine's lite mode
-        await pg.wait_for_function("!!document.getElementById('nmBoat')", polling=500, timeout=25000)
+        # (other cards, such as the first week's badges, wait their turn: they are put away here)
+        await pg.wait_for_function("!!document.getElementById('nmBoat') || (document.getElementById('modal').hidden = true, false)", polling=1000, timeout=25000)
         await pg.evaluate("(() => { document.getElementById('nmBoat').value = 'Testbris'; document.getElementById('nmGo').click(); })()")
-        ch = await pg.evaluate("({name:S.boatName, unnamed:!!S.unnamed, log:S.log.slice(-1)[0].no})")
+        ch = await pg.evaluate("({name:S.boatName, unnamed:!!S.unnamed, log:S.log.slice(-3).map(e => e.no).join(' | ')})")
         print(ok(ch['name'] == 'Testbris' and not ch['unnamed'] and 'Døpte båten «Testbris»' in ch['log']), 'without the cloud the boat is named in a dialog of its own after the second landing', ch)
         print('errors:', errs[:3]); await pg.close()
 
@@ -89,7 +93,7 @@ async def main():
         O = sv['out']; nN = sum(1 for o in O if o['naust'] is not None); nS = sum(1 for o in O if o['shop'] is not None)
         print(json.dumps({'n': len(O), 'naust': nN, 'shop': nS, 'cap': sv['cap'], 'missing': [o['name'] for o in O if o['naust'] is None or o['shop'] is None], 'far': [o for o in O if o['field'] is None or o['field'] > 6 or (o['needL'] or 0) > sv['cap'] * 0.6]}, ensure_ascii=False))
         print(ok(all(o['naust'] is None or o['naust'] <= 400 for o in O) and all(o['shop'] is None or 40 <= o['shop'] <= 170 for o in O)), 'Father\'s naust stands within 400 m of the plant, and the tackle shop 45-160 m from the naust, wherever they are found', [(o['name'], o['naust'], o['shop']) for o in O][:12])
-        print(ok(nN >= len(O) * 0.7 and nS >= nN * 0.7), 'along the coast most homes get the naust and the shop by it (the rest start at the plant\'s quay, with the shop in the harbour)', (nN, nS, len(O)))
+        print(ok(nN >= len(O) * 0.7 and nS == 0), 'along the coast most homes get the naust, and no shop by it: Father\'s naust is only a home (the rest start at the plant\'s quay)', (nN, nS, len(O)))
         print(ok(all(o['field'] is not None and o['field'] <= 6 and o['needL'] <= sv['cap'] * 0.6 for o in O)), 'from every home the first trip\'s patch is at most 6 km out, and there and back takes at most 60 % of the start boat\'s tank', [(o['name'], o['field'], o['needL']) for o in O][:12])
         print('errors:', errs[:3]); await b.close()
 

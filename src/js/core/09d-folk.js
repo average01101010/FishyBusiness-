@@ -46,7 +46,7 @@ function folkShop(){
 const folkIce = () => (S.folk && S.folk.shop && S.folk.shop.n >= 15) ? 0.9 : 1;
 // in the home harbour, the first time each day between 08 and 20: Edvard's word
 function folkPort(H){
-  const F = folkState(), E = F.edvard, b = S.boat, home = S.home || 'finnsnes', day = Math.floor(H / 24), hr = gDate(H).getUTCHours();
+  const F = folkState(), E = F.edvard, b = S.boat, home = S.home || HOME0, day = Math.floor(H / 24), hr = gDate(H).getUTCHours();
   if (b.status !== 'port' || b.port !== home || hr < 8 || hr >= 20 || E.last === day || (S.tut && S.tut.v)) return null;
   E.last = day; const pt = portById(home), hn = pt ? pt.name : '';
   let l;

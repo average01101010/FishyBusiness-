@@ -72,7 +72,7 @@ function festCatch(sp, kg){
 // the board: everyone's biggest, yours with them
 function festBoard(y){
   const rows = festField(y), me = S.fest && S.fest.y === y ? S.fest.best : 0;
-  if (me > 0) rows.push({name:S.company || S.fest.boat || (S.lang === 'no' ? 'Deg' : 'You'), port:(portById(S.home || 'finnsnes') || {}).name || '', kg:me, me:true});
+  if (me > 0) rows.push({name:S.company || S.fest.boat || (S.lang === 'no' ? 'Deg' : 'You'), port:(portById(S.home || HOME0) || {}).name || '', kg:me, me:true});
   return rows.sort((a, b) => b.kg - a.kg);
 }
 const FEST_PRIZE = [15000, 7500, 3000];

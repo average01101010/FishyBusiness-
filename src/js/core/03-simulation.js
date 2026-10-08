@@ -746,7 +746,7 @@ function ordState(){ return S.orders || (S.orders = {offers:[], active:[], done:
 // the customers that post orders to you: those within 60 km of the home harbour or 40 km of the boat (a start along the coast,
 // 05.10.2026: the coast's plants are customers too, 06b-coastports.js); from Senja, all of Senja's own as before
 function custNear(c){
-  const q = portById(c.port), home = portById(S.home || 'finnsnes'); if (!q) return false;
+  const q = portById(c.port), home = portById(S.home || HOME0); if (!q) return false;
   if (!c.coastal && !(home && home.coastal)) return true;
   return (home && dist(q.p, home.p) < 60) || dist(q.p, S.boat.pos) < 40;
 }

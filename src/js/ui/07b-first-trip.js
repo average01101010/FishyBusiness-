@@ -7,10 +7,10 @@
 const tutOn = () => !!(S.tut && S.tut.v === 2);
 const tutNew = () => ({v:2, m:{}, catch:true, pAt:Date.now(), ...(S && S.tutStart ? S.tutStart : {})});   // a start along the coast brings its patch and plant (ui/08c-start.js)
 const tutField = () => tutFieldAt();   // Gisundet nord, or near a start along the coast (core: the skrei patch while the catch is guaranteed)
-// where the first catch is landed: Botnhamn from Finnsnes, the start's own plant elsewhere (ui/08c-start.js); the field's name for the tips
+// where the first catch is landed: Botnhamn from Vangshamn (and the old Finnsnes start), the start's own plant elsewhere (ui/08c-start.js); the field's name for the tips
 const tutLand = () => (S.tut && S.tut.land) || 'botnhamn', tutLandN = () => (portById(tutLand()) || {name:'Botnhamn'}).name;
 const tutAt = () => S.tut && S.tut.f && S.tut.f.at ? S.tut.f.at : {no:'ved Gisundet nord', en:'at North Gisundet'};
-const tutHome = () => portById((S.home) || 'finnsnes') || PORTS[0];
+const tutHome = () => portById(S.home || HOME0) || PORTS[0];
 function tutMark(k){ if (!tutOn() || S.tut.m[k]) return; S.tut.m[k] = S.t || 1; S.tut.pAt = Date.now(); save(); }
 // free the first time: the ice (the first fill, up to 150 kg, on the plant after the first landing) and one luxury luck. The hand jig is
 // mounted from the start (Jonas 07.10.2026); there is no ice on the first fishing
@@ -79,7 +79,7 @@ const TSTEPS = [
   {id:'full', done:() => holdTotal() >= capHold() - 1 || (S.boat.status === 'idle' && holdTotal() > 1 && !S.boat.fishUntil && !S.boat.tutWait) || !!S.lastSale,
     tip:() => ({el:vis('#hud'), no:'Lasterommet fylles. Når det er fullt, går du til ' + tutLandN() + ' og leverer.', en:'The hold is filling up. When it is full, you go to ' + tutLandN() + ' and land the catch.', small:true})},
   {id:'route2', live:true, view:() => [S.boat.pos, portById(tutLand()).p], done:() => draftEnds(tutLand()) || planEnds(tutLand()) || (S.boat.status === 'port' && S.boat.port === tutLand()),
-    tip:() => { if (!inPlot()) return {el:vis('#miniPlot'), no:tutLand() === 'botnhamn' ? 'Lasten er full! Åpne kartplotteren. Finnsnes har ikke fiskemottak, så fisken skal til Botnhamn.' : 'Lasten er full! Åpne kartplotteren. Fisken skal inn til mottaket i ' + tutLandN() + '.', en:tutLand() === 'botnhamn' ? 'The hold is full! Open the chart plotter. Finnsnes has no fish plant, so the catch goes to Botnhamn.' : 'The hold is full! Open the chart plotter. The catch goes to the plant at ' + tutLandN() + '.'};
+    tip:() => { if (!inPlot()) return {el:vis('#miniPlot'), no:tutLand() !== tutHome().id ? 'Lasten er full! Åpne kartplotteren. ' + tutHome().name + ' har ikke fiskemottak, så fisken skal til ' + tutLandN() + '.' : 'Lasten er full! Åpne kartplotteren. Fisken skal inn til mottaket i ' + tutLandN() + '.', en:tutLand() !== tutHome().id ? 'The hold is full! Open the chart plotter. ' + tutHome().name + ' has no fish plant, so the catch goes to ' + tutLandN() + '.' : 'The hold is full! Open the chart plotter. The catch goes to the plant at ' + tutLandN() + '.'};
       if (LEIA_ARM || LEIA_BUSY) return {map:{p:portById(tutLand()).p, r:0.5}, no:'Trykk på ' + tutLandN() + ' i kartet.', en:'Tap ' + tutLandN() + ' on the chart.'};
       return {el:vis('#rAuto'), no:'Trykk «Autonav», og så på ' + tutLandN() + ' i kartet. Båten finner en trygg vei dit.', en:'Tap «Autonav», then ' + tutLandN() + ' on the chart. The boat finds a safe way there.'}; }},
   {id:'cast2', done:() => (planEnds(tutLand()) && S.boat.status !== 'idle') || (S.boat.status === 'port' && S.boat.port === tutLand()),

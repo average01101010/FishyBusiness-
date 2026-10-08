@@ -29,7 +29,7 @@ const FOLKAPP = (() => {
   const L = (no, en) => S.lang === 'no' ? no : en;
   const day = t => dayStr(t / 60).replace(/^\S+ /, '');
   function page(){
-    const F = folkState(), E = F.edvard, home = portById(S.home || 'finnsnes'), h = ['<div class="ph-c">'];
+    const F = folkState(), E = F.edvard, home = portById(S.home || HOME0), h = ['<div class="ph-c">'];
     h.push('<div class="ph-card fk"><div class="fk-h"><span class="fk-av">E</span><div><h4>Edvard</h4><small>' + L('Kjente far. Sitter på benken ved kaia i ', 'Knew Father. Sits on the bench by the quay in ') + (home ? home.name : '') + '</small></div></div>' +
       (E.said ? '<p class="fk-q">«' + L(E.said.no, E.said.en) + '»</p><small>' + day(E.said.t) + '</small>' : '<p class="ph-note">' + L('Du har ikke møtt ham ennå. Han er ofte på kaia i hjemhavna på dagtid.', 'You have not met him yet. He is often on the quay in your home harbour in the daytime.') + '</p>') + '</div>');
     const P = Object.entries(F.plants).sort((a, b) => b[1].kg - a[1].kg);

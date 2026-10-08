@@ -26,7 +26,7 @@ const NOTEBOOK = (() => {
   const L = (no, en) => S.lang === 'no' ? no : en;
   // the marks round the home harbour: made once its waters are loaded (and again after a move)
   function ready(){
-    if (S.notes && S.notes.home === (S.home || 'finnsnes') && S.notes.marks && S.notes.marks.length) return true;
+    if (S.notes && S.notes.home === (S.home || HOME0) && S.notes.marks && S.notes.marks.length) return true;
     if (busy) return false; busy = true;
     const home = noteHome();
     mapNeed(home.p, MAPD.simR).then(() => { busy = false; notesMake(); save(); if (PHONE.isOpen() && PHONE.app === 'notat') PHONE.render(); }, e => { busy = false; console.error(e); });

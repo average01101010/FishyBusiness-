@@ -62,7 +62,7 @@ function panelRoute(){
   }
   h.push('<p class="note">' + t('route_hint') + (S.marks.some(markLive) ? ' ' + t('marks_n') : '') + '</p>');
   if (LEIA_BUSY || LEIA_ARM) h.push('<p class="leiahint">' + (LEIA_BUSY ? (S.lang === 'no' ? 'Finner leia …' : 'Finding the fairway …') : (S.lang === 'no' ? 'Autonav: trykk i kartet der du vil. Båten holder seg unna land, grunner og skjær. Så trykker du «Kast loss».' : 'Autonav: tap the chart where you want to go. The boat keeps off land, shallows and rocks. Then tap «Cast off».')) + '</p>');
-  if (!S.draft.length){ h.push('<p>' + t(b.status === 'port' && b.port === 'finnsnes' ? 'route_empty_fs' : 'route_empty') + '</p>'); return h.join(''); }
+  if (!S.draft.length){ h.push('<p>' + t(b.status === 'port' && b.port === 'finnsnes' && !(S.tut && S.tut.f) ? 'route_empty_fs' : 'route_empty') + '</p>'); return h.join(''); }
   const tl = draftTimeline(), L = (no, en) => S.lang === 'no' ? no : en, when = T => hm(T / 60) + ' <small>' + inReal(T - S.t) + '</small>';
   h.push('<ul class="wps wpcards"><li class="wpc wp0"><div class="wh"><span class="n">' + wpName(0) + '</span><span class="lbl">' + (b.status === 'port' ? portById(b.port).name : L('Båten', 'The boat')) + '<small>' + coordStr(b.pos) + '</small></span></div><div class="wg"><span>' + L('Avgang ', 'Departs ') + '<b>' + (tl.dep - S.t < 1 ? L('nå', 'now') : when(tl.dep)) + '</b></span></div></li>' + S.draft.map((w, i) => {
     const lg = tl.legs[i], lbl = w.port ? portById(w.port).name : coordStr(w);
