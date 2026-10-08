@@ -109,27 +109,39 @@ function npcBerths(group, p, boats, R = 0.6){
 // like Husøy, needs more than one.
 const APPROACH = {};
 function clearLine(a, b){ const n = Math.max(1, Math.ceil(dist(a, b) / 0.008)); for (let i = 1; i < n; i++) if (isLand({x:a.x + (b.x - a.x) * i / n, y:a.y + (b.y - a.y) * i / n})) return false; return !coastSegHit(a, b); }
+// the land a sealed harbour's way out may cross (approachPath's pt.free): within pt.free km of its point
+let QUAYF = null;
+function quayLand(q){ if (!QUAYF) QUAYF = PORTS.filter(p => p.free); for (const p of QUAYF) if (dist(q, p.p) < p.free) return true; return false; }
+function quayLandLine(a, b){ const n = Math.max(1, Math.ceil(dist(a, b) / 0.008)); for (let i = 1; i < n; i++){ const q = {x:a.x + (b.x - a.x) * i / n, y:a.y + (b.y - a.y) * i / n}; if (isLand(q) && !quayLand(q)) return false; } return true; }
 function approachPath(pt){
   if (APPROACH[pt.id]) return APPROACH[pt.id];
   // over the mask's cells (k = y * nx + x, counted from the layer's corner), a cell land where isLand has its middle (the fine coast)
   const M = MAPD.L.mask, c = M.c, nx = M.nx, cell = k => { const x = k % nx; return {x:(M.ix0 + x + 0.5) * c, y:(M.iy0 + (k - x) / nx + 0.5) * c}; }, s0 = (Math.floor(pt.p.y / c) - M.iy0) * nx + Math.floor(pt.p.x / c) - M.ix0;
-  const LM = new Map(), mk = (x, y) => { const k = y * nx + x; let v = LM.get(k); if (v === undefined){ v = isLand(cell(k)); LM.set(k, v); } return v; };
-  const prev = new Map([[s0, -1]]), Q = [s0]; let end = -1;
-  for (let h = 0; h < Q.length && h < 300000; h++){
-    const k = Q[h], x = k % nx, y = (k - x) / nx, p = cell(k);
-    if (dist(p, pt.p) > 0.4 && coastDist(p) > 0.25){ end = k; break; }
-    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]){
-      const X = x + dx, Y = y + dy, kk = Y * nx + X; if (X < 0 || Y < 0 || X >= nx || Y >= M.ny || prev.has(kk) || mk(X, Y)) continue;
-      if (dx && dy && (mk(X, y) || mk(x, Y))) continue;
-      if (coastSegHit(p, cell(kk))) continue;   // a breakwater thinner than a cell between them
-      prev.set(kk, k); Q.push(kk);
+  // a harbour sealed in by its own quay and fill (6 of 359 along the coast, 08.10.2026: Ålesund, Fosnavåg, Laukvik, Vengsøy and
+  // two shops; their boats could not get out at all): the land within free km of the harbour point is passable, 80 m, then 150, 250 and 400 m
+  // (pt.free, quayLand: the routes may cross it; the simulation leaves the harbours to their way in anyway, groundCheck)
+  let prev, end = -1;
+  for (const free of [0, 0.08, 0.15, 0.25, 0.4]){
+    const LM = new Map(), mk = (x, y) => { const k = y * nx + x; let v = LM.get(k); if (v === undefined){ const q = cell(k); v = isLand(q) && !(free && dist(q, pt.p) < free); LM.set(k, v); } return v; };
+    prev = new Map([[s0, -1]]); const Q = [s0];
+    for (let h = 0; h < Q.length && h < 300000; h++){
+      const k = Q[h], x = k % nx, y = (k - x) / nx, p = cell(k);
+      if (dist(p, pt.p) > 0.4 && coastDist(p) > 0.25){ end = k; break; }
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]){
+        const X = x + dx, Y = y + dy, kk = Y * nx + X; if (X < 0 || Y < 0 || X >= nx || Y >= M.ny || prev.has(kk) || mk(X, Y)) continue;
+        if (dx && dy && (mk(X, y) || mk(x, Y))) continue;
+        if (!(free && dist(p, pt.p) < free) && coastSegHit(p, cell(kk))) continue;   // a breakwater thinner than a cell between them
+        prev.set(kk, k); Q.push(kk);
+      }
     }
+    if (end >= 0){ if (free){ pt.free = free; QUAYF = null; } break; }
   }
   if (end < 0) return APPROACH[pt.id] = [];
   const cells = []; for (let k = end; k !== -1; k = prev.get(k)) cells.push(cell(k));
   cells[cells.length - 1] = pt.p;
   const path = [cells[0]];
-  for (let i = 0; i < cells.length - 1;){ let j = cells.length - 1; while (j > i + 1 && !clearLine(cells[i], cells[j])) j--; if (j === cells.length - 1) break; path.push(cells[j]); i = j; }
+  const clear = (a, b) => pt.free ? (clearLine(a, b) || quayLandLine(a, b)) : clearLine(a, b);
+  for (let i = 0; i < cells.length - 1;){ let j = cells.length - 1; while (j > i + 1 && !clear(cells[i], cells[j])) j--; if (j === cells.length - 1) break; path.push(cells[j]); i = j; }
   APPROACH[pt.id] = path.map(q => ({x:Math.round(q.x * 1000) / 1000, y:Math.round(q.y * 1000) / 1000}));
   pt.app = APPROACH[pt.id][0]; PCELL = null;   // the harbour's safe zone reaches out to the start of the way in (inHarbour)
   return APPROACH[pt.id];

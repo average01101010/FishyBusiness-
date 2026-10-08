@@ -72,7 +72,8 @@ AFTER = """(() => { const b = S.boat, R = {st:b.st, plan:!!S.plan, replan:!!(S.p
 
 DEADLINE = """(() => { const R = {}, b = S.boat, T = turState(); T.act = []; T.credit = 1; S.jobs = [];
   const m = {id:9901, k:'frakt', cls:'kort', to:'botnhamn', from:'finnsnes', kg:10, what:['kasser', 'boxes'], t0:S.t - 200, due:S.t + 1000, hTot:20, vid:S.cur, stage:'go', nm:5, h:1, pay:500};
-  T.act.push(m); b.status = 'aground'; b.port = null; const d0 = m.due; for (let i = 0; i < 10; i++) step(); R.stuck = m.due - d0;
+  S.plan = null; b.tow = null; if (typeof helmOff === 'function') helmOff();
+  T.act.push(m); const d0 = m.due; let n = 0; for (let i = 0; i < 10; i++){ b.status = 'aground'; b.port = null; step(); n++; } R.stuck = m.due - d0; R.n = n;
   b.status = 'idle'; const d1 = m.due; for (let i = 0; i < 10; i++) step(); R.free = m.due - d1;
   // once: the time lost to a grounding after the mission was taken (an incident 120 minutes ago)
   T.credit = 0; S.incidents = [{t:S.t - 120, k:'aground', boat:'x', no:'', en:''}]; const d2 = m.due; step(); R.credit = m.due - d2; R.flag = T.credit;
