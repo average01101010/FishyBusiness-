@@ -52,7 +52,7 @@ function kingArea(p){
   if (lon > 18.6 && lon < 19.4 && lat > 69.25 && lat < 69.8) a = Math.max(a, 0.03);
   return lat > 72 ? a * 0.3 : a;
 }
-function newPGear(){ return {nets:[], lines:{hyse:{n:0, baited:0, bt:{}}, bank:{n:0, baited:0, bt:{}}}, pots:{big:0}, bait:{}, baitPref:'makrell', kits:{n:0, heavy:0}, shore:[]}; }
+function newPGear(){ return {nets:[], lines:{hyse:{n:0, baited:0, bt:{}, cond:1, max:1, bent:0, miss:0, sharp:0}, bank:{n:0, baited:0, bt:{}, cond:1, max:1, bent:0, miss:0, sharp:0}}, pots:{big:0}, bait:{}, baitPref:'makrell', kits:{n:0, heavy:0}, shore:[], hooks:0, potc:{cond:1, max:1}, jig:{mark:{n:0, c:1}, kveite:{n:0, c:1}}}; }
 // ---- bait (the user's list 04.10.2026): five kinds, each good for its own. Krabbe is the cheapest and fair on everything; reke is for
 // cod and skrei, partly saithe and haddock; krill for redfish; makrell for saithe and fair on haddock, cod and crab; sei for halibut and
 // crab. A tub remembers what it was baited with (bt: kind -> tubs), the pots take the kind chosen on the bait page (baitPref). Own saithe
@@ -142,6 +142,8 @@ function buyGear(what, spec, n){
   // gear in the tackle shop, bait at the plant (Jonas 07.10.2026; core/06c-steder.js portServices)
   const sv = portServices(portById(b.port), berthKind(b));
   if (what === 'bait' ? !sv.mottak : !sv.butikk) return what === 'bait' ? [gL('Agn kjøper du på fiskemottaket.', 'You buy bait at the fish plant.')] : [gL('Redskap kjøper du i utstyrsbutikken.', 'You buy gear in the tackle shop.')];
+  if (what === 'hooks' || what === 'jig') return careBuy(what, spec, n);   // hooks in packs and jig sets (10b-gearcare.js)
+  careInit(pg);
   let cost = 0, kind = null;
   if (what === 'net'){ kind = 'garn'; const o = NETOPT.find(x => netKey(x[0], x[1]) === String(spec)); if (!o) return [gL('Torskegarn nord for 62° N skal ha minst 156 mm maskevidde.', 'Cod nets north of 62° N must have at least 156 mm mesh.')]; cost = n * NETTY[o[0]].price; }
   else if (what === 'stamp'){ kind = 'line'; cost = n * LINE_KINDS[spec].price; }
@@ -150,12 +152,13 @@ function buyGear(what, spec, n){
   else if (what === 'heavy') cost = n * GPRICE.heavy;
   else if (what === 'bait') cost = n * (BAITS[spec] || BAITS[pg.baitPref] || BAITS.makrell).kr;
   if (kind && gearRoom(kind) < n) return [gL('Det er ikke plass til mer ' + GEAR[kind].no.toLowerCase() + ' på denne båten.', 'There is no room for more ' + GEAR[kind].en.toLowerCase() + ' on this vessel.')];
+  if (what === 'kit' && n > kitRoomNow()) return [gL('Du har ikke redskap til flere blåsesett. Kjøp mer line, garn eller teiner først.', 'You have no gear for more buoy sets. Buy more line, nets or pots first.')];
   if (what === 'heavy' && pg.kits.heavy + n > pg.kits.n) return [gL('Tunge dregger kjøpes til blåsesett du har.', 'Heavy anchors go with buoy sets you own.')];
   if (cost > S.cash) return [gL('Ikke nok penger.', 'Not enough money.')];
   S.cash -= cost; S.stats.costs += cost;
-  if (what === 'net'){ const o = NETOPT.find(x => netKey(x[0], x[1]) === String(spec)); pg.nets.push({id:gid('n'), mesh:o[1], ty:o[0], n, cond:1}); }
-  else if (what === 'stamp') pg.lines[spec].n += n;
-  else if (what === 'pot') pg.pots[spec] += n;
+  if (what === 'net'){ const o = NETOPT.find(x => netKey(x[0], x[1]) === String(spec)); pg.nets.push({id:gid('n'), mesh:o[1], ty:o[0], n, cond:1, max:0.95}); }
+  else if (what === 'stamp'){ const L = pg.lines[spec], tot = L.n + n; L.cond = careRound((L.cond * L.n + n) / tot); L.miss = careRound(L.miss * L.n / tot); L.bent = careRound(L.bent * L.n / tot); L.max = careRound((L.max * L.n + n) / tot); L.n = tot; }   // new line comes complete with its hooks
+  else if (what === 'pot'){ const c = pg.potc, tot = pg.pots[spec] + n; c.cond = careRound((c.cond * pg.pots[spec] + n) / tot); c.max = careRound((c.max * pg.pots[spec] + n) / tot); pg.pots[spec] = tot; }
   else if (what === 'kit') pg.kits.n += n;
   else if (what === 'heavy') pg.kits.heavy += n;
   else if (what === 'bait'){ const k = BAITS[spec] ? spec : BAITS[pg.baitPref] ? pg.baitPref : 'makrell'; baitOf(pg)[k] = (baitOf(pg)[k] || 0) + n; }
@@ -219,8 +222,8 @@ function startSet(kind, spec, fishAfter, hdg){
   const b = S.boat, pg = S.pgear, why = gearRules(kind, spec, b.pos); if (why) return why;
   let n, km, s = {kind};
   if (kind === 'garn'){ const l = pg.nets.find(x => x.id === spec.nid); n = l.n; km = n * GEAR.garn.km; Object.assign(s, {mesh:l.mesh, ty:l.ty, lid:l.id, cond:l.cond}); }
-  else if (kind === 'line'){ n = spec.n; km = n * LINE_KINDS[spec.lk].hooks * GEAR.line.kmHook; Object.assign(s, {lk:spec.lk, hooks:n * LINE_KINDS[spec.lk].hooks}); }
-  else { n = spec.n; km = n * GEAR.teine.km; Object.assign(s, {pot:spec.pot}); }
+  else if (kind === 'line'){ n = spec.n; km = n * LINE_KINDS[spec.lk].hooks * GEAR.line.kmHook; { const L1 = careG().lines[spec.lk]; Object.assign(s, {lk:spec.lk, hooks:n * LINE_KINDS[spec.lk].hooks, cond:L1.cond, miss:L1.miss, bent:L1.bent, sharp:L1.sharp > 0}); } }
+  else { n = spec.n; km = n * GEAR.teine.km; Object.assign(s, {pot:spec.pot, cond:careG().potc.cond}); }
   const geo = hdg != null ? setGeomExact(b.pos, hdg, km) : setGeom(b.pos, b.heading || 0, km); if (!geo) return [gL('Det er ikke plass til redskapet her. Prøv lenger ut.', 'There is no room for the gear here. Try further out.')];
   // the gear leaves the deck as it goes over the side; it is reserved now
   if (kind === 'garn') pg.nets.splice(pg.nets.findIndex(x => x.id === spec.nid), 1);
@@ -312,7 +315,7 @@ function gopAbort(why){
       log('Setting avbrutt. Redskapet er tatt om bord igjen.', 'Setting stopped. The gear is back aboard.'); b.gop = null; }
   } else {
     const s = S.sets.find(x => x.id === g.sid);
-    if (s && g.done > 0 && g.done < s.n){ gearBack(s, g.done, wearNets(s, g)); s.n -= g.done; if (s.kind === 'line') s.hooks = s.n * g.hooksPer; s.a = {x:b.pos.x, y:b.pos.y}; s.b = {...g.b}; }
+    if (s && g.done > 0 && g.done < s.n){ gearBack(s, g.done, wearNets(s, g), wearOf(s, g)); s.n -= g.done; if (s.kind === 'line') s.hooks = s.n * g.hooksPer; s.a = {x:b.pos.x, y:b.pos.y}; s.b = {...g.b}; }
     if (s) s.hauling = false;
     log('Trekkingen stoppet. ' + (s ? s.n + ' ' + unitName(s.kind, s.n) + ' står igjen i sjøen.' : ''), 'Hauling stopped. ' + (s ? s.n + ' ' + unitName(s.kind, s.n) + ' remain in the sea.' : ''));
     b.gop = null;
@@ -321,11 +324,10 @@ function gopAbort(why){
   if (why !== 'return' && why !== 'dock' && b.status === 'fishing'){ b.gopQuiet = true; b.fishUntil = S.t; }
 }
 // gear back on deck after hauling (or a stopped set); nets with their condition
-function gearBack(s, n, cond){
-  const pg = S.pgear;
-  if (s.kind === 'garn'){ if (n > 0) pg.nets.push({id:s.lid && !pg.nets.some(l => l.id === s.lid) ? s.lid : gid('n'), mesh:s.mesh, ty:s.ty, n, cond:cond != null ? cond : s.cond}); }
-  else if (s.kind === 'line') pg.lines[s.lk].n += n;
-  else pg.pots[s.pot] += n;
+function gearBack(s, n, cond, W){
+  const pg = S.pgear; careInit(pg);
+  if (s.kind === 'garn'){ if (n > 0) pg.nets.push({id:s.lid && !pg.nets.some(l => l.id === s.lid) ? s.lid : gid('n'), mesh:s.mesh, ty:s.ty, n, cond:cond != null ? cond : s.cond, max:s.max == null ? 0.95 : s.max}); }
+  else careBack(s, n, W);   // line and pots: condition averaged with what is aboard (10b-gearcare.js)
   if (n > 0 && (s.kind === 'garn' || s.kind === 'line')) achAdd('haul');   // «Garn eller line satt og trukket» (09f-merker.js)
 }
 // wear on a string of nets from one haul: more with a heavy catch, crab in the net, rough sea and long soaks; a worn net can go to pieces
@@ -392,20 +394,20 @@ function landCrabs(g, n, kg){
 }
 function finishHaul(g, H){
   const b = S.boat, s = S.sets.find(x => x.id === g.sid); if (!s){ gopEnd(g); return; }
-  const cond = wearNets(s, g);
+  const W = wearOf(s, g), cond = W.cond;
   S.sets.splice(S.sets.indexOf(s), 1);
   { const e = (S.gearLog || []).find(x => x.id === s.id); if (e){ e.tHaul = S.t; e.kg = Math.round(g.kg || 0); } }
-  let tore = 0;
+  let tore = W.tore || 0;
   if (s.kind === 'garn' && cond < 0.25){ const p = Math.min(1, 3 * (0.25 - cond) + (cond <= 0 ? 1 : 0)); for (let i = 0; i < s.n; i++) if (Math.random() < p) tore++; }
   const back = s.n - tore;
   if (s.tur) turHauled(s);   // found gear goes back to its owner (09g-turer.js)
-  else { gearBack(s, back, cond); S.pgear.kits.n++; if (s.heavy) S.pgear.kits.heavy++; }
+  else { gearBack(s, back, cond, W); S.pgear.kits.n++; if (s.heavy) S.pgear.kits.heavy++; }
   const what = GEAR[s.kind].no.toLowerCase(), whatEn = GEAR[s.kind].en.toLowerCase();
   log('Trakk ' + what + ': ' + fmt(g.kg, 0) + ' kg, sto ' + fmt(g.soak, 0) + ' t' + (g.rel ? ', ' + g.rel + (s.kind === 'teine' ? ' krabber satt ut igjen' : ' fisk sluppet') : '') + (g.dead >= 1 ? ', ' + Math.round(g.dead) + ' døde krabber kastet' : '') + '.',
     'Hauled ' + whatEn + ': ' + fmt(g.kg, 0) + ' kg, soaked ' + fmt(g.soak, 0) + ' h' + (g.rel ? ', ' + g.rel + (s.kind === 'teine' ? ' crabs put back' : ' fish released') : '') + (g.dead >= 1 ? ', ' + Math.round(g.dead) + ' dead crabs thrown' : '') + '.');
   // the crew remarks on a good or a poor haul (kg per unit against a fair haul for the gear)
   { const per = g.kg / Math.max(1, g.n), fair = (HEATG.fair[s.kind] || 1) * heatSoakShare(s.kind, g.soak || HEATG.T); crewSay(null, per > fair * 1.4 ? 'haulGood' : per < fair * 0.35 ? 'haulBad' : null); }
-  if (tore) log(tore + ' garn gikk i filler. De var for slitt.', tore + ' nets went to pieces. They were too worn.');
+  if (tore) log(tore + ' ' + unitName(s.kind, tore) + (s.kind === 'garn' ? ' gikk i filler' : s.kind === 'line' ? ' gikk av' : ' gikk tapt') + '. ' + (tore === 1 ? 'Den' : 'De') + ' var for slitt.', tore + ' ' + unitName(s.kind, tore) + (s.kind === 'garn' ? ' went to pieces' : s.kind === 'line' ? ' parted' : ' were lost') + '. ' + (tore === 1 ? 'It' : 'They') + ' was too worn.');
   else if (s.kind === 'garn' && cond < 0.35) log('Garna er slitt (' + Math.round(cond * 100) + ' %). Bøt dem før de går i filler.', 'The nets are worn (' + Math.round(cond * 100) + ' %). Mend them before they go to pieces.');
   // the catch mark: kilos per line, per net and per pot (tilbakemelding #33). Nets joined into a string fish as one net, and a line of
   // several tubs as one line, so those count the string; each pot is its own. Its colour is the haul per unit against a fair one
@@ -465,7 +467,7 @@ function soakHour(s, H){
   const add = (sp, kg, n) => { const A = acc[sp] || (acc[sp] = {kg:0, n:0, ts:0}); A.kg += kg; A.n += n; A.ts += kg * H; };
   if (s.kind === 'teine'){
     const P = POTS[s.pot], A = acc.krabbe || {n:0}, cap = P.cap * s.n, g = Math.min(1, a / 6) * Math.exp(-a / 40);
-    const lam = KC.q * GEAR.teine.q * 30 * s.n * P.f * density('krabbe', mid, H) * luck('krabbe') * baitF(s.bait || 'makrell', 'krabbe') * g * Math.max(0, 1 - A.n / cap);
+    const lam = KC.q * GEAR.teine.q * 30 * s.n * P.f * density('krabbe', mid, H) * luck('krabbe') * baitF(s.bait || 'makrell', 'krabbe') * g * Math.max(0, 1 - A.n / cap) * potQ(s);
     const mw = KC.mean;
     if (lam > 0){ add('krabbe', lam * mw, lam); tot += lam * mw; takeStock(mid, lam * mw, 'krabbe'); }
     for (const sp in SELQ.teine){ const r = 30 * GEAR.teine.q * s.n * SELQ.teine[sp] * density(sp, mid, H) * g; if (r > 0) add(sp, r, r / SPECIES[sp].size[0]); }
@@ -476,7 +478,7 @@ function soakHour(s, H){
   const key = gearKey(s), sel = SELQ[key], G = GEAR[s.kind];
   const nNow = Object.values(acc).reduce((q, x) => q + x.n, 0), kgNow = Object.values(acc).reduce((q, x) => q + x.kg, 0);
   const f = s.kind === 'line' ? Math.exp(-a / 10) * Math.max(0, 1 - nNow / (s.hooks * 0.35)) : Math.exp(-a / 30) * Math.max(0, 1 - kgNow / (80 * s.n));
-  const units = s.kind === 'line' ? s.hooks / 100 : s.n, cond = s.kind === 'garn' ? 0.5 + 0.5 * (s.cond || 1) : 1;
+  const units = s.kind === 'line' ? s.hooks / 100 : s.n, cond = s.kind === 'garn' ? 0.5 + 0.5 * (s.cond || 1) : s.kind === 'line' ? lineQ(s) : 1;
   // a line's bait: the tubs' kinds weighed by how many (an old set without them: makrell, as the old bait)
   const bw = s.kind === 'line' ? (s.baitW || {makrell:s.n}) : null, bwN = bw ? Object.values(bw).reduce((a, v) => a + v, 0) || 1 : 1, lineB = sp => { if (!bw) return 1; let v = 0; for (const k in bw) v += bw[k] * baitF(k, sp); return v / bwN; };
   let gen = 0;   // a species with its own stock layer (the Greenland halibut, stk) is taken from that, the rest from the common one
@@ -523,6 +525,8 @@ function reportLost(sid){
   return true;
 }
 
+const nMax = l => l.max == null ? 0.95 : l.max;
+function netMended(l){ l.cond = nMax(l); l.max = Math.max(CARE.ceilMin, careRound(nMax(l) - CARE.ceil.garn)); }   // mended to its ceiling, which drops a little each time
 // ---- in port: baiting at the shed or by the crew, mending by the crew or at the net loft in Finnsnes
 const egnPort = p => !!(p && p.mottak);          // assumed: a baiting shed at the fish plants (not checked)
 const botPort = p => !!(p && p.id === 'finnsnes');
@@ -554,9 +558,9 @@ function egnSelf(lk, n){
 function mendSelf(nid){
   const b = S.boat, pg = S.pgear, l = pg.nets.find(x => x.id === nid);
   if (b.status !== 'port') return [gL('Garn bøtes i havn.', 'Nets are mended in port.')];
-  if (!l || l.cond >= 0.9) return [gL('Garna trenger ikke bøting.', 'The nets do not need mending.')];
+  if (!l || l.cond >= nMax(l) - 0.05) return [gL('Garna trenger ikke bøting.', 'The nets do not need mending.')];
   const hands = handsAboard(), eff = hands * teamEff(crewAboard(), meAboard(), 'garn'); if (!hands) return [gL('Ingen om bord kan bøte.', 'Nobody aboard can mend.')];
-  const h = Math.round(l.n * (0.95 - l.cond) / 0.25 * 0.5 / eff * 10) / 10;
+  const h = Math.round(l.n * (nMax(l) - l.cond) / 0.25 * 0.5 / eff * 10) / 10;
   if (!queueJob({kind:'mend', nid, h, no:'Bøte ' + l.n + ' garn', en:'Mend ' + l.n + ' nets'})) return [gL('Verkstedkøen er full.', 'The work queue is full.')];
   pg.nets.splice(pg.nets.indexOf(l), 1); pg.shore.push({kind:'mendself', lenke:l});
   log('Bøter ' + l.n + ' garn selv, ca. ' + fmt(h, 1) + ' t.', 'Mending ' + l.n + ' nets ourselves, about ' + fmt(h, 1) + ' h.');
@@ -565,8 +569,8 @@ function mendSelf(nid){
 function botOrder(nid){
   const b = S.boat, pg = S.pgear, p = portById(b.port), l = pg.nets.find(x => x.id === nid);
   if (b.status !== 'port' || !botPort(p)) return [gL('Bøteriet ligger i Finnsnes.', 'The net loft is in Finnsnes.')];
-  if (!l || l.cond >= 0.9) return [gL('Garna trenger ikke bøting.', 'The nets do not need mending.')];
-  const fee = Math.round(GPRICE.bot * l.n * (0.95 - l.cond) / 0.1); if (fee > S.cash) return [gL('Ikke nok penger.', 'Not enough money.')];
+  if (!l || l.cond >= nMax(l) - 0.05) return [gL('Garna trenger ikke bøting.', 'The nets do not need mending.')];
+  const fee = Math.round(GPRICE.bot * l.n * (nMax(l) - l.cond) / 0.1); if (fee > S.cash) return [gL('Ikke nok penger.', 'Not enough money.')];
   S.cash -= fee; S.stats.costs += fee; pg.nets.splice(pg.nets.indexOf(l), 1);
   const ready = S.t + 24 * 60; pg.shore.push({kind:'bot', port:b.port, lenke:l, n:l.n, ready, fee});
   log('Leverte ' + l.n + ' garn til bøteriet i ' + p.name + ', ' + kr(fee) + '. Klare om et døgn.', 'Left ' + l.n + ' nets at the net loft in ' + p.name + ', ' + kr(fee) + '. Ready in a day.');
@@ -576,20 +580,21 @@ function botOrder(nid){
 function gearJob(j){
   const pg = S.pgear;
   if (j.kind === 'egn'){ const i = pg.shore.findIndex(x => x.kind === 'egnself' && x.lk === j.lk && x.n === j.n); if (i >= 0) pg.shore.splice(i, 1); const L0 = pg.lines[j.lk], bt = btOf(L0); L0.n += j.n; L0.baited += j.n; bt[j.bait || 'makrell'] = (bt[j.bait || 'makrell'] || 0) + j.n; log(j.n + ' stamper er egnet.', j.n + ' tubs are baited.'); return true; }
-  if (j.kind === 'mend'){ const i = pg.shore.findIndex(x => x.kind === 'mendself' && x.lenke.id === j.nid); if (i >= 0){ const l = pg.shore[i].lenke; pg.shore.splice(i, 1); l.cond = 0.95; pg.nets.push(l); log(l.n + ' garn er bøtet.', l.n + ' nets are mended.'); } return true; }
-  return false;
+  if (j.kind === 'mend'){ const i = pg.shore.findIndex(x => x.kind === 'mendself' && x.lenke.id === j.nid); if (i >= 0){ const l = pg.shore[i].lenke; pg.shore.splice(i, 1); netMended(l); pg.nets.push(l); log(l.n + ' garn er bøtet.', l.n + ' nets are mended.'); } return true; }
+  return careJobDone(j);
 }
 function gearJobCancel(j){
-  const pg = S.pgear; if (!pg) return;
+  const pg = S.pgear; if (!pg) return; careJobCancel(j);
   if (j.kind === 'egn'){ const i = pg.shore.findIndex(x => x.kind === 'egnself' && x.lk === j.lk && x.n === j.n); if (i >= 0) pg.shore.splice(i, 1); pg.lines[j.lk].n += j.n; const k = j.bait || 'makrell'; baitOf(pg)[k] = (baitOf(pg)[k] || 0) + j.n * LINE_KINDS[j.lk].baitKg; }
   if (j.kind === 'mend'){ const i = pg.shore.findIndex(x => x.kind === 'mendself' && x.lenke.id === j.nid); if (i >= 0){ pg.nets.push(pg.shore[i].lenke); pg.shore.splice(i, 1); } }
 }
 function shoreTick(){
-  const b = S.boat, pg = S.pgear; if (!pg || !pg.shore.length || b.status !== 'port') return;
+  const b = S.boat, pg = S.pgear; if (pg) careTick();   // the crew's upkeep in port (10b-gearcare.js)
+  if (!pg || !pg.shore.length || b.status !== 'port') return;
   for (const j of pg.shore.slice()){
     if (j.port !== b.port || S.t < j.ready) continue;
     if (j.kind === 'egn'){ const L0 = pg.lines[j.lk], bt = btOf(L0); L0.n += j.n; L0.baited += j.n; bt[j.bait || 'makrell'] = (bt[j.bait || 'makrell'] || 0) + j.n; log('Hentet ' + j.n + ' egnede stamper fra egnebua.', 'Picked up ' + j.n + ' baited tubs from the baiting shed.'); }
-    else if (j.kind === 'bot'){ j.lenke.cond = 0.95; pg.nets.push(j.lenke); log('Hentet ' + j.n + ' bøtede garn fra bøteriet.', 'Picked up ' + j.n + ' mended nets from the net loft.'); }
+    else if (j.kind === 'bot'){ netMended(j.lenke); pg.nets.push(j.lenke); log('Hentet ' + j.n + ' bøtede garn fra bøteriet.', 'Picked up ' + j.n + ' mended nets from the net loft.'); }
     else continue;
     pg.shore.splice(pg.shore.indexOf(j), 1);
   }

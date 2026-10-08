@@ -460,10 +460,10 @@ function dock(pid, berth){
 // sea, cold, hands busy on deck, and your own share while you play the jig game. fish() uses it, and so does the heat map's «Her nå» line.
 function catchFactors(H, W, hs){
   // fishing feels the boat's motions (03c-stability.js): the wave height given, scaled by how she moves here
-  const hw = hs * motionHere(H).f, wpen = Math.max(0.15, 1 - Math.max(0, hw - BOAT.risk[0] * 0.5) * 0.4 / (BOAT.risk[0] / 1.0) - Math.max(0, W - 8) * 0.03), eff = fishEffort();
+  const hw = hs * motionHere(H).f, wpen = Math.max(0.15, 1 - Math.max(0, hw - BOAT.risk[0] * 0.5) * 0.4 / (BOAT.risk[0] / 1.0) - Math.max(0, W - 8) * 0.03), eff = fishEffort() * jigQ();   // worn pilk and hooks fish worse (10b-gearcare.js)
   // halibut is fished by hand on heavy gear: jigging machines do not help
   // the hands busy on deck are not at the rail: fishEffort counts only those at the Fiske station
-  const keff = workTeam('fiske', 'juksa', 'fishing').sum;
+  const keff = workTeam('fiske', 'juksa', 'fishing').sum * jigQ();
   // playing the jig game, your own share comes through your bites (ui/10-rod-acts.js) and is left out here
   const jig = !!(typeof window !== 'undefined' && window.jigActive), share = jig ? jigMeShare() : 0, cold = coldPen(H, hs), deck = 1;
   return {eff, keff, wpen, cold, deck, jig, pen:(1 - cold) * deck * (1 - share)};
@@ -496,6 +496,7 @@ function fish(H, W, hs){
   if (jig && meAboard()) S.deckMe = (S.deckMe || 0) + 1;   // jigging by hand counts as your own work on deck
   let room = capHold() - tot, dsum = 0, tsum = 0, gotTop = 0;
   S.facc = S.facc || {}; S.fnext = S.fnext || {};
+  jigWear();   // the mounted set of pilk and hooks wears a little each minute of fishing (10b-gearcare.js)
   for (const sp of SP){
     const dn = density(sp, b.pos, H); dsum += dn; tsum += tutBonus(sp, b.pos);
     S.facc[sp] = (S.facc[sp] || 0) + 30 * (S.target === 'kveite' && b.kgear ? keff : eff) * dn * luck(sp) * targetF(sp, H) * noteBoost(sp, b.pos) * (SPECIES[sp].jig != null ? SPECIES[sp].jig : 1) * wpen * pen * (0.5 + Math.random()) / 60;   // jig: what the jig takes of a species (the Greenland halibut next to none)

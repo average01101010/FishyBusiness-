@@ -68,6 +68,8 @@ if (S){ awayMs = Date.now() - (S.lastReal || Date.now()); } else S = newState();
 // every vessel gets its gear locker (saves from before passive gear have none, also on vessels that are not bound)
 for (const v of S.fleet) withVessel(v, () => { if (!S.pgear) S.pgear = newPGear(); });
 // 08.10.2026: one pot only, the big one («Krabbeteiner»); small pots aboard and in the sea become big ones
+// 08.10.2026: gear care (core/10b-gearcare.js): the line's condition and hooks, the pots' condition, hooks in the store and the jig sets
+for (const v of S.fleet) withVessel(v, () => { if (S.pgear) careInit(S.pgear); });
 // 08.10.2026: the yard's «Klargjøring til neste tur» jobs are gone; one still queued in an old save is dropped
 for (const v of S.fleet) withVessel(v, () => { if (S.jobs) S.jobs = S.jobs.filter(j => j.kind !== 'prep'); S.prep = {}; S.tripBuff = null; });
 for (const v of S.fleet) withVessel(v, () => { const p = S.pgear.pots; if (p.small){ p.big = (p.big || 0) + p.small; } delete p.small; if (!p.big) p.big = 0; });
