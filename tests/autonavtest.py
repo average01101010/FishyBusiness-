@@ -137,7 +137,7 @@ async def main():
         # 6. national routes: 100 m cells, every leg as the boat sails it
         for a, b in [('Vannareid', 'Honningsvåg'), ('Honningsvåg', 'Vannareid'), ('Skjervøy', 'Hammerfest'), ('Tromsø', 'Vannareid')]:
             r = await J(ROUTE, [a, b])
-            ok = not r.get('err') and not r.get('why') and r['bad'] == [] and r['cell'] == 0.1 and r['n'] <= 40
+            ok = not r.get('err') and not r.get('why') and r['bad'] == [] and r['cell'] == 0.1 and r['n'] <= max(40, r['nm'] * 1.852 / 2)
             check(ok, '6. Autonav %s → %s: 100 m-celler, ingen etappe grunnstøter' % (a, b), {k: v for k, v in r.items() if k != 'bad'} if ok else r)
         # 7. «Sitter båten fast?» in the Redning app (tilbakemelding #49): from the plant in Vannareid after a tow, out on safe water
         r = await J("""(async () => { const pt = portById('mT155'), b = S.boat; await mapNeed(pt.p, 3); S.plan = null; S.unstuckAt = 0; dock('mT155'); b.damage = 1; hullRepair();

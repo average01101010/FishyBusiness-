@@ -336,7 +336,20 @@ async function leiaRoute0(a, b, aPort, bPort){
   // a long way: by the fairway network first (11c-leinett.js)
   // (along the net the strict rule first, the safe depth and 25 m from rocks, as the grid's search keeps to; the boat's own minimum
   // only where that finds no way)
-  if (!safe){ const net = await lnetRoute(from, to, sd, st); if (net){ st.soft = 0; safe = await finish(net, true); st.by = safe ? 'net' : 'net-failed'; } }
+  if (!safe){ const net = await lnetRoute(from, to, sd, st);
+    if (net && net.net){
+      // a baked net: the way onto it and off it straightened and checked, its own legs as they are (tools/leia/bake.py)
+      const part = async (Q, ends) => { await lnetLoad(Q); await obsLoad(Q); let best = null; for (const m of LEIA.margins){ const s2 = await leiaStraighten(Q, sd, m, st); if (!best || s2.length < best.length) best = s2; } return leiaMend(best, sd, st, true); };
+      st.soft = 0; const A0 = [a].concat(laneOut, net.pre.slice(laneOut.length ? 1 : 0)).filter((q, i, l) => i === 0 || dist(q, l[i - 1]) > 0.001);
+      const B0 = net.post.slice(0, laneIn.length ? -1 : undefined).concat(laneIn, [b]).filter((q, i, l) => i === 0 || dist(q, l[i - 1]) > 0.001);
+      const pa = await part(A0), pb = pa && await part(B0);
+      if (pa && pb){ safe = pa.concat(net.net.slice(1, -1), pb.slice(0)).filter((q, i, l) => i === 0 || dist(q, l[i - 1]) > 0.001); st.by = 'net'; st.maxWp = safe.length; st.soft = (st.soft || 0) + net.soft;
+        // the map under the net's legs too, though nothing here checks them: the route list's warnings (draftHazards) and the sailing
+        // read the depth along every leg (only loading, no search: a few seconds on the longest ways)
+        const tl = performance.now(); await lnetLoad(net.net); st.loadMs = Math.round(performance.now() - tl); }
+      else st.by = 'net-failed';
+    }
+    else if (net){ st.soft = 0; safe = await finish(net, true); st.by = safe ? 'net' : 'net-failed'; } }
   // the grid's search: when the net gave no way, or legs only the boat's own minimum allows (st.soft: near a rock or under the safe
   // depth by the chart) on a way short enough for it, and then the way with fewer such legs
   if (!safe || (st.soft && dist(from, to) < 400)){

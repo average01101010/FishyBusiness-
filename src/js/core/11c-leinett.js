@@ -11,8 +11,12 @@ const LNET = (() => {
   if (!D) return null;
   const n = D.n, X = new Float64Array(n), Y = new Float64Array(n), adj = Array.from({length:n}, () => []), grid = new Map();
   for (let i = 0; i < n; i++){ X[i] = D.nodes[2 * i] / 1000; Y[i] = D.nodes[2 * i + 1] / 1000; const k = Math.floor(X[i] / 5) * 65536 + Math.floor(Y[i] / 5); let g = grid.get(k); if (!g) grid.set(k, g = []); g.push(i); }
-  for (const w of D.ways) for (let k = 1; k < w.length; k++){ const a = w[k - 1], b = w[k], L = Math.hypot(X[a] - X[b], Y[a] - Y[b]); adj[a].push(b, L); adj[b].push(a, L); }
-  return {n, X, Y, adj, grid, src:D.src, min:10, near:12, tries:6, fine:6};
+  // a baked net (tools/leia/bake.py): every leg already checked against the map, soft[w][k] 1 where it keeps only the boat's own
+  // minimum (those cost three times their length, so the strict ones are taken first)
+  const baked = !!D.baked;
+  const soft = new Set();
+  D.ways.forEach((w, wi) => { for (let k = 1; k < w.length; k++){ const a = w[k - 1], b = w[k], sf = baked && D.soft && D.soft[wi][k - 1], L = Math.hypot(X[a] - X[b], Y[a] - Y[b]) * (sf ? 3 : 1); adj[a].push(b, L); adj[b].push(a, L); if (sf){ soft.add(a * n + b); soft.add(b * n + a); } } });
+  return {n, X, Y, adj, grid, soft, src:D.src, baked, bakedSd:D.sd || 0, bakedDraft:D.draft || 0, min:10, near:12, tries:6, fine:6};
 })();
 const lnetPt = i => ({x:LNET.X[i], y:LNET.Y[i]});
 // the nodes within km of p, nearest first (at most max)
@@ -56,7 +60,8 @@ async function lnetAccess(p, i, sd, st){
   let L = 0; for (let k = 1; k < pts.length; k++) L += dist(pts[k - 1], pts[k]);
   return {pts, L};
 }
-// the way from `from` to `to` by the net: the points from from to to, or null (too short a way, no net near, or no way through it)
+// the way from `from` to `to` by the net: the points from from to to, or with a baked net {pre, net, post} (the way onto it, its
+// nodes, the way off it), or null (too short a way, no net near, or no way through it)
 async function lnetRoute(from, to, sd, st){
   if (!LNET || dist(from, to) < LNET.min) return null;
   const a = lnetNear(from, LNET.near, LNET.tries), b = lnetNear(to, LNET.near, LNET.tries); if (!a.length || !b.length) return null;
@@ -66,8 +71,13 @@ async function lnetRoute(from, to, sd, st){
   if (!A.size || !B.size) return null;
   const path = lnetPath([...A].map(([i, r]) => [i, r.L]), [...B].map(([i, r]) => [i, r.L])); if (!path) return null;
   const s = path.nodes[0], e = path.nodes[path.nodes.length - 1];
-  const pts = A.get(s).pts.slice(0, -1).concat(path.nodes.map(lnetPt), B.get(e).pts.slice(0, -1).reverse());
-  st.net = {nodes:path.nodes.length, km:+path.cost.toFixed(1)};
+  const pre = A.get(s).pts, net = path.nodes.map(lnetPt), post = B.get(e).pts.slice().reverse();
+  st.net = {nodes:path.nodes.length, km:+path.cost.toFixed(1), baked:LNET.baked};
+  // a baked net's legs are taken as they are: only the ways onto and off it want the map under them
+  // (only for a boat the bake's checks hold for: no deeper than its draught and safe depth; a deeper one has the legs checked here)
+  // (its soft legs counted as the grid's search counts them, st.soft: on a way short enough the grid's own way is then compared)
+  if (LNET.baked && BOAT.draft + LEIA.minOver <= LNET.bakedDraft + 1e-6 && sd <= LNET.bakedSd + 1e-6){ let sf = 0; for (let k = 1; k < path.nodes.length; k++) if (LNET.soft.has(path.nodes[k - 1] * LNET.n + path.nodes[k])) sf++; return {pre, net, post, soft:sf}; }
+  const pts = pre.slice(0, -1).concat(net, post.slice(1));
   await lnetLoad(pts);
   return pts;
 }
