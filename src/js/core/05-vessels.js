@@ -290,7 +290,7 @@ function vesselStep(H){
   if (b.tutWait && (b.status !== 'idle' || (S.haill && S.haill.type === 'luksus'))){ if (b.status === 'idle'){ b.status = 'fishing'; b.fishUntil = S.t + b.tutWait * 60; log('Haillen er om bord. Starter fiske i ' + b.tutWait + ' t.', 'The luck is aboard. Fishing for ' + b.tutWait + ' h.'); } b.tutWait = null; }
   // you are asleep alone aboard: nobody fishes, and the boat drifts (core/15-energy.js). On a route the autopilot holds her course and
   // she goes on to the route's end (tilbakemeldinger #47 and #48, 08.10.2026: asleep on Autonav to Honningsvåg, she drifted ashore)
-  if (sleepAlone() && ['sailing', 'fishing', 'idle'].includes(b.status) && !(b.status === 'sailing' && S.plan)){ sleepDrift(H); risk(W, hs); return; }
+  if (sleepAlone() && !b.anch && ['sailing', 'fishing', 'idle'].includes(b.status) && !(b.status === 'sailing' && S.plan)){ sleepDrift(H); risk(W, hs); return; }
   // (with the hand on the helm the skipper decides: no turning back by itself, 16-helm.js)
   // turning back by itself only when the wind rises over the limit while she is out (b.windArm: it has been under the limit since she
   // left); not when she casts off in a wind already over it, nor again after the skipper stopped the turn back, until it has dropped
@@ -305,6 +305,7 @@ function vesselStep(H){
   if (b.status === 'sailing'){ if (!helmOn()){ const p0 = b.pos; sail(H, W, hs); if (meAboard()) tatAdd('nm', dist(p0, b.pos) / NM); } }   // by hand she moves every tick (helmStep)
   else if (b.status === 'fishing') fish(H, W, hs);
   else b.v = 0;
+  if (b.anch) anchorTick(H, W, hs);   // the anchor holds or drags (06e-anchor.js)
   risk(W, hs);
 }
 // speed for the coming minute: the boat speeds up and slows down gradually, and keeps to 5 knots within 250 m of a harbour
@@ -392,6 +393,7 @@ function arrive(w){
   S.trail.push({x:w.x, y:w.y, port:w.port || null});
   if (w.port){ dock(w.port, w.berth); return true; }
   pl.idx++;
+  if (w.anchor){ S.plan = null; b.status = 'idle'; b.v = 0; if (!dropAnchor(true)) log('Fant ikke grunn å ankre på her.', 'Found no ground to anchor on here.'); return true; }   // a rest at anchor (06d-drift.js)
   if (!(w.fish > 0) && pl.idx < pl.wps.length){ const nw = pl.wps[pl.idx], c = Math.round(trueDeg(Math.atan2(nw.x - w.x, -(nw.y - w.y)), w)) % 360; log('WP' + pl.idx + ' passert. Ny kurs ' + String(c).padStart(3, '0') + '°.', 'WP' + pl.idx + ' passed. New course ' + String(c).padStart(3, '0') + '°.', 'nav'); }
   // work with passive gear at this waypoint: set or haul, then any fishing hours with the jig
   if (w.act){ b.status = 'idle'; const why = w.act.op === 'cycle' ? gearCycle(w, w.fish) : w.act.op === 'haul' ? startHaul(w.act.sid, w.act.reset, w.fish) : startSet(w.act.kind, w.act.spec, w.fish); if (!why) return true; log(why[0], why[0]); if (!(w.fish > 0)) b.status = 'sailing'; }
@@ -426,7 +428,7 @@ function unstuck(){
   if (typeof helmOff === 'function') helmOff();
   if (b.gop) gopAbort('return');
   b.land = b.shift = b.fueling = b.after = null; b.landWait = null; b.tow = null; b.castUntil = null;
-  S.plan = null; b.pos = {x:to.x, y:to.y}; b.status = 'idle'; b.port = null; b.v = 0; b.fishUntil = null; b.berth = null; b.windArm = false;
+  S.plan = null; b.anch = null; b.pos = {x:to.x, y:to.y}; b.status = 'idle'; b.port = null; b.v = 0; b.fishUntil = null; b.berth = null; b.windArm = false;
   S.trail = [{x:to.x, y:to.y, port:null}]; S.unstuckAt = Date.now();
   log('Båten ble flyttet ut på trygt vann og ligger stille.', 'The boat was moved out to safe water and lies still.', 'nav');
   if (typeof cloudEv === 'function') cloudEv('unstuck', was);
@@ -436,7 +438,7 @@ function dock(pid, berth){
   const b = S.boat, port = portById(pid); S.tripBuff = null; if (b.gop) gopAbort('dock');
   S.dockLog = (S.dockLog || []).concat([{t:S.t, pid, st:b.status}]).slice(-6);   // the last moorings, for «Sitter båten fast?» (unstuck)
   if (port.rorbu) rorbuSite(port);   // its berth is found before the boat is put there (07d-rorbu.js)
-  b.status = 'port'; b.port = pid; b.v = 0; b.fishUntil = null; b.pos = {x:port.p.x, y:port.p.y}; b.moorT = S.t; b.shift = b.fueling = b.after = null;
+  b.anch = null; b.status = 'port'; b.port = pid; b.v = 0; b.fishUntil = null; b.pos = {x:port.p.x, y:port.p.y}; b.moorT = S.t; b.shift = b.fueling = b.after = null;
   b.berth = berth === 'naust' && quayFace(pid, 'naust') ? 'naust' : 'main';   // a route can end at Father's naust (07c-naust.js)
   const wasOps = S.plan && S.plan.ops;
   S.plan = null; S.trail = [{x:port.p.x, y:port.p.y, port:pid}];

@@ -55,11 +55,13 @@ function driftSessHours(o, s){
   const r = s.route; if (!r || !r.wps || !r.wps.length) return 0;
   return driftLegHours(r.wps, r.speed, portById(r.home) ? portById(r.home).p : r.wps[0]) + DRF.landH;
 }
-const driftEndPort = s => s.type === 'hvile' ? s.at : s.route && s.route.end;
+const driftEndPort = s => s.type === 'hvile' ? (s.at === 'anker' ? s.near : s.at) : s.route && s.route.end;
 const driftStartPort = s => s.type === 'hvile' ? null : s.route && s.route.home;
 // the stations of a route (what the soak is measured between)
 const driftStations = s => s.route && s.route.wps ? s.route.wps.filter(w => w.act && w.act.kind) : [];
 
+// the hours a rest lasts: until the next session is due
+function driftRestHours(o, s){ const S2 = o.sess.slice().sort((a, c) => a.dep - c.dep), i = S2.indexOf(s), nx = S2[(i + 1) % S2.length]; let g = nx.dep - s.dep; if (g <= 0) g += o.period; return Math.max(1, g); }
 // ---- the check: errors stop the plan being switched on, warnings only inform. Also the overview the player reads.
 function driftCheck(o){
   const E = [], W = [], rep = {work:0, trips:0, gaps:[], soak:[], period:o.period}, no = (a, b) => gL(a, b);
@@ -69,7 +71,14 @@ function driftCheck(o){
   if (DRF_RIGS[o.rig] && DRF_RIGS[o.rig].soon) E.push(no(driftRigName(o.rig) + ' kommer med havsteget og kan ikke settes opp ennå.', driftRigName(o.rig) + ' arrives with the ocean step and cannot be planned yet.'));
   else if (!rigHas(o.rig)) E.push(no('Båten har ikke utstyret for ' + driftRigName(o.rig).toLowerCase() + '. Monter det under Oppgrader.', 'The boat has no equipment for ' + driftRigName(o.rig).toLowerCase() + '. Fit it under Upgrade.'));
   for (const s of S2){
-    if (s.type === 'hvile'){ if (!s.at || !portById(s.at)) E.push(no('En hviløkt mangler hvilested.', 'A rest session has no place to rest.')); continue; }
+    if (s.type === 'hvile'){
+      if (s.at === 'anker'){
+        if (!s.near || !portById(s.near)) E.push(no('En hviløkt ved anker mangler havnen den ligger nær.', 'A rest at anchor has no harbour to lie near.'));
+        else if (s.pos){ const sp = anchorSpot(s.pos), lim = BOAT.risk[2] / (0.7 + 0.3 * (sp.expo == null ? 1 : sp.expo));
+          if (!sp.ok) W.push(no('Ankerplassen nær ' + portById(s.near).name + ' passer ikke lenger. Velg på nytt.', 'The anchorage near ' + portById(s.near).name + ' no longer fits. Choose again.'));
+          else if (sp.level >= 1) W.push(no('Ankerplassen nær ' + portById(s.near).name + ' er ' + (sp.level === 2 ? 'åpen og utsatt' : 'noe åpen') + '. Ankeret begynner å slepe fra ca. ' + Math.round(lim) + ' m/s vind eller ' + fmt(BOAT.risk[0], 1) + ' m sjø. Ved dårligere vær ligger båten ved kai.', 'The anchorage near ' + portById(s.near).name + ' is ' + (sp.level === 2 ? 'open and exposed' : 'somewhat open') + '. The anchor starts to drag from about ' + Math.round(lim) + ' m/s of wind or ' + fmt(BOAT.risk[0], 1) + ' m of sea. In worse weather the boat lies at the quay.')); }
+        continue; }
+      if (!s.at || !portById(s.at)) E.push(no('En hviløkt mangler hvilested.', 'A rest session has no place to rest.')); continue; }
     const r = s.route;
     if (!r || !r.wps || !r.wps.length){ E.push(no('En tur kl. ' + driftClock(s.dep) + ' har ingen rute. Tegn ruta i kartplotteren.', 'The trip at ' + driftClock(s.dep) + ' has no route. Draw it in the plotter.')); continue; }
     if (!r.end || !portById(r.end)) E.push(no('Turen kl. ' + driftClock(s.dep) + ' må ende i en havn.', 'The trip at ' + driftClock(s.dep) + ' must end in a port.'));
@@ -134,7 +143,7 @@ const driftClock = h => { const x = ((h % 24) + 24) % 24, hh = Math.floor(x), mm
 function driftPreview(o){
   const C = driftCheck(o), out = [];
   for (const s of C.sorted){
-    if (s.type === 'hvile'){ out.push({t:s.dep, no:'Hvile i ' + (portById(s.at) || {name:'?'}).name, en:'Rest in ' + (portById(s.at) || {name:'?'}).name, kind:'rest'}); continue; }
+    if (s.type === 'hvile'){ const nm = (portById(s.at === 'anker' ? s.near : s.at) || {name:'?'}).name; out.push({t:s.dep, no:s.at === 'anker' ? 'Hvile til ankers nær ' + nm : 'Hvile i ' + nm, en:s.at === 'anker' ? 'Rest at anchor near ' + nm : 'Rest in ' + nm, kind:'rest'}); continue; }
     const r = s.route, h = driftSessHours(o, s); if (!r) continue;
     out.push({t:s.dep, no:'Kast loss fra ' + (portById(r.home) || {name:'?'}).name, en:'Cast off from ' + (portById(r.home) || {name:'?'}).name, kind:'dep'});
     for (const w of r.wps) if (w.act && w.act.kind) out.push({t:s.dep + 0.5, no:GEAR[w.act.kind].no + ' (stasjon)', en:GEAR[w.act.kind].en + ' (station)', kind:'st'});
@@ -187,15 +196,18 @@ function driftFail(o, sk, no, en){
 }
 function opsStep(H){
   const o = driftOps(), b = S.boat; if (!o || !o.on || !o.sess.length) return;
-  if (b.status !== 'port' || portBusy(b) || S.plan || b.land || b.shift) return;
+  const atAnchor = b.status === 'idle' && !!b.anch;
+  if ((b.status !== 'port' && !atAnchor) || (b.status === 'port' && portBusy(b)) || S.plan || b.land || b.shift) return;
   if (o.hold && H < o.hold) return;
   driftSync(o, H);
   if (H < driftDue(o)) return;
   const s = o.sess[o.idx], sk = opsSkipper() || S.crew[0] || null;
   if (!sk && !meAboard()){ driftFail(o, null, 'Planen kan ikke gå: ingen mannskap.', 'The plan cannot run: no crew.'); return; }
   if (S.jobs && S.jobs.length){ o.hold = H + 1; if (!o.jobTold || o.jobTold < S.t - 600){ o.jobTold = S.t; msg(sk ? sk.name : '', 'Verkstedet jobber på båten, så jeg venter.', 'The yard is working on the boat, so I wait.'); } return; }
-  const dest = s.type === 'hvile' ? portById(s.at) : portById(s.route.home);
-  if (s.type === 'hvile' && b.port === s.at){ driftAdvance(o); return; }
+  const anchorRest = s.type === 'hvile' && s.at === 'anker', restPort = s.type === 'hvile' ? (anchorRest ? s.near : s.at) : null;
+  const dest = s.type === 'hvile' ? portById(restPort) : portById(s.route.home);
+  if (!dest){ driftAdvance(o); return; }
+  if (s.type === 'hvile' && (anchorRest ? b.anch : b.port === s.at)){ driftAdvance(o); return; }
   // the weather over the session
   const dur = Math.max(1, driftSessHours(o, s)), wx = driftWxAhead(o, H, dur);
   if (!wx.ok){ o.delay = (o.delay || 0) + 1; o.hold = H + 1;
@@ -203,19 +215,31 @@ function opsStep(H){
     else if (o.delay === 1) msg(sk ? sk.name : '', 'Blir på land. Varselet gir ' + fmt(wx.w, 0) + ' m/s og ' + fmt(wx.h, 1) + ' m sjø, over grensene (' + o.wx.wind + ' m/s, ' + fmt(o.wx.hs, 1) + ' m).', 'Staying ashore. The forecast gives ' + fmt(wx.w, 0) + ' m/s and ' + fmt(wx.h, 1) + ' m sea, over the limits (' + o.wx.wind + ' m/s, ' + fmt(o.wx.hs, 1) + ' m).');
     return; }
   o.delay = 0;
-  // the way from where she lies to where the session starts (or, for a rest, to the place of rest)
-  const target = s.type === 'hvile' ? dest : dest, tgtPt = s.type === 'hvile' ? target.p : s.route.wps[0];
-  let pre = [];
+  // the way from where she lies to where the session starts (or, for a rest, to the place of rest: the quay, or the anchorage if the
+  // weather over the rest is what the boat's own limits hold there; else she goes to the quay)
+  const tgtPt = s.type === 'hvile' ? dest.p : s.route.wps[0], fromName = b.port ? portById(b.port).name : gL('sjøen', 'sea');
+  let pre = [], anchored = false, fellBack = false;
   if (s.type === 'hvile' || b.port !== s.route.home){
-    const key = o.cn + ':' + o.idx + ':' + b.port;
+    const key = o.cn + ':' + o.idx + ':' + (b.port || 'sea');
     if (!OPS_PRE || OPS_PRE.key !== key){
-      const P = OPS_PRE = {key, wps:null}, first = s.type === 'hvile' ? {x:target.p.x, y:target.p.y} : {x:tgtPt.x, y:tgtPt.y}, vid = S.cur;
-      Promise.resolve().then(() => leiaRoute({x:b.pos.x, y:b.pos.y}, first, b.port, s.type === 'hvile' ? s.at : (tgtPt.port || null)))
-        .then(r => { P.wps = r && r.wps && !r.why ? r.wps.map((q, i, l) => i === l.length - 1 && s.type === 'hvile' ? {x:target.p.x, y:target.p.y, port:s.at, fish:0} : {x:q.x, y:q.y, port:null, fish:0, leia:true}) : false; }).catch(() => { P.wps = false; });
+      const P = OPS_PRE = {key, wps:null, anchored:false, fellBack:false}, from = {x:b.pos.x, y:b.pos.y}, fromPort = b.port, rest = anchorRest ? driftRestHours(o, s) : 0;
+      (async () => {
+        let first, toPort = null, spot = null, want = false;
+        if (s.type === 'hvile'){
+          if (anchorRest){ try { await mapNeed(dest.p, 14); } catch (e){}
+            spot = s.pos && anchorSpot(s.pos).ok ? s.pos : driftAnchorage(s.near);
+            if (spot){ const sp = anchorSpot(spot); want = sp.ok && anchorForecast(spot, H, rest, sp) <= ANCH.hold && driftWxAhead(o, H, rest).ok; } }
+          first = want ? {x:spot.x, y:spot.y} : {x:dest.p.x, y:dest.p.y}; toPort = want ? null : restPort;
+        } else { first = {x:tgtPt.x, y:tgtPt.y}; toPort = tgtPt.port || null; }
+        const r = await leiaRoute(from, first, fromPort, toPort);
+        P.anchored = want; P.fellBack = anchorRest && !want;
+        P.wps = r && r.wps && !r.why ? r.wps.map((q, i, l) => i === l.length - 1 && s.type === 'hvile' ? (want ? {x:q.x, y:q.y, port:null, fish:0, anchor:true} : {x:dest.p.x, y:dest.p.y, port:restPort, fish:0}) : {x:q.x, y:q.y, port:null, fish:0, leia:true}) : false;
+      })().catch(() => { P.wps = false; });
       return;
     }
     if (OPS_PRE.wps === null) return;
-    if (OPS_PRE.wps === false){ OPS_PRE = null; driftFail(o, sk, 'Fant ingen vei fra ' + portById(b.port).name + ' til ' + (s.type === 'hvile' ? 'hvilestedet' : 'turens start') + '.', 'Found no way from ' + portById(b.port).name + ' to ' + (s.type === 'hvile' ? 'the place of rest' : 'the start of the trip') + '.'); return; }
+    if (OPS_PRE.wps === false){ OPS_PRE = null; driftFail(o, sk, 'Fant ingen vei fra ' + fromName + ' til ' + (s.type === 'hvile' ? 'hvilestedet' : 'turens start') + '.', 'Found no way from ' + fromName + ' to ' + (s.type === 'hvile' ? 'the place of rest' : 'the start of the trip') + '.'); return; }
+    anchored = OPS_PRE.anchored; fellBack = OPS_PRE.fellBack;
     pre = s.type === 'hvile' ? OPS_PRE.wps : OPS_PRE.wps.slice(0, -1);
   }
   OPS_PRE = null;
@@ -231,7 +255,7 @@ function opsStep(H){
   if (!wps.length){ driftAdvance(o); return; }
   S.plan = {wps, idx:0, speed:s.type === 'hvile' ? S.draftSpeed : s.route.speed, returning:false, depAt:null, ops:true, unsafe:[]};
   o.cur = {sid:s.id, type:s.type, t0:S.t, at:o.sess.indexOf(s)}; o.fails = 0; o.paused = null; driftAdvance(o);
-  if (s.type === 'hvile') log((sk ? sk.name : gL('Båten', 'The boat')) + ' går til ' + dest.name + ' for å hvile.', (sk ? sk.name : 'The boat') + ' goes to ' + dest.name + ' to rest.');
+  if (s.type === 'hvile') log((sk ? sk.name : gL('Båten', 'The boat')) + (anchored ? ' går ut og ligger til ankers nær ' + dest.name + ' for å hvile.' : fellBack ? ' går til kai i ' + dest.name + ' for å hvile. Været er for hardt til å ligge til ankers.' : ' går til ' + dest.name + ' for å hvile.'), (sk ? sk.name : 'The boat') + (anchored ? ' goes out and anchors near ' + dest.name + ' to rest.' : fellBack ? ' goes to the quay in ' + dest.name + ' to rest. The weather is too hard to lie at anchor.' : ' goes to ' + dest.name + ' to rest.'));
   else if (me) log('Gikk ut på driftsplanen med deg som høvedsmann. ' + (sk ? sk.name + ' er mannskap på turen.' : ''), 'Went out on the plan with you as master. ' + (sk ? sk.name + ' is crew on this trip.' : ''));
   else log(sk.name + ' gikk ut på driftsplanen.', sk.name + ' went out on the plan.');
   depart();

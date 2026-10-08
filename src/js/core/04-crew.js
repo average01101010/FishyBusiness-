@@ -114,7 +114,7 @@ function crewTick(H){
   // resting ashore with the skipper (the naust or a rorbu, 15-energy.js) they come back as fast as he does: 0 to 100 in six hours in a
   // rorbu (Jonas 06.10.2026: «Så begge sover på en måte i rorbuen»)
   // and at a rorbu they sleep there too, with you or without you (tilbakemelding #11)
-  const restC = meAboard() && resting() ? restRate(b) * 60 : b.status === 'port' && ((typeof isRorbu === 'function' && isRorbu(b.port)) || bunks(b)) ? RORBU.rate * 60 : 0;   // (a boat with bunks rests the crew at the quay as fast as a rorbu does, Jonas 08.10.2026)
+  const restC = meAboard() && resting() ? restRate(b) * 60 : b.status === 'port' && ((typeof isRorbu === 'function' && isRorbu(b.port)) || bunks(b)) ? RORBU.rate * 60 : b.anch && b.status !== 'port' && bunks(b) ? RORBU.rate * 60 * 0.85 : 0;   // (a boat with bunks rests the crew at the quay as fast as a rorbu does, Jonas 08.10.2026)
   for (const c of S.crew.slice()){
     const here = onIds.has(c.id) && atSea, viol = !!viols[c.id];
     // the share of the hour spent working: a break at sea tires less, but is not rest

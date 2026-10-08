@@ -26,8 +26,12 @@ const DRIFTUI = (() => {
   function sessRow(o, s, i, C){
     const n = C.sorted.length, tm = '<span class="dr-tm"><button data-pa="dr-dep" data-id="' + s.id + '" data-d="-0.5">−</button> ' + hh(s.dep) + ' <button data-pa="dr-dep" data-id="' + s.id + '" data-d="0.5">+</button></span>';
     if (s.type === 'hvile'){
-      const at = s.at, opts = driftRestPlaces(o, s).map(q => T('dr-at', q.name + (q.rorbu ? L(' (rorbu)', ' (rorbu)') : L(' (kai)', ' (quay)')), q.id === at, 'data-id="' + s.id + '" data-p="' + q.id + '"')).join('');
-      return '<div class="dr-s rest"><div class="dr-h">' + tm + '<b>' + L('Hvile', 'Rest') + '</b> ' + (at ? L('i ', 'in ') + nm(at) : '') + '</div><div class="ops-days">' + opts + '</div><div class="ph-row2">' + B('dr-del', L('Fjern', 'Remove'), 'data-id="' + s.id + '"') + '</div></div>';
+      const at = s.at, opts = driftRestPlaces(o, s).map(q => T('dr-at', q.name + (q.rorbu ? L(' (rorbu)', ' (rorbu)') : L(' (kai)', ' (quay)')), q.id === at, 'data-id="' + s.id + '" data-p="' + q.id + '"')).join('') +
+        T('dr-at', L('Anker', 'Anchor'), at === 'anker', 'data-id="' + s.id + '" data-p="anker"');
+      const sp = at === 'anker' && s.pos ? anchorSpot(s.pos) : null, lim = sp && sp.ok ? Math.round(BOAT.risk[2] / (0.7 + 0.3 * sp.expo)) : 0;
+      return '<div class="dr-s rest"><div class="dr-h">' + tm + '<b>' + L('Hvile', 'Rest') + '</b> ' + (at === 'anker' ? L('til ankers nær ', 'at anchor near ') + nm(s.near) : at ? L('i ', 'in ') + nm(at) : '') + '</div><div class="ops-days">' + opts + '</div>' +
+        (at === 'anker' ? '<p class="ph-note">' + (sp && sp.ok ? L('Ankerplass ' + fmt(s.pos ? dist(s.pos, portById(s.near).p) : 0, 1) + ' km fra havna, ' + Math.round(sp.depth) + ' m dypt, ' + (sp.level === 0 ? 'godt skjermet' : sp.level === 1 ? 'noe åpent' : 'åpent og utsatt') + '. Ankeret begynner å slepe fra ca. ' + lim + ' m/s vind eller ' + fmt(BOAT.risk[0], 1) + ' m sjø; da ligger båten ved kai i stedet.', 'Anchorage ' + fmt(s.pos ? dist(s.pos, portById(s.near).p) : 0, 1) + ' km from the harbour, ' + Math.round(sp.depth) + ' m deep, ' + (sp.level === 0 ? 'well sheltered' : sp.level === 1 ? 'somewhat open' : 'open and exposed') + '. The anchor starts to drag from about ' + lim + ' m/s of wind or ' + fmt(BOAT.risk[0], 1) + ' m of sea; the boat then lies at the quay instead.') : L('Finner ankerplass …', 'Finding an anchorage …')) + '</p>' : '<p class="ph-note">' + L('Kai er standard. Anker kan velges der været tillater det.', 'The quay is the default. Anchor can be chosen where the weather allows it.') + '</p>') +
+        '<div class="ph-row2">' + B('dr-del', L('Fjern', 'Remove'), 'data-id="' + s.id + '"') + '</div></div>';
     }
     const r = s.route, has = r && r.wps && r.wps.length, st = driftStations(s).length;
     return '<div class="dr-s"><div class="dr-h">' + tm + '<b>' + L('Tur ', 'Trip ') + (i + 1) + '</b> ' + (has ? nm(r.home) + ' → ' + nm(r.end) : '<i>' + L('ingen rute ennå', 'no route yet') + '</i>') + '</div>' +
@@ -151,7 +155,10 @@ const DRIFTUI = (() => {
     if (a === 'dr-addrest'){ const C = driftCheck(o), last = C.sorted[C.sorted.length - 1], end = last && driftEndPort(last), from = end || S.boat.port, pl = from ? driftRestPlaces(o, {at:from}) : [];
       const dep = last ? Math.min(o.period - 0.5, Math.ceil((last.dep + Math.max(driftSessHours(o, last), 0)) * 2) / 2) : 18;
       o.sess.push({id:driftSid(), type:'hvile', dep, at:(pl.find(q => q.rorbu) || pl[0] || {}).id || from}); return true; }
-    if (a === 'dr-at' && s){ s.at = d.p; return true; }
+    if (a === 'dr-at' && s){
+      if (d.p === 'anker'){ const C = driftCheck(o), i = C.sorted.indexOf(s), pv = C.sorted[i - 1] || C.sorted[C.sorted.length - 1], near = (pv && pv !== s && driftEndPort(pv)) || (portById(s.near) ? s.near : null) || S.boat.port || nearestPort(S.boat.pos).id;
+        s.at = 'anker'; s.near = near; s.pos = null; driftPickAnchorage(s, () => { if (typeof refreshAll === 'function') refreshAll(); else if (typeof PHONE !== 'undefined') PHONE.render(); }); return true; }
+      s.at = d.p; delete s.near; delete s.pos; return true; }
     if (a === 'dr-draw' && s){ if (!draw(d.id)) return false; PHONE.show(false); if (typeof DOCK !== 'undefined' && DOCK.close) DOCK.close(); toast(L('Tegn ruta, og trykk «Lagre i driftsplanen» nederst i ruteboksen.', 'Draw the route, then press "Save in the plan" at the bottom of the route box.')); return true; }
     if (a === 'dr-prev'){ prev = !prev; return true; }
     if (a === 'dr-rep'){ repOpen = !repOpen; return true; }
@@ -166,7 +173,7 @@ const DRIFTUI = (() => {
 })();
 // the places a rest can be: the quay where the last trip ended, and the rorbuer near it
 function driftRestPlaces(o, s){
-  const from = portById(s.at) || portById(S.boat.port) || nearestPort(S.boat.pos), out = [{id:from.id, name:from.name, rorbu:!!from.rorbu, d:0}];
+  const from = portById(s.at === 'anker' ? s.near : s.at) || portById(S.boat.port) || nearestPort(S.boat.pos), out = [{id:from.id, name:from.name, rorbu:!!from.rorbu, d:0}];
   try { for (const R of rorbuSites(from.p, 40)) if (!out.some(q => q.id === R.id)) out.push({id:R.id, name:R.name, rorbu:true, d:dist(R.p, from.p)}); } catch (e){}
   return out.sort((a, c) => a.d - c.d).slice(0, 4);
 }

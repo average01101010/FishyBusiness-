@@ -23,6 +23,7 @@ function statusText(){
   if (b.status === 'port') return t(b.land ? 'st_landing' : b.shift ? 'st_shift' : b.fueling ? 'st_fueling' : 'st_port', portById(b.port).name);
   if (b.status === 'sailing') return t(S.plan && S.plan.returning ? 'st_returning' : 'st_sailing', fmt(b.v, 0));
   if (b.gop){ const g = gopText(); return GL(g[2], g[3]); }
+  if (b.anch && b.status === 'idle') return GL('Ligger til ankers', 'At anchor');
   if (b.status === 'tow' && b.tow) return t('st_tow_' + b.tow.ph, fmt(b.v, 0));
   return t('st_' + b.status);
 }

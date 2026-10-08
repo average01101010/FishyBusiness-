@@ -35,6 +35,7 @@ const DOCK = (() => {
     batmarked:SVG('<path d="M3 15h18l-2.5 4.5H6z"/><path d="M8 15V9h6l2 6"/><path d="M11 9V5"/>'),
     oppgr:SVG('<path d="M14.5 5.5a4 4 0 0 0-5 5L3.8 16.2a1.8 1.8 0 0 0 2.5 2.5l5.7-5.7a4 4 0 0 0 5-5l-2.5 2.5-2.3-.5-.5-2.3z"/>'),
     fiskeutstyr:SVG('<circle cx="12" cy="15" r="4.5"/><path d="M12 10.5V3l5 2-5 2"/>'),
+    anker:SVG('<circle cx="12" cy="5" r="2"/><path d="M12 7v14"/><path d="M8 11h8"/><path d="M5 15a7 7 0 0 0 14 0"/><path d="M3.5 16.5L5 15l1.5 1.5M17.5 16.5L19 15l1.5 1.5"/>'),
     arbeid:SVG('<circle cx="7" cy="6" r="2.5"/><path d="M3 20v-3a4 4 0 0 1 8 0v3"/><path d="M14 7h7"/><path d="M18 4l3 3-3 3"/><path d="M14 15h7"/><path d="M18 12l3 3-3 3"/>'),
     rigg:SVG('<path d="M12 3v18"/><path d="M5 21h14"/><path d="M12 4l7 11h-7"/><path d="M12 7L6 15h6"/>'),
     vedlikehold:SVG('<path d="M4 20l7-7"/><path d="M13.5 4.5l6 6-3 3-6-6z"/><path d="M10.5 7.5l6 6"/>'),
@@ -127,10 +128,12 @@ const DOCK = (() => {
       // a quay within 400 m: «Fortøy» takes her in (moorGo), to a rorbu's, the naust's or a harbour's (16-helm.js moorAll); with more
       // than one in reach it opens a fan with each, nearest first (tilbakemelding #23: by a rorbu it only ever went back to the rorbu)
       const ml = moorAll(b.pos, 0.4), mo = ml[0], moor = mo && I('fortoy', 'naust', 'Fortøy', 'Moor', Object.assign(ml.length > 1 ? {menu:'fortoy'} : {run:() => moorGo(mo)}, {pri:mo.kind === 'rorbu' || mo.kind === 'naust' || S.energy < 40}));
+      // anchor: the boat keeps her place and the crew rests; the anchor can drag in weather the boat does not hold (06e-anchor.js)
+      const sp = !b.anch && anchorSpot(b.pos), anc = b.anch ? I('anker', 'anker', 'Hiv anker', 'Weigh anchor', {run:() => { weighAnchor(); refreshAll(); }, on:true}) : !moor ? I('anker', 'anker', 'Kast anker', 'Drop anchor', sp && sp.ok ? {run:() => { dropAnchor(); refreshAll(); }} : {off:[sp && anchorWhy[sp.why] ? L(anchorWhy[sp.why][0], anchorWhy[sp.why][1]) : L('Ikke her.', 'Not here.')]}) : null;
       return [rigJig() && I('jukse', 'jukse', 'Jukse', 'Jig', {menu:'jukse', pri:!s}),
         I('settut', 'settut', 'Sett ut', 'Set', {menu:'settut', off:rigJig() ? [L('Båten er rigget for juksa. Rigg om til line, garn eller teiner under Beholdning.', 'The boat is rigged for jigging. Re-rig for line, nets or pots under Inventory.')] : !ch.length && [S.pgear && (S.pgear.nets.length || S.pgear.lines.hyse.n || S.pgear.lines.bank.n || S.pgear.pots.small || S.pgear.pots.big) ? L('Redskapet om bord er ikke klart: line må egnes, og teiner trenger agn og blåsesett.', 'The gear aboard is not ready: line must be baited, and pots need bait and buoy sets.') : L('Du har ikke garn, line eller teiner om bord.', 'You have no nets, line or pots aboard.')]}),
         // by a quay with no buoy near, «Fortøy» takes the place of the greyed «Ta opp», so the row stays five wide on a phone
-        s || !moor ? haul : null, moor, nav, crew, work, beh].filter(Boolean);
+        s || !moor ? haul : null, moor, nav, anc, crew, work, beh].filter(Boolean);
     }
     if (b.status === 'fishing' && b.gop) return [I('gstop', 'stopp', 'Stopp arbeidet', 'Stop the work', {act:'gstop'}), work, beh].filter(Boolean);
     if (b.status === 'fishing') return [I('stopfish', 'stopp', 'Stopp', 'Stop', {act:'stopfish'}),

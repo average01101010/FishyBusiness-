@@ -33,6 +33,9 @@ JS = """(async () => {
   act('dr-addrest'); R.rest = S.ops.sess.some(x => x.type === 'hvile');
   R.html = page(); R.bar = R.html.includes('dr-bar'); R.prevBtn = R.html.includes('dr-prev');
   act('dr-prev'); R.prevList = page().includes('dr-ev');
+  // a rest at anchor: the place is found, with its shelter and the limits of the boat
+  { const rs = S.ops.sess.find(x => x.type === 'hvile'); act('dr-at', {id:rs.id, p:'anker'}); R.ankerSet = rs.at === 'anker' && !!rs.near; await new Promise(r => setTimeout(r, 1500));
+    R.ankerPos = !!rs.pos; const h = page(); R.ankerUi = /Ankerplass/.test(h) && /begynner å slepe/.test(h); act('dr-at', {id:rs.id, p:'husoy'}); R.ankerBack = rs.at === 'husoy' && !rs.pos; }
   // rig change clears the stations of the other gear
   act('dr-rig', {r:'line'}); R.rig = S.ops.rig === 'line';
   act('dr-w', {d:'2'}); R.wind = S.ops.wx.wind === 14; act('dr-hs', {d:'0.5'}); R.hs = S.ops.wx.hs === 3;
@@ -54,6 +57,7 @@ async def main():
                          ('ctx2', 'tur 2 starter i havna forrige tur sluttet'), ('origin2', 'tur 2 tegnes fra den havna, ikke fra båten'), ('cancelled', 'avbryt rydder opp'), ('rest', 'hviløkt'), ('bar', 'døgnstolpen vises'), ('prevList', 'test av planen viser hendelser'),
                          ('rig', 'bytte av utstyr'), ('wind', 'vindgrense'), ('hs', 'sjøgrense'), ('stock', 'bunkring av/på')]:
             print(ok(r.get(k)), label)
+        print(ok(r['ankerSet'] and r['ankerPos'] and r['ankerUi'] and r['ankerBack']), 'hvile ved anker: ankerplass funnet, med skjerming og båtens grenser')
         print(ok(r['port'] == 'husoy' and r['port2'] == 'senjahopen'), 'draftPort følger turens start')
         print('sidefeil', errs[:3]); await b.close()
 asyncio.run(main())
