@@ -145,6 +145,15 @@ async def main():
           R.st = b.status; R.port = b.port; R.d = Math.round(dist(b.pos, pt.p) * 1000); R.land = isLand(b.pos); R.depth = +depthF(b.pos).toFixed(1); R.cd = +coastDist(b.pos).toFixed(2);
           PHONE.open('redning'); const b2 = document.querySelector('[data-pa=unstuck]'); R.again = !!(b2 && b2.disabled); PHONE.show(false); return R; })()""")
         check(r['btn'] and r['st'] == 'idle' and r['port'] is None and not r['land'] and r['depth'] >= 4 and r['cd'] >= 0.2 and r['d'] < 2000 and r['again'], '7. «Flytt båten ut på trygt vann» legger båten utenfor Vannareid på dypt vann, og knappen hviler etterpå', r)
+        # 8. a steady gale (Vannareid 08.10.2026): after «Sitter båten fast?», and setting off in a wind already over the turn-back
+        # limit, the boat is not turned straight back to the plant; a wind that rises over it while she is out still turns her
+        r = await J("""(async () => { const b = S.boat, on = S.settings.autoOn, w = S.settings.autoW; S.settings.autoOn = true; S.settings.autoW = 0; S.plan = null;
+          const R = {}; for (let i = 0; i < 30; i++) step(); R.after = b.status; R.ret = !!(S.plan && S.plan.returning);
+          const pt = portById('mT155'), q = {x:b.pos.x + (b.pos.x - pt.p.x) * 0.5, y:b.pos.y + (b.pos.y - pt.p.y) * 0.5};
+          S.plan = {wps:[{x:q.x, y:q.y, port:null, fish:0}], idx:0, speed:6, returning:false, unsafe:[false]}; depart(); for (let i = 0; i < 10; i++) step(); R.out = !!(S.plan && !S.plan.returning) || b.status === 'idle';
+          S.settings.autoW = 99; step(); S.settings.autoW = 0; step(); R.rise = !!(S.plan && S.plan.returning);
+          S.settings.autoOn = on; S.settings.autoW = w; S.plan = null; b.status = 'idle'; return R; })()""")
+        check(r['after'] == 'idle' and not r['ret'] and r['out'] and r['rise'], '8. i vedvarende kuling snur båten ikke rett inn igjen etter «Sitter båten fast?» eller når du kaster loss; vind som øker mens du er ute, snur den fortsatt', r)
         print('sidefeil', errs[:5])
         await br.close()
 

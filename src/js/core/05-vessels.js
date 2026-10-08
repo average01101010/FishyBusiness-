@@ -292,8 +292,12 @@ function vesselStep(H){
   // she goes on to the route's end (tilbakemeldinger #47 and #48, 08.10.2026: asleep on Autonav to Honningsvåg, she drifted ashore)
   if (sleepAlone() && ['sailing', 'fishing', 'idle'].includes(b.status) && !(b.status === 'sailing' && S.plan)){ sleepDrift(H); risk(W, hs); return; }
   // (with the hand on the helm the skipper decides: no turning back by itself, 16-helm.js)
-  if (S.settings.autoOn && W > S.settings.autoW && ['sailing','fishing','idle'].includes(b.status) && !(S.plan && S.plan.returning) && !(S.tut && S.tut.catch) && !helmOn()){
-    startReturn(true, W);
+  // turning back by itself only when the wind rises over the limit while she is out (b.windArm: it has been under the limit since she
+  // left); not when she casts off in a wind already over it, nor again after the skipper stopped the turn back, until it has dropped
+  // (Vannareid 08.10.2026: in a steady gale every start, Stopp and «Sitter båten fast?» was turned straight back to the plant)
+  if (W <= S.settings.autoW) b.windArm = true;
+  if (S.settings.autoOn && W > S.settings.autoW && b.windArm && ['sailing','fishing','idle'].includes(b.status) && !(S.plan && S.plan.returning) && !(S.tut && S.tut.catch) && !helmOn()){
+    b.windArm = false; startReturn(true, W);
   }
   if (b.status === 'sailing' || b.status === 'fishing') b.engH = (b.engH || 0) + (b.status === 'sailing' ? 1 : 0.25) / 60;
   if (b.status === 'sailing'){ if (!helmOn()){ const p0 = b.pos; sail(H, W, hs); if (meAboard()) tatAdd('nm', dist(p0, b.pos) / NM); } }   // by hand she moves every tick (helmStep)
@@ -420,7 +424,7 @@ function unstuck(){
   if (typeof helmOff === 'function') helmOff();
   if (b.gop) gopAbort('return');
   b.land = b.shift = b.fueling = b.after = null; b.landWait = null; b.tow = null; b.castUntil = null;
-  S.plan = null; b.pos = {x:to.x, y:to.y}; b.status = 'idle'; b.port = null; b.v = 0; b.fishUntil = null; b.berth = null;
+  S.plan = null; b.pos = {x:to.x, y:to.y}; b.status = 'idle'; b.port = null; b.v = 0; b.fishUntil = null; b.berth = null; b.windArm = false;
   S.trail = [{x:to.x, y:to.y, port:null}]; S.unstuckAt = Date.now();
   log('Båten ble flyttet ut på trygt vann og ligger stille.', 'The boat was moved out to safe water and lies still.', 'nav');
   if (typeof cloudEv === 'function') cloudEv('unstuck', was);

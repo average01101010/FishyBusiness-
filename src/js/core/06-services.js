@@ -181,7 +181,7 @@ function opsReport(pid, kg, total, landed){
   msg(sk ? sk.name : 'Driftsplan', 'Driftsrapport: ' + what[0] + rest[0], 'Operations report: ' + what[1] + rest[1]);
 }
 function depart(){
-  const b = S.boat;
+  const b = S.boat; b.windArm = false;   // armed again once the wind is under the turn-back limit (05-vessels.js)
   // the lines stay on until the catch is landed; the plan leaves when it is done
   if (b.status === 'port' && portBusy(b)){ if (S.plan){ S.plan.depAt = portBusy(b) + 1; log('Går når arbeidet på kaia er ferdig, kl. ' + hm(S.plan.depAt / 60) + '.', 'Leaving when the work at the quay is done, at ' + hm(S.plan.depAt / 60) + '.'); } return false; }
   // without you aboard, the vessel needs crew of its own
