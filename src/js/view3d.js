@@ -3466,6 +3466,10 @@ const G3 = (() => {
       return false;
     }
   }
+  // the crew's words over their heads (Jonas 08.10.2026, tilbakemelding #44: «kommentarer fra mannskap burde komme opp som flytende tekst
+  // over hodet ... La gjerne også kommentaren henge 10 sekunder»): the line stands over the one who says it for SAYMS, fading in and out
+  const SAYMS = 10000, SAY = {c:null, txt:'', t0:0, a:null, el:null};
+  function say3d(c, no, en){ if (!active || !c) return false; SAY.c = c; SAY.txt = c.name.split(' ')[0] + ': «' + (S.lang === 'no' ? no : en) + '»'; SAY.t0 = performance.now(); return true; }
   let labelEls = [];
   function buildLabels(){ labelsEl.innerHTML = ''; labelEls = PORTS.map(p => { const d = document.createElement('div'); d.className = 'lbl3d'; d.textContent = p.name; labelsEl.appendChild(d); return d; }); }
   function resize(){
@@ -4121,6 +4125,11 @@ const G3 = (() => {
     // hand-worked boats do the same in drawSkiff)
     else { const jig = S.boat.status === 'fishing' && !S.boat.gop && !S.boat.deckStop && (VG.open || ncrew === 0);
       drawVessel(VT, VG, BMrel, VPn, !cam.helm && !awaySk, deckCrew, jig, hullLiv(S.boat), true); }
+    SAY.a = null;
+    if (SAY.c && performance.now() - SAY.t0 < SAYMS){
+      const ci = crewAboard().findIndex(p => p.id === SAY.c.id), sp = VG.crewSpots && VG.crewSpots[ci >= 0 && ci < deckCrew ? ci : 0];
+      SAY.a = xf(BMrel, sp ? [sp[0], sp[1] + 2.1, sp[2]] : [0, 3.4, 0]);
+    }
     if (SHOW){ const y = (env.tide || 0) + (seaH(SHOW.x, SHOW.z, t) - (env.tide || 0)) * 0.8; SHOW.M = model(SHOW.x - eye[0], y - eye[1], SHOW.z - eye[2], -SHOW.h, Math.sin(t * 0.7) * 0.02, Math.sin(t * 0.9) * 0.03); drawVessel(SHOW.t, GEO(SHOW.t), SHOW.M, VPn, true, 2); }
     if (STATN){ nSetup(VPn); drawN(STATN, TM); if (BUNKN) drawN(BUNKN, TM); } if (LIFT.off < 0.05) drawMooring(BMrel, eye, VPn, t); drawRescue(BMrel, eye, VPn, t); drawTowLine(BMrel, VPn); if (PM) drawDeck(BMrel, eye, VPn, t, DECKACT); drawGearOp(BMrel, eye, VPn, t);
     const plant = PM ? nearestPlant(eye) : null; drawUnits(eye, VPn, true, nearFar, plant && plant.id); drawSites(eye, VPn, true, nearFar);
@@ -4316,6 +4325,15 @@ const G3 = (() => {
   }
   function updateLabels(VP, eye, W, Hh){
     const r = wrap.getBoundingClientRect(), sx = r.width / W, sy = r.height / Hh;
+    // the crew's line over the head of whoever says it
+    if (!SAY.el || !SAY.el.isConnected){ SAY.el = document.createElement('div'); SAY.el.className = 'say3d'; labelsEl.appendChild(SAY.el); }
+    { const el = SAY.el, age = performance.now() - SAY.t0, a = SAY.a;
+      if (!a || age >= SAYMS){ if (el.style.display !== 'none') el.style.display = 'none'; }
+      else { const cw = VP[3] * a[0] + VP[7] * a[1] + VP[11] * a[2] + VP[15];
+        if (cw <= 0) el.style.display = 'none';
+        else { const cx = VP[0] * a[0] + VP[4] * a[1] + VP[8] * a[2] + VP[12], cy = VP[1] * a[0] + VP[5] * a[1] + VP[9] * a[2] + VP[13];
+          if (el.textContent !== SAY.txt) el.textContent = SAY.txt;
+          el.style.display = ''; el.style.opacity = Math.min(1, age / 300, (SAYMS - age) / 800).toFixed(2); el.style.left = ((cx / cw * 0.5 + 0.5) * W * sx) + 'px'; el.style.top = ((1 - (cy / cw * 0.5 + 0.5)) * Hh * sy) + 'px'; } } }
     PORTS.forEach((p, i) => {
       const x = p.coast.x * 1000 - eye[0], z = p.coast.y * 1000 - eye[2], d = Math.hypot(x, z), el = labelEls[i];
       if (d > 14000){ if (el.style.display !== 'none') el.style.display = 'none'; return; }   // (the coast's harbours far off: no ground lookups where no packs are)
@@ -4381,7 +4399,7 @@ const G3 = (() => {
   return {
     // the quality: with a setting ('auto', 'low', 'mid', 'high') it applies it; returns the level now and the frame rate
     quality(v){ if (v){ S.settings.q3d = v; QUAL.bad = QUAL.good = 0; QUAL.cap = 2; qualSet(); } return {lvl:QUAL.lvl, set:S.settings.q3d || 'auto', fps:FPS.v, ultra:UINT}; },
-    show, toggle(){ return show(!active); }, isActive:() => active, haltNeed:() => active ? trkHaltNeed() : 0, get failWhy(){ return failWhy; },
+    show, toggle(){ return show(!active); }, isActive:() => active, say:say3d, haltNeed:() => active ? trkHaltNeed() : 0, get failWhy(){ return failWhy; },
     // the next frame as a JPEG data URL (or null when no frame comes within 2 s)
     // whether a point (km, and metres above the ground) is in the picture the camera shows now: in front within the picture's width,
     // and no ground between (Kystposten's lighthouse pictures, ui/05f-turer.js)

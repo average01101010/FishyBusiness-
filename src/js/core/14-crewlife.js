@@ -145,6 +145,25 @@ const SAY = {
     ['Kæm har flytta kniven min? Igjen!', 'Who moved my knife? Again!', 'kranglefant']]
 };
 const pick1 = a => a[Math.floor(Math.random() * a.length)];
+// A hand says the lines in the dialect of where he is from (Jonas 08.10.2026, tilbakemelding #44: «Mannskap burde skrive på dialekt med ord
+// og uttrykk basert på hvor det kommer fra»). The lines are written in the Northern Norwegian of Troms; north of 65° N they stand as they
+// are, and further south the words are changed by region: Trøndelag, Møre, the west and the south coast.
+const DIALECTS = {
+  tro:[[/\bikkje\b/g, 'itj'], [/\bkæm\b/g, 'kem'], [/\bkjæm\b/g, 'kjem'], [/\bfesken\b/g, 'fisken'], [/\bfesk\b/g, 'fisk']],
+  mor:[[/\bæ\b/g, 'eg'], [/\bmæ\b/g, 'meg'], [/\bsæ\b/g, 'seg'], [/\bkæm\b/g, 'kven'], [/\bka\b/g, 'kva'], [/\bkorsn\b/g, 'korleis'], [/\be\b/g, 'er'], [/\bska\b/g, 'skal'], [/\bkjæm\b/g, 'kjem'], [/\bfesken\b/g, 'fisken'], [/\bfesk\b/g, 'fisk'], [/\bnå\b/g, 'no'], [/\bikkje\b/g, 'ikkje']],
+  vest:[[/\bæ\b/g, 'eg'], [/\bmæ\b/g, 'meg'], [/\bsæ\b/g, 'seg'], [/\bkæm\b/g, 'kven'], [/\bka\b/g, 'kva'], [/\bkorsn\b/g, 'korleis'], [/\be\b/g, 'er'], [/\bska\b/g, 'skal'], [/\bkjæm\b/g, 'kjem'], [/\bfesken\b/g, 'fisken'], [/\bfesk\b/g, 'fisk'], [/\bnå\b/g, 'no'], [/\bvatn\b/g, 'vatn'], [/\bikkje\b/g, 'ikkje']],
+  sor:[[/\bkæm\b/g, 'kem'], [/\bkorsn\b/g, 'korleis'], [/\bikkje\b/g, 'ikkje'], [/\bfesken\b/g, 'fisken'], [/\bfesk\b/g, 'fisk'], [/\bvatn\b/g, 'vann'], [/\bnå\b/g, 'nå']]
+};
+const capLike = (from, to) => from[0] !== from[0].toLowerCase() ? to[0].toUpperCase() + to.slice(1) : to;
+function dialectOf(c){
+  const pt = c && c.homePort && portById(c.homePort), q = pt || portById(S.home || HOME0); if (!q) return null;
+  const la = natLL(q.p).lat; return la >= 65 ? null : la >= 63.3 ? 'tro' : la >= 62 ? 'mor' : la >= 59.2 ? 'vest' : 'sor';
+}
+function crewDialect(c, text){
+  const d = DIALECTS[dialectOf(c)]; if (!d) return text;
+  let out = text; for (const [re, to] of d) out = out.replace(new RegExp(re.source, 'gi'), m => capLike(m, to));
+  return out;
+}
 // someone says a line for the situation: c, or a person whose ways suit one of the lines, or anyone aboard
 function crewSay(c, sit){
   const on = crewAboard(), L0 = sit && SAY[sit]; if (!on.length || !L0) return false;
@@ -156,10 +175,10 @@ function crewSay(c, sit){
     if (fit.length && Math.random() < 0.6){ const l = pick1(fit); who = pick1(on.filter(p => p.traits.includes(l[2]))); pool = [l]; }
     else { pool = L0.filter(l => !l[2]); who = pick1(on); } }
   if (!pool.length || !who) return false;
-  const l = pick1(pool), nm = who.name.split(' ')[0]; S.sayT = S.t;
-  log(nm + ': «' + l[0] + '»', nm + ': «' + l[1] + '»');
-  (who.said = who.said || []).push({t:S.t, no:l[0], en:l[1]}); if (who.said.length > 5) who.said.shift();
-  if (hooks.onSay && meAboard()) hooks.onSay(who, l[0], l[1]);
+  const l = pick1(pool), nm = who.name.split(' ')[0], no = crewDialect(who, l[0]); S.sayT = S.t;
+  log(nm + ': «' + no + '»', nm + ': «' + l[1] + '»');
+  (who.said = who.said || []).push({t:S.t, no, en:l[1]}); if (who.said.length > 5) who.said.shift();
+  if (hooks.onSay && meAboard()) hooks.onSay(who, no, l[1]);
   return true;
 }
 // once an hour at sea: now and then (at most every 1.5 hours) someone remarks on how things are

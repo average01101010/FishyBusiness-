@@ -92,7 +92,7 @@ const WORK = (() => {
   return {page, act};
 })();
 // a line from the crew shows as a toast when you are aboard
-hooks.onSay = (c, no, en) => { if (typeof toast === 'function') toast(c.name.split(' ')[0] + ': «' + (S.lang === 'no' ? no : en) + '»'); };
+hooks.onSay = (c, no, en) => { if (typeof G3 !== 'undefined' && G3.isActive() && G3.say(c, no, en)) return; if (typeof toast === 'function') toast(c.name.split(' ')[0] + ': «' + (S.lang === 'no' ? no : en) + '»'); };
 // your energy on screen: the edges darken under 15 %, and asleep the screen is black with a countdown in real time
 function energyUi(){
   const L = (no, en) => S.lang === 'no' ? no : en, e = S.energy == null ? 100 : S.energy, sl = $('sleep'), vg = $('vign'), zz = asleep();

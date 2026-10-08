@@ -1040,3 +1040,7 @@ body.vplot .depc{display:none}
 /* the chart's side buttons all one size and square (Jonas 08.10.2026): play/pause, delete route, undo, redo and the boat arrow */
 .zoom button#zboat{display:grid;place-items:center;padding:0}
 .zoom button.rt svg,.zoom button#zboat svg{width:24px;height:24px}
+
+/* the crew's words over their heads in 3D (view3d.js say3d) */
+.say3d{position:absolute;transform:translate(-50%,-100%);max-width:240px;padding:5px 9px;border-radius:9px;background:rgba(7,18,28,.82);color:#f2f7fa;font:600 13px/1.25 var(--sans);text-align:center;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.35);z-index:3}
+.say3d::after{content:'';position:absolute;left:50%;bottom:-5px;margin-left:-5px;border:5px solid transparent;border-bottom:0;border-top-color:rgba(7,18,28,.82)}
