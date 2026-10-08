@@ -4,6 +4,34 @@ function dayKey(d){ d = d || new Date(); return d.getFullYear() + '-' + String(d
 function dayNum(k){ const [y, m, dd] = k.split('-').map(Number); return Math.round(Date.UTC(y, m - 1, dd) / 864e5); }
 function fmt(n, d = 0){ return new Intl.NumberFormat(S.lang === 'no' ? 'nb-NO' : 'en-GB', {minimumFractionDigits:d, maximumFractionDigits:d}).format(n); }
 function kr(n){ return S.lang === 'no' ? fmt(Math.round(n)) + ' kr' : 'NOK ' + fmt(Math.round(n)); }
+// A landing note paid (ui/08-actions.js sell, Jonas 08.10.2026: «ka-ching», «+(inntekt)» in green, counted over to the account): the amount
+// rises from the cash bar in green, the register rings (SND.cash), and the cash in the bar and in the HUD counts up from what it was to
+// what it is (CASHFX.v, shown by cashShown()), with a tick on the way (SND.coin). Longer for more (1.1 to 2.6 s). A page the browser
+// drives for a test shows the sum at once, unless CASHFX.force is set; a player who asks for less motion gets the sum and the ring.
+const CASHFX = {on:false, v:0, from:0, to:0, t0:0, dur:0, blip:0, force:false, raf:0};
+const cashShown = () => CASHFX.on ? CASHFX.v : S.cash;
+function cashFx(delta){
+  if (!(delta >= 1) || typeof document === 'undefined') return;
+  if (typeof SND !== 'undefined' && SND.cash) SND.cash(delta);
+  if (document.hidden || (navigator.webdriver && !CASHFX.force)) return;
+  const el = $('cash'); if (!el) return;
+  const to = S.cash, from = CASHFX.on ? CASHFX.v : to - delta, calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const f = document.createElement('div'); f.className = 'cashfx'; f.textContent = '+' + kr(delta).replace(/^NOK /, 'NOK ');
+  const r = el.getBoundingClientRect(); f.style.left = Math.round(r.left + r.width / 2) + 'px'; f.style.top = Math.round(r.bottom + 2) + 'px';
+  document.body.appendChild(f); setTimeout(() => f.remove(), 2400);
+  if (calm){ return; }
+  Object.assign(CASHFX, {on:true, from, to, v:from, t0:performance.now(), dur:Math.min(2600, Math.max(1100, 700 + Math.log10(delta + 10) * 330)), blip:0});
+  el.classList.add('cashup'); cancelAnimationFrame(CASHFX.raf);
+  const step = now => {
+    const u = Math.min(1, (now - CASHFX.t0) / CASHFX.dur), e = 1 - Math.pow(1 - u, 3);
+    CASHFX.v = CASHFX.from + (CASHFX.to - CASHFX.from) * e;
+    if (u < 1 && now - CASHFX.blip > 55 + 60 * u){ CASHFX.blip = now; if (typeof SND !== 'undefined' && SND.coin) SND.coin(u); }
+    if (u >= 1){ CASHFX.on = false; el.classList.remove('cashup'); }
+    renderClock();
+    if (u < 1) CASHFX.raf = requestAnimationFrame(step);
+  };
+  CASHFX.raf = requestAnimationFrame(step);
+}
 // real time for a stretch of game time: the clock runs GAME_RATE × S.mult game minutes per real minute
 function realMin(gameMin){ return gameMin / simRate(); }
 function realDur(gameMin){ const m = realMin(Math.max(0, gameMin)), no = S.lang === 'no';

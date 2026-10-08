@@ -1,6 +1,6 @@
 function renderClock(){
   $('clock').textContent = clockStr(S.t / 60);
-  const c = $('cash'); c.textContent = kr(S.cash); c.classList.toggle('neg', S.cash < 0);
+  const c = $('cash'); c.textContent = kr(cashShown()); c.classList.toggle('neg', S.cash < 0);
 }
 
 // the fishing chart needs the plotter on the vessel you follow; the wish is kept, so it comes back on a vessel that has one

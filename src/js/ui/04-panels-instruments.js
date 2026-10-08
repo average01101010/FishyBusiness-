@@ -59,10 +59,10 @@ function renderHud(){
     const e = S.energy == null ? 100 : S.energy, no = S.lang === 'no';
     const warn = (atSea && lvl >= 1 ? '<b class="r' + lvl + '">' + fmt(hs, 1) + ' m</b>' : '') + (!energyOff() && (asleep() || e < ENERGY.warn) ? '<b class="' + (asleep() || e < ENERGY.dim ? 'r2' : 'r1') + '">⚡' + Math.round(e) + ' %</b>' : '');
     setHtml(hud, '<div class="hstrip"><span class="ht">' + hm(S.t / 60) + '</span><i class="dot ' + dot + '"></i><span class="hs">' + statusText() + '</span>' + warn +
-      '<b class="' + (S.cash < 0 ? 'r2' : '') + '">' + kr(S.cash) + '</b><button type="button" class="hmin" data-hmin="hud" aria-label="' + (no ? 'Vis alt' : 'Show all') + '">+</button></div>');
+      '<b class="' + (S.cash < 0 ? 'r2' : '') + '">' + kr(cashShown()) + '</b><button type="button" class="hmin" data-hmin="hud" aria-label="' + (no ? 'Vis alt' : 'Show all') + '">+</button></div>');
   } else {
   const nx = nextEvent();
-  setHtml(hud, '<div class="hd"><span>' + dayStr(S.t / 60) + ' ' + hm(S.t / 60) + '</span><b class="' + (S.cash < 0 ? 'r2' : '') + '">' + kr(S.cash) + '</b><button type="button" class="hmin" data-hmin="hud" aria-label="' + (S.lang === 'no' ? 'Minimer' : 'Minimise') + '">–</button></div><div class="st"><i class="dot ' + dot + '"></i>' + statusText() + '</div>' + (nx ? '<div class="st nx">⏱ ' + nx.txt + ' ' + inReal(nx.t - S.t) + ' <small>(' + hm(nx.t / 60) + ')</small></div>' : '') +
+  setHtml(hud, '<div class="hd"><span>' + dayStr(S.t / 60) + ' ' + hm(S.t / 60) + '</span><b class="' + (S.cash < 0 ? 'r2' : '') + '">' + kr(cashShown()) + '</b><button type="button" class="hmin" data-hmin="hud" aria-label="' + (S.lang === 'no' ? 'Minimer' : 'Minimise') + '">–</button></div><div class="st"><i class="dot ' + dot + '"></i>' + statusText() + '</div>' + (nx ? '<div class="st nx">⏱ ' + nx.txt + ' ' + inReal(nx.t - S.t) + ' <small>(' + hm(nx.t / 60) + ')</small></div>' : '') +
     (S.fleet && S.fleet.length > 1 ? '<div class="row"><span>' + (S.lang === 'no' ? 'Båt' : 'Vessel') + '</span><b>' + S.boatName + (meAboard() ? ' ⚓' : '') + '</b></div>' : '') +
     '<div class="row"><span>' + t('wind') + '</span><b>' + dirName(windDir(H)) + ' ' + fmt(W, 1) + ' m/s</b></div>' +
     '<div class="row"><span>' + t('waves') + '</span><b>' + fmt(hs, 1) + ' m' + (atSea ? ' <span class="r' + lvl + '">' + t('risk' + lvl) + '</span>' : '') + '</b></div>' +

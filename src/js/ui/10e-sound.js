@@ -230,6 +230,25 @@ const SND = (() => {
       set('npc' + k, on ? (o.n.big ? 0.16 : 0.1) * (nv > 0.5 ? 1 : 0.4) * o.a.g : 0, 0.6); place('npc' + k, o.a);
     }
   }
+  // the cash register when a landing note is paid (Jonas 08.10.2026: «ka-ching»): the drawer's click (a short burst of noise through a
+  // band-pass) and the bell struck twice (partials of a metal bell, each dying away), through the master so the volume is the player's.
+  // coin(u) is one small tick of the count-up, higher as the count nears its end (u 0 to 1). Silent before the first touch or when off.
+  function cash(kr){
+    if (!ac || ac.state !== 'running' || !vol()) return;
+    const t = ac.currentTime, big = Math.min(1, Math.log10(Math.max(10, kr)) / 6), amp = 0.28 + 0.22 * big;
+    { const n = ac.createBufferSource(); n.buffer = WHITE; const f = filt('bandpass', 2600, 1.1), g = gain(0, master); n.connect(f); f.connect(g);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(amp * 1.2, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.07); n.start(t, Math.random() * 0.5, 0.1); }
+    for (const [dt, f0, a] of [[0.075, 1568, 1], [0.19, 2093, 0.8]]) for (const [ratio, pa, dec] of [[1, 1, 1.5], [2.41, 0.45, 0.9], [3.97, 0.22, 0.55], [5.6, 0.1, 0.3]]){
+      const o = ac.createOscillator(), g = gain(0, master); o.type = 'sine'; o.frequency.value = f0 * ratio; o.connect(g);
+      g.gain.setValueAtTime(0.0001, t + dt); g.gain.exponentialRampToValueAtTime(amp * a * pa * 0.5, t + dt + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, t + dt + dec);
+      o.start(t + dt); o.stop(t + dt + dec + 0.05);
+    }
+  }
+  function coin(u){
+    if (!ac || ac.state !== 'running' || !vol()) return;
+    const t = ac.currentTime, o = ac.createOscillator(), g = gain(0, master); o.type = 'sine'; o.frequency.value = 1500 + 1500 * Math.min(1, Math.max(0, u)); o.connect(g);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.07, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05); o.start(t); o.stop(t + 0.07);
+  }
   function start(){
     if (started || (!vol() && !musVol())) return;
     try { build(); started = true; setInterval(tick, 100); } catch (e){ console.warn('sound', e); }
@@ -242,5 +261,5 @@ const SND = (() => {
   document.addEventListener('pointerdown', () => { if (!started){ if (S && S.settings) start(); } else if (ac && ac.state !== 'running' && ac.state !== 'closed' && !document.hidden) quiet(ac.resume()); }, true);
   document.addEventListener('visibilitychange', () => { if (!ac || ac.state === 'closed') return; quiet(document.hidden ? ac.suspend() : ac.resume()); });
   // testEar / testSrc (for the tests): an ear and the places, as G3.ear and G3.sndSrc give them in 3D
-  return {start, FIRES, MUS, get started(){ return started; }, get state(){ return ac ? ac.state : 'none'; }, LV, tick, at:(q, ref, e) => { const k = EAR; EAR = e; const r = at(q, ref); EAR = k; return r; }, testEar:null, testSrc:null};
+  return {start, cash, coin, FIRES, MUS, get started(){ return started; }, get state(){ return ac ? ac.state : 'none'; }, LV, tick, at:(q, ref, e) => { const k = EAR; EAR = e; const r = at(q, ref); EAR = k; return r; }, testEar:null, testSrc:null};
 })();

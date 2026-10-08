@@ -1044,3 +1044,9 @@ body.vplot .depc{display:none}
 /* the crew's words over their heads in 3D (view3d.js say3d) */
 .say3d{position:absolute;transform:translate(-50%,-100%);max-width:240px;padding:5px 9px;border-radius:9px;background:rgba(7,18,28,.82);color:#f2f7fa;font:600 13px/1.25 var(--sans);text-align:center;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.35);z-index:3}
 .say3d::after{content:'';position:absolute;left:50%;bottom:-5px;margin-left:-5px;border:5px solid transparent;border-bottom:0;border-top-color:rgba(7,18,28,.82)}
+
+/* a landing note paid: the amount rises in green from the cash bar, and the cash counts up in green (ui/02-format-state.js cashFx) */
+.cashfx{position:fixed;z-index:99999;transform:translate(-50%,0);pointer-events:none;font-weight:800;font-size:22px;letter-spacing:.2px;color:#3ddc84;text-shadow:0 1px 3px rgba(0,0,0,.55),0 0 12px rgba(61,220,132,.45);white-space:nowrap;animation:cashUp 2.2s ease-out forwards}
+@keyframes cashUp{0%{opacity:0;transform:translate(-50%,8px) scale(.7)}10%{opacity:1;transform:translate(-50%,0) scale(1.18)}22%{transform:translate(-50%,-4px) scale(1)}72%{opacity:1;transform:translate(-50%,-30px) scale(1)}100%{opacity:0;transform:translate(-50%,-52px) scale(1)}}
+#cash.cashup{color:#3ddc84;text-shadow:0 0 10px rgba(61,220,132,.55);transition:color .2s}
+@media (prefers-reduced-motion:reduce){.cashfx{animation:cashFade 2.2s linear forwards}@keyframes cashFade{0%,70%{opacity:1}100%{opacity:0}}}
