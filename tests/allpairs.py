@@ -47,6 +47,7 @@ async def main():
         await pg.wait_for_function("typeof SIMREADY !== 'undefined' && SIMREADY", timeout=120000)
         pairs = await pg.evaluate(PAIRS, K)
         mine = [x for i, x in enumerate(pairs) if i % SN == SI - 1]
+        if os.environ.get('ONLY'): mine = [x.split('>') for x in os.environ['ONLY'].split(',')]   # ONLY=a>b,c>d: just these pairs
         res, fail, slow = [], 0, 0
         for ai, bi in mine:
             r = await pg.evaluate(CHECK, [ai, bi]); r['a'], r['b'] = ai, bi; res.append(r)

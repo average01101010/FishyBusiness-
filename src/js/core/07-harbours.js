@@ -140,7 +140,10 @@ function approachPath(pt){
   const cells = []; for (let k = end; k !== -1; k = prev.get(k)) cells.push(cell(k));
   cells[cells.length - 1] = pt.p;
   const path = [cells[0]];
-  const clear = (a, b) => pt.free ? (clearLine(a, b) || quayLandLine(a, b)) : clearLine(a, b);
+  // (land every 2 m as the route check: clearLine's 8 m let thin islets through, and the way in then failed the mend, 08.10.2026; the
+  // 8 m check first, as it turns most lines down cheaply)
+  const fine = (a, b, quay) => { const n = Math.max(1, Math.ceil(dist(a, b) / 0.002)); for (let i = 1; i < n; i++){ const q = {x:a.x + (b.x - a.x) * i / n, y:a.y + (b.y - a.y) * i / n}; if (isLand(q) && !(quay && quayLand(q))) return false; } return !coastSegHit(a, b); };
+  const clear = (a, b) => pt.free ? (clearLine(a, b) ? fine(a, b, false) || fine(a, b, true) : quayLandLine(a, b) && fine(a, b, true)) : clearLine(a, b) && fine(a, b, false);
   for (let i = 0; i < cells.length - 1;){ let j = cells.length - 1; while (j > i + 1 && !clear(cells[i], cells[j])) j--; if (j === cells.length - 1) break; path.push(cells[j]); i = j; }
   APPROACH[pt.id] = path.map(q => ({x:Math.round(q.x * 1000) / 1000, y:Math.round(q.y * 1000) / 1000}));
   pt.app = APPROACH[pt.id][0]; PCELL = null;   // the harbour's safe zone reaches out to the start of the way in (inHarbour)

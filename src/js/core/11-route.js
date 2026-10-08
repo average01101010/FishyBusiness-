@@ -168,13 +168,15 @@ async function leiaCorridor1(pp, bb, R, c, sd, st, first, last){
 }
 // can a straight leg be sailed: no land, and away from harbours at least `margin` km from the shore, deep enough and clear of rocks
 function leiaLegOk(p, q, sd, margin){
-  const L = dist(p, q), n = Math.max(1, Math.ceil(L / 0.008));
+  // (land every 2 m like leiaLegFail, the rest every 24 m: a sliver of land between samples 8 m apart passed here and failed in the mend,
+  // CI check of all plant pairs 08.10.2026)
+  const L = dist(p, q), n = Math.max(1, Math.ceil(L / 0.002));
   // the depth is checked up to the ends too, unless an end itself lies in shallow water (a set's buoy, the naust's berth): there the
   // boat goes anyway, and the 50 m round it are hers (before 08.10.2026 the 50 m by every end went unchecked)
   const sp = inHarbour(p) || depthF(p) < sd + 1, sq = inHarbour(q) || depthF(q) < sd + 1;
   for (let i = 1; i < n; i++){
     const u = i / n, pt = {x:p.x + (q.x - p.x) * u, y:p.y + (q.y - p.y) * u}; if (isLand(pt)) return false;
-    if (i % 3 || inHarbour(pt)) continue;
+    if (i % 12 || inHarbour(pt)) continue;
     if (margin > 0 && coastDist(pt) < margin && Math.min(dist(pt, p), dist(pt, q)) > margin) return false;
     if (depthF(pt) < sd + 1 && !((sp && dist(pt, p) <= 0.05) || (sq && dist(pt, q) <= 0.05))) return false;
   }
@@ -213,9 +215,16 @@ async function leiaMend(P, sd, st, strict){
   const tick = async () => { if (performance.now() - t0 > LEIA.slice){ leiaSlice(st, t0, 'mend'); await leiaYield(); t0 = performance.now(); } };
   // (eA, eB: the leg's ends are the route's own start or end)
   const fail = (a, b, eA, eB) => leiaLegFail(a, b, tick, eA, eB, strict), safe = async (a, b, eA, eB) => !(await fail(a, b, eA, eB));
+  // the way in: the boat's own minimum depth outside harbours and no breakwater or rock, land inside the harbour skipped
+  const safeIn = async (a, b) => { const L = dist(a, b), n = Math.max(1, Math.ceil(L / 0.004)), lim = BOAT.draft + LEIA.minOver;
+    for (let i = 1; i <= n; i++){ const pt = {x:a.x + (b.x - a.x) * i / n, y:a.y + (b.y - a.y) * i / n}; if (inHarbour(pt)) continue; if (isLand(pt) || depthF(pt) < lim) return false; if ((i & 63) === 0) await tick(); }
+    return !coastSegHit(a, b) && !rockOnLeg(a, b, 0.012); };
   for (let i = 1; i < P.length; i++){
     const p = out[out.length - 1], q = P[i], first = out.length === 1, last = i === P.length - 1, f = await fail(p, q, first, last);
     if (!f){ out.push(q); continue; }
+    // the harbour's own way in, between two of its points: kept as it is when the boat's own minimum holds on it (see leiaRoute0)
+    if (st.trust){ const tp = st.trust.get(p.x.toFixed(4) + ',' + p.y.toFixed(4)), tq = st.trust.get(q.x.toFixed(4) + ',' + q.y.toFixed(4));
+      if (tp && tp === tq && dist(p, q) < 3 && await safeIn(p, q)){ out.push(q); if (strict) st.soft = (st.soft || 0) + 1; st.trusted = (st.trusted || 0) + 1; continue; } }
     // a cell's middle by the shore (a 100 m cell can hold a sliver of land): the point is dropped when the leg to the next one is clean
     if (!last && !(await fail(p, P[i + 1], first, i + 1 === P.length - 1))){ st.dropped = (st.dropped || 0) + 1; continue; }
     // (what failed, for the tests and the console: land, the depth there, a rock or a breakwater)
@@ -268,7 +277,7 @@ async function leiaRoute(a, b, aPort, bPort, opt){
   const tight = opt && opt.tight, shoreK = LEIA.shoreK, margins = LEIA.margins; if (tight){ LEIA.shoreK = 0; LEIA.margins = [0]; }
   // the things in the water (11b-obstacles.js) count everywhere but by the route's ends: a boat lying by a pier, a route to the naust
   const ctx = HIND.ctx; HIND.ctx = {free:[a, b].map(p => [p.x * 1000, p.y * 1000]), freeR:40};
-  try { return await leiaRoute0(a, b, aPort, bPort); } finally { LEIA.shoreK = shoreK; LEIA.margins = margins; HIND.ctx = ctx; }
+  try { return await leiaRoute0(a, b, aPort, bPort, false); } finally { LEIA.shoreK = shoreK; LEIA.margins = margins; HIND.ctx = ctx; }
 }
 // Step 1 of the coast-wide Autonav (08.10.2026): the way from a point by the shore, in a narrow basin or among islets, out to
 // water where the 100 m search can take over (or to where goal(q) says, within km), found on the 25 m mask (the fine coast decides what is land): breadth-first through
@@ -279,7 +288,7 @@ function leiaLane(p, goal, km){
   const M = MAPD.L.mask, c = M.c, nx = M.nx, ny = M.ny, lim = BOAT.draft + LEIA.minOver;
   const cell = k => { const x = k % nx; return {x:(M.ix0 + x + 0.5) * c, y:(M.iy0 + (k - x) / nx + 0.5) * c}; };
   const X0 = Math.floor(p.x / c) - M.ix0, Y0 = Math.floor(p.y / c) - M.iy0; if (X0 < 0 || Y0 < 0 || X0 >= nx || Y0 >= ny) return null;
-  const W = new Map(), wet = (x, y) => { const k = y * nx + x; let v = W.get(k); if (v === undefined){ const q = cell(k); try { v = !isLand(q) && (inHarbour(q) || depthF(q) >= lim); } catch (e){ v = false; } W.set(k, v); } return v; };
+  const W = new Map(), wet = (x, y) => { const k = y * nx + x; let v = W.get(k); if (v === undefined){ const q = cell(k); try { v = !isLand(q) && (inHarbour(q) || depthF(q) >= lim && !rockOnLeg(q, q, 0.0135)); } catch (e){ v = false; } W.set(k, v); } return v; };
   const open = q => { try { if (!mapSimAt(q)) return coastDistFar(q) >= LANE.clear; const L = MAPD.L.dc; return rcell(L, Math.floor(q.x / 0.1), Math.floor(q.y / 0.1)) > 0 && coastDist(q) >= LANE.clear; } catch (e){ return false; } };
   const s0 = Y0 * nx + X0, prev = new Map([[s0, -1]]), Q = [s0]; let end = -1;
   for (let h = 0; h < Q.length && h < LANE.max; h++){
@@ -301,7 +310,39 @@ function leiaLane(p, goal, km){
   while (i < pts.length - 1){ let j = pts.length - 1; while (j > i + 1 && !clean(pts[i], pts[j])) j--; out.push(pts[j]); i = j; }
   return out;
 }
-async function leiaRoute0(a, b, aPort, bPort){
+// A pocket (CI check of all plant pairs, 08.10.2026: Fredvang, Sleneset and others): an end whose open 100 m cells make up a small
+// closed piece (a basin among islets, all its ways out narrower than the 100 m cells see) cannot be searched from, though the fine
+// mask has the way out. Its cells as a Set of keys when the piece is under LPOCK.cap cells and stays inside the window, else null.
+const LPOCK = {cap:5000, win:8};
+const pockKey = (x, y) => Math.floor(x / 0.1) * 131072 + Math.floor(y / 0.1);
+function leiaPocket(p, sd){
+  const G = leiaGrid(p.x - LPOCK.win, p.y - LPOCK.win, p.x + LPOCK.win, p.y + LPOCK.win, 0.1), s0 = leiaNearCell(G, p, sd, 1, true); if (s0 < 0) return null;
+  const seen = new Set([s0]), Q = [s0], keys = new Set();
+  for (let h = 0; h < Q.length; h++){
+    if (Q.length > LPOCK.cap) return null;
+    const u = Q[h], ux = u % G.nx, uy = Math.floor(u / G.nx); keys.add((G.ix0 + ux) * 131072 + G.iy0 + uy);
+    if (ux === 0 || uy === 0 || ux === G.nx - 1 || uy === G.ny - 1) return null;   // reaches the window's edge: open sea
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]){
+      const x = ux + dx, y = uy + dy, v = y * G.nx + x; if (seen.has(v) || !isFinite(leiaCost(G, v, sd))) continue;
+      if (dx && dy && (!isFinite(leiaCost(G, uy * G.nx + x, sd)) || !isFinite(leiaCost(G, y * G.nx + ux, sd)))) continue;
+      seen.add(v); Q.push(v);
+    }
+  }
+  return keys;
+}
+// the fine lane out of a pocket: to the first wet 25 m cell whose 100 m cell lies outside it, is open and 150 m from the shore; and on
+// from there while that is a pocket too (at most three), the points from e outwards or null
+function leiaPocketOut(e, sd, st){
+  let out = null, cur = e;
+  for (let n = 0; n < 3; n++){
+    const pk = leiaPocket(cur, sd); if (!pk) break;
+    const L = leiaLane(cur, q => !pk.has(pockKey(q.x, q.y)) && coastDist(q) >= LANE.clear && (!mapSimAt(q) || rcell(MAPD.L.dc, Math.floor(q.x / 0.1), Math.floor(q.y / 0.1)) > 0), 6);
+    if (!L || L.length < 2) break;
+    out = out ? out.concat(L.slice(1)) : L; cur = L[L.length - 1]; st.pocket = (st.pocket || 0) + 1;
+  }
+  return out;
+}
+async function leiaRoute0(a, b, aPort, bPort, pocket){
   const sd = safeDepth(), st = {slices:0, maxSlice:0, expanded:0, ms:0}, T0 = performance.now();
   const A = aPort ? portById(aPort) : null, B = bPort ? portById(bPort) : null;
   // the water round both ends first: a harbour's way in is found over the tiles' mask (approachPath), and a far harbour's tiles are
@@ -312,11 +353,25 @@ async function leiaRoute0(a, b, aPort, bPort){
   let lo = A ? lane(A) : [], li = B ? lane(B) : [];
   if (!lo || !li){ await Promise.all([A, B].filter(Boolean).map(pt => mapNeed(pt.p, 4))); lo = lo || approachPath(A); li = li || approachPath(B); }
   const laneOut = A ? lo.slice().reverse().filter(q => dist(q, A.p) >= 0.002) : [], laneIn = B ? li.filter(q => dist(q, B.p) >= 0.002) : [];
+  // the harbour's own way in (approachPath) is kept as it is when the mend checks it: it may cross the quay land inside the harbour
+  // (the sailing skips harbours for land) and the harbour mouth may be under the safe depth (2 to 3 m) though deep enough for the boat
+  // (CI check of all plant pairs, 08.10.2026: Flekkerøy, Flatanger and Tustna had no way in); such a leg counts as soft (st.soft)
+  st.trust = new Map(); const trustAdd = (id, arr) => arr.forEach(q => st.trust.set(q.x.toFixed(4) + ',' + q.y.toFixed(4), id));
+  if (A && lo) trustAdd(1, [A.p].concat(lo)); if (B && li) trustAdd(2, [B.p].concat(li));
   // step 1: an end still in tight water (a narrow basin, among islets: its 100 m cells shut) goes out by the fine lane first
   const tight = q => { try { if (!mapSimAt(q)) return false; return !(rcell(MAPD.L.dc, Math.floor(q.x / 0.1), Math.floor(q.y / 0.1)) > 0 && coastDist(q) >= LANE.clear); } catch (e){ return false; } };
   const e0 = laneOut.length ? laneOut[laneOut.length - 1] : a, e1 = laneIn.length ? laneIn[0] : b;
   if (tight(e0)){ const L = leiaLane(e0); if (L && L.length > 1){ laneOut.push(...L.slice(1)); st.laneOut = L.length - 1; } }
   if (tight(e1)){ const L = leiaLane(e1); if (L && L.length > 1){ laneIn.unshift(...L.slice(1).reverse()); st.laneIn = L.length - 1; } }
+  // the second try (the first found no way): an end in a pocket goes out of it by the fine lane first, unless the other end lies in the
+  // same pocket (then the search inside it will do)
+  if (pocket){
+    const q0 = laneOut.length ? laneOut[laneOut.length - 1] : a, q1 = laneIn.length ? laneIn[0] : b;
+    let k0 = null, k1 = null; try { k0 = leiaPocket(q0, sd); k1 = leiaPocket(q1, sd); } catch (e){}
+    const same = k0 && k0.has(pockKey(q1.x, q1.y));
+    if (k0 && !same){ const L = leiaPocketOut(q0, sd, st); if (L && L.length > 1) laneOut.push(...L.slice(1)); }
+    if (k1 && !same){ const L = leiaPocketOut(q1, sd, st); if (L && L.length > 1) laneIn.unshift(...L.slice(1).reverse()); }
+  }
   const from = laneOut.length ? laneOut[laneOut.length - 1] : a, to = laneIn.length ? laneIn[0] : b;
   // the end itself in water too shallow for the boat (a tap by the shore): no route ends on a shoal (the chart plotter moves such a
   // tap out to deeper water first, ui/03b-route.js leiaTo)
@@ -339,10 +394,13 @@ async function leiaRoute0(a, b, aPort, bPort){
   if (!safe){ const net = await lnetRoute(from, to, sd, st);
     if (net && net.net){
       // a baked net: the way onto it and off it straightened and checked, its own legs as they are (tools/leia/bake.py)
-      const part = async (Q, ends) => { await lnetLoad(Q); await obsLoad(Q); let best = null; for (const m of LEIA.margins){ const s2 = await leiaStraighten(Q, sd, m, st); if (!best || s2.length < best.length) best = s2; } return leiaMend(best, sd, st, true); };
+      // (a way onto the net that the fine lane found is kept as it is: the lane is made of wet 25 m cells, no cut land corner, no breakwater,
+      // every straight piece checked for land, the boat's own depth and rocks; the straightening here would join its pieces into legs
+      // that fail on a rock beside them, Helligvær 08.10.2026; it counts as soft)
+      const part = async (Q, lane) => { await lnetLoad(Q); await obsLoad(Q); if (lane){ st.soft = (st.soft || 0) + 1; st.laneKept = (st.laneKept || 0) + 1; return Q; } let best = null; for (const m of LEIA.margins){ const s2 = await leiaStraighten(Q, sd, m, st); if (!best || s2.length < best.length) best = s2; } return leiaMend(best, sd, st, true); };
       st.soft = 0; const A0 = [a].concat(laneOut, net.pre.slice(laneOut.length ? 1 : 0)).filter((q, i, l) => i === 0 || dist(q, l[i - 1]) > 0.001);
       const B0 = net.post.slice(0, laneIn.length ? -1 : undefined).concat(laneIn, [b]).filter((q, i, l) => i === 0 || dist(q, l[i - 1]) > 0.001);
-      const pa = await part(A0), pb = pa && await part(B0);
+      const pa = await part(A0, net.preLane), pb = pa && await part(B0, net.postLane);
       if (pa && pb){ safe = pa.concat(net.net.slice(1, -1), pb.slice(0)).filter((q, i, l) => i === 0 || dist(q, l[i - 1]) > 0.001); st.by = 'net'; st.maxWp = safe.length; st.soft = (st.soft || 0) + net.soft;
         // the map under the net's legs too, though nothing here checks them: the route list's warnings (draftHazards) and the sailing
         // read the depth along every leg (only loading, no search: a few seconds on the longest ways)
@@ -358,7 +416,7 @@ async function leiaRoute0(a, b, aPort, bPort){
     else if (!safe) why = cells && cells.why ? ['Fant ingen rute dit. Punktet ligger for trangt til.', 'Found no route there. The point is too tight in.'] : ['Fant ingen rute dit.', 'Found no route there.'];
     if (!safe && !why) why = ['Fant ingen trygg rute dit.', 'Found no safe route there.'];
   }
-  if (!safe) return {why, st};
+  if (!safe){ if (!pocket){ const r2 = await leiaRoute0(a, b, aPort, bPort, true); if (!r2.why) return r2; r2.st.firstWhy = why; return r2; } return {why, st}; }
   // a leg that still passes a bridge's pier, a pier or a mark (the search's cells are 100 m and more) goes round it: under a bridge
   // between its piers, round the rest on the shorter side
   const wps = obsRoute(a, safe.slice(1)), nm = wps.reduce((acc, q, i) => acc + dist(i ? wps[i - 1] : a, q), 0) / NM;

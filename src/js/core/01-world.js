@@ -161,7 +161,9 @@ for (const q of BRIDGES) for (let i = 4; i + 1 < q.length; i += 2){ const g = LG
 // (100 m steps to 25.5 km); coastDistFar is the core's alone, for what looks far. DC is the 100 m layer's extent (cells numbered from
 // the frame's origin; mapStart fills it in), which the route's grid (11-route.js) covers: its cell v is (ix0 + v % nx, iy0 + floor(v / nx))
 const DC = {nx:0, ny:0, ix0:0, iy0:0};
-function coastDist(p){ return mapSimAt(p) ? rbil(MAPD.L.dc, p) : coastDistFar(p); }
+// (a block no pack has, at a tile's seaward edge, is open sea: the core's word then, as depthF and leiaShore have it; a block a pack has
+// but is not loaded still throws, as it should; CI check of all plant pairs 08.10.2026: «dc block has no pack» on a 2 000 km route)
+function coastDist(p){ if (!mapSimAt(p)) return coastDistFar(p); try { return rbil(MAPD.L.dc, p); } catch (e){ if (/has no pack/.test(e.message)) return coastDistFar(p); throw e; } }
 function coastDistFar(p){ return rbil(MAPD.L.dc200, p) * 0.1; }
 const dcCell = v => rcell(MAPD.L.dc, DC.ix0 + v % DC.nx, DC.iy0 + Math.floor(v / DC.nx));
 // Real depths: Kartverket 50 m depth model (open data), resampled to 100 m; gaps near land filled smoothly

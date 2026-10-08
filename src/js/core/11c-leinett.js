@@ -55,10 +55,11 @@ async function lnetAccess(p, i, sd, st){
   const r = await leiaFind1(p, q, sd, st, 2);
   let pts = r && !r.why && r.length ? [p].concat(r, [q]) : null;
   // a harbour among islets, its 100 m cells shut: the fine lane on the 25 m mask right up to the node (LNET.fine km at most)
-  if (!pts){ const L0 = leiaLane(p, c => dist(c, q) < 0.04, LNET.fine); if (L0 && L0.length > 1){ pts = L0.concat([q]); st.fineAccess = (st.fineAccess || 0) + 1; } }
+  let lane = false;
+  if (!pts){ const L0 = leiaLane(p, c => dist(c, q) < 0.04, LNET.fine); if (L0 && L0.length > 1){ pts = L0.concat([q]); lane = true; st.fineAccess = (st.fineAccess || 0) + 1; } }
   if (!pts) return null;
   let L = 0; for (let k = 1; k < pts.length; k++) L += dist(pts[k - 1], pts[k]);
-  return {pts, L};
+  return {pts, L, lane};
 }
 // the way from `from` to `to` by the net: the points from from to to, or with a baked net {pre, net, post} (the way onto it, its
 // nodes, the way off it), or null (too short a way, no net near, or no way through it)
@@ -76,7 +77,7 @@ async function lnetRoute(from, to, sd, st){
   // a baked net's legs are taken as they are: only the ways onto and off it want the map under them
   // (only for a boat the bake's checks hold for: no deeper than its draught and safe depth; a deeper one has the legs checked here)
   // (its soft legs counted as the grid's search counts them, st.soft: on a way short enough the grid's own way is then compared)
-  if (LNET.baked && BOAT.draft + LEIA.minOver <= LNET.bakedDraft + 1e-6 && sd <= LNET.bakedSd + 1e-6){ let sf = 0; for (let k = 1; k < path.nodes.length; k++) if (LNET.soft.has(path.nodes[k - 1] * LNET.n + path.nodes[k])) sf++; return {pre, net, post, soft:sf}; }
+  if (LNET.baked && BOAT.draft + LEIA.minOver <= LNET.bakedDraft + 1e-6 && sd <= LNET.bakedSd + 1e-6){ let sf = 0; for (let k = 1; k < path.nodes.length; k++) if (LNET.soft.has(path.nodes[k - 1] * LNET.n + path.nodes[k])) sf++; return {pre, net, post, soft:sf, preLane:!!A.get(s).lane, postLane:!!B.get(e).lane}; }
   const pts = pre.slice(0, -1).concat(net, post.slice(1));
   await lnetLoad(pts);
   return pts;
