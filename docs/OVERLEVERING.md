@@ -3088,6 +3088,14 @@ Appen **Fiskeguide** på telefonen (`ui/06f-fishguide.js`, `GUIDE`) svarer på �
 - Test: `tests/guidetest.py` (månedene, stengt og skrei, årsvisningen, kortene for torsk, blåkveite, kongekrabbe og kveite, «Lite der du er» sør og nord, engelsk).
 - Ikke bygget: regionsvise tall for torsk, hyse og sei (modellen har ikke egne regioner for dem, bare dybde, åpen kyst og kanter), og «anbefalt felt der du er» (varmekartet og ekkoloddet viser hvor fisken står akkurat nå).
 
+### 5.34 Verftet og utstyrsbutikken som havneenheter (Jonas 08.10.2026)
+
+`tools/harbour/steder.py s|y` lager `harbour-unit-s` (butikken: toetasjes butikk fra Finnsnes-modellen, uten is og drivstoff, på plantenes kai) og `harbour-unit-y` (verftet). Verftet står på en **stor enhet** (`UNIT_Y` i `01-world.js`, `ugeo(U)`, `U.y`): kai på 120 m, dekk 34 m, basseng mudret til 13 m (ca. 11,5 m ved lavvann), hovedliggeplass x = -20 (90 m), bunkersliggeplass x = 30. Alt som før leste `UNIT.*` leser nå `ugeo(U)` (kjerne, 3D-terreng, 2D-kart). Det gjør at den største båten, den pelagiske tråleren (75 m, 15,5 m bred, 7,5 m dypgang), får plass og vann under kjølen. `BEAM` har nå også havbåtene, så de ligger en bredde ut fra kaia.
+
+Modellen har hall (40 × 20 m, port mot kaia, skiltet VERFT · BÅTSALG), tilhenger- og blokkbåt, tønner og tømmer, dieselstasjonen (som plantens, så bunkringen er den samme) og skipsløftet: 14 vinsjhus langs kanten med trinse over kaifronten, og fire plattformer (14 × 6,4, 26 × 9,6, 56 × 14 og 90 × 21 m) med kjølblokker, og en kabel (`yard_cable`). Spillet (`liftStep`, `drawYardLift` i `view3d.js`) velger minste plattform som rommer båten (lengde + 3 m, bredde + 1,2 m) og skalerer den litt. Ved jobb av typen `hull` eller `repair` (slippen) stiger plattformen under kjølen (40 s), løfter båten til kaidekket, og senker den når jobben er ferdig. Båten ligger stille (ingen sjø, ingen fortøyningstau) mens den står oppe. Test: `tests/yardtest.py` (3D) og `stedertest.py` (geometri og dybde).
+
+Ikke gjort: animert mannskap og kran ved løftet, lyd, og at stedene i `steder.json` er valgt for en 120 m enhet (de er valgt for 55 m; samsvar med nabohavner sjekkes ikke).
+
 ## 6. Regelverk og kilder
 
 | Tema | Kilde | Hovedpunkter |

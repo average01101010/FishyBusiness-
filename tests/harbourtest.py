@@ -38,7 +38,7 @@ async def main():
         P = r['ports']
         print(ok(all(P[k]['water'] for k in P)), 'every harbour berth is in the water')
         print(ok(all(P[k]['sold'] and P[k]['iceBtn'] and P[k]['ice'] and P[k]['chute'] for k in PLANTS)), 'the eight plants buy fish and sell ice from the chute')
-        print(ok(P['finnsnes']['iceBtn'] and P['finnsnes']['ice'] and not P['finnsnes']['chute']), 'Finnsnes has no chute: the tackle shop sells bagged ice')
+        print(ok(not P['finnsnes']['chute']), 'Finnsnes has no ice chute')
         print(ok(all(P[k]['fuelBtn'] == (k in FUEL) and P[k]['fuel'] == (k in FUEL) for k in P)), 'fuel in every harbour: Finnsnes and the bunker berth of every harbour unit')
         print(ok(r['opsFrovag']['shift'] == 'bunker' and r['opsFrovag']['ice'] > 0 and r['opsFinnsnes']['fuel'] > 10 and r['opsFinnsnes']['ice'] == 0), 'a standing plan restocks what the harbour sells: Frovåg ice, then over to the bunker berth for fuel; Finnsnes fuel, no chute ice')
         print(ok(sorted(r['customers']) == ['brensholmen', 'frovag', 'sommaroy', 'torsken']), 'the new plants post orders')

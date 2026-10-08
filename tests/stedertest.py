@@ -56,6 +56,15 @@ async def main():
         n = json.loads(await J("""(() => { S.boat.pos = {...portById('botnhamn').p}; const y = placesNear(S.boat.pos, 'verft', 3), b = placesNear(S.boat.pos, 'butikk', 3), m = placesNear(S.boat.pos, 'mottak', 3);
           return {y:y.map(x => [x.pt.name, Math.round(x.d / NM)]), b:b.map(x => [x.pt.name, Math.round(x.d / NM)]), m:m.map(x => x.pt.name), sorted:y[0].d <= y[1].d && b[0].d <= b[1].d}; })()"""))
         check(n['sorted'] and len(n['y']) == 3 and len(n['b']) == 3 and n['m'][0] == 'Botnhamn', 'the nearest yards, shops and plants from the boat, nearest first', n)
+        # the yard's unit is the big one, so that the biggest vessel (the pelagic seiner: 75 m, 15.5 m abeam, 7.5 m draught) lies on its lift: a face of
+        # 120 m, the main berth long enough for her, and water under her keel at the lowest tide all along her and at the bunker berth too
+        y2 = json.loads(await J("""(() => { const y = PORTS.find(q => q.sted === 'verft'), U = UNITS[y.id], g = ugeo(U), V = VESSELS.pelagisk, sh = PORTS.find(q => q.sted === 'butikk'), gs = ugeo(UNITS[sh.id]);
+          const at = kind => { const bp = berthPose(y.id, 'pelagisk', kind), [lx, lz] = unitL(U, bp.x * 1000, bp.y * 1000); let minD = 1e9, ends = [];
+            for (let s = -V.len / 2; s <= V.len / 2 + 0.1; s += 5) for (const o of [0.1, 0.5, 0.9]){ const w = unitW(U, lx + s, Math.max(1, lz - V.beam / 2 + V.beam * o)); minD = Math.min(minD, unitDredge({x:w[0] / 1000, y:w[1] / 1000}, 0) - 1.55); }
+            return {lx:Math.round(lx), lz:+lz.toFixed(1), bow:Math.round(Math.abs(lx) + V.len / 2), minD:+minD.toFixed(1)}; };
+          return {big:U.y === true, E:g.E, B:g.B, shopE:gs.E, hl:quayFace(y.id, 'main').hl, depth:quayFace(y.id, 'main').depth, main:at('main'), bunker:at('bunker'), draft:V.draft, beam:BEAM.pelagisk, fill:U.f.slice(0, 2)}; })()"""))
+        check(y2['big'] and y2['E'] == 60 and y2['B'] == 34 and y2['shopE'] == 27.4 and y2['hl'] == 45 and y2['depth'] == 34 and y2['beam'] == 15.5 and y2['main']['bow'] <= 60 and y2['main']['lz'] > 8 and y2['main']['minD'] >= y2['draft'] + 3.0 and y2['bunker']['minD'] >= y2['draft'] + 1,
+              'the yard has the big unit (a 120 m face, 34 m deep) and the shop the plants\' one; the 75 m vessel lies on the main berth within the face, a beam out, with a lift\'s depth under her at the lowest tide, and at the bunker berth with her draught clear', y2)
         print('errors:', errs[:3]); await br.close()
 
 asyncio.run(main())

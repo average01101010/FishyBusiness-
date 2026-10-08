@@ -18,7 +18,9 @@ const STEDER_D = /*@include(data/steder.json)*/null;
     used[name] = [x, y];
     const nx = Math.cos(a), nz = Math.sin(a), cx = x * 1000, cz = y * 1000, hl = Math.max(8, len / 2), ux = -nz, uz = nx;
     COASTQ[id] = {main:{a:[cx - ux * hl, cz - uz * hl], b:[cx + ux * hl, cz + uz * hl], n:[nx, nz]}};
-    const U = {id, o:[cx, cz], u:[nz, -nx], n:[nx, nz], f:[27.4, -24.4, 27.4, -28.4, -27.4, -28.4, -27.4, -24.4], v:kind ? 'y' : 's', coastal:true, sted:true};
+    // a yard's unit is the big one (UNIT_Y, 01-world.js): the biggest vessels lie on its lift
+    const g = kind ? UNIT_Y : UNIT, U = {id, o:[cx, cz], u:[nz, -nx], n:[nx, nz], f:[g.E, -g.B, g.E, -g.B - 4, -g.E, -g.B - 4, -g.E, -g.B], v:kind ? 'y' : 's', coastal:true, sted:true};
+    if (kind) U.y = true;
     UNITS[id] = U; UNITA.push(U);
     PORTS.push({id, name, xy:[x, y], shore:[x, y], pier:true, fuel:!!kind, ice:false, mottak:false, pf:1, coast:{x:(cx - nx * 30) / 1000, y:(cz - nz * 30) / 1000},
       p:{x:Math.round(cx + nx * 15) / 1000, y:Math.round(cz + nz * 15) / 1000}, i:PORTS.length, coastal:true, sted:kind ? 'verft' : 'butikk'});

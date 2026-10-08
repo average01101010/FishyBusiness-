@@ -24,10 +24,10 @@ const QUAY_DEPTH = 10;   // how far the quay deck reaches in from the face (m)
 function unitDredge(p, d){
   const x = p.x * 1000, z = p.y * 1000;
   for (const U of UNITA){
-    if (Math.abs(x - U.o[0]) > 100 || Math.abs(z - U.o[1]) > 100) continue;
-    const [lx, lz] = unitL(U, x, z);
+    const R = U.y ? 200 : 100; if (Math.abs(x - U.o[0]) > R || Math.abs(z - U.o[1]) > R) continue;
+    const [lx, lz] = unitL(U, x, z), g = ugeo(U);
     if (groundOut(U, lx, lz) === 0) return 0;
-    if (lz > 0){ const dO = Math.hypot(Math.max(0, Math.abs(lx) - UNIT.basinX), Math.max(0, lz - UNIT.basinZ)); d = Math.max(d, UNIT.dredge - tideZC(p) - 0.5 * dO); }
+    if (lz > 0){ const dO = Math.hypot(Math.max(0, Math.abs(lx) - g.basinX), Math.max(0, lz - g.basinZ)); d = Math.max(d, g.dredge - tideZC(p) - 0.5 * dO); }
   }
   return d;
 }
@@ -35,7 +35,7 @@ function quayFace(pid, kind){
   if (kind === 'naust') return naustFace(pid);   // Father's pile quay in the home harbour (07c-naust.js)
   if (RBID.has(pid)) return kind === 'main' ? rorbuFace(pid) : null;   // a rorbu's quay (07d-rorbu.js)
   const U = UNITS[pid];
-  if (U){ const b = UNIT.berth[kind]; if (!b) return null; const c = unitW(U, b[0], 0); return {x:c[0], z:c[1], ux:U.u[0], uz:U.u[1], nx:U.n[0], nz:U.n[1], hl:b[1] / 2, depth:UNIT.B, unit:pid}; }
+  if (U){ const g = ugeo(U), b = g.berth[kind]; if (!b) return null; const c = unitW(U, b[0], 0); return {x:c[0], z:c[1], ux:U.u[0], uz:U.u[1], nx:U.n[0], nz:U.n[1], hl:b[1] / 2, depth:g.B, unit:pid}; }
   const q = QUAYS[pid] && QUAYS[pid][kind]; if (!q) return null;
   const dx = q.b[0] - q.a[0], dz = q.b[1] - q.a[1], L = Math.hypot(dx, dz), ux = dx / L, uz = dz / L, s = -uz * q.n[0] + ux * q.n[1] >= 0 ? 1 : -1;
   return {x:(q.a[0] + q.b[0]) / 2, z:(q.a[1] + q.b[1]) / 2, ux, uz, nx:-uz * s, nz:ux * s, hl:L / 2, depth:QUAY_DEPTH};
@@ -47,7 +47,7 @@ const PIERBOX = (() => {
   // the quay decks behind the faces in QUAYS; the shoreline behind them is not always straight, so the deck fills the gap
   for (const pid in QUAYS) for (const kind in QUAYS[pid]){ if (UNITS[pid]) continue; const f = quayFace(pid, kind); out.push({x:f.x - f.nx * f.depth / 2, z:f.z - f.nz * f.depth / 2, w:f.depth, l:f.hl * 2, ang:Math.atan2(f.ux, f.uz), bw:false, closed:false, made:true, quay:pid + '|' + kind}); }
   // where a harbour unit stands, the mapped piers on its ground (the block and its fill) and in its basin go (the unit is its own quay)
-  const inUnit = (x, z) => UNITA.some(U => { const [lx, lz] = unitL(U, x, z); return groundOut(U, lx, lz) <= 2 || (Math.abs(lx) <= UNIT.basinX && lz >= 0 && lz <= UNIT.basinZ); });
+  const inUnit = (x, z) => UNITA.some(U => { const [lx, lz] = unitL(U, x, z); const g = ugeo(U); return groundOut(U, lx, lz) <= 2 || (Math.abs(lx) <= g.basinX && lz >= 0 && lz <= g.basinZ); });
   for (let i = out.length - 1; i >= 0; i--){
     const q = out[i]; if (q.made) continue;
     const ax = Math.sin(q.ang), az = Math.cos(q.ang), nx = Math.cos(q.ang), nz = -Math.sin(q.ang); let hit = false;
@@ -76,7 +76,7 @@ function quayFree(f){
     const px = pt.p.x * 1000, pz = pt.p.y * 1000; if (Math.abs(px - f.x) > f.hl + 60 || Math.abs(pz - f.z) > f.hl + 60) continue;
     const a = clamp((px - f.x) * f.ux + (pz - f.z) * f.uz, -f.hl, f.hl); if (Math.hypot(f.x + f.ux * a - px, f.z + f.uz * a - pz) < 35) return f.free = false;
   }
-  for (const U of UNITA){ const [lx, lz] = unitL(U, f.x, f.z); if (Math.abs(lx) < UNIT.E + 40 && lz > -UNIT.B - 15 && lz < UNIT.basinZ + 25) return f.free = false; }
+  for (const U of UNITA){ const [lx, lz] = unitL(U, f.x, f.z); const g = ugeo(U); if (Math.abs(lx) < g.E + 40 && lz > -g.B - 15 && lz < g.basinZ + 25) return f.free = false; }
   return f.free = true;
 }
 const NPCB = new Map();
@@ -142,7 +142,7 @@ function exitWps(pt, to){ if (clearLine(pt.p, to)) return []; const out = []; fo
 function entryWps(pt, from){ if (clearLine(from, pt.p)) return []; const a = approachPath(pt); for (let i = a.length - 1; i >= 0; i--) if (dist(a[i], pt.p) >= 0.002 && clearLine(from, a[i])) return a.slice(i).filter(q => dist(q, pt.p) >= 0.002); return []; }
 // beam (m) of the player's vessels, for lying alongside
 // beam by vessel type, for the berths and the 3D view (the ocean vessels get their berths at the ocean step)
-const BEAM = Object.fromEntries(Object.entries(VESSELS).filter(([k, V]) => V.cls !== 'hav').map(([k, V]) => [k, V.beam]));
+const BEAM = Object.fromEntries(Object.entries(VESSELS).map(([k, V]) => [k, V.beam]));   // the ocean vessels too (08.10.2026): the yard's lift takes the biggest, and she lies a beam out from the quay
 const CAST_MIN = 1;   // game minutes to take the lines in before the boat moves (quicker, tilbakemelding #22)
 // Where a vessel lies in a harbour: alongside the quay in QUAYS (kind 'main' or 'bunker'), or else the quay face nearest the harbour's
 // berth point; parallel to it with the quay to starboard (where the skipper stands), off the face by half the beam and the fenders.
@@ -188,7 +188,7 @@ function berthBlocked(p, m = 2){
   for (const q of PIERBOX){ if (Math.abs(q.x - x) > q.l + q.w + 30 || Math.abs(q.z - z) > q.l + q.w + 30) continue;
     const ax = Math.sin(q.ang), az = Math.cos(q.ang), nx = Math.cos(q.ang), nz = -Math.sin(q.ang), dx = x - q.x, dz = z - q.z;
     if (Math.abs(dx * ax + dz * az) <= q.l / 2 + m && Math.abs(dx * nx + dz * nz) <= q.w / 2 + m) return true; }
-  for (const U of UNITA){ const [lx, lz] = unitL(U, x, z); if (Math.abs(lx) <= UNIT.E + m && lz <= m && lz >= -UNIT.B) return true; }
+  for (const U of UNITA){ const [lx, lz] = unitL(U, x, z); const g = ugeo(U); if (Math.abs(lx) <= g.E + m && lz <= m && lz >= -g.B) return true; }
   return false;
 }
 function berthClear(a, b, m){ const n = Math.max(1, Math.ceil(dist(a, b) / 0.004)); for (let i = 1; i < n; i++) if (berthBlocked({x:a.x + (b.x - a.x) * i / n, y:a.y + (b.y - a.y) * i / n}, m)) return false; return !coastSegHit(a, b); }

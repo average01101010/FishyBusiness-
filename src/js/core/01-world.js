@@ -204,7 +204,7 @@ function harbourNear(x, z){
 }
 function qPockets(){ if (!QPOCK){ QPOCK = []; for (const pid in QUAYS) for (const kind in QUAYS[pid]) if (!UNITS[pid]) QPOCK.push(quayFace(pid, kind)); } return QPOCK; }
 function pocketHit(US, QS, x, z){
-  for (const U of US){ if (Math.abs(x - U.o[0]) > 60 || Math.abs(z - U.o[1]) > 60) continue; const [lx, lz] = unitL(U, x, z); if (lz > 0 && lz <= UNIT.basinZ && Math.abs(lx) <= UNIT.basinX) return true; }
+  for (const U of US){ const R = U.y ? 140 : 60; if (Math.abs(x - U.o[0]) > R || Math.abs(z - U.o[1]) > R) continue; const [lx, lz] = unitL(U, x, z), g = ugeo(U); if (lz > 0 && lz <= g.basinZ && Math.abs(lx) <= g.basinX) return true; }
   for (const f of QS){ const dx = x - f.x, dz = z - f.z, s = dx * f.ux + dz * f.uz, t = dx * f.nx + dz * f.nz; if (t > 0 && t <= POCKET && Math.abs(s) <= f.hl + 4) return true; }
   return false;
 }
@@ -267,6 +267,13 @@ const portById = id => PORTS.find(p => p.id === id) || RBID.get(id);
 // 5 000 t a year (Senjahopen, Husøy), b the old fish plant where it takes under 1 000 t, mostly from
 // small boats (Gryllefjord, Torsken, Brensholmen), a the plant of today elsewhere (src/data/mottak.json, 04.10.2026)
 const UNIT = {E:27.4, B:24.4, bot:-9, basinX:33.4, basinZ:26, dredge:6.6, berth:{main:[-5, 24], bunker:[16.5, 23]}};
+// A yard's unit is a big one (Jonas 08.10.2026: «Du må lage verftet slik at den kan ta opp de aller største båtene også»): the biggest vessel,
+// the pelagic seiner, is 75 m long, 15.5 m abeam and draws 7.5 m, and the lift has to go down under her keel and out to the sides. So a face of
+// 120 m, a deck 34 m deep, a basin dredged to 13 m below chart datum (about 11.5 m at the lowest tide; the lift's deck lies 7.5 m + 0.65 m under
+// the water for her, 0.8 m lower while it is let down, and its girders reach 1.5 m deeper), the main berth long enough for her and the bunker berth east of the lift. Units
+// with y set (tools/harbour/steder.py y; 06c-steder.js) use these, the others UNIT: ugeo(U).
+const UNIT_Y = {E:60, B:34, bot:-14, basinX:66, basinZ:44, dredge:13, berth:{main:[-20, 90], bunker:[30, 40]}};
+const ugeo = U => U && U.y ? UNIT_Y : UNIT;
 const UNITS = {
   botnhamn:{o:[53282.5, 23499.9], u:[-0.993, -0.116], f:[27.4,-24.4, 27.4,-70.9, 12,-65.9, 9,-61.4, 7,-28.4, -27.4,-28.4, -27.4,-24.4]}, husoy:{o:[43788.5, 19672.7], u:[-0.12, -0.993], v:'c', f:[27.4,-24.4, 27.4,-28.4, -27.4,-28.4, -27.4,-24.4]}, senjahopen:{o:[36807.1, 25112.1], u:[0.876, -0.483], v:'c', f:[27.4,-24.4, 27.4,-35.9, 9,-46.4, -2,-28.4, -9,-28.4, -27.4,-39.4, -27.4,-24.4]},
   gryllefjord:{o:[20312.3, 39841.9], u:[-0.947, -0.32], v:'b', f:[27.4,-24.4, 27.4,-28.4, -27.4,-28.4, -27.4,-24.4]}, sommaroy:{o:[56736.6, 9544.3], u:[-0.707, -0.707], f:[27.4,-24.4, 27.4,-28.4, -27.4,-28.4, -27.4,-24.4]}, brensholmen:{o:[58576.6, 12633.9], u:[-0.766, -0.643], v:'b', f:[27.4,-24.4, 27.4,-80.4, 12,-59.4, 8,-47.9, 7,-38.9, -7,-28.4, -27.4,-28.4, -27.4,-24.4]},
@@ -278,7 +285,7 @@ const UNITA = Object.values(UNITS);
 const unitW = (U, lx, lz) => [U.o[0] + U.u[0] * lx + U.n[0] * lz, U.o[1] + U.u[1] * lx + U.n[1] * lz];
 const unitL = (U, x, z) => { const dx = x - U.o[0], dz = z - U.o[1]; return [dx * U.u[0] + dz * U.u[1], dx * U.n[0] + dz * U.n[1]]; };
 // how far (m) lx, lz in a unit's frame lie outside its block, outside its fill (Infinity without one) and outside both: 0 on it
-const blockOut = (lx, lz) => Math.hypot(Math.max(0, Math.abs(lx) - UNIT.E), Math.max(0, -UNIT.B - lz, lz));
+const blockOut = (lx, lz, g = UNIT) => Math.hypot(Math.max(0, Math.abs(lx) - g.E), Math.max(0, -g.B - lz, lz));
 function fillOut(U, lx, lz){
   const f = U.f; if (!f) return Infinity;
   let inside = false, d2 = Infinity;
@@ -290,11 +297,11 @@ function fillOut(U, lx, lz){
   }
   return inside ? 0 : Math.sqrt(d2);
 }
-const groundOut = (U, lx, lz) => Math.min(blockOut(lx, lz), fillOut(U, lx, lz));
+const groundOut = (U, lx, lz) => Math.min(blockOut(lx, lz, ugeo(U)), fillOut(U, lx, lz));
 // whether p (km) is on a unit's block or fill
 function onUnitGround(p){
   const x = p.x * 1000, z = p.y * 1000; if (!harbourNear(x, z)) return false;
-  for (const U of UNITA){ if (Math.abs(x - U.o[0]) > 120 || Math.abs(z - U.o[1]) > 120) continue; const [lx, lz] = unitL(U, x, z); if (groundOut(U, lx, lz) === 0) return true; }
+  for (const U of UNITA){ const R = U.y ? 200 : 120; if (Math.abs(x - U.o[0]) > R || Math.abs(z - U.o[1]) > R) continue; const [lx, lz] = unitL(U, x, z); if (groundOut(U, lx, lz) === 0) return true; }
   return false;
 }
 function portApproach(pt){

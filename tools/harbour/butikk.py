@@ -32,6 +32,7 @@ HEAVES = QTOP + 6.2; HRIDGE = QTOP + 7.8     # a low roof with the ridge running
 APRON = (-19.0, 19.0, 9.6, 27.5)             # the paved yard from the deck's back edge round the buildings
 ROLL = (10.6, 5.0, 4.6)                      # the roller door: middle x, width, height
 DOOR = -7.0                                  # the shop's glass doors (middle x)
+SIGN_SHOP, SIGN_GABLE, SIGN_HALL = 'BÅT & FISKEUTSTYR', 'FISKEUTSTYR', 'BÅTSALG · VERKSTED'   # the signs (tools/harbour/steder.py sets its own)
 C = {}
 
 
@@ -183,7 +184,7 @@ def shop(fine=True):
     o.append(box('board', -12.4, 0.4, y0 - 0.12, y0, QTOP + 3.2, QTOP + 4.15, C['sign']))
     o.append(box('board_rim_t', -12.5, 0.5, y0 - 0.16, y0, QTOP + 4.15, QTOP + 4.22, C['letters']))
     o.append(box('board_rim_b', -12.5, 0.5, y0 - 0.16, y0, QTOP + 3.13, QTOP + 3.2, C['letters']))
-    o.append(place(text_obj('sign_text', 'BÅT & FISKEUTSTYR', 0.76, C['letters']), (-6.0, y0 - 0.15, QTOP + 3.66), (math.pi / 2, 0, 0)))
+    o.append(place(text_obj('sign_text', SIGN_SHOP, 0.76, C['letters']), (-6.0, y0 - 0.15, QTOP + 3.66), (math.pi / 2, 0, 0)))
     for k in range(6):
         xm = -14.4 + k * 3.0; f, gg = window('up%d' % k, a, b, x1 - xm, QTOP + 4.45, 1.2, 1.45, n); o.append(f); g.append(gg)
     # a downlight under the canopy (it glows in the renders)
@@ -193,7 +194,7 @@ def shop(fine=True):
     for k, (s, z, w, h) in enumerate(((3.0, QTOP + 1.0, 1.4, 1.5), (9.0, QTOP + 1.0, 1.4, 1.5), (6.0, QTOP + 4.45, 1.2, 1.45))):
         f, gg = window('west%d' % k, a, b, s, z, w, h, n); o.append(f); g.append(gg)
     o.append(box('gable_board', x0 - 0.12, x0, ym - 3.0, ym + 3.0, EAVES + 0.35, EAVES + 1.15, C['sign']))
-    o.append(place(text_obj('gable_text', 'FISKEUTSTYR', 0.5, C['letters']), (x0 - 0.15, ym, EAVES + 0.75), (math.pi / 2, 0, -math.pi / 2)))
+    o.append(place(text_obj('gable_text', SIGN_GABLE, 0.5, C['letters']), (x0 - 0.15, ym, EAVES + 0.75), (math.pi / 2, 0, -math.pi / 2)))
     # the back: windows on both floors and a back door
     a, b, n = (x0, y1), (x1, y1), (0, 1, 0)
     for k, s in enumerate((3.0, 7.0, 11.0, 15.0)):
@@ -238,7 +239,7 @@ def hall(fine=True):
     o.append(box('roll_box', rx - rw / 2 - 0.15, rx + rw / 2 + 0.15, y0 - 0.32, y0, QTOP + rh + 0.05, QTOP + rh + 0.6, C['navy']))
     o.append(box('pdoor', 5.4, 6.4, y0 - 0.07, y0, QTOP + 0.25, QTOP + 2.35, C['navy']))
     o.append(box('hall_board', rx - 2.9, rx + 2.9, y0 - 0.1, y0, QTOP + rh + 0.75, QTOP + rh + 1.35, C['navy']))
-    o.append(place(text_obj('hall_text', 'BÅTSALG · VERKSTED', 0.36, C['white']), (rx, y0 - 0.12, QTOP + rh + 1.05), (math.pi / 2, 0, 0)))
+    o.append(place(text_obj('hall_text', SIGN_HALL, 0.36, C['white']), (rx, y0 - 0.12, QTOP + rh + 1.05), (math.pi / 2, 0, 0)))
     o.append(box('hlamp', rx - 0.2, rx + 0.2, y0 - 0.3, y0, QTOP + rh + 1.45, QTOP + rh + 1.62, C['lamp']))
     # a band of windows high on the east wall, three on the back
     a, b, n = (x1, y0), (x1, y1), (1, 0, 0)
@@ -312,12 +313,12 @@ def alu_boat(fine=True):
     o.append(place(text_obj('price_text', 'TILBUD', 0.12, C['red']), (X0 + L + 0.53, Y - 1.245, QTOP + 1.23), (math.pi / 2, 0, 0)))
     return o
 
-def deck_props(fine=True):
+def deck_props(fine=True, ice=True):
     o = []
     y0 = SHOP[2]
     if not fine:
         o.append(cyl('flagpole', (-17.6, 9.0, QTOP), (-17.6, 9.0, QTOP + 10.0), 0.07, C['white'], 6))
-        o.append(box('freezer', 7.0, 8.6, 9.6, 10.4, QTOP, QTOP + 0.9, C['white']))
+        if ice: o.append(box('freezer', 7.0, 8.6, 9.6, 10.4, QTOP, QTOP + 0.9, C['white']))
         return o
     # the flag on its pole at the yard's west corner
     fx, fy = -17.6, 9.0
@@ -350,17 +351,18 @@ def deck_props(fine=True):
     ax = DOOR - 2.7
     for s_ in (-1, 1): o.append(slab('aboard', (ax - 0.3, y0 - 1.6 + s_ * 0.25, QTOP), (ax + 0.3, y0 - 1.6 + s_ * 0.25, QTOP), (ax + 0.3, y0 - 1.6, QTOP + 0.9), (ax - 0.3, y0 - 1.6, QTOP + 0.9), 0.025, C['white']))
     o.append(place(text_obj('open_text', 'ÅPENT', 0.14, C['letters']), (ax, y0 - 1.76, QTOP + 0.5), (math.pi / 2 - 0.27, 0, 0)))
-    # the ice: a chest freezer saying IS and a pallet of bagged ice beside it
-    ix, iy = 7.2, 9.9
-    o.append(box('freezer', ix, ix + 1.6, iy - 0.4, iy + 0.4, QTOP, QTOP + 0.88, C['white'], bevel=0.03))
-    o.append(box('freezer_lid', ix - 0.02, ix + 1.62, iy - 0.42, iy + 0.42, QTOP + 0.88, QTOP + 0.95, C['blue'], bevel=0.02))
-    o.append(place(text_obj('ice_text', 'IS', 0.36, C['blue']), (ix + 0.8, iy - 0.415, QTOP + 0.48), (math.pi / 2, 0, 0)))
-    px = ix + 2.1
-    o.append(box('pallet', px, px + 1.2, iy - 0.4, iy + 0.4, QTOP, QTOP + 0.14, C['wood']))
-    for lay in range(3):
-        for i in range(3):
-            for j in range(2):
-                o.append(box('icebag', px + 0.05 + 0.38 * i, px + 0.39 + 0.38 * i, iy - 0.36 + 0.37 * j, iy - 0.02 + 0.37 * j, QTOP + 0.14 + 0.16 * lay, QTOP + 0.29 + 0.16 * lay, C['ice'], bevel=0.04))
+    if ice:
+        # the ice: a chest freezer saying IS and a pallet of bagged ice beside it
+        ix, iy = 7.2, 9.9
+        o.append(box('freezer', ix, ix + 1.6, iy - 0.4, iy + 0.4, QTOP, QTOP + 0.88, C['white'], bevel=0.03))
+        o.append(box('freezer_lid', ix - 0.02, ix + 1.62, iy - 0.42, iy + 0.42, QTOP + 0.88, QTOP + 0.95, C['blue'], bevel=0.02))
+        o.append(place(text_obj('ice_text', 'IS', 0.36, C['blue']), (ix + 0.8, iy - 0.415, QTOP + 0.48), (math.pi / 2, 0, 0)))
+        px = ix + 2.1
+        o.append(box('pallet', px, px + 1.2, iy - 0.4, iy + 0.4, QTOP, QTOP + 0.14, C['wood']))
+        for lay in range(3):
+            for i in range(3):
+                for j in range(2):
+                    o.append(box('icebag', px + 0.05 + 0.38 * i, px + 0.39 + 0.38 * i, iy - 0.36 + 0.37 * j, iy - 0.02 + 0.37 * j, QTOP + 0.14 + 0.16 * lay, QTOP + 0.29 + 0.16 * lay, C['ice'], bevel=0.04))
     # fish crates stacked by the hall
     for k, (cx, cy, nh, m) in enumerate(((14.4, 9.4, 6, C['crate']), (15.2, 9.4, 5, C['crate']), (14.8, 8.6, 4, C['crate2']), (16.2, 9.5, 3, C['crate2']))):
         for h in range(nh): o.append(box('crate%d_%d' % (k, h), cx - 0.4, cx + 0.4, cy - 0.3, cy + 0.3, QTOP + 0.25 * h, QTOP + 0.25 * h + 0.24, m, bevel=0.015))
