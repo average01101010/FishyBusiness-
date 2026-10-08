@@ -55,7 +55,7 @@ function obsIndex(){
   for (const br of bridges){ const o = obsBridge(br); o.piers.forEach(put); o.deck.forEach(put); }
   const box = (q, why) => { if (q.made) return; put({t:1, x:q.x, z:q.z, l:q.l / 2, w:q.w / 2, ux:Math.sin(q.ang), uz:Math.cos(q.ang), why}); };
   for (const q of PIERBOX) box(q, 'pier');
-  for (const t of VEC.tiles.values()) for (const q of t.piers) box(q, 'pier');
+  for (const t of VEC.tiles.values()) for (const q of t.piers) if (!unitCovers(q.x, q.z, 3)) box(q, 'pier');   // not under a harbour unit (it is drawn without them, view3d.js tileStatics)
   if (S.naust && S.naust.o){ const n = S.naust, f = {x:n.o[0] - n.u[0] * 0.5, z:n.o[1] - n.u[1] * 0.5}, nx = -n.u[1], nz = n.u[0];
     put({t:1, x:f.x - nx * 1.7, z:f.z - nz * 1.7, l:8.1, w:1.7, ux:n.u[0], uz:n.u[1], why:'naust'}); }
   // the quays of the rorbuer found so far (07d-rorbu.js), the deck behind the face

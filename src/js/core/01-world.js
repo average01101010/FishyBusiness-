@@ -332,6 +332,14 @@ function onUnitGround(p){
   for (const U of UNITA){ const R = U.y ? 200 : 120; if (Math.abs(x - U.o[0]) > R || Math.abs(z - U.o[1]) > R) continue; const [lx, lz] = unitL(U, x, z); if (groundOut(U, lx, lz) === 0) return true; }
   return false;
 }
+// whether a point (m) is on a unit's block or fill, within m metres of it, or in its basin (the pack's piers, slabs and roads under a unit are dropped,
+// 08.10.2026: a pier through the quay of Engenes and Lauksletta)
+function unitCovers(x, z, m){
+  if (!harbourNear(x, z)) return false;
+  for (const U of UNITA){ const R = U.y ? 200 : 120; if (Math.abs(x - U.o[0]) > R || Math.abs(z - U.o[1]) > R) continue; const [lx, lz] = unitL(U, x, z), g = ugeo(U);
+    if (groundOut(U, lx, lz) <= m || (Math.abs(lx) <= g.basinX && lz >= 0 && lz <= g.basinZ)) return true; }
+  return false;
+}
 function portApproach(pt){
   let best = null;
   for (let r = 0.15; r <= 0.7; r += 0.05) for (let a = 0; a < 360; a += 7.5){

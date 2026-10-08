@@ -617,7 +617,9 @@ const G3 = (() => {
     for (const t of VEC.tiles.values()){
       if (TST.has(t.k)) continue;
       const vp = MAPD.byTile.get('view:' + t.k); if (vp && !vp.buf) continue;
-      const items = [...t.piers.map(q => m => pierInto(m, q, t.k)), ...t.slabs.map(pts => m => slabInto(m, pts, t.k)), ...t.molos.map((pts, i) => m => stonesOf(TJOB.stones, sm => moundInto(m, pts, (t.tx * 31 + t.ty) * 7919 + i * 104729, false, t.k, sm))), ...t.bridges.map(br => m => bridgeInto(m, br, t.k))];
+      // the pack's piers and slabs under a harbour unit or a rorbu/naust site are left out (a pier through the quay at Engenes, Lauksletta)
+      const under = (x, z) => unitCovers(x, z, 3) || onSite(x, z), slabUnder = pts => { let cx = 0, cz = 0; for (const [x, z] of pts){ if (under(x, z)) return true; cx += x; cz += z; } return under(cx / pts.length, cz / pts.length); };
+      const items = [...t.piers.filter(q => !under(q.x, q.z)).map(q => m => pierInto(m, q, t.k)), ...t.slabs.filter(pts => !slabUnder(pts)).map(pts => m => slabInto(m, pts, t.k)), ...t.molos.map((pts, i) => m => stonesOf(TJOB.stones, sm => moundInto(m, pts, (t.tx * 31 + t.ty) * 7919 + i * 104729, false, t.k, sm))), ...t.bridges.map(br => m => bridgeInto(m, br, t.k))];
       TJOB = {t, m:MB(), items, i:0, ms:0, stones:[]}; return;
     }
   }
@@ -1241,6 +1243,7 @@ const G3 = (() => {
       for (let j = 1; j < r.xs.length; j++){
         const ax = r.xs[j - 1], az = r.zs[j - 1], bx2 = r.xs[j], bz2 = r.zs[j], mx = (ax + bx2) / 2, mz = (az + bz2) / 2;
         if (mx < x0 || mx >= x0 + 1000 || mz < z0 || mz >= z0 + 1000) continue;
+        if (unitCovers(mx, mz, 6) || onSite(mx, mz)) continue;   // no road through a harbour unit or a rorbu
         const L = Math.hypot(bx2 - ax, bz2 - az); if (L < 0.5) continue;
         const ux = (bx2 - ax) / L, uz = (bz2 - az) / L, px = -uz, pz = ux, n = Math.max(1, Math.ceil(L / 10));
         for (let q = 0; q < n; q++){
