@@ -6,7 +6,7 @@
 // Roll period after IMO's weather criterion (IS Code 2008, 2.3): T = 2 C B / sqrt(GM), C = 0.373 + 0.023 B/d - 0.043 L/100 (B/d at most 3.5,
 // as the formula was fitted). Heave and pitch: T = 2 pi sqrt(Cb T (1 + 0.8) / (g Cwp)) (the water that moves with the hull, 0.8 of it).
 // IMO's minimum for fishing vessels with one deck: GM 0.35 m (IS Code part B, 2.1). Icing is not modelled (Jonas' choice 02.10.2026).
-const STAB_W = {potSmall:15, potBig:25, net:9, tub:25, kit:6};   // kg aboard per pot (with its rope), net, line tub, jig kit
+const STAB_W = {potBig:25, net:9, tub:25, kit:6};   // kg aboard per pot (with its rope), net, line tub, jig kit
 const STAB_C = new Map();
 function hullOf(type){
   let h = STAB_C.get(type); if (h) return h;
@@ -20,7 +20,7 @@ function hullOf(type){
 // what is aboard: the catch low in the hold (on the floor of an open boat), tubs waiting on deck, and gear on deck
 function stabLoad(b = S.boat){
   const pg = S.pgear || {}, pots = pg.pots || {}, lines = pg.lines || {}, nets = (pg.nets || []).reduce((a, n) => a + n.n, 0);
-  const gear = (pots.small || 0) * STAB_W.potSmall + (pots.big || 0) * STAB_W.potBig + nets * STAB_W.net + ((lines.hyse || {}).n || 0) * STAB_W.tub + ((lines.bank || {}).n || 0) * STAB_W.tub + ((pg.kits || {}).n || 0) * STAB_W.kit;
+  const gear = (pots.big || 0) * STAB_W.potBig + nets * STAB_W.net + ((lines.hyse || {}).n || 0) * STAB_W.tub + ((lines.bank || {}).n || 0) * STAB_W.tub + ((pg.kits || {}).n || 0) * STAB_W.kit;
   const hold = typeof holdTotal === 'function' ? holdTotal() : 0, deck = typeof deckPending === 'function' ? deckPending() : 0;
   return {hold, deck, gear};
 }

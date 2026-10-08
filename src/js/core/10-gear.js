@@ -12,7 +12,8 @@ const GEAR = {
 };
 const LINE_KINDS = {hyse:{no:'Hyseline', en:'Haddock line', hooks:700, price:2100, egn:500, baitKg:5}, bank:{no:'Bankline', en:'Bank line', hooks:300, price:1700, egn:300, baitKg:3}};
 // king crab pots (a frame of steel and netting, 1.5-2 m across; the prices are estimates): cap is the crabs a pot holds
-const POTS = {small:{no:'Små kongekrabbeteiner', en:'Small king crab pots', price:1400, cap:20, f:1}, big:{no:'Store kongekrabbeteiner', en:'Big king crab pots', price:2200, cap:40, f:1.4, big:true}};
+// one pot only (Jonas 08.10.2026): the big king crab pot, 1.55 x 1.45 x 1.07 m. The key stays 'big' so saves carry over; old small pots become big ones (potsFix)
+const POTS = {big:{no:'Krabbeteiner', en:'Crab pots', price:2200, cap:40, f:1.4, big:true}};
 const MESHES = [156, 180, 200];                                  // legal cod nets north of 62° N; bigger mesh, bigger fish
 const GPRICE = {net:1500, kit:2500, heavy:1500, bait:18, potBait:0.6, bot:180, egnRate:560};   // kr, kg bait per pot, bøteri kr per net per 0.1, hooks baited per hour
 // how well each gear takes each species, relative to the jig (1 for every fish); pots take crab and a little cod and tusk
@@ -39,7 +40,7 @@ function kingArea(p){
   if (lon > 18.6 && lon < 19.4 && lat > 69.25 && lat < 69.8) a = Math.max(a, 0.03);
   return lat > 72 ? a * 0.3 : a;
 }
-function newPGear(){ return {nets:[], lines:{hyse:{n:0, baited:0, bt:{}}, bank:{n:0, baited:0, bt:{}}}, pots:{small:0, big:0}, bait:{}, baitPref:'makrell', kits:{n:0, heavy:0}, shore:[]}; }
+function newPGear(){ return {nets:[], lines:{hyse:{n:0, baited:0, bt:{}}, bank:{n:0, baited:0, bt:{}}}, pots:{big:0}, bait:{}, baitPref:'makrell', kits:{n:0, heavy:0}, shore:[]}; }
 // ---- bait (the user's list 04.10.2026): five kinds, each good for its own. Krabbe is the cheapest and fair on everything; reke is for
 // cod and skrei, partly saithe and haddock; krill for redfish; makrell for saithe and fair on haddock, cod and crab; sei for halibut and
 // crab. A tub remembers what it was baited with (bt: kind -> tubs), the pots take the kind chosen on the bait page (baitPref). Own saithe
@@ -114,7 +115,7 @@ function ownedUnits(kind){
   const shore = (pg.shore || []).reduce((a, j) => a + (kind === 'garn' && (j.kind === 'bot' || j.kind === 'mendself') ? j.lenke.n : kind === 'line' && (j.kind === 'egn' || j.kind === 'egnself') ? j.n : 0), 0);
   if (kind === 'garn') return pg.nets.reduce((a, l) => a + l.n, 0) + sea + shore;
   if (kind === 'line') return pg.lines.hyse.n + pg.lines.bank.n + sea + shore;
-  return pg.pots.small + pg.pots.big + sea;
+  return pg.pots.big + sea;
 }
 function gearRoom(kind){ const m = (BOAT.gearMax || {})[kind === 'line' ? 'stamp' : kind] || 0; return Math.max(0, m - ownedUnits(kind)); }
 
@@ -227,7 +228,7 @@ function startHaul(sid, reset, fishAfter){
   if (b.status !== 'idle' && b.status !== 'fishing') return [gL('Båten må ligge stille ved blåsa.', 'The boat must lie still at the buoy.')];
   const da = dist(b.pos, s.a), db = dist(b.pos, s.b); if (Math.min(da, db) > 0.3) return [gL('Gå helt inn til blåsa først.', 'Go right up to the buoy first.')];
   if (handsAboard() < GEAR[s.kind].crewMin) return [gL('Garn krever minst to om bord: deg og én til, eller to fra mannskapet.', 'Nets need at least two aboard: you and one more, or two of the crew.')];
-  if (s.kind === 'teine' && POTS[s.pot].big && !S.equip.teinehaler) return [gL('Store teiner kan ikke trekkes for hånd. Du trenger teinehaler.', 'Big pots cannot be hauled by hand. You need a pot hauler.')];
+  if (s.kind === 'teine' && !hasHauler('teine')) return [gL('Teiner kan ikke trekkes for hånd. Du trenger teinehaler eller elektrisk haler.', 'Pots cannot be hauled by hand. You need a pot hauler or an electric hauler.')];
   s.hauling = true;
   const from = da <= db ? s.a : s.b, to = da <= db ? s.b : s.a;
   b.status = 'fishing'; b.fishUntil = null; b.deckStop = false; b.deckEnd = null;
@@ -412,7 +413,7 @@ function cycleSpec(kind, want){
   const pg = S.pgear;
   if (kind === 'garn'){ const l = pg.nets.find(x => !want || x.mesh === want.mesh) || pg.nets[0]; return l ? {nid:l.id} : null; }
   if (kind === 'line'){ const lk = want && want.lk && pg.lines[want.lk].baited ? want.lk : pg.lines.hyse.baited ? 'hyse' : 'bank'; return pg.lines[lk].baited ? {lk, n:pg.lines[lk].baited} : null; }
-  const pot = want && want.pot && pg.pots[want.pot] ? want.pot : pg.pots.big ? 'big' : 'small', n = Math.min(pg.pots[pot], Math.floor(Math.max(...Object.values(baitOf(pg)), 0) / GPRICE.potBait + 1e-9)); return n > 0 ? {pot, n} : null;
+  const pot = 'big', n = Math.min(pg.pots[pot], Math.floor(Math.max(...Object.values(baitOf(pg)), 0) / GPRICE.potBait + 1e-9)); return n > 0 ? {pot, n} : null;
 }
 function gearCycle(w, fishAfter){
   const a = w.act, b = S.boat, H = S.t / 60;
@@ -430,7 +431,7 @@ function opsGearNeeds(o){
   const acts = (o.wps || []).filter(w => w.act).map(w => w.act.kind), pg = S.pgear, p = portById(S.boat.port), miss = [];
   if (!acts.length || !pg) return null;
   if (acts.includes('garn') && handsAboard() < 2) miss.push(gL('garn krever to om bord', 'nets need two aboard'));
-  if (acts.includes('teine')){ const k = BAITS[pg.baitPref] ? pg.baitPref : 'makrell', need = (pg.pots.small + pg.pots.big) * GPRICE.potBait - (baitOf(pg)[k] || 0); if (need > 0 && p && p.mottak && driftStock().bait){ const kg = Math.ceil(need), c = kg * BAITS[k].kr; if (c <= S.cash){ S.cash -= c; S.stats.costs += c; baitOf(pg)[k] = (baitOf(pg)[k] || 0) + kg; } } }
+  if (acts.includes('teine')){ const k = BAITS[pg.baitPref] ? pg.baitPref : 'makrell', need = pg.pots.big * GPRICE.potBait - (baitOf(pg)[k] || 0); if (need > 0 && p && p.mottak && driftStock().bait){ const kg = Math.ceil(need), c = kg * BAITS[k].kr; if (c <= S.cash){ S.cash -= c; S.stats.costs += c; baitOf(pg)[k] = (baitOf(pg)[k] || 0) + kg; } } }
   if (acts.includes('line') && !pg.lines.hyse.baited && !pg.lines.bank.baited && !mySets().some(s => s.kind === 'line')) miss.push(gL('lina er ikke egnet', 'the line is not baited'));
   return miss.length ? miss : null;
 }

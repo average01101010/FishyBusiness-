@@ -1908,7 +1908,7 @@ const G3 = (() => {
     return {spot, cols, tank:[-(sx - 0.5), d.y, spot[2]], slot:i => { const L = Math.floor(i / cols), c = i % cols; return [spot[0] - c * (2 * pw + 0.08), d.y + L * (pw * 0.93 + 0.01), spot[2] + 2 * pw + 0.3]; }};
   }
   function drawPots(BMrel, t, g, G, HP, sx, d, skiff, seg){
-    const s = g.op === 'haul' ? (S.sets || []).find(x => x.id === g.sid) : g.s, ps = s && s.pot === 'small' ? 0.75 : 1, X = GB.px || {}, XP = X.pot || {};
+    const s = g.op === 'haul' ? (S.sets || []).find(x => x.id === g.sid) : g.s, ps = 1, X = GB.px || {}, XP = X.pot || {};
     const ph = (GB.potB ? XP.h || 0.65 : 0.4) * ps, pw = (GB.potB ? XP.half || 0.7 : 0.4) * ps, gw = G.gw || d.y + 0.9, D = potDeck(G, HP, sx, d, pw);
     if (POTA.g !== g || g.done !== POTA.done){
       if (POTA.g === g && g.done === POTA.done + 1) POTA.dur = clamp(t - POTA.t0, 2, 40);

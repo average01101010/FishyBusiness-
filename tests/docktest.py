@@ -202,7 +202,7 @@ async def run(p, w, h, tag):
     # Autonav to a set's buoy puts the haul in the route, and it starts there (tilbakemelding #31: line, nets and pots alike)
     r = await pg.evaluate("""(async () => { const b = S.boat, keep = {pos:{...b.pos}, status:b.status, port:b.port, plan:S.plan}, g = GROUNDS[0].p, out = [];
       b.status = 'idle'; b.port = null; b.pos = {x:g.x, y:g.y}; S.plan = null; const p = b.pos;
-      for (const kind of ['line', 'garn', 'teine']){ const s = {id:'tst' + kind, vid:S.cur, kind, lk:'hyse', n:kind === 'teine' ? 10 : 1, hooks:700, pot:'small', a:{x:p.x + 0.8, y:p.y}, b:{x:p.x + 1.4, y:p.y}, tSet:S.t, depth:40, heavy:false};
+      for (const kind of ['line', 'garn', 'teine']){ const s = {id:'tst' + kind, vid:S.cur, kind, lk:'hyse', n:kind === 'teine' ? 10 : 1, hooks:700, pot:'big', a:{x:p.x + 0.8, y:p.y}, b:{x:p.x + 1.4, y:p.y}, tSet:S.t, depth:40, heavy:false};
         S.sets.push(s); S.draft = []; LEIA_ARM = true; gearTap({s, e:s.a});
         for (let i = 0; i < 150 && !S.draft.length; i++) await new Promise(r => setTimeout(r, 100));
         const w = S.draft[S.draft.length - 1]; out.push({kind, act:w && w.act ? w.act.op + ':' + w.act.sid : null, d:w ? Math.round(dist(w, s.a) * 1000) : -1});

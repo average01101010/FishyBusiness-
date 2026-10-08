@@ -18,12 +18,12 @@ async def main():
           // a sjark at sea on the Husøy ground, a gale from the west
           S.t = Math.round((Date.UTC(2027, 10, 12, 11) - EPOCH) / 6e4); const H = S.t / 60, g = GROUNDS[0].p, b = S.boat;
           b.type = 'sjark'; applyVessel(); b.status = 'idle'; b.port = null; b.pos = {...g}; S.plan = null; S.hold = []; WX_FORCE = {w:14, d:270};
-          S.pgear = S.pgear || newPGear(); S.pgear.pots = {small:0, big:0};
+          S.pgear = S.pgear || newPGear(); S.pgear.pots = {big:0};
           R.empty = r2(stabOf('sjark').GM);
-          S.pgear.pots.small = 500; R.pots300 = r2(stabOf('sjark').GM); R.pots300state = motionHere(H).state;
+          S.pgear.pots.big = 300; R.pots300 = r2(stabOf('sjark').GM); R.pots300state = motionHere(H).state;
           b.stab = 0; b.stabAt = 0; stabTick(H); R.warned = S.log[S.log.length - 1].no;
           R.hud = (renderHud(), document.getElementById('hud').textContent); R.panel = panelWx();
-          S.pgear.pots.small = 150; R.atMax = r2(stabOf('sjark').GM); S.pgear.pots.small = 0; b.stab = 0;
+          S.pgear.pots.big = 90; R.atMax = r2(stabOf('sjark').GM); S.pgear.pots.big = 0; b.stab = 0;
           // catch low in the hold makes her stiffer, not tender
           R.withCatch = r2(stabOf('sjark', {hold:2000, deck:0, gear:0}).GM);
           // resonance: in a light wind the swell from the west (10-12 s) meets a pelagic trawler (roll period about 9 s) at different periods

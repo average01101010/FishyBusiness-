@@ -90,7 +90,7 @@ const achRnd = (key, k) => (hashStr(String(achState().seed) + '|' + key + '|' + 
 function achPool(scale){
   const b = S.boat, pg = S.pgear || {}, out = [], L = (no, en) => [no, en];
   const add = (tier, w, f) => out.push({tier, w, f}), sc = v => Math.round(v * scale);
-  const lines = pg.lines ? (pg.lines.hyse ? pg.lines.hyse.n : 0) + (pg.lines.bank ? pg.lines.bank.n : 0) : 0, pots = pg.pots ? (pg.pots.small || 0) + (pg.pots.big || 0) : 0;
+  const lines = pg.lines ? (pg.lines.hyse ? pg.lines.hyse.n : 0) + (pg.lines.bank ? pg.lines.bank.n : 0) : 0, pots = pg.pots ? (pg.pots.big || 0) : 0;
   const nets = pg.nets || [], iceRoom = (BOAT.iceCap || 0) - (b.ice || 0), fuelRoom = (BOAT.fuelCap || 0) - (b.fuel || 0);
   const money = (lo, hi, who) => r => { const v = Math.round((lo + (hi - lo) * r) * scale / 100) * 100;
     return {apply:() => { S.cash += v; }, t:L(who[0] + ' ' + kr(v) + '.', who[1] + ' ' + kr(v) + '.')}; };

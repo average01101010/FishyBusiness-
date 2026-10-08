@@ -18,7 +18,7 @@ function setChoices(){
   const pg = S.pgear, out = [], r = RIGS[(DRIFTCTX && DRIFTCTX.rig) || rigOf()].kind; if (!pg || !r) return out;
   for (const l of pg.nets) out.push({kind:'garn', spec:{nid:l.id}, n:l.n, lbl:[l.n + ' garn ' + l.mesh + ' mm', l.n + ' nets ' + l.mesh + ' mm']});
   for (const lk of ['hyse', 'bank']){ const n = pg.lines[lk].baited; if (n > 0) out.push({kind:'line', spec:{lk, n}, n, lbl:[n + ' ' + (n === 1 ? 'stamp' : 'stamper') + ' ' + LINE_KINDS[lk].no.toLowerCase(), n + ' ' + (n === 1 ? 'tub' : 'tubs') + ' of ' + LINE_KINDS[lk].en.toLowerCase()]}); }
-  for (const pot of ['small', 'big']){ const n = Math.min(pg.pots[pot], Math.floor(Math.max(0, ...Object.values(baitOf(pg))) / GPRICE.potBait + 1e-9)); if (n > 0) out.push({kind:'teine', spec:{pot, n}, n, lbl:[n + ' ' + POTS[pot].no.toLowerCase(), n + ' ' + POTS[pot].en.toLowerCase()]}); }
+  for (const pot of ['big']){ const n = Math.min(pg.pots[pot], Math.floor(Math.max(0, ...Object.values(baitOf(pg))) / GPRICE.potBait + 1e-9)); if (n > 0) out.push({kind:'teine', spec:{pot, n}, n, lbl:[n + ' ' + POTS[pot].no.toLowerCase(), n + ' ' + POTS[pot].en.toLowerCase()]}); }
   return out.filter(c => c.kind === r);
 }
 // what the boat is doing with gear, for the status line and the action bar
@@ -54,7 +54,7 @@ function gearPanel(){
   const on = [];
   if (pg.nets.length) on.push(pg.nets.map(l => l.n + ' garn ' + l.mesh + ' mm (' + Math.round(l.cond * 100) + ' %)').join(', '));
   for (const lk of ['hyse', 'bank']) if (pg.lines[lk].n) on.push(pg.lines[lk].n + ' ' + LINE_KINDS[lk].no.toLowerCase() + ' (' + pg.lines[lk].baited + ' ' + GL('egnet', 'baited') + ')');
-  for (const pot of ['small', 'big']) if (pg.pots[pot]) on.push(pg.pots[pot] + ' ' + POTS[pot].no.toLowerCase());
+  for (const pot of ['big']) if (pg.pots[pot]) on.push(pg.pots[pot] + ' ' + POTS[pot].no.toLowerCase());
   h.push('<div class="kv"><span>' + GL('Om bord', 'Aboard') + '</span><span>' + (on.length ? on.join('; ') : GL('ingen', 'none')) + '</span></div>');
   h.push('<div class="kv"><span>' + GL('Blåsesett og agn', 'Buoy sets and bait') + '</span><span>' + pg.kits.n + ' · ' + fmt(baitKg(pg), 0) + ' kg</span></div>');
   if (b.gop){ const g = gopText(); h.push('<p><b>' + GL(g[0], g[1]) + '</b></p><div class="btns"><button class="btn" data-act="gstop">' + GL('Stopp', 'Stop') + '</button></div>'); }
