@@ -14,7 +14,7 @@
 //   fs       ten, twenty ... years of sea time      ach   a badge chapter done      as   a company made a limited company (AS)
 //   tur      a long trip or the season's move done (turoppdrag, 09g-turer.js)          kvote    a structure quota bought
 // The week's top boats come from the shared leaderboard (ui/10h-world.js worldTop), and the day's biggest landing tells its lander in
-// the game (and by push when away: supabase/migrations/20261007180000_news_more.sql push_paper). A record price (the highest in a
+// the game (no push: Kystposten sends none, 20261008000000_push_ops.sql). A record price (the highest in a
 // year) is reckoned in every game alike (pressRecords), and the year's first skrei comes from the shared landings (pressSkrei).
 const PRESS = {R:150, keep:40, remote:[], land:[], at:0, told:{}, toldAt:0, skrei:null};
 const PRESS_KINDS = ['boat', 'name', 'aground', 'rescue', 'salv', 'foto', 'fish', 'fs', 'ach', 'as', 'tur', 'kvote'];

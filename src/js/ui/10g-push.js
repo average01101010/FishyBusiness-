@@ -8,15 +8,18 @@
 // (Jonas 05.10.2026: «Varselet må ha betydning», «Vi skal sende 4 pushvarsel i døgnet»), each in a group the player may turn off
 // (S.settings.pushCat), and each with the time it stops mattering (exp); the server sends at most four a day, none between 22 and
 // 08, and what is due at once as one (supabase/migrations/20261006030000_push_rules.sql). What is told:
-// - fangst: gear that has soaked long enough (line 10 h, nets 20 h, pots 40 h: after that the catch falls off, 10-gear.js soakHour);
-//   fish in a hold about to drop a grade (the freshness falls as in core/05-vessels.js vesselStep); a boat in at a harbour with fish
-// - verft: the yard's work on a boat done (core/06-services.js YARD_KINDS)
-// - kvote: the Directorate announcing the stop of the open group's fishing, with what is left of your quota (03d-quota.js qyStep)
-// - topp: the server's own, when someone passes you on the leaderboard and the week's result (push_prefs)
-// - sesong: the seasons' news on their morning (09c-seasons.js), and the skrei festival the day before
+// Rules from Jonas 07.10.2026 (docs/push-plan.md): everything tied to the work of the boat, and nothing else. There is no quiet night
+// (fishers keep watch at night; a phone's own sleep mode quiets it), no choice of how many (the server's cap follows how much she plays:
+// 20261008000000_push_ops.sql push_cap), and the first one comes five minutes after the app was closed at the earliest. What is told:
+// - drift: the boat in at her harbour or at the end of her route and waiting, the hold full, the skipper rested, the yard's or the fitting's
+//   work done, gear that has soaked long enough (line 10 h, nets 20 h, pots 40 h: 10-gear.js soakHour), fish about to drop a grade, a gale
+//   or high waves on the way while the boat is out or gear is in the sea, a skipper or a crew getting tired, a crew about to break the
+//   rest rule, and an engine overdue for service
+// - uke: the server's one message a week, Norway's best fisher (push_week). No news from Kystposten, no seasons, no quota, no leaderboard.
 const PUSH = {key:undefined, last:''};
-const PUSH_CATS = [['fangst', 'Fangst og båter', 'Catch and boats'], ['verft', 'Verftet', 'The yard'], ['kvote', 'Kvoter', 'Quotas'], ['topp', 'Topplista', 'The leaderboard'], ['sesong', 'Sesonger', 'Seasons']];
+const PUSH_CATS = [['drift', 'Båten og driften', 'The boat and the work'], ['uke', 'Ukas beste fisker', 'The week\'s best fisher']];
 const PUSH_AHEAD = 40 * 60 * GAME_RATE;   // game minutes: what happens in the next 40 real hours (the server takes two days)
+const PUSH_WX = 36;                       // game hours ahead for the weather (the forecast does not reach further)
 const pushCat = k => !S.settings.pushCat || S.settings.pushCat[k] !== false;
 const PUSH_SOAK = {
   line:[10, 'Lina har stått i 10 timer. Nå er det tid for å dra den.', 'The line has soaked for 10 hours. Time to haul it.'],
@@ -45,7 +48,7 @@ async function pushOn(){
     if (!sub) sub = await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:pushB64(key)});
     const j = sub.toJSON(); await cloudRpc('push_sub', {endpoint:j.endpoint, p256dh:j.keys.p256dh, auth:j.keys.auth, lang:S.lang || 'no'});
   } catch (e){ console.error(e); return cloudL('Kunne ikke slå på varsler nå. Prøv igjen.', 'Could not turn on notifications now. Try again.'); }
-  S.settings.push = true; save(); try { await cloudRpc('push_prefs', {top:pushCat('topp')}); } catch (e){} return null;
+  S.settings.push = true; save(); try { await cloudRpc('push_prefs', {top:pushCat('uke')}); } catch (e){} return null;
 }
 async function pushOff(){
   S.settings.push = false; save();
@@ -66,38 +69,44 @@ function pushAsk(){
   if (a.n >= PUSH_ASKS || Date.now() - a.at < 20 * 36e5 || !m || !m.hidden) return;
   S.settings.pushAsk = {n:a.n + 1, at:Date.now()}; save();
   modal('<div class="ob"><h2>' + cloudL('Vil du ha beskjed?', 'Shall we let you know?') + '</h2><p>' +
-    cloudL('Havet går videre når appen er lukket. Vi sier fra når garnet har stått lenge nok, når fisken i lasterommet snart blir dårligere, når båten er framme med fangst, og når noen går forbi deg på topplista.', 'The sea goes on while the app is closed. We tell you when the nets have soaked long enough, when the fish in the hold is about to lose quality, when the boat is in with the catch, and when someone passes you on the leaderboard.') +
-    '</p><p class="note">' + cloudL('Høyst fire i døgnet, aldri mellom 22 og 08. Du velger bort det du ikke vil ha i Innstillinger.', 'At most four a day, never between 22 and 08. You turn off what you do not want in Settings.') + '</p>' +
+    cloudL('Havet går videre når appen er lukket. Vi sier fra når båten er framme, når lasten er full, når mannskapet blir sliten, når garnet har stått lenge nok og når det blåser opp mens du er ute.', 'The sea goes on while the app is closed. We tell you when the boat is in, when the hold is full, when the crew gets tired, when the nets have soaked long enough and when it blows up while you are out.') +
+    '</p><p class="note">' + cloudL('Det første kommer tidligst fem minutter etter at du har lukket appen. Du kan slå det av i Innstillinger.', 'The first one comes five minutes after you close the app at the earliest. You can turn it off in Settings.') + '</p>' +
     '<div class="btns"><button class="btn" id="paNo" data-close>' + cloudL('Ikke nå', 'Not now') + '</button><button class="btn primary" id="paYes" data-close>' + cloudL('Slå på varsler', 'Turn on notifications') + '</button></div></div>');
   $('paYes').addEventListener('click', () => pushOn().then(err => { toast(err || cloudL('Varsler er på.', 'Notifications are on.')); if (PHONE.isOpen()) PHONE.render(); }));
 }
-// what will happen while the app is away: [{at, exp (ISO), tag, title, body}], soonest first, at most 24
+// what will happen while the app is away: [{at, exp (ISO), tag, title, body, pri}], soonest first, at most 24; pri 0 matters most
 function pushItems(now){
   now = now || Date.now();
   const out = [], L2 = (no, en) => S.lang === 'en' ? en : no, real = T => now + (T - S.t) / GAME_RATE * 60000;
-  // T in game minutes; exp: real hours after it that it still matters
-  const add = (cat, T, tag, title, no, en, exp) => { if (!pushCat(cat) || !(T > S.t) || T - S.t > PUSH_AHEAD) return;
-    out.push({at:new Date(real(T)).toISOString(), exp:new Date(real(T) + (exp || 6) * 36e5).toISOString(), tag, title, body:L2(no, en)}); };
-  const MN = S.lang === 'en' ? ['January','February','March','April','May','June','July','August','September','October','November','December'] : ['januar','februar','mars','april','mai','juni','juli','august','september','oktober','november','desember'];
-  const dayStr = (y, d) => { const t = new Date(Date.UTC(y, 0, 1 + d)); return t.getUTCDate() + (S.lang === 'en' ? ' ' : '. ') + MN[t.getUTCMonth()]; };
+  // T in game minutes (from now on); exp: real hours after it that it still matters
+  const add = (T, tag, title, no, en, exp, pri) => { if (!pushCat('drift') || !(T >= S.t) || T - S.t > PUSH_AHEAD) return;
+    out.push({at:new Date(real(T)).toISOString(), exp:new Date(real(T) + (exp || 6) * 36e5).toISOString(), tag, title, body:L2(no, en), pri:pri == null ? 3 : pri}); };
+  const company = S.company || S.boatName || 'Det Store Blå';
   // the gear in the sea (the company's, S.sets)
   for (const s of S.sets || []){
     const k = PUSH_SOAK[s.kind]; if (!k || s.lost || s.hauling) continue;
     const v = (S.fleet || []).find(x => x.id === s.vid), nm = v ? vget(v, 'boatName') : S.boatName;
-    add('fangst', s.tSet + k[0] * 60, 'gear-' + s.id, nm || 'Det Store Blå', k[1], k[2], 6);
+    add(s.tSet + k[0] * 60, 'gear-' + s.id, nm || company, k[1], k[2], 6, 2);
   }
   for (const v of (S.fleet && S.fleet.length ? S.fleet : [null])) (v ? withVessel : (vv, f) => f())(v, () => {
-    const b = S.boat, nm = S.boatName || 'Det Store Blå', tag = v && v.id || 'b', kg = (S.hold || []).reduce((a, x) => a + x.kg, 0);
-    // a boat on a route, in at its harbour at the end (as the route's ETA, 04-panels-instruments.js navOf), when she has fish to land
+    const b = S.boat, nm = S.boatName || 'Det Store Blå', tag = v && v.id || 'b', kg = (S.hold || []).reduce((a, x) => a + x.kg, 0), out_ = b.status !== 'port';
+    // a boat on a route, at the end of it (as the route's ETA, 04-panels-instruments.js navOf): at a harbour, a shop or a yard, or out at sea
     const P = S.plan;
-    if (P && P.idx < P.wps.length && b.status !== 'port'){
-      const wps = P.wps.slice(P.idx), last = wps[wps.length - 1];
-      if (last.port && portById(last.port)){
-        let km = 0, a = b.pos, fishH = 0; wps.forEach((q, i) => { km += dist(a, q); a = q; if (i && q.fish > 0) fishH += q.fish; });
-        const H0 = P.depAt ? Math.max(S.t / 60, P.depAt / 60) : S.t / 60, T = (H0 + km / ((P.speed || 10) * NM) + fishH) * 60, pn = portById(last.port).name;
-        if (kg > 1 || fishH > 0) add('fangst', T, 'port-' + tag, nm, nm + ' er framme i ' + pn + (kg > 1 && !fishH ? ' med ' + fmt(kg, 0) + ' kg fisk' : ' med fangsten') + '. Lever mens fisken er fersk.',
-          nm + ' is in at ' + pn + (kg > 1 && !fishH ? ' with ' + fmt(kg, 0) + ' kg of fish' : ' with the catch') + '. Land it while the fish is fresh.', 3);
-      }
+    if (P && P.idx < P.wps.length && out_){
+      const wps = P.wps.slice(P.idx), last = wps[wps.length - 1], pt = last.port && portById(last.port);
+      let km = 0, a = b.pos, fishH = 0; wps.forEach((q, i) => { km += dist(a, q); a = q; if (i && q.fish > 0) fishH += q.fish; });
+      const H0 = P.depAt ? Math.max(S.t / 60, P.depAt / 60) : S.t / 60, T = (H0 + km / ((P.speed || 10) * NM) + fishH) * 60;
+      if (pt){
+        const sv = portServices(pt), here = pt.name;
+        if (sv.mottak && (kg > 1 || fishH > 0)) add(T, 'port-' + tag, nm, nm + ' er framme i ' + here + (kg > 1 && !fishH ? ' med ' + fmt(kg, 0) + ' kg fisk' : ' med fangsten') + '. Lever mens fisken er fersk.',
+          nm + ' is in at ' + here + (kg > 1 && !fishH ? ' with ' + fmt(kg, 0) + ' kg of fish' : ' with the catch') + '. Land it while the fish is fresh.', 12, 1);
+        else add(T, 'port-' + tag, nm, nm + ' er framme i ' + here + ' og venter på deg.', nm + ' is in at ' + here + ' and waits for you.', 12, 1);
+      } else add(T, 'end-' + tag, nm, nm + ' er ferdig med ruta og venter på ordre.', nm + ' has finished the route and waits for orders.', 12, 1);
+    }
+    // the hold full, while jigging (the session's catch so far gives the rate), before the fishing time is out
+    if (b.status === 'fishing' && S.fsess && typeof rigJig === 'function' && rigJig() && S.t - S.fsess.t0 >= 20 && S.fsess.kg > 0){
+      const rate = S.fsess.kg / ((S.t - S.fsess.t0) / 60), left = capHold() - kg;
+      if (left > 1 && rate > 1){ const T = S.t + left / rate * 60; if (b.fishUntil == null || T < b.fishUntil) add(T, 'full-' + tag, nm, 'Lasten på ' + nm + ' er full. Tid for å gå inn.', 'The hold on ' + nm + ' is full. Time to head in.', 6, 1); }
     }
     // fish in the hold about to drop a grade (not while she is on her way in: that is the line above), two game hours before
     if (kg > 20 && !(P && P.idx < P.wps.length)){
@@ -106,28 +115,41 @@ function pushItems(now){
         const r = (x.bled ? (x.iced ? 0.9 : 3.0) : (x.iced ? 2.2 : 6.0)) * clean, f = x.fresh, nx = f >= 85 ? 85 : f >= 65 ? 65 : f >= 40 ? 40 : f >= 15 ? 15 : null;
         if (nx == null || r <= 0) continue; const T = S.t + (f - nx) / r * 60 - 120;
         if (!best || T < best.T) best = {T, g:grade(f), g2:grade(nx - 0.01)}; }
-      if (best) add('fangst', Math.max(S.t + 1, best.T), 'fresh-' + tag, nm, 'Fisken i lasterommet går snart ned fra ' + best.g + '- til ' + best.g2 + '-kvalitet. Lever den nå, så får du bedre betalt.',
-        'The fish in the hold will soon drop from grade ' + best.g + ' to ' + best.g2 + '. Land it now and you are paid better.', 2);
+      if (best) add(Math.max(S.t, best.T), 'fresh-' + tag, nm, 'Fisken i lasterommet går snart ned fra ' + best.g + '- til ' + best.g2 + '-kvalitet. Lever den nå, så får du bedre betalt.',
+        'The fish in the hold will soon drop from grade ' + best.g + ' to ' + best.g2 + '. Land it now and you are paid better.', 2, 2);
     }
-    // the yard's work done on her
+    // the yard's and the fitting's work done on her
     const yj = (S.jobs || []).filter(j => YARD_KINDS.includes(j.kind) && j.until != null && j.until > S.t);
-    if (yj.length){ const T = Math.max(...yj.map(j => j.until)), names = yj.map(j => L2(j.no || '', j.en || j.no || '')).filter(Boolean).slice(0, 3).join(', ');
-      add('verft', T, 'yard-' + tag, nm, 'Verftet er ferdig' + (names ? ' med ' + names.toLowerCase() : '') + '. Båten er klar til å gå ut.', 'The yard is done' + (names ? ' with ' + names.toLowerCase() : '') + '. The boat is ready to go out.', 12); }
-  });
-  // the open group's stop announced, worked out ahead as the game does day by day (03d-quota.js qyStep), with what is left of your quota
-  if (access() === 'open') try {
-    const H = S.t / 60, y = yearH(H), Y = qyAt(H), last = yearH(H + PUSH_AHEAD / 60) > y ? doyOf(y, 12, 31) : doyH(H + PUSH_AHEAD / 60);
-    if (Y.stop == null && Y.free == null){ const C = JSON.parse(JSON.stringify(Y));
-      for (let d = C.d + 1; d <= last && C.ann == null; d++){ C.d = d; qyStep(C, y, d); }
-      if (C.ann != null && C.stop != null){ const room = codRoom(H) / 1000;
-        add('kvote', (hOfDoy(y, C.ann) + 8) * 60, 'quota-stop', 'Fiskeridirektoratet',
-          'Fisket på maksimalkvotene i åpen gruppe stoppes ' + dayStr(y, C.stop) + '.' + (room > 0.05 ? ' Du har ' + fmt(room, 1) + ' t torsk igjen å fiske før det.' : ''),
-          'Fishing on the maximum quotas in the open group stops on ' + dayStr(y, C.stop) + '.' + (room > 0.05 ? ' You have ' + fmt(room, 1) + ' t of cod left to fish before then.' : ''), 24); }
+    if (yj.length){ const T = Math.max(...yj.map(j => j.until)), fitOnly = yj.every(j => j.kind === 'fit'), names = yj.map(j => L2(j.no || '', j.en || j.no || '')).filter(Boolean).slice(0, 3).join(', ');
+      add(T, 'yard-' + tag, nm, (fitOnly ? 'Monteringen er ferdig' : 'Verftet er ferdig') + (names ? ' med ' + names.toLowerCase() : '') + '. Båten er klar til å gå ut.', (fitOnly ? 'The fitting is done' : 'The yard is done') + (names ? ' with ' + names.toLowerCase() : '') + '. The boat is ready to go out.', 12, 2); }
+    // a crew getting tired, and one about to break the rest rule (core/04-crew.js, 14-crewlife.js): while she is out
+    if (out_ && S.crew && S.crew.length){
+      let tired = null, gap = null;
+      for (const c of S.crew){
+        if (typeof crewAboard === 'function' && !crewAboard().some(x => x.id === c.id)) continue;
+        if (c.fatigue != null && c.fatigue < 70) tired = Math.min(tired == null ? 1e18 : tired, S.t + (70 - c.fatigue) / 4 * 60); else if (c.fatigue != null) tired = S.t;
+        const r = typeof restLog === 'function' ? restLog(c) : null; if (r){ let w = 0; for (let i = r.length - 1; i >= 0 && !r[i]; i--) w++; if (w < REST.gap) gap = Math.min(gap == null ? 1e18 : gap, S.t + (REST.gap - w) * 60); else gap = S.t; }
+      }
+      if (tired != null) add(tired, 'crew-' + tag, nm, 'Mannskapet på ' + nm + ' begynner å bli sliten. Gå inn til kai og la dem hvile.', 'The crew of ' + nm + ' is getting tired. Head in to the quay and let them rest.', 6, 1);
+      if (gap != null) add(gap, 'rest-' + tag, nm, 'Mannskapet har jobbet i 14 timer i strekk. Neste time bryter hviletidsreglene.', 'The crew has worked for 14 hours straight. The next hour breaks the rest rule.', 6, 1);
     }
-  } catch (e){ console.warn('push quota', e); }
-  // the seasons' news on their morning, and the skrei festival the day before
-  for (const e of seasonNext(S.t / 60, 6)) if (e.ev !== 'rule' && e.ev !== 'fest') add('sesong', (e.H + 7) * 60, 'season-' + e.ev, 'Kystradio', e.no + '.', e.en + '.', 12);
-  { const F = festDays(yearH(S.t / 60)); add('sesong', (F.H0 - 14) * 60, 'fest', L2('Skreifestivalen', 'The skrei festival'), 'Skreifestivalen er i morgen. Største torsk fra lørdag til søndag kl. 18 vinner 15 000 kr.', 'The skrei festival is tomorrow. The biggest cod from Saturday to Sunday 18:00 wins 15 000 kr.', 12); }
+    // an engine overdue for service, while she is out: the risk of a stop grows with every hour (core/05-vessels.js risk)
+    if (out_ && typeof svcOverdue === 'function' && svcOverdue() > 0) add(S.t + 60, 'svc-' + tag, nm, 'Motoren på ' + nm + ' er over tid for service. Faren for motorstopp øker på sjøen.', 'The engine on ' + nm + ' is overdue for service. The risk of a stop grows at sea.', 3, 2);
+    // a gale or high waves on the way (the boat's own limits, riskLevel) while she is out or her gear is in the sea; two game hours before
+    const spots = []; if (out_) spots.push(P && P.wps.length ? P.wps[P.wps.length - 1] : b.pos); for (const s of mySets()) if (s.vid === (v ? v.id : S.cur)){ spots.push(s.a); }
+    if (spots.length){
+      const H0 = S.t / 60; let hit = null;
+      for (let h = 1; h <= PUSH_WX && !hit; h++) for (const q of spots){ const W = windAt(H0 + h), hs = hsAt(q, H0 + h), lvl = riskLevel(W, hs); if (lvl > 0){ hit = {h, W, hs, lvl}; break; } }
+      if (hit){ const bf = beaufort(hit.W), wave = fmt(hit.hs, 1); add(Math.max(S.t, (H0 + hit.h - 2) * 60), 'wx-' + tag, nm, (hit.lvl > 1 ? 'Storm' : 'Kuling') + ' på vei: vindstyrke ' + bf + ' og bølger på ' + wave + ' m. ' + nm + ' ligger ute' + (mySets().length ? ', og redskapet står i sjøen' : '') + '.',
+        (hit.lvl > 1 ? 'A storm' : 'A gale') + ' is coming: force ' + bf + ' and waves of ' + wave + ' m. ' + nm + ' is out' + (mySets().length ? ' and the gear is in the sea' : '') + '.', 6, 1); }
+    }
+  });
+  // the skipper: rested in the naust or the rorbu, or getting tired at sea (core/15-energy.js)
+  if (S.energy != null && typeof restRate === 'function'){
+    const b = myBoat(), nm = S.boatName || 'Det Store Blå', rr = restRate(b);
+    if (resting() && rr > 0 && S.energy < 99) add(S.t + (100 - S.energy) / rr, 'rested', nm, 'Du er uthvilt. ' + nm + ' er klar til å gå ut.', 'You are rested. ' + nm + ' is ready to go out.', 12, 3);
+    else if (!resting() && rr <= 0 && S.energy > ENERGY.warn && !energyOff()) add(S.t + (S.energy - ENERGY.warn) / ENERGY.sea, 'tired', nm, 'Du er sliten (25 %). Arbeidet går tregere. Ta inn til naustet eller en rorbu for å hvile.', 'You are tired (25 %). Your work slows. Head in to the boathouse or a rorbu to rest.', 6, 1);
+  }
   return out.sort((x, y) => x.at < y.at ? -1 : 1).slice(0, 24);
 }
 // away: lay out what is coming; back: clear it (only sent when it changed)
@@ -149,12 +171,12 @@ function pushCardRow(){
   if (!pushHas() || !PUSH.key) return '';
   return '<label><span>' + cloudL('Varsler når appen er lukket', 'Notifications while the app is closed') + '</span><input type="checkbox" data-pa="cloudPush"' + (S.settings.push ? ' checked' : '') + '></label>' +
     (S.settings.push ? PUSH_CATS.map(([k, no, en]) => '<label class="sub"><span>' + cloudL(no, en) + '</span><input type="checkbox" data-pa="cloudPushCat" data-k="' + k + '"' + (pushCat(k) ? ' checked' : '') + '></label>').join('') : '') +
-    '<p class="ph-note">' + cloudL('Bare det som betyr noe: redskap som har stått lenge nok, fisk som snart blir dårligere, båten framme med fangst, verftet ferdig, kvotestopp, topplista og sesongene. Høyst fire i døgnet, aldri mellom 22 og 08.',
-      'Only what matters: gear that has soaked long enough, fish about to lose quality, the boat in with the catch, the yard done, a quota stop, the leaderboard and the seasons. At most four a day, never between 22 and 08.') + '</p>';
+    '<p class="ph-note">' + cloudL('Bare det som har med driften å gjøre: båten framme, full last, mannskapet, redskap som har stått lenge, verftet og monteringen ferdig, kuling mens du er ute og uthvilt. Dessuten ett varsel i uka om Norges beste fisker. Det første kommer tidligst fem minutter etter at du har lukket appen.',
+      'Only what has to do with the work: the boat in, a full hold, the crew, gear that has soaked long, the yard and the fitting done, a gale while you are out and rested. And one message a week about Norway\'s best fisher. The first one comes five minutes after you close the app at the earliest.') + '</p>';
 }
 function pushCatToggle(k){
   S.settings.pushCat = Object.assign({}, S.settings.pushCat); S.settings.pushCat[k] = !pushCat(k); save();
-  if (k === 'topp') cloudRpc('push_prefs', {top:pushCat('topp')}).catch(e => console.error(e));
+  if (k === 'uke') cloudRpc('push_prefs', {top:pushCat('uke')}).catch(e => console.error(e));
   if (PHONE.isOpen()) PHONE.render();
 }
 function pushToggle(){

@@ -17,9 +17,9 @@ Spillet skal tjene penger, og Jonas skal kunne leve av det. Dette er grunnlaget 
 
 - **Kjernesløyfen:** fiskingen. Napp, rykk, fangsten varierer, flekkene flytter seg, været. Innsatsen er tid og dyktighet, ikke penger.
 - **Metasløyfen:** 14 båter, «Neste mål», utstyr, lån, blad B, lukket gruppe, mannskap, tatoveringer, fars notatbok, trofévegg, kvoteår.
-- **Sosial sløyfe:** felles verden, ukas toppliste, Skreifestivalen, synlige båter, push når noen passerer deg. Den finnes, men er tynn.
+- **Sosial sløyfe:** felles verden, ukas toppliste, Skreifestivalen, synlige båter, ukas beste fisker som ett varsel i uka. Den finnes, men er tynn.
 - **Innloggingsbonusen** er den snille varianten: +1 % per dag, bortedager tærer gradvis (`STREAK.decay`), den nulles ikke. Duolingo måtte redde seg med «streak freeze» fordi folk som mistet en lang streak, sluttet.
-- **Push** er begrenset: høyst 4 i døgnet, ingenting 22–08, hendelser i verden heller enn «kom tilbake».
+- **Push** er knyttet til driften av spillerens egen båt og eget redskap, ikke «kom tilbake». Tak etter bruk (6, 12 eller 24 i døgnet, 2 når fem på rad ikke ble åpnet), også om natta, første varsel tidligst fem minutter etter at appen ble lukket. Verden sender ett varsel i uka (ukas beste fisker), Kystposten ingen (`docs/push-plan.md`).
 - **Butikken:** priser i kroner, ingen fiktiv valuta, 💎-merket, angrerett forklart, gjester kan ikke kjøpe. Det ligner prinsippene EU-landenes forbrukermyndigheter (CPC-nettverket) la fram for spillvaluta i 2025.
 - **Gjestestarten:** gratis juksa, is og luksushaill, registrering etter andre levering (eller ved andre åpning), i spillets egne ord.
 - **Haill** (29 kr, +100 % i 24 t, så avtagende over 72 t) og **luksushaill** (59 kr, +200 % første døgn, over 96 t). **Trim** (29/39/49 kr, ×1,5/1,75/2 fart i 24/48/72 t). **«Ferdig nå»** på verftet (19 kr).

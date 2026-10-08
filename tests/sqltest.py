@@ -118,8 +118,11 @@ def main():
         R['pushAnon'] = sql("select public.push_plan('[]')", {}, 'anon', expect_err=True)
         R['pushClaimPl'] = sql("select count(*) from public.push_claim(10)", A, 'authenticated', expect_err=True)
         R['pushRead'] = sql("select count(*) from public.push_subs", A, 'authenticated', expect_err=True)
-        NOON = "set dsb.clock = '2026-10-06 12:00:00+02'; "   # push_claim sends nothing between 22 and 08 Norwegian time (20261006030000_push_rules.sql)
-        R['pushClaim'] = sql(NOON + "select count(*) from public.push_claim(10)", None, 'service_role') + '/' + sql(NOON + "select count(*) from public.push_claim(10)", None, 'service_role')
+        NOON = "set dsb.clock = '2026-10-06 12:00:00+02'; "   # the tests' clock for the weekly message; push_claim has no quiet hours since 20261008000000_push_ops.sql
+        # nothing is sent sooner than five minutes after the plan was laid (push_plan): the tests make what is five minutes off due now
+        DUE = "update public.push_queue set send_at = now() - interval '1 second' where sent_at is null and send_at > now() and send_at < now() + interval '6 minutes'; "
+        R['pushFloor'] = sql("select (min(send_at) > now() + interval '4 minutes')::text from public.push_queue where player_id = 'user_01AAA' and sent_at is null")   # the -30 s item was held back to five minutes from now
+        R['pushClaim'] = sql(DUE + "select count(*) from public.push_claim(10)", None, 'service_role') + '/' + sql(DUE + "select count(*) from public.push_claim(10)", None, 'service_role')
         R['pushReplan'] = sql(plan(600), A, 'authenticated') + '/' + sql("select count(*) from public.push_queue where sent_at is null")
         # feedback (20261005180000_feedback.sql): a player sends and reads only their own, without the pictures; no player reads the
         # table or the list; the admin with aal2 lists them, opens a picture, sets the status and answers; at most 20 a day; a picture
@@ -248,32 +251,49 @@ def main():
         R['posLiv'] = [q.get('liv') for q in json.loads(sql("select public.pos_near(860, 350, 20)", A, 'authenticated'))]
         sql("select public.pos_put(860, 350, 0, 0, 'sailing', 'Fjordbris', 'skiff')", B, 'authenticated')
         R['posLiv0'] = [q.get('liv') for q in json.loads(sql("select public.pos_near(860, 350, 20)", A, 'authenticated'))]
-        # push rules (20261006030000_push_rules.sql): one message for what is due at once, four a day, nothing in the night, nothing stale,
-        # and the server's own: passed on the leaderboard, and the week's result
+        # push rules (20261006030000_push_rules.sql, then 20261008000000_push_ops.sql): one message for what is due at once, a cap a day that follows
+        # how much she plays (6, 12 with two sessions a day, 24 with four, 2 when the last five were not answered), no quiet night, nothing
+        # stale, five minutes at the earliest, and the world's one message a week: Norway's best fisher
         sql("select public.push_sub('https://fcm.googleapis.com/fcm/send/bbb', 'BPkey2', 'authkey2', 'no')", B, 'authenticated')
-        item = lambda secs, tag, exp=None: dict({'at': ts(secs), 'tag': tag, 'title': 'Havbris', 'body': tag + ' skjedde.'}, **({'exp': ts(exp)} if exp is not None else {}))
-        sql("select public.push_plan('%s')" % json.dumps([item(-30, 'a1'), item(-20, 'a2')]), A, 'authenticated')
-        R['pMerge'] = json.loads(sql(NOON + "select coalesce(json_agg(c), '[]') from public.push_claim(10) c", None, 'service_role'))
+        item = lambda secs, tag, exp=None, pri=None: dict({'at': ts(secs), 'tag': tag, 'title': 'Havbris', 'body': tag + ' skjedde.'}, **({'exp': ts(exp)} if exp is not None else {}), **({'pri': pri} if pri is not None else {}))
+        sql("select public.push_plan('%s')" % json.dumps([item(-30, 'a1', None, 2), item(-20, 'a2', None, 0)]), A, 'authenticated')
+        R['pMerge'] = json.loads(sql(DUE + "select coalesce(json_agg(c), '[]') from public.push_claim(10) c", None, 'service_role'))
         caps = []
-        for i in range(5):
+        for i in range(8):
             sql("select public.push_plan('%s')" % json.dumps([item(-10, 'b%d' % i)]), B, 'authenticated')
-            caps.append(sql(NOON + "select count(*) from public.push_claim(10) c where c.player_id = 'user_01BBB'", None, 'service_role'))
-        R['pCap'] = '/'.join(caps)
+            caps.append(sql(DUE + "select count(*) from public.push_claim(10) c where c.player_id = 'user_01BBB'", None, 'service_role'))
+        R['pCap'] = '/'.join(caps)      # six a day for a new player, then none
+        # two sessions a day for three days lift it to twelve; the sessions are the analytics' (sessions)
         sql("update public.push_queue set sent_at = sent_at - interval '25 hours' where player_id = 'user_01BBB'")
+        sql("insert into public.sessions (id, player_id, started_at) select gen_random_uuid(), 'user_01BBB', now() - (i * interval '5 hours') - interval '1 hour' from generate_series(0, 6) i")
+        R['pCap12'] = sql("select public.push_cap('user_01BBB')")
+        sql("insert into public.sessions (id, player_id, started_at) select gen_random_uuid(), 'user_01BBB', now() - (i * interval '3 hours') - interval '30 minutes' from generate_series(0, 14) i")
+        R['pCap24'] = sql("select public.push_cap('user_01BBB')")
+        # the last five unanswered (no session within half an hour of each): two a day
+        sql("delete from public.sessions where player_id = 'user_01BBB'")
+        sql("insert into public.push_queue (player_id, send_at, tag, title, body, kind, sent_at) select 'user_01BBB', now() - (i * interval '2 hours'), 'u' || i, 't', 'b', 'plan', now() - (i * interval '2 hours') from generate_series(1, 5) i")
+        R['pCap2'] = sql("select public.push_cap('user_01BBB')")
+        sql("delete from public.push_queue where tag like 'u_'")
+        # no quiet night: what is due at 23:30 goes
         sql("select public.push_plan('%s')" % json.dumps([item(-10, 'night')]), B, 'authenticated')
-        R['pNight'] = sql("set dsb.clock = '2026-10-06 23:30:00+02'; select count(*) from public.push_claim(10)", None, 'service_role') + '/' + sql(NOON + "select count(*) from public.push_claim(10)", None, 'service_role')
+        R['pNight'] = sql("set dsb.clock = '2026-10-06 23:30:00+02'; " + DUE + "select count(*) from public.push_claim(10)", None, 'service_role')
         sql("select public.push_plan('%s')" % json.dumps([item(-30, 'old', -5)]), B, 'authenticated')
-        R['pStale'] = sql(NOON + "select count(*) from public.push_claim(10)", None, 'service_role') + '/' + sql("select count(*) from public.push_queue where tag = 'old' and dropped")
+        R['pStale'] = sql(DUE + "select count(*) from public.push_claim(10)", None, 'service_role') + '/' + sql("select count(*) from public.push_queue where tag = 'old' and dropped")
+        # the leaderboard's «passed you» is gone, and the week's message goes once a week to everyone who has it on: the best fisher in each group
         sql("""select public.land_put(2000, 2027, 'botnhamn', 'open', '[{"sp":"torsk","kg":300,"kgq":300}]', 'Fjordbris')""", B, 'authenticated')
         sql("""select public.land_put(2001, 2027, 'finnsnes', 'open', '[{"sp":"torsk","kg":500,"kgq":500}]', 'Havbris')""", A, 'authenticated')
-        R['pPass'] = sql("select coalesce(json_agg(json_build_object('t', title, 'b', body, 'kind', kind)), '[]') from public.push_queue where player_id = 'user_01BBB' and tag = 'top-pass'")
-        sql("delete from public.push_queue where tag = 'top-pass'"); sql("select public.push_prefs(false)", B, 'authenticated')
-        sql("""select public.land_put(2002, 2027, 'botnhamn', 'open', '[{"sp":"torsk","kg":900,"kgq":900}]', 'Fjordbris')""", B, 'authenticated')
-        sql("""select public.land_put(2003, 2027, 'finnsnes', 'open', '[{"sp":"torsk","kg":900,"kgq":900}]', 'Havbris')""", A, 'authenticated')
-        R['pPrefs'] = sql("select count(*) from public.push_queue where player_id = 'user_01BBB' and tag = 'top-pass'")
-        sql("select public.push_prefs(true)", B, 'authenticated')
-        R['pWeek'] = sql("select public.push_week(11)", None, 'service_role') + '/' + sql("select string_agg(body, ' | ' order by body) from public.push_queue where tag = 'top-week'")
-        R['pWeekPl'] = sql("select public.push_week(11)", A, 'authenticated', expect_err=True)
+        R['pPass'] = sql("select count(*) from public.push_queue where tag = 'top-pass'")
+        sql("select public.push_prefs(false)", B, 'authenticated')
+        R['pWeekOff'] = sql("select public.push_week(true)", None, 'service_role')
+        R['pWeekOffQ'] = sql("select count(*) from public.push_queue where tag = 'top-week' and player_id = 'user_01BBB'")
+        sql("delete from public.push_queue where tag = 'top-week'"); sql("select public.push_prefs(true)", B, 'authenticated')
+        R['pWeek'] = sql("select public.push_week(true)", None, 'service_role') + '/' + sql("select string_agg(body, ' | ' order by body) from public.push_queue where tag = 'top-week'")
+        sql("delete from public.push_queue where tag = 'top-week'")
+        # the day gate: Monday 08:00 once, not on Tuesday, not twice in a week
+        R['pWeekTue'] = sql("set dsb.clock = '2026-10-06 09:00:00+02'; select public.push_week()", None, 'service_role')
+        R['pWeekMon'] = sql("set dsb.clock = '2026-10-12 09:00:00+02'; select public.push_week()", None, 'service_role') + '/' + sql("set dsb.clock = '2026-10-12 10:00:00+02'; select public.push_week()", None, 'service_role')
+        R['pWeekPl'] = sql("select public.push_week(true)", A, 'authenticated', expect_err=True)
+        R['pPaper'] = sql("select public.push_paper()", None, 'service_role')   # Kystposten sends no push (20261008000000_push_ops.sql)
         R['wBadT'] = sql("select public.land_put('NaN', 2027, 'x', 'open', '[]')", A, 'authenticated', expect_err=True)
         R['wBadC'] = sql("select public.catch_put(1, (select jsonb_agg(jsonb_build_array(i, 1)) from generate_series(1, 601) i))", A, 'authenticated', expect_err=True)
         R['wRead'] = sql("select count(*) from public.landings", A, 'authenticated', expect_err=True)
@@ -413,14 +433,14 @@ def main():
               'push: only the browsers\' push services; no plan without a subscription; only what is due within two days; players never read the tables or claim; the sender takes what is due once; a new plan replaces the old', {k: R[k] for k in ('pushNoSub', 'pushPlan', 'pushClaim', 'pushReplan')})
         print(ok(R['pushGone'] == '0/0'), 'deleting the account takes the push subscriptions and the queue', R['pushGone'])
         pm = R['pMerge'][0] if R['pMerge'] else {}
-        print(ok(len(R['pMerge']) == 1 and pm.get('title') == 'Det Store Blå' and 'a1 skjedde' in pm.get('body', '') and 'a2 skjedde' in pm.get('body', '') and R['pCap'] == '1/1/1/1/0'
-                 and R['pNight'] == '0/1' and R['pStale'] == '0/1'),
-              'push: what is due at once goes as one message; at most four a day; nothing between 22 and 08, it waits for the morning; what has stopped mattering is dropped',
-              {'merge': pm, 'cap': R['pCap'], 'night': R['pNight'], 'stale': R['pStale']})
-        pp = json.loads(R['pPass'])
-        print(ok(len(pp) == 1 and pp[0]['kind'] == 'srv' and '«Havbris» gikk forbi deg i åpen gruppe' in pp[0]['b'] and 'nr. 2 i Norge' in pp[0]['b'] and R['pPrefs'] == '0'
-                 and R['pWeek'].startswith('2/') and 'Du ble nr. 1 av 2 i åpen gruppe med 1400 kg. Norges beste båt!' in R['pWeek'] and 'Du ble nr. 2 av 2' in R['pWeek'] and R['pWeekPl'][0]),
-              "push from the server: passed on the leaderboard (not with it turned off), and the week's result for each who landed; players cannot call it", {'pass': pp, 'prefs': R['pPrefs'], 'week': R['pWeek']})
+        print(ok(R['pushFloor'] == 'true'), 'push: nothing is sent sooner than five minutes after the plan was laid', R['pushFloor'])
+        print(ok(len(R['pMerge']) == 1 and pm.get('title') == 'Det Store Blå' and 'a1 skjedde' in pm.get('body', '') and 'a2 skjedde' in pm.get('body', '') and pm.get('body', '').index('a2') < pm.get('body', '').index('a1')
+                 and R['pCap'] == '1/1/1/1/1/0/0/0' and R['pCap12'] == '12' and R['pCap24'] == '24' and R['pCap2'] == '2' and R['pNight'] == '1' and R['pStale'] == '0/1'),
+              'push: what is due at once goes as one message, the most important first; six a day for a new player (but five unanswered ones in a row cut it to two until she opens the app), 12 and 24 with more sessions; no quiet night; what has stopped mattering is dropped',
+              {'merge': pm, 'cap': R['pCap'], '12': R['pCap12'], '24': R['pCap24'], '2': R['pCap2'], 'night': R['pNight'], 'stale': R['pStale']})
+        print(ok(R['pPass'] == '0' and R['pWeekOff'] == '1' and R['pWeekOffQ'] == '0' and R['pWeek'].startswith('2/') and 'Ukas beste fisker i åpen gruppe er «Havbris» med ' in R['pWeek'] and ' I lukket gruppe: «' in R['pWeek']
+                 and R['pWeekTue'] == '0' and R['pWeekMon'] == '2/0' and R['pWeekPl'][0] and R['pPaper'] == '0'),
+              "push from the server: no leaderboard message; once a week (Monday from 08:00) the best fisher of the last seven days to each who has it on (not with it turned off); players cannot call it", {'pass': R['pPass'], 'off': [R['pWeekOff'], R['pWeekOffQ']], 'week': R['pWeek'], 'tue': R['pWeekTue'], 'mon': R['pWeekMon']})
         q, pd = R['sQuote'], R['sPend']
         print(ok(q.get('price_nok') == 49 and q.get('data', {}).get('k') == 'turbo' and R['sNoProd'][0] and R['sAnon'][0] and R['sPaid1'] == 't' and R['sPaid2'] == 'f'
                  and len(pd) == 1 and pd[0]['product'] == 'trim_turbo' and pd[0]['data'].get('give') == 'trim' and pd[0]['data'].get('boat') == 'v1' and R['sPendB'] == []
