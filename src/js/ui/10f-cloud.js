@@ -36,7 +36,7 @@ function cloudDev(){
   const g = typeof G3 !== 'undefined' ? G3 : null, q = g && g.quality ? g.quality() : {}, s = window.screen || {};
   return {gpu:cloudGpu(), cores:navigator.hardwareConcurrency || null, mem:navigator.deviceMemory || null,
     scr:Math.round(s.width || innerWidth) + 'x' + Math.round(s.height || innerHeight) + '@' + Math.round((devicePixelRatio || 1) * 10) / 10,
-    lvl:q.lvl == null ? null : q.lvl, view:g && g.isActive && g.isActive() ? '3d' : 'kart'};
+    lvl:q.lvl == null ? null : q.lvl, view:g && g.isActive && g.isActive() ? '3d' : 'kart', js:g && g._debug && g._debug.jsms ? Math.round(g._debug.jsms * 10) / 10 : null};
 }
 function cloudMeta(){
   // at the gate the game is not loaded yet (S comes in bootGame)
@@ -216,6 +216,7 @@ async function cloudFlush(end){
 }
 function cloudErr(msg, src, stack){
   if (!CLOUD.on || !msg || CLOUD.errs >= 20 || CLOUD.errSeen[msg]) return;
+  if (/Failed to start the audio device|The AudioContext was not allowed to start/i.test(String(msg))) return;   // the phone's audio is taken or no tap has come yet: not a fault of the game (10e-sound.js tries again at the next tap)
   CLOUD.errSeen[msg] = 1; CLOUD.errs++;
   cloudRpc('tm_error', {msg:String(msg).slice(0, 400), src:String(src || '').slice(0, 200), stack:String(stack || '').slice(0, 2000), meta:{...cloudMeta(), ...cloudDev()}}).catch(() => {});
 }

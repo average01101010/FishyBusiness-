@@ -149,11 +149,12 @@ const pick1 = a => a[Math.floor(Math.random() * a.length)];
 // og uttrykk basert på hvor det kommer fra»). The lines are written in the Northern Norwegian of Troms; north of 65° N they stand as they
 // are, and further south the words are changed by region: Trøndelag, Møre, the west and the south coast.
 const DIALECTS = {
-  tro:[[/\bikkje\b/g, 'itj'], [/\bkæm\b/g, 'kem'], [/\bkjæm\b/g, 'kjem'], [/\bfesken\b/g, 'fisken'], [/\bfesk\b/g, 'fisk']],
-  mor:[[/\bæ\b/g, 'eg'], [/\bmæ\b/g, 'meg'], [/\bsæ\b/g, 'seg'], [/\bkæm\b/g, 'kven'], [/\bka\b/g, 'kva'], [/\bkorsn\b/g, 'korleis'], [/\be\b/g, 'er'], [/\bska\b/g, 'skal'], [/\bkjæm\b/g, 'kjem'], [/\bfesken\b/g, 'fisken'], [/\bfesk\b/g, 'fisk'], [/\bnå\b/g, 'no'], [/\bikkje\b/g, 'ikkje']],
-  vest:[[/\bæ\b/g, 'eg'], [/\bmæ\b/g, 'meg'], [/\bsæ\b/g, 'seg'], [/\bkæm\b/g, 'kven'], [/\bka\b/g, 'kva'], [/\bkorsn\b/g, 'korleis'], [/\be\b/g, 'er'], [/\bska\b/g, 'skal'], [/\bkjæm\b/g, 'kjem'], [/\bfesken\b/g, 'fisken'], [/\bfesk\b/g, 'fisk'], [/\bnå\b/g, 'no'], [/\bvatn\b/g, 'vatn'], [/\bikkje\b/g, 'ikkje']],
-  sor:[[/\bkæm\b/g, 'kem'], [/\bkorsn\b/g, 'korleis'], [/\bikkje\b/g, 'ikkje'], [/\bfesken\b/g, 'fisken'], [/\bfesk\b/g, 'fisk'], [/\bvatn\b/g, 'vann'], [/\bnå\b/g, 'nå']]
+  tro:[['ikkje', 'itj'], ['kæm', 'kem'], ['kjæm', 'kjem'], ['fesken', 'fisken'], ['fesk', 'fisk']],
+  mor:[['æ', 'eg'], ['mæ', 'meg'], ['sæ', 'seg'], ['kæm', 'kven'], ['ka', 'kva'], ['korsn', 'korleis'], ['e', 'er'], ['ska', 'skal'], ['kjæm', 'kjem'], ['fesken', 'fisken'], ['fesk', 'fisk'], ['nå', 'no']],
+  vest:[['æ', 'eg'], ['mæ', 'meg'], ['sæ', 'seg'], ['kæm', 'kven'], ['ka', 'kva'], ['korsn', 'korleis'], ['e', 'er'], ['ska', 'skal'], ['kjæm', 'kjem'], ['fesken', 'fisken'], ['fesk', 'fisk'], ['nå', 'no']],
+  sor:[['kæm', 'kem'], ['korsn', 'korleis'], ['fesken', 'fisken'], ['fesk', 'fisk'], ['vatn', 'vann']]
 };
+// whole words, one by one (the letters æ, ø and å are no word characters to \b)
 const capLike = (from, to) => from[0] !== from[0].toLowerCase() ? to[0].toUpperCase() + to.slice(1) : to;
 function dialectOf(c){
   const pt = c && c.homePort && portById(c.homePort), q = pt || portById(S.home || HOME0); if (!q) return null;
@@ -161,8 +162,7 @@ function dialectOf(c){
 }
 function crewDialect(c, text){
   const d = DIALECTS[dialectOf(c)]; if (!d) return text;
-  let out = text; for (const [re, to] of d) out = out.replace(new RegExp(re.source, 'gi'), m => capLike(m, to));
-  return out;
+  return text.replace(/\p{L}+/gu, w => { for (const [from, to] of d) if (w.toLowerCase() === from) return capLike(w, to); return w; });
 }
 // someone says a line for the situation: c, or a person whose ways suit one of the lines, or anyone aboard
 function crewSay(c, sit){

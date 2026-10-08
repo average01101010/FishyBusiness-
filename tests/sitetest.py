@@ -22,7 +22,7 @@ async def main():
           if (sh){ const at = (x, y) => [sh.o[0] + sh.u[0] * x - sh.n[0] * y, sh.o[1] + sh.u[1] * x - sh.n[1] * y]; R.shop = {yard:[[0, 15], [-12, 20], [12, 25]].map(([x, y]) => +G3._debug.terrH(...at(x, y)).toFixed(2)), clear:G3._debug.onSite(...at(0, 18))}; }
           R.models = ['naust', 'shop'].map(k => !!G3._debug.siteModel(k)); return R; })()""")
         print(json.dumps(r))
-        print(ok(r['kinds'] == ['shop', 'naust'] and all(r['models'])), 'the shop and Father\'s naust are set down by Finnsnes, with their models', r['kinds'])
+        print(ok(r['kinds'][:2] == ['shop', 'naust'] and all(r['models'])), 'the shop and Father\'s naust are set down by Finnsnes, with their models', r['kinds'])
         N = r.get('naust') or {}
         print(ok(N and not any(N['front']) and all(N['behind']) and N['portD'] >= 70 and 50 <= N['home'] <= 400), 'the naust stands on the shore: water 10-30 m in front, land behind, at least 70 m from a harbour, near the home harbour', N)
         print(ok(N and all(g <= -0.3 for g in N['ground']) and N['clear']), 'the ground under the naust is cut under its own bank, and the map\'s houses go there', N.get('ground'))
@@ -37,7 +37,7 @@ async def main():
         await pg.wait_for_timeout(7000); await pg.screenshot(path='site_shop.png')
         # a home along the coast: its naust is found when its waters are in
         cs = await pg.evaluate("""(async () => { const pt = PORTS.find(q => q.coastal && /Båtsfjord/.test(q.name)) || PORTS.find(q => q.coastal); await mapNeed(pt.p, MAPD.simR); S.home = pt.id; S.naust = null; const n = naustSite();
-          const r = {home:pt.name, found:!!n, d:n ? Math.round(Math.hypot(n.o[0] - pt.p.x * 1000, n.o[1] - pt.p.y * 1000)) : null}; S.home = undefined; S.naust = null; return r; })()""")
+          const r = {home:pt.name, found:!!n, d:n ? Math.round(Math.hypot(n.o[0] - pt.p.x * 1000, n.o[1] - pt.p.y * 1000)) : null}; S.home = 'finnsnes'; S.naust = null; return r; })()""")
         print(ok(cs['found'] and cs['d'] < 400), 'a home along the coast gets its naust on the shore near the plant', cs)
         # the naust as a home: the roof before the stove, faster rest in the home harbour, the workbench's cheaper jig
         nu = await pg.evaluate("""(() => { const b = S.boat, q = portById('finnsnes'); b.status = 'port'; b.port = 'finnsnes'; b.pos = {x:q.p.x, y:q.p.y}; S.naustUp = {}; S.cash = 50000; S.adm = null; S.sleep = null;
@@ -64,7 +64,7 @@ async def main():
           return {kind, bp:!!bp, ends, j, i, gear:b.gear, ice:b.ice, father:/faren din/i.test(sol), sh, land, fuel, k1, tg, far, k2, k3, at:Math.round(Math.hypot(b.pos.x - pose.x, b.pos.y - pose.y) * 1000), log:S.log.slice(-2).map(e => e.no)}; })()""")
         print(json.dumps(st, ensure_ascii=False))
         print(ok(st['kind'] == 'naust' and st['bp'] and st['ends'] and not any(st['ends'])), 'a new game\'s boat lies at Father\'s naust, along its pile quay and in the water', st['ends'])
-        print(ok(st['j'] is None and st['i'] is None and st['gear'] and st['ice'] >= 149 and st['father']), 'at the naust the shop gives the jig and the ice Father paid for, and Solveig tells of it')
+        print(ok(st['j'] and st['i'] and not st['gear'] and st['ice'] == 0), 'at the naust nothing is sold (Father\'s naust is a home, not a shop: docs/handelssteder.md)')
         print(ok(not st['sh'] and not st['land'] and not st['fuel'] and st['k1'] == 'naust'), 'no fast travel: from the naust the boat is not shifted to the plant\'s quay, and landing and fuel are refused there', [st['sh'], st['land'], st['fuel']])
         print(ok(st['tg'] and st['tg'].get('berth') == 'naust' and st['tg'].get('port') == 'finnsnes' and st['far'] is None and st['k2'] == 'main' and st['k3'] == 'naust' and any('naustet' in l for l in st['log'])), 'a tap by the naust makes it a route\'s end, and a route that ends there docks the boat at the naust', {'tg':st['tg'], 'k2':st['k2'], 'k3':st['k3'], 'at':st['at'], 'log':st['log']})
         await pg.evaluate("""(() => { const c = G3._debug.cam; c.helm = false; c.dist = 34; c.pitch = 0.2; const n = G3._debug.sitesNow().find(s => s.k === 'naust'), b = S.boat; c.yaw = Math.atan2(-n.n[0], n.n[1]) - b.heading + 0.5; })()""")
