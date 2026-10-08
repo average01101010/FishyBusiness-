@@ -108,9 +108,19 @@ function legHazardMemo(a, c, sd){
 }
 function draftHazards(){
   const sd = safeDepth(), k = sd + '|' + S.boat.pos.x.toFixed(3) + ',' + S.boat.pos.y.toFixed(3) + '|' + S.draft.map(w => w.x.toFixed(3) + ',' + w.y.toFixed(3)).join(';');
-  if (hzCache.k === k) return hzCache.v;
-  let a = S.boat.pos; const v = S.draft.map(w => { const h = legHazardMemo(a, w, sd); a = w; return h; });
+  if (hzCache.k === k || hzCache.k === 'wait|' + k || hzCache.k === 'fail|' + k) return hzCache.v;
+  // a drawn leg can cross tiles whose packs are not in yet (08.10.2026: «mask block … is not loaded» from the route editor stopped
+  // the game): such a leg is left unflagged while its packs are fetched, and the chart is drawn again when they are in
+  let a = S.boat.pos, wait = null; const v = S.draft.map(w => { const p = a; a = w; if (!legReady(p, w)){ (wait = wait || []).push([p, w]); return {minD:1e9, rocks:0, unsafe:false}; } return legHazardMemo(p, w, sd); });
+  if (wait){ const kw = 'wait|' + k; hzCache = {k:kw, v}; Promise.all(wait.map(lnetLoad)).then(() => { if (hzCache.k === kw && typeof routeChanged === 'function') routeChanged(); }, e => { if (hzCache.k === kw) hzCache.k = 'fail|' + k; console.error(e); }); return v; }
   hzCache = {k, v}; return v;
+}
+// whether the packs legHazard reads are in along a leg (the box lnetLoad fetches, 11c-leinett.js)
+function legReady(a, c){
+  const x0 = Math.min(a.x, c.x) - 0.5, y0 = Math.min(a.y, c.y) - 0.5, x1 = Math.max(a.x, c.x) + 0.5, y1 = Math.max(a.y, c.y) + 0.5;
+  for (const pk of mapPacksIn('sim', x0, y0, x1, y1)) if (!pk.buf) return false;
+  for (const pk of mapPacksIn('chart', x0, y0, x1, y1)) if (!pk.buf || !pk.coast) return false;
+  return true;
 }
 // running aground
 function nearestPlace(p){

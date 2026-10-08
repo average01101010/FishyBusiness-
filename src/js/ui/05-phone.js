@@ -418,6 +418,9 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p95', '08.10.2026', 'Ruter over kart som ikke er lastet', 'Routes over map not yet loaded', [
+      ['Spillet stopper ikke lenger når du tegner en rute over et område kartet ikke har lastet ennå. Advarslene for grunner og skjær kommer når kartet er lastet.', 'The game no longer stops when you draw a route over an area the map has not loaded yet. The warnings for shallows and rocks appear once the map is in.'],
+    ]],
     ['p94', '08.10.2026', 'Krabbeteiner: én størrelse, plass etter båten', 'Crab pots: one size, room by the boat', [
       ['Det er nå bare én krabbeteine, den store (1,55 × 1,45 × 1,07 m). Den heter «Krabbeteiner». Små teiner du hadde, er blitt store.', 'There is now one crab pot, the big one (1.55 × 1.45 × 1.07 m). It is called "Crab pots". Any small pots you had have become big ones.'],
       ['Hyselina har nå 600 kroker per stamp (en stamp rommer 200–600, etter Fiskeridirektoratets redskapshefte), og et garn er 28 m. Kystbåtene har høyst 33 stamper (ca. 20 000 kroker), og den eldre 21-meteren har plass til 240 garn.', 'Haddock line now has 600 hooks a tub (a tub holds 200–600, after the Directorate of Fisheries gear booklet), and a net is 28 m. The coastal boats have at most 33 tubs (about 20,000 hooks), and the older 21 m boat has room for 240 nets.'],
