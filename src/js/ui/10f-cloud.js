@@ -158,13 +158,16 @@ async function cloudGate(){
     // the save: which of the game here and the account's goes on (cloudSync)
     if (sessionStorage.getItem('dsb_force')){ sessionStorage.removeItem('dsb_force'); CLOUD.forceNext = true; }   // a game taken back (cloudRestore)
     const cs = await cloudRpc('save_get', {});
-    if (cs && cs.data) await cloudSync(cs);
+    // (a game the player took back on purpose goes on, whatever the account has: its first save replaces the account's, kept in the history)
+    if (cs && cs.data && !CLOUD.forceNext) await cloudSync(cs); else if (cs && cs.data) syncSet(cs.saved_at, 0);
   } catch (e){ console.error(e); }
   cloudGateHide();
 }
 
 // ---------- after the start: hooks, measurements, the save ----------
 function cloudStart(){
+  // what the start chose between two games, told once the game is up (cloudKeptNote)
+  try { const n = sessionStorage.getItem('dsb_note'); if (n){ sessionStorage.removeItem('dsb_note'); setTimeout(() => toast(n), 1500); } } catch (e){}
   if (!CLOUD.on) return;
   window.addEventListener('error', e => { cloudErr(e.message, (e.filename || '') + ':' + (e.lineno || ''), e.error && e.error.stack);
     if (e.error && typeof FEEDBACK !== 'undefined') setTimeout(() => FEEDBACK.nudge('err'), 2000); });   // what the player saw helps (06e-feedback.js)
@@ -234,7 +237,7 @@ function syncSet(rev, at){ try { localStorage.setItem(syncKey(), JSON.stringify(
 // what a game is: its day, money and boat (sent with every save, shown when two games meet)
 function saveSum(o){
   if (!o) return null; const b = o.boat || (((o.fleet || [])[0] || {}).boat) || {};
-  return {day:Math.floor((o.t || 0) / 1440) + 1, cash:Math.round(o.cash || 0), boat:o.boatName || '', type:b.type || '', tut:!!(o.tut && o.tut.v), fleet:(o.fleet || []).length || 1};
+  return {t:Math.round(o.t || 0), day:Math.floor((o.t || 0) / 1440) + 1, cash:Math.round(o.cash || 0), boat:o.boatName || '', type:b.type || '', tut:!!(o.tut && o.tut.v), fleet:(o.fleet || []).length || 1};
 }
 function sumText(m){
   if (!m) return cloudL('ukjent', 'unknown');
@@ -253,6 +256,13 @@ function cloudChoose(here, cloud, when, box){
   const done = (k, res) => () => { if (!box){ const m = document.getElementById('modal'); m.hidden = true; m.innerHTML = ''; } res(k); };
   return new Promise(res => { document.getElementById('cgHere').onclick = done('here', res); document.getElementById('cgCloud').onclick = done('cloud', res); });
 }
+// One game per account (Jonas 08.10.2026: «Det skulle bare vært sånn at det var EN lagring … Men alle må kunne stole på dette»): when
+// this device and the account have both been played since they were last in step, the one that has come furthest in game time goes on by
+// itself, and the other is kept (the account's in its history, this device's as the save before), to be had back under Innstillinger
+// › Tidligere lagringer. The player is only told. (Old summaries without t: their day.)
+const sumT = s => !s ? -1 : s.t != null ? s.t : ((s.day || 1) - 1) * 1440;
+function cloudKeptNote(where){ const m = where === 'cloud' ? cloudL('Vi fant et spill som har kommet lenger på kontoen din, og fortsetter med det. Spillet som var på denne enheten, er tatt vare på under Innstillinger › Tidligere lagringer.', 'We found a game on your account that has come further, and go on with it. The game that was on this device is kept under Settings › Earlier saves.') : cloudL('Spillet på denne enheten har kommet lengst og fortsetter. Det andre spillet på kontoen er tatt vare på under Innstillinger › Tidligere lagringer.', 'The game on this device has come furthest and goes on. The other game on your account is kept under Settings › Earlier saves.');
+  if (typeof toast === 'function' && typeof S !== 'undefined' && S) toast(m); else try { sessionStorage.setItem('dsb_note', m); } catch (e){} }
 // the choice is open (or its summary on the way): no save goes to the account meanwhile; another dialog over it lets the next try ask again
 const cloudChoosing = () => CLOUD.choosing || !!document.getElementById('cgHere');
 // the account's game onto this device (the one here kept), and start again with it
@@ -269,9 +279,9 @@ async function cloudSync(cs){
   // (not played here since it was last in step, but for the last minute that may not have reached the account as the page closed)
   if (sync && local <= sync.at + 150000){ cloudGateShow('<p>' + cloudL('Henter spillet ditt …', 'Fetching your game …') + '</p>'); return cloudTake(cs); }   // not played here since: the newer one from elsewhere
   if (!sync && Math.abs(local - Date.parse(rev)) < 3000){ syncSet(rev, local); return; }            // the same save, from before devices kept count
-  // both have been played since they were last in step: the player chooses
+  // both have been played since they were last in step: the one furthest in game time goes on (see sumT above)
   let cloud = cs.summary; if (!cloud){ try { cloud = saveSum((await codeRead(cs.data)).o); } catch (e){} }
-  const pick = await cloudChoose(saveSum(lo), cloud, rev, true);
+  const pick = sumT(cloud) > sumT(saveSum(lo)) ? 'cloud' : 'here'; cloudKeptNote(pick);
   if (pick === 'cloud'){ cloudGateShow('<p>' + cloudL('Henter spillet ditt …', 'Fetching your game …') + '</p>'); return cloudTake(cs); }
   CLOUD.forceNext = true; syncSet(rev, 0);   // the game here goes on; its first save replaces the account's (kept in the history)
 }
@@ -294,9 +304,9 @@ async function cloudConflict(cl){
   let sum = cl.summary, cs = null;
   try { if (!sum){ cs = await cloudRpc('save_get', {}); sum = cs && cs.data ? saveSum((await codeRead(cs.data)).o) : null; } } catch (e){ console.error(e); }
   CLOUD.choosing = false;
-  const pick = await cloudChoose(saveSum(S), sum, cl.saved_at, false);
+  const pick = sumT(sum) > sumT(saveSum(S)) ? 'cloud' : 'here'; cloudKeptNote(pick);
   if (pick === 'cloud'){ cs = cs || await cloudRpc('save_get', {}); if (cs && cs.data){ save(); await cloudTake(cs); } }
-  else { CLOUD.forceNext = true; CLOUD.lastSave = 0; await cloudSaveSoon(); }
+  else { CLOUD.forceNext = true; CLOUD.lastSave = 0; setTimeout(cloudSaveSoon, 50); }   // (after the save that met the conflict has let go of CLOUD.saving)
 }
 // «Tidligere lagringer» in Settings: the cloud's last ten and the one this device had before, each can be taken back
 async function cloudHist(){

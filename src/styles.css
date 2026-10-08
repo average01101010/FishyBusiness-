@@ -516,6 +516,7 @@ body.vplot #instr{flex-wrap:wrap-reverse;max-width:calc(100% - var(--sidew) - 84
 #ecdisTop .ec-echo .hb-bar{width:96px;height:9px;border-radius:5px;background-color:#f9fbfc;box-shadow:inset 0 0 0 1px #2c5870}
 #ecdisTop .ec-echo .hb-lab{font:10px var(--sans);color:#9fc3d6;white-space:nowrap}
 #ecdisTop .ec-echo .hb-sp{height:22px;min-width:0;padding:0 8px;border-radius:6px;font:600 11px var(--sans);color:#f6e868}
+#heatBox .hb-un{display:block;margin-top:2px;font:500 10.5px var(--sans);opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #ecdisTop #ecSet.on{background:#e6f6ff;color:#0a1620}
 /* the GPS box's route lines in the bar (the user's wish 02.10.2026), only while a route is sailed; the least needed fields give way */
 #ecdisTop .ec-nav{display:none} body.navon #ecdisTop .ec-nav{display:flex}
@@ -1072,3 +1073,4 @@ body.vplot .depc{display:none}
 .anchal{position:absolute;left:50%;top:18%;transform:translateX(-50%);padding:8px 16px;border-radius:8px;background:rgba(120,10,10,.85);color:#fff;font-weight:700;letter-spacing:.04em;font-size:15px;white-space:nowrap;pointer-events:none;border:2px solid #ff5a4a;opacity:.55;transition:opacity .12s}
 .anchal.on{opacity:1;box-shadow:0 0 22px rgba(255,60,40,.7)}
 @media (prefers-reduced-motion:reduce){.anchal{transition:none}}
+#autoTo{min-height:32px}

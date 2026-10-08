@@ -174,6 +174,11 @@ Spillet skal ligge på Hetzner-serveren din, ikke på GitHub Pages (se G).
 4. **Betaling** med Stripe Checkout og en webhook (serverfunksjon i Supabase) som låser opp det som er kjøpt. Kjøpet følger kontoen.
 5. **Sidene** Personvern, Vilkår, Kilder og Kontakt.
 6. **Ny logo fra Blender:** app-ikonene og et bilde for deling i sosiale medier.
+7. **Stabilitet før lansering** (Jonas 08.10.2026: venter til spillet offentliggjøres, fordi det endres mange ganger daglig i utviklingen):
+   - **Ekte lagringer stopper utrullingen:** et steg i `deploy.yml` henter alle lagringene (`tools/saves/fetch.py --hist 1`, med GitHub-hemmeligheten `SUPABASE_SERVICE_ROLE_KEY`, som alt er lagt inn) og kjører `tests/savestest.py` mot `dist-pwa` før opplastingen. Én lagring som ikke starter, stopper utrullingen. Lagringene blir bare på maskinen som kjører jobben, og loggen viser bare fingeravtrykk. Tidsgrensen heves til 45 minutter.
+   - **Testutgave før produksjon:** arbeidsgrenen rulles ut til en egen adresse, og bare `main` til detstorebla.no.
+   - **Feil fra spillerne** (`cloudErr`, «boot:») som varsel til Jonas, ikke bare i admin.
+   - Til da kan lagringene testes for hånd: `python3 tools/saves/fetch.py` med nøkkelen, så `python3 tests/savestest.py`.
 
 ## C. Valg som må tas
 

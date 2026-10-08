@@ -300,6 +300,8 @@ function vesselStep(H){
   if (W <= limW && !seaOver) b.windArm = true;
   if ((wl ? wl.shelter : S.settings.autoOn) && (W > limW || seaOver) && b.windArm && ['sailing','fishing','idle'].includes(b.status) && !(S.plan && S.plan.returning) && !(S.tut && S.tut.catch) && !helmOn()){
     b.windArm = false; startReturn(true, W, false, seaOver && W <= limW ? hs : 0);
+    // say it on the screen too, with where the limit is set (Vannareid 08.10.2026: the player did not know why the boat turned)
+    if (hooks.onTurnBack) hooks.onTurnBack(!!wl, seaOver && W <= limW, W, hs, limW, wl ? wl.hs : 0);
   }
   if (b.status === 'sailing' || b.status === 'fishing') b.engH = (b.engH || 0) + (b.status === 'sailing' ? 1 : 0.25) / 60;
   if (b.status === 'sailing'){ if (!helmOn()){ const p0 = b.pos; sail(H, W, hs); if (meAboard()) tatAdd('nm', dist(p0, b.pos) / NM); } }   // by hand she moves every tick (helmStep)
@@ -524,7 +526,7 @@ function fish(H, W, hs){
 }
 function endFishing(why){
   const b = S.boat; b.fishUntil = null; b.deckStop = false; b.deckEnd = null;
-  const fs = S.fsess; if (fs && S.t - fs.t0 >= 15){ S.marks.push({x:fs.x, y:fs.y, t:S.t, kgph:Math.round(fs.kg / ((S.t - fs.t0) / 60))}); if (S.marks.length > 80) S.marks.shift(); } S.fsess = null;
+  const fs = S.fsess; if (fs && S.t - fs.t0 >= 15){ { const kgph = Math.round(fs.kg / ((S.t - fs.t0) / 60)); S.marks.push({x:fs.x, y:fs.y, t:S.t, kgph, q:Math.round(kgph / (HEATG.fair.jig * heatRigFactor()) * 100) / 100}); } if (S.marks.length > 80) S.marks.shift(); } S.fsess = null;
   if (b.gopQuiet){ b.gopQuiet = false; if (why === 'full') log('Lasten er full.', 'The hold is full.'); }
   else if (why === 'full') log('Lasten er full.', 'The hold is full.');
   else if (why === 'gear') log('Kan ikke fiske uten juksa.', 'Cannot fish without a jig line.');

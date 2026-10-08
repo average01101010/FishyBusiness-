@@ -115,6 +115,10 @@ function energyUi(){
 $('slAck').onclick = () => { if (alarmAck()){ save(); panelDirty = true; if (typeof refreshAll === 'function') refreshAll(); } energyUi(); };
 // «Våkn opp»: the sleep is broken off with the rest it has given (15-energy.js wakeEarly)
 $('slSkip').onclick = () => { if (wakeEarly(false)){ save(); panelDirty = true; if (typeof refreshAll === 'function') refreshAll(); } energyUi(); };
+hooks.onTurnBack = (plan, sea, W, hs, limW, limHs) => { if (typeof toast !== 'function') return; const L = (no, en) => S.lang === 'no' ? no : en, f = x => x.toFixed(1).replace('.', S.lang === 'no' ? ',' : '.');
+  toast(sea ? L('Sjøen er ' + f(hs) + ' m, over grensen ' + f(limHs) + ' m i driftsplanen. Båten snur mot nærmeste kai.', 'The sea is ' + f(hs) + ' m, over the ' + f(limHs) + ' m limit of the plan. The boat turns to the nearest quay.')
+    : plan ? L('Vinden er ' + f(W) + ' m/s, over grensen ' + f(limW) + ' m/s i driftsplanen. Båten snur mot nærmeste kai.', 'The wind is ' + f(W) + ' m/s, over the ' + f(limW) + ' m/s limit of the plan. The boat turns to the nearest quay.')
+    : L('Vinden er ' + f(W) + ' m/s, over grensen din på ' + f(limW) + '. Båten snur mot nærmeste kai. Endres under Innstillinger → Snu ved.', 'The wind is ' + f(W) + ' m/s, over your limit of ' + f(limW) + '. The boat turns to the nearest quay. Change it under Settings → Turn back at.')); };
 hooks.onEnergy = k => { if (typeof toast !== 'function') return; const L = (no, en) => S.lang === 'no' ? no : en;
   if (k === 'warn') toast(bunks(S.boat) ? L('Du er sliten (25 %). Arbeidet ditt går tregere. Gå til kai for å hvile.', 'You are tired (25 %). Your work goes slower. Go to the quay to rest.') : L('Du er sliten (25 %). Arbeidet ditt går tregere. Seil til naustet eller en rorbu for å hvile.', 'You are tired (25 %). Your work goes slower. Sail to your boathouse or a rorbu to rest.'));
   if (k === 'ack') toast(L('Du er våken, men trøtt og døsig. Du kan døse av igjen til du har hvilt deg ut.', 'You are awake, but tired and drowsy. You may doze off again until you have had a proper rest.'));

@@ -35,11 +35,12 @@ function heatIndex(v, steps){
 }
 // the cells as one small picture, one pixel a cell, with the afterglow faded in its alpha; rebuilt when the cells, the species or
 // the game minute change
-const HP = {rev:-1, t:-1, sp:'', tier:'', off:document.createElement('canvas'), ix0:0, iy0:0, w:0, h:0, last:0, box:''};
+const HP = {rev:-1, t:-1, sp:'', tier:'', gk:'', off:document.createElement('canvas'), ix0:0, iy0:0, w:0, h:0, last:0, box:''};
 function heatImage(){
   const sp = heatSpecies(), tier = HEATC.tier;
-  if (HP.rev === HEATC.rev && HP.t === S.t && HP.sp === sp && HP.tier === tier) return HP.w > 0;
-  HP.rev = HEATC.rev; HP.t = S.t; HP.sp = sp; HP.tier = tier;
+  const gx = heatGearCtx(), gk = gx ? gx.sig : '';
+  if (HP.rev === HEATC.rev && HP.t === S.t && HP.sp === sp && HP.tier === tier && HP.gk === gk) return HP.w > 0;
+  HP.rev = HEATC.rev; HP.t = S.t; HP.sp = sp; HP.tier = tier; HP.gk = gk; HEATGC = gx;
   const cs = HEATC.cs; let ix0 = 1e9, iy0 = 1e9, ix1 = -1e9, iy1 = -1e9;
   for (const c of HEATC.cells.values()){ if (!c.v) continue; const ix = Math.floor(c.x / cs), iy = Math.floor(c.y / cs); if (ix < ix0) ix0 = ix; if (iy < iy0) iy0 = iy; if (ix > ix1) ix1 = ix; if (iy > iy1) iy1 = iy; }
   if (ix1 < ix0){ HP.w = 0; return false; }
@@ -113,14 +114,14 @@ function heatBar(steps){
 function heatBox(on){
   const el = $('heatBox'); if (!el) return;
   if (!on){ if (!el.hidden) el.hidden = true; return; }
-  const now = performance.now(), tier = heatTier(), sp = heatSpecies(), key = [tier, sp, S.lang, S.boat.status].join('|');
+  const now = performance.now(), tier = heatTier(), sp = heatSpecies(), gi = heatGearInfo(), key = [tier, sp, S.lang, S.boat.status, gi ? gi.no : ''].join('|');
   if (!el.hidden && key === HP.box && now - HP.last < 1000) return; HP.last = now; HP.box = key; el.hidden = false;
   const L = (no, en) => S.lang === 'no' ? no : en, pick = HEAT.tiers[tier].pick, nx = sp === 'all' ? HEAT.sp[0] : HEAT.sp[HEAT.sp.indexOf(sp) + 1] || 'all';
   const title = tier === 'sonar' ? L('Sonar', 'Sonar') : tier === 'chirp' ? L('CHIRP-ekkolodd', 'CHIRP echo sounder') : L('Ekkolodd', 'Echo sounder');
   const range = fmt(HEAT.tiers[tier].r * 2 / NM, 1) + ' nm';
   el.innerHTML = '<small>' + title.toUpperCase() + ' · ' + range + '</small><span class="hb-row"><span class="hb-lab">' + L('lite', 'little') + '</span><span class="hb-bar" style="background-image:' + heatBar(tier === 'basic') + '"></span><span class="hb-lab">' + L('mye fisk', 'much fish') + '</span>' +
-    (pick ? '<button type="button" class="hb-sp" data-act="hsp" data-s="' + nx + '">' + SPNAME[sp][S.lang === 'no' ? 0 : 1].replace(/^./, c => c.toUpperCase()) + ' ›</button>' : '') + '</span>';
-  el.title = heatReadout().replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    (pick ? '<button type="button" class="hb-sp" data-act="hsp" data-s="' + nx + '">' + SPNAME[sp][S.lang === 'no' ? 0 : 1].replace(/^./, c => c.toUpperCase()) + ' ›</button>' : '') + '</span>' + (gi ? '<small class="hb-un">' + L(gi.no, gi.en) + '</small>' : '');
+  el.title = (gi ? L(gi.no, gi.en) + '. ' : '') + heatReadout().replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 }
 $('heatBox').addEventListener('click', e => { const el = e.target.closest('[data-act]'); if (el && !el.disabled) doAct(el); });
 hooks.onHeat = () => heatPaint();

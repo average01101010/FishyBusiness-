@@ -159,11 +159,11 @@ async def run(p, w, h, tag):
     check(i is not None, 'Sett ut viser redskapet om bord', fan)
     await tap_el('#dockFan [data-dk=set' + str(i) + ']'); await pg.wait_for_timeout(800)
     r = json.loads(await J("(() => { const p = S.boat.pos, e = setEnd(), a = mapToClient(p), c = mapToClient(e); return {plot:document.body.classList.contains('vplot'), km:setKm(), px:Math.hypot(c.x - a.x, c.y - a.y), want:setKm() * view.px, bar:!document.getElementById('setBar').hidden, n:SETM.n}; })()"))
-    check(r['plot'] and r['bar'] and abs(r['km'] - 3 * 700 * 0.0015) < 1e-9 and abs(r['px'] - r['want']) < 2, 'linja i kartet er like lang som 3 stamper hyseline (3 150 m), ±2 px', r)
+    check(r['plot'] and r['bar'] and abs(r['km'] - 3 * 600 * 0.0015) < 1e-9 and abs(r['px'] - r['want']) < 2, 'linja i kartet er like lang som 3 stamper hyseline (2 700 m), ±2 px', r)
     await pg.screenshot(path='dock_set_' + tag + '.png')
     # − shortens it by one tub
     await tap_el('#setBar [data-sb="-"]'); await pg.wait_for_timeout(200)
-    check(await pg.evaluate("SETM.n === 2 && Math.abs(setKm() - 2.1) < 1e-9"), '− gjør linja én stamp kortere')
+    check(await pg.evaluate("SETM.n === 2 && Math.abs(setKm() - 1.8) < 1e-9"), '− gjør linja én stamp kortere')
     # drag the end round to the south-east; the boat sets exactly there
     tgt = json.loads(await J("(() => { const p = S.boat.pos; for (const a of [135, 90, 180, 45, 225, 270, 315, 0]){ const h = a * Math.PI / 180; SETM.hdg = h; if (!setWhy()) return {a, e:mapToClient(setEnd())}; } return null; })()"))
     check(tgt is not None, 'det finnes en retning der lina kan settes', tgt)
@@ -179,7 +179,7 @@ async def run(p, w, h, tag):
         await tap_el('#setBar [data-sb=go]'); await pg.wait_for_timeout(500)
         r = json.loads(await J("(() => { const g = S.boat.gop; return g && {op:g.op, n:g.n, dx:g.b.x - g.a.x, dy:g.b.y - g.a.y, hdg:S.boat.heading, bar:document.getElementById('setBar').hidden, v3d:document.body.classList.contains('v3d')}; })()"))
         import math
-        ok = r and r['op'] == 'set' and r['n'] == 2 and abs(math.atan2(r['dx'], -r['dy']) - math.atan2(math.sin(hd), math.cos(hd))) < 1e-6 and abs(math.hypot(r['dx'], r['dy']) - 2.1) < 1e-6
+        ok = r and r['op'] == 'set' and r['n'] == 2 and abs(math.atan2(r['dx'], -r['dy']) - math.atan2(math.sin(hd), math.cos(hd))) < 1e-6 and abs(math.hypot(r['dx'], r['dy']) - 1.8) < 1e-6
         check(ok, 'Sett ut setter 2 stamper nøyaktig langs linja, og båten snur dit', r)
         # stopping before anything went over the side gives everything back
         await pg.evaluate("(() => { const pg = S.pgear; window._k = pg.kits.n; window._b = pg.lines.hyse.baited; gopAbort('stop'); })()")

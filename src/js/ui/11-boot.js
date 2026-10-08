@@ -114,4 +114,22 @@ loadFine().then(f => { FINE = f; if (g3Live()) G3.fineReady(); }).catch(e => con
 }
 bootMap().then(cloudGate).then(bootMapLoad).then(() => { bootGame(); cloudHooks(); cloudStart(); try { sessionStorage.removeItem('dsb_needpk'); } catch (e){} }).catch(e => { console.error(e);
   // a read in a pack that is not in: remember the pack and start again with it, a few times at most, before the player sees the error
-  try { if (e && e.pk && e.pk.file){ const L = JSON.parse(sessionStorage.getItem('dsb_needpk') || '[]'); if (L.length < 8 && !L.includes(e.pk.file)){ L.push(e.pk.file); sessionStorage.setItem('dsb_needpk', JSON.stringify(L)); location.reload(); return; } } } catch (e2){} const m = document.getElementById('modal'); if (m){ m.hidden = false; m.innerHTML = '<div class="card"><h2>Kartet lastet ikke</h2><p class="note">' + String(e && e.message || e) + '</p></div>'; } });
+  try { if (e && e.pk && e.pk.file){ const L = JSON.parse(sessionStorage.getItem('dsb_needpk') || '[]'); if (L.length < 8 && !L.includes(e.pk.file)){ L.push(e.pk.file); sessionStorage.setItem('dsb_needpk', JSON.stringify(L)); location.reload(); return; } } } catch (e2){} bootFail(e); });
+// A start that fails never leaves the player stuck (Jonas 08.10.2026): what went wrong goes to the admin's error list, and the player can try
+// again, start in safe mode (no 3D) or take back the game this device had before (the one now is kept as the one before, so it can be
+// had again the same way)
+function bootFail(e){
+  const msg = String(e && e.message || e), en = !/^no/.test((navigator.language || 'no').toLowerCase()) && !/^nb|^nn/.test((navigator.language || '').toLowerCase()), L = (no, eng) => en ? eng : no;
+  try { if (typeof cloudErr === 'function') cloudErr('boot: ' + msg, 'boot', e && e.stack); } catch (e2){}
+  const safe = /safe/.test(location.hash), prev = (() => { try { return !!localStorage.getItem(KEY_PREV); } catch (e2){ return false; } })();
+  const m = document.getElementById('modal'); if (!m) return; m.hidden = false;
+  m.innerHTML = '<div class="card"><h2>' + L('Spillet startet ikke', 'The game did not start') + '</h2><p class="note">' + msg.replace(/</g, '&lt;') + '</p>' +
+    '<p>' + L('Feilen er sendt til oss. Lagringen din er trygg.', 'The error has been sent to us. Your save is safe.') + '</p><div class="btns">' +
+    '<button id="bfRetry" class="btn">' + L('Prøv igjen', 'Try again') + '</button>' +
+    (safe ? '' : '<button id="bfSafe" class="btn">' + L('Start i sikker modus (uten 3D)', 'Start in safe mode (no 3D)') + '</button>') +
+    (prev ? '<button id="bfPrev" class="btn">' + L('Hent forrige lagring', 'Take back the save before') + '</button>' : '') + '</div></div>';
+  const on = (id, f) => { const b = document.getElementById(id); if (b) b.onclick = f; };
+  on('bfRetry', () => { try { sessionStorage.removeItem('dsb_needpk'); } catch (e2){} location.reload(); });
+  on('bfSafe', () => { location.hash = (location.hash ? location.hash + ',' : '#') + 'safe,no3d'; location.reload(); });
+  on('bfPrev', () => { try { const cur = localStorage.getItem(KEY), pv = localStorage.getItem(KEY_PREV); if (pv){ localStorage.setItem(KEY, pv); if (cur) localStorage.setItem(KEY_PREV, cur); sessionStorage.setItem('dsb_force', '1'); } } catch (e2){} location.reload(); });
+}

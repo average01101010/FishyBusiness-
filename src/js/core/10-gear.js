@@ -404,13 +404,14 @@ function finishHaul(g, H){
   log('Trakk ' + what + ': ' + fmt(g.kg, 0) + ' kg, sto ' + fmt(g.soak, 0) + ' t' + (g.rel ? ', ' + g.rel + (s.kind === 'teine' ? ' krabber satt ut igjen' : ' fisk sluppet') : '') + (g.dead >= 1 ? ', ' + Math.round(g.dead) + ' døde krabber kastet' : '') + '.',
     'Hauled ' + whatEn + ': ' + fmt(g.kg, 0) + ' kg, soaked ' + fmt(g.soak, 0) + ' h' + (g.rel ? ', ' + g.rel + (s.kind === 'teine' ? ' crabs put back' : ' fish released') : '') + (g.dead >= 1 ? ', ' + Math.round(g.dead) + ' dead crabs thrown' : '') + '.');
   // the crew remarks on a good or a poor haul (kg per unit against a fair haul for the gear)
-  { const per = g.kg / Math.max(1, g.n), fair = {garn:25, line:80, teine:1.2}[s.kind] || 1; crewSay(null, per > fair * 1.4 ? 'haulGood' : per < fair * 0.35 ? 'haulBad' : null); }
+  { const per = g.kg / Math.max(1, g.n), fair = (HEATG.fair[s.kind] || 1) * heatSoakShare(s.kind, g.soak || HEATG.T); crewSay(null, per > fair * 1.4 ? 'haulGood' : per < fair * 0.35 ? 'haulBad' : null); }
   if (tore) log(tore + ' garn gikk i filler. De var for slitt.', tore + ' nets went to pieces. They were too worn.');
   else if (s.kind === 'garn' && cond < 0.35) log('Garna er slitt (' + Math.round(cond * 100) + ' %). Bøt dem før de går i filler.', 'The nets are worn (' + Math.round(cond * 100) + ' %). Mend them before they go to pieces.');
   // the catch mark: kilos per line, per net and per pot (tilbakemelding #33). Nets joined into a string fish as one net, and a line of
   // several tubs as one line, so those count the string; each pot is its own. Its colour is the haul per unit against a fair one
-  { const kgu = s.kind === 'teine' ? g.kg / Math.max(1, s.n) : g.kg, fair = {garn:25, line:80, teine:1.2}[s.kind] || 1;
-    S.marks.push({x:setMid(s).x, y:setMid(s).y, t:S.t, kgph:0, g:s.kind, kgu:Math.round(kgu * 10) / 10, q:Math.round(g.kg / Math.max(1, s.n) / fair * 100) / 100}); if (S.marks.length > 80) S.marks.shift(); }
+  // (08.10.2026: per unit for all three, a tub, a net and a pot, with the soak; the colour is the haul against a usual one for that soak, HEATG)
+  { const kgu = g.kg / Math.max(1, s.n), soak = Math.round(g.soak || 0), fair = (HEATG.fair[s.kind] || 1) * heatSoakShare(s.kind, soak || HEATG.T);
+    S.marks.push({x:setMid(s).x, y:setMid(s).y, t:S.t, kgph:0, g:s.kind, kgu:Math.round(kgu * 10) / 10, soak, q:Math.round(kgu / fair * 100) / 100}); if (S.marks.length > 80) S.marks.shift(); }
   // set the same gear again where it stood (line has to be baited in port first)
   if (g.reset && back > 0 && s.kind !== 'line'){
     const spec = s.kind === 'garn' ? {nid:S.pgear.nets[S.pgear.nets.length - 1].id} : {pot:s.pot, n:back};

@@ -40,8 +40,58 @@ function heatSample(p, H){
   return out;
 }
 // the value as the map colours it: the species against its own level (HEATSC)
-const heatShown = (v, sp) => heatValue(v, sp) * (HEATSC[sp] || 1);
+const heatShown = (v, sp) => (HEATGC ? heatGearVal(v, sp) : heatValue(v, sp)) * (HEATSC[sp] || 1);
 function heatValue(v, sp){ const i = HEATI[sp]; return i !== undefined ? v[i] || 0 : v[0] + v[1] + v[2] + v[3] + (v[4] || 0); }
+
+// ---------- the map in the gear's own unit (Jonas 08.10.2026) ----------
+// A hand jig is tended by the hour, so the echo sounder says kilos an hour; a net, a line tub or a pot stands in the sea and fishes with
+// the soak, so for them the map says the kilos one unit would give over a soak of HEATG.T hours (the same formulas as soakHour in
+// 10-gear.js, on the same density), and the colours are the haul against what the gear usually gives (HEATG.fair: a net, a tub or a pot at a
+// good place after 24 h; green begins at a usual haul, yellow at 1.4 times that, red at 2.8 times). The jig keeps its colours (what
+// one person with a hand jig takes), and the figure in the sounder's box is your own rig's kilos an hour.
+const HEATG = {T:24, fair:{garn:30, line:70, teine:20, jig:20}};
+const HEATIDX = {torsk:0, hyse:1, sei:2, blakveite:4, lyr:5, lange:6, brosme:7, uer:8, kveite:9};
+let HEATGC = null;   // the rig's gear now (null: the jig), worked out when the picture is made
+const heatSoakSum = (tau, T) => { let s = 0; for (let a = 1; a <= T; a++) s += Math.exp(-a / tau); return s; };
+const heatPotSum = T => { let s = 0; for (let a = 1; a <= T; a++) s += Math.min(1, a / 6) * Math.exp(-a / 40); return s; };
+// how much of a 24-hour haul a shorter soak gives
+function heatSoakShare(kind, T){
+  const f = kind === 'line' ? a => heatSoakSum(10, a) : kind === 'teine' ? heatPotSum : a => heatSoakSum(30, a);
+  return Math.min(1, f(Math.max(1, Math.min(HEATG.T, T))) / f(HEATG.T));
+}
+function heatGearCtx(){
+  const b = S.boat, rig = typeof rigOf === 'function' ? rigOf() : 'juksa', kind = RIGS[rig] && RIGS[rig].kind, pg = S.pgear || {};
+  if (!kind) return null;
+  if (kind === 'garn'){ const l = (pg.nets || [])[0], ty = l && l.ty && l.ty !== 'bunn' ? l.ty : null, key = ty ? 'garn:' + ty : 'garn';
+    return {kind, key, sig:key, unit:['garn', 'net'], per:GEAR.garn.q * heatSoakSum(30, HEATG.T), fair:HEATG.fair.garn}; }
+  if (kind === 'line'){ const lk = pg.lines && pg.lines.bank && pg.lines.bank.n > ((pg.lines.hyse || {}).n || 0) ? 'bank' : 'hyse', bait = BAITS[pg.baitPref] ? pg.baitPref : 'makrell';
+    return {kind, key:'line:' + lk, bait, sig:'line:' + lk + ':' + bait, unit:['stamp', 'tub'], per:GEAR.line.q * (LINE_KINDS[lk].hooks / 100) * heatSoakSum(10, HEATG.T), fair:HEATG.fair.line}; }
+  return {kind:'teine', key:'teine', sig:'teine', unit:['teine', 'pot'], per:GEAR.teine.q * heatPotSum(HEATG.T), fair:HEATG.fair.teine,
+    crab:KC.q * GEAR.teine.q * POTS.big.f * KC.mean * heatPotSum(HEATG.T), cap:POTS.big.cap * KC.mean};
+}
+// the kilos one unit of the gear would give at a cell (v: the cell's kg an hour per species for a hand jig) over the soak
+function heatGearKg(v, sp, cx){
+  if (!cx || !v) return 0;
+  if (cx.kind === 'teine'){
+    if (sp === 'all' || sp === 'krabbe') return Math.min(cx.cap, cx.crab * (v[10] || 0));
+    return (HEATIDX[sp] != null ? v[HEATIDX[sp]] * ((SELQ.teine || {})[sp] || 0) * cx.per : 0);
+  }
+  const sel = SELQ[cx.key] || {}; let sum = 0;
+  for (const s of sp === 'all' ? Object.keys(HEATIDX) : HEATIDX[sp] != null ? [sp] : []) sum += v[HEATIDX[s]] * (sel[s] || 0) * (cx.bait ? baitF(cx.bait, s) : 1);
+  return sum * cx.per;
+}
+// the value the colours are read from: the haul against a usual one, in the units the scale knows (a usual haul is 20, where green begins)
+const heatGearVal = (v, sp) => heatGearKg(v, sp, HEATGC) / HEATGC.fair * HEATG.fair.jig;
+// your rig's share of what one person with a hand jig takes (several hands, jig machines)
+function heatRigFactor(){ const e = typeof fishEffort === 'function' ? fishEffort() : 0; return e > 0 ? e / JIG.hand : 1; }
+// what the sounder's box says about the boat's own place: the figure in the gear's unit
+function heatGearInfo(){
+  const b = S.boat, v = b.status === 'port' ? null : heatAt(b.pos); if (!v) return null;
+  const cx = heatGearCtx(), sp = heatSpecies();
+  if (!cx){ const n = Math.round(heatValue(v, sp) * heatRigFactor()); return {no:'Her: ca. ' + n + ' kg/t med riggen din', en:'Here: about ' + n + ' kg/h with your rig'}; }
+  const n = Math.round(heatGearKg(v, sp, cx));
+  return {no:'Her: ca. ' + n + ' kg per ' + cx.unit[0] + ' etter ' + HEATG.T + ' t', en:'Here: about ' + n + ' kg per ' + cx.unit[1] + ' after ' + HEATG.T + ' h'};
+}
 
 // the cells: key → {x, y (centre), v, t (game minute worked out), h (stock hour), seen (game minute last inside the disk)}
 const HEATC = {key:'', tier:null, cs:0, cells:new Map(), queue:[], qi:0, busy:false, t:-1, rev:0, lastTick:0, stats:{slices:0, maxSlice:0, n:0, ms:0}};

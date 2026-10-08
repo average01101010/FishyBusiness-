@@ -2,7 +2,7 @@
 player who is not signed in; signed in, the game starts and says hello; the consent is asked with the year of birth; with a yes the
 events (an app opened, a grounding) go up in a batch, an error is reported, a session that ends a minute after grounding counts as a
 rage quit; the save goes up as a save code with what the game is (summary) and the account's save it comes from (base); when the
-account has moved on (another device saved) the player chooses between the two games, seeing each, and «this one» is forced up; the
+account has moved on (another device saved) the game furthest along in game time goes on by itself (the other kept in the history) and the player is told; the
 earlier saves are listed in Settings; on a new device the account's save replaces the empty one here, and a device whose game has been
 played since the account moved on asks before the game starts (05.10.2026, the save sync); the account card is in Settings; the Admin
 app only for the flagged account. Prints OK or FEIL."""
@@ -91,20 +91,20 @@ async def main():
               'the save goes up as a save code with its summary, not forced, from no account save yet', {k: (v[:12] if isinstance(v, str) else v) for k, v in (puts[0] if puts else {}).items()})
         check(r['card'], 'the account card is in Settings, with the e-mail')
         check(not r['admIcon'] and not r['admApp'], 'an account without the admin flag has no Admin app on the phone and cannot open it', {'icon': r['admIcon'], 'app': r['admApp']})
-        # the account has moved on (another device saved): nothing is written over, the player sees both games and chooses
+        # the account has moved on (another device saved) with a game that has come less far: one game per account (08.10.2026), the one
+        # furthest in game time goes on by itself, the other is kept in the account's history, and the player is only told
         sync = await pg.evaluate("JSON.parse(localStorage.getItem('dsb_sync_user_test') || 'null')")
-        replies['save_put2'] = {'ok': False, 'cloud': {'saved_at': '2030-01-01T10:00:00+00:00', 'game_t': 99999, 'summary': {'day': 40, 'cash': 512000, 'boat': 'Havørn', 'type': 'sjark', 'fleet': 2, 'tut': False}}}
+        conflict = {'ok': False, 'cloud': {'saved_at': '2030-01-01T10:00:00+00:00', 'game_t': 0, 'summary': {'t': 0, 'day': 1, 'cash': 512000, 'boat': 'Havørn', 'type': 'sjark', 'fleet': 2, 'tut': False}}}
+        replies['save_put2'] = lambda b: {'ok': True, 'saved_at': '2030-01-01T10:05:00+00:00'} if b.get('force') else conflict   # the account only gives way to a forced save
         n0 = len(calls)
-        c2 = await pg.evaluate("""async () => { S.lastReal = Date.now() + 5; save(); CLOUD.lastSave = 0; await cloudSaveSoon(); await cloudSaveSoon(); const m = document.getElementById('modal');
-          return {open:!m.hidden, two:/To spill|Two games/.test(m.innerText), cloud:/Dag 40/.test(m.innerText) && /512 000 kr/.test(m.innerText) && /Havørn/.test(m.innerText), here:(document.getElementById('cgHere') || {}).innerText}; }""")
+        c2 = await pg.evaluate("""async () => { S.t = Math.max(S.t || 0, 600); S.lastReal = Date.now() + 5; save(); CLOUD.lastSave = 0; await cloudSaveSoon(); await new Promise(r => setTimeout(r, 300)); const m = document.getElementById('modal');
+          return {open:!m.hidden && !!document.getElementById('cgHere'), told:/kommet lengst/.test(document.body.innerText)}; }""")
         puts2 = [c[1] for c in calls[n0:] if c[0] == 'save_put2']
-        check(sync and sync['rev'] == '2026-10-05T10:00:00.123+00:00' and len(puts2) == 1 and puts2[0]['base'] == sync['rev'] and puts2[0]['force'] is False,
+        check(sync and sync['rev'] == '2026-10-05T10:00:00.123+00:00' and len(puts2) >= 1 and puts2[0]['base'] == sync['rev'] and puts2[0]['force'] is False,
               'the device keeps which account save its game comes from, and sends it with the next save', {'sync': sync, 'puts': [(q['base'], q['force']) for q in puts2]})
-        check(c2['open'] and c2['two'] and c2['cloud'] and c2['here'] and 'Dag' in c2['here'], 'the account has moved on: nothing is written over, and the player sees both games (day, money, boat) and chooses; no second dialog meanwhile', c2)
-        replies['save_put2'] = {'ok': True, 'saved_at': '2030-01-01T10:05:00+00:00'}; n0 = len(calls)
-        await pg.click('#cgHere'); await pg.wait_for_function("JSON.parse(localStorage.getItem('dsb_sync_user_test')).rev.startsWith('2030-01-01T10:05')", timeout=10000)
+        await pg.wait_for_function("JSON.parse(localStorage.getItem('dsb_sync_user_test')).rev.startsWith('2030-01-01T10:05')", timeout=15000)
         puts3 = [c[1] for c in calls[n0:] if c[0] == 'save_put2']
-        check(len(puts3) == 1 and puts3[0]['force'] is True and await pg.evaluate("document.getElementById('modal').hidden && !CLOUD.forceNext"), '«Spillet på denne enheten» puts it up forced (the account keeps the other in its history)', [(q['base'], q['force']) for q in puts3])
+        check(not c2['open'] and c2['told'] and puts3 and puts3[-1]['force'] is True and await pg.evaluate("!CLOUD.forceNext"), 'the account moved on with a game that has come less far: no choice, the game here goes on and is put up forced (the account keeps the other in its history), and the player is told', {'c2': c2, 'puts': [(q['base'], q['force']) for q in puts3]})
         # the earlier saves in Settings
         replies['save_hist_list'] = [{'id': 7, 'saved_at': '2030-01-01T10:00:00+00:00', 'game_t': 99999, 'summary': {'day': 40, 'cash': 512000, 'boat': 'Havørn', 'type': 'sjark', 'fleet': 2}}]
         await pg.evaluate("(() => { PHONE.open('innst'); document.querySelector('#phone [data-pa=cloudHist]').click(); })()")
@@ -234,19 +234,17 @@ async def main():
         # 4. played here, and the account moved on elsewhere meanwhile: the player chooses before the game starts, seeing both
         # (a game of no time and no boat name is an untouched one and the account's is taken without asking, so this one has hours on it)
         await pg.evaluate("(() => { S.company = 'Her AS'; S.cash = 77000; S.t = Math.max(S.t || 0, 600); save(); const k = 'dsb_sync_user_test', s = JSON.parse(localStorage.getItem(k)); s.at = Date.now() - 600000; localStorage.setItem(k, JSON.stringify(s)); })()")
-        replies['save_get'] = {'data': code, 'saved_at': '2031-01-01T10:00:00Z', 'game_t': 2, 'summary': {'day': 9, 'cash': 33000, 'boat': 'Fjordbris', 'type': 'skiff', 'fleet': 1}}
+        replies['save_get'] = {'data': code, 'saved_at': '2031-01-01T10:00:00Z', 'game_t': 2, 'summary': {'t': 2, 'day': 1, 'cash': 33000, 'boat': 'Fjordbris', 'type': 'skiff', 'fleet': 1}}
         # (the page's last save as it closes is refused: the account has moved on)
         replies['save_put2'] = {'ok': False, 'cloud': {'saved_at': '2031-01-01T10:00:00Z', 'game_t': 2}}
-        await pg.reload(); await pg.wait_for_selector('#cloudGate #cgHere', timeout=90000)
+        n0 = len(calls); await pg.reload()
         replies['save_put2'] = {'ok': True, 'saved_at': '2031-01-01T10:09:00+00:00'}
-        g = await pg.evaluate("(() => ({here:document.getElementById('cgHere').innerText, cloud:document.getElementById('cgCloud').innerText, ready:typeof SIMREADY !== 'undefined' && SIMREADY}))()")
-        check('77 000 kr' in g['here'] and 'Dag 9' in g['cloud'] and 'Fjordbris' in g['cloud'] and not g['ready'], 'played here while the account moved on elsewhere: before the game starts the player sees both and chooses', g)
-        await pg.screenshot(path='cloud_choose.png')
-        n0 = len(calls); await pg.click('#cgHere')
         await pg.wait_for_function("typeof SIMREADY !== 'undefined' && SIMREADY && !document.getElementById('cloudGate')", timeout=120000)
+        g = await pg.evaluate("({asked:!!document.getElementById('cgHere')})")
+        check(not g['asked'], 'played here while the account moved on elsewhere with less: the game here starts without a choice', g)
         r4 = await pg.evaluate("async () => { S.lastReal = Date.now(); save(); CLOUD.lastSave = 0; await cloudSaveSoon(); return {company:S.company}; }")
         puts4 = [c[1] for c in calls[n0:] if c[0] == 'save_put2']
-        check(r4['company'] == 'Her AS' and puts4 and puts4[0]['force'] is True, '«Spillet på denne enheten» starts it and puts it up forced', {'company': r4['company'], 'puts': [(q['base'], q['force']) for q in puts4]})
+        check(r4['company'] == 'Her AS' and puts4 and puts4[0]['force'] is True, 'the game furthest along starts and is put up forced', {'company': r4['company'], 'puts': [(q['base'], q['force']) for q in puts4]})
         # 5. deleting the account takes the game on this device too, so the next sign-in begins again with Father's letter (05.10.2026)
         replies['delete_me'] = {'ok': True}
         d5 = await pg.evaluate("""async () => { window.confirm = () => true; cloudAct('cloudDel'); await new Promise(r => setTimeout(r, 800));

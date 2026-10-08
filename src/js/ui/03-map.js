@@ -309,11 +309,11 @@ function renderStatic(){
   // med fangst-rate skal forsvinne etter 12 in-game timer»), and renderDyn redraws when the next one runs out
   markEnd = Infinity;
   // a hauled set's mark says kilos per line, net or pot (core/10-gear.js finishHaul), coloured by the haul against a fair one
-  const GU = {line:['line', 'line'], garn:['garn', 'net'], teine:['teine', 'pot']};
+  const GU = {line:['stamp', 'tub'], garn:['garn', 'net'], teine:['teine', 'pot']};
   for (const mk of S.marks){ if (!markLive(mk)) continue; markEnd = Math.min(markEnd, mk.t + MARK_LIFE); const gu = mk.g && mk.kgu != null && GU[mk.g];
-    const col = gu ? (mk.q >= 1.4 ? '#d7301f' : mk.q >= 1 ? '#f08a24' : mk.q >= 0.6 ? '#e5c12b' : '#5b8db8') : mk.kgph >= 40 ? '#d7301f' : mk.kgph >= 20 ? '#f08a24' : mk.kgph >= 8 ? '#e5c12b' : '#5b8db8';
+    const col = mk.q != null ? (mk.q >= 1.4 ? '#d7301f' : mk.q >= 1 ? '#f08a24' : mk.q >= 0.6 ? '#e5c12b' : '#5b8db8') : mk.kgph >= 40 ? '#d7301f' : mk.kgph >= 20 ? '#f08a24' : mk.kgph >= 8 ? '#e5c12b' : '#5b8db8';
     g.push('<circle cx="' + mk.x + '" cy="' + mk.y + '" r="' + (4.2 * u) + '" fill="' + col + '" stroke="#fff" stroke-width="' + (1.2 * u) + '"/>');
-    if (view.z > 3.5) g.push(txt({x:mk.x + 6 * u, y:mk.y + 3.5 * u}, gu ? fmt(mk.kgu, mk.kgu < 10 ? 1 : 0) + ' kg/' + gu[S.lang === 'en' ? 1 : 0] : mk.kgph + ' kg/t', 'lbl-ground', 9.5 * u, 'stroke-width="' + (2.5 * u) + '"')); }
+    if (view.z > 3.5) g.push(txt({x:mk.x + 6 * u, y:mk.y + 3.5 * u}, gu ? fmt(mk.kgu, mk.kgu < 10 ? 1 : 0) + ' kg/' + gu[S.lang === 'en' ? 1 : 0] + (mk.soak ? ' · ' + mk.soak + (S.lang === 'en' ? ' h' : ' t') : '') : mk.kgph + (S.lang === 'en' ? ' kg/h' : ' kg/t'), 'lbl-ground', 9.5 * u, 'stroke-width="' + (2.5 * u) + '"')); }
   // your own marks: a flag with its name, set by holding a finger on the chart (Jonas 06.10.2026); they stay until you delete them
   for (const pn of S.pins || []){ if (!inV(pn.x, pn.y)) continue; const s = 6 * u;
     g.push('<path d="M' + pn.x + ',' + pn.y + 'v' + (-2.2 * s) + 'l' + (1.3 * s) + ',' + (0.45 * s) + 'l' + (-1.3 * s) + ',' + (0.45 * s) + '" class="pinflag' + (pn.id === PINSEL ? ' sel' : '') + '" stroke-width="' + (1.4 * u) + '"/><circle cx="' + pn.x + '" cy="' + pn.y + '" r="' + (1.8 * u) + '" class="pinfoot"/>');
