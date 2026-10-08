@@ -2,23 +2,33 @@
 // Rules: cod nets north of 62° N have at least 156 mm mesh (maskeviddeforskriften); inside the fjord line at most 80 cod nets and 5,000
 // hooks, and no vessel of 15 m or more (høstingsforskriften kap. VI); nets and line for halibut and monkfish are tended at least every
 // 4th day, and each vessel hauls only its own pots (kap. V); lost gear must be reported (Fiskeridirektoratet, "Meld tapt redskap"); king
-// crab west of 26° E has no minimum size and all of it is landed (J-138-2026 § 5). A tub (stamp) holds about 300 hooks of bank line or 700 of haddock line; hand line stands
+// crab west of 26° E has no minimum size and all of it is landed (J-138-2026 § 5). A tub (stamp) holds about 300 hooks of bank line or 600 of haddock line (a tub holds 200–600, Fiskeridirektoratet's Redskapshefte); hand line stands
 // 3–4 hours and other line overnight (Store norske leksikon, "line"). Catch rates, times, wear and prices are start values for play-testing.
 // Gear aboard each vessel is S.pgear (a VKEY); gear in the sea is S.sets for the whole company, so the map and 3D can draw every buoy.
 const GEAR = {
-  garn:{no:'Garn', en:'Nets', u:['garn', 'garn', 'net', 'nets'], km:0.03, set:0.8, haul:4, hand:2.5, crewMin:2, haulers:['garnhaler'], q:0.07, skill:'garn'},
+  garn:{no:'Garn', en:'Nets', u:['garn', 'garn', 'net', 'nets'], km:0.028, set:0.8, haul:4, hand:2.5, crewMin:2, haulers:['garnhaler'], q:0.07, skill:'garn'},
   line:{no:'Line', en:'Line', u:['stamp', 'stamper', 'tub', 'tubs'], kmHook:0.0015, set:5, haul:25 / 700, hand:2.0, crewMin:1, haulers:['linehaler', 'elhaler'], q:0.032, skill:'line'},
   teine:{no:'Teiner', en:'Pots', u:['teine', 'teiner', 'pot', 'pots'], km:0.025, set:0.9, haul:1.2, hand:2.5, crewMin:1, haulers:['teinehaler', 'elhaler'], q:0.12, skill:'teiner'}
 };
-const LINE_KINDS = {hyse:{no:'Hyseline', en:'Haddock line', hooks:700, price:2100, egn:500, baitKg:5}, bank:{no:'Bankline', en:'Bank line', hooks:300, price:1700, egn:300, baitKg:3}};
+const LINE_KINDS = {hyse:{no:'Hyseline', en:'Haddock line', hooks:600, price:2100, egn:500, baitKg:5}, bank:{no:'Bankline', en:'Bank line', hooks:300, price:1700, egn:300, baitKg:3}};
 // king crab pots (a frame of steel and netting, 1.5-2 m across; the prices are estimates): cap is the crabs a pot holds
 // one pot only (Jonas 08.10.2026): the big king crab pot, 1.55 x 1.45 x 1.07 m. The key stays 'big' so saves carry over; old small pots become big ones (potsFix)
 const POTS = {big:{no:'Krabbeteiner', en:'Crab pots', price:2200, cap:40, f:1.4, big:true}};
+// three kinds of net (Jonas 08.10.2026; Fiskeridirektoratet's Redskapshefte 2.2): the bottom net for cod (the default), the floating net (flytegarn,
+// fished higher in the water for saithe) and the Greenland halibut net (big mesh). A net string carries `ty` ('bunn' when missing).
+// The 360 mm mesh and the selectivity are our estimates; the game's flytegarn takes the same mesh sizes as the cod net and ignores depth.
+const NETTY = {bunn:{no:'Torskegarn', en:'Cod net', price:1500}, flyt:{no:'Flytegarn', en:'Floating net', price:1700}, kveite:{no:'Blåkveitegarn', en:'Halibut net', price:2400}};
+const NETOPT = [['bunn', 156], ['bunn', 180], ['bunn', 200], ['flyt', 156], ['flyt', 180], ['kveite', 360]];
+const netKey = (ty, mesh) => (ty && ty !== 'bunn' ? ty + ':' : '') + mesh;   // the shop's spec, and the key a string is joined by
+const netTy = l => (l && l.ty) || 'bunn';
+const netNo = l => (netTy(l) === 'bunn' ? '' : NETTY[netTy(l)].no.toLowerCase() + ' ') + l.mesh + ' mm', netEn = l => (netTy(l) === 'bunn' ? '' : NETTY[netTy(l)].en.toLowerCase() + ' ') + l.mesh + ' mm';
 const MESHES = [156, 180, 200];                                  // legal cod nets north of 62° N; bigger mesh, bigger fish
 const GPRICE = {net:1500, kit:2500, heavy:1500, bait:18, potBait:0.6, bot:180, egnRate:560};   // kr, kg bait per pot, bøteri kr per net per 0.1, hooks baited per hour
 // how well each gear takes each species, relative to the jig (1 for every fish); pots take crab and a little cod and tusk
 const SELQ = {
   garn:{torsk:1.0, hyse:0.45, sei:0.7, lyr:0.6, lange:0.35, brosme:0.25, uer:0.3, kveite:0.35, blakveite:3.2},
+  'garn:flyt':{sei:2.4, torsk:0.5, hyse:0.12, lyr:0.1, lange:0, brosme:0, uer:0.1, kveite:0, blakveite:0},
+  'garn:kveite':{blakveite:5.5, kveite:3.5, lange:0.7, brosme:0.4, torsk:0.2, hyse:0.02, sei:0.1, lyr:0, uer:0.2},
   'line:hyse':{torsk:0.7, hyse:2.6, sei:0.15, lyr:0.2, lange:0.8, brosme:1.0, uer:0.3, kveite:0.6, blakveite:2.5},
   'line:bank':{torsk:0.8, hyse:0.8, sei:0.1, lyr:0.15, lange:2.4, brosme:2.8, uer:0.4, kveite:1.8, blakveite:5.0},   // the Greenland halibut: line 49 %, nets 40 % of the coastal catch in 2026 (Råfisklaget); about 125 kg per
   // 1000 hooks over 20 h on the edge off Andøya, so 30 tubs a day give a boat under 14 m about 7 t in its first week (docs/plan-blakveite.md B7)
@@ -29,7 +39,7 @@ const GK = {torsk:1, hyse:1.05, sei:1, lyr:1, lange:0.8, brosme:0.95, uer:1.15, 
 // the weights (kg) [median, log-spread] of males and females, the mean weight, how many more crabs than the old brown crab came, and the
 // freshness under which a crab is dead (an estimate from HI's catches in Porsanger 2020 and Varanger 2021: many small crabs and females)
 const KC = {fem:0.4, hurt:0.05, wm:[1.5, 0.55], wf:[1.1, 0.35], mean:1.5, q:3, dead:40};
-const gearKey = s => s.kind === 'line' ? 'line:' + s.lk : s.kind;
+const gearKey = s => s.kind === 'line' ? 'line:' + s.lk : s.kind === 'garn' && s.ty && s.ty !== 'bunn' ? 'garn:' + s.ty : s.kind;
 const setMid = s => ({x:(s.a.x + s.b.x) / 2, y:(s.a.y + s.b.y) / 2});
 const tideRate = H => Math.abs(tideH(H + 0.5) - tideH(H - 0.5));
 // where the king crab is (HI): hardly any in Troms (0-0.01 crab a pot in its surveys 2023-2026; small stocks in Balsfjorden and at
@@ -51,7 +61,11 @@ const BAITS = {
   krabbe:{no:'Krabbe', en:'Crab', kr:10, f:{}, d:1.0},
   reke:{no:'Reke', en:'Shrimp', kr:28, f:{torsk:1.4, hyse:1.1, sei:1.1}, d:0.8},
   sei:{no:'Sei', en:'Saithe', kr:12, f:{kveite:1.6, krabbe:1.2, blakveite:1.1}, d:0.7},
-  krill:{no:'Krill', en:'Krill', kr:22, f:{uer:1.8}, d:0.6}};
+  krill:{no:'Krill', en:'Krill', kr:22, f:{uer:1.8}, d:0.6},
+  // 08.10.2026: the bait matters more now that there are two kinds of line (hook size picks the family, the bait the species): herring and
+  // capelin for haddock, squid for ling and tusk (our estimates; no source found for bait by species)
+  sild:{no:'Sild og lodde', en:'Herring and capelin', kr:14, f:{hyse:1.6, torsk:1.2, sei:0.9}, d:0.7},
+  blekksprut:{no:'Blekksprut', en:'Squid', kr:34, f:{lange:1.8, brosme:1.8, uer:1.2, kveite:1.2}, d:0.6}};
 const BAIT_OWN = ['sei'];   // king crab is far too dear for bait (the bait crab is shore crab, bought)
 const baitF = (k, sp) => { const B = BAITS[k]; return !B ? 1 : B.f[sp] != null ? B.f[sp] : B.d; };
 // the pool by kind (an old save's single pool was herring and mackerel: makrell), and a line's baited tubs by kind
@@ -127,7 +141,7 @@ function buyGear(what, spec, n){
   const sv = portServices(portById(b.port), berthKind(b));
   if (what === 'bait' ? !sv.mottak : !sv.butikk) return what === 'bait' ? [gL('Agn kjøper du på fiskemottaket.', 'You buy bait at the fish plant.')] : [gL('Redskap kjøper du i utstyrsbutikken.', 'You buy gear in the tackle shop.')];
   let cost = 0, kind = null;
-  if (what === 'net'){ kind = 'garn'; if (!MESHES.includes(spec)) return [gL('Torskegarn nord for 62° N skal ha minst 156 mm maskevidde.', 'Cod nets north of 62° N must have at least 156 mm mesh.')]; cost = n * GPRICE.net; }
+  if (what === 'net'){ kind = 'garn'; const o = NETOPT.find(x => netKey(x[0], x[1]) === String(spec)); if (!o) return [gL('Torskegarn nord for 62° N skal ha minst 156 mm maskevidde.', 'Cod nets north of 62° N must have at least 156 mm mesh.')]; cost = n * NETTY[o[0]].price; }
   else if (what === 'stamp'){ kind = 'line'; cost = n * LINE_KINDS[spec].price; }
   else if (what === 'pot'){ kind = 'teine'; cost = n * POTS[spec].price; }
   else if (what === 'kit') cost = n * GPRICE.kit;
@@ -137,7 +151,7 @@ function buyGear(what, spec, n){
   if (what === 'heavy' && pg.kits.heavy + n > pg.kits.n) return [gL('Tunge dregger kjøpes til blåsesett du har.', 'Heavy anchors go with buoy sets you own.')];
   if (cost > S.cash) return [gL('Ikke nok penger.', 'Not enough money.')];
   S.cash -= cost; S.stats.costs += cost;
-  if (what === 'net') pg.nets.push({id:gid('n'), mesh:spec, n, cond:1});
+  if (what === 'net'){ const o = NETOPT.find(x => netKey(x[0], x[1]) === String(spec)); pg.nets.push({id:gid('n'), mesh:o[1], ty:o[0], n, cond:1}); }
   else if (what === 'stamp') pg.lines[spec].n += n;
   else if (what === 'pot') pg.pots[spec] += n;
   else if (what === 'kit') pg.kits.n += n;
@@ -146,8 +160,8 @@ function buyGear(what, spec, n){
   return null;
 }
 // join two lenker of the same mesh, or split one
-function joinNets(id1, id2){ const pg = S.pgear, a = pg.nets.find(l => l.id === id1), c = pg.nets.find(l => l.id === id2); if (!a || !c || a === c || a.mesh !== c.mesh) return false; a.cond = (a.cond * a.n + c.cond * c.n) / (a.n + c.n); a.n += c.n; pg.nets.splice(pg.nets.indexOf(c), 1); return true; }
-function splitNets(id, n){ const pg = S.pgear, a = pg.nets.find(l => l.id === id); if (!a || n < 1 || n >= a.n) return false; a.n -= n; pg.nets.push({id:gid('n'), mesh:a.mesh, n, cond:a.cond}); return true; }
+function joinNets(id1, id2){ const pg = S.pgear, a = pg.nets.find(l => l.id === id1), c = pg.nets.find(l => l.id === id2); if (!a || !c || a === c || a.mesh !== c.mesh || netTy(a) !== netTy(c)) return false; a.cond = (a.cond * a.n + c.cond * c.n) / (a.n + c.n); a.n += c.n; pg.nets.splice(pg.nets.indexOf(c), 1); return true; }
+function splitNets(id, n){ const pg = S.pgear, a = pg.nets.find(l => l.id === id); if (!a || n < 1 || n >= a.n) return false; a.n -= n; pg.nets.push({id:gid('n'), mesh:a.mesh, ty:a.ty, n, cond:a.cond}); return true; }
 
 // ---- rules for setting at a place
 // distance from a point to the string between the buoys
@@ -202,7 +216,7 @@ function gopUnitMin(g, H, hs){
 function startSet(kind, spec, fishAfter, hdg){
   const b = S.boat, pg = S.pgear, why = gearRules(kind, spec, b.pos); if (why) return why;
   let n, km, s = {kind};
-  if (kind === 'garn'){ const l = pg.nets.find(x => x.id === spec.nid); n = l.n; km = n * GEAR.garn.km; Object.assign(s, {mesh:l.mesh, lid:l.id, cond:l.cond}); }
+  if (kind === 'garn'){ const l = pg.nets.find(x => x.id === spec.nid); n = l.n; km = n * GEAR.garn.km; Object.assign(s, {mesh:l.mesh, ty:l.ty, lid:l.id, cond:l.cond}); }
   else if (kind === 'line'){ n = spec.n; km = n * LINE_KINDS[spec.lk].hooks * GEAR.line.kmHook; Object.assign(s, {lk:spec.lk, hooks:n * LINE_KINDS[spec.lk].hooks}); }
   else { n = spec.n; km = n * GEAR.teine.km; Object.assign(s, {pot:spec.pot}); }
   const geo = hdg != null ? setGeomExact(b.pos, hdg, km) : setGeom(b.pos, b.heading || 0, km); if (!geo) return [gL('Det er ikke plass til redskapet her. Prøv lenger ut.', 'There is no room for the gear here. Try further out.')];
@@ -280,8 +294,8 @@ function finishSet(g, H){
   S.sets = S.sets || []; S.sets.push(s);
   // the deck log's gear tab keeps every set, also after it is hauled (ui/06b-book-tabs.js)
   S.gearLog = S.gearLog || []; S.gearLog.push(gearLogEntry(s)); if (S.gearLog.length > 60) S.gearLog.shift();
-  const what = s.kind === 'garn' ? s.n + ' garn (' + s.mesh + ' mm)' : s.kind === 'line' ? s.n + ' ' + (s.n === 1 ? 'stamp' : 'stamper') + ' ' + LINE_KINDS[s.lk].no.toLowerCase() : s.n + ' ' + POTS[s.pot].no.toLowerCase();
-  const whatEn = s.kind === 'garn' ? s.n + ' nets (' + s.mesh + ' mm)' : s.kind === 'line' ? s.n + ' ' + (s.n === 1 ? 'tub' : 'tubs') + ' of ' + LINE_KINDS[s.lk].en.toLowerCase() : s.n + ' ' + POTS[s.pot].en.toLowerCase();
+  const what = s.kind === 'garn' ? s.n + ' garn (' + netNo(s) + ')' : s.kind === 'line' ? s.n + ' ' + (s.n === 1 ? 'stamp' : 'stamper') + ' ' + LINE_KINDS[s.lk].no.toLowerCase() : s.n + ' ' + POTS[s.pot].no.toLowerCase();
+  const whatEn = s.kind === 'garn' ? s.n + ' nets (' + netEn(s) + ')' : s.kind === 'line' ? s.n + ' ' + (s.n === 1 ? 'tub' : 'tubs') + ' of ' + LINE_KINDS[s.lk].en.toLowerCase() : s.n + ' ' + POTS[s.pot].en.toLowerCase();
   log('Satte ' + what + ' på ' + s.depth + ' m, ' + coordStr(setMid(s)) + '.', 'Set ' + whatEn + ' at ' + s.depth + ' m, ' + coordStr(setMid(s)) + '.', 'nav');
   gopEnd(g);
 }
@@ -307,7 +321,7 @@ function gopAbort(why){
 // gear back on deck after hauling (or a stopped set); nets with their condition
 function gearBack(s, n, cond){
   const pg = S.pgear;
-  if (s.kind === 'garn'){ if (n > 0) pg.nets.push({id:s.lid && !pg.nets.some(l => l.id === s.lid) ? s.lid : gid('n'), mesh:s.mesh, n, cond:cond != null ? cond : s.cond}); }
+  if (s.kind === 'garn'){ if (n > 0) pg.nets.push({id:s.lid && !pg.nets.some(l => l.id === s.lid) ? s.lid : gid('n'), mesh:s.mesh, ty:s.ty, n, cond:cond != null ? cond : s.cond}); }
   else if (s.kind === 'line') pg.lines[s.lk].n += n;
   else pg.pots[s.pot] += n;
   if (n > 0 && (s.kind === 'garn' || s.kind === 'line')) achAdd('haul');   // «Garn eller line satt og trukket» (09f-merker.js)
@@ -355,7 +369,7 @@ function landFish(sp, kg, key, mesh, p, H, hook, fresh, g){
 // size selection: nets keep fish near the optimal length for the mesh (and big fish that tangle); hooks let the smallest go
 function netLen(w){ return Math.pow(1000 * w / 0.0068, 1 / 3.1); }
 function retain(sp, key, mesh, w){
-  if (key === 'garn'){ const L = netLen(w), Lo = 0.40 * mesh * (GK[sp] || 1), r = Math.exp(-0.5 * ((L - Lo) / (0.18 * Lo)) ** 2); return L > Lo ? Math.max(r, 0.35 * Math.exp(-(L - Lo) / (0.5 * Lo))) : r; }
+  if (key === 'garn' || key.startsWith('garn:')){ const L = netLen(w), Lo = 0.40 * mesh * (GK[sp] || 1), r = Math.exp(-0.5 * ((L - Lo) / (0.18 * Lo)) ** 2); return L > Lo ? Math.max(r, 0.35 * Math.exp(-(L - Lo) / (0.5 * Lo))) : r; }
   if (key === 'line:hyse') return sstep(0.35, 0.9, w);
   if (key === 'line:bank') return sstep(0.8, 2.2, w);
   return 1;
@@ -411,7 +425,7 @@ function finishHaul(g, H){
 // Before a gale (over 17 m/s within 36 hours) the gear is brought home instead of set again.
 function cycleSpec(kind, want){
   const pg = S.pgear;
-  if (kind === 'garn'){ const l = pg.nets.find(x => !want || x.mesh === want.mesh) || pg.nets[0]; return l ? {nid:l.id} : null; }
+  if (kind === 'garn'){ const l = pg.nets.find(x => !want || (x.mesh === want.mesh && netTy(x) === netTy(want))) || pg.nets[0]; return l ? {nid:l.id} : null; }
   if (kind === 'line'){ const lk = want && want.lk && pg.lines[want.lk].baited ? want.lk : pg.lines.hyse.baited ? 'hyse' : 'bank'; return pg.lines[lk].baited ? {lk, n:pg.lines[lk].baited} : null; }
   const pot = 'big', n = Math.min(pg.pots[pot], Math.floor(Math.max(...Object.values(baitOf(pg)), 0) / GPRICE.potBait + 1e-9)); return n > 0 ? {pot, n} : null;
 }
@@ -422,7 +436,7 @@ function gearCycle(w, fishAfter){
   if (s){ b.pos = dist(b.pos, s.a) <= dist(b.pos, s.b) ? {...s.a} : {...s.b}; const why = startHaul(s.id, a.kind !== 'line' && !gale && !a.final, fishAfter); if (!why && gale) log('Kuling i varselet. Tar redskapet med hjem.', 'A gale in the forecast. Taking the gear home.'); return why; }
   if (!s && !rigKindOk(a.kind)) return rigWrong(a.kind);
   if (gale) return [gL('Kuling i varselet. Setter ikke ut redskap nå.', 'A gale in the forecast. Not setting gear now.')];
-  const spec = cycleSpec(a.kind, a.spec && (a.kind === 'garn' ? {mesh:(S.pgear.nets.find(l => l.id === a.spec.nid) || {}).mesh} : a.spec));
+  const spec = cycleSpec(a.kind, a.spec && (a.kind === 'garn' ? {mesh:(S.pgear.nets.find(l => l.id === a.spec.nid) || {}).mesh, ty:(S.pgear.nets.find(l => l.id === a.spec.nid) || {}).ty} : a.spec));
   if (!spec) return [gL('Ikke noe ' + GEAR[a.kind].no.toLowerCase() + ' klart om bord.', 'No ' + GEAR[a.kind].en.toLowerCase() + ' ready aboard.')];
   return startSet(a.kind, spec, fishAfter);
 }

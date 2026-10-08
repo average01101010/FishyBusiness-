@@ -72,7 +72,7 @@ const GUIDE = (() => {
   }
   const verdict = r => r >= 0.75 ? L('Toppsesong', 'Peak season') : r >= 0.5 ? L('God tid', 'A good time') : r >= 0.3 ? L('Middels', 'Middling') : L('Svak tid', 'A weak time');
   // ----- the gear: what keeps the species (SELQ), by the stars of a reading of it: 3 best, 2 good, 1 some
-  const GEARS = [['jig', 'Juksa', 'Jig'], ['garn', 'Garn', 'Nets'], ['line:hyse', 'Hyseline', 'Haddock line'], ['line:bank', 'Bankline', 'Bank line'], ['teine', 'Teiner', 'Pots']];
+  const GEARS = [['jig', 'Juksa', 'Jig'], ['garn', 'Garn', 'Nets'], ['garn:flyt', 'Flytegarn', 'Floating net'], ['garn:kveite', 'Blåkveitegarn', 'Halibut net'], ['line:hyse', 'Hyseline', 'Haddock line'], ['line:bank', 'Bankline', 'Bank line'], ['teine', 'Teiner', 'Pots']];
   function stars(sp, g){
     const s = SPECIES[sp];
     if (g === 'jig'){ if (s.shell) return 0; if (sp === 'kveite') return 3; if ((s.jig != null ? s.jig : 1) < 0.1) return 0; return s.dep[0] > 150 ? 1 : 2; }

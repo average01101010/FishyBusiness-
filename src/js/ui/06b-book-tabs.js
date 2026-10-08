@@ -144,7 +144,7 @@ function bookSales(){
 }
 // the entry for a set in the gear log, from the set itself
 function gearLogEntry(s){
-  const m = setMid(s), lbl = s.kind === 'garn' ? [s.n + ' garn ' + s.mesh + ' mm', s.n + ' nets ' + s.mesh + ' mm'] : s.kind === 'line' ? [s.n + ' ' + (s.n === 1 ? 'stamp' : 'stamper') + ' ' + LINE_KINDS[s.lk].no.toLowerCase(), s.n + ' ' + (s.n === 1 ? 'tub' : 'tubs') + ' of ' + LINE_KINDS[s.lk].en.toLowerCase()] : [s.n + ' ' + POTS[s.pot].no.toLowerCase(), s.n + ' ' + POTS[s.pot].en.toLowerCase()];
+  const m = setMid(s), lbl = s.kind === 'garn' ? [s.n + ' garn ' + netNo(s), s.n + ' nets ' + netEn(s)] : s.kind === 'line' ? [s.n + ' ' + (s.n === 1 ? 'stamp' : 'stamper') + ' ' + LINE_KINDS[s.lk].no.toLowerCase(), s.n + ' ' + (s.n === 1 ? 'tub' : 'tubs') + ' of ' + LINE_KINDS[s.lk].en.toLowerCase()] : [s.n + ' ' + POTS[s.pot].no.toLowerCase(), s.n + ' ' + POTS[s.pot].en.toLowerCase()];
   return {id:s.id, vid:s.vid, kind:s.kind, lbl, n:s.n, tSet:s.tSet, x:m.x, y:m.y, depth:s.depth, tHaul:null, kg:null, lost:null};
 }
 function bookTabPages(t){

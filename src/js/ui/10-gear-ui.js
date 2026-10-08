@@ -16,7 +16,7 @@ function setLabel(s, short){
 // the gear aboard as ready-made choices for setting: whole strings of nets, all baited tubs of a kind, all pots of a size with bait
 function setChoices(){
   const pg = S.pgear, out = [], r = RIGS[(DRIFTCTX && DRIFTCTX.rig) || rigOf()].kind; if (!pg || !r) return out;
-  for (const l of pg.nets) out.push({kind:'garn', spec:{nid:l.id}, n:l.n, lbl:[l.n + ' garn ' + l.mesh + ' mm', l.n + ' nets ' + l.mesh + ' mm']});
+  for (const l of pg.nets) out.push({kind:'garn', spec:{nid:l.id}, n:l.n, lbl:[l.n + ' garn ' + netNo(l), l.n + ' nets ' + netEn(l)]});
   for (const lk of ['hyse', 'bank']){ const n = pg.lines[lk].baited; if (n > 0) out.push({kind:'line', spec:{lk, n}, n, lbl:[n + ' ' + (n === 1 ? 'stamp' : 'stamper') + ' ' + LINE_KINDS[lk].no.toLowerCase(), n + ' ' + (n === 1 ? 'tub' : 'tubs') + ' of ' + LINE_KINDS[lk].en.toLowerCase()]}); }
   for (const pot of ['big']){ const n = Math.min(pg.pots[pot], Math.floor(Math.max(0, ...Object.values(baitOf(pg))) / GPRICE.potBait + 1e-9)); if (n > 0) out.push({kind:'teine', spec:{pot, n}, n, lbl:[n + ' ' + POTS[pot].no.toLowerCase(), n + ' ' + POTS[pot].en.toLowerCase()]}); }
   return out.filter(c => c.kind === r);
@@ -52,7 +52,7 @@ function gearPanel(){
   const b = S.boat, pg = S.pgear, h = []; if (!pg) return '';
   h.push('<h3>' + GL('Redskap', 'Gear') + '</h3>');
   const on = [];
-  if (pg.nets.length) on.push(pg.nets.map(l => l.n + ' garn ' + l.mesh + ' mm (' + Math.round(l.cond * 100) + ' %)').join(', '));
+  if (pg.nets.length) on.push(pg.nets.map(l => l.n + ' garn ' + netNo(l) + ' (' + Math.round(l.cond * 100) + ' %)').join(', '));
   for (const lk of ['hyse', 'bank']) if (pg.lines[lk].n) on.push(pg.lines[lk].n + ' ' + LINE_KINDS[lk].no.toLowerCase() + ' (' + pg.lines[lk].baited + ' ' + GL('egnet', 'baited') + ')');
   for (const pot of ['big']) if (pg.pots[pot]) on.push(pg.pots[pot] + ' ' + POTS[pot].no.toLowerCase());
   h.push('<div class="kv"><span>' + GL('Om bord', 'Aboard') + '</span><span>' + (on.length ? on.join('; ') : GL('ingen', 'none')) + '</span></div>');

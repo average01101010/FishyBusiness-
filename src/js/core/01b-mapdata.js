@@ -29,8 +29,15 @@ function idbDo(mode, f){ return mapIdb().then(db => db && new Promise(res => { t
 async function mapFetch(pk){
   const kept = await idbDo('readonly', s => s.get(pk.hash));
   if (kept && kept.byteLength === pk.bytes){ MAPD.cached++; return new Uint8Array(kept); }
-  const r = await fetch(MAPD.base + pk.file); if (!r.ok) throw new Error('map: ' + pk.file + ' ' + r.status);
-  const buf = await r.arrayBuffer(); MAPD.fetched++;
+  // a pack that does not come (a slow or dropped connection, a proxy that cuts a large file, a hiccup on the server) is asked for again
+  // up to three times, 0.7 s, 1.4 s and 2.1 s apart, before the player sees an error (08.10.2026: players stuck at «Kartet lastet ikke»)
+  let buf = null, err = null;
+  for (let t = 0; t < 4 && !buf; t++){
+    if (t) await new Promise(res => setTimeout(res, 700 * t));
+    try { const r = await fetch(MAPD.base + pk.file, t ? {cache:'reload'} : undefined); if (!r.ok) throw new Error('map: ' + pk.file + ' ' + r.status); const b = await r.arrayBuffer(); if (pk.bytes && b.byteLength !== pk.bytes) throw new Error('map: ' + pk.file + ' came as ' + b.byteLength + ' bytes, not ' + pk.bytes); buf = b; } catch (e){ err = e; }
+  }
+  if (!buf) throw err;
+  MAPD.fetched++;
   idbDo('readwrite', s => s.put(buf, pk.hash));
   return new Uint8Array(buf);
 }
@@ -103,7 +110,7 @@ function mapBlock(L, bx, by){
   const k = gridKey(bx, by) * 16 + L.id; let a = MAPD.blk.get(k);   // room for 16 layers (there are 10 with 'deep')
   if (a){ MAPD.blk.delete(k); MAPD.blk.set(k, a); return a; }
   const pk = mapPackOf(L, bx, by), e = pk && pk.idx && pk.idx.get(L.name + ':' + bx + ':' + by);
-  if (!pk || !pk.buf || !e){ MAPD.miss++; throw new Error('map: ' + L.name + ' block ' + bx + ',' + by + (pk ? ' is not loaded (' + pk.file + ')' : ' has no pack')); }
+  if (!pk || !pk.buf || !e){ MAPD.miss++; const er = new Error('map: ' + L.name + ' block ' + bx + ',' + by + (pk ? (pk.buf ? ' is not in ' : ' is not loaded (') + pk.file + (pk.buf ? '' : ')') : ' has no pack')); if (pk && !pk.buf) er.pk = pk; throw er; }
   a = mapDecode(L, fflate.inflateSync(pk.buf.subarray(e[0], e[0] + e[1])));
   MAPD.blk.set(k, a); MAPD.bytes += a.byteLength;
   for (const [kk, v] of MAPD.blk){ if (MAPD.bytes <= MAPD.budget) break; if (kk === k) continue; MAPD.blk.delete(kk); MAPD.bytes -= v.byteLength; }

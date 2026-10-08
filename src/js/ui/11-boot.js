@@ -14,7 +14,12 @@ async function bootMap(){
   // (the talk on the quay weighs them all); not the coast's receivers, which would be the whole coast's packs
   for (const q of PORTS) if (!q.coastal) pts.push(q.p); for (const g of GROUNDS) pts.push(g.p);
   { const h = saved && saved.home && portById(saved.home); if (h) pts.push(h.p); }
-  await Promise.all([mapLoad(MAPD.core), ...pts.map(p => mapNeed(p, MAPD.simR))]);
+  // a read that lands in a pack not in yet (the coast reader looks a little beyond the radius, 08.10.2026: «mask block 105,20 is not loaded»)
+  // loads that pack and goes again; a pack that does not come is tried again by mapFetch before it gets here
+  for (let t = 0; ; t++){
+    try { await Promise.all([mapLoad(MAPD.core), ...pts.map(p => mapNeed(p, MAPD.simR))]); break; }
+    catch (e){ if (t >= 8) throw e; if (e && e.pk) await mapLoad(e.pk); else await new Promise(res => setTimeout(res, 1000)); }
+  }
   DEPTH = true;
 }
 function bootGame(){

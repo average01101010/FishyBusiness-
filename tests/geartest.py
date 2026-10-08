@@ -68,13 +68,13 @@ async def main():
           R.set1 = startSet('garn', {nid:'na'}, 0); hStep(400); b.pos = {x:inside.x + 1.2, y:inside.y + 0.6}; if (isLand(b.pos) || !insideFjord(b.pos)) b.pos = {x:inside.x - 1.2, y:inside.y - 0.6};
           R.set2 = startSet('garn', {nid:'nb'}, 0); hStep(400); b.status = 'idle';
           R.set81 = gearRules('garn', {nid:'nc'}, b.pos); R.nets = mySets().filter(s => insideFjord(setMid(s))).reduce((a, s) => a + s.n, 0);
-          b.rig = 'line'; R.hooks8 = gearRules('line', {lk:'hyse', n:8}, b.pos); R.hooks7 = gearRules('line', {lk:'hyse', n:7}, b.pos);
+          b.rig = 'line'; R.hooks8 = gearRules('line', {lk:'hyse', n:9}, b.pos); R.hooks7 = gearRules('line', {lk:'hyse', n:8}, b.pos);
           R.geo = mySets().map(s => [!isLand(s.a), !isLand(s.b), legClear(s.a, s.b), depthF(s.a) >= 5 && depthF(s.b) >= 5, Math.round(dist(s.a, s.b) * 1000)]);
           return R; })()""")
         print('rules:', json.dumps(r, ensure_ascii=False))
         print(ok(r['alone'] and r['withOne'] is None and r['twoCrew'] is None), 'nets need two aboard: not alone; you and one crew, or two crew without you')
-        print(ok(r['set1'] is None and r['set2'] is None and r['nets'] == 80 and r['set81'] and r['hooks8'] and r['hooks7'] is None), 'inside the fjord line: 80 nets and no more, 5,000 hooks (7 tubs of haddock line, not 8)')
-        print(ok(all(all(g[:4]) for g in r['geo']) and all(1150 <= g[4] <= 1250 for g in r['geo'])), 'each string lies at sea between its buoys, clear of land, on at least 5 m, 30 m a net')
+        print(ok(r['set1'] is None and r['set2'] is None and r['nets'] == 80 and r['set81'] and r['hooks8'] and r['hooks7'] is None), 'inside the fjord line: 80 nets and no more, 5,000 hooks (8 tubs of haddock line at 600 hooks, not 9)')
+        print(ok(all(all(g[:4]) for g in r['geo']) and all(1070 <= g[4] <= 1170 for g in r['geo'])), 'each string lies at sea between its buoys, clear of land, on at least 5 m, 28 m a net')
 
         # 3. soak curves and mesh size (dry sets, no stock taken)
         await pg.evaluate("crabReady()")
@@ -155,7 +155,7 @@ async def main():
           S.pgear.lines.hyse = {n:4, baited:0}; S.pgear.bait = 100; b.port = 'husoy'; b.pos = {...portById('husoy').p}; const c1 = S.cash;
           R.egn = egnOrder('hyse', 2); R.egnFee = Math.round(c1 - S.cash); R.egnExpect = 2 * (LINE_KINDS.hyse.egn + LINE_KINDS.hyse.baitKg * GPRICE.bait); R.beforeReady = S.pgear.lines.hyse.baited;
           for (let i = 0; i < 6 * 60; i++) step(); R.afterReady = S.pgear.lines.hyse.baited;
-          S.jobs = []; R.self = egnSelf('hyse', 2); R.selfH = S.jobs.length ? S.jobs[0].h : null; R.selfExpect = Math.round(2 * 700 / (560 * handsAboard() * teamEff(crewAboard(), meAboard(), 'line')) * 10) / 10;
+          S.jobs = []; R.self = egnSelf('hyse', 2); R.selfH = S.jobs.length ? S.jobs[0].h : null; R.selfExpect = Math.round(2 * LINE_KINDS.hyse.hooks / (560 * handsAboard() * teamEff(crewAboard(), meAboard(), 'line')) * 10) / 10;
           for (let i = 0; i < 600 && S.jobs.length; i++) step(); R.selfDone = S.pgear.lines.hyse.baited;
           return R; })()""")
         print('care:', json.dumps(r, ensure_ascii=False))
@@ -241,7 +241,7 @@ async def main():
           let jig = 0; for (let h = 0; h < 8; h++) for (const sp of SP) jig += 30 * density(sp, GROUNDS[2].p, Hm + h); R.jigOneHand8h = Math.round(jig);
           return R; })()""")
         print('calibration:', json.dumps(r))
-        print(ok(70 <= r['linePerTub'] <= 115 and r['lineHyse'] >= 50), 'haddock line, 12 hours in February on the eight best haddock spots: 70–115 kg a tub, mostly haddock')
+        print(ok(60 <= r['linePerTub'] <= 115 and r['lineHyse'] >= 50), 'haddock line, 12 hours in February on the eight best haddock spots: 60–115 kg a tub (600 hooks), mostly haddock')
         print(ok(20 <= r['netPerNet'] <= 45), 'cod nets of 180 mm, 20 hours in March west of Gryllefjord: 20–45 kg a net')
         print(ok(2.0 <= r['potPerPot'] <= 12), 'big king crab pots, 24 hours in September in West Finnmark: 2–12 kg a pot (an estimate)')
         # bait (04.10.2026): five kinds with their own species, a set line keeps the tubs' bait, and own saithe as bait counts on the quota
@@ -253,6 +253,16 @@ async def main():
           R.own = baitFromHold('sei', 50); R.ownBait = baitOf(pg).sei; R.quota = Math.round(quotaState().sei - q0); R.left = Math.round(holdTotal()); S.hold = []; return R; })()""")
         print('bait:', json.dumps(bt))
         print(ok(bt['f'] == [1.4, 1.8, 0.6, 1, 1.6, 1.4] and bt['cod'][0] > bt['cod'][1] * 1.8 and bt['own'] == 50 and bt['ownBait'] >= 50 and bt['quota'] == 50 and bt['left'] == 10), 'bait: shrimp takes more cod than krill, and own saithe as bait leaves the hold and counts on the quota')
+        # net types (08.10.2026): the bottom net for cod, the floating net for saithe, the Greenland halibut net for halibut; bought, joined and set by type
+        nt = await pg.evaluate("""(()=>{ const R = {}; const pg = S.pgear; pg.nets = []; const b = S.boat; b.status = 'port'; b.port = 'finnsnes'; b.pos = {...portById('finnsnes').p}; S.cash = 1e6; b.type = 'sjark'; applyVessel();
+          R.buy = [buyGear('net', 156, 5), buyGear('net', 'flyt:156', 5), buyGear('net', 'kveite:360', 5), buyGear('net', 'flyt:200', 1)].map(x => x == null ? 'ok' : 'no');
+          R.types = pg.nets.map(l => (l.ty || 'bunn') + ':' + l.mesh); R.join = joinNets(pg.nets[0].id, pg.nets[1].id);
+          const Hh = HOUR(2028, 1, 10, 6), P = GROUNDS[2].p, one = (ty, mesh) => dry('garn', {n:10, mesh, ty}, P, Hh, 20), kgs = s => { const o = {}; for (const sp in s.acc) o[sp] = s.acc[sp].kg; return o; };
+          R.k = {bunn:kgs(one('bunn', 156)), flyt:kgs(one('flyt', 156)), kv:kgs(one('kveite', 360))}; R.lbl = netNo({mesh:360, ty:'kveite'}); return R; })()""")
+        print('nets:', json.dumps(nt))
+        fl, bu, kv = nt['k']['flyt'], nt['k']['bunn'], nt['k']['kv']
+        print(ok(nt['buy'] == ['ok', 'ok', 'ok', 'no'] and nt['types'] == ['bunn:156', 'flyt:156', 'kveite:360'] and not nt['join'] and nt['lbl'] == 'blåkveitegarn 360 mm'), 'three kinds of net: bought by type, a floating net and a cod net are not joined, 200 mm floating is not sold')
+        print(ok((fl.get('sei', 0) / max(1, fl.get('torsk', 1))) > (bu.get('sei', 0) / max(1, bu.get('torsk', 1))) * 2 and (fl.get('hyse', 0) < bu.get('hyse', 1)) and (kv.get('blakveite', 0) + kv.get('kveite', 0)) > (bu.get('blakveite', 0) + bu.get('kveite', 0))), 'the floating net takes much more saithe against cod than the bottom net, the halibut net more Greenland halibut and halibut')
         # 7. the catch comes aboard in slices as the string comes over the rail (tilbakemelding #30), not all at the end of a unit, and the
         #     haul slows as the bleeding tub fills
         r = await pg.evaluate("""(()=>{ const R = {}, b = S.boat; S.sets = []; S.hold = []; S.pgear = newPGear(); S.pgear.kits.n = 4; S.crew = [hand()]; S.me = S.cur;
@@ -276,7 +286,7 @@ async def main():
           R.cap = tubCap(); R.slow = [0, 0.25, 0.5, 0.75, 1].map(f => +fillTo(R.cap * f).toFixed(2)); R.slowSet = haulSlow({op:'set'}); S.hold = [];
           return R; })()""")
         print('slices:', json.dumps(r, ensure_ascii=False))
-        print(ok(r['line']['sl'] == 7 and r['line']['firstUnit'] >= 4 and r['line']['ups'] > r['line']['n'] * 2), 'a haddock-line tub of 700 hooks comes aboard in seven slices, several of them in the first tub')
+        print(ok(r['line']['sl'] == 6 and r['line']['firstUnit'] >= 4 and r['line']['ups'] > r['line']['n'] * 2), 'a haddock-line tub of 600 hooks comes aboard in six slices, several of them in the first tub')
         print(ok(r['net']['sl'] == 3 and r['net']['ups'] > r['net']['n'] and r['net']['kg'] > 30), 'a net comes aboard in thirds')
         print(ok(r['line']['left'] <= 1 and r['net']['left'] <= 1), 'everything the strings held has been landed or released when they are up')
         print(ok(r['who']['net2']['st'] == 'haling,haling' and r['who']['net2']['bl'] == 1 and r['who']['net3']['st'] == 'haling,haling,sloy' and r['who']['net3']['bl'] == 1 and r['who']['line2']['st'] == 'haling,sloy' and r['who']['line2']['bl'] == 0 and r['who']['line3']['bl'] == 0 and 'sloy' in r['who']['line3']['st']), 'a net takes two at the hauler, one pulling and one bleeding, with a third hand gutting; a line takes one (and nobody bleeds apart)', r['who'])
