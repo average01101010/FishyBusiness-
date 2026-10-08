@@ -58,7 +58,8 @@ const HYRE = {week:6000 * 5, safe:0.9};
 const hyreAsk = c => Math.max(100, Math.round(c.ask * HYRE.week / 7 * HYRE.safe / 10) * 10);
 // the day wages, paid at midnight for every vessel's crew on hyre
 function payHyre(){ let sum = 0; eachVessel(() => { for (const c of S.crew) if (c.pay === 'hyre'){ S.cash -= c.hyre; S.stats.costs += c.hyre; sum += c.hyre; c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, c.hyre]]); } }); return sum; }
-function crewAboard(H){ if (H == null) H = S.t / 60; const wd = (gDate(H).getUTCDay() + 6) % 7; return (S.crew || []).map(crewUpgrade).filter(c => !c.off && (!c.bi || c.biDays[wd])); }
+// (all: those off watch asleep in their bunks too, 06d-drift.js driftWatch; they are crew and share the catch, but are not on deck)
+function crewAboard(H, all){ if (H == null) H = S.t / 60; const wd = (gDate(H).getUTCDay() + 6) % 7; return (S.crew || []).map(crewUpgrade).filter(c => !c.off && (all || !c.sleepW) && (!c.bi || c.biDays[wd])); }
 function crewEff(c, H, hs, g = 'juksa'){
   const A = c.attr, T = c.traits; let e = 0.55 + 0.08 * A.erf + 0.07 * (c.gear[g] || c.gear.juksa || 1) + 0.04 * A.styrke;
   e *= 1 - 0.5 * sstep(50, 100, c.fatigue); e *= c.morale < 30 ? 0.85 : c.morale > 75 ? 1.05 : 1; if (c.cpen) e *= 0.9;
@@ -99,6 +100,7 @@ function crewRumour(){ const B = S.bors; if (!B || Math.random() < 0.5) return n
 function crewTick(H){
   const b = S.boat; if (!S.crew || !S.crew.length){ S.workLog = []; return; }
   S.crew = S.crew.map(crewUpgrade);
+  driftWatch(H);   // 2 + 2: who is on watch this hour (06d-drift.js)
   const hs = hsAt(b.pos, H), atSea = b.status === 'sailing' || b.status === 'fishing', fishing = b.status === 'fishing', hr = gDate(H).getUTCHours(), night = hr >= 22 || hr < 6;
   // the vessel's own log of hours at sea, for the crew page
   S.workLog = (S.workLog || []).concat([atSea ? 1 : 0]).slice(-24);
@@ -112,7 +114,7 @@ function crewTick(H){
   // resting ashore with the skipper (the naust or a rorbu, 15-energy.js) they come back as fast as he does: 0 to 100 in six hours in a
   // rorbu (Jonas 06.10.2026: «Så begge sover på en måte i rorbuen»)
   // and at a rorbu they sleep there too, with you or without you (tilbakemelding #11)
-  const restC = meAboard() && resting() ? restRate(b) * 60 : b.status === 'port' && typeof isRorbu === 'function' && isRorbu(b.port) ? RORBU.rate * 60 : 0;
+  const restC = meAboard() && resting() ? restRate(b) * 60 : b.status === 'port' && ((typeof isRorbu === 'function' && isRorbu(b.port)) || bunks(b)) ? RORBU.rate * 60 : 0;   // (a boat with bunks rests the crew at the quay as fast as a rorbu does, Jonas 08.10.2026)
   for (const c of S.crew.slice()){
     const here = onIds.has(c.id) && atSea, viol = !!viols[c.id];
     // the share of the hour spent working: a break at sea tires less, but is not rest

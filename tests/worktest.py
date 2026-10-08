@@ -72,11 +72,11 @@ async def main():
           const mood = hist => { const c = hand(40); c.morale = 60; S.crew = [c]; S.meal = {due:S.t + 9999, cook:null, hist}; for (let h = 0; h < 10; h++) crewTick(S.t / 60 + h); return c.morale; };
           R.mood = [mood([5, 5, 5, 5]), mood([1, 1, 1, 1])].map(v => Math.round(v * 10) / 10);
           // the rest rule: a skiff trip of 15 hours breaks the 14-hour rule; a night at the quay puts it right
-          const rr = hand(30); S.crew = [rr]; S.restWarn = -1e9; const m0 = S.msgs.length; R.leftAtStart = restLeft(rr);
+          S.company = 'Testrederiet'; const rr = hand(30); S.crew = [rr]; S.restWarn = -1e9; const m0 = S.msgs.length; R.leftAtStart = restLeft(rr);
           for (let h = 0; h < 15; h++){ rr.wk = {sloy:50}; crewTick(S.t / 60 + h); }
           R.broken = restCheck(rr.rest); R.warned = S.msgs.slice(m0).some(m => /hviletidsreglene/.test(m.no) && /14 timer/.test(m.no)); R.fat = Math.round(rr.fatigue);
           b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; S.plan = null; for (let h = 0; h < 10; h++){ rr.wk = {}; crewTick(S.t / 60 + h); }
-          R.afterNight = restCheck(rr.rest);
+          R.afterNight = restCheck(rr.rest); S.company = '';
           // the crew talks: a day at sea gives some lines, never two periodic ones within an hour and a half
           S.energy = 100; b.status = 'idle'; b.port = null; b.pos = {...g}; S.crew = [hand(30), hand(45)]; S.crew[0].traits = ['spokefugl']; S.sayT = null; const l0 = S.log.length;
           for (let i = 0; i < 24 * 60; i++) step();

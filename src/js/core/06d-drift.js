@@ -21,7 +21,7 @@ const DRF_RIGS = {
 const driftRigName = r => DRF_RIGS[r] && DRF_RIGS[r].no ? gL(DRF_RIGS[r].no, DRF_RIGS[r].en) : rigName(r);
 const driftMode = o => (DRF_RIGS[o.rig] || DRF_RIGS.juksa).mode;
 function driftNew(over){
-  const b = S.boat, o = {v:2, on:false, name:gL('Driftsplan', 'Operations plan'), rig:RIGS[b.rig] ? b.rig : 'juksa', skipper:(S.crew[0] || {}).id || null, crewMode:'day',
+  const b = S.boat, o = {v:2, on:false, name:gL('Driftsplan', 'Operations plan'), rig:RIGS[b.rig] ? b.rig : 'juksa', skipper:(S.crew[0] || {}).id || null, mate:null, crewMode:'day', watchH:6,
     wx:{wind:12, hs:2.5, shelter:true}, days:[1, 1, 1, 1, 1, 0, 0], period:24, stock:{ice:true, fuel:true, gear:true, bait:true},
     sess:[], idx:0, cn:0, a0:null, hold:0, fails:0, paused:null, cur:null, rep:[], skipped:0};
   return Object.assign(o, over || {});
@@ -112,7 +112,15 @@ function driftCheck(o){
   if (!sk && !S.crew.length) W.push(no('Ingen mannskap er ansatt. Planen går bare når du selv er om bord.', 'No crew is hired. The plan only runs when you are aboard yourself.'));
   else if (!sk) W.push(no('Ingen skipper er valgt. Den første i mannskapet kjører planen.', 'No skipper is chosen. The first of the crew runs the plan.'));
   if (o.rig === 'garn' && S.crew.length < 1) W.push(no('Garn krever to om bord.', 'Nets need two aboard.'));
-  if (typeof restRuleOn === 'function' && restRuleOn() && rep.restMin > 0 && rep.restTotal < 10) W.push(no('Mannskapet får under 10 timer hvile i døgnet. Hviletidskravet brytes.', 'The crew get under 10 hours of rest a day. The rest rule is broken.'));
+  if (o.crewMode === 'watch'){
+    const R = driftRoles(o), need = Math.ceil(S.crew.length / 2);
+    if (S.crew.length < driftNeedHands) E.push(no('Døgndrift 2 og 2 krever fire mann: skipper, styrmann og to på dekk. Du har ' + S.crew.length + '.', 'Round-the-clock 2 and 2 needs four hands: a skipper, a mate and two on deck. You have ' + S.crew.length + '.'));
+    else if (!(R.mate)) E.push(no('Velg en styrmann.', 'Choose a mate.'));
+    if ((VESSELS[S.boat.type].berths || 0) < need) E.push(no('Vaktene trenger køyer til dem som har fri (' + need + '). Båten har ' + (VESSELS[S.boat.type].berths || 0) + '.', 'The watch off needs bunks (' + need + '). The boat has ' + (VESSELS[S.boat.type].berths || 0) + '.'));
+    rep.watch = {on:o.watchH || 6, rest:o.period / 2};
+  } else if (S.crew.length >= 2 && rep.work > 14 && !(VESSELS[S.boat.type].berths > 0)) W.push(no('Mannskapet jobber lange dager uten køyer. Hvilen blir dårlig.', 'The crew works long days without bunks. The rest will be poor.'));
+  if (S.crew.length && o.sess.some(s => s.type === 'hvile') && o.sess.filter(s => s.type === 'hvile').every(s => { const p = portById(s.at); return p && !p.rorbu; }) && !(VESSELS[S.boat.type].berths > 0)) W.push(no('Båten har ingen køyer, og hvilestedet er en vanlig kai. Mannskapet hviler best på en rorbu.', 'The boat has no bunks, and the place of rest is an ordinary quay. The crew rests best at a rorbu.'));
+  if (typeof restRuleOn === 'function' && restRuleOn() && o.crewMode !== 'watch' && rep.restMin > 0 && rep.restTotal < 10) W.push(no('Mannskapet får under 10 timer hvile i døgnet. Hviletidskravet brytes.', 'The crew get under 10 hours of rest a day. The rest rule is broken.'));
   if (rep.work > o.period * 0.75) W.push(no('Over tre fjerdedeler av døgnet er arbeid. Mannskapet blir fort slitne.', 'Over three quarters of the day is work. The crew tire fast.'));
   // the weather limits against what the boat can take
   if (o.wx.hs > BOAT.risk[1] * 0.95) W.push(no('Grensen for sjø er over det båten tåler (' + fmt(BOAT.risk[1], 1) + ' m).', 'The sea limit is above what the boat can take (' + fmt(BOAT.risk[1], 1) + ' m).'));
@@ -133,6 +141,23 @@ function driftPreview(o){
     out.push({t:s.dep + h, no:'Levering i ' + (portById(r.end) || {name:'?'}).name, en:'Landing in ' + (portById(r.end) || {name:'?'}).name, kind:'land'});
   }
   return {events:out.sort((a, b) => a.t - b.t), check:C};
+}
+
+// ---- the crew: roles and the watch. Day work has everyone on deck at once. Round the clock («døgndrift 2 og 2») needs four hands: a
+// skipper, a mate and two on deck; the skipper and one deckhand stand one watch, the mate and the other the other, `watchH` hours each.
+// The watch off is asleep in the bunks (not on deck, not in the lists; c.sleepW), rests, and shares the catch as the rest.
+const driftNeedHands = 4;
+function driftRoles(o){
+  const sk = S.crew.find(c => c.id === o.skipper) || S.crew[0] || null, mate = S.crew.find(c => c.id === o.mate && c !== sk) || S.crew.find(c => c !== sk) || null, deck = S.crew.filter(c => c !== sk && c !== mate);
+  const A = [sk, deck[0]].filter(Boolean).concat(deck.slice(2).filter((c, i) => i % 2 === 0)), Bw = [mate, deck[1]].filter(Boolean).concat(deck.slice(2).filter((c, i) => i % 2 === 1));
+  return {sk, mate, deck, A, B:Bw};
+}
+const driftWatchActive = o => !!o && o.v === 2 && o.crewMode === 'watch' && S.crew.length >= driftNeedHands && !!S.plan && !!S.plan.ops && S.boat.status !== 'port';
+function driftWatch(H){
+  const o = S.ops;
+  if (!driftWatchActive(o)){ for (const c of S.crew) if (c.sleepW) delete c.sleepW; return; }
+  const R = driftRoles(o), aOn = Math.floor(driftHod(H) / (o.watchH || 6)) % 2 === 0, off = aOn ? R.B : R.A;
+  for (const c of S.crew){ if (off.includes(c)) c.sleepW = true; else delete c.sleepW; }
 }
 
 // ---- the weather the plan allows, while it runs

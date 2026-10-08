@@ -174,7 +174,7 @@ function sell(){
   // VAT on the sale once the business is in the VAT register: it comes with the settlement and goes straight on to the state
   mvaCheck(total); const mva = S.mva ? mvaOf(total, tk) : 0;
   // those on hyre have their day wage (payHyre) and no share
-  const aboardNow = crewAboard().filter(c => c.pay !== 'hyre'), lott = Math.round(aboardNow.reduce((a, c) => a + c.share, 0) * net);
+  const aboardNow = crewAboard(null, true).filter(c => c.pay !== 'hyre'), lott = Math.round(aboardNow.reduce((a, c) => a + c.share, 0) * net);
   for (const c of aboardNow) c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, net * c.share]]);
   // back aboard after the trip they sat out; not at a landing that was still going when they were given time off, which put them
   // straight back aboard for the next trip (tilbakemelding #32)

@@ -29,6 +29,21 @@ JS = """(async () => {
   o.sess[1].dep = 5 + hrs + 2; const c4 = driftCheck(o); R.twoOk = c4.ok; R.trips = c4.trips; R.work = Math.round(c4.work * 10) / 10; R.restMin = Math.round(c4.restMin * 10) / 10;
   o.rig = 'garn'; o.sess[0].route.wps.push({x:wps[3].x, y:wps[3].y, port:null, fish:0, act:{op:'cycle', kind:'line'}}); const c5 = driftCheck(o); R.mixErr = c5.errors.some(e => /Bare én type utstyr/.test(e));
   o.rig = 'juksa'; o.sess[0].route.wps.pop(); R.soon = (() => { o.rig = 'bunntral'; const c = driftCheck(o); o.rig = 'juksa'; return c.errors.some(e => /havsteget/.test(e)); })();
+  // soak: two rounds of nets close together warn that the soak is short, far apart it is fine
+  { const st = (kind) => ({x:wps[3].x, y:wps[3].y, port:null, fish:0, act:{op:'cycle', kind}}); const o2 = driftNew({rig:'garn'}); o2.sess = [mk(5, 'husoy', 'husoy'), mk(8, 'husoy', 'husoy')]; o2.sess.forEach(q => q.route.wps.splice(3, 0, st('garn')));
+    const w = driftCheck(o2); R.soakShort = w.soak.length === 2 && w.soak[0].h === 3 && w.warnings.some(x => /Ståtiden er bare 3 t/.test(x)); o2.sess[1].dep = 17; const w2 = driftCheck(o2); R.soakOk = w2.soak[0].h === 12 && !w2.warnings.some(x => /Ståtiden/.test(x)); }
+  // crew system: round the clock 2 + 2 needs four hands, a mate and bunks for the watch off; the watch off sleeps and is off deck
+  { const vt = Object.keys(VESSELS).find(k => VESSELS[k].crewMax >= 4 && VESSELS[k].berths >= 2), keep = {type:b.type, crew:S.crew, plan:S.plan, status:b.status};
+    b.type = vt; applyVessel(); const mk4 = () => Object.assign(genCrew(), {bi:false, off:false}); S.crew = [mk4(), mk4(), mk4(), mk4()];
+    const o3 = driftNew({crewMode:'watch', skipper:S.crew[0].id, mate:S.crew[1].id}); o3.sess = [mk(5, 'husoy', 'husoy')]; const c3 = driftCheck(o3); R.watchOk = !c3.errors.some(e => /Døgndrift|styrmann|køyer/.test(e)) && c3.watch && c3.watch.on === 6;
+    const R3 = driftRoles(o3); R.roles = R3.A.length === 2 && R3.B.length === 2 && R3.A[0] === S.crew[0] && R3.B[0] === S.crew[1];
+    S.crew = S.crew.slice(0, 3); R.few = driftCheck(o3).errors.some(e => /krever fire mann/.test(e)); S.crew = [mk4(), mk4(), mk4(), mk4()]; o3.skipper = S.crew[0].id; o3.mate = S.crew[1].id; S.ops = o3;
+    S.plan = {ops:true, wps:[], idx:0}; b.status = 'sailing'; const H6 = Math.floor(S.t / 60 / 24) * 24 + 7;   // 07:00 and 13:00: A on, then B on
+    driftWatch(H6); const a1 = S.crew.filter(c => c.sleepW).map(c => S.crew.indexOf(c)).join(''); R.onDeck = crewAboard(H6).length; R.allAboard = crewAboard(H6, true).length;
+    driftWatch(H6 + 6); const a2 = S.crew.filter(c => c.sleepW).map(c => S.crew.indexOf(c)).join(''); R.watch = [a1, a2];
+    b.status = 'port'; driftWatch(H6); R.upAtQuay = !S.crew.some(c => c.sleepW);
+    o3.crewMode = 'day'; b.status = 'sailing'; driftWatch(H6); R.dayAllUp = !S.crew.some(c => c.sleepW);
+    b.type = keep.type; applyVessel(); S.crew = keep.crew; S.plan = keep.plan; b.status = keep.status; S.ops = o; }
   // 3. two trips a day, each with a landing: calm day, 05:00 and the second one
   o.on = true; o.a0 = null; o.fails = 0; o.hold = 0;
   const landed = [], m0 = S.msgs.length, trips0 = S.stats.trips; let outs = 0, wasPort = true;
@@ -62,6 +77,10 @@ async def main():
         print(ok(r['overlapErr']), 'overlappende turer avvises')
         print(ok(r['twoOk'] and r['trips'] == 2), 'to turer i døgnet godkjennes', r.get('restMin'))
         print(ok(r['mixErr']), 'to typer utstyr avvises')
+        print(ok(r['watchOk'] and r['roles'] and r['few']), 'døgndrift 2+2 godkjennes med fire mann, styrmann og køyer, ellers ikke')
+        print(ok(r['onDeck'] == 2 and r['allAboard'] == 4 and r['watch'][0] != r['watch'][1] and len(r['watch'][0]) == 2 and len(r['watch'][1]) == 2), 'vaktene bytter: to på dekk, to sover, alle er mannskap')
+        print(ok(r['upAtQuay'] and r['dayAllUp']), 'ved kai og i dagdrift er alle oppe')
+        print(ok(r['soakShort'] and r['soakOk']), 'ståtid regnes mellom rundene, og for kort ståtid advares')
         print(ok(r['soon']), 'trål/not/snurrevad kan ikke settes opp ennå')
         print(ok(r['outs'] == 2 and r['reps'] == 2 and r['msgs'] == 2 and r['status'] == 'port'), 'to turer med levering etter hver')
         print(ok(r['heldBack'] and r['stayMsg']), 'planens vindgrense holder båten på land')

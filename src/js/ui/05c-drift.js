@@ -34,6 +34,12 @@ const DRIFTUI = (() => {
       (has ? '<p class="ph-note">' + dur(driftSessHours(o, s)) + (st ? ' · ' + st + L(' stasjoner', ' stations') : '') + (r.wps.some(w => w.fish > 0) ? ' · ' + L('fisketid ', 'fishing ') + r.wps.reduce((a, w) => a + (w.fish || 0), 0) + L(' t', ' h') : '') + '</p>' : '') +
       '<div class="ph-row2">' + B('dr-draw', has ? L('Endre rute i kartplotteren', 'Edit route in the plotter') : L('Tegn rute i kartplotteren', 'Draw route in the plotter'), 'data-id="' + s.id + '"', 'p') + B('dr-del', L('Fjern', 'Remove'), 'data-id="' + s.id + '"') + '</div></div>';
   }
+  // who stands which watch
+  function watchInfo(o){
+    const R = driftRoles(o), f = c => c ? c.name.split(' ')[0] : '–', roleOf = c => c === R.sk ? L(' (skipper)', ' (skipper)') : c === R.mate ? L(' (styrmann)', ' (mate)') : '';
+    return '<div class="dr-watch"><div><b>' + L('Vakt A', 'Watch A') + '</b> ' + R.A.map(c => f(c) + roleOf(c)).join(', ') + '</div><div><b>' + L('Vakt B', 'Watch B') + '</b> ' + R.B.map(c => f(c) + roleOf(c)).join(', ') + '</div>' +
+      '<div>' + L('Vakt hver ', 'A watch every ') + '<button data-pa="dr-wh" data-d="-1">−</button> ' + (o.watchH || 6) + L(' t', ' h') + ' <button data-pa="dr-wh" data-d="1">+</button> · ' + L('Den som har fri sover i køyene, og er ikke på dekk.', 'The watch off sleeps in the bunks and is not on deck.') + '</div></div>';
+  }
   function page(){
     const o = driftOps(), b = S.boat, h = ['<div class="ph-c">'];
     if (!o){
@@ -54,7 +60,10 @@ const DRIFTUI = (() => {
       '<p class="ph-note">' + (mode === 'tur' ? L('Juksa: båten drar ut, fyller lasten, leverer og drar ut igjen. Legg inn så mange turer i døgnet du vil.', 'Jigging: the boat goes out, fills the hold, lands and goes out again. Put in as many trips a day as you like.') :
         mode === 'sett' ? L('Redskapet blir stående i sjøen mellom rundene. Hver runde trekker det som står og setter på nytt. Ståtiden er tiden mellom to runder.', 'The gear stays in the sea between rounds. Each round hauls what stands and sets again. The soak is the time between two rounds.') :
         L('Lange perioder på feltet.', 'Long periods on the grounds.')) + '</p>' +
+      kvr(L('Mannskapsordning', 'Crew system'), T('dr-mode', L('Dagdrift', 'Day work'), o.crewMode !== 'watch', 'data-m="day"') + ' ' + T('dr-mode', L('Døgndrift 2+2', 'Round the clock 2+2'), o.crewMode === 'watch', 'data-m="watch"' + (S.crew.length < driftNeedHands ? ' disabled' : ''))) +
+      (o.crewMode === 'watch' ? watchInfo(o) : '<p class="ph-note">' + L('Dagdrift: alle på dekk samtidig. Mannskapet hviler mellom turene og om natta.', 'Day work: everyone on deck at once. The crew rests between trips and at night.') + (S.crew.length < driftNeedHands ? ' ' + L('Døgndrift 2+2 krever fire mann.', 'Round the clock 2+2 needs four hands.') : '') + '</p>') +
       kvr(L('Skipper', 'Skipper'), S.crew.length ? S.crew.map(c => T('dr-sk', c.name.split(' ')[0], o.skipper === c.id, 'data-id="' + c.id + '"')).join(' ') : L('Ingen mannskap ansatt', 'No crew hired')) +
+      (o.crewMode === 'watch' && S.crew.length ? kvr(L('Styrmann', 'Mate'), S.crew.map(c => T('dr-mate', c.name.split(' ')[0], driftRoles(o).mate === c, 'data-id="' + c.id + '"')).join(' ')) : '') +
       (o.period === 24 ? kvr(L('Dager', 'Days'), '<span class="ops-days">' + (S.lang === 'no' ? OPS_DAYS_NO : OPS_DAYS_EN).map((d, i) => T('dr-day', d, o.days[i], 'data-i="' + i + '"')).join('') + '</span>') : '') +
       kvr(L('Maks vind', 'Max wind'), '<button data-pa="dr-w" data-d="-1">−</button> ' + o.wx.wind + ' m/s <button data-pa="dr-w" data-d="1">+</button>') +
       kvr(L('Maks sjø', 'Max sea'), '<button data-pa="dr-hs" data-d="-0.5">−</button> ' + fmt(o.wx.hs, 1) + ' m <button data-pa="dr-hs" data-d="0.5">+</button>') +
@@ -126,7 +135,10 @@ const DRIFTUI = (() => {
     const s = d.id && o.sess.find(x => x.id === d.id);
     if (a === 'dr-on'){ if (o.on){ o.on = false; return true; } const C = driftCheck(o); if (!C.ok){ toast(C.errors[0]); return true; } o.on = true; o.paused = null; o.fails = 0; o.a0 = null; o.idx = 0; o.cn = 0; o.hold = 0; toast(L('Driftsplanen er på.', 'The plan is on.')); return true; }
     if (a === 'dr-rig'){ if (!DRF_RIGS[d.r] || DRF_RIGS[d.r].soon) return false; o.rig = d.r; if (o.on) o.on = false; for (const q of o.sess) if (q.route) for (const w of q.route.wps) if (w.act) delete w.act; return true; }
-    if (a === 'dr-sk'){ o.skipper = d.id; return true; }
+    if (a === 'dr-sk'){ o.skipper = d.id; if (o.mate === d.id) o.mate = null; return true; }
+    if (a === 'dr-mate'){ o.mate = d.id; if (o.skipper === d.id) o.skipper = (S.crew.find(c => c.id !== d.id) || {}).id || null; return true; }
+    if (a === 'dr-mode'){ if (d.m === 'watch' && S.crew.length < driftNeedHands){ toast(L('Døgndrift 2+2 krever fire mann.', 'Round the clock 2+2 needs four hands.')); return false; } o.crewMode = d.m === 'watch' ? 'watch' : 'day'; if (o.on) o.on = false; return true; }
+    if (a === 'dr-wh'){ o.watchH = clamp((o.watchH || 6) + (+d.d), 4, 8); return true; }
     if (a === 'dr-day'){ const i = +d.i; o.days[i] = o.days[i] ? 0 : 1; return true; }
     if (a === 'dr-w'){ o.wx.wind = clamp(o.wx.wind + (+d.d), 4, 24); return true; }
     if (a === 'dr-hs'){ o.wx.hs = clamp(Math.round((o.wx.hs + (+d.d)) * 2) / 2, 0.5, 8); return true; }
