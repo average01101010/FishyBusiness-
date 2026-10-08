@@ -44,6 +44,8 @@ const setMid = s => ({x:(s.a.x + s.b.x) / 2, y:(s.a.y + s.b.y) / 2});
 const tideRate = H => Math.abs(tideH(H + 0.5) - tideH(H - 0.5));
 // where the king crab is (HI): hardly any in Troms (0-0.01 crab a pot in its surveys 2023-2026; small stocks in Balsfjorden and at
 // Håkøya), more from Loppa and Sørøya, most west of Nordkapp and in the quota area east of 26° E, where only Finnmark's own may fish
+// The density west of 26° E is set on purpose (Jonas 08.10.2026): HI's pot surveys 2020-22 found under 1 % of the quota area's catch there, but the
+// crab is known to be spreading west along the coast, so the game keeps the higher figures. Do not lower them to match that table.
 function kingArea(p){
   const ll = natLL(p), lon = ll.lon, lat = ll.lat;
   let a = lon < 19.6 ? 0.004 : lon < 22 ? 0.004 + 0.15 * sstep(19.6, 22, lon) : lon < 24 ? 0.15 + 0.55 * sstep(22, 24, lon) : 0.7 + 0.5 * sstep(24, 26, lon);
