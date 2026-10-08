@@ -8,9 +8,12 @@ const courseDeg = (a, c) => trueDeg(Math.atan2(c.x - a.x, -(c.y - a.y)), a);   /
 const deg3s = d => String(Math.round(d) % 360).padStart(3, '0') + '°';
 // the draft leg by leg: course to steer, length, and when the boat gets to each point and leaves it (game minutes). Gear work at a
 // point is not counted, the same as in the estimate.
+// where the draft starts: the boat's berth, or the start of a trip being drawn for the operations plan (core/06d-drift.js DRIFTCTX)
+const draftOrigin = () => DRIFTCTX && DRIFTCTX.origin ? DRIFTCTX.origin : quayPos(S.boat);
+const draftPort = () => DRIFTCTX ? DRIFTCTX.home : S.boat.status === 'port' && berthKind(S.boat) !== 'naust' ? S.boat.port : null;
 function draftTimeline(){
   const b = S.boat, e = estimate(), v = Math.max(1, e.v), out = [];
-  let a = quayPos(b), T = S.draftDep && S.draftDep > S.t ? S.draftDep : S.t;
+  let a = draftOrigin(), T = S.draftDep && S.draftDep > S.t ? S.draftDep : S.t;
   const T0 = T;
   S.draft.forEach(w => { const km = dist(a, w); T += km / (v * NM) * 60; const arrive = T; T += (w.fish || 0) * 60; out.push({nm:km / NM, crs:courseDeg(a, w), arrive, leave:T}); a = w; });
   return {dep:T0, legs:out, end:T};
@@ -76,7 +79,7 @@ function routeUndoRedo(redo){ if (!canEditDraft()) return; if (redo ? draftRedo(
 // The point follows the finger; if it ends on land it turns red and goes back. A second finger cancels, so the chart can be pinched.
 let RDRAG = null;
 const WP_HIT = 22, INS_HIT = 18, INS_MIN = 64;   // px
-function legEnds(i){ return [i === 0 ? quayPos(S.boat) : S.draft[i - 1], S.draft[i]]; }
+function legEnds(i){ return [i === 0 ? draftOrigin() : S.draft[i - 1], S.draft[i]]; }
 // the legs long enough on screen to carry a «+» handle, with the handle's position
 function insHandles(){
   const out = []; if (!canEditDraft()) return out;
@@ -137,8 +140,8 @@ async function leiaTo(pt, buoy, act){   // buoy: to a set's buoy, to haul it (th
   // went to a rorbu by it)
   if (view.z >= 2 && !tutOn()) for (const R of rorbuSites(pt, r + 0.05)){ const d = dist(R.p, pt); if (d < r && d < bd){ bd = d; near = R; } }
   // from Father's naust the way starts at its berth, not by the harbour's way out from the plant (tilbakemelding #20)
-  const atN = !S.draft.length && b.status === 'port' && berthKind(b) === 'naust';
-  const start = S.draft.length ? S.draft[S.draft.length - 1] : quayPos(b), aPort = !S.draft.length && b.status === 'port' && !atN ? b.port : null;
+  const atN = !DRIFTCTX && !S.draft.length && b.status === 'port' && berthKind(b) === 'naust';
+  const start = S.draft.length ? S.draft[S.draft.length - 1] : draftOrigin(), aPort = !S.draft.length && !atN ? draftPort() : null;
   // Father's naust as the end (07c-naust.js naustTarget); in its own harbour the way there is short, straight from the harbour point
   const nt = naustTarget(pt, r);
   if (nt && atN){ toast(t('already_here')); return; }
@@ -188,7 +191,7 @@ function deepNear(p, maxKm){
 // how the drawn route compares with following the fairway through the same stops: worked out in the background, then shown
 const LEIA_CMP = {key:'', res:null, busy:false, timer:0};
 function leiaStops(){
-  const b = S.boat, q = quayPos(b), out = [{p:{x:q.x, y:q.y}, port:!S.draft.length || b.status !== 'port' || berthKind(b) === 'naust' ? null : b.port}];
+  const b = S.boat, q = draftOrigin(), out = [{p:{x:q.x, y:q.y}, port:!S.draft.length ? null : draftPort()}];
   S.draft.forEach((w, i) => { if (w.port || wpStop(w) || i === S.draft.length - 1) out.push({p:{x:w.x, y:w.y}, port:w.port || null}); });
   return out;
 }

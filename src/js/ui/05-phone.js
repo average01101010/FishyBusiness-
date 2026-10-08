@@ -7,6 +7,7 @@ const PHONE = (() => {
   const IC = {
     guide:SVG('<circle cx="12" cy="12" r="9"/><path d="M15.6 8.4l-2.1 5.1-5.1 2.1 2.1-5.1z"/><circle cx="12" cy="12" r=".9" fill="#fff"/>'),
     fiske:SVG('<path d="M15 3v9.5a4.5 4.5 0 0 1-9 0V10l-2.2 2.2"/><path d="M6 10l2.2 2.2"/><circle cx="15" cy="3" r="1.2"/><path d="M15 7l3 1.5"/>'),
+    drift:SVG('<path d="M4 6h16M4 12h10M4 18h6"/><circle cx="18" cy="15" r="3.2"/><path d="M18 13.2v1.9l1.2.8"/>'),
     haill:SVG('<path d="M7 5v7a5 5 0 0 0 10 0V5"/><path d="M5 5h4M15 5h4"/><circle cx="7" cy="8.5" r=".7" fill="#fff"/><circle cx="17" cy="8.5" r=".7" fill="#fff"/><circle cx="8.2" cy="13.5" r=".7" fill="#fff"/><circle cx="15.8" cy="13.5" r=".7" fill="#fff"/>'),
     vaer:SVG('<circle cx="9" cy="9" r="3.2"/><path d="M9 2.5v1.6M3.3 9H1.8M4.4 4.4l1.1 1.1M13.6 4.4l-1.1 1.1"/><path d="M8 20h9.5a3.5 3.5 0 0 0 .3-7 5 5 0 0 0-9.6 1.2A2.9 2.9 0 0 0 8 20z"/>'),
     post:SVG('<path d="M4 5h13v14H6a2 2 0 0 1-2-2V5z"/><path d="M17 8h3v9a2 2 0 0 1-2 2"/><path d="M7 9h7M7 12h7M7 15h4"/>'),
@@ -37,7 +38,7 @@ const PHONE = (() => {
     tilbake:SVG('<path d="M4 5h16v11H10l-4.5 4V16H4z"/><path d="M8 9.5h8M8 12.5h5"/>'),
     innst:SVG('<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>'),
     admin:SVG('<path d="M14.5 6.5a4 4 0 0 0 5 5L12 19a2.1 2.1 0 0 1-3-3l7.5-7.5"/><path d="M14.5 6.5L17 4l3 3-2.5 2.5"/><path d="M5 3l3 3M3 5l3 3"/>')};
-  const APPS = [['vaer', 'Vær', 'Weather', '#2f7fd0'], ['post', 'Kystposten', 'Coast Post', '#b8402f'], ['meld', 'Meldinger', 'Messages', '#29a36a'], ['rederi', 'Rederi', 'Company', '#1f4e79'], ['salg', 'Salgslaget', 'Sales', '#1e8c6e'], ['kvote', 'Kvote', 'Quota', '#8a6a1c'], ['regler', 'Regler', 'Rules', '#2d6a4f'], ['ordl', 'Oppdrag', 'Orders', '#2e7d4f'], ['haill', 'Haill', 'Luck', '#c9a227'], ['notat', 'Notatbok', 'Notebook', '#6b4a2b'], ['sesong', 'Sesong', 'Season', '#1e6f8c'], ['guide', 'Fiskeguide', 'Fish guide', '#177a8a'], ['folk', 'Folk', 'People', '#8a5a2b'], ['merker', 'Merker', 'Badges', '#b0752a'], ['sjomann', 'Sjømann', 'Seaman', '#23506b'], ['redning', 'Redning', 'Rescue', '#e0562b'], ['trim', 'Trim', 'Tuning', '#b3261e'], ['patch', 'Patchnotes', 'Patch notes', '#5a4fa3'], ['tilbake', 'Tilbakemelding', 'Feedback', '#d0672f'], ['innst', 'Innstillinger', 'Settings', '#4a5560'], ['admin', 'Admin', 'Admin', '#7a2e8f']];
+  const APPS = [['vaer', 'Vær', 'Weather', '#2f7fd0'], ['post', 'Kystposten', 'Coast Post', '#b8402f'], ['meld', 'Meldinger', 'Messages', '#29a36a'], ['rederi', 'Rederi', 'Company', '#1f4e79'], ['salg', 'Salgslaget', 'Sales', '#1e8c6e'], ['kvote', 'Kvote', 'Quota', '#8a6a1c'], ['regler', 'Regler', 'Rules', '#2d6a4f'], ['drift', 'Drift', 'Operations', '#2a6f97'], ['ordl', 'Oppdrag', 'Orders', '#2e7d4f'], ['haill', 'Haill', 'Luck', '#c9a227'], ['notat', 'Notatbok', 'Notebook', '#6b4a2b'], ['sesong', 'Sesong', 'Season', '#1e6f8c'], ['guide', 'Fiskeguide', 'Fish guide', '#177a8a'], ['folk', 'Folk', 'People', '#8a5a2b'], ['merker', 'Merker', 'Badges', '#b0752a'], ['sjomann', 'Sjømann', 'Seaman', '#23506b'], ['redning', 'Redning', 'Rescue', '#e0562b'], ['trim', 'Trim', 'Tuning', '#b3261e'], ['patch', 'Patchnotes', 'Patch notes', '#5a4fa3'], ['tilbake', 'Tilbakemelding', 'Feedback', '#d0672f'], ['innst', 'Innstillinger', 'Settings', '#4a5560'], ['admin', 'Admin', 'Admin', '#7a2e8f']];
   const unread = () => S.msgs.filter(m => !m.read).length;
   // the Rederi app comes with the company: founded as an AS in the bank (Jonas 06.10.2026), or already more than one vessel
   const rederiOpen = () => S.form === 'AS' || (S.fleet && S.fleet.length > 1);
@@ -386,7 +387,7 @@ const PHONE = (() => {
   function render(){ status(); setBadge(); if (!isOpen) return; if (app === 'patch' && S.settings.patchSeen !== PATCH[0][0]){ S.settings.patchLast = S.settings.patchSeen; S.settings.patchSeen = PATCH[0][0]; } const key = app + '|' + (sub[app] || ''), y = key === shown ? view.scrollTop : 0; view.innerHTML = app === 'home' ? home() : shell(app); shown = key; view.scrollTop = y; }
   // every page by name: the phone apps, and the pages that open in the dock's drawer instead (DRAWER)
   const PAGES = () => ({vaer, post, salg, kvote, regler, redning, rederi, meld, haill, logg, sjomann, merker, notat:() => NOTEBOOK.page(), sesong:() => SEASONAPP.page(), guide:() => GUIDE.page(), folk:() => FOLKAPP.page(), trim, patch, tilbake:() => FEEDBACK.page(), innst, admin,
-    ordl, rigg, arbeid:() => WORK.page() + '<div class="ph-c">' + opsCard() + '</div>', fiske, fartoy:() => fartoy('marked'), maler:() => PAINT.page(), utstyr:() => utstyr('verft'), utstyrb:() => utstyr('butikk'), redskap, mannskap, bors, bank, verksted, havn, last, lever, is:isApp, agn, oppdrag, beholdning});
+    ordl, rigg, arbeid:() => WORK.page() + DRIFTUI.page(), drift:() => DRIFTUI.page(), fiske, fartoy:() => fartoy('marked'), maler:() => PAINT.page(), utstyr:() => utstyr('verft'), utstyrb:() => utstyr('butikk'), redskap, mannskap, bors, bank, verksted, havn, last, lever, is:isApp, agn, oppdrag, beholdning});
   function shell(a){ const d = APPS.find(x => x[0] === a) || [a, a, a, '#28507f'], f = PAGES()[a]; return '<div class="ph-appv' + (a === 'post' || a === 'notat' ? ' ph-paper' : '') + '"><div class="ph-top" style="background:' + d[3] + '"><span class="ic">' + (IC[a] || '') + '</span>' + L(d[1], d[2]) + '</div>' + (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) + '</div>'; }
   // a page for the drawer, and an action tapped there: it runs as if that page were the open app, and says which page shows next
   function page(a){ const f = PAGES()[a]; return f ? (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) : ''; }
@@ -417,6 +418,13 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p93', '08.10.2026', 'Drift: driftplan for hver båt', 'Drift: an operations plan for every boat', [
+      ['Ny app, Drift, for driftsplanen til hver båt du eier. Du lager økter: turer med egen rute og avgangstid, og hvile ved kai eller rorbu. Flere turer i døgnet er mulig, så du kan levere mer fisk per døgn.', 'A new app, Drift, for the operations plan of each boat you own. You make sessions: trips with their own route and departure time, and rests at a quay or a rorbu. Several trips a day are possible, so you can land more fish per day.'],
+      ['Én type utstyr per plan: juksa, line, garn eller teiner. Ved line, garn og teiner er ståtiden tiden mellom to runder, og appen sier fra om den blir for kort eller for lang. Trål, ringnot og snurrevad kommer med havsteget.', 'One type of gear per plan: jigging, longline, nets or pots. With line, nets and pots the soak is the time between two rounds, and the app tells you if it gets too short or too long. Trawl, purse seine and Danish seine come with the ocean step.'],
+      ['«Tegn rute» åpner kartplotteren med start der turen begynner, ikke der båten ligger nå. Planen må ende der den begynner for å bli godkjent.', '"Draw route" opens the chart plotter starting where the trip begins, not where the boat lies now. The plan must end where it begins to be approved.'],
+      ['Du setter grenser for vind og sjø. Blir været verre mens båten er ute, går den til nærmeste kai. Du velger selv om den skal bunkre is, diesel og agn på mottaket.', 'You set limits for wind and sea. If the weather worsens while the boat is out, it goes to the nearest quay. You choose whether it stocks ice, diesel and bait at the plant.'],
+      ['Oversikten viser arbeidstid, turer og hvile i døgnet på en tidslinje. «Test planen» viser dagen time for time uten å sette båten i gang. Lagre planer som maler, og se dagsrapporten med levert fisk.', 'The overview shows working time, trips and rest in the day on a timeline. "Test the plan" shows the day hour by hour without starting the boat. Save plans as templates, and see the day report with the fish landed.'],
+      ['Planen pauser seg selv etter tre mislykkede forsøk på rad, og sier hvorfor.', 'The plan pauses itself after three failed attempts in a row, and says why.']]],
     ['p92', '08.10.2026', 'Autonav går aldri på land', 'Autonav never runs you aground', [
       ['Når sluttseddelen er utbetalt, ringer kassa, beløpet stiger grønt opp fra kontoen, og summen teller seg opp.', 'When the landing note is paid, the register rings, the amount rises in green from the account, and the sum counts up.'],
       ['Arbeiderne på fiskemottaket kommenterer fangsten din med tekst over hodet: mye eller lite, kveite og kongekrabbe, ferskhet, og et spørsmål om du har glemt haillen hjemme. Replikkene er på dialekten der mottaket ligger.', 'The hands at the fish plant comment on your catch with text over their heads: much or little, halibut and king crab, freshness, and a question about whether you left your luck at home. The lines are in the dialect of the plant’s place.'],
@@ -1174,8 +1182,8 @@ const PHONE = (() => {
     h.push('</div>'); return h.join('');
   }
   // --- the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
-  const SEL_APPS = ['fartoy', 'utstyr', 'utstyrb', 'redskap', 'mannskap', 'bors', 'verksted'];
-  const DRAWER = new Set(['arbeid', 'rigg', 'fiske', 'fartoy', 'utstyr', 'utstyrb', 'redskap', 'mannskap', 'bors', 'bank', 'verksted', 'havn', 'last', 'lever', 'is', 'agn', 'oppdrag', 'beholdning', 'maler']);
+  const SEL_APPS = ['drift', 'fartoy', 'utstyr', 'utstyrb', 'redskap', 'mannskap', 'bors', 'verksted'];
+  const DRAWER = new Set(['drift', 'arbeid', 'rigg', 'fiske', 'fartoy', 'utstyr', 'utstyrb', 'redskap', 'mannskap', 'bors', 'bank', 'verksted', 'havn', 'last', 'lever', 'is', 'agn', 'oppdrag', 'beholdning', 'maler']);
   let selV = null;
   const selVessel = () => (selV && vesselById(selV)) || curVessel();
   const withSel = fn => withVessel(selVessel(), fn);
@@ -1197,8 +1205,8 @@ const PHONE = (() => {
       if (s.lost) A('lost' + s.id, GEAR[s.kind].no + ' er tapt. Meld tapt redskap', GEAR[s.kind].en + ' lost. Report the lost gear', 'redskap');
       else if (s.kind === 'teine' ? a >= 44 : s.kind === 'line' ? a >= 24 : a >= 48) A('soak' + s.id, GEAR[s.kind].no + ' har stått i ' + fmt(a, 0) + ' t', GEAR[s.kind].en + ' has soaked ' + fmt(a, 0) + ' h', 'beholdning:gear'); }
     if (S.pgear && S.pgear.nets.some(l => l.cond < 0.35)) A('worn', 'Slitte garn bør bøtes', 'Worn nets should be mended', 'beholdning:gear');
-    if (o && o.on && !sk) A('ops', 'Driftsplanen mangler skipper', 'The standing plan has no skipper', 'mannskap');
-    if (o && o.on && b.status === 'port' && b.port !== o.home) A('opsport', 'Ligger ikke i ' + portById(o.home).name + ', der driftsplanen starter', 'Not at ' + portById(o.home).name + ', where the standing plan starts', 'mannskap');
+    if (o && o.on && !sk) A('ops', 'Driftsplanen har ingen skipper valgt', 'The plan has no skipper chosen', 'drift');
+    else if (o && o.v === 2 && o.paused) A('ops', 'Driftsplanen står på pause', 'The plan is paused', 'drift');
     if (access() !== 'none'){ const lim = codLimitNow(H); if (lim > 0 && quotaState().torsk >= lim * 0.9) A('quota', 'Torskekvoten er nesten brukt opp', 'The cod quota is nearly used up', 'kvote'); }
     let next = null; if (o && o.on) for (let k = 0; k < 8 && next == null; k++){ const Hd = Math.floor((H + 6) / 24) * 24 - 6 + k * 24 + o.dep, wd = (gDate(Hd).getUTCDay() + 6) % 7; if (o.days[wd] && Hd > H) next = Hd; }
     return {name:S.boatName, type:b.type, status:statusText(), pos:b.status === 'port' ? portById(b.port).name : fieldCode(b.pos) + ' · ' + L('nær ', 'near ') + nearestPort(b.pos).name,
@@ -1327,26 +1335,6 @@ const PHONE = (() => {
     }
     h.push('</div>'); return h.join('');
   }
-  // the standing plan, on the crew page of the drawer (Jonas 07.10.2026: «muligheten for å lage en driftsplan burde ligge inne under
-  // mannskapsknappen slik at man styrer det meste av automatisert drift der inne») and in the Crew app
-  function opsCard(){
-    const h = [], o = S.ops, b = S.boat, last = S.draft[S.draft.length - 1], canSave = b.status === 'port' && last && last.port && !tutOn();
-      if (!o) h.push('<div class="ph-card"><h4>' + L('Fast driftsplan', 'Standing plan') + '</h4><p class="ph-note">' + L('Legg en rute i kartplotteren som starter og slutter i havn, med fisketid på feltene, og trykk «Lagre som fast driftsplan». Da kan en skipper fra mannskapet kjøre den for deg, levere fangsten og fylle opp båten.', 'Plan a route in the plotter that starts and ends in port, with fishing time on the grounds, and press "Save as standing plan". A skipper from your crew can then run it for you, land the catch and restock the boat.') + '</p></div>');
-      else {
-        const sk = opsSkipper(), days = S.lang === 'no' ? OPS_DAYS_NO : OPS_DAYS_EN, fh = o.wps.reduce((a, w) => a + (w.fish || 0), 0);
-        h.push('<div class="ph-card"><h4>' + L('Fast driftsplan', 'Standing plan') + '</h4>' +
-          '<div class="ph-kv"><span>' + L('Status', 'Status') + '</span><span><button data-pa="ops_on" class="' + (o.on ? 'on' : '') + '">' + (o.on ? L('På', 'On') : L('Av', 'Off')) + '</button></span></div>' +
-          kv(L('Rute', 'Route'), portById(o.home).name + ' → ' + (o.wps.length - 1) + ' ' + L('punkter', 'points') + ' → ' + portById(o.end).name) + kv(L('Fisketid', 'Fishing time'), fh + ' t') + kv(L('Varighet', 'Duration'), L('ca. ', 'about ') + o.hours + ' t') +
-          '<div class="ph-kv"><span>' + L('Avgang', 'Departure') + '</span><span><button data-pa="ops_dep" data-d="-1">−</button> ' + String(o.dep).padStart(2, '0') + ':00 <button data-pa="ops_dep" data-d="1">+</button></span></div>' +
-          '<div class="ph-kv"><span>' + L('Dager', 'Days') + '</span><span class="ops-days">' + days.map((d, i) => '<button data-pa="ops_day" data-i="' + i + '" class="' + (o.days[i] ? 'on' : '') + '">' + d + '</button>').join('') + '</span></div>' +
-          '<div class="ph-kv"><span>' + L('Maks vind', 'Max wind') + '</span><span><button data-pa="ops_w" data-d="-1">−</button> ' + o.maxWind + ' m/s <button data-pa="ops_w" data-d="1">+</button></span></div>' +
-          '<div class="ph-kv"><span>' + L('Skipper', 'Skipper') + '</span><span>' + (S.crew.length ? S.crew.map(c => '<button data-pa="ops_sk" data-id="' + c.id + '" class="' + (o.skipper === c.id ? 'on' : '') + '">' + c.name.split(' ')[0] + '</button>').join(' ') : L('Ansett noen først', 'Hire someone first')) + '</span></div>' +
-          (S.lic ? '' : '<p class="ph-note">' + L('Er du selv om bord, er du høvedsmann, og turen fisker på kvoten din som når du kjører selv. Skipperen er da vanlig mannskap. En ansatt skipper kan ikke fiske torsk, hyse og sei for deg i åpen gruppe eller uten adgang, så når han går alene, fisker han kveite hvis båten har kveiteutstyr, ellers andre arter. Torsk, hyse og sei over 10 % av landingen blir da inndratt.', 'If you are aboard yourself, you are the master, and the trip fishes on your quota as when you run it yourself. The skipper is then ordinary crew. A hired skipper cannot fish cod, haddock and saithe for you in the open group or without access, so when he goes alone he fishes halibut if the boat has halibut gear, otherwise other species. Cod, haddock and saithe above 10% of the landing is then confiscated.') + '</p>') +
-          '<p class="ph-note">' + (sk ? L(sk.name + ' (' + sk.lv + ') kjører planen. Når han går alene, blir fangsten ' + Math.round(sk.skill * 90) + ' % av det du får selv, og han får 5 % tillegg i lott.', sk.name + ' (' + sk.lvEn + ') runs the plan. When he goes alone, the catch is ' + Math.round(sk.skill * 90) + '% of what you would get yourself, and he gets a 5% bonus share.') : L('Velg en skipper for å kunne slå på planen.', 'Choose a skipper to switch the plan on.')) + '</p></div>');
-      }
-    if (canSave) h.push('<div class="ph-card"><button class="ph-btn p" data-pa="ops_save">' + (o ? L('Bytt ut planen med ruta i kartplotteren', 'Replace the plan with the route on the chart plotter') : L('Lag driftsplan av ruta i kartplotteren', 'Make a plan of the route on the chart plotter')) + '</button></div>');
-    return h.join('');
-  }
   function mannskap(){
     S.crew = S.crew.map(crewUpgrade);
     const max = BOAT.crewMax, h = ['<div class="ph-c"><p class="ph-note">' + L('Mannskapet får lott: en andel av fangstverdien ved hver landing. Flere hender betyr flere snører i sjøen og flere juksamaskiner i drift.', 'The crew is paid a share of the catch value at each landing. More hands means more lines in the water and more jigging reels running.') + '</p>'];
@@ -1366,7 +1354,7 @@ const PHONE = (() => {
       if (S.crew.length) h.push('<div class="ph-card"><h4>' + L('Hvile', 'Rest') + '</h4>' + S.crew.map(c => { const r = restLog(c), d = r.slice(-24).reduce((a, v) => a + v, 0), wk = r.reduce((a, v) => a + v, 0), left = S.boat.status === 'port' ? 24 : restLeft(c);
           return kv(c.name.split(' ')[0], d + L(' t i døgnet · ', ' h a day · ') + wk + L(' t i uka', ' h a week') + (left <= 6 ? ' · <span class="' + (left ? 'r1' : 'r2') + '">' + (left ? L('hvile innen ' + left + ' t', 'rest within ' + left + ' h') : L('brudd', 'broken')) + '</span>' : '')); }).join('') +
         '<p class="ph-note">' + L('Forskrift om arbeids- og hviletid på fiskefartøy krever minst 10 timer hvile i døgnet og 77 i uka, hvilen i høyst to perioder der én er minst 6 timer, og høyst 14 timer mellom hvileperiodene.', 'The working-time rules for fishing vessels require at least 10 hours of rest a day and 77 a week, the rest in at most two periods with one of at least 6 hours, and at most 14 hours between rest periods.') + ' ' + (BOAT.berths ? L('Båten har ' + BOAT.berths + ' køyer, så pause om bord teller som hvile.', 'The boat has ' + BOAT.berths + ' berths, so a break aboard counts as rest.') : L('Båten har ingen køyer, så bare tid ved kai teller som hvile.', 'The boat has no berths, so only time at the quay counts as rest.')) + '</p></div>'); }
-    h.push(opsCard());
+    h.push('<div class="ph-card"><h4>' + L('Driftsplan', 'Operations plan') + '</h4><p class="ph-note">' + L('Flere turer i døgnet, utstyr, hvile og værgrenser for båten ligger i Drift-appen.', 'Several trips a day, gear, rest and weather limits for the boat are in the Drift app.') + '</p><button class="ph-btn p" data-pa="open" data-a="drift">' + L('Åpne Drift', 'Open Drift') + '</button></div>');
     h.push('<div class="ph-card"><h4>' + L('Trenger du folk?', 'Need hands?') + '</h4><p class="ph-note">' + L('Ledige fiskere finner du i Mannskapsbørsen.', 'Available fishers are in the crew exchange.') + '</p><button class="ph-btn p" data-pa="open" data-a="bors">' + L('Åpne Mannskapsbørsen', 'Open the crew exchange') + '</button></div>');
     return h.join('');
   }
@@ -1473,6 +1461,7 @@ const PHONE = (() => {
     else if (a === 'svc'){ const c = d.m === 'self' ? Math.round(VESSELS[b.type].svcCost * 0.35) : VESSELS[b.type].svcCost, hh = d.m === 'self' ? 2 * YARD_H : YARD_H; if (S.cash < c){ toast(t('no_cash')); return; } if (!queueJob({kind:'svc', h:hh, self:d.m === 'self', no:d.m === 'self' ? 'Egen service på motoren' : 'Service på verkstedet', en:d.m === 'self' ? 'Servicing the engine yourself' : 'Engine service at the yard'})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } S.cash -= c; S.stats.costs += c; }
     else if (a === 'prep'){ const P2 = PREP[d.k]; if (S.cash < P2.cost){ toast(t('no_cash')); return; } if (!queueJob({kind:'prep', k:d.k, h:P2.h, no:P2.no, en:P2.en})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } S.cash -= P2.cost; S.stats.costs += P2.cost; }
     else if (a.slice(0, 3) === 'wk-'){ if (!WORK.act(a, d)) return; }
+    else if (a.slice(0, 3) === 'dr-'){ if (!DRIFTUI.act(a, d)) return; }
     // Autonav to a named place from the phone: the chart plotter opens on it and finds the way; «Kast loss» is for the player (Jonas 07.10.2026)
     else if (a === 'goplace'){ const q = portById(d.id); if (!q) return; show(false); if (typeof DOCK !== 'undefined' && DOCK.close) DOCK.close(); if (S.draft.length) draftEdit(() => { S.draft = []; }); openPlotter(); view.cx = q.p.x; view.cy = q.p.y; setTimeout(() => leiaTo({x:q.p.x, y:q.p.y}), 450); return; }
     else if (a === 'rig'){ const why = rigSet(d.r); if (why){ toast(why[0]); return; } }
@@ -1496,12 +1485,6 @@ const PHONE = (() => {
       if (!queueJob({kind:'hull', h:6, no:'Skrogrens på slipp', en:'Hull cleaning on the slip'})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } S.cash -= c; S.stats.costs += c; log('Bestilte skrogrens på slipp, ' + kr(c) + '.', 'Ordered a hull cleaning on the slip, ' + kr(c) + '.'); }
     else if (a === 'trimbuy'){ const b = S.boat, B = BOOSTS[d.k]; if (!B || !canBoost(VESSELS[b.type])) return; payBuy(d.k, () => { b.trim = {k:d.k, t0:S.t}; applyVessel(); log(B.no + ' er på i ' + B.h + ' timer. Toppfart nå ' + fmt(BOAT.vmax, 1) + ' knop.', B.en + ' is on for ' + B.h + ' hours. Top speed now ' + fmt(BOAT.vmax, 1) + ' knots.'); toast(L(B.no + ': ', B.en + ': ') + fmt(BOAT.vmax, 1) + ' kn'); }); }
     else if (a === 'equip'){ const E = EQUIP[d.k]; if (!atKind(EQ_YARD(d.k) ? 'verft' : 'butikk') || S.cash < E.price) return; if (!queueJob({kind:'fit', k:d.k, h:fitHours(d.k), no:'Montering av ' + E.name.no.toLowerCase(), en:'Fitting the ' + E.name.en})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } S.cash -= E.price; S.stats.costs += E.price; achAdd('equip'); log('Kjøpt ' + E.name.no + '. Monteres i verkstedet.', 'Bought the ' + E.name.en + '. Being fitted at the yard.'); } else if (a === 'equipOLD'){ const E = EQUIP[d.k]; if (E.multi) S.equip[d.k] = (S.equip[d.k] || 0) + 1; else S.equip[d.k] = true; applyVessel(); log('Montert: ' + E.name.no + '.', 'Fitted: ' + E.name.en + '.'); updateMapButtons(); INSTR.show(); }
-    else if (a === 'ops_save'){ if (typeof doAct === 'function') doAct({dataset:{act:'opssave'}}); }
-    else if (a === 'ops_on'){ if (!S.ops) return; if (!S.ops.on && !opsSkipper()){ toast(L('Velg en skipper først.', 'Choose a skipper first.')); return; } S.ops.on = !S.ops.on; log(S.ops.on ? 'Fast driftsplan slått på.' : 'Fast driftsplan slått av.', S.ops.on ? 'Standing plan switched on.' : 'Standing plan switched off.'); }
-    else if (a === 'ops_dep'){ S.ops.dep = (S.ops.dep + (+d.d) + 24) % 24; }
-    else if (a === 'ops_day'){ const i = +d.i; S.ops.days[i] = S.ops.days[i] ? 0 : 1; }
-    else if (a === 'ops_w'){ S.ops.maxWind = clamp(S.ops.maxWind + (+d.d), 6, 20); }
-    else if (a === 'ops_sk'){ S.ops.skipper = d.id; }
     else if (a === 'hire'){ const c = candidates().find(x => x.id === d.id); if (c && S.crew.length < BOAT.crewMax){ S.crew.push(c); log(c.name + ' er ansatt som ' + c.lv + '.', c.name + ' joined as ' + c.lvEn + '.'); } }
     else if (a === 'fire'){ const c = S.crew.splice(+d.i, 1)[0]; if (c) log(c.name + ' har gått i land.', c.name + ' has gone ashore.'); }
     else if (a === 'repay'){ const k = d.k || 'loan', Q = S[k]; if (!Q || S.cash < 10000) return; const x = Math.min(10000, Q.bal); S.cash -= x; Q.bal -= x; if (Q.bal < 1) S[k] = null; }

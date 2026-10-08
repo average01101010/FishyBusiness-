@@ -19,10 +19,5 @@ async def main():
         await pg.evaluate("[...document.querySelectorAll('button')].find(x => x.textContent.trim() === 'Min båt') && 0; PHONE.open('salg')"); await pg.wait_for_timeout(500)
         await pg.evaluate("[...document.querySelectorAll('button')].find(x => x.textContent.trim() === 'Kvote').click()"); await pg.wait_for_timeout(600)
         await pg.screenshot(path='p2.png')
-        # standing-plan buttons in the crew app
-        await pg.evaluate("S.crew=[{id:'k1', name:'Ola Hansen', age:34, lv:'erfaren', lvEn:'experienced', skill:1.0, share:0.16}]; S.ops={on:false, dep:5, days:[1,1,1,1,1,0,0], maxWind:12, skipper:null, last:-1, wps:[{x:1,y:1,port:null,fish:2},{x:2,y:2,port:'husoy',fish:0}], speed:18, home:'husoy', end:'husoy', hours:6}; PHONE.open('mannskap')"); await pg.wait_for_timeout(500)
-        for sel in ["[data-pa=ops_sk][data-id=k1]", "[data-pa=ops_on]", "[data-pa=ops_dep][data-d='1']", "[data-pa=ops_day][data-i='5']", "[data-pa=ops_w][data-d='1']"]:
-            await pg.evaluate(f"document.querySelector(\"{sel}\").click()"); await pg.wait_for_timeout(200)
-        print('ops after clicks:', await pg.evaluate("JSON.stringify({on:S.ops.on, sk:S.ops.skipper, dep:S.ops.dep, sat:S.ops.days[5], w:S.ops.maxWind})"))
         print('errors:', errs[:4]); await b.close()
 asyncio.run(main())

@@ -15,7 +15,7 @@ function setLabel(s, short){
 }
 // the gear aboard as ready-made choices for setting: whole strings of nets, all baited tubs of a kind, all pots of a size with bait
 function setChoices(){
-  const pg = S.pgear, out = [], r = RIGS[rigOf()].kind; if (!pg || !r) return out;
+  const pg = S.pgear, out = [], r = RIGS[(DRIFTCTX && DRIFTCTX.rig) || rigOf()].kind; if (!pg || !r) return out;
   for (const l of pg.nets) out.push({kind:'garn', spec:{nid:l.id}, n:l.n, lbl:[l.n + ' garn ' + l.mesh + ' mm', l.n + ' nets ' + l.mesh + ' mm']});
   for (const lk of ['hyse', 'bank']){ const n = pg.lines[lk].baited; if (n > 0) out.push({kind:'line', spec:{lk, n}, n, lbl:[n + ' ' + (n === 1 ? 'stamp' : 'stamper') + ' ' + LINE_KINDS[lk].no.toLowerCase(), n + ' ' + (n === 1 ? 'tub' : 'tubs') + ' of ' + LINE_KINDS[lk].en.toLowerCase()]}); }
   for (const pot of ['small', 'big']){ const n = Math.min(pg.pots[pot], Math.floor(Math.max(0, ...Object.values(baitOf(pg))) / GPRICE.potBait + 1e-9)); if (n > 0) out.push({kind:'teine', spec:{pot, n}, n, lbl:[n + ' ' + POTS[pot].no.toLowerCase(), n + ' ' + POTS[pot].en.toLowerCase()]}); }

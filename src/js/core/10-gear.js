@@ -84,7 +84,8 @@ const rigOfKind = kind => Object.keys(RIGS).find(r => RIGS[r].kind === kind) || 
 // an old save has no rig: the kind of gear in the sea or in the standing plan, otherwise jigging
 function rigGuess(){
   const s = mySets()[0]; if (s) return rigOfKind(s.kind);
-  const w = S.ops && (S.ops.wps || []).find(x => x.act && x.act.kind); return w ? rigOfKind(w.act.kind) : 'juksa';
+  const o = S.ops; if (o && o.v === 2 && RIGS[o.rig]) return o.rig;
+  const w = o && (o.wps || []).find(x => x.act && x.act.kind); return w ? rigOfKind(w.act.kind) : 'juksa';
 }
 function rigOf(){ const b = S.boat; if (!RIGS[b.rig]) b.rig = rigGuess(); return b.rig; }
 const rigKindOk = kind => RIGS[rigOf()].kind === kind;
@@ -417,7 +418,7 @@ function gearCycle(w, fishAfter){
   const a = w.act, b = S.boat, H = S.t / 60;
   let gale = false; for (let k = 0; k <= 36; k += 3) if (windAt(H + k) > 17) gale = true;
   const s = mySets().find(x => x.kind === a.kind && segDist(w, x.a, x.b) < 0.5);
-  if (s){ b.pos = dist(b.pos, s.a) <= dist(b.pos, s.b) ? {...s.a} : {...s.b}; const why = startHaul(s.id, a.kind !== 'line' && !gale, fishAfter); if (!why && gale) log('Kuling i varselet. Tar redskapet med hjem.', 'A gale in the forecast. Taking the gear home.'); return why; }
+  if (s){ b.pos = dist(b.pos, s.a) <= dist(b.pos, s.b) ? {...s.a} : {...s.b}; const why = startHaul(s.id, a.kind !== 'line' && !gale && !a.final, fishAfter); if (!why && gale) log('Kuling i varselet. Tar redskapet med hjem.', 'A gale in the forecast. Taking the gear home.'); return why; }
   if (!s && !rigKindOk(a.kind)) return rigWrong(a.kind);
   if (gale) return [gL('Kuling i varselet. Setter ikke ut redskap nå.', 'A gale in the forecast. Not setting gear now.')];
   const spec = cycleSpec(a.kind, a.spec && (a.kind === 'garn' ? {mesh:(S.pgear.nets.find(l => l.id === a.spec.nid) || {}).mesh} : a.spec));
@@ -429,7 +430,7 @@ function opsGearNeeds(o){
   const acts = (o.wps || []).filter(w => w.act).map(w => w.act.kind), pg = S.pgear, p = portById(S.boat.port), miss = [];
   if (!acts.length || !pg) return null;
   if (acts.includes('garn') && handsAboard() < 2) miss.push(gL('garn krever to om bord', 'nets need two aboard'));
-  if (acts.includes('teine')){ const k = BAITS[pg.baitPref] ? pg.baitPref : 'makrell', need = (pg.pots.small + pg.pots.big) * GPRICE.potBait - (baitOf(pg)[k] || 0); if (need > 0 && p && p.mottak){ const kg = Math.ceil(need), c = kg * BAITS[k].kr; if (c <= S.cash){ S.cash -= c; S.stats.costs += c; baitOf(pg)[k] = (baitOf(pg)[k] || 0) + kg; } } }
+  if (acts.includes('teine')){ const k = BAITS[pg.baitPref] ? pg.baitPref : 'makrell', need = (pg.pots.small + pg.pots.big) * GPRICE.potBait - (baitOf(pg)[k] || 0); if (need > 0 && p && p.mottak && driftStock().bait){ const kg = Math.ceil(need), c = kg * BAITS[k].kr; if (c <= S.cash){ S.cash -= c; S.stats.costs += c; baitOf(pg)[k] = (baitOf(pg)[k] || 0) + kg; } } }
   if (acts.includes('line') && !pg.lines.hyse.baited && !pg.lines.bank.baited && !mySets().some(s => s.kind === 'line')) miss.push(gL('lina er ikke egnet', 'the line is not baited'));
   return miss.length ? miss : null;
 }

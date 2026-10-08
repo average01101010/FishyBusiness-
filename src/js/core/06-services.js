@@ -116,69 +116,14 @@ function newsForDay(day){
 
 // ---- standing operations plan: a hired skipper runs a saved route on set days, lands the catch and restocks ----
 const OPS_DAYS_NO = ['Ma', 'Ti', 'On', 'To', 'Fr', 'Lø', 'Sø'], OPS_DAYS_EN = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
-function opsSkipper(){ return S.ops && S.crew.find(c => c.id === S.ops.skipper) || null; }
 function autoRestock(){
   // only what the harbour sells: ice down the plant's chute (where she lies at the plant's quay), then fuel at the bunker quay,
   // which takes her over there and runs the pump
   const b = S.boat, pt = portById(b.port) || {};
-  if (pt.ice && catchIce() && berthKind(b) === 'main'){ const kg = Math.max(0, BOAT.iceCap - b.ice), c = kg * PRICE.ice; if (kg > 0 && c <= S.cash){ b.ice += kg; S.cash -= c; S.stats.costs += c; iceChute(kg); } }
-  if (pt.fuel && BOAT.fuelCap - b.fuel > 0.5 && S.cash > 0) startFueling(true);
-  if (!b.gear && PRICE.gear <= S.cash){ b.gear = true; S.cash -= PRICE.gear; S.stats.costs += PRICE.gear; }
-}
-let OPS_PRE = null;   // the way from where she lies to the plan's start, while it is found (not saved)
-function opsStep(H){
-  const o = S.ops, b = S.boat; if (!o || !o.on || !o.wps || !o.wps.length) return;
-  const g = gDate(H), day = Math.floor((H + 6) / 24), wd = (g.getUTCDay() + 6) % 7, hod = g.getUTCHours() + g.getUTCMinutes() / 60;
-  if (b.status !== 'port' || portBusy(b) || S.plan || o.last === day || !o.days[wd] || hod < o.dep || hod > o.dep + 2) return;
-  const sk = opsSkipper();
-  if (!sk){ o.last = day; msg('Driftsplan', 'Driftsplanen står: ingen skipper er satt. Velg en skipper under Mannskap.', 'The operations plan is idle: no skipper is set. Choose one under Crew.'); return; }
-  // the crew are signed on the boat and go where she lies (tilbakemelding #11: at a rorbu they did not think she was where the plan
-  // starts): away from the plan's harbour, the skipper first takes the fairway from her berth to the plan's first point
-  let pre = [];
-  if (b.port !== o.home){
-    if (!OPS_PRE || OPS_PRE.day !== day || OPS_PRE.from !== b.port){
-      const w0 = o.wps[0], P = OPS_PRE = {day, from:b.port, wps:null};
-      Promise.resolve().then(() => leiaRoute({x:b.pos.x, y:b.pos.y}, {x:w0.x, y:w0.y}, b.port, w0.port || null))
-        .then(r => { P.wps = r && r.wps && !r.why ? r.wps.slice(0, -1).map(q => ({x:q.x, y:q.y, port:null, fish:0, leia:true})) : false; }).catch(() => { P.wps = false; });
-      return;
-    }
-    if (OPS_PRE.wps === null) return;   // the way is being found
-    if (OPS_PRE.wps === false){ o.last = day; msg(sk.name, 'Fant ingen vei fra ' + portById(b.port).name + ' til driftsplanen, så jeg går ikke ut i dag.', 'Found no way from ' + portById(b.port).name + ' to the plan, so I am not going out today.'); return; }
-    pre = OPS_PRE.wps;
-  }
-  o.last = day; OPS_PRE = null;
-  if (S.jobs && S.jobs.length){ msg(sk.name, 'Verkstedet jobber på båten, så jeg venter til i morgen.', 'The yard is working on the boat, so I will wait until tomorrow.'); return; }
-  let wmax = 0, hmax = 0; const dur = o.hours || 8; for (let k = 0; k <= dur; k += 1){ wmax = Math.max(wmax, windAt(H + k)); hmax = Math.max(hmax, hsOpen(H + k)); }
-  if (wmax > o.maxWind || hmax > BOAT.risk[1] * 0.85){ msg(sk.name, 'Blir på land i dag. Varselet gir ' + fmt(wmax, 0) + ' m/s og ' + fmt(hmax, 1) + ' m sjø, over grensa på ' + o.maxWind + ' m/s.', 'Staying ashore today. The forecast gives ' + fmt(wmax, 0) + ' m/s and ' + fmt(hmax, 1) + ' m seas, above the ' + o.maxWind + ' m/s limit.'); log(sk.name + ' ble på land på grunn av været.', sk.name + ' stayed ashore because of the weather.'); return; }
-  { const miss = opsGearNeeds(o); if (miss){ msg(sk.name, 'Går ikke ut på planen i dag: ' + miss.join(', ') + '.', 'Not running the plan today: ' + miss.join(', ') + '.'); return; } }
-  autoRestock();
-  // a hired skipper fishes cod, haddock and saithe only in the closed group; alone he goes for halibut when the boat has the gear.
-  // With you aboard you are the master, and you fish as on your own trips
-  const me = meAboard();
-  if (!me && !S.lic && b.kgear && !kveiteClosed(H)) S.target = 'kveite';
-  S.plan = {wps:pre.concat(o.wps.map(w => ({...w}))), idx:0, speed:o.speed, returning:false, depAt:null, ops:true, unsafe:[]};
-  if (me) log('Gikk ut på fast driftsplan med deg som høvedsmann. ' + sk.name + ' er mannskap på turen.', 'Went out on the standing plan with you as master. ' + sk.name + ' is crew on this trip.');
-  else log(sk.name + ' gikk ut på fast driftsplan.', sk.name + ' went out on the standing plan.');
-  depart();
-}
-function opsLanded(pid){
-  if (!S.ops) return;
-  // the plant is closed: the boat waits at the quay until it opens (vesselStep asks again)
-  const pt = portById(pid); if (pt && pt.mottak && holdTotal() >= 0.5 && !mottakOpen(S.t / 60)){ if (S.boat.landWait !== pid) log('Mottaket i ' + pt.name + ' er stengt. Båten venter til det åpner ' + mottakWhen(S.t / 60, true) + '.', 'The plant in ' + pt.name + ' is closed. The boat waits until it opens ' + mottakWhen(S.t / 60, false) + '.'); S.boat.landWait = pid; return; }
-  S.boat.landWait = null;
-  opsGearAfter();
-  // the catch goes up with the crane; the report comes with the landing note
-  if (startLanding(true)) return;
-  opsReport(pid, holdTotal(), 0, false);
-}
-function opsReport(pid, kg, total, landed){
-  const sk = opsSkipper(), port = portById(pid);
-  autoRestock();
-  const extra = S.tripOwner ? 0 : Math.round(Math.max(0, total) * 0.05); if (extra > 0){ S.cash -= extra; S.stats.costs += extra; }
-  const what = landed ? [fmt(kg, 0) + ' kg levert i ' + port.name + ', ' + kr(Math.round(total)) + ' etter lott' + (extra ? ', skippertillegg ' + kr(extra) : '') + '.', fmt(kg, 0) + ' kg landed at ' + port.name + ', ' + kr(Math.round(total)) + ' after shares' + (extra ? ', skipper bonus ' + kr(extra) : '') + '.']
-    : kg > 0.5 ? [fmt(kg, 0) + ' kg om bord. ' + port.name + ' har ikke fiskemottak.', fmt(kg, 0) + ' kg aboard. ' + port.name + ' has no fish plant.'] : ['ingen fangst å levere.', 'no catch to land.'];
-  const b = S.boat, fuelling = b.shift || b.fueling, rest = fuelling ? [' Går bort og fyller drivstoff, så er båten klar.', ' Going over to fill fuel, then the boat is ready.'] : [' Båten er fylt opp og klar.', ' The boat is fuelled and ready.'];
-  msg(sk ? sk.name : 'Driftsplan', 'Driftsrapport: ' + what[0] + rest[0], 'Operations report: ' + what[1] + rest[1]);
+  const st = driftStock();
+  if (st.ice && pt.ice && catchIce() && berthKind(b) === 'main'){ const kg = Math.max(0, BOAT.iceCap - b.ice), c = kg * PRICE.ice; if (kg > 0 && c <= S.cash){ b.ice += kg; S.cash -= c; S.stats.costs += c; iceChute(kg); } }
+  if (st.fuel && pt.fuel && BOAT.fuelCap - b.fuel > 0.5 && S.cash > 0) startFueling(true);
+  if (st.gear && !b.gear && PRICE.gear <= S.cash){ b.gear = true; S.cash -= PRICE.gear; S.stats.costs += PRICE.gear; }
 }
 function depart(){
   const b = S.boat; b.windArm = false;   // armed again once the wind is under the turn-back limit (05-vessels.js)
@@ -242,8 +187,9 @@ function jobsDone(){ if (!S.jobs || !S.jobs.length) return null; let m = null; f
 // 08.10.2026: «båten går til nærmeste kai om været blir for dårlig i stedet for å returnere»), or home the way she came ('home').
 // She lies still while the way is found; the three nearest places are tried, and found none, she goes home the way she came.
 const SHELTER = {tries:3, n:0};
-function shelterReturn(W){
-  const b = S.boat, from = {x:b.pos.x, y:b.pos.y}, vid = S.cur, tok = ++SHELTER.n, speed = S.plan ? S.plan.speed : S.draftSpeed;
+function shelterReturn(W, hsOver){
+  const b = S.boat, from = {x:b.pos.x, y:b.pos.y}, vid = S.cur, tok = ++SHELTER.n, speed = S.plan ? S.plan.speed : S.draftSpeed, ops = !!(S.plan && S.plan.ops);
+  const why = hsOver ? ['Sjøen økte til ' + hsOver.toFixed(1).replace('.', ',') + ' m', 'The sea rose to ' + hsOver.toFixed(1) + ' m'] : ['Vinden økte til ' + W.toFixed(1).replace('.', ',') + ' m/s', 'Wind rose to ' + W.toFixed(1) + ' m/s'];
   if (b.gop) gopAbort('return');
   S.plan = null; b.status = 'idle'; b.v = 0; b.fishUntil = null; S.shelter = {tok, W};
   const cand = PORTS.filter(q => !q.rorbu).map(q => [q, dist(q.p, from)]).sort((x, y) => x[1] - y[1]).slice(0, SHELTER.tries).map(x => x[0]);
@@ -254,14 +200,16 @@ function shelterReturn(W){
       let res = null; try { res = await leiaRoute(from, {x:q.p.x, y:q.p.y}, null, q.id); } catch (e){ console.error(e); }
       if (res && !res.why && res.wps && res.wps.length){ bound(() => { if (!still()) return; S.shelter = null;
         const wps = res.wps.map((w, i) => i === res.wps.length - 1 ? {x:q.p.x, y:q.p.y, port:q.id, fish:0} : {x:w.x, y:w.y, port:null, fish:0, leia:true});
-        S.plan = {wps, idx:0, speed, returning:true, unsafe:wps.map(() => false)}; S.boat.status = 'sailing';
-        log('Vinden økte til ' + W.toFixed(1).replace('.', ',') + ' m/s. Autonav tar båten til nærmeste kai, ' + q.name + '.', 'Wind rose to ' + W.toFixed(1) + ' m/s. Autonav takes the boat to the nearest quay, ' + q.name + '.'); }); return; }
+        S.plan = {wps, idx:0, speed, returning:true, unsafe:wps.map(() => false), ops}; S.boat.status = 'sailing';
+        log(why[0] + '. Autonav tar båten til nærmeste kai, ' + q.name + '.', why[1] + '. Autonav takes the boat to the nearest quay, ' + q.name + '.'); }); return; }
     }
-    bound(() => { if (!still()) return; S.shelter = null; startReturn(true, W, true); });
+    bound(() => { if (!still()) return; S.shelter = null; startReturn(true, W, true, hsOver, ops); });
   })();
 }
-function startReturn(auto, W, home){
-  if (auto && !home && S.settings.autoTo !== 'home'){ shelterReturn(W); return; }
+function startReturn(auto, W, home, hsOver, opsKeep){
+  // the plan's trips always take the nearest quay (the plan has its own limits); the player's own trips follow the setting
+  const ops = opsKeep != null ? opsKeep : !!(S.plan && S.plan.ops);
+  if (auto && !home && (ops || S.settings.autoTo !== 'home')){ shelterReturn(W, hsOver); return; }
   const b = S.boat, tr = S.trail.slice().reverse(), wps = [];
   if (b.gop) gopAbort('return');
   if (!auto) loreTurnBack();
@@ -271,10 +219,10 @@ function startReturn(auto, W, home){
     if (t.port) break;
   }
   if (!wps.length || !wps[wps.length - 1].port){ const np = nearestPort(b.pos); wps.push({x:np.p.x, y:np.p.y, port:np.id, fish:0}); }
-  S.plan = {wps, idx:0, speed:S.plan ? S.plan.speed : S.draftSpeed, returning:true};
+  S.plan = {wps, idx:0, speed:S.plan ? S.plan.speed : S.draftSpeed, returning:true, ops};
   b.fishUntil = null;
   if (b.status === 'engine') b.prev = 'sailing'; else b.status = 'sailing';
-  if (auto) log('Vinden økte til ' + W.toFixed(1).replace('.', ',') + ' m/s. Båten går hjem samme vei.', 'Wind rose to ' + W.toFixed(1) + ' m/s. Heading home the same way.');
+  if (auto) log(hsOver ? 'Sjøen økte til ' + hsOver.toFixed(1).replace('.', ',') + ' m. Båten går hjem samme vei.' : 'Vinden økte til ' + W.toFixed(1).replace('.', ',') + ' m/s. Båten går hjem samme vei.', hsOver ? 'The sea rose to ' + hsOver.toFixed(1) + ' m. Heading home the same way.' : 'Wind rose to ' + W.toFixed(1) + ' m/s. Heading home the same way.');
   else log('Returnerer samme vei.', 'Returning the same way.');
 }
 // ===== CORE END =====

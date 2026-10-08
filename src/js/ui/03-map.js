@@ -417,7 +417,7 @@ function renderDyn(){
   }
   // draft: the legs, the «+» handle on each long leg, the points named WP1 … and the start WP0
   if (S.draft.length){
-    const a0 = quayPos(b); let a = a0;
+    const a0 = draftOrigin(); let a = a0;
     const hz = draftHazards();
     S.draft.forEach((w, i) => {
       const ok = legClear(a, w), un = hz[i] && hz[i].unsafe;
@@ -562,17 +562,17 @@ function addWaypoint(pt){
   // went to a rorbu by it)
   if (view.z >= 2 && !tutOn()) for (const R of rorbuSites(pt, r + 0.05)){ const d = dist(R.p, pt); if (d < r && d < bd){ bd = d; near = R; } }
   // Father's naust: a route can end there (you sail to it; 07c-naust.js naustTarget)
-  const nt = naustTarget(pt, r), atN = b.status === 'port' && berthKind(b) === 'naust';
+  const nt = naustTarget(pt, r), atN = !DRIFTCTX && b.status === 'port' && berthKind(b) === 'naust';
   if (nt && atN && !S.draft.length){ toast(t('already_here')); return; }
-  if (!nt && near && b.status === 'port' && b.port === near.id && !S.draft.length && !atN){ toast(t('already_here')); return; }
+  if (!nt && near && draftPort() === near.id && !S.draft.length && !atN){ toast(t('already_here')); return; }
   if (!near && !nt && isLandUI(pt)){ toast(t('on_land')); return; }
   draftEdit(() => {
     const wp = (q, auto) => S.draft.push({x:q.x, y:q.y, port:null, fish:0, auto});
     // out of the harbour first, the way the boats go, when the first leg would cut across a breakwater or a point
-    if (!S.draft.length && b.status === 'port' && !(nt && b.port === nt.port)) exitWps(portById(b.port), nt || (near ? near.p : pt)).forEach(q => wp(q, 'out'));
+    if (!S.draft.length && draftPort() && !(nt && draftPort() === nt.port)) exitWps(portById(draftPort()), nt || (near ? near.p : pt)).forEach(q => wp(q, 'out'));
     if (nt) S.draft.push({x:nt.x, y:nt.y, port:nt.port, berth:'naust', fish:0});
     else if (near){
-      const prev = S.draft.length ? S.draft[S.draft.length - 1] : quayPos(b);
+      const prev = S.draft.length ? S.draft[S.draft.length - 1] : draftOrigin();
       entryWps(near, prev).forEach(q => wp(q, 'in'));
       S.draft.push({x:near.p.x, y:near.p.y, port:near.id, fish:0});
       if (window.innerWidth <= 700) document.body.classList.add('drawer');

@@ -1695,11 +1695,20 @@ Kvotesystemet ligger i `core/03d-quota.js` (04.10.2026, plan Q1–Q6). Grunnlage
 - **Rettet 01.10.2026:** `crewQuit` avbrøt resten av `crewTick` den timen, og juksing trente feil redskap etter garn (`lastGear`). Begge er borte.
 - **Testet:** Vanlig drift med 10 timers fiske og klær ga trivsel 60–70. Hardkjøring med 20 timer per døgn fikk alle tre til å si opp innen fire døgn.
 
-### 5.7 Driftsplan (`S.ops`, per båt)
+### 5.7 Driftsplan (`S.ops`, per båt) – Drift-appen (Jonas 08.10.2026)
 
-- Lagret rute som driftsplan, med skipper, ukedager, avgangstid og vindgrense.
-- `opsStep` tar værsjekk, fyller drivstoff, is og redskap, og drar. `opsLanded` selger, fyller på, sender rapport og gir skipperen 5 % bonus.
-- **Fase 2** endrer hva en ansatt skipper får fiske i åpen gruppe, se kapittel 9.
+Kjernen ligger i `core/06d-drift.js`, appen i `ui/05c-drift.js`. Den gamle planen (én rute, én avgang i døgnet, vindgrense) er erstattet; `driftUp` gjør en gammel `S.ops` om til en plan med én økt, første gang den leses.
+
+- **Modell** (`driftNew`): `S.ops = {v:2, on, name, rig, skipper, crewMode, wx:{wind, hs, shelter}, days, period, stock:{ice, fuel, gear, bait}, sess:[…], idx, cn, a0, hold, fails, paused, cur, rep}`. `S.ops` er et av båtens egne felt (`VKEYS`), så hver båt har sin plan. Maler ligger på rederiet i `S.driftTpl` (høyst 12).
+- **Økter** (`sess`): `{id, type:'tur', dep, route:{wps, speed, home, end, hours}}` eller `{id, type:'hvile', dep, at}`. `dep` er timer fra døgnets start (`period` = 24 t; lengre perioder er til felt og teiner). Ei tur gjentas hver periode på valgte ukedager. En hviløkt sender båten med Autonav til kai eller rorbu (mannskapet sover på rorbu, `07d-rorbu.js`).
+- **Utstyr** (`rig`, `DRF_RIGS`): én type per plan. `juksa` er tur-modus (ut, fyll, lever, ut igjen). `line`, `garn` og `teiner` er sett-modus: ruta har stasjoner (`act:{op:'cycle'}`) som trekker det som står og setter på nytt. **Ståtiden er tiden mellom to runder**, altså mellom øktene; `driftCheck` regner den ut og advarer under og over `DRF.soak`. `bunntral`, `ringnot` og `snurrevad` står i tabellen med `soon:true` og kan ikke settes opp før havsteget.
+- **Godkjenning** (`driftCheck`): feil hindrer at planen slås på: ingen økter, en tur uten rute eller som ikke ender i havn, to typer utstyr, utstyr båten ikke har, turer som overlapper, og at planen ikke lukker seg (hver økt må starte der forrige sluttet, og siste må slutte der første begynner). Advarsler: ståtid, hvile under 10 t (bare med rederi, `restRuleOn`), over tre fjerdedeler arbeid, sjøgrense over det båten tåler. Oversikten viser arbeidstid, turer, hvile mellom øktene og ståtid.
+- **Kjøring** (`opsStep` kalles hvert minutt fra `vesselStep`): `driftSync` finner neste økt (`idx`, syklus `cn`, anker `a0`), vinduet er `DRF.window` (8 t). Før avgang sjekkes været over turens varighet mot planens grenser (utsetter en time om gangen, hopper over etter 8 t), mannskap, verkstedjobber, riggen (`rigSet`), og `opsGearNeeds`. Er båten ikke ved turens start, finner `leiaRoute` veien dit først. Tre feil på rad setter planen på pause med årsaken (`o.paused`, vist i appen og som varsel). `opsLanded` og `opsReport` lander, bunkrer etter `o.stock` og skriver dagsrapporten (`o.rep`).
+- **Vær under turen** (`driftWx` i `05-vessels.js`): turer på planen bruker planens grenser for vind og sjø i stedet for spillerens. Går været over, tar `shelterReturn` båten til nærmeste kai (planens turer gjør alltid det), og `ops`-merket følger med, så fangsten blir levert hvis kaia er et mottak.
+- **Rutetegning** (`DRIFTCTX`): «Tegn rute» binder båten, setter `DRIFTCTX = {vid, sid, home, origin, rig}` og åpner kartplotteren. `draftOrigin()` og `draftPort()` (`03b-route.js`) gjør at ruta tegnes fra turens start, ikke fra båten, og stasjonene følger planens utstyr. «Lagre i driftsplanen» (`driftsave`) lagrer ruta på økta. Båten må ligge i havn.
+- **Test planen** (`driftPreview`): dagen time for time som anslag, uten å flytte båten.
+- **Ikke gjort ennå:** roller (skipper, styrmann, dekk) og døgndrift 2+2, søvn om bord med lugar, og ankring. Ruter for trål, ringnot og snurrevad. Se oppgavene i Drift-lista.
+- **Tester:** `drifttest.py` (kjernen: migrering, sjekken, to turer med levering, vindgrense, pause, mal), `driftuitest.py` (appen og rutetegningen fra et annet startsted). `geartest`, `opsowntest`, `fleet2test` og `fleet3test` bruker eldre planer og går gjennom `driftUp`.
 
 ### 5.8 Bestillinger (`CUSTOMERS`, `ordersTick`)
 

@@ -295,9 +295,11 @@ function vesselStep(H){
   // turning back by itself only when the wind rises over the limit while she is out (b.windArm: it has been under the limit since she
   // left); not when she casts off in a wind already over it, nor again after the skipper stopped the turn back, until it has dropped
   // (Vannareid 08.10.2026: in a steady gale every start, Stopp and «Sitter båten fast?» was turned straight back to the plant)
-  if (W <= S.settings.autoW) b.windArm = true;
-  if (S.settings.autoOn && W > S.settings.autoW && b.windArm && ['sailing','fishing','idle'].includes(b.status) && !(S.plan && S.plan.returning) && !(S.tut && S.tut.catch) && !helmOn()){
-    b.windArm = false; startReturn(true, W);
+  // (a trip on the operations plan has the plan's own limits for wind and sea, 06d-drift.js)
+  const wl = driftWx(), limW = wl ? wl.wind : S.settings.autoW, seaOver = !!wl && hs > wl.hs;
+  if (W <= limW && !seaOver) b.windArm = true;
+  if ((wl ? wl.shelter : S.settings.autoOn) && (W > limW || seaOver) && b.windArm && ['sailing','fishing','idle'].includes(b.status) && !(S.plan && S.plan.returning) && !(S.tut && S.tut.catch) && !helmOn()){
+    b.windArm = false; startReturn(true, W, false, seaOver && W <= limW ? hs : 0);
   }
   if (b.status === 'sailing' || b.status === 'fishing') b.engH = (b.engH || 0) + (b.status === 'sailing' ? 1 : 0.25) / 60;
   if (b.status === 'sailing'){ if (!helmOn()){ const p0 = b.pos; sail(H, W, hs); if (meAboard()) tatAdd('nm', dist(p0, b.pos) / NM); } }   // by hand she moves every tick (helmStep)

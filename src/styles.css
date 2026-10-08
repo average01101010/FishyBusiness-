@@ -1050,3 +1050,18 @@ body.vplot .depc{display:none}
 @keyframes cashUp{0%{opacity:0;transform:translate(-50%,8px) scale(.7)}10%{opacity:1;transform:translate(-50%,0) scale(1.18)}22%{transform:translate(-50%,-4px) scale(1)}72%{opacity:1;transform:translate(-50%,-30px) scale(1)}100%{opacity:0;transform:translate(-50%,-52px) scale(1)}}
 #cash.cashup{color:#3ddc84;text-shadow:0 0 10px rgba(61,220,132,.55);transition:color .2s}
 @media (prefers-reduced-motion:reduce){.cashfx{animation:cashFade 2.2s linear forwards}@keyframes cashFade{0%,70%{opacity:1}100%{opacity:0}}}
+
+/* Drift, the operations plan (ui/05c-drift.js) */
+.dr-bar{position:relative;height:22px;margin:6px 0 22px;border-radius:6px;background:rgba(120,140,160,.22);overflow:visible}
+.dr-bar i{position:absolute;top:0;bottom:0;border-radius:5px;min-width:4px}
+.dr-bar i.work{background:#2f7fd0}.dr-bar i.rest{background:#29a36a;opacity:.85}
+.dr-bar b{position:absolute;top:24px;transform:translateX(-50%);font-size:10px;font-weight:600;opacity:.65}
+.dr-s{border-top:1px solid rgba(120,140,160,.25);padding:8px 0}
+.dr-s:first-of-type{border-top:0}
+.dr-h{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.dr-tm{white-space:nowrap}
+.dr-tm button,.ph-kv button{min-width:30px}
+.dr-pv{margin:8px 0}
+.dr-ev{display:flex;gap:10px;padding:3px 0;font-size:13px}
+.dr-ev span:first-child{min-width:62px;font-variant-numeric:tabular-nums;font-weight:600}
+.dr-ev.rest span:last-child{color:#29a36a}.dr-ev.land span:last-child{color:#2f7fd0}
