@@ -105,7 +105,11 @@ Spillet skal tjene penger, og Jonas skal kunne leve av det (06.10.2026). Grunnla
 
 ## Publisering
 
-Publiser `dist/index.html` til artifacten https://claude.ai/artifact/HHehndJQmtCYBJpQ1b8L6f med dens URL, slik at lenken beholdes. Gjør det bare når brukeren ber om det.
+**Spillet publiseres på detstorebla.no** (Jonas 08.10.2026): en push til arbeidsgrenen som endrer `src/` ruller det ut av `.github/workflows/deploy.yml` («Appen på Hetzner», PWA-bygget). Sjekk at kjøringen er grønn med `gh api repos/average01101010/FishyBusiness-/actions/runs`.
+
+**Artifacten oppdateres ikke lenger** (Jonas 08.10.2026: «La artifacten stå»). Siden er over 16 MB (23 MB), og artifacten tar høyst 16 MB per side, så publiseringen avvises. Artifacten https://claude.ai/artifact/HHehndJQmtCYBJpQ1b8L6f står som den var 03.10.2026 og skal ikke slettes. Publiser bare dit hvis brukeren ber om det, og da trengs en lettere utgave (modeller og skrifter ut av siden).
+
+Slik ble artifacten publisert da den ble oppdatert: `dist/index.html` til artifactens URL, slik at lenken beholdes.
 
 Appen for hjemskjermen (PWA, fra 03.10.2026) bygges med `KYST_PWA=1 node build.mjs` til `dist-pwa/`. Den legges ut på GitHub Pages av `.github/workflows/pwa.yml` hver gang en push endrer spillet, bygget eller kart-releasen: https://average01101010.github.io/FishyBusiness-/. Kartdata for hele kysten som ikke får plass i artifacten (256 MB), kommer bare i appen.
 

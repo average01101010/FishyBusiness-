@@ -4,7 +4,7 @@
 
 Skrevet 29.09.2026 ved flytting fra claude.ai-chat til Claude Code. Dokumentet samler beslutninger, regler, tall og arbeidsmåte som ikke står i koden. Les det sammen med `docs/spesifikasjon.md` (fiskerisystemet) og koden.
 
-- Siste publiserte versjon fra chatten: https://claude.ai/artifact/HHehndJQmtCYBJpQ1b8L6f (flåtemodell fase 1).
+- Spillet kjører på detstorebla.no (utrulling fra GitHub Actions ved push, se `CLAUDE.md`, Publisering). Artifacten https://claude.ai/artifact/HHehndJQmtCYBJpQ1b8L6f er ikke oppdatert siden 03.10.2026: siden er 23 MB og artifacten tar høyst 16 MB (Jonas 08.10.2026: la den stå).
 - Spesifikasjon (Claude Doc): https://claude.ai/code/artifact/0ca28240-d946-46b1-802b-b4b511e9398d
 - Spillfila: én selvstendig HTML-fil, `kystfiske-prototype.html` (~4,3 MB, all kart- og terrengdata innebygd som base64).
 
