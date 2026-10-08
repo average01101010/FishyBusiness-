@@ -138,6 +138,12 @@ async def main():
             r = await J(ROUTE, [a, b])
             ok = not r.get('err') and not r.get('why') and r['bad'] == [] and r['cell'] == 0.1 and r['n'] <= 40
             check(ok, '6. Autonav %s → %s: 100 m-celler, ingen etappe grunnstøter' % (a, b), {k: v for k, v in r.items() if k != 'bad'} if ok else r)
+        # 7. «Sitter båten fast?» in the Redning app (tilbakemelding #49): from the plant in Vannareid after a tow, out on safe water
+        r = await J("""(async () => { const pt = portById('mT155'), b = S.boat; await mapNeed(pt.p, 3); S.plan = null; S.unstuckAt = 0; dock('mT155'); b.damage = 1; hullRepair();
+          PHONE.open('redning'); const btn = document.querySelector('[data-pa=unstuck]'); const R = {btn:!!btn && !btn.disabled}; if (btn) btn.click();
+          R.st = b.status; R.port = b.port; R.d = Math.round(dist(b.pos, pt.p) * 1000); R.land = isLand(b.pos); R.depth = +depthF(b.pos).toFixed(1); R.cd = +coastDist(b.pos).toFixed(2);
+          PHONE.open('redning'); const b2 = document.querySelector('[data-pa=unstuck]'); R.again = !!(b2 && b2.disabled); PHONE.show(false); return R; })()""")
+        check(r['btn'] and r['st'] == 'idle' and r['port'] is None and not r['land'] and r['depth'] >= 4 and r['cd'] >= 0.2 and r['d'] < 2000 and r['again'], '7. «Flytt båten ut på trygt vann» legger båten utenfor Vannareid på dypt vann, og knappen hviler etterpå', r)
         print('sidefeil', errs[:5])
         await br.close()
 

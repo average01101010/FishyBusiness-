@@ -394,8 +394,41 @@ function arrive(w){
   if (pl.idx >= pl.wps.length){ S.plan = null; b.status = 'idle'; b.v = 0; if (pl.halt) log('Stoppet båten.', 'Stopped the boat.'); else log('Fremme ved siste veipunkt. Ligger stille.', 'Reached the last waypoint. Stopped.'); return true; }
   return false;
 }
+// «Sitter båten fast?» (the Redning app; tilbakemelding #49, 08.10.2026: in Vannareid the boat went ten metres and jumped back to the
+// plant, by Autonav and by hand): the boat is put out on safe water just off where she is, the outer end of the harbour's way in or the
+// nearest point at least 200 m from land and deep enough, and lies still there. Not under tow; at most every ten real minutes. What
+// the boat's state was goes to the telemetry, so the cause of a boat that cannot get away can be found.
+const UNSTUCK = {gap:10 * 60e3};
+function unstuckWhy(){
+  const b = S.boat;
+  if (b.status === 'tow') return ['Redningsskøyta har deg på slep.', 'The rescue boat has you in tow.'];
+  if (S.unstuckAt && Date.now() - S.unstuckAt < UNSTUCK.gap) return ['Vent noen minutter før du prøver igjen.', 'Wait a few minutes before you try again.'];
+  return null;
+}
+function unstuckSpot(){
+  const b = S.boat, sd = safeDepth(), pt = b.port ? portById(b.port) : null, near = pt || nearestPort(b.pos), from = b.status === 'port' && pt ? pt.p : b.pos;
+  const ok = q => { try { return !isLand(q) && coastDist(q) >= 0.2 && depthF(q) >= sd + 1; } catch (e){ return false; } };
+  if (near && dist(near.p, from) < 2){ let path = null; try { path = approachPath(near); } catch (e){} if (path && path.length && ok(path[0])) return path[0]; }
+  for (const r of [0.3, 0.5, 0.75, 1, 1.5, 2, 3, 4]) for (let i = 0; i < 24; i++){ const a = i * Math.PI / 12, q = {x:from.x + Math.sin(a) * r, y:from.y - Math.cos(a) * r}; if (ok(q)) return q; }
+  return null;
+}
+function unstuck(){
+  const why = unstuckWhy(); if (why) return why;
+  const b = S.boat, to = unstuckSpot(); if (!to) return ['Fant ikke trygt vann i nærheten.', 'Found no safe water near by.'];
+  const was = {st:b.status, port:b.port || null, berth:b.berth || null, plan:!!S.plan, idx:S.plan ? S.plan.idx : null, helm:!!(S.helm && S.helm.on), rest:!!S.rest, land:!!b.land, shift:!!b.shift, fuel:!!b.fueling, after:!!b.after, jobs:(S.jobs || []).map(j => j.kind), sleep:!!(S.sleep && S.t < S.sleep.until), dock:(S.dockLog || []).slice(-6), x:+b.pos.x.toFixed(3), y:+b.pos.y.toFixed(3)};
+  if (S.rest) restEnd(true);
+  if (typeof helmOff === 'function') helmOff();
+  if (b.gop) gopAbort('return');
+  b.land = b.shift = b.fueling = b.after = null; b.landWait = null; b.tow = null; b.castUntil = null;
+  S.plan = null; b.pos = {x:to.x, y:to.y}; b.status = 'idle'; b.port = null; b.v = 0; b.fishUntil = null; b.berth = null;
+  S.trail = [{x:to.x, y:to.y, port:null}]; S.unstuckAt = Date.now();
+  log('Båten ble flyttet ut på trygt vann og ligger stille.', 'The boat was moved out to safe water and lies still.', 'nav');
+  if (typeof cloudEv === 'function') cloudEv('unstuck', was);
+  return null;
+}
 function dock(pid, berth){
   const b = S.boat, port = portById(pid); S.tripBuff = null; if (b.gop) gopAbort('dock');
+  S.dockLog = (S.dockLog || []).concat([{t:S.t, pid, st:b.status}]).slice(-6);   // the last moorings, for «Sitter båten fast?» (unstuck)
   if (port.rorbu) rorbuSite(port);   // its berth is found before the boat is put there (07d-rorbu.js)
   b.status = 'port'; b.port = pid; b.v = 0; b.fishUntil = null; b.pos = {x:port.p.x, y:port.p.y}; b.moorT = S.t; b.shift = b.fueling = b.after = null;
   b.berth = berth === 'naust' && quayFace(pid, 'naust') ? 'naust' : 'main';   // a route can end at Father's naust (07c-naust.js)
