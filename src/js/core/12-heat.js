@@ -9,7 +9,7 @@ const HEAT = {
     basic:{r:0.5 * NM, cs:0.1, every:10, pick:false},    // the simple sounder every boat has: 1 nm across, coarse
     chirp:{r:0.75 * NM, cs:0.06, every:5, pick:true},    // CHIRP: 1.5 nm across, sharper, and it tells the species apart
     sonar:{r:1.5 * NM, cs:0.08, every:2, pick:true}},    // sonar: 3 nm across, and quick enough to see the schools move
-  glow:30, slice:5, sp:['torsk', 'hyse', 'sei', 'lyr', 'lange', 'brosme', 'uer', 'kveite', 'blakveite'], maxCells:40000};
+  glow:30, slice:5, sp:['torsk', 'hyse', 'sei', 'lyr', 'lange', 'brosme', 'uer', 'kveite', 'blakveite', 'krabbe'], maxCells:40000};
 
 // which instrument draws the heat now, if any: the sonar when it is fitted and on, else the echo sounder unless it is off
 function heatTier(){
@@ -23,13 +23,24 @@ function heatSpecies(){ const t = heatTier(), v = S.settings && S.settings.heatS
 // kg an hour for one person with a hand jig at a point: cod, haddock, saithe, the other fish together (3), and the Greenland halibut
 // (4) on its own (the sounder sees it on the edge, though the jig hardly takes it; 07.10.2026), then each of the other species for the
 // picker (5 to 9, tilbakemelding #41: pollack, ling, tusk, redfish and halibut on the CHIRP); the sum of all is the first five
-const HEATI = {torsk:0, hyse:1, sei:2, blakveite:4, lyr:5, lange:6, brosme:7, uer:8, kveite:9};
+// (10 is the king crab, tilbakemelding 08.10.2026: it has its own model with the pots, and is not part of «all fish»)
+const HEATI = {torsk:0, hyse:1, sei:2, blakveite:4, lyr:5, lange:6, brosme:7, uer:8, kveite:9, krabbe:10};
+// What colour a species' kg an hour gets when it is picked (tilbakemelding 08.10.2026: pollack, ling, tusk, redfish, halibut and Greenland
+// halibut never reached the first colour, 10 kg an hour, though they are all over their ground): each is shown against its own level,
+// so that the thickest 2 % of the places where it is found sit at the green/yellow edge (30 kg an hour on the scale) and the best spots
+// above. Measured 08.10.2026 over the coast from Rogaland to Varanger, four seasons and the shelf edge; the cod and the saithe are
+// already there (their 98th percentile is 20 and 25), «all fish» is the plain sum. Only the picture is scaled: the numbers behind it,
+// and with them the catch, are as they were.
+const HEATSC = {hyse:4, lyr:15, lange:12, brosme:11, uer:20, kveite:30, blakveite:5, krabbe:3};
 function heatSample(p, H){
-  const out = new Float64Array(10), q = denPlace(p); if (!q) return out;
+  const out = new Float64Array(11), q = denPlace(p); if (!q) return out;
   const T = denTime(H);
   for (const sp of SP){ const k = 30 * denSp(sp, q, H, T), i = HEATI[sp]; if (i === undefined || i > 4) out[3] += k; if (i !== undefined) out[i] += k; }
+  for (const sp of SHELL){ const i = HEATI[sp]; if (i !== undefined) out[i] += 30 * denSp(sp, q, H, T); }
   return out;
 }
+// the value as the map colours it: the species against its own level (HEATSC)
+const heatShown = (v, sp) => heatValue(v, sp) * (HEATSC[sp] || 1);
 function heatValue(v, sp){ const i = HEATI[sp]; return i !== undefined ? v[i] || 0 : v[0] + v[1] + v[2] + v[3] + (v[4] || 0); }
 
 // the cells: key → {x, y (centre), v, t (game minute worked out), h (stock hour), seen (game minute last inside the disk)}

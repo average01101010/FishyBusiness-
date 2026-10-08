@@ -49,7 +49,7 @@ function heatImage(){
     if (!c.v) continue;
     // the edge: full from the middle out to 55 % of the radius, then softly out to nothing at the ring (the user's wish 02.10.2026)
     const age = S.t - c.seen, e = Math.min(1, Math.max(0, (1 - c.near) / 0.45)), fade = (age <= 0 ? 1 : 0.6 * Math.max(0, 1 - age / HEAT.glow)) * e * e * (3 - 2 * e); if (fade <= 0) continue;
-    const i = heatIndex(heatValue(c.v, sp), steps); if (!i) continue;
+    const i = heatIndex(heatShown(c.v, sp), steps); if (!i) continue;
     const k = ((Math.floor(c.y / cs) - iy0) * w + Math.floor(c.x / cs) - ix0) * 4;
     d[k] = HEATPAL[i * 4]; d[k + 1] = HEATPAL[i * 4 + 1]; d[k + 2] = HEATPAL[i * 4 + 2]; d[k + 3] = HEATPAL[i * 4 + 3] * fade;
   }
@@ -95,7 +95,7 @@ function heatReadout(){
   if (S.boat.status === 'port') return '<p class="hr-note">' + t('echo_off') + '</p>';
   let h = '';
   if (S.tut && S.tut.catch) h += '<p class="hr-note">' + L('Første tur: full last er garantert.', 'First trip: a full hold is guaranteed.') + '</p>';
-  if (HEATC.tier === 'sonar'){ const sp = heatSpecies(), s2 = sp === 'all' ? 'torsk' : sp, nm = {torsk:['Torskestimene', 'The cod schools'], hyse:['Hysestimene', 'The haddock schools'], sei:['Seistimene', 'The saithe schools'], blakveite:['Blåkveita', 'The Greenland halibut']}[s2] || [SPECIES[s2].no.replace(/^./, c => c.toUpperCase()) + 'stimene', 'The ' + SPECIES[s2].en.toLowerCase() + ' schools'];
+  if (HEATC.tier === 'sonar' && !(SPECIES[heatSpecies()] || {}).shell){ const sp = heatSpecies(), s2 = sp === 'all' ? 'torsk' : sp, nm = {torsk:['Torskestimene', 'The cod schools'], hyse:['Hysestimene', 'The haddock schools'], sei:['Seistimene', 'The saithe schools'], blakveite:['Blåkveita', 'The Greenland halibut']}[s2] || [SPECIES[s2].no.replace(/^./, c => c.toUpperCase()) + 'stimene', 'The ' + SPECIES[s2].en.toLowerCase() + ' schools'];
     h += '<p class="hr-note">' + nm[S.lang === 'no' ? 0 : 1] + L(' trekker mot ', ' are heading ') + compassOf(schoolDrift(s2).a) + '.</p>'; }
   return h;
 }

@@ -24,9 +24,9 @@ async def main():
           R.seen = seen; const h = echoSettings(); R.btn = (h.match(/data-act="hsp"/g) || []).length; R.cap = HEAT.sp.every(sp => h.includes('data-s="' + sp + '"'));
           S.equip.sonar = true; S.settings.sonar = true; S.settings.heatSp = 'brosme'; R.sonar = heatSpecies(); const t0 = HEATC.tier; HEATC.tier = 'sonar'; S.boat.status = 'idle'; R.note = heatReadout().replace(/<[^>]+>/g, ''); HEATC.tier = t0; S.settings.heatSp = 'all'; return R; })()""")
         print(json.dumps(r, ensure_ascii=False))
-        print(ok(r['len'] == 10 and abs(r['sum'] - r['want']) < 1e-3 and all(abs(a - b) < 1e-3 for _, a, b in r['each'])), 'the sounder samples each species on its own and the sum of all is as before', (r['sum'], r['want']))
-        print(ok(r['seen'] == ['all', 'torsk', 'hyse', 'sei', 'lyr', 'lange', 'brosme', 'uer', 'kveite', 'blakveite', 'all']), 'the chip on the chart goes through all species and back to all', r['seen'])
-        print(ok(r['btn'] == 10 and r['cap'] and r['sonar'] == 'brosme' and 'rosme' in r['note']), 'the settings list every species, and the sonar says where the tusk schools are heading', (r['btn'], r['note']))
+        print(ok(r['len'] == 11 and abs(r['sum'] - r['want']) < 1e-3 and all(abs(a - b) < 1e-3 for _, a, b in r['each'])), 'the sounder samples each species on its own and the sum of all is as before', (r['sum'], r['want']))
+        print(ok(r['seen'] == ['all', 'torsk', 'hyse', 'sei', 'lyr', 'lange', 'brosme', 'uer', 'kveite', 'blakveite', 'krabbe', 'all']), 'the chip on the chart goes through all species and back to all', r['seen'])
+        print(ok(r['btn'] == 11 and r['cap'] and r['sonar'] == 'brosme' and 'rosme' in r['note']), 'the settings list every species, and the sonar says where the tusk schools are heading', (r['btn'], r['note']))
         print('errors:', errs[:3]); await br.close()
 
 asyncio.run(main())
