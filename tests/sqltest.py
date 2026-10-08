@@ -216,8 +216,15 @@ def main():
         R['nearB'] = json.loads(sql("select public.pos_near(850, 350, 20)", B, 'authenticated'))
         R['nearA'] = json.loads(sql("select public.pos_near(850, 350, 20)", A, 'authenticated'))
         R['nearFar'] = json.loads(sql("select public.pos_near(100, 100, 20)", B, 'authenticated'))
+        # pos_world (20261008120000_pos_world.sql): every active player whatever the distance, the paint only on the near ones
+        sql("select public.pos_put(850, 350, 90, 7, 'sailing', 'Havbris', 'trebat', 'h:gul')", A, 'authenticated')
+        R['allNear'] = json.loads(sql("select public.pos_world(850, 350, 20)", B, 'authenticated'))
+        R['allFar'] = json.loads(sql("select public.pos_world(100, 100, 20)", B, 'authenticated'))
+        R['allAnon'] = sql("select public.pos_world(850, 350, 20)", {}, 'anon', expect_err=True)
+        sql("select public.pos_put(850, 350, 90, 7, 'sailing', 'Havbris', 'trebat')", A, 'authenticated')
         sql("update public.presence set at = now() - interval '5 minutes' where player_id = 'user_01BBB'")
         R['nearStale'] = json.loads(sql("select public.pos_near(850, 350, 20)", A, 'authenticated'))
+        R['allStale'] = json.loads(sql("select public.pos_world(850, 350, 20)", A, 'authenticated'))
         R['posRead'] = sql("select count(*) from public.presence", A, 'authenticated', expect_err=True)
         R['posBad'] = sql("select public.pos_put('NaN', 1, 0, 0, '', '', '')", A, 'authenticated', expect_err=True)
         R['posAnon'] = sql("select public.pos_near(850, 350, 20)", {}, 'anon', expect_err=True)
@@ -401,6 +408,9 @@ def main():
         print(ok(len(R['nearB']) == 1 and nb.get('boat') == 'Havbris' and nb.get('vtype') == 'trebat' and len(nb.get('id', '')) == 10 and 'user_' not in json.dumps(R['nearB'])
                  and len(R['nearA']) == 1 and R['nearA'][0]['boat'] == 'Fjordbris' and R['nearFar'] == [] and R['nearStale'] == []),
               'the shared world: each player sees the other boats near by (name, type, place, heading, speed), never their own or an account, and not one gone quiet for two minutes', {'B': nb, 'far': R['nearFar'], 'stale': R['nearStale']})
+        print(ok(len(R['allNear']) == 1 and R['allNear'][0]['boat'] == 'Havbris' and R['allNear'][0]['liv'] == 'h:gul' and len(R['allFar']) == 1 and R['allFar'][0]['boat'] == 'Havbris' and R['allFar'][0]['liv'] == ''
+                 and R['allStale'] == [] and R['allAnon'][0] and 'user_' not in json.dumps(R['allFar'])),
+              'pos_world: every active player whatever the distance (pos_near gave none from 100 km away), the paint only on the near ones, no one gone quiet, no anonymous', {'near': R['allNear'], 'far': R['allFar'], 'stale': R['allStale']})
         print(ok(R['posRead'][0] and R['posBad'][0] and R['posAnon'][0] and R['posOff'][0]),
               'the shared world: no one reads the table, a bad position and the anonymous are refused, and there is no hiding the boat', [R[k][1][:40] for k in ('posRead', 'posBad', 'posAnon', 'posOff')])
         mk = {(a, b): c for a, b, c in R['wB']['mkt']}

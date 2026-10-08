@@ -115,17 +115,17 @@ async def main():
         # the shared world V3: my boat goes up, the other players' boats near by come down and show on the AIS (05.10.2026)
         pos = await pg.evaluate("({x:S.boat.pos.x, y:S.boat.pos.y})")
         replies['pos_put'] = 'null'
-        replies['pos_near'] = [{'id': 'abc1234567', 'boat': 'Fjordbris', 'vtype': 'skiff', 'x': pos['x'] + 0.5, 'y': pos['y'] + 0.5, 'hd': 1.2, 'v': 5, 'st': 'sailing', 'age': 1, 'user': 'Kystjenta', 'fs': 40000}]
+        replies['pos_world'] = [{'id': 'abc1234567', 'boat': 'Fjordbris', 'vtype': 'skiff', 'x': pos['x'] + 0.5, 'y': pos['y'] + 0.5, 'hd': 1.2, 'v': 5, 'st': 'sailing', 'age': 1, 'user': 'Kystjenta', 'fs': 40000}]
         n0 = len(calls)
         w = await pg.evaluate("""async () => { S.boatName = S.boatName || 'Havbris'; await worldTick(); const n = npcStates(S.t / 60).find(q => q.player);
           return {n:n && {name:n.name, type:n.type, L:n.L, st:n.st, d:Math.hypot(n.p.x - S.boat.pos.x, n.p.y - S.boat.pos.y)}, card:n ? aisInfo(n) : ''}; }""")
-        wp = [c[1] for c in calls[n0:] if c[0] == 'pos_put']; wn = [c[1] for c in calls[n0:] if c[0] == 'pos_near']
+        wp = [c[1] for c in calls[n0:] if c[0] == 'pos_put']; wn = [c[1] for c in calls[n0:] if c[0] == 'pos_world']
         check(wp and wp[0]['boat'] and wp[0]['vtype'] and abs(wp[0]['x'] - pos['x']) < 0.01 and isinstance(wp[0].get('fs'), int) and wn and w['n'] and w['n']['name'] == 'Fjordbris' and w['n']['L'] > 5
               and 'Spiller' in w['card'] and 'Fjordbris' in w['card'] and 'Eier' in w['card'] and 'Kystjenta' in w['card'] and '12 år og' in w['card'],
               "the shared world: my boat's place, name, type and sea time go up, and another player's boat near by shows among the boats, with an AIS card that names the owner and the sea time", {'put': wp[0] if wp else None, 'peer': w['n']})
         # the paint goes along (20261007090000_livery.sql), and the other player's paint comes down to her model; a server without it yet
         # (404 for a call with liv) gets the place without the paint, and the shared world stays on
-        replies['pos_near'][0]['liv'] = 'h:gul'; n0 = len(calls)
+        replies['pos_world'][0]['liv'] = 'h:gul'; n0 = len(calls)
         lv = await pg.evaluate("async () => { S.boat.liv = {hull:'kobolt'}; WORLDP.last = 0; await worldTick(); const n = npcStates(S.t / 60).find(q => q.player); return {liv:n && n.liv, parsed:n && livParse(n.liv)}; }")
         wl = [c[1].get('liv') for c in calls[n0:] if c[0] == 'pos_put']
         # a server without the sea time yet (404 for a call with fs) gets the place and the paint without it; one without the paint
@@ -143,8 +143,15 @@ async def main():
         n0 = len(calls)
         hide = await pg.evaluate("async () => { S.settings.showMe = false; PHONE.open('innst'); const card = document.getElementById('phView').innerText; PHONE.show(false); await worldTick(); return {card:card.includes('Vis båten min'), hasOff:typeof worldShowMe !== 'undefined'}; }")
         wo = [c[0] for c in calls[n0:]]
-        check(not hide['card'] and not hide['hasOff'] and 'pos_put' in wo and 'pos_off' not in wo and 'pos_near' in wo,
+        check(not hide['card'] and not hide['hasOff'] and 'pos_put' in wo and 'pos_off' not in wo and 'pos_world' in wo,
               'there is no hiding the boat: Settings has no such choice, and the place goes up even with the old setting off', {'hide': hide, 'calls': wo})
+        # a database without pos_world yet (404) gives the boats near by through pos_near, and the shared world stays on (08.10.2026)
+        replies['pos_near'] = list(replies['pos_world']); replies['pos_world'] = lambda b: 404; n0 = len(calls)
+        old2 = await pg.evaluate("async () => { WORLDP.last = 0; await worldTick(); return {noAll:!!WORLDP.noAll, off:!!WORLDP.off, peers:PEERS.length}; }")
+        wo3 = [c[0] for c in calls[n0:] if c[0] in ('pos_world', 'pos_near')]
+        check(old2['noAll'] and not old2['off'] and old2['peers'] == 1 and wo3 == ['pos_world', 'pos_near'], 'a database without pos_world gives the boats near by through pos_near, and the shared world stays on', {'old': old2, 'calls': wo3})
+        replies['pos_world'] = replies.pop('pos_near'); replies.pop('pos_near', None)
+        await pg.evaluate("WORLDP.noAll = false")
         # every account has a player name (07.10.2026): the name it took elsewhere comes down; without one it is asked for, with no «later»,
         # until a free one is taken; one the admin took away is gone, with the reason
         replies['name_mine'] = {'name': 'Kystjenta', 'removed': False}

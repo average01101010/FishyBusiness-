@@ -418,6 +418,7 @@ const PHONE = (() => {
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
     ['p92', '08.10.2026', 'Autonav går aldri på land', 'Autonav never runs you aground', [
+      ['Alle aktive spillere vises på kartet, uansett hvor langt unna de er.', 'All active players show on the chart, however far away they are.'],
       ['CHIRP og sonar viser nå lyr, lange, brosme, uer, kveite og blåkveite tydelig, hver mot sitt eget nivå, og kongekrabbe er kommet med i artsvalget.', 'CHIRP and sonar now show pollack, ling, tusk, redfish, halibut and Greenland halibut clearly, each against its own level, and king crab has joined the species picker.'],
       ['Blir det for mye vind, går båten til nærmeste kai med Autonav. Under Innstillinger kan du velge «Hjem samme vei» i stedet.', 'If the wind gets too strong, the boat goes to the nearest quay by Autonav. Under Settings you can choose «Home the same way» instead.'],
       ['Kaster du loss i vind over grensen, eller trykker Stopp når båten snur, snur den ikke igjen før vinden har løyet.', 'Cast off in wind over the limit, or press Stop when the boat turns back, and it will not turn again until the wind has eased.'],

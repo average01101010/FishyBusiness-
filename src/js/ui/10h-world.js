@@ -1,7 +1,7 @@
 // ---------- the shared world V3: the other players' boats (05.10.2026; supabase/migrations/20261005220000_presence.sql) ----------
 // Jonas: «fokuset nå må være å få koblet sammen spillerne i verden med felles tid … Dette er nesten et mmorpg spill». Every 15 s while
 // the game is open, seen and signed in, where the boat you follow is goes up (her place, heading, speed, what she does, her name and
-// type, and your sea time), and the other players' boats within about the AIS range come down into PEERS (core/05-vessels.js
+// type, and your sea time), and the other players' boats, all of them whatever the distance (08.10.2026), come down into PEERS (core/05-vessels.js
 // peerStates), which the chart's AIS and the 3D view show like the other boats on the water, with the owner's player name and sea time.
 // There is no hiding the boat (Jonas 07.10.2026: «Det skal ikke være mulig å skjule båten sin posisjon for andre spillere, det er et
 // krav»); a guest's boat is left out for the others by the server (supabase/migrations/20261007130000_seen.sql).
@@ -21,7 +21,11 @@ async function worldTick(){
     if (!WORLDP.noFs && typeof fsState === 'function') a.fs = Math.round(fsState().p);
     for (;;){ try { await cloudRpc('pos_put', a); break; } catch (e){ if (!/ 404$/.test(e.message)) throw e;
       if ('fs' in a){ WORLDP.noFs = true; delete a.fs; } else if ('liv' in a){ WORLDP.noLiv = true; delete a.liv; } else throw e; } }
-    const list = await cloudRpc('pos_near', {x:b.pos.x, y:b.pos.y, r:WORLD_R}) || [], now = Date.now();
+    // every active player, whatever the distance (pos_world, supabase/migrations/20261008120000_pos_world.sql); the boats within WORLD_R
+    // come with their paint. A database without it (404) gives the boats near by, as before.
+    let list; if (!WORLDP.noAll){ try { list = await cloudRpc('pos_world', {x:b.pos.x, y:b.pos.y, r:WORLD_R}); } catch (e){ if (!/ 404$/.test(e.message)) throw e; WORLDP.noAll = true; } }
+    if (!list && WORLDP.noAll) list = await cloudRpc('pos_near', {x:b.pos.x, y:b.pos.y, r:WORLD_R});
+    list = list || []; const now = Date.now();
     PEERS.length = 0; for (const q of list) PEERS.push({...q, at:now - (q.age || 0) * 1000});
     WORLDP.last = now; WORLDP.err = 0;
     await gearSync(now);
