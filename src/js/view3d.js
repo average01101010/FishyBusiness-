@@ -1570,7 +1570,8 @@ const G3 = (() => {
     ];
   }
   function drawWorker(P, st, eye, T, idx){
-    const y = P.gy([st.x, st.z]), h = st.h, F = [Math.sin(h), -Math.cos(h)], R = [Math.cos(h), Math.sin(h)], rel = (x, yy, z) => [x - eye[0], yy - eye[1], z - eye[2]];
+    const y = P.gy([st.x, st.z]), h = st.h; (P.wpos || (P.wpos = {}))[idx] = {x:st.x, y, z:st.z};   // where he stands, for his words (sayWorker)
+    const F = [Math.sin(h), -Math.cos(h)], R = [Math.cos(h), Math.sin(h)], rel = (x, yy, z) => [x - eye[0], yy - eye[1], z - eye[2]];
     const W = (a, up, r) => rel(st.x + F[0] * a + R[0] * r, y + up, st.z + F[1] * a + R[1] * r);
     const ph = st.walk || st.task === 'sweep' ? (T * 6.5 + idx) : 0, sw = st.walk ? Math.sin(ph) : 0;
     // the detailed figure (tools/harbour/arbeider.py): the harbour workers in blue coveralls and hard hats, the crew on deck in oilskins
@@ -3468,8 +3469,10 @@ const G3 = (() => {
   }
   // the crew's words over their heads (Jonas 08.10.2026, tilbakemelding #44: «kommentarer fra mannskap burde komme opp som flytende tekst
   // over hodet ... La gjerne også kommentaren henge 10 sekunder»): the line stands over the one who says it for SAYMS, fading in and out
-  const SAYMS = 10000, SAY = {c:null, txt:'', t0:0, a:null, el:null};
-  function say3d(c, no, en){ if (!active || !c) return false; SAY.c = c; SAY.txt = c.name.split(' ')[0] + ': «' + (S.lang === 'no' ? no : en) + '»'; SAY.t0 = performance.now(); return true; }
+  const SAYMS = 10000, SAY = {c:null, w:null, txt:'', t0:0, a:null, el:null};
+  // a hand at the plant (core/09d-folk.js plantSay): over his head when the plant is the one near the eye, else false (the caller toasts it)
+  function sayWorker(pid, idx, nm, no, en){ if (!active) return false; const P = PLANTS.find(q => q.id === pid); if (!P) return false; SAY.c = null; SAY.w = {pid, idx}; SAY.txt = nm + ': «' + (S.lang === 'no' ? no : en) + '»'; SAY.t0 = performance.now(); return true; }
+  function say3d(c, no, en){ if (!active || !c) return false; SAY.w = null; SAY.c = c; SAY.txt = c.name.split(' ')[0] + ': «' + (S.lang === 'no' ? no : en) + '»'; SAY.t0 = performance.now(); return true; }
   let labelEls = [];
   function buildLabels(){ labelsEl.innerHTML = ''; labelEls = PORTS.map(p => { const d = document.createElement('div'); d.className = 'lbl3d'; d.textContent = p.name; labelsEl.appendChild(d); return d; }); }
   function resize(){
@@ -4139,7 +4142,10 @@ const G3 = (() => {
     if (SHOW){ const y = (env.tide || 0) + (seaH(SHOW.x, SHOW.z, t) - (env.tide || 0)) * 0.8; SHOW.M = model(SHOW.x - eye[0], y - eye[1], SHOW.z - eye[2], -SHOW.h, Math.sin(t * 0.7) * 0.02, Math.sin(t * 0.9) * 0.03); drawVessel(SHOW.t, GEO(SHOW.t), SHOW.M, VPn, true, 2); }
     if (STATN){ nSetup(VPn); drawN(STATN, TM); if (BUNKN) drawN(BUNKN, TM); } if (LIFT.off < 0.05) drawMooring(BMrel, eye, VPn, t); drawRescue(BMrel, eye, VPn, t); drawTowLine(BMrel, VPn); if (PM) drawDeck(BMrel, eye, VPn, t, DECKACT); drawGearOp(BMrel, eye, VPn, t);
     const plant = PM ? nearestPlant(eye) : null; drawUnits(eye, VPn, true, nearFar, plant && plant.id); drawSites(eye, VPn, true, nearFar);
-    const pr = plant ? drawPlant(plant, eye, VPn, t, BMrel) : null, bunk = PM ? nearestBunker(eye) : null; if (bunk) bunk.last = drawBunker(bunk, eye, VPn, t, BMrel); gl.useProgram(PL.p);
+    const pr = plant ? drawPlant(plant, eye, VPn, t, BMrel) : null;
+    // a hand at the plant says his line: over his head, else over the first hand who is out
+    if (SAY.w && plant && plant.id === SAY.w.pid && plant.wpos && performance.now() - SAY.t0 < SAYMS){ const q = plant.wpos[SAY.w.idx] || plant.wpos[Object.keys(plant.wpos)[0]]; if (q) SAY.a = [q.x - eye[0], q.y + 2.1 - eye[1], q.z - eye[2]]; }
+    const bunk = PM ? nearestBunker(eye) : null; if (bunk) bunk.last = drawBunker(bunk, eye, VPn, t, BMrel); gl.useProgram(PL.p);
     wildSpawn(t); drawNPC(eye, t, H, VPn); drawAir(eye, t, H, VPn); drawGearSea(eye, t, VPn, H); drawWild(eye, t, dt);
 
     // the ensign in its hours (core/03-simulation.js flagUp; always while the paint shop tries one on); the pennant flies day and night
@@ -4405,7 +4411,7 @@ const G3 = (() => {
   return {
     // the quality: with a setting ('auto', 'low', 'mid', 'high') it applies it; returns the level now and the frame rate
     quality(v){ if (v){ S.settings.q3d = v; QUAL.bad = QUAL.good = 0; QUAL.cap = 2; qualSet(); } return {lvl:QUAL.lvl, set:S.settings.q3d || 'auto', fps:FPS.v, ultra:UINT}; },
-    show, toggle(){ return show(!active); }, isActive:() => active, say:say3d, haltNeed:() => active ? trkHaltNeed() : 0, get failWhy(){ return failWhy; },
+    show, toggle(){ return show(!active); }, isActive:() => active, say:say3d, sayWorker, haltNeed:() => active ? trkHaltNeed() : 0, get failWhy(){ return failWhy; },
     // the next frame as a JPEG data URL (or null when no frame comes within 2 s)
     // whether a point (km, and metres above the ground) is in the picture the camera shows now: in front within the picture's width,
     // and no ground between (Kystposten's lighthouse pictures, ui/05f-turer.js)

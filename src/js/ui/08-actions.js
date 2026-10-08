@@ -190,6 +190,7 @@ function sell(){
   S.landN = (S.landN || 0) + 1;   // the landings, for a guest's papers (ui/10f-cloud.js: registering after the second)
   achSale(total, Object.values(lines).map(r => r.sp));   // the badges (core/09f-merker.js)
   { const by = {}; for (const r of arr) by[r.sp] = (by[r.sp] || 0) + r.kg; turSale(port.id, by); }   // missions (core/09g-turer.js)
+  const cashBefore = S.cash;
   S.cash += net - lott - coopKr; S.stats.revenue += total; S.stats.costs += tk.sum + lott + coopKr;
   if (coopKr > 0) log(S.lic.coop.name + ' fikk ' + kr(coopKr) + ' for torsken på kvoten hans.', S.lic.coop.name + ' got ' + kr(coopKr) + ' for the cod on his quota.'); S.stats.kg += kg; S.hold = [];
   const fs = S.marks.length ? S.marks[S.marks.length - 1] : null, field = fieldCode(S.fsess || fs || b.pos);
@@ -215,6 +216,8 @@ function sell(){
   if (S.tut && S.tut.catch) S.tut.catch = false;   // the first-trip guarantee ends with the first landing
   for (const x of S.hold) delete x._used;
   log('Leverte ' + Math.round(kg) + ' kg i ' + port.name + ' for ' + kr(total) + '.', 'Landed ' + Math.round(kg) + ' kg at ' + port.name + ' for ' + kr(total) + '.');
+  { const ls = S.lastSale, pt = port; setTimeout(() => { try { plantSay(pt, ls); } catch (e){ console.error(e); } }, 900); }   // the plant's hands comment (core/09d-folk.js)
+  cashFx(S.cash - cashBefore);   // the register rings and the sum counts into the account (ui/02-format-state.js)
   setTimeout(pushAsk, 3000);   // notifications, if the player has not been asked (10g-push.js)
   setTimeout(() => FEEDBACK.nudge('land'), 3500);   // the reminder of the feedback app and its thank-you, if no other window is up (06e-feedback.js)
 

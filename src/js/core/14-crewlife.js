@@ -67,6 +67,9 @@ function serveMeal(q, cook, me){
 const REST = {day:10, long:6, gap:14, week:77};
 const REST_RULE = {day:['minst 10 timer hvile i døgnet', 'at least 10 hours of rest a day'], split:['hvilen i høyst to perioder, én på minst 6 timer', 'rest in at most two periods, one of at least 6 hours'],
   gap:['høyst 14 timer mellom hvileperiodene', 'at most 14 hours between rest periods'], week:['minst 77 timer hvile i uka', 'at least 77 hours of rest a week']};
+// the rule binds only a skipper who runs a firm (Jonas 08.10.2026: «Fjern også kravet om hviletid for mannskapet når spilleren ikke har rederi … Hviletidskrav skal komme når spilleren starter rederi»):
+// S.company is set when he buys into the closed group or founds the AS. Before that the crew works as long as they have energy (fatigue)
+const restRuleOn = () => !!S.company;
 function restLog(c){ if (!Array.isArray(c.rest) || c.rest.length !== 168) c.rest = Array(168).fill(1); return c.rest; }
 function restCheck(r){
   const d = r.slice(-24), sum = a => a.reduce((x, y) => x + y, 0);
@@ -78,12 +81,12 @@ function restCheck(r){
   return null;
 }
 // hours of work left before a rule is broken, if the person keeps working from now (0: broken now)
-function restLeft(c){ const r = restLog(c).slice(); if (restCheck(r)) return 0; for (let k = 1; k <= 24; k++){ r.push(0); r.shift(); if (restCheck(r)) return k - 1; } return 24; }
+function restLeft(c){ if (!restRuleOn()) return 24; const r = restLog(c).slice(); if (restCheck(r)) return 0; for (let k = 1; k <= 24; k++){ r.push(0); r.shift(); if (restCheck(r)) return k - 1; } return 24; }
 // an hour of the log: rest when not aboard, in port, or on a break in a berth
 function restHour(c, onb){
   const r = restLog(c), afloat = S.boat.status !== 'port', work = Object.values(c.wk || {}).reduce((a, m) => a + m, 0);
   r.push(!onb || !afloat || ((BOAT.berths || 0) > 0 && work <= 10) ? 1 : 0); r.shift();
-  return onb && afloat ? restCheck(r) : null;
+  return onb && afloat && restRuleOn() ? restCheck(r) : null;
 }
 
 // ---- what the crew says: lines driven by the situation and by each person's ways. [no, en, trait the line suits]
@@ -149,21 +152,24 @@ const pick1 = a => a[Math.floor(Math.random() * a.length)];
 // og uttrykk basert på hvor det kommer fra»). The lines are written in the Northern Norwegian of Troms; north of 65° N they stand as they
 // are, and further south the words are changed by region: Trøndelag, Møre, the west and the south coast.
 const DIALECTS = {
-  tro:[['ikkje', 'itj'], ['kæm', 'kem'], ['kjæm', 'kjem'], ['fesken', 'fisken'], ['fesk', 'fisk']],
-  mor:[['æ', 'eg'], ['mæ', 'meg'], ['sæ', 'seg'], ['kæm', 'kven'], ['ka', 'kva'], ['korsn', 'korleis'], ['e', 'er'], ['ska', 'skal'], ['kjæm', 'kjem'], ['fesken', 'fisken'], ['fesk', 'fisk'], ['nå', 'no']],
-  vest:[['æ', 'eg'], ['mæ', 'meg'], ['sæ', 'seg'], ['kæm', 'kven'], ['ka', 'kva'], ['korsn', 'korleis'], ['e', 'er'], ['ska', 'skal'], ['kjæm', 'kjem'], ['fesken', 'fisken'], ['fesk', 'fisk'], ['nå', 'no']],
-  sor:[['kæm', 'kem'], ['korsn', 'korleis'], ['fesken', 'fisken'], ['fesk', 'fisk'], ['vatn', 'vann']]
+  tro:[['ikkje', 'itj'], ['kæm', 'kem'], ['kjæm', 'kjem'], ['fesken', 'fisken'], ['fesk', 'fisk'], ['sjyen', 'sjøen'], ['koffør', 'korfor'], ['dokker', 'dikkan']],
+  mor:[['æ', 'eg'], ['mæ', 'meg'], ['sæ', 'seg'], ['dæ', 'deg'], ['dokker', 'dykk'], ['kæm', 'kven'], ['ka', 'kva'], ['korsn', 'korleis'], ['koffør', 'kvifor'], ['e', 'er'], ['ska', 'skal'], ['kjæm', 'kjem'], ['fesken', 'fisken'], ['fesk', 'fisk'], ['sjyen', 'sjøen'], ['nå', 'no']],
+  vest:[['æ', 'eg'], ['mæ', 'meg'], ['sæ', 'seg'], ['dæ', 'deg'], ['dokker', 'dykk'], ['kæm', 'kven'], ['ka', 'kva'], ['korsn', 'korleis'], ['koffør', 'kvifor'], ['e', 'er'], ['ska', 'skal'], ['kjæm', 'kjem'], ['fesken', 'fisken'], ['fesk', 'fisk'], ['sjyen', 'sjøen'], ['nå', 'no']],
+  sor:[['æ', 'jeg'], ['mæ', 'meg'], ['sæ', 'seg'], ['dæ', 'deg'], ['dokker', 'dere'], ['kæm', 'hvem'], ['ka', 'hva'], ['korsn', 'hvordan'], ['koffør', 'hvorfor'], ['e', 'er'], ['ska', 'skal'], ['kjæm', 'kommer'], ['ikkje', 'ikke'], ['fesken', 'fisken'], ['fesk', 'fisk'], ['sjyen', 'sjøen'], ['vatn', 'vann']]
 };
 // whole words, one by one (the letters æ, ø and å are no word characters to \b)
 const capLike = (from, to) => from[0] !== from[0].toLowerCase() ? to[0].toUpperCase() + to.slice(1) : to;
+// the dialect of a place: null north of 65° N (the lines stand as they are), else tro, mor, vest or sor
+function dialectAt(p){ const la = natLL(p).lat; return la >= 65 ? null : la >= 63.3 ? 'tro' : la >= 62 ? 'mor' : la >= 59.2 ? 'vest' : 'sor'; }
 function dialectOf(c){
   const pt = c && c.homePort && portById(c.homePort), q = pt || portById(S.home || HOME0); if (!q) return null;
-  const la = natLL(q.p).lat; return la >= 65 ? null : la >= 63.3 ? 'tro' : la >= 62 ? 'mor' : la >= 59.2 ? 'vest' : 'sor';
+  return dialectAt(q.p);
 }
-function crewDialect(c, text){
-  const d = DIALECTS[dialectOf(c)]; if (!d) return text;
+function dialectText(key, text){
+  const d = DIALECTS[key]; if (!d) return text;
   return text.replace(/\p{L}+/gu, w => { for (const [from, to] of d) if (w.toLowerCase() === from) return capLike(w, to); return w; });
 }
+function crewDialect(c, text){ return dialectText(dialectOf(c), text); }
 // someone says a line for the situation: c, or a person whose ways suit one of the lines, or anyone aboard
 function crewSay(c, sit){
   const on = crewAboard(), L0 = sit && SAY[sit]; if (!on.length || !L0) return false;
