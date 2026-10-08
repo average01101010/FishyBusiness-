@@ -80,6 +80,18 @@ async def main():
         print('upkeep:', json.dumps(r, ensure_ascii=False))
         print(ok(r['off'] == 0 and r['on'] == ['hk'] and r['lf'] == 0 and r['after'] == [0, 0] and r['alone'] == 0), 'the crew changes worn hooks by itself in port when it has the hooks, not with the setting off, not when alone', r['on'])
         print(ok(r['old'] == [1, 1, 0, 1, 1, 0.95]), 'an old save gets the new fields', r['old'])
+        # 6. on screen: the status under Inventory, the shop's Service page, and the buttons work
+        r = await pg.evaluate("""(()=>{ const R = {}; const b = S.boat; b.status = 'port'; b.port = 'finnsnes'; b.pos = {...portById('finnsnes').p}; S.pgear = newPGear(); S.jobs = []; S.cash = 1e6; S.crew = [Object.assign(genCrew(), {bi:false, off:false}), Object.assign(genCrew(), {bi:false, off:false})];
+          buyGear('stamp', 'hyse', 8); buyGear('pot', 'big', 3); buyGear('net', '156', 4); buyGear('hooks', 500, 1); const L = S.pgear.lines.hyse; L.miss = 0.1; L.bent = 0.1; L.cond = 0.5; S.pgear.potc.cond = 0.5; S.pgear.nets[0].cond = 0.5; S.pgear.bait = {makrell:40, sild:15};
+          PHONE.open('redskap'); document.querySelector('[data-pa=sub][data-s=bord]').click(); const html = document.getElementById('drawerBody').innerHTML; R.bord = ['tak ', 'mangler', 'bøyde', 'Kroker på lager', 'Makrell', 'Sild', 'Reparer teinene selv', 'Reparer lina selv', 'Mannskapet vedlikeholder selv'].map(t => html.includes(t));
+          R.hookBtn = !!document.querySelector('[data-pa=carehk][data-m=self]'); R.kjop = ['Kroker og juksautstyr', '500 kroker'].map(t => (document.querySelector('[data-pa=sub][data-s=kjop]').click(), document.getElementById('drawerBody').innerHTML.includes(t)));
+          PHONE.open('service'); const d = document.getElementById('drawerBody'); const sh = d.innerHTML; R.service = ['Service i utstyrsbutikken', 'Selg ', 'Reparer lina', 'Bøt garna', 'Reparer teinene'].map(t => sh.includes(t));
+          const c0 = S.cash; document.querySelector('#drawerBody [data-pa=carelr][data-m=shop]').click(); R.shopJob = S.jobs.map(j => [j.kind, !!j.shop]); R.paid = c0 - S.cash;
+          const n0 = S.pgear.pots.big; document.querySelector('#drawerBody [data-pa=caresell][data-w=pot]').click(); R.sold = n0 - S.pgear.pots.big;
+          R.auto = (() => { document.querySelector('[data-pa=careauto]'); return S.settings.careAuto; })(); return R; })()""")
+        print('ui:', json.dumps(r, ensure_ascii=False))
+        print(ok(all(r['bord']) and r['hookBtn'] and all(r['kjop'])), 'Inventory shows ceilings, hooks, bait kinds and the upkeep buttons, and the Buy tab sells hooks and jig sets', [r['bord'], r['kjop']])
+        print(ok(all(r['service']) and r['shopJob'] == [['lr', True]] and r['paid'] > 0 and r['sold'] == 1), 'the Service page offers mending and buy-back, and the buttons work', [r['service'], r['shopJob'], r['paid'], r['sold']])
         print(ok(not errs), 'no page errors', errs[:2])
         await br.close()
 asyncio.run(main())

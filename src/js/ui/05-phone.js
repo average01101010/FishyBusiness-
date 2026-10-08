@@ -82,6 +82,28 @@ const PHONE = (() => {
     if (!tutOn()) h.push(redskap('kjop'));
     return h.join('');
   }
+  // the tackle shop's service (Jonas 08.10.2026): the shop mends and changes in half the time for a fee, and buys the gear back
+  function service(){
+    const b = S.boat, pt = portById(b.port), here = atKind('butikk') && pt, pg = careInit(S.pgear), h = ['<div class="ph-c">'];
+    if (!here) h.push(nearHint('butikk'));
+    h.push('<div class="ph-card"><h4>' + L('Service i utstyrsbutikken', 'Service at the tackle shop') + '</h4><p class="ph-note">' + L('Butikken reparerer og bytter på halve tiden mot et gebyr, og kjøper redskap tilbake til en firedel av nypris ganger standen. Det lønner seg aldri å kjøpe og selge. Slitt redskap bør byttes ut.', 'The shop mends and changes in half the time for a fee, and buys gear back at a quarter of the new price times its condition. It never pays to buy and sell. Worn gear should be replaced.') + '</p></div>');
+    const sell = (w, k, n, lbl) => cbtn('caresell', 'data-w="' + w + '" data-k="' + k + '" data-n="' + n + '"', L('Selg ', 'Sell ') + lbl + ' · ' + kr(sellValue(w, k, n)), here);
+    for (const lk of ['hyse', 'bank']){ const L0 = pg.lines[lk]; if (!L0.n) continue; const un = L0.n - L0.baited, qh = careQuote('hooks', lk, true), ql = careQuote('line', lk, true);
+      h.push('<div class="ph-card"><h4>' + LINE_KINDS[lk][S.lang] + '</h4>' + kv(L('Lina', 'The line'), pctOf(L0.cond) + ' · ' + L('tak ', 'ceiling ') + pctOf(L0.max)) + cbar(L0.cond) + kv(L('Kroker som må byttes', 'Hooks to change'), hooksNeed(lk)) + '<div class="ph-btncol">' +
+        (qh ? cbtn('carehk', 'data-lk="' + lk + '" data-m="shop"', L('Bytt ', 'Change ') + qh.n + L(' kroker', ' hooks') + qTxt(qh), here && qh.fee <= S.cash) : '') + (ql ? cbtn('carelr', 'data-lk="' + lk + '" data-m="shop"', L('Reparer lina', 'Mend the line') + qTxt(ql), here && ql.fee <= S.cash) : '') +
+        (un > 0 ? sell('line', lk, 1, L('1 stamp', '1 tub')) : '') + (un > 1 ? sell('line', lk, un, un + ' ' + L('stamper', 'tubs')) : '') + '</div>' + (un < L0.n ? '<p class="ph-note">' + L('Egnede stamper selges ikke.', 'Baited tubs are not bought back.') + '</p>' : '') + '</div>'); }
+    for (const l of pg.nets){ const q = careQuote('net', l.id, true);
+      h.push('<div class="ph-card"><h4>' + l.n + ' ' + L('garn', 'nets') + ' ' + netNo(l) + '</h4>' + kv(L('Stand', 'Condition'), pctOf(l.cond) + ' · ' + L('tak ', 'ceiling ') + pctOf(nMax(l))) + cbar(l.cond) + '<div class="ph-btncol">' +
+        (q ? cbtn('grmend', 'data-id="' + l.id + '" data-m="shop"', L('Bøt garna', 'Mend the nets') + qTxt(q), here && q.fee <= S.cash) : '') + sell('net', l.id, 1, L('garna', 'the nets')) + '</div></div>'); }
+    if (pg.pots.big){ const q = careQuote('pot', 0, true);
+      h.push('<div class="ph-card"><h4>' + pg.pots.big + ' ' + POTS.big[S.lang].toLowerCase() + '</h4>' + kv(L('Stand', 'Condition'), pctOf(pg.potc.cond) + ' · ' + L('tak ', 'ceiling ') + pctOf(pg.potc.max)) + cbar(pg.potc.cond) + '<div class="ph-btncol">' +
+        (q ? cbtn('carepot', 'data-m="shop"', L('Reparer teinene', 'Mend the pots') + qTxt(q), here && q.fee <= S.cash) : '') + sell('pot', 0, 1, L('1 teine', '1 pot')) + (pg.pots.big > 1 ? sell('pot', 0, pg.pots.big, pg.pots.big + ' ' + L('teiner', 'pots')) : '') + '</div></div>'); }
+    const rest = [];
+    for (const k of ['mark', 'kveite']) if (pg.jig[k].n > 0) rest.push(sell('jig', k, 1, L('reservesett: ', 'spare set: ') + CARE.jig[k][S.lang].toLowerCase()));
+    if (pg.kits.n > 0) rest.push(sell('kit', 0, 1, L('blåsesett', 'buoy set'))); if (pg.kits.heavy > 0) rest.push(sell('heavy', 0, 1, L('tung dregg', 'heavy anchor'))); if (pg.hooks >= 100) rest.push(sell('hooks', 0, 100, L('100 kroker', '100 hooks')));
+    if (rest.length) h.push('<div class="ph-card"><h4>' + L('Annet utstyr', 'Other gear') + '</h4><div class="ph-btncol">' + rest.join('') + '</div></div>');
+    return h.join('') + '</div>';
+  }
   function iceCard(){
     const b = S.boat, pt = portById(b.port), here = atKind('mottak') && pt, ice = here && pt.ice, room = shopIceRoom(), ikr = shopIceKr(), buy = shopBtn;
     const h = [];
@@ -382,7 +404,7 @@ const PHONE = (() => {
   function render(){ status(); setBadge(); if (!isOpen) return; if (app === 'patch' && S.settings.patchSeen !== PATCH[0][0]){ S.settings.patchLast = S.settings.patchSeen; S.settings.patchSeen = PATCH[0][0]; } const key = app + '|' + (sub[app] || ''), y = key === shown ? view.scrollTop : 0; view.innerHTML = app === 'home' ? home() : shell(app); shown = key; view.scrollTop = y; }
   // every page by name: the phone apps, and the pages that open in the dock's drawer instead (DRAWER)
   const PAGES = () => ({vaer, post, salg, kvote, regler, redning, rederi, meld, haill, logg, sjomann, merker, notat:() => NOTEBOOK.page(), sesong:() => SEASONAPP.page(), guide:() => GUIDE.page(), folk:() => FOLKAPP.page(), trim, patch, tilbake:() => FEEDBACK.page(), innst, admin,
-    ordl, rigg, arbeid:() => WORK.page() + DRIFTUI.page(), drift:() => DRIFTUI.page(), fiske, fartoy:() => fartoy('marked'), maler:() => PAINT.page(), utstyr:() => utstyr('verft'), utstyrb:() => utstyr('butikk'), redskap, mannskap, bors, bank, verksted, havn, last, lever, is:isApp, agn, oppdrag, beholdning});
+    ordl, rigg, arbeid:() => WORK.page() + DRIFTUI.page(), drift:() => DRIFTUI.page(), fiske, service, fartoy:() => fartoy('marked'), maler:() => PAINT.page(), utstyr:() => utstyr('verft'), utstyrb:() => utstyr('butikk'), redskap, mannskap, bors, bank, verksted, havn, last, lever, is:isApp, agn, oppdrag, beholdning});
   function shell(a){ const d = APPS.find(x => x[0] === a) || [a, a, a, '#28507f'], f = PAGES()[a]; return '<div class="ph-appv' + (a === 'post' || a === 'notat' ? ' ph-paper' : '') + '"><div class="ph-top" style="background:' + d[3] + '"><span class="ic">' + (IC[a] || '') + '</span>' + L(d[1], d[2]) + '</div>' + (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) + '</div>'; }
   // a page for the drawer, and an action tapped there: it runs as if that page were the open app, and says which page shows next
   function page(a){ const f = PAGES()[a]; return f ? (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) : ''; }
@@ -413,6 +435,14 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p95', '08.10.2026', 'Utstyr som slites, og service i utstyrsbutikken', 'Gear that wears, and service at the tackle shop', [
+      ['Lina har status: selve lina og krokene (i orden, bøyde og manglende). Nye liner kommer komplette. Slitte kroker byttes mot kroker du har kjøpt, og friske kroker fisker 5 % bedre de første trekkene. Er lina selv utslitt, lønner det seg å selge den og kjøpe ny.', 'The line has a status: the line itself and the hooks (fine, bent and missing). New line comes complete. Worn hooks are changed from hooks you have bought, and fresh hooks catch 5 % better for the first hauls. When the line itself is worn out, it pays to sell it and buy a new one.'],
+      ['Kroker kjøpes i pakker på 100, 500 og 1000 i utstyrsbutikken og ligger i Beholdning sammen med resten av utstyret. Der ser du også status og tak for garn, line, teiner og juksa, og en oversikt over agnet om bord.', 'Hooks are bought in packs of 100, 500 and 1000 at the tackle shop and sit in Inventory with the rest of the gear. There you also see the condition and ceiling of nets, line, pots and the jig, and an overview of the bait aboard.'],
+      ['Ny Service-knapp hos utstyrsbutikken: butikken reparerer line, bøter garn, reparerer teiner og bytter kroker på halve tiden mot et gebyr, og kjøper utstyret tilbake til en firedel av nypris ganger standen. Hver reparasjon senker taket litt, så alt må byttes ut en gang.', 'A new Service button at the tackle shop: the shop mends line, mends nets, mends pots and changes hooks in half the time for a fee, and buys the gear back at a quarter of the new price times its condition. Every repair lowers the ceiling a little, so everything has to be replaced once.'],
+      ['Mannskapet vedlikeholder selv i havn når de ikke har noe annet å gjøre, så lenge du har kroker på lager. Det kan slås av i Beholdning.', 'The crew does the upkeep itself in port when they have nothing else to do, as long as you have hooks in the store. It can be turned off in Inventory.'],
+      ['Pilk og markkroker til juksa og kveitepilken kjøpes som sett, slites ved fiske og byttes. Du velger i Beholdning hva du fisker med.', 'Pilk with fly hooks and the halibut pilk for the jig are bought as sets, wear with fishing and are changed. You choose under Inventory what to fish with.'],
+      ['Du kan ikke kjøpe flere blåsesett og dregger enn du har line, garn og teiner til å bruke dem på.', 'You cannot buy more buoy sets and anchors than you have line, nets and pots to use them on.'],
+      ['«Klargjøring til neste tur» er tatt ut av Vedlikehold på verftet.', '«Getting ready for the next trip» is gone from Maintenance at the yard.']]],
     ['p94', '08.10.2026', 'Krabbeteiner: én størrelse, plass etter båten', 'Crab pots: one size, room by the boat', [
       ['Det er nå bare én krabbeteine, den store (1,55 × 1,45 × 1,07 m). Den heter «Krabbeteiner». Små teiner du hadde, er blitt store.', 'There is now one crab pot, the big one (1.55 × 1.45 × 1.07 m). It is called "Crab pots". Any small pots you had have become big ones.'],
       ['Hyselina har nå 600 kroker per stamp (en stamp rommer 200–600, etter Fiskeridirektoratets redskapshefte), og et garn er 28 m. Kystbåtene har høyst 33 stamper (ca. 20 000 kroker), og den eldre 21-meteren har plass til 240 garn.', 'Haddock line now has 600 hooks a tub (a tub holds 200–600, after the Directorate of Fisheries gear booklet), and a net is 28 m. The coastal boats have at most 33 tubs (about 20,000 hooks), and the older 21 m boat has room for 240 nets.'],
@@ -1196,7 +1226,7 @@ const PHONE = (() => {
   }
   // --- the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
   const SEL_APPS = ['drift', 'fartoy', 'utstyr', 'utstyrb', 'redskap', 'mannskap', 'bors', 'verksted'];
-  const DRAWER = new Set(['drift', 'arbeid', 'rigg', 'fiske', 'fartoy', 'utstyr', 'utstyrb', 'redskap', 'mannskap', 'bors', 'bank', 'verksted', 'havn', 'last', 'lever', 'is', 'agn', 'oppdrag', 'beholdning', 'maler']);
+  const DRAWER = new Set(['drift', 'arbeid', 'rigg', 'fiske', 'service', 'fartoy', 'utstyr', 'utstyrb', 'redskap', 'mannskap', 'bors', 'bank', 'verksted', 'havn', 'last', 'lever', 'is', 'agn', 'oppdrag', 'beholdning', 'maler']);
   let selV = null;
   const selVessel = () => (selV && vesselById(selV)) || curVessel();
   const withSel = fn => withVessel(selVessel(), fn);
@@ -1279,6 +1309,45 @@ const PHONE = (() => {
     h.push('</div>'); return h.join('');
   }
   // --- gear: in the sea, aboard (baiting and mending), and the shop
+  // ---- gear care (core/10b-gearcare.js): the condition of the gear aboard, and what the crew can do about it in port
+  const pctOf = v => Math.round(v * 100) + ' %';
+  const cbar = v => '<div class="ph-bar"><i style="width:' + Math.round(clamp(v, 0, 1) * 100) + '%"></i></div>';
+  const cbtn = (a, attrs, label, ok, cls) => '<button class="ph-btn' + (cls ? ' ' + cls : '') + '" data-pa="' + a + '" ' + attrs + (ok === false ? ' disabled' : '') + '>' + label + '</button>';
+  const qTxt = q => q ? ' · ' + (q.fee ? kr(q.fee) + ' · ' : '') + realDur(q.h * 60) : '';
+  function careAboard(inPort, p){
+    const pg = careInit(S.pgear), b = S.boat, h = ['<div class="ph-card"><h4>' + L('Line', 'Line') + '</h4>'];
+    for (const lk of ['hyse', 'bank']){ const L0 = pg.lines[lk], un = L0.n - L0.baited; if (!L0.n) continue;
+      const tot = L0.n * LINE_KINDS[lk].hooks, miss = Math.round(L0.miss * tot), bent = Math.round(L0.bent * tot);
+      h.push(kv(LINE_KINDS[lk][S.lang], L0.n + ' ' + L('stamper', 'tubs') + ', ' + L0.baited + ' ' + L('egnet', 'baited')) + kv(L('Lina', 'The line'), pctOf(L0.cond) + ' · ' + L('tak ', 'ceiling ') + pctOf(L0.max)) + cbar(L0.cond) +
+        kv(L('Kroker', 'Hooks'), (tot - miss - bent) + ' ' + L('i orden', 'fine') + ', ' + bent + ' ' + L('bøyde', 'bent') + ', ' + miss + ' ' + L('mangler', 'missing')) + (L0.sharp > 0 ? '<p class="ph-note">' + L('Nye kroker: fisker 5 % bedre i ' + L0.sharp + ' trekk til.', 'Fresh hooks: 5 % better catch for ' + L0.sharp + ' more hauls.') + '</p>' : ''));
+      if (L0.max <= 0.45) h.push('<p class="ph-note">' + L('Lina er så slitt at det lønner seg å skifte den: selg den i utstyrsbutikken (Service) og kjøp ny.', 'The line is so worn that it pays to replace it: sell it at the tackle shop (Service) and buy a new one.') + '</p>');
+      if (inPort){ const qh = careQuote('hooks', lk, false), ql = careQuote('line', lk, false), need = hooksNeed(lk), hb = [];
+        if (need > 0) hb.push(cbtn('carehk', 'data-lk="' + lk + '" data-m="self"', L('Bytt ', 'Change ') + (qh ? qh.n : need) + L(' kroker selv', ' hooks yourselves') + qTxt(qh) + (qh ? '' : ' · ' + L('ingen kroker på lager', 'no hooks in the store')), !!qh));
+        if (ql) hb.push(cbtn('carelr', 'data-lk="' + lk + '" data-m="self"', L('Reparer lina selv', 'Mend the line yourselves') + qTxt(ql), true));
+        if (hb.length) h.push('<div class="ph-btncol">' + hb.join('') + '</div>'); }
+      if (inPort && un > 0) h.push('<div class="ph-btncol">' + (egnPort(p) ? '<button class="ph-btn p" data-pa="gregn" data-lk="' + lk + '" data-n="' + un + '" data-m="shed">' + L('Egnebua egner ' + un, 'The shed baits ' + un) + ' (' + kr(un * (LINE_KINDS[lk].egn + LINE_KINDS[lk].baitKg * BAITS[BAITS[pg.baitPref] ? pg.baitPref : 'makrell'].kr)) + ')</button>' : '') +
+        '<button class="ph-btn" data-pa="gregn" data-lk="' + lk + '" data-n="' + un + '" data-m="self">' + L('Egn ' + un + ' selv', 'Bait ' + un + ' yourselves') + ' (' + fmt(un * LINE_KINDS[lk].baitKg, 0) + ' kg ' + L('agn', 'bait') + ')</button></div>'); }
+    if (!pg.lines.hyse.n && !pg.lines.bank.n) h.push('<p class="ph-note">' + L('Ingen line om bord.', 'No line aboard.') + '</p>');
+    h.push('<p class="ph-note">' + L('Kroker på lager: ', 'Hooks in store: ') + pg.hooks + '. ' + L('Kjøpes i pakker på 100, 500 og 1000 i utstyrsbutikken.', 'Bought in packs of 100, 500 and 1000 at the tackle shop.') + '</p></div>');
+    // pots
+    h.push('<div class="ph-card"><h4>' + L('Teiner', 'Pots') + '</h4>' + kv(POTS.big[S.lang], pg.pots.big));
+    if (pg.pots.big){ h.push(kv(L('Stand', 'Condition'), pctOf(pg.potc.cond) + ' · ' + L('tak ', 'ceiling ') + pctOf(pg.potc.max)) + cbar(pg.potc.cond));
+      if (inPort){ const qp = careQuote('pot', 0, false); if (qp) h.push('<div class="ph-btncol">' + cbtn('carepot', 'data-m="self"', L('Reparer teinene selv', 'Mend the pots yourselves') + qTxt(qp), true) + '</div>'); } }
+    h.push('</div>');
+    // the jig: the pilk and hooks that are mounted, and the spare sets
+    if (b.gear || b.kgear){ h.push('<div class="ph-card"><h4>' + L('Juksa', 'Jig') + '</h4>');
+      for (const k of ['mark', 'kveite']){ if (k === 'mark' ? !b.gear : !b.kgear) continue; const J = pg.jig[k], on = jigKind() === k, qj = 1;
+        h.push(kv(CARE.jig[k][S.lang] + (on ? ' · ' + L('i bruk', 'in use') : ''), pctOf(J.c) + ' · ' + J.n + ' ' + L('på lager', 'spare')) + cbar(J.c));
+        const bt = []; if (!on) bt.push(cbtn('jigsel', 'data-k="' + k + '"', L('Bruk ', 'Use ') + CARE.jig[k][S.lang].toLowerCase(), true)); if (inPort && J.n > 0 && J.c < 0.98 && qj) bt.push(cbtn('carejig', 'data-k="' + k + '"', L('Bytt til nytt sett', 'Fit a new set'), true));
+        if (bt.length) h.push('<div class="ph-btncol">' + bt.join('') + '</div>'); }
+      h.push('<p class="ph-note">' + L('Pilk og kroker slites ved fiske. Reservesett kjøpes i utstyrsbutikken, og du velger her hva du fisker med.', 'Pilk and hooks wear with fishing. Spare sets are bought at the tackle shop, and you choose here what to fish with.') + '</p></div>'); }
+    // buoys, bait and the crew's own upkeep
+    const bk = Object.entries(baitOf(pg)).filter(e => e[1] > 0.05);
+    h.push('<div class="ph-card"><h4>' + L('Blåser og agn', 'Buoys and bait') + '</h4>' + kv(L('Blåsesett', 'Buoy sets'), pg.kits.n + (pg.kits.heavy ? ' (' + pg.kits.heavy + ' ' + L('med tung dregg', 'with heavy anchor') + ')' : '')) +
+      (bk.length ? bk.map(e => kv(BAITS[e[0]] ? BAITS[e[0]][S.lang] : e[0], fmt(e[1], 0) + ' kg')).join('') : kv(L('Agn', 'Bait'), L('ingen', 'none'))) +
+      '<div class="ph-btncol">' + cbtn('careauto', '', L('Mannskapet vedlikeholder selv i havn: ', 'The crew does the upkeep in port: ') + (S.settings.careAuto === false ? L('av', 'off') : L('på', 'on')), true, 'alt') + '</div></div>');
+    return h.join('');
+  }
   function redskap(tab0){
     const tab = tab0 || sub.redskap || 'sjo', b = S.boat, pg = S.pgear, p = portById(b.port), inPortNow = b.status === 'port';
     const h = ['<div class="ph-c">' + (tab0 ? '' : subs('redskap', [['sjo', 'I sjøen', 'In the sea'], ['bord', 'Om bord', 'Aboard'], ['kjop', 'Kjøp', 'Buy']]))];
@@ -1294,21 +1363,15 @@ const PHONE = (() => {
       h.push('<p class="ph-note">' + L('Line er best innen et døgn. Etter 24 timer tar marfloen fisken. Teiner bør stå minst 20 timer og trekkes innen 48. Garn trekkes helst hver dag. Om sommeren går fisken fort i garnet.', 'Line is best within a day. After 24 hours the amphipods take the fish. Pots should stand at least 20 hours and be hauled within 48. Nets are best hauled daily. In summer the fish spoils fast in the net.') + '</p>');
     } else if (tab === 'bord'){
       h.push('<div class="ph-card"><h4>' + L('Garn', 'Nets') + '</h4>' + (pg.nets.length ? '' : '<p class="ph-note">' + L('Ingen garn om bord.', 'No nets aboard.') + '</p>'));
-      for (const l of pg.nets){ h.push('<div class="ph-kv"><span>' + l.n + ' garn ' + netNo(l) + '</span><span>' + Math.round(l.cond * 100) + ' %</span></div><div class="ph-bar"><i style="width:' + Math.round(l.cond * 100) + '%"></i></div>');
-        if (inPortNow && l.cond < 0.9) h.push('<div class="ph-btncol"><button class="ph-btn" data-pa="grmend" data-id="' + l.id + '" data-m="self">' + L('Bøt selv', 'Mend yourselves') + '</button>' + (botPort(p) ? '<button class="ph-btn" data-pa="grmend" data-id="' + l.id + '" data-m="bot">' + L('Lever til bøteriet', 'Leave at the net loft') + ' (' + kr(Math.round(GPRICE.bot * l.n * (0.95 - l.cond) / 0.1)) + ')</button>' : '') + '</div>');
+      for (const l of pg.nets){ h.push('<div class="ph-kv"><span>' + l.n + ' garn ' + netNo(l) + '</span><span>' + Math.round(l.cond * 100) + ' % · ' + L('tak ', 'ceiling ') + Math.round(nMax(l) * 100) + ' %</span></div><div class="ph-bar"><i style="width:' + Math.round(l.cond * 100) + '%"></i></div>');
+        if (inPortNow && l.cond < nMax(l) - 0.05) h.push('<div class="ph-btncol"><button class="ph-btn" data-pa="grmend" data-id="' + l.id + '" data-m="self">' + L('Bøt selv', 'Mend yourselves') + '</button>' + (botPort(p) ? '<button class="ph-btn" data-pa="grmend" data-id="' + l.id + '" data-m="bot">' + L('Lever til bøteriet', 'Leave at the net loft') + ' (' + kr(Math.round(GPRICE.bot * l.n * (nMax(l) - l.cond) / 0.1)) + ')</button>' : '') + '</div>');
         if (l.n >= 2) h.push('<button class="ph-btn alt" data-pa="grsplit" data-id="' + l.id + '">' + L('Del lenka i to', 'Split the string') + '</button>'); }
       if (pg.nets.length >= 2){ const m = {}; for (const l of pg.nets) (m[netKey(l.ty, l.mesh)] = m[netKey(l.ty, l.mesh)] || []).push(l); for (const k in m) if (m[k].length >= 2) h.push('<button class="ph-btn alt" data-pa="grjoin" data-a="' + m[k][0].id + '" data-b="' + m[k][1].id + '">' + L('Slå sammen lenker på ' + k.replace(':', ' ') + ' mm', 'Join strings of ' + k.replace(':', ' ') + ' mm') + '</button>'); }
-      h.push('</div><div class="ph-card"><h4>' + L('Line', 'Line') + '</h4>');
-      for (const lk of ['hyse', 'bank']){ const L0 = pg.lines[lk], un = L0.n - L0.baited; if (!L0.n) continue;
-        h.push(kv(LINE_KINDS[lk][S.lang], L0.n + ' ' + L('stamper', 'tubs') + ', ' + L0.baited + ' ' + L('egnet', 'baited')));
-        if (inPortNow && un > 0) h.push('<div class="ph-btncol">' + (egnPort(p) ? '<button class="ph-btn p" data-pa="gregn" data-lk="' + lk + '" data-n="' + un + '" data-m="shed">' + L('Egnebua egner ' + un, 'The shed baits ' + un) + ' (' + kr(un * (LINE_KINDS[lk].egn + LINE_KINDS[lk].baitKg * BAITS[BAITS[pg.baitPref] ? pg.baitPref : 'makrell'].kr)) + ')</button>' : '') +
-          '<button class="ph-btn" data-pa="gregn" data-lk="' + lk + '" data-n="' + un + '" data-m="self">' + L('Egn ' + un + ' selv', 'Bait ' + un + ' yourselves') + ' (' + fmt(un * LINE_KINDS[lk].baitKg, 0) + ' kg ' + L('agn', 'bait') + ')</button></div>'); }
-      if (!pg.lines.hyse.n && !pg.lines.bank.n) h.push('<p class="ph-note">' + L('Ingen line om bord.', 'No line aboard.') + '</p>');
-      h.push('</div><div class="ph-card"><h4>' + L('Teiner, blåser og agn', 'Pots, buoys and bait') + '</h4>' + kv(POTS.big[S.lang], pg.pots.big) + kv(L('Blåsesett', 'Buoy sets'), pg.kits.n + (pg.kits.heavy ? ' (' + pg.kits.heavy + ' ' + L('med tung dregg', 'with heavy anchor') + ')' : '')) + kv(L('Agn', 'Bait'), fmt(baitKg(pg), 0) + ' kg') + '</div>');
+      h.push('</div>' + careAboard(inPortNow, p));
       const shore = pg.shore.filter(j => j.ready); if (shore.length) h.push('<div class="ph-card"><h4>' + L('På land', 'Ashore') + '</h4>' + shore.map(j => kv(j.kind === 'egn' ? j.n + ' ' + L('stamper i egnebua', 'tubs at the baiting shed') : j.n + ' ' + L('garn på bøteriet', 'nets at the net loft'), portById(j.port).name + ', ' + L('klar ', 'ready ') + (S.t >= j.ready ? L('nå', 'now') : hm(j.ready / 60)))).join('') + '</div>');
     } else {
       // quantities follow the room aboard: a skiff gets fewer nets per button than a sjark
-      const room = k => gearRoom(k), cap = w => w === 'net' ? room('garn') : w === 'stamp' ? room('line') : w === 'pot' ? room('teine') : 1e9;
+      const room = k => gearRoom(k), cap = w => w === 'net' ? room('garn') : w === 'stamp' ? room('line') : w === 'pot' ? room('teine') : w === 'kit' ? kitRoomNow() : 1e9;
       const buy = (w, s, n0, lbl, unit) => { const n = Math.max(1, Math.min(n0, cap(w))), price = n * unit, ok = cap(w) >= 1 && price <= S.cash && inPortNow;
         return '<button class="ph-btn' + (ok ? ' p' : '') + '"' + (ok ? '' : ' disabled') + ' data-pa="grbuy" data-w="' + w + '" data-s="' + s + '" data-n="' + n + '">' + lbl(n) + ' (' + kr(price) + ')</button>'; };
       if (!inPortNow) h.push('<div class="ph-card"><p class="ph-note">' + L('Redskap kjøpes i havn.', 'Gear is bought in port.') + '</p></div>');
@@ -1317,6 +1380,9 @@ const PHONE = (() => {
       h.push('<div class="ph-card"><h4>' + L('Teiner', 'Pots') + '</h4><p>' + L('For kongekrabbe, som fiskes fritt vest for 26° Ø, men nesten bare finnes i Finnmark. Teinene er store og må trekkes med teinehaler eller elektrisk haler. Det er høyst 30 per fartøy. Uten krabbekar lever krabben rundt et døgn. Plass til ', 'For king crab, fished freely west of 26° E but found almost only in Finnmark. The pots are big and need a pot hauler or an electric hauler. At most 30 a vessel. Without a crab tank a crab lives about a day. Room for ') + room('teine') + L(' til.', ' more.') + '</p><div class="ph-btncol">' + buy('pot', 'big', 20, n => n + ' ' + POTS.big[S.lang].toLowerCase(), POTS.big.price) + '</div></div>');
       h.push('<div class="ph-card"><h4>' + L('Blåser, dregg og agn', 'Buoys, anchors and bait') + '</h4><p>' + L('Hvert sett i sjøen trenger et blåsesett: to blåser med stake, flagg og dregg. Tung dregg holder bedre i storm og strøm.', 'Each set in the sea needs a buoy set: two buoys with pole, flag and anchor. A heavy anchor holds better in storm and current.') + '</p><div class="ph-btncol">' +
         buy('kit', 0, 1, () => L('Blåsesett', 'Buoy set'), GPRICE.kit) + (pg.kits.heavy < pg.kits.n ? buy('heavy', 0, 1, () => L('Tung dregg', 'Heavy anchor'), GPRICE.heavy) : '') + buy('bait', 0, 20, () => L('20 kg agn', '20 kg bait'), GPRICE.bait) + buy('bait', 0, 100, () => L('100 kg agn', '100 kg bait'), GPRICE.bait) + '</div></div>');
+      h.push('<div class="ph-card"><h4>' + L('Kroker og juksautstyr', 'Hooks and jig tackle') + '</h4><p>' + L('Ny line kommer komplett med kroker. Slitte eller bøyde kroker byttes mot kroker fra lageret, under Om bord. Pilk og kroker til juksa slites og byttes på samme måte. Blåsesett og dregger kan ikke kjøpes i flere enn redskapet ditt kan bruke.', 'New line comes complete with hooks. Worn or bent hooks are changed from the store, under Aboard. The jig\'s pilk and hooks wear and are changed the same way. Buoy sets and anchors cannot be bought in greater numbers than your gear can use.') + '</p><div class="ph-btncol">' +
+        buy('hooks', 100, 1, () => L('100 kroker', '100 hooks'), CARE.hookKr[100]) + buy('hooks', 500, 1, () => L('500 kroker', '500 hooks'), CARE.hookKr[500]) + buy('hooks', 1000, 1, () => L('1000 kroker', '1000 hooks'), CARE.hookKr[1000]) +
+        buy('jig', 'mark', 1, () => L('Markkroker og pilk (sett)', 'Fly hooks and pilk (set)'), CARE.jig.mark.kr) + buy('jig', 'kveite', 1, () => L('Kveitepilk (sett)', 'Halibut pilk (set)'), CARE.jig.kveite.kr) + '</div></div>');
       h.push('<p class="ph-note">' + L('Halere finner du under Verft, Oppgraderinger. Prisene er foreløpige.', 'Haulers are under Yard, Upgrades. Prices are provisional.') + '</p>');
     }
     return h.join('') + '</div>';
@@ -1484,7 +1550,14 @@ const PHONE = (() => {
     else if (a === 'book'){ show(false); BOOK.open('salg', +d.i); return false; }
     else if (a === 'goset'){ const s = (S.sets || []).find(x => x.id === d.id); if (s) DOCK.goTo(s); return false; }
     else if (a === 'gregn'){ const why = d.m === 'shed' ? egnOrder(d.lk, +d.n) : egnSelf(d.lk, +d.n); if (why){ toast(why[0]); return; } }
-    else if (a === 'grmend'){ const why = d.m === 'bot' ? botOrder(d.id) : mendSelf(d.id); if (why){ toast(why[0]); return; } }
+    else if (a === 'grmend'){ const why = d.m === 'bot' ? botOrder(d.id) : d.m === 'shop' ? netShop(d.id) : mendSelf(d.id); if (why){ toast(why[0]); return; } }
+    else if (a === 'carehk'){ const why = hooksJob(d.lk, d.m === 'shop'); if (why){ toast(why[0]); return; } }
+    else if (a === 'carelr'){ const why = lineFix(d.lk, d.m === 'shop'); if (why){ toast(why[0]); return; } }
+    else if (a === 'carepot'){ const why = potFix(d.m === 'shop'); if (why){ toast(why[0]); return; } }
+    else if (a === 'carejig'){ const why = jigJob(d.k); if (why){ toast(why[0]); return; } }
+    else if (a === 'jigsel'){ const why = jigChoose(d.k); if (why){ toast(why[0]); return; } }
+    else if (a === 'careauto'){ S.settings.careAuto = S.settings.careAuto === false; }
+    else if (a === 'caresell'){ const why = sellGear(d.w, isNaN(+d.k) ? d.k : +d.k, +d.n || 1); if (why){ toast(why[0]); return; } }
     else if (a === 'grsplit'){ const l = S.pgear.nets.find(x => x.id === d.id); if (l) splitNets(l.id, Math.floor(l.n / 2)); }
     else if (a === 'grjoin'){ joinNets(d.a, d.b); }
     else if (a === 'jobx'){ const j = (S.jobs || [])[+d.i]; if (j && j.until == null){ S.jobs.splice(+d.i, 1); gearJobCancel(j); const refund = j.kind === 'prep' ? PREP[j.k].cost : j.kind === 'fit' ? EQUIP[j.k].price : j.kind === 'hold' ? upPrice(HOLDUP[j.lv - 1].pc) : j.kind === 'eng' ? upPrice(ENGUP[j.lv - 1].pc) : j.kind === 'hull' ? 1500 + Math.round(BOAT.len * 400 / 100) * 100 : 0; S.cash += refund; S.stats.costs -= refund; } }

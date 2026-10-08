@@ -86,52 +86,57 @@ const kitRoomNow = () => Math.max(0, kitMax() - S.pgear.kits.n - mySets().length
 function hooksNeed(lk){ const L = careG().lines[lk]; return Math.round((L.miss + L.bent) * L.n * LINE_KINDS[lk].hooks); }
 function careWhy(){ const b = S.boat; return b.status !== 'port' ? [gL('Vedlikehold gjøres i havn.', 'Upkeep is done in port.')] : null; }
 function careShopWhy(){ const b = S.boat, sv = portServices(portById(b.port), berthKind(b)); return !sv.butikk ? [gL('Butikken må ta det: gå til utstyrsbutikken.', 'The shop has to do it: go to the tackle shop.')] : null; }
-// the hooks: the crew uses the hooks in the store (pg.hooks), the shop its own (at the pack price and its work)
+// what a job would cost and take: {n, fee, h, mat} or null when there is nothing to do or nobody to do it. The shop does it in half the time
+// for a fee; the crew uses its own hooks (pg.hooks) and a little material
+function careQuote(what, key, shop){
+  const pg = careG();
+  if (what === 'hooks'){ const L = pg.lines[key], need = hooksNeed(key), n = shop ? need : Math.min(need, pg.hooks), ce = careHands('line'); if (n < 1 || !ce.hands) return null;
+    return {n, need, tot:L.n * LINE_KINDS[key].hooks, fee:shop ? Math.round(n * (CARE.hookKr[100] / 100 + CARE.feeHook)) : 0, h:careJobHours(n / (CARE.hookRate * ce.eff), shop)}; }
+  if (what === 'line'){ const L = pg.lines[key], ce = careHands('line'); if (!L.n || L.cond >= L.max - 0.05 || !ce.hands) return null; const d = L.max - L.cond;
+    return {n:L.n, fee:shop ? Math.round(CARE.feeLine * L.n * d / 0.1) : Math.round(CARE.matLine * L.n * d / 0.1), h:careJobHours(L.n * d / 0.25 * 0.5 / ce.eff, shop)}; }
+  if (what === 'pot'){ const c = pg.potc, n = pg.pots.big, ce = careHands('teiner'); if (!n || c.cond >= c.max - 0.05 || !ce.hands) return null; const d = c.max - c.cond;
+    return {n, fee:shop ? Math.round(CARE.feePot * n * d / 0.1) : Math.round(CARE.matPot * n * d / 0.1), h:careJobHours(n * d / 0.25 * 0.3 / ce.eff, shop)}; }
+  if (what === 'net'){ const l = pg.nets.find(x => x.id === key), ce = careHands('garn'); if (!l || l.cond >= nMax(l) - 0.05 || !ce.hands) return null; const d = nMax(l) - l.cond;
+    return {n:l.n, fee:shop ? Math.round(GPRICE.bot * l.n * d / 0.1 * 0.8) : 0, h:careJobHours(l.n * d / 0.25 * 0.5 / ce.eff, shop)}; }
+  return null;
+}
+const careNoHands = () => [gL('Ingen om bord kan gjøre jobben.', 'Nobody aboard can do the job.')];
+function careGate(shop){ return careWhy() || (shop ? careShopWhy() : null); }
+function careQueue(j, fee){ if (fee > S.cash) return [gL('Ikke nok penger.', 'Not enough money.')]; if (!queueJob(j)) return [gL('Verkstedkøen er full.', 'The work queue is full.')]; S.cash -= fee; S.stats.costs += fee; return null; }
 function hooksJob(lk, shop){
-  const pg = careG(), L = pg.lines[lk], why = careWhy() || (shop ? careShopWhy() : null); if (why) return why;
-  const need = hooksNeed(lk); if (need < 1) return [gL('Kroken sitter som den skal.', 'The hooks are in order.')];
-  const n = shop ? need : Math.min(need, pg.hooks); if (n < 1) return [gL('Du har ingen kroker å bytte med. Kjøp en pakke i utstyrsbutikken.', 'You have no hooks to change with. Buy a pack at the tackle shop.')];
-  const fee = shop ? Math.round(n * (CARE.hookKr[100] / 100 + CARE.feeHook)) : 0; if (fee > S.cash) return [gL('Ikke nok penger.', 'Not enough money.')];
-  const ce = careHands('line'); if (!ce.hands) return [gL('Ingen om bord kan bytte kroker.', 'Nobody aboard can change hooks.')];
-  const h = careJobHours(n / (CARE.hookRate * ce.eff), shop);
-  if (!queueJob({kind:'hk', lk, n, need0:need, tot0:L.n * LINE_KINDS[lk].hooks, h, shop:!!shop, fee, no:(shop ? 'Butikken bytter ' : 'Bytte ') + n + ' kroker på ' + LINE_KINDS[lk].no.toLowerCase(), en:(shop ? 'The shop changes ' : 'Changing ') + n + ' hooks on ' + LINE_KINDS[lk].en.toLowerCase()})) return [gL('Verkstedkøen er full.', 'The work queue is full.')];
-  if (shop){ S.cash -= fee; S.stats.costs += fee; } else pg.hooks -= n;
-  log((shop ? 'Butikken bytter ' : 'Bytter ') + n + ' kroker, ca. ' + fmt(h, 1) + ' t.', (shop ? 'The shop changes ' : 'Changing ') + n + ' hooks, about ' + fmt(h, 1) + ' h.');
+  const pg = careG(), why = careGate(shop); if (why) return why;
+  if (hooksNeed(lk) < 1) return [gL('Kroken sitter som den skal.', 'The hooks are in order.')];
+  const q = careQuote('hooks', lk, shop); if (!q) return !shop && pg.hooks < 1 ? [gL('Du har ingen kroker å bytte med. Kjøp en pakke i utstyrsbutikken.', 'You have no hooks to change with. Buy a pack at the tackle shop.')] : careNoHands();
+  const e = careQueue({kind:'hk', lk, n:q.n, need0:q.need, tot0:q.tot, h:q.h, shop:!!shop, fee:q.fee, no:(shop ? 'Butikken bytter ' : 'Bytte ') + q.n + ' kroker på ' + LINE_KINDS[lk].no.toLowerCase(), en:(shop ? 'The shop changes ' : 'Changing ') + q.n + ' hooks on ' + LINE_KINDS[lk].en.toLowerCase()}, q.fee); if (e) return e;
+  if (!shop) pg.hooks -= q.n;
+  log((shop ? 'Butikken bytter ' : 'Bytter ') + q.n + ' kroker, ca. ' + fmt(q.h, 1) + ' t.', (shop ? 'The shop changes ' : 'Changing ') + q.n + ' hooks, about ' + fmt(q.h, 1) + ' h.');
   return null;
 }
 // the line itself: back to its ceiling, which drops
 function lineFix(lk, shop){
-  const pg = careG(), L = pg.lines[lk], why = careWhy() || (shop ? careShopWhy() : null); if (why) return why;
+  const pg = careG(), L = pg.lines[lk], why = careGate(shop); if (why) return why;
   if (!L.n || L.cond >= L.max - 0.05) return [gL('Lina trenger ikke reparasjon.', 'The line needs no repair.')];
-  const d = L.max - L.cond, fee = shop ? Math.round(CARE.feeLine * L.n * d / 0.1) : 0, mat = shop ? 0 : Math.round(CARE.matLine * L.n * d / 0.1); if (fee + mat > S.cash) return [gL('Ikke nok penger.', 'Not enough money.')];
-  const ce = careHands('line'); if (!ce.hands) return [gL('Ingen om bord kan reparere lina.', 'Nobody aboard can mend the line.')];
-  const h = careJobHours(L.n * d / 0.25 * 0.5 / ce.eff, shop);
-  if (!queueJob({kind:'lr', lk, h, shop:!!shop, fee:fee + mat, no:(shop ? 'Butikken reparerer ' : 'Reparere ') + LINE_KINDS[lk].no.toLowerCase(), en:(shop ? 'The shop mends the ' : 'Mending the ') + LINE_KINDS[lk].en.toLowerCase()})) return [gL('Verkstedkøen er full.', 'The work queue is full.')];
-  S.cash -= fee + mat; S.stats.costs += fee + mat;
-  log((shop ? 'Butikken reparerer' : 'Reparerer') + ' lina, ca. ' + fmt(h, 1) + ' t.', (shop ? 'The shop mends' : 'Mending') + ' the line, about ' + fmt(h, 1) + ' h.');
+  const q = careQuote('line', lk, shop); if (!q) return careNoHands();
+  const e = careQueue({kind:'lr', lk, h:q.h, shop:!!shop, fee:q.fee, no:(shop ? 'Butikken reparerer ' : 'Reparere ') + LINE_KINDS[lk].no.toLowerCase(), en:(shop ? 'The shop mends the ' : 'Mending the ') + LINE_KINDS[lk].en.toLowerCase()}, q.fee); if (e) return e;
+  log((shop ? 'Butikken reparerer' : 'Reparerer') + ' lina, ca. ' + fmt(q.h, 1) + ' t.', (shop ? 'The shop mends' : 'Mending') + ' the line, about ' + fmt(q.h, 1) + ' h.');
   return null;
 }
 function potFix(shop){
-  const pg = careG(), c = pg.potc, n = pg.pots.big, why = careWhy() || (shop ? careShopWhy() : null); if (why) return why;
+  const pg = careG(), c = pg.potc, n = pg.pots.big, why = careGate(shop); if (why) return why;
   if (!n || c.cond >= c.max - 0.05) return [gL('Teinene trenger ikke reparasjon.', 'The pots need no repair.')];
-  const d = c.max - c.cond, fee = shop ? Math.round(CARE.feePot * n * d / 0.1) : 0, mat = shop ? 0 : Math.round(CARE.matPot * n * d / 0.1); if (fee + mat > S.cash) return [gL('Ikke nok penger.', 'Not enough money.')];
-  const ce = careHands('teiner'); if (!ce.hands) return [gL('Ingen om bord kan reparere teiner.', 'Nobody aboard can mend pots.')];
-  const h = careJobHours(n * d / 0.25 * 0.3 / ce.eff, shop);
-  if (!queueJob({kind:'pr', h, shop:!!shop, fee:fee + mat, no:(shop ? 'Butikken reparerer ' : 'Reparere ') + n + ' teiner', en:(shop ? 'The shop mends ' : 'Mending ') + n + ' pots'})) return [gL('Verkstedkøen er full.', 'The work queue is full.')];
-  S.cash -= fee + mat; S.stats.costs += fee + mat;
-  log((shop ? 'Butikken reparerer ' : 'Reparerer ') + n + ' teiner, ca. ' + fmt(h, 1) + ' t.', (shop ? 'The shop mends ' : 'Mending ') + n + ' pots, about ' + fmt(h, 1) + ' h.');
+  const q = careQuote('pot', 0, shop); if (!q) return careNoHands();
+  const e = careQueue({kind:'pr', h:q.h, shop:!!shop, fee:q.fee, no:(shop ? 'Butikken reparerer ' : 'Reparere ') + n + ' teiner', en:(shop ? 'The shop mends ' : 'Mending ') + n + ' pots'}, q.fee); if (e) return e;
+  log((shop ? 'Butikken reparerer ' : 'Reparerer ') + n + ' teiner, ca. ' + fmt(q.h, 1) + ' t.', (shop ? 'The shop mends ' : 'Mending ') + n + ' pots, about ' + fmt(q.h, 1) + ' h.');
   return null;
 }
 // nets at the shop: the same as mending ourselves in half the time, for a fee
 function netShop(nid){
-  const b = S.boat, pg = careG(), l = pg.nets.find(x => x.id === nid), why = careWhy() || careShopWhy(); if (why) return why;
-  if (!l || l.cond >= l.max - 0.05) return [gL('Garna trenger ikke bøting.', 'The nets do not need mending.')];
-  const d = l.max - l.cond, fee = Math.round(GPRICE.bot * l.n * d / 0.1 * 0.8); if (fee > S.cash) return [gL('Ikke nok penger.', 'Not enough money.')];
-  const ce = careHands('garn'); if (!ce.hands) return [gL('Ingen om bord kan bøte.', 'Nobody aboard can mend.')];
-  const h = careJobHours(l.n * d / 0.25 * 0.5 / ce.eff, true);
-  if (!queueJob({kind:'mend', nid, h, shop:true, fee, no:'Butikken bøter ' + l.n + ' garn', en:'The shop mends ' + l.n + ' nets'})) return [gL('Verkstedkøen er full.', 'The work queue is full.')];
-  S.cash -= fee; S.stats.costs += fee; pg.nets.splice(pg.nets.indexOf(l), 1); pg.shore.push({kind:'mendself', lenke:l});
-  log('Butikken bøter ' + l.n + ' garn, ca. ' + fmt(h, 1) + ' t.', 'The shop mends ' + l.n + ' nets, about ' + fmt(h, 1) + ' h.'); void b;
+  const pg = careG(), l = pg.nets.find(x => x.id === nid), why = careGate(true); if (why) return why;
+  if (!l || l.cond >= nMax(l) - 0.05) return [gL('Garna trenger ikke bøting.', 'The nets do not need mending.')];
+  const q = careQuote('net', nid, true); if (!q) return careNoHands();
+  const e = careQueue({kind:'mend', nid, h:q.h, shop:true, fee:q.fee, no:'Butikken bøter ' + l.n + ' garn', en:'The shop mends ' + l.n + ' nets'}, q.fee); if (e) return e;
+  pg.nets.splice(pg.nets.indexOf(l), 1); pg.shore.push({kind:'mendself', lenke:l});
+  log('Butikken bøter ' + l.n + ' garn, ca. ' + fmt(q.h, 1) + ' t.', 'The shop mends ' + l.n + ' nets, about ' + fmt(q.h, 1) + ' h.');
   return null;
 }
 // changing the jig tackle: a spare set goes on, the old one is thrown out

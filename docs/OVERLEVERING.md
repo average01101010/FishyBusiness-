@@ -3551,6 +3551,25 @@ Egne båter vises med egne symboler i kartplotteren, og du kan trykke for å fø
 
 Større fartøyklasser, snurrevad, trål og ringnot (med lisenser, sonar og farvann utenfor 12 nm), egne anlegg og nye regioner. For PWA, server og hele kysten, se «PWA og hele kysten (veikart)».
 
+### 5.36 Utstyrsstatus, service og tilbakekjøp (Jonas 08.10.2026)
+
+Alt dette ligger i `core/10b-gearcare.js` (kjernen) og i `ui/05-phone.js` (Beholdning og Service-siden), testet av `tests/caretest.py`. Tallene er startverdier uten kilde.
+
+- **Hva slites:**
+  - Line: selve lina (`cond`, med et tak `max` som synker 0,07 for hver reparasjon) og krokene (andel manglende `miss` og bøyde `bent`). Ny line kommer komplett. Under 35 % kan stamper gå av ved trekk.
+  - Garn: `cond` som før, og et tak som synker 0,04 for hver bøting.
+  - Teiner: én stand for teinene om bord (`pg.potc`), tak −0,05 per reparasjon. Under 30 % kan teiner gå tapt.
+  - Juksa: pilk og markkroker (`mark`) og kveitepilk (`kveite`) i `pg.jig`, med reservesett. Valget er `S.target` (`mix` eller `kveite`). Fanger 0,65–1,0 av normalt etter standen.
+  - Slitasjen kommer av bruk: tung fangst per enhet, grov sjø, lang ståtid og dypt vann (`wearOf`).
+- **Fangsten:** `lineQ` (kroker og line) og `potQ` ganges inn i `soakHour`. Friske kroker (`sharp`, 3 trekk) gir ×1,05. `jigQ` ganges inn i `catchFactors`.
+- **Kroker:** kjøpes i pakker på 100, 500 og 1000 hos utstyrsbutikken (`pg.hooks`). Mannskapet bytter fra lageret (300 kroker i timen per hånd), og friske kroker kommer når minst 15 % er byttet. Butikken bytter alle på halve tiden mot gebyr, med egne kroker.
+- **Butikkens Service** (`Butikk › Service`, siden `service` i `05-phone.js`): reparasjon og bøting på halve tiden mot gebyr (`careQuote`), og tilbakekjøp (`sellGear`) til en firedel av nypris ganger (0,2 + 0,8 × stand), så det aldri lønner seg å kjøpe og selge. Egnede stamper kjøpes ikke tilbake.
+- **Mannskapet selv** (`careTick`, én gang i timen i havn, bare med mannskap og uten andre jobber): bøter garn, bytter kroker fra lageret, reparerer line og teiner, bytter et slitt juksasett. Slås av med `S.settings.careAuto` i Beholdning.
+- **Blåsesett og dregger** kan ikke kjøpes i flere enn redskapet kan bruke (`kitMax`: stamper, garn og teiner, også de i sjøen).
+- **Fjernet:** «Klargjøring til neste tur» (`PREP` i `06-services.js`). Gamle jobber i lagringer droppes ved oppstart (`11-boot.js`).
+- **Gamle lagringer:** `careInit` legger til feltene.
+- **Ikke gjort:** pilker og juksamaskiner (elektrisk) har ingen egen slitasje utover settet; teinene har én felles stand.
+
 ## 10. Kjente problemer og åpne spørsmål
 
 - **Mannskapssystemet (01.10.2026) er ikke spilltestet.** Usikre punkter:
