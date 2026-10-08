@@ -3160,6 +3160,14 @@ Ikke gjort: animert mannskap og kran ved løftet, lyd, og at stedene i `steder.j
 
 ## 9. Flåteplanen
 
+
+### 5.35 Plassering, ikoner, mottaksnavn og rutelistens tab (08.10.2026)
+
+- **Plassering** (regelen står i `docs/handelssteder.md`, «Plassering av stedene»): `tools/steder/steder.py` og `tools/rorbu/rorbuer.py` lager `steder.json` og `rorbuer.json` på nytt. Ingen to steder (mottak, butikk, verft, rorbu, fars naust) nærmere enn 1,5 km, unntatt landsbyer uten andre kaier (0,6 km, aldri under 0,5). Kaia velges etter ly (eksponering fra `national.expo`) og gangavstand. Ekte verft kan flytte seg inntil 2 km til en bedre kai, verft tynnes ut (5 km mellom), og det legges inn oppdiktede verft der et mottak er mer enn 34 km (rundt 20 nm) fra nærmeste. Én utstyrsbutikk per poststed (ekte før oppdiktet, ingen i Finnsnes, der butikken står på kaia). Rorbuene ved mottakene står 1,5–4 km fra mottaket, i det mest skjermede (eksponering høyst 0,3) skjæret. `07d-rorbu.js` finner rett strand nær punktet. Kjente hull: 5 av 202 mottak ligger 37–44 km fra nærmeste verft, og 27 er over 37 km fra nærmeste butikk (størst 65 km: Båtsfjord, Røst, Kiberg), fordi kartpakkene ikke har noen ledig kai i de landsbyene. `tests/placetest.py` måler det.
+- **Mottaksnavn:** `portLabel(p)` (`01-world.js`) gir «Stedet fiskemottak», «Stedet mottak» eller «Stedet fiskebruk» (utseende b = det gamle bruket), alltid det samme for samme mottak. Kartplotteren viser dem; teksten ellers sier fortsatt stedet.
+- **Kartikoner** (`portIcon` i `03-map.js`, `portKind` i `01-world.js`): mottak en fisk i blå ring, utstyrsbutikk en krok i oransje firkant, verft et skrog på løft i grønn ring, fars naust et lite hus, ellers den gamle ruten.
+- **Rutelistens tab** (`#sideTab` i `08-actions.js`, CSS sist i `styles.css`): i kartplotteren skyver tab-en (ÅPNE/LUKK) rutelisten ut til høyre (liggende, `body.sidehide`, kartet blir like bredt som skjermen) eller ned (stående, `body.drawer`). Rute-knappen i toppen er skjult stående. `tests/sidetab.py`.
+
 ### Fase 1: Flåtemodell uten synlige endringer (ferdig)
 
 Se 4.3.
