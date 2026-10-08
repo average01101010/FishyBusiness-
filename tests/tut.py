@@ -51,7 +51,7 @@ async def play(p, W, H, tag):
     # «Hvor står fars naust?» (ui/08c-start.js): the place with most to earn is picked to begin with; the test takes Vangshamn (Father's
     # naust on Senja, landing at Botnhamn) from the list; «Start her» goes on to the boat's name
     await tap_el('#ltGo'); await pg.wait_for_selector('#stGo', state='visible', timeout=20000); await pg.wait_for_timeout(300); await pg.screenshot(path='start_%s.png' % tag)
-    sp = await pg.evaluate("(() => { const b = document.getElementById('stGo').getBoundingClientRect(), l = document.querySelector('#startPick .st-list').getBoundingClientRect(); return {go:b.bottom <= innerHeight + 1 && b.top >= 0, list:l.height > 60, n:document.querySelectorAll('#startPick .st-it').length}; })()")
+    sp = await pg.evaluate("(() => { const b = document.getElementById('stGo').getBoundingClientRect(), l = document.getElementById('stAll').getBoundingClientRect(); return {go:b.bottom <= innerHeight + 1 && b.top >= 0, list:l.height > 60, n:document.querySelectorAll('#startPick .st-it').length}; })()")
     check(sp['go'] and sp['list'] and sp['n'] >= 150, tag + ': the start lists the coast\'s plants, and «Start her» is on the screen', sp)
     await pg.evaluate("document.querySelector('#startPick .st-it[data-id=vangshamn]').click()")
     await tap_el('#stGo'); await pg.wait_for_selector('#obGo', state='visible', timeout=60000)
