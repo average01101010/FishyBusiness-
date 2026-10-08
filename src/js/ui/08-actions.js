@@ -84,6 +84,7 @@ function panelChange(e){
   if (id === 'setGut') S.settings.gut = e.target.checked;
   if (id === 'setIce') S.settings.ice = e.target.checked;
   if (id === 'setAuto') S.settings.autoOn = e.target.checked;
+  if (id === 'autoTo') S.settings.autoTo = e.target.value === 'home' ? 'home' : 'near';
   if (id === 'dep'){ S.draftDep = e.target.value ? +e.target.value : null; e.target.blur(); }
   e.target.blur && e.target.type === 'range' && e.target.blur();
   panelDirty = true; save();

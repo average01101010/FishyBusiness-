@@ -238,7 +238,30 @@ function jobOk(j){
 function queueJob(j){ S.jobs = S.jobs || []; if (S.jobs.length >= 6) return false; S.jobs.forEach(jobOk); jobOk(j); S.jobs.push(j); if (S.boat.status === 'port') j.until = S.t + j.h * 60; return true; }
 function jobsDone(){ if (!S.jobs || !S.jobs.length) return null; let m = null; for (const j of S.jobs) if (j.until != null) m = Math.max(m || 0, j.until); return m; }
 
-function startReturn(auto, W){
+// in a wind over the turn-back limit the boat goes by Autonav to the nearest quay (S.settings.autoTo 'near', the default; Jonas
+// 08.10.2026: «båten går til nærmeste kai om været blir for dårlig i stedet for å returnere»), or home the way she came ('home').
+// She lies still while the way is found; the three nearest places are tried, and found none, she goes home the way she came.
+const SHELTER = {tries:3, n:0};
+function shelterReturn(W){
+  const b = S.boat, from = {x:b.pos.x, y:b.pos.y}, vid = S.cur, tok = ++SHELTER.n, speed = S.plan ? S.plan.speed : S.draftSpeed;
+  if (b.gop) gopAbort('return');
+  S.plan = null; b.status = 'idle'; b.v = 0; b.fishUntil = null; S.shelter = {tok, W};
+  const cand = PORTS.filter(q => !q.rorbu).map(q => [q, dist(q.p, from)]).sort((x, y) => x[1] - y[1]).slice(0, SHELTER.tries).map(x => x[0]);
+  const bound = fn => { const v = typeof vesselById === 'function' ? vesselById(vid) : null; if (v && v.id !== S.cur) onVessel(v, fn); else fn(); };
+  const still = () => S.shelter && S.shelter.tok === tok && !S.plan && S.boat.status === 'idle';
+  (async () => {
+    for (const q of cand){
+      let res = null; try { res = await leiaRoute(from, {x:q.p.x, y:q.p.y}, null, q.id); } catch (e){ console.error(e); }
+      if (res && !res.why && res.wps && res.wps.length){ bound(() => { if (!still()) return; S.shelter = null;
+        const wps = res.wps.map((w, i) => i === res.wps.length - 1 ? {x:q.p.x, y:q.p.y, port:q.id, fish:0} : {x:w.x, y:w.y, port:null, fish:0, leia:true});
+        S.plan = {wps, idx:0, speed, returning:true, unsafe:wps.map(() => false)}; S.boat.status = 'sailing';
+        log('Vinden økte til ' + W.toFixed(1).replace('.', ',') + ' m/s. Autonav tar båten til nærmeste kai, ' + q.name + '.', 'Wind rose to ' + W.toFixed(1) + ' m/s. Autonav takes the boat to the nearest quay, ' + q.name + '.'); }); return; }
+    }
+    bound(() => { if (!still()) return; S.shelter = null; startReturn(true, W, true); });
+  })();
+}
+function startReturn(auto, W, home){
+  if (auto && !home && S.settings.autoTo !== 'home'){ shelterReturn(W); return; }
   const b = S.boat, tr = S.trail.slice().reverse(), wps = [];
   if (b.gop) gopAbort('return');
   if (!auto) loreTurnBack();

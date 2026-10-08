@@ -197,6 +197,7 @@ function panelWx(){
   h.push('</tbody></table><p class="note">' + t('fc_n') + '</p>');
   h.push('<label class="tog"><input type="checkbox" id="setAuto"' + (S.settings.autoOn ? ' checked' : '') + '><span>' + t('auto') + '<small>' + t('auto_n') + '</small></span></label>');
   h.push('<div class="range"><input type="range" min="6" max="20" step="1" value="' + S.settings.autoW + '" id="autoW" aria-label="' + t('auto') + '"' + (S.settings.autoOn ? '' : ' disabled') + '><output id="autoWOut">' + S.settings.autoW + ' m/s</output></div>');
+  h.push('<label><span>' + t('auto_to') + '</span> <select id="autoTo"' + (S.settings.autoOn ? '' : ' disabled') + '><option value="near"' + (S.settings.autoTo !== 'home' ? ' selected' : '') + '>' + t('auto_near') + '</option><option value="home"' + (S.settings.autoTo === 'home' ? ' selected' : '') + '>' + t('auto_home') + '</option></select></label>');
   return h.join('');
 }
 // where a landing has got to, for the action bar and the harbour panel

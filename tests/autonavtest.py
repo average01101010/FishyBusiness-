@@ -151,9 +151,16 @@ async def main():
           const R = {}; for (let i = 0; i < 30; i++) step(); R.after = b.status; R.ret = !!(S.plan && S.plan.returning);
           const pt = portById('mT155'), q = {x:b.pos.x + (b.pos.x - pt.p.x) * 0.5, y:b.pos.y + (b.pos.y - pt.p.y) * 0.5};
           S.plan = {wps:[{x:q.x, y:q.y, port:null, fish:0}], idx:0, speed:6, returning:false, unsafe:[false]}; depart(); for (let i = 0; i < 10; i++) step(); R.out = !!(S.plan && !S.plan.returning) || b.status === 'idle';
-          S.settings.autoW = 99; step(); S.settings.autoW = 0; step(); R.rise = !!(S.plan && S.plan.returning);
-          S.settings.autoOn = on; S.settings.autoW = w; S.plan = null; b.status = 'idle'; return R; })()""")
-        check(r['after'] == 'idle' and not r['ret'] and r['out'] and r['rise'], '8. i vedvarende kuling snur båten ikke rett inn igjen etter «Sitter båten fast?» eller når du kaster loss; vind som øker mens du er ute, snur den fortsatt', r)
+          const rise = async to => { S.settings.autoTo = to; S.plan = {wps:[{x:q.x, y:q.y, port:null, fish:0}], idx:0, speed:6, returning:false, unsafe:[false]}; b.status = 'sailing';
+            S.settings.autoW = 99; step(); S.settings.autoW = 0; step();
+            for (let i = 0; i < 300 && !(S.plan && S.plan.returning); i++) await new Promise(r => setTimeout(r, 100));
+            const pl = S.plan, e = pl && pl.wps[pl.wps.length - 1]; return {ret:!!(pl && pl.returning), port:e ? e.port : null, leia:!!(pl && pl.wps.some(w => w.leia)), st:b.status}; };
+          const np = PORTS.filter(p => !p.rorbu).sort((x, y) => dist(x.p, b.pos) - dist(y.p, b.pos))[0].id;
+          R.near = await rise('near'); R.np = np; R.home = await rise('home');
+          S.settings.autoOn = on; S.settings.autoW = w; delete S.settings.autoTo; S.plan = null; b.status = 'idle'; return R; })()""")
+        check(r['after'] == 'idle' and not r['ret'] and r['out'], '8a. i vedvarende kuling snur båten ikke rett inn igjen etter «Sitter båten fast?» eller når du kaster loss', r)
+        check(r['near']['ret'] and r['near']['st'] == 'sailing' and r['near']['port'] == r['np'] and r['near']['leia'], '8b. vind som øker mens du er ute: Autonav tar båten til nærmeste kai (valget «Nærmeste kai»)', r['near'])
+        check(r['home']['ret'] and r['home']['port'] is not None and not r['home']['leia'], '8c. med valget «Hjem samme vei» går båten hjem samme vei som den kom', r['home'])
         print('sidefeil', errs[:5])
         await br.close()
 
