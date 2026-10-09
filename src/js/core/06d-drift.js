@@ -12,6 +12,9 @@
 // A plan is approved (and can be switched on) only when it closes: the end of the last session is where the first one starts.
 // the route being drawn for a session (ui/05c-drift.js): where it starts, so the plotter draws from there and not from the boat
 let DRIFTCTX = null;
+// the plotter draws from the trip's start only while a route for this vessel's plan is being drawn; a place being picked for the plan maker
+// (DRIFTCTX.spot) does not move the start, so the boat's own route and Autonav always start where she is (tilbakemelding 09.10.2026)
+const driftCtxOn = () => !!(DRIFTCTX && !DRIFTCTX.spot && DRIFTCTX.vid === S.cur);
 const DRF = {landH:1, setH:{garn:0.8, line:0.9, teine:0.6}, late:8, window:8, maxDelay:8, failMax:3, tplMax:12, repMax:80,
   // the soak window each gear should have, hours: [too short under, good from, good to, too long over] (the fish and the gear suffer outside it)
   soak:{line:[4, 6, 20, 30], garn:[8, 12, 36, 60], teine:[18, 24, 60, 96]}};

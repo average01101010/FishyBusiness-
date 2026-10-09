@@ -562,7 +562,7 @@ function addWaypoint(pt){
   // went to a rorbu by it)
   if (view.z >= 2 && !tutOn()) for (const R of rorbuSites(pt, r + 0.05)){ const d = dist(R.p, pt); if (d < r && d < bd){ bd = d; near = R; } }
   // Father's naust: a route can end there (you sail to it; 07c-naust.js naustTarget)
-  const nt = naustTarget(pt, r), atN = !DRIFTCTX && b.status === 'port' && berthKind(b) === 'naust';
+  const nt = naustTarget(pt, r), atN = !driftCtxOn() && b.status === 'port' && berthKind(b) === 'naust';
   if (nt && atN && !S.draft.length){ toast(t('already_here')); return; }
   if (!nt && near && draftPort() === near.id && !S.draft.length && !atN){ toast(t('already_here')); return; }
   if (!near && !nt && isLandUI(pt)){ toast(t('on_land')); return; }

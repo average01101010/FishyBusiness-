@@ -9,8 +9,8 @@ const deg3s = d => String(Math.round(d) % 360).padStart(3, '0') + '°';
 // the draft leg by leg: course to steer, length, and when the boat gets to each point and leaves it (game minutes). Gear work at a
 // point is not counted, the same as in the estimate.
 // where the draft starts: the boat's berth, or the start of a trip being drawn for the operations plan (core/06d-drift.js DRIFTCTX)
-const draftOrigin = () => DRIFTCTX && DRIFTCTX.origin ? DRIFTCTX.origin : quayPos(S.boat);
-const draftPort = () => DRIFTCTX ? DRIFTCTX.home : S.boat.status === 'port' && berthKind(S.boat) !== 'naust' ? S.boat.port : null;
+const draftOrigin = () => driftCtxOn() && DRIFTCTX.origin ? DRIFTCTX.origin : quayPos(S.boat);
+const draftPort = () => driftCtxOn() ? DRIFTCTX.home : S.boat.status === 'port' && berthKind(S.boat) !== 'naust' ? S.boat.port : null;
 function draftTimeline(){
   const b = S.boat, e = estimate(), v = Math.max(1, e.v), out = [];
   let a = draftOrigin(), T = S.draftDep && S.draftDep > S.t ? S.draftDep : S.t;
@@ -140,7 +140,7 @@ async function leiaTo(pt, buoy, act){   // buoy: to a set's buoy, to haul it (th
   // went to a rorbu by it)
   if (view.z >= 2 && !tutOn()) for (const R of rorbuSites(pt, r + 0.05)){ const d = dist(R.p, pt); if (d < r && d < bd){ bd = d; near = R; } }
   // from Father's naust the way starts at its berth, not by the harbour's way out from the plant (tilbakemelding #20)
-  const atN = !DRIFTCTX && !S.draft.length && b.status === 'port' && berthKind(b) === 'naust';
+  const atN = !driftCtxOn() && !S.draft.length && b.status === 'port' && berthKind(b) === 'naust';
   const start = S.draft.length ? S.draft[S.draft.length - 1] : draftOrigin(), aPort = !S.draft.length && !atN ? draftPort() : null;
   // Father's naust as the end (07c-naust.js naustTarget); in its own harbour the way there is short, straight from the harbour point
   const nt = naustTarget(pt, r);

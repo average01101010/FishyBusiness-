@@ -69,6 +69,14 @@ async def main():
         print(ok(u['intro'] and u['s0'] >= 1 and u['n0'] and u['n1'] and u['n2'] and u['n3'] and u['make'] and not u['err']), 'the questions are tapped through one at a time and the plan is made', u)
         print(ok(u['mark'] and u['noHeat']), 'the places show the catch you had there, not what the sea holds', [u['mark'], u['noHeat']])
         print(ok(u['use'] and u['on'] and u['summary'] and u['wx'] == 10), 'the plan is switched on; the page shows the day, Change and the catch report; careful weather is 10 m/s', u)
+        # tilbakemelding 09.10.2026: at sea, «Velg i kartet» and then leaving the questions must not move the start of the boat's own route
+        f = await pg.evaluate("""(() => { const R = {}, b = S.boat, home = portById(S.home || HOME0); S.ops = null; b.status = 'idle'; b.port = null; b.pos = {x:home.p.x + 3, y:home.p.y - 2}; b.v = 0; S.plan = null; S.draft = [];
+          DRIFTUI.act('dr-znew', {}); DRIFTUI.act('dr-zstep', {s:'2'}); DRIFTUI.act('dr-zspot', {k:'jp', i:'map'}); R.picking = !!(DRIFTCTX && DRIFTCTX.spot);
+          const o = draftOrigin(); R.originBoat = dist(o, b.pos) < 0.05; R.portNull = draftPort() == null;
+          DRIFTUI.act('dr-zcancel', {}); R.cleared = DRIFTCTX === null;
+          DRIFTCTX = {vid:S.cur, spot:'jp'}; R.staleOrigin = dist(draftOrigin(), b.pos) < 0.05; DRIFTUI.page(); R.staleCleared = DRIFTCTX === null; return R; })()""")
+        print('spot:', json.dumps(f))
+        print(ok(f['picking'] and f['originBoat'] and f['portNull'] and f['cleared'] and f['staleOrigin'] and f['staleCleared']), 'picking a place for the plan never moves the start of the route from the boat, and leaving the questions clears it', f)
         print(ok(not errs), 'no page errors', errs[:2])
         await b.close()
 asyncio.run(main())

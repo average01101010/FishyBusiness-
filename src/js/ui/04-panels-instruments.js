@@ -1,7 +1,7 @@
 // ---------- estimates ----------
 function estimate(){
   const b = S.boat, H = S.t / 60, W = windAt(H);
-  let km = 0, fishH = 0, bad = -1, a = DRIFTCTX ? draftOrigin() : b.pos;
+  let km = 0, fishH = 0, bad = -1, a = driftCtxOn() ? draftOrigin() : b.pos;
   S.draft.forEach((w, i) => { km += dist(a, w); if (bad < 0 && !legClear(a, w)) bad = i; fishH += w.fish || 0; a = w; });
   const v = Math.min(S.draftSpeed, speedCap(hsAt(b.pos, H)));
   const nm = km / NM, hours = nm / v, fuel = fuelLph(v, W) * hours;

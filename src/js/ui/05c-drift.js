@@ -121,7 +121,10 @@ const DRIFTUI = (() => {
     h.push('<div class="ph-card">' + B('dr-reset', L('Slett driftsplanen', 'Delete the plan')) + '</div></div>');
     return h.join('');
   }
+  // a place being picked for the plan maker is dropped when the questions are left (it must never be left behind: tilbakemelding 09.10.2026)
+  const dropSpot = () => { if (DRIFTCTX && DRIFTCTX.spot){ DRIFTCTX = null; S.draft = []; if (typeof routeChanged === 'function') routeChanged(); } };
   function page(){
+    if (!wz) dropSpot();
     if (wz) return wizPage();
     const o = driftOps();
     if (!o) return '<div class="ph-c"><div class="ph-card"><h4>' + L('Driftsplan for «', 'Operations plan for «') + S.boatName + '»</h4><p class="ph-note">' + L('Med en driftsplan fisker, leverer og hviler båten på egen hånd, hver dag. Du svarer på fem spørsmål, og planen regner ut turene som gir mest levert per døgn innenfor hviletiden.', 'With an operations plan the boat fishes, lands and rests on her own, every day. You answer five questions, and the plan works out the trips that land the most a day within the rest rules.') + '</p>' +
@@ -219,13 +222,13 @@ const DRIFTUI = (() => {
     S.draft = []; DRIFTCTX = null; if (typeof routeChanged === 'function') routeChanged();
     toast(L('Ruta er lagret i driftsplanen.', 'The route is saved in the plan.')); return true;
   }
-  function cancelRoute(){ DRIFTCTX = null; S.draft = []; if (typeof routeChanged === 'function') routeChanged(); }
+  function cancelRoute(){ if (DRIFTCTX && DRIFTCTX.spot){ DRIFTCTX = null; S.draft = []; if (typeof routeChanged === 'function') routeChanged(); return; } DRIFTCTX = null; S.draft = []; if (typeof routeChanged === 'function') routeChanged(); }
   // ---- actions (data-pa="dr-…"); true when something changed
   function act(a, d){
     const o = driftOps();
     if (a === 'dr-new'){ S.ops = driftNew(); return true; }
     if (a === 'dr-znew' || a === 'dr-zedit'){ wz = {step:0, a:o && o.wiz ? Object.assign({}, o.wiz, {est:null, err:null}) : planWizDefaults()}; spotCache = null; adv = false; return true; }
-    if (a === 'dr-zcancel'){ wz = null; return true; }
+    if (a === 'dr-zcancel'){ wz = null; dropSpot(); return true; }
     if (a === 'dr-zadv'){ adv = true; return true; }
     if (a === 'dr-zsimple'){ adv = false; return true; }
     if (wz){
@@ -239,7 +242,7 @@ const DRIFTUI = (() => {
       if (a === 'dr-zspot'){
         if (d.i === 'gear'){ A.jp = null; A.est = null; return true; }
         if (d.i === 'map'){ const base = portById(A.base) || portById(S.boat.port) || nearestPort(S.boat.pos);
-          DRIFTCTX = {vid:S.cur, sid:null, spot:d.k, home:base.id, origin:{x:base.p.x, y:base.p.y}, rig:A.gear, name:L('Driftsplan', 'Operations plan')}; S.draft = []; if (typeof routeChanged === 'function') routeChanged();
+          DRIFTCTX = {vid:S.cur, sid:null, spot:d.k, rig:A.gear, name:L('Driftsplan', 'Operations plan')}; S.draft = []; if (typeof routeChanged === 'function') routeChanged();
           PHONE.show(false); if (typeof DOCK !== 'undefined' && DOCK.close) DOCK.close(); toast(d.k === 'gp' ? L('Trykk i kartet der redskapet skal stå.', 'Tap the chart where the gear shall stand.') : L('Trykk i kartet der dere skal jukse.', 'Tap the chart where you will jig.')); return true; }
         const q = (spotCache || [])[+d.i]; if (!q) return false; A[d.k] = {x:q.x, y:q.y}; A.est = null; return true; }
       if (a === 'dr-zbuild'){ const op = o || (S.ops = driftNew()); op.on = false; op.wiz = A; building = true; planBuild(op, () => { building = false; rerender(); }); return true; }
@@ -280,7 +283,7 @@ const DRIFTUI = (() => {
     if (a === 'dr-reset'){ if (!confirm(L('Slette driftsplanen for «' + S.boatName + '»?', 'Delete the plan for «' + S.boatName + '»?'))) return false; S.ops = null; return true; }
     return false;
   }
-  return {page, act, saveRoute, cancelRoute, draw};
+  return {page, act, saveRoute, cancelRoute, draw, wizOn:() => !!wz};
 })();
 // the places a rest can be: the quay where the last trip ended, and the rorbuer near it
 function driftRestPlaces(o, s){
