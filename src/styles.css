@@ -41,7 +41,7 @@ select,button,input{font:inherit;color:inherit}
 .pace select{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:3px 6px;font-size:13px;color:var(--ink)}
 .chip{background:transparent;border:1px solid var(--line);border-radius:6px;padding:3px 9px;font-size:13px;cursor:pointer}
 main{position:fixed;inset:0}
-#mapwrap{position:absolute;inset:0;overflow:hidden;background:#0b1622}
+#mapwrap{position:absolute;inset:0;overflow:hidden;background:#0b1622} body.vplot #mapwrap[data-cbg=day]{background:#dde3e5} body.vplot #mapwrap[data-cbg=dark]{background:#05090d}
 #map{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;user-select:none;-webkit-user-select:none;cursor:crosshair}
 header{display:none}
 #side{display:none;position:absolute;left:0;right:0;bottom:0;height:44%;z-index:6;flex-direction:column;background:var(--paper);border-top-left-radius:16px;border-top-right-radius:16px;box-shadow:0 -8px 26px rgba(0,0,0,.28);padding-bottom:env(safe-area-inset-bottom,0px)}

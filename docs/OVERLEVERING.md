@@ -3639,6 +3639,10 @@ Målt først i Playwright, med CPU-en strupet 4× og nettet strupet til 10 Mbit/
   - Det synlige bildet hadde alle pakkene sine etter 21–26 s, mot 25–26 s før.
   - Kysten ble tegnet 10 ganger, mot 46.
   - Hele regionen var ferdig etter 30–45 s. Variasjonen fra kjøring til kjøring er stor, så forskjellen fra før er usikker. Seks pakker om gangen kan gjøre selve nedlastingen litt tregere enn alt på én gang.
+- **Rettet samme dag (video fra Jonas):** Når kartet ble dratt, sto landet igjen mens navnene og båtene fulgte fingeren. `chartCompose` stemplet bildet med visningen slik den var *nå* (`view`), ikke visningen bildet var tegnet for. Regellagets nye runde (`chartVectors(V, true)`, fra endringen over) tegnet derfor et bilde av den gamle visningen og viste det som om det var den nye.
+  - Nå får `V` visningen den ble laget for (`V.cx`, `V.cy`, `V.z`), bildet stemples med den, og `followChart` flytter det dit visningen er nå.
+  - Regellagets runde tegner bare når visningen er den samme, og ellers ikke mens en finger er nede.
+  - Under et langt drag eller en klyping tegnes kartet på nytt når bildet har flyttet seg en sjuendedel av skjermen eller blitt skalert en sjettedel, høyst hvert 350. ms. Det som ligger utenfor bildet, har kartets bakgrunnsfarge (`#mapwrap[data-cbg]`), ikke den mørke.
 - **Svakt:**
   - Testmaskinen tegner lerretet i programvare. Der koster `drawImage` og kysten langt mer enn på et nettbrett med GPU, så tallene sier lite om nettbrettet.
   - Fliser i en Web Worker og lagring av ferdige fliser er ikke gjort:

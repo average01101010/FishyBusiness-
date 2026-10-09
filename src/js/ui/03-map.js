@@ -13,7 +13,10 @@ function applyView(){
   const h = MAP_H / view.z, w = h * (r.width / r.height);
   view.cx = clamp(view.cx, MAPB.x0, MAPB.x1); view.cy = clamp(view.cy, MAPB.y0, MAPB.y1);
   svg.setAttribute('viewBox', (view.cx - w / 2) + ' ' + (view.cy - h / 2) + ' ' + w + ' ' + h);
-  if (window.chartReady && document.body.classList.contains('vplot')){ CT.moved = performance.now(); if (!chartPan()) followChart(); clearTimeout(chartTimer); chartTimer = setTimeout(() => paintChart(1), 160); }
+  if (window.chartReady && document.body.classList.contains('vplot')){ CT.moved = performance.now(); if (!chartPan()) followChart(); clearTimeout(chartTimer); chartTimer = setTimeout(() => paintChart(1), 160);
+    // a long drag or pinch: painted anew when the picture has moved a seventh of the screen or been scaled a sixth, at most every 350 ms,
+    // so the coast does not end at the edge of the last paint (the grey band in the video of 09.10.2026)
+    const V = CT.v; if (V && CT.moved - (CT.paintT || 0) > 350 && (Math.hypot(view.cx - V.cx, view.cy - V.cy) * view.px > 0.15 * Math.min(r.width, r.height) || Math.abs(Math.log(view.z / V.z)) > 0.18)){ clearTimeout(chartTimer); paintChart(1); } }
   view.px = r.height / h;
   // ui/03c-heat.js, loaded after this file: at most every 100 ms while the view moves (it was drawn with a blur at every move)
   if (window.heatReady && !heatT) heatT = setTimeout(() => { heatT = 0; heatPaint(); }, 100);
@@ -42,7 +45,7 @@ function chartView(scale){
   const r = svg.getBoundingClientRect(), mr = svg.parentNode.getBoundingClientRect(); if (!r.width || !r.height) return null;
   const dpr = Math.min(2, window.devicePixelRatio || 1) * scale, W = Math.max(2, Math.round(r.width * dpr)), H = Math.max(2, Math.round(r.height * dpr));
   const hh = MAP_H / view.z, ww = hh * (r.width / r.height), x0 = view.cx - ww / 2, y0 = view.cy - hh / 2, k = hh / H, rd = Math.min(dpr, 1.5 * scale);
-  return {r, mr, dpr, W, H, hh, ww, x0, y0, k, kr:k * dpr / rd, kx:ww / W, ky:k, lv:chartLevel(hh), fish:chartMode() === 'fish', night:chartMode() !== 'fish' && chartNight(), sd:safeDepth()};
+  return {r, mr, dpr, W, H, hh, ww, x0, y0, k, cx:view.cx, cy:view.cy, z:view.z, kr:k * dpr / rd, kx:ww / W, ky:k, lv:chartLevel(hh), fish:chartMode() === 'fish', night:chartMode() !== 'fish' && chartNight(), sd:safeDepth()};
 }
 function paintChart(scale){
   if (!DEPTH || !document.body.classList.contains('vplot')) return;
@@ -93,7 +96,11 @@ function chartCompose(V, tiles, budget){
     if (CT.job.length && !CT.raf) CT.raf = requestAnimationFrame(chartWork);
   }
   if (CT.vec) ctx.drawImage(CT.vec, Math.round(CT.vsh[0]), Math.round(CT.vsh[1]));
-  chartCv.style.transform = ''; chartCv.dataset.v = [view.cx, view.cy, view.z, V.r.width, V.r.height].join(',');
+  // stamped with the view it was painted for (not the view of now: a paint for an earlier view, as the rule layer's, was shown as if it
+  // were for the dragged one, the land standing still under the names, feedback 09.10.2026), then moved to where the view is now
+  chartCv.style.transform = ''; chartCv.dataset.v = [V.cx, V.cy, V.z, V.r.width, V.r.height].join(',');
+  if (V.cx !== view.cx || V.cy !== view.cy || V.z !== view.z) followChart();
+  CT.paintT = performance.now(); svg.parentNode.dataset.cbg = V.fish || V.night ? 'dark' : 'day';   // what shows beyond the picture while it is dragged
 }
 // the queued tiles, about 8 ms a frame while the chart is moved and 16 ms when it lies still (feedback #55: the chart came slowly; nothing
 // else is drawn while it is up) (a missing one coarse, a coarse one fine); then the view is composed again
@@ -206,7 +213,7 @@ function chartVectors(V, again){
       const A = ruLayerBlock(bx, by, q, budget); if (!A){ miss = true; continue; }
       const cv = ruLayerCanvas(A); if (cv) ctx.drawImage(cv, (bx * 10 - x0) / kx, (by * 10 - y0) / ky, 10 / kx, 10 / ky); }
     ctx.restore();
-    if (miss){ clearTimeout(CT.ruT); CT.ruT = setTimeout(() => { if (!document.body.classList.contains('vplot')) return; if (CT.v === V){ chartVectors(V, true); chartCompose(V, V.lv > 0, 0); } else paintChart(1); }, 60); }
+    if (miss){ clearTimeout(CT.ruT); CT.ruT = setTimeout(() => { if (!document.body.classList.contains('vplot')) return; if (CT.v === V && V.cx === view.cx && V.cy === view.cy && V.z === view.z){ chartVectors(V, true); chartCompose(V, V.lv > 0, 0); } else if (!ptrs.size) paintChart(1); }, 60); }
   }
   // the fjord lines for coastal cod along the coast (høstingsforskriften vedlegg 4, rules.json): dashed violet, as regulation lines
   // are drawn on official charts, named when zoomed in
