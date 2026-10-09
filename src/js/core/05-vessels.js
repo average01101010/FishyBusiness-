@@ -51,13 +51,15 @@ function fleetState(i, H){
   const d = dist(s.p, home); if (d < 0.45 && (s.st === 'out' || s.st === 'in')){ const u = d / 0.45; s.p = {x:bp.p.x + (s.p.x - bp.p.x) * u, y:bp.p.y + (s.p.y - bp.p.y) * u}; }
   return s;
 }
+// where a fleet boat's day starts, for its weather (V4)
+const FHP = f => ({x:f.hp[0], y:f.hp[1]});
 function fleetState0(i, H){
   const f = FLEET[i], big = f.L >= 14, g = gDate(H), hod = g.getUTCHours() + g.getUTCMinutes() / 60 + g.getUTCSeconds() / 3600;
   const dep = 4.5 + hash(i * 13 + 5) * 2.5, e = ((hod - dep) % 24 + 24) % 24, day0 = H - e, dI = Math.floor((day0 + 6) / 24);
   const k = f.R.length > 1 && hash(dI * 31 + i) < 0.5 ? 1 : 0, R = f.R[k], RR = f.RR[k];
   const moored = () => { const q = f.R[0] ? atRoute(f.R[0], 0) : {p:{x:f.hp[0], y:f.hp[1]}, hd:0}; return {p:q.p, hd:q.hd + Math.PI, st:'port'}; };
-  if (!R || hash(dI * 17 + i * 7) < 0.12 || windAt(day0) >= (big ? 15 : f.L >= 12 ? 13.5 : 12)) return moored();
-  const cs = ((big ? 9.8 : 7.8) + hash(i * 3 + 1) * 1.8) * clamp(1 - (hsOpen(day0) - 1.2) * 0.12, 0.65, 1) * NM, hsp = 5 * NM;
+  if (!R || hash(dI * 17 + i * 7) < 0.12 || windAt(day0, FHP(f)) >= (big ? 15 : f.L >= 12 ? 13.5 : 12)) return moored();
+  const cs = ((big ? 9.8 : 7.8) + hash(i * 3 + 1) * 1.8) * clamp(1 - (hsOpen(day0, FHP(f)) - 1.2) * 0.12, 0.65, 1) * NM, hsp = 5 * NM;
   const hz = Math.min(0.45, R.len * 0.25), tH = hz / hsp, T = tH + (R.len - hz) / cs, fishH = 5 + hash(dI * 7 + i * 3) * 3.5;
   if (e < T){ const sd = e < tH ? e * hsp : hz + (e - tH) * cs, a = atRoute(R, sd); return {p:a.p, hd:a.hd, st:'out'}; }
   if (e < T + fishH){
@@ -66,7 +68,7 @@ function fleetState0(i, H){
     if (!D){
       // drift downwind over the bank, but never onto land: try nearby directions, then a shorter drift
       const jx = (hash(dI * 97 + i * 11 + kc) - 0.5) * 0.3, jy = (hash(dI * 89 + i * 5 + kc) - 0.5) * 0.3, st0 = {x:spot.x + jx, y:spot.y + jy};
-      const Hc = day0 + T + kc * C, wd = (windDir(Hc) - gridGamma(spot) + 180) * Math.PI / 180; let run = (0.35 + 0.075 * windAt(Hc)) * NM * 0.62, end = st0, dd = wd;
+      const Hc = day0 + T + kc * C, wd = (windDir(Hc, spot) - gridGamma(spot) + 180) * Math.PI / 180; let run = (0.35 + 0.075 * windAt(Hc, spot)) * NM * 0.62, end = st0, dd = wd;
       const ok = (a, b) => { for (let q = 1; q <= 8; q++){ const p = {x:a.x + (b.x - a.x) * q / 8, y:a.y + (b.y - a.y) * q / 8}; if (isLandFar(p) || coastDistFar(p) < 0.12) return false; } return true; };   // the core only: the fleet works anywhere
       search: for (let tries = 0; tries < 3; tries++, run *= 0.5) for (const off of [0, 0.5, -0.5, 1, -1, 1.6, -1.6, Math.PI]){ const a = wd + off, e2 = {x:st0.x + Math.sin(a) * run, y:st0.y - Math.cos(a) * run}; if (ok(st0, e2)){ end = e2; dd = a; break search; } }
       D = {st0, end, dd}; if (DRIFT.size > 3000) DRIFT.clear(); DRIFT.set(dk, D);
@@ -97,9 +99,9 @@ function coastState(b, H, hod = hodOf(H)){
   const dep = 4 + hash(i * 13 + 5) * 4, e = ((hod - dep) % 24 + 24) % 24, day0 = H - e, dI = Math.floor((day0 + 6) / 24), G = b.h.grounds;
   const moored = b.moored || (b.moored = {p:b.p, hd:b.hd, st:'port'});
   // a day out is at most 17 hours (the weather is not asked at night)
-  if (e > 17 || !G.length || hash(dI * 17 + i * 7) < 0.3 || windAt(day0) >= (b.L >= 15 ? 15 : b.L >= 12 ? 13.5 : 12)) return moored;
+  if (e > 17 || !G.length || hash(dI * 17 + i * 7) < 0.3 || windAt(day0, b.p) >= (b.L >= 15 ? 15 : b.L >= 12 ? 13.5 : 12)) return moored;
   const gr = G[Math.floor(hash(dI * 31 + i) * G.length)], R = gr.R || (gr.R = prepRoute(gr.pts.map(q => [q.x, q.y]))), RR = gr.RR || (gr.RR = prepRoute(gr.pts.map(q => [q.x, q.y]).reverse()));
-  const cs = ((b.L >= 14 ? 9.8 : 7.8) + hash(i * 3 + 1) * 1.8) * clamp(1 - (hsOpen(day0) - 1.2) * 0.12, 0.65, 1) * NM, hsp = 5 * NM;
+  const cs = ((b.L >= 14 ? 9.8 : 7.8) + hash(i * 3 + 1) * 1.8) * clamp(1 - (hsOpen(day0, b.p) - 1.2) * 0.12, 0.65, 1) * NM, hsp = 5 * NM;
   const m0 = R.pts[0], t0 = dist(b.p, m0) / hsp, tr = R.len / cs, T = t0 + tr, fishH = 5 + hash(dI * 7 + i * 3) * 3.5;
   const along = (a, c, u) => ({p:{x:a.x + (c.x - a.x) * u, y:a.y + (c.y - a.y) * u}, hd:Math.atan2(c.x - a.x, -(c.y - a.y))});
   if (e < t0){ const q = along(b.p, m0, e / t0); return {p:q.p, hd:q.hd, st:'out'}; }
@@ -130,7 +132,7 @@ function coastCast(b, gr, dI, i, kc, Hc, spot){
   let c = M.get(key); if (c) return c;
   if (M.size > 8) M.clear();
   const A = seaward({x:spot.x + (hash(dI * 97 + i * 11 + kc) - 0.5) * 0.3, y:spot.y + (hash(dI * 89 + i * 5 + kc) - 0.5) * 0.3}, gr.p);
-  const wd = (windDir(Hc) - gridGamma(gr.p) + 180) * Math.PI / 180 + (hash(i * 41 + 7) - 0.5) * 1.2, run = (0.35 + 0.075 * windAt(Hc)) * NM * 0.62;
+  const wd = (windDir(Hc, gr.p) - gridGamma(gr.p) + 180) * Math.PI / 180 + (hash(i * 41 + 7) - 0.5) * 1.2, run = (0.35 + 0.075 * windAt(Hc, gr.p)) * NM * 0.62;
   c = {A, E:A, dir:wd};
   out: for (const f of [1, 0.5]) for (const t of [0, Math.PI, Math.PI / 2, -Math.PI / 2]){
     const a = wd + t, E = {x:A.x + Math.sin(a) * run * f, y:A.y - Math.cos(a) * run * f};

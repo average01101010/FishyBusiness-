@@ -122,39 +122,92 @@ function seasonal(arr, H){
   return arr[i] * (1 - f) + arr[(i + 1) % 12] * f;
 }
 
-// weather: seasonal climate + low-pressure passages
+// weather: seasonal climate + low-pressure passages that travel up the coast (V4 of the weather plan; Jonas 09.10.2026: «vi må bygge
+// ferdig værsystemene»). The lows come in from the sea in the south-west and go north-east along the coast, each on its own track
+// and at its own speed, so a gale reaches Vestlandet first and Finnmark a day later, and one coast can be in a storm while another
+// has calm. Where a place lies along the coast and off it (wxPlace) gives its own hour of every low and of the background weather.
+// At Senja (WX_REF) the hours are as before; how strong each low is there varies with its track, and on average it is as before.
 const WIND_MEAN = [9.2,9.0,8.4,7.0,6.0,5.4,5.0,5.4,6.8,7.8,8.6,9.0];
 const STORM_P = [0.12,0.11,0.09,0.06,0.03,0.02,0.02,0.03,0.06,0.09,0.11,0.12];
 // tests can hold the weather still: WX_FORCE = {w:11, d:180} (m/s, from degrees)
 let WX_FORCE = null;
-// the lows near H: centre hour, peak (m/s) and width (hours)
-function stormsNear(H){
-  const out = [], k0 = Math.floor(H / 24);
-  for (let k = k0 - 2; k <= k0 + 2; k++) if (h2(k, 101) < STORM_P[gDate(k * 24).getUTCMonth()]) out.push({c:k * 24 + h2(k, 102) * 24, amp:5 + h2(k, 103) * 9, w:5 + h2(k, 104) * 7});
-  return out;
+// the lows' road: a line off the coast from Lindesnes round Stad, past Helgeland, Lofoten and Troms to Nordkapp and Vardø. A place
+// is measured along it (s, km from Lindesnes) and across it (c, km, + out to sea on the left of the way the lows go)
+const WX_TRACK = [[57.9, 7.0], [59.3, 4.6], [62.2, 4.6], [65.2, 10.6], [67.6, 11.6], [69.4, 15.6], [70.6, 21.8], [71.3, 25.8], [70.6, 31.5]];
+const WX_SYN = 45;   // km/h: how fast the background weather moves up the coast
+let WXT = null;
+function wxTrack(){
+  if (WXT) return WXT;
+  const pts = WX_TRACK.map(([a, b]) => P(a, b)), seg = []; let s0 = 0;
+  for (let i = 0; i + 1 < pts.length; i++){ const a = pts[i], dx = pts[i + 1].x - a.x, dy = pts[i + 1].y - a.y, len = Math.hypot(dx, dy); seg.push({a, dx, dy, len, s0}); s0 += len; }
+  WXT = {seg, tot:s0, ref:null};
+  WXT.ref = wxMeasure(P(69.4, 17.5));
+  // each low's strength at a place is its own (5-14 m/s) times how near its track and its deepest point are; scaled so the lows at
+  // Senja are as strong as before on average
+  let m = 0, n = 0; for (let k = 0; k < 4000; k++){ m += wxLowShape(k, WXT.ref); n++; } WXT.norm = n / m;
+  return WXT;
 }
-function windAt(H){
+function wxMeasure(p){
+  const T = WXT; let best = null;
+  for (const g of T.seg){ const t = clamp(((p.x - g.a.x) * g.dx + (p.y - g.a.y) * g.dy) / (g.len * g.len), 0, 1), qx = g.a.x + g.dx * t, qy = g.a.y + g.dy * t, d = Math.hypot(p.x - qx, p.y - qy);
+    if (!best || d < best.d){ const z = g.dx * (p.y - g.a.y) - g.dy * (p.x - g.a.x); best = {d, s:g.s0 + t * g.len, c:z > 0 ? -d : d}; } }
+  return {s:best.s, c:best.c};
+}
+let WXPQ = {k:'', v:null};
+// where p lies for the weather (else the boat you follow; Senja before there is a game), kept for a 5 km cell
+function wxPlace(p){
+  const T = wxTrack(), q = p || herePos(); if (!q) return {s:T.ref.s, c:T.ref.c, dt:0, q:null};
+  const k = Math.round(q.x / 5) + ':' + Math.round(q.y / 5); if (WXPQ.k === k) return WXPQ.v;
+  const m = wxMeasure(q), v = {s:m.s, c:m.c, dt:(m.s - T.ref.s) / WX_SYN, q:{x:Math.round(q.x / 5) * 5, y:Math.round(q.y / 5) * 5}};
+  WXPQ = {k, v}; return v;
+}
+// how much of low k reaches a place: more near its track (o, km out to sea, from 120 km inland to 400 km out) and near where along the
+// coast it is deepest (a), and the side of the track the place is on
+function wxLowShape(k, m){
+  const T = WXT, o = -120 + h2(k, 106) * 520, a = (h2(k, 107) * 1.3 - 0.15) * T.tot;
+  return (0.45 + 0.55 * Math.exp(-(((m.c - o) / 420) ** 2))) * (0.55 + 0.45 * Math.exp(-(((m.s - a) / 1400) ** 2)));
+}
+// the lows that pass a place near H: the hour they are deepest there (c), how strong (amp, m/s) and how long (w, hours), and whether
+// the place is on the right of the track (the wind veers as it passes) or the left (it backs)
+let STQ = {k0:NaN, q:null, v:null};
+function stormsNear(H, p){
+  const T = wxTrack(), q = wxPlace(p), k0 = Math.floor((H - q.dt) / 24);
+  if (STQ.k0 === k0 && STQ.q === q) return STQ.v;   // the lows near a place depend only on the day and the place
+  const out = [];
+  for (let k = k0 - 3; k <= k0 + 3; k++){
+    if (!(h2(k, 101) < STORM_P[gDate(k * 24).getUTCMonth()])) continue;
+    const v = 38 + h2(k, 105) * 30, o = -120 + h2(k, 106) * 520;
+    out.push({c:k * 24 + h2(k, 102) * 24 + (q.s - T.ref.s) / v, amp:(5 + h2(k, 103) * 9) * wxLowShape(k, q) * T.norm, w:5 + h2(k, 104) * 7, right:q.c < o ? 1 : -1, side:clamp((o - q.c) / 150, -1, 1)});
+  }
+  STQ = {k0, q, v:out}; return out;
+}
+// the windier and calmer stretches of the coast (the month's strongest wind in climate.json against Senja's, softened), Senja 1
+function wxWindF(H, p){ return CLIM ? clamp(Math.pow(climRatio('wmax', H, p), 0.2), 0.92, 1.12) : 1; }
+function windAt(H, p){
   if (WX_FORCE) return WX_FORCE.w;
-  const base = seasonal(WIND_MEAN, H);
-  const n = 0.55 * vn(H / 30, 11) + 0.30 * vn(H / 9, 23) + 0.15 * vn(H / 3, 37);
-  let storm = 0; for (const s of stormsNear(H)) storm += s.amp * Math.exp(-(((H - s.c) / s.w) ** 2));
-  return Math.max(0.3, base * (0.1 + 1.8 * n) + storm);
+  const q = wxPlace(p), Hl = H - q.dt, base = seasonal(WIND_MEAN, Hl);
+  const n = 0.55 * vn(Hl / 30, 11) + 0.30 * vn(Hl / 9, 23) + 0.15 * vn(Hl / 3, 37);
+  let storm = 0; for (const s of stormsNear(H, p)) storm += s.amp * Math.exp(-(((H - s.c) / s.w) ** 2));
+  return Math.max(0.3, (base * (0.1 + 1.8 * n) + storm) * wxWindF(H, q.q));
 }
-// A low passing north-east along the coast: the wind backs to south ahead of it and veers through south-west to north-west behind
-// the cold front (Buys Ballot's law; the lows go north-east past northern Norway). The turn follows the low's share of the wind.
-function windDir(H){
+// A low passing north-east along the coast: the wind backs to south ahead of it; on the right of its track it veers through
+// south-west to north-west behind the cold front, on the left it backs through east to north (Buys Ballot's law). The turn follows
+// the low's share of the wind
+function windDir(H, p){
   if (WX_FORCE) return WX_FORCE.d;
-  const base = ((225 + 400 * (vn(H / 40, 55) - 0.5)) % 360 + 360) % 360;
+  const q = wxPlace(p), Hl = H - q.dt, base = ((225 + 400 * (vn(Hl / 40, 55) - 0.5)) % 360 + 360) % 360;
   let sx = 0, sy = 0, sa = 0;
-  for (const s of stormsNear(H)){ const u = (H - s.c) / s.w, a = s.amp * Math.exp(-u * u), d = (235 + 65 * Math.tanh(1.3 * u)) * Math.PI / 180; sx += a * Math.sin(d); sy += a * Math.cos(d); sa += a; }
+  for (const s of stormsNear(H, p)){ const u = (H - s.c) / s.w, a = s.amp * Math.exp(-u * u), r = 0.5 + 0.5 * s.side, t = Math.tanh(1.3 * u);
+    const dR = (235 + 65 * t) * Math.PI / 180, dL = (85 - 65 * t) * Math.PI / 180;
+    sx += a * (r * Math.sin(dR) + (1 - r) * Math.sin(dL)); sy += a * (r * Math.cos(dR) + (1 - r) * Math.cos(dL)); sa += a; }
   if (sa < 0.05) return base;
-  const f = clamp(sa / windAt(H), 0, 1), b = base * Math.PI / 180, x = (1 - f) * Math.sin(b) + f * sx / sa, y = (1 - f) * Math.cos(b) + f * sy / sa;
+  const f = clamp(sa / windAt(H, p), 0, 1), b = base * Math.PI / 180, x = (1 - f) * Math.sin(b) + f * sx / sa, y = (1 - f) * Math.cos(b) + f * sy / sa;
   return ((Math.atan2(x, y) * 180 / Math.PI) % 360 + 360) % 360;
 }
 function exposure(p){ return 0.2 + 0.8 * rbil(MAPD.L.expo, p) / 255; }
 // the waves (hsAt, hsOpen) are in 03b-sea.js
 function fcErr(H, now, seed){ const ahead = Math.max(0, H - now), issue = Math.floor(now / 6); return (vn(H / 10, seed + issue) - 0.5) * 0.7 * Math.min(1, ahead / 48); }
-function fcWind(H, now){ return windAt(H) * (1 + fcErr(H, now, 900)); }
+function fcWind(H, now, p){ return windAt(H, p) * (1 + fcErr(H - wxPlace(p).dt, now - wxPlace(p).dt, 900)); }
 const BF = [0.3,1.6,3.4,5.5,8.0,10.8,13.9,17.2,20.8,24.5,28.5,32.7];
 function beaufort(W){ let b = 0; while (b < 12 && W >= BF[b]) b++; return b; }
 const AIRT = [-2.5,-2.5,-1.5,1.5,5.5,9,12,11.5,8,3.5,0.5,-1.5];
@@ -180,13 +233,67 @@ function climW(p){ if (!CLIM) return null; const q = p || herePos(); if (!q) ret
 function climV(key, H, p){ const w = climW(p); if (!w) return null; let v = 0, s = 0; for (const [c, x] of w){ const a = c[key]; if (!a || a.some(x => x == null)) continue; v += seasonal(a, H) * x; s += x; } return s ? v / s : null; }
 function climDiff(key, H, p){ if (!CLIM) return 0; const v = climV(key, H, p), r = CLIM.ref[key] ? seasonal(CLIM.ref[key], H) : null; return v == null || r == null ? 0 : v - r; }
 function climRatio(key, H, p){ if (!CLIM) return 1; const v = climV(key, H, p), r = CLIM.ref[key] ? seasonal(CLIM.ref[key], H) : null; return v == null || !r ? 1 : clamp(v / r, 0.3, 3); }
-function airTemp(H, p){ const d = gDate(H), hr = d.getUTCHours() + d.getUTCMinutes() / 60; return seasonal(AIRT, H) + climDiff('t', H, p) + (vn(H / 20, 81) - 0.5) * 6 + 1.5 * Math.sin((hr - 9) / 24 * 2 * Math.PI) - Math.max(0, windAt(H) - 10) * 0.15; }
+function airTemp(H, p){ const d = gDate(H), hr = d.getUTCHours() + d.getUTCMinutes() / 60; return seasonal(AIRT, H) + climDiff('t', H, p) + (vn(H / 20, 81) - 0.5) * 6 + 1.5 * Math.sin((hr - 9) / 24 * 2 * Math.PI) - Math.max(0, windAt(H, p) - 10) * 0.15; }
 // more precipitation a month makes the wet spells come oftener: the threshold of the noise moves with the ratio
-function precipAt(H, p){ const r = climRatio('p', H, p); return clamp((vn(H / 8, 71) - 0.56 + 0.18 * Math.log(r)) * 2.6 + (windAt(H) - 10) / 14, 0, 1); }
+function precipAt(H, p){ const r = climRatio('p', H, p); return clamp((vn(H / 8, 71) - 0.56 + 0.18 * Math.log(r)) * 2.6 + (windAt(H, p) - 10) / 14, 0, 1); }
 function cloudAt(H, p){ return clamp(0.3 + precipAt(H, p) * 0.9 + (vn(H / 14, 91) - 0.5) * 1.4 + climDiff('cloud', H, p) / 100, 0, 1); }
 function visibility(H, p){ const pr = precipAt(H, p), snow = airTemp(H, p) < 1; return clamp(45 - pr * (snow ? 42 : 28) - cloudAt(H, p) * 8, 1.2, 50); }
 // the sea's temperature at the surface where p is (°C): Senja's year moved by the difference in the marine API's monthly means
 function seaTemp(H, p){ return seasonal(SST, H) + climDiff('sst', H, p); }
+// ---- snow and the seasons on land (V2 and V3 of the weather plan; Jonas 09.10.2026: «vi må bygge ferdig værsystemene og årstidene»).
+// Reckoned day by day from the first of August, where the place is (a 20 km cell) and at every 100 m of height up to 1 500 m:
+// - the snow (SWE, mm of water): the day's precipitation falls as snow below about 0.5 °C and as sleet up to 1.5 °C (mm from the
+//   month's normal at the place, climate.json p, shared out by the game's own rain; 65 % of it stays, the rest blows off and
+//   sublimates, set so the coast of Troms has about a metre of snow at the most); it melts with the warmth, 4 mm a degree-day, and
+//   faster in rain. The air cools 0.65 °C per 100 m and it falls a little more higher up, so the snow lies longer up the hills
+//   and comes back there first. On the ground it lies in patches when it is thin (view3d.js).
+// - the birch and the grass: the leaves come out when the warmth since spring (degree-days over 5 °C) reaches about 60, the grass
+//   greens with it (and keeps a little green through a mild winter without snow); the leaves turn yellow when the ten-day mean falls
+//   under 9 °C after midsummer and are gone two weeks later.
+const SNOW_Z = 16, SNOW_DZ = 100;
+let SEAS_PI = 0, SEASQ = new Map();
+function wxDay(d, p){
+  // one day (d: whole days since EPOCH) at p: mean air at the sea and the precipitation in mm
+  let T = 0, I = 0; for (const h of [3, 9, 15, 21]){ const H = d * 24 + h; T += airTemp(H, p) / 4; I += precipAt(H, p) / 4; }
+  if (!SEAS_PI){ let m = 0; for (let k = 0; k < 730; k++) m += precipAt(k * 12 + 5, null); SEAS_PI = Math.max(0.05, m / 730); }
+  const mm = (climV('p', d * 24 + 12, p) || 100) / 30.4 * I / SEAS_PI;
+  return {T, mm};
+}
+function seasonAt(H, p){
+  const q = p || herePos() || P(69.4, 17.5), k = Math.round(q.x / 20) + ':' + Math.round(q.y / 20), cell = {x:Math.round(q.x / 20) * 20, y:Math.round(q.y / 20) * 20};
+  const day = Math.floor(H / 24), g = gDate(H), y0 = g.getUTCMonth() >= 7 ? g.getUTCFullYear() : g.getUTCFullYear() - 1, d0 = Math.floor((Date.UTC(y0, 7, 1) - EPOCH) / 864e5);
+  // a new season starts on the first of August, in summer: birch in leaf, the grass green
+  let st = SEASQ.get(k);
+  if (!st || st.d0 !== d0 || st.day > day){ st = {d0, day:d0 - 1, swe:new Float32Array(SNOW_Z), gdd:999, t10:[], leaf:1, yel:0, fallD:-1, grass:1}; SEASQ.set(k, st); if (SEASQ.size > 64) SEASQ.delete(SEASQ.keys().next().value); }
+  while (st.day < day){
+    st.day++; const {T, mm} = wxDay(st.day, cell), mo = gDate(st.day * 24 + 12).getUTCMonth();
+    for (let i = 0; i < SNOW_Z; i++){
+      const z = i * SNOW_DZ, t = T - 0.0065 * z, P = mm * (1 + 0.0004 * z), fs = clamp((1.5 - t) / 1.0, 0, 1);
+      let w = st.swe[i] + P * fs * 0.65; if (t > 0) w -= 4 * t + 0.0125 * P * (1 - fs) * t; st.swe[i] = Math.max(0, w);
+    }
+    // the growing season at the sea: degree-days from the new year's spring, the ten-day mean for the autumn
+    st.t10.push(T); if (st.t10.length > 10) st.t10.shift(); const t10 = st.t10.reduce((a, b) => a + b, 0) / st.t10.length;
+    if (mo >= 2 && mo <= 6) st.gdd += Math.max(0, T - 5);
+    st.leaf = clamp((st.gdd - 40) / 40, 0, 1) * (st.swe[0] < 5 ? 1 : 0.3);
+    if (mo >= 7 && st.t10.length >= 10 && t10 < 9 && st.fallD < 0) st.fallD = st.day;
+    st.yel = st.fallD >= 0 ? clamp((st.day - st.fallD) / 10, 0, 1) : 0;
+    if (st.fallD >= 0 && st.day - st.fallD > 16) st.leaf = Math.max(0, 1 - (st.day - st.fallD - 16) / 6);
+    st.grass = Math.max(clamp((st.gdd - 20) / 80, 0, 1) * (st.fallD >= 0 ? clamp(1 - (st.day - st.fallD) / 30, 0, 1) : 1), clamp((t10 - 2) / 6, 0, 0.35)) * (st.swe[0] < 5 ? 1 : 0);
+    // the new year: before spring the summer's leaves are gone (birch bare), the warmth since spring starts over
+    if (mo < 2){ st.gdd = 0; st.leaf = 0; st.grass = 0; st.yel = 0; st.fallD = -1; }
+  }
+  return st;
+}
+// the snow line at p (m): the height where 20 mm of water lies as snow; under the sea when the shore is white (down to −120 m, so
+// the patches on the low ground thin out last), 3000 when there is none
+function snowLineAt(H, p){
+  const st = seasonAt(H, p), w = st.swe, L = 20;
+  if (w[0] >= L) return -Math.min(120, (w[0] - L) * 1.5);
+  for (let i = 1; i < SNOW_Z; i++) if (w[i] >= L) return (i - 1 + (L - w[i - 1]) / Math.max(1e-6, w[i] - w[i - 1])) * SNOW_DZ;
+  return 3000;
+}
+// the snow at height z (m) at p, mm of water
+function snowAt(H, z, p){ const st = seasonAt(H, p), f = clamp(z / SNOW_DZ, 0, SNOW_Z - 1.001), i = Math.floor(f); return st.swe[i] + (st.swe[i + 1] - st.swe[i]) * (f - i); }
 const RAD = Math.PI / 180, OBS = {lat:69.35 * RAD, lw:-17.6 * RAD}, OBL = 23.4397 * RAD;
 const jdays = H => (gDate(H).getTime() - 3600000) / 86400000 + 2440587.5 - 2451545;   // days since J2000 (UTC)
 // where the sky and the tide are reckoned (phase K10 of the coast plan): the place asked for, else the boat you follow; OBS (Senja)

@@ -31,8 +31,9 @@ async def main():
           let t0 = performance.now(); for (let i = 0; i < 2000; i++) fetchAt(LG(Math.random() * 78, Math.random() * 82), Math.random() * 360); R.usRay = r1((performance.now() - t0) / 2000 * 1000);
           t0 = performance.now(); for (let i = 0; i < 10000; i++) fetchField(LG(40 + Math.random(), 10 + Math.random()), 200 + Math.random() * 20); R.usWarm0 = r1((performance.now() - t0) / 10000 * 1000);
           t0 = performance.now(); for (let i = 0; i < 10000; i++) fetchField(LG(40 + Math.random(), 10 + Math.random()), 200 + Math.random() * 20); R.usWarm = r1((performance.now() - t0) / 10000 * 1000);
-          // the wind is the same as before the sea model (only its direction turns with the lows)
-          let ws = 0; for (let h = 0; h < 8760 * 2; h += 0.7) ws += windAt(h); R.windSum = Math.round(ws * 1000) / 1000;
+          // the wind at Senja is as strong as before on average (V4: since the lows travel up the coast each is stronger or weaker by its
+          // track, so the sum is no longer exact; 192 722.469 before)
+          let ws = 0; for (let h = 0; h < 8760 * 2; h += 0.7) ws += windAt(h, P(69.4, 17.5)); R.windSum = Math.round(ws * 1000) / 1000;
           // a low veers the wind clockwise as it passes: from south ahead of it towards north-west behind
           const H0 = (Date.UTC(2028, 0, 1) - EPOCH) / 3.6e6, seen = new Set(), turns = [];
           for (let h = 0; h < 8760; h += 12) for (const st of stormsNear(H0 + h)){ if (st.amp < 10 || seen.has(st.c)) continue; seen.add(st.c);
@@ -69,7 +70,7 @@ async def main():
         print(ok(all(max(R[g]) < 15 for g in ['Gisundet nord', 'Solbergfjorden', 'Malangsgapet'])), 'the fjord grounds have short fetches')
         print(ok(r['jump'] <= 1.05 and r['dev'] < 15), 'the cached field turns smoothly with the wind, and its wave height is within 15 % of what the rays give within 10 degrees at the grounds')
         L = r['lee']
-        print(ok(abs(r['windSum'] - 192722.469) < 1e-2), 'the wind speed is the same as before the sea model')
+        print(ok(abs(r['windSum'] / 192722.469 - 1) < 0.04), 'the wind at Senja is as strong as before the lows travelled, within 4 %', r['windSum'])
         print(ok(r['veer']['n'] >= 5 and r['veer']['cw'] >= 0.7 * r['veer']['n']), 'the wind veers clockwise as a low passes (most lows over 10 m/s in 2028)')
         print(ok(all(0.95 <= v <= 1.05 for v in r['wmo'])), 'the wind sea on the open sea is WMO\'s probable height for each Beaufort force')
         print(ok(all(L[g]['N']['w'] > 2.2 and L[g]['S']['w'] < 0.8 * L[g]['N']['w'] for g in L)), 'at 11 m/s the outer grounds have a full wind sea from the north and less in the lee of Senja from the south')

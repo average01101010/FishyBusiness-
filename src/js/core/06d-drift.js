@@ -185,7 +185,8 @@ function driftWxAhead(o, H, dur, s){
   const pts = [];
   if (s && s.route && s.route.wps && s.route.wps.length){ const W = s.route.wps, st = Math.max(1, Math.ceil(W.length / 8)); for (let i = 0; i < W.length; i += st) pts.push(W[i]); pts.push(W[W.length - 1]); const hp = portById(s.route.home); if (hp) pts.push(hp.p); }
   const seaAt = Hk => { if (!pts.length) return hsOpen(Hk); let m = 0; for (const p of pts){ let v; try { v = hsAt(p, Hk); } catch (e){ v = hsOpen(Hk); } m = Math.max(m, v); } return m; };
-  let w = 0, h = 0; for (let k = 0; k <= Math.ceil(dur); k++){ w = Math.max(w, windAt(H + k)); h = Math.max(h, seaAt(H + k)); }
+  const windOn = Hk => { if (!pts.length) return windAt(Hk); let m = 0; for (const p of pts) m = Math.max(m, windAt(Hk, p)); return m; };
+  let w = 0, h = 0; for (let k = 0; k <= Math.ceil(dur); k++){ w = Math.max(w, windOn(H + k)); h = Math.max(h, seaAt(H + k)); }
   const lim = Math.min(o.wx.hs, BOAT.risk[1] * 0.95);
   return {w, h, lim, boatLim:BOAT.risk[1] * 0.95 < o.wx.hs, ok:w <= o.wx.wind && h <= lim}; }
 

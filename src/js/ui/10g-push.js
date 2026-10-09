@@ -139,7 +139,7 @@ function pushItems(now){
     const spots = []; if (out_) spots.push(P && P.wps.length ? P.wps[P.wps.length - 1] : b.pos); for (const s of mySets()) if (s.vid === (v ? v.id : S.cur)){ spots.push(s.a); }
     if (spots.length){
       const H0 = S.t / 60; let hit = null;
-      for (let h = 1; h <= PUSH_WX && !hit; h++) for (const q of spots){ const W = windAt(H0 + h), hs = hsAt(q, H0 + h), lvl = riskLevel(W, hs); if (lvl > 0){ hit = {h, W, hs, lvl}; break; } }
+      for (let h = 1; h <= PUSH_WX && !hit; h++) for (const q of spots){ const W = windAt(H0 + h, q), hs = hsAt(q, H0 + h), lvl = riskLevel(W, hs); if (lvl > 0){ hit = {h, W, hs, lvl}; break; } }
       if (hit){ const bf = beaufort(hit.W), wave = fmt(hit.hs, 1); add(Math.max(S.t, (H0 + hit.h - 2) * 60), 'wx-' + tag, nm, (hit.lvl > 1 ? 'Storm' : 'Kuling') + ' på vei: vindstyrke ' + bf + ' og bølger på ' + wave + ' m. ' + nm + ' ligger ute' + (mySets().length ? ', og redskapet står i sjøen' : '') + '.',
         (hit.lvl > 1 ? 'A storm' : 'A gale') + ' is coming: force ' + bf + ' and waves of ' + wave + ' m. ' + nm + ' is out' + (mySets().length ? ' and the gear is in the sea' : '') + '.', 6, 1); }
     }

@@ -49,7 +49,7 @@ function motionAt(p, H, head, kn, St = stabOf()){
     const fL = 1 / (1 + (k * St.L * Math.abs(Math.cos(m)) / Math.PI) ** 2), heave = we * we * hs / 2 * fL, pitch = we * we * (Math.PI * hs / lam) * fL * Math.abs(Math.cos(m)) * St.L / 3;
     r2 += roll * roll; a2 += heave * heave + pitch * pitch; if (roll > rmax){ rmax = roll; res = x; }
   }
-  return {roll:Math.min(0.9, Math.sqrt(r2)), heel:windHeel(St, windAt(H)), av:Math.sqrt(a2), res, GM:St.GM, Tr:St.Tr, deckEdge:St.deckEdge};
+  return {roll:Math.min(0.9, Math.sqrt(r2)), heel:windHeel(St, windAt(H, p)), av:Math.sqrt(a2), res, GM:St.GM, Tr:St.Tr, deckEdge:St.deckEdge};
 }
 // the steady heel from a beam wind: the pressure 0.5 rho U^2 1.2 on the side above water, its lever over the weight and GM
 function windHeel(St, U){ const A = St.L * (St.f + (St.decked ? 1.4 : 0.15)), Z = St.T / 2 + St.f / 2 + (St.decked ? 0.9 : 0.1), lw = 0.5 * 1.25 * U * U * 1.2 * A * Z / (St.D * 1000 * 9.81); return Math.atan(lw / Math.max(St.GM, 0.04)); }
@@ -64,12 +64,12 @@ function stabState(M){
 // it would move drifting beam-on to the same sea with nothing aboard. So the year's work keeps its calibration, and course, speed, load
 // and resonance tell. 1 m/s^2 of vertical acceleration counts as much as 10 degrees of roll. A boat with no way on lies beam-on.
 const motionIdx = M => M.av + 0.1 * M.roll * 180 / Math.PI;
-function boatHead(H, b = S.boat){ const kn = b.status === 'sailing' ? b.v || 0 : 0; return {kn, head:kn > 0.5 ? b.heading || 0 : (windDir(H) - gridGamma(b.pos) + 90) * Math.PI / 180}; }
+function boatHead(H, b = S.boat){ const kn = b.status === 'sailing' ? b.v || 0 : 0; return {kn, head:kn > 0.5 ? b.heading || 0 : (windDir(H, b.pos) - gridGamma(b.pos) + 90) * Math.PI / 180}; }
 let MW_MEMO = {k:'', v:null};
 function motionHere(H, b = S.boat){
   const {kn, head} = boatHead(H, b), L = stabLoad(b), k = b.type + '|' + b.pos.x + '|' + b.pos.y + '|' + H + '|' + kn + '|' + head + '|' + L.hold + '|' + L.deck + '|' + L.gear;
   if (MW_MEMO.k === k && !WX_FORCE) return MW_MEMO.v;
-  const St = stabOf(b.type, L), M = motionAt(b.pos, H, head, kn, St), R = motionAt(b.pos, H, (windDir(H) - gridGamma(b.pos) + 90) * Math.PI / 180, 0, stabOf(b.type, {hold:0, deck:0, gear:0}));
+  const St = stabOf(b.type, L), M = motionAt(b.pos, H, head, kn, St), R = motionAt(b.pos, H, (windDir(H, b.pos) - gridGamma(b.pos) + 90) * Math.PI / 180, 0, stabOf(b.type, {hold:0, deck:0, gear:0}));
   const v = {M, St, f:clamp((motionIdx(M) + 0.05) / (motionIdx(R) + 0.05), 0.6, 1.8), state:stabState(M)};
   MW_MEMO = {k, v}; return v;
 }

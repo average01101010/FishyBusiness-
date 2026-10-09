@@ -5,7 +5,7 @@ const G3 = (() => {
   let gl = null, ready = false, failed = false, active = false, raf = 0, lastF = 0;
   let PL, PS, PSF, PK, PP, SST_VS = false, SSDUMMY = null, SEADBG = false;
   let TERR, STAT, BOATM, CAPM, RODM, FLAGM, SKYQ, PATCH, FARQ, DYNP, DYNA;
-  let HG = null, NEARM = null, MIDM = null, FINEM = null, loading = false, LIGHTS = [], snowNow = null;   // the snow line in use (m; below 0 in winter), null before the first frame
+  let HG = null, NEARM = null, MIDM = null, FINEM = null, loading = false, LIGHTS = [], snowNow = null, grassAt = null;   // the snow line in use (m; below 0 in winter), null before the first frame
   // Quality (phase K8 of the coast plan): 0 low, 1 medium, 2 high, 3 ultra (Jonas 05.10.2026: «en ultra grafikk setting ... finne ut
   // hvor grensa ligger for flagship-modeller»; only when chosen, never by auto, and only where 32-bit indices are there: UINT).
   // 'auto' (the setting S.settings.q3d) steps down a level when the
@@ -387,7 +387,12 @@ const G3 = (() => {
   // grass along the water by the naust while all else was white). Along the coast it moves with how much warmer or colder the place is
   // than Senja (core/03-simulation.js climDiff), about 150 m a degree (air cools some 0.65 °C per 100 m)
   const SNOWLINE = [-120,-120,-80,150,350,650,900,1000,850,450,120,-80];
-  const snowLine = H => seasonal(SNOWLINE, H) + clamp(typeof climDiff === 'function' ? climDiff('t', H) : 0, -6, 8) * 150;
+  // since V2 of the weather plan the snow lies where it has fallen and not yet melted (core snowLineAt: day by day at every 100 m of
+  // height where the boat is); the table is only what is used if that is missing
+  const snowLine = H => typeof snowLineAt === 'function' ? snowLineAt(H) : seasonal(SNOWLINE, H) + clamp(typeof climDiff === 'function' ? climDiff('t', H) : 0, -6, 8) * 150;
+  // the grass and the birch by the season where the boat is (core seasonAt, V3): 0 straw-coloured to 1 green; the birch bare, in leaf
+  // or yellow
+  const grassNow = () => typeof seasonAt === 'function' ? Math.round(seasonAt(S.t / 60).grass * 10) / 10 : 1;
   // real ground height (m) at world x/z (m); sea floor is shaped from shore distance and exposure; where a harbour unit stands, its
   // ground (unitTerr)
   const COAST3 = {top:1.7};
@@ -815,7 +820,7 @@ const G3 = (() => {
   const WEED = [0.27, 0.24, 0.13], WEED2 = [0.22, 0.2, 0.12], BARN = [0.66, 0.66, 0.62];   // rockweed and barnacles in the tidal zone
   function recolor(m, snow){
     const {slope, nz, col, h, fo} = m;
-    const grass = [0.36, 0.43, 0.28], birch = [0.25, 0.33, 0.22], rock = [0.33, 0.35, 0.37], snowC = [0.9, 0.92, 0.95], shore = [0.5, 0.49, 0.44], bed = [0.3, 0.3, 0.27];
+    const gr = grassNow(), grass = mix3([0.5, 0.46, 0.33], [0.36, 0.43, 0.28], gr), birch = mix3([0.33, 0.3, 0.26], [0.25, 0.33, 0.22], gr), rock = [0.33, 0.35, 0.37], snowC = [0.9, 0.92, 0.95], shore = [0.5, 0.49, 0.44], bed = [0.3, 0.3, 0.27];
     const asph = [0.3, 0.31, 0.32], gravel = [0.47, 0.45, 0.41], pv = m.pv;   // a harbour unit's fill and the flat land by it (unitPatch)
     for (let i = 0; i < h.length; i++){
       const y = h[i], n = nz[i]; let c;
@@ -1267,7 +1272,7 @@ const G3 = (() => {
     return c;
   }
   // trees: birch woods below the tree line with some pine, kept off roads and buildings; colours follow the season
-  const treeSeason = () => { const mo = gDate(S.t / 60).getUTCMonth(); return mo >= 5 && mo <= 7 ? 1 : mo === 8 ? 2 : 0; };
+  const treeSeason = () => { if (typeof seasonAt === 'function'){ const st = seasonAt(S.t / 60); return st.leaf < 0.4 ? 0 : st.yel > 0.45 ? 2 : 1; } const mo = gDate(S.t / 60).getUTCMonth(); return mo >= 5 && mo <= 7 ? 1 : mo === 8 ? 2 : 0; };
   function addTrees(m, key, srcs, snowy){
     const gz = gridKeyY(key), gx = gridKeyX(key), x0 = gx * 1000, z0 = gz * 1000, occ = new Uint8Array(1600);
     const mark = (x, z, r) => { const cx = Math.floor((x - x0) / 25), cz = Math.floor((z - z0) / 25); for (let a = -r; a <= r; a++) for (let b = -r; b <= r; b++){ const i = cx + b, j = cz + a; if (i >= 0 && j >= 0 && i < 40 && j < 40) occ[j * 40 + i] = 1; } };
@@ -1906,7 +1911,7 @@ const G3 = (() => {
     const g = S.boat.gop; if (g && g.op === 'set' && g.done >= 0){ const back = ((GEO(vtype()).stern || 3) + 5) / 1000, d = Math.hypot(bv.x / 1000 - g.a.x, bv.z / 1000 - g.a.y);
       L.push(bv.init && d < back ? {x:(bv.x - Math.sin(bv.head) * back * 1000 + Math.cos(bv.head) * 1.5) / 1000, y:(bv.z + Math.cos(bv.head) * back * 1000 + Math.sin(bv.head) * 1.5) / 1000} : g.a); }
     if (!L.length) return; if (!GB) buildGear();
-    nSetup(VP); const wd = (windDir(H) - gridGamma({x:bv.x / 1000, y:bv.z / 1000}) + 180) * DEG;
+    nSetup(VP); const wd = (windDir(H, {x:bv.x / 1000, y:bv.z / 1000}) - gridGamma({x:bv.x / 1000, y:bv.z / 1000}) + 180) * DEG;
     for (const e of L){ const x = e.x * 1000, z = e.y * 1000; if (Math.hypot(x - eye[0], z - eye[2]) > 4000) continue;
       const y = seaH(x, z, t) - 0.1, sx = (seaH(x + 0.6, z, t) - seaH(x - 0.6, z, t)) / 1.2, sz = (seaH(x, z + 0.6, t) - seaH(x, z - 0.6, t)) / 1.2;
       drawN(GB.buoy, model(x - eye[0], y - eye[1], z - eye[2], Math.PI / 2 - wd, -sz * 0.9, sx * 0.9)); }
@@ -2835,7 +2840,7 @@ const G3 = (() => {
   // a broad spectrum around the peak wavelength; short waves keep a little energy so the surface always has texture (sum of squares 1/8, so Hs = 1)
   function specW(L0){ const w = WL.map(L => Math.exp(-(((Math.log(L) - Math.log(L0)) / 0.75) ** 2)) + 0.06 * Math.min(1, L0 / L)), n = Math.sqrt(w.reduce((a, c) => a + c * c, 0)) * 2.828; return w.map(v => v / n); }
   function updateWaves(dt, H){
-    const p = {x:bv.x / 1000, y:bv.z / 1000}, gT = gridGamma(p), hsT = hsAt(p, H), WT = windAt(H), wdT = windDir(H) - gT, dirT = (wdT + 180) * DEG, SW = swellOpen(H), swDirT = (SW.dir - gT + 180) * DEG;   // the world is drawn on the grid: true directions turn by -gamma
+    const p = {x:bv.x / 1000, y:bv.z / 1000}, gT = gridGamma(p), hsT = hsAt(p, H), WT = windAt(H, p), wdT = windDir(H, p) - gT, dirT = (wdT + 180) * DEG, SW = swellOpen(H, p), swDirT = (SW.dir - gT + 180) * DEG;   // the world is drawn on the grid: true directions turn by -gamma
     if (!WV.init){ WV.hs = hsT; WV.W = WT; WV.dir = dirT; WV.swHs = SW.hs; WV.swDir = swDirT; WV.swTp = SW.tp; WV.init = true; }
     // the sea answers the wind over a few seconds (a sudden change, as after skipping time, never snaps the waves)
     const k = 1 - Math.exp(-dt / 4); WV.hs = lerp(WV.hs, hsT, k); WV.W = lerp(WV.W, WT, k); WV.swHs = lerp(WV.swHs, SW.hs, k); WV.swTp = lerp(WV.swTp, SW.tp, k * 0.2);
@@ -2991,7 +2996,7 @@ const G3 = (() => {
     if (mlight > 0.02){ const ml = [0.62, 0.7, 0.9].map(v => v * mlight * 0.32); env.sunCol = env.sunCol.map((v, k) => v + ml[k]); env.amb = env.amb.map((v, k) => v + [0.02, 0.025, 0.04][k] * mlight); const my = Math.max(env.moonDir[1], 0.25), mll = Math.hypot(env.moonDir[0], my, env.moonDir[2]); env.lightDir = [env.moonDir[0] / mll, my / mll, env.moonDir[2] / mll]; }
     env.shadowDir = el > -1 ? env.sunDir : mlight > 0.02 ? env.moonDir : null;
     env.tide = tideH(H);
-    const sn = Math.round(snowLine(H) / 20) * 20; if (sn !== snowNow){ snowNow = sn; recolor(TERR, sn); if (NEARM) recolor(NEARM, sn); if (FINEM) recolor(FINEM, sn); for (const m of UPATCH) recolor(m, sn); }
+    const sn = Math.round(snowLine(H) / 20) * 20, gn = grassNow(); if (sn !== snowNow || gn !== grassAt){ snowNow = sn; grassAt = gn; recolor(TERR, sn); if (NEARM) recolor(NEARM, sn); if (FINEM) recolor(FINEM, sn); for (const m of UPATCH) recolor(m, sn); }
   }
 
 
@@ -4171,7 +4176,7 @@ const G3 = (() => {
     const BMrel = model(bv.x - eye[0], bv.y - eye[1], bv.z - eye[2], -bv.head, bv.pitch, bv.roll);
     const BMabs = Array.from(model(0, 0, 0, -bv.head, bv.pitch, bv.roll)); BMabs[12] = bv.x; BMabs[13] = bv.y; BMabs[14] = bv.z;   // world position in full precision (see the eye above)
     // apparent wind for the flag
-    const wdir = (windDir(H) - gridGamma({x:bv.x / 1000, y:bv.z / 1000}) + 180) * DEG, wv = env.wind || windAt(H), bms = bv.v * 0.514 * 2;
+    const wdir = (windDir(H, {x:bv.x / 1000, y:bv.z / 1000}) - gridGamma({x:bv.x / 1000, y:bv.z / 1000}) + 180) * DEG, wv = env.wind || windAt(H, {x:bv.x / 1000, y:bv.z / 1000}), bms = bv.v * 0.514 * 2;
     const ax = Math.sin(wdir) * wv - Math.sin(bv.head) * bms, az = -Math.cos(wdir) * wv + Math.cos(bv.head) * bms, appW = Math.hypot(ax, az), appB = Math.atan2(ax, -az);
     updateFlag(t, appW);
 

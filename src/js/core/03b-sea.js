@@ -84,9 +84,10 @@ function hsWind(U, F){ return Math.min(hsWMO(U), 0.0016 * U * Math.sqrt(F * 1000
 function fetchCap(U){ return U > 0.3 ? (hsWMO(U) / (0.0016 * U)) ** 2 * 9.81 / 1000 : 0; }
 function tpWind(U, F){ const f = Math.min(F, fetchCap(U)) * 1000; return f > 0 ? 0.286 * (U / 9.81) * Math.cbrt(9.81 * f / (U * U)) : 0; }
 // the wind the sea has had time to answer: most of now, some of three hours ago
-let WE_MEMO = {H:NaN, v:0}, WD_MEMO = {H:NaN, v:0};
-function wdAt(H){ if (H === WD_MEMO.H && !WX_FORCE) return WD_MEMO.v; const v = windDir(H); WD_MEMO = {H, v}; return v; }
-function weAt(H){ if (H === WE_MEMO.H && !WX_FORCE) return WE_MEMO.v; const v = 0.6 * windAt(H) + 0.4 * windAt(H - 3); WE_MEMO = {H, v}; return v; }
+// (kept per hour and 5 km cell: the weather moves along the coast, V4)
+let WE_MEMO = {H:NaN, k:null, v:0}, WD_MEMO = {H:NaN, k:null, v:0};
+function wdAt(H, p){ const k = wxPlace(p); if (H === WD_MEMO.H && k === WD_MEMO.k && !WX_FORCE) return WD_MEMO.v; const v = windDir(H, p); WD_MEMO = {H, k, v}; return v; }
+function weAt(H, p){ const k = wxPlace(p); if (H === WE_MEMO.H && k === WE_MEMO.k && !WX_FORCE) return WE_MEMO.v; const v = 0.6 * windAt(H, p) + 0.4 * windAt(H - 3, p); WE_MEMO = {H, k, v}; return v; }
 
 // Swell from the Norwegian Sea, from the west-north-west: a seasonal ground swell, and what the lows leave behind, which dies away
 // over a day (only the sea a wind from the west half raised runs in towards the coast). It fades into the fjords and sounds with the
@@ -94,20 +95,20 @@ function weAt(H){ if (H === WE_MEMO.H && !WX_FORCE) return WE_MEMO.v; const v = 
 // wave height they had before the fetch (Jonas' choice 02.10.2026).
 const SWELL = [1.25,1.25,1.1,0.85,0.65,0.5,0.45,0.5,0.75,0.95,1.1,1.25];
 const SWELL_K = [6, 12, 18, 24, 36];
-let SW_MEMO = {H:NaN, v:null};
-function swellOpen(H){
-  if (H === SW_MEMO.H && !WX_FORCE) return SW_MEMO.v;
-  const base = seasonal(SWELL, H) * (0.1 + 1.8 * vn(H / 50, 77));
+let SW_MEMO = {H:NaN, k:null, v:null};
+function swellOpen(H, p){
+  const K = wxPlace(p), Hl = H - K.dt; if (H === SW_MEMO.H && K === SW_MEMO.k && !WX_FORCE) return SW_MEMO.v;
+  const base = seasonal(SWELL, Hl) * (0.1 + 1.8 * vn(Hl / 50, 77));
   let rem = 0;
-  for (const k of SWELL_K){ const d = windDir(H - k) * Math.PI / 180, west = Math.max(0, -Math.sin(d)); rem = Math.max(rem, hsWMO(weAt(H - k)) * Math.exp(-k / 24) * west); }
+  for (const k of SWELL_K){ const d = windDir(H - k, p) * Math.PI / 180, west = Math.max(0, -Math.sin(d)); rem = Math.max(rem, hsWMO(weAt(H - k, p)) * Math.exp(-k / 24) * west); }
   const hs = Math.hypot(base, rem);
-  const v = {hs, dir:300 + 50 * (vn(H / 60, 313) - 0.5), tp:clamp(8.5 + 1.1 * hs, 9, 14)};
-  SW_MEMO = {H, v}; return v;
+  const v = {hs, dir:300 + 50 * (vn(Hl / 60, 313) - 0.5), tp:clamp(8.5 + 1.1 * hs, 9, 14)};
+  SW_MEMO = {H, k:K, v}; return v;
 }
 function swellFactor(p){ return Math.pow(rbil(MAPD.L.expo, p) / 255, 1.5); }
 // the sea at p: wind sea w and swell sw (significant heights, m), the wind sea's peak period and fetch, and where each comes from
 function hsParts(p, H){
-  const U = weAt(H), d = wdAt(H), F = fetchHere(p, d - gridGamma(p)), S = swellOpen(H);
+  const U = weAt(H, p), d = wdAt(H, p), F = fetchHere(p, d - gridGamma(p)), S = swellOpen(H, p);
   return {w:hsWind(U, F), sw:S.hs * swellFactor(p), tp:tpWind(U, F), F, U, dir:d, swDir:S.dir, swTp:S.tp};
 }
 let HS_MEMO = {x:NaN, y:NaN, H:NaN, v:0};
@@ -116,12 +117,12 @@ function hsAt(p, H){
   const q = hsParts(p, H), v = Math.max(0.05, Math.hypot(q.w, q.sw));
   HS_MEMO = {x:p.x, y:p.y, H, v}; return v;
 }
-function hsOpen(H){ return Math.max(0.05, Math.hypot(hsWMO(weAt(H)), swellOpen(H).hs)); }
+function hsOpen(H, p){ return Math.max(0.05, Math.hypot(hsWMO(weAt(H, p)), swellOpen(H, p).hs)); }
 // forecasts: the forecast wind (with its error) through the same sea; the swell forecast has its own error
-function fcHsOpen(H, now){ return hsOpen(H) * (1 + fcErr(H, now, 5900)); }
+function fcHsOpen(H, now, p){ return hsOpen(H, p) * (1 + fcErr(H, now, 5900)); }
 function hsAtFc(p, H, now){
-  const U = 0.6 * fcWind(H, now) + 0.4 * fcWind(H - 3, now), F = fetchHere(p, windDir(H) - gridGamma(p));
-  return Math.max(0.05, Math.hypot(hsWind(U, F), swellOpen(H).hs * (1 + fcErr(H, now, 5900)) * swellFactor(p)));
+  const U = 0.6 * fcWind(H, now, p) + 0.4 * fcWind(H - 3, now, p), F = fetchHere(p, windDir(H, p) - gridGamma(p));
+  return Math.max(0.05, Math.hypot(hsWind(U, F), swellOpen(H, p).hs * (1 + fcErr(H, now, 5900)) * swellFactor(p)));
 }
 // the sea state number by the significant wave height (the Douglas scale, WMO code 3700: 0 glassy ... 9 phenomenal)
 const SEA_CODE = [0.05, 0.1, 0.5, 1.25, 2.5, 4, 6, 9, 14];

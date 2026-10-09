@@ -2253,6 +2253,34 @@ Brukerens ønske: mannskapet skal være en levende og givende del av spillet, in
 
 ### 5.20 Vær og hav (02.10.2026)
 
+**Lavtrykk som flytter seg (V4, 09.10.2026;** Jonas: «vi må bygge ferdig værsystemene og årstidene før vi starter med å tenke på hvor nye spillere skal starte»):
+- Før V4 var vinden den samme langs hele kysten i samme time. Nå har hvert lavtrykk et eget spor langs kysten: en linje utenfor kysten fra Lindesnes rundt Stad, forbi Helgeland, Lofoten og Troms til Nordkapp og Vardø (`WX_TRACK`).
+- `wxPlace(p)` måler et sted langs sporet (s, km fra Lindesnes) og på tvers av det (c, + ut mot havet), lagret per rute på 5 km.
+- Lavtrykk k går med 38–68 km/t og passerer et sted ved timen det passerte Senja før, flyttet med (s − s_Senja)/fart. En storm topper derfor rundt 40 t før i Færder, 32 t før i Bergen, 6,5 t før i Bodø, 6,5 t etter i Hammerfest og 13,5 t etter i Vardø.
+- Styrken avhenger av hvor nær sporet stedet er (sporet ligger fra 120 km inne i landet til 400 km ute) og hvor langs kysten lavtrykket er dypest (`wxLowShape`). Den er skalert så snittet ved Senja er som før: `seatest` måler vindsummen over to år til 0,2 % over den gamle.
+- Bakgrunnsværet (støyen i vinden og retningen) flytter seg også nordover, med 45 km/t (`WX_SYN`).
+- Vinden dreier med klokka (S → SV → NV) på høyre side av sporet og mot klokka (S → Ø → N) på venstre side (Buys Ballot).
+- Stedets egen vindstyrke følger den sterkeste vinden i `climate.json` mot Senja (`wmax`), dempet: (forholdet)^0,2, innenfor 0,92–1,12.
+- `windAt`, `windDir`, `weAt`, `wdAt`, `swellOpen`, `hsOpen`, `fcWind`, `fcHsOpen` og `hsAtFc` tar et sted `p` (ellers båten). Driftsplanen ser vinden langs hele ruten, og ankeret, push-varslene, NPC-flåten, stabiliteten og 3D bruker stedet der det skjer.
+- Måling, andel timer over 11 m/s i januar: Senja 29 %, Bergen 35 %, Bodø 35 %, Vardø 38 %, Hammerfest 34 %. Det tar 5 µs per kall uten mellomlager.
+
+**Snø og årstider (V2 og V3, 09.10.2026):**
+- `seasonAt(H, p)` regner dag for dag fra 1. august for en rute på 20 km. Hver dag har middeltemperaturen og nedbøren fra `airTemp` og `precipAt` (fire ganger i døgnet), og nedbøren i mm fra månedsnormalen i `climate.json`.
+- **Snø (V2)** regnes for hver 100. meter opp til 1 500 m:
+  - lufta kjølner 0,65 °C per 100 m, og nedbøren øker 4 % per 100 m
+  - nedbøren faller som snø under 0,5 °C og blandet opp til 1,5 °C, og 65 % av den blir liggende
+  - snøen smelter med 4 mm per graddøgn, og raskere i regn
+  - `snowLineAt` gir høyden der 20 mm vann ligger som snø. `view3d.js` bruker den i stedet for den faste tabellen (`SNOWLINE`, nå bare reserve) og legger snøen flekkete rundt grensen.
+  - Måling midt i måneden, mm vann ved sjøen / 300 m / 800 m:
+    - Senja: 235 / 424 / 663 i januar, 0 ved sjøen fra juni
+    - Bergen: nesten aldri snø ved sjøen, men 285 mm på 300 m i februar
+    - Vardø: 68 / 111 / 177 i januar
+- **Årstider (V3):**
+  - Bjørka får løv når temperatursummen over 5 °C siden mars når rundt 60: i mai i Bergen og Kristiansund, i juni i Bodø og på Senja.
+  - Gresset grønnes med løvet og holder litt grønt gjennom en mild vinter uten snø.
+  - Løvet gulner når tidagerssnittet faller under 9 °C etter midtsommer og faller to uker senere.
+  - `view3d.js` blander gresset fra halmfarget til grønt (`grassNow`), og bjørka er naken, grønn eller gul (`treeSeason`).
+
 **Klima etter sted (V1, 06.10.2026;** Jonas: «Vi skal jo ikke ha ekte live-vær, men vi må kunne simulere været langs hele kysten på en god måte, med variasjoner fra sted til sted»):
 - `src/data/climate.json` har månedsmidler for 19 punkter fra Færder til Kirkenes: lufttemperatur, nedbør, snø, sterkeste vind, andel kulingdager og skydekke fra ERA5 2006–2020, og sjøtemperatur fra Open-Meteos marine data 2023–2025. Dataene hentes av `tools/climate/fetch.py` i `.github/workflows/klima.yml` (startes ved å endre `tools/climate/klima.json`) og ligger som releaser `klima-N`.
 - Spillets eget vær er uendret, men flyttes med hvor stedet avviker fra Senja, der spillet er kalibrert. Lufta og sjøen flyttes med forskjellen i temperatur, nedbøren med forholdet i månedsnedbør, og skydekket med forskjellen. Ved Senja er alt nøyaktig som før.

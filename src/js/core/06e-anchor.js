@@ -24,7 +24,7 @@ function anchorLoad(W, hs, expo){ const r = BOAT.risk; return Math.max(W * (0.7 
 // the weather the boat would get over the next hours at a place, as a load
 function anchorForecast(p, H, hours, spot){
   const sp = spot || anchorSpot(p); let m = 0;
-  for (let k = 0; k <= Math.ceil(hours); k++){ m = Math.max(m, anchorLoad(windAt(H + k), hsAt(p, H + k), sp.expo)); }
+  for (let k = 0; k <= Math.ceil(hours); k++){ m = Math.max(m, anchorLoad(windAt(H + k, p), hsAt(p, H + k), sp.expo)); }
   return m;
 }
 // the anchor alarm: a drag sounds it (06e hooks.onAnchorAlarm: the siren, the flashing light in 3D, the toast); a player asleep aboard is
