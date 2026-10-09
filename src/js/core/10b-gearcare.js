@@ -84,7 +84,14 @@ const kitRoomNow = () => Math.max(0, kitMax() - S.pgear.kits.n - mySets().length
 
 // ---- the crew's work in port (and the shop's, in half the time for a fee): hooks, line, pots, jig tackle, nets
 function hooksNeed(lk){ const L = careG().lines[lk]; return Math.round((L.miss + L.bent) * L.n * LINE_KINDS[lk].hooks); }
-function careWhy(){ const b = S.boat; return b.status !== 'port' ? [gL('Vedlikehold gjøres i havn.', 'Upkeep is done in port.')] : null; }
+// the crew's work at sea (Jonas 09.10.2026: «Agning av liner, reparering av kroker, bøting av garn og teiner og sånne ting skal kunne skje
+// mens båten seiler om mannskapet er ledig»): under way or lying still, with a crew aboard (the skipper alone steers); the jobs pause
+// while the crew is busy fishing, hauling or gutting (core/05-vessels.js), and go on when it is free again
+function seaWork(){ const b = S.boat; return (b.status === 'sailing' || b.status === 'idle') && !b.gop && !b.tow && (S.crew || []).length > 0 && crewAboard().length > 0; }
+const crewBusyAtSea = () => { const b = S.boat; return b.status === 'fishing' || !!b.gop || (typeof deckPending === 'function' && deckPending() > 0.5); };
+const CREW_JOBS = ['egn', 'mend', 'hk', 'lr', 'pr', 'jg'];
+const crewJob = j => CREW_JOBS.includes(j.kind) && !j.shop;
+function careWhy(){ const b = S.boat; return b.status !== 'port' && !seaWork() ? [(S.crew || []).length ? gL('Mannskapet tar dette i havn, eller mens båten går eller ligger i ro.', 'The crew does this in port, or while the boat is under way or lying still.') : gL('Alene om bord gjøres dette i havn. Med mannskap kan det gjøres på sjøen.', 'Alone aboard this is done in port. With a crew it can be done at sea.')] : null; }
 function careShopWhy(){ const b = S.boat, sv = portServices(portById(b.port), berthKind(b)); return !sv.butikk ? [gL('Butikken må ta det: gå til utstyrsbutikken.', 'The shop has to do it: go to the tackle shop.')] : null; }
 // what a job would cost and take: {n, fee, h, mat} or null when there is nothing to do or nobody to do it. The shop does it in half the time
 // for a fee; the crew uses its own hooks (pg.hooks) and a little material
@@ -196,15 +203,36 @@ function sellGear(what, key, n){
 // ---- upkeep by the crew when the boat lies in port with nothing else to do: once an hour, one job at a time, from what is in the store
 let CARE_LAST = -1;
 function careTick(){
-  const b = S.boat, pg = S.pgear; if (!pg || b.status !== 'port' || S.settings.careAuto === false) return;
+  const b = S.boat, pg = S.pgear; if (!pg || (b.status !== 'port' && !seaWork()) || S.settings.careAuto === false) return;
   const H = Math.floor(S.t / 60); if (H === CARE_LAST) return; CARE_LAST = H;
   careInit(pg);
+  if ((S.crew || []).length) gearTalk();   // now and then a word on the state of the gear, the hooks and the bait
   if ((S.jobs || []).length || b.gop || b.land || !handsAboard()) return;
   if (!(S.crew || []).length) return;   // only a crew does this by itself; alone, it is yours to order
+  // at sea only when no standing plan runs (06d-drift.js): its gear must stay aboard for the next set; ordered jobs still go
+  if (b.status !== 'port'){ if (crewBusyAtSea() || (S.plan && S.plan.ops) || ((o => o && o.on)(typeof driftOps === 'function' ? driftOps() : null))) return;
+    // at sea the crew also baits the tubs that are ready for it, with the bait aboard
+    for (const lk of ['hyse', 'bank']){ const L = pg.lines[lk], free = L.n - L.baited; const bk = free > 0 && baitPick(pg, LINE_KINDS[lk].baitKg); if (bk){ const n = Math.max(1, Math.min(free, Math.floor((baitOf(pg)[bk] || 0) / LINE_KINDS[lk].baitKg))); if (!egnSelf(lk, n)) return; } } }
   const mendable = pg.nets.find(l => l.cond < Math.min(0.6, l.max - 0.1)); if (mendable && !mendSelf(mendable.id)) return;
   for (const lk of ['hyse', 'bank']){ const L = pg.lines[lk]; if (!L.n) continue;
     if (hooksNeed(lk) >= Math.max(5, 0.06 * L.n * LINE_KINDS[lk].hooks) && pg.hooks > 0 && !hooksJob(lk, false)) return;
     if (L.cond < Math.min(0.6, L.max - 0.1) && !lineFix(lk, false)) return; }
   if (pg.pots.big && pg.potc.cond < Math.min(0.6, pg.potc.max - 0.1) && !potFix(false)) return;
   const k = jigKind(); if (pg.jig[k].c < 0.3 && pg.jig[k].n > 0 && !jigJob(k)) return;
+}
+
+// ---- what the crew says about the gear (Jonas 09.10.2026: «Tidvis kan mannskapet komme med kommentarer tilknyttet dette som feks å kommentere
+// status på utstyret, mangel eller tomt for kroker, mangel eller tomt for agn»): once an hour at most a look at the store, and each
+// thing said at most once a game day (S.gsay), through the crew's own voice (core/14-crewlife.js crewSay: the log, over the head in 3D)
+function gearTalk(){
+  const pg = S.pgear; if (!pg || !crewAboard().length) return;
+  const said = S.gsay || (S.gsay = {}), fresh = k => S.t - (said[k] || -1e9) > 24 * 60, say = k => { if (fresh(k) && crewSay(null, k)){ said[k] = S.t; return true; } return false; };
+  const lineHooks = ['hyse', 'bank'].reduce((a, lk) => a + (pg.lines[lk].n ? hooksNeed(lk) : 0), 0), lines = pg.lines.hyse.n + pg.lines.bank.n;
+  const tubs = ['hyse', 'bank'].reduce((a, lk) => a + Math.max(0, pg.lines[lk].n - pg.lines[lk].baited), 0), tubKg = ['hyse', 'bank'].reduce((a, lk) => a + (pg.lines[lk].n > pg.lines[lk].baited ? LINE_KINDS[lk].baitKg : 0), 0);
+  if (lines && lineHooks >= 20 && pg.hooks <= 0 && say('hooksOut')) return;
+  if (lines && pg.hooks > 0 && pg.hooks < lineHooks && say('hooksLow')) return;
+  if (tubs && baitKg(pg) < 0.5 && say('baitOut')) return;
+  if (tubs && baitKg(pg) >= 0.5 && baitKg(pg) < tubKg * Math.min(tubs, 3) && say('baitLow')) return;
+  if ((pg.nets.some(l => l.cond < 0.4) || ['hyse', 'bank'].some(lk => pg.lines[lk].n && pg.lines[lk].cond < 0.4) || (pg.pots.big && pg.potc.cond < 0.4)) && say('gearWorn')) return;
+  if (pg.jig && pg.jig[jigKind()].c < 0.3 && say('jigWorn')) return;
 }

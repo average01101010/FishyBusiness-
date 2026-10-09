@@ -3797,6 +3797,26 @@ Nå tar `vecPrune` alltid med midten av kartplotteren når den er åpen. Kontrol
   - Raden slettes etter ett døgn.
 - **Testene:** `hailtest` (med en falsk database) og hilsenene i `sqltest`.
 
+### 5.54 Mannskapets arbeid på sjøen og prat om redskapen (Jonas 09.10.2026)
+
+- **Arbeid på sjøen:** egning, krokbytte, reparasjon av line og teiner, bøting og nytt juksesett kan nå gjøres på sjøen (`seaWork()` i `core/10b-gearcare.js`). Kravene:
+  - Båten går eller ligger i ro (også til ankers).
+  - Den holder ikke på med redskap (`gop`) og er ikke på slep.
+  - Det er mannskap om bord. Skipperen alene styrer og kan ikke gjøre det, og får en forklaring.
+- **Jobbene:**
+  - Knappene under Beholdning vises også da.
+  - Jobbene (`CREW_JOBS`) starter med en gang. De står på pause så lenge mannskapet fisker, haler eller sløyer (`crewBusyAtSea`); tiden skyves da ett minutt for hvert minutt (`core/05-vessels.js`).
+  - Butikkens og verftets jobber går fortsatt bare i havn.
+- **Mannskapet på egen hånd:**
+  - `careTick` går nå også på sjøen. Mannskapet egner da frie stamper med agnet om bord, og bøter, bytter kroker og reparerer som i havn.
+  - Dette skjer ikke mens en driftsplan går, fordi redskapen da må være om bord til neste sett.
+- **Prat om redskapen:** én gang i timen ser mannskapet på lageret (`gearTalk`). Hver ting sies høyst én gang i spilldøgnet (`S.gsay`), med mannskapets egen stemme og dialekt (`crewSay`: loggen og teksten over hodet i 3D). Det de sier fra om:
+  - Kroker: tomt eller lite (`hooksOut`, `hooksLow`).
+  - Agn: tomt eller lite (`baitOut`, `baitLow`).
+  - Slitt redskap, juksa medregnet (`gearWorn`, `jigWorn`).
+  - En ferdig jobb på sjøen (`workDone`).
+- **Test:** `seaworktest`.
+
 ### 5.41 Puben i 3D (Jonas 08.10.2026)
 
 Jonas: «Spilleren trykker på pub og blir dermed sendt inn i puben hvor man sitter ved bardisken i first-person-view. Man skal kunne spinne hjulet som tidligere.» Og: «Kanskje noe som blir et sosialt element.»

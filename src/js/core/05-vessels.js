@@ -272,9 +272,15 @@ function vesselStep(H){
   // work queue at the yard and on the quay: runs while the boat is in port
   if (S.jobs && S.jobs.length && b.status === 'port'){ let done = null; for (const j of S.jobs){ jobOk(j); if (j.until == null) j.until = S.t + j.h * 60; if (S.t >= j.until) (done = done || []).push(j); }
     if (done){ S.jobs = S.jobs.filter(j => !done.includes(j)); done.forEach(finishJob); } }   // all side by side (06-services.js queueJob)
+  // the crew's own jobs go on at sea while it is free, and wait while it fishes, hauls or guts (10b-gearcare.js seaWork)
+  else if (S.jobs && S.jobs.length && seaWork()){ let done = null; const busy = crewBusyAtSea();
+    for (const j of S.jobs){ if (!crewJob(j)) continue; jobOk(j); if (j.until == null) j.until = S.t + j.h * 60; if (busy) j.until += 1; else if (S.t >= j.until) (done = done || []).push(j); }
+    if (done){ S.jobs = S.jobs.filter(j => !done.includes(j)); done.forEach(finishJob); crewSay(null, 'workDone'); } }
+  else if (S.jobs && S.jobs.length && b.status !== 'port') for (const j of S.jobs) if (crewJob(j) && j.until != null) j.until += 1;   // nobody free: it waits
   // the landing note comes when the catch is weighed in; the pump runs and the boat moves along the harbour
   if (b.land && S.t >= b.land.until) finishLanding();
   if (b.status === 'port'){ quayMinute(); shoreTick(); }
+  else if (typeof careTick === 'function' && S.pgear) careTick();   // the crew's upkeep and gear talk at sea (10b-gearcare.js seaWork)
   opsStep(H);
   // planned departure
   if (S.plan && S.plan.depAt && S.t >= S.plan.depAt && (b.status === 'port' || b.status === 'idle')){

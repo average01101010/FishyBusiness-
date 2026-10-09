@@ -92,6 +92,17 @@ function restHour(c, onb){
 // ---- what the crew says: lines driven by the situation and by each person's ways. [no, en, trait the line suits]
 // The Norwegian lines are in North Norwegian speech (words from the user's list: agalaus, au hirre, hustri, sjyen, kokning, …)
 const SAY = {
+  // the gear (10b-gearcare.js gearTalk; Jonas 09.10.2026)
+  hooksOut:[['Skipper, vi e tom førr kroka. Lina fesker dårlig med alle de tomme plassan.', 'Skipper, we are out of hooks. The line fishes badly with all those empty places.'], ['Ikkje en krok igjen i kassa. Vi må innom butikken.', 'Not one hook left in the box. We have to call at the shop.'],
+    ['Halve lina e uten krok. Det e som å fiske med hull i garnet.', 'Half the line has no hooks. It is like fishing with a hole in the net.', 'grinebiter']],
+  hooksLow:[['Det e lite kroka igjen. Det rekk ikkje te å skifte alle.', 'There are few hooks left. Not enough to change them all.'], ['Vi bør kjøpe en pakke kroka neste gang vi e i land.', 'We should buy a pack of hooks next time we are ashore.']],
+  baitOut:[['Agnet e tomt. Vi kan ikkje egne mer før vi har kjøpt.', 'The bait is gone. We cannot bait any more until we have bought some.'], ['Ingen agn igjen. Skal æ egne med kaffegrut?', 'No bait left. Shall I bait with coffee grounds?', 'spokefugl']],
+  baitLow:[['Agnet begynne å bli lite. Det rekk te et par stampa te.', 'The bait is running low. Enough for a couple more tubs.'], ['Husk agn når vi kjem inn. Det e snart tomt.', 'Remember bait when we come in. It is nearly gone.']],
+  gearWorn:[['Redskapen e sliten. Den treng en skikkelig omgang snart.', 'The gear is worn. It needs a proper going-over soon.'], ['Garnan e fulle av hol. Vi fesker halvparten av ka vi kunne.', 'The nets are full of holes. We fish half of what we could.'],
+    ['Det her har sett bedre dager. Akkurat som mæ.', 'This has seen better days. Just like me.', 'spokefugl']],
+  jigWorn:[['Pilken e slitt blank. Fesken ser den ikkje lenger.', 'The pilk is worn dull. The fish do not see it any more.'], ['Markkrokan e sløve. Vi treng et nytt sett.', 'The fly hooks are blunt. We need a new set.']],
+  workDone:[['Sånn, da e det gjort. Klart te neste sett.', 'There, that is done. Ready for the next set.'], ['Ferdig med det. Godt å ha noe å gjøre på overfarten.', 'Done with that. Good to have something to do on the crossing.'],
+    ['Stampan står egna og klare.', 'The tubs stand baited and ready.']],
   goodCatch:[['Nu bit dem! Det her e nesten førr lett.', 'They are biting now! This is almost too easy.'], ['Ka med fesk! Fortsett det sånn, må vi kjøpe større båt.', 'So much fish! If it keeps up like this, we need a bigger boat.'],
     ['Torsken står i kø førr å komme om bord.', 'The cod are queueing to come aboard.'], ['Søkkanes bra dag. Sånne dager skulle man hatt flere nævva.', 'A seriously good day. Days like this you wish you had more hands.'],
     ['Æ trur fesken har hørt om lotten min og vil hjelpe te.', 'I think the fish have heard about my share and want to help.', 'spokefugl'], ['Ja ja, det går vel an. Men det vare ikkje.', 'Yes, well, it will do. But it will not last.', 'grinebiter'],

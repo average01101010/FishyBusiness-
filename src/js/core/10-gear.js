@@ -564,7 +564,7 @@ function egnOrder(lk, n){
 }
 function egnSelf(lk, n){
   const b = S.boat, pg = S.pgear, L0 = pg.lines[lk], free = L0.n - L0.baited, kg = n * LINE_KINDS[lk].baitKg;
-  if (b.status !== 'port') return [gL('Lina egnes i havn.', 'The line is baited in port.')];
+  if (b.status !== 'port' && !seaWork()) return [gL('Lina egnes i havn, eller av mannskapet på sjøen.', 'The line is baited in port, or by the crew at sea.')];
   if (n < 1 || free < n) return [gL('Du har ikke så mange uegnede stamper om bord.', 'You do not have that many unbaited tubs aboard.')];
   const bk = baitPick(pg, kg); if (!bk) return [gL('Du trenger ' + fmt(kg, 0) + ' kg agn av samme slag.', 'You need ' + fmt(kg, 0) + ' kg of bait of one kind.')];
   // two aboard bait twice as fast as one, three two and a half times (Jonas 07.10.2026, tilbakemelding #28), each further hand half a tub more
@@ -577,7 +577,7 @@ function egnSelf(lk, n){
 }
 function mendSelf(nid){
   const b = S.boat, pg = S.pgear, l = pg.nets.find(x => x.id === nid);
-  if (b.status !== 'port') return [gL('Garn bøtes i havn.', 'Nets are mended in port.')];
+  if (b.status !== 'port' && !seaWork()) return [gL('Garn bøtes i havn, eller av mannskapet på sjøen.', 'Nets are mended in port, or by the crew at sea.')];
   if (!l || l.cond >= nMax(l) - 0.05) return [gL('Garna trenger ikke bøting.', 'The nets do not need mending.')];
   const hands = handsAboard(), eff = hands * teamEff(crewAboard(), meAboard(), 'garn'); if (!hands) return [gL('Ingen om bord kan bøte.', 'Nobody aboard can mend.')];
   const h = Math.round(l.n * (nMax(l) - l.cond) / 0.25 * 0.5 / eff * 10) / 10;

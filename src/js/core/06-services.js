@@ -176,7 +176,7 @@ function jobOk(j){
   if (YARD_KINDS.includes(j.kind)){ j.h = j.self ? 2 * YARD_H : YARD_H; if (j.until != null && j.until > S.t + j.h * 60) j.until = S.t + j.h * 60; }
   if (!(j.h > 0)) j.h = 2; if (j.until != null && !Number.isFinite(j.until)) j.until = null; return j; }
 // every job starts when it is ordered (or when the boat comes into port), side by side
-function queueJob(j){ S.jobs = S.jobs || []; if (S.jobs.length >= 6) return false; S.jobs.forEach(jobOk); jobOk(j); S.jobs.push(j); if (S.boat.status === 'port') j.until = S.t + j.h * 60; return true; }
+function queueJob(j){ S.jobs = S.jobs || []; if (S.jobs.length >= 6) return false; S.jobs.forEach(jobOk); jobOk(j); S.jobs.push(j); if (S.boat.status === 'port' || (crewJob(j) && seaWork())) j.until = S.t + j.h * 60; return true; }
 function jobsDone(){ if (!S.jobs || !S.jobs.length) return null; let m = null; for (const j of S.jobs) if (j.until != null) m = Math.max(m || 0, j.until); return m; }
 
 // in a wind over the turn-back limit the boat goes by Autonav to the nearest quay (S.settings.autoTo 'near', the default; Jonas
