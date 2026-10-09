@@ -44,6 +44,8 @@ const PUBSOC = (() => {
       h.push('<h5>' + L('Hilsener til deg', 'Greetings to you') + '</h5><ul class="pb-got">' + G.got.slice(0, 8).map(g => { const ln = GREET[g.k]; if (!ln) return ''; const m = Math.round((g.age || 0) / 60);
         return '<li><b>' + esc(g.from ? peerName(g.from) : L('En spiller', 'A player')) + '</b>: «' + esc(L(ln[0], ln[1])) + '» <small>' + (m < 1 ? L('nå', 'now') : L(m + ' min siden', m + ' min ago')) + '</small></li>'; }).join('') + '</ul>');
     }
+    // the pub's guestbook (ui/10m-guestbook.js)
+    if (typeof GBOOK !== 'undefined' && S.boat.port) h.push('<div class="pb-gb">' + GBOOK.html(String(S.boat.port), (q, label) => btn(q, label)) + '</div>');
     return h.join('');
   }
   function greet(id, k){
@@ -153,6 +155,7 @@ const PUBSOC = (() => {
   // the buttons in the pub's panels that are the social side's: true when one was handled
   function act(q){
     if (q.startsWith('g:')){ const [, id, k] = q.split(':'); greet(id, +k); return true; }
+    if (q.startsWith('gbSign:') && typeof GBOOK !== 'undefined'){ GBOOK.sign(String(S.boat.port || ''), +q.slice(7)); return true; }   // the guestbook (ui/10m-guestbook.js)
     if (q === 'lagjoin'){ lagJoin(String(S.boat.port || '')); return true; }
     if (q === 'lagleave'){ lagJoin(null); return true; }
     if (q === 'lagpay'){ lagPay(); return true; }

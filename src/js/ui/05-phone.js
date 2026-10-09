@@ -403,7 +403,7 @@ const PHONE = (() => {
   let shown = '';
   function render(){ status(); setBadge(); if (!isOpen) return; if (app === 'patch' && S.settings.patchSeen !== PATCH[0][0]){ S.settings.patchLast = S.settings.patchSeen; S.settings.patchSeen = PATCH[0][0]; } const key = app + '|' + (sub[app] || ''), y = key === shown ? view.scrollTop : 0; view.innerHTML = app === 'home' ? home() : shell(app); shown = key; view.scrollTop = y; }
   // every page by name: the phone apps, and the pages that open in the dock's drawer instead (DRAWER)
-  const PAGES = () => ({vaer, post, salg, kvote, regler, redning, rederi, meld, haill, logg, merker, naustp:() => NOTEBOOK.page(), sesong:() => SEASONAPP.page(), guide:() => GUIDE.page(), folk:() => FRIENDS.page(), trim, patch, tilbake:() => FEEDBACK.page(), innst, admin,
+  const PAGES = () => ({vaer, post, salg, kvote, regler, redning, rederi, meld, haill, logg, merker, naustp:() => NOTEBOOK.page(), sesong:() => SEASONAPP.page(), guide:() => GUIDE.page(), folk:() => FRIENDS.page(), gbook:() => GBOOK.page(), trim, patch, tilbake:() => FEEDBACK.page(), innst, admin,
     ordl, rigg, arbeid:() => WORK.page() + DRIFTUI.page(), drift:() => DRIFTUI.page(), fiske, service, fartoy:() => fartoy('marked'), maler:() => PAINT.page(), utstyr:() => utstyr('verft'), utstyrb:() => utstyr('butikk'), redskap, mannskap, bors, bank, verksted, havn, last, lever, is:isApp, agn, oppdrag, beholdning});
   function shell(a){ const d = APPS.find(x => x[0] === a) || [a, a, a, '#28507f'], f = PAGES()[a]; return '<div class="ph-appv' + (a === 'post' || a === 'notat' ? ' ph-paper' : '') + '"><div class="ph-top" style="background:' + d[3] + '"><span class="ic">' + (IC[a] || '') + '</span>' + L(d[1], d[2]) + '</div>' + (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) + '</div>'; }
   // a page for the drawer, and an action tapped there: it runs as if that page were the open app, and says which page shows next
@@ -436,6 +436,7 @@ const PHONE = (() => {
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
     ['p102', '09.10.2026', 'Kjentmannen, nordlyset og driftsplanen', 'The old hand, the northern lights and the operations plan', [
+      ['Gjestebøker i pubene og rorbuene langs kysten: skriv deg inn med en hilsen, og se hvem som har vært der før deg. Gjestebøkene du har skrevet i, samles i Kystfareren i Milepæler, landsdel for landsdel.', 'Guestbooks in the pubs and rorbuer along the coast: sign with a greeting, and see who has been there before you. The guestbooks you have signed are gathered in Coastfarer in Milestones, part of the coast by part.'],
       ['Del fangstmerker: trykk på et av dine egne fangstmerker i kartet og del det med vennene dine eller fiskarlaget. De ser det i kartet med navnet ditt i et døgn, og kan legge rute dit. Du kan dele fem merker i døgnet.', 'Share catch marks: tap one of your own catch marks on the chart and share it with your friends or the fishing club. They see it on the chart with your name for a day, and can route there. You can share five marks a day.'],
       ['Flere merker i Milepæler: fisk tatt, turer fullført, havner, verft, utstyrsbutikker, rorbuer og puber besøkt, og venner. Hvert trinn gir en gave.', 'More badges in Milestones: fish caught, trips completed, harbours, yards, tackle shops, rorbuer and pubs visited, and friends. Each step gives a gift.'],
       ['Ny app: Venner (der Folk var). Legg til en venn med vennekoden, ved å trykke på båten deres i kartet, eller i puben. Venner ser båten til hverandre i kartet i grønt, uansett hvor langt unna, og der den sist lå når spillet er lukket. Bonusen for fast kunde på mottakene står nå i Salgslaget.', 'New app: Friends (where People was). Add a friend with their friend code, by tapping their boat on the chart, or in the pub. Friends see each other\'s boat on the chart in green, however far apart, and where it last lay while the game is closed. The regular customer bonus at the plants is now in Sales.'],
@@ -1004,11 +1005,12 @@ const PHONE = (() => {
   // The app keeps its id 'merker'.
   function merker(){
     if (typeof achCheck === 'function') achCheck(true);
-    const tab = sub.merker || 'uke', tabs = subs('merker', [['uke', 'Første uke', 'First week'], ['merker', 'Merker', 'Badges'], ['rekord', 'Rekordfisk', 'Record fish'], ['overtro', 'Fra gamle dager', 'The old ways'], ['tatover', 'Tatoveringer', 'Tattoos']]);
+    const tab = sub.merker || 'uke', tabs = subs('merker', [['uke', 'Første uke', 'First week'], ['merker', 'Merker', 'Badges'], ['rekord', 'Rekordfisk', 'Record fish'], ['overtro', 'Fra gamle dager', 'The old ways'], ['tatover', 'Tatoveringer', 'Tattoos'], ['kyst', 'Kystfareren', 'Coastfarer']]);
     if (tab === 'tatover') return '<div class="ph-c">' + tabs + tattoos() + '</div>';
     if (tab === 'merker') return '<div class="ph-c">' + tabs + fsCard() + achLong() + '</div>';
     if (tab === 'rekord') return '<div class="ph-c">' + tabs + '<div class="ph-card">' + NOTEBOOK.wall(true) + '</div></div>';
     if (tab === 'overtro') return '<div class="ph-c">' + tabs + lore() + '</div>';
+    if (tab === 'kyst') return '<div class="ph-c">' + tabs + GBOOK.kyst() + '</div>';   // the guestbooks signed (ui/10m-guestbook.js)
     return '<div class="ph-c">' + tabs + achWeek() + '</div>';
   }
   // the old ways you have heard (core/08-lore.js), the rest as unknown
@@ -1568,7 +1570,8 @@ const PHONE = (() => {
     else if (a === 'close'){ show(false); return; }
     else if (/^gd[A-Z]/.test(a)){ if (!GUIDE.act(a, d)) return false; }   // the fish guide (ui/06f-fishguide.js)
     else if (/^fb[A-Z]/.test(a)){ if (!FEEDBACK.act(a, d)) return false; }
-    else if (/^fr[A-Z]/.test(a)){ if (!FRIENDS.act(a, d)) return false; }   // the Venner app (ui/10k-friends.js)   // the feedback app (ui/06e-feedback.js)
+    else if (/^fr[A-Z]/.test(a)){ if (!FRIENDS.act(a, d)) return false; }
+    else if (/^gb[A-Z]/.test(a)){ if (!GBOOK.act(a, d)) return false; }   // the guestbook (ui/10m-guestbook.js)   // the Venner app (ui/10k-friends.js)   // the feedback app (ui/06e-feedback.js)
     else if (/^pnt/.test(a)){ if (!PAINT.act(a, d)) return false; }   // the paint shop (ui/10j-paint.js)
     else if (a === 'naustbuy'){ const why = naustBuy(d.k); if (why) toast(L(why[0], why[1])); }
     else if (a === 'lang'){ S.lang = S.lang === 'no' ? 'en' : 'no'; refreshAll(); }

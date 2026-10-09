@@ -360,6 +360,6 @@ const PUB3 = (() => {
     if (typeof G3 !== 'undefined' && G3.hold) G3.hold(false);
     if (typeof renderActs === 'function') renderActs();
   }
-  return {open, close, isOpen:() => on, get panel(){ return panelKey; }, openSpot, spin, get wheelA(){ return WH.a; }, get busy(){ return WH.busy; }, look(y, p){ cam.yaw = y; cam.pitch = p; },
+  return {open, close, isOpen:() => on, get panel(){ return panelKey; }, refresh(){ if (on && panelKey && PANELS[panelKey]) PANELS[panelKey](); }, openSpot, spin, get wheelA(){ return WH.a; }, get busy(){ return WH.busy; }, look(y, p){ cam.yaw = y; cam.pitch = p; },
     get anchors(){ return P ? P.A : null; }, kjentFind, get cam(){ return cam; }, project:c => VP ? project(c) : null};
 })();

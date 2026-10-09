@@ -608,6 +608,20 @@ def main():
         print(ok(SM['f'] == 'ok' and SM['nolag'] == 'nolag' and SM['l'] == 'ok' and SM['bad'] == 'no' and SM['guest'] == 'no' and SM['seen'] == [[900], [902], [], []]
                  and SM['max'] == ['ok', 'ok', 'ok', 'max'] and 900 not in SM['old'] and SM['table']),
               'shared catch marks: a friend sees the one to friends, a club member the one to the club, a stranger and the sharer none; five in four hours; gone after four hours; no table open', SM)
+        # the guestbooks (20261009220000_guestbook.sql): sign once a day per place with a preset line, the boat's name with it, the book's
+        # last rows and count, my places, no guest, no bad place, no table open
+        sql("delete from public.presence where player_id = 'user_01FRA'; insert into public.presence (player_id, boat, vtype, x, y, st) values ('user_01FRA', 'Sjø<b>bris', 'trebat', 900, 300, 'port')")
+        GB = {'a1': sql("select public.gb_sign('finnsnes', 2)", A, 'authenticated'), 'a2': sql("select public.gb_sign('finnsnes', 3)", A, 'authenticated'),
+              'a3': sql("select public.gb_sign('rb12', -1)", A, 'authenticated'), 'b1': sql("select public.gb_sign('finnsnes', -1)", B, 'authenticated'),
+              'bad': sql("select public.gb_sign('fin snes', 1)", A, 'authenticated'), 'badk': sql("select public.gb_sign('husoy', 40)", A, 'authenticated'),
+              'guest': sql("select public.gb_sign('finnsnes', 1)", GU, 'authenticated')}
+        bk = json.loads(sql("select public.gb_get('finnsnes')", C, 'authenticated'))
+        GB['n'] = bk['n']; GB['rows'] = [(r['k'], r['boat'], r['me']) for r in bk['rows']]
+        GB['mine'] = sorted(json.loads(sql("select public.gb_mine()", A, 'authenticated')))
+        GB['table'] = sql("select * from public.guestbook", A, 'authenticated', expect_err=True)[0]
+        print(ok(GB['a1'] == 'ok' and GB['a2'] == 'wait' and GB['a3'] == 'ok' and GB['b1'] == 'ok' and GB['bad'] == 'no' and GB['badk'] == 'no' and GB['guest'] == 'no'
+                 and GB['n'] == 2 and GB['rows'] == [(-1, 'Havbris', False), (2, 'Sjøbbris', False)] and GB['mine'] == ['finnsnes', 'rb12'] and GB['table']),
+              'guestbooks: once a day per place, a preset line and the boat (markup stripped), the book with its count, my places; no guest, no bad place or line, no table open', GB)
     finally:
         run(*as_pg([os.path.join(BIN, 'pg_ctl'), '-D', data, '-m', 'immediate', 'stop']))
         shutil.rmtree(tmp, ignore_errors=True)

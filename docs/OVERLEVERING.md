@@ -3761,6 +3761,24 @@ Nå tar `vecPrune` alltid med midten av kartplotteren når den er åpen. Kontrol
   - Merkene slettes etter ett døgn.
 - **Testene:** `sharetest` (med en falsk database) og delte merker i `sqltest`.
 
+### 5.52 Gjestebøker og Kystfareren (Jonas 09.10.2026)
+
+- **Gjesteboka:** én i hver pub (alle havner med bygd) og hver rorbu (`ui/10m-guestbook.js`).
+  - Den åpnes fra «Gjestebok» i Bygd-viften, ved rorbua og i pubens «I kveld»-panel.
+  - Du skriver deg inn med én av 8 faste hilsener (`GBOOK.LINES`) eller «Bare navnet». Det er ingen fritekst, fordi spillerne kan være 13 år.
+  - Du kan skrive deg inn én gang i døgnet per sted.
+  - Boka viser hvor mange som har skrevet seg inn, og de siste 30 med spillernavn, båtnavn, hilsen og tid.
+- **Kystfareren:**
+  - Stedene du har skrevet deg inn, ligger i `S.gb`. De hentes fra skyen én gang per økt (`gb_mine`), så de teller på alle enheter.
+  - Fanen Kystfareren i Milepæler teller per landsdel (`GBOOK.part`, etter breddegrad og lengdegrad). Den viser antallet mot alle puber og rorbuer der, med navnene på dem du har besøkt.
+  - Det lange merket «Kystfareren: gjestebøker» har trinnene 1–250.
+  - Landsdelene er prøvd ved Kristiansand (Sør), Bergen (Vest), Kristiansund (Midt), Bodø (Nordland), Tromsø (Troms), Hammerfest og Vardø (Finnmark).
+- **Skyen:** `supabase/migrations/20261009220000_guestbook.sql`.
+  - Tabellen `guestbook`, som er stengt for spillerne, og funksjonene `gb_sign`, `gb_get` og `gb_mine`.
+  - Båtnavnet hentes fra `presence`, og tegn som kan lage HTML, fjernes.
+  - Høyst 30 innskrivninger i timen. Gjester kan ikke skrive seg inn.
+- **Testene:** `gbtest` (med en falsk database) og gjestebøkene i `sqltest`.
+
 ### 5.41 Puben i 3D (Jonas 08.10.2026)
 
 Jonas: «Spilleren trykker på pub og blir dermed sendt inn i puben hvor man sitter ved bardisken i first-person-view. Man skal kunne spinne hjulet som tidligere.» Og: «Kanskje noe som blir et sosialt element.»
