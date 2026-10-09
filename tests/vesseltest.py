@@ -57,7 +57,7 @@ async def main():
         print(json.dumps(r, ensure_ascii=False))
         print(ok(not r['bad']), 'every vessel type has the full spec and the numbers hang together', r['bad'][:6])
         f = r['fit']
-        print(ok('elhaler' in f['skiff'] and 'elhaler' in f['snekke'] and 'elhaler' not in f['sjark'] and 'garnhaler' not in f['skiff'] and 'garnhaler' in f['snekke']
+        print(ok('linehaler' in f['skiff'] and 'linehaler' in f['snekke'] and 'linehaler' in f['sjark'] and 'garnhaler' not in f['skiff'] and 'garnhaler' in f['snekke']
                  and 'sonar' in f['sjark'] and 'sonar' not in f['snekke'] and 'motor90' in f['skiff'] and 'motor90' not in f['snekke']), 'equipment fits by size and engine')
         print(ok(r['boost'] == [30, 1.35] and r['plain'] == [24, 1]), 'the 90 hp outboard gives the skiff 30 kn and a thirstier engine')
         print(ok(r['same'] == [['skiff', 60, 'box', 3, 10], ['snekke', 150, 'box', 5, 3], ['sjark', 300, 'tub', 8, 3], ['sjarkny', 400, 'tub', 10, 10]]), 'the old type tables (tub, landing, yard hours, acceleration) are now fields with the same values')

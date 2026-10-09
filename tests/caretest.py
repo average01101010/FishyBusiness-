@@ -8,7 +8,7 @@ from playwright.async_api import async_playwright
 
 ok = lambda c: 'OK  ' if c else 'FEIL'
 SEED = """(()=>{ let a = 20261008; Math.random = () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; })()"""
-PREP = """(()=>{ S.tut = 0; S.cash = 1e7; S.settings.autoOn = false; S.stock = initStock();
+PREP = """(()=>{ S.equip.linehaler = S.equip.garnhaler = S.equip.teinehaler = true; S.tut = 0; S.cash = 1e7; S.settings.autoOn = false; S.stock = initStock();
   const b = S.boat; b.type = 'sjark'; applyVessel(); b.status = 'port'; b.port = 'finnsnes'; b.pos = {...portById('finnsnes').p}; b.gear = true; b.kgear = true;
   S.pgear = newPGear(); S.jobs = []; S.sets = []; S.crew = []; for (let i = 0; i < 2; i++) S.crew.push(Object.assign(genCrew(), {bi:false, off:false}));
   window.done = () => { for (let i = 0; i < 3000 && (S.jobs || []).length; i++){ S.t += 5; step(); } return (S.jobs || []).length; };
@@ -92,6 +92,14 @@ async def main():
         print('ui:', json.dumps(r, ensure_ascii=False))
         print(ok(all(r['bord']) and r['hookBtn'] and all(r['kjop'])), 'Inventory shows ceilings, hooks, bait kinds and the upkeep buttons, and the Buy tab sells hooks and jig sets', [r['bord'], r['kjop']])
         print(ok(all(r['service']) and r['shopJob'] == [['lr', True]] and r['paid'] > 0 and r['sold'] == 1), 'the Service page offers mending and buy-back, and the buttons work', [r['service'], r['shopJob'], r['paid'], r['sold']])
+        # the one buying rule (Jonas 08.10.2026): nothing for line, nets or pots without the hauler, and nothing that goes with gear you do not own
+        r = await pg.evaluate("""(()=>{ const R = {}; S.pgear = newPGear(); S.jobs = []; S.cash = 1e7; for (const k of ['linehaler', 'garnhaler', 'teinehaler']) S.equip[k] = false;
+          R.noHaul = [buyGear('stamp', 'hyse', 1), buyGear('net', '156', 1), buyGear('pot', 'big', 1)].map(x => !!x);
+          R.noGear = [buyGear('hooks', 100, 1), buyGear('kit', 0, 1), buyGear('bait', 'makrell', 10)].map(x => !!x);
+          S.equip.linehaler = true; R.line = buyGear('stamp', 'hyse', 1); R.hooks = buyGear('hooks', 100, 1); R.names = ['linehaler', 'garnhaler', 'teinehaler'].map(k => EQUIP[k].name.no);
+          return R; })()""")
+        print('gate:', json.dumps(r, ensure_ascii=False))
+        print(ok(all(r['noHaul']) and all(r['noGear']) and r['line'] is None and r['hooks'] is None and r['names'] == ['Linehaler', 'Garnhaler', 'Teinehaler']), 'line, nets and pots need their hauler, hooks, buoy sets and bait need the gear, and the haulers carry plain names')
         print(ok(not errs), 'no page errors', errs[:2])
         await br.close()
 asyncio.run(main())

@@ -41,7 +41,7 @@ async def main():
           const spot = window.CRABSPOT; atSea(spot); b.status = 'fishing'; b.fishUntil = S.t + 480; for (let i = 0; i < 480; i++) step();
           R.jigCrab = S.hold.filter(x => x.sp === 'krabbe').length; R.jigKg = Math.round(holdTotal()); S.hold = [];
           b.status = 'port'; b.port = 'finnsnes'; b.pos = {...portById('finnsnes').p}; S.pgear = newPGear(); const c0 = S.cash;
-          PHONE.open('redskap'); document.querySelector('[data-pa=sub][data-s=kjop]').click();
+          S.equip.linehaler = S.equip.garnhaler = S.equip.teinehaler = true; PHONE.open('redskap'); document.querySelector('[data-pa=sub][data-s=kjop]').click();
           const click = sel => { const e = document.querySelector(sel); if (e && !e.disabled) e.click(); return !!(e && !e.disabled); };
           R.clicked = [click('[data-pa=grbuy][data-w=net][data-s="156"]'), click('[data-pa=grbuy][data-w=stamp][data-s=hyse]'), click('[data-pa=grbuy][data-w=pot][data-s=big]'), click('[data-pa=grbuy][data-w=kit]')];
           // the bait is bought at the plant, not in the shop (Jonas 07.10.2026): over to Botnhamn for it, and the page is drawn again
@@ -51,13 +51,13 @@ async def main():
           R.spent = Math.round(c0 - S.cash); R.potRoom = BOAT.gearMax.teine; R.expect = 6 * GPRICE.net + 4 * LINE_KINDS.hyse.price + R.potRoom * POTS.big.price + GPRICE.kit + 20 * GPRICE.bait;
           R.fullNets = document.querySelector('[data-pa=grbuy][data-w=net]').disabled;
           // haulers: the small electric one is not for a sjark
-          PHONE.open('utstyrb'); R.elSkiff = !!document.querySelector('[data-pa=equip][data-k=elhaler]') || document.body.innerHTML.includes('Elektrisk haler');
+          PHONE.open('utstyrb'); R.elSkiff = !!document.querySelector('[data-pa=equip][data-k=linehaler]') && !document.body.innerHTML.includes('Elektrisk haler') && !document.body.innerHTML.includes('Hydraulisk');
           b.type = 'sjark'; applyVessel(); PHONE.open('utstyrb'); R.elSjark = document.getElementById('drawerBody').innerHTML.includes('Elektrisk haler'); R.garnhalerSjark = document.getElementById('drawerBody').innerHTML.includes('Hydraulisk garnhaler');
           PHONE.show(false); b.type = 'skiff'; applyVessel(); return R; })()""")
         print('buy:', json.dumps(r, ensure_ascii=False))
         print(ok(r['spNoCrab'] and r['jigCrab'] == 0 and r['jigKg'] > 0), 'king crab is outside the fish list, and a day of jigging on a crab spot takes no crab')
         print(ok(all(r['clicked']) and r['pg'] == {'nets':[6], 'hyse':4, 'pots':r['potRoom'], 'kits':1, 'bait':20} and r['spent'] == r['expect'] and r['fullNets']), 'buying in the Gear app: nets, tubs, pots, a buoy set and bait, sized to the skiff’s room, paid exactly')
-        print(ok(r['elSkiff'] and not r['elSjark'] and r['garnhalerSjark']), 'the electric hauler is for small boats, the hydraulic net hauler for the sjark')
+        print(ok(r['elSkiff'] and not r['elSjark'] and r['garnhalerSjark']), 'the line hauler fits every boat and is just called a line hauler; the net hauler is for the sjark')
 
         # 2. rules at setting: two aboard for nets, the fjord line's limits, both ends at sea
         r = await pg.evaluate("""(()=>{ const R = {}, b = S.boat; b.type = 'sjark'; applyVessel(); S.pgear = newPGear(); S.sets = [];
@@ -185,10 +185,10 @@ async def main():
 
         # 6b. the rig: one kind of fishing at a time, changed at the yard in port, free once the hauler is aboard, with the gear out of the sea
         r = await pg.evaluate("""(()=>{ const R = {}, b = S.boat; S.sets = []; S.hold = []; S.ops = null; S.me = S.cur; S.crew = [hand()]; b.type = 'skiff'; applyVessel(); b.gop = null;
-          for (const k of ['elhaler', 'linehaler', 'garnhaler', 'teinehaler']) S.equip[k] = false;
+          for (const k of ['linehaler', 'garnhaler', 'teinehaler']) S.equip[k] = false;
           b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; delete b.rig; R.def = rigOf();
           R.noHauler = (rigBlock('line') || [''])[0]; R.garnSkiff = (rigBlock('garn') || [''])[0]; R.juksa = rigBlock('juksa');
-          S.equip.elhaler = true; R.toLine = rigSet('line'); R.line = rigOf();
+          S.equip.linehaler = true; R.toLine = rigSet('line'); R.line = rigOf();
           S.pgear = newPGear(); S.pgear.kits.n = 2; S.pgear.lines.hyse = {n:2, baited:2}; S.pgear.nets.push({id:'nr', mesh:156, n:5, cond:1}); S.pgear.pots.big = 5; S.pgear.bait = 5;
           R.choices = [...new Set(setChoices().map(c => c.kind))];
           atSea(GROUNDS[2].p); R.atSea = rigBlock('teiner'); R.netRule = (gearRules('garn', {nid:'nr'}, b.pos) || [''])[0];
@@ -201,7 +201,7 @@ async def main():
           S.sets[0].kind = 'teine'; delete b.rig; R.guess = rigOf(); S.sets = [];
           DOCK.open('rigg'); const dr = document.getElementById('drawerBody'); R.page = dr.querySelectorAll('[data-pa=rig]').length; R.pageOn = (dr.querySelector('.rig.on h4') || {}).textContent || '';
           dr.querySelector('[data-pa=rig][data-r=juksa]').click(); R.byTap = rigOf(); DOCK.close();
-          b.type = 'sjark'; applyVessel(); S.equip.elhaler = false; R.sjarkLine = (rigBlock('line') || [''])[0]; b.type = 'skiff'; applyVessel(); return R; })()""")
+          b.type = 'sjark'; applyVessel(); S.equip.linehaler = false; R.sjarkLine = (rigBlock('line') || [''])[0]; b.type = 'skiff'; applyVessel(); return R; })()""")
         print('rig:', json.dumps(r, ensure_ascii=False))
         print(ok(r['def'] == 'juksa' and r['juksa'] and 'haler' in r['noHauler'] and 'passer ikke' in r['garnSkiff']), 'a new boat is rigged for jigging; line needs a hauler, and nets do not fit a skiff')
         print(ok(r['toLine'] is None and r['line'] == 'line' and r['choices'] == ['line'] and 'rigget for line' in r['netRule']), 'with the electric hauler the skiff rigs for line, and only line can be set')
@@ -254,7 +254,7 @@ async def main():
         print('bait:', json.dumps(bt))
         print(ok(bt['f'] == [1.4, 1.8, 0.6, 1, 1.6, 1.4] and bt['cod'][0] > bt['cod'][1] * 1.8 and bt['own'] == 50 and bt['ownBait'] >= 50 and bt['quota'] == 50 and bt['left'] == 10), 'bait: shrimp takes more cod than krill, and own saithe as bait leaves the hold and counts on the quota')
         # net types (08.10.2026): the bottom net for cod, the floating net for saithe, the Greenland halibut net for halibut; bought, joined and set by type
-        nt = await pg.evaluate("""(()=>{ const R = {}; const pg = S.pgear; pg.nets = []; const b = S.boat; b.status = 'port'; b.port = 'finnsnes'; b.pos = {...portById('finnsnes').p}; S.cash = 1e6; b.type = 'sjark'; applyVessel();
+        nt = await pg.evaluate("""(()=>{ const R = {}; S.equip.garnhaler = true; const pg = S.pgear; pg.nets = []; const b = S.boat; b.status = 'port'; b.port = 'finnsnes'; b.pos = {...portById('finnsnes').p}; S.cash = 1e6; b.type = 'sjark'; applyVessel();
           R.buy = [buyGear('net', 156, 5), buyGear('net', 'flyt:156', 5), buyGear('net', 'kveite:360', 5), buyGear('net', 'flyt:200', 1)].map(x => x == null ? 'ok' : 'no');
           R.types = pg.nets.map(l => (l.ty || 'bunn') + ':' + l.mesh); R.join = joinNets(pg.nets[0].id, pg.nets[1].id);
           const Hh = HOUR(2028, 1, 10, 6), P = GROUNDS[2].p, one = (ty, mesh) => dry('garn', {n:10, mesh, ty}, P, Hh, 20), kgs = s => { const o = {}; for (const sp in s.acc) o[sp] = s.acc[sp].kg; return o; };

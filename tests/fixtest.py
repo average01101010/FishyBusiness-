@@ -20,12 +20,12 @@ async def main():
 
         # A1: buy an electric hauler in the Equipment app, the job gets a length and finishes
         await pg.evaluate("S.cash = 100000; PHONE.open('utstyr')"); await pg.wait_for_timeout(400)
-        await pg.evaluate("document.querySelector('[data-pa=equip][data-k=elhaler]').click()"); await pg.wait_for_timeout(300)
+        await pg.evaluate("document.querySelector('[data-pa=equip][data-k=linehaler]').click()"); await pg.wait_for_timeout(300)
         j = await pg.evaluate("JSON.stringify(S.jobs.map(j => ({k:j.k, h:j.h, until:j.until})))")
         jobs = json.loads(j)
         check(len(jobs) == 1 and jobs[0]['h'] == 3 and isinstance(jobs[0]['until'], (int, float)), 'haleren får 3 spilltimer i verkstedet (30 ekte minutter)', j)
         await pg.evaluate("for (let i = 0; i < 200; i++) step()")
-        r = await pg.evaluate("JSON.stringify({jobs:S.jobs.length, fitted:!!S.equip.elhaler})")
+        r = await pg.evaluate("JSON.stringify({jobs:S.jobs.length, fitted:!!S.equip.linehaler})")
         check(json.loads(r) == {'jobs': 0, 'fitted': True}, 'haleren er montert og køen er tom', r)
         await pg.evaluate("PHONE.show && PHONE.show(false)")
 

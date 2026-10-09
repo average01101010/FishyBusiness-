@@ -45,7 +45,7 @@ async def main():
           return {face:!!face, berth:!!bp, bunker, ok, state:!!b.fueling || !!b.shift}; })()"""))
         check(f['face'] and f['berth'] and f['bunker'] and f['ok'] and f['state'], 'a yard has a quay and a berth, and the boat fills fuel there', f)
         # what is bought where
-        g = json.loads(await J("""(() => { const b = S.boat, sh = PORTS.find(q => q.sted === 'butikk'), pl = portById('botnhamn'), y = PORTS.find(q => q.sted === 'verft'); b.status = 'port'; b.berth = 'main'; b.fueling = null; b.shift = null; b.gear = false; S.cash = 100000; S.pgear = S.pgear || newPGear();
+        g = json.loads(await J("""(() => { const b = S.boat, sh = PORTS.find(q => q.sted === 'butikk'), pl = portById('botnhamn'), y = PORTS.find(q => q.sted === 'verft'); S.equip.garnhaler = true; S.pgear.lines.hyse.n = Math.max(S.pgear.lines.hyse.n, 1); b.status = 'port'; b.berth = 'main'; b.fueling = null; b.shift = null; b.gear = false; S.cash = 100000; S.pgear = S.pgear || newPGear();
           const at = q => { b.port = q.id; b.pos = {x:q.p.x, y:q.p.y}; };
           at(pl); const plantGear = buyGear('net', 156, 1), plantJig = shopBuy('jig', 0, false), plantIce = shopBuy('ice', 50, false), plantBait = buyGear('bait', 'makrell', 10);
           at(sh); const shopGear = buyGear('net', 156, 1), shopJig = shopBuy('jig', 0, false), shopIce = shopBuy('ice', 50, false), shopBait = buyGear('bait', 'makrell', 10);

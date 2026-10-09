@@ -7,8 +7,8 @@
 // Gear aboard each vessel is S.pgear (a VKEY); gear in the sea is S.sets for the whole company, so the map and 3D can draw every buoy.
 const GEAR = {
   garn:{no:'Garn', en:'Nets', u:['garn', 'garn', 'net', 'nets'], km:0.028, set:0.8, haul:4, hand:2.5, crewMin:2, haulers:['garnhaler'], q:0.07, skill:'garn'},
-  line:{no:'Line', en:'Line', u:['stamp', 'stamper', 'tub', 'tubs'], kmHook:0.0015, set:5, haul:25 / 700, hand:2.0, crewMin:1, haulers:['linehaler', 'elhaler'], q:0.032, skill:'line'},
-  teine:{no:'Teiner', en:'Pots', u:['teine', 'teiner', 'pot', 'pots'], km:0.025, set:0.9, haul:1.2, hand:2.5, crewMin:1, haulers:['teinehaler', 'elhaler'], q:0.12, skill:'teiner'}
+  line:{no:'Line', en:'Line', u:['stamp', 'stamper', 'tub', 'tubs'], kmHook:0.0015, set:5, haul:25 / 700, hand:2.0, crewMin:1, haulers:['linehaler'], q:0.032, skill:'line'},
+  teine:{no:'Teiner', en:'Pots', u:['teine', 'teiner', 'pot', 'pots'], km:0.025, set:0.9, haul:1.2, hand:2.5, crewMin:1, haulers:['teinehaler'], q:0.12, skill:'teiner'}
 };
 const LINE_KINDS = {hyse:{no:'Hyseline', en:'Haddock line', hooks:600, price:2100, egn:500, baitKg:5}, bank:{no:'Bankline', en:'Bank line', hooks:300, price:1700, egn:300, baitKg:3}};
 // king crab pots (a frame of steel and netting, 1.5-2 m across; the prices are estimates): cap is the crabs a pot holds
@@ -136,12 +136,25 @@ function ownedUnits(kind){
 function gearRoom(kind){ const m = (BOAT.gearMax || {})[kind === 'line' ? 'stamp' : kind] || 0; return Math.max(0, m - ownedUnits(kind)); }
 
 // ---- buying (in port)
+// one rule for everything sold for gear (Jonas 08.10.2026): nothing for line, nets or pots is bought before the boat has the hauler for it,
+// and what goes with them (hooks, buoy sets, anchors, bait) only once the boat owns some of that gear. Every shop button and buyGear ask this.
+function buyGate(what){
+  const own = k => ownedUnits(k) > 0, anyGear = own('line') || own('garn') || own('teine');
+  if (what === 'stamp' && !hasHauler('line')) return [gL('Du trenger en linehaler før du kan kjøpe line.', 'You need a line hauler before you can buy line.')];
+  if (what === 'net' && !hasHauler('garn')) return [gL('Du trenger en garnhaler før du kan kjøpe garn.', 'You need a net hauler before you can buy nets.')];
+  if (what === 'pot' && !hasHauler('teine')) return [gL('Du trenger en teinehaler før du kan kjøpe teiner.', 'You need a pot hauler before you can buy pots.')];
+  if (what === 'hooks' && !own('line')) return [gL('Kroker trenger du først når du har line.', 'You only need hooks once you own line.')];
+  if ((what === 'kit' || what === 'heavy') && !anyGear) return [gL('Blåsesett og dregger hører til line, garn eller teiner du eier.', 'Buoy sets and anchors go with line, nets or pots you own.')];
+  if (what === 'bait' && !(own('line') || own('teine'))) return [gL('Agn trenger du først når du har line eller teiner.', 'You only need bait once you own line or pots.')];
+  return null;
+}
 function buyGear(what, spec, n){
   const pg = S.pgear, b = S.boat; n = Math.max(1, Math.round(n || 1));
   if (b.status !== 'port') return [gL('Redskap kjøpes i havn.', 'Gear is bought in port.')];
   // gear in the tackle shop, bait at the plant (Jonas 07.10.2026; core/06c-steder.js portServices)
   const sv = portServices(portById(b.port), berthKind(b));
   if (what === 'bait' ? !sv.mottak : !sv.butikk) return what === 'bait' ? [gL('Agn kjøper du på fiskemottaket.', 'You buy bait at the fish plant.')] : [gL('Redskap kjøper du i utstyrsbutikken.', 'You buy gear in the tackle shop.')];
+  const gate = buyGate(what); if (gate) return gate;
   if (what === 'hooks' || what === 'jig') return careBuy(what, spec, n);   // hooks in packs and jig sets (10b-gearcare.js)
   careInit(pg);
   let cost = 0, kind = null;
@@ -247,7 +260,7 @@ function startHaul(sid, reset, fishAfter){
   if (b.status !== 'idle' && b.status !== 'fishing') return [gL('Båten må ligge stille ved blåsa.', 'The boat must lie still at the buoy.')];
   const da = dist(b.pos, s.a), db = dist(b.pos, s.b); if (Math.min(da, db) > 0.3) return [gL('Gå helt inn til blåsa først.', 'Go right up to the buoy first.')];
   if (handsAboard() < GEAR[s.kind].crewMin) return [gL('Garn krever minst to om bord: deg og én til, eller to fra mannskapet.', 'Nets need at least two aboard: you and one more, or two of the crew.')];
-  if (s.kind === 'teine' && !hasHauler('teine')) return [gL('Teiner kan ikke trekkes for hånd. Du trenger teinehaler eller elektrisk haler.', 'Pots cannot be hauled by hand. You need a pot hauler or an electric hauler.')];
+  if (s.kind === 'teine' && !hasHauler('teine')) return [gL('Teiner kan ikke trekkes for hånd. Du trenger en teinehaler.', 'Pots cannot be hauled by hand. You need a pot hauler.')];
   s.hauling = true;
   const from = da <= db ? s.a : s.b, to = da <= db ? s.b : s.a;
   b.status = 'fishing'; b.fishUntil = null; b.deckStop = false; b.deckEnd = null;

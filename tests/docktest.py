@@ -62,7 +62,7 @@ async def run(p, w, h, tag):
     await tap_el('#drawerTabs [data-pg=bors]'); await pg.wait_for_timeout(300)
     check(await pg.evaluate("!!document.querySelector('#drawerBody [data-pa=bhire]') || document.getElementById('drawerBody').textContent.includes('søker hyre')"), 'Mannskap har fanen Mannskapsbørs')
     # buying a net string in the drawer
-    await pg.evaluate("DOCK.open('fiske')"); await pg.wait_for_timeout(300)
+    await pg.evaluate("S.equip.garnhaler = true; DOCK.open('fiske')"); await pg.wait_for_timeout(300)
     n0 = await pg.evaluate("S.pgear.nets.reduce((a, l) => a + l.n, 0)")
     await pg.evaluate("document.querySelector('#drawerBody [data-pa=grbuy][data-w=net]').click()"); await pg.wait_for_timeout(300)
     check(await pg.evaluate("S.pgear.nets.reduce((a, l) => a + l.n, 0)") > n0, 'garn kjøpes i Fiskeutstyr i skuffen')

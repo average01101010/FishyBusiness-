@@ -69,3 +69,19 @@ Gjelder alle fiskemottak, verft, utstyrsbutikker, rorbuer og fars naust, og alle
 ## Utstyrsbutikkens service (08.10.2026)
 
 Butikken har en Service-knapp (`Butikk › Service`): den reparerer line og teiner, bøter garn og bytter kroker på halve tiden av det mannskapet bruker, mot et gebyr, og den kjøper utstyr tilbake til en firedel av nypris ganger standen (aldri lønnsomt å kjøpe og selge). Kroker i pakker på 100, 500 og 1000 og reservesett til juksa (markkroker med pilk, kveitepilk) selges her. Se 5.36 i `OVERLEVERING.md`.
+
+## Kjøpsrekkefølgen (Jonas 08.10.2026)
+
+Alle kjøpssystemer følger det spilleren eier. Regelen ligger i `buyGate(what)` i `src/js/core/10-gear.js`, og både `buyGear` og knappene i butikken og på mottaket spør den:
+
+| Kjøp | Krever |
+|---|---|
+| line | linehaler |
+| garn | garnhaler (passer båter fra 7,5 m) |
+| teiner | teinehaler |
+| kroker | at du eier line |
+| blåsesett, dregger | at du eier line, garn eller teiner |
+| agn | at du eier line eller teiner |
+| juksautstyr (pilk, markkroker) | ingenting (juksa følger med fra start) |
+
+Halerne heter bare linehaler, garnhaler og teinehaler (ingen «elektrisk», «hydraulisk» eller 12 V). Linehaler og teinehaler passer på alle båter. Eldre lagringer med den gamle elektriske haleren får linehaler og teinehaler. Et nytt kjøpssystem legger regelen sin i `buyGate` (eller `equipFits` for utstyr som må passe båten) i stedet for å sjekke selv.

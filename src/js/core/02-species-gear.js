@@ -155,10 +155,9 @@ const EQUIP = {
   jukse:{price:34000, multi:true, name:{no:'Juksamaskin', en:'Electric jigging reel'}, desc:{no:'Fisker omtrent dobbelt så mye som håndjuksa. Én person kan passe tre. Med maskiner om bord passer du dem og jukser ikke selv.', en:'Catches about twice as much as a hand jig. One person can tend three. With machines aboard you tend them and do not jig by hand.'}},
   motor90:{price:148000, fit:{outboard:true}, boost:{vmax:30, fuelK:1.35}, name:{no:'Påhengsmotor 90 hk', en:'90 hp outboard'}, desc:{no:'Toppfart 30 knop, men tørstere.', en:'Top speed 30 knots, but thirstier.'}},
   // haulers for passive gear (start prices): without one, nets and line come up by hand, slowly, and pots cannot be hauled at all
-  elhaler:{price:38000, fit:{maxLen:8.5}, name:{no:'Elektrisk haler (12 V)', en:'Electric hauler (12 V)'}, desc:{no:'Trekker line og teiner. Passer små båter.', en:'Hauls line and pots. Suits small boats.'}},
-  linehaler:{price:68000, fit:{minLen:7.5}, name:{no:'Hydraulisk linehaler', en:'Hydraulic line hauler'}, desc:{no:'Trekker lina jevnt og raskt.', en:'Hauls the line steadily and fast.'}},
-  garnhaler:{price:95000, fit:{minLen:7.5}, name:{no:'Hydraulisk garnhaler', en:'Hydraulic net hauler'}, desc:{no:'Trekker garna. For hånd går det sakte.', en:'Hauls the nets. By hand it is slow.'}},
-  teinehaler:{price:58000, fit:{minLen:7.5}, name:{no:'Teinehaler med davit', en:'Pot hauler with davit'}, desc:{no:'Hiver teinene opp. Teiner kan ikke trekkes for hånd.', en:'Lifts the pots. Pots cannot be hauled by hand.'}},
+  linehaler:{price:68000, name:{no:'Linehaler', en:'Line hauler'}, desc:{no:'Trekker lina jevnt og raskt.', en:'Hauls the line steadily and fast.'}},
+  garnhaler:{price:95000, fit:{minLen:7.5}, name:{no:'Garnhaler', en:'Net hauler'}, desc:{no:'Trekker garna. For hånd går det sakte.', en:'Hauls the nets. By hand it is slow.'}},
+  teinehaler:{price:58000, name:{no:'Teinehaler', en:'Pot hauler'}, desc:{no:'Hiver teinene opp. Teiner kan ikke trekkes for hånd.', en:'Lifts the pots. Pots cannot be hauled by hand.'}},
   // a tank of running sea water for king crab (the price is an estimate): without it a crab lives about a day in the hold, and a dead
   // one is worth nothing (05-vessels.js, sell)
   krabbekar:{price:28000, fit:{minLen:6.5}, name:{no:'Krabbekar med sjøvann', en:'Live crab tank'}, desc:{no:'Kar med sirkulerende sjøvann som holder kongekrabben levende i flere døgn. Uten kar lever den rundt et døgn i lasten, og død krabbe er verdiløs.', en:'A tank of running sea water that keeps king crab alive for days. Without it a crab lives about a day in the hold, and a dead crab is worthless.'}}
