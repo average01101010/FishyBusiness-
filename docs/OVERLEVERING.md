@@ -3698,13 +3698,11 @@ Nå tar `vecPrune` alltid med midten av kartplotteren når den er åpen. Kontrol
 
 - Merker-appen heter **Milepæler** (id fortsatt `merker`) og samler alt spilleren har oppnådd: Første uke, Merker (med fartstiden), Rekordfisk, Fra gamle dager og Tatoveringer. Kystfareren kommer som egen fane med gjesteboka.
 - Rekordfisk er den samme lista som trofeveggen (`NOTEBOOK.wall(true)` i `ui/06c-notebook.js`), men uten oppgraderingene. Selve trofeveggen og oppgraderingene finnes bare når båten ligger ved fars naust (5.47).
-- **Sjømann-appen er fjernet.** Papirene står der de betyr noe (`papRederi`/`papBladB` i `ui/05-phone.js`):
-  - Ervervstillatelsen og Foretaket (ENK og MVA) står nederst i Rederi.
-  - Blad B står øverst i Mine kvoter i Kvote.
-  - Knappen «Se papirene» i Neste mål åpner Kvote.
+- **Sjømann-appen er fjernet.** Papirene står i Kvote, under Mine kvoter: blad B, ervervstillatelsen og foretaket (`papBladB`, `papPermit`, `papBiz` i `ui/05-phone.js`). Knappen «Se papirene» i Neste mål åpner Kvote.
+- **Rederi-appen åpner først når rederiet finnes** (`rederiOpen`: AS stiftet eller mer enn én båt; Jonas 09.10.2026). Da flytter foretaket dit, med formen (AS eller ENK), og forsvinner fra Kvote. Ervervstillatelsen og blad B blir stående i Kvote.
+- «Stift Rederi AS» er et steg i Neste mål med knapp til banken. Det kommer etter båtstigen, så det synes først når båtene er nådd.
 - De oppdiktede attestene (helseerklæring, sikkerhetskurs, fiskeskipper klasse C, SRC) er tatt bort. Spillet sjekket dem aldri.
-- Merk: Rederi-appen vises bare etter at rederiet er stiftet. Før det ser spilleren ikke ervervstillatelsen og foretaket.
-- Testene: `loretest` sjekker Rekordfisk-fanen og at Sjømann er borte, og `booktest` sjekker papirene i Rederi og Kvote.
+- Testene: `loretest` sjekker Rekordfisk-fanen og at Sjømann er borte, og `booktest` sjekker papirene i Kvote, og foretaket som AS i Rederi.
 
 ### 5.41 Puben i 3D (Jonas 08.10.2026)
 

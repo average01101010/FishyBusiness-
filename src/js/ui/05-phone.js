@@ -250,7 +250,7 @@ const PHONE = (() => {
   // the Kvote app: your quotas, the open group's season, the stocks, and the market for rights (core/03d-quota.js)
   function kvote(){ const t = ['mine', 'open', 'stock', 'mkt'].includes(sub.kvote) ? sub.kvote : 'mine', H = S.t / 60;
     const top = subs('kvote', [['mine', 'Mine kvoter', 'My quotas'], ['open', 'Åpen gruppe', 'Open group'], ['stock', 'Bestand', 'Stock'], ['mkt', 'Marked', 'Market']]);
-    if (t === 'mine') return top + '<div class="ph-c">' + papBladB() + '</div>' + salg('kvote');
+    if (t === 'mine') return top + '<div class="ph-c">' + '<h4 style="margin:4px 2px 6px">' + L('Papirer', 'Papers') + '</h4>' + papBladB() + papPermit() + (rederiOpen() ? '' : papBiz()) + '</div>' + salg('kvote');
     return top + '<div class="ph-c">' + (t === 'open' ? kvOpen(H) : t === 'stock' ? kvStock(H) : kvMkt(H)) + '</div>'; }
   const MNS = () => S.lang === 'no' ? ['januar','februar','mars','april','mai','juni','juli','august','september','oktober','november','desember'] : ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const doyStr = (y, d) => { const t = new Date(Date.UTC(y, 0, 1 + d)); return t.getUTCDate() + (S.lang === 'no' ? '. ' : ' ') + MNS()[t.getUTCMonth()]; };
@@ -436,7 +436,7 @@ const PHONE = (() => {
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
     ['p102', '09.10.2026', 'Kjentmannen, nordlyset og driftsplanen', 'The old hand, the northern lights and the operations plan', [
-      ['Merker-appen heter nå Milepæler og samler alt du har oppnådd: første uke, merkene, rekordfisken, det du har hørt fra gamle dager og tatoveringene. Sjømann-appen er borte. Ervervstillatelsen og foretaket står i Rederi, og blad B står i Kvote.', 'The Badges app is now Milestones and gathers all you have achieved: the first week, the badges, the record fish, what you have heard of the old ways and the tattoos. The Seaman app is gone. The fishing permit and the business are in Company, and blad B is in Quota.'],
+      ['Merker-appen heter nå Milepæler og samler alt du har oppnådd: første uke, merkene, rekordfisken, det du har hørt fra gamle dager og tatoveringene. Sjømann-appen er borte. Papirene (blad B, ervervstillatelsen og foretaket) står i Kvote. Når du stifter rederiet, åpner Rederi-appen, og foretaket står der.', 'The Badges app is now Milestones and gathers all you have achieved: the first week, the badges, the record fish, what you have heard of the old ways and the tattoos. The Seaman app is gone. The papers (blad B, the fishing permit and the business) are in Quota. When you found the company, the Company app opens with the business in it.'],
       ['Fars notatbok og medene hans i kartet er tatt bort. Istandsettingen av naustet og trofeveggen finner du under Naustet når du ligger ved fars naust.', 'Father\'s notebook and his marks on the chart are gone. Setting the naust to rights and the trophy wall are under Naustet when you lie at Father\'s naust.'],
       ['Rettet: fiskebåtene, hurtigbåten og ferja ved Senja vistes i kartet uansett hvor langt unna du var. Nå vises de bare innen AIS-rekkevidden, som alle andre båter.', 'Fixed: the fishing boats, the express boat and the ferry at Senja showed on the chart however far away you were. Now they show only within AIS range, like every other boat.'],
       ['Rettet: veiene i byene (som i Tromsø) blinket av og på i kartplotteren når båten var langt unna.', 'Fixed: the roads in towns (as in Tromsø) blinked on and off in the chart plotter when the boat was far away.'],
@@ -970,8 +970,8 @@ const PHONE = (() => {
     }
     return h.join('');
   }
-  // the papers a fisher carries, shown where they matter (Jonas 09.10.2026: the Sjømann app is gone): the permit and the business in the
-  // Rederi app, blad B in the Kvote app. The made-up certificates (health, safety course, skipper, SRC) are no longer shown.
+  // the papers a fisher carries, shown where they matter (Jonas 09.10.2026: the Sjømann app is gone): blad B and the permit in the Kvote
+  // app, the business there too until the Rederi app opens (rederiOpen), then in Rederi. The made-up certificates (health, safety course, skipper, SRC) are no longer shown.
   const papWho = () => S.company ? L('Skipper i ', 'Skipper of ') + S.company : L('Skipper på «', 'Skipper of the «') + (S.boatName || 'Havbris') + '»';
   const papCard = (col, title, rows, note) => '<div class="ph-card papc"><div class="pap-h" style="background:' + col + '">' + title + '</div>' + rows.map(([a, b]) => kv(a, b)).join('') + (note ? '<p class="ph-note">' + note + '</p>' : '') + '</div>';
   function papBladB(){ const who = papWho(), card = papCard;
@@ -979,11 +979,14 @@ const PHONE = (() => {
         ['Status', F.b ? '<span class="r0">' + L('Ført på blad B', 'On blad B') + '</span>' : L('Blad A: fiske er ikke hovedyrket ennå', 'Blad A: fishing is not your main occupation yet')]],
         L('Forenklet. Deltakerloven § 6 krever at den som kjøper en båt i lukket gruppe, har fisket i minst tre av de siste fem årene, og blad B er det vanlige beviset. I spillet holder det med ' + BLADB.days + ' landingsdager med deg om bord og 1 G i førstehåndsverdi.', 'Simplified. Deltakerloven § 6 asks the buyer of a closed-group boat to have fished in at least three of the last five years, and blad B is the usual proof. In the game, ' + BLADB.days + ' landing days with you aboard and 1 G of first-hand value will do.')))(S.fm || {n:0, kr:0, b:false});
   }
-  function papRederi(){ const card = papCard;
+  function papPermit(){ const card = papCard;
     return card('#33617a', L('Ervervstillatelse', 'Fishing permit'), S.fleet.map(v => [vget(v, 'boatName') || L('Båten', 'The boat'), L('Gitt', 'Granted') + ' · ' + String((VESSELS[vget(v, 'boat').type] || {}).len || '').replace('.', ',') + ' m' + ((r => r ? ' · ' + regText(r) : '')(v.id === S.cur ? regOf(S.boat) : vget(v, 'boat').reg))]).concat([[L('Utstedt av', 'Issued by'), L('Fiskeridirektoratet', 'Directorate of Fisheries')]]),
-        L('Deltakerloven § 4: en båt kan bare brukes i ervervsmessig fiske med ervervstillatelse for eieren. Under 15 m holder det at du er aktiv fisker (ervervstillatelsesforskriften § 2). I spillet gis den når du kjøper båten.', 'Deltakerloven § 4: a boat may be used in commercial fishing only with a permit for its owner. Under 15 m it is enough that you are an active fisher. In the game it comes with the boat.')) +
-      (M => card('#6b5b95', L('Foretaket', 'The business'), M ? [[L('Form', 'Form'), L('Enkeltpersonforetak (ENK)', 'Sole proprietorship')], [L('Org.nr.', 'Org. no.'), String(M.org).replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3')], [L('MVA-registrert', 'VAT registered'), bkDate(M.t)], ['Status', '<span class="r0">' + L('Registrert', 'Registered') + '</span>']]
-          : [[L('Salg siste tolv måneder', 'Sales in the last twelve months'), kr((S.sales || []).filter(s => s.t > S.t - 365 * 1440).reduce((a, s) => a + (s.total || 0), 0)) + ' / ' + kr(MVA.limit)], ['Status', L('Ikke registrert ennå', 'Not registered yet')]],
+        L('Deltakerloven § 4: en båt kan bare brukes i ervervsmessig fiske med ervervstillatelse for eieren. Under 15 m holder det at du er aktiv fisker (ervervstillatelsesforskriften § 2). I spillet gis den når du kjøper båten.', 'Deltakerloven § 4: a boat may be used in commercial fishing only with a permit for its owner. Under 15 m it is enough that you are an active fisher. In the game it comes with the boat.'));
+  }
+  // the business: in Kvote while it is a sole proprietorship, in Rederi once the company is founded (Jonas 09.10.2026)
+  function papBiz(){ const card = papCard;
+    return (M => card('#6b5b95', L('Foretaket', 'The business'), M ? [[L('Form', 'Form'), S.form === 'AS' ? L('Aksjeselskap (AS)', 'Limited company') : L('Enkeltpersonforetak (ENK)', 'Sole proprietorship')], [L('Org.nr.', 'Org. no.'), String(M.org).replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3')], [L('MVA-registrert', 'VAT registered'), bkDate(M.t)], ['Status', '<span class="r0">' + L('Registrert', 'Registered') + '</span>']]
+          : [[L('Form', 'Form'), S.form === 'AS' ? L('Aksjeselskap (AS)', 'Limited company') : L('Enkeltpersonforetak (ENK)', 'Sole proprietorship')], [L('Salg siste tolv måneder', 'Sales in the last twelve months'), kr((S.sales || []).filter(s => s.t > S.t - 365 * 1440).reduce((a, s) => a + (s.total || 0), 0)) + ' / ' + kr(MVA.limit)], ['Status', L('Ikke registrert ennå', 'Not registered yet')]],
         L('Du trenger verken ENK eller AS for å fiske. Når salget passerer 50 000 kr på tolv måneder, må foretaket i Merverdiavgiftsregisteret (merverdiavgiftsloven § 2-1). Da legges MVA på 11,11 % på oppgjøret, og den går videre til staten. Org.nr. er fiktivt.', 'You need neither a sole proprietorship nor a company to fish. When the sales pass NOK 50,000 in twelve months, the business must enter the VAT register. Then 11.11 % VAT comes with the settlement and goes on to the state. The org. no. is fictional.')))(S.mva);
   }
   // the sea time (core/09e-fartstid.js): the years and days, the bar to the next year, and the rest built up while away
@@ -1172,13 +1175,15 @@ const PHONE = (() => {
     const top = Math.max(-1, ...S.fleet.map(v => vget(v, 'lic')).filter(Boolean).map(l => LIC_OFFERS.findIndex(O => O.id === l.id))), O = LIC_OFFERS[top + 1];
     if (O){ const x = deal(VESSELS[O.ves].price + licValue(O), tradeIn(), innOK()); steps.push({n:O[S.lang], need:x.eqNeed + 5000, bank:true, a:'fartoy'}); }
     if (!S.fleet.some(v => VESSELS[vget(v, 'boat').type].cls !== 'open')){ const k = 'kyst15', x = deal(VESSELS[k].price, 0); steps.push({n:VESSELS[k].name[S.lang], need:x.eqNeed + 5000, bank:true, a:'fartoy'}); }
+    // the company (Jonas 09.10.2026): the Rederi app opens with it; after the boats, so the ladder comes first
+    if (!rederiOpen()) steps.push({n:L('Stift Rederi AS', 'Found a limited company'), need:TAX.as.capital + TAX.as.fee, a:'bank', txt:L('Rederi-appen åpner når rederiet er stiftet. Aksjekapital og gebyr: ', 'The Company app opens once the company is founded. Share capital and fee: ') + kr(TAX.as.capital + TAX.as.fee)});
     steps.push({n:L('Havfiske', 'Ocean fishing'), pc:0, lock:true, txt:L('Kommer når kartet utvides vestover', 'Comes when the chart is extended west')});
     return steps.slice(0, 2).map(x => Object.assign(x, {pc:x.pc != null ? x.pc : Math.min(1, Math.max(0, S.cash) / Math.max(1, x.need))}));
   }
   function goalsCard(){
     const g = goals(); if (!g.length) return '';
     return '<div class="ph-card"><h4>' + L('Neste mål', 'Next goals') + '</h4>' + g.map(x => '<p style="margin:6px 0 2px"><b>' + x.n + '</b><br><small>' + (x.txt || (x.bank ? L('Egenkapital banken krever: ', 'Equity the bank wants: ') : L('Pris: ', 'Price: ')) + kr(x.need) + (x.bank && S.sales.length < 3 ? ' · ' + L('og tre sluttsedler', 'and three landing notes') : '')) + '</small></p><div class="qbar"><i style="width:' + (x.pc * 100).toFixed(1) + '%"></i></div>' +
-      (x.a === 'papers' ? '<button class="ph-btn" data-pa="papers">' + L('Se papirene', 'See the papers') + '</button>' : x.lock || x.pc < 1 ? '' : x.a !== 'fartoy' ? '<button class="ph-btn" data-pa="open" data-a="' + x.a + '">' + L('Til butikken', 'To the shop') + '</button>' : '<button class="ph-btn" data-pa="sub" data-s="marked">' + L('Se markedet', 'See the market') + '</button>')).join('') + '</div>';
+      (x.a === 'papers' ? '<button class="ph-btn" data-pa="papers">' + L('Se papirene', 'See the papers') + '</button>' : x.lock || x.pc < 1 ? '' : x.a !== 'fartoy' ? '<button class="ph-btn" data-pa="open" data-a="' + x.a + '">' + (x.a === 'bank' ? L('Til banken', 'To the bank') : L('Til butikken', 'To the shop')) + '</button>' : '<button class="ph-btn" data-pa="sub" data-s="marked">' + L('Se markedet', 'See the market') + '</button>')).join('') + '</div>';
   }
   // ---- the boat market: tabs for the open group, boats with a closed-group right, the coastal fleet over 11 m and the ocean fleet;
   // a card per boat with its side view, and a spec sheet with the buttons. Until the company owns a closed-group vessel, an open-group
@@ -1335,7 +1340,7 @@ const PHONE = (() => {
           (me || S.fleet.length < 2 ? '' : '<button class="ph-btn red" data-pa="vsell" data-id="' + v.id + '"' + (inp && !tiLocked(v) ? '' : ' disabled') + '>' + L('Selg for ', 'Sell for ') + kr(vesselValue(v)) + '</button>') + '</div>' +
           (!me && !(inp && meIn) ? '<p class="ph-note">' + L('For å bytte båt må begge ligge i havn.', 'To change vessel, both must be in port.') + '</p>' : '') + '</div>');
       }
-    h.push('<h4 style="margin:10px 2px 6px">' + L('Papirer', 'Papers') + '</h4>' + papRederi());   // from the Sjømann app (Jonas 09.10.2026)
+    h.push('<h4 style="margin:10px 2px 6px">' + L('Foretaket', 'The business') + '</h4>' + papBiz());   // from the Sjømann app (Jonas 09.10.2026)
     h.push('</div>'); return h.join('');
   }
   // --- equipment
