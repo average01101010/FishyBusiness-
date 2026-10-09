@@ -586,6 +586,28 @@ def main():
         print(ok(len(FR['codeA']) == 6 and FR['codeA'] == FR['codeA2'] and FR['guest'] == 'null/no' and FR['self'] == 'no' and FR['ask'] == 'ok' and FR['inA'] and FR['outB'] and FR['yes'] == 'ok'
                  and FR['again'] == 'already' and FR['cross'] == 'ok/friends' and FR['far'] and FR['tables'] and FR['rm'] == 'ok' and FR['after'] == 1),
               'friends: a lasting code, asked by code or boat, accepted (or asked both ways), the boat seen far away and long after, no guest, no table open, ended by either', FR)
+        # shared catch marks (20261009200000_shared_marks.sql): to friends or the fiskarlag, seen by them and not by a stranger, five in four hours
+        D = {'sub': 'user_01FRD', 'role': 'authenticated'}
+        sql("insert into public.players (id, guest) values ('user_01FRD', false) on conflict do nothing")
+        sql("select public.friend_ask('%s')" % hid('user_01FRC'), A, 'authenticated')   # A and C are friends again (C asked before)
+        sql("select public.friend_ask('%s')" % hid('user_01FRA'), C, 'authenticated')
+        SM = {}
+        share = lambda who, sc, x: sql("select public.mark_share('%s', %s, 300, 32, '', null, null, 1.2)" % (sc, x), who, 'authenticated')
+        SM['f'] = share(A, 'f', 900); SM['nolag'] = share(A, 'l', 901)
+        sql("select public.lag_join('senjahopen')", A, 'authenticated'); sql("select public.lag_join('senjahopen')", D, 'authenticated')
+        SM['l'] = share(A, 'l', 902)
+        SM['bad'] = sql("select public.mark_share('f', 900, 300, 32, '<b>', null, null, null)", A, 'authenticated')
+        SM['guest'] = sql("select public.mark_share('f', 900, 300, 32, '', null, null, null)", GU, 'authenticated')
+        gC = json.loads(sql("select public.marks_get()", C, 'authenticated')); gD = json.loads(sql("select public.marks_get()", D, 'authenticated'))
+        gB = json.loads(sql("select public.marks_get()", B, 'authenticated')); gA = json.loads(sql("select public.marks_get()", A, 'authenticated'))
+        SM['seen'] = [[m['x'] for m in g] for g in (gC, gD, gB, gA)]
+        SM['max'] = [share(A, 'f', 903 + i) for i in range(4)]
+        sql("update public.shared_marks set at = now() - interval '5 hours' where x = 900")
+        SM['old'] = [m['x'] for m in json.loads(sql("select public.marks_get()", C, 'authenticated'))]
+        SM['table'] = sql("select * from public.shared_marks", A, 'authenticated', expect_err=True)[0]
+        print(ok(SM['f'] == 'ok' and SM['nolag'] == 'nolag' and SM['l'] == 'ok' and SM['bad'] == 'no' and SM['guest'] == 'no' and SM['seen'] == [[900], [902], [], []]
+                 and SM['max'] == ['ok', 'ok', 'ok', 'max'] and 900 not in SM['old'] and SM['table']),
+              'shared catch marks: a friend sees the one to friends, a club member the one to the club, a stranger and the sharer none; five in four hours; gone after four hours; no table open', SM)
     finally:
         run(*as_pg([os.path.join(BIN, 'pg_ctl'), '-D', data, '-m', 'immediate', 'stop']))
         shutil.rmtree(tmp, ignore_errors=True)

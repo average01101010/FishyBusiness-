@@ -3744,6 +3744,23 @@ Nå tar `vecPrune` alltid med midten av kartplotteren når den er åpen. Kontrol
 - **Et merke som kommer til seinere**, tas opp stille der spillet står (`S.ach.lk`), så en gammel lagring ikke får en flom av gaver. Nye spill kjenner alle merkene fra start.
 - **Test:** sjekk 11 i `merketest`.
 
+### 5.51 Delte fangstmerker (Jonas 09.10.2026)
+
+- **Dele:** trykk på et av dine egne fangstmerker i kartet (`SHARE.tap`, `ui/10l-share.js`). Da åpnes et kort med fangsten, tiden og avstanden, og knappene «Del med venner», «Del med fiskarlaget» og «Rute hit».
+  - Delingen sender bare tallene (posisjon, kg/t eller kg per line, garn eller teine, ståtid og kvalitet), aldri tekst. Knappen blir «Delt» (`mk.sh`).
+  - Trykk på et eget merke la før til et rutepunkt. Nå åpner det kortet, og «Rute hit» gjør det samme.
+- **Se andres:**
+  - Merker delt med deg (fra en venn, eller fra noen i fiskarlaget i havna di) står i kartet som en rute i fangstens farge, med navnet og fangsten.
+  - De står i 4 ekte timer, som er ett spilldøgn ved 6×.
+  - Trykk gir avsender og «Rute hit». Første gang et merke kommer, går en linje til Meldinger fra «Venner» eller «Fiskarlaget» (`S.shSeen`).
+- **Skyen:** `supabase/migrations/20261009200000_shared_marks.sql`.
+  - Tabellen `shared_marks`, som er stengt for spillerne, og funksjonene `mark_share` og `marks_get`.
+  - Høyst 5 delinger på 4 timer. Gjester kan ikke dele.
+  - Fiskarlag-deling krever medlemskap (`nolag`).
+  - Ingen ser sine egne delte merker, og fremmede ser ingenting.
+  - Merkene slettes etter ett døgn.
+- **Testene:** `sharetest` (med en falsk database) og delte merker i `sqltest`.
+
 ### 5.41 Puben i 3D (Jonas 08.10.2026)
 
 Jonas: «Spilleren trykker på pub og blir dermed sendt inn i puben hvor man sitter ved bardisken i first-person-view. Man skal kunne spinne hjulet som tidligere.» Og: «Kanskje noe som blir et sosialt element.»

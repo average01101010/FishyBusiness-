@@ -515,7 +515,8 @@ function renderDyn(){
     if (!sel && [-1, 0, 1].some(d => lblAt.has((kx + d) + ',' + ky))) continue;
     lblAt.add(kx + ',' + ky); g.push(txt({x:n.p.x + (n.player ? 11 : 8) * u, y:n.p.y - (n.player ? 9 : 6) * u}, n.name, 'lbl-ais' + (n.player ? ' pl' : ''), (n.player ? 11 : 10) * u, 'stroke-width="' + (3 * u) + '"'));
   }
-  if (typeof FRIENDS !== 'undefined') g.push(FRIENDS.svg(u, AISNOW));   // friends whose game is closed, where they were last (ui/10k-friends.js)
+  if (typeof FRIENDS !== 'undefined') g.push(FRIENDS.svg(u, AISNOW));
+  if (typeof SHARE !== 'undefined') g.push(SHARE.svg(u));   // catch marks shared with you (ui/10l-share.js)   // friends whose game is closed, where they were last (ui/10k-friends.js)
   // gear being drawn out
   if (SETM) g.push(setSvg(u));
   // boat
@@ -593,7 +594,7 @@ function ptrUp(e){
   ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null;
   if (tap && drag.pin && e.timeStamp - drag.t0 >= PIN_HOLD){ pinAdd(toMap(e.clientX, e.clientY)); if (ptrs.size === 0) drag = null; return; }
   if (tap && SETM){ setAim(toMap(e.clientX, e.clientY)); if (ptrs.size === 0) drag = null; return; }
-  if (tap){ const mp = toMap(e.clientX, e.clientY), rr = 16 / view.px; const ph = (S.pins || []).find(q => dist(q, mp) < rr && !(q.until && q.until <= S.t)); if (ph){ pinOpen(ph.id); return; } const gh = gearHit(mp, rr * 0.8); if (gh){ gearTap(gh); renderDyn(); return; } let hit = null, bd = 1e9; for (const n of AISNOW){ const d = dist(n.p, mp); if (d < rr && d < bd){ bd = d; hit = n; } } if (hit && (hit.st === 'port' || hit.v === 0) && PORTS.some(q => dist(q.p, mp) < rr * 1.6)) hit = null; if (hit){ AISSEL = hit.id; renderDyn(); renderAisCard(); return; } addWaypoint(mp); }
+  if (tap){ const mp = toMap(e.clientX, e.clientY), rr = 16 / view.px; const ph = (S.pins || []).find(q => dist(q, mp) < rr && !(q.until && q.until <= S.t)); if (ph){ pinOpen(ph.id); return; } if (typeof SHARE !== 'undefined' && SHARE.tap(mp, rr)) return; const gh = gearHit(mp, rr * 0.8); if (gh){ gearTap(gh); renderDyn(); return; } let hit = null, bd = 1e9; for (const n of AISNOW){ const d = dist(n.p, mp); if (d < rr && d < bd){ bd = d; hit = n; } } if (hit && (hit.st === 'port' || hit.v === 0) && PORTS.some(q => dist(q.p, mp) < rr * 1.6)) hit = null; if (hit){ AISSEL = hit.id; renderDyn(); renderAisCard(); return; } addWaypoint(mp); }
   if (ptrs.size === 0) drag = null;
   else { const [p] = [...ptrs.values()]; drag = {sx:p.x, sy:p.y, cx:view.cx, cy:view.cy, moved:true}; }
 }
