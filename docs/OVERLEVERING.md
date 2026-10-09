@@ -3639,7 +3639,7 @@ Jonas: «Spilleren trykker på pub og blir dermed sendt inn i puben hvor man sit
 - **Svakheter:**
   - Lyset er bakt for kveld. Vinduene viser skumring også midt på sommeren.
   - Folkene står stille.
-  - Migrasjonen (`20261009120000_pub.sql`) er ikke kjørt i Supabase ennå. Forsøket gjennom MCP ble avbrutt 09.10.2026. Til den er kjørt, sier fiskarlaget at det ikke får kontakt, og hilsener kommer ikke fram. «I kveld», quizen og resten av puben virker uten den.
+  - Migrasjonen (`20261009120000_pub.sql`) ble kjørt av Jonas i Supabase sin SQL Editor 09.10.2026. Tabellene har RLS uten policy, og funksjonene kan bare kalles av innloggede (ikke anon).
   - Disken har sprekker mellom bordene foran som slipper litt lys gjennom når man ser ned.
   - Modellen gjør siden 2,8 MB større (base64 3,7 MB).
 
