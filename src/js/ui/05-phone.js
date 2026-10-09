@@ -435,6 +435,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p102', '09.10.2026', 'Driftsplanen', 'The operations plan', [
+      ['Planmakeren sier nå tydelig hva mannskapet gjør når lasten er full: de leverer og går ut igjen så mange turer som planen viser, venter ved kaia hvis mottaket er stengt, og hviler etter siste levering.', 'The plan maker now says clearly what the crew do when the hold is full: they land and go out again as many trips as the plan shows, wait at the quay if the plant is closed, and rest after the last landing.']]],
     ['p101', '09.10.2026', 'Kjølvann og kaier', 'Wake and quays', [
       ['Rettet: en hvit strek gikk på tvers av vannet ved hekken der hekkbølgen starter. Bølgen vokser nå jevnt fram bak båten.', 'Fixed: a white line ran across the water at the stern where the stern wave starts. The wave now grows smoothly behind the boat.'],
       ['Rettet: kaiflater fra kartet viste seg gjennom kaia ved utstyrsbutikker, verft og mottak, som i Hammerfest. Den delen som ligger under kaia, tegnes ikke lenger.', 'Fixed: quay areas from the map showed through the quay at tackle shops, yards and plants, as in Hammerfest. The part under the quay is no longer drawn.'],

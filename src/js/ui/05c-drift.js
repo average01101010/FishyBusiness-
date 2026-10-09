@@ -106,7 +106,7 @@ const DRIFTUI = (() => {
     return '<div class="dr-day">' + kvr(L('Turer i døgnet', 'Trips a day'), e.trips) +
       kvr(L('Arbeid / hvile', 'Work / rest'), fmt(e.work, 1) + L(' t / ', ' h / ') + fmt(e.rest, 1) + L(' t i strekk', ' h in one stretch')) + kvr(L('Levering', 'Landing'), nm(e.mottak)) +
       '<div class="dr-pv">' + e.tl.map(x => '<div class="dr-ev"><span>' + hh(x.t) + '</span><span>' + (S.lang === 'no' ? x.no : x.en) + '</span></div>').join('') + '</div>' +
-      '<p class="ph-note">' + (inWiz ? L('Tidene er anslag. Båten jukser bare til lasten er full, og venter på mottaket hvis det er stengt.', 'The times are estimates. The boat only jigs until the hold is full, and waits at the plant if it is closed.') : L('Fangstrapporten under viser hva planen leverer. Prøv andre plasser og se om tallet går opp.', 'The catch report below shows what the plan lands. Try other places and see if the figure goes up.')) + '</p></div>';
+      '<p class="ph-note">' + (inWiz ? L('Tidene er anslag. Når lasten er full, leverer mannskapet og går ut igjen, så mange turer som står over. Er mottaket stengt, venter båten ved kaia til det åpner. Etter siste levering hviler mannskapet på hvilestedet.', 'The times are estimates. When the hold is full, the crew land and go out again, as many trips as shown above. If the plant is closed, the boat waits at the quay until it opens. After the last landing the crew rest at the place of rest.') : L('Fangstrapporten under viser hva planen leverer. Prøv andre plasser og se om tallet går opp.', 'The catch report below shows what the plan lands. Try other places and see if the figure goes up.')) + '</p></div>';
   }
   function summary(o){
     const w = o.wiz, C = driftCheck(o), h = ['<div class="ph-c">'];
