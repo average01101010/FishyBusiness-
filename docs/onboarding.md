@@ -15,7 +15,7 @@ bygging. Den bygger på det som finnes: åpningsscenen med brevet, startlista, n
 4. **Aldri stopp.** Ingen tips stopper båten eller spillet. Det som ikke er lest, ligger igjen som en prikk på Neste mål og i Håndboka.
 5. **Alltid et neste mål.** Fra første sekund til uke fire står det ett konkret mål i Neste mål-brikka. Spilleren skal aldri lure på
    «hva nå?».
-6. **Første tur er obligatorisk, resten er drypp.** Kapittel 1 (første tur) kjøres for alle. Kapittel 2–6 kommer som korte drypp
+6. **Første tur er obligatorisk, resten er drypp.** Kapittel 1 (første tur) kjøres for alle og kan ikke hoppes over (Jonas 09.10.2026). Kapittel 2–6 kommer som korte drypp
    når spilleren gjør ting første gang, og kan alltid hoppes over med ett trykk («Jeg kan dette» skjuler resten av kapittelet).
 7. **Må virke i stående og liggende format, med berøring,** på svake telefoner uten 3D også (tipsene peker på 2D-elementer eller
    på knapper, aldri bare på noe i 3D-bildet).
@@ -61,10 +61,10 @@ Spilleklokka går 6× i kapittel 1 som i dag. Tallene i parentes er ekte minutte
     nederst viser det som skjer.
 12. Fisker til lasterommet er fullt (dagens `full`). Tips underveis om lasten (kg på dekk/i rommet).
 
-### E. Hjem med manuell rute (7 min)
-13. **Manuell rute til mottaket** (Jonas' forslag, ja): «Trykk i kartet for å legge rutepunkter fram til mottaket.» Mottaket lyser.
-    Rutekontrollen («krysser land») sier fra, og Autonav står alltid som reserve-knapp om spilleren gir opp.
-14. **Kurslista** vises når ruta er lagt: etapper, kurs, distanse, tid. Ett tips.
+### E. Hjem (7 min)
+13. «Trykk på mottaket, så Autonav.» Mottaket lyser i kartet (som `route2` i dag). Manuell rute og kurslista læres på tur 2
+    (kapittel 2), se Jonas' svar i 8.
+14. **Kurslista** vises likevel når ruta ligger: etapper, kurs, distanse, tid. Ett tips, ingen handling.
 15. «Kast loss.» Underveis, ett om gangen, mens båten går:
     - telefonen og appene: Vær (med varselet og fargene for det båten tåler), Salgslaget (priser nå), Kvote (åpen gruppe, kort),
       Regler («Kan jeg fiske her?»),
@@ -91,7 +91,7 @@ Spilleklokka går 6× i kapittel 1 som i dag. Tallene i parentes er ekte minutte
 Hvert drypp er 1–3 tips, utløst første gang noe skjer, med «Jeg kan dette» som skjuler resten av kapittelet. Et drypp som
 ikke blir sett, ligger i Håndboka og som prikk i Neste mål.
 
-**Kapittel 2: Tur 2 og 3 (samme dag).** Fiskeguide-appen (hvor fisken står, sesonger), ekkoloddet og artsvalget, regellaget i
+**Kapittel 2: Tur 2 og 3 (samme dag).** Neste mål: «Velg felt selv». **Manuell rute** dit med rutepunkter og kurslista (Autonav som reserve). Fiskeguide-appen (hvor fisken står, sesonger), ekkoloddet og artsvalget, regellaget i
 kartplotteren, dybder og flo og fjære (tidevannet i navigasjonsbaren og i Vær), fartsjustering i kartplotteren (diesel per nm),
 søk etter steder, innstillingene i kartplotteren. Kystposten og meldinger første gang det kommer en sak eller melding.
 
@@ -141,7 +141,7 @@ kommer som drypp, står i Håndboka. Håndboka er også svaret på «hvordan var
 | Steg | Hva | Omfang |
 |---|---|---|
 | 1 | Måling: `tut_step`-hendelser og trakt per trinn i admin, på dagens veiledning | 1 dag |
-| 2 | Kapittel 1 omskrevet: naustet som start, ny rekkefølge, manuell rute hjem med kursliste, apper underveis, registrering ved sluttseddelen, mannskap på kaia | 3–4 dager + `tut` (40 min) i begge formater |
+| 2 | Kapittel 1 omskrevet: naustet som start med kinosekvens ut, ny rekkefølge, kursliste vist, apper underveis, registrering ved sluttseddelen, mannskap på kaia som valg | 3–4 dager + `tut` (40 min) i begge formater |
 | 3 | Håndboka og Neste mål-dryppene (kapittel 2–6, rammeverket) | 2 dager |
 | 4 | Innholdet i kapittel 2–6 | 3 dager |
 | 5 | Full regresjon, dokumentasjon, patchnotes | 1 dag |
@@ -149,11 +149,13 @@ kommer som drypp, står i Håndboka. Håndboka er også svaret på «hvordan var
 Testen `tut.py` utvides til kapittel 1 slik den er nå (hele turen med berøring, liggende og stående), og kapittel 2–6 får en
 egen lett test som utløser hvert drypp og sjekker at ingen stopper spillet.
 
-## 8. Spørsmål til Jonas før bygging
+## 8. Jonas' svar (09.10.2026)
 
-1. Mannskap ved første levering: valg (anbefalt) eller alltid?
-2. Manuell rute hjem i kapittel 1 (anbefalt, med Autonav som reserve) eller Autonav begge veier?
-3. Registrering ved sluttseddelen (anbefalt) eller først ved tredje levering som nå?
-4. Skal kapittel 1 kunne hoppes over av noen (for eksempel en som starter spillet på nytt)? Anbefalt: ja, men bare etter at
-   spilleren har fullført det én gang på samme enhet eller konto.
-5. Kinosekvensen ut av naustet (5 s): vil du ha den, eller rett ut på kaia?
+1. Mannskap ved første levering: **valgfritt.**
+2. Hjemturen i kapittel 1: Claude bestemmer. **Valg: Autonav hjem på første tur, manuell rute med kursliste på tur 2** (kapittel 2,
+   når spilleren velger felt selv). Grunnen: mellom fullt lasterom og den første sluttseddelen skal det ikke stå noe som kan
+   mislykkes. En rute som «krysser land» rett før belønningen er den verste plassen å feile. På tur 2 er feltet spillerens eget
+   valg, og da er ruta dit en naturlig ting å lære, med Autonav som reserve.
+3. Registrering ved første sluttseddel med luksushaill som gave: **ja.**
+4. Kapittel 1 kan ikke hoppes over: **obligatorisk for alle.**
+5. Kinosekvensen ut av naustet: **ja.**
