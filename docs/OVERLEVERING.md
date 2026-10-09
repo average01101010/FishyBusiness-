@@ -3779,6 +3779,24 @@ Nå tar `vecPrune` alltid med midten av kartplotteren når den er åpen. Kontrol
   - Høyst 30 innskrivninger i timen. Gjester kan ikke skrive seg inn.
 - **Testene:** `gbtest` (med en falsk database) og gjestebøkene i `sqltest`.
 
+### 5.53 Tuting og faste hilsener på sjøen (Jonas 09.10.2026)
+
+- **Tut:** knappen kommer blant båtens knapper (ligger stille og under seiling) når en annen spillers båt er innenfor 1 nm (`HAIL.dockItem`, `ui/10n-hail.js`).
+  - Hornet høres her (`SND.horn`), og hos den andre med styrke etter avstanden.
+  - Du kan tute på samme båt én gang i minuttet.
+  - Tutingen teller i merket «Tutet på andre båter» (1–200).
+- **Faste hilsener:** AIS-kortet til en spillerbåt innenfor 5 nm har seks faste hilsener (`HAIL.LINES`). Det er ingen fritekst.
+- **Mottak:**
+  - Hentes hvert 15. sekund med id etter den siste du har sett (`S.hailId`).
+  - Hver hilsen gir en melding: fra «Venner» om avsenderen er en venn, ellers fra «Sjøen».
+  - Den vises også som en kort beskjed på skjermen og som tekst over båten i 3D i 10 sekunder (`G3.sayBoat`, som følger båten).
+- **Skyen:** `supabase/migrations/20261009240000_hails.sql`.
+  - Tabellen `hails`, som er stengt for spillerne, og funksjonene `hail_send` og `hails_get`.
+  - Serveren måler avstanden selv mellom posisjoner som er rapportert de siste to minuttene.
+  - Høyst 60 i timen. Gjester kan ikke sende.
+  - Raden slettes etter ett døgn.
+- **Testene:** `hailtest` (med en falsk database) og hilsenene i `sqltest`.
+
 ### 5.41 Puben i 3D (Jonas 08.10.2026)
 
 Jonas: «Spilleren trykker på pub og blir dermed sendt inn i puben hvor man sitter ved bardisken i first-person-view. Man skal kunne spinne hjulet som tidligere.» Og: «Kanskje noe som blir et sosialt element.»

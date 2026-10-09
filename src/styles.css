@@ -1144,3 +1144,5 @@ body.vplot .depc{display:none}
 .gb-rows{list-style:none;padding:0;margin:8px 0 0} .gb-rows li{padding:6px 0;border-top:1px solid rgba(0,0,0,.08)} .gb-rows i{color:#5b5040}
 #pub3 .pb-gb{margin-top:12px;border-top:1px solid rgba(255,255,255,.12);padding-top:8px} #pub3 .pb-gb h4{margin:0 0 4px} #pub3 .gb-lines button{padding:4px 9px;font-size:12px}
 #pub3 .gb-rows li{border-top-color:rgba(255,255,255,.08)} #pub3 .gb-rows i{color:#e6d3a8}
+/* the six lines to a player's boat on its AIS card (ui/10n-hail.js) */
+.hl-lines{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px} .hl-lines button{padding:5px 8px;border-radius:7px;border:1px solid #2c5870;background:#173447;color:#e7f4ee;font:600 12px var(--sans)}

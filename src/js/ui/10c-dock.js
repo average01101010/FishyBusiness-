@@ -28,6 +28,7 @@ const DOCK = (() => {
     lever:SVG('<path d="M4 11h16v9H4z"/><path d="M4 15h16"/><path d="M12 2.5v6"/><path d="M9 6l3 3 3-3"/>'),
     is:SVG('<path d="M12 2v20M3.5 7l17 10M20.5 7l-17 10"/><path d="M9 3.5l3 2 3-2M9 20.5l3-2 3 2"/>'),
     agn:SVG('<path d="M3 12c3-4 8-5 12-3l4-3v12l-4-3c-4 2-9 1-12-3z"/><circle cx="7.5" cy="11" r=".8" fill="currentColor"/>'),
+    horn:SVG('<path d="M4 10v4h3l6 4V6l-6 4z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/>'),
     pub:SVG('<path d="M5 9h10v11H5z"/><path d="M15 12h2.5a2 2 0 0 1 0 4H15"/><path d="M5 9a2.5 2.5 0 0 1 3-3 3 3 0 0 1 5 0 2 2 0 0 1 2 3"/>'),
     bank:SVG('<path d="M3 9l9-5 9 5"/><path d="M5 9v9M10 9v9M14 9v9M19 9v9"/><path d="M3 20h18"/>'),
     oppdrag:SVG('<path d="M8.5 3.5h7v3h-7z"/><path d="M8 5H5v16h14V5h-3"/><path d="M8 11h8M8 15h5"/>'),
@@ -122,6 +123,7 @@ const DOCK = (() => {
     const work = (S.crew.length || S.ops) && I('arbeid', 'arbeid', 'Mannskap', 'Crew', {page:'arbeid'});
     const b = S.boat, beh = I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'});   // no «Hjem» (the user's wish 02.10.2026: Autonav to the harbour, or «Returner samme vei» in the plotter)
     const nav = I('nav', 'nav', 'Auto-nav', 'Auto-nav', {run:autoNav});
+    const tut = typeof HAIL !== 'undefined' ? HAIL.dockItem(I) : null;   // another player's boat within 1 nm (ui/10n-hail.js)
     if (b.status === 'idle'){
       const s = nearSet(b.pos, 0.3), nb = nearestBuoy(), ch = setChoices();
       const haul = s ? (s.kind === 'line' ? I('taopp', 'taopp', 'Ta opp', 'Haul', {act:'ghaul', data:{id:s.id}, pri:true}) : I('taopp', 'taopp', 'Ta opp', 'Haul', {menu:'taopp', pri:true}))
@@ -135,13 +137,13 @@ const DOCK = (() => {
       return [I('jukse', 'jukse', 'Jukse', 'Jig', {menu:'jukse', pri:!s}),
         I('settut', 'settut', 'Sett ut', 'Set', {menu:'settut', off:rigJig() ? [L('Båten er rigget for juksa. Rigg om til line, garn eller teiner under Beholdning.', 'The boat is rigged for jigging. Re-rig for line, nets or pots under Inventory.')] : !ch.length && [S.pgear && (S.pgear.nets.length || S.pgear.lines.hyse.n || S.pgear.lines.bank.n || S.pgear.pots.small || S.pgear.pots.big) ? L('Redskapet om bord er ikke klart: line må egnes, og teiner trenger agn og blåsesett.', 'The gear aboard is not ready: line must be baited, and pots need bait and buoy sets.') : L('Du har ikke garn, line eller teiner om bord.', 'You have no nets, line or pots aboard.')]}),
         // by a quay with no buoy near, «Fortøy» takes the place of the greyed «Ta opp», so the row stays five wide on a phone
-        s || !moor ? haul : null, moor, nav, anc, crew, work, beh].filter(Boolean);
+        s || !moor ? haul : null, moor, nav, tut, anc, crew, work, beh].filter(Boolean);
     }
     if (b.status === 'fishing' && b.gop) return [I('gstop', 'stopp', 'Stopp arbeidet', 'Stop the work', {act:'gstop'}), work, beh].filter(Boolean);
     if (b.status === 'fishing') return [I('stopfish', 'stopp', 'Stopp', 'Stop', {act:'stopfish'}),
       b.deckStop && !b.deckEnd ? I('deckgo', 'videre', 'Fisk videre', 'Fish on', {act:'deckgo', pri:true}) : !b.deckStop && deckPending() > 0.5 ? I('deckstop', 'sloy', 'Stopp og sløy', 'Stop and gut', {act:'deckstop'}) : null,
       G3.isActive() && window.JIGG && (window.jigActive || window.JIGG.ok()) ? I('jigg', 'juks', window.jigActive ? 'Slutt å jukse' : 'Jukse selv', window.jigActive ? 'Stop jigging' : 'Jig yourself', {act:'jigg', pri:!window.jigActive, on:!!window.jigActive}) : null, crew, work, beh].filter(Boolean);
-    if (b.status === 'sailing') return [I('stop', 'stopp', 'Stopp båten', 'Stop', {act:'stop'}), nav, crew, work, beh].filter(Boolean);
+    if (b.status === 'sailing') return [I('stop', 'stopp', 'Stopp båten', 'Stop', {act:'stop'}), nav, tut, crew, work, beh].filter(Boolean);
     if (b.status === 'tow') return [beh];   // the tow takes its time (no fast forward: one clock for everyone)
     if (b.status === 'adrift' || b.status === 'engine' || b.status === 'aground') return [I('hjelp', 'hjelp', 'Hjelp', 'Help', {run:() => PHONE.open('redning'), warn:true}), beh];
     return [beh];

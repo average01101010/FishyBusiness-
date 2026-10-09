@@ -64,6 +64,7 @@ const ACHL = [
   {id:'rorbu', n:['Rorbuer besøkt', 'Rorbuer visited'], tiers:[1, 3, 5, 10, 20], unit:'', v:() => achVisitN(pt => !!pt.rorbu)},
   {id:'pub', n:['Puber besøkt', 'Pubs visited'], tiers:[1, 3, 5, 10, 20], unit:'', v:() => Object.keys(achState().pub).length},
   {id:'kyst', n:['Kystfareren: gjestebøker', 'Coastfarer: guestbooks'], tiers:[1, 5, 10, 25, 50, 100, 250], unit:'', v:() => Object.keys(S.gb || {}).length},
+  {id:'tut', n:['Tutet på andre båter', 'Horns sounded at other boats'], tiers:[1, 10, 50, 200], unit:'', v:() => achC('horn')},
   {id:'venner', n:['Venner', 'Friends'], tiers:[1, 5, 10, 25], unit:'', v:() => typeof FRIENDS !== 'undefined' ? FRIENDS.count() : 0},
   {id:'arter', n:['Arter levert', 'Species landed'], tiers:[3, 5, 8, 12], unit:'', v:() => Object.keys((S.ach && S.ach.sp) || {}).length},
   {id:'nm', n:['Nautiske mil om bord', 'Nautical miles aboard'], tiers:[250, 1000, 2500, 5000, 10000], unit:'nm', v:() => (S.tat && S.tat.nm) || 0},

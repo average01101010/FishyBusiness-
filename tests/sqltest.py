@@ -622,6 +622,24 @@ def main():
         print(ok(GB['a1'] == 'ok' and GB['a2'] == 'wait' and GB['a3'] == 'ok' and GB['b1'] == 'ok' and GB['bad'] == 'no' and GB['badk'] == 'no' and GB['guest'] == 'no'
                  and GB['n'] == 2 and GB['rows'] == [(-1, 'Havbris', False), (2, 'Sjøbbris', False)] and GB['mine'] == ['finnsnes', 'rb12'] and GB['table']),
               'guestbooks: once a day per place, a preset line and the boat (markup stripped), the book with its count, my places; no guest, no bad place or line, no table open', GB)
+        # tuting and the phrases (20261009240000_hails.sql): the horn within 1 nm, a line within 5 nm, both boats fresh, once a minute per
+        # boat; the other gets them with the sender's name, boat and whether they are friends; no guest, no table open
+        sql("""delete from public.presence where player_id in ('user_01FRA', 'user_01FRB', 'user_01FRC');
+          insert into public.presence (player_id, boat, vtype, x, y, st) values ('user_01FRA', 'Sjøbris', 'trebat', 900, 300, 'sailing'), ('user_01FRB', 'Havbris', 'trebat', 901.2, 300, 'sailing'),
+            ('user_01FRC', 'Nordlys', 'trebat', 906, 300, 'fishing')""")
+        H = {'horn': sql("select public.hail_send('%s', -1)" % hid('user_01FRB'), A, 'authenticated'), 'again': sql("select public.hail_send('%s', -1)" % hid('user_01FRB'), A, 'authenticated'),
+             'hornFar': sql("select public.hail_send('%s', -1)" % hid('user_01FRC'), A, 'authenticated'), 'line5': sql("select public.hail_send('%s', 2)" % hid('user_01FRC'), A, 'authenticated'),
+             'badk': sql("select public.hail_send('%s', 9)" % hid('user_01FRB'), C, 'authenticated'), 'self': sql("select public.hail_send('%s', 1)" % hid('user_01FRA'), A, 'authenticated'),
+             'guest': sql("select public.hail_send('%s', 1)" % hid('user_01FRB'), GU, 'authenticated')}
+        sql("update public.presence set at = now() - interval '5 minutes' where player_id = 'user_01FRB'")
+        H['stale'] = sql("select public.hail_send('%s', 3)" % hid('user_01FRB'), C, 'authenticated')
+        gB = json.loads(sql("select public.hails_get(0)", B, 'authenticated')); gC = json.loads(sql("select public.hails_get(0)", C, 'authenticated'))
+        H['gotB'] = [(g['k'], g['boat'], g['fid'] == hid('user_01FRA'), g['friend']) for g in gB]; H['gotC'] = [(g['k'], g['friend']) for g in gC]
+        H['since'] = json.loads(sql("select public.hails_get(%d)" % gB[-1]['id'], B, 'authenticated')) if gB else None
+        H['table'] = sql("select * from public.hails", A, 'authenticated', expect_err=True)[0]
+        print(ok(H['horn'] == 'ok' and H['again'] == 'wait' and H['hornFar'] == 'far' and H['line5'] == 'ok' and H['badk'] == 'no' and H['self'] == 'no' and H['guest'] == 'no' and H['stale'] == 'far'
+                 and H['gotB'] == [(-1, 'Sjøbris', True, False)] and H['gotC'] == [(2, True)] and H['since'] == [] and H['table']),
+              'hails: the horn within 1 nm and a line within 5 nm of a fresh boat, once a minute; the other gets the sender, the boat and the friendship; no guest, no table open', H)
     finally:
         run(*as_pg([os.path.join(BIN, 'pg_ctl'), '-D', data, '-m', 'immediate', 'stop']))
         shutil.rmtree(tmp, ignore_errors=True)
