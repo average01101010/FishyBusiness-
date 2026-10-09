@@ -40,14 +40,36 @@ function newVesselObj(type, pid, lic){
 }
 // ---- the yard's rebuilds, per boat (S.boat; the user's list 04.10.2026): a bigger hold in three steps, the last doubling it (more
 // boxes, a longer hold: the weight shows in her stability and speed), priced on the boat's price
-const HOLDUP = [{x:1.25, pc:0.04, h:8}, {x:1.6, pc:0.07, h:16}, {x:2.0, pc:0.12, h:32}];
+const HOLDUP = [{x:1.2, pc:0.03, h:8}, {x:1.4, pc:0.06, h:16}, {x:1.7, pc:0.10, h:32}];   // tuned down 08.10.2026 (was 1.25, 1.6, 2.0); not for the ocean vessels, whose tanks are fixed
 const holdX = b => b && b.holdLv ? HOLDUP[b.holdLv - 1].x : 1;
 const upPrice = pc => Math.max(5000, Math.round(VESSELS[S.boat.type || 'skiff'].price * pc / 1000) * 1000);
 // the engine: a bigger one from the yard in two steps (+20 % and +40 % power; inboard engines, the outboard skiff has the 90 hp
 // outboard instead), and the speed boosts sold in the Trim app (diesel engines; real money later, a test now). The power's gain in
 // speed: a planing hull its square root, a displacement hull its cube root but held under +12 % by its hull speed. The effects of the
 // boosts are our proposal (the user named them, not their effects): power +10 %, +8 % and +12 %, a tenth more acceleration each
-const ENGUP = [{p:0.2, pc:0.06, h:12}, {p:0.4, pc:0.11, h:24}];
+// a bigger engine (Jonas 08.10.2026): +10 % and +20 % power, so a tenth or a fifth of the speed at most; it drinks more and the engine
+// service costs more (svc), so it saves nothing the Trim boosts (+50 to +100 %) do. What it gives is a lasting, modest gain.
+const ENGUP = [{p:0.1, pc:0.06, h:12, svc:1.2}, {p:0.2, pc:0.11, h:24, svc:1.5}];
+const svcCostOf = b => { const V = VESSELS[b.type || 'skiff']; return Math.round(V.svcCost * (b.engLv && !V.outboard ? ENGUP[b.engLv - 1].svc : 1)); };
+// the rest of the yard's upgrades, all about the boat itself (never the fishing gear), each in steps, priced as a share of the boat's
+// price (upPrice) and fitted by what the boat has: cabins, galley and drying room only where there are bunks (berths), the hold and
+// insulation not for the ocean vessels, a stabiliser from 9 m and the gyro from 25 m. b.upg = {key: step}. fx: what the step does.
+const UPGS = {
+  cabin:{no:'Lugarer', en:'Cabins', fit:V => V.berths > 0, d:['Bedre køyer, madrasser og skott. Mannskapet blir ikke så fort sliten på sjøen, og hviler bedre i pausene.', 'Better bunks, mattresses and bulkheads. The crew tire more slowly at sea and rest better in the breaks.'],
+    steps:[{pc:0.03, h:8, no:'Bedre køyer', en:'Better bunks', fat:0.92}, {pc:0.06, h:16, no:'Lugarer med skott', en:'Cabins with bulkheads', fat:0.85}, {pc:0.10, h:24, no:'Egne lugarer', en:'Separate cabins', fat:0.78}]},
+  galley:{no:'Messe og bysse', en:'Mess and galley', fit:V => V.berths > 0, d:['Større bysse og en ordentlig messe. Maten går fortere å lage, og mannskapet trives bedre om bord.', 'A larger galley and a proper mess. Meals are cooked faster and the crew are happier aboard.'],
+    steps:[{pc:0.02, h:8, no:'Større bysse', en:'A larger galley', cook:24, mood:2}, {pc:0.04, h:16, no:'Messe', en:'A mess', cook:18, mood:4}, {pc:0.07, h:24, no:'Messe og kjøkken', en:'Mess and kitchen', cook:12, mood:6}]},
+  dry:{no:'Tørkerom og bad', en:'Drying room and shower', fit:V => V.berths > 0, d:['Tørkerom for oljehyre og et bad. Mannskapet fryser mindre når det er kaldt og vått, og kommer varmere ut av vakten.', 'A drying room for oilskins and a shower. The crew feel the cold and wet less and come off watch warmer.'],
+    steps:[{pc:0.02, h:8, no:'Tørkerom', en:'Drying room', cold:0.85}, {pc:0.04, h:16, no:'Tørkerom og bad', en:'Drying room and shower', cold:0.7}]},
+  insul:{no:'Isolert lasterom', en:'Insulated hold', fit:V => V.cls !== 'hav' && V.iceCap > 0, d:['Isolasjon i lasterommet. Isen holder lenger, så du bruker mindre is per kilo fisk.', 'Insulation in the hold. The ice lasts longer, so you use less ice per kilo of fish.'],
+    steps:[{pc:0.02, h:8, no:'Isolasjon', en:'Insulation', ice:0.85}, {pc:0.04, h:16, no:'Kjølt lasterom', en:'A chilled hold', ice:0.7}]},
+  tank:{no:'Større drivstofftank', en:'A larger fuel tank', fit:V => !V.outboard && V.cls !== 'hav', d:['Ekstra tank. Lengre rekkevidde mellom bunkringene.', 'An extra tank. A longer range between refuellings.'],
+    steps:[{pc:0.015, h:8, no:'Ekstra tank', en:'An extra tank', x:1.25}, {pc:0.03, h:16, no:'Stor tank', en:'A large tank', x:1.5}]},
+  stab:{no:'Stabilisering', en:'Stabilisation', fit:V => V.len >= 9, d:['Slingrekjøl og, på de store båtene, gyrostabilisator. Båten mister mindre fart i sjø, og mannskapet har det bedre i dårlig vær.', 'Bilge keels and, on the big boats, a gyro stabiliser. The boat loses less speed in a sea and the crew cope better in bad weather.'],
+    steps:[{pc:0.025, h:12, no:'Slingrekjøl', en:'Bilge keels', sea:0.9}, {pc:0.06, h:24, no:'Gyrostabilisator', en:'Gyro stabiliser', sea:0.78, minLen:25}]}
+};
+const upgLv = (b, k) => (b && b.upg && b.upg[k]) || 0;
+const upgNext = (b, k) => { const U = UPGS[k], V = VESSELS[(b || S.boat).type || 'skiff'], st = U.steps[upgLv(b, k)]; return U.fit(V) && st && (!st.minLen || V.len >= st.minLen) ? st : null; };
 // Trim (Jonas 05.10.2026): more speed for the boat for a while, sold for real money, the time in game hours. One at a time on a boat
 // (a new one takes the place of the one on, b.trim {k, t0}), diesel engines only. x: top and cruising speed.
 const BOOSTS = {pump:{x:1.5, h:24, nok:29, no:'Justert dieselpumpe', en:'Tuned injection pump'}, ic:{x:1.75, h:48, nok:39, no:'Ladeluftkjøling', en:'Charge air cooling'}, turbo:{x:2, h:72, nok:49, no:'Økt turbotrykk', en:'Higher boost pressure'}};
@@ -60,6 +82,9 @@ function applyVessel(){
   const b = S.boat; Object.assign(BOAT, VESSELS[b.type || 'skiff']);
   for (const k in EQUIP) if (EQUIP[k].boost && S.equip && S.equip[k] && equipFits(k, b.type || 'skiff')) Object.assign(BOAT, EQUIP[k].boost);
   const hx = holdX(b); BOAT.holdCap = Math.round(BOAT.holdCap * hx); BOAT.iceCap = Math.round(BOAT.iceCap * hx);
+  // the yard's other upgrades (UPGS): what they change for the crew and the boat
+  const fx = {}; for (const k in UPGS){ const lv = upgLv(b, k); if (lv && UPGS[k].fit(VESSELS[b.type || 'skiff'])) Object.assign(fx, UPGS[k].steps[lv - 1]); }
+  BOAT.fx = fx; if (fx.x) BOAT.fuelCap = Math.round(BOAT.fuelCap * fx.x); if (fx.sea) BOAT.sea *= fx.sea; BOAT.svcCost = svcCostOf(b);
   const P = powerX(b); if (P > 1){ const sx = speedOfPower(P, BOAT.planing);
     BOAT.vmax *= sx; BOAT.vcruise *= sx; BOAT.fuelK *= 1 + 0.4 * (P - 1); BOAT.accel *= 1 + (b.engLv ? 0.3 * ENGUP[b.engLv - 1].p : 0); BOAT.hp = Math.round(BOAT.hp * P); }
   const T = canBoost(BOAT) && trimOn(b); if (T){ BOAT.vmax *= T.x; BOAT.vcruise *= T.x; BOAT.accel *= T.x; }

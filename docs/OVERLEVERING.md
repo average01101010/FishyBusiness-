@@ -3570,6 +3570,17 @@ Alt dette ligger i `core/10b-gearcare.js` (kjernen) og i `ui/05-phone.js` (Behol
 - **Gamle lagringer:** `careInit` legger til feltene.
 - **Ikke gjort:** pilker og juksamaskiner (elektrisk) har ingen egen slitasje utover settet; teinene har én felles stand.
 
+### 5.37 Verftets oppgraderinger av selve båten (Jonas 09.10.2026)
+
+Bare båten, aldri fiskeutstyr eller haler. Tallene står i `core/03-simulation.js` (`HOLDUP`, `ENGUP`, `UPGS`), jobbene i `core/06-services.js` (`finishJob`, kind `upg`), kortene i `ui/05-phone.js` (verftet, Oppgraderinger) og testen i `tests/yardupgtest.py`. Lagret per båt: `b.holdLv`, `b.engLv`, `b.upg = {nøkkel: trinn}`.
+
+- **Prisen** er en andel av båtens pris (`upPrice(pc)`, minst 5 000 kr), så en tråler til 60 mill. koster millioner og en snekke noen tusen. Hver jobb tar 30 ekte minutter (`YARD_H`).
+- **Lasterom** (ikke havbåtene, `cls: 'hav'`): +20 %, +40 %, +70 % til 3, 6 og 10 % av båtprisen (var +25, +60, +100 %). Eksisterende lagringer beholder trinnet og får de nye tallene.
+- **Motor** (ikke påhengsmotor): +10 % og +20 % kraft til 6 og 11 %. Fartsgevinsten er bevisst liten mot Trim (+50 til +100 %): mer diesel (`fuelK`) og motorservice ×1,2 og ×1,5 (`svcCostOf`).
+- **Mannskap, bare på båter med køyer** (`berths` > 0): lugarer (tretthet ×0,92 / ×0,85 / ×0,78 på sjøen), messe og bysse (måltidet 24 / 18 / 12 minutter og humør +2 / +4 / +6), tørkerom og bad (kuldeslitet ×0,85 / ×0,7). Virkningen går gjennom `BOAT.fx` til `crewTick` (`core/04-crew.js`) og `mealMinute`.
+- **Isolert lasterom** (ikke havbåtene): isbruken per kilo ×0,85 / ×0,7. **Drivstofftank** (ikke påhengs- og havbåter): ×1,25 / ×1,5. **Stabilisering** (fra 9 m): slingrekjøl, og gyrostabilisator fra 25 m; `BOAT.sea` ×0,9 / ×0,78 (mindre fartstap i sjø) og mannskapets sjøgang teller mindre.
+- **Ikke gjort:** havbåtene har ingen oppgraderinger for lasterom (tankene er faste); lugarer gir ikke ekstra mannskapsplass; ingen animasjon.
+
 ## 10. Kjente problemer og åpne spørsmål
 
 - **Mannskapssystemet (01.10.2026) er ikke spilltestet.** Usikre punkter:

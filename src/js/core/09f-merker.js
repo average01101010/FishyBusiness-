@@ -30,7 +30,7 @@ const ACH = [
   {id:'equip', ch:1, n:['Første utstyrskjøp', 'First equipment bought'], p:() => !!achC('equip') || achFleet(v => Object.values(vget(v, 'equip') || {}).some(Boolean))},
   {id:'l20', ch:1, n:['Én levering over 20 000 kr', 'A landing over NOK 20,000'], p:() => [achBest(), 20000]},
   {id:'t1', ch:1, n:['Ett tonn levert', 'A tonne landed'], p:() => [achKg(), 1000]},
-  {id:'yard', ch:1, n:['Første oppgradering på verftet', 'First upgrade at the yard'], p:() => achFleet(v => ((vget(v, 'boat').holdLv || 0) + (vget(v, 'boat').engLv || 0)) > 0)},
+  {id:'yard', ch:1, n:['Første oppgradering på verftet', 'First upgrade at the yard'], p:() => achFleet(v => ((vget(v, 'boat').holdLv || 0) + (vget(v, 'boat').engLv || 0) + Object.keys(vget(v, 'boat').upg || {}).length) > 0)},
   {id:'crew', ch:1, n:['Første mann hyret', 'First hand hired'], p:() => !!achC('crew') || achFleet(v => (vget(v, 'crew') || []).length > 0)},
   {id:'plant2', ch:1, n:['Levert til et nytt mottak', 'Landed at a new plant'], p:() => [achPorts(), 2]},
   {id:'storm', ch:1, hid:true, n:['Første uvær', 'First rough weather'], h:['Ute i kuling og hjem uten slep.', 'Out in a gale and home without a tow.'], p:() => !!achC('storm')},

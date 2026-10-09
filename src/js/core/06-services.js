@@ -157,6 +157,7 @@ function finishJob(j){
   else if (j.kind === 'repair'){ log('Skroget er reparert.', 'The hull is repaired.'); }
   else if (j.kind === 'eng'){ b.engLv = j.lv; applyVessel(); log('Ny motor montert: ' + BOAT.hp + ' hk, ' + fmt(BOAT.vmax, 1) + ' knop.', 'New engine fitted: ' + BOAT.hp + ' hp, ' + fmt(BOAT.vmax, 1) + ' knots.'); }
   else if (j.kind === 'hull'){ b.foul = 0; log('Skroget er renset på slipp.', 'The hull is cleaned on the slip.'); }
+  else if (j.kind === 'upg'){ b.upg = Object.assign({}, b.upg, {[j.u]:j.lv}); applyVessel(); const st = UPGS[j.u].steps[j.lv - 1]; log('Ombygd: ' + st.no + '.', 'Rebuilt: ' + st.en + '.'); }
   else if (j.kind === 'hold'){ b.holdLv = j.lv; applyVessel(); log('Lasterommet er bygd om: ' + fmt(BOAT.holdCap, 0) + ' kg.', 'The hold is rebuilt: ' + fmt(BOAT.holdCap, 0) + ' kg.'); }
   else if (gearJob(j)){}
   else if (j.kind === 'prep') return;   // a job from an old save: nothing to do
@@ -166,7 +167,7 @@ function finishJob(j){
 // once (Jonas 05.10.2026: «Montering av utstyr og vedlikehold skal ta 30 ekte minutter, og man kan gjøre flere oppgaver samtidig»): 30
 // minutes at GAME_RATE game minutes a minute. Servicing the engine yourself (self) is cheaper and takes twice as long. The work on the
 // quay (rigging, baiting, mending) keeps its own hours, also side by side.
-const YARD_H = 30 * GAME_RATE / 60, YARD_KINDS = ['fit', 'svc', 'hull', 'hold', 'eng', 'repair'];
+const YARD_H = 30 * GAME_RATE / 60, YARD_KINDS = ['fit', 'svc', 'hull', 'hold', 'eng', 'upg', 'repair'];
 const YARD_NOW_NOK = 19;   // the yard's work done at once, for real money (Jonas 05.10.2026; ui/05-phone.js «Ferdig nå»)
 function fitHours(k){ return YARD_H; }
 // a job with no length would never finish and would keep the boat in port for good; a yard job from before (when they took 2 to 16

@@ -52,7 +52,7 @@ function obsIndex(){
     o.id = list.length; o.st = 0; list.push(o);
     for (let j = Math.floor((z0 - pad) / C); j <= Math.floor((z1 + pad) / C); j++) for (let i = Math.floor((x0 - pad) / C); i <= Math.floor((x1 + pad) / C); i++){ const k = i * 1048576 + j; let a = idx.get(k); if (!a) idx.set(k, a = []); a.push(o); } };
   const bridges = BRIDGES.slice(); for (const t of VEC.tiles.values()) for (const q of t.bridges) bridges.push(q);
-  for (const br of bridges){ const o = obsBridge(br); o.piers.forEach(put); o.deck.forEach(put); }
+  for (const br of bridges){ if (bridgeUnderUnit(br)) continue; const o = obsBridge(br); o.piers.forEach(put); o.deck.forEach(put); }
   const box = (q, why) => { if (q.made) return; put({t:1, x:q.x, z:q.z, l:q.l / 2, w:q.w / 2, ux:Math.sin(q.ang), uz:Math.cos(q.ang), why}); };
   for (const q of PIERBOX) box(q, 'pier');
   for (const t of VEC.tiles.values()) for (const q of t.piers) if (!unitCovers(q.x, q.z, 3)) box(q, 'pier');   // not under a harbour unit (it is drawn without them, view3d.js tileStatics)

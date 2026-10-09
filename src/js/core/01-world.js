@@ -340,6 +340,13 @@ function unitCovers(x, z, m){
     if (groundOut(U, lx, lz) <= m || (Math.abs(lx) <= g.basinX && lz >= 0 && lz <= g.basinZ)) return true; }
   return false;
 }
+// a short bridge (under 80 m) that lies under a harbour unit or a site is not there: the unit stands on a filled quay, and a small
+// bridge in the map's data would hang over the plant or the berth (Jonas 08.10.2026). extra(x, z): another place test (view3d.js onSite)
+function bridgeUnderUnit(br, extra){
+  if (br[1] >= 80) return false;
+  for (let i = 4; i + 1 < br.length; i += 2) if (unitCovers(br[i], br[i + 1], 6) || (extra && extra(br[i], br[i + 1]))) return true;
+  return false;
+}
 function portApproach(pt){
   let best = null;
   for (let r = 0.15; r <= 0.7; r += 0.05) for (let a = 0; a < 360; a += 7.5){

@@ -579,9 +579,9 @@ function deckMinute(){
   if (cg) for (const x of S.hold.filter(x => !x.gut && !x.iced && !SPECIES[x.sp].live)){ if (pm <= 0.001) break; const kg = Math.min(x.kg, pm * DECK.gut); moveKg(x, kg, {gut:true}); pm -= kg / DECK.gut; worked += kg; }
   pm += I.sum;   // the gutters ice what they have gutted once the gutting is done
   if (catchIce()) for (const x of S.hold.filter(x => !x.iced && (x.gut || !cg) && !SPECIES[x.sp].live)){
-    if (pm <= 0.001) break; const kg = Math.min(x.kg, pm * DECK.ice, b.ice / 0.3);
+    if (pm <= 0.001) break; const kg = Math.min(x.kg, pm * DECK.ice, b.ice / (0.3 * ((BOAT.fx && BOAT.fx.ice) || 1)));
     if (kg <= 0.01){ if (S.t - (S.lastIceWarn || -1e9) > 120){ log('Tom for is. Fangsten ises ikke.', 'Out of ice. The catch is not being iced.'); S.lastIceWarn = S.t; } break; }
-    moveKg(x, kg, {iced:true}); b.ice -= kg * 0.3; pm -= kg / DECK.ice; worked += kg;
+    moveKg(x, kg, {iced:true}); b.ice -= kg * 0.3 * ((BOAT.fx && BOAT.fx.ice) || 1); pm -= kg / DECK.ice; worked += kg;
   }
   // your own minutes on deck
   if (worked > 0 && (G.me || I.me)) S.deckMe = (S.deckMe || 0) + 1;

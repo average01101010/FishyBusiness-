@@ -85,3 +85,7 @@ Alle kjøpssystemer følger det spilleren eier. Regelen ligger i `buyGate(what)`
 | juksautstyr (pilk, markkroker) | ingenting (juksa følger med fra start) |
 
 Halerne heter bare linehaler, garnhaler og teinehaler (ingen «elektrisk», «hydraulisk» eller 12 V). Linehaler og teinehaler passer på alle båter. Eldre lagringer med den gamle elektriske haleren får linehaler og teinehaler. Et nytt kjøpssystem legger regelen sin i `buyGate` (eller `equipFits` for utstyr som må passe båten) i stedet for å sjekke selv.
+
+## Verftets oppgraderinger (Jonas 09.10.2026)
+
+Verftet bygger om selve båten: lasterom, motor, lugarer, messe og bysse, tørkerom og bad, isolert lasterom, drivstofftank og stabilisering. Aldri fiskeutstyr, liner, garn, teiner, juksa eller haler (de kjøpes i utstyrsbutikken, og haleren følger `buyGate`). Navigasjonsutstyr er elektronikk i utstyrsbutikken. Prisen følger båtens verdi, og hver oppgradering finnes bare der båten har det den bygges på (køyer for lugar, messe og tørkerom). Tallene står i 5.37 i overleveringen.

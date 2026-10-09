@@ -105,7 +105,7 @@ function crewTick(H){
   // the vessel's own log of hours at sea, for the crew page
   S.workLog = (S.workLog || []).concat([atSea ? 1 : 0]).slice(-24);
   const on = crewAboard(H), onIds = new Set(on.map(c => c.id)), has = t => on.filter(c => c.traits.includes(t)).length;
-  const cold = coldPen(H, hs), food = foodScore();
+  const cold = coldPen(H, hs) * ((BOAT.fx && BOAT.fx.cold) || 1), food = foodScore();   // the drying room (UPGS.dry) takes the edge off the cold
   // the rest rule, person by person (core/14-crewlife.js): a broken rule tires them faster and sours the mood, and you hear of it once a day
   const viols = {}; for (const c of S.crew){ const v = restHour(c, onIds.has(c.id)); if (v) viols[c.id] = v; }
   { const ids = Object.keys(viols); if (ids.length && (S.restWarn || -1e9) < S.t - 1440){ S.restWarn = S.t; const who = ids.map(id => crewById(id).name.split(' ')[0]).join(', '), r = REST_RULE[viols[ids[0]]];
@@ -119,7 +119,7 @@ function crewTick(H){
     const here = onIds.has(c.id) && atSea, viol = !!viols[c.id];
     // the share of the hour spent working: a break at sea tires less, but is not rest
     const wm = Object.values(c.wk || {}).reduce((a, m) => a + m, 0), workF = c.wk ? clamp(wm / 60, 0, 1) : 1;
-    c.fatigue = here ? clamp(c.fatigue + (fishing ? 6 : 3) * (0.4 + 0.6 * workF) * (1.4 - 0.16 * c.attr.uth) * (night ? 1.25 : 1) * (viol ? 1.5 : 1), 0, 100) : clamp(c.fatigue - Math.max(8 * (night ? 1.5 : 1), restC), 0, 100);
+    c.fatigue = here ? clamp(c.fatigue + (fishing ? 6 : 3) * (0.4 + 0.6 * workF) * (1.4 - 0.16 * c.attr.uth) * (night ? 1.25 : 1) * (viol ? 1.5 : 1) * ((BOAT.fx && BOAT.fx.fat) || 1), 0, 100) : clamp(c.fatigue - Math.max(8 * (night ? 1.5 : 1), restC), 0, 100);
     if (onIds.has(c.id) && b.status !== 'port') learnHour(c);
     c.wk = {};
     if (here){ c.seaH = (c.seaH || 0) + 1; const k = c.traits.includes('laerevillig') ? 2 : 1;
@@ -134,9 +134,9 @@ function crewTick(H){
     else { tg = 60 + (c.share - c.ask) * 300;
       const earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).reduce((a, e) => a + e[1], 0), expect = c.ask * 6000 * 5;
       if (S.t - (c.hiredT || 0) > 3 * 1440) tg += clamp((earn - expect) / expect * 12, -12, 12); }
-    if (here) tg += (food - 3) * 3;   // the food on board: the last four meals
+    if (here) tg += (food - 3) * 3 + ((BOAT.fx && BOAT.fx.mood) || 0);   // the mess and galley (UPGS.galley)   // the food on board: the last four meals
     tg -= Math.max(0, c.fatigue - 50) * 0.5; tg -= cold * 50 * (here ? 1 : 0.3);
-    if (here && hs > 1.5) tg -= (hs - 1.5) * 10 * (1.2 - 0.12 * c.attr.sjo); if (here && hs > 1.2 && c.traits.includes('sjosyk')) tg -= 15;
+    if (here && hs * ((BOAT.fx && BOAT.fx.sea) || 1) > 1.5) tg -= (hs * ((BOAT.fx && BOAT.fx.sea) || 1) - 1.5) * 10 * (1.2 - 0.12 * c.attr.sjo); if (here && hs > 1.2 && c.traits.includes('sjosyk')) tg -= 15;
     const me = t => c.traits.includes(t) ? 1 : 0; tg += 4 * (has('spokefugl') - me('spokefugl')) + 3 * (has('omsorgsfull') - me('omsorgsfull')) - 2 * (has('grinebiter') - me('grinebiter')); if (me('grinebiter')) tg -= 5;
     tg -= Object.values(c.grudge || {}).reduce((a, v) => a + v, 0) * 5; if (viol) tg -= 8; if (me('olglad') && S.pubE === pubEvening(H)) tg += 6; if (c.cpen) tg -= c.cpen;
     c.morale = clamp(c.morale + (tg - c.morale) * (me('rastlos') ? 0.07 : 0.04), 0, 100);

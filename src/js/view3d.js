@@ -619,7 +619,7 @@ const G3 = (() => {
       const vp = MAPD.byTile.get('view:' + t.k); if (vp && !vp.buf) continue;
       // the pack's piers and slabs under a harbour unit or a rorbu/naust site are left out (a pier through the quay at Engenes, Lauksletta)
       const under = (x, z) => unitCovers(x, z, 3) || onSite(x, z), slabUnder = pts => { let cx = 0, cz = 0; for (const [x, z] of pts){ if (under(x, z)) return true; cx += x; cz += z; } return under(cx / pts.length, cz / pts.length); };
-      const items = [...t.piers.filter(q => !under(q.x, q.z)).map(q => m => pierInto(m, q, t.k)), ...t.slabs.filter(pts => !slabUnder(pts)).map(pts => m => slabInto(m, pts, t.k)), ...t.molos.map((pts, i) => m => stonesOf(TJOB.stones, sm => moundInto(m, pts, (t.tx * 31 + t.ty) * 7919 + i * 104729, false, t.k, sm))), ...t.bridges.map(br => m => bridgeInto(m, br, t.k))];
+      const items = [...t.piers.filter(q => !under(q.x, q.z)).map(q => m => pierInto(m, q, t.k)), ...t.slabs.filter(pts => !slabUnder(pts)).map(pts => m => slabInto(m, pts, t.k)), ...t.molos.map((pts, i) => m => stonesOf(TJOB.stones, sm => moundInto(m, pts, (t.tx * 31 + t.ty) * 7919 + i * 104729, false, t.k, sm))), ...t.bridges.filter(br => !bridgeUnderUnit(br, onSite)).map(br => m => bridgeInto(m, br, t.k))];
       TJOB = {t, m:MB(), items, i:0, ms:0, stones:[]}; return;
     }
   }
@@ -854,7 +854,7 @@ const G3 = (() => {
     const bwLeft = new Set(PIERBOX.filter(q => q.bw).map(q => q.src));
     PIERS.forEach((pr, i) => { if (pr[0] === 1 && bwLeft.has(i)) stonesOf(STONES, sm => moundInto(m, Array.from({length:(pr.length - 1) / 2}, (_, k) => [pr[1 + k * 2] * 1000, pr[2 + k * 2] * 1000]), i * 7919 + 13, true, undefined, sm)); });
     // bridges from OpenStreetMap
-    for (const br of BRIDGES) bridgeInto(m, br);
+    for (const br of BRIDGES) if (!bridgeUnderUnit(br, onSite)) bridgeInto(m, br);
     // lighthouses, lights, beacons and buoys
     for (const mk of SEAMARKS.marks) markInto(m, mk);
     if (typeof FYR !== 'undefined' && FYR) for (const f of FYR) if (inSenja(f[0], f[1])) fyrInto(m, f);   // the register's lighthouses in Senja's square

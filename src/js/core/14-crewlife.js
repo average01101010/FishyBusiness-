@@ -47,7 +47,7 @@ function mealMinute(A){
   if (S.t < M.due) return;
   const ck = A.find(p => p.st === 'kokk');
   if (ck){ const id = ck.c ? ck.c.id : 'me'; if (!M.cook || M.cook.id !== id) M.cook = {id, m:0}; M.cook.m++;
-    if (M.cook.m >= MEAL.cook) serveMeal(ck.c ? clamp(Math.round(ck.c.attr.kokk), 1, 5) : 3, ck.c, !ck.c); return; }
+    if (M.cook.m >= ((BOAT.fx && BOAT.fx.cook) || MEAL.cook)) serveMeal(ck.c ? clamp(Math.round(ck.c.attr.kokk), 1, 5) : 3, ck.c, !ck.c); return; }
   if (S.t >= M.due + MEAL.wait && !M.cook) serveMeal(1, null, false);
 }
 function serveMeal(q, cook, me){
