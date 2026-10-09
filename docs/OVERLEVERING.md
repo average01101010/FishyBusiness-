@@ -3659,6 +3659,26 @@ Målt først i Playwright, med CPU-en strupet 4× og nettet strupet til 10 Mbit/
 
 Rederi-appen har også fått regnskap med lånene (tilbakemelding #9): resultat, hvert lån (restgjeld, rente, terminbeløp, neste trekk, betalte renter i `L.intPaid`, telles fra 09.10.2026) og en balanse med flåtens verdi (`vesselValue`), konto, gjeld og egenkapital.
 
+### 5.45 Søk i kartplotteren (Jonas 09.10.2026)
+
+`ui/03f-search.js`. Forstørrelsesglasset (`#zsearch`) over båtknappen åpner et søkefelt (`#srch`).
+- **Hva som finnes:**
+  - Spillets steder: mottak, verft, butikker, rorbuer og naustet.
+  - Sjøkartets navn: tettsteder, fjorder/sund/bukter, øyer, topper/nes. Det gjelder kjernens `names0` overalt og kartpakkenes `names` per flis.
+  - En posisjon i desimalgrader («70.99 24.87»).
+- Mens feltet er åpent, hentes alle kartpakkene (`chart`) for kysten, tre om gangen. Listen sier hvor langt den har kommet.
+- **Rekkefølge:**
+  1. Navnet selv. Det gjelder også med bestemt form, så «mefjord» finner Mefjorden.
+  2. Navnet begynner på det som er skrevet.
+  3. Et ord i navnet begynner på det.
+  4. Navnet inneholder det.
+  
+  Innenfor hvert trinn kommer spillets steder foran kartnavnene, og nærmeste foran.
+- **Valgt sted:** kartet går dit, med en ring (`srchSvg`) og et kort med «Autonav hit» og «Lagre merke».
+  - «Autonav hit» går til stedets kai. For et tettsted eller en øy går den til nærmeste kai innen 4 km, ellers til punktet (`leiaTo`).
+- Test: `tests/searchtest.py`.
+- Svakt: like navn langs kysten skilles bare ved avstanden fra båten og typen.
+
 ### 5.41 Puben i 3D (Jonas 08.10.2026)
 
 Jonas: «Spilleren trykker på pub og blir dermed sendt inn i puben hvor man sitter ved bardisken i first-person-view. Man skal kunne spinne hjulet som tidligere.» Og: «Kanskje noe som blir et sosialt element.»
