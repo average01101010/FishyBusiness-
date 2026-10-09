@@ -4116,6 +4116,16 @@ Kartrastere i `.npy`-format (over 300 MB) er ikke med. De kan lages på nytt fra
 - Veggen (`NOTEBOOK.wall`, brukt av Rekordfisk-fanen og Naustet-siden) viser alle artene, de ikke fangede som «?». Uten oppgraderingen «vegg» (3 000 kr) er det en bar planke med spiker; rekordene telles likevel.
 - Edvard (`09d-folk.js`) og merket «Storfisken» (torsk over 9 kg) leser fra rekordene.
 - Test: `tests/rectest.py` (erstatter `dreamtest.py`).
-- Neste: 3D-naustet (Blender-rom og førstepersonsscene etter pub-mønsteret) med fisken på veggen.
+- 3D-naustet (5.57) viser rekordene som fisk på veggen.
 
 Gaver av utstyr (`09f-merker.js`) monteres nå med en gang uten verftskø («gaver skal aldri ha ventetid»). Kø-brikken sier «Mannskapet jobber til» når køen bare er mannskapets egne jobber.
+
+### 5.57 Naustet i 3D med trofeveggen (Jonas 09.10.2026: «Kjør på med naustet»)
+
+«Naustet» i skuffen (bare der båten ligger ved fars naust) åpner et rom i førsteperson, bygd etter pub-mønsteret:
+
+- **Modellen:** `tools/harbour/naustinne.py` (Blender, bpy) → `src/data/naustinne.b64` (`<script id="glb-naustinne">` i malen). Lys bakt i toppunktene (skumring gjennom vinduene, en lampe over veggen, en lanterne, en lampe ved benken); ildens andel bakt for seg og flimrer. Delene er egne noder som spillet viser etter oppgraderingene: `roofold`/`roofnew` (tak), `ovn`, `benk`/`benkold`, `vegg`, `room`, `glass`. To bakinger: de nye delene sammen, og de gamle med de nye skjult. `python3 tools/harbour/naustinne.py fast` bygger uten kontrollbilder (`look` bare bildene; `NAUST_SAMPLES` setter prøvene).
+- **Scenen:** `ui/09c-naust3d.js` (`NAUST3D`) er en tilpasset kopi av `PUB3`: eget lite WebGL-lerret, `G3.hold`, se deg rundt med fingeren, trykk på det du vil se. Fiskene på veggen er spillets egne modeller (`glbLoad('fish')`, `tools/fish/fisk.py`), én per art (10, kongekrabbe med), i størrelse etter vekten mot en stor fisk av arten (`lenOf`, 0,4–0,95 m); arter du ikke har fått, er en stiplet etikett med «?». Etikettene er knapper over plakettene (art og kg); trykk på fisken eller etiketten viser vekt, dato, sted, båt og redskap.
+- **Oppgraderingene i rommet:** tak, ovn, benk og vegg kjøpes fra rommet (samme `naustBuy` og `naustWhy` som Naustet-siden). Uten vegg henger ingen fisk der, og trykk på veggen viser rekordtabellen og tilbudet; rekordene telles likevel fra første fisk.
+- **Tilbakefall:** uten WebGL eller modell åpner knappen Naustet-siden som før; «Liste» i rommet åpner den også. Rommet lukkes når båten legger fra.
+- Test: `tests/naust3dtest.py` (3D). Ikke gjort: lyd i rommet (ovnen knitrer ikke ennå).

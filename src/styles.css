@@ -1127,6 +1127,39 @@ body.vplot .depc{display:none}
 .gb-rows{list-style:none;padding:0;margin:8px 0 0} .gb-rows li{padding:6px 0;border-top:1px solid rgba(0,0,0,.08)} .gb-rows i{color:#5b5040}
 #pub3 .pb-gb{margin-top:12px;border-top:1px solid rgba(255,255,255,.12);padding-top:8px} #pub3 .pb-gb h4{margin:0 0 4px} #pub3 .gb-lines button{padding:4px 9px;font-size:12px}
 #pub3 .gb-rows li{border-top-color:rgba(255,255,255,.08)} #pub3 .gb-rows i{color:#e6d3a8}
+#naust3{position:absolute;inset:0;z-index:8;background:#000;overflow:hidden;font-family:var(--sans);touch-action:none}#naust3[hidden]{display:none}
+#naust3 canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#naust3 .pb-lab{position:absolute;inset:0;pointer-events:none}
+#naust3 .pb-lab button{position:absolute;left:0;top:0;pointer-events:auto;border:1px solid rgba(255,226,160,.55);background:rgba(20,14,8,.62);color:#ffe9b8;font:700 12.5px var(--sans);padding:5px 10px;border-radius:14px;white-space:nowrap;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.4);cursor:pointer}
+#naust3 .pb-lab button::after{content:'';position:absolute;left:50%;bottom:-6px;margin-left:-5px;border:5px solid transparent;border-top-color:rgba(255,226,160,.55);border-bottom:0}
+#naust3 .pb-top{position:absolute;top:calc(env(safe-area-inset-top,0px) + 8px);left:8px;right:8px;display:flex;gap:6px;align-items:center}
+#naust3 .pb-t{flex:1;min-width:0;color:#fff3dc;font:700 16px var(--sans);text-shadow:0 1px 4px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#naust3 .pb-t small{display:block;font:500 12px var(--sans);color:#e2cfa8}
+#naust3 .pb-top button{border:1px solid rgba(255,255,255,.25);background:rgba(10,8,6,.6);color:#fff;font:700 13px var(--sans);padding:8px 12px;border-radius:12px;cursor:pointer}
+#naust3 .pb-hint{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);transform:translateX(-50%);background:rgba(10,8,6,.6);color:#f2e6cc;font:600 13px var(--sans);padding:7px 14px;border-radius:14px;pointer-events:none;transition:opacity .6s;white-space:nowrap}
+#naust3 .pb-hint.off{opacity:0}
+#naust3 .pb-panel{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 10px);width:min(94vw,460px);max-height:58%;overflow:auto;background:rgba(28,20,13,.94);color:#f5ead4;border:1px solid rgba(255,220,150,.28);border-radius:16px;box-shadow:0 10px 34px rgba(0,0,0,.55);padding:0 14px 12px}
+#naust3 .pb-panel[hidden]{display:none}
+#naust3 .pb-ph{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;padding:11px 0 6px;background:inherit;font-size:16px;color:#ffe2a6}
+#naust3 .pb-ph button{border:0;background:none;color:#e9d9b8;font-size:20px;cursor:pointer;padding:2px 4px}
+#naust3 .pb-pb p{margin:6px 0;font-size:14px;line-height:1.4}#naust3 .pb-say{font-style:italic;color:#fff2d6}
+#naust3 .pb-why{font-size:12.5px;color:#e8c96a}#naust3 .pb-odds{font-size:11px;opacity:.7}
+#naust3 .pb-bt{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+#naust3 .pb-pb button{border:0;border-radius:11px;padding:9px 13px;font:700 13.5px var(--sans);background:#4a3a2a;color:#fff;cursor:pointer}
+#naust3 .pb-pb button.pri{background:#c9a227;color:#1d1710}#naust3 .pb-pb button:disabled{background:#3a332c;color:#8d857a;cursor:default}
+#naust3 .pb-card{border-top:1px solid rgba(255,220,150,.18);padding:8px 0}#naust3 .pb-card:first-child{border-top:0}
+#naust3 h5{margin:6px 0 4px;font-size:13.5px;color:#ffe2a6}#naust3 ol,#naust3 ul{margin:4px 0;padding-left:20px;font-size:13.5px}
+#naust3 .pb-who{list-style:none;padding:0}#naust3 .pb-who li{padding:6px 0;border-top:1px solid rgba(255,255,255,.08)}#naust3 .pb-who small{color:#cdbb98}
+#naust3 .pb-gr{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}#naust3 .pb-gr button{padding:6px 9px;font-size:12px}
+#naust3 .pb-got{list-style:none;padding:0}#naust3 .pb-got small{color:#bfae8c}
+#naust3 .pb-goal{height:10px;border-radius:5px;background:#3a2f24;overflow:hidden;margin:8px 0 2px}#naust3 .pb-goal div{height:100%;background:linear-gradient(90deg,#c9a227,#e6c862)}
+#naust3 .pb-qs{display:flex;flex-direction:column;gap:6px;margin:8px 0}#naust3 .pb-qs button{text-align:left}#naust3 .pb-qa small{color:#cdbb98}
+#naust3 .pb-gb{margin-top:12px;border-top:1px solid rgba(255,255,255,.12);padding-top:8px} #naust3 .pb-gb h4{margin:0 0 4px} #naust3 .gb-lines button{padding:4px 9px;font-size:12px}
+#naust3 .gb-rows li{border-top-color:rgba(255,255,255,.08)} #naust3 .gb-rows i{color:#e6d3a8}
+#naust3 .pb-lab button{text-align:center;line-height:1.15;padding:3px 8px}#naust3 .pb-lab button b{display:block;font-size:12px}#naust3 .pb-lab button small{display:block;font:600 11px var(--sans);color:#e8c96a}
+#naust3 .pb-lab button.nb3-empty{opacity:.55;border-style:dashed}
+#naust3 .nb3-kg{font:700 26px var(--serif,Georgia,serif);color:#ffe2a6;margin:2px 0}#naust3 .nb3-tbl{width:100%;border-collapse:collapse;font-size:13px}#naust3 .nb3-tbl td{padding:3px 4px;border-bottom:1px solid rgba(255,226,160,.15)}#naust3 .nb3-tbl td:nth-child(2){text-align:right;font-weight:700}
+body.in-naust #dock,body.in-naust #dockFan,body.in-naust #dockInfo,body.in-naust .ov,body.in-naust #hud,body.in-naust #miniPlot,body.in-naust #logbook{display:none!important}
 /* the six lines to a player's boat on its AIS card (ui/10n-hail.js) */
 .hl-lines{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px} .hl-lines button{padding:5px 8px;border-radius:7px;border:1px solid #2c5870;background:#173447;color:#e7f4ee;font:600 12px var(--sans)}
 /* towing between players (ui/10o-ptow.js): the ask on the chart, and its card */

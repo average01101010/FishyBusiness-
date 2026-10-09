@@ -68,7 +68,7 @@ const DOCK = (() => {
     if (p.rorbu) return [restItem(), I('gjestebok', 'oppdrag', 'Gjestebok', 'Guestbook', {page:'gbook'}), S.crew.length || S.ops ? I('arbeid', 'arbeid', 'Mannskap', 'Crew', {page:'arbeid'}) : null, I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'})].filter(Boolean);
     // Father's naust is a home, not a place of trade (Jonas 07.10.2026): rest, the boathouse itself, the crew and the inventory; the
     // shop, the plant and the yard are at their own quays
-    if (berthKind(b) === 'naust') return [restItem(), I('naustup', 'naust', 'Naustet', 'Boathouse', {page:'naustp'}), S.crew.length || S.ops ? I('arbeid', 'arbeid', 'Mannskap', 'Crew', {page:'arbeid'}) : null, I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'})].filter(Boolean);
+    if (berthKind(b) === 'naust') return [restItem(), I('naustup', 'naust', 'Naustet', 'Boathouse', {run:() => { NAUST3D.open(); }}), S.crew.length || S.ops ? I('arbeid', 'arbeid', 'Mannskap', 'Crew', {page:'arbeid'}) : null, I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'})].filter(Boolean);
     // the three places of trade (Jonas 07.10.2026): the plant (core/06c-steder.js portServices) takes the catch and sells ice, bait and fuel,
     // the tackle shop sells gear and electronics, the yard sells and mends boats and sells fuel; each has its own button, and all three have the village
     const sv = portServices(p, berthKind(b));
