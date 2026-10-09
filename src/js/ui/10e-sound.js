@@ -20,7 +20,7 @@
 // half. In the 2D chart the ear is aboard, as before.
 const SNDREF = {eng:12, wash:10, haul:5, reel:4, slap:8, gull:12, crane:18, beep:20, chute:15, pump:6, alarm:8, npc:12, npcBig:30, air:350};
 const SND = (() => {
-  let ac = null, master = null, L = null, started = false, lastIce = null, craneT = 0, beepT = 0, alarmT = 0, EAR = null, semiT = 0;
+  let ac = null, master = null, LP = null, RB = null, dest = null, roomOn = false, roomO = {}, L = null, started = false, lastIce = null, craneT = 0, beepT = 0, alarmT = 0, EAR = null, semiT = 0;
   const FIRES = [];   // the semi-diesel's firings ahead, as performance.now() times (the 3D view puffs black smoke at each)
   const LV = {};   // the levels set at the last tick (for the tests)
   const vol = () => S.settings.sound === false ? 0 : (S.settings.vol == null ? 0.6 : S.settings.vol);
@@ -37,7 +37,7 @@ const SND = (() => {
   const pgain = () => { const g = gain(0), p = ac.createStereoPanner ? ac.createStereoPanner() : null; if (p){ g.connect(p); p.connect(master); } else g.connect(master); return {g, p}; };
   let PINK, WHITE;
   function build(){
-    ac = new (window.AudioContext || window.webkitAudioContext)(); master = gain(0, ac.destination); PINK = noise(3, true); WHITE = noise(2, false); L = {};
+    ac = new (window.AudioContext || window.webkitAudioContext)(); LP = filt('lowpass', 22000, 0.5); LP.connect(ac.destination); master = gain(0, LP); RB = gain(0, ac.destination); PINK = noise(3, true); WHITE = noise(2, false); L = {};
     // the engine: a saw at the firing rate and a square an octave down, a ripple at the rate of the revolutions, through a low-pass
     { const {g, p} = pgain(), f = filt('lowpass', 400, 2.5), am = gain(0.7, f), o1 = osc('sawtooth', 60), o2 = osc('square', 30), g2 = gain(0.35, am), lfo = osc('sine', 12), lg = gain(0.3);
       f.connect(g); o1.connect(am); o2.connect(g2); lfo.connect(lg); lg.connect(am.gain); L.eng = {g, p, f, o1, o2, lfo, lg}; }
@@ -46,6 +46,9 @@ const SND = (() => {
     // the nearest aircraft: pink noise through a low-pass with the propellers' hum, chopped at the blade rate for a helicopter
     { const {g, p} = pgain(), f = filt('lowpass', 600, 0.8), am = gain(0.6, f), o = osc('sawtooth', 82), og = gain(0.12, f), lfo = osc('sine', 0.3), lg = gain(0.05);
       loop(PINK).connect(am); o.connect(og); lfo.connect(lg); lg.connect(am.gain); f.connect(g); L.air = {g, p, f, o, lfo, lg}; }
+    // inside Father's naust (room(), below): the stove's low fire and the rain on the roof, on a bus of their own that the outdoors' low-pass does not take
+    { const g = gain(0, RB), f = filt('lowpass', 380, 0.7); loop(PINK).connect(f); f.connect(g); L.fire = {g, f}; }
+    { const g = gain(0, RB), f = filt('highpass', 1400, 0.5); loop(WHITE).connect(f); f.connect(g); L.roofrain = {g, f}; }
     // the wash and the sea round her
     // (a soft hiss through a band-pass, not the low rumble it was: Jonas 05.10.2026, «Jeg vil ikke at havet skal rumle så masse, heller
     // litt bølgeskvulp bare»; the lapping is single waves, below)
@@ -69,12 +72,40 @@ const SND = (() => {
   }
   const place = (k, a) => { const P = L[k].p; LV[k + 'Pan'] = a.pan; if (P) P.pan.setTargetAtTime(a.pan, ac.currentTime, 0.1); };
   // a one-shot's own panner (the gull, the slap, the beeps, the chute, the alarm)
-  const oneOut = pan => { if (!pan || !ac.createStereoPanner) return master; const p = ac.createStereoPanner(); p.pan.value = pan; p.connect(master); return p; };
+  const oneOut = pan => { const out = dest || master; if (!pan || !ac.createStereoPanner) return out; const p = ac.createStereoPanner(); p.pan.value = pan; p.connect(out); return p; };
   // a burst of noise through a filter, with an attack and a decay (a slap, the chute)
   function burst(type, f, q, peak, dur, att, pan){
     const s = ac.createBufferSource(); s.buffer = PINK; const x = filt(type, f, q), g = gain(0, oneOut(pan)), t = ac.currentTime;
     s.connect(x); x.connect(g); g.gain.linearRampToValueAtTime(peak, t + (att || 0.01)); g.gain.exponentialRampToValueAtTime(0.0005, t + dur);
     s.start(t, Math.random() * 2); s.stop(t + dur + 0.05);
+  }
+  // ---------- inside Father's naust (Jonas 09.10.2026: «Kjør på med lyd i naustet»; ui/09c-naust3d.js) ----------
+  // The sea, the wind and the boats are what they were but through a wall: the outdoors' low-pass closes to 1.2 kHz and they sink under the
+  // room's own sounds. The stove (when it is set up) is a low fire with crackles and now and then a louder pop; the roof drips where it leaks
+  // (before the roof is made tight) and in the rain the roof drums, louder and brighter where it leaks; the timbers creak now and then.
+  function room(on, o){ roomOn = !!on; roomO = o || {}; }
+  function roomTick(){
+    const now = ac.currentTime, v = vol(), up = roomOn && v > 0;
+    LP.frequency.setTargetAtTime(roomOn ? 1200 : 22000, now, 0.35); RB.gain.setTargetAtTime(up ? v * 0.9 : 0, now, 0.3); LV.room = up ? 1 : 0;
+    if (!up){ L.fire.g.gain.setTargetAtTime(0, now, 0.3); L.roofrain.g.gain.setTargetAtTime(0, now, 0.3); return; }
+    const ovn = !!roomO.ovn, tak = !!roomO.tak, rain = precipAt(S.t / 60), wet = rain > 0.15 && airTemp(S.t / 60) >= 1 ? rain - 0.15 : 0;
+    L.fire.g.gain.setTargetAtTime(ovn ? 0.05 * (0.75 + 0.5 * Math.random()) : 0, now, 0.15); LV.fire = ovn ? 1 : 0;
+    L.roofrain.g.gain.setTargetAtTime(wet ? (tak ? 0.05 : 0.11) * wet * 1.5 : 0, now, 0.8); L.roofrain.f.frequency.setTargetAtTime(tak ? 1100 : 1900, now, 0.8); LV.roofrain = wet ? (tak ? 1 : 2) : 0;
+    dest = RB;
+    try {
+      if (ovn){ const n = (Math.random() < 0.75 ? 1 : 0) + (Math.random() < 0.3 ? 1 : 0);
+        for (let i = 0; i < n; i++){ const pop = Math.random() < 0.1; burst('highpass', 1500 + Math.random() * 3500, 0.7, (pop ? 0.13 : 0.02 + Math.random() * 0.05) * (0.7 + 0.6 * Math.random()), pop ? 0.05 : 0.012 + Math.random() * 0.02, 0.002, (Math.random() - 0.5) * 0.5); }
+        if (Math.random() < 0.03) burst('bandpass', 700, 1.2, 0.05, 0.18, 0.01, (Math.random() - 0.5) * 0.4); }   // a log settling
+      if (!tak && Math.random() < (wet ? 0.12 : 0.035)) drip((Math.random() - 0.5) * 1.2);
+      if (Math.random() < 0.006){ const t = now, o = osc('sawtooth', 78 + Math.random() * 30), f = filt('bandpass', 170, 4), g = gain(0, RB);
+        o.connect(f); f.connect(g); o.frequency.exponentialRampToValueAtTime(52, t + 0.7); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.05, t + 0.12); g.gain.exponentialRampToValueAtTime(0.0005, t + 0.7); o.stop(t + 0.8); }
+    } finally { dest = null; }
+  }
+  // a drop falling on the floor: a short falling sine and a tick of noise
+  function drip(pan){
+    const t = ac.currentTime, o = osc('sine', 1500 + Math.random() * 700), g = gain(0, oneOut(pan));
+    o.connect(g); o.frequency.exponentialRampToValueAtTime(600, t + 0.07); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.05, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0005, t + 0.12); o.stop(t + 0.15);
+    burst('bandpass', 2600, 1.5, 0.012, 0.03, 0.001, pan);
   }
   // a gull's cry: a falling, then rising and falling squeal, two or three calls
   function gull(near, pan){
@@ -159,7 +190,7 @@ const SND = (() => {
   }
   function tick(){
     if (!ac || ac.state !== 'running') return;
-    musTick();
+    musTick(); roomTick();
     const b = S.boat, H = S.t / 60, p3 = typeof G3 !== 'undefined' && G3.isActive(), mv = vol() * (p3 ? 1 : 0.6);
     master.gain.setTargetAtTime(mv, ac.currentTime, 0.3); LV.master = mv; if (!mv) return;
     // the ear and the places: the camera in 3D (or what a test sets), else aboard
@@ -275,5 +306,5 @@ const SND = (() => {
   document.addEventListener('pointerdown', () => { if (!started){ if (S && S.settings) start(); } else if (ac && ac.state !== 'running' && ac.state !== 'closed' && !document.hidden) quiet(ac.resume()); }, true);
   document.addEventListener('visibilitychange', () => { if (!ac || ac.state === 'closed') return; quiet(document.hidden ? ac.suspend() : ac.resume()); });
   // testEar / testSrc (for the tests): an ear and the places, as G3.ear and G3.sndSrc give them in 3D
-  return {start, cash, coin, horn, anchorAlarm, FIRES, MUS, get started(){ return started; }, get state(){ return ac ? ac.state : 'none'; }, LV, tick, at:(q, ref, e) => { const k = EAR; EAR = e; const r = at(q, ref); EAR = k; return r; }, testEar:null, testSrc:null};
+  return {start, cash, coin, horn, room, anchorAlarm, FIRES, MUS, get started(){ return started; }, get state(){ return ac ? ac.state : 'none'; }, LV, tick, at:(q, ref, e) => { const k = EAR; EAR = e; const r = at(q, ref); EAR = k; return r; }, testEar:null, testSrc:null};
 })();

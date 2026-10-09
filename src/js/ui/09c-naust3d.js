@@ -219,7 +219,9 @@ const NAUST3D = (() => {
     if (!el) return; const t = el.querySelector('.pb-t'), H = S.t / 60;
     if (t) t.innerHTML = esc(L('Fars naust', 'Father’s boathouse')) + '<small>' + esc(clockStr(H)) + ' · ' + esc(kr(S.cash)) + '</small>';
   }
-  function tick(){ renderTop(); if (!NOTEBOOK.atNaust()){ toast(L('Du har lagt fra.', 'You have cast off.')); close(); } }
+  // the room's own sounds (core in ui/10e-sound.js room): the stove and the roof as they are set up now
+  const sound = () => { if (typeof SND !== 'undefined') SND.room(on, {ovn:naustHas('ovn'), tak:naustHas('tak')}); };
+  function tick(){ renderTop(); sound(); if (!NOTEBOOK.atNaust()){ toast(L('Du har lagt fra.', 'You have cast off.')); close(); } }
   function build(){
     el = document.createElement('div'); el.id = 'naust3'; el.hidden = true;
     el.innerHTML = '<canvas></canvas><div class="pb-lab"></div><div class="pb-top"><div class="pb-t"></div><button data-q="list">' + L('Liste', 'List') + '</button><button data-q="out">' + L('Gå ut', 'Leave') + '</button></div>' +
@@ -248,10 +250,10 @@ const NAUST3D = (() => {
     cam.fov = 1;
     if (typeof G3 !== 'undefined' && G3.hold) G3.hold(true);
     renderTop(); tLast = 0; if (!raf) raf = requestAnimationFrame(frame);
-    return true;
+    sound(); return true;
   }
   function close(){
-    if (!on) return; on = false; if (el) el.hidden = true; document.body.classList.remove('in-pub'); panel(null);
+    if (!on) return; on = false; sound(); if (el) el.hidden = true; document.body.classList.remove('in-pub'); panel(null);
     if (typeof G3 !== 'undefined' && G3.hold) G3.hold(false);
     if (typeof renderActs === 'function') renderActs();
   }

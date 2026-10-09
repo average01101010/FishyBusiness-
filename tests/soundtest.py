@@ -66,6 +66,11 @@ async def main():
         mu = await pg.evaluate("""(() => { S.settings.sound = false; S.settings.music = 0.35; SND.tick(); const on = {lv:SND.LV.music, chord:!!SND.MUS.chord, out:!!SND.MUS.out};
           document.querySelector('[data-pa=mus][data-v="0"]').click(); SND.tick(); return {on, off:SND.LV.music, buttons:document.querySelectorAll('[data-pa=mus]').length}; })()""")
         check(mu['on']['lv'] > 0 and mu['on']['chord'] and mu['off'] == 0 and mu['buttons'] == 4, 'musikken spiller med egen styrke (også med lydeffektene av), og Av i Innstillinger gjør den stille', mu)
+        # Father's naust (09.10.2026): inside, the outdoors goes through a wall (the low-pass closes) and the stove and the roof have sounds of their own
+        ro = await pg.evaluate("""(() => { S.settings.sound = true; S.settings.vol = 0.6; const r = {}; SND.testEar = null; SND.testSrc = null;
+          SND.room(true, {ovn:true, tak:false}); SND.tick(); r.on = {room:SND.LV.room, fire:SND.LV.fire}; SND.room(true, {ovn:false, tak:true}); SND.tick(); r.cold = {fire:SND.LV.fire};
+          SND.room(false); SND.tick(); r.off = SND.LV.room; return r; })()""")
+        check(ro['on']['room'] == 1 and ro['on']['fire'] == 1 and ro['cold']['fire'] == 0 and ro['off'] == 0, 'i naustet har ovnen og taket egne lyder, og de er borte utenfor', ro)
         print('errors:', errs[:5])
         await b.close()
 
