@@ -13,7 +13,7 @@ function applyView(){
   const h = MAP_H / view.z, w = h * (r.width / r.height);
   view.cx = clamp(view.cx, MAPB.x0, MAPB.x1); view.cy = clamp(view.cy, MAPB.y0, MAPB.y1);
   svg.setAttribute('viewBox', (view.cx - w / 2) + ' ' + (view.cy - h / 2) + ' ' + w + ' ' + h);
-  if (window.chartReady && document.body.classList.contains('vplot')){ if (!chartPan()) followChart(); clearTimeout(chartTimer); chartTimer = setTimeout(() => paintChart(1), 160); }
+  if (window.chartReady && document.body.classList.contains('vplot')){ CT.moved = performance.now(); if (!chartPan()) followChart(); clearTimeout(chartTimer); chartTimer = setTimeout(() => paintChart(1), 160); }
   view.px = r.height / h;
   // ui/03c-heat.js, loaded after this file: at most every 100 ms while the view moves (it was drawn with a blur at every move)
   if (window.heatReady && !heatT) heatT = setTimeout(() => { heatT = 0; heatPaint(); }, 100);
@@ -52,7 +52,7 @@ function paintChart(scale){
   if (chartCv.width !== W) chartCv.width = W; if (chartCv.height !== H) chartCv.height = H;
   CT.v = V;
   // the packs under the view and half a view round it are asked for, each once; the chart is painted again when they come
-  if (lv) chartWant(x0 - ww / 2, y0 - hh / 2, x0 + ww * 1.5, y0 + hh * 1.5);
+  if (lv) chartWant(V);
   if (!lv) chartWhole(V);
   else { const key = [V.kr.toPrecision(10), lv, V.fish, V.night, V.sd].join('|'); if (key !== CT.key){ CT.key = key; CT.tiles.clear(); CT.job = []; } }
   chartVectors(V);
@@ -95,10 +95,11 @@ function chartCompose(V, tiles, budget){
   if (CT.vec) ctx.drawImage(CT.vec, Math.round(CT.vsh[0]), Math.round(CT.vsh[1]));
   chartCv.style.transform = ''; chartCv.dataset.v = [view.cx, view.cy, view.z, V.r.width, V.r.height].join(',');
 }
-// the queued tiles, about 8 ms a frame (a missing one coarse, a coarse one fine); then the view is composed again
+// the queued tiles, about 8 ms a frame while the chart is moved and 16 ms when it lies still (feedback #55: the chart came slowly; nothing
+// else is drawn while it is up) (a missing one coarse, a coarse one fine); then the view is composed again
 function chartWork(){
   CT.raf = 0; const V = CT.v; if (!V || !V.lv || !CT.job.length || !document.body.classList.contains('vplot')) return;
-  const until = performance.now() + 8; let did = 0;
+  const until = performance.now() + (performance.now() - (CT.moved || 0) < 400 ? 8 : 16); let did = 0;
   while (CT.job.length && (performance.now() < until || !did)){
     const [i, j] = CT.job.shift(), tk = i + ',' + j, t = CT.tiles.get(tk); if (t && t.q === 1) continue;
     CT.tiles.set(tk, chartTile(V, i, j, t ? 1 : 4)); did++;
@@ -117,18 +118,63 @@ function chartTile(V, i, j, q){
   const TS = CT.TS, n = TS / q, k = V.kr * q, img = new ImageData(n, n), st = {prov:false};
   chartRaster(img.data, n, n, i * TS * V.kr, j * TS * V.kr, k, k, V, st);
   const cv = document.createElement('canvas'); cv.width = cv.height = n; cv.getContext('2d').putImageData(img, 0, 0);
-  return {cv, q, prov:st.prov};
+  // the packs it waited for (its box and a kilometre round it): it is painted again when they have all come, not at every pack that
+  // comes (feedback #55); a tile at the edge of the detail, with no pack to wait for, is not painted again
+  const e = TS * V.kr, wait = st.prov ? mapPacksIn('sim', i * e - 1, j * e - 1, (i + 1) * e + 1, (j + 1) * e + 1).filter(pk => !pk.buf) : null;
+  return {cv, q, prov:!!(wait && wait.length), wait};
 }
-// the packs a view needs, each asked for once; when they come the tiles painted without them go, and the chart is painted again
-function chartWant(x0, y0, x1, y1){
-  for (const kind of ['sim', 'chart']) for (const pk of mapPacksIn(kind, x0, y0, x1, y1)){
-    if (pk.buf || CT.want.has(pk)) continue; CT.want.add(pk);
-    mapLoad(pk).then(() => { CT.want.delete(pk); chartCame(); }, e => { CT.want.delete(pk); console.error(e); });
+// The packs a view needs (under it and half a view round it), each asked for once; when they come the tiles painted without them go,
+// and the chart is painted again. Feedback #55 (09.10.2026, «kartet laster tregt»): on a first open of a region all its packs (38 at
+// 50 km, 0.2-0.4 MB each) were asked for at once and came late together, 27 s with the CPU slowed 4x against 7 s of painting. Now they are
+// fetched a few at a time, those under the view first and the nearest its middle first, so the chart under the eyes fills in first; a
+// small line on the chart says how far it has come. A route's packs are fetched to the device beforehand when the chart has nothing to
+// fetch (chartWarm), so the chart along it comes from the device.
+const CHQ = {q:[], n:0, max:6, tot:0, done:0, warm:[], el:null};
+function chartWant(V){
+  const {x0, y0, ww, hh} = V, cx = x0 + ww / 2, cy = y0 + hh / 2, T = MAPD.man.tile;
+  for (const kind of ['sim', 'chart']) for (const pk of mapPacksIn(kind, x0 - ww / 2, y0 - hh / 2, x0 + ww * 1.5, y0 + hh * 1.5)){
+    if (pk.buf || CT.want.has(pk)) continue; CT.want.add(pk); CHQ.q.push(pk); CHQ.tot++;
   }
+  const pr = pk => { const mx = (pk.tile[0] + 0.5) * T, my = (pk.tile[1] + 0.5) * T, see = mx + T / 2 > x0 && mx - T / 2 < x0 + ww && my + T / 2 > y0 && my - T / 2 < y0 + hh; return (see ? 0 : 1e6) + Math.hypot(mx - cx, my - cy) - (pk.kind === 'chart' ? 1 : 0); };
+  CHQ.q.sort((a, b) => pr(a) - pr(b)); chartPump();
 }
-function chartCame(){
-  clearTimeout(CT.came);
-  CT.came = setTimeout(() => { for (const [tk, t] of CT.tiles) if (t.prov) CT.tiles.delete(tk); if (document.body.classList.contains('vplot')){ paintChart(1); scheduleStatic(); } }, 120);
+function chartPump(){
+  while (CHQ.n < CHQ.max && CHQ.q.length){
+    const pk = CHQ.q.shift(); CHQ.n++;
+    mapLoad(pk).then(() => { CT.want.delete(pk); chartCame(pk); }, e => { CT.want.delete(pk); console.error(e); }).finally(() => { CHQ.n--; CHQ.done++; chartPump(); chartLoadLine(); });
+  }
+  if (!CHQ.q.length && !CHQ.n){ CHQ.tot = CHQ.done = 0; chartWarmNext(); }
+  chartLoadLine();
+}
+function chartLoadLine(){
+  const el = CHQ.el || (CHQ.el = Object.assign(document.createElement('div'), {id:'chload'})); if (!el.parentNode) svg.parentNode.appendChild(el);
+  const on = CHQ.tot > 0 && CHQ.done < CHQ.tot; el.hidden = !on;
+  if (on) el.textContent = gL('Laster sjøkart · ', 'Loading the chart · ') + CHQ.done + gL(' av ', ' of ') + CHQ.tot;
+}
+// the packs along a route (03b-route.js routeChanged), fetched to the device one at a time while the chart has nothing else to fetch
+function chartWarm(wps){
+  if (!MAPD.man || !wps || wps.length < 2) return; const seen = new Set(CHQ.warm);
+  for (let i = 1; i < wps.length; i++){ const a = wps[i - 1], b = wps[i], n = Math.ceil(dist(a, b) / 10);
+    for (let k = 0; k <= n; k++){ const x = a.x + (b.x - a.x) * k / n, y = a.y + (b.y - a.y) * k / n;
+      for (const kind of ['chart', 'sim']) for (const pk of mapPacksIn(kind, x - 3, y - 3, x + 3, y + 3)){ const f = pk.of || pk; if (!f.buf && !seen.has(f)){ seen.add(f); CHQ.warm.push(f); } } } }
+  if (!CHQ.q.length && !CHQ.n) chartWarmNext();
+}
+function chartWarmNext(){
+  if (CHQ.warmOn) return; const pk = CHQ.warm.shift(); if (!pk) return; CHQ.warmOn = true;
+  idbDo('readonly', s => s.count(pk.hash)).then(n => n || pk.buf ? null : mapFetch(pk)).catch(() => {}).then(() => { CHQ.warmOn = false; if (!CHQ.q.length && !CHQ.n) chartWarmNext(); });
+}
+function chartCame(pk){
+  // a pack in the margin round the view changes nothing on the screen: the chart is painted again only for one under the view
+  const V = CT.v, T = MAPD.man.tile;
+  if (pk && pk.tile && V && ((pk.tile[0] + 1) * T < V.x0 || pk.tile[0] * T > V.x0 + V.ww || (pk.tile[1] + 1) * T < V.y0 || pk.tile[1] * T > V.y0 + V.hh)) return;
+  // while the packs come one after another, the chart is painted again at most every 400 ms (each paint draws the coast anew)
+  // A depth pack (sim) changes only the tiles that waited for it; a chart pack (the coast and the names) the whole paint
+  if (!pk || pk.kind !== 'sim') CT.cameAll = true;
+  if (CT.came) return; const wait = Math.max(120, (CT.cameT || 0) + 400 - performance.now());
+  CT.came = setTimeout(() => { CT.came = 0; CT.cameT = performance.now(); const all = CT.cameAll; CT.cameAll = false;
+    for (const [tk, t] of CT.tiles) if (t.prov && t.wait.every(pk => pk.buf)) CT.tiles.delete(tk);
+    if (!document.body.classList.contains('vplot')) return;
+    if (all || !CT.v || !CT.v.lv){ paintChart(1); scheduleStatic(); } else chartCompose(CT.v, true, 40); }, wait);
 }
 // a block of the rule layer as a 40 x 40 picture (null when it has nothing to show), kept with the block
 const RU_CV = new WeakMap();
@@ -139,12 +185,17 @@ function ruLayerCanvas(A){
   c.putImageData(im, 0, 0); const out = any ? cv : null; RU_CV.set(A, out); return out;
 }
 // the coast, the graticule and the fjord line for the view, on their own canvas
-function chartVectors(V){
+// (again: the coast and graticule of the last paint of the same view are kept, on CT.cb, and only the rule layer and the fjord lines are
+// drawn over them anew: the rule layer's blocks come over several paints, and the region's coast took 130 ms a paint, feedback #55)
+function chartVectors(V, again){
   const {W, H, x0, y0, kx, ky, dpr} = V, fish = V.fish || V.night;
   const cv = CT.vec || (CT.vec = document.createElement('canvas')); if (cv.width !== W) cv.width = W; if (cv.height !== H) cv.height = H; CT.vsh = [0, 0];
-  const ctx = cv.getContext('2d'); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, H);
-  chartCoast(ctx, x0, y0, kx, ky, W, H, dpr, fish);
-  chartGrid(ctx, x0, y0, kx, ky, W, H, dpr, fish);
+  const cb = CT.cb || (CT.cb = document.createElement('canvas'));
+  if (!again || cb.width !== W || cb.height !== H){ if (cb.width !== W) cb.width = W; if (cb.height !== H) cb.height = H;
+    const bc = cb.getContext('2d'); bc.setTransform(1, 0, 0, 1, 0, 0); bc.clearRect(0, 0, W, H);
+    chartCoast(bc, x0, y0, kx, ky, W, H, dpr, fish);
+    chartGrid(bc, x0, y0, kx, ky, W, H, dpr, fish); }
+  const ctx = cv.getContext('2d'); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, W, H); ctx.drawImage(cb, 0, 0);
   // the rule layer (R3, 03e-rules.js ruLayerBlock): red where your boat may not fish with her gear today, yellow where there are
   // limits, from a 250 m grid drawn soft over the sea; the blocks not worked out yet (25 ms a paint) come in the next paints
   const xb = x0 + W * kx, yb = y0 + H * ky;
@@ -155,7 +206,7 @@ function chartVectors(V){
       const A = ruLayerBlock(bx, by, q, budget); if (!A){ miss = true; continue; }
       const cv = ruLayerCanvas(A); if (cv) ctx.drawImage(cv, (bx * 10 - x0) / kx, (by * 10 - y0) / ky, 10 / kx, 10 / ky); }
     ctx.restore();
-    if (miss){ clearTimeout(CT.ruT); CT.ruT = setTimeout(() => { if (document.body.classList.contains('vplot')) paintChart(1); }, 60); }
+    if (miss){ clearTimeout(CT.ruT); CT.ruT = setTimeout(() => { if (!document.body.classList.contains('vplot')) return; if (CT.v === V){ chartVectors(V, true); chartCompose(V, V.lv > 0, 0); } else paintChart(1); }, 60); }
   }
   // the fjord lines for coastal cod along the coast (høstingsforskriften vedlegg 4, rules.json): dashed violet, as regulation lines
   // are drawn on official charts, named when zoomed in

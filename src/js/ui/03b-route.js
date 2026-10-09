@@ -32,7 +32,7 @@ function draftRedo(){ const h = rhist(); if (!h.r.length) return false; h.u.push
 function draftForget(all){ if (all) for (const k in RHIST) delete RHIST[k]; else { const h = rhist(); h.u.length = 0; h.r.length = 0; } }
 // the draft can be edited while the boat lies in port or still at sea, and no departure is waiting
 const canEditDraft = () => ['port', 'idle'].includes(S.boat.status) && !(S.plan && S.plan.depAt) && !(S.plan && S.boat.status !== 'idle');
-function routeChanged(){ hzCache.k = ''; panelDirty = true; renderDyn(); renderRouteTools(); }
+function routeChanged(){ hzCache.k = ''; panelDirty = true; renderDyn(); renderRouteTools(); try { chartWarm(S.draft && S.draft.length > 1 ? [S.boat.pos, ...S.draft] : S.plan && S.plan.wps); } catch (e){} }
 
 // --- the floating undo and redo buttons over the zoom buttons on the chart
 let rtKey = '';

@@ -3622,6 +3622,29 @@ Gardinene sto på en linje med små folder langs den magnetiske øst-vest-retnin
 - **Underkanten bølger**, og gardinene kommer og går i biter langs lengden, så buene slutter på himmelen.
 - **Test:** `aurorashot` (OK). Bilder fra fire retninger før og etter ble sendt til Jonas.
 
+### 5.43 Kartplotteren laster raskere (tilbakemelding #55, 09.10.2026)
+
+Målt først i Playwright, med CPU-en strupet 4× og nettet strupet til 10 Mbit/s og 40 ms. Måleskriptet ligger ikke i repoet.
+- Første åpning av en region (120 km høy) tok 32–35 s. Det meste var ikke nedlastingen (38 pakker, rett under 0,9 MB den største), men hovedtråden:
+  - Hver pakke som kom, tegnet hele kartet på nytt, også kysten (`chartVectors`, 130–350 ms i regionen i programvare).
+  - Regellaget tegnet hele kartet på nytt hvert 60. ms til alle blokkene var regnet ut.
+- **Endret** (`ui/03-map.js`):
+  - Pakkene hentes seks om gangen, de under bildet først og nærmest midten først (`CHQ`, `chartWant`, `chartPump`).
+  - En pakke i margen tegner ingenting på nytt. En dybdepakke (`sim`) tegner bare flisene som ventet på den (`t.wait`). En kartpakke (kysten) tegner hele bildet, høyst hvert 400. ms.
+  - Regellaget tegnes over en lagret kopi av kysten og rutenettet (`CT.cb`, `chartVectors(V, true)`), så kysten tegnes ikke på nytt for hver runde.
+  - Flisene får 16 ms per bilde når kartet ligger i ro (8 ms mens det flyttes).
+  - Linja «Laster sjøkart · n av m» øverst i kartet (`#chload`) viser hvor langt hentingen er kommet.
+  - En rute (`routeChanged`) henter pakkene langs seg til enheten (IndexedDB) én om gangen når kartet ikke henter noe annet (`chartWarm`). De holdes ikke i minnet.
+- **Etter endringen**, samme måling:
+  - Det synlige bildet hadde alle pakkene sine etter 21–26 s, mot 25–26 s før.
+  - Kysten ble tegnet 10 ganger, mot 46.
+  - Hele regionen var ferdig etter 30–45 s. Variasjonen fra kjøring til kjøring er stor, så forskjellen fra før er usikker. Seks pakker om gangen kan gjøre selve nedlastingen litt tregere enn alt på én gang.
+- **Svakt:**
+  - Testmaskinen tegner lerretet i programvare. Der koster `drawImage` og kysten langt mer enn på et nettbrett med GPU, så tallene sier lite om nettbrettet.
+  - Fliser i en Web Worker og lagring av ferdige fliser er ikke gjort:
+    - `chartRaster` leser kartpakkene gjennom globale lesere, så en Worker måtte fått sine egne kopier av pakkene.
+    - Flisene er knyttet til zoomen, som varierer fritt, så lagrede fliser ville sjelden blitt brukt igjen.
+
 ### 5.41 Puben i 3D (Jonas 08.10.2026)
 
 Jonas: «Spilleren trykker på pub og blir dermed sendt inn i puben hvor man sitter ved bardisken i first-person-view. Man skal kunne spinne hjulet som tidligere.» Og: «Kanskje noe som blir et sosialt element.»
