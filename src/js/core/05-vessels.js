@@ -292,6 +292,7 @@ function vesselStep(H){
   }
   if (b.status === 'unmooring'){ if (S.t >= b.castUntil){ const pid = b.port, q = quayPos(b), kind = berthKind(b); b.pos = {x:q.x, y:q.y}; b.status = 'sailing'; b.port = null; helmCastDone(pid, kind); } return; }
   if (b.status === 'port'){ if (b.landWait && b.port === b.landWait && mottakOpen(H)){ const pid = b.landWait; b.landWait = null; opsLanded(pid); } return; }
+  if (b.status === 'ptow'){ if (typeof ptowStep === 'function') ptowStep(); return; }   // towed by another player (ui/10o-ptow.js)
   if (b.status === 'tow'){ towStep(H); return; }        // the rescue boat comes and tows (rescue)
   const W = windAt(H), hs = hsAt(b.pos, H);
   if (['sailing', 'fishing', 'idle'].includes(b.status)) stabTick(H);
@@ -452,7 +453,8 @@ function dock(pid, berth){
   if (port.rorbu) rorbuSite(port);   // its berth is found before the boat is put there (07d-rorbu.js)
   b.anch = null; b.status = 'port'; b.port = pid; b.v = 0; b.fishUntil = null; b.pos = {x:port.p.x, y:port.p.y}; b.moorT = S.t; b.shift = b.fueling = b.after = null;
   b.berth = berth === 'naust' && quayFace(pid, 'naust') ? 'naust' : 'main';   // a route can end at Father's naust (07c-naust.js)
-  if (typeof achVisitPort === 'function') achVisitPort(pid);   // «Havner besøkt» and the rest (09f-merker.js)
+  if (typeof achVisitPort === 'function') achVisitPort(pid);
+  if (typeof PTOW !== 'undefined') PTOW.docked(pid);   // moored with another player's boat in tow: the tow is done (ui/10o-ptow.js)   // «Havner besøkt» and the rest (09f-merker.js)
   const wasOps = S.plan && S.plan.ops;
   S.plan = null; S.trail = [{x:port.p.x, y:port.p.y, port:pid}];
   if (b.berth === 'naust') log('Fortøyd ved naustet i ' + port.name + '.', 'Moored at the boathouse in ' + port.name + '.');

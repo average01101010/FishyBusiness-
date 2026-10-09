@@ -640,6 +640,36 @@ def main():
         print(ok(H['horn'] == 'ok' and H['again'] == 'wait' and H['hornFar'] == 'far' and H['line5'] == 'ok' and H['badk'] == 'no' and H['self'] == 'no' and H['guest'] == 'no' and H['stale'] == 'far'
                  and H['gotB'] == [(-1, 'Sjøbris', True, False)] and H['gotC'] == [(2, True)] and H['since'] == [] and H['table']),
               'hails: the horn within 1 nm and a line within 5 nm of a fresh boat, once a minute; the other gets the sender, the boat and the friendship; no guest, no table open', H)
+        # towing between players (20261009260000_tows.sql): an ask seen near and not far, taken once, hooked only within 200 m, done in a
+        # harbour with the game's pay at most once a day for the same player; a guest can do nothing; no table open
+        sql("""delete from public.presence where player_id in ('user_01FRA', 'user_01FRB', 'user_01FRC', 'user_01FRD');
+          insert into public.presence (player_id, boat, vtype, x, y, st) values ('user_01FRA', 'Sjøbris', 'trebat', 900, 300, 'out'), ('user_01FRB', 'Havbris', 'trebat', 905, 300, 'sailing'),
+            ('user_01FRC', 'Nordlys', 'trebat', 990, 300, 'sailing')""")
+        T = {}
+        tid = int(sql("select public.tow_ask(900, 300)", A, 'authenticated'))
+        T['seenB'] = [o['id'] for o in json.loads(sql("select public.tow_open(905, 300, 55)", B, 'authenticated'))] == [tid]
+        T['farC'] = json.loads(sql("select public.tow_open(990, 300, 55)", C, 'authenticated')) == []
+        T['ownA'] = json.loads(sql("select public.tow_open(900, 300, 55)", A, 'authenticated')) == []
+        T['guest'] = sql("select coalesce(public.tow_ask(1, 1)::text, 'null')", GU, 'authenticated') + '/' + sql("select public.tow_take(%d)" % tid, GU, 'authenticated')
+        T['take'] = sql("select public.tow_take(%d)" % tid, B, 'authenticated'); T['take2'] = sql("select public.tow_take(%d)" % tid, D, 'authenticated')
+        T['hookFar'] = sql("select public.tow_hook(%d)" % tid, B, 'authenticated')
+        sql("update public.presence set x = 900.1, at = now() where player_id = 'user_01FRB'")
+        T['hook'] = sql("select public.tow_hook(%d)" % tid, B, 'authenticated')
+        mA = json.loads(sql("select public.tow_mine()", A, 'authenticated')); T['mineA'] = [mA['role'], mA['st'], mA['other']['boat']]
+        T['bad'] = json.loads(sql("select public.tow_done(%d, 'fin snes')" % tid, B, 'authenticated'))['ok']
+        T['done'] = json.loads(sql("select public.tow_done(%d, 'finnsnes')" % tid, B, 'authenticated'))
+        mA = json.loads(sql("select public.tow_mine()", A, 'authenticated')); T['mineA2'] = [mA['st'], mA['port']]
+        # the same pair again the same day: done, but not paid
+        t2 = int(sql("select public.tow_ask(900, 300)", A, 'authenticated')); sql("select public.tow_take(%d)" % t2, B, 'authenticated'); sql("select public.tow_hook(%d)" % t2, B, 'authenticated')
+        T['done2'] = json.loads(sql("select public.tow_done(%d, 'finnsnes')" % t2, B, 'authenticated'))
+        # a helper gives it back: open again
+        t3 = int(sql("select public.tow_ask(900, 300)", A, 'authenticated')); sql("select public.tow_take(%d)" % t3, B, 'authenticated'); sql("select public.tow_cancel(%d)" % t3, B, 'authenticated')
+        T['back'] = [o['id'] for o in json.loads(sql("select public.tow_open(905, 300, 55)", B, 'authenticated'))] == [t3]
+        T['table'] = sql("select * from public.tows", A, 'authenticated', expect_err=True)[0]
+        print(ok(T['seenB'] and T['farC'] and T['ownA'] and T['guest'] == 'null/no' and T['take'] == 'ok' and T['take2'] == 'taken' and T['hookFar'] == 'far' and T['hook'] == 'ok'
+                 and T['mineA'] == ['needer', 'tow', 'Havbris'] and T['bad'] is False and T['done'] == {'ok': True, 'pay': True} and T['mineA2'] == ['done', 'finnsnes']
+                 and T['done2'] == {'ok': True, 'pay': False} and T['back'] and T['table']),
+              'towing between players: an ask seen near, taken once, hooked within 200 m, done in a harbour, paid once a day for the same player, handed back; no guest, no table open', T)
     finally:
         run(*as_pg([os.path.join(BIN, 'pg_ctl'), '-D', data, '-m', 'immediate', 'stop']))
         shutil.rmtree(tmp, ignore_errors=True)

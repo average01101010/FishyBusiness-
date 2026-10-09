@@ -123,7 +123,8 @@ const DOCK = (() => {
     const work = (S.crew.length || S.ops) && I('arbeid', 'arbeid', 'Mannskap', 'Crew', {page:'arbeid'});
     const b = S.boat, beh = I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'});   // no «Hjem» (the user's wish 02.10.2026: Autonav to the harbour, or «Returner samme vei» in the plotter)
     const nav = I('nav', 'nav', 'Auto-nav', 'Auto-nav', {run:autoNav});
-    const tut = typeof HAIL !== 'undefined' ? HAIL.dockItem(I) : null;   // another player's boat within 1 nm (ui/10n-hail.js)
+    const tut = typeof HAIL !== 'undefined' ? HAIL.dockItem(I) : null;
+    const ptow = typeof PTOW !== 'undefined' ? PTOW.dockItem(I) : null;   // «Ta slep» by a player's broken-down boat (ui/10o-ptow.js)   // another player's boat within 1 nm (ui/10n-hail.js)
     if (b.status === 'idle'){
       const s = nearSet(b.pos, 0.3), nb = nearestBuoy(), ch = setChoices();
       const haul = s ? (s.kind === 'line' ? I('taopp', 'taopp', 'Ta opp', 'Haul', {act:'ghaul', data:{id:s.id}, pri:true}) : I('taopp', 'taopp', 'Ta opp', 'Haul', {menu:'taopp', pri:true}))
@@ -137,7 +138,7 @@ const DOCK = (() => {
       return [I('jukse', 'jukse', 'Jukse', 'Jig', {menu:'jukse', pri:!s}),
         I('settut', 'settut', 'Sett ut', 'Set', {menu:'settut', off:rigJig() ? [L('Båten er rigget for juksa. Rigg om til line, garn eller teiner under Beholdning.', 'The boat is rigged for jigging. Re-rig for line, nets or pots under Inventory.')] : !ch.length && [S.pgear && (S.pgear.nets.length || S.pgear.lines.hyse.n || S.pgear.lines.bank.n || S.pgear.pots.small || S.pgear.pots.big) ? L('Redskapet om bord er ikke klart: line må egnes, og teiner trenger agn og blåsesett.', 'The gear aboard is not ready: line must be baited, and pots need bait and buoy sets.') : L('Du har ikke garn, line eller teiner om bord.', 'You have no nets, line or pots aboard.')]}),
         // by a quay with no buoy near, «Fortøy» takes the place of the greyed «Ta opp», so the row stays five wide on a phone
-        s || !moor ? haul : null, moor, nav, tut, anc, crew, work, beh].filter(Boolean);
+        ptow, s || !moor ? haul : null, moor, nav, tut, anc, crew, work, beh].filter(Boolean);
     }
     if (b.status === 'fishing' && b.gop) return [I('gstop', 'stopp', 'Stopp arbeidet', 'Stop the work', {act:'gstop'}), work, beh].filter(Boolean);
     if (b.status === 'fishing') return [I('stopfish', 'stopp', 'Stopp', 'Stop', {act:'stopfish'}),

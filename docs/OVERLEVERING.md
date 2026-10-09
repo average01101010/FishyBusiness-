@@ -3817,6 +3817,31 @@ Nå tar `vecPrune` alltid med midten av kartplotteren når den er åpen. Kontrol
   - En ferdig jobb på sjøen (`workDone`).
 - **Test:** `seaworktest`.
 
+### 5.55 Slep mellom spillere (Jonas 09.10.2026: belønning «Kanskje 25000?»)
+
+- **Den som trenger hjelp** (båten driver, har motorstopp eller står på grunn):
+  - Redning-appen har kortet «Spør om slep» (`PTOW.card4phone`, `ui/10o-ptow.js`).
+  - Spørsmålet sendes fra stedet der båten ligger (`tow_ask`), og ventetiden vises.
+  - Når noen tar det, kommer en melding.
+  - Når slepet er festet, får båten status `ptow`. Den ligger 50 m bak hjelperen og fortsetter langs hennes kurs mellom rapportene (`ptowStep`, en gren i `vesselStep`).
+  - Når hjelperen fortøyer, legger båten seg i den havna (`dock`). Slepet er gratis.
+  - Tar ingen spørsmålet innen 20 ekte minutter, eller kommer ikke den som tok det innen 20 minutter, avlyses det og redningsskøyta tilkalles (`rescue(true)`).
+  - Starter motoren igjen av seg selv, avlyses spørsmålet.
+- **Hjelperen:**
+  - Spørsmål innenfor 30 nm hentes hvert 30. sekund (`tow_open`). De står som røde trekanter «Trenger slep» i kartet, og det kommer én melding per spørsmål.
+  - Trykk på trekanten gir kortet med «Hjelp» (`tow_take`), og Autonav går dit.
+  - Når båten ligger stille innenfor 150 m, kommer «Ta slep» blant knappene (`tow_hook`). Serveren sjekker selv at båtene er innenfor 200 m.
+  - Under slep er farten begrenset til 5,5 kn, og drivstofforbruket er ×1,5, som på sleperturene (`ptowTowing` i `speedCap`/`fuelLph`).
+  - Når hjelperen fortøyer i en havn (`PTOW.docked` fra `dock`), er jobben gjort. Spillet betaler 25 000 kr når serveren tillater det: én gang i døgnet for samme spiller, og høyst tre betalte slep i døgnet, så to venner ikke kan tjene på å late som.
+  - Merket «Slept andre spillere» har trinnene 1–20.
+  - Hjelperen kan «Gi fra seg» slepet. Da åpnes det for andre igjen.
+- **Skyen:** `supabase/migrations/20261009260000_tows.sql`.
+  - Tabellen `tows`, som er stengt for spillerne.
+  - Funksjonene `tow_ask`, `tow_open`, `tow_take`, `tow_hook`, `tow_done`, `tow_cancel` og `tow_mine`.
+  - Gjester kan verken spørre eller hjelpe.
+- **Det som mangler:** tauet mellom båtene tegnes ikke i 3D. Den slepte båten vises hos hjelperen der den selv rapporterer seg (cirka 15 sekunders forsinkelse).
+- **Testene:** `ptowtest` (begge rollene, med en falsk database) og slep i `sqltest`.
+
 ### 5.41 Puben i 3D (Jonas 08.10.2026)
 
 Jonas: «Spilleren trykker på pub og blir dermed sendt inn i puben hvor man sitter ved bardisken i first-person-view. Man skal kunne spinne hjulet som tidligere.» Og: «Kanskje noe som blir et sosialt element.»

@@ -436,6 +436,7 @@ const PHONE = (() => {
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
     ['p102', '09.10.2026', 'Kjentmannen, nordlyset og driftsplanen', 'The old hand, the northern lights and the operations plan', [
+      ['Slep mellom spillere: har båten stoppet, kan du spørre andre spillere innenfor 30 nm om slep i Redning-appen. Det er gratis for deg. Den som hjelper, får 25 000 kr når båten er slept til havn. Tar ingen det innen 20 minutter, kommer redningsskøyta.', 'Towing between players: if your boat has broken down, you can ask other players within 30 nm for a tow in the Rescue app. It is free for you. The one who helps gets NOK 25,000 when the boat is towed to harbour. If nobody takes it within 20 minutes, the rescue boat comes.'],
       ['Mannskapet jobber på sjøen: egning av line, bytte av kroker og bøting av garn og teiner går nå også mens båten går eller ligger i ro, når mannskapet er ledig. Jobben venter mens dere fisker og sløyer. Mannskapet sier fra når kroker eller agn begynner å ta slutt, og når redskapen er sliten.', 'The crew works at sea: baiting lines, changing hooks and mending nets and pots now also go on while the boat is under way or lying still, when the crew is free. The job waits while you fish and gut. The crew tells you when hooks or bait run low, and when the gear is worn.'],
       ['Tut og hilsener på sjøen: med en annen spillers båt innenfor 1 nautisk mil kommer «Tut» blant knappene, og den andre hører hornet. Båtkortet til en spiller innenfor 5 nm har seks faste hilsener. Det du får, kommer i meldingene og som tekst over båten i 3D.', 'Horns and hails at sea: with another player\'s boat within 1 nautical mile, «Horn» comes among the buttons and the other player hears it. The boat card of a player within 5 nm has six set greetings. What you get comes to your messages and as text over the boat in 3D.'],
       ['Gjestebøker i pubene og rorbuene langs kysten: skriv deg inn med en hilsen, og se hvem som har vært der før deg. Gjestebøkene du har skrevet i, samles i Kystfareren i Milepæler, landsdel for landsdel.', 'Guestbooks in the pubs and rorbuer along the coast: sign with a greeting, and see who has been there before you. The guestbooks you have signed are gathered in Coastfarer in Milestones, part of the coast by part.'],
@@ -1153,6 +1154,7 @@ const PHONE = (() => {
     const b = S.boat, bars = inPort() ? 4 : coverage(b.pos), can = bars > 0 || S.equip.vhf, np = nearestPort(b.pos), H = S.t / 60, lvl = riskLevel(windAt(H), hsAt(b.pos, H));
     const st = rescueBase(b.pos), eta = Math.round(st.d / (TOW.come * NM) * 60) + TOW.muster;
     const h = ['<div class="ph-c"><div class="ph-card"><h4>' + L('Din posisjon', 'Your position') + '</h4><p>' + coordStr(b.pos) + '</p>' + kv(L('Nærmeste havn', 'Nearest port'), np.name + ', ' + fmt(dist(np.p, b.pos) / NM, 1) + ' nm') + kv(L('Dekning', 'Coverage'), bars ? bars + '/4' : L('Ingen', 'None')) + kv('VHF', S.equip.vhf ? L('Ja, kanal 16', 'Yes, channel 16') : L('Ikke montert', 'Not fitted')) + '</div>'];
+    if (!inPort() && typeof PTOW !== 'undefined') h.push(PTOW.card4phone());   // a tow from another player (ui/10o-ptow.js)
     if (inPort()) h.push('<div class="ph-card"><p>' + L('Du ligger trygt i havn.', 'You are safely in port.') + '</p></div>');
     else if (b.status === 'tow' && b.tow) h.push('<div class="ph-card"><h4>' + statusText() + '</h4><p>' + L('Redningsskøyta fra ' + b.tow.base + ' sleper deg til ' + portById(b.tow.port).name + '.', 'The rescue boat from ' + b.tow.base + ' tows you to ' + portById(b.tow.port).name + '.') + '</p></div>');
     else {
@@ -1573,7 +1575,8 @@ const PHONE = (() => {
     else if (/^gd[A-Z]/.test(a)){ if (!GUIDE.act(a, d)) return false; }   // the fish guide (ui/06f-fishguide.js)
     else if (/^fb[A-Z]/.test(a)){ if (!FEEDBACK.act(a, d)) return false; }
     else if (/^fr[A-Z]/.test(a)){ if (!FRIENDS.act(a, d)) return false; }
-    else if (/^gb[A-Z]/.test(a)){ if (!GBOOK.act(a, d)) return false; }   // the guestbook (ui/10m-guestbook.js)   // the Venner app (ui/10k-friends.js)   // the feedback app (ui/06e-feedback.js)
+    else if (/^gb[A-Z]/.test(a)){ if (!GBOOK.act(a, d)) return false; }
+    else if (/^pt[A-Z]/.test(a)){ PTOW.act(a); }   // a tow from another player (ui/10o-ptow.js)   // the guestbook (ui/10m-guestbook.js)   // the Venner app (ui/10k-friends.js)   // the feedback app (ui/06e-feedback.js)
     else if (/^pnt/.test(a)){ if (!PAINT.act(a, d)) return false; }   // the paint shop (ui/10j-paint.js)
     else if (a === 'naustbuy'){ const why = naustBuy(d.k); if (why) toast(L(why[0], why[1])); }
     else if (a === 'lang'){ S.lang = S.lang === 'no' ? 'en' : 'no'; refreshAll(); }
