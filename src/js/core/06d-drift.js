@@ -174,8 +174,16 @@ function driftWatch(H){
 
 // ---- the weather the plan allows, while it runs
 function driftWx(){ const o = S.ops; if (!o || o.v !== 2 || !S.plan || !S.plan.ops) return null; return {wind:o.wx.wind, hs:Math.min(o.wx.hs, BOAT.risk[1] * 0.95), shelter:!!o.wx.shelter}; }
-function driftWxAhead(o, H, dur){ let w = 0, h = 0; for (let k = 0; k <= Math.ceil(dur); k++){ w = Math.max(w, windAt(H + k)); h = Math.max(h, hsOpen(H + k)); }
-  return {w, h, ok:w <= o.wx.wind && h <= Math.min(o.wx.hs, BOAT.risk[1] * 0.95)}; }
+// the sea is the session's own (Jonas 09.10.2026: the plan stayed ashore in Båtsfjord with 2,3 m on the open sea, while the trip was
+// inside the fjord): the most along its route and at its home, hour by hour (hsAt, sheltered where the route is); the open sea where
+// the route is not known or its map is not in. lim: the sea limit that holds, the plan's or the boat's own if that is lower
+function driftWxAhead(o, H, dur, s){
+  const pts = [];
+  if (s && s.route && s.route.wps && s.route.wps.length){ const W = s.route.wps, st = Math.max(1, Math.ceil(W.length / 8)); for (let i = 0; i < W.length; i += st) pts.push(W[i]); pts.push(W[W.length - 1]); const hp = portById(s.route.home); if (hp) pts.push(hp.p); }
+  const seaAt = Hk => { if (!pts.length) return hsOpen(Hk); let m = 0; for (const p of pts){ let v; try { v = hsAt(p, Hk); } catch (e){ v = hsOpen(Hk); } m = Math.max(m, v); } return m; };
+  let w = 0, h = 0; for (let k = 0; k <= Math.ceil(dur); k++){ w = Math.max(w, windAt(H + k)); h = Math.max(h, seaAt(H + k)); }
+  const lim = Math.min(o.wx.hs, BOAT.risk[1] * 0.95);
+  return {w, h, lim, boatLim:BOAT.risk[1] * 0.95 < o.wx.hs, ok:w <= o.wx.wind && h <= lim}; }
 
 // ---- the engine
 const driftDue = o => o.a0 + o.cn * o.period + o.sess[o.idx].dep;
@@ -224,13 +232,16 @@ function opsStep(H){
   if (!dest){ driftAdvance(o); return; }
   if (s.type === 'hvile' && (anchorRest ? b.anch : b.port === s.at)){ if (o.wiz){ o.restT0 = S.t; o.restWant = false; } driftAdvance(o); return; }
   // the weather over the session
-  const dur = Math.max(1, driftSessHours(o, s)), wx = driftWxAhead(o, H, dur);
+  const dur = Math.max(1, driftSessHours(o, s)), wx = driftWxAhead(o, H, dur, s);
   // a plan from the plan maker: when the weather keeps her from going to the base to rest, she rests where she lies (hours at the quay are
   // rest by the rule, 14-crewlife.js restHour), and the next day waits out the rest as usual
   if (!wx.ok && s.type === 'hvile' && o.wiz && b.status === 'port'){ o.restT0 = S.t; o.restWant = false; driftAdvance(o); log((sk ? sk.name : gL('Båten', 'The boat')) + ' blir liggende i ' + (portById(b.port) || {name:'havna'}).name + ' og hviler. Været er for dårlig til å gå til ' + dest.name + '.', (sk ? sk.name : 'The boat') + ' stays in ' + (portById(b.port) || {name:'the harbour'}).name + ' to rest. The weather is too bad to go to ' + dest.name + '.'); return; }
   if (!wx.ok){ o.delay = (o.delay || 0) + 1; o.hold = H + 1;
     if (o.delay > DRF.maxDelay){ o.delay = 0; o.skipped++; driftAdvance(o); msg(sk ? sk.name : '', 'Hopper over turen. Været holdt seg over grensene i ' + DRF.maxDelay + ' timer.', 'Skipping the trip. The weather stayed over the limits for ' + DRF.maxDelay + ' hours.'); }
-    else if (o.delay === 1) msg(sk ? sk.name : '', 'Blir på land. Varselet gir ' + fmt(wx.w, 0) + ' m/s og ' + fmt(wx.h, 1) + ' m sjø, over grensene (' + o.wx.wind + ' m/s, ' + fmt(o.wx.hs, 1) + ' m).', 'Staying ashore. The forecast gives ' + fmt(wx.w, 0) + ' m/s and ' + fmt(wx.h, 1) + ' m sea, over the limits (' + o.wx.wind + ' m/s, ' + fmt(o.wx.hs, 1) + ' m).');
+    else if (o.delay === 1){ const wOver = wx.w > o.wx.wind, why = wOver ? ['vinden ' + fmt(wx.w, 0) + ' m/s er over grensen på ' + o.wx.wind + ' m/s', 'the wind of ' + fmt(wx.w, 0) + ' m/s is over the limit of ' + o.wx.wind + ' m/s']
+        : wx.boatLim ? ['sjøen ' + fmt(wx.h, 1) + ' m er over det båten tåler (' + fmt(wx.lim, 1) + ' m), uansett risikovalg', 'the sea of ' + fmt(wx.h, 1) + ' m is over what the boat can take (' + fmt(wx.lim, 1) + ' m), whatever the risk setting']
+        : ['sjøen ' + fmt(wx.h, 1) + ' m er over grensen på ' + fmt(wx.lim, 1) + ' m', 'the sea of ' + fmt(wx.h, 1) + ' m is over the limit of ' + fmt(wx.lim, 1) + ' m'];
+      msg(sk ? sk.name : '', 'Blir på land: ' + why[0] + ' der vi skal.', 'Staying ashore: ' + why[1] + ' where we are going.'); }
     return; }
   o.delay = 0;
   // the way from where she lies to where the session starts (or, for a rest, to the place of rest: the quay, or the anchorage if the
