@@ -7,6 +7,7 @@ Et kystfiskespill langs hele norskekysten (det begynte på Senja) som kjører so
 ## Arbeidsmåte
 
 - **Spillet er nasjonalt** (Jonas 06.10.2026): alt som legges inn eller endres, gjelder hele kysten, ikke bare Senja. Arter, regler, felt, mottak, modeller og data bygges for hele landet fra start. Senja-dataene er bare et eldre, mer detaljert utsnitt.
+- **Stikkprøver langs kysten ved feilretting** (Jonas 09.10.2026): når en feil er funnet ett sted (for eksempel Tromsø) og feilen eller rettingen kan gjelde hele landet, skal rettingen prøves på minst tre andre steder spredt langs kysten (sør, midt og nord, gjerne Bergen, Bodø og Hammerfest/Båtsfjord) før den meldes som ferdig. Svaret til Jonas sier hvor det er prøvd, og om feilen fantes der også.
 - **Fart foran finpuss** (brukerens valg 01.10.2026): Endringene skal inn raskt, og finpuss og feilretting gjøres samlet etterpå.
 - **Grafikken er nesten det viktigste** (brukerens valg 03.10.2026): Ikke senk kvaliteten med mindre målinger viser at vi absolutt må. Ytelse hentes først uten å endre utseendet (arbeid ut av hovedtråden, mindre søppel, færre tegnekall, smartere oppdeling). Lagging og feil skal heller ikke ødelegge spillopplevelsen.
 - Ved større funksjoner med uklare valg: legg fram en kort plan og vent på klarsignal. Enkle endringer bygges rett. «Snakk uten å bygge» betyr at ingenting skal bygges. «Kjør på» betyr bygg, test og lever.
