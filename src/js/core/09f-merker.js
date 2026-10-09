@@ -48,7 +48,7 @@ const ACH = [
   {id:'l50', ch:2, n:['Én levering over 50 000 kr', 'A landing over NOK 50,000'], p:() => [achBest(), 50000]},
   {id:'t5', ch:2, n:['Fem tonn levert', 'Five tonnes landed'], p:() => [achKg(), 5000]},
   {id:'fs5', ch:2, n:['5 år fartstid', '5 years at sea'], p:() => [fsOf(fsState().p).y, 5]},
-  {id:'big', ch:2, hid:true, n:['Storfisken', 'The big one'], h:['En torsk over 9 kg, eller en fisk på trofeveggen.', 'A cod over 9 kg, or a fish on the trophy wall.'], p:() => !!achC('big') || (S.trophies || []).length > 0}
+  {id:'big', ch:2, hid:true, n:['Storfisken', 'The big one'], h:['En torsk over 9 kg.', 'A cod over 9 kg.'], p:() => !!achC('big') || (recState().torsk || {kg:0}).kg >= 9}
 ];
 // the long badges: tiers, each with a gift (the first three landing sizes are in the week's card)
 const ACHL = [
@@ -127,8 +127,9 @@ function achPool(scale){
   add(1, 2, money(5000, 10000, ['Salgslaget sender en premie:', 'The sales organisation sends a prize:']));
   const eq = Object.keys(EQUIP).filter(q => !EQUIP[q].multi && !(S.equip || {})[q] && equipFits(q, b.type) && EQUIP[q].price <= 25000 * scale && !(S.jobs || []).some(j => j.k === q));
   if (eq.length) add(2, 2, r => { const q = eq[Math.floor(r * eq.length) % eq.length], E = EQUIP[q];
-    return {apply:() => { if (!queueJob({kind:'fit', k:q, h:fitHours(q), no:'Montering av ' + E.name.no.toLowerCase() + ' (gave)', en:'Fitting the ' + E.name.en + ' (a gift)'})) S.cash += E.price; },
-      t:L('Verkstedet gir deg ' + E.name.no.toLowerCase() + ' og monterer det gratis neste gang du er i havn.', 'The yard gives you the ' + E.name.en + ' and fits it free the next time you are in port.')}; });
+    // a gift is fitted at once, with no wait (Jonas 09.10.2026: «Gaver skal aldri ha ventetid»)
+    return {apply:() => { S.equip[q] = true; applyVessel(); if (hooks.onEquip) hooks.onEquip(); },
+      t:L('Verkstedet gir deg ' + E.name.no.toLowerCase() + '. Det er montert.', 'The yard gives you the ' + E.name.en + '. It is fitted.')}; });
   add(2, 1, money(15000, 25000, ['En gammel kar på kaia har lagt igjen en konvolutt til deg:', 'An old man on the quay has left an envelope for you:']));
   return out;
 }

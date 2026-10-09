@@ -137,7 +137,7 @@ function folkPort(H){
   let l;
   if (!E.met){ E.met = S.t; l = EDVARD.first; }
   else {
-    const T = (S.trophies || []).filter(t => t.t > (E.bigSeen || 0) && !t.crew).sort((a, b2) => b2.kg - a.kg)[0];
+    const T = Object.values(recState()).filter(t => t.t > (E.bigSeen || 0) && t.kg >= 9 && t.sp !== 'krabbe').sort((a, b2) => b2.kg - a.kg)[0];   // a big new record (09b-records.js)
     if (T){ E.bigSeen = S.t; l = EDVARD.big(T); }
     else { const free = EDVARD.lines.map((x, i) => i).filter(i => !E.seen.includes(i)); const i = free.length ? free[Math.floor(h2(day, 8813) * free.length)] : Math.floor(h2(day, 8814) * EDVARD.lines.length);
       E.seen.push(i); if (E.seen.length > 5) E.seen.shift(); l = EDVARD.lines[i]; }

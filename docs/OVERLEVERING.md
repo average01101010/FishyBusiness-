@@ -2544,7 +2544,7 @@ Hva som ble gjort (siste blokk i `styles.css`):
 
 Admin-appen (bare Jonas' konto) har kortet «Åpningen»: «Vis brevet» spiller brevscenen igjen uten å endre noe, og «Start nytt spill» spør først og begynner så helt på nytt (lagringen i skyen også), med brevet, båtnavnet og «Første tur».
 
-### 5.25d Fars notatbok og drømmefisken (05.10.2026)
+### 5.25d Fars notatbok og drømmefisken (05.10.2026) – TATT UT 09.10.2026, se 5.56
 
 Jonas valgte dem fra lista over det som får folk til å spille videre (nr. 2 og 3). Reglene ligger i `core/09b-dream.js`, og appen, kartmerkene og kampen i `ui/06c-notebook.js`. Testen er `tests/dreamtest.py`.
 
@@ -4105,3 +4105,17 @@ Jonas: «Spilleren trykker på pub og blir dermed sendt inn i puben hvor man sit
 - `transcripts/`: fullstendige utskrifter av de fire tidligere chatøktene og `journal.txt`, med hele historikken før denne økta.
 
 Kartrastere i `.npy`-format (over 300 MB) er ikke med. De kan lages på nytt fra OpenStreetMap-kildene, og resultatet ligger allerede i HTML-fila.
+
+### 5.56 Personlige rekorder og trofeveggen (Jonas 09.10.2026)
+
+«Drømmefisken fra fars notatbok skal droppes helt. Nå kjører vi kun på største fisk man har fisket.» `core/09b-dream.js` er slettet (drømmefisken, kampen `DREAMUI`, `dreamTick`) og erstattet av `core/09b-records.js`.
+
+- `S.rec[art] = {sp, kg, t, at, boat, how}`: den største fisken av hver art, vekt, tid, nærmeste havn eller felt innen 25 km, båtnavn og redskap (`juksa`, `line`, `garn`, `teine`). 10 arter, kongekrabbe med.
+- `recCatch(sp, kg, how)` kalles fra `addCatch` (05-vessels.js) med `opt.how` fra jukse-løkka, `landFish` (nøkkelen før kolon) og teina. Større fisk tar plassen. Melding bare når den slår forrige med minst 15 %, første fisk av arten går i loggen.
+- `recState()` bretter gamle `S.trophies` inn (største per art) og fjerner `S.trophies`/`S.dream` første gang rekordene leses. Gamle lagringer har ikke historikk for enkeltfisker, så rekordene starter med trofeene.
+- Veggen (`NOTEBOOK.wall`, brukt av Rekordfisk-fanen og Naustet-siden) viser alle artene, de ikke fangede som «?». Uten oppgraderingen «vegg» (3 000 kr) er det en bar planke med spiker; rekordene telles likevel.
+- Edvard (`09d-folk.js`) og merket «Storfisken» (torsk over 9 kg) leser fra rekordene.
+- Test: `tests/rectest.py` (erstatter `dreamtest.py`).
+- Neste: 3D-naustet (Blender-rom og førstepersonsscene etter pub-mønsteret) med fisken på veggen.
+
+Gaver av utstyr (`09f-merker.js`) monteres nå med en gang uten verftskø («gaver skal aldri ha ventetid»). Kø-brikken sier «Mannskapet jobber til» når køen bare er mannskapets egne jobber.

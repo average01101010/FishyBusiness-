@@ -385,7 +385,7 @@ function landFish(sp, kg, key, mesh, p, H, hook, fresh, g){
     if (acc[sp] < nx[sp]) break;
     const w = nx[sp]; acc[sp] -= w; nx[sp] = 0;
     if (w < SPECIES[sp].minKg || (SPECIES[sp].maxKg && w > SPECIES[sp].maxKg) || (sp === 'kveite' && kveiteClosed(H))){ S.stats.released = (S.stats.released || 0) + 1; if (g) g.rel++; continue; }
-    const k = Math.min(w, room); room -= k; addCatch(sp, k, clsOf(sp, w), hook, {fresh}); got += k;
+    const k = Math.min(w, room); room -= k; addCatch(sp, k, clsOf(sp, w), hook, {fresh, how:String(key).split(':')[0]}); got += k;
     if (typeof window !== 'undefined'){ const cq = window.CATCHQ || (window.CATCHQ = []); if (cq.length < 30) cq.push({sp, kg:k, t:performance.now()}); }
   }
   return got;
@@ -407,7 +407,7 @@ function landCrabs(g, n, kg){
     S.gacc.crabN -= 1;
     const fem = Math.random() < KC.fem, W = fem ? KC.wf : KC.wm, w = Math.max(0.3, Math.round(W[0] * Math.exp(W[1] * gauss(Math.random(), Math.random())) * 100) / 100);
     const hurt = !fem && Math.random() < KC.hurt, cls = fem ? 4 : hurt ? 5 : w >= 3.2 ? 0 : w >= 2.2 ? 1 : w >= 1.6 ? 2 : w >= 0.8 ? 3 : 6;
-    const k = Math.min(w, room); room -= k; addCatch('krabbe', k, cls, false, {fresh:100}); g.kg += k;
+    const k = Math.min(w, room); room -= k; addCatch('krabbe', k, cls, false, {fresh:100, how:'teine'}); g.kg += k;
     if (typeof window !== 'undefined'){ const cq = window.CATCHQ || (window.CATCHQ = []); if (cq.length < 30) cq.push({sp:'krabbe', kg:k, t:performance.now()}); }
   }
   void kg;

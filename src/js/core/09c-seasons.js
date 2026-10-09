@@ -6,7 +6,7 @@
 // 06-services.js.
 // Skreifestivalen: the second weekend of March, Saturday 00:00 to Sunday 18:00, the biggest cod landed by one of your boats against
 // the skippers of the coast. 15 000, 7 500 and 3 000 kr for the three biggest; the result comes on Sunday evening (seasonDay).
-// A dream fish (09b-dream.js) can win it.
+// A big fish on the record list (09b-records.js) can win it.
 const SEASON_EV = [
   {id:'skrei', m:1, d:20, j:6, vhf:['Skreien er kommet. De første båtene melder god skrei på juksa langs kysten.', 'The skrei has come. The first boats report good spawning cod on the jig along the coast.'],
     post:[['Skreien er her', 'The skrei is here'], ['Årets første skreifangster er landet. Mottakene gjør klar til høysesong, og prisene for stor torsk er gode.', 'The year’s first skrei catches have been landed. The plants are getting ready for the high season, and prices for big cod are good.']],
