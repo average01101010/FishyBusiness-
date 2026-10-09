@@ -53,7 +53,7 @@ function doAct(el){
   else if (act === 'retrace'){ if (tutOn()) return; startReturn(false); }
   else if (act === 'tow') rescue(true);
   else if (act === 'fh+' || act === 'fh-') S.fishPlanH = clamp(S.fishPlanH + (act === 'fh+' ? 1 : -1), 1, 12);
-  else if (act === 'startfish'){ if (!rigJig()){ const w = rigWrong(null); toast(w[0]); return; }
+  else if (act === 'startfish'){
     // there is no rod: without a hand jig, reels or halibut gear for halibut nobody can fish
     if (!b.gear && !(S.equip && S.equip.jukse > 0) && !(S.target === 'kveite' && b.kgear)){ toast(L('Du har ingen juksa. Kjøp håndjuksa i butikken på kaia.', 'You have no jig. Buy a hand jig in the shop on the quay.')); return; } { const rb = ruBlockMsg({p:b.pos, len:BOAT.len, gear:'juksa', sp:S.target === 'kveite' ? 'kveite' : null, hand:!(S.equip && S.equip.jukse > 0)}); if (rb){ toast(rb); return; } } b.status = 'fishing'; b.fishUntil = S.t + S.fishPlanH * 60; log('Starter fiske i ' + S.fishPlanH + ' t.', 'Fishing for ' + S.fishPlanH + ' h.'); }
   else if (act === 'stopfish'){ if (b.gop) gopAbort('stop'); b.fishUntil = S.t; S.plan = null; endFishing('done'); }

@@ -131,7 +131,7 @@ const DOCK = (() => {
       const ml = moorAll(b.pos, 0.4), mo = ml[0], moor = mo && I('fortoy', 'naust', 'Fortøy', 'Moor', Object.assign(ml.length > 1 ? {menu:'fortoy'} : {run:() => moorGo(mo)}, {pri:mo.kind === 'rorbu' || mo.kind === 'naust' || S.energy < 40}));
       // anchor: the boat keeps her place and the crew rests; the anchor can drag in weather the boat does not hold (06e-anchor.js)
       const sp = !b.anch && anchorSpot(b.pos), anc = b.anch ? I('anker', 'anker', 'Hiv anker', 'Weigh anchor', {run:() => { weighAnchor(); refreshAll(); }, on:true}) : !moor ? I('anker', 'anker', 'Kast anker', 'Drop anchor', sp && sp.ok ? {run:() => { dropAnchor(); refreshAll(); }} : {off:[sp && anchorWhy[sp.why] ? L(anchorWhy[sp.why][0], anchorWhy[sp.why][1]) : L('Ikke her.', 'Not here.')]}) : null;
-      return [rigJig() && I('jukse', 'jukse', 'Jukse', 'Jig', {menu:'jukse', pri:!s}),
+      return [I('jukse', 'jukse', 'Jukse', 'Jig', {menu:'jukse', pri:!s}),
         I('settut', 'settut', 'Sett ut', 'Set', {menu:'settut', off:rigJig() ? [L('Båten er rigget for juksa. Rigg om til line, garn eller teiner under Beholdning.', 'The boat is rigged for jigging. Re-rig for line, nets or pots under Inventory.')] : !ch.length && [S.pgear && (S.pgear.nets.length || S.pgear.lines.hyse.n || S.pgear.lines.bank.n || S.pgear.pots.small || S.pgear.pots.big) ? L('Redskapet om bord er ikke klart: line må egnes, og teiner trenger agn og blåsesett.', 'The gear aboard is not ready: line must be baited, and pots need bait and buoy sets.') : L('Du har ikke garn, line eller teiner om bord.', 'You have no nets, line or pots aboard.')]}),
         // by a quay with no buoy near, «Fortøy» takes the place of the greyed «Ta opp», so the row stays five wide on a phone
         s || !moor ? haul : null, moor, nav, anc, crew, work, beh].filter(Boolean);
@@ -157,7 +157,7 @@ const DOCK = (() => {
       out.push((S.rest.w === 'rorbu' ? L('Hviler på rorbua', 'Resting at the rorbu') : L('Hviler i naustet', 'Resting in the boathouse')) + ' · ' + Math.round(S.energy) + ' %' + (up > 0 ? L(' · ' + up + ' % raskere', ' · ' + up + ' % faster') : '') + (m > 0 ? L(', uthvilt kl. ', ', rested at ') + hm((S.t + m) / 60) : '')); }
     if (b.status === 'unmooring') out.push(L('Kaster loss …', 'Casting off …'));
     if (b.gop){ const g = gopText(); if (g) out.push(L(g[0], g[1])); }
-    else if (b.status === 'fishing' && b.fishUntil != null) out.push((rigJig() ? L('Jukser, stopper ', 'Jigging, stops ') : L('Venter, går ', 'Waiting, leaves ')) + inReal(b.fishUntil - S.t));
+    else if (b.status === 'fishing' && b.fishUntil != null) out.push(L('Jukser, stopper ', 'Jigging, stops ') + inReal(b.fishUntil - S.t));
     const dk = b.status !== 'port' && deckText(true); if (dk) out.push(dk[0]);
     return out.join(' · ');
   }

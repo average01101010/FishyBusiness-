@@ -35,7 +35,7 @@ function workCtx(as){
   const icing = catchIce() && b.ice > 0.5, cg = catchGut(); let gut = 0, ice = 0, pend = 0;
   for (const x of S.hold){ if (SPECIES[x.sp].live || x.iced) continue; if (cg && !x.gut) gut += x.kg; else if (icing) ice += x.kg; if ((cg && !x.gut) || icing) pend += x.kg; }
   const deck = s !== 'aground' && pend > 0.5;
-  return {s, stop, ror:s === 'sailing' || s === 'unmooring' || s === 'engine', fiske:s === 'fishing' && !g && !stop && rigJig(), haling:!!g && !stop,
+  return {s, stop, ror:s === 'sailing' || s === 'unmooring' || s === 'engine', fiske:s === 'fishing' && !g && !stop, haling:!!g && !stop,
     sort:!!g && g.kind === 'teine' && g.op === 'haul', hands:g && g.kind === 'garn' && g.op === 'haul' ? 2 : 1, sloy:deck && gut > 0.01, is:deck && ice > 0.01, kokk:as !== 'fishing' && mealDue(), pause:true};
 }
 // who stands where: [{c (null for you), st}], you first

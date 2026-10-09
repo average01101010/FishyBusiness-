@@ -485,7 +485,9 @@ function fish(H, W, hs){
   if (deckPending() >= tubCap()){ b.deckStop = true; log('Bløggekaret er fullt. Stopper fisket for å sløye og ise.', 'The bleeding tub is full. Stopping to gut and ice.'); crewSay(null, 'tubFull'); if (hooks.onDeck && !VTAG) hooks.onDeck('stop'); return; }
   // setting or hauling passive gear takes the place of jigging
   if (b.gop){ gearOpMinute(H, W, hs); return; }
-  if (!rigJig()) return;   // rigged for passive gear: the boat has no jig out, and the fishing hours are spent waiting
+  // jigging is always possible while the boat lies still, also with line, nets or pots in the sea (Jonas 09.10.2026): the dead time between
+  // setting and hauling is spent on the jig. What the gear in the sea is likely to bring is kept free in the hold (gearReserve), so the haul is not left standing
+  { const res = gearReserve(); if (res > 0 && tot >= capHold() - res){ if ((S.resTold || -1e9) < S.t - 720){ S.resTold = S.t; log('Resten av lasterommet er satt av til redskapet i sjøen. Jukser ikke mer nå.', 'The rest of the hold is kept for the gear in the sea. No more jigging now.'); } return; } }
   // where the rules stop the boat (03e-rules.js: the fjord lines by length, the baseline zones of J-161-2026 § 32, closed areas): it waits
   { const rq = {p:b.pos, len:BOAT.len, gear:'juksa', sp:S.target === 'kveite' ? 'kveite' : null, hand:!(S.equip && S.equip.jukse > 0)}, rb = (S.ruAt && S.ruAt.t > S.t - 10 && dist(S.ruAt.p, b.pos) < 0.05) ? S.ruAt.m : ruBlockMsg(rq);
     S.ruAt = {t:S.t, p:{x:b.pos.x, y:b.pos.y}, m:rb};

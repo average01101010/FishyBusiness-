@@ -195,7 +195,7 @@ async def main():
           R.setLine = startSet('line', {lk:'hyse', n:1}, 0); hStep(300); b.status = 'idle';
           // fishing hours with a line rig: the boat waits, no jig catch
           S.hold = []; b.status = 'fishing'; b.fishUntil = S.t + 60; for (let i = 0; i < 50; i++) step(); R.jigKg = Math.round(holdTotal() * 10) / 10; endFishing('done');
-          DOCK.render(); R.dockJig = DOCK.items().some(x => x.id === 'jukse') ? 0 : 1;
+          DOCK.render(); R.dockJig = DOCK.items().some(x => x.id === 'jigg' || x.id === 'jukse') ? 1 : 0;
           b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; R.inSea = (rigBlock('teiner') || [''])[0];
           // an old save with pots in the sea and no rig: rigged for pots
           S.sets[0].kind = 'teine'; delete b.rig; R.guess = rigOf(); S.sets = [];
@@ -205,7 +205,7 @@ async def main():
         print('rig:', json.dumps(r, ensure_ascii=False))
         print(ok(r['def'] == 'juksa' and r['juksa'] and 'haler' in r['noHauler'] and 'passer ikke' in r['garnSkiff']), 'a new boat is rigged for jigging; line needs a hauler, and nets do not fit a skiff')
         print(ok(r['toLine'] is None and r['line'] == 'line' and r['choices'] == ['line'] and 'rigget for line' in r['netRule']), 'with the electric hauler the skiff rigs for line, and only line can be set')
-        print(ok(r['atSea'] is None and r['setLine'] is None and r['jigKg'] == 0 and r['dockJig'] == 1), 'at sea the rig can be changed aboard when nothing is in the sea; fishing hours with a line rig catch nothing on the jig, and the Jig button is gone')
+        print(ok(r['atSea'] is None and r['setLine'] is None and r['jigKg'] > 0 and r['dockJig'] == 1), 'at sea the rig can be changed aboard when nothing is in the sea; fishing hours with a line rig still give a jig catch, and the Jig button stays')
         print(ok('Trekk alt' in r['inSea'] and r['guess'] == 'teiner'), 'gear in the sea blocks re-rigging; an old save takes the rig from the gear in the sea')
         print(ok(r['page'] == 2 and 'Teiner' in r['pageOn'] and r['byTap'] == 'juksa' and 'linehaler' in r['sjarkLine']), 'the Rig page in the drawer offers what the skiff can rig (not nets) and re-rigs on a tap; a sjark needs the hydraulic line hauler')
 

@@ -3581,6 +3581,10 @@ Bare båten, aldri fiskeutstyr eller haler. Tallene står i `core/03-simulation.
 - **Isolert lasterom** (ikke havbåtene): isbruken per kilo ×0,85 / ×0,7. **Drivstofftank** (ikke påhengs- og havbåter): ×1,25 / ×1,5. **Stabilisering** (fra 9 m): slingrekjøl, og gyrostabilisator fra 25 m; `BOAT.sea` ×0,9 / ×0,78 (mindre fartstap i sjø) og mannskapets sjøgang teller mindre.
 - **Ikke gjort:** havbåtene har ingen oppgraderinger for lasterom (tankene er faste); lugarer gir ikke ekstra mannskapsplass; ingen animasjon.
 
+### 5.38 Juks i dødtiden (Jonas 09.10.2026)
+
+Juksa er alltid tilgjengelig når båten ligger i ro (status `fishing`, ingen `b.gop`), uansett rigg. Rigget (`b.rig`) styrer nå bare det passive redskapet som settes og trekkes (line, garn, teiner), og valget «juksa» heter «Bare juksa». Under setting og haling går båten (`b.gop`), og da jukses det ikke. Lasterommet beskyttes mot at juksefangsten fyller det før redskapet er trukket: `gearReserve()` (`core/10-gear.js`) setter av det redskapet i sjøen ventes å gi (det største av det som er fanget ×1,2 og en typisk fangst per enhet: line 70 kg per stamp, garn 40, teine 7), og `fish()` slutter å jukse når resten av rommet er reservert. Blir lasten likevel full under haling, står resten av redskapet igjen (som før). Test: `tests/jigalongtest.py`.
+
 ## 10. Kjente problemer og åpne spørsmål
 
 - **Mannskapssystemet (01.10.2026) er ikke spilltestet.** Usikre punkter:

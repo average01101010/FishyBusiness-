@@ -96,7 +96,7 @@ function hasHauler(kind){ return GEAR[kind].haulers.some(k => S.equip && S.equip
 // ---- the rig: a boat is rigged for one kind of fishing at a time. Jigging needs a hand jig or reels; line and pots
 // need a hauler that takes them, nets a net hauler. Fitting a hauler the first time is a yard job; once it is aboard, the rig is
 // changed aboard (Beholdning → Rigg, Jonas 07.10.2026), anywhere, free and at once, when none of the boat's nets, lines or pots are in the sea
-const RIGS = {juksa:{no:'Juksa', en:'Jigging', kind:null}, line:{no:'Line', en:'Longline', kind:'line'}, garn:{no:'Garn', en:'Nets', kind:'garn'}, teiner:{no:'Teiner', en:'Pots', kind:'teine'}};
+const RIGS = {juksa:{no:'Bare juksa', en:'Jigging only', kind:null}, line:{no:'Line', en:'Longline', kind:'line'}, garn:{no:'Garn', en:'Nets', kind:'garn'}, teiner:{no:'Teiner', en:'Pots', kind:'teine'}};
 const rigOfKind = kind => Object.keys(RIGS).find(r => RIGS[r].kind === kind) || 'juksa';
 // an old save has no rig: the kind of gear in the sea or in the standing plan, otherwise jigging
 function rigGuess(){
@@ -107,6 +107,10 @@ function rigGuess(){
 function rigOf(){ const b = S.boat; if (!RIGS[b.rig]) b.rig = rigGuess(); return b.rig; }
 const rigKindOk = kind => RIGS[rigOf()].kind === kind;
 const rigJig = () => rigOf() === 'juksa';
+// room kept free in the hold for what my gear in the sea is likely to bring up: what it has caught so far, at least a typical haul per unit
+// (kg: line a tub, net a net, pots a pot). Jigging stops when the hold is full but for this.
+const TYPKG = {line:70, garn:40, teine:7};
+function gearReserve(){ let r = 0; for (const s of mySets()){ let got = 0; for (const sp in (s.acc || {})) got += s.acc[sp].kg || 0; r += Math.max(got * 1.2, s.n * (TYPKG[s.kind] || 0)); } return Math.round(r); }
 function rigHas(r){ return !RIGS[r].kind || hasHauler(RIGS[r].kind); }
 const rigName = r => gL(RIGS[r].no, RIGS[r].en);
 const lc1 = x => x[0].toLowerCase() + x.slice(1);
