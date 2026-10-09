@@ -621,7 +621,7 @@ const G3 = (() => {
       const vp = MAPD.byTile.get('view:' + t.k); if (vp && !vp.buf) continue;
       // the pack's piers and slabs under a harbour unit or a rorbu/naust site are left out (a pier through the quay at Engenes, Lauksletta)
       const under = (x, z) => unitCovers(x, z, 3) || onSite(x, z), slabUnder = pts => { let cx = 0, cz = 0; for (const [x, z] of pts){ if (under(x, z)) return true; cx += x; cz += z; } return under(cx / pts.length, cz / pts.length); };
-      const items = [...t.piers.filter(q => !under(q.x, q.z)).map(q => m => pierInto(m, q, t.k)), ...t.slabs.filter(pts => !slabUnder(pts)).map(pts => m => slabInto(m, pts, t.k)), ...t.molos.map((pts, i) => m => stonesOf(TJOB.stones, sm => moundInto(m, pts, (t.tx * 31 + t.ty) * 7919 + i * 104729, false, t.k, sm))), ...t.bridges.filter(br => !bridgeUnderUnit(br, onSite)).map(br => m => bridgeInto(m, br, t.k))];
+      const items = [...t.piers.filter(q => !under(q.x, q.z)).map(q => m => pierInto(m, q, t.k)), ...t.slabs.filter(pts => !slabUnder(pts)).map(pts => m => slabInto(m, pts, t.k, pts.some(([x, z]) => harbourNear(x, z)) ? (x, z) => unitCovers(x, z, 1) || onSite(x, z) : null)), ...t.molos.map((pts, i) => m => stonesOf(TJOB.stones, sm => moundInto(m, pts, (t.tx * 31 + t.ty) * 7919 + i * 104729, false, t.k, sm))), ...t.bridges.filter(br => !bridgeUnderUnit(br, onSite)).map(br => m => bridgeInto(m, br, t.k))];
       TJOB = {t, m:MB(), items, i:0, ms:0, stones:[]}; return;
     }
   }
@@ -897,11 +897,16 @@ const G3 = (() => {
   // a pier mapped as an area, in its shape (its bounding box, as Senja's small ones are drawn, lay over the water at a big quay in
   // Bergen): the deck in strips a metre deep, each cut where the outline crosses its middle, the walls down the outline's edges; the
   // camera's solids in strips 4 m deep
-  function slabInto(m, pts, tag){
+  // cut(x, z): where the deck is left out (a harbour unit's quay or a site over part of it: 09.10.2026 the slab under the tackle shop at
+  // Hammerfest was drawn at the quay's own height, in saw teeth through its deck); the runs are cut in 2 m pieces there
+  function slabInto(m, pts, tag, cut){
     const n = pts.length; let z0 = 1e18, z1 = -1e18; for (const [, z] of pts){ z0 = Math.min(z0, z); z1 = Math.max(z1, z); }
-    const top = [0.6, 0.58, 0.54], side = [0.5, 0.49, 0.46], runs = (z, f) => { const xs = []; for (let k = 0; k < n - 1; k++){ const az = pts[k][1], bz = pts[k + 1][1]; if ((az > z) !== (bz > z)) xs.push(pts[k][0] + (z - az) * (pts[k + 1][0] - pts[k][0]) / (bz - az)); } xs.sort((a, b) => a - b); for (let q = 0; q + 1 < xs.length; q += 2) f(xs[q], xs[q + 1]); };
+    const top = [0.6, 0.58, 0.54], side = [0.5, 0.49, 0.46], runs = (z, f) => { const xs = []; for (let k = 0; k < n - 1; k++){ const az = pts[k][1], bz = pts[k + 1][1]; if ((az > z) !== (bz > z)) xs.push(pts[k][0] + (z - az) * (pts[k + 1][0] - pts[k][0]) / (bz - az)); } xs.sort((a, b) => a - b);
+      for (let q = 0; q + 1 < xs.length; q += 2){ const a = xs[q], b = xs[q + 1]; if (!cut){ f(a, b); continue; }
+        const k = Math.max(1, Math.ceil((b - a) / 2)), d = (b - a) / k; let s0 = null;
+        for (let i = 0; i <= k; i++){ const off = i === k || cut(a + (i + 0.5) * d, z); if (off){ if (s0 !== null){ f(a + s0 * d, a + i * d); s0 = null; } } else if (s0 === null) s0 = i; } } };
     for (let z = z0; z < z1; z += 1){ const z2 = Math.min(z1, z + 1); runs((z + z2) / 2, (a, b) => m.quad([a, QTOP, z], [b, QTOP, z], [b, QTOP, z2], [a, QTOP, z2], top)); }
-    for (let k = 0; k < n - 1; k++){ const [ax, az] = pts[k], [bx, bz] = pts[k + 1]; if (Math.hypot(bx - ax, bz - az) < 0.2) continue; m.quad([ax, -2.4, az], [bx, -2.4, bz], [bx, QTOP, bz], [ax, QTOP, az], side); }
+    for (let k = 0; k < n - 1; k++){ const [ax, az] = pts[k], [bx, bz] = pts[k + 1]; if (Math.hypot(bx - ax, bz - az) < 0.2 || (cut && cut((ax + bx) / 2, (az + bz) / 2))) continue; m.quad([ax, -2.4, az], [bx, -2.4, bz], [bx, QTOP, bz], [ax, QTOP, az], side); }
     for (let z = z0; z < z1; z += 4){ const z2 = Math.min(z1, z + 4); runs((z + z2) / 2, (a, b) => camSolid((a + b) / 2, (z + z2) / 2, b - a, z2 - z, 0, -3, QTOP, tag)); }
   }
   // a road bridge [class, length, name, type, x, z, ...]: the deck rises from its ends to a clearance by its length (Tromsøbrua, 1046 m,
