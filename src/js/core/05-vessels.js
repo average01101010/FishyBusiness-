@@ -485,6 +485,7 @@ function fish(H, W, hs){
   if (deckPending() >= tubCap()){ b.deckStop = true; log('Bløggekaret er fullt. Stopper fisket for å sløye og ise.', 'The bleeding tub is full. Stopping to gut and ice.'); crewSay(null, 'tubFull'); if (hooks.onDeck && !VTAG) hooks.onDeck('stop'); return; }
   // setting or hauling passive gear takes the place of jigging
   if (b.gop){ gearOpMinute(H, W, hs); return; }
+  if (S.plan && S.plan.noJig) return;   // a plan with gear and no jigging: the boat waits by the gear (06f-plan.js)
   // jigging is always possible while the boat lies still, also with line, nets or pots in the sea (Jonas 09.10.2026): the dead time between
   // setting and hauling is spent on the jig. What the gear in the sea is likely to bring is kept free in the hold (gearReserve), so the haul is not left standing
   { const res = gearReserve(); if (res > 0 && tot >= capHold() - res){ if ((S.resTold || -1e9) < S.t - 720){ S.resTold = S.t; log('Resten av lasterommet er satt av til redskapet i sjøen. Jukser ikke mer nå.', 'The rest of the hold is kept for the gear in the sea. No more jigging now.'); } return; } }

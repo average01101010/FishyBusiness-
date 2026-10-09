@@ -11,7 +11,7 @@ JS = """(async () => {
   const ole = Object.assign(genCrew(), {bi:false, off:false, name:'Ole Mikalsen'}); S.crew = [ole];
   const page = () => PHONE.page('drift');
   const act = (a, d) => PHONE.dact('drift', a, d || {});
-  R.p0 = page().includes('dr-new');
+  R.p0 = page().includes('dr-znew');
   act('dr-new'); R.o = !!S.ops && S.ops.v === 2;
   R.p1 = page().includes('Oppsett') && page().includes('Økter') && page().includes('Oversikt');
   R.soonDisabled = /<button disabled[^>]*>Bunntrål/.test(page());

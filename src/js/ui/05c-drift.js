@@ -44,8 +44,94 @@ const DRIFTUI = (() => {
     return '<div class="dr-watch"><div><b>' + L('Vakt A', 'Watch A') + '</b> ' + R.A.map(c => f(c) + roleOf(c)).join(', ') + '</div><div><b>' + L('Vakt B', 'Watch B') + '</b> ' + R.B.map(c => f(c) + roleOf(c)).join(', ') + '</div>' +
       '<div>' + L('Vakt hver ', 'A watch every ') + '<button data-pa="dr-wh" data-d="-1">−</button> ' + (o.watchH || 6) + L(' t', ' h') + ' <button data-pa="dr-wh" data-d="1">+</button> · ' + L('Den som har fri sover i køyene, og er ikke på dekk.', 'The watch off sleeps in the bunks and is not on deck.') + '</div></div>';
   }
+
+  // ===== the plan maker (core/06f-plan.js): a few questions, one at a time, and the day made out of the answers =====
+  let wz = null, adv = false, building = false, spotCache = null;
+  const rerender = () => { if (typeof refreshAll === 'function') refreshAll(); else if (typeof PHONE !== 'undefined') PHONE.render(); };
+  const STEPS = 5, BIG = (a, label, sub, on, extra, off) => '<button class="dr-big' + (on ? ' on' : '') + '" data-pa="' + a + '"' + (extra ? ' ' + extra : '') + (off ? ' disabled' : '') + '><b>' + label + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '</button>';
+  const head = (i, q) => '<div class="ph-card"><p class="dr-step">' + L('Steg ', 'Step ') + (i + 1) + L(' av ', ' of ') + STEPS + '</p><h4>' + q + '</h4>';
+  const nav = (back, next, nextOk) => '<div class="ph-row2">' + (back ? B('dr-zstep', L('← Tilbake', '← Back'), 'data-s="' + (wz.step - 1) + '"') : B('dr-zcancel', L('Avbryt', 'Cancel'))) + (next ? B('dr-zstep', L('Neste →', 'Next →'), 'data-s="' + (wz.step + 1) + '"' + (nextOk === false ? ' disabled' : ''), 'p') : '') + '</div></div>';
+  const km = (p, q) => fmt(dist(p, q) / NM, 1) + ' nm';
+  function gearWhy(g){
+    if (g === 'juksa') return null;
+    const k = PLAN_KIND[g]; if (!rigHas(g)) return L('Båten mangler ' + GEAR[k].no.toLowerCase().replace(/r$/, '') + 'haler', 'The boat has no hauler for ' + GEAR[k].en.toLowerCase());
+    if (planUnits(k) < 1) return L('Ingen ' + GEAR[k].no.toLowerCase() + ' om bord', 'No ' + GEAR[k].en.toLowerCase() + ' aboard');
+    if ((BOAT.gearMax || {})[k === 'line' ? 'stamp' : k] === 0) return L('Passer ikke denne båten', 'Does not suit this boat');
+    return null;
+  }
+  function spotLine(q, kind){
+    // only what the player knows: his own catch here (S.marks), never the fish the sea holds
+    const a = wz.a, base = portById(a.base), m = planMark(q, kind || null);
+    const known = m ? (kind ? L('du fikk ' + fmt(m.kgu, 1) + ' kg per ' + GEAR[kind].u[0] + ' her', 'you got ' + fmt(m.kgu, 1) + ' kg a ' + GEAR[kind].u[2] + ' here') : L('du fikk ' + m.kgph + ' kg/t her', 'you got ' + m.kgph + ' kg/h here')) : L('ikke fisket her ennå', 'not fished here yet');
+    return (base ? km(base.p, q) + L(' fra ', ' from ') + base.name + ' · ' : '') + known;
+  }
+  function wizPage(){
+    const a = wz.a, h = ['<div class="ph-c">'], kind = PLAN_KIND[a.gear] || null;
+    if (wz.step === 0){
+      const here = S.boat.status === 'port' ? S.boat.port : nearestPort(S.boat.pos).id, pl = driftRestPlaces({}, {at:here}), home = S.home || HOME0;
+      if (portById(home) && !pl.some(q => q.id === home) && dist(portById(home).p, portById(here).p) < 60) pl.push({id:home, name:portById(home).name, d:dist(portById(home).p, portById(here).p)});
+      h.push(head(0, L('Hvor skal båten ligge og hvile om natta?', 'Where shall the boat lie and rest at night?')) + '<p class="ph-note">' + L('Dagen starter og slutter her. Planen kan slås på hvor båten enn ligger; den går hit først.', 'The day starts and ends here. The plan can be switched on wherever the boat lies; she goes here first.') + '</p>' +
+        pl.map(q => BIG('dr-zbase', q.name + (q.id === home ? L(' (naustet)', ' (the naust)') : isRorbu(q.id) ? L(' (rorbu)', ' (rorbu)') : ''), planRestOk(q.id) ? L('Mannskapet kan sove her', 'The crew can sleep here') : L('Ingen køyer her: dårlig hvile', 'No bunks here: poor rest'), a.base === q.id, 'data-p="' + q.id + '"')).join('') + nav(false, true, !!a.base));
+    } else if (wz.step === 1){
+      h.push(head(1, L('Hva skal båten fiske med?', 'What shall the boat fish with?')) + ['juksa', 'line', 'garn', 'teiner'].map(g => { const why = gearWhy(g); return BIG('dr-zgear', g === 'juksa' ? L('Bare juksa', 'Jigging only') : driftRigName(g), why || (g === 'juksa' ? L('Ut, fyll lasten, lever, og ut igjen', 'Out, fill the hold, land, and out again') : L(planUnits(PLAN_KIND[g]) + ' ' + GEAR[PLAN_KIND[g]].u[1] + ' om bord', planUnits(PLAN_KIND[g]) + ' ' + GEAR[PLAN_KIND[g]].u[3] + ' aboard')), a.gear === g, 'data-g="' + g + '"', !!why); }).join(''));
+      if (kind) h.push('<h4 style="margin-top:14px">' + L('Jukse i tillegg mens redskapet står?', 'Jig as well while the gear stands?') + '</h4>' + BIG('dr-zjig', L('Ja, juks til lasten er full', 'Yes, jig until the hold is full'), L('Mer fisk per døgn. Det holdes plass til redskapet.', 'More fish a day. Room is kept for the gear.'), a.jig, 'data-v="1"') + BIG('dr-zjig', L('Nei, bare redskapet', 'No, only the gear'), L('Båten venter ved redskapet', 'The boat waits by the gear'), !a.jig, 'data-v="0"'));
+      h.push(nav(true, true, !gearWhy(a.gear)));
+    } else if (wz.step === 2){
+      const sp = spotCache || (spotCache = planSpots(a.base)), pick = (k, q) => a[k] && dist(a[k], q) < 0.3;
+      const list = (k, kd) => sp.map((q, i) => BIG('dr-zspot', q.kind === 'mark' ? L('Fangstplass (' + q.kgph + ' kg/t da du var der)', 'Catch mark (' + q.kgph + ' kg/h when you were there)') : q.kind === 'set' ? L('Der redskapet står nå', 'Where the gear stands now') : L('Der båten er nå', 'Where the boat is now'), spotLine(q, kd), pick(k, q), 'data-k="' + k + '" data-i="' + i + '"')).join('') +
+        BIG('dr-zspot', L('Velg i kartet …', 'Choose in the chart …'), a[k] && !sp.some(q => pick(k, q)) ? L('Valgt: ', 'Chosen: ') + spotLine(a[k], kd) : L('Trykk der du vil i kartplotteren', 'Tap where you like in the plotter'), a[k] && !sp.some(q => pick(k, q)), 'data-k="' + k + '" data-i="map"');
+      h.push(head(2, kind ? L('Hvor skal redskapet stå?', 'Where shall the gear stand?') : L('Hvor skal dere jukse?', 'Where will you jig?')) + '<p class="ph-note">' + L('Plassen avgjør fangsten. Finn fisken med ekkoloddet, eller bruk plasser du har fisket godt på før. Fangstrapporten viser etter hvert hvordan plassene gir.', 'The place decides the catch. Find the fish with the sounder, or use places you have fished well before. The catch report shows in time how the places give.') + '</p>' + list(kind ? 'gp' : 'jp', kind));
+      if (kind && a.jig) h.push('<h4 style="margin-top:14px">' + L('Hvor skal dere jukse?', 'Where will you jig?') + '</h4>' + BIG('dr-zspot', L('Ved redskapet', 'By the gear'), L('Båten er på plass når det skal trekkes', 'The boat is in place for the haul'), !a.jp, 'data-k="jp" data-i="gear"') + list('jp', null));
+      h.push(nav(true, true, !!(kind ? a.gp : a.jp)));
+    } else if (wz.step === 3){
+      const W = PLANW.wx;
+      h.push(head(3, L('Hvor tøft vær skal båten gå ut i?', 'How rough a weather shall the boat go out in?')) +
+        BIG('dr-zwx', L('Forsiktig', 'Careful'), L('Inntil ' + W.safe.wind + ' m/s og ' + fmt(W.safe.hs, 1) + ' m sjø', 'Up to ' + W.safe.wind + ' m/s and ' + fmt(W.safe.hs, 1) + ' m sea'), a.wx === 'safe', 'data-v="safe"') +
+        BIG('dr-zwx', L('Vanlig', 'Normal'), L('Inntil ' + W.normal.wind + ' m/s og ' + fmt(W.normal.hs, 1) + ' m sjø', 'Up to ' + W.normal.wind + ' m/s and ' + fmt(W.normal.hs, 1) + ' m sea'), a.wx === 'normal', 'data-v="normal"') +
+        BIG('dr-zwx', L('Tøff', 'Rough'), L('Inntil ' + W.tough.wind + ' m/s og ' + fmt(W.tough.hs, 1) + ' m sjø (aldri mer enn båten tåler)', 'Up to ' + W.tough.wind + ' m/s and ' + fmt(W.tough.hs, 1) + ' m sea (never more than the boat takes)'), a.wx === 'tough', 'data-v="tough"') +
+        '<h4 style="margin-top:14px">' + L('Når starter dagen?', 'When does the day begin?') + '</h4>' + kvr(L('Første avgang', 'First departure'), '<button data-pa="dr-zstart" data-d="-0.5">−</button> ' + hh(a.start) + ' <button data-pa="dr-zstart" data-d="0.5">+</button>') +
+        '<p class="ph-note">' + L('Planen holder arbeidsdagen innenfor ' + PLANW.work + ' timer, så mannskapet alltid får ' + PLANW.rest + ' timer hvile i strekk.', 'The plan keeps the working day within ' + PLANW.work + ' hours, so the crew always get ' + PLANW.rest + ' hours of rest in one stretch.') + '</p>' + nav(true, true));
+    } else {
+      const o = driftOps(), w = o && o.wiz === a ? a : null, est = w && w.est;
+      h.push(head(4, L('Slik blir dagen', 'This is the day')));
+      if (building) h.push('<p class="ph-note">' + L('Lager planen …', 'Making the plan …') + '</p></div>');
+      else if (!est){ if (a.err) h.push('<p class="bad">' + a.err + '</p>'); h.push('<p class="ph-note">' + L('Planen legger turene, stasjonene og leveringene slik at båten fisker mest mulig, og så mannskapet får hvilen sin.', 'The plan lays out the trips, stations and landings so the boat fishes as much as she can, and the crew get their rest.') + '</p>' + B('dr-zbuild', L('Lag planen', 'Make the plan'), '', 'p') + nav(true, false)); }
+      else h.push(dayCard(o, true) + '<div class="ph-row2">' + B('dr-zstep', L('← Tilbake', '← Back'), 'data-s="3"') + B('dr-zuse', L('Bruk planen og slå den på', 'Use the plan and switch it on'), '', 'p') + '</div></div>');
+    }
+    h.push('</div>'); return h.join('');
+  }
+  // the day, as the plan maker reckoned it: the figure to beat, the rest kept, and each step with its clock
+  function dayCard(o, inWiz){
+    const w = o.wiz, e = w && w.est; if (!e) return '';
+    return '<div class="dr-day">' + kvr(L('Turer i døgnet', 'Trips a day'), e.trips) +
+      kvr(L('Arbeid / hvile', 'Work / rest'), fmt(e.work, 1) + L(' t / ', ' h / ') + fmt(e.rest, 1) + L(' t i strekk', ' h in one stretch')) + kvr(L('Levering', 'Landing'), nm(e.mottak)) +
+      '<div class="dr-pv">' + e.tl.map(x => '<div class="dr-ev"><span>' + hh(x.t) + '</span><span>' + (S.lang === 'no' ? x.no : x.en) + '</span></div>').join('') + '</div>' +
+      '<p class="ph-note">' + (inWiz ? L('Tidene er anslag. Båten jukser bare til lasten er full, og venter på mottaket hvis det er stengt.', 'The times are estimates. The boat only jigs until the hold is full, and waits at the plant if it is closed.') : L('Fangstrapporten under viser hva planen leverer. Prøv andre plasser og se om tallet går opp.', 'The catch report below shows what the plan lands. Try other places and see if the figure goes up.')) + '</p></div>';
+  }
+  function summary(o){
+    const w = o.wiz, C = driftCheck(o), h = ['<div class="ph-c">'];
+    h.push('<div class="ph-card"><h4>' + L('Driftsplan · «', 'Operations plan · «') + S.boatName + '»</h4>' +
+      '<button class="dr-onoff' + (o.on ? ' on' : '') + '" data-pa="dr-on"' + (!o.on && !C.ok ? ' disabled' : '') + '>' + (o.on ? L('På · trykk for å slå av', 'On · tap to switch off') : C.ok ? L('Av · trykk for å slå på', 'Off · tap to switch on') : L('Ikke klar', 'Not ready')) + '</button>' +
+      (o.paused ? '<p class="bad">' + L('Satt på pause: ', 'Paused: ') + (S.lang === 'no' ? o.paused.no : o.paused.en) + '</p>' : '') + (!C.ok ? C.errors.map(e => '<p class="bad">' + e + '</p>').join('') : '') +
+      (o.on ? '<p class="ph-note">' + driftNext(o) + '</p>' : '') +
+      kvr(L('Hviler i', 'Rests in'), nm(w.base)) + kvr(L('Fisker med', 'Fishes with'), w.gear === 'juksa' ? L('bare juksa', 'jigging only') : driftRigName(w.gear).toLowerCase() + (w.jig ? L(' og juksa', ' and the jig') : '')) +
+      kvr(L('Vær', 'Weather'), {safe:L('forsiktig', 'careful'), normal:L('vanlig', 'normal'), tough:L('tøft', 'rough')}[w.wx] || '') + '</div>');
+    h.push('<div class="ph-card"><h4>' + L('Dagen', 'The day') + '</h4>' + dayCard(o, false) + '<div class="ph-row2">' + B('dr-zedit', L('Endre planen', 'Change the plan'), '', 'p') + B('dr-zadv', L('Flere valg', 'More choices')) + '</div></div>');
+    h.push(report(o));
+    h.push('<div class="ph-card">' + B('dr-reset', L('Slett driftsplanen', 'Delete the plan')) + '</div></div>');
+    return h.join('');
+  }
   function page(){
+    if (wz) return wizPage();
+    const o = driftOps();
+    if (!o) return '<div class="ph-c"><div class="ph-card"><h4>' + L('Driftsplan for «', 'Operations plan for «') + S.boatName + '»</h4><p class="ph-note">' + L('Med en driftsplan fisker, leverer og hviler båten på egen hånd, hver dag. Du svarer på fem spørsmål, og planen regner ut turene som gir mest levert per døgn innenfor hviletiden.', 'With an operations plan the boat fishes, lands and rests on her own, every day. You answer five questions, and the plan works out the trips that land the most a day within the rest rules.') + '</p>' +
+      B('dr-znew', L('Lag driftsplan', 'Make a plan'), '', 'p') + '</div></div>';
+    if (adv || !o.wiz || !o.wiz.est) return advPage();
+    return summary(o);
+  }
+  function advPage(){
     const o = driftOps(), b = S.boat, h = ['<div class="ph-c">'];
+    if (o && o.wiz) h.push('<div class="ph-card">' + B('dr-zsimple', L('← Tilbake til den enkle visningen', '← Back to the simple view')) + '<p class="ph-note">' + L('Endrer du øktene her, lages de ikke på nytt av spørsmålene før du trykker «Endre planen» igjen.', 'If you change the sessions here, the questions do not remake them until you press «Change the plan» again.') + '</p></div>');
     if (!o){
       h.push('<div class="ph-card"><h4>' + L('Driftsplan for «', 'Operations plan for «') + S.boatName + '»</h4><p class="ph-note">' + L('En driftsplan lar båten fiske, levere og hvile på egen hånd, med flere turer i døgnet om du vil. Du velger utstyr, tegner rutene i kartplotteren og setter grenser for vær. Planen gjelder båten, uansett hvem som er om bord.', 'An operations plan lets the boat fish, land and rest on its own, with several trips a day if you like. You choose the gear, draw the routes in the plotter and set the weather limits. The plan belongs to the boat, whoever is aboard.') + '</p>' +
         B('dr-new', L('Lag driftsplan', 'Make a plan'), '', 'p') + (S.driftTpl && S.driftTpl.length ? tplList() : '') + '</div>'); h.push('</div>'); return h.join('');
@@ -105,7 +191,9 @@ const DRIFTUI = (() => {
   function report(o){
     const days = {}; for (const r of o.rep){ const k = gDate(r.t / 60).toISOString().slice(0, 10); const d = days[k] || (days[k] = {n:0, kg:0, kr:0}); d.n++; d.kg += r.kg; d.kr += r.kr; }
     const ks = Object.keys(days).sort().reverse().slice(0, repOpen ? 14 : 3);
-    return '<div class="ph-card"><h4>' + L('Dagsrapport', 'Day report') + '</h4>' + (ks.length ? ks.map(k => kvr(k.slice(8) + '.' + k.slice(5, 7) + '.', days[k].n + L(' leveringer · ', ' landings · ') + fmt(days[k].kg, 0) + ' kg · ' + kr(days[k].kr))).join('') + (Object.keys(days).length > 3 ? B('dr-rep', repOpen ? L('Færre dager', 'Fewer days') : L('Flere dager', 'More days')) : '') : '<p class="ph-note">' + L('Ingen leveringer på planen ennå.', 'No landings on the plan yet.') + '</p>') + '</div>';
+    const all = Object.keys(days).sort().reverse(), last7 = all.slice(0, 7), sum7 = last7.reduce((a, k) => a + days[k].kg, 0), best = all.reduce((m, k) => days[k].kg > (m ? days[m].kg : -1) ? k : m, null);
+    const head2 = all.length ? kvr(L('Snitt per døgn (siste ' + last7.length + ')', 'Average a day (last ' + last7.length + ')'), fmt(sum7 / Math.max(1, last7.length), 0) + ' kg') + (best ? kvr(L('Beste døgn', 'Best day'), best.slice(8) + '.' + best.slice(5, 7) + '. · ' + fmt(days[best].kg, 0) + ' kg') : '') : '';
+    return '<div class="ph-card"><h4>' + L('Fangstrapport', 'Catch report') + '</h4>' + head2 + (ks.length ? ks.map(k => kvr(k.slice(8) + '.' + k.slice(5, 7) + '.', days[k].n + L(' leveringer · ', ' landings · ') + fmt(days[k].kg, 0) + ' kg · ' + kr(days[k].kr))).join('') + (Object.keys(days).length > 3 ? B('dr-rep', repOpen ? L('Færre dager', 'Fewer days') : L('Flere dager', 'More days')) : '') : '<p class="ph-note">' + L('Ingen leveringer på planen ennå.', 'No landings on the plan yet.') + '</p>') + '</div>';
   }
   // ---- the route of a trip: the chart plotter draws it, from where the trip starts (core DRIFTCTX)
   function draw(sid){
@@ -120,6 +208,7 @@ const DRIFTUI = (() => {
   }
   // the route is saved to the session
   function saveRoute(){
+    if (DRIFTCTX && DRIFTCTX.spot){ const c = DRIFTCTX, q = S.draft.filter(w => !w.port).pop(); if (!q) return false; if (wz){ wz.a[c.spot] = {x:q.x, y:q.y}; wz.a.est = null; } S.draft = []; DRIFTCTX = null; if (typeof routeChanged === 'function') routeChanged(); return true; }
     const c = DRIFTCTX, o = driftOps(), s = c && o && o.sess.find(x => x.id === c.sid), last = S.draft[S.draft.length - 1];
     if (!s) { DRIFTCTX = null; return false; }
     if (!last || !last.port){ toast(L('Ruta må slutte i en havn.', 'The route must end in a port.')); return false; }
@@ -135,6 +224,28 @@ const DRIFTUI = (() => {
   function act(a, d){
     const o = driftOps();
     if (a === 'dr-new'){ S.ops = driftNew(); return true; }
+    if (a === 'dr-znew' || a === 'dr-zedit'){ wz = {step:0, a:o && o.wiz ? Object.assign({}, o.wiz, {est:null, err:null}) : planWizDefaults()}; spotCache = null; adv = false; return true; }
+    if (a === 'dr-zcancel'){ wz = null; return true; }
+    if (a === 'dr-zadv'){ adv = true; return true; }
+    if (a === 'dr-zsimple'){ adv = false; return true; }
+    if (wz){
+      const A = wz.a;
+      if (a === 'dr-zstep'){ wz.step = clamp(+d.s, 0, STEPS - 1); if (wz.step === 2) spotCache = null; return true; }
+      if (a === 'dr-zbase'){ A.base = d.p; A.est = null; spotCache = null; return true; }
+      if (a === 'dr-zgear'){ if (gearWhy(d.g)) return false; A.gear = d.g; A.est = null; if (!PLAN_KIND[d.g]) A.gp = null; return true; }
+      if (a === 'dr-zjig'){ A.jig = d.v === '1'; A.est = null; return true; }
+      if (a === 'dr-zwx'){ A.wx = d.v; A.est = null; return true; }
+      if (a === 'dr-zstart'){ A.start = clamp(A.start + (+d.d), 0, 12); A.est = null; return true; }
+      if (a === 'dr-zspot'){
+        if (d.i === 'gear'){ A.jp = null; A.est = null; return true; }
+        if (d.i === 'map'){ const base = portById(A.base) || portById(S.boat.port) || nearestPort(S.boat.pos);
+          DRIFTCTX = {vid:S.cur, sid:null, spot:d.k, home:base.id, origin:{x:base.p.x, y:base.p.y}, rig:A.gear, name:L('Driftsplan', 'Operations plan')}; S.draft = []; if (typeof routeChanged === 'function') routeChanged();
+          PHONE.show(false); if (typeof DOCK !== 'undefined' && DOCK.close) DOCK.close(); toast(d.k === 'gp' ? L('Trykk i kartet der redskapet skal stå.', 'Tap the chart where the gear shall stand.') : L('Trykk i kartet der dere skal jukse.', 'Tap the chart where you will jig.')); return true; }
+        const q = (spotCache || [])[+d.i]; if (!q) return false; A[d.k] = {x:q.x, y:q.y}; A.est = null; return true; }
+      if (a === 'dr-zbuild'){ const op = o || (S.ops = driftNew()); op.on = false; op.wiz = A; building = true; planBuild(op, () => { building = false; rerender(); }); return true; }
+      if (a === 'dr-zuse'){ const op = driftOps(); if (!op || !op.wiz || !op.wiz.est) return false; const C = driftCheck(op); if (!C.ok){ toast(C.errors[0]); return true; }
+        op.bestKg = Math.max(op.bestKg || 0, op.wiz.est.kg); op.on = true; op.paused = null; op.fails = 0; op.a0 = null; op.idx = 0; op.cn = 0; op.hold = 0; wz = null; adv = false; toast(L('Driftsplanen er på.', 'The plan is on.')); return true; }
+    }
     if (!o) return false;
     const s = d.id && o.sess.find(x => x.id === d.id);
     if (a === 'dr-on'){ if (o.on){ o.on = false; return true; } const C = driftCheck(o); if (!C.ok){ toast(C.errors[0]); return true; } o.on = true; o.paused = null; o.fails = 0; o.a0 = null; o.idx = 0; o.cn = 0; o.hold = 0; toast(L('Driftsplanen er på.', 'The plan is on.')); return true; }

@@ -3585,6 +3585,17 @@ Bare båten, aldri fiskeutstyr eller haler. Tallene står i `core/03-simulation.
 
 Juksa er alltid tilgjengelig når båten ligger i ro (status `fishing`, ingen `b.gop`), uansett rigg. Rigget (`b.rig`) styrer nå bare det passive redskapet som settes og trekkes (line, garn, teiner), og valget «juksa» heter «Bare juksa». Under setting og haling går båten (`b.gop`), og da jukses det ikke. Lasterommet beskyttes mot at juksefangsten fyller det før redskapet er trukket: `gearReserve()` (`core/10-gear.js`) setter av det redskapet i sjøen ventes å gi (det største av det som er fanget ×1,2 og en typisk fangst per enhet: line 70 kg per stamp, garn 40, teine 7), og `fish()` slutter å jukse når resten av rommet er reservert. Blir lasten likevel full under haling, står resten av redskapet igjen (som før). Test: `tests/jigalongtest.py`.
 
+### 5.39 Planleggeren: driftsplan med fem spørsmål (Jonas 09.10.2026)
+
+Mål: spilleren holder hviletiden og får mest mulig levert per døgn, og systemet skal forstås av alle. Ferdigheten ligger i plassene (hvor redskapet står, hvor det jukses), ikke i å stille klokker.
+- **Spørsmålene** (`ui/05c-drift.js`, `wizPage`): 1) hvileplass (forhåndsvalgt der båten ligger hvis mannskapet kan sove der, ellers nærmeste rorbu; `planRestOk`), 2) redskap (bare juksa, line, garn, teiner; sperret med grunn uten haler eller redskap) og om det skal jukses i tillegg, 3) plass for redskapet og for juksa (egne fangstprikker, redskapet i sjøen, der båten er, eller «Velg i kartet» med `DRIFTCTX.spot`), 4) vær (Forsiktig 10 m/s/1,5 m, Vanlig 13/2,5, Tøff 16/3,5, aldri over båtens grense) og første avgang, 5) «Lag planen».
+- **Planleggeren** (`core/06f-plan.js`, `planBuild`): finner leia mellom base, felt, juksplass og mottak (`leiaRoute`), velger mottaket som gir kortest vei felt → mottak → base, prøver kandidater (antall turer; line satt og trukket på samme tur eller over to turer; garn og teiner én gang i døgnet med 24 t ståtid) og velger den som lander mest innenfor `PLANW.work` = 14 t. Resultatet skrives som vanlige økter i planen (`o.sess`), så motoren i `06d-drift.js` kjører dem. Senere turer har `asap` og går så snart båten er ledig.
+- **Ingen forventet fangst vises.** Planleggeren regner bare med det spilleren vet: egne fangstprikker innen 1,5 km de siste 14 dagene (`planMark`), ellers et nøytralt standardtall (`HEATG.fair`). Plasslista viser «du fikk X kg/t her» eller «ikke fisket her ennå». Fangstrapporten (levert per døgn, snitt siste 7 døgn, beste døgn) er tilbakemeldingen.
+- **Hvilen:** når hviløkta begynner, settes `o.restWant`; når båten ligger ved basen, `o.restT0`. Første tur neste dag venter til det har gått `PLANW.rest` = 10 t. Hindrer været turen hjem, hviler båten der den ligger (tid ved kai teller som hvile i `restHour`).
+- **Juks:** `S.plan.noJig` når spilleren har valgt redskap uten juks (båten venter ved redskapet). `gearReserve` holder bare av plass når redskapet skal trekkes på samme tur før levering.
+- **Flere valg** viser den gamle detaljvisningen (økter, 2+2, maler, test av planen). Endringer der lages ikke om av spørsmålene før «Endre planen».
+- Test: `tests/plantest.py` (planer, sjekk, hvile, motoren én dag, veiviseren med klikk). Svakt: andre døgns hvile er ikke målt fordi været i testen holdt båten inne; balansen i tallene (`PLANW.setH/haulH`, `HEATG.fair`) er anslag.
+
 ## 10. Kjente problemer og åpne spørsmål
 
 - **Mannskapssystemet (01.10.2026) er ikke spilltestet.** Usikre punkter:

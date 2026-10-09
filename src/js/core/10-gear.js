@@ -110,7 +110,10 @@ const rigJig = () => rigOf() === 'juksa';
 // room kept free in the hold for what my gear in the sea is likely to bring up: what it has caught so far, at least a typical haul per unit
 // (kg: line a tub, net a net, pots a pot). Jigging stops when the hold is full but for this.
 const TYPKG = {line:70, garn:40, teine:7};
-function gearReserve(){ let r = 0; for (const s of mySets()){ let got = 0; for (const sp in (s.acc || {})) got += s.acc[sp].kg || 0; r += Math.max(got * 1.2, s.n * (TYPKG[s.kind] || 0)); } return Math.round(r); }
+function gearReserve(){
+  // on a plan the room is only kept when the gear is hauled on this trip, before the landing; else the jig may fill the hold
+  if (S.plan && S.plan.ops){ const rest = S.plan.wps.slice(S.plan.idx), pi = rest.findIndex(w => w.port); if (!(pi < 0 ? rest : rest.slice(0, pi)).some(w => w.act)) return 0; }
+  let r = 0; for (const s of mySets()){ let got = 0; for (const sp in (s.acc || {})) got += s.acc[sp].kg || 0; r += Math.max(got * 1.2, s.n * (TYPKG[s.kind] || 0)); } return Math.round(r); }
 function rigHas(r){ return !RIGS[r].kind || hasHauler(RIGS[r].kind); }
 const rigName = r => gL(RIGS[r].no, RIGS[r].en);
 const lc1 = x => x[0].toLowerCase() + x.slice(1);

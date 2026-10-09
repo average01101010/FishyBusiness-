@@ -1078,3 +1078,12 @@ body.vplot .depc{display:none}
 .dr-kv button,.ops-days button{background:#e3eaee;color:#15252f;border:1px solid #b9c7cf;border-radius:8px;font-weight:600}
 .dr-kv button.on,.ops-days button.on{background:#1e8c6e;color:#fff;border-color:#1e8c6e}
 .dr-kv button:disabled{background:transparent;color:#6c7d87;border:1px dashed #9aabb4;opacity:1}
+/* the plan maker (ui/05c-drift.js): one question at a time, big buttons for a finger */
+.dr-step{margin:0 0 2px;font-size:12px;color:#5b6c76;text-transform:uppercase;letter-spacing:.04em}
+.dr-big{display:block;width:100%;text-align:left;margin:6px 0;padding:12px 14px;border:1px solid #b9c7cf;border-radius:12px;background:#f4f7f9;color:#15252f;font:inherit;cursor:pointer}
+.dr-big b{display:block;font-size:15px}.dr-big small{display:block;margin-top:2px;font-size:12.5px;color:#4b5d68}
+.dr-big.on{background:#1e8c6e;border-color:#1e8c6e;color:#fff}.dr-big.on small{color:#e3f4ee}
+.dr-big:disabled{background:transparent;border-style:dashed;color:#7d8d96;cursor:default}.dr-big:disabled small{color:#8a9aa3}
+.dr-onoff{display:block;width:100%;margin:8px 0;padding:14px;border:0;border-radius:12px;background:#e3eaee;color:#15252f;font:700 15px var(--sans)}
+.dr-onoff.on{background:#1e8c6e;color:#fff}.dr-onoff:disabled{background:transparent;border:1px dashed #9aabb4;color:#6c7d87}
+.dr-day .dr-pv{margin-top:8px}

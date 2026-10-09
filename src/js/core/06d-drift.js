@@ -183,7 +183,7 @@ function driftSync(o, H){
   for (let g = 0; g < 400; g++){
     const due = driftDue(o);
     if (o.idx === 0){ if (!driftDayOn(o) || due < H - DRF.window){ o.cn++; continue; } break; }
-    if (due < H - DRF.late){ o.skipped++; o.idx = (o.idx + 1) % o.sess.length; if (!o.idx) o.cn++; continue; }
+    if (due < H - DRF.late && !o.sess[o.idx].asap){ o.skipped++; o.idx = (o.idx + 1) % o.sess.length; if (!o.idx) o.cn++; continue; }
     break;
   }
 }
@@ -199,17 +199,27 @@ function opsStep(H){
   const atAnchor = b.status === 'idle' && !!b.anch;
   if ((b.status !== 'port' && !atAnchor) || (b.status === 'port' && portBusy(b)) || S.plan || b.land || b.shift) return;
   if (o.hold && H < o.hold) return;
+  // the rest at the base (a plan from the plan maker, 06f-plan.js): it is counted from when the boat lies there, and the first trip of a
+  // day waits until it has lasted PLANW.rest hours, so the crew's rest is always had in one stretch
+  if (o.wiz && o.restWant && b.status === 'port' && b.port === o.wiz.base){ o.restT0 = S.t; o.restWant = false; }
   driftSync(o, H);
-  if (H < driftDue(o)) return;
   const s = o.sess[o.idx], sk = opsSkipper() || S.crew[0] || null;
+  // a session that follows straight on from the last (asap) goes when the boat is free, not at a clock
+  if (H < driftDue(o) && !(s.asap && o.idx > 0)) return;
+  if (o.wiz && o.idx === 0 && !o.restWant && o.restT0 != null && S.t < o.restT0 + PLANW.rest * 60){
+    if ((o.restTold || -1e9) < o.restT0){ o.restTold = S.t; msg(sk ? sk.name : gL('Driftsplan', 'Operations plan'), 'Mannskapet hviler til kl. ' + driftClock(driftHod((o.restT0 + PLANW.rest * 60) / 60)) + ' før neste tur.', 'The crew rest until ' + driftClock(driftHod((o.restT0 + PLANW.rest * 60) / 60)) + ' before the next trip.'); }
+    return; }
   if (!sk && !meAboard()){ driftFail(o, null, 'Planen kan ikke gå: ingen mannskap.', 'The plan cannot run: no crew.'); return; }
   if (S.jobs && S.jobs.length){ o.hold = H + 1; if (!o.jobTold || o.jobTold < S.t - 600){ o.jobTold = S.t; msg(sk ? sk.name : '', 'Verkstedet jobber på båten, så jeg venter.', 'The yard is working on the boat, so I wait.'); } return; }
   const anchorRest = s.type === 'hvile' && s.at === 'anker', restPort = s.type === 'hvile' ? (anchorRest ? s.near : s.at) : null;
   const dest = s.type === 'hvile' ? portById(restPort) : portById(s.route.home);
   if (!dest){ driftAdvance(o); return; }
-  if (s.type === 'hvile' && (anchorRest ? b.anch : b.port === s.at)){ driftAdvance(o); return; }
+  if (s.type === 'hvile' && (anchorRest ? b.anch : b.port === s.at)){ if (o.wiz){ o.restT0 = S.t; o.restWant = false; } driftAdvance(o); return; }
   // the weather over the session
   const dur = Math.max(1, driftSessHours(o, s)), wx = driftWxAhead(o, H, dur);
+  // a plan from the plan maker: when the weather keeps her from going to the base to rest, she rests where she lies (hours at the quay are
+  // rest by the rule, 14-crewlife.js restHour), and the next day waits out the rest as usual
+  if (!wx.ok && s.type === 'hvile' && o.wiz && b.status === 'port'){ o.restT0 = S.t; o.restWant = false; driftAdvance(o); log((sk ? sk.name : gL('Båten', 'The boat')) + ' blir liggende i ' + (portById(b.port) || {name:'havna'}).name + ' og hviler. Været er for dårlig til å gå til ' + dest.name + '.', (sk ? sk.name : 'The boat') + ' stays in ' + (portById(b.port) || {name:'the harbour'}).name + ' to rest. The weather is too bad to go to ' + dest.name + '.'); return; }
   if (!wx.ok){ o.delay = (o.delay || 0) + 1; o.hold = H + 1;
     if (o.delay > DRF.maxDelay){ o.delay = 0; o.skipped++; driftAdvance(o); msg(sk ? sk.name : '', 'Hopper over turen. Været holdt seg over grensene i ' + DRF.maxDelay + ' timer.', 'Skipping the trip. The weather stayed over the limits for ' + DRF.maxDelay + ' hours.'); }
     else if (o.delay === 1) msg(sk ? sk.name : '', 'Blir på land. Varselet gir ' + fmt(wx.w, 0) + ' m/s og ' + fmt(wx.h, 1) + ' m sjø, over grensene (' + o.wx.wind + ' m/s, ' + fmt(o.wx.hs, 1) + ' m).', 'Staying ashore. The forecast gives ' + fmt(wx.w, 0) + ' m/s and ' + fmt(wx.h, 1) + ' m sea, over the limits (' + o.wx.wind + ' m/s, ' + fmt(o.wx.hs, 1) + ' m).');
@@ -253,7 +263,8 @@ function opsStep(H){
   if (s.type !== 'hvile' && !me && !S.lic && b.kgear && !kveiteClosed(H)) S.target = 'kveite';
   const wps = s.type === 'hvile' ? pre : pre.concat(s.route.wps.map(w => ({...w})));
   if (!wps.length){ driftAdvance(o); return; }
-  S.plan = {wps, idx:0, speed:s.type === 'hvile' ? S.draftSpeed : s.route.speed, returning:false, depAt:null, ops:true, unsafe:[]};
+  S.plan = {wps, idx:0, speed:s.type === 'hvile' ? S.draftSpeed : s.route.speed, returning:false, depAt:null, ops:true, unsafe:[], noJig:!!(o.wiz && PLAN_KIND[o.wiz.gear] && !o.wiz.jig)};
+  if (s.type === 'hvile' && o.wiz) o.restWant = true;
   o.cur = {sid:s.id, type:s.type, t0:S.t, at:o.sess.indexOf(s)}; o.fails = 0; o.paused = null; driftAdvance(o);
   if (s.type === 'hvile') log((sk ? sk.name : gL('Båten', 'The boat')) + (anchored ? ' går ut og ligger til ankers nær ' + dest.name + ' for å hvile.' : fellBack ? ' går til kai i ' + dest.name + ' for å hvile. Været er for hardt til å ligge til ankers.' : ' går til ' + dest.name + ' for å hvile.'), (sk ? sk.name : 'The boat') + (anchored ? ' goes out and anchors near ' + dest.name + ' to rest.' : fellBack ? ' goes to the quay in ' + dest.name + ' to rest. The weather is too hard to lie at anchor.' : ' goes to ' + dest.name + ' to rest.'));
   else if (me) log('Gikk ut på driftsplanen med deg som høvedsmann. ' + (sk ? sk.name + ' er mannskap på turen.' : ''), 'Went out on the plan with you as master. ' + (sk ? sk.name + ' is crew on this trip.' : ''));
