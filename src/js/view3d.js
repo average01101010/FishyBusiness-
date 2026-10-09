@@ -233,13 +233,35 @@ const G3 = (() => {
     'float dif=max(dot(n,uSun),0.0)*mix(0.08,1.0,smoothstep(0.15,0.85,vS));vec3 amb=mix(uGnd,uAmb,n.y*0.5+0.5);vec3 col=c*(amb+uSunCol*dif+pLit(vW,n));float f=1.0-exp(-uFogD*uFogD*d*d);gl_FragColor=vec4(mix(col,uFog,f),1.0);}';
   const SKY_VS = 'attribute vec2 aP;varying vec2 vP;void main(){vP=aP;gl_Position=vec4(aP,0.9999,1.0);}';
   const SKY_FS = 'precision highp float;uniform vec3 uF;uniform vec3 uR;uniform vec3 uU;uniform vec2 uTan;uniform vec3 uZen;uniform vec3 uHor;uniform vec3 uSunD;uniform vec3 uSunCol;' +
-    'uniform float uCloud;uniform float uTime;uniform float uStars;uniform float uAur;uniform float uDay;uniform vec2 uWindDir;uniform vec3 uMoonD;uniform float uMoonA;varying vec2 vP;' + NOISE +
+    'uniform vec3 uCX;uniform vec3 uCY;uniform vec3 uCP;uniform float uPx;uniform float uCloud;uniform float uTime;uniform float uStars;uniform float uAur;uniform float uDay;uniform vec2 uWindDir;uniform vec3 uMoonD;uniform float uMoonA;varying vec2 vP;' + NOISE +
     // the aurora's line across the sky plane: wide arcs, S-folds, small ripples and a tighter curl that wanders along it
-    'float aFold(float x,float fk,float T){float xc=5.0*sin(T*0.007+fk*5.0);float q=x-xc;' +
-    'return 1.1*sin(x*0.16+T*0.012+fk*2.1)+0.55*sin(x*0.37-T*0.02+fk*4.7)+0.3*sin(x*0.9+T*0.05+fk)+0.6*(ns(vec2(x*0.22-T*0.015,fk*7.0))-0.5)+0.9*exp(-q*q*0.12)*sin(q*1.6);}' +
+    // lod fades the small folds and the curl where the samples along the ray stand too far apart to follow them (low in the sky)
+    'float aFold(float x,float fk,float T,float lod){float xc=5.0*sin(T*0.007+fk*5.0);float q=x-xc;' +
+    'return 1.1*sin(x*0.16+T*0.012+fk*2.1)+0.55*sin(x*0.37-T*0.02+fk*4.7)+lod*(0.3*sin(x*0.9+T*0.05+fk)+0.9*exp(-q*q*0.12)*sin(q*1.6))+0.6*(ns(vec2(x*0.22-T*0.015,fk*7.0))-0.5);}' +
     'void main(){vec3 d=normalize(uF+vP.x*uTan.x*uR+vP.y*uTan.y*uU);float h=clamp(d.y,0.0,1.0);vec3 col=mix(uHor,uZen,pow(h,0.55));' +
     'float sd=max(dot(d,uSunD),0.0);col+=uSunCol*(pow(sd,12.0)*0.35+smoothstep(0.9993,0.99965,sd)*2.5)*(1.0-uCloud*0.9);' +
-    'if(uStars>0.01&&d.y>0.0){vec3 q=floor(d*420.0);vec3 r3=fract(mod(q,1024.0)*0.1031);r3+=dot(r3,r3.yzx+33.33);float s=fract((r3.x+r3.y)*r3.z);col+=vec3(step(0.9972,s))*uStars*(0.4+0.6*fract(s*97.0));}' +
+    // the night sky (Jonas 09.10.2026: «litt mer realistisk og spektakulær ... Litt som i spillet skyrim»): the stars and the Milky Way
+    // stand where they are on the real sky and turn round the pole star with the sidereal time (uCX/uCY/uCP: the equator's RA 0h and
+    // 6h and the pole, from the boat's latitude and longitude). Stars are round points a pixel or two wide (uPx), many faint and few bright,
+    // white with blue and orange ones, twinkling more low in the sky; the northern Milky Way (Cassiopeia, Cygnus) a band with dark dust
+    // lanes and faint coloured clouds; and a faint green airglow along the horizon
+    'if(uStars>0.01&&d.y>-0.02){vec3 s=vec3(dot(d,uCX),dot(d,uCY),dot(d,uCP));float hz=smoothstep(-0.02,0.1,d.y);' +
+    'vec3 G=vec3(-0.868,-0.198,0.456),C=vec3(-0.055,-0.873,-0.484);float gb=dot(s,G),gl=dot(s,C)*0.5+0.5;' +
+    'float mwn=ns(s.xy*5.0+s.z*3.1)*0.55+ns(s.yz*11.0+s.x*2.3)*0.3+ns(s.zx*23.0)*0.15;' +
+    'float band=exp(-gb*gb/(0.03+0.02*mwn))*(0.45+0.55*gl);float dust=exp(-pow(gb-0.035*(mwn-0.5),2.0)/0.0016)*smoothstep(0.35,0.7,mwn);' +
+    'float mw=band*(0.35+0.9*mwn)*(1.0-0.75*dust);' +
+    'vec3 mwc=mix(vec3(0.42,0.48,0.72),vec3(0.75,0.62,0.55),gl)+vec3(0.25,0.05,0.3)*smoothstep(0.55,0.85,ns(s.xy*3.0+7.0))+vec3(0.0,0.12,0.22)*smoothstep(0.55,0.85,ns(s.yz*3.4+2.0));' +
+    'col+=mwc*mw*0.12*uStars*hz;' +
+    'vec3 a=abs(s);vec3 fc;vec2 uv;if(a.x>a.y&&a.x>a.z){uv=s.yz/a.x;fc=vec3(sign(s.x),0.0,0.0);}else if(a.y>a.z){uv=s.xz/a.y;fc=vec3(0.0,sign(s.y),0.0);}else{uv=s.xy/a.z;fc=vec3(0.0,0.0,sign(s.z));}' +
+    'vec3 st=vec3(0.0);for(int L=0;L<2;L++){float sc=L==0?70.0:210.0;vec2 pp=uv*sc;vec2 cl=floor(pp);vec2 fr=pp-cl;' +
+    'vec3 r3=fract(vec3(cl.xyx+fc.xyz*17.0+float(L)*31.0)*vec3(0.1031,0.1030,0.0973));r3+=dot(r3,r3.yzx+33.33);r3=fract((r3.xxy+r3.yzz)*r3.zyx);' +
+    'float m=L==0?smoothstep(0.965,1.0,r3.z)*smoothstep(0.965,1.0,r3.z)*2.4:smoothstep(0.87,1.0,r3.z)*(0.22+0.9*mw);' +
+    'if(m>0.02){vec2 sp=0.2+0.6*r3.xy;float dd=length(fr-sp)/sc;float rr=uPx*(0.75+0.9*min(m,2.0));' +
+    'float tw=1.0+(0.35+0.4*(1.0-hz))*sin(uTime*(3.0+r3.x*5.0)+r3.y*60.0)*step(0.3,m);' +
+    'vec3 sc3=mix(vec3(0.72,0.82,1.0),vec3(1.0,0.82,0.6),smoothstep(0.35,1.0,r3.x));if(r3.y<0.12)sc3=vec3(0.65,0.75,1.0);' +
+    'st+=sc3*m*tw*exp(-dd*dd/(rr*rr));}}' +
+    'col+=st*uStars*hz*0.85;' +
+    'col+=vec3(0.012,0.04,0.022)*uStars*exp(-pow((d.y-0.07)/0.07,2.0));}' +
     'if(uMoonA>0.01){float md=dot(d,uMoonD);float R=0.0095;if(md>cos(R*1.6)){vec3 up=abs(uMoonD.y)>0.99?vec3(1.0,0.0,0.0):vec3(0.0,1.0,0.0);vec3 rx=normalize(cross(up,uMoonD));vec3 ry=cross(uMoonD,rx);vec2 q=vec2(dot(d-uMoonD*md,rx),dot(d-uMoonD*md,ry))/R;float r2=dot(q,q);' +
     'if(r2<1.0){vec3 n=normalize(q.x*rx+q.y*ry-sqrt(1.0-r2)*uMoonD);float lit=smoothstep(-0.05,0.08,dot(n,uSunD));float mare=0.82+0.18*ns(q*3.0+7.0);col=mix(col,vec3(0.93,0.93,0.88)*mare*(0.06+0.94*lit),uMoonA*(1.0-uCloud*0.85));}' +
     'else col+=vec3(0.55,0.6,0.7)*uMoonA*0.06*exp(-(r2-1.0)*0.6)*(1.0-uCloud);}}' +
@@ -253,19 +275,21 @@ const G3 = (() => {
     // (557.7 nm oxygen) from the lower edge, red (630 nm) high up, a purple fringe under a strong one. Stronger activity brings the
     // curtains south, overhead (core auroraAt: activity, darkness, clouds and how far north the boat is).
     'if(uAur>0.01&&d.y>0.004){vec2 E=vec2(0.978,0.208),N=vec2(-E.y,E.x);vec2 g=d.xz/max(d.y,0.004);float gE=dot(g,E),gN=dot(g,N),T=uTime;vec3 acc=vec3(0.0);' +
-    'vec2 hd=normalize(vec2(gE,gN)+vec2(1e-5,0.0));' +
+    // the sheets have a soft thickness, at least as wide as the step along the ray on the plane (no gaps, no hard outlines however the
+    // sheet is seen; Jonas 09.10.2026: «bra i noen vinkler, men helt jævlig i andre ... litt mer blurry»). Each sample adds the glow of the
+    // sheet's own depth there, scaled so a sheet crossed square on gives the same light at any thickness, and more the longer the ray runs
+    // inside it (edge on), which the soft sheet limits by itself
+    'float gl=length(g),stp=0.22,dd=gl*stp,w=max(0.14,dd*0.75),lod=1.0-smoothstep(0.35,1.1,dd);' +
     'for(int k=0;k<3;k++){float fk=float(k);float c0=-2.6-fk*1.1+uAur*1.9+0.35*sin(T*0.011+fk*2.3);' +
-    'float sp=0.9;float Fp=gN*sp-c0-aFold(gE*sp,fk,T);' +
-    'for(int i=1;i<10;i++){float sc=0.9+float(i)*0.29;float Fc=gN*sc-c0-aFold(gE*sc,fk,T);' +
-    'if(Fp*Fc<=0.0){float alt=mix(sp,sc,Fp/(Fp-Fc+1e-6));float u=alt*gE;' +
-    'float seg=smoothstep(0.22,0.52,ns(vec2(u*0.11+fk*11.0,T*0.004+fk)));' +
-    'float lo=1.0+0.2*(ns(vec2(u*0.55+T*0.02,fk*3.0+5.0))-0.5)*2.0;' +
-    'if(seg>0.01&&alt>lo-0.1&&alt<3.4){float r=ns(vec2(u*7.0+T*0.3+fk*13.0,fk))*0.65+ns(vec2(u*19.0-T*0.55,fk+3.0))*0.35;r=0.2+1.1*r*r;' +
-    'float pulse=0.55+0.45*ns(vec2(u*0.35+T*0.09,fk*5.0+T*0.025));float hp=smoothstep(lo-0.08,lo+0.02,alt)*(exp(-(alt-lo)*1.7)+0.22*smoothstep(lo+0.6,lo+1.6,alt)*(1.0-smoothstep(2.8,3.4,alt)));' +
-    'vec3 hc=mix(vec3(0.13,1.0,0.45),vec3(0.9,0.14,0.3),smoothstep(lo+0.55,lo+1.5,alt))+vec3(0.55,0.0,0.6)*uAur*(1.0-smoothstep(lo-0.05,lo+0.08,alt));' +
-    'float sl=(aFold(u+0.05,fk,T)-aFold(u-0.05,fk,T))*10.0;vec2 nr=normalize(vec2(-sl,1.0));' +
-    'float edge=min(3.5,0.8/max(abs(dot(hd,nr)),0.22));acc+=hc*hp*r*pulse*edge*seg*(1.0-fk*0.3);}}' +
-    'sp=sc;Fp=Fc;}}' +
+    'for(int i=0;i<12;i++){float alt=0.9+float(i)*stp;float u=alt*gE;float F=gN*alt-c0-aFold(u,fk,T,lod);' +
+    'if(abs(F)<w*2.3){float lo=1.0+0.2*(ns(vec2(u*0.55+T*0.02,fk*3.0+5.0))-0.5)*2.0;' +
+    'float hp=smoothstep(lo-0.2,lo+0.06,alt)*(exp(-(alt-lo)*1.5)+0.16*smoothstep(lo+0.6,lo+1.6,alt)*(1.0-smoothstep(2.6,3.3,alt)));' +
+    'if(hp>0.003){float seg=smoothstep(0.2,0.55,ns(vec2(u*0.11+fk*11.0,T*0.004+fk)));' +
+    'float r=ns(vec2(u*3.2+T*0.22+fk*13.0,fk))*0.7+ns(vec2(u*8.0-T*0.4,fk+3.0))*0.3;r=0.3+0.95*r*r;' +
+    'float pulse=0.6+0.4*ns(vec2(u*0.35+T*0.09,fk*5.0+T*0.025));' +
+    'vec3 hc=mix(vec3(0.16,1.0,0.48),vec3(0.75,0.16,0.42),smoothstep(lo+0.6,lo+1.6,alt))+vec3(0.45,0.0,0.55)*uAur*(1.0-smoothstep(lo-0.1,lo+0.1,alt));' +
+    'float den=exp(-F*F/(w*w))*dd/w;acc+=hc*hp*r*pulse*seg*den*(1.0-fk*0.3)*0.5;}}}}' +
+    'acc=acc/(1.0+0.35*max(acc.g,max(acc.r,acc.b)));' +
     'col+=acc*uAur*0.6*smoothstep(0.0,0.06,d.y)+vec3(0.03,0.16,0.08)*uAur*smoothstep(0.0,0.35,d.y)*(1.0-smoothstep(0.35,0.9,d.y))*0.35;}' +
     'if(d.y>0.0){vec2 cp=d.xz/(d.y+0.08)*1.2+mod(uWindDir*uTime*0.004,64.0)+160.0;float c=ns(cp)*0.6+ns(cp*2.3)*0.3+ns(cp*5.1)*0.1;float cov=smoothstep(1.0-uCloud-0.05,1.0-uCloud+0.35,c);' +
     'vec3 cc=mix(uHor*0.85,vec3(0.9,0.92,0.95),0.35*uDay)*(0.3+0.7*uDay);col=mix(col,cc,cov*smoothstep(0.0,0.12,d.y)*0.95);}' +
@@ -275,6 +299,14 @@ const G3 = (() => {
   const PT_FS = 'precision mediump float;uniform vec3 uCol;uniform float uRound;varying float vA;' +
     'void main(){float a=vA;if(uRound>0.5){vec2 c=gl_PointCoord-0.5;float r=dot(c,c);if(r>0.25)discard;a*=uRound>1.5?exp(-r*14.0)*(1.0-r*4.0):1.0-r*4.0;}gl_FragColor=vec4(uCol,a);}';
 
+  // the celestial frame for the night sky: the pole at the boat's latitude, turned by the local sidereal time (GMST from the game's date)
+  function skyFrame(u, Hh, tn, bv){
+    const ll = natLL({x:bv.x / 1000, y:bv.z / 1000}), f = ll.lat * DEG, jd = (EPOCH + S.t * 6e4) / 864e5 + 2440587.5;
+    const th = 2 * Math.PI * (0.779057273264 + 1.00273781191135448 * (jd - 2451545)) + ll.lon * DEG;
+    const sf = Math.sin(f), cf = Math.cos(f), M = [0, cf, sf], E = [1, 0, 0], ct = Math.cos(th), st = Math.sin(th);
+    gl.uniform3fv(u.uCX, [ct * M[0] - st * E[0], ct * M[1], ct * M[2]]); gl.uniform3fv(u.uCY, [st * M[0] + ct * E[0], st * M[1], st * M[2]]);
+    gl.uniform3fv(u.uCP, [0, sf, -cf]); gl.uniform1f(u.uPx, 2 * tn / Math.max(Hh, 1));
+  }
   // A fragment shader asks for highp only where the device has it (some phones' GPUs have mediump only there); a shader that fails
   // says which one, and whether the context was lost, since a lost context fails every compile with no log (the user's phone
   // 05.10.2026: «shadere: Error», nothing more)
@@ -4150,7 +4182,7 @@ const G3 = (() => {
     const u = PK.u, tn = Math.tan(fov / 2);
     gl.uniform3fv(u.uF, V.F); gl.uniform3fv(u.uR, V.R); gl.uniform3fv(u.uU, V.U); gl.uniform2fv(u.uTan, [tn * asp, tn]);
     gl.uniform3fv(u.uZen, env.zen); gl.uniform3fv(u.uHor, env.hor); gl.uniform3fv(u.uSunD, env.sunDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uMoonD, env.moonDir || [0, -1, 0]); gl.uniform1f(u.uMoonA, env.moonA || 0);
-    gl.uniform1f(u.uCloud, env.cloud); gl.uniform1f(u.uTime, t); gl.uniform1f(u.uStars, env.stars); gl.uniform1f(u.uAur, env.aur); gl.uniform1f(u.uDay, env.day); gl.uniform2fv(u.uWindDir, env.windDir);
+    skyFrame(u, Hh, tn, bv); gl.uniform1f(u.uCloud, env.cloud); gl.uniform1f(u.uTime, t); gl.uniform1f(u.uStars, env.stars); gl.uniform1f(u.uAur, env.aur); gl.uniform1f(u.uDay, env.day); gl.uniform2fv(u.uWindDir, env.windDir);
     gl.disableVertexAttribArray(1); attr(0, SKYQ, 2); gl.drawArrays(gl.TRIANGLES, 0, 6);
     gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL);
     // far pass
