@@ -184,6 +184,9 @@ function vecWant(x0, y0, x1, y1, then){
 // let the decoded tiles go that are more than R km from every point given (km); VEC.drop's hooks (the 3D view) free what they built
 function vecPrune(pts, R = 60){
   const T = MAPD.man ? MAPD.man.tile : 50;
+  // what the open chart plotter shows is kept too: the boat's own pruning (05-vessels.js, the boat far off on a route) let the chart's
+  // roads go and come back again and again, so the streets of Tromsø blinked (Jonas' video 09.10.2026)
+  if (typeof document !== 'undefined' && document.body && document.body.classList.contains('vplot') && typeof view !== 'undefined') pts = pts.concat([{x:view.cx, y:view.cy}]);
   for (const [k, t] of VEC.tiles){
     const far = pts.every(p => Math.max(Math.abs(p.x - (t.tx + 0.5) * T), Math.abs(p.y - (t.ty + 0.5) * T)) > R + T / 2);
     if (far){ VEC.tiles.delete(k); VEC.ver++; for (const f of VEC.drop) f(t); }

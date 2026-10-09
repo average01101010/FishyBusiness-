@@ -3679,6 +3679,12 @@ Rederi-appen har også fått regnskap med lånene (tilbakemelding #9): resultat,
 - Test: `tests/searchtest.py`.
 - Svakt: like navn langs kysten skilles bare ved avstanden fra båten og typen.
 
+### 5.46 Veiene blinket i kartplotteren (video fra Jonas 09.10.2026)
+
+Tromsøyas gater kom og gikk i kartplotteren. `vecPrune` slapp vec-flisene som lå langt fra punktene den fikk. Båten ber om det med bare sin egen posisjon (`05-vessels.js`, 120 km), og 3D-visningen med øyet. Med båten på vei mot Båtsfjord ble flisene under kartet sluppet. Kartet ba om dem igjen (`vecWant`), de kom, og så ble de sluppet på nytt.
+
+Nå tar `vecPrune` alltid med midten av kartplotteren når den er åpen. Kontroll: med kartet over Tromsø og båten ved Båtsfjord sto 3 666 veier igjen etter en runde med `vecPrune`, mot 0 uten. Det er målt med `KYST_VEC=1`, fordi vec-pakkene bare er med i bygget da.
+
 ### 5.41 Puben i 3D (Jonas 08.10.2026)
 
 Jonas: «Spilleren trykker på pub og blir dermed sendt inn i puben hvor man sitter ved bardisken i first-person-view. Man skal kunne spinne hjulet som tidligere.» Og: «Kanskje noe som blir et sosialt element.»
