@@ -17,7 +17,7 @@ function hourly(){
   if (hr === 7){ let best = null; for (const {pt:q} of plantsNear(S.boat.pos, 10)){ const pr = price(q, 'torsk', H); if (!best || pr > best.pr) best = {q, pr}; }
     if (best && bars > 0) msg(best.q.name + ' Fisk', 'God morgen! Vi betaler ' + Math.round(best.pr) + ' kr/kg for torsk i dag (A-kvalitet).', 'Good morning! We pay NOK ' + Math.round(best.pr) + '/kg for cod today (grade A).'); }
   // monthly loan payment
-  for (const k of ['loan', 'loanIN']){ const L = S[k]; if (!L || S.t < L.next) continue; const r = L.rate / 12, int = L.bal * r, pay = Math.min(L.bal + int, L.pay); L.bal = L.bal + int - pay; S.cash -= pay; S.stats.costs += int; L.next += 30 * 24 * 60;
+  for (const k of ['loan', 'loanIN']){ const L = S[k]; if (!L || S.t < L.next) continue; const r = L.rate / 12, int = L.bal * r, pay = Math.min(L.bal + int, L.pay); L.bal = L.bal + int - pay; S.cash -= pay; S.stats.costs += int; L.intPaid = (L.intPaid || 0) + int; L.next += 30 * 24 * 60;
     msg(LOANS[k].who, 'Terminbeløp ' + Math.round(pay) + ' kr trukket. Restgjeld ' + Math.round(L.bal) + ' kr.', 'Instalment of NOK ' + Math.round(pay) + ' paid. Remaining NOK ' + Math.round(L.bal) + '.'); if (L.bal < 1) S[k] = null; }
   // yard: new vessel ready
   if (S.order && !S.order.told && S.t >= S.order.due){ S.order.told = true; msg('Verftet', 'Den nye båten er klar for overtakelse i Finnsnes.', 'Your new vessel is ready for handover in Finnsnes.'); }

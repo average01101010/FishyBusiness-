@@ -436,6 +436,7 @@ const PHONE = (() => {
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
     ['p102', '09.10.2026', 'Kjentmannen, nordlyset og driftsplanen', 'The old hand, the northern lights and the operations plan', [
+      ['Rederi-appen har fått et regnskap: inntekter, kostnader og resultat, hvert lån med restgjeld, rente, terminbeløp og betalte renter, og en balanse med flåtens verdi, gjeld og egenkapital.', 'The Company app has accounts: revenue, costs and result, each loan with its balance, rate, instalment and interest paid, and a balance sheet with the fleet\'s value, debt and equity.'],
       ['Rettet: når du drar i kartet med fingeren, står landet ikke lenger igjen mens navnene og båtene flytter seg, og det blir ikke tomme felt i kanten.', 'Fixed: when you drag the chart with a finger, the land no longer stays behind while the names and boats move, and no empty bands appear at the edge.'],
       ['Kartplotteren henter sjøkartet der du ser først, og tegner ikke hele kartet på nytt for hver bit som kommer. En linje øverst viser hvor langt den er kommet. Ruta du legger, hentes til enheten på forhånd.', 'The chart plotter fetches the chart where you look first, and no longer redraws the whole chart for every piece that arrives. A line at the top shows how far it has come. The route you lay is fetched to the device beforehand.'],
       ['Driftsplanen: velg opptil tre juksplasser etter hverandre. Mannskapet flytter seg når fangsten faller. Dagskortet viser når båten går ut igjen etter en levering. Er mottaket stengt når dagen er ferdig, hviler mannskapet ved kaia og leverer når det åpner, før neste tur.', 'Operations plan: choose up to three jig places in turn. The crew move on when the catch falls. The day card shows when the boat goes out again after a landing. If the plant is closed when the day is done, the crew rest at the quay and land when it opens, before the next trip.'],
@@ -1302,6 +1303,17 @@ const PHONE = (() => {
   function rederi(){
     const all = summaries(), al = all.flatMap(x => x.s.al), bar = (a, c, k) => '<div class="ph-bar"><i class="' + (k || '') + '" style="width:' + Math.round(clamp(a / Math.max(1, c), 0, 1) * 100) + '%"></i></div>';
     const h = ['<div class="ph-c"><div class="ph-card"><h4>' + (S.company || L('Rederiet', 'The company')) + '</h4>' + kv(L('Båter', 'Vessels'), all.length) + kv(L('Konto', 'Account'), kr(S.cash)) + kv(L('Inntekt i dag', 'Income today'), kr(Math.round(all.reduce((a, x) => a + x.s.inc, 0)))) + '</div>'];
+    // the company's books (tilbakemelding #9, Jonas 09.10.2026: «lånedetaljer burde stå i regnskapet til rederiet»): the year's result, each
+    // loan with its balance, rate, instalment and the interest paid on it, and what the company owns against what it owes
+    { const fleetV = all.reduce((a, x) => a + vesselValue(x.v), 0), D = debt(), res = S.stats.revenue - S.stats.costs;
+      const loanRows = k => { const Q = S[k]; if (!Q) return ''; return '<p class="ph-note" style="margin:8px 0 2px"><b>' + (k === 'loanIN' ? L('Risikolån, ', 'Risk loan, ') : L('Båtlån, ', 'Vessel loan, ')) + LOANS[k].who + '</b></p>' +
+        kv(L('Restgjeld', 'Balance'), kr(Math.round(Q.bal))) + kv(L('Rente', 'Interest'), fmt(Q.rate * 100, 1) + ' %') + kv(L('Terminbeløp', 'Monthly payment'), kr(Q.pay)) +
+        kv(L('Neste trekk', 'Next payment'), dayStr(Q.next / 60)) + kv(L('Renter betalt', 'Interest paid'), kr(Math.round(Q.intPaid || 0))); };
+      h.push('<div class="ph-card"><h4>' + L('Regnskap', 'Accounts') + '</h4>' + kv(L('Inntekter', 'Revenue'), kr(S.stats.revenue)) + kv(L('Kostnader', 'Costs'), kr(S.stats.costs)) +
+        kv(L('Resultat', 'Result'), kr(res)) + (S.loan || S.loanIN ? loanRows('loan') + loanRows('loanIN') : '<p class="ph-note">' + L('Rederiet har ingen lån.', 'The company has no loans.') + '</p>') +
+        '<p class="ph-note" style="margin:8px 0 2px"><b>' + L('Balanse', 'Balance sheet') + '</b></p>' + kv(L('Flåten (verdi)', 'The fleet (value)'), kr(fleetV)) + kv(L('Konto', 'Account'), kr(Math.round(S.cash))) +
+        kv(L('Gjeld', 'Debt'), kr(Math.round(D))) + kv(L('Egenkapital', 'Equity'), kr(Math.round(fleetV + S.cash - D))) +
+        '<button class="ph-btn" data-pa="open" data-a="bank">' + L('Til banken (nedbetaling og nye lån)', 'To the bank (repayment and new loans)') + '</button></div>'); }
     h.push('<h4 style="margin:10px 2px 6px">' + L('Trenger deg', 'Needs you') + (al.length ? ' (' + al.length + ')' : '') + '</h4>');
     if (!al.length) h.push('<p class="ph-note">' + L('Alt er i orden i flåten.', 'All is well in the fleet.') + '</p>');
     for (const a of al) h.push('<div class="ph-card"><div class="ph-kv"><span><b>«' + vget(vesselById(a.id), 'boatName') + '»</b> ' + L(a.no, a.en) + '</span><span><button class="ph-btn" style="margin:0" data-pa="goto" data-id="' + a.id + '" data-a="' + a.app + '">' + L('Åpne', 'Open') + '</button></span></div></div>');
