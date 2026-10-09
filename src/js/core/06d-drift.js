@@ -218,7 +218,7 @@ function opsStep(H){
     if ((o.restTold || -1e9) < o.restT0){ o.restTold = S.t; msg(sk ? sk.name : gL('Driftsplan', 'Operations plan'), 'Mannskapet hviler til kl. ' + driftClock(driftHod((o.restT0 + PLANW.rest * 60) / 60)) + ' før neste tur.', 'The crew rest until ' + driftClock(driftHod((o.restT0 + PLANW.rest * 60) / 60)) + ' before the next trip.'); }
     return; }
   if (!sk && !meAboard()){ driftFail(o, null, 'Planen kan ikke gå: ingen mannskap.', 'The plan cannot run: no crew.'); return; }
-  if (S.jobs && S.jobs.length){ o.hold = H + 1; if (!o.jobTold || o.jobTold < S.t - 600){ o.jobTold = S.t; msg(sk ? sk.name : '', 'Verkstedet jobber på båten, så jeg venter.', 'The yard is working on the boat, so I wait.'); } return; }
+  if (S.jobs && S.jobs.length){ o.hold = H + 1; if (!o.jobTold || o.jobTold < S.t - 600){ o.jobTold = S.t; msg(sk ? sk.name : '', jobsCrewOnly() ? 'Vi er ikke ferdige med utstyret, så jeg venter.' : 'Verkstedet jobber på båten, så jeg venter.', jobsCrewOnly() ? 'We are not done with the gear, so I wait.' : 'The yard is working on the boat, so I wait.'); } return; }
   const anchorRest = s.type === 'hvile' && s.at === 'anker', restPort = s.type === 'hvile' ? (anchorRest ? s.near : s.at) : null;
   const dest = s.type === 'hvile' ? portById(restPort) : portById(s.route.home);
   if (!dest){ driftAdvance(o); return; }

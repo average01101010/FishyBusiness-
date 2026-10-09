@@ -153,7 +153,7 @@ const DOCK = (() => {
   function infoText(){
     const b = S.boat, out = [];
     if (S.plan && S.plan.depAt) out.push(L('Avgang ', 'Departs ') + hm(S.plan.depAt / 60));
-    if (b.status === 'port'){ if (S.jobs && S.jobs.length) out.push(L('Verksted til ', 'Yard until ') + hm((jobsDone() || S.t) / 60)); if (b.land) out.push(landText(true)[0]); if (b.shift || b.fueling) out.push(quayText(true)[0]); }
+    if (b.status === 'port'){ if (S.jobs && S.jobs.length) out.push(L(jobsCrewOnly() ? 'Mannskapet jobber til ' : 'Verksted til ', jobsCrewOnly() ? 'Crew working until ' : 'Yard until ') + hm((jobsDone() || S.t) / 60)); if (b.land) out.push(landText(true)[0]); if (b.shift || b.fueling) out.push(quayText(true)[0]); }
     if (b.status === 'port' && !resting() && restWhere(b) === 'rorbu') out.push(L('Rorbu: ' + kr(RORBU.kr) + ' natta', 'Rorbu: ' + kr(RORBU.kr) + ' a night'));
     // in the home harbour, which of the two berths she lies at: Father's naust or the plant's quay (07-harbours.js berthKind)
     if (b.status === 'port' && !resting() && atHome(b) && quayFace(b.port, 'naust')){ const k = BERTHN[berthKind(b)] || BERTHN.main; out.push(L('Ved ' + k[0], 'At ' + k[1])); }

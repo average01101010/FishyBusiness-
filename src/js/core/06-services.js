@@ -161,7 +161,7 @@ function finishJob(j){
   else if (j.kind === 'hold'){ b.holdLv = j.lv; applyVessel(); log('Lasterommet er bygd om: ' + fmt(BOAT.holdCap, 0) + ' kg.', 'The hold is rebuilt: ' + fmt(BOAT.holdCap, 0) + ' kg.'); }
   else if (gearJob(j)){}
   else if (j.kind === 'prep') return;   // a job from an old save: nothing to do
-  msg(j.kind === 'egn' || j.kind === 'mend' ? (S.lang === 'no' ? 'Kaia' : 'The quay') : 'Verkstedet', (j.no || '') + ' er ferdig.', (j.en || '') + ' is done.');
+  msg(crewJob(j) ? (S.lang === 'no' ? 'Kaia' : 'The quay') : 'Verkstedet', (j.no || '') + ' er ferdig.', (j.en || '') + ' is done.');
 }
 // The yard's jobs (fitting, service, the slip, the hold, the engine, repairs) take 30 real minutes each, whatever they are, and run all at
 // once (Jonas 05.10.2026: «Montering av utstyr og vedlikehold skal ta 30 ekte minutter, og man kan gjøre flere oppgaver samtidig»): 30
@@ -177,6 +177,8 @@ function jobOk(j){
   if (!(j.h > 0)) j.h = 2; if (j.until != null && !Number.isFinite(j.until)) j.until = null; return j; }
 // every job starts when it is ordered (or when the boat comes into port), side by side
 function queueJob(j){ S.jobs = S.jobs || []; if (S.jobs.length >= 6) return false; S.jobs.forEach(jobOk); jobOk(j); S.jobs.push(j); if (S.boat.status === 'port' || (crewJob(j) && seaWork())) j.until = S.t + j.h * 60; return true; }
+// true when everything queued is the crew's own work (baiting, mending, hooks) and not the yard's: the labels then say so
+const jobsCrewOnly = () => !!(S.jobs && S.jobs.length) && S.jobs.every(crewJob);
 function jobsDone(){ if (!S.jobs || !S.jobs.length) return null; let m = null; for (const j of S.jobs) if (j.until != null) m = Math.max(m || 0, j.until); return m; }
 
 // in a wind over the turn-back limit the boat goes by Autonav to the nearest quay (S.settings.autoTo 'near', the default; Jonas
