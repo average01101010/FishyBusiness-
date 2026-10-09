@@ -3596,6 +3596,10 @@ Mål: spilleren holder hviletiden og får mest mulig levert per døgn, og system
 - **Flere valg** viser den gamle detaljvisningen (økter, 2+2, maler, test av planen). Endringer der lages ikke om av spørsmålene før «Endre planen».
 - Test: `tests/plantest.py` (planer, sjekk, hvile, motoren én dag, veiviseren med klikk). Svakt: andre døgns hvile er ikke målt fordi været i testen holdt båten inne; balansen i tallene (`PLANW.setH/haulH`, `HEATG.fair`) er anslag.
 
+### 5.40 Bro-visningen rister ikke (09.10.2026)
+
+`model()` i `view3d.js` lager en `Float32Array`. Kameraøyet i bro-visningen ble regnet gjennom den med båtens verdensposisjon (rundt 1 000 000 m), og float32 har der bare 6–12 cm oppløsning. Øyet hoppet derfor i trinn mens skroget, som tegnes relativt til øyet, ikke gjorde det. Det ga et sagtann-mønster rundt 10 ganger i sekundet som økte med farten (målt i Jonas' video: 1–2 px glidning per bilde, så 8–10 px tilbake). Nå roteres øyets plass på skroget alene og legges til posisjonen i full presisjon, og `BMabs` har posisjonen i full presisjon. **Regel:** legg aldri verdenskoordinater inn i `model()` når resultatet brukes til noe annet enn en matrise som sendes til GPU-en relativt til øyet. Test: `tests/helmjit.py`.
+
 ## 10. Kjente problemer og åpne spørsmål
 
 - **Mannskapssystemet (01.10.2026) er ikke spilltestet.** Usikre punkter:
