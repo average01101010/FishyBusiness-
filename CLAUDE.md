@@ -41,6 +41,7 @@ Et kystfiskespill langs hele norskekysten (det begynte på Senja) som kjører so
 - **Patchnotes nevner aldri** taktisk spilldesign, psykologi, ekte penger eller salgsstrategi (Jonas 06.10.2026). Det blir mellom oss. Ingen 💎, priser i kroner for ekte penger, butikk, gaver for å registrere seg, tellinger før registrering eller grunner til hvorfor noe er laget slik. En funksjon som koster ekte penger, beskrives bare ved hva den gjør i spillet, om den nevnes i det hele tatt.
 - Vær ærlig om svake tester, antakelser og usikre regler. Sjekk regelverk mot kildene (Lovdata, Fiskeridirektoratet, Råfisklaget) før det bygges inn, og oppgi kilden.
 - Brukeren tester på Android-nettbrett, så UI må fungere med berøring i både stående og liggende format.
+- **Alle UI-endringer testes og kontrolleres i både stående og liggende format** (Jonas 09.10.2026): ta skjermbilde av endringen i begge formater (for eksempel 800×1280 og 1280×800) og se på dem før endringen meldes som ferdig.
 
 ## Engasjement og inntekt
 

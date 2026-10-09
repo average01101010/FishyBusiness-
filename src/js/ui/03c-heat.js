@@ -113,16 +113,21 @@ function heatBar(steps){
 // red over the sea's colour, and the species button; what it says besides (heatReadout) is its tooltip and under «Innstillinger»
 function heatBox(on){
   const el = $('heatBox'); if (!el) return;
-  if (!on){ if (!el.hidden) el.hidden = true; return; }
-  const now = performance.now(), tier = heatTier(), sp = heatSpecies(), gi = heatGearInfo(), key = [tier, sp, S.lang, S.boat.status, gi ? gi.no : ''].join('|');
+  if (!on){ if (!el.hidden) el.hidden = true; HP.menu = false; return; }
+  const now = performance.now(), tier = heatTier(), sp = heatSpecies(), key = [tier, sp, S.lang, S.boat.status, HP.menu ? 1 : 0].join('|');
   if (!el.hidden && key === HP.box && now - HP.last < 1000) return; HP.last = now; HP.box = key; el.hidden = false;
-  const L = (no, en) => S.lang === 'no' ? no : en, pick = HEAT.tiers[tier].pick, nx = sp === 'all' ? HEAT.sp[0] : HEAT.sp[HEAT.sp.indexOf(sp) + 1] || 'all';
+  const L = (no, en) => S.lang === 'no' ? no : en, pick = HEAT.tiers[tier].pick, nm = k => SPNAME[k][S.lang === 'no' ? 0 : 1].replace(/^./, c => c.toUpperCase());
   const title = tier === 'sonar' ? L('Sonar', 'Sonar') : tier === 'chirp' ? L('CHIRP-ekkolodd', 'CHIRP echo sounder') : L('Ekkolodd', 'Echo sounder');
   const range = fmt(HEAT.tiers[tier].r * 2 / NM, 1) + ' nm';
+  // the box shows the scale and the species, never a number for the fish (Jonas 09.10.2026: «Den skal ikke vise estimert fangstrate»);
+  // the species button opens a small list to pick from
   el.innerHTML = '<small>' + title.toUpperCase() + ' · ' + range + '</small><span class="hb-row"><span class="hb-lab">' + L('lite', 'little') + '</span><span class="hb-bar" style="background-image:' + heatBar(tier === 'basic') + '"></span><span class="hb-lab">' + L('mye fisk', 'much fish') + '</span>' +
-    (pick ? '<button type="button" class="hb-sp" data-act="hsp" data-s="' + nx + '">' + SPNAME[sp][S.lang === 'no' ? 0 : 1].replace(/^./, c => c.toUpperCase()) + ' ›</button>' : '') + '</span>' + (gi ? '<small class="hb-un">' + L(gi.no, gi.en) + '</small>' : '');
-  el.title = (gi ? L(gi.no, gi.en) + '. ' : '') + heatReadout().replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    (pick ? '<button type="button" class="hb-sp" data-hm="1" aria-expanded="' + !!HP.menu + '">' + nm(sp) + ' ' + (HP.menu ? '▴' : '▾') + '</button>' : '') + '</span>' +
+    (pick && HP.menu ? '<div class="hb-menu">' + ['all'].concat(HEAT.sp).map(k => '<button type="button" data-act="hsp" data-s="' + k + '"' + (k === sp ? ' class="on"' : '') + '>' + nm(k) + '</button>').join('') + '</div>' : '');
+  el.title = '';
 }
-$('heatBox').addEventListener('click', e => { const el = e.target.closest('[data-act]'); if (el && !el.disabled) doAct(el); });
+$('heatBox').addEventListener('click', e => {
+  if (e.target.closest('[data-hm]')){ HP.menu = !HP.menu; HP.box = ''; heatBox(true); return; }
+  const el = e.target.closest('[data-act]'); if (el && !el.disabled){ HP.menu = false; HP.box = ''; doAct(el); heatBox(true); } });
 hooks.onHeat = () => heatPaint();
 window.heatReady = true;
