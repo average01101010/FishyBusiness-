@@ -34,29 +34,67 @@ function shoreSpot(cx, cz, r0, r1, o){
       let Nx = -uz, Nz = ux; if (Nx * nx + Nz * nz < 0){ ux = -ux; uz = -uz; Nx = -Nx; Nz = -Nz; }
       if (o.out.some(v => land(c.x + Nx * v, c.z + Nz * v)) || o.inl.some(v => !land(c.x - Nx * v, c.z - Nz * v))) continue;
       if ([[0, 0], [-o.half, 0], [o.half, 0], [0, 6], [0, -10]].some(([du, dn]) => onPier(c.x + ux * du + Nx * dn, c.z + uz * du + Nz * dn))) continue;
-      if (o.avoid && o.avoid(c.x, c.z)) continue;
+      if (o.avoid && o.avoid(c.x, c.z, ux, uz, Nx, Nz)) continue;
       const score = bend + Math.abs(A.v - B.v) * 0.2 + Math.abs(r - o.pref) * 0.015;
       if (!best || score < best.score) best = {score, o:[c.x, c.z], u:[ux, uz], r};
     } }
   return best;
+}
+// Keeping clear (Jonas 09.10.2026, after boats lay through a naust in Tufjord: «Sørg for at det aldri er en konflikt mellom naustet og andre
+// kaier eller moloer, bygninger eller andre ting»): the naust's ground and the water in front of it, from 17 m along the shore each way,
+// 14 m in and 28 m out, holds no pier, breakwater or quay face of the vec packs (with 7-12 m to spare), no boat of the NPC harbours at her
+// berth (her length and 6 m) and, as far as there is a choice, no mapped building (with 3 m). x, z is the shoreline's point, (ux, uz)
+// along it and (nx, nz) out to sea. Returns what is in the way ('pier', 'molo', 'quay', 'boat', 'bld') or null; the packs of the tiles
+// must be decoded (naustVecOk).
+const NAUST_BOX = {a:[-17, -8.5, 0, 8.5, 17], d:[-14, -7, 0, 4, 10, 16, 22, 28]};
+function naustClash(x, z, ux, uz, nx, nz, withBld){
+  const pts = []; for (const a of NAUST_BOX.a) for (const d of NAUST_BOX.d) pts.push([x + ux * a + nx * d, z + uz * a + nz * d]);
+  const tiles = vecTilesIn(x - 120, z - 120, x + 120, z + 120), segD = (px, pz, ax, az, bx, bz) => { const dx = bx - ax, dz = bz - az, L2 = dx * dx + dz * dz || 1, t = clamp(((px - ax) * dx + (pz - az) * dz) / L2, 0, 1); return Math.hypot(px - ax - dx * t, pz - az - dz * t); };
+  for (const t of tiles){
+    for (const q of t.piers){ if (Math.abs(q.x - x) > q.l + q.w + 60 || Math.abs(q.z - z) > q.l + q.w + 60) continue; const sa = Math.sin(q.ang), ca = Math.cos(q.ang);
+      for (const [px, pz] of pts){ const dx = px - q.x, dz = pz - q.z; if (Math.abs(dx * sa + dz * ca) <= q.l / 2 + 7 && Math.abs(dx * ca - dz * sa) <= q.w / 2 + 7) return 'pier'; } }
+    for (const m of t.molos) for (let i = 0; i + 1 < m.length; i++){ if (Math.abs(m[i][0] - x) > 200 || Math.abs(m[i][1] - z) > 200) continue; for (const [px, pz] of pts) if (segD(px, pz, m[i][0], m[i][1], m[i + 1][0], m[i + 1][1]) < 12) return 'molo'; }
+    for (const q of t.quays){ if (q.kind > 2 || Math.abs(q.x - x) > q.hl + 80 || Math.abs(q.z - z) > q.hl + 80) continue; for (const [px, pz] of pts) if (segD(px, pz, q.x - q.ux * q.hl, q.z - q.uz * q.hl, q.x + q.ux * q.hl, q.z + q.uz * q.hl) < 9) return 'quay'; }
+    for (const h of t.npc || []) for (const b of h.boats){ const bx = b.p.x * 1000, bz = b.p.y * 1000; if (Math.abs(bx - x) > 100 || Math.abs(bz - z) > 100) continue; const R = (b.L || 12) / 2 + 6; for (const [px, pz] of pts) if (Math.hypot(px - bx, pz - bz) < R) return 'boat'; }
+    if (withBld && t.bld && t.bld.cells) for (let gz = Math.floor((z - 50) / 1000); gz <= Math.floor((z + 50) / 1000); gz++) for (let gx = Math.floor((x - 50) / 1000); gx <= Math.floor((x + 50) / 1000); gx++){
+      const l = t.bld.cells.get(gridKey(gx, gz)); if (!l) continue;
+      for (const i of l){ const bx = t.bld.x[i], bz = t.bld.z[i]; if (Math.abs(bx - x) > 60 || Math.abs(bz - z) > 60) continue; const R = Math.max(t.bld.l[i], t.bld.w[i]) / 2 + 3; for (const [px, pz] of pts) if (Math.hypot(px - bx, pz - bz) < R) return 'bld'; } }
+  }
+  return null;
+}
+// whether the vec packs round a point (the home plant's quay) are decoded, so naustClash sees what is there; a build without them is ready,
+// and a pack that does not come in 25 s is not waited for
+let NAUST_WAIT = {k:'', t:0};
+function naustVecOk(cx, cz){
+  if (!MAPD.man) return true; const T = MAPD.man.tile * 1000; vecWant((cx - 500) / 1000, (cz - 500) / 1000, (cx + 500) / 1000, (cz + 500) / 1000);
+  let ok = true; for (let ty = Math.floor((cz - 500) / T); ty <= Math.floor((cz + 500) / T); ty++) for (let tx = Math.floor((cx - 500) / T); tx <= Math.floor((cx + 500) / T); tx++) if (vecHas(tx, ty) && !vecTile(tx, ty)) ok = false;
+  if (ok) return true; const n = performance.now(), k = Math.round(cx) + ',' + Math.round(cz); if (NAUST_WAIT.k !== k) NAUST_WAIT = {k, t:n}; return n - NAUST_WAIT.t > 25000;
 }
 // Father's naust: a stretch of shore 60-360 m from the home plant's quay (the harbour point where it has none), straight for 30 m, open
 // water 8, 16 and 30 m out and land 6, 14 and 25 m in, no harbour point within 70 m; its pile quay's face 4 m out from the shoreline.
 function naustFind(pid){
   const pt = portById(pid); if (!pt) return {port:pid};
   const f = quayFace(pid, 'main'), cx = f ? f.x : pt.p.x * 1000, cz = f ? f.z : pt.p.y * 1000;
-  const avoid = (x, z) => PORTS.some(q => Math.hypot(q.p.x * 1000 - x, q.p.y * 1000 - z) < 70) || unitNear(x, z, 110);
-  const sp = shoreSpot(cx, cz, 60, 360, {half:15, bend:6, out:[8, 16, 30], inl:[6, 14, 25], avoid, pref:120})
-    || shoreSpot(cx, cz, 60, 360, {half:12, bend:9, out:[8, 16], inl:[6, 14], avoid, pref:120});
-  if (!sp) return {port:pid};
+  const base = (x, z) => PORTS.some(q => Math.hypot(q.p.x * 1000 - x, q.p.y * 1000 - z) < 70) || unitNear(x, z, 110);
+  const strict = (x, z, ux, uz, nx, nz) => base(x, z) || !!naustClash(x, z, ux, uz, nx, nz, true), hard = (x, z, ux, uz, nx, nz) => base(x, z) || !!naustClash(x, z, ux, uz, nx, nz, false);
+  // clear of everything first; failing that, clear of quays, piers, breakwaters and boats and with a house or two to take away
+  const sp = shoreSpot(cx, cz, 60, 360, {half:15, bend:6, out:[8, 16, 30], inl:[6, 14, 25], avoid:strict, pref:120})
+    || shoreSpot(cx, cz, 60, 360, {half:12, bend:9, out:[8, 16], inl:[6, 14], avoid:strict, pref:120})
+    || shoreSpot(cx, cz, 60, 360, {half:15, bend:6, out:[8, 16, 30], inl:[6, 14, 25], avoid:hard, pref:120})
+    || shoreSpot(cx, cz, 60, 360, {half:12, bend:9, out:[8, 16], inl:[6, 14], avoid:hard, pref:120})
+    || shoreSpot(cx, cz, 60, 500, {half:12, bend:10, out:[8, 16], inl:[6, 12], avoid:hard, pref:150});
+  if (!sp) return {port:pid, ver:2};
   const N = [-sp.u[1], sp.u[0]], o = [sp.o[0] + N[0] * 4, sp.o[1] + N[1] * 4];
-  return {port:pid, o:o.map(v => Math.round(v * 10) / 10), u:sp.u.map(v => Math.round(v * 1e4) / 1e4)};
+  return {port:pid, ver:2, o:o.map(v => Math.round(v * 10) / 10), u:sp.u.map(v => Math.round(v * 1e4) / 1e4)};
 }
 // Father's naust at the home harbour: {o, u} or null where none was found (or its map is not in yet)
 function naustSite(){
   const pid = S.home || HOME0;
-  if (S.naust && S.naust.port === pid) return S.naust.o ? S.naust : null;
-  const pt = portById(pid); if (!pt || !mapReadyAt(pt.p, 0.4)) return null;
+  // a naust found before the clearance rule (ver 2) is found again, once the packs round it are in
+  if (S.naust && S.naust.port === pid && S.naust.ver === 2) return S.naust.o ? S.naust : null;
+  const pt = portById(pid); if (!pt || !mapReadyAt(pt.p, 0.4)){ return S.naust && S.naust.port === pid && S.naust.o ? S.naust : null; }
+  const f = quayFace(pid, 'main'), cx = f ? f.x : pt.p.x * 1000, cz = f ? f.z : pt.p.y * 1000;
+  if (!naustVecOk(cx, cz)) return S.naust && S.naust.port === pid && S.naust.o ? S.naust : null;
   S.naust = naustFind(pid); return S.naust.o ? S.naust : null;
 }
 // Father's naust as a berth in the home harbour (Jonas 05.10.2026: «Nye spillere skal starte ved det nye naustet», and «fast
