@@ -87,6 +87,10 @@ function fleetState0(i, H){
 // a day off. Only the boats within AIS_KM of the boat you follow are worked out (coastNear), and their packs are asked for as she
 // goes. They take no fish from the simulation's stock (only FLEET's do, which every player has).
 const AIS_KM = 15;
+// what the AIS shows (the chart, the 3D plotter): the coast's boats are already only those within AIS_KM (coastNear); Senja's own fleet,
+// the coastal ship and the ferry are sailed everywhere (their fishing takes from the stock, 03-simulation.js), but shown only within
+// AIS_KM of the boat you follow too (Jonas 09.10.2026: «Jeg er langt oppe i Finnmarka, men kan enda se NPC-båtene som er på Senja»)
+const aisShown = n => !(n.fleet || n.id === 'ferje' || n.id === 'kystn' || n.id === 'kysts') || !S.boat || dist(n.p, S.boat.pos) <= AIS_KM;
 const hodOf = H => { const g = gDate(H); return g.getUTCHours() + g.getUTCMinutes() / 60 + g.getUTCSeconds() / 3600; };
 function coastState(b, H, hod = hodOf(H)){
   const i = b.seed || (b.seed = hashStr(b.id) % 1000003);

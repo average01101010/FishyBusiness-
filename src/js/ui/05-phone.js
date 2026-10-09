@@ -436,6 +436,7 @@ const PHONE = (() => {
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
     ['p102', '09.10.2026', 'Kjentmannen, nordlyset og driftsplanen', 'The old hand, the northern lights and the operations plan', [
+      ['Rettet: fiskebåtene, hurtigbåten og ferja ved Senja vistes i kartet uansett hvor langt unna du var. Nå vises de bare innen AIS-rekkevidden, som alle andre båter.', 'Fixed: the fishing boats, the express boat and the ferry at Senja showed on the chart however far away you were. Now they show only within AIS range, like every other boat.'],
       ['Rettet: veiene i byene (som i Tromsø) blinket av og på i kartplotteren når båten var langt unna.', 'Fixed: the roads in towns (as in Tromsø) blinked on and off in the chart plotter when the boat was far away.'],
       ['Søk i kartplotteren: trykk på forstørrelsesglasset og skriv et sted, et mottak, et verft, en rorbu, en fjord eller en posisjon. Kartet går dit, og «Autonav hit» legger ruta.', 'Search in the chart plotter: tap the magnifier and type a place, a fish plant, a yard, a rorbu, a fjord or a position. The chart goes there, and «Autonav here» lays the route.'],
       ['Den lille kartplotteren i 3D viser bunnen som den store: dybdelinjer, dybdetall og dybden i farger.', 'The little chart plotter in 3D shows the bottom as the big one does: depth lines, soundings and the depth in colours.'],

@@ -495,7 +495,7 @@ function renderDyn(){
   g.push(gearSvg(u));
   // other vessels (AIS)
   const Hn = (S.t + liveFrac()) / 60;
-  AISNOW = npcStates(Hn);
+  AISNOW = npcStates(Hn).filter(aisShown);
   if (AISSEL){ const tr = aisTrack(AISSEL, Hn); if (tr.length > 1) g.push('<polyline points="' + tr.map(q => q.x.toFixed(3) + ',' + q.y.toFixed(3)).join(' ') + '" class="aistrack" stroke-width="' + (1.6 * u) + '" stroke-dasharray="' + (4 * u) + ' ' + (3 * u) + '"/>'); }
   // names: the coast's boats only when the chart is under 4 km tall, and none on top of another (a grid of label cells)
   const lblAt = new Set(), lw = 70 * u, lh = 14 * u, coastLbl = MAP_H / view.z < 4;

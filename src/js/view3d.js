@@ -2438,7 +2438,7 @@ const G3 = (() => {
     // route and trail
     if (S.plan){ g.strokeStyle = '#d6336c'; g.lineWidth = 3; g.beginPath(); g.moveTo(X(p.x) + cw / 2, Y(p.y)); for (const w of S.plan.wps.slice(S.plan.idx)) g.lineTo(X(w.x) + cw / 2, Y(w.y)); g.stroke(); }
     // other vessels
-    if (Hn - aisCache.t > 0.02 || aisCache.t < 0){ aisCache = {t:Hn, v:npcStates(Hn)}; }
+    if (Hn - aisCache.t > 0.02 || aisCache.t < 0){ aisCache = {t:Hn, v:npcStates(Hn).filter(aisShown)}; }
     // the other players in gold, larger and ringed, as on the chart (ui/03-map.js)
     for (const n of aisCache.v){ const x = X(n.p.x) + cw / 2, y = Y(n.p.y), k = n.player ? 1.45 : 1; if (x < -10 || x > cw + 10 || y < top - 10 || y > top + ch + 10) continue;
       if (n.player){ g.strokeStyle = 'rgba(242,179,61,.75)'; g.lineWidth = 2; g.beginPath(); g.arc(x, y, 17, 0, Math.PI * 2); g.stroke(); }
