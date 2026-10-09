@@ -3627,6 +3627,7 @@ Jonas: «Spilleren trykker på pub og blir dermed sendt inn i puben hvor man sit
   - Kveldens prat på stedets dialekt (`dialectText`): hvem som betaler best for en art innen 45 km i dag, og sesongpraten.
   - **Runde på mannskapet:** 120 kr per mann om bord, én gang per kveld (`S.crewRoundE`). Gir +8 i trivsel (+12 for den ølglade), og trivselen glir tilbake mot målet som vanlig.
 - **Oppslagstavla:** Kystposten, ukas tre beste (`worldTop`) og antall turoppdrag, med knapper til appene.
+- **Kjentmannen ved disken** (tilbakemelding #58, Jonas 09.10.2026: «i puben 1 gang per spilldøgn»): for 2 500 kr spillpenger, én gang per spilldøgn (`S.kjent.d`), finner han den beste plassen innen 10 km fra havna for arten du spør om (torsk, sei, hyse, kveite), med et rutenett på 0,8 km over sjø mellom 8 og 400 m dyp (`kjentFind`, samme `density` som fisken kommer fra). Han sier hvor mye av de andre artene som står der (fire nivåer mot det beste i området). Plassen blir et merke i kartet (`S.pins`, `kjent:true`, `until` ved døgnets slutt). Ikke for ekte penger: det ville vært å selge seg forbi ferdigheten i å finne fisk.
 - **Det runde bordet:** Mannskapsbørsen. Den ligger fortsatt også under Mannskap.
 - **Det sosiale** (`ui/09c-pubsoc.js`, `PUBSOC`; `supabase/migrations/20261009120000_pub.sql`):
   - **I kveld:** de andre spillernes båter som ligger i havna (`peerStates`, under 2 km).

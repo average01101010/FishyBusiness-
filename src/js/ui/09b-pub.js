@@ -241,7 +241,47 @@ const PUB3 = (() => {
     return '<p class="pb-say">«' + esc(hello) + '»</p>' + (tip ? '<p>«' + esc(tip) + '»</p>' : '') + (st ? '<p>' + esc(L(st[0], st[1])) + '</p>' : '') +
       (cr.length ? '<div class="pb-bt">' + btn('round', L('Spander en runde på mannskapet', 'Buy your crew a round') + ' · ' + kr(cost), had || S.cash < cost, 'pri') + '</div><p class="pb-why">' +
         (had ? L('Mannskapet har fått sin runde i kveld.', 'The crew have had their round tonight.') : S.cash < cost ? L('Du har ikke nok penger til en runde.', 'You do not have enough money for a round.') : L('En øl på deg løfter stemningen om bord, og de husker det en stund.', 'A beer on you lifts the mood aboard, and they remember it for a while.')) + '</p>'
-        : '<p class="pb-why">' + L('Har du mannskap, kan du spandere en runde på dem her.', 'With a crew, you can buy them a round here.') + '</p>');
+        : '<p class="pb-why">' + L('Har du mannskap, kan du spandere en runde på dem her.', 'With a crew, you can buy them a round here.') + '</p>') + kjentHtml();
+  }
+  // ---------- the old hand at the bar with the echo sounder's news (tilbakemelding #58; Jonas 09.10.2026: «i puben 1 gang per spilldøgn») ----------
+  // For game money, once a game day: he names the best place within 10 km of the harbour for the species you ask about, and how the others
+  // stand there. The place is the sea's own (the same density the fish come from), so the reward still comes from the sea; it is a chart
+  // mark until the day is out.
+  const KJENT_COST = 2500, KJENT_SP = ['torsk', 'sei', 'hyse', 'kveite'], KJENT_R = 10;
+  const gameDay = () => Math.floor(H_() / 24);
+  function kjentFind(sp){
+    const pt = portById(S.boat.port), H = H_(); if (!pt) return null;
+    const pts = [];
+    for (let dy = -KJENT_R; dy <= KJENT_R; dy += 0.8) for (let dx = -KJENT_R; dx <= KJENT_R; dx += 0.8){
+      if (dx * dx + dy * dy > KJENT_R * KJENT_R) continue; const p = {x:pt.p.x + dx, y:pt.p.y + dy};
+      try { if (isLand(p)) continue; const d = depthF(p); if (d < 8 || d > 400) continue; const v = {}; for (const k of KJENT_SP) v[k] = density(k, p, H); pts.push({p, v}); } catch (e){ /* a block not loaded: leave it */ }
+    }
+    if (!pts.length) return null;
+    const max = {}; for (const k of KJENT_SP) max[k] = Math.max(1e-9, ...pts.map(q => q.v[k]));
+    const best = pts.reduce((a, q) => q.v[sp] > a.v[sp] ? q : a, pts[0]);
+    const lvl = k => { const r = best.v[k] / max[k]; return r > 0.75 ? 3 : r > 0.45 ? 2 : r > 0.15 ? 1 : 0; };
+    return {p:best.p, sp, lv:Object.fromEntries(KJENT_SP.map(k => [k, lvl(k)])), place:nearestPlace(best.p)};
+  }
+  const LVL = [['nesten ingenting', 'next to nothing'], ['litt', 'a little'], ['bra', 'good'], ['mye', 'plenty']];
+  function kjentHtml(){
+    const K = S.kjent && S.kjent.d === gameDay() ? S.kjent : null, can = !K && S.cash >= KJENT_COST;
+    if (K){ const sp = SPECIES[K.sp];
+      return '<div class="pb-card"><h5>' + L('Kjentmannen ved disken', 'The old hand at the bar') + '</h5><p>«' + esc(L('Æ var ute med loddet i dag. ' + sp.no + ' står ' + LVL[K.lv[K.sp]][0] + ' ' + K.place.no + '.', 'I was out with the sounder today. ' + sp.en + ': ' + LVL[K.lv[K.sp]][1] + ', ' + K.place.en + '.')) + '»</p><p>' +
+        KJENT_SP.filter(k => k !== K.sp).map(k => esc(L(SPECIES[k].no + ': ' + LVL[K.lv[k]][0], SPECIES[k].en + ': ' + LVL[K.lv[k]][1]))).join(' · ') + '</p><p class="pb-why">' + L('Plassen står som et merke i kartet resten av dagen. Ny rapport i morgen.', 'The place is a mark on the chart for the rest of the day. A new report tomorrow.') + '</p></div>'; }
+    return '<div class="pb-card"><h5>' + L('Kjentmannen ved disken', 'The old hand at the bar') + '</h5><p>' + L('Han med skipperlua har vært ute med ekkoloddet. For ' + kr(KJENT_COST) + ' forteller han hvor det står best innen ' + KJENT_R + ' km, og hva annet som står der.', 'The man in the skipper\'s cap has been out with his echo sounder. For ' + kr(KJENT_COST) + ' he tells you where it stands best within ' + KJENT_R + ' km, and what else is there.') + '</p>' +
+      '<div class="pb-bt">' + KJENT_SP.map(k => btn('kjent:' + k, esc(L(SPECIES[k].no, SPECIES[k].en)), !can)).join('') + '</div>' + (S.cash < KJENT_COST ? '<p class="pb-why">' + L('Du har ikke nok penger.', 'You do not have enough money.') + '</p>' : '') + '</div>';
+  }
+  function kjentBuy(sp){
+    if (!KJENT_SP.includes(sp) || (S.kjent && S.kjent.d === gameDay()) || S.cash < KJENT_COST) return;
+    const r = kjentFind(sp); if (!r){ toast(L('Kjentmannen har ikke vært ute her i dag.', 'The old hand has not been out round here today.')); return; }
+    S.cash -= KJENT_COST; S.stats.costs += KJENT_COST;
+    const until = (gameDay() + 1) * 1440;
+    S.kjent = {d:gameDay(), sp, lv:r.lv, place:r.place, x:r.p.x, y:r.p.y};
+    // his place as a chart mark until the day is out (the chart leaves out marks whose time has run)
+    S.pins = (S.pins || []).filter(q => !q.kjent); const id = (S.pinN = (S.pinN || 0) + 1);
+    S.pins.push({id, x:Math.round(r.p.x * 1000) / 1000, y:Math.round(r.p.y * 1000) / 1000, name:L('Kjentmann: ', 'Old hand: ') + L(SPECIES[sp].no, SPECIES[sp].en).toLowerCase(), t:S.t, kjent:true, until});
+    msg('Puben', 'Kjentmannen: ' + SPECIES[sp].no + ' står ' + LVL[r.lv[sp]][0] + ' ' + r.place.no + '. Merket ligger i kartet resten av dagen.', 'The old hand: ' + SPECIES[sp].en + ', ' + LVL[r.lv[sp]][1] + ', ' + r.place.en + '. The mark is on the chart for the rest of the day.');
+    save(); PANELS.bartender(); renderTop(); if (typeof scheduleStatic === 'function') scheduleStatic();
   }
   function crewRound(){
     const cr = crewHere(), cost = ROUND_PP * cr.length; if (!cr.length || S.crewRoundE === ev() || S.cash < cost) return;
@@ -299,7 +339,7 @@ const PUB3 = (() => {
     el.addEventListener('click', e => {
       const s = e.target.closest('.pb-lab [data-s]'); if (s){ openSpot(s.dataset.s); return; }
       const b = e.target.closest('[data-q]'); if (!b || b.disabled) return; const q = b.dataset.q;
-      if (q === 'out') close(); else if (q === 'x') panel(null); else if (q === 'who') PANELS.who(); else if (q === 'spin') spin(); else if (q === 'round') crewRound();
+      if (q === 'out') close(); else if (q === 'x') panel(null); else if (q === 'who') PANELS.who(); else if (q === 'spin') spin(); else if (q === 'round') crewRound(); else if (q.startsWith('kjent:')) kjentBuy(q.slice(6));
       else if (q.startsWith('o:')){ const a = q.slice(2); if (PHONE.DRAWER && PHONE.DRAWER.has(a)) PHONE.open(a); else { PHONE.show(true); PHONE.open(a); } }
       else if (PUBSOC.act(q, b)){ if (panelKey && PANELS[panelKey]) PANELS[panelKey](); renderTop(); }
     });
@@ -321,5 +361,5 @@ const PUB3 = (() => {
     if (typeof renderActs === 'function') renderActs();
   }
   return {open, close, isOpen:() => on, get panel(){ return panelKey; }, openSpot, spin, get wheelA(){ return WH.a; }, get busy(){ return WH.busy; }, look(y, p){ cam.yaw = y; cam.pitch = p; },
-    get anchors(){ return P ? P.A : null; }, get cam(){ return cam; }, project:c => VP ? project(c) : null};
+    get anchors(){ return P ? P.A : null; }, kjentFind, get cam(){ return cam; }, project:c => VP ? project(c) : null};
 })();

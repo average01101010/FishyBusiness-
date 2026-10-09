@@ -55,6 +55,13 @@ async def main():
         m1 = json.loads(m1)
         print(ok(not m0 or (all(b > a for a, b in zip(m0, m1['m'])) and m1['e'] and m1['dis'])), 'runde på mannskapet løfter stemningen én gang i kvelden', {'før': m0, 'etter': m1['m'], 'kr': m1['cash']})
         await pg.screenshot(path='pub_bar.png')
+        # the old hand at the bar: a report once a game day for game money, his place a chart mark until the day is out
+        await pg.evaluate("S.kjent = null; PUB3.openSpot('bartender')"); await pg.wait_for_timeout(300)
+        k0 = await pg.evaluate("S.cash")
+        await pg.evaluate("document.querySelector('#pub3 [data-q=\"kjent:torsk\"]') && document.querySelector('#pub3 [data-q=\"kjent:torsk\"]').click()"); await pg.wait_for_timeout(600)
+        kj = json.loads(await pg.evaluate("JSON.stringify({cash:S.cash, k:S.kjent, pin:(S.pins || []).filter(q => q.kjent).length, again:!!document.querySelector('#pub3 [data-q^=kjent]'), txt:(document.querySelector('#pub3 .pb-card:last-child') || {}).textContent || ''})"))
+        print(ok(kj['k'] and k0 - kj['cash'] == 2500 and kj['pin'] == 1 and not kj['again']), 'kjentmannen gir rapport og et merke i kartet, én gang i spilldøgnet', {'kr': k0 - kj['cash'], 'pin': kj['pin'], 'tekst': kj['txt'][:90]})
+        await pg.screenshot(path='pub_kjent.png')
         # the week's quiz: five answers, paid for the right ones, then done
         await pg.evaluate("PUB3.openSpot('quiz')"); await pg.wait_for_timeout(300)
         c0 = await pg.evaluate("S.cash")

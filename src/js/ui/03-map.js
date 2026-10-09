@@ -315,7 +315,7 @@ function renderStatic(){
     g.push('<circle cx="' + mk.x + '" cy="' + mk.y + '" r="' + (4.2 * u) + '" fill="' + col + '" stroke="#fff" stroke-width="' + (1.2 * u) + '"/>');
     if (view.z > 3.5) g.push(txt({x:mk.x + 6 * u, y:mk.y + 3.5 * u}, gu ? fmt(mk.kgu, mk.kgu < 10 ? 1 : 0) + ' kg/' + gu[S.lang === 'en' ? 1 : 0] + (mk.soak ? ' · ' + mk.soak + (S.lang === 'en' ? ' h' : ' t') : '') : mk.kgph + (S.lang === 'en' ? ' kg/h' : ' kg/t'), 'lbl-ground', 9.5 * u, 'stroke-width="' + (2.5 * u) + '"')); }
   // your own marks: a flag with its name, set by holding a finger on the chart (Jonas 06.10.2026); they stay until you delete them
-  for (const pn of S.pins || []){ if (!inV(pn.x, pn.y)) continue; const s = 6 * u;
+  for (const pn of S.pins || []){ if (!inV(pn.x, pn.y) || (pn.until && pn.until <= S.t)) continue; const s = 6 * u;
     g.push('<path d="M' + pn.x + ',' + pn.y + 'v' + (-2.2 * s) + 'l' + (1.3 * s) + ',' + (0.45 * s) + 'l' + (-1.3 * s) + ',' + (0.45 * s) + '" class="pinflag' + (pn.id === PINSEL ? ' sel' : '') + '" stroke-width="' + (1.4 * u) + '"/><circle cx="' + pn.x + '" cy="' + pn.y + '" r="' + (1.8 * u) + '" class="pinfoot"/>');
     if (view.z > 1.2 && pn.name) g.push(txt({x:pn.x + 4 * u, y:pn.y + 4 * u}, pinEsc(pn.name), 'lbl-pin', 11 * u, 'stroke-width="' + (2.5 * u) + '"')); }
   // Father's marks (ui/06c-notebook.js)
@@ -533,7 +533,7 @@ function ptrUp(e){
   ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null;
   if (tap && drag.pin && e.timeStamp - drag.t0 >= PIN_HOLD){ pinAdd(toMap(e.clientX, e.clientY)); if (ptrs.size === 0) drag = null; return; }
   if (tap && SETM){ setAim(toMap(e.clientX, e.clientY)); if (ptrs.size === 0) drag = null; return; }
-  if (tap){ const mp = toMap(e.clientX, e.clientY), rr = 16 / view.px; const ph = (S.pins || []).find(q => dist(q, mp) < rr); if (ph){ pinOpen(ph.id); return; } const gh = gearHit(mp, rr * 0.8); if (gh){ gearTap(gh); renderDyn(); return; } let hit = null, bd = 1e9; for (const n of AISNOW){ const d = dist(n.p, mp); if (d < rr && d < bd){ bd = d; hit = n; } } if (hit && (hit.st === 'port' || hit.v === 0) && PORTS.some(q => dist(q.p, mp) < rr * 1.6)) hit = null; if (hit){ AISSEL = hit.id; renderDyn(); renderAisCard(); return; } addWaypoint(mp); }
+  if (tap){ const mp = toMap(e.clientX, e.clientY), rr = 16 / view.px; const ph = (S.pins || []).find(q => dist(q, mp) < rr && !(q.until && q.until <= S.t)); if (ph){ pinOpen(ph.id); return; } const gh = gearHit(mp, rr * 0.8); if (gh){ gearTap(gh); renderDyn(); return; } let hit = null, bd = 1e9; for (const n of AISNOW){ const d = dist(n.p, mp); if (d < rr && d < bd){ bd = d; hit = n; } } if (hit && (hit.st === 'port' || hit.v === 0) && PORTS.some(q => dist(q.p, mp) < rr * 1.6)) hit = null; if (hit){ AISSEL = hit.id; renderDyn(); renderAisCard(); return; } addWaypoint(mp); }
   if (ptrs.size === 0) drag = null;
   else { const [p] = [...ptrs.values()]; drag = {sx:p.x, sy:p.y, cx:view.cx, cy:view.cy, moved:true}; }
 }
