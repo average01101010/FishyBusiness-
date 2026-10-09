@@ -67,7 +67,7 @@ const DOCK = (() => {
     if (p.rorbu) return [restItem(), S.crew.length || S.ops ? I('arbeid', 'arbeid', 'Mannskap', 'Crew', {page:'arbeid'}) : null, I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'})].filter(Boolean);
     // Father's naust is a home, not a place of trade (Jonas 07.10.2026): rest, the boathouse itself, the crew and the inventory; the
     // shop, the plant and the yard are at their own quays
-    if (berthKind(b) === 'naust') return [restItem(), I('naustup', 'naust', 'Naustet', 'Boathouse', {run:() => PHONE.open('notat')}), S.crew.length || S.ops ? I('arbeid', 'arbeid', 'Mannskap', 'Crew', {page:'arbeid'}) : null, I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'})].filter(Boolean);
+    if (berthKind(b) === 'naust') return [restItem(), I('naustup', 'naust', 'Naustet', 'Boathouse', {page:'naustp'}), S.crew.length || S.ops ? I('arbeid', 'arbeid', 'Mannskap', 'Crew', {page:'arbeid'}) : null, I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'})].filter(Boolean);
     // the three places of trade (Jonas 07.10.2026): the plant (core/06c-steder.js portServices) takes the catch and sells ice, bait and fuel,
     // the tackle shop sells gear and electronics, the yard sells and mends boats and sells fuel; each has its own button, and all three have the village
     const sv = portServices(p, berthKind(b));
@@ -99,8 +99,8 @@ const DOCK = (() => {
       I('bank', 'bank', 'Bank', 'Bank', {page:'bank'}),
       I('oppdrag', 'oppdrag', 'Oppdrag', 'Orders', {page:'oppdrag'}),
       I('mannskap', 'mannskap', 'Ansatte', 'Employees', {page:'mannskap'}), restOnDock() ? null : restItem(),
-      // Father's naust in the home harbour: setting it to rights is in the notebook (core/07c-naust.js, ui/06c-notebook.js)
-      atHome(b) ? I('naustup', 'naust', 'Naustet', 'Boathouse', {run:() => PHONE.open('notat')}) : null].filter(Boolean);
+      // (Father's naust is set to rights from the dock when the boat lies at it, and only there: ui/06c-notebook.js)
+      ].filter(Boolean);
     if (m === 'verft') return [
       I('batmarked', 'batmarked', 'Båthandel', 'Boats', {page:'fartoy'}),
       I('oppgr', 'oppgr', 'Oppgrader', 'Upgrade', {page:'utstyr'}),

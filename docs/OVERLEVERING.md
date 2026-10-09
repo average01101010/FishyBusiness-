@@ -3685,6 +3685,15 @@ Tromsøyas gater kom og gikk i kartplotteren. `vecPrune` slapp vec-flisene som l
 
 Nå tar `vecPrune` alltid med midten av kartplotteren når den er åpen. Kontroll: med kartet over Tromsø og båten ved Båtsfjord sto 3 666 veier igjen etter en runde med `vecPrune`, mot 0 uten. Det er målt med `KYST_VEC=1`, fordi vec-pakkene bare er med i bygget da.
 
+### 5.47 Fars notatbok fjernet (Jonas 09.10.2026)
+
+«Notatboka kan fjernes i sin helhet og fars fiskeplasser strykes fra kartet.»
+- Appen `notat` er borte, sammen med fars méd (`notesMake`, `noteBoost` med +30 % og +5 %, ×8 storfisk på kveitebakken), Edvards hint om medene og merket «Fars merker funnet».
+- Gamle lagringers `S.notes` blir liggende, men leses ikke.
+- Storfisken og kampen (`core/09b-dream.js`, `DREAMUI`) er som før.
+- Istandsettingen av naustet og trofeveggen er siden `naustp` (`NOTEBOOK.page`). Den åpnes fra dokken bare når båten ligger ved fars naust (`berthKind === 'naust'`, Jonas: «bare tilgjengelig om man ligger ved fars naust. Samme med trofeveggen»).
+- Kartet viser fortsatt fars naust.
+
 ### 5.41 Puben i 3D (Jonas 08.10.2026)
 
 Jonas: «Spilleren trykker på pub og blir dermed sendt inn i puben hvor man sitter ved bardisken i first-person-view. Man skal kunne spinne hjulet som tidligere.» Og: «Kanskje noe som blir et sosialt element.»

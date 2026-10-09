@@ -1,8 +1,7 @@
 // ===== the people on the quay (05.10.2026; Jonas chose it from the list of what makes people play on, 7) =====
 // Three who are there wherever you start, with names that fit the coast:
 // - Edvard, who knew Father. He sits on the bench by the quay in the home harbour (S.home, else Finnsnes) and has a word for you the
-//   first time you come in each day (08-20): about Father, the weather, the marks in the notebook you have not found yet (the way to
-//   one of them), the big fish you got. What he has said is in S.folk.edvard.seen, so he does not repeat himself soon.
+//   first time you come in each day (08-20): about Father, the weather, the big fish you got. What he has said is in S.folk.edvard.seen, so he does not repeat himself soon.
 // - The plant's manager at the plant you sell most to: she keeps count of what you land there (folkSold, from sell()). At 2, 10 and
 //   30 tonnes you are a regular supplier, and the plant pays 1, 2 and 3 % more there (folkPf, in clsPrice: on the market price).
 // - Solveig in the tackle shop: she counts what you buy (folkShop); the fifth time the coffee is on her, and from the fifteenth the
@@ -21,7 +20,6 @@ const EDVARD = {
     ['Ikke gå ut i kuling for noen kilo torsk. Fisken er der i morgen også.', 'Don’t go out in a gale for a few kilos of cod. The fish will be there tomorrow too.'],
     ['Han lo av meg den gangen jeg fikk propellen i garnet hans. Det tok oss hele dagen å få det løs.', 'He laughed at me the time I got my propeller in his net. It took us the whole day to get it free.'],
     ['Skreien er som et gammelt vennskap. Den kommer tilbake hvert år, om du bare venter.', 'The skrei is like an old friendship. It comes back every year, if you just wait.']],
-  hint:(m, home) => ['Far din fisket ofte ' + SPECIES[m.sp].no.toLowerCase() + ' et stykke ' + m.dir[0] + ' for ' + home + '. Det står i notatboka hans, tror jeg.', 'Your father often fished ' + SPECIES[m.sp].en.toLowerCase() + ' a way ' + m.dir[1] + ' of ' + home + '. It is in his notebook, I think.'],
   big:t => ['Jeg hørte om ' + SPECIES[t.sp].no.toLowerCase() + 'a på ' + fmt(t.kg, 0) + ' kilo. Far din hadde vært stolt.', 'I heard about the ' + SPECIES[t.sp].en.toLowerCase() + ' of ' + fmt(t.kg, 0) + ' kilos. Your father would have been proud.']
 };
 function folkState(){ const F = S.folk || (S.folk = {}); F.edvard = F.edvard || {met:0, last:-1, seen:[], said:null}; F.plants = F.plants || {}; F.shop = F.shop || {n:0}; return F; }
@@ -140,9 +138,7 @@ function folkPort(H){
   if (!E.met){ E.met = S.t; l = EDVARD.first; }
   else {
     const T = (S.trophies || []).filter(t => t.t > (E.bigSeen || 0) && !t.crew).sort((a, b2) => b2.kg - a.kg)[0];
-    const N = S.notes, open = N && N.marks ? N.marks.filter(m => !N.found[m.id]) : [];
     if (T){ E.bigSeen = S.t; l = EDVARD.big(T); }
-    else if (open.length && h2(day, 8811) < 0.4) l = EDVARD.hint(open[Math.floor(h2(day, 8812) * open.length)], hn);
     else { const free = EDVARD.lines.map((x, i) => i).filter(i => !E.seen.includes(i)); const i = free.length ? free[Math.floor(h2(day, 8813) * free.length)] : Math.floor(h2(day, 8814) * EDVARD.lines.length);
       E.seen.push(i); if (E.seen.length > 5) E.seen.shift(); l = EDVARD.lines[i]; }
   }

@@ -42,7 +42,7 @@ async def run(p, w, h, tag):
     check(lbl[:3] == ['Butikk', 'Bygd', 'Verft'], 'knappene har kort tekst under ikonet', lbl)
 
     # the fans (at home Bygd also has «Hvil», the rest in Father's naust: 15-energy.js, 05.10.2026)
-    for m, want in (('butikk', ['fiskeutstyr', 'service', 'elektronikk']), ('bygd', ['pub', 'bank', 'oppdrag', 'mannskap', 'rest', 'naustup']), ('verft', ['batmarked', 'oppgr', 'vedlikehold', 'maler', 'bunker'])):
+    for m, want in (('butikk', ['fiskeutstyr', 'service', 'elektronikk']), ('bygd', ['pub', 'bank', 'oppdrag', 'mannskap', 'rest']), ('verft', ['batmarked', 'oppgr', 'vedlikehold', 'maler', 'bunker'])):
         await tap_el('#dock [data-dk=' + m + ']'); await pg.wait_for_timeout(250)
         f = await pg.evaluate("[...document.querySelectorAll('#dockFan [data-dk]')].map(x => x.dataset.dk)")
         vis = await pg.evaluate("!document.getElementById('dockFan').hidden")
@@ -107,7 +107,7 @@ async def run(p, w, h, tag):
     await pg.evaluate("PHONE.open('home')"); await pg.wait_for_timeout(400)
     apps = await pg.evaluate("[...document.querySelectorAll('#phone .ph-app')].map(x => x.dataset.a)")
     BASE = ['vaer', 'post', 'meld', 'salg', 'kvote', 'regler', 'drift', 'ordl', 'haill', 'merker', 'sjomann', 'redning', 'trim', 'patch', 'tilbake', 'innst', 'admin']   # and since 05.10.2026 Notatbok, Sesong and Folk among them, and Tilbakemelding, and Fiskeguide from 08.10.2026
-    check([a for a in apps if a in BASE] == BASE and all(a in BASE + ['notat', 'sesong', 'guide', 'folk'] for a in apps), 'telefonen har appene, med Kvote, Regler, Oppdrag, Trim, Patchnotes og Admin i rekkefølge', apps)
+    check([a for a in apps if a in BASE] == BASE and all(a in BASE + ['sesong', 'guide', 'folk'] for a in apps), 'telefonen har appene, med Kvote, Regler, Oppdrag, Trim, Patchnotes og Admin i rekkefølge', apps)
     # the Rederi app only once the company is founded in the bank (Jonas 06.10.2026)
     rd = await pg.evaluate("(() => { const has = () => [...document.querySelectorAll('#phone .ph-app')].some(x => x.dataset.a === 'rederi'); const f0 = S.form, r0 = has(); S.form = 'AS'; PHONE.open('home'); const r1 = has(); S.form = f0; PHONE.open('home'); return [r0, r1]; })()")
     check(rd == [False, True], 'Rederi-appen kommer først når rederiet er stiftet', rd)

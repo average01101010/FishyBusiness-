@@ -1,53 +1,18 @@
-// ===== Father's notebook, the trophy wall and the fight with the dream fish (05.10.2026; the rules are in core/09b-dream.js) =====
-// The phone app «Notatbok»: Father's marks in his hand (Caveat on lined paper), each with the way from the harbour, how far, the place
-// near by, the depth in fathoms and a word of his about the fish. «Vis i kartet» puts the circle the mark lies in on the chart (the
-// point itself once it is found) and keeps it there. Below it the trophy wall: every dream fish landed, the record of each kind first.
+// ===== Father's naust: setting it to rights and the trophy wall (core/07c-naust.js), and the fight with the dream fish (core/09b-dream.js) =====
+// The page «Naustet» opens from the dock when the boat lies at Father's naust, and only there (Jonas 09.10.2026: «Muligheten til å
+// oppgradere fars naust skal bare være tilgjengelig om man ligger ved fars naust. Samme med trofeveggen»). Father's notebook and his marks
+// on the chart were taken out the same day.
 // The fight: one bar for the strain on the line and one for the line out. Hold «Sveiv» to take line in; the strain rises, and fast if
 // you hold while the fish runs. Let go before it has been red for half a second, or the line parts; let it take 120 m and it is gone.
 // With the line in and the fish tired, it is gaffed; with the line in and the fish fresh, it dives again. 20 seconds without a touch
 // and the crew takes it over (if there is anyone else aboard).
-const FATHER = {
-  torsk:['Når skreien går, står han på kanten mot djupet. Dra juksa sakte.', 'When the skrei runs, it stands on the edge of the deep. Jig slowly.'],
-  hyse:['Hysa vil ha blaut bunn og stille vatn. Kjenn etter de små nappene.', 'Haddock wants soft bottom and quiet water. Feel for the small bites.'],
-  sei:['Seien står der straumen river, i morgengry og kveldinga.', 'Saithe stands where the current runs, at dawn and in the evening.'],
-  lange:['Langa ligger djupt i steinura. Ha nok lin, og ha tolmod.', 'Ling lies deep in the scree. Have line enough, and patience.'],
-  kveite:['Kveita står der bunnen skrår, når straumen snur. Den store kommer når du minst venter det.', 'Halibut stands where the bottom slopes, as the tide turns. The big one comes when you least expect it.']
-};
-// what he wrote beside a mark, read once it is found
-const FATHER_STORY = {
-  torsk:['Her dro jeg min første skrei, fjorten år gammel. Far min sto bak meg og sa ingenting, men han smilte hele veien hjem.', 'Here I pulled my first skrei, fourteen years old. My father stood behind me and said nothing, but he smiled all the way home.'],
-  hyse:['Mor ville alltid ha hyse til søndagsmiddagen. Her fikk jeg nok, også de årene det var smått ellers.', 'Mother always wanted haddock for Sunday dinner. Here I got enough, even in the years it was poor elsewhere.'],
-  sei:['En høstkveld kokte det av sei her. Vi fylte båten på en time og var hjemme før det ble mørkt.', 'One autumn evening the sea boiled with saithe here. We filled the boat in an hour and were home before dark.'],
-  lange:['Gamle Ole viste meg dette stedet. Han sa at den som har tolmod, får langa. Han hadde rett.', 'Old Ole showed me this place. He said the one with patience gets the ling. He was right.'],
-  kveite:['Her mistet jeg den største fisken i mitt liv. Jeg så den ved ripa, bredere enn døra på naustet. Den er der fortsatt, tror jeg.', 'Here I lost the biggest fish of my life. I saw it at the rail, wider than the boathouse door. It is still there, I think.']
-};
 const NOTEBOOK = (() => {
-  let busy = false;
   const L = (no, en) => S.lang === 'no' ? no : en;
-  // the marks round the home harbour: made once its waters are loaded (and again after a move)
-  function ready(){
-    if (S.notes && S.notes.home === (S.home || HOME0) && S.notes.marks && S.notes.marks.length) return true;
-    if (busy) return false; busy = true;
-    const home = noteHome();
-    mapNeed(home.p, MAPD.simR).then(() => { busy = false; notesMake(); save(); if (PHONE.isOpen() && PHONE.app === 'notat') PHONE.render(); }, e => { busy = false; console.error(e); });
-    return false;
-  }
   const day = t => dayStr(t / 60).replace(/^\S+ /, '');
+  const atNaust = () => S.boat.status === 'port' && berthKind(S.boat) === 'naust';
   function page(){
     const h = ['<div class="nb-paper">'];
-    if (!ready()){ h.push('<p class="nb-hand">' + L('Du blar opp i fars notatbok …', 'You open Father’s notebook …') + '</p></div>'); return h.join(''); }
-    const N = S.notes, home = portById(N.home), nf = N.marks.filter(m => N.found[m.id]).length;
-    h.push('<h3 class="nb-hand nb-h">' + L('Fars méd', 'Father’s marks') + '</h3><p class="nb-lead">' +
-      L('Notatboka lå i naustet. Far skrev ned stedene der fisken står, fra ' + home.name + '. Fisk innen 400 m fra et méd for å finne det. Der biter fisken bedre, og på Kveitebakken kommer storfisken oftere.',
-        'The notebook was in the boathouse. Father wrote down where the fish stand, from ' + home.name + '. Fish within 400 m of a mark to find it. There the fish bite better, and on the halibut bank the big fish comes more often.') +
-      ' <b>' + nf + ' / ' + N.marks.length + L(' funnet', ' found') + '</b>' + (noteAll() ? '<br>' + L('Du har funnet alle medene. Fars gamle pilk lå inni permen: litt bedre fangst overalt (+5 %).', 'You have found all the marks. Father’s old jig was inside the cover: a little better catch everywhere (+5 %).') : '') + '</p>');
-    for (const m of N.marks){
-      const nm = NOTE_NAME[m.sp], f = N.found[m.id], dir = m.dir[S.lang === 'no' ? 0 : 1];
-      h.push('<div class="nb-mark' + (f ? ' found' : '') + '"><p class="nb-hand"><b>' + L(nm[0], nm[1]) + '.</b> ' + fmt(m.nm, 1) + L(' nm ' + dir + ' fra ' + home.name, ' nm ' + dir + ' of ' + home.name) +
-        (m.near ? L(', mot ' + m.near, ', towards ' + m.near) : '') + '. ' + m.fv + L(' favner.', ' fathoms.') + '<br><i>' + L(FATHER[m.sp][0], FATHER[m.sp][1]) + '</i></p>' + (f ? '<p class="nb-hand nb-story">' + L(FATHER_STORY[m.sp][0], FATHER_STORY[m.sp][1]) + '</p>' : '') +
-        '<div class="nb-row">' + (f ? '<span class="nb-stamp">✓ ' + L('Funnet ', 'Found ') + day(f) + '</span>' : '<span class="nb-sp">' + SPECIES[m.sp][S.lang] + '</span>') +
-        '<button class="ph-btn alt" data-pa="notshow" data-id="' + m.id + '">' + L('Vis i kartet', 'Show on the chart') + '</button></div></div>');
-    }
+    if (!atNaust()){ h.push('<p class="nb-lead">' + L('Naustet og trofeveggen er hjemme ved fars naust. Legg til der for å se dem.', 'The naust and the trophy wall are at Father\u2019s naust. Moor there to see them.') + '</p></div>'); return h.join(''); }
     // the naust: set it to rights step by step (core/07c-naust.js)
     h.push('<h3 class="nb-hand nb-h">' + L('Naustet', 'The boathouse') + '</h3><p class="nb-lead">' + L('Naustet trenger en hånd. Snekkeren tar jobben når du ligger i hjemhavna.', 'The boathouse needs a hand. The carpenter does the work while you lie in the home harbour.') + '</p>');
     for (const U of NAUST_UP){ const done = naustHas(U.k), why = done ? null : naustWhy(U.k);
@@ -69,33 +34,14 @@ const NOTEBOOK = (() => {
     h.push('</div>');
     return h.join('');
   }
-  // «Vis i kartet»: the circle (or the found point) on the chart, centred, and the chart shown
-  function show(id){
-    const N = S.notes, m = N && N.marks.find(x => x.id === id); if (!m) return;
-    N.shown = N.shown || {}; N.shown[id] = 1; const c = N.found[id] ? m.p : m.c || m.p;
-    PHONE.show(false); if (G3.isActive()) G3.toggle();
-    view.cx = c.x; view.cy = c.y; view.z = Math.max(view.z, 4); save(); applyView(); renderStatic(); renderDyn();
-  }
-  // on the chart: the found marks as a pencil cross with the name, the circles looked up and not found yet
+  // on the chart: Father's naust, a small house on the shore by the home harbour
   function svg(u, inV){
-    const g = [];
-    // Father's naust (core/07c-naust.js): a small house on the shore by the home harbour
-    const ns = S.naust && S.naust.o; if (ns && view.z > 2.2){ const x = ns[0] / 1000, y = ns[1] / 1000, s = 4.5 * u; if (inV(x, y)){
+    const g = [], ns = S.naust && S.naust.o; if (ns && view.z > 2.2){ const x = ns[0] / 1000, y = ns[1] / 1000, s = 4.5 * u; if (inV(x, y)){
       g.push('<path d="M' + (x - s) + ',' + (y + s * 0.8) + 'v' + (-s * 1.1) + 'l' + s + ',' + (-s * 0.9) + 'l' + s + ',' + (s * 0.9) + 'v' + (s * 1.1) + 'z" class="nbh" stroke-width="' + (1.2 * u) + '"/>');
       if (view.z > 3) g.push(txt({x:x + 7 * u, y:y + 4 * u}, S.lang === 'no' ? 'Fars naust' : 'Father\u2019s boathouse', 'lbl-nb', 12 * u, 'stroke-width="' + (2.5 * u) + '"')); } }
-    const N = S.notes; if (!N || !N.marks) return g.join('');
-    for (const m of N.marks){
-      const nm = NOTE_NAME[m.sp][S.lang === 'no' ? 0 : 1];
-      if (N.found[m.id]){ if (!inV(m.p.x, m.p.y)) continue; const s = 5 * u;
-        g.push('<path d="M' + (m.p.x - s) + ',' + (m.p.y - s) + 'L' + (m.p.x + s) + ',' + (m.p.y + s) + 'M' + (m.p.x + s) + ',' + (m.p.y - s) + 'L' + (m.p.x - s) + ',' + (m.p.y + s) + '" class="nbx" stroke-width="' + (2.2 * u) + '"/>');
-        if (view.z > 2.5) g.push(txt({x:m.p.x + 7 * u, y:m.p.y - 5 * u}, nm, 'lbl-nb', 12 * u, 'stroke-width="' + (2.5 * u) + '"')); }
-      else if (N.shown && N.shown[m.id] && m.c){ if (!inV(m.c.x, m.c.y)) continue;
-        g.push('<circle cx="' + m.c.x + '" cy="' + m.c.y + '" r="0.5" class="nbc" stroke-width="' + (1.8 * u) + '" stroke-dasharray="' + (6 * u) + ' ' + (4 * u) + '"/>');
-        if (view.z > 1.5) g.push(txt({x:m.c.x + 0.52, y:m.c.y}, nm + '?', 'lbl-nb', 12 * u, 'stroke-width="' + (2.5 * u) + '"')); }
-    }
     return g.join('');
   }
-  return {page, show, svg, ready};
+  return {page, svg, atNaust};
 })();
 // the fight with the dream fish
 window.DREAMUI = (() => {
@@ -147,7 +93,7 @@ window.DREAMUI = (() => {
     if (s.res){
       const r = s.res, nm = r.sp ? SPECIES[r.sp][S.lang].toLowerCase() : '';
       $e('.dr-h').textContent = r.won ? (L('En ', 'A ') + nm + L(' på ', ' of ') + fmt(r.kg, 1) + ' kg!') : r.why === 'snap' ? L('Snøret røk.', 'The line parted.') : r.why === 'out' ? L('Den tok all lina.', 'It took all the line.') : L('Den slet seg.', 'It got away.');
-      $e('.dr-sub').textContent = r.won ? (r.rel ? L('Kveita er fredet nå, så den gikk ut igjen. Den står på trofeveggen i notatboka.', 'Halibut is protected now, so it went back. It is on the trophy wall in the notebook.') : (r.crew ? L('Mannskapet fikk den inn. ', 'The crew got it in. ') : '') + L('Den ligger i lasten og står på trofeveggen i notatboka.', 'It is in the hold and on the trophy wall in the notebook.')) : L('Det var noe stort: ' + nm + ', kanskje ' + fmt(r.kg, 0) + ' kg.', 'It was something big: a ' + nm + ', perhaps ' + fmt(r.kg, 0) + ' kg.');
+      $e('.dr-sub').textContent = r.won ? (r.rel ? L('Kveita er fredet nå, så den gikk ut igjen. Den står på trofeveggen i naustet.', 'Halibut is protected now, so it went back. It is on the trophy wall in the naust.') : (r.crew ? L('Mannskapet fikk den inn. ', 'The crew got it in. ') : '') + L('Den ligger i lasten og kommer på trofeveggen i naustet.', 'It is in the hold and goes on the trophy wall in the naust.')) : L('Det var noe stort: ' + nm + ', kanskje ' + fmt(r.kg, 0) + ' kg.', 'It was something big: a ' + nm + ', perhaps ' + fmt(r.kg, 0) + ' kg.');
       btn.textContent = 'OK'; return;
     }
     const run = s.run > 0;

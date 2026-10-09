@@ -52,7 +52,6 @@ const ACHL = [
   {id:'arter', n:['Arter levert', 'Species landed'], tiers:[3, 5, 8, 12], unit:'', v:() => Object.keys((S.ach && S.ach.sp) || {}).length},
   {id:'nm', n:['Nautiske mil om bord', 'Nautical miles aboard'], tiers:[250, 1000, 2500, 5000, 10000], unit:'nm', v:() => (S.tat && S.tat.nm) || 0},
   {id:'natt', n:['Nattfiske', 'Night fishing'], tiers:[1, 10, 50], unit:'', v:() => achC('night')},
-  {id:'notat', n:['Fars merker funnet', 'Father\'s marks found'], tiers:[1, 3, 5], unit:'', v:() => Object.keys((S.notes && S.notes.found) || {}).length},
   {id:'peer', n:['Andre spillere møtt på sjøen', 'Other players met at sea'], tiers:[1, 10, 50], unit:'', v:() => Object.keys((S.ach && S.ach.peers) || {}).length},
   // the pub (ui/09c-pubsoc.js): the week's quiz with every answer right, and the weeks the fiskarlag reached its goal
   {id:'quiz', n:['Quizmester på puben', 'Pub quiz master'], tiers:[1, 5, 20], unit:'', v:() => achC('quiz')},

@@ -43,13 +43,13 @@ async def main():
         nu = await pg.evaluate("""(() => { const b = S.boat, q = portById('finnsnes'); b.status = 'port'; b.port = 'finnsnes'; b.pos = {x:q.p.x, y:q.p.y}; S.naustUp = {}; S.cash = 50000; S.adm = null; S.sleep = null;
           const stoveFirst = naustWhy('ovn'), c0 = S.cash, t = naustBuy('tak'), paid = c0 - S.cash; S.energy = 50; restStart(); energyMinute(); const dE = S.energy - 50; restEnd(true);
           naustBuy('benk'); b.gear = false; const c1 = S.cash; shopBuy('jig', 0, false); const jig = c1 - S.cash;
-          b.port = 'husoy'; const away = naustRest(b); b.port = 'finnsnes'; PHONE.open('notat');
+          b.port = 'husoy'; const away = naustRest(b); b.port = 'finnsnes'; b.berth = 'naust'; PHONE.open('naustp');
           return {stoveFirst:stoveFirst && stoveFirst[0], t, paid, dE:+dE.toFixed(4), want:+(100 / 8 / 60 * 1.25).toFixed(4), jig, gear:PRICE.gear, away}; })()""")
         await pg.wait_for_selector('.nb-up', timeout=60000)
         nu['txt'] = await pg.evaluate("(() => { const t = document.querySelector('.ph-appv').innerText; PHONE.show(false); return t.includes('Naustet') && t.includes('Vedovn') && /gjort/i.test(t); })()")
         print(json.dumps(nu, ensure_ascii=False))
         print(ok(nu['stoveFirst'] == 'Taket må tettes først.' and nu['t'] is None and nu['paid'] == 6000 and abs(nu['dE'] - nu['want']) < 1e-3 and nu['away'] == 1), 'the naust\'s roof (before the stove) makes you rest 25 % faster in the home harbour, and only there')
-        print(ok(nu['jig'] == round(nu['gear'] * 0.75) and nu['txt']), 'Father\'s workbench makes the hand jig a quarter cheaper at home; the notebook lists the steps', nu['jig'])
+        print(ok(nu['jig'] == round(nu['gear'] * 0.75) and nu['txt']), 'Father\'s workbench makes the hand jig a quarter cheaper at home; the naust page (at the naust) lists the steps', nu['jig'])
         # the start at Father's naust (Jonas 05.10.2026): a new game's boat lies at the naust's pile quay in the water; the jig and the ice
         # are Father's (Solveig tells it, the ice comes in bags); no fast travel (Jonas 05.10.2026): the boat is never shifted between the
         # naust and the plant's quay for you, landing and fuel only at the plant's quay, and a route that ends at the naust (the chart plotter's

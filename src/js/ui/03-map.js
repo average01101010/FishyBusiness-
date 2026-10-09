@@ -377,7 +377,7 @@ function renderStatic(){
     g.push('<path d="M' + pn.x + ',' + pn.y + 'v' + (-2.2 * s) + 'l' + (1.3 * s) + ',' + (0.45 * s) + 'l' + (-1.3 * s) + ',' + (0.45 * s) + '" class="pinflag' + (pn.id === PINSEL ? ' sel' : '') + '" stroke-width="' + (1.4 * u) + '"/><circle cx="' + pn.x + '" cy="' + pn.y + '" r="' + (1.8 * u) + '" class="pinfoot"/>');
     if (view.z > 1.2 && pn.name) g.push(txt({x:pn.x + 4 * u, y:pn.y + 4 * u}, pinEsc(pn.name), 'lbl-pin', 11 * u, 'stroke-width="' + (2.5 * u) + '"')); }
   if (typeof srchSvg === 'function') g.push(srchSvg(u));   // the place found by search (ui/03f-search.js)
-  // Father's marks (ui/06c-notebook.js)
+  // Father's naust (ui/06c-notebook.js)
   g.push(NOTEBOOK.svg(u, inV));
   g.push(turSvg(u, inV));   // where the missions go (ui/05f-turer.js)
   // ports, their names when the view is closer than the whole region; the place names (03a-chart.js) keep clear of them
