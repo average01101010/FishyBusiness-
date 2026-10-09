@@ -82,6 +82,11 @@ const DRIFTUI = (() => {
         BIG('dr-zspot', L('Velg i kartet …', 'Choose in the chart …'), a[k] && !sp.some(q => pick(k, q)) ? L('Valgt: ', 'Chosen: ') + spotLine(a[k], kd) : L('Trykk der du vil i kartplotteren', 'Tap where you like in the plotter'), a[k] && !sp.some(q => pick(k, q)), 'data-k="' + k + '" data-i="map"');
       h.push(head(2, kind ? L('Hvor skal redskapet stå?', 'Where shall the gear stand?') : L('Hvor skal dere jukse?', 'Where will you jig?')) + '<p class="ph-note">' + L('Plassen avgjør fangsten. Finn fisken med ekkoloddet, eller bruk plasser du har fisket godt på før. Fangstrapporten viser etter hvert hvordan plassene gir.', 'The place decides the catch. Find the fish with the sounder, or use places you have fished well before. The catch report shows in time how the places give.') + '</p>' + list(kind ? 'gp' : 'jp', kind));
       if (kind && a.jig) h.push('<h4 style="margin-top:14px">' + L('Hvor skal dere jukse?', 'Where will you jig?') + '</h4>' + BIG('dr-zspot', L('Ved redskapet', 'By the gear'), L('Båten er på plass når det skal trekkes', 'The boat is in place for the haul'), !a.jp, 'data-k="jp" data-i="gear"') + list('jp', null));
+      // more jig places, in turn: the crew move on when the catch falls (feedback #57)
+      if (kind ? a.jig : a.jp){
+        h.push('<h4 style="margin-top:14px">' + L('Flytte til en annen plass når fangsten faller?', 'Move on to another place when the catch falls?') + '</h4>' + BIG('dr-zspot', L('Nei, bli på plassen', 'No, stay at the place'), '', !a.jp2, 'data-k="jp2" data-i="none"') + list('jp2', null));
+        if (a.jp2) h.push('<h4 style="margin-top:14px">' + L('Og en tredje plass?', 'And a third place?') + '</h4>' + BIG('dr-zspot', L('Nei, to plasser er nok', 'No, two places will do'), '', !a.jp3, 'data-k="jp3" data-i="none"') + list('jp3', null));
+      }
       h.push(nav(true, true, !!(kind ? a.gp : a.jp)));
     } else if (wz.step === 3){
       const W = PLANW.wx;
@@ -241,6 +246,7 @@ const DRIFTUI = (() => {
       if (a === 'dr-zstart'){ A.start = clamp(A.start + (+d.d), 0, 12); A.est = null; return true; }
       if (a === 'dr-zspot'){
         if (d.i === 'gear'){ A.jp = null; A.est = null; return true; }
+        if (d.i === 'none'){ A[d.k] = null; if (d.k === 'jp2') A.jp3 = null; A.est = null; return true; }
         if (d.i === 'map'){ const base = portById(A.base) || portById(S.boat.port) || nearestPort(S.boat.pos);
           DRIFTCTX = {vid:S.cur, sid:null, spot:d.k, rig:A.gear, name:L('Driftsplan', 'Operations plan')}; S.draft = []; if (typeof routeChanged === 'function') routeChanged();
           PHONE.show(false); if (typeof DOCK !== 'undefined' && DOCK.close) DOCK.close(); toast(d.k === 'gp' ? L('Trykk i kartet der redskapet skal stå.', 'Tap the chart where the gear shall stand.') : L('Trykk i kartet der dere skal jukse.', 'Tap the chart where you will jig.')); return true; }

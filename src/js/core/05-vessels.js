@@ -524,6 +524,14 @@ function fish(H, W, hs){
   }
   // only the stock's own share of the catch is taken from it: not the guide's skrei patch, nor what the guarantee tops up
   takeStock(b.pos, (got - gotTop) * (dsum > 0 ? Math.max(0, (dsum - tsum) / dsum) : 1)); S.fsess.kg += got; if (got > 0) (b.tripGear = b.tripGear || {}).juksa = 1;
+  // a plan's jig places in turn (06f-plan.js, wp.jc; feedback #57): each hour's catch is weighed against the first hour's here, and when it
+  // has fallen to half the crew move on to the next place, taking the hours left with them
+  { const pl = S.plan, w = pl && pl.ops && pl.wps[pl.idx - 1], fs = S.fsess;
+    if (w && w.jc && w.jc < w.jn && b.fishUntil != null && S.t - (fs.ck || fs.t0) >= 60){
+      const r = fs.kg - (fs.ckKg || 0); fs.ck = S.t; fs.ckKg = fs.kg;
+      if (fs.r1 == null) fs.r1 = r;
+      else if (r < 0.5 * fs.r1){ const nx = pl.wps.slice(pl.idx).find(q => q.jc && q.fish > 0);
+        if (nx){ nx.fish = Math.round((nx.fish + Math.max(0, (b.fishUntil - S.t) / 60)) * 10) / 10; log('Fangsten faller. Flytter til neste juksplass.', 'The catch is falling. Moving on to the next jig place.'); endFishing('move'); return; } } } }
   // cod quota: warn once a day when the cod on board already fills what is left
   const q = quotaState(), codHold = S.hold.filter(x => x.sp === 'torsk').reduce((a, x) => a + x.kg, 0);
   if (codHold > 0 && access() !== 'none' && q.torsk + codHold >= codLimitNow(H) && !ffPct(H) && (S.codWarn || -1e9) < S.t - 1440){ S.codWarn = S.t; log('Torskekvoten er full. Torsk du lander nå blir inndratt.', 'The cod quota is full. Cod you land now will be confiscated.'); }
@@ -533,8 +541,11 @@ function endFishing(why){
   const fs = S.fsess; if (fs && S.t - fs.t0 >= 15){ { const kgph = Math.round(fs.kg / ((S.t - fs.t0) / 60)); S.marks.push({x:fs.x, y:fs.y, t:S.t, kgph, q:Math.round(kgph / (HEATG.fair.jig * heatRigFactor()) * 100) / 100}); } if (S.marks.length > 80) S.marks.shift(); } S.fsess = null;
   if (b.gopQuiet){ b.gopQuiet = false; if (why === 'full') log('Lasten er full.', 'The hold is full.'); }
   else if (why === 'full') log('Lasten er full.', 'The hold is full.');
+  else if (why === 'move'){}
   else if (why === 'gear') log('Kan ikke fiske uten juksa.', 'Cannot fish without a jig line.');
   else log('Ferdig med fisket. ' + Math.round(holdTotal()) + ' kg om bord.', 'Finished fishing. ' + Math.round(holdTotal()) + ' kg on board.');
+  // a full hold sails past a plan's jig places still ahead (06f-plan.js, wp.jc) on the way to land
+  if (why === 'full' && S.plan && S.plan.ops) for (let i = S.plan.idx; i < S.plan.wps.length; i++){ const w = S.plan.wps[i]; if (w.jc && w.fish > 0 && !w.act) w.fish = 0; }
   if (S.plan && S.plan.idx < S.plan.wps.length) b.status = 'sailing';
   else { S.plan = null; b.status = 'idle'; }
 }

@@ -201,6 +201,8 @@ function opsStep(H){
   const o = driftOps(), b = S.boat; if (!o || !o.on || !o.sess.length) return;
   const atAnchor = b.status === 'idle' && !!b.anch;
   if ((b.status !== 'port' && !atAnchor) || (b.status === 'port' && portBusy(b)) || S.plan || b.land || b.shift) return;
+  // the catch waits at a closed plant: it is landed when the plant opens (vesselStep), before anything else (feedback #57)
+  if (b.status === 'port' && b.landWait && b.port === b.landWait) return;
   if (o.hold && H < o.hold) return;
   // the rest at the base (a plan from the plan maker, 06f-plan.js): it is counted from when the boat lies there, and the first trip of a
   // day waits until it has lasted PLANW.rest hours, so the crew's rest is always had in one stretch
@@ -209,6 +211,9 @@ function opsStep(H){
   const s = o.sess[o.idx], sk = opsSkipper() || S.crew[0] || null;
   // a session that follows straight on from the last (asap) goes when the boat is free, not at a clock
   if (H < driftDue(o) && !(s.asap && o.idx > 0)) return;
+  // the crew have had the night's rest at the quay of a closed plant (opsLanded): the rest at the base is left out, and the first trip
+  // waits out the rest from when they came in, and goes from where she lies
+  if (s.type === 'hvile' && o.wiz && o.quayRest){ o.quayRest = null; driftAdvance(o); return; }
   if (o.wiz && o.idx === 0 && !o.restWant && o.restT0 != null && S.t < o.restT0 + PLANW.rest * 60){
     if ((o.restTold || -1e9) < o.restT0){ o.restTold = S.t; msg(sk ? sk.name : gL('Driftsplan', 'Operations plan'), 'Mannskapet hviler til kl. ' + driftClock(driftHod((o.restT0 + PLANW.rest * 60) / 60)) + ' før neste tur.', 'The crew rest until ' + driftClock(driftHod((o.restT0 + PLANW.rest * 60) / 60)) + ' before the next trip.'); }
     return; }
@@ -277,7 +282,14 @@ function opsStep(H){
 function opsLanded(pid){
   const o = driftOps(); if (!o) return;
   // the plant is closed: the boat waits at the quay until it opens (vesselStep asks again)
-  const pt = portById(pid); if (pt && pt.mottak && holdTotal() >= 0.5 && !mottakOpen(S.t / 60)){ if (S.boat.landWait !== pid) log('Mottaket i ' + pt.name + ' er stengt. Båten venter til det åpner ' + mottakWhen(S.t / 60, true) + '.', 'The plant in ' + pt.name + ' is closed. The boat waits until it opens ' + mottakWhen(S.t / 60, false) + '.'); S.boat.landWait = pid; return; }
+  const pt = portById(pid); if (pt && pt.mottak && holdTotal() >= 0.5 && !mottakOpen(S.t / 60)){
+    if (S.boat.landWait !== pid){
+      // a plan from the plan maker whose day is done: the crew take the night's rest here at the quay (feedback #57)
+      const nx = o.sess[o.idx], night = o.wiz && nx && nx.type === 'hvile';
+      if (night){ o.restT0 = S.t; o.restWant = false; o.quayRest = S.t; }
+      log('Mottaket i ' + pt.name + ' er stengt. ' + (night ? 'Mannskapet hviler ved kaia og leverer' : 'Båten venter til det åpner') + ' ' + mottakWhen(S.t / 60, true) + '.', 'The plant in ' + pt.name + ' is closed. ' + (night ? 'The crew rest at the quay and land' : 'The boat waits until it opens') + ' ' + mottakWhen(S.t / 60, false) + '.');
+    }
+    S.boat.landWait = pid; return; }
   S.boat.landWait = null;
   opsGearAfter();
   // the catch goes up with the crane; the report comes with the landing note

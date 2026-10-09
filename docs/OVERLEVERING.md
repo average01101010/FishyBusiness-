@@ -3593,6 +3593,19 @@ Mål: spilleren holder hviletiden og får mest mulig levert per døgn, og system
 - **Ingen forventet fangst vises.** Planleggeren regner bare med det spilleren vet: egne fangstprikker innen 1,5 km de siste 14 dagene (`planMark`), ellers et nøytralt standardtall (`HEATG.fair`). Plasslista viser «du fikk X kg/t her» eller «ikke fisket her ennå». Fangstrapporten (levert per døgn, snitt siste 7 døgn, beste døgn) er tilbakemeldingen.
 - **Hvilen:** når hviløkta begynner, settes `o.restWant`; når båten ligger ved basen, `o.restT0`. Første tur neste dag venter til det har gått `PLANW.rest` = 10 t. Hindrer været turen hjem, hviler båten der den ligger (tid ved kai teller som hvile i `restHour`).
 - **Juks:** `S.plan.noJig` når spilleren har valgt redskap uten juks (båten venter ved redskapet). `gearReserve` holder bare av plass når redskapet skal trekkes på samme tur før levering.
+- **Tilbakemelding #57 (09.10.2026):**
+  - **Opptil tre juksplasser etter tur** (`w.jp`, `w.jp2`, `w.jp3`; steg 3 spør «Flytte til en annen plass når fangsten faller?»). Planleggeren går inn til den første og ut fra den siste (`PF.J`), regner veien mellom dem (`chain`, `ctx.jc`) og deler fiskeitimene likt. Punktene får `jc`/`jn` i ruta.
+  - Motoren (`05-vessels.js`) veier hver times fangst mot den første timen på plassen. Når den har falt til halvparten, går mannskapet videre med timene som er igjen («Fangsten faller. Flytter til neste juksplass.»). Full last seiler forbi resten av juksplassene (`fish = 0`).
+  - **Dagskortet** viser «Går ut igjen fra M» etter en levering som har flere turer etter seg.
+  - **Åpningstidene** (`mottakOpen`) sjekkes på papiret for neste hverdag (`H0`):
+    - En levering mellom to turer må finne mottaket åpent, ellers forkastes kandidaten. Forkastes alle, sier feilen det.
+    - Etter siste tur hviler mannskapet ved kaia og leverer når mottaket åpner (`est.quay`).
+  - **Motoren:**
+    - Med fangst om bord ved et stengt mottak (`b.landWait`) går båten ikke ut på neste økt før fangsten er levert.
+    - Er dagen ferdig (neste økt er hvilen), teller hvilen fra ankomsten (`o.restT0`, `o.quayRest`). Hviløkta ved basen hoppes over, og første tur går derfra båten ligger.
+  - Svakt:
+    - Planen ser bare én hverdag, så lørdag (08–14) og søndag kan gi en annen dag enn kortet viser. Motoren venter uansett riktig.
+    - Grensen «halvparten av første time» er et anslag.
 - **Flere valg** viser den gamle detaljvisningen (økter, 2+2, maler, test av planen). Endringer der lages ikke om av spørsmålene før «Endre planen».
 - Test: `tests/plantest.py` (planer, sjekk, hvile, motoren én dag, veiviseren med klikk). Svakt: andre døgns hvile er ikke målt fordi været i testen holdt båten inne; balansen i tallene (`PLANW.setH/haulH`, `HEATG.fair`) er anslag.
 

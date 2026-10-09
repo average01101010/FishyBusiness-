@@ -54,6 +54,35 @@ async def main():
         print('engine:', json.dumps(e, ensure_ascii=False))
         print(ok(e['left'] is not None and e['landings'] >= 1), 'the plan goes out and lands', e)
         print(ok(e['restAt'] and (e['restH'] is None or e['restH'] >= 10)), 'the boat rests at the base, and the next day waits until 10 hours of rest are had', e)
+        # feedback #57: up to three jig places in turn, «goes out again» after a landing between trips, and the night at a closed plant
+        q = await pg.evaluate("""async () => { const R = {}, home = portById(S.home || HOME0);
+          const g0 = GROUNDS.slice().sort((x, y) => dist(x.p, home.p) - dist(y.p, home.p))[0].p, gs = [{x:g0.x, y:g0.y}];
+          for (let r = 1; r < 4 && gs.length < 3; r += 0.5) for (let k = 0; k < 12 && gs.length < 3; k++){ const q = {x:g0.x + r * Math.cos(k * 0.52), y:g0.y + r * Math.sin(k * 0.52)}; if (!isLand(q) && depthF(q) > 15 && gs.every(z => dist(z, q) > 0.8)) gs.push(q); }
+          const a = Object.assign(planWizDefaults(), {base:home.id, gear:'juksa', jp:gs[0], jp2:gs[1], jp3:gs[2], start:5}), o = driftNew(); o.wiz = a;
+          await new Promise(res => planBuild(o, res));
+          const w = o.sess.length ? o.sess[0].route.wps.filter(x => x.jn) : [];
+          R.multi = {err:a.err, jc:w.map(x => x.jc), fish:w.map(x => x.fish), tl:a.est ? a.est.tl.some(x => /plasser etter tur/.test(x.no)) : false, again:a.est && a.est.trips > 1 ? a.est.tl.some(x => /^Går ut igjen/.test(x.no)) : null, trips:a.est && a.est.trips};
+          // the plan's sums with the plant closed at the landing: the last trip rests at the quay, a landing between trips is refused
+          const ctx = {L:() => 1, R:100, units:0, gearKg:() => 0, kind:null, cap:600, start:5, mname:'M', bname:'B', jc:0, jn:1, open:() => false, next:h => h + 6};
+          const one = planSim({trips:[[{at:'J', fish:true}]]}, ctx), two = planSim({trips:[[{at:'J', fish:true}], [{at:'J', fish:true}]]}, ctx);
+          const opn = planSim({trips:[[{at:'J', fish:true}], [{at:'J', fish:true}]]}, Object.assign({}, ctx, {open:() => true}));
+          R.sim = {again:!!(opn && opn.tl.some(x => /^Går ut igjen fra M/.test(x.no))), quay:!!(one && one.quay), line:one ? one.tl[one.tl.length - 1].no : null, two:two, shut:!!ctx.shut};
+          // the engine: in at a closed plant at the end of the day, the crew rest at the quay, land when it opens, and the base rest is left out
+          const O = S.ops, b = S.boat, M = portById(O.wiz.est.mottak); let H = Math.ceil(S.t / 60); while (gDate(H).getUTCHours() !== 23) H++;
+          S.t = H * 60; b.status = 'port'; b.port = M.id; b.pos = {...M.p}; S.plan = null; b.land = null; addCatch('torsk', 200);
+          O.on = true; O.idx = O.sess.length - 1; O.hold = 0; O.restT0 = null; opsLanded(M.id);
+          R.eng = {wait:b.landWait === M.id, quay:O.quayRest != null, rest0:O.restT0 === S.t};
+          for (let i = 0; i < 60; i++) step(); R.eng.stayed = !S.plan && b.port === M.id && b.landWait === M.id;
+          S.t = Math.round(mottakNext(S.t / 60) * 60) + 1; let done = null;
+          for (let i = 0; i < 600 && done == null; i++){ step(); if (O.quayRest == null) done = S.t; }
+          R.eng.landed = holdTotal() < 1; R.eng.skipped = done != null && O.idx === 0; R.eng.restLeft = O.restT0 != null ? Math.round((O.restT0 + PLANW.rest * 60 - S.t) / 6) / 10 : null;
+          return R; }""")
+        print('#57:', json.dumps(q, ensure_ascii=False)[:900])
+        m = q['multi']
+        print(ok(not m['err'] and m['jc'] == [1, 2, 3] and all(f > 0 for f in m['fish']) and m['tl'] and m['again'] is not False), 'three jig places in turn, and the day card says so', m)
+        print(ok(q['sim']['again'] and q['sim']['quay'] and 'hviler ved kaia' in (q['sim']['line'] or '') and q['sim']['two'] is None and q['sim']['shut']), 'the day card says «goes out again» after a landing between trips; the plan rests at the quay of a closed plant after the last trip, and never lands between trips at a closed one', q['sim'])
+        en = q['eng']
+        print(ok(en['wait'] and en['quay'] and en['rest0'] and en['stayed'] and en['landed'] and en['skipped']), 'the engine: the crew rest at the closed plant, land when it opens before the next trip, and the base rest is left out', en)
         # the questions in the app, tapped through: base, gear, place (a catch mark), weather, make, use
         u = await pg.evaluate("""async () => { const R = {}, b = S.boat; S.ops = null; b.status = 'port'; b.port = S.home || HOME0; b.pos = {...portById(b.port).p};
           const home = portById(b.port), g = GROUNDS.slice().sort((x, y) => dist(x.p, home.p) - dist(y.p, home.p))[0]; S.marks.push({x:g.p.x, y:g.p.y, t:S.t, kgph:60, q:1});
