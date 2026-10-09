@@ -1,6 +1,6 @@
 from _env import GAME, boot
 # The old ways (O): superstition as lore. The crew, the quay and the pub tell of it at the right moments; what you hear is kept in the
-# Seaman app. Lore only: no effect on the crew's mood, the catch or the weather.
+# Milepæler app. Lore only: no effect on the crew's mood, the catch or the weather.
 import asyncio, json
 from playwright.async_api import async_playwright
 
@@ -30,8 +30,10 @@ async def main():
           const p0 = Object.keys(S.lore).length, st = lorePub(); R.pub = {story:st && st[0], more:Object.keys(S.lore).length - p0};
           // no effect on the crew
           R.morale = S.crew.map(c => c.morale).every((m, i) => m === morale0[i]);
-          // the Seaman app
-          PHONE.open('sjomann'); document.querySelector('[data-pa="sub"][data-s="overtro"]').click(); const v = document.querySelector('.ph-appv'); R.app = {text:v ? v.innerText.slice(0, 160) : null, cards:v ? v.querySelectorAll('.ph-card').length : 0, unknown:v ? v.innerText.split('Ennå ikke hørt').length - 1 : -1};
+          // the Milepæler app
+          PHONE.open('merker'); document.querySelector('[data-pa="sub"][data-s="overtro"]').click(); const v = document.querySelector('.ph-appv'); R.app = {text:v ? v.innerText.slice(0, 160) : null, cards:v ? v.querySelectorAll('.ph-card').length : 0, unknown:v ? v.innerText.split('Ennå ikke hørt').length - 1 : -1};
+          PHONE.dact('merker', 'sub', {s:'rekord'}); PHONE.render(); R.rec = document.querySelector('.ph-appv').innerText.includes('Rekordfisk') && !document.querySelector('[data-pa="naustbuy"]');
+          R.apps = [...document.querySelectorAll('#phone .ph-app')].map(x => x.dataset.a).includes('sjomann');
           return R; })()""")
         print(json.dumps(r, ensure_ascii=False))
         print(ok(r['friday'] == 5 and r['fri']['heard'] and r['fri']['text'] and 'fredag' in r['fri']['text'] and r['fri']['log']), 'a Friday departure: the oldest hand mutters, and it goes in the deck log')
@@ -40,6 +42,7 @@ async def main():
         print(ok(len(r['atSea']) >= 5), 'over some days at sea the crew brings up more of the old ways')
         print(ok(r['pub']['story'] and r['pub']['more'] == 1), 'the pub tells an old story instead of an empty evening')
         print(ok(r['morale']), "lore only: the crew's mood is unchanged")
-        print(ok(r['app']['text'] and 'Fra gamle dager' in r['app']['text'] and r['app']['cards'] == 13 and r['app']['unknown'] >= 0), 'the Seaman app shows what you have heard, and the rest as unknown')
+        print(ok(r['app']['text'] and 'Fra gamle dager' in r['app']['text'] and r['app']['cards'] == 13 and r['app']['unknown'] >= 0), 'the Milepæler app shows what you have heard, and the rest as unknown')
+        print(ok(r['rec'] and not r['apps']), 'the Milepæler app has the Rekordfisk tab without the naust upgrades, and the Sjømann app is gone')
         print('errors:', errs[:4]); await b.close()
 asyncio.run(main())

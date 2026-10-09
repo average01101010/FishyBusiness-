@@ -38,5 +38,5 @@ function tatLanding(pid){ if (!meAboard()) return; S.tat = S.tat || {}; S.tat.pl
 function checkTattoos(){
   S.tattoos = S.tattoos || {}; const c = tatCounts();
   for (const T of TATS){ if (T.lock || S.tattoos[T.id]) continue; const [have, need] = T.p(c); if (have < need) continue;
-    S.tattoos[T.id] = S.t; msg('Sjømann', 'Du har gjort deg fortjent til en ny tatovering: ' + T.n[0].toLowerCase() + '. ' + T.m[0] + ' Se den i Merker-appen.', 'You have earned a new tattoo: ' + T.n[1].toLowerCase() + '. ' + T.m[1] + ' See it in the Badges app.'); }
+    S.tattoos[T.id] = S.t; msg('Sjømann', 'Du har gjort deg fortjent til en ny tatovering: ' + T.n[0].toLowerCase() + '. ' + T.m[0] + ' Se den i Milepæler-appen.', 'You have earned a new tattoo: ' + T.n[1].toLowerCase() + '. ' + T.m[1] + ' See it in the Milestones app.'); }
 }

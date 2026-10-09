@@ -2,7 +2,7 @@
 // Fishermen along the coast were superstitious, and the game lets the crew, the quay and the pub tell of it. It is lore only: no
 // effect on the catch, the weather or the crew's mood. Sources (checked 29.09.2026): Store norske leksikon (noaord, draug),
 // Redningsselskapet «Ikke ta med brunost på havet!», Båtmagasinet «Om tro og overtro til sjøs», Norsk Fisk «Overtro»,
-// NRK on the mast coin, and forum talk on renaming boats (weak). What you have heard is kept in S.lore and shown in the Seaman app.
+// NRK on the mast coin, and forum talk on renaming boats (weak). What you have heard is kept in S.lore and shown in the Milepæler app.
 const LORE = {
   noaord:{t:['Noaord', 'Noa words'], x:['På sjøen og på feltet brukte fiskerne andre ord for det som var farlig å nevne. Kirka ble «høghus» og presten «svartkjole», og hest og gris var det best å ikke snakke om i det hele tatt. Man trodde havets makter ikke tålte å høre folks vanlige språk.', 'At sea and on the grounds fishermen used other words for what was dangerous to name. The church became the «high house» and the priest the «black gown», and horses and pigs were best not mentioned at all. The powers of the sea were thought not to bear ordinary speech.']},
   plystre:{t:['Ikke plystre om bord', 'No whistling aboard'], x:['Den som plystrer om bord, plystrer opp vind og storm.', 'Whoever whistles aboard whistles up wind and storm.']},
@@ -19,7 +19,7 @@ const LORE = {
 };
 // who tells it: the oldest hand aboard where you are, or someone on the quay
 function loreTeller(){ const c = meAboard() ? crewAboard().slice().sort((a, b) => b.age - a.age)[0] : null; return c || null; }
-// tell a piece of lore: a message and a line in the deck log; the first time it is kept for the Seaman app
+// tell a piece of lore: a message and a line in the deck log; the first time it is kept for the Milepæler app
 function hearLore(id, from, no, en){
   if (!LORE[id]) return false; S.lore = S.lore || {}; const L0 = S.lore[id], now = S.t;
   if (L0 && typeof L0 === 'object' && now - L0.last < 3 * 1440) return false;   // not the same story every day

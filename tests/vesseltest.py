@@ -150,7 +150,7 @@ async def main():
           R.after = {type:S.boat.type, lic:S.lic && S.lic.id, cash:Math.round(S.cash), loan:S.loan && Math.round(S.loan.bal), loanIN:S.loanIN && Math.round(S.loanIN.bal), inUsed:!!S.inUsed, innNow:innOK()};
           R.goals2 = goalTxt();
           DOCK.open('bank'); R.bank = dr().textContent.includes('Innovasjon Norge'); DOCK.close();
-          PHONE.open('sjomann'); PHONE.dact('sjomann', 'sub', {s:'papir'}); PHONE.render(); R.papers = /blad B/.test(document.querySelector('#phone').textContent) && /Ført på blad B/.test(document.querySelector('#phone').textContent); PHONE.show(false);
+          PHONE.open('kvote'); PHONE.render(); R.papers = /blad B/.test(document.querySelector('#phone').textContent) && /Ført på blad B/.test(document.querySelector('#phone').textContent); PHONE.show(false);
           // selling a vessel pays the loans first
           const v2 = newVesselObj('snekke', 'husoy'), l0 = S.loan.bal, c0 = S.cash, val = vesselValue(v2); window.confirm = () => true; PHONE.dact('rederi', 'vsell', {id:v2.id}); R.sell = {loanDown:Math.round(l0 - (S.loan ? S.loan.bal : 0)), cash:Math.round(S.cash - c0), val};
           return R; })()''')

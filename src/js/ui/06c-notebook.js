@@ -20,10 +20,17 @@ const NOTEBOOK = (() => {
         '<button class="ph-btn' + (why ? ' alt' : ' p') + '" data-pa="naustbuy" data-k="' + U.k + '"' + (why ? ' disabled title="' + L(why[0], why[1]) + '"' : '') + '>' + kr(U.kr) + '</button>') + '</div>');
     }
     { const w = NAUST_UP.map(U => !naustHas(U.k) && naustWhy(U.k)).find(Boolean); if (w && w[0] !== 'Du har ikke nok penger.') h.push('<p class="ph-note">' + L(w[0], w[1]) + '</p>'); }
-    // the trophy wall
+    h.push(wall());
+    h.push('</div>');
+    return h.join('');
+  }
+  // the trophy wall: the biggest of each kind and the latest big fish. Also the Rekordfisk tab in the Milepæler app (ui/05-phone.js)
+  // app: the Milepæler tab, with its own heading and a pointer to the wall in the naust
+  function wall(app){ const h = [];
     const T = (S.trophies || []).slice(), rec = {};
     for (const x of T) if (!rec[x.sp] || x.kg > rec[x.sp].kg) rec[x.sp] = x;
-    h.push('<h3 class="nb-hand nb-h">' + L('Trofeveggen', 'The trophy wall') + '</h3>' + (naustHas('vegg') ? '<p class="nb-lead">' + L('Den henger i naustet nå.', 'It hangs in the boathouse now.') + '</p>' : ''));
+    if (app) h.push('<h4>' + L('Rekordfisk', 'Record fish') + '</h4><p class="ph-note">' + L('Den største av hvert slag du har fått, og den siste storfisken. Trofeveggen selv henger i fars naust.', 'The biggest of each kind you have caught, and the latest big fish. The trophy wall itself hangs in Father\u2019s naust.') + '</p>');
+    else h.push('<h3 class="nb-hand nb-h">' + L('Trofeveggen', 'The trophy wall') + '</h3>' + (naustHas('vegg') ? '<p class="nb-lead">' + L('Den henger i naustet nå.', 'It hangs in the boathouse now.') + '</p>' : ''));
     if (!T.length) h.push('<p class="nb-lead">' + L('Ingen storfisk ennå. Noen ganger tar noe stort juksa: en kveite på over hundre kilo, en skrei på 30 eller en lange på 25. Sveiv når snøret tåler det, og slipp når fisken drar.', 'No big fish yet. Sometimes something big takes the jig: a halibut of over a hundred kilos, a skrei of 30 or a ling of 25. Reel when the line can take it, and let go when the fish runs.') + '</p>');
     else {
       h.push('<div class="nb-recs">' + Object.values(rec).sort((a, b) => b.kg - a.kg).map(x => '<div class="nb-rec"><b>' + SPECIES[x.sp][S.lang] + '</b><span>' + fmt(x.kg, 1) + ' kg</span><small>' + x.at + ' · ' + day(x.t) + '</small></div>').join('') + '</div>');
@@ -31,7 +38,6 @@ const NOTEBOOK = (() => {
         T.sort((a, b) => b.t - a.t).slice(0, 15).map(x => '<tr><td>' + SPECIES[x.sp][S.lang] + (x.rel ? L(' (satt ut)', ' (released)') : '') + (x.crew ? ' ⚓' : '') + '</td><td>' + fmt(x.kg, 1) + '</td><td>' + x.at + '</td><td>' + day(x.t) + '</td></tr>').join('') + '</table>' +
         '<p class="ph-note">' + L('⚓: tatt av mannskapet.', '⚓: taken by the crew.') + '</p>');
     }
-    h.push('</div>');
     return h.join('');
   }
   // on the chart: Father's naust, a small house on the shore by the home harbour
@@ -41,7 +47,7 @@ const NOTEBOOK = (() => {
       if (view.z > 3) g.push(txt({x:x + 7 * u, y:y + 4 * u}, S.lang === 'no' ? 'Fars naust' : 'Father\u2019s boathouse', 'lbl-nb', 12 * u, 'stroke-width="' + (2.5 * u) + '"')); } }
     return g.join('');
   }
-  return {page, svg, atNaust};
+  return {page, svg, atNaust, wall};
 })();
 // the fight with the dream fish
 window.DREAMUI = (() => {

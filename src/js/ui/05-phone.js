@@ -38,7 +38,7 @@ const PHONE = (() => {
     tilbake:SVG('<path d="M4 5h16v11H10l-4.5 4V16H4z"/><path d="M8 9.5h8M8 12.5h5"/>'),
     innst:SVG('<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>'),
     admin:SVG('<path d="M14.5 6.5a4 4 0 0 0 5 5L12 19a2.1 2.1 0 0 1-3-3l7.5-7.5"/><path d="M14.5 6.5L17 4l3 3-2.5 2.5"/><path d="M5 3l3 3M3 5l3 3"/>')};
-  const APPS = [['vaer', 'Vær', 'Weather', '#2f7fd0'], ['post', 'Kystposten', 'Coast Post', '#b8402f'], ['meld', 'Meldinger', 'Messages', '#29a36a'], ['rederi', 'Rederi', 'Company', '#1f4e79'], ['salg', 'Salgslaget', 'Sales', '#1e8c6e'], ['kvote', 'Kvote', 'Quota', '#8a6a1c'], ['regler', 'Regler', 'Rules', '#2d6a4f'], ['drift', 'Driftsplan', 'Operations plan', '#2a6f97'], ['ordl', 'Oppdrag', 'Orders', '#2e7d4f'], ['haill', 'Haill', 'Luck', '#c9a227'], ['sesong', 'Sesong', 'Season', '#1e6f8c'], ['guide', 'Fiskeguide', 'Fish guide', '#177a8a'], ['folk', 'Folk', 'People', '#8a5a2b'], ['merker', 'Merker', 'Badges', '#b0752a'], ['sjomann', 'Sjømann', 'Seaman', '#23506b'], ['redning', 'Redning', 'Rescue', '#e0562b'], ['trim', 'Trim', 'Tuning', '#b3261e'], ['patch', 'Patchnotes', 'Patch notes', '#5a4fa3'], ['tilbake', 'Tilbakemelding', 'Feedback', '#d0672f'], ['innst', 'Innstillinger', 'Settings', '#4a5560'], ['admin', 'Admin', 'Admin', '#7a2e8f']];
+  const APPS = [['vaer', 'Vær', 'Weather', '#2f7fd0'], ['post', 'Kystposten', 'Coast Post', '#b8402f'], ['meld', 'Meldinger', 'Messages', '#29a36a'], ['rederi', 'Rederi', 'Company', '#1f4e79'], ['salg', 'Salgslaget', 'Sales', '#1e8c6e'], ['kvote', 'Kvote', 'Quota', '#8a6a1c'], ['regler', 'Regler', 'Rules', '#2d6a4f'], ['drift', 'Driftsplan', 'Operations plan', '#2a6f97'], ['ordl', 'Oppdrag', 'Orders', '#2e7d4f'], ['haill', 'Haill', 'Luck', '#c9a227'], ['sesong', 'Sesong', 'Season', '#1e6f8c'], ['guide', 'Fiskeguide', 'Fish guide', '#177a8a'], ['folk', 'Folk', 'People', '#8a5a2b'], ['merker', 'Milepæler', 'Milestones', '#b0752a'], ['redning', 'Redning', 'Rescue', '#e0562b'], ['trim', 'Trim', 'Tuning', '#b3261e'], ['patch', 'Patchnotes', 'Patch notes', '#5a4fa3'], ['tilbake', 'Tilbakemelding', 'Feedback', '#d0672f'], ['innst', 'Innstillinger', 'Settings', '#4a5560'], ['admin', 'Admin', 'Admin', '#7a2e8f']];
   const unread = () => S.msgs.filter(m => !m.read).length;
   // the Rederi app comes with the company: founded as an AS in the bank (Jonas 06.10.2026), or already more than one vessel
   const rederiOpen = () => S.form === 'AS' || (S.fleet && S.fleet.length > 1);
@@ -250,7 +250,7 @@ const PHONE = (() => {
   // the Kvote app: your quotas, the open group's season, the stocks, and the market for rights (core/03d-quota.js)
   function kvote(){ const t = ['mine', 'open', 'stock', 'mkt'].includes(sub.kvote) ? sub.kvote : 'mine', H = S.t / 60;
     const top = subs('kvote', [['mine', 'Mine kvoter', 'My quotas'], ['open', 'Åpen gruppe', 'Open group'], ['stock', 'Bestand', 'Stock'], ['mkt', 'Marked', 'Market']]);
-    if (t === 'mine') return top + salg('kvote');
+    if (t === 'mine') return top + '<div class="ph-c">' + papBladB() + '</div>' + salg('kvote');
     return top + '<div class="ph-c">' + (t === 'open' ? kvOpen(H) : t === 'stock' ? kvStock(H) : kvMkt(H)) + '</div>'; }
   const MNS = () => S.lang === 'no' ? ['januar','februar','mars','april','mai','juni','juli','august','september','oktober','november','desember'] : ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const doyStr = (y, d) => { const t = new Date(Date.UTC(y, 0, 1 + d)); return t.getUTCDate() + (S.lang === 'no' ? '. ' : ' ') + MNS()[t.getUTCMonth()]; };
@@ -403,7 +403,7 @@ const PHONE = (() => {
   let shown = '';
   function render(){ status(); setBadge(); if (!isOpen) return; if (app === 'patch' && S.settings.patchSeen !== PATCH[0][0]){ S.settings.patchLast = S.settings.patchSeen; S.settings.patchSeen = PATCH[0][0]; } const key = app + '|' + (sub[app] || ''), y = key === shown ? view.scrollTop : 0; view.innerHTML = app === 'home' ? home() : shell(app); shown = key; view.scrollTop = y; }
   // every page by name: the phone apps, and the pages that open in the dock's drawer instead (DRAWER)
-  const PAGES = () => ({vaer, post, salg, kvote, regler, redning, rederi, meld, haill, logg, sjomann, merker, naustp:() => NOTEBOOK.page(), sesong:() => SEASONAPP.page(), guide:() => GUIDE.page(), folk:() => FOLKAPP.page(), trim, patch, tilbake:() => FEEDBACK.page(), innst, admin,
+  const PAGES = () => ({vaer, post, salg, kvote, regler, redning, rederi, meld, haill, logg, merker, naustp:() => NOTEBOOK.page(), sesong:() => SEASONAPP.page(), guide:() => GUIDE.page(), folk:() => FOLKAPP.page(), trim, patch, tilbake:() => FEEDBACK.page(), innst, admin,
     ordl, rigg, arbeid:() => WORK.page() + DRIFTUI.page(), drift:() => DRIFTUI.page(), fiske, service, fartoy:() => fartoy('marked'), maler:() => PAINT.page(), utstyr:() => utstyr('verft'), utstyrb:() => utstyr('butikk'), redskap, mannskap, bors, bank, verksted, havn, last, lever, is:isApp, agn, oppdrag, beholdning});
   function shell(a){ const d = APPS.find(x => x[0] === a) || [a, a, a, '#28507f'], f = PAGES()[a]; return '<div class="ph-appv' + (a === 'post' || a === 'notat' ? ' ph-paper' : '') + '"><div class="ph-top" style="background:' + d[3] + '"><span class="ic">' + (IC[a] || '') + '</span>' + L(d[1], d[2]) + '</div>' + (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) + '</div>'; }
   // a page for the drawer, and an action tapped there: it runs as if that page were the open app, and says which page shows next
@@ -436,6 +436,7 @@ const PHONE = (() => {
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
     ['p102', '09.10.2026', 'Kjentmannen, nordlyset og driftsplanen', 'The old hand, the northern lights and the operations plan', [
+      ['Merker-appen heter nå Milepæler og samler alt du har oppnådd: første uke, merkene, rekordfisken, det du har hørt fra gamle dager og tatoveringene. Sjømann-appen er borte. Ervervstillatelsen og foretaket står i Rederi, og blad B står i Kvote.', 'The Badges app is now Milestones and gathers all you have achieved: the first week, the badges, the record fish, what you have heard of the old ways and the tattoos. The Seaman app is gone. The fishing permit and the business are in Company, and blad B is in Quota.'],
       ['Fars notatbok og medene hans i kartet er tatt bort. Istandsettingen av naustet og trofeveggen finner du under Naustet når du ligger ved fars naust.', 'Father\'s notebook and his marks on the chart are gone. Setting the naust to rights and the trophy wall are under Naustet when you lie at Father\'s naust.'],
       ['Rettet: fiskebåtene, hurtigbåten og ferja ved Senja vistes i kartet uansett hvor langt unna du var. Nå vises de bare innen AIS-rekkevidden, som alle andre båter.', 'Fixed: the fishing boats, the express boat and the ferry at Senja showed on the chart however far away you were. Now they show only within AIS range, like every other boat.'],
       ['Rettet: veiene i byene (som i Tromsø) blinket av og på i kartplotteren når båten var langt unna.', 'Fixed: the roads in towns (as in Tromsø) blinked on and off in the chart plotter when the boat was far away.'],
@@ -969,27 +970,21 @@ const PHONE = (() => {
     }
     return h.join('');
   }
-  // the papers a fisher carries: shown, not checked by the game. The health declaration is made up (a fictional doctor); the names of
-  // the certificates follow Sjøfartsdirektoratet, but which one a skipper under 15 m needs is not confirmed (OVERLEVERING kap. 10)
-  function papers(){
-    const t0 = S.log.length ? S.log[0].t : S.t, who = S.company ? L('Skipper i ', 'Skipper of ') + S.company : L('Skipper på «', 'Skipper of the «') + (S.boatName || 'Havbris') + '»', no = k => String(1000 + Math.floor(h2(k, 517) * 9000)) + ' ' + String(100000 + Math.floor(h2(k, 518) * 900000));
-    const until = t0 + 2 * 365 * 1440, ok = S.t < until, vhf = S.fleet.some(v => (vget(v, 'equip') || {}).vhf);
-    const card = (col, title, rows, note) => '<div class="ph-card papc"><div class="pap-h" style="background:' + col + '">' + title + '</div>' + rows.map(([a, b]) => kv(a, b)).join('') + (note ? '<p class="ph-note">' + note + '</p>' : '') + '</div>';
-    return '<p class="ph-note">' + L('Papirene du har med deg om bord.', 'The papers you carry aboard.') + '</p>' +
-      card('#2f6fb3', L('Helseerklæring for arbeidstakere på skip', 'Health declaration for workers on ships'), [[L('Navn', 'Name'), who], [L('Utstedt', 'Issued'), bkDate(t0)], [L('Gyldig til', 'Valid until'), bkDate(until)], [L('Lege', 'Doctor'), L('Sjømannslege Ragnhild Strøm, Finnsnes', 'Seamen\'s doctor Ragnhild Strøm, Finnsnes')], ['Status', ok ? '<span class="r0">' + L('Gyldig', 'Valid') + '</span>' : '<span class="r2">' + L('Utløpt', 'Expired') + '</span>']],
-        L('Fiktiv attest. Legen og nummeret finnes ikke.', 'A fictional certificate. The doctor and the number do not exist.')) +
-      card('#1e8c6e', L('Sikkerhetsopplæring for sjøfolk på mindre skip', 'Safety training for seafarers on smaller ships'), [[L('Navn', 'Name'), who], [L('Kurs', 'Course'), L('35 timer, bestått', '35 hours, passed')], [L('Bevis nr.', 'Certificate no.'), no(1)], [L('Dato', 'Date'), bkDate(t0)]]) +
-      card('#b0413e', L('Fiskeskipper klasse C', 'Fishing skipper class C'), [[L('Navn', 'Name'), who], [L('Gjelder', 'Covers'), L('fører av fiskefartøy under 15 m', 'master of fishing vessels under 15 m')], [L('Sertifikat nr.', 'Certificate no.'), no(2)]]) +
-      (F => card('#7a5a2c', L('Fiskermanntallet, blad B', 'Fishermen\'s register, blad B'), [[L('Navn', 'Name'), who], [L('Landingsdager med deg om bord', 'Landing days with you aboard'), fmt(F.n, 0) + ' / ' + BLADB.days], [L('Førstehåndsverdi', 'First-hand value'), kr(F.kr) + ' / ' + kr(BLADB.kr) + ' (1 G)'],
+  // the papers a fisher carries, shown where they matter (Jonas 09.10.2026: the Sjømann app is gone): the permit and the business in the
+  // Rederi app, blad B in the Kvote app. The made-up certificates (health, safety course, skipper, SRC) are no longer shown.
+  const papWho = () => S.company ? L('Skipper i ', 'Skipper of ') + S.company : L('Skipper på «', 'Skipper of the «') + (S.boatName || 'Havbris') + '»';
+  const papCard = (col, title, rows, note) => '<div class="ph-card papc"><div class="pap-h" style="background:' + col + '">' + title + '</div>' + rows.map(([a, b]) => kv(a, b)).join('') + (note ? '<p class="ph-note">' + note + '</p>' : '') + '</div>';
+  function papBladB(){ const who = papWho(), card = papCard;
+    return (F => card('#7a5a2c', L('Fiskermanntallet, blad B', 'Fishermen\'s register, blad B'), [[L('Navn', 'Name'), who], [L('Landingsdager med deg om bord', 'Landing days with you aboard'), fmt(F.n, 0) + ' / ' + BLADB.days], [L('Førstehåndsverdi', 'First-hand value'), kr(F.kr) + ' / ' + kr(BLADB.kr) + ' (1 G)'],
         ['Status', F.b ? '<span class="r0">' + L('Ført på blad B', 'On blad B') + '</span>' : L('Blad A: fiske er ikke hovedyrket ennå', 'Blad A: fishing is not your main occupation yet')]],
-        L('Forenklet. Deltakerloven § 6 krever at den som kjøper en båt i lukket gruppe, har fisket i minst tre av de siste fem årene, og blad B er det vanlige beviset. I spillet holder det med ' + BLADB.days + ' landingsdager med deg om bord og 1 G i førstehåndsverdi.', 'Simplified. Deltakerloven § 6 asks the buyer of a closed-group boat to have fished in at least three of the last five years, and blad B is the usual proof. In the game, ' + BLADB.days + ' landing days with you aboard and 1 G of first-hand value will do.')))(S.fm || {n:0, kr:0, b:false}) +
-      // the permit to fish for each boat, and the business in the registers (03-simulation.js MVA)
-      card('#33617a', L('Ervervstillatelse', 'Fishing permit'), S.fleet.map(v => [vget(v, 'boatName') || L('Båten', 'The boat'), L('Gitt', 'Granted') + ' · ' + String((VESSELS[vget(v, 'boat').type] || {}).len || '').replace('.', ',') + ' m' + ((r => r ? ' · ' + regText(r) : '')(v.id === S.cur ? regOf(S.boat) : vget(v, 'boat').reg))]).concat([[L('Utstedt av', 'Issued by'), L('Fiskeridirektoratet', 'Directorate of Fisheries')]]),
+        L('Forenklet. Deltakerloven § 6 krever at den som kjøper en båt i lukket gruppe, har fisket i minst tre av de siste fem årene, og blad B er det vanlige beviset. I spillet holder det med ' + BLADB.days + ' landingsdager med deg om bord og 1 G i førstehåndsverdi.', 'Simplified. Deltakerloven § 6 asks the buyer of a closed-group boat to have fished in at least three of the last five years, and blad B is the usual proof. In the game, ' + BLADB.days + ' landing days with you aboard and 1 G of first-hand value will do.')))(S.fm || {n:0, kr:0, b:false});
+  }
+  function papRederi(){ const card = papCard;
+    return card('#33617a', L('Ervervstillatelse', 'Fishing permit'), S.fleet.map(v => [vget(v, 'boatName') || L('Båten', 'The boat'), L('Gitt', 'Granted') + ' · ' + String((VESSELS[vget(v, 'boat').type] || {}).len || '').replace('.', ',') + ' m' + ((r => r ? ' · ' + regText(r) : '')(v.id === S.cur ? regOf(S.boat) : vget(v, 'boat').reg))]).concat([[L('Utstedt av', 'Issued by'), L('Fiskeridirektoratet', 'Directorate of Fisheries')]]),
         L('Deltakerloven § 4: en båt kan bare brukes i ervervsmessig fiske med ervervstillatelse for eieren. Under 15 m holder det at du er aktiv fisker (ervervstillatelsesforskriften § 2). I spillet gis den når du kjøper båten.', 'Deltakerloven § 4: a boat may be used in commercial fishing only with a permit for its owner. Under 15 m it is enough that you are an active fisher. In the game it comes with the boat.')) +
       (M => card('#6b5b95', L('Foretaket', 'The business'), M ? [[L('Form', 'Form'), L('Enkeltpersonforetak (ENK)', 'Sole proprietorship')], [L('Org.nr.', 'Org. no.'), String(M.org).replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3')], [L('MVA-registrert', 'VAT registered'), bkDate(M.t)], ['Status', '<span class="r0">' + L('Registrert', 'Registered') + '</span>']]
           : [[L('Salg siste tolv måneder', 'Sales in the last twelve months'), kr((S.sales || []).filter(s => s.t > S.t - 365 * 1440).reduce((a, s) => a + (s.total || 0), 0)) + ' / ' + kr(MVA.limit)], ['Status', L('Ikke registrert ennå', 'Not registered yet')]],
-        L('Du trenger verken ENK eller AS for å fiske. Når salget passerer 50 000 kr på tolv måneder, må foretaket i Merverdiavgiftsregisteret (merverdiavgiftsloven § 2-1). Da legges MVA på 11,11 % på oppgjøret, og den går videre til staten. Org.nr. er fiktivt.', 'You need neither a sole proprietorship nor a company to fish. When the sales pass NOK 50,000 in twelve months, the business must enter the VAT register. Then 11.11 % VAT comes with the settlement and goes on to the state. The org. no. is fictional.')))(S.mva) +
-      card('#5b6770', L('Begrenset radiosertifikat (SRC)', 'Short Range Certificate (SRC)'), [[L('Navn', 'Name'), who], ['Status', vhf ? '<span class="r0">' + L('Gyldig', 'Valid') + '</span>' : L('Ikke tatt, trengs for VHF om bord', 'Not taken, needed for VHF aboard')]]);
+        L('Du trenger verken ENK eller AS for å fiske. Når salget passerer 50 000 kr på tolv måneder, må foretaket i Merverdiavgiftsregisteret (merverdiavgiftsloven § 2-1). Da legges MVA på 11,11 % på oppgjøret, og den går videre til staten. Org.nr. er fiktivt.', 'You need neither a sole proprietorship nor a company to fish. When the sales pass NOK 50,000 in twelve months, the business must enter the VAT register. Then 11.11 % VAT comes with the settlement and goes on to the state. The org. no. is fictional.')))(S.mva);
   }
   // the sea time (core/09e-fartstid.js): the years and days, the bar to the next year, and the rest built up while away
   function fsChip(){ const F = fsState(), o = fsOf(F.p), rest = Math.round(F.rest / 60);
@@ -998,23 +993,26 @@ const PHONE = (() => {
     return '<div class="ph-card"><h4>' + L('Fartstid', 'Sea time') + '</h4><div class="ph-big">' + fsText(F.p, true) + '</div><span class="gb fsbar"><i style="width:' + (o.f * 100).toFixed(1) + '%"></i></span>' +
       '<p class="ph-note">' + L('Fartstid tjenes om bord: hver time til sjøs og hver levering. Det mannskapet gjør mens du er borte, teller en firedel. Når du har vært borte, gir de neste timene til sjøs dobbel fartstid.', 'Sea time is earned aboard: every hour at sea and every landing. What the crew does while you are away counts a quarter. After time away, the next hours at sea give double sea time.') +
       (rest > 0 ? ' <b>' + L('Uthvilt: ' + rest + ' t igjen.', 'Rested: ' + rest + ' h left.') + '</b>' : '') + '</p></div>'; }
-  // the Merker app (Jonas 07.10.2026: the week's milestones, the long badges with the sea time, and the tattoos from Sjømann)
+  // the Milepæler app (Jonas 09.10.2026: «alt av achievements ... samles i en enkelt app som kalles milepæler»): the week's milestones,
+  // the long badges with the sea time, the record fish (the wall itself is in Father's naust), the old ways and the tattoos.
+  // The app keeps its id 'merker'.
   function merker(){
     if (typeof achCheck === 'function') achCheck(true);
-    const tab = sub.merker || 'uke', tabs = subs('merker', [['uke', 'Første uke', 'First week'], ['merker', 'Merker', 'Badges'], ['tatover', 'Tatoveringer', 'Tattoos']]);
+    const tab = sub.merker || 'uke', tabs = subs('merker', [['uke', 'Første uke', 'First week'], ['merker', 'Merker', 'Badges'], ['rekord', 'Rekordfisk', 'Record fish'], ['overtro', 'Fra gamle dager', 'The old ways'], ['tatover', 'Tatoveringer', 'Tattoos']]);
     if (tab === 'tatover') return '<div class="ph-c">' + tabs + tattoos() + '</div>';
     if (tab === 'merker') return '<div class="ph-c">' + tabs + fsCard() + achLong() + '</div>';
+    if (tab === 'rekord') return '<div class="ph-c">' + tabs + '<div class="ph-card">' + NOTEBOOK.wall(true) + '</div></div>';
+    if (tab === 'overtro') return '<div class="ph-c">' + tabs + lore() + '</div>';
     return '<div class="ph-c">' + tabs + achWeek() + '</div>';
   }
-  function sjomann(){
-    const tab = sub.sjomann || 'overtro';
-    if (tab === 'papir') return '<div class="ph-c">' + subs('sjomann', [['overtro', 'Fra gamle dager', 'The old ways'], ['papir', 'Papirer', 'Papers']]) + papers() + '</div>';
+  // the old ways you have heard (core/08-lore.js), the rest as unknown
+  function lore(){
     const heard = S.lore || {}, ids = Object.keys(LORE), n = ids.filter(id => heard[id]).length;
-    const h = ['<div class="ph-c">' + subs('sjomann', [['overtro', 'Fra gamle dager', 'The old ways'], ['papir', 'Papirer', 'Papers']]) + '<div class="ph-card"><h4>' + L('Fra gamle dager', 'The old ways') + '</h4><p class="ph-note">' + L('Sjøfolk og fiskere har alltid vært overtroiske. Det du hører om bord, på kaia og på puben, samles her. Du har hørt ', 'Seafarers and fishermen have always been superstitious. What you hear aboard, on the quay and at the pub is kept here. You have heard ') + n + L(' av ', ' of ') + ids.length + L(' fortellinger.', ' stories.') + '</p></div>'];
+    const h = ['<div class="ph-card"><h4>' + L('Fra gamle dager', 'The old ways') + '</h4><p class="ph-note">' + L('Sjøfolk og fiskere har alltid vært overtroiske. Det du hører om bord, på kaia og på puben, samles her. Du har hørt ', 'Seafarers and fishermen have always been superstitious. What you hear aboard, on the quay and at the pub is kept here. You have heard ') + n + L(' av ', ' of ') + ids.length + L(' fortellinger.', ' stories.') + '</p></div>'];
     for (const id of ids){ const E = LORE[id], w = heard[id];
       h.push(w ? '<div class="ph-card"><h4>' + L(E.t[0], E.t[1]) + '</h4><p>' + L(E.x[0], E.x[1]) + '</p><p class="ph-note">' + L('Hørt første gang ', 'First heard ') + dayStr(w.first / 60) + '</p></div>'
         : '<div class="ph-card" style="opacity:.55"><h4>?</h4><p class="ph-note">' + L('Ennå ikke hørt. Lytt til folk på sjøen og på puben.', 'Not heard yet. Listen to people at sea and at the pub.') + '</p></div>'); }
-    return h.join('') + '</div>';
+    return h.join('');
   }
   // --- weather
   function sunTimesOld(H){ const d0 = Math.floor(H / 24) * 24 - 6 + 24 * (gDate(H).getUTCHours() < 6 ? -0 : 0); let up = null, dn = null, prev = sunAt(d0).el; for (let m = 10; m <= 24 * 60; m += 10){ const e = sunAt(d0 + m / 60).el; if (prev < -0.8 && e >= -0.8 && up === null) up = d0 + m / 60; if (prev >= -0.8 && e < -0.8 && dn === null) dn = d0 + m / 60; prev = e; } return {up, dn, always:sunAt(d0 + 12).el > -0.8 && up === null, never:sunAt(d0 + 6).el < -0.8 && up === null}; }
@@ -1239,7 +1237,7 @@ const PHONE = (() => {
     else if (mine) h.push('<p class="ph-note">' + L(bn + ' er en slik båt.', bn + ' is one of these.') + '</p>');
     else if (O){ const mineO = S.lic && S.lic.id === O.id, inn = innOK(), A = deal(price, ti, inn), B = deal(price, 0, inn), F = S.fm || {n:0, kr:0}, bb = bladB();
       if (mineO) h.push('<p class="ph-note">' + L(bn + ' har denne hjemmelen.', bn + ' has this right.') + '</p>');
-      else if (!bb) h.push('<p class="ph-note"><b>' + L('Krever blad B i fiskermanntallet.', 'Needs blad B of the fishermen\'s register.') + '</b> ' + L('Du har ' + F.n + ' av ' + BLADB.days + ' landingsdager med deg om bord og ' + kr(F.kr) + ' av ' + kr(BLADB.kr) + ' i førstehåndsverdi. Se Papirer i Sjømann-appen.', 'You have ' + F.n + ' of ' + BLADB.days + ' landing days with you aboard and ' + kr(F.kr) + ' of ' + kr(BLADB.kr) + ' in first-hand value. See Papers in the Sailor app.') + '</p>');
+      else if (!bb) h.push('<p class="ph-note"><b>' + L('Krever blad B i fiskermanntallet.', 'Needs blad B of the fishermen\'s register.') + '</b> ' + L('Du har ' + F.n + ' av ' + BLADB.days + ' landingsdager med deg om bord og ' + kr(F.kr) + ' av ' + kr(BLADB.kr) + ' i førstehåndsverdi. Se blad B i Kvote-appen.', 'You have ' + F.n + ' of ' + BLADB.days + ' landing days with you aboard and ' + kr(F.kr) + ' of ' + kr(BLADB.kr) + ' in first-hand value. See blad B in the Quota app.') + '</p>');
       else h.push((inn ? '<p class="ph-note">' + L('Første båt i lukket gruppe: Innovasjon Norge toppfinansierer ' + Math.round(INN * 100) + ' % med et risikolån (8,9 %, 10 år), så du trenger bare ' + Math.round((0.2 - INN) * 100) + ' % egenkapital.', 'First boat in the closed group: Innovasjon Norge tops up ' + Math.round(INN * 100) + '% with a risk loan (8.9%, 10 years), so you only need ' + Math.round((0.2 - INN) * 100) + '% equity.') + '</p>' : '') + payNote(A, 'Mellomlegg med ' + bn + ' i bytte: ', 'To pay with ' + bn + ' traded in: ', 'lån over 15 år ', '15-year loan ') + '<button class="ph-btn' + (A.ok ? ' p' : '') + '" data-pa="buylic" data-ti="1" data-id="' + O.id + '"' + (A.ok && free && !tiLocked(curVessel()) ? '' : ' disabled') + '>' + L('Kjøp og bytt inn ' + bn, 'Buy, trading in ' + bn) + '</button>' +
         payNote(B, 'Til flåten, uten innbytte: ', 'For the fleet, no trade-in: ', 'lån over 15 år ', '15-year loan ') + '<button class="ph-btn" data-pa="buylic" data-ti="0" data-id="' + O.id + '"' + (B.ok && free ? '' : ' disabled') + '>' + L('Kjøp til flåten', 'Buy for the fleet') + '</button>');
       // the first closed-group boat founds the company (until then the player fishes in his own name)
@@ -1337,6 +1335,7 @@ const PHONE = (() => {
           (me || S.fleet.length < 2 ? '' : '<button class="ph-btn red" data-pa="vsell" data-id="' + v.id + '"' + (inp && !tiLocked(v) ? '' : ' disabled') + '>' + L('Selg for ', 'Sell for ') + kr(vesselValue(v)) + '</button>') + '</div>' +
           (!me && !(inp && meIn) ? '<p class="ph-note">' + L('For å bytte båt må begge ligge i havn.', 'To change vessel, both must be in port.') + '</p>' : '') + '</div>');
       }
+    h.push('<h4 style="margin:10px 2px 6px">' + L('Papirer', 'Papers') + '</h4>' + papRederi());   // from the Sjømann app (Jonas 09.10.2026)
     h.push('</div>'); return h.join('');
   }
   // --- equipment
@@ -1641,7 +1640,7 @@ const PHONE = (() => {
     else if (a === 'fire'){ const c = S.crew.splice(+d.i, 1)[0]; if (c) log(c.name + ' har gått i land.', c.name + ' has gone ashore.'); }
     else if (a === 'repay'){ const k = d.k || 'loan', Q = S[k]; if (!Q || S.cash < 10000) return; const x = Math.min(10000, Q.bal); S.cash -= x; Q.bal -= x; if (Q.bal < 1) S[k] = null; }
     else if (a === 'repayAll'){ const k = d.k || 'loan', Q = S[k]; if (!Q || S.cash < Q.bal) return; S.cash -= Q.bal; S[k] = null; log((k === 'loanIN' ? 'Risikolånet' : 'Båtlånet') + ' er innfridd.', 'The ' + (k === 'loanIN' ? 'risk' : 'vessel') + ' loan is paid off.'); }
-    else if (a === 'papers'){ app = 'sjomann'; sub.sjomann = 'papir'; }
+    else if (a === 'papers'){ app = 'kvote'; sub.kvote = 'mine'; }
     else if (a === 'mktab'){ sub.marked = d.s; mkSel = null; }
     else if (a === 'mksel'){ mkSel = d.k ? {k:d.k, o:d.o || null} : null; }
     else if (a === 'mk3d'){ if (typeof DOCK !== 'undefined') DOCK.close(); if (isOpen) show(false); G3.showroom(d.k); return; }

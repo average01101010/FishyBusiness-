@@ -2,7 +2,7 @@
 // A milestone shows as a short banner at the top with its gift (it does not take taps: the game goes on under it); a finished
 // chapter as a card with its reward; a played game's first check as one card with all it was ticked for. The phone's Merker app has
 // the week's chapters (the open ones with their milestones and gifts, the next one's titles locked), the long badges with the sea
-// time, and the tattoos (moved from Sjømann). The home screen's chip shows the week's count and the nearest milestone.
+// time, and the tattoos, the record fish and the old ways (the Milepæler app since 09.10.2026). The home screen's chip shows the week's count and the nearest milestone.
 const AL = (no, en) => S.lang === 'en' ? en : no;
 const ACHQ = [];
 let ACHQ_ON = false;

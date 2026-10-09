@@ -70,7 +70,7 @@ async def main():
           return {r0, used:REGM.k.senja[2].includes(r0.n), card, refused, n, r1:regOf(S.boat), own:PAINT.owned('reg'), str:livStr(S.boat), back:livMark(livStr(S.boat)), oe:livMark('m:N.12.B2'),
             strips:Object.keys(VESSELS).filter(t => markStrips(t)).length, types:Object.keys(VESSELS).length}; })()""")
         await pg.wait_for_function("regOf(S.boat).n !== %d" % rg['r0']['n'], timeout=10000)
-        rg2 = await pg.evaluate("({r:regOf(S.boat), papers:(PHONE.dact('home', 'papers', {}), PHONE.open('sjomann'), document.getElementById('phView').innerText)})")
+        rg2 = await pg.evaluate("({r:regOf(S.boat), papers:(PHONE.open('rederi'), document.getElementById('phView').innerText)})")
         await pg.evaluate("PHONE.show(false)")
         want = 'T-%d-LK' % rg['n']
         check(rg['r0']['f'] == 'T' and rg['r0']['k'] == 'LK' and not rg['used'] and rg['card'] and rg['refused'] and rg2['r']['n'] == rg['n'] and want in rg2['papers']

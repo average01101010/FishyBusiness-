@@ -117,11 +117,12 @@ async def run(p, w, h, tag):
           PHONE.open('ordl'); PHONE.dact('ordl', 'sub', {s:'best'}); PHONE.render(); const t = document.getElementById('phView').innerText; PHONE.show(false);   // the orders' tab (Turer is first)
           return {active:O.active.length, name:t.includes(CUSTOMERS[1].no), deadline:/Frist/.test(t), earlier:/Tidligere/.test(t)}; })())"""))
         check(r['active'] == 1 and r['name'] and r['deadline'] and r['earlier'], 'et oppdrag tatt i Bygd står i oppdragslista på telefonen med frist, og de tidligere under', r)
-        # the papers in the Seaman app
-        await pg.evaluate("PHONE.open('sjomann')"); await pg.wait_for_timeout(300)
-        await pg.evaluate("document.querySelector('#phone [data-pa=sub][data-s=papir]').click()"); await pg.wait_for_timeout(300)
+        # the papers (Jonas 09.10.2026: the Sjømann app is gone): the permit and the business in Rederi, blad B in Kvote
+        await pg.evaluate("PHONE.open('rederi')"); await pg.wait_for_timeout(300)
         t = await pg.evaluate("document.getElementById('phView').innerText")
-        check('Helseerklæring for arbeidstakere på skip' in t and 'Sikkerhetsopplæring' in t and 'Fiskeskipper klasse C' in t, 'Sjømann har fanen Papirer med helseerklæring og sertifikater')
+        await pg.evaluate("PHONE.open('kvote')"); await pg.wait_for_timeout(300)
+        t2 = await pg.evaluate("document.getElementById('phView').innerText")
+        check('Ervervstillatelse' in t and 'Foretaket' in t and 'blad B' in t2 and 'Helseerklæring' not in t + t2, 'ervervstillatelsen og foretaket står i Rederi, blad B i Kvote, og de oppdiktede sertifikatene er borte')
         await pg.screenshot(path='book_papirer.png')
         # a landing note in the phone opens the same note in the book
         await pg.evaluate("PHONE.open('salg')"); await pg.wait_for_timeout(200)

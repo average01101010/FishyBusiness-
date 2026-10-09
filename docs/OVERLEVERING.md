@@ -3694,6 +3694,18 @@ Nå tar `vecPrune` alltid med midten av kartplotteren når den er åpen. Kontrol
 - Istandsettingen av naustet og trofeveggen er siden `naustp` (`NOTEBOOK.page`). Den åpnes fra dokken bare når båten ligger ved fars naust (`berthKind === 'naust'`, Jonas: «bare tilgjengelig om man ligger ved fars naust. Samme med trofeveggen»).
 - Kartet viser fortsatt fars naust.
 
+### 5.48 Milepæler, og Sjømann-appen fjernet (Jonas 09.10.2026)
+
+- Merker-appen heter **Milepæler** (id fortsatt `merker`) og samler alt spilleren har oppnådd: Første uke, Merker (med fartstiden), Rekordfisk, Fra gamle dager og Tatoveringer. Kystfareren kommer som egen fane med gjesteboka.
+- Rekordfisk er den samme lista som trofeveggen (`NOTEBOOK.wall(true)` i `ui/06c-notebook.js`), men uten oppgraderingene. Selve trofeveggen og oppgraderingene finnes bare når båten ligger ved fars naust (5.47).
+- **Sjømann-appen er fjernet.** Papirene står der de betyr noe (`papRederi`/`papBladB` i `ui/05-phone.js`):
+  - Ervervstillatelsen og Foretaket (ENK og MVA) står nederst i Rederi.
+  - Blad B står øverst i Mine kvoter i Kvote.
+  - Knappen «Se papirene» i Neste mål åpner Kvote.
+- De oppdiktede attestene (helseerklæring, sikkerhetskurs, fiskeskipper klasse C, SRC) er tatt bort. Spillet sjekket dem aldri.
+- Merk: Rederi-appen vises bare etter at rederiet er stiftet. Før det ser spilleren ikke ervervstillatelsen og foretaket.
+- Testene: `loretest` sjekker Rekordfisk-fanen og at Sjømann er borte, og `booktest` sjekker papirene i Rederi og Kvote.
+
 ### 5.41 Puben i 3D (Jonas 08.10.2026)
 
 Jonas: «Spilleren trykker på pub og blir dermed sendt inn i puben hvor man sitter ved bardisken i first-person-view. Man skal kunne spinne hjulet som tidligere.» Og: «Kanskje noe som blir et sosialt element.»
