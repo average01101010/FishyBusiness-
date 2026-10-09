@@ -160,7 +160,7 @@ const DRIFTUI = (() => {
         L('Lange perioder på feltet.', 'Long periods on the grounds.')) + '</p>' +
       kvr(L('Mannskapsordning', 'Crew system'), T('dr-mode', L('Dagdrift', 'Day work'), o.crewMode !== 'watch', 'data-m="day"') + ' ' + T('dr-mode', L('Døgndrift 2+2', 'Round the clock 2+2'), o.crewMode === 'watch', 'data-m="watch"' + (S.crew.length < driftNeedHands ? ' disabled' : ''))) +
       (o.crewMode === 'watch' ? watchInfo(o) : '<p class="ph-note">' + L('Dagdrift: alle på dekk samtidig. Mannskapet hviler mellom turene og om natta.', 'Day work: everyone on deck at once. The crew rests between trips and at night.') + (S.crew.length < driftNeedHands ? ' ' + L('Døgndrift 2+2 krever fire mann.', 'Round the clock 2+2 needs four hands.') : '') + '</p>') +
-      kvr(L('Skipper', 'Skipper'), S.crew.length ? S.crew.map(c => T('dr-sk', c.name.split(' ')[0], o.skipper === c.id, 'data-id="' + c.id + '"')).join(' ') : L('Ingen mannskap ansatt', 'No crew hired')) +
+      kvr(L('Skipper', 'Skipper'), [T('dr-sk', L('Meg', 'Me'), o.skipper === 'me', 'data-id="me"')].concat(S.crew.map(c => T('dr-sk', c.name.split(' ')[0], o.skipper === c.id, 'data-id="' + c.id + '"'))).join(' ')) +
       (o.crewMode === 'watch' && S.crew.length ? kvr(L('Styrmann', 'Mate'), S.crew.map(c => T('dr-mate', c.name.split(' ')[0], driftRoles(o).mate === c, 'data-id="' + c.id + '"')).join(' ')) : '') +
       (o.period === 24 ? kvr(L('Dager', 'Days'), '<span class="ops-days">' + (S.lang === 'no' ? OPS_DAYS_NO : OPS_DAYS_EN).map((d, i) => T('dr-day', d, o.days[i], 'data-i="' + i + '"')).join('') + '</span>') : '') +
       kvr(L('Maks vind', 'Max wind'), '<button data-pa="dr-w" data-d="-1">−</button> ' + o.wx.wind + ' m/s <button data-pa="dr-w" data-d="1">+</button>') +

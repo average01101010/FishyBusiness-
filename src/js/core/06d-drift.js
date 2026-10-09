@@ -24,7 +24,7 @@ const DRF_RIGS = {
 const driftRigName = r => DRF_RIGS[r] && DRF_RIGS[r].no ? gL(DRF_RIGS[r].no, DRF_RIGS[r].en) : rigName(r);
 const driftMode = o => (DRF_RIGS[o.rig] || DRF_RIGS.juksa).mode;
 function driftNew(over){
-  const b = S.boat, o = {v:2, on:false, name:gL('Driftsplan', 'Operations plan'), rig:RIGS[b.rig] ? b.rig : 'juksa', skipper:(S.crew[0] || {}).id || null, mate:null, crewMode:'day', watchH:6,
+  const b = S.boat, o = {v:2, on:false, name:gL('Driftsplan', 'Operations plan'), rig:RIGS[b.rig] ? b.rig : 'juksa', skipper:meAboard() ? 'me' : (S.crew[0] || {}).id || null, mate:null, crewMode:'day', watchH:6,
     wx:{wind:12, hs:2.5, shelter:true}, days:[1, 1, 1, 1, 1, 0, 0], period:24, stock:{ice:true, fuel:true, gear:true, bait:true},
     sess:[], idx:0, cn:0, a0:null, hold:0, fails:0, paused:null, cur:null, rep:[], skipped:0};
   return Object.assign(o, over || {});
@@ -44,7 +44,10 @@ function driftUp(o){
   }
   S.ops = n; return n;
 }
-const driftOps = () => { const o = S.ops; return o && o.v !== 2 ? driftUp(o) : o; };
+// you are the skipper when you are aboard (Jonas 09.10.2026: «Sindre er ikke skipper, jeg er skipper. Han er mannskap»): skipper 'me';
+// a plan from before is moved over once; on a boat you are not aboard, the crew's skipper runs it
+const driftMeSk = o => !!o && o.skipper === 'me' && meAboard();
+const driftOps = () => { let o = S.ops; if (o && o.v !== 2) o = driftUp(o); if (o && o.v === 2 && !o.skMe){ o.skMe = 1; if (meAboard()) o.skipper = 'me'; } return o; };
 const driftHod = H => { const g = gDate(H); return g.getUTCHours() + g.getUTCMinutes() / 60; };
 
 // ---- how long things take (estimates; the plan's overview and its dry run use the same)
@@ -121,7 +124,8 @@ function driftCheck(o){
   }
   // the crew
   const sk = S.crew.find(c => c.id === o.skipper);
-  if (!sk && !S.crew.length) W.push(no('Ingen mannskap er ansatt. Planen går bare når du selv er om bord.', 'No crew is hired. The plan only runs when you are aboard yourself.'));
+  if (o.skipper === 'me'){ if (!meAboard()) W.push(no('Du er skipper, men er ikke om bord. Den første i mannskapet kjører planen.', 'You are the skipper but not aboard. The first of the crew runs the plan.')); }
+  else if (!sk && !S.crew.length) W.push(no('Ingen mannskap er ansatt. Planen går bare når du selv er om bord.', 'No crew is hired. The plan only runs when you are aboard yourself.'));
   else if (!sk) W.push(no('Ingen skipper er valgt. Den første i mannskapet kjører planen.', 'No skipper is chosen. The first of the crew runs the plan.'));
   if (o.rig === 'garn' && S.crew.length < 1) W.push(no('Garn krever to om bord.', 'Nets need two aboard.'));
   if (o.crewMode === 'watch'){
@@ -160,7 +164,7 @@ function driftPreview(o){
 // The watch off is asleep in the bunks (not on deck, not in the lists; c.sleepW), rests, and shares the catch as the rest.
 const driftNeedHands = 4;
 function driftRoles(o){
-  const sk = S.crew.find(c => c.id === o.skipper) || S.crew[0] || null, mate = S.crew.find(c => c.id === o.mate && c !== sk) || S.crew.find(c => c !== sk) || null, deck = S.crew.filter(c => c !== sk && c !== mate);
+  const sk = driftMeSk(o) ? null : S.crew.find(c => c.id === o.skipper) || S.crew[0] || null, mate = S.crew.find(c => c.id === o.mate && c !== sk) || S.crew.find(c => c !== sk) || null, deck = S.crew.filter(c => c !== sk && c !== mate);
   const A = [sk, deck[0]].filter(Boolean).concat(deck.slice(2).filter((c, i) => i % 2 === 0)), Bw = [mate, deck[1]].filter(Boolean).concat(deck.slice(2).filter((c, i) => i % 2 === 1));
   return {sk, mate, deck, A, B:Bw};
 }
@@ -216,7 +220,7 @@ function opsStep(H){
   // day waits until it has lasted PLANW.rest hours, so the crew's rest is always had in one stretch
   if (o.wiz && o.restWant && b.status === 'port' && b.port === o.wiz.base){ o.restT0 = S.t; o.restWant = false; }
   driftSync(o, H);
-  const s = o.sess[o.idx], sk = opsSkipper() || S.crew[0] || null;
+  const s = o.sess[o.idx], sk = driftMeSk(o) ? {name:gL('Driftsplan', 'Operations plan'), me:true} : (opsSkipper() || S.crew[0] || null);
   // a session that follows straight on from the last (asap) goes when the boat is free, not at a clock
   if (H < driftDue(o) && !(s.asap && o.idx > 0)) return;
   // the crew have had the night's rest at the quay of a closed plant (opsLanded): the rest at the base is left out, and the first trip
@@ -310,7 +314,7 @@ function opsLanded(pid){
 // the bunker and ice at the plant, as the plan says (the plan's own stock options; no plan, as before: all of it)
 function driftStock(){ const o = S.ops; return o && o.v === 2 && o.stock ? o.stock : {ice:true, fuel:true, gear:true, bait:true}; }
 function opsReport(pid, kg, total, landed){
-  const o = driftOps(), sk = opsSkipper() || S.crew[0] || null, port = portById(pid);
+  const o = driftOps(), sk = driftMeSk(o) ? {name:gL('Driftsplan', 'Operations plan'), me:true} : (opsSkipper() || S.crew[0] || null), port = portById(pid);
   autoRestock();
   const extra = S.tripOwner ? 0 : Math.round(Math.max(0, total) * 0.05); if (extra > 0){ S.cash -= extra; S.stats.costs += extra; }
   const what = landed ? [fmt(kg, 0) + ' kg levert i ' + port.name + ', ' + kr(Math.round(total)) + ' etter lott' + (extra ? ', skippertillegg ' + kr(extra) : '') + '.', fmt(kg, 0) + ' kg landed at ' + port.name + ', ' + kr(Math.round(total)) + ' after shares' + (extra ? ', skipper bonus ' + kr(extra) : '') + '.']
@@ -330,7 +334,7 @@ function driftTplSave(name){
 }
 function driftTplUse(i){
   const t = (S.driftTpl || [])[i]; if (!t) return false;
-  const n = driftNew(JSON.parse(JSON.stringify(t))); n.skipper = (S.crew.find(c => c.id === n.skipper) || S.crew[0] || {}).id || null;
+  const n = driftNew(JSON.parse(JSON.stringify(t))); n.skipper = n.skipper === 'me' ? 'me' : (S.crew.find(c => c.id === n.skipper) || S.crew[0] || {}).id || null;
   for (const s of n.sess) s.id = driftSid();
   S.ops = n; return true;
 }

@@ -436,6 +436,7 @@ const PHONE = (() => {
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
     ['p102', '09.10.2026', 'Kjentmannen, nordlyset og driftsplanen', 'The old hand, the northern lights and the operations plan', [
+      ['Du er skipper på din egen båt: i Driftsplan er «Meg» valgt som skipper når du er om bord, og mannskapet er mannskap. Er du ikke om bord, kjører den du velger av mannskapet.', 'You are the skipper of your own boat: in the Operations plan «Me» is the skipper when you are aboard, and the crew are crew. When you are not aboard, the one you pick from the crew runs it.'],
       ['Driftsplanen ser nå på sjøen der turen faktisk går (i fjorden er det roligere enn ute på havet), ikke bare på havet utenfor. Blir båten likevel liggende, sier skipperen hva som er over grensen, og om det er båtens egen grense som stopper turen.', 'The operations plan now looks at the sea where the trip actually goes (calmer in the fjord than out at sea), not only the open sea outside. If the boat still stays in, the skipper says what is over the limit, and whether it is the boat\u2019s own limit that stops the trip.'],
       ['Ruten fra fars naust ble meldt som «krysser land» fordi kontrollen regnet fra mottakets kai i stedet for fra naustet. Nå regnes den fra der båten faktisk ligger.', 'A route from Father\u2019s boathouse was flagged as crossing land because the check started at the plant\u2019s quay instead of the boathouse. It now starts where the boat actually lies.'],
       ['Fars naust står aldri lenger oppå kaier, moloer eller båter som ligger til kai. Står det et sted der noe er i veien, flyttes det til en ledig plass i nærheten.', 'Father\u2019s boathouse no longer stands on quays, breakwaters or moored boats. Where something is in the way, it moves to a free spot nearby.'],
@@ -1319,7 +1320,7 @@ const PHONE = (() => {
       if (s.lost) A('lost' + s.id, GEAR[s.kind].no + ' er tapt. Meld tapt redskap', GEAR[s.kind].en + ' lost. Report the lost gear', 'redskap');
       else if (s.kind === 'teine' ? a >= 44 : s.kind === 'line' ? a >= 24 : a >= 48) A('soak' + s.id, GEAR[s.kind].no + ' har stått i ' + fmt(a, 0) + ' t', GEAR[s.kind].en + ' has soaked ' + fmt(a, 0) + ' h', 'beholdning:gear'); }
     if (S.pgear && S.pgear.nets.some(l => l.cond < 0.35)) A('worn', 'Slitte garn bør bøtes', 'Worn nets should be mended', 'beholdning:gear');
-    if (o && o.on && !sk) A('ops', 'Driftsplanen har ingen skipper valgt', 'The plan has no skipper chosen', 'drift');
+    if (o && o.on && !sk && !driftMeSk(o)) A('ops', 'Driftsplanen har ingen skipper valgt', 'The plan has no skipper chosen', 'drift');
     else if (o && o.v === 2 && o.paused) A('ops', 'Driftsplanen står på pause', 'The plan is paused', 'drift');
     if (access() !== 'none'){ const lim = codLimitNow(H); if (lim > 0 && quotaState().torsk >= lim * 0.9) A('quota', 'Torskekvoten er nesten brukt opp', 'The cod quota is nearly used up', 'kvote'); }
     let next = null; if (o && o.on) for (let k = 0; k < 8 && next == null; k++){ const Hd = Math.floor((H + 6) / 24) * 24 - 6 + k * 24 + o.dep, wd = (gDate(Hd).getUTCDay() + 6) % 7; if (o.days[wd] && Hd > H) next = Hd; }
