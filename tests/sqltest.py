@@ -561,6 +561,31 @@ def main():
         print(ok(FD == {'start': 3, 'catch': 2, 'land1': 2, 'land3': 1, 'reg': 2, 'd1': 2, 'd1n': 2, 'd7': 1, 'd7n': 1, 'd30': 0, 'd30n': 0} and FX['pl'][0] and FX['mfa'][0]
                  and F1['weeks'] and sum(w['start'] for w in F1['weeks']) >= 3),
               "the funnel: started, first catch, first and third landing, an account, and back after 1, 7 and 30 days of those who have had that long; by the week they started; only the admin with MFA reads it", FD)
+        # friends (20261009180000_friends.sql): a code, a request by code and by the hashed id, accepted both ways, the friend's boat
+        # wherever it is and also when it went quiet long ago, no guest, no stranger reads, and either can end it
+        sql("insert into public.players (id, guest) values ('user_01FRA', false), ('user_01FRB', false), ('user_01FRC', false) on conflict do nothing")
+        A = {'sub': 'user_01FRA', 'role': 'authenticated'}; B = {'sub': 'user_01FRB', 'role': 'authenticated'}; C = {'sub': 'user_01FRC', 'role': 'authenticated'}; GU = {'sub': '33333333-3333-4333-8333-333333333333', 'role': 'authenticated'}
+        hid = lambda p: sql("select left(md5('dsb' || '%s'), 10)" % p)
+        FR = {}
+        FR['codeA'] = sql("select public.friend_code()", A, 'authenticated'); FR['codeA2'] = sql("select public.friend_code()", A, 'authenticated')
+        FR['guest'] = sql("select coalesce(public.friend_code(), 'null')", GU, 'authenticated') + '/' + sql("select public.friend_ask('%s')" % FR['codeA'], GU, 'authenticated')
+        FR['self'] = sql("select public.friend_ask('%s')" % FR['codeA'], A, 'authenticated')
+        FR['ask'] = sql("select public.friend_ask('%s')" % FR['codeA'].lower(), B, 'authenticated')
+        gA = json.loads(sql("select public.friends_get()", A, 'authenticated')); FR['inA'] = [r['id'] for r in gA['in']] == [hid('user_01FRB')]
+        FR['outB'] = [r['id'] for r in json.loads(sql("select public.friends_get()", B, 'authenticated'))['out']] == [hid('user_01FRA')]
+        FR['yes'] = sql("select public.friend_answer('%s', true)" % hid('user_01FRB'), A, 'authenticated')
+        FR['again'] = sql("select public.friend_ask('%s')" % hid('user_01FRA'), B, 'authenticated')
+        # C asks A, A asks C back: that makes them friends without an answer
+        FR['cross'] = sql("select public.friend_ask('%s')" % hid('user_01FRA'), C, 'authenticated') + '/' + sql("select public.friend_ask('%s')" % hid('user_01FRC'), A, 'authenticated')
+        sql("delete from public.presence where player_id = 'user_01FRB'; insert into public.presence (player_id, boat, vtype, x, y, st, at) values ('user_01FRB', 'Havbris', 'trebat', 900, 300, 'port', now() - interval '3 days')")
+        gA = json.loads(sql("select public.friends_get()", A, 'authenticated')); fb = [f for f in gA['friends'] if f['id'] == hid('user_01FRB')]
+        FR['far'] = bool(fb) and fb[0]['boat'] == 'Havbris' and fb[0]['x'] == 900 and fb[0]['age'] > 200000 and len(gA['friends']) == 2 and gA['code'] == FR['codeA']
+        FR['tables'] = sql("select * from public.friends", A, 'authenticated', expect_err=True)[0] and sql("select public.friend_who('%s')" % FR['codeA'], A, 'authenticated', expect_err=True)[0]
+        FR['rm'] = sql("select public.friend_remove('%s')" % hid('user_01FRA'), B, 'authenticated')
+        FR['after'] = len(json.loads(sql("select public.friends_get()", A, 'authenticated'))['friends'])
+        print(ok(len(FR['codeA']) == 6 and FR['codeA'] == FR['codeA2'] and FR['guest'] == 'null/no' and FR['self'] == 'no' and FR['ask'] == 'ok' and FR['inA'] and FR['outB'] and FR['yes'] == 'ok'
+                 and FR['again'] == 'already' and FR['cross'] == 'ok/friends' and FR['far'] and FR['tables'] and FR['rm'] == 'ok' and FR['after'] == 1),
+              'friends: a lasting code, asked by code or boat, accepted (or asked both ways), the boat seen far away and long after, no guest, no table open, ended by either', FR)
     finally:
         run(*as_pg([os.path.join(BIN, 'pg_ctl'), '-D', data, '-m', 'immediate', 'stop']))
         shutil.rmtree(tmp, ignore_errors=True)

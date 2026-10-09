@@ -30,8 +30,8 @@ async def main():
         print(ok(f['sat'] == 6 and 8 <= f['date'] <= 14 and f['best'] == 41.2 and f['before'] == 41.2 and f['prize'] == 15000 and any('vant Skreifestivalen' in x for x in f['m'])), 'the skrei festival on the second weekend of March: the biggest cod in the weekend wins 15 000 kr')
         # 3. the apps: Sesong (now, coming, the calendar) and Folk
         ap = await pg.evaluate("""(() => { const F = festDays(2028); S.t = (F.H0 - 48) * 60; PHONE.open('sesong'); const a = document.querySelector('.ph-appv').innerText, cells = document.querySelectorAll('.sn-grid i').length;
-          PHONE.open('folk'); const b = document.querySelector('.ph-appv').innerText; PHONE.show(false); return {a:a.slice(0, 120), cells, fest:a.includes('Skreifestivalen'), parts:a.includes('Kommer') && a.includes('Fiskekalender'), edv:b.includes('Edvard')}; })()""")
-        print(ok(ap['cells'] == 8 * 12 and ap['fest'] and ap['parts'] and ap['edv']), 'the Sesong app shows the season, the festival, what comes and the fish calendar; Folk shows Edvard', ap['cells'])
+          PHONE.open('salg'); const b = document.querySelector('.ph-appv').innerText; PHONE.show(false); return {a:a.slice(0, 120), cells, fest:a.includes('Skreifestivalen'), parts:a.includes('Kommer') && a.includes('Fiskekalender'), edv:b.includes('Fast kunde')}; })()""")
+        print(ok(ap['cells'] == 8 * 12 and ap['fest'] and ap['parts'] and ap['edv']), 'the Sesong app shows the season, the festival, what comes and the fish calendar; Salgslaget shows the regulars\' bonus (the Folk app is Venner since 09.10.2026)', ap['cells'])
         await pg.evaluate("PHONE.open('sesong')"); await pg.wait_for_timeout(300); await pg.screenshot(path='season_app.png'); await pg.evaluate("PHONE.show(false)")
         # 4. Edvard in the home harbour once a day, a regular supplier's price, Solveig's ice
         fk = await pg.evaluate("""(() => { const b = S.boat, q = portById('finnsnes'); b.status = 'port'; b.port = 'finnsnes'; b.pos = {...q.p}; S.folk = null; S.tut = 0;

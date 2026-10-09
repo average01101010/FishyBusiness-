@@ -1123,3 +1123,14 @@ body.vplot .depc{display:none}
 .dr-onoff{display:block;width:100%;margin:8px 0;padding:14px;border:0;border-radius:12px;background:#e3eaee;color:#15252f;font:700 15px var(--sans)}
 .dr-onoff.on{background:#1e8c6e;color:#fff}.dr-onoff:disabled{background:transparent;border:1px dashed #9aabb4;color:#6c7d87}
 .dr-day .dr-pv{margin-top:8px}
+/* Venner (ui/10k-friends.js): the code, the add field, the friends with a green dot when their game is open; friends' boats on the chart */
+.fr-big{letter-spacing:.18em;font-family:var(--mono,monospace);text-align:center;margin:4px 0 6px}
+.fr-add{display:flex;gap:8px;align-items:center} .fr-add input{flex:1;min-width:0;font:600 18px var(--mono,monospace);letter-spacing:.15em;text-transform:uppercase;padding:9px 10px;border:1px solid #b9c4cc;border-radius:8px}
+.fr-add .ph-btn{margin:0;flex:0 0 auto}
+.fr-h{margin:12px 2px 6px} .fr-row{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap} .fr-row span{display:flex;gap:6px} .fr-row .ph-btn{margin:0}
+.fr-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#9aa5ad;margin-right:7px;vertical-align:1px} .fr.on .fr-dot{background:#2bb673}
+.fr-chip{display:inline-block;font-size:12px;padding:2px 8px;border-radius:10px;background:rgba(43,182,115,.16);color:#1f8a57;margin-top:6px}
+.ph-btn.fr-ask{margin-top:8px} #pub3 .fr-chip{color:#9be3bd} #pub3 .ph-btn.fr-ask{padding:4px 10px;font-size:12px;margin:4px 0 0}
+.ais.player.friend{fill:#3ccf86;stroke:#0f5a35} .ais-halo.friend{stroke:#3ccf86} .ais.player.friend.off{fill:none;stroke-dasharray:3 2;opacity:.8}
+.lbl-ais.fr.off{fill:#1f8a57;font-weight:600;opacity:.85}
+#map.plot .ais.player.friend{fill:#5fe3a1;stroke:#d6ffe9} #map.plot .ais-halo.friend{stroke:#5fe3a1} #map.plot .lbl-ais.fr.off{fill:#7ff0b6}

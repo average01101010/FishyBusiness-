@@ -3704,6 +3704,26 @@ Nå tar `vecPrune` alltid med midten av kartplotteren når den er åpen. Kontrol
 - De oppdiktede attestene (helseerklæring, sikkerhetskurs, fiskeskipper klasse C, SRC) er tatt bort. Spillet sjekket dem aldri.
 - Testene: `loretest` sjekker Rekordfisk-fanen og at Sjømann er borte, og `booktest` sjekker papirene i Kvote, og foretaket som AS i Rederi.
 
+### 5.49 Venner (Jonas 09.10.2026)
+
+- **Folk-appen er Venner** (id fortsatt `folk`, `ui/10k-friends.js`). Den viser vennekoden din (6 tegn, uten 0/O/1/I), et felt for en annens kode, forespørsler til deg (Godta/Avslå), vennene og forespørslene du har sendt.
+- **Hver venn vises med** status («På sjøen nå», «I havn nå», «Fisker nå» eller «Sist sett for …»), nærmeste havn og avstanden fra deg. Knappen «Vis i kartet» åpner kartplotteren der vennen er. «Fjern venn» krever to trykk.
+- **Legge til:** med kode, fra AIS-kortet til en spillerbåt i kartet («Legg til som venn», `FRIENDS.chip`), eller ved en spiller i puben («Hvem er her»). Spør to spillere hverandre, blir de venner uten å svare.
+- **I kartet:**
+  - Venners båter er grønne.
+  - En venn med lukket spill står der båten sist lå, med stiplet ring og tiden (`FRIENDS.svg`).
+  - Båten kan ikke skjules for venner. Jonas: «Det skal ikke være mulig å slå av posisjon».
+- **Skyen:** `supabase/migrations/20261009180000_friends.sql`.
+  - Tabellene `friend_codes`, `friends` og `friend_req`. Ingen tabell er åpen.
+  - Funksjonene `friend_code`, `friend_ask`, `friend_answer`, `friend_remove` og `friends_get`.
+  - Gjester stoppes både av tokenet og av `players.guest`.
+  - Høyst 100 venner og 20 forespørsler i timen.
+  - Spillerne er bare kjent ved samme hash som i `pos_world`.
+  - Uten migreringen (404) sier appen at Venner ikke er klare.
+- **Henting:** hvert minutt mens spilleren er logget inn, og med en gang etter en handling. En ny forespørsel gir én melding fra «Venner» (`S.frSeen`).
+- **Fast kunde** (bonusen på mottakene og i butikken, `FOLKAPP.page`) står nå nederst i Priser i Salgslaget. Edvard er ikke lenger i appen. Han hilser fortsatt på kaia.
+- **Testene:** `friendtest` (med en falsk database) og vennedelen av `sqltest` (på en lokal PostgreSQL).
+
 ### 5.41 Puben i 3D (Jonas 08.10.2026)
 
 Jonas: «Spilleren trykker på pub og blir dermed sendt inn i puben hvor man sitter ved bardisken i first-person-view. Man skal kunne spinne hjulet som tidligere.» Og: «Kanskje noe som blir et sosialt element.»

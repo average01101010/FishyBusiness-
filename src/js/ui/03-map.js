@@ -454,7 +454,7 @@ function aisInfo(n){
     : n.type === 'coastal' ? [[L('Kallesignal', 'Call sign'), 'LAKY'], [L('Rederi', 'Owner'), 'Kystruta AS'], [L('Størrelse', 'Size'), '121,8 × 21,0 m'], [L('Dypgående', 'Draught'), '4,9 m']] : [[L('Kallesignal', 'Call sign'), 'LMSB'], [L('Rederi', 'Owner'), 'Senja Ferjedrift AS'], [L('Størrelse', 'Size'), '49,9 × 12,4 m'], [L('Dypgående', 'Draught'), '3,1 m']];
   const dg = r => String(Math.round(((r * 180 / Math.PI) % 360 + 360) % 360) % 360).padStart(3, '0') + '°';
   rows.push([L('Status', 'Status'), st], [L('Fart (SOG)', 'Speed (SOG)'), fmt(n.v, 1) + ' kn'], [L('Kurs (COG)', 'Course (COG)'), n.v > 0.15 ? dg(n.cog !== undefined ? n.cog : n.hd) : '–'], [L('Styrekurs (HDG)', 'Heading (HDG)'), dg(n.hd)]);
-  return '<div class="ai-h"><b>' + n.name + '</b><button type="button" id="aisX" aria-label="Lukk">✕</button></div><div class="ai-t">' + (n.player ? L('Spiller', 'Player') : n.rs ? L('Redningsfartøy', 'Rescue vessel') : n.fleet || n.coast ? L('Fiskefartøy', 'Fishing vessel') : n.type === 'coastal' ? L('Passasjerskip', 'Passenger ship') : L('Ferje', 'Ferry')) + '</div>' + rows.map(r => '<div class="ai-r"><span>' + r[0] + '</span><span>' + r[1] + '</span></div>').join('') + (n.player ? '' : '<div class="ai-n">' + L('Stiplet linje: sporet siste 24 timer', 'Dashed line: track over the last 24 hours') + '</div>');
+  return '<div class="ai-h"><b>' + n.name + '</b><button type="button" id="aisX" aria-label="Lukk">✕</button></div><div class="ai-t">' + (n.player ? L('Spiller', 'Player') : n.rs ? L('Redningsfartøy', 'Rescue vessel') : n.fleet || n.coast ? L('Fiskefartøy', 'Fishing vessel') : n.type === 'coastal' ? L('Passasjerskip', 'Passenger ship') : L('Ferje', 'Ferry')) + '</div>' + rows.map(r => '<div class="ai-r"><span>' + r[0] + '</span><span>' + r[1] + '</span></div>').join('') + (n.player && typeof FRIENDS !== 'undefined' ? FRIENDS.chip(String(n.id).slice(1)) : '') + (n.player ? '' : '<div class="ai-n">' + L('Stiplet linje: sporet siste 24 timer', 'Dashed line: track over the last 24 hours') + '</div>');
 }
 function renderAisCard(){ const el = $('aisCard'); if (!AISSEL){ el.hidden = true; return; } const n = AISNOW.find(q => q.id === AISSEL); if (!n){ el.hidden = true; return; } el.innerHTML = aisInfo(n); el.hidden = false; $('aisX').onclick = () => { AISSEL = null; renderAisCard(); renderDyn(); }; }
 function renderDyn(){
@@ -502,9 +502,9 @@ function renderDyn(){
   // the other players last, on top, with a ring, a larger mark and their names from further out (they come first among the names)
   const aisOrd = AISNOW.filter(n => !n.player).concat(AISNOW.filter(n => n.player)), plLbl = [], aisLbl = [];
   for (const n of aisOrd){
-    const pl = n.player, cls = pl ? 'ais player' : n.rs ? 'ais rs' : n.fleet || n.coast ? 'ais fish' : 'ais pass', sel = AISSEL === n.id ? ' sel' : '', moored = n.st === 'port' || (!n.fleet && !n.coast && n.v === 0);
+    const pl = n.player, fr = pl && typeof FRIENDS !== 'undefined' && FRIENDS.is(String(n.id).slice(1)), cls = pl ? 'ais player' + (fr ? ' friend' : '') : n.rs ? 'ais rs' : n.fleet || n.coast ? 'ais fish' : 'ais pass', sel = AISSEL === n.id ? ' sel' : '', moored = n.st === 'port' || (!n.fleet && !n.coast && n.v === 0);
     const sw = (sel ? 2.4 : pl ? 1.6 : 1.1) * u;
-    if (pl) g.push('<circle cx="' + n.p.x + '" cy="' + n.p.y + '" r="' + ((moored ? 7 : 12) * u) + '" class="ais-halo" stroke-width="' + (1.4 * u) + '"/>');
+    if (pl) g.push('<circle cx="' + n.p.x + '" cy="' + n.p.y + '" r="' + ((moored ? 7 : 12) * u) + '" class="ais-halo' + (fr ? ' friend' : '') + '" stroke-width="' + (1.4 * u) + '"/>');
     if (moored) g.push('<circle cx="' + n.p.x + '" cy="' + n.p.y + '" r="' + ((pl ? 4.4 : 3.2) * u) + '" class="' + cls + sel + ' moor" stroke-width="' + sw + '"/>');
     else { const k = (n.type === 'coastal' ? 10 : n.type === 'ferry' ? 8.5 : pl ? 8.2 : n.fleet || n.coast ? 5.2 + n.L * 0.13 : 6.5) * u, dg = (n.cog !== undefined ? n.cog : n.hd) * 180 / Math.PI;
       g.push('<g transform="translate(' + n.p.x + ' ' + n.p.y + ') rotate(' + dg.toFixed(1) + ')"><path d="M0,' + (-k * 1.25) + ' L' + (0.55 * k) + ',' + (k * 0.8) + ' L0,' + (k * 0.45) + ' L' + (-0.55 * k) + ',' + (k * 0.8) + ' Z" class="' + cls + sel + '" stroke-width="' + sw + '"/></g>'); }
@@ -515,6 +515,7 @@ function renderDyn(){
     if (!sel && [-1, 0, 1].some(d => lblAt.has((kx + d) + ',' + ky))) continue;
     lblAt.add(kx + ',' + ky); g.push(txt({x:n.p.x + (n.player ? 11 : 8) * u, y:n.p.y - (n.player ? 9 : 6) * u}, n.name, 'lbl-ais' + (n.player ? ' pl' : ''), (n.player ? 11 : 10) * u, 'stroke-width="' + (3 * u) + '"'));
   }
+  if (typeof FRIENDS !== 'undefined') g.push(FRIENDS.svg(u, AISNOW));   // friends whose game is closed, where they were last (ui/10k-friends.js)
   // gear being drawn out
   if (SETM) g.push(setSvg(u));
   // boat

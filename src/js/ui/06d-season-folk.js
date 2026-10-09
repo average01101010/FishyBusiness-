@@ -25,13 +25,13 @@ const SEASONAPP = (() => {
   }
   return {page};
 })();
+// The regulars at the plants and the shop; Edvard and the app itself are gone (ui/10k-friends.js has the Folk app's place)
 const FOLKAPP = (() => {
   const L = (no, en) => S.lang === 'no' ? no : en;
   const day = t => dayStr(t / 60).replace(/^\S+ /, '');
+  // the plants' and the shop's regulars (core/09d-folk.js): shown in Salgslaget since the Folk app became Venner (Jonas 09.10.2026)
   function page(){
-    const F = folkState(), E = F.edvard, home = portById(S.home || HOME0), h = ['<div class="ph-c">'];
-    h.push('<div class="ph-card fk"><div class="fk-h"><span class="fk-av">E</span><div><h4>Edvard</h4><small>' + L('Kjente far. Sitter på benken ved kaia i ', 'Knew Father. Sits on the bench by the quay in ') + (home ? home.name : '') + '</small></div></div>' +
-      (E.said ? '<p class="fk-q">«' + L(E.said.no, E.said.en) + '»</p><small>' + day(E.said.t) + '</small>' : '<p class="ph-note">' + L('Du har ikke møtt ham ennå. Han er ofte på kaia i hjemhavna på dagtid.', 'You have not met him yet. He is often on the quay in your home harbour in the daytime.') + '</p>') + '</div>');
+    const F = folkState(), h = [];
     const P = Object.entries(F.plants).sort((a, b) => b[1].kg - a[1].kg);
     if (!P.length) h.push('<div class="ph-card fk"><h4>' + L('Mottakene', 'The plants') + '</h4><p class="ph-note">' + L('Lever fisk, så blir du kjent med folka på mottaket. Faste leverandører får bedre pris: 1 % ekstra etter 2 tonn, 2 % etter 10 og 3 % etter 30 tonn.', 'Land fish and you get to know the people at the plant. Regular suppliers get a better price: 1 % more after 2 tonnes, 2 % after 10 and 3 % after 30.') + '</p></div>');
     for (const [id, x] of P.slice(0, 6)){
@@ -43,7 +43,7 @@ const FOLKAPP = (() => {
     const n = F.shop.n;
     h.push('<div class="ph-card fk"><div class="fk-h"><span class="fk-av s">S</span><div><h4>' + FOLK_NAMES.shop + '</h4><small>' + L('Butikken på kaia', 'The shop on the quay') + '</small></div></div><div class="ph-kv"><span>' + L('Handlet', 'Purchases') + '</span><span>' + n + '</span></div>' +
       '<small>' + (n >= 15 ? L('10 % på isen og gratis kaffe.', '10 % off the ice and free coffee.') : n >= 5 ? L('Gratis kaffe. 10 % på isen fra 15 handler.', 'Free coffee. 10 % off the ice from 15 purchases.') : L('Kaffen er gratis fra 5 handler, og isen 10 % billigere fra 15.', 'Coffee is free from 5 purchases, and ice 10 % cheaper from 15.')) + '</small></div>');
-    h.push('</div>'); return h.join('');
+    return h.join('');
   }
   return {page};
 })();

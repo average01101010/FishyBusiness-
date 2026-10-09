@@ -35,7 +35,7 @@ const PUBSOC = (() => {
       h.push('<p>' + L('Spillere med båten i ' + (pt ? pt.name : 'havna') + ' i kveld:', 'Players with their boat in ' + (pt ? pt.name : 'the harbour') + ' tonight:') + '</p><ul class="pb-who">');
       for (const p of H){
         const nm = p.user ? esc(p.user) : L('Ukjent', 'Unknown'), wait = G.sent[p.id] && Date.now() - G.sent[p.id] < 300000;
-        h.push('<li><b>' + nm + '</b> <small>«' + esc(p.boat) + '»</small>' + (cloudOn() ? '<div class="pb-gr">' + GREET.map((g, i) => btn('g:' + p.id + ':' + i, esc(L(g[0], g[1])), wait)).join('') + '</div>' : '') + '</li>');
+        h.push('<li><b>' + nm + '</b> <small>«' + esc(p.boat) + '»</small>' + (typeof FRIENDS !== 'undefined' ? ' ' + FRIENDS.chip(p.id) : '') + (cloudOn() ? '<div class="pb-gr">' + GREET.map((g, i) => btn('g:' + p.id + ':' + i, esc(L(g[0], g[1])), wait)).join('') + '</div>' : '') + '</li>');
       }
       h.push('</ul>');
       if (!cloudOn()) h.push('<p class="pb-why">' + L('Logg inn for å hilse på de andre.', 'Sign in to greet the others.') + '</p>');
