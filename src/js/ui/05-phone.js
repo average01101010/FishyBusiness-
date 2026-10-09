@@ -435,6 +435,9 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p101', '09.10.2026', 'Kjølvannet bak hekken', 'The wake behind the stern', [
+      ['Rettet: en hvit strek gikk på tvers av vannet ved hekken der hekkbølgen starter. Bølgen vokser nå jevnt fram bak båten.', 'Fixed: a white line ran across the water at the stern where the stern wave starts. The wave now grows smoothly behind the boat.'],
+    ]],
     ['p100', '09.10.2026', 'Puben i bygda', 'The pub in the bygd', [
       ['Trykk på Pub i bygda, så sitter du på en krakk ved bardisken. Dra med fingeren for å se deg rundt, og trykk på det du vil.', 'Tap Pub in the bygd and you sit on a stool at the bar. Drag with a finger to look around, and tap what you like.'],
       ['Lykkehjulet henger på veggen og snurrer når du spanderer en runde, én gang hver kveld som før.', 'The wheel hangs on the wall and spins when you buy a round, once each evening as before.'],
