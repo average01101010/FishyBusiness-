@@ -435,6 +435,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p103', '09.10.2026', 'Meldinger om bord', 'Messages aboard', [
+      ['Når mannskapet er ferdig med å egne, bytte kroker eller bøte, kommer meldingen nå fra «Om bord» og ikke fra kaia, også når jobben gjøres på sjøen.', 'When the crew has finished baiting, changing hooks or mending, the message now comes from «Aboard» and not from the quay, also when the job is done at sea.']]],
     ['p102', '09.10.2026', 'Kjentmannen, nordlyset og driftsplanen', 'The old hand, the northern lights and the operations plan', [
       ['Naustet har fått et rom du kan gå inn i: trykk Naustet når du ligger ved fars naust. På trofeveggen henger den største fisken du har fått av hver art, med vekt, dato og sted. Taket, ovnen, benken og veggen ser du i rommet og kan sette i stand derfra.', 'The boathouse now has a room you can step into: tap Boathouse when you lie at Father\u2019s boathouse. On the trophy wall hangs the biggest fish you have landed of each species, with weight, date and place. You see the roof, the stove, the bench and the wall in the room and can set them to rights from there.'],
       ['Utstyr du får i gave (for eksempel brovaktsalarm) er montert med en gang. Ingen ventetid hos verftet.', 'Equipment you get as a gift (a bridge watch alarm, for example) is fitted at once. No wait at the yard.'],
