@@ -86,6 +86,15 @@ async def main():
         b = await pg.evaluate("""(async () => { ACHQ.length = 0; ACHQ_ON = false; achShow([{a:achOf('fish'), g:{t:['Mottaket gir deg 100 kg is.', 'x'], tier:1}}]); await new Promise(r => setTimeout(r, 300));
           const el = document.getElementById('achPop'); return {on:!!el && el.classList.contains('on'), txt:el ? el.innerText : '', pe:el ? getComputedStyle(el).pointerEvents : ''}; })()""")
         check(b['on'] and 'Første fisk over ripa' in b['txt'] and '100 kg is' in b['txt'] and b['pe'] == 'none', 'a milestone shows as a banner with its gift, and the game goes on under it', b)
+        # 11. the places moored at, the fish one by one, the trips and the friends (Jonas 09.10.2026: «Jo flere milepæler jo bedre»)
+        v = await pg.evaluate("""(() => { const A = achState(), L = id => ACHL.find(x => x.id === id), nv = p => !achVisits()[p.id], yard = PORTS.find(p => /verft/.test(p.sted || '') && nv(p)), shop = PORTS.find(p => /butikk/.test(p.sted || '') && nv(p)), rb = RORBUER.find(nv);
+          const v0 = {verft:L('verft').v(), butikk:L('butikk').v(), rorbu:L('rorbu').v(), havner:L('havner').v()};
+          for (const p of [yard, shop, rb]) if (p) achVisitPort(p.id); achVisitPort(yard && yard.id);
+          A.pub.finnsnes = 1; const f0 = L('fisk').v(); addCatch('torsk', 3, 2); const f1 = L('fisk').v();
+          return {v0, v1:{verft:L('verft').v(), butikk:L('butikk').v(), rorbu:L('rorbu').v(), havner:L('havner').v(), pub:L('pub').v()}, f0, f1, have:!!(yard && shop && rb), turer:!!L('turer'), venner:L('venner').v()}; })()""")
+        check(v['have'] and v['v1']['verft'] == v['v0']['verft'] + 1 and v['v1']['butikk'] == v['v0']['butikk'] + 1 and v['v1']['rorbu'] == v['v0']['rorbu'] + 1 and v['v1']['havner'] >= v['v0']['havner'] + 3
+              and v['v1']['pub'] >= 1 and v['f1'] == v['f0'] + 1 and v['turer'] and v['venner'] == 0,
+              'new badges: yards, tackle shops, rorbuer, harbours and pubs visited (each counted once), fish caught one by one, trips, friends', v)
         check(errs == [], 'sidefeil', errs)
         await br.close()
 

@@ -128,5 +128,5 @@ const FRIENDS = (() => {
     e.preventDefault(); e.stopPropagation(); ask(b.dataset.fr); b.outerHTML = '<span class="fr-chip">' + L('Forespørsel sendt', 'Request sent') + '</span>';
   }, true);
   setInterval(() => fetch(false), 20000);
-  return {page, act, svg, chip, is, fetch, ask, _F:F};
+  return {page, act, svg, chip, is, fetch, ask, count:() => list().length, _F:F};
 })();

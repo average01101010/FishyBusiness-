@@ -17,6 +17,13 @@ const achPorts = () => { const s = new Set((S.sales || []).map(x => x.port).filt
 const achFleet = f => (S.fleet || []).some(v => { try { return f(v); } catch (e){ return false; } });
 const achC = k => (S.ach && S.ach.c && S.ach.c[k]) || 0;
 const achKg = () => (S.stats && S.stats.kg) || 0;
+// the places moored at (Jonas 09.10.2026: «milepæler for antall fiskemottak, verft, utstyrsbutikker og sånt»): the harbours in S.ach.v,
+// seeded the first time with the plants sold to and where the boat lies, and the pubs sat in (S.ach.pub)
+function achVisits(){ const A = achState(); if (!A.vSeed){ A.vSeed = 1; for (const s of S.sales || []) if (s.port) A.v[s.port] = 1; if (S.boat && S.boat.status === 'port' && S.boat.port) A.v[S.boat.port] = 1; } return A.v; }
+function achVisitPort(pid){ if (pid) achVisits()[pid] = 1; }
+const achVisitN = f => Object.keys(achVisits()).filter(id => { const pt = portById(id); return pt && f(pt); }).length;
+// the fish taken, one by one (addCatch); a game from before is seeded from the kilos landed, at about 3 kg a fish
+const achFish = () => { const A = achState(); if (A.c.fishn == null) A.c.fishn = Math.round(achKg() / 3); return A.c.fishn; };
 const ACH = [
   // the first hours
   {id:'took', ch:0, n:['Tok over båten', 'Took over the boat'], p:() => !!S.intro},
@@ -49,6 +56,14 @@ const ACHL = [
   {id:'tonn', n:['Levert i alt', 'Landed in all'], tiers:[10, 25, 50, 100, 250, 500, 1000], unit:'t', v:() => achKg() / 1000},
   {id:'fs', n:['Fartstid', 'Sea time'], tiers:[10, 20, 30, 40], unit:'år', v:() => fsOf(fsState().p).y},
   {id:'mottak', n:['Mottak langs kysten', 'Plants along the coast'], tiers:[3, 5, 10, 25, 50], unit:'', v:() => achPorts()},
+  {id:'fisk', n:['Fisk tatt', 'Fish caught'], tiers:[100, 1000, 5000, 10000, 50000, 100000], unit:'', v:() => achFish()},
+  {id:'turer', n:['Turer fullført', 'Trips completed'], tiers:[10, 50, 100, 250, 500], unit:'', v:() => (S.stats && S.stats.trips) || 0},
+  {id:'havner', n:['Havner besøkt', 'Harbours visited'], tiers:[5, 10, 25, 50, 100], unit:'', v:() => achVisitN(() => true)},
+  {id:'verft', n:['Verft besøkt', 'Yards visited'], tiers:[1, 3, 5, 10, 20], unit:'', v:() => achVisitN(pt => /verft/.test(pt.sted || ''))},
+  {id:'butikk', n:['Utstyrsbutikker besøkt', 'Tackle shops visited'], tiers:[1, 3, 5, 10, 20], unit:'', v:() => achVisitN(pt => /butikk/.test(pt.sted || ''))},
+  {id:'rorbu', n:['Rorbuer besøkt', 'Rorbuer visited'], tiers:[1, 3, 5, 10, 20], unit:'', v:() => achVisitN(pt => !!pt.rorbu)},
+  {id:'pub', n:['Puber besøkt', 'Pubs visited'], tiers:[1, 3, 5, 10, 20], unit:'', v:() => Object.keys(achState().pub).length},
+  {id:'venner', n:['Venner', 'Friends'], tiers:[1, 5, 10, 25], unit:'', v:() => typeof FRIENDS !== 'undefined' ? FRIENDS.count() : 0},
   {id:'arter', n:['Arter levert', 'Species landed'], tiers:[3, 5, 8, 12], unit:'', v:() => Object.keys((S.ach && S.ach.sp) || {}).length},
   {id:'nm', n:['Nautiske mil om bord', 'Nautical miles aboard'], tiers:[250, 1000, 2500, 5000, 10000], unit:'nm', v:() => (S.tat && S.tat.nm) || 0},
   {id:'natt', n:['Nattfiske', 'Night fishing'], tiers:[1, 10, 50], unit:'', v:() => achC('night')},
@@ -60,7 +75,9 @@ const ACHL = [
 const achOf = id => ACH.find(a => a.id === id);
 function achState(){
   if (!S.ach) S.ach = {d:{}, g:{}, ch:{}, l:{}, c:{}, sp:{}, owe:[], seed:(Math.random() * 1e9) | 0, best:0};
-  const A = S.ach; for (const k of ['d', 'g', 'ch', 'l', 'c', 'sp', 'peers']) A[k] = A[k] || {}; A.owe = A.owe || []; return A;
+  // the long badges this game has known from its start (a badge added later is taken up quietly where the game is, achCheck)
+  if (!S.ach.lk){ S.ach.lk = {}; if (!Object.keys(S.ach.l).length) for (const L0 of ACHL) S.ach.lk[L0.id] = 1; }
+  const A = S.ach; for (const k of ['d', 'g', 'ch', 'l', 'c', 'sp', 'peers', 'v', 'pub']) A[k] = A[k] || {}; A.owe = A.owe || []; return A;
 }
 const achHave = a => { const r = a.p(); return Array.isArray(r) ? r[0] >= r[1] : !!r; };
 const achProg = a => { const r = a.p(); return Array.isArray(r) ? clamp(r[0] / r[1], 0, 1) : r ? 1 : 0; };
@@ -74,7 +91,7 @@ const achLive = () => !(typeof NOTUT !== 'undefined' && NOTUT) || (typeof window
 // a counter or a flag from the game (core/05-vessels.js, ui/05-phone.js, ui/08-actions.js)
 function achAdd(k, n){ const A = achState(); A.c[k] = (A.c[k] || 0) + (n == null ? 1 : n); }
 function achSale(total, sps){ const A = achState(); A.best = Math.max(A.best || 0, total || 0); for (const sp of sps || []) A.sp[sp] = 1; achCheck(); }
-function achCatch(sp, cls){ if (sp === 'torsk' && cls === 0 && meAboard()) achAdd('big'); }
+function achCatch(sp, cls){ achFish(); achAdd('fishn'); if (sp === 'torsk' && cls === 0 && meAboard()) achAdd('big'); }
 // each game minute: rough weather with you aboard (a gale, Beaufort 6 and up), night fishing, and another player's boat near
 function achMinute(){
   if (S.t % 10 === 0) achCheck();
@@ -148,7 +165,9 @@ function achCheck(quiet){
     }
     // the gifts kept from the first trip
     if (A.owe.length && !(typeof tutOn === 'function' && tutOn())){ const owe = A.owe; A.owe = []; for (const [key, scale, title] of owe){ const g = achGive(key, scale, title); const a = achOf(key); if (a) fresh.push({a, g}); } }
-    for (const L0 of ACHL){ const v = L0.v(), got = A.l[L0.id] || 0; let k = got;
+    for (const L0 of ACHL){ const v = L0.v();
+      if (!A.lk[L0.id]){ A.lk[L0.id] = 1; if (!A.l[L0.id]){ let k0 = 0; while (k0 < L0.tiers.length && v >= L0.tiers[k0]) k0++; A.l[L0.id] = k0; continue; } }
+      const got = A.l[L0.id] || 0; let k = got;
       while (k < L0.tiers.length && v >= L0.tiers[k]) k++;
       if (k > got){ A.l[L0.id] = k; if (!achLive() || A.seeding) continue;
         for (let i = got; i < k; i++){ const g = achGive(L0.id + i, 3, L0.n); fresh.push({long:L0, tier:i, g}); } } }

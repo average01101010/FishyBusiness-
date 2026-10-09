@@ -446,6 +446,7 @@ function dock(pid, berth){
   if (port.rorbu) rorbuSite(port);   // its berth is found before the boat is put there (07d-rorbu.js)
   b.anch = null; b.status = 'port'; b.port = pid; b.v = 0; b.fishUntil = null; b.pos = {x:port.p.x, y:port.p.y}; b.moorT = S.t; b.shift = b.fueling = b.after = null;
   b.berth = berth === 'naust' && quayFace(pid, 'naust') ? 'naust' : 'main';   // a route can end at Father's naust (07c-naust.js)
+  if (typeof achVisitPort === 'function') achVisitPort(pid);   // «Havner besøkt» and the rest (09f-merker.js)
   const wasOps = S.plan && S.plan.ops;
   S.plan = null; S.trail = [{x:port.p.x, y:port.p.y, port:pid}];
   if (b.berth === 'naust') log('Fortøyd ved naustet i ' + port.name + '.', 'Moored at the boathouse in ' + port.name + '.');

@@ -352,7 +352,7 @@ const PUB3 = (() => {
     // start turned a little towards the wheel, so both it and the bartender are in sight
     cam.yaw -= 0.18; cam.fov = 1;
     if (typeof G3 !== 'undefined' && G3.hold) G3.hold(true);
-    S.pubVisit = (S.pubVisit || 0) + 1; renderTop(); PUBSOC.enter();
+    S.pubVisit = (S.pubVisit || 0) + 1; if (S.boat.port && typeof achState === 'function') achState().pub[S.boat.port] = 1; renderTop(); PUBSOC.enter();
     tLast = 0; if (!raf) raf = requestAnimationFrame(frame);
   }
   function close(){

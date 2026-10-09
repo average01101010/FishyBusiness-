@@ -3724,6 +3724,26 @@ Nå tar `vecPrune` alltid med midten av kartplotteren når den er åpen. Kontrol
 - **Fast kunde** (bonusen på mottakene og i butikken, `FOLKAPP.page`) står nå nederst i Priser i Salgslaget. Edvard er ikke lenger i appen. Han hilser fortsatt på kaia.
 - **Testene:** `friendtest` (med en falsk database) og vennedelen av `sqltest` (på en lokal PostgreSQL).
 
+### 5.50 Flere merker (Jonas 09.10.2026: «Jo flere milepæler jo bedre»)
+
+- **Nye lange merker** i `ACHL` (`core/09f-merker.js`), hvert trinn med en gave, som de andre:
+  - Fisk tatt: 100–100 000.
+  - Turer fullført: 10–500.
+  - Havner besøkt: 5–100.
+  - Verft besøkt: 1–20.
+  - Utstyrsbutikker besøkt: 1–20.
+  - Rorbuer besøkt: 1–20.
+  - Puber besøkt: 1–20.
+  - Venner: 1–25.
+  - Levert i alt (tonn) og mottak fantes fra før.
+- **Besøkene:**
+  - `dock()` skriver havna i `S.ach.v` (`achVisitPort`). Første gang fylles den med mottakene det er solgt til, og stedet båten ligger.
+  - Puben skriver havna i `S.ach.pub` når du går inn.
+  - Sorteringen går etter havnas `sted` (verft, butikk) og `rorbu`.
+- **Fisken:** telles én og én i `addCatch` (`S.ach.c.fishn`). Et eldre spill starter på levert kilo delt på 3. Det er en antakelse, men nye ting skal ikke starte på null.
+- **Et merke som kommer til seinere**, tas opp stille der spillet står (`S.ach.lk`), så en gammel lagring ikke får en flom av gaver. Nye spill kjenner alle merkene fra start.
+- **Test:** sjekk 11 i `merketest`.
+
 ### 5.41 Puben i 3D (Jonas 08.10.2026)
 
 Jonas: «Spilleren trykker på pub og blir dermed sendt inn i puben hvor man sitter ved bardisken i first-person-view. Man skal kunne spinne hjulet som tidligere.» Og: «Kanskje noe som blir et sosialt element.»
