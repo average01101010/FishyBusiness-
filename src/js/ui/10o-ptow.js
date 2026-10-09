@@ -21,6 +21,8 @@ const PTOW = (() => {
   const cloudOn = () => typeof CLOUD !== 'undefined' && CLOUD.on && CLOUD.user && !(typeof isGuest === 'function' && isGuest());
   const distress = () => ['adrift', 'engine', 'aground'].includes(S.boat.status);
   const P = {open:[], busy:false, off:false, at:0, seen:{}, sel:null};
+  // the other boat among the players' boats (core/05-vessels.js peerStates), the nearest to where she is said to be: for the line in 3D
+  const peerAt = (x, y) => { let best = null, bd = 0.5; for (const n of peerStates()){ const d = dist(n.p, {x, y}); if (d < bd){ bd = d; best = n.id; } } return best; };
   const nm = o => o && o.user ? peerName(o.user) : L('en spiller', 'a player'), bt = o => o && o.boat ? '«' + peerName(o.boat) + '»' : '';
   function rpc(fn, a){ return cloudRpc(fn, a).catch(e => { if (/ 404$/.test(e.message)) P.off = true; throw e; }); }
   // ---- the one who needs help
@@ -53,6 +55,7 @@ const PTOW = (() => {
     if (m.st === 'tow' && o && o.x != null){
       if (b.status !== 'ptow'){ if (typeof helmOff === 'function') helmOff(); S.plan = null; b.status = 'ptow'; b.fishUntil = null; t.st = 'tow';
         msg('Slep', nm(o) + ' har tatt deg på slep.', nm(o) + ' has taken you in tow.'); }
+      t.pid = peerAt(o.x, o.y) || t.pid;
       t.h = {x:o.x, y:o.y, hd:o.hd || 0, v:(o.age || 0) < 120 ? o.v || 0 : 0, at:Date.now() - Math.min(60, o.age || 0) * 1000};
     }
     if (m.st === 'done' && m.port && portById(m.port)){
@@ -74,7 +77,7 @@ const PTOW = (() => {
   function hook(){
     const H = S.ptowH; if (!H) return;
     rpc('tow_hook', {id:H.id}).then(r => {
-      if (r === 'ok'){ H.st = 'tow'; save(); msg('Slep', 'Slepet er festet. Gå til en havn og fortøy, så er jobben gjort. Farten er begrenset mens du sleper.', 'The tow is made fast. Go to a harbour and moor, and the job is done. Your speed is limited while towing.'); if (typeof refreshAll === 'function') refreshAll(); }
+      if (r === 'ok'){ H.st = 'tow'; H.pid = peerAt(H.x, H.y); save(); msg('Slep', 'Slepet er festet. Gå til en havn og fortøy, så er jobben gjort. Farten er begrenset mens du sleper.', 'The tow is made fast. Go to a harbour and moor, and the job is done. Your speed is limited while towing.'); if (typeof refreshAll === 'function') refreshAll(); }
       else toast(r === 'far' ? L('Du må ligge nærmere båten.', 'You must lie closer to the boat.') : L('Slepet finnes ikke lenger.', 'The tow is gone.'));
     }).catch(() => toast(L('Fikk ikke kontakt. Prøv igjen.', 'No connection. Try again.')));
   }
@@ -96,7 +99,7 @@ const PTOW = (() => {
   }
   function onMineH(m){
     const H = S.ptowH; if (!m || m.role !== 'helper' || m.id !== H.id){ if (!m || m.id === H.id){ S.ptowH = null; msg('Slep', 'Slepet ble avlyst.', 'The tow was called off.'); } return; }
-    if (m.other && m.other.x != null && (m.other.age || 0) < 180){ H.x = m.other.x; H.y = m.other.y; }
+    if (m.other && m.other.x != null && (m.other.age || 0) < 180){ H.x = m.other.x; H.y = m.other.y; if (H.st === 'tow' && !H.pid) H.pid = peerAt(H.x, H.y); }
   }
   // the dock's «Ta slep» (ui/10c-dock.js): lying still within 150 m of the boat
   function dockItem(I){

@@ -3839,7 +3839,10 @@ Nå tar `vecPrune` alltid med midten av kartplotteren når den er åpen. Kontrol
   - Tabellen `tows`, som er stengt for spillerne.
   - Funksjonene `tow_ask`, `tow_open`, `tow_take`, `tow_hook`, `tow_done`, `tow_cancel` og `tow_mine`.
   - Gjester kan verken spørre eller hjelpe.
-- **Det som mangler:** tauet mellom båtene tegnes ikke i 3D. Den slepte båten vises hos hjelperen der den selv rapporterer seg (cirka 15 sekunders forsinkelse).
+- **I 3D** (`view3d.js` `drawNPC` og `drawTowLine`):
+  - Den andre båten er funnet blant spillerbåtene ved festingen (`pid`, den nærmeste).
+  - Hos hjelperen legges den slepte båten 30 m akterut, og tauet går fra hjelperens akterende til den slepte båtens baug. Hos den slepte legges hjelperen 30 m forut, og tauet går fra egen baug til hjelperens akterende.
+  - Båtene følger dermed hverandre jevnt, selv om rapportene kommer hvert 15. sekund. Tauet henger litt, som ved slep av NPC-båter.
 - **Testene:** `ptowtest` (begge rollene, med en falsk database) og slep i `sqltest`.
 
 ### 5.41 Puben i 3D (Jonas 08.10.2026)
