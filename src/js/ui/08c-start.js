@@ -33,21 +33,46 @@ function startInfo(pt){
   now.sort((a, b) => b[1] - a[1]);
   return {la, lo, region:REGIONS.find(r => r[3](la, lo))[0], codT, inSeason, small:mk ? mk.small : 0, score:pot, now:now.slice(0, 3).map(x => x[0])};
 }
+// the weather on the first trip (Jonas 09.10.2026: «Alle skal kunne gå ut, fiske og levere sin første fisk på fiskemottaket»): the
+// list only offers places where the sea stays under the starting boat's careful limit (risk[0]) the next six hours, about the real
+// hour the first trip takes, along the whole trip: the most sheltered water 2 km out from the harbour (where the first trip's patch is
+// then looked for, tutFieldNear) and, from Vangshamn, the way to Botnhamn; and never in a wind over the boat's danger limit. The sea is the game's own (hsAt with the lows where they are,
+// V4), read from the national core so the whole coast can be asked before its map is in. A place over the limit stands grey with the
+// hour it is expected to open again.
+const START_WX = [0, 2, 4, 6];
+// the sea, and the wind if it is over the boat's danger limit (risk[3]: in a full gale the fjord's short sea is no comfort), as one
+// number against the careful sea limit: the most over the next six hours
+function startSeaMax(q, H0){ const V = VESSELS[S.boat.type] || VESSELS.skiff; let m = 0;
+  for (const w of START_WX){ let v; try { v = hsAt(q, H0 + w); } catch (e){ v = 0; } if (windAt(H0 + w, q) > V.risk[3]) v = 99; m = Math.max(m, v); } return m; }
+function startRing(pt){ const out = []; for (let a = 0; a < 360; a += 45){ const q = {x:pt.p.x + Math.sin(a * Math.PI / 180) * 2, y:pt.p.y - Math.cos(a * Math.PI / 180) * 2}; if (!isLandFar(q)) out.push(q); } return out.length ? out : [pt.p]; }
+function startWx(pt, H0){
+  const lim = (VESSELS[S.boat.type] || VESSELS.skiff).risk[0], ring = pt._ring || (pt._ring = startRing(pt));
+  const land = pt.mottak ? null : portById('botnhamn'), mid = land ? {x:(pt.p.x + land.p.x) / 2, y:(pt.p.y + land.p.y) / 2} : null;
+  const at = H => { let best = Infinity, bq = null; for (const q of ring){ const v = startSeaMax(q, H); if (v < best){ best = v; bq = q; } } return {hs:Math.max(best, mid ? startSeaMax(mid, H) : 0), q:bq}; };
+  const now = at(H0); if (now.hs <= lim) return {ok:true, hs:now.hs, q:now.q, lim};
+  let open = null; for (let k = 6; k <= 48 && open == null; k += 6) if (at(H0 + k).hs <= lim) open = H0 + k;
+  return {ok:false, hs:now.hs, lim, open};
+}
 function showStart(done){
   const L = (no, en) => S.lang === 'no' ? no : en;
-  const ports = PORTS.filter(q => q.mottak || q.id === HOME0).map(pt => ({pt, ...startInfo(pt)})).sort((a, b) => b.score - a.score);
+  const H0 = S.t / 60, ports0 = PORTS.filter(q => q.mottak || q.id === HOME0).map(pt => ({pt, ...startInfo(pt), wx:startWx(pt, H0)}));
+  // the places the first trip can be made from now come first; if the whole coast were over the limit (never seen), all are offered
+  const anyOk = ports0.some(x => x.wx.ok); if (!anyOk) ports0.forEach(x => { x.wx.ok = true; });
+  const ports = ports0.sort((a, b) => (b.wx.ok - a.wx.ok) || b.score - a.score);
+  const openTx = x => { const o = x.wx.open; if (o == null) return L('Uvær de neste to døgnene', 'Heavy weather the next two days');
+    const d = Math.floor((o + 0) / 24) - Math.floor(H0 / 24); return L('Uvær nå · åpner igjen ca. ', 'Heavy weather now · opens again about ') + (d === 0 ? '' : d === 1 ? L('i morgen ', 'tomorrow ') : dayStr(o) + ' ') + L('kl. ', '') + hm(Math.round(o)); };
   // the best now: the top of the list, marked; no map (Jonas 08.10.2026: «Fjern kartet fra start-skjermen for nye brukere»)
-  const TOP = 12, rec = new Set(ports.slice(0, TOP).map(x => x.pt.id));
+  const TOP = 12, rec = new Set(ports.filter(x => x.wx.ok).slice(0, TOP).map(x => x.pt.id));
   const spN = sp => SPECIES[sp] ? (S.lang === 'no' ? SPECIES[sp].no : SPECIES[sp].en).toLowerCase() : sp;
-  const item = (x, i) => '<button class="st-it' + (rec.has(x.pt.id) ? ' rec' : '') + '" data-id="' + x.pt.id + '" data-q="' + x.pt.name.toLowerCase() + '"><b>' + (i != null ? (i + 1) + '. ' : '') + x.pt.name + '</b><small>' +
+  const item = (x, i) => '<button class="st-it' + (rec.has(x.pt.id) ? ' rec' : '') + (x.wx.ok ? '' : ' wx') + '" data-id="' + x.pt.id + '" data-q="' + x.pt.name.toLowerCase() + '"><b>' + (i != null ? (i + 1) + '. ' : '') + x.pt.name + '</b><small>' + (x.wx.ok ? '' : '<span class="st-wx">' + openTx(x) + '</span><br>') +
     (x.pt.id === HOME0 ? L('Fars naust. Fisken leveres i Botnhamn', 'Father’s boathouse. The catch is landed at Botnhamn') + (x.now.length ? ' · ' : '') : '') +
     (x.now.length ? L('Landes nå: ', 'Landed now: ') + x.now.map(spN).join(', ') : L('Lite å levere nå', 'Little landed now')) +
     (x.small >= 0.3 ? L(' · mye fra små båter', ' · much from small boats') : '') + '</small></button>';
-  const best = ports.slice(0, TOP).map((x, i) => item(x, i)).join('');
+  const best = ports.filter(x => x.wx.ok).slice(0, TOP).map((x, i) => item(x, i)).join('');
   const byReg = REGIONS.map(r => { const xs = ports.filter(x => x.region === r[0]); return xs.length ? '<details class="st-reg"><summary>' + L(r[1], r[2]) + ' <span>' + xs.length + '</span></summary>' + xs.map(x => item(x)).join('') + '</details>' : ''; }).join('');
   const el = document.createElement('div'); el.id = 'startPick'; el.className = 'stp';   // not 'st': that is the HUD's status line
   el.innerHTML = '<div class="st-box"><h2>' + L('Hvor står fars naust?', 'Where is Father’s boathouse?') + '</h2><p class="st-lead">' +
-    L('Velg hvor langs kysten du tar over. Øverst står stedene der det er mest å tjene akkurat nå. Vil du heller starte nær der du bor, kan du søke eller bla etter landsdel.', 'Choose where along the coast you take over. At the top are the places where there is most to earn right now. If you would rather start near where you live, search or browse by region.') +
+    L('Velg hvor langs kysten du tar over. Øverst står stedene der det er mest å tjene akkurat nå. Vil du heller starte nær der du bor, kan du søke eller bla etter landsdel. Steder med uvær akkurat nå står grått, med når det ventes å løye.', 'Choose where along the coast you take over. At the top are the places where there is most to earn right now. If you would rather start near where you live, search or browse by region. Places with heavy weather right now are grey, with when it is expected to ease.') +
     '</p><input type="search" id="stQ" class="st-q" autocomplete="off" placeholder="' + L('Søk etter et sted', 'Search for a place') + '">' +
     '<div class="st-list" id="stHits" hidden></div><div class="st-list" id="stAll"><h3 class="st-h">' + L('Best akkurat nå', 'Best right now') + '</h3>' + best +
     '<h3 class="st-h">' + L('Alle steder etter landsdel', 'All places by region') + '</h3>' + byReg + '</div>' +
@@ -55,7 +80,7 @@ function showStart(done){
   document.body.appendChild(el);
   let sel = null;
   const pick = id => {
-    sel = ports.find(x => x.pt.id === id); if (!sel) return;
+    const c = ports.find(x => x.pt.id === id); if (!c || !c.wx.ok) return; sel = c;
     el.querySelectorAll('.on').forEach(e => e.classList.remove('on')); el.querySelectorAll('[data-id="' + id + '"]').forEach(e => e.classList.add('on'));
     const p = el.querySelector('#stPick'); p.hidden = false; const rg = REGIONS.find(r => r[0] === sel.region);
     el.querySelector('#stPickTx').innerHTML = '<b>' + sel.pt.name + '</b> · ' + L(rg[1], rg[2]) + (sel.pt.mk ? '<br><small>' + sel.pt.mk.ids.length + L(' mottak · ', ' receivers · ') + fmt(sel.pt.mk.kg / 1000, 0) + L(' t i året', ' t a year') + '</small>' : '');
@@ -74,13 +99,14 @@ function showStart(done){
     el.remove(); done();
   });
 }
-// the patch for «Første tur» near a harbour: the best cod within 1.5 to 6 km, in 20 to 150 m of water (r 1.2 km)
+// the patch for «Første tur» near a harbour: the best cod within 1.5 to 6 km, in 20 to 150 m of water (r 1.2 km), where the sea stays
+// under the starting boat's careful limit the next six hours
 function tutFieldNear(pt){
-  const H = S.t / 60; let best = null;
+  const H = S.t / 60, lim = (VESSELS[S.boat.type] || VESSELS.skiff).risk[0]; let best = null;   // in water under the boat's careful limit the next hours if there is any
   for (let r = 1.5; r <= 6; r += 0.5) for (let a = 0; a < 360; a += 15){
     const q = {x:pt.p.x + Math.sin(a * Math.PI / 180) * r, y:pt.p.y - Math.cos(a * Math.PI / 180) * r};
     if (isLand(q)) continue; const d = depthF(q); if (d < 20 || d > 150) continue;
-    const s = density('torsk', q, H) - r * 0.02; if (!best || s > best.s) best = {s, p:q};
+    const s = density('torsk', q, H) - r * 0.02 - (startSeaMax(q, H) > lim ? 100 : 0); if (!best || s > best.s) best = {s, p:q};
   }
   return best ? {p:{x:Math.round(best.p.x * 1000) / 1000, y:Math.round(best.p.y * 1000) / 1000}, r:1.2} : null;
 }

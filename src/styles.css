@@ -857,6 +857,7 @@ body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 2
 .st-it{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;padding:10px 12px;min-height:48px;border-radius:10px;border:1px solid #23415a;background:#0f2232;color:#e6eef3;cursor:pointer;font:inherit}
 .st-it b{font-weight:650} .st-it small{color:#93aebd;font-size:12.5px} .st-it.rec b{color:#ffd24d}
 .st-it.on{border-color:#e0337c;background:#1a2f42;box-shadow:0 0 0 1px #e0337c inset}
+.st-it.wx{opacity:.5;cursor:default} .st-it.wx b{color:#93aebd} .st-it .st-wx{color:#ffb38a;font-weight:600}
 .st-reg{border:1px solid #1d3a50;border-radius:12px;padding:4px 8px 6px;background:rgba(10,24,36,.6)}
 .st-reg summary{cursor:pointer;padding:8px 4px;font-weight:650;list-style-position:inside} .st-reg summary span{color:#7f9caf;font-weight:500;font-size:12px}
 .st-reg[open] summary{margin-bottom:4px} .st-reg .st-it{margin-bottom:6px}

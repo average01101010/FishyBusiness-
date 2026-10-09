@@ -2264,6 +2264,18 @@ Brukerens ønske: mannskapet skal være en levende og givende del av spillet, in
 - `windAt`, `windDir`, `weAt`, `wdAt`, `swellOpen`, `hsOpen`, `fcWind`, `fcHsOpen` og `hsAtFc` tar et sted `p` (ellers båten). Driftsplanen ser vinden langs hele ruten, og ankeret, push-varslene, NPC-flåten, stabiliteten og 3D bruker stedet der det skjer.
 - Måling, andel timer over 11 m/s i januar: Senja 29 %, Bergen 35 %, Bodø 35 %, Vardø 38 %, Hammerfest 34 %. Det tar 5 µs per kall uten mellomlager.
 
+**Startlista etter været (09.10.2026;** Jonas: «Alle skal kunne gå ut, fiske og levere sin første fisk på fiskemottaket»):
+- `startWx(pt, H)` i `ui/08c-start.js` sjekker hvert sted i «Hvor står fars naust?» de neste seks spilltimene (0, 2, 4 og 6 t), omtrent den ekte timen første tur tar.
+- Sjekken gjelder det lunest vannet 2 km ut fra havna, åtte retninger. Der leter `tutFieldNear` etter feltet etterpå, og felt over grensen trekkes ned. Fra Vangshamn gjelder den også veien til Botnhamn.
+- Grensen er startbåtens forsiktige sjø (`risk[0]`, 1,2 m for trebåten). Et sted er aldri åpent i vind over båtens faregrense (`risk[3]`, 14,5 m/s).
+- Bølgene leses fra den nasjonale kjernen, så hele kysten kan sjekkes før kartet er lastet. Det tar 0,7 s første gang og 0,15 s etterpå for 162 steder (Chromium på PC).
+- Steder over grensen står grått med «Uvær nå · åpner igjen ca. …» (eller «Uvær de neste to døgnene»), kan ikke velges og er ikke med i «Best akkurat nå». Er hele kysten stengt, vises alle. Det er ikke sett i målingene.
+- Under første tur (`S.tut`) snur båten ikke av seg selv for været (`05-vessels.js`).
+- Måling med lavtrykkene i V4:
+  - i snitt 141 av 162 steder åpne
+  - i de verste stormtimene i februar 2028 (28–30 m/s ved Senja) 14–62 åpne, da i sør eller i nord der stormen ikke var
+  - skanning av to år, hver tredje time (5 840 tidspunkter): lista var aldri tom. Det verste var 4 åpne steder (19.03.2028 kl. 18), færre enn 20 åpne på 26 tidspunkter, og 60 eller flere på 5 627.
+
 **Snø og årstider (V2 og V3, 09.10.2026):**
 - `seasonAt(H, p)` regner dag for dag fra 1. august for en rute på 20 km. Hver dag har middeltemperaturen og nedbøren fra `airTemp` og `precipAt` (fire ganger i døgnet), og nedbøren i mm fra månedsnormalen i `climate.json`.
 - **Snø (V2)** regnes for hver 100. meter opp til 1 500 m:

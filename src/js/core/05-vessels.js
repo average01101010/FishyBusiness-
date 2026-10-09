@@ -311,7 +311,7 @@ function vesselStep(H){
   // (a trip on the operations plan has the plan's own limits for wind and sea, 06d-drift.js)
   const wl = driftWx(), limW = wl ? wl.wind : S.settings.autoW, seaOver = !!wl && hs > wl.hs;
   if (W <= limW && !seaOver) b.windArm = true;
-  if ((wl ? wl.shelter : S.settings.autoOn) && (W > limW || seaOver) && b.windArm && ['sailing','fishing','idle'].includes(b.status) && !(S.plan && S.plan.returning) && !(S.tut && S.tut.catch) && !helmOn()){
+  if ((wl ? wl.shelter : S.settings.autoOn) && (W > limW || seaOver) && b.windArm && ['sailing','fishing','idle'].includes(b.status) && !(S.plan && S.plan.returning) && !S.tut && !helmOn()){
     b.windArm = false; startReturn(true, W, false, seaOver && W <= limW ? hs : 0);
     // say it on the screen too, with where the limit is set (Vannareid 08.10.2026: the player did not know why the boat turned)
     if (hooks.onTurnBack) hooks.onTurnBack(!!wl, seaOver && W <= limW, W, hs, limW, wl ? wl.hs : 0);
