@@ -95,7 +95,7 @@ const DOCK = (() => {
       I('service', 'vedlikehold', 'Service', 'Service', {page:'service'}),
       I('elektronikk', 'oppgr', 'Elektronikk og haler', 'Electronics and haulers', {page:'utstyrb'})];
     if (m === 'bygd') return [
-      I('pub', 'pub', 'Pub', 'Pub', {act:'pub', off:tutOn() ? [L('Puben venter til etter første tur.', 'The pub waits until after the first trip.')] : !pubOpen(H) ? [L('Puben åpner klokka 15.', 'The pub opens at 15:00.')] : S.pubE === pubEvening(H) ? [L('Du har tatt en runde i kveld.', 'You have had a round tonight.')] : null}),
+      I('pub', 'pub', 'Pub', 'Pub', {act:'pub', off:tutOn() ? [L('Puben venter til etter første tur.', 'The pub waits until after the first trip.')] : !pubOpen(H) ? [L('Puben åpner klokka 15.', 'The pub opens at 15:00.')] : null}),
       I('bank', 'bank', 'Bank', 'Bank', {page:'bank'}),
       I('oppdrag', 'oppdrag', 'Oppdrag', 'Orders', {page:'oppdrag'}),
       I('mannskap', 'mannskap', 'Ansatte', 'Employees', {page:'mannskap'}), restOnDock() ? null : restItem(),

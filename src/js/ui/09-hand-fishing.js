@@ -30,8 +30,9 @@ window.PUBW = (() => {
       '<div class="pubbtns"><button class="pri" data-p="spin"' + (can && !spinning ? '' : ' disabled') + '>' + L('Spander en runde', 'Buy a round') + ' · ' + kr(PUB_COST) + '</button><button data-p="close">' + L('Gå hjem', 'Go home') + '</button></div>' +
       (!can && !spinning && why(H) ? '<p class="pubwhy">' + why(H) + '</p>' : '') + '<p class="pubodds">' + odds() + '</p></div>';
   }
-  function spin(){
-    const H = S.t / 60, c = cost(); if (spinning || S.boat.status !== 'port' || !pubOpen(H) || S.pubE === pubEvening(H) || S.cash < c) return;
+  // a round paid, drawn and saved (also for the 3D pub, ui/09b-pub.js): {seg, m}, or null when no round can be had now
+  function draw(){
+    const H = S.t / 60, c = cost(); if (spinning || S.boat.status !== 'port' || !pubOpen(H) || S.pubE === pubEvening(H) || S.cash < c) return null;
     let r = Math.random() * tot, seg = segs[0]; for (const g of segs){ r -= (g.s1 - g.s0) / 360 * tot; if (r <= 0){ seg = g; break; } }
     // the round is paid, drawn and saved before the wheel turns, so closing the app mid-spin loses nothing
     S.cash -= c; S.stats.costs += c; S.pubE = pubEvening(H);
@@ -39,7 +40,12 @@ window.PUBW = (() => {
     if (seg.k === 'haill' || seg.k === 'luksus'){ giveHaill(seg.k, 'pub'); m = L('Du vant ', 'You won ') + HAILL[seg.k][S.lang].toLowerCase() + '! ' + L('Den ligger i Haill-appen til du aktiverer den.', 'It waits in the Luck app until you switch it on.'); msg('Puben', L('Du gikk hjem med ', 'You went home with ') + HAILL[seg.k][S.lang].toLowerCase() + '.', 'You went home with ' + HAILL[seg.k].en.toLowerCase() + '.'); }
     else if (seg.k === 'rykte'){ const cr = crewRumour(), t0 = cr || rumour()[0]; m = t0; msg('Puben', t0, t0); }
     else { const st = Math.random() < 0.6 ? lorePub() : null; m = st ? st[S.lang === 'no' ? 0 : 1] : EMPTY[Math.floor(Math.random() * EMPTY.length)][S.lang === 'no' ? 0 : 1]; }   // an old story instead of an empty evening
-    S.pubLast = {e:S.pubE, k:seg.k, m}; spinning = true; save(); render(L('Hjulet snurrer …', 'The wheel is spinning …'));
+    S.pubLast = {e:S.pubE, k:seg.k, m}; save();
+    return {seg, m};
+  }
+  function spin(){
+    const d = draw(); if (!d) return; const {seg, m} = d;
+    spinning = true; render(L('Hjulet snurrer …', 'The wheel is spinning …'));
     const at = seg.s0 + (seg.s1 - seg.s0) * (0.2 + 0.6 * Math.random()), rot = 360 * 5 + (360 - at);
     const g = el.querySelector('.pubrot'); g.style.transition = 'none'; g.style.transform = 'rotate(0deg)'; void g.getBoundingClientRect();
     g.style.transition = 'transform 4.2s cubic-bezier(0.15, 0.85, 0.2, 1)'; g.style.transform = 'rotate(' + rot + 'deg)';
@@ -48,5 +54,5 @@ window.PUBW = (() => {
       if (typeof renderActs === 'function') renderActs(); if (typeof renderHud === 'function') renderHud(); }, 4400);
   }
   el.addEventListener('click', e => { const b = e.target.closest('[data-p]'); if (!b || b.disabled) return; if (b.dataset.p === 'spin') spin(); else if (!spinning){ el.hidden = true; if (typeof renderActs === 'function') renderActs(); } });
-  return {open(){ render(); el.hidden = false; }, _segs:segs};
+  return {open(){ render(); el.hidden = false; }, _segs:segs, draw, why, odds, can:() => !why(S.t / 60), cost, rumour, EMPTY};
 })();

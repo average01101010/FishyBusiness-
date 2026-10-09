@@ -3600,6 +3600,49 @@ Mål: spilleren holder hviletiden og får mest mulig levert per døgn, og system
 
 `model()` i `view3d.js` lager en `Float32Array`. Kameraøyet i bro-visningen ble regnet gjennom den med båtens verdensposisjon (rundt 1 000 000 m), og float32 har der bare 6–12 cm oppløsning. Øyet hoppet derfor i trinn mens skroget, som tegnes relativt til øyet, ikke gjorde det. Det ga et sagtann-mønster rundt 10 ganger i sekundet som økte med farten (målt i Jonas' video: 1–2 px glidning per bilde, så 8–10 px tilbake). Nå roteres øyets plass på skroget alene og legges til posisjonen i full presisjon, og `BMabs` har posisjonen i full presisjon. **Regel:** legg aldri verdenskoordinater inn i `model()` når resultatet brukes til noe annet enn en matrise som sendes til GPU-en relativt til øyet. Test: `tests/helmjit.py`.
 
+### 5.41 Puben i 3D (Jonas 08.10.2026)
+
+Jonas: «Spilleren trykker på pub og blir dermed sendt inn i puben hvor man sitter ved bardisken i first-person-view. Man skal kunne spinne hjulet som tidligere.» Og: «Kanskje noe som blir et sosialt element.»
+
+- **Modellen** (`tools/harbour/pub.py`, `src/data/pub.b64`, `<script id="glb-pub">`): ett rom, likt i alle bygder.
+  - Innhold: plankegulv, mørkt brystpanel og grønngrå bord over, bjelketak, bardisk med fotlist, tappetårn og bakbar med flasker og speil.
+  - Folk: bartenderen og to faste gjester ved disken (figurene fra `arbeider.py`, sittende), tre ledige fiskere ved det runde bordet og to som spiller kort.
+  - Ellers: steinpeis med flammer, quiztavle, oppslagstavle, fiskarlagets langbord med vimpel, vinduer mot havna i skumring, glasskuler, livbøye og bilder.
+  - Lyset er bakt inn i hjørnefargene med Cycles (taklamper over disken, vegglamper, peisen, skumringen gjennom glasset). Store flater er delt opp så lyset får nok punkter.
+  - Bakingen gjøres per hjørne, og hvert hjørne får egen støy. Derfor slås hjørner på samme sted med samme retning sammen og glattes litt mot naboene (`smooth_bake`). Hvert materiale har et lite minstelys, så hjørner inne i andre deler (en hals i kragen) ikke blir svarte.
+  - Skumringen utenfor dempes etter bakingen (`dim_sky`). Tonen er en myk skulder med eksponering etter 90-prosentilen.
+  - Bakingen lagres i `tools/harbour/out/pub_baked.blend`, så `python3 tools/harbour/pub.py retone fast` kan justere tone og glatting uten å bake på nytt (rundt 15 minutter).
+  - En egen baking holder peisens andel av lyset (`_PAINT[1]`), så spillet kan la den flakke. Flammene er sone 4 og vaier i skyggeleggeren.
+  - Hjulet er en egen del (`wheel`) med feltene fra `WHEEL` i skriptet, som må være like `PUB_WHEEL` (`pubtest.py` sjekker det).
+  - Navnebrettet over bakbaren (`anchors.sign`) får stedets navn fra spillet.
+  - Trykkpunktene står i `anchors.spots` (navn, midtpunkt og radius).
+- **Scenen** (`ui/09b-pub.js`, `PUB3`):
+  - Et eget lite WebGL-lerret over spillet. GLB-en går rett inn i GPU-en med 16-bits posisjoner, fargebytes og indekser.
+  - Verdens 3D holder bildene sine så lenge puben er åpen (`G3.hold`).
+  - Man ser rundt med fingeren. Et kort trykk treffer det nærmeste trykkpunktet langs strålen, og merkelappene over tingene kan også trykkes.
+  - Uten WebGL, uten modell eller med `#no3d` (testene uten 3D) åpner det gamle 2D-hjulet (`PUBW`).
+  - Puben stenger kl. 03 og når båten går. Vifta i Bygd viser Pub når den er åpen, også etter kveldens runde.
+- **Hjulet:** samme trekning som før (`PUBW.draw`: betalt, trukket og lagret før hjulet går, én runde per kveld, bare spillpenger). Hjulet roteres til et tilfeldig punkt i feltet trekningen valgte, med fem hele runder og myk stopp.
+- **Bartenderen:**
+  - Kveldens prat på stedets dialekt (`dialectText`): hvem som betaler best for en art innen 45 km i dag, og sesongpraten.
+  - **Runde på mannskapet:** 120 kr per mann om bord, én gang per kveld (`S.crewRoundE`). Gir +8 i trivsel (+12 for den ølglade), og trivselen glir tilbake mot målet som vanlig.
+- **Oppslagstavla:** Kystposten, ukas tre beste (`worldTop`) og antall turoppdrag, med knapper til appene.
+- **Det runde bordet:** Mannskapsbørsen. Den ligger fortsatt også under Mannskap.
+- **Det sosiale** (`ui/09c-pubsoc.js`, `PUBSOC`; `supabase/migrations/20261009120000_pub.sql`):
+  - **I kveld:** de andre spillernes båter som ligger i havna (`peerStates`, under 2 km).
+  - **Hilsener:** seks faste linjer, aldri fritekst (spillere fra 13 år). Serveren tar høyst 30 i timen og én til samme spiller hvert femte minutt. Gjester kan ikke sende. Hilsener til deg vises i puben og legges i Meldinger.
+  - **Fiskarlaget:** ett lag per havn (id-en er havnas id, så ingen navn skrives). Målet for spilluka er 1 500 kg for hver medlem som har levert, minst 1 500 kg. Den som ikke har fisket, trekker ikke målet opp, slik regelen om at sosialt skal være additivt krever. Når målet er nådd, henter hver sin del (3 000 kr, `S.pubSoc.lagW`). Tallene kommer fra landingene som deles for topplista.
+  - **Ukas quiz:** fem spørsmål fra en bank på 30, de samme for alle i spilluka. Gir 400 kr per riktig svar, én gang per uke. Fullt hus teller i det lange merket «Quizmester på puben».
+- **Merker:** de lange merkene `quiz` og `lag` (`09f-merker.js`).
+- **Senere:** dart eller armbryting ved kortbordet.
+- **Test:** `tests/pubtest.py` (3D).
+- **Svakheter:**
+  - Lyset er bakt for kveld. Vinduene viser skumring også midt på sommeren.
+  - Folkene står stille.
+  - Migrasjonen (`20261009120000_pub.sql`) er ikke kjørt i Supabase ennå. Forsøket gjennom MCP ble avbrutt 09.10.2026. Til den er kjørt, sier fiskarlaget at det ikke får kontakt, og hilsener kommer ikke fram. «I kveld», quizen og resten av puben virker uten den.
+  - Disken har sprekker mellom bordene foran som slipper litt lys gjennom når man ser ned.
+  - Modellen gjør siden 2,8 MB større (base64 3,7 MB).
+
 ## 10. Kjente problemer og åpne spørsmål
 
 - **Mannskapssystemet (01.10.2026) er ikke spilltestet.** Usikre punkter:

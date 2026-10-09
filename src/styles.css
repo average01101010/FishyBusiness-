@@ -161,6 +161,35 @@ body.vplot #gps::after{display:none}
 #pubUI h3{margin:0 0 8px;font-size:18px}#pubUI .pubw{width:min(70vw,250px);height:auto;display:block;margin:0 auto}#pubUI .pubw text{fill:#fff;font:700 11px var(--sans)}
 #pubUI .pubrot{transform-origin:0 0}#pubUI .pubmsg{min-height:40px;margin:10px 4px;font-size:14px;line-height:1.35}#pubUI .pubbtns{display:flex;gap:8px;justify-content:center}
 #pubUI .pubbtns button{border:0;border-radius:12px;padding:10px 14px;font:700 14px var(--sans);background:#3a444c;color:#fff}#pubUI .pubbtns button.pri{background:#c9a227;color:#1d2328}#pubUI .pubbtns button:disabled,#pubUI .pubbtns button.pri:disabled{background:#3a444c;color:#8d979e;cursor:default}#pubUI .pubwhy{font-size:12.5px;margin:8px 0 0;color:#e8c96a}
+/* the pub in 3D (ui/09b-pub.js): its canvas over the game, the labels on what can be tapped, a bar on top and a panel at the foot */
+#pub3{position:absolute;inset:0;z-index:8;background:#000;overflow:hidden;font-family:var(--sans);touch-action:none}#pub3[hidden]{display:none}
+#pub3 canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#pub3 .pb-lab{position:absolute;inset:0;pointer-events:none}
+#pub3 .pb-lab button{position:absolute;left:0;top:0;pointer-events:auto;border:1px solid rgba(255,226,160,.55);background:rgba(20,14,8,.62);color:#ffe9b8;font:700 12.5px var(--sans);padding:5px 10px;border-radius:14px;white-space:nowrap;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,.4);cursor:pointer}
+#pub3 .pb-lab button::after{content:'';position:absolute;left:50%;bottom:-6px;margin-left:-5px;border:5px solid transparent;border-top-color:rgba(255,226,160,.55);border-bottom:0}
+#pub3 .pb-top{position:absolute;top:calc(env(safe-area-inset-top,0px) + 8px);left:8px;right:8px;display:flex;gap:6px;align-items:center}
+#pub3 .pb-t{flex:1;min-width:0;color:#fff3dc;font:700 16px var(--sans);text-shadow:0 1px 4px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pub3 .pb-t small{display:block;font:500 12px var(--sans);color:#e2cfa8}
+#pub3 .pb-top button{border:1px solid rgba(255,255,255,.25);background:rgba(10,8,6,.6);color:#fff;font:700 13px var(--sans);padding:8px 12px;border-radius:12px;cursor:pointer}
+#pub3 .pb-hint{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);transform:translateX(-50%);background:rgba(10,8,6,.6);color:#f2e6cc;font:600 13px var(--sans);padding:7px 14px;border-radius:14px;pointer-events:none;transition:opacity .6s;white-space:nowrap}
+#pub3 .pb-hint.off{opacity:0}
+#pub3 .pb-panel{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 10px);width:min(94vw,460px);max-height:58%;overflow:auto;background:rgba(28,20,13,.94);color:#f5ead4;border:1px solid rgba(255,220,150,.28);border-radius:16px;box-shadow:0 10px 34px rgba(0,0,0,.55);padding:0 14px 12px}
+#pub3 .pb-panel[hidden]{display:none}
+#pub3 .pb-ph{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;padding:11px 0 6px;background:inherit;font-size:16px;color:#ffe2a6}
+#pub3 .pb-ph button{border:0;background:none;color:#e9d9b8;font-size:20px;cursor:pointer;padding:2px 4px}
+#pub3 .pb-pb p{margin:6px 0;font-size:14px;line-height:1.4}#pub3 .pb-say{font-style:italic;color:#fff2d6}
+#pub3 .pb-why{font-size:12.5px;color:#e8c96a}#pub3 .pb-odds{font-size:11px;opacity:.7}
+#pub3 .pb-bt{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+#pub3 .pb-pb button{border:0;border-radius:11px;padding:9px 13px;font:700 13.5px var(--sans);background:#4a3a2a;color:#fff;cursor:pointer}
+#pub3 .pb-pb button.pri{background:#c9a227;color:#1d1710}#pub3 .pb-pb button:disabled{background:#3a332c;color:#8d857a;cursor:default}
+#pub3 .pb-card{border-top:1px solid rgba(255,220,150,.18);padding:8px 0}#pub3 .pb-card:first-child{border-top:0}
+#pub3 h5{margin:6px 0 4px;font-size:13.5px;color:#ffe2a6}#pub3 ol,#pub3 ul{margin:4px 0;padding-left:20px;font-size:13.5px}
+#pub3 .pb-who{list-style:none;padding:0}#pub3 .pb-who li{padding:6px 0;border-top:1px solid rgba(255,255,255,.08)}#pub3 .pb-who small{color:#cdbb98}
+#pub3 .pb-gr{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}#pub3 .pb-gr button{padding:6px 9px;font-size:12px}
+#pub3 .pb-got{list-style:none;padding:0}#pub3 .pb-got small{color:#bfae8c}
+#pub3 .pb-goal{height:10px;border-radius:5px;background:#3a2f24;overflow:hidden;margin:8px 0 2px}#pub3 .pb-goal div{height:100%;background:linear-gradient(90deg,#c9a227,#e6c862)}
+#pub3 .pb-qs{display:flex;flex-direction:column;gap:6px;margin:8px 0}#pub3 .pb-qs button{text-align:left}#pub3 .pb-qa small{color:#cdbb98}
+body.in-pub #dock,body.in-pub #dockFan,body.in-pub #dockInfo,body.in-pub .ov,body.in-pub #hud,body.in-pub #miniPlot,body.in-pub #logbook{display:none!important}
 #pubUI .pubodds{font-size:11px;opacity:.7;margin:10px 0 0}.haill{color:#e0b93c}.ph-row2{display:flex;gap:6px;margin:4px 0 8px}.ph-row2 .ph-btn{flex:1;margin:0}
 .qbar{height:8px;border-radius:4px;background:rgba(127,127,127,.25);margin:2px 0 8px;overflow:hidden}.qbar i{display:block;height:100%;background:#1e8c6e}
 #binoc{position:absolute;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse 58% 62% at 50% 50%,transparent 70%,rgba(0,0,0,.55) 86%,#000 100%)} #binoc[hidden]{display:none} #binoc span{position:absolute;right:50%;transform:translateX(50%);bottom:calc(env(safe-area-inset-bottom,0px) + 150px);background:rgba(6,16,24,.6);color:#fff;font:700 13px var(--sans);padding:3px 10px;border-radius:10px}

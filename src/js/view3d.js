@@ -4040,11 +4040,13 @@ const G3 = (() => {
   // the main thread's time a frame takes (ms, smoothed; the GL commands are queued, so this is the JS side): with the frame rate it tells a
   // phone or a PC held back by the script from one held back by the graphics card (the devices' telemetry, 10f-cloud.js cloudDev)
   let JSMS = 0;
+  // held while the pub's own 3D is shown (ui/09b-pub.js): no frames drawn, the loop keeps ticking
+  let HOLD = false;
   function frame(){ const j0 = performance.now(); frame0(); JSMS = JSMS ? JSMS * 0.92 + (performance.now() - j0) * 0.08 : performance.now() - j0; }
   function frame0(){
     if (!active){ raf = 0; return; }
     raf = requestAnimationFrame(frame);
-    if (document.hidden || NO3D) return;
+    if (document.hidden || NO3D || HOLD) return;
     resize();
     const now = performance.now(), dt = Math.min(0.1, (now - lastF) / 1000), rdt = Math.max(1e-3, (now - lastF) / 1000); lastF = now;
     FPS.v = FPS.v ? FPS.v * 0.95 + 0.05 / rdt : 1 / rdt; FRAMEMS = FRAMEMS * 0.8 + Math.min(500, rdt * 1000) * 0.2; qualTick(dt, FPS.v, now); if (now - FPS.at > 500){ FPS.at = now; const fe = fpsEl(); if (fe) fe.textContent = Math.round(FPS.v) + ' bilder/s · ' + (1000 / FPS.v).toFixed(1) + ' ms · ' + ['Lav', 'Middels', 'Høy', 'Ultra'][QUAL.lvl]; }
@@ -4431,7 +4433,7 @@ const G3 = (() => {
   return {
     // the quality: with a setting ('auto', 'low', 'mid', 'high') it applies it; returns the level now and the frame rate
     quality(v){ if (v){ S.settings.q3d = v; QUAL.bad = QUAL.good = 0; QUAL.cap = 2; qualSet(); } return {lvl:QUAL.lvl, set:S.settings.q3d || 'auto', fps:FPS.v, ultra:UINT}; },
-    show, toggle(){ return show(!active); }, isActive:() => active, say:say3d, sayWorker, anchorAlarm:anchorAlarm3d, haltNeed:() => active ? trkHaltNeed() : 0, get failWhy(){ return failWhy; },
+    show, toggle(){ return show(!active); }, hold(on){ HOLD = !!on; if (!on) lastF = performance.now(); }, isActive:() => active, say:say3d, sayWorker, anchorAlarm:anchorAlarm3d, haltNeed:() => active ? trkHaltNeed() : 0, get failWhy(){ return failWhy; },
     // the next frame as a JPEG data URL (or null when no frame comes within 2 s)
     // whether a point (km, and metres above the ground) is in the picture the camera shows now: in front within the picture's width,
     // and no ground between (Kystposten's lighthouse pictures, ui/05f-turer.js)

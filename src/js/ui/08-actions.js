@@ -39,7 +39,7 @@ function doAct(el){
   else if (act === 'hsp'){ S.settings.heatSp = el.dataset.s; if (typeof heatPaint === 'function') heatPaint(true); }
   else if (act === 'sd-' || act === 'sd+'){ S.settings.safeDepth = clamp(safeDepth() + (act === 'sd+' ? 1 : -1), 1, 30); hzCache.k = ''; renderBase(); scheduleStatic(); }
   else if (act === 'jigg'){ window.JIGG.toggle(); renderActs(); return; }
-  else if (act === 'pub'){ window.PUBW.open(); return; }
+  else if (act === 'pub'){ PUB3.open(); return; }
   else if (act === 'target'){ if (kveiteClosed(S.t / 60)){ S.target = 'mix'; toast(L('Kveita er fredet fra 20. desember til og med 20. april.', 'Halibut is closed from 20 December to 20 April.')); } else S.target = S.target === 'kveite' ? 'mix' : 'kveite'; renderActs(); return; }
   else if (act === 'driftsave'){ if (DRIFTUI.saveRoute()){ if (typeof DOCK !== 'undefined' && DOCK.open) DOCK.open('drift'); else PHONE.open('drift'); } }
   else if (act === 'driftcancel'){ DRIFTUI.cancelRoute(); if (typeof DOCK !== 'undefined' && DOCK.open) DOCK.open('drift'); else PHONE.open('drift'); }

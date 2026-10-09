@@ -435,6 +435,13 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p100', '09.10.2026', 'Puben i bygda', 'The pub in the bygd', [
+      ['Trykk på Pub i bygda, så sitter du på en krakk ved bardisken. Dra med fingeren for å se deg rundt, og trykk på det du vil.', 'Tap Pub in the bygd and you sit on a stool at the bar. Drag with a finger to look around, and tap what you like.'],
+      ['Lykkehjulet henger på veggen og snurrer når du spanderer en runde, én gang hver kveld som før.', 'The wheel hangs on the wall and spins when you buy a round, once each evening as before.'],
+      ['Bartenderen prater på stedets dialekt og vet hvor de betaler godt i dag. Har du mannskap, kan du spandere en runde på dem, og stemningen om bord stiger.', 'The bartender talks in the local dialect and knows where they pay well today. With a crew, you can buy them a round, and the mood aboard rises.'],
+      ['På oppslagstavla henger Kystposten, ukas beste fiskere og turoppdragene. Ved det runde bordet sitter folk som ser etter hyre.', 'The notice board has Kystposten, the week\'s best fishers and the trip jobs. At the round table sit people looking for a berth.'],
+      ['Se hvem som ligger i havna i kveld og hils på dem. Bli med i fiskarlaget i havna: laget har et felles mål hver uke, og alle får sin del når det nås.', 'See who lies in the harbour tonight and greet them. Join the harbour\'s fishing club: the club has a shared goal each week, and everyone gets a share when it is reached.'],
+      ['Ny quiz på tavla hver uke, med fem spørsmål om fisk, sjø og kyst.', 'A new quiz on the board every week, with five questions about fish, sea and coast.']]],
     ['p99', '09.10.2026', 'Ny driftsplan: fem spørsmål', 'New operations plan: five questions', [
       ['Rettet: båten ristet i bro-visningen, verst i fart. Kameraet sitter nå helt fast i båten.', 'Fixed: the boat shook in the bridge view, worst at speed. The camera now sits firmly fixed to the boat.'],
       ['Driftsplanen lages nå med fem enkle spørsmål, ett om gangen: hvor båten hviler, hva den fisker med, hvor redskapet står og hvor dere jukser, hvor tøft vær den går ut i, og når dagen starter. Planen legger selv turene, stasjonene og leveringene.', 'The operations plan is now made with five simple questions, one at a time: where the boat rests, what she fishes with, where the gear stands and where you jig, how rough a weather she goes out in, and when the day begins. The plan lays out the trips, stations and landings itself.'],
