@@ -89,3 +89,7 @@ Halerne heter bare linehaler, garnhaler og teinehaler (ingen «elektrisk», «hy
 ## Verftets oppgraderinger (Jonas 09.10.2026)
 
 Verftet bygger om selve båten: lasterom, motor, lugarer, messe og bysse, tørkerom og bad, isolert lasterom, drivstofftank og stabilisering. Aldri fiskeutstyr, liner, garn, teiner, juksa eller haler (de kjøpes i utstyrsbutikken, og haleren følger `buyGate`). Navigasjonsutstyr er elektronikk i utstyrsbutikken. Prisen følger båtens verdi, og hver oppgradering finnes bare der båten har det den bygges på (køyer for lugar, messe og tørkerom). Tallene står i 5.37 i overleveringen.
+
+### Broer under steder (Jonas 08.10.2026)
+
+`tools/steder/bruflytt.py` flyttet fem steder fra broer til nærmeste kai uten bro. Ti steder (mottakene Bergsfjord, Nordnesøya, Sleneset og Gutvik, verftene Trondheim, Lurøy, Ramfjordbotn og Olderdalen, butikkene Vannvåg og Uløybukt) har ingen kai uten bro innen 1,5 km. For dem og alle andre tegnes og regnes ikke en kort bro (under 80 m) som ligger under en havneenhet eller et sted: `bridgeUnderUnit` i `core/01-world.js`, brukt av `11b-obstacles.js` og `view3d.js`.
