@@ -51,8 +51,8 @@ async def main():
           R.spent = Math.round(c0 - S.cash); R.potRoom = BOAT.gearMax.teine; R.expect = 6 * GPRICE.net + 4 * LINE_KINDS.hyse.price + R.potRoom * POTS.big.price + GPRICE.kit + 20 * GPRICE.bait;
           R.fullNets = document.querySelector('[data-pa=grbuy][data-w=net]').disabled;
           // haulers: the small electric one is not for a sjark
-          PHONE.open('utstyrb'); R.elSkiff = !!document.querySelector('[data-pa=equip][data-k=linehaler]') && !document.body.innerHTML.includes('Elektrisk haler') && !document.body.innerHTML.includes('Hydraulisk');
-          b.type = 'sjark'; applyVessel(); PHONE.open('utstyrb'); R.elSjark = document.getElementById('drawerBody').innerHTML.includes('Elektrisk haler'); R.garnhalerSjark = document.getElementById('drawerBody').innerHTML.includes('Hydraulisk garnhaler');
+          PHONE.open('utstyrb'); R.elSkiff = document.body.innerHTML.includes('Linehaler') && !document.body.innerHTML.includes('Elektrisk haler') && !document.body.innerHTML.includes('Hydraulisk');
+          b.type = 'sjark'; applyVessel(); PHONE.open('utstyrb'); R.elSjark = document.getElementById('drawerBody').innerHTML.includes('Elektrisk haler'); R.garnhalerSjark = document.getElementById('drawerBody').innerHTML.includes('Garnhaler');
           PHONE.show(false); b.type = 'skiff'; applyVessel(); return R; })()""")
         print('buy:', json.dumps(r, ensure_ascii=False))
         print(ok(r['spNoCrab'] and r['jigCrab'] == 0 and r['jigKg'] > 0), 'king crab is outside the fish list, and a day of jigging on a crab spot takes no crab')
@@ -191,7 +191,7 @@ async def main():
           S.equip.linehaler = true; R.toLine = rigSet('line'); R.line = rigOf();
           S.pgear = newPGear(); S.pgear.kits.n = 2; S.pgear.lines.hyse = {n:2, baited:2}; S.pgear.nets.push({id:'nr', mesh:156, n:5, cond:1}); S.pgear.pots.big = 5; S.pgear.bait = 5;
           R.choices = [...new Set(setChoices().map(c => c.kind))];
-          atSea(GROUNDS[2].p); R.atSea = rigBlock('teiner'); R.netRule = (gearRules('garn', {nid:'nr'}, b.pos) || [''])[0];
+          atSea(GROUNDS[2].p); S.equip.teinehaler = true; R.atSea = rigBlock('teiner'); R.netRule = (gearRules('garn', {nid:'nr'}, b.pos) || [''])[0];
           R.setLine = startSet('line', {lk:'hyse', n:1}, 0); hStep(300); b.status = 'idle';
           // fishing hours with a line rig: the boat waits, no jig catch
           S.hold = []; b.status = 'fishing'; b.fishUntil = S.t + 60; for (let i = 0; i < 50; i++) step(); R.jigKg = Math.round(holdTotal() * 10) / 10; endFishing('done');
