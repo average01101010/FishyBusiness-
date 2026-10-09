@@ -18,7 +18,16 @@ function miniBg(c, R, k, W, H, dpr){
   const BW = W * 2, BH = H * 2, bg = MINIP.bg; if (bg.width !== BW) bg.width = BW; if (bg.height !== BH) bg.height = BH;
   const g = bg.getContext('2d'), x0 = c.x - BW / 2 / k, y0 = c.y - BH / 2 / k;
   const dok = mapViewReady(x0, y0, x0 + BW / k, y0 + BH / k, () => { MINIP.at = 0; }, ['sim', 'chart']), n = MINIP.n, sd = safeDepth(), s2 = sd > 2.5 ? Math.min(2, sd / 2) : -1;
-  const off = MINIP.off; if (off.width !== n){ off.width = off.height = n; MINIP.img = off.getContext('2d').createImageData(n, n); }
+  // the sea as the big chart paints it (03-map.js chartRaster: the depth in its colours and the depth lines; Jonas 09.10.2026: «Ser så tomt
+  // ut når man ikke kan se bunnen i den»), at most 560 samples across and scaled up; before the packs have come, the coarse picture below
+  if (dok){
+    const PW = Math.min(BW, 560), PH = Math.max(2, Math.round(PW * BH / BW)), off = MINIP.off; if (off.width !== PW || off.height !== PH){ off.width = PW; off.height = PH; MINIP.img = null; }
+    const img = MINIP.img || (MINIP.img = off.getContext('2d').createImageData(PW, PH)), V = {lv:Math.max(1, chartLevel(BH / k)), fish:false, night, sd};
+    let ok = true; try { chartRaster(img.data, PW, PH, x0, y0, BW / k / PW, BH / k / PH, V, null); } catch (e){ ok = false; }
+    if (ok){ off.getContext('2d').putImageData(img, 0, 0); g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true; g.drawImage(off, 0, 0, BW, BH);
+      chartCoast(g, x0, y0, 1 / k, 1 / k, BW, BH, dpr, night); miniSoundings(g, x0, y0, k, BW, BH, dpr, night); return; }
+  }
+  const off = MINIP.off; if (off.width !== n || off.height !== n){ off.width = off.height = n; MINIP.img = off.getContext('2d').createImageData(n, n); }
   const d = MINIP.img.data, sx = BW / k / n, sy = BH / k / n;
   for (let j = 0; j < n; j++) for (let i = 0; i < n; i++){
     const q = {x:x0 + (i + 0.5) * sx, y:y0 + (j + 0.5) * sy}, o = (j * n + i) * 4; let cl;
@@ -30,6 +39,21 @@ function miniBg(c, R, k, W, H, dpr){
   off.getContext('2d').putImageData(MINIP.img, 0, 0);
   g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true; g.drawImage(off, 0, 0, BW, BH);
   chartCoast(g, x0, y0, 1 / k, 1 / k, BW, BH, dpr, night);
+}
+// the depth in whole metres at the points of a grid fixed to the map, about every 70 CSS px, as the big chart writes them (soundingsSvg)
+function miniSoundings(g, x0, y0, k, BW, BH, dpr, night){
+  const sp = 70 * dpr / k, i0 = Math.floor(x0 / sp), j0 = Math.floor(y0 / sp), i1 = Math.ceil((x0 + BW / k) / sp), j1 = Math.ceil((y0 + BH / k) / sp);
+  if ((i1 - i0 + 1) * (j1 - j0 + 1) > 300) return;
+  g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.font = 'italic ' + Math.round(9.5 * dpr) + 'px ' + (getComputedStyle(document.body).getPropertyValue('--sans') || 'sans-serif');
+  g.textAlign = 'center'; g.lineJoin = 'round'; g.lineWidth = 2.4 * dpr; g.fillStyle = night ? '#a9cdea' : '#3b6f9c'; g.strokeStyle = night ? '#0b1a2a' : '#f9fbfc';
+  for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++){
+    const hsh = Math.sin(i * 127.1 + j * 311.7) * 43758.5453, fr = hsh - Math.floor(hsh), p = {x:(i + 0.5 + (j & 1 ? 0.25 : -0.25) + (fr - 0.5) * 0.3) * sp, y:(j + 0.5) * sp};
+    let d; try { if (isLand(p) || coastDistFar(p) < 0.08) continue; d = depthF(p); } catch (e){ continue; }
+    if (!(d >= 2)) continue;
+    const t = d < 10 ? d.toFixed(1).replace('.', ',') : String(Math.round(d)), X = (p.x - x0) * k, Y = (p.y - y0) * k + 3 * dpr;
+    g.strokeText(t, X, Y); g.fillText(t, X, Y);
+  }
+  g.restore();
 }
 function miniPaint(){
   const el = MINIP.el; if (!el || !window.chartReady || !document.body.classList.contains('v3d') || !el.clientWidth || !MAPD.core || !MAPD.core.buf) return;

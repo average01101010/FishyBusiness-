@@ -3649,6 +3649,16 @@ Målt først i Playwright, med CPU-en strupet 4× og nettet strupet til 10 Mbit/
     - `chartRaster` leser kartpakkene gjennom globale lesere, så en Worker måtte fått sine egne kopier av pakkene.
     - Flisene er knyttet til zoomen, som varierer fritt, så lagrede fliser ville sjelden blitt brukt igjen.
 
+### 5.44 Bunnen i den lille kartplotteren (Jonas 09.10.2026)
+
+«Ser så tomt ut når man ikke kan se bunnen i den.» `miniBg` (`ui/03e-miniplot.js`) tegnet 64 × 64 punkter i to blåtoner etter sikker dybde. Nå bruker den den store kartplotterens `chartRaster`, når pakkene er lastet (`dok`):
+- Den tegner dybden i kartfargene og dybdelinjene, med høyst 560 punkter i bredden, skalert opp.
+- Dybdetall (`miniSoundings`) står omtrent hver 70. CSS-piksel i et rutenett som ligger fast i kartet, slik som `soundingsSvg`.
+- Før pakkene har kommet, brukes det gamle grove bildet.
+- Det koster rundt 150 ms per bakgrunn i testmaskinen. Bakgrunnen tegnes bare når båten har flyttet seg en femtedel av radien, eller hvert 20. sekund.
+
+Rederi-appen har også fått regnskap med lånene (tilbakemelding #9): resultat, hvert lån (restgjeld, rente, terminbeløp, neste trekk, betalte renter i `L.intPaid`, telles fra 09.10.2026) og en balanse med flåtens verdi (`vesselValue`), konto, gjeld og egenkapital.
+
 ### 5.41 Puben i 3D (Jonas 08.10.2026)
 
 Jonas: «Spilleren trykker på pub og blir dermed sendt inn i puben hvor man sitter ved bardisken i first-person-view. Man skal kunne spinne hjulet som tidligere.» Og: «Kanskje noe som blir et sosialt element.»
