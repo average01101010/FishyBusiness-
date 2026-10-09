@@ -817,9 +817,14 @@ body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 2
   .dk-b{width:56px;font-size:10px} .dk-b .dk-i{width:44px;height:44px} .dk-b .dk-i svg{width:22px;height:22px}
   .dk-b .dk-l{white-space:normal;max-width:60px;text-align:center;line-height:1.05;font-size:9.5px;letter-spacing:-.15px}
   #dockInfo,#dockFan{bottom:calc(env(safe-area-inset-bottom,0px) + 94px)}
-  /* the chart plotter's top row: the echo sounder's scale under it on the right, settings and close as symbols */
+  /* the chart plotter's top row: the echo sounder stays in the row, narrower, never on the chart (Jonas 09.10.2026: «flytte ekkolodd-baren
+     opp i navigasjonsbaren også i stående modus»), settings and close as symbols */
   body.vplot #ecdisTop .ec-f{padding:0 5px}
-  body.vplot #ecdisTop #heatBox{position:absolute;top:calc(env(safe-area-inset-top,0px) + 50px);right:8px;border-radius:8px;padding:4px 8px;border:1px solid #1f3a4c}
+  body.vplot #ecdisTop #heatBox{flex:1 1 auto;min-width:0;padding:0 5px}
+  body.vplot #ecdisTop #heatBox > small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:8.5px;letter-spacing:.02em}
+  body.vplot #ecdisTop .ec-echo .hb-row{gap:4px}
+  body.vplot #ecdisTop .ec-echo .hb-bar{width:auto;flex:1 1 30px;min-width:24px;max-width:70px}
+  body.vplot #ecdisTop .ec-echo .hb-sp{padding:0 6px;font-size:10.5px}
   #ecdisTop .ec-b{gap:4px;padding:0 6px}
   #ecdisTop #ecSet,#ecdisTop #ecClose{min-width:40px;font-size:0}
   #ecdisTop #ecSet::before{content:'⚙';font-size:17px} #ecdisTop #ecClose::before{content:'✕';font-size:16px}
