@@ -3600,6 +3600,15 @@ Mål: spilleren holder hviletiden og får mest mulig levert per døgn, og system
 
 `model()` i `view3d.js` lager en `Float32Array`. Kameraøyet i bro-visningen ble regnet gjennom den med båtens verdensposisjon (rundt 1 000 000 m), og float32 har der bare 6–12 cm oppløsning. Øyet hoppet derfor i trinn mens skroget, som tegnes relativt til øyet, ikke gjorde det. Det ga et sagtann-mønster rundt 10 ganger i sekundet som økte med farten (målt i Jonas' video: 1–2 px glidning per bilde, så 8–10 px tilbake). Nå roteres øyets plass på skroget alene og legges til posisjonen i full presisjon, og `BMabs` har posisjonen i full presisjon. **Regel:** legg aldri verdenskoordinater inn i `model()` når resultatet brukes til noe annet enn en matrise som sendes til GPU-en relativt til øyet. Test: `tests/helmjit.py`.
 
+### 5.42 Nordlyset i buer og folder (tilbakemelding #56, 09.10.2026)
+
+Gardinene sto på en linje med små folder langs den magnetiske øst-vest-retningen, så sett på langs ble de «et langt teppe som henger på himmelen i en rett linje». Nå:
+- **Linja bøyer seg** (`aFold` i himmelskyggeren): store buer, S-folder, små krusninger og en strammere krøll som vandrer langs den.
+- **Strålen følges opp** gjennom høydene i ni steg, og arket lyses der den krysser linja. En fold sett fra siden vises derfor to ganger. Den gamle fastpunkt-løsningen kunne ikke følge store bøyer.
+- **Kantlyset regnes ut fra linjas egen normal**, ikke fra en fast retning.
+- **Underkanten bølger**, og gardinene kommer og går i biter langs lengden, så buene slutter på himmelen.
+- **Test:** `aurorashot` (OK). Bilder fra fire retninger før og etter ble sendt til Jonas.
+
 ### 5.41 Puben i 3D (Jonas 08.10.2026)
 
 Jonas: «Spilleren trykker på pub og blir dermed sendt inn i puben hvor man sitter ved bardisken i first-person-view. Man skal kunne spinne hjulet som tidligere.» Og: «Kanskje noe som blir et sosialt element.»
