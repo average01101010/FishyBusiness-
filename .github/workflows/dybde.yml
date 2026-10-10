@@ -1,0 +1,33 @@
+# Kartverket's depth models along the whole coast (tools/map/dybde.py): Geonorge is closed to the cloud session, open here.
+# Started by a push that changes tools/map/dybde.json (on any branch). mode 'probe' looks for the service, 'fetch' fetches the depth
+# per coastal tile and keeps it as a release dybde-<run number>.
+name: Dybde langs kysten
+on:
+  push:
+    paths: ['tools/map/dybde.json']
+  workflow_dispatch:
+permissions:
+  contents: write
+env:
+  PYTHONUNBUFFERED: '1'
+jobs:
+  depth:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy requests pyproj tifffile imagecodecs
+      - name: Probe or fetch
+        run: python3 tools/map/dybde.py "$(python3 -c "import json;print(json.load(open('tools/map/dybde.json'))['mode'])")" depth
+      - name: The release
+        if: hashFiles('depth/manifest.json') != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=dybde-${{ github.run_number }}
+          tar czf depth.tgz depth
+          gh release create "$TAG" depth.tgz --target "${{ github.sha }}" --title "Dybde $TAG" \
+            --notes "Kartverkets Dybdedata – terrengmodeller 50 meters grid (CC BY 4.0, Geonorge WCS) per kystflis, tools/map/dybde.py, commit ${{ github.sha }}."

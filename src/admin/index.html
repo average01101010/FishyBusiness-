@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Det Store Blå · admin</title>
+<style>
+:root{--bg:#07111d;--panel:#0e1d2f;--line:#1f3550;--ink:#e8f0f8;--dim:#93a9c1;--acc:#f2b33d;--blue:#4b9be0;--good:#53c48a;--bad:#e5645b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:2;flex-wrap:wrap}
+header h1{font:600 20px Georgia,serif;margin:0}
+header .sp{flex:1}
+select,input,button{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+button{cursor:pointer}button.p{background:var(--acc);color:#1b1407;border:0;font-weight:600}
+nav{display:flex;gap:6px;padding:10px 16px;overflow-x:auto;border-bottom:1px solid var(--line)}
+nav button{white-space:nowrap}nav button.on{background:var(--blue);border-color:var(--blue)}
+main{padding:16px;max-width:1280px;margin:0 auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.card h3{margin:0 0 8px;font-size:14px;color:var(--dim);font-weight:600}
+.kpi b{display:block;font-size:26px;font-weight:650}.kpi span{color:var(--dim);font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:5px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{color:var(--dim);font-weight:600}
+.bar{display:flex;align-items:center;gap:8px;font-size:13px;margin:3px 0}.bar i{display:block;height:10px;background:var(--blue);border-radius:3px}.bar em{color:var(--dim);font-style:normal;margin-left:auto}
+.note{color:var(--dim);font-size:13px}.warn{color:var(--acc)}
+tr.worst td{background:rgba(224,120,60,.14)}
+#login{max-width:380px;margin:12vh auto;padding:0 16px}#login .card{padding:20px}#login label{display:block;margin:10px 0 4px;color:var(--dim)}#login input{width:100%}
+svg text{fill:var(--dim);font-size:10px}
+.demo{background:#3a2a07;color:var(--acc);padding:6px 16px;font-size:13px}
+.lggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}.lgimg{display:block;width:128px;height:128px;object-fit:contain;background:repeating-conic-gradient(#8884 0 25%,transparent 0 50%) 0 0/16px 16px;border-radius:6px}.lgoff .lgimg{opacity:.35}.lgrow textarea{width:100%;box-sizing:border-box}
+.fbbody{white-space:pre-wrap;word-break:break-word;margin:6px 0}.fbimg{display:block;max-width:100%;max-height:70vh;border-radius:8px;margin:6px 0}.fbai{border-left:3px solid var(--acc);padding:4px 10px;margin:6px 0;font-size:13px}.fbset{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;margin-top:6px}.fbset textarea{flex:1 1 260px;min-height:38px;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// The admin dashboard of Det Store Blå (04.10.2026; docs/lansering.md E): only Jonas. He signs in with Supabase Auth and a TOTP
+// code (aal2); the numbers come from one call, admin_dashboard() in supabase/migrations/, which refuses anyone else. Nothing secret
+// is in this page: the project's address and public key only. Without them, or with ?demo, it shows made-up numbers to see the layout.
+const CFG = /*@cloud*/null;
+const DEMO = !CFG || !CFG.supabaseUrl || /[?&]demo/.test(location.search);
+const $ = s => document.querySelector(s), esc = v => String(v == null ? '–' : v).replace(/[&<>"]/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'})[c]);
+const nf = (v, d) => v == null || isNaN(v) ? '–' : Number(v).toLocaleString('nb-NO', {maximumFractionDigits:d == null ? 1 : d});
+const pct = v => v == null ? '–' : nf(v * 100, 1) + ' %';
+let SES = JSON.parse(sessionStorage.getItem('dsbAdmin') || 'null'), DATA = null, TAB = 'oversikt', DAYS = 30;
+
+async function auth(path, body, tok){
+  const r = await fetch(CFG.supabaseUrl.replace(/\/$/, '') + '/auth/v1/' + path, {method:body ? 'POST' : 'GET', headers:{'Content-Type':'application/json', apikey:CFG.supabaseAnon, ...(tok ? {Authorization:'Bearer ' + tok} : {})}, body:body ? JSON.stringify(body) : undefined});
+  const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.msg || j.error_description || j.message || ('HTTP ' + r.status)); return j;
+}
+async function rpc(fn, args){
+  const r = await fetch(CFG.supabaseUrl.replace(/\/$/, '') + '/rest/v1/rpc/' + fn, {method:'POST', headers:{'Content-Type':'application/json', apikey:CFG.supabaseAnon, Authorization:'Bearer ' + SES.access_token}, body:JSON.stringify(args)});
+  if (r.status === 401){ SES = null; sessionStorage.removeItem('dsbAdmin'); render(); throw new Error('utlogget'); }
+  // a function that returns nothing (admin_feedback_set) answers 204 with an empty body: that is a success, not bad JSON
+  const tx = await r.text(); if (!r.ok) throw new Error(tx.slice(0, 200)); return tx ? JSON.parse(tx) : null;
+}
+function keep(s){ SES = s; sessionStorage.setItem('dsbAdmin', JSON.stringify(s)); }
+
+// ---------- sign-in: password, then the second factor (enrolled the first time) ----------
+function loginView(msg){
+  $('#app').innerHTML = '<div id="login"><div class="card"><h1 style="font:600 24px Georgia,serif;margin:0 0 4px">Det Store Blå</h1><p class="note">Admin. Bare for eieren.</p>' +
+    (msg ? '<p class="warn">' + esc(msg) + '</p>' : '') +
+    '<label>E-post</label><input id="em" type="email" autocomplete="username"><label>Passord</label><input id="pw" type="password" autocomplete="current-password">' +
+    '<p><button class="p" id="go">Logg inn</button></p></div></div>';
+  $('#go').onclick = async () => { try { const s = await auth('token?grant_type=password', {email:$('#em').value, password:$('#pw').value}); keep(s); await mfa(); } catch (e){ loginView(e.message); } };
+}
+async function mfa(){
+  const u = await auth('user', null, SES.access_token), f = (u.factors || []).find(x => x.factor_type === 'totp' && x.status === 'verified');
+  let id = f && f.id, qr = '';
+  if (!id){ const en = await auth('factors', {factor_type:'totp', friendly_name:'Det Store Blå admin ' + Date.now()}, SES.access_token); id = en.id;
+    qr = '<p class="note">Første gang: skann koden med en autentiseringsapp (for eksempel Google Authenticator eller 1Password), og skriv inn de seks sifrene.</p><div style="background:#fff;padding:8px;border-radius:8px;width:max-content">' + (en.totp.qr_code.startsWith('data:') ? '<img src="' + en.totp.qr_code + '" width="180" height="180" alt="QR">' : en.totp.qr_code) + '</div><p class="note">Eller skriv inn: <code>' + esc(en.totp.secret) + '</code></p>'; }
+  $('#app').innerHTML = '<div id="login"><div class="card"><h1 style="font:600 22px Georgia,serif;margin:0 0 8px">Totrinnskode</h1>' + qr +
+    '<label>Kode fra appen</label><input id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6"><p><button class="p" id="ok">Bekreft</button></p><p class="warn" id="err"></p></div></div>';
+  $('#ok').onclick = async () => { try { const ch = await auth('factors/' + id + '/challenge', {}, SES.access_token);
+    const s = await auth('factors/' + id + '/verify', {challenge_id:ch.id, code:$('#code').value.trim()}, SES.access_token); keep(s); load(); } catch (e){ $('#err').textContent = e.message; } };
+}
+
+// ---------- the numbers ----------
+async function load(){
+  try { DATA = DEMO ? demo() : await rpc('admin_dashboard', {days:DAYS}); render(); }
+  catch (e){ if (SES) $('#app').innerHTML = '<main><div class="card warn">' + esc(e.message) + '</div><button onclick="SES=null;sessionStorage.clear();render()">Logg inn på nytt</button></main>'; }
+}
+const TABS = [['oversikt', 'Oversikt'], ['trakt', 'Trakt'], ['tid', 'Spilletid'], ['frafall', 'Frafall'], ['bruk', 'Spillbruk'], ['okonomi', 'Økonomi i spillet'], ['penger', 'Penger'], ['teknikk', 'Teknikk'], ['geo', 'Geografi'], ['tilbake', 'Tilbakemeldinger'], ['agent', 'Agent'], ['logoer', 'Logoer'], ['navn', 'Brukernavn'], ['avis', 'Kystposten'], ['merker', 'Merker'], ['kommer', 'Kommer']];
+function render(){
+  if (!DEMO && !SES) return loginView();
+  if (!DATA) { $('#app').innerHTML = '<main class="note">Henter …</main>'; return load(); }
+  $('#app').innerHTML = (DEMO ? '<div class="demo">Demo: tallene er oppdiktet. Med Supabase-nøklene og innlogging vises de ekte.</div>' : '') +
+    '<header><h1>Det Store Blå · admin</h1><span class="sp"></span><span class="note">Oppdatert ' + new Date(DATA.generated).toLocaleTimeString('nb-NO') + '</span>' +
+    '<select id="days">' + [1, 7, 30, 90, 365].map(d => '<option value="' + d + '"' + (d === DAYS ? ' selected' : '') + '>' + (d === 1 ? 'Siste døgn' : 'Siste ' + d + ' dager') + '</option>').join('') + '</select>' +
+    (DEMO ? '' : '<button id="out">Logg ut</button>') + '</header><nav>' + TABS.map(([k, n]) => '<button data-t="' + k + '"' + (k === TAB ? ' class="on"' : '') + '>' + n + '</button>').join('') + '</nav><main>' + (VIEW[TAB] || (() => ''))(DATA) + '</main>';
+  $('#days').onchange = e => { DAYS = +e.target.value; DATA = null; render(); };
+  document.querySelectorAll('nav button').forEach(b => b.onclick = () => { TAB = b.dataset.t; render(); });
+  if ($('#out')) $('#out').onclick = () => { auth('logout', {}, SES.access_token).catch(() => {}); SES = null; sessionStorage.clear(); render(); };
+  if (TAB === 'tilbake') fbWire();
+  if (TAB === 'agent') agWire();
+  if (TAB === 'logoer') lgWire();
+  if (TAB === 'navn') nmWire();
+  if (TAB === 'avis') nwWire();
+  if (TAB === 'merker' && $('#acR')) $('#acR').onclick = () => { AC = null; render(); };
+  if (TAB === 'trakt' && $('#fnR')) $('#fnR').onclick = () => { FN = null; TU = null; HBF = null; render(); };
+}
+
+const kpi = (label, v, sub) => '<div class="card kpi"><b>' + v + '</b><span>' + label + (sub ? '<br>' + sub : '') + '</span></div>';
+const card = (title, body, note) => '<div class="card"><h3>' + title + '</h3>' + body + (note ? '<p class="note">' + note + '</p>' : '') + '</div>';
+function bars(obj, fmt){ const e = Object.entries(obj || {}).sort((a, b) => b[1] - a[1]); if (!e.length) return '<p class="note">Ingen data ennå.</p>'; const m = Math.max(...e.map(x => +x[1])) || 1;
+  return e.slice(0, 25).map(([k, v]) => '<div class="bar"><span style="min-width:120px">' + esc(k) + '</span><i style="width:' + Math.max(2, 60 * v / m) + '%"></i><em>' + (fmt ? fmt(v) : nf(v, 0)) + '</em></div>').join(''); }
+function table(rows, cols){ if (!rows || !rows.length) return '<p class="note">Ingen data ennå.</p>'; return '<table><tr>' + cols.map(c => '<th>' + c[1] + '</th>').join('') + '</tr>' + rows.map(r => '<tr>' + cols.map(c => '<td>' + (c[2] ? c[2](r[c[0]], r) : esc(r[c[0]])) + '</td>').join('') + '</tr>').join('') + '</table>'; }
+function daily(d){ const W = 900, H = 200, n = Math.max(1, d.length), bw = W / n, mh = Math.max(0.1, ...d.map(x => x.hours)), ms = Math.max(1, ...d.map(x => x.sessions));
+  let s = '<svg viewBox="0 0 ' + W + ' ' + (H + 30) + '" width="100%">';
+  d.forEach((x, i) => { const h = H * x.hours / mh, y = H - h; s += '<rect x="' + (i * bw + 1) + '" y="' + y + '" width="' + Math.max(1, bw - 2) + '" height="' + h + '" fill="#4b9be0"><title>' + x.day + ': ' + nf(x.hours) + ' t, ' + x.sessions + ' økter, ' + x.players + ' spillere, ' + Object.entries(x.browsers || {}).map(e => e.join(' ')).join(', ') + '</title></rect>';
+    s += '<circle cx="' + (i * bw + bw / 2) + '" cy="' + (H - H * x.sessions / ms) + '" r="2.5" fill="#f2b33d"/>'; if (n <= 31 || i % Math.ceil(n / 15) === 0) s += '<text x="' + (i * bw + bw / 2) + '" y="' + (H + 14) + '" text-anchor="middle">' + x.day.slice(5) + '</text>'; });
+  return s + '</svg><p class="note">Søyler: timer spilt. Prikker: økter. Hold over en søyle for nettleserne.</p>'; }
+function heat(hm){ const g = {}; let m = 0; (hm || []).forEach(x => { g[x.dow + ':' + x.hour] = x.hours; m = Math.max(m, x.hours); }); const days = ['Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør', 'Søn'];
+  let s = '<svg viewBox="0 0 760 200" width="100%">'; for (let d = 1; d <= 7; d++){ s += '<text x="0" y="' + (d * 24 + 4) + '">' + days[d - 1] + '</text>';
+    for (let h = 0; h < 24; h++){ const v = g[d + ':' + h] || 0, a = m ? v / m : 0; s += '<rect x="' + (34 + h * 30) + '" y="' + (d * 24 - 12) + '" width="28" height="22" rx="3" fill="rgba(75,155,224,' + (0.06 + 0.94 * a).toFixed(2) + ')"><title>' + days[d - 1] + ' kl. ' + h + ': ' + nf(v) + ' t</title></rect>'; } }
+  for (let h = 0; h < 24; h += 3) s += '<text x="' + (34 + h * 30 + 8) + '" y="196">' + h + '</text>'; return s + '</svg>'; }
+const VIEW = {
+  oversikt: D => { const o = D.overview; return '<div class="grid">' + kpi('Spillere i alt', nf(o.players, 0), nf(o.consented, 0) + ' deler statistikk') + kpi('Aktive nå', nf(o.active_now, 0)) + kpi('Daglig / ukentlig / månedlig', nf(o.dau, 0) + ' / ' + nf(o.wau, 0) + ' / ' + nf(o.mau, 0)) +
+    kpi('Spilletid registrert', nf(o.play_total_h) + ' t') + kpi('Økter (avsluttet)', nf(o.sessions, 0) + ' (' + nf(o.sessions_ended, 0) + ')') + kpi('Snitt / median økt', nf(o.avg_min) + ' / ' + nf(o.median_min) + ' min') +
+    kpi('Kommer tilbake', pct(o.return_ratio), 'spilte to dager eller flere') + kpi('Snitt innloggingsrekke', nf(o.streak_avg) + ' dager') + kpi('Installert som app', pct(o.pwa_share)) + '</div>' + card('Spilletid per dag', daily(D.daily || [])); },
+  tid: D => card('Spilletid per dag', daily(D.daily || [])) + card('Ukedag og time (Norge)', heat(D.heatmap)) + card('Per måned', bars(D.months, v => nf(v) + ' t')) +
+    card('Svingdørindeksen', '<p class="note">Spredningen i øktlengde delt på medianen per spiller kommer når det er nok økter. Mange korte økter og få lange gir høy indeks.</p>'),
+  frafall: D => card('Churn-indeks (0–100), de 200 sist aktive', table(D.churn, [['player', 'Spiller'], ['index', 'Indeks', v => '<b style="color:' + (v >= 70 ? 'var(--bad)' : v >= 40 ? 'var(--acc)' : 'var(--good)') + '">' + v + '</b>'], ['days_since', 'Dager siden'], ['min_7d', 'Min siste 7 d'], ['min_prev_7d', 'Min uka før']]),
+    'Indeksen: 60 % fra dager siden sist (full ved 14 dager), 40 % fra fallet i spilletid fra uka før til siste uke.') +
+    card('Rage quit', '<p>Andel økter som sluttet mindre enn ett minutt etter en grunnstøting eller en dårlig levering: <b>' + pct(D.rage.share) + '</b></p>' + bars(D.rage.after)) +
+    card('Død sone: hvor de slutter i sinne', table((D.rage.where || []).slice(0, 30), [['x', 'x (km)'], ['y', 'y (km)'], ['n', 'Antall']])),
+  bruk: D => card('Appene og knappene som brukes', bars(D.features)) + card('Redskap', bars(D.gear)) + card('Båtene spillerne har nå', bars(D.boats)) +
+    card('Grunnstøtinger', '<p>I perioden: <b>' + nf(D.groundings.count, 0) + '</b></p>' + bars(D.groundings.by_boat) + table((D.groundings.where || []).slice(0, 20), [['x', 'x'], ['y', 'y'], ['v', 'Fart (kn)']])) +
+    card('Turene', '<div class="grid">' + kpi('Leveringer', nf(D.trips.count, 0)) + kpi('Snitt kast loss → levering', nf(D.trips.avg_trip_min, 0) + ' min spilltid') + kpi('Snitt per levering', nf(D.trips.avg_kr, 0) + ' kr') + '</div><h3>Mottak</h3>' + bars(D.trips.ports) + '<h3>Fangstfelt</h3>' + bars(D.trips.fields)),
+  okonomi: D => '<div class="grid">' + kpi('Gini for kassa', nf(D.economy.gini_cash, 3), '0 er likt, 1 er alt hos én') + kpi('Gini for flåten', nf(D.economy.gini_fleet, 3)) + kpi('Median kasse', nf(D.economy.cash_p50, 0) + ' kr') + kpi('90-persentil kasse', nf(D.economy.cash_p90, 0) + ' kr') + '</div>',
+  penger: D => { const m = D.money; return '<div class="grid">' + kpi('Inntekt i perioden', nf(m.revenue_nok, 0) + ' kr') + kpi('Betalende', nf(m.payers, 0)) + kpi('ARPU', nf(m.arpu, 2) + ' kr') + kpi('Konvertering', pct(m.conversion)) +
+    kpi('Gjenkjøp', pct(m.repurchase)) + kpi('Tid til første kjøp', nf(m.ttfp_days) + ' dager') + kpi('Refusjoner', pct(m.refund_rate)) + kpi('Forlatt kasse', pct(m.abandon_rate)) + '</div>' +
+    card('Boostere', bars(m.boosters)) + card('Transaksjonslogg (Stripe)', table(m.log, [['at', 'Tid', v => esc(new Date(v).toLocaleString('nb-NO'))], ['player', 'Spiller'], ['product', 'Produkt'], ['nok', 'Kr'], ['status', 'Status'], ['id', 'Stripe-økt']]), 'Fylles når Stripe-webhooken er koblet på.'); },
+  teknikk: D => card('Feil og krasj', table(D.tech.errors, [['msg', 'Melding'], ['n', 'Antall'], ['last', 'Sist', v => esc(new Date(v).toLocaleString('nb-NO'))], ['versions', 'Versjoner', v => esc((v || []).join(', '))]])) +
+    card('Bildetakt', table(D.tech.fps, [['platform', 'Plattform'], ['quality', 'Kvalitet'], ['fps', 'Snitt'], ['low', 'Lavest'], ['drops', 'Hakk (< 20)'], ['n', 'Målinger']])) + card('Nettlesere', bars(D.tech.browsers)) + card('Plattformer', bars(D.tech.platforms)) + devCard(),
+  geo: D => card('Land (fra nettverket, IP-adressen lagres ikke)', bars(D.geo.countries)) + card('Tidssoner', bars(D.geo.timezones)) + card('Hjemhavn i spillet', bars(D.geo.homes)),
+  kommer: () => card('Venter på funksjoner i spillet', '<ul><li>Push-varsler: åpningsrate</li><li>Venner og deling: sosial klyngedynamikk, nettverkskoeffisient, viralitet, invite-to-churn og den sosiale utløseren for kjøp</li><li>Betalte boostere: bruken (tabellen er klar)</li></ul>', 'Se docs/lansering.md E.')
+};
+// ---------- the devices (supabase/migrations/20261006160000_device_data.sql): the frame rate by graphics chip, and the errors with the chips they hit ----------
+let DEV = null;
+async function devLoad(){ await null; try { DEV = DEMO ? devDemo() : await rpc('admin_devices', {days:DAYS}); } catch (e){ DEV = {err:e.message}; } if (TAB === 'teknikk') render(); }
+function devCard(){
+  if (!DEV || DEV.days !== Math.min(90, DAYS) && !DEV.err){ if (!DEV || !DEV.loading){ DEV = {loading:true, days:-1}; devLoad(); } return card('Enheter', '<p class="note">Henter …</p>'); }
+  if (DEV.err) return card('Enheter', '<p class="warn">' + esc(DEV.err) + '</p>', 'Er migreringen supabase/migrations/20261006160000_device_data.sql kjørt?');
+  const sl = v => v >= 45 ? '' : v >= 25 ? ' class="warn"' : ' style="color:var(--bad)"';
+  return card('Bildetakt per enhet', table(DEV.fps_device, [['gpu', 'Grafikkbrikke'], ['platform', 'Plattform'], ['browser', 'Nettleser'], ['fps', 'Snitt', v => '<span' + sl(v) + '>' + nf(v, 1) + '</span>'], ['low', 'Lavest'], ['drops', 'Hakk'], ['lvl', '3D-nivå'], ['cores', 'Kjerner'], ['mem', 'Minne (GB)'], ['scr', 'Skjerm'], ['n', 'Målinger']]),
+      'Rødt under 25 bilder i sekundet, gult under 45. Agenten leser det samme i hver kjøring.') +
+    card('Bildetakt per versjon', table(DEV.fps_version, [['version', 'Versjon'], ['fps', 'Snitt'], ['low', 'Lavest'], ['slow', 'Andel under 20', v => pct(v)], ['n', 'Målinger']])) +
+    card('Feil per grafikkbrikke', table(DEV.errors, [['msg', 'Melding'], ['n', 'Antall'], ['sessions', 'Økter'], ['gpus', 'Grafikkbrikker', v => esc((v || []).join(' · '))], ['platforms', 'Plattformer', v => esc(Object.entries(v || {}).map(([k, n]) => k + ' ' + n).join(', '))]]));
+}
+function devDemo(){
+  return {days:Math.min(90, DAYS), fps_device:[{gpu:'Adreno (TM) 642L', platform:'android', browser:'chrome', fps:31.4, low:14, drops:4.2, lvl:1, cores:8, mem:4, scr:'412x915@2.6', n:220},
+      {gpu:'Mali-G57 MC2', platform:'android', browser:'samsung', fps:22.8, low:9, drops:9.1, lvl:0, cores:8, mem:4, scr:'360x800@3', n:90}, {gpu:'Apple GPU', platform:'ios', browser:'safari', fps:57.2, low:44, drops:0.1, lvl:2, cores:6, mem:null, scr:'390x844@3', n:140}],
+    fps_version:[{version:'p56', fps:41.2, low:20, slow:0.08, n:300}, {version:'p55', fps:39.9, low:19, slow:0.1, n:410}],
+    errors:[{msg:'3D konteksten mistet under spill', n:12, sessions:9, gpus:['Mali-G57 MC2'], platforms:{android:12}}]};
+}
+// ---------- the players' feedback (the game's Tilbakemelding app, supabase/migrations/20261005180000_feedback.sql) ----------
+// A list of its own, newest first, filtered by topic and status; a picture is fetched when asked for; the status and the answer are
+// saved per row, and the player sees them in the app. Not refreshed by the minute, so an answer being written is not lost.
+const FBT = {bug:'Feil', ui:'Knapper og skjerm', perf:'Grafikk og fart', fish:'Fiske og fangst', econ:'Penger og priser', boat:'Båter og utstyr', world:'Kart, vær og verden', tut:'Første tur', idea:'Idé eller ønske', other:'Annet'};
+const FBS = {new:'Ny', seen:'Lest', planned:'Kommer', fixed:'Fikset', no:'Ikke nå'};
+let FB = null; const FBF = {topic:'', status:''}, FBIMG = {}, FBVID = {};
+// a video in the private bucket: a signed link for an hour, to play here; deleting goes through Storage, then the row
+const store = (path, opt) => fetch(CFG.supabaseUrl.replace(/\/$/, '') + '/storage/v1/object/' + path, {...opt, headers:{'Content-Type':'application/json', apikey:CFG.supabaseAnon, Authorization:'Bearer ' + SES.access_token}});
+const encPath = p => p.split('/').map(encodeURIComponent).join('/');
+async function vidSign(p){ const r = await store('sign/feedback-media/' + encPath(p), {method:'POST', body:JSON.stringify({expiresIn:3600})}); const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.signedURL) throw new Error(j.message || j.error || ('HTTP ' + r.status)); return CFG.supabaseUrl.replace(/\/$/, '') + '/storage/v1' + j.signedURL; }
+async function vidDel(paths){ const r = await store('feedback-media', {method:'DELETE', body:JSON.stringify({prefixes:paths})}); if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + (await r.text()).slice(0, 120)); }
+async function fbLoad(){
+  await null;   // after the render that asked for it (in the demo nothing else waits, and a render inside a render is lost)
+  try { FB = DEMO ? fbDemo() : await rpc('admin_feedback', {lim:200, topic_f:FBF.topic || null, status_f:FBF.status || null}); } catch (e){ FB = {err:e.message}; }
+  if (TAB === 'tilbake') render();
+}
+const opts = (o, cur, all) => '<option value="">' + all + '</option>' + Object.entries(o).map(([k, v]) => '<option value="' + k + '"' + (k === cur ? ' selected' : '') + '>' + esc(v) + '</option>').join('');
+function fbMeta(m){
+  m = m || {}; const pos = m.pos ? '<a href="https://www.norgeskart.no/#!?zoom=12&lat=' + m.pos[0] + '&lon=' + m.pos[1] + '&project=norgeskart&layers=1002&sok=' + m.pos[0] + ',' + m.pos[1] + '" target="_blank" rel="noopener">' + m.pos[0] + ', ' + m.pos[1] + '</a>' : '–';
+  return esc([m.version, m.platform + '/' + m.browser + (m.pwa ? ' (app)' : ''), m.w + '×' + m.h + ' @' + m.dpr, m.view + (m.lvl != null ? ' nivå ' + m.lvl : '') + (m.fps ? ' · ' + m.fps + ' fps' : '') + ' · ' + m.quality].join(' · ')) +
+    '<br>' + esc([m.boat, m.st, m.port, 'dag ' + Math.floor((m.t || 0) / 1440), m.tut ? 'veiledning: ' + m.tut : null].filter(Boolean).join(' · ')) + ' · ' + pos;
+}
+VIEW.tilbake = () => {
+  if (!FB){ fbLoad(); return '<p class="note">Henter …</p>'; }
+  if (FB.err) return card('Tilbakemeldinger', '<p class="warn">' + esc(FB.err) + '</p>', 'Er migreringen supabase/migrations/20261005180000_feedback.sql kjørt?');
+  const all = Object.values(FB.topics || {}).reduce((a, b) => a + b, 0);
+  return '<div class="grid">' + kpi('Tilbakemeldinger', nf(all, 0), nf((FB.status || {}).new || 0, 0) + ' nye') + kpi('Snittkarakter siste 30 dager', FB.rating == null ? '–' : nf(FB.rating, 2) + ' / 5') + kpi('Bilder', nf(FB.mb, 1) + ' MB') + kpi('Video i lagringen', nf(FB.vmb || 0, 1) + ' MB', 'av 1 024 MB på gratisplanen' + (FB.orphans ? ' · ' + FB.orphans + ' uten tilbakemelding <button id="fbOrph">Slett dem</button>' : '')) + '</div>' +
+    card('Hva det gjelder', bars(Object.fromEntries(Object.entries(FB.topics || {}).map(([k, v]) => [FBT[k] || k, v])))) +
+    '<div class="card"><select id="fbT">' + opts(FBT, FBF.topic, 'Alle emner') + '</select> <select id="fbS">' + opts(FBS, FBF.status, 'Alle statuser') + '</select> <button id="fbR">Oppdater</button></div>' +
+    (FB.rows.length ? FB.rows.map(r => '<div class="card fbrow" data-id="' + r.id + '"><h3>#' + r.id + ' · ' + esc(FBT[r.topic] || r.topic) + (r.rating ? ' · ' + '★'.repeat(r.rating) + '<span class="note">' + '★'.repeat(5 - r.rating) + '</span>' : '') +
+      ' <span class="note">· ' + new Date(r.ts).toLocaleString('nb-NO') + ' · ' + esc(String(r.player).slice(-8)) + '</span>' + (r.rewarded ? ' <span class="note">· 🎁 takk-haill sendt</span>' : '') + '</h3><p class="fbbody">' + esc(r.body) + '</p>' +
+      (r.img ? (FBIMG[r.id] ? FBIMG[r.id].map(u => '<img class="fbimg" src="' + u + '" alt="">').join('') : '<button data-fbimg="' + r.id + '">' + ((r.nimg || 1) > 1 ? 'Vis ' + r.nimg + ' bilder' : 'Vis bilde (' + r.kb + ' kB)') + '</button>') : '') +
+      (r.vids || []).map(v => !v.done ? '<p class="note">Video som ikke kom fram (' + nf(v.mb, 1) + ' MB)</p>' : FBVID[v.path] ? '<video class="fbimg" controls playsinline src="' + esc(FBVID[v.path]) + '"></video><button data-fbvdel="' + esc(v.path) + '">Slett videoen</button>'
+        : '<button data-fbvid="' + esc(v.path) + '">Spill av video (' + nf(v.secs, 0) + ' s, ' + nf(v.mb, 1) + ' MB)</button> ').join('') +
+      '<p class="note">' + fbMeta(r.meta) + '</p>' + fbAi(r) + '<div class="fbset"><select data-fbst>' + Object.entries(FBS).map(([k, v]) => '<option value="' + k + '"' + (k === r.status ? ' selected' : '') + '>' + v + '</option>').join('') + '</select>' +
+      '<textarea data-fbre rows="2" placeholder="Svar til spilleren (vises i appen)">' + esc(r.reply || '') + '</textarea><button data-fbsave="' + r.id + '">Lagre</button></div>' +
+      (r.rewarded ? '' : '<p class="note">«Kommer» eller «Fikset» gir spilleren 12 timer med fullt haill som takk (én gang).</p>') + '</div>').join('') : '<p class="note">Ingen tilbakemeldinger her ennå.</p>');
+};
+// what the feedback agent noted (tools/feedback/RUTINE.md): its weight and note, and the status and reply it suggests; «Bruk forslaget»
+// only fills them in, Jonas saves
+// the links to the pull requests the agent opened, clickable (the text is escaped first; only github.com links)
+const links = t => t.replace(/https:\/\/github\.com\/[\w.\/#-]+/g, u => '<a href="' + u + '" target="_blank" rel="noopener">' + u.replace('https://github.com/average01101010/FishyBusiness-/pull/', 'PR #') + '</a>');
+function fbAi(r){
+  const a = r.ai; if (!a) return '';
+  return '<div class="fbai"><b>Agenten</b>' + (a.score != null ? ' · vekt ' + nf(a.score, 1) : '') + (a.status ? ' · foreslår «' + esc(FBS[a.status] || a.status) + '»' : '') +
+    '<p class="fbbody">' + links(esc(a.note || '')) + '</p>' + (a.reply ? '<p class="fbbody note">Svarforslag: ' + esc(a.reply) + '</p>' : '') +
+    (a.reply || a.status ? '<button data-fbai="' + r.id + '">Bruk forslaget</button>' : '') + '</div>';
+}
+function fbWire(){
+  document.querySelectorAll('[data-fbai]').forEach(b => b.onclick = () => { const row = b.closest('.fbrow'), r = FB.rows.find(x => x.id === +b.dataset.fbai), a = (r && r.ai) || {};
+    if (a.status) row.querySelector('[data-fbst]').value = a.status; if (a.reply) row.querySelector('[data-fbre]').value = a.reply; });
+  if ($('#fbT')) $('#fbT').onchange = e => { FBF.topic = e.target.value; FB = null; render(); };
+  if ($('#fbS')) $('#fbS').onchange = e => { FBF.status = e.target.value; FB = null; render(); };
+  if ($('#fbR')) $('#fbR').onclick = () => { FB = null; render(); };
+  document.querySelectorAll('[data-fbimg]').forEach(b => b.onclick = async () => { const id = +b.dataset.fbimg; b.disabled = true;
+    try { FBIMG[id] = DEMO ? [] : await rpc('admin_feedback_imgs', {fid:id}).catch(async e => { if (!/404|admin_feedback_imgs/.test(e.message)) throw e; return [await rpc('admin_feedback_img', {fid:id})]; }); } catch (e){ alert(e.message); } render(); });
+  document.querySelectorAll('[data-fbvid]').forEach(b => b.onclick = async () => { b.disabled = true; try { FBVID[b.dataset.fbvid] = await vidSign(b.dataset.fbvid); } catch (e){ alert(e.message); } render(); });
+  document.querySelectorAll('[data-fbvdel]').forEach(b => b.onclick = async () => { if (!confirm('Slette videoen for godt?')) return; const p = b.dataset.fbvdel; b.disabled = true;
+    try { await vidDel([p]); await rpc('admin_media_gone', {path:p}); delete FBVID[p]; FB = null; } catch (e){ alert(e.message); b.disabled = false; } render(); });
+  if ($('#fbOrph')) $('#fbOrph').onclick = async () => { if (!confirm('Slette videoene som ikke lenger hører til en tilbakemelding?')) return;
+    try { const l = await rpc('admin_media_orphans', {}); if (l.length) await vidDel(l); FB = null; } catch (e){ alert(e.message); } render(); };
+  document.querySelectorAll('[data-fbsave]').forEach(b => b.onclick = async () => { const id = +b.dataset.fbsave, row = b.closest('.fbrow'), st = row.querySelector('[data-fbst]').value, re = row.querySelector('[data-fbre]').value;
+    b.disabled = true; try { if (!DEMO) await rpc('admin_feedback_set', {fid:id, st, answer:re}); const r = FB.rows.find(x => x.id === id); if (r){ r.status = st; r.reply = re.trim() || null; } b.textContent = 'Lagret'; } catch (e){ alert(e.message); b.disabled = false; } });
+}
+// ---------- the feedback agent's reports (supabase/migrations/20261006120000_feedback_agent.sql, tools/feedback/RUTINE.md) ----------
+// Four times a day a Claude Code routine reads the new feedback without who wrote it, notes each (shown under it in Tilbakemeldinger)
+// and writes a report here, with the pull requests it opened; Jonas merges or closes them in GitHub.
+let AG = null;
+async function agLoad(){ await null; try { AG = DEMO ? agDemo() : await rpc('admin_agent_runs', {lim:30}); } catch (e){ AG = {err:e.message}; } if (TAB === 'agent') render(); }
+const md = t => esc(t).split('\n').map(l => /^#{1,4} /.test(l) ? '<b>' + l.replace(/^#+ /, '') + '</b>' : l).join('\n').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+const PRS = 'https://github.com/average01101010/FishyBusiness-/pulls';
+VIEW.agent = () => {
+  if (!AG){ agLoad(); return '<p class="note">Henter …</p>'; }
+  if (AG.err) return card('Agent', '<p class="warn">' + esc(AG.err) + '</p>', 'Er migreringen supabase/migrations/20261006120000_feedback_agent.sql kjørt?');
+  const last = AG[0];
+  return '<div class="grid">' + kpi('Siste kjøring', last ? new Date(last.ts).toLocaleString('nb-NO') : '–', last ? nf(last.n, 0) + ' nye tilbakemeldinger' : 'Ingen ennå') +
+    kpi('Kjøringer med noe nytt', nf(AG.length, 0), 'de siste 30') + kpi('PR-er åpnet', nf(AG.reduce((a, r) => a + (r.prs || []).length, 0), 0), '<a href="' + PRS + '" target="_blank" rel="noopener">Åpne PR-er i GitHub</a>') + '</div>' +
+    '<div class="card"><button id="agR">Oppdater</button> <span class="note">Agenten leser de nye tilbakemeldingene kl. 05.58, 11.58, 17.58 og 23.58, uten å vite hvem som skrev dem. Den svarer aldri spillerne selv: forslagene står under hver tilbakemelding.</span></div>' +
+    (AG.length ? AG.map(r => '<div class="card"><h3>' + new Date(r.ts).toLocaleString('nb-NO') + ' · ' + nf(r.n, 0) + ' nye</h3><div class="fbbody">' + md(r.report) + '</div>' +
+      ((r.prs || []).length ? '<p>' + r.prs.map(x => '<a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + esc(x.title || x.url) + '</a>').join('<br>') + '</p>' : '') + '</div>').join('')
+      : '<p class="note">Ingen rapporter ennå.</p>');
+};
+// ---------- the players' logos (Malerverkstedet; supabase/migrations/20261007110000_logos.sql) ----------
+// Every uploaded picture, newest first. One that is offensive is taken away with a reason: the player reads it in the game and may put
+// up another without paying again; the boats near show none until then.
+let LG = null;
+async function lgLoad(){ await null; try { LG = DEMO ? lgDemo() : await rpc('admin_logos', {lim:200}); } catch (e){ LG = {err:e.message}; } if (TAB === 'logoer') render(); }
+VIEW.logoer = () => {
+  if (!LG){ lgLoad(); return '<p class="note">Henter …</p>'; }
+  if (LG.err) return card('Logoer', '<p class="warn">' + esc(LG.err) + '</p>', 'Er migreringen supabase/migrations/20261007110000_logos.sql kjørt?');
+  const live = LG.filter(r => !r.removed);
+  return '<div class="grid">' + kpi('Opplastede logoer', nf(live.length, 0), nf(LG.length - live.length, 0) + ' tatt bort') + '</div>' +
+    '<div class="card"><button id="lgR">Oppdater</button> <span class="note">Spillerne ser logoene på skroget og i flagget til båtene i nærheten. Tar du en bort, får spilleren grunnen du skriver, og kan laste opp et nytt bilde uten å betale igjen.</span></div>' +
+    (LG.length ? '<div class="lggrid">' + LG.map(r => '<div class="card lgrow' + (r.removed ? ' lgoff' : '') + '" data-who="' + esc(r.who) + '"><img class="lgimg" alt="" src="' + (/^data:image\/(webp|png|jpeg);base64,/.test(r.img || '') ? r.img : '') + '">' +
+      '<p class="note">' + esc(r.who) + ' · v' + nf(r.ver, 0) + ' · ' + new Date(r.at).toLocaleString('nb-NO') + '</p>' +
+      (r.removed ? '<p class="warn">Tatt bort ' + new Date(r.removed).toLocaleString('nb-NO') + (r.reason ? ': ' + esc(r.reason) : '') + '</p>'
+        : '<textarea data-lgre rows="2" maxlength="300" placeholder="Hvorfor (spilleren ser dette)"></textarea><button data-lgdel="' + esc(r.who) + '">Ta bort</button>') + '</div>').join('') + '</div>'
+      : '<p class="note">Ingen logoer ennå.</p>');
+};
+function lgWire(){
+  if ($('#lgR')) $('#lgR').onclick = () => { LG = null; render(); };
+  document.querySelectorAll('[data-lgdel]').forEach(b => b.onclick = async () => {
+    const box = b.closest('.lgrow'), why = box.querySelector('[data-lgre]').value.trim();
+    if (!why){ box.querySelector('[data-lgre]').focus(); return; }
+    b.disabled = true; try { if (!DEMO) await rpc('admin_logo_remove', {who:b.dataset.lgdel, reason:why}); else { const r = LG.find(x => x.who === b.dataset.lgdel); r.removed = new Date().toISOString(); r.reason = why; } LG = DEMO ? LG : null; render(); }
+    catch (e){ b.disabled = false; alert(e.message); } });
+}
+function lgDemo(){
+  const cv = document.createElement('canvas'); cv.width = cv.height = 64; const g = cv.getContext('2d'); g.fillStyle = '#1d3b6b'; g.fillRect(0, 0, 64, 64); g.fillStyle = '#fff'; g.font = 'bold 26px sans-serif'; g.textAlign = 'center'; g.fillText('JH', 32, 42);
+  return [{who:'a1b2c3d4e5', img:cv.toDataURL('image/png'), ver:2, at:new Date(Date.now() - 36e5).toISOString(), removed:null, reason:null}];
+}
+// ---------- the players' names (supabase/migrations/20261007120000_names.sql): shown to others beside the boat ----------
+// Taken away with a reason the player reads; that name cannot be had again, and choosing a new one costs nothing.
+let NM = null;
+async function nmLoad(){ await null; try { NM = DEMO ? [{who:'a1b2c3d4e5', name:'Havfisker88', at:new Date(Date.now() - 36e5).toISOString(), removed:null, reason:null}] : await rpc('admin_names', {lim:500}); } catch (e){ NM = {err:e.message}; } if (TAB === 'navn') render(); }
+VIEW.navn = () => {
+  if (!NM){ nmLoad(); return '<p class="note">Henter …</p>'; }
+  if (NM.err) return card('Brukernavn', '<p class="warn">' + esc(NM.err) + '</p>', 'Er migreringen supabase/migrations/20261007120000_names.sql kjørt?');
+  const live = NM.filter(r => !r.removed);
+  return '<div class="grid">' + kpi('Brukernavn', nf(live.length, 0), nf(NM.length - live.length, 0) + ' tatt bort') + '</div>' +
+    '<div class="card"><button id="nmR">Oppdater</button> <span class="note">Navnene vises for andre spillere ved båten. Tar du et bort, får spilleren grunnen du skriver, navnet kan ikke brukes igjen, og et nytt koster ingenting.</span></div>' +
+    (NM.length ? card('Navnene', '<table><tr><th>Navn</th><th>Spiller</th><th>Valgt</th><th></th></tr>' + NM.map(r => '<tr class="nmrow"><td>' + esc(r.name) + '</td><td class="note">' + esc(r.who) + '</td><td class="note">' + new Date(r.at).toLocaleString('nb-NO') + '</td><td>' +
+      (r.removed ? '<span class="warn">Tatt bort' + (r.reason ? ': ' + esc(r.reason) : '') + '</span>' : '<input data-nmre maxlength="300" placeholder="Hvorfor (spilleren ser dette)"> <button data-nmdel="' + esc(r.who) + '">Ta bort</button>') + '</td></tr>').join('') + '</table>')
+      : '<p class="note">Ingen brukernavn ennå.</p>');
+};
+// ---------- Kystposten's stories (supabase/migrations/20261007170000_news.sql; the game's core/09h-press.js) ----------
+// What the players' games have put in the shared paper: the kind, the boat's and the company's names and the numbers. The words are
+// written in each reader's game. One that should not be there is taken away for everyone.
+let NW = null;
+const NW_KIND = {boat:'Båtkjøp', name:'Båtdåp', aground:'Grunnstøting', rescue:'Redning', salv:'Berging', foto:'Fyrbilde', fish:'Storfisk', fs:'Fartstid', ach:'Merker', as:'Aksjeselskap'};
+async function nwLoad(){ await null; try { NW = DEMO ? [{id:1, at:new Date(Date.now() - 36e5).toISOString(), kind:'aground', boat:'Havørn', company:'', d:{type:'sjark'}, removed:false, user:'Havfisker88'}] : await rpc('admin_news', {lim:200}); } catch (e){ NW = {err:e.message}; } if (TAB === 'avis') render(); }
+VIEW.avis = () => {
+  if (!NW){ nwLoad(); return '<p class="note">Henter …</p>'; }
+  if (NW.err) return card('Kystposten', '<p class="warn">' + esc(NW.err) + '</p>', 'Er migreringen supabase/migrations/20261007170000_news.sql kjørt?');
+  const live = NW.filter(r => !r.removed), by = {}; for (const r of live) by[r.kind] = (by[r.kind] || 0) + 1;
+  return '<div class="grid">' + kpi('Saker', nf(live.length, 0), nf(NW.length - live.length, 0) + ' tatt bort') + Object.entries(by).map(([k, n]) => kpi(NW_KIND[k] || k, nf(n, 0), '')).join('') + '</div>' +
+    '<div class="card"><button id="nwR">Oppdater</button> <span class="note">Sakene spillene har lagt i den felles avisa. Tar du en bort, forsvinner den for alle.</span></div>' +
+    (NW.length ? card('Sakene', '<table><tr><th>Når</th><th>Sak</th><th>Båt</th><th>Rederi</th><th>Tall</th><th>Spiller</th><th></th></tr>' + NW.map(r => '<tr><td class="note">' + new Date(r.at).toLocaleString('nb-NO') + '</td><td>' + esc(NW_KIND[r.kind] || r.kind) + '</td><td>' + esc(r.boat) + '</td><td>' + esc(r.company) + '</td><td class="note">' + esc(JSON.stringify(r.d)) + '</td><td class="note">' + esc(r.user) + '</td><td>' +
+      (r.removed ? '<span class="warn">Tatt bort</span>' : '<button data-nwdel="' + r.id + '">Ta bort</button>') + '</td></tr>').join('') + '</table>') : '<p class="note">Ingen saker ennå.</p>');
+};
+function nwWire(){
+  if ($('#nwR')) $('#nwR').onclick = () => { NW = null; render(); };
+  document.querySelectorAll('[data-nwdel]').forEach(b => b.onclick = async () => {
+    b.disabled = true; try { if (!DEMO) await rpc('admin_news_remove', {id:+b.dataset.nwdel}); else NW.find(x => x.id === +b.dataset.nwdel).removed = true; NW = DEMO ? NW : null; render(); }
+    catch (e){ b.disabled = false; alert(e.message); } });
+}
+// ---------- the funnel (supabase/migrations/20261007150000_funnel.sql; docs/engasjement.md point 9) ----------
+// From the envelope to the third landing and the registration, and how many come back: each step's count, its share of those who
+// started and of the step before. The largest fall is marked; that is where the next change goes, and the weeks below show whether
+// a change moved it (one change at a time).
+let FN = null;
+const FN_STEPS = [['start', 'Åpnet spillet (konvolutten)'], ['catch', 'Første fangst'], ['land1', 'Første levering'], ['land3', 'Tredje levering'], ['reg', 'Registrert']];
+async function fnLoad(){ await null; try { FN = DEMO ? fnDemo() : await rpc('admin_funnel', {weeks:8}); } catch (e){ FN = {err:e.message}; } if (TAB === 'trakt') render(); }
+function fnDemo(){
+  const W = [];
+  for (let i = 0; i < 6; i++){ const s = 40 + i * 7, wk = new Date(Date.now() - i * 7 * 864e5).toISOString().slice(0, 10);
+    W.push({wk, start:s, catch:Math.round(s * 0.9), land1:Math.round(s * 0.7), land3:Math.round(s * 0.45), reg:Math.round(s * 0.3), d1:Math.round(s * 0.4), d1n:i ? s : Math.round(s * 0.7),
+      d7:i ? Math.round(s * 0.2) : 0, d7n:i ? s : 0, d30:i >= 5 ? Math.round(s * 0.08) : 0, d30n:i >= 5 ? s : 0}); }
+  const all = {}; for (const k of Object.keys(W[0]).filter(k => k !== 'wk')) all[k] = W.reduce((a, r) => a + r[k], 0);
+  return {all, weeks:W};
+}
+VIEW.trakt = () => {
+  if (!FN){ fnLoad(); return '<p class="note">Henter …</p>'; }
+  if (FN.err) return card('Trakt', '<p class="warn">' + esc(FN.err) + '</p>', 'Er migreringen supabase/migrations/20261007150000_funnel.sql kjørt?');
+  const A = FN.all || {}, s0 = Math.max(1, A.start || 0), r = (v, of) => of ? Math.round(v / of * 100) + ' %' : '–';
+  let worst = null;
+  for (let i = 1; i < FN_STEPS.length; i++){ const a = A[FN_STEPS[i - 1][0]] || 0, b = A[FN_STEPS[i][0]] || 0, fall = a ? 1 - b / a : 0; if (a && (!worst || fall > worst.fall)) worst = {i, fall}; }
+  const rows = FN_STEPS.map(([k, nm], i) => { const n = A[k] || 0, prev = i ? A[FN_STEPS[i - 1][0]] || 0 : n, w = Math.round(n / s0 * 100);
+    return '<tr' + (worst && worst.i === i ? ' class="worst"' : '') + '><td>' + esc(nm) + '</td><td>' + nf(n, 0) + '</td><td style="width:40%"><div class="bar"><i style="width:' + w + '%"></i></div></td><td class="note">' + w + ' %</td><td class="note">' + (i ? r(n, prev) : '') + '</td></tr>'; }).join('');
+  const back = (k, nm) => kpi(nm, r(A[k] || 0, A[k + 'n'] || 0), nf(A[k] || 0, 0) + ' av ' + nf(A[k + 'n'] || 0, 0));
+  return '<div class="grid">' + kpi('Åpnet spillet', nf(A.start || 0, 0), 'med statistikk') + back('d1', 'Tilbake etter 1 døgn') + back('d7', 'Tilbake etter 7 dager') + back('d30', 'Tilbake etter 30 dager') + '</div>' +
+    '<div class="card"><button id="fnR">Oppdater</button> <span class="note">Fra konvolutten til tredje levering og registrering, og hvor mange som kommer tilbake. Bare spillere som deler bruksstatistikk. Endre én ting om gangen og se på tallene før neste.</span></div>' +
+    card('Trakten', '<table><tr><th>Steg</th><th>Spillere</th><th></th><th>Av alle</th><th>Av forrige</th></tr>' + rows + '</table>',
+      worst ? 'Størst frafall før «' + esc(FN_STEPS[worst.i][1]) + '»: ' + Math.round(worst.fall * 100) + ' % kommer ikke videre. Der er neste sted å gjøre noe.' : '') +
+    card('Per uke de startet', table(FN.weeks, [['wk', 'Uke fra', v => esc(String(v).slice(0, 10))], ['start', 'Startet'], ['catch', 'Fangst', (v, x) => r(v, x.start)], ['land1', '1. levering', (v, x) => r(v, x.start)],
+      ['land3', '3. levering', (v, x) => r(v, x.start)], ['reg', 'Registrert', (v, x) => r(v, x.start)], ['d1', 'Dag 1', (v, x) => r(v, x.d1n)], ['d7', 'Dag 7', (v, x) => r(v, x.d7n)], ['d30', 'Dag 30', (v, x) => r(v, x.d30n)]]),
+      'Andel av dem som startet den uka. Dag 1, 7 og 30 regnes av dem som har hatt så lang tid.') + tuView() + hbView();
+};
+// ---------- the first trip's steps (supabase/migrations/20261010100000_tut_steps.sql; the game's ui/07b-first-trip.js; docs/onboarding.md) ----------
+// Each step of the guided first trip in the game's order: how many reached it of those who began the guide, and the median real
+// seconds it took. Where the count falls off, or the seconds pile up, is where the guide is changed next.
+const TUT_STEPS = [['n1', 'Naustet'], ['n2', 'Trofeveggen'], ['n3', 'Ovnen og lista'], ['nout', 'Gå ut'], ['intro', 'Båten'], ['gps', 'Åpne kartplotteren'], ['route1', 'Rute til feltet'], ['fish2', 'Fisketid på punktet'], ['cast1', 'Kast loss'],
+  ['chip', 'Neste-brikka'], ['kino', 'Kino på'], ['kino2', 'Kino av'], ['cam', 'Broa'], ['cam2', 'Broa, tilbake'], ['sail', 'På vei ut'], ['luck', 'Fiskelykka'], ['haill', 'Haill hentet'], ['luckhud', 'Haill i statusboksen'],
+  ['fish', 'Juksa / jukse selv'], ['deck', 'Bløgging og sløying'], ['full', 'Lasten full'], ['route2', 'Rute til mottaket'], ['cast2', 'Kast loss hjem'], ['legs', 'Kurslista'], ['tour', 'Omvisningen'], ['hud', 'Statusboksen'],
+  ['apps', 'Telefonen'], ['vaer', 'Vær-appen'], ['salg', 'Salgslaget'], ['regler', 'Regler'], ['redning', 'Redning'], ['land', 'Levert'], ['slip', 'Sluttseddelen'], ['reg', 'Registrering'], ['book', 'Dekksdagboka'], ['ice', 'Is'],
+  ['beh', 'Beholdning'], ['crew', 'Mannskap'], ['goal', 'Neste mål']];
+let TU = null;
+async function tuLoad(){ await null; try { TU = DEMO ? tuDemo() : await rpc('admin_tut', {weeks:8}); } catch (e){ TU = {err:e.message}; } if (TAB === 'trakt') render(); }
+function tuDemo(){ const st = {}; let n = 40; TUT_STEPS.forEach(([id], i) => { n = Math.max(12, n - (i % 4 === 0 ? 2 : 0)); st[id] = {n, med:20 + (i * 37) % 90, settled:i % 3}; }); return {started:40, steps:st, done:12, doneMed:1560}; }
+function tuView(){
+  if (!TU){ tuLoad(); return '<p class="note">Henter …</p>'; }
+  if (TU.err) return card('Første tur', '<p class="warn">' + esc(TU.err) + '</p>', 'Er migreringen supabase/migrations/20261010100000_tut_steps.sql kjørt?');
+  const all = Math.max(1, TU.started || 0), st = TU.steps || {}, mm = s => s == null ? '–' : s >= 90 ? Math.round(s / 60) + ' min' : Math.round(s) + ' s';
+  let worst = null, prev = TU.started || 0;
+  const rows = TUT_STEPS.map(([id, nm], i) => { const x = st[id] || {}, n = x.n || 0, w = Math.round(n / all * 100), fall = prev ? 1 - n / prev : 0;
+    if (prev && n < prev && (!worst || fall > worst.fall)) worst = {i, fall}; const r = '<tr data-i="' + i + '"><td class="note">' + (i + 1) + '</td><td>' + esc(nm) + ' <span class="note">' + id + '</span></td><td>' + nf(n, 0) + '</td><td style="width:35%"><div class="bar"><i style="width:' + w + '%"></i></div></td><td class="note">' + w + ' %</td><td class="note">' + mm(x.med) + '</td></tr>';
+    prev = n || prev; return r; }).join('');
+  const body = '<table><tr><th></th><th>Trinn</th><th>Spillere</th><th></th><th>Av dem som begynte</th><th>Median tid</th></tr>' + rows + '</table>';
+  return '<div class="grid">' + kpi('Begynte på Første tur', nf(TU.started || 0, 0), 'siste 8 uker, med statistikk') + kpi('Fullførte', nf(TU.done || 0, 0), Math.round((TU.done || 0) / all * 100) + ' % av dem som begynte') + kpi('Median tid, hele turen', mm(TU.doneMed), 'ekte tid') + '</div>' +
+    card('Første tur, trinn for trinn', body, worst ? 'Størst frafall før «' + esc(TUT_STEPS[worst.i][1]) + '»: ' + Math.round(worst.fall * 100) + ' % kommer ikke videre. Tida er ekte sekunder på trinnet (trinn som ble avgjort av et senere trinn teller ikke).' : 'Tida er ekte sekunder på trinnet.');
+}
+// ---------- Håndboka's drips (supabase/migrations/20261010120000_hb.sql; the game's ui/07c-handbook.js) ----------
+// Each tip of chapters 2–6: how many read it («Skjønner») and how many put the chapter to rest from it («Jeg kan dette»). A tip many
+// skip from is one that comes too early or says too little.
+const HB_TIPS = [[2, 'Tur 2 og 3', [['rute', 'Egen rute'], ['guide', 'Fiskeguiden'], ['ekko', 'Ekkoloddet'], ['tide', 'Flo og fjære'], ['regler', 'Kan jeg fiske her?'], ['sesong', 'Sesongen'], ['post', 'Kystposten'], ['meld', 'Meldinger']]],
+  [3, 'Kvelden og natta', [['energi', 'Hvile'], ['kulde', 'Kulda'], ['diesel', 'Diesel'], ['rorbu', 'Rorbua']]],
+  [4, 'Rutinen', [['drift', 'Driftsplanen'], ['topp', 'Salgslaget og topplista'], ['merker', 'Milepæler'], ['tilbake', 'Si fra'], ['patch', 'Patchnotes']]],
+  [5, 'Utstyr og båt', [['oppdrag', 'Oppdrag'], ['butikk', 'Utstyrsbutikken'], ['verft', 'Verftet'], ['neste', 'Neste båt']]],
+  [6, 'Sosialt og økonomi', [['venner', 'Venner'], ['ais', 'Andre båter'], ['pub', 'Puben'], ['rederi', 'Rederiet'], ['kvote', 'Kvoten']]]];
+let HBF = null;
+async function hbLoad(){ await null; try { HBF = DEMO ? hbDemo() : await rpc('admin_hb', {weeks:8}); } catch (e){ HBF = {err:e.message}; } if (TAB === 'trakt') render(); }
+function hbDemo(){ const t = {}; let k = 0; for (const [, , tips] of HB_TIPS) for (const [id] of tips){ t[id] = {seen:Math.max(2, 30 - k * 1), skip:(k * 7) % 5}; k++; } return {players:34, tips:t}; }
+function hbView(){
+  if (!HBF){ hbLoad(); return ''; }
+  if (HBF.err) return card('Håndboka', '<p class="warn">' + esc(HBF.err) + '</p>', 'Er migreringen supabase/migrations/20261010120000_hb.sql kjørt?');
+  const all = Math.max(1, HBF.players || 0), T = HBF.tips || {};
+  const rows = HB_TIPS.map(([ch, nm, tips]) => '<tr><th colspan="5" style="text-align:left;padding-top:8px">' + ch + '. ' + esc(nm) + '</th></tr>' + tips.map(([id, t]) => { const x = T[id] || {}, n = x.seen || 0, w = Math.round(n / all * 100);
+    return '<tr><td>' + esc(t) + ' <span class="note">' + id + '</span></td><td>' + nf(n, 0) + '</td><td style="width:35%"><div class="bar"><i style="width:' + w + '%"></i></div></td><td class="note">' + w + ' %</td><td class="note">' + (x.skip ? nf(x.skip, 0) + ' hoppet over her' : '') + '</td></tr>'; }).join('')).join('');
+  return card('Håndboka, tips for tips', '<p class="note">' + nf(HBF.players || 0, 0) + ' spillere har sett minst ett tips de siste 8 ukene.</p><table><tr><th>Tips</th><th>Lest</th><th></th><th>Av dem</th><th>«Jeg kan dette»</th></tr>' + rows + '</table>',
+    'Et tips mange hopper over fra, kommer for tidlig eller sier for lite.');
+}
+// ---------- the badges' funnel (supabase/migrations/20261007140000_ach.sql; the game's core/09f-merker.js) ----------
+// How far the players come in «Første uke på sjøen»: each milestone in the game's order, with how many reached it (of those who share
+// usage statistics), and the chapters finished. Where the count falls off is where the next change goes.
+const ACH_IDS = [[0, 'took', 'Tok over båten'], [0, 'fish', 'Første fisk over ripa'], [0, 'land', 'Første levering'], [0, 'own', 'Første tur på egen hånd'], [0, 'l10', 'Levering over 10 000 kr'], [0, 'reg', 'Ført i fiskermanntallet'], [0, 'sleep', 'Første natt i køya'],
+  [1, 'equip', 'Første utstyrskjøp'], [1, 'l20', 'Levering over 20 000 kr'], [1, 't1', 'Ett tonn levert'], [1, 'yard', 'Første oppgradering på verftet'], [1, 'crew', 'Første mann hyret'], [1, 'plant2', 'Nytt mottak'], [1, 'storm', 'Første uvær (skjult)'],
+  [2, 'l25', 'Levering over 25 000 kr'], [2, 'gear', 'Garn eller line satt og trukket'], [2, 'boat', 'Første båtbytte'], [2, 'l50', 'Levering over 50 000 kr'], [2, 't5', 'Fem tonn levert'], [2, 'fs5', '5 år fartstid'], [2, 'big', 'Storfisken (skjult)']];
+let AC = null;
+async function acLoad(){ await null; try { AC = DEMO ? {players:40, ms:{took:40, fish:37, land:31, own:22, l10:20, reg:14, sleep:12, equip:11, l20:9, t1:10, yard:6, crew:5, plant2:7, storm:2, l25:4, gear:2, boat:2, l50:1, t5:3, fs5:3, big:1}, ch:{0:9, 1:3, 2:0}} : await rpc('admin_ach', {}); } catch (e){ AC = {err:e.message}; } if (TAB === 'merker') render(); }
+VIEW.merker = () => {
+  if (!AC){ acLoad(); return '<p class="note">Henter …</p>'; }
+  if (AC.err) return card('Merker', '<p class="warn">' + esc(AC.err) + '</p>', 'Er migreringen supabase/migrations/20261007140000_ach.sql kjørt?');
+  const all = Math.max(1, AC.players || 0), ms = AC.ms || {}, ch = AC.ch || {};
+  const row = (c, id, nm) => { const n = ms[id] || 0, w = Math.round(n / all * 100); return '<tr><td class="note">' + (c + 1) + '</td><td>' + esc(nm) + '</td><td>' + nf(n, 0) + '</td><td style="width:45%"><div class="bar"><i style="width:' + w + '%"></i></div></td><td class="note">' + w + ' %</td></tr>'; };
+  return '<div class="grid">' + kpi('Startet spillet', nf(AC.players || 0, 0), 'med statistikk') + kpi('Kapittel 1', nf(ch[0] || 0, 0), 'fullført') + kpi('Kapittel 2', nf(ch[1] || 0, 0), 'fullført') + kpi('Kapittel 3', nf(ch[2] || 0, 0), 'fullført') + '</div>' +
+    '<div class="card"><button id="acR">Oppdater</button> <span class="note">Hvor mange som nådde hver milepæl i «Første uke på sjøen», i spillets rekkefølge. Der tallet faller mest, er neste sted å gjøre noe.</span></div>' +
+    card('Milepælene', '<table><tr><th>Kap.</th><th>Milepæl</th><th>Spillere</th><th></th><th></th></tr>' + ACH_IDS.map(([c, id, nm]) => row(c, id, nm)).join('') + '</table>');
+};
+function nmWire(){
+  if ($('#nmR')) $('#nmR').onclick = () => { NM = null; render(); };
+  document.querySelectorAll('[data-nmdel]').forEach(b => b.onclick = async () => {
+    const row = b.closest('.nmrow'), why = row.querySelector('[data-nmre]').value.trim();
+    if (!why){ row.querySelector('[data-nmre]').focus(); return; }
+    b.disabled = true; try { if (!DEMO) await rpc('admin_name_remove', {who:b.dataset.nmdel, reason:why}); else { const r = NM.find(x => x.who === b.dataset.nmdel); r.removed = new Date().toISOString(); r.reason = why; } NM = DEMO ? NM : null; render(); }
+    catch (e){ b.disabled = false; alert(e.message); } });
+}
+function agWire(){ if ($('#agR')) $('#agR').onclick = () => { AG = null; render(); }; }
+function agDemo(){
+  return [{id:2, ts:new Date(Date.now() - 2 * 36e5).toISOString(), n:3, report:'## Det viktigste\nTo spillere melder at båten går på land ved Gibostad med Autonav (#3, #5).\n\n## Topp 5\n- **#3** Autonav på land ved Gibostad · vekt 6,5 · se på leia i 03c-route.js\n- **#4** Ønske: dorg etter sei · vekt 1', prs:[{url:PRS, title:'Autonav: hold avstand til land ved Gibostad'}]},
+    {id:1, ts:new Date(Date.now() - 8 * 36e5).toISOString(), n:1, report:'## Det viktigste\nÉn ny: et ønske om flere båtfarger (#2).', prs:[]}];
+}
+function fbDemo(){
+  const now = Date.now(), m = {version:'p34', platform:'android', browser:'chrome', pwa:true, w:412, h:915, dpr:2.6, view:'3d', lvl:1, fps:38, quality:'auto', boat:'trebat', st:'fishing', port:null, t:4380, pos:[69.512, 17.693]};
+  return {rows:[{id:3, ts:new Date(now - 36e5).toISOString(), player:'user_01HDEMO0003', topic:'bug', rating:4, body:'Båten la seg på land ved Gibostad da jeg brukte Autonav.', img:true, kb:212, nimg:3, vids:[{path:'user_01HDEMO0003/3-1-demo.mp4', mime:'video/mp4', mb:18.4, secs:41, done:true}], meta:m, status:'new', reply:null,
+      ai:{score:6.5, status:'seen', note:'Autonav legger leia for nær land ved Gibostad (som #5). Sannsynlig årsak: avstanden til land i leia.', reply:'Takk! Vi ser på Autonav ved Gibostad.', at:new Date(now - 7e6).toISOString()}},
+    {id:2, ts:new Date(now - 864e5).toISOString(), player:'user_01HDEMO0002', topic:'idea', rating:5, body:'Kunne det vært mulig å fiske sei med dorg?', img:false, kb:0, meta:{...m, st:'port', port:'botnhamn'}, status:'planned', reply:'God idé, den kommer!'}],
+    topics:{bug:7, idea:4, perf:3, ui:2}, status:{new:9, seen:4, planned:2, fixed:1}, rating:4.1, mb:3.2, vmb:18.4, orphans:0};
+}
+// made-up numbers in the same shape as admin_dashboard(), to see the layout before there are players
+function demo(){
+  const R = (a, b) => a + Math.random() * (b - a), now = Date.now(), d = [];
+  for (let i = DAYS - 1; i >= 0; i--){ const day = new Date(now - i * 864e5).toISOString().slice(0, 10), s = Math.round(R(20, 90)); d.push({day, hours:+(s * R(0.3, 0.9)).toFixed(1), sessions:s, players:Math.round(s * 0.6), browsers:{chrome:Math.round(s * 0.6), samsung:Math.round(s * 0.25), safari:Math.round(s * 0.15)}}); }
+  const hm = []; for (let w = 1; w <= 7; w++) for (let h = 0; h < 24; h++) hm.push({dow:w, hour:h, sessions:0, hours:+(Math.max(0, Math.sin((h - 6) / 24 * Math.PI * 2 - 1) + (w > 5 ? 0.6 : 0)) * R(2, 6)).toFixed(1)});
+  return {generated:new Date().toISOString(), days:DAYS, overview:{players:412, consented:301, active_window:188, dau:57, wau:143, mau:188, active_now:9, play_total_h:2310.4, sessions:1840, sessions_ended:1795, avg_min:31.2, median_min:22.5, return_ratio:0.46, streak_avg:3.8, pwa_share:0.38},
+    daily:d, heatmap:hm, months:{'2026-08':310, '2026-09':980, '2026-10':1020},
+    churn:Array.from({length:12}, (_, i) => ({player:'user_01H' + (1000 + i), index:Math.round(R(5, 95)), days_since:+R(0, 20).toFixed(1), min_7d:Math.round(R(0, 400)), min_prev_7d:Math.round(R(0, 400))})),
+    rage:{share:0.031, after:{aground:41, sale:9}, where:[{x:821, y:381, n:7}, {x:842, y:376, n:4}]},
+    features:{'redskap':420, 'kart':390, 'regler':160, 'pa:sell':350, 'pa:depart':330, 'pa:grbuy':120}, gear:{garn:210, line:180, teine:60}, boats:{skiff:200, snekke:90, jukesjark:60, sjark:40, breisjark:12},
+    groundings:{count:63, by_boat:{skiff:30, snekke:18, sjark:15}, where:[{x:'821.4', y:'381.2', v:'9.0'}]}, trips:{count:880, avg_trip_min:410, avg_kr:6900, ports:{husoy:300, senjahopen:240, botnhamn:120}, fields:{'05-08':200, '05-12':140}},
+    economy:{gini_cash:0.62, gini_fleet:0.55, cash_p50:84000, cash_p90:1450000},
+    money:{revenue_nok:18450, payers:61, arpu:98.1, conversion:0.032, repurchase:0.28, ttfp_days:4.5, refund_rate:0.01, abandon_rate:0.22, boosters:{}, log:[{at:new Date().toISOString(), player:'user_01H1004', product:'skin-rodt-skrog', nok:49, status:'paid', id:'cs_test_a1'}]},
+    tech:{errors:[{msg:'TypeError: Cannot read properties of null', n:12, last:new Date().toISOString(), versions:['p15']}], fps:[{platform:'android', quality:'auto', fps:41.2, low:18, drops:3.1, n:220}, {platform:'windows', quality:'high', fps:58.9, low:44, drops:0.2, n:140}], browsers:{chrome:1100, samsung:450, safari:250, firefox:40}, platforms:{android:1200, windows:380, ios:220, mac:40}},
+    geo:{countries:{NO:380, SE:14, DE:9}, timezones:{'Europe/Oslo':388, 'Europe/Stockholm':14}, homes:{husoy:160, senjahopen:120, finnsnes:80}}};
+}
+render(); setInterval(() => { if (DATA && (DEMO || SES) && TAB !== 'tilbake' && TAB !== 'agent') { DATA = null; load(); } }, 60000);
+</script>
+</body>
+</html>

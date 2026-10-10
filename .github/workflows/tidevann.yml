@@ -1,0 +1,32 @@
+# The tide along the coast (phase K10 of the coast plan): tools/tide/fetch.py fetches Kartverket's prediction for a year at each point
+# of tools/tide/points.json and fits the game's harmonic constants; the result is kept as a release tide-<run number> (tide.json),
+# which goes into src/data/tide.json. Kartverket's host is closed to the cloud session, open here.
+# Started by a push that changes tools/tide/tide.json (on any branch), or by hand from the Actions tab once this file is on main.
+name: Tidevann langs kysten
+on:
+  push:
+    paths: ['tools/tide/tide.json']
+  workflow_dispatch:
+permissions:
+  contents: write
+env:
+  PYTHONUNBUFFERED: '1'
+jobs:
+  tide:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install numpy requests
+      - name: Kartverket's prediction and the fit
+        run: python3 tools/tide/fetch.py tide.json
+      - name: The release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=tide-${{ github.run_number }}
+          gh release create "$TAG" tide.json --target "${{ github.sha }}" --title "Tidevann $TAG" \
+            --notes "Tidevannet langs kysten fra Kartverkets Se havnivå (CC BY 4.0), tilpasset spillets harmoniske konstanter (tools/tide/fetch.py), commit ${{ github.sha }}."

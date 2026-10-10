@@ -1,0 +1,45 @@
+# Det Store Blå on the Hetzner server (docs/lansering.md G): the app built as for Pages (pwa.yml) and uploaded with rsync over SSH
+# to the deploy user that tools/server/setup.sh made. Runs on a push to main or the working branch (as pwa.yml) that changes the game,
+# and by hand from the Actions tab once the file is on main; until then a run is started again with «Re-run all jobs».
+# Needs the secrets DEPLOY_HOST (the server's address), DEPLOY_KEY (the private deploy key) and DEPLOY_KNOWN_HOSTS (ssh-keyscan of
+# the server); without DEPLOY_HOST it builds and stops.
+name: Appen på Hetzner
+on:
+  push:
+    branches: [main, ccr-5e1ba2f4-pusvyd]
+    paths: ['src/**', 'build.mjs', 'tools/map/kart.json', 'tools/map/game.py', 'tools/server/**', '.github/workflows/deploy.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: hetzner
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: The whole coast's map packs (the newest kart- release, joined with Senja's)
+        run: |
+          pip install requests
+          python3 tools/map/game.py
+      - name: The app
+        run: KYST_PWA=1 node build.mjs
+      - name: Upload to the server
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          if [ -z "$DEPLOY_HOST" ]; then echo "No DEPLOY_HOST secret yet: built, not uploaded."; exit 0; fi
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/deploy && chmod 600 ~/.ssh/deploy
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          rsync -az --delete-after --delay-updates -e "ssh -i ~/.ssh/deploy" dist-pwa/ "deploy@$DEPLOY_HOST:current/"
