@@ -26,20 +26,20 @@ C = {}
 def colours():
     C['suit'] = mat('suit', (0.13, 0.29, 0.62), 0.2, zone=1)          # repainted per kit in the game
     C['trou'] = mat('trousers', (0.13, 0.29, 0.62), 0.2, zone=3)
-    C['skin'] = mat('skin', (0.86, 0.64, 0.50), 0.25)
+    C['skin'] = mat('skin', (0.86, 0.64, 0.50), 0.25, zone=4)
     C['lip'] = mat('lip', (0.66, 0.40, 0.34), 0.25)
-    C['hair'] = mat('hair', (0.26, 0.17, 0.10), 0.1)
-    C['brow'] = mat('brow', (0.20, 0.13, 0.08), 0.1)
+    C['hair'] = mat('hair', (0.26, 0.17, 0.10), 0.1, zone=5)
+    C['brow'] = mat('brow', (0.20, 0.13, 0.08), 0.1, zone=5)
     C['eye'] = mat('eye', (0.06, 0.06, 0.07), 0.7)
-    C['helmet'] = mat('helmet', (0.98, 0.80, 0.06), 0.75)
+    C['helmet'] = mat('helmet', (0.98, 0.80, 0.06), 0.75, zone=6)
     C['harness'] = mat('harness', (0.12, 0.12, 0.13), 0.2)
-    C['beanie'] = mat('beanie', (0.72, 0.15, 0.12), 0.05)
-    C['boot'] = mat('boot', (0.09, 0.09, 0.10), 0.35)
+    C['beanie'] = mat('beanie', (0.72, 0.15, 0.12), 0.05, zone=6)
+    C['boot'] = mat('boot', (0.09, 0.09, 0.10), 0.35, zone=7)
     C['sole'] = mat('sole', (0.24, 0.22, 0.20), 0.1)
     C['glove'] = mat('glove', (0.84, 0.78, 0.50), 0.15)
     C['zip'] = mat('zip', (0.55, 0.57, 0.60), 0.6, metal=0.5)
     C['refl'] = mat('reflective', (0.85, 0.87, 0.85), 0.6)
-    C['wool'] = mat('wool', (0.07, 0.07, 0.08), 0.05)
+    C['wool'] = mat('wool', (0.07, 0.07, 0.08), 0.05, zone=6)
     C['peak'] = mat('peak', (0.04, 0.04, 0.05), 0.85)
     C['brass'] = mat('brass', (0.80, 0.63, 0.26), 0.7, metal=0.6)
     C['cream'] = mat('cream', (0.90, 0.86, 0.74), 0.1)
@@ -115,8 +115,7 @@ def head():
         objs.append(sphere('brow%d' % s, (s * 0.032, fy(s * 0.032, 1.684) + 0.001, 1.684), 0.018, C['brow'], (1.3, 0.35, 0.3), 8, 4))
         objs.append(sphere('ear%d' % s, (s * 0.076, -0.012, 1.652), 0.028, C['skin'], (0.4, 0.75, 1.1), 10, 6))
     objs.append(sphere('mouth', (0, fy(0, 1.596) - 0.001, 1.596), 0.02, C['lip'], (1.3, 0.35, 0.3), 8, 4))
-    objs.append(sphere('hair', (0, -0.028, 1.700), 1.0, C['hair'], (0.082, 0.097, 0.075), 16, 10))
-    return join(objs, 'HEAD')
+    return join(objs, 'HEAD')      # bald: the hair is a part of its own (garderobe.py hair_*)
 
 def hardhat():
     """the hard hat: a shell with a short peak at the front, a ridge over the top, the harness showing under the rim"""
@@ -211,6 +210,8 @@ def only(o, fn):
 
 def build_all():
     P = {'torso': torso(), 'sweater': sweater(), 'head': head(), 'hardhat': hardhat(), 'beanie': beanie(), 'skippercap': skippercap(), 'uarm': uarm(), 'farm': farm(), 'thigh': thigh(), 'shin': shin(), 'boot': boot(), 'hand': hand()}
+    import garderobe
+    for nm in ('hardhat', 'beanie', 'skippercap'): garderobe.tilt_hat(P[nm])      # the hats sit tilted back: the brows and eyes are free
     return P
 
 def pose(P, x, y, h, kit='hw', arms=None):
@@ -249,13 +250,28 @@ def main():
         bake_ao(P[hat], 32, 0.05)
         for x in hid: x.hide_render = False
     for nm in ('boot', 'hand'): only(P[nm], lambda o: bake_ao(o, 32, 0.05))
+    # the wardrobe (garderobe.py): each part with the head (and the others hidden) so it shades like the hats do
+    import garderobe
+    WR = garderobe.build(sys.modules[__name__])
+    for nm, o, origin in WR:
+        o.hide_render = False
+        if origin == 'neck':
+            hid = [x for x in bpy.data.objects if x.type == 'MESH' and x not in (P['head'], o) and not x.hide_render]
+            for x in hid: x.hide_render = True
+            bake_ao(o, 24, 0.05)
+            for x in hid: x.hide_render = False
+        else: only(o, lambda q: bake_ao(q, 24 if origin == 'hip' else 16, 0.1 if origin == 'hip' else 0.05))
+    global LAST; LAST = (P, WR)
     parts = [('torso', mesh_arrays(P['torso'], rel(HIP), to_game_n), 1.0), ('head', mesh_arrays(P['head'], rel(NECK), to_game_n), 1.0),
              ('hardhat', mesh_arrays(P['hardhat'], rel(NECK), to_game_n), 1.0), ('beanie', mesh_arrays(P['beanie'], rel(NECK), to_game_n), 1.0),
              ('skippercap', mesh_arrays(P['skippercap'], rel(NECK), to_game_n), 1.0), ('sweater', mesh_arrays(P['sweater'], rel(HIP), to_game_n), 1.0),
              ('boot', mesh_arrays(P['boot'], to_game, to_game_n), 1.0), ('hand', mesh_arrays(P['hand'], ident, ident), 1.0)]
     for nm in ('uarm', 'farm', 'thigh', 'shin'): parts.append((nm, mesh_arrays(P[nm], ident, ident, ao=False), 1.0))
+    for nm, o, origin in WR:
+        xf = {'neck': (rel(NECK), to_game_n), 'hip': (rel(HIP), to_game_n), 'ground': (to_game, to_game_n), 'wrist': (ident, ident)}[origin]
+        parts.append((nm, mesh_arrays(o, xf[0], xf[1]), 1.0))
     ex = {'frame': 'kystfiske worker: x right, y up, z back (faces -z); torso from the hips (0.92 m), head and hats from the neck (1.50 m), boot from the ground; limbs one unit along +z, hand from the wrist along +z',
-          'joints': {'hip': HIP, 'neck': NECK, 'hipX': 0.11, 'shoulder': list(SHO)}, 'zones': {'1': 'jacket', '3': 'trousers'}}
+          'joints': {'hip': HIP, 'neck': NECK, 'hipX': 0.11, 'shoulder': list(SHO)}, 'zones': {'1': 'jacket', '3': 'trousers', '4': 'skin', '5': 'hair', '6': 'hat', '7': 'shoes'}}
     glb = os.path.join(OUT, 'worker.glb'); n = write_glb(glb, parts, ex)
     import base64
     open(os.path.join(ROOT, 'src', 'data', 'worker.b64'), 'w').write(base64.b64encode(open(glb, 'rb').read()).decode())
@@ -263,6 +279,7 @@ def main():
     if 'fast' in sys.argv: return
     # renders: the harbour worker, the skipper and a fisherman side by side, painted as the game paints them
     for o in P.values(): o.hide_render = True
+    for _n, o, _g in WR: o.hide_render = True
     KIT = {'hw': ((0.13, 0.29, 0.62), (0.13, 0.29, 0.62)), 'skipper': ((0.11, 0.15, 0.30), (0.20, 0.21, 0.24)), 'crew': ((0.95, 0.42, 0.07), (0.95, 0.42, 0.07))}
     for x, kit, h, arms in ((-0.8, 'hw', 0.25, None), (0.0, 'skipper', 0.0, None), (0.8, 'crew', -0.25, {-1: (-0.2, 0.32, 1.08), 1: (0.22, 0.30, 1.1)})):
         top, legs = mat(kit + '_top', KIT[kit][0], 0.2), mat(kit + '_legs', KIT[kit][1], 0.2)
