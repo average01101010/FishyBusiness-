@@ -101,6 +101,16 @@ const SAY = {
   gearWorn:[['Redskapen e sliten. Den treng en skikkelig omgang snart.', 'The gear is worn. It needs a proper going-over soon.'], ['Garnan e fulle av hol. Vi fesker halvparten av ka vi kunne.', 'The nets are full of holes. We fish half of what we could.'],
     ['Det her har sett bedre dager. Akkurat som mæ.', 'This has seen better days. Just like me.', 'spokefugl']],
   jigWorn:[['Pilken e slitt blank. Fesken ser den ikkje lenger.', 'The pilk is worn dull. The fish do not see it any more.'], ['Markkrokan e sløve. Vi treng et nytt sett.', 'The fly hooks are blunt. We need a new set.']],
+  // the boat and the skipper (vitalsTalk; Jonas 10.10.2026)
+  fuelLow:[['Skipper, vi har bare en fjerdedel igjen på tanken. Tenk på hjemveien.', 'Skipper, we have only a quarter left in the tank. Think of the way home.'],
+    ['Dieselen begynne å bli lite. Vi bør ha en plan førr å fylle.', 'The diesel is getting low. We should have a plan to fill up.'],
+    ['Tanken e under en fjerdedel. Æ liker det ikkje så langt ute.', 'The tank is under a quarter. I do not like it this far out.']],
+  fuelCrit:[['Nu e det snart tomt! Vi må inn nu, skipper!', 'It is nearly empty! We have to head in now, skipper!'],
+    ['Dieselen e nesten borte. Æ vil ikkje ligge og drive her.', 'The diesel is almost gone. I do not want to lie drifting here.'],
+    ['Under ti prosent, skipper. Det e ikkje mye å gå på.', 'Under ten per cent, skipper. There is not much to go on.']],
+  meTired:[['Skipper, du ser sliten ut. Bør du ikkje hvile litt?', 'Skipper, you look worn out. Should you not rest a bit?'],
+    ['Du e grå i fjeset, skipper. Gå og legg deg, vi klare oss.', 'You are grey in the face, skipper. Go and lie down, we will manage.'],
+    ['Æ har sett lik ut som deg etter ei uke uten søvn. Ta en pause.', 'I have seen people looking like you after a week without sleep. Take a break.']],
   workDone:[['Sånn, da e det gjort. Klart te neste sett.', 'There, that is done. Ready for the next set.'], ['Ferdig med det. Godt å ha noe å gjøre på overfarten.', 'Done with that. Good to have something to do on the crossing.'],
     ['Stampan står egna og klare.', 'The tubs stand baited and ready.']],
   goodCatch:[['Nu bit dem! Det her e nesten førr lett.', 'They are biting now! This is almost too easy.'], ['Ka med fesk! Fortsett det sånn, må vi kjøpe større båt.', 'So much fish! If it keeps up like this, we need a bigger boat.'],
@@ -197,6 +207,16 @@ function crewSay(c, sit){
   (who.said = who.said || []).push({t:S.t, no, en:l[1]}); if (who.said.length > 5) who.said.shift();
   if (hooks.onSay && meAboard()) hooks.onSay(who, no, l[1]);
   return true;
+}
+// the boat's state and the skipper's: once an hour at sea, each thing at most once a game day (S.gsay), and again after refuelling
+function vitalsTalk(on){
+  const b = S.boat; if (!on.length || b.status === 'port' || !BOAT.fuelCap) return;
+  const said = S.gsay || (S.gsay = {}), fresh = k => S.t - (said[k] || -1e9) > 24 * 60, say = k => { if (fresh(k) && crewSay(null, k)){ said[k] = S.t; return true; } return false; };
+  const f = b.fuel / BOAT.fuelCap;
+  if (f > 0.4){ delete said.fuelLow; delete said.fuelCrit; }
+  if (f < 0.1 && say('fuelCrit')) return;
+  if (f < 0.25 && f >= 0.1 && say('fuelLow')) return;
+  if (meAboard() && !asleep() && S.energy != null && S.energy < ENERGY.warn && !energyOff()) say('meTired');
 }
 // once an hour at sea: now and then (at most every 1.5 hours) someone remarks on how things are
 function sayHour(H, on, hs){

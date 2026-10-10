@@ -46,6 +46,11 @@ async def main():
           L2.n = 4; L2.baited = 4; L2.miss = 0.3; CARE_LAST = -1; careTick(); R.planHooks = S.jobs.some(x => x.kind === 'hk'); S.jobs = []; L2.miss = 0;
           pg.nets.push({id:'nT', mesh:60, ty:'x', n:4, cond:0.3, max:0.95}); b.rig = 'garn'; CARE_LAST = -1; careTick(); R.planNetsKept = !S.jobs.some(x => x.kind === 'mend') && pg.nets.some(x => x.id === 'nT'); S.jobs = [];
           b.rig = 'line'; CARE_LAST = -1; careTick(); R.planNetsMended = S.jobs.some(x => x.kind === 'mend'); S.plan = null; S.jobs = [];
+          // the crew speaks of the diesel at 25 % and 10 % and of the skipper's energy (Jonas 10.10.2026), once a day each
+          const say = (f, e) => { S.gsay = {}; S.sayT = -1e9; b.fuel = BOAT.fuelCap * f; S.energy = e; const l = S.log.length; vitalsTalk(crewAboard()); return S.log.slice(l).map(x => x.no).join(' | '); };
+          R.f30 = say(0.3, 80); R.f20 = say(0.2, 80); R.f05 = say(0.05, 80); R.en20 = say(0.9, 20); R.en50 = say(0.9, 50);
+          S.gsay = {}; S.sayT = -1e9; b.fuel = BOAT.fuelCap * 0.2; vitalsTalk(crewAboard()); S.sayT = -1e9; const l9 = S.log.length; vitalsTalk(crewAboard()); R.fOnce = S.log.length - l9;
+          b.fuel = BOAT.fuelCap; S.energy = 90;
           return R; })()""")
         print(json.dumps(r, ensure_ascii=False)[:1400])
         print(ok(r['sea'] and r['why'] is None and r['e1'] is None and r['until']), 'with a crew aboard, out at sea and lying still, the line can be baited, and the job starts at once')
@@ -55,6 +60,8 @@ async def main():
         print(ok('agn' in r['baitTalk'].lower()), 'out of bait for the tubs: someone says so', r['baitTalk'])
         print(ok(r['planBait'] and r['planHooks']), 'on a standing plan the crew still baits and changes hooks at sea', r['planBait'], r['planHooks'])
         print(ok(r['planNetsKept'] and r['planNetsMended']), 'on a net plan the nets stay aboard for the next set; on other plans the crew mends them', r['planNetsKept'], r['planNetsMended'])
+        print(ok(not r['f30'] and r['f20'] and r['f05'] and r['f20'] != r['f05'] and r['fOnce'] == 0), 'the crew speaks of the diesel under 25 % and under 10 %, not above, and not twice a day', r['f20'], '|', r['f05'])
+        print(ok(r['en20'] and not r['en50']), 'the crew speaks of the skipper being worn out under 25 % energy, not at 50 %', r['en20'])
         print(ok(r['alone'] and r['aloneEgn']), 'the skipper alone cannot do it at sea', r['alone'])
         print('errors:', errs[:3]); await br.close()
 
