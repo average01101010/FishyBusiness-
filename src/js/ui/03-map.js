@@ -148,7 +148,9 @@ function chartWant(V){
 function chartPump(){
   while (CHQ.n < CHQ.max && CHQ.q.length){
     const pk = CHQ.q.shift(); CHQ.n++;
-    mapLoad(pk).then(() => { CT.want.delete(pk); chartCame(pk); }, e => { CT.want.delete(pk); console.error(e); }).finally(() => { CHQ.n--; CHQ.done++; chartPump(); chartLoadLine(); });
+    mapLoad(pk).then(() => { CT.want.delete(pk); chartCame(pk); }, e => { CT.want.delete(pk); console.error(e);
+      // a pack that did not come is asked for again after a while (a view that stays as it is would otherwise stay without it): up to 5 times
+      if ((pk.fails = (pk.fails || 0) + 1) <= 5) setTimeout(() => { if (CT.v && document.body.classList.contains('vplot')) chartWant(CT.v); }, 3000 * pk.fails); }).finally(() => { CHQ.n--; CHQ.done++; chartPump(); chartLoadLine(); });
   }
   if (!CHQ.q.length && !CHQ.n){ CHQ.tot = CHQ.done = 0; chartWarmNext(); }
   chartLoadLine();

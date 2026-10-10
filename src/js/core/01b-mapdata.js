@@ -32,7 +32,7 @@ async function mapFetch(pk){
   // a pack that does not come (a slow or dropped connection, a proxy that cuts a large file, a hiccup on the server) is asked for again
   // up to three times, 0.7 s, 1.4 s and 2.1 s apart, before the player sees an error (08.10.2026: players stuck at «Kartet lastet ikke»)
   let buf = null, err = null;
-  for (let t = 0; t < 4 && !buf; t++){
+  for (let t = 0; t < 5 && !buf; t++){
     if (t) await new Promise(res => setTimeout(res, 700 * t));
     try { const r = await fetch(MAPD.base + pk.file, t ? {cache:'reload'} : undefined); if (!r.ok) throw new Error('map: ' + pk.file + ' ' + r.status); const b = await r.arrayBuffer(); if (pk.bytes && b.byteLength !== pk.bytes) throw new Error('map: ' + pk.file + ' came as ' + b.byteLength + ' bytes, not ' + pk.bytes); buf = b; } catch (e){ err = e; }
   }
@@ -88,6 +88,28 @@ let MVI = {k:'', v:false}, MFI = {k:'', v:false};
 function mapKindIn(kind, p, memo){ const T = MAPD.man.tile, k = kind + ':' + Math.floor(p.x / T) + ':' + Math.floor(p.y / T); if (memo.k === k && memo.v) return true; const pk = MAPD.byTile.get(k); memo.k = k; memo.v = !!(pk && pk.buf); return memo.v; }
 const mapViewIn = p => mapKindIn('view', p, MVI), mapFarIn = p => mapKindIn('far', p, MFI);
 function mapNeed(p, r){ return Promise.all(mapSimPacks(p, r).map(pk => pk.kind === 'chart' ? coastEnsure(pk) : mapLoad(pk))); }
+// Everything round some places, before a new player is let in (Jonas 10.10.2026: «Alt burde være ferdig innlastet så snart den nye
+// spilleren har kommet forbi innlastingsskjermen», after a chart that came only when it was zoomed out and in again): the packs of the kinds
+// under a box of R km round each point, a few at a time, each tried again before it counts as lost; the chart packs get their coast indexed
+// (as mapNeed does). pts [{x, y}], kinds [[kind, R km]], onProgress(done, of) for the line on the start screen; throws an Error naming what
+// did not come, so the start can say so and offer another try instead of going on without a map.
+async function mapPreload(pts, kinds, onProgress){
+  const want = new Map();
+  for (const p of pts) for (const [kind, R] of kinds) for (const pk of mapPacksIn(kind, p.x - R, p.y - R, p.x + R, p.y + R)) want.set(pk, kind);
+  const list = [...want.keys()], files = new Set(list.map(pk => pk.file)); let done = 0, total = files.size; const seen = new Set(), lost = [];
+  const tick = pk => { if (!seen.has(pk.file)){ seen.add(pk.file); done++; } if (onProgress) onProgress(Math.min(done, total), total); };
+  const one = async pk => {
+    for (let t = 0; t < 3; t++){
+      try { if (pk.kind === 'chart') await coastEnsure(pk); else await mapLoad(pk); tick(pk); return; }
+      catch (e){ if (t === 2){ lost.push(pk.file); console.error(e); } else await new Promise(r => setTimeout(r, 900 * (t + 1))); }
+    }
+  };
+  if (onProgress) onProgress(0, total);
+  const q = list.slice(); const workers = Array.from({length:4}, async () => { for (let pk = q.shift(); pk; pk = q.shift()) await one(pk); });
+  await Promise.all(workers);
+  if (lost.length) throw new Error('map: ' + lost.length + ' packs did not come (' + lost.slice(0, 3).join(', ') + ')');
+  return total;
+}
 function mapLoadKind(kind){ return Promise.all(MAPD.packs.filter(pk => pk.kind === kind).map(mapLoad)); }
 // ---------- blocks ----------
 function med16(raw, n){

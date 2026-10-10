@@ -94,8 +94,11 @@ function showStart(done){
     if (sel) hits.querySelectorAll('[data-id="' + sel.pt.id + '"]').forEach(e => e.classList.add('on')); });
   pick(ports[0].pt.id);
   el.querySelector('#stGo').addEventListener('click', async () => {
-    if (!sel) return; const b = el.querySelector('#stGo'); b.disabled = true; b.textContent = L('Laster kartet …', 'Loading the map …');
-    try { await chooseStart(sel.pt); } catch (e){ console.error(e); }
+    if (!sel) return; const b = el.querySelector('#stGo'), tx = el.querySelector('#stPickTx'); b.disabled = true; b.textContent = L('Laster kartet …', 'Loading the map …');
+    try { await chooseStart(sel.pt, (n, m) => { b.textContent = L('Laster kartet · ', 'Loading the map · ') + n + L(' av ', ' of ') + m; }); }
+    catch (e){   // no map, no start: the player is told, and tries again (Jonas 10.10.2026)
+      console.error(e); b.disabled = false; b.textContent = L('Prøv igjen', 'Try again');
+      tx.innerHTML = '<b>' + L('Kartet kom ikke fram.', 'The map did not arrive.') + '</b><br><small>' + L('Sjekk nettet og prøv igjen.', 'Check the connection and try again.') + '</small>'; return; }
     el.remove(); done();
   });
 }
@@ -114,7 +117,7 @@ function tutFieldNear(pt){
 // a game from before moving its home (Settings, «Hjemsted»): only the home and Father's naust go there; the boat stays where she is and
 // is sailed there (Jonas 05.10.2026: «Fast travel er ikke mulig i spillet, punktum.»)
 let START_HOMEONLY = false;
-async function chooseStart(pt){
+async function chooseStart(pt, onProgress){
   if (START_HOMEONLY){ START_HOMEONLY = false; S.home = pt.id; S.naust = null; view.cx = pt.p.x; view.cy = pt.p.y; save(); refreshAll(); return; }
   S.home = pt.id; S.naust = null; S.boat.berth = 'naust';   // the boat lies at Father's naust (07c-naust.js); the plant's quay until it is found
   await mapNeed(pt.p, Math.max(MAPD.simR, 7.5));   // the first trip's patch is looked for up to 6 km out (tutFieldNear)
@@ -123,5 +126,9 @@ async function chooseStart(pt){
   // Vangshamn has no plant: the first catch goes to Botnhamn, 5.7 km west
   { const f = tutFieldNear(pt); S.tutStart = {land:pt.mottak ? pt.id : 'botnhamn'}; if (f) S.tutStart.f = {...f, at:{no:'utenfor ' + pt.name, en:'off ' + pt.name}}; if (S.tut && S.tut.v === 2) Object.assign(S.tut, S.tutStart); }
   view.cx = pt.p.x; view.cy = pt.p.y;
+  // the whole first trip's ground in before the game begins: the harbour, the patch of fish and the landing, every kind of pack the chart and
+  // the 3D view read there (the player has nothing left to wait for after this screen)
+  const lp = portById(S.tutStart.land), pts = [pt.p, S.tutStart.f ? S.tutStart.f.p : pt.p, lp ? lp.p : pt.p];
+  await mapPreload(pts, [['sim', 8], ['chart', 8], ['view', 10], ['vec', 10], ['far', 30]], onProgress);
   save(); refreshAll();
 }
