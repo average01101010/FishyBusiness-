@@ -101,3 +101,10 @@ function lookQuay(id, i){
   if (!l){ const r = lookRng(lookHash(k + '#q')); l = lookFromSeed(k, r() < 0.25 ? 'f' : 'm', 20 + Math.floor(r() * 40), 'quay'); LOOK_Q.set(k, l); if (LOOK_Q.size > 300) LOOK_Q.delete(LOOK_Q.keys().next().value); }
   return l;
 }
+
+// a look from its key (what another player's game sent with her position): every field checked, what is not known becomes the plain choice
+function lookFromKey(s){
+  if (typeof s !== 'string' || !s) return null; const a = s.split('.'); if (a.length !== 12) return null;
+  const n = v => v === '-' ? null : +v;
+  return lookClean({b:a[0], s:+a[1], hs:a[2], hc:+a[3], bd:a[4], ht:a[5], hk:n(a[6]), tp:a[7], tk:+a[8], lg:+a[9], sh:a[10], sc:+a[11]});
+}

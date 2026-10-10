@@ -120,7 +120,7 @@ async def main():
         w = await pg.evaluate("""async () => { S.boatName = S.boatName || 'Havbris'; await worldTick(); const n = npcStates(S.t / 60).find(q => q.player);
           return {n:n && {name:n.name, type:n.type, L:n.L, st:n.st, d:Math.hypot(n.p.x - S.boat.pos.x, n.p.y - S.boat.pos.y)}, card:n ? aisInfo(n) : ''}; }""")
         wp = [c[1] for c in calls[n0:] if c[0] == 'pos_put']; wn = [c[1] for c in calls[n0:] if c[0] == 'pos_world']
-        check(wp and wp[0]['boat'] and wp[0]['vtype'] and abs(wp[0]['x'] - pos['x']) < 0.01 and isinstance(wp[0].get('fs'), int) and wn and w['n'] and w['n']['name'] == 'Fjordbris' and w['n']['L'] > 5
+        check(wp and wp[0]['boat'] and wp[0]['vtype'] and abs(wp[0]['x'] - pos['x']) < 0.01 and isinstance(wp[0].get('fs'), int) and wp[0].get('lk', '').count('.') == 11 and isinstance(wp[0].get('ck'), str) and wn and w['n'] and w['n']['name'] == 'Fjordbris' and w['n']['L'] > 5
               and 'Spiller' in w['card'] and 'Fjordbris' in w['card'] and 'Eier' in w['card'] and 'Kystjenta' in w['card'] and '12 år og' in w['card'],
               "the shared world: my boat's place, name, type and sea time go up, and another player's boat near by shows among the boats, with an AIS card that names the owner and the sea time", {'put': wp[0] if wp else None, 'peer': w['n']})
         # the paint goes along (20261007090000_livery.sql), and the other player's paint comes down to her model; a server without it yet
@@ -128,6 +128,11 @@ async def main():
         replies['pos_world'][0]['liv'] = 'h:gul'; n0 = len(calls)
         lv = await pg.evaluate("async () => { S.boat.liv = {hull:'kobolt'}; WORLDP.last = 0; await worldTick(); const n = npcStates(S.t / 60).find(q => q.player); return {liv:n && n.liv, parsed:n && livParse(n.liv)}; }")
         wl = [c[1].get('liv') for c in calls[n0:] if c[0] == 'pos_put']
+        # a server without the looks yet (404 for a call with lk) gets the place, the sea time and the paint without them
+        replies['pos_put'] = lambda b: 404 if 'lk' in b else 'null'; n0 = len(calls)
+        nolk = await pg.evaluate("async () => { WORLDP.last = 0; await worldTick(); return {noLk:!!WORLDP.noLk, noFs:!!WORLDP.noFs}; }")
+        wk = [('lk' in c[1], 'fs' in c[1], 'liv' in c[1]) for c in calls[n0:] if c[0] == 'pos_put']
+        check(wk == [(True, True, True), (False, True, True)] and nolk['noLk'] and not nolk['noFs'], 'a server without the looks yet gets the position, the sea time and the paint without them', {'calls':wk, 'flags':nolk})
         # a server without the sea time yet (404 for a call with fs) gets the place and the paint without it; one without the paint
         # either gets the place alone, and the shared world stays on
         replies['pos_put'] = lambda b: 404 if 'fs' in b else 'null'; n0 = len(calls)

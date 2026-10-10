@@ -3755,7 +3755,11 @@ const G3 = (() => {
     return PV[key] = {pb:buf(new Float32Array(b.p)), nb:buf(new Float32Array(b.n)), cb:buf(new Float32Array(b.c)), n:b.p.length / 3};
   }
   const ownPerson = (kind, i) => { const l = kind === 'crew' ? lookCrew(i) : lookMe(); if (!l) return null; const key = 'o|' + kind + '|' + lookKey(l); return PV[key] || personMesh(kind, l, key); };
-  const npcPerson = (kind, n) => { const h = lookHash(String(n.id)) % 12, key = 'n|' + kind + '|' + h; return PV[key] || personMesh(kind, lookFromSeed('npc' + kind + h, kind === 'crew' && h % 5 === 0 ? 'f' : 'm', 24 + (h * 5) % 40, 'sea'), key); };
+  // a boat of another player: her skipper's and crew's looks as she sent them (lk, ck); the local boats' from a look made from the id
+  const npcPerson = (kind, n, i) => {
+    if (n.player && n.lk){ const code = kind === 'crew' ? String(n.ck || '').split(';')[i || 0] : n.lk, key = 'p|' + kind + '|' + code, look = !PV[key] && lookFromKey(code); if (PV[key]) return PV[key]; if (look) return personMesh(kind, look, key); }
+    const h = lookHash(String(n.id)) % 12, key = 'n|' + kind + '|' + h; return PV[key] || personMesh(kind, lookFromSeed('npc' + kind + h, kind === 'crew' && h % 5 === 0 ? 'f' : 'm', 24 + (h * 5) % 40, 'sea'), key);
+  };
   function people(){
     if (PERS) return PERS; const mk = (hands, suit, kit) => { const b = VB(); b.lod = 0.6; personVB(b, 0, 0, 0, false, hands, suit, kit); return {pb:buf(new Float32Array(b.p)), nb:buf(new Float32Array(b.n)), cb:buf(new Float32Array(b.c)), n:b.p.length / 3}; };
     return PERS = {skip:mk([[-0.16, 1.08, -0.42], [0.16, 1.08, -0.42]], [0.93, 0.4, 0.1, 0.3], 'skipper'), skipDeck:mk(null, [0.93, 0.4, 0.1, 0.3], 'skipper'), crew:mk(null, [0.95, 0.75, 0.15, 0.3], 'crew')};
@@ -3919,7 +3923,7 @@ const G3 = (() => {
       drawN(K.hull, chain(n.M, K.S));
       if (!K.glass) continue;
       if (n.st !== 'port') drawN(npcPerson('skip', n), at(G.skipperAt));
-      if (n.st === 'fishing') for (let i = 0; i < 2 && i < G.crewSpots.length; i++) drawN(npcPerson('crew', {id:String(n.id) + i}), at(G.crewSpots[i], G.crewSpots[i][3]));
+      if (n.st === 'fishing') for (let i = 0; i < 2 && i < G.crewSpots.length; i++) drawN(npcPerson('crew', {id:String(n.id) + i, player:n.player, lk:n.lk, ck:n.ck}, i), at(G.crewSpots[i], G.crewSpots[i][3]));
     }
     drawNPCNames(kit, VP);
     gl.disableVertexAttribArray(2); gl.useProgram(PL.p);

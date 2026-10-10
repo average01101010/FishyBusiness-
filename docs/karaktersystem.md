@@ -1,6 +1,6 @@
 # Karaktersystem og garderobe (plan, 10.10.2026)
 
-Status 10.10.2026: fase 1 til 4 er bygget (utseendekoden, garderoben i Blender, redigeringen, mannskapet og folk på kaia og andre båter med eget utseende). Igjen: fase 5 (butikk, fortjente plagg og sesongplagg, trakt i admin) og fase 6 (andre spillere ser figuren din, krever en ny migrering for `pos_put`).
+Status 10.10.2026: fase 1 til 4 er bygget (utseendekoden, garderoben i Blender, redigeringen, mannskapet og folk på kaia og andre båter med eget utseende). Fase 6 er bygget: andre spillere ser figuren (`presence.lk`/`ck`, migreringen `20261010140000_look.sql`, `lookFromKey`, 404-reserve `noLk`). Igjen: fase 5 (butikk, fortjente plagg og sesongplagg, trakt i admin).
 
 Som bygget:
 - `core/09i-look.js`: utseendet, katalogen, paletter, `lookKit` (delenes navn og farger), `lookFromSeed` (mannskap og folk på kaia ut fra id, alder og kjønn), `lookOf` (lagres på personen, forskjellig fra de andre om bord og i flåten).

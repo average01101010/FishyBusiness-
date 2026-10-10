@@ -18,9 +18,11 @@ async function worldTick(){
     const a = {x:+b.pos.x.toFixed(4), y:+b.pos.y.toFixed(4), hd:+(b.heading || 0).toFixed(3),
       v:+(b.status === 'sailing' ? b.v || 0 : 0).toFixed(1), st:String(b.status || ''), boat:S.boatName || '', vtype:b.type || ''}, lv = livStr(b);
     if (lv && !WORLDP.noLiv) a.liv = lv;
+    // the figures: the skipper's look and the first four hands' (core/09i-look.js; supabase/migrations/20261010140000_look.sql)
+    if (!WORLDP.noLk && typeof lookKey === 'function'){ a.lk = lookKey(lookMe()); a.ck = crewAboard().slice(0, 4).map(c => lookKey(lookOf(c))).join(';'); }
     if (!WORLDP.noFs && typeof fsState === 'function') a.fs = Math.round(fsState().p);
     for (;;){ try { await cloudRpc('pos_put', a); break; } catch (e){ if (!/ 404$/.test(e.message)) throw e;
-      if ('fs' in a){ WORLDP.noFs = true; delete a.fs; } else if ('liv' in a){ WORLDP.noLiv = true; delete a.liv; } else throw e; } }
+      if ('lk' in a){ WORLDP.noLk = true; delete a.lk; delete a.ck; } else if ('fs' in a){ WORLDP.noFs = true; delete a.fs; } else if ('liv' in a){ WORLDP.noLiv = true; delete a.liv; } else throw e; } }
     // every active player, whatever the distance (pos_world, supabase/migrations/20261008120000_pos_world.sql); the boats within WORLD_R
     // come with their paint. A database without it (404) gives the boats near by, as before.
     let list; if (!WORLDP.noAll){ try { list = await cloudRpc('pos_world', {x:b.pos.x, y:b.pos.y, r:WORLD_R}); } catch (e){ if (!/ 404$/.test(e.message)) throw e; WORLDP.noAll = true; } }

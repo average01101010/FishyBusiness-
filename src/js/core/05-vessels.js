@@ -213,7 +213,7 @@ function peerStates(){
   for (const q of PEERS){
     const V = VESSELS[q.vtype] || VESSELS.trebat, dt = Math.min(30, Math.max(0, (now - q.at) / 1000)), moving = q.st === 'sailing' && q.v > 0.2;
     const d = moving ? q.v * NM * dt * GAME_RATE / 3600 : 0, p = {x:q.x + Math.sin(q.hd) * d, y:q.y - Math.cos(q.hd) * d};
-    out.push({id:'p' + q.id, name:peerName(q.boat), type:V.len >= 11 ? 'kyst' : 'sjark', p, hd:q.hd, cog:q.hd, v:moving ? q.v : 0, st:q.st === 'fishing' ? 'fishing' : q.st === 'port' ? 'port' : 'out', player:true, vtype:q.vtype, L:V.len, B:V.beam || V.len / 3, liv:String(q.liv || '').slice(0, 160),
+    out.push({id:'p' + q.id, name:peerName(q.boat), type:V.len >= 11 ? 'kyst' : 'sjark', p, hd:q.hd, cog:q.hd, v:moving ? q.v : 0, st:q.st === 'fishing' ? 'fishing' : q.st === 'port' ? 'port' : 'out', player:true, vtype:q.vtype, L:V.len, B:V.beam || V.len / 3, liv:String(q.liv || '').slice(0, 160), lk:String(q.lk || '').slice(0, 64), ck:String(q.ck || '').slice(0, 300),
       user:q.user ? peerName(q.user).slice(0, 20) : '', fs:Math.max(0, +q.fs || 0)});
   }
   return out;
