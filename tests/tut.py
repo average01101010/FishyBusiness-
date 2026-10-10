@@ -17,7 +17,7 @@ ORDER = ['n1', 'n2', 'n3', 'nout', 'intro', 'gps', 'route1', 'cast1', 'chip', 'k
          'legs', 'tour', 'hud', 'apps', 'vaer', 'salg', 'regler', 'redning', 'land', 'slip', 'book', 'ice', 'beh', 'crew', 'goal']
 SKIPPABLE = ('nout', 'kino', 'kino2', 'cam', 'cam2', 'legs')
 # the steps read with «Skjønner» while the ring shows what they are about
-OK_RING = ('deck', 'chip', 'slip', 'goal', 'luckhud', 'hud', 'apps', 'vaer', 'salg', 'regler', 'redning', 'legs', 'beh', 'intro')
+OK_RING = ('deck', 'chip', 'slip', 'goal', 'luckhud', 'hud', 'apps', 'vaer', 'salg', 'regler', 'redning', 'legs', 'beh', 'intro', 'n2')
 
 
 def check(ok, what, extra=''):
@@ -61,11 +61,11 @@ async def play(p, W, H, tag):
     await tap_el('#stGo'); await pg.wait_for_selector('#obGo', state='visible', timeout=60000)
     co = await pg.evaluate("({co:!!document.getElementById('obCo'), boat:!!document.getElementById('obBoat'), letter:!!document.getElementById('letter'), mark:document.getElementById('modal').innerText.includes(regText(regOf(S.boat)))})")
     check(lt['flat'] and lt['text'].startswith('Til deg som står igjen på kaia') and '– Far' in lt['text'] and lt['fits'] and lt['font'] >= 11, tag + ': the envelope opens with a tap, the letter unfolds whole and readable', {k: lt[k] for k in ('flat', 'fits', 'w', 'h', 'font')})
-    check(not co['boat'] and co['mark'] and not co['co'] and not co['letter'], tag + ': then the boat is taken over without a name (her registration mark), no company', co)
+    check(not co['boat'] and not co['mark'] and not co['co'] and not co['letter'], tag + ': then the boat is taken over without a name, the mark not mentioned (Jonas 10.10.2026), no company', co)
     await pg.wait_for_timeout(400); await tap_el('#obGo'); await pg.wait_for_timeout(600)
     await pg.wait_for_function("G3.isActive() || document.body.classList.contains('vplot')", timeout=90000); await pg.wait_for_timeout(800)
     await pg.evaluate("S.mult = 30; save()")
-    seen, reloads, hold_at_land, free, t0, stuck = [], 0, None, {}, time.time(), 0
+    seen, reloads, hold_at_land, free, t0, stuck, bonus_row = [], 0, None, {}, time.time(), 0, False
     for it in range(900):
         s = json.loads(await pg.evaluate(STATE))
         sid = s['id']
@@ -85,6 +85,8 @@ async def play(p, W, H, tag):
         if s['rod'] and sid != 'fish':
             await pg.evaluate("JIGG.stop(); renderActs()"); continue
         if sid == 'land' and s['st'] == 'port' and hold_at_land is None: hold_at_land = s['hold']
+        # the landing note is read while the guide shows it: it leaves the page a few game hours after the sale, and the rest of the trip takes longer than that at 30×
+        if sid == 'slip' and not bonus_row: bonus_row = await pg.evaluate("[...document.querySelectorAll('#drawerBody .slipt td')].some(td => /Innloggingsbonus/.test(td.textContent))")
         if sid in ('route2',) and s['busy']:
             await pg.wait_for_timeout(300); continue
         if s['ok'] and (not s['ring'] or sid in OK_RING) and not (sid == 'slip' and not s['ring'] and s['okText'].startswith('Skjønner')):
@@ -94,7 +96,6 @@ async def play(p, W, H, tag):
         await pg.wait_for_timeout(500)
     end = json.loads(await pg.evaluate("JSON.stringify({crew:S.crew.length, tut:S.tut, haill:S.haill && S.haill.type, sale:S.lastSale && {port:S.lastSale.port, total:S.lastSale.total, streak:S.lastSale.streak}, catchFlag:!!(S.tut && S.tut.catch), ice:S.boat.ice, gear:S.boat.gear, log:S.log.slice(-8).map(e => e.no)})"))
     await pg.evaluate("PHONE.show(false); DOCK.open('lever')"); await pg.wait_for_timeout(600)
-    bonus_row = await pg.evaluate("[...document.querySelectorAll('#drawerBody .slipt td')].some(td => /Innloggingsbonus/.test(td.textContent))")
     await pg.screenshot(path='tut_' + tag + '.png')
     order = [x for x in seen if x]
     want = [x for x in ORDER if x in order or x not in SKIPPABLE]

@@ -60,7 +60,7 @@ const TSTEPS = [
   {id:'n1', ok:true, done:() => false,
     tip:() => ({no:'Fars naust. Her satt han etter hver tur, så lenge du kan huske. Nå er det ditt.', en:'Father’s boathouse. He sat here after every trip, as long as you can remember. Now it is yours.'})},
   {id:'n2', ok:true, done:() => false,
-    tip:() => ({el:vis('#naust3 [data-s=far]'), no:'Fars torsk, ' + fmt(FAR_REC.kg, 1) + ' kg. Den eneste fisken han hengte opp. Den største du selv får av hver art, kommer til å henge under den.', en:'Father’s cod, ' + fmt(FAR_REC.kg, 1) + ' kg. The only fish he ever hung up. The biggest you land of each species will hang below it.'})},
+    tip:() => ({rect:() => naustOpen() ? NAUST3D.farRect() : null, no:'Fars torsk, ' + fmt(FAR_REC.kg, 1) + ' kg. Den eneste fisken han hengte opp. Den største du selv får av hver art, kommer til å henge under den.', en:'Father’s cod, ' + fmt(FAR_REC.kg, 1) + ' kg. The only fish he ever hung up. The biggest you land of each species will hang below it.'})},
   {id:'n3', ok:true, done:() => false,
     tip:() => ({no:'Ovnen, taket og benken kan du sette i stand etter hvert. Alt om naustet står under «Liste».', en:'The stove, the roof and the bench you can put right in time. Everything about the boathouse is under «List».'})},
   {id:'nout', done:() => !naustOpen(),
@@ -229,6 +229,7 @@ function tutReveal(el){
   for (let p = el.parentElement; p; p = p.parentElement) if (p.scrollHeight > p.clientHeight + 1 && /auto|scroll/.test(getComputedStyle(p).overflowY)){ p.scrollTop += over; return; }
 }
 function tutRect(T0){
+  if (T0.rect){ const R = T0.rect(); return R && R.w > 0 ? {R:{x:R.x - 6, y:R.y - 6, w:R.w + 12, h:R.h + 12}, round:false} : {R:null, round:false}; }
   if (T0.el){ if (T0.scroll) tutReveal(T0.el); const q = T0.el.getBoundingClientRect(); return {R:{x:q.left - 6, y:q.top - 6, w:q.width + 12, h:q.height + 12}, round:false}; }
   if (T0.map && inPlot()){ const c = mapToClient(T0.map.p), rp = Math.max(28, T0.map.r * view.px); return {R:{x:c.x - rp, y:c.y - rp, w:rp * 2, h:rp * 2}, round:true}; }
   return {R:null, round:false};

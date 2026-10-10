@@ -73,8 +73,8 @@ const NAUST3D = (() => {
     q([x, -y, -z], [x, y, -z], [x, y, z], [x, -y, z], [1, 0, 0], C); q([-x, -y, -z], [-x, -y, z], [-x, y, z], [-x, y, -z], [-1, 0, 0], C);
     const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(out), gl.STATIC_DRAW); return {b, n:out.length / 9};
   }
-  // where Father's cod hangs: over the trophy wall's frame, left of the lamp so it is not hidden behind it, under the roof's slope
-  const FAR_AT = () => { const w = P.A.wall; return w ? [w[0] - 1.1, w[1] + 1.55, w[2]] : null; };
+  // where Father's cod hangs: on the board itself, in the middle above the top row of hooks (over the frame it sat behind the beam)
+  const FAR_AT = () => { const w = P.A.wall; return w ? [w[0], w[1] + 0.82, w[2]] : null; };
   function init(){
     if (gl) return true; if (failed) return false;
     if (/no3d/.test(location.hash)){ failed = true; return false; }      // the tests without 3D (KYST_LITE): the page as before
@@ -137,7 +137,8 @@ const NAUST3D = (() => {
     const fishDraw = (m, M) => { gl.bindBuffer(gl.ARRAY_BUFFER, m.b); gl.uniformMatrix4fv(P.pf.u.uM, false, M);
       gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 36, 0); gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 36, 12); gl.vertexAttribPointer(2, 3, gl.FLOAT, false, 36, 24); gl.drawArrays(gl.TRIANGLES, 0, m.n); };
     if (F0 && P.fish[FAR_REC.sp]){
-      fishOn(); fishDraw(P.board, TS([F0[0], F0[1], F0[2] + 0.04], [1, 1, 1]));
+      fishOn(); fishDraw(P.board, TS([F0[0], F0[1], F0[2] + 0.07], [1, 1, 1]));
+      gl.uniform1f(P.pf.u.uK, 1.3 + 0.06 * flick);   // right under the lamp, the brightest thing on the wall
       const len = lenOf(FAR_REC.sp, FAR_REC.kg); fishDraw(P.fish[FAR_REC.sp], mul(mul(TS([F0[0], F0[1], F0[2] + 0.2], [len, len, len]), RZ(0.05)), RY(-Math.PI / 2)));
       gl.useProgram(p.p); for (let i = 0; i < 3; i++) gl.enableVertexAttribArray(i);
     }
@@ -178,9 +179,9 @@ const NAUST3D = (() => {
       const lift = k === 'door' ? 1.1 : k === 'tak' ? 0.3 : 0.55; vis(b, project([c[0], c[1] + lift, c[2]]), true);
     }
     let fb = lay.querySelector('[data-s="far"]'); if (!fb){ fb = document.createElement('button'); fb.dataset.s = 'far'; fb.innerHTML = '<b>' + esc(L('Fars torsk', 'Father’s cod')) + '</b><small>' + esc(fmt(FAR_REC.kg, 1)) + ' kg</small>'; lay.appendChild(fb); }
-    const F0 = FAR_AT(); vis(fb, F0 && project([F0[0], F0[1] - 0.3, F0[2] + 0.12]), true, true);
+    const F0 = FAR_AT(); vis(fb, F0 && project([F0[0], F0[1] + 0.24, F0[2] + 0.12]), true);   // over the fish, so the guide's tip above it leaves the fish in view
     let w = lay.querySelector('[data-s="vegg"]'); if (!w){ w = document.createElement('button'); w.dataset.s = 'vegg'; w.textContent = L('Rekordene', 'The records'); lay.appendChild(w); }
-    const wc = P.A.wall; vis(w, wc && project([wc[0], wc[1] + 1.35, wc[2] + 0.2]), true);
+    const wc = P.A.wall; vis(w, wc && project([wc[0] + 1.5, wc[1] + 1.35, wc[2] + 0.2]), true);
   }
   function pick(px, py){
     const x = px / cv.clientWidth * 2 - 1, y = 1 - py / cv.clientHeight * 2, ty = Math.tan(FY / 2), tx = ty * ASP, {f, r, u} = basis();
@@ -189,7 +190,7 @@ const NAUST3D = (() => {
     let best = null, bt = 1e9;
     if (naustHas('vegg')) (P.A.slots || []).forEach((s, i) => { const t = hit([s[0], s[1] - 0.2, s[2] + 0.2], 0.46); if (t != null && t < bt){ bt = t; best = 'f:' + i; } });
     if (best) return best;
-    { const F0 = FAR_AT(), t = F0 && hit([F0[0], F0[1], F0[2] + 0.2], 0.5); if (t != null) return 'far'; }
+    { const F0 = FAR_AT(), t = F0 && hit([F0[0], F0[1], F0[2] + 0.2], 0.4); if (t != null) return 'far'; }
     for (const [k, c, rad] of P.A.spots || []){ const t = hit(c, rad); if (t != null && t < bt){ bt = t; best = k; } }
     return best;
   }
@@ -290,5 +291,12 @@ const NAUST3D = (() => {
     if (typeof G3 !== 'undefined' && G3.hold) G3.hold(false);
     if (typeof renderActs === 'function') renderActs();
   }
-  return {open, close, isOpen:() => on, ready(){ if (!el) build(); return init(); }, get panel(){ return panelKey; }, openSpot, look(y, p){ cam.yaw = y; cam.pitch = p; }, get anchors(){ return P ? P.A : null; }, get cam(){ return cam; }, project:c => VP ? project(c) : null, lenOf};
+  // the screen rectangle round Father's cod and its label, for the guide's ring (null until the room has drawn a frame)
+  function farRect(){
+    if (!on || !P || !VP) return null; const F0 = FAR_AT(); if (!F0) return null; const r = cv.getBoundingClientRect();
+    const pts = [[-0.62, -0.22], [0.62, -0.22], [0.62, 0.44], [-0.62, 0.44]].map(([dx, dy]) => project([F0[0] + dx, F0[1] + dy, F0[2] + 0.2])); if (pts.some(q => !q)) return null;
+    const xs = pts.map(q => q[0] + r.left), ys = pts.map(q => q[1] + r.top), x0 = Math.min(...xs), y0 = Math.min(...ys);
+    return {x:x0, y:y0, w:Math.max(...xs) - x0, h:Math.max(...ys) - y0};
+  }
+  return {open, close, isOpen:() => on, ready(){ if (!el) build(); return init(); }, farRect, get panel(){ return panelKey; }, openSpot, look(y, p){ cam.yaw = y; cam.pitch = p; }, get anchors(){ return P ? P.A : null; }, get cam(){ return cam; }, project:c => VP ? project(c) : null, lenOf};
 })();
