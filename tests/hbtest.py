@@ -17,7 +17,7 @@ async def main():
         for W, H, tag in [(1280, 800, 'liggende'), (800, 1280, 'staaende')]:
             ctx = await br.new_context(viewport={'width': W, 'height': H}); pg = await ctx.new_page(); errs = []
             pg.on('pageerror', lambda e: errs.append(str(e)))
-            await boot(pg, GAME); await pg.wait_for_timeout(600)
+            await boot(pg, GAME + ',hb'); await pg.wait_for_timeout(600)   # ',hb': the tips are off in the tests' games unless asked for (07c-handbook.js hbPick)
             # 1. an old hand gets no drips: five landings when the book arrives
             a = await pg.evaluate("(() => { S.hb = null; S.landN = 5; const H = hbState(); return {skip:Object.keys(H.skip).length, ready:hbReady()}; })()")
             check(a['skip'] == 5 and a['ready'] == 0, tag + ': five landings when the book arrives: every chapter at rest, nothing ready', a)

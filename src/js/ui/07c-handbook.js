@@ -82,6 +82,7 @@ const HB = [
 const hbById = id => HB.find(t => t.id === id);
 // the drip to show now: the one under way, else the first whose moment has come
 function hbPick(){
+  if (typeof NOTUT !== 'undefined' && NOTUT && !/hb/.test(location.hash)) return null;   // the tests' games (#notut) get no tips over their buttons; #hb turns them on (hbtest)
   const H = hbState();
   if (H.cur){ const t = hbById(H.cur); if (t && (!H.seen[t.id] || H.force)) return t; H.cur = null; H.force = 0; }
   if (Date.now() - (H.at || 0) < HB_GAP) return null;
