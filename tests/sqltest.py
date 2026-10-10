@@ -570,6 +570,14 @@ def main():
         print(ok(TUr['started'] == 2 and TUr['steps']['gps']['n'] == 2 and TUr['steps']['gps']['med'] == 21 and TUr['steps']['route1']['n'] == 2 and TUr['steps']['route1']['med'] == 40
                  and TUr['steps']['route1']['settled'] == 1 and TUr['done'] == 1 and TUr['doneMed'] == 1500 and TUx['pl'][0] and TUx['mfa'][0]),
               "the first trip's steps: players and median seconds per step, settled steps without time, the trips finished; only the admin with MFA reads it", TUr)
+        # Håndboka's drips (20261010120000_hb.sql): per tip, the players who read it and who put the chapter to rest from it; only the
+        # admin with MFA reads it
+        sql("""insert into public.events (player_id, kind, data) values ('user_01FN1', 'hb', '{"id":"guide","how":"seen"}'), ('user_01FN1', 'hb', '{"id":"guide","how":"seen"}'),
+            ('user_01FN3', 'hb', '{"id":"guide","how":"seen"}'), ('user_01FN3', 'hb', '{"id":"ekko","how":"skip"}')""")
+        HBr = json.loads(sql("select public.admin_hb(8)", AD2, 'authenticated'))
+        HBx = {'pl': sql("select public.admin_hb(8)", B, 'authenticated', expect_err=True), 'mfa': sql("select public.admin_hb(8)", AD1, 'authenticated', expect_err=True)}
+        print(ok(HBr['players'] == 2 and HBr['tips']['guide']['seen'] == 2 and HBr['tips']['guide']['skip'] == 0 and HBr['tips']['ekko']['skip'] == 1 and HBr['tips']['ekko']['seen'] == 0 and HBx['pl'][0] and HBx['mfa'][0]),
+              "Håndboka's drips: players who read and who skipped from each tip; only the admin with MFA reads it", HBr)
         # friends (20261009180000_friends.sql): a code, a request by code and by the hashed id, accepted both ways, the friend's boat
         # wherever it is and also when it went quiet long ago, no guest, no stranger reads, and either can end it
         sql("insert into public.players (id, guest) values ('user_01FRA', false), ('user_01FRB', false), ('user_01FRC', false) on conflict do nothing")

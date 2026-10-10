@@ -98,7 +98,7 @@ function render(){
   if (TAB === 'navn') nmWire();
   if (TAB === 'avis') nwWire();
   if (TAB === 'merker' && $('#acR')) $('#acR').onclick = () => { AC = null; render(); };
-  if (TAB === 'trakt' && $('#fnR')) $('#fnR').onclick = () => { FN = null; TU = null; render(); };
+  if (TAB === 'trakt' && $('#fnR')) $('#fnR').onclick = () => { FN = null; TU = null; HBF = null; render(); };
 }
 
 const kpi = (label, v, sub) => '<div class="card kpi"><b>' + v + '</b><span>' + label + (sub ? '<br>' + sub : '') + '</span></div>';
@@ -332,7 +332,7 @@ VIEW.trakt = () => {
       worst ? 'Størst frafall før «' + esc(FN_STEPS[worst.i][1]) + '»: ' + Math.round(worst.fall * 100) + ' % kommer ikke videre. Der er neste sted å gjøre noe.' : '') +
     card('Per uke de startet', table(FN.weeks, [['wk', 'Uke fra', v => esc(String(v).slice(0, 10))], ['start', 'Startet'], ['catch', 'Fangst', (v, x) => r(v, x.start)], ['land1', '1. levering', (v, x) => r(v, x.start)],
       ['land3', '3. levering', (v, x) => r(v, x.start)], ['reg', 'Registrert', (v, x) => r(v, x.start)], ['d1', 'Dag 1', (v, x) => r(v, x.d1n)], ['d7', 'Dag 7', (v, x) => r(v, x.d7n)], ['d30', 'Dag 30', (v, x) => r(v, x.d30n)]]),
-      'Andel av dem som startet den uka. Dag 1, 7 og 30 regnes av dem som har hatt så lang tid.') + tuView();
+      'Andel av dem som startet den uka. Dag 1, 7 og 30 regnes av dem som har hatt så lang tid.') + tuView() + hbView();
 };
 // ---------- the first trip's steps (supabase/migrations/20261010100000_tut_steps.sql; the game's ui/07b-first-trip.js; docs/onboarding.md) ----------
 // Each step of the guided first trip in the game's order: how many reached it of those who began the guide, and the median real
@@ -356,6 +356,26 @@ function tuView(){
   const body = '<table><tr><th></th><th>Trinn</th><th>Spillere</th><th></th><th>Av dem som begynte</th><th>Median tid</th></tr>' + rows + '</table>';
   return '<div class="grid">' + kpi('Begynte på Første tur', nf(TU.started || 0, 0), 'siste 8 uker, med statistikk') + kpi('Fullførte', nf(TU.done || 0, 0), Math.round((TU.done || 0) / all * 100) + ' % av dem som begynte') + kpi('Median tid, hele turen', mm(TU.doneMed), 'ekte tid') + '</div>' +
     card('Første tur, trinn for trinn', body, worst ? 'Størst frafall før «' + esc(TUT_STEPS[worst.i][1]) + '»: ' + Math.round(worst.fall * 100) + ' % kommer ikke videre. Tida er ekte sekunder på trinnet (trinn som ble avgjort av et senere trinn teller ikke).' : 'Tida er ekte sekunder på trinnet.');
+}
+// ---------- Håndboka's drips (supabase/migrations/20261010120000_hb.sql; the game's ui/07c-handbook.js) ----------
+// Each tip of chapters 2–6: how many read it («Skjønner») and how many put the chapter to rest from it («Jeg kan dette»). A tip many
+// skip from is one that comes too early or says too little.
+const HB_TIPS = [[2, 'Tur 2 og 3', [['rute', 'Egen rute'], ['guide', 'Fiskeguiden'], ['ekko', 'Ekkoloddet'], ['tide', 'Flo og fjære'], ['regler', 'Kan jeg fiske her?'], ['sesong', 'Sesongen'], ['post', 'Kystposten'], ['meld', 'Meldinger']]],
+  [3, 'Kvelden og natta', [['energi', 'Hvile'], ['kulde', 'Kulda'], ['diesel', 'Diesel'], ['rorbu', 'Rorbua']]],
+  [4, 'Rutinen', [['drift', 'Driftsplanen'], ['topp', 'Salgslaget og topplista'], ['merker', 'Milepæler'], ['tilbake', 'Si fra'], ['patch', 'Patchnotes']]],
+  [5, 'Utstyr og båt', [['oppdrag', 'Oppdrag'], ['butikk', 'Utstyrsbutikken'], ['verft', 'Verftet'], ['neste', 'Neste båt']]],
+  [6, 'Sosialt og økonomi', [['venner', 'Venner'], ['ais', 'Andre båter'], ['pub', 'Puben'], ['rederi', 'Rederiet'], ['kvote', 'Kvoten']]]];
+let HBF = null;
+async function hbLoad(){ await null; try { HBF = DEMO ? hbDemo() : await rpc('admin_hb', {weeks:8}); } catch (e){ HBF = {err:e.message}; } if (TAB === 'trakt') render(); }
+function hbDemo(){ const t = {}; let k = 0; for (const [, , tips] of HB_TIPS) for (const [id] of tips){ t[id] = {seen:Math.max(2, 30 - k * 1), skip:(k * 7) % 5}; k++; } return {players:34, tips:t}; }
+function hbView(){
+  if (!HBF){ hbLoad(); return ''; }
+  if (HBF.err) return card('Håndboka', '<p class="warn">' + esc(HBF.err) + '</p>', 'Er migreringen supabase/migrations/20261010120000_hb.sql kjørt?');
+  const all = Math.max(1, HBF.players || 0), T = HBF.tips || {};
+  const rows = HB_TIPS.map(([ch, nm, tips]) => '<tr><th colspan="5" style="text-align:left;padding-top:8px">' + ch + '. ' + esc(nm) + '</th></tr>' + tips.map(([id, t]) => { const x = T[id] || {}, n = x.seen || 0, w = Math.round(n / all * 100);
+    return '<tr><td>' + esc(t) + ' <span class="note">' + id + '</span></td><td>' + nf(n, 0) + '</td><td style="width:35%"><div class="bar"><i style="width:' + w + '%"></i></div></td><td class="note">' + w + ' %</td><td class="note">' + (x.skip ? nf(x.skip, 0) + ' hoppet over her' : '') + '</td></tr>'; }).join('')).join('');
+  return card('Håndboka, tips for tips', '<p class="note">' + nf(HBF.players || 0, 0) + ' spillere har sett minst ett tips de siste 8 ukene.</p><table><tr><th>Tips</th><th>Lest</th><th></th><th>Av dem</th><th>«Jeg kan dette»</th></tr>' + rows + '</table>',
+    'Et tips mange hopper over fra, kommer for tidlig eller sier for lite.');
 }
 // ---------- the badges' funnel (supabase/migrations/20261007140000_ach.sql; the game's core/09f-merker.js) ----------
 // How far the players come in «Første uke på sjøen»: each milestone in the game's order, with how many reached it (of those who share
