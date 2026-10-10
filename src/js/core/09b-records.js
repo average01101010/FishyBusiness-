@@ -24,9 +24,16 @@ function recCatch(sp, kg, how){
   const R = recState(), o = R[sp]; kg = Math.round(kg * 10) / 10; if (o && kg <= o.kg) return;
   R[sp] = {sp, kg, t:S.t, at:recPlace(S.boat.pos), boat:S.boatName || '', how:how || 'juksa'};
   const nm = SPECIES[sp], quiet = typeof tutOn === 'function' && tutOn();
+  if (sp === FAR_REC.sp && kg > FAR_REC.kg && !S.farBeat){ S.farBeat = S.t; if (!quiet) msg('Trofeveggen', 'Du slo fars torsk: ' + fmt(kg, 1) + ' kg mot hans ' + fmt(FAR_REC.kg, 1) + ' kg. Den henger ved siden av hans i naustet.', 'You beat Father’s cod: ' + fmt(kg, 1) + ' kg against his ' + fmt(FAR_REC.kg, 1) + ' kg. It hangs beside his in the boathouse.'); }
   if (!o){ if (!quiet) log('Første ' + nm.no.toLowerCase() + ' på rekordlista: ' + fmt(kg, 1) + ' kg.', 'First ' + nm.en.toLowerCase() + ' on the record list: ' + fmt(kg, 1) + ' kg.'); return; }
   // a clearly bigger one gets a message; a few grams more only changes the wall
   if (!quiet && kg >= o.kg * 1.15 && kg >= 1) msg('Trofeveggen', 'Ny rekord: ' + nm.no.toLowerCase() + ' på ' + fmt(kg, 1) + ' kg (før ' + fmt(o.kg, 1) + ' kg).', 'New record: ' + nm.en.toLowerCase() + ' of ' + fmt(kg, 1) + ' kg (was ' + fmt(o.kg, 1) + ' kg).');
 }
+// Father's cod (Jonas 10.10.2026: «en utstoppet torsk der som er fars rekord»): the one fish that hangs in the naust from the start,
+// stuffed and mounted over the trophy wall, his biggest, taken on the jig off the home harbour the winter the boat was new to him.
+// The first fish on the wall is his, so the wall is never empty (endowed progress), and a cod bigger than his is the first real record.
+const FAR_REC = {sp:'torsk', kg:24.6, year:1998, how:'juksa'};
+const farRecPlace = () => { const h = portById(S.home || HOME0); return h ? h.name : ''; };
+const farRecBeaten = () => { const r = recState().torsk; return !!(r && r.kg > FAR_REC.kg); };
 // every species in order, with its record or null: [{sp, rec}]
 const recList = () => { const R = recState(); return Object.keys(SPECIES).map(sp => ({sp, rec:R[sp] || null})); };

@@ -60,7 +60,7 @@ const TSTEPS = [
   {id:'n1', ok:true, done:() => false,
     tip:() => ({no:'Fars naust. Her satt han etter hver tur, så lenge du kan huske. Nå er det ditt.', en:'Father’s boathouse. He sat here after every trip, as long as you can remember. Now it is yours.'})},
   {id:'n2', ok:true, done:() => false,
-    tip:() => ({no:'Trofeveggen er tom. Den største fisken du får av hver art, kommer til å henge her.', en:'The trophy wall is empty. The biggest fish you land of each species will hang here.'})},
+    tip:() => ({el:vis('#naust3 [data-s=far]'), no:'Fars torsk, ' + fmt(FAR_REC.kg, 1) + ' kg. Den eneste fisken han hengte opp. Den største du selv får av hver art, kommer til å henge under den.', en:'Father’s cod, ' + fmt(FAR_REC.kg, 1) + ' kg. The only fish he ever hung up. The biggest you land of each species will hang below it.'})},
   {id:'n3', ok:true, done:() => false,
     tip:() => ({no:'Ovnen, taket og benken kan du sette i stand etter hvert. Alt om naustet står under «Liste».', en:'The stove, the roof and the bench you can put right in time. Everything about the boathouse is under «List».'})},
   {id:'nout', done:() => !naustOpen(),

@@ -64,6 +64,17 @@ const NAUST3D = (() => {
     }
     return F;
   }
+  // the varnished board Father's cod is mounted on (position, normal, colour like the fish), a box of w × h × d metres round the origin
+  function boardBuf(w, h, d){
+    const C = [0.21, 0.13, 0.07], Cf = [0.26, 0.17, 0.09], out = [], q = (a, b, c, e, n, col) => { for (const v of [a, b, c, a, c, e]) out.push(v[0], v[1], v[2], n[0], n[1], n[2], col[0], col[1], col[2]); };
+    const x = w / 2, y = h / 2, z = d / 2;
+    q([-x, -y, z], [x, -y, z], [x, y, z], [-x, y, z], [0, 0, 1], Cf); q([-x, -y, -z], [-x, y, -z], [x, y, -z], [x, -y, -z], [0, 0, -1], C);
+    q([-x, y, -z], [-x, y, z], [x, y, z], [x, y, -z], [0, 1, 0], C); q([-x, -y, -z], [x, -y, -z], [x, -y, z], [-x, -y, z], [0, -1, 0], C);
+    q([x, -y, -z], [x, y, -z], [x, y, z], [x, -y, z], [1, 0, 0], C); q([-x, -y, -z], [-x, -y, z], [-x, y, z], [-x, y, -z], [-1, 0, 0], C);
+    const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(out), gl.STATIC_DRAW); return {b, n:out.length / 9};
+  }
+  // where Father's cod hangs: over the trophy wall's frame, left of the lamp so it is not hidden behind it, under the roof's slope
+  const FAR_AT = () => { const w = P.A.wall; return w ? [w[0] - 1.1, w[1] + 1.55, w[2]] : null; };
   function init(){
     if (gl) return true; if (failed) return false;
     if (/no3d/.test(location.hash)){ failed = true; return false; }      // the tests without 3D (KYST_LITE): the page as before
@@ -71,7 +82,7 @@ const NAUST3D = (() => {
       gl = cv.getContext('webgl', {antialias:true, alpha:false, powerPreference:'high-performance'}) || cv.getContext('experimental-webgl');
       if (!gl) throw new Error('no webgl');
       const pr = prog(VS, FS), pf = prog(VF, 'precision mediump float;varying vec3 vC;void main(){gl_FragColor=vec4(vC,1.0);}'), M = load(); if (!M) throw new Error('no model');
-      P = Object.assign(M, {pr, pf, fish:loadFish()});
+      P = Object.assign(M, {pr, pf, fish:loadFish()}); P.board = boardBuf(1.18, 0.4, 0.035);
       cv.addEventListener('webglcontextlost', e => { e.preventDefault(); gl = null; P = null; failed = false; });
       return true;
     } catch (e){ failed = true; gl = null; console.warn('naust 3d', e); return false; }
@@ -120,6 +131,16 @@ const NAUST3D = (() => {
     part('room'); part(naustHas('tak') ? 'roofnew' : 'roofold'); part(naustHas('benk') ? 'benk' : 'benkold');
     if (naustHas('ovn')) part('ovn');
     if (naustHas('vegg')) part('vegg');
+    // Father's cod on its board, there from the start whatever the wall is like; the player's fish on the wall below
+    const F0 = FAR_AT(), fishOn = () => { const f = P.pf; gl.useProgram(f.p); gl.uniformMatrix4fv(f.u.uVP, false, VP); gl.uniform3f(f.u.uL, 0.0, 0.62, 0.78); gl.uniform1f(f.u.uK, 0.96 + 0.05 * flick);
+      gl.enableVertexAttribArray(0); gl.enableVertexAttribArray(1); gl.enableVertexAttribArray(2); };
+    const fishDraw = (m, M) => { gl.bindBuffer(gl.ARRAY_BUFFER, m.b); gl.uniformMatrix4fv(P.pf.u.uM, false, M);
+      gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 36, 0); gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 36, 12); gl.vertexAttribPointer(2, 3, gl.FLOAT, false, 36, 24); gl.drawArrays(gl.TRIANGLES, 0, m.n); };
+    if (F0 && P.fish[FAR_REC.sp]){
+      fishOn(); fishDraw(P.board, TS([F0[0], F0[1], F0[2] + 0.04], [1, 1, 1]));
+      const len = lenOf(FAR_REC.sp, FAR_REC.kg); fishDraw(P.fish[FAR_REC.sp], mul(mul(TS([F0[0], F0[1], F0[2] + 0.2], [len, len, len]), RZ(0.05)), RY(-Math.PI / 2)));
+      gl.useProgram(p.p); for (let i = 0; i < 3; i++) gl.enableVertexAttribArray(i);
+    }
     // the fish on the wall
     if (naustHas('vegg') && P.A.slots){
       const f = P.pf; gl.useProgram(f.p); gl.uniformMatrix4fv(f.u.uVP, false, VP); gl.uniform3f(f.u.uL, 0.0, 0.62, 0.78); gl.uniform1f(f.u.uK, 0.96 + 0.05 * flick);
@@ -138,7 +159,7 @@ const NAUST3D = (() => {
   }
 
   // ---------- what can be tapped ----------
-  const SPOTS = {vegg:['Trofeveggen', 'The trophy wall'], ovn:['Vedovnen', 'The wood stove'], benk:['Arbeidsbenken', 'The workbench'], tak:['Taket', 'The roof'], door:['Gå ut', 'Leave']};
+  const SPOTS = {far:['Fars torsk', 'Father’s cod'], vegg:['Trofeveggen', 'The trophy wall'], ovn:['Vedovnen', 'The wood stove'], benk:['Arbeidsbenken', 'The workbench'], tak:['Taket', 'The roof'], door:['Gå ut', 'Leave']};
   const dayOf = t => dayStr(t / 60).replace(/^\S+ /, '');
   function project(c){ const x = VP[0] * c[0] + VP[4] * c[1] + VP[8] * c[2] + VP[12], y = VP[1] * c[0] + VP[5] * c[1] + VP[9] * c[2] + VP[13], w = VP[3] * c[0] + VP[7] * c[1] + VP[11] * c[2] + VP[15];
     if (w <= 0.05) return null; return [(x / w * 0.5 + 0.5) * cv.clientWidth, (0.5 - y / w * 0.5) * cv.clientHeight]; }
@@ -156,6 +177,8 @@ const NAUST3D = (() => {
       let b = lay.querySelector('[data-s="' + k + '"]'); if (!b){ b = document.createElement('button'); b.dataset.s = k; b.textContent = L(...SPOTS[k]); lay.appendChild(b); }
       const lift = k === 'door' ? 1.1 : k === 'tak' ? 0.3 : 0.55; vis(b, project([c[0], c[1] + lift, c[2]]), true);
     }
+    let fb = lay.querySelector('[data-s="far"]'); if (!fb){ fb = document.createElement('button'); fb.dataset.s = 'far'; fb.innerHTML = '<b>' + esc(L('Fars torsk', 'Father’s cod')) + '</b><small>' + esc(fmt(FAR_REC.kg, 1)) + ' kg</small>'; lay.appendChild(fb); }
+    const F0 = FAR_AT(); vis(fb, F0 && project([F0[0], F0[1] - 0.3, F0[2] + 0.12]), true, true);
     let w = lay.querySelector('[data-s="vegg"]'); if (!w){ w = document.createElement('button'); w.dataset.s = 'vegg'; w.textContent = L('Rekordene', 'The records'); lay.appendChild(w); }
     const wc = P.A.wall; vis(w, wc && project([wc[0], wc[1] + 1.35, wc[2] + 0.2]), true);
   }
@@ -166,6 +189,7 @@ const NAUST3D = (() => {
     let best = null, bt = 1e9;
     if (naustHas('vegg')) (P.A.slots || []).forEach((s, i) => { const t = hit([s[0], s[1] - 0.2, s[2] + 0.2], 0.46); if (t != null && t < bt){ bt = t; best = 'f:' + i; } });
     if (best) return best;
+    { const F0 = FAR_AT(), t = F0 && hit([F0[0], F0[1], F0[2] + 0.2], 0.5); if (t != null) return 'far'; }
     for (const [k, c, rad] of P.A.spots || []){ const t = hit(c, rad); if (t != null && t < bt){ bt = t; best = k; } }
     return best;
   }
@@ -186,10 +210,18 @@ const NAUST3D = (() => {
     panel('f', '<p class="nb3-kg">' + esc(fmt(r.kg, 1)) + ' kg</p><p>' + esc(dayOf(r.t)) + (r.at ? L(' · ved ', ' · near ') + esc(r.at) : '') + '</p><p>' +
       (r.boat ? L('Båten «', 'The boat «') + esc(r.boat) + '»' : '') + (how ? ' · ' + esc(how) : '') + '</p>', sp[S.lang]);
   }
+  // Father's cod: the story on its plaque, and the player's own cod beside it once there is one
+  function farCard(){
+    const mine = recState().torsk, yr = FAR_REC.year, pl = farRecPlace();
+    panel('far', '<p class="nb3-kg">' + esc(fmt(FAR_REC.kg, 1)) + ' kg</p><p>' + esc(L('Tatt på juksa ' + (pl ? 'utenfor ' + pl + ' ' : '') + 'i mars ' + yr + ', fra denne båten. Han fikk den stoppet ut og hengte den her, og det er den eneste fisken han noen gang skrøt av.',
+      'Taken on the jig ' + (pl ? 'off ' + pl + ' ' : '') + 'in March ' + yr + ', from this boat. He had it stuffed and hung it here, and it is the only fish he ever boasted of.')) + '</p>' +
+      (mine ? '<p>' + esc(mine.kg > FAR_REC.kg ? L('Din største: ' + fmt(mine.kg, 1) + ' kg. Du slo ham.', 'Your biggest: ' + fmt(mine.kg, 1) + ' kg. You beat him.') : L('Din største så langt: ' + fmt(mine.kg, 1) + ' kg. Det mangler ' + fmt(FAR_REC.kg - mine.kg, 1) + ' kg.', 'Your biggest so far: ' + fmt(mine.kg, 1) + ' kg. ' + fmt(FAR_REC.kg - mine.kg, 1) + ' kg to go.')) + '</p>'
+        : '<p>' + esc(L('Får du en større, henger din ved siden av.', 'Land a bigger one and yours hangs beside it.')) + '</p>'), L('Fars torsk', 'Father’s cod'));
+  }
   function recordsCard(){
     const list = recList(), n = list.filter(x => x.rec).length;
     panel('vegg', '<p>' + (naustHas('vegg') ? L('Den største fisken du har fått av hver art henger her.', 'The biggest fish you have landed of each species hangs here.') : L('En bar planke med spiker. Rekordene dine telles likevel fra første fisk, og de henger på veggen når snekkeren har satt den opp.', 'A bare board with nails. Your records count from the first fish all the same, and they hang on the wall once the carpenter has put it up.')) + '</p>' +
-      '<table class="nb3-tbl">' + list.map(({sp, rec}) => '<tr><td>' + esc(SPECIES[sp][S.lang]) + '</td><td>' + (rec ? esc(fmt(rec.kg, 1)) + ' kg' : '?') + '</td><td>' + (rec ? esc(dayOf(rec.t)) : '') + '</td></tr>').join('') + '</table>' +
+      '<table class="nb3-tbl"><tr><td>' + esc(L('Fars torsk', 'Father’s cod')) + '</td><td>' + esc(fmt(FAR_REC.kg, 1)) + ' kg</td><td>' + FAR_REC.year + '</td></tr>' + list.map(({sp, rec}) => '<tr><td>' + esc(SPECIES[sp][S.lang]) + '</td><td>' + (rec ? esc(fmt(rec.kg, 1)) + ' kg' : '?') + '</td><td>' + (rec ? esc(dayOf(rec.t)) : '') + '</td></tr>').join('') + '</table>' +
       '<p class="pb-why">' + n + ' / ' + list.length + '</p>' + (naustHas('vegg') ? '' : upBtn('vegg')), L('Trofeveggen', 'The trophy wall'));
   }
   const upBtn = k => { const U = NAUST_UP.find(x => x.k === k), why = naustHas(k) ? null : naustWhy(k);
@@ -206,6 +238,7 @@ const NAUST3D = (() => {
     if (k === 'door'){ close(); return; }
     if (k.startsWith('f:')) return fishCard(+k.slice(2));
     if (k === 'vegg') return recordsCard();
+    if (k === 'far') return farCard();
     if (['tak', 'ovn', 'benk'].includes(k)) upCard(k);
   }
   function buy(k){
