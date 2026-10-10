@@ -244,6 +244,68 @@ def land(x, z):
     if r is None: raise Missing()
     return r[(iy - by * 400) * 400 + (ix - bx * 400)] == 1
 
+# ---------------------------------------------------------------- the fine coast (the game's truth for land and sea near the boats)
+# The chart packs' coast2 (01d-coast.js): rings in metres from the tile's corner, class 0/1 land, 2/3 breakwaters, the nonzero winding rule
+# (land: the land rings wind round the point, or a breakwater does). land_fine() reads it as the game's isLand does, for a tile that has a chart
+# pack, else the 25 m mask; it is built per 800 m window as a 2 m raster by scanline, so a lookup costs nothing once its window is in.
+_rings = {}
+def _uv(raw, st):
+    v = 0; s = 1
+    while True:
+        c = raw[st[0]]; st[0] += 1; v += (c & 127) * s; s *= 128
+        if not c & 128: return v
+def coast_rings(tx, ty):
+    """the fine coast of tile (tx, ty) as [(class, int32 array (n, 2) in metres from the tile's corner)], None when the tile has no chart pack"""
+    k = (tx, ty)
+    if k in _rings: return _rings[k]
+    p = PK.get(('chart', tx, ty)); out = None
+    if p:
+        b, idx = pack(p); e = idx.get('coast2:%d:%d' % (tx * B, ty * B))
+        if e:
+            raw = inflate(b[e[0]:e[0] + e[1]]); st = [0]; n = _uv(raw, st); out = []
+            for _ in range(n):
+                cls = _uv(raw, st); m = _uv(raw, st); x = y = 0; pts = np.empty((m, 2), np.int32)
+                for j in range(m):
+                    a = _uv(raw, st); x += -(a + 1) // 2 if a % 2 else a // 2
+                    a = _uv(raw, st); y += -(a + 1) // 2 if a % 2 else a // 2
+                    pts[j] = (x, y)
+                if m >= 3: out.append((cls, pts))
+        else: out = []
+    _rings[k] = out; return out
+WIN = 800; FRES = 2.0
+_fwin = {}
+def _fine_window(wx, wz):
+    """land (bool, 400 x 400, row = z) of the 800 m window (wx, wz), or None where its tile has no chart pack"""
+    k = (wx, wz)
+    if k in _fwin: return _fwin[k]
+    x0 = wx * WIN; z0 = wz * WIN; n = int(WIN / FRES); tx = int(x0 // (TILE * 1000)); ty = int(z0 // (TILE * 1000))
+    if ('chart', tx, ty) not in PK or coast_rings(tx, ty) is None: _fwin[k] = None; return None
+    wl = np.zeros((n, n), np.int16); wb = np.zeros((n, n), np.int16)
+    cy = z0 + (np.arange(n) + 0.5) * FRES + 0.0137   # row centres, off the whole metres where the data's points are
+    for dx in (-1, 0, 1):
+        for dy in (-1, 0, 1):
+            t2 = (tx + dx, ty + dy); R = coast_rings(*t2) if ('chart', t2[0], t2[1]) in PK else None
+            if not R: continue
+            ox = t2[0] * TILE * 1000; oz = t2[1] * TILE * 1000
+            for cls, P in R:
+                ax = P[:, 0] + ox; az = P[:, 1] + oz; bx = np.roll(ax, -1); bz = np.roll(az, -1)
+                keep = (np.minimum(az, bz) <= cy[-1]) & (np.maximum(az, bz) >= cy[0]) & (az != bz)
+                if not keep.any(): continue
+                A = wb if cls >= 2 else wl
+                for ex, ez, fx, fz in zip(ax[keep], az[keep], bx[keep], bz[keep]):
+                    j0 = max(0, int(math.ceil((min(ez, fz) - 0.0137 - z0) / FRES - 0.5))); j1 = min(n - 1, int(math.floor((max(ez, fz) - 0.0137 - z0) / FRES - 0.5)))
+                    if j1 < j0: continue
+                    js = np.arange(j0, j1 + 1); xc = ex + (cy[js] - ez) * (fx - ex) / (fz - ez); sg = -1 if fz > ez else 1
+                    ci = np.clip(np.ceil((xc - x0) / FRES - 0.5).astype(int), 0, n)   # the first cell whose centre lies right of the crossing
+                    ok = ci < n
+                    np.add.at(A, (js[ok], ci[ok]), sg)
+    land = (np.cumsum(wl, axis=1) != 0) | (np.cumsum(wb, axis=1) != 0)
+    _fwin[k] = land; return land
+def land_fine(x, z):
+    """land at x, z (m) as the game's isLand has it near the boats: the fine coast where the tile has one, else the 25 m mask"""
+    wx = int(math.floor(x / WIN)); wz = int(math.floor(z / WIN)); W = _fine_window(wx, wz)
+    if W is None: return land(x, z)
+    n = W.shape[0]; return bool(W[min(n - 1, max(0, int((z - wz * WIN) / FRES))), min(n - 1, max(0, int((x - wx * WIN) / FRES)))])
 def shore_spot(cx, cz, r0, r1, o, avoid, piers):
     def on_pier(x, z):
         for q in piers:
