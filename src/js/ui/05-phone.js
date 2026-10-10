@@ -35,10 +35,11 @@ const PHONE = (() => {
     kvote:SVG('<path d="M12 3a9 9 0 1 0 9 9h-9z"/><path d="M15 2.6A9 9 0 0 1 21.4 9H15z"/>'),
     trim:SVG('<path d="M4 15a8 8 0 1 1 16 0"/><path d="M12 15l4-5"/><circle cx="12" cy="15" r="1.6"/><path d="M6 19h12"/>'),
     patch:SVG('<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 12h7M9 15.5h7M9 19h4"/>'),
+    handbok:SVG('<path d="M5 4h6a2 2 0 0 1 2 2v14a1.5 1.5 0 0 0-1.5-1.5H5z"/><path d="M19 4h-6a2 2 0 0 0-2 2v14a1.5 1.5 0 0 1 1.5-1.5H19z"/><path d="M7.5 8.5h3M7.5 11.5h3M13.5 8.5h3"/>'),
     tilbake:SVG('<path d="M4 5h16v11H10l-4.5 4V16H4z"/><path d="M8 9.5h8M8 12.5h5"/>'),
     innst:SVG('<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>'),
     admin:SVG('<path d="M14.5 6.5a4 4 0 0 0 5 5L12 19a2.1 2.1 0 0 1-3-3l7.5-7.5"/><path d="M14.5 6.5L17 4l3 3-2.5 2.5"/><path d="M5 3l3 3M3 5l3 3"/>')};
-  const APPS = [['vaer', 'Vær', 'Weather', '#2f7fd0'], ['post', 'Kystposten', 'Coast Post', '#b8402f'], ['meld', 'Meldinger', 'Messages', '#29a36a'], ['rederi', 'Rederi', 'Company', '#1f4e79'], ['salg', 'Salgslaget', 'Sales', '#1e8c6e'], ['kvote', 'Kvote', 'Quota', '#8a6a1c'], ['regler', 'Regler', 'Rules', '#2d6a4f'], ['drift', 'Driftsplan', 'Operations plan', '#2a6f97'], ['ordl', 'Oppdrag', 'Orders', '#2e7d4f'], ['haill', 'Haill', 'Luck', '#c9a227'], ['sesong', 'Sesong', 'Season', '#1e6f8c'], ['guide', 'Fiskeguide', 'Fish guide', '#177a8a'], ['folk', 'Venner', 'Friends', '#8a5a2b'], ['merker', 'Milepæler', 'Milestones', '#b0752a'], ['redning', 'Redning', 'Rescue', '#e0562b'], ['trim', 'Trim', 'Tuning', '#b3261e'], ['patch', 'Patchnotes', 'Patch notes', '#5a4fa3'], ['tilbake', 'Tilbakemelding', 'Feedback', '#d0672f'], ['innst', 'Innstillinger', 'Settings', '#4a5560'], ['admin', 'Admin', 'Admin', '#7a2e8f']];
+  const APPS = [['vaer', 'Vær', 'Weather', '#2f7fd0'], ['post', 'Kystposten', 'Coast Post', '#b8402f'], ['meld', 'Meldinger', 'Messages', '#29a36a'], ['rederi', 'Rederi', 'Company', '#1f4e79'], ['salg', 'Salgslaget', 'Sales', '#1e8c6e'], ['kvote', 'Kvote', 'Quota', '#8a6a1c'], ['regler', 'Regler', 'Rules', '#2d6a4f'], ['drift', 'Driftsplan', 'Operations plan', '#2a6f97'], ['ordl', 'Oppdrag', 'Orders', '#2e7d4f'], ['haill', 'Haill', 'Luck', '#c9a227'], ['sesong', 'Sesong', 'Season', '#1e6f8c'], ['guide', 'Fiskeguide', 'Fish guide', '#177a8a'], ['folk', 'Venner', 'Friends', '#8a5a2b'], ['merker', 'Milepæler', 'Milestones', '#b0752a'], ['redning', 'Redning', 'Rescue', '#e0562b'], ['trim', 'Trim', 'Tuning', '#b3261e'], ['handbok', 'Håndboka', 'Handbook', '#3b6b5e'], ['patch', 'Patchnotes', 'Patch notes', '#5a4fa3'], ['tilbake', 'Tilbakemelding', 'Feedback', '#d0672f'], ['innst', 'Innstillinger', 'Settings', '#4a5560'], ['admin', 'Admin', 'Admin', '#7a2e8f']];
   const unread = () => S.msgs.filter(m => !m.read).length;
   // the Rederi app comes with the company: founded as an AS in the bank (Jonas 06.10.2026), or already more than one vessel
   const rederiOpen = () => S.form === 'AS' || (S.fleet && S.fleet.length > 1);
@@ -403,7 +404,7 @@ const PHONE = (() => {
   let shown = '';
   function render(){ status(); setBadge(); if (!isOpen) return; if (app === 'patch' && S.settings.patchSeen !== PATCH[0][0]){ S.settings.patchLast = S.settings.patchSeen; S.settings.patchSeen = PATCH[0][0]; } const key = app + '|' + (sub[app] || ''), y = key === shown ? view.scrollTop : 0; view.innerHTML = app === 'home' ? home() : shell(app); shown = key; view.scrollTop = y; }
   // every page by name: the phone apps, and the pages that open in the dock's drawer instead (DRAWER)
-  const PAGES = () => ({vaer, post, salg, kvote, regler, redning, rederi, meld, haill, logg, merker, naustp:() => NOTEBOOK.page(), sesong:() => SEASONAPP.page(), guide:() => GUIDE.page(), folk:() => FRIENDS.page(), gbook:() => GBOOK.page(), trim, patch, tilbake:() => FEEDBACK.page(), innst, admin,
+  const PAGES = () => ({vaer, post, salg, kvote, regler, redning, rederi, meld, haill, logg, merker, naustp:() => NOTEBOOK.page(), sesong:() => SEASONAPP.page(), guide:() => GUIDE.page(), folk:() => FRIENDS.page(), gbook:() => GBOOK.page(), trim, patch, handbok:() => HBUI.page(), tilbake:() => FEEDBACK.page(), innst, admin,
     ordl, rigg, arbeid:() => WORK.page() + DRIFTUI.page(), drift:() => DRIFTUI.page(), fiske, service, fartoy:() => fartoy('marked'), maler:() => PAINT.page(), utstyr:() => utstyr('verft'), utstyrb:() => utstyr('butikk'), redskap, mannskap, bors, bank, verksted, havn, last, lever, is:isApp, agn, oppdrag, beholdning});
   function shell(a){ const d = APPS.find(x => x[0] === a) || [a, a, a, '#28507f'], f = PAGES()[a]; return '<div class="ph-appv' + (a === 'post' || a === 'notat' ? ' ph-paper' : '') + '"><div class="ph-top" style="background:' + d[3] + '"><span class="ic">' + (IC[a] || '') + '</span>' + L(d[1], d[2]) + '</div>' + (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) + '</div>'; }
   // a page for the drawer, and an action tapped there: it runs as if that page were the open app, and says which page shows next
@@ -435,6 +436,9 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p104', '10.10.2026', 'Håndboka', 'The handbook', [
+       ['Ny app på telefonen: Håndboka. Etter første tur kommer tipsene ett og ett, første gang noe skjer: egen rute, ekkoloddet, flo og fjære, hvile, diesel, driftsplanen, butikken, verftet, puben og mer. «Jeg kan dette» legger resten av kapittelet til ro, og i Håndboka kan du lese alle tipsene igjen og la dem peke på knappen («Vis meg»).', 'New app on the phone: the Handbook. After the first trip the tips come one by one, the first time something happens: your own route, the echo sounder, the tide, rest, diesel, the operations plan, the shop, the yard, the pub and more. «I know this» puts the rest of the chapter to rest, and in the Handbook you can read every tip again and let it point at the button («Show me»).'],
+    ]],
     ['p103', '09.10.2026', 'Været flytter seg langs kysten', 'The weather moves along the coast', [
        ['Fars torsk henger i naustet: 24,6 kg, stoppet ut og montert over trofeveggen. Trykk på den, så får du historien, og får du en større, henger din ved siden av.', 'Father’s cod hangs in the boathouse: 24.6 kg, stuffed and mounted over the trophy wall. Tap it for the story, and land a bigger one and yours hangs beside it.'],
        ['Første tur begynner inne i fars naust. Du går ut, ser båten for første gang og legger fra kai med ett trykk på feltet. Underveis prøver du kino, bro og kikkert, og på vei inn får du kurslista, appene (vær, priser, regler, redning) og hva været betyr for båten. Ved sluttseddelen kan du skrive under i eget navn, og på kaia står en som vil mønstre på hvis du vil ha selskap i båten.', 'The first trip begins inside Father’s boathouse. You step out, see the boat for the first time and cast off with one tap on the ground. On the way you try the cinema, bridge and binoculars, and on the way in you get the course list, the apps (weather, prices, rules, rescue) and what the weather means for the boat. At the landing note you can sign in your own name, and on the quay stands someone who wants to sign on if you want company aboard.'],
@@ -963,12 +967,12 @@ const PHONE = (() => {
     return h.join('');
   }
   function home(){
-    const H = S.t / 60, W = windAt(H), n = unread(), na = alerts().length, np = patchNew(), npost = pressUnread();
+    const H = S.t / 60, W = windAt(H), n = unread(), na = alerts().length, np = patchNew(), npost = pressUnread(), nhb = typeof hbReady === 'function' && !tutOn() ? hbReady() : 0;
     return '<div class="ph-homescr"><div class="ph-clock">' + hm(H) + '</div><div class="ph-date">' + dayStr(H) + '</div>' +
       '<div class="ph-widget"><span class="w1">' + dirName(windDir(H)) + ' ' + fmt(W, 0) + ' m/s · ' + fmt(Math.round(airTemp(H)) || 0, 0) + ' °C</span><span class="w2">' + kr(S.cash) + '</span></div>' +
       ((g => g ? '<button class="ph-goal" data-pa="open" data-a="fartoy"><span>' + L('Neste mål: ', 'Next goal: ') + '<b>' + g.n + '</b></span><small>' + (g.txt || kr(Math.min(Math.max(0, S.cash), g.need)) + ' / ' + kr(g.need)) + '</small><span class="gb"><i style="width:' + (g.pc * 100).toFixed(1) + '%"></i></span></button>' : '')(goals()[0])) +
       (typeof achChip === 'function' ? achChip() : '') + fsChip() +
-      '<div class="ph-grid">' + APPS.filter(a => (a[0] !== 'admin' || adminOk()) && (a[0] !== 'rederi' || rederiOpen())).map(a => '<button class="ph-app" data-pa="open" data-a="' + a[0] + '"><span class="ic" style="background:linear-gradient(160deg,' + a[3] + ',' + a[3] + 'cc)">' + IC[a[0]] + '</span>' + L(a[1], a[2]) + (a[0] === 'meld' && n ? '<span class="bd">' + n + '</span>' : '') + (a[0] === 'ordl' && ordState().active.length ? '<span class="bd">' + ordState().active.length + '</span>' : '') + (a[0] === 'rederi' && na ? '<span class="bd">' + na + '</span>' : '') + (a[0] === 'patch' && np ? '<span class="bd">' + np + '</span>' : '') + (a[0] === 'post' && npost ? '<span class="bd">' + npost + '</span>' : '') + '</button>').join('') + '</div></div>';
+      '<div class="ph-grid">' + APPS.filter(a => (a[0] !== 'admin' || adminOk()) && (a[0] !== 'rederi' || rederiOpen())).map(a => '<button class="ph-app" data-pa="open" data-a="' + a[0] + '"><span class="ic" style="background:linear-gradient(160deg,' + a[3] + ',' + a[3] + 'cc)">' + IC[a[0]] + '</span>' + L(a[1], a[2]) + (a[0] === 'meld' && n ? '<span class="bd">' + n + '</span>' : '') + (a[0] === 'ordl' && ordState().active.length ? '<span class="bd">' + ordState().active.length + '</span>' : '') + (a[0] === 'rederi' && na ? '<span class="bd">' + na + '</span>' : '') + (a[0] === 'patch' && np ? '<span class="bd">' + np + '</span>' : '') + (a[0] === 'handbok' && nhb ? '<span class="bd">' + nhb + '</span>' : '') + (a[0] === 'post' && npost ? '<span class="bd">' + npost + '</span>' : '') + '</button>').join('') + '</div></div>';
   }
   const kv = (a, b) => '<div class="ph-kv"><span>' + a + '</span><span>' + b + '</span></div>';
   const tq = (kg, d) => isFinite(kg) ? fmt(kg / 1000, d) + ' t' : L('ingen grense', 'no limit');   // a quota in tonnes, or no limit
@@ -1631,6 +1635,8 @@ const PHONE = (() => {
       if (S.adm.noEnergy){ S.sleep = null; S.energy = 100; S.drowsy = false; S.enWarn = false; log('Admin: energien er skrudd av. Du blir ikke sliten og sovner ikke.', 'Admin: energy is off. You do not tire or fall asleep.'); }
       else log('Admin: energien er skrudd på igjen.', 'Admin: energy is on again.'); }
     else if (a === 'admFuel'){ const b = S.boat, add = Math.max(0, BOAT.fuelCap - b.fuel); b.fuel = BOAT.fuelCap; if (b.status === 'adrift' && add > 0) b.status = 'idle'; log('Admin: tanken fylt (' + fmt(add) + ' L).', 'Admin: the tank filled (' + fmt(add) + ' L).'); }
+    else if (a === 'hbshow'){ HBUI.show(d.id); return; }   // «Vis meg» in Håndboka: the phone closes and the tip points (07c-handbook.js)
+    else if (a === 'hbskip'){ HBUI.toggle(+d.ch); }
     else if (a === 'sub'){ sub[app] = d.s; if (app === 'post') sub.postArt = null; }
     else if (a === 'art'){ sub.postArt = d.k; }
     else if (a === 'artback'){ sub.postArt = null; }
@@ -1785,7 +1791,7 @@ const PHONE = (() => {
     return true;
   }
   view.addEventListener('click', e => { const t0 = e.target.closest('[data-pa],[data-act]'); if (!t0 || t0.disabled) return; if (t0.dataset.pa) act(t0.dataset.pa, t0.dataset); else { doAct(t0); render(); } });
-  view.addEventListener('input', e => { if (e.target.id === 'coName') coDraft = e.target.value; else if (e.target.id === 'fbBody') return FEEDBACK.input(e.target.value); panelInput(e); });
+  view.addEventListener('input', e => { if (e.target.id === 'hbQ'){ HBUI.q = e.target.value; const l = view.querySelector('.hb-list'); if (l) l.innerHTML = HBUI.list(); return; } if (e.target.id === 'coName') coDraft = e.target.value; else if (e.target.id === 'fbBody') return FEEDBACK.input(e.target.value); panelInput(e); });
   view.addEventListener('change', e => { if (e.target.id === 'fbFile') return FEEDBACK.pick(e.target.files); panelChange(e); if (e.target.id === 'setAuto') render(); });
   el.querySelector('.ph-nav').addEventListener('click', e => { const t0 = e.target.closest('[data-pa]'); if (t0) act(t0.dataset.pa, t0.dataset); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && isOpen) show(false); });

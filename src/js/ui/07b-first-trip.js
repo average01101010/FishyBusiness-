@@ -276,22 +276,29 @@ function tutUpdate(){
   if (tutOn() && !S.tut.m.cast1){ const k = tutFieldWp(S.draft); if (k >= 0 && !(S.draft[k].fish >= 2)){ S.draft[k].fish = 2; if (typeof panelDirty !== 'undefined') panelDirty = true; } }
   const tip = $('tip'), dim = $('tutDim'), ring = $('tutRing'), hide = () => { tip.hidden = true; dim.hidden = true; ring.hidden = true; tutCur = null; };
   if (tutOn() && BOOK.isOpen()){ const st = tutStep(); if (st && st.id === 'book') tutMark('book'); }
-  if (!tutOn() || !$('modal').hidden || BOOK.isOpen()){ hide(); return; }
+  if (!tutOn()){ if (!$('modal').hidden || BOOK.isOpen() || JIG_OPEN() || typeof hbUpdate !== 'function' || !hbUpdate()) hide(); return; }   // after the first trip the box is the handbook's (07c-handbook.js)
+  if (!$('modal').hidden || BOOK.isOpen()){ hide(); return; }
   const st = tutStep(); if (!st){ tutFinish(); return; }
   tutView(st);
   if (window.jigActive) tutMark('jigOn');
   const T0 = tutTip(st), txt = S.lang === 'no' ? T0.no : T0.en; tutCur = {st, T0};
   if (JIG_OPEN()){ hide(); return; }   // the jig game has its own controls on screen
   if (T0.small){ if (TUTSM.txt !== txt){ TUTSM.txt = txt; TUTSM.t0 = Date.now(); TUTSM.hid = false; } if (TUTSM.hid || Date.now() - TUTSM.t0 > 9000){ hide(); return; } }
+  tipPlace(txt, T0, {ok:(st.ok && !T0.noOk) || T0.okAct});
+}
+// the box itself: its text and buttons, the hole in the dimmed layer and the ring round the target, and where the box goes (above the
+// target when the target is low on the screen, else below; in the middle of the screen without a target). Shared with the handbook.
+function tipPlace(txt, T0, o){
+  const tip = $('tip'), dim = $('tutDim'), ring = $('tutRing');
   if ($('tipText').textContent !== txt) $('tipText').textContent = txt || '';
-  const ok = (st.ok && !T0.noOk) || T0.okAct; $('tipOk').hidden = !ok;
-  $('tipOk').textContent = T0.okText ? (S.lang === 'no' ? T0.okText[0] : T0.okText[1]) : (S.lang === 'no' ? 'Skjønner' : 'Got it');
+  $('tipOk').hidden = !o.ok;
+  const okText = o.okText || T0.okText; $('tipOk').textContent = okText ? (S.lang === 'no' ? okText[0] : okText[1]) : (S.lang === 'no' ? 'Skjønner' : 'Got it');
   $('tipSkip').hidden = true;   // no skipping: every step is done (Jonas 05.10.2026)
   const alt = $('tipAlt'); alt.hidden = !T0.alt; if (T0.alt) alt.textContent = S.lang === 'no' ? T0.alt[0] : T0.alt[1];
   tip.hidden = false; tip.classList.toggle('small', !!T0.small);
   const {R, round} = tutRect(T0);
   const place = (el, cls) => { el.hidden = !R; if (!R) return; el.style.left = R.x + 'px'; el.style.top = R.y + 'px'; el.style.width = R.w + 'px'; el.style.height = R.h + 'px'; el.classList.toggle('round', round); };
-  place(dim); place(ring); if (T0.small && R) dim.hidden = true;
+  place(dim); place(ring); if ((T0.small || T0.nodim) && R) dim.hidden = true; if (T0.nodim && !R) ring.hidden = true;
   const tw = tip.offsetWidth, th = tip.offsetHeight, ar = tip.querySelector('.tip-arrow'), vw = window.innerWidth, vh = window.innerHeight;
   if (!R){ tip.style.left = Math.max(8, (vw - tw) / 2) + 'px'; tip.style.top = '72px'; ar.style.display = 'none'; return; }
   const above = R.y > th + 24 && (R.y + R.h > vh * 0.45), x = clamp(R.x + R.w / 2 - tw / 2, 8, vw - tw - 8), y = above ? R.y - th - 12 : Math.min(vh - th - 8, R.y + R.h + 12);
