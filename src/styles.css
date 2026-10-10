@@ -842,7 +842,7 @@ body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 2
 }
 
 /* ---------- «Hvor står fars naust?»: where a new game starts (ui/08c-start.js) ---------- */
-.stp{position:fixed;inset:0;z-index:70;background:radial-gradient(ellipse at 50% 30%,#13283a,#070d14 75%);color:#e6eef3;display:flex;justify-content:center;overflow:auto;-webkit-overflow-scrolling:touch;font:14px/1.45 var(--sans)}
+.stp{position:fixed;inset:0;z-index:70;background:radial-gradient(ellipse at 50% 30%,#13283a,#070d14 75%);color:#e6eef3;display:flex;justify-content:center;align-items:flex-start;overflow:auto;-webkit-overflow-scrolling:touch;font:14px/1.45 var(--sans)}
 .st-box{width:min(980px,100%);padding:calc(env(safe-area-inset-top,0px) + 18px) 16px calc(env(safe-area-inset-bottom,0px) + 92px);box-sizing:border-box}
 .stp h2{margin:0 0 6px;font:600 26px var(--serif,Georgia,serif);letter-spacing:.01em}
 .st-lead{margin:0 0 14px;color:#a9bfcc;max-width:62ch}
