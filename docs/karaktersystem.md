@@ -1,6 +1,13 @@
 # Karaktersystem og garderobe (plan, 10.10.2026)
 
-Status: plan, ikke bygget. Venter på klarsignal og svar på spørsmålene nederst (CLAUDE.md: større funksjoner med uklare valg).
+Status: besluttet 10.10.2026, under bygging.
+
+## Beslutninger (Jonas 10.10.2026)
+1. Figuren skal synes også i 3D (på dekk, og dermed for andre spillere).
+2. Både mann og kvinne.
+3. Kosmetikken er gratis til å begynne med. Butikk (fase 5) kommer senere.
+4. Spilleren kler ikke mannskapet. Mannskapet får utseende av spillet, fra samme katalog.
+5. Flere typer skjegg, bart og frisyrer, og flere hårfarger.
 
 ## Ønsket (Jonas 10.10.2026)
 - Spilleren kan endre utseende på figuren sin: hatter, luer, hår, jakker, bukser, sko.
@@ -20,7 +27,7 @@ Status: plan, ikke bygget. Venter på klarsignal og svar på spørsmålene neder
 **Ytelse (grafikken er nesten det viktigste):** et plagg legges inn i kroppsdelen det sitter på når figuren bygges (genser blir en del av torsoen, støvel av foten), og resultatet bufres per utseende. Antall tegnekall per figur blir som i dag (ni deler). Bufferet holdes lite med en enkel LRU, fordi bare de figurene som er synlige trengs.
 
 **Blender:** ny `tools/harbour/garderobe.py` etter mønsteret fra `arbeider.py`, med skjult kropp under plagget og egne dataelementer per plass som leses først når de trengs (som båtmodellene). Første runde:
-- Hår: kort, middels, langt, hestehale, flette, skallet, pluss skjegg i to former.
+- Hår: kort, sidestilt, middels, langt, hestehale, flette, knute, krøll, tynt hår (bare kransen), skallet. Skjegg: bart, hakeskjegg, kortskjegg, fullskjegg og kinnskjegg med bart. Hårfarger: svart, mørkebrun, brun, lysebrun, blond, rød, grå, hvit (grått og hvitt oftere med alderen).
 - Hodeplagg: skipperlue, toppluen, flat sixpence, sydvest, hjelm, skyggelue, ingen.
 - Jakker: oljehyre, ullgenser, fleece, regnjakke, dunjakke, flytedress.
 - Bukser: oljebukse med seler, arbeidsbukse, jeans, ullbukse.
@@ -60,7 +67,7 @@ Status: plan, ikke bygget. Venter på klarsignal og svar på spørsmålene neder
 - Skjermbilder av figurene i 3D og av editoren i begge formater.
 - 3D-testene som berører figurene (`vessel3d` 24 min, `unittest`, `worktest`) etter spørsmålet i CLAUDE.md om hver enkelt.
 
-## Spørsmål til Jonas
+## Spørsmål til Jonas (besvart, se Beslutninger)
 1. Hvor skal spilleren se figuren sin: bare i editoren, naustet og puben, eller også på dekk i 3D (og dermed for andre spillere)?
 2. En kropp med mann og kvinne, eller flere kroppsformer?
 3. Skal kosmetikk selges for �Erfra første runde, eller først gratis og så butikk?
