@@ -238,8 +238,7 @@ function showIntro(namesOnly){
   // then where Father's boathouse stands: the start along the coast (ui/08c-start.js)
   if (!namesOnly && !NOTUT && !S.intro && !S.home){ showStart(() => showIntro()); return; }
   if (!S.boatName || S.unnamed) boatUnnamed();
-  modal('<div class="ob"><h2>' + L('Båten etter far', 'Father\'s boat') + '</h2><p>' + L('Båten har ikke noe navn på skroget ennå. Til da kjennes hun på registreringsmerket <b>' + S.boatName + '</b>. Du døper henne selv når du er ført i fiskermanntallet i eget navn.',
-      'The boat has no name on her hull yet. Until then she goes by her registration mark <b>' + S.boatName + '</b>. You name her yourself once you are in the fishermen\'s register in your own name.') + '</p>' +
+  modal('<div class="ob"><h2>' + L('Båten etter far', 'Father\'s boat') + '</h2><p>' + L('Hun ligger ved naustet slik han lot henne ligge. Hun er din nå.', 'She lies at the boathouse as he left her. She is yours now.') + '</p>' +
     '<div class="btns"><button class="btn primary" data-close id="obGo">' + L('Ta over båten', 'Take over the boat') + '</button></div></div>');
   $('obGo').addEventListener('click', () => {
     // the tests' games (#notut) skip the start and keep the old Senja start: the boat and Father's naust in Finnsnes

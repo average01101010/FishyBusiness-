@@ -66,7 +66,7 @@ const TSTEPS = [
   {id:'nout', done:() => !naustOpen(),
     tip:() => ({el:vis('#naust3 [data-q=out]'), no:'Gå ut og se båten.', en:'Go out and see the boat.'})},
   {id:'intro', ok:true, done:() => false,
-    tip:() => { tutIntroGo(); return {no:'Der ligger hun: ' + S.boatName + ', fars gamle båt. Sliten, men hun flyter, og juksa ligger om bord.', en:'There she lies: ' + S.boatName + ', Father’s old boat. Worn, but she floats, and the jig is aboard.'}; }},
+    tip:() => { tutIntroGo(); return {no:'Der ligger hun, fars gamle båt. Sliten, men hun flyter, og juksa ligger om bord.', en:'There she lies, Father’s old boat. Worn, but she floats, and the jig is aboard.'}; }},
   {id:'gps', done:() => inPlot() || !!S.plan || S.boat.status !== 'port',
     tip:() => PHONE.isOpen() ? {el:vis('#phone .ph-nav [data-pa=close]'), no:'Lukk telefonen. Nå skal du planlegge turen.', en:'Close the phone. Now you plan the trip.'} : DOCK.page ? {el:vis('#drawerClose'), no:'Lukk Fiskeutstyr. Nå skal du planlegge turen.', en:'Close the tackle shop. Now you plan the trip.'} : {el:vis('#miniPlot'), no:'Trykk på GPS-en for å åpne kartplotteren.', en:'Tap the GPS to open the chart plotter.'}},
   {id:'route1', live:true, view:() => [tutHome().p, tutField().p], done:() => tutFieldWp(S.draft) >= 0 || (S.plan && tutFieldWp(S.plan.wps) >= 0) || S.boat.status === 'fishing',
@@ -162,7 +162,7 @@ const TSTEPS = [
   // say later, and is asked again at the third landing as before (ui/10f-cloud.js)
   {id:'reg', done:() => typeof isGuest !== 'function' || !isGuest() || !!S.tut.m.regLater,
     tip:() => ({okText:['Registrer meg', 'Register'], okAct:() => { if (typeof guestAsk === 'function') guestAsk('tut'); }, alt:['Senere', 'Later'], altAct:() => tutMark('regLater'),
-      no:'Sluttseddelen er skrevet på fars papirer. Skriv den i ditt navn: da følger båten, pengene og fangsten deg på alle enheter, og en luksushaill ligger klar om bord.', en:'The landing note is written on Father’s papers. Write it in your name: then the boat, the money and the catch follow you on every device, and a luxury luck lies ready aboard.'})},
+      no:'Sluttseddelen er skrevet på fars papirer. Skriv den i ditt navn: da døper du båten, alt følger deg på alle enheter, og en luksushaill ligger klar om bord.', en:'The landing note is written on Father’s papers. Write it in your name: then you name the boat, everything follows you on every device, and a luxury luck lies ready aboard.'})},
   {id:'book', done:() => false,
     tip:() => ({el:vis('#logbook') || (inPlot() ? vis('#ecClose') : null), no:'Dekksdagboka: turen står der alt. Alt som skjer om bord blir skrevet her, med fangst, salg, sesonger og utstyr. Trykk på den og bla litt. Lukk den når du er ferdig.', en:'The deck log: the trip is in it already. Everything that happens aboard is written here, with catches, sales, seasons and gear. Tap it and leaf through. Close it when you are done.'})},
   // the ice (Jonas 07.10.2026): learnt at the plant after the first landing, before the first trip of one's own; the first fill is on the plant
