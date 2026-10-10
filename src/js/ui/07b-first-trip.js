@@ -40,14 +40,41 @@ function phoneApp(app, inner){
   if (PHONE.app !== app) return {el:vis(PHONE.app === 'home' ? '#phone [data-a="' + app + '"]' : '#phone .ph-nav [data-pa=home], #phone .ph-nav [data-pa=back]'), scroll:PHONE.app === 'home'};
   return {el:inner ? vis(inner) : null, scroll:true};
 }
+// the naust (docs/onboarding.md B, Jonas 09.10.2026: «Starter inne i naustet med noen tekstlinjer»): the room opens of itself at the
+// start, once its site is found (07c-naust.js, a few seconds after the map is in); three lines, one at a time, and «Gå ut» closes it.
+// Without the room (no WebGL, the tests without 3D, the site not found within 25 s) the lines go by on their own
+const naustOpen = () => typeof NAUST3D !== 'undefined' && NAUST3D.isOpen();
+function tutNaustTry(){
+  if (S.tut.m.naustOpened || S.tut.m.naustGaveUp || typeof NAUST3D === 'undefined') return;
+  if (Date.now() - (S.tut.t0 || 0) > 25000 || /no3d/.test(location.hash)){ S.tut.m.naustGaveUp = 1; return; }
+  if (!(typeof NOTEBOOK !== 'undefined' && NOTEBOOK.atNaust()) || !NAUST3D.ready()) return;
+  if (NAUST3D.open()) S.tut.m.naustOpened = 1; else S.tut.m.naustGaveUp = 1;
+}
+// out of the naust: the camera glides from the quay back to its place behind the boat (view3d.js intro), once
+function tutIntroGo(){ if (S.tut.m.introGo) return; S.tut.m.introGo = 1; if (S.tut.m.naustOpened && typeof G3 !== 'undefined' && G3.intro && G3.isActive()) G3.intro(5); }
+// the way out: the cameras are tried until the boat is at the grounds; in the chart plotter the 3D view comes first
+const arrived = () => !!S.boat.tutWait || S.boat.status === 'fishing' || holdTotal() > 1;
+const no3dv = () => typeof G3 === 'undefined' || !!G3.failWhy || !G3.isActive();
+const to3d = () => inPlot() ? {el:vis('#ecClose'), noOk:true, no:'Trykk «Lukk» for å gå tilbake til 3D først.', en:'Tap «Close» to go back to 3D first.'} : null;
 const TSTEPS = [
+  {id:'n1', ok:true, done:() => false,
+    tip:() => ({no:'Fars naust. Her satt han etter hver tur, så lenge du kan huske. Nå er det ditt.', en:'Father’s boathouse. He sat here after every trip, as long as you can remember. Now it is yours.'})},
+  {id:'n2', ok:true, done:() => false,
+    tip:() => ({no:'Trofeveggen er tom. Den største fisken du får av hver art, kommer til å henge her.', en:'The trophy wall is empty. The biggest fish you land of each species will hang here.'})},
+  {id:'n3', ok:true, done:() => false,
+    tip:() => ({no:'Ovnen, taket og benken kan du sette i stand etter hvert. Alt om naustet står under «Liste».', en:'The stove, the roof and the bench you can put right in time. Everything about the boathouse is under «List».'})},
+  {id:'nout', done:() => !naustOpen(),
+    tip:() => ({el:vis('#naust3 [data-q=out]'), no:'Gå ut og se båten.', en:'Go out and see the boat.'})},
+  {id:'intro', ok:true, done:() => false,
+    tip:() => { tutIntroGo(); return {no:'Der ligger hun: ' + S.boatName + ', fars gamle båt. Sliten, men hun flyter, og juksa ligger om bord.', en:'There she lies: ' + S.boatName + ', Father’s old boat. Worn, but she floats, and the jig is aboard.'}; }},
   {id:'gps', done:() => inPlot() || !!S.plan || S.boat.status !== 'port',
     tip:() => PHONE.isOpen() ? {el:vis('#phone .ph-nav [data-pa=close]'), no:'Lukk telefonen. Nå skal du planlegge turen.', en:'Close the phone. Now you plan the trip.'} : DOCK.page ? {el:vis('#drawerClose'), no:'Lukk Fiskeutstyr. Nå skal du planlegge turen.', en:'Close the tackle shop. Now you plan the trip.'} : {el:vis('#miniPlot'), no:'Trykk på GPS-en for å åpne kartplotteren.', en:'Tap the GPS to open the chart plotter.'}},
   {id:'route1', live:true, view:() => [tutHome().p, tutField().p], done:() => tutFieldWp(S.draft) >= 0 || (S.plan && tutFieldWp(S.plan.wps) >= 0) || S.boat.status === 'fishing',
     tip:() => { if (!inPlot()) return {el:vis('#miniPlot'), no:'Åpne kartplotteren igjen.', en:'Open the chart plotter again.'};
       const g = tutField();
       if (LEIA_ARM || LEIA_BUSY) return {map:{p:g.p, r:g.r}, no:'Trykk i kartet innenfor ringen ' + tutAt().no + '. Der står fisken nå.', en:'Tap the chart inside the ring ' + tutAt().en + '. That is where the fish are.'};
-      return {el:vis('#rAuto'), no:'Fisken står ' + tutAt().no + '. Trykk «Autonav», og så i ringen der, så finner båten en trygg vei. Du kan også sette punktene selv.', en:'The fish are ' + tutAt().en + '. Tap «Autonav», then inside the ring there, and the boat finds a safe way. You can also set the points yourself.'}; }},
+      return {el:vis('#rAuto'), no:'Fisken står ' + tutAt().no + '. Trykk «Autonav», og så i ringen der, så finner båten en trygg vei.', en:'The fish are ' + tutAt().en + '. Tap «Autonav», then inside the ring there, and the boat finds a safe way.'}; }},
+  // the point in the ring gets its two hours of fishing of itself (tutUpdate); this step only shows when that did not happen
   {id:'fish2', live:true, done:() => tutFieldFish() >= 2 || S.boat.status === 'fishing',
     tip:() => { const k = tutFieldWp(S.draft); if (k < 0) return {no:'Legg et punkt innenfor ringen igjen.', en:'Put a point inside the ring again.'};
       if (window.innerWidth <= 700) document.body.classList.add('drawer');
@@ -56,11 +83,19 @@ const TSTEPS = [
     tip:() => { const e = estimate();
       if (e.bad >= 0) return {el:vis(['#rUndo', '#panel [data-act=clear]']), no:'Etappe ' + legName(e.bad) + ' krysser land. Trykk angre, og bruk «Autonav», eller dra punktet ut på sjøen.', en:'Leg ' + legName(e.bad) + ' crosses land. Tap undo and use «Autonav», or drag the point out to sea.'};
       if (e.fuel > S.boat.fuel) return {el:vis('#panel [data-act=clear]'), no:'Turen bruker mer drivstoff enn du har. Gjør ruta kortere.', en:'The trip needs more fuel than you have. Make the route shorter.'};
-      return {el:vis('#panel .rbar [data-act=start]'), no:'Trykk «Kast loss». Båten kjører selv ut til feltet.', en:'Tap «Cast off». The boat runs out to the grounds on its own.'}; }},
-  // on the way out: the «Next» chip, then the wait until the boat is at the grounds (it waits there for the luck, core/05-vessels.js)
+      return {el:vis('#panel .rbar [data-act=start]'), no:'Trykk «Kast loss». Båten kjører selv ut til feltet. Punktet har fått to timer fisketid.', en:'Tap «Cast off». The boat runs out to the grounds on its own. The point has two hours of fishing time.'}; }},
+  // on the way out (docs/onboarding.md C8): the «Next» chip, the cinema, the bridge with the binoculars, each until the boat is at the grounds
   {id:'chip', ok:true, done:() => false,
-    tip:() => ({el:vis('#hud .st.nx'), no:'Båten kjører selv ut til feltet. Brikka «Neste» viser hva som skjer og når, også hvor lenge det er i ekte tid. Du kan gjøre andre ting imens.', en:'The boat runs out to the grounds on its own. The «Next» chip shows what happens next and when, also how long that is in real time. You can do other things meanwhile.'})},
-  {id:'sail', done:() => !!S.boat.tutWait || S.boat.status === 'fishing' || holdTotal() > 1,
+    tip:() => ({el:vis('#hud .st.nx'), no:'Båten kjører selv. Brikka «Neste» viser hva som skjer og når, også i ekte tid. Du kan gjøre andre ting imens.', en:'The boat runs on her own. The «Next» chip shows what happens next and when, also in real time. You can do other things meanwhile.'})},
+  {id:'kino', done:() => no3dv() || arrived() || G3.kino(),
+    tip:() => to3d() || {el:vis('#kinoBtn'), no:'Trykk Kino. Da filmer kameraet båten av seg selv, fra lufta, fra sjøen og fra land.', en:'Tap Cinema. The camera films the boat on its own, from the air, from the sea and from the shore.'}},
+  {id:'kino2', done:() => no3dv() || arrived() || !G3.kino(),
+    tip:() => { const b = vis('#kinoBtn'); return b ? {el:b, no:'Fint, ikke sant? Trykk Kino igjen for å ta tilbake kameraet.', en:'Nice, is it not? Tap Cinema again to take the camera back.'} : {no:'Trykk på skjermen for å få knappene fram, så Kino igjen for å ta tilbake kameraet.', en:'Tap the screen to bring the buttons back, then Cinema again to take the camera back.'}; }},
+  {id:'cam', done:() => no3dv() || arrived() || G3.isHelm(),
+    tip:() => to3d() || {el:vis('#camBtn'), no:'Trykk kameraknappen for å stå på broa.', en:'Tap the camera button to stand on the bridge.'}},
+  {id:'cam2', done:() => no3dv() || arrived() || !G3.isHelm(),
+    tip:() => ({el:vis('#camBtn'), no:'Nå ser du som skipperen. Dra med fingeren for å se deg rundt, og knip med to fingre for kikkerten. Trykk kameraknappen igjen for å gå tilbake.', en:'Now you see as the skipper does. Drag a finger to look round, and pinch with two fingers for the binoculars. Tap the camera button again to go back.'})},
+  {id:'sail', done:() => arrived(),
     tip:() => ({el:vis('#hud .st.nx'), no:'Båten er på vei ut til feltet ' + tutAt().no + '.', en:'The boat is on its way out to the grounds ' + tutAt().en + '.', small:true})},
   // just before the first fishing (Jonas 05.10.2026: «Spilleren burde introduseres for "fiskelykke" og haill-appen like før han skal
   // fiske første gangen»): what the luck is, then the Luck app, then where the luck aboard shows
@@ -79,7 +114,7 @@ const TSTEPS = [
       if (inPlot()) return {el:vis('#ecClose'), no:'Nå fisker juksa. Trykk «Lukk» for å se fisket i 3D.', en:'The jig is fishing now. Tap «Close» to watch in 3D.'};
       return {el:vis('#dock [data-act=jigg]'), no:'Nå fisker juksa for deg. Trykk «Jukse selv» for å jukse selv: når det napper, trykk «Rykk» mens nåla er midt på. Knappen blir rød når det napper, og midt på gir to fisk på kroken.', en:'The jig fishes for you now. Tap «Jig yourself» to jig yourself: when it bites, tap «Strike» as the needle is in the middle. The button turns red when it bites, and the middle gives two fish on the hooks.'}; }},
   {id:'deck', ok:true, done:() => false,
-    tip:() => ({el:vis(['#dockInfo', '#hud']), no:'Fisken blør i bløggekaret idet den kommer over ripa. Så blir den sløyd og lagt i lasterommet.', en:'The fish is bled in the tub as it comes over the rail. Then it is gutted and put in the hold.'})},
+    tip:() => ({el:vis(['#dockInfo', '#hud']), no:'Fisken blør i bløggekaret idet den kommer over ripa. Så blir den sløyd og lagt i lasterommet. Godt bløgget og sløyd fisk gir bedre pris.', en:'The fish is bled in the tub as it comes over the rail. Then it is gutted and put in the hold. Well bled and gutted fish fetches a better price.'})},
   {id:'full', done:() => holdTotal() >= capHold() - 1 || (S.boat.status === 'idle' && holdTotal() > 1 && !S.boat.fishUntil && !S.boat.tutWait) || !!S.lastSale,
     tip:() => ({el:vis('#hud'), no:'Lasterommet fylles. Når det er fullt, går du til ' + tutLandN() + ' og leverer.', en:'The hold is filling up. When it is full, you go to ' + tutLandN() + ' and land the catch.', small:true})},
   {id:'route2', live:true, view:() => [S.boat.pos, portById(tutLand()).p], done:() => draftEnds(tutLand()) || planEnds(tutLand()) || (S.boat.status === 'port' && S.boat.port === tutLand()),
@@ -89,30 +124,31 @@ const TSTEPS = [
   {id:'cast2', done:() => (planEnds(tutLand()) && S.boat.status !== 'idle') || (S.boat.status === 'port' && S.boat.port === tutLand()),
     tip:() => { const e = estimate(); if (e.bad >= 0) return {el:vis(['#rUndo', '#panel [data-act=clear]']), no:'Etappe ' + legName(e.bad) + ' krysser land. Trykk angre, og bruk «Autonav».', en:'Leg ' + legName(e.bad) + ' crosses land. Tap undo and use «Autonav».'};
       return {el:vis('#panel .rbar [data-act=start]'), no:'Trykk «Kast loss».', en:'Tap «Cast off».'}; }},
+  // the course list, shown once while the plotter is still open; the manual route is learnt on the second trip (docs/onboarding.md 8)
+  {id:'legs', ok:true, done:() => !inPlot(),
+    tip:() => ({el:vis('#panel .wpc .wg') || vis('#panel'), scroll:true, no:'Kurslista: hver etappe med kurs, distanse og når du er framme. Neste tur legger du ruta selv, punkt for punkt.', en:'The course list: each leg with its course, distance and arrival. On the next trip you lay the route yourself, point by point.'})},
   // on the way in to the plant, a look round the game (Jonas 05.10.2026: «En god anledning til å ta en dypere gjennomgang i tutorialen er
   // jo når brukeren har fisket og er på tur til nærmeste fiskemottak … statusfanen, dekksdagboken, appene, kamera, innstillinger,
   // værsystemer»). Each page is read and «Skjønner» goes on; the boat sails on meanwhile and waits at the quay if it gets there first.
   {id:'tour', ok:true, done:() => false,
     tip:() => ({no:'Båten går selv til ' + tutLandN() + '. Mens den går, viser jeg deg rundt i spillet.', en:'The boat sails to ' + tutLandN() + ' on its own. While it goes, let me show you round the game.'})},
   {id:'hud', ok:true, done:() => false,
-    tip:() => inPlot() ? {el:vis('#ecClose'), noOk:true, no:'Trykk «Lukk» for å gå tilbake til 3D først.', en:'Tap «Close» to go back to 3D first.'} :
-      {el:vis('#hud'), no:'Statusboksen: klokka og dagen, hva båten gjør, pengene, drivstoffet, lasten og energien din. Trykk «–» for å gjøre den til en tynn stripe, og «+» for å åpne den igjen.', en:'The status box: the clock and the day, what the boat is doing, your money, the fuel, the hold and your energy. Tap «–» to fold it to a thin strip, and «+» to open it again.'}},
-  {id:'book', done:() => false,
-    tip:() => ({el:vis('#logbook') || (inPlot() ? vis('#ecClose') : null), no:'Dekksdagboka: alt som skjer om bord blir skrevet her, med fangst, salg, sesonger, hendelser og utstyr. Trykk på den og bla litt. Lukk den når du er ferdig.', en:'The deck log: everything that happens aboard is written here, with catches, sales, seasons, events and gear. Tap it and leaf through. Close it when you are done.'})},
-  {id:'cam', done:() => typeof G3 === 'undefined' || !!G3.failWhy || G3.isHelm(),
-    tip:() => inPlot() ? {el:vis('#ecClose'), no:'Trykk «Lukk» for å gå tilbake til 3D først.', en:'Tap «Close» to go back to 3D first.'} :
-      {el:vis('#camBtn'), no:'Kameraet: dra med fingeren for å se deg rundt båten, og knip for å zoome. Trykk kameraknappen for å stå på broa.', en:'The camera: drag a finger to look round the boat, and pinch to zoom. Tap the camera button to stand on the bridge.'}},
-  {id:'cam2', done:() => typeof G3 === 'undefined' || !!G3.failWhy || !G3.isHelm(),
-    tip:() => ({el:vis('#camBtn'), no:'Nå ser du fra broa, slik skipperen ser det. Trykk kameraknappen igjen for å gå tilbake. Knappen ved siden av gir kinovisning, der kameraet filmer båten av seg selv.', en:'Now you see from the bridge, as the skipper does. Tap the camera button again to go back. The button next to it gives the cinema view, where the camera films the boat on its own.'})},
+    tip:() => to3d() || {el:vis('#hud'), no:'Statusboksen: klokka og dagen, hva båten gjør, pengene, drivstoffet, lasten og energien din. Trykk «–» for å gjøre den til en tynn stripe, og «+» for å åpne den igjen.', en:'The status box: the clock and the day, what the boat is doing, your money, the fuel, the hold and your energy. Tap «–» to fold it to a thin strip, and «+» to open it again.'}},
   {id:'apps', ok:true, done:() => false,
     tip:() => { const t0 = phoneApp('home', '#phone .ph-grid'); if (!(PHONE.isOpen() && PHONE.app === 'home')) return {...t0, noOk:true, no:'Åpne telefonen.', en:'Open the phone.'};
-      return {...t0, no:'Telefonen har appene dine: vær, meldinger, Kystposten, rederiet, Salgslaget, kvoten, reglene, haillen og flere. Øverst står neste mål.', en:'The phone has your apps: weather, messages, the Coast Post, the company, the sales organisation, the quota, the rules, the luck and more. The next goal is at the top.'}; }},
+      return {...t0, no:'Telefonen har appene dine: vær, meldinger, Kystposten, Salgslaget, kvoten, reglene, haillen og flere. Øverst står neste mål.', en:'The phone has your apps: weather, messages, the Coast Post, the sales organisation, the quota, the rules, the luck and more. The next goal is at the top.'}; }},
   {id:'vaer', ok:true, done:() => false,
     tip:() => { const t0 = phoneApp('vaer', '#phone .ph-c .ph-card'); if (!(PHONE.isOpen() && PHONE.app === 'vaer')) return {...t0, noOk:true, no:'Åpne Vær-appen.', en:'Open the Weather app.'};
-      return {...t0, no:'Været: vind, bølger, dønning, sikt og tidevann der du er, og varselet for de neste 48 timene med fargene for hva båten din tåler. Bølgene blir høyere der vinden har lang vei over åpent hav. Sjekk varselet før du går ut.', en:'The weather: wind, waves, swell, visibility and the tide where you are, and the forecast for the next 48 hours, coloured for what your boat can take. The waves grow where the wind has a long way over open sea. Check the forecast before you go out.'}; }},
-  {id:'innst', ok:true, done:() => false,
-    tip:() => { const t0 = phoneApp('innst', '#phone .ph-c .ph-card'); if (!(PHONE.isOpen() && PHONE.app === 'innst')) return {...t0, noOk:true, no:'Åpne Innstillinger.', en:'Open Settings.'};
-      return {...t0, no:'Innstillingene: språk, grafikken i 3D (Auto går ned når bildet hakker), lyd og musikk, statusboksene, hjemsted og kontoen din. Det du endrer, lagres med en gang.', en:'Settings: language, the 3D graphics (Auto steps down when the picture stutters), sound and music, the status boxes, your home port and your account. What you change is kept at once.'}; }},
+      return {...t0, no:'Været: vind, bølger, dønning, sikt og tidevann der du er, og varselet for to døgn med fargene for hva båten din tåler. Blir det rødt, snur båten av seg selv eller blir liggende ved kai. Sjekk varselet før du går ut.', en:'The weather: wind, waves, swell, visibility and the tide where you are, and the forecast for two days coloured for what your boat can take. When it turns red, the boat turns back on her own or stays at the quay. Check the forecast before you go out.'}; }},
+  {id:'salg', ok:true, done:() => false,
+    tip:() => { const t0 = phoneApp('salg', '#phone .ph-c .ph-card'); if (!(PHONE.isOpen() && PHONE.app === 'salg')) return {...t0, noOk:true, no:'Åpne Salgslaget.', en:'Open the sales organisation.'};
+      return {...t0, no:'Salgslaget: prisene per art og størrelse denne uka, mottakene og hva de tar imot. Prisen er det du får per kilo ved kaia.', en:'The sales organisation: the prices per species and size this week, the plants and what they take. The price is what you get per kilo at the quay.'}; }},
+  {id:'regler', ok:true, done:() => false,
+    tip:() => { const t0 = phoneApp('regler', '#phone .ph-c .ph-card'); if (!(PHONE.isOpen() && PHONE.app === 'regler')) return {...t0, noOk:true, no:'Åpne Regler.', en:'Open Rules.'};
+      return {...t0, no:'Reglene: «Kan jeg fiske her?» svarer for der du er, med minstemål, stengte felt og kvoten din i åpen gruppe. Spillet sier fra før du bryter noe.', en:'The rules: «Can I fish here?» answers for where you are, with minimum sizes, closed fields and your quota in the open group. The game tells you before you break anything.'}; }},
+  {id:'redning', ok:true, done:() => false,
+    tip:() => { const t0 = phoneApp('redning', '#phone .ph-c .ph-card'); if (!(PHONE.isOpen() && PHONE.app === 'redning')) return {...t0, noOk:true, no:'Åpne Redning.', en:'Open Rescue.'};
+      return {...t0, no:'Redning: stopper motoren eller går du på grunn, ber du om hjelp her. Redningsskøyta kommer og sleper deg inn. Første gang er gratis.', en:'Rescue: if the engine stops or you run aground, you ask for help here. The rescue boat comes and tows you in. The first time is free.'}; }},
   {id:'land', done:() => !!S.boat.land || !!(S.lastSale && S.lastSale.port === tutLand()),
     tip:() => { if (!(S.boat.status === 'port' && S.boat.port === tutLand())) return {el:vis('#hud .st.nx'), no:'Båten er på vei til ' + tutLandN() + '.', en:'The boat is on its way to ' + tutLandN() + '.', small:true};
       if (inPlot()) return {el:vis('#ecClose'), no:'Fremme! Trykk «Lukk» og lever i 3D.', en:'Arrived! Tap «Close» and land the catch in 3D.'};
@@ -122,6 +158,13 @@ const TSTEPS = [
     tip:() => { if (S.boat.land) return {el:vis('#hud .st.nx'), no:'Kranen løfter fisken på land. Sluttseddelen kommer når lossingen er ferdig.', en:'The crane lifts the catch ashore. The landing note comes when the landing is done.', small:true, noOk:true};
       if (DOCK.page !== 'lever' || !vis('#drawerBody .slipt')) return {okText:['Vis sluttseddelen', 'Show the landing note'], okAct:() => { DOCK.open('lever'); setTimeout(() => { tutScrollSlip(); if (!vis('#drawerBody .slipt')) tutMark('slip'); }, 350); }, no:'Fisken er levert. Sluttseddelen viser hva du fikk betalt.', en:'The catch is landed. The landing note shows what you were paid.'};
       return {el:vis('#drawerBody .slipt'), no:'Her er prisen per kilo for hver størrelse og kvalitet, og innloggingsbonusen din. Hver dag du åpner spillet, gir 1 % mer på fisken.', en:'Here is the price per kilo for each size and grade, and your login bonus. Each day you open the game adds 1 % on the fish.'}; }},
+  // the register, at the first landing note (docs/onboarding.md F17, Jonas 09.10.2026): «skriv under seddelen i ditt navn»; a guest can
+  // say later, and is asked again at the third landing as before (ui/10f-cloud.js)
+  {id:'reg', done:() => typeof isGuest !== 'function' || !isGuest() || !!S.tut.m.regLater,
+    tip:() => ({okText:['Registrer meg', 'Register'], okAct:() => { if (typeof guestAsk === 'function') guestAsk('tut'); }, alt:['Senere', 'Later'], altAct:() => tutMark('regLater'),
+      no:'Sluttseddelen er skrevet på fars papirer. Skriv den i ditt navn: da følger båten, pengene og fangsten deg på alle enheter, og en luksushaill ligger klar om bord.', en:'The landing note is written on Father’s papers. Write it in your name: then the boat, the money and the catch follow you on every device, and a luxury luck lies ready aboard.'})},
+  {id:'book', done:() => false,
+    tip:() => ({el:vis('#logbook') || (inPlot() ? vis('#ecClose') : null), no:'Dekksdagboka: turen står der alt. Alt som skjer om bord blir skrevet her, med fangst, salg, sesonger og utstyr. Trykk på den og bla litt. Lukk den når du er ferdig.', en:'The deck log: the trip is in it already. Everything that happens aboard is written here, with catches, sales, seasons and gear. Tap it and leaf through. Close it when you are done.'})},
   // the ice (Jonas 07.10.2026): learnt at the plant after the first landing, before the first trip of one's own; the first fill is on the plant
   // (a new customer, and they know the old boat), and its price is not mentioned
   {id:'ice', done:() => S.boat.ice >= 149 || !!S.tut.m.free_ice,
@@ -129,10 +172,18 @@ const TSTEPS = [
       if (open) return {el:vis('#drawerBody [data-pa=shop][data-k=ice][data-fill]'), scroll:true, no:'Fyll opp iskassa: trykk på knappen, og en gang til for å bekrefte. Mottaket tar første fylling siden du er ny her og de kjenner igjen den gamle båten.', en:'Fill up the ice box: tap the button, and once more to confirm. The plant covers the first fill because you are new here and they recognise the old boat.'};
       if (S.boat.status !== 'port') return {no:'Mottaket selger is.', en:'The plant sells ice.', small:true};
       return {...dockApp('marked', 'is', 'is', null), no:'Is holder fisken fersk og gir bedre pris. Før neste tur fyller du iskassa her: trykk Mottak og så Is.', en:'Ice keeps the fish fresh and gets a better price. Before the next trip you fill the ice box here: tap Plant and then Ice.'}; }},
+  {id:'beh', ok:true, done:() => false,
+    tip:() => { if (DOCK.page !== 'beholdning'){ if (inPlot()) return to3d(); return {el:vis('#dock [data-dk=beh]') || vis('#drawerClose'), noOk:true, no:'Åpne Beholdning.', en:'Open the inventory.'}; }
+      return {el:vis('#drawerBody'), no:'Beholdning: lasterommet, isen, dieselen og redskapet. Her ser du hva du har med deg før du går ut.', en:'The inventory: the hold, the ice, the diesel and the gear. Here you see what you have with you before you go out.'}; }},
+  // a hand on the quay (docs/onboarding.md F21, Jonas 09.10.2026: valgfritt): on a share of the catch, nothing until the next landing
+  {id:'crew', done:() => !(typeof PHONE !== 'undefined' && PHONE.candidates) || S.crew.length > 0 || BOAT.crewMax < 1 || !!S.tut.m.crewLater,
+    tip:() => { const c = PHONE.candidates()[0]; if (DOCK.page) DOCK.close();
+      return {okText:['Mønstre på', 'Sign on'], okAct:() => { PHONE.hire(c.id); tutMark('crew'); }, alt:['Senere', 'Later'], altAct:() => tutMark('crewLater'),
+        no:'På kaia står ' + c.name + ', ' + c.lv + ', og vil mønstre på. Mannskap får lott, en del av fangsten, så det koster ingenting før du leverer. Med en mann til går sløyinga dobbelt så fort.', en:'On the quay stands ' + c.name + ', ' + c.lvEn + ', and wants to sign on. The crew gets a share of the catch, so it costs nothing until you land. With one more hand the gutting goes twice as fast.'}; }},
   {id:'goal', ok:true, done:() => false,
     tip:() => { if (DOCK.page) DOCK.close();
-      if (!(PHONE.isOpen() && PHONE.app === 'home')) return {okText:['Vis neste mål', 'Show the next goal'], okAct:() => PHONE.open('home'), no:'Godt levert! Nå kan du spare til neste steg.', en:'Well landed! Now you can save up for the next step.'};
-      return {el:vis('#phone .ph-goal'), okText:['Ferdig', 'Done'], no:'Neste mål er en juksamaskin. Den fisker like mye som to håndjukser. Målene står her og øverst i Båthandel på verftet. God tur!', en:'The next goal is a jigging machine. It fishes as much as two hand jigs. The goals are here and at the top of the boat market at the yard. Good fishing!'}; }}
+      if (!(PHONE.isOpen() && PHONE.app === 'home')) return {okText:['Vis neste mål', 'Show the next goal'], okAct:() => PHONE.open('home'), no:'Godt levert! Nå er du din egen skipper. Neste tur velger du feltet selv.', en:'Well landed! Now you are your own skipper. On the next trip you choose the grounds yourself.'};
+      return {el:vis('#phone .ph-goal'), okText:['Ferdig', 'Done'], no:'Neste mål står her og øverst i Båthandel på verftet. Første mål er en juksamaskin: den fisker som to håndjukser. God tur!', en:'The next goal is here and at the top of the boat market at the yard. The first goal is a jigging machine: it fishes as two hand jigs. Good fishing!'}; }}
 ];
 // adrift (Jonas 05.10.2026: «Båten stoppet midt i ruta og nå kommer jeg ingen vei fordi jeg er låst i tutorialen og kan ikke lage ny rute
 // til botnhamn»): «Stopp» stops the route as well, and the guide waited for a boat that would never come. Lying still at sea without a
@@ -219,6 +270,9 @@ function tutView(st){
 }
 function tutUpdate(){
   if (tutOn() && S.boat && !S.boat.gear && !S.tut.m.free_jig) S.boat.gear = true;   // a first trip begun before the jig came with the boat
+  if (tutOn() && !S.tut.m.nout) tutNaustTry();
+  // the point in the ring gets its two hours of fishing of itself (the first trip teaches the route, not the fishing time)
+  if (tutOn() && !S.tut.m.cast1){ const k = tutFieldWp(S.draft); if (k >= 0 && !(S.draft[k].fish >= 2)){ S.draft[k].fish = 2; if (typeof panelDirty !== 'undefined') panelDirty = true; } }
   const tip = $('tip'), dim = $('tutDim'), ring = $('tutRing'), hide = () => { tip.hidden = true; dim.hidden = true; ring.hidden = true; tutCur = null; };
   if (tutOn() && BOOK.isOpen()){ const st = tutStep(); if (st && st.id === 'book') tutMark('book'); }
   if (!tutOn() || !$('modal').hidden || BOOK.isOpen()){ hide(); return; }
@@ -232,6 +286,7 @@ function tutUpdate(){
   const ok = (st.ok && !T0.noOk) || T0.okAct; $('tipOk').hidden = !ok;
   $('tipOk').textContent = T0.okText ? (S.lang === 'no' ? T0.okText[0] : T0.okText[1]) : (S.lang === 'no' ? 'Skjønner' : 'Got it');
   $('tipSkip').hidden = true;   // no skipping: every step is done (Jonas 05.10.2026)
+  const alt = $('tipAlt'); alt.hidden = !T0.alt; if (T0.alt) alt.textContent = S.lang === 'no' ? T0.alt[0] : T0.alt[1];
   tip.hidden = false; tip.classList.toggle('small', !!T0.small);
   const {R, round} = tutRect(T0);
   const place = (el, cls) => { el.hidden = !R; if (!R) return; el.style.left = R.x + 'px'; el.style.top = R.y + 'px'; el.style.width = R.w + 'px'; el.style.height = R.h + 'px'; el.classList.toggle('round', round); };
@@ -244,5 +299,6 @@ function tutUpdate(){
 }
 const JIG_OPEN = () => !!window.jigActive && !$('jigUI').hidden;
 $('tip').addEventListener('click', e => { if (!e.target.closest('#tipOk') && tutCur && tutCur.T0.small){ TUTSM.hid = true; tutUpdate(); } });
+$('tipAlt').onclick = () => { if (!tutCur || !tutCur.T0.altAct) return; tutCur.T0.altAct(); tutUpdate(); };
 $('tipOk').onclick = () => { if (!tutCur) return; const {st, T0} = tutCur; if (T0.okAct){ T0.okAct(); tutUpdate(); return; } if (st.id === 'goal'){ tutMark('goal'); tutFinish(); return; } tutMark(st.id); tutUpdate(); };
 

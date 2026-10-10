@@ -140,8 +140,8 @@ kommer som drypp, står i Håndboka. Håndboka er også svaret på «hvordan var
 
 | Steg | Hva | Omfang |
 |---|---|---|
-| 1 | Måling: `tut_step`-hendelser og trakt per trinn i admin, på dagens veiledning | 1 dag |
-| 2 | Kapittel 1 omskrevet: naustet som start med kinosekvens ut, ny rekkefølge, kursliste vist, apper underveis, registrering ved sluttseddelen, mannskap på kaia som valg | 3–4 dager + `tut` (40 min) i begge formater |
+| 1 | Måling: `tut_step`-hendelser og trakt per trinn i admin, på dagens veiledning | 1 dag. **Bygget 10.10.2026** (`admin_tut`, Jonas kjører migreringen `20261010100000_tut_steps.sql`) |
+| 2 | Kapittel 1 omskrevet: naustet som start med kinosekvens ut, ny rekkefølge, kursliste vist, apper underveis, registrering ved sluttseddelen, mannskap på kaia som valg | 3–4 dager + `tut` (40 min) i begge formater. **Bygget 10.10.2026** (5.16 i overleveringen). Avvik fra planen: `route1` og `cast1` er to trykk (feltet, så «Kast loss»), fordi avgangen fortsatt skal være spillerens eget trykk; bløgging og sløying forklares ved full last som før (`deck`), ikke ved første fisk |
 | 3 | Håndboka og Neste mål-dryppene (kapittel 2–6, rammeverket) | 2 dager |
 | 4 | Innholdet i kapittel 2–6 | 3 dager |
 | 5 | Full regresjon, dokumentasjon, patchnotes | 1 dag |

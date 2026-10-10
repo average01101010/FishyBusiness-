@@ -377,7 +377,7 @@ body.vplot #logbook{display:none}
 .bk-ctrl button{background:rgba(255,255,255,.12);border:0;border-radius:9px;color:#fff;min-width:34px;height:32px;font:600 14px var(--sans);cursor:pointer;padding:0 10px}
 #bkDate{min-width:130px;text-align:center}
 #tip{position:fixed;z-index:63;max-width:280px;background:#fffbe9;color:#1c2a33;border-radius:12px;padding:11px 13px 9px;box-shadow:0 10px 30px rgba(0,0,0,.35);font:14px/1.4 var(--sans)}
-#tip p{margin:0 0 8px} .tip-b{display:flex;gap:8px;justify-content:flex-end} .tip-b button{border:0;border-radius:8px;padding:5px 10px;font:600 12.5px var(--sans);cursor:pointer;background:#e7e1cc;color:#1c2a33} .tip-b #tipOk{background:var(--mag);color:#fff}
+#tip p{margin:0 0 8px} .tip-b{display:flex;gap:8px;justify-content:flex-end} #tipAlt{background:transparent!important;color:#5b6a73!important} .tip-b button{border:0;border-radius:8px;padding:5px 10px;font:600 12.5px var(--sans);cursor:pointer;background:#e7e1cc;color:#1c2a33} .tip-b #tipOk{background:var(--mag);color:#fff}
 .tip-arrow{position:absolute;width:14px;height:14px;background:#fffbe9;transform:rotate(45deg)}
 .ob label{display:block;font-size:13px;font-weight:600;margin:10px 0 4px} .ob input{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:15px;background:var(--paper);color:var(--ink)}
 #ecdisTop{display:none}

@@ -337,10 +337,11 @@ VIEW.trakt = () => {
 // ---------- the first trip's steps (supabase/migrations/20261010100000_tut_steps.sql; the game's ui/07b-first-trip.js; docs/onboarding.md) ----------
 // Each step of the guided first trip in the game's order: how many reached it of those who began the guide, and the median real
 // seconds it took. Where the count falls off, or the seconds pile up, is where the guide is changed next.
-const TUT_STEPS = [['gps', 'Åpne kartplotteren'], ['route1', 'Rute til feltet'], ['fish2', 'Fisketid på punktet'], ['cast1', 'Kast loss'], ['chip', 'Neste-brikka'], ['sail', 'På vei ut'],
-  ['luck', 'Fiskelykka'], ['haill', 'Haill hentet'], ['luckhud', 'Haill i statusboksen'], ['fish', 'Juksa / jukse selv'], ['deck', 'Bløgging og sløying'], ['full', 'Lasten full'],
-  ['route2', 'Rute til mottaket'], ['cast2', 'Kast loss hjem'], ['tour', 'Omvisningen'], ['hud', 'Statusboksen'], ['book', 'Dekksdagboka'], ['cam', 'Kameraet'], ['cam2', 'Broa'],
-  ['apps', 'Telefonen'], ['vaer', 'Vær-appen'], ['innst', 'Innstillinger'], ['land', 'Levert'], ['slip', 'Sluttseddelen'], ['ice', 'Is'], ['goal', 'Neste mål']];
+const TUT_STEPS = [['n1', 'Naustet'], ['n2', 'Trofeveggen'], ['n3', 'Ovnen og lista'], ['nout', 'Gå ut'], ['intro', 'Båten'], ['gps', 'Åpne kartplotteren'], ['route1', 'Rute til feltet'], ['fish2', 'Fisketid på punktet'], ['cast1', 'Kast loss'],
+  ['chip', 'Neste-brikka'], ['kino', 'Kino på'], ['kino2', 'Kino av'], ['cam', 'Broa'], ['cam2', 'Broa, tilbake'], ['sail', 'På vei ut'], ['luck', 'Fiskelykka'], ['haill', 'Haill hentet'], ['luckhud', 'Haill i statusboksen'],
+  ['fish', 'Juksa / jukse selv'], ['deck', 'Bløgging og sløying'], ['full', 'Lasten full'], ['route2', 'Rute til mottaket'], ['cast2', 'Kast loss hjem'], ['legs', 'Kurslista'], ['tour', 'Omvisningen'], ['hud', 'Statusboksen'],
+  ['apps', 'Telefonen'], ['vaer', 'Vær-appen'], ['salg', 'Salgslaget'], ['regler', 'Regler'], ['redning', 'Redning'], ['land', 'Levert'], ['slip', 'Sluttseddelen'], ['reg', 'Registrering'], ['book', 'Dekksdagboka'], ['ice', 'Is'],
+  ['beh', 'Beholdning'], ['crew', 'Mannskap'], ['goal', 'Neste mål']];
 let TU = null;
 async function tuLoad(){ await null; try { TU = DEMO ? tuDemo() : await rpc('admin_tut', {weeks:8}); } catch (e){ TU = {err:e.message}; } if (TAB === 'trakt') render(); }
 function tuDemo(){ const st = {}; let n = 40; TUT_STEPS.forEach(([id], i) => { n = Math.max(12, n - (i % 4 === 0 ? 2 : 0)); st[id] = {n, med:20 + (i * 37) % 90, settled:i % 3}; }); return {started:40, steps:st, done:12, doneMed:1560}; }

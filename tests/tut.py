@@ -10,10 +10,14 @@ from _env import GAME_TUT as GAME
 import asyncio, json, time
 from playwright.async_api import async_playwright
 
-ORDER = ['gps', 'route1', 'fish2', 'cast1', 'chip', 'sail', 'luck', 'haill', 'luckhud', 'fish', 'deck', 'full', 'route2', 'cast2',
-         'tour', 'hud', 'book', 'cam', 'cam2', 'apps', 'vaer', 'innst', 'land', 'slip', 'ice', 'goal']
+# the first trip after the rewrite of 10.10.2026 (docs/onboarding.md): the naust first, the cameras on the way out, the apps on the way
+# in, the register, the inventory and a hand on the quay at the plant. fish2 is settled by the two hours the ring's point gets of itself,
+# reg by the game running without the cloud, and the cameras by the boat arriving when the test is too slow to tap them
+ORDER = ['n1', 'n2', 'n3', 'nout', 'intro', 'gps', 'route1', 'cast1', 'chip', 'kino', 'kino2', 'cam', 'cam2', 'sail', 'luck', 'haill', 'luckhud', 'fish', 'deck', 'full', 'route2', 'cast2',
+         'legs', 'tour', 'hud', 'apps', 'vaer', 'salg', 'regler', 'redning', 'land', 'slip', 'book', 'ice', 'beh', 'crew', 'goal']
+SKIPPABLE = ('nout', 'kino', 'kino2', 'cam', 'cam2', 'legs')
 # the steps read with «Skjønner» while the ring shows what they are about
-OK_RING = ('deck', 'chip', 'slip', 'goal', 'luckhud', 'hud', 'apps', 'vaer', 'innst')
+OK_RING = ('deck', 'chip', 'slip', 'goal', 'luckhud', 'hud', 'apps', 'vaer', 'salg', 'regler', 'redning', 'legs', 'beh', 'intro')
 
 
 def check(ok, what, extra=''):
@@ -51,7 +55,7 @@ async def play(p, W, H, tag):
     # «Hvor står fars naust?» (ui/08c-start.js): the place with most to earn is picked to begin with; the test takes Vangshamn (Father's
     # naust on Senja, landing at Botnhamn) from the list; «Start her» goes on to the boat's name
     await tap_el('#ltGo'); await pg.wait_for_selector('#stGo', state='visible', timeout=20000); await pg.wait_for_timeout(300); await pg.screenshot(path='start_%s.png' % tag)
-    sp = await pg.evaluate("(() => { const b = document.getElementById('stGo').getBoundingClientRect(), l = document.getElementById('stAll').getBoundingClientRect(); return {go:b.bottom <= innerHeight + 1 && b.top >= 0, list:l.height > 60, n:document.querySelectorAll('#startPick .st-it').length}; })()")
+    sp = await pg.evaluate("(() => { const b = document.getElementById('stGo').getBoundingClientRect(), l = document.getElementById('stAll').getBoundingClientRect(); return {go:b.bottom <= innerHeight + 1 && b.top >= 0, list:(l.height > 60 || document.getElementById('stAll').scrollHeight > 60) && document.querySelectorAll('#stAll > .st-it.rec').length > 0, n:document.querySelectorAll('#startPick .st-it').length}; })()")
     check(sp['go'] and sp['list'] and sp['n'] >= 150, tag + ': the start lists the coast\'s plants, and «Start her» is on the screen', sp)
     await pg.evaluate("document.querySelector('#startPick .st-it[data-id=vangshamn]').click()")
     await tap_el('#stGo'); await pg.wait_for_selector('#obGo', state='visible', timeout=60000)
@@ -88,12 +92,13 @@ async def play(p, W, H, tag):
         if s['ring']:
             await tap(s['ring']['x'], s['ring']['y']); await pg.wait_for_timeout(350 if sid != 'route2' else 700); continue
         await pg.wait_for_timeout(500)
-    end = json.loads(await pg.evaluate("JSON.stringify({tut:S.tut, haill:S.haill && S.haill.type, sale:S.lastSale && {port:S.lastSale.port, total:S.lastSale.total, streak:S.lastSale.streak}, catchFlag:!!(S.tut && S.tut.catch), ice:S.boat.ice, gear:S.boat.gear, log:S.log.slice(-8).map(e => e.no)})"))
+    end = json.loads(await pg.evaluate("JSON.stringify({crew:S.crew.length, tut:S.tut, haill:S.haill && S.haill.type, sale:S.lastSale && {port:S.lastSale.port, total:S.lastSale.total, streak:S.lastSale.streak}, catchFlag:!!(S.tut && S.tut.catch), ice:S.boat.ice, gear:S.boat.gear, log:S.log.slice(-8).map(e => e.no)})"))
     await pg.evaluate("PHONE.show(false); DOCK.open('lever')"); await pg.wait_for_timeout(600)
     bonus_row = await pg.evaluate("[...document.querySelectorAll('#drawerBody .slipt td')].some(td => /Innloggingsbonus/.test(td.textContent))")
     await pg.screenshot(path='tut_' + tag + '.png')
     order = [x for x in seen if x]
-    check(order == ORDER, tag + ': alle stegene kom i rekkefølge', order)
+    want = [x for x in ORDER if x in order or x not in SKIPPABLE]
+    check(order == want, tag + ': alle stegene kom i rekkefølge', order)
     check(end['tut'] == 0 and 'Første tur er fullført' in ' '.join(end['log']), tag + ': veiledningen er fullført', end['log'])
     check(free.get('gear') and free.get('ice', 1) == 0 and free.get('cash') == 15000, tag + ': juksa satt på fra start, og ingen is før første fiske', free)
     check(end['ice'] >= 149 and end['gear'], tag + ': første fylling is fra mottaket etter første levering (15 000 kr igjen)', {k: end[k] for k in ('ice', 'gear')})
@@ -101,6 +106,8 @@ async def play(p, W, H, tag):
     check(hold_at_land is not None and hold_at_land >= 349, tag + ': full last ved levering', hold_at_land)
     check(end['sale'] and end['sale']['port'] == 'botnhamn' and bonus_row, tag + ': levert i Botnhamn med bonuslinje på sluttseddelen', end['sale'])
     check(reloads == 3, tag + ': tre omlastinger underveis', reloads)
+    check(end['crew'] == 1, tag + ': mannen på kaia mønstret på ved mottaket', end['crew'])
+    check('nout' in order, tag + ': naustet åpnet seg ved start, og «Gå ut» tok spilleren ned på kaia', [x for x in order if x.startswith('n')])
     print('   ', tag, 'tid', round(time.time() - t0), 's, iterasjoner', it)
     print(json.dumps({'tut': end['tut'], 'tag': tag}))
     await ctx.close()

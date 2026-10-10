@@ -257,5 +257,5 @@ const NAUST3D = (() => {
     if (typeof G3 !== 'undefined' && G3.hold) G3.hold(false);
     if (typeof renderActs === 'function') renderActs();
   }
-  return {open, close, isOpen:() => on, get panel(){ return panelKey; }, openSpot, look(y, p){ cam.yaw = y; cam.pitch = p; }, get anchors(){ return P ? P.A : null; }, get cam(){ return cam; }, project:c => VP ? project(c) : null, lenOf};
+  return {open, close, isOpen:() => on, ready(){ if (!el) build(); return init(); }, get panel(){ return panelKey; }, openSpot, look(y, p){ cam.yaw = y; cam.pitch = p; }, get anchors(){ return P ? P.A : null; }, get cam(){ return cam; }, project:c => VP ? project(c) : null, lenOf};
 })();
