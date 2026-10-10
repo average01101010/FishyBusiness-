@@ -98,7 +98,7 @@ function render(){
   if (TAB === 'navn') nmWire();
   if (TAB === 'avis') nwWire();
   if (TAB === 'merker' && $('#acR')) $('#acR').onclick = () => { AC = null; render(); };
-  if (TAB === 'trakt' && $('#fnR')) $('#fnR').onclick = () => { FN = null; render(); };
+  if (TAB === 'trakt' && $('#fnR')) $('#fnR').onclick = () => { FN = null; TU = null; render(); };
 }
 
 const kpi = (label, v, sub) => '<div class="card kpi"><b>' + v + '</b><span>' + label + (sub ? '<br>' + sub : '') + '</span></div>';
@@ -332,8 +332,30 @@ VIEW.trakt = () => {
       worst ? 'Størst frafall før «' + esc(FN_STEPS[worst.i][1]) + '»: ' + Math.round(worst.fall * 100) + ' % kommer ikke videre. Der er neste sted å gjøre noe.' : '') +
     card('Per uke de startet', table(FN.weeks, [['wk', 'Uke fra', v => esc(String(v).slice(0, 10))], ['start', 'Startet'], ['catch', 'Fangst', (v, x) => r(v, x.start)], ['land1', '1. levering', (v, x) => r(v, x.start)],
       ['land3', '3. levering', (v, x) => r(v, x.start)], ['reg', 'Registrert', (v, x) => r(v, x.start)], ['d1', 'Dag 1', (v, x) => r(v, x.d1n)], ['d7', 'Dag 7', (v, x) => r(v, x.d7n)], ['d30', 'Dag 30', (v, x) => r(v, x.d30n)]]),
-      'Andel av dem som startet den uka. Dag 1, 7 og 30 regnes av dem som har hatt så lang tid.');
+      'Andel av dem som startet den uka. Dag 1, 7 og 30 regnes av dem som har hatt så lang tid.') + tuView();
 };
+// ---------- the first trip's steps (supabase/migrations/20261010100000_tut_steps.sql; the game's ui/07b-first-trip.js; docs/onboarding.md) ----------
+// Each step of the guided first trip in the game's order: how many reached it of those who began the guide, and the median real
+// seconds it took. Where the count falls off, or the seconds pile up, is where the guide is changed next.
+const TUT_STEPS = [['gps', 'Åpne kartplotteren'], ['route1', 'Rute til feltet'], ['fish2', 'Fisketid på punktet'], ['cast1', 'Kast loss'], ['chip', 'Neste-brikka'], ['sail', 'På vei ut'],
+  ['luck', 'Fiskelykka'], ['haill', 'Haill hentet'], ['luckhud', 'Haill i statusboksen'], ['fish', 'Juksa / jukse selv'], ['deck', 'Bløgging og sløying'], ['full', 'Lasten full'],
+  ['route2', 'Rute til mottaket'], ['cast2', 'Kast loss hjem'], ['tour', 'Omvisningen'], ['hud', 'Statusboksen'], ['book', 'Dekksdagboka'], ['cam', 'Kameraet'], ['cam2', 'Broa'],
+  ['apps', 'Telefonen'], ['vaer', 'Vær-appen'], ['innst', 'Innstillinger'], ['land', 'Levert'], ['slip', 'Sluttseddelen'], ['ice', 'Is'], ['goal', 'Neste mål']];
+let TU = null;
+async function tuLoad(){ await null; try { TU = DEMO ? tuDemo() : await rpc('admin_tut', {weeks:8}); } catch (e){ TU = {err:e.message}; } if (TAB === 'trakt') render(); }
+function tuDemo(){ const st = {}; let n = 40; TUT_STEPS.forEach(([id], i) => { n = Math.max(12, n - (i % 4 === 0 ? 2 : 0)); st[id] = {n, med:20 + (i * 37) % 90, settled:i % 3}; }); return {started:40, steps:st, done:12, doneMed:1560}; }
+function tuView(){
+  if (!TU){ tuLoad(); return '<p class="note">Henter …</p>'; }
+  if (TU.err) return card('Første tur', '<p class="warn">' + esc(TU.err) + '</p>', 'Er migreringen supabase/migrations/20261010100000_tut_steps.sql kjørt?');
+  const all = Math.max(1, TU.started || 0), st = TU.steps || {}, mm = s => s == null ? '–' : s >= 90 ? Math.round(s / 60) + ' min' : Math.round(s) + ' s';
+  let worst = null, prev = TU.started || 0;
+  const rows = TUT_STEPS.map(([id, nm], i) => { const x = st[id] || {}, n = x.n || 0, w = Math.round(n / all * 100), fall = prev ? 1 - n / prev : 0;
+    if (prev && n < prev && (!worst || fall > worst.fall)) worst = {i, fall}; const r = '<tr data-i="' + i + '"><td class="note">' + (i + 1) + '</td><td>' + esc(nm) + ' <span class="note">' + id + '</span></td><td>' + nf(n, 0) + '</td><td style="width:35%"><div class="bar"><i style="width:' + w + '%"></i></div></td><td class="note">' + w + ' %</td><td class="note">' + mm(x.med) + '</td></tr>';
+    prev = n || prev; return r; }).join('');
+  const body = '<table><tr><th></th><th>Trinn</th><th>Spillere</th><th></th><th>Av dem som begynte</th><th>Median tid</th></tr>' + rows + '</table>';
+  return '<div class="grid">' + kpi('Begynte på Første tur', nf(TU.started || 0, 0), 'siste 8 uker, med statistikk') + kpi('Fullførte', nf(TU.done || 0, 0), Math.round((TU.done || 0) / all * 100) + ' % av dem som begynte') + kpi('Median tid, hele turen', mm(TU.doneMed), 'ekte tid') + '</div>' +
+    card('Første tur, trinn for trinn', body, worst ? 'Størst frafall før «' + esc(TUT_STEPS[worst.i][1]) + '»: ' + Math.round(worst.fall * 100) + ' % kommer ikke videre. Tida er ekte sekunder på trinnet (trinn som ble avgjort av et senere trinn teller ikke).' : 'Tida er ekte sekunder på trinnet.');
+}
 // ---------- the badges' funnel (supabase/migrations/20261007140000_ach.sql; the game's core/09f-merker.js) ----------
 // How far the players come in «Første uke på sjøen»: each milestone in the game's order, with how many reached it (of those who share
 // usage statistics), and the chapters finished. Where the count falls off is where the next change goes.

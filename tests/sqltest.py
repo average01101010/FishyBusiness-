@@ -561,6 +561,15 @@ def main():
         print(ok(FD == {'start': 3, 'catch': 2, 'land1': 2, 'land3': 1, 'reg': 2, 'd1': 2, 'd1n': 2, 'd7': 1, 'd7n': 1, 'd30': 0, 'd30n': 0} and FX['pl'][0] and FX['mfa'][0]
                  and F1['weeks'] and sum(w['start'] for w in F1['weeks']) >= 3),
               "the funnel: started, first catch, first and third landing, an account, and back after 1, 7 and 30 days of those who have had that long; by the week they started; only the admin with MFA reads it", FD)
+        # the first trip's steps (20261010100000_tut_steps.sql): players per step, the median seconds (settled steps not counted), the
+        # trips finished and their median; only the admin with MFA reads it
+        sql("""insert into public.events (player_id, kind, data) values ('user_01FN1', 'tut_step', '{"id":"gps","s":12}'), ('user_01FN1', 'tut_step', '{"id":"route1","s":40}'),
+            ('user_01FN3', 'tut_step', '{"id":"gps","s":30}'), ('user_01FN3', 'tut_step', '{"id":"route1","s":0,"settled":true}'), ('user_01FN1', 'tut_done', '{"s":1500}')""")
+        TUr = json.loads(sql("select public.admin_tut(8)", AD2, 'authenticated'))
+        TUx = {'pl': sql("select public.admin_tut(8)", B, 'authenticated', expect_err=True), 'mfa': sql("select public.admin_tut(8)", AD1, 'authenticated', expect_err=True)}
+        print(ok(TUr['started'] == 2 and TUr['steps']['gps']['n'] == 2 and TUr['steps']['gps']['med'] == 21 and TUr['steps']['route1']['n'] == 2 and TUr['steps']['route1']['med'] == 40
+                 and TUr['steps']['route1']['settled'] == 1 and TUr['done'] == 1 and TUr['doneMed'] == 1500 and TUx['pl'][0] and TUx['mfa'][0]),
+              "the first trip's steps: players and median seconds per step, settled steps without time, the trips finished; only the admin with MFA reads it", TUr)
         # friends (20261009180000_friends.sql): a code, a request by code and by the hashed id, accepted both ways, the friend's boat
         # wherever it is and also when it went quiet long ago, no guest, no stranger reads, and either can end it
         sql("insert into public.players (id, guest) values ('user_01FRA', false), ('user_01FRB', false), ('user_01FRC', false) on conflict do nothing")

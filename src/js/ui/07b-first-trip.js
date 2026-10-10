@@ -5,13 +5,17 @@
 // the game state as well as the milestones, so the guide survives reloads and surprises. Saves from before it are not sent through.
 // While it runs, a dimmed layer with a hole and a pulsing ring shows where to tap (z-index 61–62, over the phone), with the tip above.
 const tutOn = () => !!(S.tut && S.tut.v === 2);
-const tutNew = () => ({v:2, m:{}, catch:true, pAt:Date.now(), ...(S && S.tutStart ? S.tutStart : {})});   // a start along the coast brings its patch and plant (ui/08c-start.js)
+const tutNew = () => ({v:2, m:{}, catch:true, pAt:Date.now(), t0:Date.now(), ...(S && S.tutStart ? S.tutStart : {})});   // a start along the coast brings its patch and plant (ui/08c-start.js)
 const tutField = () => tutFieldAt();   // Gisundet nord, or near a start along the coast (core: the skrei patch while the catch is guaranteed)
 // where the first catch is landed: Botnhamn from Vangshamn (and the old Finnsnes start), the start's own plant elsewhere (ui/08c-start.js); the field's name for the tips
 const tutLand = () => (S.tut && S.tut.land) || 'botnhamn', tutLandN = () => (portById(tutLand()) || {name:'Botnhamn'}).name;
 const tutAt = () => S.tut && S.tut.f && S.tut.f.at ? S.tut.f.at : {no:'ved Gisundet nord', en:'at North Gisundet'};
 const tutHome = () => portById(S.home || HOME0) || PORTS[0];
-function tutMark(k){ if (!tutOn() || S.tut.m[k]) return; S.tut.m[k] = S.t || 1; S.tut.pAt = Date.now(); save(); }
+// a step done (the guide's funnel, docs/onboarding.md point 6): the real seconds it took since the step before go to the cloud as
+// tut_step; a step settled by a later one (settle) took no time of its own
+function tutEv(k, settle){ if (typeof cloudEv !== 'function') return; const s = settle ? 0 : Math.round((Date.now() - (S.tut.pAt || Date.now())) / 1000); cloudEv('tut_step', settle ? {id:k, s:0, settled:true} : {id:k, s:Math.max(0, Math.min(s, 86400))}); }
+function tutMark(k){ if (!tutOn() || S.tut.m[k]) return; tutEv(k); S.tut.m[k] = S.t || 1; S.tut.pAt = Date.now(); save(); }
+function tutSettle(k){ if (S.tut.m[k]) return; tutEv(k, true); S.tut.m[k] = S.t || 1; }
 // free the first time: the ice (the first fill, up to 150 kg, on the plant after the first landing) and one luxury luck. The hand jig is
 // mounted from the start (Jonas 07.10.2026); there is no ice on the first fishing
 // (the first trip is short and the catch guaranteed), the plant teaches it after the first landing
@@ -181,10 +185,10 @@ function tutRect(T0){
 function tutStep(){
   if (!tutOn()) return null;
   // a step done for good settles the live ones before it (a route is only a draft until the boat casts off)
-  for (let i = 0; i < TSTEPS.length; i++){ const st = TSTEPS[i]; if (S.tut.m[st.id]) continue; if (TSTEPS.slice(i + 1).some(q => S.tut.m[q.id])){ S.tut.m[st.id] = S.tut.m[st.id] || S.t || 1; continue; } if (st.done()){ if (!st.live){ for (const q of TSTEPS){ if (q === st) break; if (!S.tut.m[q.id]) S.tut.m[q.id] = S.t || 1; } tutMark(st.id); } continue; } return st; }
+  for (let i = 0; i < TSTEPS.length; i++){ const st = TSTEPS[i]; if (S.tut.m[st.id]) continue; if (TSTEPS.slice(i + 1).some(q => S.tut.m[q.id])){ tutSettle(st.id); continue; } if (st.done()){ if (!st.live){ for (const q of TSTEPS){ if (q === st) break; tutSettle(q.id); } tutMark(st.id); } continue; } return st; }
   return null;
 }
-function tutFinish(){ S.tut = 0; log('Første tur er fullført. Nå er du din egen skipper.', 'The first trip is done. Now you are your own skipper.'); save(); tutUpdate(); if (typeof refreshAll === 'function') refreshAll(); if (typeof pushAsk === 'function') setTimeout(pushAsk, 3000); }
+function tutFinish(){ if (typeof cloudEv === 'function' && S.tut && S.tut.t0) cloudEv('tut_done', {s:Math.round((Date.now() - S.tut.t0) / 1000)}); S.tut = 0; log('Første tur er fullført. Nå er du din egen skipper.', 'The first trip is done. Now you are your own skipper.'); save(); tutUpdate(); if (typeof refreshAll === 'function') refreshAll(); if (typeof pushAsk === 'function') setTimeout(pushAsk, 3000); }
 function tutScrollSlip(){ const v = $('drawerBody'), t = v && v.querySelector('.slipt'); if (t) v.scrollTop = Math.max(0, t.offsetTop - 60); }
 // what the guide lets the player do on each step; the rest waits until the first trip is done
 const TUT_ALLOW = {start:['cast1', 'cast2'], waypoint:['route1', 'fish2', 'route2'], sell:['land']};
