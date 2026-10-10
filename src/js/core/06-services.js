@@ -161,7 +161,8 @@ function finishJob(j){
   else if (j.kind === 'hold'){ b.holdLv = j.lv; applyVessel(); log('Lasterommet er bygd om: ' + fmt(BOAT.holdCap, 0) + ' kg.', 'The hold is rebuilt: ' + fmt(BOAT.holdCap, 0) + ' kg.'); }
   else if (gearJob(j)){}
   else if (j.kind === 'prep') return;   // a job from an old save: nothing to do
-  msg(crewJob(j) ? (S.lang === 'no' ? 'Kaia' : 'The quay') : 'Verkstedet', (j.no || '') + ' er ferdig.', (j.en || '') + ' is done.');
+  // the crew works aboard, in port or at sea (tilbakemelding #59)
+  msg(crewJob(j) ? (S.lang === 'no' ? 'Om bord' : 'Aboard') : 'Verkstedet', (j.no || '') + ' er ferdig.', (j.en || '') + ' is done.');
 }
 // The yard's jobs (fitting, service, the slip, the hold, the engine, repairs) take 30 real minutes each, whatever they are, and run all at
 // once (Jonas 05.10.2026: «Montering av utstyr og vedlikehold skal ta 30 ekte minutter, og man kan gjøre flere oppgaver samtidig»): 30
