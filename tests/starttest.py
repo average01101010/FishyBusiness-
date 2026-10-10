@@ -52,8 +52,8 @@ async def main():
         nm = await pg.evaluate("({card:document.getElementById('modal').innerText, input:!!document.getElementById('obBoat'), mark:regText(regOf(S.boat)), name:S.boatName, unnamed:!!S.unnamed})")
         await pg.click('#obGo')
         await pg.wait_for_function("S.intro === true && document.getElementById('modal').hidden", timeout=30000)
-        print(ok(not nm['input'] and nm['unnamed'] and nm['name'] == nm['mark'] and nm['mark'] in nm['card'] and 'fiskermanntallet' in nm['card']),
-              'the boat has no name: she goes by her registration mark, and the card says she is named once in fiskermanntallet', {k: nm[k] for k in ('mark', 'name', 'unnamed', 'input')})
+        print(ok(not nm['input'] and nm['unnamed'] and nm['name'] == nm['mark'] and nm['mark'] not in nm['card'] and 'registreringsmerke' not in nm['card']),   # the mark is not mentioned (Jonas 10.10.2026); the naming comes with the registration
+              'the boat has no name (her mark stands in its place) and the card does not mention the mark: she is named at the registration', {k: nm[k] for k in ('mark', 'name', 'unnamed', 'input')})
         # the first trip's route step names the place, not Gisundet; then a sale at the coast plant
         tip = await pg.evaluate("""(() => { setBodyView(false); const s = TSTEPS.find(x => x.id === 'route1'); LEIA_ARM = true; const t = s.tip(); LEIA_ARM = false; return ((t && t.no) || '') + ' | ' + JSON.stringify(S.tut.f || null).slice(0, 60); })()""")
         print(ok('Gisundet' not in tip and pick['name'].split(' (')[0] in tip), 'the first trip\'s tips name the new place', tip[:90])
