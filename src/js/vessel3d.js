@@ -831,17 +831,22 @@ function personVB(B, x, y, z, seated, hands, suit, kit){
 // The jacket (paint zone 1) and the trousers (zone 3) take the kit's colours, and each kit has its torso and its hat: the harbour
 // worker in a blue coverall and a yellow hard hat, the skipper in a navy sweater and a skipper's cap (so you see who is who), the
 // fishermen in orange oilskins and a red knitted cap. The parts' frames: see arbeider.py.
-const WKIT = {hw:{top:[0.13, 0.29, 0.62], legs:[0.13, 0.29, 0.62], torso:'torso', hat:'hardhat'},
-  skipper:{top:[0.11, 0.15, 0.30], legs:[0.20, 0.21, 0.24], torso:'sweater', hat:'skippercap'},
-  crew:{top:[0.95, 0.42, 0.07], legs:[0.95, 0.42, 0.07], torso:'torso', hat:'beanie'}};
+const WKIT = {hw:{top:[0.13, 0.29, 0.62], legs:[0.13, 0.29, 0.62], torso:'torso', hat:'hardhat', hairP:'hair_short_h', shoe:'boot'},
+  skipper:{top:[0.11, 0.15, 0.30], legs:[0.20, 0.21, 0.24], torso:'sweater', hat:'skippercap', hairP:'hair_short_h', shoe:'boot'},
+  crew:{top:[0.95, 0.42, 0.07], legs:[0.95, 0.42, 0.07], torso:'torso', hat:'beanie', hairP:'hair_short_h', shoe:'boot'}};
 const WK_S = 0.95;      // on board a little smaller than on the quay (1.73 m with the cap), as the wheelhouses were made for the old figure
 const WK_SH = 1.42 * WK_S;      // the shoulders' height on board, for the arms the 3D view draws live
 const WKPC = {};
+// a figure's kit: one of the three old ones by name, or a look (core/09i-look.js: an object, or lookKit's result)
+const wkKitOf = kit => typeof kit === 'string' ? WKIT[kit] : kit && kit.top ? kit : lookKit(kit);
+const wkKeyOf = kit => typeof kit === 'string' ? kit : wkKitOf(kit).key;
 function wkPart(name, kit){
-  const k = name + '|' + kit; if (k in WKPC) return WKPC[k];
-  const o = glbPart('worker', name), K = WKIT[kit]; if (!o || !K) return WKPC[k] = null;
-  const c = o.c.slice();
-  for (let i = 0; i < o.zone.length; i++){ const col = o.zone[i] === 1 ? K.top : o.zone[i] === 3 ? K.legs : null; if (col){ const a = o.ao[i]; c[i * 4] = col[0] * a; c[i * 4 + 1] = col[1] * a; c[i * 4 + 2] = col[2] * a; } }
+  const K = wkKitOf(kit); if (!K) return null;
+  const k = name + '|' + (typeof kit === 'string' ? kit : K.key); if (k in WKPC) return WKPC[k];
+  if (Object.keys(WKPC).length > 1500) for (const q in WKPC) delete WKPC[q];
+  const o = glbPart('worker', name); if (!o) return WKPC[k] = null;
+  const c = o.c.slice(), zc = {1:K.top, 3:K.legs, 4:K.skin || null, 5:K.hair || null, 6:K.hatc || null, 7:K.shoec || null};
+  for (let i = 0; i < o.zone.length; i++){ const col = zc[o.zone[i]]; if (col){ const a = o.ao[i]; c[i * 4] = col[0] * a; c[i * 4 + 1] = col[1] * a; c[i * 4 + 2] = col[2] * a; } }
   return WKPC[k] = {p:o.p, n:o.n, c};
 }
 // a part into a builder through a frame: unit axes ax = [x, y, z] scaled by s, origin at
@@ -863,14 +868,15 @@ function wkLimb(B, o, A, E, r){
 // a whole figure facing -z with the feet at (x, y, z), standing or seated; hands where given (null: down by the sides, or on the knees
 // seated; false: no arms, the 3D view draws them live)
 function figureVB(B, x, y, z, seated, hands, kit){
-  const K = WKIT[kit], S = WK_S, P = n => wkPart(n, kit), hip = y + (seated ? 0.46 : 0.92 * S);
+  const K = wkKitOf(kit), S = WK_S, P = n => wkPart(n, kit), hip = y + (seated ? 0.46 : 0.92 * S);
   for (const sd of [-1, 1]){
     const H = [x + sd * 0.11 * S, hip, z], knee = seated ? [x + sd * 0.11 * S, hip + 0.02, z - 0.42 * S] : [x + sd * 0.115 * S, y + 0.5 * S, z - 0.03];
     const foot = seated ? [x + sd * 0.12 * S, y + 0.08 * S, z - 0.46 * S] : [x + sd * 0.12 * S, y + 0.08 * S, z];
-    wkLimb(B, P('thigh'), H, knee, S); wkLimb(B, P('shin'), knee, foot, S); wkPut(B, P('boot'), WKI, [S, S, S], [foot[0], foot[1] - 0.08 * S, foot[2]]);
+    wkLimb(B, P('thigh'), H, knee, S); wkLimb(B, P('shin'), knee, foot, S); wkPut(B, P(K.shoe || 'boot'), WKI, [S, S, S], [foot[0], foot[1] - 0.08 * S, foot[2]]);
   }
   wkPut(B, P(K.torso), WKI, [S, S, S], [x, hip, z]);
-  const neck = [x, hip + 0.58 * S, z]; wkPut(B, P('head'), WKI, [S, S, S], neck); wkPut(B, P(K.hat), WKI, [S, S, S], neck);
+  const neck = [x, hip + 0.58 * S, z]; wkPut(B, P('head'), WKI, [S, S, S], neck);
+  for (const nm of [K.hairP, K.beard, K.hat]) if (nm) wkPut(B, P(nm), WKI, [S, S, S], neck);
   if (hands === false) return;
   const sh = hip + 0.5 * S;
   for (const sd of [-1, 1]){

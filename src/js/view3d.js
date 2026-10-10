@@ -1642,14 +1642,15 @@ const G3 = (() => {
     const W = (a, up, r) => rel(st.x + F[0] * a + R[0] * r, y + up, st.z + F[1] * a + R[1] * r);
     const ph = st.walk || st.task === 'sweep' ? (T * 6.5 + idx) : 0, sw = st.walk ? Math.sin(ph) : 0;
     // the detailed figure (tools/harbour/arbeider.py): the harbour workers in blue coveralls and hard hats, the crew on deck in oilskins
-    const K = PM.W && PM.W[P.kit || (P.bare ? 'crew' : 'hw')];      // P.kit: the skipper himself when he does the work
+    const lk = P.look || (!P.kit && !P.bare && P.id != null ? lookQuay(P.id, idx) : null);      // the people on a plant's quay each have their own look too (core/09i-look.js lookQuay)
+    const K = PM.W && (lk ? lookMesh(lk) : PM.W[P.kit || (P.bare ? 'crew' : 'hw')]);      // P.look: the one who does the work, by his look (the skipper's or a crew member's); P.kit: the old kits
     for (const s of [-1, 1]){ const hip = W(0, 0.92, s * 0.11), foot = W(sw * s * 0.28, 0.08 + Math.max(0, Math.cos(ph) * s) * 0.07 * (st.walk ? 1 : 0), s * 0.12), knee = [(hip[0] + foot[0]) / 2 + F[0] * 0.07, (hip[1] + foot[1]) / 2, (hip[2] + foot[2]) / 2 + F[1] * 0.07];
       if (K){ drawN(K.thigh, limbM(hip, knee, 1)); drawN(K.shin, limbM(knee, foot, 1)); drawN(K.boot, chain(M4.T(foot[0], foot[1] - 0.08, foot[2]), M4.RY(-h))); continue; }
       drawN(PM.leg, limbM(hip, knee, 0.075)); drawN(PM.leg, limbM(knee, foot, 0.065)); drawN(PM.boot, chain(M4.T(foot[0], foot[1] - 0.08, foot[2]), M4.RY(-h))); }
     const bend = st.task === 'hose' || st.task === 'coil' || st.task === 'stack' || st.task === 'gut' ? 0.12 : st.task === 'ice' ? 0.22 : 0;
     const tc = W(bend * 0.4, 1.2, 0); drawN(K ? K.torso : PM.torso, chain(M4.T(tc[0], tc[1] - 0.28, tc[2]), M4.RY(-h), M4.RX(-bend)));
     const hd = W(bend, 1.6, 0), HM = chain(M4.T(hd[0], hd[1] - 0.1, hd[2]), M4.RY(-h + (st.task === 'look' ? Math.sin(T * 0.4 + idx) * 0.5 : 0)));
-    if (K){ drawN(K.head, HM); drawN(K.hat, HM); } else drawN(P.bare ? PM.headB : PM.head, HM);
+    if (K){ drawN(K.head, HM); for (const m of [K.hair, K.beard, K.hat]) if (m) drawN(m, HM); } else drawN(P.bare ? PM.headB : PM.head, HM);
     let hands;
     const t = T + idx * 1.7;
     switch (st.task){
@@ -1865,11 +1866,11 @@ const G3 = (() => {
           drawN(fishOf(sp), chain(BMrel, M4.T(ux, d.y, uz), M4.S(ts), M4.T((hash(i * 3) - 0.5) * 0.12, 0.5 + lay * 0.05, z), M4.RY(Math.PI / 2 + (i % 2 ? Math.PI : 0) + (hash(i * 9) - 0.5) * 0.3), M4.RZ(sp === 'krabbe' ? 0 : Math.PI / 2 * (hash(i * 11) > 0.5 ? 1 : -1)), M4.S((0.48 + hash(i * 13) * 0.1) * (sp === 'krabbe' ? 1.7 : 1)))); }
         if (!DK.on) drawN(fishOf(pick(0.3)), chain(BMrel, M4.T(tx, topY, tz + (own ? 0 : 0.25)), M4.RY(0.2), M4.RZ(Math.PI / 2), M4.S(0.5))); } }
     if (!DK.on) return;
-    const wl = xf(BMrel, [tx + 0.62, d.y, tz]), wy = wl[1] + eye[1], P = {gy:() => wy, bare:true, spray:0, kit:DK.me ? 'skipper' : null}, head = bv.head - Math.PI / 2;
+    const wl = xf(BMrel, [tx + 0.62, d.y, tz]), wy = wl[1] + eye[1], P = {gy:() => wy, bare:true, spray:0, kit:DK.me ? 'skipper' : null, look:DK.me ? lookMe() : lookCrew(0)}, head = bv.head - Math.PI / 2;
     drawWorker(P, {x:wl[0] + eye[0], z:wl[2] + eye[2], h:head, task:DK.task === 'gut' ? 'gut' : 'ice', walk:false, s:0}, eye, t, 7);
     // the skipper and a hand both on the deck work: the hand stands inboard of the bleeding tub, facing it
     if (DK.me && DK.crew && !DK.alone){ const w2 = xf(BMrel, [ux + (ux > tx ? -0.62 : 0.62), d.y, uz]), y2 = w2[1] + eye[1];
-      drawWorker({gy:() => y2, bare:true, spray:0, kit:null}, {x:w2[0] + eye[0], z:w2[2] + eye[2], h:bv.head + (ux > tx ? 1 : -1) * Math.PI / 2, task:DK.task === 'gut' ? 'gut' : 'ice', walk:false, s:0}, eye, t, 8); }
+      drawWorker({gy:() => y2, bare:true, spray:0, kit:null, look:lookCrew(0)}, {x:w2[0] + eye[0], z:w2[2] + eye[2], h:bv.head + (ux > tx ? 1 : -1) * Math.PI / 2, task:DK.task === 'gut' ? 'gut' : 'ice', walk:false, s:0}, eye, t, 8); }
     // the offal goes over the port rail into the water, where the gulls come down for it
     const out = [-Math.cos(bv.head), -Math.sin(bv.head)], a = xf(BMrel, [tx - 0.15, d.y + 1.0, tz]), wat = (env.tide || 0) - eye[1];
     DK.pt = [a[0] + eye[0] + out[0] * 2.6, (env.tide || 0), a[2] + eye[2] + out[1] * 2.6];
@@ -2087,7 +2088,7 @@ const G3 = (() => {
     // hauler taking the gear in, the next clearing it at the end of the tray, a third stacking it aft (the skiff's fisher is drawn with
     // the boat)
     if (!skiff){ const n = clamp(gopHands(), 0, 3), spots = [[HP[0] - 0.55, HP[2] + 0.2, 'coil', Math.PI / 2], [HP[0] - 1.25, HP[2] + 0.75, 'stack', Math.PI * 0.6], [sx * 0.3 + 0.5, DZ + 0.2, 'stack', Math.PI]];
-      for (let k = 0; k < n; k++){ const [x, z, task, a] = spots[k], wl = xf(BMrel, [x, d.y, z]), wy = wl[1] + eye[1], P = {gy:() => wy, bare:true, spray:0, kit:k === 0 && gopMe() ? 'skipper' : null};
+      for (let k = 0; k < n; k++){ const [x, z, task, a] = spots[k], wl = xf(BMrel, [x, d.y, z]), wy = wl[1] + eye[1], P = {gy:() => wy, bare:true, spray:0, kit:k === 0 && gopMe() ? 'skipper' : null, look:k === 0 && gopMe() ? lookMe() : lookCrew(k - (gopMe() ? 1 : 0))};
         drawWorker(P, {x:wl[0] + eye[0], z:wl[2] + eye[2], h:bv.head + a, task, walk:false, s:0}, eye, t, 9 + k); } }
   }
   // ---------- bunker quays: a tank in its bund, the pump with its meter and hose reel, the sign; someone from the boat holds the nozzle ----------
@@ -2189,7 +2190,17 @@ const G3 = (() => {
   // arrays {p, n, c} as a mesh to draw
   const upA = o => o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null;
   // the figure's parts for one kit (vessel3d.js wkPart), to pose joint by joint
-  const wkMeshes = kit => { const g = n => upA(wkPart(n, kit)), K = WKIT[kit]; return {torso:g(K.torso), head:g('head'), hat:g(K.hat), uarm:g('uarm'), farm:g('farm'), thigh:g('thigh'), shin:g('shin'), boot:g('boot'), hand:g('hand')}; };
+  const wkMeshes = kit => { const g = n => n ? upA(wkPart(n, kit)) : null, K = wkKitOf(kit);
+    return {torso:g(K.torso), head:g('head'), hat:g(K.hat), hair:g(K.hairP), beard:g(K.beard), uarm:g('uarm'), farm:g('farm'), thigh:g('thigh'), shin:g('shin'), boot:g(K.shoe || 'boot'), hand:g('hand')}; };
+  // the meshes of a look, kept by its key (the last 40 looks; the buffers of the one that goes are freed)
+  const LOOKM = new Map();
+  function lookMesh(look){
+    const key = lookKit(look).key; let m = LOOKM.get(key);
+    if (m){ LOOKM.delete(key); LOOKM.set(key, m); return m; }
+    m = wkMeshes(look); LOOKM.set(key, m);
+    if (LOOKM.size > 40){ const k0 = LOOKM.keys().next().value, o = LOOKM.get(k0); LOOKM.delete(k0); for (const q in o){ const x = o[q]; if (x && x.pb){ gl.deleteBuffer(x.pb); gl.deleteBuffer(x.nb); gl.deleteBuffer(x.cb); } } }
+    return m;
+  }
   function nSetup(VP){
     gl.useProgram(PRGN.p); const u = PRGN.u; plSet(u);
     gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uSun, env.lightDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb); gl.uniform3fv(u.uGnd, env.gnd); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD); gl.uniform1f(u.uAlpha, 1); gl.uniform1f(u.uEmis, 0);
@@ -2213,6 +2224,20 @@ const G3 = (() => {
   // tools/boats/snekke23.py) gets its own from it: its hull, glass, lid, propeller and tiller, name boards, the skipper (seated at the
   // tiller where it has one) and the crew, and its places; an inboard boat has no wheel, lever or outboard. useHand swaps the kit in.
   let PERSON = null; const HANDK = {cur:null};
+  // the figures on the own boat (the skipper at the wheel, the crewman on the seat, the fisher at the rail and the fisher's arms) are built
+  // once per boat kit with the look the skipper and the first hand have; when either changes (the wardrobe, a new hand) they are built again
+  const peopleSig = () => lookKey(lookMe()) + '|' + (lookCrew(0) ? lookKey(lookCrew(0)) : '');
+  function refreshPeople(K){
+    if (!K || !K.pp || !PERSON) return; const sig = peopleSig(); if (K.pSig === sig) return; K.pSig = sig;
+    // (the old buffers are left: boat kits made from each other share them, and a look changes rarely)
+    const free = () => {};
+    const build = (a, look) => { const b = NB(); PERSON(b, a[0], a[1], a[2], a[3], a[4], look); return b.mesh(); };
+    const me = lookMe(), c0 = lookCrew(0) || 'crew';
+    if (K.pp.skipper){ free(K.skipper); K.skipper = build(K.pp.skipper, me); }
+    if (K.pp.crew){ free(K.crew); K.crew = build(K.pp.crew, c0); }
+    if (K.pp.fisher){ free(K.fisher); K.fisher = build(K.pp.fisher, me); }
+    if (glbHas('worker')){ if (K.wk) for (const q in K.wk) free(K.wk[q]); K.wk = wkMeshes(me); }
+  }
   function useHand(t){
     if (HANDK.cur === t || !SK) return;
     if (!HANDK.skiff) HANDK.skiff = {SK, SKA:Object.assign({}, SKA), CHARM:CHARM_AT};
@@ -2233,8 +2258,10 @@ const G3 = (() => {
     const g = A.tiller && A.tiller.grip, sk = A.skipper;
     // at a tiller: seated beside it, the right hand on its grip, the left on his knee
     const hands = g ? [[sk[0] - 0.12, sk[1] + 0.56, sk[2] - 0.34], [g[0] - 0.03, g[1] + 0.03, g[2]]] : A.wheel ? [[A.wheel[0] - 0.14, A.wheel[1] + 0.14, A.wheel[2] + 0.05], [A.wheel[0] + 0.14, A.wheel[1] + 0.12, A.wheel[2] + 0.05]] : null;
-    const ps = NB(); PERSON(ps, sk[0], sk[1], sk[2], !!A.sit, hands, 'skipper'); K.skipper = ps.mesh();
-    const pc = NB(); PERSON(pc, A.seat[0], A.seat[1], A.seat[2], true, null, 'crew'); K.crew = pc.mesh();
+    const ps = NB(); PERSON(ps, sk[0], sk[1], sk[2], !!A.sit, hands, lookMe()); K.skipper = ps.mesh();
+    const pc = NB(); PERSON(pc, A.seat[0], A.seat[1], A.seat[2], true, null, lookCrew(0) || 'crew'); K.crew = pc.mesh();
+    K.pp = {skipper:[sk[0], sk[1], sk[2], !!A.sit, hands], crew:[A.seat[0], A.seat[1], A.seat[2], true, null], fisher:[0, 0, 0, false, false]}; K.pSig = peopleSig(); K.wk = wkMeshes(lookMe());
+    { const fb = NB(); PERSON(fb, 0, 0, 0, false, false, lookMe()); K.fisher = fb.mesh(); }
     const KA = Object.assign({}, HANDK.skiff.SKA); for (const k of ['sole', 'tub', 'fisher', 'haul', 'reel', 'mach', 'stack', 'filler']) if (A[k]) KA[k] = A[k];
     return {SK:K, SKA:KA, CHARM:A.charm || HANDK.skiff.CHARM};
   }
@@ -2388,10 +2415,10 @@ const G3 = (() => {
         B.tube([[x + sd * 0.21, sh - 0.04, z], el, hd], 0.052, JAC, 8); B.rbox(hd[0], hd[1] - 0.04, hd[2], 0.08, 0.08, 0.1, 0.035, SKN); }
       B.rbox(x, sh - 0.03, z, 0.13, 0.1, 0.13, 0.05, SKN); B.rbox(x, sh + 0.05, z, 0.22, 0.26, 0.24, 0.1, SKN); B.rbox(x, sh + 0.23, z, 0.235, 0.13, 0.25, 0.1, HAT);
     };
-    const pb = NB(); person(pb, 0, 0.2, 0.8, false, [[-0.12, 1.12, 0.05], [0.16, 1.1, 0.05]], 'skipper');
-    const cb = NB(); person(cb, 0.26, 0.32, 1.16, true, null, 'crew');
+    const pb = NB(); person(pb, 0, 0.2, 0.8, false, [[-0.12, 1.12, 0.05], [0.16, 1.1, 0.05]], lookMe());
+    const cb = NB(); person(cb, 0.26, 0.32, 1.16, true, null, lookCrew(0) || 'crew');
     // the fisher at the rail: body without arms (the arms are drawn live, reaching for rod, reel or line)
-    const fb = NB(); person(fb, 0, 0, 0, false, false, 'skipper');
+    const fb = NB(); person(fb, 0, 0, 0, false, false, lookMe());
     const lb = NB(); lb.tube([[0, 0, 0], [0, 0, 1]], 1, [0.14, 0.26, 0.58, 0.25], 10);
     const hb = NB(); hb.rbox(0, -0.04, 0, 0.085, 0.085, 0.1, 0.035, [0.93, 0.74, 0.6, 0.25]);
     // hand jig reel (juksavinde) on the gunwale: a fixed frame with a roller, and a drum with crank turning about the fore-aft axis
@@ -2427,7 +2454,8 @@ const G3 = (() => {
       skipper:pb.mesh(), crew:cb.mesh(), fishM, rodT:0, fisher:fb.mesh(), cstr:cs.mesh(), shoe:hs.mesh(), limb:lb.mesh(), hand:hb.mesh(), reelF:jf.mesh(), reelD:jd.mesh(), mach:mm.mesh(), anim:null, lines:[], tPlot:mkTex(), tGauge:mkTex(), tVhf:mkTex(), tName:mkTex(), cvP, cvG, cvV, cvN, nameKey:'',
       wheelAt:[0.02, 0.98, zb - 0.075], wheelTilt:0.42, leverAt:lvBox, motorAt:[0, 0.5, zs(0) + 0.02],
       needle:{rpm:0, fuel:0, temp:8, volt:12.6}, wheelA:0, headPrev:null, propA:0, tP:0, tG:0};
-    if (glbHas('worker')) SK.wk = wkMeshes('skipper');      // the fisher's arms, drawn live
+    SK.pp = {skipper:[0, 0.2, 0.8, false, [[-0.12, 1.12, 0.05], [0.16, 1.1, 0.05]]], crew:[0.26, 0.32, 1.16, true, null], fisher:[0, 0, 0, false, false]};
+    if (glbHas('worker')) SK.wk = wkMeshes(lookMe());      // the fisher's arms, drawn live
     // the detailed model from tools/boats (skiff59.py): hull, glass, the lid, the outboard and its propeller from the GLB, and the places
     // from its anchors; the console's screens are part of the model and not live
     const GK = glbHas('skiff') ? geoOf('skiff') : null, A = GK && GK.skiff;
@@ -2438,8 +2466,9 @@ const G3 = (() => {
       const cp = glbPart('skiff', 'cap'); if (cp){ const c = MB(); for (let i = 0; i < cp.p.length; i += 9) c.tri([cp.p[i], cp.p[i + 1], cp.p[i + 2]], [cp.p[i + 3], cp.p[i + 4], cp.p[i + 5]], [cp.p[i + 6], cp.p[i + 7], cp.p[i + 8]], [1, 1, 1]); SK.cap = c.mesh(); }
       SK.wheelAt = A.wheel; SK.wheelTilt = A.wheelTilt; SK.leverAt = A.lever; SK.motorAt = A.motor; SK.live = false;
       if (A.names) SK.qName = A.names.map(([B, T]) => texStrip(B, T));
-      const w = A.wheel, ps = NB(); person(ps, A.skipper[0], A.skipper[1], A.skipper[2], false, [[w[0] - 0.14, w[1] + 0.14, w[2] + 0.05], [w[0] + 0.14, w[1] + 0.12, w[2] + 0.05]], 'skipper'); SK.skipper = ps.mesh();
-      const pc = NB(); person(pc, A.seat[0], A.seat[1], A.seat[2], true, null, 'crew'); SK.crew = pc.mesh();
+      const w = A.wheel, ps = NB(); person(ps, A.skipper[0], A.skipper[1], A.skipper[2], false, [[w[0] - 0.14, w[1] + 0.14, w[2] + 0.05], [w[0] + 0.14, w[1] + 0.12, w[2] + 0.05]], lookMe()); SK.skipper = ps.mesh();
+      const pc = NB(); person(pc, A.seat[0], A.seat[1], A.seat[2], true, null, lookCrew(0) || 'crew'); SK.crew = pc.mesh();
+      SK.pp = {skipper:[A.skipper[0], A.skipper[1], A.skipper[2], false, [[w[0] - 0.14, w[1] + 0.14, w[2] + 0.05], [w[0] + 0.14, w[1] + 0.12, w[2] + 0.05]]], crew:[A.seat[0], A.seat[1], A.seat[2], true, null], fisher:[0, 0, 0, false, false]};
       for (const k of ['sole', 'tub', 'fisher', 'haul', 'reel', 'mach', 'stack', 'filler']) if (A[k]) SKA[k] = A[k];
       CHARM_AT = A.charm || CHARM_AT;
     }
@@ -2628,7 +2657,7 @@ const G3 = (() => {
     const on = engineOn(), frac = on ? clamp(b.v / BOAT.vmax, 0, 1) : 0; SK.propA += (on ? 6 + frac * 120 : 0) * dt;
     nSetup(VP);
     const fishing = S.boat.status === 'fishing' && !S.boat.deckStop;   // with all hands on deck, nobody fishes
-    paintHand(); drawN(SK.hull, BMrel); if (showSkipper && !fishing) drawN(SK.skipper, BMrel); if (showCrew) drawN(SK.crew, BMrel);
+    refreshPeople(SK); paintHand(); drawN(SK.hull, BMrel); if (showSkipper && !fishing) drawN(SK.skipper, BMrel); if (showCrew) drawN(SK.crew, BMrel);
     SK.rodT += dt; SK.lines = [];
     const T = SK.rodT, A = SK.anim || (SK.anim = {mode:null, st:'jig', t:0, fish:[], fly:[], th:0, mc:[]});
     const kv = S.target === 'kveite' && S.boat.kgear && !kveiteClosed(S.t / 60), mode = !fishing ? null : S.boat.gop ? 'gear' : (!kv && S.equip && S.equip.jukse > 0 && !window.jigActive) ? 'machine' : (S.boat.gear || kv) ? 'juksa' : null;
@@ -3716,6 +3745,17 @@ const G3 = (() => {
       if (m && m.o.c.length === E.hull.n * 4){ gl.bindBuffer(gl.ARRAY_BUFFER, E.hull.cb); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(m.o.c), gl.STATIC_DRAW); } } }
     return E;
   }
+  // the people on the boats seen from outside: the own boat's skipper and crew by their looks, each local boat's by a look from her id (a dozen
+  // in all), made once and kept (kind: 'skip' at the wheel, 'skipDeck' on deck, 'crew')
+  const PV = {};
+  function personMesh(kind, look, key){
+    if (PV[key]) return PV[key];
+    const ks = Object.keys(PV); if (ks.length > 160){ for (const q of ks){ const m = PV[q]; gl.deleteBuffer(m.pb); gl.deleteBuffer(m.nb); gl.deleteBuffer(m.cb); delete PV[q]; } }
+    const b = VB(); b.lod = 0.6; personVB(b, 0, 0, 0, false, kind === 'skip' ? [[-0.16, 1.08, -0.42], [0.16, 1.08, -0.42]] : null, null, look);
+    return PV[key] = {pb:buf(new Float32Array(b.p)), nb:buf(new Float32Array(b.n)), cb:buf(new Float32Array(b.c)), n:b.p.length / 3};
+  }
+  const ownPerson = (kind, i) => { const l = kind === 'crew' ? lookCrew(i) : lookMe(); if (!l) return null; const key = 'o|' + kind + '|' + lookKey(l); return PV[key] || personMesh(kind, l, key); };
+  const npcPerson = (kind, n) => { const h = lookHash(String(n.id)) % 12, key = 'n|' + kind + '|' + h; return PV[key] || personMesh(kind, lookFromSeed('npc' + kind + h, kind === 'crew' && h % 5 === 0 ? 'f' : 'm', 24 + (h * 5) % 40, 'sea'), key); };
   function people(){
     if (PERS) return PERS; const mk = (hands, suit, kit) => { const b = VB(); b.lod = 0.6; personVB(b, 0, 0, 0, false, hands, suit, kit); return {pb:buf(new Float32Array(b.p)), nb:buf(new Float32Array(b.n)), cb:buf(new Float32Array(b.c)), n:b.p.length / 3}; };
     return PERS = {skip:mk([[-0.16, 1.08, -0.42], [0.16, 1.08, -0.42]], [0.93, 0.4, 0.1, 0.3], 'skipper'), skipDeck:mk(null, [0.93, 0.4, 0.1, 0.3], 'skipper'), crew:mk(null, [0.95, 0.75, 0.15, 0.3], 'crew')};
@@ -3828,9 +3868,9 @@ const G3 = (() => {
   function drawVessel(t, G, BMrel, VP, skipper, ncrew, onDeck, liv, named){
     const m = pvm(t, liv); if (!m) return; const P = people(); nSetup(VP); drawN(m.hull, BMrel);
     const ds = onDeck && G.crewSpots && ncrew < G.crewSpots.length ? G.crewSpots[ncrew] : null;
-    if (skipper && ds) drawN(P.skipDeck, chain(BMrel, M4.T(ds[0], ds[1], ds[2]), M4.RY(ds[3] || 0)));
-    else if (skipper) drawN(P.skip, chain(BMrel, M4.T(G.skipperAt[0], G.skipperAt[1], G.skipperAt[2])));
-    for (let i = 0; i < ncrew && i < G.crewSpots.length; i++){ const c = G.crewSpots[i]; drawN(P.crew, chain(BMrel, M4.T(c[0], c[1], c[2]), M4.RY(c[3] || 0))); }
+    if (skipper && ds) drawN((named && ownPerson('skipDeck')) || P.skipDeck, chain(BMrel, M4.T(ds[0], ds[1], ds[2]), M4.RY(ds[3] || 0)));
+    else if (skipper) drawN((named && ownPerson('skip')) || P.skip, chain(BMrel, M4.T(G.skipperAt[0], G.skipperAt[1], G.skipperAt[2])));
+    for (let i = 0; i < ncrew && i < G.crewSpots.length; i++){ const c = G.crewSpots[i]; drawN((named && ownPerson('crew', i)) || P.crew, chain(BMrel, M4.T(c[0], c[1], c[2]), M4.RY(c[3] || 0))); }
     if (G.trawl) drawTrawl(t, G.trawl, BMrel, performance.now() / 1000);
     if (G.seine) drawSeine(t, G.seine, BMrel, VP, performance.now() / 1000);
     gl.disableVertexAttribArray(2);
@@ -3878,8 +3918,8 @@ const G3 = (() => {
     for (const n of kit){ const K = n.K, G = K.geo, at = (p, r) => chain(n.M, M4.T(p[0] * K.sv[0], p[1] * K.sv[1], p[2] * K.sv[2]), M4.RY(r || 0));
       drawN(K.hull, chain(n.M, K.S));
       if (!K.glass) continue;
-      if (n.st !== 'port') drawN(P.skip, at(G.skipperAt));
-      if (n.st === 'fishing') for (let i = 0; i < 2 && i < G.crewSpots.length; i++) drawN(P.crew, at(G.crewSpots[i], G.crewSpots[i][3]));
+      if (n.st !== 'port') drawN(npcPerson('skip', n), at(G.skipperAt));
+      if (n.st === 'fishing') for (let i = 0; i < 2 && i < G.crewSpots.length; i++) drawN(npcPerson('crew', {id:String(n.id) + i}), at(G.crewSpots[i], G.crewSpots[i][3]));
     }
     drawNPCNames(kit, VP);
     gl.disableVertexAttribArray(2); gl.useProgram(PL.p);

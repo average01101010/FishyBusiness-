@@ -1,6 +1,13 @@
 # Karaktersystem og garderobe (plan, 10.10.2026)
 
-Status: besluttet 10.10.2026, under bygging.
+Status 10.10.2026: fase 1 til 4 er bygget (utseendekoden, garderoben i Blender, redigeringen, mannskapet og folk på kaia og andre båter med eget utseende). Igjen: fase 5 (butikk, fortjente plagg og sesongplagg, trakt i admin) og fase 6 (andre spillere ser figuren din, krever en ny migrering for `pos_put`).
+
+Som bygget:
+- `core/09i-look.js`: utseendet, katalogen, paletter, `lookKit` (delenes navn og farger), `lookFromSeed` (mannskap og folk på kaia ut fra id, alder og kjønn), `lookOf` (lagres på personen, forskjellig fra de andre om bord og i flåten).
+- `tools/harbour/garderobe.py` og `arbeider.py`: delene i Blender (frisyrer med en `_h`-utgave under hatt, skjegg, hatter, jakker for begge kropper, sko). `garderobe_bilder.py` lager kontrollbilder og måler det som skal måles: ingen flater som krysser mellom hår og hatt, at alle deler henger i hodet, og at ingenting dekker øynene.
+- `vessel3d.js` (`wkPart`, `figureVB`) og `view3d.js` (`lookMesh`, `refreshPeople`, `personMesh`): figurene tegnes etter utseende.
+- `ui/10g-wardrobe.js`: Garderoben, et eget skjermbilde med dreibar forhåndsvisning. Åpnes fra telefonen.
+- Test: `looktest.py`.
 
 ## Beslutninger (Jonas 10.10.2026)
 1. Figuren skal synes også i 3D (på dekk, og dermed for andre spillere).

@@ -1190,3 +1190,33 @@ body.in-naust #dock,body.in-naust #dockFan,body.in-naust #dockInfo,body.in-naust
 .hb-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#d8452b;margin-right:7px;vertical-align:middle}
 .hb-t.seen h4{color:#5b6a73}.hb-t h4{margin:0 0 4px}.hb-t p{margin:0 0 2px}
 #hbQ{width:100%;box-sizing:border-box;padding:9px 11px;border-radius:10px;border:1px solid #cfd8dd;font:14px var(--sans);margin:4px 0 8px;background:#fff}
+
+/* the wardrobe (ui/10g-wardrobe.js): the figure turning on the left (above, in portrait), the choices on the right (below) */
+.wd{position:fixed;inset:0;z-index:9000;display:flex;background:linear-gradient(#27394a,#0f1a24);color:#e8eef3;font:15px/1.35 system-ui,sans-serif;touch-action:manipulation}
+.wd-view{position:relative;flex:1 1 auto;min-width:0}
+.wd-cv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab}
+.wd-vb{position:absolute;left:0;right:0;bottom:12px;display:flex;justify-content:center;gap:10px}
+.wd-vb button,.wd-foot button{min-height:44px;min-width:44px;padding:0 16px;border:0;border-radius:22px;background:rgba(255,255,255,.14);color:inherit;font:inherit;cursor:pointer}
+.wd-side{flex:0 0 400px;min-width:0;max-width:46vw;display:flex;flex-direction:column;background:rgba(8,14,20,.72);border-left:1px solid rgba(255,255,255,.12);min-height:0}
+.wd-top{display:flex;align-items:center;gap:10px;padding:12px 14px}
+.wd-top b{font-size:18px}.wd-sp{flex:1}
+.wd-x,.wd-ok{min-height:44px;padding:0 18px;border:0;border-radius:22px;font:inherit;cursor:pointer;color:#fff}
+.wd-x{background:rgba(255,255,255,.14)}.wd-ok{background:#2c8f5e;font-weight:600}
+.wd-tabs{display:flex;gap:6px;padding:0 12px 8px;overflow-x:auto;scrollbar-width:none;min-width:0}
+.wd-tab{flex:0 0 auto;min-height:40px;padding:0 14px;border:0;border-radius:20px;background:rgba(255,255,255,.09);color:inherit;font:inherit;cursor:pointer}
+.wd-tab.on{background:#3a6fb0;color:#fff}
+.wd-body{flex:1 1 auto;overflow:auto;padding:4px 14px 12px;min-height:0}
+.wd-sub{margin:12px 0 8px;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:#9fb4c4}
+.wd-chips,.wd-sws{display:flex;flex-wrap:wrap;gap:8px}
+.wd-chip{min-height:44px;padding:0 14px;border:2px solid transparent;border-radius:10px;background:rgba(255,255,255,.1);color:inherit;font:inherit;cursor:pointer}
+.wd-chip.small{min-height:36px;font-size:13px}
+.wd-chip.on{border-color:#6fb3ff;background:rgba(80,140,220,.28)}
+.wd-sw{width:44px;height:44px;border:3px solid rgba(255,255,255,.25);border-radius:50%;cursor:pointer;padding:0}
+.wd-sw.on{border-color:#fff;box-shadow:0 0 0 2px #3a6fb0}
+.wd-note{padding:14px;color:#c4d2dd}
+.wd-foot{display:flex;gap:10px;padding:10px 14px 14px}
+@media (orientation:portrait),(max-width:760px){
+  .wd{flex-direction:column}
+  .wd-view{flex:0 0 42%}
+  .wd-side{flex:1 1 auto;max-width:none;border-left:0;border-top:1px solid rgba(255,255,255,.12)}
+}
