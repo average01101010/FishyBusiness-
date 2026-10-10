@@ -209,11 +209,14 @@ function careTick(){
   if ((S.crew || []).length) gearTalk();   // now and then a word on the state of the gear, the hooks and the bait
   if ((S.jobs || []).length || b.gop || b.land || !handsAboard()) return;
   if (!(S.crew || []).length) return;   // only a crew does this by itself; alone, it is yours to order
-  // at sea only when no standing plan runs (06d-drift.js): its gear must stay aboard for the next set; ordered jobs still go
-  if (b.status !== 'port'){ if (crewBusyAtSea() || (S.plan && S.plan.ops) || ((o => o && o.on)(typeof driftOps === 'function' ? driftOps() : null))) return;
+  // at sea the crew works while it is free, also on a standing plan (06d-drift.js; Jonas 10.10.2026). Baiting, hooks, line and pot repairs
+  // take nothing out of what the next set uses (an unbaited tub is not set anyway), so they go on. Mending takes a string of nets off the
+  // boat until it is done, and the plan's next set may name that string: on a net plan the nets are mended in port
+  const planOn = !!(S.plan && S.plan.ops) || ((o => !!(o && o.on))(typeof driftOps === 'function' ? driftOps() : null)), netPlan = planOn && rigOf() === 'garn';
+  if (b.status !== 'port'){ if (crewBusyAtSea()) return;
     // at sea the crew also baits the tubs that are ready for it, with the bait aboard
     for (const lk of ['hyse', 'bank']){ const L = pg.lines[lk], free = L.n - L.baited; const bk = free > 0 && baitPick(pg, LINE_KINDS[lk].baitKg); if (bk){ const n = Math.max(1, Math.min(free, Math.floor((baitOf(pg)[bk] || 0) / LINE_KINDS[lk].baitKg))); if (!egnSelf(lk, n)) return; } } }
-  const mendable = pg.nets.find(l => l.cond < Math.min(0.6, l.max - 0.1)); if (mendable && !mendSelf(mendable.id)) return;
+  const mendable = !(b.status !== 'port' && netPlan) && pg.nets.find(l => l.cond < Math.min(0.6, l.max - 0.1)); if (mendable && !mendSelf(mendable.id)) return;
   for (const lk of ['hyse', 'bank']){ const L = pg.lines[lk]; if (!L.n) continue;
     if (hooksNeed(lk) >= Math.max(5, 0.06 * L.n * LINE_KINDS[lk].hooks) && pg.hooks > 0 && !hooksJob(lk, false)) return;
     if (L.cond < Math.min(0.6, L.max - 0.1) && !lineFix(lk, false)) return; }

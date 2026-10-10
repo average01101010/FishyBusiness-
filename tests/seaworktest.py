@@ -40,6 +40,12 @@ async def main():
           pg.lines.hyse.baited = 0; baitOf(pg).makrell = 0; S.gsay = {hooksOut:S.t, hooksLow:S.t}; S.sayT = -1e9; CARE_LAST = -1; const l3 = S.log.length; mins(1); R.baitTalk = S.log.slice(l3).map(x => x.no).join(' | ');
           // alone aboard, at sea: not possible
           const crew = S.crew; S.crew = []; R.alone = careWhy(); R.aloneEgn = egnSelf('hyse', 1); S.crew = crew;
+          // on a standing plan (Jonas 10.10.2026): the crew still baits and changes hooks at sea; nets are mended unless the plan fishes nets
+          S.jobs = []; const L2 = pg.lines.hyse; L2.n = 4; L2.baited = 0; baitOf(pg).makrell = 40; pg.hooks = 500; L2.miss = 0; S.plan = {ops:true, wps:[{}], idx:0};
+          CARE_LAST = -1; careTick(); R.planBait = S.jobs.some(x => x.kind === 'egn'); S.jobs = [];
+          L2.n = 4; L2.baited = 4; L2.miss = 0.3; CARE_LAST = -1; careTick(); R.planHooks = S.jobs.some(x => x.kind === 'hk'); S.jobs = []; L2.miss = 0;
+          pg.nets.push({id:'nT', mesh:60, ty:'x', n:4, cond:0.3, max:0.95}); b.rig = 'garn'; CARE_LAST = -1; careTick(); R.planNetsKept = !S.jobs.some(x => x.kind === 'mend') && pg.nets.some(x => x.id === 'nT'); S.jobs = [];
+          b.rig = 'line'; CARE_LAST = -1; careTick(); R.planNetsMended = S.jobs.some(x => x.kind === 'mend'); S.plan = null; S.jobs = [];
           return R; })()""")
         print(json.dumps(r, ensure_ascii=False)[:1400])
         print(ok(r['sea'] and r['why'] is None and r['e1'] is None and r['until']), 'with a crew aboard, out at sea and lying still, the line can be baited, and the job starts at once')
@@ -47,6 +53,8 @@ async def main():
         print(ok(r['allBaited']), 'the crew baits the free tubs by itself at sea with the bait aboard')
         print(ok('krok' in r['hookTalk'].lower() and r['hookTalk2'] == 0), 'out of hooks: someone says so, and not again the same day', r['hookTalk'])
         print(ok('agn' in r['baitTalk'].lower()), 'out of bait for the tubs: someone says so', r['baitTalk'])
+        print(ok(r['planBait'] and r['planHooks']), 'on a standing plan the crew still baits and changes hooks at sea', r['planBait'], r['planHooks'])
+        print(ok(r['planNetsKept'] and r['planNetsMended']), 'on a net plan the nets stay aboard for the next set; on other plans the crew mends them', r['planNetsKept'], r['planNetsMended'])
         print(ok(r['alone'] and r['aloneEgn']), 'the skipper alone cannot do it at sea', r['alone'])
         print('errors:', errs[:3]); await br.close()
 

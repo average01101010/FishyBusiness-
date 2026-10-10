@@ -3867,7 +3867,7 @@ Nå tar `vecPrune` alltid med midten av kartplotteren når den er åpen. Kontrol
   - Butikkens og verftets jobber går fortsatt bare i havn.
 - **Mannskapet på egen hånd:**
   - `careTick` går nå også på sjøen. Mannskapet egner da frie stamper med agnet om bord, og bøter, bytter kroker og reparerer som i havn.
-  - Dette skjer ikke mens en driftsplan går, fordi redskapen da må være om bord til neste sett.
+  - Dette skjer også mens en driftsplan går (Jonas 10.10.2026). Egning, krokbytte og reparasjon av line og teiner tar ikke redskap bort fra neste sett (en uegnet stamp settes ikke likevel). Bøting tar en garnlenke av båten til den er ferdig, og planens neste sett kan peke på nettopp den lenka. På en garnplan bøtes derfor ikke garn på sjøen, bare i havn. Testen er `seaworktest.py`.
 - **Prat om redskapen:** én gang i timen ser mannskapet på lageret (`gearTalk`). Hver ting sies høyst én gang i spilldøgnet (`S.gsay`), med mannskapets egen stemme og dialekt (`crewSay`: loggen og teksten over hodet i 3D). Det de sier fra om:
   - Kroker: tomt eller lite (`hooksOut`, `hooksLow`).
   - Agn: tomt eller lite (`baitOut`, `baitLow`).
