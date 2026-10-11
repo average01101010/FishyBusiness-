@@ -89,6 +89,18 @@ async def main():
         check(errs == [], 'sidefeil som gjest', errs)
         await ctx.close()
 
+        # 5b. another dialog (a badge, the landing note) takes the card's place just after it opened: the card is not counted as asked, and comes again
+        calls = []; replies = {'tm_hello': {'consent': True, 'owned': []}, 'save_put2': {'ok': True, 'saved_at': '2026-10-06T10:00:00Z'}}
+        ctx, pg, errs = await page(br, calls, replies, "window.__noUser = 1;")
+        await boot(pg)
+        await pg.evaluate("(() => { S.tut = 0; S.landN = 1; S.regAsk = 0; guestNudge(2); setTimeout(() => modal('<h2>Første levering</h2><button data-close>OK</button>'), 3200); })()")
+        await pg.wait_for_function("(document.querySelector('#modal h2') || {}).textContent === 'Første levering'", timeout=15000)
+        first = await pg.evaluate("S.regAsk || 0")
+        await pg.evaluate("document.getElementById('modal').hidden = true")
+        await pg.wait_for_selector('#modal .ob.reg', timeout=20000)
+        check(first == 0, 'a card that another dialog took the place of is not counted as asked, and comes again when the screen is free', {'regAsk_after_overwrite': first})
+        await ctx.close()
+
         # 6. back from registering: the guest's things move to the account first, then the welcome gift
         calls = []; replies = {'tm_hello': {'consent': True, 'owned': []}, 'save_get': 'null', 'guest_merge': {'merged': True, 'save': True}, 'name_claim': '"ok"'}
         ctx, pg, errs = await page(br, calls, replies, "localStorage.setItem('dsb_guest_code', JSON.stringify({code:'code_abc', gid:'g-1'})); localStorage.setItem('dsb_guest', JSON.stringify({at:'gtok', rt:'grt', exp:9e9, id:'g-1'})); if (!sessionStorage.getItem('n')){ sessionStorage.setItem('n', 1); localStorage.setItem('dsb_names', JSON.stringify({boat:'Havbris', user:'Kystjenta'})); }")

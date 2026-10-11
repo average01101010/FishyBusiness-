@@ -119,7 +119,7 @@ if (AWAY){ catchUp(AWAY + Date.now() - BOOT_T); AWAY = 0; refreshAll(); } lastWa
 loadRoads().then(r => { ROADS = r; scheduleStatic(); if (g3Live()) G3.roadsReady(); }).catch(e => console.error(e));
 loadFine().then(f => { FINE = f; if (g3Live()) G3.fineReady(); }).catch(e => console.error(e));
 }
-bootMap().then(cloudGate).then(bootMapLoad).then(() => { bootGame(); cloudHooks(); cloudStart(); try { sessionStorage.removeItem('dsb_needpk'); } catch (e){} }).catch(e => { console.error(e);
+bootMap().then(cloudGate).then(bootMapLoad).then(() => { bootGame(); cloudHooks(); cloudStart(); try { INSTALL.start(); } catch (e){} try { sessionStorage.removeItem('dsb_needpk'); } catch (e){} }).catch(e => { console.error(e);
   // a read in a pack that is not in: remember the pack and start again with it, a few times at most, before the player sees the error
   try { if (e && e.pk && e.pk.file){ const L = JSON.parse(sessionStorage.getItem('dsb_needpk') || '[]'); if (L.length < 8 && !L.includes(e.pk.file)){ L.push(e.pk.file); sessionStorage.setItem('dsb_needpk', JSON.stringify(L)); location.reload(); return; } } } catch (e2){} bootFail(e); });
 // A start that fails never leaves the player stuck (Jonas 08.10.2026): what went wrong goes to the admin's error list, and the player can try

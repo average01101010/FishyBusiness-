@@ -2174,6 +2174,9 @@ Inspirert av Fishing: Barents Sea.
 
 ### 5.19 Arbeid om bord, mat, hviletid, replikker og energien din (01.10.2026)
 
+> **Fjernet 11.10.2026 (Jonas: «Fjern alt om hviletid»):** mannskapet har ikke lenger krav om hviletid. Regelen (`REST`, `restCheck`, `restHour`, `restLeft`), meldingene om brudd, hvilekortet i Mannskap-appen, replikken `rest`, temaet «hvile» i krangler og push-varselet `rest-` er borte. Energi og slitenhet (`fatigue`, `ENERGY`) består. Teksten under er historikk.
+
+
 Brukerens ønske: mannskapet skal være en levende og givende del av spillet, inspirert av Fishing: Barents Sea. Ingen portretter.
 
 - **Filer:** `core/13-work.js` (stasjoner og kjeder), `core/14-crewlife.js` (læring, mat, hviletid og replikker), `core/15-energy.js` (energien din og søvnen) og `ui/05b-work.js` (skuffesiden «Mannskap», toastene og søvnskjermen).
@@ -3043,6 +3046,7 @@ Jonas' liste: oppgraderinger, kvotehandel, kikkert, raskere fangst, fortøying, 
   - Detaljavstandene for NPC-sett, havneenheter og byggdetalj regnes som avstand/z, byggene med høyst 3×.
   - Kikkertrammen er `#binoc`, som viser «4×».
 - **Øyet ved rattet** (Jonas' video 04.10.2026, skiff i 24 kn): Rekka og konsollen hoppet i snitt 3,7 px per bilde mot øyet, mens horisonten sto stille. Øyet ble plassert med glattet hiv og stamp (0,3 s), mens båten ble tegnet uten. Nå sitter øyet fast på skroget, og bare blikkretningen følger stamp og rull dempet (70 %, 0,3 s). Hiv flytter ikke horisonten. Rettingen er ikke målt i spillet ennå.
+- **Fjernet 11.10.2026 (Jonas):** mottakene har ingen åpningstider. `mottakOpen` returnerer alltid sant, kortet «Åpningstider» i Salgslaget er borte, og planleggeren ser aldri et stengt mottak. Resten av dette punktet er historikk.
 - **Åpningstider på mottakene** (`mottakOpen`, `mottakNext`, `mottakWhen` i `07-harbours.js`):
   - Mottakene publiserer ingen tider (søkt 04.10.2026: mottaket i Senjahopen oppgir telefon, og Råfisklaget lister mottakene uten tider). Derfor typiske tider: hverdager 06–18, lørdag 08–14, stengt søndag, og 05–22 hver dag i skreisesongen (januar–april).
   - Første tur venter aldri.
@@ -4200,3 +4204,13 @@ Gaver av utstyr (`09f-merker.js`) monteres nå med en gang uten verftskø («gav
 - **Tegning:** figurene bygges ledd for ledd som før, med delene lagt sammen per utseende. `lookMesh` holder de 40 siste utseendene for folk på dekk og kaia, `personMesh` de for båter sett utenfra. Eget båtutseende bygges på nytt når spillerens eller første mannskaps utseende endres (`refreshPeople`).
 - **Garderoben** (`WARD`): et eget skjermbilde med en liten WebGL-visning (samme deler som spillet), dreibar, hel figur eller ansikt, faner for kropp, hud, hår, skjegg, hatt, jakke, bukser og sko, og knappene Ferdig, Avbryt, Tilfeldig og Tilbake til start. Liggende og stående.
 - **Ikke gjort ennå:** butikk, fortjente plagg og sesongplagg, og bar hånd i stedet for hansker. Andre spillere ser figuren via `presence.lk`/`ck` (migrering `20261010140000_look.sql`, `lookFromKey`; sendes bare med `pos_put` når serveren kjenner feltene, ellers `WORLDP.noLk`).
+
+### 5.34 Rettelser 11.10.2026
+
+- **Juksa kan ikke mistes** (Jonas): hendelsen «Mistet juksa i sjøen» i grov sjø er fjernet (`core/05-vessels.js`). Ingen juksa og ingen maskiner stopper fisket med beskjed (`fish()`), for eksempel etter at en tidligere lagring mistet den (tilbakemelding #60).
+- **Redskap i sjøen kan fortsatt tapes i sterk storm** (`gearHour` i `core/10-gear.js`: liten sjanse over 2,5 m, mye større mot 5 m; tungt anker holder bedre). Uendret.
+- **Konto øverst i Innstillinger** på telefonen (`cloudCard` i `ui/10f-cloud.js`): gjester kan registrere seg eller logge inn; uten sky står det hvor man registrerer seg.
+- **Registreringskortet** (`guestNudge`, `guestOpenAsk` i `ui/10f-cloud.js`): et trinn teller som stilt først når kortet står på skjermen 1,5 s etter (ellers prøver det igjen, seks ganger), fordi en annen dialog (merke, sluttseddel) kunne ta plassen og kortet aldri ble sett. En gjest som har levert én gang og ikke sett kortet får det ved neste åpning.
+- **Hjemskjermen** (`ui/10p-install.js`, `INSTALL`): anbefaling om å legge spillet på hjemskjermen, på iPhone (stegene «Del» og «Legg til på Hjem-skjerm», ingen dialog å kalle) og Android (nettleserens egen dialog via `beforeinstallprompt`, ellers menystegene). Kort under Innstillinger så lenge spillet går i en fane, og ett kort etter første levering (høyst tre ganger, to døgn mellom, etter registreringskortet). Skjules som appen, og i bygg uten manifest (artifacten). Hendelser: `install_ask`, `install_go`, `install_done`. Test: `installtest.py`.
+- **Siste lagring vinner** (`cloudSync`, `cloudConflict`): når enheten og kontoen begge er spilt siden de var i takt, brukes den som ble lagret sist (`saved_at` mot `lastReal`), ikke den som har kommet lengst i spilltid som før. Den andre ligger i «Tidligere lagringer». Klokkene er enhetenes egne.
+

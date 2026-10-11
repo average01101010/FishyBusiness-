@@ -91,14 +91,14 @@ async def main():
               'the save goes up as a save code with its summary, not forced, from no account save yet', {k: (v[:12] if isinstance(v, str) else v) for k, v in (puts[0] if puts else {}).items()})
         check(r['card'], 'the account card is in Settings, with the e-mail')
         check(not r['admIcon'] and not r['admApp'], 'an account without the admin flag has no Admin app on the phone and cannot open it', {'icon': r['admIcon'], 'app': r['admApp']})
-        # the account has moved on (another device saved) with a game that has come less far: one game per account (08.10.2026), the one
-        # furthest in game time goes on by itself, the other is kept in the account's history, and the player is only told
+        # the account has moved on (another device saved) with an older save: one game per account (08.10.2026), the one saved
+        # last goes on (11.10.2026) by itself, the other is kept in the account's history, and the player is only told
         sync = await pg.evaluate("JSON.parse(localStorage.getItem('dsb_sync_user_test') || 'null')")
-        conflict = {'ok': False, 'cloud': {'saved_at': '2030-01-01T10:00:00+00:00', 'game_t': 0, 'summary': {'t': 0, 'day': 1, 'cash': 512000, 'boat': 'Havørn', 'type': 'sjark', 'fleet': 2, 'tut': False}}}
+        conflict = {'ok': False, 'cloud': {'saved_at': '2026-01-01T10:00:00+00:00', 'game_t': 0, 'summary': {'t': 0, 'day': 1, 'cash': 512000, 'boat': 'Havørn', 'type': 'sjark', 'fleet': 2, 'tut': False}}}
         replies['save_put2'] = lambda b: {'ok': True, 'saved_at': '2030-01-01T10:05:00+00:00'} if b.get('force') else conflict   # the account only gives way to a forced save
         n0 = len(calls)
         c2 = await pg.evaluate("""async () => { S.t = Math.max(S.t || 0, 600); S.lastReal = Date.now() + 5; save(); CLOUD.lastSave = 0; await cloudSaveSoon(); await new Promise(r => setTimeout(r, 300)); const m = document.getElementById('modal');
-          return {open:!m.hidden && !!document.getElementById('cgHere'), told:/kommet lengst/.test(document.body.innerText)}; }""")
+          return {open:!m.hidden && !!document.getElementById('cgHere'), told:/lagret sist/.test(document.body.innerText)}; }""")
         puts2 = [c[1] for c in calls[n0:] if c[0] == 'save_put2']
         check(sync and sync['rev'] == '2026-10-05T10:00:00.123+00:00' and len(puts2) >= 1 and puts2[0]['base'] == sync['rev'] and puts2[0]['force'] is False,
               'the device keeps which account save its game comes from, and sends it with the next save', {'sync': sync, 'puts': [(q['base'], q['force']) for q in puts2]})
@@ -239,9 +239,9 @@ async def main():
         # 4. played here, and the account moved on elsewhere meanwhile: the player chooses before the game starts, seeing both
         # (a game of no time and no boat name is an untouched one and the account's is taken without asking, so this one has hours on it)
         await pg.evaluate("(() => { S.company = 'Her AS'; S.cash = 77000; S.t = Math.max(S.t || 0, 600); save(); const k = 'dsb_sync_user_test', s = JSON.parse(localStorage.getItem(k)); s.at = Date.now() - 600000; localStorage.setItem(k, JSON.stringify(s)); })()")
-        replies['save_get'] = {'data': code, 'saved_at': '2031-01-01T10:00:00Z', 'game_t': 2, 'summary': {'t': 2, 'day': 1, 'cash': 33000, 'boat': 'Fjordbris', 'type': 'skiff', 'fleet': 1}}
+        replies['save_get'] = {'data': code, 'saved_at': '2026-01-02T10:00:00Z', 'game_t': 2, 'summary': {'t': 2, 'day': 1, 'cash': 33000, 'boat': 'Fjordbris', 'type': 'skiff', 'fleet': 1}}
         # (the page's last save as it closes is refused: the account has moved on)
-        replies['save_put2'] = {'ok': False, 'cloud': {'saved_at': '2031-01-01T10:00:00Z', 'game_t': 2}}
+        replies['save_put2'] = {'ok': False, 'cloud': {'saved_at': '2026-01-02T10:00:00Z', 'game_t': 2}}
         n0 = len(calls); await pg.reload()
         replies['save_put2'] = {'ok': True, 'saved_at': '2031-01-01T10:09:00+00:00'}
         await pg.wait_for_function("typeof SIMREADY !== 'undefined' && SIMREADY && !document.getElementById('cloudGate')", timeout=120000)

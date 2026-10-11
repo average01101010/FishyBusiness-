@@ -257,11 +257,11 @@ function cloudChoose(here, cloud, when, box){
   return new Promise(res => { document.getElementById('cgHere').onclick = done('here', res); document.getElementById('cgCloud').onclick = done('cloud', res); });
 }
 // One game per account (Jonas 08.10.2026: «Det skulle bare vært sånn at det var EN lagring … Men alle må kunne stole på dette»): when
-// this device and the account have both been played since they were last in step, the one that has come furthest in game time goes on by
+// this device and the account have both been played since they were last in step, the one saved last (11.10.2026; before it was the one furthest in game time) goes on by
 // itself, and the other is kept (the account's in its history, this device's as the save before), to be had back under Innstillinger
 // › Tidligere lagringer. The player is only told. (Old summaries without t: their day.)
 const sumT = s => !s ? -1 : s.t != null ? s.t : ((s.day || 1) - 1) * 1440;
-function cloudKeptNote(where){ const m = where === 'cloud' ? cloudL('Vi fant et spill som har kommet lenger på kontoen din, og fortsetter med det. Spillet som var på denne enheten, er tatt vare på under Innstillinger › Tidligere lagringer.', 'We found a game on your account that has come further, and go on with it. The game that was on this device is kept under Settings › Earlier saves.') : cloudL('Spillet på denne enheten har kommet lengst og fortsetter. Det andre spillet på kontoen er tatt vare på under Innstillinger › Tidligere lagringer.', 'The game on this device has come furthest and goes on. The other game on your account is kept under Settings › Earlier saves.');
+function cloudKeptNote(where){ const m = where === 'cloud' ? cloudL('Vi fant en nyere lagring på kontoen din, og fortsetter med den. Spillet som var på denne enheten, er tatt vare på under Innstillinger › Tidligere lagringer.', 'We found a newer save on your account, and go on with it. The game that was on this device is kept under Settings › Earlier saves.') : cloudL('Spillet på denne enheten er lagret sist og fortsetter. Det andre spillet på kontoen er tatt vare på under Innstillinger › Tidligere lagringer.', 'The game on this device was saved last and goes on. The other game on your account is kept under Settings › Earlier saves.');
   if (typeof toast === 'function' && typeof S !== 'undefined' && S) toast(m); else try { sessionStorage.setItem('dsb_note', m); } catch (e){} }
 // the choice is open (or its summary on the way): no save goes to the account meanwhile; another dialog over it lets the next try ask again
 const cloudChoosing = () => CLOUD.choosing || !!document.getElementById('cgHere');
@@ -279,9 +279,9 @@ async function cloudSync(cs){
   // (not played here since it was last in step, but for the last minute that may not have reached the account as the page closed)
   if (sync && local <= sync.at + 150000){ cloudGateShow('<p>' + cloudL('Henter spillet ditt …', 'Fetching your game …') + '</p>'); return cloudTake(cs); }   // not played here since: the newer one from elsewhere
   if (!sync && Math.abs(local - Date.parse(rev)) < 3000){ syncSet(rev, local); return; }            // the same save, from before devices kept count
-  // both have been played since they were last in step: the one furthest in game time goes on (see sumT above)
-  let cloud = cs.summary; if (!cloud){ try { cloud = saveSum((await codeRead(cs.data)).o); } catch (e){} }
-  const pick = sumT(cloud) > sumT(saveSum(lo)) ? 'cloud' : 'here'; cloudKeptNote(pick);
+  // both have been played since they were last in step: the last save goes on, whatever either game has come to (Jonas 11.10.2026: «alltid den
+  // siste lagringen»); the other is kept in the history
+  const pick = Date.parse(rev) > local ? 'cloud' : 'here'; cloudKeptNote(pick);
   if (pick === 'cloud'){ cloudGateShow('<p>' + cloudL('Henter spillet ditt …', 'Fetching your game …') + '</p>'); return cloudTake(cs); }
   CLOUD.forceNext = true; syncSet(rev, 0);   // the game here goes on; its first save replaces the account's (kept in the history)
 }
@@ -304,7 +304,7 @@ async function cloudConflict(cl){
   let sum = cl.summary, cs = null;
   try { if (!sum){ cs = await cloudRpc('save_get', {}); sum = cs && cs.data ? saveSum((await codeRead(cs.data)).o) : null; } } catch (e){ console.error(e); }
   CLOUD.choosing = false;
-  const pick = sumT(sum) > sumT(saveSum(S)) ? 'cloud' : 'here'; cloudKeptNote(pick);
+  const pick = Date.parse(cl.saved_at) > (S.lastReal || 0) ? 'cloud' : 'here'; cloudKeptNote(pick);   // the last save goes on
   if (pick === 'cloud'){ cs = cs || await cloudRpc('save_get', {}); if (cs && cs.data){ save(); await cloudTake(cs); } }
   else { CLOUD.forceNext = true; CLOUD.lastSave = 0; setTimeout(cloudSaveSoon, 50); }   // (after the save that met the conflict has let go of CLOUD.saving)
 }
@@ -349,10 +349,14 @@ function cloudHooks(){
 
 // ---------- the account card in Settings ----------
 function cloudCard(){
-  if (!CLOUD.on || !CLOUD.user) return '';
-  const u = CLOUD.user, L2 = cloudL;
+  const L2 = cloudL;
+  // the account is not there: the game says so and where to go (Jonas 11.10.2026: registering from Settings, Account)
+  if (!CLOUD.on) return '<div class="ph-card"><h4>' + L2('Konto', 'Account') + '</h4><p class="ph-note">' + L2('Du spiller uten konto her. Registrer deg og logg inn på ', 'You play without an account here. Register and sign in at ') + '<a href="https://detstorebla.no" target="_blank" rel="noopener">detstorebla.no</a>' + L2(', så ligger spillet på kontoen din og følger deg mellom enhetene.', ', and the game is kept on your account and follows you between devices.') + '</p></div>';
+  if (!CLOUD.user) return '<div class="ph-card"><h4>' + L2('Konto', 'Account') + '</h4><p class="ph-note">' + L2('Kobler til kontoen … Er du uten nett, kommer den når du er på nett igjen.', 'Connecting to the account … Without a network it comes when you are back online.') + '</p></div>';
+  const u = CLOUD.user;
   if (CLOUD.guest) return '<div class="ph-card"><h4>' + L2('Konto', 'Account') + '</h4><p class="ph-note">' + L2('Du spiller som gjest. Spillet ligger bare i denne nettleseren til du registrerer deg.', 'You play as a guest. The game lives only in this browser until you register.') + '</p>' +
     '<button class="ph-btn p" data-pa="cloudReg">' + L2('Registrer meg', 'Register') + '</button>' +
+    '<button class="ph-btn alt" data-pa="cloudSignIn">' + L2('Har du konto? Logg inn', 'Have an account? Sign in') + '</button>' +
     '<label><span>' + L2('Del bruksstatistikk', 'Share usage statistics') + '</span><input type="checkbox" data-pa="cloudStat"' + (CLOUD.consent ? ' checked' : '') + '></label>' +
     '<p class="ph-note">' + [['vilkar', 'Vilkår', 'Terms'], ['personvern', 'Personvern', 'Privacy'], ['kilder', 'Kilder', 'Sources'], ['kontakt', 'Kontakt', 'Contact']]
       .map(([f, no, en]) => '<a href="' + f + '.html" target="_blank" rel="noopener">' + L2(no, en) + '</a>').join(' · ') + '</p></div>';
@@ -384,6 +388,7 @@ async function cloudMediaDel(){
   } catch (e){ console.warn('feedback media', e); }
 }
 function cloudAct(a, d){
+  if (a === 'cloudSignIn'){ if (isGuest()) guestRegister(true); return true; }
   if (a === 'cloudReg'){ guestAsk(guestDue() ? 'due' : 'soft'); return true; }
   if (a === 'cloudHist'){ cloudHist(); return true; }
   if (a === 'cloudName'){ const v = String(($('accUser') || {}).value || '').trim(); if (!NAME_RE.test(v)){ toast(cloudL('3–20 bokstaver, tall, punktum, bindestrek eller understrek.', '3–20 letters, digits, dots, hyphens or underscores.')); return false; } nameTake(v); return true; }
@@ -517,8 +522,9 @@ function nameAsk(why, reason){
 }
 // the second opening of the game as a guest: the letter, once a session, when the screen is free
 function guestOpenAsk(){
-  if (!isGuest() || (S.opens || 0) < 2 || CLOUD.openAsked) return;
-  const go = () => { if (tutOn()) return; const m = document.getElementById('modal'); if (m && !m.hidden){ setTimeout(go, 4000); return; } if (CLOUD.openAsked) return; CLOUD.openAsked = true; guestAsk('due'); };
+  // (also a guest who has landed once and was never shown the card, whatever took its place: it comes at the next opening)
+  if (!isGuest() || CLOUD.openAsked || ((S.opens || 0) < 2 && !((S.landN || 0) >= 1 && (S.regAsk || 0) < 2))) return;
+  const go = () => { if (tutOn()) return; const m = document.getElementById('modal'); if (m && !m.hidden){ setTimeout(go, 4000); return; } if (CLOUD.openAsked) return; CLOUD.openAsked = true; guestAsk(guestDue() ? 'due' : 'soft'); };
   setTimeout(go, 6000);
 }
 // without the cloud (the artifact, the tests) there is no registering: the boat is named at the same point, after the second landing or
@@ -538,7 +544,12 @@ let NAME_ASKED = false;
 // a card waits for the screen to be free (no dialog, the tutorial over) and is shown once per step
 function guestNudge(step){
   if (!isGuest() || tutOn() || (S.regAsk || 0) >= step) return;
-  const go = () => { const m = document.getElementById('modal'); if (m && !m.hidden){ setTimeout(go, 4000); return; } if ((S.regAsk || 0) >= step) return; S.regAsk = step; save(); guestAsk(step >= 3 ? 'due' : 'soft'); };
+  // the step counts as asked only once the card is really on the screen: another dialog (a badge, the landing note) that opens just
+  // after it would otherwise take its place and the player never saw it (Jonas 11.10.2026); it is tried again a few times
+  let tries = 0;
+  const go = () => { const m = document.getElementById('modal'); if (m && !m.hidden){ setTimeout(go, 4000); return; } if ((S.regAsk || 0) >= step || !isGuest()) return;
+    guestAsk(step >= 3 ? 'due' : 'soft');
+    setTimeout(() => { const mm = document.getElementById('modal'); if (mm && !mm.hidden && mm.querySelector('.ob.reg')){ S.regAsk = step; save(); } else if (++tries < 6) setTimeout(go, 6000); }, 1500); };
   setTimeout(go, step === 1 ? 8000 : 2500);   // after the first trip the push question comes first (tutFinish)
 }
 async function guestRegister(signIn){
