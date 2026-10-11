@@ -370,3 +370,7 @@ Jonas' ønske 04.10.2026 er et dashbord med all bruksinformasjon, og lista hans 
 **Alternativ uten server:** Cloudflare Pages for siden og Cloudflare R2 for kartpakkene. Det har gratis trafikk, men en grense på 25 MB per fil.
 
 **Supabase på egen server** går også, men da må du drifte databasen, sikkerhetskopiene og oppdateringene selv. Det anbefales ikke nå.
+
+## Supabase: anonym innlogging må stå på (funnet 11.10.2026)
+Gjestekontoene (nye spillere starter uten innlogging) bruker Supabases anonyme innlogging. Den sto av til 11.10.2026: `POST /auth/v1/signup` ga `422 anonymous_provider_disabled`, og spillet startet da uten sky. Ingen nye spillere fikk registreringskort, og ingen gjester ble laget fra 6.10. Slått på under Authentication › Sign In / Providers › «Allow anonymous sign-ins» (Save changes, og last siden på nytt for å se at den holder). Sjekk den ved enhver ny Supabase-oppsett. Sett også hastighetsgrensen for anonyme innlogginger (Rate Limits) og vurder CAPTCHA (Attack Protection).
+
