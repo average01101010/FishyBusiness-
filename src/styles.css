@@ -781,6 +781,9 @@ button.ph-art.pa-btn:active{background:#efe8d8}
 .lt-hint.on{opacity:1}
 .lt-go{position:absolute;left:50%;bottom:calc(3vh + env(safe-area-inset-bottom,0px));transform:translate(-50%,8px);padding:13px 36px;border-radius:999px;border:1px solid rgba(242,214,160,.5);background:rgba(18,14,9,.8);color:#f3e6c8;font:600 17px 'Source Serif 4',Georgia,serif;letter-spacing:.08em;opacity:0;transition:opacity 1s,transform 1s;cursor:pointer;z-index:7}
 .lt-go.on{opacity:1;transform:translate(-50%,0)}
+.lt-login{position:absolute;right:calc(14px + env(safe-area-inset-right,0px));top:calc(12px + env(safe-area-inset-top,0px));z-index:8;min-height:40px;padding:8px 16px;border-radius:999px;border:1px solid rgba(242,214,160,.35);background:rgba(18,14,9,.55);color:rgba(243,230,200,.85);font:600 14px 'Source Serif 4',Georgia,serif;letter-spacing:.03em;cursor:pointer}
+.lt-login:active{background:rgba(18,14,9,.85)}
+.ob.reg .reg-next{font-size:13px;color:#4a5a64;margin:8px 0 0}
 @keyframes ltFloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-5px) rotate(.4deg)}}
 @keyframes ltFlicker{0%,100%{opacity:.92}46%{opacity:1}51%{opacity:.84}55%{opacity:.97}}
 @keyframes ltDust{0%{transform:translate(0,0);opacity:0}15%{opacity:.8}85%{opacity:.55}100%{transform:translate(34px,-96px);opacity:0}}

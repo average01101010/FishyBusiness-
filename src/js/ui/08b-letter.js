@@ -58,8 +58,10 @@ function showLetter(done){
         '<div class="lt-pocket" style="background-image:' + letterPic('env-pocket') + '"></div>' +
       '</div>' +
     '</div>' +
-    '<div class="lt-hint" id="ltHint">' + T(LETTER.tap) + '</div><button class="lt-go" id="ltGo" type="button" hidden>' + T(LETTER.go) + '</button>';
+    '<div class="lt-hint" id="ltHint">' + T(LETTER.tap) + '</div><button class="lt-go" id="ltGo" type="button" hidden>' + T(LETTER.go) + '</button>' +
+    (typeof isGuest === 'function' && isGuest() ? '<button class="lt-login" id="ltLogin" type="button">' + (en ? 'Played before? Sign in' : 'Har du spilt før? Logg inn') + '</button>' : '');
   document.body.appendChild(sc);
+  { const lg = sc.querySelector('#ltLogin'); if (lg) lg.onclick = () => guestLogin('letter'); }
   // the game under the scene is hidden while it is up, so the device draws only the letter (the chart and the panels cost frames)
   const app = document.getElementById('app'); if (app) app.style.visibility = 'hidden';
   const $l = id => document.getElementById(id), env = $l('ltEnv'), back = $l('ltBack'), flap = $l('ltFlap'), paper = $l('ltPaper'), go = $l('ltGo');

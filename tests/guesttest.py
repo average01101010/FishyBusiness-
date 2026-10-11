@@ -60,29 +60,19 @@ async def main():
           return {r, st0, st:b.status, t, wide, plan:!!S.plan, unnamed:S.unnamed === true, mark:S.boatName, boat:!!document.getElementById('regBoat'), user:!!document.getElementById('regUser')}; })()""")
         await pg.click('#regLater'); closed = await pg.evaluate("document.getElementById('modal').hidden")
         check(d['r'] is False and d['st'] == d['st0'] == 'port' and 'fiskermanntallet' in d['t'] and 'levert 2 ganger' in d['t'] and d['unnamed'] and d['mark'] in d['t'] and '«' not in d['t'].split('båten din')[0][-30:]
-              and d['boat'] and d['user'] and 'Brukernavn' in d['t'] and 'valgfritt' not in d['t'] and '23 456 kr' in d['t'] and '789 kg' in d['t']
+              and not d['boat'] and not d['user'] and 'etterpå' in d['t'] and '23 456 kr' in d['t'] and '789 kg' in d['t']
               and 'denne nettleseren' in d['t'] and 'Luksushaill' in d['t'] and 'Registrer meg' in d['t'] and closed,
-              'after the second landing casting off waits: the letter from Fiskeridirektoratet shows the nameless boat by her mark, the money and the fish, asks to name the boat and for a player name (required), says the game lives only in this browser, offers a luxury luck, and «Ikke nå» closes it', d['t'][:300])
+              'after the second landing casting off waits: the letter from Fiskeridirektoratet shows the nameless boat by her mark, the money and the fish, says it takes ten seconds and that the names come afterwards, says the game lives only in this browser, offers a luxury luck, and «Ikke nå» closes it', d['t'][:300])
         # 4. a guest cannot buy, and the account card says what a guest is
         g = await pg.evaluate("""(() => { payBuy('haill', () => { window.__given = 1; }); const t = (document.querySelector('#modal .ob.reg') || {}).innerText || ''; document.getElementById('modal').hidden = true;
           PHONE.open('innst'); const card = document.getElementById('phView').innerText; PHONE.show(false); return {t, given:!!window.__given, card:card.includes('Du spiller som gjest') && card.includes('Registrer meg')}; })()""")
         check('Kjøp krever registrering' in g['t'] and not g['given'] and g['card'], 'a guest cannot buy with real money (the letter asks to register instead), and Settings says the game lives in this browser until then', g)
         # 5. «Registrer meg»: the game up first, a one-time code kept on the device, then WorkOS
         await pg.evaluate("(() => { CLOUD.regT = 0; depart(); })()"); await pg.wait_for_selector('#regGo', timeout=10000)
-        # the player name is required (Jonas 07.10.2026: «Alle registrerte brukere må ha et brukernavn»): none, a bad one or a taken one waits
-        replies['name_free'] = 'false'
-        bad = await pg.evaluate("""async () => { const w = () => new Promise(r => setTimeout(r, 400)), go = v => { document.getElementById('regUser').value = v; document.getElementById('regGo').click(); };
-          document.getElementById('regBoat').value = 'Havbris'; const out = {};
-          go(''); await w(); out.none = !document.getElementById('modal').hidden && !window.__signUp;
-          go('a b'); await w(); out.space = !document.getElementById('modal').hidden && !window.__signUp;
-          go('Kystjenta'); await w(); out.taken = !document.getElementById('modal').hidden && !window.__signUp; out.kept = localStorage.getItem('dsb_names'); return out; }""")
-        replies['name_free'] = 'true'
-        await pg.evaluate("S.lastReal = Date.now(); CLOUD.lastSave = 0; document.getElementById('regUser').value = 'Kystjenta'; document.getElementById('regGo').click()")
+        # one tap: no names before the sign-in (they are asked for afterwards, with a name suggested)
+        await pg.evaluate("S.lastReal = Date.now(); CLOUD.lastSave = 0; document.getElementById('regGo').click()")
         await pg.wait_for_function("window.__signUp === 1", timeout=15000)
-        names = await pg.evaluate("JSON.parse(localStorage.getItem('dsb_names') || 'null')")
-        free = [c[1] for c in calls if c[0] == 'name_free']
-        check(bad['none'] and bad['space'] and bad['taken'] and not bad['kept'] and free[-1] == {'name': 'Kystjenta'} and names == {'boat': 'Havbris', 'user': 'Kystjenta'},
-              'registering needs a player name: none, one with a space or one that is taken waits; a free one is kept on the device with the boat\'s name until the account is there', {'bad': bad, 'names': names})
+        check(await pg.evaluate("localStorage.getItem('dsb_names')") is None and not [c for c in calls if c[0] == 'name_free'], 'registering is one tap: nothing is asked or kept before the sign-in', {})
         kept = await pg.evaluate("JSON.parse(localStorage.getItem('dsb_guest_code') || 'null')")
         claim = [c for c in calls if c[0] == 'guest_claim']; puts = [c for c in calls if c[0] == 'save_put2']
         check(kept == {'code': 'code_abc', 'gid': 'g-1'} and claim and claim[0][2] == 'Bearer gtok' and puts and calls.index(puts[-1]) < calls.index(claim[0]),
@@ -117,6 +107,19 @@ async def main():
         check(order[:3] == ['guest_merge', 'tm_hello', 'save_get'] and mg[0][1] == {'code': 'code_abc'} and mg[0][2] == 'Bearer tok_test' and not r['code'] and not r['guestKey'] and not r['gift'] and not r['guest'] and r['msg'],
               'back as an account: the guest\'s things move over first (with the code, as the account), the guest is forgotten on the device, and a luxury luck and a message from Fiskeridirektoratet are aboard', {'order': order, 'r': r})
         check(errs == [], 'sidefeil som ny konto', errs)
+        await ctx.close()
+        # 7. back as an account with no name and an unnamed boat: one card with a name suggested and the boat to name, one tap to save
+        calls = []; replies = {'tm_hello': {'consent': True, 'owned': []}, 'save_get': 'null', 'name_mine': 'null', 'name_free': 'true', 'name_claim': '"ok"', 'save_put2': {'ok': True, 'saved_at': '2026-10-11T10:00:00Z'}}
+        ctx, pg, errs = await page(br, calls, replies)
+        await boot(pg)
+        await pg.evaluate("(() => { S.tut = 0; S.unnamed = true; S.user = null; nameAsk(); })()")   # (the tests, #notut, ask for it themselves)
+        await pg.wait_for_selector('#nmUser', timeout=30000)
+        sug = await pg.evaluate("({v:document.getElementById('nmUser').value, boat:!!document.getElementById('nmBoat2')})")
+        await pg.fill('#nmBoat2', 'Havbris'); await pg.click('#nmUserGo')
+        await pg.wait_for_function("S.user && S.boatName === 'Havbris'", timeout=15000)
+        claim = [c for c in calls if c[0] == 'name_claim']
+        check(sug['boat'] and len(sug['v']) >= 5 and claim and claim[-1][1] == {'name': sug['v']}, 'after the sign-in the card has a free player name suggested and the boat to name; one tap saves both', {'sug': sug, 'claim': [c[1] for c in claim]})
+        check(errs == [], 'sidefeil navnekortet', errs)
         await ctx.close(); await br.close()
 
 asyncio.run(main())
