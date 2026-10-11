@@ -257,6 +257,10 @@ async def main():
           return {game:localStorage.getItem(KEY), prev:localStorage.getItem(KEY_PREV), signed:localStorage.getItem('dsb_signed'), sync:localStorage.getItem('dsb_sync_user_test'), out:window.__signOut === 1}; }""")
         await pg.wait_for_timeout(1500)
         d5['after'] = await pg.evaluate("localStorage.getItem(KEY)")
+        d5['done'] = await pg.evaluate("(() => { const b = document.getElementById('cgDone'); return b ? document.getElementById('cloudGate').innerText : null; })()")
+        check(bool(d5['done'] and 'slettet' in d5['done']), 'after deleting, the game says in its own words that the account is deleted, with a button back to the start (no blank page from WorkOS)', d5['done'])
+        for w, h, nm in ((1280, 800, 'land'), (800, 1280, 'port')):
+            await pg.set_viewport_size({'width': w, 'height': h}); await pg.wait_for_timeout(300); await pg.screenshot(path='accdel_%s.png' % nm)
         check(d5['out'] and not d5['game'] and not d5['prev'] and not d5['signed'] and not d5['sync'] and not d5['after'], 'deleting the account takes the game on this device too, and nothing is saved again on the way out', d5)
         del_calls = [c for c in calls[n5:] if c[0] in ('account-delete', 'delete_me')]
         check([c[0] for c in del_calls] == ['account-delete'] and del_calls[0][2] == 'Bearer tok_test', 'deleting asks the Edge Function account-delete with the player\'s own token (the sign-in at WorkOS goes with it), not the bare database call', [(c[0], c[2]) for c in del_calls])

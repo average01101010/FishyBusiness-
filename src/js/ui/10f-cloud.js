@@ -499,7 +499,13 @@ function cloudAct(a, d){
       SAVE_OFF = true;   // nothing saved again on the way out
       for (const k of [KEY, KEY_V1, KEY_PREV, CLOUD_SIGNED, syncKey()]) try { localStorage.removeItem(k); } catch (e){}
       try { sessionStorage.removeItem('dsb_pulled'); sessionStorage.removeItem('dsb_force'); } catch (e){}
-      toast(cloudL('Kontoen er slettet.', 'The account is deleted.')); CLOUD.ak.signOut({returnTo:location.origin + location.pathname}); })
+      // the user is gone at WorkOS too, so no trip to its sign-out page (it shows a blank page for a user that no longer exists): the session
+      // here is cleared and the game says it in its own words, with a way back to the start
+      Promise.resolve().then(() => CLOUD.ak.signOut({navigate:false})).catch(() => {}).then(() => {
+        cloudGateShow('<p class="cg-lead">' + cloudL('Kontoen er slettet.', 'The account is deleted.') + '</p><p class="cg-small">' +
+          cloudL('Spillet, statistikken og innloggingen din er fjernet. Kjøp beholdes uten navn i regnskapet. Du kan begynne på nytt når du vil.', 'Your game, statistics and sign-in are removed. Purchases are kept without a name for the books. You can begin again whenever you like.') + '</p>' +
+          '<div class="cg-btns">' + cloudBtn('cgDone', cloudL('Til forsiden', 'To the start'), true) + '</div>');
+        document.getElementById('cgDone').onclick = () => { location.href = location.origin + location.pathname; }; }); })
       .catch(e => toast(cloudL('Kunne ikke slette kontoen nå. Prøv igjen.', 'Could not delete the account now. Try again.')));
     return true;
   }
