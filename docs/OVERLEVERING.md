@@ -955,7 +955,7 @@ Jonas' valg: gratis å spille med kjøp via Stripe, påkrevd innlogging med Work
 - **Databasen** (`supabase/migrations/20261004120000_cloud.sql`):
   - Tabellene er spillere, lagringer, økter, hendelser, feil, bildetakt, produkter, kjøp og rettigheter.
   - Alle tabellene har RLS, med lesetilgang bare for `is_admin()`. Det krever Supabase Auth-ID-en til Jonas i `admins` og totrinnsinnlogging (`aal2`).
-  - Spillet skriver bare gjennom funksjonene `tm_hello`, `tm_consent`, `tm_batch`, `tm_error`, `tm_perf`, `save_get`, `save_put2` (før `save_put`), `save_hist_list`, `save_hist_get` og `delete_me` (security definer). Funksjonene sjekker WorkOS-ID-en (`pid()`, tokenets `sub`) og samtykket.
+  - Spillet skriver bare gjennom funksjonene `tm_hello`, `tm_consent`, `tm_batch`, `tm_error`, `tm_perf`, `save_get`, `save_put2` (før `save_put`), `save_hist_list`, `save_hist_get` og `delete_me` og `delete_me2` (security definer; den siste navngir kontoen for Edge Function `account-delete`, som også sletter brukeren hos WorkOS, se docs/lansering.md). Funksjonene sjekker WorkOS-ID-en (`pid()`, tokenets `sub`) og samtykket.
   - Under 13 år teller ikke et ja som samtykke.
   - **Admin-appen i spillet** (05.10.2026, Jonas: «admin-appen på telefonen skal kun være tilgjengelig på min konto»):
     - `players.game_admin` er satt for WorkOS-kontoen til Jonas, og bare der. Ingen spiller kan sette den selv, fordi tabellen ikke har skrivetilgang for spillere.

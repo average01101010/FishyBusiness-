@@ -459,6 +459,19 @@ function histRows(){
 }
 // the player's own feedback videos out of the Storage bucket (supabase/migrations/20261006010000_feedback_media.sql); quietly nothing
 // where the database does not have the list yet
+// the account, then the sign-in at WorkOS: one call to the Edge Function account-delete (the key for WorkOS lives there). Not set up (503)
+// or not reachable: the database deletion alone, as before, so deleting never stops on it
+async function cloudAccountDel(){
+  try {
+    const tok = await cloudToken();
+    if (tok){
+      const r = await fetch(CLOUD_CFG.supabaseUrl.replace(/\/$/, '') + '/functions/v1/account-delete', {method:'POST', headers:{'Content-Type':'application/json', apikey:CLOUD_CFG.supabaseAnon, Authorization:'Bearer ' + tok}, body:'{}'});
+      if (r.ok) return;
+      if (r.status !== 503 && r.status !== 404) throw new Error('account-delete ' + r.status);
+    }
+  } catch (e){ if (e && /^account-delete/.test(e.message)) throw e; }
+  await cloudRpc('delete_me', {});
+}
 async function cloudMediaDel(){
   try { const l = await cloudRpc('fb_media_list', {}); if (!l || !l.length) return;
     const tok = await cloudToken(), c = CLOUD_CFG;
@@ -482,7 +495,7 @@ function cloudAct(a, d){
     // account went on with it, without Father's letter or the boathouse); the next sign-in starts a new game with the letter
     if (!confirm(cloudL('Slette kontoen? Spillet på kontoen og på denne enheten, statistikken og innloggingen slettes. Kjøp beholdes uten navn i regnskapet. Neste gang begynner du på nytt.', 'Delete the account? The game on the account and on this device, the statistics and the sign-in are deleted. Purchases are kept without a name for the books. Next time you begin again.'))) return true;
     // the videos sent with feedback go first, through Storage (which does not take deletes made in the database)
-    cloudMediaDel().then(() => cloudRpc('delete_me', {})).then(() => {
+    cloudMediaDel().then(cloudAccountDel).then(() => {
       SAVE_OFF = true;   // nothing saved again on the way out
       for (const k of [KEY, KEY_V1, KEY_PREV, CLOUD_SIGNED, syncKey()]) try { localStorage.removeItem(k); } catch (e){}
       try { sessionStorage.removeItem('dsb_pulled'); sessionStorage.removeItem('dsb_force'); } catch (e){}

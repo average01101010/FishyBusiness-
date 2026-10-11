@@ -371,6 +371,10 @@ def main():
         R['lgMine'] = json.loads(sql("select public.logo_mine()", A, 'authenticated'))
         R['lgAgain'] = sql("select public.logo_put('%s')" % LIMG, A, 'authenticated'); R['lgMine2'] = json.loads(sql("select public.logo_mine()", A, 'authenticated'))
         sql("select public.delete_me()", A, 'authenticated')
+        # delete_me2 (20261011160000_delete_me2.sql): the same, and the answer names the account for the Edge Function account-delete
+        D2U = {'sub': 'user_01DDD', 'role': 'authenticated'}; sql("select public.tm_hello('{}')", D2U, 'authenticated')
+        R['del2'] = sql("select public.delete_me2()", D2U, 'authenticated') + '/' + sql("select count(*) from public.players where id = 'user_01DDD'")
+        R['del2Anon'] = sql("select public.delete_me2()", None, 'anon', expect_err=True)
         R['wGone'] = sql("select (select count(*) from public.landings where player_id = 'user_01AAA') || '/' || (select count(*) from public.catches where player_id = 'user_01AAA') || '/' || (select count(*) from public.landings)")
         R['fbGone'] = sql("select count(*) from public.feedback where player_id = 'user_01AAA'")
         R['pushGone'] = sql("select count(*) || '/' || (select count(*) from public.push_queue where player_id = 'user_01AAA') from public.push_subs where player_id = 'user_01AAA'")
@@ -500,6 +504,7 @@ def main():
         print(ok(R['rgA'] == 't' and R['rgB'] == 'f' and R['rgA2'] == 't' and R['rgBad'][0] and R['rgRead'][0]), "one's own registration number: the first player's, refused to another, kept for the first; a bad mark and reading the claims are refused", {k: R[k] for k in ('rgA', 'rgB', 'rgA2')})
         print(ok(R['dOwn'] == ['des_ripe'] and R['dGive'] == ['cos'] and R['dGone'] == []), 'a paint design: paid, it is the account\'s on every device (owned) and a grant for the game; a refund takes it away', {'own': R['dOwn'], 'give': R['dGive'], 'gone': R['dGone']})
         print(ok(R['deleted'] == '0/0/0/anon'), 'deleting the account takes the player, the events and the save; the purchase stays without a name for the books', R['deleted'])
+        print(ok(R['del2'] == 'user_01DDD/0' and R['del2Anon'] is not None), 'delete_me2 deletes the account and names it (for the sign-in at WorkOS); signed out it is refused', {'del2': R['del2'], 'anon': str(R['del2Anon'])[:60]})
         # guests (20261006180000_guest.sql): an anonymous sign-in plays and saves like a player, cannot buy, and registering moves it all
         G = {'sub': '9a1c2a3e-0000-4000-8000-0000000000aa', 'role': 'authenticated', 'is_anonymous': True}; C = {'sub': 'user_01GGG', 'role': 'authenticated'}
         sql("select public.tm_hello('{}')", G, 'authenticated'); sql("select public.tm_consent(true, 1990)", G, 'authenticated')

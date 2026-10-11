@@ -252,11 +252,14 @@ async def main():
         check(r4['company'] == 'Her AS' and puts4 and puts4[0]['force'] is True, 'the game furthest along starts and is put up forced', {'company': r4['company'], 'puts': [(q['base'], q['force']) for q in puts4]})
         # 5. deleting the account takes the game on this device too, so the next sign-in begins again with Father's letter (05.10.2026)
         replies['delete_me'] = {'ok': True}
+        replies['account-delete'] = {'ok': True, 'workos': True}; n5 = len(calls)
         d5 = await pg.evaluate("""async () => { window.confirm = () => true; cloudAct('cloudDel'); await new Promise(r => setTimeout(r, 800));
           return {game:localStorage.getItem(KEY), prev:localStorage.getItem(KEY_PREV), signed:localStorage.getItem('dsb_signed'), sync:localStorage.getItem('dsb_sync_user_test'), out:window.__signOut === 1}; }""")
         await pg.wait_for_timeout(1500)
         d5['after'] = await pg.evaluate("localStorage.getItem(KEY)")
         check(d5['out'] and not d5['game'] and not d5['prev'] and not d5['signed'] and not d5['sync'] and not d5['after'], 'deleting the account takes the game on this device too, and nothing is saved again on the way out', d5)
+        del_calls = [c for c in calls[n5:] if c[0] in ('account-delete', 'delete_me')]
+        check([c[0] for c in del_calls] == ['account-delete'] and del_calls[0][2] == 'Bearer tok_test', 'deleting asks the Edge Function account-delete with the player\'s own token (the sign-in at WorkOS goes with it), not the bare database call', [(c[0], c[2]) for c in del_calls])
         print('errors:', errs[:3]); await br.close()
 
 
