@@ -29,7 +29,8 @@ async def page(br, calls, replies, init=''):
         except Exception: body = {}
         calls.append((fn, body, req.headers.get('authorization', '')))
         if fn == 'signup': return await route.fulfill(status=200, content_type='application/json', body=json.dumps({'access_token': 'gtok', 'refresh_token': 'grt', 'expires_in': 3600, 'user': {'id': 'g-1'}}))
-        r = replies.get(fn, '')
+        r = replies.get(fn, 404 if fn in ('save_put3', 'save_head') else '')
+        if r == 404: return await route.fulfill(status=404, content_type='application/json', body='{"code":"PGRST202"}')
         await route.fulfill(status=200, content_type='application/json', body=r if isinstance(r, str) else json.dumps(r))
     await pg.route('https://sb.test/**', handle)
     return ctx, pg, errs

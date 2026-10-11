@@ -31,7 +31,7 @@ async def page(br, calls, replies, no_user=False):
         try: body = json.loads(req.post_data or '{}')
         except Exception: body = {}
         calls.append((fn, body, req.headers.get('authorization', '')))
-        r = replies.get(fn, '')
+        r = replies.get(fn, 404 if fn in ('save_put3', 'save_head') else '')   # (a database without the revisions: the older puts are tested here; synctest.py has the revisions)
         if callable(r): r = r(body)   # a reply that depends on what was sent
         if r == 404: return await route.fulfill(status=404, content_type='application/json', body='{"code":"PGRST202"}')   # a function the database does not have
         await route.fulfill(status=200, content_type='application/json', body=r if isinstance(r, str) else json.dumps(r))
