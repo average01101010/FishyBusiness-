@@ -374,3 +374,9 @@ Jonas' ønske 04.10.2026 er et dashbord med all bruksinformasjon, og lista hans 
 ## Supabase: anonym innlogging må stå på (funnet 11.10.2026)
 Gjestekontoene (nye spillere starter uten innlogging) bruker Supabases anonyme innlogging. Den sto av til 11.10.2026: `POST /auth/v1/signup` ga `422 anonymous_provider_disabled`, og spillet startet da uten sky. Ingen nye spillere fikk registreringskort, og ingen gjester ble laget fra 6.10. Slått på under Authentication › Sign In / Providers › «Allow anonymous sign-ins» (Save changes, og last siden på nytt for å se at den holder). Sjekk den ved enhver ny Supabase-oppsett. Sett også hastighetsgrensen for anonyme innlogginger (Rate Limits) og vurder CAPTCHA (Attack Protection).
 
+## WorkOS i produksjon (11.10.2026)
+- **Produksjonsmiljøet er satt opp:** Google med egne nøkler fra Google Cloud (OAuth-klient, redirect `https://auth.workos.com/sso/oauth/google/…/callback`), Magic Auth på, passord av, logo og farger, redirect `https://detstorebla.no/`. Klient-ID for produksjon: `client_01M449YD8FX033VBQVHV7B8QAG` (`src/data/cloud.json`). Staging-ID-en var `client_01M449YCKA9VJST0W0FY0HP62E`.
+- **Supabase Third-Party Auth** skal peke på produksjonens issuer: `https://api.workos.com/user_management/client_01M449YD8FX033VBQVHV7B8QAG`.
+- **Eget innloggingsdomene (`auth.detstorebla.no`) er valgt bort** (Jonas 11.10.2026: 99 USD i måneden er uaktuelt). Spillet bruker standardadressen hos WorkOS og `workosDevMode: true` (innloggingen holdes i nettleserens lokale lagring). Det kan tas opp igjen når inntektene dekker det: legg inn domenet under Domains › AuthKit, og sett `workosApiHostname` og `workosDevMode: false` i `cloud.json`.
+- **Kontoene fra Staging følger ikke med.** Brukere og lagringer fra testmiljøet (blant annet Jonas' konto) har andre bruker-ID-er enn i produksjon. Admin-flagget (`players.game_admin`) må settes for den nye ID-en etter første innlogging.
+
