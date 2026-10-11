@@ -210,6 +210,23 @@ def main():
         R['svOther'] = sql("select public.save_hist_get(%d)" % (hid[0] if hid else 0), B, 'authenticated')
         R['svRead'] = sql("select count(*) from public.save_hist", PD, 'authenticated', expect_err=True)
         R['svOld'] = json.loads(sql("select public.save_put('KYST2:OLDPAGE', '2026-10-05T12:00:00Z', 5, false)", PD, 'authenticated'))   # an old page left open
+
+        # the save by the server's own revision (20261011120000_sync.sql): a device that has not met the newest revision cannot write over
+        # it, the refusal says another device made it, a forced save keeps the one it replaces, save_head is the save without the game
+        PE = {'sub': 'user_01EEE', 'role': 'authenticated'}; sql("select public.tm_hello('{}')", PE, 'authenticated')
+        put3 = lambda data, base, dev, force='false', who=PE: json.loads(sql("select public.save_put3('%s', '2026-10-11T10:00:00Z', 100, %s, %s, '{\"day\":3}', '%s', '%s')" % (data, base if base is not None else 'null', force, dev, {'devA': 'iPhone', 'devB': 'Android'}.get(dev, 'PC')), who, 'authenticated'))
+        R['p3a'] = put3('KYST2:A1', None, 'devA')
+        R['p3b0'] = put3('KYST2:B0', None, 'devB')                       # B never met the cloud
+        R['p3a2'] = put3('KYST2:A2', R['p3a'].get('rev'), 'devA')
+        R['p3bStale'] = put3('KYST2:B1', R['p3a'].get('rev'), 'devB')    # B met only the first
+        R['p3Head'] = json.loads(sql("select public.save_head()", PE, 'authenticated'))
+        R['p3Force'] = put3('KYST2:B2', 0, 'devB', 'true')
+        R['p3Get'] = json.loads(sql("select public.save_get()", PE, 'authenticated'))
+        R['p3Hist'] = json.loads(sql("select public.save_hist_list()", PE, 'authenticated'))
+        sql("select public.save_put2('KYST2:OLDCODE', '2026-10-11T11:00:00Z', 100, '%s', true, '{\"day\":4}')" % R['p3Get']['saved_at'], PE, 'authenticated')
+        R['p3Old'] = json.loads(sql("select public.save_head()", PE, 'authenticated'))
+        R['p3Anon'] = sql("select public.save_put3('x', now(), 1, null, false, '{}', 'd', 'n')", {}, 'anon', expect_err=True)
+        R['p3Other'] = json.loads(sql("select public.save_head()", B, 'authenticated'))
         # the shared world V3: where the boats are (20261005220000_presence.sql)
         sql("select public.pos_put(850, 350, 90, 7, 'sailing', 'Havbris', 'trebat')", A, 'authenticated')
         sql("select public.pos_put(851, 350.5, 180, 0, 'fishing', 'Fjordbris', 'skiff')", B, 'authenticated')
@@ -378,6 +395,13 @@ def main():
         print(ok(R['save1']['ok'] and not R['save2']['ok'] and R['save3']['ok'] and R['getA']['data'] == 'KYST2:OLD' and R['getB'] is None), 'the cloud save: the newest wins, an older one is refused unless forced, and each sees only his own')
         print(ok(R['readEv'] == '0' and R['readPl'] == '0' and all(R[k][0] for k in ('readAnon', 'writePl', 'dashPlayer', 'dashAal1', 'anonDash'))), 'the lock: a player sees no rows and cannot write a table or open the dashboard, the admin without the second factor is refused, the anonymous too',
               [R[k][1][:50] for k in ('writePl', 'dashPlayer', 'dashAal1')])
+        print(ok(R['p3a'].get('ok') and R['p3a']['rev'] == 1 and not R['p3b0'].get('ok') and R['p3b0'].get('moved') is True and R['p3b0']['cloud']['device_name'] == 'iPhone'
+                 and R['p3a2'].get('ok') and R['p3a2']['rev'] == 2 and not R['p3bStale'].get('ok') and R['p3bStale']['cloud']['rev'] == 2 and R['p3bStale'].get('moved') is True
+                 and R['p3Head']['rev'] == 2 and 'data' not in R['p3Head'] and R['p3Head']['device'] == 'devA'
+                 and R['p3Force'].get('ok') and R['p3Force']['rev'] == 3 and R['p3Get']['data'] == 'KYST2:B2' and R['p3Get']['device_name'] == 'Android' and R['p3Get'].get('updated_at')
+                 and any(h['summary'].get('day') == 3 for h in R['p3Hist']) and R['p3Old']['rev'] == 4 and R['p3Old']['device'] is None
+                 and R['p3Anon'][0] and R['p3Other'] is None), 'the server counts the saves: a device that has not met the newest revision is refused (and told another device made it), a forced one keeps the replaced game, save_head is the save without the game, the older puts bump the revision, and anon cannot write',
+              {k: R[k] for k in ('p3a', 'p3b0', 'p3a2', 'p3bStale', 'p3Head', 'p3Force', 'p3Old')})
         print(ok(R['sv1'].get('ok') and R['sv2'].get('ok') and not R['svPhone'].get('ok') and not R['svStale'].get('ok') and R['svStale'].get('cloud', {}).get('summary', {}).get('day') == 13
                  and R['svCloud']['data'] == 'KYST2:TABLET2' and not R['svOld'].get('ok')), 'the cloud save: a device that has not met the newest save cannot write over it (the old phone, also an old page), and is told what the cloud has',
               {k: R[k] for k in ('sv1', 'sv2', 'svPhone', 'svStale')})
