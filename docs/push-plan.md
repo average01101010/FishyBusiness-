@@ -26,7 +26,6 @@ Koden: klienten `src/js/ui/10g-push.js` (`pushItems` → `push_plan`), serveren 
 | Verftsjobb eller montering ferdig | `yard-` | 2 | 12 t |
 | Kuling eller storm på vei (båtens egne grenser) mens båten er ute eller redskap står i sjøen, to spilletimer før | `wx-` | 1 | 6 t |
 | Mannskapet begynner å bli sliten, mens båten er ute | `crew-` | 1 | 6 t |
-| Mannskapet bryter snart hviletiden (14 timer i strekk) | `rest-` | 1 | 6 t |
 | Motoren er over tid for service, mens båten er ute (risikoen for stopp vokser) | `svc-` | 2 | 6 t |
 | Du er uthvilt i naustet eller rorbua | `rested` | 3 | 12 t |
 | Du er sliten på sjøen | `tired` | 3 | 12 t |

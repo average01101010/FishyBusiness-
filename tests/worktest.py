@@ -71,12 +71,6 @@ async def main():
           b.status = 'sailing'; S.plan = {wps:[{x:g.x + 30, y:g.y, port:null, fish:0}], idx:0, speed:2, returning:false};
           const mood = hist => { const c = hand(40); c.morale = 60; S.crew = [c]; S.meal = {due:S.t + 9999, cook:null, hist}; for (let h = 0; h < 10; h++) crewTick(S.t / 60 + h); return c.morale; };
           R.mood = [mood([5, 5, 5, 5]), mood([1, 1, 1, 1])].map(v => Math.round(v * 10) / 10);
-          // the rest rule: a skiff trip of 15 hours breaks the 14-hour rule; a night at the quay puts it right
-          S.company = 'Testrederiet'; const rr = hand(30); S.crew = [rr]; S.restWarn = -1e9; const m0 = S.msgs.length; R.leftAtStart = restLeft(rr);
-          for (let h = 0; h < 15; h++){ rr.wk = {sloy:50}; crewTick(S.t / 60 + h); }
-          R.broken = restCheck(rr.rest); R.warned = S.msgs.slice(m0).some(m => /hviletidsreglene/.test(m.no) && /14 timer/.test(m.no)); R.fat = Math.round(rr.fatigue);
-          b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; S.plan = null; for (let h = 0; h < 10; h++){ rr.wk = {}; crewTick(S.t / 60 + h); }
-          R.afterNight = restCheck(rr.rest); S.company = '';
           // the crew talks: a day at sea gives some lines, never two periodic ones within an hour and a half
           S.energy = 100; b.status = 'idle'; b.port = null; b.pos = {...g}; S.crew = [hand(30), hand(45)]; S.crew[0].traits = ['spokefugl']; S.sayT = null; const l0 = S.log.length;
           for (let i = 0; i < 24 * 60; i++) step();
@@ -88,7 +82,6 @@ async def main():
         print(ok(r['goodMeal']['q'] == 4 and 5.9 <= r['goodMeal']['after'] <= 6.7 and r['goodMeal']['by']), 'a cook of 4 on a break makes a meal of 4 about six hours out')
         print(ok(r['bread']['q'] == 1 and 6.9 <= r['bread']['after'] <= 7.2), 'with nobody who can cook it is dry bread an hour after the meal was due')
         print(ok(r['mood'][0] > r['mood'][1] + 3), 'good food lifts the mood, bad food sinks it')
-        print(ok(r['leftAtStart'] >= 14 and r['broken'] == 'gap' and r['warned'] and r['afterNight'] is None), 'a 15-hour trip breaks the 14-hour rule with a message naming it; a night at the quay puts it right')
         print(ok(r['said'] >= 3 and r['minGap'] >= 15 and r['kept'] >= 1), 'the crew talks during a day at sea, not in bursts, and each keeps their last lines')
 
         # your energy (core/15-energy.js): a day at sea empties it, eight hours at the quay fill it; at 0 you sleep for eight hours

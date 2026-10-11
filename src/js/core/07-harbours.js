@@ -251,12 +251,8 @@ function landState(L, t){
 // The plants' opening hours (the user's list 04.10.2026). The plants publish none (looked up 04.10.2026: the plant in Senjahopen gives
 // a phone number, Råfisklaget lists the plants without hours), so these are typical ones: weekdays 06-18 and Saturday 08-14, closed
 // on Sunday, and every day 05-22 in the skrei season (January to April), when the boats land late. The first trip never waits.
-function mottakOpen(H){
-  if (typeof tutOn === 'function' && tutOn()) return true;
-  const g = gDate(H), m = g.getUTCMonth(), wd = g.getUTCDay(), h = g.getUTCHours() + g.getUTCMinutes() / 60;
-  if (m <= 3) return h >= 5 && h < 22;
-  return wd >= 1 && wd <= 5 ? h >= 6 && h < 18 : wd === 6 ? h >= 8 && h < 14 : false;
-}
+// (no opening hours: the plants take the catch at any hour, Jonas 11.10.2026)
+function mottakOpen(H){ return true; }
 // the next quarter hour the plants are open (within four days)
 function mottakNext(H){ for (let k = 0; k < 4 * 24 * 4; k++){ const h = (Math.ceil(H * 4) + k) / 4; if (mottakOpen(h)) return h; } return H; }
 // when it opens, in words: «i dag kl. 06:00», «i morgen kl. 06:00» or the weekday

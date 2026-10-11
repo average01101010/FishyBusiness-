@@ -136,7 +136,6 @@ function driftCheck(o){
     rep.watch = {on:o.watchH || 6, rest:o.period / 2};
   } else if (S.crew.length >= 2 && rep.work > 14 && !(VESSELS[S.boat.type].berths > 0)) W.push(no('Mannskapet jobber lange dager uten køyer. Hvilen blir dårlig.', 'The crew works long days without bunks. The rest will be poor.'));
   if (S.crew.length && o.sess.some(s => s.type === 'hvile') && o.sess.filter(s => s.type === 'hvile').every(s => { const p = portById(s.at); return p && !p.rorbu; }) && !(VESSELS[S.boat.type].berths > 0)) W.push(no('Båten har ingen køyer, og hvilestedet er en vanlig kai. Mannskapet hviler best på en rorbu.', 'The boat has no bunks, and the place of rest is an ordinary quay. The crew rests best at a rorbu.'));
-  if (typeof restRuleOn === 'function' && restRuleOn() && o.crewMode !== 'watch' && rep.restMin > 0 && rep.restTotal < 10) W.push(no('Mannskapet får under 10 timer hvile i døgnet. Hviletidskravet brytes.', 'The crew get under 10 hours of rest a day. The rest rule is broken.'));
   if (rep.work > o.period * 0.75) W.push(no('Over tre fjerdedeler av døgnet er arbeid. Mannskapet blir fort slitne.', 'Over three quarters of the day is work. The crew tire fast.'));
   // the weather limits against what the boat can take
   if (o.wx.hs > BOAT.risk[1] * 0.95) W.push(no('Grensen for sjø er over det båten tåler (' + fmt(BOAT.risk[1], 1) + ' m).', 'The sea limit is above what the boat can take (' + fmt(BOAT.risk[1], 1) + ' m).'));

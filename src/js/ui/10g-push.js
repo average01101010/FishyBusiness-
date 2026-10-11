@@ -124,14 +124,12 @@ function pushItems(now){
       add(T, 'yard-' + tag, nm, (fitOnly ? 'Monteringen er ferdig' : 'Verftet er ferdig') + (names ? ' med ' + names.toLowerCase() : '') + '. Båten er klar til å gå ut.', (fitOnly ? 'The fitting is done' : 'The yard is done') + (names ? ' with ' + names.toLowerCase() : '') + '. The boat is ready to go out.', 12, 2); }
     // a crew getting tired, and one about to break the rest rule (core/04-crew.js, 14-crewlife.js): while she is out
     if (out_ && S.crew && S.crew.length){
-      let tired = null, gap = null;
+      let tired = null;
       for (const c of S.crew){
         if (typeof crewAboard === 'function' && !crewAboard().some(x => x.id === c.id)) continue;
         if (c.fatigue != null && c.fatigue < 70) tired = Math.min(tired == null ? 1e18 : tired, S.t + (70 - c.fatigue) / 4 * 60); else if (c.fatigue != null) tired = S.t;
-        const r = typeof restLog === 'function' ? restLog(c) : null; if (r){ let w = 0; for (let i = r.length - 1; i >= 0 && !r[i]; i--) w++; if (w < REST.gap) gap = Math.min(gap == null ? 1e18 : gap, S.t + (REST.gap - w) * 60); else gap = S.t; }
       }
       if (tired != null) add(tired, 'crew-' + tag, nm, 'Mannskapet på ' + nm + ' begynner å bli sliten. Gå inn til kai og la dem hvile.', 'The crew of ' + nm + ' is getting tired. Head in to the quay and let them rest.', 6, 1);
-      if (gap != null) add(gap, 'rest-' + tag, nm, 'Mannskapet har jobbet i 14 timer i strekk. Neste time bryter hviletidsreglene.', 'The crew has worked for 14 hours straight. The next hour breaks the rest rule.', 6, 1);
     }
     // an engine overdue for service, while she is out: the risk of a stop grows with every hour (core/05-vessels.js risk)
     if (out_ && typeof svcOverdue === 'function' && svcOverdue() > 0) add(S.t + 60, 'svc-' + tag, nm, 'Motoren på ' + nm + ' er over tid for service. Faren for motorstopp øker på sjøen.', 'The engine on ' + nm + ' is overdue for service. The risk of a stop grows at sea.', 3, 2);

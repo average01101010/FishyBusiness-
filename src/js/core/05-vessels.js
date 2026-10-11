@@ -637,8 +637,7 @@ function risk(W, hs){
       log('Motorstopp i grov sjø.', 'Engine failure in rough seas.');
     }
   } else if (r < 0.85){
-    if (b.gear && b.status === 'fishing' && !b.gop && !(typeof tutOn === 'function' && tutOn())){ b.gear = false; log('Mistet juksa i sjøen. Uten juksa fisker bare juksamaskinene. Kjøp ny juksa i butikken.', 'Lost the jig line overboard. Without a jig only the reels fish. Buy a new jig in the shop.'); if (typeof window !== 'undefined' && window.JIGG) window.JIGG.stop(); }
-    else log('Kraftig rulling, men ingen skade.', 'Heavy rolling, but no damage.');
+    log('Kraftig rulling, men ingen skade.', 'Heavy rolling, but no damage.');   // the jig is never lost at sea (Jonas 11.10.2026)
   } else {
     if (lvl === 2) rescue(false); else log('Kraftig rulling, men ingen skade.', 'Heavy rolling, but no damage.');
   }

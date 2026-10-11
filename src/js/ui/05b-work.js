@@ -42,9 +42,7 @@ const WORK = (() => {
   // how long until the rest rule is broken, at sea (you as skipper are not under it)
   function restLine(c){
     if (!c){ const e = S.energy == null ? 100 : S.energy; return '<br><span class="' + (e < ENERGY.dim ? 'r2' : e < ENERGY.warn ? 'r1' : '') + '">' + L('Energi ', 'Energy ') + Math.round(e) + ' %</span>'; }
-    if (S.boat.status === 'port') return '';
-    const left = restLeft(c); if (left > 6) return '';
-    return '<br><span class="' + (left ? 'r1' : 'r2') + '">' + (left ? L('Må hvile innen ' + left + ' t', 'Must rest within ' + left + ' h') : L('Brudd på hviletiden', 'Rest rule broken')) + '</span>';
+    return '';
   }
   function row(p, i){
     const id = pid(p.c), ed = edit && edit.id === id, job = ed ? edit.chain : jobOf(p.c, i), auto = p.c ? !p.c.job : !S.myJob;
@@ -64,8 +62,8 @@ const WORK = (() => {
     const where = at ? (shore || rb ? L(' · hviler i ', ' · resting in ') + lie : L(' · ved kai', ' · at the quay')) : L(' · til sjøs', ' · at sea');
     const st = c => c.off ? L('Fri denne turen', 'Off this trip') : !on.has(c.id) ? L('Fri i dag (biyrke)', 'Off today (part-time)') : L('Mønstret på ', 'Signed on ') + bn + where;
     const me = meAboard() ? '<div class="ph-kv"><span><b>' + L('Du (skipper)', 'You (skipper)') + '</b></span><span>' + (shore ? L('Hviler i ', 'Resting in ') + lie : at ? L('Om bord, ved kai', 'Aboard, at the quay') : L('Om bord', 'Aboard')) + restLine(null) + '</span></div>' : '<div class="ph-kv"><span><b>' + L('Du', 'You') + '</b></span><span>' + L('Ikke om bord', 'Not aboard') + '</span></div>';
-    const rows = S.crew.map(c => { const d = restLog(c).slice(-24).reduce((a, v) => a + v, 0);
-      return '<div class="ph-kv"><span><b>' + c.name.split(' ')[0] + '</b></span><span>' + st(c) + '<br>' + L('Slitenhet ', 'Fatigue ') + Math.round(c.fatigue) + ' · ' + L('trivsel ', 'morale ') + Math.round(c.morale) + ' · ' + L('hvilt ', 'rested ') + d + L(' t siste døgn', ' h in the last day') + restLine(c) + '</span></div>'; }).join('');
+    const rows = S.crew.map(c => {
+      return '<div class="ph-kv"><span><b>' + c.name.split(' ')[0] + '</b></span><span>' + st(c) + '<br>' + L('Slitenhet ', 'Fatigue ') + Math.round(c.fatigue) + ' · ' + L('trivsel ', 'morale ') + Math.round(c.morale) + restLine(c) + '</span></div>'; }).join('');
     return '<div class="ph-card"><h4>' + L('Mannskapet', 'The crew') + '</h4>' + me + rows + (S.crew.length ? '<p class="ph-note">' + L('Den som er mønstret på, følger båten dit den ligger, og hviler i rorbua når båten ligger der.', 'Those signed on follow the boat wherever she lies, and rest in the rorbu when she lies there.') + '</p>' : '<p class="ph-note">' + L('Ingen mannskap ennå. Finn folk under Bygd, Ansatte.', 'No crew yet. Find people under Village, Employees.') + '</p>') + '</div>';
   }
   function page(){

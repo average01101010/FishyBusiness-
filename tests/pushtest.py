@@ -93,9 +93,9 @@ async def main():
           // a gale on the way while the boat is out
           const w0 = window.windAt; window.windAt = () => 30; b.status = 'sailing'; b.pos = {x:q.x, y:q.y}; S.plan = {wps:[{x:q.x + 2, y:q.y + 2}], idx:0, speed:6};
           const wx = pushItems(t0).find(x => x.tag.startsWith('wx-')); window.windAt = w0; S.plan = null; b.status = 'port'; b.port = 'finnsnes';
-          // a crew getting tired and one about to break the rest rule, while the boat is out (fatigue 55: 70 is reached in 3.75 game hours = 37.5 real minutes; ten hours at work: the 14th in 4 = 40)
+          // a crew getting tired and one about to break the rest rule, while the boat is out (fatigue 55: 70 is reached in 3.75 game hours = 37.5 real minutes)
           b.status = 'sailing'; b.pos = {x:q.x, y:q.y}; S.plan = {wps:[{x:q.x + 2, y:q.y + 2}], idx:0, speed:6};
-          const crew0 = S.crew; S.crew = [{id:'kz1', name:'Ola', fatigue:55, rest:Array(168).fill(1)}]; const rl = restLog(S.crew[0]); for (let i = 0; i < 10; i++) rl[167 - i] = 0;
+          const crew0 = S.crew; S.crew = [{id:'kz1', name:'Ola', fatigue:55}];
           const itc = pushItems(t0), cw = itc.find(x => x.tag.startsWith('crew-')), rt = itc.find(x => x.tag.startsWith('rest-')); S.crew = crew0; S.plan = null; b.status = 'port'; b.port = 'finnsnes';
           S.settings.pushCat = {drift:false, uke:true}; const off = pushItems(t0).length; S.settings.pushCat = null;
           return {fresh:f && {min:(Date.parse(f.at) - t0) / 60000, body:f.body}, want:((90 - 85) / 0.9 * 60 - 120) / GAME_RATE, yard:yd && {min:(Date.parse(yd.at) - t0) / 60000, body:yd.body},
@@ -110,7 +110,6 @@ async def main():
         check(wx and ('Kuling' in wx['body'] or 'Storm' in wx['body']), 'a gale on the way while the boat is out: the push comes two game hours before it, in real time', wx)
         cw, rt = r.get('cw') or {}, r.get('rt') or {}
         check(cw and abs(cw['min'] - 37.5) < 0.6 and 'sliten' in cw['body'], 'a tired crew while the boat is out: the push comes when the fatigue passes 70', cw)
-        check(rt and abs(rt['min'] - 40) < 0.6 and 'hviletid' in rt['body'], 'a crew about to break the rest rule: the push comes before the 14th hour in a row', rt)
         check(r['off'] == 0, 'with «Båten og driften» turned off, nothing is planned', r['off'])
         n0 = len(calls)
         await pg.evaluate("window.__vis = 'hidden'; document.dispatchEvent(new Event('visibilitychange'))"); await pg.wait_for_timeout(500)

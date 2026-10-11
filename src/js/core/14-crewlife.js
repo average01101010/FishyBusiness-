@@ -60,34 +60,7 @@ function serveMeal(q, cook, me){
   crewSay(null, q >= 4 ? 'foodGood' : q <= 2 ? 'foodBad' : null);
 }
 
-// ---- the rest rule for fishers (FOR-2017-11-10-1758, forskrift om arbeids- og hviletid på fiskefartøy § 3; § 1 leaves out
-// those who work alone on their own vessel, so not you): at least 10 hours of
-// rest in any 24 and 77 in any 7 days; the rest in at most two periods, one of at least 6 hours; at most 14 hours between rest
-// periods. Each person keeps a log of the last 168 hours (1 = rest). Without berths, only hours ashore or at the quay are rest.
-const REST = {day:10, long:6, gap:14, week:77};
-const REST_RULE = {day:['minst 10 timer hvile i døgnet', 'at least 10 hours of rest a day'], split:['hvilen i høyst to perioder, én på minst 6 timer', 'rest in at most two periods, one of at least 6 hours'],
-  gap:['høyst 14 timer mellom hvileperiodene', 'at most 14 hours between rest periods'], week:['minst 77 timer hvile i uka', 'at least 77 hours of rest a week']};
-// the rule binds only a skipper who runs a firm (Jonas 08.10.2026: «Fjern også kravet om hviletid for mannskapet når spilleren ikke har rederi … Hviletidskrav skal komme når spilleren starter rederi»):
-// S.company is set when he buys into the closed group or founds the AS. Before that the crew works as long as they have energy (fatigue)
-const restRuleOn = () => !!S.company;
-function restLog(c){ if (!Array.isArray(c.rest) || c.rest.length !== 168) c.rest = Array(168).fill(1); return c.rest; }
-function restCheck(r){
-  const d = r.slice(-24), sum = a => a.reduce((x, y) => x + y, 0);
-  let w = 0; for (let i = r.length - 1; i >= 0 && !r[i]; i--) w++; if (w > REST.gap) return 'gap';
-  if (sum(d) < REST.day) return 'day';
-  const runs = []; let k = 0; for (const v of d){ if (v) k++; else if (k){ runs.push(k); k = 0; } } if (k) runs.push(k);
-  runs.sort((a, b) => b - a); if (runs.length && (runs[0] < REST.long || runs[0] + (runs[1] || 0) < REST.day)) return 'split';
-  if (sum(r) < REST.week) return 'week';
-  return null;
-}
-// hours of work left before a rule is broken, if the person keeps working from now (0: broken now)
-function restLeft(c){ if (!restRuleOn()) return 24; const r = restLog(c).slice(); if (restCheck(r)) return 0; for (let k = 1; k <= 24; k++){ r.push(0); r.shift(); if (restCheck(r)) return k - 1; } return 24; }
-// an hour of the log: rest when not aboard, in port, or on a break in a berth
-function restHour(c, onb){
-  const r = restLog(c), afloat = S.boat.status !== 'port', work = Object.values(c.wk || {}).reduce((a, m) => a + m, 0);
-  r.push(!onb || !afloat || ((BOAT.berths || 0) > 0 && work <= 10) ? 1 : 0); r.shift();
-  return onb && afloat && restRuleOn() ? restCheck(r) : null;
-}
+// (no rest rule for the crew: Jonas 11.10.2026, «Fjern alt om hviletid». The energy system stays: fatigue, and rest ashore.)
 
 // ---- what the crew says: lines driven by the situation and by each person's ways. [no, en, trait the line suits]
 // The Norwegian lines are in North Norwegian speech (words from the user's list: agalaus, au hirre, hustri, sjyen, kokning, …)
@@ -228,7 +201,7 @@ function sayHour(H, on, hs){
   const sick = on.find(c => c.traits.includes('sjosyk')); if (sick && hs > 1.2) sits.push(['seasick', sick]);
   const tired = on.slice().sort((a, c) => c.fatigue - a.fatigue)[0]; if (tired.fatigue > 70) sits.push(['tired', tired]);
   if (hs > 2 || W > 14) sits.push(['storm']); else if (W < 2) sits.push(['calm']);
-  if (on.some(c => { const r = restLog(c); let w = 0; for (let i = r.length - 1; i >= 0 && !r[i]; i--) w++; return w > 12; })) sits.push(['longTrip']);
+  if (S.workLog && S.workLog.length >= 12 && S.workLog.slice(-12).every(v => v)) sits.push(['longTrip']);
   if (hr >= 5 && hr <= 7) sits.push(['morning']);
   const s = sits.length && Math.random() < 0.75 ? pick1(sits) : ['chat'];
   crewSay(s[1] || null, s[0]);
