@@ -32,6 +32,23 @@ function vecPath(v, sc, tol){
 // the step (a power of two of the data's own, 0 for all of it) that suits a pixel of px km
 const pathStep = (px, base) => Math.max(0, Math.floor(Math.log2(0.7 * px / base)));
 function chartPath0(px){ const b = pathStep(px || 0, 0.3), k = 'p0:' + b; if (!CHARTV.paths.has(k)){ const v = mapVec(MAPD.core, 'coast0'); if (!v) return null; CHARTV.paths.set(k, vecPath(v, 0.01, b ? 30 * 2 ** b : 0)); } return CHARTV.paths.get(k); }
+// the rings that touch the rectangle r [x0, y0, x1, y1] (m from the tile's corner), as paths in km: land (class 0 and 1), mole (the
+// breakwaters, 2 and 3) and all, each null when none. The shore in 3D (view3d buildLandMask) strokes the land's and the breakwaters' rings
+// with their own slopes and fills all of them, over its own window alone: a tile's whole coast ran to 184 000 points (Frøya). A ring
+// kept whole keeps the nonzero fill right inside the window; a hole whose outer ring is outside it lies outside it too.
+function vecPathsIn(v, sc, r){
+  const rd = vReader(v.b), n = rd.u(), P = {land:null, mole:null, all:null}, pts = []; let nl = 0, nm = 0;
+  for (let k = 0; k < n; k++){
+    const c = rd.u(), m = rd.u(); let x = 0, y = 0, ax = Infinity, ay = Infinity, bx = -Infinity, by = -Infinity; pts.length = 0;
+    for (let j = 0; j < m; j++){ x += rd.z(); y += rd.z(); pts.push(x, y); if (x < ax) ax = x; if (y < ay) ay = y; if (x > bx) bx = x; if (y > by) by = y; }
+    if (m < 3 || bx < r[0] || ax > r[2] || by < r[1] || ay > r[3]) continue;
+    const key = c >= 2 ? 'mole' : 'land', p = P[key] || (P[key] = new Path2D()), a = P.all || (P.all = new Path2D());
+    for (let j = 0; j < pts.length; j += 2){ const X = pts[j] * sc, Y = pts[j + 1] * sc; if (j){ p.lineTo(X, Y); a.lineTo(X, Y); } else { p.moveTo(X, Y); a.moveTo(X, Y); } }
+    p.closePath(); a.closePath(); if (c >= 2) nm++; else nl++;
+  }
+  P.n = nl + nm; return P;
+}
+function chartPathsIn(pk, r){ const v = mapVec(pk, 'coast2'); return v ? vecPathsIn(v, 0.001, r) : null; }
 function chartPath(pk, lv, px){ const base = lv === 2 ? 0.003 : 0.025, b = pathStep(px || 0, base), k = pk.file + ':' + pk.tile + ':' + lv + ':' + b; if (!CHARTV.paths.has(k)){ const v = mapVec(pk, lv === 2 ? 'coast2' : 'coast1'); CHARTV.paths.set(k, v ? vecPath(v, 0.001, b ? base * 1000 * 2 ** b : 0) : null); } return CHARTV.paths.get(k); }
 // the coast over the painted depth: the rings stroked and then filled (nonzero: the holes turn the other way), so the seams between
 // Overture's land pieces are covered and only the shore keeps its line, on the sea's side

@@ -9,7 +9,7 @@
 // way from the corner down the cell's left side and then across to the point, so the answer is exact to the data. The corners sit
 // off the whole metres (COX, COY), where the data's points are. The index is part of the simulation's barrier (mapReadyAt), so
 // nothing reads a tile's coast before it is built, and the answer never depends on what happens to be loaded.
-const COAST = {CC:100, COX:0.371, COY:0.587, worker:null, id:0, wait:new Map(), ms:0, forceMain:false, last:null, built:0, soft:0};
+const COAST = {CC:100, COX:0.371, COY:0.587, worker:null, id:0, wait:new Map(), ms:0, forceMain:false, last:null, built:0, soft:0, mole:0};   // mole: the nearest edge of the last distance query was a breakwater's
 // the index of a tile's coast2 bytes b (rings in metres from the tile's corner), for a tile of T m: self-contained, as it also runs
 // in the worker. Crossing a ring's edge moving along d changes the winding by sign(e x d): moving right that is -sign(dy).
 function coastBuild(b, T, CC, COX, COY){
@@ -72,7 +72,7 @@ function coastDistQ(I, x, y, cap){
     const c = b * N + a;
     for (let q = I.cs[c]; q < I.cs[c + 1]; q++){
       const o = I.ce[q] * 4, ax = ed[o], ay = ed[o + 1], dx = ed[o + 2] - ax, dy = ed[o + 3] - ay, L2 = dx * dx + dy * dy, t = L2 ? Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / L2)) : 0, ex = ax + t * dx - x, ey = ay + t * dy - y, dd = ex * ex + ey * ey;
-      if (dd < d2) d2 = dd;
+      if (dd < d2){ d2 = dd; COAST.mole = I.K[I.ce[q]]; }
     }
   }
   return Math.sqrt(d2);
@@ -119,7 +119,7 @@ function coastAt(p){ const I = coastIndexAt(p); if (!I) return -1; const L = COA
 // the same where the tile's index is in, else -1 without asking for it (the 3D view's far ground reads 100 km round)
 function coastAtIf(p){ const I = coastIndexAt(p, false); if (!I) return -1; const L = COAST.last; return coastQuery(I, p.x * 1000 - L.ox, p.y * 1000 - L.oy); }
 // the signed distance (m, + on land) to the fine coast at p within cap, where the tile's index is in, else NaN without asking
-function coastSdIf(p, cap){ const I = coastIndexAt(p, false); if (!I) return NaN; const L = COAST.last, x = p.x * 1000 - L.ox, y = p.y * 1000 - L.oy, d = coastDistQ(I, x, y, cap); return coastQuery(I, x, y) ? d : -d; }
+function coastSdIf(p, cap){ const I = coastIndexAt(p, false); if (!I) return NaN; const L = COAST.last, x = p.x * 1000 - L.ox, y = p.y * 1000 - L.oy; COAST.mole = 0; const d = coastDistQ(I, x, y, cap); return coastQuery(I, x, y) ? d : -d; }
 // metres to the fine coast at p, capped at cap (100 m reaches; more is cap); -1 where the tile has no fine coast
 function coastDistM(p, cap){ const I = coastIndexAt(p); if (!I) return -1; const L = COAST.last; return coastDistQ(I, p.x * 1000 - L.ox, p.y * 1000 - L.oy, cap || 100); }
 // a chart pack loaded and its coast indexed (once); the promise is kept on the pack
