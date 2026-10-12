@@ -182,7 +182,7 @@ async function leiaTo(pt, buoy, act){   // buoy: to a set's buoy, to haul it (th
 // point within maxKm (rings of 16) at sea with the boat's safe depth, else null
 function deepNear(p, maxKm){
   const sd = safeDepth(), ok = c => { if (isLandUI(c)) return false; if (!mapSimAt(c) || !mapReadyAt(c, 0)) return true; try { return depthF(c) >= sd + 1; } catch (e){ return true; } };
-  const okp = (() => { if (isLandUI(p)) return false; if (!mapSimAt(p) || !mapReadyAt(p, 0)) return true; try { return depthF(p) >= BOAT.draft + LEIA.minOver; } catch (e){ return true; } })();
+  const okp = (() => { if (isLandUI(p)) return false; if (!mapSimAt(p) || !mapReadyAt(p, 0)) return true; try { return depthF(p) >= BOAT.draft + LEIA.minOver - leiaTideCredit(p, p); } catch (e){ return true; } })();   // (the tide's credit as the route finder has it)
   if (okp) return p;
   for (const r of [0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5]){ if (r > maxKm) break;
     for (let i = 0; i < 16; i++){ const a = i * Math.PI / 8, c = {x:p.x + Math.sin(a) * r, y:p.y - Math.cos(a) * r}; if (ok(c) && clearLine(c, p)) return c; } }

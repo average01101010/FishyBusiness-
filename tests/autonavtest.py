@@ -9,6 +9,8 @@ ran aground; the route went on 200 m cells and a raw step between two of them cr
    shallow end.
 6. National routes (Vannareid–Honningsvåg both ways, Skjervøy–Hammerfest, Tromsø–Vannareid) go on 100 m cells, and every leg is
    checked the way the simulation sails it (groundCheck, isLand at 5 m): none grounds.
+9. Autonav 2 (12.10.2026): the tide's credit (the lowest water over the trip less the margin), Havøysund to its rorbu through the
+   sound on the 50 m grid, a shallow end refused without the tide and taken with it, and the net's way pulled tight.
 Prints OK or FEIL per check."""
 from _env import GAME, boot
 import asyncio, json
@@ -161,6 +163,37 @@ async def main():
         check(r['after'] == 'idle' and not r['ret'] and r['out'], '8a. i vedvarende kuling snur båten ikke rett inn igjen etter «Sitter båten fast?» eller når du kaster loss', r)
         check(r['near']['ret'] and r['near']['st'] == 'sailing' and r['near']['port'] == r['np'] and r['near']['leia'], '8b. vind som øker mens du er ute: Autonav tar båten til nærmeste kai (valget «Nærmeste kai»)', r['near'])
         check(r['home']['ret'] and r['home']['port'] is not None and not r['home']['leia'], '8c. med valget «Hjem samme vei» går båten hjem samme vei som den kom', r['home'])
+        # 9. Autonav 2 (12.10.2026): the lowest water of the trip counts as depth, narrow sounds on the 50 m grid, the net's legs pulled
+        r = await J("""(async () => { const R = {}, A = PORTS.find(p => p.name === 'Havøysund'); await mapNeed(A.p, 9); const Rb = rorbuSites(A.p, 8)[0]; if (!Rb) return {err:'no rorbu'};
+          // 9a: the credit is the lowest water above chart datum over the next hours, less the margin, between -0.5 and 1
+          const H0 = S.t / 60; let lo = Infinity; for (let h = 0; h <= 4; h += 0.25) lo = Math.min(lo, tideCD(H0 + h, A.p));
+          R.credit = +leiaTideCredit(A.p, A.p).toFixed(3); R.expect = +clamp(lo - LEIA.tideMargin, -0.5, 1).toFixed(3); R.idle = LEIA_TIDE.credit;
+          // 9b: Havøysund to its rorbu goes through the sound south of Havøya (7.5 nm round the island before)
+          S.boat.status = 'port'; S.boat.port = A.id; S.boat.pos = {...A.p}; S.plan = null;
+          const r1 = await leiaRoute({...A.p}, {...Rb.p}, A.id, null); if (r1.why) return Object.assign(R, {why1:r1.why[0]});
+          R.nm1 = +r1.nm.toFixed(2); R.line1 = +(dist(A.p, Rb.p) / NM).toFixed(2); R.fine50 = r1.st.fine50 || 0; R.by1 = r1.st.by;
+          let bad = 0, p0 = {...A.p}; for (const w of r1.wps){ await mapNeed(w, 0.5); if (groundCheck(p0, w)) bad++; p0 = w; } R.bad1 = bad;
+          // 9c: the shallowest water on the way (outside the harbour) as the end, the draught set just over it: without the tide the end
+          // is refused («For grunt»), with the lowest water of the trip counted the way there is open
+          let zmin = Infinity, qm = null; p0 = {...A.p}; for (const w of r1.wps){ const L = dist(p0, w), n = Math.max(1, Math.ceil(L / 0.02)); for (let k = 1; k <= n; k++){ const q = {x:p0.x + (w.x - p0.x) * k / n, y:p0.y + (w.y - p0.y) * k / n}; if (!inHarbour(q) && !isLand(q) && dist(q, Rb.p) > 0.08){ const z = depthF(q); if (z < zmin){ zmin = z; qm = q; } } } p0 = w; }
+          R.zmin = +zmin.toFixed(1); R.q = !!qm;
+          if (qm){ const d0 = BOAT.draft; BOAT.draft = Math.max(0.3, zmin - LEIA.minOver + 0.2); R.draftSet = +BOAT.draft.toFixed(2); R.lineq = +(dist(A.p, qm) / NM).toFixed(2);
+            const n1 = await leiaRoute({...A.p}, {...qm}, A.id, null, {noTide:true}), n2 = await leiaRoute({...A.p}, {...qm}, A.id, null);
+            R.noTide = n1.why ? n1.why[0] : +n1.nm.toFixed(2); R.withTide = n2.why ? n2.why[0] : +n2.nm.toFixed(2); R.tide2 = n2.st && n2.st.tide; BOAT.draft = d0; }
+          // 9d: a way by the net is pulled tight: fewer points than the net's way had
+          const B = PORTS.find(p => p.name === 'Honningsvåg'), C = PORTS.find(p => p.name === 'Hammerfest utstyrsbutikk'); S.boat.port = B.id; S.boat.pos = {...B.p};
+          const r2 = await leiaRoute({...B.p}, {...C.p}, B.id, C.id); if (r2.why) return Object.assign(R, {why2:r2.why[0]});
+          R.n2 = r2.wps.length; R.nm2 = +r2.nm.toFixed(1); R.pull = r2.st.pull; R.by2 = r2.st.by;
+          bad = 0; p0 = {...B.p}; for (const w of r2.wps){ await mapNeed(w, 0.5); if (groundCheck(p0, w)) bad++; p0 = w; } R.bad2 = bad;
+          S.plan = null; S.boat.status = 'idle'; S.boat.port = null; return R; })()""")
+        if r.get('err') or r.get('why1') or r.get('why2'): check(False, '9. Autonav 2', r)
+        else:
+            check(abs(r['credit'] - r['expect']) < 0.01 and r['idle'] == 0, '9a. tidevannets kreditt er laveste vannstand over turen minus marginen, og 0 utenfor en rute', r)
+            check(r['nm1'] < r['line1'] * 2 and r['bad1'] == 0 and r['fine50'] >= 1, '9b. Havøysund → rorbua går gjennom sundet på 50 m-rutenettet, ingen etappe grunnstøter', {k: r[k] for k in ('nm1', 'line1', 'fine50', 'by1', 'bad1')})
+            if r.get('q'):
+                ok = isinstance(r['withTide'], (int, float)) and r['withTide'] < 2 * r['lineq'] and isinstance(r['noTide'], str) and 'grunt' in r['noTide']
+                check(ok or (r['tide2'] or 0) < 0.4, '9c. det grunneste på veien som mål, med dypgangen like over: nektet uten tidevann, nådd med vannstanden over turen', {k: r.get(k) for k in ('zmin', 'draftSet', 'lineq', 'noTide', 'withTide', 'tide2')})
+            check(r['pull'] and r['pull']['to'] < r['pull']['from'] and r['n2'] <= 24 and r['bad2'] == 0, '9d. Honningsvåg → Hammerfest: leinettets vei er rettet ut (færre punkter), ingen etappe grunnstøter', {k: r[k] for k in ('n2', 'nm2', 'pull', 'by2', 'bad2')})
         print('sidefeil', errs[:5])
         await br.close()
 

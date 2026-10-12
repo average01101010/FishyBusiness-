@@ -1,7 +1,8 @@
 """The 3D boat on the route (06.10.2026; view3d.js trkOn/trkStep, core haltPlan, ui renderDyn with livePose). Jonas: «båten strengt må
 følge rutestreken som lages i kartplotteren», «ganske nøyaktige kursendringer», «stoppe på nøyaktig den plassen siste endepunkt er …
 slakker av og stopper nøyaktig der den skal», Stopp underway not «bråstoppe», and the own boat on the chart updated more often.
-1. Senjahopen, from the plant's quay to the rorbu rb129 (tilbakemelding #3: she hung at the plant's quay): out from the quay, along the
+1. Senjahopen, from the plant's quay to the nearest rorbu (tilbakemelding #3: she hung at the plant's quay; the rorbu was rb129 until the
+   rorbuer were placed anew 08.10.2026, now the nearest one within 8 km is looked up): out from the quay, along the
    line, in to the rorbu's berth, lines on.
 2. Out to sea, then «Stopp» underway: she slacks off gradually and stops where the simulation stops.
 3. On to a point at sea: she stops exactly on the last waypoint, without running past it.
@@ -60,35 +61,36 @@ async def main():
         pg = await br.new_page(viewport={'width': 1100, 'height': 700}); errs = []
         pg.on('pageerror', lambda e: errs.append(str(e)))
         await boot(pg, GAME + '#notut')
-        # 1. the plant's quay in Senjahopen to the rorbu rb129, the route the chart plotter draws (Autonav)
+        # 1. the plant's quay in Senjahopen to the nearest rorbu, the route the chart plotter draws (Autonav)
         r = await pg.evaluate("""(async () => { const b = S.boat; b.status = 'port'; b.port = 'senjahopen'; b.shift = null; b.berth = null; S.plan = null; S.draft = []; S.tut = 0;
-          const bp = berthPose('senjahopen', b.type); b.pos = {...portById('senjahopen').p}; b.heading = bp.hd; rorbuSite('rb129'); const R = RBID.get('rb129');
-          view.z = Math.max(view.z, 3); setTab('route'); await leiaTo({x:R.p.x, y:R.p.y}); return {n:S.draft.length, last:(S.draft[S.draft.length - 1] || {}).port || null}; })()""")
+          const bp = berthPose('senjahopen', b.type); b.pos = {...portById('senjahopen').p}; b.heading = bp.hd; await mapNeed(b.pos, 9); const R = rorbuSites(b.pos, 8)[0]; rorbuSite(R.id);
+          view.z = Math.max(view.z, 3); setTab('route'); await leiaTo({x:R.p.x, y:R.p.y}); return {n:S.draft.length, last:(S.draft[S.draft.length - 1] || {}).port || null, rb:R.id, km:+dist(b.pos, R.p).toFixed(2)}; })()""")
+        RB = r['rb']; print('rorbu', RB, r['km'], 'km')
         await pg.evaluate("G3.show(true)"); await pg.wait_for_function("G3.isActive()", timeout=90000); await pg.wait_for_timeout(2500)
         await pg.evaluate("(() => { doAct({dataset:{act:'start'}, disabled:false}); const g = document.getElementById('ruGo'); if (g) g.click(); })()")
-        out = await follow(pg, lambda s: s['st'] == 'port' and s['port'] == 'rb129' and s['mo'] == 'moored' and not s['trk'], n=500)
-        end = await pg.evaluate("""(() => { const D = G3._debug, b = S.boat, bp = berthPose('rb129', b.type, 'main') || berthPose('rb129', b.type);
-          return {d:Math.hypot(D.bv.px - bp.x * 1000, D.bv.pz - bp.y * 1000), dh:Math.abs(((D.bv.cog - bp.hd) * 180 / Math.PI + 540) % 360 - 180), st:b.status, port:b.port, mo:D.MO.phase}; })()""")
+        out = await follow(pg, lambda s: s['st'] == 'port' and s['port'] == RB and s['mo'] == 'moored' and not s['trk'], n=500)
+        end = await pg.evaluate("""(rb) => { const D = G3._debug, b = S.boat, bp = berthPose(rb, b.type, 'main') || berthPose(rb, b.type);
+          return {d:Math.hypot(D.bv.px - bp.x * 1000, D.bv.pz - bp.y * 1000), dh:Math.abs(((D.bv.cog - bp.hd) * 180 / Math.PI + 540) % 360 - 180), st:b.status, port:b.port, mo:D.MO.phase}; }""", RB)
         off, back = along(out)
         first = next((s for s in out if s['trk']), None); x0 = (out[0]['x'], out[0]['z'])
         # by the time the simulation is 150 m out from the harbour point, she is under way out from the quay (measured against the
         # simulation, not the clock: the page here stalls for 10-20 s at a time while SwiftShader draws, and the clock with it)
         s0 = out[0]['sim']; i0 = next((i for i, s in enumerate(out) if math.hypot(s['sim'][0] - s0[0], s['sim'][1] - s0[1]) > 150), None)
         left = out[i0]['trk']['s'] if i0 is not None and out[i0]['trk'] else None
-        dock = next((i for i, s in enumerate(out) if s['st'] == 'port' and s['port'] == 'rb129'), None)
-        check(r['n'] > 0 and r['last'] == 'rb129' and first is not None, 'Autonav makes a route to the rorbu, and the 3D boat takes it as a line out from the quay', {'wps': r['n'], 'line': first and first['trk']['n']})
+        dock = next((i for i, s in enumerate(out) if s['st'] == 'port' and s['port'] == RB), None)
+        check(r['n'] > 0 and r['last'] == RB and first is not None, 'Autonav makes a route to the rorbu, and the 3D boat takes it as a line out from the quay', {'wps': r['n'], 'line': first and first['trk']['n']})
         check(left is not None and left > 30, 'she is more than 30 m out from the plant\'s quay along her line when the simulation is 150 m out (#3: she hung there)', {'s': left and round(left, 1)})
         check(off < 3.5 and back < 0.6, 'she keeps to the line all the way, at most 3.5 m off it in the corners, and never goes back along it', {'off': round(off, 2), 'back': round(back, 2)})
-        check(end['st'] == 'port' and end['port'] == 'rb129' and end['mo'] == 'moored' and end['d'] < 0.3 and end['dh'] < 3, 'she comes in to the rorbu\'s berth, exactly, and the lines go on', {k: (round(v, 2) if isinstance(v, float) else v) for k, v in end.items()})
+        check(end['st'] == 'port' and end['port'] == RB and end['mo'] == 'moored' and end['d'] < 0.3 and end['dh'] < 3, 'she comes in to the rorbu\'s berth, exactly, and the lines go on', {k: (round(v, 2) if isinstance(v, float) else v) for k, v in end.items()})
         # in at the berth: her line is done (the lines going on after it run on the frames' own clock)
         inb = next((i for i, s in enumerate(out) if dock is not None and i >= dock and not s['trk']), None)
         after = inb is not None and (out[inb]['t'] - out[dock]['t']) / 1000
         check(inb is not None and after < 60, 'she is in at the berth within a minute of the simulation docking', {'after': after and round(after, 1)})
         # 2. out to sea, Stopp underway: slack off, stop where the simulation stops
-        sea = await pg.evaluate("""(async () => { const o = portById('rb129').p; let best = null;
+        sea = await pg.evaluate("""async (rb) => { const o = portById(rb).p; let best = null;
           for (let k = 0; k < 24; k++){ const a = k / 24 * 2 * Math.PI, q = {x:o.x + Math.sin(a) * 1.6, y:o.y - Math.cos(a) * 1.6}; if (isLand(q) || depthF(q) < 15) continue; const q2 = {x:o.x + Math.sin(a) * 2.4, y:o.y - Math.cos(a) * 2.4};
             if (!isLand(q2) && depthF(q2) > 15 && legClear(q, q2)){ best = {q, q2}; break; } }
-          if (!best) return null; S.draft = []; await leiaTo(best.q); S.draft.push({x:best.q2.x, y:best.q2.y}); return {n:S.draft.length, q2:[best.q2.x * 1000, best.q2.y * 1000]}; })()""")
+          if (!best) return null; S.draft = []; await leiaTo(best.q); S.draft.push({x:best.q2.x, y:best.q2.y}); return {n:S.draft.length, q2:[best.q2.x * 1000, best.q2.y * 1000]}; }""", RB)
         if not sea:
             check(False, 'a point at sea 1.6-2.4 km from the rorbu, for the stop and the end of a route')
         else:

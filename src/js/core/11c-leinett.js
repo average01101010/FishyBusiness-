@@ -16,7 +16,10 @@ const LNET = (() => {
   const baked = !!D.baked;
   const soft = new Set();
   D.ways.forEach((w, wi) => { for (let k = 1; k < w.length; k++){ const a = w[k - 1], b = w[k], sf = baked && D.soft && D.soft[wi][k - 1], L = Math.hypot(X[a] - X[b], Y[a] - Y[b]) * (sf ? 3 : 1); adj[a].push(b, L); adj[b].push(a, L); if (sf){ soft.add(a * n + b); soft.add(b * n + a); } } });
-  return {n, X, Y, adj, grid, soft, src:D.src, baked, bakedSd:D.sd || 0, bakedDraft:D.draft || 0, min:10, near:12, tries:6, fine:6};
+  // ahead, aheadN: nodes up to `ahead` km away in the direction of the other end (within 50°), the nearest aheadN of them, tried as well
+  // when a clean straight leg reaches them (12.10.2026: the nearest nodes all lay on the harbour's own side way, so the route went
+  // out to its junction and back: Risøyhamn, Honningsvåg)
+  return {n, X, Y, adj, grid, soft, src:D.src, baked, bakedSd:D.sd || 0, bakedDraft:D.draft || 0, min:10, near:12, tries:8, fine:6, ahead:25, aheadN:4};
 })();
 const lnetPt = i => ({x:LNET.X[i], y:LNET.Y[i]});
 // the nodes within km of p, nearest first (at most max)
@@ -24,6 +27,12 @@ function lnetNear(p, km, max){
   const out = [], r = Math.ceil(km / 5), gx = Math.floor(p.x / 5), gy = Math.floor(p.y / 5);
   for (let dx = -r; dx <= r; dx++) for (let dy = -r; dy <= r; dy++){ const g = LNET.grid.get((gx + dx) * 65536 + gy + dy); if (g) for (const i of g){ const d = Math.hypot(LNET.X[i] - p.x, LNET.Y[i] - p.y); if (d <= km) out.push([i, d]); } }
   return out.sort((a, b) => a[1] - b[1]).slice(0, max);
+}
+// the nodes up to km away from p that lie within 50° of the way to q, nearest first (at most max), not among `skip`
+function lnetAhead(p, q, km, max, skip){
+  const ang = Math.atan2(q.y - p.y, q.x - p.x), out = [];
+  for (const [i, d] of lnetNear(p, km, 400)){ if (d < 0.5 || skip.has(i)) continue; let da = Math.abs(Math.atan2(LNET.Y[i] - p.y, LNET.X[i] - p.x) - ang); if (da > Math.PI) da = 2 * Math.PI - da; if (da < Math.PI * 50 / 180) out.push([i, d]); }
+  return out.slice(0, max);
 }
 // the shortest way through the net from any of srcs to any of dsts ([[node, cost to it]]): the nodes in order and the total, or null
 function lnetPath(srcs, dsts){
@@ -49,9 +58,10 @@ async function lnetLoad(P){
   await Promise.all(jobs);
 }
 // from p to node i: a clean straight leg, else a short search, else the fine lane ([points from p to the node], length) or null
-async function lnetAccess(p, i, sd, st){
+async function lnetAccess(p, i, sd, st, straight){
   const q = lnetPt(i); await lnetLoad([p, q]);
   if (!(await leiaLegFail(p, q))) return {pts:[p, q], L:dist(p, q)};
+  if (straight) return null;   // (a node ahead: only by a clean straight leg)
   const r = await leiaFind1(p, q, sd, st, 2);
   let pts = r && !r.why && r.length ? [p].concat(r, [q]) : null;
   // a harbour among islets, its 100 m cells shut: the fine lane on the 25 m mask right up to the node (LNET.fine km at most)
@@ -69,6 +79,9 @@ async function lnetRoute(from, to, sd, st){
   const A = new Map(), B = new Map();
   for (const [i] of a){ const r = await lnetAccess(from, i, sd, st); if (r) A.set(i, r); }
   for (const [i] of b){ const r = await lnetAccess(to, i, sd, st); if (r) B.set(i, r); }
+  // and the nodes ahead, in the direction of the other end, by a clean straight leg
+  for (const [i] of lnetAhead(from, to, LNET.ahead, LNET.aheadN, A)){ const r = await lnetAccess(from, i, sd, st, true); if (r){ A.set(i, r); st.ahead = (st.ahead || 0) + 1; } }
+  for (const [i] of lnetAhead(to, from, LNET.ahead, LNET.aheadN, B)){ const r = await lnetAccess(to, i, sd, st, true); if (r){ B.set(i, r); st.ahead = (st.ahead || 0) + 1; } }
   if (!A.size || !B.size) return null;
   const path = lnetPath([...A].map(([i, r]) => [i, r.L]), [...B].map(([i, r]) => [i, r.L])); if (!path) return null;
   const s = path.nodes[0], e = path.nodes[path.nodes.length - 1];
