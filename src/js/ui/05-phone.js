@@ -438,6 +438,7 @@ const PHONE = (() => {
   const PATCH = [
     ['p105', '12.10.2026', 'Ekkoloddet og juksa', 'The echo sounder and the jig', [
        ['Ekkoloddet kunne stoppe for resten av økta hvis en kartbit ikke var lastet inn ennå. Nå hopper det over den biten og prøver igjen litt senere.', 'The echo sounder could stop for the rest of the session when a piece of the map was not loaded yet. It now skips that piece and tries again a little later.'],
+       ['Når du jukser fra en båt med styrhus og har mannskap om bord, går skipperen nå ut på dekk og jukser selv, mens mannskapet sløyer. Før ble han stående i styrhuset.', 'When you jig from a boat with a wheelhouse and have crew aboard, the skipper now goes out on deck and jigs himself while the crew gut. Before, he stayed in the wheelhouse.'],
     ]],
     ['p104', '10.10.2026', 'Håndboka', 'The handbook', [
        ['Kysten i 3D følger nå sjøkartets kystlinje. Land som manglet eller var gjennomsiktig langs vannkanten, så man kunne se hus rett gjennom fjellet, er tilbake. Kantene er glatte i stedet for trappetrinn, og skummet ligger langs stranda i stedet for ved siden av.', 'The coast in 3D now follows the sea chart coastline. Land that was missing or see-through along the waterline, so houses could be seen straight through the hill, is back. The edges are smooth instead of stepped, and the foam lies along the beach instead of beside it.'],
