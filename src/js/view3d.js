@@ -211,22 +211,25 @@ const G3 = (() => {
     // shallows and surf, the surf from the sea that reaches this shore
     'if(uSOn>0.5&&uHOn>0.5){vec2 su=(vW.xz-uSRect.xy)*uSRect.zw;if(su.x>0.0&&su.y>0.0&&su.x<1.0&&su.y<1.0){float ef=smoothstep(0.0,0.06,min(min(su.x,su.y),min(1.0-su.x,1.0-su.y)));' +
     'float hb=texture2D(uHgt,su*(255.0/256.0)+0.5/256.0).r*16.0-8.0;float dep=uTideL-hb;float hl=length(S.xy);' +
+    // where the shore texture is in (buildLandMask), the water's depth over the foreshore comes from it: the surf lies on the waterline
+    // of the tide, on the coast's own line at high water and out on the foreshore at ebb; beyond the foreshore the heights as before,
+    // except the coarse mesh's own shelf by the line (its bed over 1 m), which is no shoal: 3 m deep there
+    'if(uLSOn>0.5){vec2 lu=(vW.xz-uLRect.xy)*uLRect.zw;if(lu.x>0.0&&lu.y>0.0&&lu.x<1.0&&lu.y<1.0){float hs=texture2D(uLandS,lu).r*8.0-4.0;dep=hs>-3.9?uTideL-hs:(hb>1.0?3.0:dep);}}' +
     'col=mix(col,vec3(0.07,0.33,0.32)*(uAmb*1.5+uSunCol*0.75),(1.0-smoothstep(0.3,5.0,dep))*0.42*(1.0-fr)*ef);' +
-    'float bw=0.15+hl*0.9;float band=(1.0-smoothstep(0.0,bw,dep))*smoothstep(-0.2,0.02,dep);float sw=0.5+0.5*sin(uTime*0.9+dot(P,w)*0.06);' +
-    // where the land mask is in, the surf lies along the coast's own line (the mask, blurred by a mip), not along the 25 m heights' steps
-    'if(uLSOn>0.5){vec2 lu=(vW.xz-uLRect.xy)*uLRect.zw;if(lu.x>0.0&&lu.y>0.0&&lu.x<1.0&&lu.y<1.0){float lm=texture2D(uLandS,lu,0.9).r;band=smoothstep(0.02,0.35,lm)*(1.0-smoothstep(0.5,0.9,lm));}}' +
+    'float bw=0.3+hl*1.4;float band=(1.0-smoothstep(0.0,bw,dep))*smoothstep(-0.2,0.02,dep);float sw=0.5+0.5*sin(uTime*0.9+dot(P,w)*0.06);' +
     'float ln=ns(P*0.32+vec2(uTime*0.35,-uTime*0.25))*0.6+ns(P*0.95-uTime*0.45)*0.4;' +
     'foam=max(foam,band*smoothstep(0.35,0.72,ln+band*0.2)*(0.3+0.7*clamp(hl*1.6,0.0,1.0))*(0.7+0.3*sw)*ef);}}' +
     'if(uDbg>0.5){gl_FragColor=vec4(vec3(clamp(foam,0.0,1.0)),1.0);return;}' +
     'col=mix(col,fc,clamp(foam,0.0,1.0)*0.85);float fg=1.0-exp(-uFogD*uFogD*d*d);gl_FragColor=vec4(mix(col,uFog,fg),1.0);}';
   const TER_FS = '#extension GL_OES_standard_derivatives : enable\nprecision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform vec4 uHole;' +
-    'uniform sampler2D uGround;uniform sampler2D uLand;uniform vec4 uGRect;uniform float uGOn;uniform float uLOn;uniform float uCR;uniform float uTideY;uniform vec3 uSand;varying vec3 vW;varying vec3 vC;varying vec3 vN;varying vec3 vP;varying float vS;' + NOISE + PLG +
-    // the ground above the water where the land mask says sea is cut, so the waterline is the vector coast's (buildLandMask)
+    'uniform sampler2D uGround;uniform sampler2D uLand;uniform vec4 uGRect;uniform float uGOn;uniform float uLOn;uniform float uTideY;uniform float uSwash;uniform vec3 uSand;varying vec3 vW;varying vec3 vC;varying vec3 vN;varying vec3 vP;varying float vS;' + NOISE + PLG +
+    // the ground near the water is cut where the shore texture (buildLandMask: the foreshore's own height, h = r * 8 - 4) lies under
+    // the tide, so the waterline is the coast's own line at high water and the foreshore's at ebb, whatever the mesh's cells
     'void main(){if(vW.x>uHole.x&&vW.x<uHole.z&&vW.z>uHole.y&&vW.z<uHole.w)discard;vec2 luv=(vW.xz-uGRect.xy)*uGRect.zw;' +
-    'if(uLOn>0.5&&vP.y>uTideY-2.5&&vP.y<uTideY+4.0&&luv.x>0.0&&luv.y>0.0&&luv.x<1.0&&luv.y<1.0&&texture2D(uLand,luv).r<0.3){if(vP.y>uTideY+0.02||texture2D(uLand,luv,uCR).r>0.02)discard;}vec2 wp=mod(vP.xz,4096.0);float d=length(vW);float det=1.0-smoothstep(900.0,5000.0,d);' +
+    'if(uLOn>0.5&&vP.y>uTideY-3.5&&vP.y<uTideY+4.0&&luv.x>0.0&&luv.y>0.0&&luv.x<1.0&&luv.y<1.0&&texture2D(uLand,luv).r*8.0-4.0<uTideY-uSwash)discard;vec2 wp=mod(vP.xz,4096.0);float d=length(vW);float det=1.0-smoothstep(900.0,5000.0,d);' +
     'float b1=ns(wp*0.045)-0.5;float b2=ns(wp.yx*0.045+13.0)-0.5;float b3=ns(wp*0.011+5.0)-0.5;vec3 n=normalize(vN);float st=1.0-n.y;' +
     'n=normalize(n+vec3(b1*0.5+b3,0.0,b2*0.5-b3*0.6)*(0.2+st*0.7)*det);vec3 c=vC*(0.92+0.16*ns(wp*0.018+2.0));float h=vP.y;vec2 uv=(vW.xz-uGRect.xy)*uGRect.zw;float ins=step(0.0,uv.x)*step(0.0,uv.y)*step(uv.x,1.0)*step(uv.y,1.0);float ef=smoothstep(0.0,0.06,min(min(uv.x,uv.y),min(1.0-uv.x,1.0-uv.y)));' +
-    'float sand=(1.0-smoothstep(1.0,3.6,h+b1*1.6))*step(0.05,h);c=mix(c,uSand,sand*0.8);' +
+    'float sand=(1.0-smoothstep(1.2,2.1,h+b1*0.8))*step(0.05,h);c=mix(c,uSand,sand*0.7);' +
     // the tidal zone along the whole coast: rockweed up to about the high water and a pale band of barnacles above it, never under
     // snow (Jonas 07.10.2026: «det ser litt dumt ut når den eneste plassen det er tang og rur i verden er rundt stolpene til naustet»)
     'float wd=(1.0-smoothstep(0.9,1.5,h+b2*0.6))*step(-0.6,h);c=mix(c,mix(vec3(0.22,0.19,0.1),vec3(0.32,0.28,0.14),ns(wp*0.35)),wd*0.92);' +
@@ -397,12 +400,21 @@ const G3 = (() => {
   const grassNow = () => typeof seasonAt === 'function' ? Math.round(seasonAt(S.t / 60).grass * 10) / 10 : 1;
   // real ground height (m) at world x/z (m); sea floor is shaped from shore distance and exposure; where a harbour unit stands, its
   // ground (unitTerr)
-  // dil (m): the ground of the meshes (not what the boat and the camera ask) is flat and above the water as far out to sea as one cell of the
-  // mesh, where the land mask (buildLandMask) is in, so a triangle across the coast never has the land side under water (the sea bit into the
-  // land by up to half a cell, 12-47 m, in teeth along the triangles: #61, Jonas 12.10.2026); the terrain shader cuts what stands over the
-  // mask's sea, so the waterline is the coast's own line, and below it a slope falls away over the next cell instead of a wall
-  const COAST3 = {top:1.7};
-  let MASKR = null;   // the rectangle [x0, z0, x1, z1] of the land mask in use, null without one
+  // The shore (#61, Jonas 12.10.2026: land missing along the water, a brown line in the sea, the surf beside the land): one profile,
+  // keyed to the chart's own coast line (coast2, coastSdIf = signed distance, + on land), decides where the ground meets the sea,
+  // for the meshes, the physics, the shore texture the terrain shader cuts by (buildLandMask) and the surf in the sea shader:
+  //   on the line and inland the ground is at least COAST3.top (2.0 m: over the highest astronomical tide along the coast, 1.75 m in
+  //   East Finnmark, with room for the texture's byte and its blend at the line; the line is about the mean high water, and flat
+  //   coastal land of the tiles stood under the sea at high water);
+  //   seaward the foreshore falls 1 in 3 (g; 1 in 1.5 for a breakwater's armour, gMole, where the nearest edge is a breakwater's,
+  //   COAST.mole, in the texture and the mesh alike) to COAST3.deep, then
+  //   the sea bed of the tiles, held under deep (no ground of the 25 m mask stands in water the chart shows).
+  // So the waterline is where the tide meets the ramp: on the line at high water, out to (top - tide) / g m at ebb, with the rockweed
+  // and the barnacles (recolor, TER_FS) exposed between, and the surf (SEA_FS) on it, wherever the tide stands.
+  // dil (m): the meshes' own cell size (terrCoarse, nearSurf; not what the boat and the camera ask). A coarse mesh (12-47 m) is flat at
+  // top from the line out to one cell at sea before the ramp, so a triangle across the line never dips under water inside it (the sea
+  // bit into the land in teeth of up to half a cell); the texture cuts the rest at the waterline. The fine mesh (4 m) carries the ramp.
+  const COAST3 = {top:2.0, g:1 / 3, gMole:1 / 1.5, deep:-2.5, swash:0.8};
   function terrRaw(x, z, dil){
     if (x < MAPB.x0 * 1000 || z < MAPB.y0 * 1000 || x > MAPB.x1 * 1000 || z > MAPB.y1 * 1000) return -40;
     // the tiles' ground (25 m) where they have it and it is in; else the far heights (200 m, phase K8) held to the national core's
@@ -411,15 +423,11 @@ const G3 = (() => {
     let h;
     h = HG ? tileH(MAPD.L.hgt, 'view', x, z) : NaN;
     if (h !== h){ const m = rbilM(MAPD.L.land200, x, z); h = HG ? tileH(MAPD.L.far, 'far', x, z) : NaN; if (h !== h) h = m >= 0.5 ? 2 : -4; h = m >= 0.5 ? Math.max(h, 0.3 + (m - 0.5) * 6) : Math.min(h, -0.5 - (0.5 - m) * 8); }
-    // the fine coast (01d-coast.js, where its tile is indexed: round the camera) decides where the ground meets the sea: the ground
-    // rises 1 in 1 from the coast's line to COAST3.top on its land side and falls the same on its sea side, so between two points of a
-    // mesh the waterline lies on the coast's line, not on the grid (a breakwater 8 m wide came out as steps); no ground of the 25 m mask
-    // the heights were made from stands in water the chart shows. The terrain shader cuts the rest at the line (buildLandMask).
-    const dl = dil && MASKR && x >= MASKR[0] && x <= MASKR[2] && z >= MASKR[1] && z <= MASKR[3] ? dil : 0;
-    const sd = coastSdIf({x:x / 1000, y:z / 1000}, COAST3.top + 1 + 2 * dl);
+    const fl = dil > 6 ? dil : 0;
+    const sd = coastSdIf({x:x / 1000, y:z / 1000}, (COAST3.top - COAST3.deep) / COAST3.g + fl + 2);
     if (sd === sd){
-      if (dl){ const e = sd + dl; h = e >= 0 ? Math.max(h, COAST3.top) : Math.min(h, COAST3.top + e * 2 * COAST3.top / dl); }   // flat to one cell out to sea, then a slope down (no floor: it meets the sea bed where it meets it, a floor left a trench in shallow water)
-      else h = sd >= 0 ? Math.max(h, Math.min(COAST3.top, sd)) : Math.min(h, -Math.min(COAST3.top, -sd));
+      if (sd >= 0) h = Math.max(h, COAST3.top);
+      else { const r = COAST3.top + Math.min(0, sd + fl) * (COAST.mole ? COAST3.gMole : COAST3.g); h = r > COAST3.deep ? r : Math.min(h, COAST3.deep); }
     }
     h = siteTerr(x, z, h);   // Father's naust and the Finnsnes shop (SITES)
     return h > -3 && harbourNear(x, z) && inHarbourPocket({x:x / 1000, y:z / 1000}) ? -3 : h;   // the water in front of a quay (01-world.js)
@@ -641,7 +649,8 @@ const G3 = (() => {
   function buildPatches(){
     for (const m of UPATCH) freeMesh(m); UPATCH = [];
     if (!NEARM) return;
-    for (const U of UNITA) if (U.o[0] > NEARM.x0 + 200 && U.o[0] < NEARM.x0 + NEARM.sx - 200 && U.o[1] > NEARM.z0 + 200 && U.o[1] < NEARM.z0 + NEARM.sz - 200) UPATCH.push(unitPatch(U, NEARM));
+    const inF = U => FINEM && U.o[0] > FINEM.x0 + 120 && U.o[0] < FINEM.x0 + FINEM.sx - 120 && U.o[1] > FINEM.z0 + 120 && U.o[1] < FINEM.z0 + FINEM.sz - 120;
+    for (const U of UNITA) if (U.o[0] > NEARM.x0 + 200 && U.o[0] < NEARM.x0 + NEARM.sx - 200 && U.o[1] > NEARM.z0 + 200 && U.o[1] < NEARM.z0 + NEARM.sz - 200) UPATCH.push(unitPatch(U, inF(U) ? FINEM : NEARM));
   }
   // The far terrain: a window of TERRW.span round the boat (phase K8; it was Senja's square), on a grid of TERRW.snap, built again when
   // the boat is TERRW.move from its middle or new packs have come; the far sea and the wide sea-state map follow it
@@ -810,7 +819,7 @@ const G3 = (() => {
     meshTask('mid', MIDM && MIDM.gn === QUAL.midN[QUAL.lvl] ? MIDM : null, cx - span / 2, cz - span / 2, span, QUAL.midN[QUAL.lvl], null, (M, dirty) => { const old = MIDM; MIDM = M; MIDM.cx = cx; MIDM.cz = cz; MIDM.stale = dirty; shSeed(MIDM, old); if (old) freeMesh(old); });
   }
   function updateNear(){
-    stream3d(); nearWanted(); fineWanted(); updateMid(); updateFar(); meshStep(); tileStep();   // the near mesh first when more than one is due
+    stream3d(); nearWanted(); fineWanted(); updateMid(); updateFar(); meshStep(); tileStep(); if (LMJOB) lmStep();   // the near mesh first when more than one is due
   }
   function nearWanted(){
     const span = QUAL.near[QUAL.lvl][cam.dist > 1200 ? 1 : 0], snap = span / 10, cx = Math.round(bv.x / snap) * snap, cz = Math.round(bv.z / snap) * snap;
@@ -826,7 +835,7 @@ const G3 = (() => {
     if (!NEARM) return;
     const span = FINEW.span[QUAL.lvl], n = FINEW.n[QUAL.lvl], snap = span / 8, cx = Math.round(bv.x / snap) * snap, cz = Math.round(bv.z / snap) * snap;
     if (FINEM && !FINEM.stale && FINEM.sx === span && FINEM.gn === n && Math.abs(cx - FINEM.cx) < span / 5 && Math.abs(cz - FINEM.cz) < span / 5) return;
-    meshTask('fine', FINEM && FINEM.sx === span && FINEM.gn === n ? FINEM : null, cx - span / 2, cz - span / 2, span, n, (x, z) => terrCoarse(x, z, span / (n - 1)), (M, dirty) => { const old = FINEM; FINEM = M; FINEM.cx = cx; FINEM.cz = cz; FINEM.stale = dirty; shSeed(FINEM, old); if (old) freeMesh(old); if (snowNow != null) recolor(FINEM, snowNow); });
+    meshTask('fine', FINEM && FINEM.sx === span && FINEM.gn === n ? FINEM : null, cx - span / 2, cz - span / 2, span, n, (x, z) => terrCoarse(x, z, span / (n - 1)), (M, dirty) => { const old = FINEM; FINEM = M; FINEM.cx = cx; FINEM.cz = cz; FINEM.stale = dirty; shSeed(FINEM, old); if (old) freeMesh(old); if (snowNow != null) recolor(FINEM, snowNow); buildPatches(); });
   }
   const WEED = [0.27, 0.24, 0.13], WEED2 = [0.22, 0.2, 0.12], BARN = [0.66, 0.66, 0.62];   // rockweed and barnacles in the tidal zone
   function recolor(m, snow){
@@ -838,7 +847,7 @@ const G3 = (() => {
       if (y < 0) c = bed;
       else {
         c = mix3(rock, mix3(grass, birch, n), y < 280 ? 1 : sstep(420, 280, y));
-        if (y < 6) c = mix3(shore, c, y / 6);
+        if (y < 3.5) c = mix3(shore, c, y / 3.5);
         // the tidal zone along the whole coast, as under Father's naust (Jonas 07.10.2026: «det ser litt dumt ut når den eneste plassen det
         // er tang og rur i verden er rundt stolpene til naustet»): rockweed up to about the high water, a pale band of barnacles above it
         const tw = 1 - sstep(0.9, 1.5, y), tb = sstep(0.9, 1.4, y) * (1 - sstep(1.7, 2.3, y));
@@ -3347,9 +3356,9 @@ const G3 = (() => {
     gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uSun, env.lightDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb); gl.uniform3fv(u.uGnd, env.gnd); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD);
     gl.uniform3fv(u.uSand, snowNow == null || snowNow < 5 ? [0.84, 0.86, 0.88] : [0.74, 0.71, 0.6]); gl.uniformMatrix4fv(u.uM, false, TM);
     const one = (m, hole, ground) => {
-      gl.uniformMatrix4fv(u.uM, false, relM(m)); gl.uniform3fv(u.uPO, [m.o[0] - RO.x, 0, m.o[1] - RO.z]); gl.uniform4fv(u.uHole, hole || NOHOLE); gl.uniform1f(u.uGOn, ground && GTEX ? 1 : 0); gl.uniform1f(u.uLOn, ground && LMTEX && LMON ? 1 : 0); gl.uniform1f(u.uCR, Math.max(0, Math.log2(4 * (m.sx && m.gn ? m.sx / (m.gn - 1) : 4) / LMTEXEL))); gl.uniform1f(u.uTideY, env.tide || 0);
+      gl.uniformMatrix4fv(u.uM, false, relM(m)); gl.uniform3fv(u.uPO, [m.o[0] - RO.x, 0, m.o[1] - RO.z]); gl.uniform4fv(u.uHole, hole || NOHOLE); gl.uniform1f(u.uGOn, ground && GTEX ? 1 : 0); gl.uniform1f(u.uLOn, ground && LMTEX && LMON ? 1 : 0); gl.uniform1f(u.uTideY, Math.min(env.tide || 0, COAST3.top - 0.15)); gl.uniform1f(u.uSwash, clamp(0.5 * (WV.hs + WV.swHs), 0, COAST3.swash));
       if (ground && LMTEX){ gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, LMTEX); gl.uniform1i(u.uLand, 2); gl.activeTexture(gl.TEXTURE0); }
-      if (GRECT) gl.uniform4fv(u.uGRect, [GRECT[0] - eye[0], GRECT[1] - eye[2], GRECT[2], GRECT[3]]);
+      if (LRECT) gl.uniform4fv(u.uGRect, [LRECT[0] - eye[0], LRECT[1] - eye[2], LRECT[2], LRECT[3]]);
       if (ground && GTEX){ gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, GTEX); gl.uniform1i(u.uGround, 0); gl.uniform4fv(u.uGRect, [GRECT[0] - eye[0], GRECT[1] - eye[2], GRECT[2], GRECT[3]]); }
       attr(0, m.pb, 3); attr(1, m.cb, 3); attr(2, m.nb, 3); attr(3, m.sb, 1); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, m.ib); gl.drawElements(gl.TRIANGLES, m.n, m.i32 ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT, 0);
     };
@@ -3381,39 +3390,74 @@ const G3 = (() => {
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); gl.activeTexture(gl.TEXTURE0); }
     buildLandMask();
   }
-  // The land mask over the near terrain (2048 x 2048, 1.5-6 m a texel): the fine coast with its breakwaters (01d-coast.js, the chart
-  // packs' coast2), the harbour units' blocks and fills as land, and their basins and the quays' pockets as water, as isLand has them.
-  // (Jonas 12.10.2026, #61: land missing along the coast, houses seen through the hills: the cut is only for the coast's own low ramp, less
-  // than 4 m above the water, and only where the mask is clearly sea (< 0.3): from a distance the mask is read from a coarser mip, where a thin
-  // or low strip of land averaged below one half and was cut away, and the hills behind it with it.)
-  // The terrain shader cuts the ground above the water where it says sea, so the waterline is the coast's own line (the user: the 3D
-  // world is to follow the vector coast, 04.10.2026), not the 25 m cells the heights were made from. Off the tiles with a chart pack
-  // (or until it comes) there is no mask, and the ground meets the sea where it is.
-  let LMON = false, LMTEXEL = 3;   // LMTEXEL: metres per texel of the land mask
+  // The shore texture over the near terrain (2048 x 2048, 4096 on ultra; 1.5-6 m a texel; LUMINANCE, h = r * 8 - 4 m, no mips):
+  // the foreshore's own height by the profile of terrRaw (COAST3), drawn from the chart packs' coast2 with a canvas: the sea black
+  // (-4 m), the coast's rings stroked widest first in steps of about half a metre of height, the land's at 1 in 3 and the breakwaters'
+  // (class 2 and 3) at 1 in 1.5, all in the order of their height so the nearest shore wins where two meet, and the land filled over
+  // them at COAST3.top (1.7 m), so the ramp lies on the sea's side alone. Then the harbour units' basins and the quays' pockets as
+  // deep water and their blocks and fills as land a texel wider than they are, so the cut never bites a deck (quay walls are plumb).
+  // The terrain shader cuts the ground that stands over the tide where the texture lies under it (uLand, uTideY), and the sea shader
+  // puts the surf where the texture meets the tide (uLandS): one waterline, read the same on every GPU (no mip, no bias).
+  // Off the tiles with a chart pack (or until it comes) there is no texture, and the ground meets the sea where it is.
+  // (Jonas 12.10.2026, #61: the binary mask of before, read from a mip at a distance, cut thin land and the hills behind it, left the
+  // surf beside the land and the foreshore's ramp as a brown line in the water.)
+  // Drawn a few strokes a frame (lmStep, LMSLICE ms): the coast within a window of the whole coast runs to tens of thousands of points,
+  // and 24 strokes of it at once stalled a tablet for a second. The texture in use (LMTEX, LRECT) stands until the new one is done.
+  let LMON = false, LMTEXEL = 3, LMMS = 0, LRECT = null, LMJOB = null;   // LMTEXEL: metres per texel; LMMS: the last build's time (ms); LRECT: [x0, z0, 1/sx, 1/sx] of the texture in use
+  const LMSLICE = 9, lmByte = h => Math.round(clamp((h + 4) / 8, 0, 1) * 255), lmCol = h => { const b = lmByte(h); return 'rgb(' + b + ',' + b + ',' + b + ')'; };
   function buildLandMask(){
     if (!NEARM) return;
-    const size = QUAL.lvl === 3 ? 4096 : 2048, x0 = NEARM.x0, z0 = NEARM.z0, sx = NEARM.sx, k = size / sx, T = MAPD.man.tile * 1000;
+    const t0 = performance.now(), size = Math.min(QUAL.lvl === 3 ? 4096 : 2048, gl.getParameter(gl.MAX_TEXTURE_SIZE) || 2048), x0 = NEARM.x0, z0 = NEARM.z0, sx = NEARM.sx, k = size / sx, T = MAPD.man.tile * 1000;
     const pks = mapPacksIn('chart', x0 / 1000, z0 / 1000, (x0 + sx) / 1000, (z0 + sx) / 1000);
-    LMON = false; if (!pks.length){ if (MASKR){ MASKR = null; staleMesh('near'); staleMesh('fine'); } return; }
+    if (!pks.length){ LMON = false; LMJOB = null; return; }
     const wait = pks.filter(pk => !pk.buf); if (wait.length){ Promise.all(wait.map(mapLoad)).then(() => buildLandMask(), e => console.error(e)); return; }
-    lcv = lcv || document.createElement('canvas'); lcv.width = lcv.height = size; const g = lcv.getContext('2d');
-    g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#000'; g.fillRect(0, 0, size, size); g.fillStyle = '#fff';
-    for (const pk of pks){ const p = chartPath(pk, 2, 0); if (!p) continue; g.setTransform(1000 * k, 0, 0, 1000 * k, (pk.tile[0] * T - x0) * k, (pk.tile[1] * T - z0) * k); g.fill(p, 'nonzero'); }
+    // the rings within the window and the ramp's reach, per pack
+    const W = (COAST3.top + 4) / COAST3.g + 2, paths = [];
+    for (const pk of pks){ const ox = pk.tile[0] * T, oz = pk.tile[1] * T, P = chartPathsIn(pk, [x0 - ox - W, z0 - oz - W, x0 + sx - ox + W, z0 + sx - oz + W]); if (P && P.n) paths.push({pk, ox, oz, P}); }
+    // the strokes: for each ring class its ramp down from the line, as (height, half width) pairs, drawn deepest first
+    const steps = [], sz = 0.5;
+    for (const [key, gr] of [['land', COAST3.g], ['mole', COAST3.gMole]]){
+      if (!paths.some(q => q.P[key])) continue;
+      const Wc = (COAST3.top + 4) / gr, n = Math.ceil(Wc * gr / sz);
+      for (let i = 0; i < n; i++){ const w1 = Wc * (1 - i / n), w0 = Wc * (1 - (i + 1) / n); steps.push({key, w:w1, h:COAST3.top - (w1 + w0) / 2 * gr}); }
+    }
+    steps.sort((a, b) => a.h - b.h);
+    lcv = lcv || document.createElement('canvas'); if (lcv.width !== size) lcv.width = lcv.height = size;
+    const g = lcv.getContext('2d'); g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = lmCol(-4); g.fillRect(0, 0, size, size); g.lineJoin = 'round'; g.lineCap = 'round';
+    LMJOB = {g, paths, steps, i:0, x0, z0, sx, k, size, t0, ms:performance.now() - t0};
+    lmStep();
+  }
+  // a slice of the shore texture's drawing; the rest when it is done
+  function lmStep(){
+    const J = LMJOB; if (!J) return; const t0 = performance.now(), until = t0 + LMSLICE, {g, paths, steps, x0, z0, sx, k} = J;
+    const tf = q => g.setTransform(1000 * k, 0, 0, 1000 * k, (q.ox - x0) * k, (q.oz - z0) * k);
+    while (J.i < steps.length){
+      const st = steps[J.i++]; g.strokeStyle = lmCol(st.h); g.lineWidth = 2 * st.w / 1000;
+      for (const q of paths){ const p = q.P[st.key]; if (!p) continue; tf(q); g.stroke(p); }
+      if (performance.now() > until){ J.ms += performance.now() - t0; return; }
+    }
     g.setTransform(1, 0, 0, 1, 0, 0);
-    const poly = (pts, col) => { g.fillStyle = col; g.beginPath(); pts.forEach(([x, z], i) => i ? g.lineTo((x - x0) * k, (z - z0) * k) : g.moveTo((x - x0) * k, (z - z0) * k)); g.closePath(); g.fill(); };
     const near = (x, z) => x > x0 - 300 && x < x0 + sx + 300 && z > z0 - 300 && z < z0 + sx + 300;
+    // a fill's own sides fall 1 in 1.6 (unitTerr): its ramp round it, as a breakwater's, under the land's fill (its land side stays land)
+    const fp = new Path2D(); let anyF = false;
+    for (const U of UNITA){ if (!near(U.o[0], U.o[1]) || !U.f || U.f.length < 6) continue; anyF = true;
+      for (let i = 0; i < U.f.length; i += 2){ const [x, z] = unitW(U, U.f[i], U.f[i + 1]); i ? fp.lineTo((x - x0) * k, (z - z0) * k) : fp.moveTo((x - x0) * k, (z - z0) * k); } fp.closePath(); }
+    if (anyF) for (const st of steps){ if (st.key !== 'mole') continue; g.strokeStyle = lmCol(st.h); g.lineWidth = 2 * st.w * k; g.stroke(fp); }
+    g.fillStyle = lmCol(COAST3.top);
+    for (const q of paths){ if (!q.P.all) continue; tf(q); g.fill(q.P.all, 'nonzero'); }
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    const poly = (pts, h, wide) => { g.fillStyle = g.strokeStyle = lmCol(h); g.beginPath(); pts.forEach(([x, z], i) => i ? g.lineTo((x - x0) * k, (z - z0) * k) : g.moveTo((x - x0) * k, (z - z0) * k)); g.closePath(); g.fill(); if (wide){ g.lineWidth = 2; g.stroke(); } };
+    for (const U of UNITA){ if (!near(U.o[0], U.o[1])) continue; const q = ugeo(U);
+      poly([[-q.basinX, 0.2], [q.basinX, 0.2], [q.basinX, q.basinZ], [-q.basinX, q.basinZ]].map(([a, b]) => unitW(U, a, b)), -4); }
+    for (const f of qPockets()){ if (!near(f.x, f.z)) continue; const s = f.hl + 4, Q = (a, b) => [f.x + f.ux * a + f.nx * b, f.z + f.uz * a + f.nz * b]; poly([Q(-s, 0.2), Q(s, 0.2), Q(s, POCKET), Q(-s, POCKET)], -4); }
     for (const U of UNITA){ if (!near(U.o[0], U.o[1])) continue;
-      const fl = []; for (let i = 0; i < U.f.length; i += 2) fl.push(unitW(U, U.f[i], U.f[i + 1])); poly(fl, '#fff');
-      const g = ugeo(U);
-      poly([[-g.E, -g.B], [g.E, -g.B], [g.E, 0], [-g.E, 0]].map(([a, b]) => unitW(U, a, b)), '#fff');
-      poly([[-g.basinX, 0.2], [g.basinX, 0.2], [g.basinX, g.basinZ], [-g.basinX, g.basinZ]].map(([a, b]) => unitW(U, a, b)), '#000'); }
-    for (const f of qPockets()){ if (!near(f.x, f.z)) continue; const s = f.hl + 4, Q = (a, b) => [f.x + f.ux * a + f.nx * b, f.z + f.uz * a + f.nz * b]; poly([Q(-s, 0.2), Q(s, 0.2), Q(s, POCKET), Q(-s, POCKET)], '#000'); }
-    LMON = true; LMTEXEL = sx / size;
-    { const R = [x0, z0, x0 + sx, z0 + sx]; if (!MASKR || MASKR.some((v, i) => Math.abs(v - R[i]) > 1e-6)){ MASKR = R; staleMesh('near'); staleMesh('fine'); } }   // the meshes are built again with the ground that reaches the line
+      const fl = []; for (let i = 0; i < U.f.length; i += 2) fl.push(unitW(U, U.f[i], U.f[i + 1])); poly(fl, COAST3.top, true);
+      const q = ugeo(U); poly([[-q.E, -q.B], [q.E, -q.B], [q.E, 0], [-q.E, 0]].map(([a, b]) => unitW(U, a, b)), COAST3.top, true); }
     LMTEX = LMTEX || gl.createTexture(); gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, LMTEX);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, lcv); gl.generateMipmap(gl.TEXTURE_2D);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, lcv);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); gl.activeTexture(gl.TEXTURE0);
+    LMON = true; LMTEXEL = sx / J.size; LRECT = [x0, z0, 1 / sx, 1 / sx]; LMJOB = null; LMMS = J.ms + performance.now() - t0;
   }
   // the flat sea as a ring: the rectangle R [x0, z0, x1, z1] less the hole Hl where something nearer is drawn, as up to four strips,
   // so no water is shaded twice and the shader never discards (which costs the early depth test on phone and tablet GPUs)
@@ -3444,7 +3488,7 @@ const G3 = (() => {
     gl.uniform4fv(u.uWa, WV.ua); gl.uniform4fv(u.uWb, ub); gl.uniform1fv(u.uGp, gp); if (u.uFWa){ gl.uniform4fv(u.uFWa, WV.ua); gl.uniform4fv(u.uFWb, ub); gl.uniform1fv(u.uFGp, gp); } plSet(u);
     gl.uniform3fv(u.uSun, env.lightDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD);
     gl.uniform3fv(u.uZen, env.zen); gl.uniform3fv(u.uHor, env.hor); gl.uniform3fv(u.uDeep, [0.035, 0.14, 0.18]); gl.uniform1f(u.uWind, env.wind); gl.uniform2fv(u.uWindDir, env.windDir); gl.uniform1f(u.uSpec, env.spec);
-    gl.uniform1f(u.uLSOn, LMTEX && LMON && GRECT ? 1 : 0); if (LMTEX && LMON && GRECT){ gl.activeTexture(gl.TEXTURE6); gl.bindTexture(gl.TEXTURE_2D, LMTEX); gl.uniform1i(u.uLandS, 6); gl.activeTexture(gl.TEXTURE0); gl.uniform4fv(u.uLRect, [GRECT[0] - eye[0], GRECT[1] - eye[2], GRECT[2], GRECT[3]]); }
+    gl.uniform1f(u.uLSOn, LMTEX && LMON && LRECT ? 1 : 0); if (LMTEX && LMON && LRECT){ gl.activeTexture(gl.TEXTURE6); gl.bindTexture(gl.TEXTURE_2D, LMTEX); gl.uniform1i(u.uLandS, 6); gl.activeTexture(gl.TEXTURE0); gl.uniform4fv(u.uLRect, [LRECT[0] - eye[0], LRECT[1] - eye[2], LRECT[2], LRECT[3]]); }
     gl.uniform1f(u.uSOn, STEX ? 1 : 0); gl.uniform1f(u.uHOn, HTEX ? 1 : 0); gl.uniform1f(u.uTideL, env.tide || 0); if (HTEX){ gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, HTEX); gl.uniform1i(u.uHgt, 3); gl.activeTexture(gl.TEXTURE0); } if (STEX) gl.uniform4fv(u.uSRect, [SRECT[0] - eye[0], SRECT[1] - eye[2], SRECT[2], SRECT[3]]);
     gl.disableVertexAttribArray(1);
     if (far){
@@ -4606,6 +4650,6 @@ const G3 = (() => {
     // the cinema: on or off (the HUD is the page's: body.kino-clean)
     kino(on){ if (on !== undefined){ KINO.on = !!on; KINO.shot = null; } return KINO.on; }, intro:introStart, introOn:() => !!INTRO, get kinoShot(){ return KINO.shot ? KINO.shot.type : null; },
     isHelm:() => cam.helm, setHelm(on){ const G = GEO(vtype()); cam.helm = !!on; cam.zoom = 1; cam.hy = 0; cam.hp = G.hp !== undefined ? G.hp : -0.07; cam.fov = G.fov || 55; },
-    _debug:{get anchl(){ return ANCHAL; }, get jsms(){ return JSMS; }, lift:LIFT, bv, pota:POTA, get fps(){ return FPS.v; }, get cam(){ return cam; }, trawl(mode, at, hold){ TRAWL.mode = mode || null; TRAWL.t0 = performance.now() / 1000 - (at || 0); TRAWL.hold = hold ? at || 0 : null; return mode; }, seine(mode, at, hold){ SEINE.mode = mode || null; SEINE.t0 = performance.now() / 1000 - (at || 0); SEINE.hold = hold ? at || 0 : null; return mode; }, get seineNow(){ return seineState(performance.now() / 1000); }, get trawlNow(){ const st = trawlState(performance.now() / 1000); return TRAWL.mode ? Object.assign({mode:TRAWL.mode}, st) : null; }, get trk(){ return TRK && {s:TRK.s, v:TRK.v, vc:TRK.vc, end:TRK.end, sIn:TRK.sIn, back:TRK.back, turnL:TRK.turnL, done:TRK.done, stops:TRK.stops.map(q => q.s), P:TRK.P}; }, get peers(){ return npcNow.filter(n => n.player).map(n => ({id:n.id, vtype:n.vtype, t:n.K ? n.K.t : null, glass:!!(n.K && n.K.glass)})); }, get air(){ return airNow.map(a => ({kind:a.kind, w:a.w.map(Math.round)})); }, get airM(){ return !!(AIRM && AIRM.plane); }, get curFov(){ return curFov; }, cam, moundTop, bridgeInto, get statTris(){ return STAT ? STAT.n / 3 : 0; }, get vec(){ return {tiles:[...VEC.tiles.values()].map(t => ({k:t.k, bld:t.bld ? t.bld.n : 0, roads:t.roads.length, bridges:t.bridges.length, piers:t.piers.length, molos:t.molos.length, quays:t.quays.length, ms:Math.round(t.ms)})), statics:[...TST].map(([k, s]) => ({k, tris:s.tris, ms:Math.round(s.ms)})), chunks:CH.size}; }, moundInto, MB, haulModel, get haulA(){ return HAULA; }, gopHands, kinoNext(){ KINO.shot = null; }, get kino(){ const k = KINO.shot, e = KINO.eye, g = KINO.tgt; if (!k || !e) return null; const t = (performance.now() - T0) / 1000; return {type:k.type, up:e[1] - Math.max(terrH(e[0], e[2]), seaH(e[0], e[2], t)), free:camFree(g, e), d:Math.hypot(e[0] - bv.x, e[2] - bv.z)}; }, get PLA(){ return PLA; }, get PCA(){ return PCA; }, set noPL(v){ NOPL = !!v; }, get beams(){ return BMN; }, glErr(){ return gl ? gl.getError() : -1; }, mastTop:t => mastTop(geoOf(t)), QUAL, qualTick, TERRW, get TERR(){ return TERR; }, get MIDM(){ return MIDM; }, RO, SSL, WV, WK, ssAt, seaH, waves:(dt, H) => updateWaves(dt, H), get sstVS(){ return SST_VS; }, get seaLvl(){ return seaLvl; }, get seaBasic(){ return !!(PS && PS.basic); }, get seaOne(){ return PSF === PS; }, get seaLite(){ return !!(PS && PS.lite); }, set seaDbg(v){ SEADBG = v; }, get drift(){ let c = 0; for (let i = 0; i < SDN; i++) if (SD.age[i] < SD.life[i]) c++; return c; }, get eye(){ return lastEye; }, camInside, camFree, get camPull(){ return camPull; }, get camLift(){ return camLift; }, get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, BUNKERS, nearestPlant, fkRun, legAt, terrH, terrRaw, unitModel, get UPATCH(){ return UPATCH; }, sitesNow, siteModel, onSite, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; lightsHere(e, 50).forEach(L => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(L, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }, get landMask(){ return LMON ? lcv : null; }, meshH(x, z){ const M = FINEM && x > FINEM.x0 + 8 && x < FINEM.x0 + FINEM.sx - 8 && z > FINEM.z0 + 8 && z < FINEM.z0 + FINEM.sz - 8 ? FINEM : NEARM; return M ? nearSurf(M, x, z) : NaN; }, seaU(){ if (!PS) return null; gl.useProgram(PS.p); const g = n => PS.u[n] == null ? 'none' : gl.getUniform(PS.p, PS.u[n]); return {ls:g('uLSOn'), land:g('uLandS'), rect:g('uLRect') && Array.from(g('uLRect')), hOn:g('uHOn'), sOn:g('uSOn'), lmon:LMON, gr:!!GRECT, lt:!!LMTEX}; },  get FINEM(){ return FINEM; }, get seaNP(){ return NP; }, get dpr(){ return canvas ? canvas.width / Math.max(1, canvas.getBoundingClientRect().width) : 0; }}
+    _debug:{get anchl(){ return ANCHAL; }, get jsms(){ return JSMS; }, lift:LIFT, bv, pota:POTA, get fps(){ return FPS.v; }, get cam(){ return cam; }, trawl(mode, at, hold){ TRAWL.mode = mode || null; TRAWL.t0 = performance.now() / 1000 - (at || 0); TRAWL.hold = hold ? at || 0 : null; return mode; }, seine(mode, at, hold){ SEINE.mode = mode || null; SEINE.t0 = performance.now() / 1000 - (at || 0); SEINE.hold = hold ? at || 0 : null; return mode; }, get seineNow(){ return seineState(performance.now() / 1000); }, get trawlNow(){ const st = trawlState(performance.now() / 1000); return TRAWL.mode ? Object.assign({mode:TRAWL.mode}, st) : null; }, get trk(){ return TRK && {s:TRK.s, v:TRK.v, vc:TRK.vc, end:TRK.end, sIn:TRK.sIn, back:TRK.back, turnL:TRK.turnL, done:TRK.done, stops:TRK.stops.map(q => q.s), P:TRK.P}; }, get peers(){ return npcNow.filter(n => n.player).map(n => ({id:n.id, vtype:n.vtype, t:n.K ? n.K.t : null, glass:!!(n.K && n.K.glass)})); }, get air(){ return airNow.map(a => ({kind:a.kind, w:a.w.map(Math.round)})); }, get airM(){ return !!(AIRM && AIRM.plane); }, get curFov(){ return curFov; }, cam, moundTop, bridgeInto, get statTris(){ return STAT ? STAT.n / 3 : 0; }, get vec(){ return {tiles:[...VEC.tiles.values()].map(t => ({k:t.k, bld:t.bld ? t.bld.n : 0, roads:t.roads.length, bridges:t.bridges.length, piers:t.piers.length, molos:t.molos.length, quays:t.quays.length, ms:Math.round(t.ms)})), statics:[...TST].map(([k, s]) => ({k, tris:s.tris, ms:Math.round(s.ms)})), chunks:CH.size}; }, moundInto, MB, haulModel, get haulA(){ return HAULA; }, gopHands, kinoNext(){ KINO.shot = null; }, get kino(){ const k = KINO.shot, e = KINO.eye, g = KINO.tgt; if (!k || !e) return null; const t = (performance.now() - T0) / 1000; return {type:k.type, up:e[1] - Math.max(terrH(e[0], e[2]), seaH(e[0], e[2], t)), free:camFree(g, e), d:Math.hypot(e[0] - bv.x, e[2] - bv.z)}; }, get PLA(){ return PLA; }, get PCA(){ return PCA; }, set noPL(v){ NOPL = !!v; }, get beams(){ return BMN; }, glErr(){ return gl ? gl.getError() : -1; }, mastTop:t => mastTop(geoOf(t)), QUAL, qualTick, TERRW, get TERR(){ return TERR; }, get MIDM(){ return MIDM; }, RO, SSL, WV, WK, ssAt, seaH, waves:(dt, H) => updateWaves(dt, H), get sstVS(){ return SST_VS; }, get seaLvl(){ return seaLvl; }, get seaBasic(){ return !!(PS && PS.basic); }, get seaOne(){ return PSF === PS; }, get seaLite(){ return !!(PS && PS.lite); }, set seaDbg(v){ SEADBG = v; }, get drift(){ let c = 0; for (let i = 0; i < SDN; i++) if (SD.age[i] < SD.life[i]) c++; return c; }, get eye(){ return lastEye; }, camInside, camFree, get camPull(){ return camPull; }, get camLift(){ return camLift; }, get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, BUNKERS, nearestPlant, fkRun, legAt, terrH, terrRaw, unitModel, get UPATCH(){ return UPATCH; }, sitesNow, siteModel, onSite, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; lightsHere(e, 50).forEach(L => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(L, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }, get landMask(){ return LMON ? lcv : null; }, get maskMs(){ return LMMS; }, get coast3(){ return COAST3; }, meshH(x, z){ const M = FINEM && x > FINEM.x0 + 8 && x < FINEM.x0 + FINEM.sx - 8 && z > FINEM.z0 + 8 && z < FINEM.z0 + FINEM.sz - 8 ? FINEM : NEARM; return M ? nearSurf(M, x, z) : NaN; }, seaU(){ if (!PS) return null; gl.useProgram(PS.p); const g = n => PS.u[n] == null ? 'none' : gl.getUniform(PS.p, PS.u[n]); return {ls:g('uLSOn'), land:g('uLandS'), rect:g('uLRect') && Array.from(g('uLRect')), hOn:g('uHOn'), sOn:g('uSOn'), lmon:LMON, gr:!!GRECT, lt:!!LMTEX}; },  get FINEM(){ return FINEM; }, get seaNP(){ return NP; }, get dpr(){ return canvas ? canvas.width / Math.max(1, canvas.getBoundingClientRect().width) : 0; }}
   };
 })();
