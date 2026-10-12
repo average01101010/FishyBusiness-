@@ -137,12 +137,17 @@ function heatWork(){
   if (HEATC.busy) return; HEATC.busy = true;
   const run = () => {
     const t0 = performance.now(), H = S.t / 60, hr = Math.floor(S.t / 60); let n = 0;
-    while (HEATC.qi < HEATC.queue.length && performance.now() - t0 < HEAT.slice){ const c = HEATC.queue[HEATC.qi++]; c.v = heatSample(c, H); c.t = S.t; c.h = hr; n++; }
+    // a cell that cannot be read (a map block not in yet) is skipped and tried again at the next tick: a throw here used to leave
+    // HEATC.busy set, and the sounder stood still for the rest of the session (tilbakemelding #63)
+    while (HEATC.qi < HEATC.queue.length && performance.now() - t0 < HEAT.slice){ const c = HEATC.queue[HEATC.qi++];
+      try { c.v = heatSample(c, H); c.t = S.t; c.h = hr; n++; }
+      catch (e){ if (e && e.pk && typeof mapLoad === 'function') mapLoad(e.pk).catch(() => {});
+        if (typeof cloudErr === 'function') cloudErr('heat: ' + (e && e.message || e), 'heatWork', e && e.stack); } }
     const ms = performance.now() - t0, st = HEATC.stats; st.slices++; st.maxSlice = Math.max(st.maxSlice, ms); st.n += n; st.ms += ms; if (ms > 16) st.over = (st.over || 0) + 1;
     if (n) HEATC.rev++;
     const done = HEATC.qi >= HEATC.queue.length;
-    if (typeof hooks !== 'undefined' && hooks.onHeat && (done || performance.now() - heatLastHook > 150)){ heatLastHook = performance.now(); hooks.onHeat(); }
     if (done) HEATC.busy = false; else setTimeout(run, 0);
+    if (typeof hooks !== 'undefined' && hooks.onHeat && (done || performance.now() - heatLastHook > 150)){ heatLastHook = performance.now(); hooks.onHeat(); }
   };
   setTimeout(run, 0);
 }
