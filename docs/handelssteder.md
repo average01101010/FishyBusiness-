@@ -18,6 +18,10 @@ To steder uten handel:
 - **Fars naust** er hjemmet spilleren kommer tilbake til med jevne mellomrom. Der hviler man, ser til mannskapet og beholdningen, og kan restaurere naustet til god standard (notatboka). Det selges ingenting der. Det går ikke an å kjøpe fiskeutstyr, is eller noe annet fra naustet.
 - **Rorbuene** selger heller ingenting. De er bare en plass å hvile eller søke ly for været.
 
+## Kaiboden (Jonas 12.10.2026)
+
+Det som kjøpes for ekte penger (💎), ligger i én app på telefonen, Kaiboden, med en fane hver: Haill, Trim og Skippertak. Det er ikke et handelssted i spillverdenen: utstyr, fisk og båter handles fortsatt bare i utstyrsbutikken, på mottaket og på verftet. «Ferdig nå» blir værende på verftet, der behovet oppstår. Den største av hver (luksushaill, økt turbotrykk, Skippertak Max) er merket «Mest for pengene», og det stemmer for hver av dem (`tests/skiptest.py`). Skippertak (energidrikken, 1, 2 eller 4 spilldøgn for hele flåten) selges bare for ekte penger.
+
 ## Plassering av stedene (regel, Jonas 08.10.2026)
 
 Gjelder alle fiskemottak, verft, utstyrsbutikker, rorbuer og fars naust, og alle senere endringer og nye bygg. Jonas' ord: «Sjekk plassering av alle fiskemottak, verft, utstyrsbutikker og rorbuer. Disse skal ikke ligge for nært hverandre. Det skal i praksis være umulig å få opp knappen der man må velge mellom å fortøye i et fiskebruk eller en rorbue. Men de må være plassert på strategiske plasser langs kysten der de i stor grad har ly for vær og vind.»

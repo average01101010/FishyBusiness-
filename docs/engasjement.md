@@ -66,7 +66,7 @@ Alt bygges for hele kysten. Hver endring skal kunne leses av i trakten (punkt 9)
 - **Fiktiv valuta** og pakker som skjuler prisen. Prisen står i kroner med 💎.
 - **Nedtellinger i butikken**, «bare i dag». Sesongting kan fortjenes eller kjøpes igjen senere.
 - **Straff for fravær:** ingen push om tapt bonus eller tapt plass, ingen streak som nulles.
-- **Lengre ventetider eller energi som betalingsmur.** Trøttheten er simulering og skal forbli det.
+- **Lengre ventetider, eller energi og trøtthet gjort tyngre for å selge.** Trøttheten er simulering og skal forbli det. Energi selges bare som avløsning av simuleringens egen trøtthet (Skippertak, Jonas 12.10.2026): energimodellen (`ENERGY`, `RORBU`, mannskapets slitasje) gjøres aldri tyngre for å selge mer, gratisveien (hvile i naustet og på rorbua) beholdes som den er, og ingen popup eller push foreslår kjøp når noen er trøtt. `tests/skiptest.py` låser tallene. Skippertak selges bare for ekte penger, aldri for spillets kroner.
 - **Vervepyramider med spam.** Et enkelt «inviter en venn» med en liten gave til begge er greit.
 - **Reklame for belønning.** Ingen reklame i spillet.
 - **Sosial forpliktelse som felle.** Topplister, fiskarlag og felles mål er additive.

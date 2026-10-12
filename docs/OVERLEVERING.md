@@ -566,6 +566,17 @@ Jonas: «Den er i dag ganske bra, men den tar noen rare avgjørelser som forleng
 - **Test:** `autonavtest.py` 9a–9d (kreditten, Havøysund–rorbua gjennom sundet, det grunneste på veien som mål nektes uten tidevann og nås med, Honningsvåg–Hammerfest strammet). Kjørt 12.10.2026: autonavtest (20 OK), routetest (43 OK), obstest, r4test, naustleia, teleport3d grønne; docktest, vesseltest og fleet3test feiler likt på HEAD-bygget før endringen (telefonens appliste, lasterommet, en null-knapp) og hører til neste finpuss. `routetest` feilet én gang i en samlekjøring som gikk parallelt med en annen testkjøring, og gikk grønt tre ganger alene. Alle mottakspar (`autonav.yml`) kjøres i Actions ved pushen.
 - **Ikke gjort:** havnenes egne veier ut (`approachPath`) har fortsatt punkter 13–50 m fra hverandre rundt moloene; de ligger i havna og strammes ikke, fordi en rett etappe der krysser kailand.
 
+### 5.40 Skippertak og Kaiboden (12.10.2026)
+
+Jonas: energi som ny inntektskilde, «en fiktiv energidrikk som heter "Skippertak"», «Skippertak Light = 1 spilldøgn, 29kr, Skippertak = 2 spilldøgn, 39kr, Skippertak Max = 4 spilldøgn, 49kr», «Hele flåten», «Det skal ikke kunne kjøpes noe skippertak med vanlig spillvaluta», en felles app «Kaiboden» for haill, trim og Skippertak, og «Mest for pengene» på den dyreste av hver.
+
+- **Kjernen** (`SKIP`, `skipOn`, `skipLeft`, `giveSkip` i `core/15-energy.js`): `S.skip = {k, t0, until}`, felles for spilleren (ikke i `VKEYS`). Mens den virker, holdes energien din på 100 %, du sovner ikke (sover du, våkner du), mannskapets slitasje på alle båtene i flåten er 0 (`04-crew.js`), og driftsplanens hviløkter hoppes over (`06d-drift.js`, også ventetida etter hvilen i planmakerens planer). Økter med fast klokkeslett går fortsatt på klokkeslettet. En ny legges til tida som er igjen. Tida er spillets ene klokke og går også når spillet er lukket (Jonas: klokka kan ikke stoppes for noen). Når den går ut, står det i loggen, og alle er uthvilt; energien faller så som vanlig.
+- **Varslene** (`ui/10g-push.js`): «sliten»-varslene for deg og mannskapet regnes fra når Skippertak går ut.
+- **Kjøpet**: produktene `skip_light`, `skip`, `skip_max` (`supabase/migrations/20261012120000_skippertak.sql`, `data.give = 'skip'`), levert av `shopGive` i `ui/10i-shop.js` som haill og trim. Bare ekte penger; gjester får registreringsspørsmålet som før.
+- **Kaiboden** (`ui/05-phone.js`): én app i rutenettet der Haill sto. Inne i den er Haill, Trim og Skippertak faner (`KBT`, `kbTabs`); sidene er de gamle, så `PHONE.open('haill')` og veiledningens pekere (`phoneApp` i `07b-first-trip.js`) virker som før. Appen åpner på fanen som ble brukt sist. «Mest for pengene» (`kbBest`) står på luksushaill, økt turbotrykk og Skippertak Max.
+- **Regelen** i `docs/engasjement.md` («Det vi ikke gjør») er skrevet om: energi selges bare som avløsning av simuleringens egen trøtthet, og modellen gjøres aldri tyngre for å selge.
+- **Test:** `tests/skiptest.py` (energitallene låst, giveSkip for hele flåten, energi og slitasje holdt, hviløkt hoppet over, forlengelse, utløp, «Mest for pengene» sant for alle tre, Kaiboden med faner, kjøp i testmodus, skjermbilder stående og liggende).
+
 ### 4.12c Sjømerker langs hele kysten (05.10.2026)
 
 Jonas: «Sjømerker må ordnes langs hele kysten. Alt senja har, må resten av norge ha også. Dette er ikke en senja-simulator».

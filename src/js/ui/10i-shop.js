@@ -9,7 +9,7 @@
 // Where there is no cloud (the artifact, the tests) the buttons give it at once, as a test without payment; so does the Admin's game
 // until the shop is set up. Signed in elsewhere, the shop is «on sale soon» until Stripe is set up.
 const SHOP = {ready:null, busy:false, ret:null};
-const SHOP_PRODUCT = {haill:'haill', luksus:'luksus', pump:'trim_pump', ic:'trim_ic', turbo:'trim_turbo', yard:'verft_na',
+const SHOP_PRODUCT = {haill:'haill', luksus:'luksus', pump:'trim_pump', ic:'trim_ic', turbo:'trim_turbo', yard:'verft_na', sk_light:'skip_light', sk_std:'skip', sk_max:'skip_max',
   des_ripe:'des_ripe', des_totone:'des_totone', des_vann:'des_vann', des_stripe:'des_stripe', des_lakk:'des_lakk', des_flagg:'des_flagg', des_reg:'des_reg'};   // the paint designs (ui/10j-paint.js)
 const shopFn = () => CLOUD_CFG.supabaseUrl.replace(/\/$/, '') + '/functions/v1/shop-checkout';
 const shopL = (no, en) => S.lang === 'en' ? en : no;
@@ -29,6 +29,7 @@ function shopLabel(nok){
 function shopWhat(k){
   if (HAILL[k]) return {name:HAILL[k][S.lang === 'en' ? 'en' : 'no'], nok:HAILL[k].nok};
   if (BOOSTS[k]) return {name:'Trim: ' + BOOSTS[k][S.lang === 'en' ? 'en' : 'no'], nok:BOOSTS[k].nok};
+  if (/^sk_/.test(k) && SKIP[k.slice(3)]){ const X = SKIP[k.slice(3)]; return {name:X[S.lang === 'en' ? 'en' : 'no'], nok:X.nok}; }   // Skippertak (core/15-energy.js)
   if (/^des_/.test(k)){ const N = PAINT.DNAME[k.slice(4)] || ['', '']; return {name:(k === 'des_flagg' || k === 'des_reg' ? '' : shopL('Malingsdesign: ', 'Paint design: ')) + shopL(N[0], N[1]), nok:PAINT.nok(k.slice(4))}; }
   return {name:shopL('Verftet ferdig nå', 'The yard done now'), nok:YARD_NOW_NOK};
 }
@@ -70,6 +71,7 @@ function shopGive(g){
   if (d.give === 'yard') return withVessel(v, () => { let n = 0; for (const j of S.jobs || []) if (YARD_KINDS.includes(j.kind) && j.until != null && j.until > S.t){ j.until = S.t; n++; }
     log('Verftet gjorde ' + (n > 1 ? n + ' jobber' : n ? 'jobben' : 'ingen jobber') + ' på «' + S.boatName + '» ferdig med én gang.', 'The yard finished ' + (n > 1 ? n + ' jobs' : n ? 'the job' : 'no jobs') + ' on the «' + S.boatName + '» straight away.');
     return shopL('Verftet er ferdig', 'The yard is done'); });
+  if (d.give === 'skip' && SKIP[d.k]) return giveSkip(d.k);   // Skippertak, for the whole fleet (core/15-energy.js)
   if (d.give === 'cos') return giveCos(d.k);   // a paint design, yours on every boat (ui/10j-paint.js)
   return null;
 }

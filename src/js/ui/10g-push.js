@@ -124,10 +124,10 @@ function pushItems(now){
       add(T, 'yard-' + tag, nm, (fitOnly ? 'Monteringen er ferdig' : 'Verftet er ferdig') + (names ? ' med ' + names.toLowerCase() : '') + '. Båten er klar til å gå ut.', (fitOnly ? 'The fitting is done' : 'The yard is done') + (names ? ' with ' + names.toLowerCase() : '') + '. The boat is ready to go out.', 12, 2); }
     // a crew getting tired, and one about to break the rest rule (core/04-crew.js, 14-crewlife.js): while she is out
     if (out_ && S.crew && S.crew.length){
-      let tired = null;
+      let tired = null; const t0 = typeof skipOn === 'function' && skipOn() ? S.skip.until : S.t;   // (Skippertak: rested until it runs out)
       for (const c of S.crew){
         if (typeof crewAboard === 'function' && !crewAboard().some(x => x.id === c.id)) continue;
-        if (c.fatigue != null && c.fatigue < 70) tired = Math.min(tired == null ? 1e18 : tired, S.t + (70 - c.fatigue) / 4 * 60); else if (c.fatigue != null) tired = S.t;
+        if (c.fatigue != null && c.fatigue < 70) tired = Math.min(tired == null ? 1e18 : tired, t0 + (70 - c.fatigue) / 4 * 60); else if (c.fatigue != null) tired = t0;
       }
       if (tired != null) add(tired, 'crew-' + tag, nm, 'Mannskapet på ' + nm + ' begynner å bli sliten. Gå inn til kai og la dem hvile.', 'The crew of ' + nm + ' is getting tired. Head in to the quay and let them rest.', 6, 1);
     }
@@ -146,7 +146,7 @@ function pushItems(now){
   if (S.energy != null && typeof restRate === 'function'){
     const b = myBoat(), nm = S.boatName || 'Det Store Blå', rr = restRate(b);
     if (resting() && rr > 0 && S.energy < 99) add(S.t + (100 - S.energy) / rr, 'rested', nm, 'Du er uthvilt. ' + nm + ' er klar til å gå ut.', 'You are rested. ' + nm + ' is ready to go out.', 12, 3);
-    else if (!resting() && rr <= 0 && S.energy > ENERGY.warn && !energyOff()) add(S.t + (S.energy - ENERGY.warn) / ENERGY.sea, 'tired', nm, 'Du er sliten (25 %). Arbeidet går tregere. Ta inn til naustet eller en rorbu for å hvile.', 'You are tired (25 %). Your work slows. Head in to the boathouse or a rorbu to rest.', 6, 1);
+    else if (!resting() && rr <= 0 && S.energy > ENERGY.warn && !energyOff()) add((typeof skipOn === 'function' && skipOn() ? S.skip.until : S.t) + (S.energy - ENERGY.warn) / ENERGY.sea, 'tired', nm, 'Du er sliten (25 %). Arbeidet går tregere. Ta inn til naustet eller en rorbu for å hvile.', 'You are tired (25 %). Your work slows. Head in to the boathouse or a rorbu to rest.', 6, 1);
   }
   return out.sort((x, y) => x.at < y.at ? -1 : 1).slice(0, 24);
 }

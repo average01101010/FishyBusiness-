@@ -226,7 +226,9 @@ function opsStep(H){
   // the crew have had the night's rest at the quay of a closed plant (opsLanded): the rest at the base is left out, and the first trip
   // waits out the rest from when they came in, and goes from where she lies
   if (s.type === 'hvile' && o.wiz && o.quayRest){ o.quayRest = null; driftAdvance(o); return; }
-  if (o.wiz && o.idx === 0 && !o.restWant && o.restT0 != null && S.t < o.restT0 + PLANW.rest * 60){
+  // Skippertak (15-energy.js): the crew need no rest while it works, so a rest session is left out and the plan goes on with the next
+  if (s.type === 'hvile' && skipOn()){ o.restWant = false; driftAdvance(o); return; }
+  if (o.wiz && o.idx === 0 && !o.restWant && o.restT0 != null && S.t < o.restT0 + PLANW.rest * 60 && !skipOn()){
     if ((o.restTold || -1e9) < o.restT0){ o.restTold = S.t; msg(sk ? sk.name : gL('Driftsplan', 'Operations plan'), 'Mannskapet hviler til kl. ' + driftClock(driftHod((o.restT0 + PLANW.rest * 60) / 60)) + ' før neste tur.', 'The crew rest until ' + driftClock(driftHod((o.restT0 + PLANW.rest * 60) / 60)) + ' before the next trip.'); }
     return; }
   if (!sk && !meAboard()){ driftFail(o, null, 'Planen kan ikke gå: ingen mannskap.', 'The plan cannot run: no crew.'); return; }

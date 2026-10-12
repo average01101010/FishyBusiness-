@@ -37,7 +37,10 @@ function dockApp(menu, item, page, inner){
 }
 function phoneApp(app, inner){
   if (!PHONE.isOpen()) return phoneTarget();
-  if (PHONE.app !== app) return {el:vis(PHONE.app === 'home' ? '#phone [data-a="' + app + '"]' : '#phone .ph-nav [data-pa=home], #phone .ph-nav [data-pa=back]'), scroll:PHONE.app === 'home'};
+  // (Haill and Trim are tabs of Kaiboden, ui/05-phone.js: the grid has Kaiboden, and inside it the tab is tapped)
+  const kb = ['haill', 'trim', 'skip'].includes(app);
+  if (PHONE.app !== app && kb && ['haill', 'trim', 'skip'].includes(PHONE.app)) return {el:vis('#phone .kb-tabs [data-a="' + app + '"]'), scroll:false};
+  if (PHONE.app !== app) return {el:vis(PHONE.app === 'home' ? '#phone [data-a="' + (kb ? 'kaiboden' : app) + '"]' : '#phone .ph-nav [data-pa=home], #phone .ph-nav [data-pa=back]'), scroll:PHONE.app === 'home'};
   return {el:inner ? vis(inner) : null, scroll:true};
 }
 // the naust (docs/onboarding.md B, Jonas 09.10.2026: «Starter inne i naustet med noen tekstlinjer»): the room opens of itself at the

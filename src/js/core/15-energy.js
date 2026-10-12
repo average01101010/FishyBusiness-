@@ -67,10 +67,37 @@ function restMinute(){
 const meEff = () => S.energy != null && S.energy < ENERGY.warn ? ENERGY.slow : 1;
 // «Energi av» in the admin app (the user's wish 03.10.2026, for testing without falling asleep): full energy, no sleep, no dozing
 const energyOff = () => !!(S.adm && S.adm.noEnergy);
+// ===== Skippertak (Jonas 12.10.2026): an energy drink, for real money only (never for the game's kroner), in three sizes =====
+// While it works, you and every crew on every vessel of the fleet stay rested: your energy is held at 100 %, no one falls asleep, the
+// crews' fatigue stays at 0, and an operations plan's rest sessions are left out (06d-drift.js), so a boat on a plan works through
+// them. The time is the game's one clock for every player, so it runs while the game is closed too. A new one is added to what is
+// left. The energy model itself (ENERGY, RORBU, the crews' fatigue) is never made harder to sell more: tests/skiptest.py locks the
+// numbers, and the free way, rest in the naust or at a rorbu, stays as it is (docs/engasjement.md). The prices are the database's
+// (supabase/migrations/20261012120000_skippertak.sql); the game shows its own, and the two must agree (as HAILL and BOOSTS).
+const SKIP = {light:{h:24, nok:29, no:'Skippertak Light', en:'Skippertak Light'},
+  std:{h:48, nok:39, no:'Skippertak', en:'Skippertak'},
+  max:{h:96, nok:49, no:'Skippertak Max', en:'Skippertak Max', best:true}};
+const skipOn = () => !!(S.skip && S.skip.until != null && S.t < S.skip.until);
+const skipLeft = () => skipOn() ? (S.skip.until - S.t) / 60 : 0;   // game hours left
+// the crews of the whole fleet (the vessel you are on keeps hers in S.crew, the others in their own fields: VKEYS)
+function fleetCrews(){ const out = [S.crew || []]; for (const v of S.fleet || []) if (v.id !== S.cur && v.crew) out.push(v.crew); return out; }
+function giveSkip(k){
+  const X = SKIP[k]; if (!X) return null;
+  const from = skipOn() ? S.skip.until : S.t;
+  S.skip = {k, t0:S.t, until:from + X.h * 60};
+  S.sleep = null; S.energy = 100; S.drowsy = false; S.enWarn = false;
+  for (const cr of fleetCrews()) for (const c of cr) c.fatigue = 0;
+  log(X.no + ': du og mannskapet på hele flåten er uthvilt i ' + Math.round(skipLeft()) + ' timer.', X.en + ': you and the crews of the whole fleet are rested for ' + Math.round(skipLeft()) + ' hours.');
+  if (hooks.onEnergy) hooks.onEnergy('skip');
+  return X[S.lang === 'en' ? 'en' : 'no'];
+}
 // once a minute, before the vessels move
 function energyMinute(){
   if (S.energy == null) S.energy = 100;
   if (energyOff()){ S.energy = 100; S.sleep = null; S.drowsy = false; S.enWarn = false; return; }
+  // Skippertak: held at full, awake, and once it has run out, said once
+  if (skipOn()){ if (S.sleep) S.sleep = null; restMinute(); S.energy = 100; S.drowsy = false; S.enWarn = false; return; }
+  if (S.skip && !S.skip.told){ S.skip.told = true; log(SKIP[S.skip.k] ? SKIP[S.skip.k].no + ' har gått ut. Nå trenger du og mannskapet hvile igjen.' : 'Skippertak har gått ut.', (SKIP[S.skip.k] ? SKIP[S.skip.k].en : 'Skippertak') + ' has run out. You and the crews need rest again.'); }
   if (S.sleep){ if (S.t >= S.sleep.until) wakeUp(); return; }
   restMinute();
   const v = myVessel(), b = v && vget(v, 'boat'), quay = !b || b.status === 'port', rate = restRate(b);
