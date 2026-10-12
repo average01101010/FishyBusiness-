@@ -942,6 +942,12 @@ Jonas: «Jeg vil ha bort det som er i magenta», og vannlinja skal være nøyakt
   - **Det fine terrenget rundt båten** (`FINEM`, `fineWanted`): 1 024 m med rundt 4 m mellom punktene (768 m på lav kvalitet), der nærnettet har 12–47 m. Nærnettet har et hull under det. Ellers ble en 8 m bred molo, som ved Hamnskjæret i Botnhamn, flekkete eller borte.
   - **Moloene:** de som ligger i OSM-kysten, blir terreng. De som er tegnet som molo (Senjas `PIERS` type 1 og vec-pakkenes `molos`), bygges som før som steinfyllinger, som på Husøy.
   - **Kontrollbilder** (`probe/coast3d.py` i kladdemappa): Botnhamn, Husøy og Senjahopen før og etter.
+  - **Land som manglet, og skum ved siden av (Jonas 12.10.2026, tilbakemelding #61, to klipp fra Havøysund):**
+    - Årsaken: en trekant over kysten mellom et landpunkt (1,7 m) og et sjøpunkt (−1,7 m) fikk vannlinja midt mellom punktene. Er landpunktet lenger unna kystlinja enn sjøpunktet, ligger vannlinja inne på land, og sjøen biter seg inn med tagger langs trekantene, opptil en halv celle (12–47 m). Skummet leste høydene og fulgte tagene.
+    - Rettingen: `terrRaw(x, z, dil)` gir nettene (`terrCoarse`, `nearSurf`) flat grunn 1,7 m over vann like langt ut i sjøen som cellestørrelsen (`dil` = meter mellom punktene), og så en slak skråning ned, der landmasken er inne (`MASKR`). Terrengskyggeren kutter det som står over maskens sjø (høyst 4 m over vannet og bare der masken er under 0,3), så vannlinja er kystlinjas egen. `terrH`, kamera og fysikk spør uten `dil` og får de ekte høydene. Når masken kommer eller flytter seg, bygges `near` og `fine` om (`MASKR`).
+    - Skummet i havskyggeren leses nå fra landmasken (`uLandS` på enhet 6, `uLRect`, `uLSOn`, blurret av en mip) og ikke fra høydekartet. Uten maske brukes høydene som før.
+    - Målt mot `coastSdIf` (vektorkysten som sjøkartet tegnes fra) ved Havøysund: maskens kant ligger i median 1,2 m fra kystlinja, 90 % innenfor 2,6 m og 99 % innenfor 3,4 m (pikselstørrelse 2,9 m). Havnenes kaiblokker og fyllinger er tegnet som land og regnes ikke som kystlinje.
+    - Feilsøking: `tests/shore_probe.py` (båten ved havner langs kysten ved lavvann, kameraet mot land), `tests/shore_havoy.py` (stedet fra klippet, kikkert 3× og 6×) og `tests/shore_mask.py` (maska som bilde og målingen mot kystlinja). `G3._debug.landMask` gir masken.
   - **Ikke ennå:**
     - Kantene kan bli litt taggete på skrå, der masken leses fra en grovere mip.
     - Skummet langs land regnes fortsatt fra høydene i nærnettet, ikke fra masken.
