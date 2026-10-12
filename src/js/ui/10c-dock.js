@@ -161,7 +161,12 @@ const DOCK = (() => {
       out.push((S.rest.w === 'rorbu' ? L('Hviler på rorbua', 'Resting at the rorbu') : L('Hviler i naustet', 'Resting in the boathouse')) + ' · ' + Math.round(S.energy) + ' %' + (up > 0 ? L(' · ' + up + ' % raskere', ' · ' + up + ' % faster') : '') + (m > 0 ? L(', uthvilt kl. ', ', rested at ') + hm((S.t + m) / 60) : '')); }
     if (b.status === 'unmooring') out.push(L('Kaster loss …', 'Casting off …'));
     if (b.gop){ const g = gopText(); if (g) out.push(L(g[0], g[1])); }
-    else if (b.status === 'fishing' && b.fishUntil != null) out.push(L('Jukser, stopper ', 'Jigging, stops ') + inReal(b.fishUntil - S.t));
+    else if (b.status === 'fishing' && b.fishUntil != null){
+      // how many jigging reels are working (tilbakemelding #64), short enough for a phone: the hands at the rail tend three each, as in
+      // fishEffort (core/03-simulation.js), so «3 av 5» means too few hands for the rest
+      const own = S.equip ? S.equip.jukse || 0 : 0, jk = own > 0 && !(S.target === 'kveite' && b.kgear && !kveiteClosed(S.t / 60)) ? Math.min(own, workTeam('fiske', 'juksa', 'fishing').n * JIG.perPerson) : 0;
+      out.push(jk > 0 ? (jk < own ? L('Jukser med ' + jk + ' av ' + own + ' maskiner', 'Jigging with ' + jk + ' of ' + own + ' reels') : L('Jukser med ' + jk + (jk === 1 ? ' maskin' : ' maskiner'), 'Jigging with ' + jk + (jk === 1 ? ' reel' : ' reels'))) + L(', stopper ', ', stops ') + inReal(b.fishUntil - S.t)
+        : L('Jukser, stopper ', 'Jigging, stops ') + inReal(b.fishUntil - S.t)); }
     const dk = b.status !== 'port' && deckText(true); if (dk) out.push(dk[0]);
     return out.join(' · ');
   }
