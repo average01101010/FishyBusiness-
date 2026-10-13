@@ -465,6 +465,7 @@ const PHONE = (() => {
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
     ['p104', '10.10.2026', 'Håndboka', 'The handbook', [
+       ['Stedsnavnene som fløt i lufta i 3D-visningen, er fjernet.', 'The place names floating in the air in the 3D view are gone.'],
        ['Kystradioen sender lokale værmeldinger på VHF kl. 09, 12, 15, 18 og 21: vinden og bølgene der båten er, og hvordan vinden går de neste tolv timene, med kulingvarsel når det trengs.', 'The coast radio sends local forecasts on VHF at 09, 12, 15, 18 and 21: the wind and the waves where the boat is, and how the wind goes the next twelve hours, with a gale warning when it is needed.'],
        ['Meldinger som dukker opp på skjermen, står i 10 sekunder. Fiskemottakene sender ikke lenger «God morgen» med dagens pris; prisene står i Salgslaget.', 'Messages that pop up on the screen stay for 10 seconds. The fish plants no longer send «Good morning» with the day\'s price; the prices are in Salgslaget.'],
        ['Nybygg fra verftet leveres med en gang, uten byggetid. En båt som allerede er bestilt, leveres nå.', 'New builds from the yard are delivered at once, with no building time. A vessel already on order is delivered now.'],

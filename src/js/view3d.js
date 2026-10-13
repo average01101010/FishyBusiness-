@@ -3697,7 +3697,9 @@ const G3 = (() => {
   function sayWorker(pid, idx, nm, no, en){ if (!active) return false; const P = PLANTS.find(q => q.id === pid); if (!P) return false; SAY.c = SAY.b = null; SAY.w = {pid, idx}; SAY.txt = nm + ': «' + (S.lang === 'no' ? no : en) + '»'; SAY.t0 = performance.now(); return true; }
   function say3d(c, no, en){ if (!active || !c) return false; SAY.w = SAY.b = null; SAY.c = c; SAY.txt = c.name.split(' ')[0] + ': «' + (S.lang === 'no' ? no : en) + '»'; SAY.t0 = performance.now(); return true; }
   let labelEls = [];
-  function buildLabels(){ labelsEl.innerHTML = ''; labelEls = PORTS.map(p => { const d = document.createElement('div'); d.className = 'lbl3d'; d.textContent = p.name; labelsEl.appendChild(d); return d; }); }
+  // (the harbours' names floating over the 3D view are gone, Jonas 13.10.2026: «Fjernes teksten for stedsnavn som flyter i luften»; the
+  // layer stays for the crew's lines and the anchor alarm)
+  function buildLabels(){ labelsEl.innerHTML = ''; labelEls = []; }
   function resize(){
     const r = wrap.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, QUAL.dpr[QUAL.lvl]);
     const w = Math.max(1, Math.round(r.width * dpr)), h = Math.max(1, Math.round(r.height * dpr));
@@ -4619,15 +4621,6 @@ const G3 = (() => {
       if (!on){ if (el.style.display !== 'none') el.style.display = 'none'; }
       else { const txt = S.lang === 'no' ? (ANCHAL.kind === 'gale' ? '⚓ ANKERALARM · ankeret slepper i kuling' : '⚓ ANKERALARM · ankeret slepper') : (ANCHAL.kind === 'gale' ? '⚓ ANCHOR ALARM · dragging in a gale' : '⚓ ANCHOR ALARM · the anchor is dragging');
         if (el.textContent !== txt) el.textContent = txt; el.style.display = ''; el.classList.toggle('on', (performance.now() / 350) % 2 < 1); } }
-    PORTS.forEach((p, i) => {
-      const x = p.coast.x * 1000 - eye[0], z = p.coast.y * 1000 - eye[2], d = Math.hypot(x, z), el = labelEls[i];
-      if (d > 14000){ if (el.style.display !== 'none') el.style.display = 'none'; return; }   // (the coast's harbours far off: no ground lookups where no packs are)
-      const y = Math.max(0, terrH(p.coast.x * 1000, p.coast.y * 1000)) + 35 - eye[1];
-      const cx = VP[0] * x + VP[4] * y + VP[8] * z + VP[12], cy = VP[1] * x + VP[5] * y + VP[9] * z + VP[13], cw = VP[3] * x + VP[7] * y + VP[11] * z + VP[15];
-      if (cw <= 0){ el.style.display = 'none'; return; }
-      const ly = (1 - (cy / cw * 0.5 + 0.5)) * Hh * sy; if (ly < 70){ el.style.display = 'none'; return; }
-      el.style.display = ''; el.style.opacity = (1 - 0.65 * sstep(5000, 14000, d)).toFixed(2); el.style.left = ((cx / cw * 0.5 + 0.5) * W * sx) + 'px'; el.style.top = ((1 - (cy / cw * 0.5 + 0.5)) * Hh * sy) + 'px';
-    });
   }
 
   // ---------- controls ----------
