@@ -2,20 +2,35 @@
 // the phone's bars by the distance to land: kilometres, so the national core's (it looks far, and never waits for a tile's pack)
 function coverage(p){ const d = coastDistFar(p); return d < 3 ? 4 : d < 8 ? 3 : d < 14 ? 2 : d < 20 ? 1 : 0; }
 function msg(from, no, en){ S.msgs.push({t:S.t, from, no, en, read:false}); if (S.msgs.length > 80) S.msgs.shift(); if (hooks.onMsg) hooks.onMsg(); }
+function radioForecast(H){
+  const p = S.boat.pos, w0 = windAt(H, p), d0 = windDir(H, p), hs = fcHsOpen(H, H, p), en = d => DIRS.en[Math.round(d / 45) % 8];
+  let mx = 0, at = H; for (let k = 1; k <= 12; k++){ const w = fcWind(H + k, H, p); if (w > mx){ mx = w; at = H + k; } }
+  const w12 = fcWind(H + 12, H, p), d12 = windDir(H + 12, p), r = Math.round, b0 = beaufort(w0), b1 = beaufort(mx);
+  const wave = (Math.round(hs * 10) / 10).toFixed(1);
+  let no = 'Værmelding kl. ' + p2(gDate(H).getUTCHours()) + ': ' + dirName(d0) + ' ' + r(w0) + ' m/s, ' + BFN.no[b0] + ', bølger ute ' + wave.replace('.', ',') + ' m. ';
+  let eng = 'Forecast at ' + p2(gDate(H).getUTCHours()) + ':00: ' + en(d0) + ' ' + r(w0) + ' m/s, ' + BFN.en[b0] + ', waves outside ' + wave + ' m. ';
+  if (mx >= w0 + 2.5){ no += 'Øker til ' + BFN.no[b1] + ', ' + r(mx) + ' m/s fra ' + dirName(windDir(at, p)) + ' rundt ' + hm(at) + '.'; eng += 'Rising to ' + BFN.en[b1] + ', ' + r(mx) + ' m/s from the ' + en(windDir(at, p)) + ' around ' + hm(at) + '.'; }
+  else if (w12 <= w0 - 2.5){ no += 'Avtar til ' + r(w12) + ' m/s fra ' + dirName(d12) + ' de neste tolv timene.'; eng += 'Easing to ' + r(w12) + ' m/s from the ' + en(d12) + ' over the next twelve hours.'; }
+  else { no += 'Omtrent det samme de neste tolv timene.'; eng += 'Much the same the next twelve hours.'; }
+  if (mx >= 13.9){ no += ' Kulingvarsel.'; eng += ' Gale warning.'; S.lastGale = S.t; }
+  msg('Kystradio', no, eng);
+}
 function hourly(){
   const H = S.t / 60, hr = gDate(H).getUTCHours();
   if (hr === 0){ checkTattoos(); payHyre(); taxTick(H); }   // the fleet and the crew's years are checked once a day; the day wages are paid
   // the company hears it if any vessel does: in port, with mobile coverage, or on VHF
   const bars = Math.max(0, ...S.fleet.map(v => { const vb = vget(v, 'boat'); return vb.status === 'port' ? 4 : coverage(vb.pos); })), vhf = S.fleet.some(v => (vget(v, 'equip') || {}).vhf);
   // gale warning ahead (coast radio on VHF, or text message when there is coverage)
-  if ((vhf || bars > 0) && (S.lastGale || -1e9) < S.t - 12 * 60){
+  const radioHr = vhf && [9, 12, 15, 18, 21].includes(hr);   // (then the forecast below carries the warning)
+  if ((vhf || bars > 0) && !radioHr && (S.lastGale || -1e9) < S.t - 12 * 60){
     let mx = 0, at = 0; for (let k = 1; k <= 12; k++){ const w = fcWind(H + k, H); if (w > mx){ mx = w; at = H + k; } }
     if (mx >= 13.9){ S.lastGale = S.t; const bft = beaufort(mx), kind = mx >= 20.8 ? ['Storm', 'Storm'] : mx >= 17.2 ? ['Sterk kuling', 'Severe gale'] : ['Kuling', 'Gale'];
       msg(vhf ? 'Kystradio' : 'Værvarsel', kind[0] + ' ventet fra ' + dirName(windDir(at)) + ' rundt ' + hm(at) + ', ' + Math.round(mx) + ' m/s (styrke ' + bft + ').', kind[1] + ' expected from ' + DIRS.en[Math.round(windDir(at) / 45) % 8] + ' around ' + hm(at) + ', ' + Math.round(mx) + ' m/s (force ' + bft + ').'); }
   }
-  // morning tip from the fish plant paying most for cod
-  if (hr === 7){ let best = null; for (const {pt:q} of plantsNear(S.boat.pos, 10)){ const pr = price(q, 'torsk', H); if (!best || pr > best.pr) best = {q, pr}; }
-    if (best && bars > 0) msg(best.q.name + ' Fisk', 'God morgen! Vi betaler ' + Math.round(best.pr) + ' kr/kg for torsk i dag (A-kvalitet).', 'Good morning! We pay NOK ' + Math.round(best.pr) + '/kg for cod today (grade A).'); }
+  // (the fish plants' morning price message is gone, Jonas 13.10.2026: the prices are in Salgslaget)
+  // the coast radio's local forecast on VHF at 09, 12, 15, 18 and 21 (Jonas 13.10.2026), for the waters of the boat followed: the wind and
+  // the sea now, and how the wind goes the next twelve hours (a gale in it counts as the gale warning too)
+  if (radioHr) radioForecast(H);
   // monthly loan payment
   for (const k of ['loan', 'loanIN']){ const L = S[k]; if (!L || S.t < L.next) continue; const r = L.rate / 12, int = L.bal * r, pay = Math.min(L.bal + int, L.pay); L.bal = L.bal + int - pay; S.cash -= pay; S.stats.costs += int; L.intPaid = (L.intPaid || 0) + int; L.next += 30 * 24 * 60;
     msg(LOANS[k].who, 'Terminbeløp ' + Math.round(pay) + ' kr trukket. Restgjeld ' + Math.round(L.bal) + ' kr.', 'Instalment of NOK ' + Math.round(pay) + ' paid. Remaining NOK ' + Math.round(L.bal) + '.'); if (L.bal < 1) S[k] = null; }

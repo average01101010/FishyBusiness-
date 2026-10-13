@@ -28,6 +28,8 @@ async function bootMapLoad(){
 }
 function bootGame(){
 S = load(); tabMark();   // this page has the game now (an older page left open stops: tabMine, 02-format-state.js)
+// the fish plants' morning price messages (gone 13.10.2026) leave the phone's message list too
+if (S && S.msgs) S.msgs = S.msgs.filter(m => !/^God morgen! Vi betaler /.test(m.no || ''));
 if (S){ awayMs = Date.now() - (S.lastReal || Date.now()); } else S = newState();
 // the skiff is only bought at the yard (05.10.2026, Jonas: «Den båten der skal kun være tilgjengelig for kjøp i verftet … For alle
 // brukere»): a save that still sails the free aluminium skiff it started with (the start boat until 04.10.2026: the first vessel, never

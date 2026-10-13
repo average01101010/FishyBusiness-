@@ -122,7 +122,15 @@ let tab = 'route', panelDirty = true, pressHold = false;
 const view = {cx:0, cy:0, z:1.35, px:10};
 hooks.onLog = () => { panelDirty = true; };
 
-function toast(msg){ const el = $('toast'); el.textContent = msg; el.classList.add('on'); clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove('on'), 2600); }
+// ms: how long it stays (a message from the phone, 10 s: Jonas 13.10.2026 «De forsvinner ganske fort nå»); a short note over a message
+// that is still up gives the message back for the rest of its time
+function toast(msg, ms){
+  const el = $('toast'); if (ms) toast._keep = {msg, until:Date.now() + ms};
+  el.textContent = msg; el.classList.add('on'); clearTimeout(toast._t);
+  const back = () => { const k = toast._keep; if (k && k.msg !== msg && k.until > Date.now() + 500){ msg = k.msg; el.textContent = msg; toast._t = setTimeout(back, k.until - Date.now()); return; }
+    toast._keep = null; el.classList.remove('on'); };
+  toast._t = setTimeout(back, ms || 2600);
+}
 
 
 // The saved game as a code (P1 of the PWA plan, 03.10.2026): the artifact and the app on the home screen are two places, each with
