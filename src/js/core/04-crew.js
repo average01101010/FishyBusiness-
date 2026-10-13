@@ -85,7 +85,28 @@ const PAIR_TOPICS = {jobb:{no:'{a} mener {b} ikke tar sin del av jobben på dekk
 const BOSS_TOPICS = {lott:{no:'{a} mener lotten er for lav for jobben som gjøres.', en:'{a} thinks the share is too low for the work done.'},
   vaer:{no:'{a} liker ikke at dere går ut i så mye vær.', en:'{a} does not like you going out in this much weather.'}, kulde:{no:'{a} fryser og vil ha bedre klær om bord.', en:'{a} is freezing and wants better clothes aboard.'}, generelt:{no:'{a} er misfornøyd og sier klart fra om det.', en:'{a} is unhappy and says so plainly.'}};
 function crewById(id){ return (S.crew || []).find(c => c.id === id); }
-function crewQuit(c, why){ const i = S.crew.indexOf(c); if (i < 0) return; S.crew.splice(i, 1); for (const o of S.crew){ if (o.grudge) delete o.grudge[c.id]; }
+// What the hold is worth to the crew now: priced at this plant (or the nearest one) as sell() would, less the sales organisation's
+// deductions (TREKK), on which the share is reckoned
+function holdNet(){
+  if (!S.hold.length) return 0; const H = S.t / 60, here = portById(S.boat.port), pt = here && here.mottak ? here : (plantsNear(S.boat.pos, 1)[0] || {}).pt; if (!pt) return 0;
+  let v = 0; for (const x of S.hold){ const c = x.cls != null ? x.cls : SPECIES[x.sp].ref, g = grade(x.fresh);
+    v += x.kg * (x.sp === 'krabbe' ? ((x.fresh || 0) < KC.dead ? 0 : clsPrice(pt, x.sp, c, H, false)) : g === 'V' ? 1 : clsPrice(pt, x.sp, c, H, x.hook) * GM[g]); }
+  return v - trekkOf(v, BOAT.len || 0).sum;
+}
+// The settlement when someone leaves the boat (let go, or signing off): a crew member on a share who was aboard when fish now in the
+// hold was caught gets the share of it at once, and one on a wage gets the day's wage for the part of the day worked (Adrian 13.10.2026:
+// crew let go just before the landing were paid nothing for the trip)
+function crewSettle(c){
+  let lott = 0, hyre = 0;
+  if (c.pay === 'hyre'){ const g = gDate(S.t / 60), since = g.getUTCHours() * 60 + g.getUTCMinutes(), m = Math.min(since, c.hiredT != null ? Math.max(0, S.t - c.hiredT) : since);
+    hyre = Math.round((c.hyre || 0) * m / 1440); }
+  else if (c.trip && S.hold.length) lott = Math.round(c.share * holdNet());
+  const sum = lott + hyre; delete c.trip; if (sum <= 0) return 0;
+  S.cash -= sum; S.stats.costs += sum; c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, sum]]);
+  log(c.name + ' fikk ' + kr(sum) + (lott ? ' i lott for fangsten om bord.' : ' i hyre for dagen.'), c.name + ' was paid ' + kr(sum) + (lott ? ' as the share of the catch aboard.' : ' in wages for the day.'));
+  return sum;
+}
+function crewQuit(c, why){ const i = S.crew.indexOf(c); if (i < 0) return; crewSettle(c); S.crew.splice(i, 1); for (const o of S.crew){ if (o.grudge) delete o.grudge[c.id]; }
   msg(c.name, why || 'Jeg mønstrer av her. Det er ikke noe for meg lenger.', 'I am signing off here. It is not for me any more.'); log(c.name + ' har mønstret av.', c.name + ' has signed off.'); if (S.cevt && (S.cevt.a === c.id || S.cevt.b === c.id)) S.cevt = null; }
 // the job exchange: new people look for a berth every morning; fewer in the skrei season, when every boat is hiring
 function borsTick(H){

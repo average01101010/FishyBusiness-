@@ -1583,6 +1583,10 @@ Mister du juksa, fisker bare juksamaskinene til du kjøper ny i Fiskeutstyr. `mo
   - **Lott eller hyre** (E3, 04.10.2026, `HYRE`, `hyreAsk` og `payHyre` i `04-crew.js`):
     - Hvert mannskap kan gå på lott (som før) eller på hyre. Bytte gjøres med knappen på mannskapskortet i Rederi-appen (`cpay`).
     - **Hyre** er en fast dagslønn (`c.hyre`), betalt ved midnatt (`hourly` i `06-services.js`) for hver dag mannskapet er ansatt, også når båten ligger. Den som går på hyre, får ingen lott i `sell()`.
+    - **Oppgjør når noen går i land** (Adrian 13.10.2026: mannskap ble sagt opp rett før levering, og fikk verken lott eller hyre). Oppsigelse går bare til kai (`crewAshore` i `05-phone.js`). `crewSettle(c)` i `04-crew.js` kjøres ved oppsigelse (`cfire`, `cres` fireA/fireB, `fire`) og når noen mønstrer av (`crewQuit`):
+      - På lott: var de om bord da fisken i lasterommet ble tatt (`c.trip`, satt av `addCatch`), får de `c.share` av `holdNet()` med en gang: lasten priset som i `sell()` ved mottaket der båten ligger (eller det nærmeste), minus trekket. Inndragning og bonuser regnes ikke med.
+      - På hyre: dagslønna for den delen av døgnet som er gått siden midnatt (eller siden de mønstret på).
+      - I `sell()` får alle med `c.trip` lott, også de som har fått fri etter at fisken ble tatt. `c.trip` nulles ved levering.
     - **Hyra mannskapet ber om** er 90 % av det lotten de ønsker ville gitt i en uke med 6 000 kr om dagen i fem dager, fordelt på sju dager. Dette er et anslag, ingen tariff. Moralen følger hyra mot det de ba om, med litt ekstra fordi den er trygg.
     - **Ingen arbeidsgiveravgift** på hyre til mannskap på fiskefartøy. Produktavgiften dekker den (folketrygdloven § 23-5, Skatteetaten «Hyre til mannskap på fiske-, småhvalfangst- og selfartsfartøy», funnet med søk 04.10.2026).
     - **Ikke ennå:** Salg-fanen regner fortsatt mannskapets andel som lott for alle.

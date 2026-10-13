@@ -572,6 +572,7 @@ function addCatch(sp, kg, cls, hook, opt){
   festCatch(sp, kg);   // the skrei festival's biggest cod (09c-seasons.js)
   achCatch(sp, cls);   // «Storfisken» (09f-merker.js)
   recCatch(sp, kg, opt && opt.how);   // the personal records (09b-records.js)
+  for (const c of crewAboard(null, true)) c.trip = 1;   // aboard for this catch: a share of it at the landing, or when let go before it (crewSettle)
   const bled = true, iced = false, gut = false, hr = Math.floor(S.t / 60), start = opt && opt.fresh != null ? opt.fresh : 100; hook = hook !== false;
   let x = S.hold.find(h => h.sp === sp && h.cls === cls && h.bled === bled && h.iced === iced && h.hr === hr && !!h.gut === gut && h.hook === hook);
   if (!x){ x = {sp, cls, kg:0, n:0, bled, iced, hr, fresh:start, gut, hook}; S.hold.push(x); }
