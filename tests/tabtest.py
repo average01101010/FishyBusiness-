@@ -42,6 +42,7 @@ async def cloud_ctx(br, init=''):
         elif fn == 'save_get': r = DB['row'] or None
         elif fn == 'save_head': r = ({k: v for k, v in DB['row'].items() if k != 'data'} if DB['row'] else None)
         elif fn == 'save_put3': r = put3(b)
+        elif fn in ('save_put4', 'save_claim', 'save_beat'): return await route.fulfill(status=404, content_type='application/json', body='{}')   # (a database before 20261013120000_active.sql: the fallbacks)
         else: r = ''
         await route.fulfill(status=200, content_type='application/json', body=r if isinstance(r, str) else json.dumps(r))
     await ctx.route('https://sb.test/**', handle)

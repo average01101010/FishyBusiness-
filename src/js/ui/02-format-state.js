@@ -69,7 +69,8 @@ let SAVE_OFF = false;
 // its morning over the game he had played since, on the device and, the device being the same, on the account). The page that reads the
 // save marks itself the owner (KEY_OWN, with the time); a page that finds a later mark from another page has been passed by: it saves
 // nothing more, plays no more and says so (tabLose), and loading it again makes it the owner with the game as it is now.
-const KEY_OWN = 'kystfiske_v2_own', TAB = {id:'t' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36), at:0, lost:false};
+// (held: another device has the game, ui/10f-cloud.js cloudPassed; wait: a page that slept asks the account who has it before it plays)
+const KEY_OWN = 'kystfiske_v2_own', TAB = {id:'t' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36), at:0, lost:false, held:false, wait:false};
 function tabMark(){ TAB.at = Date.now(); try { localStorage.setItem(KEY_OWN, JSON.stringify({tab:TAB.id, at:TAB.at})); } catch (e){} }
 function tabMine(){
   if (TAB.lost) return false; if (!TAB.at) return true;

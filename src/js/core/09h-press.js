@@ -48,7 +48,7 @@ function pressStory(it){
   const P2 = (no, en) => [no, en];
   if (it.kind === 'boat'){ const V = VESSELS[d.type]; if (!V) return null; const vn = V.name.no.split(' (')[0], ve = V.name.en.split(' (')[0];
     s.h = d.nb ? P2('Nybygg bestilt: ' + vn.toLowerCase(), 'New build ordered: ' + ve.toLowerCase()) : d.lic ? P2('Kjøper båt med kvote', 'Buys a boat with a quota') : P2('Ny båt til ' + w[0], 'A new boat for ' + w[1]);
-    s.ing = d.nb ? P2(w[0] + ' har bestilt en ny ' + vn.toLowerCase() + ' fra verftet. Hun skal være klar om 45 døgn.', w[1] + ' has ordered a new ' + ve.toLowerCase() + ' from the yard. She is due in 45 days.')
+    s.ing = d.nb ? P2(w[0] + ' har fått en ny ' + vn.toLowerCase() + ' fra verftet.', w[1] + ' has taken delivery of a new ' + ve.toLowerCase() + ' from the yard.')
       : P2(w[0] + ' har kjøpt en ' + vn.toLowerCase() + (d.lic ? ' med plass i lukket gruppe' : '') + '.', w[1] + ' has bought a ' + ve.toLowerCase() + (d.lic ? ' with a place in the closed group' : '') + '.');
     s.body.push(P2('Båten er ' + fmt(V.len, 1) + ' meter lang, tar ' + fmt(V.holdCap, 0) + ' kg i lasterommet og går ' + fmt(V.vcruise || 0, 0) + ' knop i marsjfart.', 'She is ' + fmt(V.len, 1) + ' metres long, takes ' + fmt(V.holdCap, 0) + ' kg in the hold and cruises at ' + fmt(V.vcruise || 0, 0) + ' knots.'));
     if (d.price > 0) s.body.push(P2('Prisen skal ha ligget rundt ' + kr(Math.round(d.price / 10000) * 10000) + '.', 'The price is said to have been about ' + kr(Math.round(d.price / 10000) * 10000) + '.'));

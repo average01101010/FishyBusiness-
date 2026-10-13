@@ -113,11 +113,11 @@ async def main():
         # 5. a new build ordered for the fleet is added when the yard delivers
         order = await pg.evaluate("""(()=>{ S.cash = 2e7; S.order = null; for (const v of S.fleet) withVessel(v, () => { S.plan = null; S.boat.status = 'port'; S.boat.port = 'finnsnes'; });
           DOCK.open('fartoy:marked'); { const dr = document.getElementById('drawerBody'), tap = s => { const e = dr.querySelector(s); if (e) e.click(); }; tap('[data-pa=mksel]:not([data-k])'); tap('[data-pa=mktab][data-s=open]'); tap('[data-pa=mksel][data-k=sjarkny]'); }
-          const n0 = S.fleet.length; document.querySelector('[data-pa="buy"][data-ti="0"][data-k="sjarkny"]').click(); const vid = S.order ? S.order.vid : 'no order';
-          S.t = S.order.due; deliverOrder(); const nv = S.fleet[S.fleet.length - 1];
+          const n0 = S.fleet.length; document.querySelector('[data-pa="buy"][data-ti="0"][data-k="sjarkny"]').click(); const vid = S.order ? 'an order' : null;
+          const nv = S.fleet[S.fleet.length - 1];
           return {n0, n1:S.fleet.length, vid, order:S.order, type:vget(nv, 'boat').type, port:vget(nv, 'boat').port, msg:S.msgs[S.msgs.length - 1].no}; })()""")
         print('new build:', json.dumps(order, ensure_ascii=False))
-        print(ok(order['vid'] is None and order['n1'] == order['n0'] + 1 and order['type'] == 'sjarkny' and order['order'] is None), 'the new build joins the fleet in Finnsnes')
+        print(ok(order['vid'] is None and order['n1'] == order['n0'] + 1 and order['type'] == 'sjarkny' and order['order'] is None), 'the new build joins the fleet at once, at the yard (no building time)')
         print('dialogs:', dialogs)
         print('errors:', errs[:4]); await b.close()
 asyncio.run(main())

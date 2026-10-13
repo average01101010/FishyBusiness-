@@ -465,6 +465,8 @@ const PHONE = (() => {
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
     ['p104', '10.10.2026', 'Håndboka', 'The handbook', [
+       ['Nybygg fra verftet leveres med en gang, uten byggetid. En båt som allerede er bestilt, leveres nå.', 'New builds from the yard are delivered at once, with no building time. A vessel already on order is delivered now.'],
+       ['Spillet kan bare være i gang på én enhet om gangen. Åpner du det på en annen enhet, settes den første på pause med en gang, og du fortsetter akkurat der du slapp, med det siste som skjedde. «Spill her i stedet» flytter spillet tilbake. Finnes det likevel to utgaver, viser valget begge med dag, penger og båt.', 'The game can only run on one device at a time. Open it on another device and the first one is paused at once, and you go on exactly where you left off, with the last thing that happened. «Play here instead» moves the game back. Should there still be two versions, the choice shows both with day, money and boat.'],
        ['Lagringen er tryggere når du bytter mellom enheter og faner: en fane som har stått åpen lenge, skriver ikke lenger et eldre spill over det nye, men sier fra og lar deg fortsette med spillet slik det er nå. Appen på hjemskjermen spør «Har du spilt før?» første gang, så du kan logge inn og fortsette der du slapp.', 'Saving is safer when you switch between devices and tabs: a tab left open for long no longer writes an older game over the newer one, but says so and lets you go on with the game as it is now. The app on the home screen asks «Have you played before?» the first time, so you can sign in and go on where you left off.'],
        ['Den brukte hurtigsjarken på 10,99 m har fått en ny og detaljert modell: gult skrog med hvit skansekledning, styrhus med gult tak, mast med radar og haleblokk, og et ryddig arbeidsdekk med luke og haler.', 'The used 10.99 m speed sjark has a new, detailed model: a yellow hull with white bulwarks, a wheelhouse with a yellow roof, a mast with radar and hauling block, and a tidy working deck with hatch and hauler.'],
        ['Plastsnekka på 26 fot har fått en ny og detaljert modell: klinkmønster i skroget, ruff med vinduer, vindskjerm med hardtopp over styreplassen og åpen cockpit akter.', 'The 26 ft fibreglass snekke has a new, detailed model: a clinker-look hull, a cabin with windows, a windscreen with a hard top over the helm and an open cockpit aft.'],
@@ -1303,7 +1305,7 @@ const PHONE = (() => {
     const sec = (t, rows) => '<div class="vsec"><h5>' + t + '</h5>' + rows.filter(Boolean).join('') + '</div>';
     h.push('<button class="ph-btn alt mkback" data-pa="mksel">‹ ' + L('Tilbake til listen', 'Back to the list') + '</button>');
     h.push('<div class="ph-card vsheet"><h4>' + (O ? O[S.lang] : V.name[S.lang]) + '</h4><div class="vbig">' + vesselSVG(k) + '</div><p>' + V.desc[S.lang] + '</p>');
-    h.push(sec(L('Generelt', 'General'), [kv(L('Pris', 'Price'), kr(price)), V.priceNew ? kv(L('Nypris', 'New price'), kr(V.priceNew)) : '', kv(L('Byggeår', 'Built'), V.isNew ? L('bygges nå (45 døgn)', 'built now (45 days)') : V.year),
+    h.push(sec(L('Generelt', 'General'), [kv(L('Pris', 'Price'), kr(price)), V.priceNew ? kv(L('Nypris', 'New price'), kr(V.priceNew)) : '', kv(L('Byggeår', 'Built'), V.isNew ? L('nybygg, levert med en gang', 'new build, delivered at once') : V.year),
       kv(L('Lengde', 'Length'), fmt(V.len, 2) + ' m'), kv(L('Bredde', 'Beam'), fmt(V.beam, 1) + ' m'), kv(L('Dypgående', 'Draft'), fmt(V.draft, 1) + ' m'), kv(L('Vekt (deplasement)', 'Weight (displacement)'), fmt(V.disp, V.disp < 10 ? 1 : 0) + ' t'),
       kv(L('Lasterom', 'Hold'), tn(V.holdCap) + (V.cls === 'hav' ? L(' fryst', ' frozen') : '')), V.iceCap ? kv(L('Is', 'Ice'), tn(V.iceCap)) : '', kv(L('Drivstoff', 'Fuel'), fmt(V.fuelCap, 0) + ' L ' + (V.diesel ? 'diesel' : L('bensin', 'petrol'))),
       kv(L('Motor', 'Engine'), V.engine[S.lang]), kv(L('Fart', 'Speed'), L('marsj ', 'cruise ') + fmt(V.vcruise, 1) + ' · ' + L('topp ', 'top ') + fmt(V.vmax, 1) + ' kn'),
@@ -1352,7 +1354,7 @@ const PHONE = (() => {
       const off = k => (k === 'chirp' && S.settings.echo === false) || (k === 'sonar' && S.settings.sonar === false) ? L(' (av)', ' (off)') : '';
       const eq = Object.keys(EQUIP).filter(k => EQUIP[k].multi ? S.equip[k] > 0 : S.equip[k]).map(k => EQUIP[k].name[S.lang] + (EQUIP[k].multi ? ' × ' + S.equip[k] : '') + off(k));
       h.push('<div class="ph-card"><h4>' + L('Utstyr om bord', 'Equipment on board') + '</h4><p>' + ['GPS'].concat(S.equip.chirp ? [] : [L('Enkelt ekkolodd', 'Basic sounder') + (S.settings.echo === false ? L(' (av)', ' (off)') : '')]).concat(eq).join(', ') + '</p><h4 style="margin-top:8px">' + L('Mannskap', 'Crew') + '</h4><p>' + [L('Deg (skipper)', 'You (skipper)')].concat(S.crew.map(c => c.name)).join(', ') + ' · ' + L('plass til ', 'room for ') + (V.crewMax + 1) + '</p></div>');
-      if (S.order) h.push('<div class="ph-card"><h4>' + L('Bestilt', 'On order') + '</h4><p>' + VESSELS[S.order.type].name[S.lang] + '</p>' + kv(L('Klar', 'Ready'), dayStr(S.order.due / 60)) + '<p class="ph-note">' + L('Overtas i Finnsnes.', 'Handover in Finnsnes.') + '</p></div>');
+      if (S.order) h.push('<div class="ph-card"><h4>' + L('Bestilt', 'On order') + '</h4><p>' + VESSELS[S.order.type].name[S.lang] + '</p>' + '<p class="ph-note">' + L('Byttes så snart båten den skal erstatte, ligger i havn.', 'Swapped as soon as the vessel it replaces lies in port.') + '</p></div>');
     } else h.push(market());
     h.push('</div>'); return h.join('');
   }
@@ -1738,8 +1740,8 @@ const PHONE = (() => {
       const V2 = VESSELS[d.k], ti = d.ti === '0' ? 0 : tradeIn(); if (!V2 || V2.lock || !atKind('verft') || S.order || (ti && S.boat.type === d.k)) return;
       if (!ti && V2.len < 11 && !hasLic()){ toast(L('Et rederi kan bare ha én båt i åpen gruppe.', 'A company can only have one boat in the open group.')); return; }
       const x = deal(V2.price, ti); if (!x.ok){ toast(whyText(x) || t('no_cash')); return; } finance(x, 120); achAdd('boat');
-      if (V2.isNew){ S.order = {type:d.k, due:S.t + 45 * 24 * 60, vid:ti ? S.cur : null}; log('Bestilte ' + V2.name.no + '. Levering om 45 døgn' + (ti ? ', mot «' + S.boatName + '» i bytte.' : ' til flåten.'), 'Ordered the ' + V2.name.en + '. Delivery in 45 days' + (ti ? ', with «' + S.boatName + '» traded in.' : ' for the fleet.')); }
-      else if (ti) switchVessel(d.k);
+      // a new build is delivered at once, at this yard, like a used vessel (Jonas 13.10.2026: «Fjern byggetiden når man bestiller nybygg»)
+      if (ti) switchVessel(d.k);
       else { const v = newVesselObj(d.k, S.boat.port); log('Kjøpte ' + V2.name.no + ' til flåten. Hun heter «' + v.boatName + '» og ligger i ' + portById(S.boat.port).name + '.', 'Bought the ' + V2.name.en + ' for the fleet. She is called «' + v.boatName + '» and lies at ' + portById(S.boat.port).name + '.'); }
       pressPut('boat', {type:d.k, nb:V2.isNew ? 1 : 0, price:V2.price});   // Kystposten (core/09h-press.js)
       if (ti && S.lic){ log('Kvoten i lukket gruppe fulgte med den gamle båten.', 'The closed-group quota went with the old vessel.'); S.lic = null; freshQuota(); openUsedLoad(); }

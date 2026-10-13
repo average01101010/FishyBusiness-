@@ -305,6 +305,9 @@ function tick(){
   const now = Date.now(), dt = (now - lastWall) / 1000; lastWall = now;
   // a page that slept (a tab in the background, a phone in a pocket) asks first whether another page has the game now: it plays nothing
   if (TAB.lost || (dt > 2 && !tabMine())) return;
+  // and whether another device has taken the game meanwhile (ui/10f-cloud.js): nothing plays while that is asked, or while it has it
+  if (dt > 8 && typeof cloudWake === 'function') cloudWake();
+  if (TAB.held || TAB.wait) return;
   // (until the simulation's data is in, the clock waits: 11-boot.js)
   if (SIMREADY){ if (CATCH_LEFT > 0){ const n = Math.min(CATCH_LEFT, 3000); CATCH_LEFT -= n; playMinutes(n); panelDirty = true; if (!CATCH_LEFT && AWAYR) awayEnd(); }
   else if (WCLOCK.on){
@@ -321,7 +324,7 @@ function tick(){
   if (WAKE_BACK && !CATCH_LEFT){ WAKE_BACK = false; if (asleep()) wakeEarly(true); }
   heatTick();
   if (!G3.isActive()){ renderDyn(); if (AISSEL) renderAisCard(); heatPaint(); } renderHud(); renderClock(); renderActs(); DOCK.tick(); HUI.tick(); energyUi(); turFotoUi(); INSTR.renderGPS(); renderRouteTools(); tutUpdate(); PHONE.status(); PHONE.tickHome();
-  if (S.order && S.t >= S.order.due) deliverOrder();
+  if (S.order) deliverOrder();
   // the chart's night colours follow the sun: drawn again when they change
   if (S.t !== CHN.t){ CHN.t = S.t; if (chartNight() !== CHN.v && document.body.classList.contains('vplot')) renderBase(); }
   const pnow = performance.now();
@@ -330,11 +333,13 @@ function tick(){
 }
 // the yard hands over a new build in Finnsnes: in exchange for the vessel it was ordered against (once she is moored there), or as an
 // extra vessel for the fleet (vid null)
+// (no building time since 13.10.2026: a new build is delivered when it is bought; an order from before is delivered now, the vessel it
+// replaces swapped wherever she lies in port, and a vessel for the fleet at the harbour of the one followed, or Finnsnes)
 function deliverOrder(){
   const o = S.order, k = o.type, tv = o.vid === null ? null : vesselById(o.vid || S.cur);
-  if (!tv){ S.order = null; const v = newVesselObj(k, 'finnsnes'); log('Overtok ' + VESSELS[k].name.no + ' fra verftet. Hun heter «' + v.boatName + '» og ligger i Finnsnes.', 'Took delivery of the ' + VESSELS[k].name.en + ' from the yard. She is called «' + v.boatName + '» and lies in Finnsnes.');
-    msg('Verftet', 'Den nye båten, «' + v.boatName + '», er levert og ligger klar i Finnsnes.', 'The new vessel, the «' + v.boatName + '», has been delivered and is ready in Finnsnes.'); save(); return; }
-  const b = vget(tv, 'boat'); if (b.status !== 'port' || b.port !== 'finnsnes') return;
+  if (!tv){ S.order = null; const v = newVesselObj(k, S.boat.status === 'port' && S.boat.port ? S.boat.port : 'finnsnes'); log('Overtok ' + VESSELS[k].name.no + ' fra verftet. Hun heter «' + v.boatName + '» og ligger i ' + portById(vget(v, 'boat').port).name + '.', 'Took delivery of the ' + VESSELS[k].name.en + ' from the yard. She is called «' + v.boatName + '» and lies at ' + portById(vget(v, 'boat').port).name + '.');
+    msg('Verftet', 'Den nye båten, «' + v.boatName + '», er levert og ligger klar.', 'The new vessel, the «' + v.boatName + '», has been delivered and is ready.'); save(); return; }
+  const b = vget(tv, 'boat'); if (b.status !== 'port' || !b.port) return;
   S.order = null; onVessel(tv, () => PHONE.switchVessel(k)); save();
 }
 document.addEventListener('visibilitychange', () => { if (document.hidden) save(); else tabMine(); });

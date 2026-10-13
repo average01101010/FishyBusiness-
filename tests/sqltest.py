@@ -227,6 +227,21 @@ def main():
         R['p3Old'] = json.loads(sql("select public.save_head()", PE, 'authenticated'))
         R['p3Anon'] = sql("select public.save_put3('x', now(), 1, null, false, '{}', 'd', 'n')", {}, 'anon', expect_err=True)
         R['p3Other'] = json.loads(sql("select public.save_head()", B, 'authenticated'))
+        # one device at a time (20261013120000_active.sql): the device that starts takes the game, the other's saves are refused (taken),
+        # except its last state as the hand-over while nothing has been saved since; a beat tells every device who has the game
+        PF = {'sub': 'user_01FFF', 'role': 'authenticated'}; sql("select public.tm_hello('{}')", PF, 'authenticated')
+        put4 = lambda data, base, dev, hand='false', force='false': json.loads(sql("select public.save_put4('%s', '2026-10-13T10:00:00Z', 100, %s, %s, '{\"day\":5}', '%s', '%s', %s)" % (data, base if base is not None else 'null', force, dev, {'devA': 'Nettbrett', 'devB': 'iPhone'}.get(dev, 'PC'), hand), PF, 'authenticated'))
+        R['acA'] = put4('KYST2:A1', None, 'devA')
+        R['acClaim'] = json.loads(sql("select public.save_claim('devB', 'iPhone')", PF, 'authenticated'))
+        R['acPutA'] = put4('KYST2:A2', 1, 'devA')
+        R['acHand'] = put4('KYST2:A3', 1, 'devA', 'true')
+        R['acBeatB'] = json.loads(sql("select public.save_beat('devB')", PF, 'authenticated'))
+        R['acBeatA'] = json.loads(sql("select public.save_beat('devA')", PF, 'authenticated'))
+        R['acPutB'] = put4('KYST2:B1', 2, 'devB')
+        R['acHand2'] = put4('KYST2:A4', 2, 'devA', 'true')
+        R['acOld'] = json.loads(sql("select public.save_put3('KYST2:A5', '2026-10-13T10:00:00Z', 100, 3, false, '{}', 'devA', 'Nettbrett')", PF, 'authenticated'))
+        R['acGet'] = json.loads(sql("select public.save_get()", PF, 'authenticated'))
+        R['acBeatAnon'] = sql("select public.save_beat('x')", {}, 'anon', expect_err=True)
         # the shared world V3: where the boats are (20261005220000_presence.sql)
         sql("select public.pos_put(850, 350, 90, 7, 'sailing', 'Havbris', 'trebat')", A, 'authenticated')
         sql("select public.pos_put(851, 350.5, 180, 0, 'fishing', 'Fjordbris', 'skiff')", B, 'authenticated')
@@ -406,6 +421,13 @@ def main():
                  and any(h['summary'].get('day') == 3 for h in R['p3Hist']) and R['p3Old']['rev'] == 4 and R['p3Old']['device'] is None
                  and R['p3Anon'][0] and R['p3Other'] is None), 'the server counts the saves: a device that has not met the newest revision is refused (and told another device made it), a forced one keeps the replaced game, save_head is the save without the game, the older puts bump the revision, and anon cannot write',
               {k: R[k] for k in ('p3a', 'p3b0', 'p3a2', 'p3bStale', 'p3Head', 'p3Force', 'p3Old')})
+        print(ok(R['acA'].get('ok') and R['acClaim'].get('prev_dev') == 'devA' and R['acClaim'].get('prev_age') is not None and R['acClaim']['prev_age'] < 60
+                 and not R['acPutA'].get('ok') and R['acPutA'].get('taken') is True and R['acPutA']['cloud']['active_name'] == 'iPhone'
+                 and R['acHand'].get('ok') and R['acHand']['rev'] == 2 and R['acBeatB']['active_dev'] == 'devB' and R['acBeatB']['rev'] == 2 and R['acBeatB']['device'] == 'devA'
+                 and R['acBeatA']['active_dev'] == 'devB' and R['acPutB'].get('ok') and R['acPutB']['rev'] == 3 and not R['acHand2'].get('ok')
+                 and not R['acOld'].get('ok') and R['acOld'].get('taken') is True and R['acGet']['data'] == 'KYST2:B1' and R['acBeatAnon'][0]),
+              'one device at a time: the device that starts takes the game, the other one\'s saves are refused (taken), its last state goes up as the hand-over only while nothing has been saved since, a beat tells who has the game, and the old put is refused too',
+              {k: R[k] for k in ('acA', 'acClaim', 'acPutA', 'acHand', 'acBeatB', 'acPutB', 'acHand2', 'acOld')})
         print(ok(R['sv1'].get('ok') and R['sv2'].get('ok') and not R['svPhone'].get('ok') and not R['svStale'].get('ok') and R['svStale'].get('cloud', {}).get('summary', {}).get('day') == 13
                  and R['svCloud']['data'] == 'KYST2:TABLET2' and not R['svOld'].get('ok')), 'the cloud save: a device that has not met the newest save cannot write over it (the old phone, also an old page), and is told what the cloud has',
               {k: R[k] for k in ('sv1', 'sv2', 'svPhone', 'svStale')})

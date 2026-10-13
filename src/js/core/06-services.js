@@ -20,7 +20,7 @@ function hourly(){
   for (const k of ['loan', 'loanIN']){ const L = S[k]; if (!L || S.t < L.next) continue; const r = L.rate / 12, int = L.bal * r, pay = Math.min(L.bal + int, L.pay); L.bal = L.bal + int - pay; S.cash -= pay; S.stats.costs += int; L.intPaid = (L.intPaid || 0) + int; L.next += 30 * 24 * 60;
     msg(LOANS[k].who, 'Terminbeløp ' + Math.round(pay) + ' kr trukket. Restgjeld ' + Math.round(L.bal) + ' kr.', 'Instalment of NOK ' + Math.round(pay) + ' paid. Remaining NOK ' + Math.round(L.bal) + '.'); if (L.bal < 1) S[k] = null; }
   // yard: new vessel ready
-  if (S.order && !S.order.told && S.t >= S.order.due){ S.order.told = true; msg('Verftet', 'Den nye båten er klar for overtakelse i Finnsnes.', 'Your new vessel is ready for handover in Finnsnes.'); }
+  if (S.order && S.order.vid !== null && !S.order.told){ S.order.told = true; msg('Verftet', 'Den nye båten er klar. Byttet skjer så snart båten den skal erstatte, ligger i havn.', 'Your new vessel is ready. The swap is made as soon as the vessel it replaces lies in port.'); }
   // engine service due, vessel by vessel
   eachVessel(() => { const b = S.boat, vt = S.fleet.length > 1 ? '«' + S.boatName + '»: ' : ''; if (svcOverdue() > 0 && !S.svcTold){ S.svcTold = true; msg('Verkstedet', vt + 'Motoren har gått ' + Math.round(b.engH) + ' timer og er over tiden for service.', vt + 'The engine has run ' + Math.round(b.engH) + ' hours and is overdue for a service.'); } });
 }

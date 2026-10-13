@@ -31,7 +31,7 @@ async def page(br, calls, replies, no_user=False):
         try: body = json.loads(req.post_data or '{}')
         except Exception: body = {}
         calls.append((fn, body, req.headers.get('authorization', '')))
-        r = replies.get(fn, 404 if fn in ('save_put3', 'save_head') else '')   # (a database without the revisions: the older puts are tested here; synctest.py has the revisions)
+        r = replies.get(fn, 404 if fn in ('save_put3', 'save_head', 'save_put4', 'save_claim', 'save_beat') else '')   # (a database without the revisions: the older puts are tested here; synctest.py has the revisions)
         if callable(r): r = r(body)   # a reply that depends on what was sent
         if r == 404: return await route.fulfill(status=404, content_type='application/json', body='{"code":"PGRST202"}')   # a function the database does not have
         await route.fulfill(status=200, content_type='application/json', body=r if isinstance(r, str) else json.dumps(r))
@@ -65,7 +65,7 @@ async def main():
         calls = []; replies = {'tm_hello': {'consent': None, 'owned': []}, 'save_get': 'null', 'save_put2': {'ok': True, 'saved_at': '2026-10-05T10:00:00.123+00:00'}}
         ctx, pg, errs = await page(br, calls, replies)
         await boot(pg)
-        first = [c[0] for c in calls[:2]]
+        first = [c[0] for c in calls if c[0] != 'save_claim'][:2]   # (the claim, 20261013120000_active.sql, is answered 404 here: a database before it)
         await pg.wait_for_selector('#cgYes', timeout=15000)
         await pg.fill('#cgYear', '1990'); await pg.click('#cgYes'); await pg.wait_for_timeout(500)
         cons = [c[1] for c in calls if c[0] == 'tm_consent']; closed = await pg.evaluate("document.getElementById('modal').hidden")
