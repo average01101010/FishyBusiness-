@@ -152,7 +152,9 @@ function pushItems(now){
 }
 // away: lay out what is coming; back: clear it (only sent when it changed)
 function pushPlan(away){
-  if (!S.settings.push || !pushHas()) return;
+  // (a page that does not have the game, ui/10f-cloud.js and 02-format-state.js, never plans: the device that has it does, and its plan
+  // must stand while its screen is off)
+  if (!S.settings.push || !pushHas() || TAB.held || TAB.lost) return;
   const items = away ? pushItems() : [], sig = JSON.stringify(items);
   if (sig === PUSH.last) return; PUSH.last = sig;
   cloudRpc('push_plan', {items}, {keep:true}).catch(e => { PUSH.last = ''; console.error(e); });

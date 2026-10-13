@@ -430,6 +430,9 @@ function cloudWake(){
 async function cloudPassed(h){
   if (TAB.held || TAB.lost) return; TAB.held = true;
   cloudEv('passed', {dev:h.active_name || null});
+  // the device that has it is silent (its screen off, closed): nothing runs there, so this one takes the game back by itself, the time
+  // since played to the world's clock (an online game: the world, the clock and the plans go on with every screen off)
+  if (h.active_age != null && h.active_age > 30){ cloudGateShow('<p>' + cloudL('Henter spillet ditt …', 'Fetching your game …') + '</p>'); return cloudPlayHere(); }
   const since = Date.parse(h.active_since || '') || 0, fresh = since && CLOUD.beatAt && since - CLOUD.beatAt < 20000;
   if (fresh && TAB.rv != null && h.rev === TAB.rv && !SAVE_OFF && !CLOUD.noPut4){
     try { const at = S.lastReal, data = await saveCode();
@@ -441,10 +444,10 @@ async function cloudPassed(h){
 }
 function cloudHeldShow(h){
   const dev = gEsc(h.active_name || cloudL('en annen enhet', 'another device'));
-  cloudGateShow('<p class="cg-lead">' + cloudL('Du spiller nå på ' + dev, 'You are playing on ' + dev + ' now') + '</p><p class="cg-small">' +
-    cloudL('Spillet kan bare være i gang på én enhet om gangen. Her står det på pause, og ingenting går tapt.', 'The game can only run on one device at a time. Here it is paused, and nothing is lost.') + '</p>' +
+  cloudGateShow('<p class="cg-lead">' + cloudL('Spillet er åpent på ' + dev, 'The game is open on ' + dev) + '</p><p class="cg-small">' +
+    cloudL('Verden, klokka og driftsplanen går som vanlig, men spillet styres fra én enhet om gangen, og nå er det ' + dev + '.', 'The world, the clock and the plan go on as usual, but the game is run from one device at a time, and now that is ' + dev + '.') + '</p>' +
     '<div class="cg-btns">' + cloudBtn('cgPlay', cloudL('Spill her i stedet', 'Play here instead'), true) + '</div>' +
-    '<p class="cg-fine">' + cloudL('Da flyttes spillet hit akkurat slik det er nå, og ' + dev + ' settes på pause.', 'The game then moves here exactly as it is now, and ' + dev + ' is paused.') + '</p>');
+    '<p class="cg-fine">' + cloudL('Da flyttes spillet hit akkurat slik det står nå, og ' + dev + ' viser dette kortet.', 'The game then moves here exactly as it stands now, and ' + dev + ' shows this card.') + '</p>');
   document.getElementById('cgPlay').onclick = cloudPlayHere;
 }
 // «Spill her i stedet»: this device takes the game back, with the newest save if it has moved on elsewhere

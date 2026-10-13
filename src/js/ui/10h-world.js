@@ -9,7 +9,7 @@
 const WORLDP = {last:0, busy:false, err:0, off:false};
 const WORLD_R = 25;   // km round the boat: about the AIS range
 async function worldTick(){
-  if (!CLOUD.on || !CLOUD.user || WORLDP.busy || WORLDP.off || (typeof document !== 'undefined' && document.hidden)) return;
+  if (!CLOUD.on || !CLOUD.user || WORLDP.busy || WORLDP.off || TAB.held || TAB.lost || TAB.wait || (typeof document !== 'undefined' && document.hidden)) return;   // (only the page that has the game shows the boat)
   WORLDP.busy = true;
   try {
     const b = S.boat;

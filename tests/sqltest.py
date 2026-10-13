@@ -423,7 +423,7 @@ def main():
               {k: R[k] for k in ('p3a', 'p3b0', 'p3a2', 'p3bStale', 'p3Head', 'p3Force', 'p3Old')})
         print(ok(R['acA'].get('ok') and R['acClaim'].get('prev_dev') == 'devA' and R['acClaim'].get('prev_age') is not None and R['acClaim']['prev_age'] < 60
                  and not R['acPutA'].get('ok') and R['acPutA'].get('taken') is True and R['acPutA']['cloud']['active_name'] == 'iPhone'
-                 and R['acHand'].get('ok') and R['acHand']['rev'] == 2 and R['acBeatB']['active_dev'] == 'devB' and R['acBeatB']['rev'] == 2 and R['acBeatB']['device'] == 'devA'
+                 and R['acHand'].get('ok') and R['acHand']['rev'] == 2 and R['acBeatB']['active_dev'] == 'devB' and R['acBeatB']['rev'] == 2 and R['acBeatB']['device'] == 'devA' and R['acBeatB'].get('active_age') is not None
                  and R['acBeatA']['active_dev'] == 'devB' and R['acPutB'].get('ok') and R['acPutB']['rev'] == 3 and not R['acHand2'].get('ok')
                  and not R['acOld'].get('ok') and R['acOld'].get('taken') is True and R['acGet']['data'] == 'KYST2:B1' and R['acBeatAnon'][0]),
               'one device at a time: the device that starts takes the game, the other one\'s saves are refused (taken), its last state goes up as the hand-over only while nothing has been saved since, a beat tells who has the game, and the old put is refused too',

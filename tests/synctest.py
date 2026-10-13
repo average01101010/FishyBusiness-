@@ -28,7 +28,7 @@ def check(c, msg, d=None):
 DB = {'row': None, 'hist': [], 'calls': []}
 iso = lambda t=None: datetime.fromtimestamp(t or time.time(), timezone.utc).isoformat()
 HEAD = ('rev', 'saved_at', 'game_t', 'summary', 'device', 'device_name', 'updated_at', 'active_dev', 'active_name', 'active_since')
-def head(): return dict({k: DB['row'][k] for k in HEAD}, now=iso()) if DB['row'] else None
+def head(): return dict({k: DB['row'][k] for k in HEAD}, now=iso(), active_age=(time.time() - DB['row']['active_at']) if DB['row'].get('active_at') else None) if DB['row'] else None
 def put4(b):
     cur = DB['row']; other = bool(cur and cur.get('active_dev') and cur['active_dev'] != b['device'])
     if cur and not b.get('force') and (cur['rev'] != b.get('base_rev') or (other and not b.get('handoff'))):
@@ -107,7 +107,7 @@ async def main():
         # 3. the tablet has stopped: it says the game is on the iPhone, and plays no more
         await A[1].wait_for_selector('#cgPlay', timeout=20000)
         a1 = await A[1].evaluate("(async () => { const t0 = S.t, txt = document.getElementById('cloudGate').innerText; await new Promise(r => setTimeout(r, 3000)); return {held:TAB.held, txt, same:S.t === t0}; })()")
-        check(a1['held'] and a1['same'] and 'Du spiller nå på iPhone' in a1['txt'] and 'Spill her i stedet' in a1['txt'], 'the tablet stops playing at once and says the game is on the iPhone', a1)
+        check(a1['held'] and a1['same'] and 'Spillet er åpent på iPhone' in a1['txt'] and 'Spill her i stedet' in a1['txt'], 'the tablet stops playing at once and says the game is on the iPhone', a1)
         await shots(A[1], 'held', '#cgPlay')
         # 4. the phone plays on; «Spill her i stedet» on the tablet takes the game back with what the phone did, and the phone stops
         await B[1].evaluate("(() => { S.cash = 222222; save(); })()")
@@ -121,9 +121,16 @@ async def main():
         await B[1].evaluate("(() => { TAB.held = false; })()")
         await A[1].evaluate("(() => { document.getElementById('cloudGate').remove(); TAB.held = false; CLOUD.beatAt = 0; })()")   # as if it slept through it
         w = await A[1].evaluate("(async () => { const t0 = S.t; lastWall = Date.now() - 60000; tick(); const waiting = TAB.wait; await new Promise(r => setTimeout(r, 2500)); return {waiting, held:TAB.held, same:S.t === t0}; })()")
-        check(w['waiting'] and w['held'] and w['same'], 'a tablet that slept asks the account before it plays, and stays paused', w)
+        check(w['waiting'] and w['held'] and w['same'], 'a tablet that slept asks the account before it plays, and stays paused while the phone has the game open', w)
+        # the phone's screen goes off (it is silent): the tablet opened again takes the game back by itself, no card, the time played on
+        await B[0].close(); DB['row']['active_at'] -= 120
+        await A[1].evaluate("(() => { document.getElementById('cloudGate').remove(); TAB.held = false; lastWall = Date.now() - 60000; tick(); })()")
+        try: await A[1].wait_for_function("!TAB.held && !TAB.wait && !document.getElementById('cloudGate')", timeout=30000)
+        except Exception: pass
+        s = await A[1].evaluate("({held:TAB.held, gate:!!document.getElementById('cloudGate')})")
+        check(not s['held'] and not s['gate'] and DB['row']['active_name'] == 'Android-nettbrett', 'with the phone silent (screen off), the tablet takes the game back by itself, without a card', {'s': s, 'active': DB['row']['active_name']})
         # 6. two games that really went apart: both shown with what they are; «Spillet på denne enheten» writes over, the other kept
-        await A[1].evaluate("(() => { document.getElementById('cloudGate').remove(); TAB.held = false; })()")
+        await A[1].evaluate("(() => { const g = document.getElementById('cloudGate'); if (g) g.remove(); TAB.held = false; })()")
         await A[1].evaluate("(() => { cloudConflict({rev:99, device:'x', device_name:'iPhone', updated_at:new Date().toISOString(), summary:{t:70000, day:49, cash:333333, boat:'Havbris', type:'sjark', fleet:1}}, true); })()")
         await A[1].wait_for_selector('#cloudGate .handoff #cgHere', timeout=15000)
         h = await A[1].evaluate("document.getElementById('cloudGate').innerText")
@@ -137,6 +144,6 @@ async def main():
             await A[1].wait_for_timeout(250)
         check(len(DB['hist']) > n0 and DB['row']['device_name'] == 'Android-nettbrett', '«Spillet på denne enheten» writes over, and the other game is kept in the history', {'hist': len(DB['hist']), 'row': DB['row']['device_name']})
         check(not A[2] and not B[2], 'no page errors', (A[2] + B[2])[:3])
-        await A[0].close(); await B[0].close(); await br.close()
+        await A[0].close(); await br.close()
     print('FEIL: ' + ', '.join(bad) if bad else 'alt OK')
 asyncio.run(main())

@@ -6,6 +6,7 @@ Et kystfiskespill langs hele norskekysten (det begynte på Senja) som kjører so
 
 ## Arbeidsmåte
 
+- **Huskeregel: Det Store Blå er et online-spill (MMO) med én felles verden og én felles klokke for alle spillerne** (Jonas 13.10.2026). Tiden går også når skjermen er av og spillet er lukket: driftsplanen, flåten, mannskapet, verftet og verden går videre, og det som har skjedd, spilles mot den felles klokka når spillet åpnes igjen (`WCLOCK`, `catchUp`). Ingenting må stoppe tiden eller driften fordi en skjerm er av, en fane sover eller en enhet står på pause. Det som kan settes på pause, er bare en side som ikke har spillet (én enhet styrer om gangen); den sender heller ingenting (lagring, push-planer, posisjon).
 - **Spillet er nasjonalt** (Jonas 06.10.2026): alt som legges inn eller endres, gjelder hele kysten, ikke bare Senja. Arter, regler, felt, mottak, modeller og data bygges for hele landet fra start. Senja-dataene er bare et eldre, mer detaljert utsnitt.
 - **Stikkprøver langs kysten ved feilretting** (Jonas 09.10.2026): når en feil er funnet ett sted (for eksempel Tromsø) og feilen eller rettingen kan gjelde hele landet, skal rettingen prøves på minst tre andre steder spredt langs kysten (sør, midt og nord, gjerne Bergen, Bodø og Hammerfest/Båtsfjord) før den meldes som ferdig. Svaret til Jonas sier hvor det er prøvd, og om feilen fantes der også.
 - **Fart foran finpuss** (brukerens valg 01.10.2026): Endringene skal inn raskt, og finpuss og feilretting gjøres samlet etterpå.
