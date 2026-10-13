@@ -464,6 +464,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p108', '13.10.2026', 'Kartplotteren på smale telefoner', 'The chart plotter on narrow phones', [
+       ['På de smaleste telefonene havnet knappene for innstillinger og lukk på en egen rad, og stripa med veipunkt og ETA dekket toppen av infoboksen, så den ikke kunne felles sammen. Alt får nå plass i baren igjen. Takk for tipset!', 'On the narrowest phones the settings and close buttons ended up on a row of their own, and the waypoint and ETA strip covered the top of the info box so it could not be folded away. Everything fits in the bar again. Thanks for the tip!']]],
     ['p107', '13.10.2026', 'Autonav, ruter og driftsplanen', 'Autonav, routes and the operations plan', [
        ['Autonav kunne stoppe uten rute når veien gikk langt til havs, der kystkartet slutter (for eksempel ut mot eggakanten). Dybden leses nå riktig helt ut til kanten.', 'Autonav could stop without a route when the way went far out to sea, where the coastal chart ends (for example out towards the shelf edge). The depth is now read right out to the edge.'],
        ['Spillet stopper ikke lenger når du tegner en rute over et område kartet ikke har lastet ennå. Advarslene for grunner og skjær kommer når kartet er lastet.', 'The game no longer stops when you draw a route over an area the map has not loaded yet. The warnings for shallows and rocks appear once the map is in.'],

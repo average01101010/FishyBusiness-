@@ -4,7 +4,7 @@ from _env import boot, OUT
 import asyncio, json, os
 from playwright.async_api import async_playwright
 
-SET = """async () => { S.equip.plotter = true; S.equip.sonar = S.equip.sonar || false;
+SET = """async () => { S.equip.plotter = true; S.equip.sonar = S.equip.sonar || false; S.equip.chirp = true;
   const H = PORTS.find(q => /havøysund/i.test(q.name)) || PORTS[0], b = S.boat; b.status = 'idle'; b.port = null; b.pos = {x:H.p.x - 3, y:H.p.y + 2};
   S.plan = {wps:[{x:H.p.x - 2, y:H.p.y + 1}, {x:H.p.x - 1, y:H.p.y + 0.5}, {x:H.p.x, y:H.p.y, port:H.id}], idx:0, speed:7, returning:false};
   await mapNeed(b.pos, 4); openPlotter(); }"""
@@ -17,7 +17,7 @@ MEASURE = """() => { const bar = document.getElementById('ecdisTop').getBounding
 async def main():
     async with async_playwright() as p:
         br = await p.chromium.launch(args=['--disable-gpu-compositing'])
-        for w, h, tag in [(430, 932, 'telefon_staaende'), (932, 430, 'telefon_liggende'), (800, 1280, 'staaende'), (1280, 800, 'liggende')]:
+        for w, h, tag in [(344, 694, 'smal_telefon_staaende'), (430, 932, 'telefon_staaende'), (932, 430, 'telefon_liggende'), (800, 1280, 'staaende'), (1280, 800, 'liggende')]:
             pg = await br.new_page(viewport={'width': w, 'height': h}, has_touch=True, is_mobile=w < 1000); errs = []
             pg.on('pageerror', lambda e: errs.append(str(e)))
             await boot(pg); await pg.evaluate(SET); await pg.wait_for_timeout(1500)
