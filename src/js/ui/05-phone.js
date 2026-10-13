@@ -464,6 +464,10 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p105', '12.10.2026', 'Ekkoloddet og juksa', 'The echo sounder and the jig', [
+       ['Ekkoloddet kunne stoppe for resten av økta hvis en kartbit ikke var lastet inn ennå. Nå hopper det over den biten og prøver igjen litt senere.', 'The echo sounder could stop for the rest of the session when a piece of the map was not loaded yet. It now skips that piece and tries again a little later.'],
+       ['Når du jukser fra en båt med styrhus og har mannskap om bord, går skipperen nå ut på dekk og jukser selv, mens mannskapet sløyer. Før ble han stående i styrhuset.', 'When you jig from a boat with a wheelhouse and have crew aboard, the skipper now goes out on deck and jigs himself while the crew gut. Before, he stayed in the wheelhouse.'],
+    ]],
     ['p104', '10.10.2026', 'Håndboka', 'The handbook', [
        ['Mannskap kan bare sies opp når båten ligger til kai (mottak, verft, naust, rorbu, butikk eller en annen kai), ikke mens hun er ute i drift eller ligger for anker.', 'Crew can only be let go with the boat at a quay (a plant, a yard, a boathouse, a rorbu, a shop or another quay), not while she is out working or at anchor.'],
        ['Den som sies opp eller mønstrer av med fangst om bord, får lotten sin av fangsten der og da, og den som går på hyre, får hyre for den delen av dagen som er gått. Mannskap som var med da fisken ble tatt, får lott ved levering selv om de har fått fri etterpå.', 'Crew let go or signing off with catch aboard are paid their share of it there and then, and those on a wage get the part of the day worked. Crew who were aboard when the fish was caught get their share at the landing even if given time off since.'],

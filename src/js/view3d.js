@@ -4392,9 +4392,10 @@ const G3 = (() => {
     // and while the skipper rests ashore the crew are up there too (Jonas 06.10.2026: both sleep in the rorbu)
     const underway = S.boat.status === 'sailing' && !S.boat.gop, ashore = meAboard() && resting(), deckCrew = (underway && !VG.open) || ashore ? 0 : Math.max(0, ncrew - awayCr - Math.max(0, gHaul) - helmCr);
     if (VG.hand){ drawSkiff(BMrel, VPn, dt, !cam.helm && !awaySk, deckCrew > 0); gl.useProgram(PL.p); }
-    // jigging from a boat with a wheelhouse, the skipper leaves the wheel for the rail when the boat is open or he is alone (the
-    // hand-worked boats do the same in drawSkiff)
-    else { const jig = S.boat.status === 'fishing' && !S.boat.gop && !S.boat.deckStop && (VG.open || ncrew === 0);
+    // jigging from a boat with a wheelhouse, the skipper leaves the wheel for the rail (the hand-worked boats do the same in drawSkiff),
+    // also with crew aboard: he tends the jig while they gut (tilbakemelding #62: on a sjark with two hands he stood in the wheelhouse
+    // while one hand looked on); he stays at the wheel only when the crew fill every deck place
+    else { const jig = S.boat.status === 'fishing' && !S.boat.gop && !S.boat.deckStop;
       drawVessel(VT, VG, BMrel, VPn, !cam.helm && !awaySk, deckCrew, jig, hullLiv(S.boat), true); drawJigRail(BMrel, VPn, VT, VG, dt); gl.disableVertexAttribArray(2); gl.useProgram(PL.p); }
     SAY.a = null;
     if (SAY.c && performance.now() - SAY.t0 < SAYMS){
