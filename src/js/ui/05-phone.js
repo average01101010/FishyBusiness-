@@ -464,6 +464,9 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p106', '12.10.2026', 'Køyene og juksamaskinene', 'The bunks and the jigging reels', [
+       ['Ligger båten ved kai og har køyer, sover mannskapet i dem til de er uthvilt, i stedet for å stå ute på dekk. Takk for tipset!', 'When the boat lies at the quay and has bunks, the crew sleep in them until they are rested, instead of standing out on deck. Thanks for the tip!'],
+       ['Når du jukser med juksamaskiner, står det over knappene hvor mange som er i bruk. Én mann passer tre maskiner, så «3 av 5» betyr at det trengs flere hender til resten.', 'When you jig with jigging reels, the line above the buttons says how many are in use. One hand tends three reels, so «3 of 5» means more hands are needed for the rest.']]],
     ['p105', '12.10.2026', 'Ekkoloddet og juksa', 'The echo sounder and the jig', [
        ['Ekkoloddet kunne stoppe for resten av økta hvis en kartbit ikke var lastet inn ennå. Nå hopper det over den biten og prøver igjen litt senere.', 'The echo sounder could stop for the rest of the session when a piece of the map was not loaded yet. It now skips that piece and tries again a little later.'],
        ['Når du jukser fra en båt med styrhus og har mannskap om bord, går skipperen nå ut på dekk og jukser selv, mens mannskapet sløyer. Før ble han stående i styrhuset.', 'When you jig from a boat with a wheelhouse and have crew aboard, the skipper now goes out on deck and jigs himself while the crew gut. Before, he stayed in the wheelhouse.'],
