@@ -291,7 +291,7 @@ const SPEC3D = {
   jukesjark:{hull:{form:'round', F:0.82, fr:0.5, ar:0.16, rake:0.75, srake:0.15, tw:0.72, smax:0.48, entry:2.1, run:2.0, Tc:0.78, n:2.3, flare:0.08, trise:0.25, bulH:0.5, NS:38,
       col:{hull:VC.white, stripe:VC.blue, bottom:VC.afRed, boot:VC.blue, deck:VC.deck, inner:VC.inner, rail:VC.blue}, stripeW:0.13},
     parts:[['house', {zf:0.85, za:3.05, w:2.0, h:1.9, rake:-0.15, sill:0.95, nwin:3, nside:2, col:VC.white, roof:VC.blue}], ['mast', {z:2.5, h:2.0, radar:'dome', on:'house'}],
-      ['exhaust', {x:0.65, z:2.95, h:2.3}], ['jukse', {at:[-0.6, -2.0]}], ['rails', {s0:0.84, s1:0.99, h:0.6}], ['tubs', {z:-1.2, n:2}], ['fenders', {at:[0.3, 0.55, 0.75]}]],
+      ['exhaust', {x:0.65, z:2.95, h:2.3}], ['rails', {s0:0.84, s1:0.99, h:0.6}], ['tubs', {z:-1.2, n:2}], ['fenders', {at:[0.3, 0.55, 0.75]}]],
     work:{z:-0.9}, crew:[[0.6, -0.6, -1.5], [-0.6, -1.9, 1.6]]},
   hurtigsjark:{hull:{form:'chine', F:1.1, fr:0.42, ar:0.08, rake:0.8, srake:-0.1, tw:0.92, smax:0.56, entry:1.9, run:1.4, Tc:0.8, dr:15, drF:40, flare:0.1, flareFwd:0.12, trise:0.85, bulH:0.55, NS:40,
       col:{hull:VC.white, stripe:VC.blue, bottom:VC.afRed, boot:VC.blue, deck:VC.deck, inner:VC.inner, rail:VC.blue}, stripeW:0.16},

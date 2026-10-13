@@ -2786,6 +2786,58 @@ const G3 = (() => {
     }
   }
   function drawSkiffGlass(BMrel, VP){ if (SK) drawGlass(SK.glass, BMrel, VP); }
+  // the jigging machines on a boat with a wheelhouse (Jonas 13.10.2026: «alle båter utenom havflåten skal ha anledning til å bruke
+  // juksamaskin»): up to three on the starboard rail by the working deck, clear of the hauler. Where the rail is, is read off the
+  // boat's own model once per type: in a slice across her at each place, the top of the outermost part of her side.
+  const JIGR = {}, JIG_Z = {breisjark:[3.5, 4.25, 5.0]};    // where the side is covered forward (her shelter), the open deck aft
+  function jigRail(t, G){
+    if (t in JIGR) return JIGR[t];
+    const m = vesselModel(t), P = m && m.o && m.o.p, out = [];
+    if (P && G && G.deck){ const half = (G.beam || 3) / 2, hz = G.hauler ? G.hauler[2] : 1e9, st = G.stern || 4, bw = G.bow != null ? G.bow : -st, dy = G.deck.y;
+      // the places to try: out from the middle of the working deck both ways, clear of the hauler and the ends
+      const zs = JIG_Z[t] || [...Array(24).keys()].map(k => G.deck.z + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 0.35).filter(z => Math.abs(z - hz) > 0.6 && z < st - 0.9 && z > bw + 1.5);
+      for (const z of zs){ if (out.length >= 3) break; if (out.some(q => Math.abs(q[2] - z) < 0.7)) continue;
+        let xm = 0; for (let i = 0; i < P.length; i += 3) if (Math.abs(P[i + 2] - z) < 0.12 && P[i] > xm && P[i] < half + 0.3) xm = P[i];
+        if (xm < half * 0.6) continue;
+        // the top of her side there, a rail between knee and hip height over the deck
+        let ym = -1e9; for (let i = 0; i < P.length; i += 3) if (Math.abs(P[i + 2] - z) < 0.12 && P[i] > xm - 0.18 && P[i + 1] > ym && P[i + 1] < dy + 1.3) ym = P[i + 1];
+        if (ym < dy + 0.35) continue;
+        out.push([xm - 0.05, ym, z]); }
+      out.sort((a, b) => a[2] - b[2]); }
+    return (JIGR[t] = out);
+  }
+  const JA = {mc:[], t:null};
+  function drawJigRail(BMrel, VP, t, G, dt){
+    if (!SK) return; SK.lines = []; SK.rodT = (SK.rodT || 0) + dt;
+    // the machines stay bolted to the rail whatever she does; they run (spool, line, fish) only while she jigs with them
+    const b = S.boat, own = S.equip && S.equip.jukse > 0, run = own && b.status === 'fishing' && !b.gop && !window.jigActive && !(S.target === 'kveite' && b.kgear), MG = SK.machG;
+    if (!own || !MG){ JA.mc = []; return; }
+    nSetup(VP);
+    if (JA.t !== t){ JA.t = t; JA.mc = []; }
+    const spots = jigRail(t, G), n = Math.min(3, S.equip.jukse, spots.length); if (!n) return;
+    const Q = window.CATCHQ || (window.CATCHQ = []), nowT = performance.now(), T = (SK.rodT || 0), L2R = q => xf(BMrel, q), x = MG.x, sp = x.spool, sh = x.sheave;
+    while (Q.length && (nowT - Q[0].t > 15000 || Q.length > 12)) Q.shift();
+    if (!run){ JA.mc = []; for (let k = 0; k < n; k++){ const P = spots[k]; drawN(MG.body, chain(BMrel, M4.T(P[0], P[1], P[2])));
+      if (MG.spool) drawN(MG.spool, chain(BMrel, M4.T(P[0] + sp[0], P[1] + sp[1], P[2] + sp[2]))); if (MG.sheave) drawN(MG.sheave, chain(BMrel, M4.T(P[0] + sh[0], P[1] + sh[1], P[2] + sh[2]))); } return; }
+    while (JA.mc.length < n) JA.mc.push({st:'jig', t:0, fish:[], a:0});
+    for (let k = 0; k < n; k++){ const m = JA.mc[k], P = spots[k], tip = [P[0] + x.tip[0], P[1] + x.tip[1], P[2] + x.tip[2]]; m.t += dt;
+      drawN(MG.body, chain(BMrel, M4.T(P[0], P[1], P[2])));
+      if (m.st === 'jig' && Q.length && (Q.length >= 2 || nowT - Q[0].t > 2000)){ m.fish = Q.splice(0, 3); m.st = 'haul'; m.t = 0; m.d0 = -1.6 - 0.5 * m.fish.length; }
+      m.a = m.st === 'jig' ? 1.6 * Math.pow(Math.max(0, Math.sin(T * 2.6 + k * 1.7)), 3) : m.a - dt * 9;
+      if (MG.spool) drawN(MG.spool, chain(BMrel, M4.T(P[0] + sp[0], P[1] + sp[1], P[2] + sp[2]), M4.RZ(m.a)));
+      if (MG.sheave) drawN(MG.sheave, chain(BMrel, M4.T(P[0] + sh[0], P[1] + sh[1], P[2] + sh[2]), M4.RZ(m.a * x.spoolR / x.sheaveR)));
+      SK.lines.push([L2R([P[0] + sp[0], P[1] + sp[1] + x.spoolR, P[2] + sp[2]]), L2R([P[0] + x.lead[0], P[1] + x.lead[1], P[2] + x.lead[2]])]);
+      if (m.st === 'jig'){ const bob = 0.25 * Math.pow(Math.max(0, Math.sin(T * 2.6 + k * 1.7)), 3); SK.lines.push([L2R(tip), L2R([tip[0], -0.3 - bob, tip[2]])]); }
+      else { const end = m.d0 + m.t * 1.3; let low = null;
+        // the fish come up on the line and are taken in over the rail at the top (onto the deck, where the catch is shown)
+        for (let i = m.fish.length - 1; i >= 0; i--){ const f = m.fish[i], y = end + i * 0.5;
+          if (y >= tip[1] - 0.35){ m.fish.splice(i, 1); continue; }
+          const sc = clamp(0.42 * Math.cbrt(f.kg), 0.28, 1.2), Pf = [tip[0], y, tip[2]];
+          if (y > -0.2) drawN(SK.fishM[f.sp] || SK.fishM.torsk, chain(BMrel, M4.T(Pf[0], Pf[1] - sc * 0.45, Pf[2]), M4.RX(Math.PI / 2), M4.RZ(Math.sin(T * 9 + i + k * 3) * 0.45), M4.S(sc)));
+          low = low || Pf; }
+        SK.lines.push([L2R(tip), L2R(low || [tip[0], Math.min(tip[1], end), tip[2]])]);
+        if (!m.fish.length && m.t > 0.6){ m.st = 'jig'; m.t = 0; } } }
+  }
   function drawGlass(m, BMrel, VP){
     if (!m || !m.n) return; nSetup(VP); gl.uniform1f(PRGN.u.uAlpha, 0.2);
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
@@ -4341,7 +4393,7 @@ const G3 = (() => {
     // jigging from a boat with a wheelhouse, the skipper leaves the wheel for the rail when the boat is open or he is alone (the
     // hand-worked boats do the same in drawSkiff)
     else { const jig = S.boat.status === 'fishing' && !S.boat.gop && !S.boat.deckStop && (VG.open || ncrew === 0);
-      drawVessel(VT, VG, BMrel, VPn, !cam.helm && !awaySk, deckCrew, jig, hullLiv(S.boat), true); }
+      drawVessel(VT, VG, BMrel, VPn, !cam.helm && !awaySk, deckCrew, jig, hullLiv(S.boat), true); drawJigRail(BMrel, VPn, VT, VG, dt); gl.disableVertexAttribArray(2); gl.useProgram(PL.p); }
     SAY.a = null;
     if (SAY.c && performance.now() - SAY.t0 < SAYMS){
       // over the head of the one who speaks, at his place on deck (the crew stand at the places in the order of the list); when he is not
@@ -4524,7 +4576,7 @@ const G3 = (() => {
     if (QUAL.lvl) driftSpray(VP, eye, dt, t, foamCol);
     drawSmoke(VP, eye, BM, dt);
     // fishing lines
-    if (S.boat.status === 'fishing' && GEO(vtype()).hand && SK){
+    if (S.boat.status === 'fishing' && SK && (SK.lines || []).length){
       const segs = (SK.lines || []).slice();
       let n = 0;
       for (const [a0, b0] of segs){ if (n > 30) break; const A0 = [a0[0] + eye[0], a0[1] + eye[1], a0[2] + eye[2]], B0 = b0 ? [b0[0] + eye[0], b0[1] + eye[1], b0[2] + eye[2]] : [A0[0], seaH(A0[0], A0[2], t) - 0.2, A0[2]];
@@ -4658,6 +4710,6 @@ const G3 = (() => {
     // the cinema: on or off (the HUD is the page's: body.kino-clean)
     kino(on){ if (on !== undefined){ KINO.on = !!on; KINO.shot = null; } return KINO.on; }, intro:introStart, introOn:() => !!INTRO, get kinoShot(){ return KINO.shot ? KINO.shot.type : null; },
     isHelm:() => cam.helm, setHelm(on){ const G = GEO(vtype()); cam.helm = !!on; cam.zoom = 1; cam.hy = 0; cam.hp = G.hp !== undefined ? G.hp : -0.07; cam.fov = G.fov || 55; },
-    _debug:{get anchl(){ return ANCHAL; }, get jsms(){ return JSMS; }, lift:LIFT, bv, pota:POTA, get fps(){ return FPS.v; }, get cam(){ return cam; }, trawl(mode, at, hold){ TRAWL.mode = mode || null; TRAWL.t0 = performance.now() / 1000 - (at || 0); TRAWL.hold = hold ? at || 0 : null; return mode; }, seine(mode, at, hold){ SEINE.mode = mode || null; SEINE.t0 = performance.now() / 1000 - (at || 0); SEINE.hold = hold ? at || 0 : null; return mode; }, get seineNow(){ return seineState(performance.now() / 1000); }, get trawlNow(){ const st = trawlState(performance.now() / 1000); return TRAWL.mode ? Object.assign({mode:TRAWL.mode}, st) : null; }, get trk(){ return TRK && {s:TRK.s, v:TRK.v, vc:TRK.vc, end:TRK.end, sIn:TRK.sIn, back:TRK.back, turnL:TRK.turnL, done:TRK.done, stops:TRK.stops.map(q => q.s), P:TRK.P}; }, get peers(){ return npcNow.filter(n => n.player).map(n => ({id:n.id, vtype:n.vtype, t:n.K ? n.K.t : null, glass:!!(n.K && n.K.glass)})); }, get air(){ return airNow.map(a => ({kind:a.kind, w:a.w.map(Math.round)})); }, get airM(){ return !!(AIRM && AIRM.plane); }, get curFov(){ return curFov; }, cam, moundTop, bridgeInto, get statTris(){ return STAT ? STAT.n / 3 : 0; }, get vec(){ return {tiles:[...VEC.tiles.values()].map(t => ({k:t.k, bld:t.bld ? t.bld.n : 0, roads:t.roads.length, bridges:t.bridges.length, piers:t.piers.length, molos:t.molos.length, quays:t.quays.length, ms:Math.round(t.ms)})), statics:[...TST].map(([k, s]) => ({k, tris:s.tris, ms:Math.round(s.ms)})), chunks:CH.size}; }, moundInto, MB, haulModel, get haulA(){ return HAULA; }, gopHands, kinoNext(){ KINO.shot = null; }, get kino(){ const k = KINO.shot, e = KINO.eye, g = KINO.tgt; if (!k || !e) return null; const t = (performance.now() - T0) / 1000; return {type:k.type, up:e[1] - Math.max(terrH(e[0], e[2]), seaH(e[0], e[2], t)), free:camFree(g, e), d:Math.hypot(e[0] - bv.x, e[2] - bv.z)}; }, get PLA(){ return PLA; }, get PCA(){ return PCA; }, set noPL(v){ NOPL = !!v; }, get beams(){ return BMN; }, glErr(){ return gl ? gl.getError() : -1; }, mastTop:t => mastTop(geoOf(t)), QUAL, qualTick, TERRW, get TERR(){ return TERR; }, get MIDM(){ return MIDM; }, RO, SSL, WV, WK, ssAt, seaH, waves:(dt, H) => updateWaves(dt, H), get sstVS(){ return SST_VS; }, get seaLvl(){ return seaLvl; }, get seaBasic(){ return !!(PS && PS.basic); }, get seaOne(){ return PSF === PS; }, get seaLite(){ return !!(PS && PS.lite); }, set seaDbg(v){ SEADBG = v; }, get drift(){ let c = 0; for (let i = 0; i < SDN; i++) if (SD.age[i] < SD.life[i]) c++; return c; }, get eye(){ return lastEye; }, camInside, camFree, get camPull(){ return camPull; }, get camLift(){ return camLift; }, get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, BUNKERS, nearestPlant, fkRun, legAt, terrH, terrRaw, unitModel, get UPATCH(){ return UPATCH; }, sitesNow, siteModel, onSite, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; lightsHere(e, 50).forEach(L => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(L, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }, get landMask(){ return LMON ? lcv : null; }, get maskMs(){ return LMMS; }, get coast3(){ return COAST3; }, meshH(x, z){ const M = FINEM && x > FINEM.x0 + 8 && x < FINEM.x0 + FINEM.sx - 8 && z > FINEM.z0 + 8 && z < FINEM.z0 + FINEM.sz - 8 ? FINEM : NEARM; return M ? nearSurf(M, x, z) : NaN; }, seaU(){ if (!PS) return null; gl.useProgram(PS.p); const g = n => PS.u[n] == null ? 'none' : gl.getUniform(PS.p, PS.u[n]); return {ls:g('uLSOn'), land:g('uLandS'), rect:g('uLRect') && Array.from(g('uLRect')), hOn:g('uHOn'), sOn:g('uSOn'), lmon:LMON, gr:!!GRECT, lt:!!LMTEX}; },  get FINEM(){ return FINEM; }, get seaNP(){ return NP; }, get dpr(){ return canvas ? canvas.width / Math.max(1, canvas.getBoundingClientRect().width) : 0; }}
+    _debug:{get anchl(){ return ANCHAL; }, jigRail:t => jigRail(t, GEO(t)), get jsms(){ return JSMS; }, lift:LIFT, bv, pota:POTA, get fps(){ return FPS.v; }, get cam(){ return cam; }, trawl(mode, at, hold){ TRAWL.mode = mode || null; TRAWL.t0 = performance.now() / 1000 - (at || 0); TRAWL.hold = hold ? at || 0 : null; return mode; }, seine(mode, at, hold){ SEINE.mode = mode || null; SEINE.t0 = performance.now() / 1000 - (at || 0); SEINE.hold = hold ? at || 0 : null; return mode; }, get seineNow(){ return seineState(performance.now() / 1000); }, get trawlNow(){ const st = trawlState(performance.now() / 1000); return TRAWL.mode ? Object.assign({mode:TRAWL.mode}, st) : null; }, get trk(){ return TRK && {s:TRK.s, v:TRK.v, vc:TRK.vc, end:TRK.end, sIn:TRK.sIn, back:TRK.back, turnL:TRK.turnL, done:TRK.done, stops:TRK.stops.map(q => q.s), P:TRK.P}; }, get peers(){ return npcNow.filter(n => n.player).map(n => ({id:n.id, vtype:n.vtype, t:n.K ? n.K.t : null, glass:!!(n.K && n.K.glass)})); }, get air(){ return airNow.map(a => ({kind:a.kind, w:a.w.map(Math.round)})); }, get airM(){ return !!(AIRM && AIRM.plane); }, get curFov(){ return curFov; }, cam, moundTop, bridgeInto, get statTris(){ return STAT ? STAT.n / 3 : 0; }, get vec(){ return {tiles:[...VEC.tiles.values()].map(t => ({k:t.k, bld:t.bld ? t.bld.n : 0, roads:t.roads.length, bridges:t.bridges.length, piers:t.piers.length, molos:t.molos.length, quays:t.quays.length, ms:Math.round(t.ms)})), statics:[...TST].map(([k, s]) => ({k, tris:s.tris, ms:Math.round(s.ms)})), chunks:CH.size}; }, moundInto, MB, haulModel, get haulA(){ return HAULA; }, gopHands, kinoNext(){ KINO.shot = null; }, get kino(){ const k = KINO.shot, e = KINO.eye, g = KINO.tgt; if (!k || !e) return null; const t = (performance.now() - T0) / 1000; return {type:k.type, up:e[1] - Math.max(terrH(e[0], e[2]), seaH(e[0], e[2], t)), free:camFree(g, e), d:Math.hypot(e[0] - bv.x, e[2] - bv.z)}; }, get PLA(){ return PLA; }, get PCA(){ return PCA; }, set noPL(v){ NOPL = !!v; }, get beams(){ return BMN; }, glErr(){ return gl ? gl.getError() : -1; }, mastTop:t => mastTop(geoOf(t)), QUAL, qualTick, TERRW, get TERR(){ return TERR; }, get MIDM(){ return MIDM; }, RO, SSL, WV, WK, ssAt, seaH, waves:(dt, H) => updateWaves(dt, H), get sstVS(){ return SST_VS; }, get seaLvl(){ return seaLvl; }, get seaBasic(){ return !!(PS && PS.basic); }, get seaOne(){ return PSF === PS; }, get seaLite(){ return !!(PS && PS.lite); }, set seaDbg(v){ SEADBG = v; }, get drift(){ let c = 0; for (let i = 0; i < SDN; i++) if (SD.age[i] < SD.life[i]) c++; return c; }, get eye(){ return lastEye; }, camInside, camFree, get camPull(){ return camPull; }, get camLift(){ return camLift; }, get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, BUNKERS, nearestPlant, fkRun, legAt, terrH, terrRaw, unitModel, get UPATCH(){ return UPATCH; }, sitesNow, siteModel, onSite, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; lightsHere(e, 50).forEach(L => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(L, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }, get landMask(){ return LMON ? lcv : null; }, get maskMs(){ return LMMS; }, get coast3(){ return COAST3; }, meshH(x, z){ const M = FINEM && x > FINEM.x0 + 8 && x < FINEM.x0 + FINEM.sx - 8 && z > FINEM.z0 + 8 && z < FINEM.z0 + FINEM.sz - 8 ? FINEM : NEARM; return M ? nearSurf(M, x, z) : NaN; }, seaU(){ if (!PS) return null; gl.useProgram(PS.p); const g = n => PS.u[n] == null ? 'none' : gl.getUniform(PS.p, PS.u[n]); return {ls:g('uLSOn'), land:g('uLandS'), rect:g('uLRect') && Array.from(g('uLRect')), hOn:g('uHOn'), sOn:g('uSOn'), lmon:LMON, gr:!!GRECT, lt:!!LMTEX}; },  get FINEM(){ return FINEM; }, get seaNP(){ return NP; }, get dpr(){ return canvas ? canvas.width / Math.max(1, canvas.getBoundingClientRect().width) : 0; }}
   };
 })();
