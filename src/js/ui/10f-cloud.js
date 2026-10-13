@@ -326,6 +326,10 @@ async function cloudSync(cs){
   // (not played here since it was last in step, but for the last minute that may not have reached the account as the page closed)
   if (sync && local <= sync.at + 150000){ cloudGateShow('<p>' + cloudL('Henter spillet ditt …', 'Fetching your game …') + '</p>'); return cloudTake(cs); }   // not played here since: the newer one from elsewhere
   if (!sync && Math.abs(local - Date.parse(rev)) < 3000){ syncSet(rev, local, cs.rev); return; }            // the same save, from before devices kept count
+  // a device that has never been in step with this account (signing in from a guest's game, or from the app on the home screen, which
+  // keeps storage of its own): the account's game goes on, and the one here is kept (Tidligere lagringer). Before, the newest by the
+  // clock went on, and a game just begun could pass a long-played one (13.10.2026)
+  if (!sync){ cloudKeptNote('cloud'); cloudGateShow('<p>' + cloudL('Henter spillet ditt …', 'Fetching your game …') + '</p>'); return cloudTake(cs); }
   // both have been played since they were last in step: the last save goes on, whatever either game has come to (Jonas 11.10.2026: «alltid den
   // siste lagringen»); the other is kept in the history
   const pick = Date.parse(cs.updated_at || rev) > local ? 'cloud' : 'here'; cloudKeptNote(pick);   // (the server's own time of the save when it tells it)

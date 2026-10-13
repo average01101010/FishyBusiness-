@@ -99,6 +99,11 @@ async def main():
         await B.reload(); await B.wait_for_function(READY, timeout=120000); await B.wait_for_timeout(1500)
         st = await B.evaluate("({cash:S.cash, seq:S.seq, sync:syncGet(), lost:TAB.lost})")
         check(st['cash'] == 985690, 'a game on the device older than the one the device sent gives way to the account\'s at the start', st)
+        # signing in on a device that has never been in step with the account (a guest's game, the app): the account's game, never the newest by the clock
+        await B.evaluate("o => { SAVE_OFF = true; const g = JSON.parse(o); g.lastReal = Date.now(); g.cash = 1234; localStorage.setItem(KEY, JSON.stringify(g)); localStorage.removeItem(syncKey()); sessionStorage.removeItem('dsb_pulled'); }", old)
+        await B.reload(); await B.wait_for_function(READY, timeout=120000); await B.wait_for_timeout(1500)
+        st = await B.evaluate("({cash:S.cash, prev:JSON.parse(localStorage.getItem(KEY_PREV) || '{}').cash})")
+        check(st['cash'] == 985690 and st['prev'] == 1234, 'a device never in step with the account takes the account\'s game, and keeps its own as the one before', st)
         check(not errs, 'no page errors (cloud)', errs[:3])
         await ctx.close()
 
