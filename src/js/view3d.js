@@ -2452,6 +2452,9 @@ const G3 = (() => {
     // electric jigging machine on the rail with its rod out over the side
     const mm = NB(); mm.rbox(0, 0, 0, 0.26, 0.26, 0.36, 0.05, [0.86, 0.87, 0.88, 0.6]); mm.rbox(0, -0.04, 0, 0.3, 0.05, 0.4, 0.02, [0.2, 0.22, 0.25, 0.4]); mm.tube([[0.14, 0.13, 0], [0.2, 0.13, 0]], 0.1, [0.25, 0.27, 0.3, 0.6], 12);
     mm.tube([[0.1, 0.2, 0], [0.8, 0.62, 0]], 0.018, [0.18, 0.2, 0.22, 0.7], 8); mm.tube([[0.78, 0.61, 0], [0.82, 0.63, 0]], 0.03, STL, 8);
+    // the machine from tools/gear/juksamaskin.py in place of the drawn one: the body, the spool and the block's sheave, which turn
+    let machG = null; if (typeof glbHas === 'function' && glbHas('gear-jig')){ const up = nm => { const o = glbPart('gear-jig', nm); return o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null; }, jg = glbLoad('gear-jig'), x = (jg && jg.ex) || {};
+      const body = up('maskin'); if (body && x.tip) machG = {body, spool:up('spole'), sheave:up('skive'), x}; }
     // one fish, 1 m long along -z (head forward), coloured per species: back, belly
     const FC = {torsk:[[0.36, 0.33, 0.2, 0.5], [0.9, 0.88, 0.8, 0.5]], sei:[[0.2, 0.25, 0.24, 0.6], [0.72, 0.74, 0.74, 0.6]], hyse:[[0.28, 0.3, 0.33, 0.6], [0.85, 0.86, 0.88, 0.7]], lange:[[0.42, 0.36, 0.26, 0.5], [0.8, 0.76, 0.66, 0.5]], brosme:[[0.45, 0.33, 0.2, 0.5], [0.72, 0.6, 0.45, 0.5]], lyr:[[0.33, 0.32, 0.2, 0.55], [0.82, 0.8, 0.7, 0.6]], uer:[[0.72, 0.22, 0.14, 0.6], [0.92, 0.55, 0.42, 0.6]], kveite:[[0.26, 0.25, 0.2, 0.4], [0.94, 0.94, 0.92, 0.6]], blakveite:[[0.17, 0.16, 0.15, 0.4], [0.33, 0.31, 0.29, 0.5]]};
     const fishM = {}; for (const sp in FC){ const f = NB(), [back, belly] = FC[sp], G = [], NZ = 12, NA = 12;
@@ -2471,7 +2474,7 @@ const G3 = (() => {
     const cvN = document.createElement('canvas'); cvN.width = 512; cvN.height = 128;
     SK = {hull, glass:gl2.mesh(), wheel:wh.mesh(), lever:lv.mesh(), motor:ob.mesh(), prop:prop.mesh(), cap:cap.mesh(),
       qPlot:texQuad(...scrPlot), qGauge:texQuad(...scrGauge), qVhf:texQuad(...scrVhf), qName:nq,
-      skipper:pb.mesh(), crew:cb.mesh(), fishM, rodT:0, fisher:fb.mesh(), cstr:cs.mesh(), shoe:hs.mesh(), limb:lb.mesh(), hand:hb.mesh(), reelF:jf.mesh(), reelD:jd.mesh(), mach:mm.mesh(), anim:null, lines:[], tPlot:mkTex(), tGauge:mkTex(), tVhf:mkTex(), tName:mkTex(), cvP, cvG, cvV, cvN, nameKey:'',
+      skipper:pb.mesh(), crew:cb.mesh(), fishM, rodT:0, fisher:fb.mesh(), cstr:cs.mesh(), shoe:hs.mesh(), limb:lb.mesh(), hand:hb.mesh(), reelF:jf.mesh(), reelD:jd.mesh(), mach:machG ? machG.body : mm.mesh(), machG, anim:null, lines:[], tPlot:mkTex(), tGauge:mkTex(), tVhf:mkTex(), tName:mkTex(), cvP, cvG, cvV, cvN, nameKey:'',
       wheelAt:[0.02, 0.98, zb - 0.075], wheelTilt:0.42, leverAt:lvBox, motorAt:[0, 0.5, zs(0) + 0.02],
       needle:{rpm:0, fuel:0, temp:8, volt:12.6}, wheelA:0, headPrev:null, propA:0, tP:0, tG:0};
     SK.pp = {skipper:[0, 0.2, 0.8, false, [[-0.12, 1.12, 0.05], [0.16, 1.1, 0.05]]], crew:[0.26, 0.32, 1.16, true, null], fisher:[0, 0, 0, false, false]};
@@ -2734,8 +2737,14 @@ const G3 = (() => {
         const n = Math.min(3, S.equip.jukse);
         while (A.mc.length < n) A.mc.push({st:'jig', t:0, fish:[]});
         let busy = null;
-        for (let k = 0; k < n; k++){ const m = A.mc[k], P = SKA.mach[k], tip = [P[0] + 0.8, P[1] + 0.62, P[2]]; m.t += dt;
+        for (let k = 0; k < n; k++){ const m = A.mc[k], P = SKA.mach[k], G = SK.machG, tip = G ? [P[0] + G.x.tip[0], P[1] + G.x.tip[1], P[2] + G.x.tip[2]] : [P[0] + 0.8, P[1] + 0.62, P[2]]; m.t += dt;
           drawN(SK.mach, chain(BMrel, M4.T(P[0], P[1], P[2])));
+          // the spool jerks the jig up and down while it fishes and runs the line in fast when fish are on; the sheave follows the line
+          if (G){ const was = m.a || 0; m.a = m.st === 'jig' ? 1.6 * Math.pow(Math.max(0, Math.sin(T * 2.6 + k * 1.7)), 3) : was - dt * 9;
+            const sp = G.x.spool, sh = G.x.sheave, sa = m.a;
+            if (G.spool) drawN(G.spool, chain(BMrel, M4.T(P[0] + sp[0], P[1] + sp[1], P[2] + sp[2]), M4.RZ(sa)));
+            if (G.sheave) drawN(G.sheave, chain(BMrel, M4.T(P[0] + sh[0], P[1] + sh[1], P[2] + sh[2]), M4.RZ(sa * G.x.spoolR / G.x.sheaveR)));
+            SK.lines.push([L2R([P[0] + sp[0], P[1] + sp[1] + G.x.spoolR, P[2] + sp[2]]), L2R([P[0] + G.x.lead[0], P[1] + G.x.lead[1], P[2] + G.x.lead[2]])]); }
           if (m.st === 'jig' && Q.length && (Q.length >= 2 || nowT - Q[0].t > 2000)){ m.fish = Q.splice(0, 3); m.st = 'haul'; m.t = 0; m.d0 = -1.4 - 0.5 * m.fish.length; }
           if (m.st === 'jig'){ const bob = 0.25 * Math.pow(Math.max(0, Math.sin(T * 2.6 + k * 1.7)), 3); SK.lines.push([L2R(tip), L2R([tip[0], -0.3 - bob, tip[2]])]); }
           else { const end = m.d0 + m.t * 1.3; let low = null;
