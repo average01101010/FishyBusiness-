@@ -65,7 +65,29 @@ const spName = sp => SPECIES[sp][S.lang];
 const KEY = 'kystfiske_v2', KEY_V1 = 'kystfiske_proto_v1';
 // set when a save code has been read in and the page is about to load it: nothing may save over it before the reload (pagehide saves)
 let SAVE_OFF = false;
-function save(){ if (SAVE_OFF) return; try { S.lastReal = Date.now(); let o = S; if (S.fleet && S.fleet.length){ storeVessel(curVessel()); o = Object.assign({}, S); for (const k of VKEYS) delete o[k]; } localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) {} }
+// One tab writes the game on a device (Adrian 13.10.2026: a tab left open on the iPhone since the morning woke up hours later and saved
+// its morning over the game he had played since, on the device and, the device being the same, on the account). The page that reads the
+// save marks itself the owner (KEY_OWN, with the time); a page that finds a later mark from another page has been passed by: it saves
+// nothing more, plays no more and says so (tabLose), and loading it again makes it the owner with the game as it is now.
+const KEY_OWN = 'kystfiske_v2_own', TAB = {id:'t' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36), at:0, lost:false};
+function tabMark(){ TAB.at = Date.now(); try { localStorage.setItem(KEY_OWN, JSON.stringify({tab:TAB.id, at:TAB.at})); } catch (e){} }
+function tabMine(){
+  if (TAB.lost) return false; if (!TAB.at) return true;
+  let o = null; try { o = JSON.parse(localStorage.getItem(KEY_OWN) || 'null'); } catch (e){}
+  if (o && o.tab !== TAB.id && o.at >= TAB.at){ tabLose(); return false; }
+  return true;
+}
+function tabLose(){
+  if (TAB.lost) return; TAB.lost = true; SAVE_OFF = true;
+  const L = (no, en) => typeof S !== 'undefined' && S && S.lang === 'en' ? en : no;
+  try { if (typeof cloudEv === 'function') cloudEv('tab_lost', {}); } catch (e){}
+  const g = typeof cloudGateShow === 'function' ? cloudGateShow('<p class="cg-lead">' + L('Spillet er åpnet et annet sted', 'The game is open somewhere else') + '</p><p class="cg-small">' +
+    L('Spillet ditt er åpnet i en annen fane eller et annet vindu på denne enheten. Denne er satt på pause, så den ikke skriver et eldre spill over det nye.', 'Your game is open in another tab or window on this device. This one is paused, so it does not write an older game over the newer one.') +
+    '</p><div class="cg-btns"><button id="tabHere" type="button" class="cg-btn pri">' + L('Spill her', 'Play here') + '</button></div>') : null;
+  const b = document.getElementById('tabHere'); if (b) b.onclick = () => location.reload();
+  if (!g) location.reload();
+}
+function save(){ if (SAVE_OFF || !tabMine()) return; try { S.lastReal = Date.now(); S.seq = (S.seq || 0) + 1; let o = S; if (S.fleet && S.fleet.length){ storeVessel(curVessel()); o = Object.assign({}, S); for (const k of VKEYS) delete o[k]; } localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) {} }
 // v1 to v2: every point {x, y} (km) anywhere in the save goes through LG; the stock's dense grids of the legacy frame (40 x 42 cells of
 // 2 km) become the sparse cells of the national frame, the lowest value where two old cells land in one new; headings turn with the frame
 function migrateV2(o){
@@ -106,6 +128,7 @@ function toast(msg){ const el = $('toast'); el.textContent = msg; el.classList.a
 // its own storage, so a game is carried across as text, the save gzipped in base64 after «KYST2:» (Innstillinger on the phone).
 const b64of = u => { let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); };
 async function saveCode(){
+  if (!tabMine()) return null;   // (a page passed by another sends nothing: the game here is the other page's now)
   save(); const raw = localStorage.getItem(KEY); if (!raw) return null;
   const z = new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer());
   return 'KYST2:' + b64of(z);
@@ -124,5 +147,5 @@ async function loadCode(code){
   const {raw, o} = await codeRead(code);
   try { const cur = localStorage.getItem(KEY); if (cur && cur !== raw) localStorage.setItem(KEY_PREV, cur); } catch (e){}
   // (two games may not fit the browser's storage: the game being loaded goes first)
-  SAVE_OFF = true; try { localStorage.setItem(KEY, raw); } catch (e){ localStorage.removeItem(KEY_PREV); localStorage.setItem(KEY, raw); } return o;
+  SAVE_OFF = true; try { localStorage.setItem(KEY, raw); } catch (e){ localStorage.removeItem(KEY_PREV); localStorage.setItem(KEY, raw); } tabMark(); return o;
 }

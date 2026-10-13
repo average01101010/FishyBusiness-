@@ -92,6 +92,8 @@ async function cloudRpc(fn, args, opt){
   const t = await r.text(); return t ? JSON.parse(t) : null;
 }
 
+// started from the icon on the home screen (the installed app), not in a browser tab
+const appMode = () => { try { return !!(navigator.standalone || (window.matchMedia && (matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches))); } catch (e){ return false; } };
 // ---------- the gate: before the game starts ----------
 function cloudGateShow(html){
   // the same picture and type as the loading screen (styles.css): the name over the sky, the text and the buttons in a card over the water
@@ -130,6 +132,17 @@ async function cloudGate(){
   }
   // a new player: the envelope at once, as a guest (a device signed in before meets the gate below)
   if (!CLOUD.user && !localStorage.getItem(CLOUD_SIGNED)){
+    // the app on the home screen keeps its own storage (an iPhone keeps it apart from Safari's; Adrian 13.10.2026: «når æ starte appen så
+    // begynne æ med far sitt brev»): with nothing on it yet, the player is asked first whether they have played before
+    if (appMode() && !localStorage.getItem(KEY) && !localStorage.getItem(GUEST_KEY)){
+      await new Promise(res => {
+        cloudGateShow('<p class="cg-lead">' + cloudL('Har du spilt før?', 'Have you played before?') + '</p><p class="cg-small">' +
+          cloudL('Appen har sin egen lagring. Logg inn med den samme kontoen som i nettleseren, så fortsetter du der du slapp.', 'The app keeps its own storage. Sign in with the same account as in the browser, and you go on where you left off.') + '</p>' +
+          '<div class="cg-btns">' + cloudBtn('cgIn', cloudL('Logg inn', 'Sign in'), true) + cloudBtn('cgNew', cloudL('Start et nytt spill', 'Start a new game')) + '</div>');
+        document.getElementById('cgIn').onclick = () => CLOUD.ak.signIn();
+        document.getElementById('cgNew').onclick = () => { cloudGateHide(); res(); };
+      });
+    }
     try { await guestStart(); }
     catch (e){ console.error(e); CLOUD.on = false; return; }   // no anonymous sign-in to be had (no network): the game on the device alone
     try { const h = await cloudRpc('tm_hello', {meta:cloudMeta()}); CLOUD.consent = h ? h.consent : null; } catch (e){ console.error(e); }
@@ -170,6 +183,7 @@ function cloudStart(){
   // what the start chose between two games, told once the game is up (cloudKeptNote)
   try { const n = sessionStorage.getItem('dsb_note'); if (n){ sessionStorage.removeItem('dsb_note'); setTimeout(() => toast(n), 1500); } } catch (e){}
   if (!CLOUD.on) return;
+  { const sy = syncGet(); if (sy && sy.rv != null) TAB.rv = sy.rv; }   // the revision this page's game comes from (cloudSaveSoon sends from it)
   window.addEventListener('error', e => { cloudErr(e.message, (e.filename || '') + ':' + (e.lineno || ''), e.error && e.error.stack);
     if (e.error && typeof FEEDBACK !== 'undefined') setTimeout(() => FEEDBACK.nudge('err'), 2000); });   // what the player saw helps (06e-feedback.js)
   window.addEventListener('unhandledrejection', e => cloudErr(String(e.reason && e.reason.message || e.reason), 'promise', e.reason && e.reason.stack));
@@ -236,7 +250,10 @@ function cloudErr(msg, src, stack){
 // kept: on this device (KEY_PREV) and in the cloud's history, and both can be taken back under Settings («Tidligere lagringer»).
 const syncKey = () => 'dsb_sync_' + ((CLOUD.user && CLOUD.user.id) || '');
 function syncGet(){ try { return JSON.parse(localStorage.getItem(syncKey()) || 'null'); } catch (e){ return null; } }
-function syncSet(rev, at, rv){ try { localStorage.setItem(syncKey(), JSON.stringify({rev, at, rv:rv == null ? null : rv})); } catch (e){} }
+function syncSet(rev, at, rv, sq){ try { localStorage.setItem(syncKey(), JSON.stringify({rev, at, rv:rv == null ? null : rv, sq:sq == null ? null : sq})); } catch (e){} }
+// (sq: the save count, S.seq, of the game sent; a game on the device with a lower count than that is older than what this device sent,
+// written back over it by a page left open since: cloudSync takes the account's then. rv is also kept by the page itself, TAB.rv, so a
+// page that is behind never sends from the revision another page of this device has come to.)
 // which device a save comes from (11.10.2026, supabase/migrations/20261011120000_sync.sql): a random id kept on the device, and a name for
 // the dialogs. The server counts the saves (rev); the device keeps the revision its game comes from (sync.rv).
 function deviceId(){
@@ -290,16 +307,22 @@ function cloudKeptNote(where){ const m = where === 'cloud' ? cloudL('Vi fant en 
 const cloudChoosing = () => CLOUD.choosing || !!document.getElementById('cgHere');
 // the account's game onto this device (the one here kept), and start again with it
 async function cloudTake(cs){
-  const o = await loadCode(cs.data); syncSet(cs.saved_at, o.lastReal || Date.parse(cs.saved_at), cs.rev); sessionStorage.setItem('dsb_pulled', cs.saved_at);
+  const o = await loadCode(cs.data); syncSet(cs.saved_at, o.lastReal || Date.parse(cs.saved_at), cs.rev, o.seq); sessionStorage.setItem('dsb_pulled', cs.saved_at);
   if (cs.device && cs.device !== deviceId()){ try { sessionStorage.setItem('dsb_note', cloudL('Fortsetter der du slapp på ' + (cs.device_name || 'en annen enhet') + '. ', 'Going on where you left off on ' + (cs.device_name || 'another device') + '. ') + sumText(cs.summary || saveSum(o)) + '.'); } catch (e){} }
   location.reload(); return new Promise(() => {});
 }
 // at the start: the account has a game; which goes on
 async function cloudSync(cs){
   const rev = cs.saved_at, localRaw = localStorage.getItem(KEY), lo = localRaw ? JSON.parse(localRaw) : null, local = lo ? (lo.lastReal || 0) : 0, sync = syncGet();
+  // the game here is older than the one this device sent (a page left open wrote its game back over it): the account's, whatever else
+  // (after taking it the counts are the same, so this never goes round)
+  if (lo && sync && Date.parse(sync.rev) === Date.parse(rev) && sync.sq != null && (lo.seq || 0) < sync.sq){
+    cloudGateShow('<p>' + cloudL('Henter spillet ditt …', 'Fetching your game …') + '</p>'); return cloudTake(cs); }
   if (sessionStorage.getItem('dsb_pulled') === rev) return;                                        // just loaded it (never in a loop)
   if (!lo || (lo.t || 0) < 1 && !lo.boatName){ cloudGateShow('<p>' + cloudL('Henter spillet ditt …', 'Fetching your game …') + '</p>'); return cloudTake(cs); }   // nothing here yet
-  if (sync && Date.parse(sync.rev) === Date.parse(rev)){ if (cs.rev != null && sync.rv !== cs.rev) syncSet(sync.rev, sync.at, cs.rev); return; }   // the account has this device's game: on with it
+  if (sync && Date.parse(sync.rev) === Date.parse(rev)){
+    // the account has this device's game: on with it
+    if (cs.rev != null && sync.rv !== cs.rev) syncSet(sync.rev, sync.at, cs.rev, sync.sq); return; }
   // (not played here since it was last in step, but for the last minute that may not have reached the account as the page closed)
   if (sync && local <= sync.at + 150000){ cloudGateShow('<p>' + cloudL('Henter spillet ditt …', 'Fetching your game …') + '</p>'); return cloudTake(cs); }   // not played here since: the newer one from elsewhere
   if (!sync && Math.abs(local - Date.parse(rev)) < 3000){ syncSet(rev, local, cs.rev); return; }            // the same save, from before devices kept count
@@ -310,7 +333,7 @@ async function cloudSync(cs){
   CLOUD.forceNext = true; syncSet(rev, 0, cs.rev);   // the game here goes on; its first save replaces the account's (kept in the history)
 }
 async function cloudSaveSoon(closing, manual){
-  if (!CLOUD.on || !CLOUD.user || !S.lastReal || CLOUD.saving || cloudChoosing()) return;
+  if (!CLOUD.on || !CLOUD.user || !S.lastReal || CLOUD.saving || cloudChoosing() || TAB.lost || SAVE_OFF) return;   // (SAVE_OFF: another game is about to be loaded here)
   if (manual) save();
   if (S.lastReal === CLOUD.lastSave){ if (manual) cloudStatus('ok'); return; }
   CLOUD.saving = true; if (!closing) cloudStatus('saving');
@@ -320,7 +343,7 @@ async function cloudSaveSoon(closing, manual){
     // the server counts the saves (save_put3): the game says which revision it comes from, and the cloud having moved on is refused.
     // A device from before the revisions (or a new one) asks first which revision its game is from. (A database without it: the older puts.)
     if (!CLOUD.noPut3){
-      let base = (syncGet() || {}).rv; if (base === undefined) base = null;
+      let base = TAB.rv !== undefined ? TAB.rv : (syncGet() || {}).rv; if (base === undefined) base = null;
       if (base == null && !CLOUD.forceNext){
         let head = null;
         try { head = await cloudRpc('save_head', {}); } catch (e){ if (/ 404$/.test(e.message)) CLOUD.noPut3 = true; else throw e; }
@@ -341,7 +364,7 @@ async function cloudSaveSoon(closing, manual){
       if (!CLOUD.oldPut){ try { r = await cloudRpc('save_put2', {data, saved_at:iso, game_t:Math.round(S.t || 0), base:sync ? sync.rev : null, force:!!CLOUD.forceNext, summary:saveSum(S)}, keep); } catch (e){ if (!/ 404$/.test(e.message)) throw e; CLOUD.oldPut = true; } }
       if (CLOUD.oldPut) r = await cloudRpc('save_put', {data, saved_at:iso, game_t:Math.round(S.t || 0), force:!!CLOUD.forceNext}, keep);
     }
-    if (r && r.ok){ CLOUD.lastSave = at; CLOUD.forceNext = false; syncSet(r.saved_at || iso, at, r.rev); cloudStatus('ok'); }
+    if (r && r.ok){ CLOUD.lastSave = at; CLOUD.forceNext = false; TAB.rv = r.rev; syncSet(r.saved_at || iso, at, r.rev, S.seq); cloudStatus('ok'); }
     else if (r && r.cloud && !closing) cloudConflict(r.cloud, r.moved);
   } catch (e){ console.error(e); cloudStatus(navigator.onLine === false ? 'offline' : 'error'); } finally { CLOUD.saving = false; }
 }
@@ -352,8 +375,9 @@ async function cloudCheckHead(){
   if (!CLOUD.on || !CLOUD.user || CLOUD.noPut3 || CLOUD.saving || cloudChoosing() || navigator.onLine === false || Date.now() - (CLOUD.headT || 0) < 15000) return;
   CLOUD.headT = Date.now();
   try {
-    const h = await cloudRpc('save_head', {}), sy = syncGet();
-    if (h && sy && sy.rv != null && h.rev > sy.rv && h.device && h.device !== deviceId()) cloudConflict(h, true);
+    if (!tabMine()) return;
+    const h = await cloudRpc('save_head', {}), sy = syncGet(), rv = TAB.rv !== undefined ? TAB.rv : sy && sy.rv;
+    if (h && sy && rv != null && h.rev > rv && h.device && h.device !== deviceId()) cloudConflict(h, true);
   } catch (e){ if (/ 404$/.test(e.message)) CLOUD.noPut3 = true; }
 }
 async function cloudConflict(cl, moved){
@@ -396,7 +420,7 @@ async function cloudRestore(id){
   if (!raw) return toast(cloudL('Fant ikke lagringen.', 'Could not find the save.'));
   if (!confirm(cloudL('Hente dette spillet? Spillet du har nå, blir tatt vare på og kan hentes igjen.', 'Take this game back? The game you have now is kept and can be had again.'))) return;
   save(); const cur = localStorage.getItem(KEY); SAVE_OFF = true;
-  try { localStorage.setItem(KEY_PREV, cur); } catch (e){} localStorage.setItem(KEY, raw);
+  try { localStorage.setItem(KEY_PREV, cur); } catch (e){} localStorage.setItem(KEY, raw); tabMark();
   sessionStorage.setItem('dsb_force', '1'); location.reload();
 }
 

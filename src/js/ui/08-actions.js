@@ -303,6 +303,8 @@ function catchUp(realMs){
 let lastWall = Date.now(), acc = 0, lastPanel = 0, lastSave = 0, WAKE_BACK = false;
 function tick(){
   const now = Date.now(), dt = (now - lastWall) / 1000; lastWall = now;
+  // a page that slept (a tab in the background, a phone in a pocket) asks first whether another page has the game now: it plays nothing
+  if (TAB.lost || (dt > 2 && !tabMine())) return;
   // (until the simulation's data is in, the clock waits: 11-boot.js)
   if (SIMREADY){ if (CATCH_LEFT > 0){ const n = Math.min(CATCH_LEFT, 3000); CATCH_LEFT -= n; playMinutes(n); panelDirty = true; if (!CATCH_LEFT && AWAYR) awayEnd(); }
   else if (WCLOCK.on){
@@ -335,7 +337,7 @@ function deliverOrder(){
   const b = vget(tv, 'boat'); if (b.status !== 'port' || b.port !== 'finnsnes') return;
   S.order = null; onVessel(tv, () => PHONE.switchVessel(k)); save();
 }
-document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) save(); else tabMine(); });
 window.addEventListener('pagehide', save);
 
 // ---------- chrome ----------

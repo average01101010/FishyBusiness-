@@ -320,7 +320,7 @@ function chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st){
   }
 }
 function scheduleChart(){ followChart(); clearTimeout(chartTimer); chartTimer = setTimeout(() => paintChart(1), 140); }
-window.addEventListener('resize', () => { if (document.body.classList.contains('vplot')) scheduleChart(); });
+window.addEventListener('resize', () => { if (S && document.body.classList.contains('vplot')) scheduleChart(); });
 const CHN = {v:false};   // the night colours the base was last drawn with (tick() draws it again when the sun changes them)
 function renderBase(){
   // the night colours take the fishing chart's dark overlay (labels, ports, AIS)
@@ -612,7 +612,7 @@ svg.addEventListener('wheel', e => {
 if ($('zin')) $('zin').onclick = () => { if (G3.isActive()) return G3.zoom(1 / 1.4); view.z = clamp(view.z * 1.4, ZMIN, ZMAX); applyView(); scheduleStatic(); };
 if ($('zout')) $('zout').onclick = () => { if (G3.isActive()) return G3.zoom(1.4); view.z = clamp(view.z / 1.4, ZMIN, ZMAX); applyView(); scheduleStatic(); };
 $('zboat').onclick = () => { if (G3.isActive()) return G3.reset(); view.cx = S.boat.pos.x; view.cy = S.boat.pos.y; applyView(); scheduleStatic(); };
-window.addEventListener('resize', () => { applyView(); scheduleStatic(); });
+window.addEventListener('resize', () => { if (!S) return; applyView(); scheduleStatic(); });   // (not before the game is read: the sign-in gate can be turned)
 
 function addWaypoint(pt){
   const b = S.boat;

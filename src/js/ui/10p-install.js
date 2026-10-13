@@ -14,12 +14,15 @@ const INSTALL = (() => {
   addEventListener('beforeinstallprompt', e => { e.preventDefault(); ev = e; });
   addEventListener('appinstalled', () => { keep({done:1}); ev = null; try { if (typeof cloudEv === 'function') cloudEv('install_done', {os:os()}); } catch (e){} const m = document.getElementById('modal'); if (m && !m.hidden && m.querySelector('.ob.inst')) m.hidden = true; });
   // can it be offered here: a phone or tablet (or a browser that has an install dialog) in a tab, not already the app
-  const can = () => hasApp() && !standalone() && !st().done && (!!os() || !!ev);
+  // (on an iPhone the app keeps storage of its own, and a guest's game, which lives only in this browser, would not come along: a guest
+  // is asked once registered; Android's app shares the browser's storage)
+  const can = () => hasApp() && !standalone() && !st().done && (!!os() || !!ev) && !(os() === 'ios' && typeof isGuest === 'function' && isGuest());
   const SHARE = '<svg viewBox="0 0 24 24" width="22" height="22" style="vertical-align:-5px" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M8 7l4-4 4 4"/><path d="M5 11v9h14v-9"/></svg>';
   const steps = () => {
     if (os() === 'ios') return '<ol class="inst-steps"><li>' + L('Trykk på ', 'Tap ') + '<b>' + L('Del', 'Share') + '</b> ' + SHARE + L(' (firkanten med pil opp) i Safari.', ' (the square with an arrow up) in Safari.') + '</li>' +
       '<li>' + L('Bla ned og velg ', 'Scroll down and choose ') + '<b>' + L('Legg til på Hjem-skjerm', 'Add to Home Screen') + '</b>.</li><li>' + L('Trykk ', 'Tap ') + '<b>' + L('Legg til', 'Add') + '</b>.</li></ol>' +
-      '<p class="note">' + L('Åpner du spillet i en annen nettleser enn Safari, finner du «Del» i menyen. Åpne spillet fra ikonet etterpå.', 'If you have the game open in a browser other than Safari, «Share» is in its menu. Open the game from the icon afterwards.') + '</p>';
+      '<p class="note">' + L('Åpner du spillet i en annen nettleser enn Safari, finner du «Del» i menyen. Åpne spillet fra ikonet etterpå.', 'If you have the game open in a browser other than Safari, «Share» is in its menu. Open the game from the icon afterwards.') + '</p>' +
+      '<p class="note">' + L('Appen har sin egen lagring på iPhone. Første gang du åpner den, trykker du «Logg inn» med den samme kontoen, så blir spillet ditt med.', 'On an iPhone the app keeps its own storage. The first time you open it, tap «Sign in» with the same account, and your game comes along.') + '</p>';
     return '<ol class="inst-steps"><li>' + L('Åpne nettleserens meny ', 'Open the browser\'s menu ') + '(⋮).</li><li>' + L('Velg ', 'Choose ') + '<b>' + L('Installer app', 'Install app') + '</b> ' + L('eller ', 'or ') + '<b>' + L('Legg til på startskjermen', 'Add to Home screen') + '</b>.</li><li>' + L('Åpne spillet fra ikonet etterpå.', 'Open the game from the icon afterwards.') + '</li></ol>';
   };
   const why = () => L('Spillet starter fra ikonet i fullskjerm, kartet blir liggende på enheten så det går fort og virker uten nett, og lagringen blir værende. Nettlesere sletter det de har lagret etter en stund, på iPhone etter en uke uten besøk.', 'The game starts from the icon in full screen, the chart stays on the device so it is quick and works offline, and the save stays. Browsers delete what they have stored after a while, an iPhone after a week without a visit.');

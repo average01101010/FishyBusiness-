@@ -27,7 +27,7 @@ async function bootMapLoad(){
   DEPTH = true;
 }
 function bootGame(){
-S = load();
+S = load(); tabMark();   // this page has the game now (an older page left open stops: tabMine, 02-format-state.js)
 if (S){ awayMs = Date.now() - (S.lastReal || Date.now()); } else S = newState();
 // the skiff is only bought at the yard (05.10.2026, Jonas: «Den båten der skal kun være tilgjengelig for kjøp i verftet … For alle
 // brukere»): a save that still sails the free aluminium skiff it started with (the start boat until 04.10.2026: the first vessel, never
@@ -139,5 +139,5 @@ function bootFail(e){
   const on = (id, f) => { const b = document.getElementById(id); if (b) b.onclick = f; };
   on('bfRetry', () => { try { sessionStorage.removeItem('dsb_needpk'); } catch (e2){} location.reload(); });
   on('bfSafe', () => { location.hash = (location.hash ? location.hash + ',' : '#') + 'safe,no3d'; location.reload(); });
-  on('bfPrev', () => { try { const cur = localStorage.getItem(KEY), pv = localStorage.getItem(KEY_PREV); if (pv){ localStorage.setItem(KEY, pv); if (cur) localStorage.setItem(KEY_PREV, cur); sessionStorage.setItem('dsb_force', '1'); } } catch (e2){} location.reload(); });
+  on('bfPrev', () => { try { const cur = localStorage.getItem(KEY), pv = localStorage.getItem(KEY_PREV); if (pv){ localStorage.setItem(KEY, pv); if (cur) localStorage.setItem(KEY_PREV, cur); tabMark(); sessionStorage.setItem('dsb_force', '1'); } } catch (e2){} location.reload(); });
 }
