@@ -386,7 +386,9 @@ body.vplot #logbook{display:none}
 .tip-arrow{position:absolute;width:14px;height:14px;background:#fffbe9;transform:rotate(45deg)}
 .ob label{display:block;font-size:13px;font-weight:600;margin:10px 0 4px} .ob input{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:15px;background:var(--paper);color:var(--ink)}
 #ecdisTop{display:none}
-body.vplot #ecdisTop{position:absolute;z-index:6;left:0;right:0;top:0;height:46px;padding-top:env(safe-area-inset-top,0px);display:flex;align-items:stretch;gap:1px;background:#0a1620;border-bottom:1px solid #1f3a4c;color:#dff3ea;font:12px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+/* the bar's height counts the notch: with the inset inside a fixed 46 px the fields were squeezed to nothing and spilled onto the chart (iPhone 13.10.2026) */
+body.vplot{--ecH:calc(46px + env(safe-area-inset-top,0px))}
+body.vplot #ecdisTop{position:absolute;z-index:6;left:0;right:0;top:0;height:var(--ecH);padding-top:env(safe-area-inset-top,0px);display:flex;align-items:stretch;gap:1px;background:#0a1620;border-bottom:1px solid #1f3a4c;color:#dff3ea;font:12px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 #ecdisTop .ec-f{display:flex;flex-direction:column;justify-content:center;padding:0 9px;background:#0e1f2c;min-width:0}
 #ecdisTop .ec-f small{font-size:9.5px;color:#7fb8d6;letter-spacing:.08em} #ecdisTop .ec-f b{font-size:15px;font-weight:600;color:#f2fbf7;white-space:nowrap}
 #ecdisTop .ec-pos{min-width:0} #ecdisTop .ec-pos b{font-size:12.5px}
@@ -394,10 +396,10 @@ body.vplot #ecdisTop{position:absolute;z-index:6;left:0;right:0;top:0;height:46p
 #ecdisTop button{height:32px;min-width:52px;border-radius:8px;border:1px solid #2c5870;background:#16354a;color:#e6f6ff;font:600 13px var(--sans);cursor:pointer} #ecdisTop #ecClose{background:var(--mag);border-color:var(--mag);color:#fff}
 body.vplot #plotTop{display:none!important}
 body.vplot{--sidew:340px}
-body.vplot #map{top:46px;left:0;right:auto;bottom:auto;width:calc(100% - var(--sidew));height:calc(100% - 46px)}
-body.vplot #side{top:46px;left:auto;right:0;bottom:0;width:var(--sidew);height:auto;border-radius:0;box-shadow:-6px 0 18px rgba(0,0,0,.18);border-left:1px solid #1f3a4c}
+body.vplot #map{top:var(--ecH);left:0;right:auto;bottom:auto;width:calc(100% - var(--sidew));height:calc(100% - var(--ecH))}
+body.vplot #side{top:var(--ecH);left:auto;right:0;bottom:0;width:var(--sidew);height:auto;border-radius:0;box-shadow:-6px 0 18px rgba(0,0,0,.18);border-left:1px solid #1f3a4c}
 body.vplot #side::before{display:none}
-body.vplot #hud{top:calc(env(safe-area-inset-top,0px) + 54px)}
+body.vplot #hud{top:calc(var(--ecH) + 8px)}
 body.vplot #instr{display:flex!important;top:var(--gpsTop,160px);bottom:auto!important;left:8px!important}
 #instr.echoOff #echoWrap{display:none!important}
 body.vplot .zoom{right:calc(var(--sidew) + 12px)!important;bottom:16px!important}
@@ -562,7 +564,7 @@ body.vplot #instr{flex-wrap:wrap-reverse;max-width:calc(100% - var(--sidew) - 84
 @media (max-width:1440px){body.navon #ecdisTop .ec-sun{display:none}}
 @media (max-width:1240px){body.navon #ecdisTop .ec-tide{display:none}}
 @media (max-width:980px){body.navon #ecdisTop .ec-pos{display:none} #ecdisTop .ec-nav b{font-size:12.5px}}
-#plotSet{position:absolute;z-index:9;top:calc(env(safe-area-inset-top,0px) + 52px);right:8px;width:min(360px,92vw);max-height:calc(100% - 70px);overflow:auto;background:var(--paper);color:var(--ink);border:1px solid #1f3a4c;border-radius:12px;padding:12px 14px;box-shadow:0 10px 28px rgba(0,0,0,.35)}
+#plotSet{position:absolute;z-index:9;top:calc(var(--ecH,46px) + 6px);right:8px;width:min(360px,92vw);max-height:calc(100% - 70px);overflow:auto;background:var(--paper);color:var(--ink);border:1px solid #1f3a4c;border-radius:12px;padding:12px 14px;box-shadow:0 10px 28px rgba(0,0,0,.35)}
 #plotSet .ps-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px} #plotSet .ps-h button{width:36px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--paper);color:var(--ink);font-size:16px;cursor:pointer}
 body:not(.vplot) #plotSet{display:none!important}
 @media (min-width:701px){body.vplot:not(.routing) #side{display:none} body.vplot:not(.routing) #map{width:100%} body.vplot:not(.routing) .zoom{right:12px!important}}
@@ -827,8 +829,20 @@ body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 2
   #dockInfo,#dockFan{bottom:calc(env(safe-area-inset-bottom,0px) + 94px)}
   /* the chart plotter's top row: the echo sounder stays in the row, narrower, never on the chart (Jonas 09.10.2026: «flytte ekkolodd-baren
      opp i navigasjonsbaren også i stående modus»), settings and close as symbols */
+  /* a narrow phone standing up: one row as before (heading, speed, depth, echo sounder, buttons); while a route is sailed its waypoint
+     and ETA get a strip of their own under it, each reading cut short rather than running into the next (Jonas 13.10.2026: «virker
+     ikke optimalt med dette skjermformatet», and the echo sounder alone on a row looked odd) */
+  body.vplot.navon{--ecH:calc(80px + env(safe-area-inset-top,0px))}
+  body.vplot #ecdisTop{flex-wrap:wrap;align-content:stretch;row-gap:0}
+  body.vplot #ecdisTop::after{content:'';order:1;flex:0 0 100%;height:0}
+  body.vplot #ecdisTop > *{height:45px}
+  body.vplot #ecdisTop .ec-nav{order:2;flex:1 1 0;height:34px;flex-direction:row;align-items:center;gap:8px;border-top:1px solid #1f3a4c}
+  body.vplot #ecdisTop .ec-f:not(#heatBox){overflow:hidden}
+  body.vplot #ecdisTop .ec-f:not(#heatBox) small,body.vplot #ecdisTop .ec-f:not(#heatBox) b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+  body.vplot #ecdisTop .ec-nav small{flex:0 1 auto} body.vplot #ecdisTop .ec-nav b{flex:0 0 auto}
+  body.vplot #ecdisTop .ec-f small{font-size:8.5px;letter-spacing:.03em}
   body.vplot #ecdisTop .ec-f{padding:0 5px}
-  body.vplot #ecdisTop #heatBox{flex:1 1 auto;min-width:0;padding:0 5px}
+  body.vplot #ecdisTop #heatBox{flex:1 1 auto;min-width:0;padding:0 8px}
   body.vplot #ecdisTop #heatBox > small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:8.5px;letter-spacing:.02em}
   body.vplot #ecdisTop .ec-echo .hb-row{gap:4px}
   body.vplot #ecdisTop .ec-echo .hb-bar{width:auto;flex:1 1 30px;min-width:24px;max-width:70px}
