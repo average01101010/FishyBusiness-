@@ -464,6 +464,11 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p107', '13.10.2026', 'Autonav, ruter og driftsplanen', 'Autonav, routes and the operations plan', [
+       ['Autonav kunne stoppe uten rute når veien gikk langt til havs, der kystkartet slutter (for eksempel ut mot eggakanten). Dybden leses nå riktig helt ut til kanten.', 'Autonav could stop without a route when the way went far out to sea, where the coastal chart ends (for example out towards the shelf edge). The depth is now read right out to the edge.'],
+       ['Spillet stopper ikke lenger når du tegner en rute over et område kartet ikke har lastet ennå. Advarslene for grunner og skjær kommer når kartet er lastet.', 'The game no longer stops when you draw a route over an area the map has not loaded yet. The warnings for shallows and rocks appear once the map is in.'],
+       ['Planmakeren sier nå tydelig hva mannskapet gjør når lasten er full: de leverer og går ut igjen så mange turer som planen viser, venter ved kaia hvis mottaket er stengt, og hviler etter siste levering.', 'The plan maker now says clearly what the crew do when the hold is full: they land and go out again as many trips as the plan shows, wait at the quay if the plant is closed, and rest after the last landing.'],
+    ]],
     ['p106', '12.10.2026', 'Køyene og juksamaskinene', 'The bunks and the jigging reels', [
        ['Ligger båten ved kai og har køyer, sover mannskapet i dem til de er uthvilt, i stedet for å stå ute på dekk. Takk for tipset!', 'When the boat lies at the quay and has bunks, the crew sleep in them until they are rested, instead of standing out on deck. Thanks for the tip!'],
        ['Når du jukser med juksamaskiner, står det over knappene hvor mange som er i bruk. Én mann passer tre maskiner, så «3 av 5» betyr at det trengs flere hender til resten.', 'When you jig with jigging reels, the line above the buttons says how many are in use. One hand tends three reels, so «3 of 5» means more hands are needed for the rest.']]],
