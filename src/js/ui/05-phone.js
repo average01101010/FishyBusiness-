@@ -464,6 +464,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p109', '14.10.2026', 'Ekkoloddet når garna settes', 'The echo sounder when the nets are set', [
+       ['Med flere slags garn om bord kunne fisken nesten forsvinne fra ekkoloddet når ei lenke ble satt ut, fordi kartet byttet til neste lenkes garntype. Kartet viser nå fisken for lenka du setter eller sist satte. Takk for tipset!', 'With several kinds of nets aboard, the fish could almost vanish from the echo sounder when a string was set, because the map switched to the next string\'s kind of net. The map now shows the fish for the string you are setting or set last. Thanks for the tip!']]],
     ['p108', '13.10.2026', 'Kartplotteren på smale telefoner', 'The chart plotter on narrow phones', [
        ['På de smaleste telefonene havnet knappene for innstillinger og lukk på en egen rad, og stripa med veipunkt og ETA dekket toppen av infoboksen, så den ikke kunne felles sammen. Alt får nå plass i baren igjen. Takk for tipset!', 'On the narrowest phones the settings and close buttons ended up on a row of their own, and the waypoint and ETA strip covered the top of the info box so it could not be folded away. Everything fits in the bar again. Thanks for the tip!']]],
     ['p107', '13.10.2026', 'Autonav, ruter og driftsplanen', 'Autonav, routes and the operations plan', [

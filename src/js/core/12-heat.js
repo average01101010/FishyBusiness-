@@ -59,10 +59,19 @@ function heatSoakShare(kind, T){
   const f = kind === 'line' ? a => heatSoakSum(10, a) : kind === 'teine' ? heatPotSum : a => heatSoakSum(30, a);
   return Math.min(1, f(Math.max(1, Math.min(HEATG.T, T))) / f(HEATG.T));
 }
+// the string of nets the map speaks for (tilbakemelding #71): the one being drawn out or set, else the one this boat set last, else the
+// first aboard. The first aboard alone switched the map to the next string's kind (a halibut net sees hardly any cod) as soon as a
+// string went over the side, so the fish seemed to vanish from the sounder
+function heatNet(pg){
+  const sm = typeof SETM !== 'undefined' && SETM && SETM.kind === 'garn' ? (pg.nets || []).find(l => l.id === SETM.spec.nid) : null; if (sm) return sm;
+  const g = S.boat.gop; if (g && g.kind === 'garn' && g.s) return g.s;
+  const sea = mySets().filter(s => s.kind === 'garn' && !s.lost).sort((a, c) => c.tSet - a.tSet)[0];
+  return sea || (pg.nets || [])[0];
+}
 function heatGearCtx(){
   const b = S.boat, rig = typeof rigOf === 'function' ? rigOf() : 'juksa', kind = RIGS[rig] && RIGS[rig].kind, pg = S.pgear || {};
   if (!kind) return null;
-  if (kind === 'garn'){ const l = (pg.nets || [])[0], ty = l && l.ty && l.ty !== 'bunn' ? l.ty : null, key = ty ? 'garn:' + ty : 'garn';
+  if (kind === 'garn'){ const l = heatNet(pg), ty = l && l.ty && l.ty !== 'bunn' ? l.ty : null, key = ty ? 'garn:' + ty : 'garn';
     return {kind, key, sig:key, unit:['garn', 'net'], per:GEAR.garn.q * heatSoakSum(30, HEATG.T), fair:HEATG.fair.garn}; }
   if (kind === 'line'){ const lk = pg.lines && pg.lines.bank && pg.lines.bank.n > ((pg.lines.hyse || {}).n || 0) ? 'bank' : 'hyse', bait = BAITS[pg.baitPref] ? pg.baitPref : 'makrell';
     return {kind, key:'line:' + lk, bait, sig:'line:' + lk + ':' + bait, unit:['stamp', 'tub'], per:GEAR.line.q * (LINE_KINDS[lk].hooks / 100) * heatSoakSum(10, HEATG.T), fair:HEATG.fair.line}; }
