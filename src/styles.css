@@ -842,7 +842,9 @@ body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 2
   body.vplot #ecdisTop .ec-nav small{flex:0 1 auto} body.vplot #ecdisTop .ec-nav b{flex:0 0 auto}
   body.vplot #ecdisTop .ec-f small{font-size:8.5px;letter-spacing:.03em}
   body.vplot #ecdisTop .ec-f{padding:0 5px}
-  body.vplot #ecdisTop #heatBox{flex:1 1 auto;min-width:0;padding:0 8px}
+  /* the echo sounder takes the room that is left, not its label's full width: on a 344 px iPhone that width pushed settings and close
+     onto a row of their own, and the waypoint strip fell below the bar over the info box (tilbakemelding #68) */
+  body.vplot #ecdisTop #heatBox{flex:1 1 0;min-width:0;padding:0 8px}
   body.vplot #ecdisTop #heatBox > small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:8.5px;letter-spacing:.02em}
   body.vplot #ecdisTop .ec-echo .hb-row{gap:4px}
   body.vplot #ecdisTop .ec-echo .hb-bar{width:auto;flex:1 1 30px;min-width:24px;max-width:70px}
