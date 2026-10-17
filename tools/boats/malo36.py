@@ -102,12 +102,12 @@ def colours():
     C['af'] = mat('antifouling', (0.34, 0.08, 0.06), 0.1)
     C['boot'] = mat('boot', (0.92, 0.93, 0.92), 0.55, zone=2)
     C['hull'] = mat('hull', (0.05, 0.16, 0.38), 0.65, zone=1)
-    C['white'] = mat('white', (0.91, 0.92, 0.91), 0.5)
+    C['white'] = mat('house', (0.91, 0.92, 0.91), 0.5, zone=3)     # the bulwarks' white, the shelter and the wheelhouse: paint zone 3
     C['inner'] = mat('inner', (0.84, 0.85, 0.84), 0.3)
-    C['deck'] = mat('deck', (0.46, 0.49, 0.48), 0.12)
+    C['deck'] = mat('deck', (0.46, 0.49, 0.48), 0.12, zone=4)
     C['rub'] = mat('rub', (0.05, 0.05, 0.06), 0.3)
     C['steel'] = mat('steel', (0.74, 0.76, 0.78), 0.85, metal=0.8)
-    C['mast'] = mat('mast', (0.90, 0.91, 0.90), 0.55)
+    C['mast'] = mat('mast', (0.90, 0.91, 0.90), 0.55, zone=3)
     C['dark'] = mat('dark', (0.10, 0.11, 0.12), 0.25)
     C['frame'] = mat('frame', (0.07, 0.07, 0.08), 0.45)
     C['glass'] = mat('glass', (0.05, 0.08, 0.11), 0.95)
@@ -395,6 +395,8 @@ def forecastle(fine=True):
 
 
 # ---------- masts, rigging and the aft deck ----------
+TABLE = (3.3, 4.2, -1.92, -1.3)      # x0, x1, y0, y1 of the gutting table under the shelter, starboard side
+
 def rig(fine=True):
     objs = []; seg = 12 if fine else 6
     zr = roof_z(6.47)
@@ -410,7 +412,7 @@ def rig(fine=True):
     objs.append(box('tbar', 6.45, 6.49, WH_YC - 0.28, WH_YC + 0.28, 9.0, 9.05, C['mast']))
     for sy in (-0.25, 0.25): objs.append(cyl('whip%d' % int(sy * 100), (6.47, WH_YC + sy, 9.05), (6.47, WH_YC + sy, 9.75), 0.012, C['white'], 6))
     objs.append(cyl('topmast', (6.47, WH_YC, 9.09), (6.47, WH_YC, 9.2), 0.04, C['lwhite'], 10))
-    for z in (8.82, 7.85): objs.append(box('mhl%d' % int(z * 10), 6.53, 6.65, WH_YC - 0.05, WH_YC + 0.05, z - 0.06, z + 0.06, C['lwhite'], 0.01))
+    for z, m in ((8.82, C['lred']), (7.85, C['lwhite'])): objs.append(box('mhl%d' % int(z * 10), 6.53, 6.65, WH_YC - 0.05, WH_YC + 0.05, z - 0.06, z + 0.06, m, 0.01))   # the fishing lights, red over white
     objs.append(box('arm2_light', 7.82, 7.94, WH_YC - 0.05, WH_YC + 0.05, 6.39, 6.47, C['lwhite']))
     objs.append(cyl('fstay', (6.50, WH_YC, 7.55), (7.85, WH_YC, roof_z(7.85)), 0.032, C['mast'], 8))
     # the derrick over the shelter, its topping lift and the hook
@@ -447,9 +449,15 @@ def rig(fine=True):
     objs.append(box('casing', 1.0, 2.85, 1.02, 1.92, Z_DECK, 3.35, C['white'], 0.04))
     objs.append(plate('casing_door', (0, 1.02 - 0.008, 0), (1, 0, 0), (0, 0, 1), [(1.55, 2.34), (2.25, 2.34), (2.25, 3.22), (1.55, 3.22)], C['inner'], 0.0, 0.01))
     objs.append(tube('exhaust', [(2.73, 1.0, 3.35), (2.73, 1.0, 5.10), (2.75, 1.0, 5.22), (2.84, 1.0, 5.28), (2.93, 1.0, 5.22)], 0.07, C['steel'], 12))
-    for k, (y0, y1) in enumerate(((-1.75, -1.0), (-0.9, -0.15))):
+    for k, (y0, y1) in enumerate(((-0.9, -0.15),)):
         objs.append(box('tub%d' % k, 0.05, 1.05, y0, y1, Z_DECK, Z_DECK + 0.60, C['tub'], 0.05))
         objs.append(box('tub_in%d' % k, 0.12, 0.98, y0 + 0.07, y1 - 0.07, Z_DECK + 0.58, Z_DECK + 0.605, C['dark']))
+    # the gutting table under the shelter to starboard (B6), its top a working height over the deck, a lip outboard, fish boxes under it
+    x0, x1, y0, y1 = TABLE; zt = Z_DECK + 0.9
+    objs.append(box('table_top', x0, x1, y0, y1, zt - 0.05, zt, C['steel'], 0.01))
+    objs.append(box('table_lip', x0, x1, y0 - 0.02, y0, zt - 0.05, zt + 0.12, C['steel']))
+    for x, y in ((x0 + 0.05, y0 + 0.05), (x1 - 0.05, y0 + 0.05), (x0 + 0.05, y1 - 0.05), (x1 - 0.05, y1 - 0.05)): objs.append(cyl('tleg%d' % int(x * 10 + y * 3), (x, y, Z_DECK), (x, y, zt - 0.05), 0.02, C['steel'], 6))
+    for k in range(2): objs.append(box('fbox%d' % k, x0 + 0.1, x0 + 0.7, y0 + 0.05, y1 - 0.05, Z_DECK + 0.3 * k, Z_DECK + 0.3 * k + 0.28, C['inner'], 0.01))
     for sg in (1, -1):
         for x in (0.6, 1.6):
             yo = y_at(x, 2.4) + 0.006
@@ -464,6 +472,8 @@ def rig(fine=True):
 def build(fine=True):
     """all the parts: solids (to be joined and baked) and glass"""
     hull, rows = build_hull(fine)
+    if fine:
+        for o in hull: tint_obj(o, wear)
     solids = list(hull)
     solids += bulwark_inner(XA, 6.55, lambda x: Z_DECK, 'bw_aft', fine)
     solids += bulwark_inner(6.55, 10.70, z_bakk, 'bw_fwd', fine)
@@ -479,16 +489,65 @@ def build(fine=True):
     return solids, g1 + g2
 
 
+from mathutils import noise
+def n3(x, y, z=0.0): return noise.noise(Vector((x, y, z)))
+def ss(a, b, x):
+    t = max(0.0, min(1.0, (x - a) / (b - a) if b != a else 0.0)); return t * t * (3 - 2 * t)
+def toward(m, rgb, k):
+    base = m['rgb']; return [1 + (rgb[i] / max(base[i], 1e-3) - 1) * k for i in range(3)]
+
+def wear(p, m, n):
+    """light wear for a boat of 2015 (B16): grime over the boot top and streaks down from the rub rail on the blue, slime on the
+    antifouling, rust runs down the white under the bulwark cap; a multiplier of the colour at every corner"""
+    x, y, z = p; nm = m.name if m else ''; side = 1 if y > 0 else -1
+    if nm == 'hull':
+        g = 1 - 0.14 * ss(0.35, 0.0, z - Z_BT)
+        g *= 1 - 0.10 * ss(0.25, 0.65, n3(x * 9.0, side * 2.3, 0.4)) * ss(0.6, 0.0, z_rub(x) - z)
+        g *= 0.97 + 0.05 * n3(x * 4.0, z * 7.0, side * 1.3)
+        return [g, g, g]
+    if nm == 'antifouling':
+        v = 0.84 + 0.26 * n3(x * 2.5, z * 6.0, y * 2.0) + 0.12 * ss(Z_AF - 0.3, Z_AF, z); return [v, v * 1.02, v * 0.98]
+    if nm == 'house' and z < Z_DECK + 1.2 and abs(y) > 1.6:
+        return toward(m, (0.45, 0.25, 0.12), 0.45 * ss(0.5, 0.85, n3(x * 7.0, side * 4.0, 1.1)) * ss(0.8, 0.0, z - Z_DECK))
+    return None
+
+def tint_obj(o, fn):
+    """writes the per-corner TINT colour attribute of a mesh object from fn(point, material, face normal) -> rgb or None"""
+    me = o.data; lay = me.color_attributes.get('TINT') or me.color_attributes.new('TINT', 'FLOAT_COLOR', 'CORNER')
+    for poly in me.polygons:
+        m = me.materials[poly.material_index] if me.materials else None
+        for li in poly.loop_indices:
+            t = fn(me.vertices[me.loops[li].vertex_index].co, m, poly.normal)
+            lay.data[li].color = (t[0], t[1], t[2], 1.0) if t else (1.0, 1.0, 1.0, 1.0)
+
 def to_game(p): return (-p[1], p[2] - WL, -(p[0] - XM))
 def to_game_n(n): return (-n[1], n[2], -n[0])
+
+def name_strips(G):
+    """where the name is written (B12): on the blue topsides forward under the rub rail, both sides, and across the transom"""
+    out = []
+    for sg, xs in ((1, [8.9 - 1.3 * k / 12 for k in range(13)]), (-1, [7.6 + 1.3 * k / 12 for k in range(13)])):
+        B = []; T = []
+        for x in xs:
+            for arr, dz in ((B, 0.72), (T, 0.36)): z = z_rub(x) - dz; arr.append(G(x, sg * (y_at(x, z) + 0.03), z))
+        out.append([B, T])
+    ys = [0.9 - 1.8 * k / 12 for k in range(13)]      # port to starboard: left to right seen from astern
+    out.append([[G(x_transom(2.0) - 0.02, y, 2.0) for y in ys], [G(x_transom(2.34) - 0.02, y, 2.34) for y in ys]])
+    return out
 
 def anchors():
     G = lambda x, y, z: [round(v, 3) for v in to_game((x, y, z))]
     return {'eye': G(7.80, -0.55, 4.86), 'skipperAt': G(7.62, -0.55, WH_FLOOR), 'hp': -0.06, 'fov': 58,
             'crewSpots': [G(5.05, -1.15, Z_DECK + 0.04) + [1.57], G(4.25, -0.35, Z_DECK + 0.04) + [0.0], G(1.25, -0.55, Z_DECK + 0.04) + [3.14], G(0.55, 0.65, Z_DECK + 0.04) + [3.14]],
             'hauler': G(5.30, -1.62, 3.52), 'filler': G(4.6, 1.80, Z_DECK + 0.1), 'pole': G(-0.52, 1.62, 4.95),
-            'lights': [[G(6.60, WH_YC, 8.82), [1, 0.95, 0.85]], [G(6.60, WH_YC, 7.85), [1, 0.95, 0.85]], [G(8.71, 1.55, roof_z(8.7) + 0.04), [1, 0.12, 0.1]],
-                       [G(8.71, -1.29, roof_z(8.7) + 0.04), [0.1, 1, 0.35]], [G(-0.63, 0, 5.10), [1, 0.95, 0.85]], [G(6.47, WH_YC, 9.16), [1, 0.95, 0.85]]],
+            'lights': [[G(6.47, WH_YC, 9.16), [1, 0.95, 0.85], 'allround'], [G(8.71, 1.55, roof_z(8.7) + 0.04), [1, 0.12, 0.1], 'port'],
+                       [G(8.71, -1.29, roof_z(8.7) + 0.04), [0.1, 1, 0.35], 'stbd'], [G(-0.63, 0, 5.10), [1, 0.95, 0.85], 'stern']],
+            # the doors (B4): the wheelhouse door aft on the starboard side, out onto the forecastle walkway, and the casing's door on the aft deck
+            'doors': [{'at': G(6.39, -1.52, 3.32), 'w': 0.62, 'h': 1.68, 'in': G(6.39, -0.9, WH_FLOOR), 'to': 'helm', 'hinge': 'fwd'},
+                      {'at': G(1.9, 1.0, Z_DECK), 'w': 0.7, 'h': 0.88, 'in': G(1.9, 1.5, Z_DECK), 'to': 'casing', 'hinge': 'aft'}],
+            'names': name_strips(G),
+            'work': {'table': G((TABLE[0] + TABLE[1]) / 2, (TABLE[2] + TABLE[3]) / 2, Z_DECK), 'tub': G(0.55, -1.37, Z_DECK), 'own': True, 'top': round(Z_DECK + 0.9 - WL, 3)},
+            'hatch': G(4.7, 0.0, Z_DECK + 0.31),
             'deck': {'y': round(Z_DECK - WL, 3), 'z': round(-(4.5 - XM), 3)}, 'gw': round(z_sheer(4.5) - WL, 3),
             'stern': round(-(XA - XM) + 0.2, 3), 'bow': round(-(10.3 - XM), 3), 'side': 1.89, 'beam': 4.2, 'pl': 4.4, 'rl': 1.6, 'open': False, 'hand': False}
 
@@ -510,7 +569,8 @@ def check_overlay(objs):
 
 
 SHOTS = [('bow3q', (17.5, -12.5, 5.2), (5.0, 0, 3.4), 35), ('stern3q', (-8.5, 11.0, 6.2), (4.0, 0, 3.4), 35), ('side', (5.0, -21, 2.6), (5.0, 0, 3.6), 35),
-         ('above', (13.0, -9.0, 15.0), (5.0, 0, 3.0), 35), ('deck', (1.5, -4.5, 6.6), (5.5, 0.5, 3.0), 24)]
+         ('above', (13.0, -9.0, 15.0), (5.0, 0, 3.0), 35), ('deck', (1.5, -4.5, 6.6), (5.5, 0.5, 3.0), 24),
+         ('stern', (-13.0, 0.5, 4.2), (3.0, 0, 3.4), 30), ('shelter', (0.5, -9.5, 5.0), (4.5, -0.6, 3.0), 40), ('bow', (16.0, 3.0, 4.0), (6.0, 0, 3.4), 40)]
 
 def main():
     os.makedirs(OUT, exist_ok=True)
