@@ -464,6 +464,9 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p110', '17.10.2026', 'Jevnere bilde på store skjermer', 'Smoother picture on big screens', [
+       ['På store PC-skjermer med svak grafikk gikk 3D-bildet tregt selv på laveste grafikknivå. På laveste nivå tegnes bildet nå med høyst omtrent full HD-oppløsning og strekkes ut til skjermen, så det går jevnere. Mindre skjermer og de andre nivåene er som før.', 'On big PC screens with weak graphics the 3D view ran slowly even at the lowest graphics level. At the lowest level the picture is now drawn at about full HD at most and stretched to the screen, so it runs smoother. Smaller screens and the other levels are as before.'],
+    ]],
     ['p108', '13.10.2026', 'Kartplotteren på smale telefoner', 'The chart plotter on narrow phones', [
        ['På de smaleste telefonene havnet knappene for innstillinger og lukk på en egen rad, og stripa med veipunkt og ETA dekket toppen av infoboksen, så den ikke kunne felles sammen. Alt får nå plass i baren igjen. Takk for tipset!', 'On the narrowest phones the settings and close buttons ended up on a row of their own, and the waypoint and ETA strip covered the top of the info box so it could not be folded away. Everything fits in the bar again. Thanks for the tip!']]],
     ['p107', '13.10.2026', 'Autonav, ruter og driftsplanen', 'Autonav, routes and the operations plan', [
