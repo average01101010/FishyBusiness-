@@ -32,7 +32,9 @@ async def main():
         pg = await (await br.new_context(viewport={'width':1100, 'height':800})).new_page(); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
         await boot(pg)
         r = await pg.evaluate("""(()=>{ const R = {bad:[]}, need = ['name', 'len', 'beam', 'draft', 'disp', 'holdCap', 'iceCap', 'fuelCap', 'hp', 'engine', 'vmax', 'vcruise', 'accel', 'turnR',
-            'planing', 'outboard', 'diesel', 'fuelK', 'risk', 'sea', 'crewMax', 'berths', 'tubCap', 'land', 'std', 'rigs', 'jukseMax', 'gearMax', 'svcH', 'svcCost', 'svcJobH', 'cls', 'price', 'year', 'desc'];
+            'planing', 'outboard', 'diesel', 'fuelK', 'risk', 'sea', 'crewMax', 'berths', 'tubCap', 'land', 'std', 'rigs', 'jukseMax', 'gearMax', 'svcH', 'svcCost', 'svcJobH', 'cls', 'price', 'year', 'desc',
+            // schema v2 (docs/batplan.md del 4): the fields, and what vesselDerive adds
+            'hullMat', 'hold', 'deckCargo', 'iceMaker', 'gutMachine', 'lph', 'cabins', 'fac', 'stations', 'crane', 'range', 'watch', 'haulers', 'openOk', 'key'];
           for (const [k, V] of Object.entries(VESSELS)){
             for (const f of need) if (V[f] == null) R.bad.push(k + ': mangler ' + f);
             // fullness: displacement over length overall × beam × greatest draft × sea water. With the overall figures (not the waterline
@@ -45,11 +47,29 @@ async def main():
             if (!(V.holdCap < V.disp * 1000)) R.bad.push(k + ': last over vekten');
             if (!['box', 'tub'].includes(V.land)) R.bad.push(k + ': land');
             if (V.cls !== 'hav' && BEAM[k] !== V.beam) R.bad.push(k + ': BEAM');
+            // schema v2: the rules of docs/batplan.md del 4
+            if (!['tre', 'alu', 'glassfiber', 'stål'].includes(V.hullMat)) R.bad.push(k + ': hullMat');
+            if (!V.hold || !['dekk', 'rom', 'frys', 'rsw'].includes(V.hold.kind) || !(V.hold.m3 > 0)) R.bad.push(k + ': hold');
+            if (!V.fac || !['open', 'hardtop', 'hus'].includes(V.fac.house) || !['none', 'plate', 'bysse'].includes(V.fac.galley)) R.bad.push(k + ': fac');
+            if (V.fac.house !== 'hus' && V.len < 9 && V.hold.kind !== 'dekk') R.bad.push(k + ': an open boat carries her catch on deck');
+            if (V.fac.house === 'hus' && !(V.berths >= 1)) R.bad.push(k + ': a wheelhouse boat has a berth');
+            if (V.berths > V.cabins * 4 || (!V.berths && V.cabins)) R.bad.push(k + ': berths against cabins');
+            if (!V.berths && (V.fac.galley !== 'none' || V.fac.wc || V.fac.dry || V.fac.mess)) R.bad.push(k + ': facilities without berths');
+            if (!(V.deckCargo <= 0.3 * V.disp * 1000)) R.bad.push(k + ': deck cargo over 30 % of the displacement');
+            if (!(V.jukseMax <= (V.crewMax + 1) * 3)) R.bad.push(k + ': more jigging reels than the people can tend');
+            const lhp = V.lph / V.hp; if (!(lhp <= 0.23 && lhp >= (V.planing ? 0.10 : 0.04))) R.bad.push(k + ': lph/hp ' + lhp.toFixed(3));
+            if (!(V.range >= 60)) R.bad.push(k + ': range ' + V.range);
+            if ((V.gutMachine || V.iceMaker) && !(V.len > 14.99)) R.bad.push(k + ': machines only over 14.99 m');
+            if (!(V.stations && V.stations.table >= 1 && V.stations.hauler >= 1) || !(V.crane >= 0)) R.bad.push(k + ': stations/crane');
+            if (Math.abs(fuelBase(V.vcruise, V.vmax, V.planing) * V.fuelK - V.lph) > 1e-6) R.bad.push(k + ': fuelK does not give lph');
+            // every boat has a Blender model with the anchors the crew, the lights and the flag need
+            const G = geoOf(k); if (!glbHas(k)) R.bad.push(k + ': no GLB'); else for (const a of ['crewSpots', 'deck', 'eye', 'hauler', 'skipperAt', 'lights', 'pole']) if (!G || G[a] == null) R.bad.push(k + ': anchor ' + a);
           }
+          R.burn = Object.fromEntries(Object.entries(VESSELS).map(([k, V]) => [k, [V.lph, V.range, V.watch, V.haulers.length]]));
           // equipment fits by size: the small electric hauler on small boats, hydraulic haulers and sonar on bigger ones, the 90 hp outboard on outboard boats
           R.fit = Object.fromEntries(Object.keys(VESSELS).map(k => [k, Object.keys(EQUIP).filter(q => equipFits(q, k)).join(',')]));
           // the 90 hp outboard boosts only a boat with an outboard
-          const b = S.boat, t0 = b.type; b.type = 'skiff'; S.equip.motor90 = true; applyVessel(); R.boost = [BOAT.vmax, BOAT.fuelK]; S.equip.motor90 = false; applyVessel(); R.plain = [BOAT.vmax, BOAT.fuelK];
+          const b = S.boat, t0 = b.type; b.type = 'skiff'; S.equip.motor90 = true; applyVessel(); R.boost = [BOAT.vmax, BOAT.lph, +BOAT.fuelK.toFixed(3)]; S.equip.motor90 = false; applyVessel(); R.plain = [BOAT.vmax, BOAT.lph, +BOAT.fuelK.toFixed(3)];
           b.type = t0; applyVessel();
           // the old type table values are kept for the four first types
           R.same = ['skiff', 'snekke', 'sjark', 'sjarkny'].map(k => [k, VESSELS[k].tubCap, VESSELS[k].land, VESSELS[k].svcJobH, VESSELS[k].accel]);
@@ -59,7 +79,8 @@ async def main():
         f = r['fit']
         print(ok('linehaler' in f['skiff'] and 'linehaler' in f['snekke'] and 'linehaler' in f['sjark'] and 'garnhaler' not in f['skiff'] and 'garnhaler' in f['snekke']
                  and 'sonar' in f['sjark'] and 'sonar' not in f['snekke'] and 'motor90' in f['skiff'] and 'motor90' not in f['snekke']), 'equipment fits by size and engine')
-        print(ok(r['boost'] == [30, 1.35] and r['plain'] == [24, 1]), 'the 90 hp outboard gives the skiff 30 kn and a thirstier engine')
+        print(ok(r['boost'][:2] == [30, 15] and r['plain'][:2] == [24, 11] and r['boost'][2] > r['plain'][2]), 'the 90 hp outboard gives the skiff 30 kn and a thirstier engine (15 l/h against 11)', r['boost'], r['plain'])
+        print('burn (l/h at cruise, nm range, 2+2 watch, haulers):', json.dumps(r['burn']))
         print(ok(r['same'] == [['skiff', 60, 'box', 3, 10], ['snekke', 150, 'box', 5, 3], ['sjark', 300, 'tub', 8, 3], ['sjarkny', 400, 'tub', 10, 10]]), 'the old type tables (tub, landing, yard hours, acceleration) are now fields with the same values')
         # the ladder: prices rise with what you get, the closed-group offers sit on the right boats, the ocean fleet is locked, big boats keep out of the fjords
         r = await pg.evaluate("""(()=>{ const R = {}, b = S.boat;

@@ -1430,7 +1430,7 @@ Jonas: «båtnavn eller rederiene til andre brukere må komme offentlig i avisen
 
 ### 5.1 Båter og utstyr
 
-Båtene står i `VESSELS` (`core/02-species-gear.js`). Tallene er startverdier og anslag, og vekta er deplasement.
+Båtene står i `VESSELS` (`core/02-species-gear.js`). Tallene er startverdier og anslag, og vekta er deplasement. Fra 17.10.2026 har hver båt også skjemaet v2 (`docs/batplan.md` del 4): skrogmateriale, `hold {kind, m3}` (dekk, rom, frys, rsw), dekkslast for frakt, is- og sløyemaskin (bare over 14,99 m), forbruk `lph` i marsj (kurvens `fuelK` avledes av den i `vesselDerive`, sammen med rekkevidden, 2+2-vakt, halerne som passer og om hun kan gå i åpen gruppe), lugarer, fasiliteter (`fac`), arbeidsplasser (`stations`) og kran. `vesseltest.py` nekter en båt uten feltene og håndhever reglene.
 
 | Nøkkel | Typenavn | L × B × T (m) | Vekt (t) | Last | Motor, marsj/topp | Mannskap / køyer | Pris | Gruppe |
 |---|---|---|---|---|---|---|---|---|
