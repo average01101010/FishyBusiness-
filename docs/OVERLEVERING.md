@@ -3290,6 +3290,8 @@ Ikke gjort: animert mannskap og kran ved løftet, lyd, og at stedene i `steder.j
 
 ## 8. Engasjement: veikart
 
+**Forslagslista** over alt vi kan gjøre med spillet, med plan for de fem Jonas fikk lagt fram 13.10.2026 (VHF-praten, Lofotfisket, hjellen, mannskap med liv, årboka) og de eldre åpne punktene, står i `docs/forslag.md`. Det som bestilles, flyttes derfra til arbeidslista i `docs/engasjement.md`.
+
 **Ferdig:**
 - Innloggingsbonus (erstattet «Kaffe på kaia» 01.10.2026)
 - Veiledningen «Første tur»
