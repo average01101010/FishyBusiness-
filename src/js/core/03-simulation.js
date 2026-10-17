@@ -690,6 +690,7 @@ const KPK = 260;
 const LIC_OFFERS = [
   {id:'u7', ves:'trebat', no:'Gammel tresnekke med hjemmel under 7 m', en:'Old wooden snekke with a right under 7 m'},
   {id:'h7', ves:'snekke', no:'Plastsnekke med hjemmel 7–7,9 m', en:'Fibreglass snekke with a right of 7–7.9 m'},
+  {id:'h8', ves:'plastsjark', no:'Plastsjark 31 fot med hjemmel 8–8,9 m', en:'31 ft fibreglass sjark with a right of 8–8.9 m'},
   {id:'h9', ves:'sjark', no:'Havsjark 35 fot med hjemmel 9–9,9 m', en:'35 ft havsjark with a right of 9–9.9 m'},
   {id:'h10', ves:'hurtigsjark', no:'Hurtigsjark med hjemmel 10–10,9 m', en:'Speed sjark with a right of 10–10.9 m'},
   // the same right with the other two 10.99 m boats (Jonas 17.10.2026: the open and the closed group climb the same steps up to 11 m); k tells the offers apart, id is the right

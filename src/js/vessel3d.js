@@ -278,6 +278,12 @@ const SPEC3D = {
     open:true, parts:[['house', {zf:-1.15, za:0.55, w:1.55, h:1.85, rake:0.25, sill:0.82, nwin:2, nside:1, col:VC.white, roof:VC.green, deckY:0.32}], ['mast', {z:0.3, h:1.4, radar:'dome', on:'house'}],
       ['engine', {z:1.3, w:0.7, l:0.9, h:0.5}], ['tubs', {z:2.4, n:2}], ['fenders', {at:[0.35, 0.6]}]],
     work:{z:2.3}, crew:[[0.55, 2.2, -1.7], [-0.55, 2.8, 1.6]]},
+  // the 31 ft fibreglass sjark (tools/boats/plast31.py is the detailed model): the kit stands in for the NPC boats of 8–9.99 m and at a distance
+  plastsjark:{hull:{form:'round', F:0.9, fr:0.5, ar:0.2, rake:0.8, srake:0.25, tw:0.6, smax:0.48, entry:2.0, run:2.0, Tc:0.95, n:2.3, flare:0.07, trise:0.15, bulH:0.5, NS:36,
+      col:{hull:VC.white, stripe:VC.navy, bottom:VC.afRed, boot:VC.black, deck:VC.deck, inner:VC.inner, rail:VC.white}, stripeW:0.14},
+    parts:[['house', {zf:0.98, za:3.78, w:2.5, h:1.95, rake:-0.12, sill:0.95, nwin:3, nside:2, col:VC.cream, roof:VC.white}], ['mast', {z:3.2, h:2.6, radar:'dome', on:'house'}],
+      ['exhaust', {x:0.55, z:3.5, h:1.5}], ['raft', {x:0.7, z:2.0, on:'house'}], ['hauler', {z:-1.22, kind:'line'}],
+      ['rails', {s0:0.86, s1:0.99, h:0.55}], ['tubs', {z:-0.4, n:1}], ['fenders', {at:[0.3, 0.55, 0.78]}]]},
   sjark:{hull:{form:'round', F:0.95, fr:0.55, ar:0.22, rake:0.95, srake:0.3, tw:0.68, smax:0.46, entry:2.2, run:2.2, Tc:1.0, n:2.4, flare:0.08, trise:0.2, bulH:0.55, NS:40,
       col:{hull:VC.white, stripe:VC.red, bottom:VC.afRed, boot:VC.black, deck:VC.deck, inner:VC.inner, rail:VC.red}, stripeW:0.16},
     parts:[['house', {zf:1.15, za:3.75, w:2.3, h:1.95, rake:-0.18, sill:1.0, nwin:3, nside:2, col:VC.white, roof:VC.red}], ['mast', {z:3.1, h:2.4, radar:'open', radarL:1.4, on:'house'}],
@@ -1097,7 +1103,7 @@ const LANT_C = {w:[1, 0.97, 0.88], r:[1, 0.12, 0.1], g:[0.1, 1, 0.35]};
 function lanterns(G, V, st){
   const L = (G && G.lights) || [], isR = c => c[0] > 0.8 && c[1] < 0.4, isG = c => c[1] > 0.8 && c[0] < 0.4, out = [];
   if (!st || st.port) return out;
-  // a model from the Blender round names its lanterns ([pos, colour, type]: port, stbd, masthead, allround, stern, masthead2); older ones are told apart by colour and place
+  // a model from the Blender round names its lanterns ([pos, colour, type]: port, stbd, masthead, allround, stern, masthead2; 'work' is a floodlight and no lantern); older ones are told apart by colour and place
   const typed = L.some(l => typeof l[2] === 'string'), T = t => L.filter(l => l[2] === t);
   const W = typed ? T('masthead').concat(T('allround')) : L.filter(l => !isR(l[1]) && !isG(l[1])).slice().sort((a, b) => b[0][1] - a[0][1]), mast = W[0] || null;
   const stern = typed ? T('stern')[0] || null : W.length > 1 ? W.slice(1).sort((a, b) => b[0][2] - a[0][2])[0] : null;
@@ -1120,7 +1126,7 @@ function lanterns(G, V, st){
   if (len >= 50) push(extra.length ? extra[0][0] : up(mt, 1.5), 'w', 'masthead2');
   return out;
 }
-const HELM_KIT = {kyst15:1, kyst21:1, hurtigsjark:1, sjarkny:1, autoliner:1, bunntral:1, pelagisk:1, snokrabbe:1};
+const HELM_KIT = {autoliner:1, bunntral:1, pelagisk:1, snokrabbe:1};   // the coastal models from the Blender round (sjarkny, hurtigsjark, kyst15, kyst21) have their console, wheel and chair in the model (tools/boats)
 const DECKPTS = {};
 function deckPoints(type){
   if (type in DECKPTS) return DECKPTS[type]; const M = deckMap(type), G = geoOf(type); if (!M || !G){ DECKPTS[type] = null; return null; }
