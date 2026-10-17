@@ -26,8 +26,12 @@
 //           and the paper prints it (T.press, newsForDay)
 // The crew talks about the trip as it starts (turDepart): the time it takes, and now and then the engine (the trim app's words).
 const TUR = {
-  cls:{kort:{h:[0.4, 3], f:1.1}, mid:{h:[3, 7.5], f:1.3}, lang:{h:[7.5, 18], f:1.6}},   // travel in game hours (6 a real hour) and the pay factor
-  seasonF:2, detour:1.25, rate0:9000, move:37, sesongR:30, tipGap:20 * 3600e3, mechGap:72 * 3600e3,
+  cls:{kort:{h:[0.4, 3], f:0.6}, mid:{h:[3, 7.5], f:0.75}, lang:{h:[7.5, 18], f:0.9}},   // travel in game hours (6 a real hour) and the pay factor of the player's own rate
+  // the missions' economy (Jonas 17.10.2026, tilbakemelding #72): a mission where the catch is the player's (an order, the season, lost
+  // gear, a survey station) pays only a premium of the time (keepF); with others under way a mission pays for its share of the time
+  // (stack, by how many are active when it is taken); and in a week the missions may bring up to share of what fishing and missions
+  // brought together, beyond which the pay goes on at over of itself (a soft brake: the fishing carries the climb up the ladder)
+  keepF:0.35, stack:[1, 0.6, 0.4], share:0.3, over:0.25, detour:1.25, rate0:9000, move:37, sesongR:30, tipGap:20 * 3600e3, mechGap:72 * 3600e3,
   stasjonR:1, ekkoV:7, ekkoMax:8, fotoR:3, fotoNo3d:1.5
 };
 const TUR_GOODS = [
@@ -39,7 +43,22 @@ const TUR_GOODS = [
 const TUR_BOATS = ['Måsen', 'Terna', 'Lille Viking', 'Havbris', 'Skarven', 'Fiskeørn', 'Polarlys', 'Sølvblank', 'Kvitøy', 'Brisen'];
 const TUR_OWNERS = ['Kåre Nilsen', 'Hallvard Olsen', 'Ragnhild Johansen', 'Per Arne Hansen', 'Sigrid Pedersen', 'Odd Karlsen', 'Bjørn Isaksen', 'Torill Mikkelsen'];
 const turL = (no, en) => S.lang === 'en' ? en : no;
-function turState(){ const T = S.turer || (S.turer = {board:[], act:[], done:[], seq:0, at:null, tip:{t:0, n:0, k:0, said:0}, mech:0}); T.tip = T.tip || {t:0, n:0, k:0, said:0}; return T; }
+function turState(){ const T = S.turer || (S.turer = {board:[], act:[], done:[], seq:0, at:null, tip:{t:0, n:0, k:0, said:0}, mech:0, v:2}); T.tip = T.tip || {t:0, n:0, k:0, said:0};
+  if (!T.v || T.v < 2){ T.v = 2; T.board = []; T.at = null; try { turRebase(T); } catch (e){ console.warn('turRebase', e); } }
+  return T; }
+// missions taken before the economy of 17.10.2026: the pay to the new rules where that is lower, a season's kilos to at most two holds
+// and 70 % of the quota left (they are not taken away, and what is promised never goes up)
+function turRebase(T){
+  const H = S.t / 60;
+  for (const m of T.act){ const c = TUR.cls[m.cls] || TUR.cls.mid; let nb = null;
+    if (m.k === 'frakt' || m.k === 'foto' || (m.k === 'prove' && m.kind === 'ekko')) nb = turPay(m.h, c.f);
+    else if (m.k === 'best' || m.k === 'garn') nb = turPay(m.h, TUR.keepF);
+    else if (m.k === 'prove') nb = turPay(m.h, TUR.keepF * 1.5);
+    else if (m.k === 'sesong'){ const room = turRoom(m.sp, H); m.kg = Math.max(m.got || 0, Math.round(Math.min(m.kg, BOAT.holdCap * 2, isFinite(room) ? (m.got || 0) + room * 0.7 : Infinity) / 100) * 100); nb = turPay(2 * m.h + Math.min(m.hTot || 168, m.kg / Math.max(1, BOAT.holdCap / 20)), TUR.keepF); }
+    else if (m.k === 'slep'){ const was = m.pay || m.payHi || 1; m.pf = 1; const now = turSalvage(m, m.danger != null ? m.danger : turDanger(m.p)); m.pf = Math.min(1, now / was) * Math.min(1, TUR.cls[m.cls].f / 1.3); m.payLo = turSalvage(m, 0); m.payHi = turSalvage(m, 1); m.pay = Math.min(m.pay || now, turSalvage(m, m.danger || 0.5)); m.base = m.pay; continue; }
+    if (nb != null){ m.base = Math.round(nb / 100) * 100; m.pay = Math.min(m.pay || m.base, Math.max(500, m.base));
+      if (m.k === 'best'){ const o = ordState().active.find(x => x.tur === m.id); if (o) o.bonus = m.pay; } } }
+}
 const cargoKg = () => (S.cargo || []).reduce((a, c) => a + c.kg, 0);
 // the boat's own speed without trim, its range on a full tank (nm), and the sea miles between two places (straight with the detours a
 // route takes along a coast)
@@ -49,7 +68,35 @@ const turNm = (a, b) => dist(a, b) * TUR.detour / NM;
 const turHere = () => S.boat.status === 'port' && portById(S.boat.port) ? portById(S.boat.port).p : S.boat.pos;
 // what the boat earns in an hour of fishing, in real time: from her hold, as the first players earned (9 000 kr an hour in the
 // 23-foot boat, about one landing an hour; a bigger boat earns more, but not in step with her hold)
-function turRate(){ return TUR.rate0 * Math.pow(Math.max(100, BOAT.holdCap) / 350, 0.6); }
+function turCap(){ return TUR.rate0 * Math.pow(Math.max(100, BOAT.holdCap) / 350, 0.6); }
+// the player's own: what this boat's landings brought per real hour at sea over the last 14 game days (the sea hours are counted each game
+// hour, turHour). Until 30 hours are logged it leans on 60 % of the boat's curve; it stays between 30 % and 100 % of the curve
+function turOwn(){
+  const T = turState(), d = Math.floor(S.t / 1440), cap = turCap();
+  const seaH = Object.entries(T.sea || {}).filter(([k]) => +k >= d - 14).reduce((a, [, v]) => a + v, 0);
+  const sales = (S.sales || []).filter(x => x.v === S.cur && x.t > S.t - 14 * 1440), kr0 = sales.reduce((a, x) => a + (x.total || 0), 0), kg = sales.reduce((a, x) => a + (x.kg || 0), 0);
+  const w = clamp(seaH / 30, 0, 1), own = seaH > 0 ? kr0 / seaH * GAME_RATE : 0;
+  const rate = clamp(cap * 0.6 * (1 - w) + Math.min(own, cap) * w, cap * 0.3, cap);
+  const wk = (S.sales || []).filter(x => x.v === S.cur && x.t > S.t - 7 * 1440).reduce((a, x) => a + (x.kg || 0), 0);
+  return {rate, seaH, kgPerH:seaH > 0 ? kg / seaH : 0, wk};
+}
+function turRate(){ return turOwn().rate; }
+// the week's missions (paid and promised) against the week's landings, and the soft brake on a new pay
+function turWeek(){ const w0 = S.t - 7 * 1440, T = turState();
+  const mis = (T.done || []).filter(x => x.ok && x.t > w0).reduce((a, x) => a + (x.pay || 0), 0) + T.act.reduce((a, m) => a + (m.pay || 0), 0);
+  const fish = (S.sales || []).filter(x => x.t > w0).reduce((a, x) => a + (x.total || 0), 0);
+  return {mis, fish}; }
+function turBrake(pay){ const W = turWeek(), allow = Math.max(turCap() * 2, W.fish * TUR.share / (1 - TUR.share)), room = Math.max(0, allow - W.mis);
+  return pay <= room ? pay : room + (pay - room) * TUR.over; }
+// what a mission pays the player now: its base (m.base, set when it is made) by the missions already under way and the week's brake
+function turFinal(m){ const T = turState(), n = Math.min(TUR.stack.length - 1, T.act.filter(x => x !== m).length);
+  return Math.max(500, Math.round(turBrake(m.base * TUR.stack[n]) / 100) * 100); }
+// the species the player can fish: the jig takes every fish but the Greenland halibut (nets for it or a line), the crab wants pots
+function turSpOk(sp){ const pg = S.pgear; if (sp === 'krabbe') return !!(pg && pg.pots && pg.pots.big > 0);
+  if (sp === 'blakveite') return !!(pg && ((pg.nets || []).some(l => netTy(l) === 'kveite') || (pg.lines && ((pg.lines.bank && pg.lines.bank.n > 0) || (pg.lines.hyse && pg.lines.hyse.n > 0)))));
+  return true; }
+// how the player has been doing: the last ten missions, more done is a little harder, more failed a little easier
+function turForm(){ const D = (turState().done || []).slice(0, 10); if (D.length < 3) return 1; const r = D.filter(x => x.ok).length / D.length; return r > 0.8 ? 1.1 : r < 0.4 ? 0.8 : 1; }
 const turPay = (hGame, f) => Math.max(500, Math.round(turRate() * hGame / GAME_RATE * f / 100) * 100);
 function turClass(hGame){ for (const k in TUR.cls){ const c = TUR.cls[k].h; if (hGame >= c[0] && hGame < c[1]) return k; } return null; }
 const turMinR = hGame => Math.round(hGame * 60 / GAME_RATE);
@@ -99,14 +146,14 @@ function turBest(o, cls, used, me = turMe()){
   const cand = turPlants().filter(q => !used.has(q.id) && q.id !== S.boat.port).map(q => ({q, h:turNm(o, q.p) / v})).filter(x => x.h >= c.h[0] && x.h < hi);
   for (const {q, h} of turOrder(cand, me)){
     const cust = CUSTOMERS.find(z => z.port === q.id && z.big); if (!cust) continue;
-    const sps = q.mk && q.mk.sp ? Object.entries(q.mk.sp).filter(([sp, r]) => SPECIES[sp] && (r.months & (1 << mon)) && spCatchable(sp, H) && turRoom(sp, H) >= 150).sort((a, b) => b[1].kg - a[1].kg).map(r => r[0])
-      : custSp(cust).filter(sp => spCatchable(sp, H) && turRoom(sp, H) >= 150);
+    const sps = q.mk && q.mk.sp ? Object.entries(q.mk.sp).filter(([sp, r]) => SPECIES[sp] && (r.months & (1 << mon)) && spCatchable(sp, H) && turSpOk(sp) && turRoom(sp, H) >= 200).sort((a, b) => b[1].kg - a[1].kg).map(r => r[0])
+      : custSp(cust).filter(sp => spCatchable(sp, H) && turSpOk(sp) && turRoom(sp, H) >= 200);
     if (!sps.length || !turCan(o, q.p, h, false)) continue;
     // a species the player lands, if the plant takes it; about a usual landing, or part of the hold for one who has not landed yet
     const sp = sps.slice().sort((a, b) => (me.sp[b] || 0) - (me.sp[a] || 0))[0], base = me.kg > 30 ? me.kg * (0.8 + Math.random() * 0.5) : BOAT.holdCap * (0.4 + Math.random() * 0.4);
-    const kg = Math.max(50, Math.round(Math.min(BOAT.holdCap, base, turRoom(sp, H) * 0.8) / 10) * 10), xq = me.y >= 10 && Math.random() < 0.4;
+    const kg = Math.max(50, Math.round(Math.min(BOAT.holdCap, base * turForm(), turRoom(sp, H) * 0.7) / 10) * 10), xq = me.y >= 10 && Math.random() < 0.4;
     // the plant pays a known skipper a little more (its reputation, 03-simulation.js repOf: 0.8 to 1.2)
-    return {k:'best', cls, to:q.id, p:q.p, nm:Math.round(turNm(o, q.p)), h, sp, kg, q:xq ? 'E' : 'A', prem:xq ? 0.2 : 0.1, cust:cust.id, pay:Math.round(turPay(h, c.f) * (0.8 + repOf(cust.id) / 250) / 100) * 100, hTot:h * 2.5 + 30};
+    return {k:'best', cls, to:q.id, p:q.p, nm:Math.round(turNm(o, q.p)), h, sp, kg, q:xq ? 'E' : 'A', prem:xq ? 0.2 : 0.1, cust:cust.id, base:Math.round(turPay(h, TUR.keepF) * (0.8 + repOf(cust.id) / 250) / 100) * 100, hTot:h * 2.5 + 30};
   }
   return null;
 }
@@ -118,7 +165,7 @@ function turFrakt(o, cls, used, me = turMe()){
     if (!turCan(from.p, q.p, h - pick, false) || (pick && !turCan(o, from.p, pick, false))) continue;
     const room = capHold() - holdTotal(), fit = TUR_GOODS.filter(g => g.kg[0] <= room * 0.6); if (!fit.length) return null;
     const g = fit[Math.floor(Math.random() * fit.length)], kg = Math.round(Math.min(g.kg[1], room * 0.6, Math.max(g.kg[0], BOAT.holdCap * (0.2 + Math.random() * 0.3))) / 10) * 10;
-    return {k:'frakt', cls, from:from.id, to:q.id, p:q.p, nm:Math.round((pick ? turNm(o, from.p) : 0) + turNm(from.p, q.p)), h, kg, what:[g.no, g.en], pay:turPay(h, c.f), hTot:h * 2.5 + 12};
+    return {k:'frakt', cls, from:from.id, to:q.id, p:q.p, nm:Math.round((pick ? turNm(o, from.p) : 0) + turNm(from.p, q.p)), h, kg, what:[g.no, g.en], base:turPay(h, c.f), hTot:h * 2.5 + 12};
   }
   return null;
 }
@@ -132,7 +179,7 @@ function turGarn(o){
     const h = 2 * turNm(o, p) / v + 1.5; if (h >= c.h[1] * 1.6 || !turCan(o, p, h, true)) continue;
     const owner = TUR_OWNERS[Math.floor(Math.random() * TUR_OWNERS.length)], kind = nets ? 'garn' : 'line', n = nets ? 4 + Math.floor(Math.random() * 5) : 1 + Math.floor(Math.random() * 2);
     const kg = Math.round(Math.min(BOAT.holdCap * 0.5, (nets ? n * 18 : n * 70) * (0.6 + Math.random() * 0.8)));
-    return {k:'garn', cls:'kort', p, nm:Math.round(turNm(o, p)), h, kind, n, kgFish:kg, owner, pay:Math.max(500, Math.round(turPay(h, c.f) * 0.5 / 100) * 100), hTot:h * 2.5 + 24};
+    return {k:'garn', cls:'kort', p, nm:Math.round(turNm(o, p)), h, kind, n, kgFish:kg, owner, base:turPay(h, TUR.keepF), hTot:h * 2.5 + 24};
   }
   return null;
 }
@@ -144,7 +191,7 @@ const TUR_VAL = [[5.5, 80000], [5.9, 95000], [7.9, 245000], [8.9, 750000], [10.6
 function turValue(L){ let i = 1; while (i < TUR_VAL.length - 1 && L > TUR_VAL[i][0]) i++; const [a, b] = [TUR_VAL[i - 1], TUR_VAL[i]], f = clamp((L - a[0]) / (b[0] - a[0]), 0, 1); return Math.round((a[1] + (b[1] - a[1]) * f) * 0.6 / 1000) * 1000; }
 // the salvage reward: the time and costs (as the board pays for time) and a share of the value by the danger (0 out in open water,
 // 1 within a few hundred metres of land), never more than the value
-const turSalvage = (m, danger) => Math.min(m.value, Math.round((turPay(m.h, TUR.cls[m.cls].f) + m.value * (0.03 + 0.12 * clamp(danger, 0, 1))) / 100) * 100);
+const turSalvage = (m, danger) => Math.min(m.value, Math.round((turPay(m.h, TUR.cls[m.cls].f) + m.value * (0.03 + 0.12 * clamp(danger, 0, 1))) * (m.pf || 1) / 100) * 100);
 const turDanger = p => { try { return clamp(1 - (coastDistFar(p) - 0.2) / 2, 0, 1); } catch (e){ return 0.5; } };
 function turSlep(o, cls){
   const c = TUR.cls[cls], v = turV(), tv = Math.min(TUR_TOWV, v * 0.75);
@@ -158,7 +205,7 @@ function turSlep(o, cls){
     const m = {k:'slep', cls, to:port.id, p, nm:Math.round(turNm(o, p) + turNm(p, port.p)), h, reach:turNm(o, p) / v, boat:TUR_BOATS[Math.floor(Math.random() * TUR_BOATS.length)],
       owner:TUR_OWNERS[Math.floor(Math.random() * TUR_OWNERS.length)], L, B:Math.round(L * 0.34 * 10) / 10, T:Math.round(L * 0.13 * 10) / 10, hd:Math.random() * Math.PI * 2, liv:Math.floor(Math.random() * 4),
       value:turValue(L), hTot:h * 2.5 + 12};
-    m.payLo = turSalvage(m, 0); m.payHi = turSalvage(m, 1); m.pay = turSalvage(m, turDanger(p));
+    m.payLo = turSalvage(m, 0); m.payHi = turSalvage(m, 1); m.base = turSalvage(m, turDanger(p));
     return m;
   }
   return null;
@@ -233,21 +280,28 @@ function turProveMinute(m, b){
     turPayOut(m, 'Havforskningsinstituttet', 'Ekkoloddlinja er kommet inn. ' + saw[0], 'The echo line has come in. ' + saw[1]);
   }
 }
-// the season's move: where a species is landed most this month, 40 to 250 nm off, and it is in season and catchable
+// the season's move: where a species is landed most this month, 40 to 250 nm off, in season, catchable with the player's gear and with
+// quota left. The kilos follow what the player has landed in a week, for the days left after the sailing there and back, by the sea time
+// and the form (turForm), between half a hold and two, and never more than 70 % of what is left on the quota (Jonas 17.10.2026, #72:
+// «oppnåelige, men ikke nødvendigvis enkle», and no cod to fish when there is no cod left on the quota)
 function turSesong(o){
   const H = S.t / 60, mon = gDate(H).getUTCMonth(), v = turV(), cand = [];
   for (const q of turPlants()){ if (!q.mk || !q.mk.sp) continue; const nm = turNm(o, q.p); if (nm < 40 || nm > 250) continue;
-    for (const sp in q.mk.sp){ const r = q.mk.sp[sp]; if (!SPECIES[sp] || !(r.months & (1 << mon)) || !spCatchable(sp, H) || turRoom(sp, H) < 1000) continue;
+    for (const sp in q.mk.sp){ const r = q.mk.sp[sp]; if (!SPECIES[sp] || !(r.months & (1 << mon)) || !spCatchable(sp, H) || !turSpOk(sp) || turRoom(sp, H) < 700) continue;
       cand.push({q, sp, nm, w:r.kg}); } }
-  // the place where most is landed that the boat can reach on a tank, an open boat through sheltered water
   const best = cand.sort((a, b) => b.w - a.w).slice(0, 12).find(c => turCan(o, c.q.p, 0, false, false));
   if (!best) return null;
   const h = best.nm / v;
-  const kg = Math.round(Math.max(500, Math.min(BOAT.holdCap * 3 * (turMe().y >= 10 ? 1.5 : 1), turRoom(best.sp, H) * 0.8)) / 100) * 100;
   // to the end of the week (Sunday night), or the next if this one is too short for the trip and the fishing
   const d = gDate(H), left = ((7 - d.getUTCDay()) % 7) * 24 + 24 - d.getUTCHours();
   const hTot = left >= h * 2.5 + 48 ? left : left + 168;
-  return {k:'sesong', cls:'sesong', to:best.q.id, p:best.q.p, nm:Math.round(best.nm), h, sp:best.sp, kg, got:0, pay:turPay(h, TUR.seasonF) + turPay(12, 1), hTot};
+  const me = turMe(), own = turOwn(), hold = BOAT.holdCap, fishD = Math.max(1, (hTot - 2 * h) / 24);
+  const perDay = own.wk > 0 ? own.wk / 7 : hold * 0.7 / 7, skill = clamp(1.1 + 0.04 * me.y, 1.1, 1.5) * turForm();
+  let kg = clamp(perDay * fishD * skill, hold * 0.5, hold * 2); kg = Math.min(kg, turRoom(best.sp, H) * 0.7);
+  kg = Math.round(kg / 100) * 100; if (kg < 300) return null;
+  // the pay: a premium for the sailing there and back and for the hours of fishing the kilos take at the player's own pace
+  const fishH = Math.min(hTot, kg / Math.max(own.kgPerH, hold / 20));
+  return {k:'sesong', cls:'sesong', to:best.q.id, p:best.q.p, nm:Math.round(best.nm), h, sp:best.sp, kg, got:0, base:turPay(2 * h + fishH, TUR.keepF), hTot};
 }
 // ---- survey fishing for Havforskningsinstituttet ----
 // the lengths the board sees (cm, total length) of each species, a catch's usual span
@@ -269,14 +323,14 @@ function turProve(o, cls){
       const len = (dist(pts[0], pts[1]) + dist(pts[1], pts[2])) / NM, h = turNm(o, p) / v + len / Math.min(v, TUR.ekkoV);
       // out, along the line and home again on her tank (it ends at sea, as the lost gear does)
       if (h < c.h[0] || h >= c.h[1] || 2 * (turNm(o, p) + len) > 0.75 * turRange() || !turCan(o, p, h, true)) continue;
-      return {k:'prove', kind:'ekko', cls, p, pts, at:0, nm:Math.round(turNm(o, p) + len), h, pay:turPay(h, c.f), hTot:h * 2.5 + 12};
+      return {k:'prove', kind:'ekko', cls, p, pts, at:0, nm:Math.round(turNm(o, p) + len), h, base:turPay(h, c.f), hTot:h * 2.5 + 12};
     }
     // a station: fish there an hour (two on a middle trip), where fishing with the jig is allowed
     const need = cls === 'kort' ? 60 : 120, h = turNm(o, p) / v + need / 60;
     if (h < c.h[0] || h >= c.h[1] || !turCan(o, p, h, true)) continue;
     try { if (typeof ruBlockMsg === 'function' && ruBlockMsg({p, len:BOAT.len, gear:'juksa', sp:null, hand:!(S.equip && S.equip.jukse > 0)})) continue; } catch (e){}
-    const pay = turPay(h, c.f);
-    return {k:'prove', kind:'stasjon', cls, p, need, min:0, nm:Math.round(turNm(o, p)), h, pay, bonusMax:Math.round(pay * 0.2 / 100) * 100, hTot:h * 2.5 + 12};
+    const base = turPay(h, TUR.keepF * 1.5);   // the catch at the station is the player's; the measuring is the work
+    return {k:'prove', kind:'stasjon', cls, p, need, min:0, nm:Math.round(turNm(o, p)), h, base, bonusMax:Math.round(base * 0.2 / 100) * 100, hTot:h * 2.5 + 12};
   }
   return null;
 }
@@ -334,7 +388,7 @@ function turFoto(o, cls){
     const hTot = h * 2.5 + 12, can = k => { if (k === 'uvaer' && open) return false; let n2 = 0;
       for (let t = H + h; t <= H + hTot - 0.5; t += 0.5) if (TUR_LYS[k].ok(t, L) && (k !== 'uvaer' || hsAtFc(ap, t, H) <= warn)) n2++; return n2 >= 2; };
     const want = Math.random() < 0.55 ? ['nordlys', 'sol', 'natt', 'uvaer'].filter(can) : [], lys = want.length ? want[Math.floor(Math.random() * want.length)] : null;
-    return {k:'foto', cls, p:ap, fyr:{x:L.x, y:L.y, h:f[2], name:f[3]}, lys, nm:Math.round(turNm(o, ap)), h, pay:Math.round(turPay(h, c.f) * (lys ? 1.25 : 1) / 100) * 100, hTot};
+    return {k:'foto', cls, p:ap, fyr:{x:L.x, y:L.y, h:f[2], name:f[3]}, lys, nm:Math.round(turNm(o, ap)), h, base:Math.round(turPay(h, c.f) * (lys ? 1.25 : 1) / 100) * 100, hTot};
   }
   return null;
 }
@@ -360,7 +414,7 @@ function turFotoTake(m, seen, img){
 }
 function turMake(){
   const T = turState(), o = turHere(), used = new Set(T.act.map(m => m.to).filter(Boolean)), B = [], me = turMe();
-  const add = m => { if (m){ m.id = ++T.seq; m.until = S.t + 1440; B.push(m); if (m.to) used.add(m.to); } };
+  const add = m => { if (m){ m.id = ++T.seq; m.until = S.t + 1440; if (m.base == null) m.base = m.pay || 500; m.pay = turFinal(m); B.push(m); if (m.to) used.add(m.to); } };
   // the first of a weighted draw that the boat can do (a weight's key Math.random() ** (1 / w): the heavier, the likelier first)
   const has = k => T.act.some(m => m.k === k) || B.some(m => m.k === k);
   const draw = list => { for (const [, f] of list.filter(x => x[0] > 0).map(x => [Math.pow(Math.random(), 1 / x[0]), x[1]]).sort((a, b) => b[0] - a[0])){ const m = f(); if (m) return m; } return null; };
@@ -384,8 +438,11 @@ function turMake(){
 function turEnsure(force){
   const T = turState(), o = turHere(), H = S.t / 60;
   T.board = T.board.filter(m => m.until > S.t);
-  const morning = T.at && Math.floor((T.at.t / 60 - 6) / 24) !== Math.floor((H - 6) / 24);
-  if (force || !T.at || (!T.board.length && S.t - T.at.t > 60) || morning || dist(o, T.at) > TUR.move) turMake();
+  const day = Math.floor((H - 6) / 24), morning = T.at && Math.floor((T.at.t / 60 - 6) / 24) !== day;
+  // a new board when the boat has moved far, but once a game day at most (the board is not to be rolled for the best offers)
+  const moved = T.at && dist(o, T.at) > TUR.move && T.mvDay !== day;
+  if (moved) T.mvDay = day;
+  if (force || !T.at || morning || moved) turMake();
   return T;
 }
 // ---- taking, doing and finishing ----
@@ -394,6 +451,9 @@ function turTake(id){
   if (T.act.length >= 3) return turL('Du har allerede tre oppdrag. Fullfør eller gi fra deg ett først.', 'You already have three missions. Finish or give one up first.');
   if (m.k === 'frakt' && capHold() - holdTotal() < m.kg) return turL('Det er ikke plass i lasterommet. Lever fangsten først.', 'There is no room in the hold. Land the catch first.');
   T.board.splice(T.board.indexOf(m), 1); m.t0 = S.t; m.due = S.t + Math.round(m.hTot * 60); m.vid = S.cur;
+  if (m.base == null) m.base = m.pay || 500; m.pay = turFinal(m);
+  if (m.k === 'slep'){ m.pf = m.pay / Math.max(1, m.base); m.payLo = turSalvage(m, 0); m.payHi = turSalvage(m, 1); }
+  if (m.k === 'prove' && m.bonusMax) m.bonusMax = Math.round(m.pay * 0.2 / 100) * 100;
   if (m.k === 'best'){ const O = ordState(); O.active.push({id:++O.seq, cust:m.cust, port:m.to, sp:m.sp, kg:m.kg, left:m.kg, q:m.q, prem:m.prem || 0.1, bonus:m.pay, offerUntil:S.t, days:Math.ceil(m.hTot / 24), due:m.due, tur:m.id}); m.ord = O.seq; }
   if (m.k === 'frakt'){ m.stage = 'pick'; if (S.boat.status === 'port' && S.boat.port === m.from) turLoad(m); }
   if (m.k === 'garn') turSpawn(m);
@@ -403,6 +463,7 @@ function turTake(id){
   if (m.k === 'foto') msg('Kystposten', 'Fint at du tar den. Vi vil ha et bilde av ' + turFyrName(m) + (m.lys ? ' ' + TUR_LYS[m.lys].no : '') + '. Snu kameraet mot fyret og trykk på utløseren når du er innen 3 km.', 'Good that you take it. We want a picture of ' + turFyrName(m) + (m.lys ? ' ' + TUR_LYS[m.lys].en : '') + '. Turn the camera to the lighthouse and press the shutter when you are within 3 km.');
   if (m.k === 'slep'){ m.stage = 'reach'; msg(m.owner, 'Takk for at du kommer! «' + m.boat + '» har motorstopp og ligger og driver ved ' + coordStr(m.p) + '.', 'Thank you for coming! The «' + m.boat + '» has engine trouble and is drifting at ' + coordStr(m.p) + '.'); }
   T.act.push(m);
+  for (const b of T.board) b.pay = turFinal(b);   // the rest of the board as it stands with this one under way
   if (typeof cloudEv === 'function') cloudEv('tur_take', {k:m.k, cls:m.cls, nm:m.nm, min:turMinR(m.h)});
   log('Tok oppdraget: ' + turWhat(m)[0] + '.', 'Took the mission: ' + turWhat(m)[1] + '.');
   return null;
@@ -443,7 +504,7 @@ function turEnd(m, ok, why){
   }
   T.done.unshift({id:m.id, k:m.k, cls:m.cls, to:m.to || null, ok, pay:ok ? m.pay : 0, t:S.t, what:turWhat(m)}); T.done = T.done.slice(0, 20);
   if (why) log(why, why);
-  if (typeof cloudEv === 'function') cloudEv(ok ? 'tur_done' : 'tur_fail', {k:m.k, cls:m.cls, nm:m.nm, trim:!!trimOn(S.boat), min:Math.round((S.t - m.t0) / GAME_RATE)});
+  if (typeof cloudEv === 'function') cloudEv(ok ? 'tur_done' : 'tur_fail', {k:m.k, cls:m.cls, nm:m.nm, trim:!!trimOn(S.boat), min:Math.round((S.t - m.t0) / GAME_RATE), pay:ok ? Math.round(m.pay || 0) : 0});
 }
 function turPayOut(m, from, no, en){
   if (m.k !== 'best'){ S.cash += m.pay; S.stats.revenue += m.pay; }
@@ -481,7 +542,9 @@ function turHauled(s){
   turPayOut(m, m.owner, (m.kind === 'garn' ? 'Takk for at du fant garnlenka mi. Fisken er din.' : 'Takk for at du fant lina mi. Fisken er din.'), (m.kind === 'garn' ? 'Thank you for finding my string of nets. The fish is yours.' : 'Thank you for finding my line. The fish is yours.'));
 }
 function turHour(){
-  const T = S.turer; if (!T) return;
+  const T = turState(), d = Math.floor(S.t / 1440), L = T.sea || (T.sea = {});
+  if (S.boat.status === 'sailing' || S.boat.status === 'fishing') L[d] = (L[d] || 0) + 1;   // the sea hours for the player's own rate (turOwn)
+  for (const k in L) if (+k < d - 15) delete L[k];
   for (const m of T.act.slice()) if (m.due && S.t > m.due){
     // an order out of time is the orders' own to end and tell (ordersTick); once it has, the mission goes with it
     if (m.k === 'best'){ if (!ordState().active.some(o => o.tur === m.id)) turEnd(m, false, null); continue; }

@@ -128,7 +128,7 @@ const VIEW = {
   bruk: D => card('Appene og knappene som brukes', bars(D.features)) + card('Redskap', bars(D.gear)) + card('Båtene spillerne har nå', bars(D.boats)) +
     card('Grunnstøtinger', '<p>I perioden: <b>' + nf(D.groundings.count, 0) + '</b></p>' + bars(D.groundings.by_boat) + table((D.groundings.where || []).slice(0, 20), [['x', 'x'], ['y', 'y'], ['v', 'Fart (kn)']])) +
     card('Turene', '<div class="grid">' + kpi('Leveringer', nf(D.trips.count, 0)) + kpi('Snitt kast loss → levering', nf(D.trips.avg_trip_min, 0) + ' min spilltid') + kpi('Snitt per levering', nf(D.trips.avg_kr, 0) + ' kr') + '</div><h3>Mottak</h3>' + bars(D.trips.ports) + '<h3>Fangstfelt</h3>' + bars(D.trips.fields)),
-  okonomi: D => '<div class="grid">' + kpi('Gini for kassa', nf(D.economy.gini_cash, 3), '0 er likt, 1 er alt hos én') + kpi('Gini for flåten', nf(D.economy.gini_fleet, 3)) + kpi('Median kasse', nf(D.economy.cash_p50, 0) + ' kr') + kpi('90-persentil kasse', nf(D.economy.cash_p90, 0) + ' kr') + '</div>',
+  okonomi: D => '<div class="grid">' + kpi('Gini for kassa', nf(D.economy.gini_cash, 3), '0 er likt, 1 er alt hos én') + kpi('Gini for flåten', nf(D.economy.gini_fleet, 3)) + kpi('Median kasse', nf(D.economy.cash_p50, 0) + ' kr') + kpi('90-persentil kasse', nf(D.economy.cash_p90, 0) + ' kr') + '</div>' + turCards(),
   penger: D => { const m = D.money; return '<div class="grid">' + kpi('Inntekt i perioden', nf(m.revenue_nok, 0) + ' kr') + kpi('Betalende', nf(m.payers, 0)) + kpi('ARPU', nf(m.arpu, 2) + ' kr') + kpi('Konvertering', pct(m.conversion)) +
     kpi('Gjenkjøp', pct(m.repurchase)) + kpi('Tid til første kjøp', nf(m.ttfp_days) + ' dager') + kpi('Refusjoner', pct(m.refund_rate)) + kpi('Forlatt kasse', pct(m.abandon_rate)) + '</div>' +
     card('Boostere', bars(m.boosters)) + card('Transaksjonslogg (Stripe)', table(m.log, [['at', 'Tid', v => esc(new Date(v).toLocaleString('nb-NO'))], ['player', 'Spiller'], ['product', 'Produkt'], ['nok', 'Kr'], ['status', 'Status'], ['id', 'Stripe-økt']]), 'Fylles når Stripe-webhooken er koblet på.'); },
@@ -137,6 +137,17 @@ const VIEW = {
   geo: D => card('Land (fra nettverket, IP-adressen lagres ikke)', bars(D.geo.countries)) + card('Tidssoner', bars(D.geo.timezones)) + card('Hjemhavn i spillet', bars(D.geo.homes)),
   kommer: () => card('Venter på funksjoner i spillet', '<ul><li>Push-varsler: åpningsrate</li><li>Venner og deling: sosial klyngedynamikk, nettverkskoeffisient, viralitet, invite-to-churn og den sosiale utløseren for kjøp</li><li>Betalte boostere: bruken (tabellen er klar)</li></ul>', 'Se docs/lansering.md E.')
 };
+// ---------- the missions' economy (supabase/migrations/20261017120000_turokonomi.sql): each player's income from missions against
+// landings (the brake in the game aims at about 30 %), and saves where the cash rose more than the logged landings and missions ----------
+let TURE = null;
+async function turLoad(){ await null; try { TURE = DEMO ? {share:[], flags:[]} : {share:await rpc('admin_tur_share', {days:Math.min(90, DAYS)}), flags:await rpc('admin_cash_flags', {lim:100})}; } catch (e){ TURE = {err:e.message}; } TURE.days = Math.min(90, DAYS); if (TAB === 'okonomi') render(); }
+function turCards(){
+  if (!TURE || (TURE.days !== Math.min(90, DAYS) && !TURE.err)){ if (!TURE || !TURE.loading){ TURE = {loading:true, days:-1}; turLoad(); } return card('Oppdrag og fangst', '<p class="note">Henter …</p>'); }
+  if (TURE.err) return card('Oppdrag og fangst', '<p class="warn">' + esc(TURE.err) + '</p>', 'Er migreringen supabase/migrations/20261017120000_turokonomi.sql kjørt?');
+  const sh = (TURE.share || []).map(r => Object.assign({}, r, {pct:(r.tur + r.fish) > 0 ? r.tur / (r.tur + r.fish) : 0}));
+  return card('Oppdrag og fangst per spiller', table(sh, [['player', 'Spiller'], ['boat', 'Båt'], ['tur', 'Oppdrag (kr)', v => nf(v, 0)], ['fish', 'Fangst (kr)', v => nf(v, 0)], ['pct', 'Andel oppdrag', v => pct(v)], ['done', 'Fullført'], ['failed', 'Feilet']]), 'Fra hendelsene (bare spillere som har sagt ja til statistikk). Bremsen i spillet sikter mot rundt 30 % per spilluke; beløp for oppdrag finnes fra 17.10.2026.') +
+    card('Mistenkelige pengehopp', table(TURE.flags, [['at', 'Tid', v => esc(new Date(v).toLocaleString('nb-NO'))], ['player_id', 'Spiller'], ['cash0', 'Før', v => nf(v, 0)], ['cash1', 'Etter', v => nf(v, 0)], ['delta', 'Økning', v => nf(v, 0)], ['explained', 'Forklart av salg og oppdrag', v => nf(v, 0)], ['game_dt', 'Spillminutter']]), 'En lagring der kassa steg mer enn 300 000 kr og mer enn dobbelt så mye som loggede salg og oppdrag. Bare et flagg: ingenting avvises eller tas fra noen.');
+}
 // ---------- the devices (supabase/migrations/20261006160000_device_data.sql): the frame rate by graphics chip, and the errors with the chips they hit ----------
 let DEV = null;
 async function devLoad(){ await null; try { DEV = DEMO ? devDemo() : await rpc('admin_devices', {days:DAYS}); } catch (e){ DEV = {err:e.message}; } if (TAB === 'teknikk') render(); }

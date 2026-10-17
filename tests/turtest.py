@@ -27,8 +27,8 @@ async def main():
             ok:B.every(m => m.pay >= 500 && m.hTot >= m.h * 2.5 && (m.cls === 'sesong' || (m.h >= TUR.cls[m.cls].h[0] && m.h < TUR.cls[m.cls].h[1] * (m.k === 'garn' ? 1.6 : 1)))),
             perH:Object.fromEntries(B.filter(m => m.k !== 'garn').map(m => [m.cls, Math.round(m.pay / m.h)])), mins:B.map(m => turMinR(m.h))}; })()""")
         ph = b['perH']
-        check(b['n'] >= 3 and 'kort' in b['cls'] and b['ok'] and 8000 <= b['rate'] <= 10000 and (not ('lang' in ph and 'kort' in ph) or ph['lang'] > ph['kort']),
-              'the board: short, middle and long missions by the real time to sail; the pay follows what the boat earns an hour, more an hour for the long; deadlines at least 2.5 times the time without trim', b)
+        check(b['n'] >= 3 and 'kort' in b['cls'] and b['ok'] and 5000 <= b['rate'] <= 6000,
+              'the board: short, middle and long missions by the real time to sail; a newcomer is paid 60 % of the boat\'s hourly curve until the sea hours are logged; deadlines at least 2.5 times the time without trim', b)
         # 1b. weighed by the player's own record: a newcomer gets no long trip and no season's move; an old hand's long go further;
         #     the order is for a species the player lands, about a usual landing; a plant pays a known skipper more
         w = await pg.evaluate("""(() => { const o = turHere(), fs = fsState(), p0 = fs.p, sales0 = S.sales;
@@ -200,6 +200,35 @@ async def main():
           return {kinds, two, tap}; })()""")
         check(bd['kinds'].get('prove', 0) > 0 and bd['kinds'].get('foto', 0) > 0 and not bd['two'] and (bd['tap'] is None or abs(bd['tap']['got'] - bd['tap']['cm']) <= 1),
               'the board offers survey fishing and lighthouse pictures now and then, never two of one kind; a tap on the measuring board reads the length there', bd)
+        # the missions' economy (Jonas 17.10.2026, tilbakemelding #72): the player's own rate, a mission under way pays less for the next, the week's soft brake
+        ec = await pg.evaluate("""(() => { const T = turState(), cap = turCap(), d = Math.floor(S.t / 1440), keep = {sales:S.sales, sea:T.sea, act:T.act, done:T.done};
+          T.act = []; T.done = []; T.sea = {}; T.sea[d] = 30; S.sales = [{t:S.t - 600, v:S.cur, port:'x', kg:500, total:cap / GAME_RATE * 30 * 0.5, sp:[]}];
+          const half = turOwn().rate / cap; T.sea[d] = 0; const prior = turOwn().rate / cap; T.sea[d] = 30;
+          S.sales = [{t:S.t - 600, v:S.cur, port:'x', kg:500, total:cap / GAME_RATE * 30 * 5, sp:[]}]; const top = turOwn().rate / cap;
+          const m = {base:10000}, a0 = turFinal(m); T.act = [{pay:0}]; const a1 = turFinal(m); T.act = [{pay:0}, {pay:0}]; const a2 = turFinal(m); T.act = [];
+          S.sales = [{t:S.t - 600, v:S.cur, port:'x', kg:500, total:1000000, sp:[]}]; T.done = [{ok:true, t:S.t - 60, pay:400000}];
+          const room = 1000000 * 0.3 / 0.7 - 400000, br = turBrake(100000), want = room + (100000 - room) * 0.25;
+          Object.assign(S, {sales:keep.sales}); T.sea = keep.sea; T.act = keep.act; T.done = keep.done;
+          return {half:+half.toFixed(2), prior:+prior.toFixed(2), top:+top.toFixed(2), a0, a1, a2, br:Math.round(br), want:Math.round(want)}; })()""")
+        check(abs(ec['half'] - 0.5) < 0.02 and abs(ec['prior'] - 0.6) < 0.02 and ec['top'] == 1 and ec['a0'] == 10000 and ec['a1'] == 6000 and ec['a2'] == 4000 and abs(ec['br'] - ec['want']) < 2,
+              "the pay follows the player's own landings per hour at sea (60 % of the curve without sea hours, never above it); a second and third mission under way pay 60 % and 40 %; past 30 % of the week's income the pay goes on at a quarter", ec)
+        # the season's move: kilos from the player's own week, at most two holds and 70 % of the quota left; no crab without pots; no cod when the cod is fished
+        se2 = await pg.evaluate("""(() => { const T = turState(), keep = {sales:S.sales, act:T.act}, o = turHere(), out = [], hold = BOAT.holdCap; T.act = [];
+          S.sales = [{t:S.t - 600, v:S.cur, port:'x', kg:hold * 6, total:100000, sp:[['torsk', hold * 6]]}];
+          for (let i = 0; i < 6; i++){ const m = turSesong(o); if (m) out.push({sp:m.sp, kg:m.kg, room:turRoom(m.sp, S.t / 60)}); }
+          const crab = turSpOk('krabbe'), pots = S.pgear && S.pgear.pots ? S.pgear.pots.big : 0;
+          S.sales = keep.sales; T.act = keep.act; return {out, hold, crab, pots}; })()""")
+        o2 = se2['out']
+        check(all(x['kg'] <= 2 * se2['hold'] + 50 and (x['room'] is None or x['kg'] <= 0.7 * x['room'] + 50) for x in o2) and (se2['crab'] == (se2['pots'] > 0)),
+              "the season's move: at most two holds and 70 % of what is left on the quota; crab only with pots aboard", se2)
+        # the board is rolled by moving far once a game day at most; old missions are brought down to the new rules when the save opens
+        rr = await pg.evaluate("""(() => { const T = turEnsure(true); T.mvDay = null; const seq0 = T.seq, b = S.boat, p0 = {x:b.pos.x, y:b.pos.y};
+          b.pos = {x:p0.x + 50, y:p0.y}; turEnsure(); const seq1 = T.seq; b.pos = {x:p0.x + 100, y:p0.y}; turEnsure(); const seq2 = T.seq; b.pos = p0;
+          const old = {k:'sesong', cls:'sesong', to:'x', sp:'sei', kg:BOAT.holdCap * 3, got:0, h:12, hTot:150, pay:400000, id:999};
+          const keep = T.act; T.act = [old]; T.v = 1; turState(); const after = {kg:old.kg, pay:old.pay}; T.act = keep;
+          return {moved1:seq1 > seq0, moved2:seq2 > seq1, kg:after.kg, pay:after.pay, hold:BOAT.holdCap}; })()""")
+        check(rr['moved1'] and not rr['moved2'] and rr['kg'] <= 2 * rr['hold'] and rr['pay'] < 400000,
+              'moving far makes a new board once a game day, not twice; a season\'s move taken before is brought down to two holds and the new pay', rr)
         check(errs == [], 'sidefeil', errs[:3])
         await br.close()
 
