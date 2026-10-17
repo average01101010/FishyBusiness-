@@ -310,10 +310,9 @@ def fittings(fine=True):
             for sg in (1, -1):
                 y = sg * (y_at(x, z_sheer(x)) - 0.12); zc = z_sheer(x) + 0.012
                 acyl(A, (x, y, zc), (x, y, zc + 0.22), 0.04, s, seg=8); acyl(A, (x - 0.09, y, zc + 0.17), (x + 0.09, y, zc + 0.17), 0.02, s, seg=6)
-        for x in (2.0, 4.6, 7.6):                                                                          # fenders hung at the stripe
+        for x in (1.6, 3.2):                                                                               # fenders stowed on deck along the bulwark's foot beside the wheelhouse (hung outboard they widen the hull's measure)
             for sg in (1, -1):
-                zf = z_sheer(x) - 0.45; y = sg * (y_at(x, zf) + 0.11); acyl(A, (x, y, zf + 0.25), (x, y, zf - 0.25), 0.1, lambda z: C['rubber'], seg=10)
-                acyl(A, (x, sg * (y_at(x, z_sheer(x)) + 0.02), z_sheer(x)), (x, y, zf + 0.25), 0.007, lambda z: C['dark'], seg=4)
+                zd = z_deck(x) + 0.1; y = sg * (y_at(x, zd) - 0.17); acyl(A, (x - 0.25, y, zd), (x + 0.25, y, zd), 0.1, lambda z: C['rubber'], seg=10)
         # the pulpit round the bow and the rail along the foredeck's cap, the windlass and the bow roller, a mushroom vent on the trunk
         xs = [8.6 + (XF - 0.08 - 8.6) * k / 8 for k in range(9)]
         for sg in (1, -1):

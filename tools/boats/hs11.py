@@ -290,10 +290,10 @@ def fittings(A, fine=True):
         for sg in (1, -1):
             y = sg * (hbz(x, z_top(x)) - 0.14); zt = z_top(x)
             acyl(A, (x, y, zt), (x, y, zt + 0.26), 0.05, s, seg=8); acyl(A, (x - 0.1, y, zt + 0.2), (x + 0.1, y, zt + 0.2), 0.022, s, seg=6)
-    for x in (2.0, 4.5, 9.3):                                                                               # fenders hung at the strake
+    for x in (1.6, 3.0, 4.3):                                                                               # fenders stowed inboard on the working deck, hung from the cap (outboard they widen the hull's measure)
         for sg in (1, -1):
-            y = sg * (hbz(x, Z_RUB) + 0.13); acyl(A, (x, y, Z_RUB + 0.35), (x, y, Z_RUB - 0.2), 0.12, lambda z: C['rubber'], seg=10)
-            acyl(A, (x, sg * (hbz(x, z_top(x)) - 0.02), z_top(x)), (x, y, Z_RUB + 0.35), 0.008, lambda z: C['dark'], seg=4)
+            zt = z_top(x); y = sg * (hbz(x, zt) - 0.20); acyl(A, (x, y, zt - 0.06), (x, y, zt - 0.5), 0.12, lambda z: C['rubber'], seg=10)
+            acyl(A, (x, sg * (hbz(x, zt) - 0.04), zt), (x, y, zt - 0.06), 0.008, lambda z: C['dark'], seg=4)
     for sg in (1, -1):                                                                                      # bilge keels along the chine
         xs = [3.0 + 0.5 * k for k in range(9)]
         for x0, x1 in zip(xs, xs[1:]):

@@ -2917,8 +2917,8 @@ const G3 = (() => {
     PENT = mkTex(); upTex(PENT, im); gl.generateMipmap(gl.TEXTURE_2D); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); return PENT;
   }
   // the masthead: the highest of the boat's lights (a detailed model's and a kit model's alike) when it is above the ensign's pole.
-  // A boat with no mast (the open boats, whose highest light is the stern lantern) flies no pennant, only the ensign (Jonas 07.10.2026)
-  function mastTop(G){ if (!G) return null; let top = null; for (const L of G.lights || []) if (L && L[0] && (!top || L[0][1] > top[1])) top = L[0];
+  // A boat with no mast (the open boats, whose highest light is the stern lantern or the all-round light on its stake) flies no pennant, only the ensign (Jonas 07.10.2026)
+  function mastTop(G){ if (!G || G.open) return null; let top = null; for (const L of G.lights || []) if (L && L[0] && (!top || L[0][1] > top[1])) top = L[0];
     return top && (!G.pole || top[1] > G.pole[1]) ? [top[0], top[1] + 0.3, top[2]] : null; }
   function updateFlag(t, appW){
     const droop = (1 - sstep(1.5, 8, appW)) * 1.25, amp = 0.03 + 0.09 * sstep(2, 16, appW), om = 4 + appW * 1.1;
