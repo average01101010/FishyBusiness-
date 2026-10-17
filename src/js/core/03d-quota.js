@@ -81,7 +81,7 @@ function licQ(l, H, len){
 // grows through the year, different for each boat and year
 function sellerCod(id, H){ const d = doyH(H), u = h2(yearH(H) * 31 + (S.qseed || 0) % 9973, 700 + id.length * 7 + id.charCodeAt(1)); return clamp(d / 365 * (0.6 + 0.9 * u), 0, 0.85); }
 // the offers in Båthandel (LIC_OFFERS in 03-simulation.js) show this year's quotas for the boat they come with
-for (const O of LIC_OFFERS){ O.hl = HJ[O.id].hl; O.kpk = KPK; const f = () => licQ(O, S.t / 60, VESSELS[O.ves].len);
+for (const O of LIC_OFFERS){ O.k = O.k || O.id; O.hl = HJ[O.id].hl; O.kpk = KPK; const f = () => licQ(O, S.t / 60, VESSELS[O.ves].len);
   Object.defineProperties(O, {cod:{get:() => f().torsk}, hyse:{get:() => f().hyse}, sei:{get:() => f().sei}}); }
 // § 29: what the owner has landed this year with a boat in the open group follows the owner to the next boat there (the new boat's
 // quota is reduced by it); a boat that takes over a closed-group right starts the year with what the seller fished on it

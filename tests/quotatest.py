@@ -39,7 +39,7 @@ SEASON = """(() => { const R = {}, at = (y, m, d) => (Date.UTC(y, m - 1, d) - EP
 
 TRADE = """(async () => { const R = {}, y = yearH(S.t / 60), tap = q => { const e = document.querySelector('#drawerBody ' + q) || document.querySelector(q); if (e) e.click(); return !!e; };
   S.tut = 0; window.confirm = () => true; S.cash = 3e6; S.loan = null; S.loanIN = null; S.fm = {n:20, last:-1, kr:5e5, b:true}; S.sales = S.sales.length >= 3 ? S.sales : [{t:0, total:1}, {t:1, total:1}, {t:2, total:1}];
-  const b = S.boat; b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; S.lic = null; S.crew = [];
+  const b = S.boat, Y = PORTS.find(q => q.sted === 'verft'); b.status = 'port'; b.port = Y.id; b.pos = {...Y.p}; S.lic = null; S.crew = [];   // (boats are bought at a yard, Jonas 07.10.2026)
   // § 29: open-group cod follows the owner from a closed-group boat traded back to the open group
   const q0 = freshQuota(); q0.torsk = 1200; openUsedSave(q0); S.lic = {id:'u7', since:y - 1}; quotaState().torsk = 5000; b.type = 'trebat'; applyVessel();
   PHONE.dact('rederi', 'buy', {k:'skiff', ti:'1'}); R.p29 = {lic:!!S.lic, torsk:quotaState().torsk, type:S.boat.type};
@@ -52,6 +52,7 @@ TRADE = """(async () => { const R = {}, y = yearH(S.t / 60), tap = q => { const 
   R.struct = {c0, c1, c2, c3, n:(S.lic.st || []).length, until:S.lic.st && S.lic.st[0].until, room:structRoom(S.lic, 'h14'), small:structRoom({id:'u7'}, 'u7')};
   // haddock and saithe in the closed group: over the maximum quota only 30 % haddock and 20 % saithe of the landing are kept
   const LQ = licQ(S.lic); quotaState().hyse = LQ.hyse[0]; quotaState().sei = LQ.sei[0];
+  b.port = 'husoy'; b.pos = {...portById('husoy').p};   // (the landing needs a plant, the buying a yard)
   S.hold = [{sp:'torsk', kg:500, fresh:90, bled:true, iced:true, c:1, g:'A'}, {sp:'hyse', kg:500, fresh:90, c:1, g:'A'}]; S.tripOwner = true; sell(); R.hyse = {conf:Math.round(S.lastSale.confKg), keptH:Math.round(quotaState().hyse - LQ.hyse[0])};
   // the special scheme: two boats under 11 m, both since last year; one is sold and the other fishes both quotas
   b.type = 'sjark'; applyVessel(); S.lic = {id:'h9', since:y - 1}; freshQuota(); const v2 = newVesselObj('snekke', 'husoy', {id:'h7', since:y - 1}), n0 = S.fleet.length, q9 = licQ(S.lic).torsk;

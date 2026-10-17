@@ -112,7 +112,7 @@ async def main():
         print(ok([x[0] for x in hd['out']] == [hd['spec'], round(hd['spec'] * 1.2), round(hd['spec'] * 1.4), round(hd['spec'] * 1.7)] and hd['out'][3][1] == round(hd['ice'] * 1.7) and all(x[0] == x[2] for x in hd['out']) and hd['job'] == 1), 'the hold rebuilt in three steps: +20 %, +40 %, +70 %, the ice room with it', hd)
         lens = [x[1] for x in r['ladder'] if x[2] != 'hav']
         print(ok(len(r['ladder']) >= 13 and all(x[3] for x in r['ladder'] if x[2] == 'hav') and not any(x[3] for x in r['ladder'] if x[2] != 'hav')), 'the ladder runs from the open boat to the ocean fleet, and only the ocean fleet is locked')
-        print(ok([o[0] for o in r['offers']] == ['u7', 'h7', 'h9', 'h10', 'h14', 'h20'] and all(r['offers'][i][3] < r['offers'][i + 1][3] for i in range(5))), 'six closed-group offers by quota length (the coastal vessels with 14–14.9 and 20–20.9 m), dearer the longer')
+        print(ok([o[0] for o in r['offers']] == ['u7', 'h7', 'h9', 'h10', 'h10', 'h10', 'h14', 'h20'] and all(r['offers'][i][3] < r['offers'][i + 1][3] for i in range(7))), 'eight closed-group offers (h10 with all three 10.99 m boats) by quota length (the coastal vessels with 14–14.9 and 20–20.9 m), dearer the longer')
         print(ok(r['grp'][0] == 0 and r['grp'][1] == r['grp'][2]), 'the 7.9 m snekke fishes in the open group under 8 m, with the year\'s maximum quota for that group', r['grp'])
         print(ok(r['fjord']['kg'] == 0 and r['fjord']['warn']), 'a 21 m vessel may not jig inside the fjord line')
         # the market: tabs, cards with a side view, the spec sheet, the ocean fleet locked, one open-group boat, in landscape and portrait
@@ -136,7 +136,7 @@ async def main():
             await pg.screenshot(path=os.path.join(ROOT, 'tests', 'out', 'market_' + tag + '.png'))
             print(tag, json.dumps(u, ensure_ascii=False)[:900])
             t = u['tabs']
-            print(ok(len(t['open']) == 7 and len(t['lic']) == 6 and len(t['kyst']) == 2 and len(t['hav']) == 4 and all(c[2] for v in t.values() for c in v)), tag + ': four tabs with every boat as a card with its side view')
+            print(ok(len(t['open']) == 7 and len(t['lic']) == 8 and len(t['kyst']) == 2 and len(t['hav']) == 4 and all(c[2] for v in t.values() for c in v)), tag + ': four tabs with every boat as a card with its side view')
             print(ok(u['havText'] and not u['havBuy'] and len(u['havSecs']) >= 3), tag + ': the ocean vessel has a full spec sheet (length, beam, draft, weight) and no buy button')
             print(ok(u['tiBtn'] and u['tiOk'] and not u['fleetBtn']), tag + ': an open-group boat is bought by trading in, not for the fleet, before the company has a closed-group vessel')
             print(ok('Hjemmel' in u['licSecs'] and u['licBtns'] == 2), tag + ': a boat with a right shows the right and both ways to buy')
