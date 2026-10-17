@@ -1071,6 +1071,9 @@ function deckPath(M, a, b){
   return out;
 }
 // the places on a type's deck, from the model's anchors: where the work is done and where one stands when free. Cells of the map.
+// the models whose wheelhouse has no wheel and chair of its own (the Malo, the havsjark, the snekke and the hand boats have theirs
+// from Blender): the view draws a simple helm kit at skipperAt for these, so the one steering has something to hold (Jonas 17.10.2026)
+const HELM_KIT = {kyst15:1, kyst21:1, hurtigsjark:1, sjarkny:1, autoliner:1, bunntral:1, pelagisk:1, snokrabbe:1, jukesjark:1};
 const DECKPTS = {};
 function deckPoints(type){
   if (type in DECKPTS) return DECKPTS[type]; const M = deckMap(type), G = geoOf(type); if (!M || !G){ DECKPTS[type] = null; return null; }

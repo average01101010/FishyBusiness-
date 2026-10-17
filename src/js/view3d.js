@@ -1619,6 +1619,7 @@ const G3 = (() => {
       palN:[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(nb => mk(b => { b.box(0, 0, 0, 1.2, 0.14, 0.8, [0.66, 0.53, 0.36, 0.05]); for (let k = 0; k < nb; k++) b.box((k % 3 - 1) * 0.4, 0.14 + Math.floor(k / 3) * 0.29, 0, 0.38, 0.28, 0.78, [0.18, 0.4, 0.74, 0.25]); })),
       tub:mk(b => { b.box(0, 0, 0, 1.2, 0.85, 1.0, [0.2, 0.36, 0.62, 0.25]); b.box(0, 0.84, 0, 1.24, 0.05, 1.04, [0.16, 0.3, 0.52, 0.25]); b.box(0, 0.8, 0, 1.08, 0.06, 0.88, [0.93, 0.96, 0.98, 0.5]); }),
       board:mk(b => b.box(0, 0, 0, 0.24, 0.3, 0.02, [0.92, 0.9, 0.84, 0.1])),
+      seat:mk(b => { b.box(0, 0, 0, 0.46, 0.07, 0.44, [0.16, 0.17, 0.19, 0.3]); b.box(0, 0.07, 0.2, 0.46, 0.5, 0.06, [0.16, 0.17, 0.19, 0.3]); }),   // the helm chair (drawHelmKit)
       // icing on deck (tilbakemelding #24): an aluminium ice shovel, a scoop of ice, the insulated ice bin and a box of fish to ice
       shovel:mk(b => { b.box(0, 0, 0, 0.26, 0.015, 0.3, [0.74, 0.77, 0.8, 0.7]); b.box(0, 0.015, -0.14, 0.26, 0.06, 0.015, [0.74, 0.77, 0.8, 0.7]); b.box(-0.125, 0.015, 0, 0.015, 0.05, 0.28, [0.74, 0.77, 0.8, 0.7]); b.box(0.125, 0.015, 0, 0.015, 0.05, 0.28, [0.74, 0.77, 0.8, 0.7]); }),
       icebit:mk(b => b.box(0, 0, 0, 0.035, 0.03, 0.035, [0.95, 0.98, 1, 0.6])),
@@ -1667,9 +1668,12 @@ const G3 = (() => {
     for (const s of [-1, 1]){ const hip = W(0, 0.92, s * 0.11), foot = W(sw * s * 0.28, 0.08 + Math.max(0, Math.cos(ph) * s) * 0.07 * (st.walk ? 1 : 0), s * 0.12), knee = [(hip[0] + foot[0]) / 2 + F[0] * 0.07, (hip[1] + foot[1]) / 2, (hip[2] + foot[2]) / 2 + F[1] * 0.07];
       if (K){ drawN(K.thigh, limbM(hip, knee, 1)); drawN(K.shin, limbM(knee, foot, 1)); drawN(K.boot, chain(M4.T(foot[0], foot[1] - 0.08, foot[2]), M4.RY(-h))); continue; }
       drawN(PM.leg, limbM(hip, knee, 0.075)); drawN(PM.leg, limbM(knee, foot, 0.065)); drawN(PM.boot, chain(M4.T(foot[0], foot[1] - 0.08, foot[2]), M4.RY(-h))); }
-    const bend = st.task === 'hose' || st.task === 'coil' || st.task === 'stack' || st.task === 'gut' ? 0.12 : st.task === 'ice' ? 0.22 : st.task === 'lean' ? 0.1 : 0;
+    const bend = (st.task === 'hose' || st.task === 'coil' || st.task === 'stack' || st.task === 'gut' ? 0.12 : st.task === 'ice' ? 0.22 : st.task === 'lean' ? 0.1 : 0) * (st.blend == null ? 1 : st.blend);
     const tc = W(bend * 0.4, 1.2, 0); drawN(K ? K.torso : PM.torso, chain(M4.T(tc[0], tc[1] - 0.28, tc[2]), M4.RY(-h), M4.RX(-bend)));
-    const hd = W(bend, 1.6, 0), HM = chain(M4.T(hd[0], hd[1] - 0.1, hd[2]), M4.RY(-h + (st.task === 'look' ? Math.sin(T * 0.4 + idx) * 0.5 : 0)));
+    // the head: looking about when idle, and at you when you bring the camera close in front of him (deckcrew agents, st.peek)
+    let hy = st.task === 'look' ? Math.sin(T * 0.4 + idx) * 0.5 : 0;
+    if (st.peek){ const ex = eye[0] - st.x, ez = eye[2] - st.z, d = Math.hypot(ex, ez); if (d < 7){ let dh = Math.atan2(ex, -ez) - h; while (dh > Math.PI) dh -= 2 * Math.PI; while (dh < -Math.PI) dh += 2 * Math.PI; if (Math.abs(dh) < 1.3) hy = -dh * 0.85 * Math.min(1, (7 - d) / 2); } }
+    const hd = W(bend, 1.6, 0), HM = chain(M4.T(hd[0], hd[1] - 0.1, hd[2]), M4.RY(-h + hy));
     if (K){ drawN(K.head, HM); for (const m of [K.hair, K.beard, K.hat]) if (m) drawN(m, HM); } else drawN(P.bare ? PM.headB : PM.head, HM);
     let hands;
     const t = T + idx * 1.7;
@@ -4004,8 +4008,19 @@ const G3 = (() => {
     for (const a of CREW3D.visible()){ if (a.me && cam.helm) continue;
       const lp = a.mode === 'helm' && G.skipperAt ? [G.skipperAt[0], G.skipperAt[1], G.skipperAt[2]] : [a.x, a.y, a.z], wl = xf(BMrel, lp), wy = wl[1] + eye[1];
       const P = {gy:() => wy, bare:true, spray:0, kit:a.me ? 'skipper' : null, look:a.me ? lookMe() : a.c ? lookOf(a.c) : lookCrew(0)};
-      drawWorker(P, {x:wl[0] + eye[0], z:wl[2] + eye[2], h:bv.head + (a.mode === 'helm' ? 0 : a.h), task:a.mode === 'walk' ? null : a.task, walk:a.mode === 'walk', s:0}, eye, t, idx++); }
+      drawWorker(P, {x:wl[0] + eye[0], z:wl[2] + eye[2], h:bv.head + (a.mode === 'helm' ? 0 : a.h), task:a.task, walk:a.mode === 'walk', blend:a.mode === 'walk' ? 0 : a.blend, peek:true, s:0}, eye, t, idx++); }
+    if (HELM_KIT[vtype()] && G.skipperAt && cam.dist < 80) drawHelmKit(BMrel, eye, G);
     gl.disableVertexAttribArray(2); gl.useProgram(PL.p);
+  }
+  // a simple wheel and a chair at the helm, in the boat's frame, for the models whose wheelhouse is bare inside (vessel3d.js HELM_KIT)
+  function drawHelmKit(BMrel, eye, G){
+    const h = bv.head, F = [Math.sin(h), -Math.cos(h)], R = [Math.cos(h), Math.sin(h)], A = G.skipperAt, at = (a, up, r) => { const w = xf(BMrel, [A[0] + r, A[1] + up, A[2] - a]); return [w[0], w[1], w[2]]; };
+    const c = at(0.42, 1.08, 0), ax = [F[0] * 0.9, 0.45, F[1] * 0.9], al = Math.hypot(ax[0], ax[1], ax[2]), a = ax.map(v => v / al);   // the wheel's axis, tilted back towards the one steering
+    const u = R, v = [a[1] * u[2] - a[2] * u[1], a[2] * u[0] - a[0] * u[2], a[0] * u[1] - a[1] * u[0]], rim = [];
+    for (let i = 0; i < 12; i++){ const th = i / 12 * Math.PI * 2; rim.push([c[0] + (u[0] * Math.cos(th) + v[0] * Math.sin(th)) * 0.2, c[1] + (u[1] * Math.cos(th) + v[1] * Math.sin(th)) * 0.2, c[2] + (u[2] * Math.cos(th) + v[2] * Math.sin(th)) * 0.2]); }
+    for (let i = 0; i < 12; i++){ drawN(PM.wire, limbM(rim[i], rim[(i + 1) % 12], 0.016)); if (i % 2 === 0) drawN(PM.wire, limbM(c, rim[i], 0.011)); }
+    drawN(PM.wire, limbM(c, at(0.62, 0.98, 0), 0.025));   // the column down to the console
+    const sp = at(-0.42, 0.75, 0); drawN(PM.seat, chain(M4.T(sp[0], sp[1], sp[2]), M4.RY(-h))); drawN(PM.wire, limbM(at(-0.42, 0.02, 0), sp, 0.03));
   }
   function drawVessel(t, G, BMrel, VP, skipper, ncrew, onDeck, liv, named){
     const m = pvm(t, liv); if (!m) return; const P = people(); nSetup(VP); drawN(m.hull, BMrel);

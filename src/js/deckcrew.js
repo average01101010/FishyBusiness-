@@ -6,10 +6,10 @@
 // Opening the game, or coming back after the clock has run on (catchUp), puts everyone at their place at once; from then on they walk.
 const CREW3D = (() => {
   const A = [];                          // the agents, one per person aboard who is up: {id, me, c, x, y, z, h, cell, goal, path, pi, mode, task, idle, blend}
-  const ST = {type:null, M:null, PT:null, jig:null, lastSim:null, ctxT:0, ctx:null, seed:1};
+  const ST = {type:null, M:null, PT:null, jig:null, lastSim:null, ctxT:0, ctx:null, seed:1, clk:0};
   const WALK = 1.2, TURN = 4.5;          // m/s on a flat deck, rad/s turning on the spot
   const rnd = () => { ST.seed = (ST.seed * 1664525 + 1013904223) >>> 0; return ST.seed / 4294967296; };
-  const nowS = () => performance.now() / 1000;
+  const nowS = () => ST.clk;             // the agents' own clock, in seconds of ticks (real time in the game, the test's ticks in the test)
   function reset(){ A.length = 0; ST.type = null; ST.lastSim = null; }
   // the boat's type, its deck map and places; false while the boat has none (the hand-worked boats keep their seated figures)
   function ready(){
@@ -65,7 +65,7 @@ const CREW3D = (() => {
     if (act === 'sit') act = 'lean';
     // the lee side when it blows: the rail places whose way out is away from the wind are preferred (the wind's side is a guess by heading)
     const pick = leans[Math.floor(rnd() * leans.length)];
-    return {k:pick.k, h:pick.h, task:act === 'lean' ? 'lean' : act, until:nowS() + 20 + rnd() * 70, idle:true};
+    return {k:pick.k, h:pick.h, task:act === 'lean' ? 'lean' : act, until:nowS() + 30 + rnd() * 60, idle:true};
   }
   // ---- the agents follow the people aboard ----
   function sync(ctx){
@@ -77,19 +77,23 @@ const CREW3D = (() => {
       const keep = g && a.kind === kind && !(g.idle && g.until < t) && !(g.inside === 'in' && g.until && g.until < t && p.st === 'pause' && !ctx.underway) && !(ctx.away && g);
       if (keep){ if (a.slot >= 0) (used[kind] || (used[kind] = new Set())).add(a.slot); } else pend.push([p, a, kind]); }
     for (const [p, a, kind] of pend){ let n = 0; const U = used[kind] || (used[kind] = new Set()); while (U.has(n)) n++; U.add(n);
-      a.goal = goalOf(p, ctx, n); a.kind = kind; a.slot = n; a.path = null; }
+      a.goal = goalOf(p, ctx, n); a.kind = kind; a.slot = n; a.path = null; a.sub = null; a.nextCarry = t + 25 + rnd() * 40; }
     for (let i = A.length - 1; i >= 0; i--) if (!seen.has(A[i].id)) A.splice(i, 1);
   }
   // everyone straight to their place (the first frame, a change of boat, the clock run on)
-  function snap(){ for (const a of A){ if (!a.goal){ a.mode = 'in'; continue; } const p = ST.M.at(a.goal.k); a.x = p[0]; a.y = p[1]; a.z = p[2]; a.cell = a.goal.k; a.h = a.goal.h; a.task = a.goal.task; a.mode = a.goal.inside ? a.goal.inside : 'at'; a.path = null; } }
+  function snap(){ for (const a of A){ a.sub = null; if (!a.goal){ a.mode = 'in'; continue; } const p = ST.M.at(a.goal.k); a.x = p[0]; a.y = p[1]; a.z = p[2]; a.cell = a.goal.k; a.h = a.goal.h; a.task = a.goal.task; a.mode = a.goal.inside ? a.goal.inside : 'at'; a.path = null; } }
   function tick(dt){
-    if (!ready()) return; dt = Math.min(0.1, Math.max(0, dt || 0)); const t = nowS();
+    if (!ready()) return; dt = Math.min(0.1, Math.max(0, dt || 0)); ST.clk += dt; const t = nowS();
     const jump = ST.lastSim == null || Math.abs(S.t - ST.lastSim) > 30; ST.lastSim = S.t;
     if (!ST.ctx || t - ST.ctxT > 1){ ST.ctx = context(); ST.ctxT = t; sync(ST.ctx); }
     if (jump){ snap(); return; }
     const M = ST.M, ctx = ST.ctx, roll = Math.abs(ST.roll || 0), spd = WALK * (roll > 0.21 ? 0 : roll > 0.14 ? 0.65 : 1);
     for (const a of A){
-      const g = a.goal;
+      // the errand: the one gutting carries a box of fish from the table to the hold hatch now and then, and walks back (1.5 of the plan)
+      if (a.sub){ if (a.sub.done && t > a.sub.done){ a.sub = null; a.path = null; } }
+      else if (a.goal && a.mode === 'at' && a.goal.task === 'gut' && (a.nextCarry || 0) < t){ const d = ST.G.deck || {z:0}, k = M.near(0, d.z, 2.5);
+        if (k >= 0 && k !== a.goal.k && !a.goal.idle){ a.sub = {k, h:Math.PI, task:'stack', carry:true, hold:2.5}; a.path = null; } a.nextCarry = t + 35 + rnd() * 40; }
+      const g = a.sub || a.goal;
       if (!g){ a.mode = 'in'; continue; }
       // inside, and now wanted on deck: out through the door
       if (a.mode === 'in' || a.mode === 'helm'){ if (g.inside && a.cell === g.k){ a.task = g.task; a.mode = g.inside; continue; }
@@ -101,9 +105,9 @@ const CREW3D = (() => {
         const q = M.at(a.path[Math.min(a.pi, a.path.length - 1)]), dx = q[0] - a.x, dz = q[2] - a.z, dist = Math.hypot(dx, dz);
         const want = Math.atan2(dx, -dz); let dh = dist > 1e-3 ? want - a.h : 0; while (dh > Math.PI) dh -= 2 * Math.PI; while (dh < -Math.PI) dh += 2 * Math.PI;
         a.h += Math.max(-TURN * dt, Math.min(TURN * dt, dh)); const climb = Math.abs(q[1] - a.y) > 0.4 ? 0.45 : 1, step = spd * climb * dt * (Math.abs(dh) > 1.2 ? 0.3 : 1);
-        a.mode = 'walk'; a.task = null; a.near = dist;
+        a.mode = 'walk'; a.task = a.sub && a.sub.carry ? 'carry' : null; a.near = dist;
         if (dist <= step + 1e-6){ a.x = q[0]; a.z = q[2]; a.y = q[1]; a.cell = a.path[Math.min(a.pi, a.path.length - 1)]; a.pi++;   // the point is reached this very step: no jump, ever
-          if (a.pi >= a.path.length){ a.mode = g.inside ? g.inside : 'at'; a.task = g.task; a.path = null; a.cell = g.k; continue; } }
+          if (a.pi >= a.path.length){ a.mode = g.inside ? g.inside : 'at'; a.task = g.task; a.path = null; a.cell = g.k; a.blend = 0; if (a.sub && !a.sub.done) a.sub.done = t + (a.sub.hold || 2); continue; } }
         else { a.x += dx / dist * step; a.z += dz / dist * step; const fy = M.floorAt(a.x, a.z); a.y = fy === fy ? fy : a.y + (q[1] - a.y) * Math.min(1, step / Math.max(dist, 1e-3)); }
       } else {
         // at the place: turn to face the work, and the blend into its pose
