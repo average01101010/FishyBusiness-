@@ -2917,9 +2917,12 @@ const G3 = (() => {
     PENT = mkTex(); upTex(PENT, im); gl.generateMipmap(gl.TEXTURE_2D); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); return PENT;
   }
   // the masthead: the highest of the boat's lights (a detailed model's and a kit model's alike) when it is above the ensign's pole.
-  // A boat with no mast (the open boats, whose highest light is the stern lantern or the all-round light on its stake) flies no pennant, only the ensign (Jonas 07.10.2026)
-  function mastTop(G){ if (!G || G.open) return null; let top = null; for (const L of G.lights || []) if (L && L[0] && (!top || L[0][1] > top[1])) top = L[0];
-    return top && (!G.pole || top[1] > G.pole[1]) ? [top[0], top[1] + 0.3, top[2]] : null; }
+  // A boat with no mast flies no pennant, only the ensign (Jonas 07.10.2026): the open boats, whose highest light is the stern lantern or
+  // the all-round light on a stake by the ensign's pole (within a metre of it); the snekke's all-round light sits on her mast amidships
+  function mastTop(G){ if (!G) return null; let top = null;
+    for (const L of G.lights || []) if (L && L[0] && L[2] !== 'stern' && L[2] !== 'work' && (!top || L[0][1] > top[1])) top = L[0];
+    if (!top || (G.pole && (top[1] <= G.pole[1] || Math.hypot(top[0] - G.pole[0], top[2] - G.pole[2]) < 1.0))) return null;
+    return [top[0], top[1] + 0.3, top[2]]; }
   function updateFlag(t, appW){
     const droop = (1 - sstep(1.5, 8, appW)) * 1.25, amp = 0.03 + 0.09 * sstep(2, 16, appW), om = 4 + appW * 1.1;
     const P3 = (u, v) => { const z = amp * (u / FLAG_W) * Math.sin(u * 11 - t * om + v * 3); return [u * Math.cos(droop), v - FLAG_H - u * Math.sin(droop), z]; };
