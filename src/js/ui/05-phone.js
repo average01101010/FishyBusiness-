@@ -464,6 +464,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p117', '17.10.2026', 'Lanterner etter Sjøveisreglene', 'Lights by the rules of the road', [
+       ['Båtene fører lanterner etter Sjøveisreglene: rødt over hvitt når det fiskes, grønt over hvitt når det tråles, topplanterne, sidelanterner og akterlanterne under fart, ett hvitt lys til ankers, to røde ved motorstopp, og ingen ved kai. Det gjelder også båtene rundt deg.', 'The boats carry their lights by the rules of the road: red over white when fishing, green over white when trawling, masthead, side and stern lights under way, one white at anchor, two reds with the engine stopped, and none at the quay. The boats around you too.']]],
     ['p116', '17.10.2026', 'Samme stige i begge gruppene', 'The same ladder in both groups', [
        ['Hjemmelen 10–10,9 m fås nå også med sjarken på 36 fot og den nye hurtigsjarken, så valget mellom fart, plass og pris er det samme i lukket gruppe som i åpen. Neste mål peker på neste hjemmel.', 'The 10–10.9 m right now comes with the 36 ft sjark and the new speed sjark too, so the choice between speed, room and price is the same in the closed group as in the open. Next goals point to the next right.']]],
     ['p115', '17.10.2026', 'Maskiner og frakt på dekk', 'Machines and freight on deck', [

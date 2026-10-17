@@ -4183,8 +4183,11 @@ const G3 = (() => {
     if (env.night < 0.05 || !npcNow.length) return;
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.depthMask(false);
     for (const n of npcNow){
-      if (n.K){ const M = chain(n.M, n.K.S), px = n.L < 14 ? 260 : 600; for (const [p, col] of n.K.geo.lights){ const q = xf(M, p); PB[0] = q[0]; PB[1] = q[1]; PB[2] = q[2]; PA[0] = env.night; drawPts(1, gl.POINTS, VP, col, px, true); } continue; }
-      for (const [lx, ly, lz, c] of NPCM.lights[n.type]){ const q = xf(n.M, [lx, ly, lz]); PB[0] = q[0]; PB[1] = q[1]; PB[2] = q[2]; PA[0] = env.night; drawPts(1, gl.POINTS, VP, NLC[c], NPCM.lightPx[n.type] || 900, true); } }
+      // the same rules as the own boat (vessel3d.js lanterns): fishing red over white, under way the full set, in port nothing
+      const stN = {port:n.st === 'port', fishing:n.st === 'fishing', v:n.st === 'fishing' ? 0 : 5, anch:false};
+      if (n.K){ const M = chain(n.M, n.K.S), px = n.L < 14 ? 260 : 600; for (const [p, col] of lanterns(n.K.geo, {len:n.L || 8, vmax:10}, stN)){ const q = xf(M, p); PB[0] = q[0]; PB[1] = q[1]; PB[2] = q[2]; PA[0] = env.night; drawPts(1, gl.POINTS, VP, col, px, true); } continue; }
+      const LG = NPCM.lanG || (NPCM.lanG = {}), GN = LG[n.type] || (LG[n.type] = {lights:(NPCM.lights[n.type] || []).map(([lx, ly, lz, c]) => [[lx, ly, lz], NLC[c]])});
+      for (const [p, col] of lanterns(GN, {len:n.L || 20, vmax:12}, stN)){ const q = xf(n.M, p); PB[0] = q[0]; PB[1] = q[1]; PB[2] = q[2]; PA[0] = env.night; drawPts(1, gl.POINTS, VP, col, NPCM.lightPx[n.type] || 900, true); } }
     const cs = npcNow.find(n => n.type === 'coastal');
     if (cs){ let k = 0; for (let r = 0; r < 4; r++) for (let i = 0; i < 18; i++) for (const sx of [-1, 1]){ if (hash(r * 97 + i * 13 + (sx > 0 ? 5 : 0)) < 0.35) continue; const q = xf(cs.M, [sx * 8.95, 8.5 + r * 3.2, -24 + i * 3.4]); PB[k * 3] = q[0]; PB[k * 3 + 1] = q[1]; PB[k * 3 + 2] = q[2]; PA[k] = env.night * 0.9; k++; } drawPts(k, gl.POINTS, VP, [1, 0.8, 0.5], 420, true); }
     gl.depthMask(true); gl.disable(gl.BLEND);
@@ -4499,9 +4502,10 @@ const G3 = (() => {
       gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.depthMask(false);
       // at anchor only the all-round white light shows (no side lights or stern light, which are for a boat under way); the anchor
       // alarm turns it red and makes it flash (06e-anchor.js)
-      const anchored = !!S.boat.anch && S.boat.status !== 'port', alarm = performance.now() < ANCHAL.until;
-      let L3 = VG.lights, drawn = L3.length;
-      if (anchored){ const wl = L3.filter(([p, c]) => c[0] > 0.8 && c[1] > 0.8 && c[2] > 0.6).sort((a, b) => b[0][1] - a[0][1])[0] || [[0, 3.4, 0], [1, 0.95, 0.85]]; L3 = [[wl[0], alarm ? ((performance.now() / 250) % 2 < 1 ? [1, 0.1, 0.06] : [0.25, 0.02, 0.02]) : [1, 0.97, 0.88]]]; drawn = 1; }
+      const b0 = S.boat, anchored = !!b0.anch && b0.status !== 'port', alarm = performance.now() < ANCHAL.until, V0 = VESSELS[vtype()] || {len:8};
+      // the lanterns after Sjøveisreglene (vessel3d.js lanterns, 17.10.2026): what she shows follows what she does
+      let L3 = lanterns(VG, V0, {port:b0.status === 'port', anch:anchored, v:b0.v || 0, fishing:b0.status === 'fishing' || !!b0.gop, trawl:V0.cls === 'hav' && !(V0.rigs || []).length, aground:b0.status === 'aground', nuc:b0.status === 'engine' || b0.status === 'adrift'}), drawn = L3.length;
+      if (anchored && alarm && L3.length) L3 = L3.map(([p, c], i) => i ? [p, c] : [p, (performance.now() / 250) % 2 < 1 ? [1, 0.1, 0.06] : [0.25, 0.02, 0.02]]);   // the anchor alarm turns the light red and flashing (06e-anchor.js)
       ANCHAL.drawn = drawn;
       for (const [lp, lc] of L3){ const q = xf(BMrel, lp); PB[0] = q[0]; PB[1] = q[1]; PB[2] = q[2]; PA[0] = env.night; drawPts(1, gl.POINTS, VPn, lc, anchored ? 420 : 260, true); }
       gl.depthMask(true); gl.disable(gl.BLEND);

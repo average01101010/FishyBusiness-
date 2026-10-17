@@ -1068,6 +1068,42 @@ function deckPath(M, a, b){
 // the places on a type's deck, from the model's anchors: where the work is done and where one stands when free. Cells of the map.
 // the models whose wheelhouse has no wheel and chair of its own (the Malo, the havsjark, the snekke and the hand boats have theirs
 // from Blender): the view draws a simple helm kit at skipperAt for these, so the one steering has something to hold (Jonas 17.10.2026)
+// ---- the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11) ----
+// A model's lights (G.lights: [[x, y, z], colour]) are told apart by colour and place: red and green are the side lights, the highest
+// white the masthead light, a white further aft among the rest the stern light, any other white a second masthead light. What is lit
+// follows the boat and what she does; nothing in port (the deck lights are another matter):
+// - under way with the engine (rule 23): masthead, sides and stern; 50 m and over a second masthead light higher up; under 7 m with
+//   at most 7 knots one all-round white alone (under 12 m one all-round white and the sides would do; the models carry the full set)
+// - fishing (rule 26): red over white all-round, trawling green over white, no masthead light; the sides and stern only when she
+//   makes way through the water; a trawler of 50 m and over also a masthead light abaft of and higher than the green one
+// - at anchor (rule 30): one all-round white; 50 m and over one aft and lower as well. Aground: the anchor lights and two reds
+//   one over the other (not under 12 m)
+// - not under command (rule 27: engine failure, adrift): two reds one over the other, the sides and stern only when making way
+// Returns [[x, y, z], colour, kind]. The day shapes (two cones point to point, the ball) are not drawn yet.
+const LANT_C = {w:[1, 0.97, 0.88], r:[1, 0.12, 0.1], g:[0.1, 1, 0.35]};
+function lanterns(G, V, st){
+  const L = (G && G.lights) || [], isR = c => c[0] > 0.8 && c[1] < 0.4, isG = c => c[1] > 0.8 && c[0] < 0.4, out = [];
+  if (!st || st.port) return out;
+  const W = L.filter(l => !isR(l[1]) && !isG(l[1])).slice().sort((a, b) => b[0][1] - a[0][1]), mast = W[0] || null;
+  const stern = W.length > 1 ? W.slice(1).sort((a, b) => b[0][2] - a[0][2])[0] : null, extra = W.filter(l => l !== mast && l !== stern), sides = L.filter(l => isR(l[1]) || isG(l[1]));
+  const len = (V && V.len) || 8, mt = mast ? mast[0] : [0, 3.4, 0], up = (p, dy) => [p[0], p[1] + dy, p[2]], push = (p, c, k) => out.push([p, LANT_C[c] || c, k]);
+  const moving = (st.v || 0) > 0.5, sideStern = () => { for (const s of sides) push(s[0], s[1], 'side'); if (stern) push(stern[0], 'w', 'stern'); };
+  if (st.aground || (st.anch && !st.fishing)){
+    push(mt, 'w', 'anchor'); if (len >= 50 && stern) push(stern[0], 'w', 'anchor2');
+    if (st.aground && len >= 12){ push(up(mt, 1.0), 'r', 'nuc'); push(up(mt, 2.0), 'r', 'nuc'); }
+    return out; }
+  if (st.fishing){
+    push(mt, 'w', 'fishW'); push(up(mt, 1.0), st.trawl ? 'g' : 'r', st.trawl ? 'trawlG' : 'fishR');
+    if (st.trawl && len >= 50) push(extra.length ? extra[0][0] : up(mt, 2.0), 'w', 'masthead2');
+    if (moving) sideStern();
+    return out; }
+  if (st.nuc){ push(up(mt, 1.0), 'r', 'nuc'); push(up(mt, 2.0), 'r', 'nuc'); if (moving) sideStern(); return out; }
+  push(mt, 'w', len < 12 ? 'allround' : 'masthead');
+  if (len < 7 && (V && V.vmax || 99) <= 7) return out;
+  sideStern();
+  if (len >= 50) push(extra.length ? extra[0][0] : up(mt, 1.5), 'w', 'masthead2');
+  return out;
+}
 const HELM_KIT = {kyst15:1, kyst21:1, hurtigsjark:1, sjarkny:1, autoliner:1, bunntral:1, pelagisk:1, snokrabbe:1};
 const DECKPTS = {};
 function deckPoints(type){
