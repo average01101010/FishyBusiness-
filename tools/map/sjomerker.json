@@ -1,0 +1,4 @@
+{
+  "what": "the sea marks along the whole coast from OpenStreetMap's seamark tags (tools/map/sjomerker.py), fetched by .github/workflows/sjomerker.yml when this file changes and kept as a release sjomerker-<run number>; tools/map/release.py fetches the newest and tools/map/game.py puts them into the chart packs",
+  "run": 2
+}

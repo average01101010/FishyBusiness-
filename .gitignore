@@ -1,0 +1,14 @@
+dist/
+tests/out/
+__pycache__/
+tools/boats/out/
+tools/harbour/out/
+tools/wild/out/
+tools/gear/out/
+dist-pwa/
+dist-vec/
+tools/fish/out/
+tools/air/out/
+tools/brand/out/
+tools/opening/out/
+tests/saves/

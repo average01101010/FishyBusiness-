@@ -1,0 +1,125 @@
+# The national map data for the whole coast (tools/map/, the coast plan's phase K5), built on GitHub's runners, where the network is
+# open, and kept as a release (tag kart-<run number>), as the user chose on 02.10.2026: git keeps the code and Senja's packs only.
+# tools/map/release.py fetches a release's files for a build.
+#   national  the national stages (land at 200 m, the coast's tiles, the openness, the far heights) and Overture's index
+#   tiles     the coast's tiles in tools/map/kart.json's 'parts' parts side by side (coast.py cache k n), with the chart's coast and
+#             names per tile, and Kartverket's depth from the release kart.json's 'depth' names (dybde-N, .github/workflows/dybde.yml)
+#   pack      the game's packs of all the tiles (coast.py game: sim, view, chart and vec per tile), and the release: kart-game.tar.gz and
+#             its manifest.json (tools/map/game.py joins them with the core and the far heights in src/data/map for the build)
+# Started by a push that changes tools/map/kart.json (on any branch), or by hand from the Actions tab once this file is on main.
+name: Kartdata for hele kysten
+on:
+  push:
+    paths: ['tools/map/kart.json']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: kart
+  cancel-in-progress: false
+env:
+  PYTHONUNBUFFERED: '1'
+jobs:
+  national:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: tools/map/requirements.txt
+      - run: pip install -r tools/map/requirements.txt
+      - name: Overture's index, and the national stages
+        working-directory: tools/map
+        run: |
+          python3 ov.py index
+          python3 national.py mask200
+          python3 national.py tiles
+          python3 national.py expo
+          python3 national.py far
+      - uses: actions/upload-artifact@v4
+        with:
+          name: national
+          retention-days: 5
+          path: |
+            tools/map/out/national/*.npy
+            tools/map/out/national/*.npz
+            tools/map/out/national/tiles.json
+            tools/map/cache/index-*.json
+            tools/map/cache/files-*.json
+
+  tiles:
+    needs: national
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        part: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: tools/map/requirements.txt
+      - run: pip install -r tools/map/requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: national
+          path: tools/map
+      - name: Kartverket's depth (the release kart.json names, from .github/workflows/dybde.yml)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=$(python3 -c "import json; print(json.load(open('tools/map/kart.json')).get('depth', ''))")
+          if [ -n "$TAG" ]; then mkdir -p tools/map/out && gh release download "$TAG" -p depth.tgz -D /tmp && tar xzf /tmp/depth.tgz -C tools/map/out && ls tools/map/out/depth | wc -l; fi
+      - name: The tiles of part ${{ matrix.part }}
+        working-directory: tools/map
+        run: python3 coast.py cache ${{ matrix.part }} $(python3 -c "import json; print(json.load(open('kart.json'))['parts'])")
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tiles-${{ matrix.part }}
+          retention-days: 5
+          path: |
+            tools/map/out/national/tiles/*.npz
+            tools/map/out/national/vec/*.npz
+            tools/map/out/national/chart/*.pkl
+
+  pack:
+    needs: tiles
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: tools/map/requirements.txt
+      - run: pip install -r tools/map/requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: national
+          path: tools/map
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: tiles-*
+          path: tools/map/out/national
+          merge-multiple: true
+      - name: The packs
+        working-directory: tools/map
+        run: |
+          python3 coast.py game | tee out/national/game.json
+          tar czf ../../kart-game.tar.gz -C out/national game
+          cp out/national/game/manifest.json ../../manifest.json
+          ls -la ../../kart-game.tar.gz
+      - name: The release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=kart-${{ github.run_number }}
+          gh release create "$TAG" kart-game.tar.gz manifest.json --target "${{ github.sha }}" --title "Kartdata $TAG" \
+            --notes "Kartdata for hele kysten i spillets format (sim, view, chart og vec per flis) fra tools/map, Overture $(python3 -c "import json; print(json.load(open('tools/map/kart.json'))['overture'])"), commit ${{ github.sha }}. $(cat tools/map/out/national/game.json)"
