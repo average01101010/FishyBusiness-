@@ -88,7 +88,7 @@ Rekkefølgen er også byggerekkefølgen. 14 økter til sammen.
 
 ### A4. Mannskap med liv (4 økter)
 
-**Bestilt 17.10.2026**, utvidet med fri bevegelse på dekk (ingen teleportering). Planen og statusen står i `docs/mannskap-plan.md`.
+**Bestilt 17.10.2026**, utvidet med fri bevegelse på dekk (ingen teleportering). Planen og statusen står i `docs/mannskap-plan.md`. **Bygd 17.10.2026** (del 1: dekkskart, agenter, andre båter, ratt og kasse; del 2: familie, drøm, sparing, historie, hendelser, egen båt, retur). Gjenstår: skipper på båt to, `DECK_OVR`-tabellen, sitting og prat mellom ledige, LOD-måling.
 
 **Idéen.** Mannskapet har hjemsted, familie, et mål og en historie som skrives mens de er hos deg. En god mann sparer lotten sin til egen båt, sier opp med en ukes varsel etter to sesonger, og dukker opp som NPC-skipper ved hjemstedet sitt, med navn på AIS og stemme på VHF. En annen vil bli skipper på din neste båt. Noen gifter seg, noen får barn, noen blir skadet og er borte tre uker. De som drar, kan komme tilbake. Mannskapskortet forteller alt som har skjedd.
 
