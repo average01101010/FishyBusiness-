@@ -1005,12 +1005,40 @@ function deckMap(type){
         if (pick < 0 || lab[q][pick] >= 0) continue; if (Fq[pick][1]){ bar[q] = 1; continue; } lab[q][pick] = L; stack.push([q, pick]); } } } }
   // the deck: the part with most cells at the anchors' deck height (a chain of steps can tie the gunwale cap to the sole of an open
   // boat, so a part is weighed by its cells at the level, not its size), else at a crew spot's height, else the biggest part
-  let main = -1, n = 0, best = 0; const choose = w => { for (let L = 0; L < nl; L++){ const v = w(L); if (v > best){ best = v; main = L; n = size[L]; } } return main >= 0; };
-  choose(L => hitDeck[L] + hitSpot[L]) || choose(L => size[L]);
-  const parts = []; for (let L = 0; L < nl; L++) if (size[L] >= 8) parts.push({n:size[L], y:Math.round(ys[L] / size[L] * 100) / 100, main:L === main}); parts.sort((a, b) => b.n - a.n);
-  for (let k = 0; k < N; k++){ H[k] = NaN; if (!lab[k]) continue; for (let g = 0; g < lab[k].length; g++) if (lab[k][g] === main){ H[k] = floors[k][g][0]; break; } }
+  let main = -1, best = 0; const choose = w => { for (let L = 0; L < nl; L++){ const v = w(L); if (v > best){ best = v; main = L; } } return main >= 0; };
+  choose(L => hitDeck[L]) || choose(L => hitSpot[L]) || choose(L => size[L]);
   const yDeck = main >= 0 ? ys[main] / size[main] : yLow;
-  const M = {type, c:DM_C, x0, z0, nx, nz, h:H, bar, n, parts, yDeck, cellOf, _floors:floors, _lab:lab, at(k){ const i = k % nx; return [x0 + (i + 0.5) * DM_C, H[k], z0 + ((k - i) / nx + 0.5) * DM_C]; },
+  // the other parts one can get to: a part of some size whose edge comes within 0.6 m of the deck's (or of a part already joined),
+  // up to 1.6 m higher (the foredeck, a step up to the house's side deck) or 1.2 m lower (the stern platform), or at the same level
+  // past a bar (a gate in the bulwark, the squeeze past the engine box): the nearest pair of cells becomes a link, a ladder or a
+  // step the way goes over (deckPath), slower than the deck. Chained three times, so a part up a part is reached too.
+  const onDeck = new Set([main]), links = [], cellsOf = L => { const out = []; for (let k = 0; k < N; k++){ const lb = lab[k]; if (lb) for (let g = 0; g < lb.length; g++) if (lb[g] === L) out.push([k, g]); } return out; };
+  // a cell under two levels that are both deck (the working deck and the shelter deck over it) stands for the deck itself, else for the bigger part
+  const inDeck = new Int32Array(N).fill(-1); const refresh = () => { for (let k = 0; k < N; k++){ inDeck[k] = -1; const lb = lab[k]; if (!lb) continue;
+    for (let g = 0; g < lb.length; g++) if (onDeck.has(lb[g]) && (inDeck[k] < 0 || lb[g] === main || (lb[inDeck[k]] !== main && size[lb[g]] > size[lb[inDeck[k]]]))) inDeck[k] = g; } };
+  for (let round = 0; round < 3; round++){ refresh(); let added = false;
+    for (let L = 0; L < nl; L++){ if (onDeck.has(L) || size[L] < 20) continue; let best = null;
+      for (const [k, g] of cellsOf(L)){ if (inDeck[k] >= 0) continue; const y = floors[k][g][0], i = k % nx, j = (k - i) / nx;   // (a cell the deck already stands for cannot be the part's end of the link)
+        for (let dj = -3; dj <= 3; dj++) for (let di = -3; di <= 3; di++){ const ii = i + di, jj = j + dj; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; const q = jj * nx + ii, gq = inDeck[q]; if (gq < 0) continue;
+          const d = Math.hypot(di, dj) * DM_C, dy = y - floors[q][gq][0]; if (d > 0.6 || dy > 1.6 || dy < -1.2) continue;   // (a roof lies higher than 1.6 m; a stair to a shelter deck is a hand-set link) if (Math.abs(dy) < DM_STEP && d <= DM_C * 1.5) continue;   // a step this small the fill would have taken: it is barred, so a gap stays a gap unless something lies between
+          const sc = d + Math.abs(dy) * 0.2; if (!best || sc < best.sc) best = {sc, a:q, b:k, g, dy}; } }
+      if (best){ onDeck.add(L); links.push([best.a, best.b, Math.round(best.dy * 100) / 100]); added = true; } }
+    if (!added) break; }
+  refresh();
+  // what the deck cannot reach on foot or by a link (a part that lies over deck cells keeps only the cells of its own) is dropped
+  { const seen = new Uint8Array(N), LK = {}; for (const [a, b] of links){ (LK[a] || (LK[a] = [])).push(b); (LK[b] || (LK[b] = [])).push(a); }
+    const yOf = k => floors[k][inDeck[k]][0]; let k0 = -1; for (let k = 0; k < N && k0 < 0; k++) if (inDeck[k] >= 0 && lab[k][inDeck[k]] === main) k0 = k;
+    if (k0 >= 0){ const st = [k0]; seen[k0] = 1;
+      while (st.length){ const k = st.pop(), i = k % nx, j = (k - i) / nx, y = yOf(k);
+        for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]){ const ii = i + di, jj = j + dj; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; const q = jj * nx + ii; if (seen[q] || inDeck[q] < 0 || Math.abs(yOf(q) - y) > DM_STEP) continue; seen[q] = 1; st.push(q); }
+        for (const q of LK[k] || []) if (!seen[q] && inDeck[q] >= 0){ seen[q] = 1; st.push(q); } }
+      for (let k = 0; k < N; k++) if (!seen[k]) inDeck[k] = -1; } }
+  for (let i = links.length - 1; i >= 0; i--){ const [a, b] = links[i]; if (inDeck[a] < 0 || inDeck[b] < 0 || links.findIndex(l => l[0] === a && l[1] === b) !== i) links.splice(i, 1); }
+  const parts = []; for (let L = 0; L < nl; L++) if (size[L] >= 8) parts.push({n:size[L], y:Math.round(ys[L] / size[L] * 100) / 100, main:L === main, on:onDeck.has(L)}); parts.sort((a, b) => b.n - a.n);
+  for (let k = 0; k < N; k++) H[k] = inDeck[k] >= 0 ? floors[k][inDeck[k]][0] : NaN;
+  const LINK = {}; for (const [a, b] of links){ (LINK[a] || (LINK[a] = [])).push(b); (LINK[b] || (LINK[b] = [])).push(a); }
+  let n = 0; for (let k = 0; k < N; k++) if (H[k] === H[k]) n++;
+  const M = {type, c:DM_C, x0, z0, nx, nz, h:H, bar, n, parts, yDeck, links, LINK, cellOf, _floors:floors, _lab:lab, at(k){ const i = k % nx; return [x0 + (i + 0.5) * DM_C, H[k], z0 + ((k - i) / nx + 0.5) * DM_C]; },
     ok(k){ return k >= 0 && H[k] === H[k]; }, floorAt(x, z){ const k = cellOf(x, z); return k >= 0 && H[k] === H[k] ? H[k] : NaN; }};
   // the nearest deck cell to a point (within r m), for the places the anchors name
   M.near = (x, z, r = 1.5) => { let best = -1, bd = r * r; for (let k = 0; k < N; k++){ if (H[k] !== H[k]) continue; const p = M.at(k), d = (p[0] - x) ** 2 + (p[2] - z) ** 2; if (d < bd){ bd = d; best = k; } } return best; };
@@ -1031,7 +1059,9 @@ function deckPath(M, a, b){
     const i = k % nx, j = (k - i) / nx;
     for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]){ const ii = i + di, jj = j + dj; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; const q = jj * nx + ii; if (!M.ok(q) || closed[q]) continue;
       if (di && dj && !(M.ok(j * nx + ii) && M.ok(jj * nx + i))) continue; if (Math.abs(H[q] - H[k]) > DM_STEP) continue;
-      const c = g[k] + (di && dj ? 1.414 : 1) + EC[q] + Math.abs(H[q] - H[k]) * 3; if (c < g[q]){ g[q] = c; came[q] = k; if (!open.includes(q)) open.push(q); } } }
+      const c = g[k] + (di && dj ? 1.414 : 1) + EC[q] + Math.abs(H[q] - H[k]) * 3; if (c < g[q]){ g[q] = c; came[q] = k; if (!open.includes(q)) open.push(q); } }
+    // a ladder, a step or a gate: the link's other end, at the cost of the climb
+    for (const q of M.LINK[k] || []){ if (closed[q]) continue; const c = g[k] + 3 + Math.abs(H[q] - H[k]) * 4; if (c < g[q]){ g[q] = c; came[q] = k; if (!open.includes(q)) open.push(q); } } }
   if (came[b] < 0 && b !== a) return null;
   const path = []; for (let k = b; k >= 0; k = came[k]){ path.push(k); if (k === a) break; } path.reverse(); if (path[0] !== a) return null;
   // pulled straight: skip to the furthest cell seen over free deck (sampled every half cell)
