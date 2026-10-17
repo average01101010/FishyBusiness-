@@ -3889,7 +3889,7 @@ const G3 = (() => {
   const ownPerson = (kind, i) => { const l = kind === 'crew' ? lookCrew(i) : lookMe(); if (!l) return null; const key = 'o|' + kind + '|' + lookKey(l); return PV[key] || personMesh(kind, l, key); };
   // a boat of another player: her skipper's and crew's looks as she sent them (lk, ck); the local boats' from a look made from the id
   const npcPerson = (kind, n, i) => {
-    if (n.player && n.lk){ const code = kind === 'crew' ? String(n.ck || '').split(';')[i || 0] : n.lk, key = 'p|' + kind + '|' + code, look = !PV[key] && lookFromKey(code); if (PV[key]) return PV[key]; if (look) return personMesh(kind, look, key); }
+    if (n.lk){ const code = kind === 'crew' ? String(n.ck || '').split(';')[i || 0] : n.lk, key = 'p|' + kind + '|' + code, look = !PV[key] && lookFromKey(code); if (PV[key]) return PV[key]; if (look) return personMesh(kind, look, key); }
     const h = lookHash(String(n.id)) % 12, key = 'n|' + kind + '|' + h; return PV[key] || personMesh(kind, lookFromSeed('npc' + kind + h, kind === 'crew' && h % 5 === 0 ? 'f' : 'm', 24 + (h * 5) % 40, 'sea'), key);
   };
   function people(){
@@ -4103,7 +4103,7 @@ const G3 = (() => {
   }
   // the look of a person on another boat: a player's as she sent it (lk, ck), a local boat's from its id (as npcPerson)
   const npcLook = (kind, n, i) => {
-    if (n.player && n.lk){ const code = kind === 'crew' ? String(n.ck || '').split(';')[i || 0] : n.lk, l = code && lookFromKey(code); if (l) return l; }
+    if (n.lk){ const code = kind === 'crew' ? String(n.ck || '').split(';')[i || 0] : n.lk, l = code && lookFromKey(code); if (l) return l; }
     const h = lookHash(String(n.id)) % 12; return lookFromSeed('npc' + kind + h, kind === 'crew' && h % 5 === 0 ? 'f' : 'm', 24 + (h * 5) % 40, 'sea');
   };
   // ---------- the rescue boat (tools/boats/redning.py) and its tow line, where core/05-vessels.js towPose says ----------

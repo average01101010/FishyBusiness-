@@ -57,7 +57,7 @@ function crewUpgrade(c){ if (c.attr){ if (c.gear && c.gear.sloy == null) Object.
 const HYRE = {week:6000 * 5, safe:0.9};
 const hyreAsk = c => Math.max(100, Math.round(c.ask * HYRE.week / 7 * HYRE.safe / 10) * 10);
 // the day wages, paid at midnight for every vessel's crew on hyre
-function payHyre(){ let sum = 0; eachVessel(() => { for (const c of S.crew) if (c.pay === 'hyre'){ S.cash -= c.hyre; S.stats.costs += c.hyre; sum += c.hyre; c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, c.hyre]]); } }); return sum; }
+function payHyre(){ let sum = 0; eachVessel(() => { for (const c of S.crew) if (c.pay === 'hyre'){ S.cash -= c.hyre; S.stats.costs += c.hyre; sum += c.hyre; if (typeof lifeEarn === 'function') lifeEarn(c, c.hyre); c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, c.hyre]]); } }); return sum; }
 // (all: those off watch asleep in their bunks too, 06d-drift.js driftWatch; they are crew and share the catch, but are not on deck)
 function crewAboard(H, all){ if (H == null) H = S.t / 60; const wd = (gDate(H).getUTCDay() + 6) % 7; return (S.crew || []).map(crewUpgrade).filter(c => !c.off && (all || !c.sleepW) && (!c.bi || c.biDays[wd])); }
 function crewEff(c, H, hs, g = 'juksa'){
@@ -102,17 +102,18 @@ function crewSettle(c){
     hyre = Math.round((c.hyre || 0) * m / 1440); }
   else if (c.trip && S.hold.length) lott = Math.round(c.share * holdNet());
   const sum = lott + hyre; delete c.trip; if (sum <= 0) return 0;
-  S.cash -= sum; S.stats.costs += sum; c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, sum]]);
+  S.cash -= sum; S.stats.costs += sum; c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, sum]]); if (typeof lifeEarn === 'function') lifeEarn(c, sum);
   log(c.name + ' fikk ' + kr(sum) + (lott ? ' i lott for fangsten om bord.' : ' i hyre for dagen.'), c.name + ' was paid ' + kr(sum) + (lott ? ' as the share of the catch aboard.' : ' in wages for the day.'));
   return sum;
 }
-function crewQuit(c, why){ const i = S.crew.indexOf(c); if (i < 0) return; crewSettle(c); S.crew.splice(i, 1); for (const o of S.crew){ if (o.grudge) delete o.grudge[c.id]; }
-  msg(c.name, why || 'Jeg mønstrer av her. Det er ikke noe for meg lenger.', 'I am signing off here. It is not for me any more.'); log(c.name + ' har mønstret av.', c.name + ' has signed off.'); if (S.cevt && (S.cevt.a === c.id || S.cevt.b === c.id)) S.cevt = null; }
+function crewQuit(c, why, whyEn){ const i = S.crew.indexOf(c); if (i < 0) return; crewSettle(c); S.crew.splice(i, 1); for (const o of S.crew){ if (o.grudge) delete o.grudge[c.id]; }
+  msg(c.name, why || 'Jeg mønstrer av her. Det er ikke noe for meg lenger.', whyEn || 'I am signing off here. It is not for me any more.'); log(c.name + ' har mønstret av.', c.name + ' has signed off.'); if (S.cevt && (S.cevt.a === c.id || S.cevt.b === c.id)) S.cevt = null; }
 // the job exchange: new people look for a berth every morning; fewer in the skrei season, when every boat is hiring
 function borsTick(H){
   const B = S.bors || (S.bors = {pool:[], day:-1}), day = Math.floor((H + 6) / 24);
   B.pool = B.pool.filter(c => c.until > S.t);
   const first = B.day === -1; if (B.day === day || (!first && gDate(H).getUTCHours() < 7)) return; B.day = day;
+  if (typeof alumniReturn === 'function') alumniReturn(B);
   const n = skreiSeason(H) ? (Math.random() < 0.5 ? 1 : 0) : 1 + (Math.random() < 0.5 ? 1 : 0);
   for (let i = 0; i < n + (first ? 2 : 0) && B.pool.length < 6; i++){ const c = genCrew(); c.until = S.t + (2 + Math.floor(Math.random() * 4)) * 1440; B.pool.push(c); }
 }
@@ -133,6 +134,7 @@ function crewTick(H){
   const restC = meAboard() && resting() ? restRate(b) * 60 : b.status === 'port' && ((typeof isRorbu === 'function' && isRorbu(b.port)) || bunks(b)) ? RORBU.rate * 60 : b.anch && b.status !== 'port' && bunks(b) ? RORBU.rate * 60 * 0.85 : 0;   // (a boat with bunks rests the crew at the quay as fast as a rorbu does, Jonas 08.10.2026)
   for (const c of S.crew.slice()){
     const here = onIds.has(c.id) && atSea;
+    if (typeof lifeDay === 'function'){ crewLife(c); lifeOffTick(c); lifeDay(c, H); if (!S.crew.includes(c)) continue; if (here && fishing) lifeInjury(c, hs); }   // del 2: their life beside the work (14-crewlife.js)
     // the share of the hour spent working: a break at sea tires less, but is not rest
     const wm = Object.values(c.wk || {}).reduce((a, m) => a + m, 0), workF = c.wk ? clamp(wm / 60, 0, 1) : 1;
     c.fatigue = skipOn() ? 0 : here ? clamp(c.fatigue + (fishing ? 6 : 3) * (0.4 + 0.6 * workF) * (1.4 - 0.16 * c.attr.uth) * (night ? 1.25 : 1) * ((BOAT.fx && BOAT.fx.fat) || 1), 0, 100) : clamp(c.fatigue - Math.max(8 * (night ? 1.5 : 1), restC), 0, 100);
@@ -174,6 +176,7 @@ function crewTick(H){
   }
   vitalsTalk(on);
   sayHour(H, on, hs);
+  if (typeof lifeHail === 'function') lifeHail(H);
   // a quarrel left alone gets worse
   if (S.cevt){ const age = S.t - S.cevt.t0, A = crewById(S.cevt.a), Bc = crewById(S.cevt.b);
     if (age > 720 && !S.cevt.esc){ S.cevt.esc = true; if (A) A.cpen = 10; if (Bc) Bc.cpen = 10; msg('Om bord', 'Krangelen om bord er ikke løst, og stemningen blir verre.', 'The quarrel aboard is not sorted out, and the mood is getting worse.'); }

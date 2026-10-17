@@ -176,7 +176,7 @@ function sell(){
   // those on hyre have their day wage (payHyre) and no share
   // and so do those who were aboard when the fish was caught, though given time off since (c.trip, set by addCatch)
   const onIds = new Set(crewAboard(null, true).map(c => c.id)), aboardNow = (S.crew || []).filter(c => c.pay !== 'hyre' && (c.trip || onIds.has(c.id))), lott = Math.round(aboardNow.reduce((a, c) => a + c.share, 0) * net);
-  for (const c of aboardNow) c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, net * c.share]]);
+  for (const c of aboardNow){ c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, net * c.share]]); if (typeof lifeEarn === 'function') lifeEarn(c, net * c.share); }
   // back aboard after the trip they sat out; not at a landing that was still going when they were given time off, which put them
   // straight back aboard for the next trip (tilbakemelding #32)
   for (const c of S.crew){ delete c.trip; if (c.offTrip){ c.off = false; delete c.offTrip; } }

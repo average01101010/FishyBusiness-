@@ -191,6 +191,8 @@ function npcStates(H, only){
   if (!only || only[0] === 'c') for (const n of coastNear(H, only)) out.push(n);
   // a boat in a mission: drifting with engine trouble, or on the tow line (09g-turer.js)
   if (!only || only[0] === 't') for (const n of turNpcs()) if (!only || only === n.id) out.push(n);
+  // the old hands who went to a boat of their own, fishing out of their home port (14-crewlife.js alumniStates)
+  if ((!only || only.startsWith('al')) && typeof alumniStates === 'function') for (const n of alumniStates(H)) if (!only || only === n.id) out.push(n);
   // the other players' boats near by (the shared world V3, ui/10h-world.js)
   if (!only || only[0] === 'p') for (const n of peerStates()) if (!only || only === n.id) out.push(n);
   // the rescue boat on her way to you and with you on the tow

@@ -206,3 +206,83 @@ function sayHour(H, on, hs){
   const s = sits.length && Math.random() < 0.75 ? pick1(sits) : ['chat'];
   crewSay(s[1] || null, s[0]);
 }
+
+// ===== Del 2 of «mannskap med liv» (docs/mannskap-plan.md; Jonas 17.10.2026): each person's life beside the work =====
+// c.life = {fam, goal, saved, target, best, story[], notice, day, bday}: a family at home, a dream (a boat of their own, skipper of a
+// second boat, or a quiet life), savings that grow with what they earn aboard, a story of at most twelve lines, and the week's notice
+// when the dream is within reach. Everything runs on the game's hours (crewTick), so it goes on while the game is closed (catchUp).
+const LIFE_BOATS = ['Havella', 'Solglimt', 'Nordlys', 'Fjordgutt', 'Straumen', 'Vårsol', 'Kvitnes', 'Leik', 'Trygg', 'Brødrene', 'Måken', 'Sjøblomst'];
+const LIFE_GOAL = {egenbat:['Egen båt', 'A boat of their own'], skipper:['Føre båt nummer to', 'Skipper of a second boat'], ro:['Et rolig liv', 'A quiet life']};
+function crewLife(c){
+  if (c.life) return c.life;
+  const r = Math.random, a = c.age || 30;
+  const fam = a < 26 ? (r() < 0.75 ? 'single' : 'partner') : a <= 40 ? (r() < 0.3 ? 'single' : r() < 0.5 ? 'partner' : 'kids') : (r() < 0.1 ? 'single' : r() < 0.28 ? 'partner' : 'kids');
+  const g = r(), goal = a < 35 ? (g < 0.55 ? 'egenbat' : g < 0.8 ? 'skipper' : 'ro') : a <= 50 ? (g < 0.3 ? 'egenbat' : g < 0.6 ? 'skipper' : 'ro') : (g < 0.1 ? 'egenbat' : g < 0.25 ? 'skipper' : 'ro');
+  const target = Math.round((600000 + r() * 300000) / 10000) * 10000;   // a used sjark with gear
+  const saved = Math.min(Math.round(target * 0.7), Math.round((c.yrs || 0) * 25000 * (0.3 + r() * 0.7) / 1000) * 1000);   // never from nought (docs/engasjement.md: endowed progress)
+  c.life = {fam, goal, saved, target, best:0, story:[], notice:null, day:-1, bday:Math.floor(r() * 365)};
+  lifeStory(c, 'Mønstret på «' + (S.boatName || 'båten') + '».', 'Signed on the «' + (S.boatName || 'boat') + '».');
+  return c.life;
+}
+function lifeStory(c, no, en){ const L = crewLife(c); L.story.push([S.t, no, en]); while (L.story.length > 12) L.story.shift(); }
+// what was earned aboard goes to the savings: 40 % of it, 25 % with children at home
+function lifeEarn(c, sum){ if (!(sum > 0) || !c) return; const L = crewLife(c); L.saved += Math.round(sum * (L.fam === 'kids' ? 0.25 : 0.4));
+  if (sum > L.best){ L.best = sum; if (sum >= 15000) lifeStory(c, 'Beste oppgjøret så langt: ' + kr(sum) + '.', 'Best settlement so far: ' + kr(sum) + '.'); } }
+function lifeOff(c, days, no, en, sno, sen){ c.off = true; c.offUntil = S.t + days * 1440; msg(c.name, crewDialect(c, no), en); lifeStory(c, sno, sen); }
+// once a day for each person: a birthday, the notice and the day it is up, and the small and large things of a life ashore
+function lifeDay(c, H){
+  const L = crewLife(c), day = Math.floor(H / 24); if (L.day === day) return; const fresh = L.day === -1; L.day = day; if (fresh) return;
+  const d = gDate(H), doy = Math.floor((Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) - Date.UTC(d.getUTCFullYear(), 0, 1)) / 864e5);
+  if (doy === L.bday){ c.age = (c.age || 30) + 1; msg(c.name, crewDialect(c, 'Jeg fyller ' + c.age + ' i dag. Kaka står i byssa.'), 'I turn ' + c.age + ' today. The cake is in the galley.'); lifeStory(c, 'Fylte ' + c.age + ' år om bord.', 'Turned ' + c.age + ' aboard.'); for (const o of S.crew) if (o !== c) o.morale = Math.min(100, o.morale + 2); }
+  if (L.notice){ if (S.t >= L.notice && S.boat.status === 'port') lifeDepart(c); return; }
+  if (c.off && c.offUntil) return;
+  if (L.goal === 'egenbat' && L.saved >= L.target){ L.notice = S.t + 7 * 1440;
+    msg(c.name, crewDialect(c, 'Jeg har spart nok til egen båt nå. Jeg går i land om ei uke, og takker for tiden om bord.'), 'I have saved enough for a boat of my own now. I go ashore in a week, and thank you for the time aboard.');
+    lifeStory(c, 'Sa opp for å kjøpe egen båt.', 'Gave notice to buy a boat of their own.'); return; }
+  if (L.goal === 'skipper' && !L.saidSkip && c.attr.erf >= 4.5 && c.attr.sjo >= 4){ L.saidSkip = true; msg(c.name, crewDialect(c, 'Jeg er klar til å føre en båt for deg den dagen du får en til.'), 'I am ready to skipper a boat for you the day you get another.'); }
+  const r = Math.random();
+  if (L.fam === 'partner' && c.age < 50 && r < 0.0012){ lifeOff(c, 3, 'Jeg gifter meg på lørdag! Jeg tar tre dager fri.', 'I am getting married on Saturday! I take three days off.', 'Giftet seg.', 'Got married.'); for (const o of S.crew) o.morale = Math.min(100, o.morale + 3); }
+  else if ((L.fam === 'partner' || L.fam === 'kids') && c.age < 46 && r < 0.0020){ L.fam = 'kids'; lifeOff(c, 2, 'Vi har fått en liten en! Jeg er hjemme et par dager.', 'We have had a little one! I am at home a couple of days.', 'Ble forelder.', 'Became a parent.'); }
+  else if (r < 0.0035) lifeOff(c, 1 + Math.floor(Math.random() * 3), 'Jeg ligger med feber. Jeg er tilbake om noen dager.', 'I am down with a fever. Back in a few days.', 'Lå syk noen dager.', 'Was ill a few days.');
+}
+// a fall on deck in a heavy sea (per hour fishing, hs the significant wave height): two to three weeks ashore
+function lifeInjury(c, hs){ if (c.offUntil || !(hs > 2.2) || Math.random() >= 0.0006 * (hs - 2.2)) return;
+  lifeOff(c, 14 + Math.floor(Math.random() * 8), 'Jeg gikk over ende på dekk og slo foten stygt. Legen sier noen uker i land.', 'I went over on deck and hurt my leg badly. The doctor says some weeks ashore.', 'Skadet seg på dekk i grov sjø.', 'Was hurt on deck in a heavy sea.'); c.morale = Math.max(0, c.morale - 10); }
+// time off that has a date on it runs out by itself
+function lifeOffTick(c){ if (c.offUntil && S.t >= c.offUntil){ c.off = false; delete c.offUntil; msg(c.name, crewDialect(c, 'Jeg er tilbake om bord.'), 'I am back aboard.'); } }
+// off to a boat of their own: the name of the boat, a look to remember them by, and a place among the alumni (at most ten) who fish
+// out of their home port and come back to the exchange after a year or two
+function lifeDepart(c){
+  const L = crewLife(c), hp = c.homePort && portById(c.homePort), used = new Set((S.alumni || []).map(a => a.boat)), boat = LIFE_BOATS.find(b => !used.has(b)) || LIFE_BOATS[Math.floor(Math.random() * LIFE_BOATS.length)];
+  lifeStory(c, 'Kjøpte egen båt, «' + boat + '».', 'Bought a boat of their own, the «' + boat + '».');
+  let lk = null; try { lk = typeof lookOf === 'function' && typeof lookKey === 'function' ? lookKey(lookOf(c)) : null; } catch (e){}
+  const snap = JSON.parse(JSON.stringify(Object.assign({}, c, {wk:undefined, grudge:{}, earn:[], off:false, offUntil:undefined, trip:undefined, sleepW:undefined, low:0})));
+  S.alumni = (S.alumni || []).filter(a => a.id !== c.id).concat([{id:c.id, name:c.name, boat, home:c.home, homePort:c.homePort, lk, t0:S.t, back:S.t + Math.round((365 + Math.random() * 365) * 1440), c:snap}]).slice(-10);
+  crewQuit(c, crewDialect(c, 'Takk for tiden om bord. Nå går jeg om bord i min egen. Du ser meg nok på feltet.'), 'Thank you for the time aboard. Now I go aboard my own. You will see me on the grounds.');
+  log(c.name + ' har kjøpt egen båt, «' + boat + '», og fisker fra ' + (hp ? hp.name : c.home) + '.', c.name + ' has bought a boat of their own, the «' + boat + '», and fishes out of ' + (hp ? hp.name : c.home) + '.');
+}
+// the alumni's boats on the AIS (core/05-vessels.js npcStates): on the nearest known ground within 40 km of the home port, 07–15
+// every day but Sunday; no ground that near, and the boat stays out of sight (the national grounds are not in the game yet)
+function alumniGround(a){ if (a.g !== undefined) return a.g; const hp = (a.homePort && portById(a.homePort)) || portById(S.home || HOME0) || portById('finnsnes'); if (!hp || typeof GROUNDS === 'undefined') return a.g = null;   // a home with no port in the game: out of the skipper's home port
+  let best = null, bd = 40; for (const g of GROUNDS){ if (!g.p) continue; const d = dist(g.p, hp.p); if (d < bd){ bd = d; best = g.p; } } return a.g = best ? {x:best.x, y:best.y} : null; }
+function alumniStates(H){
+  const out = []; if (!S.alumni || !S.alumni.length) return out; const d = gDate(H), hod = d.getUTCHours() + d.getUTCMinutes() / 60; if (d.getUTCDay() === 0) return out;
+  S.alumni.forEach((a, i) => { const G = alumniGround(a); if (!G) return; const j = (lookHash(String(a.id)) % 100) / 100; if (hod < 7 + j || hod >= 15 + j * 1.5) return;
+    out.push({id:'al' + a.id, name:a.boat, type:'sjark', p:{x:G.x + Math.sin(i * 2.1 + j) * 0.5, y:G.y + Math.cos(i * 2.1 + j) * 0.5}, hd:0.3 + i + j, cog:0.3 + i + j, v:0, st:'fishing', alum:true, L:10.99, B:3.9, liv:(i % 3) + 1, lk:a.lk || '', ck:'', first:a.name.split(' ')[0]}); });
+  return out;
+}
+// passing an old hand on the grounds: a horn from her boat, once a day (until the VHF talk is built)
+function lifeHail(H){
+  if (!S.alumni || !S.alumni.length || S.boat.status === 'port') return; const day = Math.floor(H / 24);
+  for (const n of alumniStates(H)){ const a = S.alumni.find(x => 'al' + x.id === n.id); if (!a || a.hailDay === day || dist(n.p, S.boat.pos) > 1.5) continue; a.hailDay = day;
+    msg('Sjøen', n.first + ' tuter til deg fra «' + a.boat + '».', n.first + ' sounds the horn at you from the «' + a.boat + '».');
+    if (typeof SND !== 'undefined' && SND.horn) SND.horn(0.6); if (typeof G3 !== 'undefined' && G3.sayBoat) G3.sayBoat(n.id, S.lang === 'en' ? 'Good to see you!' : crewDialect(a.c || null, 'Godt å se deg!')); }
+}
+// back to the exchange after the years with a boat of their own: a smaller share asked, and the story goes on
+function alumniReturn(B){
+  for (const a of (S.alumni || []).slice()){ if (a.back > S.t || !a.c || B.pool.length >= 6) continue; S.alumni.splice(S.alumni.indexOf(a), 1);
+    const c = crewDerive(Object.assign(a.c, {ask:Math.round(a.c.ask * 0.9 * 100) / 100, morale:62, fatigue:0, known:[true, true], grudge:{}, earn:[], off:false, until:S.t + 5 * 1440})); c.share = c.ask; if (c.cpen) delete c.cpen;
+    if (c.life){ c.life.notice = null; c.life.goal = 'ro'; c.life.saved = Math.round(c.life.target * 0.3); c.life.day = -1; lifeStory(c, 'Solgte «' + a.boat + '» og søker hyre igjen.', 'Sold the «' + a.boat + '» and looks for a berth again.'); }
+    B.pool.push(c); }
+}
+
