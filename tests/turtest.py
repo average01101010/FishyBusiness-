@@ -76,11 +76,11 @@ async def main():
         fr = await pg.evaluate("""(() => { const T = turState(); S.hold = []; S.boat.status = 'port'; S.boat.port = S.home || PORTS[0].id; S.boat.pos = {...portById(S.boat.port).p};
           const o = turHere(); let m = null; for (const c of ['kort', 'mid', 'lang']){ m = turFrakt(o, c, new Set()); if (m) break; }
           if (!m) return {none:true};
-          m.id = ++T.seq; m.until = S.t + 1440; T.board.push(m); const c0 = capHold(); const err = turTake(m.id); const loaded = c0 - capHold(), fish = holdTotal();
+          m.id = ++T.seq; m.until = S.t + 1440; T.board.push(m); const c0 = cargoRoom(); const err = turTake(m.id); const loaded = c0 - cargoRoom(), fish = holdTotal();   // (freight goes on deck first, schema v2: the room for freight shrinks, the hold only beyond the deck)
           const cash0 = S.cash; dock(m.to); const done = T.done.find(d => d.id === m.id);
           return {err, kg:m.kg, loaded, fish, after:cargoKg(), done:!!(done && done.ok), gain:S.cash - cash0, pay:m.pay}; })()""")
         check(fr.get('none') or (fr['err'] is None and abs(fr['loaded'] - fr['kg']) < 0.5 and fr['fish'] < 0.5 and fr['after'] < 0.5 and fr['done'] and fr['gain'] == fr['pay']),
-              'freight is loaded at the quay and takes room in the hold (it is no part of the catch); delivered, it leaves the hold and pays', fr)
+              'freight is loaded at the quay and takes the room for freight, on deck first (it is no part of the catch); delivered, it leaves the boat and pays', fr)
         # 5. lost gear: a line (one aboard can haul it) with fish in it near the coast; hauled, the fish is aboard and the owner pays
         g = await pg.evaluate("""(() => { const T = turState(); S.hold = []; S.cargo = []; S.boat.status = 'idle'; S.boat.port = null; const o = {...S.boat.pos};
           const m = turGarn(o); if (!m) return {none:true};

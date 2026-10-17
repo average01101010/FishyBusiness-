@@ -163,7 +163,7 @@ function turFrakt(o, cls, used, me = turMe()){
   const cand = PORTS.filter(q => q.id !== from.id && !used.has(q.id) && q.pier).map(q => ({q, h:pick + turNm(from.p, q.p) / v})).filter(x => x.h >= c.h[0] && x.h < hi);
   for (const {q, h} of turOrder(cand, me)){
     if (!turCan(from.p, q.p, h - pick, false) || (pick && !turCan(o, from.p, pick, false))) continue;
-    const room = capHold() - holdTotal(), fit = TUR_GOODS.filter(g => g.kg[0] <= room * 0.6); if (!fit.length) return null;
+    const room = cargoRoom(), fit = TUR_GOODS.filter(g => g.kg[0] <= room * 0.6); if (!fit.length) return null;   // (the deck first, schema v2)
     const g = fit[Math.floor(Math.random() * fit.length)], kg = Math.round(Math.min(g.kg[1], room * 0.6, Math.max(g.kg[0], BOAT.holdCap * (0.2 + Math.random() * 0.3))) / 10) * 10;
     return {k:'frakt', cls, from:from.id, to:q.id, p:q.p, nm:Math.round((pick ? turNm(o, from.p) : 0) + turNm(from.p, q.p)), h, kg, what:[g.no, g.en], base:turPay(h, c.f), hTot:h * 2.5 + 12};
   }
@@ -449,7 +449,7 @@ function turEnsure(force){
 function turTake(id){
   const T = turState(), m = T.board.find(x => x.id === id); if (!m) return turL('Oppdraget er ikke lenger på tavla.', 'The mission is no longer on the board.');
   if (T.act.length >= 3) return turL('Du har allerede tre oppdrag. Fullfør eller gi fra deg ett først.', 'You already have three missions. Finish or give one up first.');
-  if (m.k === 'frakt' && capHold() - holdTotal() < m.kg) return turL('Det er ikke plass i lasterommet. Lever fangsten først.', 'There is no room in the hold. Land the catch first.');
+  if (m.k === 'frakt' && cargoRoom() < m.kg) return turL('Det er ikke plass på dekk eller i lasterommet. Lever fangsten først.', 'There is no room on deck or in the hold. Land the catch first.');
   T.board.splice(T.board.indexOf(m), 1); m.t0 = S.t; m.due = S.t + Math.round(m.hTot * 60); m.vid = S.cur;
   if (m.base == null) m.base = m.pay || 500; m.pay = turFinal(m);
   if (m.k === 'slep'){ m.pf = m.pay / Math.max(1, m.base); m.payLo = turSalvage(m, 0); m.payHi = turSalvage(m, 1); }
@@ -472,10 +472,14 @@ function turDrop(id){
   const T = turState(), m = T.act.find(x => x.id === id); if (!m) return;
   turEnd(m, false, turL('Gav fra deg oppdraget.', 'Gave up the mission.'));
 }
+// the crew's job of getting the freight aboard or ashore (cargoMin, 03-simulation.js): the boat stays at the quay until it is done
+function cargoJob(kg, no, en){ if (typeof queueJob !== 'function' || S.boat.status !== 'port') return; queueJob({kind:'last', crew:true, h:cargoMin(kg) / 60, no, en}); }
 function turLoad(m){
-  if (capHold() - holdTotal() < m.kg){ log('Lasta til ' + portById(m.to).name + ' venter på kaia. Det er ikke plass i lasterommet.', 'The freight for ' + portById(m.to).name + ' waits on the quay. There is no room in the hold.'); return false; }
+  if (cargoRoom() < m.kg){ log('Lasta til ' + portById(m.to).name + ' venter på kaia. Det er ikke plass på dekk eller i lasterommet.', 'The freight for ' + portById(m.to).name + ' waits on the quay. There is no room on deck or in the hold.'); return false; }
+  const onDeck = cargoKg() + m.kg <= (BOAT.deckCargo || 0);
   S.cargo = (S.cargo || []).concat([{tur:m.id, kg:m.kg, no:m.what[0], en:m.what[1]}]); m.stage = 'go'; m.vid = S.cur;
-  log('Lastet ' + fmt(m.kg, 0) + ' kg ' + m.what[0] + ' for ' + portById(m.to).name + '.', 'Loaded ' + fmt(m.kg, 0) + ' kg of ' + m.what[1] + ' for ' + portById(m.to).name + '.');
+  log('Lastet ' + fmt(m.kg, 0) + ' kg ' + m.what[0] + ' for ' + portById(m.to).name + (onDeck ? ' på dekk.' : '.'), 'Loaded ' + fmt(m.kg, 0) + ' kg of ' + m.what[1] + ' for ' + portById(m.to).name + (onDeck ? ' on deck.' : '.'));
+  cargoJob(m.kg, 'Lasting av ' + m.what[0], 'Loading the ' + m.what[1]);
   return true;
 }
 // the lost gear goes into the sea as a set of the boat's own, marked as found: hauled, the fish is yours and the gear goes to its owner
@@ -517,7 +521,7 @@ function turDock(pid){
   const T = S.turer; if (!T || !T.act.length) return;
   for (const m of T.act.slice()){ if (m.k !== 'frakt' || m.vid !== S.cur) continue;
     if (m.stage === 'pick' && pid === m.from) turLoad(m);
-    else if (m.stage === 'go' && pid === m.to){ S.cargo = (S.cargo || []).filter(c => c.tur !== m.id);
+    else if (m.stage === 'go' && pid === m.to){ S.cargo = (S.cargo || []).filter(c => c.tur !== m.id); cargoJob(m.kg, 'Lossing av ' + m.what[0], 'Landing the ' + m.what[1]);
       turPayOut(m, portById(pid).name, 'Takk for at du kom med ' + m.what[0] + '.', 'Thank you for bringing the ' + m.what[1] + '.'); } }
   for (const m of T.act.slice()) if (m.k === 'slep' && m.vid === S.cur && m.stage === 'tow' && pid === m.to){
     m.pay = turSalvage(m, m.danger || 0);

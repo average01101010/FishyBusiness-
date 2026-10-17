@@ -42,7 +42,7 @@ function newVesselObj(type, pid, lic){
 // boxes, a longer hold: the weight shows in her stability and speed), priced on the boat's price
 const HOLDUP = [{x:1.2, pc:0.03, h:8}, {x:1.4, pc:0.06, h:16}, {x:1.7, pc:0.10, h:32}];   // tuned down 08.10.2026 (was 1.25, 1.6, 2.0); not for the ocean vessels, whose tanks are fixed
 const holdX = b => b && b.holdLv ? HOLDUP[b.holdLv - 1].x : 1;
-const upPrice = pc => Math.max(5000, Math.round(VESSELS[S.boat.type || 'skiff'].price * pc / 1000) * 1000);
+const upPrice = (pc, min) => Math.max(min || 5000, Math.round(VESSELS[S.boat.type || 'skiff'].price * pc / 1000) * 1000);   // (min: a step's own floor, the machines)
 // the engine: a bigger one from the yard in two steps (+20 % and +40 % power; inboard engines, the outboard skiff has the 90 hp
 // outboard instead), and the speed boosts sold in the Trim app (diesel engines; real money later, a test now). The power's gain in
 // speed: a planing hull its square root, a displacement hull its cube root but held under +12 % by its hull speed. The effects of the
@@ -66,7 +66,13 @@ const UPGS = {
   tank:{no:'Større drivstofftank', en:'A larger fuel tank', fit:V => !V.outboard && V.cls !== 'hav', d:['Ekstra tank. Lengre rekkevidde mellom bunkringene.', 'An extra tank. A longer range between refuellings.'],
     steps:[{pc:0.015, h:8, no:'Ekstra tank', en:'An extra tank', x:1.25}, {pc:0.03, h:16, no:'Stor tank', en:'A large tank', x:1.5}]},
   stab:{no:'Stabilisering', en:'Stabilisation', fit:V => V.len >= 9, d:['Slingrekjøl og, på de store båtene, gyrostabilisator. Båten mister mindre fart i sjø, og mannskapet har det bedre i dårlig vær.', 'Bilge keels and, on the big boats, a gyro stabiliser. The boat loses less speed in a sea and the crew cope better in bad weather.'],
-    steps:[{pc:0.025, h:12, no:'Slingrekjøl', en:'Bilge keels', sea:0.9}, {pc:0.06, h:24, no:'Gyrostabilisator', en:'Gyro stabiliser', sea:0.78, minLen:25}]}
+    steps:[{pc:0.025, h:12, no:'Slingrekjøl', en:'Bilge keels', sea:0.9}, {pc:0.06, h:24, no:'Gyrostabilisator', en:'Gyro stabiliser', sea:0.78, minLen:25}]},
+  // the machines (Jonas 17.10.2026: only on boats over 14.99 m; the ocean vessels have theirs in the factory, VESSELS gutMachine and
+  // iceMaker): a gutting machine takes 600 kg an hour with one person feeding it, an ice machine makes 1,500 kg of ice a day at sea
+  gut:{no:'Sløyemaskin', en:'Gutting machine', fit:V => V.len > 14.99 && V.cls !== 'hav' && !V.gutMachine, d:['Sløyemaskin på dekk. Én person mater den, og den tar 600 kg i timen. Fisken holder samme kvalitet som for hånd.', 'A gutting machine on deck. One person feeds it, and it takes 600 kg an hour. The fish keep the same quality as by hand.'],
+    steps:[{pc:0.06, min:350000, h:24, no:'Sløyemaskin', en:'Gutting machine', gut:600}]},
+  ice:{no:'Ismaskin', en:'Ice machine', fit:V => V.len > 14.99 && V.cls !== 'hav' && !V.iceMaker, d:['Ismaskin om bord. Lager 1 500 kg is i døgnet på sjøen, så isen ikke tar slutt på lange turer. Is ved kai er fortsatt billigere.', 'An ice machine aboard. Makes 1,500 kg of ice a day at sea, so the ice does not run out on long trips. Ice at the quay is still cheaper.'],
+    steps:[{pc:0.05, min:300000, h:24, no:'Ismaskin', en:'Ice machine', maker:1500}]}
 };
 const upgLv = (b, k) => (b && b.upg && b.upg[k]) || 0;
 const upgNext = (b, k) => { const U = UPGS[k], V = VESSELS[(b || S.boat).type || 'skiff'], st = U.steps[upgLv(b, k)]; return U.fit(V) && st && (!st.minLen || V.len >= st.minLen) ? st : null; };
@@ -86,6 +92,7 @@ function applyVessel(){
   // the yard's other upgrades (UPGS): what they change for the crew and the boat
   const fx = {}; for (const k in UPGS){ const lv = upgLv(b, k); if (lv && UPGS[k].fit(VESSELS[b.type || 'skiff'])) Object.assign(fx, UPGS[k].steps[lv - 1]); }
   BOAT.fx = fx; if (fx.x) BOAT.fuelCap = Math.round(BOAT.fuelCap * fx.x); if (fx.sea) BOAT.sea *= fx.sea; BOAT.svcCost = svcCostOf(b);
+  const V0 = VESSELS[b.type || 'skiff']; BOAT.gutMachine = V0.gutMachine || fx.gut || 0; BOAT.iceMaker = V0.iceMaker || fx.maker || 0;   // the machines: the boat's own, or the yard's (UPGS gut, ice)
   const P = powerX(b); if (P > 1){ const sx = speedOfPower(P, BOAT.planing);
     BOAT.vmax *= sx; BOAT.vcruise *= sx; BOAT.fuelK *= 1 + 0.4 * (P - 1); BOAT.accel *= 1 + (b.engLv ? 0.3 * ENGUP[b.engLv - 1].p : 0); BOAT.hp = Math.round(BOAT.hp * P); }
   const T = canBoost(BOAT) && trimOn(b); if (T){ BOAT.vmax *= T.x; BOAT.vcruise *= T.x; BOAT.accel *= T.x; }
@@ -846,7 +853,12 @@ const EPOCH_HR = new Date(EPOCH).getUTCHours();
 function pubEvening(H){ return Math.floor((H + EPOCH_HR - 15) / 24); }
 function pubOpen(H){ const hr = gDate(H).getUTCHours(); return hr >= 15 || hr < 3; }
 // the hold (borrowed deck tubs from «Kaffe på kaia» are gone since 01.10.2026)
-function capHold(){ return Math.max(0, BOAT.holdCap - (typeof cargoKg === 'function' ? cargoKg() : 0)); }   // the room for fish: freight for a mission takes its part (09g-turer.js)
+// the room for fish: freight for a mission goes on deck first (schema v2 deckCargo, docs/batplan.md del 8) and takes hold room only beyond that (09g-turer.js)
+function capHold(){ const c = typeof cargoKg === 'function' ? cargoKg() : 0; return Math.max(0, BOAT.holdCap - Math.max(0, c - (BOAT.deckCargo || 0))); }
+// the room for more freight: what is left on deck, and what is left beside the catch
+function cargoRoom(){ const c = typeof cargoKg === 'function' ? cargoKg() : 0; return Math.max(0, (BOAT.deckCargo || 0) - c) + Math.max(0, capHold() - holdTotal()); }
+// loading or landing freight takes its time (Jonas 17.10.2026): a crane lifts 200 kg a minute a tonne of lift; by hand it is pieces under 60 kg, 60 kg a minute a person
+function cargoMin(kg){ const hands = Math.max(1, handsAboard()); return Math.max(5, Math.ceil(kg / (BOAT.crane ? 200 * BOAT.crane : 60 * hands))); }
 // ---- the daily login bonus: each real calendar day you open the game adds a point to a bonus on the fish price; each day
 // you stay away takes three off, never below zero. No ceiling for now (decided 30.09.2026); change STREAK to add one. ----
 const STREAK = {step:1, decay:3, max:Infinity};

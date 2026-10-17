@@ -272,7 +272,7 @@ function vesselStep(H){
   workMinute();
   const kar = S.equip && S.equip.krabbekar;
   for (const x of S.hold){ const r = SPECIES[x.sp].live ? (kar ? 0.4 : 2.5) : x.bled ? (x.iced ? 0.9 : 3.0) : (x.iced ? 2.2 : 6.0); x.fresh = Math.max(0, x.fresh - r * clean / 60); }
-  deckMinute();
+  iceMinute(); deckMinute();
   // work queue at the yard and on the quay: runs while the boat is in port
   if (S.jobs && S.jobs.length && b.status === 'port'){ let done = null; for (const j of S.jobs){ jobOk(j); if (j.until == null) j.until = S.t + j.h * 60; if (S.t >= j.until) (done = done || []).push(j); }
     if (done){ S.jobs = S.jobs.filter(j => !done.includes(j)); done.forEach(finishJob); } }   // all side by side (06-services.js queueJob)
@@ -605,13 +605,16 @@ function moveKg(x, kg, patch){
   y.fresh = (y.fresh * y.kg + x.fresh * kg) / (y.kg + kg); y.kg += kg; y.n = (y.n || 0) + n; x.kg -= kg; x.n = (x.n || 0) - n;
   if (x.kg < 0.01) S.hold.splice(S.hold.indexOf(x), 1);
 }
+// the ice machine (BOAT.iceMaker, kg a day; schema v2, the yard's UPGS.ice) fills the ice room at sea
+function iceMinute(){ const b = S.boat; if (!BOAT.iceMaker || b.status === 'port' || (b.ice || 0) >= BOAT.iceCap) return; b.ice = Math.min(BOAT.iceCap, (b.ice || 0) + BOAT.iceMaker / 1440); }
 // a minute of deck work: gut first, then ice down what is gutted (or, when landing round, what is bled)
 function deckMinute(){
   const b = S.boat, cg = catchGut(); if (!S.hold.length) return;
   const G = workTeam('sloy', 'sloy'), I = workTeam('is', 'is'); if (!G.n && !I.n) return;
-  let pm = G.sum, worked = 0;
+  // the gutting machine (BOAT.gutMachine, kg an hour; schema v2) adds its throughput while someone feeds it; it ices nothing
+  let pm = G.sum + (G.n && BOAT.gutMachine ? BOAT.gutMachine / 60 / DECK.gut : 0), worked = 0;
   if (cg) for (const x of S.hold.filter(x => !x.gut && !x.iced && !SPECIES[x.sp].live)){ if (pm <= 0.001) break; const kg = Math.min(x.kg, pm * DECK.gut); moveKg(x, kg, {gut:true}); pm -= kg / DECK.gut; worked += kg; }
-  pm += I.sum;   // the gutters ice what they have gutted once the gutting is done
+  pm = Math.min(pm, G.sum) + I.sum;   // the gutters ice what they have gutted once the gutting is done
   if (catchIce()) for (const x of S.hold.filter(x => !x.iced && (x.gut || !cg) && !SPECIES[x.sp].live)){
     if (pm <= 0.001) break; const kg = Math.min(x.kg, pm * DECK.ice, b.ice / (0.3 * ((BOAT.fx && BOAT.fx.ice) || 1)));
     if (kg <= 0.01){ if (S.t - (S.lastIceWarn || -1e9) > 120){ log('Tom for is. Fangsten ises ikke.', 'Out of ice. The catch is not being iced.'); S.lastIceWarn = S.t; } break; }
