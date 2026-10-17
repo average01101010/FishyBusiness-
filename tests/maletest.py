@@ -116,6 +116,12 @@ async def main():
         # a boat bought in trade starts unpainted, with a free first choice
         e = await pg.evaluate("""(() => { PHONE.switchVessel('sjark'); return {type:S.boat.type, liv:S.boat.liv || null}; })()""")
         check(e['type'] == 'sjark' and e['liv'] is None, 'a boat taken in trade starts in her own colour with a free first choice', e)
+        # the superstructure and the decks (paint zones 3 and 4) on the snekke from the Blender round: the model has them, the colours reach
+        # the painter and go to the others with the paint; the wooden boat has none, so the paint shop shows nothing for her
+        z = await pg.evaluate("""(() => { const Z = glbZones('snekke'), W = glbZones('trebat'), m = modelLiv({hull:'hvit', house:'marine', deck:'lysgra'}), str = livStr({liv:{hull:'hvit', house:'marine', deck:'lysgra'}}), L = livParse(str);
+          return {z3:!!Z[3], z4:!!Z[4], w3:!!W[3], house:m && m.house, deck:m && m.deck, str, back:!!(L && L.house && L.deck), key:livKey(m)}; })()""")
+        check(z['z3'] and z['z4'] and not z['w3'] and z['house'] and z['deck'] and z['str'] == 'h:hvit;o:marine;d:lysgra' and z['back'] and 'marine' not in z['key'] and len(z['key']) > 10,
+              'the snekke has the superstructure and deck zones (the wooden boat not), and their colours are shared with the paint and come back', z)
         check(errs == [], 'sidefeil', errs)
         await br.close()
 

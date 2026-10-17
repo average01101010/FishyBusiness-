@@ -348,7 +348,7 @@ const SPEC3D = {
 // ---------- detailed models from GLB files (tools/boats, built in Blender from the yards' drawings) ----------
 // The GLB holds the near model (lod0), the glass and the simple model for the fleet at a distance (lod1), in the game's frame,
 // positions as 16-bit integers scaled by the node, normals and colours as bytes (KHR_mesh_quantization); colour alpha is gloss,
-// _PAINT carries the paint zone (1 = hull) and the baked occlusion, so a livery can repaint the hull. The scene's extras hold the
+// _PAINT carries the paint zone (1 = hull, 2 = the stripe, 3 = the superstructure, 4 = the decks) and the baked occlusion, so a livery can repaint the hull. The scene's extras hold the
 // places the 3D view needs (helm, eye, crew, lights, hauler, flag). Read the first time a type is shown.
 // The data sits in non-running <script id="glb-TYPE"> and <script id="pic-TYPE"> elements in the page (src/index.html), so the big
 // strings never pass through the script parser and the clock's first ticks are not held up by them.
@@ -381,16 +381,25 @@ function glbLoad(type){
 }
 // one part of a type's GLB ({p, n, c}): the starter boat's hull, glass, lid, outboard and propeller are drawn by view3d.js one by one
 function glbPart(type, name){ const G = glbLoad(type); return (G && G.parts[name]) || null; }
-// a detailed model's part with the hull painted: paint zone 1 takes the colour, with the shade baked into it (ao) kept
+// a detailed model's part painted: paint zone 1 (the hull) takes liv.hull, zone 3 (the superstructure) liv.house and zone 4 (the decks)
+// liv.deck, with the shade baked into them (ao) kept
 function glbPaint(part, liv){
-  if (!liv || !liv.hull || !part.zone) return part;
-  const c = part.c.slice(); for (let i = 0; i < part.zone.length; i++) if (part.zone[i] === 1){ const a = part.ao[i]; c[i * 4] = liv.hull[0] * a; c[i * 4 + 1] = liv.hull[1] * a; c[i * 4 + 2] = liv.hull[2] * a; }
+  if (!liv || !(liv.hull || liv.house || liv.deck) || !part.zone) return part;
+  const Z = [null, liv.hull || null, null, liv.house || null, liv.deck || null], c = part.c.slice();
+  for (let i = 0; i < part.zone.length; i++){ const col = Z[part.zone[i]]; if (!col) continue; const a = part.ao[i]; c[i * 4] = col[0] * a; c[i * 4 + 1] = col[1] * a; c[i * 4 + 2] = col[2] * a; }
   return {p:part.p, n:part.n, c};
+}
+// which paint zones a type's model has ({1:1, 3:1, ...}): the paint shop offers the superstructure and the decks only where they exist
+const GLBZ = {};
+function glbZones(type){
+  if (type in GLBZ) return GLBZ[type]; const G = glbHas(type) ? glbLoad(type) : null, P = G && G.parts.lod0, z = {};
+  if (P && P.zone) for (let i = 0; i < P.zone.length; i++) z[P.zone[i]] = 1;
+  return GLBZ[type] = z;
 }
 function glbModel(type, lod, liv){
   const G = glbLoad(type); if (!G || !G.parts.lod0) return null;
   const part = lod >= 1 ? G.parts.lod0 : (G.parts.lod1 || G.parts.lod0); let o = part;
-  if (liv && DESIGNS.some(k => liv[k])) o = glbDesign(type, part, liv); else if (liv && liv.hull) o = glbPaint(part, liv);
+  if (liv && DESIGNS.some(k => liv[k])) o = glbDesign(type, part, liv); else if (liv && (liv.hull || liv.house || liv.deck)) o = glbPaint(part, liv);
   // an outboard and its propeller are parts of their own, in their own frames (they turn in the game): the whole boat carries them in place
   const sk = G.ex.anchors && G.ex.anchors.skiff;
   if (lod >= 1 && sk && G.parts.outboard){
@@ -492,20 +501,22 @@ const palRGB = k => { const e = k && HULLPAL.find(x => x[0] === k); return e && 
 function modelLiv(L){
   if (!L) return null; const o = {}, h = palRGB(L.hull); let any = false;
   if (h){ o.hull = [h[0], h[1], h[2], 0.6]; any = true; }
+  for (const k of ['house', 'deck']){ const c = palRGB(L[k]); if (c){ o[k] = c; any = true; } }   // the superstructure and the decks (paint zones 3 and 4)
   for (const k of DESIGNS){ const v = L.d && L.d[k]; if (!v) continue; if (k === 'lakk'){ o.lakk = true; any = true; } else { const c = palRGB(v); if (c){ o[k] = c; any = true; } } }
   return any ? o : null;
 }
 function hullLiv(b){ return modelLiv(PAINTPRE && typeof S !== 'undefined' && b === S.boat ? PAINTPRE : b && b.liv); }
-function livKey(liv){ return liv ? ['hull', ...DESIGNS].map(k => liv[k] ? (liv[k] === true ? 1 : liv[k].join(',')) : '').join('|') : ''; }
+function livKey(liv){ return liv ? ['hull', 'house', 'deck', ...DESIGNS].map(k => liv[k] ? (liv[k] === true ? 1 : liv[k].join(',')) : '').join('|') : ''; }
 // the designs that cut the hull's triangles (a change of these is a new shape; the others are only colours)
 function livGeo(liv){ return liv ? ['ripe', 'totone', 'vann'].filter(k => liv[k]).join(',') : ''; }
 // the paint as it goes to the other players with the position (ui/10h-world.js pos_put, supabase/migrations/20261007090000_livery.sql):
-// 'h:<colour>;r:..;t:..;v:..;s:..;g:1'; and back again. Only colours in HULLPAL count, so nothing else can be painted on a boat.
-const LIVS = {hull:'h', ripe:'r', totone:'t', vann:'v', stripe:'s', lakk:'g', flag:'f', mark:'m', logo:'l'};
+// 'h:<colour>;o:<overbygg>;d:<dekk>;r:..;t:..;v:..;s:..;g:1'; and back again. Only colours in HULLPAL count, so nothing else can be painted on a boat.
+const LIVS = {hull:'h', house:'o', deck:'d', ripe:'r', totone:'t', vann:'v', stripe:'s', lakk:'g', flag:'f', mark:'m', logo:'l'};
 const MARKENC = s => String(s).replace(/Æ/g, '1').replace(/Ø/g, '2').replace(/Å/g, '3'), MARKDEC = s => String(s).replace(/1/g, 'Æ').replace(/2/g, 'Ø').replace(/3/g, 'Å');
 function livStr(b){
   const L = (b && b.liv) || {}, out = [];
   if (L.hull && L.hull !== 'orig' && palRGB(L.hull)) out.push('h:' + L.hull);
+  for (const k of ['house', 'deck']) if (L[k] && L[k] !== 'orig' && palRGB(L[k])) out.push(LIVS[k] + ':' + L[k]);
   for (const k of DESIGNS){ const v = L.d && L.d[k]; if (k === 'lakk' ? v : v && palRGB(v)) out.push(LIVS[k] + ':' + (k === 'lakk' ? 1 : v)); }
   if (L.flag && /^[A-Z]{2,4}$/.test(L.flag.c || '') && /^[a-z]+$/.test(L.flag.s || '')) out.push('f:' + L.flag.c + '.' + L.flag.s);
   const r = typeof regOf === 'function' && b === S.boat ? regOf(b) : b.reg; if (r && r.f) out.push('m:' + MARKENC(r.f) + '.' + r.n + '.' + MARKENC(r.k));   // the registration mark (core/06b-coastports.js)
@@ -519,7 +530,7 @@ function livPen(s){ const m = /(?:^|;)p:([1-3])(?:;|$)/.exec(String(s || '')); r
 function livMark(s){ const m = /(?:^|;)m:([A-Z0-9]{1,3})\.(\d{1,4})\.([A-Z0-9]{1,3})(?:;|$)/.exec(String(s || '')); return m ? MARKDEC(m[1]) + '-' + m[2] + '-' + MARKDEC(m[3]) : ''; }
 function livParse(s){
   const L = {d:{}}; for (const part of String(s || '').split(';')){ const [a, v] = part.split(':'), k = Object.keys(LIVS).find(q => LIVS[q] === a); if (!k || !v) continue;
-    if (k === 'hull') L.hull = v; else if (k === 'flag'){ const [c, sh] = v.split('.'); L.flag = {c, s:sh}; } else if (k === 'mark' || k === 'logo') continue; else L.d[k] = k === 'lakk' ? 1 : v; }
+    if (k === 'hull') L.hull = v; else if (k === 'house' || k === 'deck') L[k] = v; else if (k === 'flag'){ const [c, sh] = v.split('.'); L.flag = {c, s:sh}; } else if (k === 'mark' || k === 'logo') continue; else L.d[k] = k === 'lakk' ? 1 : v; }
   return modelLiv(L);
 }
 // ---- paint designs (Malerverkstedet): a stripe under the sheer (ripe), a second colour on the lower topsides (totone), a stripe at the
@@ -566,6 +577,8 @@ function glbDesign(type, part, liv){
     const z0 = Z ? Z[v] : 0, all1 = Z && Z[v] === 1 && Z[v + 1] === 1 && Z[v + 2] === 1, all2 = Z && Z[v] === 2 && Z[v + 1] === 2 && Z[v + 2] === 2;
     const V = [0, 1, 2].map(k => { const i = v + k; return {p:[P[i * 3], P[i * 3 + 1], P[i * 3 + 2]], n:[Nn[i * 3], Nn[i * 3 + 1], Nn[i * 3 + 2]], c:[C[i * 4], C[i * 4 + 1], C[i * 4 + 2], C[i * 4 + 3]], a:A ? A[i] : 1}; });
     if (all2 && liv.stripe){ for (const q of V) emit(q, liv.stripe, q.c[3]); continue; }
+    if (Z && liv.house && z0 === 3 && Z[v + 1] === 3 && Z[v + 2] === 3){ for (const q of V) emit(q, liv.house, q.c[3]); continue; }   // the superstructure and the decks: colours only, no lines
+    if (Z && liv.deck && z0 === 4 && Z[v + 1] === 4 && Z[v + 2] === 4){ for (const q of V) emit(q, liv.deck, q.c[3]); continue; }
     if (!all1){ for (const q of V) emit(q, null, q.c[3]); continue; }
     const gloss = liv.lakk ? Math.max(V[0].c[3], 0.85) : V[0].c[3];
     // cut the triangle by each line in turn (Sutherland–Hodgman on both sides), then each piece takes its colour
@@ -1118,6 +1131,8 @@ function deckPoints(type){
   put('sloy', tx + (tx < 0 ? 0.62 : -0.62), tz, tx < 0 ? -Math.PI / 2 : Math.PI / 2, far); put('is', ux + (ux > tx ? -0.62 : 0.62), uz, ux > tx ? Math.PI / 2 : -Math.PI / 2, far);
   if (G.hauler) put('haling', G.hauler[0] * 0.7, G.hauler[2], G.hauler[0] > 0 ? Math.PI / 2 : -Math.PI / 2, 1.6);
   if (G.skipperAt){ const c = M.near(G.skipperAt[0], G.skipperAt[2], 0.5); if (c >= 0) pt.ror = {k:c, h:0}; else put('door', G.skipperAt[0], G.skipperAt[2], 0, 40); }   // the helm, or the door when the house has no floor in the model
+  // a model from the Blender round names its real doors (anchors.doors: [{at, w, h, in, to}], the sill in the game's frame): the crew go in and out there
+  if (G.doors && G.doors.length && G.doors[0].at) put('door', G.doors[0].at[0], G.doors[0].at[2], 0, 1.5);
   (G.crewSpots || []).forEach((c, i) => put('spot' + i, c[0], c[2], c[3] || 0, 1.0));
   if (G.filler) put('filler', G.filler[0] * 0.8, G.filler[2], G.filler[0] > 0 ? Math.PI / 2 : -Math.PI / 2, 1.4);
   // the rail: deck cells at the edge with the outside beyond them, spread along both sides and the stern, facing out

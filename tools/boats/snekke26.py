@@ -96,9 +96,10 @@ def colours():
     C['boot'] = mat('boot', (0.07, 0.09, 0.16), 0.45)
     C['hull'] = mat('snwhite', (0.94, 0.94, 0.92), 0.65, zone=1)
     C['band'] = mat('band', (0.09, 0.12, 0.22), 0.55)
-    C['white'] = mat('white', (0.95, 0.95, 0.93), 0.55)
+    C['white'] = mat('house', (0.95, 0.95, 0.93), 0.55, zone=3)     # the trunk, the hard top and the mast: paint zone 3 (superstructure)
     C['inner'] = mat('inner', (0.88, 0.88, 0.85), 0.3)
-    C['deck'] = mat('deck', (0.86, 0.86, 0.82), 0.12)
+    C['deck'] = mat('deck', (0.86, 0.86, 0.82), 0.12, zone=4)       # the side decks, the trunk top and the foredeck: paint zone 4
+    C['lampR'] = mat('lampR', (0.85, 0.08, 0.06), 0.7); C['lampG'] = mat('lampG', (0.08, 0.75, 0.30), 0.7); C['lampW'] = mat('lampW', (0.95, 0.93, 0.85), 0.7)
     C['sole'] = mat('sole', (0.6, 0.44, 0.27), 0.2)
     C['teak'] = mat('teak', (0.58, 0.38, 0.2), 0.3)
     C['steel'] = mat('steel', (0.78, 0.8, 0.82), 0.85, metal=0.85)
@@ -223,6 +224,30 @@ def decks(fine=True):
     return [A.done(28)], [G.done(28)]
 
 
+# ---------- the lanterns (Sjøveisreglene rules 21–23; docs/batplan.md del 11): the side lights in black housings on the trunk's sides
+# just abaft the forward window post, screened inboard; the stern light on the flag staff ----------
+LAMP_X = 4.70                       # the side lights' station, in the gap between the first and second window
+
+def lamp_z(): return ZCT - 0.17
+
+def lantern_geo(A):
+    z = lamp_z()
+    for side, glass in ((1, 'lampR'), (-1, 'lampG')):                                  # port red, starboard green (y to port)
+        y = side * (cabin_w(LAMP_X) - 0.04 * (z - z_sheer(LAMP_X)) / (ZCT - z_sheer(LAMP_X)))   # on the leaning face of the trunk
+        abox(A, LAMP_X - 0.05, LAMP_X + 0.05, min(y, y + side * 0.07), max(y, y + side * 0.07), z - 0.07, z + 0.07, C["black"])       # the housing
+        abox(A, LAMP_X - 0.05, LAMP_X + 0.05, min(y + side * 0.07, y + side * 0.085), max(y + side * 0.07, y + side * 0.085), z - 0.045, z + 0.045, C[glass])   # the glass, outboard
+        abox(A, LAMP_X - 0.07, LAMP_X + 0.07, min(y - side * 0.005, y + side * 0.09), max(y - side * 0.005, y + side * 0.09), z + 0.07, z + 0.085, C['black'])   # the cap
+    # the stern light on the flag staff's head, a white lantern in a dark cap
+    sx, sy, zt = -0.08, -0.5, z_sheer(0) + 0.85
+    acyl(A, (sx, sy, zt - 0.1), (sx, sy, zt + 0.02), 0.03, lambda zz: C['lampW'], seg=8)
+    acyl(A, (sx, sy, zt + 0.02), (sx, sy, zt + 0.04), 0.036, lambda zz: C['dark'], seg=8)
+
+def lantern_anchors(G):
+    z = lamp_z(); y = lambda side: side * (cabin_w(LAMP_X) - 0.04 * (z - z_sheer(LAMP_X)) / (ZCT - z_sheer(LAMP_X)) + 0.1)
+    return [[G(3.12, 0, HTZ + 1.1), [1, 0.95, 0.85], 'allround'], [G(LAMP_X, y(1), z), [1, 0.12, 0.1], 'port'], [G(LAMP_X, y(-1), z), [0.1, 1, 0.35], 'stbd'],
+            [G(-0.08, -0.5, z_sheer(0) + 0.81), [1, 0.95, 0.85], 'stern']]
+
+
 # ---------- the windscreen and the hard top over the helm ----------
 WSX, WSZ = 3.95, ZCT + 0.04         # the windscreen's foot, on the trunk top
 HT0, HT1, HTZ = 2.25, 3.55, 3.36    # the hard top from aft to forward, its underside
@@ -271,8 +296,10 @@ def helm(fine=True):
     # the mast on the hard top with its cross-tree and the masthead light, the VHF whip
     acyl(A, (3.2, 0.0, HTZ + 0.1), (3.12, 0.0, HTZ + 1.05), 0.03, lambda z: w, seg=8)
     abox(A, 3.11, 3.19, -0.22, 0.22, HTZ + 0.72, HTZ + 0.75, w)
-    acyl(A, (3.12, 0.0, HTZ + 1.05), (3.12, 0.0, HTZ + 1.13), 0.035, lambda z: w, seg=8)
+    acyl(A, (3.12, 0.0, HTZ + 1.05), (3.12, 0.0, HTZ + 1.13), 0.035, lambda z: C['lampW'], seg=8)      # the all-round white light (rule 23 d, under 12 m)
+    acyl(A, (3.12, 0.0, HTZ + 1.13), (3.12, 0.0, HTZ + 1.15), 0.04, lambda z: C['dark'], seg=8)
     acyl(A, (2.45, -0.8, HTZ + 0.1), (2.45, -0.8, HTZ + 1.6), 0.01, lambda z: w, seg=4)
+    lantern_geo(A)
     out = [A.done(30)]
     if fine: out.append(torus('wheel', (3.38, -0.62, zb + 0.66), (1, 0, 0.45), 0.17, 0.016, C['steel'], seg=18, rseg=6))
     return out, [G.done(30)]
@@ -346,13 +373,30 @@ def build(fine=True):
 def to_game(p): return (-p[1], p[2] - WL, -(p[0] - XM))
 def to_game_n(n): return (-n[1], n[2], -n[0])
 
+def name_strips(G):
+    """where the name is written (vessel3d.js nameStrips): a strip on each bow under the band, a hand aft of the stem, and one across the
+    transom over the boot top (the name and home port belong on the stern as well; the game writes the name there)"""
+    out = []; zt = lambda x: z_sheer(x) - BAND[0] - 0.08
+    for sg, xs in ((1, [6.35 - 1.05 * k / 12 for k in range(13)]), (-1, [5.3 + 1.05 * k / 12 for k in range(13)])):
+        B = []; T = []
+        for x in xs:
+            for arr, dz in ((B, 0.27), (T, 0.0)):
+                z = zt(x) - dz; arr.append(G(x, sg * (y_at(x, z) + 0.03), z))
+        out.append([B, T])
+    # the transom: from starboard to port seen from astern, on the flat of the transom under the band
+    zb, zt0 = z_sheer(XA) - 0.62, z_sheer(XA) - 0.36; ys = [0.62 - 1.24 * k / 12 for k in range(13)]      # port to starboard: left to right seen from astern
+    out.append([[G(XA - 0.02, y, zb) for y in ys], [G(XA - 0.02, y, zt0) for y in ys]])
+    return out
+
 def anchors():
     G = lambda x, y, z: [round(v, 3) for v in to_game((x, y, z))]
     hx = 2.0; hy = -(deck_edge(hx) - 0.12); zb = z_sheer(3.5)
     return {'eye': G(3.0, -0.62, zb + 1.22), 'skipperAt': G(3.0, -0.62, zb), 'hp': -0.1, 'fov': 62,
             'crewSpots': [G(1.6, -0.75, ZC) + [1.57], G(1.0, 0.6, ZC) + [0.0], G(0.6, -0.4, ZC) + [3.14]],
-            'lights': [[G(3.12, 0, HTZ + 1.13), [1, 0.95, 0.85]], [G(4.1, cabin_w(4.1) + 0.01, ZCT - 0.05), [1, 0.12, 0.1]], [G(4.1, -cabin_w(4.1) - 0.01, ZCT - 0.05), [0.1, 1, 0.35]],
-                       [G(-0.08, -0.5, z_sheer(0) + 0.85), [1, 0.95, 0.85]]],
+            'lights': lantern_anchors(G),
+            # the companionway door in the trunk's aft end (the real door into the cabin), its sill on the bridge deck; the crew go in here
+            'doors': [{'at': G(3.75, 0.33, z_sheer(3.75)), 'w': 0.55, 'h': round(ZCT - 0.04 - z_sheer(3.75), 2), 'in': G(4.4, 0.33, z_sheer(3.75) - 0.4), 'to': 'cabin'}],
+            'names': name_strips(G),
             # the open cockpit aft: the hauler on the starboard coaming, the gear in the cockpit
             'deck': {'y': round(ZC - WL, 3), 'z': round(-(1.4 - XM), 3)}, 'gw': round(z_sheer(1.5) - WL, 3),
             'stern': round(XM - XA, 3), 'bow': round(-(XF - XM), 3), 'side': HB, 'beam': 2.7, 'pl': 2.6, 'rl': 1.2, 'open': True, 'hand': False,

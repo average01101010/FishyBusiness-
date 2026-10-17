@@ -32,6 +32,13 @@ var PAINT = (() => {
   const price = b => Math.max(1500, Math.round((VESSELS[b.type].price || 0) * 0.01 / 100) * 100);
   const cur = b => (b.liv && b.liv.hull) || 'orig';
   const curD = (b, k) => (b.liv && b.liv.d && b.liv.d[k]) || null;
+  // the superstructure (paint zone 3) and the decks (zone 4) on the models that have them (the Blender round; Jonas 17.10.2026):
+  // b.liv.house and b.liv.deck, each painted for the same price as the hull, and shared with the paint (vessel3d.js livStr 'o:', 'd:')
+  const ZONES = [['house', 3, 'Overbygg', 'Superstructure', 'Styrhuset, kahytten og overbygget.', 'The wheelhouse, the cabin and the superstructure.'],
+    ['deck', 4, 'Dekk', 'Deck', 'Dekket, rufftaket og lukene.', 'The deck, the trunk top and the hatches.']];
+  const zoneOk = (b, k) => { const z = ZONES.find(q => q[0] === k); return !!(z && typeof glbZones === 'function' && glbZones(b.type)[z[1]]); };
+  const curZ = (b, k) => (b.liv && b.liv[k]) || 'orig';
+  const zoneCost = b => ZONES.filter(z => zoneOk(b, z[0]) && (pre[z[0]] || 'orig') !== curZ(b, z[0])).length * price(b);
   const owned = k => !!((S.cos && S.cos[k]) || (typeof CLOUD !== 'undefined' && (CLOUD.owned || []).includes('des_' + k)));
   const css = e => e && e[3] ? 'rgb(' + e[3].map(v => Math.round(v * 255)).join(',') + ')' : '';
   const copy = x => { const o = JSON.parse(JSON.stringify(x || {})); o.d = o.d || {}; return o; };
@@ -49,7 +56,7 @@ var PAINT = (() => {
     if (b.status !== 'port') return '<div class="ph-c"><p class="ph-note">' + L('Båten må ligge i havn for å males.', 'The boat must be in port to be painted.') + '</p></div>';
     const c = cur(b), s = pre.hull || 'orig', e = HULLPAL.find(x => x[0] === s) || HULLPAL[0], free = !(b.liv && b.liv.hull), pr = price(b);
     const fCh = flagCh(b, pre) && flagOk(pre), lgCh = pre.logo !== undefined && owned('logo') && logoStr(pre.logo) !== logoStr(S.logo);
-    const hullCh = s !== c, dCh = DESIGNS.some(k => owned(k) && (pre.d[k] || null) !== curD(b, k)) || fCh || lgCh, cost = hullCh && !free && e[4] !== 'ach' ? pr : 0, short = cost > S.cash;
+    const hullCh = s !== c, zc = zoneCost(b), zCh = zc > 0, dCh = DESIGNS.some(k => owned(k) && (pre.d[k] || null) !== curD(b, k)) || fCh || lgCh, cost = (hullCh && !free && e[4] !== 'ach' ? pr : 0) + zc, short = cost > S.cash;
     const tried = DESIGNS.filter(k => !owned(k) && pre.d[k] && designFits(b.type, k)).concat(!flagOk(pre) ? ['flagg'] : []).concat(!owned('logo') && pre.logo ? ['logo'] : []);
     const h = ['<div class="ph-c"><div class="ph-card"><h4>' + L('Skrogfarge', 'Hull colour') + '</h4>' +
       '<p class="ph-note">' + L('Trykk på en farge, så vises den på skroget. Du betaler først når du maler.', 'Tap a colour and it shows on the hull. You pay only when you paint.') + '</p>' +
@@ -57,6 +64,10 @@ var PAINT = (() => {
       '<p class="pnt-name"><b>' + L(e[1], e[2]) + '</b>' + (s === c ? ' · ' + L('nå', 'now') : '') + '</p>' +
       '<p class="ph-note">' + (free ? L('Første fargevalg på denne båten er gratis.', 'The first choice of colour on this boat is free.') :
         L('Å male skroget koster ' + kr(pr) + ' for ' + (S.boatName || 'båten') + '.', 'Painting the hull costs ' + kr(pr) + ' for ' + (S.boatName || 'the boat') + '.')) + '</p></div>'];
+    // the superstructure and the decks, where the model has them: a palette each, the same price as the hull
+    for (const z of ZONES){ if (!zoneOk(b, z[0])) continue; const v = pre[z[0]] || 'orig', now = curZ(b, z[0]), ez = HULLPAL.find(x => x[0] === v) || HULLPAL[0];
+      h.push('<div class="ph-card"><h4>' + L(z[2], z[3]) + '</h4><p class="ph-note">' + L(z[4], z[5]) + '</p><div class="pnt-pal">' + HULLPAL.filter(palOk).map(x => sw('pntz', z[0], x[0], v, now, x)).join('') + '</div>' +
+        '<p class="pnt-name"><b>' + L(ez[1], ez[2]) + '</b> · ' + (v === now ? L('nå', 'now') : kr(pr)) + '</p></div>'); }
     // the designs this boat can wear
     const ks = DESIGNS.filter(k => designFits(b.type, k));
     if (ks.length){
@@ -96,7 +107,7 @@ var PAINT = (() => {
         (!has && lg ? '<button class="ph-btn" data-pa="pntbuy" data-d="logo">' + shopLabel(nok('logo')) + '</button>' + shopFine() : '') + '</div>'); }
     h.push('<div class="ph-card pnt-go">' + (tried.length ? '<p class="ph-note">' + L('Du prøver ' + tried.map(k => DNAME[k][0].toLowerCase()).join(' og ') + '. Kjøp designet for å beholde det.',
         'You are trying ' + tried.map(k => DNAME[k][1].toLowerCase()).join(' and ') + '. Buy the design to keep it.') + '</p>' : '') +
-      '<button class="ph-btn" data-pa="pntgo"' + (!hullCh && !dCh || short ? ' disabled' : '') + '>' + (hullCh ? L('Mal skroget', 'Paint the hull') + ' · ' + (free ? L('gratis', 'free') : kr(cost)) :
+      '<button class="ph-btn" data-pa="pntgo"' + (!hullCh && !zCh && !dCh || short ? ' disabled' : '') + '>' + (hullCh || zCh ? L(zCh ? 'Mal båten' : 'Mal skroget', zCh ? 'Paint the boat' : 'Paint the hull') + ' · ' + (cost ? kr(cost) : L('gratis', 'free')) :
         dCh ? L('Bruk designet', 'Use the design') : L('Båten har denne malingen', 'The boat has this paint')) + '</button>' +
       (short ? '<p class="ph-note r2">' + L('Du har ikke nok penger.', 'You do not have enough money.') + '</p>' : '') + '</div></div>');
     return h.join('');
@@ -105,6 +116,7 @@ var PAINT = (() => {
   function apply(b){
     const s = pre.hull || 'orig', d = {}; for (const k of DESIGNS) if (owned(k) && pre.d[k] && designFits(b.type, k)) d[k] = pre.d[k];
     const liv = {}; if (s !== cur(b) || (b.liv && b.liv.hull)) liv.hull = s; if (Object.keys(d).length) liv.d = d;
+    for (const z of ZONES){ const v = pre[z[0]]; if (zoneOk(b, z[0]) && v && v !== 'orig' && palRGB(v)) liv[z[0]] = v; }
     const f = flagOf(flagOk(pre) ? pre : b.liv); if (f.code !== 'NO' || f.shape !== 'rekt') liv.flag = {c:f.code, s:f.shape};
     if (pre.logo !== undefined && owned('logo')) logoSet(pre.logo);
     if (Object.keys(liv).length) b.liv = liv; else delete b.liv;
@@ -112,6 +124,7 @@ var PAINT = (() => {
   function act(a, d){
     const b = S.boat; if (!pre) pre = copy(b.liv);
     if (a === 'pntsel'){ if (!HULLPAL.some(x => x[0] === d.k && palOk(x))) return false; pre.hull = d.k; PAINTPRE = pre; return true; }
+    if (a === 'pntz'){ if (!zoneOk(b, d.d) || !HULLPAL.some(x => x[0] === d.k && palOk(x))) return false; if (d.k === 'orig') delete pre[d.d]; else pre[d.d] = d.k; PAINTPRE = pre; return true; }
     if (a === 'pntd'){ const k = d.d; if (!DESIGNS.includes(k)) return false;
       if (!d.k) delete pre.d[k]; else if (k === 'lakk') pre.d[k] = 1; else if (HULLPAL.some(x => x[0] === d.k && x[3])) pre.d[k] = d.k; else return false;
       PAINTPRE = pre; return true; }
@@ -134,12 +147,13 @@ var PAINT = (() => {
       payBuy('des_' + k, () => { giveCos(k); const was = pre; pre = copy(S.boat.liv); if (k === 'logo' && was && flagOf(was).code === 'LOGO') pre.flag = was.flag; PAINTPRE = pre; if (typeof DOCK !== 'undefined'){ DOCK.render(); DOCK.redraw(); } });
       return true; }
     if (a === 'pntgo'){
-      if (b.status !== 'port') return false; const s = pre.hull || 'orig', free = !(b.liv && b.liv.hull) || (HULLPAL.find(x => x[0] === s) || [])[4] === 'ach', cost = s !== cur(b) && !free ? price(b) : 0; if (cost > S.cash) return false;
+      if (b.status !== 'port') return false; const s = pre.hull || 'orig', free = !(b.liv && b.liv.hull) || (HULLPAL.find(x => x[0] === s) || [])[4] === 'ach', zc = zoneCost(b), cost = (s !== cur(b) && !free ? price(b) : 0) + zc; if (cost > S.cash) return false;
       const was = cur(b); if (cost){ S.cash -= cost; S.stats.costs += cost; }
       apply(b); pre = copy(b.liv); PAINTPRE = pre;
       if (s !== was){ const e = HULLPAL.find(x => x[0] === s);
         log((S.boatName || 'Båten') + ' er malt ' + (s === 'orig' ? 'tilbake i originalfargen' : e[1].toLowerCase()) + (cost ? ' for ' + fmt(cost) + ' kr' : '') + '.',
           (S.boatName || 'The boat') + ' is painted ' + (s === 'orig' ? 'back in her original colour' : e[2].toLowerCase()) + (cost ? ' for NOK ' + fmt(cost) : '') + '.'); }
+      else if (zc) log((S.boatName || 'Båten') + ' er malt' + (cost ? ' for ' + fmt(cost) + ' kr' : '') + '.', (S.boatName || 'The boat') + ' is painted' + (cost ? ' for NOK ' + fmt(cost) : '') + '.');
       else log((S.boatName || 'Båten') + ' har fått ny maling.', (S.boatName || 'The boat') + ' has new paint.');
       return true;
     }
