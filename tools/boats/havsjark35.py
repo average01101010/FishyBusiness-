@@ -123,12 +123,12 @@ def colours():
     C['hull'] = mat('hull', (0.90, 0.91, 0.90), 0.6, zone=1)
     C['stripe'] = mat('stripe', (0.60, 0.07, 0.06), 0.55, zone=2)
     C['cap'] = mat('cap', (0.46, 0.07, 0.06), 0.5)
-    C['white'] = mat('white', (0.92, 0.93, 0.92), 0.5)
+    C['white'] = mat('house', (0.92, 0.93, 0.92), 0.5, zone=3)     # the wheelhouse, the gear room and the bulwarks' white: paint zone 3 (B14)
     C['inner'] = mat('inner', (0.85, 0.86, 0.85), 0.3)
-    C['deck'] = mat('deck', (0.42, 0.47, 0.43), 0.12)
-    C['roof'] = mat('roof', (0.80, 0.82, 0.81), 0.3)
+    C['deck'] = mat('deck', (0.42, 0.47, 0.43), 0.12, zone=4)
+    C['roof'] = mat('roof', (0.80, 0.82, 0.81), 0.3, zone=3)
     C['steel'] = mat('steel', (0.74, 0.76, 0.78), 0.85, metal=0.8)
-    C['mast'] = mat('mast', (0.88, 0.89, 0.88), 0.55)
+    C['mast'] = mat('mast', (0.88, 0.89, 0.88), 0.55, zone=3)
     C['dark'] = mat('dark', (0.10, 0.11, 0.12), 0.25)
     C['frame'] = mat('frame', (0.07, 0.07, 0.08), 0.45)
     C['glass'] = mat('glass', (0.05, 0.08, 0.11), 0.95)
@@ -508,9 +508,9 @@ def rig(fine=True):
         objs.append(cyl('astay%d' % sg, (ax, 0, 5.96), (3.70, sg * (y_at(3.7, z_cap(3.7, sg), sg) - 0.05), z_cap(3.7, sg)), 0.008, C['dark'], 4))
     objs.append(box('sternlight', ax + 0.06, ax + 0.16, -0.05, 0.05, 4.10, 4.22, C['lwhite']))
     # the forward mast: lantern arms, the aerial bar and crosstree, a whip on top, stays, the derrick and its winch
-    for z in (8.23, 6.82):
+    for z, m in ((8.23, C['lred']), (6.82, C['lwhite'])):                                                   # the fishing lights, red over white (B8)
         objs.append(box('larm%d' % int(z * 10), fx, fx + 0.48, fy - 0.025, fy + 0.025, z - 0.025, z + 0.025, C['mast']))
-        objs.append(box('lantern%d' % int(z * 10), fx + 0.42, fx + 0.56, fy - 0.06, fy + 0.06, z - 0.20, z + 0.20, C['lwhite'], 0.01))
+        objs.append(box('lantern%d' % int(z * 10), fx + 0.42, fx + 0.56, fy - 0.06, fy + 0.06, z - 0.20, z + 0.20, m, 0.01))
     objs.append(box('aerial_bar', fx - 0.10, fx + 0.95, fy - 0.03, fy + 0.03, 6.27, 6.33, C['mast']))
     for k, x in enumerate((fx + 0.55, fx + 0.85)): objs.append(cyl('whip%d' % k, (x, fy, 6.33), (x, fy, 7.30 - 0.2 * k), 0.010, C['white'], 6))
     objs.append(box('crosstree', fx - 0.03, fx + 0.03, fy - 0.45, fy + 0.45, 6.20, 6.26, C['mast']))
@@ -568,14 +568,28 @@ def build(fine=True):
 def to_game(p): return (-p[1], p[2] - WL, -(p[0] - XM))
 def to_game_n(n): return (-n[1], n[2], -n[0])
 
+def name_strips(G):
+    """where the name is written (B12): on the white topsides forward over the rubbing strake, both sides, and across the transom"""
+    out = []
+    for sg, xs in ((1, [8.9 - 1.2 * k / 12 for k in range(13)]), (-1, [7.7 + 1.2 * k / 12 for k in range(13)])):
+        B = []; T = []
+        for x in xs:
+            for arr, dz in ((B, 0.22), (T, 0.56)): z = z_rub(x) + dz; arr.append(G(x, sg * (y_at(x, z, sg) + 0.03), z))
+        out.append([B, T])
+    w = y_at(0.0, 1.4) * 0.78; ys = [w - 2 * w * k / 12 for k in range(13)]        # port to starboard: left to right seen from astern
+    out.append([[G(x_t(1.25) - 0.025, y, 1.25) for y in ys], [G(x_t(1.55) - 0.025, y, 1.55) for y in ys]])
+    return out
+
 def anchors():
     G = lambda x, y, z: [round(v, 3) for v in to_game((x, y, z))]
     zd = z_deck(3.0)
     return {'eye': G(6.85, -0.40, 2.62), 'skipperAt': G(6.62, -0.40, WH_FLOOR), 'hp': -0.06, 'fov': 58,
             'crewSpots': [G(4.15, -1.10, z_deck(4.15) + 0.04) + [1.57], G(3.25, 1.00, zd + 0.04) + [0.0], G(0.95, 0.30, z_deck(0.95) + 0.04) + [3.14], G(3.10, -1.00, zd + 0.04) + [3.14]],
             'hauler': G(4.51, -1.48, 1.52), 'filler': G(5.55, 1.72, z_deck(5.55) + 0.1), 'pole': G(0.02, 1.55, 2.70),
-            'lights': [[G(FM[0] + 0.49, FM[1], 8.23), [1, 0.95, 0.85]], [G(FM[0] + 0.49, FM[1], 6.82), [1, 0.95, 0.85]], [G(7.50, WH_WF + 0.10, WH_TOP - 0.04), [1, 0.12, 0.1]],
-                       [G(7.50, -WH_WF - 0.10, WH_TOP - 0.04), [0.1, 1, 0.35]], [G(AM[0] + 0.11, 0, 4.16), [1, 0.95, 0.85]], [G(7.51, 0, 3.69), [1, 0.95, 0.85]]],
+            # typed lights (B8): the all-round white on the light mast on the roof (under 12 m), the sides on the wheelhouse front, the stern light on the aft mast
+            'lights': [[G(7.51, 0, 3.69), [1, 0.95, 0.85], 'allround'], [G(7.50, WH_WF + 0.10, WH_TOP - 0.04), [1, 0.12, 0.1], 'port'],
+                       [G(7.50, -WH_WF - 0.10, WH_TOP - 0.04), [0.1, 1, 0.35], 'stbd'], [G(AM[0] + 0.11, 0, 4.16), [1, 0.95, 0.85], 'stern']],
+            'names': name_strips(G),
             'deck': {'y': round(zd - WL, 3), 'z': round(-(3.0 - XM), 3)}, 'gw': round(z_cap(4.5, -1) - WL, 3),
             'stern': round(XM + 0.2, 3), 'bow': round(-(10.3 - XM), 3), 'side': 1.9, 'beam': 4.1, 'pl': 4.2, 'rl': 1.56, 'open': False, 'hand': False}
 
@@ -601,7 +615,8 @@ def check_overlay():
 
 
 SHOTS = [('bow3q', (16.5, -11.5, 4.2), (5.0, 0, 2.2), 35), ('stern3q', (-8.0, 10.5, 5.2), (4.0, 0, 2.2), 35), ('side', (5.0, -21, 1.6), (5.0, 0, 2.6), 35),
-         ('above', (13.0, -9.0, 13.0), (5.0, 0, 1.5), 35), ('deck', (0.6, -4.2, 4.6), (5.0, 0.4, 1.6), 24)]
+         ('above', (13.0, -9.0, 13.0), (5.0, 0, 1.5), 35), ('deck', (0.6, -4.2, 4.6), (5.0, 0.4, 1.6), 24),
+         ('stern', (-14.0, 0.5, 3.6), (4.0, 0, 2.2), 30), ('helm', (13.0, -5.0, 4.2), (6.8, -0.3, 2.6), 32)]
 
 def main():
     os.makedirs(OUT, exist_ok=True)
