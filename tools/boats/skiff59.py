@@ -383,7 +383,8 @@ def anchors():
           'skipper': G(1.55, 0.0, Z_SOLE), 'seat': G(0.95, 0.55, 0.96 - 0.46), 'filler': G(0.95, -(hbs(0.95) - 0.10), zs(0.95) + 0.02), 'names': names}
     return {'eye': G(1.62, 0.0, Z_SOLE + 1.62), 'skipperAt': G(1.55, 0.0, Z_SOLE), 'hp': -0.3, 'fov': 62,
             'crewSpots': [G(0.95, 0.55, 0.96 - 0.46) + [0.0]], 'hauler': sk['haul'], 'filler': sk['filler'], 'pole': G(0.85, 1.05, 2.03),
-            'lights': [[G(5.42, 0.40, zs(5.4) + 0.04), [1, 0.12, 0.1]], [G(5.42, -0.40, zs(5.4) + 0.04), [0.1, 1, 0.35]], [G(0.85, 1.05, 2.03), [1, 0.95, 0.85]]],
+            # typed lights (B8, rule 23 under 7 m): the sides on the bow deck, the all-round white on its pole at the port quarter
+            'lights': [[G(5.42, 0.40, zs(5.4) + 0.04), [1, 0.12, 0.1], 'port'], [G(5.42, -0.40, zs(5.4) + 0.04), [0.1, 1, 0.35], 'stbd'], [G(0.85, 1.05, 2.03), [1, 0.95, 0.85], 'allround']],
             'deck': {'y': sole, 'z': round(-(1.2 - XM), 3)}, 'gw': round(gwz(3.0), 3), 'stern': round(XM + 0.1, 3), 'bow': -2.2, 'side': 0.83,
             'beam': 2.45, 'pl': 2.4, 'rl': 1.0, 'open': True, 'hand': True, 'skiff': sk,
             'work': {'table': G(1.50, 0.72, Z_SOLE), 'tub': G(1.45, -0.62, Z_SOLE), 's': 0.75}}
