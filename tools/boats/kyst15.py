@@ -90,10 +90,13 @@ C = {}
 def colours():
     C['af'] = mat('antifouling', (0.07, 0.07, 0.075), 0.15)
     C['hull'] = mat('k15red', (0.72, 0.05, 0.04), 0.6, zone=1)
-    C['white'] = mat('white', (0.92, 0.92, 0.90), 0.5)
+    C['white'] = mat('house', (0.92, 0.92, 0.90), 0.5, zone=3)      # the white upper works, the shelter and the wheelhouse: paint zone 3
+    C['strake'] = mat('strake', (0.92, 0.92, 0.90), 0.5, zone=2)    # the boot top and the rubbing strake: zone 2 (the stripe)
     C['inner'] = mat('inner', (0.82, 0.82, 0.80), 0.3)
-    C['deck'] = mat('deck', (0.42, 0.44, 0.44), 0.12)
-    C['roof'] = mat('roof', (0.80, 0.80, 0.78), 0.3)
+    C['deck'] = mat('deck', (0.42, 0.44, 0.44), 0.12, zone=4)
+    C['roof'] = mat('roof', (0.80, 0.80, 0.78), 0.3, zone=3)
+    C['lampR'] = mat('lampR', (0.85, 0.08, 0.06), 0.7); C['lampG'] = mat('lampG', (0.08, 0.75, 0.30), 0.7); C['lampW'] = mat('lampW', (0.95, 0.93, 0.85), 0.7)
+    C['seat'] = mat('seat', (0.16, 0.17, 0.20), 0.3); C['screen'] = mat('screen', (0.06, 0.10, 0.14), 0.8)
     C['steel'] = mat('steel', (0.66, 0.68, 0.70), 0.75, metal=0.7)
     C['dark'] = mat('dark', (0.12, 0.13, 0.14), 0.25)
     C['black'] = mat('black', (0.05, 0.05, 0.06), 0.35)
@@ -123,7 +126,7 @@ def hull_rows(sg, fine=True):
 
 def band_of(j, fine):
     n = NB(fine); k = 0
-    for m, c in zip(n, ('af', 'white', 'hull', 'white', 'hull', 'white')):
+    for m, c in zip(n, ('af', 'strake', 'hull', 'strake', 'hull', 'white')):
         k += m
         if j < k: return C[c]
     return C['white']
@@ -141,13 +144,36 @@ def build_hull(fine=True):
 
 
 # ---------- the shelter deck and foredeck, the open hauling station, the rails ----------
+SW0, SW1, SWY0, SWY1 = 5.0, 7.0, -1.6, -0.95      # the stairwell in the shelter deck over the hauling station's companion ladder
+TABLE = (5.8, 6.6, -2.8, -2.2)                  # the gutting table in the hauling station, by the bulwark
+
+def door(A, axis, at, u0, u1, z0, h, face=1, hinge=1):
+    """a door in a wall (B4): the plane axis = at ('x' or 'y'), the opening from u0 to u1 along the other axis, the sill at z0, h tall;
+    the leaf stands out on the side face (+1/-1 along the axis) and hangs on the jamb at the hinge end (+1 the high end of u). A frame
+    with jambs and a head, a steel sill, a porthole and a handle; the leaf is part of the house, the anchor carries the hinge."""
+    w = C['white']; lo, hi = min(u0, u1), max(u0, u1); f = face
+    def B(a0, a1, u_0, u_1, z_0, z_1, m):       # a box across the wall plane from a0 to a1 (along the axis), u_0..u_1 along the other
+        if axis == 'x': abox(A, min(a0, a1), max(a0, a1), u_0, u_1, z_0, z_1, m)
+        else: abox(A, u_0, u_1, min(a0, a1), max(a0, a1), z_0, z_1, m)
+    B(at - 0.02 * f, at + 0.06 * f, lo - 0.05, lo, z0, z0 + h + 0.08, w); B(at - 0.02 * f, at + 0.06 * f, hi, hi + 0.05, z0, z0 + h + 0.08, w)
+    B(at - 0.02 * f, at + 0.06 * f, lo - 0.05, hi + 0.05, z0 + h, z0 + h + 0.08, w)
+    B(at - 0.02 * f, at + 0.07 * f, lo - 0.05, hi + 0.05, z0, z0 + 0.12, C['steel'])
+    B(at + 0.005 * f, at + 0.045 * f, lo + 0.01, hi - 0.01, z0 + 0.12, z0 + h - 0.01, w)
+    cu = (lo + hi) / 2; B(at + 0.045 * f, at + 0.055 * f, cu - 0.16, cu + 0.16, z0 + 1.13, z0 + 1.52, C['dark'])
+    B(at + 0.055 * f, at + 0.06 * f, cu - 0.13, cu + 0.13, z0 + 1.16, z0 + 1.49, C['glass'])
+    hu = lo + 0.12 if hinge > 0 else hi - 0.12
+    B(at + 0.06 * f, at + 0.09 * f, hu - 0.012, hu + 0.012, z0 + 1.0, z0 + 1.12, C['steel'])
+
 def decks(fine=True):
     A = Acc('decks'); step = 0.4 if fine else 1.5
-    xs = sorted(set([XA + 0.05] + [XA + 0.3 + step * k for k in range(int(XF / step) + 2) if XA + 0.3 + step * k < XF - 0.3] + [XF - 0.3]))
+    xs = sorted(set([XA + 0.05, SW0, SW1] + [XA + 0.3 + step * k for k in range(int(XF / step) + 2) if XA + 0.3 + step * k < XF - 0.3] + [XF - 0.3]))
     for x0, x1 in zip(xs, xs[1:]):
         ya, yb = hbz(x0, ZSD) - 0.05, hbz(x1, ZSD) - 0.05
         ta, tb = z_top(x0), z_top(x1); ea, eb = hbz(x0, ta), hbz(x1, tb)
-        A.poly([(x0, -ya, ZSD), (x1, -yb, ZSD), (x1, yb, ZSD), (x0, ya, ZSD)], C['deck'], (0, 0, 1))
+        if x0 >= SW0 - 1e-6 and x1 <= SW1 + 1e-6:        # the stairwell: the deck in two parts either side of the opening
+            A.poly([(x0, -ya, ZSD), (x1, -yb, ZSD), (x1, SWY0, ZSD), (x0, SWY0, ZSD)], C['deck'], (0, 0, 1))
+            A.poly([(x0, SWY1, ZSD), (x1, SWY1, ZSD), (x1, yb, ZSD), (x0, ya, ZSD)], C['deck'], (0, 0, 1))
+        else: A.poly([(x0, -ya, ZSD), (x1, -yb, ZSD), (x1, yb, ZSD), (x0, ya, ZSD)], C['deck'], (0, 0, 1))
         for sg in (1, -1):
             A.poly([(x0, sg * ya, ZSD), (x1, sg * yb, ZSD), (x1, sg * (eb - 0.06), tb), (x0, sg * (ea - 0.06), ta)], C['inner'], (0, -sg, 0))
             A.poly([(x0, sg * (ea - 0.06), ta), (x1, sg * (eb - 0.06), tb), (x1, sg * eb, tb + 0.01), (x0, sg * ea, ta + 0.01)], C['white'], (0, 0, 1))
@@ -161,9 +187,20 @@ def decks(fine=True):
         A.poly([(xa, -ya, ZMD), (xb, -yb, ZMD), (xb, -YB, ZMD), (xa, -YB, ZMD)], C['deck'], (0, 0, 1))
         A.poly([(xa, -ya, ZMD), (xb, -yb, ZMD), (xb, -rb, zr), (xa, -ra, zr)], C['inner'], (0, 1, 0))
         A.poly([(xa, -ra, zr), (xb, -rb, zr), (xb, -(rb + 0.05), zr), (xa, -(ra + 0.05), zr)], C['white'], (0, 0, 1))
-        A.poly([(xa, -(hbz(xa, ZSD) - 0.02), ZSD - 0.03), (xb, -(hbz(xb, ZSD) - 0.02), ZSD - 0.03), (xb, -YB, ZSD - 0.03), (xa, -YB, ZSD - 0.03)], C['white'], (0, 0, -1))
+        yi = SWY0 if SW0 - 1e-6 <= xa and xb <= SW1 + 1e-6 else -YB       # the ceiling stops at the stairwell
+        A.poly([(xa, -(hbz(xa, ZSD) - 0.02), ZSD - 0.03), (xb, -(hbz(xb, ZSD) - 0.02), ZSD - 0.03), (xb, yi, ZSD - 0.03), (xa, yi, ZSD - 0.03)], C['white'], (0, 0, -1))
     A.poly([(OP0, -YB, ZMD), (OP1, -YB, ZMD), (OP1, -YB, ZSD), (OP0, -YB, ZSD)], C['inner'], (0, -1, 0))
-    A.poly([(OP1 - 1.2, -YB - 0.01, ZMD), (OP1 - 0.4, -YB - 0.01, ZMD), (OP1 - 0.4, -YB - 0.01, ZMD + 1.9), (OP1 - 1.2, -YB - 0.01, ZMD + 1.9)], C['wood'], (0, -1, 0))
+    # the companion ladder from the hauling station up to the shelter deck, along the inboard wall, and the coaming round its well
+    n = 9; run = (SW1 - 0.05 - (SW0 + 0.05)) / n; rise = (ZSD - ZMD) / n      # 24 cm risers: under the deck map's body band (DM_BODY 0.25), so each step is a floor the crew can take
+    for k in range(n): abox(A, SW0 + 0.05 + run * k, SW0 + 0.05 + run * (k + 1), SWY0 + 0.05, SWY1 - 0.05, ZMD, ZMD + rise * (k + 1), C['deck'])
+    abox(A, SW0 + 0.05, SW1 - 0.05, SWY0 + 0.05, SWY0 + 0.09, ZMD, ZSD, C['inner'])                      # the ladder's outboard cheek
+    abox(A, SW0 - 0.06, SW1 + 0.06, SWY0 - 0.06, SWY0, ZSD, ZSD + 0.28, C['white']); abox(A, SW0 - 0.06, SW0, SWY0 - 0.06, SWY1 + 0.06, ZSD, ZSD + 0.28, C['white'])
+    abox(A, SW0 - 0.06, SW1 + 0.06, SWY1, SWY1 + 0.06, ZSD, ZSD + 0.28, C['white'])
+    for x in (SW0, SW1): acyl(A, (x, SWY0 - 0.03, ZSD + 0.28), (x, SWY0 - 0.03, ZSD + 1.0), 0.02, lambda z: C['steel'], seg=5)
+    acyl(A, (SW0, SWY0 - 0.03, ZSD + 1.0), (SW1, SWY0 - 0.03, ZSD + 1.0), 0.02, lambda z: C['steel'], seg=5, cap=False)
+    # the doors of the hauling station (B4): into the enclosed deck through the inboard wall forward of the ladder, and through the aft wall
+    door(A, 'y', -YB, SW1 + 0.1, SW1 + 0.8, ZMD, 1.9, face=-1, hinge=+1)
+    door(A, 'x', OP0, -2.3, -1.6, ZMD, 1.9, face=+1, hinge=-1)
     for x, s_ in ((OP0, 1), (OP1, -1)):
         zs = [ZMD + (ZSD - ZMD) * k / 6 for k in range(7)]
         A.poly([(x, -YB, ZMD)] + [(x, -(hbz(x, z) - 0.02), z) for z in zs] + [(x, -YB, ZSD)], C['inner'], (s_, 0, 0))
@@ -233,7 +270,41 @@ def gear(fine=True):
         if fine: acyl(A, (a[0], a[1], WR + 0.95), (b[0], b[1], WR + 0.95), 0.022, lambda z: w, seg=5, cap=False)
     if fine:
         for x, y in ro: acyl(A, (x, y, WR + 0.18), (x, y, WR + 0.95), 0.022, lambda z: w, seg=5)
-    for sg in (1, -1): abox(A, 11.6, 12.0, sg * (WY + 0.2) - 0.07, sg * (WY + 0.2) + 0.07, WR - 0.3, WR - 0.08, C['dark'])
+    for sg in (1, -1):
+        abox(A, 11.6, 12.0, sg * (WY + 0.2) - 0.07, sg * (WY + 0.2) + 0.07, WR - 0.3, WR - 0.08, C['dark'])                               # the side lights' housings
+        y0 = sg * (WY + 0.27); abox(A, 11.64, 11.96, min(y0, y0 + sg * 0.015), max(y0, y0 + sg * 0.015), WR - 0.27, WR - 0.11, C['lampR' if sg > 0 else 'lampG'])
+    # the wheelhouse inside (B5): the console under the front windows, three screens, the wheel, the skipper's chair, a bench to port
+    abox(A, 11.75, 12.3, -1.6, 1.6, ZSD, ZSD + 0.95, C['inner'])
+    for y0 in (-1.3, -0.6, 0.4):
+        A.poly([(12.05, y0, ZSD + 1.0), (12.05, y0 + 0.55, ZSD + 1.0), (11.97, y0 + 0.55, ZSD + 1.38), (11.97, y0, ZSD + 1.38)], C['screen'], (-1, 0, 0.25))
+        abox(A, 11.97, 12.07, y0 - 0.02, y0 + 0.57, ZSD + 0.98, ZSD + 1.4, C['dark'])
+    acyl(A, (11.75, -0.6, ZSD + 1.05), (11.6, -0.6, ZSD + 1.12), 0.03, lambda z: C['steel'], seg=6)
+    atorus(A, (11.58, -0.6, ZSD + 1.13), (1, 0, 0.45), 0.2, 0.018, lambda a: C['black'], 16, 6)
+    acyl(A, (11.2, -0.6, ZSD), (11.2, -0.6, ZSD + 0.55), 0.05, lambda z: C['steel'], seg=8)
+    abox(A, 10.98, 11.45, -0.83, -0.37, ZSD + 0.55, ZSD + 0.65, C['seat']); abox(A, 10.93, 11.01, -0.83, -0.37, ZSD + 0.65, ZSD + 1.2, C['seat'])
+    abox(A, 9.2, 10.6, 1.5, 2.1, ZSD + 0.42, ZSD + 0.5, C['seat']); abox(A, 9.2, 10.6, 2.03, 2.1, ZSD + 0.5, ZSD + 0.95, C['seat']); abox(A, 9.2, 10.6, 1.5, 2.1, ZSD, ZSD + 0.42, C['inner'])
+    door(A, 'x', WX0, -1.75, -1.05, ZSD, 1.95, face=-1, hinge=-1)                                   # the wheelhouse door aft to starboard
+    # the masthead lantern on the pole, the fishing lights (red over white) under it; the floodlights on the roof's aft edge
+    acyl(A, (10.6, 0, 12.25), (10.6, 0, 12.42), 0.07, lambda z: C['lampW'], seg=10); acyl(A, (10.6, 0, 12.42), (10.6, 0, 12.46), 0.08, lambda z: C['dark'], seg=10)
+    acyl(A, (10.6, 0, 11.25), (10.6, 0, 11.42), 0.085, lambda z: C['lampR'], seg=10); acyl(A, (10.6, 0, 10.75), (10.6, 0, 10.92), 0.085, lambda z: C['lampW'], seg=10)
+    for sg in (1, -1):
+        abox(A, WX0 - 0.12, WX0 - 0.08, sg * 1.3 - 0.02, sg * 1.3 + 0.02, WR + 0.18, WR + 0.4, C['steel'])
+        abox(A, WX0 - 0.25, WX0 - 0.03, sg * 1.3 - 0.1, sg * 1.3 + 0.1, WR + 0.38, WR + 0.54, C['dark']); abox(A, WX0 - 0.26, WX0 - 0.25, sg * 1.3 - 0.08, sg * 1.3 + 0.08, WR + 0.4, WR + 0.52, C['lampW'])
+    # the exhaust beside the mast tower, the liferaft in its cradle on the roof to starboard
+    acyl(A, (10.25, 0.55, WR + 0.18), (10.25, 0.55, 9.3), 0.09, lambda z: C['black'], seg=8); acyl(A, (10.25, 0.55, 9.3), (10.25, 0.55, 9.4), 0.11, lambda z: C['black'], seg=8)
+    acyl(A, (8.9, -1.3, WR + 0.5), (10.0, -1.3, WR + 0.5), 0.33, lambda z: w, seg=14)
+    for x in (9.1, 9.8): acyl(A, (x - 0.02, -1.3, WR + 0.5), (x + 0.02, -1.3, WR + 0.5), 0.335, lambda z: C['dark'], seg=14); abox(A, x - 0.05, x + 0.05, -1.7, -0.9, WR + 0.18, WR + 0.26, C['steel'])
+    # the flag staff and the stern light at the transom, bollards on the shelter deck's cap, the gutting table in the hauling station
+    zt = z_top(XA); acyl(A, (XA + 0.2, 0, zt - 0.1), (XA + 0.2, 0, zt + 1.5), 0.02, lambda z: w, seg=6); abox(A, XA + 0.15, XA + 0.25, -0.04, 0.04, zt, zt + 0.12, C['steel'])
+    acyl(A, (XA + 0.2, 0.5, zt + 0.1), (XA + 0.2, 0.5, zt + 0.85), 0.015, lambda z: C['steel'], seg=5); acyl(A, (XA + 0.2, 0.5, zt + 0.85), (XA + 0.2, 0.5, zt + 0.97), 0.04, lambda z: C['lampW'], seg=8)
+    acyl(A, (XA + 0.2, 0.5, zt + 0.97), (XA + 0.2, 0.5, zt + 1.0), 0.047, lambda z: C['dark'], seg=8)
+    for x in (0.7, 4.0, 8.2, 13.0):
+        for sg in (1, -1):
+            y = sg * (hbz(x, z_top(x)) - 0.16); acyl(A, (x, y, z_top(x)), (x, y, z_top(x) + 0.3), 0.06, lambda z: C['steel'], seg=8); acyl(A, (x - 0.12, y, z_top(x) + 0.23), (x + 0.12, y, z_top(x) + 0.23), 0.025, lambda z: C['steel'], seg=6)
+    x0, x1, y0, y1 = TABLE; zt2 = ZMD + 0.9
+    abox(A, x0, x1, y0, y1, zt2 - 0.05, zt2, C['steel']); abox(A, x0, x1, y0 - 0.02, y0, zt2 - 0.05, zt2 + 0.12, C['steel'])
+    for x, y in ((x0 + 0.05, y0 + 0.05), (x1 - 0.05, y0 + 0.05), (x0 + 0.05, y1 - 0.05), (x1 - 0.05, y1 - 0.05)): acyl(A, (x, y, ZMD), (x, y, zt2 - 0.05), 0.02, lambda z: C['steel'], seg=5)
+    for k in range(2): abox(A, 1.2, 1.8, -1.3, -0.7, ZSD + 0.3 * k, ZSD + 0.3 * k + 0.28, C['inner'])     # fish boxes on the shelter deck aft
     # the mast on the roof: the tower, the radar bar, a yard with lights, the pole; a GPS dome and the searchlights
     acyl(A, (10.6, 0, WR + 0.18), (10.6, 0, 10.4), 0.16, lambda z: w, seg=10, r1=0.11)
     abox(A, 10.3, 10.9, -0.6, 0.6, 9.15, 9.25, w); abox(A, 10.5, 10.7, -0.08, 0.08, 9.25, 9.45, C['dark']); abox(A, 10.0, 11.2, -0.07, 0.07, 9.45, 9.55, C['dark'])
@@ -273,12 +344,31 @@ def build(fine=True):
 def to_game(p): return (-p[1], p[2] - WL, -(p[0] - XM))
 def to_game_n(n): return (-n[1], n[2], -n[0])
 
+def name_strips(G):
+    """where the name is written (B12): on the white upper works forward over the red, both sides, and across the transom's white"""
+    out = []
+    for sg, xs in ((1, [13.5 - 1.4 * k / 12 for k in range(13)]), (-1, [12.1 + 1.4 * k / 12 for k in range(13)])):
+        B = []; T = []
+        for x in xs:
+            for arr, z in ((B, 5.28), (T, 5.68)): arr.append(G(x, sg * (hbz(x, z) + 0.03), z))
+        out.append([B, T])
+    ys = [1.3 - 2.6 * k / 12 for k in range(13)]      # port to starboard: left to right seen from astern
+    out.append([[G(XA - 0.02, y, 5.0) for y in ys], [G(XA - 0.02, y, 5.4) for y in ys]])
+    return out
+
 def anchors():
     G = lambda x, y, z: [round(v, 3) for v in to_game((x, y, z))]
     return {'eye': G(12.0, -0.6, ZSD + 1.7), 'skipperAt': G(11.7, -0.6, ZSD), 'hp': -0.08, 'fov': 58,
             'crewSpots': [G(5.4, -2.3, ZMD) + [1.57], G(6.9, -2.0, ZMD) + [1.57], G(2.6, 0.0, ZSD) + [3.14], G(13.6, 0.4, ZSD) + [0.0]],
-            'lights': [[G(10.6, 0, 12.4), [1, 0.95, 0.85]], [G(11.8, WY + 0.2, WR - 0.2), [1, 0.12, 0.1]], [G(11.8, -WY - 0.2, WR - 0.2), [0.1, 1, 0.35]],
-                       [G(XA + 0.2, 0, z_top(XA) + 0.9), [1, 0.95, 0.85]], [G(0.55, 0, 12.0), [1, 0.95, 0.85]]],
+            'lights': [[G(10.6, 0, 12.34), [1, 0.95, 0.85], 'masthead'], [G(11.8, WY + 0.3, WR - 0.19), [1, 0.12, 0.1], 'port'], [G(11.8, -WY - 0.3, WR - 0.19), [0.1, 1, 0.35], 'stbd'],
+                       [G(XA + 0.2, 0.5, z_top(XA) + 0.91), [1, 0.95, 0.85], 'stern']],
+            # the doors (B4): the hauling station's door into the enclosed deck, its aft door, and the wheelhouse door aft to starboard
+            'doors': [{'at': G(SW1 + 0.45, -0.92, ZMD), 'w': 0.7, 'h': 1.9, 'in': G(SW1 + 0.45, -0.2, ZMD), 'to': 'deck', 'hinge': 'fwd'},
+                      {'at': G(OP0 + 0.03, -1.95, ZMD), 'w': 0.7, 'h': 1.9, 'in': G(OP0 - 0.8, -1.95, ZMD), 'to': 'deck', 'hinge': 'stbd'},
+                      {'at': G(WX0 - 0.03, -1.4, ZSD), 'w': 0.7, 'h': 1.95, 'in': G(WX0 + 0.8, -1.4, ZSD), 'to': 'helm', 'hinge': 'stbd'}],
+            'names': name_strips(G),
+            'work': {'table': G((TABLE[0] + TABLE[1]) / 2, (TABLE[2] + TABLE[3]) / 2, ZMD), 'tub': G(5.0, -2.55, ZMD), 'own': True, 'top': round(ZMD + 0.9 - WL, 3)},
+            'bunk': G(9.5, 1.0, ZMD + 0.6), 'stairs': [{'from': G(SW0 + 0.1, -1.27, ZMD), 'to': G(SW1 - 0.1, -1.27, ZSD)}],
             # the working deck under the shelter: the gear comes in over the red bulwark through the open hauling station on the starboard side
             'deck': {'y': round(ZMD - WL, 3), 'z': round(-(6.2 - XM), 3)}, 'gw': round(z_red(6.2) - WL, 3),
             'stern': round(XM - XA, 3), 'bow': round(-(XF - XM), 3), 'side': HB, 'beam': 6.6, 'pl': 6.0, 'rl': 2.5, 'open': False, 'hand': False,
@@ -286,7 +376,8 @@ def anchors():
 
 
 SHOTS = [('bow3q', (28.0, -17.0, 6.5), (7.5, 0, 4.5), 35), ('stern3q', (-10.0, -12.0, 8.0), (6.0, 0, 5.0), 35), ('side', (7.5, -31, 5.0), (7.5, 0, 6.0), 35),
-         ('above', (22.0, 14.0, 18.0), (7.5, 0, 4.0), 35), ('haul', (9.0, -8.0, 5.0), (6.0, -2.5, 4.4), 35)]
+         ('above', (22.0, 14.0, 18.0), (7.5, 0, 4.0), 35), ('haul', (9.0, -8.0, 5.0), (6.0, -2.5, 4.4), 35), ('stern', (-20.0, 0.5, 6.0), (5.0, 0, 5.0), 30),
+         ('helm', (20.0, -7.0, 7.5), (11.5, -0.3, 6.6), 30), ('ladder', (3.0, -7.5, 7.0), (6.0, -1.3, 4.8), 40)]
 
 def main():
     os.makedirs(OUT, exist_ok=True)
