@@ -58,6 +58,8 @@ Alt bygges for hele kysten. Hver endring skal kunne leses av i trakten (punkt 9)
 8. **«Kystfiskerpakken»**, ett kjøp (for eksempel 199 kr): alle dagens fargeskjemaer, supportervimpel og navnet ditt på kildesiden. Ingen spillfordeler. Et alternativ til småkjøp for dem som heller betaler én gang.
 9. **Trakten i admin-dashbordet** (bygd 07.10.2026, fanen «Trakt», `admin_funnel` i `supabase/migrations/20261007150000_funnel.sql`): konvolutt → første fangst → første levering → tredje levering → registrert → tilbake etter 1, 7 og 30 dager, totalt og per uke spillerne startet. Det største frafallet er merket. Bare spillere som deler statistikk telles. Bygd før punkt 4, fordi hver endring skal kunne leses av her.
 
+10. **Mannskap med liv** (Jonas 17.10.2026): folk som går mellom arbeidsoppgavene og vandrer på dekk når de er ledige, så livet deres (hjemsted, mål, historie, hendelser, avmønstring til egen båt). Plan og status i `docs/mannskap-plan.md`.
+
 **Vurderes senere:** fiskarlag per hjemhavn (felles ukemål og oppslag, aldri slik at én spillers fravær skader andre), innholdsutvidelser som havsteget med blåkveite (legitimt så lenge grunnspillet føles komplett), abonnement («Rederi-medlemskap») med bekvemmeligheter der ingenting går tapt ved oppsigelse (vent til betalingsviljen for kosmetikk er kjent).
 
 ## Det vi ikke gjør

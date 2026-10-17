@@ -926,3 +926,138 @@ function vesselSVG(type, w, h){
   svg += '<line x1="' + x0 + '" y1="0" x2="' + x1 + '" y2="0" stroke="rgba(30,90,140,.45)" stroke-width="0.05"/></svg>';
   return svg;
 }
+
+// ===== the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md) =====
+// Read straight off the model's triangles, so it follows every model (Blender or built here) without a hand-drawn plan: a grid of
+// DM_C m cells over the boat; a cell is a floor where an upward face lies under its centre with nothing over it for 1.85 m, and it is
+// barred where anything stands in a person's body (0.25 to 1.7 m over the floor) within the cell. From the deck's work places the
+// floors are joined where a step is at most DM_STEP, so a roof, the gunwale cap and the bleeding tub are not deck, but a hatch is.
+// Walls, bulwarks and the house's sides bar the cells they pass through, and a door is where they do not. Nothing here touches WebGL.
+const DM_C = 0.2, DM_STEP = 0.45, DM_HEAD = 1.85, DM_BODY = [0.25, 1.7], DECKMAP = {};
+function deckMap(type){
+  if (type in DECKMAP) return DECKMAP[type];
+  const m = vesselModel(type), G = m && m.geo; if (!m || !G){ DECKMAP[type] = null; return null; }
+  const P = Array.from(m.o.p), NN = Array.from(m.o.n), gl = m.glass && m.glass.p ? m.glass.p : [], gn = m.glass && m.glass.n ? m.glass.n : [];
+  for (let i = 0; i < gl.length; i++){ P.push(gl[i]); NN.push(gn[i] != null ? gn[i] : 0); }
+  let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; for (let i = 0; i < P.length; i += 3){ if (P[i] < x0) x0 = P[i]; if (P[i] > x1) x1 = P[i]; if (P[i + 2] < z0) z0 = P[i + 2]; if (P[i + 2] > z1) z1 = P[i + 2]; }
+  x0 = Math.floor(x0 / DM_C) * DM_C; z0 = Math.floor(z0 / DM_C) * DM_C; const nx = Math.ceil((x1 - x0) / DM_C) + 1, nz = Math.ceil((z1 - z0) / DM_C) + 1, N = nx * nz;
+  if (N > 60000){ DECKMAP[type] = null; return null; }
+  // the triangles by the cells their footprint covers
+  const bins = new Array(N); for (let k = 0; k < N; k++) bins[k] = null;
+  const nt = P.length / 9, tri = new Float32Array(nt * 12);   // ax ay az bx by bz cx cy cz ny, and the face's slopes dy/dx dy/dz (NaN when it stands on end)
+  for (let t = 0; t < nt; t++){ const o = t * 9, ax = P[o], ay = P[o + 1], az = P[o + 2], bx = P[o + 3], by = P[o + 4], bz = P[o + 5], cx = P[o + 6], cy = P[o + 7], cz = P[o + 8];
+    const nY = (NN[o + 1] + NN[o + 4] + NN[o + 7]) / 3;   // the model's own normals (the winding is not to be trusted in every builder)
+    const ux = bx - ax, uy = by - ay, uz = bz - az, vx = cx - ax, vy = cy - ay, vz = cz - az, wX = uy * vz - uz * vy, wY = uz * vx - ux * vz, wZ = ux * vy - uy * vx, wl = Math.hypot(wX, wY, wZ) || 1;
+    const steep = Math.abs(wY / wl) < 0.25;
+    tri.set([ax, ay, az, bx, by, bz, cx, cy, cz, nY, steep ? NaN : -wX / wY, steep ? NaN : -wZ / wY], t * 12);
+    const i0 = Math.max(0, Math.floor((Math.min(ax, bx, cx) - x0) / DM_C)), i1 = Math.min(nx - 1, Math.floor((Math.max(ax, bx, cx) - x0) / DM_C));
+    const j0 = Math.max(0, Math.floor((Math.min(az, bz, cz) - z0) / DM_C)), j1 = Math.min(nz - 1, Math.floor((Math.max(az, bz, cz) - z0) / DM_C));
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++){ const k = j * nx + i; (bins[k] || (bins[k] = [])).push(t); } }
+  // the height of triangle t over (x, z), or NaN when it does not cover the point
+  const yAt = (t, x, z) => { const o = t * 12, ax = tri[o], az = tri[o + 2], bx = tri[o + 3], bz = tri[o + 5], cx = tri[o + 6], cz = tri[o + 8];
+    const d = (bz - cz) * (ax - cx) + (cx - bx) * (az - cz); if (Math.abs(d) < 1e-9) return NaN;
+    const l0 = ((bz - cz) * (x - cx) + (cx - bx) * (z - cz)) / d, l1 = ((cz - az) * (x - cx) + (ax - cx) * (z - cz)) / d, l2 = 1 - l0 - l1;
+    return l0 >= -1e-6 && l1 >= -1e-6 && l2 >= -1e-6 ? l0 * tri[o + 1] + l1 * tri[o + 4] + l2 * tri[o + 7] : NaN; };
+  // whether triangle t (its footprint) touches the cell square [sx0, sx1] × [sz0, sz1] (separating axes in the plan)
+  const touches = (t, sx0, sx1, sz0, sz1) => { const o = t * 12, X = [tri[o], tri[o + 3], tri[o + 6]], Z = [tri[o + 2], tri[o + 5], tri[o + 8]];
+    if (Math.max(...X) < sx0 || Math.min(...X) > sx1 || Math.max(...Z) < sz0 || Math.min(...Z) > sz1) return false;
+    for (let e = 0; e < 3; e++){ const f = (e + 1) % 3, ex = X[f] - X[e], ez = Z[f] - Z[e], nx_ = -ez, nz_ = ex;   // the edge normal as an axis
+      let tmin = 1e9, tmax = -1e9; for (let q = 0; q < 3; q++){ const v = X[q] * nx_ + Z[q] * nz_; if (v < tmin) tmin = v; if (v > tmax) tmax = v; }
+      let smin = 1e9, smax = -1e9; for (const [px, pz] of [[sx0, sz0], [sx1, sz0], [sx0, sz1], [sx1, sz1]]){ const v = px * nx_ + pz * nz_; if (v < smin) smin = v; if (v > smax) smax = v; }
+      if (tmax < smin || tmin > smax) return false; }
+    return true; };
+  // every cell: its candidate floors (upward faces with head room), and the floors barred by something in the body
+  const floors = new Array(N), H = new Float32Array(N).fill(NaN), bar = new Uint8Array(N);
+  for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++){ const k = j * nx + i, B = bins[k]; if (!B) continue; const x = x0 + (i + 0.5) * DM_C, z = z0 + (j + 0.5) * DM_C, hits = [];
+    for (const t of B){ const y = yAt(t, x, z); if (y === y) hits.push([y, tri[t * 12 + 9]]); }
+    hits.sort((a, b) => a[0] - b[0]); const F = [];
+    for (let h = 0; h < hits.length; h++){ if (Math.abs(hits[h][1]) < 0.55) continue; const y = hits[h][0]; let clear = true;   // |n|: the kit's deck grids carry their normals turned down
+      for (let q = h + 1; q < hits.length; q++){ if (hits[q][0] > y + DM_HEAD) break; if (hits[q][0] > y + 0.05){ clear = false; break; } }
+      if (!clear) continue;
+      // anything standing in the body over this floor bars it: a wall, a rail post, a tub, the house's side (the footprint test catches the vertical faces the point test cannot)
+      let barred = false; const sx0 = x - DM_C / 2, sx1 = x + DM_C / 2, sz0 = z - DM_C / 2, sz1 = z + DM_C / 2;
+      for (const t of B){ const o = t * 12; let ymin = Math.min(tri[o + 1], tri[o + 4], tri[o + 7]), ymax = Math.max(tri[o + 1], tri[o + 4], tri[o + 7]);
+        if (tri[o + 10] === tri[o + 10]){   // a sloping face: its height inside this cell, from the plane through its corners
+          const yc = tri[o + 1] + tri[o + 10] * (x - tri[o]) + tri[o + 11] * (z - tri[o + 2]), sp = (Math.abs(tri[o + 10]) + Math.abs(tri[o + 11])) * DM_C / 2;
+          ymin = Math.max(ymin, yc - sp); ymax = Math.min(ymax, yc + sp); if (ymin > ymax) continue; }
+        if (ymax < y + DM_BODY[0] || ymin > y + DM_BODY[1]) continue; if (touches(t, sx0, sx1, sz0, sz1)){ barred = true; break; } }
+      F.push([y, barred]); }
+    if (F.length) floors[k] = F; }
+  // the deck's heights: the anchors' deck.y, and where the crew stand today (crewSpots, 4 cm over their deck); nothing more than 0.8 m
+  // under the lowest of them is deck (the hold's floor, the bilge)
+  const levels = []; if (G.deck) levels.push(G.deck.y); for (const c of G.crewSpots || []) levels.push(c[1] - 0.04); if (G.work) levels.push(G.work.table[1]);
+  const yLow = levels.length ? Math.min(...levels) : 0;
+  for (let k = 0; k < N; k++) if (floors[k]){ const F = floors[k].filter(f => f[0] >= yLow - 0.8); floors[k] = F.length ? F : null; }
+  // joined into parts, floor by floor (a cell can carry two levels, the working deck and the shelter deck over it): a neighbour's
+  // floor within a step joins the part. The deck is the biggest part at the anchors' deck height, else at a crew spot's height, else
+  // the biggest of all. A roof, the gunwale cap and the bleeding tub are not deck; a platform or a foredeck up a ladder is joined by a
+  // link (deckPoints), not by the fill.
+  const cellOf = (x, z) => { const i = Math.floor((x - x0) / DM_C), j = Math.floor((z - z0) / DM_C); return i >= 0 && j >= 0 && i < nx && j < nz ? j * nx + i : -1; };
+  const lab = new Array(N), size = [], hitDeck = [], hitSpot = [], ys = []; let nl = 0;
+  for (let k = 0; k < N; k++) lab[k] = floors[k] ? floors[k].map(() => -1) : null;
+  const nearAny = (y, L) => L.some(v => Math.abs(v - y) <= 0.45);
+  const spotLv = (G.crewSpots || []).map(c => c[1] - 0.04), deckLv = G.deck ? [G.deck.y] : [];
+  for (let k0 = 0; k0 < N; k0++){ if (!floors[k0]) continue; for (let f0 = 0; f0 < floors[k0].length; f0++){ if (lab[k0][f0] >= 0 || floors[k0][f0][1]) continue;
+    const L = nl++; size.push(0); hitDeck.push(0); hitSpot.push(0); ys.push(0); lab[k0][f0] = L; const stack = [[k0, f0]];
+    while (stack.length){ const [k, fi] = stack.pop(), y = floors[k][fi][0], i = k % nx, j = (k - i) / nx; size[L]++; ys[L] += y; if (nearAny(y, deckLv)) hitDeck[L]++; if (nearAny(y, spotLv)) hitSpot[L]++;
+      for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]){ const ii = i + di, jj = j + dj; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; const q = jj * nx + ii, Fq = floors[q]; if (!Fq) continue;
+        let pick = -1; for (let g = 0; g < Fq.length; g++) if (Math.abs(Fq[g][0] - y) <= DM_STEP && (pick < 0 || Math.abs(Fq[g][0] - y) < Math.abs(Fq[pick][0] - y))) pick = g;
+        if (pick < 0 || lab[q][pick] >= 0) continue; if (Fq[pick][1]){ bar[q] = 1; continue; } lab[q][pick] = L; stack.push([q, pick]); } } } }
+  // the deck: the part with most cells at the anchors' deck height (a chain of steps can tie the gunwale cap to the sole of an open
+  // boat, so a part is weighed by its cells at the level, not its size), else at a crew spot's height, else the biggest part
+  let main = -1, n = 0, best = 0; const choose = w => { for (let L = 0; L < nl; L++){ const v = w(L); if (v > best){ best = v; main = L; n = size[L]; } } return main >= 0; };
+  choose(L => hitDeck[L] + hitSpot[L]) || choose(L => size[L]);
+  const parts = []; for (let L = 0; L < nl; L++) if (size[L] >= 8) parts.push({n:size[L], y:Math.round(ys[L] / size[L] * 100) / 100, main:L === main}); parts.sort((a, b) => b.n - a.n);
+  for (let k = 0; k < N; k++){ H[k] = NaN; if (!lab[k]) continue; for (let g = 0; g < lab[k].length; g++) if (lab[k][g] === main){ H[k] = floors[k][g][0]; break; } }
+  const yDeck = main >= 0 ? ys[main] / size[main] : yLow;
+  const M = {type, c:DM_C, x0, z0, nx, nz, h:H, bar, n, parts, yDeck, cellOf, _floors:floors, _lab:lab, at(k){ const i = k % nx; return [x0 + (i + 0.5) * DM_C, H[k], z0 + ((k - i) / nx + 0.5) * DM_C]; },
+    ok(k){ return k >= 0 && H[k] === H[k]; }, floorAt(x, z){ const k = cellOf(x, z); return k >= 0 && H[k] === H[k] ? H[k] : NaN; }};
+  // the nearest deck cell to a point (within r m), for the places the anchors name
+  M.near = (x, z, r = 1.5) => { let best = -1, bd = r * r; for (let k = 0; k < N; k++){ if (H[k] !== H[k]) continue; const p = M.at(k), d = (p[0] - x) ** 2 + (p[2] - z) ** 2; if (d < bd){ bd = d; best = k; } } return best; };
+  DECKMAP[type] = M; return M;
+}
+// a way over the deck from a to b (cells), as cells; eight neighbours, a diagonal only past two free sides, and the cells by a bar or
+// an edge cost a little more, so the way keeps off the walls and the rail. Then pulled straight where the deck between is free.
+function deckPath(M, a, b){
+  if (!M || !M.ok(a) || !M.ok(b)) return null; if (a === b) return [a];
+  const {nx, nz, h:H} = M, N = nx * nz, g = new Float32Array(N).fill(Infinity), came = new Int32Array(N).fill(-1), open = [a]; g[a] = 0;
+  const edge = k => { const i = k % nx, j = (k - i) / nx; for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]){ const ii = i + di, jj = j + dj; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz || !M.ok(jj * nx + ii)) return true; } return false; };
+  const EC = new Float32Array(N); for (let k = 0; k < N; k++) if (M.ok(k)) EC[k] = edge(k) ? 0.6 : 0;
+  const hx = b % nx, hz = (b - hx) / nx, heur = k => { const i = k % nx, j = (k - i) / nx; return Math.hypot(i - hx, j - hz); };
+  const closed = new Uint8Array(N);
+  while (open.length){
+    let bi = 0, bf = Infinity; for (let q = 0; q < open.length; q++){ const f = g[open[q]] + heur(open[q]); if (f < bf){ bf = f; bi = q; } }
+    const k = open[bi]; open[bi] = open[open.length - 1]; open.pop(); if (k === b) break; if (closed[k]) continue; closed[k] = 1;
+    const i = k % nx, j = (k - i) / nx;
+    for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]){ const ii = i + di, jj = j + dj; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; const q = jj * nx + ii; if (!M.ok(q) || closed[q]) continue;
+      if (di && dj && !(M.ok(j * nx + ii) && M.ok(jj * nx + i))) continue; if (Math.abs(H[q] - H[k]) > DM_STEP) continue;
+      const c = g[k] + (di && dj ? 1.414 : 1) + EC[q] + Math.abs(H[q] - H[k]) * 3; if (c < g[q]){ g[q] = c; came[q] = k; if (!open.includes(q)) open.push(q); } } }
+  if (came[b] < 0 && b !== a) return null;
+  const path = []; for (let k = b; k >= 0; k = came[k]){ path.push(k); if (k === a) break; } path.reverse(); if (path[0] !== a) return null;
+  // pulled straight: skip to the furthest cell seen over free deck (sampled every half cell)
+  const free = (p, q) => { const A = M.at(p), B = M.at(q), n = Math.ceil(Math.hypot(B[0] - A[0], B[2] - A[2]) / (DM_C / 2)) + 1; let last = A[1];
+    for (let s = 0; s <= n; s++){ const t = s / n, k = M.cellOf(A[0] + (B[0] - A[0]) * t, A[2] + (B[2] - A[2]) * t); if (!M.ok(k) || EC[k] > 0 && s > 0 && s < n || Math.abs(H[k] - last) > DM_STEP) return false; last = H[k]; } return true; };
+  const out = [path[0]]; let i = 0; while (i < path.length - 1){ let j = path.length - 1; while (j > i + 1 && !free(path[i], path[j])) j--; out.push(path[j]); i = j; }
+  return out;
+}
+// the places on a type's deck, from the model's anchors: where the work is done and where one stands when free. Cells of the map.
+const DECKPTS = {};
+function deckPoints(type){
+  if (type in DECKPTS) return DECKPTS[type]; const M = deckMap(type), G = geoOf(type); if (!M || !G){ DECKPTS[type] = null; return null; }
+  const pt = {}, W = G.work, Bm = G.beam || 3, d = G.deck || {y:G.gw, z:0}, far = Math.max(6, (VESSELS[type] ? VESSELS[type].len : 10) / 6), put = (k, x, z, h, r) => { const c = M.near(x, z, r || 1.2); if (c >= 0) pt[k] = {k:c, h:h == null ? null : h}; };
+  // the gutting table and the bleeding tub, where drawDeck stands people (view3d.js): inboard of the table, inboard of the tub
+  const tx = W ? W.table[0] : -(Bm / 2 - 0.42), tz = W ? W.table[2] : d.z, ux = W ? W.tub[0] : Bm / 2 - 0.62, uz = W ? W.tub[2] : d.z + 0.35;
+  // (within far: on a shelter-decker the table's default place can lie where the model has no floor, and the work moves to the deck)
+  put('sloy', tx + (tx < 0 ? 0.62 : -0.62), tz, tx < 0 ? -Math.PI / 2 : Math.PI / 2, far); put('is', ux + (ux > tx ? -0.62 : 0.62), uz, ux > tx ? Math.PI / 2 : -Math.PI / 2, far);
+  if (G.hauler) put('haling', G.hauler[0] * 0.7, G.hauler[2], G.hauler[0] > 0 ? Math.PI / 2 : -Math.PI / 2, 1.6);
+  if (G.skipperAt){ const c = M.near(G.skipperAt[0], G.skipperAt[2], 0.5); if (c >= 0) pt.ror = {k:c, h:0}; else put('door', G.skipperAt[0], G.skipperAt[2], 0, 40); }   // the helm, or the door when the house has no floor in the model
+  (G.crewSpots || []).forEach((c, i) => put('spot' + i, c[0], c[2], c[3] || 0, 1.0));
+  if (G.filler) put('filler', G.filler[0] * 0.8, G.filler[2], G.filler[0] > 0 ? Math.PI / 2 : -Math.PI / 2, 1.4);
+  // the rail: deck cells at the edge with the outside beyond them, spread along both sides and the stern, facing out
+  const lean = []; for (let k = 0; k < M.nx * M.nz; k++){ if (!M.ok(k)) continue; const i = k % M.nx, j = (k - i) / M.nx, p = M.at(k);
+    for (const [di, dj, hd] of [[1, 0, Math.PI / 2], [-1, 0, -Math.PI / 2], [0, 1, Math.PI]]){ const ii = i + di, jj = j + dj; if (ii < 0 || jj < 0 || ii >= M.nx || jj >= M.nz || M.ok(jj * M.nx + ii)) continue;
+      if (di && Math.sign(p[0]) !== di && Math.abs(p[0]) > 0.3) continue;   // the outside is outboard, not an inboard fitting
+      lean.push({k, h:hd}); break; } }
+  lean.sort((a, b) => M.at(a.k)[2] - M.at(b.k)[2]); const step = Math.max(1, Math.floor(lean.length / 10)); pt.lean = lean.filter((_, i) => i % step === 0).slice(0, 10);
+  DECKPTS[type] = pt; return pt;
+}
