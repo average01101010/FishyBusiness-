@@ -63,6 +63,8 @@ def colours():
     w('wood_in', (0.40, 0.37, 0.32)); w('wood_in2', (0.35, 0.32, 0.28)); w('wood_dk', (0.27, 0.24, 0.21)); w('bilge', (0.26, 0.23, 0.19), 0.3)
     w('rail', (0.28, 0.21, 0.15), 0.2); w('canvas', (0.36, 0.40, 0.33), 0.08); w('canvas2', (0.30, 0.34, 0.28), 0.08)
     w('fender', (0.70, 0.70, 0.66), 0.3); w('crate', (0.22, 0.36, 0.52), 0.25); w('crate2', (0.52, 0.55, 0.56), 0.25); w('crate3', (0.58, 0.56, 0.50), 0.25); w('crate_in', (0.17, 0.26, 0.36), 0.2); w('table', (0.62, 0.58, 0.50), 0.1); w('steel', (0.62, 0.64, 0.66), 0.7); w('stone', (0.30, 0.31, 0.33), 0.2); w('bronze', (0.48, 0.36, 0.20), 0.6); w('rope', (0.55, 0.48, 0.35))
+    # the lanterns' coloured glass and the lifebuoy (the boats round, 17.10.2026: lanterns as geometry, typed in the anchors)
+    w('lampR', (0.85, 0.08, 0.06), 0.7); w('lampG', (0.08, 0.75, 0.30), 0.7); w('lampW', (0.95, 0.93, 0.85), 0.7); w('buoy', (0.95, 0.45, 0.10), 0.3); w('buoyW', (0.92, 0.92, 0.90), 0.3)
     C['glass'] = mat('glass', (0.07, 0.09, 0.10), 0.9)
 
 
@@ -282,6 +284,28 @@ def deck_gear(A, fine=True):
             y, z = hb(fx) + 0.004, zs(fx) - 0.09
             A.poly([V((fx - 0.012, side * (y + 0.002), z)), V((fx + 0.012, side * (y + 0.002), z)), V((fx + 0.006, side * (hb(fx) * 0.97 + 0.004), z - 0.32)), V((fx - 0.006, side * (hb(fx) * 0.97 + 0.004), z - 0.32))], C['rust'], (0, side, 0))
 
+# the lanterns (Sjøveisreglene regel 23, a boat under 7 m or 7 knots: one all-round white, the sides when practicable): two small iron
+# housings on the gunwales by the forward thwart with red and green glass facing out, and the all-round white lantern on a short staff
+# on the stern seat's port side, clear of the tiller. The anchors carry their type (vessel3d.js lanterns)
+LAMP_X = 6.05; LAMP_W = (0.40, 0.35)     # the side lamps' station; the white lantern's staff (x, y)
+def lamp_z(): return zs(LAMP_X) + 0.10
+def lantern_geo(A):
+    for side, glass in ((1, 'lampR'), (-1, 'lampG')):                                  # port red, starboard green (y to port)
+        y = side * (hb(LAMP_X) - 0.03); z = lamp_z()
+        abox(A, LAMP_X - 0.06, LAMP_X + 0.06, min(y, y + side * 0.07), max(y, y + side * 0.07), z - 0.08, z + 0.07, C['iron'])        # the housing
+        abox(A, LAMP_X - 0.05, LAMP_X + 0.05, min(y + side * 0.07, y + side * 0.085), max(y + side * 0.07, y + side * 0.085), z - 0.05, z + 0.04, C[glass])   # the glass, outboard
+        abox(A, LAMP_X - 0.07, LAMP_X + 0.07, min(y - side * 0.01, y + side * 0.08), max(y - side * 0.01, y + side * 0.08), z + 0.07, z + 0.09, C['iron'])   # the cap
+    sx, sy = LAMP_W; z0 = zs(sx) - 0.04; zt = z0 + 0.95
+    acyl(A, (sx, sy, z0), (sx, sy, zt - 0.14), 0.016, lambda zz: C['iron'], 6)                                                     # the staff
+    acyl(A, (sx, sy, zt - 0.14), (sx, sy, zt - 0.02), 0.045, lambda zz: C['lampW'], 10)                                               # the white lantern
+    acyl(A, (sx, sy, zt - 0.02), (sx, sy, zt), 0.055, lambda zz: C['iron'], 10)                                                      # its cap
+    # the lifebuoy against the starboard side aft of the engine box, orange with white bands
+    bx = 2.0; bz = zs(bx) - 0.30; by = -(inner_hb(bx, bz) - 0.05)        # inside the planking at the height it hangs
+    atorus(A, (bx, by, bz), (0, 1, 0), 0.28, 0.045, lambda a: C['buoyW'] if (a % (math.pi / 2)) < math.pi / 9 else C['buoy'], 20, 6)
+def lantern_anchors(G):
+    z = lamp_z(); sx, sy = LAMP_W
+    return [[G(LAMP_X, hb(LAMP_X) + 0.06, z), [1, 0.12, 0.1], 'port'], [G(LAMP_X, -(hb(LAMP_X) + 0.06), z), [0.1, 1, 0.35], 'stbd'], [G(sx, sy, zs(sx) + 0.86), [1, 0.95, 0.85], 'allround']]
+
 def tarp(A):
     """Father's worn tarpaulin, folded in a heap on the foredeck, its loose end hanging down over the deck's aft edge"""
     nu, nv = 20, 12; xe = 6.07; zd = lambda x: zs(x) - 0.02; G = []; hang = 6
@@ -355,7 +379,7 @@ def propeller():
 def build(fine=True):
     A = Acc('snekke')
     hull(A, fine); keel_stem(A, fine); interior(A, fine); engine(A, fine); steering(A, fine)
-    if fine: frames(A); deck_gear(A, fine); crates(A); gutting_table(A)
+    if fine: frames(A); deck_gear(A, fine); crates(A); gutting_table(A); lantern_geo(A)
     return [A.done(40, tint=wear)], [box('noglass', 0, 0.01, 0, 0.01, -50, -49.99, C['glass'])]
 
 
@@ -391,7 +415,7 @@ def anchors():
     return {'eye': G(1.12, 0.36, SEAT + 0.82), 'skipperAt': G(1.12, 0.36, Z_FLOOR), 'hp': -0.22, 'fov': 62,
             'crewSpots': [G(4.25, 0.45, 1.04) + [0.0]], 'hauler': sk['haul'], 'filler': sk['filler'], 'pole': G(-0.15, 0.1, 2.35),
             'exhaust': G(*EXH), 'engine': G(2.95, 0.05, ENG[3] + 0.2), 'skiff': sk,
-            'lights': [[G(6.6, 0.45, zs(6.6) + 0.04), [1, 0.12, 0.1]], [G(6.6, -0.45, zs(6.6) + 0.04), [0.1, 1, 0.35]], [G(-0.05, 0, 1.76), [1, 0.95, 0.85]]],
+            'lights': lantern_anchors(G),
             'deck': {'y': round(Z_FLOOR - WL, 3), 'z': round(-(1.2 - XM), 3)}, 'gw': gw(3.4), 'stern': round(XM + 0.1, 3), 'bow': round(-(L - XM), 3), 'side': 1.0,
             'beam': 2.26, 'pl': 2.6, 'rl': 1.2, 'open': True, 'hand': True, 'inboard': True,
             'work': {'table': G(3.75, 0.62, Z_FLOOR), 'tub': G(3.8, -0.6, Z_FLOOR), 's': 0.75, 'own': True, 'top': round(zs(3.75) + 0.05 - WL, 3)}}

@@ -464,6 +464,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p118', '17.10.2026', 'Båtene får nye detaljer', 'The boats get their details', [
+       ['Trebåten har fått ekte lanterner: rødt og grønt på rekka ved den fremre tofta, og den hvite lykta på en stake akter, slik en båt under sju meter fører dem. En livbøye henger innenfor ripa.', 'The wooden boat has real lanterns: red and green on the gunwales by the forward thwart, and the white lamp on a staff aft, as a boat under seven metres carries them. A lifebuoy hangs inside the gunwale.']]],
     ['p117', '17.10.2026', 'Lanterner etter Sjøveisreglene', 'Lights by the rules of the road', [
        ['Båtene fører lanterner etter Sjøveisreglene: rødt over hvitt når det fiskes, grønt over hvitt når det tråles, topplanterne, sidelanterner og akterlanterne under fart, ett hvitt lys til ankers, to røde ved motorstopp, og ingen ved kai. Det gjelder også båtene rundt deg.', 'The boats carry their lights by the rules of the road: red over white when fishing, green over white when trawling, masthead, side and stern lights under way, one white at anchor, two reds with the engine stopped, and none at the quay. The boats around you too.']]],
     ['p116', '17.10.2026', 'Samme stige i begge gruppene', 'The same ladder in both groups', [

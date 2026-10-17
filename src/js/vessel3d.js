@@ -1084,8 +1084,11 @@ const LANT_C = {w:[1, 0.97, 0.88], r:[1, 0.12, 0.1], g:[0.1, 1, 0.35]};
 function lanterns(G, V, st){
   const L = (G && G.lights) || [], isR = c => c[0] > 0.8 && c[1] < 0.4, isG = c => c[1] > 0.8 && c[0] < 0.4, out = [];
   if (!st || st.port) return out;
-  const W = L.filter(l => !isR(l[1]) && !isG(l[1])).slice().sort((a, b) => b[0][1] - a[0][1]), mast = W[0] || null;
-  const stern = W.length > 1 ? W.slice(1).sort((a, b) => b[0][2] - a[0][2])[0] : null, extra = W.filter(l => l !== mast && l !== stern), sides = L.filter(l => isR(l[1]) || isG(l[1]));
+  // a model from the Blender round names its lanterns ([pos, colour, type]: port, stbd, masthead, allround, stern, masthead2); older ones are told apart by colour and place
+  const typed = L.some(l => typeof l[2] === 'string'), T = t => L.filter(l => l[2] === t);
+  const W = typed ? T('masthead').concat(T('allround')) : L.filter(l => !isR(l[1]) && !isG(l[1])).slice().sort((a, b) => b[0][1] - a[0][1]), mast = W[0] || null;
+  const stern = typed ? T('stern')[0] || null : W.length > 1 ? W.slice(1).sort((a, b) => b[0][2] - a[0][2])[0] : null;
+  const extra = typed ? T('masthead2') : W.filter(l => l !== mast && l !== stern), sides = typed ? T('port').concat(T('stbd')) : L.filter(l => isR(l[1]) || isG(l[1]));
   const len = (V && V.len) || 8, mt = mast ? mast[0] : [0, 3.4, 0], up = (p, dy) => [p[0], p[1] + dy, p[2]], push = (p, c, k) => out.push([p, LANT_C[c] || c, k]);
   const moving = (st.v || 0) > 0.5, sideStern = () => { for (const s of sides) push(s[0], s[1], 'side'); if (stern) push(stern[0], 'w', 'stern'); };
   if (st.aground || (st.anch && !st.fishing)){
