@@ -682,7 +682,6 @@ const KPK = 260;
 const LIC_OFFERS = [
   {id:'u7', ves:'trebat', no:'Gammel tresnekke med hjemmel under 7 m', en:'Old wooden snekke with a right under 7 m'},
   {id:'h7', ves:'snekke', no:'Plastsnekke med hjemmel 7–7,9 m', en:'Fibreglass snekke with a right of 7–7.9 m'},
-  {id:'h8', ves:'jukesjark', no:'Plastsjark med hjemmel 8–8,9 m', en:'Fibreglass sjark with a right of 8–8.9 m'},
   {id:'h9', ves:'sjark', no:'Havsjark 35 fot med hjemmel 9–9,9 m', en:'35 ft havsjark with a right of 9–9.9 m'},
   {id:'h10', ves:'hurtigsjark', no:'Hurtigsjark med hjemmel 10–10,9 m', en:'Speed sjark with a right of 10–10.9 m'},
   {id:'h14', ves:'kyst15', no:'Kystbåt 14,99 m med hjemmel 14–14,9 m', en:'14.99 m coastal vessel with a right of 14–14.9 m'},

@@ -65,13 +65,13 @@ async def main():
         r = await pg.evaluate("""(()=>{ const R = {}, b = S.boat;
           R.ladder = Object.entries(VESSELS).map(([k, V]) => [k, V.len, V.cls, !!V.lock]);
           R.offers = LIC_OFFERS.map(O => [O.id, O.ves, VESSELS[O.ves].len, Math.round((VESSELS[O.ves].price + licValue(O)) / 1000)]);
-          // the 8.9 m sjark is in the open group's 8–9.99 m quota group: the year's maximum quota for it (5.6 t in 2026)
-          const t0 = b.type; b.type = 'jukesjark'; applyVessel(); R.jukGroup = [lenGroup(), codLimits().max, Math.round((yearQuota(yearH(S.t / 60)).open.max[1] + openMaxAdd(S.t / 60)) * 1000)]; b.type = 'kyst21'; applyVessel();
+          // the 7.9 m snekke is in the open group's under-8 m quota group: the year's maximum quota for it (4.0 t in 2026)
+          const t0 = b.type; b.type = 'snekke'; applyVessel(); R.grp = [lenGroup(), codLimits().max, Math.round((yearQuota(yearH(S.t / 60)).open.max[0] + openMaxAdd(S.t / 60)) * 1000)]; b.type = 'kyst21'; applyVessel();
           const inside = GROUNDS.find(g => insideFjord(g.p) && depthF(g.p) > 20).p; b.status = 'fishing'; b.port = null; b.pos = {...inside}; b.gop = null; b.rig = 'juksa'; b.gear = true; b.fishUntil = S.t + 120; S.hold = []; S.crew = [];
           for (let i = 0; i < 60; i++) step(); R.fjord = {kg:Math.round(holdTotal()), warn:S.log.slice(-40).some(e => /fjordlinj/.test(e.no))};
           b.type = t0; applyVessel(); b.status = 'idle'; return R; })()""")
         print('ladder:', json.dumps(r, ensure_ascii=False))
-        # the hold rebuilt at the yard in three steps (04.10.2026): +25 %, +60 %, twice; the ice room grows with it, and a type's own numbers stay
+        # the hold rebuilt at the yard in three steps (04.10.2026, tuned down 08.10.2026): +20 %, +40 %, +70 %; the ice room grows with it, and a type's own numbers stay
         hd = await pg.evaluate("""(()=>{ const b = S.boat, t0 = b.type, l0 = b.holdLv; b.type = 'skiff'; const out = [];
           for (const lv of [0, 1, 2, 3]){ b.holdLv = lv; applyVessel(); out.push([BOAT.holdCap, BOAT.iceCap, capHold()]); }
           b.holdLv = 0; finishJob({kind:'hold', lv:1, no:'', en:''}); const job = b.holdLv; b.holdLv = l0; b.type = t0; applyVessel();
@@ -88,16 +88,16 @@ async def main():
         print(ok(0.80 <= sk['full'] / sk['empty'] <= 0.95 and 0.85 <= sj['full'] / sj['empty'] <= 0.95), 'a full hold costs top speed, more on the planing skiff than on the sjark', {k: (v['empty'], v['full']) for k, v in wt.items()})
         print(ok(sj['eng'] <= sj['spec'] * 1.12 + 1e-6 and sj['eng'] > sj['spec'] and abs(sj['boost'] - sj['spec'] * 2) < 0.02 and sj['gone'] == sj['spec'] and sk['eng'] == sk['spec'] and sk['boost'] == sk['spec']), 'a bigger engine helps the sjark (at most +12 %), turbo trim doubles her speed for 72 game hours and then it is gone, the outboard skiff takes neither', {k: (v['spec'], v['eng'], v['boost'], v['gone']) for k, v in wt.items()})
         print(ok(all(abs(v['foul'][0] - 0.85) < 0.01 and abs(v['foul'][1] - 1.25) < 0.01 for v in wt.values())), 'a fully fouled hull costs 15 % speed and 25 % fuel', {k: v['foul'] for k, v in wt.items()})
-        print(ok([x[0] for x in hd['out']] == [hd['spec'], round(hd['spec'] * 1.25), round(hd['spec'] * 1.6), hd['spec'] * 2] and hd['out'][3][1] == hd['ice'] * 2 and all(x[0] == x[2] for x in hd['out']) and hd['job'] == 1), 'the hold rebuilt in three steps: +25 %, +60 %, twice, the ice room with it', hd)
+        print(ok([x[0] for x in hd['out']] == [hd['spec'], round(hd['spec'] * 1.2), round(hd['spec'] * 1.4), round(hd['spec'] * 1.7)] and hd['out'][3][1] == round(hd['ice'] * 1.7) and all(x[0] == x[2] for x in hd['out']) and hd['job'] == 1), 'the hold rebuilt in three steps: +20 %, +40 %, +70 %, the ice room with it', hd)
         lens = [x[1] for x in r['ladder'] if x[2] != 'hav']
-        print(ok(len(r['ladder']) >= 14 and all(x[3] for x in r['ladder'] if x[2] == 'hav') and not any(x[3] for x in r['ladder'] if x[2] != 'hav')), 'the ladder runs from the open boat to the ocean fleet, and only the ocean fleet is locked')
-        print(ok([o[0] for o in r['offers']] == ['u7', 'h7', 'h8', 'h9', 'h10', 'h14', 'h20'] and all(r['offers'][i][3] < r['offers'][i + 1][3] for i in range(6))), 'seven closed-group offers by quota length (the coastal vessels with 14–14.9 and 20–20.9 m), dearer the longer')
-        print(ok(r['jukGroup'][0] == 1 and r['jukGroup'][1] == r['jukGroup'][2]), 'the 8.9 m sjark fishes in the open group 8–9.99 m, with the year\'s maximum quota for that group', r['jukGroup'])
+        print(ok(len(r['ladder']) >= 13 and all(x[3] for x in r['ladder'] if x[2] == 'hav') and not any(x[3] for x in r['ladder'] if x[2] != 'hav')), 'the ladder runs from the open boat to the ocean fleet, and only the ocean fleet is locked')
+        print(ok([o[0] for o in r['offers']] == ['u7', 'h7', 'h9', 'h10', 'h14', 'h20'] and all(r['offers'][i][3] < r['offers'][i + 1][3] for i in range(5))), 'six closed-group offers by quota length (the coastal vessels with 14–14.9 and 20–20.9 m), dearer the longer')
+        print(ok(r['grp'][0] == 0 and r['grp'][1] == r['grp'][2]), 'the 7.9 m snekke fishes in the open group under 8 m, with the year\'s maximum quota for that group', r['grp'])
         print(ok(r['fjord']['kg'] == 0 and r['fjord']['warn']), 'a 21 m vessel may not jig inside the fjord line')
         # the market: tabs, cards with a side view, the spec sheet, the ocean fleet locked, one open-group boat, in landscape and portrait
         for vw, vh, tag in ((1100, 800, 'liggende'), (800, 1180, 'staende')):
             await pg.set_viewport_size({'width':vw, 'height':vh})
-            u = await pg.evaluate("""(()=>{ const R = {}, b = S.boat; S.fleet = [S.fleet[0]]; bindVessel(S.fleet[0]); b.type = 'skiff'; applyVessel(); b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; S.order = null; S.cash = 3e5; S.fm = {n:10, last:-1, kr:2e5, b:true};
+            u = await pg.evaluate("""(()=>{ const R = {}, b = S.boat; S.fleet = [S.fleet[0]]; bindVessel(S.fleet[0]); b.type = 'skiff'; applyVessel(); const Y = PORTS.find(q => q.sted === 'verft'); b.status = 'port'; b.port = Y.id; b.pos = {...Y.p}; S.order = null; S.cash = 3e5; S.fm = {n:10, last:-1, kr:2e5, b:true};
               S.sales = S.sales.length >= 3 ? S.sales : [{t:0, total:1}, {t:0, total:1}, {t:0, total:1}];
               const dr = () => document.getElementById('drawerBody'), tap = sel => { const e = dr().querySelector(sel); if (e) e.click(); return !!e; };
               DOCK.open('fartoy'); tap('[data-pa=mksel]:not([data-k])');
@@ -107,7 +107,7 @@ async def main():
               tap('[data-pa=mksel][data-k=bunntral]'); const sh = dr().querySelector('.vsheet'); R.havSecs = [...sh.querySelectorAll('.vsec h5')].map(e => e.textContent); R.havBuy = !!sh.querySelector('[data-pa=buy]'); R.havText = sh.textContent.includes('Bredde') && sh.textContent.includes('Dypgående') && sh.textContent.includes('Vekt');
               tap('[data-pa=mksel]:not([data-k])');
               // an open-group boat: trade-in only before the company owns a closed-group vessel
-              tap('[data-pa=mktab][data-s=open]'); tap('[data-pa=mksel][data-k=jukesjark]'); R.fleetBtn = !!dr().querySelector('[data-pa=buy][data-ti="0"]'); R.tiBtn = dr().querySelector('[data-pa=buy][data-ti="1"]'); R.tiOk = !!R.tiBtn && !R.tiBtn.disabled; R.tiBtn = !!R.tiBtn;
+              tap('[data-pa=mktab][data-s=open]'); tap('[data-pa=mksel][data-k=snekke]'); R.fleetBtn = !!dr().querySelector('[data-pa=buy][data-ti="0"]'); R.tiBtn = dr().querySelector('[data-pa=buy][data-ti="1"]'); R.tiOk = !!R.tiBtn && !R.tiBtn.disabled; R.tiBtn = !!R.tiBtn;
               R.small = [...dr().querySelectorAll('button')].filter(e => e.offsetParent && e.getBoundingClientRect().height < 43).map(e => e.textContent.slice(0, 24)); R.overflow = dr().scrollWidth > dr().clientWidth + 1;
               tap('[data-pa=mksel]:not([data-k])'); tap('[data-pa=mktab][data-s=lic]'); tap('[data-pa=mksel][data-k=trebat][data-o=u7]'); R.licSecs = [...dr().querySelectorAll('.vsheet .vsec h5')].map(e => e.textContent);
               R.licBtns = [...dr().querySelectorAll('[data-pa=buylic]')].length;
@@ -115,20 +115,20 @@ async def main():
             await pg.screenshot(path=os.path.join(ROOT, 'tests', 'out', 'market_' + tag + '.png'))
             print(tag, json.dumps(u, ensure_ascii=False)[:900])
             t = u['tabs']
-            print(ok(len(t['open']) == 8 and len(t['lic']) == 7 and len(t['kyst']) == 2 and len(t['hav']) == 4 and all(c[2] for v in t.values() for c in v)), tag + ': four tabs with every boat as a card with its side view')
+            print(ok(len(t['open']) == 7 and len(t['lic']) == 6 and len(t['kyst']) == 2 and len(t['hav']) == 4 and all(c[2] for v in t.values() for c in v)), tag + ': four tabs with every boat as a card with its side view')
             print(ok(u['havText'] and not u['havBuy'] and len(u['havSecs']) >= 3), tag + ': the ocean vessel has a full spec sheet (length, beam, draft, weight) and no buy button')
             print(ok(u['tiBtn'] and u['tiOk'] and not u['fleetBtn']), tag + ': an open-group boat is bought by trading in, not for the fleet, before the company has a closed-group vessel')
             print(ok('Hjemmel' in u['licSecs'] and u['licBtns'] == 2), tag + ': a boat with a right shows the right and both ways to buy')
             print(ok(not u['overflow'] and not u['small']), tag + ': no sideways scroll and every button at least 44 px', u['small'][:4])
             await pg.evaluate("DOCK.close()")
-        # trading the skiff in for the 8.9 m sjark
-        r = await pg.evaluate("""(()=>{ S.cash = 9e5; const c0 = S.cash; DOCK.open('fartoy'); const dr = document.getElementById('drawerBody'); const back = dr.querySelector('[data-pa=mksel]:not([data-k])'); if (back) back.click(); dr.querySelector('[data-pa=mktab][data-s=open]').click(); dr.querySelector('[data-pa=mksel][data-k=jukesjark]').click();
+        # trading the skiff in for the 7.9 m snekke
+        r = await pg.evaluate("""(()=>{ S.cash = 9e5; const c0 = S.cash; DOCK.open('fartoy'); const dr = document.getElementById('drawerBody'); const back = dr.querySelector('[data-pa=mksel]:not([data-k])'); if (back) back.click(); dr.querySelector('[data-pa=mktab][data-s=open]').click(); dr.querySelector('[data-pa=mksel][data-k=snekke]').click();
           dr.querySelector('[data-pa=buy][data-ti="1"]').click(); const R = {type:S.boat.type, paid:Math.round(c0 - S.cash), fleet:S.fleet.length, open:openVesselId() === S.cur}; DOCK.close(); return R; })()""")
         print('trade-in:', json.dumps(r))
-        print(ok(r['type'] == 'jukesjark' and r['paid'] == 750000 - 66500 and r['fleet'] == 1 and r['open']), 'trading the skiff in for the 8.9 m sjark costs the price less the trade-in, and she takes the open-group place')
+        print(ok(r['type'] == 'snekke' and r['paid'] == 245000 - 66500 and r['fleet'] == 1 and r['open']), 'trading the skiff in for the 7.9 m snekke costs the price less the trade-in, and she takes the open-group place')
         # V7, the way to the closed group: blad B, the loans, Innovasjon Norge's top-up and the ladder in «Neste mål»
         r = await pg.evaluate(r'''(()=>{ const R = {}, b = S.boat; S.fleet = [S.fleet[0]]; bindVessel(S.fleet[0]); b.type = 'skiff'; applyVessel(); S.lic = null; S.loan = null; S.loanIN = null; S.inUsed = false; S.order = null;
-          b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; b.gear = true; S.equip.jukse = 1; S.equip.motor90 = false; S.fm = {n:0, last:-1, kr:0, b:false}; S.msgs = [];
+          const Y = PORTS.find(q => q.sted === 'verft'); b.status = 'port'; b.port = Y.id; b.pos = {...Y.p}; b.gear = true; S.equip.jukse = 1; S.equip.motor90 = false; S.fm = {n:0, last:-1, kr:0, b:false}; S.msgs = [];
           const dr = () => document.getElementById('drawerBody'), tap = sel => { const e = dr().querySelector(sel); if (e) e.click(); return !!e; };
           const goalTxt = () => { DOCK.open('fartoy'); const c = [...dr().querySelectorAll('.ph-card')].find(e => /Neste mål/.test(e.textContent)); const t = c ? [...c.querySelectorAll('b')].map(e => e.textContent) : []; DOCK.close(); return t; };
           R.goals0 = goalTxt();

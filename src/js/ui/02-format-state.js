@@ -106,6 +106,11 @@ function migrateV2(o){
 function load(){ try { let s = localStorage.getItem(KEY), o = s ? JSON.parse(s) : null;
   if (!o){ s = localStorage.getItem(KEY_V1); o = s ? JSON.parse(s) : null; o = o && o.v === 1 ? migrateV2(o) : null; }
   if (!o || o.v !== 2) return null;
+  // the 29 ft fibreglass sjark left with the boats round (Jonas 17.10.2026, docs/batplan.md): a save that owned one gets the 35 ft havsjark
+  // in her place, the difference waived, and her 8 m right becomes the 9 m one; no save in the cloud had her, local ones may
+  for (const v of [o, ...(o.fleet || [])]){ if (v.boat && v.boat.type === 'jukesjark'){ v.boat.type = 'sjark'; if (Array.isArray(o.log)) o.log.push({t:o.t || 0, no:'Plastsjarken på 29 fot er tatt ut av spillet. Du har fått havsjarken på 35 fot i stedet, uten mellomlegg.', en:'The 29 ft fibreglass sjark has left the game. You have the 35 ft havsjark in her place, at no cost.'}); }
+    if (v.lic && v.lic.id === 'h8') v.lic.id = 'h9'; }
+  if (o.order && o.order.type === 'jukesjark') o.order.type = 'sjark';
   // a saved fleet: point the vessel fields at the vessel being followed before anything else reads them
   if (o.fleet && o.fleet.length){ const v = o.fleet.find(x => x.id === o.cur) || o.fleet[0]; for (const k of VKEYS) o[k] = v[k]; }
   // the catch's handling follows the work chains now (13-work.js catchGut): the old switches go, once

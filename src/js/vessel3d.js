@@ -288,11 +288,6 @@ const SPEC3D = {
       col:{hull:[0.9, 0.91, 0.9, 0.45], stripe:VC.red, bottom:VC.afBlack, boot:VC.black, deck:VC.wood, inner:VC.wood, rail:VC.teak}, stripeW:0.09, railR:0.05},
     open:true, parts:[['engine', {z:0.35, w:0.62, l:0.85, h:0.55}], ['thwart', {z:-1.5}], ['thwart', {z:1.45, h:0.3}], ['tiller', {}], ['tubs', {z:-0.6, n:1, col:VC.tub}]],
     work:{z:-0.6}, crew:[[0.35, -1.2, 1.5]]},
-  jukesjark:{hull:{form:'round', F:0.82, fr:0.5, ar:0.16, rake:0.75, srake:0.15, tw:0.72, smax:0.48, entry:2.1, run:2.0, Tc:0.78, n:2.3, flare:0.08, trise:0.25, bulH:0.5, NS:38,
-      col:{hull:VC.white, stripe:VC.blue, bottom:VC.afRed, boot:VC.blue, deck:VC.deck, inner:VC.inner, rail:VC.blue}, stripeW:0.13},
-    parts:[['house', {zf:0.85, za:3.05, w:2.0, h:1.9, rake:-0.15, sill:0.95, nwin:3, nside:2, col:VC.white, roof:VC.blue}], ['mast', {z:2.5, h:2.0, radar:'dome', on:'house'}],
-      ['exhaust', {x:0.65, z:2.95, h:2.3}], ['rails', {s0:0.84, s1:0.99, h:0.6}], ['tubs', {z:-1.2, n:2}], ['fenders', {at:[0.3, 0.55, 0.75]}]],
-    work:{z:-0.9}, crew:[[0.6, -0.6, -1.5], [-0.6, -1.9, 1.6]]},
   hurtigsjark:{hull:{form:'chine', F:1.1, fr:0.42, ar:0.08, rake:0.8, srake:-0.1, tw:0.92, smax:0.56, entry:1.9, run:1.4, Tc:0.8, dr:15, drF:40, flare:0.1, flareFwd:0.12, trise:0.85, bulH:0.55, NS:40,
       col:{hull:VC.white, stripe:VC.blue, bottom:VC.afRed, boot:VC.blue, deck:VC.deck, inner:VC.inner, rail:VC.blue}, stripeW:0.16},
     parts:[['house', {zf:-2.4, za:0.6, w:3.0, h:2.0, rake:0.4, sill:1.0, nwin:3, nside:2, col:VC.white, roof:VC.white, frame:VC.black}], ['mast', {z:0.1, h:1.7, radar:'open', radarL:1.5, on:'house'}],
@@ -1073,7 +1068,7 @@ function deckPath(M, a, b){
 // the places on a type's deck, from the model's anchors: where the work is done and where one stands when free. Cells of the map.
 // the models whose wheelhouse has no wheel and chair of its own (the Malo, the havsjark, the snekke and the hand boats have theirs
 // from Blender): the view draws a simple helm kit at skipperAt for these, so the one steering has something to hold (Jonas 17.10.2026)
-const HELM_KIT = {kyst15:1, kyst21:1, hurtigsjark:1, sjarkny:1, autoliner:1, bunntral:1, pelagisk:1, snokrabbe:1, jukesjark:1};
+const HELM_KIT = {kyst15:1, kyst21:1, hurtigsjark:1, sjarkny:1, autoliner:1, bunntral:1, pelagisk:1, snokrabbe:1};
 const DECKPTS = {};
 function deckPoints(type){
   if (type in DECKPTS) return DECKPTS[type]; const M = deckMap(type), G = geoOf(type); if (!M || !G){ DECKPTS[type] = null; return null; }

@@ -53,7 +53,7 @@ Fart foran finpuss gjelder, men her bygges grunnmuren for alt som kommer, så sk
 
 - Fjernes fra `VESSELS`, `LIC_OFFERS` (h8), `SPEC3D` i `vessel3d.js`, `HELM_KIT`, `tests/vesseltest.py` (tre steder bruker den som prøvebåt; byttes til `snekke`/`sjark`), overleveringens tabell og `docs/forslag.md`.
 - Oppstart (`11-boot.js`): en lagring med `type:'jukesjark'` får `sjark` med mellomlegget ettergitt (ingen finnes i skyen, men lokale lagringer kan finnes). Logglinje og melding.
-- Hullet i stigen fylles av en **ny modell** i del 10 (en plastsjark på 29–31 fot, 8,9–9,5 m, med styrhus akter og to køyer forut, etter de vanlige norske plastsjarkene fra 1990-tallet). Til den er bygd, er stigen 7,9 → 10,57 m.
+- Hullet i stigen fylles av en **ny modell** i del 10 (en plastsjark på 29–31 fot, 8,9–9,5 m, med styrhus akter og to køyer forut, etter de vanlige norske plastsjarkene fra 1990-tallet; Jonas 17.10.2026: «ja, så lenge du klarer å lage den så realistisk som mulig», så den bygges etter en ekte GA-tegning eller produsentens mål, ikke på frihånd). Til den er bygd, er stigen 7,9 → 10,57 m.
 
 ## 4. Fartøyskjemaet v2 (huskeregelen)
 
@@ -75,7 +75,7 @@ Hver båt i `VESSELS` får disse gruppene. Ingen felt kan mangle; `vesseltest` s
 
 **Elektronikk:** `std` (følger med), og hva som passer (`sonar` fra 10 m osv.) avledes av `equipFits`.
 
-**Oppgraderinger:** hvilke `UPGS`, `HOLDUP` og `ENGUP` som passer, avledes av skjemaet: lugaroppgraderinger krever `cabins ≥ 1`, isolert rom krever `hold.kind === 'rom'`, tank krever innenbords diesel, stabilisering fra 9 m, gyro fra 25 m. Nytt: «Sløyemaskin» (fra 10,5 m med `fac.shelter` eller `stations.table ≥ 2`) og «Ismaskin» (fra 10,99 m med generator) som verftsoppgraderinger, ikke butikkvarer, siden de bygges inn.
+**Oppgraderinger:** hvilke `UPGS`, `HOLDUP` og `ENGUP` som passer, avledes av skjemaet: lugaroppgraderinger krever `cabins ≥ 1`, isolert rom krever `hold.kind === 'rom'`, tank krever innenbords diesel, stabilisering fra 9 m, gyro fra 25 m. Nytt: «Sløyemaskin» og «Ismaskin» som verftsoppgraderinger, ikke butikkvarer, siden de bygges inn, og **bare på båter over 14,99 m** (Jonas 17.10.2026), det vil si kystbåten på 21 m og havbåtene; de tre 10,99-metrene og kyst15 sløyer for hånd og kjøper is.
 
 **Regler:** `group` (avledet: åpen under 11 m, lukket med hjemmel, konsesjon for `hav`), `lic` (hjemmelstilbud), `fjordline` (avledet: 15 m og over), `lights` (lanterneklasse, avledet av lengde og fiskemåte, del 11), `marking` (størrelsen på merket, avledet av lengde, del 12).
 
@@ -108,13 +108,13 @@ Tallene er forslag til Jonas, med begrunnelse. Det som ikke står, beholdes.
 |---|---|---|---|---|---|---|---|---|---|---|
 | skiff 5,9 | +1 | 0/0 | åpen, ingenting | dekk 350 kg | 150 kg | 2 | 6/4/4 | – | 11 l/t (60 hk bensin, 18 kn) | 95 000 |
 | trebat 7,0 | +1 | 0/0 | åpen, ingenting | dekk 350 kg | 200 kg | 2 | 6/4/6 | – | 1,0 l/t (8 hk) | 45 000 |
-| snekke 7,9 | +2 | 0/0 (ruff med 2 køyer er et valg, se spørsmål) | hardtop, ruff | dekk 900 kg | 300 kg | 3 | 15/10/9 | – | 3,5 l/t (30 hk) | 245 000 |
+| snekke 7,9 | +2 | 0/0 (åpen båt: ingen hvile om bord, Jonas 17.10.2026) | hardtop, ruff | dekk 900 kg | 300 kg | 3 | 15/10/9 | – | 3,5 l/t (30 hk) | 245 000 |
 | **ny plastsjark ~9,2** | +2 | 1/2 | hus, kokeplate | rom 1 800 kg | 600 kg | 4 | 25/14/12 | – | 9 l/t (150 hk, 8,5 kn) | 850 000 |
-| sjark 10,57 | +3 | 1/4 (bakken har plass til fire) | hus, kokeplate, wc | rom 6 500 kg | 1 500 kg | 5 | 40/24/18 | sløyemaskin mulig | 12 l/t (180 hk) | 1 150 000 |
-| hurtigsjark 10,99 | +2 (hurtigsjarker går med to) | 1/2 | hus, kokeplate, wc | rom 5 000 kg | 1 200 kg | 6 | 50/26/18 | sløyemaskin mulig | 55 l/t (500 hk, 17 kn) | 4 900 000 |
-| sjarkny 10,99 | +3 | 2/4 | hus, bysse, wc, tørkerom | rom 7 000 kg | 1 800 kg | 6 | 60/30/21 | begge mulig | 75 l/t (650 hk, 20 kn) | 10 500 000 |
-| breisjark 10,99 | +4 | 2/4 | hus, ly, bysse, wc, tørkerom | rom 10 000 kg | 2 500 kg | 6 | 100/33/20 | begge mulig | 20 l/t (300 hk) | 9 000 000 |
-| kyst15 | +5 | 3/6 | hus, shelter, bysse, messe, wc, tørkerom, kran | rom 28 t | 6 t | 8 | 160/33/30 | begge, kran 1 t | 70 l/t (750 hk) | 18 000 000 |
+| sjark 10,57 | +3 | 1/4 (bakken har plass til fire) | hus, kokeplate, wc | rom 6 500 kg | 1 500 kg | 5 | 40/24/18 | – | 12 l/t (180 hk) | 1 150 000 |
+| hurtigsjark 10,99 | +2 (Jonas 17.10.2026: slik de drives) | 1/2 | hus, kokeplate, wc | rom 5 000 kg | 1 200 kg | 6 | 50/26/18 | – | 55 l/t (500 hk, 17 kn) | 4 900 000 |
+| sjarkny 10,99 | +3 | 2/4 | hus, bysse, wc, tørkerom | rom 7 000 kg | 1 800 kg | 6 | 60/30/21 | – | 75 l/t (650 hk, 20 kn) | 10 500 000 |
+| breisjark 10,99 | +4 | 2/4 | hus, ly, bysse, wc, tørkerom | rom 10 000 kg | 2 500 kg | 6 | 100/33/20 | – | 20 l/t (300 hk) | 9 000 000 |
+| kyst15 | +5 | 3/6 | hus, shelter, bysse, messe, wc, tørkerom, kran | rom 28 t | 6 t | 8 | 160/33/30 | kran 1 t (14,99 m: ingen maskiner) | 70 l/t (750 hk) | 18 000 000 |
 | kyst21 | +6 | 4/8 | hus, bysse, messe, wc, tørkerom, kran, galge | rom 55 t | 10 t | 8 | 240/33/30 | begge, kran 2 t | 90 l/t (900 hk) | 9 000 000 (1978, forklares) |
 | autoliner 45 | lag | 8/16 | fabrikk, fryseri | frys 400 t | 30 t | 0 | autoline 40 000 kroker | fabrikk | 350 l/t | 70 mill. |
 | snokrabbe 50 | lag | 9/18 | fabrikk, fryseri | frys 500 t | 40 t | 0 | 7 000 teiner | fabrikk | 400 l/t | 60 mill. |
@@ -123,7 +123,7 @@ Tallene er forslag til Jonas, med begrunnelse. Det som ikke står, beholdes.
 
 Forbruket er regnet som 0,12–0,15 l per hestekraft og time i marsj (dieselmotorer rundt 0,19 l/hk·t ved full last, 60–75 % last i marsj; skal sjekkes mot produsentenes kurver før tallene låses). En egen test (`fuelcal`) skriver ut l/t og rekkevidde per båt og feiler utenfor ±25 % av tabellen.
 
-**Sløyemaskin:** verftsoppgradering, 6 % av båtprisen, minst 350 000 kr; tar 600 kg i timen med én person som mater (mot `DECK.gut` 5 kg i minuttet for hånd per person); fisken får kvalitetsklasse som for hånd. **Ismaskin:** 5 % av båtprisen, minst 300 000 kr; lager 400 kg is i døgnet på sjøen (kystbåtene 1 500 kg), så isen aldri tar slutt på lange turer; is kjøpes fortsatt billigere ved kai. Begge trenger strøm (generator følger båter fra 10,5 m).
+**Sløyemaskin og ismaskin bare over 14,99 m** (Jonas 17.10.2026). **Sløyemaskin:** verftsoppgradering på kystbåten 21 m, 6 % av båtprisen, minst 350 000 kr; tar 600 kg i timen med én person som mater (mot `DECK.gut` 5 kg i minuttet for hånd per person); fisken får kvalitetsklasse som for hånd. Havbåtene har den i fabrikken fra før. **Ismaskin:** 5 % av båtprisen, minst 300 000 kr; lager 1 500 kg is i døgnet på sjøen, så isen aldri tar slutt på lange turer; is kjøpes fortsatt billigere ved kai. Alle andre båter sløyer for hånd og kjøper is, som nå.
 
 ## 7. Huskeregelen for en ny båt
 
@@ -143,7 +143,7 @@ Fasilitetene i skjemaet styrer det mannskapet gjør, i stedet for `berths > 0` o
 - **Mat:** `galley` `none` gir termos og brødskiver (måltidsscoren tak 2), `plate` dagens enkle retter, `bysse` alle rettene og kokken som egen stasjon. `mess` gir humørtillegget fra messa.
 - **Kulde og vått:** `shelter` og `dry` tar kulden ned som `UPGS.dry` gjør i dag; en åpen båt gir full kulde.
 - **Arbeidet:** `stations.table` setter hvor mange som kan sløye samtidig, `stations.hauler` hvor mange som trekker, `jukseMax` og `crewMax` hvor mange maskiner som faktisk passes. `workAssign` leser dette i stedet for faste tall. Sløyemaskinen er en stasjon som trenger én person.
-- **Fraktegods** bæres om bord for hånd under 60 kg per kolli, ellers trengs kran (`crane`), og lastetiden følger av det.
+- **Fraktegods** bæres om bord for hånd under 60 kg per kolli, ellers trengs kran (`crane`, fra kyst15), og lastetiden følger av det (Jonas 17.10.2026: «dette løser du sikkert på en bra måte»).
 - **Dekksagentene** (`deckcrew.js`) får stasjonene fra de samme ankrene, så det som står i databladet, er det man ser på dekk.
 - **Dørene er ekte** (Jonas 17.10.2026): mannskapet går inn og ut av styrhuset, lugaren og shelteret gjennom dørene der forbildet har dem, på riktig side. Dekkskartet (`deckMap`) får åpningene sine fra `doors`-ankrene, ikke fra et hull i skroget der stien passet best, og `walktest` feiler når en sti krysser en vegg utenom en dør. Døra åpnes i modellen når noen går gjennom (enkel rotasjon om hengslet, som lukene).
 - **Mannskapet sier fra:** uten bysse klager de over maten på lange turer, uten wc over turer over 12 timer, uten ly over kulde. Linjene finnes i `SAY`; de kobles til fasilitetene.
@@ -184,7 +184,7 @@ Oppdragsøkonomien fra 17.10.2026 (`docs/OVERLEVERING.md` 4.26) gjør at fisket 
 - B11 eksos, ventilasjon, tanker, slanger
 - B12 navnefelt på begge bauger og hekken, merkefelt på begge bauger, hjemsted på hekken (del 12), logofelt på styrhuset
 - B13 flaggstang/-pinne akter og vimpelfeste i mastetoppen
-- B14 malingssoner: 1 skrog, 2 stripe/bånd, 3 overbygg, 4 dekk (nytt: overbygget kan males, dekket får eget valg)
+- B14 malingssoner: 1 skrog, 2 stripe/bånd, 3 overbygg, 4 dekk (nytt: overbygget kan males, dekket får eget valg; Jonas 17.10.2026: ja)
 - B15 ankrene fra del 4, inkludert `hatch`, `bunk`, `door`, og dekkskartet (`walktest`) grønt uten `DECK_OVR`
 - B16 slitasje og rust som vertex-mørking, mer på gamle båter (år), ikke som tekstur
 - B17 LOD: `lod0` for nær, `lod1` for 150–400 m, og NPC-utgaven; trekantbudsjett 80 000 for båter under 12 m, 150 000 for kystbåtene, 250 000 for havbåtene (måles av eksporten og skrives i loggen)
@@ -205,7 +205,7 @@ Oppdragsøkonomien fra 17.10.2026 (`docs/OVERLEVERING.md` 4.26) gjør at fisket 
 8. **ny plastsjark 9 m** (del 3): fra bunnen etter malen
 9. `havsjark35.py`: B8 (typede lanterner), B12, B14 (overbygg-sone)
 10. `skiff59.py`: B8, B12
-11. havbåtene `al45.py`, `krabbe50.py`, `tral60.py`, `not75.py`: B4, B7–B10, B12, B17, når havfeltene nærmer seg
+11. havbåtene `al45.py`, `krabbe50.py`, `tral60.py`, `not75.py`: B4, B7–B10, B12, B17 (Jonas 17.10.2026: alle nå, «så er det gjort»)
 
 Hver modell er 1–2 økter (Blender-skript, eksport, dekkskart, kontrollbilder, `vessel3d`-testen på 24 minutter). Kontrollbildene legges fram for Jonas etter hver modell, slik det ble gjort med havsjarken.
 
@@ -249,16 +249,17 @@ Kilden er Sjøveisreglene (forskrift 1. desember 1975 nr. 5 om forebygging av sa
 | 10–24 | Blender-løftet i rekkefølgen i del 10 (1–2 økter per modell, den nye plastsjarken 2) |
 | 25 | Full regresjon, overlevering, patchnotes |
 
-## 15. Spørsmål til Jonas før økt 1
+## 15. Avgjort av Jonas 17.10.2026
 
-1. **Ny plastsjark på ~9 m** som erstatning for plastsjarken (del 3), i begge gruppene? Jeg anbefaler ja; uten den er spranget 245 000 → 1 150 000 kr.
-2. **Snekka 26 fot:** skal ruffen gi 2 køyer (hvile ved kai og til ankers), eller holder regelen fra 05.10 om at åpne båter ikke gir hvile?
-3. **Hurtigsjarken:** ned til deg + 2 i mannskap (slik de drives), eller beholde + 3?
-4. **Maskinene:** sløyemaskin fra 10,5 m og ismaskin fra 10,99 m, som verftsoppgraderinger med prisene i del 6?
-5. **Fraktegods på dekk** med kran fra kyst15, hånd under 60 kg ellers?
-6. **Rekkefølgen på Blender-løftet** i del 10, og om havbåtene kan vente til havfeltene.
-7. **Overbygg og dekk som egne malingssoner** (B14), eller bare skrog og stripe som i dag?
+1. **Ny plastsjark på ~9 m:** ja, så realistisk som mulig (del 3 og 10).
+2. **Åpne båter gir ikke hvile om bord.** Snekka beholder 0 køyer.
+3. **Hurtigsjarken:** deg + 2.
+4. **Sløyemaskin og ismaskin bare på båter over 14,99 m.**
+5. **Frakt på dekk** med kran fra kyst15, for hånd under 60 kg ellers: ja, løses som foreslått.
+6. **Blender-løftet tar med havbåtene nå.**
+7. **Overbygg og dekk blir egne malingssoner.**
 
 ## Status
 
-- 17.10.2026: planen skrevet. Dørene lagt til (ekte plassering, ankere, dekkskart). Ingenting bygd.
+- 17.10.2026: planen skrevet. Dørene lagt til (ekte plassering, ankere, dekkskart). Alle sju spørsmålene avgjort (del 15).
+- 17.10.2026, økt 1: plastsjarken ut av `VESSELS`, `LIC_OFFERS` (h8), `SPEC3D`, `HELM_KIT`, admin-eksempeldataene, `vesseltest` og overleveringen; en lagring som eide en, får havsjarken uten mellomlegg og h8 blir h9 (`load()` i `02-format-state.js`); patchnote p112.

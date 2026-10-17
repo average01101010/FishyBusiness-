@@ -464,6 +464,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p112', '17.10.2026', 'Plastsjarken går ut', 'The fibreglass sjark leaves', [
+       ['Plastsjarken på 29 fot er tatt ut av Båthandelen. Den som eide en, har fått havsjarken på 35 fot i stedet, uten mellomlegg. En ny og bedre båt i samme størrelse kommer.', 'The 29 ft fibreglass sjark has left the boat market. Anyone who owned one has the 35 ft havsjark in her place, at no cost. A new and better boat of the same size is coming.']]],
     ['p111', '17.10.2026', 'Oppdragene', 'The missions', [
        ['Sesongoppdragene passer nå båten din: kiloene følger det du selv har levert ei vanlig uke, tida til reisen er trukket fra, og arten er en du har redskap og kvote igjen til. Takk for tipset!', 'The season missions now fit your boat: the kilos follow what you yourself land in a usual week, the time for the trip is taken off, and the species is one you have the gear and quota left for. Thanks for the tip!'],
        ['Belønningen for oppdrag følger det du selv tjener på fisket, og der du beholder fangsten, betaler oppdraget et tillegg i stedet for hele tida. Oppdrag du alt har tatt, er regnet om på samme måte.', 'The reward for missions follows what you yourself earn from fishing, and where you keep the catch, the mission pays a premium instead of the whole time. Missions you have already taken are worked out the same way.']]],
