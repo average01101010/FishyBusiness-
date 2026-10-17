@@ -25,33 +25,40 @@ function alarmAck(){
 // - in a rorbu (07d-rorbu.js): six hours to full, RORBU.kr a night, paid when you go in and then once a day while you stay
 // Aboard at the quay a boat with bunks (VESSELS berths) rests you in eight hours as before; an open boat gives no rest at all, at the
 // quay or at sea.
-const restWhere = b => b && b.status === 'port' ? (isRorbu(b.port) ? 'rorbu' : atHome(b) ? 'naust' : null) : null;
+// and, from 17.10.2026 (tilbakemelding #70; Jonas: «i båter som har køye skal man kunne hvile ombord»), in the bunk of a boat with
+// berths (schema v2, docs/batplan.md del 8) lying at anchor or at sea with someone of the crew awake on watch: 'koye'. Slower than a
+// bed ashore (restRate), and the crew work on while you sleep (restAshore tells the deck and the 3D view apart from the rest ashore)
+const crewOf = v => v ? (v.id === S.cur ? S.crew : v.crew) || [] : S.crew || [];
+const bunkOk = (b, v) => !!(b && b.status !== 'port' && bunks(b) && (b.anch || crewOf(v).some(c => !c.off)));
+const restWhere = b => b && b.status === 'port' ? (isRorbu(b.port) ? 'rorbu' : atHome(b) ? 'naust' : null) : bunkOk(b, myVessel()) ? 'koye' : null;
 const myBoat = () => { const v = myVessel(); return v ? vget(v, 'boat') : S.boat; };
-const resting = () => { const b = myBoat(); return !!(S.rest && b && b.status === 'port' && b.port === S.rest.port); };
+const resting = () => { const b = myBoat(); if (!S.rest || !b) return false; return S.rest.w === 'koye' ? bunkOk(b, myVessel()) : b.status === 'port' && b.port === S.rest.port; };
+const restAshore = () => resting() && S.rest.w !== 'koye';
 const bunks = b => !!(b && VESSELS[b.type] && VESSELS[b.type].berths > 0);
 // energy a minute where she lies (0 when there is no rest to be had)
 function restRate(b){
   if (!b) return ENERGY.quay;
-  if (b.status !== 'port') return 0;
+  if (b.status !== 'port') return S.rest && S.rest.w === 'koye' && resting() ? ENERGY.quay * (b.anch ? 0.85 : 0.7) : 0;   // the bunk: a berth at anchor, poorer under way
   if (S.rest && S.rest.port === b.port) return S.rest.w === 'rorbu' ? RORBU.rate : ENERGY.quay * naustRest(b);
   return bunks(b) ? ENERGY.quay : 0;
 }
 function restStart(){
-  const b = myBoat(), w = restWhere(b); if (!w) return ['Du kan hvile i naustet i hjemhavna eller på en rorbu.', 'You can rest in the boathouse in your home harbour or at a rorbu.'];
+  const b = myBoat(), w = restWhere(b); if (!w) return bunks(b) ? ['Du kan hvile i køya til ankers, eller på sjøen når noen av mannskapet er våkne og har vakta.', 'You can rest in the bunk at anchor, or at sea when someone of the crew is awake on watch.'] : ['Du kan hvile i naustet i hjemhavna eller på en rorbu.', 'You can rest in the boathouse in your home harbour or at a rorbu.'];
   if (resting()) return null;
-  const pt = portById(b.port);
-  if (w === 'rorbu'){
+  const pt = b.port ? portById(b.port) : null;
+  if (w === 'koye'){ const sk = crewOf(myVessel()).filter(c => !c.off).slice().sort((a, c) => c.attr.sjo - a.attr.sjo)[0]; log(b.anch ? 'Du gikk ned i køya mens båten ligger til ankers.' : 'Du gikk ned i køya. ' + sk.name.split(' ')[0] + ' har vakta.', b.anch ? 'You went down to the bunk while the boat lies at anchor.' : 'You went down to the bunk. ' + sk.name.split(' ')[0] + ' has the watch.'); }
+  else if (w === 'rorbu'){
     if (S.cash < RORBU.kr) return ['Du har ikke ' + kr(RORBU.kr) + ' til en natt på rorbua.', 'You do not have ' + kr(RORBU.kr) + ' for a night at the rorbu.'];
     S.cash -= RORBU.kr; S.stats.costs += RORBU.kr;
     log('Du tok inn på rorbua i ' + pt.name + ' for ' + kr(RORBU.kr) + ' natta.', 'You took a room at the rorbu in ' + pt.name + ' for ' + kr(RORBU.kr) + ' a night.');
   } else log('Du gikk opp i naustet for å hvile.', 'You went up to the boathouse to rest.');
-  S.rest = {port:b.port, w, t0:S.t, paid:S.t + RORBU.night}; achAdd('sleep');
+  S.rest = {port:b.port || null, w, t0:S.t, paid:S.t + RORBU.night}; achAdd('sleep');
   if (hooks.onEnergy) hooks.onEnergy('rest');
   return null;
 }
 function restEnd(quiet){
   if (!S.rest) return; const w = S.rest.w; S.rest = null;
-  if (!quiet) log((w === 'rorbu' ? 'Du gikk ned fra rorbua' : 'Du gikk ned fra naustet') + ' og om bord. Energi ' + Math.round(S.energy) + ' %.', 'You went down from the ' + (w === 'rorbu' ? 'rorbu' : 'boathouse') + ' and aboard. Energy ' + Math.round(S.energy) + ' %.');
+  if (!quiet) log(w === 'koye' ? 'Du kom opp fra køya. Energi ' + Math.round(S.energy) + ' %.' : (w === 'rorbu' ? 'Du gikk ned fra rorbua' : 'Du gikk ned fra naustet') + ' og om bord. Energi ' + Math.round(S.energy) + ' %.', w === 'koye' ? 'You came up from the bunk. Energy ' + Math.round(S.energy) + ' %.' : 'You went down from the ' + (w === 'rorbu' ? 'rorbu' : 'boathouse') + ' and aboard. Energy ' + Math.round(S.energy) + ' %.');
   if (hooks.onEnergy) hooks.onEnergy('rest');
 }
 // once a minute: the rest is over when the boat has gone, and a rorbu wants its next night paid
@@ -100,11 +107,11 @@ function energyMinute(){
   if (S.skip && !S.skip.told){ S.skip.told = true; log(SKIP[S.skip.k] ? SKIP[S.skip.k].no + ' har gått ut. Nå trenger du og mannskapet hvile igjen.' : 'Skippertak har gått ut.', (SKIP[S.skip.k] ? SKIP[S.skip.k].en : 'Skippertak') + ' has run out. You and the crews need rest again.'); }
   if (S.sleep){ if (S.t >= S.sleep.until) wakeUp(); return; }
   restMinute();
-  const v = myVessel(), b = v && vget(v, 'boat'), quay = !b || b.status === 'port', rate = restRate(b);
-  S.energy = clamp(S.energy + (quay ? rate : -ENERGY.sea), 0, 100);   // at the quay only where there is rest (restRate)
+  const v = myVessel(), b = v && vget(v, 'boat'), quay = !b || b.status === 'port', rate = restRate(b), bunk = !quay && resting();   // (in the bunk at anchor or at sea, #70)
+  S.energy = clamp(S.energy + (quay || bunk ? rate : -ENERGY.sea), 0, 100);   // at the quay only where there is rest (restRate)
   if (S.energy > ENERGY.warn + 5) S.enWarn = false;
-  if (S.drowsy && quay && rate > 0 && S.energy >= BNWAS.rested){ S.drowsy = false; log('Du har hvilt deg ut.', 'You have had a proper rest.'); }
-  if (quay) return;
+  if (S.drowsy && (quay || bunk) && rate > 0 && S.energy >= BNWAS.rested){ S.drowsy = false; log('Du har hvilt deg ut.', 'You have had a proper rest.'); }
+  if (quay || bunk) return;
   // drowsy after the alarm: you may doze off again (the same minute is the same for every player: a hash, not Math.random)
   if (S.drowsy && S.energy > 0 && h2(S.t, 977) < BNWAS.risk){ fallAsleep(v, true); return; }
   if (S.energy <= ENERGY.warn && !S.enWarn){ S.enWarn = true; const rb = bunks(b) ? null : rorbuNear(b.pos, 40)[0], tip = rb ? [' Nærmeste rorbu er i ' + rb.R.name + ', ' + fmt(rb.d / NM, 0) + ' nm unna.', ' The nearest rorbu is in ' + rb.R.name + ', ' + fmt(rb.d / NM, 0) + ' nm away.'] : ['', '']; log('Du begynner å bli sliten. Arbeidet ditt går tregere.' + tip[0], 'You are getting tired. Your work goes slower.' + tip[1]); if (hooks.onEnergy) hooks.onEnergy('warn'); }

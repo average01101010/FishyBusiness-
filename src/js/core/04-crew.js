@@ -127,17 +127,19 @@ function crewTick(H){
   // the vessel's own log of hours at sea, for the crew page
   S.workLog = (S.workLog || []).concat([atSea ? 1 : 0]).slice(-24);
   const on = crewAboard(H), onIds = new Set(on.map(c => c.id)), has = t => on.filter(c => c.traits.includes(t)).length;
-  const cold = coldPen(H, hs) * ((BOAT.fx && BOAT.fx.cold) || 1), food = foodScore();   // the drying room (UPGS.dry) takes the edge off the cold
+  // the drying room (UPGS.dry) takes the edge off the cold, as do the boat's own shelter deck and drying room; an open boat is colder (schema v2 fac, docs/batplan.md del 8)
+  const F = BOAT.fac || {}, cold = coldPen(H, hs) * ((BOAT.fx && BOAT.fx.cold) || 1) * (F.shelter ? 0.75 : 1) * (F.dry ? 0.85 : 1) * (F.house === 'open' ? 1.15 : 1), food = foodScore();
+  const tripH = (() => { let n = 0; for (let i = S.workLog.length - 1; i >= 0 && S.workLog[i]; i--) n++; return n; })();
   // resting ashore with the skipper (the naust or a rorbu, 15-energy.js) they come back as fast as he does: 0 to 100 in six hours in a
   // rorbu (Jonas 06.10.2026: «Så begge sover på en måte i rorbuen»)
   // and at a rorbu they sleep there too, with you or without you (tilbakemelding #11)
-  const restC = meAboard() && resting() ? restRate(b) * 60 : b.status === 'port' && ((typeof isRorbu === 'function' && isRorbu(b.port)) || bunks(b)) ? RORBU.rate * 60 : b.anch && b.status !== 'port' && bunks(b) ? RORBU.rate * 60 * 0.85 : 0;   // (a boat with bunks rests the crew at the quay as fast as a rorbu does, Jonas 08.10.2026)
+  const restC = meAboard() && restAshore() ? restRate(b) * 60 : b.status === 'port' && ((typeof isRorbu === 'function' && isRorbu(b.port)) || bunks(b)) ? RORBU.rate * 60 : b.anch && b.status !== 'port' && bunks(b) ? RORBU.rate * 60 * 0.85 : 0;   // (a boat with bunks rests the crew at the quay as fast as a rorbu does, Jonas 08.10.2026)
   for (const c of S.crew.slice()){
     const here = onIds.has(c.id) && atSea;
     if (typeof lifeDay === 'function'){ crewLife(c); lifeOffTick(c); lifeDay(c, H); if (!S.crew.includes(c)) continue; if (here && fishing) lifeInjury(c, hs); }   // del 2: their life beside the work (14-crewlife.js)
     // the share of the hour spent working: a break at sea tires less, but is not rest
     const wm = Object.values(c.wk || {}).reduce((a, m) => a + m, 0), workF = c.wk ? clamp(wm / 60, 0, 1) : 1;
-    c.fatigue = skipOn() ? 0 : here ? clamp(c.fatigue + (fishing ? 6 : 3) * (0.4 + 0.6 * workF) * (1.4 - 0.16 * c.attr.uth) * (night ? 1.25 : 1) * ((BOAT.fx && BOAT.fx.fat) || 1), 0, 100) : clamp(c.fatigue - Math.max(8 * (night ? 1.5 : 1), restC), 0, 100);
+    c.fatigue = skipOn() ? 0 : here ? clamp(c.fatigue + (fishing ? 6 : 3) * (0.4 + 0.6 * workF) * (1.4 - 0.16 * c.attr.uth) * (night ? 1.25 : 1) * ((BOAT.fx && BOAT.fx.fat) || 1) * (F.house === 'open' ? 1.1 : 1), 0, 100) : clamp(c.fatigue - Math.max(8 * (night ? 1.5 : 1), restC), 0, 100);
     if (onIds.has(c.id) && b.status !== 'port') learnHour(c);
     c.wk = {};
     if (here){ c.seaH = (c.seaH || 0) + 1; const k = c.traits.includes('laerevillig') ? 2 : 1;
@@ -152,7 +154,7 @@ function crewTick(H){
     else { tg = 60 + (c.share - c.ask) * 300;
       const earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).reduce((a, e) => a + e[1], 0), expect = c.ask * 6000 * 5;
       if (S.t - (c.hiredT || 0) > 3 * 1440) tg += clamp((earn - expect) / expect * 12, -12, 12); }
-    if (here) tg += (food - 3) * 3 + ((BOAT.fx && BOAT.fx.mood) || 0);   // the mess and galley (UPGS.galley)   // the food on board: the last four meals
+    if (here) tg += (food - 3) * 3 + ((BOAT.fx && BOAT.fx.mood) || 0) + (F.mess ? 3 : F.galley === 'bysse' ? 1 : 0) - (!F.wc && tripH >= 12 ? 3 : 0);   // the food on board (the last four meals), the mess and galley (built in, or UPGS.galley), no toilet on a long day
     tg -= Math.max(0, c.fatigue - 50) * 0.5; tg -= cold * 50 * (here ? 1 : 0.3);
     if (here && hs * ((BOAT.fx && BOAT.fx.sea) || 1) > 1.5) tg -= (hs * ((BOAT.fx && BOAT.fx.sea) || 1) - 1.5) * 10 * (1.2 - 0.12 * c.attr.sjo); if (here && hs > 1.2 && c.traits.includes('sjosyk')) tg -= 15;
     const me = t => c.traits.includes(t) ? 1 : 0; tg += 4 * (has('spokefugl') - me('spokefugl')) + 3 * (has('omsorgsfull') - me('omsorgsfull')) - 2 * (has('grinebiter') - me('grinebiter')); if (me('grinebiter')) tg -= 5;

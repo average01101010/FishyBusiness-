@@ -4447,7 +4447,7 @@ const G3 = (() => {
     // and while the skipper rests ashore the crew are up there too (Jonas 06.10.2026: both sleep in the rorbu)
     // and at the quay in a boat with bunks the crew who still need rest are asleep in them, not on deck (tilbakemelding #65; they rest
     // there as fast as in a rorbu, core/04-crew.js): only the rested ones come up
-    const underway = S.boat.status === 'sailing' && !S.boat.gop, ashore = meAboard() && resting();
+    const underway = S.boat.status === 'sailing' && !S.boat.gop, ashore = meAboard() && restAshore();   // (in the bunk aboard, #70, the crew stay on deck)
     const inBunks = S.boat.status === 'port' && !VG.open && bunks(S.boat) ? crewAboard().slice(0, ncrew).filter(c => c.fatigue >= 1).length : 0;
     const deckCrew = (underway && !VG.open) || ashore ? 0 : Math.max(0, ncrew - awayCr - Math.max(0, gHaul) - helmCr - inBunks);
     // the people aboard walk the deck (deckcrew.js): the boat is drawn without her fixed figures, and the agents are drawn after her

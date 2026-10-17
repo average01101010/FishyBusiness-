@@ -41,7 +41,7 @@ function workCtx(as){
 // who stands where: [{c (null for you), st}], you first
 function workAssign(as){
   const team = crewAboard(), ctx = workCtx(as), P = [];
-  if (meAboard() && !asleep()) P.push({c:null, job:jobOf(null)});
+  if (meAboard() && !asleep() && !(typeof resting === 'function' && resting())) P.push({c:null, job:jobOf(null)});   // (in the bunk, #70: the crew work on without you)
   team.forEach((c, i) => P.push({c, job:jobOf(c, i)}));
   if (!P.length) return P;
   if (ctx.s === 'aground'){ for (const p of P) p.st = 'pause'; return P; }
@@ -65,6 +65,10 @@ function workAssign(as){
   if (ctx.kokk && !cook){ const q = P.filter(p => p.st === 'pause' && p.c && p.c.attr.kokk >= MEAL.ok).sort((a, b) => b.c.attr.kokk - a.c.attr.kokk)[0]; if (q) q.st = 'kokk'; }
   // stopped to gut: everyone free goes on deck
   if (ctx.stop) for (const p of P) if ((p.st === 'pause' || (alone && p.st === 'haling')) && (ctx.sloy || ctx.is)) p.st = ctx.sloy ? 'sloy' : 'is';
+  // the deck has room for stations.table at the gutting table and one at the tub beside it (schema v2, docs/batplan.md del 8): while the
+  // boat fishes on, the rest stay at the rail; stopped to gut, or at the quay, everyone lends a hand
+  if (ctx.fiske && !ctx.stop){ const room = ((BOAT.stations && BOAT.stations.table) || 1) + 1; let onDeck = 0;
+    for (const p of P) if (p.st === 'sloy' || p.st === 'is'){ if (++onDeck > room) p.st = 'fiske'; } }
   return P;
 }
 // the people on a station and what they do there together: n, the sum of their efficiency for skill g, and the mean

@@ -63,10 +63,11 @@ async def main():
           R.learn = [y, o, u].map(c => +(c.gear.sloy - 2).toFixed(3));
           // meals: a good cook on a break makes dinner six hours out; with no cook it is bread an hour after it was due
           b.status = 'idle'; b.port = null; b.pos = {...g}; b.gop = null; S.hold = []; S.plan = null; S.meal = null; S.me = S.cur; S.myJob = null;
+          const T0 = S.boat.type; S.boat.type = 'sjark'; applyVessel();   // (a hotplate aboard: on the open boats it is a packed lunch and a flask, 14-crewlife.js)
           const ck = hand(40, 4); S.crew = [ck]; const t0 = S.t; for (let i = 0; i < 400 && !(S.meal && S.meal.hist.length); i++) step();
           R.goodMeal = {q:S.meal.hist[0], after:Math.round((S.t - t0) / 60 * 10) / 10, by:S.meal.last && S.meal.last.by === ck.id};
           const nc = hand(40, 2); S.crew = [nc]; S.meal = null; const t1 = S.t; for (let i = 0; i < 500 && !(S.meal && S.meal.hist.length); i++) step();
-          R.bread = {q:S.meal.hist[0], after:Math.round((S.t - t1) / 60 * 10) / 10};
+          R.bread = {q:S.meal.hist[0], after:Math.round((S.t - t1) / 60 * 10) / 10}; S.boat.type = T0; applyVessel();
           // the food steers the mood: the same hand, good food against bad, ten hours at sea
           b.status = 'sailing'; S.plan = {wps:[{x:g.x + 30, y:g.y, port:null, fish:0}], idx:0, speed:2, returning:false};
           const mood = hist => { const c = hand(40); c.morale = 60; S.crew = [c]; S.meal = {due:S.t + 9999, cook:null, hist}; for (let h = 0; h < 10; h++) crewTick(S.t / 60 + h); return c.morale; };

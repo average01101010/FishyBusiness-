@@ -74,7 +74,8 @@ async def main():
                 await pg.screenshot(path=os.path.join(OUT, 'vessel_npc_%d.png' % i))
             await pg.evaluate("S.mult = 1")
             sc = [k[3] for k in npc['kits']] + [k[4] for k in npc['kits']]
-            print(ok(all(0.8 <= x <= 1.25 for x in sc) and all(k[2] for k in npc['kits'])), 'every boat in the local fleet gets a kit model within 20 % of her length and beam', [k[:3] for k in npc['kits']])
+            # (within 30 % since 17.10.2026: the 8.9 m kit model left with the plastsjark, docs/batplan.md del 3, so a 9 m boat wears the havsjark scaled down until the new Blender model comes)
+            print(ok(all(0.75 <= x <= 1.3 for x in sc) and all(k[2] for k in npc['kits'])), 'every boat in the local fleet gets a kit model within 30 % of her length and beam', [k[:3] for k in npc['kits']])
             print(ok(all(v[1] <= (120000 if v[3] else 25000) and v[2] <= (10000 if v[3] else 6000) for v in npc['verts']) and npc['liv'] > 0), 'near versions under 25 000 points (detailed GLB models 120 000), middle under 6 000 (GLB 10 000), and the liveries change the colours', npc['verts'])
             print(ok(bool(npc.get('npc'))), 'found a boat on her ground for the screenshots', npc.get('npc'))
         # another player's boat: her own type's model, not the box boat (Jonas 05.10.2026: a friend in the same old wooden boat showed white)

@@ -45,14 +45,17 @@ function mealMinute(A){
   if (S.boat.status === 'port' || !crewAboard().length){ M.due = null; M.cook = null; return; }
   if (M.due == null){ M.due = S.t + MEAL.every; return; }
   if (S.t < M.due) return;
+  // no galley aboard (schema v2 fac.galley): a packed lunch and coffee from the flask when the meal is due, nobody cooks; a hotplate caps the dish at 4
+  const gal = (BOAT.fac && BOAT.fac.galley) || 'bysse';
+  if (gal === 'none'){ serveMeal(2, null, false, ['matpakke og kaffe fra termosen', 'a packed lunch and coffee from the flask']); return; }
   const ck = A.find(p => p.st === 'kokk');
   if (ck){ const id = ck.c ? ck.c.id : 'me'; if (!M.cook || M.cook.id !== id) M.cook = {id, m:0}; M.cook.m++;
-    if (M.cook.m >= ((BOAT.fx && BOAT.fx.cook) || MEAL.cook)) serveMeal(ck.c ? clamp(Math.round(ck.c.attr.kokk), 1, 5) : 3, ck.c, !ck.c); return; }
+    if (M.cook.m >= ((BOAT.fx && BOAT.fx.cook) || MEAL.cook)) serveMeal(Math.min(gal === 'plate' ? 4 : 5, ck.c ? clamp(Math.round(ck.c.attr.kokk), 1, 5) : 3), ck.c, !ck.c); return; }
   if (S.t >= M.due + MEAL.wait && !M.cook) serveMeal(1, null, false);
 }
-function serveMeal(q, cook, me){
+function serveMeal(q, cook, me, dish){
   const M = mealState(); M.hist.push(q); if (M.hist.length > 8) M.hist.shift(); M.due = S.t + MEAL.every; M.cook = null; M.last = {t:S.t, q, by:cook ? cook.id : me ? 'me' : null};
-  const d = DISH[q];
+  const d = dish || DISH[q];
   if (cook) log(cook.name.split(' ')[0] + ' laget ' + d[0] + ' til mannskapet.', cook.name.split(' ')[0] + ' made ' + d[1] + ' for the crew.');
   else if (me) log('Du laget ' + d[0] + ' til mannskapet.', 'You made ' + d[1] + ' for the crew.');
   else log('Ingen hadde tid til å lage mat. Det ble ' + d[0] + '.', 'Nobody had time to cook. It was ' + d[1] + '.');
@@ -96,6 +99,10 @@ const SAY = {
     ['Æ e så agalaus. Ska vi ikkje prøve et nytt sted?', 'I am so restless. Should we not try a new spot?', 'rastlos'], ['Æ sei vi lægg inn åran og prøve igjen i mårrå.', 'I say we give up and try again tomorrow.', 'makelig']],
   tubFull:[['Bløggekaret renn snart over!', 'The bleeding tub is about to overflow!'], ['Vi treng flere nævva på dekk her.', 'We need more hands on deck here.'],
     ['Fesken ligg førr lenge i karet. Det koste kvalitet.', 'The fish lie too long in the tub. That costs quality.', 'perfeksjonist'], ['Gi mæ en kniv, så e det unnagjort.', 'Give me a knife and it is done.', 'arbeidsjern']],
+  noGalley:[['Ti tima på sjyen og bare tørre brødskiver. Hadde vi hatt ei kokeplate …', 'Ten hours at sea and only dry bread. If we had a hotplate …'], ['Termosen e tom, skipper. Ei bysse hadde vorre nå.', 'The flask is empty, skipper. A galley would be something.'],
+    ['Æ drømme om varm mat. Det her e en lang dag førr en matpakke.', 'I dream of hot food. This is a long day for a packed lunch.', 'grinebiter']],
+  noWc:[['Tolv tima uten do. Æ sei ikkje meir.', 'Twelve hours without a toilet. I say no more.'], ['Neste båt har toalett, skipper. Det e alt æ ber om.', 'The next boat has a toilet, skipper. That is all I ask.'],
+    ['Det e grensa førr ka en kar held ut uten do.', 'There is a limit to what a man puts up with without a toilet.', 'grinebiter']],
   cold:[['Æ har låppen på nævan. Kjenn ikkje fingran lenger.', 'My hands have gone numb with cold. I cannot feel my fingers.'], ['Hustri e det. Kæm va det som snakka om sommer i Nord-Norge?', 'It is bitterly cold. Who said anything about summer up north?'],
     ['Naggelbett på alle ti. Takk førr det.', 'Frostbitten nails on all ten. Thanks for that.'], ['Snørret mitt har frosse te istapp. Ny rekord.', 'My snot has frozen into an icicle. New record.', 'spokefugl'],
     ['Neste gang kjøpe vi ordentlige klær. Eller ny skipper.', 'Next time we buy proper clothes. Or a new skipper.', 'grinebiter']],
@@ -202,6 +209,9 @@ function sayHour(H, on, hs){
   const tired = on.slice().sort((a, c) => c.fatigue - a.fatigue)[0]; if (tired.fatigue > 70) sits.push(['tired', tired]);
   if (hs > 2 || W > 14) sits.push(['storm']); else if (W < 2) sits.push(['calm']);
   if (S.workLog && S.workLog.length >= 12 && S.workLog.slice(-12).every(v => v)) sits.push(['longTrip']);
+  // the boat's own facilities (schema v2): no galley on a long day, no toilet on a longer one
+  { const F = BOAT.fac || {}; let n = 0; for (let i = (S.workLog || []).length - 1; i >= 0 && S.workLog[i]; i--) n++;
+    if (F.galley === 'none' && n >= 10) sits.push(['noGalley']); if (!F.wc && n >= 12) sits.push(['noWc']); }
   if (hr >= 5 && hr <= 7) sits.push(['morning']);
   const s = sits.length && Math.random() < 0.75 ? pick1(sits) : ['chat'];
   crewSay(s[1] || null, s[0]);

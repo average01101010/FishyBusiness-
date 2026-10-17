@@ -132,7 +132,8 @@ function driftCheck(o){
     const R = driftRoles(o), need = Math.ceil(S.crew.length / 2);
     if (S.crew.length < driftNeedHands) E.push(no('Døgndrift 2 og 2 krever fire mann: skipper, styrmann og to på dekk. Du har ' + S.crew.length + '.', 'Round-the-clock 2 and 2 needs four hands: a skipper, a mate and two on deck. You have ' + S.crew.length + '.'));
     else if (!(R.mate)) E.push(no('Velg en styrmann.', 'Choose a mate.'));
-    if ((VESSELS[S.boat.type].berths || 0) < need) E.push(no('Vaktene trenger køyer til dem som har fri (' + need + '). Båten har ' + (VESSELS[S.boat.type].berths || 0) + '.', 'The watch off needs bunks (' + need + '). The boat has ' + (VESSELS[S.boat.type].berths || 0) + '.'));
+    if (!VESSELS[S.boat.type].watch) E.push(no('Døgndrift 2 og 2 krever styrhus og køyer om bord.', 'Round-the-clock 2 and 2 needs a wheelhouse and bunks aboard.'));
+    else if ((VESSELS[S.boat.type].berths || 0) < need) E.push(no('Vaktene trenger køyer til dem som har fri (' + need + '). Båten har ' + (VESSELS[S.boat.type].berths || 0) + '.', 'The watch off needs bunks (' + need + '). The boat has ' + (VESSELS[S.boat.type].berths || 0) + '.'));
     rep.watch = {on:o.watchH || 6, rest:o.period / 2};
   } else if (S.crew.length >= 2 && rep.work > 14 && !(VESSELS[S.boat.type].berths > 0)) W.push(no('Mannskapet jobber lange dager uten køyer. Hvilen blir dårlig.', 'The crew works long days without bunks. The rest will be poor.'));
   if (S.crew.length && o.sess.some(s => s.type === 'hvile') && o.sess.filter(s => s.type === 'hvile').every(s => { const p = portById(s.at); return p && !p.rorbu; }) && !(VESSELS[S.boat.type].berths > 0)) W.push(no('Båten har ingen køyer, og hvilestedet er en vanlig kai. Mannskapet hviler best på en rorbu.', 'The boat has no bunks, and the place of rest is an ordinary quay. The crew rests best at a rorbu.'));

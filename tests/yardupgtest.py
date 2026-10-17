@@ -18,9 +18,9 @@ async def main():
           b.type = 'snekke'; b.upg = {}; applyVessel(); R.price = [VESSELS.snekke.price, upPrice(0.03)];
           b.type = Object.keys(VESSELS).find(t => VESSELS[t].cls === 'hav'); R.pricehav = [VESSELS[b.type].price, upPrice(0.03)];
           // effects: cabins and galley and the rest change what the crew and the boat do
-          b.type = 'sjarkny'; b.upg = {}; applyVessel(); const f0 = {fuel:BOAT.fuelCap, sea:BOAT.sea, fx:JSON.stringify(BOAT.fx)};
+          b.type = 'sjark'; b.upg = {}; applyVessel(); const f0 = {fuel:BOAT.fuelCap, sea:BOAT.sea, fx:JSON.stringify(BOAT.fx)};   // (the havsjark: a hotplate and no drying room, so the yard's galley and drying room fit; the new sjark has both built in)
           b.upg = {cabin:3, galley:3, dry:2, insul:2, tank:2, stab:1}; applyVessel(); R.fx = BOAT.fx; R.fuel = [f0.fuel, BOAT.fuelCap]; R.sea = [f0.sea, BOAT.sea];
-          b.upg = {}; b.engLv = 2; applyVessel(); R.svc = [VESSELS.sjarkny.svcCost, BOAT.svcCost];
+          b.upg = {}; b.engLv = 2; applyVessel(); R.svc = [VESSELS[b.type].svcCost, BOAT.svcCost];
           b.engLv = 0; b.upg = {}; applyVessel();
           // a job at the yard finishes and sets the step
           b.type = 'sjarkny'; b.status = 'port'; b.port = PORTS.find(q => q.sted === 'verft').id; const q = PORTS.find(q => q.sted === 'verft'); b.pos = {x:q.p.x, y:q.p.y};
