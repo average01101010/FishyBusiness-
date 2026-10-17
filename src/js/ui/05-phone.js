@@ -465,7 +465,7 @@ const PHONE = (() => {
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
     ['p113', '17.10.2026', 'Båtene gjennomgått', 'The boats reviewed', [
-       ['Alle båtene har fått samme skjema: skrogmateriale, lasterom eller dekkslast, plass til frakt på dekk, forbruk i liter per time, rekkevidde, lugarer, køyer og fasiliteter om bord. Forbruket følger nå motoren, så de større båtene bruker mer diesel i marsj enn før. Havsjarken sover fire, den nye hurtigsjarken fire, og den brukte hurtigsjarken går med to.', 'Every boat now has the same sheet: hull material, hold or deck load, room for freight on deck, burn in litres an hour, range, cabins, berths and the facilities aboard. The burn follows the engine, so the bigger boats use more diesel at cruising speed than before. The havsjark sleeps four, the new speed sjark four, and the used speed sjark runs with two.']]],
+       ['Alle båtene har fått samme skjema: skrogmateriale, lasterom eller dekkslast, plass til frakt på dekk, forbruk i liter per time, rekkevidde, lugarer, køyer og fasiliteter om bord. Forbruket følger nå motoren, så de større båtene bruker mer diesel i marsj enn før. Havsjarken sover fire, den nye hurtigsjarken fire, og den brukte hurtigsjarken går med to. Databladet i Båthandelen og under Beholdning → Båten viser de samme åtte delene for alle båter.', 'Every boat now has the same sheet: hull material, hold or deck load, room for freight on deck, burn in litres an hour, range, cabins, berths and the facilities aboard. The burn follows the engine, so the bigger boats use more diesel at cruising speed than before. The havsjark sleeps four, the new speed sjark four, and the used speed sjark runs with two. The spec sheet in the boat market and under Inventory → The boat shows the same eight sections for every boat.']]],
     ['p112', '17.10.2026', 'Plastsjarken går ut', 'The fibreglass sjark leaves', [
        ['Plastsjarken på 29 fot er tatt ut av Båthandelen. Den som eide en, har fått havsjarken på 35 fot i stedet, uten mellomlegg. En ny og bedre båt i samme størrelse kommer.', 'The 29 ft fibreglass sjark has left the boat market. Anyone who owned one has the 35 ft havsjark in her place, at no cost. A new and better boat of the same size is coming.']]],
     ['p111', '17.10.2026', 'Oppdragene', 'The missions', [
@@ -1303,7 +1303,7 @@ const PHONE = (() => {
   // ---- the boat market: tabs for the open group, boats with a closed-group right, the coastal fleet over 11 m and the ocean fleet;
   // a card per boat with its side view, and a spec sheet with the buttons. Until the company owns a closed-group vessel, an open-group
   // boat is only bought by trading in the one you have: a company can have one vessel in the open group (deltakerforskriften)
-  let mkSel = null;
+  let mkSel = null, minSheet = false;   // the market's chosen boat; the spec sheet open on «Min båt»
   const hasLic = () => S.fleet.some(v => vget(v, 'lic'));
   const grpText = V => V.cls === 'hav' ? L('havfiske, konsesjon', 'ocean, licence') : V.len >= 11 ? L('bare lukket gruppe (11 m og mer)', 'closed group only (11 m and more)') : V.len < 8 ? L('åpen gruppe under 8 m', 'open group under 8 m') : V.len < 10 ? L('åpen gruppe 8–9,99 m', 'open group 8–9.99 m') : L('åpen gruppe 10–10,99 m', 'open group 10–10.99 m');
   const tn = n => n >= 10000 ? fmt(n / 1000, n >= 100000 ? 0 : 1) + ' t' : fmt(n, 0) + ' kg';
@@ -1332,26 +1332,43 @@ const PHONE = (() => {
     if (!atKind('verft')) h.push('<p class="ph-note">' + L('Båter kjøpes og selges på verftet.', 'Vessels are bought and sold at the yard.') + '</p>' + nearHint('verft'));
     return h.join('');
   }
+  // the spec sheet: eight sections with the same rows for every boat (Jonas 17.10.2026, docs/batplan.md del 5). A row that does not
+  // apply says «ingen», «–» or «ikke på denne båten»; it is never left out, so two boats side by side read alike
+  const NOTHERE = () => L('ikke på denne båten', 'not on this boat');
+  function specSecs(k, O){
+    const V = VESSELS[k], price = O ? V.price + licValue(O) : V.price, no = L('ingen', 'none'), ja = L('ja', 'yes'), yn = x => x ? ja : L('nei', 'no'), upto = n => n ? L('inntil ', 'up to ') + fmt(n, 0) : no, nm = q => EQUIP[q].name[S.lang];
+    const holdTxt = {dekk:L('dekkslast i kasser og kar, ', 'deck load in boxes and tubs, '), rom:L('lasterom med is, ', 'a hold with ice, '), frys:L('fryseri, ', 'freezer hold, '), rsw:L('RSW-tanker, ', 'RSW tanks, ')}[V.hold.kind] + tn(V.holdCap) + ' (' + fmt(V.hold.m3, V.hold.m3 < 10 ? 1 : 0) + ' m³)';
+    const house = {open:L('åpen båt', 'open boat'), hardtop:L('hardtopp over styreplassen', 'a hardtop over the helm'), hus:L('styrhus', 'wheelhouse')}[V.fac.house], galley = {none:no, plate:L('kokeplate', 'a hotplate'), bysse:L('bysse', 'a galley')}[V.fac.galley];
+    const hull = {tre:L('tre', 'wood'), alu:L('aluminium', 'aluminium'), glassfiber:L('glassfiber', 'fibreglass'), 'stål':L('stål', 'steel')}[V.hullMat];
+    const elec = ['plotter', 'vhf', 'ais', 'chirp', 'sonar', 'brovakt'], stdE = elec.filter(q => V.std.includes(q)), fitE = elec.filter(q => !V.std.includes(q) && equipFits(q, k));
+    const upRows = ['cabin', 'galley', 'dry', 'insul', 'tank', 'stab'].map(u => kv(UPGS[u][S.lang], UPGS[u].fit(V) ? ja : NOTHERE()));
+    return [
+      [L('Generelt', 'General'), [kv(L('Pris', 'Price'), kr(price)), kv(L('Nypris', 'New price'), V.priceNew ? kr(V.priceNew) : '–'), kv(L('Byggeår', 'Built'), V.isNew ? L('nybygg, levert med en gang', 'new build, delivered at once') : V.year),
+        kv(L('Lengde', 'Length'), fmt(V.len, 2) + ' m'), kv(L('Bredde', 'Beam'), fmt(V.beam, 1) + ' m'), kv(L('Dypgående', 'Draft'), fmt(V.draft, 1) + ' m'), kv(L('Vekt (deplasement)', 'Weight (displacement)'), fmt(V.disp, V.disp < 10 ? 1 : 0) + ' t'),
+        kv(L('Skrog', 'Hull'), hull), kv(L('Gruppe', 'Group'), grpText(V)), kv(L('Fjordlinja', 'Fjord line'), V.len >= 15 ? L('kan ikke fiske innenfor', 'may not fish inside') : L('kan fiske innenfor', 'may fish inside'))]],
+      [L('Last', 'Cargo'), [kv(L('Fangsten', 'The catch'), holdTxt), kv(L('Is', 'Ice'), V.iceCap ? tn(V.iceCap) : V.hold.kind === 'frys' || V.hold.kind === 'rsw' ? L('trengs ikke', 'not needed') : no), kv(L('Ismaskin', 'Ice machine'), V.iceMaker ? tn(V.iceMaker) + L(' i døgnet', ' a day') : no),
+        kv(L('Frakt på dekk', 'Freight on deck'), tn(V.deckCargo)), kv(L('Bløggekar', 'Bleeding tub'), tn(V.tubCap)), kv(L('Leveres i', 'Landed in'), V.land === 'tub' ? L('kar', 'tubs') : L('kasser', 'boxes'))]],
+      [L('Maskin og drift', 'Engine and running'), [kv(L('Motor', 'Engine'), V.engine[S.lang]), kv(L('Fart', 'Speed'), L('marsj ', 'cruise ') + fmt(V.vcruise, 1) + ' · ' + L('topp ', 'top ') + fmt(V.vmax, 1) + ' kn'), kv(L('Forbruk i marsj', 'Burn at cruise'), fmt(V.lph, V.lph < 10 ? 1 : 0) + ' l/t'),
+        kv(L('Tank', 'Tank'), fmt(V.fuelCap, 0) + ' L ' + (V.diesel ? 'diesel' : L('bensin', 'petrol'))), kv(L('Rekkevidde', 'Range'), fmt(V.range, 0) + ' nm'), kv(L('Service', 'Service'), L('hver ', 'every ') + V.svcH + L(' timer, ', ' hours, ') + kr(V.svcCost))]],
+      [L('Sjø', 'Sea'), [kv(L('Tåler', 'Handles'), L('bølger til ', 'waves up to ') + fmt(V.risk[0], 1) + ' m, ' + L('vind til ', 'wind up to ') + Math.round(V.risk[2]) + ' m/s'), kv(L('Skrogtype', 'Hull type'), V.planing ? L('planende', 'planing') : L('deplasement', 'displacement')), kv(L('Kan ankre', 'Can anchor'), ja), kv(L('Døgndrift (2+2-vakt)', 'Round the clock (2+2 watch)'), yn(V.watch))]],
+      [L('Folk om bord', 'People aboard'), [kv(L('Mannskap', 'Crew'), V.crew ? V.crew.key.length + L(' nøkkelfolk + lag på ', ' key people + teams of ') + V.crew.teams.map(t => t.n).join(' + ') : L('du + ', 'you + ') + V.crewMax), kv(L('Nøkkelfolk', 'Key people'), V.crew ? V.crew.key.join(', ') : '–'),
+        kv(L('Lugarer', 'Cabins'), V.cabins || no), kv(L('Køyer', 'Berths'), V.berths || no), kv(L('Styreplass', 'Helm'), house), kv(L('Ly over arbeidsdekket', 'Shelter over the deck'), yn(V.fac.shelter)), kv(L('Bysse', 'Galley'), galley), kv(L('Toalett', 'Toilet'), yn(V.fac.wc)), kv(L('Tørkerom', 'Drying room'), yn(V.fac.dry)), kv(L('Messe', 'Mess'), yn(V.fac.mess))]],
+      [L('Redskap og dekk', 'Gear and deck'), [kv(L('Rigger', 'Rigs'), V.rigs.length ? V.rigs.map(r => RIGS[r][S.lang]).join(', ') : L('trål og not', 'trawl and seine')), kv(L('Juksamaskiner', 'Jigging reels'), upto(V.jukseMax)), kv(L('Garn', 'Nets'), upto(V.gearMax.garn)), kv(L('Linestamper', 'Line tubs'), upto(V.gearMax.stamp)),
+        kv(L('Autoline', 'Autoline'), V.autoHooks ? fmt(V.autoHooks, 0) + L(' kroker', ' hooks') : no), kv(L('Teiner', 'Pots'), upto(V.gearMax.teine)), kv(L('Halere som passer', 'Haulers that fit'), V.haulers.length ? V.haulers.map(nm).join(', ') : no),
+        kv(L('Ved sløyebordet', 'At the gutting table'), V.stations.table), kv(L('Ved haleren', 'At the hauler'), V.stations.hauler), kv(L('Kran', 'Crane'), V.crane ? fmt(V.crane, 0) + ' t' : no), kv(L('Sløyemaskin', 'Gutting machine'), V.gutMachine ? fmt(V.gutMachine, 0) + ' kg/t' : no)]],
+      [L('Elektronikk', 'Electronics'), [kv(L('Følger med', 'Comes with'), stdE.length ? stdE.map(nm).join(', ') : no), kv(L('Kan monteres', 'Can be fitted'), fitE.length ? fitE.map(nm).join(', ') : no)]],
+      [L('Oppgraderinger på verftet', 'Upgrades at the yard'), upRows.concat([kv(L('Større lasterom', 'A larger hold'), V.cls !== 'hav' ? ja : NOTHERE()), kv(L('Større motor', 'A bigger engine'), !V.outboard ? ja : NOTHERE())])]];
+  }
   function sheet(k, O){
     const V = VESSELS[k], bn = '«' + S.boatName + '»', ti = tradeIn(), free = atKind('verft') && !S.order, price = O ? V.price + licValue(O) : V.price, mine = S.boat.type === k && !O, h = [];
     const sec = (t, rows) => '<div class="vsec"><h5>' + t + '</h5>' + rows.filter(Boolean).join('') + '</div>';
     h.push('<button class="ph-btn alt mkback" data-pa="mksel">‹ ' + L('Tilbake til listen', 'Back to the list') + '</button>');
     h.push('<div class="ph-card vsheet"><h4>' + (O ? O[S.lang] : V.name[S.lang]) + '</h4><div class="vbig">' + vesselSVG(k) + '</div><p>' + V.desc[S.lang] + '</p>');
-    h.push(sec(L('Generelt', 'General'), [kv(L('Pris', 'Price'), kr(price)), V.priceNew ? kv(L('Nypris', 'New price'), kr(V.priceNew)) : '', kv(L('Byggeår', 'Built'), V.isNew ? L('nybygg, levert med en gang', 'new build, delivered at once') : V.year),
-      kv(L('Lengde', 'Length'), fmt(V.len, 2) + ' m'), kv(L('Bredde', 'Beam'), fmt(V.beam, 1) + ' m'), kv(L('Dypgående', 'Draft'), fmt(V.draft, 1) + ' m'), kv(L('Vekt (deplasement)', 'Weight (displacement)'), fmt(V.disp, V.disp < 10 ? 1 : 0) + ' t'),
-      kv(L('Lasterom', 'Hold'), tn(V.holdCap) + (V.cls === 'hav' ? L(' fryst', ' frozen') : '')), V.iceCap ? kv(L('Is', 'Ice'), tn(V.iceCap)) : '', kv(L('Drivstoff', 'Fuel'), fmt(V.fuelCap, 0) + ' L ' + (V.diesel ? 'diesel' : L('bensin', 'petrol'))),
-      kv(L('Motor', 'Engine'), V.engine[S.lang]), kv(L('Fart', 'Speed'), L('marsj ', 'cruise ') + fmt(V.vcruise, 1) + ' · ' + L('topp ', 'top ') + fmt(V.vmax, 1) + ' kn'),
-      kv(L('Mannskap', 'Crew'), V.crew ? V.crew.key.length + L(' nøkkelfolk + lag på ', ' key people + teams of ') + V.crew.teams.map(t => t.n).join(' + ') : L('du + ', 'you + ') + V.crewMax), kv(L('Køyer', 'Berths'), V.berths || L('ingen', 'none')),
-      kv(L('Tåler', 'Handles'), L('bølger til ', 'waves up to ') + fmt(V.risk[0], 1) + ' m, ' + L('vind til ', 'wind up to ') + Math.round(V.risk[2]) + ' m/s'), kv(L('Gruppe', 'Group'), grpText(V)),
-      V.len >= 15 ? kv(L('Fjordlinja', 'Fjord line'), L('kan ikke fiske innenfor', 'may not fish inside')) : '']));
-    const hauls = ['linehaler', 'garnhaler', 'teinehaler'].filter(q => equipFits(q, k)).map(q => EQUIP[q].name[S.lang]);
-    h.push(sec(L('Redskap', 'Gear'), [kv(L('Rigger', 'Rigs'), V.rigs.length ? V.rigs.map(r => RIGS[r][S.lang]).join(', ') : L('trål og not (havsteget)', 'trawl and seine (ocean step)')), V.jukseMax ? kv(L('Juksamaskiner', 'Jigging reels'), L('inntil ', 'up to ') + V.jukseMax) : '',
-      V.gearMax.garn ? kv(L('Garn', 'Nets'), L('inntil ', 'up to ') + V.gearMax.garn) : '', V.gearMax.stamp ? kv(L('Linestamper', 'Line tubs'), L('inntil ', 'up to ') + V.gearMax.stamp) : '', V.autoHooks ? kv(L('Autoline', 'Autoline'), fmt(V.autoHooks, 0) + L(' kroker', ' hooks')) : '',
-      V.gearMax.teine ? kv(L('Teiner', 'Pots'), L('inntil ', 'up to ') + fmt(V.gearMax.teine, 0)) : '', hauls.length ? kv(L('Halere som passer', 'Haulers that fit'), hauls.join(', ')) : '']));
+    const secs = specSecs(k, O); h.push(sec(secs[0][0], secs[0][1]));
     if (O){ const yearly = Math.round(O.cod * avgPrice('torsk', S.t / 60, 7) / 1000) * 1000;
       h.push(sec(L('Hjemmel', 'Right'), [kv(L('Hjemmelslengde', 'Quota length'), O.hl), kv(L('Torsk, fartøykvote', 'Cod, vessel quota'), fmt(O.cod / 1000, 3) + ' t'), kv(L('Hyse, maks / garantert', 'Haddock, max / guaranteed'), tq(O.hyse[0], 1) + ' / ' + tq(O.hyse[1], 1)),
         kv(L('Sei, maks / garantert', 'Saithe, max / guaranteed'), tq(O.sei[0], 1) + ' / ' + tq(O.sei[1], 1)), kv(L('Kvotepris', 'Quota price'), O.kpk + ' kr/kg · ' + kr(licValue(O))), kv(L('Torsk per år', 'Cod a year'), L('ca. ', 'about ') + kr(yearly))])); }
-    if (V.crew) h.push(sec(L('Mannskap om bord', 'Crew aboard'), [kv(L('Nøkkelfolk', 'Key people'), V.crew.key.join(', ')), kv(L('Lag', 'Teams'), V.crew.teams.map(t => t.n + ' ' + t.role).join(', ') + (V.crew.rot > 1 ? L(', to vakter', ', two watches') : ''))]));
+    for (const [t, rows] of secs.slice(1)) h.push(sec(t, rows));
     // buying
     if (V.lock) h.push('<p class="ph-note">' + L('Havfiske kommer når kartet utvides vestover, utenfor 12 nm. Krever konsesjon.', 'Ocean fishing comes when the chart is extended west, outside 12 nm. Needs a licence.') + '</p>');
     else if (mine) h.push('<p class="ph-note">' + L(bn + ' er en slik båt.', bn + ' is one of these.') + '</p>');
@@ -1378,7 +1395,9 @@ const PHONE = (() => {
       h.push('<div class="ph-card"><h4>«' + S.boatName + '»' + (meAboard() ? ' ⚓' : '') + '</h4><p class="ph-note">' + L('Adgang: ', 'Access: ') + accessText(curVessel()) + '</p>' + (S.fleet.length > 1 ? '<button class="ph-btn alt" data-pa="open" data-a="rederi">' + L('Hele flåten i Rederi-appen', 'The whole fleet in the Company app') + '</button>' : '') + '</div>');
       const svcLeft = V.svcH - ((b.engH || 0) - (b.svcAt || 0)), svcPct = clamp(1 - svcLeft / V.svcH, 0, 1), cls = svcPct > 0.9 ? 'bad' : svcPct > 0.7 ? 'warn' : '';
       const bar = (a, c, k) => '<div class="ph-bar"><i class="' + (k || '') + '" style="width:' + Math.round(clamp(a / c, 0, 1) * 100) + '%"></i></div>';
-      h.push('<div class="ph-card"><h4>' + V.name[S.lang] + '</h4>' + kv(L('Lengde', 'Length'), fmt(V.len, 1) + ' m') + kv(L('Toppfart', 'Top speed'), BOAT.vmax + ' kn') + kv(L('Drivstoff', 'Fuel'), BOAT.diesel ? 'Diesel' : L('Bensin', 'Petrol')) + kv(L('Tåler', 'Handles'), L('bølger til ', 'waves up to ') + fmt(BOAT.risk[0], 1) + ' m ' + L('trygt', 'safely')) + '</div>');
+      const sec = (t, rows) => '<div class="vsec"><h5>' + t + '</h5>' + rows.filter(Boolean).join('') + '</div>';
+      h.push('<div class="ph-card vsheet"><h4>' + V.name[S.lang] + '</h4>' + (minSheet ? specSecs(b.type).map(([t, rows]) => sec(t, rows)).join('') :
+        kv(L('Lengde', 'Length'), fmt(V.len, 2) + ' m') + kv(L('Toppfart', 'Top speed'), fmt(BOAT.vmax, 1) + ' kn') + kv(L('Tåler', 'Handles'), L('bølger til ', 'waves up to ') + fmt(BOAT.risk[0], 1) + ' m ' + L('trygt', 'safely'))) + '<button class="ph-btn alt" data-pa="minsheet">' + (minSheet ? L('Skjul databladet', 'Hide the spec sheet') : L('Hele databladet', 'The whole spec sheet')) + '</button></div>');
       h.push('<div class="ph-card"><h4>Status</h4>' + kv(L('Drivstoff', 'Fuel'), fmt(b.fuel, 0) + ' / ' + BOAT.fuelCap + ' L') + bar(b.fuel, BOAT.fuelCap, b.fuel < BOAT.fuelCap * 0.2 ? 'bad' : '') + kv(L('Is', 'Ice'), fmt(b.ice, 0) + ' / ' + BOAT.iceCap + ' kg') + bar(b.ice, BOAT.iceCap) + kv(L('Last', 'Hold'), fmt(holdTotal(), 0) + ' / ' + BOAT.holdCap + ' kg') + bar(holdTotal(), BOAT.holdCap) +
         kv(L('Motortimer', 'Engine hours'), fmt(b.engH || 0, 0) + ' t') + kv(L('Neste service', 'Next service'), svcLeft > 0 ? L('om ', 'in ') + fmt(svcLeft, 0) + ' t' : '<span class="r2">' + L('forfalt', 'overdue') + '</span>') + bar(svcPct, 1, cls) +
         kv(L('Juksa', 'Jig line'), b.gear ? L('i orden', 'fine') : '<span class="r2">' + L('ingen, kjøp juksa i butikken', 'none, buy a jig in the shop') + '</span>') + '<button class="ph-btn" data-pa="open" data-a="verksted">' + L('Til verkstedet', 'To the workshop') + '</button></div>');
@@ -1777,6 +1796,7 @@ const PHONE = (() => {
     else if (a === 'papers'){ app = 'kvote'; sub.kvote = 'mine'; }
     else if (a === 'mktab'){ sub.marked = d.s; mkSel = null; }
     else if (a === 'mksel'){ mkSel = d.k ? {k:d.k, o:d.o || null} : null; }
+    else if (a === 'minsheet'){ minSheet = !minSheet; }
     else if (a === 'mk3d'){ if (typeof DOCK !== 'undefined') DOCK.close(); if (isOpen) show(false); G3.showroom(d.k); return; }
     else if (a === 'buy'){
       // data-ti="1": trade in the vessel you follow; data-ti="0": add a vessel to the fleet (not an open-group boat before the company has a closed-group one)
