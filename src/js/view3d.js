@@ -4075,12 +4075,37 @@ const G3 = (() => {
     for (const n of kit){ const K = n.K, G = K.geo, at = (p, r) => chain(n.M, M4.T(p[0] * K.sv[0], p[1] * K.sv[1], p[2] * K.sv[2]), M4.RY(r || 0));
       drawN(K.hull, chain(n.M, K.S));
       if (!K.glass) continue;
+      if (npcCrewDraw(n, K, eye, t)) continue;   // her people walk her deck like yours (deckcrew.js crewSim)
       if (n.st !== 'port') drawN(npcPerson('skip', n), at(G.skipperAt));
       if (n.st === 'fishing') for (let i = 0; i < 2 && i < G.crewSpots.length; i++) drawN(npcPerson('crew', {id:String(n.id) + i, player:n.player, lk:n.lk, ck:n.ck}, i), at(G.crewSpots[i], G.crewSpots[i][3]));
     }
     drawNPCNames(kit, VP);
     gl.disableVertexAttribArray(2); gl.useProgram(PL.p);
   }
+  // the agents of another boat within the near LOD (deckcrew.js crewSim, one per boat, dropped when she has been out of sight a
+  // minute): the same walking people as on your own boat, in her model's frame scaled to her size; false when her model has no deck map
+  const NCREW = new Map();
+  function npcCrewDraw(n, K, eye, t){
+    if (typeof crewSim !== 'function' || !K.geo || K.geo.hand) return false;
+    const type = K.t; let E = NCREW.get(n.id);
+    if (!E || E.type !== type){ const st = {n}; E = {type, st, t:0, sim:crewSim({type:() => type, ctx:G => npcCrewCtx(st.n, G), seed:1 + (lookHash(String(n.id)) % 1000)})}; NCREW.set(n.id, E); }
+    E.st.n = n; const gap = t - E.t; E.t = t; const sim = E.sim; if (!sim.on()) return false;
+    if (gap > 5) sim._st.lastSim = null;   // out of sight a while: everyone straight to their place
+    sim.tick(Math.min(0.1, Math.max(0, gap)));
+    const G = K.geo, sv = K.sv, h0 = n.hd; let idx = 40 + (lookHash(String(n.id)) % 50);
+    for (const a of sim.visible()){
+      const lp = a.mode === 'helm' && G.skipperAt ? G.skipperAt : [a.x, a.y, a.z], wl = xf(n.M, [lp[0] * sv[0], lp[1] * sv[1], lp[2] * sv[2]]), wy = wl[1] + eye[1];
+      const look = npcLook(a.me ? 'skip' : 'crew', n, a.c ? (a.c.id.endsWith('1') ? 1 : 0) : 0);
+      const P = {gy:() => wy, bare:true, spray:0, kit:a.me ? 'skipper' : null, look};
+      drawWorker(P, {x:wl[0] + eye[0], z:wl[2] + eye[2], h:h0 + (a.mode === 'helm' ? 0 : a.h), task:a.task, walk:a.mode === 'walk', blend:a.mode === 'walk' ? 0 : a.blend, peek:true, s:0}, eye, t, idx++); }
+    if (NCREW.size > 24) for (const [id, e] of NCREW) if (t - e.t > 60) NCREW.delete(id);
+    return true;
+  }
+  // the look of a person on another boat: a player's as she sent it (lk, ck), a local boat's from its id (as npcPerson)
+  const npcLook = (kind, n, i) => {
+    if (n.player && n.lk){ const code = kind === 'crew' ? String(n.ck || '').split(';')[i || 0] : n.lk, l = code && lookFromKey(code); if (l) return l; }
+    const h = lookHash(String(n.id)) % 12; return lookFromSeed('npc' + kind + h, kind === 'crew' && h % 5 === 0 ? 'f' : 'm', 24 + (h * 5) % 40, 'sea');
+  };
   // ---------- the rescue boat (tools/boats/redning.py) and its tow line, where core/05-vessels.js towPose says ----------
   // the tow line to a boat in tow (core/09g-turer.js): from your stern to her bow, a little sag
   let TOWR = null;

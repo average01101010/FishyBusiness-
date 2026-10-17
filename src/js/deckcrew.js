@@ -4,16 +4,18 @@
 // it, in the boat's own frame, over the deck map read off the model (vessel3d.js deckMap). The 3D view (view3d.js) draws the agents
 // where they stand and walk; nothing here touches WebGL, and nothing here is saved: the agents are the view of the game, not the game.
 // Opening the game, or coming back after the clock has run on (catchUp), puts everyone at their place at once; from then on they walk.
-const CREW3D = (() => {
+// One sim per boat (crewSim): the own boat's reads the game (CREW3D); another player's or an NPC boat's gets its type, state and
+// people from the view (view3d.js drawNPC), so the same walking, places and idle life show on every boat near enough to see them.
+function crewSim(src){
   const A = [];                          // the agents, one per person aboard who is up: {id, me, c, x, y, z, h, cell, goal, path, pi, mode, task, idle, blend}
-  const ST = {type:null, M:null, PT:null, jig:null, lastSim:null, ctxT:0, ctx:null, seed:1, clk:0};
+  const ST = {type:null, M:null, PT:null, jig:null, lastSim:null, ctxT:0, ctx:null, seed:(src && src.seed) || 1, clk:0};
   const WALK = 1.2, TURN = 4.5;          // m/s on a flat deck, rad/s turning on the spot
   const rnd = () => { ST.seed = (ST.seed * 1664525 + 1013904223) >>> 0; return ST.seed / 4294967296; };
   const nowS = () => ST.clk;             // the agents' own clock, in seconds of ticks (real time in the game, the test's ticks in the test)
   function reset(){ A.length = 0; ST.type = null; ST.lastSim = null; }
   // the boat's type, its deck map and places; false while the boat has none (the hand-worked boats keep their seated figures)
   function ready(){
-    const b = S && S.boat, t = b && b.type; if (!t || typeof deckMap !== 'function') return false;
+    const t = src ? src.type() : S && S.boat && S.boat.type; if (!t || typeof deckMap !== 'function') return false;
     if (ST.type !== t){ ST.type = t; ST.M = deckMap(t); ST.PT = ST.M ? deckPoints(t) : null; ST.G = typeof geoOf === 'function' ? geoOf(t) : null; A.length = 0; ST.lastSim = null; ST.ctx = null; ST.ctxT = 0; }
     return !!(ST.M && ST.PT && ST.G && !ST.G.hand && ST.PT.sloy);
   }
@@ -30,6 +32,7 @@ const CREW3D = (() => {
     const sp = ST.PT['spot' + k] || ST.PT.spot0; return sp ? {k:sp.k, h:sp.h || 0, task:'jig'} : null; }
   // ---- what the game says: everyone's station this minute, and the boat's state ----
   function context(){
+    if (src) return src.ctx(ST.G);
     const b = S.boat, G = ST.G, H = S.t / 60, hr = typeof gDate === 'function' ? gDate(H).getUTCHours() : 12;
     const away = typeof meAboard === 'function' && meAboard() && typeof resting === 'function' && resting();   // the skipper rests ashore: the crew sleep there too (Jonas 06.10.2026)
     const underway = b.status === 'sailing' && !b.gop, port = b.status === 'port', hasBunks = typeof bunks === 'function' && !!bunks(b);
@@ -84,7 +87,7 @@ const CREW3D = (() => {
   function snap(){ for (const a of A){ a.sub = null; if (!a.goal){ a.mode = 'in'; continue; } const p = ST.M.at(a.goal.k); a.x = p[0]; a.y = p[1]; a.z = p[2]; a.cell = a.goal.k; a.h = a.goal.h; a.task = a.goal.task; a.mode = a.goal.inside ? a.goal.inside : 'at'; a.path = null; } }
   function tick(dt){
     if (!ready()) return; dt = Math.min(0.1, Math.max(0, dt || 0)); ST.clk += dt; const t = nowS();
-    const jump = ST.lastSim == null || Math.abs(S.t - ST.lastSim) > 30; ST.lastSim = S.t;
+    const jump = ST.lastSim == null || Math.abs(S.t - ST.lastSim) > 30 || (src && src.jump && src.jump()); ST.lastSim = S.t;
     if (!ST.ctx || t - ST.ctxT > 1){ ST.ctx = context(); ST.ctxT = t; sync(ST.ctx); }
     if (jump){ snap(); return; }
     const M = ST.M, ctx = ST.ctx, roll = Math.abs(ST.roll || 0), spd = WALK * (roll > 0.21 ? 0 : roll > 0.14 ? 0.65 : 1);
@@ -125,4 +128,14 @@ const CREW3D = (() => {
   function visible(){ return A.filter(a => a.mode !== 'in' && a.goal); }
   function anchorOf(cid){ const a = A.find(q => q.c && q.c.id === cid); return a && a.mode !== 'in' ? a : null; }
   return {tick, agents, visible, anchorOf, on, setJig, setRoll, reset, _st:ST};
-})();
+}
+const CREW3D = crewSim(null);
+// the context of another boat as the view knows her (core/05-vessels.js npcStates: st fishing, in, out or port; a player's boat
+// sends her state the same way): the skipper and two hands when fishing, the skipper at the wheel and the hands inside under way,
+// nobody on deck in port. The people are stand-ins with an id, so the places are kept from minute to minute.
+function npcCrewCtx(n, G){
+  const H = S.t / 60, hr = typeof gDate === 'function' ? gDate(H).getUTCHours() : 12, wind = typeof windAt === 'function' ? windAt(H, n.p) : 0;
+  const hands = [{id:String(n.id) + '0', traits:[]}, {id:String(n.id) + '1', traits:[]}], fishing = n.st === 'fishing', port = n.st === 'port';
+  const WA = port ? [] : fishing ? [{c:null, st:'fiske'}, {c:hands[0], st:'sloy'}, {c:hands[1], st:'fiske'}] : [{c:null, st:'ror'}, {c:hands[0], st:'pause'}, {c:hands[1], st:'pause'}];
+  return {away:false, underway:!fishing && !port, port, hasBunks:false, open:!!(G && G.open), deckTask:'gut', wind, night:hr >= 22 || hr < 6, WA, aground:false, fishing};
+}
