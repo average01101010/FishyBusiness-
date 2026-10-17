@@ -464,6 +464,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p109', '17.10.2026', 'Mannskapet går på dekk', 'The crew walk the deck', [
+       ['Folkene om bord står ikke lenger fast på plassene sine. De går over dekket mellom roret, sløyebordet, karet, haleren og juksamaskinene når arbeidet skifter, og tar seg en tur langs rekka når de er ledige. Under fart går mannskapet inn i styrhuset. Første steg av «mannskap med liv»; flere båter og mer liv kommer.', 'The people aboard no longer stand fixed at their places. They walk the deck between the helm, the gutting table, the tub, the hauler and the jigging reels as the work changes, and take a turn along the rail when idle. Under way the crew go into the wheelhouse. First step of «crew with a life»; more boats and more life to come.']]],
     ['p108', '13.10.2026', 'Kartplotteren på smale telefoner', 'The chart plotter on narrow phones', [
        ['På de smaleste telefonene havnet knappene for innstillinger og lukk på en egen rad, og stripa med veipunkt og ETA dekket toppen av infoboksen, så den ikke kunne felles sammen. Alt får nå plass i baren igjen. Takk for tipset!', 'On the narrowest phones the settings and close buttons ended up on a row of their own, and the waypoint and ETA strip covered the top of the info box so it could not be folded away. Everything fits in the bar again. Thanks for the tip!']]],
     ['p107', '13.10.2026', 'Autonav, ruter og driftsplanen', 'Autonav, routes and the operations plan', [
