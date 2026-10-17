@@ -12,12 +12,14 @@ const G3 = (() => {
   // frames have been slower than 28 a second for 4 s, and up when faster than 50 for 12 s, but not back up to a level it left within
   // the last two minutes. «#qfix» in the address (the tests) keeps it at high. Per level: the drawing's pixels (dpr), the near
   // terrain's reach, the terrain's shadows, the full sea shader beyond the wave patch, and the spray in the air.
+  // Low also draws at most px0 pixels (about 1920 x 1080) and lets the browser stretch them, so a big desktop screen on a weak GPU
+  // gets the frames back (Iris Xe on 3440 x 1440 held 17 a second at low, 5 million pixels a frame); smaller screens are untouched.
   // Ultra: the screen's own pixels (up to 3 a CSS pixel), the near terrain 9-18 km at 384 points a side (256 below) with a land mask
   // of 4096 (2048), the fine ground 2.7 m apart, the middle terrain denser, the far terrain 160 km wide at 511 points (100 km at 255),
   // the camera's far plane at 260 km (170) and the clearest air 90 km (50), the sea's wave patch 2 m apart (4 m below), buildings and
   // trees out to 2.2 km (1.3 km), the plants, the naust and the boats in full 1.8 times further out, and the meshes and the shadows
   // given twice the time a frame.
-  const QUAL = {lvl:2, bad:0, good:0, cap:2, capT:0, fix:/qfix/.test(location.hash), dpr:[1, 1.25, 1.5, 3], near:[[3000, 6000], [6000, 12000], [6000, 12000], [9000, 18000]],
+  const QUAL = {lvl:2, bad:0, good:0, cap:2, capT:0, fix:/qfix/.test(location.hash), dpr:[1, 1.25, 1.5, 3], px0:2.1e6, near:[[3000, 6000], [6000, 12000], [6000, 12000], [9000, 18000]],
     nearN:[256, 256, 256, 384], midN:[256, 256, 256, 384], farN:[255, 255, 255, 511], chunkR:[1300, 1300, 1300, 2200], lodK:[1, 1, 1, 1.8]};
   let UINT = false;
   function qualSet(){ const v = S.settings.q3d || 'auto'; if (QUAL.fix) QUAL.lvl = 2; else if (v !== 'auto') QUAL.lvl = v === 'ultra' && !UINT && gl ? 2 : {low:0, mid:1, high:2, ultra:3}[v]; return v; }
@@ -3710,7 +3712,7 @@ const G3 = (() => {
   // layer stays for the crew's lines and the anchor alarm)
   function buildLabels(){ labelsEl.innerHTML = ''; labelEls = []; }
   function resize(){
-    const r = wrap.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, QUAL.dpr[QUAL.lvl]);
+    const r = wrap.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, QUAL.dpr[QUAL.lvl], QUAL.lvl ? 9 : Math.sqrt(QUAL.px0 / Math.max(1, r.width * r.height)));
     const w = Math.max(1, Math.round(r.width * dpr)), h = Math.max(1, Math.round(r.height * dpr));
     if (canvas.width !== w || canvas.height !== h){ canvas.width = w; canvas.height = h; }
   }
