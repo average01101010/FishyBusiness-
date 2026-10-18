@@ -293,13 +293,9 @@ def shelter(fine=True):
         objs.append(cyl('liferaft', (3.25, 0.40, ROOF_SH + 0.31), (3.25, 1.40, ROOF_SH + 0.31), 0.24, C['white'], 18))
         for yy in (0.62, 1.18): objs.append(torus('raftband%d' % int(yy * 100), (3.25, yy, ROOF_SH + 0.31), (0, 1, 0), 0.245, 0.012, C['dark'], 20, 4))
         objs.append(torus('buoy_aft', (2.30, -1.45, ROOF_SH + 0.05), (1, 0, 0), 0.27, 0.06, C['orange'], 22, 8))
-        # inside: the hold hatch, the net hauler at the hauling port
+        # inside: the hold hatch; no hauler in the model (Jonas 18.10.2026: no boat carries modelled gear), the bought one is drawn at the anchor
         objs.append(box('hatch_coaming', 3.92, 5.48, -0.72, 0.72, Z_DECK, Z_DECK + 0.26, C['deck'], 0.02))
         objs.append(box('hatch_cover', 3.88, 5.52, -0.76, 0.76, Z_DECK + 0.26, Z_DECK + 0.31, C['inner'], 0.015))
-        objs.append(cyl('haul_post', (5.30, -1.40, Z_DECK), (5.30, -1.40, 3.30), 0.10, C['red'], 12))
-        objs.append(cyl('haul_drum', (5.18, -1.62, 3.52), (5.42, -1.62, 3.52), 0.24, C['red'], 22))
-        objs.append(cyl('haul_drum2', (5.20, -1.28, 3.72), (5.40, -1.28, 3.72), 0.17, C['red'], 18))
-        objs.append(box('haul_arm', 5.24, 5.36, -1.60, -1.25, 3.28, 3.75, C['red'], 0.02))
     return objs, glass
 
 

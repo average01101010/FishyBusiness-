@@ -423,10 +423,7 @@ def aft_deck(fine=True):
     objs.append(torus('buoy_aft', (2.62 + 0.07, 1.50, 2.25), (1, 0, 0), 0.25, 0.055, C['orange'], 22, 8))
     # the line hauler on the starboard waist, and the roller over the low bulwark
     zd = z_deck(4.5)
-    objs.append(cyl('haul_post', (4.50, -1.30, zd), (4.50, -1.30, 1.25), 0.09, C['red'], 12))
-    objs.append(box('haul_arm', 4.42, 4.58, -1.50, -1.22, 1.20, 1.40, C['red'], 0.02))
-    objs.append(cyl('haul_sheave', (4.46, -1.48, 1.52), (4.56, -1.48, 1.52), 0.22, C['red'], 22))
-    objs.append(cyl('haul_motor', (4.56, -1.48, 1.52), (4.74, -1.48, 1.52), 0.09, C['dark'], 12))
+    # no hauler in the model (Jonas 18.10.2026: no boat carries modelled gear): the one the player buys is drawn at the hauler anchor
     yc = -(y_at(4.5, 1.28, -1) + 0.06)
     for x in (4.15, 4.85):
         objs.append(box('roller_cheek%d' % int(x * 100), x - 0.02, x + 0.02, yc - 0.10, yc + 0.12, 1.20, 1.46, C['steel'], 0.01))

@@ -186,13 +186,10 @@ def decks(fine=True):
         for a, b in zip(stem, stem[1:]): acyl(A, (a[0] + 0.012, 0, a[2]), (b[0] + 0.012, 0, b[2]), 0.03, lambda z: C['steel'] if z > WL + 0.1 else C['af'], seg=6, cap=False)
         for x, sg in ((0.4, 1), (0.4, -1), (9.1, 1), (9.1, -1)):
             yy = sg * (y_sh(x) - 0.15); abox(A, x - 0.1, x + 0.1, yy - 0.02, yy + 0.02, z_sh(x) + 0.01, z_sh(x) + 0.06, C['steel'])
-    # the hauling port in the starboard bulwark and the line hauler at it, under the wheelhouse roof's overhang
+    # the hauling port in the starboard bulwark, under the wheelhouse roof's overhang; no hauler in the model (Jonas 18.10.2026: no boat
+    # carries modelled gear), the one the player buys is drawn at the hauler anchor
     hx = 3.9; hy = -(y_sh(hx) - 0.07)
     A.poly([(hx - 0.35, hy - 0.002, z_sh(hx) - 0.42), (hx + 0.35, hy - 0.002, z_sh(hx) - 0.42), (hx + 0.35, hy - 0.002, z_sh(hx) + 0.011), (hx - 0.35, hy - 0.002, z_sh(hx) + 0.011)], C['dark'], (0, 1, 0))
-    acyl(A, (hx, hy + 0.35, ZMD), (hx, hy + 0.35, z_sh(hx) + 0.15), 0.07, lambda z: C['plate'], seg=8)
-    acyl(A, (hx, hy + 0.35, z_sh(hx) + 0.15), (hx, hy + 0.1, z_sh(hx) + 0.3), 0.045, lambda z: C['plate'], seg=8)
-    acyl(A, (hx - 0.05, hy + 0.05, z_sh(hx) + 0.3), (hx + 0.05, hy + 0.05, z_sh(hx) + 0.3), 0.2, lambda z: C['dark'], seg=16)
-    acyl(A, (hx + 0.05, hy + 0.05, z_sh(hx) + 0.3), (hx + 0.25, hy + 0.05, z_sh(hx) + 0.3), 0.1, lambda z: C['orange'], seg=12)
     # the transom: a ladder to starboard, the round light low in the middle
     if fine:
         for y in (-0.85, -1.15): acyl(A, (-0.02, y, z_sh(0) + 0.3), (-0.02, y, z_sh(0)), 0.016, lambda z: C['steel'], seg=5); acyl(A, (-0.02, y, z_sh(0)), (-0.06, y, WL - 0.35), 0.016, lambda z: C['steel'], seg=5)

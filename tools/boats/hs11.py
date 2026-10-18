@@ -204,9 +204,8 @@ def gear(fine=True):
     for y in (-0.65, 0.65): acyl(A, (6.4, y, 6.3), (6.4, y, 7.4), 0.012, lambda z: w, seg=4)
     acyl(A, (7.6, -1.6, WR + 0.12), (7.6, -1.6, 6.8), 0.02, lambda z: w, seg=4)
     acyl(A, (8.3, 1.4, WR + 0.12), (8.3, 1.4, 4.85), 0.12, lambda z: C['steel'], seg=10)
-    # the hauling station: a hauler post on the starboard rail under the roof
-    hx = 5.3; hy = -(hbz(hx, z_top(hx)) - 0.3)
-    acyl(A, (hx, hy, ZMD), (hx, hy, z_top(hx) + 0.35), 0.08, lambda z: C['steel'], seg=8)
+    # the hauling station on the starboard rail under the roof has no hauler in the model (Jonas 18.10.2026: no boat carries modelled gear);
+    # the one the player buys is drawn at the hauler anchor
     # the crane on the port quarter, its boom laid forward along the bulwark
     acyl(A, (0.6, 1.7, ZMD), (0.6, 1.7, z_top(0.6) + 0.6), 0.16, lambda z: C['orange'], seg=sg_)
     beam(A, (0.6, 1.7, z_top(0.6) + 0.6), (0.75, 1.7, z_top(0.6) + 1.2), 0.2, 0.22, C['orange'])

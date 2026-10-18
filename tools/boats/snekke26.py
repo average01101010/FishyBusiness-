@@ -337,12 +337,7 @@ def fittings(fine=True):
             y = sg * (deck_edge(x) - 0.12); abox(A, x - 0.09, x + 0.09, y - 0.018, y + 0.018, z_sheer(x) + 0.012, z_sheer(x) + 0.055, C['steel'])
         abox(A, 7.55, 7.96, -0.06, 0.06, z_sheer(7.75) - 0.02, z_sheer(7.75) + 0.06, C['steel'])
         acyl(A, (7.93, -0.04, z_sheer(7.75) + 0.02), (7.93, 0.04, z_sheer(7.75) + 0.02), 0.035, lambda z: C['dark'], seg=10)
-    # the hauler on the starboard coaming: a post and a sheave on a short arm out over the side
-    hx = 2.0; hy = -(deck_edge(hx) - 0.12)
-    acyl(A, (hx, hy, ZC), (hx, hy, z_sheer(hx) + 0.3), 0.055, s, seg=8)
-    acyl(A, (hx, hy, z_sheer(hx) + 0.3), (hx, hy, z_sheer(hx) + 0.42), 0.035, s, seg=6)
-    acyl(A, (hx - 0.03, hy, z_sheer(hx) + 0.42), (hx + 0.03, hy, z_sheer(hx) + 0.42), 0.13, lambda z: C['dark'], seg=14)
-    acyl(A, (hx + 0.03, hy, z_sheer(hx) + 0.42), (hx + 0.18, hy, z_sheer(hx) + 0.42), 0.07, lambda z: C['dark'], seg=10)
+    # no hauler in the model (Jonas 18.10.2026: no boat carries modelled gear): the one the player buys is drawn at the hauler anchor on the coaming
     objs = [A.done(30)]
     # the keel, the propeller on its shaft, the rudder behind it
     zk = lambda x: z_keel(x) + 0.05
