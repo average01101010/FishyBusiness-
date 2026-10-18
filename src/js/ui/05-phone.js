@@ -464,6 +464,9 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p119', '18.10.2026', 'Rettinger på båtene', 'Fixes on the boats', [
+       ['Ingen båt kommer lenger med haler ferdig montert: haleren du kjøper, står der den hører hjemme på rekka. Plastsjarken har fått vinduene på plass, styrhusdøra ved siden av dem i stedet for tvers gjennom, og en finere baug.', 'No boat comes with a hauler fitted any more: the hauler you buy stands where it belongs at the rail. The fibreglass sjark has her windows in place, the wheelhouse door beside them instead of through them, and a fairer bow.'],
+       ['Databladet i Båthandelen sier nå lukket gruppe med hjemmelslengde og faktisk lengde for båter som selges med hjemmel, og åpen gruppe bare for dem uten.', 'The datasheet in the boat market now says closed group with quota length and actual length for boats sold with a right, and open group only for those without.']]],
     ['p118', '17.10.2026', 'Båtene får nye detaljer', 'The boats get their details', [
        ['Trebåten har fått ekte lanterner: rødt og grønt på rekka ved den fremre tofta, og den hvite lykta på en stake akter, slik en båt under sju meter fører dem. En livbøye henger innenfor ripa.', 'The wooden boat has real lanterns: red and green on the gunwales by the forward thwart, and the white lamp on a staff aft, as a boat under seven metres carries them. A lifebuoy hangs inside the gunwale.'],
        ['Snekka har fått sidelanterner på ruffen, akterlanterne på flaggstanga og navnet på hekken i tillegg til baugene. Mannskapet går inn gjennom den ekte nedgangen til kahytten. I Malerverkstedet kan ruffen og dekket males hver for seg på båter som har det.', 'The snekke has side lights on the trunk, a stern light on the flag staff and her name on the transom as well as the bows. The crew go in through the real companionway. In the paint shop the cabin and the deck can be painted on their own on boats that have them.'],
@@ -1326,7 +1329,9 @@ const PHONE = (() => {
   // boat is only bought by trading in the one you have: a company can have one vessel in the open group (deltakerforskriften)
   let mkSel = null, minSheet = false;   // the market's chosen boat; the spec sheet open on «Min båt»
   const hasLic = () => S.fleet.some(v => vget(v, 'lic'));
-  const grpText = V => V.cls === 'hav' ? L('havfiske, konsesjon', 'ocean, licence') : V.len >= 11 ? L('bare lukket gruppe (11 m og mer)', 'closed group only (11 m and more)') : V.len < 8 ? L('åpen gruppe under 8 m', 'open group under 8 m') : V.len < 10 ? L('åpen gruppe 8–9,99 m', 'open group 8–9.99 m') : L('åpen gruppe 10–10,99 m', 'open group 10–10.99 m');
+  // the group: with a right (O) the boat goes into the closed group on the right's quota length, whatever her own length (a 31 ft boat with an
+  // 8–8.9 m right is the usual thing along the coast); without one, the open group's class by her actual length
+  const grpText = (V, O) => O ? L('lukket gruppe, hjemmel ' + O.hl + ' (faktisk lengde ' + fmt(V.len, 2) + ' m)', 'closed group, right of ' + O.hl + ' (actual length ' + fmt(V.len, 2) + ' m)') : V.cls === 'hav' ? L('havfiske, konsesjon', 'ocean, licence') : V.len >= 11 ? L('bare lukket gruppe (11 m og mer)', 'closed group only (11 m and more)') : V.len < 8 ? L('åpen gruppe under 8 m', 'open group under 8 m') : V.len < 10 ? L('åpen gruppe 8–9,99 m', 'open group 8–9.99 m') : L('åpen gruppe 10–10,99 m', 'open group 10–10.99 m');
   const tn = n => n >= 10000 ? fmt(n / 1000, n >= 100000 ? 0 : 1) + ' t' : fmt(n, 0) + ' kg';
   function mkCard(k, O){
     const V = VESSELS[k], price = O ? V.price + licValue(O) : V.price, mine = S.boat.type === k && !O, tag = V.lock ? L('kommer', 'coming') : O ? O.hl : V.isNew ? L('nybygg', 'new build') : L('brukt', 'used');
@@ -1366,7 +1371,7 @@ const PHONE = (() => {
     return [
       [L('Generelt', 'General'), [kv(L('Pris', 'Price'), kr(price)), kv(L('Nypris', 'New price'), V.priceNew ? kr(V.priceNew) : '–'), kv(L('Byggeår', 'Built'), V.isNew ? L('nybygg, levert med en gang', 'new build, delivered at once') : V.year),
         kv(L('Lengde', 'Length'), fmt(V.len, 2) + ' m'), kv(L('Bredde', 'Beam'), fmt(V.beam, 1) + ' m'), kv(L('Dypgående', 'Draft'), fmt(V.draft, 1) + ' m'), kv(L('Vekt (deplasement)', 'Weight (displacement)'), fmt(V.disp, V.disp < 10 ? 1 : 0) + ' t'),
-        kv(L('Skrog', 'Hull'), hull), kv(L('Gruppe', 'Group'), grpText(V)), kv(L('Fjordlinja', 'Fjord line'), V.len >= 15 ? L('kan ikke fiske innenfor', 'may not fish inside') : L('kan fiske innenfor', 'may fish inside'))]],
+        kv(L('Skrog', 'Hull'), hull), kv(L('Gruppe', 'Group'), grpText(V, O)), kv(L('Fjordlinja', 'Fjord line'), V.len >= 15 ? L('kan ikke fiske innenfor', 'may not fish inside') : L('kan fiske innenfor', 'may fish inside'))]],
       [L('Last', 'Cargo'), [kv(L('Fangsten', 'The catch'), holdTxt), kv(L('Is', 'Ice'), V.iceCap ? tn(V.iceCap) : V.hold.kind === 'frys' || V.hold.kind === 'rsw' ? L('trengs ikke', 'not needed') : no), kv(L('Ismaskin', 'Ice machine'), V.iceMaker ? tn(V.iceMaker) + L(' i døgnet', ' a day') : no),
         kv(L('Frakt på dekk', 'Freight on deck'), tn(V.deckCargo)), kv(L('Bløggekar', 'Bleeding tub'), tn(V.tubCap)), kv(L('Leveres i', 'Landed in'), V.land === 'tub' ? L('kar', 'tubs') : L('kasser', 'boxes'))]],
       [L('Maskin og drift', 'Engine and running'), [kv(L('Motor', 'Engine'), V.engine[S.lang]), kv(L('Fart', 'Speed'), L('marsj ', 'cruise ') + fmt(V.vcruise, 1) + ' · ' + L('topp ', 'top ') + fmt(V.vmax, 1) + ' kn'), kv(L('Forbruk i marsj', 'Burn at cruise'), fmt(V.lph, V.lph < 10 ? 1 : 0) + ' l/t'),
@@ -1387,7 +1392,7 @@ const PHONE = (() => {
     h.push('<div class="ph-card vsheet"><h4>' + (O ? O[S.lang] : V.name[S.lang]) + '</h4><div class="vbig">' + vesselSVG(k) + '</div><p>' + V.desc[S.lang] + '</p>');
     const secs = specSecs(k, O); h.push(sec(secs[0][0], secs[0][1]));
     if (O){ const yearly = Math.round(O.cod * avgPrice('torsk', S.t / 60, 7) / 1000) * 1000;
-      h.push(sec(L('Hjemmel', 'Right'), [kv(L('Hjemmelslengde', 'Quota length'), O.hl), kv(L('Torsk, fartøykvote', 'Cod, vessel quota'), fmt(O.cod / 1000, 3) + ' t'), kv(L('Hyse, maks / garantert', 'Haddock, max / guaranteed'), tq(O.hyse[0], 1) + ' / ' + tq(O.hyse[1], 1)),
+      h.push(sec(L('Hjemmel', 'Right'), [kv(L('Hjemmelslengde', 'Quota length'), O.hl), kv(L('Faktisk lengde', 'Actual length'), fmt(V.len, 2) + ' m'), kv(L('Torsk, fartøykvote', 'Cod, vessel quota'), fmt(O.cod / 1000, 3) + ' t'), kv(L('Hyse, maks / garantert', 'Haddock, max / guaranteed'), tq(O.hyse[0], 1) + ' / ' + tq(O.hyse[1], 1)),
         kv(L('Sei, maks / garantert', 'Saithe, max / guaranteed'), tq(O.sei[0], 1) + ' / ' + tq(O.sei[1], 1)), kv(L('Kvotepris', 'Quota price'), O.kpk + ' kr/kg · ' + kr(licValue(O))), kv(L('Torsk per år', 'Cod a year'), L('ca. ', 'about ') + kr(yearly))])); }
     for (const [t, rows] of secs.slice(1)) h.push(sec(t, rows));
     // buying
