@@ -97,14 +97,14 @@ const hodOf = H => { const g = gDate(H); return g.getUTCHours() + g.getUTCMinute
 function coastState(b, H, hod = hodOf(H)){
   const i = b.seed || (b.seed = hashStr(b.id) % 1000003);
   const dep = 4 + hash(i * 13 + 5) * 4, e = ((hod - dep) % 24 + 24) % 24, day0 = H - e, dI = Math.floor((day0 + 6) / 24), G = b.h.grounds;
-  const moored = b.moored || (b.moored = {p:b.p, hd:b.hd, st:'port'});
+  const moored = coastMoor(b);
   // a day out is at most 17 hours (the weather is not asked at night)
   if (e > 17 || !G.length || hash(dI * 17 + i * 7) < 0.3 || windAt(day0, b.p) >= (b.L >= 15 ? 15 : b.L >= 12 ? 13.5 : 12)) return moored;
   const gr = G[Math.floor(hash(dI * 31 + i) * G.length)], R = gr.R || (gr.R = prepRoute(gr.pts.map(q => [q.x, q.y]))), RR = gr.RR || (gr.RR = prepRoute(gr.pts.map(q => [q.x, q.y]).reverse()));
   const cs = ((b.L >= 14 ? 9.8 : 7.8) + hash(i * 3 + 1) * 1.8) * clamp(1 - (hsOpen(day0, b.p) - 1.2) * 0.12, 0.65, 1) * NM, hsp = 5 * NM;
-  const m0 = R.pts[0], t0 = dist(b.p, m0) / hsp, tr = R.len / cs, T = t0 + tr, fishH = 5 + hash(dI * 7 + i * 3) * 3.5;
+  const m0 = R.pts[0], t0 = dist(moored.p, m0) / hsp, tr = R.len / cs, T = t0 + tr, fishH = 5 + hash(dI * 7 + i * 3) * 3.5;
   const along = (a, c, u) => ({p:{x:a.x + (c.x - a.x) * u, y:a.y + (c.y - a.y) * u}, hd:Math.atan2(c.x - a.x, -(c.y - a.y))});
-  if (e < t0){ const q = along(b.p, m0, e / t0); return {p:q.p, hd:q.hd, st:'out'}; }
+  if (e < t0){ const q = along(moored.p, m0, e / t0); return {p:q.p, hd:q.hd, st:'out'}; }
   if (e < T){ const a = atRoute(R, (e - t0) * cs); return {p:a.p, hd:a.hd, st:'out'}; }
   // on the ground: over to the boat's own spot, whole casts drifting off it (each cast ends where the next starts), back to the centre
   const spot = coastSpot(gr, dI, i), C = 0.75, nc = Math.max(1, Math.round(fishH / C)), fH = nc * C, tin = Math.max(1e-3, dist(gr.p, spot) / cs);
@@ -116,8 +116,64 @@ function coastState(b, H, hod = hodOf(H)){
   }
   const eb = e - T - tin - fH;
   if (eb < tr){ const a = atRoute(RR, eb * cs); return {p:a.p, hd:a.hd, st:'in'}; }
-  if (eb < tr + t0){ const q = along(m0, b.p, (eb - tr) / t0); return {p:q.p, hd:q.hd, st:'in'}; }
+  if (eb < tr + t0){ const q = along(m0, moored.p, (eb - tr) / t0); return {p:q.p, hd:q.hd, st:'in'}; }
   return moored;
+}
+// ===== where a coast boat lies at home (Jonas 18.10.2026: «npc-båter mange plasser er plassert i landmassen når de ligger ved kai»;
+// «aldri konflikt med andre båter, verft, fiskemottak, utstyrsbutikk, naust, rorbuer eller landmasse») =====
+// The pack's berth (npc.py) is alongside a quay face of the map data, which the fine coast that is drawn may put a few metres off, so
+// half of the boats lay with one side ashore. Once the fine coast is in round the harbour, each boat's place is checked: the hull with
+// a margin (L + 2 m by B + 1 m, 15 points) on water, its middle line clear of piers, quays on piles and sea marks (obsSegHit), away from
+// the places the players lie at (the plants, yards, shops, rorbuer, Father's naust and the harbour units), and clear of the harbour's
+// boats placed before it. A boat that does not fit is moved off the face the least that frees her (up to 8 m, then along the face),
+// and one that still does not is put on a mooring buoy in the basin (as small boats lie in Norwegian harbours), swinging to the
+// harbour's mouth. Until the coast is in, the pack's place stands (nothing is drawn so near anyway).
+const MOOR = {ver:-1};
+function moorBlocked(x, z, r){
+  for (const q of PORTS) if (Math.abs(q.p.x * 1000 - x) < r + 60 && Math.abs(q.p.y * 1000 - z) < r + 60 && Math.hypot(q.p.x * 1000 - x, q.p.y * 1000 - z) < r + 45) return true;
+  if (unitNear(x, z, r + 60)) return true;
+  const nh = S && S.naust && S.naust.o; if (nh && Math.hypot(nh[0] - x, nh[1] - z) < r + 45) return true;
+  for (const R of rorbuIn(x / 1000 - 0.3, z / 1000 - 0.3, x / 1000 + 0.3, z / 1000 + 0.3)){ const s = R.site, o = s && s.o; if (Math.hypot((o ? o[0] : R.cand.x * 1000) - x, (o ? o[1] : R.cand.y * 1000) - z) < r + 35) return true; }
+  return false;
+}
+// whether a hull of L x B m with its middle at p (km) and heading hd lies free; others: the boats placed already [{p, hd, L, B}]
+function moorFree(p, hd, L, B, others){
+  const s = Math.sin(hd), c = Math.cos(hd), hl = L / 2 + 1, hb = B / 2 + 0.5;
+  for (const fa of [-1, -0.5, 0, 0.5, 1]) for (const ab of [-1, 0, 1]) if (isLand({x:p.x + (s * fa * hl + c * ab * hb) / 1000, y:p.y + (-c * fa * hl + s * ab * hb) / 1000})) return false;
+  if (obsSegHit({x:p.x + s * hl / 1000, y:p.y - c * hl / 1000}, {x:p.x - s * hl / 1000, y:p.y + c * hl / 1000}, hb)) return false;
+  if (moorBlocked(p.x * 1000, p.y * 1000, L / 2)) return false;
+  for (const o of others){ const dx = (p.x - o.p.x) * 1000, dz = (p.y - o.p.y) * 1000, d = Math.hypot(dx, dz); if (d > (L + o.L) / 2 + 3) continue;
+    // in the other's frame: along her and across her; free when apart either way (with a metre between), or wholly when one swings on a buoy
+    const os = Math.sin(o.hd), oc = Math.cos(o.hd), al = Math.abs(dx * os - dz * oc), ac = Math.abs(dx * oc + dz * os);
+    if (o.buoy || al < (L + o.L) / 2 + 1 && ac < (B + o.B) / 2 + 1) return false; }
+  return true;
+}
+function moorHarbour(h){
+  const placed = [], mouth = h.grounds.length ? h.grounds[0].pts[0] : null;
+  for (const b of h.boats){
+    const s = Math.sin(b.hd), c = Math.cos(b.hd); let m = null;
+    // off the face: the boat's beam direction both ways, the least that frees her; then along the face too
+    const tryAt = (along, off) => { const p = {x:b.p.x + (s * along + c * off) / 1000, y:b.p.y + (-c * along + s * off) / 1000}; return moorFree(p, b.hd, b.L, b.B, placed) ? p : null; };
+    for (let off = 0; off <= 8 && !m; off += 0.5) for (const sg of off ? [1, -1] : [1]){ const p = tryAt(0, sg * off); if (p){ m = {p, hd:b.hd}; break; } }
+    for (let al = b.L / 2; al <= b.L * 2 && !m; al += b.L / 2) for (const sa of [1, -1]){ for (let off = 0; off <= 6 && !m; off += 1) for (const sg of off ? [1, -1] : [1]){ const p = tryAt(sa * al, sg * off); if (p){ m = {p, hd:b.hd}; break; } } if (m) break; }
+    // a mooring buoy in the basin: water with room to swing (the length and 8 m from the coast), away from the berths and the rest
+    if (!m) for (let r = 40; r <= 420 && !m; r += 30) for (let k = 0; k < 16 && !m; k++){
+      const a = (k + hash(hashStr(b.id) + r) * 0.9) / 16 * 2 * Math.PI, p = {x:h.x + Math.sin(a) * r / 1000, y:h.y - Math.cos(a) * r / 1000};
+      if (!coastFine(p) || isLand(p) || coastDistM(p, 100) < b.L + 8) continue;
+      const hd = mouth ? Math.atan2(mouth.x - p.x, -(mouth.y - p.y)) : b.hd;
+      if (moorFree(p, hd, b.L * 2, b.L * 2, placed)) m = {p, hd, buoy:true};
+    }
+    if (!m) m = {p:b.p, hd:b.hd, none:true};   // nowhere free: she keeps the pack's place (counted by the tests)
+    b.moored = {p:m.p, hd:m.hd, st:'port', buoy:!!m.buoy, none:!!m.none}; placed.push({p:m.p, hd:m.hd, L:b.L, B:b.B, buoy:m.buoy});
+  }
+  h.moorVer = MOOR.ver;
+}
+function coastMoor(b){
+  const h = b.h; MOOR.ver = VEC.ver * 1000 + COAST.built;   // new packs or coast indexes: the places are fixed again (rarely)
+  if (h && h.moorVer === MOOR.ver && b.moored) return b.moored;
+  // the fine coast must be in round the harbour before the places are fixed; meanwhile the pack's place
+  if (h && coastFine(b.p) && coastIndexAt(b.p, false)){ moorHarbour(h); return b.moored; }
+  return {p:b.p, hd:b.hd, st:'port'};
 }
 // land for the coast's boats: the 25 m mask where its pack is in, else the national core's 200 m (always there)
 const coastFine = p => mapSimAt(p) && mapReadyAt(p, 0), coastLand = p => coastFine(p) ? isLand(p) : isLandFar(p);
