@@ -93,7 +93,7 @@ const G3 = (() => {
     'uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform float uEmis;uniform vec4 uHole;uniform vec4 uOver;varying vec3 vW;varying vec3 vC;' + PLG +
     'void main(){if(vW.x>uHole.x&&vW.x<uHole.z&&vW.z>uHole.y&&vW.z<uHole.w)discard;vec3 n=normalize(cross(dFdx(vW),dFdy(vW)));if(dot(n,vW)>0.0)n=-n;float dif=max(dot(n,uSun),0.0);' +
     'vec3 amb=mix(uGnd,uAmb,n.y*0.5+0.5);vec3 bc=mix(vC,uOver.rgb,uOver.a);vec3 c=bc*(amb+uSunCol*dif+pLit(vW,n))+bc*uEmis;float d=length(vW);float f=1.0-exp(-uFogD*uFogD*d*d);gl_FragColor=vec4(mix(c,uFog,f),1.0);}';
-  const TER_VS = 'attribute vec3 aPos;attribute vec3 aCol;attribute vec3 aNor;attribute float aShd;uniform mat4 uVP;uniform mat4 uM;uniform vec3 uPO;varying vec3 vW;varying vec3 vC;varying vec3 vN;varying vec3 vP;varying float vS;void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;vC=aCol;vN=aNor;vP=aPos+uPO;vS=aShd;gl_Position=uVP*w;}';
+  const TER_VS = 'attribute vec3 aPos;attribute vec3 aCol;attribute vec3 aNor;attribute float aShd;attribute vec4 aMat;uniform mat4 uVP;uniform mat4 uM;uniform vec3 uPO;varying vec3 vW;varying vec3 vC;varying vec3 vN;varying vec3 vP;varying float vS;varying vec4 vM;void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;vC=aCol;vN=aNor;vP=aPos+uPO;vS=aShd;vM=aMat;gl_Position=uVP*w;}';
   const NOISE = 'float hs(vec2 p){vec3 q=fract(vec3(p.xyx)*0.1031);q+=dot(q,q.yzx+33.33);return fract((q.x+q.y)*q.z);}' +
     'float ns(vec2 p){vec2 i=floor(p),f=fract(p);vec2 u=f*f*(3.0-2.0*f);return mix(mix(hs(i),hs(i+vec2(1.0,0.0)),u.x),mix(hs(i+vec2(0.0,1.0)),hs(i+vec2(1.0,1.0)),u.x),u.y);}';
   // The local sea (03b-sea.js) from the sea-state textures, n (32 x 32 over the near terrain) and w (128 x 128 over the whole map): R and G hold
@@ -221,15 +221,52 @@ const G3 = (() => {
     'foam=max(foam,band*smoothstep(0.35,0.72,ln+band*0.2)*(0.3+0.7*clamp(hl*1.6,0.0,1.0))*(0.7+0.3*sw)*ef);}}' +
     'if(uDbg>0.5){gl_FragColor=vec4(vec3(clamp(foam,0.0,1.0)),1.0);return;}' +
     'col=mix(col,fc,clamp(foam,0.0,1.0)*0.85);float fg=1.0-exp(-uFogD*uFogD*d*d);gl_FragColor=vec4(mix(col,uFog,fg),1.0);}';
-  const TER_FS = '#extension GL_OES_standard_derivatives : enable\nprecision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform vec4 uHole;' +
-    'uniform sampler2D uGround;uniform sampler2D uLand;uniform vec4 uGRect;uniform float uGOn;uniform float uLOn;uniform float uTideY;uniform float uSwash;uniform vec3 uSand;varying vec3 vW;varying vec3 vC;varying vec3 vN;varying vec3 vP;varying float vS;' + NOISE + PLG +
+  const terFS = q => '#extension GL_OES_standard_derivatives : enable\n#define MATQ ' + q + '\nprecision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform vec4 uHole;' +
+    'uniform sampler2D uGround;uniform sampler2D uLand;uniform vec4 uGRect;uniform float uGOn;uniform float uLOn;uniform float uTideY;uniform float uSwash;uniform vec3 uSand;varying vec3 vW;varying vec3 vC;varying vec3 vN;varying vec3 vP;varying float vS;varying vec4 vM;uniform vec4 uMP;uniform vec4 uMQ;' + NOISE + PLG +
     // the ground near the water is cut where the shore texture (buildLandMask: the foreshore's own height, h = r * 8 - 4) lies under
     // the tide, so the waterline is the coast's own line at high water and the foreshore's at ebb, whatever the mesh's cells
     'void main(){if(vW.x>uHole.x&&vW.x<uHole.z&&vW.z>uHole.y&&vW.z<uHole.w)discard;vec2 luv=(vW.xz-uGRect.xy)*uGRect.zw;' +
     'if(uLOn>0.5&&vP.y>uTideY-3.5&&vP.y<uTideY+4.0&&luv.x>0.0&&luv.y>0.0&&luv.x<1.0&&luv.y<1.0&&texture2D(uLand,luv).r*8.0-4.0<uTideY-uSwash)discard;vec2 wp=mod(vP.xz,4096.0);float d=length(vW);float det=1.0-smoothstep(900.0,5000.0,d);' +
-    'float b1=ns(wp*0.045)-0.5;float b2=ns(wp.yx*0.045+13.0)-0.5;float b3=ns(wp*0.011+5.0)-0.5;vec3 n=normalize(vN);float st=1.0-n.y;' +
-    'n=normalize(n+vec3(b1*0.5+b3,0.0,b2*0.5-b3*0.6)*(0.2+st*0.7)*det);vec3 c=vC*(0.92+0.16*ns(wp*0.018+2.0));float h=vP.y;vec2 uv=(vW.xz-uGRect.xy)*uGRect.zw;float ins=step(0.0,uv.x)*step(0.0,uv.y)*step(uv.x,1.0)*step(uv.y,1.0);float ef=smoothstep(0.0,0.06,min(min(uv.x,uv.y),min(1.0-uv.x,1.0-uv.y)));' +
-    'float sand=(1.0-smoothstep(1.2,2.1,h+b1*0.8))*step(0.05,h);c=mix(c,uSand,sand*0.7);' +
+        // the ground's own surface (Jonas 18.10.2026: terrain first, and smooth on every device): the vertex colour is the vegetation, and
+    // vM carries the weights of rock, wood, snow and a harbour's fill from recolor. MATQ 0 blends them plainly (the low quality, as before);
+    // MATQ 1 sharpens the rock and snow edges with noise and drifts the tone over hundreds of metres so no two hillsides match; MATQ 2 adds
+    // the close detail inside about a kilometre: the rock's joints and lichen over three projections (so a cliff is not smeared from above),
+    // the grass in tufts, heather on the drier slopes, bog on the flat low ground, pebbles where the rock breaks up
+    'float b1=ns(wp*0.045)-0.5;float b2=ns(wp.yx*0.045+13.0)-0.5;float b3=ns(wp*0.011+5.0)-0.5;vec3 n=normalize(vN);float st=1.0-n.y;float h=vP.y;' +
+    'float R=vM.x;float S=vM.z;vec3 c=vC*(0.92+0.16*ns(wp*0.018+2.0));vec3 rc=vec3(0.33,0.35,0.37);vec3 sc=vec3(0.9,0.92,0.95);' +
+    '\n#if MATQ>0\n' +
+    'vec2 wq=mod(vP.xz,16384.0);float mv=ns(wq/512.0+0.5)-0.5;float mv2=ns(wq/128.0+9.5)-0.5;c*=(1.0+mv*0.14+mv2*0.07)*vec3(1.0+mv2*0.06,1.0,1.0-mv2*0.06);' +
+        // Rock where the ground steepens, without the camouflage (Jonas 18.10.2026: «Hva er greia med disse mønstrene?»): a threshold on
+    // 20-60 m noise turned an even 50/50 slope into spots. So there is no pattern at that scale at all: broad zones of about 160 m
+    // (stretched down the fall line) shift the rock weight softly, the geometry's own steepness adds to it, and only inside a kilometre
+    // comes a fine pattern of slabs and tussocks (1.5-4 m, read as texture); on the steep faces thin ledges of turf along the contours.
+    // uMP: zone amplitude, ledge amplitude, fine amplitude, steepness gain. uMQ: the fine pattern's threshold width, the snow's warp, the
+    // stretch down the fall line, unused. MATP in JS, G3._debug.matp
+    'vec2 dd=n.xz;float dl=length(dd);dd=dl>0.02?dd/dl:vec2(1.0,0.0);vec2 sl=vec2(dot(wp,vec2(-dd.y,dd.x)),dot(wp,dd)/uMQ.z);' +
+    'float det1=1.0-smoothstep(250.0,1000.0,d);float zone=ns(sl/160.0+41.0)-0.5;float steep=smoothstep(0.45,0.72,st);' +
+    'float Rg=R+zone*uMP.x+(st*1.1-0.5)*uMP.w;' +
+    'float fine=0.0;if(det1>0.0)fine=((ns(wp*0.25+21.0)-0.5)+0.5*(ns(wp*0.7+3.0)-0.5))*uMP.z*det1;' +
+    'float ledge=(ns(vec2(sl.x/40.0,h/6.0)+17.0)-0.5)*uMP.y*steep*det;' +
+    'R=clamp(smoothstep(0.5-uMQ.x,0.5+uMQ.x,Rg+fine-max(ledge,0.0)*2.0)*step(2.5,h)*(1.0-vM.w)+R*(1.0-step(2.5,h)),0.0,1.0);' +
+    'float sw=(ns(wp/36.0+27.0)-0.5)+0.5*(ns(wp/11.0+8.0)-0.5);S=smoothstep(0.3,0.7,S+sw*uMQ.y*det)*(1.0-smoothstep(0.5,0.8,st)*0.8);sc*=0.97+0.06*ns(wp*0.3);rc*=0.9+0.2*(mv2+0.5)+0.2*zone;' +
+    '\n#if MATQ>1\n' +
+    // one noise per projection gives both the joints (where it crosses its middle) and the blocks' tone (its value), 3 m blocks
+    'if(det1>0.0){vec3 c0=c,r0=rc;vec3 aw=abs(n);aw=aw*aw*aw*aw;aw/=aw.x+aw.y+aw.z;' +
+    'vec2 px=vec2(mod(vP.z,4096.0),mod(vP.y,4096.0)),pz=vec2(mod(vP.x,4096.0),mod(vP.y,4096.0));' +
+    'float ny=ns(wp*0.35),nx=ns(px*0.35+3.0),nz=ns(pz*0.35+6.0);float j=aw.y*abs(ny-0.5)+aw.x*abs(nx-0.5)+aw.z*abs(nz-0.5);float crack=1.0-smoothstep(0.0,0.035,j);' +
+    'float blk=aw.y*ny+aw.x*nx+aw.z*nz;float lic=smoothstep(0.56,0.72,ns(wp*0.22+9.0))*(1.0-smoothstep(0.4,0.7,st))*step(6.0,h);' +
+    'float peb=hs(floor(wp*1.5));rc=rc*(0.86+0.28*blk)*(1.0-crack*0.45)*(1.0+(peb-0.5)*1.2*R*(1.0-R));rc=mix(rc,vec3(0.56,0.58,0.46),lic*0.5);' +
+    'float tf=ns(wp*0.9)+ns(wp*2.7+2.0)*0.5;float heath=smoothstep(0.5,0.75,ns(wp/16.0+5.0))*smoothstep(0.05,0.2,st)*(1.0-vM.y);' +
+    'float bog=smoothstep(0.58,0.78,ns(wp/64.0+11.0))*(1.0-smoothstep(0.03,0.1,st))*smoothstep(70.0,20.0,h)*step(4.0,h)*(1.0-vM.y);' +
+    'c*=1.0+(tf-0.75)*(0.24-vM.y*0.12);c=mix(c,c*vec3(0.92,0.78,0.86),heath*0.6);c=mix(c,vec3(0.4,0.37,0.2)*(0.9+0.2*tf),bog*0.55);' +
+    'c=mix(c0,c,det1);rc=mix(r0,rc,det1);}' +
+    '\n#endif\n' +
+    'n=normalize(n+vec3(b1*0.5+b3,0.0,b2*0.5-b3*0.6)*(0.2+st*0.7)*det*(1.0+R*0.8)*(1.0-S*0.7));' +
+    '\n#else\n' +
+    'n=normalize(n+vec3(b1*0.5+b3,0.0,b2*0.5-b3*0.6)*(0.2+st*0.7)*det);' +
+    '\n#endif\n' +
+    'c=mix(c,rc,R);c=mix(c,sc,S);vec2 uv=(vW.xz-uGRect.xy)*uGRect.zw;float ins=step(0.0,uv.x)*step(0.0,uv.y)*step(uv.x,1.0)*step(uv.y,1.0);float ef=smoothstep(0.0,0.06,min(min(uv.x,uv.y),min(1.0-uv.x,1.0-uv.y)));' +
+'float sand=(1.0-smoothstep(1.2,2.1,h+b1*0.8))*step(0.05,h);c=mix(c,uSand,sand*0.7);' +
     // the tidal zone along the whole coast: rockweed up to about the high water and a pale band of barnacles above it, never under
     // snow (Jonas 07.10.2026: «det ser litt dumt ut når den eneste plassen det er tang og rur i verden er rundt stolpene til naustet»)
     'float wd=(1.0-smoothstep(0.9,1.5,h+b2*0.6))*step(-0.6,h);c=mix(c,mix(vec3(0.22,0.19,0.1),vec3(0.32,0.28,0.14),ns(wp*0.35)),wd*0.92);' +
@@ -604,12 +641,12 @@ const G3 = (() => {
     }
     const big = N > 65536, idx = big ? new Uint32Array((n - 1) * (n - 1) * 6) : new Uint16Array((n - 1) * (n - 1) * 6); let q = 0;   // 32-bit on ultra (UINT)
     for (let j = 0; j < n - 1; j++) for (let i = 0; i < n - 1; i++){ const a = j * n + i, b = a + 1, c = a + n, d = c + 1; idx[q++] = a; idx[q++] = c; idx[q++] = b; idx[q++] = b; idx[q++] = c; idx[q++] = d; }
-    const col = new Float32Array(N * 3), m = {pb:buf(pos), cb:buf(col, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), nb:buf(nor), ib:buf(idx, gl.ELEMENT_ARRAY_BUFFER), n:idx.length, i32:big, h, nz, slope, fo, col, x0, z0, sx, sz, pos, nor, gn:n, o:[x0, z0], sh:new Float32Array(N).fill(1)}; m.sb = buf(m.sh, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); m.shKey = '';
+    const col = new Float32Array(N * 3), m = {pb:buf(pos), cb:buf(col, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), nb:buf(nor), ib:buf(idx, gl.ELEMENT_ARRAY_BUFFER), n:idx.length, i32:big, h, nz, slope, fo, col, mat:new Float32Array(N * 4), x0, z0, sx, sz, pos, nor, gn:n, o:[x0, z0], sh:new Float32Array(N).fill(1)}; m.sb = buf(m.sh, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); m.mb = buf(m.mat, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); m.shKey = '';
     recolor(m, snowNow == null ? 0 : snowNow);
     return m;
   }
   function makeMesh(x0, z0, sx, sz, n, hf){ const B = meshBegin(x0, z0, sx, sz, n, hf); meshRows(B, Infinity); return meshEnd(B); }
-  function freeMesh(m){ if (m.parts){ m.parts.forEach(freeMesh); return; } gl.deleteBuffer(m.pb); gl.deleteBuffer(m.cb); gl.deleteBuffer(m.ib); if (m.nb) gl.deleteBuffer(m.nb); if (m.sb) gl.deleteBuffer(m.sb); }
+  function freeMesh(m){ if (m.parts){ m.parts.forEach(freeMesh); return; } gl.deleteBuffer(m.pb); gl.deleteBuffer(m.cb); gl.deleteBuffer(m.ib); if (m.nb) gl.deleteBuffer(m.nb); if (m.sb) gl.deleteBuffer(m.sb); if (m.mb) gl.deleteBuffer(m.mb); }
   // the near terrain's own surface at x, z (its triangles over the ground without the units), so a fine patch meets it exactly
   function nearSurf(M, x, z){
     const n = M.gn, d = M.sx / (n - 1), gx = clamp((x - M.x0) / d, 0, n - 1.001), gz = clamp((z - M.z0) / d, 0, n - 1.001), i = Math.floor(gx), j = Math.floor(gz), fx = gx - i, fz = gz - j;
@@ -641,8 +678,8 @@ const G3 = (() => {
     const idx = []; for (let j = 0; j < nz - 1; j++) for (let i = 0; i < nx - 1; i++){
       if (xs[i] >= -E - 1e-6 && xs[i + 1] <= E + 1e-6 && zs[j] >= -B - 1e-6 && zs[j + 1] <= 1e-6) continue;   // the quay's own block
       const a = j * nx + i, b = a + 1, c = a + nx, d = c + 1; idx.push(a, c, b, b, c, d); }
-    const col = new Float32Array(N * 3), m = {pb:buf(pos), cb:buf(col, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), nb:buf(nor), ib:buf(new Uint16Array(idx), gl.ELEMENT_ARRAY_BUFFER), n:idx.length, h, nz:nzA, slope, fo, pv, col, pos, nor, unit:U.id, o:[U.o[0], U.o[1]], sh:new Float32Array(N).fill(1)};
-    m.sb = buf(m.sh, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); m.shKey = '';
+    const col = new Float32Array(N * 3), m = {pb:buf(pos), cb:buf(col, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), nb:buf(nor), ib:buf(new Uint16Array(idx), gl.ELEMENT_ARRAY_BUFFER), n:idx.length, h, nz:nzA, slope, fo, pv, col, mat:new Float32Array(N * 4), pos, nor, unit:U.id, o:[U.o[0], U.o[1]], sh:new Float32Array(N).fill(1)};
+    m.sb = buf(m.sh, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); m.mb = buf(m.mat, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); m.shKey = '';
     recolor(m, snowNow == null ? 0 : snowNow);
     return m;
   }
@@ -839,28 +876,33 @@ const G3 = (() => {
   }
   const WEED = [0.27, 0.24, 0.13], WEED2 = [0.22, 0.2, 0.12], BARN = [0.66, 0.66, 0.62];   // rockweed and barnacles in the tidal zone
   function recolor(m, snow){
-    const {slope, nz, col, h, fo} = m;
-    const gr = grassNow(), grass = mix3([0.5, 0.46, 0.33], [0.36, 0.43, 0.28], gr), birch = mix3([0.33, 0.3, 0.26], [0.25, 0.33, 0.22], gr), rock = [0.33, 0.35, 0.37], snowC = [0.9, 0.92, 0.95], shore = [0.5, 0.49, 0.44], bed = [0.3, 0.3, 0.27];
+    const {slope, nz, col, h, fo, mat} = m;
+    const gr = grassNow(), grass = mix3([0.5, 0.46, 0.33], [0.36, 0.43, 0.28], gr), birch = mix3([0.33, 0.3, 0.26], [0.25, 0.33, 0.22], gr), shore = [0.5, 0.49, 0.44], bed = [0.3, 0.3, 0.27];
     const asph = [0.3, 0.31, 0.32], gravel = [0.47, 0.45, 0.41], pv = m.pv;   // a harbour unit's fill and the flat land by it (unitPatch)
+    // the rock (0.33, 0.35, 0.37) and the snow (0.9, 0.92, 0.95) are laid on in the fragment shader (terFS) by the weights in mat, so their
+    // edges can be sharpened per pixel; the colour here is the ground under them
     for (let i = 0; i < h.length; i++){
-      const y = h[i], n = nz[i]; let c;
+      const y = h[i], n = nz[i]; let c, R = 0, wood = 0, sn = 0, p = 0;
       if (y < 0) c = bed;
       else {
-        c = mix3(rock, mix3(grass, birch, n), y < 280 ? 1 : sstep(420, 280, y));
+        const alt = y < 280 ? 1 : sstep(420, 280, y);   // bare rock above the vegetation
+        c = mix3(grass, birch, n);
         if (y < 3.5) c = mix3(shore, c, y / 3.5);
         // the tidal zone along the whole coast, as under Father's naust (Jonas 07.10.2026: «det ser litt dumt ut når den eneste plassen det
         // er tang og rur i verden er rundt stolpene til naustet»): rockweed up to about the high water, a pale band of barnacles above it
         const tw = 1 - sstep(0.9, 1.5, y), tb = sstep(0.9, 1.4, y) * (1 - sstep(1.7, 2.3, y));
         if (tw > 0 || tb > 0){ c = mix3(c, mix3(WEED, WEED2, sstep(0.4, 0.7, n)), tw * (1 - sstep(0.5, 0.85, slope[i]) * 0.5)); c = mix3(c, BARN, tb * 0.55); }
         // birch woods below the tree line stay dark through the snow; steep faces show bare rock
-        const rs = sstep(0.32, 0.7, slope[i]), wood = Math.max(y < 320 ? sstep(0.42, 0.62, n) * sstep(320, 200, y) : 0, fo ? fo[i] * sstep(420, 260, y) * 0.9 : 0) * (1 - rs);
-        const p = pv ? pv[i] : 0, sn = sstep(snow - 60, snow + 60, y + n * 90) * (1 - rs * 0.85) * (1 - wood * 0.55) * (1 - p * 0.6) * sstep(1.5, 2.3, y);   // no snow where the tide comes
-        c = mix3(mix3(c, rock, rs * 0.75), birch, wood * 0.6);
+        const rs = sstep(0.32, 0.7, slope[i]); wood = Math.max(y < 320 ? sstep(0.42, 0.62, n) * sstep(320, 200, y) : 0, fo ? fo[i] * sstep(420, 260, y) * 0.9 : 0) * (1 - rs);
+        p = pv ? pv[i] : 0; sn = sstep(snow - 60, snow + 60, y + n * 90) * (1 - rs * 0.85) * (1 - wood * 0.55) * (1 - p * 0.6) * sstep(1.5, 2.3, y);   // no snow where the tide comes
+        R = (1 - alt * (1 - rs * 0.75)) * (1 - p);
+        c = mix3(c, birch, wood * 0.6);
         if (p) c = mix3(c, mix3(asph, gravel, sstep(0.4, 0.75, n) * 0.7 + (1 - p) * 0.3), p);
-        c = mix3(c, snowC, sn);
       }
       col[i * 3] = c[0]; col[i * 3 + 1] = c[1]; col[i * 3 + 2] = c[2];
+      mat[i * 4] = R; mat[i * 4 + 1] = wood; mat[i * 4 + 2] = sn; mat[i * 4 + 3] = p;
     }
+    gl.bindBuffer(gl.ARRAY_BUFFER, m.mb); gl.bufferSubData(gl.ARRAY_BUFFER, 0, mat);
     gl.bindBuffer(gl.ARRAY_BUFFER, m.cb); gl.bufferSubData(gl.ARRAY_BUFFER, 0, col);
   }
 
@@ -3424,8 +3466,20 @@ const G3 = (() => {
     gl.uniformMatrix4fv(PL.u.uM, false, m.o ? relM(m) : M); gl.uniform4fv(PL.u.uHole, hole || NOHOLE); attr(0, m.pb, 3); attr(1, m.cb, 3);
     if (m.ib){ gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, m.ib); gl.drawElements(gl.TRIANGLES, m.n, m.i32 ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT, 0); } else gl.drawArrays(gl.TRIANGLES, 0, m.n);
   }
+  // the terrain program of the quality in use (terFS: MATQ 0 on low, 1 on mid, 2 on high and ultra; #mat0..2 in the address overrides),
+  // compiled when first needed; a tier a driver will not compile falls back to the one below
+  let PTS = [null, null, null];
+  function terProg(q){
+    if (PTS[q]) return PTS[q];
+    try { PTS[q] = program(TER_VS, terFS(q), ['aPos', 'aCol', 'aNor', 'aShd', 'aMat'], 'terreng' + q); }
+    catch (e){ console.warn('terreng' + q, e.message || e); PTS[q] = terProg(q - 1); }
+    return PTS[q];
+  }
+  const MATQ_FIX = (location.hash.match(/mat(\d)/) || [])[1];
+  const MATP = {p:[0.5, 0.4, 0.65, 0.6], q:[0.4, 0.6, 2, 0]};   // chosen from the variant sheets 18.10.2026 (matvar.py in the session)   // the material shader's tuning (terFS uMP, uMQ)
   function drawTerrain(TM, eye, VP, near){
-    gl.useProgram(PT.p); const u = PT.u; plSet(u);
+    const PQ = terProg(MATQ_FIX !== undefined ? +MATQ_FIX : Math.min(2, QUAL.lvl)) || PT; gl.useProgram(PQ.p); const u = PQ.u; plSet(u);
+    if (u.uMP){ gl.uniform4fv(u.uMP, MATP.p); gl.uniform4fv(u.uMQ, MATP.q); }
     gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uSun, env.lightDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb); gl.uniform3fv(u.uGnd, env.gnd); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD);
     gl.uniform3fv(u.uSand, snowNow == null || snowNow < 5 ? [0.84, 0.86, 0.88] : [0.74, 0.71, 0.6]); gl.uniformMatrix4fv(u.uM, false, TM);
     const one = (m, hole, ground) => {
@@ -3433,14 +3487,14 @@ const G3 = (() => {
       if (ground && LMTEX){ gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, LMTEX); gl.uniform1i(u.uLand, 2); gl.activeTexture(gl.TEXTURE0); }
       if (LRECT) gl.uniform4fv(u.uGRect, [LRECT[0] - eye[0], LRECT[1] - eye[2], LRECT[2], LRECT[3]]);
       if (ground && GTEX){ gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, GTEX); gl.uniform1i(u.uGround, 0); gl.uniform4fv(u.uGRect, [GRECT[0] - eye[0], GRECT[1] - eye[2], GRECT[2], GRECT[3]]); }
-      attr(0, m.pb, 3); attr(1, m.cb, 3); attr(2, m.nb, 3); attr(3, m.sb, 1); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, m.ib); gl.drawElements(gl.TRIANGLES, m.n, m.i32 ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT, 0);
+      attr(0, m.pb, 3); attr(1, m.cb, 3); attr(2, m.nb, 3); attr(3, m.sb, 1); attr(4, m.mb, 4); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, m.ib); gl.drawElements(gl.TRIANGLES, m.n, m.i32 ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT, 0);
     };
     const holeOf = (M, g) => new Float32Array([M.x0 + g - eye[0], M.z0 + g - eye[2], M.x0 + M.sx - g - eye[0], M.z0 + M.sz - g - eye[2]]);
     if (!NEARM) one(TERR);
     else if (near){ one(NEARM, FINEM ? holeOf(FINEM, 6) : null, true); if (FINEM){ gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(-1, -1); one(FINEM, null, true); gl.disable(gl.POLYGON_OFFSET_FILL); } if (UPATCH.length){ gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(-1, -2); for (const m of UPATCH) one(m, null, true); gl.disable(gl.POLYGON_OFFSET_FILL); } }
     else if (!MIDM) one(TERR, holeOf(NEARM, 45));
     else { one(TERR, holeOf(MIDM, 180)); one(MIDM, holeOf(NEARM, 45)); }
-    gl.disableVertexAttribArray(2); gl.disableVertexAttribArray(3); litSetup(VP);
+    gl.disableVertexAttribArray(2); gl.disableVertexAttribArray(3); gl.disableVertexAttribArray(4); litSetup(VP);
   }
   // ground layer under the corridor: roads and forest, drawn on a canvas and draped on the terrain
   function buildGround(){
@@ -3646,7 +3700,7 @@ const G3 = (() => {
       if (!gl.getExtension('OES_standard_derivatives')) throw new Error('mangler OES_standard_derivatives');
       UINT = !!gl.getExtension('OES_element_index_uint'); qualSet();   // 32-bit indices: the ultra level's big meshes
       stage = 'shadere';
-      PL = program(LIT_VS, LIT_FS, ['aPos', 'aCol'], 'lit'); PT = program(TER_VS, TER_FS, ['aPos', 'aCol', 'aNor', 'aShd'], 'terreng'); PRGN = program(LITN_VS, LITN_FS, ['aPos', 'aNor', 'aCol'], 'modell'); PRGX = program(TEX_VS, TEX_FS, ['aPos', 'aUV'], 'tekstur'); PRGW = program(WK_VS, WK_FS, ['aPos', 'aW', 'aS'], 'kjølvann');
+      PL = program(LIT_VS, LIT_FS, ['aPos', 'aCol'], 'lit'); PT = program(TER_VS, terFS(0), ['aPos', 'aCol', 'aNor', 'aShd', 'aMat'], 'terreng'); PTS = [PT, null, null]; PRGN = program(LITN_VS, LITN_FS, ['aPos', 'aNor', 'aCol'], 'modell'); PRGX = program(TEX_VS, TEX_FS, ['aPos', 'aUV'], 'tekstur'); PRGW = program(WK_VS, WK_FS, ['aPos', 'aW', 'aS'], 'kjølvann');
       WKB = {p:new Float32Array(9000 * 3), w:new Float32Array(9000 * 4), s:new Float32Array(9000), pb:buf(new Float32Array(9000 * 3), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), wb:buf(new Float32Array(9000 * 4), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), sb:buf(new Float32Array(9000), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW)}; // the waves read the sea-state texture in the vertex shader where the GPU can (#novtf in the address tries without)
       SST_VS = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS) >= 2 && !/novtf/.test(location.hash);
       // The sea is the heaviest program, and a phone's driver may refuse to link it with no word why (Adreno 642L, 05.10.2026: «sjø link:
@@ -4807,6 +4861,6 @@ const G3 = (() => {
     // the cinema: on or off (the HUD is the page's: body.kino-clean)
     kino(on){ if (on !== undefined){ KINO.on = !!on; KINO.shot = null; } return KINO.on; }, intro:introStart, introOn:() => !!INTRO, get kinoShot(){ return KINO.shot ? KINO.shot.type : null; },
     isHelm:() => cam.helm, setHelm(on){ const G = GEO(vtype()); cam.helm = !!on; cam.zoom = 1; cam.hy = 0; cam.hp = G.hp !== undefined ? G.hp : -0.07; cam.fov = G.fov || 55; },
-    _debug:{get anchl(){ return ANCHAL; }, jigRail:t => jigRail(t, GEO(t)), get jsms(){ return JSMS; }, lift:LIFT, bv, pota:POTA, get fps(){ return FPS.v; }, get cam(){ return cam; }, trawl(mode, at, hold){ TRAWL.mode = mode || null; TRAWL.t0 = performance.now() / 1000 - (at || 0); TRAWL.hold = hold ? at || 0 : null; return mode; }, seine(mode, at, hold){ SEINE.mode = mode || null; SEINE.t0 = performance.now() / 1000 - (at || 0); SEINE.hold = hold ? at || 0 : null; return mode; }, get seineNow(){ return seineState(performance.now() / 1000); }, get trawlNow(){ const st = trawlState(performance.now() / 1000); return TRAWL.mode ? Object.assign({mode:TRAWL.mode}, st) : null; }, get trk(){ return TRK && {s:TRK.s, v:TRK.v, vc:TRK.vc, end:TRK.end, sIn:TRK.sIn, back:TRK.back, turnL:TRK.turnL, done:TRK.done, stops:TRK.stops.map(q => q.s), P:TRK.P}; }, get peers(){ return npcNow.filter(n => n.player).map(n => ({id:n.id, vtype:n.vtype, t:n.K ? n.K.t : null, glass:!!(n.K && n.K.glass)})); }, get air(){ return airNow.map(a => ({kind:a.kind, w:a.w.map(Math.round)})); }, get airM(){ return !!(AIRM && AIRM.plane); }, get curFov(){ return curFov; }, cam, moundTop, bridgeInto, get statTris(){ return STAT ? STAT.n / 3 : 0; }, get vec(){ return {tiles:[...VEC.tiles.values()].map(t => ({k:t.k, bld:t.bld ? t.bld.n : 0, roads:t.roads.length, bridges:t.bridges.length, piers:t.piers.length, molos:t.molos.length, quays:t.quays.length, ms:Math.round(t.ms)})), statics:[...TST].map(([k, s]) => ({k, tris:s.tris, ms:Math.round(s.ms)})), chunks:CH.size}; }, moundInto, MB, haulModel, get haulA(){ return HAULA; }, gopHands, kinoNext(){ KINO.shot = null; }, get kino(){ const k = KINO.shot, e = KINO.eye, g = KINO.tgt; if (!k || !e) return null; const t = (performance.now() - T0) / 1000; return {type:k.type, up:e[1] - Math.max(terrH(e[0], e[2]), seaH(e[0], e[2], t)), free:camFree(g, e), d:Math.hypot(e[0] - bv.x, e[2] - bv.z)}; }, get PLA(){ return PLA; }, get PCA(){ return PCA; }, set noPL(v){ NOPL = !!v; }, get beams(){ return BMN; }, glErr(){ return gl ? gl.getError() : -1; }, mastTop:t => mastTop(geoOf(t)), QUAL, qualTick, TERRW, get TERR(){ return TERR; }, get MIDM(){ return MIDM; }, RO, SSL, WV, WK, ssAt, seaH, waves:(dt, H) => updateWaves(dt, H), get sstVS(){ return SST_VS; }, get seaLvl(){ return seaLvl; }, get seaBasic(){ return !!(PS && PS.basic); }, get seaOne(){ return PSF === PS; }, get seaLite(){ return !!(PS && PS.lite); }, set seaDbg(v){ SEADBG = v; }, get drift(){ let c = 0; for (let i = 0; i < SDN; i++) if (SD.age[i] < SD.life[i]) c++; return c; }, get eye(){ return lastEye; }, camInside, camFree, get camPull(){ return camPull; }, get camLift(){ return camLift; }, get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, BUNKERS, nearestPlant, fkRun, legAt, terrH, terrRaw, unitModel, get UPATCH(){ return UPATCH; }, sitesNow, siteModel, onSite, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; lightsHere(e, 50).forEach(L => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(L, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }, get landMask(){ return LMON ? lcv : null; }, get maskMs(){ return LMMS; }, get coast3(){ return COAST3; }, meshH(x, z){ const M = FINEM && x > FINEM.x0 + 8 && x < FINEM.x0 + FINEM.sx - 8 && z > FINEM.z0 + 8 && z < FINEM.z0 + FINEM.sz - 8 ? FINEM : NEARM; return M ? nearSurf(M, x, z) : NaN; }, seaU(){ if (!PS) return null; gl.useProgram(PS.p); const g = n => PS.u[n] == null ? 'none' : gl.getUniform(PS.p, PS.u[n]); return {ls:g('uLSOn'), land:g('uLandS'), rect:g('uLRect') && Array.from(g('uLRect')), hOn:g('uHOn'), sOn:g('uSOn'), lmon:LMON, gr:!!GRECT, lt:!!LMTEX}; },  get FINEM(){ return FINEM; }, get seaNP(){ return NP; }, get dpr(){ return canvas ? canvas.width / Math.max(1, canvas.getBoundingClientRect().width) : 0; }}
+    _debug:{matp:MATP, get anchl(){ return ANCHAL; }, jigRail:t => jigRail(t, GEO(t)), get jsms(){ return JSMS; }, lift:LIFT, bv, pota:POTA, get fps(){ return FPS.v; }, get cam(){ return cam; }, trawl(mode, at, hold){ TRAWL.mode = mode || null; TRAWL.t0 = performance.now() / 1000 - (at || 0); TRAWL.hold = hold ? at || 0 : null; return mode; }, seine(mode, at, hold){ SEINE.mode = mode || null; SEINE.t0 = performance.now() / 1000 - (at || 0); SEINE.hold = hold ? at || 0 : null; return mode; }, get seineNow(){ return seineState(performance.now() / 1000); }, get trawlNow(){ const st = trawlState(performance.now() / 1000); return TRAWL.mode ? Object.assign({mode:TRAWL.mode}, st) : null; }, get trk(){ return TRK && {s:TRK.s, v:TRK.v, vc:TRK.vc, end:TRK.end, sIn:TRK.sIn, back:TRK.back, turnL:TRK.turnL, done:TRK.done, stops:TRK.stops.map(q => q.s), P:TRK.P}; }, get peers(){ return npcNow.filter(n => n.player).map(n => ({id:n.id, vtype:n.vtype, t:n.K ? n.K.t : null, glass:!!(n.K && n.K.glass)})); }, get air(){ return airNow.map(a => ({kind:a.kind, w:a.w.map(Math.round)})); }, get airM(){ return !!(AIRM && AIRM.plane); }, get curFov(){ return curFov; }, cam, moundTop, bridgeInto, get statTris(){ return STAT ? STAT.n / 3 : 0; }, get vec(){ return {tiles:[...VEC.tiles.values()].map(t => ({k:t.k, bld:t.bld ? t.bld.n : 0, roads:t.roads.length, bridges:t.bridges.length, piers:t.piers.length, molos:t.molos.length, quays:t.quays.length, ms:Math.round(t.ms)})), statics:[...TST].map(([k, s]) => ({k, tris:s.tris, ms:Math.round(s.ms)})), chunks:CH.size}; }, moundInto, MB, haulModel, get haulA(){ return HAULA; }, gopHands, kinoNext(){ KINO.shot = null; }, get kino(){ const k = KINO.shot, e = KINO.eye, g = KINO.tgt; if (!k || !e) return null; const t = (performance.now() - T0) / 1000; return {type:k.type, up:e[1] - Math.max(terrH(e[0], e[2]), seaH(e[0], e[2], t)), free:camFree(g, e), d:Math.hypot(e[0] - bv.x, e[2] - bv.z)}; }, get PLA(){ return PLA; }, get PCA(){ return PCA; }, set noPL(v){ NOPL = !!v; }, get beams(){ return BMN; }, glErr(){ return gl ? gl.getError() : -1; }, mastTop:t => mastTop(geoOf(t)), QUAL, qualTick, TERRW, get TERR(){ return TERR; }, get MIDM(){ return MIDM; }, RO, SSL, WV, WK, ssAt, seaH, waves:(dt, H) => updateWaves(dt, H), get sstVS(){ return SST_VS; }, get seaLvl(){ return seaLvl; }, get seaBasic(){ return !!(PS && PS.basic); }, get seaOne(){ return PSF === PS; }, get seaLite(){ return !!(PS && PS.lite); }, set seaDbg(v){ SEADBG = v; }, get drift(){ let c = 0; for (let i = 0; i < SDN; i++) if (SD.age[i] < SD.life[i]) c++; return c; }, get eye(){ return lastEye; }, camInside, camFree, get camPull(){ return camPull; }, get camLift(){ return camLift; }, get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, BUNKERS, nearestPlant, fkRun, legAt, terrH, terrRaw, unitModel, get UPATCH(){ return UPATCH; }, sitesNow, siteModel, onSite, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; lightsHere(e, 50).forEach(L => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(L, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }, get landMask(){ return LMON ? lcv : null; }, get maskMs(){ return LMMS; }, get coast3(){ return COAST3; }, meshH(x, z){ const M = FINEM && x > FINEM.x0 + 8 && x < FINEM.x0 + FINEM.sx - 8 && z > FINEM.z0 + 8 && z < FINEM.z0 + FINEM.sz - 8 ? FINEM : NEARM; return M ? nearSurf(M, x, z) : NaN; }, seaU(){ if (!PS) return null; gl.useProgram(PS.p); const g = n => PS.u[n] == null ? 'none' : gl.getUniform(PS.p, PS.u[n]); return {ls:g('uLSOn'), land:g('uLandS'), rect:g('uLRect') && Array.from(g('uLRect')), hOn:g('uHOn'), sOn:g('uSOn'), lmon:LMON, gr:!!GRECT, lt:!!LMTEX}; },  get FINEM(){ return FINEM; }, get seaNP(){ return NP; }, get dpr(){ return canvas ? canvas.width / Math.max(1, canvas.getBoundingClientRect().width) : 0; }}
   };
 })();

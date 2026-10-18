@@ -467,6 +467,19 @@ Jonas valgte 02.10.2026 å la GitHub bygge og lagre de nasjonale kartdataene. Gi
   - Automatisk kvalitet går opp igjen etter 8 s over 40 bilder/s.
   - «Vis bildetakt» ligger i Innstillinger.
 
+### 4.11b Bakkens materialer i skyggeleggeren (Jonas 18.10.2026)
+
+Jonas så en video om teksturflising og spurte om verden kunne bli penere. Vi har ingen fliser: bakken ble farget per punkt i nettet (12–47 m mellom dem) og så glattet. Det som manglet, var materiale, ikke variasjon. Rammene fra Jonas: terrenget er viktigst («arbeidsplassen er naturen og båten»), og spillet skal gå jevnt på telefoner, nettbrett og i nettleser.
+
+- **Punktene** (`recolor` i `view3d.js`) gir nå vegetasjonsfargen (`aCol`) og et vektsett `aMat` = (berg, skog, snø, havnefylling). Berget og snøen legges på først i fragmentskyggeleggeren (`terFS`), så kantene kan skjerpes per piksel.
+- **Tre trinn** etter kvaliteten (`MATQ` som `#define`, ett program per trinn, kompilert ved første bruk, `terProg`; et trinn driveren ikke vil kompilere, faller tilbake til det under):
+  - **0 (lav):** den gamle blandingen av punktfargene, like billig som før.
+  - **1 (middels):** en langsom variasjon i tone og lysstyrke over 128 og 512 m (så ingen to åssider er like); berget der bakken bratner, uten mønster på 20–60 m (første utkast la en terskel på slik støy, og en jevnt bratt fjellside i Lofoten ble til kamuflasjeflekker; Jonas: «Hva er greia med disse mønstrene?»): brede soner på om lag 160 m (strukket 2:1 nedover fallinja) skyver bergvekten mykt, geometriens egen helning legges til, og på de bratte flatene ligger tynne hyller med torv langs kotene; en skarp, flekkete snøkant med egen ustrukket støy (strukket bøyde den seg til bånd langs kotene der helningen dreide) og uten snø på det bratteste. Bergets relieff forsterker normalstøyen, snøen demper den.
+  - **2 (høy og ultra):** innenfor 250–1 000 m i tillegg et fint mønster av berghyller og tuer (1,5–4 m, leses som struktur, ikke mønster), bergets sprekker (tynne linjer der en støy krysser midten, i tre projeksjoner vektet med normalen, så en fjellvegg ikke smøres ovenfra) og blokker, lav på de slakere flatene, gress og lyng i tuer (to skalaer), lyng på de tørrere skråningene, myr på flat lav mark under 70 m, og småstein der berget er halvt. Alt blandes inn etter avstanden, så ingenting popper.
+- **Mediump:** verdenskoordinatene foldes med `mod(…, 4096)` og `mod(…, 16384)` før støyen, og de langsomme skalaene deler 16384, så det blir ingen søm.
+- `MATP` (`G3._debug.matp`, `uMP`/`uMQ`): sonenes styrke, hyllene, det fine mønsteret, helningens vekt; terskelbredden, snøens forvrengning, strekket nedover fallinja. Valgt fra variantark (`matvar.py` i kladdemappa: seks varianter per sted i ett bilde). `#mat0`, `#mat1`, `#mat2` i adressen låser trinnet for sammenligning. Bilder før/etter ligger i økta (Senja, Lofoten, Bergen, Finnmark, Senja om vinteren); verktøyet var `terrshot.py` i kladdemappa.
+- **Ikke gjort ennå:** ur ved foten av stup (trenger nabolaget), detaljteksturer (256² berg/gress som krydder), fasader og tak på byggene (runde 2).
+
 ### 4.12 Autonav over hele kysten (kystplanen, fase K9, 02.10.2026)
 
 - **Vindu i stedet for hele kartet** (`leiaFind` i `core/11-route.js`): A* går i et vindu rundt start og mål, `LEIA.pad` (5 km) eller `LEIA.padK` (35 %) av avstanden, det som er størst.

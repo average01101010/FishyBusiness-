@@ -464,6 +464,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p121', '18.10.2026', 'Landskapet får materiale', 'The land gets its surface', [
+       ['Fjellet, bakken og strendene langs hele kysten har fått overflate: berg med sprekker og lav der det bratner, gress og lyng i tuer, myr på flat mark, flekkete snøkanter og åssider som ikke lenger er like. Detaljen legges på nær båten og koster ingenting på lav grafikk.', 'The mountains, ground and shores along the whole coast have a surface now: rock with joints and lichen where it steepens, grass and heather in tufts, bog on the flats, ragged snow edges and hillsides that no longer match. The detail comes in near the boat and costs nothing on low graphics.']]],
     ['p120', '18.10.2026', 'Båtene i havnene ligger riktig', 'The boats in the harbours lie right', [
        ['Båtene langs kysten ligger ikke lenger med skroget inne i land når de er i havn. Finnes det ikke plass ved kaia, ligger de mindre båtene ved en flytebrygge med landgang, og de større på en fortøyningsbøye ute på havna, aldri oppå andre båter, mottak, verft, butikker, naust eller rorbuer.', 'The coast\'s boats no longer lie with the hull ashore when they are in harbour. Where the quay has no room, the smaller boats lie at a floating dock with a gangway and the bigger ones on a mooring buoy out in the harbour, never on top of other boats, buying stations, yards, shops, boathouses or rorbuer.']]],
     ['p119', '18.10.2026', 'Rettinger på båtene', 'Fixes on the boats', [
