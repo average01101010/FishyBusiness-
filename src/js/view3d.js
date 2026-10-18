@@ -243,9 +243,11 @@ const G3 = (() => {
     // uMP: zone amplitude, ledge amplitude, fine amplitude, steepness gain. uMQ: the fine pattern's threshold width, the snow's warp, the
     // stretch down the fall line, unused. MATP in JS, G3._debug.matp
     'vec2 dd=n.xz;float dl=length(dd);dd=dl>0.02?dd/dl:vec2(1.0,0.0);vec2 sl=vec2(dot(wp,vec2(-dd.y,dd.x)),dot(wp,dd)/uMQ.z);' +
-    'float det1=1.0-smoothstep(250.0,1000.0,d);float zone=ns(sl/160.0+41.0)-0.5;float steep=smoothstep(0.45,0.72,st);' +
+    'float det1=1.0-smoothstep(200.0,700.0,d);float zone=ns(sl/160.0+41.0)-0.5;float steep=smoothstep(0.45,0.72,st);' +
     'float Rg=R+zone*uMP.x+(st*1.1-0.5)*uMP.w;' +
-    'float fine=0.0;if(det1>0.0)fine=((ns(wp*0.25+21.0)-0.5)+0.5*(ns(wp*0.7+3.0)-0.5))*uMP.z*det1;' +
+    // the two fine noises (4 m and 1.4 m) serve the slabs, the tufts and the lichen alike (one evaluation each; Jonas 18.10.2026 felt the
+    // frames stutter along the shore, where this tier fills the screen)
+    'float fine=0.0,f1=0.0,f2=0.0;if(det1>0.0){f1=ns(wp*0.25+21.0)-0.5;f2=ns(wp*0.7+3.0)-0.5;fine=(f1+0.5*f2)*uMP.z*det1;}' +
     'float ledge=(ns(vec2(sl.x/40.0,h/6.0)+17.0)-0.5)*uMP.y*steep*det;' +
     'R=clamp(smoothstep(0.5-uMQ.x,0.5+uMQ.x,Rg+fine-max(ledge,0.0)*2.0)*step(2.5,h)*(1.0-vM.w)+R*(1.0-step(2.5,h)),0.0,1.0);' +
     'float sw=(ns(wp/36.0+27.0)-0.5)+0.5*(ns(wp/11.0+8.0)-0.5);S=smoothstep(0.3,0.7,S+sw*uMQ.y*det)*(1.0-smoothstep(0.5,0.8,st)*0.8);sc*=0.97+0.06*ns(wp*0.3);rc*=0.9+0.2*(mv2+0.5)+0.2*zone;' +
@@ -254,9 +256,9 @@ const G3 = (() => {
     'if(det1>0.0){vec3 c0=c,r0=rc;vec3 aw=abs(n);aw=aw*aw*aw*aw;aw/=aw.x+aw.y+aw.z;' +
     'vec2 px=vec2(mod(vP.z,4096.0),mod(vP.y,4096.0)),pz=vec2(mod(vP.x,4096.0),mod(vP.y,4096.0));' +
     'float ny=ns(wp*0.35),nx=ns(px*0.35+3.0),nz=ns(pz*0.35+6.0);float j=aw.y*abs(ny-0.5)+aw.x*abs(nx-0.5)+aw.z*abs(nz-0.5);float crack=1.0-smoothstep(0.0,0.035,j);' +
-    'float blk=aw.y*ny+aw.x*nx+aw.z*nz;float lic=smoothstep(0.56,0.72,ns(wp*0.22+9.0))*(1.0-smoothstep(0.4,0.7,st))*step(6.0,h);' +
+    'float blk=aw.y*ny+aw.x*nx+aw.z*nz;float lic=smoothstep(0.06,0.22,f1)*(1.0-smoothstep(0.4,0.7,st))*step(6.0,h);' +
     'float peb=hs(floor(wp*1.5));rc=rc*(0.86+0.28*blk)*(1.0-crack*0.45)*(1.0+(peb-0.5)*1.2*R*(1.0-R));rc=mix(rc,vec3(0.56,0.58,0.46),lic*0.5);' +
-    'float tf=ns(wp*0.9)+ns(wp*2.7+2.0)*0.5;float heath=smoothstep(0.5,0.75,ns(wp/16.0+5.0))*smoothstep(0.05,0.2,st)*(1.0-vM.y);' +
+    'float tf=(f1+0.5)+(f2+0.5)*0.5;float heath=smoothstep(0.5,0.75,ns(wp/16.0+5.0))*smoothstep(0.05,0.2,st)*(1.0-vM.y);' +
     'float bog=smoothstep(0.58,0.78,ns(wp/64.0+11.0))*(1.0-smoothstep(0.03,0.1,st))*smoothstep(70.0,20.0,h)*step(4.0,h)*(1.0-vM.y);' +
     'c*=1.0+(tf-0.75)*(0.24-vM.y*0.12);c=mix(c,c*vec3(0.92,0.78,0.86),heath*0.6);c=mix(c,vec3(0.4,0.37,0.2)*(0.9+0.2*tf),bog*0.55);' +
     'c=mix(c0,c,det1);rc=mix(r0,rc,det1);}' +
