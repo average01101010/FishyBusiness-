@@ -225,8 +225,8 @@ function moorHarbour(h){
       const hd = mouth ? Math.atan2(mouth.x - p.x, -(mouth.y - p.y)) : b.hd;
       if (!docksIn(p.x * 1000 - 60, p.y * 1000 - 60, p.x * 1000 + 60, p.y * 1000 + 60).every(d => { const e1 = d.s0 + d.np * FDOCK.PL; for (let q = 0; q <= e1; q += 3) if (Math.hypot(p.x * 1000 - d.o[0] - d.n[0] * q, p.y * 1000 - d.o[1] - d.n[1] * q) < b.L + 8) return false; return true; })) continue;
       // p is the buoy; she lies to it by the bow on her mooring pennant and swings round it with the wind and the tide (the circle free)
-      const k = (b.L / 2 + MOOR.PEN) / 1000;
-      if (moorFree(p, hd, b.L * 2 + 2 * MOOR.PEN, b.L * 2 + 2 * MOOR.PEN, placed)) m = {p:{x:p.x - Math.sin(hd) * k, y:p.y + Math.cos(hd) * k}, hd, buoy:p};
+      const pen = (b.L / 2 + MOOR.PEN) / 1000;
+      if (moorFree(p, hd, b.L * 2 + 2 * MOOR.PEN, b.L * 2 + 2 * MOOR.PEN, placed)) m = {p:{x:p.x - Math.sin(hd) * pen, y:p.y + Math.cos(hd) * pen}, hd, buoy:p};
     }
     if (!m) m = {p:b.p, hd:b.hd, none:true};   // nowhere free: she keeps the pack's place (counted by the tests)
     b.moored = {p:m.p, hd:m.hd, st:'port', buoy:m.buoy || null, none:!!m.none};
