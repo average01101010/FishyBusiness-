@@ -464,6 +464,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p120', '18.10.2026', 'Båtene i havnene ligger riktig', 'The boats in the harbours lie right', [
+       ['Båtene langs kysten ligger ikke lenger med skroget inne i land når de er i havn. Finnes det ikke plass ved kaia, ligger de mindre båtene ved en flytebrygge med landgang, og de større på en fortøyningsbøye ute på havna, aldri oppå andre båter, mottak, verft, butikker, naust eller rorbuer.', 'The coast\'s boats no longer lie with the hull ashore when they are in harbour. Where the quay has no room, the smaller boats lie at a floating dock with a gangway and the bigger ones on a mooring buoy out in the harbour, never on top of other boats, buying stations, yards, shops, boathouses or rorbuer.']]],
     ['p119', '18.10.2026', 'Rettinger på båtene', 'Fixes on the boats', [
        ['Ingen båt kommer lenger med haler ferdig montert: haleren du kjøper, står der den hører hjemme på rekka. Plastsjarken har fått vinduene på plass, styrhusdøra ved siden av dem i stedet for tvers gjennom, og en finere baug.', 'No boat comes with a hauler fitted any more: the hauler you buy stands where it belongs at the rail. The fibreglass sjark has her windows in place, the wheelhouse door beside them instead of through them, and a fairer bow.'],
        ['Databladet i Båthandelen sier nå lukket gruppe med hjemmelslengde og faktisk lengde for båter som selges med hjemmel, og åpen gruppe bare for dem uten.', 'The datasheet in the boat market now says closed group with quota length and actual length for boats sold with a right, and open group only for those without.']]],

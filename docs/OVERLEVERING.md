@@ -813,6 +813,18 @@ Jonas valgte «Full trafikk langs kysten», men «NPC båtene skal kun dukke opp
 - at båtene ikke tar fisk
 - AIS-kortet og sporet
 
+#### 4.16b Liggeplassene i havnene: kai, flytebrygge og bøye (Jonas 18.10.2026)
+
+Jonas: «npc-båter mange plasser er plassert i landmassen når de ligger ved kai … Sørg for at det aldri oppstår konflikt med andre båter, verft, fiskemottak, utstyrsbutikk, naust, rorbuer eller landmasse.» Kaifrontene i vec-pakkene og den fine kystlinja (25 m-masken) stemmer ikke alltid overens, så opptil 60 % av båtene lå med en skrogside på land.
+
+- `coastMoor(b)` i `core/05-vessels.js` setter liggeplassen én gang per havn (`moorHarbour`) når den fine kysten er inne, og igjen bare når vec-pakkene eller kystindeksene endres (`MOOR.ver`). Til da brukes pakkens plass.
+- **Kai:** pakkens plass prøves først, så forskjøvet ut fra kaia 0–8 m og langs kaia. `moorFree` krever 15 skrogpunkter utenfor land (med 1 m og 0,5 m margin), ingen kai, molo, brygge eller bøye i `obsSegHit`, avstand til mottak, verft og butikker (`PORTS`, 45 m), havneenhetene (`unitNear`, 60 m), naustet (45 m) og rorbuene (35 m) (`moorBlocked`), og ingen overlapp med båtene som alt er plassert, også i nabohavner innen 600 m (`moorAround`).
+- **Flytebrygge** for båter under 15 m som kaia ikke tok: `shoreSpot` finner en rett strandlinje 15–450 m fra havna. Brygga (`FDOCK`) er et landkar på land, en landgang på 10 m ned til 1–4 betongpontonger på 12 × 2,4 m som følger tidevannet, og båtene ligger langs begge sider med baugen ut. `dockFree` krever vann og minst 1,2 m dybde under hele brygga, ingen hindring, ingen sted innen 15 m, ingen plassert båt innen 5 m av sidene og 10 m til andre brygger.
+- **Fortøyningsbøye** for resten: vann med plass til å svinge (båtlengde + 8 m fra land, dybde ≥ dypgang + 1,5 m), bort fra bryggene. Bøya ligger `MOOR.PEN` = 3 m foran baugen, og hele svaierringen (2L + 6 m) må være fri. Finnes ingen plass, beholder båten pakkens plass (`none`, telles av proben).
+- Bryggene og bøyene (med svaierringen) går inn i hindringene (`core/11b-obstacles.js`, nøkkelen `FDOCK.ver`), så Autonav og andre båter holder seg unna.
+- 3D: `drawDocks` i `view3d.js` tegner brygger og bøyer innen 1,5 km. Modellene er byggesettet `tools/harbour/brygge.py` → `src/data/harbour-brygge.b64` (`glb-brygge`): `ponton`, `ponton_end` (stige og livbøye), `finger` (utrigger 8 × 0,8 m), `landgang`, `landkar`, `kai_tre` (trekai på påler, 6 m fag), `kai_betong` (betongkai med fendere og leider, 6 m) og `boye`. Ramma: x langs modulen, y opp fra middelvann, z på tvers. `finger`, `kai_tre` og `kai_betong` er klare, men ikke tatt i bruk ennå.
+- Stikkprøve 18.10.2026 (proben i økta, sommer kl. 03): Tromsø 43 båter (3 ved flytebrygge), Bergen 22 (1), Bodø 18, Ålesund 56, Båtsfjord 9, Kristiansund 28, Honningsvåg 23 (1): 0 på land, 0 på kai, 0 overlapp, 0 uten plass. Hammerfest fikk tidsavbrudd i proben mens vec-pakkene lastet (ikke plasseringen).
+
 ### 4.17 Reglenes kartdata langs hele kysten (R1 av regelplanen, 04.10.2026)
 
 Jonas: «Det neste vi må finne ut da er hvor grunnlinjen går langs hele kysten og hvordan regelverket er langs hele kysten». Og om artene: «Vi skal ikke fiske noe hummer i spillet», men «Kongekrabbe skal kunne fiskes i spillet! Det er viktig!»

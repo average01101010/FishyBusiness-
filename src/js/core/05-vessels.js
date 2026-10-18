@@ -128,7 +128,7 @@ function coastState(b, H, hod = hodOf(H)){
 // boats placed before it. A boat that does not fit is moved off the face the least that frees her (up to 8 m, then along the face),
 // and one that still does not is put on a mooring buoy in the basin (as small boats lie in Norwegian harbours), swinging to the
 // harbour's mouth. Until the coast is in, the pack's place stands (nothing is drawn so near anyway).
-const MOOR = {ver:-1};
+const MOOR = {ver:-1, PEN:3};   // PEN: the mooring pennant from the buoy to the bow (m)
 function moorBlocked(x, z, r){
   for (const q of PORTS) if (Math.abs(q.p.x * 1000 - x) < r + 60 && Math.abs(q.p.y * 1000 - z) < r + 60 && Math.hypot(q.p.x * 1000 - x, q.p.y * 1000 - z) < r + 45) return true;
   if (unitNear(x, z, r + 60)) return true;
@@ -148,24 +148,91 @@ function moorFree(p, hd, L, B, others){
     if (o.buoy || al < (L + o.L) / 2 + 1 && ac < (B + o.B) / 2 + 1) return false; }
   return true;
 }
+// the floating docks (tools/harbour/brygge.py): where a harbour's quays hold too few of its boats, a dock of the common kind is laid
+// out from a straight bit of shore near it: the abutment on the shoreline, the 10 m gangway down to a row of 12 m pontoons running
+// out to sea, and the boats alongside it on both sides, bow out. The dock is laid only where all of it is on water (the pontoons, and
+// the boats with their margins), clear of piers, marks, the players' places and the boats placed already; else the boats go on
+// buoys. A dock: {o, n (out to sea), u, s0 (where the pontoons start, m out from the shoreline), np (pontoons), h (its harbour)}
+const FDOCK = {PL:12, PW:2.4, FB:0.5, GL:10, QTOP:2.4, ver:0};
+FDOCK.GH = Math.sqrt(FDOCK.GL * FDOCK.GL - (FDOCK.QTOP - FDOCK.FB) ** 2);   // the gangway's run over the water
+// the docks of the harbours in the tiles that are in (the obstacles and the 3D view read them)
+function docksIn(x0, z0, x1, z1){ const out = []; for (const t of vecTilesIn(x0, z0, x1, z1)) for (const h of t.npc || []) for (const d of h.docks || []) out.push(d); return out; }
+function dockFree(d, others, placed){
+  const [ox, oz] = d.o, [nx, nz] = d.n, [ux, uz] = d.u, s1 = d.s0 + d.np * FDOCK.PL, P = (s, c) => ({x:(ox + nx * s + ux * c) / 1000, y:(oz + nz * s + uz * c) / 1000});
+  for (let s = d.s0; s <= s1 + 0.01; s += 3) for (const c of [-1.5, 0, 1.5]){ const p = P(s, c); if (isLand(p) || depthF(p) < 1.2) return false; }
+  if (obsSegHit(P(d.s0, 0), P(s1 + 1, 0), FDOCK.PW / 2 + 1)) return false;
+  for (let s = 0; s <= s1; s += 6) if (moorBlocked(ox + nx * s, oz + nz * s, 15)) return false;
+  // the boats placed already (at the quays round it, or swinging on buoys) clear of the dock and the boats that will lie along it: her
+  // hull's points in the dock's frame outside the gangway and pontoons with 5 m each side for those alongside and 2 m off the end
+  for (const o of placed || []){ const os = Math.sin(o.hd), oc = Math.cos(o.hd), hl = o.L / 2 + 1, hb = o.B / 2 + 1;
+    if (Math.hypot(o.p.x * 1000 - ox, o.p.y * 1000 - oz) > s1 + o.L + 20) continue;
+    for (const fa of [-1, -0.5, 0, 0.5, 1]) for (const ab of [-1, 0, 1]){ const dx = o.p.x * 1000 + os * fa * hl + oc * ab * hb - ox, dz = o.p.y * 1000 - oc * fa * hl + os * ab * hb - oz;
+      const al = dx * nx + dz * nz, ac = Math.abs(dx * ux + dz * uz); if (al > -2 && al < s1 + 4 && ac < FDOCK.PW / 2 + 5) return false; } }
+  // other docks within 300 m: 10 m apart at least, the pontoons' lines
+  for (const e of others){ if (e === d || Math.hypot(e.o[0] - ox, e.o[1] - oz) > 300) continue; const e1 = e.s0 + e.np * FDOCK.PL;
+    for (let s = 0; s <= s1; s += 3){ const px = ox + nx * s, pz = oz + nz * s; for (let q = 0; q <= e1; q += 3) if (Math.hypot(px - e.o[0] - e.n[0] * q, pz - e.o[1] - e.n[1] * q) < 10) return false; } }
+  return true;
+}
+// the boats of other harbours fixed already within 600 m of p (km): they keep their places, the new ones keep off them
+function moorAround(h, p){ const out = []; for (const t of vecTilesIn(p.x * 1000 - 600, p.y * 1000 - 600, p.x * 1000 + 600, p.y * 1000 + 600)) for (const g of t.npc || []){ if (g === h || g.moorVer !== MOOR.ver) continue;
+  for (const b of g.boats) if (b.moored && dist(b.moored.p, p) < 0.6){ const q = b.moored.buoy, D = b.L * 2 + 2 * MOOR.PEN;
+    out.push(q ? {p:q, hd:b.moored.hd, L:D, B:D, buoy:true} : {p:b.moored.p, hd:b.moored.hd, L:b.L, B:b.B}); } } return out; }
 function moorHarbour(h){
-  const placed = [], mouth = h.grounds.length ? h.grounds[0].pts[0] : null;
+  // fixed again: its own docks and buoys out of the obstacles first (they would push its boats about)
+  if ((h.docks && h.docks.length) || h.boats.some(b => b.moored && b.moored.buoy)){ h.docks = []; FDOCK.ver++; }
+  h.moorVer = -1;
+  const placed = moorAround(h, h), mouth = h.grounds.length ? h.grounds[0].pts[0] : null, need = [];
   for (const b of h.boats){
     const s = Math.sin(b.hd), c = Math.cos(b.hd); let m = null;
     // off the face: the boat's beam direction both ways, the least that frees her; then along the face too
     const tryAt = (along, off) => { const p = {x:b.p.x + (s * along + c * off) / 1000, y:b.p.y + (-c * along + s * off) / 1000}; return moorFree(p, b.hd, b.L, b.B, placed) ? p : null; };
     for (let off = 0; off <= 8 && !m; off += 0.5) for (const sg of off ? [1, -1] : [1]){ const p = tryAt(0, sg * off); if (p){ m = {p, hd:b.hd}; break; } }
     for (let al = b.L / 2; al <= b.L * 2 && !m; al += b.L / 2) for (const sa of [1, -1]){ for (let off = 0; off <= 6 && !m; off += 1) for (const sg of off ? [1, -1] : [1]){ const p = tryAt(sa * al, sg * off); if (p){ m = {p, hd:b.hd}; break; } } if (m) break; }
-    // a mooring buoy in the basin: water with room to swing (the length and 8 m from the coast), away from the berths and the rest
-    if (!m) for (let r = 40; r <= 420 && !m; r += 30) for (let k = 0; k < 16 && !m; k++){
+    if (m){ b.moored = {p:m.p, hd:m.hd, st:'port'}; placed.push({p:m.p, hd:m.hd, L:b.L, B:b.B}); } else need.push(b);
+  }
+  // a floating dock for the boats under 15 m the quays did not take (the bigger ones lie at quays or on buoys)
+  const dockable = need.filter(b => b.L < 15);
+  if (dockable.length){
+    const cx = h.x * 1000, cz = h.y * 1000, others = docksIn(cx - 400, cz - 400, cx + 400, cz + 400);
+    const avoid = (x, z) => moorBlocked(x, z, 20);
+    for (const [r0, r1] of [[15, 150], [150, 300], [300, 450]]){
+      const sp = shoreSpot(cx, cz, r0, r1, {half:5, bend:3, out:[6, 12, 20, 30], inl:[4, 10], avoid, pref:r0}); if (!sp) continue;
+      const d = {o:sp.o, u:sp.u, n:[-sp.u[1], sp.u[0]], s0:FDOCK.GH - 0.6, np:Math.min(4, Math.max(1, Math.ceil(dockable.reduce((a, b) => a + b.L + 1.5, 0) / 2 / FDOCK.PL))), h};
+      for (; d.np >= 1 && !dockFree(d, others, placed); d.np--);
+      if (d.np < 1) continue;
+      // the boats along it, both sides, from the shore end out (a bow may stand 2 m past the last pontoon)
+      const hd = Math.atan2(d.n[0], -d.n[1]), s1 = d.s0 + d.np * FDOCK.PL, at = [d.s0 + 1, d.s0 + 1], got = [];
+      for (const b of dockable){
+        for (const side of [0, 1]){
+          const sc = at[side] + b.L / 2; if (sc + b.L / 2 > s1 + 2) continue;
+          const off = (side ? -1 : 1) * (FDOCK.PW / 2 + b.B / 2 + 0.3), p = {x:(d.o[0] + d.n[0] * sc + d.u[0] * off) / 1000, y:(d.o[1] + d.n[1] * sc + d.u[1] * off) / 1000};
+          if (!moorFree(p, hd, b.L, b.B, placed)) continue;
+          b.moored = {p, hd, st:'port', dock:true}; placed.push({p, hd, L:b.L, B:b.B}); at[side] = sc + b.L / 2 + 1.5; got.push(b); break;
+        }
+      }
+      if (!got.length) continue;
+      (h.docks = h.docks || []).push(d); FDOCK.ver++;
+      for (const b of got) need.splice(need.indexOf(b), 1);
+      break;
+    }
+  }
+  // a mooring buoy in the basin for the rest: water with room to swing (the length and 8 m from the coast), away from the berths and the rest
+  for (const b of need){
+    let m = null;
+    for (let r = 40; r <= 420 && !m; r += 30) for (let k = 0; k < 16 && !m; k++){
       const a = (k + hash(hashStr(b.id) + r) * 0.9) / 16 * 2 * Math.PI, p = {x:h.x + Math.sin(a) * r / 1000, y:h.y - Math.cos(a) * r / 1000};
-      if (!coastFine(p) || isLand(p) || coastDistM(p, 100) < b.L + 8) continue;
+      if (!coastFine(p) || isLand(p) || coastDistM(p, 100) < b.L + 8 || depthF(p) < b.T + 1.5) continue;
       const hd = mouth ? Math.atan2(mouth.x - p.x, -(mouth.y - p.y)) : b.hd;
-      if (moorFree(p, hd, b.L * 2, b.L * 2, placed)) m = {p, hd, buoy:true};
+      if (!docksIn(p.x * 1000 - 60, p.y * 1000 - 60, p.x * 1000 + 60, p.y * 1000 + 60).every(d => { const e1 = d.s0 + d.np * FDOCK.PL; for (let q = 0; q <= e1; q += 3) if (Math.hypot(p.x * 1000 - d.o[0] - d.n[0] * q, p.y * 1000 - d.o[1] - d.n[1] * q) < b.L + 8) return false; return true; })) continue;
+      // p is the buoy; she lies to it by the bow on her mooring pennant and swings round it with the wind and the tide (the circle free)
+      const k = (b.L / 2 + MOOR.PEN) / 1000;
+      if (moorFree(p, hd, b.L * 2 + 2 * MOOR.PEN, b.L * 2 + 2 * MOOR.PEN, placed)) m = {p:{x:p.x - Math.sin(hd) * k, y:p.y + Math.cos(hd) * k}, hd, buoy:p};
     }
     if (!m) m = {p:b.p, hd:b.hd, none:true};   // nowhere free: she keeps the pack's place (counted by the tests)
-    b.moored = {p:m.p, hd:m.hd, st:'port', buoy:!!m.buoy, none:!!m.none}; placed.push({p:m.p, hd:m.hd, L:b.L, B:b.B, buoy:m.buoy});
+    b.moored = {p:m.p, hd:m.hd, st:'port', buoy:m.buoy || null, none:!!m.none};
+    placed.push(m.buoy ? {p:m.buoy, hd:m.hd, L:b.L * 2 + 2 * MOOR.PEN, B:b.L * 2 + 2 * MOOR.PEN, buoy:true} : {p:m.p, hd:m.hd, L:b.L, B:b.B});
   }
+  if (need.some(b => b.moored.buoy)) FDOCK.ver++;   // the new buoys into the obstacles
   h.moorVer = MOOR.ver;
 }
 function coastMoor(b){

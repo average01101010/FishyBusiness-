@@ -43,7 +43,7 @@ function obsBridge(br){
 }
 // everything there is now, in a grid of 250 m cells (each thing in every cell within 40 m of it)
 function obsIndex(){
-  const nk = S.naust && S.naust.o ? S.naust.o.join(',') : '', key = VEC.ver + '|' + MARKS.ver + '|' + nk + '|' + (RORBU.ver || 0);
+  const nk = S.naust && S.naust.o ? S.naust.o.join(',') : '', key = VEC.ver + '|' + MARKS.ver + '|' + nk + '|' + (RORBU.ver || 0) + '|' + FDOCK.ver;
   if (HIND.idx && HIND.key === key) return HIND.idx;
   const idx = new Map(), list = [], C = HIND.C, pad = 40;
   const put = o => { let x0, z0, x1, z1;
@@ -61,6 +61,14 @@ function obsIndex(){
   // the quays of the rorbuer found so far (07d-rorbu.js), the deck behind the face
   for (const R of RORBUER) if (R.site){ const n = R.site, nx = -n.u[1], nz = n.u[0], w = RORBU.out / 2;
     put({t:1, x:n.o[0] - nx * w, z:n.o[1] - nz * w, l:RORBU.hl, w, ux:n.u[0], uz:n.u[1], why:'rorbu'}); }
+  // the coast harbours' floating docks (05-vessels.js moorHarbour): the pontoons, and the gangway down to them (too low to pass under);
+  // and the mooring buoys with the circle their boats swing on
+  for (const t of VEC.tiles.values()) for (const h of t.npc || []){
+    for (const d of h.docks || []){ const L = d.np * FDOCK.PL, sm = d.s0 + L / 2;
+      put({t:1, x:d.o[0] + d.n[0] * sm, z:d.o[1] + d.n[1] * sm, l:L / 2, w:FDOCK.PW / 2, ux:d.n[0], uz:d.n[1], why:'dock'});
+      put({t:1, x:d.o[0] + d.n[0] * d.s0 / 2, z:d.o[1] + d.n[1] * d.s0 / 2, l:d.s0 / 2, w:0.8, ux:d.n[0], uz:d.n[1], why:'dock'}); }
+    if (h.moorVer === MOOR.ver) for (const b of h.boats) if (b.moored && b.moored.buoy) put({t:0, x:b.moored.buoy.x * 1000, z:b.moored.buoy.y * 1000, r:b.L + MOOR.PEN, why:'buoy'});
+  }
   const mark = mk => { const r = obsMarkR[mk[2]]; if (r) put({t:0, x:mk[0] * 1000, z:mk[1] * 1000, r, why:'mark'}); };
   SEAMARKS.marks.forEach(mark); for (const t of MARKS.tiles.values()) if (t) t.marks.forEach(mark);   // and the coast's (01e-marks.js)
   HIND.idx = idx; HIND.list = list; HIND.key = key; return idx;
