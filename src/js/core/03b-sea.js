@@ -133,3 +133,23 @@ function seaHere(p, H){
   const q = hsParts(p, H), hs = Math.max(0.05, Math.hypot(q.w, q.sw)), Lp = 1.56 * q.tp * q.tp;
   return {hs, w:q.w, sw:q.sw, dir:q.dir, swDir:q.swDir, swTp:q.swTp, code:seaState(hs), krapp:q.w >= 0.4 && q.w >= q.sw && Lp > 0 && q.w / Lp > 0.04};
 }
+// How much of the sea's speed loss she takes, by where the sea comes from (Fysikk 2, 19.10.2026): Kwon's direction factors for the
+// involuntary speed loss in wind and waves (Y. J. Kwon, «Speed loss due to added resistance in wind and waves», The Naval
+// Architect, March 2008), at force 6: 1 in a head sea, 0.79 on the bow, 0.45 abeam, 0.14 from astern. A small boat eases down in a
+// steep following sea to keep from broaching, so from astern she keeps a third of the loss here. The wind sea and the swell count by
+// their energy; rel is the angle between the bow and where the sea comes from (0 a head sea).
+const SEA_DIRF = [[0, 1], [30, 0.97], [60, 0.78], [90, 0.55], [120, 0.44], [150, 0.37], [180, 0.35]];
+function seaDirOf(rel){
+  const a = Math.min(180, Math.abs(rel) * 180 / Math.PI);
+  for (let i = 1; i < SEA_DIRF.length; i++) if (a <= SEA_DIRF[i][0]){ const [a0, f0] = SEA_DIRF[i - 1], [a1, f1] = SEA_DIRF[i]; return f0 + (f1 - f0) * (a - a0) / (a1 - a0); }
+  return SEA_DIRF[SEA_DIRF.length - 1][1];
+}
+// the sea's parts near p (kept per 100 m and game hour: the model asks every tick)
+let SEAP_MEMO = {k:'', v:null};
+function seaPartsNear(p, H){ const k = H + '|' + Math.round(p.x * 10) + '|' + Math.round(p.y * 10); if (SEAP_MEMO.k === k && !WX_FORCE) return SEAP_MEMO.v; const v = hsParts(p, H); SEAP_MEMO = {k, v}; return v; }
+// the share of the loss on the heading head (grid, radians, clockwise from north)
+function seaDirF(p, H, head){
+  const q = seaPartsNear(p, H), g = gridGamma(p), e = q.w * q.w + q.sw * q.sw; if (!(e > 1e-4) || !isFinite(head)) return 1;
+  const rel = from => { let d = ((from - g) * Math.PI / 180 - head) % (2 * Math.PI); if (d > Math.PI) d -= 2 * Math.PI; if (d < -Math.PI) d += 2 * Math.PI; return d; };
+  return (q.w * q.w * seaDirOf(rel(q.dir)) + q.sw * q.sw * seaDirOf(rel(q.swDir))) / e;
+}

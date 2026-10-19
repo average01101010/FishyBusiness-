@@ -456,7 +456,9 @@ function vesselStep(H){
 // (it starts slowing before it gets there)
 function sailV(H, hs){
   const b = S.boat, pl = S.plan; if (!pl) return 0;
-  let tgt = Math.min(pl.speed, speedCap(hs == null ? hsAt(b.pos, H) : hs)), near = 1e9;
+  // (the loss by where the sea comes from on the leg she is on, as the manoeuvring model has it: Fysikk 2, 03b-sea.js seaDirF)
+  const w0 = pl.wps[pl.idx], cb = w0 && dist(b.pos, w0) > 1e-4 ? seaDirF(b.pos, H, Math.atan2(w0.x - b.pos.x, -(w0.y - b.pos.y))) : 1;
+  let tgt = Math.min(pl.speed, speedCap(hs == null ? hsAt(b.pos, H) : hs, cb)), near = 1e9;
   for (const q of PORTS){ const d = dist(q.p, b.pos); if (d < near) near = d; }
   // brake before the next stop (a harbour or a fishing spot) or the route's end along the route, not when leaving
   let rem = 0, p0 = b.pos, stop = false; for (let i = pl.idx; i < pl.wps.length; i++){ const w = pl.wps[i]; rem += dist(p0, w); p0 = w; if (wpStop(w) || i === pl.wps.length - 1){ stop = true; break; } if (rem > 3) break; }

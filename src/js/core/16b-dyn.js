@@ -12,12 +12,16 @@
 // astern out from the quay on the line (fenders and a hand on the quay do that, which the model has not got yet) and in to the harbour
 // point, where the quay's lines take her alongside (3D moorStep). By hand (16-helm.js) the throttle and the rudder go straight into the
 // same model.
+// The wind and the sea push on her (Fysikk 2, dynEnv): the wind across her above the water gives leeway and a yaw, the waves a mean
+// drift where they run, the speed she can hold falls by where the sea comes from (Kwon's direction factors, 03b-sea.js seaDirF), the
+// propeller and the rudder come out of the water in a heavy sea (less thrust, less bite), the screw walks the stern to port astern,
+// and a quartering or following sea sets her off her course now and then, which the autopilot or the hand on the helm must meet.
 // It runs in game time on every tick while the game is open (dynTick): what the player sees is the physics, GAME_RATE times faster than
 // life, as the rest of the world is. Time caught up (the game was closed, a tab slept, an admin pace) and the company's other vessels
 // keep the kinematic minute step (sail), which is what the model does on average. The state lives in S.boat.dyn (metres, radians, m/s)
 // and is written back to b.pos, b.heading and b.v every tick, which is what the rest of the game reads.
 const DYN = {on:false, b:null, cal:{}, line:null, dep:null, nm:0, hold:false, holdAt:0, debt:0, dbg:null};   // hold: the map round her is not in, she waits (as the minute step does) from holdAt; debt: the real seconds she waited, made up at double pace once it is in
-const DYN_RUD = 35 * Math.PI / 180, DYN_H = 0.2, KN_MS = NM * 1000 / 3600;   // hard over; the integration step (game s); m/s a knot
+const DYN_RUD = 35 * Math.PI / 180, DYN_H = 0.2, KN_MS = NM * 1000 / 3600, DYN_AIR = 1.25;   // hard over; the integration step (game s); m/s a knot; the air's density
 const dynAng = (from, to) => { let d = (to - from) % (2 * Math.PI); if (d > Math.PI) d -= 2 * Math.PI; if (d < -Math.PI) d += 2 * Math.PI; return d; };
 // the hull's numbers, from the vessel's own (02-species-gear.js)
 function dynPar(V){
@@ -43,20 +47,39 @@ function dynPar(V){
   return {L, B, T, m, mx, my, Iz, Yv, Yr, Nv, Nr:NrS, kNr, Nrr, umax, Tmax, k2, k1, Ydc, xR, drate, rs:1, alat};
 }
 // one step of h game seconds of the hull's own motion (u, v, r, the rudder dl), with the commands thr (-1..1) and rud (-1..1);
-// capF scales the resistance up when the sea caps the speed. The damping terms are implicit, so the step is stable at any size.
-function dynInt(P, s, thr, rud, h, capF){
+// capF scales the resistance up when the sea caps the speed; E is the wind and the sea on her (dynEnv; none in the calibration, which
+// is calm water). The damping terms are implicit, so the step is stable at any size.
+function dynInt(P, s, thr, rud, h, capF, E){
   s.dl += clamp(clamp(rud, -1, 1) * DYN_RUD - s.dl, -P.drate * h, P.drate * h);
   thr = clamp(thr, -1, 1);
-  const u = s.u, U = Math.max(Math.abs(u), 0.12 * P.umax);
-  const Tx = thr >= 0 ? P.Tmax * thr * (1 - 0.35 * Math.max(0, u) / P.umax) : 0.6 * P.Tmax * thr * (1 - 0.35 * Math.max(0, -u) / P.umax);
+  const u = s.u, U = Math.max(Math.abs(u), 0.12 * P.umax), kT = E ? E.kT : 1, kR = E ? E.kR : 1;
+  const Tx = kT * (thr >= 0 ? P.Tmax * thr * (1 - 0.35 * Math.max(0, u) / P.umax) : 0.6 * P.Tmax * thr * (1 - 0.35 * Math.max(0, -u) / P.umax));
   const R = P.k1 * u + P.k2 * capF * u * Math.abs(u);
-  // the water over the rudder: the way she has and the screw's race (sign with the direction)
-  const uR2 = u * Math.abs(u) + 0.35 * thr * P.umax * P.umax * (thr > 0 ? 1 : 0.5);
-  const Yd = -P.Ydc * P.rs * s.dl * uR2, Nd = P.xR * Yd;   // the lift on a rudder put to starboard is to port: the stern goes to port, the bow to starboard
+  // the water over the rudder: the way she has and the screw's race (sign with the direction; less when the screw is in the air)
+  const uR2 = u * Math.abs(u) + 0.35 * kT * thr * P.umax * P.umax * (thr > 0 ? 1 : 0.5);
+  const Yd = -P.Ydc * P.rs * kR * (s.dl + (E ? E.dq * (E.side == null ? 1 : E.side) : 0)) * uR2, Nd = P.xR * Yd;   // the lift on a rudder put to starboard is to port: the stern goes to port, the bow to starboard (E.dq: the sea setting her off, as a rudder angle)
+  let Ye = 0, Ne = 0, Nvu = U, Uv = U;
+  if (E){
+    // the wind across her above the water (the pressure on the side, 0.9 of it, from the wind she feels: the true wind less her own
+    // way, and less what her own way alone gives, which the calibration has in the resistance), its centre at P.xw; the waves' drift
+    const c = Math.cos(s.psi), sn = Math.sin(s.psi), wrV = (E.wE - (u * sn + s.v * c)) * c - (E.wN - (u * c - s.v * sn)) * sn;
+    const sd = E.side == null ? 1 : E.side, Yw = sd * 0.5 * DYN_AIR * 0.9 * P.AL * (wrV * Math.abs(wrV) + s.v * Math.abs(s.v));
+    // the screw walks the stern: to port astern (a right-handed screw), a little to starboard ahead, mostly at low speed
+    const Ypw = (thr < 0 ? 0.07 : 0.012) * Tx * Math.exp(-Math.abs(u) / (0.25 * P.umax));
+    // (and the water across her at low speed: the cross-flow drag on her side, 0.5 of L x her mean draught, which the linear hull has not got)
+    const Ycf = -0.5 * 1025 * 0.5 * P.L * P.Tm * s.v * Math.abs(s.v) * Math.exp(-Math.abs(u) / (0.2 * P.umax));
+    Ye = Yw + sd * (E.fe * c - E.fn * sn) + Ypw + Ycf; Ne = P.xw * Yw + P.xR * Ypw;
+    // with no way on she falls off across the wind and lies there, as a drifting boat does (the moment of the wind on her ends,
+    // 0.08 of the side's pressure times the length, towards beam-on, gone by a sixth of her top speed); the hull's own sway-yaw
+    // coupling comes of her way (Munk's moment goes as u v), so drifting she does not spin
+    const wrU = (E.wE - (u * sn + s.v * c)) * sn + (E.wN - (u * c - s.v * sn)) * c, gam = Math.atan2(-wrV, -wrU);
+    Ne -= sd * 0.5 * DYN_AIR * (wrU * wrU + wrV * wrV) * P.AL * P.L * 0.08 * Math.sin(2 * gam) * Math.exp(-Math.abs(u) / (0.15 * P.umax));
+    Nvu = Math.abs(u); Uv = Math.max(Math.abs(u), 0.04 * P.umax);   // (at low speed the cross-flow drag holds her against the side, not the linear hull's floor)
+  }
   s.u += h * (Tx - R + P.my * s.v * s.r) / P.mx;
-  const vd = (P.Yr * U * s.r + Yd - P.mx * s.u * s.r) / P.my, va = -P.Yv * U / P.my;
+  const vd = (P.Yr * U * s.r + Yd + Ye - P.mx * s.u * s.r) / P.my, va = -P.Yv * Uv / P.my;
   s.v = (s.v + h * vd) / (1 + h * va);
-  const rd = (P.Nv * U * s.v + Nd) / P.Iz, ra = (-P.Nr * U + Math.abs(P.Nrr * s.r)) / P.Iz;
+  const rd = (P.Nv * Nvu * s.v + Nd + Ne) / P.Iz, ra = (-P.Nr * U + Math.abs(P.Nrr * s.r)) / P.Iz;
   s.r = (s.r + h * rd) / (1 + h * ra);
   const rcap = P.alat / Math.max(0.5, Math.abs(s.u)); s.r = clamp(s.r, -rcap, rcap);
 }
@@ -69,8 +92,8 @@ const dynZero = () => ({u:0, v:0, r:0, dl:0, psi:0, X:0, Y:0});
 // the throttle that holds the speed u
 function dynThrEq(P, u, capF){ return u <= 0 ? 0 : clamp((P.k1 * u + P.k2 * capF * u * u) / (P.Tmax * (1 - 0.35 * u / P.umax)), 0, 1); }
 // ---- the calibration: measured on the model itself, once a vessel ----
-function dynTurn(P, V){
-  const s = dynZero(); s.u = V.vcruise * KN_MS; const thr = dynThrEq(P, s.u, 1), h = 0.1, rs = [];
+function dynTurn(P, V, u0 = V.vcruise * KN_MS){
+  const s = dynZero(); s.u = u0; const thr = dynThrEq(P, s.u, 1), h = 0.1, rs = [];
   let t = 0, adv = null, tr = null, td = null;
   while (t < 1200 && s.psi < 3 * Math.PI){
     dynInt(P, s, thr, 1, h, 1); dynMove(s, h); t += h; rs.push(s.r);
@@ -78,7 +101,7 @@ function dynTurn(P, V){
     if (td === null && s.psi >= Math.PI) td = s.X;
   }
   const rss = s.r, uss = s.u, i63 = rs.findIndex(r => r >= 0.63 * rss), T = Math.max(0.3, (i63 < 0 ? rs.length : i63) * h);
-  return {R:uss / Math.max(1e-6, rss), adv, tr, td, rss, uss, T, K:rss / DYN_RUD, Uc:V.vcruise * KN_MS, t};
+  return {R:uss / Math.max(1e-6, rss), adv, tr, td, rss, uss, T, K:rss / DYN_RUD, Uc:u0, t};
 }
 function dynAccel(P){
   const b = P.k1 + 0.35 * P.Tmax / P.umax, ueq = (-b + Math.sqrt(b * b + 4 * P.k2 * P.Tmax)) / (2 * P.k2), s = dynZero(); let t = 0;
@@ -93,8 +116,17 @@ function dynStops(P){
 function dynCal(key){
   if (DYN.cal[key]) return DYN.cal[key];
   const V = VESSELS[key] || VESSELS.skiff, P = dynPar(V), want = clamp(V.turnR || 2 * V.len, 1.2 * V.len, 2 * V.len);
+  // the wind's areas: the side above the water (the freeboard along her, and the wheelhouse, a hardtop or the people at the console
+  // over a share of her length) and the front; the centre of the side at the middle of a small boat (she drifts across the wind), a
+  // little forward on the big ones with the wheelhouse forward (her bow falls off); the propeller tips about 0.45 of the draught down
+  // (the draught is to the keel's foot)
+  { const h = hullOf(V === VESSELS[key] ? key : 'skiff'), hs = {hus:[0.35, 2.0], hardtop:[0.3, 1.5]}[(V.fac || {}).house] || [0.15, 1.0];
+    P.AL = V.len * h.f + hs[0] * V.len * hs[1] * (V.len >= 30 ? 1.6 : 1); P.AF = V.beam * (h.f + 0.8 * hs[1] * (V.len >= 30 ? 1.6 : 1)); P.xw = V.len >= 14 ? 0.04 * V.len : 0; P.hp = 0.45 * V.draft; P.Tm = h.T; }
   let lo = 0.02, hi = 20; for (let i = 0; i < 16; i++){ P.rs = Math.sqrt(lo * hi); if (dynTurn(P, V).R > want) lo = P.rs; else hi = P.rs; } P.rs = Math.sqrt(lo * hi);
   const turn = dynTurn(P, V), acc = dynAccel(P), stop = dynStops(P);
+  // Nomoto's K and T measured again at a quarter, half and three quarters of cruising speed, for the autopilot's gains at the way she
+  // has (on a planing hull they do not follow the textbook scaling: T stays about the same, K falls with the speed)
+  const nom = [0.25, 0.5, 0.75].map(f => { const t = dynTurn(P, V, f * turn.Uc); return {u:f * turn.Uc, K:t.K, T:t.T, R:t.R}; }).concat([{u:turn.Uc, K:turn.K, T:turn.T, R:turn.R}]);
   // the autopilot's rudder: a second-order loop on Nomoto's K and T (at cruising speed; K grows and T shrinks with speed), not faster
   // than 0.6 rad/s so she does not flap the rudder, critically damped
   const wn = Math.min(1.2 / turn.T, 0.6), Kp = wn * wn * turn.T / turn.K, Kd0 = Math.max(0, (2 * wn * turn.T - 1) / turn.K);
@@ -102,7 +134,7 @@ function dynCal(key){
   // cruising speed, at most 0.08 m/s2 (0.25 for a planing hull, which comes off the plane quickly; at 6x on the screen the hard stop
   // looked like a jolt)
   const uc = V.vcruise * KN_MS, aC = clamp(0.6 * uc * uc / (2 * Math.max(1, dynStopDist({stop}, uc))), 0.02, V.planing ? 0.25 : 0.08);
-  return DYN.cal[key] = {key, V, P, turn, acc, stop, Kp, Kd0, aC};
+  return DYN.cal[key] = {key, V, P, turn, acc, stop, Kp, Kd0, aC, nom};
 }
 // the way to stop from the speed v, and the speed she can have with d metres to stop in
 function dynStopDist(cal, v){ const S = cal.stop, i = Math.min(S.length - 2, Math.floor(Math.abs(v) / 0.25)), f = Math.abs(v) / 0.25 - i; return S[i] + (S[i + 1] - S[i]) * f; }
@@ -110,6 +142,46 @@ function dynStopDist(cal, v){ const S = cal.stop, i = Math.min(S.length - 2, Mat
 const dynVEase = (cal, d, vT = 0) => Math.sqrt(vT * vT + 1.4 * cal.aC * Math.max(0, d));   // (planned at 70 % of aC: the margin the lever needs to follow it)
 const dynEaseDist = (cal, v) => v * v / (1.4 * cal.aC);
 function dynVStop(cal, d){ const S = cal.stop; if (d <= 0) return 0; let i = 1; while (i < S.length && S[i] <= d) i++; if (i >= S.length) return (S.length - 1) * 0.25; return ((i - 1) + (d - S[i - 1]) / Math.max(1e-6, S[i] - S[i - 1])) * 0.25; }
+// ---- the wind and the sea on her this tick (Fysikk 2) ----
+// What the hull feels, from the sea state the rest of the game has (03b-sea.js hsParts: the wind sea and the swell, their heights,
+// periods and where they come from) and the wind (windAt, windDir), in game time, so it is the same whatever the screen shows:
+// - cap/capF: the speed she can hold on this heading (speedCap with Kwon's direction factor) and the resistance that holds her to
+//   it at full throttle (solved exactly, with the thrust she has);
+// - kT, kR: the share of the thrust and of the rudder's bite left when the propeller comes out of the water. The stern's motion
+//   against the sea is a share of the wave height (more in waves about her own length, which she cannot ride; more into the sea),
+//   and the propeller is out when that motion passes the tips' depth: exp(-h^2 / 2 sigma^2) of the time (Rayleigh);
+// - fe, fn: the waves' mean drift where they run (rho g m0 L Kr^2 / 2, Kr = tanh(1.3 k T): a hull reflects the short waves only);
+// - dq: the yaw the sea sets her off with, as a rudder angle, a smooth random on her own clock with the encounter period, most in a
+//   quartering and following sea (where a boat yaws and wants to broach), least into it;
+// - wE, wN: the true wind (m/s, the way it blows, east and north on the grid), for the pressure on her side in dynInt.
+const DYN_YAWF = [[0, 0.25], [90, 0.5], [135, 1], [180, 0.8]];
+function dynEnv(b, d, cal, H, dtG = 0){
+  const P = cal.P, p = b.pos, g = gridGamma(p), psi = d.psi; let q = null;
+  try { q = seaPartsNear(p, H); } catch (e){ q = null; }
+  const E = {cap:P.umax, capF:1, kT:1, kR:1, fe:0, fn:0, dq:0, wE:0, wN:0, Pem:0, hs:0, cb:1, tau:6};
+  if (q){
+    const hs = Math.max(0.05, Math.hypot(q.w, q.sw)), cb = seaDirF(p, H, psi); E.hs = hs; E.cb = cb;
+    E.cap = Math.max(0.3, speedCap(hs, cb) * KN_MS);
+    let s2 = 0, dq2 = 0, te = 0, ws = 0;
+    for (const [h0, tp, from] of [[q.w, q.tp, q.dir], [q.sw, q.swTp, q.swDir]]){
+      if (!(h0 > 0.02) || !(tp > 0.3)) continue;
+      const w = 2 * Math.PI / tp, k = w * w / 9.81, mu = dynAng(psi, (from - g) * Math.PI / 180), cm = Math.cos(mu), am = Math.abs(mu) * 180 / Math.PI;
+      const fL = 1 / (1 + (k * P.L * Math.abs(cm) / Math.PI) ** 2), sr = h0 / 4 * (0.2 + 0.65 * (1 - fL)) * (0.6 + 0.4 * (1 + cm) / 2);
+      s2 += sr * sr;
+      let fq = DYN_YAWF[DYN_YAWF.length - 1][1]; for (let i = 1; i < DYN_YAWF.length; i++) if (am <= DYN_YAWF[i][0]){ const [a0, f0] = DYN_YAWF[i - 1], [a1, f1] = DYN_YAWF[i]; fq = f0 + (f1 - f0) * (am - a0) / (a1 - a0); break; }
+      dq2 += (0.12 * h0 / 2 * fq) ** 2;
+      const we = Math.max(0.05, Math.abs(w + k * d.u * cm)); te += h0 * h0 * 2 * Math.PI / we; ws += h0 * h0;
+      const Fd = 0.5 * 1025 * 9.81 * (h0 * h0 / 16) * P.L * Math.tanh(1.3 * k * P.T) ** 2, a = (from - g + 180) * Math.PI / 180;
+      E.fe += Fd * Math.sin(a); E.fn += Fd * Math.cos(a);
+    }
+    const sig = Math.sqrt(s2); E.Pem = sig > 0.01 ? Math.exp(-P.hp * P.hp / (2 * sig * sig)) : 0; E.kT = 1 - 0.6 * E.Pem; E.kR = 1 - 0.5 * E.Pem;
+    E.tau = clamp(ws ? te / ws : 6, 2, 20);
+    d.yph = ((d.yph || 0) + dtG / E.tau) % 1e6; E.dq = Math.sqrt(dq2) * 2.2 * (vn(d.yph, 991) - 0.5);
+  }
+  const c = E.cap; E.capF = Math.max(1, (E.kT * P.Tmax * (1 - 0.35 * c / P.umax) - P.k1 * c) / (P.k2 * c * c));
+  const U = windAt(H, p), a = (windDir(H, p) - g + 180) * Math.PI / 180; E.wE = U * Math.sin(a); E.wN = U * Math.cos(a);
+  DYN.env = E; return E;
+}
 // ---- the state, in step with the boat the rest of the game reads ----
 function dynState(b){
   let d = b.dyn; const fresh = !d;
@@ -173,8 +245,8 @@ function dynMinute(H, W){
 function dynHelm(d, dtG){
   const b = S.boat, h = S.helm, cal = dynCal(b.type), P = cal.P, H = S.t / 60;
   if (Math.abs(h.v * KN_MS - d.u) > 0.6) d.u = h.v * KN_MS;   // set from outside (a test, «Fortøy» undone): the model takes it
-  const cap = speedCap(hsAt(b.pos, H)) * KN_MS, capF = Math.max(1, (P.umax / Math.max(0.3, cap)) ** 2), X0 = d.X, Y0 = d.Y;
-  for (let left = dtG; left > 1e-6;){ const s = Math.min(DYN_H, left); left -= s; dynInt(P, d, h.thr, h.rud, s, capF); dynMove(d, s); }
+  const E = dynEnv(b, d, cal, H, dtG), capF = E.capF, X0 = d.X, Y0 = d.Y;
+  for (let left = dtG; left > 1e-6;){ const s = Math.min(DYN_H, left); left -= s; dynInt(P, d, h.thr, h.rud, s, capF, E); dynMove(d, s); }
   if (!h.thr && Math.abs(d.u) < 0.04){ d.u = 0; }
   // land: over 3 knots she runs aground on it, slower she comes to a stop against it (every 10 m, then the thin breakwaters, then
   // the depth under her)
@@ -252,7 +324,7 @@ function dynAuto(d, dtG){
     const dep = !T && DYN.dep && Math.hypot(DYN.dep.bp.x * 1000 - d.X, DYN.dep.bp.y * 1000 - d.Y) < 60 ? DYN.dep : null; DYN.dep = null;
     T = DYN.line = dynLineBuild(pl, dep); T.s = dep ? 0 : dynLineProj(T, d.X, d.Y, 0, 1e9);
   }
-  const cap = speedCap(hsAt(b.pos, H)) * KN_MS, capF = Math.max(1, (P.umax / Math.max(0.3, cap)) ** 2);
+  const E = dynEnv(b, d, cal, H, dtG), cap = E.cap, capF = E.capF;
   let vc = Math.min((pl.speed || BOAT.vcruise) * KN_MS, cap), near = 1e9; for (const q of PORTS){ const dq = dist(q.p, b.pos); if (dq < near) near = dq; }
   if (near < 0.25) vc = Math.min(vc, 5 * KN_MS);
   const X0 = d.X, Y0 = d.Y;
@@ -271,6 +343,9 @@ function dynAuto(d, dtG){
     // land from a rorbu's berth left her lying «under way» for good, 19.10.2026)
     if (T.ghit && !unsafe && T.ghit.s - 25 < sStop){ sStop = T.ghit.s - 25; stopW = null; }
     const ds = sStop - T.s;
+    // (the last lengths in to a stop the skipper holds her up to it against the wind and the sea, with the engine's kicks a model
+    // without a bow thruster cannot give: she stands on the point, as Jonas asked 06.10.2026, and drifts from there when she lies)
+    E.side = clamp((ds - 0.5 * L) / Math.max(2.5 * L, 80), 0, 1);
     // out from the quay: astern on the line, turning over to the way out, and on along it to the harbour point and round on to the
     // route, at a knot and a half, then three (not the model's: the fenders and a hand on the quay do that, and she has neither
     // yet; the turn at the harbour point is often a hairpin, which the old follower pivoted through too)
@@ -294,25 +369,34 @@ function dynAuto(d, dtG){
     let vCmd = pl.replan ? 0 : vc;
     if (T.back > 0 && T.s < T.sOut + T.turnL + 20) vCmd = Math.min(vCmd, 3 * KN_MS);   // (just out from a quay: manoeuvring speed)
     const vBase = vCmd;
-    for (const c of T.corners){ if (c.s <= T.s - 2 * L) continue; if (c.s > T.s + 600) break; const vTurn = Math.max(1.5 * KN_MS, vc * (1 - c.th / Math.PI)); if (c.s - T.s > -L) vCmd = Math.min(vCmd, dynVEase(cal, c.s - T.s - L, vTurn)); else vCmd = Math.min(vCmd, vTurn); }
+    // (into a corner she slows with how sharp it is, but a planing hull no slower than a third of her cruising speed: below that her
+    // rudder has no bite without the screw's race, and at two knots she ran 50 m past the corner before it took, 19.10.2026)
+    const vTmin = cal.V.planing ? 0.35 * cal.turn.Uc : 1.5 * KN_MS;
+    for (const c of T.corners){ if (c.s <= T.s - 2 * L) continue; if (c.s > T.s + 600) break; const vTurn = Math.min(vc, Math.max(vTmin, vc * (1 - c.th / Math.PI))); if (c.s - T.s > -L) vCmd = Math.min(vCmd, dynVEase(cal, c.s - T.s - L, vTurn)); else vCmd = Math.min(vCmd, vTurn); }
     vCmd = Math.min(vCmd, dynVEase(cal, ds - 0.3));
     if (ds < 4) vCmd = Math.min(vCmd, Math.sqrt(2 * 0.12 * Math.max(0, ds - 0.25)) + 0.04);
     // (the lever goes over gradually, a quarter of its travel a game second, as a hand moves it)
     // the throttle for the acceleration that brings her to the commanded speed in three game seconds, and along the easing curve
     // when she is slackening off (the resistance she has at this speed counted in, so she follows the curve and does not lag it)
     const aDes = (vCmd - d.u) / 3 + (vCmd < vBase - 0.05 && d.u > 0.1 ? -0.7 * cal.aC : 0), F = P.mx * aDes + P.k1 * d.u + P.k2 * capF * d.u * Math.abs(d.u);
-    const thrT = vCmd < 0.05 && d.u < 0.3 ? (d.u > 0.02 ? -0.15 : 0) : F >= 0 ? clamp(F / (P.Tmax * (1 - 0.35 * Math.max(0, d.u) / P.umax)), 0, 1) : clamp(F / (0.6 * P.Tmax), -0.6, 0);
+    const thrT = vCmd < 0.05 && d.u < 0.3 ? (d.u > 0.02 ? -0.15 : 0) : F >= 0 ? clamp(F / (E.kT * P.Tmax * (1 - 0.35 * Math.max(0, d.u) / P.umax)), 0, 1) : clamp(F / (0.6 * E.kT * P.Tmax), -0.6, 0);
     const thr = d.thr = d.thr == null ? thrT : d.thr + clamp(thrT - d.thr, -0.25 * h, 0.25 * h);
     // the rudder: line of sight on the leg she is on, or on the next one from where a turn on her own radius must begin to meet it
     // (so she cuts the corner by R(1/cos(th/2) - 1) and never swings outside); the course wanted is the leg's, bent towards it by
     // the cross-track error over a look-ahead of a radius and a half (stable: the heading loop is much faster than that)
-    const Rt = Math.max(cal.turn.R, d.u * d.u / P.alat), n = T.P.length; let seg = dynSeg(T, T.s);
     // (the wheel goes over a response time before the arc must begin: Nomoto's T and half the rudder's travel, at the way she has)
-    if (seg + 1 <= n - 1){ const th = Math.abs(dynAng(dynSegHd(T, seg), dynSegHd(T, seg + 1))), lead = Math.min(Rt * Math.tan(Math.min(th, 2.6) / 2) + Math.abs(d.u) * (cal.turn.T + 0.5 * DYN_RUD / P.drate), 0.5 * (T.L[seg] - T.L[seg - 1])); if (T.L[seg] - T.s < lead) seg++; }
+    // (Nomoto's constants at the way she has, between the ones measured in the calibration (dynCal nom); the loop's gains follow, so
+    // a planing hull at harbour speed is steered as firmly as at speed: with the cruising gains the fast boats ran 50-80 m past a
+    // corner at 5-6 knots, 19.10.2026)
+    const N = cal.nom, us = clamp(Math.abs(d.u), N[0].u, N[N.length - 1].u); let j = 1; while (j < N.length - 1 && N[j].u < us) j++;
+    const fN = (us - N[j - 1].u) / Math.max(1e-6, N[j].u - N[j - 1].u), Tn = N[j - 1].T + (N[j].T - N[j - 1].T) * fN, Kn = (N[j - 1].K + (N[j].K - N[j - 1].K) * fN) * Math.max(Math.abs(d.u), 0.5 * N[0].u) / us, wn = Math.min(1.2 / Tn, 0.6);
+    const Kp = wn * wn * Tn / Kn, Kd = Math.max(0, (2 * wn * Tn - 1) / Kn), Rn = N[j - 1].R + (N[j].R - N[j - 1].R) * fN;
+    const Rt = Math.max(Rn, d.u * d.u / P.alat), n = T.P.length; let seg = dynSeg(T, T.s);
+    if (seg + 1 <= n - 1){ const th = Math.abs(dynAng(dynSegHd(T, seg), dynSegHd(T, seg + 1))), lead = Math.min(Rt * Math.tan(Math.min(th, 2.6) / 2) + Math.abs(d.u) * (Tn + 0.5 * DYN_RUD / P.drate), 0.5 * (T.L[seg] - T.L[seg - 1])); if (T.L[seg] - T.s < lead) seg++; }
     const sa = T.P[seg - 1], hdP = dynSegHd(T, seg), ye = (d.X - sa[0]) * Math.cos(hdP) + (d.Y - sa[1]) * Math.sin(hdP);
     const chi = Math.abs(d.u) > 0.3 ? d.psi + Math.atan2(d.v, d.u) : d.psi, chiD = hdP - Math.atan(ye / Math.max(1.5 * Rt, L));
-    const Kd = cal.Kd0 * cal.turn.Uc / Math.max(0.25 * cal.turn.Uc, Math.abs(d.u)), rud = clamp((cal.Kp * dynAng(chi, chiD) - Kd * d.r) / DYN_RUD, -1, 1);
-    dynInt(P, d, thr, rud, h, capF); dynMove(d, h);
+    const rud = clamp((Kp * dynAng(chi, chiD) - Kd * d.r) / DYN_RUD, -1, 1);
+    dynInt(P, d, thr, rud, h, capF, E); dynMove(d, h);
     // the last creep on to a stop is the model's, held so she never runs past it
     if (ds < 4 && d.u > vCmd + 0.02) d.u = Math.max(vCmd + 0.02, d.u - cal.aC * h);
   }
