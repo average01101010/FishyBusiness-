@@ -64,7 +64,7 @@ async def main():
         t = await pg.evaluate("""(() => { delete S.free; S.member = false; S.cash = 100000; const b = S.boat; b.status = 'port'; b.port = b.port || 'finnsnes';
           const m0 = S.msgs.length, c0 = S.cash; S.hold = [{sp:'torsk', kg:50, fresh:90, bled:true, iced:true, cls:2, n:10, hr:0}]; rescue(false); const t1 = {paid:c0 - S.cash, hold:Math.round(holdTotal()), msg:S.msgs.slice(m0).some(m => m.from === 'Redningsselskapet' && /første slepet er gratis/.test(m.no))};
           const c1 = S.cash; rescue(true); const t2 = {paid:c1 - S.cash};
-          const c2 = S.cash; b.damage = 1; hullRepair(); const r1 = {paid:c2 - S.cash, msg:S.msgs.slice(-1)[0].no}; const c3 = S.cash; b.damage = 1; hullRepair(); const r2 = {paid:c3 - S.cash};
+          const c2 = S.cash; b.dmg = null; hullHit(5, 1e5, 'kai'); hullRepair(); const r1 = {paid:c2 - S.cash, msg:S.msgs.slice(-1)[0].no}; const c3 = S.cash; hullHit(5, 1e5, 'kai'); hullRepair(); const r2 = {paid:c3 - S.cash};   // (a blow at 5 knots each, Fysikk 3: the damage is an amount now, core/16c-hull.js)
           return {t1, t2, r1, r2, tow:PRICE.tow}; })()""")
         check(t['t1']['paid'] == 0 and t['t1']['hold'] == 50 and t['t1']['msg'] and t['t2']['paid'] == t['tow'] and t['r1']['paid'] == 0 and 'første reparasjonen' in t['r1']['msg'] and t['r2']['paid'] > 0,
               'the first tow is free and keeps the catch even in a distress call, with a word on how to avoid the next; the first repair is free; the second of each is paid', t)
