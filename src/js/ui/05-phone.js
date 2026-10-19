@@ -464,6 +464,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p122', '19.10.2026', 'Sjøen rundt båten følger med', 'The sea round the boat keeps up', [
+       ['Den korte sjøen, krusningene og skummet rundt skroget går nå med båten i fart, så sjøen ikke lenger stryker forbi skroget seks ganger for fort på skjermen. De lange bølgene og dønningen står i verden som før.', 'The short sea, the ripples and the foam round the hull now ride with the boat under way, so the sea no longer streams past the hull six times too fast on the screen. The long waves and the swell stand in the world as before.']]],
     ['p121', '18.10.2026', 'Landskapet får materiale', 'The land gets its surface', [
        ['Fjellet, bakken og strendene langs hele kysten har fått overflate: berg med sprekker og lav der det bratner, gress og lyng i tuer, myr på flat mark, flekkete snøkanter og åssider som ikke lenger er like. Detaljen legges på nær båten og koster ingenting på lav grafikk.', 'The mountains, ground and shores along the whole coast have a surface now: rock with joints and lichen where it steepens, grass and heather in tufts, bog on the flats, ragged snow edges and hillsides that no longer match. The detail comes in near the boat and costs nothing on low graphics.']]],
     ['p120', '18.10.2026', 'Båtene i havnene ligger riktig', 'The boats in the harbours lie right', [

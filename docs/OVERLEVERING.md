@@ -2516,6 +2516,14 @@ Brukerens valg:
 - SNL «Beauforts vindskala», «frisk bris», «liten kuling»
 - met.no / SNL «sjøgang» (Douglas-skalaen)
 
+### 5.20b Nærfeltet: den korte sjøen i båtens ramme (19.10.2026)
+
+**Problemet:** verden går 6× (`GAME_RATE`), bølgene går i ekte tid (det ser riktig ut), men båten flytter seg 6× fortere over bølgefeltet enn den gjør gjennom sjøen. Den korte sjøen (vindsjøkomponent 4–9, bølgelengder 6–27 m), krusningene og skumflekkene strøk forbi skroget seks ganger for fort, og baug- og hekkbølgen møtte dem feil. Jonas 18.10.2026: samspillet mellom sjø og fartøy skal være så realistisk som mulig; valget ble å la verden gå 6×, bølgene i ekte tid og den korte sjøen i båtens ramme.
+
+**Løsningen** (`view3d.js`, `NF`, `nfStep`): den korte sjøen, krusningene og skummet flyttes med båten med andelen R = 1 − 1/`simRate()` (5/6 ved 6×) av båtens forflytning per bilde, som faseforskyvning per bølgekomponent (`uNFp`, med Gerstner-forskyvningen `uNFg`) og som posisjonsforskyvning `uNFD` for krusninger og skum. Forskyvningene regnes eksakt og modulo 2π, så ingen presisjon tapes over lange turer (`uNFD` brytes ved 65 536 m når båten ligger stille). De lange bølgene (0–3) og dønningen (10–12) står fast i verden. CPU-speilet `seaDisp`/`seaH` bruker de samme forskyvningene, så hiv, bøyer og NPC-er stemmer med det som tegnes. Et hopp over 300 m (teleport) tas ikke med. `#nf0` i adressen slår nærfeltet av (`G3._debug.nf`). Kontrollbilder fra kino- og brovisningen med og uten (11 m/s fralandsvind vest av Senja) viste skroget riktig i sjøen begge veier.
+
+**Ikke løst her:** skummet i kjølvannet og baugbølgen var alt i båtens ramme. Resten av fysikkplanen (manøvreringsmodell, bølgekrefter, skade) står i 5.60.
+
 ### 5.21 Skipsstabilitet og båtens bevegelser (02.10.2026)
 
 Brukerens ønske: båtene skal oppføre seg i sjøen etter prinsippene for skipsstabilitet.
