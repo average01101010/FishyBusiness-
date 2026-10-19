@@ -21,7 +21,7 @@ function hullOf(type){
 function stabLoad(b = S.boat){
   const pg = S.pgear || {}, pots = pg.pots || {}, lines = pg.lines || {}, nets = (pg.nets || []).reduce((a, n) => a + n.n, 0);
   const gear = (pots.big || 0) * STAB_W.potBig + nets * STAB_W.net + ((lines.hyse || {}).n || 0) * STAB_W.tub + ((lines.bank || {}).n || 0) * STAB_W.tub + ((pg.kits || {}).n || 0) * STAB_W.kit;
-  const hold = typeof holdTotal === 'function' ? holdTotal() : 0, deck = typeof deckPending === 'function' ? deckPending() : 0;
+  const hold = (typeof holdTotal === 'function' ? holdTotal() : 0) + (typeof hullWaterKg === 'function' ? hullWaterKg(b) : 0), deck = typeof deckPending === 'function' ? deckPending() : 0;
   return {hold, deck, gear};
 }
 // the boat as loaded: draft, metacentric height, roll, heave and pitch periods, the deck edge angle

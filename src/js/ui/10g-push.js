@@ -118,6 +118,10 @@ function pushItems(now){
       if (best) add(Math.max(S.t, best.T), 'fresh-' + tag, nm, 'Fisken i lasterommet går snart ned fra ' + best.g + '- til ' + best.g2 + '-kvalitet. Lever den nå, så får du bedre betalt.',
         'The fish in the hold will soon drop from grade ' + best.g + ' to ' + best.g2 + '. Land it now and you are paid better.', 2, 2);
     }
+    // water coming in faster than the bilge pump takes it (core/16c-hull.js): now, and before the engine room is full
+    if (b.dmg && b.dmg.A > 0 && typeof hullLeak === 'function'){ const Q = hullLeak(b), Pq = hullPump(b);
+      if (Q > Pq && b.status !== 'port' && !b.tow){ const T = S.t + Math.max(0, (hullFlood(b) - (b.dmg.w || 0)) / (Q - Pq));
+        add(S.t + 1, 'leak-' + tag, nm, 'Vann i ' + nm + '! Lensepumpa klarer ikke å holde unna. Motorrommet er fullt om rundt ' + Math.round(T - S.t) + ' spillminutter.', 'Water in ' + nm + '! The bilge pump cannot keep up. The engine room is full in about ' + Math.round(T - S.t) + ' game minutes.', 2, 1); } }
     // the yard's and the fitting's work done on her
     const yj = (S.jobs || []).filter(j => YARD_KINDS.includes(j.kind) && j.until != null && j.until > S.t);
     if (yj.length){ const T = Math.max(...yj.map(j => j.until)), fitOnly = yj.every(j => j.kind === 'fit'), names = yj.map(j => L2(j.no || '', j.en || j.no || '')).filter(Boolean).slice(0, 3).join(', ');

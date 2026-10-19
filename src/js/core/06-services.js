@@ -34,6 +34,8 @@ function hourly(){
   // monthly loan payment
   for (const k of ['loan', 'loanIN']){ const L = S[k]; if (!L || S.t < L.next) continue; const r = L.rate / 12, int = L.bal * r, pay = Math.min(L.bal + int, L.pay); L.bal = L.bal + int - pay; S.cash -= pay; S.stats.costs += int; L.intPaid = (L.intPaid || 0) + int; L.next += 30 * 24 * 60;
     msg(LOANS[k].who, 'Terminbeløp ' + Math.round(pay) + ' kr trukket. Restgjeld ' + Math.round(L.bal) + ' kr.', 'Instalment of NOK ' + Math.round(pay) + ' paid. Remaining NOK ' + Math.round(L.bal) + '.'); if (L.bal < 1) S[k] = null; }
+  // the hull insurance's premium, vessel by vessel (Fysikk 3, 16c-hull.js)
+  if (typeof kaskoHour === 'function') eachVessel(kaskoHour);
   // yard: new vessel ready
   if (S.order && S.order.vid !== null && !S.order.told){ S.order.told = true; msg('Verftet', 'Den nye båten er klar. Byttet skjer så snart båten den skal erstatte, ligger i havn.', 'Your new vessel is ready. The swap is made as soon as the vessel it replaces lies in port.'); }
   // engine service due, vessel by vessel
@@ -169,7 +171,7 @@ function finishJob(j){
     // the boat may have been traded for one the equipment does not suit while it waited: the yard pays back
     if (!equipFits(j.k, b.type)){ S.cash += E.price; log(E.name.no + ' passer ikke denne båten. Verkstedet betalte tilbake ' + kr(E.price) + '.', E.name.en + ' does not suit this vessel. The yard paid back ' + kr(E.price) + '.'); }
     else { if (E.multi) S.equip[j.k] = (S.equip[j.k] || 0) + 1; else S.equip[j.k] = true; applyVessel(); log('Montert: ' + E.name.no + '.', 'Fitted: ' + E.name.en + '.'); if (hooks.onEquip) hooks.onEquip(); } }
-  else if (j.kind === 'repair'){ log('Skroget er reparert.', 'The hull is repaired.'); }
+  else if (j.kind === 'repair'){ if (typeof hullMended === 'function') hullMended(j); else b.damage = 0; log('Skroget er reparert.', 'The hull is repaired.'); }
   else if (j.kind === 'eng'){ b.engLv = j.lv; applyVessel(); log('Ny motor montert: ' + BOAT.hp + ' hk, ' + fmt(BOAT.vmax, 1) + ' knop.', 'New engine fitted: ' + BOAT.hp + ' hp, ' + fmt(BOAT.vmax, 1) + ' knots.'); }
   else if (j.kind === 'hull'){ b.foul = 0; log('Skroget er renset på slipp.', 'The hull is cleaned on the slip.'); }
   else if (j.kind === 'upg'){ b.upg = Object.assign({}, b.upg, {[j.u]:j.lv}); applyVessel(); const st = UPGS[j.u].steps[j.lv - 1]; log('Ombygd: ' + st.no + '.', 'Rebuilt: ' + st.en + '.'); }

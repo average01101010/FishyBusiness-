@@ -229,7 +229,8 @@ function dynContact(b, d, P, O){
     const last = b.hits && b.hits[b.hits.length - 1], fresh = !last || S.t - last.t > 1 || hit.kn > last.kn + 0.5;
     if (fresh){ b.hits = (b.hits || []).concat([{t:S.t, E:Math.round(hit.E), kn:+hit.kn.toFixed(1), k:hit.k}]).slice(-20);
       if (hit.kn >= 1){ const what = {kai:['kaia', 'the quay'], brygge:['brygga', 'the pier'], molo:['moloen', 'the breakwater']}[hit.k], kn = (Math.round(hit.kn * 10) / 10).toFixed(1);
-        const no = (hit.kn >= 3 ? 'Hardt støt mot ' : 'Smell i ') + what[0] + ', ' + kn.replace('.', ',') + ' knop.', en = (hit.kn >= 3 ? 'A hard blow against ' : 'A knock against ') + what[1] + ', ' + kn + ' knots.';
+        const say = typeof hullHit === 'function' ? hullSay(hullHit(hit.kn, hit.E, hit.k, b)) : null;   // what it did to the hull (Fysikk 3, 16c-hull.js)
+        const no = (hit.kn >= 3 ? 'Hardt støt mot ' : 'Smell i ') + what[0] + ', ' + kn.replace('.', ',') + ' knop.' + (say ? say.no : ''), en = (hit.kn >= 3 ? 'A hard blow against ' : 'A knock against ') + what[1] + ', ' + kn + ' knots.' + (say ? say.en : '');
         log(no, en, 'nav'); if (typeof toast === 'function') toast(S.lang === 'en' ? en : no); } }
   }
   return hit;

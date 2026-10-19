@@ -396,7 +396,7 @@ function riskLevel(W, hs){ const r = BOAT.risk; if (hs >= r[1] || W >= r[3]) ret
 // hull's resistance at a speed goes with the weight to the 2/3, so at the same power the speed goes with (D0/D)^(2/9), about ^0.22
 // (+50 % weight: −9 %); a planing hull feels it more, ^0.5. The fuel at a speed goes with (D/D0)^(2/3)
 const FUEL_KG = d => d ? 0.84 : 0.74;   // kg a litre, diesel and petrol
-function boatTons(){ const b = S.boat, V = VESSELS[b.type] || VESSELS.skiff; return V.disp + (holdTotal() + (typeof cargoKg === 'function' ? cargoKg() : 0) + (b.ice || 0) + (b.fuel || 0) * FUEL_KG(V.diesel) + 90 * Math.max(1, handsAboard())) / 1000; }
+function boatTons(){ const b = S.boat, V = VESSELS[b.type] || VESSELS.skiff; return V.disp + (holdTotal() + (typeof cargoKg === 'function' ? cargoKg() : 0) + (b.ice || 0) + (b.fuel || 0) * FUEL_KG(V.diesel) + 90 * Math.max(1, handsAboard()) + (typeof hullWaterKg === 'function' ? hullWaterKg(b) : 0)) / 1000; }
 function boatTons0(){ const V = VESSELS[S.boat.type] || VESSELS.skiff; return V.disp + (V.holdCap * 0.25 + V.fuelCap * 0.5 * FUEL_KG(V.diesel) + 90) / 1000; }
 function loadF(){ return clamp(Math.pow(boatTons0() / Math.max(0.1, boatTons()), BOAT.planing ? 0.5 : 0.22), 0.55, 1.08); }
 // ---- fouling: weed and barnacles on the hull (S.boat.foul, 0 to 1) slow her up to 15 % and cost up to 25 % more fuel; it grows in
@@ -406,7 +406,7 @@ function loadF(){ return clamp(Math.pow(boatTons0() / Math.max(0.1, boatTons()),
 function foulHour(H){ const b = S.boat, m = gDate(H).getUTCMonth(), r = (m >= 5 && m <= 8 ? 0.012 : 0.004) / 24 * (S.equip && S.equip.antigro ? 0.3 : 1); b.foul = Math.min(1, (b.foul || 0) + r); }
 const foulSpeed = () => 1 - 0.15 * ((S.boat && S.boat.foul) || 0), foulFuel = () => 1 + 0.25 * ((S.boat && S.boat.foul) || 0);
 function fuelLph(v, W){ const base = fuelBase(v, BOAT.vmax, BOAT.planing); return base * BOAT.fuelK * (1 + 0.015 * W) * Math.pow(boatTons() / boatTons0(), 2 / 3) * foulFuel() * ((typeof turTowing === 'function' && turTowing()) || (typeof ptowTowing === 'function' && ptowTowing()) ? 1.5 : 1); }
-function speedCap(hs, cb = 1){ const v = BOAT.vmax * clamp(1 - (hs - 0.3) * BOAT.sea * cb, 0.2, 1) * loadF() * foulSpeed(); return (typeof turTowing === 'function' && turTowing()) || (typeof ptowTowing === 'function' && ptowTowing()) ? Math.min(v, TUR_TOWV) : v; }   // with a boat in tow (09g-turer.js)
+function speedCap(hs, cb = 1){ const v = BOAT.vmax * clamp(1 - (hs - 0.3) * BOAT.sea * cb, 0.2, 1) * loadF() * foulSpeed() * (typeof hullSpeed === 'function' ? hullSpeed() : 1); return (typeof turTowing === 'function' && turTowing()) || (typeof ptowTowing === 'function' && ptowTowing()) ? Math.min(v, TUR_TOWV) : v; }   // with a boat in tow (09g-turer.js)
 
 // fish
 function noise2(x, y, s){

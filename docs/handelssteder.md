@@ -64,6 +64,10 @@ Gjelder alle fiskemottak, verft, utstyrsbutikker, rorbuer og fars naust, og alle
 - **Trinn 2 gjort (07.10.2026):** utstyrsbutikk og verft er egne havner med egen kai langs hele kysten (103 butikker og 157 verft, ekte punkter fra Overture der de finnes og oppdiktede der avstanden ble for lang), med egne knapper, kjøp bare på riktig sted og «nærmeste sted» med Autonav (se 5.32 i overleveringen). Bunkring er på mottak og verft. Utseendet er mottakets inntil modellene er laget.
 - **Gjenstår (trinn 3):** verftsmodellen i Blender med dieselfylling, skipsløft som tørrlegger alle båter, og animasjoner; butikkmodell med kai; folk og skilt.
 
+## Skrog og kasko på verftet (19.10.2026, Fysikk 3)
+
+Reparasjon av skroget etter støt og grunnstøting og kasko (skrogforsikring) ligger på verftet, under Vedlikehold: kortet «Skrog og skade» med «Reparer», og kortet «Kasko» med «Tegn kasko» og «Si opp kaskoen». Båten må ligge ved verftets kai. Planen 18.10.2026 sa kasko hos Salgslaget; den ble lagt på verftet fordi verftet er stedet for reparasjoner og vedlikehold, og Råfisklaget selger ikke forsikring. Se 5.60 i overleveringen.
+
 ## Å fylle på
 
 - Foreslått, ikke vedtatt: diesel (bunkring) hører til mottaket (bunkerkaia står alt ved mottakene), og omrigging hører til utstyrsbutikken. Telefonen kan ikke brukes til å kjøpe fysiske ting borte fra stedet. En hjelp for å finne nærmeste butikk, verft og mottak (kartlag med avstand og Autonav dit).

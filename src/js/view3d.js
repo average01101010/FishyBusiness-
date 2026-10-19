@@ -2236,12 +2236,28 @@ const G3 = (() => {
   const WHITE = [0.9, 0.92, 0.93], NAVY = [0.1, 0.16, 0.3], RED = [0.45, 0.12, 0.1], FLOOR = [0.72, 0.74, 0.74], ORANGE = [0.93, 0.4, 0.1], SKIN = [0.85, 0.65, 0.5], DARK = [0.14, 0.16, 0.18], GREY = [0.62, 0.64, 0.66], GLASS = [0.2, 0.27, 0.32];
   // ======================= the starter boat: a 19 ft centre-console skiff, modelled in detail =======================
   // smooth-shaded lit program with gloss (vertex colour alpha) for curved parts; textured program for screens and decals
-  const LITN_VS = 'attribute vec3 aPos;attribute vec3 aNor;attribute vec4 aCol;uniform mat4 uVP;uniform mat4 uM;varying vec3 vW;varying vec3 vN;varying vec4 vC;' +
-    'void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;vN=(uM*vec4(aNor,0.0)).xyz;vC=aCol;gl_Position=uVP*w;}';
-  const LITN_FS = 'precision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform float uAlpha;uniform float uEmis;varying vec3 vW;varying vec3 vN;varying vec4 vC;' + PLG +
-    'void main(){vec3 n=normalize(vN);vec3 V=normalize(-vW);if(dot(n,V)<0.0)n=-n;float dif=max(dot(n,uSun),0.0);vec3 amb=mix(uGnd,uAmb,n.y*0.5+0.5);' +
-    'float sp=pow(max(dot(reflect(-uSun,n),V),0.0),mix(12.0,90.0,vC.a))*vC.a;float fr=pow(1.0-max(dot(n,V),0.0),4.0)*vC.a*0.35;' +
-    'vec3 c=vC.rgb*(amb+uSunCol*dif+pLit(vW,n))+uSunCol*sp*0.55+uAmb*1.2*fr+vC.rgb*uEmis;float d=length(vW);float f=1.0-exp(-uFogD*uFogD*d*d);gl_FragColor=vec4(mix(c,uFog,f),uAlpha);}';
+  const LITN_VS = 'attribute vec3 aPos;attribute vec3 aNor;attribute vec4 aCol;uniform mat4 uVP;uniform mat4 uM;varying vec3 vW;varying vec3 vN;varying vec4 vC;varying vec3 vP;varying vec3 vNm;' +
+    'void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;vN=(uM*vec4(aNor,0.0)).xyz;vC=aCol;vP=aPos;vNm=aNor;gl_Position=uVP*w;}';
+  // The wear on your own hull (Fysikk 3, core/16c-hull.js): uWear = (scratches, damage, the gunwale's height over the waterline, half
+  // the length), zero for everything else. In the boat's own metres (the waterline at y = 0, the bow to -z), on the sides: scratches are
+  // thin streaks along her in the upper topsides, at the rubbing strake and fender height where a quay is met, and down the stem, where
+  // the paint is scraped to the primer (light on a dark hull, grey on a light one) and the gloss is gone; damage is dark, dented
+  // blotches with rust-brown in them from the waterline up, most forward.
+  const WEAR_GL = 'uniform vec4 uWear;varying vec3 vP;varying vec3 vNm;float wh(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}' +
+    'float wn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(wh(i),wh(i+vec2(1.0,0.0)),f.x),mix(wh(i+vec2(0.0,1.0)),wh(i+vec2(1.0,1.0)),f.x),f.y);}' +
+    'void wearHull(inout vec3 bc,inout float gs){vec3 nm=normalize(vNm);float sd=smoothstep(0.5,0.8,length(nm.xz)),top=uWear.z;if(sd<=0.0||vP.y<-0.05||vP.y>top*1.06)return;' +
+    'float bow=clamp(-vP.z/uWear.w,0.0,1.0),aft=clamp(vP.z/uWear.w,0.0,1.0),stem=smoothstep(0.75,0.95,bow);' +
+    'float band=max(smoothstep(0.3*top,0.5*top,vP.y)*(1.0-smoothstep(0.97*top,1.05*top,vP.y)),stem*smoothstep(0.0,0.15,vP.y)),zone=0.4+0.6*max(smoothstep(0.25,0.8,bow),0.75*smoothstep(0.45,0.9,aft));' +
+    'float st=wn(vec2(vP.z*0.6+vP.x*0.2,vP.y*26.0+wn(vec2(vP.z*0.3,vP.x))*6.0)),pt=wn(vec2(vP.z*0.2+7.3,vP.y*1.4+vP.x*0.4));' +
+    'float s=clamp(uWear.x*sd*band*zone*smoothstep(0.74-0.2*uWear.x,0.8-0.2*uWear.x,st)*smoothstep(0.2,0.5,pt+0.4*uWear.x)*2.0,0.0,1.0);' +
+    'float lum=dot(bc,vec3(0.3,0.59,0.11));bc=mix(bc,lum>0.55?vec3(0.36,0.35,0.33):vec3(0.85,0.83,0.78),s*0.9);gs*=1.0-0.8*s;' +
+    'float db=smoothstep(0.0,0.12,vP.y)*(1.0-smoothstep(0.9*top,1.02*top,vP.y)),dz=wn(vec2(vP.z*0.8+2.1,vP.y*2.6+vP.x*0.3)),rs=wn(vec2(vP.z*3.0,vP.y*9.0));' +
+    'float dm=clamp(uWear.y*sd*db*(0.35+0.65*smoothstep(0.2,0.8,bow))*smoothstep(0.5,0.68,dz+0.3*uWear.y)*1.6,0.0,1.0);' +
+    'bc=mix(bc,mix(bc*0.35,vec3(0.32,0.16,0.07),0.45*smoothstep(0.4,0.8,rs)),dm*0.9);gs*=1.0-0.85*dm;}';
+  const LITN_FS = 'precision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform float uAlpha;uniform float uEmis;varying vec3 vW;varying vec3 vN;varying vec4 vC;' + PLG + WEAR_GL +
+    'void main(){vec3 n=normalize(vN);vec3 V=normalize(-vW);if(dot(n,V)<0.0)n=-n;float dif=max(dot(n,uSun),0.0);vec3 amb=mix(uGnd,uAmb,n.y*0.5+0.5);vec3 bc=vC.rgb;float gs=vC.a;if(uWear.x+uWear.y>0.0)wearHull(bc,gs);' +
+    'float sp=pow(max(dot(reflect(-uSun,n),V),0.0),mix(12.0,90.0,gs))*gs;float fr=pow(1.0-max(dot(n,V),0.0),4.0)*gs*0.35;' +
+    'vec3 c=bc*(amb+uSunCol*dif+pLit(vW,n))+uSunCol*sp*0.55+uAmb*1.2*fr+bc*uEmis;float d=length(vW);float f=1.0-exp(-uFogD*uFogD*d*d);gl_FragColor=vec4(mix(c,uFog,f),uAlpha);}';
   const TEX_VS = 'attribute vec3 aPos;attribute vec2 aUV;uniform mat4 uVP;uniform mat4 uM;varying vec2 vUV;varying vec3 vW;void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;vUV=aUV;gl_Position=uVP*w;}';
   const TEX_FS = 'precision mediump float;uniform sampler2D uTex;uniform float uLit;uniform vec3 uN;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;varying vec2 vUV;varying vec3 vW;' +
     'void main(){vec4 t=texture2D(uTex,vUV);if(t.a<0.05)discard;vec3 c=uLit>0.5?t.rgb*(uAmb+uSunCol*max(dot(uN,uSun),0.0)):t.rgb;float d=length(vW);float f=1.0-exp(-uFogD*uFogD*d*d);gl_FragColor=vec4(mix(c,uFog,f),t.a);}';
@@ -2280,8 +2296,12 @@ const G3 = (() => {
   }
   function nSetup(VP){
     gl.useProgram(PRGN.p); const u = PRGN.u; plSet(u);
-    gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uSun, env.lightDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb); gl.uniform3fv(u.uGnd, env.gnd); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD); gl.uniform1f(u.uAlpha, 1); gl.uniform1f(u.uEmis, 0);
+    gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uSun, env.lightDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb); gl.uniform3fv(u.uGnd, env.gnd); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD); gl.uniform1f(u.uAlpha, 1); gl.uniform1f(u.uEmis, 0); gl.uniform4fv(u.uWear, WEAR0);
   }
+  // your own hull's wear for the next draws (core/16c-hull.js b.dmg), and back to none
+  const WEAR0 = new Float32Array([0, 0, 1, 1]);
+  function wearOn(t){ const d = S.boat && S.boat.dmg; if (!d || !(d.s > 0.004 || d.h > 0.004) || !PRGN.u.uWear) return false; const h = hullOf(t), G = GEO(t); gl.uniform4fv(PRGN.u.uWear, [Math.min(1, d.s), Math.min(1, d.h), (G && G.gw) || h.f + 0.15, h.L / 2]); return true; }
+  function wearOff(){ if (PRGN.u.uWear) gl.uniform4fv(PRGN.u.uWear, WEAR0); }
   function drawN(m, M){ gl.uniformMatrix4fv(PRGN.u.uM, false, m.o ? relM(m) : M); attr(0, m.pb, 3); attr(1, m.nb, 3); gl.bindBuffer(gl.ARRAY_BUFFER, m.cb); gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 4, gl.FLOAT, false, 0, 0); gl.drawArrays(gl.TRIANGLES, 0, m.n); }
   // a decal strip following a curved surface: bottom and top point rows, texture u runs along the rows
   function texStrip(Pb, Pt){ const p = [], uv = [], n = Pb.length - 1; for (let i = 0; i < n; i++){ const u0 = i / n, u1 = (i + 1) / n; p.push(...Pb[i], ...Pb[i + 1], ...Pt[i + 1], ...Pb[i], ...Pt[i + 1], ...Pt[i]); uv.push(u0, 1, u1, 1, u1, 0, u0, 1, u1, 0, u0, 0); } return {pb:buf(new Float32Array(p)), ub:buf(new Float32Array(uv)), n:p.length / 3}; }
@@ -2737,7 +2757,7 @@ const G3 = (() => {
     const on = engineOn(), frac = on ? clamp(b.v / BOAT.vmax, 0, 1) : 0; SK.propA += (on ? 6 + frac * 120 : 0) * dt;
     nSetup(VP);
     const fishing = S.boat.status === 'fishing' && !S.boat.deckStop;   // with all hands on deck, nobody fishes
-    refreshPeople(SK); paintHand(); drawN(SK.hull, BMrel); if (showSkipper && !fishing) drawN(SK.skipper, BMrel); if (showCrew) drawN(SK.crew, BMrel);
+    refreshPeople(SK); paintHand(); const wr = wearOn(vtype()); drawN(SK.hull, BMrel); if (wr) wearOff(); if (showSkipper && !fishing) drawN(SK.skipper, BMrel); if (showCrew) drawN(SK.crew, BMrel);
     SK.rodT += dt; SK.lines = [];
     const T = SK.rodT, A = SK.anim || (SK.anim = {mode:null, st:'jig', t:0, fish:[], fly:[], th:0, mc:[]});
     const kv = S.target === 'kveite' && S.boat.kgear && !kveiteClosed(S.t / 60), mode = !fishing ? null : S.boat.gop ? 'gear' : (!kv && S.equip && S.equip.jukse > 0 && !window.jigActive) ? 'machine' : (S.boat.gear || kv) ? 'juksa' : null;
@@ -4128,7 +4148,7 @@ const G3 = (() => {
     const sp = at(-0.42, 0.75, 0); drawN(PM.seat, chain(M4.T(sp[0], sp[1], sp[2]), M4.RY(-h))); drawN(PM.wire, limbM(at(-0.42, 0.02, 0), sp, 0.03));
   }
   function drawVessel(t, G, BMrel, VP, skipper, ncrew, onDeck, liv, named){
-    const m = pvm(t, liv); if (!m) return; const P = people(); nSetup(VP); drawN(m.hull, BMrel);
+    const m = pvm(t, liv); if (!m) return; const P = people(); nSetup(VP); const wr = named && wearOn(t); drawN(m.hull, BMrel); if (wr) wearOff();
     const ds = onDeck && G.crewSpots && ncrew < G.crewSpots.length ? G.crewSpots[ncrew] : null;
     if (skipper && ds) drawN((named && ownPerson('skipDeck')) || P.skipDeck, chain(BMrel, M4.T(ds[0], ds[1], ds[2]), M4.RY(ds[3] || 0)));
     else if (skipper) drawN((named && ownPerson('skip')) || P.skip, chain(BMrel, M4.T(G.skipperAt[0], G.skipperAt[1], G.skipperAt[2])));

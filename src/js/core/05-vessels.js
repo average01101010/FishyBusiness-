@@ -396,6 +396,8 @@ function vesselStep(H){
   const kar = S.equip && S.equip.krabbekar;
   for (const x of S.hold){ const r = SPECIES[x.sp].live ? (kar ? 0.4 : 2.5) : x.bled ? (x.iced ? 0.9 : 3.0) : (x.iced ? 2.2 : 6.0); x.fresh = Math.max(0, x.fresh - r * clean / 60); }
   iceMinute(); deckMinute();
+  // a leak, the bilge pump, the water aboard (Fysikk 3, 16c-hull.js): every minute, also under tow and in port
+  if (typeof hullMinute === 'function') hullMinute();
   // work queue at the yard and on the quay: runs while the boat is in port
   if (S.jobs && S.jobs.length && b.status === 'port'){ let done = null; for (const j of S.jobs){ jobOk(j); if (j.until == null) j.until = S.t + j.h * 60; if (S.t >= j.until) (done = done || []).push(j); }
     if (done){ S.jobs = S.jobs.filter(j => !done.includes(j)); done.forEach(finishJob); } }   // all side by side (06-services.js queueJob)
@@ -779,7 +781,9 @@ function risk(W, hs){
     if (lvl === 2) rescue(false); else log('Kraftig rulling, men ingen skade.', 'Heavy rolling, but no damage.');
   }
 }
-function hullRepair(){ const b = S.boat; if (!b.damage) return; b.damage = 0; const full = Math.round(VESSELS[b.type].price * 0.035), first = freeFirst('rep'), cost = first ? 0 : full; S.cash -= cost; S.stats.costs += cost; queueJob({kind:'repair', h:8, no:'Reparasjon av skroget', en:'Hull repair'});
+// after a tow (towDone): a damaged hull is mended where she was towed (the nearest yard), the insurance and the first free repair
+// counted (Fysikk 3, 16c-hull.js hullOrder); scratches alone wait for the player
+function hullRepair(){ const b = S.boat; if (typeof hullOrder === 'function'){ hullOld(b); if (hullBad(b) && b.status === 'port') hullOrder(true); return; } if (!b.damage) return; b.damage = 0; const full = Math.round(VESSELS[b.type].price * 0.035), first = freeFirst('rep'), cost = first ? 0 : full; S.cash -= cost; S.stats.costs += cost; queueJob({kind:'repair', h:8, no:'Reparasjon av skroget', en:'Hull repair'});
   if (first) msg('Verkstedet', 'Skroget har fått skader etter grunnstøtingen. Den første reparasjonen tar vi gratis, den tar 8 timer. Neste gang koster den ' + full + ' kr. Følg dybdene i kartet og hold avstand til skjær og grunner.', 'The hull was damaged when you ran aground. The first repair is on us; it takes 8 hours. Next time it costs NOK ' + full + '. Watch the depths on the chart and keep clear of rocks and shoals.');
   else msg('Verkstedet', 'Skroget har fått skader etter grunnstøtingen. Reparasjonen koster ' + cost + ' kr og tar 8 timer.', 'The hull was damaged when you ran aground. The repair costs NOK ' + cost + ' and takes 8 hours.'); }
 function svcOverdue(){ const b = S.boat; return Math.max(0, ((b.engH || 0) - (b.svcAt || 0)) / BOAT.svcH - 1); }
