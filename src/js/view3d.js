@@ -2248,9 +2248,9 @@ const G3 = (() => {
     'void wearHull(inout vec3 bc,inout float gs){vec3 nm=normalize(vNm);float sd=smoothstep(0.5,0.8,length(nm.xz)),top=uWear.z;if(sd<=0.0||vP.y<-0.05||vP.y>top*1.06)return;' +
     'float bow=clamp(-vP.z/uWear.w,0.0,1.0),aft=clamp(vP.z/uWear.w,0.0,1.0),stem=smoothstep(0.75,0.95,bow);' +
     'float band=max(smoothstep(0.3*top,0.5*top,vP.y)*(1.0-smoothstep(0.97*top,1.05*top,vP.y)),stem*smoothstep(0.0,0.15,vP.y)),zone=0.4+0.6*max(smoothstep(0.25,0.8,bow),0.75*smoothstep(0.45,0.9,aft));' +
-    'float st=wn(vec2(vP.z*0.6+vP.x*0.2,vP.y*26.0+wn(vec2(vP.z*0.3,vP.x))*6.0)),pt=wn(vec2(vP.z*0.2+7.3,vP.y*1.4+vP.x*0.4));' +
-    'float s=clamp(uWear.x*sd*band*zone*smoothstep(0.74-0.2*uWear.x,0.8-0.2*uWear.x,st)*smoothstep(0.2,0.5,pt+0.4*uWear.x)*2.0,0.0,1.0);' +
-    'float lum=dot(bc,vec3(0.3,0.59,0.11));bc=mix(bc,lum>0.55?vec3(0.36,0.35,0.33):vec3(0.85,0.83,0.78),s*0.9);gs*=1.0-0.8*s;' +
+    'float st=wn(vec2(vP.z*0.9+vP.x*0.2,vP.y*30.0+wn(vec2(vP.z*0.4,vP.x))*6.0)),br=wn(vec2(vP.z*2.6+3.1,vP.y*4.0+vP.x)),pt=wn(vec2(vP.z*0.2+7.3,vP.y*1.4+vP.x*0.4));' +
+    'float s=clamp(uWear.x*sd*band*zone*smoothstep(0.76-0.15*uWear.x,0.82-0.15*uWear.x,st)*smoothstep(0.35,0.6,br)*smoothstep(0.2,0.5,pt+0.4*uWear.x)*1.8,0.0,1.0);' +
+    'float lum=dot(bc,vec3(0.3,0.59,0.11));bc=mix(bc,lum>0.55?vec3(0.4,0.39,0.37):mix(min(bc*1.6+0.08,vec3(1.0)),vec3(0.6,0.58,0.54),0.4),s*0.75);gs*=1.0-0.8*s;' +
     'float db=smoothstep(0.0,0.12,vP.y)*(1.0-smoothstep(0.9*top,1.02*top,vP.y)),dz=wn(vec2(vP.z*0.8+2.1,vP.y*2.6+vP.x*0.3)),rs=wn(vec2(vP.z*3.0,vP.y*9.0));' +
     'float dm=clamp(uWear.y*sd*db*(0.35+0.65*smoothstep(0.2,0.8,bow))*smoothstep(0.5,0.68,dz+0.3*uWear.y)*1.6,0.0,1.0);' +
     'bc=mix(bc,mix(bc*0.35,vec3(0.32,0.16,0.07),0.45*smoothstep(0.4,0.8,rs)),dm*0.9);gs*=1.0-0.85*dm;}';
