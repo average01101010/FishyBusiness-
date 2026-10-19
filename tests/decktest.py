@@ -40,7 +40,7 @@ async def main():
           R.fresh = S.hold.map(x => [x.sp, Math.round(x.fresh)]);
           // the Stop and gut button while fishing, and Fish on
           reset([]); addCatch('torsk', 10, null, true); renderActs(); R.btn = DOCK.text(); doAct({dataset:{act:'deckstop'}, disabled:false}); R.btnStop = b.deckStop;
-          for (let i = 0; i < 5; i++) step(); R.afterBtn = {stop:b.deckStop, pending:Math.round(deckPending())};
+          for (let i = 0; i < 5; i++) step(); R.afterBtn = {stop:b.deckStop, pending:Math.round(deckPending()), gut:Math.round(kgOf(x => x.gut)), status:b.status};
           return R; })()""")
         print(json.dumps(r, ensure_ascii=False))
         print(ok(r['caught']['tub'] == 30 and r['caught']['bled']), 'the catch is bled at once and lies in the tub, round and not iced')
@@ -52,6 +52,7 @@ async def main():
         print(ok(r['twoFishingHands'] == 1 and r['twoFishingStop'] is False), 'two aboard fishing: one works the deck, fishing does not stop')
         print(ok(r['endStay']['status'] == 'fishing' and r['endStay']['stop'] and r['endLeave']['status'] == 'sailing' and r['endLeave']['pending'] == 0), 'alone, the catch is seen to before she leaves the grounds')
         f = dict(r['fresh']); print(ok(f['hyse'] - f['torsk'] >= 5), 'fish left in the tub loses quality faster than iced fish')
-        print(ok('Stopp og sløy' in r['btn'] and r['btnStop'] and r['afterBtn']['pending'] == 0 and not r['afterBtn']['stop']), 'the Stop and gut button stops fishing, and fishing goes on when the tub is empty')
+        # (once the tub is empty she fishes on in the same minute, so new fish may lie in the tub again: what was there is gutted)
+        print(ok('Stopp og sløy' in r['btn'] and r['btnStop'] and r['afterBtn']['gut'] >= 10 and not r['afterBtn']['stop'] and r['afterBtn']['status'] == 'fishing'), 'the Stop and gut button stops fishing, and fishing goes on when the tub is empty', r['afterBtn'])
         print('errors:', errs[:4]); await b.close()
 asyncio.run(main())

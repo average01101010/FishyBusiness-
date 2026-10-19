@@ -2295,7 +2295,7 @@ Brukerens ønske: mannskapet skal være en levende og givende del av spillet, in
   - Et måltid på 4 eller mer gir deg +4 % energi.
   - Tilstanden ligger per båt i `S.meal`.
 - **Hviletid** (forskrift om arbeids- og hviletid på fiskefartøy, FOR-2017-11-10-1758 § 3):
-  - **Bare med rederi** (Jonas 08.10.2026): kravet gjelder først når spilleren har `S.company` (kjøpt seg inn i lukket gruppe eller stiftet AS). Før det kan mannskapet jobbe så lenge de har energi; bare tretthet (`fatigue`) setter grensen. `restRuleOn()` i `14-crewlife.js` slår av `restHour`-bruddene og `restLeft` (ingen advarsel, ingen ×1,5 på tretthet, ingen «må hvile innen»). Loggen føres likevel, så reglene gjelder fra første time når rederiet starter. `tests/restruletest.py`.
+  - **Bare med rederi** (Jonas 08.10.2026): kravet gjelder først når spilleren har `S.company` (kjøpt seg inn i lukket gruppe eller stiftet AS). Før det kan mannskapet jobbe så lenge de har energi; bare tretthet (`fatigue`) setter grensen. `restRuleOn()` i `14-crewlife.js` slår av `restHour`-bruddene og `restLeft` (ingen advarsel, ingen ×1,5 på tretthet, ingen «må hvile innen»). Loggen føres likevel, så reglene gjelder fra første time når rederiet starter. (`tests/restruletest.py` ble fjernet med regelen.)
   - Kravene: minst 10 timer hvile per 24 timer og 77 per 168 timer, hvilen i høyst to perioder der én er minst 6 timer, og høyst 14 timer mellom hvileperiodene.
   - Hver person har en logg over de siste 168 timene (`c.rest`, 1 = hvile).
   - Ingen av båtene har køyer (`VESSELS.*.berths = 0`), så bare timer i havn eller i land teller som hvile. Med køyer ville en time med høyst 10 minutters arbeid telle.

@@ -19,7 +19,9 @@ async def main():
         await boot(pg)
 
         # A1: buy an electric hauler in the Equipment app, the job gets a length and finishes
-        await pg.evaluate("S.cash = 100000; PHONE.open('utstyr')"); await pg.wait_for_timeout(400)
+        # (equipment is bought in the equipment shop, with the boat at its quay: docs/handelssteder.md)
+        await pg.evaluate("(async () => { const b = S.boat, q = PORTS.filter(p => p.sted === 'butikk').sort((x, y) => dist(x.p, b.pos) - dist(y.p, b.pos))[0]; await mapNeed(q.p, 3); dock(q.id); })()")
+        await pg.evaluate("S.cash = 100000; PHONE.open('utstyrb')"); await pg.wait_for_timeout(400)
         await pg.evaluate("document.querySelector('[data-pa=equip][data-k=linehaler]').click()"); await pg.wait_for_timeout(300)
         j = await pg.evaluate("JSON.stringify(S.jobs.map(j => ({k:j.k, h:j.h, until:j.until})))")
         jobs = json.loads(j)
@@ -42,7 +44,7 @@ async def main():
         # the yard's jobs run side by side, 30 real minutes each (05.10.2026, «Montering av utstyr og vedlikehold skal ta 30 ekte minutter, og
         # man kan gjøre flere oppgaver samtidig»); overtime halves what is left of one of them; a job from before keeps no longer time
         r = await pg.evaluate("""(() => { S.cash = 500000; S.equip.vhf = false; S.equip.ais = false; S.jobs = [{kind:'fit', k:'sonar', h:16, until:S.t + 900, no:'x', en:'x'}];
-          PHONE.open('utstyr'); for (const k of ['vhf', 'ais']) document.querySelector('[data-pa=equip][data-k=' + k + ']').click();
+          PHONE.open('utstyrb'); for (const k of ['vhf', 'ais']) document.querySelector('[data-pa=equip][data-k=' + k + ']').click();
           PHONE.open('verksted'); const t0 = S.t, until = S.jobs.map(j => j.until - t0), sonarH = S.jobs[0].h;
           document.querySelector('[data-pa=jobOT][data-i="2"]').click(); const ot = S.jobs.map(j => j.until - t0), rush = !!document.querySelector('[data-pa=jobRush]');
           for (let i = 0; i < 200; i++) step(); PHONE.show(false); if (typeof DOCK !== 'undefined') DOCK.close();

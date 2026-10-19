@@ -12,7 +12,7 @@ async def main():
         errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
         await boot(pg)
 
-        r = await pg.evaluate("""(()=>{
+        r = await pg.evaluate("""(async ()=>{
           const R = {}, q = s => document.querySelector(s), view = () => document.getElementById('phView').innerText;
           S.tut = 0; S.cash = 500000; S.t = Math.round((Date.UTC(2027, 5, 7, 10) - EPOCH) / 6e4);
           S.boatName = 'Havbris'; delete S.unnamed;   // a new game's boat is nameless until named (08-actions.js boatUnnamed)
@@ -27,8 +27,10 @@ async def main():
           // an alert opens the right app on the right vessel, without changing the vessel you follow
           const go = [...document.querySelectorAll('[data-pa="goto"]')].find(x => x.dataset.id === v2.id && x.dataset.a === 'drift'); go.click();
           R.goto = {app:DOCK.page, sel:PHONE.sel, cur:S.cur, crewShown:document.getElementById('drawerBody').innerText.includes(vget(v2, 'crew')[0].name.split(' ')[0])};
-          // equipment bought with the selector on the second vessel is fitted there
-          PHONE.open('utstyr'); [...document.querySelectorAll('[data-pa="vsel"]')].find(x => x.dataset.id === v2.id).click();
+          // equipment bought with the selector on the second vessel is fitted there (in the equipment shop, with her at its quay:
+          // docs/handelssteder.md)
+          const bu = PORTS.filter(p => p.sted === 'butikk').sort((x, y) => dist(x.p, v2.boat.pos) - dist(y.p, v2.boat.pos))[0]; await mapNeed(bu.p, 3); withVessel(v2, () => dock(bu.id));
+          PHONE.open('utstyrb'); [...document.querySelectorAll('[data-pa="vsel"]')].find(x => x.dataset.id === v2.id).click();
           q('[data-pa="equip"][data-k="chirp"]').click();
           R.equip = {v2jobs:(vget(v2, 'jobs') || []).map(j => j.kind + ':' + j.k), v1jobs:(S.jobs || []).map(j => j.kind + ':' + j.k), cur:S.cur, sel:PHONE.sel};
           // income per vessel

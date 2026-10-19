@@ -37,9 +37,10 @@ async def main():
             msgs:S.msgs.slice(-4).map(m => m.from + ': ' + m.no)}; })()""")
         check(r3['notice'] and r3['n1'] == 2 and r3['n2'] == 2 and r3['n3'] == 2 and r3['n4'] == 1 and r3['gone'], 'the week\'s notice is given, and the hand goes ashore to a boat of their own in port when it is up, not at sea', r3)
         check(r3['alum'] and r3['alum']['boat'] and r3['alum']['back'] and r3['alum']['hasC'] and any('egen båt' in q for q in (r3['alum']['story'] or [])), 'the alumnus has a boat with a name, a return date a year or more on, and the story says so', r3['alum'])
-        # the alumnus fishes out of the home port on the AIS (Senja grounds), and is quiet on Sunday
-        r4 = await pg.evaluate("""(() => { const a = S.alumni[0], out = []; for (let d = 0; d < 7; d++){ const H0 = Math.floor(S.t / 60 / 24) * 24 + d * 24 + 10; const L = alumniStates(H0); out.push({wd:gDate(H0).getUTCDay(), n:L.length, st:L[0] && L[0].st, name:L[0] && L[0].name, land:L[0] ? (typeof isLand === 'function' ? isLand(L[0].p) : null) : null, id:L[0] && L[0].id}); }
-          const night = alumniStates(Math.floor(S.t / 60 / 24) * 24 + 24 + 3).length, inAis = npcStates(Math.floor(S.t / 60 / 24) * 24 + 48 + 10).some(n => n.alum); return {out, night, inAis, g:a.g}; })()""")
+        # the alumnus fishes out of the home port on the AIS (Senja grounds), and is quiet on Sunday (the hours by the clock: the game's
+        # hour 0 is 06:00, EPOCH_HR)
+        r4 = await pg.evaluate("""(() => { const a = S.alumni[0], out = [], D0 = Math.floor((S.t / 60 + EPOCH_HR) / 24) * 24 - EPOCH_HR; for (let d = 0; d < 7; d++){ const H0 = D0 + d * 24 + 10; const L = alumniStates(H0); out.push({wd:gDate(H0).getUTCDay(), n:L.length, st:L[0] && L[0].st, name:L[0] && L[0].name, land:L[0] ? (typeof isLand === 'function' ? isLand(L[0].p) : null) : null, id:L[0] && L[0].id}); }
+          const night = alumniStates(D0 + 24 + 3).length, inAis = npcStates(D0 + 48 + 10).some(n => n.alum); return {out, night, inAis, g:a.g}; })()""")
         wk = [o for o in r4['out'] if o['wd'] != 0]; su = [o for o in r4['out'] if o['wd'] == 0]
         check(r4['g'] and all(o['n'] == 1 and o['st'] == 'fishing' for o in wk) and all(o['n'] == 0 for o in su) and r4['night'] == 0 and r4['inAis'], 'the alumnus fishes on a ground near home 07–15 on weekdays, not on Sunday or at night, and is among the AIS boats', r4)
         # back at the exchange after the years away, for a smaller share, with the story carried on
