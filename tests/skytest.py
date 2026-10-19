@@ -28,11 +28,14 @@ async def main():
         check(abs(dx - exp[0]) < 0.25 * abs(exp[0]) and abs(dz - exp[1]) < 0.35 * abs(exp[1]) + 0.005, 'in 10 m/s from the west the clouds drift east-south-east at 15 m/s over a 1 500 m deck', {'secs': round(secs, 1), 'd': [round(dx, 4), round(dz, 4)], 'exp': [round(exp[0], 4), round(exp[1], 4)]})
         # the wind turns 30 degrees: the sky goes on from where it was (no jump), now the new way
         await pg.evaluate("(() => { WX_FORCE = {w:10, d:300}; })()")
-        c0 = await pg.evaluate("[...G3._debug.cld.off]")
-        jumps = []
+        # (the path the sky went over six seconds, set against the time that went: a slow frame under SwiftShader makes up its seconds in
+        # one step, which lengthens no path; a jump does)
+        c0 = await pg.evaluate("({off:[...G3._debug.cld.off], t:performance.now()})"); t0 = c0['t']; path = 0
         for _ in range(12):
-            await pg.wait_for_timeout(500); c1 = await pg.evaluate("[...G3._debug.cld.off]"); jumps.append(math.hypot(c1[0] - c0[0], c1[1] - c0[1])); c0 = c1
-        check(max(jumps) < 0.05, 'when the wind turns 30 degrees the clouds go on without a jump', {'largest step in half a second': round(max(jumps), 4)})
+            await pg.wait_for_timeout(500); c1 = await pg.evaluate("({off:[...G3._debug.cld.off], t:performance.now()})")
+            path += math.hypot(c1['off'][0] - c0['off'][0], c1['off'][1] - c0['off'][1]); c0 = c1
+        drift = rate * (c0['t'] - t0) / 1000
+        check(path - drift < 0.03, 'when the wind turns 30 degrees the clouds go on without a jump', {'path': round(path, 4), 'drift in the time': round(drift, 4)})
         await pg.screenshot(path='tests/out/skytest.png')
         print('errors:', errs[:3])
         await br.close()
