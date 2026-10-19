@@ -310,18 +310,21 @@ function tick(){
   if (dt > 8 && typeof cloudWake === 'function') cloudWake();
   if (TAB.held || TAB.wait) return;
   // (until the simulation's data is in, the clock waits: 11-boot.js)
-  if (SIMREADY){ if (CATCH_LEFT > 0){ const n = Math.min(CATCH_LEFT, 3000); CATCH_LEFT -= n; playMinutes(n); panelDirty = true; if (!CATCH_LEFT && AWAYR) awayEnd(); }
+  if (SIMREADY){ if (CATCH_LEFT > 0){ DYN.on = false; const n = Math.min(CATCH_LEFT, 3000); CATCH_LEFT -= n; playMinutes(n); panelDirty = true; if (!CATCH_LEFT && AWAYR) awayEnd(); }
   else if (WCLOCK.on){
     // one clock for everyone: step on to the world's minute; more than ten minutes behind (the tab slept) is time away; a save from
     // before that is ahead goes at half pace until the world has caught up with it
     const wf = worldTf(), gap = wf - S.t;
-    if (gap > 10) catchUp(0);
-    else { if (helmOn() && !sleepAlone()) helmStep(dt); let n = 0;
+    if (gap > 10){ DYN.on = false; catchUp(0); }   // (time caught up plays the kinematic minute step: she keeps the world's clock, and the model takes over again from where that put her)
+    else { dynTick(dt); let n = 0;
       if (gap >= 0){ while (S.t + 1 <= wf && n < 3000 && simAreaReady()){ step(); n++; } acc = clamp(wf - S.t, 0, 0.999); }
       else { acc += dt * GAME_RATE / 120; while (acc >= 1 && n < 3000 && simAreaReady()){ step(); acc -= 1; n++; } }
       if (n) panelDirty = true; }
   }
-  else if (dt > 6) catchUp(dt * 1000); else { if (helmOn() && !sleepAlone()) helmStep(dt); acc += dt * simRate() / 60; let n = 0; while (acc >= 1 && n < 3000 && simAreaReady()){ step(); acc -= 1; n++; } } }
+  // (as on the world's clock: a real stall of more than ten game minutes is caught up with the kinematic minute step; a shorter one is
+  // stepped as usual, with the model moving her through it, so no game time is lost and she is not moved under the 3D view; the admin
+  // tempo, S.mult, makes a tick worth many minutes and is stepped, never caught up: catchUp counts real time at the base rate)
+  else if (dt > 6 && dt * simRate() / 60 > 10){ DYN.on = false; catchUp(dt * 1000); acc += (dt * simRate() / 60) % 1; } else { dynTick(dt); acc += dt * simRate() / 60; let n = 0; while (acc >= 1 && n < 3000 && simAreaReady()){ step(); acc -= 1; n++; } } }
   if (WAKE_BACK && !CATCH_LEFT){ WAKE_BACK = false; if (asleep()) wakeEarly(true); }
   heatTick();
   if (!G3.isActive()){ renderDyn(); if (AISSEL) renderAisCard(); heatPaint(); } renderHud(); renderClock(); renderActs(); DOCK.tick(); HUI.tick(); energyUi(); turFotoUi(); INSTR.renderGPS(); renderRouteTools(); tutUpdate(); PHONE.status(); PHONE.tickHome();

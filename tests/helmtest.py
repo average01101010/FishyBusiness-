@@ -44,6 +44,7 @@ async def main():
         s0 = await pg.evaluate(ST)
         try: await pg.wait_for_function("Math.abs(S.helm.v) > 3.2", timeout=40000)
         except Exception: pass
+        await pg.wait_for_timeout(1500)   # (the manoeuvring model has her up to speed in seconds: let her go a few lengths)
         s1 = await pg.evaluate(ST)
         moved = ((s1['x'] - s0['x']) ** 2 + (s1['y'] - s0['y']) ** 2) ** 0.5 * 1000
         check(s0['thr'] > 0.9 and s1['hv'] > 2 and moved > 10 and s1['fuel'] < s0['fuel'], 'gassen helt fram gir fart og fremdrift, og drivstoff går', {'thr': s0['thr'], 'kn': round(s1['hv'], 1), 'm': round(moved), 'fuel': round(s0['fuel'] - s1['fuel'], 3)})

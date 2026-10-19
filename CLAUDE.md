@@ -22,7 +22,7 @@ Et kystfiskespill langs hele norskekysten (det begynte på Senja) som kjører so
   | `heattest` | 30 min | varmekartet, ekkoloddet, sonaren eller fiskemodellen |
   | `vessel3d` | 24 min | båtmodellene eller malingen |
   | `sea3d` | 15 min | havskyggeren eller sjøtilstanden |
-  | `trackfollow` | 13 min | styringen, Autonav eller rutene |
+  | `trackfollow` | 30 min | styringen, Autonav, rutene eller manøvreringsmodellen (`16b-dyn.js`) |
   | `tral3d` | 12 min | trål eller not |
   | `vectest` | 11 min | vec-pakkene (bygg, veier, bruer, kaier) |
   | `teleport3d` | 8 min | kartlasteren eller 3D-terrenget |

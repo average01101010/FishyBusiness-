@@ -26,30 +26,14 @@ function helmOff(){ if (S.helm){ S.helm.on = false; S.helm.thr = 0; S.helm.rud =
 // one step of dt real seconds (from the tick), dt x the rate in game seconds; the turn at most half a radian a real second, so the
 // wheel does not spin her round on the screen's quick time
 function helmStep(dt){
-  const b = S.boat, h = S.helm, H = S.t / 60, rate = simRate(); dt = Math.min(dt, 1) * rate; HELM.t = Date.now();
+  // the manoeuvring model (16b-dyn.js) moves her with the throttle and the rudder, in game seconds
+  const b = S.boat, h = S.helm; dt = Math.min(dt, 20) * simRate(); HELM.t = Date.now();
   if (b.fuel <= 0){ b.fuel = 0; b.status = 'adrift'; b.v = 0; h.v = 0; log('Tom for drivstoff. Båten driver.', 'Out of fuel. The boat is adrift.'); return; }
-  const cap = speedCap(hsAt(b.pos, H)), tgt = h.thr >= 0 ? h.thr * cap : h.thr * cap * 0.35, a = (BOAT.accel || 3) / 60;
-  h.v += clamp(tgt - h.v, -a * 1.5 * dt, a * dt);
-  if (!h.thr && Math.abs(h.v) < 0.05) h.v = 0;
-  // the rudder bites with way on; in gear at a standstill the screw's wash turns her a little (astern the other way)
-  const vm = h.v * 0.5144, ws = h.thr ? Math.sign(h.thr) * Math.max(0, 1 - Math.abs(vm)) * 0.8 : 0;
-  h.yaw = clamp(h.rud * (vm + ws) / Math.max(4, BOAT.turnR || 40), -0.5 / rate, 0.5 / rate);
-  const hd = b.heading + h.yaw * dt, d = h.v * NM / 3600 * dt, to = {x:b.pos.x + Math.sin(hd) * d, y:b.pos.y - Math.cos(hd) * d};
-  b.heading = ((hd % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
-  // land: the simulation's ground check leaves it to the routes (legClear keeps them off it), but by hand she can be driven at it:
-  // over 3 knots she runs aground there, slower she comes to a stop against it
-  if (d){ const n = Math.max(1, Math.ceil(Math.abs(d) / 0.01)); let last = b.pos;
-    for (let i = 1; i <= n; i++){ const q = {x:b.pos.x + (to.x - b.pos.x) * i / n, y:b.pos.y + (to.y - b.pos.y) * i / n}; if (isLand(q)){ if (Math.abs(h.v) > 3){ runAground(last); helmOff(); } else { b.pos = last; h.v = 0; b.v = 0; } return; } last = q; }
-    // a breakwater thinner than the 10 m steps (01d-coast.js)
-    if (coastSegHit(b.pos, to)){ if (Math.abs(h.v) > 3){ runAground(b.pos); helmOff(); } else { h.v = 0; b.v = 0; } return; } }
-  const gp = d ? groundCheck(b.pos, to) : null;
-  if (gp){ runAground(gp); helmOff(); return; }
-  HELM.nm += Math.abs(d) / NM; if (HELM.nm > 0.05 && meAboard()){ tatAdd('nm', HELM.nm); HELM.nm = 0; }
-  b.pos = to; b.v = Math.abs(h.v);
-  b.fuel = Math.max(0, b.fuel - fuelLph(Math.abs(h.v), windAt(H)) / 3600 * dt);
+  DYN.on = true; const d = dynState(b); DYN.b = b; dynHelm(d, dt);
 }
 // where she is between ticks: on along her course at her speed, turning at her rate
 function helmPose(frac){
+  if (dynLive()) return dynLivePose(frac);
   const b = S.boat, h = S.helm, s = Math.min(0.5, (Date.now() - HELM.t) / 1000) * simRate(), hd = b.heading + h.yaw * s, d = h.v * NM / 3600 * s;
   return {p:{x:b.pos.x + Math.sin(hd) * d, y:b.pos.y - Math.cos(hd) * d}, hd, frac};
 }

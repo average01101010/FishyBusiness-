@@ -417,7 +417,11 @@ function vesselStep(H){
     else if (S.settings.autoOn && W0 > S.settings.autoW && (S.plan.delays || 0) < 12){ S.plan.depAt += 60; S.plan.delays = (S.plan.delays || 0) + 1; log('Avgangen er utsatt en time. Vinden er ' + W0.toFixed(0) + ' m/s.', 'Departure postponed an hour. The wind is ' + W0.toFixed(0) + ' m/s.'); }
     else depart();
   }
-  if (b.status === 'unmooring'){ if (S.t >= b.castUntil){ const pid = b.port, q = quayPos(b), kind = berthKind(b); b.pos = {x:q.x, y:q.y}; b.status = 'sailing'; b.port = null; helmCastDone(pid, kind); } return; }
+  if (b.status === 'unmooring'){ if (S.t >= b.castUntil){ const pid = b.port, q = quayPos(b), kind = berthKind(b); b.pos = {x:q.x, y:q.y}; b.status = 'sailing'; b.port = null;
+      // with the manoeuvring model running (the game open, 16b-dyn.js) she starts from the berth she lay at and backs out on the line
+      const bp = typeof DYN !== 'undefined' && DYN.on && simRate() <= 12 && S.plan ? berthPose(pid, b.type || 'skiff', kind) || berthPose(pid, b.type || 'skiff') : null;
+      if (bp){ b.pos = {x:bp.x, y:bp.y}; b.heading = bp.hd; DYN.dep = {bp, pid, naust:kind === 'naust'}; DYN.line = null; }
+      helmCastDone(pid, kind); } return; }
   if (b.status === 'port'){ if (b.landWait && b.port === b.landWait && mottakOpen(H)){ const pid = b.landWait; b.landWait = null; opsLanded(pid); } return; }
   if (b.status === 'ptow'){ if (typeof ptowStep === 'function') ptowStep(); return; }   // towed by another player (ui/10o-ptow.js)
   if (b.status === 'tow'){ towStep(H); return; }        // the rescue boat comes and tows (rescue)
@@ -464,6 +468,7 @@ function sail(H, W, hs){
   const b = S.boat, pl = S.plan;
   if (!pl){ b.status = 'idle'; b.v = 0; return; }
   if (b.fuel <= 0){ b.fuel = 0; b.status = 'adrift'; b.v = 0; log('Tom for drivstoff. Båten driver.', 'Out of fuel. The boat is adrift.'); return; }
+  if (typeof dynLive === 'function' && dynLive()){ dynMinute(H, W); return; }   // the manoeuvring model has her on the tick (16b-dyn.js): the minute only books
   if (pl.replan){ b.v = 0; return; }   // a way round shallow water ahead is being found (sailReplan)
   const v = sailV(H, hs); b.v = v;
   let left = v * NM / 60;

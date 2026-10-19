@@ -88,6 +88,7 @@ function liveFrac(){ return clamp(acc + (Date.now() - lastWall) / 1000 * simRate
 function livePose(frac){
   if (frac === undefined) frac = liveFrac();
   const b = S.boat, q0 = quayPos(b); let p = {x:q0.x, y:q0.y}, hd = b.heading, idx = S.plan ? S.plan.idx : 0;   // at the naust, its berth
+  if (dynLive()) return dynLivePose(frac);   // the manoeuvring model's own pose, a little on from its last tick (core/16b-dyn.js)
   if (helmOn()) return helmPose(frac);
   if (b.status === 'tow'){ const q = towPose(frac); if (q && q.b) return {p:q.b.p, hd:q.b.hd, frac}; }
   if (b.status === 'sailing' && S.plan){
