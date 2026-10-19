@@ -4383,3 +4383,15 @@ Planen fra 18.10.2026 (5.58) i fire deler, alle i `core/16b-dyn.js` og for hele 
 
 **Ikke gjort:** støt mot andre båter og bøyer (kontakten kjenner bare kaier, brygger og moloer), skade på andre spilleres båter i 3D, at en skadet båt er mindre verdt i båthandelen, og opplagsrabatt på premien.
 
+**Bunntype: data som finnes (undersøkt 19.10.2026, ikke bygget inn).** `bedRock` gjetter fjell eller sand ut fra skjær og bratthet. Tre åpne kilder kan erstatte gjetningen:
+- **NGU, «Bunntyper fra sjømåling»:** over 62 000 punkter i fjorder og kystfarvann, registrert av Kartverket sjødivisjonen under dybdemålingen, med sannsynlig bunntype (grovt eller fint sediment, fjell). Det er den nærmeste kilden til der båtene går på grunn. Nedlasting fra NGU (datasett 709) som txt, SOSI eller shp. Lisensen står ikke i metadataene og må sjekkes.
+- **NGU, «Bunnsedimenter (kornstørrelse)»,** oversikt og detaljert (MAREANO og kystkartleggingen), med klasser fra leire til «bart fjell». NLOD. WMS `MarinBunnsedimenterWMS` (lag `Kornstorrelse_Det`) og nedlasting fra Geonorge. Detaljert bare der det er kartlagt.
+- **EMODnet Geology, «Seabed substrate»:** de nasjonale kartene (også NGUs) samlet i Folk-klasser, med fem klasser der én er «rock and boulders». 1:250 000 og 1:1 000 000 for hele norskekysten, finere der det finnes. GeoServer `drive.emodnet-geology.eu`. EMODnet-data er frie (CC BY 4.0).
+Containeren slipper ikke gjennom til `geo.ngu.no` eller `drive.emodnet-geology.eu` (403 fra proxyen), så de må hentes av en GitHub-arbeidsflyt, som kartdataene, reglene og mottakene: `tools/bunn/bunn.py` + `.github/workflows/bunn.yml` → release `bunn-N` → et lite raster per flis (fjell, grus, sand, mudder) i kartpakkene eller `src/data/bunn.json`, og `bedRock` slår opp der og faller tilbake på brattheten der det mangler data. Sjøkartenes egen bunntype (`SBDARE` i ENC fra Kartverket) er ikke åpen.
+
+### 5.61 Skyene i ekte tid (#352, 19.10.2026)
+
+Skyene på himmelen (`cp` i himmelskyggeleggeren) driver med vinden i skyhøyden, i ekte tid som bølgene: 1,5 ganger vinden ved sjøen (overflatevinden over sjø er rundt to tredjedeler av vinden over friksjonslaget), dreid 15° med klokka (overflatevinden krysser isobarene inn mot lavtrykket), minst 2 m/s, over et skydekke i 1 500 m (`CLD`, `cloudStep` i `view3d.js`). Forskyvningen samles opp bilde for bilde på tiden som virkelig har gått (`uCloudOff`). Før gikk skyene mot vinden i fast fart (forskyvningen var vindretningen ganger tiden siden start, lagt til prøvepunktet), og når vinden dreide noen grader, hoppet hele himmelen. Test: `tests/skytest.py` (3D, rundt 1 min): retning og fart i vind fra vest, og ingen hopp når vinden dreier 30°.
+
+**Funnet, ikke rettet:** havskyggerens vindkastflekker (`Q = P + w*uTime*1.2`) og kattepotene (`ns(P*0.013 + w*uTime*0.5)`) har samme fortegn og driver mot vinden. Rettingen er et fortegn og en fart, men den endrer havet og trenger `sea3d` (15 min) og bilder før og etter.
+
