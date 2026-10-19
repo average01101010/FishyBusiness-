@@ -24,7 +24,8 @@ JS = """(async () => {
   let drags = 0; for (let i = 0; i < 40 * 60 && b.anch; i++){ step(); drags = b.anch ? b.anch.drags : drags; } R.dragged = drags > 0;
   // a gale: the awake boat weighs and heads for a quay
   window.windAt = () => BOAT.risk[3] * 1.2; window.hsAt = () => BOAT.risk[1] * 1.2; b.status = 'idle'; b.port = null; b.pos = {x:spot.x, y:spot.y}; S.plan = null; b.anch = null; dropAnchor();
-  let gone = false; for (let i = 0; i < 20 * 60 && !gone; i++){ step(); if (i % 20 === 0) await tick(); gone = !b.anch && (!!S.plan || b.status === 'sailing' || b.status === 'port'); } R.gale = gone;
+  // (the minutes are played as catch-up plays them, with the manoeuvring model off: in a loop of steps it would only move her in real time)
+  let gone = false; for (let i = 0; i < 20 * 60 && !gone; i++){ DYN.on = false; step(); if (i % 20 === 0) await tick(); gone = !b.anch && (!!S.plan || b.status === 'sailing' || b.status === 'port'); } R.gale = gone;
   window.windAt = realW; window.hsAt = realH; b.anch = null;
   // the alarm hook: a drag rings it, and the one asleep alone aboard is woken by the same ring as the bridge watch alarm
   { let rang = 0; const keep = hooks.onAnchorAlarm; hooks.onAnchorAlarm = (k, n) => { rang++; }; anchorAlarm('drag', 1); R.alarmRang = rang === 1; hooks.onAnchorAlarm = keep; }
@@ -43,7 +44,7 @@ JS = """(async () => {
     const o = driftNew({skipper:ole.id, days:[1, 1, 1, 1, 1, 1, 1]}); o.wx.wind = 40; o.wx.hs = 7; o.sess = [trip(5), {id:driftSid(), type:'hvile', dep:9, at:'anker', near:'husoy', pos:null}, trip(15)]; S.ops = o; o.on = true;
     if (mode === 'storm'){ window.windAt = () => BOAT.risk[2] * 1.3; window.hsAt = () => 0.3; window.hsOpen = () => 0.3; }
     const ev = {anch:0, outAfterAnch:0, port:0}; let wasAnch = false, outs = 0, hold = 0;
-    for (let i = 0; i < 28 * 60; i++){ step(); if (i % 15 === 0) await tick(); if (b.anch && !wasAnch){ ev.anch++; } wasAnch = !!b.anch;
+    for (let i = 0; i < 28 * 60; i++){ DYN.on = false; step(); if (i % 15 === 0) await tick(); if (b.anch && !wasAnch){ ev.anch++; } wasAnch = !!b.anch;
       if (b.status !== 'port' && ev.anch >= 1 && !b.anch && b.status === 'sailing') ev.outAfterAnch++; if (b.status === 'port' && S.t % 60 === 0) ev.port++;
       if (b.status !== 'port' && !b.anch && !S.hold.length && b.status === 'sailing' && hold < 3){ for (const [sp, kg] of [['torsk', 80]]) S.hold.push({sp, cls:SPECIES[sp].ref, kg, n:1, bled:true, iced:true, hr:0, fresh:95, gut:false, hook:true}); hold++; } }
     ev.logs = S.log.slice(-40).map(l => hm(l.t / 60) + ' ' + (l.no || '').slice(0, 70)); ev.reps = o.rep.length; ev.msgs = S.msgs.filter(m => /ankers/.test(m.no)).map(m => m.no.slice(0, 80)); ev.fails = o.fails; ev.on = o.on; ev.pos = o.sess[1].pos; ev.status = b.status; ev.anchNow = !!b.anch; ev.dbg = {idx:o.idx, cn:o.cn, a0:o.a0, hold:o.hold, delay:o.delay, sk:o.skipped, H:S.t / 60, hod:driftHod(S.t / 60), busy:portBusy(b), jobs:S.jobs && S.jobs.length, plan:!!S.plan, land:!!b.land, shift:!!b.shift, st:b.status, crew:S.crew.length, wxw:windAt(S.t/60), hs:hsOpen(S.t/60)};

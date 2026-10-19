@@ -39,12 +39,13 @@ async def main():
         print(ok(bool(r['far'])), 'grounds too far for a day with rest are refused with a reason', r['far'])
         print(ok(r['noKg']), 'the plan shows no expected catch', r['noKg'])
         # the engine runs the jigging plan for a day: out, lands, rests at the base, and waits out the rest before the next day
+        # (the minutes are played as catch-up plays them, with the manoeuvring model off: in a loop of steps it would only move her in real time)
         e = await pg.evaluate("""async () => { const R = {}, o = S.ops, b = S.boat, home = o.wiz.base;
           b.status = 'port'; b.port = home; b.pos = {...portById(home).p};
           const H = S.t / 60; o.wiz.start = Math.floor(driftHod(H)) + 1; await new Promise(res => planBuild(o, res));
           o.on = true; o.a0 = null; o.idx = 0; o.cn = 0; o.hold = 0;
           const t0 = S.t; let left = null, landed = 0, restAt = null, out2 = null;
-          for (let i = 0; i < 60 * 40; i++){ step(); if (left == null && b.status !== 'port') left = S.t;
+          for (let i = 0; i < 60 * 40; i++){ DYN.on = false; step(); if (left == null && b.status !== 'port') left = S.t;
             if (o.restT0 != null && restAt == null) restAt = o.restT0;
             if (restAt != null && out2 == null && b.status !== 'port' && S.t > restAt + 30) out2 = S.t;
             if (out2 != null) break;

@@ -38,7 +38,7 @@ async def main():
           b.status = 'idle'; b.port = null; b.pos = {x:g.p.x, y:g.p.y}; S.plan = null; b.fuel = BOAT.fuelCap;
           const res = await leiaRoute({x:g.p.x, y:g.p.y}, R.p, null, R.id); if (res.why) return {why:res.why};
           const wps = res.wps.map((q, i) => i === res.wps.length - 1 ? {x:R.p.x, y:R.p.y, port:R.id, fish:0} : {x:q.x, y:q.y, port:null, fish:0});
-          S.plan = {wps, idx:0, speed:BOAT.cruise || 6, returning:false}; b.status = 'sailing'; let n = 0; while (b.status !== 'port' && n < 600){ step(); n++; }
+          S.plan = {wps, idx:0, speed:BOAT.cruise || 6, returning:false}; b.status = 'sailing'; let n = 0; while (b.status !== 'port' && n < 600){ DYN.on = false; step(); n++; }
           return {n, st:b.status, port:b.port, berth:berthKind(b), log:(S.log || []).slice(-6).map(l => l.no || l[1] || '').join(' | ')}; })""", rid)
         check(r.get('st') == 'port' and r.get('port') == rid, 'Autonav takes the boat from Gryllefjord to the rorbu, and she lies at its quay', r)
         # 3b. «Fortøy» in the dock when she lies still off the quay (Jonas 05.10.2026: «Det må også være mulig å fortøye i kaia»)
@@ -46,7 +46,7 @@ async def main():
           b.pos = {x:R.p.x + N[0] * 0.15, y:R.p.y + N[1] * 0.15}; DOCK.tick && DOCK.tick(); renderActs && renderActs(); const el = [...document.querySelectorAll('#dock button')].find(e => e.textContent.trim() === 'Fortøy'); if (el) el.click();
           const f = [...document.querySelectorAll('#dockFan button')].find(e => e.textContent.trim().toLowerCase().startsWith('rorbua')); if (f) f.click(); })""", rid)
         await pg.wait_for_timeout(2500)
-        r = await pg.evaluate("""(rid => { const b = S.boat, st0 = b.status; let n = 0; while (b.status !== 'port' && n < 200){ step(); n++; } return {st0, n, st:b.status, port:b.port}; })""", rid)
+        r = await pg.evaluate("""(rid => { const b = S.boat, st0 = b.status; let n = 0; while (b.status !== 'port' && n < 200){ DYN.on = false; step(); n++; } return {st0, n, st:b.status, port:b.port}; })""", rid)
         check(r['st0'] == 'sailing' and r['st'] == 'port' and r['port'] == rid, 'lying still 150 m off the rorbu, «Fortøy» in the dock takes her in to its quay', r)
         # 3c. the rorbuer stand 1.5-4 km from their plant (Jonas 08.10.2026), so the choice of quay to moor at never comes up from a rorbu
         # (tilbakemelding #23 was that she only ever went back to the rorbu): within 400 m of one rorbu there is no plant's quay

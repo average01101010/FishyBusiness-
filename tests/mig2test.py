@@ -41,19 +41,22 @@ async def main():
         await pg.evaluate("S.mult = 0; window.removeEventListener('pagehide', save)")
         s3 = await pg.evaluate("(() => { save(); return localStorage.getItem(KEY); })()")
         c = await pg.evaluate(PTS, s3)
+        # the points as the migration puts them (the game plays on from there once loaded: a boat under way moves, and a way round
+        # shallow water asked for before the save goes into her plan, so the reloaded game is not where to measure the move of frame)
+        m = await pg.evaluate(PTS, await pg.evaluate("(s) => JSON.stringify(migrateV2(JSON.parse(s)))", v1))
         keep = await pg.evaluate("localStorage.getItem(KEY_V1)")
         st = await pg.evaluate("(() => ({at:GROUNDS.map(g => +stockAt(g.p).toFixed(4)), crab:+stockAt(GROUNDS[5].p, 'krabbe').toFixed(4), boat:S.boat.status, port:S.boat.port}))()")
         st0 = await pg.evaluate("""(s) => { const o = JSON.parse(s), keep = [S.stock, S.cstk]; S.stock = o.stock; S.cstk = o.cstk;
           const r = {at:GROUNDS.map(g => +stockAt(g.p).toFixed(4)), crab:+stockAt(GROUNDS[5].p, 'krabbe').toFixed(4)}; S.stock = keep[0]; S.cstk = keep[1]; return r; }""", s2)
         import math
-        miss = [k for k in a['pts'] if k not in c['pts']]
-        err = max([math.hypot(a['pts'][k][0] - c['pts'][k][0], a['pts'][k][1] - c['pts'][k][1]) * 1000 for k in a['pts'] if k in c['pts']] or [1e9])
+        miss = [k for k in a['pts'] if k not in m['pts']]
+        err = max([math.hypot(a['pts'][k][0] - m['pts'][k][0], a['pts'][k][1] - m['pts'][k][1]) * 1000 for k in a['pts'] if k in m['pts']] or [1e9])
         kinds = sorted(set(k.split('.')[3] if k.startswith('S.fleet.') else k.split('.')[1] for k in a['pts']))
-        print(json.dumps({'points':len(a['pts']), 'kinds':kinds, 'missing':miss[:8], 'errM':err, 'hd':[a['hd'], c['hd']], 'v':c['v'], 'stock':[st0, st],
+        print(json.dumps({'points':len(a['pts']), 'kinds':kinds, 'missing':miss[:8], 'errM':err, 'hd':[a['hd'], m['hd']], 'v':c['v'], 'stock':[st0, st],
                           'cells':[len(a['stock'] or {}), len(c['stock'] or {})]}))
         print(ok(c['v'] == 2 and keep == v1), 'the v1 game is read from its old key and saved as v2; the v1 save is left as it was')
         print(ok(len(a['pts']) >= 20 and not miss and err < 1), 'every position (%d, in %s) lands within a metre of where it was: %.4f m' % (len(a['pts']), ', '.join(kinds), err))
-        print(ok(all(abs(x - y) < 1e-6 for x, y in zip(a['hd'], c['hd']) if x is not None)), 'the boat\'s heading turns with the frame')
+        print(ok(all(abs(x - y) < 1e-6 for x, y in zip(a['hd'], m['hd']) if x is not None)), 'the boat\'s heading turns with the frame')
         print(ok(all(abs(x - y) < 0.03 for x, y in zip(st0['at'], st['at'])) and abs(st0['crab'] - st['crab']) < 0.03), 'the stock (fish and crab) at the grounds is what it was, within the 2 km cells moving: %s' % json.dumps([st0, st]))
         print('errors:', errs[:4]); await b.close()
 asyncio.run(main())
