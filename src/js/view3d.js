@@ -3434,8 +3434,10 @@ const G3 = (() => {
         bv.spd = TOW.tow * KNV(); bv.yr *= Math.exp(-dt * 2);
       } else {
         // in port, fishing or drifting: glide to the spot, coast to a stop and swing slowly to the new heading
+        // (drifting, core lieDrift: she keeps close to where the drift has her, on the time that has really gone, as under the model,
+        // so slow frames never leave her behind the chart and the simulation; she comes there from where the model stopped her)
         bv.spd *= Math.exp(-dt * 1.2); bv.yr *= Math.exp(-dt * 2);
-        const k = 1 - Math.exp(-dt * 1.5); bv.px += (tx - bv.px) * k; bv.pz += (tz - bv.pz) * k;
+        const k = b.drv ? 1 - Math.exp(-Math.min(30, rdt || dt) * 3) : 1 - Math.exp(-dt * 1.5); bv.px += (tx - bv.px) * k; bv.pz += (tz - bv.pz) * k;
         bv.cog += angDiff(bv.cog, pr.hd) * (1 - Math.exp(-dt * 0.7));
       }
       // the bow points a little into the turn, so the stern skids out
