@@ -4,7 +4,7 @@
 const turEsc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'})[c]);
 const TUR_CLS = {kort:['Kort', 'Short'], mid:['Middels', 'Medium'], lang:['Lang', 'Long'], sesong:['Sesong', 'Season']};
 const TUR_KIND = {best:['Bestilling', 'Order'], frakt:['Frakt', 'Freight'], garn:['Hjelp på sjøen', 'Help at sea'], slep:['Hjelp på sjøen', 'Help at sea'], sesong:['Sesongflytting', 'Following the season'], prove:['Havforskningsinstituttet', 'Marine research'], foto:['Kystposten', 'Kystposten']};
-function turCard(m, act){
+function turCard(m, act, det){
   const L0 = (no, en) => S.lang === 'en' ? en : no, w = turWhat(m), kv0 = (k, v) => '<div class="kv"><span>' + k + '</span><b>' + v + '</b></div>';
   let extra = '';
   if (m.k === 'best' && act){ const o = ordState().active.find(x => x.tur === m.id); if (o) extra = kv0(L0('Levert', 'Delivered'), fmt(o.kg - o.left, 0) + ' / ' + fmt(o.kg, 0) + ' kg'); }
@@ -29,7 +29,8 @@ function turCard(m, act){
     slep:['Motorstopp, og hun driver mot land. Legg deg stille ved siden av henne, så går slepet over (høyst 5,5 knop). Ingen avtale på forhånd: berger du henne, har du krav på bergelønn etter sjøloven, etter båtens verdi, faren og tiden. Driver hun på land først, blir det ingen.', 'Engine trouble, and she is drifting toward land. Lie still beside her and the tow line goes over (5.5 knots at most). No agreement beforehand: if you save her, you are owed a salvage reward under the Maritime Code, by the boat\'s value, the danger and the time. If she drifts ashore first, there is none.']}[m.k];
   return '<div class="ph-card tur ' + m.cls + '"><div class="tur-h"><span class="tur-c">' + L0(TUR_CLS[m.cls][0], TUR_CLS[m.cls][1]) + '</span><small>' + L0(TUR_KIND[m.k][0], TUR_KIND[m.k][1]) + '</small></div>' +
     '<h4>' + turEsc(L0(w[0], w[1])) + '</h4><p class="ph-note">' + L0(desc[0], desc[1]) + '</p>' +
-    kv0(L0('Avstand', 'Distance'), fmt(m.nm, 0) + ' nm') + kv0(L0('Seiling', 'Sailing'), L0('ca. ', 'about ') + turDur(m.h)) + extra +
+    kv0(L0('Avstand', 'Distance'), fmt(m.nm, 0) + ' nm') + kv0(L0('Seiling', 'Sailing'), L0('ca. ', 'about ') + turDur(m.h)) +
+    (det != null ? kv0(L0('Omvei', 'Detour'), det <= 5 ? L0('på veien din', 'on your way') : '+' + turDur(det * GAME_RATE / 60)) : '') + extra +
     kv0(m.k === 'slep' ? L0('Bergelønn', 'Salvage') : L0('Belønning', 'Reward'), m.k === 'slep' && m.stage !== 'tow' ? kr(m.payLo) + ' – ' + kr(m.payHi) : kr(m.k === 'slep' ? turSalvage(m, m.danger || 0) : m.pay) + (m.k === 'prove' && m.bonusMax ? L0(' + inntil ', ' + up to ') + kr(m.bonusMax) : '')) + (act ? kv0(L0('Frist', 'Deadline'), dayStr(m.due / 60) + ' ' + hm(m.due / 60) + ' · ' + inReal(m.due - S.t)) : kv0(L0('Tid til rådighet', 'Time allowed'), L0('ca. ', 'about ') + turDur(m.hTot))) +
     '<div class="tur-b">' + (act ? (m.k === 'prove' && m.stage === 'measure' ? '<button class="ph-btn p" data-pa="turmeas" data-id="' + m.id + '">' + L0('Mål fisken', 'Measure the fish') + '</button>' : '') +
       (m.k === 'foto' && !turG3() && dist(S.boat.pos, m.fyr) <= TUR.fotoR ? '<button class="ph-btn p" data-pa="turfoto" data-id="' + m.id + '">' + L0('Ta bilde', 'Take the picture') + '</button>' : '') +
@@ -39,9 +40,13 @@ function turCard(m, act){
 function turPage(){
   const T = turEnsure(), L0 = (no, en) => S.lang === 'en' ? en : no, h = [];
   if (T.act.length){ h.push('<h4 class="tur-sec">' + L0('Dine oppdrag', 'Your missions') + '</h4>'); for (const m of T.act) h.push(turCard(m, true)); }
-  h.push('<h4 class="tur-sec">' + L0('Tavla', 'The board') + '</h4><p class="ph-note tur-n">' + L0('Laget fra der båten er nå. Ny tavle hver morgen, og når du har flyttet deg et stykke.', 'Made from where the boat is now. A new board every morning, and when you have moved a good way.') + '</p>');
-  if (!T.board.length) h.push('<div class="ph-card"><p class="ph-note">' + L0('Ingen oppdrag passer båten akkurat nå. Se innom igjen senere.', 'No mission suits the boat just now. Look in again later.') + '</p></div>');
-  for (const m of T.board) h.push(turCard(m, false));
+  h.push('<h4 class="tur-sec">' + L0('Tavla', 'The board') + '</h4><p class="ph-note tur-n">' + L0('Laget fra der båten er nå. Nye oppdrag kommer etter hvert, høyst fire på tavla, og du kan ha to om gangen. Det som ligger på veien din, står først.', 'Made from where the boat is now. New missions come as time goes, at most four on the board, and you can have two at a time. What lies on your way comes first.') + '</p>');
+  // the next one: when the next place on the board comes (core turEnsure)
+  const next = T.board.length >= TUR.boardMax ? null : turDur((1 - ((T.slots || 0) % 1)) * TUR.refillH * (turSlow() ? TUR.slowF : 1));
+  if (!T.board.length) h.push('<div class="ph-card"><p class="ph-note">' + L0('Ingen oppdrag på tavla akkurat nå.', 'No missions on the board just now.') + (next ? L0(' Det neste kommer om ca. ', ' The next comes in about ') + next + '.' : '') + '</p></div>');
+  const way = turWay(), o = turHere(), B = T.board.map(m => ({m, d:turDetour(m, way, o)})).sort((a, c) => (a.d == null ? 1e9 : a.d) - (c.d == null ? 1e9 : c.d));
+  for (const {m, d} of B) h.push(turCard(m, false, d));
+  if (T.board.length && next) h.push('<p class="ph-note tur-n">' + L0('Neste oppdrag kommer om ca. ', 'The next mission comes in about ') + next + '.</p>');
   const old = T.done.slice(0, 6);
   if (old.length) h.push('<h4 class="tur-sec">' + L0('Tidligere', 'Earlier') + '</h4><div class="ph-card">' + old.map(d => '<div class="kv"><span>' + turEsc(L0(d.what[0], d.what[1])) + '</span><b>' + (d.ok ? kr(d.pay) : '<span class="r2">' + L0('ikke fullført', 'not done') + '</span>') + '</b></div>').join('') + '</div>');
   return h.join('');

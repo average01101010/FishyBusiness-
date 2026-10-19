@@ -1,4 +1,4 @@
-"""Turoppdrag (core/09g-turer.js, ui/05f-turer.js; docs/engasjement.md point 4, Jonas 07.10.2026): a board made from where the boat
+"""Turoppdrag (core/09g-turer.js, ui/05f-turer.js; docs/engasjement.md point 4, Jonas 07.10.2026; paid for the job, #73, 19.10.2026): a board made from where the boat
 is, with short, middle and long missions by the real time they take to sail, a reward that follows what the boat earns an hour and
 grows with the length, and deadlines well beyond the time without trim; only what the boat can do is offered (her range on a tank, an
 open boat's sheltered water); an order to a far plant, freight in the hold, lost gear with fish in it, and the season's move each run
@@ -22,13 +22,15 @@ async def main():
         await boot(pg)
         # 1. the board: classes by the time to sail, pay by the boat's hourly earnings, deadlines beyond the time without trim
         # the missions, not the skipper's sleep, are tested here: no energy (as in Admin), so a long haul does not end in sleep and the shore
+        # (the sections take missions one after another and leave some under way: the limit of two is checked with the economy below)
+        await pg.evaluate("TUR.maxAct = 9")
         b = await pg.evaluate("""(() => { S.adm = Object.assign(S.adm || {}, {noEnergy:true}); S.boat.fuel = BOAT.fuelCap; fsState().p = fsNeed(4); const T = turEnsure(true), B = T.board;
-          return {n:B.length, cls:B.map(m => m.cls), kinds:B.map(m => m.k), rate:Math.round(turRate()), v:turV(), range:Math.round(turRange()),
+          return {n:B.length, cls:B.map(m => m.cls), kinds:B.map(m => m.k), rate:Math.round(turRate()), cap:Math.round(turCap()), v:turV(), range:Math.round(turRange()),
             ok:B.every(m => m.pay >= 500 && m.hTot >= m.h * 2.5 && (m.cls === 'sesong' || (m.h >= TUR.cls[m.cls].h[0] && m.h < TUR.cls[m.cls].h[1] * (m.k === 'garn' ? 1.6 : 1)))),
             perH:Object.fromEntries(B.filter(m => m.k !== 'garn').map(m => [m.cls, Math.round(m.pay / m.h)])), mins:B.map(m => turMinR(m.h))}; })()""")
         ph = b['perH']
-        check(b['n'] >= 3 and 'kort' in b['cls'] and b['ok'] and 5000 <= b['rate'] <= 6000,
-              'the board: short, middle and long missions by the real time to sail; a newcomer is paid 60 % of the boat\'s hourly curve until the sea hours are logged; deadlines at least 2.5 times the time without trim', b)
+        check(b['n'] >= 3 and 'kort' in b['cls'] and b['ok'] and b['rate'] == b['cap'],
+              'the board: short, middle and long missions by the real time to sail; paid by the boat\'s hourly curve (ordinary fishing without haill); deadlines at least 2.5 times the time without trim', b)
         # 1b. weighed by the player's own record: a newcomer gets no long trip and no season's move; an old hand's long go further;
         #     the order is for a species the player lands, about a usual landing; a plant pays a known skipper more
         w = await pg.evaluate("""(() => { const o = turHere(), fs = fsState(), p0 = fs.p, sales0 = S.sales;
@@ -146,9 +148,9 @@ async def main():
           const act = T.act.length, txt2 = document.getElementById('phView').innerText;
           PHONE.dact('ordl', 'sub', {s:'best'}); PHONE.render(); const best = document.getElementById('phView').innerText; PHONE.show(false);
           const svg = turSvg(1, () => true);
-          return {cards, tav:/Tavla/.test(txt), act, dine:/Dine oppdrag/.test(txt2), best:/Bestillinger/.test(best), ring:/turmk/.test(svg)}; })()""")
-        check(u['cards'] >= 3 and u['tav'] and u['act'] == 1 and u['dine'] and u['best'] and u['ring'],
-              "the Oppdrag app shows the board, a mission is taken from it, the orders have their own tab, and the chart rings where it goes", u)
+          return {cards, tav:/Tavla/.test(txt), act, dine:/Dine oppdrag/.test(txt2), best:/Bestillinger/.test(best), ring:/turmk/.test(svg), omvei:!turWay() || /Omvei/.test(txt)}; })()""")
+        check(u['cards'] >= 3 and u['tav'] and u['act'] == 1 and u['dine'] and u['best'] and u['ring'] and u['omvei'],
+              "the Oppdrag app shows the board (with the detour when the boat has a way), a mission is taken from it, the orders have their own tab, and the chart rings where it goes", u)
         # 10. survey fishing for Havforskningsinstituttet: an hour at the station counts what comes up from then; ten fish on the board,
         #     read within half a centimetre, pay the time and the whole bonus; an empty station is a sample too
         pv = await pg.evaluate("""(() => { S.equip = S.equip || {}; S.equip.jukse = Math.max(1, S.equip.jukse || 0);   // a jigging reel aboard, so a station can be offered
@@ -200,18 +202,23 @@ async def main():
           return {kinds, two, tap}; })()""")
         check(bd['kinds'].get('prove', 0) > 0 and bd['kinds'].get('foto', 0) > 0 and not bd['two'] and (bd['tap'] is None or abs(bd['tap']['got'] - bd['tap']['cm']) <= 1),
               'the board offers survey fishing and lighthouse pictures now and then, never two of one kind; a tap on the measuring board reads the length there', bd)
-        # the missions' economy (Jonas 17.10.2026, tilbakemelding #72): the player's own rate, a mission under way pays less for the next, the week's soft brake
-        ec = await pg.evaluate("""(() => { const T = turState(), cap = turCap(), d = Math.floor(S.t / 1440), keep = {sales:S.sales, sea:T.sea, act:T.act, done:T.done};
-          T.act = []; T.done = []; T.sea = {}; T.sea[d] = 30; S.sales = [{t:S.t - 600, v:S.cur, port:'x', kg:500, total:cap / GAME_RATE * 30 * 0.5, sp:[]}];
-          const half = turOwn().rate / cap; T.sea[d] = 0; const prior = turOwn().rate / cap; T.sea[d] = 30;
-          S.sales = [{t:S.t - 600, v:S.cur, port:'x', kg:500, total:cap / GAME_RATE * 30 * 5, sp:[]}]; const top = turOwn().rate / cap;
-          const m = {base:10000}, a0 = turFinal(m); T.act = [{pay:0}]; const a1 = turFinal(m); T.act = [{pay:0}, {pay:0}]; const a2 = turFinal(m); T.act = [];
-          S.sales = [{t:S.t - 600, v:S.cur, port:'x', kg:500, total:1000000, sp:[]}]; T.done = [{ok:true, t:S.t - 60, pay:400000}];
-          const room = 1000000 * 0.3 / 0.7 - 400000, br = turBrake(100000), want = room + (100000 - room) * 0.25;
-          Object.assign(S, {sales:keep.sales}); T.sea = keep.sea; T.act = keep.act; T.done = keep.done;
-          return {half:+half.toFixed(2), prior:+prior.toFixed(2), top:+top.toFixed(2), a0, a1, a2, br:Math.round(br), want:Math.round(want)}; })()""")
-        check(abs(ec['half'] - 0.5) < 0.02 and abs(ec['prior'] - 0.6) < 0.02 and ec['top'] == 1 and ec['a0'] == 10000 and ec['a1'] == 6000 and ec['a2'] == 4000 and abs(ec['br'] - ec['want']) < 2,
-              "the pay follows the player's own landings per hour at sea (60 % of the curve without sea hours, never above it); a second and third mission under way pay 60 % and 40 %; past 30 % of the week's income the pay goes on at a quarter", ec)
+        # the missions' economy (Jonas 19.10.2026, tilbakemelding #73): paid by the boat's curve whatever the player's own landings (haill),
+        # the price shown is the price paid whatever else is under way, two at most; the supply: a place every 18 game hours, at most four,
+        # a third as often once the week's missions are over 30 % of the week's income
+        ec = await pg.evaluate("""(() => { const T = turState(), cap = turCap(), keep = {sales:S.sales, act:T.act, done:T.done, board:T.board, slots:T.slots, slotT:T.slotT};
+          T.act = []; T.done = []; S.sales = [{t:S.t - 600, v:S.cur, port:'x', kg:500, total:cap / GAME_RATE * 30 * 5, sp:[]}]; const rich = turRate() / cap;
+          S.sales = []; const none = turRate() / cap;
+          const m = {base:10000}, a0 = turFinal(m); T.act = [{pay:0}]; const a1 = turFinal(m); T.act = [{pay:0}, {pay:0}]; const a2 = turFinal(m);
+          TUR.maxAct = 2; T.board = [{id:-5, k:'frakt', cls:'kort', until:S.t + 999, base:1000, pay:1000, kg:0}]; const two = turTake(-5); T.act = []; TUR.maxAct = 9;
+          T.board = []; T.slots = 0; T.slotT = S.t - 18 * 60; T.at = {t:S.t, x:turHere().x, y:turHere().y}; turEnsure(); const one = {slots:+T.slots.toFixed(2), n:T.board.length};
+          T.slotT = S.t - 100 * 18 * 60; turEnsure(); const cap4 = {slots:+T.slots.toFixed(2), n:T.board.length};
+          T.board = []; T.slots = 0; T.slotT = S.t - 18 * 60; S.sales = [{t:S.t - 600, v:S.cur, port:'x', kg:500, total:100000, sp:[]}]; T.done = [{ok:true, t:S.t - 60, pay:400000}];
+          const slow = turSlow(); turEnsure(); const slowSlots = +T.slots.toFixed(2);
+          Object.assign(S, {sales:keep.sales}); Object.assign(T, {act:keep.act, done:keep.done, board:keep.board, slots:keep.slots, slotT:keep.slotT});
+          return {rich:+rich.toFixed(2), none:+none.toFixed(2), a0, a1, a2, two, one, cap4, slow, slowSlots}; })()""")
+        check(ec['rich'] == 1 and ec['none'] == 1 and ec['a0'] == ec['a1'] == ec['a2'] == 10000 and ec['two'] and 'to oppdrag' in ec['two']
+              and abs(ec['one']['slots'] - 1) < 0.02 and ec['cap4']['slots'] == 4 and ec['slow'] and abs(ec['slowSlots'] - 0.33) < 0.02,
+              "the pay is the boat's curve whatever the player's landings, and the price shown is the price paid with other missions under way; two at most; a new place on the board every 18 game hours, at most four, a third as often past 30 % of the week's income", ec)
         # the season's move: kilos from the player's own week, at most two holds and 70 % of the quota left; no crab without pots; no cod when the cod is fished
         se2 = await pg.evaluate("""(() => { const T = turState(), keep = {sales:S.sales, act:T.act}, o = turHere(), out = [], hold = BOAT.holdCap; T.act = [];
           S.sales = [{t:S.t - 600, v:S.cur, port:'x', kg:hold * 6, total:100000, sp:[['torsk', hold * 6]]}];
@@ -222,13 +229,13 @@ async def main():
         check(all(x['kg'] <= 2 * se2['hold'] + 50 and (x['room'] is None or x['kg'] <= 0.7 * x['room'] + 50) for x in o2) and (se2['crab'] == (se2['pots'] > 0)),
               "the season's move: at most two holds and 70 % of what is left on the quota; crab only with pots aboard", se2)
         # the board is rolled by moving far once a game day at most; old missions are brought down to the new rules when the save opens
-        rr = await pg.evaluate("""(() => { const T = turEnsure(true); T.mvDay = null; const seq0 = T.seq, b = S.boat, p0 = {x:b.pos.x, y:b.pos.y};
+        rr = await pg.evaluate("""(() => { const T = turEnsure(true); T.mvDay = null; T.slots = 4; const seq0 = T.seq, b = S.boat, p0 = {x:b.pos.x, y:b.pos.y};
           b.pos = {x:p0.x + 50, y:p0.y}; turEnsure(); const seq1 = T.seq; b.pos = {x:p0.x + 100, y:p0.y}; turEnsure(); const seq2 = T.seq; b.pos = p0;
           const old = {k:'sesong', cls:'sesong', to:'x', sp:'sei', kg:BOAT.holdCap * 3, got:0, h:12, hTot:150, pay:400000, id:999};
-          const keep = T.act; T.act = [old]; T.v = 1; turState(); const after = {kg:old.kg, pay:old.pay}; T.act = keep;
-          return {moved1:seq1 > seq0, moved2:seq2 > seq1, kg:after.kg, pay:after.pay, hold:BOAT.holdCap}; })()""")
-        check(rr['moved1'] and not rr['moved2'] and rr['kg'] <= 2 * rr['hold'] and rr['pay'] < 400000,
-              'moving far makes a new board once a game day, not twice; a season\'s move taken before is brought down to two holds and the new pay', rr)
+          const keep = T.act; T.act = [old]; T.v = 1; turState(); const after = {kg:old.kg, pay:old.pay, v:T.v, slots:T.slots}; T.act = keep;
+          return {moved1:seq1 > seq0, moved2:seq2 > seq1, kg:after.kg, pay:after.pay, v:after.v, slots:after.slots, hold:BOAT.holdCap}; })()""")
+        check(rr['moved1'] and not rr['moved2'] and rr['kg'] <= 2 * rr['hold'] and rr['pay'] < 400000 and rr['v'] == 3 and rr['slots'] == 4,
+              'moving far makes a new board once a game day, not twice; a season\'s move from the oldest saves is brought down to two holds; the save comes over to the new rules with a full board', rr)
         check(errs == [], 'sidefeil', errs[:3])
         await br.close()
 
