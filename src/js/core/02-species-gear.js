@@ -172,6 +172,11 @@ const EQUIP = {
   vhf:{price:6500, name:{no:'VHF-radio', en:'VHF radio'}, desc:{no:'Kulingvarsel fra kystradioen og nødanrop uten mobildekning.', en:'Gale warnings from coast radio and distress calls without mobile coverage.'}},
   ais:{price:4900, name:{no:'AIS-sender (klasse B)', en:'AIS transponder (class B)'}, desc:{no:'Andre båter og redningstjenesten ser deg på AIS. Raskere hjelp ved nød.', en:'Other boats and the rescue service see you on AIS. Faster help in an emergency.'}},
   plotter:{price:24900, name:{no:'Kartplotter 9" med dybdekart', en:'9" chart plotter with depth charts'}, desc:{no:'Plottervisning med dybdefarger, relieff og dybdekurver.', en:'Plotter view with depth colours, relief and contours.'}},
+  // the radar (start prices, estimates: a 24" 4 kW radome is about 30 000 DKK at Raymarine's Danish shop, no Norwegian price was found;
+  // a 4 ft open array is about three times that): a dome on the wheelhouse roof up to 12 m (not on an open boat), an open array on the mast from 10 m to 21 m (the sea-going ships have
+  // their own radars in the model, as part of the ship)
+  radar:{price:35000, fit:{maxLen:12, house:true}, name:{no:'Radar (kuppel)', en:'Radar (radome)'}, desc:{no:'Radarkuppel på styrhustaket, montert i verkstedet. Antennen går rundt når du er på sjøen.', en:'A radome on the wheelhouse roof, fitted at the yard. The antenna turns while you are at sea.'}},
+  radarA:{price:95000, fit:{minLen:10, maxLen:21}, name:{no:'Radar (åpen antenne)', en:'Radar (open array)'}, desc:{no:'Åpen radarantenne på fire fot i masta, montert i verkstedet. Den går rundt når du er på sjøen.', en:'A four-foot open radar array on the mast, fitted at the yard. It turns while you are at sea.'}},
   chirp:{price:13900, name:{no:'CHIRP-ekkolodd', en:'CHIRP sounder'}, desc:{no:'Skarpere fiskeekko og bedre skille like over bunnen. Viser fisken 0,75 nm rundt båten i kartet, og du kan velge art.', en:'Sharper fish echoes and better separation near the bottom. Shows the fish 0.75 nm around the boat on the chart, and you can choose the species.'}},
   // a searchlight sonar on a hoist through the hull (start price: the parts of a Furuno CH-37BB are about 13 200 USD, before fitting)
   sonar:{price:150000, fit:{minLen:10}, name:{no:'Sonar (søkelys)', en:'Searchlight sonar'}, desc:{no:'Ser fisken 1,5 nm rundt båten, skiller torsk, hyse og sei og viser hvor stimene trekker. Monteres med senkerør gjennom skroget.', en:'Sees the fish 1.5 nm around the boat, tells cod, haddock and saithe apart and shows where the schools are heading. Fitted with a hoist through the hull.'}},
@@ -186,7 +191,7 @@ const EQUIP = {
   krabbekar:{price:28000, fit:{minLen:6.5}, name:{no:'Krabbekar med sjøvann', en:'Live crab tank'}, desc:{no:'Kar med sirkulerende sjøvann som holder kongekrabben levende i flere døgn. Uten kar lever den rundt et døgn i lasten, og død krabbe er verdiløs.', en:'A tank of running sea water that keeps king crab alive for days. Without it a crab lives about a day in the hold, and a dead crab is worthless.'}}
 };
 // whether an item fits a vessel type: by length, and outboards only on boats with an outboard
-function equipFits(k, type){ const f = EQUIP[k] && EQUIP[k].fit, V = VESSELS[type]; if (!f || !V) return !!V; return !(f.minLen && V.len < f.minLen) && !(f.maxLen && V.len > f.maxLen) && !(f.outboard && !V.outboard); }
+function equipFits(k, type){ const f = EQUIP[k] && EQUIP[k].fit, V = VESSELS[type]; if (!f || !V) return !!V; return !(f.minLen && V.len < f.minLen) && !(f.maxLen && V.len > f.maxLen) && !(f.outboard && !V.outboard) && !(f.house && V.fac.house === 'open'); }
 // the burn curve's shape at speed v (knots): a planing hull has a hump before it planes, a displacement hull climbs past 90 % of top
 // speed; fuelLph (03-simulation.js) scales it by fuelK, which vesselDerive sets so the boat burns V.lph at cruising speed
 function fuelBase(v, vmax, planing){ return planing ? 1.0 + 0.03 * v * v + 3 * Math.exp(-(((v - vmax * 0.42) / 3) ** 2)) : 1 + 0.1 * v * v + (v > vmax * 0.9 ? (v - vmax * 0.9) * 6 : 0); }
@@ -196,6 +201,19 @@ function vesselDerive(V){
   V.fuelK = fuelKOf(V); V.range = Math.round(V.fuelCap / V.lph * V.vcruise);
   V.watch = V.fac.house === 'hus' && V.berths >= 2; V.openOk = V.len < 11 && V.cls !== 'hav';
   V.haulers = Object.keys(EQUIP).filter(k => /haler$/.test(k) && equipFits(k, V.key));
+  V.lsa = lsaOf(V);
   return V;
+}
+// the life-saving gear the rules ask for, so every boat carries it from the yard (forskrift om fiskefartøy under 15 meter,
+// FOR-2013-11-22-1404, read on Lovdata 19.10.2026): a type-approved liferaft for everyone aboard on a decked boat over 6 m, hydrostatically
+// released (§ 38; with three or fewer aboard a four-person ISO 9650-1 raft will do); a lifebuoy for every third person, at least one with
+// 30 m of floating line under 10.67 m and two from there to 15 m, one with a line on each side, half of them with a light, all marked
+// with the boat's name and home port (§ 43). The boats over 15 m (other rules) get a raft on each side, four buoys on the coastal ones and
+// six on the sea-going ships, our estimate. The raft's size is the smallest common one for the most aboard (skipper and crew).
+const RAFT_CAP = [4, 6, 8, 10, 12, 16, 20, 25];
+function lsaOf(V){
+  const n = 1 + V.crewMax, cap = RAFT_CAP.find(c => c >= n) || 25, big = V.len > 15;
+  const buoys = big ? (V.cls === 'hav' ? 6 : 4) : Math.max(V.len >= 10.67 ? 2 : 1, Math.ceil(n / 3));
+  return {persons:n, rafts:big ? 2 : V.fac.house !== 'open' && V.len > 6 ? 1 : 0, cap, buoys, lines:big || V.len >= 10.67 ? 2 : 1, lights:Math.ceil(buoys / 2)};
 }
 for (const k in VESSELS){ VESSELS[k].key = k; vesselDerive(VESSELS[k]); }
