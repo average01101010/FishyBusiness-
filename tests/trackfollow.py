@@ -101,10 +101,12 @@ async def main():
           for (let k = 0; k < 24; k++){ const a = k / 24 * 2 * Math.PI, q = {x:o.x + Math.sin(a) * 1.6, y:o.y - Math.cos(a) * 1.6}; if (isLand(q) || depthF(q) < 15) continue; const q2 = {x:o.x + Math.sin(a) * 2.4, y:o.y - Math.cos(a) * 2.4};
             if (!isLand(q2) && depthF(q2) > 15 && legClear(q, q2)){ best = {q, q2}; break; } }
           if (!best) return null; const toasts = [], T0 = toast; toast = m => { toasts.push(String(m)); T0(m); };   // (what Autonav says when it declines)
-          S.draft = []; await leiaTo(best.q); let tries = 1;
+          // (Autonav snaps a tap within 22 px of a place to the place; with the chart small beside the 3D view that reached the point at sea
+          // from the rorbu, and Autonav said «Du ligger allerede her»: the chart is read as zoomed in for the tap)
+          view.px = Math.max(view.px, 100); S.draft = []; await leiaTo(best.q); let tries = 1;
           // (Autonav declines while another search runs or the draft is locked; under SwiftShader's stalls that happened right after docking, and
           // a draft of the far point alone made a route straight into land: she stopped short of it and lay «under way», 19.10.2026)
-          while (!S.draft.length && tries < 4){ await new Promise(r => setTimeout(r, 1500)); S.draft = []; await leiaTo(best.q); tries++; }
+          while (!S.draft.length && tries < 4){ await new Promise(r => setTimeout(r, 1500)); view.px = Math.max(view.px, 100); S.draft = []; await leiaTo(best.q); tries++; }
           toast = T0; let why = null; if (!S.draft.length){ try { const rr = await leiaRoute({x:S.boat.pos.x, y:S.boat.pos.y}, best.q, rb, null); why = rr && rr.why ? rr.why : rr && rr.wps ? 'ok:' + rr.wps.length : String(rr); } catch (e){ why = 'err:' + e; } }
           const leia = S.draft.length; S.draft.push({x:best.q2.x, y:best.q2.y}); return {n:S.draft.length, leia, tries, busy:LEIA_BUSY, edit:canEditDraft(), toasts:toasts.slice(0, 4), why, q2:[best.q2.x * 1000, best.q2.y * 1000]}; }""", RB)
         if not sea:
