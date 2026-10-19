@@ -266,7 +266,10 @@ function dynAuto(d, dtG){
     const st = T.stops.find(q => q.i >= pl.idx); let sStop = st ? st.s : T.end, stopW = st ? pl.wps[st.i] : null;
     if (T.gchk-- <= 0){ T.gchk = Math.round(1 / h); try { T.ghit = T.s >= Math.max(T.back + T.turnL, T.sOut + T.turnL) ? dynGroundAhead(T, T.s, dynEaseDist(cal, Math.max(0, d.u)) + 40) : null; } catch (e){ T.ghit = null; } }
     const unsafe = pl.unsafe && pl.unsafe[pl.idx];
-    if (T.ghit && !unsafe && T.ghit.s - 25 < sStop){ sStop = Math.max(T.s + 1, T.ghit.s - 25); stopW = null; }
+    // (the stop is 25 m short of it, also when that is behind her already: she then stops where she is and the replan runs; with a
+    // floor a metre ahead of her she crept on at a tenth of a metre a second and never reached the stop, a route drawn straight into
+    // land from a rorbu's berth left her lying «under way» for good, 19.10.2026)
+    if (T.ghit && !unsafe && T.ghit.s - 25 < sStop){ sStop = T.ghit.s - 25; stopW = null; }
     const ds = sStop - T.s;
     // out from the quay: astern on the line, turning over to the way out, and on along it to the harbour point and round on to the
     // route, at a knot and a half, then three (not the model's: the fenders and a hand on the quay do that, and she has neither

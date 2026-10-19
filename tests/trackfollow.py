@@ -19,7 +19,7 @@ def check(ok, what, extra=''):
 
 SAMPLE = """(() => { const D = G3._debug, b = S.boat, T = D.trk;
   return {st:b.status, port:b.port || null, x:D.bv.px, z:D.bv.pz, hd:D.bv.cog, spd:D.bv.spd, sim:[b.pos.x * 1000, b.pos.y * 1000], mo:D.MO.phase,
-    trk:T ? {s:T.s, v:T.v, end:T.end, done:T.done, n:T.P.length, P:T.P} : null, t:performance.now()}; })()"""
+    trk:T ? {s:T.s, v:T.v, end:T.end, done:T.done, n:T.P.length, P:T.P} : null, t:performance.now(), wall:(b.dyn || {}).wall || 0}; })()"""
 
 
 def seg_dist(P, x, z):
@@ -33,13 +33,19 @@ def seg_dist(P, x, z):
     return best, bs
 
 
-async def follow(pg, until, n=400, dt=200):
-    """samples until until(sample) or n samples; returns the samples"""
+DIAG = """(() => { const b = S.boat, d = b.dyn || {}, pl = S.plan, D = G3._debug;
+  return {st:b.status, t:S.t, v:+(b.v || 0).toFixed(1), u:+(d.u || 0).toFixed(2), live:dynLive(), on:DYN.on, hold:DYN.hold, debt:+DYN.debt.toFixed(1), ready:simAreaReady(), cl:CATCH_LEFT, tabw:!!TAB.wait, tabh:!!TAB.held,
+    replan:!!(pl && pl.replan), idx:pl ? pl.idx : null, n:pl ? pl.wps.length : null, line:!!DYN.line, mo:D.MO.phase, trkv:D.trk ? +D.trk.v.toFixed(1) : null, spd:+D.bv.spd.toFixed(1), log:S.log.slice(-2).map(l => l.no || l.text || '').join(' | ').slice(-100)}; })()"""
+
+
+async def follow(pg, until, n=400, dt=200, diag=0):
+    """samples until until(sample) or n samples; returns the samples (diag: print the simulation's state every so many samples)"""
     out = []
-    for _ in range(n):
+    for i in range(n):
         await pg.wait_for_timeout(dt)
         s = await pg.evaluate(SAMPLE); out.append(s)
         if until(s): break
+        if diag and (i + 1) % diag == 0: print('  diag %d:' % (i + 1), json.dumps(await pg.evaluate(DIAG), ensure_ascii=False))
     return out
 
 
@@ -94,21 +100,29 @@ async def main():
         sea = await pg.evaluate("""async (rb) => { const o = portById(rb).p; let best = null;
           for (let k = 0; k < 24; k++){ const a = k / 24 * 2 * Math.PI, q = {x:o.x + Math.sin(a) * 1.6, y:o.y - Math.cos(a) * 1.6}; if (isLand(q) || depthF(q) < 15) continue; const q2 = {x:o.x + Math.sin(a) * 2.4, y:o.y - Math.cos(a) * 2.4};
             if (!isLand(q2) && depthF(q2) > 15 && legClear(q, q2)){ best = {q, q2}; break; } }
-          if (!best) return null; S.draft = []; await leiaTo(best.q); S.draft.push({x:best.q2.x, y:best.q2.y}); return {n:S.draft.length, q2:[best.q2.x * 1000, best.q2.y * 1000]}; }""", RB)
+          if (!best) return null; const toasts = [], T0 = toast; toast = m => { toasts.push(String(m)); T0(m); };   // (what Autonav says when it declines)
+          S.draft = []; await leiaTo(best.q); let tries = 1;
+          // (Autonav declines while another search runs or the draft is locked; under SwiftShader's stalls that happened right after docking, and
+          // a draft of the far point alone made a route straight into land: she stopped short of it and lay «under way», 19.10.2026)
+          while (!S.draft.length && tries < 4){ await new Promise(r => setTimeout(r, 1500)); S.draft = []; await leiaTo(best.q); tries++; }
+          toast = T0; let why = null; if (!S.draft.length){ try { const rr = await leiaRoute({x:S.boat.pos.x, y:S.boat.pos.y}, best.q, rb, null); why = rr && rr.why ? rr.why : rr && rr.wps ? 'ok:' + rr.wps.length : String(rr); } catch (e){ why = 'err:' + e; } }
+          const leia = S.draft.length; S.draft.push({x:best.q2.x, y:best.q2.y}); return {n:S.draft.length, leia, tries, busy:LEIA_BUSY, edit:canEditDraft(), toasts:toasts.slice(0, 4), why, q2:[best.q2.x * 1000, best.q2.y * 1000]}; }""", RB)
         if not sea:
             check(False, 'a point at sea 1.6-2.4 km from the rorbu, for the stop and the end of a route')
         else:
+            check(sea['leia'] > 0, 'Autonav draws the way out from the rorbu to the point at sea', {k: sea[k] for k in ('n', 'leia', 'tries', 'busy', 'edit', 'toasts', 'why')})
             await pg.evaluate("(() => { doAct({dataset:{act:'start'}, disabled:false}); const g = document.getElementById('ruGo'); if (g) g.click(); })()")
             p0 = await pg.evaluate("[G3._debug.bv.px, G3._debug.bv.pz]")
-            out = await follow(pg, lambda s: s['st'] == 'sailing' and s['trk'] and s['trk']['v'] > 12 and math.hypot(s['x'] - p0[0], s['z'] - p0[1]) > 250, n=400)
+            out = await follow(pg, lambda s: s['st'] == 'sailing' and s['trk'] and s['trk']['v'] > 12 and math.hypot(s['x'] - p0[0], s['z'] - p0[1]) > 250, n=250, diag=40)
             print('part 2 under way: %d samples, %.0f s since the start, last %s' % (len(out), time.time() - T0, {k: out[-1][k] for k in ('st', 'spd')}))
             v0 = out[-1]['trk']['v'] if out[-1]['trk'] else 0
             await pg.evaluate("doAct({dataset:{act:'stop'}, disabled:false})")
             out = await follow(pg, lambda s: s['st'] == 'idle' and not s['trk'], n=300)
             print('part 2 stopped: %d samples, %.0f s since the start' % (len(out), time.time() - T0))
-            # (the slack-off is measured between samples close enough to see it; SwiftShader's frames can be several seconds apart)
-            vs = [s['spd'] for s in out]; drops = [(vs[i - 1] - vs[i]) / max(0.2, (out[i]['t'] - out[i - 1]['t']) / 1000) for i in range(1, len(vs)) if (out[i]['t'] - out[i - 1]['t']) / 1000 < 1.0]
-            await pg.wait_for_timeout(1500); fin = await pg.evaluate(SAMPLE); dsim = math.hypot(fin['x'] - fin['sim'][0], fin['z'] - fin['sim'][1])   # (the frame after the stop)
+            # (the slack-off is measured over the model's own ticks, by the wall time of the last tick in each sample: under SwiftShader the
+            # ticks come seconds apart, and two frames 0.2 s apart on either side of a 4 s tick would show that tick's whole slack-off as a jump)
+            vs = [s['spd'] for s in out]; drops = [(vs[i - 1] - vs[i]) / max(0.2, (out[i]['wall'] - out[i - 1]['wall']) / 1000) for i in range(1, len(vs)) if out[i]['wall'] > out[i - 1]['wall']]
+            await pg.wait_for_timeout(4000); fin = await pg.evaluate(SAMPLE); dsim = math.hypot(fin['x'] - fin['sim'][0], fin['z'] - fin['sim'][1])   # (the frame after the stop: SwiftShader's frames come up to four seconds apart)
             logl = await pg.evaluate("S.log.slice(-6).map(l => JSON.stringify(l)).join(' | ')")
             check(v0 > 12 and max(drops or [0]) < max(8, v0 / 3), 'Stopp underway: she slacks off gradually, not all at once' + ('' if drops else ' (frames too far apart to measure here; dyntest measures it)'), {'v0': round(v0, 1), 'worst m/s per s': round(max(drops or [0]), 1), 'secs': round((out[-1]['t'] - out[0]['t']) / 1000, 1)})
             check(fin['st'] == 'idle' and dsim < 0.5 and 'Stoppet båten' in logl, 'she stops where the simulation stops, and the log says «Stoppet båten»', {'d': round(dsim, 2), 'st': fin['st']})
@@ -116,7 +130,7 @@ async def main():
             await pg.evaluate("""(async () => { S.draft = [{x:%f / 1000, y:%f / 1000}]; doAct({dataset:{act:'start'}, disabled:false}); const g = document.getElementById('ruGo'); if (g) g.click(); })()""" % tuple(sea['q2']))
             out = await follow(pg, lambda s: s['st'] == 'idle' and not s['trk'] and math.hypot(s['x'] - sea['q2'][0], s['z'] - sea['q2'][1]) < 50, n=700)
             print('part 3: %d samples, %.0f s since the start' % (len(out), time.time() - T0))
-            await pg.wait_for_timeout(1500); out.append(await pg.evaluate(SAMPLE))   # (the frame after the stop)
+            await pg.wait_for_timeout(4000); out.append(await pg.evaluate(SAMPLE))   # (the frame after the stop: SwiftShader's frames come up to four seconds apart)
             ds = [math.hypot(s['x'] - sea['q2'][0], s['z'] - sea['q2'][1]) for s in out]
             near = [d for d in ds if d < 120]; rise = max([near[i] - near[i - 1] for i in range(1, len(near))] or [0])
             check(ds[-1] < 0.3 and rise < 0.2, 'at the end of the route she stops exactly on the last waypoint, without running past and coming back', {'d': round(ds[-1], 2), 'rise': round(rise, 2)})
