@@ -449,6 +449,7 @@ function vesselStep(H){
   if (b.status === 'sailing'){ if (!helmOn()){ const p0 = b.pos; sail(H, W, hs); if (meAboard()) tatAdd('nm', dist(p0, b.pos) / NM); } }   // by hand she moves every tick (helmStep)
   else if (b.status === 'fishing') fish(H, W, hs);
   else b.v = 0;
+  if (typeof lieDrift === 'function') lieDrift(H);   // with no way on she drifts with the wind and the sea (Fysikk 2, 16b-dyn.js)
   if (b.anch) anchorTick(H, W, hs);   // the anchor holds or drags (06e-anchor.js)
   risk(W, hs);
 }

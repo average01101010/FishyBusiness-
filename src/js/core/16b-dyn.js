@@ -182,6 +182,105 @@ function dynEnv(b, d, cal, H, dtG = 0){
   const U = windAt(H, p), a = (windDir(H, p) - g + 180) * Math.PI / 180; E.wE = U * Math.sin(a); E.wN = U * Math.cos(a);
   DYN.env = E; return E;
 }
+// ---- contact: the hull against the piers, the breakwaters and the harbour units' quays (Fysikk 2) ----
+// Seven points round her waterline (the stem, the shoulders, the middle and the quarters, both sides) are tested against the boxes
+// of the piers, breakwaters and quay decks (07-harbours.js PIERBOX) and the harbour units' blocks. A point inside is put out again
+// along the nearest face, and the hull gets the impulse a fendered hull gets: the speed into the face is turned back with a fifth of
+// it (fenders and rubbing strakes take the rest), with a little friction along it, as a rigid body with her added masses, so a bow
+// that touches swings the stern in. The energy of the blow (half the effective mass times the speed into the face squared) is kept
+// for the damage of Fysikk 3 (b.hits); under a knot the fenders take it and nothing is said. Land itself is the minute step's and the
+// helm's as before (over 3 knots she runs aground, slower she stops against it).
+const DYN_HULL = [[0.5, 0], [0.3, 0.5], [0.3, -0.5], [0, 0.5], [0, -0.5], [-0.45, 0.5], [-0.45, -0.5]];   // fractions of L and B
+function dynObsNear(X, Y, R){
+  const boxes = [], units = [];
+  for (const q of PIERBOX) if (Math.abs(q.x - X) < q.l + q.w + R && Math.abs(q.z - Y) < q.l + q.w + R) boxes.push(q);
+  for (const U of UNITA){ const g = ugeo(U); if (Math.hypot(U.o[0] - X, U.o[1] - Y) < g.E + g.B + R) units.push(U); }
+  return {boxes, units};
+}
+// where a point (x east, z south, metres) is inside an obstacle: how deep, and the way out (east, north)
+function dynInside(O, x, z){
+  let best = null;
+  for (const q of O.boxes){
+    const ax = Math.sin(q.ang), az = Math.cos(q.ang), nx = Math.cos(q.ang), nz = -Math.sin(q.ang), dx = x - q.x, dz = z - q.z, sA = dx * ax + dz * az, sN = dx * nx + dz * nz;
+    const pA = q.l / 2 - Math.abs(sA), pN = q.w / 2 - Math.abs(sN); if (pA <= 0 || pN <= 0) continue;
+    const o = pA < pN ? {d:pA, ox:ax * Math.sign(sA), oz:az * Math.sign(sA)} : {d:pN, ox:nx * Math.sign(sN), oz:nz * Math.sign(sN)};
+    if (!best || o.d < best.d) best = {d:o.d, e:o.ox, n:-o.oz, k:q.bw ? 'molo' : 'brygge'};
+  }
+  for (const U of O.units){ const [lx, lz] = unitL(U, x, z), g = ugeo(U); if (Math.abs(lx) <= g.E && lz <= 0 && lz >= -g.B){ const o = {d:-lz, e:U.n[0], n:-U.n[1], k:'kai'}; if (!best || o.d < best.d) best = o; } }
+  return best;
+}
+function dynContact(b, d, P, O){
+  if (!O || (!O.boxes.length && !O.units.length)) return null;
+  const c = Math.cos(d.psi), sn = Math.sin(d.psi); let hit = null;
+  for (const [fx, fy] of DYN_HULL){
+    const xc = fx * P.L, yc = fy * P.B, X = d.X + xc * sn + yc * c, Z = d.Y - (xc * c - yc * sn), I = dynInside(O, X, Z); if (!I) continue;
+    // the way out in her own frame, the point's velocity into it
+    const nu = I.e * sn + I.n * c, nv = I.e * c - I.n * sn, vpu = d.u - d.r * yc, vpv = d.v + d.r * xc, vn = vpu * nu + vpv * nv, arm = xc * nv - yc * nu;
+    d.X += I.e * (I.d + 0.02); d.Y -= I.n * (I.d + 0.02);
+    if (vn >= 0) continue;
+    const den = nu * nu / P.mx + nv * nv / P.my + arm * arm / P.Iz, J = -(1 + 0.2) * vn / den;
+    d.u += J * nu / P.mx; d.v += J * nv / P.my; d.r += J * arm / P.Iz;
+    // a little friction along the face
+    const tu = -nv, tv = nu, vt = (vpu * tu + vpv * tv), Jt = clamp(-vt / (tu * tu / P.mx + tv * tv / P.my + (xc * tv - yc * tu) ** 2 / P.Iz), -0.3 * J, 0.3 * J);
+    d.u += Jt * tu / P.mx; d.v += Jt * tv / P.my; d.r += Jt * (xc * tv - yc * tu) / P.Iz;
+    const E = 0.5 * vn * vn / den; if (!hit || E > hit.E) hit = {E, kn:-vn / KN_MS, k:I.k};
+  }
+  if (hit){
+    const last = b.hits && b.hits[b.hits.length - 1], fresh = !last || S.t - last.t > 1 || hit.kn > last.kn + 0.5;
+    if (fresh){ b.hits = (b.hits || []).concat([{t:S.t, E:Math.round(hit.E), kn:+hit.kn.toFixed(1), k:hit.k}]).slice(-20);
+      if (hit.kn >= 1){ const what = {kai:['kaia', 'the quay'], brygge:['brygga', 'the pier'], molo:['moloen', 'the breakwater']}[hit.k], kn = (Math.round(hit.kn * 10) / 10).toFixed(1);
+        const no = (hit.kn >= 3 ? 'Hardt støt mot ' : 'Smell i ') + what[0] + ', ' + kn.replace('.', ',') + ' knop.', en = (hit.kn >= 3 ? 'A hard blow against ' : 'A knock against ') + what[1] + ', ' + kn + ' knots.';
+        log(no, en, 'nav'); if (typeof toast === 'function') toast(S.lang === 'en' ? en : no); } }
+  }
+  return hit;
+}
+// ---- with no way on: she drifts (Fysikk 2) ----
+// Lying still at sea (fishing, lying, out of fuel; not at anchor, not on the gear, not by the hand on the helm) she falls off across
+// the wind and drifts with it and the waves, as the model has her with nothing on (dynInt): the speed where the push of the wind on
+// her side and the waves' drift meet the water's hold on her (the linear hull at a crawl and the cross-flow drag), solved here for the
+// minute step, so the drift is the same with the game closed. 2-6 % of the wind for the fishing boats (a 15 m fishing vessel drifted at
+// 4.0 % of the wind, 30 +/- 15 degrees off downwind, in the US Coast Guard's field test off Florida, 1997). Returns m/s east and north.
+function dynDrift(type, p, H){
+  const cal = dynCal(type), P = cal.P, g = gridGamma(p), U = windAt(H, p), a = (windDir(H, p) - g + 180) * Math.PI / 180; let q = null;
+  try { q = seaPartsNear(p, H); } catch (e){}
+  let fe = 0, fn = 0;
+  if (q) for (const [h0, tp, from] of [[q.w, q.tp, q.dir], [q.sw, q.swTp, q.swDir]]){ if (!(h0 > 0.02) || !(tp > 0.3)) continue;
+    const k = (2 * Math.PI / tp) ** 2 / 9.81, Fd = 0.5 * 1025 * 9.81 * (h0 * h0 / 16) * P.L * Math.tanh(1.3 * k * P.T) ** 2, w = (from - g + 180) * Math.PI / 180;
+    fe += Fd * Math.sin(w); fn += Fd * Math.cos(w); }
+  // across her (she lies across the wind): the waves' drift along the wind, and what runs along her hull she does not drift with
+  const Fw = fe * Math.sin(a) + fn * Math.cos(a), hold = v => -P.Yv * Math.max(0, 0.04 * P.umax) * v + 0.5 * 1025 * 0.5 * P.L * P.Tm * v * v;
+  const push = v => 0.5 * DYN_AIR * 0.9 * P.AL * Math.max(0, U - v) ** 2 + Math.max(0, Fw);
+  let lo = 0, hi = Math.max(0.05, 0.2 * U + 1); for (let i = 0; i < 40; i++){ const m = (lo + hi) / 2; if (push(m) > hold(m)) lo = m; else hi = m; }
+  const v = (lo + hi) / 2; return {e:v * Math.sin(a), n:v * Math.cos(a), v, a};
+}
+// the minute step: move her by the last minute's drift (b.drv, km a game minute, which the chart plotter and the 3D view draw her
+// along), and work out the next: across the wind, held off the land by the engine (she never drifts ashore with someone awake aboard;
+// asleep and alone is 15-energy.js sleepDrift), and jigging, driven back up over the ground she started on when she has drifted 400 m
+// off it, as jiggers do (once a stop it is said)
+const LIE = {up:0.4, land:0.06};
+function lieDrift(H){
+  const b = S.boat, dv = b.drv, ok = ['fishing', 'idle', 'adrift'].includes(b.status) && !b.anch && !b.port && !b.gop && !helmOn() && !(typeof tutOn === 'function' && tutOn());
+  b.drv = null;
+  if (!ok){ b.driftHome = null; return; }
+  if (dv && dv.t === S.t - 1 && dv.st === b.status) b.pos = {x:b.pos.x + dv.x, y:b.pos.y + dv.y};
+  if (!b.driftHome || b.driftHome.st !== b.status) b.driftHome = {x:b.pos.x, y:b.pos.y, st:b.status, said:false};
+  let D; try { D = dynDrift(b.type, b.pos, H); } catch (e){ return; }
+  // she falls off across the wind (the nearer side), over a few minutes
+  const across = [D.a + Math.PI / 2, D.a - Math.PI / 2].reduce((m, c) => Math.abs(dynAng(b.heading || 0, c)) < Math.abs(dynAng(b.heading || 0, m)) ? c : m);
+  b.heading = ((b.heading || 0) + dynAng(b.heading || 0, across) * (1 - Math.exp(-1 / 3)) + 2 * Math.PI) % (2 * Math.PI);
+  const home = b.driftHome;
+  // jigging: back up over the ground (at five knots, the minute it takes)
+  if (b.status === 'fishing' && dist(b.pos, home) > LIE.up){
+    const d = dist(b.pos, home), st = Math.min(d, 5 * NM / 60);
+    if (!home.said){ home.said = true; log('Dere har drevet av feltet. Kjører opp igjen og driver over det på nytt.', 'You have drifted off the ground. Running back up to drift over it again.', 'nav'); }
+    b.drv = {x:(home.x - b.pos.x) / d * st, y:(home.y - b.pos.y) / d * st, t:S.t, st:b.status, up:true}; return;
+  }
+  const km = D.v * 60 / 1000, step = {x:D.e * 60 / 1000, y:-D.n * 60 / 1000}, to = {x:b.pos.x + step.x, y:b.pos.y + step.y};
+  if (km < 1e-4) return;
+  let held = true; try { held = isLand(to) || !!groundCheck(b.pos, to) || coastDist(to) < LIE.land; } catch (e){}
+  if (held){ if (!home.held){ home.held = true; log(b.status === 'adrift' ? 'Båten driver mot land og blir liggende der.' : 'Båten driver mot land. Motoren holder henne unna.', b.status === 'adrift' ? 'The boat drifts in toward the land and lies there.' : 'The boat drifts toward the land. The engine holds her off.', 'nav'); } return; }
+  b.drv = {x:step.x, y:step.y, t:S.t, st:b.status};
+}
 // ---- the state, in step with the boat the rest of the game reads ----
 function dynState(b){
   let d = b.dyn; const fresh = !d;
@@ -245,8 +344,8 @@ function dynMinute(H, W){
 function dynHelm(d, dtG){
   const b = S.boat, h = S.helm, cal = dynCal(b.type), P = cal.P, H = S.t / 60;
   if (Math.abs(h.v * KN_MS - d.u) > 0.6) d.u = h.v * KN_MS;   // set from outside (a test, «Fortøy» undone): the model takes it
-  const E = dynEnv(b, d, cal, H, dtG), capF = E.capF, X0 = d.X, Y0 = d.Y;
-  for (let left = dtG; left > 1e-6;){ const s = Math.min(DYN_H, left); left -= s; dynInt(P, d, h.thr, h.rud, s, capF, E); dynMove(d, s); }
+  const E = dynEnv(b, d, cal, H, dtG), capF = E.capF, X0 = d.X, Y0 = d.Y, O = dynObsNear(d.X, d.Y, P.L + Math.abs(d.u) * dtG + 20);
+  for (let left = dtG; left > 1e-6;){ const s = Math.min(DYN_H, left); left -= s; dynInt(P, d, h.thr, h.rud, s, capF, E); dynMove(d, s); dynContact(b, d, P, O); }
   if (!h.thr && Math.abs(d.u) < 0.04){ d.u = 0; }
   // land: over 3 knots she runs aground on it, slower she comes to a stop against it (every 10 m, then the thin breakwaters, then
   // the depth under her)
@@ -397,6 +496,9 @@ function dynAuto(d, dtG){
     const chi = Math.abs(d.u) > 0.3 ? d.psi + Math.atan2(d.v, d.u) : d.psi, chiD = hdP - Math.atan(ye / Math.max(1.5 * Rt, L));
     const rud = clamp((Kp * dynAng(chi, chiD) - Kd * d.r) / DYN_RUD, -1, 1);
     dynInt(P, d, thr, rud, h, capF, E); dynMove(d, h);
+    // (a line drawn through a pier: she touches it on her fenders and is put off it; not in the last lengths into a harbour, which the
+    // quay's lines take, 3D moorStep)
+    if (!(stopW && stopW.port && ds < 4 * L)){ if (!T.obs || T.obsAt !== Math.round(T.s / 50)){ T.obs = dynObsNear(d.X, d.Y, 80 + P.L); T.obsAt = Math.round(T.s / 50); } dynContact(b, d, P, T.obs); }
     // the last creep on to a stop is the model's, held so she never runs past it
     if (ds < 4 && d.u > vCmd + 0.02) d.u = Math.max(vCmd + 0.02, d.u - cal.aC * h);
   }

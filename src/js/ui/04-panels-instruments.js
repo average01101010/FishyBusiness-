@@ -91,6 +91,8 @@ function livePose(frac){
   if (dynLive()) return dynLivePose(frac);   // the manoeuvring model's own pose, a little on from its last tick (core/16b-dyn.js)
   if (helmOn()) return helmPose(frac);
   if (b.status === 'tow'){ const q = towPose(frac); if (q && q.b) return {p:q.b.p, hd:q.b.hd, frac}; }
+  // lying still, she drifts along the minute's drift (core/16b-dyn.js lieDrift)
+  if (b.drv && b.drv.st === b.status && b.drv.t === S.t) return {p:{x:b.pos.x + b.drv.x * frac, y:b.pos.y + b.drv.y * frac}, hd:b.drv.up ? Math.atan2(b.drv.x, -b.drv.y) : b.heading, frac, idx};
   if (b.status === 'sailing' && S.plan){
     let left = sailV(S.t / 60) * NM / 60 * frac;
     while (left > 1e-9 && idx < S.plan.wps.length){

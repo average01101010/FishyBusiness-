@@ -144,6 +144,41 @@ async def main():
         check(e['walk'] > 2, 'half astern the screw walks the stern to port: the bow goes to starboard', {'deg in 20 s': e['walk']})
         pr = {q['type']: q for q in e['prop']}
         check(pr['trebat']['out'] > 3 and pr['trebat']['kT'] < 0.99 and pr['bunntral']['out'] < 0.5, 'in a gale\'s sea the small boat\'s propeller comes out of the water now and then (less thrust); the trawler\'s does not', e['prop'])
+        # 5. lying still she drifts (lieDrift): across the wind, at a few per cent of it, jigging run back up over the ground, and held
+        # off the land by the engine; then the hull against the quay of Senjahopen by hand (dynContact)
+        e = await pg.evaluate("""async () => { const b = S.boat, c0 = P(69.30, 16.70); S.tut = 0; await mapNeed(c0, 9); b.type = 'sjark'; applyVessel(); b.port = null; b.anch = null; S.plan = null; S.helm = null; b.dyn = null;
+          const open = c => { for (let r = 0.3; r <= 1.6; r += 0.3) for (let k = 0; k < 12; k++){ const a = k / 12 * 2 * Math.PI; if (isLand({x:c.x + Math.sin(a) * r, y:c.y - Math.cos(a) * r})) return false; } return !isLand(c); };
+          let c = null; for (let r = 0; r <= 8 && !c; r += 0.5) for (let k = 0; k < 16 && !c; k++){ const a = k / 16 * 2 * Math.PI, q = {x:c0.x + Math.sin(a) * r, y:c0.y - Math.cos(a) * r}; if (open(q)) c = q; }
+          WX_FORCE = {w:12, d:270}; const g = gridGamma(c), out = {};
+          b.status = 'idle'; b.pos = {x:c.x, y:c.y}; b.heading = (270 - g) * Math.PI / 180 + 0.6; b.drv = null; b.driftHome = null;   // (her bow 35 degrees off the wind)
+          for (let i = 0; i < 20; i++) step();
+          const dm = dist(c, b.pos), to = Math.atan2(b.pos.x - c.x, -(b.pos.y - c.y)), down = (90 - g) * Math.PI / 180;
+          out.lie = {kn:+(dm * 1000 / 1200 / KN_MS).toFixed(2), pct:+(100 * dm * 1000 / 1200 / 12).toFixed(1), off:+(Math.abs(dynAng(to, down)) * 180 / Math.PI).toFixed(0), across:+Math.abs(Math.sin(dynAng(b.heading, (270 - g) * Math.PI / 180))).toFixed(2)};
+          // jigging: never more than the 400 m and a minute's drift off the ground she started on
+          b.status = 'fishing'; b.fishUntil = S.t + 600; b.driftHome = null; const home = {...b.pos}; let far = 0, ups = 0;
+          for (let i = 0; i < 60; i++){ step(); far = Math.max(far, dist(home, b.pos)); if (b.drv && b.drv.up) ups++; }
+          out.jig = {far:Math.round(far * 1000), ups, said:S.log.slice(-12).some(l => /Kjører opp igjen/.test(l.no || ''))};
+          // toward land: from the open spot east until the land is 0.2 km off, the wind blowing her onto it
+          b.status = 'idle'; b.fishUntil = null; let q = {x:c.x, y:c.y}; for (let i = 0; i < 200 && coastDist(q) > 0.2; i++) q = {x:q.x + 0.05, y:q.y};
+          b.pos = {...q}; b.drv = null; b.driftHome = null; let land = false, minC = 9;
+          for (let i = 0; i < 40; i++){ step(); if (isLand(b.pos)) land = true; minC = Math.min(minC, coastDist(b.pos)); }
+          out.land = {start:+coastDist(q).toFixed(3), min:+minC.toFixed(3), land, said:S.log.slice(-15).some(l => /holder henne unna/.test(l.no || ''))};
+          WX_FORCE = null;
+          // by hand into the quay of Senjahopen at about 6 knots
+          const U = UNITS['senjahopen']; await mapNeed(portById('senjahopen').p, 9); b.status = 'idle'; b.drv = null; b.dyn = null;
+          b.pos = {x:(U.o[0] + U.n[0] * 40) / 1000, y:(U.o[1] + U.n[1] * 40) / 1000}; b.heading = Math.atan2(-U.n[0], U.n[1]); b.v = 0; S.settings.manual = true; helmTake(); S.helm.thr = 0.35; S.helm.rud = 0;
+          const h0 = (b.hits || []).length; let minZ = 99;
+          for (let i = 0; i < 40; i++){ helmStep(0.2); const [lx, lz] = unitL(U, b.pos.x * 1000, b.pos.y * 1000); minZ = Math.min(minZ, lz); }
+          S.helm.thr = -0.3; for (let i = 0; i < 25; i++) helmStep(0.2); const [lx2, lz2] = unitL(U, b.pos.x * 1000, b.pos.y * 1000);
+          out.quay = {hits:(b.hits || []).slice(h0), minZ:+minZ.toFixed(1), half:+(VESSELS.sjark.len / 2).toFixed(1), backed:+lz2.toFixed(1), said:S.log.slice(-5).some(l => /støt mot kaia|Smell i kaia/.test(l.no || ''))};
+          helmOff(); b.type = 'trebat'; applyVessel(); return out; }""")
+        lie, jig, land, quay = e['lie'], e['jig'], e['land'], e['quay']
+        check(1.5 <= lie['pct'] <= 7 and lie['off'] < 30 and lie['across'] > 0.8, 'lying still (the sjark, 12 m/s) she falls off across the wind and drifts downwind at 1.5-7 % of it', lie)
+        check(jig['far'] < 400 + 60 and jig['ups'] > 0 and jig['said'], 'jigging she is run back up over the ground when she has drifted 400 m off it, and it is said', jig)
+        check(not land['land'] and land['min'] >= 0.05 and land['said'], 'drifting onto the land the engine holds her off it (60 m), and it is said', land)
+        hq = quay['hits']
+        check(len(hq) > 0 and hq[0]['kn'] > 3 and quay['minZ'] > quay['half'] - 1.5 and quay['said'], 'by hand into the quay at about 6 knots: the blow is kept with its energy, she does not go into the quay, and it is said', quay)
+        check(quay['backed'] > quay['minZ'] + 2, 'astern she backs off the quay again', {'from': quay['minZ'], 'to': quay['backed']})
         print('errors:', errs[:5])
         await br.close()
 

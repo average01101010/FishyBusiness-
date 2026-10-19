@@ -464,6 +464,11 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p125', '19.10.2026', 'Vinden og sjøen tar i båten', 'The wind and the sea take hold of the boat', [
+       ['Båten kjenner vinden og sjøen: hun holder farten best med sjøen bakfra og dårligst rett mot den, driver litt av i sidevind, og propellen kan komme opp av vannet i grov sjø. Går du akterover, går hekken til babord.', 'The boat feels the wind and the sea: she holds her speed best with the sea astern and worst straight into it, makes a little leeway in a side wind, and the propeller can come out of the water in a heavy sea. Going astern, the stern walks to port.'],
+       ['Ligger du stille, driver hun med vinden og legger seg tvers av den. Jukser du, kjører skipperen opp igjen når dere har drevet av feltet, og motoren holder henne unna land.', 'Lying still, she drifts with the wind and lies across it. Jigging, the skipper runs back up when you have drifted off the ground, and the engine holds her off the land.'],
+       ['Kjører du inn i kaia eller brygga, tar fenderne imot og hun spretter av. I 3D ruller hun mer når hun ligger tvers av sjøen, og den korte sjøen møter skroget i riktig takt.', 'Run into the quay or a pier, and the fenders take it and she bounces off. In 3D she rolls more lying beam-on to the sea, and the short sea meets the hull at the right pace.'],
+       ['De raske båtene svinger stramt også i havnefart.', 'The fast boats turn tightly at harbour speed too.']]],
     ['p124', '19.10.2026', 'Oppdragene betales for jobben', 'Missions are paid for the job', [
        ['Belønningen settes etter hva båten din tjener på vanlig fiske, og prisen du ser på tavla, er prisen du får. Nye oppdrag kommer etter hvert, høyst fire på tavla, og du kan ha to om gangen. Det som ligger på veien din, står først, med omveien det koster.', 'The reward is set by what your boat earns at ordinary fishing, and the price you see on the board is the price you get. New missions come as time goes, at most four on the board, and you can have two at a time. What lies on your way comes first, with the detour it costs.']]],
     ['p123', '19.10.2026', 'Båten beveger seg som en båt', 'The boat moves like a boat', [

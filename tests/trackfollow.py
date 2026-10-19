@@ -19,7 +19,7 @@ def check(ok, what, extra=''):
 
 SAMPLE = """(() => { const D = G3._debug, b = S.boat, T = D.trk;
   return {st:b.status, port:b.port || null, x:D.bv.px, z:D.bv.pz, hd:D.bv.cog, spd:D.bv.spd, sim:[b.pos.x * 1000, b.pos.y * 1000], mo:D.MO.phase,
-    trk:T ? {s:T.s, v:T.v, end:T.end, done:T.done, n:T.P.length, P:T.P} : null, t:performance.now(), wall:(b.dyn || {}).wall || 0}; })()"""
+    trk:T ? {s:T.s, v:T.v, end:T.end, done:T.done, n:T.P.length, P:T.P} : null, t:performance.now(), wall:(b.dyn || {}).wall || 0, live:(q => [q.p.x * 1000, q.p.y * 1000])(livePose()), drv:!!b.drv}; })()"""
 
 
 def seg_dist(P, x, z):
@@ -97,7 +97,9 @@ async def main():
         after = inb is not None and (out[inb]['t'] - out[dock]['t']) / 1000
         check(inb is not None and after < 60, 'she is in at the berth within a minute of the simulation docking', {'after': after and round(after, 1)})
         # 2. out to sea, Stopp underway: slack off, stop where the simulation stops
-        sea = await pg.evaluate("""async (rb) => { const o = portById(rb).p; let best = null;
+        # (in a calm from here: lying still she drifts with the wind (Fysikk 2, core lieDrift), which is dyntest's to measure, and the
+        # stops here are the follower's)
+        sea = await pg.evaluate("""async (rb) => { WX_FORCE = {w:0.3, d:270}; const o = portById(rb).p; let best = null;
           for (let k = 0; k < 24; k++){ const a = k / 24 * 2 * Math.PI, q = {x:o.x + Math.sin(a) * 1.6, y:o.y - Math.cos(a) * 1.6}; if (isLand(q) || depthF(q) < 15) continue; const q2 = {x:o.x + Math.sin(a) * 2.4, y:o.y - Math.cos(a) * 2.4};
             if (!isLand(q2) && depthF(q2) > 15 && legClear(q, q2)){ best = {q, q2}; break; } }
           if (!best) return null; const toasts = [], T0 = toast; toast = m => { toasts.push(String(m)); T0(m); };   // (what Autonav says when it declines)
@@ -124,10 +126,10 @@ async def main():
             # (the slack-off is measured over the model's own ticks, by the wall time of the last tick in each sample: under SwiftShader the
             # ticks come seconds apart, and two frames 0.2 s apart on either side of a 4 s tick would show that tick's whole slack-off as a jump)
             vs = [s['spd'] for s in out]; drops = [(vs[i - 1] - vs[i]) / max(0.2, (out[i]['wall'] - out[i - 1]['wall']) / 1000) for i in range(1, len(vs)) if out[i]['wall'] > out[i - 1]['wall']]
-            await pg.wait_for_timeout(4000); fin = await pg.evaluate(SAMPLE); dsim = math.hypot(fin['x'] - fin['sim'][0], fin['z'] - fin['sim'][1])   # (the frame after the stop: SwiftShader's frames come up to four seconds apart)
+            await pg.wait_for_timeout(4000); fin = await pg.evaluate(SAMPLE); dsim = math.hypot(fin['x'] - fin['live'][0], fin['z'] - fin['live'][1])   # (the frame after the stop: SwiftShader's frames come up to four seconds apart; against the pose the plotter draws, as she drifts once she lies still, Fysikk 2)
             logl = await pg.evaluate("S.log.slice(-6).map(l => JSON.stringify(l)).join(' | ')")
             check(v0 > 12 and max(drops or [0]) < max(8, v0 / 3), 'Stopp underway: she slacks off gradually, not all at once' + ('' if drops else ' (frames too far apart to measure here; dyntest measures it)'), {'v0': round(v0, 1), 'worst m/s per s': round(max(drops or [0]), 1), 'secs': round((out[-1]['t'] - out[0]['t']) / 1000, 1)})
-            check(fin['st'] == 'idle' and dsim < 0.5 and 'Stoppet båten' in logl, 'she stops where the simulation stops, and the log says «Stoppet båten»', {'d': round(dsim, 2), 'st': fin['st']})
+            check(fin['st'] == 'idle' and dsim < 0.5 and 'Stoppet båten' in logl, 'she stops where the simulation stops, and the log says «Stoppet båten»', {'d': round(dsim, 2), 'st': fin['st'], 'drifting': fin['drv']})
             # 3. on to the point at sea: exactly on the last waypoint, never past it
             await pg.evaluate("""(async () => { S.draft = [{x:%f / 1000, y:%f / 1000}]; doAct({dataset:{act:'start'}, disabled:false}); const g = document.getElementById('ruGo'); if (g) g.click(); })()""" % tuple(sea['q2']))
             out = await follow(pg, lambda s: s['st'] == 'idle' and not s['trk'] and math.hypot(s['x'] - sea['q2'][0], s['z'] - sea['q2'][1]) < 50, n=700)

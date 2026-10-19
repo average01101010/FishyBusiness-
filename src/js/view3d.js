@@ -3133,21 +3133,21 @@ const G3 = (() => {
   }
   // the sea's height at (x, z) as the wave patch draws it: the same waves with the local heights, groups, fading and the Gerstner shift
   // undone (two steps back to the rest point that moved there). seaHFast skips the undoing (the wake, which lies across the waves anyway).
-  const SEA_D = [0, 0, 0];
+  const SEA_D = [0, 0, 0, 0];
   function seaDisp(x, z, t, S, fade){
-    let dx = 0, dy = 0, dz = 0; const ren = 1 / Math.sqrt(Math.max(1 - 2 * S[2] * (1 - S[2]) * (1 - WV.dot), 0.05)), cell = 2 * HALF / NP;
+    let dx = 0, dy = 0, dz = 0, dn = 0; const ren = 1 / Math.sqrt(Math.max(1 - 2 * S[2] * (1 - S[2]) * (1 - WV.dot), 0.05)), cell = 2 * HALF / NP;
     for (let i = 0; i < WV.list.length; i++){
       const c = WV.list[i], att = sstep(2.5, 5, 2 * Math.PI / (c.k * cell)); if (att <= 0) continue;
       const am0 = c.swell ? S[1] * c.wo : S[0] * (S[2] * c.wo + (1 - S[2]) * c.wy) * ren, Q = c.swell ? 0.3 : Math.min(WV.steep / (10 * c.k * am0 + 1e-4), 1);
       const grp = 0.62 + 0.38 * Math.sin((x * c.Dx + z * c.Dz) * c.k * 0.083 + (x * c.Dz - z * c.Dx) * c.k * 0.041 - c.om * t * 0.5 + i * 2.59 - NF.gp[i]);
-      const am = am0 * grp * att * fade, f = c.k * (c.Dx * x + c.Dz * z) - c.om * t + c.ph - NF.ph[i], co = Math.cos(f);
-      dx += Q * am * c.Dx * co; dz += Q * am * c.Dz * co; dy += am * Math.sin(f);
+      const am = am0 * grp * att * fade, f = c.k * (c.Dx * x + c.Dz * z) - c.om * t + c.ph - NF.ph[i], co = Math.cos(f), h = am * Math.sin(f);
+      dx += Q * am * c.Dx * co; dz += Q * am * c.Dz * co; dy += h; if (i >= 4 && i < 10) dn += h;
     }
-    SEA_D[0] = dx; SEA_D[1] = dy; SEA_D[2] = dz; return SEA_D;
+    SEA_D[0] = dx; SEA_D[1] = dy; SEA_D[2] = dz; SEA_D[3] = dn; return SEA_D;   // (dn: the short wind waves that ride with her, the near field)
   }
   function seaFade(x, z){ const st = 2 * HALF / NP, ox = Math.round(bv.x / st) * st, oz = Math.round(bv.z / st) * st; return 1 - sstep(0.6, 1, Math.max(Math.abs(x - ox), Math.abs(z - oz)) / HALF); }
   function seaH(x, z, t){
-    const tide = env.tide || 0, fade = seaFade(x, z); if (fade <= 0 || !WV.list.length) return tide;
+    const tide = env.tide || 0, fade = seaFade(x, z); if (fade <= 0 || !WV.list.length){ SEA_D[3] = 0; return tide; }
     const S = ssAt(x, z); let px = x, pz = z;
     for (let it = 0; it < 2; it++){ const D = seaDisp(px, pz, t, S, fade); px = x - D[0]; pz = z - D[2]; }
     return tide + seaDisp(px, pz, t, S, fade)[1];
@@ -3417,7 +3417,7 @@ const G3 = (() => {
       // under a route, and until she has come in to where it ends: along the line the chart plotter draws (trkStep)
       // (with the time that has really gone, up to 30 s: a slow frame or a stall must not leave her behind the simulation for good)
       if (dynLive()) dynFollow(Math.min(30, rdt || dt));   // the manoeuvring model has her (core/16b-dyn.js); with the time that has really gone, so a slow frame never leaves her behind
-      else if (!bp && dynRest() && !S.plan && !helmOn()) dynFollow(Math.min(30, rdt || dt));   // the model has just stopped her: stand where it left her
+      else if (!bp && dynRest() && !S.plan && !helmOn() && !b.drv) dynFollow(Math.min(30, rdt || dt));   // the model has just stopped her: stand where it left her (until she drifts: core lieDrift)
       else if (trkOn()) trkStep(Math.min(30, rdt || dt), pr);
       else if (bp) moorStep(dt, bp, Math.min(30, rdt || dt));   // (the way in and the lines on the time that has really gone: a slow frame never holds her off the quay)
       else if (helmOn()){
@@ -3450,14 +3450,16 @@ const G3 = (() => {
     // follows them; a sea that meets her roll period builds the roll up (resonance), and a beam wind heels her.
     if (!bv.st || t - (bv.stT || 0) > 1 || t < (bv.stT || 0)){ bv.st = stabOf(b.type || 'skiff'); bv.stT = t; bv.heel = -windHeel(bv.st, env.wind || 0) * Math.sign(Math.sin((windDir(S.t / 60) * DEG + Math.PI) - bv.head) || 1); }   // to leeward
     const pl = G.pl, rl = G.rl, Ls = Math.max(pl * 2, (G.stern - G.bow) * 0.8 || 0), Bs = Math.max(rl * 2, (G.beam || 2.4) * 0.8);
-    let hm = 0, sl = 0, st = 0;
-    for (const a of [-0.5, 0, 0.5]) for (const c of [-0.5, 0, 0.5]){ const h = seaH(bv.x + fx * a * Ls + rx * c * Bs, bv.z + fz * a * Ls + rz * c * Bs, t); hm += h; sl += h * a; st += h * c; }
-    hm /= 9; sl /= 1.5 * Ls; st /= 1.5 * Bs;
+    // (the short wind waves that ride with her, the near field, apart: she meets those at her real speed, and they go to the hull as
+    // they are; the long waves and the swell stand in the world, where she meets them 6 times too often, and only those are smoothed)
+    let hm = 0, sl = 0, st = 0, hmN = 0, slN = 0, stN = 0;
+    for (const a of [-0.5, 0, 0.5]) for (const c of [-0.5, 0, 0.5]){ const h = seaH(bv.x + fx * a * Ls + rx * c * Bs, bv.z + fz * a * Ls + rz * c * Bs, t), hn = SEA_D[3]; hm += h; sl += h * a; st += h * c; hmN += hn; slN += hn * a; stN += hn * c; }
+    hm /= 9; sl /= 1.5 * Ls; st /= 1.5 * Bs; hmN /= 9; slN /= 1.5 * Ls; stN /= 1.5 * Bs;
     const v = b.status === 'sailing' ? bv.spd / KNV() : 0;
     const trim = 0.07 * sstep(9, 17, v) - 0.02 * sstep(3, 9, v) * (1 - sstep(9, 13, v));
     // planing hulls bank into a turn, displacement hulls heel a little outwards
     const bank = (BOAT.planing ? -0.18 : 0.06) * clamp(bv.yr, -1.2, 1.2) * sstep(4, 18, v);
-    let tp = Math.atan(sl) + trim, tr = Math.atan(st) + bank + (bv.heel || 0), ty = hm + 0.06;
+    let tp = Math.atan(sl - slN) + trim, tr = Math.atan(st - stN) + bank + (bv.heel || 0), ty = hm - hmN + 0.06;
     // on the yard's lift she is raised with the platform and lies still: no sea to rock her (liftStep)
     const lf = liftStep(dt, b);
     if (lf.off > 0 || lf.d){ ty = hm * (1 - lf.dry) + (env.tide || 0) * lf.dry + 0.06 + lf.off; tp *= 1 - lf.dry; tr *= 1 - lf.dry; if (bv.osc && lf.d) bv.y += lf.d; if (bv.fy !== undefined && lf.d) bv.fy += lf.d; }
@@ -3467,8 +3469,12 @@ const G3 = (() => {
     const tf = 0.45 * sstep(2, 14, bv.spd || 0) + 0.3 * sstep(14, 45, bv.spd || 0);
     if (!bv.osc || tf < 0.02 || bv.fy === undefined){ bv.fy = ty; bv.fp = tp; bv.fr = tr; }
     else { const k = 1 - Math.exp(-dt / tf); bv.fy += (ty - bv.fy) * k; bv.fp += (tp - bv.fp) * k; bv.fr += (tr - bv.fr) * k; ty = bv.fy; tp = bv.fp; tr = bv.fr; }
+    ty += hmN; tp += Math.atan(slN); tr += Math.atan(stN);   // (the near field's own, unsmoothed: Fysikk 2, the real encounter)
     if (!bv.osc){ bv.osc = true; bv.vy = bv.vp = bv.vr = 0; bv.y = ty; bv.pitch = tp; bv.roll = tr; }
-    const wz = 2 * Math.PI / Math.max(0.6, bv.st.Tz), wr = 2 * Math.PI / Math.max(0.8, bv.st.Tr), zz = 0.35, zr = 0.08, n = Math.ceil(dt / 0.02), h = dt / n, lim = Math.min(0.9, bv.st.deckEdge * 1.6);
+    // (the roll is damped little lying still, more with way on: the hull's lift damps it, Ikeda; 0.06 of critical at rest to 0.15 at a
+    // Froude number of 0.3, so a boat lying beam-on to the sea rolls, tilbakemelding #66)
+    const Fn = (b.status === 'sailing' ? (b.v || 0) * 0.5144 : 0) / Math.sqrt(9.81 * Math.max(3, bv.st.L || 6));
+    const wz = 2 * Math.PI / Math.max(0.6, bv.st.Tz), wr = 2 * Math.PI / Math.max(0.8, bv.st.Tr), zz = 0.35, zr = 0.06 + 0.09 * sstep(0, 0.3, Fn), n = Math.ceil(dt / 0.02), h = dt / n, lim = Math.min(0.9, bv.st.deckEdge * 1.6);
     for (let i = 0; i < n; i++){
       bv.vy += (wz * wz * (ty - bv.y) - 2 * zz * wz * bv.vy) * h; bv.y += bv.vy * h;
       bv.vp += (wz * wz * (tp - bv.pitch) - 2 * zz * wz * bv.vp) * h; bv.pitch += bv.vp * h;
