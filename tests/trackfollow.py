@@ -19,7 +19,7 @@ def check(ok, what, extra=''):
 
 SAMPLE = """(() => { const D = G3._debug, b = S.boat, T = D.trk;
   return {st:b.status, port:b.port || null, x:D.bv.px, z:D.bv.pz, hd:D.bv.cog, spd:D.bv.spd, sim:[b.pos.x * 1000, b.pos.y * 1000], mo:D.MO.phase,
-    trk:T ? {s:T.s, v:T.v, end:T.end, done:T.done, n:T.P.length, P:T.P} : null, t:performance.now(), wall:(b.dyn || {}).wall || 0, live:(q => [q.p.x * 1000, q.p.y * 1000])(livePose()), drv:!!b.drv}; })()"""
+    trk:T ? {s:T.s, v:T.v, end:T.end, done:T.done, n:T.P.length, P:T.P} : null, t:performance.now(), wall:(b.dyn || {}).wall || 0, live:(q => [q.p.x * 1000, q.p.y * 1000])(livePose()), drv:!!b.drv, stop:b.dyn ? [b.dyn.X, b.dyn.Y] : null}; })()"""
 
 
 def seg_dist(P, x, z):
@@ -137,7 +137,11 @@ async def main():
             await pg.wait_for_timeout(4000); out.append(await pg.evaluate(SAMPLE))   # (the frame after the stop: SwiftShader's frames come up to four seconds apart)
             ds = [math.hypot(s['x'] - sea['q2'][0], s['z'] - sea['q2'][1]) for s in out]
             near = [d for d in ds if d < 120]; rise = max([near[i] - near[i - 1] for i in range(1, len(near))] or [0])
-            check(ds[-1] < 0.3 and rise < 0.2, 'at the end of the route she stops exactly on the last waypoint, without running past and coming back', {'d': round(ds[-1], 2), 'rise': round(rise, 2)})
+            # (where the model stopped her, and the 3D boat where the simulation has her: lying still she drifts on from the stop, Fysikk 2,
+            # about 0.1 m a game minute in this calm, and the frame after the stop comes some minutes later; 0.36 m on 19.10.2026)
+            fin = out[-1]; dstop = math.hypot(fin['stop'][0] - sea['q2'][0], fin['stop'][1] - sea['q2'][1]) if fin['stop'] else 1e9
+            d3 = math.hypot(fin['x'] - fin['live'][0], fin['z'] - fin['live'][1])
+            check(dstop < 0.3 and d3 < 0.3 and rise < 0.2, 'at the end of the route she stops exactly on the last waypoint, without running past and coming back', {'stop': round(dstop, 2), 'd3d': round(d3, 2), 'd': round(ds[-1], 2), 'rise': round(rise, 2), 'drifting': fin['drv']})
         # 4. the chart plotter: the boat where she is between the minutes (a leg of 0.8 km at sea, or on from wherever she is)
         await pg.evaluate("(() => { if (S.boat.status !== 'sailing'){ const o = S.boat.pos; for (const a of [0, 1.57, 3.14, 4.71]){ const q = {x:o.x + Math.sin(a) * 0.8, y:o.y - Math.cos(a) * 0.8}; if (!isLand(q) && legClear(o, q)){ S.draft = [q]; break; } } doAct({dataset:{act:'start'}, disabled:false}); const g = document.getElementById('ruGo'); if (g) g.click(); } })()")
         await pg.wait_for_timeout(3000)
