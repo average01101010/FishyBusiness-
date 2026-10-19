@@ -30,7 +30,7 @@ async def run(p, hold):
         await pg.route('**/map/' + pk['file'], handler)
         await pg.evaluate("(f => mapDrop(MAPD.packs.find(p => p.file === f)))", pk['file'])
     await pg.evaluate(TRIP, R)
-    await pg.evaluate("catchUp(10 * 3600e3 / GAME_RATE)")   # ten game hours: out, two hours of fishing, home
+    await pg.evaluate("DYN.on = false; catchUp(10 * 3600e3 / GAME_RATE)")   # ten game hours: out, two hours of fishing, home (caught up as the tick does it, the manoeuvring model off)
     R0['first'] = await pg.evaluate(OUT)
     if hold:
         await pg.wait_for_timeout(1500)
