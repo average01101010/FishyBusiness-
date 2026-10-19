@@ -1457,41 +1457,71 @@ Jonas: «båtnavn eller rederiene til andre brukere må komme offentlig i avisen
 
 ### 5.1 Båter og utstyr
 
-Båtene står i `VESSELS` (`core/02-species-gear.js`). Tallene er startverdier og anslag, og vekta er deplasement. Mannskapet leser båtens fasiliteter (`fac`) fra 17.10.2026 (`docs/batplan.md` del 8): køyer gir hvile om bord til ankers og på sjøen med vakt (`15-energy.js`, `koye`), byssa bestemmer maten (`14-crewlife.js`), ly og tørkerom kulda og messa humøret (`04-crew.js`), `stations.table` hvor mange som sløyer (`13-work.js`), og `watch` om døgndrift går (`06d-drift.js`). Fra 17.10.2026 har hver båt også skjemaet v2 (`docs/batplan.md` del 4): skrogmateriale, `hold {kind, m3}` (dekk, rom, frys, rsw), dekkslast for frakt, is- og sløyemaskin (bare over 14,99 m), forbruk `lph` i marsj (kurvens `fuelK` avledes av den i `vesselDerive`, sammen med rekkevidden, 2+2-vakt, halerne som passer og om hun kan gå i åpen gruppe), lugarer, fasiliteter (`fac`), arbeidsplasser (`stations`) og kran. `vesseltest.py` nekter en båt uten feltene og håndhever reglene.
+Båtene står i `VESSELS` (`core/02-species-gear.js`) i fartøyskjemaet v2 (17.10.2026, `docs/batplan.md` del 4). Tallene er startverdier og anslag. Skjemaet har sju grupper felt:
 
-| Nøkkel | Typenavn | L × B × T (m) | Vekt (t) | Last | Motor, marsj/topp | Mannskap / køyer | Pris | Gruppe |
-|---|---|---|---|---|---|---|---|---|
-| `skiff` | Aluminiumsbåt 19 fot (5,9 m), 60 hk påhengs (etter Plate Alloy 5.9m Adventurer) | 5,9 × 2,45 × 0,6 (skroget 0,3, med motorbeinet 0,6) | 1,0 | 350 kg | 60 hk, 18/24 kn | 1+1 / 0 | 95 000 | åpen under 8 m (startbåt for spill fra før 05.10.2026, nå bare til kjøps på verftet) |
-| `trebat` | Trebåt 23 fot (7,0 m), 8 hk semidiesel (1956), fars gamle båt | 7,0 × 2,26 × 0,62 | 1,9 | 350 kg | 8 hk, 6/7 kn | 1+1 / 0 | 45 000 | åpen under 8 m (startbåt fra 05.10.2026) |
-| `snekke` | Plastsnekke 26 fot, 30 hk diesel | 7,9 × 2,7 × 1,2 | 3,0 | 900 kg | 30 hk, 7/8 kn | 1+2 / 0 | 245 000 | åpen under 8 m |
-| `sjark` | Havsjark 35 fot (10,6 m) med bakk og styrhus (etter Viksund Havsjark 35) | 10,57 × 4,1 × 1,6 | 12 | 6 500 kg | 180 hk, 8,5/10 kn | 1+3 / 2 | 1 150 000 | åpen 10 m og over |
-| `hurtigsjark` | Brukt hurtigsjark 10,99 m, 500 hk | 10,99 × 3,9 × 1,6 | 12 | 5 000 kg | 500 hk, 17/22 kn | 1+3 / 2 | 4 900 000 | åpen 10 m og over |
-| `sjarkny` | Ny hurtigsjark 10,99 m, 650 hk | 10,99 × 4,68 × 2,06 | 15 | 7 000 kg | 650 hk, 20/25 kn | 1+3 / 3 | 10 500 000, levert med en gang (byggetiden fjernet 13.10.2026) | åpen 10 m og over |
-| `breisjark` | Sjark 36 fot med bakk og ly (etter Malo 36) | 10,99 × 4,2 × 2,0 | 20 | 10 000 kg (19 m³) | 300 hk, 9,5/10,5 kn | 1+4 / 4 | 9 000 000 | åpen 10 m og over |
-| `kyst15` | Kystbåt 14,99 m med lugarer | 14,99 × 6,6 × 3,0 | 75 | 28 t | 750 hk, 10/11,5 kn | 1+5 / 6 | 18 000 000 | bare lukket gruppe |
-| `kyst21` | Eldre kystbåt 21 m (1978) | 21 × 7,2 × 3,4 | 190 | 55 t | 900 hk, 10/11 kn | 1+6 / 8 | 9 000 000 | bare lukket, ikke innenfor fjordlinja |
-| `snokrabbe` 🔒 | Snøkrabbefartøy 50 m med fryseri | 50 × 11 × 6 | 1 800 | 500 t fryst | 3 600 hk, 11/13,5 kn | 14 / 18 | 60 mill. | havfiske, konsesjon |
-| `autoliner` 🔒 | Autoliner 45 m med frysing | 45,4 × 10,45 × 3,8 | 1 050 | 400 t fryst | 3 000 hk, 11/13 kn | 14 / 16 | 70 mill. (ny 300) | havfiske, konsesjon |
-| `bunntral` 🔒 | Frysetråler 60 m med akterslipp | 60,3 × 12,5 × 5,1 | 2 200 | 800 t fryst | 8 000 hk, 12/15 kn | 25 / 30 | 150 mill. (ny 500) | havfiske, konsesjon |
-| `pelagisk` 🔒 | Ringnot- og pelagisk tråler 75 m | 75 × 15,5 × 7,5 | 5 000 | 2 000 t RSW | 9 000 hk, 14/17 kn | 12 / 16 | 250 mill. (ny 800) | havfiske, konsesjon |
+- **Skrog og mål:** `len`, `beam`, `draft`, `disp` (deplasement i tonn), `hullMat` (`tre`, `glassfiber`, `alu`, `stål`; materialet bestemmer også hvor lett skroget tar skade, se 5.60), `planing`, `outboard`, `turnR`, `sea` (hvor mye sjøen gjør med båten) og `risk` (bølgehøyde og vind hun tåler, trinn for trinn).
+- **Last:** `hold {kind, m3}` (`dekk`, `rom`, `frys` eller `rsw`), `holdCap` (kg), `deckCargo` (frakt på dekk, med kran), `iceCap`, `tubCap` (bløggekaret), `land` (kasser eller kar ved levering), `iceMaker` og `gutMachine` (kg i timen; monteres på verftet, bare over 14,99 m).
+- **Motor og drivstoff:** `hp`, `engine`, `rpm`, `semi` (semidiesel), `diesel`, `vcruise`, `vmax`, `accel`, `fuelCap` og `lph` (liter i timen i marsjfart).
+- **Folk:** `crewMax` (folk utenom skipperen), `berths` (køyer), `cabins` (lugarer) og `crew` (nøkkelfolk og lag på havbåtene).
+- **Fasiliteter (`fac`) og arbeidsplasser (`stations`):** hus (`open`, `hardtop`, `hus`), ly, bysse (`none`, `plate`, `bysse`), WC, tørkerom og messe; `stations.table` er hvor mange som sløyer samtidig, `stations.hauler` haleplassene. `crane` er antall kraner.
+- **Redskap:** `rigs`, `jukseMax`, `gearMax {garn, stamp, teine}` og `std` (utstyr som følger med). Ingen båt har redskap modellert inn, bare plassene (Jonas 18.10.2026).
+- **Handel og drift:** `price`, `priceNew`, `isNew`, `year`, `cls` (`open`, `kyst`, `hav`), `lock` (havbåtene), `svcH`, `svcCost`, `svcJobH` og `desc`.
 
-- **Feltene:** `len`, `beam`, `draft`, `disp`, `holdCap`, `iceCap`, `fuelCap`, `hp`, `engine`, `vcruise`, `vmax`, `accel`, `turnR`, `planing`, `outboard`, `diesel`, `fuelK`, `risk`, `crewMax`, `berths`, `tubCap` (bløggekaret), `land` (kasser eller kar ved levering), `std` (utstyr som følger med), `rigs`, `jukseMax`, `gearMax`, `svcH`, `svcCost`, `svcJobH`, `cls` (`open`, `kyst`, `hav`), `price`, `isNew`, `year` og `desc`. Havbåtene har også `priceNew`, `lock`, `crew` (nøkkelfolk og lag, bare data til havsteget) og `autoHooks`.
+`vesselDerive` regner ut resten, slik at ingen tall står to steder: `fuelK` (forbrukskurven) fra `lph`, `range` = `fuelCap` / `lph` × `vcruise`, `watch` (døgndrift 2+2: styrhus og minst to køyer), `openOk` (under 11 m og ikke havbåt) og `haulers` (halerne som passer etter `equipFits`). `vesseltest.py` er skjemavokteren: den nekter en båt uten feltene og passer på reglene (blant annet at ingen kode velger etter typenavn).
+
+Mannskapet leser fasilitetene (17.10.2026, `docs/batplan.md` del 8): køyer gir hvile om bord til ankers og på sjøen med vakt (`15-energy.js`, `koye`), byssa bestemmer maten (`14-crewlife.js`), ly og tørkerom kulda og messa humøret (`04-crew.js`), `stations.table` hvor mange som sløyer (`13-work.js`), og `watch` om døgndrift går (`06d-drift.js`).
+
+Tabellene under er hentet fra spillet 19.10.2026 (`VESSELS` etter `vesselDerive`).
+
+| Nøkkel | Type | L × B × T (m) | Depl. (t) | Skrog | Last (`hold`, `holdCap`) | Dekkslast | Motor, marsj/topp | Forbruk, rekkevidde | Folk / køyer / lugarer | Pris | Gruppe |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| `skiff` | Aluminiumsbåt 19 fot (5,9 m), 60 hk påhengs (2008) | 5,9 × 2,45 × 0,6 | 1 | aluminium | på dekk 0,8 m³, 350 kg | 150 kg | 60 hk, 18/24 kn | 11 l/t, 147 nm | 1 + 1 / 0 / 0 | 95 000 | åpen og lukket gruppe |
+| `trebat` | Trebåt 23 fot (7,0 m), 8 hk semidiesel (1956) | 7 × 2,26 × 0,62 | 1,9 | tre | på dekk 0,8 m³, 350 kg | 200 kg | 8 hk, 6/7 kn | 1 l/t, 360 nm | 1 + 1 / 0 / 0 | 45 000 | åpen og lukket gruppe |
+| `snekke` | Plastsnekke 26 fot, 30 hk diesel (1994) | 7,9 × 2,7 × 1,2 | 3 | glassfiber | på dekk 1,8 m³, 900 kg | 300 kg | 30 hk, 7/8 kn | 3 l/t, 513 nm | 1 + 2 / 0 / 0 | 245 000 | åpen og lukket gruppe |
+| `plastsjark` | Plastsjark 31 fot (9,45 m), 100 hk (1992) | 9,45 × 3,3 × 1,35 | 6 | glassfiber | lasterom 6 m³, 3 500 kg | 800 kg | 100 hk, 7,5/8,5 kn | 8 l/t, 563 nm | 1 + 2 / 2 / 1 | 850 000 | åpen og lukket gruppe |
+| `sjark` | Havsjark 35 fot (10,6 m) med bakk og styrhus (1985) | 10,57 × 4,1 × 1,6 | 12 | glassfiber | lasterom 11 m³, 6 500 kg | 1 500 kg | 180 hk, 8,5/10 kn | 12 l/t, 638 nm | 1 + 3 / 4 / 1 | 1,15 mill. | åpen og lukket gruppe |
+| `hurtigsjark` | Brukt hurtigsjark 10,99 m, 500 hk (2009) | 10,99 × 3,9 × 1,6 | 12 | glassfiber | lasterom 8 m³, 5 000 kg | 1 200 kg | 500 hk, 17/22 kn | 55 l/t, 464 nm | 1 + 2 / 2 / 1 | 4,9 mill. | åpen og lukket gruppe |
+| `sjarkny` | Ny hurtigsjark 10,99 m, 650 hk (2027) | 10,99 × 4,68 × 2,06 | 15 | glassfiber | lasterom 12 m³, 7 000 kg | 1 800 kg | 650 hk, 20/25 kn | 75 l/t, 533 nm | 1 + 3 / 4 / 2 | 10,5 mill. (ny, levert med en gang) | åpen og lukket gruppe |
+| `breisjark` | Sjark 36 fot med bakk og ly (2015) | 10,99 × 4,2 × 2 | 20 | glassfiber | lasterom 19 m³, 10 000 kg | 2 500 kg | 300 hk, 9,5/10,5 kn | 20 l/t, 1 615 nm | 1 + 4 / 4 / 2 | 9 mill. | åpen og lukket gruppe |
+| `kyst15` | Kystbåt 14,99 m med lugarer (2012) | 14,99 × 6,6 × 3 | 75 | glassfiber | lasterom 45 m³, 28 000 kg | 6 000 kg | 750 hk, 10/11,5 kn | 60 l/t, 1 500 nm | 1 + 5 / 6 / 3 | 18 mill. | bare lukket gruppe |
+| `kyst21` | Eldre kystbåt 21 m, garn og line (1978) | 21 × 7,2 × 3,4 | 190 | stål | lasterom 90 m³, 55 000 kg | 10 000 kg | 900 hk, 10/11 kn | 80 l/t, 3 125 nm | 1 + 6 / 8 / 4 | 9 mill. | bare lukket gruppe |
+| `snokrabbe` 🔒 | Snøkrabbefartøy 50 m med fryseri (2001) | 50 × 11 × 6 | 1 800 | stål | fryserom 900 m³, 500 000 kg | 40 000 kg | 3 600 hk, 11/13,5 kn | 400 l/t, 9 625 nm | 14 / 18 / 9 | 60 mill. | havfiske, konsesjon |
+| `autoliner` 🔒 | Autoliner 45 m med frysing (1999) | 45,4 × 10,45 × 3,8 | 1 050 | stål | fryserom 700 m³, 400 000 kg | 30 000 kg | 3 000 hk, 11/13 kn | 350 l/t, 9 429 nm | 14 / 16 / 8 | 70 mill. (ny 300 mill.) | havfiske, konsesjon |
+| `bunntral` 🔒 | Frysetråler 60 m med akterslipp (2004) | 60,3 × 12,5 × 5,1 | 2 200 | stål | fryserom 1 400 m³, 800 000 kg | 60 000 kg | 8 000 hk, 12/15 kn | 900 l/t, 9 333 nm | 25 / 30 / 15 | 150 mill. (ny 500 mill.) | havfiske, konsesjon |
+| `pelagisk` 🔒 | Ringnot- og pelagisk tråler 75 m (2010) | 75 × 15,5 × 7,5 | 5 000 | stål | RSW-tanker 2 800 m³, 2 000 000 kg | 80 000 kg | 9 000 hk, 14/17 kn | 1 000 l/t, 9 100 nm | 12 / 16 / 8 | 250 mill. (ny 800 mill.) | havfiske, konsesjon |
+
+| Nøkkel | Hus | Ly | Bysse | WC | Tørkerom | Messe | Sløyebord / haleplasser | Vakt 2+2 | Kran | Ismaskin / sløyemaskin (kg/t) | Halere som passer | Redskapsplass garn / stamper / teiner | Bløggekar | Juksamaskiner |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `skiff` | åpen | – | – | – | – | – | 1 / 1 | – | – | – / – | linehaler, teinehaler | 6 / 4 / 4 | 60 kg | 2 |
+| `trebat` | åpen | – | – | – | – | – | 1 / 1 | – | – | – / – | linehaler, teinehaler | 6 / 4 / 6 | 60 kg | 2 |
+| `snekke` | hardtopp | – | – | – | – | – | 1 / 1 | – | – | – / – | linehaler, garnhaler, teinehaler | 15 / 10 / 9 | 150 kg | 3 |
+| `plastsjark` | styrhus | – | kokeplate | – | – | – | 1 / 1 | ja | – | – / – | linehaler, garnhaler, teinehaler | 30 / 18 / 12 | 250 kg | 4 |
+| `sjark` | styrhus | – | kokeplate | ja | – | – | 2 / 1 | ja | – | – / – | linehaler, garnhaler, teinehaler | 40 / 24 / 18 | 300 kg | 5 |
+| `hurtigsjark` | styrhus | – | kokeplate | ja | – | – | 2 / 1 | ja | – | – / – | linehaler, garnhaler, teinehaler | 50 / 26 / 18 | 350 kg | 6 |
+| `sjarkny` | styrhus | – | bysse | ja | ja | – | 2 / 1 | ja | – | – / – | linehaler, garnhaler, teinehaler | 60 / 30 / 21 | 400 kg | 6 |
+| `breisjark` | styrhus | ja | bysse | ja | ja | – | 2 / 1 | ja | – | – / – | linehaler, garnhaler, teinehaler | 100 / 33 / 20 | 450 kg | 6 |
+| `kyst15` | styrhus | ja | bysse | ja | ja | ja | 3 / 2 | ja | 1 | – / – | linehaler, garnhaler, teinehaler | 160 / 33 / 30 | 800 kg | 8 |
+| `kyst21` | styrhus | – | bysse | ja | ja | ja | 3 / 2 | ja | 2 | – / – | linehaler, garnhaler, teinehaler | 240 / 33 / 30 | 1200 kg | 8 |
+| `snokrabbe` | styrhus | ja | bysse | ja | ja | ja | 4 / 2 | ja | 5 | – / – | linehaler, garnhaler, teinehaler | 0 / 0 / 7000 | 2000 kg | 0 |
+| `autoliner` | styrhus | ja | bysse | ja | ja | ja | 4 / 1 | ja | 3 | – / 2 500 | linehaler, garnhaler, teinehaler | 0 / 0 / 4 | 2000 kg | 0 |
+| `bunntral` | styrhus | ja | bysse | ja | ja | ja | 6 / 2 | ja | 5 | – / 4 000 | linehaler, garnhaler, teinehaler | 0 / 0 / 4 | 3000 kg | 0 |
+| `pelagisk` | styrhus | ja | bysse | ja | ja | ja | 2 / 2 | ja | 5 | – / – | linehaler, garnhaler, teinehaler | 0 / 0 / 4 | 3000 kg | 0 |
+
+- **Gruppe:** båter under 11 m kan fiske i åpen gruppe (`openOk`), og med hjemmel i lukket. Kystbåtene fra 14,99 m går bare i lukket gruppe, og båter på 15 m og over fisker ikke innenfor fjordlinja (venter i stedet, se 5.2). Havbåtene (🔒) har datablad og 3D-modell, men kan ikke kjøpes før havfeltene kommer.
 - **Ingen kode velger etter typenavn.** Alt leser feltene, og `vesseltest.py` feiler hvis `=== '<type>'` dukker opp i `src/js`.
-- **Havbåtene (🔒)** har datablad og 3D-modell, men kan ikke kjøpes før havfeltene kommer vestover.
-- **Køyer** styrer hvilen: uten køyer hviler mannskapet bare i land.
+- **Køyer** styrer hvilen: uten køyer hviler mannskapet bare i land (naust, rorbu).
 - **Prisene bygger på:** brukte 26-fots snekker til 30 000–340 000 kr, en brukt Selfa 10,65 m til 4,9 mill., nye 10,99-meteres sjarker til 9,5–12,5 mill., nye 14,99-meteres kystbåter til 23–70 mill. og brukte trålere uten kvote til over en halv milliard. Havbåtenes priser og vekt er grove anslag.
 
 **Redskapsstige:**
 - *Ingen fiskestang* (fjernet 04.10.2026 etter Jonas' liste): uten håndjuksa eller juksamaskin fisker ingen for hånd. «Jukse» sier fra og peker til butikken.
-- *Håndjuksa med pilk og fire markkroker:* 1 900 kr, effekt 2,0 (doblet 04.10.2026: «350 kg på 9 spilltimer er for lite»).
-- *Juksamaskin:* 34 000 kr, effekt 4,0 hver, altså dobbelt så mye som håndjuksa. Én person passer tre og fisker da ikke selv med håndjuksa (`JIG` i `03-simulation.js`).
-- *Kveiteutstyr:* stor pilk, kraftig snøre og gaff, 2 490 kr.
-- **Butikken «Fiskeutstyr»** (telefonapp `fiske`, i alle havner, «Fiskeutstyr på kaia» i Finnsnes) selger håndjuksa, is og kveiteutstyr. Et kjøp tar to trykk: det første viser prisen, det andre betaler, og kjøpet står i driftsloggen. Finnsnes har ikke isrenne, så butikken selger is i sekker for 2,00 kr/kg (`PRICE.iceBag`, vårt anslag). På mottakene kommer isen fra isrenna for 1,50 kr/kg. Handlingslinja har «Fiskeutstyr» og en isknapp med mengde og pris. Klær, elektronikk og juksamaskiner er i Utstyr-appen.
+- *Håndjuksa med pilk og fire markkroker:* 1 900 kr (`PRICE.gear`), effekt 2,0. Den ligger montert i båten fra start (handelssteder trinn 1).
+- *Juksamaskin:* 34 000 kr, effekt 4,0 hver, altså dobbelt så mye som håndjuksa. Én person passer tre og fisker da ikke selv med håndjuksa (`JIG` i `03-simulation.js`). Hvor mange båten har plass til, står i `jukseMax`.
+- *Kveiteutstyr:* stor pilk, kraftig snøre og gaff, 2 490 kr (`PRICE.kgear`).
+- **Handelen** skjer bare på de tre stedene i `docs/handelssteder.md`: utstyrsbutikken (telefonsiden `utstyrb`, med båten ved butikkens kai) selger fiskeutstyr, halere, elektronikk, redning og klær; fiskemottaket tar imot fisken og selger is fra isrenna (1,50 kr/kg, `PRICE.ice`) og agn; verftet har båtene, motoren, vedlikeholdet, malingen, skrogreparasjonen og kaskoen. `buyGate` og `equipFits` (`core/10-gear.js`) avgjør hva som kan kjøpes til båten du har.
 - *Garn, line og teiner:* passivt redskap som står i sjøen mens båten er borte. Se «Redskap i sjøen» i kapittel 9.
-- *Halere* (`EQUIP`): elektrisk haler 38 000 kr (båter til og med 8,5 m, line og små teiner), linehaler 68 000, garnhaler 95 000 og teinehaler 58 000 (fra 7,5 m). Hva som passer hvilken båt, står som `fit:{minLen, maxLen, outboard}` og sjekkes med `equipFits(k, type)`. Uten haler trekkes garn og line for hånd og tar 2–2,5 ganger så lang tid. Store teiner kan ikke trekkes for hånd.
-- *Plass til redskap* (`gearMax` i `VESSELS`, garn / stamper / teiner): skiff 6 / 4 / 20, tresnekke 8 / 6 / 30, snekke 15 / 10 / 50, 8,9-metersjark 25 / 14 / 80, sjark 40 / 24 / 150, hurtigsjark 50 / 26 / 180, ny sjark 60 / 30 / 200, bred sjark 120 / 40 / 400, kystbåt 15 m 160 / 60 / 500 og 21 m 300 / 120 / 800.
+- *Halere* (`EQUIP`): linehaler 68 000 kr, garnhaler 95 000 (fra 7,5 m) og teinehaler 58 000. Hva som passer hvilken båt, står som `fit:{minLen, maxLen, outboard}` og sjekkes med `equipFits(k, type)`; tabellen over viser resultatet. Uten haler trekkes garn og line for hånd og tar 2–2,5 ganger så lang tid. Teiner kan ikke trekkes for hånd.
 
-Mister du juksa, fisker bare juksamaskinene til du kjøper ny i Fiskeutstyr. `motor90` er et utstyrsvalg for båter med påhengsmotor (`boost`: 30 kn, mer drivstoff).
+Mister du juksa, fisker bare juksamaskinene til du kjøper ny i utstyrsbutikken. `motor90` er et utstyrsvalg for båter med påhengsmotor (`boost`: 30 kn, mer drivstoff).
 
 **Ekkolodd og sonar** (varmekartet i kartplotteren, se 5.14):
 
