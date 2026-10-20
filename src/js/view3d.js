@@ -2007,8 +2007,10 @@ const G3 = (() => {
   // where the rig's tubs stand: the model's places (kit.garn, kit.stamps), the hand boats' stack, or by the rail aft
   function rigAt(G, kind, d){ const K = G.kit && G.kit[kind === 'garn' ? 'garn' : 'stamps']; if (K) return {at:K.at, ry:K.ry || 0};
     const sx = G.beam / 2, DZ = d.z - 0.6; return G.hand && SKA.stack ? {at:[SKA.stack[0] + (kind === 'garn' ? 0.1 : 0), d.y, SKA.stack[2]], ry:0} : {at:[sx * (kind === 'garn' ? 0.3 : 0.25), d.y, DZ], ry:0}; }
-  function drawNetTub(BMrel, at, fill, ry){ const T = kit('fish', 'kar1000'), N = kit('rig', 'garn'), M = chain(BMrel, M4.T(at[0], at[1], at[2]), M4.RY(ry || 0));
-    if (T && N){ drawN(T, M); if (fill > 0.02) drawN(N, chain(M, M4.S(1, 0.2 + 0.95 * fill, 1))); return; }
+  // the nets in a blue 460 l tub (tools/deck/rigg.py): the heap sinks as the nets go out and rises as they come in, mounded over the rim
+  // when it is full, with the bights of net hanging over the rim then (garn_kant, not scaled)
+  function drawNetTub(BMrel, at, fill, ry){ const T = kit('fish', 'kar460b') || kit('fish', 'kar460'), N = kit('rig', 'garn'), NK = kit('rig', 'garn_kant'), M = chain(BMrel, M4.T(at[0], at[1], at[2]), M4.RY(ry || 0));
+    if (T && N){ drawN(T, M); if (fill > 0.02) drawN(N, chain(M, M4.S(1, 0.25 + 0.75 * fill, 1))); if (NK && fill > 0.95) drawN(NK, M); return; }
     drawN(GB.bin, chain(M, M4.S(1, 0.3 + 0.7 * fill, 1))); }
   // the line tubs (tools/deck/rigg.py): two across and up to four along from the place, each with its coil, the baited ones with the hooks
   // hung round the rim

@@ -34,7 +34,7 @@ async def main():
         await boot(pg)
         await pg.wait_for_function("G3.isActive()", timeout=90000); await pg.wait_for_timeout(3000)
         parts = await pg.evaluate("""(() => { const P = G3._debug.kitPart, need = {fish:['kar300', 'kar460', 'kar1000', 'vann', 'is', 'hott', 'kniv', 'bord', 'benk'],
-          rig:['stamp', 'line_r', 'line_g', 'kroker', 'garn', 'kasse', 'pall', 'kasse_s'], crane:['base', 'col', 'b1', 'b2', 'ext1', 'ext2', 'hook', 'cyl1b', 'cyl1r', 'cyl2b', 'cyl2r', 'rest'],
+          rig:['stamp', 'line_r', 'line_g', 'kroker', 'garn', 'garn_kant', 'kasse', 'pall', 'kasse_s'], crane:['base', 'col', 'b1', 'b2', 'ext1', 'ext2', 'hook', 'cyl1b', 'cyl1r', 'cyl2b', 'cyl2r', 'rest'],
           safe:['radome', 'radar_ped', 'radar_bar4', 'livboye', 'boyeholder', 'boyelys', 'boyeline', 'flate4', 'flate6', 'flate12', 'vugge4', 'vugge6', 'vugge12']}, miss = [];
           for (const [f, ns] of Object.entries(need)) for (const n of ns) if (!P(f, n)) miss.push(f + ':' + n); return miss; })()""")
         check(not parts, 'alle delene i dekksutstyret fra Blender er med', parts)

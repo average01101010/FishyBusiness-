@@ -16,13 +16,20 @@ on its rim, the gill net as it lies in a fish tub after hauling, and the deck ca
               +x), each with its bend over the rim, the shank and its eye down the outside, the point down the inside, and a dark
               snood from the eye up over the rim and down to the coil. Same origin as the stamp, so it sits on the rim when placed
               at the same point. The baiter hangs them so, in order, so they come off one by one when the line is set.
-    garn      a heap of gill net in a fish tub after hauling: a crumpled mound of green and blue monofilament (billowed noise on a
-              warped plane for the bunches and the creases between them; the two colours change mostly at the creases, as two
-              nets folded into each other; the bunches lighter, the creases darker), meshes of the netting spread over a few bunches
-              and loose strands as thin light strips on it, the float line (light green, with small white floats) mostly on one
-              side and the lead line (dark) on the other, meandering in loose loops and diving in and out of the netting. Inside a
-              1.06 x 0.86 m opening (long axis along z), from y = 0.05 up to y = 1.0 in the middle and 0.70 at the walls; it tapers
-              4 cm a side towards its base like a fish tub. From the middle of its base.
+    garn      a heap of gill net in a fish tub after hauling: a mound of muted, light green and grey-blue monofilament (two nets
+              folded into each other, the colour changing mostly at the creases; the bunches lighter and greyer with the line's
+              sheen, the creases darker and richer, as if seen through more layers). Long folds whose direction wanders over the
+              heap with sharp creases between them, a finer crumple, the edges of layers lying over each other, and a few flaps
+              standing out over the crease below them. The top layer's meshes (bars of 7.5 cm, the diamonds drawn out and warped)
+              show as thin light strips over about half the heap. The float line (light green, with small white floats) mostly
+              on one side and the lead line (dark) on the other meander in loose loops, diving in and out of the netting. The
+              sides, down the tub's walls, are layers of net pressed in folds, dented in, never out. Inside a 1.06 x 0.86 m
+              opening with rounded corners (long axis along z), from y = 0.05 up to y = 1.0 in the middle and about 0.70 at the
+              walls, a little higher where the bights go over; it tapers 3.5 cm a side towards its base. From the middle of its base.
+    garn_kant the bights of net over the rim of the 460 l fish tub (tools/deck/fisk.py: 1.00 x 1.20 m outside, the rim at
+              0.74 m): on the tub's +x side and its -z end the net comes off the heap, gathers into a lumpy roll over the rim and
+              hangs down the outside in a loose U with pleats, its meshes on it and a few strands lower. Same origin as garn, but
+              not scaled with it (scaled, it would slide down through the tub's wall): the game draws it with a full heap only.
     kasse     a wooden freight crate 1.20 x 0.80 x 0.80 m (long axis z) of rough sawn spruce: vertical boards (19 mm, 6 mm gaps,
               mixed widths and shades, darker end grain), corner posts 70 mm square, three battens 22 x 95 mm round each side, a
               lid of boards along its length with three battens across it; dark inside, so the gaps read as gaps. No marks or text.
@@ -42,7 +49,7 @@ posts and battens. The occlusion is baked into the colours of the line (in its t
 The line and the tub: the game scales the line in y to show how much is left. The tub tapers, so the coil's outer wall is made to
 stay inside the tub's wall at every y scale down to 0.45 (a scale of 0.47 puts the top at 0.15); when full it stands about 2 cm off
 the wall at its top. Below 0.45 the game can scale x and z too by the extras' line.xz table, which keeps it inside the wall to the
-bottom. The net's sides taper 4 cm a side for the same reason; scaled low in a tub that tapers as much, its edge sinks a centimetre
+bottom. The net's sides taper 3.5 cm a side for the same reason; scaled low in a tub that tapers as much, its edge sinks a centimetre
 or so into the tub's thick wall, which does not show.
 
     pip install bpy==4.5.4
@@ -527,77 +534,158 @@ def kroker(K):
 
 # ======================================================================================================================
 # the gill net in its tub
-GA, GB = 0.420, 0.520            # the heap's half width (x) and half length (y) where it meets the tub's walls
-GA0, GB0 = 0.380, 0.480          # at its base (fish tubs taper)
+GA, GB, GRC = 0.420, 0.520, 0.070   # the heap's half width (x), half length (y) and corner radius where it meets the tub's walls
+GA0, GB0 = 0.385, 0.485          # at its base (fish tubs taper)
 G_Y0, G_TOP, G_EDGE = 0.05, 1.0, 0.70
-G_P = 4.5                        # the squircle's power (the tub's rounded corners)
-NET_G = (0.26, 0.52, 0.38); NET_B = (0.20, 0.38, 0.62)
-def squircle(u, v, a, b):
+T_IN = (0.43, 0.53); T_OUT = (0.50, 0.60); T_RIM = 0.74     # the 460 l fish tub: inside and outside at the rim, the rim's top
+# muted monofilament: a sea green and a grey blue, lighter and greyer than paint; the creases deeper and richer (more layers)
+NET_G = (0.44, 0.60, 0.50); NET_B = (0.42, 0.53, 0.64); SHEEN = (0.84, 0.89, 0.89)
+# the bights over the rim: the wall ('x' = the long side at +x, 'y' = the end at -y), the middle along it, half its width, how far it hangs
+BIGHTS = [('x', 1, 0.10, 0.17, 0.19), ('y', -1, -0.10, 0.13, 0.14)]
+
+def rr_dist(dx, dy, a, b, rc):
+    """the distance from the middle to a rounded rectangle's edge along the unit direction (dx, dy)"""
+    L = min(a / abs(dx) if abs(dx) > 1e-9 else 1e9, b / abs(dy) if abs(dy) > 1e-9 else 1e9)
+    cx, cy = a - rc, b - rc
+    if abs(dx * L) > cx and abs(dy * L) > cy:
+        px, py = math.copysign(cx, dx), math.copysign(cy, dy); dp = dx * px + dy * py
+        L = dp + math.sqrt(max(0.0, dp * dp - (px * px + py * py - rc * rc)))
+    return L
+def rho(x, y):
+    r = math.hypot(x, y)
+    return 0.0 if r < 1e-9 else r / rr_dist(x / r, y / r, GA, GB, GRC)
+def foot(u, v, a, b, rc):
+    """a point of the square [-1, 1]^2 on the rounded rectangle (rings of the square onto rings of it)"""
     s = max(abs(u), abs(v))
     if s < 1e-9: return 0.0, 0.0
-    lam = ((abs(u) / s) ** G_P + (abs(v) / s) ** G_P) ** (-1 / G_P)
-    return a * lam * u, b * lam * v
-def rho(x, y):
-    return ((abs(x) / GA) ** G_P + (abs(y) / GB) ** G_P) ** (1 / G_P)
+    qx, qy = a * u / s, b * v / s; L = math.hypot(qx, qy); dx, dy = qx / L, qy / L; R = rr_dist(dx, dy, a, b, rc)
+    return dx * R * s, dy * R * s
 def warp(x, y):
     return x + 0.07 * nz(x * 2.6, y * 2.6, 1.3), y + 0.07 * nz(x * 2.6, y * 2.6, 6.1)
 def crumple(x, y):
-    """the netting's folds: billowed noise (rounded bunches, sharp creases between them) on a warped plane, three sizes"""
+    """the netting's folds: long folds (gathered net lies in ridges, not round lumps) whose direction wanders over the heap, with
+    sharp creases between them, at two sizes, a finer crumple, and the edges of layers of net lying over each other"""
     wx, wy = warp(x, y)
-    n1 = nz(wx * 4.6, wy * 4.6, 3.3)
-    b1 = abs(n1); b2 = abs(nz(wx * 9.5 + 1.7, wy * 9.5, 8.1)); b3 = abs(nz(wx * 17 + 4.1, wy * 17, 1.7))
-    return b1, b2, b3, n1
+    th = math.pi * nz(x * 1.4 + 5, y * 1.4, 0.7); ca, sa = math.cos(th), math.sin(th)
+    u = wx * ca + wy * sa; v = -wx * sa + wy * ca
+    n1 = nz(u * 2.6, v * 6.0, 3.3)
+    th2 = th + 0.9 * nz(x * 3, y * 3, 2.2); u2 = wx * math.cos(th2) + wy * math.sin(th2); v2 = -wx * math.sin(th2) + wy * math.cos(th2)
+    b1 = abs(n1) ** 0.65; b2 = abs(nz(u2 * 5.0 + 1.7, v2 * 12.0, 8.1)) ** 0.7; b3 = abs(nz(wx * 17 + 4.1, wy * 17, 1.7))
+    lay = nz(wx * 3.1 + 7.7, wy * 3.1, 4.4); lay2 = nz(wx * 6.3 + 2.2, wy * 6.3, 9.9)
+    return b1, b2, b3, n1, lay, lay2
+def bight_w(x, y):
+    """how near (x, y) is to where a bight goes over the rim (1 at the wall in its middle)"""
+    w = 0.0
+    for ax, sg, c, hw, hang in BIGHTS:
+        along, across = (y, x) if ax == 'x' else (x, y); wall = GA if ax == 'x' else GB
+        if across * sg <= 0: continue
+        w = max(w, math.exp(-((along - c) / (hw * 0.8)) ** 2) * smooth(wall - 0.16, wall, across * sg))
+    return w
+def edge_h(x, y):
+    return G_EDGE + 0.012 * nz(x * 6, y * 6, 2) + 0.035 * bight_w(x, y)
 G_SCALE = [1.0]
 def heap_h(x, y, raw=False):
-    """the heap's top: a mound a little off the middle, big lumps, the netting's folds, calmer at the walls"""
+    """the heap's top: a mound a little off the middle, big lumps, the netting's folds and the layers' edges, calmer at the walls"""
     r0 = rho(x, y); r = rho(x - 0.04 * (1 - r0), y + 0.07 * (1 - r0))
-    dome = max(0.0, 1 - min(1.0, r) ** 2.2) ** 0.55
-    b1, b2, b3, _ = crumple(x, y)
-    lumps = 0.050 * nz(x * 1.9, y * 1.9, 5.0) + 0.02 * nz(x * 3.7, y * 3.7, 2.4)
-    folds = 0.135 * b1 ** 0.8 + 0.055 * b2 + 0.014 * b3 - 0.075
-    z = (0.19 * dome + (lumps + folds) * (0.35 + 0.65 * dome)) * smooth(1.0, 0.93, r0)
-    return z if raw else G_EDGE + z * G_SCALE[0]
+    dome = max(0.0, 1 - min(1.0, r) ** 2.2) ** 0.5
+    b1, b2, b3, _, lay, lay2 = crumple(x, y)
+    lumps = 0.045 * nz(x * 1.9, y * 1.9, 5.0) + 0.02 * nz(x * 3.7, y * 3.7, 2.4)
+    folds = 0.100 * b1 + 0.042 * b2 + 0.010 * b3 - 0.080
+    layers = 0.028 * smooth(-0.035, 0.065, lay) + 0.014 * smooth(-0.03, 0.05, lay2)
+    z = (0.17 * dome + (lumps + folds + layers) * (0.35 + 0.65 * dome)) * smooth(1.0, 0.93, r0)
+    return z if raw else edge_h(x, y) + z * G_SCALE[0]
 def heap_n(x, y):
     e = 0.006; dx = (heap_h(x + e, y) - heap_h(x - e, y)) / (2 * e); dy = (heap_h(x, y + e) - heap_h(x, y - e)) / (2 * e)
     return V((-dx, -dy, 1)).normalized()
-def net_mix(x, y):
+def net_mix(x, y, z=0.0):
     # two nets, a green and a blue, folded into each other: the colour changes mostly at the creases between the bunches
     wx, wy = warp(x * 1.3, y * 1.3); n1 = crumple(x, y)[3]
-    return smooth(-0.05, 0.05, 0.55 * n1 + 0.45 * nz(wx * 2.4 + 4, wy * 2.4, 2.2) + 0.06)
-def net_col(x, y):
-    c = lerp3(NET_G, NET_B, net_mix(x, y))
-    return mul3(c, 1.0 + 0.08 * nz(x * 11, y * 11, 0.4))
+    return smooth(-0.05, 0.05, 0.55 * n1 + 0.45 * nz(wx * 2.4 + 4, wy * 2.4, 2.2 + z * 9) + 0.06)
+def net_col(x, y, lit, z=0.0, mix=None):
+    """the netting's colour: lit 0 deep in a crease (darker, richer: seen through more layers), 1 on a bunch (lighter, greyer,
+    the monofilament's sheen); the value varies more than the hue"""
+    c = lerp3(NET_G, NET_B, net_mix(x, y, z) if mix is None else mix)
+    g = sum(c) / 3; deep = tuple((g + (c[k] - g) * 1.35) * 0.50 for k in range(3)); light = lerp3(c, SHEEN, 0.30)
+    c = lerp3(deep, mul3(light, 1.08), lit)
+    return mul3(c, 1.0 + 0.11 * nz(x * 13, y * 13, 0.4 + z * 5))
 
 def garn():
-    M = TM('garn'); NU, NV = 36, 44; G = []
-    # scale the mound so its top is at G_TOP
-    hmax = max(heap_h(*squircle(-1 + 2 * i / 59, -1 + 2 * j / 59, GA, GB), raw=True) for i in range(60) for j in range(60))
-    G_SCALE[0] = (G_TOP - G_EDGE) / hmax
+    M = TM('garn'); NU, NV = 37, 45; G = []
+    hmax = max(heap_h(*foot(-1 + 2 * i / 59, -1 + 2 * j / 59, GA, GB, GRC), raw=True) for i in range(60) for j in range(60))
+    G_SCALE[0] = (G_TOP - G_EDGE - 0.004) / hmax
+    def lit_at(x, y):
+        b1, b2, _, _, lay, _ = crumple(x, y)
+        return 0.15 + 0.75 * smooth(0.0, 0.55, b1) * (0.7 + 0.3 * smooth(0.0, 0.5, b2)) + 0.10 * smooth(0.0, 0.05, lay)
     for i in range(NU):
         row = []
         for j in range(NV):
-            u = -1 + 2 * i / (NU - 1); v = -1 + 2 * j / (NV - 1); x, y = squircle(u, v, GA, GB)
+            x, y = foot(-1 + 2 * i / (NU - 1), -1 + 2 * j / (NV - 1), GA, GB, GRC)
             edge = i in (0, NU - 1) or j in (0, NV - 1)
-            z = G_EDGE + 0.010 * nz(x * 6, y * 6, 2) if edge else heap_h(x, y)
-            # the bunches catch the light (monofilament), the creases between them are darker (the AO deepens them)
-            b1, b2, _, _ = crumple(x, y)
-            k = 0.55 + 0.60 * smooth(0.0, 0.50, b1) * (0.65 + 0.35 * smooth(0.0, 0.5, b2))
-            row.append(M.v((x, y, z), mul3(net_col(x, y), k / 0.5)))
+            z = edge_h(x, y) if edge else heap_h(x, y)
+            row.append(M.v((x, y, z), mul3(net_col(x, y, min(1.0, lit_at(x, y))), 0.88 / 0.5)))
         G.append(row)
     for i in range(NU - 1):
         for j in range(NV - 1):
             M.f([G[i][j], G[i + 1][j], G[i + 1][j + 1], G[i][j + 1]], C['net'], out=(0, 0, 1))
-    # the sides down the tub's walls to the base, and the base
+    # the sides down the tub's walls: net pressed against them in irregular folds (dented in, never out), patches of both colours
     ring = [G[i][0] for i in range(NU)] + [G[NU - 1][j] for j in range(1, NV)] + [G[i][NV - 1] for i in range(NU - 2, -1, -1)] + [G[0][j] for j in range(NV - 2, 0, -1)]
-    low = []
-    for v in ring:
-        x, y = v.co.x, v.co.y; low.append(M.v((x * GA0 / GA, y * GB0 / GB, G_Y0), mul3(net_col(x, y), 0.5 / 0.5)))
-    n = len(ring); cen = M.v((0, 0, G_Y0), (0.6, 0.6, 0.6))
-    for k in range(0, n, 2):          # every other edge vertex down the side is enough, nobody sees it in the tub
-        k2 = (k + 2) % n; c = (ring[k].co + low[k2].co) / 2
-        M.f([ring[k], ring[k + 1], ring[k2], low[k2], low[k]], C['net'], out=V((c.x, c.y, 0)))
-        M.f([cen, low[k2], low[k]], C['net'], out=(0, 0, -1))
+    n = len(ring); step = 3; cols = list(range(0, n, step)); fr = [0.86, 0.70, 0.54, 0.38, 0.20, 0.0]; rows = []
+    for f in fr:
+        rw = []
+        for k in cols:
+            x, y = ring[k].co.x, ring[k].co.y; zt = ring[k].co.z; z = G_Y0 + (zt - G_Y0) * f
+            sx = lerp(GA0 / GA, 1.0, f); sy = lerp(GB0 / GB, 1.0, f)
+            # layers of net laid in flat as it came aboard, pressed against the wall: folds mostly across, dented in, never out
+            fold = abs(nz(x * 4 + y * 1.5, y * 4, z * 14)) ** 0.7; fold2 = abs(nz(x * 9, y * 9 + z * 4, z * 23))
+            d = (0.022 * fold + 0.009 * fold2) if 0 < f < 1 else 0.004 * fold
+            px, py = x * sx, y * sy; L = math.hypot(px, py)
+            px -= px / L * d; py -= py / L * d
+            lit = 0.20 + 0.75 * smooth(0.010, 0.026, 0.031 - d)
+            zz = z + (0.014 * nz(x * 5, y * 5, z * 8) if 0 < f < 1 else 0.0)
+            rw.append(M.v((px, py, zz), mul3(net_col(x, y, lit, z), 0.92 / 0.5)))
+        rows.append(rw)
+    m = len(cols)
+    for q in range(m):
+        k = cols[q]; k2 = cols[(q + 1) % m]; c = (ring[k].co + rows[0][(q + 1) % m].co) / 2
+        seq = [k]
+        while seq[-1] != k2: seq.append((seq[-1] + 1) % n)
+        M.f([ring[t] for t in seq] + [rows[0][(q + 1) % m], rows[0][q]], C['net'], out=V((c.x, c.y, 0)))
+        for r_ in range(len(rows) - 1):
+            A_, B_ = rows[r_], rows[r_ + 1]; c = (A_[q].co + B_[(q + 1) % m].co) / 2
+            M.f([A_[q], A_[(q + 1) % m], B_[(q + 1) % m], B_[q]], C['net'], out=V((c.x, c.y, 0)))
+    cen = M.v((0, 0, G_Y0), (0.6, 0.6, 0.6))
+    for q in range(m): M.f([cen, rows[-1][(q + 1) % m], rows[-1][q]], C['net'], out=(0, 0, -1))
     rng = random.Random(5)
+    # flaps of netting lying over the edge of a fold, their free edges standing out over the crease below (overhangs)
+    def grad(x, y):
+        e = 0.01; return V(((heap_h(x + e, y) - heap_h(x - e, y)) / (2 * e), (heap_h(x, y + e) - heap_h(x, y - e)) / (2 * e), 0))
+    flaps = 0; tries = 0
+    while flaps < 4 and tries < 400:
+        tries += 1; x, y = rng.uniform(-0.32, 0.32), rng.uniform(-0.42, 0.42)
+        if rho(x, y) > 0.78: continue
+        g = grad(x, y)
+        if g.length < 0.45: continue
+        dn = -g.normalized(); ac = V((-dn.y, dn.x, 0)); W = rng.uniform(0.08, 0.12); D = rng.uniform(0.045, 0.07)
+        p0 = V((x, y, 0)) - dn * 0.03; z0 = heap_h(p0.x, p0.y) + 0.004; NUf, NVf = 5, 4; top = []; bot = []
+        for jv in range(NVf):
+            v = jv / (NVf - 1); rt = []; rb = []
+            for iu in range(NUf):
+                u = iu / (NUf - 1) - 0.5; vv = v * (1 + 0.25 * math.sin(u * 5 + flaps))
+                q = p0 + ac * (u * W * (1 - 0.2 * v)) + dn * (vv * D)
+                zz = max(heap_h(q.x, q.y) + 0.004, z0 - 0.022 * vv * vv - 0.006 * vv + 0.006 * v * math.sin(u * 11 + flaps))
+                c = mul3(net_col(q.x, q.y, 0.45 + 0.35 * v), 1 / 0.5)
+                rt.append(M.v((q.x, q.y, zz), c)); rb.append(M.v((q.x, q.y, zz - 0.003), mul3(c, 0.7)))
+            top.append(rt); bot.append(rb)
+        for jv in range(NVf - 1):
+            for iu in range(NUf - 1):
+                M.f([top[jv][iu], top[jv][iu + 1], top[jv + 1][iu + 1], top[jv + 1][iu]], C['net'], out=(0, 0, 1))
+                M.f([bot[jv][iu], bot[jv][iu + 1], bot[jv + 1][iu + 1], bot[jv + 1][iu]], C['net'], out=(0, 0, -1))
+        for iu in range(NUf - 1):      # the free edge
+            M.f([top[-1][iu], top[-1][iu + 1], bot[-1][iu + 1], bot[-1][iu]], C['net'], out=dn)
+        for jv in range(NVf - 1):
+            for iu, sg in ((0, -1), (NUf - 1, 1)):
+                M.f([top[jv][iu], top[jv + 1][iu], bot[jv + 1][iu], bot[jv][iu]], C['net'], out=ac * sg)
+        flaps += 1
     def strip(pts, w, tintf):
         vs = []
         for k, p in enumerate(pts):
@@ -606,41 +694,26 @@ def garn():
         for k in range(len(vs) - 1):
             M.f([vs[k][0], vs[k][1], vs[k + 1][1], vs[k + 1][0]], C['mono'], out=vs[k][2])
     def surf(x, y, lift=0.0025): return V((x, y, heap_h(x, y) + lift))
-    def light(p):
-        c = net_col(p.x, p.y); return tuple(min(0.92, c[k] * 1.35 + 0.10) / 0.5 for k in range(3))
-    # meshes of the netting where it lies spread over a bunch: a warped lattice of elongated diamonds (bars of 3.5 cm), each
-    # bar a thin strip on the surface; cut off at a ragged edge
-    for pc in range(7):
-        while True:
-            cx = rng.uniform(-0.30, 0.30); cy = rng.uniform(-0.38, 0.38)
-            if rho(cx, cy) < 0.75: break
-        ang = rng.uniform(0, math.pi); ea = V((math.cos(ang), math.sin(ang), 0)); eb = V((-math.sin(ang), math.cos(ang), 0))
-        A, B = rng.uniform(0.09, 0.14), rng.uniform(0.06, 0.09); half = math.radians(rng.uniform(22, 34)); bar = 0.035; sd = rng.random() * 9
-        def lat(i, j):      # the knot (i, j): along the patch's axis and across, warped
-            u = (i + j) * bar * math.cos(half); v = (i - j) * bar * math.sin(half)
-            p = V((cx, cy, 0)) + ea * u + eb * v
-            return p + V((0.012 * nz(p.x * 9, p.y * 9, sd), 0.012 * nz(p.x * 9, p.y * 9, sd + 3), 0))
-        def inside(p):
-            q = p - V((cx, cy, 0)); du = q.dot(ea) / A; dv = q.dot(eb) / B
-            return du * du + dv * dv < 1 + 0.25 * nz(p.x * 14, p.y * 14, sd) and rho(p.x, p.y) < 0.9
-        nn = 9
-        for fam in (0, 1):
-            for q in range(-nn, nn + 1):
-                pts = []
-                for k in range(-nn, nn + 1):
-                    p = lat(k, q) if fam == 0 else lat(q, k)
-                    if inside(p): pts.append(surf(p.x, p.y))
-                    else:
-                        if len(pts) > 1: strip(pts, 0.0017, light)
-                        pts = []
-                if len(pts) > 1: strip(pts, 0.0017, light)
-    # bunched netting: strands along the creases and over the bunches
-    for s_ in range(26):
-        x, y = rng.uniform(-0.33, 0.33), rng.uniform(-0.43, 0.43); h = rng.uniform(0, 2 * math.pi); pts = []
-        for k in range(14):
-            if rho(x, y) > 0.9: break
-            pts.append(surf(x, y, 0.002)); h += rng.uniform(-0.45, 0.45); x += 0.026 * math.cos(h); y += 0.026 * math.sin(h)
-        if len(pts) > 3: strip(pts, 0.0015, light)
+    def light(p): return mul3(lerp3(net_col(p.x, p.y, 1.0), (0.93, 0.97, 0.96), 0.62), 1 / 0.5)
+    # the top layer of netting where it lies spread: its meshes (bars of 7.5 cm, the diamonds drawn out along the folds and warped)
+    # as thin light strips on the surface, over ragged patches covering about half the heap; where it is bunched, only the folds
+    bar = 0.075; al = math.radians(24); rot = math.radians(20); cr, sr = math.cos(rot), math.sin(rot)
+    def knot(i, j):
+        u = (i + j) * bar * math.cos(al); v = (i - j) * bar * math.sin(al)
+        x = u * cr - v * sr; y = u * sr + v * cr
+        return x + 0.016 * nz(x * 7, y * 7, 21.0), y + 0.016 * nz(x * 7, y * 7, 24.0)
+    def spread(x, y): return nz(x * 3.0 + 1.1, y * 3.0, 12.5) > -0.04 and rho(x, y) < 0.96
+    N = 13
+    for fam in (0, 1):
+        for q in range(-N, N + 1):
+            pts = []
+            for k3 in range(-3 * N, 3 * N + 1):
+                t = k3 / 3.0; x, y = knot(t, q) if fam == 0 else knot(q, t)
+                if spread(x, y): pts.append(surf(x, y, 0.0042))
+                else:
+                    if len(pts) > 1: strip(pts, 0.0026, light)
+                    pts = []
+            if len(pts) > 1: strip(pts, 0.0026, light)
     # the float line and the lead line: meandering in loose loops as they came in, the float line mostly on one side and the
     # lead line on the other, diving under the netting and out again; only what shows is built
     def rope(side, r, m, seed, steps):
@@ -648,8 +721,7 @@ def garn():
         for k in range(steps):
             t = k / steps
             cur = 0.13 * nz(t * 7.0, seed, 0.3) + 0.07 * nz(t * 17.0, seed, 4.1)      # the curvature wanders
-            # steer away from the walls and towards the line's own side
-            to = V((side * 0.20 - x, -y * 0.3, 0)); want = math.atan2(to.y, to.x)
+            to = V((side * 0.20 - x, -y * 0.3, 0)); want = math.atan2(to.y, to.x)       # away from the walls, to its own side
             pull = smooth(0.70, 0.88, rho(x, y)) * 0.45 + 0.03
             dh = (want - h + math.pi) % (2 * math.pi) - math.pi
             h += cur + pull * dh; x += 0.040 * math.cos(h); y += 0.040 * math.sin(h); XY.append(V((x, y, 0)))
@@ -658,11 +730,10 @@ def garn():
         P = []; vis = []
         for k, q in enumerate(XY):
             t = k / len(XY)
-            dv = 0.85 * nz(t * 13.0, seed, 0.5) + 0.12                 # > 0 lying on the net, < 0 under it
+            dv = 0.85 * nz(t * 13.0, seed, 0.5) + 0.10                 # > 0 lying on the net, < 0 under it
             z = heap_h(q.x, q.y) + (r * 0.85 if dv > 0 else r * (0.85 - 6.0 * min(1.0, -dv * 2)))
             P.append(V((q.x, q.y, z))); vis.append(dv)
-        steps = len(P)
-        runs = []; cur_ = []
+        steps = len(P); runs = []; cur_ = []
         for k in range(steps):
             if vis[k] > -0.12: cur_.append(k)
             elif cur_: runs.append(cur_); cur_ = []
@@ -674,11 +745,88 @@ def garn():
         return P, vis
     fl, fd = rope(1, 0.0055, C['float'], 3, 95)
     rope(-1, 0.0045, C['lead'], 8, 95)
-    # small floats threaded on the float line where it lies on top
     last = -99
-    for k in range(3, len(fl) - 3):
+    for k in range(3, len(fl) - 3):        # small floats threaded on the float line where it lies on top
         if fd[k] > 0.25 and k - last > 13:
-            t = (fl[k + 1] - fl[k - 1]).normalized(); ellipsoid(M, fl[k] + heap_n(fl[k].x, fl[k].y) * 0.005, t, (0.034, 0.016), C['floats'], seg=8, rings=5); last = k
+            t = (fl[k + 1] - fl[k - 1]).normalized(); ellipsoid(M, fl[k] + heap_n(fl[k].x, fl[k].y) * 0.005, t, (0.034, 0.016), C['floats'], seg=6, rings=4); last = k
+    return M.done(65)
+
+def garn_kant():
+    """the bights of netting hanging over the tub's rim (not scaled with the heap): the net comes off the heap, gathers into a lumpy
+    roll over the rim and hangs down the outside in a loose U with pleats, its meshes as thin strips on it, a few strands lower"""
+    M = TM('garn_kant'); rng = random.Random(17)
+    for bi, (ax, sg, c, hw, hang) in enumerate(BIGHTS):
+        wall_in = T_IN[0] if ax == 'x' else T_IN[1]; wall_out = T_OUT[0] if ax == 'x' else T_OUT[1]; rw = wall_out - wall_in
+        out = V((sg, 0, 0)) if ax == 'x' else V((0, sg, 0)); al_v = V((0, 1, 0)) if ax == 'x' else V((1, 0, 0))
+        def P(along, d, z):         # along the wall, d out from the inner wall's face, z up
+            o = sg * (wall_in + d); a2 = c + along
+            return V((o, a2, z)) if ax == 'x' else V((a2, o, z))
+        z0 = T_RIM - 0.050                                           # where the curtain leaves the rim's lip
+        def bottom(al): return z0 - 0.012 - hang * max(0.0, 1 - (al / hw) ** 2) ** 0.75 * (1 + 0.12 * nz(al * 9, bi, 0.5))
+        NUk = 15
+        # the section: inside on the heap, up over the inner edge, the roll on the rim, down the outer face, then the curtain
+        def section(al, w):
+            th = (0.010 + 0.016 * w) * (0.7 + 0.6 * abs(nz(al * 14, bi, 1.1)))         # the roll's thickness: lumpy along it
+            sec = [(-0.075, None, 0), (-0.035, None, 0), (-0.006, T_RIM - 0.004 + th * 0.5, 1), (0.012, T_RIM + th * 0.9, 1), (rw * 0.5, T_RIM + th, 1),
+                   (rw - 0.006, T_RIM + th * 0.7, 1), (rw + th * 0.6, T_RIM - 0.010, 1), (rw + th * 0.5 + 0.004, z0, 1)]
+            zb = bottom(al) if abs(al) < hw else z0
+            for f in (0.25, 0.5, 0.75, 1.0):
+                sec.append((rw + 0.010 + 0.004 * f, lerp(z0, zb, f), 2))
+            return sec
+        top = []; back = []
+        for iu in range(NUk):
+            u = iu / (NUk - 1) - 0.5; al = u * 2 * hw * 1.08; w = max(0.0, math.sin(math.pi * (u + 0.5))) ** 0.6
+            sec = section(al, w); ct = []; cb = []
+            for js, (d, z, kind) in enumerate(sec):
+                if kind == 2:   # the curtain's pleats: outward only, deeper lower down
+                    d += 0.012 * (0.5 + 0.5 * math.sin(al * 48 + 1.7 * bi + 0.8 * nz(al * 6, js, bi))) * (js - 7) / 4
+                q = P(al, d, 0)
+                if z is None: z = (heap_h(q.x, q.y) if rho(q.x, q.y) < 1 else edge_h(q.x, q.y)) - 0.004
+                if kind == 1: z = lerp(edge_h(q.x, q.y), z, w) if js == 2 else z
+                q = P(al, d, z)
+                lit = (0.30 + 0.45 * w) if kind < 2 else 0.55 + 0.35 * (js - 7) / 4      # the thin curtain lighter, the roll deep
+                col = net_col(q.x, q.y, min(1.0, lit + 0.12 * nz(al * 25, js * 0.7, bi)), q.z)
+                ct.append(M.v(q, mul3(col, 1 / 0.5)))
+                cb.append(M.v(q - out * 0.003, mul3(col, 0.6 / 0.5)) if kind == 2 or js >= 6 else None)
+            top.append(ct); back.append(cb)
+        ns = len(top[0])
+        for iu in range(NUk - 1):
+            for js in range(ns - 1):
+                o_ = V((0, 0, 1)) if js < 2 else (out + V((0, 0, 1)) if js < 6 else out)
+                M.f([top[iu][js], top[iu + 1][js], top[iu + 1][js + 1], top[iu][js + 1]], C['net'], out=o_)
+                if back[iu][js] is not None and back[iu][js + 1] is not None:
+                    M.f([back[iu][js], back[iu + 1][js], back[iu + 1][js + 1], back[iu][js + 1]], C['net'], out=-out)
+        for js in range(6, ns - 1):      # the curtain's free edge seen from below
+            for iu in (0, NUk - 1):
+                pass
+        for iu in range(NUk - 1):
+            M.f([top[iu][-1], top[iu + 1][-1], back[iu + 1][-1], back[iu][-1]], C['net'], out=V((0, 0, -1)))
+        # the meshes on the curtain: a warped lattice of diamonds (bars of 3 cm) on its outer face, following the pleats
+        def curtain(al, z):
+            js = 8 + 3 * min(1.0, max(0.0, (z0 - z) / max(1e-3, z0 - bottom(al)))); f = (js - 7) / 4
+            d = rw + 0.010 + 0.004 * f + 0.012 * (0.5 + 0.5 * math.sin(al * 48 + 1.7 * bi + 0.8 * nz(al * 6, js, bi))) * f
+            return P(al, d + 0.0025, z)
+        col = mul3(lerp3(net_col(0, c, 1.0), (0.93, 0.97, 0.96), 0.62), 1 / 0.5)
+        def mstrip(pts, w):
+            vs = [(M.v(q + al_v * (w / 2), col), M.v(q - al_v * (w / 2), col)) for q in pts]
+            for k in range(len(vs) - 1): M.f([vs[k][0], vs[k][1], vs[k + 1][1], vs[k + 1][0]], C['mono'], out=out)
+        def LP(i, j):
+            al = (i + j) * 0.03 * math.cos(0.45); dz = (i - j) * 0.03 * math.sin(0.45)
+            return al + 0.006 * nz(al * 30, dz * 30, bi), z0 + 0.004 + dz + 0.005 * nz(al * 30 + 3, dz * 30, bi)
+        nl = 9
+        for fam in (0, 1):
+            for q in range(-nl, nl + 1):
+                pts = []
+                for k in range(-nl, nl + 1):
+                    al, z = LP(k, q) if fam == 0 else LP(q, k)
+                    if abs(al) < hw * 0.95 and bottom(al) + 0.006 < z <= z0 + 0.004: pts.append(curtain(al, z))
+                    else:
+                        if len(pts) > 1: mstrip(pts, 0.0019)
+                        pts = []
+                if len(pts) > 1: mstrip(pts, 0.0019)
+        for k in range(6):          # loose strands hanging lower
+            al = rng.uniform(-hw * 0.7, hw * 0.7); zb = bottom(al); L = rng.uniform(0.03, 0.07); q0 = curtain(al, zb + 0.004)
+            mstrip([q0 + out * (0.002 * t) - V((0, 0, L * t)) + al_v * (0.006 * math.sin(t * 3 + k)) for t in (0, 0.33, 0.66, 1.0)], 0.0016)
     return M.done(65)
 
 # ======================================================================================================================
@@ -751,10 +899,10 @@ def floor(z=0.0, s=6.0, rgb=(0.40, 0.41, 0.40)):
 
 def tub_outline(cut=False):
     """a simple open box, 1.0 x 1.2 x 0.74 outside and 0.86 x 1.06 inside (long along y), to judge the heap's fit; cut leaves the
-    side at -x out"""
+    side at +x out"""
     M = TM('tubline'); m = mat('tubblue', (0.12, 0.30, 0.58), 0.4)
     cbox(M, (0, 0, 0.025), (0.5, 0.6, 0.025), m, ch=0.005)
-    for sx in ((1,) if cut else (-1, 1)): cbox(M, (sx * 0.465, 0, 0.37), (0.035, 0.6, 0.37), m, ch=0.005)
+    for sx in ((-1,) if cut else (-1, 1)): cbox(M, (sx * 0.465, 0, 0.37), (0.035, 0.6, 0.37), m, ch=0.005)
     for sy in (-1, 1): cbox(M, (0, sy * 0.565, 0.37), (0.43, 0.035, 0.37), m, ch=0.005)
     return M.done(30)
 
@@ -762,8 +910,8 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     reset(); colours()
     S = stamp(); LR, K = line('red', (0.92, 1.08), 'line_r'); LG, _ = line('green', (0.80, 1.22), 'line_g'); KR = kroker(K)
-    NET = garn(); KA = crate('kasse', 1.20, 0.80, 0.80, 0.07, 0.095, 31); KS = crate('kasse_s', 0.80, 0.60, 0.60, 0.06, 0.08, 41); PA = pall()
-    objs = {'stamp': S, 'line_r': LR, 'line_g': LG, 'kroker': KR, 'garn': NET, 'kasse': KA, 'pall': PA, 'kasse_s': KS}
+    NET = garn(); KANT = garn_kant(); KA = crate('kasse', 1.20, 0.80, 0.80, 0.07, 0.095, 31); KS = crate('kasse_s', 0.80, 0.60, 0.60, 0.06, 0.08, 41); PA = pall()
+    objs = {'stamp': S, 'line_r': LR, 'line_g': LG, 'kroker': KR, 'garn': NET, 'garn_kant': KANT, 'kasse': KA, 'pall': PA, 'kasse_s': KS}
     # the occlusion baked into the colours: the coil in its tub, the net in a tub, the wood alone
     setup_render(64, 64, samples=8)
     tl = tub_outline(); fl = floor()
@@ -777,11 +925,11 @@ def main():
         for l in me.loops:
             a = acc[l.vertex_index]; c = sum(a) / len(a); lay.data[l.index].color = (c, c, c, 1.0)
     bake(LR, [S], 24, 0.06); bake(LG, [S], 24, 0.06)
-    bake(NET, [tl], 24, 0.12)
+    bake(NET, [tl, KANT], 24, 0.12); bake(KANT, [tl, NET], 24, 0.10)
     for o in (KA, KS, PA): bake(o, [], 16, 0.10)
     for p in bpy.context.scene.objects:
         if p.type == 'MESH': p.hide_render = False
-    baked = {'line_r', 'line_g', 'garn', 'kasse', 'pall', 'kasse_s'}
+    baked = {'line_r', 'line_g', 'garn', 'garn_kant', 'kasse', 'pall', 'kasse_s'}
     parts = [(nm, mesh_arrays(o, to_game, to_game_n, ao=nm in baked), 1.0) for nm, o in objs.items()]
     sz = {nm: size(o) for nm, o in objs.items()}
     r4 = lambda v: round(v, 4)
@@ -791,6 +939,8 @@ def main():
           'line': {'y0': L_Y0, 'y1': L_Y1, 'sMin': S_MIN, 'xz': fit_xz(), 'note': 'scale y by s for how much line is left; for s under sMin scale x and z by xz(s) too, so the coil stays inside the tub'},
           'hooks': {'n': N_HOOK, 'r': r4(R_HOOK), 'y': Z_RIM, 'a0': -HOOK_A, 'a1': HOOK_A, 'note': 'on the rim about +x, the angle in the x-z plane from +x towards -z'},
           'garn': {'y0': G_Y0, 'top': G_TOP, 'edgeY': G_EDGE, 'half': [GA, GB], 'halfBase': [GA0, GB0], 'note': 'half sizes in x and z; scale y with the net aboard'},
+          'garn_kant': {'rimY': T_RIM, 'tubIn': [2 * T_IN[0], 2 * T_IN[1]], 'tubOut': [2 * T_OUT[0], 2 * T_OUT[1]], 'lowY': round(sz['garn_kant'][0][1], 3),
+                        'note': 'bights of net over the rim of the 460 l tub (1.00 x 1.20 outside, the rim at y 0.74), on its +x side and its -z end; same origin as garn but not scaled: draw it with a full heap only'},
           'size': {nm: [r4(hi[k] - lo[k]) for k in range(3)] for nm, (lo, hi) in sz.items()}}
     glb = os.path.join(OUT, 'deck-rig.glb'); n = write_glb(glb, parts, ex)
     open(os.path.join(ROOT, 'src', 'data', 'deck-rig.b64'), 'w').write(base64.b64encode(open(glb, 'rb').read()).decode())
@@ -830,11 +980,12 @@ def renders(objs, tl, fl):
         show(objs, S, LR, KR, fl, *extra); camera((1.9, -1.55, 1.55), (0.55, 0.15, 0.2), lens=40); render(os.path.join(OUT, 'rigg_stamps.png'))
         for o in extra: bpy.data.objects.remove(o, do_unlink=True)
     if want('garn'):
-        NET = objs['garn']; tc = tub_outline(cut=True); tc.location = (0, 0, 0); NET.location = (0, 0, 0)
-        tf = dup(tl, (0, -1.45, 0)); nf = dup(NET, (0, -1.45, 0)); tc3 = dup(tc, (0, 1.45, 0)); n3 = dup(NET, (0, 1.45, 0), (1, 1, 0.55))
-        show(objs, NET, tc, fl, tf, nf, tc3, n3); camera((-2.9, -1.1, 3.1), (0, 0, 0.45), lens=32); render(os.path.join(OUT, 'rigg_garn.png'))
-        camera((-1.05, -0.95, 2.25), (0.0, 0.0, 0.80), lens=40); render(os.path.join(OUT, 'rigg_garn_near.png'))
-        for o in (tc, tf, nf, tc3, n3): bpy.data.objects.remove(o, do_unlink=True)
+        NET = objs['garn']; KANT = objs['garn_kant']; tc = tub_outline(cut=True); NET.location = (0, 0, 0); KANT.location = (0, 0, 0)
+        tf = dup(tl, (0, -1.45, 0)); nf = dup(NET, (0, -1.45, 0)); kf = dup(KANT, (0, -1.45, 0)); tc.location = (0, 0, 0)
+        t3 = dup(tl, (0, 1.45, 0)); n3 = dup(NET, (0, 1.45, 0), (1, 1, 0.55))
+        show(objs, NET, KANT, tc, fl, tf, nf, kf, t3, n3); camera((2.9, -1.3, 3.1), (0, -0.1, 0.45), lens=32); render(os.path.join(OUT, 'rigg_garn.png'))
+        show(objs, fl, tf, nf, kf); camera((1.55, -2.75, 2.35), (0.05, -1.45, 0.72), lens=40); render(os.path.join(OUT, 'rigg_garn_near.png'))
+        for o in (tc, tf, nf, kf, t3, n3): bpy.data.objects.remove(o, do_unlink=True)
     if want('kasse'):
         KA, KS, PA = objs['kasse'], objs['kasse_s'], objs['pall']
         KA.location = (0, 0, 0); KS.location = (1.25, -0.2, 0); PA.location = (-1.25, 0, 0); k2 = dup(KA, (-1.25, 0, 0.144)); p2 = dup(PA, (1.25, 1.1, 0))
