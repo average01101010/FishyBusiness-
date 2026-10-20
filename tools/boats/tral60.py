@@ -7,7 +7,9 @@ The trawl doors hang in the gallows on the stern either side of the ramp, as on 
 (06.10.2026: «en tråler har slike tråldører på hekken som senkes i havet ved tråling»). The doors, the codend and the net on the
 drum are parts of their own in the GLB, so the 3D view can shoot and haul the trawl (view3d.js TRAWL).
 Where the drawing says nothing (colours, the shape of the hull below the waterline, the gantry) the choices are ours: a navy hull
-with a white upper side and superstructure, blue doors, after the trawlers on the coast. Exterior only.
+with a white upper side and superstructure, blue doors, after the trawlers on the coast. The knuckle-boom crane is parked for sea with
+its main boom in a boom rest and the outer boom folded on top (Jonas 20.10.2026: the larger ocean boats' cranes need a boom rest;
+bpyutil.boom_rest, knuckle_fold). Exterior only.
 
     pip install bpy==4.5.4
     python3 tools/boats/tral60.py            -> src/data/boat-tral60.b64 (+ the side picture), renders in tools/boats/out/
@@ -353,9 +355,12 @@ def trawl_deck(fine=True):
     # the main winch in front of the superstructure
     acyl(A, (26.2, -1.6, D3 + 0.9), (26.2, 1.6, D3 + 0.9), 0.75, lambda z: C['winch'], seg=sg_)
     for sg in (1, -1): abox(A, 25.5, 26.9, sg * 1.7 - 0.12, sg * 1.7 + 0.12, D3, D3 + 1.8, C['winch'])
-    # the knuckle-boom crane on the starboard side, boom laid forward
+    # the knuckle-boom crane on the starboard side, parked for sea: the main boom laid forward in its boom rest near the knuckle (a
+    # post braced across to the deck, a rubber-lined cradle and a lashing), the outer boom folded back on top of it
     acyl(A, (17.0, -4.3, D3), (17.0, -4.3, D3 + 2.2), 0.55, lambda z: C['white'], seg=sg_)
-    beam(A, (17.0, -4.3, D3 + 2.4), (23.6, -4.0, D3 + 2.9), 0.45, 0.6, C['white']); beam(A, (23.6, -4.0, D3 + 2.9), (19.0, -3.9, D3 + 3.15), 0.35, 0.45, C['white'])
+    b0, b1 = (17.0, -4.3, D3 + 2.4), (23.6, -4.0, D3 + 2.9)
+    beam(A, b0, b1, 0.45, 0.6, C['white']); knuckle_fold(A, b0, b1, 0.45, 0.6, 4.6, 0.35, 0.45, C['white'], pin=C['steel'])
+    boom_rest(A, b0, b1, 0.45, 0.6, (22.5, -4.05), D3, C['white'], C['dark'], brace=((22.5, -5.25, D3), (22.5, -2.85, D3)), strap=C['yellow'], fine=fine)
     acyl(A, (23.6, -4.0, D3 + 2.9), (23.6, -4.0, D3 + 1.6), 0.06, lambda z: C['steel'], seg=6); abox(A, 23.4, 23.8, -4.2, -3.8, D3 + 1.3, D3 + 1.6, C['yellow'])
     # the rescue boat on its cradle on the port side, with its davit
     for sg in (1,):

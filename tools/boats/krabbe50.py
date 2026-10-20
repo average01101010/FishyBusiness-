@@ -5,7 +5,9 @@ low pot deck aft with its bulwark 4.6 m over the water, the raised forecastle fr
 windows wrapping round the front, the mast on the roof, the portal for hauling the pots with the knuckle crane beside it, the shelter
 roof over the pot deck aft, and the round forefoot under a near upright stem. Jonas asked for another colour scheme than the
 pictures' («Bytt gjerne fargene til et annet design som ikke ligner denne»): an anthracite hull with an ochre sheer stripe and boot
-top, a near black bottom, cream superstructure and ochre bands on the portal. Exterior only (CLAUDE.md).
+top, a near black bottom, cream superstructure and ochre bands on the portal. The knuckle crane is parked for sea with both booms
+laid out in one line aft into a boom rest on the shelter's roof (Jonas 20.10.2026: the larger ocean boats' cranes need a boom rest;
+bpyutil.boom_rest). Exterior only (CLAUDE.md).
 
     pip install bpy==4.5.4
     python3 tools/boats/krabbe50.py            -> src/data/boat-krabbe50.b64 (+ the side picture), renders in tools/boats/out/
@@ -241,10 +243,17 @@ def deck_gear(fine=True):
     for y in (-4.4, -3.5, -2.6):
         acyl(A, (23.1, y - 0.12, 19.0), (23.1, y + 0.12, 19.0), 0.42, lambda z: C['steel'], seg=12)
     acyl(A, (23.1, -4.4, 18.6), (23.1, -5.4, 11.2), 0.02, lambda z: C['dark'], seg=4)
-    # the knuckle crane on the port side by the portal, its boom folded aft along the deck
+    # the knuckle crane on the port side by the portal, parked for sea with both booms laid out in one line aft, level over the
+    # rescue boat, the outer boom lying in a boom rest on the shelter's roof near its tip (a low post with knees, a rubber-lined
+    # cradle and a lashing; the roof is 0.3 m under the boom), the knuckle's side plates and pin at the joint
     acyl(A, (19.0, 3.4, DK), (19.0, 3.4, DK + 2.4), 0.5, lambda z: w, seg=sg_)
     beam(A, (19.0, 3.4, DK + 2.6), (18.8, 3.3, DK + 3.6), 0.6, 0.6, w)
-    beam(A, (18.8, 3.3, DK + 3.6), (12.0, 3.0, DK + 2.6), 0.42, 0.5, w); beam(A, (12.0, 3.0, DK + 2.6), (17.0, 2.8, DK + 1.5), 0.32, 0.38, w)
+    kp = (18.8, 3.3, DK + 3.6); kd = (-6.84, -0.15, 0.0); kl = math.hypot(kd[0], kd[1])
+    kk = tuple(kp[i] + kd[i] for i in range(3)); kt = tuple(kk[i] + kd[i] / kl * 5.1 for i in range(3))   # the knuckle, the outer boom's tip
+    beam(A, kp, kk, 0.42, 0.5, w); beam(A, kk, kt, 0.32, 0.38, w)
+    for sg in (1, -1): abox(A, kk[0] - 0.05, kk[0] + 0.45, kk[1] + sg * 0.24 - 0.03, kk[1] + sg * 0.24 + 0.03, kk[2] - 0.28, kk[2] + 0.28, w)
+    acyl(A, (kk[0] + 0.2, kk[1] - 0.3, kk[2]), (kk[0] + 0.2, kk[1] + 0.3, kk[2]), 0.07, lambda z: C['steel'], seg=10)
+    boom_rest(A, kk, kt, 0.32, 0.38, (kt[0] + 0.85, kt[1]), 12.5, w, C['dark'], strap=C['boot'], fine=fine)
     # a second, taller crane forward of the portal with its boom up and aft
     acyl(A, (26.6, 3.6, DK), (26.6, 3.6, DK + 1.8), 0.42, lambda z: w, seg=sg_)
     beam(A, (26.6, 3.6, DK + 1.8), (26.2, 3.4, DK + 9.5), 0.34, 0.38, w); beam(A, (26.2, 3.4, DK + 9.5), (22.5, 3.0, DK + 6.8), 0.26, 0.3, w)

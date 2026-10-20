@@ -7,7 +7,9 @@ at the stem, the white bulwark over it, the bulb's nose at 72.1 m and 5.4 m up.
 On deck: the seine in its bin aft with the power block on a knuckle-boom crane over it, a tower crane on the starboard quarter, the
 pelagic trawl's drum and winches, the trawl doors in gallows at the stern quarters, the purse davit on the starboard side, the
 superstructure amidships with the wheelhouse on top, the raked mast and funnel, a crane and the foremast forward. The trawl doors,
-codend and net roll are the trawler's (tral60.py); view3d.js TRAWL and SEINE play the trawl and the seine. Exterior only (CLAUDE.md).
+codend and net roll are the trawler's (tral60.py); view3d.js TRAWL and SEINE play the trawl and the seine. The tower crane and the
+foredeck crane are parked for sea with their main booms in boom rests and the outer booms folded on top; the power block's crane
+works with its boom up and has none (Jonas 20.10.2026; bpyutil.boom_rest, knuckle_fold). Exterior only (CLAUDE.md).
 
     pip install bpy==4.5.4
     python3 tools/boats/not75.py            -> src/data/boat-not75.b64 (+ the side picture), renders in tools/boats/out/
@@ -210,12 +212,19 @@ def aft_deck(fine=True):
     acyl(A, (PB[0] - 0.25, PB[1], pbz), (PB[0] + 0.25, PB[1], pbz), 1.0, lambda z: C['yellow'], seg=sg_)
     acyl(A, (PB[0] + 0.25, PB[1], pbz), (PB[0] - 0.25, PB[1], pbz), 1.0, lambda z: C['yellow'], seg=sg_)
     beam(A, tip, (PB[0], PB[1], pbz + 0.6), 0.2, 0.2, C['steel'])
-    # the tower on the starboard quarter with its crane laid forward
+    # the tower on the starboard quarter with its crane laid forward for sea: the main boom lowered from the tower's top 20 degrees
+    # (it clears the tower roof's forward edge by 8 cm) into a boom rest on deck between the bin and the starboard bulwark, a braced
+    # pillar (forward to the deck and out to the bulwark) with a rubber-lined cradle and a lashing, under the power block and its
+    # crane; the outer boom folded back on top of it
     tx0, tx1, ty0, ty1 = XA + 0.2, 1.6, -7.35, -5.25; tz0 = z_deck(0.0)
     abox(A, tx0, tx1, ty0, ty1, tz0, tz0 + 5.6, w); abox(A, tx0 - 0.2, tx1 + 0.2, ty0 - 0.2, ty1 + 0.2, tz0 + 5.6, tz0 + 5.75, C['roof'])
     acyl(A, ((tx0 + tx1) / 2, (ty0 + ty1) / 2, tz0 + 5.75), ((tx0 + tx1) / 2, (ty0 + ty1) / 2, tz0 + 7.0), 0.5, lambda z: w, seg=sg_)
-    beam(A, ((tx0 + tx1) / 2, (ty0 + ty1) / 2, tz0 + 7.0), (9.0, -6.0, tz0 + 8.6), 0.5, 0.6, w)
-    beam(A, (9.0, -6.0, tz0 + 8.6), (3.0, -6.2, tz0 + 8.2), 0.4, 0.5, w)
+    rx, ry_ = 7.4, -6.8                                                       # the rest
+    b0 = ((tx0 + tx1) / 2, (ty0 + ty1) / 2, tz0 + 7.0); hd = math.hypot(rx - b0[0], ry_ - b0[1]); th = math.radians(20.0)
+    b1 = (b0[0] + (rx - b0[0]) / hd * 9.66 * math.cos(th), b0[1] + (ry_ - b0[1]) / hd * 9.66 * math.cos(th), b0[2] - 9.66 * math.sin(th))   # the knuckle (9.66 m as before)
+    beam(A, b0, b1, 0.5, 0.6, w); knuckle_fold(A, b0, b1, 0.5, 0.6, 6.0, 0.4, 0.5, w, pin=C['steel'])
+    yb = -(hbz(rx, z_top(rx) - 0.3) - 0.07)
+    boom_rest(A, b0, b1, 0.5, 0.6, (rx, ry_), z_deck(rx), w, C['dark'], brace=((rx + 0.95, ry_, z_deck(rx)), ((rx, yb, z_top(rx) - 0.3), (0, 1, 0))), strap=C['yellow'], fine=fine)
     for k in range(6): abox(A, tx1, tx1 + 0.06, ty1 + 0.15, ty1 + 0.55, tz0 + 0.5 + 0.85 * k, tz0 + 0.56 + 0.85 * k, C['steel'])
     # the gallows at the stern quarters where the pelagic doors hang, and their blocks
     for sg in (1, -1):
@@ -332,9 +341,12 @@ def superstructure(fine=True):
 def foredeck(fine=True):
     A = Acc('fore'); w = C['white']; sg_ = 18 if fine else 8
     px = 52.5; pz = z_deck(px)
+    # the foredeck crane, its main boom laid aft in a boom rest by the front of the superstructure (a post braced across to the deck,
+    # a rubber-lined cradle and a lashing), the outer boom folded back on top of it
     acyl(A, (px, 0, pz), (px, 0, pz + 2.4), 0.6, lambda z: w, seg=sg_)
-    beam(A, (px, 0, pz + 2.6), (42.5, 0.3, pz + 3.0), 0.55, 0.7, w); beam(A, (42.5, 0.3, pz + 3.0), (48.5, 0.4, pz + 3.45), 0.4, 0.5, w)
-    abox(A, 42.0, 43.0, -0.5, 1.1, z_deck(42.5), pz + 2.7, C['steel'])
+    b0, b1 = (px, 0, pz + 2.6), (42.5, 0.3, pz + 3.0)
+    beam(A, b0, b1, 0.55, 0.7, w); knuckle_fold(A, b0, b1, 0.55, 0.7, 6.0, 0.4, 0.5, w, pin=C['steel'])
+    boom_rest(A, b0, b1, 0.55, 0.7, (43.6, 0.28), z_deck(43.6), w, C['dark'], brace=((43.6, -1.0, z_deck(43.6)), (43.6, 1.55, z_deck(43.6))), strap=C['yellow'], fine=fine)
     # the foremast, raked aft: white legs below, black above, with its platforms and lights
     b0 = (59.0, 0.0, z_deck(59.0)); t0 = (56.3, 0.0, 25.2)
     for sg in (1, -1): beam(A, (60.2, sg * 1.6, z_deck(60.2)), (57.9, 0.0, 20.6), 0.4, 0.4, w)

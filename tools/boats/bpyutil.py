@@ -540,6 +540,76 @@ def beam(A, p0, p1, w, h, m, up=(0, 0, 1), skip=()):
     p0 = V(p0); p1 = V(p1); d = p1 - p0; L = d.length; d.normalize(); u = V(up); s = d.cross(u).normalized(); u = s.cross(d).normalized()
     obox(A, (p0 + p1) / 2, d * (L / 2), s * (w / 2), u * (h / 2), m, skip)
 
+def boom_rest(A, p0, p1, w, h, at, deck, m, pad, brace=(), strap=None, post=None, length=None, fine=True):
+    """a boom rest («bomstøtte»), the way larger fishing vessels park a crane's boom for sea, under the boom that beam() makes from
+    p0 to p1 (w wide, h deep, up z): a square steel post on a foot plate standing on the deck (at height deck) where the boom's axis
+    passes over the point at = (x, y) (the nearest point of it), turned to the boom's heading; on its head a cradle pitched to the
+    boom: a saddle plate under the boom's underside lined with rubber (pad), two cheeks up the boom's sides with their tops flared
+    out to lead it in, and two knees from the post under the saddle's ends; struts from the post down to the points in brace (each
+    a point, or (point, normal) where it lands on a wall, the bulwark's inside), each on a small plate; with fine, a lashing over
+    the boom in strap's colour. post is the post's side, length the cradle's length along the boom. Returns the post's foot."""
+    P0, P1 = V(p0), V(p1); D = P1 - P0
+    t = ((at[0] - P0.x) * D.x + (at[1] - P0.y) * D.y) / max(1e-9, D.x * D.x + D.y * D.y)
+    c = P0 + D * t; d = D.normalized(); s = d.cross(V((0, 0, 1))).normalized(); u = s.cross(d).normalized()
+    post = post or max(0.16, min(0.32, 0.75 * w)); L = length or max(0.40, min(0.80, 1.6 * w))
+    tp, tpad, tc, gap = 0.04, 0.03, max(0.02, 0.06 * w), 0.015
+    cu = c - u * (h / 2)                                        # the boom's underside over the post
+    pl = cu - u * (tpad + tp / 2)                               # the saddle plate's middle
+    obox(A, cu - u * (tpad / 2), d * (L / 2 - 0.02), s * (w / 2), u * (tpad / 2), pad)
+    obox(A, pl, d * (L / 2), s * (w / 2 + gap + tc), u * (tp / 2), m)
+    for sg in (1, -1):
+        ch = 0.55 * h + tpad; cc = cu + s * (sg * (w / 2 + gap + tc / 2)) + u * (ch / 2 - tpad)
+        obox(A, cc, d * (L / 2), s * (tc / 2), u * (ch / 2), m)
+        if fine:
+            a = cu + s * (sg * (w / 2 + gap + tc / 2)) + u * (0.55 * h); b = a + s * (sg * (0.04 + 0.12 * w)) + u * (0.06 + 0.12 * h)
+            e = (b - a); le = e.length; e.normalize(); n = e.cross(d).normalized()
+            obox(A, (a + b) / 2, e * (le / 2), d * (L / 2), n * (tc / 2), m)
+            obox(A, cu + s * (sg * (w / 2 + gap / 2)) + u * (0.25 * h), d * (L / 2 - 0.03), s * (gap / 2), u * (0.25 * h), pad)
+    # the post, from the foot plate up to the saddle plate's underside (its top cut to the plate's pitch, 5 mm into it), turned to the
+    # boom's heading; the foot plate a little into the deck, which may slope
+    dh = V((d.x, d.y, 0)).normalized(); sh = V((-dh.y, dh.x, 0)); ps = pl - u * (tp / 2); foot = V((cu.x, cu.y, deck))
+    under = lambda q: ps.z - (u.x * (q.x - ps.x) + u.y * (q.y - ps.y)) / u.z + 0.005      # the plate's underside over a point
+    ring = [foot + dh * (i * post / 2) + sh * (j * post / 2) for i, j in ((-1, -1), (1, -1), (1, 1), (-1, 1))]
+    top = [V((q.x, q.y, under(q))) for q in ring]; zt = ps.z
+    for k in range(4):
+        n = (k + 1) % 4; A.poly([ring[k], ring[n], top[n], top[k]], m, (ring[k] + ring[n]) / 2 - foot)
+    obox(A, (cu.x, cu.y, deck + 0.01), dh * (post / 2 + 0.08), sh * (post / 2 + 0.08), V((0, 0, 0.02)), m)
+    # the knees under the saddle's ends, in the boom's vertical plane
+    kz = max(deck + 0.05, zt - min(0.45, 0.5 * (zt - deck)))
+    for sg in (1, -1):
+        q = V((cu.x, cu.y, kz)) + dh * (sg * post / 2); e = pl - u * (tp / 2) + d * (sg * (L / 2 - 0.03))
+        beam(A, q, e, max(0.03, 0.2 * post), max(0.08, 0.5 * post), m)
+    # the struts to the deck or the bulwark, each on its plate
+    for br in brace:
+        p, nrm = (br, (0, 0, 1)) if not isinstance(br[0], (tuple, list)) else br
+        p = V(p); nrm = V(nrm).normalized(); q = V((cu.x, cu.y, deck + 0.55 * (zt - deck)))
+        beam(A, q, p, 0.55 * post, 0.55 * post, m)
+        a1 = nrm.cross(V((0, 0, 1)) if abs(nrm.z) < 0.9 else V((1, 0, 0))).normalized(); a2 = nrm.cross(a1).normalized()
+        obox(A, p, a1 * (0.35 * post + 0.05), a2 * (0.35 * post + 0.05), nrm * 0.015, m)
+    # the lashing over the boom: a band across its top and down its sides into the cradle
+    if fine and strap is not None:
+        bw = 0.04; o = 0.008
+        obox(A, c + u * (h / 2 + o / 2), d * bw, s * (w / 2 + o), u * (o / 2), strap)
+        for sg in (1, -1): obox(A, c + s * (sg * (w / 2 + o / 2)) + u * (0.275 * h), d * bw, s * (o / 2), u * (0.225 * h + o / 2), strap)
+    return foot
+
+
+def knuckle_fold(A, p0, p1, w1, h1, L2, w2, h2, m, pin=None, gap=0.04, head=0.5):
+    """a knuckle-boom crane's outer boom folded back over its main boom (the member beam() makes from p0 to p1, w1 x h1, the knuckle
+    at p1): from the knuckle back along the main boom's top, L2 long, w2 x h2, gap clear of it; the knuckle's two side plates round
+    the joint at the main boom's end, from under the main boom to over the outer one (head long), and the pin through them (pin's
+    colour). Returns the outer boom's ends: at the knuckle and at its tip."""
+    P0, P1 = V(p0), V(p1); d = (P1 - P0).normalized(); s = d.cross(V((0, 0, 1))).normalized(); u = s.cross(d).normalized()
+    k = P1 + u * (h1 / 2 + gap + h2 / 2); e = k - d * L2
+    beam(A, k, e, w2, h2, m)
+    hw = max(w1, w2) / 2 + 0.03; c = P1 - d * (head / 2) + u * ((gap + h2) / 2)
+    for sg in (1, -1): obox(A, c + s * (sg * hw), d * (head / 2), s * 0.03, u * ((h1 + gap + h2) / 2 + 0.03), m)
+    if pin is not None:
+        pc = P1 - d * (head * 0.45) + u * ((gap + h2) / 2)
+        acyl(A, pc - s * (hw + 0.06), pc + s * (hw + 0.06), 0.1 * min(h1, h2) + 0.02, lambda z: pin, seg=10)
+    return k, e
+
+
 def board(A, P, n, t, m, edges=True):
     """a board from its four front corners P (round it, bottom edge first) facing n, t thick behind; its back is left open, and
     edges='v' gives it only its two long sides"""

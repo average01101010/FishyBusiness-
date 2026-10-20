@@ -105,7 +105,7 @@ const VESSELS = {
   hurtigsjark:{name:{no:'Brukt hurtigsjark 10,99 m, 500 hk', en:'Used 10.99 m speed sjark, 500 hp'}, len:10.99, beam:3.9, draft:1.6, disp:12, holdCap:5000, iceCap:1600, fuelCap:1500, hp:500, engine:{no:'500 hk diesel', en:'500 hp diesel'},
     vmax:22, vcruise:17, accel:9, turnR:75, planing:true, outboard:false, diesel:true, risk:[2.3, 3.6, 14.8, 18.5], sea:0.15, crewMax:2, berths:2, tubCap:350, land:'tub', std:['plotter', 'vhf'],
     rigs:['juksa', 'line', 'garn', 'teiner'], jukseMax:6, gearMax:{garn:50, stamp:26, teine:18}, svcH:300, svcCost:18000, svcJobH:9, cls:'open', price:4900000, year:2009,
-    hullMat:'glassfiber', hold:{kind:'rom', m3:8}, deckCargo:1200, iceMaker:0, gutMachine:0, lph:55, cabins:1, fac:{house:'hus', shelter:false, galley:'plate', wc:true, dry:false, mess:false}, stations:{table:2, hauler:1}, crane:0,
+    hullMat:'glassfiber', hold:{kind:'rom', m3:8}, deckCargo:1200, iceMaker:0, gutMachine:0, lph:55, cabins:1, fac:{house:'hus', shelter:false, galley:'plate', wc:true, dry:false, mess:false}, stations:{table:2, hauler:1}, crane:0.5,
     desc:{no:'Planende sjark i glassfiber med styrhus forut. Rask til feltet og hjem igjen, men tørst.', en:'Planing fibreglass sjark with the wheelhouse forward. Fast to the grounds and home again, but thirsty.'}},
   sjarkny:{name:{no:'Ny hurtigsjark 10,99 m, 650 hk', en:'New 10.99 m speed sjark, 650 hp'}, len:10.99, beam:4.68, draft:2.06, disp:15, holdCap:7000, iceCap:2400, fuelCap:2000, hp:650, engine:{no:'650 hk diesel', en:'650 hp diesel'},
     vmax:25, vcruise:20, accel:10, turnR:80, planing:true, outboard:false, diesel:true, risk:[2.4, 3.8, 15, 19], sea:0.14, crewMax:3, berths:4, tubCap:400, land:'tub', std:['plotter', 'vhf'],
