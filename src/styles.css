@@ -26,7 +26,10 @@
 }
 *{box-sizing:border-box}
 html{height:100%;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);scroll-padding-top:env(safe-area-inset-top,0px);background:var(--chrome)}
-body{height:100%;margin:0;font-family:var(--sans);font-size:15px;line-height:1.4;color:var(--ink);background:var(--chrome);-webkit-text-size-adjust:100%}
+body{height:100%;margin:0;font-family:var(--sans);font-size:15px;line-height:1.4;color:var(--ink);background:var(--chrome);-webkit-text-size-adjust:100%;touch-action:manipulation}
+/* the page never zooms (Adrian 20.10.2026, #78: a pinch or a double tap zoomed the page on a phone and the buttons locked): no double-tap
+   zoom anywhere, and no text field under 16 px on a touch screen, which iOS zooms into when it gets the focus */
+@media (pointer:coarse){input,select,textarea{font-size:16px!important}}
 #app{height:100%;display:flex;flex-direction:column}
 header{display:flex;align-items:center;flex-wrap:wrap;gap:6px 14px;padding:8px 12px;border-bottom:1px solid var(--line)}
 .brand{display:flex;align-items:baseline;gap:8px;margin-right:auto}

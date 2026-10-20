@@ -613,6 +613,15 @@ if ($('zin')) $('zin').onclick = () => { if (G3.isActive()) return G3.zoom(1 / 1
 if ($('zout')) $('zout').onclick = () => { if (G3.isActive()) return G3.zoom(1.4); view.z = clamp(view.z / 1.4, ZMIN, ZMAX); applyView(); scheduleStatic(); };
 $('zboat').onclick = () => { if (G3.isActive()) return G3.reset(); view.cx = S.boat.pos.x; view.cy = S.boat.pos.y; applyView(); scheduleStatic(); };
 window.addEventListener('resize', () => { if (!S) return; applyView(); scheduleStatic(); });   // (not before the game is read: the sign-in gate can be turned)
+// the page never zooms (#78): iOS lets a pinch zoom the page whatever the viewport says, and a zoomed page left the buttons dead in
+// portrait and the chart gone after a turn to landscape. The pinch on the chart and in 3D is the game's own (pointer events, untouched);
+// the browser's is stopped, and a page that got zoomed anyway is set back when the phone turns. iOS gives the new size late, so the
+// layout is done again a moment after the turn.
+for (const ev of ['gesturestart', 'gesturechange', 'gestureend']) document.addEventListener(ev, e => e.preventDefault(), {passive:false});
+function unzoom(){ const vv = window.visualViewport, m = document.querySelector('meta[name=viewport]'); if (!vv || !m || vv.scale <= 1.01) return;
+  const c = m.getAttribute('content'); m.setAttribute('content', c + ', minimum-scale=1'); setTimeout(() => m.setAttribute('content', c), 50); }
+window.addEventListener('orientationchange', () => { unzoom(); setTimeout(() => window.dispatchEvent(new Event('resize')), 350); });
+if (window.visualViewport) visualViewport.addEventListener('resize', () => { if (visualViewport.scale > 1.01) unzoom(); });
 
 function addWaypoint(pt){
   const b = S.boat;
