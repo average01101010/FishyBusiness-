@@ -89,11 +89,21 @@ function crewSim(src){
       bleed:[bl[0], bl[1], face(bl[0], bl[1], drop[0], drop[1]), 'bleedst']};
     // the line tubs (rigAt: two across from the model's place, turned with it): one baiter or stripper to a tub, inboard of it, facing it
     const sp = K.stamps ? K.stamps : {at:[Bm / 2 * 0.25, d.y, d.z - 0.6], ry:0}, c = Math.cos(sp.ry || 0), s = Math.sin(sp.ry || 0);
-    PL.tubs = []; for (let i = 0; i < 8; i++){ const lx = (i % 2) * 0.52, lz = Math.floor(i / 2) * 0.5, x = sp.at[0] + lx * c + lz * s, z = sp.at[2] - lx * s + lz * c; PL.tubs.push([x, z]); }
-    PL.tubAt = i => { const T = PL.tubs[i % 8], L = Math.hypot(T[0], T[1] - d.z) || 1, ox = -T[0] / L, oz = -(T[1] - d.z) / L, x = T[0] + ox * 0.62, z = T[1] + oz * 0.62; return [x, z, face(x, z, T[0], T[1]), 'egn']; };
-    // the nets are mended over the rail by their tub: the rail places nearest it, one to a mender, facing out over the rail
-    const gn = K.garn ? K.garn.at : [Bm / 2 * 0.3, d.y, d.z - 0.6], rail = (ST.PT.lean || []).map(l => { const p = ST.M0.at(l.k); return [p[0], p[2], l.h, Math.hypot(p[0] - gn[0], p[2] - gn[2])]; }).sort((a, b) => a[3] - b[3]);
-    PL.mend = []; for (const r of rail){ if (PL.mend.length >= 4) break; if (PL.mend.some(q => Math.hypot(q[0] - r[0], q[1] - r[1]) < 0.9)) continue; PL.mend.push([r[0], r[1], r[2], 'mend']); }
+    PL.tubY = sp.at[1]; PL.tubs = []; for (let i = 0; i < 8; i++){ const lx = (i % 2) * 0.52, lz = Math.floor(i / 2) * 0.5, x = sp.at[0] + lx * c + lz * s, z = sp.at[2] - lx * s + lz * c; PL.tubs.push([x, z]); }
+    // (each sits at his tub on the side clear of the other tubs and of those already sitting, on the deck: the tubs stand two by two)
+    const sides = [[-1, 0], [1, 0], [0, -1], [0, 1]], seats = [];
+    PL.tubAt = i => { if (seats[i % 8]) return seats[i % 8]; const T = PL.tubs[i % 8]; let best = null, bv = -1;
+      for (const [sx, sz] of sides){ const lx = sx * 0.68, lz = sz * 0.68, x = T[0] + lx * c + lz * s, z = T[1] - lx * s + lz * c, k = ST.M0.near(x, z, 0.25); if (k < 0) continue;
+        let m = 9; for (let j = 0; j < 8; j++) if (j !== i % 8) m = Math.min(m, Math.hypot(PL.tubs[j][0] - x, PL.tubs[j][1] - z) * 1.4); for (const q of seats) if (q) m = Math.min(m, Math.hypot(q[0] - x, q[1] - z));
+        if (m > bv){ bv = m; best = [x, z, face(x, z, T[0], T[1]), 'egn']; } }
+      if (!best){ const L = Math.hypot(T[0], T[1] - d.z) || 1, x = T[0] - T[0] / L * 0.62, z = T[1] - (T[1] - d.z) / L * 0.62; best = [x, z, face(x, z, T[0], T[1]), 'egn']; }
+      return (seats[i % 8] = best); };
+    // the nets are mended over the rail by their tub: along the ship's side nearest it, fore and aft of it, 0.9 m apart, facing out
+    const gn = K.garn ? K.garn.at : [Bm / 2 * 0.3, d.y, d.z - 0.6], gs = gn[0] < -0.2 ? -1 : 1, M = ST.M, rail = [];
+    for (let k = 0; k < M.nx * M.nz; k++){ if (!M.ok(k)) continue; const p = M.at(k); if (Math.sign(p[0]) !== gs || Math.abs(p[1] - gn[1]) > 0.5 || Math.abs(p[2] - gn[2]) > 3.5) continue;
+      if (M.ok(M.cellOf(p[0] + gs * M.c, p[2])) || Math.abs(p[0]) < Bm / 2 - 0.8) continue; rail.push([p[0], p[2], gs * Math.PI / 2, Math.abs(p[2] - gn[2]) + Math.abs(p[0] - gn[0]) * 0.3]); }
+    rail.sort((a, b) => a[3] - b[3]);
+    PL.mend = []; for (const r of rail){ if (PL.mend.length >= 4) break; if (PL.mend.some(q => Math.hypot(q[0] - r[0], q[1] - r[1]) < 0.9)) continue; PL.mend.push([r[0] - gs * 0.12, r[1], r[2], 'mend']); }
     PL.cargo = K.cargo && K.cargo[0] ? [K.cargo[0][0] + 0.9, K.cargo[0][2], -Math.PI / 2, 'guide'] : null;
     return (ST.PL = PL);
   }
@@ -136,11 +146,13 @@ function crewSim(src){
     if (ctx.underway && !ctx.open && st === 'pause') return PT.door ? {k:PT.door.k, h:0, task:null, inside:'in'} : null;   // under way the crew are inside (03.10.2026)
     if (ctx.port && ctx.hasBunks && !ctx.open && p.c && p.c.fatigue >= 1 && st === 'pause') return PT.door ? {k:PT.door.k, h:0, task:null, inside:'in'} : null;   // asleep in the bunks (tilbakemelding #65)
     if (st === 'sloy') return deckAt(PT.sloy, n, 'gut') || idleGoal(p, ctx, 'look');
-    if (st === 'is') return deckAt(PT.is, n, 'pack') || idleGoal(p, ctx, 'look');
+    // (on a boat with a hold the packer turns his back to the bleeding tub: the box he packs stands on the deck before him, by the hatch)
+    if (st === 'is'){ const g = deckAt(PT.is, n, 'pack'); if (g && ((VESSELS[ST.type] || {}).hold || {}).kind !== 'dekk') g.h = (g.h || 0) + Math.PI; return g || idleGoal(p, ctx, 'look'); }
     if (st === 'sort') return at(PL.pot, 1.4) || idleGoal(p, ctx, 'look');
     if (st === 'blogg') return at(PL.bleed, 1.4) || idleGoal(p, ctx, 'look');
     if (st === 'haling'){ const q = p.role === 'plukk' ? at(PL.pick, 1.4) : p.role === 'teine' ? at(PL.pot, 1.4) : at(PL.haul[Math.min(1, n)], 1.4); return q || idleGoal(p, ctx, 'look'); }
     if (st === 'fiske'){ const q = jigSpot(n); return q || idleGoal(p, ctx, 'lean'); }
+    if (st === 'stell' && p.jw && (p.jw.kind === 'pr' || p.jw.kind === 'jg')){ const q = at(PL.pot, 1.4); return q || idleGoal(p, ctx, 'coil'); }   // (the pots and the jig sets are seen to by the hauler's side)
     if (st === 'egn' || st === 'strip' || st === 'stell'){ const q = at(PL.tubAt(n), 1.2); if (q){ q.task = st === 'stell' ? 'egn' : st; q.tub = n; } return q || idleGoal(p, ctx, 'coil'); }
     if (st === 'mend'){ const q = PL.mend[n % Math.max(1, PL.mend.length)], g = q ? at(q, 1.0) : null; if (g) g.task = 'mend'; return g || idleGoal(p, ctx, 'coil'); }
     if (st === 'last') return at(PL.cargo, 1.6) || idleGoal(p, ctx, 'look');
@@ -186,7 +198,7 @@ function crewSim(src){
       a.goal = claim(goalOf(p, ctx, n), a.id); a.kind = kind; a.slot = n; a.path = null; a.sub = null; }
     for (let i = A.length - 1; i >= 0; i--) if (!seen.has(A[i].id)) A.splice(i, 1);
     // a box of fish is full: the packer (else the gutter) carries it to the hatch and lowers it into the hold, and comes back (1.5 of the plan)
-    if (ctx.crates >= 0){ if (ST.crates >= 0 && ctx.crates > ST.crates){ const w = A.find(a => a.st === 'is' && a.mode === 'at' && !a.sub) || A.find(a => a.st === 'sloy' && a.mode === 'at' && !a.sub);
+    if (ctx.crates >= 0){ if (ST.crates >= 0 && ctx.crates > ST.crates){ const pk = A.find(a => a.st === 'is'), w = pk ? (pk.mode === 'at' && !pk.sub ? pk : null) : A.find(a => a.st === 'sloy' && a.mode === 'at' && !a.sub);
         const PL = places(), k = w ? near(PL.hatch[0], PL.hatch[1], 2.5) : -1; if (w && k >= 0 && k !== w.goal.k){ w.sub = {k, h:w.h, task:'stow', carry:'crate', hold:2.2}; w.path = null; } }
       ST.crates = ctx.crates; }
     ST.crateFill = ctx.crateFill || 0;

@@ -73,7 +73,7 @@ async def main():
           R.bait1 = bait(0); R.bait3 = bait(2);
           S.crew = []; S.jobs = []; b.type = T0; applyVessel(); return R; })()""")
         print('places:', json.dumps(r, ensure_ascii=False))
-        print(ok(r['line4']['st'] == 'haling,sloy,blogg,sloy' and r['line4']['haul'] == 1 and abs(r['line4']['min'] - r['line1']['min']) < 0.5), 'one hauls the line while one bleeds and two gut, and the hauler goes as fast as with one aboard (by the hauler\'s own pace)', r['line4'], r['line1'])
+        print(ok(r['line4']['st'] == 'haling,sloy,blogg,is' and r['line4']['haul'] == 1 and abs(r['line4']['min'] - r['line1']['min']) < 0.5), 'one hauls the line while one bleeds, one guts and one packs and ices, and the hauler goes as fast as with one aboard (by the hauler\'s own pace)', r['line4'], r['line1'])
         print(ok(r['net4']['roles'] == 'haler,plukk' and 'blogg' in r['net4']['st']), 'on a net one hauls and one picks the fish out, and a third bleeds', r['net4'])
         print(ok(r['bait1']['done'] and r['bait3']['done'] and r['bait3']['on'] == 3 and r['bait3']['min'] < r['bait1']['min'] * 0.6 and abs(r['bait3']['left0'] - r['bait3']['min']) <= 3), 'three baiting three tubs together are done sooner than one alone, and the time left shown is the time it takes', r['bait1'], r['bait3'])
         # learning, meals, the rest rule and the crew's lines (core/14-crewlife.js)

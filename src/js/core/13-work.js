@@ -31,7 +31,8 @@ const WORK_ST = ['ror', 'fiske', 'haling', 'blogg', 'sort', 'sloy', 'is', 'kokk'
 const JOB_ST = {egn:'egn', strip:'strip', mend:'mend', hk:'stell', lr:'stell', pr:'stell', jg:'stell', last:'last'};
 const JOB_SKILL = {egn:'line', strip:'line', hk:'line', lr:'line', mend:'garn', pr:'teiner', jg:'juksa'};
 const WORK_ALL = WORK_ST.concat(['egn', 'strip', 'mend', 'stell', 'last']);   // (the minutes of work that tire and teach, workMinute)
-const JOB_ME = ['ror', 'haling', 'fiske', 'sloy', 'is'], JOB_FIRST = ['sloy', 'is', 'haling', 'fiske'], JOB_REST = ['fiske', 'haling', 'sloy', 'is'];
+// (the others pack and ice before they take the table's second place: one hauls, one bleeds, one guts and one packs and ices as it comes)
+const JOB_ME = ['ror', 'haling', 'fiske', 'sloy', 'is'], JOB_FIRST = ['sloy', 'is', 'haling', 'fiske'], JOB_REST = ['fiske', 'haling', 'is', 'sloy'];
 // ready-made setups: null is the default chain
 const JOB_PRESETS = {
   en:{no:'Én på dekk', en:'One on deck', first:null, rest:null},
