@@ -2034,9 +2034,10 @@ const G3 = (() => {
   const KST = {raft:0, buoys:0, text:0, radar:0, cargo:0, crane:null, tubs:0, htub:0};   // what the last frame drew of the kit (the tests read it)
   // the buoy's lettering: the boat's name over the ring and her home port under it, in black block capitals (§ 43)
   function boyeCanvas(txt){
-    const cv = BOYET.cv || (BOYET.cv = document.createElement('canvas')); cv.width = 1024; cv.height = 96; const g = cv.getContext('2d'); g.clearRect(0, 0, 1024, 96);
-    g.fillStyle = '#121212'; g.textAlign = 'center'; g.textBaseline = 'middle'; let fs = 74; const f = () => { g.font = '800 ' + fs + 'px "Arial Narrow", Arial, sans-serif'; }; f();
-    while (g.measureText(txt).width > 980 && fs > 24){ fs -= 4; f(); } g.fillText(txt, 512, 52); return cv;
+    // (1024 × 116: the strip's own shape on the ring, 0.57 m of arc by 0.065 m, so the letters are not stretched)
+    const cv = BOYET.cv || (BOYET.cv = document.createElement('canvas')); cv.width = 1024; cv.height = 116; const g = cv.getContext('2d'); g.clearRect(0, 0, 1024, 116);
+    g.fillStyle = '#121212'; g.textAlign = 'center'; g.textBaseline = 'middle'; let fs = 88; const f = () => { g.font = '800 ' + fs + 'px "Arial Narrow", Arial, sans-serif'; }; f();
+    while (g.measureText(txt).width > 960 && fs > 24){ fs -= 4; f(); } g.fillText(txt, 512, 62); return cv;
   }
   function boyeTex(){
     const nm = String(S.boatName || '').toUpperCase().slice(0, 22), hp = portById(S.home || HOME0), pn = hp ? String(hp.name).toUpperCase().slice(0, 22) : '', k = nm + '|' + pn; if (!nm) return null;
@@ -2047,7 +2048,7 @@ const G3 = (() => {
   function drawSafety(BMrel, G, VP, t){
     const K = G.kit; if (!K) return; const V = VESSELS[vtype()], L = V && V.lsa, X = kitX('safe'), b = S.boat, eq = S.equip || {};
     // the raft in its cradle with the hydrostatic release, the smallest size for everyone aboard (§ 38)
-    if (L && L.rafts && K.raft){ const z = RAFTSZ(L.cap), R = kit('safe', 'flate' + z), C = kit('safe', 'vugge' + z), fa = X['flate_at' + z] || X.flate_at || [0, 0.05, 0];
+    if (L && L.rafts && K.raft){ const z = RAFTSZ(L.cap), R = kit('safe', 'flate' + z), C = kit('safe', 'vugge' + z), fa = (X.flate_at || {})[z] || [0, 0.07, 0];
       for (const q of K.raft.slice(0, L.rafts)){ const M = chain(BMrel, M4.T(q[0], q[1], q[2]), M4.RY(q[3] || 0)); if (C) drawN(C, M); if (R){ drawN(R, chain(M, M4.T(fa[0], fa[1], fa[2]))); KST.raft++; } } }
     // the buoys on their brackets, the first with the light and the line (§ 43: half with a light, one or two with 30 m of line)
     const BM = [];
