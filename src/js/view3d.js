@@ -2032,7 +2032,7 @@ const G3 = (() => {
   // 02-species-gear.js lsaOf), the radar that is bought, the freight on deck in crates and the crane. Nothing is drawn where the
   // model has no places or the kit is not in the page.
   const RAFTSZ = c => c <= 4 ? 4 : c <= 6 ? 6 : 12, RADS = {a:0, t:0}, BOYEQ = {}, BOYET = {k:'', top:null, bot:null, cv:null};
-  const KST = {raft:0, buoys:0, text:0, radar:0, cargo:0, crane:null, tubs:0, htub:0};   // what the last frame drew of the kit (the tests read it)
+  const KST = {raft:0, buoys:0, text:0, radar:0, cargo:0, crane:null, tubs:0, htub:0, vt:null, n:0};   // what the last frame drew of the kit, for which boat, and how many frames (the tests read it)
   // the buoy's lettering: the boat's name over the ring and her home port under it, in black block capitals (§ 43)
   function boyeCanvas(txt){
     // (1024 × 116: the strip's own shape on the ring, 0.57 m of arc by 0.065 m, so the letters are not stretched)
@@ -2157,7 +2157,7 @@ const G3 = (() => {
     const potRig = b.rig === 'teiner' && !(typeof deckPending === 'function' && deckPending() > 0.5);
     if (!G.hand){ if (!GB) buildGear(); drawCrabTank(BMrel, G, d, Bm / 2, G.hauler || [Bm / 2 * 0.92, d.y + 1, d.z - 1.3]); nSetup(VP); }
     drawRigRest(BMrel, G, d);
-    KST.raft = KST.buoys = KST.text = KST.radar = KST.cargo = KST.tubs = 0; KST.crane = null;
+    KST.raft = KST.buoys = KST.text = KST.radar = KST.cargo = KST.tubs = 0; KST.crane = null; KST.vt = vt; KST.n++;
     drawSafety(BMrel, G, VP, t); const lifted = drawCrane(BMrel, G, VP, t, d); drawCargo(BMrel, G, lifted ? 1 : 0);
     if (!potRig){
       // the bleeding tub: a 300 l fish tub with the bloody water at its level (the old box where the kit is not in the page)

@@ -25,6 +25,17 @@ SET = """((a) => { const [type, scene] = a, b = S.boat, g = GROUNDS[0].p; S.tut 
   else { b.status = 'fishing'; b.port = null; b.pos = {x:g.x, y:g.y}; b.heading = 0.4; b.v = 0; b.fishUntil = S.t + 600; }
   const c = G3._debug.cam; c.helm = false; c.pitch = 0.42; c.yaw = 1.25; c.dist = 4 + V.len * (V.len < 14 ? 0.55 : 0.8); })"""
 
+# the crane's state against the model's pose: 'stow' takes the rest's pose too where the boat parks it there; true on boats without one
+CRANE_AT = """(want) => { const C = G3._debug.kitStat.crane, X = G3._debug.kitX('crane'); if (!C) return true;
+  const at = p => p && Math.abs(C.a1 - p.a1) < 0.05 && Math.abs(C.a2 - p.a2) < 0.05; return want === 'work' ? C.job && at(X.work) : at(X.stow) || at(X.park); }"""
+
+
+async def show(pg, t, scene):
+    # set the scene and wait for frames drawn with this boat (SwiftShader draws a frame in seconds when the machine is busy)
+    n0 = await pg.evaluate("G3._debug.kitStat.n")
+    await pg.evaluate(SET, [t, scene])
+    await pg.wait_for_function("([t, n0]) => { const K = G3._debug.kitStat; return K.vt === t && K.n >= n0 + 4; }", arg=[t, n0], timeout=120000)
+
 
 async def main():
     async with async_playwright() as p:
@@ -47,10 +58,16 @@ async def main():
             if (V.hold.kind === 'dekk' && !(K.tubs && K.tubs.length) && !geoOf(t).hand) m.push('tubs'); if (V.crane > 0 && !K.crane) m.push('crane');
             if (!K.garn) m.push('garn'); if (!K.stamps) m.push('stamps'); if (!(K.cargo && K.cargo.length)) m.push('cargo'); if (m.length) out[t] = m; } return out; })""", boats)
         check(not miss, 'hver kystbåt har plassene dataene krever (flåte, livbøyer, radar, kar, kran, garnkar, stamper, last)', miss)
-        seen = {}
+        seen = {}; pose = {}
         for t in boats:
             for scene in ['fiske', 'garn', 'line'] + (['kai'] if t in ('kyst15', 'kyst21', 'sjarkny', 'snekke') else []):
-                await pg.evaluate(SET, [t, scene]); await pg.wait_for_timeout(2500 if scene != 'kai' else 12000)
+                await show(pg, t, scene)
+                # the crane where the scene wants it: folded (or on its rest) at sea, out in the working pose at the quay with freight
+                want = 'work' if scene == 'kai' else 'stow'
+                try:
+                    await pg.wait_for_function(CRANE_AT, arg=want, timeout=120000); pose[(t, scene)] = True
+                except Exception:
+                    pose[(t, scene)] = False
                 st = await pg.evaluate("JSON.parse(JSON.stringify(G3._debug.kitStat))")
                 seen[(t, scene)] = st
                 await pg.screenshot(path=os.path.join(OUT, f'deck_{t}_{scene}.png'))
@@ -65,20 +82,22 @@ async def main():
         tubs = {t: seen[(t, 'fiske')]['tubs'] + seen[(t, 'fiske')]['htub'] for t in boats if seen[(t, 'fiske')]['tubs'] + seen[(t, 'fiske')]['htub'] == 0 and t in ('skiff', 'snekke')}
         check(not tubs, 'de åpne båtene har fangsten i kar på dekk', tubs)
         # the radar's open array turns: two frames a second apart give two angles
-        await pg.evaluate(SET, ['kyst15', 'fiske']); await pg.wait_for_timeout(2000)
+        await show(pg, 'kyst15', 'fiske')
         a0 = await pg.evaluate("G3._debug.kitStat.radar"); await pg.screenshot(path=os.path.join(OUT, 'deck_radar_a.png')); await pg.wait_for_timeout(700); await pg.screenshot(path=os.path.join(OUT, 'deck_radar_b.png'))
         check(a0 == 2, 'den åpne radarantennen på kystbåten tegnes', a0)
         # the crane at the quay: folded at sea, out and working while the freight goes aboard, with crates on deck
         cr = {t: seen[(t, 'kai')]['crane'] for t in ('kyst15', 'kyst21') if (t, 'kai') in seen}
         sea = {t: seen[(t, 'fiske')]['crane'] for t in ('kyst15', 'kyst21')}
-        work = {t: c for t, c in cr.items() if c and c['job'] and sea[t] and abs(c['a1'] - sea[t]['a1']) + abs(c['a2'] - sea[t]['a2']) + c['e'] > 0.3}
+        work = [t for t in ('kyst15', 'kyst21') if pose.get((t, 'fiske')) and pose.get((t, 'kai')) and cr.get(t) and cr[t]['job']]
         check(len(work) == 2, 'kranen er foldet sammen på sjøen og folder seg ut for å laste ved kaia', {'kai': cr, 'sjø': sea})
         crates = {t: seen[(t, 'kai')]['cargo'] for t in ('kyst15', 'kyst21', 'sjarkny', 'snekke')}
         check(all(v > 0 for v in crates.values()), 'trekassene står på dekk når båten har frakt', crates)
         # two pictures standing up (the tablet held upright)
         await pg.set_viewport_size({'width': 640, 'height': 960})
         for t, scene in [('sjarkny', 'line'), ('kyst15', 'kai')]:
-            await pg.evaluate(SET, [t, scene]); await pg.wait_for_timeout(4000); await pg.screenshot(path=os.path.join(OUT, f'deck_{t}_{scene}_staaende.png'))
+            await show(pg, t, scene)
+            if scene == 'kai': await pg.wait_for_function(CRANE_AT, arg='work', timeout=120000)
+            await pg.screenshot(path=os.path.join(OUT, f'deck_{t}_{scene}_staaende.png'))
         gerr = await pg.evaluate("G3._debug.glErr()")
         check(gerr == 0, 'ingen GL-feil', gerr)
         check(not errs, 'ingen sidefeil', errs[:3])
