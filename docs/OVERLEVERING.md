@@ -2274,22 +2274,29 @@ Brukerens ønske: mannskapet skal være en levende og givende del av spillet, in
 
 - **Filer:** `core/13-work.js` (stasjoner og kjeder), `core/14-crewlife.js` (læring, mat, hviletid og replikker), `core/15-energy.js` (energien din og søvnen) og `ui/05b-work.js` (skuffesiden «Mannskap», toastene og søvnskjermen).
 - **Mannskap med liv** (Jonas 17.10.2026, planen og statusen i `docs/mannskap-plan.md`): folkene om bord teleporterer ikke lenger. `vessel3d.js` leser et *dekkskart* av hver båtmodell (`deckMap`, 20 cm ruter med gulv, sperrer og lenker mellom dekkets deler, `deckPath` A*, `deckPoints` for bordet, karet, haleren, roret eller døra og rekkeplassene; `tests/walktest.py`). `src/js/deckcrew.js` (`crewSim`, egen båt er `CREW3D`) gjør hver person til en agent som går mellom stasjonene `workAssign` gir, med fart 1,2 m/s, snuing, viking, erend med fiskekasse til lasteluka og ledig tid langs rekka; `view3d.js` tegner agentene i ett pass (`drawDeckCrew`), også på andre spilleres båter og NPC-båtene innenfor 150 m (`npcCrewDraw`), med hodet mot kameraet og et enkelt ratt og stol der modellen mangler det (`HELM_KIT`). Agentene lagres aldri (utsikt, ikke spilltilstand); første bilde og klokkehopp setter alle rett på plass. Del 2 (`core/14-crewlife.js`, `crewLife`): familie, drøm, sparing, historie, daglige hendelser, avmønstring til egen båt (`S.alumni`, høyst 10, synlige som sjark på nærmeste felt innen 40 km fra hjemhavna, tuter), retur til børsen etter 1–2 år, fall i grov sjø. Tester: `walktest`, `crewwalk`, `crewlifetest` (alle uten 3D).
-- **Stasjoner** (`STATIONS`): Ror, Fiske, Haling, Krabbesortering, Sløying, Ising, Kokk og Pause. Hvert minutt går hver person om bord til den første stasjonen i kjeden sin som har arbeid (`workAssign`, `workCtx`):
+- **Stasjoner** (`STATIONS`): Ror, Fiske, Haling, Bløgging, Krabbesortering, Sløying, Ising (pakker og iser), Kokk og Pause, og mannskapets egne jobber på redskapen: Egning, Rensing, Bøting, Vedlikehold og Last. Hvert minutt går hver person om bord til den første stasjonen i kjeden sin som har arbeid og plass (`workAssign`, `workCtx`, `stPlaces`). Plassene etter Jonas 20.10.2026 (tilbakemelding #75: «det burde kun være en mann som har ansvaret for haling mens de andre tar seg av bløgging, sløying, og ising fortløpende»):
 
-  | Stasjon | Har arbeid når … |
-  |---|---|
-  | Ror | båten går, kaster loss eller har motorstopp. Én person. |
-  | Fiske | båten jukser (status `fishing` uten redskapsarbeid, juksarigg, ikke stoppet for sløying) |
-  | Haling | redskap settes eller trekkes |
-  | Krabbesortering | teiner trekkes. Med noen her slipper halerne å sortere (ellers ×1,3 på tida). |
-  | Sløying og Ising | det ligger over 0,5 kg i karet som skal sløyes eller ises |
-  | Kokk | et måltid er forfalt. Én person. |
+  | Stasjon | Har arbeid når … | Plasser |
+  |---|---|---|
+  | Ror | båten går, kaster loss eller har motorstopp | 1 |
+  | Fiske | båten jukser (status `fishing` uten redskapsarbeid, juksarigg, ikke stoppet for sløying) | alle |
+  | Haling | redskap settes eller trekkes | `BOAT.stations.hauler` (1, 2 på kystbåtene); garn pluss én som plukker fisken ut (`role` `plukk`, bløgger når ingen andre gjør det), teiner pluss én som tømmer, egner og stabler (`teine`) |
+  | Bløgging | line eller garn trekkes (fisken kommer om bord) | 1 |
+  | Krabbesortering | teiner trekkes. Med noen her slipper halerne å sortere (ellers ×1,3 på tida). | `stations.table` |
+  | Sløying | det ligger over 0,5 kg i karet som skal sløyes | `stations.table` |
+  | Ising | noe skal ises (det sløyde, og det som er på vei fra bordet) | 1 (2 fra tre bord) |
+  | Kokk | et måltid er forfalt | 1 |
+  | Egning, Rensing, Vedlikehold | en jobb på lina i køen (`egn`, `strip`, `hk`, `lr`) | én per stamp, høyst `stations.table` + 1 |
+  | Bøting | en garnlenke bøtes (`mend`) | én per garn, høyst `stations.table` + 1 |
+  | Last | frakt lastes eller losses (`last`) | 2 med kran, ellers 4 |
+
+  En kjede der «Haling» er full, gir Bløgging. De som blir til overs (Pause uten at kjeden sier Pause), tar det ledige arbeidet der mest venter: fisken først (minutter igjen per person), så mannskapets jobber (minutter igjen).
 
 - **Kjeder:** `c.job` per mannskap og `S.myJob` for deg. `null` betyr standard:
   - Du: Ror → Haling → Fiske → Sløying → Ising.
   - Første mann: Sløying → Ising → Haling → Fiske.
-  - De andre: Fiske → Haling → Sløying → Ising.
-  - Det gir samme oppførsel som før: under seiling styrer én og resten sløyer, og ved fiske sløyer én når det er fisk i karet.
+  - De andre: Fiske → Haling → Ising → Sløying (fra 20.10.2026: pakker og iser før de tar bordets andre plass).
+  - På den nye sjarken med deg og tre på linetrekket: du haler, én bløgger, én sløyer og én pakker og iser. Under seiling styrer én, én sløyer og én iser.
 - **Reglene som alltid gjelder:**
   - Står ingen ved roret, tar den med best sjømannskap det (blant dem som har pause først, du før mannskapet).
   - Står ingen ved halingen, tar en som har pause den, ellers en fra dekket.
@@ -2299,7 +2306,8 @@ Brukerens ønske: mannskapet skal være en levende og givende del av spillet, in
   - Fiske: `effortOf(antall ved ripa, maskiner)` × snittet av deres `crewEff`. Faktoren for hender på dekk i `catchFactors` er borte.
   - Sløying: 5 kg/min × `crewEff(c, 'sloy')` per person, og det som er til overs går til ising.
   - Ising: 13,3 kg/min × `crewEff(c, 'is')`.
-  - Haling: `gopUnitMin` med snittet av halerne og antallet som haler. Ingen ved halingen betyr ingen framdrift.
+  - Haling: `gopUnitMin` med snittet av dem ved haleren; bare de ved haleren haler, høyst `stations.hauler` (garnets plukker haler ikke; på teiner teller den ene ved siden av). Ingen ved halingen betyr ingen framdrift. Med fire om bord tar linetrekket nå like lang tid som med én (26,2 min per stamp på 600 kroker, mot 14,8 før), garnet 4,5 min per garn (3,2 før) og teinene 1,3 min (1,1 før); kystbåtene med to halere 18,5 min per stamp.
+  - Mannskapets jobber (`CREW_JOBS`: egn, strip, mend, hk, lr, pr, jg, last) går med dem som står på dem (`jobW`, `jobMinute`): timene en jobb ble lagt i køen med, er arbeidet for alle om bord da (j.w i én persons minutter); hvert minutt går den med farten til dem på stasjonen (egning og rensing: to dobbelt så fort som én, hver neste en halv), og sluttida og timene (`j.until`, `j.h`) følger dem, så køen viser tida som er igjen. Ingen på jobben, så venter den.
   - Du teller som 1, eller 0,75 med energi under 25 %.
 - **Ferdige oppsett** (`JOB_PRESETS`): «Én på dekk» (standard), «Alle fisker» og «Alle på dekk».
 - **Menyen «Mannskap»** (knappelinja, i havn og på sjøen, så snart du har mannskap eller en driftsplan; het «Arbeid» til 07.10.2026, tilbakemelding #11; ansettelser ligger under Bygd, «Ansatte»):
@@ -3972,7 +3980,7 @@ Nå tar `vecPrune` alltid med midten av kartplotteren når den er åpen. Kontrol
   - Det er mannskap om bord. Skipperen alene styrer og kan ikke gjøre det, og får en forklaring.
 - **Jobbene:**
   - Knappene under Beholdning vises også da.
-  - Jobbene (`CREW_JOBS`) starter med en gang. De står på pause så lenge mannskapet fisker, haler eller sløyer (`crewBusyAtSea`); tiden skyves da ett minutt for hvert minutt (`core/05-vessels.js`).
+  - Jobbene (`CREW_JOBS`) starter med en gang. Mens båten fisker venter de; ellers går de med dem som er ledige (de som sløyer og iser er ikke det), og uten noen ledige skyves tiden ett minutt for hvert minutt (`core/05-vessels.js`, `jobMinute`).
   - Butikkens og verftets jobber går fortsatt bare i havn.
 - **Mannskapet på egen hånd:**
   - `careTick` går nå også på sjøen. Mannskapet egner da frie stamper med agnet om bord, og bøter, bytter kroker og reparerer som i havn.
@@ -4447,7 +4455,7 @@ Utstyret på dekk er egne Blender-modeller i `tools/deck/` og står på faste pl
 - **Kranene etter båtstørrelse** (Jonas 20.10.2026: «de større havbåtene skal ha kraner som krever bomstøtte, resten av de mindre båtene skal ha den sammenleggbare knekkbom-kranen. Hurtigsjarken kan ha kran.»): kyst15, kyst21 og hurtigsjarken (0,5 t, kranen i 70 % på skapet i styrbord hekkhjørne, `hurtig11.py`) har den sammenleggbare kranen fra `kran.py`. Havbåtenes kraner er skipets egne systemer i skrogmodellen og ligger på bomstøtter (`boom_rest` i `bpyutil.py`: stolpe med sadel, gummiforing, surring og stag): al45 begge kranene, tral60, not75 tårnkranen og bakkekranen, og krabbe50 med knekkbommen lagt ut rett akterover på en lav sadel på shelter-taket (`knuckle_fold`). Kraftblokk-kranen på not75 og den høye kranen på krabbe50 arbeider med bommen oppe.
 - **Kranen** (båter med `crane` > 0): pakket sammen på sjøen i transportstillingen fra tegningene og bildene (Jonas 20.10.2026): høy søyle, hovedbommen 43° ned og fram fra toppen av søyla, ytterbommen brettet helt tilbake ved siden av den med teleskophodene oppe bak søyla (`stow`). Båter der bomstøtta i kitet (`crane.rest`) stemmer med modellens `rest_at`, legger bommen i støtta (`park`); i dag gjør ingen av dem det (kyst15 har støtta 2,1 m fra kranen, modellen vil ha 3,1 m), så begge pakker kranen sammen. Ved kaia, mens frakt lastes eller losses (jobben `last`), folder den seg ut og går en runde på 40 s: over en lastplass, kroken ned og opp, svinger ut over kaia på styrbord side, ned og opp, og tilbake. Kassa henger på kroken fra kaia (lasting) eller til kaia (lossing). Rekkefølgen følger kranmanualen (Palfinger PK 23002, s. 38 og 71–72): ved sammenfolding teleskopene inn, svingen hjem, hovedbommen opp til `fold_a1`, knekken lukket, og så hovedbommen ned; ved utfolding omvendt. Hvert ledd har sin fart (utfolding ca. 16 s, sammenfolding ca. 19 s).
 
-**Animasjonene på dekk:** fisken som jukses inn, tas av ved rekka, bløgges med kniven i strupen (blodet drypper i karet) og kastes i bløggekaret (`bleed`). På linetrekket hugger mannen ved haleren fisken med høtta i rekka, rykker den inn over rekka og rister den av i karet (`gaff`). Hver fisk er en hendelse på sin plass (`dkEvent`), og den nærmeste i arbeid spiller den. Ved sløyebordet går avkappet ut over rekka fra bordets slippunkt, og måkene stuper etter det.
+**Animasjonene på dekk** (Jonas 20.10.2026: «Fisken skal høttes ombord, bløgges, sløyes, legges i kasse og ises. Alle deler av arbeidsprosessene må ha egne animasjoner»): hver fisk som kommer om bord er den ekte fangsten (`CATCHQ`), én om gangen, og går fra hånd til hånd (`dkEvent`, `dkFor`, `dkTick`, `DKDECK` i `view3d.js`). På linetrekket hugger haleren fisken med høtta i rekka og rister den av kroken på dekket ved seg (`gaff`, `places().drop` i `deckcrew.js`); på garnet plukker den ved siden av haleren den ut av maskene og slipper den der (`pick`); bløggeren tar den opp, kniven i strupen, blodet renner, og kaster den i bløggekaret (`bleed`, uten bløgger gjør den som tok den inn det). Jukser mannskapet for hånd, dras fisken opp hånd over hånd (`jigup`) og bløgges av den som juksa; med maskiner som før. Sløyeren (`gutw`) tar en fisk fra karet, legger den på bordet, skjærer, tar ut innmaten og kaster den over rekka (måkene kommer), og kaster den sløyde i kassa foran pakkeren; pakkeren (`pack`) legger den til rette og måker is over fra isboksen; når 40 kg er pakket, bærer han kassa til luka og senker den i rommet (`stow`; de åpne båtene pakker i karene sine). I den åpne båten bløgger skipperen hver fisk ved rekka før den går i karet. Egning og rensing (`egn`, `strip`): sittende på en bøtte ved stampen, kroken fra kanten, agnet fra bøtta på høyre side, kroken ned i stampen; de egnede krokene kommer på kanten etter hvert (de gamle av ved rensing, og bøtta tømmes over rekka for måkene). Bøting (`mend`): garnet trekkes fra karet over rekka foran den som bøter, med bøtenål. Stampene og garnet blir stående på dekk mens jobben går (`pg.shore` `egnself`, `stripself`, `mendself`). Den som strekker seg etter karet eller kassa, snur seg dit (`workTurn`) og går ned i knærne (`workLow`). Test: `workshot.py` (3D).
 
 **Test:** `tests/deckshot.py` (3D): alle delene er med, hver kystbåt har plassene dataene krever, flåtene og bøyene tegnes i tallet reglene krever med tekst på hver bøye, radaren vises og går rundt, de åpne båtene har fangsten i kar, kranen er foldet på sjøen og ute ved kaia med kasser på dekk; bilder `deck_*.png` liggende og to stående. `G3._debug.kitStat` viser hva siste bilde tegnet av utstyret.
 
