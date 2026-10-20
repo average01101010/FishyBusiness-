@@ -477,6 +477,13 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p128', '20.10.2026', 'Hver sin jobb på dekk', 'Everyone has a job on deck', [
+       ['Mannskapet har faste plasser: én haler, én bløgger, én sløyer og én pakker og iser. Ingen står i hverandre, og ledige hender går dit det venter mest arbeid.', 'The crew have their places: one hauls, one bleeds, one guts and one packs and ices. Nobody stands inside anyone else, and free hands go where most work waits.'],
+       ['Hver fisk går fra hånd til hånd: høttes eller plukkes inn, bløgges, sløyes, legges i kassa og ises. Full kasse bæres ned i rommet.', 'Every fish goes from hand to hand: gaffed or picked in, bled, gutted, laid in the crate and iced. A full crate is carried down to the hold.'],
+       ['Egning, rensing av gammelt agn og bøting av garn vises på dekk, og flere sammen blir fortere ferdige.', 'Baiting, stripping old bait and mending nets show on deck, and several together finish sooner.'],
+       ['Stampene vises i agnets farge. Du velger agn når du egner, kan ta av gammelt agn, og Sett ut viser hvilket agn som står i hver stamp.', 'Tubs show in the colour of their bait. You choose the bait when baiting, can strip old bait, and Set out shows the bait in each tub.'],
+       ['Juksa viser hvilke arter utstyret tar, og ekkoloddet viser fisken juksa faktisk tar. Kveitepilk krever kveiteutstyr.', 'The jig shows which species its tackle takes, and the echo sounder shows the fish the jig really takes. A halibut jig needs halibut gear.'],
+       ['Hurtigsjarken har fått sammenleggbar kran, og havbåtene legger kranene i bomstøtte.', 'The fast sjark has a folding crane, and the ocean boats lay their cranes in boom rests.']]],
     ['p127', '20.10.2026', 'Ekte utstyr på dekk', 'Real gear on deck', [
        ['Fisken hugges inn over rekka med høtt, bløgges med kniven og kastes i bløggekaret med blodvann.', 'The fish is gaffed in over the rail, bled with the knife and tossed into the bleeding tub.'],
        ['På de åpne båtene fylles fiskekarene på dekk med sløyd fisk under knust is. Avkappet fra sløyebordet går over rekka.', 'On the open boats the fish tubs on deck fill with gutted fish under crushed ice. The offal from the gutting table goes over the rail.'],
