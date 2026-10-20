@@ -4,7 +4,8 @@ The game's size stands (21 x 7.2 m, 3.4 m draft); the pictures give the type: th
 over the forecastle, the mast at the forecastle break with its raked legs and the derrick laid aft, the open working deck with the
 hatch, the deckhouse aft with the wheelhouse on it, the funnel and the mizzen, and the round stern. Jonas let us choose the colour
 («Skroget trenger ikke være grønt»): an oxblood hull with a white sheer line, a black bottom, a varnished teak wheelhouse on a white
-deckhouse, cream masts and derrick. Exterior only (CLAUDE.md).
+deckhouse, cream masts and derrick. Exterior only (CLAUDE.md). The crane, the open-array radar, the liferafts and the lifebuoys
+are the game's deck kit (tools/deck), drawn at the places in anchors.kit (the user's wish 19.10.2026).
 
     pip install bpy==4.5.4
     python3 tools/boats/kyst21.py            -> src/data/boat-kyst21.b64 (+ the side picture), renders in tools/boats/out/
@@ -278,9 +279,9 @@ WX0, WX1, WY = 4.3, 7.2, 1.7          # the wheelhouse on it
 def deck_gear(fine=True):
     A = Acc('gear'); G = Acc('glass'); w = C['white']; sg_ = 16 if fine else 8
     zd = z_deck(9.0)
-    # the hatch amidships under its tarpaulin, fish boxes beside it
+    # the hatch amidships under its tarpaulin (the fish boxes, the liferaft, the life rings, the radar and the crane are the game's deck
+    # kit, drawn at anchors.kit: the user's wish 19.10.2026)
     abox(A, 9.0, 11.4, -1.2, 1.2, zd, zd + 0.5, C['white']); abox(A, 9.05, 11.35, -1.15, 1.15, zd + 0.5, zd + 0.6, C['tarp'])
-    for k in range(3): abox(A, 11.9 + 0.62 * k, 12.45 + 0.62 * k, 1.4, 2.1, z_deck(12.5), z_deck(12.5) + 0.35 * (1 + k % 2), C['orange'] if k != 1 else C['steel'])
     # the mast at the forecastle break, its two raked legs from the forecastle deck, the yard, the derrick laid aft and up
     mx = X_FC - 0.5; mz0 = z_deck(mx)
     acyl(A, (mx, 0, mz0), (mx, 0, 13.4), 0.14, lambda z: C['cream'], seg=10, r1=0.08)
@@ -304,13 +305,13 @@ def deck_gear(fine=True):
     for sg in (1, -1):
         for x in (1.4, 2.9, 5.6): acyl(A, (x, sg * (DHY - 0.02), z0 + 1.35), (x, sg * (DHY + 0.02), z0 + 1.35), 0.18, lambda z: C['glass'], seg=12)
         door(A, 'y', sg * DHY, 3.7, 4.5, z0, 1.8, face=sg, hinge=+1, leaf=C['teak'])                 # the deckhouse doors, teak, both sides
-        acyl(A, (6.6, sg * (DHY + 0.04), z0 + 1.1), (6.6, sg * (DHY + 0.14), z0 + 1.1), 0.3, lambda z: C['orange'], seg=12)
     if fine:
         for sg in (1, -1): acyl(A, (DH0 - 0.1, sg * (DHY + 0.1), z1 + 0.9), (DH1 + 0.1, sg * (DHY + 0.1), z1 + 0.9), 0.025, lambda z: w, seg=5, cap=False)
         acyl(A, (DH0 - 0.1, -DHY - 0.1, z1 + 0.9), (DH0 - 0.1, DHY + 0.1, z1 + 0.9), 0.025, lambda z: w, seg=5, cap=False)
         for x in (DH0 - 0.1, 2.0, 3.6, DH1 + 0.1):
             for sg in (1, -1): acyl(A, (x, sg * (DHY + 0.1), z1 + 0.1), (x, sg * (DHY + 0.1), z1 + 0.9), 0.025, lambda z: w, seg=5)
-    # the wheelhouse in varnished teak, windows all round, a white roof with the radar and searchlight
+    # the wheelhouse in varnished teak, windows all round, a white roof with the searchlight (the open array the player buys stands on
+    # it at kit.radarA)
     zw0, zws, zwh, zwr = z1 + 0.1, z1 + 1.1, z1 + 1.85, z1 + 2.2
     abox(A, WX0, WX1, -WY, WY, zw0, zws, C['teak']); abox(A, WX0, WX1, -WY, WY, zwh, zwr, C['teak'])
     abox(A, WX0, WX0 + 0.1, -WY, WY, zws, zwh, C['teak'])
@@ -323,7 +324,6 @@ def deck_gear(fine=True):
         G.poly([(WX1 + 0.005, ya, zws), (WX1 + 0.005, ya + 0.6, zws), (WX1 + 0.005, ya + 0.6, zwh), (WX1 + 0.005, ya, zwh)], C['glass'], (1, 0, 0))
         abox(A, WX1 - 0.06, WX1 + 0.06, ya - 0.06, ya + 0.02, zws, zwh, C['teak'])
     abox(A, WX0 - 0.15, WX1 + 0.3, -WY - 0.2, WY + 0.2, zwr, zwr + 0.12, w)
-    abox(A, 5.4, 5.7, -0.15, 0.15, zwr + 0.12, zwr + 0.55, C['dark']); abox(A, 4.8, 6.3, -0.08, 0.08, zwr + 0.55, zwr + 0.65, C['dark'])
     acyl(A, (6.7, 0.9, zwr + 0.12), (6.7, 0.9, zwr + 0.45), 0.16, lambda z: C['steel'], seg=10)
     for sg in (1, -1):
         abox(A, 6.4, 6.8, sg * (WY + 0.22) - 0.07, sg * (WY + 0.22) + 0.07, zwr - 0.4, zwr - 0.1, C['dark'])                               # the side lights' housings
@@ -344,9 +344,7 @@ def deck_gear(fine=True):
     for sg in (1, -1):
         abox(A, WX1 + 0.08, WX1 + 0.12, sg * 1.1 - 0.02, sg * 1.1 + 0.02, zwr + 0.12, zwr + 0.34, C['steel'])
         abox(A, WX1 + 0.0, WX1 + 0.24, sg * 1.1 - 0.1, sg * 1.1 + 0.1, zwr + 0.32, zwr + 0.48, C['dark']); abox(A, WX1 + 0.24, WX1 + 0.25, sg * 1.1 - 0.08, sg * 1.1 + 0.08, zwr + 0.34, zwr + 0.46, C['lampW'])
-    # the liferaft in its cradle on the boat deck to starboard, the flag staff with the stern light at the taffrail
-    acyl(A, (1.7, -1.6, z1 + 0.45), (2.8, -1.6, z1 + 0.45), 0.33, lambda z: w, seg=14)
-    for x in (1.9, 2.6): acyl(A, (x - 0.02, -1.6, z1 + 0.45), (x + 0.02, -1.6, z1 + 0.45), 0.335, lambda z: C['dark'], seg=14); abox(A, x - 0.05, x + 0.05, -2.0, -1.2, z1 + 0.1, z1 + 0.18, C['steel'])
+    # the flag staff with the stern light at the taffrail
     zt = z_top(XS); acyl(A, (XS + 0.3, 0, zt - 0.1), (XS + 0.3, 0, zt + 1.6), 0.025, lambda z: C['cream'], seg=6); abox(A, XS + 0.24, XS + 0.36, -0.05, 0.05, zt, zt + 0.14, C['steel'])
     acyl(A, (XS + 0.3, 0.45, zt + 0.1), (XS + 0.3, 0.45, zt + 0.85), 0.015, lambda z: C['steel'], seg=5); acyl(A, (XS + 0.3, 0.45, zt + 0.85), (XS + 0.3, 0.45, zt + 0.97), 0.04, lambda z: C['lampW'], seg=8)
     acyl(A, (XS + 0.3, 0.45, zt + 0.97), (XS + 0.3, 0.45, zt + 1.0), 0.047, lambda z: C['dark'], seg=8)
@@ -420,7 +418,30 @@ def anchors():
             # the open working deck amidships: the hauler on the starboard rail by the gallows, the catch and the gear aft of it
             'deck': {'y': round(z_deck(10.5) - WL, 3), 'z': round(-(10.5 - XM), 3)}, 'gw': round(z_top(10.5) - WL, 3),
             'stern': round(XM - XS, 3), 'bow': round(-(XF - XM), 3), 'side': HB, 'beam': 7.2, 'pl': 8.4, 'rl': 2.7, 'open': False, 'hand': False,
-            'pole': G(XS + 0.25, 0, z_top(XS) + 1.6), 'hauler': G(12.0, -(hbz(12.0, z_top(12.0)) - 0.3), z_top(12.0) + 0.35), 'filler': G(10.0, HB, z_deck(10.0) + 0.3)}
+            'pole': G(XS + 0.25, 0, z_top(XS) + 1.6), 'hauler': G(12.0, -(hbz(12.0, z_top(12.0)) - 0.3), z_top(12.0) + 0.35), 'filler': G(10.0, HB, z_deck(10.0) + 0.3),
+            'kit': kit(G)}
+
+
+def kit(G):
+    """the places of the deck kit (tools/deck, drawn by the game; the user's wish 19.10.2026), in the game's frame: two liferafts in
+    cradles on the boat deck aft of the funnel, one a side by the rail so they float free; four buoys, two on the deckhouse sides where
+    the old rings hung and two on the taffrail's stanchions; the open array on the wheelhouse roof where the old scanner stood; the net
+    tub and the line tubs on the hatch, the flat place nearest the hauler (the deck rises 10-15 cm a metre forward of it); the deck cargo
+    on the hatch and on the level deck aft of it, clear of the crew's places and the side decks; the crane on the forecastle deck at its
+    after edge to port, where it reaches the hatch and out over the quay, its booms stowed upright over the working deck (no rest)"""
+    r = lambda v: round(v, 3); h = math.pi / 2
+    z0 = z_deck(DH0); z1 = z0 + 2.0; zwr = z1 + 2.2; zh = z_deck(9.0) + 0.6         # the boat deck under the rafts, the wheelhouse roof, the hatch's top
+    def stern_rail(x, sg):  # a buoy bracket on a taffrail stanchion's top, its +z outboard
+        g = G(x, sg * (hbz(x, z_top(x)) - 0.04 + 0.025), z_top(x) + 0.85); return g + [r(-sg * h)]
+    flat = lambda x0, x1: (z_deck(x0) + z_deck(x1)) / 2                           # the deck under a place that spans x0..x1
+    return {'raft': [G(2.3, -2.0, z1 + 0.1) + [r(h)], G(2.3, 2.0, z1 + 0.1) + [r(h)]],
+            'buoys': [G(6.6, -DHY, z0 + 1.4) + [r(h)], G(6.6, DHY, z0 + 1.4) + [r(-h)], stern_rail(0.3, 1), stern_rail(0.3, -1)],
+            'radarA': G(5.55, 0, zwr + 0.12),
+            'garn': {'at': G(10.7, -0.55, zh), 'ry': 0.0},
+            'stamps': {'at': G(11.025, -0.325, zh), 'ry': 0.0},
+            'cargo': [G(10.2, 0.6, zh) + [0.0], G(8.1, 1.8, flat(7.5, 8.7)) + [0.0], G(9.32, 1.8, flat(8.72, 9.92)) + [0.0],
+                      G(8.5, 0.63, flat(8.1, 8.9)) + [r(h)], G(8.5, -0.63, flat(8.1, 8.9)) + [r(h)]],
+            'crane': {'at': G(15.15, 1.9, z_fc(15.15)), 'ry': r(math.pi), 's': 1.2, 'rest': None}}
 
 
 SHOTS = [('bow3q', (36.0, -22.0, 8.0), (9.0, 0, 5.0), 35), ('stern3q', (-14.0, 15.0, 10.0), (7.0, 0, 5.0), 35), ('side', (9.0, -40, 5.5), (9.0, 0, 6.0), 35),

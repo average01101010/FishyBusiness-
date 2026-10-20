@@ -281,7 +281,8 @@ def shelter(fine=True):
     objs.append(box('bakk_face_p', 6.53, 6.57, 1.74, 1.98, Z_DECK, 3.27, C['white']))
     objs.append(box('bakk_face_s', 6.53, 6.57, -1.98, -1.48, Z_DECK, 3.27, C['white']))
     if fine:
-        # rail round the roof, a ladder up from the aft deck, the liferaft
+        # rail round the roof, a ladder up from the aft deck (the liferaft and the buoys are the game's deck kit, drawn at anchors.kit:
+        # the user's wish 19.10.2026)
         posts = [(x, sy * 2.0) for x in (2.32, 3.0, 3.7, 4.4, 5.1, 5.8) for sy in (1, -1)] + [(2.32, y) for y in (-1.0, 0.0, 1.0)]
         for k, (x, y) in enumerate(posts): objs.append(cyl('rp%d' % k, (x, y, ROOF_SH), (x, y, ROOF_SH + 0.36), 0.018, C['steel'], 8))
         objs.append(tube('roof_rail', [(5.85, 2.0, ROOF_SH + 0.36), (2.45, 2.0, ROOF_SH + 0.36), (2.32, 1.87, ROOF_SH + 0.36), (2.32, -1.87, ROOF_SH + 0.36), (2.45, -2.0, ROOF_SH + 0.36), (5.85, -2.0, ROOF_SH + 0.36)], 0.022, C['steel'], 8))
@@ -289,10 +290,6 @@ def shelter(fine=True):
         for k in range(8):
             t = (k + 0.6) / 8.6; x = 2.64 + (2.26 - 2.64) * t; z = Z_DECK + (ROOF_SH + 0.25 - Z_DECK) * t
             objs.append(cyl('rung%d' % k, (x, -1.45, z), (x, -0.95, z), 0.016, C['steel'], 6))
-        objs.append(box('raft_cradle', 3.05, 3.45, 0.42, 1.38, ROOF_SH, ROOF_SH + 0.08, C['dark']))
-        objs.append(cyl('liferaft', (3.25, 0.40, ROOF_SH + 0.31), (3.25, 1.40, ROOF_SH + 0.31), 0.24, C['white'], 18))
-        for yy in (0.62, 1.18): objs.append(torus('raftband%d' % int(yy * 100), (3.25, yy, ROOF_SH + 0.31), (0, 1, 0), 0.245, 0.012, C['dark'], 20, 4))
-        objs.append(torus('buoy_aft', (2.30, -1.45, ROOF_SH + 0.05), (1, 0, 0), 0.27, 0.06, C['orange'], 22, 8))
         # inside: the hold hatch; no hauler in the model (Jonas 18.10.2026: no boat carries modelled gear), the bought one is drawn at the anchor
         objs.append(box('hatch_coaming', 3.92, 5.48, -0.72, 0.72, Z_DECK, Z_DECK + 0.26, C['deck'], 0.02))
         objs.append(box('hatch_cover', 3.88, 5.52, -0.76, 0.76, Z_DECK + 0.26, Z_DECK + 0.31, C['inner'], 0.015))
@@ -386,22 +383,25 @@ def forecastle(fine=True):
         zb2 = z_bakk(x)
         objs.append(box('bp%d' % int(x * 10 + y * 100), x - 0.12, x + 0.12, y - 0.06, y + 0.06, zb2, zb2 + 0.04, C['dark']))
         for dx in (-0.07, 0.07): objs.append(cyl('bol%d%d' % (int(x * 10 + y * 100), int(dx * 100)), (x + dx, y, zb2), (x + dx, y, zb2 + 0.28), 0.045, C['dark'], 10))
-    objs.append(torus('buoy_fwd', (8.95, 1.62, 4.30), (0, 1, 0), 0.27, 0.06, C['orange'], 22, 8))
     return objs
 
 
 # ---------- masts, rigging and the aft deck ----------
 TABLE = (3.3, 4.2, -1.92, -1.3)      # x0, x1, y0, y1 of the gutting table under the shelter, starboard side
+RDM = (7.1, 1.0, roof_z(7.1 + 0.33) + 0.02)      # the radome's foot on the wheelhouse roof, forward to port: a plate with its top level over the roof's rise
 
 def rig(fine=True):
     objs = []; seg = 12 if fine else 6
     zr = roof_z(6.47)
     objs.append(cyl('fmast', (6.47, WH_YC, zr), (6.47, WH_YC, 9.09), 0.065, C['mast'], seg))
     objs.append(cyl('amast', (1.62, 0, Z_DECK), (1.62, 0, 8.85), 0.08, C['mast'], seg))
+    # the radar arm forward from the mast with a plate at its end, where the open array the player buys stands (kit.radarA: its bar turns
+    # clear of the mast and the fishing lights); the dome he can buy stands on a foot on the roof (kit.radar)
     objs.append(box('radar_arm', 6.47, 7.78, WH_YC - 0.04, WH_YC + 0.04, 7.21, 7.29, C['mast']))
-    objs.append(box('radar_ped', 7.08, 7.32, WH_YC - 0.12, WH_YC + 0.12, 7.29, 7.47, C['white'], 0.02 if fine else 0))
-    objs.append(box('radar_bar', 7.16, 7.24, WH_YC - 0.68, WH_YC + 0.68, 7.50, 7.66, C['dark'], 0.02 if fine else 0))
+    objs.append(box('radar_plate', 7.12, 7.72, WH_YC - 0.3, WH_YC + 0.3, 7.21, 7.29, C['mast'], 0.01 if fine else 0))
+    objs.append(box('radome_foot', RDM[0] - 0.33, RDM[0] + 0.33, RDM[1] - 0.33, RDM[1] + 0.33, roof_z(RDM[0] - 0.33) - 0.03, RDM[2], C['mast'], 0.01 if fine else 0))
     if not fine: return objs
+    objs.append(cyl('radar_strut', (6.53, WH_YC, 6.62), (7.3, WH_YC, 7.21), 0.03, C['mast'], 8))
     objs.append(box('arm2', 6.47, 7.88, WH_YC - 0.035, WH_YC + 0.035, 6.47, 6.53, C['mast']))
     objs.append(cyl('dome_post', (7.55, WH_YC, 6.53), (7.55, WH_YC, 6.66), 0.03, C['mast'], 8))
     objs.append(sphere('satdome', (7.55, WH_YC, 6.84), 0.22, C['white'], (1, 1, 0.95)))
@@ -441,19 +441,15 @@ def rig(fine=True):
     objs.append(box('sternlight', -0.68, -0.58, -0.05, 0.05, 5.05, 5.15, C['lwhite']))
     objs.append(cyl('wire', (1.62, 0, 8.0), (6.47, WH_YC, 8.0), 0.007, C['dark'], 4))
     objs.append(cyl('flagpole', (-0.36, 1.62, 3.78), (-0.52, 1.62, 4.95), 0.02, C['rope'], 8))
-    # the aft deck: a casing to port, the exhaust, two fish tubs, freeing ports
+    # the aft deck: a casing to port, the exhaust, freeing ports (the tubs and the fish boxes are the game's deck kit)
     objs.append(box('casing', 1.0, 2.85, 1.02, 1.92, Z_DECK, 3.35, C['white'], 0.04))
     objs.append(plate('casing_door', (0, 1.02 - 0.008, 0), (1, 0, 0), (0, 0, 1), [(1.55, 2.34), (2.25, 2.34), (2.25, 3.22), (1.55, 3.22)], C['inner'], 0.0, 0.01))
     objs.append(tube('exhaust', [(2.73, 1.0, 3.35), (2.73, 1.0, 5.10), (2.75, 1.0, 5.22), (2.84, 1.0, 5.28), (2.93, 1.0, 5.22)], 0.07, C['steel'], 12))
-    for k, (y0, y1) in enumerate(((-0.9, -0.15),)):
-        objs.append(box('tub%d' % k, 0.05, 1.05, y0, y1, Z_DECK, Z_DECK + 0.60, C['tub'], 0.05))
-        objs.append(box('tub_in%d' % k, 0.12, 0.98, y0 + 0.07, y1 - 0.07, Z_DECK + 0.58, Z_DECK + 0.605, C['dark']))
-    # the gutting table under the shelter to starboard (B6), its top a working height over the deck, a lip outboard, fish boxes under it
+    # the gutting table under the shelter to starboard (B6), its top a working height over the deck, a lip outboard
     x0, x1, y0, y1 = TABLE; zt = Z_DECK + 0.9
     objs.append(box('table_top', x0, x1, y0, y1, zt - 0.05, zt, C['steel'], 0.01))
     objs.append(box('table_lip', x0, x1, y0 - 0.02, y0, zt - 0.05, zt + 0.12, C['steel']))
     for x, y in ((x0 + 0.05, y0 + 0.05), (x1 - 0.05, y0 + 0.05), (x0 + 0.05, y1 - 0.05), (x1 - 0.05, y1 - 0.05)): objs.append(cyl('tleg%d' % int(x * 10 + y * 3), (x, y, Z_DECK), (x, y, zt - 0.05), 0.02, C['steel'], 6))
-    for k in range(2): objs.append(box('fbox%d' % k, x0 + 0.1, x0 + 0.7, y0 + 0.05, y1 - 0.05, Z_DECK + 0.3 * k, Z_DECK + 0.3 * k + 0.28, C['inner'], 0.01))
     for sg in (1, -1):
         for x in (0.6, 1.6):
             yo = y_at(x, 2.4) + 0.006
@@ -545,7 +541,30 @@ def anchors():
             'work': {'table': G((TABLE[0] + TABLE[1]) / 2, (TABLE[2] + TABLE[3]) / 2, Z_DECK), 'tub': G(0.55, -1.37, Z_DECK), 'own': True, 'top': round(Z_DECK + 0.9 - WL, 3)},
             'hatch': G(4.7, 0.0, Z_DECK + 0.31),
             'deck': {'y': round(Z_DECK - WL, 3), 'z': round(-(4.5 - XM), 3)}, 'gw': round(z_sheer(4.5) - WL, 3),
-            'stern': round(-(XA - XM) + 0.2, 3), 'bow': round(-(10.3 - XM), 3), 'side': 1.89, 'beam': 4.2, 'pl': 4.4, 'rl': 1.6, 'open': False, 'hand': False}
+            'stern': round(-(XA - XM) + 0.2, 3), 'bow': round(-(10.3 - XM), 3), 'side': 1.89, 'beam': 4.2, 'pl': 4.4, 'rl': 1.6, 'open': False, 'hand': False,
+            'kit': kit(G)}
+
+
+def kit(G):
+    """the places of the deck kit (tools/deck, drawn by the game; the user's wish 19.10.2026), in the game's frame: the liferaft in its
+    cradle on the shelter roof where the old one lay, athwartships; two buoys on the inside of the high aft bulwarks, one a side, clear of
+    the casing, the ladder and the crew; the dome on its foot on the wheelhouse roof, the open array on the radar arm's plate; the net tub
+    and the line tubs (never aboard together) under the shelter to port, across the hatch from the hauler (the starboard side is the
+    hauler's, the table's and the crew's), the line tubs set so the fuel filler stands between two rows; the deck cargo on the hatch
+    cover and on the aft deck by the ladder. The main deck has 8 cm of camber: a place stands at the mean of the deck under it."""
+    r = lambda v: round(v, 3); h = math.pi / 2
+    yi = lambda x: max(0.03, y_at(x, Z_DECK) - T_BW)
+    zc = lambda x, ys: Z_DECK + sum(0.08 * (1 - (y / yi(x)) ** 2) for y in ys) / len(ys)        # the cambered deck under the place
+    def wall(x, sg, z=3.45):  # a buoy bracket on the bulwark's inner face, its +z inboard (away from the wall); the bulwark flares out
+        # as it rises, so the bracket stands off the wall as far as the face comes in at the ring's foot
+        return G(x, sg * (y_at(x, z - 0.62) - T_BW - 0.01), z) + [r(sg * h)]
+    return {'raft': [G(3.4, 0.9, ROOF_SH) + [0.0]],
+            'buoys': [wall(2.0, -1), wall(0.45, 1)],
+            'radar': G(RDM[0], RDM[1], RDM[2]),
+            'radarA': G(7.42, WH_YC, 7.29),
+            'garn': {'at': G(5.28, 1.35, zc(5.28, (0.85, 1.85))), 'ry': 0.0},
+            'stamps': {'at': G(5.35, 1.57, zc(5.35, (1.05, 1.57))), 'ry': 0.0},
+            'cargo': [G(5.0, 0.0, Z_DECK + 0.31) + [r(h)], G(2.35, -0.48, zc(2.35, (-0.88, -0.08))) + [0.0]]}
 
 
 def check_overlay(objs):

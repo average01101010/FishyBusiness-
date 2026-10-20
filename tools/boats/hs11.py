@@ -7,7 +7,9 @@ stem, the deck at 2.11 m aft and the side 3.10 m forward, the near upright stem,
 under the base line with the propeller in a nozzle. Jonas let us choose the colours and asked for room on deck for the gear («husk at
 det må være dekksplass for utstyr»): the deckhouse on the drawing's aft deck is left out, so the working deck runs clear from the
 transom to the short cabin behind the wheelhouse; the hauling station stands under the cabin's roof on the starboard side. A petrol
-hull with a white rubbing strake, white superstructure, an orange crane. Exterior only (CLAUDE.md).
+hull with a white rubbing strake, white superstructure, an orange roof edge. Exterior only (CLAUDE.md). The radars, the liferaft and the
+lifebuoys are the game's deck kit (tools/deck), drawn at the places in anchors.kit (the user's wish 19.10.2026); the type has no crane
+(the orange one on the port quarter is out with the rest of the baked gear).
 
     pip install bpy==4.5.4
     python3 tools/boats/hs11.py            -> src/data/boat-hs11.b64 (+ the side picture), renders in tools/boats/out/
@@ -156,9 +158,10 @@ def underwater(fine=True):
     return [o for o in objs if o]
 
 
-# ---------- the wheelhouse forward, the cabin with the hauling station under its roof, the mast; the crane aft ----------
+# ---------- the wheelhouse forward, the cabin with the hauling station under its roof, the mast ----------
 WX0, WX1, WY = X_HS, 8.9, 2.1
 WS, WH, WR = 3.45, 4.15, 4.41
+RAD_X = 7.45                # the open array's pedestal on the radar platform, forward of the mast
 
 def gear(fine=True):
     A = Acc('gear'); G = Acc('glass'); w = C['white']; sg_ = 14 if fine else 8
@@ -196,20 +199,17 @@ def gear(fine=True):
         abox(A, 8.2, 8.5, sg * (WY + 0.12) - 0.05, sg * (WY + 0.12) + 0.05, WR - 0.25, WR - 0.05, C['dark'])                           # the side lights' housings
         y0 = sg * (WY + 0.17); abox(A, 8.23, 8.47, min(y0, y0 + sg * 0.015), max(y0, y0 + sg * 0.015), WR - 0.22, WR - 0.08, C['lampR' if sg > 0 else 'lampG'])   # the glass, outboard
     lantern_geo(A)
-    # the mast on the roof raked aft, the radar, the dome, the antennas
+    # the mast on the roof raked aft, the radar platform (now carried forward of the mast on a strut, where the open array the player
+    # buys turns clear of it: kit.radarA; the dome he can buy stands on the roof forward of the mast, kit.radar), the antennas
     P0 = (6.9, 0, WR + 0.12); P1 = (6.4, 0, 6.6)
     beam(A, P0, P1, 0.22, 0.32, w)
-    abox(A, 6.2, 6.8, -0.5, 0.5, 5.55, 5.62, w); acyl(A, (6.5, 0.0, 5.62), (6.5, 0.0, 5.95), 0.3, lambda z: w, seg=12, r1=0.26)
+    abox(A, 6.2, 6.8, -0.5, 0.5, 5.55, 5.62, w); abox(A, 6.75, RAD_X + 0.3, -0.3, 0.3, 5.55, 5.62, w); beam(A, (6.98, 0, 5.0), (RAD_X + 0.2, 0, 5.56), 0.08, 0.08, w)
     abox(A, 6.25, 6.55, -0.7, 0.7, 6.25, 6.3, w); abox(A, 6.35, 6.45, -0.06, 0.06, 6.6, 7.5, w)
     for y in (-0.65, 0.65): acyl(A, (6.4, y, 6.3), (6.4, y, 7.4), 0.012, lambda z: w, seg=4)
     acyl(A, (7.6, -1.6, WR + 0.12), (7.6, -1.6, 6.8), 0.02, lambda z: w, seg=4)
     acyl(A, (8.3, 1.4, WR + 0.12), (8.3, 1.4, 4.85), 0.12, lambda z: C['steel'], seg=10)
     # the hauling station on the starboard rail under the roof has no hauler in the model (Jonas 18.10.2026: no boat carries modelled gear);
     # the one the player buys is drawn at the hauler anchor
-    # the crane on the port quarter, its boom laid forward along the bulwark
-    acyl(A, (0.6, 1.7, ZMD), (0.6, 1.7, z_top(0.6) + 0.6), 0.16, lambda z: C['orange'], seg=sg_)
-    beam(A, (0.6, 1.7, z_top(0.6) + 0.6), (0.75, 1.7, z_top(0.6) + 1.2), 0.2, 0.22, C['orange'])
-    beam(A, (0.75, 1.7, z_top(0.6) + 1.2), (3.4, 1.85, z_top(0.6) + 0.75), 0.16, 0.18, C['orange'])
     # the anchor pockets in the bow
     for sg in (1, -1):
         x = 10.3; y = hbz(x, 2.6) + 0.02
@@ -269,20 +269,19 @@ def helm_interior(A, G):
     abox(A, 6.3, 7.7, 1.35, 1.95, ZFD, ZFD + 0.42, C['inner'])
 
 
-# ---------- the working deck (B6): the gutting table and the fish boxes; the bleeding tub is the game's own, at the work anchor ----------
+# ---------- the working deck (B6): the gutting table; the bleeding tub is the game's own, at the work anchor, and the fish boxes, the tubs
+# and the crates are the game's deck kit ----------
 TABLE = (3.0, 3.9, -1.9, -1.3)      # x0, x1, y0, y1 of the gutting table, starboard side by the hauling station
 def work_deck(A):
     x0, x1, y0, y1 = TABLE; zt = ZMD + 0.9
     abox(A, x0, x1, y0, y1, zt - 0.05, zt, C['steel'])
     for x, y in ((x0 + 0.05, y0 + 0.05), (x1 - 0.05, y0 + 0.05), (x0 + 0.05, y1 - 0.05), (x1 - 0.05, y1 - 0.05)): acyl(A, (x, y, ZMD), (x, y, zt - 0.05), 0.02, lambda z: C['steel'], seg=5)
     abox(A, x0, x1, y0 - 0.02, y0, zt - 0.05, zt + 0.12, C['steel'])                                       # the lip outboard
-    for k in range(3): abox(A, 0.9, 1.5, 0.9, 1.5, ZMD + 0.3 * k, ZMD + 0.3 * k + 0.28, C['inner'])          # a stack of fish boxes to port
-    for k in range(2): abox(A, 3.0, 3.6, 1.2, 1.8, ZMD + 0.3 * k, ZMD + 0.3 * k + 0.28, C['inner'])
     atorus(A, (3.3, 1.95, ZMD + 0.04), (0, 0, 1), 0.22, 0.03, lambda a: C['dark'], 14, 5)                     # a coiled deck hose
 
 
-# ---------- fittings (B3, B7, B9–B11, B13): bollards, fenders, bilge keels, the windlass, vents, the exhaust, the liferaft, the lifebuoy,
-# the flare locker, the flag staff ----------
+# ---------- fittings (B3, B7, B9–B11, B13): bollards, fenders, bilge keels, the windlass, vents, the exhaust, the flare locker, the flag
+# staff (the liferaft and the lifebuoys are the game's deck kit) ----------
 def fittings(A, fine=True):
     s = lambda z: C['steel']
     for x in (0.5, 3.6, 7.0, 9.9):                                                                           # bollards on the gunwale cap
@@ -304,9 +303,6 @@ def fittings(A, fine=True):
     for sg in (1, -1): acyl(A, (9.0, sg * 0.8, ZFD), (9.0, sg * 0.8, ZFD + 0.22), 0.05, lambda z: C['white'], seg=8); acyl(A, (9.0, sg * 0.8, ZFD + 0.22), (9.0, sg * 0.8, ZFD + 0.3), 0.1, lambda z: C['white'], seg=10)   # mushroom vents
     acyl(A, (7.05, 0.42, WR + 0.12), (6.62, 0.42, 5.95), 0.07, lambda z: C['black'], seg=8)                  # the dry exhaust up the mast's aft side
     acyl(A, (6.62, 0.42, 5.95), (6.6, 0.42, 6.05), 0.085, lambda z: C['black'], seg=8)
-    acyl(A, (4.75, -1.35, WR + 0.45), (5.85, -1.35, WR + 0.45), 0.33, lambda z: C['white'], seg=14)          # the liferaft in its container, in a cradle on the roof
-    for x in (4.95, 5.65): acyl(A, (x - 0.02, -1.35, WR + 0.45), (x + 0.02, -1.35, WR + 0.45), 0.335, lambda z: C['dark'], seg=14); abox(A, x - 0.05, x + 0.05, -1.75, -0.95, WR + 0.12, WR + 0.2, s(0))
-    atorus(A, (CX0 - 0.07, 1.55, ZMD + 1.35), (1, 0, 0), 0.3, 0.045, lambda a: C['buoyW'] if (a % (math.pi / 2)) < math.pi / 9 else C['buoy'], 18, 6)   # the lifebuoy on the cabin's aft wall
     abox(A, CX0 - 0.12, CX0, 1.85, 2.05, ZMD + 0.9, ZMD + 1.2, C['red'])                                     # the flare locker
     zt = z_top(XA); acyl(A, (XA + 0.15, 0.0, zt - 0.1), (XA + 0.15, 0.0, zt + 1.25), 0.015, lambda z: C['white'], seg=6)    # the flag staff
     abox(A, XA + 0.1, XA + 0.2, -0.04, 0.04, zt, zt + 0.1, s(0))
@@ -354,7 +350,26 @@ def anchors():
             # the clear working deck aft: the hauler on the starboard rail under the cabin's roof, the gear stacked aft of it
             'deck': {'y': round(ZMD - WL, 3), 'z': round(-(2.6 - XM), 3)}, 'gw': round(z_top(3.0) - WL, 3),
             'stern': round(XM - XA, 3), 'bow': round(-(XF - XM), 3), 'side': HB, 'beam': 4.68, 'pl': 4.4, 'rl': 1.78, 'open': False, 'hand': False,
-            'pole': G(XA + 0.15, 0, z_top(XA) + 1.2), 'hauler': G(hx, -(hbz(hx, z_top(hx)) - 0.3), z_top(hx) + 0.35), 'filler': G(6.5, HB, ZFD + 0.3)}
+            'pole': G(XA + 0.15, 0, z_top(XA) + 1.2), 'hauler': G(hx, -(hbz(hx, z_top(hx)) - 0.3), z_top(hx) + 0.35), 'filler': G(6.5, HB, ZFD + 0.3),
+            'kit': kit(G)}
+
+
+def kit(G):
+    """the places of the deck kit (tools/deck, drawn by the game; the user's wish 19.10.2026), in the game's frame: the liferaft in its
+    cradle on the roof aft to starboard where the old one lay; a buoy on the cabin's side in the hauling station, by the hauler, and one
+    on the port bulwark between the fenders; the dome on the roof forward of the mast, the open array on the radar platform forward of it;
+    the net tub at the stern in the middle, where the nets go out over the transom (the deck by the hauler is the table's, the bleeding
+    tub's and the crew's); the line tubs along the port bulwark aft, inboard of the fenders; the deck cargo on the hatch and on the deck
+    forward of it to port, clear of the cabin door"""
+    r = lambda v: round(v, 3); h = math.pi / 2
+    return {'raft': [G(5.3, -1.7, WR + 0.12) + [r(h)]],
+            # (the bulwark flares out as it rises: the port bracket stands off it as far as its face comes in at the ring's foot)
+            'buoys': [G(5.3, -0.5, 3.6) + [r(h)], G(2.35, hbz(2.35, ZMD) - 0.06, 2.85) + [r(h)]],
+            'radar': G(8.0, 0.0, WR + 0.12),
+            'radarA': G(RAD_X, 0, 5.62),
+            'garn': {'at': G(0.75, 0.0, ZMD), 'ry': r(h)},
+            'stamps': {'at': G(1.975, 1.72, ZMD), 'ry': 0.0},
+            'cargo': [G(2.0, 0.0, ZMD + 0.12) + [0.0], G(3.4, 1.07, ZMD) + [r(h)]]}
 
 
 SHOTS = [('bow3q', (21.0, -13.0, 5.5), (5.5, 0, 2.6), 35), ('stern3q', (-7.0, -9.0, 6.0), (4.5, 0, 2.6), 35), ('side', (5.5, -23, 2.8), (5.5, 0, 3.0), 35),
