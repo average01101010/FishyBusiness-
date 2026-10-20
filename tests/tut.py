@@ -35,7 +35,9 @@ async def play(p, W, H, tag):
     pg = await ctx.new_page(); cdp = await ctx.new_cdp_session(pg)
     pg.set_default_timeout(120000)   # a screenshot of the 3D view in SwiftShader can take more than Playwright's 30 s (as boot() in _env.py)
     errs = []
-    pg.on('pageerror', lambda e: errs.append(str(e)))
+    def perr(e):
+        errs.append(str(e)); print('    sidefeil · ' + tag + ' · ' + (getattr(e, 'stack', '') or str(e)).replace('\n', ' | ')[:600], flush=True)   # where it came from
+    pg.on('pageerror', perr)
     pg.on('dialog', lambda d: asyncio.ensure_future(d.dismiss()))
 
     async def tap(x, y):
