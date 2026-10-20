@@ -587,7 +587,11 @@ function egnOrder(lk, n, bait){
 }
 // the hands that bait or strip, as baiting counts them: two aboard twice as fast as one, three two and a half times (Jonas 07.10.2026,
 // tilbakemelding #28), each further hand half a tub more
-function egnHands(){ const hands = handsAboard(); return {hands, eff:(hands <= 2 ? hands : 2 + 0.5 * (hands - 2)) * teamEff(crewAboard(), meAboard(), 'line')}; }
+function egnHands(){ const hands = handsAboard(); return {hands, eff:egnCoop(hands) * teamEff(crewAboard(), meAboard(), 'line')}; }
+const egnCoop = k => k <= 2 ? k : 2 + 0.5 * (k - 2);
+// the hours to tell the player: no more can work the tubs than there are tubs and places (13-work.js jobPlaces), so a job for all
+// hands (h) takes longer when fewer can get at it; the job itself keeps h as its work and paces by those on it
+const egnShown = (n, h) => { const all = handsAboard(), T = (BOAT.stations && BOAT.stations.table) || 1, k = Math.min(all, clamp(Math.round(n || 1), 1, T + 1)); return k > 0 && k < all ? Math.round(h * egnCoop(all) / egnCoop(k) * 10) / 10 : h; };
 const egnHours = (lk, n, eff) => Math.round(n * LINE_KINDS[lk].hooks / (GPRICE.egnRate * eff) * 10) / 10;
 const stripHours = (lk, n, eff) => Math.max(0.1, Math.round(n * LINE_KINDS[lk].hooks / (GPRICE.egnRate * eff) / 3 * 10) / 10);   // a third of the baiting
 // the unbaited tubs the crew may bait by itself (no bait named): not those the player stripped and asked to keep bare (stripSelf)
@@ -606,7 +610,7 @@ function egnSelf(lk, n, bait){
   const h = egnHours(lk, n, eff);
   if (!queueJob({kind:'egn', lk, n, h, bait:bk, no:'Egne ' + n + ' stamper med ' + BAITS[bk].no.toLowerCase(), en:'Bait ' + n + ' tubs with ' + BAITS[bk].en.toLowerCase()})) return [gL('Verkstedkøen er full.', 'The work queue is full.')];
   B[bk] -= kg; L0.n -= n; pg.shore.push({kind:'egnself', lk, n, bait:bk}); if (bait) pg.baitPref = bait;
-  log('Egner ' + n + ' stamper med ' + BAITS[bk].no.toLowerCase() + ', ca. ' + fmt(h, 1) + ' t.', 'Baiting ' + n + ' tubs with ' + BAITS[bk].en.toLowerCase() + ', about ' + fmt(h, 1) + ' h.');
+  log('Egner ' + n + ' stamper med ' + BAITS[bk].no.toLowerCase() + ', ca. ' + fmt(egnShown(n, h), 1) + ' t.', 'Baiting ' + n + ' tubs with ' + BAITS[bk].en.toLowerCase() + ', about ' + fmt(egnShown(n, h), 1) + ' h.');
   return null;
 }
 // taking the bait off baited tubs (Jonas 20.10.2026: «Det må nesten også være mulig å fjerne agn om man ønsker å bruke noe annet som agn om man
@@ -624,7 +628,7 @@ function stripSelf(lk, bait, n, then){
   if (!queueJob({kind:'strip', lk, bait, n, h, then:nx, no:'Rense ' + n + ' stamper for ' + BAITS[bait].no.toLowerCase(), en:'Strip ' + n + ' tubs of ' + BAITS[bait].en.toLowerCase()})) return [gL('Verkstedkøen er full.', 'The work queue is full.')];
   bt[bait] -= n; L0.baited -= n; L0.n -= n; pg.shore.push({kind:'stripself', lk, n, bait});
   if (nx) pg.baitPref = nx;
-  log('Tar agnet av ' + n + ' stamper (' + BAITS[bait].no.toLowerCase() + '), ca. ' + fmt(h, 1) + ' t.', 'Taking the bait off ' + n + ' tubs (' + BAITS[bait].en.toLowerCase() + '), about ' + fmt(h, 1) + ' h.');
+  log('Tar agnet av ' + n + ' stamper (' + BAITS[bait].no.toLowerCase() + '), ca. ' + fmt(egnShown(n, h), 1) + ' t.', 'Taking the bait off ' + n + ' tubs (' + BAITS[bait].en.toLowerCase() + '), about ' + fmt(egnShown(n, h), 1) + ' h.');
   return null;
 }
 function mendSelf(nid){
