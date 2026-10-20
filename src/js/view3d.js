@@ -2085,14 +2085,24 @@ const G3 = (() => {
     const s = Q.s || 1, ca = X.col_at || [0, 0.35, 0], b1 = X.b1_at || [0, 1.0, 0], b2 = X.b2_at || [0, 0, -2.4], ea = X.ext_at || [0, 0, -1.6], e2a = X.ext2_at || [0, 0, -0.3], half = p.e / 2;
     const M0 = chain(BMrel, M4.T(Q.at[0], Q.at[1], Q.at[2]), M4.RY(Q.ry || 0), M4.S(s)), MC = chain(M0, M4.T(ca[0], ca[1], ca[2]), M4.RY(p.sl)), M1 = chain(MC, M4.T(b1[0], b1[1], b1[2]), M4.RX(p.a1));
     const M2 = chain(M1, M4.T(b2[0], b2[1], b2[2]), M4.RX(p.a2)), E1 = chain(M2, M4.T(ea[0], ea[1], ea[2] - half)), E2 = chain(E1, M4.T(e2a[0], e2a[1], e2a[2] - half));
-    return {s, M0, MC, M1, M2, E1, E2, tip:xf(E2, X.tip || [0, 0, -1.8])};
+    // the knuckle link (a rocker on the main boom and a push link to the outer boom's heel): its angles against the knuckle's, from the
+    // model's table (klink: [a2, l1, l2]), so the outer boom folds right back along the main one as a real crane's does
+    const lk = crLink(X, p.a2), L1 = lk && X.q1 ? chain(M1, M4.T(X.q1[0], X.q1[1], X.q1[2]), M4.RX(lk[0])) : null, L2 = lk && X.q2 ? chain(M2, M4.T(X.q2[0], X.q2[1], X.q2[2]), M4.RX(lk[1])) : null;
+    return {s, M0, MC, M1, M2, E1, E2, L1, L2, tip:xf(E2, X.tip || [0, 0, -1.8])};
   }
+  function crLink(X, a2){ const T = X.klink; if (!T || !T.length) return null; if (a2 <= T[0][0]) return [T[0][1], T[0][2]];
+    for (let i = 1; i < T.length; i++) if (a2 <= T[i][0]){ const u = (a2 - T[i - 1][0]) / (T[i][0] - T[i - 1][0]); return [T[i - 1][1] + (T[i][1] - T[i - 1][1]) * u, T[i - 1][2] + (T[i][2] - T[i - 1][2]) * u]; }
+    const L = T[T.length - 1]; return [L[1], L[2]]; }
   function drawCrane(BMrel, G, VP, t, d){
     const K = G.kit, V = VESSELS[vtype()]; if (!K || !K.crane || !V || !(V.crane > 0)) return;
     const X = kitX('crane'), mB = kit('crane', 'base'), mC = kit('crane', 'col'), m1 = kit('crane', 'b1'), m2 = kit('crane', 'b2'); if (!mB || !mC || !m1 || !m2) return;
     const Q = K.crane, b = S.boat, dt = Math.max(0, Math.min(0.2, t - CRN.t)); CRN.t = t;
     const job = b.status === 'port' && !b.land && S.jobs && S.jobs.find(j => j.kind === 'last' && j.until != null && j.until > S.t), loading = job && /^Lasting/.test(job.no || '');
-    const stow = crPose(X, Q.rest && X.park ? 'park' : 'stow'), work = crPose(X, 'work'), emax = 2 * (X.ext_max || 1.5);
+    // parked on its rest where the boat has room for one under the parked boom (the model's rest_at, from the foot), else folded up tight
+    // as cranes are packed on boats and lorries (Jonas 20.10.2026, with a photo)
+    const restW = Q.rest && X.park && X.rest_at ? [Q.at[0] + (Math.sin(Q.ry || 0) * X.rest_at[2]) * (Q.s || 1), Q.at[1], Q.at[2] + Math.cos(Q.ry || 0) * X.rest_at[2] * (Q.s || 1)] : null;
+    const parked = !!(restW && Math.hypot(restW[0] - Q.rest[0], restW[2] - Q.rest[2]) < 0.6);
+    const stow = crPose(X, parked ? 'park' : 'stow'), work = crPose(X, 'work'), emax = 2 * (X.ext_max || 1.5);
     let tgt = stow, ph = -1, u = 0, at = null;
     if (job){
       // where the hook must go: a cargo place, or 2.5 m out over the quay on the starboard side, level with the crane
@@ -2113,10 +2123,11 @@ const G3 = (() => {
     p.a2 = Math.max(p.a2, crA2min(X, p.a1));
     const F = crFrames(X, Q, BMrel, p), S1 = M4.S(F.s); KST.crane = {sl:p.sl, a1:p.a1, a2:p.a2, e:p.e, job:!!job, tip:F.tip.slice()};
     drawN(mB, F.M0); drawN(mC, F.MC); drawN(m1, F.M1); drawN(m2, F.M2);
-    const e1 = kit('crane', 'ext1'), e2 = kit('crane', 'ext2'); if (e1) drawN(e1, F.E1); if (e2) drawN(e2, F.E2);
+    const e1 = kit('crane', 'ext1'), e2 = kit('crane', 'ext2'), k1 = kit('crane', 'link1'), k2 = kit('crane', 'link2'); if (e1) drawN(e1, F.E1); if (e2) drawN(e2, F.E2);
+    if (k1 && F.L1) drawN(k1, F.L1); if (k2 && F.L2) drawN(k2, F.L2);
     // the cylinders between their eyes: the barrel from its base eye, the rod from the far eye back into it
-    for (const [nb, nr, fa, ka, fb, kb] of [['cyl1b', 'cyl1r', F.MC, 'c1_a', F.M1, 'c1_b'], ['cyl2b', 'cyl2r', F.M1, 'c2_a', F.M2, 'c2_b']]){
-      const cb = kit('crane', nb), cr = kit('crane', nr); if (!cb || !cr || !X[ka] || !X[kb]) continue; const A = xf(fa, X[ka]), B = xf(fb, X[kb]), v = [B[0] - A[0], B[1] - A[1], B[2] - A[2]];
+    for (const [nb, nr, fa, ka, fb, kb] of [['cyl1b', 'cyl1r', F.MC, 'c1_a', F.M1, 'c1_b'], ['cyl2b', 'cyl2r', F.M1, 'c2_a', X.c2_b_in === 'link1' ? F.L1 : F.M2, 'c2_b']]){
+      const cb = kit('crane', nb), cr = kit('crane', nr); if (!cb || !cr || !fb || !X[ka] || !X[kb]) continue; const A = xf(fa, X[ka]), B = xf(fb, X[kb]), v = [B[0] - A[0], B[1] - A[1], B[2] - A[2]];
       drawN(cb, chain(toolM(A, v), S1)); drawN(cr, chain(toolM(B, v), S1)); }
     // the hook on its wire: short and made fast at sea, paid out to the deck or the quay in the round
     const H = kit('crane', 'hook'), tip = F.tip, near = !job || Math.hypot(p.sl - tgt.sl, p.e - tgt.e) > 0.15;
@@ -2128,7 +2139,7 @@ const G3 = (() => {
     const carry = job && !near && (loading ? u >= 0.7 || u < 0.25 : u >= 0.25 && u < 0.7), C = kit('rig', 'kasse');
     if (carry && C){ const hl = (X.hook_h || 0.35) * F.s; drawN(C, chain(at0(hy - hl - 0.8), M4.S(1 / F.s))); }
     // the boom rest stands where the parked crane's outer boom comes down (the model's rest_at, from the crane's foot)
-    if (Q.rest && X.park && X.rest_at){ const R = kit('crane', 'rest'); if (R) drawN(R, chain(F.M0, M4.T(X.rest_at[0], X.rest_at[1], X.rest_at[2]))); }
+    if (parked){ const R = kit('crane', 'rest'); if (R) drawN(R, chain(F.M0, M4.T(X.rest_at[0], X.rest_at[1], X.rest_at[2]))); }
     return carry;
   }
   // the bleeding tub's top in the boat frame (where the fish are tossed)

@@ -1,57 +1,76 @@
 """The deck crane: a marine knuckle-boom crane of the kind a 15-21 m Norwegian coastal boat carries on its deck, built in Blender
-as parts that the game moves itself (the caller's spec 19.10.2026). Modelled on the small marine knuckle-boom cranes of the
-2-3 t*m class (HMF, Palfinger, Fassi); no maker's name, logo or text is on the model.
+as parts that the game moves itself (the caller's spec 19.10.2026; the compact transport fold from Jonas' photo 20.10.2026). Modelled
+on the small marine knuckle-boom cranes of the 2-3 t*m class (HMF, Palfinger, Fassi); no maker's name, logo or text is on the model.
 
 Real measures it leans on (the makers' product pages, read 19.10.2026; these are the truck versions of the same booms, the marine
 versions add corrosion protection and a pedestal):
     Fassi F32A        2.75 t*m (27 kNm), hydraulic outreach up to 6.90 m, slewing 370 deg, dead weight 390-465 kg (fassi.com)
     Palfinger PK 2900 2.5 t*m, max. lifting capacity 990 kg, max. hydraulic outreach 6.4 m (the B version), 374 kg (palfinger.com)
     HMF 330 K3        28.4 kNm, max. reach 7.1 m (lectura-specs.com)
-The boom lengths are the caller's (main boom 2.4 m pivot to pivot, outer boom 2.2 m, two telescopes of about 1.8 m sliding 1.45 m
-each), which gives 7.7 m of hydraulic reach with the outer boom level: a little more than the cranes above, so the safe working load
-at full reach is put at 0.3 t (about 2.6 t*m spread over 7.7 m, as the load charts of the class fall off).
+and the shape of the transport fold from Jonas' photo of used loader cranes (20.10.2026): a short column, the main boom standing
+steeply up from it, the outer boom folded fully down under it and lying tight along it with its tip down by the column's foot, the
+telescopes in, the whole package about 2.5 m high. The main boom is 1.60 m pivot to pivot, the outer boom 1.90 m to its mouth and the
+two telescopes slide 1.45 m each, which gives 6.5 m of hydraulic reach with both booms level, as the cranes above; the safe working
+load at full reach is put at 0.3 t (about 2.6 t*m spread over 6.5 m less the booms' own weight, as the load charts of the class fall
+off).
 
 Parts, each with its own origin at its pivot (the game composes base -> col (slew about y) -> b1 (a1 about x) -> b2 (a2 about x)
--> ext1 -> ext2 (sliding along b2's axis), and hangs the hook on a wire under the tip):
+-> ext1 -> ext2 (sliding along b2's axis), the knuckle links on b1 and b2, the cylinders between their eyes, and hangs the hook on a
+wire under the tip):
     base    the pedestal bolted to the deck: a 0.56 m square foot flange with eight bolts, a 0.34 m tube with four gussets, the top
             flange and the slewing ring's fixed race in its gear housing with a ring of bolts; 0.35 m high. From the deck.
-    col     the slewing column: the slewing housing (a rounded box that turns on the ring) with the slewing motor at its back,
-            the lift cylinder's lugs at its front, a tapered polygonal column up to the main boom's pivot bracket (two cheek
-            plates and the pin) 1.15 m over the ring, the control valve bank (four sections) on the +x side with two cross
-            levers (each works two functions) with red knobs, and the hoses up the column. From the slew axis on the ring.
-    b1      the main boom: a polygonal box section 0.20 x 0.25 m at the root tapering to 0.18 x 0.22 m, its end cranked down
-            and narrowed into the knuckle's tongue; the lift cylinder's lugs under it, the knuckle cylinder's raised bracket on
-            top, hoses with clamps along its +x side. From its pivot, lying along -z.
-    b2      the outer boom: 0.16 x 0.20 m, open at the far end where the telescopes come out (wear pads in the mouth), its heel a
-            fork of two plates round the main boom's tongue, carrying the knuckle pin and the horn the knuckle cylinder pushes on;
-            hoses along its +x side. From the knuckle pin, lying along -z (its axis 0.13 m over the pin).
-    ext1    the first telescope, 1.85 m, 0.13 x 0.165 m, with its collar and the wear pads for ext2. From its rear end.
-    ext2    the second telescope, 1.80 m, 0.104 x 0.136 m, with the tip head: a sheave of 0.15 m in a fork. From its rear end.
+    col     the slewing column: the slewing housing (a rounded box that turns on the ring) with the slewing motor at its back, the
+            lift cylinder's bracket hanging down in front of the pedestal (its base eye low, as on the real cranes, so the cylinder
+            is long enough for the boom's 90 degrees), a short tapered column up to the main boom's pivot bracket 0.57 m over the
+            ring, the control valve bank (four sections) on a bracket on the +x side with two cross levers (each works two
+            functions) with red knobs, and the hoses up to the boom. From the slew axis on the ring.
+    b1      the main boom: a polygonal box section 0.20 x 0.24 m at the root, narrowing to a 0.12 m tongue at its end where the
+            knuckle pin sits under it; the lift cylinder's lugs under it, the knuckle cylinder's bracket on top, the pin of link1
+            through its end, hoses with clamps along its +x side. From its pivot, lying along -z.
+    b2      the outer boom: 0.15 x 0.18 m, open at the far end where the telescopes come out (wear pads in the mouth), its heel a
+            cranked fork of two plates round the main boom's tongue (its axis 0.20 m over the knuckle pin, so folded it lies under
+            the main boom clear of the lift cylinder), carrying the knuckle pin and the pin of link2; hoses along its +x side. From
+            the knuckle pin, lying along -z.
+    link1   the rocker of the knuckle link: two plates from its pin on b1 to the joint J where link2 and the knuckle cylinder's
+            rod meet, 0.368 m. From its pin on b1, lying along -z to J.
+    link2   the push link: two plates from J to its pin on b2's heel, 0.488 m. From its pin on b2, lying along -z to J.
+    ext1    the first telescope, 1.75 m, 0.122 x 0.15 m, with its collar and the wear pads for ext2. From its rear end.
+    ext2    the second telescope, 1.68 m, 0.098 x 0.124 m, with the tip head: a sheave of 0.13 m in a fork. From its rear end.
     hook    the hook block: the wire's socket, a swivel with its nut, and a painted crane hook with a steel safety latch;
             0.35 m tall. From the top, where the wire is made fast.
-    cyl1b   the lift cylinder's barrel (Ø0.11 m), from its base eye, lying along -z; a steel pipe along it to the rod end
-    cyl1r   its chrome rod (Ø0.06 m), from the rod eye, lying along +z back into the barrel
-    cyl2b   the knuckle cylinder's barrel (Ø0.09 m), as cyl1b
-    cyl2r   its rod (Ø0.05 m), as cyl1r
-    rest    the boom rest: a square post with a foot flange and a rubber-lined V cradle that fits the outer boom's underside. From
-            the deck; the cradle's seat is at rest_h.
+    cyl1b   the lift cylinder's barrel (Ø0.11 m, 0.59 m), from its base eye, lying along -z; a steel pipe along it to the rod end
+    cyl1r   its chrome rod (Ø0.06 m, 0.56 m), from the rod eye, lying along +z back into the barrel
+    cyl2b   the knuckle cylinder's barrel (Ø0.09 m, 0.52 m), on top of b1, as cyl1b
+    cyl2r   its rod (Ø0.05 m, 0.46 m), as cyl1r; its eye is on the joint J at the end of link1
+    rest    the boom rest, for boats that have room for one: a square post with a foot flange and a rubber-lined V cradle that fits
+            the outer boom's underside. From the deck; the cradle's seat is at rest_h.
 
-What I chose myself: the column's height (1.15 m to the pivot, so the cylinder fits and people walk under the boom), the mount
-points of both cylinders (worked out so they fit their strokes and clear the steel in every pose: the barrel never runs past the
-rod's eye and the rod never past the barrel's base), the cylinders' lengths (the lift cylinder is 0.75 + 0.72 m, shorter than the
-spec's 1.1 m, because a 1.15 m column cannot hold a longer one over the boom's 90 degrees; the knuckle cylinder is 1.15 + 1.10 m,
-longer than the spec's 0.9 m, because a direct-acting cylinder needs that stroke for the 150 degrees of the knuckle), the
-knuckle's horn instead of a link system (the game moves no links; the horn gives the knuckle -166..-18 degrees), the polygonal
+The knuckle link (why there are links): the outer boom must close to about -170 degrees against the main boom to lie tight along it
+in the transport fold and open to level for the reach, 180 degrees in all, which a cylinder pushing straight on a lever cannot do (its
+lever passes the dead points and the rod runs into the boom). The real cranes put a four-bar link between the cylinder and the outer
+boom, and so does this one: link1 turns about q1 on b1, link2 about q2 on b2, they meet at J, and the knuckle cylinder pushes on J.
+For each a2 the game finds J (b1 frame, in the plane x = 0) as the meeting point of the circle round q1 with radius la and the circle
+round K + Rx(a2) q2 with radius lb (K = b2_at), on the side given by jside (the one with J above the line from q1 to q2: J = m +
+jside * h * perp, perp the line q1->q2 turned +90 degrees about x), or reads the angles from the table klink [a2, l1, l2], 5 degrees
+apart: link1 is placed at q1 on b1 turned l1 about x from its rest (along -z), link2 at q2 on b2 turned l2 about x. The knuckle
+cylinder runs from c2_a (on b1) to c2_b, which is J at the end of link1 (in link1's frame). With this geometry the cylinder pulls
+to raise the outer boom (it is longest folded); a link where it pushes, as on most real cranes, did not fit with the pin under the
+main boom and the folded outer boom tight along it.
+
+What I chose myself: the column's height (0.57 m to the pivot, so the folded package stays near 2.6 m), the mount points of both
+cylinders and the link geometry (worked out in 2D so the cylinders fit their strokes over the whole ranges, the barrel never runs past
+the rod's eye nor the rod past the barrel's base, the links keep a transmission angle over 30 degrees and the rod and the links clear
+the booms), the lift cylinder's length (0.59 + 0.56 m, shorter than the first spec's 1.1 m, as the short column wants), the polygonal
 section of the booms, the colours, the hoses' runs and the valve bank's look.
 
 Limits for the game (extras): a1_range and a2_range are where the cylinders fit their strokes and clear the steel; a2_min is a
-table [a1, a2] of how far the knuckle may close at each main boom angle before the folded outer boom touches the column or the
-lift cylinder (fold the crane with the main boom raised, as on a real one). Checked in Blender: no part crosses another in the
+table [a1, a2] of how far the knuckle may close at each main boom angle before the folded outer boom touches the column, the pedestal
+or the lift cylinder (fold the crane with the main boom raised, as on a real one). Checked in Blender: no part crosses another in the
 stow, park and work poses (the pins through their eyes and the telescopes in their sleeves excepted).
 
-The park pose: a folded crane cannot lie flat (the outer boom is nearly as long as the main boom and would hit the column and the
-lift cylinder), so the parked crane lies stretched out with the knuckle a little closed and the outer boom resting in the rest's
-cradle near its end, as cranes on boats are laid down for steaming.
+The stow pose is the photo's transport fold (main boom 83 degrees up, the knuckle closed to -170, the hook hanging just clear of the
+deck by the column's foot; the package is 2.6 m high). The park pose is for boats with a boom rest: the main boom 10 degrees up and
+the outer boom level, lying in the rest's cradle 0.35 m inside its mouth.
 
     pip install bpy==4.5.4
     python3 tools/deck/kran.py          -> src/data/deck-crane.b64, renders tools/deck/out/kran_*.png
@@ -88,25 +107,27 @@ def G(p): return [round(v, 4) for v in to_game(p)]
 
 # ---------- measures (Blender frame of each part, metres) ----------
 H_BASE = 0.35                                # the slewing ring's top over the deck: col_at
-P1 = V((0.0, -0.04, 1.15))                   # the main boom's pivot (col frame)
-C1A = V((0.0, 0.31, 0.09))                   # the lift cylinder's base pin (col frame)
-K2 = V((0.0, 2.40, -0.06))                   # the knuckle pin (b1 frame): the main boom is 2.40 m pivot to pivot
-C1B = V((0.0, 0.36, -0.17))                  # the lift cylinder's rod pin (b1 frame)
-C2A = V((0.0, 0.75, 0.42))                   # the knuckle cylinder's base pin on its bracket (b1 frame)
-HR, HA = 0.46, math.radians(172)             # the horn on b2's heel: radius and angle from b2's axis
-C2B = V((0.0, HR * math.cos(HA), HR * math.sin(HA)))   # the knuckle cylinder's rod pin (b2 frame)
-VB = 0.13                                    # b2's axis over its pin
-B2W, B2H, B2_Y0, B2_Y1 = 0.16, 0.20, 0.17, 2.25        # b2's section, its heel and its mouth (2.2 m of boom beyond the pin)
-E1W, E1H, E1L, E1_AT = 0.13, 0.165, 1.85, 0.45         # ext1: section, length, where its rear sits in b2 when in
-E2W, E2H, E2L, E2_AT = 0.104, 0.136, 1.80, 0.08        # ext2: the same in ext1
-EXT_MAX = 1.45                               # how far each telescope slides out (0.35 and 0.32 m stay inside)
-SHV = V((0.0, E2L + 0.14, 0.0)); SHV_R = 0.075         # the tip sheave (ext2 frame) and its radius
-TIP = SHV + V((0.0, 0.067, 0.0))             # where the wire leaves the sheave's groove, hanging down
-L1B, R1B, L1R, R1R = 0.75, 0.055, 0.72, 0.030          # the lift cylinder: barrel and rod
-L2B, R2B, L2R, R2R = 1.15, 0.045, 1.10, 0.025          # the knuckle cylinder
+P1 = V((0.0, -0.05, 0.57))                   # the main boom's pivot (col frame)
+C1A = V((0.0, 0.42, -0.22))                  # the lift cylinder's base pin, low in front of the pedestal (col frame)
+K2 = V((0.0, 1.60, -0.12))                   # the knuckle pin under the main boom's end (b1 frame): 1.60 m pivot to pivot
+C1B = V((0.0, 0.26, -0.14))                  # the lift cylinder's rod pin (b1 frame)
+C2A = V((0.0, 0.738, 0.29))                  # the knuckle cylinder's base pin on its bracket (b1 frame)
+Q1 = V((0.0, 1.314, 0.065))                  # link1's pin through the main boom's end (b1 frame)
+Q2 = V((0.0, -0.033, 0.112))                 # link2's pin on the outer boom's heel (b2 frame)
+LA, LB, JSIDE = 0.368, 0.488, 1              # the links' lengths, and which of the two meeting points is J
+VB = 0.20                                    # b2's axis over its pin
+B2W, B2H, B2_Y0, B2_Y1 = 0.15, 0.18, 0.12, 1.90        # b2's section, its heel and its mouth
+E1W, E1H, E1L, E1_AT = 0.122, 0.150, 1.75, 0.20        # ext1: section, length, where its rear sits in b2 when in
+E2W, E2H, E2L, E2_AT = 0.098, 0.124, 1.68, 0.05        # ext2: the same in ext1
+EXT_MAX = 1.45                               # how far each telescope slides out (0.25 m of each stays inside)
+SHV = V((0.0, E2L + 0.105, 0.0)); SHV_R = 0.065         # the tip sheave (ext2 frame) and its radius
+TIP = SHV + V((0.0, 0.058, 0.0))             # where the wire leaves the sheave's groove, hanging down
+L1B, R1B, L1R, R1R = 0.59, 0.055, 0.56, 0.030         # the lift cylinder: barrel and rod
+L2B, R2B, L2R, R2R = 0.52, 0.045, 0.46, 0.025          # the knuckle cylinder
 HOOK_H = 0.35
-A1_RANGE = (math.radians(-10), math.radians(80))       # where the lift cylinder fits its stroke and clears the steel
-A2_RANGE = (math.radians(-166), math.radians(-18))     # the same for the knuckle
+A1_RANGE = (math.radians(-6), math.radians(85))        # where the lift cylinder fits its stroke and clears the steel
+A2_RANGE = (math.radians(-176), math.radians(4))       # where the knuckle link works (and the cylinder fits)
+X_TONGUE, X_FORK, X_L1, X_L2 = 0.06, (0.062, 0.078), (0.062, 0.074), (0.080, 0.092)   # the knuckle's layers across (|x|)
 
 # ---------- small builders on an Acc (one mesh with a material per face) ----------
 def arc(c, r, a0, a1, n):
@@ -177,15 +198,15 @@ def catmull(p0, p1, p2, p3, t):
     t2 = t * t; t3 = t2 * t
     return 0.5 * ((2 * p1) + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 + (-p0 + 3 * p1 - 3 * p2 + p3) * t3)
 
-def smooth(ctrl):
-    """a Catmull-Rom curve through the points, with more points where it bends"""
+def smooth(ctrl, step=32):
+    """a Catmull-Rom curve through the points, with a point more for every step degrees it bends"""
     P = [V(p) for p in ctrl]; out = []
     def turn(i):
         if i <= 0 or i >= len(P) - 1: return 0.0
         a = (P[i] - P[i - 1]); b = (P[i + 1] - P[i])
         return a.angle(b) if a.length > 1e-6 and b.length > 1e-6 else 0.0
     for i in range(len(P) - 1):
-        n = 1 + int(max(turn(i), turn(i + 1)) / math.radians(32))
+        n = 1 + int(max(turn(i), turn(i + 1)) / math.radians(step))
         for k in range(n): out.append(catmull(P[max(0, i - 1)], P[i], P[i + 1], P[min(len(P) - 1, i + 2)], k / n))
     out.append(P[-1]); return out
 
@@ -201,8 +222,8 @@ def asweep(A, pts, rad, m, seg=6, cap0=True, cap1=True):
         rings.append(ring_at(pts[i], s, u, rad[i], seg))
     aloft(A, rings, m, cap0, cap1, pts)
 
-def hose(A, ctrl, r=0.011, m=None, seg=5):
-    asweep(A, smooth(ctrl), r, m or C['black'], seg)
+def hose(A, ctrl, r=0.011, m=None, seg=5, step=32):
+    asweep(A, smooth(ctrl, step), r, m or C['black'], seg)
 
 def sect(w, h):
     """the booms' polygonal section in (x, z): flat top with small chamfers, upright sides, the lower half closing in"""
@@ -254,8 +275,8 @@ def part_base():
     ac(A, (0, 0, 0.27), (0, 0, 0.295), 0.25, g, seg=24, cap1=False)
     ac(A, (0, 0, 0.295), (0, 0, 0.334), 0.262, g, seg=24, cap1=False)                    # the gear housing
     ac(A, (0, 0, 0.334), (0, 0, 0.35), 0.232, C['race'], seg=24, cap0=False)             # the fixed race
-    for k in range(10):
-        a = 2 * math.pi * (k + 0.5) / 10
+    for k in range(8):
+        a = 2 * math.pi * (k + 0.5) / 8
         bolt(A, (0.247 * math.cos(a), 0.247 * math.sin(a), 0.334), 0.010, 0.009, C['steel'])
     ac(A, (0.262, -0.06, 0.315), (0.285, -0.06, 0.315), 0.008, C['steel'], seg=6)       # grease nipple
     return A.done(40)
@@ -268,35 +289,32 @@ def part_col():
     # the slewing housing: a rounded box that turns on the ring
     prism_z(A, rrect(0.0, -0.045, 0.50, 0.51, 0.07, 3), 0.0, 0.15, r)
     ac(A, (0, 0, -0.012), (0, 0, 0.0), 0.215, C['race'], seg=24, cap0=False, cap1=False)  # the turning race under it
-    # the column: tapered, polygonal, from the housing to the pivot bracket
-    zs = [(0.15, 0.30, 0.30, -0.01, 0.075), (0.95, 0.24, 0.27, -0.03, 0.06)]
+    # the column: short, tapered, polygonal, from the housing to the pivot bracket
+    zs = [(0.15, 0.30, 0.30, -0.02, 0.075), (0.42, 0.26, 0.28, -0.035, 0.065)]
     aloft(A, [column_ring(z, w, d, yc, c) for z, w, d, yc, c in zs], r, False, True, [V((0, yc, z)) for z, w, d, yc, c in zs], flat=True)
-    abox(A, -0.16, 0.16, -0.17, 0.11, 0.15, 0.175, r)                                      # the column's foot plate
+    abox(A, -0.16, 0.16, -0.18, 0.12, 0.15, 0.175, r)                                      # the column's foot plate
     # the pivot bracket: two cheeks round the pin, the pin and its caps
     py, pz = P1.y, P1.z
-    cheek = [(0.115, 0.88), (0.10, 1.0)] + arc((py, pz), 0.105, -35, 215, 10) + [(-0.17, 1.02), (-0.18, 0.88)]
+    cheek = [(0.12, 0.33), (0.10, 0.46)] + arc((py, pz), 0.105, -35, 215, 10) + [(-0.18, 0.47), (-0.19, 0.33)]
     plate_pair(A, cheek, 0.104, 0.124, r)
     apin(A, P1, 0.142, 0.035, C['steel'], cap_r=0.05, sides=(-1, 1))
     bolt(A, (0.142, py + 0.06, pz), 0.012, 0.012, C['steel'], up=(1, 0, 0))               # the pin's lock bolt
     abox(A, 0.124, 0.13, py + 0.035, py + 0.085, pz - 0.015, pz + 0.015, C['steel'])
-    abox(A, -0.104, 0.104, -0.17, -0.12, 0.88, 1.05, r)                                    # the bracket's back plate
-    # the lift cylinder's lugs at the front, welded to the housing and the column
+    abox(A, -0.104, 0.104, -0.19, -0.14, 0.33, 0.47, r)                                    # the bracket's back plate
+    # the lift cylinder's bracket: two plates from the housing's front down in front of the pedestal to the cylinder's base eye
     cy, cz = C1A.y, C1A.z
-    lug = [(0.12, 0.012), (cy, 0.012)] + arc((cy, cz), 0.065, -90, 100, 8) + [(0.20, 0.27), (0.125, 0.36)]
+    lug = [(0.17, 0.15), (0.17, 0.005), (0.27, 0.005), (0.27, -0.07), (cy - 0.06, cz - 0.045)] + arc((cy, cz), 0.066, -125, 60, 7) + [(0.33, 0.07), (0.27, 0.15)]
     plate_pair(A, lug, 0.062, 0.078, r)
+    extrude(A, [(0.265, 0.0), (0.285, 0.0), (0.30, -0.06), (0.28, -0.07)], lambda a, b, t: V((t, a, b)), -0.062, 0.062, r)   # the web between them
     apin(A, C1A, 0.092, 0.024, C['steel'], cap_r=0.036)
     # the slewing motor at the back: a hydraulic motor standing on the housing, its pinion in the gear housing under it
     ac(A, (0, -0.25, 0.15), (0, -0.25, 0.17), 0.075, dk, seg=12, cap0=False)
     ac(A, (0, -0.25, 0.17), (0, -0.25, 0.30), 0.056, dk, seg=12, cap0=False, cap1=False)
     ac(A, (0, -0.25, 0.30), (0, -0.25, 0.32), 0.06, dk, seg=12, cap0=True)
-    for k, a in enumerate((-50, -15)):
-        q = V((0.056 * math.cos(math.radians(a)), -0.25 + 0.056 * math.sin(math.radians(a)), 0.27 - 0.05 * k))
-        ac(A, q, q + V((0.02, -0.005, 0)), 0.012, C['steel'], seg=6, cap0=False)
-        hose(A, [q + V((0.02, -0.005, 0)), q + V((0.09, 0.02, -0.02)), (0.225, -0.06 + 0.03 * k, 0.43)], 0.010)
-    # the control valve bank on the +x side: a bracket, four sections between two end covers, tie rods, spools and two levers
-    abox(A, 0.140, 0.190, -0.13, 0.13, 0.40, 0.42, dk)                                     # the bracket's arms
-    abox(A, 0.135, 0.150, -0.13, 0.13, 0.40, 0.62, dk)
-    x0, x1, z0, z1 = 0.19, 0.29, 0.43, 0.575
+    # the control valve bank on a bracket on the +x side: four sections between two end covers, tie rods, spools and two levers
+    x0, x1, z0, z1 = 0.19, 0.29, 0.40, 0.545
+    abox(A, 0.135, 0.150, -0.13, 0.13, 0.28, 0.505, dk)                                    # the bracket plate
+    abox(A, 0.140, 0.190, -0.13, 0.13, 0.37, 0.39, dk)                                     # its arms
     abox(A, x0 - 0.005, x1 + 0.005, -0.135, -0.100, z0 - 0.01, z1 + 0.01, dk)              # the inlet cover
     abox(A, x0 - 0.005, x1 + 0.005, 0.088, 0.118, z0 - 0.01, z1 + 0.005, dk)               # the end cover
     ports = []
@@ -304,25 +322,118 @@ def part_col():
         y0 = -0.098 + 0.0465 * k
         abox(A, x0, x1, y0, y0 + 0.044, z0, z1, mat('valve', (0.13, 0.135, 0.14), 0.5))
         ac(A, (0.24, y0 + 0.022, z1), (0.24, y0 + 0.022, z1 + 0.02), 0.011, C['steel'], seg=6, cap0=False)     # the spool's top
-        q = V((x1, y0 + (0.012 if k % 2 == 0 else 0.032), 0.47 if k % 2 == 0 else 0.53)); ports.append(q + V((0.014, 0, 0)))
+        q = V((x1, y0 + (0.012 if k % 2 == 0 else 0.032), z0 + 0.04 if k % 2 == 0 else z0 + 0.10)); ports.append(q + V((0.014, 0, 0)))
         ac(A, q, q + V((0.014, 0, 0)), 0.009, C['steel'], seg=6, cap0=False)                      # the work port
-    for z in (0.445, 0.56):
+    for z in (z0 + 0.015, z1 - 0.015):
         ac(A, (0.28, -0.14, z), (0.28, 0.123, z), 0.006, C['steel'], seg=5)                 # tie rods
     # the levers: each on a gimbal block over two spools, so one lever works two functions
     for k, y in enumerate((-0.052, 0.041)):
         abox(A, 0.215, 0.265, y - 0.024, y + 0.024, z1 + 0.02, z1 + 0.05, dk)
         ac(A, (0.24, y, z1 + 0.05), (0.24, y, z1 + 0.07), 0.016, C['rubber'], seg=8, r1=0.010, cap0=False)    # the boot
-        tip = V((0.33, y + (0.012 if k else -0.012), 0.86))
+        tip = V((0.32, y + (0.012 if k else -0.012), z1 + 0.27))
         ac(A, (0.24, y, z1 + 0.06), tip, 0.008, C['steel'], seg=6)
         sphere_a(A, tip + (tip - V((0.24, y, z1 + 0.06))).normalized() * 0.02, 0.026, C['knob'], seg=8, rings=5)
-    # hoses: four work lines from the valve's ports up the column to the boom's root, two supply lines into the housing
+    # hoses: four work lines from the valve's ports back and up behind the pivot to the boom's root, two supply lines into the housing
     for k, q in enumerate(ports):
-        xs = 0.165 + 0.02 * (k % 2)
-        hose(A, [q, q + V((0.04, 0, 0.04)), (x1 + 0.02, q.y - 0.03, 0.66), (xs, -0.15 - 0.012 * k, 0.80), (0.15 - 0.004 * k, -0.20 - 0.008 * k, 1.0),
-                 (0.097 - 0.022 * k, -0.235, 1.17), (0.097 - 0.022 * k, -0.20, 1.27)], 0.0105)
+        hose(A, [q, q + V((0.04, -0.02, 0.03)), (0.17 - 0.006 * k, -0.20 - 0.008 * k, 0.48), (0.097 - 0.022 * k, -0.235, 0.60), (0.097 - 0.022 * k, -0.20, 0.70)], 0.0105, step=45)
+    hose(A, [(x0 - 0.005, -0.12, z0 + 0.05), (0.185, -0.16, 0.26), (0.175, -0.19, 0.15)], 0.015)          # the supply line into the housing
+    for k, a in enumerate((-50, -15)):
+        q = V((0.056 * math.cos(math.radians(a)), -0.25 + 0.056 * math.sin(math.radians(a)), 0.27 - 0.05 * k))
+        ac(A, q, q + V((0.02, -0.005, 0)), 0.012, C['steel'], seg=6, cap0=False)
+        hose(A, [q + V((0.02, -0.005, 0)), q + V((0.09, 0.02, -0.01)), (0.188, -0.13 + 0.025 * k, z0 + 0.02)], 0.010)
+    return A.done(40)
+
+def part_b1():
+    A = Acc('b1'); r = C['red']
+    ac(A, (-0.10, 0, 0), (0.10, 0, 0), 0.075, r, seg=12)                                   # the root boss round the pivot pin
+    ky, kz = K2.y, K2.z
+    st = [(0.0, 0.20, 0.16, 0.0), (0.12, 0.20, 0.24, 0.0), (1.02, 0.18, 0.215, -0.005), (1.17, 2 * X_TONGUE, 0.21, -0.01), (ky - 0.16, 2 * X_TONGUE, 0.24, -0.04), (ky, 2 * X_TONGUE, 0.19, -0.06)]
+    boom(A, st, r)
+    ac(A, (-X_TONGUE, ky, kz), (X_TONGUE, ky, kz), 0.065, r, seg=12)                       # the knuckle's tongue boss
+    ac(A, (-X_TONGUE - 0.002, Q1.y, Q1.z), (X_TONGUE + 0.002, Q1.y, Q1.z), 0.042, r, seg=10)   # link1's boss
+    apin(A, Q1, X_L1[1] + 0.008, 0.018, C['steel'], cap_r=0.028, cap_t=0.008, sides=(-1, 1))
+    # the lift cylinder's lugs under the boom
+    y, z = C1B.y, C1B.z
+    plate_pair(A, [(y - 0.14, -0.10), (y + 0.14, -0.10), (y + 0.08, z - 0.02)] + arc((y, z), 0.048, -20, -160, 6) + [(y - 0.08, z - 0.02)], 0.044, 0.058, r)
+    apin(A, C1B, 0.07, 0.02, C['steel'], cap_r=0.03)
+    # the knuckle cylinder's bracket on top
+    y, z = C2A.y, C2A.z
+    plate_pair(A, [(y - 0.20, 0.09), (y + 0.20, 0.09), (y + 0.05, z - 0.045)] + arc((y, z), 0.05, -40, 200, 8) + [(y - 0.10, z - 0.045)], 0.048, 0.062, r)
+    abox(A, -0.048, 0.048, y - 0.15, y + 0.12, 0.09, 0.135, r)                              # the web between them
+    apin(A, C2A, 0.074, 0.019, C['steel'], cap_r=0.03)
+    # hoses along the +x side: two to the knuckle cylinder (a fitting block on the bracket), two on to the knuckle
+    # (they come over the root from behind the pivot, where the column's hoses end, and meet b2's at the knuckle pin's axis)
+    abox(A, 0.062, 0.085, y - 0.09, y - 0.03, 0.15, 0.22, C['dark'])
     for k in range(2):
-        y0 = -0.125 + 0.012 * k
-        hose(A, [(x0 - 0.005, y0, 0.50 - 0.03 * k), (0.185, -0.17 + 0.03 * k, 0.30), (0.175, -0.20 + 0.03 * k, 0.15)], 0.013)
+        x0 = 0.075 + 0.022 * k
+        hose(A, [(x0, -0.13, 0.15), (x0, -0.02, 0.14), (0.108, 0.16, 0.085 - 0.026 * k), (0.112, y - 0.25, 0.07 - 0.026 * k),
+                 (0.10, y - 0.14, 0.13 + 0.01 * k), (0.086, y - 0.07 + 0.02 * k, 0.17 + 0.02 * k)], 0.011)
+    for k in range(2):
+        zz = 0.01 - 0.026 * k; x0 = 0.031 + 0.022 * k
+        hose(A, [(x0, -0.13, 0.15), (x0, -0.02, 0.14), (0.106, 0.22, zz + 0.02), (0.112, 0.40, zz), (0.108, 1.00, zz), (0.108, 1.20, zz - 0.02),
+                 (0.11, ky - 0.15, -0.04 - 0.024 * k), (0.12, ky - 0.015, kz + 0.025 - 0.022 * k)], 0.011)
+    abox(A, X_TONGUE, 0.098, 1.22, 1.27, -0.07, 0.0, C['dark'])                            # a hose bracket on the tongue
+    for yc in (0.45, 0.95):
+        clamp(A, (0.105, yc, 0.045 if yc < y else 0.0), 0.03, C['dark'])
+    return A.done(40)
+
+def part_b2():
+    A = Acc('b2'); r = C['red']
+    # the heel: a cranked fork of two plates round b1's tongue, carrying the knuckle pin and link2's pin
+    qy, qz = Q2.y, Q2.z
+    fork = [(0.42, VB - 0.088), (0.14, VB - 0.09)] + arc((0, 0), 0.085, 30, -195, 9) + arc((qy, qz), 0.042, 205, 60, 5) + [(0.06, VB + 0.09), (0.42, VB + 0.09)]
+    plate_pair(A, fork, X_FORK[0], X_FORK[1], r)
+    abox(A, -X_FORK[0], X_FORK[0], 0.10, 0.20, VB - 0.09, VB + 0.09, r)                   # the heel's end plate
+    apin(A, (0, 0, 0), X_FORK[1] + 0.001, 0.03, C['steel'])                                 # the knuckle pin (flush: link2 passes over it)
+    for sx in (-1, 1):                                                                      # link2's pins: stubs from the plates out (b1's tongue swings between)
+        ac(A, (sx * X_FORK[0], Q2.y, Q2.z), (sx * (X_L2[1] + 0.008), Q2.y, Q2.z), 0.017, C['steel'], seg=8, cap0=False)
+        ac(A, (sx * X_L2[1], Q2.y, Q2.z), (sx * (X_L2[1] + 0.008), Q2.y, Q2.z), 0.026, C['steel'], seg=8, cap0=False)
+    # the boom, its collar and the open mouth with the wear pads
+    boom(A, [(B2_Y0, B2W, B2H, VB), (B2_Y1 - 0.04, B2W, B2H, VB)], r, True, False)
+    boom(A, [(B2_Y1 - 0.04, B2W + 0.014, B2H + 0.014, VB), (B2_Y1, B2W + 0.014, B2H + 0.014, VB)], r, True, False)
+    mouth(A, B2_Y1, VB, B2W + 0.014, B2H + 0.014, B2W - 0.016, B2H - 0.016, 0.14, r, C['dark'])
+    pads(A, B2_Y1 - 0.004, VB, B2W - 0.016, B2H - 0.016, E1W, E1H, 0.05, C['pad'])
+    # hoses: the pair from the knuckle pin's axis into the boom (to the telescope cylinder), and a pair along it to a coupling block
+    for k in range(2):
+        hose(A, [(0.12, 0.015, 0.025 - 0.022 * k), (0.115, 0.16, 0.10 - 0.012 * k), (0.10, 0.30, VB - 0.04 + 0.01 * k), (0.094, 0.40, VB - 0.03 + 0.02 * k), (0.07, 0.48, VB - 0.03 + 0.02 * k)], 0.011)
+    abox(A, 0.068, 0.084, 0.44, 0.52, VB - 0.07, VB + 0.01, C['dark'])                     # the bulkhead fitting
+    for k in range(2):
+        zz = VB + 0.035 + 0.024 * k
+        hose(A, [(0.084, 0.50, zz - 0.04), (0.087, 0.58, zz), (0.087, B2_Y1 - 0.18, zz), (0.065, B2_Y1 - 0.10, zz + 0.02 * (1 - k))], 0.010)
+    abox(A, 0.045, 0.09, B2_Y1 - 0.12, B2_Y1 - 0.05, VB + 0.03, VB + 0.098, C['dark'])     # the coupling block
+    for yc in (0.85, 1.35):
+        clamp(A, (0.081, yc, VB + 0.047), 0.026, C['dark'])
+    return A.done(40)
+
+def link_plate(L, r0, r1, waist):
+    """a link plate in (y, z): from a boss of radius r0 at the origin to one of r1 at (L, 0), drawn in at the middle"""
+    top = [(L * t, waist + (1 - t) * (r0 - waist) * (1 - t) + t * t * (r1 - waist)) for t in (0.3, 0.5, 0.7)]
+    return arc((L, 0), r1, -90, 90, 4) + list(reversed(top)) + arc((0, 0), r0, 90, 270, 4) + [(y, -z) for y, z in top]
+
+def part_link1():
+    """the rocker: two plates from its pin on b1 (the origin) to J at (0, LA, 0), with a spacer between them and J's pin"""
+    A = Acc('link1'); r = C['red']
+    plate_pair(A, link_plate(LA, 0.036, 0.036, 0.025), X_L1[0], X_L1[1], r)
+    ac(A, (-X_L1[0], LA * 0.45, 0.0), (X_L1[0], LA * 0.45, 0.0), 0.016, r, seg=6, cap0=False, cap1=False)          # the spacer tube
+    apin(A, (0, LA, 0), X_L2[1] + 0.008, 0.018, C['steel'], cap_r=0.026, cap_t=0.008, sides=(-1, 1))
+    return A.done(40)
+
+def part_link2():
+    """the push link: two plates from its pin on b2 (the origin) to J at (0, LB, 0)"""
+    A = Acc('link2'); r = C['red']
+    plate_pair(A, link_plate(LB, 0.034, 0.034, 0.024), X_L2[0], X_L2[1], r)
+    ac(A, (-X_L2[0], LB * 0.5, 0.0), (X_L2[0], LB * 0.5, 0.0), 0.014, r, seg=6, cap0=False, cap1=False)            # the spacer tube
+    return A.done(40)
+
+def part_person(h=1.8):
+    """a plain 1.8 m figure for the renders' scale (not exported)"""
+    A = Acc('person'); m = mat('person', (0.45, 0.50, 0.58), 0.3); sk = mat('skin', (0.80, 0.62, 0.50), 0.3)
+    for sx in (-1, 1):
+        ac(A, (sx * 0.09, 0, 0.0), (sx * 0.09, 0, 0.84), 0.065, m, seg=8)
+        ac(A, (sx * 0.23, 0, 0.82), (sx * 0.25, 0, 1.44), 0.045, m, seg=8)
+    abox(A, -0.20, 0.20, -0.11, 0.11, 0.80, 1.47, m)
+    ac(A, (0, 0, 1.47), (0, 0, 1.56), 0.05, sk, seg=8)
+    sphere_a(A, (0, 0, h - 0.115), 0.115, sk, seg=10, rings=6)
     return A.done(40)
 
 def sphere_a(A, c, r, m, seg=10, rings=6):
@@ -337,64 +448,6 @@ def sphere_a(A, c, r, m, seg=10, rings=6):
         j = (k + 1) % seg
         A.f([top, r0[k], r0[j]], m, (vs[0][k] + vs[0][j]) / 2 - c + V((0, 0, r)))
         A.f([bot, r1[j], r1[k]], m, (vs[-1][k] + vs[-1][j]) / 2 - c - V((0, 0, r)))
-
-def part_b1():
-    A = Acc('b1'); r = C['red']
-    ac(A, (-0.10, 0, 0), (0.10, 0, 0), 0.075, r, seg=12)                                   # the root boss round the pivot pin
-    st = [(0.0, 0.20, 0.16, 0.0), (0.12, 0.20, 0.25, 0.0), (1.80, 0.18, 0.22, 0.0), (2.06, 0.13, 0.18, -0.022), (2.34, 0.13, 0.15, -0.050)]
-    boom(A, st, r)
-    ky, kz = K2.y, K2.z
-    ac(A, (-0.065, ky, kz), (0.065, ky, kz), 0.07, r, seg=12)                               # the knuckle's tongue boss
-    # the lift cylinder's lugs under the boom
-    y, z = C1B.y, C1B.z
-    plate_pair(A, [(y - 0.15, -0.10), (y + 0.15, -0.10), (y + 0.09, z - 0.02)] + arc((y, z), 0.05, -20, -160, 6) + [(y - 0.09, z - 0.02)], 0.044, 0.058, r)
-    apin(A, C1B, 0.07, 0.02, C['steel'], cap_r=0.03)
-    # the knuckle cylinder's bracket on top
-    y, z = C2A.y, C2A.z
-    plate_pair(A, [(y - 0.25, 0.10), (y + 0.28, 0.10), (y + 0.05, z - 0.045)] + arc((y, z), 0.055, -40, 200, 8) + [(y - 0.12, z - 0.05)], 0.048, 0.062, r)
-    abox(A, -0.048, 0.048, y - 0.20, y + 0.16, 0.10, 0.14, r)                               # the web between them
-    apin(A, C2A, 0.074, 0.019, C['steel'], cap_r=0.03)
-    # hoses along the +x side: two to the knuckle cylinder (a fitting block on the bracket), two on to the knuckle
-    abox(A, 0.062, 0.085, y - 0.10, y - 0.04, 0.17, 0.25, C['dark'])
-    # (they come over the root from behind the pivot, where the column's hoses end)
-    for k in range(2):
-        x0 = 0.075 + 0.022 * k
-        hose(A, [(x0, -0.13, 0.15), (x0, -0.02, 0.14), (0.108, 0.16, 0.085 - 0.026 * k), (0.112, y - 0.30, 0.07 - 0.026 * k),
-                 (0.10, y - 0.17, 0.14 + 0.01 * k), (0.086, y - 0.08 + 0.02 * k, 0.20 + 0.025 * k)], 0.011)
-    for k in range(2):
-        zz = 0.01 - 0.026 * k; x0 = 0.031 + 0.022 * k
-        hose(A, [(x0, -0.13, 0.15), (x0, -0.02, 0.14), (0.106, 0.22, zz + 0.02), (0.112, 0.40, zz), (0.108, 1.80, zz), (0.102, 2.06, zz - 0.03),
-                 (0.106, 2.24, -0.02 - 0.024 * k), (0.12, 2.385, -0.035 - 0.022 * k)], 0.011)
-    abox(A, 0.06, 0.092, 2.08, 2.14, -0.09, -0.02, C['dark'])                              # a hose bracket on the nose
-    for yc in (0.45, 1.30, 1.75):
-        clamp(A, (0.105 if yc < 1.0 else 0.10, yc, 0.045 if yc < y else 0.0), 0.03, C['dark'])
-    return A.done(40)
-
-def part_b2():
-    A = Acc('b2'); r = C['red']
-    # the heel: a fork of two plates round b1's tongue, carrying the knuckle pin and the horn
-    hy, hz = C2B.y, C2B.z
-    fork = [(0.45, 0.035), (0.10, 0.03)] + arc((0, 0), 0.088, -20, -170, 6) + [(hy + 0.02, hz - 0.058)] + arc((hy, hz), 0.06, -100, -260, 7) + [(hy + 0.10, hz + 0.075), (0.0, 0.20), (0.12, 0.232), (0.45, 0.232)]
-    plate_pair(A, fork, 0.066, 0.084, r)
-    abox(A, -0.066, 0.066, hy + 0.05, hy + 0.20, hz + 0.02, hz + 0.075, r)                 # the horn's web
-    apin(A, (0, 0, 0), 0.098, 0.03, C['steel'], cap_r=0.046, sides=(-1, 1))
-    apin(A, C2B, 0.094, 0.018, C['steel'], cap_r=0.03)
-    # the boom, its collar and the open mouth with the wear pads
-    boom(A, [(B2_Y0, B2W, B2H, VB), (B2_Y1 - 0.045, B2W, B2H, VB)], r, True, False)
-    boom(A, [(B2_Y1 - 0.045, B2W + 0.014, B2H + 0.014, VB), (B2_Y1, B2W + 0.014, B2H + 0.014, VB)], r, True, False)
-    mouth(A, B2_Y1, VB, B2W + 0.014, B2H + 0.014, B2W - 0.016, B2H - 0.016, 0.14, r, C['dark'])
-    pads(A, B2_Y1 - 0.004, VB, B2W - 0.016, B2H - 0.016, E1W, E1H, 0.05, C['pad'])
-    # hoses: the pair from the knuckle into the boom (to the telescope cylinder), and a pair along it to a coupling block
-    for k in range(2):
-        hose(A, [(0.12, 0.015, 0.025 - 0.022 * k), (0.115, 0.14, 0.065 - 0.012 * k), (0.10, 0.26, 0.08 + 0.01 * k), (0.094, 0.36, 0.085 + 0.02 * k), (0.07, 0.46, 0.09 + 0.02 * k)], 0.011)
-    abox(A, 0.075, 0.09, 0.42, 0.50, 0.06, 0.14, C['dark'])                                # the bulkhead fitting
-    for k in range(2):
-        zz = 0.17 + 0.026 * k
-        hose(A, [(0.09, 0.47, zz - 0.05), (0.093, 0.56, zz), (0.093, 1.95, zz), (0.07, 2.04, zz + 0.02 * (1 - k))], 0.010)
-    abox(A, 0.05, 0.095, 2.02, 2.10, 0.17, 0.235, C['dark'])                               # the coupling block
-    for yc in (0.9, 1.5):
-        clamp(A, (0.087, yc, 0.183), 0.026, C['dark'])
-    return A.done(40)
 
 def part_ext1():
     A = Acc('ext1'); r = C['red']
@@ -413,7 +466,7 @@ def part_ext2():
     cheek = [(E2L + 0.02, -0.06), (E2L + 0.02, 0.063), (sy - 0.03, 0.085)] + arc((sy, sz), 0.09, 70, -100, 8) + [(sy - 0.06, -0.09)]
     plate_pair(A, cheek, 0.040, 0.053, r)
     abox(A, -0.040, 0.040, E2L + 0.03, sy - 0.02, 0.06, 0.075, r)                          # the cover
-    lathe_x(A, SHV, [(0.018, -0.034), (SHV_R, -0.034), (SHV_R, -0.024), (0.060, -0.007), (0.060, 0.007), (SHV_R, 0.024), (SHV_R, 0.034), (0.018, 0.034)], C['steel'], seg=12)
+    lathe_x(A, SHV, [(0.018, -0.032), (SHV_R, -0.032), (SHV_R, -0.022), (SHV_R - 0.012, -0.007), (SHV_R - 0.012, 0.007), (SHV_R, 0.022), (SHV_R, 0.032), (0.018, 0.032)], C['steel'], seg=12)
     apin(A, SHV, 0.064, 0.016, C['steel'], cap_r=0.026)
     ac(A, (-0.040, sy + 0.035, 0.088), (0.040, sy + 0.035, 0.088), 0.011, C['steel'], seg=6)   # the wire guard over the sheave
     return A.done(40)
@@ -421,14 +474,14 @@ def part_ext2():
 def part_hook():
     A = Acc('hook'); st = C['steel']; y = C['yellow']
     ac(A, (0, 0, 0.0), (0, 0, -0.055), 0.013, st, seg=8, r1=0.017)                          # the wire's pressed socket
-    atorus(A, (0, 0, -0.074), (1, 0, 0), 0.022, 0.008, lambda a: st, 8, 4)                  # its eye
-    atorus(A, (0, 0, -0.108), (0, 1, 0), 0.024, 0.008, lambda a: st, 8, 4)                  # the swivel's shackle
-    ac(A, (0, 0, -0.128), (0, 0, -0.17), 0.036, y, seg=12)                                   # the swivel head
+    atorus(A, (0, 0, -0.074), (1, 0, 0), 0.022, 0.008, lambda a: st, 7, 4)                  # its eye
+    atorus(A, (0, 0, -0.108), (0, 1, 0), 0.024, 0.008, lambda a: st, 7, 4)                  # the swivel's shackle
+    ac(A, (0, 0, -0.128), (0, 0, -0.17), 0.036, y, seg=10)                                   # the swivel head
     ac(A, (0, 0, -0.17), (0, 0, -0.183), 0.026, st, seg=6)                                   # its nut
     # the hook: shank, bowl and point, thickest at the bowl's bottom
     c = (0.047, -0.272); R = 0.047
     pts = [(0.0, -0.183), (0.0, -0.205), (0.0, -0.24)]
-    pts += [(c[0] + R * math.cos(math.radians(a)), c[1] + R * math.sin(math.radians(a))) for a in range(180, 431, 21)]
+    pts += [(c[0] + R * math.cos(math.radians(a)), c[1] + R * math.sin(math.radians(a))) for a in range(180, 431, 26)]
     nb = len(pts) - 3
     rad = [0.019, 0.019, 0.020] + [0.020 + 0.003 * math.sin(math.pi * min(1, k / (nb / 2))) - 0.0145 * max(0, (k - nb / 2) / (nb / 2)) for k in range(nb)]
     asweep(A, [(0, py, pz) for py, pz in pts], rad, y, seg=8)
@@ -455,8 +508,7 @@ def part_cyl(name, L, R, rod=False, eye_w=0.05, eye_r=0.04, Lr=None):
             abox(A, R - 0.012, R + 0.016, yy - 0.022, yy + 0.022, -0.018, 0.018, r)
         px = R + 0.024
         asweep(A, [(R + 0.012, 0.13, 0.0), (px, 0.16, 0.0), (px, L - 0.14, 0.0), (R + 0.012, L - 0.105, 0.0)], 0.008, C['steel'], seg=5)
-        hose(A, [(R + 0.016, 0.095, 0.0), (R + 0.055, 0.06, -0.015), (R + 0.05, -0.10, -0.06)], 0.011)   # the hose stubs to the valve
-        hose(A, [(R + 0.016, 0.125, 0.008), (R + 0.07, 0.10, 0.025), (R + 0.06, -0.10, 0.0)], 0.011)
+        hose(A, [(R + 0.016, 0.11, 0.0), (R + 0.06, 0.08, -0.01), (R + 0.055, -0.10, -0.05)], 0.012)   # the hose stub to the valve
     else:
         ac(A, (-eye_w, 0, 0), (eye_w, 0, 0), eye_r, C['steel'], seg=10)                      # the rod eye
         ac(A, (0, -0.02, 0), (0, -0.075, 0), R * 1.25, C['steel'], seg=10, cap0=False)
@@ -493,18 +545,39 @@ def T(v): return Matrix.Translation(V(v))
 def Rx(a): return Matrix.Rotation(a, 4, 'X')
 def Rz(a): return Matrix.Rotation(a, 4, 'Z')
 
+def joint(a2):
+    """the knuckle link's joint J in b1's frame for the knuckle angle a2: where the circle round Q1 (radius LA) meets the circle round
+    link2's pin (radius LB), on the JSIDE side of the line from Q1 to that pin"""
+    q2 = K2 + Rx(a2).to_3x3() @ Q2
+    d = (q2 - Q1).length
+    if d > LA + LB or d < abs(LA - LB): raise ValueError('the knuckle link cannot reach at a2 = %.3f' % a2)
+    a = (LA * LA - LB * LB + d * d) / (2 * d); h = math.sqrt(max(0.0, LA * LA - a * a))
+    e = (q2 - Q1) / d; perp = V((0.0, -e.z, e.y))           # e turned +90 degrees about x
+    return Q1 + e * a + perp * (JSIDE * h), q2
+
+def link_angles(a2):
+    """l1: link1's turn about x on b1 (from its rest along -z in the game's frame, +y here); l2: link2's turn on b2"""
+    J, q2 = joint(a2)
+    l1 = math.atan2(J.z - Q1.z, J.y - Q1.y)
+    J2 = Rx(-a2).to_3x3() @ (J - K2)                      # J in b2's frame
+    l2 = math.atan2(J2.z - Q2.z, J2.y - Q2.y)
+    return l1, l2, J
+
 def chain(slew, a1, a2, ext=0.0, wire=0.6):
     M = {'base': Matrix.Identity(4)}
     M['col'] = T((0, 0, H_BASE)) @ Rz(slew)
     M['b1'] = M['col'] @ T(P1) @ Rx(a1)
     M['b2'] = M['b1'] @ T(K2) @ Rx(a2)
+    l1, l2, J = link_angles(a2)
+    M['link1'] = M['b1'] @ T(Q1) @ Rx(l1)
+    M['link2'] = M['b2'] @ T(Q2) @ Rx(l2)
     M['ext1'] = M['b2'] @ T((0, E1_AT + ext, VB))
     M['ext2'] = M['ext1'] @ T((0, E2_AT + ext, 0))
     tip = M['ext2'] @ TIP
     M['hook'] = T(tip - V((0, 0, wire)))
-    for nm, a, b, frame_a, frame_b in (('cyl1', C1A, C1B, 'col', 'b1'), ('cyl2', C2A, C2B, 'b1', 'b2')):
-        pa = M[frame_a] @ a; pb = M[frame_b] @ b; d = (pb - pa).normalized()
-        X = (M[frame_a].to_3x3() @ V((1, 0, 0))).normalized(); Z = X.cross(d).normalized()
+    for nm, pa, pb in (('cyl1', M['col'] @ C1A, M['b1'] @ C1B), ('cyl2', M['b1'] @ C2A, M['link1'] @ V((0, LA, 0)))):
+        d = (pb - pa).normalized()
+        X = (M['col'].to_3x3() @ V((1, 0, 0))).normalized(); Z = X.cross(d).normalized()
         R = Matrix((X, d, Z)).transposed().to_4x4()
         M[nm + 'b'] = T(pa) @ R; M[nm + 'r'] = T(pb) @ R
     return M, tip
@@ -512,7 +585,7 @@ def chain(slew, a1, a2, ext=0.0, wire=0.6):
 def cyl_d(a1=None, a2=None):
     if a1 is not None:
         pb = T(P1) @ Rx(a1) @ C1B; return (pb - C1A).length
-    pb = T(K2) @ Rx(a2) @ C2B; return (pb - C2A).length
+    return (joint(a2)[0] - C2A).length
 
 def size(o):
     P = [to_game(v.co) for v in o.data.vertices]
@@ -534,8 +607,9 @@ def overlaps(objs, M, skip):
             if n: out.append((a, b, n))
     return out
 
-JOINED = {('base', 'col'), ('col', 'b1'), ('col', 'cyl1b'), ('b1', 'cyl1r'), ('cyl1b', 'cyl1r'), ('b1', 'cyl2b'), ('b2', 'cyl2r'), ('cyl2b', 'cyl2r'),
-          ('b1', 'b2'), ('b2', 'ext1'), ('ext1', 'ext2'), ('b2', 'ext2')}
+# the pairs joined by design: a pin through an eye, a rod in its barrel, a telescope in its sleeve, the knuckle's tongue in its fork
+JOINED = {('base', 'col'), ('col', 'b1'), ('col', 'cyl1b'), ('b1', 'cyl1r'), ('cyl1b', 'cyl1r'), ('b1', 'cyl2b'), ('link1', 'cyl2r'), ('cyl2b', 'cyl2r'),
+          ('b1', 'b2'), ('b1', 'link1'), ('b2', 'link2'), ('link1', 'link2'), ('b2', 'ext1'), ('ext1', 'ext2'), ('b2', 'ext2')}
 
 def fold_limits(objs, step=10):
     """for a1 from the bottom of its range up, the most the knuckle may close (a2) before the outer boom or the telescopes (in)
@@ -545,7 +619,8 @@ def fold_limits(objs, step=10):
     pairs = {(a, b) for a in ('base', 'col', 'cyl1b', 'cyl1r') for b in ('b2', 'ext1', 'ext2')}
     skip = {(a, b) for a in near for b in near if (a, b) not in pairs and (b, a) not in pairs}
     out = []
-    for a1d in range(int(round(math.degrees(A1_RANGE[0]))), int(round(math.degrees(A1_RANGE[1]))) + 1, step):
+    a1s = list(range(int(round(math.degrees(A1_RANGE[0]))), int(round(math.degrees(A1_RANGE[1]))), step)) + [int(round(math.degrees(A1_RANGE[1])))]
+    for a1d in a1s:
         a1 = math.radians(a1d); lo, hi = A2_RANGE
         clear = lambda a2: not overlaps(near, chain(0.0, a1, a2, 0.0)[0], skip)
         if clear(lo): out.append([round(a1, 4), round(lo, 4)]); continue
@@ -559,33 +634,39 @@ def fold_limits(objs, step=10):
 def main():
     os.makedirs(OUT, exist_ok=True)
     reset(); colours()
-    # the cylinders against their strokes over the working ranges
+    # the cylinders against their strokes over the working ranges, and the link's transmission angle
     d1 = [cyl_d(a1=A1_RANGE[0] + (A1_RANGE[1] - A1_RANGE[0]) * k / 60) for k in range(61)]
-    d2 = [cyl_d(a2=A2_RANGE[0] + (A2_RANGE[1] - A2_RANGE[0]) * k / 60) for k in range(61)]
+    a2s = [A2_RANGE[0] + (A2_RANGE[1] - A2_RANGE[0]) * k / 60 for k in range(61)]
+    d2 = [cyl_d(a2=a) for a in a2s]
     for nm, d, Lb, Lr in (('lift', d1, L1B, L1R), ('knuckle', d2, L2B, L2R)):
         lo, hi = min(d), max(d)
-        print('%-7s cylinder: pin to pin %.3f..%.3f m; barrel %.2f (needs <= %.3f), rod %.2f (needs <= %.3f), overlap at full stroke %.3f m'
+        print('%-7s cylinder: pin to pin %.3f..%.3f m; barrel %.3f (needs <= %.3f), rod %.3f (needs <= %.3f), overlap at full stroke %.3f m'
               % (nm, lo, hi, Lb, lo - 0.07, Lr, lo - 0.10, Lb + Lr - hi))
-    # the park pose: a1 chosen, a2 so b2's underside lies on a rest of 1.20 m near b2's end
-    a1p = 0.10; s_rest = 1.95
-    def rest_pt(a2):
-        M, _ = chain(0.0, a1p, a2); return M['b2'] @ V((0, s_rest, VB - B2H / 2))
-    lo_, hi_ = -0.9, A2_RANGE[1]
+    mus = []
+    for a in a2s:
+        J, q2 = joint(a); u = (Q1 - J).normalized(); w = (q2 - J).normalized(); mus.append(math.degrees(u.angle(w)))
+    print('knuckle link: transmission angle %.0f..%.0f deg; the cylinder %s' % (min(mus), max(mus), 'pushes to raise' if d2[-1] > d2[0] else 'pulls to raise'))
+    # the park pose (for boats with a rest): both booms level, a1 = -a2, so b2's underside lies at 1.20 m over the deck near its mouth
+    s_rest = B2_Y1 - 0.35
+    def rest_pt(a1):
+        M, _ = chain(0.0, a1, -a1); return M['b2'] @ V((0, s_rest, VB - B2H / 2))
+    lo_, hi_ = 0.0, 0.6
     for _ in range(50):
         mid = (lo_ + hi_) / 2
         if rest_pt(mid).z > 1.20: hi_ = mid
         else: lo_ = mid
-    a2p = round((lo_ + hi_) / 2, 4); rp = rest_pt(a2p); REST_H = round(rp.z, 4)
-    POSES = {'stow': {'a1': round(math.radians(78), 4), 'a2': round(math.radians(-165), 4), 'ext': 0.0, 'wire': 0.12},
-             'park': {'a1': a1p, 'a2': a2p, 'ext': 0.0, 'wire': 0.12},
-             'work': {'a1': 0.55, 'a2': -0.78, 'ext': 0.40, 'wire': 1.3}}
+    a1p = round((lo_ + hi_) / 2, 4); rp = rest_pt(a1p); REST_H = round(rp.z, 4)
+    POSES = {'stow': {'a1': round(math.radians(83), 4), 'a2': round(math.radians(-170), 4), 'ext': 0.0, 'wire': 0.04},
+             'park': {'a1': a1p, 'a2': -a1p, 'ext': 0.0, 'wire': 0.10},
+             'work': {'a1': 0.60, 'a2': -0.76, 'ext': 0.80, 'wire': 0.6}}
     for nm, p in POSES.items():
         assert A1_RANGE[0] - 1e-6 <= p['a1'] <= A1_RANGE[1] + 1e-6 and A2_RANGE[0] - 1e-6 <= p['a2'] <= A2_RANGE[1] + 1e-6, nm
 
-    objs = {'base': part_base(), 'col': part_col(), 'b1': part_b1(), 'b2': part_b2(), 'ext1': part_ext1(), 'ext2': part_ext2(), 'hook': part_hook(),
+    objs = {'base': part_base(), 'col': part_col(), 'b1': part_b1(), 'b2': part_b2(), 'link1': part_link1(), 'link2': part_link2(),
+            'ext1': part_ext1(), 'ext2': part_ext2(), 'hook': part_hook(),
             'cyl1b': part_cyl('cyl1b', L1B, R1B, eye_w=0.058, eye_r=0.042), 'cyl1r': part_cyl('cyl1r', 0, R1R, True, eye_w=0.04, eye_r=0.036, Lr=L1R),
-            'cyl2b': part_cyl('cyl2b', L2B, R2B, eye_w=0.046, eye_r=0.034), 'cyl2r': part_cyl('cyl2r', 0, R2R, True, eye_w=0.036, eye_r=0.03, Lr=L2R),
-            'rest': part_rest(REST_H, a1p + a2p)}
+            'cyl2b': part_cyl('cyl2b', L2B, R2B, eye_w=0.046, eye_r=0.034), 'cyl2r': part_cyl('cyl2r', 0, R2R, True, eye_w=0.034, eye_r=0.03, Lr=L2R),
+            'rest': part_rest(REST_H, 0.0)}
     # a little occlusion baked into the colours, each part alone (they move against each other)
     setup_render(64, 64, samples=8)
     for nm, o in objs.items():
@@ -596,28 +677,40 @@ def main():
         if p.type == 'MESH': p.hide_render = False
     parts = [(nm, mesh_arrays(o, to_game, to_game_n, ao=True), 1.0) for nm, o in objs.items()]
 
-    # reach with the outer boom level and both telescopes out
-    a1r = 0.32; Mr, tipr = chain(0.0, a1r, -a1r, EXT_MAX)
-    reach = round(tipr.y, 3)
+    # reach with both booms level and both telescopes out
+    Mr, tipr = chain(0.0, 0.0, 0.0, EXT_MAX)
     Mw, tipw = chain(0.0, POSES['work']['a1'], POSES['work']['a2'], POSES['work']['ext'])
     sz = {nm: size(o) for nm, o in objs.items()}
     r4 = lambda v: round(v, 4)
-    ex = {'frame': 'kystfiske deck crane: metres, x to starboard, y up, z aft; each part from its own pivot; booms and cylinder barrels lie along -z, rods along +z; '
+    klink = []
+    for k in range(int(round(math.degrees(A2_RANGE[0]))), int(round(math.degrees(A2_RANGE[1]))) + 1, 5):
+        a = math.radians(k); l1, l2, J = link_angles(a); klink.append([r4(a), r4(l1), r4(l2)])
+    if abs(klink[-1][0] - A2_RANGE[1]) > 1e-4:
+        l1, l2, J = link_angles(A2_RANGE[1]); klink.append([r4(A2_RANGE[1]), r4(l1), r4(l2)])
+    for i in range(1, len(klink)):                                   # unwrapped, so the game can interpolate straight between rows
+        for j in (1, 2):
+            while klink[i][j] - klink[i - 1][j] > math.pi: klink[i][j] = r4(klink[i][j] - 2 * math.pi)
+            while klink[i][j] - klink[i - 1][j] < -math.pi: klink[i][j] = r4(klink[i][j] + 2 * math.pi)
+    ex = {'frame': 'kystfiske deck crane: metres, x to starboard, y up, z aft; each part from its own pivot; booms, links and cylinder barrels lie along -z, rods along +z; '
                    'base -> col (slew about y) -> b1 (a1 about x at b1_at) -> b2 (a2 about x at b2_at) -> ext1 at ext_at + ext_dir*e -> ext2 at ext2_at + ext_dir*e; '
-                   'angles in radians, positive raises the tip; the hook hangs on a wire straight down from tip',
+                   'link1 on b1 at q1 turned l1 about x, link2 on b2 at q2 turned l2 about x (klink: [a2, l1, l2], or J from the two circles); '
+                   'cyl1 from c1_a (col) to c1_b (b1); cyl2 from c2_a (b1) to c2_b (link1); angles in radians, positive raises the tip; the hook hangs on a wire straight down from tip',
           'col_at': G((0, 0, H_BASE)),
           'b1_at': G(P1), 'c1_a': G(C1A),
           'b2_at': G(K2), 'c1_b': G(C1B), 'c2_a': G(C2A),
-          'c2_b': G(C2B), 'ext_at': G((0, E1_AT, VB)), 'ext_dir': [0, 0, -1],
+          'q1': G(Q1), 'q2': G(Q2), 'la': LA, 'lb': LB, 'jside': JSIDE,
+          'c2_b': G((0, LA, 0)), 'c2_b_in': 'link1',
+          'klink': klink,
+          'ext_at': G((0, E1_AT, VB)), 'ext_dir': [0, 0, -1],
           'ext2_at': G((0, E2_AT, 0)), 'ext_max': EXT_MAX,
           'tip': G(TIP), 'sheave': G(SHV), 'sheave_r': SHV_R,
           'cyl1_len': L1B, 'cyl1_rod': L1R, 'cyl2_len': L2B, 'cyl2_rod': L2R,
           'a1_range': [r4(A1_RANGE[0]), r4(A1_RANGE[1])], 'a2_range': [r4(A2_RANGE[0]), r4(A2_RANGE[1])],
           'a2_min': fold_limits(objs),
           'stow': POSES['stow'], 'park': POSES['park'], 'work': POSES['work'],
-          'rest_at': [0.0, 0.0, r4(-rp.y)], 'rest_h': REST_H, 'rest_tilt': r4(a1p + a2p),
-          'hook_h': HOOK_H, 'wire_min': 0.10,
-          'reach_max': reach, 'reach_work': round(tipw.y, 3), 'swl': 0.3, 'lift_moment_tm': 2.6,
+          'rest_at': [0.0, 0.0, r4(-rp.y)], 'rest_h': REST_H, 'rest_tilt': 0.0,
+          'hook_h': HOOK_H, 'wire_min': 0.04,
+          'reach_max': round(tipr.y, 3), 'reach_work': round(tipw.y, 3), 'swl': 0.3, 'lift_moment_tm': 2.6,
           'size': {nm: [r4(hi[k] - lo[k]) for k in range(3)] for nm, (lo, hi) in sz.items()}}
     glb = os.path.join(OUT, 'deck-crane.glb'); n = write_glb(glb, parts, ex)
     open(os.path.join(ROOT, 'src', 'data', 'deck-crane.b64'), 'w').write(base64.b64encode(open(glb, 'rb').read()).decode())
@@ -627,14 +720,17 @@ def main():
         lo, hi = sz[nm]
         print('  %-6s %5d tris  x %.3f..%.3f  y %.3f..%.3f  z %.3f..%.3f' % (nm, len(A['idx']) // 3, lo[0], hi[0], lo[1], hi[1], lo[2], hi[2]))
     print('  a2_min     %s' % ', '.join('%.0f:%.0f' % (math.degrees(x), math.degrees(y)) for x, y in ex['a2_min']))
-    for k in ('col_at', 'b1_at', 'c1_a', 'b2_at', 'c1_b', 'c2_a', 'c2_b', 'ext_at', 'ext2_at', 'tip', 'rest_at', 'rest_h', 'reach_max', 'reach_work', 'stow', 'park', 'work'):
+    for k in ('col_at', 'b1_at', 'c1_a', 'b2_at', 'c1_b', 'c2_a', 'q1', 'q2', 'c2_b', 'ext_at', 'ext2_at', 'tip', 'rest_at', 'rest_h', 'reach_max', 'reach_work', 'stow', 'park', 'work'):
         print('  %-10s %s' % (k, ex[k]))
     crane = {k: v for k, v in objs.items() if k != 'rest'}
     for nm, p in POSES.items():
         M, tip = chain(0.0, p['a1'], p['a2'], p['ext'], p['wire'])
         if nm == 'park': M['rest'] = T((0, rp.y, 0))
-        print('  %s: overlaps %s; tip at %.2f m out, %.2f m up; cylinders %.3f, %.3f m' % (nm, overlaps({**crane, **({'rest': objs['rest']} if nm == 'park' else {})}, M, JOINED),
-              tip.y, tip.z, cyl_d(a1=p['a1']), cyl_d(a2=p['a2'])))
+        show = {**crane, **({'rest': objs['rest']} if nm == 'park' else {})}
+        top = max((M[k] @ v.co).z for k, o in show.items() for v in o.data.vertices)
+        hk = min((M['hook'] @ v.co).z for v in objs['hook'].data.vertices)
+        print('  %s: overlaps %s; top %.3f m, tip %.2f m out %.2f m up, hook down to %.3f m; cylinders %.3f, %.3f m' % (nm, overlaps(show, M, JOINED), top,
+              tip.y, tip.z, hk, cyl_d(a1=p['a1']), cyl_d(a2=p['a2'])))
     if 'fast' in sys.argv: return
     renders(objs, POSES, rp)
 
@@ -647,37 +743,38 @@ def wire_obj(a, b):
     A = Acc('wire'); ac(A, a, b, 0.004, C['steel'], seg=6); return A.done(40)
 
 def renders(objs, POSES, rp):
-    sc = setup_render(1000, 700, samples=16)
+    sc = setup_render(1000, 700, samples=12)
     try: sc.cycles.use_denoising = True
     except Exception: pass
     bm = bmesh.new(); s_ = 12
     bm.faces.new([bm.verts.new(p) for p in ((-s_, -s_, -0.002), (s_, -s_, -0.002), (s_, s_, -0.002), (-s_, s_, -0.002))])
-    deck = obj_from_bm('deck', bm, [mat('deck', (0.36, 0.40, 0.41), 0.3)])
-    crane = [k for k in objs if k != 'rest']
+    obj_from_bm('deck', bm, [mat('deck', (0.36, 0.40, 0.41), 0.3)])
+    man = part_person(); objs = dict(objs); objs['person'] = man
+    crane = [k for k in objs if k not in ('rest', 'person')]
     only = [x for x in sys.argv[1:] if x != 'fast']
     def want(k): return not only or k in only
-    def shot(nm, pose, slew, show, cams, rest=None, wire=None):
+    def shot(nm, pose, slew, show, cams, rest=None, wire=None, person=None):
         p = POSES[pose]; M, tip = chain(slew, p['a1'], p['a2'], p['ext'], wire or p['wire'])
         if rest is not None: M['rest'] = T(rest)
+        if person is not None: M['person'] = T(person) @ Rz(math.pi / 2); show = show + ['person']
         place(objs, M, show)
         w = wire_obj(tip, M['hook'] @ V((0, 0, 0)))
         for cn, loc, look, lens in cams:
             camera(loc, look, lens=lens); render(os.path.join(OUT, 'kran_%s.png' % (nm + cn)))
         bpy.data.objects.remove(w, do_unlink=True)
     if want('stow'):
-        shot('stow', 'stow', 0.0, crane, [('', (5.6, 5.4, 2.7), (0.0, 0.4, 2.0), 30), ('_side', (8.0, 0.5, 2.2), (0.0, 0.5, 2.05), 30)])
+        shot('stow', 'stow', 0.0, crane, [('', (3.9, 3.3, 1.9), (0.0, 0.35, 1.2), 32), ('_side', (6.0, 0.4, 1.3), (0.0, 0.4, 1.25), 32)], person=(0.0, -1.1, 0.0))
     if want('park'):
-        shot('park', 'park', 0.0, crane + ['rest'], [('', (5.2, 0.4, 3.0), (0.0, 2.6, 1.3), 32), ('_rest', (1.2, 5.6, 1.8), (0.0, 4.2, 1.2), 35)], rest=(0, rp.y, 0))
+        shot('park', 'park', 0.0, crane + ['rest'], [('', (4.6, 0.2, 2.6), (0.0, 2.1, 1.0), 32)], rest=(0, rp.y, 0))
     if want('work'):
-        shot('work', 'work', -0.45, crane, [('', (6.6, -1.6, 3.2), (1.3, 2.5, 1.7), 32)])
-    if want('column'):
-        shot('column', 'work', 0.0, crane, [('', (1.55, 1.25, 1.55), (0.12, 0.05, 0.95), 38), ('_back', (1.2, -1.5, 1.3), (0.05, -0.05, 0.85), 38)])
+        shot('work', 'work', -0.45, crane, [('', (6.2, -1.4, 3.0), (1.3, 2.3, 1.5), 32)])
     if want('knuckle'):
-        p = POSES['work']; M, tip = chain(0.0, p['a1'], p['a2'], p['ext'], p['wire']); kn = M['b2'].to_translation()
-        shot('knuckle', 'work', 0.0, crane, [('', (kn.x + 1.5, kn.y - 0.9, kn.z + 0.7), (kn.x, kn.y - 0.2, kn.z), 40)])
-    if want('hook'):
-        p = POSES['work']; M, tip = chain(0.0, p['a1'], p['a2'], p['ext'], 0.5)
-        shot('hook', 'work', 0.0, crane, [('', (tip.x + 0.75, tip.y - 0.55, tip.z - 0.45), (tip.x, tip.y, tip.z - 0.62), 50)], wire=0.45)
+        for pose, cn in (('work', ''), ('stow', '_stow')):
+            p = POSES[pose]; M, tip = chain(0.0, p['a1'], p['a2'], p['ext'], p['wire']); kn = M['b2'].to_translation()
+            off = (1.3, -0.7, 0.5) if pose == 'work' else (1.3, 0.9, 0.3)
+            shot('knuckle' + cn, pose, 0.0, crane, [('', (kn.x + off[0], kn.y + off[1], kn.z + off[2]), (kn.x, kn.y, kn.z - 0.1), 40)])
+    if want('column'):
+        shot('column', 'work', 0.0, crane, [('', (1.45, 1.2, 1.25), (0.12, 0.05, 0.7), 38)])
 
 if __name__ == '__main__':
     main()
