@@ -25,9 +25,11 @@ SET = """((a) => { const [type, scene] = a, b = S.boat, g = GROUNDS[0].p; S.tut 
   else { b.status = 'fishing'; b.port = null; b.pos = {x:g.x, y:g.y}; b.heading = 0.4; b.v = 0; b.fishUntil = S.t + 600; }
   const c = G3._debug.cam; c.helm = false; c.pitch = 0.42; c.yaw = 1.25; c.dist = 4 + V.len * (V.len < 14 ? 0.55 : 0.8); })"""
 
-# the crane's state against the model's pose: 'stow' takes the rest's pose too where the boat parks it there; true on boats without one
+# the crane's state against the model's poses: 'stow' is folded (or on the rest where the boat parks it there), 'work' is well on the way
+# out with a job (SwiftShader draws a frame every few seconds at the quay, so the full unfolding is not waited for); true without a crane
 CRANE_AT = """(want) => { const C = G3._debug.kitStat.crane, X = G3._debug.kitX('crane'); if (!C) return true;
-  const at = p => p && Math.abs(C.a1 - p.a1) < 0.05 && Math.abs(C.a2 - p.a2) < 0.05; return want === 'work' ? C.job && at(X.work) : at(X.stow) || at(X.park); }"""
+  const at = p => p && Math.abs(C.a1 - p.a1) < 0.05 && Math.abs(C.a2 - p.a2) < 0.05, off = Math.abs(C.a1 - X.stow.a1) + Math.abs(C.a2 - X.stow.a2);
+  return want === 'work' ? C.job && (off > 0.6 || C.e > 0.05) : at(X.stow) || at(X.park); }"""
 
 
 async def show(pg, t, scene):
