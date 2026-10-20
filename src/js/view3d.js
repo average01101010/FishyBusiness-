@@ -2015,7 +2015,8 @@ const G3 = (() => {
   // the line tubs (tools/deck/rigg.py): two across and up to four along from the place, each with its coil, the baited ones with the hooks
   // hung round the rim
   function drawLineTubs(BMrel, at, n, baited, green, ry){ const T = kit('rig', 'stamp'), Lr = kit('rig', green ? 'line_g' : 'line_r'), K = kit('rig', 'kroker'), M0 = chain(BMrel, M4.T(at[0], at[1], at[2]), M4.RY(ry || 0));
-    for (let i = 0; i < Math.min(8, n); i++){
+    const nMax = (VESSELS[vtype()] || {len:10}).len < 8 ? 4 : 8;   // (four fit between the thwarts of the small open boats)
+    for (let i = 0; i < Math.min(nMax, n); i++){
       if (!T){ drawN(GB.tub, chain(M0, M4.T(-(i % 2) * 0.6, Math.floor(i / 2) * 0.33, (Math.floor(i / 2) % 2) * 0.1))); continue; }
       const M = chain(M0, M4.T((i % 2) * 0.52, 0, Math.floor(i / 2) * 0.5), M4.RY(hash(i * 3 + 1) * 6.28)); drawN(T, M); if (Lr) drawN(Lr, M); if (K && i < baited) drawN(K, M); } }
   // the gear aboard when the boat is rigged for it and not working it: the nets left aboard, the line tubs aboard (core/10-gear.js)
@@ -2143,7 +2144,8 @@ const G3 = (() => {
     const own = !!(W && W.own), V = VESSELS[vt], big = !!(V && V.len >= 10), KT = kit('fish', 'kar300'), KW = kit('fish', 'vann'), KB = own ? null : kit('fish', big ? 'benk' : 'bord'), XF = kitX('fish');
     const tSide = tx < 0 ? 1 : -1, kTop = XF[big ? 'benk_top' : 'bord_top'], topY = own && W.top != null ? W.top + 0.02 : KB && kTop != null ? d.y + kTop + 0.02 : d.y + 0.885;
     const potRig = b.rig === 'teiner' && !(typeof deckPending === 'function' && deckPending() > 0.5);
-    if (!G.hand){ if (!GB) buildGear(); drawCrabTank(BMrel, G, d, Bm / 2, G.hauler || [Bm / 2 * 0.92, d.y + 1, d.z - 1.3]); nSetup(VP); drawRigRest(BMrel, G, d); }
+    if (!G.hand){ if (!GB) buildGear(); drawCrabTank(BMrel, G, d, Bm / 2, G.hauler || [Bm / 2 * 0.92, d.y + 1, d.z - 1.3]); nSetup(VP); }
+    drawRigRest(BMrel, G, d);
     KST.raft = KST.buoys = KST.text = KST.radar = KST.cargo = KST.tubs = 0; KST.crane = null;
     drawSafety(BMrel, G, VP, t); const lifted = drawCrane(BMrel, G, VP, t, d); drawCargo(BMrel, G, lifted ? 1 : 0);
     if (!potRig){

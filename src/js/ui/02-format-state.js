@@ -114,6 +114,10 @@ function load(){ try { let s = localStorage.getItem(KEY), o = s ? JSON.parse(s) 
   if (o.fleet && o.fleet.length){ const v = o.fleet.find(x => x.id === o.cur) || o.fleet[0]; for (const k of VKEYS) o[k] = v[k]; }
   // the catch's handling follows the work chains now (13-work.js catchGut): the old switches go, once
   if (o.settings && !o.settings.catchByWork){ delete o.settings.gut; delete o.settings.ice; o.settings.catchByWork = true; }
+  // the radar left the boat models for the deck kit (20.10.2026: it is bought at the tackle shop, tools/deck/sikker.py): a boat that had one
+  // in her model keeps it, the dome or the open array she had, once
+  if (o.settings && !o.settings.radarKit){ o.settings.radarKit = true; const R = {plastsjark:'radar', sjark:'radar', hurtigsjark:'radar', sjarkny:'radar', breisjark:'radarA', kyst15:'radarA', kyst21:'radarA'};
+    for (const v of [o, ...(o.fleet || [])]){ const k = v.boat && R[v.boat.type]; if (k){ v.equip = v.equip || {}; if (!v.equip.radar && !v.equip.radarA) v.equip[k] = true; } } }
   // Father's naust moved from Finnsnes to Vangshamn (Jonas 08.10.2026): the home goes there; a boat at the old naust lies at the quay
   if (o.intro && (!o.home || o.home === 'finnsnes') && !/notut/.test(location.hash)){ o.home = HOME0; o.naust = null;   // (not the tests' games, #notut)
     for (const v of [o, ...(o.fleet || [])]) if (v.boat && v.boat.port === 'finnsnes' && v.boat.berth === 'naust') delete v.boat.berth; }
