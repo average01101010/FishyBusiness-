@@ -36,10 +36,12 @@ async def main():
             m = await pg.evaluate(f"(() => {{ const M = G3._debug.haulModel('{kind}'); return M ? {{r:M.r, n:M.path.length, parts:[!!M.frame, !!M.sheave, !!M.stripper]}} : null; }})()")
             await pg.screenshot(path=f'haul_{kind}.png')
             check(m and all(m['parts']) and a1 > a0, kind + 'haleren fra Blender står ved ripa, og skiva går rundt mens det hales', (m, round(a0, 2), round(a1, 2), st))
-        # the skipper on «Haling»: three hands at the gear
+        # the skipper and two crew with «Haling» first in their chains
         n = await pg.evaluate("(() => { const A = () => { const c = Object.assign(genCrew(), {bi:false, off:false, fatigue:10, morale:62, traits:[]}); return c; }; S.crew = [A(), A()]; S.me = S.cur; S.myJob = ['haling']; S.crew.forEach(c => c.job = ['haling']); return G3._debug.gopHands(); })()")
         await pg.wait_for_timeout(1500); await pg.screenshot(path='haul_crew.png')
-        check(n >= 2, 'de som står på «Haling», også skipperen, haler', n)
+        # only as many haul as the hauler has places for (Jonas 20.10.2026, #75: one man hauls the line, the others bleed, gut and ice)
+        want = await pg.evaluate("(BOAT.stations && BOAT.stations.hauler) || 1")
+        check(n == want, 'på «Haling» står så mange som haleren har plasser til, også når flere har Haling først', {'haler': n, 'plasser': want})
         gerr = await pg.evaluate("G3._debug.glErr()")
         check(gerr == 0, 'ingen GL-feil', gerr)
         print('errors:', errs[:5])
