@@ -1,5 +1,5 @@
 """The deck crane: a marine knuckle-boom crane of the kind a 15-21 m Norwegian coastal boat carries on its deck, built in Blender
-as parts that the game moves itself (the caller's spec 19.10.2026; the compact transport fold from Jonas' photo 20.10.2026). Modelled
+as parts that the game moves itself (the caller's spec 19.10.2026; the folds from Jonas' photos 20.10.2026). Modelled
 on the small marine knuckle-boom cranes of the 2-3 t*m class (HMF, Palfinger, Fassi); no maker's name, logo or text is on the model.
 
 Real measures it leans on (the makers' product pages, read 19.10.2026; these are the truck versions of the same booms, the marine
@@ -7,9 +7,14 @@ versions add corrosion protection and a pedestal):
     Fassi F32A        2.75 t*m (27 kNm), hydraulic outreach up to 6.90 m, slewing 370 deg, dead weight 390-465 kg (fassi.com)
     Palfinger PK 2900 2.5 t*m, max. lifting capacity 990 kg, max. hydraulic outreach 6.4 m (the B version), 374 kg (palfinger.com)
     HMF 330 K3        28.4 kNm, max. reach 7.1 m (lectura-specs.com)
-and the shape of the transport fold from Jonas' photo of used loader cranes (20.10.2026): a short column, the main boom standing
-steeply up from it, the outer boom folded fully down under it and lying tight along it with its tip down by the column's foot, the
-telescopes in, the whole package about 2.5 m high. The main boom is 1.60 m pivot to pivot, the outer boom 1.90 m to its mouth and the
+and the folds from Jonas' photos (20.10.2026): loader cranes packed for the road (the main boom standing steeply up from a short
+column, the outer boom folded fully down along it, about 2.5 m high), and three knuckle-boom cranes packed for sea, which is the stow
+pose here: the knuckle at the top, the main boom standing steeply up from the column, and the outer boom with its telescopes in
+sloping down diagonally (45-50 degrees in the photos) past the column, so the crane lies in itself as a compact triangle with the
+lift cylinder inside it and the telescopes' end low down in front. The order of folding is the makers' (the Palfinger PK 23002
+operator manual Jonas sent, pp. 38 and 71-72: raise the main boom steeply, fold the outer arm in, retract the telescopes, slew, and
+fold the arm down to its support on the base), which the a2_min table below keeps: the knuckle closes only with the main boom up,
+and the telescopes come in before it does. The main boom is 1.60 m pivot to pivot, the outer boom 1.90 m to its mouth and the
 two telescopes slide 1.45 m each, which gives 6.5 m of hydraulic reach with both booms level, as the cranes above; the safe working
 load at full reach is put at 0.3 t (about 2.6 t*m spread over 6.5 m less the booms' own weight, as the load charts of the class fall
 off).
@@ -38,8 +43,8 @@ wire under the tip):
     ext2    the second telescope, 1.68 m, 0.098 x 0.124 m, with the tip head: a sheave of 0.13 m in a fork. From its rear end.
     hook    the hook block: the wire's socket, a swivel with its nut, and a painted crane hook with a steel safety latch;
             0.35 m tall. From the top, where the wire is made fast.
-    cyl1b   the lift cylinder's barrel (Ø0.11 m, 0.59 m), from its base eye, lying along -z; a steel pipe along it to the rod end
-    cyl1r   its chrome rod (Ø0.06 m, 0.56 m), from the rod eye, lying along +z back into the barrel
+    cyl1b   the lift cylinder's barrel (Ø0.11 m, 0.625 m), from its base eye, lying along -z; a steel pipe along it to the rod end
+    cyl1r   its chrome rod (Ø0.06 m, 0.595 m), from the rod eye, lying along +z back into the barrel
     cyl2b   the knuckle cylinder's barrel (Ø0.09 m, 0.52 m), on top of b1, as cyl1b
     cyl2r   its rod (Ø0.05 m, 0.46 m), as cyl1r; its eye is on the joint J at the end of link1
     rest    the boom rest, for boats that have room for one: a square post with a foot flange and a rubber-lined V cradle that fits
@@ -60,7 +65,7 @@ main boom and the folded outer boom tight along it.
 What I chose myself: the column's height (0.57 m to the pivot, so the folded package stays near 2.6 m), the mount points of both
 cylinders and the link geometry (worked out in 2D so the cylinders fit their strokes over the whole ranges, the barrel never runs past
 the rod's eye nor the rod past the barrel's base, the links keep a transmission angle over 30 degrees and the rod and the links clear
-the booms), the lift cylinder's length (0.59 + 0.56 m, shorter than the first spec's 1.1 m, as the short column wants), the polygonal
+the booms), the lift cylinder's length (0.625 + 0.595 m, shorter than the first spec's 1.1 m, as the short column wants), the polygonal
 section of the booms, the colours, the hoses' runs and the valve bank's look.
 
 Limits for the game (extras): a1_range and a2_range are where the cylinders fit their strokes and clear the steel; a2_min is a
@@ -68,9 +73,16 @@ table [a1, a2] of how far the knuckle may close at each main boom angle before t
 or the lift cylinder (fold the crane with the main boom raised, as on a real one). Checked in Blender: no part crosses another in the
 stow, park and work poses (the pins through their eyes and the telescopes in their sleeves excepted).
 
-The stow pose is the photo's transport fold (main boom 83 degrees up, the knuckle closed to -170, the hook hanging just clear of the
-deck by the column's foot; the package is 2.6 m high). The park pose is for boats with a boom rest: the main boom 10 degrees up and
-the outer boom level, lying in the rest's cradle 0.35 m inside its mouth.
+The stow pose is the sea fold of the photos, for every boat: the main boom 100 degrees up (leaning 10 degrees back past upright, as
+in all three photos, so the knuckle sits behind the column), the outer boom 57 degrees below level (a2 = -157 degrees; steeper than
+the photos' 45-50 because this outer boom is 1.3 times the main boom where theirs is about 2 times, and the low end should come
+down near the base), the telescopes in and the hook block on a short wire under the mouth.
+Its envelope (stow_box: slew 0, the hook included, in the base frame on the game's axes) is x -0.28..0.354, y 0..2.647, z -1.206..
+0.637: 2.65 m high, the mouth 1.10 m forward of the slew axis and 0.87 m over the deck (the hook down to 0.45 m), the knuckle 0.64 m
+aft of it.
+The knuckle can still close to -170 for the loader-crane fold of the first photo (a2_min allows it with the main boom up). The park
+pose is for boats with a boom rest: the main boom 10 degrees up and the outer boom level, lying in the rest's cradle 0.35 m inside its
+mouth.
 
     pip install bpy==4.5.4
     python3 tools/deck/kran.py          -> src/data/deck-crane.b64, renders tools/deck/out/kran_*.png
@@ -108,9 +120,9 @@ def G(p): return [round(v, 4) for v in to_game(p)]
 # ---------- measures (Blender frame of each part, metres) ----------
 H_BASE = 0.35                                # the slewing ring's top over the deck: col_at
 P1 = V((0.0, -0.05, 0.57))                   # the main boom's pivot (col frame)
-C1A = V((0.0, 0.42, -0.22))                  # the lift cylinder's base pin, low in front of the pedestal (col frame)
+C1A = V((0.0, 0.48, -0.26))                  # the lift cylinder's base pin, low in front of the pedestal (col frame)
 K2 = V((0.0, 1.60, -0.12))                   # the knuckle pin under the main boom's end (b1 frame): 1.60 m pivot to pivot
-C1B = V((0.0, 0.26, -0.14))                  # the lift cylinder's rod pin (b1 frame)
+C1B = V((0.0, 0.26, -0.17))                  # the lift cylinder's rod pin (b1 frame)
 C2A = V((0.0, 0.738, 0.29))                  # the knuckle cylinder's base pin on its bracket (b1 frame)
 Q1 = V((0.0, 1.314, 0.065))                  # link1's pin through the main boom's end (b1 frame)
 Q2 = V((0.0, -0.033, 0.112))                 # link2's pin on the outer boom's heel (b2 frame)
@@ -122,10 +134,10 @@ E2W, E2H, E2L, E2_AT = 0.098, 0.124, 1.68, 0.05        # ext2: the same in ext1
 EXT_MAX = 1.45                               # how far each telescope slides out (0.25 m of each stays inside)
 SHV = V((0.0, E2L + 0.105, 0.0)); SHV_R = 0.065         # the tip sheave (ext2 frame) and its radius
 TIP = SHV + V((0.0, 0.058, 0.0))             # where the wire leaves the sheave's groove, hanging down
-L1B, R1B, L1R, R1R = 0.59, 0.055, 0.56, 0.030         # the lift cylinder: barrel and rod
+L1B, R1B, L1R, R1R = 0.625, 0.055, 0.595, 0.030         # the lift cylinder: barrel and rod
 L2B, R2B, L2R, R2R = 0.52, 0.045, 0.46, 0.025          # the knuckle cylinder
 HOOK_H = 0.35
-A1_RANGE = (math.radians(-6), math.radians(85))        # where the lift cylinder fits its stroke and clears the steel
+A1_RANGE = (math.radians(-6), math.radians(102))        # where the lift cylinder fits its stroke and clears the steel
 A2_RANGE = (math.radians(-176), math.radians(4))       # where the knuckle link works (and the cylinder fits)
 X_TONGUE, X_FORK, X_L1, X_L2 = 0.06, (0.062, 0.078), (0.062, 0.074), (0.080, 0.092)   # the knuckle's layers across (|x|)
 
@@ -300,7 +312,7 @@ def part_col():
     apin(A, P1, 0.142, 0.035, C['steel'], cap_r=0.05, sides=(-1, 1))
     bolt(A, (0.142, py + 0.06, pz), 0.012, 0.012, C['steel'], up=(1, 0, 0))               # the pin's lock bolt
     abox(A, 0.124, 0.13, py + 0.035, py + 0.085, pz - 0.015, pz + 0.015, C['steel'])
-    abox(A, -0.104, 0.104, -0.19, -0.14, 0.33, 0.47, r)                                    # the bracket's back plate
+    abox(A, -0.104, 0.104, -0.19, -0.14, 0.33, 0.42, r)                                    # the bracket's back plate
     # the lift cylinder's bracket: two plates from the housing's front down in front of the pedestal to the cylinder's base eye
     cy, cz = C1A.y, C1A.z
     lug = [(0.17, 0.15), (0.17, 0.005), (0.27, 0.005), (0.27, -0.07), (cy - 0.06, cz - 0.045)] + arc((cy, cz), 0.066, -125, 60, 7) + [(0.33, 0.07), (0.27, 0.15)]
@@ -335,7 +347,7 @@ def part_col():
         sphere_a(A, tip + (tip - V((0.24, y, z1 + 0.06))).normalized() * 0.02, 0.026, C['knob'], seg=8, rings=5)
     # hoses: four work lines from the valve's ports back and up behind the pivot to the boom's root, two supply lines into the housing
     for k, q in enumerate(ports):
-        hose(A, [q, q + V((0.04, -0.02, 0.03)), (0.17 - 0.006 * k, -0.20 - 0.008 * k, 0.48), (0.097 - 0.022 * k, -0.235, 0.60), (0.097 - 0.022 * k, -0.20, 0.70)], 0.0105, step=45)
+        hose(A, [q, q + V((0.04, -0.02, 0.03)), (0.17 - 0.006 * k, -0.20 - 0.008 * k, 0.48), (0.097 - 0.022 * k, -0.245, 0.56), (0.097 - 0.022 * k, -0.235, 0.63)], 0.0105, step=45)
     hose(A, [(x0 - 0.005, -0.12, z0 + 0.05), (0.185, -0.16, 0.26), (0.175, -0.19, 0.15)], 0.015)          # the supply line into the housing
     for k, a in enumerate((-50, -15)):
         q = V((0.056 * math.cos(math.radians(a)), -0.25 + 0.056 * math.sin(math.radians(a)), 0.27 - 0.05 * k))
@@ -366,11 +378,11 @@ def part_b1():
     abox(A, 0.062, 0.085, y - 0.09, y - 0.03, 0.15, 0.22, C['dark'])
     for k in range(2):
         x0 = 0.075 + 0.022 * k
-        hose(A, [(x0, -0.13, 0.15), (x0, -0.02, 0.14), (0.108, 0.16, 0.085 - 0.026 * k), (0.112, y - 0.25, 0.07 - 0.026 * k),
+        hose(A, [(x0, -0.11, 0.155), (x0, -0.02, 0.14), (0.108, 0.16, 0.085 - 0.026 * k), (0.112, y - 0.25, 0.07 - 0.026 * k),
                  (0.10, y - 0.14, 0.13 + 0.01 * k), (0.086, y - 0.07 + 0.02 * k, 0.17 + 0.02 * k)], 0.011)
     for k in range(2):
         zz = 0.01 - 0.026 * k; x0 = 0.031 + 0.022 * k
-        hose(A, [(x0, -0.13, 0.15), (x0, -0.02, 0.14), (0.106, 0.22, zz + 0.02), (0.112, 0.40, zz), (0.108, 1.00, zz), (0.108, 1.20, zz - 0.02),
+        hose(A, [(x0, -0.11, 0.155), (x0, -0.02, 0.14), (0.106, 0.22, zz + 0.02), (0.112, 0.40, zz), (0.108, 1.00, zz), (0.108, 1.20, zz - 0.02),
                  (0.11, ky - 0.15, -0.04 - 0.024 * k), (0.12, ky - 0.015, kz + 0.025 - 0.022 * k)], 0.011)
     abox(A, X_TONGUE, 0.098, 1.22, 1.27, -0.07, 0.0, C['dark'])                            # a hose bracket on the tongue
     for yc in (0.45, 0.95):
@@ -656,7 +668,7 @@ def main():
         if rest_pt(mid).z > 1.20: hi_ = mid
         else: lo_ = mid
     a1p = round((lo_ + hi_) / 2, 4); rp = rest_pt(a1p); REST_H = round(rp.z, 4)
-    POSES = {'stow': {'a1': round(math.radians(83), 4), 'a2': round(math.radians(-170), 4), 'ext': 0.0, 'wire': 0.04},
+    POSES = {'stow': {'a1': round(math.radians(100), 4), 'a2': round(math.radians(-157), 4), 'ext': 0.0, 'wire': 0.08},
              'park': {'a1': a1p, 'a2': -a1p, 'ext': 0.0, 'wire': 0.10},
              'work': {'a1': 0.60, 'a2': -0.76, 'ext': 0.80, 'wire': 0.6}}
     for nm, p in POSES.items():
@@ -680,6 +692,10 @@ def main():
     # reach with both booms level and both telescopes out
     Mr, tipr = chain(0.0, 0.0, 0.0, EXT_MAX)
     Mw, tipw = chain(0.0, POSES['work']['a1'], POSES['work']['a2'], POSES['work']['ext'])
+    # the folded crane's envelope (stow, slew 0, hook included), in the base frame on the game's axes, so boats can check clearance
+    Ms, tips = chain(0.0, POSES['stow']['a1'], POSES['stow']['a2'], POSES['stow']['ext'], POSES['stow']['wire'])
+    pts = [to_game(Ms[k] @ v.co) for k, o in objs.items() if k != 'rest' for v in o.data.vertices]
+    stow_box = {'min': [round(min(p[k] for p in pts), 3) for k in range(3)], 'max': [round(max(p[k] for p in pts), 3) for k in range(3)]}
     sz = {nm: size(o) for nm, o in objs.items()}
     r4 = lambda v: round(v, 4)
     klink = []
@@ -707,7 +723,7 @@ def main():
           'cyl1_len': L1B, 'cyl1_rod': L1R, 'cyl2_len': L2B, 'cyl2_rod': L2R,
           'a1_range': [r4(A1_RANGE[0]), r4(A1_RANGE[1])], 'a2_range': [r4(A2_RANGE[0]), r4(A2_RANGE[1])],
           'a2_min': fold_limits(objs),
-          'stow': POSES['stow'], 'park': POSES['park'], 'work': POSES['work'],
+          'stow': POSES['stow'], 'stow_box': stow_box, 'park': POSES['park'], 'work': POSES['work'],
           'rest_at': [0.0, 0.0, r4(-rp.y)], 'rest_h': REST_H, 'rest_tilt': 0.0,
           'hook_h': HOOK_H, 'wire_min': 0.04,
           'reach_max': round(tipr.y, 3), 'reach_work': round(tipw.y, 3), 'swl': 0.3, 'lift_moment_tm': 2.6,
@@ -720,7 +736,7 @@ def main():
         lo, hi = sz[nm]
         print('  %-6s %5d tris  x %.3f..%.3f  y %.3f..%.3f  z %.3f..%.3f' % (nm, len(A['idx']) // 3, lo[0], hi[0], lo[1], hi[1], lo[2], hi[2]))
     print('  a2_min     %s' % ', '.join('%.0f:%.0f' % (math.degrees(x), math.degrees(y)) for x, y in ex['a2_min']))
-    for k in ('col_at', 'b1_at', 'c1_a', 'b2_at', 'c1_b', 'c2_a', 'q1', 'q2', 'c2_b', 'ext_at', 'ext2_at', 'tip', 'rest_at', 'rest_h', 'reach_max', 'reach_work', 'stow', 'park', 'work'):
+    for k in ('col_at', 'b1_at', 'c1_a', 'b2_at', 'c1_b', 'c2_a', 'q1', 'q2', 'c2_b', 'ext_at', 'ext2_at', 'tip', 'rest_at', 'rest_h', 'reach_max', 'reach_work', 'stow', 'stow_box', 'park', 'work'):
         print('  %-10s %s' % (k, ex[k]))
     crane = {k: v for k, v in objs.items() if k != 'rest'}
     for nm, p in POSES.items():
@@ -763,7 +779,26 @@ def renders(objs, POSES, rp):
             camera(loc, look, lens=lens); render(os.path.join(OUT, 'kran_%s.png' % (nm + cn)))
         bpy.data.objects.remove(w, do_unlink=True)
     if want('stow'):
-        shot('stow', 'stow', 0.0, crane, [('', (3.9, 3.3, 1.9), (0.0, 0.35, 1.2), 32), ('_side', (6.0, 0.4, 1.3), (0.0, 0.4, 1.25), 32)], person=(0.0, -1.1, 0.0))
+        shot('stow', 'stow', 0.0, crane, [('', (4.2, 4.0, 2.1), (0.0, 0.45, 1.25), 30), ('_side', (6.6, 0.45, 1.35), (0.0, 0.45, 1.3), 30)], person=(0.0, -1.3, 0.0))
+        # from the photos' side and height (the low end to the left), and the photos over the renders when they are at hand:
+        # KRAN_PHOTO = 'path@x0,y0,x1,y1' (the crop as fractions of the image), several joined by os.pathsep; they stay out of the repo
+        shot('stow', 'stow', 0.0, crane, [('_photo', (-4.4, 1.8, 2.0), (0.0, 0.45, 1.3), 35)])
+        specs = [p for p in os.environ.get('KRAN_PHOTO', '').split(os.pathsep) if p]
+        if specs:
+            from PIL import Image
+            hh = 360; top = []
+            for spec in specs:
+                path, box = spec.split('@'); f = [float(v) for v in box.split(',')]
+                ph = Image.open(path).convert('RGB'); W, H = ph.size; ph = ph.crop((int(f[0] * W), int(f[1] * H), int(f[2] * W), int(f[3] * H)))
+                top.append(ph.resize((int(ph.size[0] * hh / ph.size[1]), hh)))
+            bot = [Image.open(os.path.join(OUT, 'kran_stow%s.png' % k)).convert('RGB') for k in ('_side', '_photo')]
+            bot = [im.resize((int(im.size[0] * hh / im.size[1]), hh)) for im in bot]
+            W = max(sum(im.size[0] for im in top), sum(im.size[0] for im in bot))
+            sheet = Image.new('RGB', (W, 2 * hh), (255, 255, 255)); x = 0
+            for im in top: sheet.paste(im, (x, 0)); x += im.size[0]
+            x = 0
+            for im in bot: sheet.paste(im, (x, hh)); x += im.size[0]
+            sheet.save(os.path.join(OUT, 'kran_stow_vs_photo.png'))
     if want('park'):
         shot('park', 'park', 0.0, crane + ['rest'], [('', (4.6, 0.2, 2.6), (0.0, 2.1, 1.0), 32)], rest=(0, rp.y, 0))
     if want('work'):
@@ -771,7 +806,7 @@ def renders(objs, POSES, rp):
     if want('knuckle'):
         for pose, cn in (('work', ''), ('stow', '_stow')):
             p = POSES[pose]; M, tip = chain(0.0, p['a1'], p['a2'], p['ext'], p['wire']); kn = M['b2'].to_translation()
-            off = (1.3, -0.7, 0.5) if pose == 'work' else (1.3, 0.9, 0.3)
+            off = (1.3, -0.7, 0.5) if pose == 'work' else (1.3, 0.8, 0.5)
             shot('knuckle' + cn, pose, 0.0, crane, [('', (kn.x + off[0], kn.y + off[1], kn.z + off[2]), (kn.x, kn.y, kn.z - 0.1), 40)])
     if want('column'):
         shot('column', 'work', 0.0, crane, [('', (1.45, 1.2, 1.25), (0.12, 0.05, 0.7), 38)])
