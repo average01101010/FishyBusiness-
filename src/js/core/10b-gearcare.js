@@ -85,11 +85,12 @@ const kitRoomNow = () => Math.max(0, kitMax() - S.pgear.kits.n - mySets().length
 // ---- the crew's work in port (and the shop's, in half the time for a fee): hooks, line, pots, jig tackle, nets
 function hooksNeed(lk){ const L = careG().lines[lk]; return Math.round((L.miss + L.bent) * L.n * LINE_KINDS[lk].hooks); }
 // the crew's work at sea (Jonas 09.10.2026: «Agning av liner, reparering av kroker, bøting av garn og teiner og sånne ting skal kunne skje
-// mens båten seiler om mannskapet er ledig»): under way or lying still, with a crew aboard (the skipper alone steers); the jobs pause
-// while the crew is busy fishing, hauling or gutting (core/05-vessels.js), and go on when it is free again
+// mens båten seiler om mannskapet er ledig»): under way or lying still, with a crew aboard (the skipper alone steers); the jobs go at the
+// pace of the hands free for them (core/13-work.js workAssign, jobMinute): those fishing, hauling or gutting are not, and with nobody
+// free a job waits
 function seaWork(){ const b = S.boat; return (b.status === 'sailing' || b.status === 'idle') && !b.gop && !b.tow && (S.crew || []).length > 0 && crewAboard().length > 0; }
 const crewBusyAtSea = () => { const b = S.boat; return b.status === 'fishing' || !!b.gop || (typeof deckPending === 'function' && deckPending() > 0.5); };
-const CREW_JOBS = ['egn', 'mend', 'hk', 'lr', 'pr', 'jg', 'last'];   // ('last': loading or landing freight, 09g-turer.js cargoJob)
+const CREW_JOBS = ['egn', 'strip', 'mend', 'hk', 'lr', 'pr', 'jg', 'last'];   // ('strip': the old bait off a line, 10-gear.js stripSelf; 'last': loading or landing freight, 09g-turer.js cargoJob)
 const crewJob = j => CREW_JOBS.includes(j.kind) && !j.shop;
 function careWhy(){ const b = S.boat; return b.status !== 'port' && !seaWork() ? [(S.crew || []).length ? gL('Mannskapet tar dette i havn, eller mens båten går eller ligger i ro.', 'The crew does this in port, or while the boat is under way or lying still.') : gL('Alene om bord gjøres dette i havn. Med mannskap kan det gjøres på sjøen.', 'Alone aboard this is done in port. With a crew it can be done at sea.')] : null; }
 function careShopWhy(){ const b = S.boat, sv = portServices(portById(b.port), berthKind(b)); return !sv.butikk ? [gL('Butikken må ta det: gå til utstyrsbutikken.', 'The shop has to do it: go to the tackle shop.')] : null; }

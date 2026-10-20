@@ -5,12 +5,15 @@
 const WORK = (() => {
   const L = (no, en) => S.lang === 'no' ? no : en;
   let edit = null, card = null;   // edit: {id, chain} while a chain is being built; card: the person whose card is open
-  const SHORT = {ror:['Ror', 'Helm'], fiske:['Fiske', 'Fish'], haling:['Haling', 'Haul'], sort:['Krabbe', 'Crab'], sloy:['Sløying', 'Gut'], is:['Ising', 'Ice'], kokk:['Kokk', 'Cook'], pause:['Pause', 'Break']};
+  const SHORT = {ror:['Ror', 'Helm'], fiske:['Fiske', 'Fish'], haling:['Haling', 'Haul'], blogg:['Bløgging', 'Bleed'], sort:['Krabbe', 'Crab'], sloy:['Sløying', 'Gut'], is:['Ising', 'Ice'], kokk:['Kokk', 'Cook'],
+    egn:['Egning', 'Bait'], strip:['Rensing', 'Strip'], mend:['Bøting', 'Mend'], stell:['Vedlikehold', 'Upkeep'], last:['Last', 'Cargo'], pause:['Pause', 'Break']};
   const sn = k => L(SHORT[k][0], SHORT[k][1]);
   const first = p => p.c ? p.c.name.split(' ')[0] : L('Du', 'You');
   const pid = c => c ? c.id : 'me';
   // the stations this rig works through, in the order the fish goes
-  function flowOf(){ const r = rigOf(); return r === 'juksa' ? ['ror', 'fiske', 'sloy', 'is'] : r === 'teiner' ? ['ror', 'haling', 'sort', 'sloy', 'is'] : ['ror', 'haling', 'sloy', 'is']; }
+  function flowOf(){ const r = rigOf(); return r === 'juksa' ? ['ror', 'fiske', 'sloy', 'is'] : r === 'teiner' ? ['ror', 'haling', 'sort', 'sloy', 'is'] : ['ror', 'haling', 'blogg', 'sloy', 'is']; }
+  // the crew's own jobs on the gear now (core/13-work.js JOB_ST): their stations beside the flow, with how far each has come
+  const jobSt = () => [...new Set((S.jobs || []).filter(j => crewJob(j) && JOB_ST[j.kind]).map(j => JOB_ST[j.kind]))];
   // what waits at a station: the queue line on its card
   function queue(k){
     const b = S.boat, cg = catchGut(), ci = catchIce(), g = b.gop; let gut = 0, ice = 0;
@@ -18,6 +21,8 @@ const WORK = (() => {
     if (k === 'ror') return b.status === 'sailing' ? fmt(b.v || 0, 0) + ' kn' : '–';
     if (k === 'fiske') return b.status === 'fishing' && !g && S.fsess ? fmt(S.fsess.kg, 0) + ' kg' : '–';
     if (k === 'haling' || k === 'sort') return g ? g.done + '/' + g.n : '–';
+    if (k === 'blogg') return g && g.op === 'haul' ? L('når fisken kommer', 'as the fish come') : '–';
+    if (Object.values(JOB_ST).includes(k)){ const J = (S.jobs || []).filter(j => crewJob(j) && JOB_ST[j.kind] === k); return J.length ? J.map(j => Math.round(jobDone(j) * 100) + ' %' + (j.until != null ? ' · ' + L('ferdig ', 'done ') + hm(j.until / 60) : '')).join(', ') : '–'; }
     if (k === 'sloy') return cg ? fmt(gut, 0) + ' kg' : L('ingen på', 'nobody on it');
     if (k === 'is') return ci ? fmt(ice, 0) + ' kg' : L('ingen på', 'nobody on it');
     if (k === 'kokk'){ const M = mealState(), f = L('mat ', 'food ') + fmt(foodScore(), 1) + '/5'; if (b.status === 'port' || M.due == null) return f; return (S.t >= M.due ? '<b class="r2">' + L('måltid nå', 'meal due') + '</b>' : L('måltid om ', 'meal in ') + dur((M.due - S.t) / 60)) + ' · ' + f; }
@@ -26,7 +31,7 @@ const WORK = (() => {
   function flow(A){
     const who = k => A.filter(p => p.st === k).map(first).join(', ') || '<i>' + L('ingen', 'nobody') + '</i>';
     const cardOf = k => '<div class="wk-st' + (A.some(p => p.st === k) ? ' on' : '') + '"><b>' + sn(k) + '</b><span class="wk-q">' + queue(k) + '</span><span class="wk-who">' + who(k) + '</span></div>';
-    return '<div class="wk-flow">' + flowOf().map(cardOf).join('<span class="wk-arr">→</span>') + '</div><div class="wk-flow side">' + ['kokk', 'pause'].map(cardOf).join('') + '</div>';
+    return '<div class="wk-flow">' + flowOf().map(cardOf).join('<span class="wk-arr">→</span>') + '</div><div class="wk-flow side">' + jobSt().concat(['kokk', 'pause']).map(cardOf).join('') + '</div>';
   }
   const chips = (job, cur) => job.map((k, i) => '<span class="wk-chip' + (k === cur ? ' on' : '') + '"><em>' + (i + 1) + '</em>' + sn(k) + '</span>').join('');
   const bar = (v, m, col) => '<div class="qbar"><i style="width:' + clamp(v / m * 100, 0, 100).toFixed(0) + '%;background:' + col + '"></i></div>';
@@ -46,7 +51,7 @@ const WORK = (() => {
   }
   function row(p, i){
     const id = pid(p.c), ed = edit && edit.id === id, job = ed ? edit.chain : jobOf(p.c, i), auto = p.c ? !p.c.job : !S.myJob;
-    let h = '<div class="ph-card wk-p' + (ed ? ' ed' : '') + '"><div class="wk-top"><button class="wk-name" data-pa="wk-card" data-id="' + id + '">' + (p.c ? p.c.name : L('Du (skipper)', 'You (skipper)')) + '</button><span class="wk-now">' + (p.bl ? L('Bløgger', 'Bleeding') : STATIONS[p.st].ing[S.lang === 'no' ? 0 : 1]) + restLine(p.c) + '</span></div>';
+    let h = '<div class="ph-card wk-p' + (ed ? ' ed' : '') + '"><div class="wk-top"><button class="wk-name" data-pa="wk-card" data-id="' + id + '">' + (p.c ? p.c.name : L('Du (skipper)', 'You (skipper)')) + '</button><span class="wk-now">' + workDoing(p) + restLine(p.c) + '</span></div>';
     h += '<div class="wk-chain">' + (job.length ? chips(job, p.st) : '<span class="ph-note">' + L('Trykk stasjonene i den rekkefølgen du vil ha dem.', 'Tap the stations in the order you want them.') + '</span>') + (auto && !ed ? '<span class="wk-auto">Auto</span>' : '') + '</div>';
     if (ed) h += '<div class="wk-pick">' + WORK_ST.map(k => '<button class="' + (job.includes(k) ? 'on' : '') + '" data-pa="wk-add" data-k="' + k + '">' + (job.includes(k) ? (job.indexOf(k) + 1) + ' ' : '') + sn(k) + '</button>').join('') + '</div>' +
       '<div class="ph-btnrow"><button class="ph-btn p" data-pa="wk-done">' + L('Ferdig', 'Done') + '</button><button class="ph-btn" data-pa="wk-auto">Auto</button></div>';
@@ -74,7 +79,7 @@ const WORK = (() => {
     const ix = new Map(team.map((c, i) => [c.id, i]));
     if (meAboard() && asleep()) h.push('<div class="ph-card wk-p"><div class="wk-top"><b>' + L('Du (skipper)', 'You (skipper)') + '</b><span class="wk-now r2">' + L('Sover', 'Asleep') + '</span></div></div>');
     for (const p of A) h.push(row(p, p.c ? ix.get(p.c.id) : 0));
-    h.push('<p class="ph-note">' + L('Hver person går til den første stasjonen i kjeden som har arbeid. Uten arbeid tar de pause. Roret og halingen står aldri tomme: da tar en som har pause over.', 'Each person goes to the first station in their chain that has work. With none, they take a break. The helm and the hauling are never left empty: someone on a break takes over.') + '</p>');
+    h.push('<p class="ph-note">' + L('Hver person går til den første stasjonen i kjeden som har arbeid og plass: én ved haleren (to der båten har to), én som bløgger når fisken kommer om bord, så mange ved sløyebordet som det er plass til, og én som pakker og iser. Den som blir til overs, tar det ledige arbeidet der mest venter, og ellers egning, rensing og bøting. Uten arbeid tar de pause. Roret og halingen står aldri tomme: da tar en som har pause over.', 'Each person goes to the first station in their chain that has work and room: one at the hauler (two where the boat has two), one bleeding as the fish come aboard, as many at the gutting table as it has room for, and one packing and icing. Whoever is left over takes the free work where most is waiting, else baiting, stripping and mending. With none, they take a break. The helm and the hauling are never left empty: someone on a break takes over.') + '</p>');
     return h.join('') + '</div>';
   }
   const who = id => id === 'me' ? null : crewById(id);

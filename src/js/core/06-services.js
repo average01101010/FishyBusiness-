@@ -194,7 +194,8 @@ function jobOk(j){
   if (YARD_KINDS.includes(j.kind)){ j.h = j.self ? 2 * YARD_H : YARD_H; if (j.until != null && j.until > S.t + j.h * 60) j.until = S.t + j.h * 60; }
   if (!(j.h > 0)) j.h = 2; if (j.until != null && !Number.isFinite(j.until)) j.until = null; return j; }
 // every job starts when it is ordered (or when the boat comes into port), side by side
-function queueJob(j){ S.jobs = S.jobs || []; if (S.jobs.length >= 6) return false; S.jobs.forEach(jobOk); jobOk(j); S.jobs.push(j); if (S.boat.status === 'port' || (crewJob(j) && seaWork())) j.until = S.t + j.h * 60; return true; }
+// (a crew job's work is fixed now, for the hands aboard: then it goes at the pace of those on it, core/13-work.js jobW, jobMinute)
+function queueJob(j){ S.jobs = S.jobs || []; if (S.jobs.length >= 6) return false; S.jobs.forEach(jobOk); jobOk(j); S.jobs.push(j); if (S.boat.status === 'port' || (crewJob(j) && seaWork())) j.until = S.t + j.h * 60; if (crewJob(j)) jobW(j); return true; }
 // true when everything queued is the crew's own work (baiting, mending, hooks) and not the yard's: the labels then say so
 const jobsCrewOnly = () => !!(S.jobs && S.jobs.length) && S.jobs.every(crewJob);
 function jobsDone(){ if (!S.jobs || !S.jobs.length) return null; let m = null; for (const j of S.jobs) if (j.until != null) m = Math.max(m || 0, j.until); return m; }

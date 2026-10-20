@@ -14,6 +14,9 @@ function stationSkill(st){
   if (st === 'fiske') return ['gear', 'juksa'];
   if (st === 'haling'){ const k = RIGS[rigOf()].kind; return k ? ['gear', GEAR[k].skill] : null; }
   if (st === 'sort' || st === 'sloy' || st === 'is') return ['gear', st];
+  if (st === 'blogg') return ['gear', 'sloy'];   // (the knife at the throat is the gutter's hand)
+  if (st === 'egn' || st === 'strip') return ['gear', 'line'];
+  if (st === 'mend') return ['gear', 'garn'];
   if (st === 'kokk') return ['attr', 'kokk'];
   if (st === 'ror') return ['attr', 'sjo'];
   return null;

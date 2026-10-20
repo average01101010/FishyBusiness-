@@ -29,7 +29,8 @@ async def main():
           R.e1 = egnSelf('hyse', 2); const j = S.jobs.find(x => x.kind === 'egn'); R.until = j && j.until != null; const h = j ? j.h : 0;
           // the crew fishes for an hour: the job waits
           const u0 = j.until; b.status = 'fishing'; b.fishUntil = S.t + 600; mins(60); R.waited = j.until - u0 >= 59; b.status = 'idle'; b.fishUntil = null;
-          const m0 = S.msgs.length, l0 = S.log.length; S.sayT = -1e9; mins(Math.ceil(h * 60) + 5); R.done = !S.jobs.some(x => x.kind === 'egn') && L.baited >= 2;
+          // (it goes at the pace of those on it: two tubs take two of the three, so the time left is read as it is now, core/13-work.js jobMinute)
+          const m0 = S.msgs.length, l0 = S.log.length; S.sayT = -1e9; mins(1); R.left = j.until - S.t; R.h = h; mins(Math.max(0, R.left) + 3); R.done = !S.jobs.some(x => x.kind === 'egn') && L.baited >= 2;
           R.doneTalk = S.log.slice(l0).some(x => /«/.test(x.no || ''));
           // the crew baits the rest by itself at sea (careTick once an hour)
           CARE_LAST = -1; S.sayT = -1e9; mins(1); R.autoQueued = S.jobs.some(x => x.kind === 'egn'); mins(600); R.allBaited = L.baited >= 4 && L.n >= 4;
@@ -54,7 +55,7 @@ async def main():
           return R; })()""")
         print(json.dumps(r, ensure_ascii=False)[:1400])
         print(ok(r['sea'] and r['why'] is None and r['e1'] is None and r['until']), 'with a crew aboard, out at sea and lying still, the line can be baited, and the job starts at once')
-        print(ok(r['waited'] and r['done'] and r['doneTalk']), 'the job waits while the crew fishes, is done afterwards, and someone says so')
+        print(ok(r['waited'] and r['done'] and r['doneTalk'] and r['left'] <= r['h'] * 60 * 1.4), 'the job waits while the crew fishes, is done afterwards in the time the queue shows, and someone says so', r['left'], r['h'])
         print(ok(r['allBaited']), 'the crew baits the free tubs by itself at sea with the bait aboard')
         print(ok('krok' in r['hookTalk'].lower() and r['hookTalk2'] == 0), 'out of hooks: someone says so, and not again the same day', r['hookTalk'])
         print(ok('agn' in r['baitTalk'].lower()), 'out of bait for the tubs: someone says so', r['baitTalk'])

@@ -25,8 +25,9 @@ async def main():
           R.gutRate = [+(S.hold.filter(x => x.gut).reduce((a, x) => a + x.kg, 0) - g0).toFixed(2), +(5 * e).toFixed(2)];
           // the effort counts only those at the rail
           S.hold = []; const eAll = fishEffort(); addCatch('torsk', 30, null, true); const eTub = fishEffort(); R.effort = [+eAll.toFixed(2), +eTub.toFixed(2)];
-          // All fish: nobody leaves the rail, so the tub fills up and stops the fishing
-          jobPreset('fisk'); R.allFish = workAssign().map(p => p.st); addCatch('torsk', tubCap(), null, true); step(); R.allFishStop = {stop:b.deckStop, on:workAssign().map(p => p.st)};
+          // All fish: nobody leaves the rail, so the tub fills up and stops the fishing; then the deck takes as many as it has room for
+          // (BOAT.stations.table at the gutting table, one packing and icing: Jonas 20.10.2026, #75), and the rest rest
+          jobPreset('fisk'); R.allFish = workAssign().map(p => p.st); addCatch('torsk', tubCap(), null, true); step(); R.allFishStop = {stop:b.deckStop, on:workAssign().map(p => p.st)}; R.table = BOAT.stations.table;
           jobPreset('en'); R.reset = [A.job, B.job, S.myJob];
           // under way you steer and both hands work the deck
           sea('sailing'); S.plan = {wps:[{x:g.x + 3, y:g.y, port:null, fish:0}], idx:0, speed:8, returning:false}; addCatch('sei', 40, null, true); R.sailing = workAssign().map(p => p.st);
@@ -48,12 +49,33 @@ async def main():
         print(ok(r['fishEmpty'] == ['fiske', 'fiske', 'fiske'] and r['fishTub'] == ['fiske', 'sloy', 'fiske']), 'default chains: everyone fishes; with fish in the tub the first hand guts')
         print(ok(abs(r['gutRate'][0] - r['gutRate'][1]) < 0.05), 'gutting goes at 5 kg a minute times the gutter\'s skill')
         print(ok(r['effort'][1] < r['effort'][0]), 'the hand gutting is not at the rail: less fishing effort')
-        print(ok(r['allFish'] == ['fiske', 'fiske', 'fiske'] and r['allFishStop']['stop'] and r['allFishStop']['on'].count('sloy') == 3), 'All fish: everyone at the rail until the tub is full, then all gut')
+        print(ok(r['allFish'] == ['fiske', 'fiske', 'fiske'] and r['allFishStop']['stop'] and r['allFishStop']['on'].count('sloy') == min(3, r['table']) and r['allFishStop']['on'].count('is') == (1 if r['table'] < 3 else 0)), 'All fish: everyone at the rail until the tub is full, then the table and the tub take as many as they have room for', r['allFishStop'])
         print(ok(r['reset'] == [None, None, None]), 'One on deck puts everyone back on the default chain')
-        print(ok(r['sailing'] == ['ror', 'sloy', 'sloy'] and r['helm'] == [4]), 'under way you steer and the hands gut; without you the best seaman steers')
+        print(ok(r['sailing'] == (['ror', 'sloy', 'sloy'] if r['table'] >= 2 else ['ror', 'sloy', 'is']) and r['helm'] == [4]), 'under way you steer and the hands gut and ice (the table has its places); without you the best seaman steers', r['sailing'])
         print(ok(r['haul'] == ['haling', 'sloy', 'haling'] and r['sort'] == ['haling', 'sloy', 'sort'] and r['sortFaster'][1] < r['sortFaster'][0] and r['forced'] >= 1), 'hauling follows the chains; a crab sorter spares the haulers; someone always hauls')
-        print(ok(r['aground'] == 0 and r['port'] == 3), 'aground nobody works; at the quay everyone works the deck')
+        print(ok(r['aground'] == 0 and r['port'] == min(3, r['table'] + 1)), 'aground nobody works; at the quay the deck takes as many as the table and the tub have room for', r['port'])
         print(ok(r['kept'][:3] == ['fiske', 'sloy', 'fiske'] and r['kept'][3]), 'the station is kept on each person, with minutes per station')
+        # the stations' places (Jonas 20.10.2026, tilbakemelding #75): on the new sjark with you and three hands one hauls the line while one
+        # bleeds and two gut, and three more at the hauler do not haul faster than one; on a net one picks beside the one hauling; the crew's
+        # jobs go at the pace of those on them: three baiting three tubs are done sooner than one alone, and the time left follows them
+        r = await pg.evaluate("""(()=>{ const R = {}, b = S.boat, g = GROUNDS[2].p, T0 = b.type; b.type = 'sjarkny'; applyVessel(); S.equip.linehaler = S.equip.garnhaler = true;
+          const hand = () => Object.assign(genCrew(), {bi:false, off:false, fatigue:10, morale:62, traits:[]}), H = S.t / 60;
+          const haul = (kind, crew) => { S.crew = []; for (let i = 0; i < crew; i++) S.crew.push(hand()); S.me = S.cur; S.myJob = null; b.status = 'fishing'; b.port = null; b.pos = {...g}; b.deckStop = false; b.ice = 300;
+            S.hold = [{sp:'torsk', cls:SPECIES.torsk.ref, kg:30, n:9, bled:true, iced:false, hr:Math.floor(S.t / 60), fresh:100, gut:false, hook:true}];
+            b.gop = {op:'haul', kind, n:4, done:0, prog:0, sub:0, sl:1, hooksPer:kind === 'line' ? 600 : 0, a:{...g}, b:{x:g.x + 0.2, y:g.y}};
+            const A = workAssign(), o = {st:A.map(p => p.st).join(','), roles:A.filter(p => p.role).map(p => p.role).join(','), haul:A.filter(p => p.st === 'haling').length, tF:workTeam('haling', 'line').eff}; o.min = gopUnitMin(b.gop, H, 0) * o.tF; b.gop = null; return o; };
+          R.line4 = haul('line', 3); R.line1 = haul('line', 0); R.net4 = haul('garn', 3);
+          // baiting three tubs in port: you alone, then you and two hands
+          const bait = crew => { S.crew = []; for (let i = 0; i < crew; i++){ const c = hand(); c.gear.line = 3; S.crew.push(c); } b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; S.hold = []; S.jobs = [];
+            const pg = S.pgear; pg.lines.hyse.n = 3; pg.lines.hyse.baited = 0; baitOf(pg).makrell = 100; egnSelf('hyse', 3); const j = S.jobs.find(x => x.kind === 'egn'), t0 = S.t; let on = 0, left0 = null;
+            for (let i = 0; i < 2000 && S.jobs.includes(j); i++){ step(); if (i === 1){ on = workAssign().filter(p => p.st === 'egn').length; left0 = j.until - S.t; } }
+            return {min:S.t - t0, on, left0, done:!S.jobs.includes(j) && pg.lines.hyse.baited >= 3}; };
+          R.bait1 = bait(0); R.bait3 = bait(2);
+          S.crew = []; S.jobs = []; b.type = T0; applyVessel(); return R; })()""")
+        print('places:', json.dumps(r, ensure_ascii=False))
+        print(ok(r['line4']['st'] == 'haling,sloy,blogg,sloy' and r['line4']['haul'] == 1 and abs(r['line4']['min'] - r['line1']['min']) < 0.5), 'one hauls the line while one bleeds and two gut, and the hauler goes as fast as with one aboard (by the hauler\'s own pace)', r['line4'], r['line1'])
+        print(ok(r['net4']['roles'] == 'haler,plukk' and 'blogg' in r['net4']['st']), 'on a net one hauls and one picks the fish out, and a third bleeds', r['net4'])
+        print(ok(r['bait1']['done'] and r['bait3']['done'] and r['bait3']['on'] == 3 and r['bait3']['min'] < r['bait1']['min'] * 0.6 and abs(r['bait3']['left0'] - r['bait3']['min']) <= 3), 'three baiting three tubs together are done sooner than one alone, and the time left shown is the time it takes', r['bait1'], r['bait3'])
         # learning, meals, the rest rule and the crew's lines (core/14-crewlife.js)
         r = await pg.evaluate("""(()=>{ const R = {}, b = S.boat, g = GROUNDS[2].p;
           const hand = (age, kokk) => { const c = Object.assign(genCrew(), {bi:false, off:false, fatigue:10, morale:62, traits:['stolt'], known:[true, true], age}); c.gear.sloy = 2; if (kokk) c.attr.kokk = kokk; return c; };
@@ -134,7 +156,7 @@ async def main():
             print(tag, json.dumps(u, ensure_ascii=False))
             await pg.screenshot(path=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'out', 'work_' + tag + '.png'))
             print(ok(u['noCrew'] and u['btn'] and u['rows'] == 3 and u['flow'] == ['Ror', 'Fiske', 'Sløying', 'Ising']), tag + ': the Arbeid button shows only with crew; the page has the flow for the rig and a row each')
-            print(ok(u['picks'] == 7 and u['chain'] == ['is', 'fiske', 'sloy'] and u['chips'] == 3), tag + ': a chain is built by tapping the stations in order, and a second tap takes one out')
+            print(ok(u['picks'] == 8 and u['chain'] == ['is', 'fiske', 'sloy'] and u['chips'] == 3), tag + ': a chain is built by tapping the stations in order (Bløgging among them), and a second tap takes one out', u['picks'])
             print(ok(u['preset'] == ['fiske', 'fiske'] and u['back'] == [None, None] and u['card'] == 12 and u['cardShut']), tag + ': presets set and reset the chains; the person card shows skills, fatigue and morale, and closes on a second tap')
             print(ok(not u['overflow'] and not u['small']), tag + ': no sideways scroll, and every button is at least 44 px', u['small'])
             await pg.evaluate("DOCK.close()")

@@ -229,8 +229,10 @@ function setGeomExact(p, hdg, km){ const e = {x:p.x + Math.sin(hdg) * km, y:p.y 
 function gopUnitMin(g, H, hs){
   // the people at the Haling station; with someone at Krabbesortering the haulers do not stop to sort
   const G = GEAR[g.kind], T = workTeam('haling', G.skill), w = T.n; if (!w) return Infinity;
-  // on a net haul one of those at the hauler bleeds and does not pull, so the pace is that of the others
-  const pull = g.kind === 'garn' && g.op === 'haul' ? Math.max(1, w - 1) : w, crewF = T.eff * (1 + (g.kind === 'garn' ? 0.4 : 0.3) * (pull - 1));
+  // only those at the haulers pull, as many as the boat has (BOAT.stations.hauler; Jonas 20.10.2026, tilbakemelding #75: one man hauls
+  // while the others bleed, gut and ice): on a net haul the one picking the fish out does not pull, and on pots the one emptying,
+  // baiting and stacking them keeps the hauler going
+  const hp = haulPlaces(), pull = g.kind === 'garn' && g.op === 'haul' ? Math.min(hp, Math.max(1, w - 1)) : Math.min(w, hp + (g.kind === 'teine' ? 1 : 0)), crewF = T.eff * (1 + (g.kind === 'garn' ? 0.4 : 0.3) * (pull - 1));
   let base = g.op === 'set' ? G.set : G.haul;
   if (g.kind === 'line') base = g.op === 'set' ? G.set * g.hooksPer / 700 : G.haul * g.hooksPer;
   const hand = g.op === 'haul' && !hasHauler(g.kind) ? G.hand : 1;

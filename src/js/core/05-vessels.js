@@ -392,20 +392,22 @@ function vesselStep(H){
   // a trim that has run its time (core BOOSTS): the speed goes back
   if (b.trim && !trimOn(b)){ const T = BOOSTS[b.trim.k]; delete b.trim; applyVessel(); if (T) log(T.no + ' er gått ut. Toppfarten er tilbake på ' + fmt(BOAT.vmax, 1) + ' knop.', 'The ' + T.en.toLowerCase() + ' has run out. Top speed is back at ' + fmt(BOAT.vmax, 1) + ' knots.'); }
   const clean = 1;
-  workMinute();
+  const WA = workMinute();
   const kar = S.equip && S.equip.krabbekar;
   for (const x of S.hold){ const r = SPECIES[x.sp].live ? (kar ? 0.4 : 2.5) : x.bled ? (x.iced ? 0.9 : 3.0) : (x.iced ? 2.2 : 6.0); x.fresh = Math.max(0, x.fresh - r * clean / 60); }
   iceMinute(); deckMinute();
   // a leak, the bilge pump, the water aboard (Fysikk 3, 16c-hull.js): every minute, also under tow and in port
   if (typeof hullMinute === 'function') hullMinute();
   // work queue at the yard and on the quay: runs while the boat is in port
-  if (S.jobs && S.jobs.length && b.status === 'port'){ let done = null; for (const j of S.jobs){ jobOk(j); if (j.until == null) j.until = S.t + j.h * 60; if (S.t >= j.until) (done = done || []).push(j); }
+  // (the crew's own jobs go at the pace of the hands on them this minute, core/13-work.js jobMinute: two or three baiting together are done
+  // sooner, and nobody on it, it waits)
+  if (S.jobs && S.jobs.length && b.status === 'port'){ let done = null; for (const j of S.jobs){ jobOk(j); if (crewJob(j) ? jobMinute(j, WA) : ((j.until == null && (j.until = S.t + j.h * 60)), S.t >= j.until)) (done = done || []).push(j); }
     if (done){ S.jobs = S.jobs.filter(j => !done.includes(j)); done.forEach(finishJob); } }   // all side by side (06-services.js queueJob)
-  // the crew's own jobs go on at sea while it is free, and wait while it fishes, hauls or guts (10b-gearcare.js seaWork)
-  else if (S.jobs && S.jobs.length && seaWork()){ let done = null; const busy = crewBusyAtSea();
-    for (const j of S.jobs){ if (!crewJob(j)) continue; jobOk(j); if (j.until == null) j.until = S.t + j.h * 60; if (busy) j.until += 1; else if (S.t >= j.until) (done = done || []).push(j); }
+  // the crew's own jobs go on at sea with those who are free; the ones fishing, hauling or gutting are not (10b-gearcare.js seaWork)
+  else if (S.jobs && S.jobs.length && seaWork()){ let done = null;
+    for (const j of S.jobs){ if (!crewJob(j)) continue; jobOk(j); if (jobMinute(j, WA)) (done = done || []).push(j); }
     if (done){ S.jobs = S.jobs.filter(j => !done.includes(j)); done.forEach(finishJob); crewSay(null, 'workDone'); } }
-  else if (S.jobs && S.jobs.length && b.status !== 'port') for (const j of S.jobs) if (crewJob(j) && j.until != null) j.until += 1;   // nobody free: it waits
+  else if (S.jobs && S.jobs.length && b.status !== 'port') for (const j of S.jobs) if (crewJob(j)) jobWait(j);   // nobody free: it waits
   // the landing note comes when the catch is weighed in; the pump runs and the boat moves along the harbour
   if (b.land && S.t >= b.land.until) finishLanding();
   if (b.status === 'port'){ quayMinute(); shoreTick(); }
