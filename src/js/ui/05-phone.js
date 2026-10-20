@@ -479,6 +479,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p129', '20.10.2026', 'Mannskapet holder seg på dekk', 'The crew stay on deck', [
+       ['På havsjarken kunne skipperen stå og styre fra taket av styrhuset, og mannskapet gikk opp på taket for å se utover. Skipperen går nå inn til rattet, og mannskapet holder seg på dekket og bakken. Takk for tipset!', 'On the havsjark the skipper could stand steering from the wheelhouse roof, and the crew went up on the roof to look out. The skipper now goes in to the wheel, and the crew keep to the deck and the foredeck. Thanks for the tip!']]],
     ['p127', '20.10.2026', 'Ekte utstyr på dekk', 'Real gear on deck', [
        ['Fisken hugges inn over rekka med høtt, bløgges med kniven og kastes i bløggekaret med blodvann.', 'The fish is gaffed in over the rail, bled with the knife and tossed into the bleeding tub.'],
        ['På de åpne båtene fylles fiskekarene på dekk med sløyd fisk under knust is. Avkappet fra sløyebordet går over rekka.', 'On the open boats the fish tubs on deck fill with gutted fish under crushed ice. The offal from the gutting table goes over the rail.'],

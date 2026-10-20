@@ -1136,13 +1136,20 @@ function deckPoints(type){
   // (within far: on a shelter-decker the table's default place can lie where the model has no floor, and the work moves to the deck)
   put('sloy', tx + (tx < 0 ? 0.62 : -0.62), tz, tx < 0 ? -Math.PI / 2 : Math.PI / 2, far); put('is', ux + (ux > tx ? -0.62 : 0.62), uz, ux > tx ? Math.PI / 2 : -Math.PI / 2, far);
   if (G.hauler) put('haling', G.hauler[0] * 0.7, G.hauler[2], G.hauler[0] > 0 ? Math.PI / 2 : -Math.PI / 2, 1.6);
-  if (G.skipperAt){ const c = M.near(G.skipperAt[0], G.skipperAt[2], 0.5); if (c >= 0) pt.ror = {k:c, h:0}; else put('door', G.skipperAt[0], G.skipperAt[2], 0, 40); }   // the helm, or the door when the house has no floor in the model
+  // the helm, or the door when the house has no floor in the model. Only a cell at the helm's own height will do: on the havsjark the
+  // house's roof is deck (joined by the links), so the nearest cell over the wheel was the roof, and the skipper steered from up there
+  // (tilbakemelding #77); the door is then the nearest cell at that height, not the roof over it
+  const nearY = (x, y, z, r) => { let best = -1, bd = r * r; for (let k = 0; k < M.nx * M.nz; k++){ if (!M.ok(k)) continue; const p = M.at(k), d = (p[0] - x) ** 2 + (p[2] - z) ** 2; if (Math.abs(p[1] - y) <= 0.6 && d < bd){ bd = d; best = k; } } return best; };
+  if (G.skipperAt){ const [sx, sy, sz] = G.skipperAt, c = nearY(sx, sy, sz, 0.5); if (c >= 0) pt.ror = {k:c, h:0}; else { const dc = nearY(sx, sy, sz, 40); if (dc >= 0) pt.door = {k:dc, h:0}; else put('door', sx, sz, 0, 40); } }
   // a model from the Blender round names its real doors (anchors.doors: [{at, w, h, in, to}], the sill in the game's frame): the crew go in and out there
   if (G.doors && G.doors.length && G.doors[0].at) put('door', G.doors[0].at[0], G.doors[0].at[2], 0, 1.5);
   (G.crewSpots || []).forEach((c, i) => put('spot' + i, c[0], c[2], c[3] || 0, 1.0));
   if (G.filler) put('filler', G.filler[0] * 0.8, G.filler[2], G.filler[0] > 0 ? Math.PI / 2 : -Math.PI / 2, 1.4);
-  // the rail: deck cells at the edge with the outside beyond them, spread along both sides and the stern, facing out
-  const lean = []; for (let k = 0; k < M.nx * M.nz; k++){ if (!M.ok(k)) continue; const i = k % M.nx, j = (k - i) / M.nx, p = M.at(k);
+  // the rail: deck cells at the edge with the outside beyond them, spread along both sides and the stern, facing out. Not a roof's edge:
+  // nothing over 1.6 m above the deck or the work places (the havsjark's house roof is joined to the deck, and a hand stood up there
+  // looking out, tilbakemelding #77; the foredeck up its step stays)
+  const yTop = Math.max(d.y || 0, ...['sloy', 'is'].filter(q => pt[q]).map(q => M.at(pt[q].k)[1])) + 1.6;
+  const lean = []; for (let k = 0; k < M.nx * M.nz; k++){ if (!M.ok(k)) continue; const i = k % M.nx, j = (k - i) / M.nx, p = M.at(k); if (p[1] > yTop) continue;
     for (const [di, dj, hd] of [[1, 0, Math.PI / 2], [-1, 0, -Math.PI / 2], [0, 1, Math.PI]]){ const ii = i + di, jj = j + dj; if (ii < 0 || jj < 0 || ii >= M.nx || jj >= M.nz || M.ok(jj * M.nx + ii)) continue;
       if (di && Math.sign(p[0]) !== di && Math.abs(p[0]) > 0.3) continue;   // the outside is outboard, not an inboard fitting
       lean.push({k, h:hd}); break; } }
