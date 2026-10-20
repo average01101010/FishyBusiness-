@@ -29,7 +29,7 @@ LITE = ['hulltest', 'dyntest', 'crewlifetest', 'crewwalk', 'walktest', 'tabtest'
 # they measure milliseconds, so they run alone at the end, when nothing else takes the CPU
 SOLO = ['routetest', 'heattest', 'landtest', 'charttest']
 READ = {'selltest', 'hailltest', 'simday', 'calib', 'kvtest', 'progweek', 'seatest'}
-LONG = {'tut': 2700, 'vessel3d': 2400, 'sea3d': 3000, 'vectest': 1500, 'heattest': 3600, 'trackfollow': 3300}   # SwiftShader can take ~40 s for one 3D screenshot; sea3d takes 27
+LONG = {'tut': 2700, 'deckshot': 2400, 'vessel3d': 2400, 'sea3d': 3000, 'vectest': 1500, 'heattest': 3600, 'trackfollow': 3300}   # SwiftShader can take ~40 s for one 3D screenshot; sea3d takes 27
 # not in D3, but they draw 3D all the same (tut.py plays the first trip with the 3D view), so they run in the 3D lane
 DRAWS3D = {'tut'}
 MUST = {'trip2': ('"st":"port"', 'ender ikke i havn'), 'tut': ('"tut": 0', 'veiledningen er ikke ferdig')}
