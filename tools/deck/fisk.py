@@ -4,7 +4,7 @@ the gaff, the knife and the gutting table; the photos stay out of the repo, only
     kar460      an insulated fish tub of 460 l, modelled on the common Norwegian rotomoulded PE tubs of that size (the Saeplast /
                 Nordic 460 l tub is the model; no name or logo on ours). Double-walled polyethylene: 1.20 x 1.00 m outside (the long
                 axis aft), 0.74 m high; inside 1.06 x 0.86 m at the rim and 0.60 m deep, the inner walls 2.5 degrees out of plumb. A
-                thick rolled rim that stands 18 mm out of the wall, rounded vertical corners (150 mm at the rim, 80 mm inside), tapered
+                thick rolled rim that stands 20 mm out of the wall, rounded vertical corners (150 mm at the rim, 80 mm inside), tapered
                 trapezoid ribs on the outside walls (the user's photo: wide at the foot, narrow under the rim), a four-way pallet base
                 (fork pockets 90 mm high through the base from all four sides, nine feet) and a drain plug with a T-grip low on one
                 short side (the end at the game's +z). Light grey-white, low gloss.
@@ -27,18 +27,19 @@ the gaff, the knife and the gutting table; the photos stay out of the repo, only
                 and 12 cm deep at the right (+x) end with a steel drain and a spigot under it, a small chrome tap at the back corner
                 behind the sink; black square steel legs (30 mm) with rails under the top, X braces on the ends, a low rail at the
                 back and levelling feet. Long axis along x, the worker at +z facing -z; origin on the floor under the middle.
+                The offal is pushed off over the far long edge (-z) near the -x end (bord_drop).
     benk        a stainless gutting bench for bigger boats: a 1.60 x 0.70 m top at 0.92 m with a rounded front edge, a 10 cm upstand
                 along the back and both ends (the ends slope down to the front), an open chute (renne) through the back upstand near
                 the -x end that slopes down and out over -z (the bench stands with its back to the rail, the chute out through where
                 the bulwark is), a lower shelf with upturned edges, four round legs on bolted foot plates, rails under the top, and a
                 hook for the rinse hose on the +x end. Same frame and origin as bord.
     botte       a black 12 l plastic bucket (Ø 0.30 m at the rim, 0.275 m high, a reinforcing band and a rolled rim, two ears) with
-                a steel bail and a plastic grip; the bail lies folded down to the game's +z side. Origin at the base centre.
+                a steel bail and a plastic grip; the bail hangs down against the side at the game's +z. Origin at the base centre.
 
-What I chose myself: everything not given above. The tubs' rib count and spacing (about 0.2 m), the rib taper (base 100 -> 56 mm,
-standing 16 -> 10 mm out), the rim band's height (85 mm), the pocket and feet layout (corner feet 140-150 mm, middle feet 160-180
-mm), the drain's place (between two ribs on the aft end, 0.125 m up) and the dirt toward the base; the gaff's ferrule, rivets and
-the hook's exact curve; the knife's guard and the blade's curve (edge rising 24 mm over the blade); the table's rim (40 mm wide, 26
+What I chose myself: everything not given above. The tubs' rib count and spacing (about 0.2 m), the rib taper (base 120 -> 52 mm,
+standing 20 -> 10 mm out), the rim band's height (85 mm), the pocket and feet layout (corner feet 140-150 mm, middle feet 160-180
+mm; the pockets are cut out of the wall with Blender's manifold boolean), the drain's place (between two ribs on the aft end, 0.125 m up) and the dirt toward the base; the gaff's ferrule, rivets and
+the hook's exact curve; the knife's guard and the blade's curve (edge rising 34 mm over the blade); the table's rim (40 mm wide, 26
 mm high), legs, bracing, tap and drain; the bench's sheet details, legs, shelf height (0.22 m), chute size (0.34 m wide, 0.33 m out,
 0.12 m drop) and the hose hook; the bucket's profile. No brand names or logos anywhere on the models.
 
@@ -49,6 +50,7 @@ benk_work, benk_drop, and tubs = {name: outer size [x, y, z], rim (y of the rim'
     pip install bpy==4.5.4
     python3 tools/deck/fisk.py          -> src/data/deck-fish.b64, renders tools/deck/out/fisk_*.png
     python3 tools/deck/fisk.py fast     -> without the renders
+    python3 tools/deck/fisk.py only=kar_close,benk_3q   -> only these renders
 
 Frames. Here in Blender: x to the right (athwartships), y forward, z up, each part built round its own origin. The game's: x right,
 y up, z aft; to_game(p) = (x, z, -y), so Blender +y (forward) is the game's -z."""
@@ -61,6 +63,7 @@ from bpyutil import *
 
 OUT = os.path.join(HERE, 'out')
 FAST = 'fast' in sys.argv
+ONLY = [a for x in sys.argv if x.startswith('only=') for a in x[5:].split(',')]   # only these renders (for checking one thing)
 
 def to_game(p): return (p[0], p[2], -p[1])
 def to_game_n(n): return (n[0], n[2], -n[1])
@@ -313,7 +316,10 @@ def tub(name, Wo, Lo, H, Wi, Li, D, body, draft=2.5):
         ya, yb = sorted((sg * cfy, sg * (hyw - cwy))); xa, xb = sorted((sg * cfx, sg * (hxw - cwx)))
         cutters.append(apply_all(box('pk', -1, 1, ya, yb, -0.05, PH, body, bevel=0.012, seg=2)))
         cutters.append(apply_all(box('pk', xa, xb, -1, 1, -0.05, PH, body, bevel=0.012, seg=2)))
-    cut_m(wall, cutters); shade(wall, 30)
+    cut_m(wall, cutters)
+    bm = bmesh.new(); bm.from_mesh(wall.data)          # the cap over the top was only there to close the solid for the boolean
+    bmesh.ops.delete(bm, geom=[f for f in bm.faces if all(v.co.z > ztop - 1e-4 for v in f.verts)], context='FACES')
+    bm.to_mesh(wall.data); bm.free(); shade(wall, 30)
     parts.append(wall)
     # --- the rim and the inside: under the lip, out and up the rim's face, over the top, down the inner wall and along the floor
     prof = [(-LIP - 0.002, zr0), (-LIP + 0.006, zr0 + 0.002), (-0.004, zr0 + 0.010), (0.0, zr0 + 0.024), (0.0, H - 0.030),
@@ -562,10 +568,13 @@ def bench():
            (Y0 + 0.003, ZT - 0.043), (Y0 + 0.012, ZT - 0.043), (Y0 + 0.012, ZT - 0.025)]
     A.append(extrude_x('top', top, X0, X1, S))
     # the upstands: along the back (broken by the chute) and the two ends, which slope down to the front
-    ups = [(Y1 - 0.02, ZT - 0.005), (Y1, ZT - 0.005), (Y1, ZT + 0.092), (Y1 - 0.003, ZT + 0.0985), (Y1 - 0.010, ZT + 0.100), (Y1 - 0.017, ZT + 0.0985), (Y1 - 0.02, ZT + 0.092)]
-    A.append(extrude_x('upb', ups, X0, cx0, S)); A.append(extrude_x('upb', ups, cx1, X1, S))
-    endp = [(Y0, ZT - 0.005), (Y1, ZT - 0.005), (Y1, ZT + 0.100), (Y0 + 0.16, ZT + 0.100), (Y0 + 0.01, ZT + 0.035), (Y0, ZT + 0.030)]
-    A.append(extrude_x('upe', endp, X1 - 0.02, X1, S)); A.append(extrude_x('upe', endp, X0, X0 + 0.02, S))
+    # (no two faces may lie in one plane: the back upstand stands 1 mm proud of the top's back and ends inside the end panels,
+    # which stand 1 mm proud of the top's ends)
+    Yb = Y1 + 0.001
+    ups = [(Yb - 0.021, ZT - 0.005), (Yb, ZT - 0.005), (Yb, ZT + 0.092), (Yb - 0.003, ZT + 0.0985), (Yb - 0.010, ZT + 0.100), (Yb - 0.017, ZT + 0.0985), (Yb - 0.021, ZT + 0.092)]
+    A.append(extrude_x('upb', ups, X0 + 0.012, cx0, S)); A.append(extrude_x('upb', ups, cx1, X1 - 0.012, S))
+    endp = [(Y0 + 0.0005, ZT - 0.005), (Yb + 0.0005, ZT - 0.005), (Yb + 0.0005, ZT + 0.100), (Y0 + 0.16, ZT + 0.100), (Y0 + 0.01, ZT + 0.035), (Y0 + 0.0005, ZT + 0.030)]
+    A.append(extrude_x('upe', endp, X1 - 0.02, X1 + 0.001, S)); A.append(extrude_x('upe', endp, X0 - 0.001, X0 + 0.02, S))
     # the chute: a folded sheet from the top's back edge down and out over the rail, 0.33 m out and 0.12 m down
     ya, za, yb, zb = Y1 - 0.02, ZT, Y1 + 0.33, ZT - 0.12
     F = Acc('chute')
@@ -616,7 +625,7 @@ def bucket():
     # the ears for the bail
     for s in (-1, 1):
         p.append(box('ear', min(s * 0.141, s * 0.159), max(s * 0.141, s * 0.159), -0.015, 0.015, 0.222, 0.249, B, bevel=0.003))
-    # the bail: steel wire from ear to ear, lying folded down toward Blender -y (the game's +z), with a plastic grip
+    # the bail: steel wire from ear to ear, hanging down against the side toward Blender -y (the game's +z), with a plastic grip
     phi = math.radians(128); a, hb, zp = 0.166, 0.170, 0.237
     hv = Vector((0, -math.sin(phi), math.cos(phi)))
     arc = lambda th: Vector((a * math.cos(th), 0, zp)) + hv * (hb * math.sin(th) ** 0.85)
@@ -678,11 +687,12 @@ def renders(O):
         for o in objs: o.hide_render = False
         for o, loc in placed.items(): o.location = loc
     def shot(nm, loc, look, lens=35):
+        if ONLY and nm not in ONLY: return
         camera(loc, look, lens=lens); render(os.path.join(OUT, 'fisk_%s.png' % nm))
     # the three sizes and the three colours side by side, and the bucket
     show([O[k] for k in ('kar300', 'kar460', 'kar460o', 'kar460b', 'kar1000', 'botte')],
          {O['kar300']: (-2.55, 0, 0), O['kar460']: (-1.30, 0, 0), O['kar460o']: (0.0, 0, 0), O['kar460b']: (1.30, 0, 0), O['kar1000']: (2.60, 0, 0), O['botte']: (-0.65, -1.0, 0)})
-    shot('kar', (0.9, -5.0, 2.4), (0.0, 0.0, 0.40), 33)
+    shot('kar', (0.8, -5.6, 2.5), (0.05, 0.0, 0.40), 28)
     # a tub close, three quarters
     show([O['kar460']], {}); shot('kar_close', (1.55, -1.75, 1.45), (0.0, 0.0, 0.32), 38)
     shot('kar_low', (1.9, -1.2, 0.30), (0.0, 0.0, 0.25), 38)

@@ -2140,13 +2140,13 @@ const G3 = (() => {
       // the table by the rail, its long side along the boat and the worker's side inboard
       if (!own){ if (KB) drawN(KB, chain(BMrel, M4.T(tx, d.y, tz), M4.RY(tSide * Math.PI / 2))); else drawN(PM.gtable, chain(BMrel, M4.T(tx, d.y, tz))); } }
     // an open boat without a hold keeps the catch in 460 l tubs on deck (the model's places, kit.tubs): the gutted and iced fish fill
-    // them in turn, in layers of six under the crushed ice
+    // them in turn, in layers of six under the crushed ice (lengthwise in the tub, three across and two along, heads both ways)
     if (V && V.hold && V.hold.kind === 'dekk' && G.kit && G.kit.tubs && G.kit.tubs.length && !G.hand){ const IS = kit('fish', 'is'), tubs = G.kit.tubs, vol = tubs.reduce((a, q) => a + (q[4] || 460), 0);
       const kgIn = S.hold.filter(x => x.gut || x.iced).reduce((a, x) => a + x.kg, 0), all = Math.max(1e-6, S.hold.reduce((a, x) => a + x.kg, 0));
       const cum = []; let acc = 0; for (const sp of ALLSP){ acc += S.hold.filter(x => x.sp === sp).reduce((a, x) => a + x.kg, 0); cum.push([sp, acc / all]); } const pick = r => (cum.find(c => r <= c[1] + 1e-9) || cum[0])[0];
       let before = 0; tubs.forEach((q, ti) => { const sz = q[4] || 460, T = kit('fish', 'kar' + sz), per = (V.holdCap || 450) * sz / vol, M = chain(BMrel, M4.T(q[0], q[1], q[2]), M4.RY(q[3] || 0)), f = clamp((kgIn - before) / per, 0, 1); before += per; if (T){ drawN(T, M); KST.tubs++; } if (f <= 0 || !SK || !SK.fishM) return;
         const layers = Math.ceil(f * 6); for (let L = 0; L < layers; L++) for (let k = 0; k < 6; k++){ const i = ti * 40 + L * 6 + k, sp = pick(hash(i * 7 + 5));
-          drawN(fishOf(sp), chain(M, M4.T(-0.24 + (k % 2) * 0.48 + (hash(i * 3) - 0.5) * 0.06, 0.16 + L * 0.085, -0.3 + Math.floor(k / 2) * 0.3), M4.RY(Math.PI / 2 + (hash(i * 9) - 0.5) * 0.5), M4.RZ(Math.PI / 2 * (hash(i * 11) > 0.5 ? 1 : -1)), M4.S(0.5 + hash(i * 13) * 0.12))); }
+          drawN(fishOf(sp), chain(M, M4.T(-0.25 + (k % 3) * 0.25 + (hash(i * 3) - 0.5) * 0.05, 0.16 + L * 0.085, -0.24 + Math.floor(k / 3) * 0.48), M4.RY((k % 2 ? Math.PI : 0) + (hash(i * 9) - 0.5) * 0.3), M4.RZ(Math.PI / 2 * (hash(i * 11) > 0.5 ? 1 : -1)), M4.S(0.46 + hash(i * 13) * 0.08))); }
         if (IS) drawN(IS, chain(M, M4.T(0, 0.16 + layers * 0.085, 0), M4.S(0.86, 1, 1.05))); }); }
     // the catch on deck (tools/fish): fish in the bleeding tub in proportion to the hold's species, one on the gutting table
     { const all = S.hold.reduce((a, x) => a + x.kg, 0), n = Math.min(8, Math.ceil(all / 25)), ts = W && W.s || 1;
@@ -2994,8 +2994,11 @@ const G3 = (() => {
     const KTq = ((GEO(vtype()) || {}).kit || {}).tubs, KTp = KTq && KTq[0], KTm = KTp && kit('fish', 'kar' + (KTp[4] || 300)), tb = KTm ? 0.14 : 0.05;
     KST.htub = 0; if (KTm){ drawN(KTm, chain(BMrel, M4.T(KTp[0], KTp[1], KTp[2]), M4.RY(KTp[3] || 0))); KST.htub = 1; }
     { const all = S.hold.reduce((a, x) => a + x.kg, 0), tot = Math.max(0, all - airKg), n = Math.min(40, Math.ceil(tot / 5)); if (n > 0){ const cum = []; let acc = 0; for (const sp of ALLSP){ acc += S.hold.filter(x => x.sp === sp).reduce((a, x) => a + x.kg, 0); cum.push([sp, acc / all]); }
-      for (let i = 0; i < n; i++){ const r = hash(i * 7 + 3), sp = (cum.find(c => r <= c[1] + 1e-9) || cum[0])[0], lay = Math.floor(i / 8), k = i % 8, x = SKA.tub[0] - 0.18 + (k % 2) * 0.36 + (hash(i * 3 + 1) - 0.5) * 0.06, z = SKA.tub[2] - 0.16 + Math.floor(k / 2) * 0.11;
-        drawN(fishOf(sp), chain(BMrel, M4.T(x, SKA.tub[1] + tb + lay * 0.05, z), M4.RY(Math.PI / 2 + (k % 2 ? Math.PI : 0) + (hash(i * 5) - 0.5) * 0.4), M4.RZ(sp === 'krabbe' ? 0 : Math.PI / 2 * (hash(i * 11) > 0.5 ? 1 : -1)), M4.S((0.42 + hash(i * 13) * 0.12) * (sp === 'krabbe' ? 1.7 : 1)))); } } }
+      for (let i = 0; i < n; i++){ const r = hash(i * 7 + 3), sp = (cum.find(c => r <= c[1] + 1e-9) || cum[0])[0], rz = M4.RZ(sp === 'krabbe' ? 0 : Math.PI / 2 * (hash(i * 11) > 0.5 ? 1 : -1)), sc = M4.S((0.42 + hash(i * 13) * 0.12) * (sp === 'krabbe' ? 1.7 : 1));
+        // in the kit's tub lengthwise, two across and two along, ten layers to the rim; in the model's own box across it as before
+        if (KTm){ const lay = Math.floor(i / 4), k = i % 4; drawN(fishOf(sp), chain(BMrel, M4.T(KTp[0], KTp[1], KTp[2]), M4.RY(KTp[3] || 0), M4.T(-0.14 + (k % 2) * 0.28 + (hash(i * 3 + 1) - 0.5) * 0.04, tb + lay * 0.05, -0.22 + Math.floor(k / 2) * 0.44), M4.RY((k % 2 ? Math.PI : 0) + (hash(i * 5) - 0.5) * 0.3), rz, sc)); continue; }
+        const lay = Math.floor(i / 8), k = i % 8, x = SKA.tub[0] - 0.18 + (k % 2) * 0.36 + (hash(i * 3 + 1) - 0.5) * 0.06, z = SKA.tub[2] - 0.16 + Math.floor(k / 2) * 0.11;
+        drawN(fishOf(sp), chain(BMrel, M4.T(x, SKA.tub[1] + tb + lay * 0.05, z), M4.RY(Math.PI / 2 + (k % 2 ? Math.PI : 0) + (hash(i * 5) - 0.5) * 0.4), rz, sc)); } } }
     // luck aboard: a charm swinging from the grab rail
     if (S.haill && haillF() > 0){ const CM = chain(BMrel, M4.T(CHARM_AT[0], CHARM_AT[1], CHARM_AT[2]), M4.RZ(Math.sin(T * 1.3) * 0.18), M4.RX(Math.sin(T * 0.9) * 0.12)); drawN(SK.cstr, CM);
       if (S.haill.type === 'luksus') drawN(SK.shoe, CM); else drawN(SK.fishM.torsk, chain(CM, M4.T(0, -0.17, 0), M4.RX(Math.PI / 2), M4.S(0.16))); }
