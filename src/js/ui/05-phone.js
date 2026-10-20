@@ -479,6 +479,13 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p127', '20.10.2026', 'Ekte utstyr på dekk', 'Real gear on deck', [
+       ['Fisken hugges inn over rekka med høtt, bløgges med kniven og kastes i bløggekaret med blodvann.', 'The fish is gaffed in over the rail, bled with the knife and tossed into the bleeding tub.'],
+       ['På de åpne båtene fylles fiskekarene på dekk med sløyd fisk under knust is. Avkappet fra sløyebordet går over rekka.', 'On the open boats the fish tubs on deck fill with gutted fish under crushed ice. The offal from the gutting table goes over the rail.'],
+       ['Rigget for garn står garnkaret på dekk, og rigget for line stampene med lina og krokene på kanten. De tømmes og fylles når redskapen settes og trekkes.', 'Rigged for nets the net tub stands on deck, and rigged for line the tubs with the line and the hooks on the rim. They empty and fill as the gear is set and hauled.'],
+       ['Redningsflåte i vugge og livbøyer med båtens navn og hjemhavn, så mange som reglene krever for båten.', 'A liferaft in its cradle and lifebuoys with the boat\'s name and home port, as many as the rules ask for the boat.'],
+       ['Radar kan kjøpes i utstyrsbutikken: kuppel på styrhuset eller åpen antenne i masta. Den går rundt når du er ute.', 'A radar can be bought at the tackle shop: a dome on the wheelhouse or an open array on the mast. It turns while you are out.'],
+       ['Frakt på dekk står i trekasser på paller, og kranen på kystbåtene folder seg ut, laster ved kaia og pakkes sammen igjen.', 'Freight on deck stands in wooden crates on pallets, and the crane on the coastal boats unfolds, loads at the quay and folds up again.']]],
     ['p126', '19.10.2026', 'Støt og grunnstøting får følger', 'Blows and groundings have consequences', [
        ['Under 1 knop tar fenderne et støt. Fra 1 knop blir det skrammer i malingen, og du ser dem på skroget. Fra 3 knop blir skroget skadet, og et hardt støt kan slå hull.', 'Under 1 knot the fenders take a blow. From 1 knot the paint gets scratches, and you see them on the hull. From 3 knots the hull is damaged, and a hard blow can hole her.'],
        ['Går du på grunn, er det forskjell på sand og fjell. Lekker båten, går lensepumpa. Tar den ikke unna, fylles motorrommet, og mannskapet ringer etter redningsskøyta.', 'Running aground, sand and rock are not the same. If she leaks, the bilge pump runs. If it cannot keep up, the engine room fills, and the crew calls the rescue boat.'],

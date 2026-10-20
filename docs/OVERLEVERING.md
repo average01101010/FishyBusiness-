@@ -4425,3 +4425,27 @@ Skyene på himmelen (`cp` i himmelskyggeleggeren) driver med vinden i skyhøyden
 
 **Funnet, ikke rettet:** havskyggerens vindkastflekker (`Q = P + w*uTime*1.2`) og kattepotene (`ns(P*0.013 + w*uTime*0.5)`) har samme fortegn og driver mot vinden. Rettingen er et fortegn og en fart, men den endrer havet og trenger `sea3d` (15 min) og bilder før og etter.
 
+
+### 5.62 Dekksutstyret: modulære modeller på båtenes festepunkter (Jonas 19.10.2026: «Alt må være modulært og kunne plasseres i alle aktuelle båter»)
+
+Utstyret på dekk er egne Blender-modeller i `tools/deck/` og står på faste plasser i hver båtmodell, i stedet for å være bakt inn i båtene. Dataene bestemmer hva som vises.
+
+**Modellene** (hver med egne deler i én GLB, lest med `glbPart`, `kit(f, navn)` og `kitX(f)` i `view3d.js`):
+- `fisk.py` → `deck-fish`: kar på 300, 460 og 1000 liter (hvite, oransje og blå 460), blodvann (`vann`), knust is (`is`), høtt (`hott`, 90 cm), bløggekniv (`kniv`), plastsløyebord (`bord`, 115 × 60 cm) og sløyebenk i stål med renne (`benk`), bøtte (`botte`). Extras: karenes indre mål (`tubs`), tuppen på høtta og kniven, bordets arbeidsflate og avkappets slippunkt (`bord_drop`, `benk_drop`).
+- `rigg.py` → `deck-rig`: linestamp (`stamp`), line i rødt og grønt (`line_r`, `line_g`), krokene på kanten (`kroker`), garnhaug (`garn`), trekasse (`kasse`, `kasse_s`) og EUR-pall (`pall`).
+- `kran.py` → `deck-crane`: leddkran i deler med hvert ledd i sitt dreiepunkt (fot, søyle, indre og ytre bom, to teleskop, krok, to sylindre, bomstøtte), og stillingene `stow`, `park` og `work` i extras.
+- `sikker.py` → `deck-safety`: radarkuppel (`radome`), åpen radar (`radar_ped`, `radar_bar4`, `radar_bar6`), livbøye med holder, lys og line, og redningsflåter i vugge med hydrostatisk utløser (4, 6 og 12 personer). Livbøyen har tekststriper (`boye_strip_top`, `boye_strip_bot`) der spillet skriver båtens navn og hjemhavn.
+
+**Festepunktene** står i båtmodellenes `anchors['kit']` (spillets ramme, x styrbord, y opp, z akter): `tubs` (kar på dekk, [x, y, z, ry, størrelse]), `garn` og `stamps` (riggens plass), `cargo` (pallplasser), `raft` (flåtevugger), `buoys` (bøyeholdere med +z ut fra veggen), `radar` (kuppel), `radarA` (åpen antenne på masta) og `crane` (fot, retning, størrelse og bomstøtte). Det bakte utstyret (radar, flåte, livbøyer, kran, løse stamper og kar) er tatt ut av de ti kystbåtene. Havbåtene beholder sine, fordi de er skipets egne systemer.
+
+**Hva som vises:**
+- **Flåte og livbøyer** følger med båten etter forskrift om fiskefartøy under 15 meter (FOR-2013-11-22-1404, lest på Lovdata 19.10.2026), `lsaOf` i `02-species-gear.js`. § 38: redningsflåte til alle om bord på dekket fartøy over 6 m, med hydrostatisk utløser (med tre eller færre om bord holder en firemannsflåte etter ISO 9650-1). § 43: én livbøye per tredje person, minst én med 30 m flytende line under 10,67 m og to fra 10,67 til 15 m, halvparten med lys, alle merket med båtens navn og hjemhavn. Over 15 m gjelder andre regler; der er to flåter og fire bøyer (seks på havbåtene) vårt anslag.
+- **Radaren** kjøpes i utstyrsbutikken: kuppel (`radar`, til båter med styrhus opp til 12 m) eller åpen antenne (`radarA`, 10–21 m). Antennen går rundt (24 o/min) når båten er ute. Radaren har ingen virkning i spillet ennå (ingen radarbilde); beskrivelsen i butikken sier bare det den gjør.
+- **Kar med fisk:** båter med lasterom har bare bløggekaret (300 l med blodvann). Åpne båter uten lasterom (skiff, trebåt, snekke) har kar på dekk som fylles med sløyd og iset fisk lag for lag, på langs, under knust is.
+- **Riggen:** rigget for garn står 1000-literskaret med garnhaugen, som synker når garnet settes og stiger når det trekkes. Rigget for line står stampene (opptil åtte) med lina, og de egnede med krokene på kanten. Både når båten bare er rigget og mens redskapen settes og trekkes står de på båtens plass (`rigAt`).
+- **Dekkslast:** frakt på dekk (S.cargo opp til `deckCargo`) står som trekasser på paller, én for hver 250 kg, så små kasser oppå.
+- **Kranen** (båter med `crane` > 0): foldet sammen på sjøen. Ved kaia, mens frakt lastes eller losses (jobben `last`), folder den seg ut og går en runde på 40 s: over en lastplass, kroken ned og opp, svinger ut over kaia på styrbord side, ned og opp, og tilbake. Kassa henger på kroken fra kaia (lasting) eller til kaia (lossing). Teleskopene går først inn og ut, så svingen, så bommene, hvert ledd i sin fart.
+
+**Animasjonene på dekk:** fisken som jukses inn, tas av ved rekka, bløgges med kniven i strupen (blodet drypper i karet) og kastes i bløggekaret (`bleed`). På linetrekket hugger mannen ved haleren fisken med høtta i rekka, rykker den inn over rekka og rister den av i karet (`gaff`). Hver fisk er en hendelse på sin plass (`dkEvent`), og den nærmeste i arbeid spiller den. Ved sløyebordet går avkappet ut over rekka fra bordets slippunkt, og måkene stuper etter det.
+
+**Test:** `tests/deckshot.py` (3D): alle delene er med, hver kystbåt har plassene dataene krever, flåtene og bøyene tegnes i tallet reglene krever med tekst på hver bøye, radaren vises og går rundt, de åpne båtene har fangsten i kar, kranen er foldet på sjøen og ute ved kaia med kasser på dekk; bilder `deck_*.png` liggende og to stående. `G3._debug.kitStat` viser hva siste bilde tegnet av utstyret.
