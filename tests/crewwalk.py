@@ -49,6 +49,16 @@ async def main():
         # time off: the hand is gone from the deck
         r4 = await pg.evaluate("(() => { S.boat.status = 'fishing'; S.boat.v = 0; S.plan = null; S.crew[1].off = true; CREW3D._st.ctxT = 0; CREW3D.tick(0.05); return CREW3D.agents().length; })()")
         check(r4 == 2, 'a hand given time off has no agent', r4)
+        # each on a place of their own (Jonas 20.10.2026, tilbakemelding #75: «To av mannskapet står også inni hverandre»): hauling line on
+        # the new sjark with three hands, one hauls, one bleeds and two gut, none closer to another than 0.4 m and none in the deck kit
+        r5 = await pg.evaluate("""(() => { const b = S.boat; b.type = 'sjarkny'; applyVessel(); S.crew = [0, 1, 2].map(() => Object.assign(genCrew(), {bi:false, off:false, fatigue:0})); S.crew.forEach(c => { c.job = null; });
+          S.equip.linehaler = true; S.hold = [{sp:'torsk', cls:SPECIES.torsk.ref, kg:60, n:18, bled:true, iced:false, hr:Math.floor(S.t / 60), fresh:100, gut:false, hook:true}]; b.status = 'fishing'; b.deckStop = false; b.ice = 300;
+          b.gop = {op:'haul', kind:'line', n:4, done:0, prog:0, sub:0, sl:1, hooksPer:600, a:{...b.pos}, b:{x:b.pos.x + 0.2, y:b.pos.y}};
+          CREW3D.reset(); for (let i = 0; i < 600; i++) CREW3D.tick(0.05);
+          const A = CREW3D.visible(), d = []; for (let i = 0; i < A.length; i++) for (let j = i + 1; j < A.length; j++) d.push(+Math.hypot(A[i].x - A[j].x, A[i].z - A[j].z).toFixed(2));
+          const M = CREW3D._st.M; b.gop = null; S.hold = [];
+          return {st:A.map(a => a.st + ':' + a.task).sort(), d, kit:M.kit || 0, inKit:A.filter(a => a.mode === 'at' && !M.ok(M.cellOf(a.x, a.z))).map(a => a.id)}; })()""")
+        check(r5['st'] == ['blogg:bleedst', 'haling:haul', 'sloy:gut', 'sloy:gut'] and min(r5['d']) >= 0.39 and not r5['inKit'] and r5['kit'] > 0, 'hauling line on the new sjark: one hauls, one bleeds, two gut, each on a place of their own (no two closer than 0.4 m), none in the kit', r5)
         check(not errs, 'no page errors', errs[:3])
         await br.close()
     print('FEIL: ' + ', '.join(bad) if bad else 'alt OK')
