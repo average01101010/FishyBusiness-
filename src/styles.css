@@ -81,9 +81,9 @@ body.vplot #gps::after{display:none}
 .dk-b.off{opacity:.45} .dk-b:active .dk-i{transform:scale(.94)}
 .dk-dot{position:absolute;top:0;right:0;width:13px;height:13px;border-radius:50%;background:#ffb020;border:2px solid #0d1b24}
 /* the status above the buttons is text, not a button: a dashed edge, no pointer */
-#dockInfo{position:absolute;z-index:5;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 86px);max-width:calc(100% - 240px);padding:5px 12px;border-radius:8px;border:1px dashed rgba(255,255,255,.3);background:rgba(6,16,24,.42);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#dfe9ef;font:500 12.5px var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+#dockInfo{position:absolute;z-index:5;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 86px + var(--dkx, 0px));max-width:calc(100% - 240px);padding:5px 12px;border-radius:8px;border:1px dashed rgba(255,255,255,.3);background:rgba(6,16,24,.42);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#dfe9ef;font:500 12.5px var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
 #dockInfo[hidden],#dockFan[hidden]{display:none}
-#dockFan{position:absolute;z-index:10;width:max-content;bottom:calc(env(safe-area-inset-bottom,0px) + 86px);display:flex;flex-wrap:wrap;justify-content:center;gap:6px;padding:10px 10px 8px;border-radius:18px;background:rgba(6,16,24,.74);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.18);box-shadow:0 6px 20px rgba(0,0,0,.35);max-width:calc(100% - 16px)}
+#dockFan{position:absolute;z-index:10;width:max-content;bottom:calc(env(safe-area-inset-bottom,0px) + 86px + var(--dkx, 0px));display:flex;flex-wrap:wrap;justify-content:center;gap:6px;padding:10px 10px 8px;border-radius:18px;background:rgba(6,16,24,.74);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.18);box-shadow:0 6px 20px rgba(0,0,0,.35);max-width:calc(100% - 16px)}
 #dockFan .dk-b.sm .dk-i{width:46px;height:46px} #dockFan .dk-b.sm .dk-i svg{width:22px;height:22px}
 #dockFan .dk-b.sm{width:84px;font-size:11.5px} #dockFan .dk-b.sm .dk-l{max-width:84px}
 #dockFan .dk-b.wide{width:auto;min-width:66px;max-width:124px} #dockFan .dk-b.wide .dk-l{max-width:124px;white-space:normal;text-align:center}
@@ -100,7 +100,7 @@ body.vplot #gps::after{display:none}
 #drawerTabs{padding:8px 12px 2px} #drawerTabs[hidden]{display:none}
 #drawerBody{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 @media (orientation:landscape){body.dk-open #dock{right:calc(min(380px,92vw) + 8px)} body.dk-open #dockInfo{left:calc((100% - min(380px,92vw)) / 2)} body.dk-open #dockFan{max-width:calc(100% - min(380px,92vw) - 16px)}}
-@media (orientation:portrait){#drawer{top:auto;left:0;width:auto;height:55%;bottom:calc(env(safe-area-inset-bottom,0px) + 84px);border-radius:16px 16px 0 0;box-shadow:0 -8px 26px rgba(0,0,0,.28);overflow:hidden} .dr-head{padding-top:8px} body.dk-open #dockInfo{display:none}}
+@media (orientation:portrait){#drawer{top:auto;left:0;width:auto;height:55%;bottom:calc(env(safe-area-inset-bottom,0px) + 84px + var(--dkx, 0px));border-radius:16px 16px 0 0;box-shadow:0 -8px 26px rgba(0,0,0,.28);overflow:hidden} .dr-head{padding-top:8px} body.dk-open #dockInfo{display:none}}
 
 @media (max-width:560px){#plotTop .pt-title{display:none} body.vplot #hud{max-width:52vw}}
 /* the loading screen and the sign-in (ui/10f-cloud.js): the picture (.dsb-bg in index.html) darkened at the top and the bottom, the kicker in
@@ -312,7 +312,7 @@ body.v3d #instr{display:none;top:var(--gpsTop,130px);bottom:auto!important}
 body.v3d.sailing #instr{display:flex}
 body.v3d #gps{background:rgba(6,16,24,.38);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-color:rgba(255,255,255,.14);width:auto;min-width:0}
 .attr{bottom:1px!important;font-size:9px!important;opacity:.75}
-@media (max-width:560px){#logbook{left:-40px!important} .ov.gpsb{left:34px;width:48px;height:48px;padding:0;justify-content:center;bottom:calc(env(safe-area-inset-bottom,0px) + 16px)} .ov.gpsb span{display:none} .ov.fab{right:10px!important;width:48px!important;height:48px!important;bottom:calc(env(safe-area-inset-bottom,0px) + 16px)!important} #dock{left:84px;right:60px;gap:0} .dk-b{width:60px;font-size:10.5px} .dk-b .dk-i{width:46px;height:46px} #dockInfo{bottom:calc(env(safe-area-inset-bottom,0px) + 78px);max-width:calc(100% - 40px)} #dockFan{bottom:calc(env(safe-area-inset-bottom,0px) + 78px)}}
+@media (max-width:560px){#logbook{left:-40px!important} .ov.gpsb{left:34px;width:48px;height:48px;padding:0;justify-content:center;bottom:calc(env(safe-area-inset-bottom,0px) + 16px)} .ov.gpsb span{display:none} .ov.fab{right:10px!important;width:48px!important;height:48px!important;bottom:calc(env(safe-area-inset-bottom,0px) + 16px)!important} #dock{left:84px;right:60px;gap:0} .dk-b{width:60px;font-size:10.5px} .dk-b .dk-i{width:46px;height:46px} #dockInfo{bottom:calc(env(safe-area-inset-bottom,0px) + 78px + var(--dkx, 0px));max-width:calc(100% - 40px)} #dockFan{bottom:calc(env(safe-area-inset-bottom,0px) + 78px + var(--dkx, 0px))}}
 #logbook{position:absolute;z-index:3;left:-34px;bottom:calc(env(safe-area-inset-bottom,0px) + 24px);width:70px;height:112px;border:0;border-radius:3px 6px 6px 3px;padding:0;cursor:pointer;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.045' numOctaves='3' seed='11'/%3E%3CfeColorMatrix values='0 0 0 0 0.16  0 0 0 0 0.12  0 0 0 0 0.42  0 0 0 -2.4 1.55'/%3E%3C/filter%3E%3Crect width='220' height='220' fill='%23090a1c'/%3E%3Crect width='220' height='220' filter='url(%23f)'/%3E%3C/svg%3E");background-size:120px;box-shadow:3px 4px 10px rgba(0,0,0,.45),inset -3px 0 0 rgba(255,255,255,.08);transform:rotate(-4deg);transition:transform .2s}
 #logbook::before{content:'';position:absolute;left:0;top:0;bottom:0;width:10px;background:#141a3a;border-radius:3px 0 0 3px}
 #logbook:active{transform:rotate(-4deg) translateX(6px)}
@@ -825,11 +825,13 @@ body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 2
   body.v3d #hud .row > span{flex:none}
   body.v3d #hud .row b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   body.v3d #miniPlot{height:min(var(--hudW,176px),20vh)}
-  /* the action row from the deck log's tab to the phone button, a name on two lines when it must */
-  #dock{left:38px;right:58px;bottom:calc(env(safe-area-inset-bottom,0px) + 20px)}
+  /* the action row from the deck log's tab to the phone button, a name on two lines when it must; more buttons than the row holds (at
+     sea: eight in 256 px on a 352 px phone, Adrian #78) wrap upwards into a second row instead of running out over the tab and the phone
+     button, and what stands above the row is lifted by --dkx (10c-dock.js rowsUp) */
+  #dock{left:38px;right:58px;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);flex-wrap:wrap-reverse;row-gap:6px}
   .dk-b{width:56px;font-size:10px} .dk-b .dk-i{width:44px;height:44px} .dk-b .dk-i svg{width:22px;height:22px}
   .dk-b .dk-l{white-space:normal;max-width:60px;text-align:center;line-height:1.05;font-size:9.5px;letter-spacing:-.15px}
-  #dockInfo,#dockFan{bottom:calc(env(safe-area-inset-bottom,0px) + 94px)}
+  #dockInfo,#dockFan{bottom:calc(env(safe-area-inset-bottom,0px) + 94px + var(--dkx, 0px))}
   /* the chart plotter's top row: the echo sounder stays in the row, narrower, never on the chart (Jonas 09.10.2026: «flytte ekkolodd-baren
      opp i navigasjonsbaren også i stående modus»), settings and close as symbols */
   /* a narrow phone standing up: one row as before (heading, speed, depth, echo sounder, buttons); while a route is sailed its waypoint

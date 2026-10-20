@@ -3,6 +3,7 @@
 // from below when the screen stands), never in a big window in the middle. At sea: jig, set and haul gear, auto-nav, the inventory.
 // The pages themselves are the phone's (PHONE.page); this file only decides which buttons there are and where things open.
 const DOCK = (() => {
+  let rowsDue = false;   // the button rows to measure when the row is next shown (rowsUp)
   const bar = $('dock'), info = $('dockInfo'), fan = $('dockFan'), dr = $('drawer'), dBody = $('drawerBody'), dTitle = $('drawerTitle'), dTabs = $('drawerTabs');
   const L = (no, en) => S.lang === 'no' ? no : en;
   const SVG = d => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
@@ -204,7 +205,7 @@ const DOCK = (() => {
     items = items0();
     if (menu && !items.some(x => x.menu === menu)) menu = null;
     const h = items.map(x => btn(x)).join(''), it = infoText();
-    if (h !== html){ html = h; bar.innerHTML = h; }
+    if (h !== html){ html = h; bar.innerHTML = h; rowsUp(); } else if (rowsDue) rowsUp();
     if (info.textContent !== it){ info.textContent = it; info.hidden = !it; }
     fanItems = menu && menu !== 'jukse' ? menuItems(menu).filter(Boolean) : [];
     const fh = !menu ? '' : menu === 'jukse' ? jigCard() : fanItems.map(x => btn(x, true)).join('');
@@ -212,6 +213,10 @@ const DOCK = (() => {
     fan.hidden = !menu; if (menu) placeFan();
     if (page) drawTabs();
   }
+  // the rows above the first one when the buttons wrap (a narrow phone upright): what stands over the row is lifted that much
+  // (measured when the row is shown: a change made while the chart plotter hides it is measured on the next render it is seen)
+  function rowsUp(){ if (!bar.offsetParent){ rowsDue = true; return; } rowsDue = false; const b0 = bar.firstElementChild, x = b0 ? Math.max(0, bar.offsetHeight - b0.offsetHeight) : 0; document.body.style.setProperty('--dkx', x + 'px'); }
+  window.addEventListener('resize', () => { if (bar) rowsUp(); });
   // the fan stands centred over its button, inside the screen
   function placeFan(){
     const pb = bar.querySelector('[data-dk="' + (items.find(x => x.menu === menu) || {}).id + '"]'); if (!pb) return;
