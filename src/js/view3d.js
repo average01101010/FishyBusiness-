@@ -2122,10 +2122,10 @@ const G3 = (() => {
     // folding: the telescopes in first, then the slew home, then the booms; unfolding the other way round (the makers' manual)
     const folding = tgt === stow;
     if (folding){ step('e', 0.45); if (p.e < 0.05){ step('sl', 0.3); if (Math.abs(Math.atan2(Math.sin(p.sl - tgt.sl), Math.cos(p.sl - tgt.sl))) < 0.05){
-      if (fa == null){ step('a2', 0.35); step('a1', 0.25); } else if (Math.abs(p.a2 - tgt.a2) > 0.02) knuckle(0.35); else step('a1', 0.25); } } }
+      if (fa == null){ step('a2', 0.35); step('a1', 0.25); } else if (Math.abs(p.a2 - tgt.a2) > 0.02) knuckle(0.35); else { step('a2', 0.35); step('a1', 0.25); } } } }
     else if (fa == null){ step('a1', 0.25); step('a2', 0.35); if (Math.abs(p.a2 - tgt.a2) < 0.3){ step('sl', 0.3); step('e', 0.45); } }
     else if (Math.abs(p.a2 - tgt.a2) > 0.02) knuckle(0.35);
-    else { step('a1', 0.25); if (Math.abs(p.a1 - tgt.a1) < 0.3){ step('sl', 0.3); step('e', 0.45); } }
+    else { step('a2', 0.35); step('a1', 0.25); if (Math.abs(p.a1 - tgt.a1) < 0.3){ step('sl', 0.3); step('e', 0.45); } }
     p.a2 = Math.max(p.a2, crA2min(X, p.a1));
     const F = crFrames(X, Q, BMrel, p), S1 = M4.S(F.s); KST.crane = {sl:p.sl, a1:p.a1, a2:p.a2, e:p.e, job:!!job, tip:F.tip.slice()};
     drawN(mB, F.M0); drawN(mC, F.MC); drawN(m1, F.M1); drawN(m2, F.M2);
