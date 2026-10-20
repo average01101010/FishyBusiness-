@@ -1244,3 +1244,44 @@ body.in-naust #dock,body.in-naust #dockFan,body.in-naust #dockInfo,body.in-naust
   .wd-view{flex:0 0 42%}
   .wd-side{flex:1 1 auto;max-width:none;border-left:0;border-top:1px solid rgba(255,255,255,.12)}
 }
+/* ---- the gear aboard at a glance (20.10.2026, tilbakemelding #74): the tubs by their bait, the bait's chips, the bait chooser, the jig
+   tackle's species (ui/10-gear-ui.js tubsHtml, ui/05-phone.js lineCard, ui/10c-dock.js jigCard) */
+.tubs{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0 4px}
+.tub{display:block;width:18px;height:18px;border-radius:50% 50% 42% 42%;border:2px solid var(--bc,#8d9aa3);background:var(--bc,#8d9aa3);box-shadow:inset 0 -3px 0 rgba(0,0,0,.18)}
+.tub.e{background:transparent;border:2px dashed #9aa8b0;box-shadow:none}
+.tub.w{background:repeating-linear-gradient(135deg,var(--bc) 0 3px,transparent 3px 6px);box-shadow:none;animation:tubw 1.8s ease-in-out infinite}
+@keyframes tubw{50%{opacity:.45}}
+.blegend{display:flex;flex-wrap:wrap;gap:3px 12px;font-size:12px;margin:2px 0 4px}
+.bchip{display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
+.bdot{display:inline-block;flex:0 0 auto;width:10px;height:10px;border-radius:50%;background:var(--bc,#8d9aa3);margin-right:4px;vertical-align:-1px}
+.bdot.e{background:transparent;border:1.5px dashed #9aa8b0}
+.bdot.w{background:repeating-linear-gradient(135deg,var(--bc) 0 2px,transparent 2px 4px);border:1.5px solid var(--bc)}
+.bkg{white-space:normal!important;text-align:right}
+.egc{border-top:1px solid #e3eaee;margin-top:8px;padding-top:4px}
+.egc-h{font:700 11.5px var(--sans);color:#5b6c76;text-transform:uppercase;letter-spacing:.04em;margin:8px 0 5px}
+.bpick{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:6px}
+.bp{display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-height:54px;padding:6px 8px;border-radius:10px;border:1.5px solid #d9e1e6;background:#f7f9fa;color:#15252f;font:600 13px var(--sans);text-align:left;cursor:pointer}
+.bp b{display:flex;align-items:center;font-weight:700}
+.bp small{font:500 11px var(--sans);color:#5b6c76;line-height:1.25}
+.bp small.g{color:#2e6b55}
+.bp.on{border-color:#15252f;background:#fff;box-shadow:inset 0 0 0 1.5px #15252f}
+.bp:disabled{opacity:.4;cursor:default}
+.egc-n{display:flex;align-items:center;justify-content:center;gap:14px;margin:10px 0 2px}
+.egc-n button{width:44px;height:44px;border-radius:50%;border:1px solid #c9d3d9;background:#fff;color:#15252f;font:700 20px var(--sans);cursor:pointer}
+.egc-n button:disabled{opacity:.35;cursor:default}
+.egc-n b{min-width:104px;text-align:center;font-size:15px}
+.ph-card.flash{animation:cflash 1.6s ease-out}
+@keyframes cflash{0%{box-shadow:0 0 0 3px #e0b93c}100%{box-shadow:0 1px 3px rgba(0,0,0,.08)}}
+.spchips{display:flex;flex-wrap:wrap;gap:4px;margin:3px 0 6px}
+.spchips em{display:inline-flex;align-items:center;font:700 11px var(--sans);font-style:normal;padding:2px 8px 2px 6px;border-radius:10px;white-space:nowrap;color:inherit;background:color-mix(in srgb,var(--sc) 15%,transparent);border:1px solid color-mix(in srgb,var(--sc) 45%,transparent)}
+.spchips em::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--sc);margin-right:4px}
+.dk-tks{display:flex;flex-direction:column;gap:6px}
+.dk-tk{display:flex;flex-direction:column;align-items:flex-start;gap:5px;max-width:300px;padding:8px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.07);color:#fff;font:600 13px var(--sans);text-align:left;cursor:pointer}
+.dk-tk.on{background:rgba(255,255,255,.2);border-color:#fff;box-shadow:inset 0 0 0 1px #fff}
+.dk-tk:disabled{opacity:.6;cursor:default} div.dk-tk{cursor:default;box-shadow:none}
+.dk-tk .spchips{margin:0} .dk-tk .spchips em{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.25)}
+.dk-x{font:500 12px var(--sans);opacity:.9}
+.dk-b.ghost{opacity:.55} .dk-b.ghost .dk-i{border-style:dashed}
+.gd-g small{font-size:11px;color:#7a8a93;font-weight:400}
+.gd-g.no span:first-child{opacity:.7} .gd-dots.none{color:#9b2c24;letter-spacing:0;font-weight:700}
+.dk-bait{position:absolute;right:-2px;bottom:-2px;width:15px;height:15px;border-radius:50%;background:var(--bc);border:2px solid #0d1b24} .dk-bait.e{background:#0d1b24;border:2px dashed #9aa8b0}

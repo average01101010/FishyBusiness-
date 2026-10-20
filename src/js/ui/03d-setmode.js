@@ -10,8 +10,10 @@ function setEnd(){ const p = S.boat.pos, km = setKm(); return {x:p.x + Math.sin(
 function setLabelNow(){
   const n = SETM.n, L = (no, en) => S.lang === 'no' ? no : en;
   if (SETM.kind === 'garn') return L(SETM.lbl[0], SETM.lbl[1]);
-  if (SETM.kind === 'line'){ const K = LINE_KINDS[SETM.spec.lk]; return L(n + ' ' + (n === 1 ? 'stamp' : 'stamper') + ' ' + K.no.toLowerCase(), n + ' ' + (n === 1 ? 'tub' : 'tubs') + ' of ' + K.en.toLowerCase()); }
-  return L(n + ' ' + POTS[SETM.spec.pot].no.toLowerCase(), n + ' ' + POTS[SETM.spec.pot].en.toLowerCase());
+  // the bait goes with the choice (setChoices: «4 stamper bankline · makrell»)
+  const bk = BAITS[SETM.spec.bait], bt = bk ? L(' · ' + bk.no.toLowerCase(), ' · ' + bk.en.toLowerCase()) : '';
+  if (SETM.kind === 'line'){ const K = LINE_KINDS[SETM.spec.lk]; return L(n + ' ' + (n === 1 ? 'stamp' : 'stamper') + ' ' + K.no.toLowerCase(), n + ' ' + (n === 1 ? 'tub' : 'tubs') + ' of ' + K.en.toLowerCase()) + bt; }
+  return L(n + ' ' + POTS[SETM.spec.pot].no.toLowerCase(), n + ' ' + POTS[SETM.spec.pot].en.toLowerCase()) + bt;
 }
 // why the gear cannot go out as drawn, or null
 function setWhy(){
