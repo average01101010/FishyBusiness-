@@ -6,39 +6,49 @@ on its rim, the gill net as it lies in a fish tub after hauling, and the deck ca
               the foot and 0.380 m high, the wall 4.5 mm thick and the bottom 16 mm over the deck inside; a reinforcing band 7 cm
               under the rim, two moulded lugs with gussets for the bail, and a galvanised steel bail (5.5 mm wire) that lies
               down against the wall on the side away from the hooks. Open, so the inside shows. From the middle of its foot.
-    line_r    the longline coiled in the tub, red-pink braided line: a ring of coil with a hole in the middle that fills the tub
-              from y = 0.02 (over its bottom) to y = 0.32: a body for the deep coils, ten turns of 7 mm rope laid in loops on top
-              of it (each turn resting on the ones under it), a loose loop sagging into the hole and one across the top, and the
-              end of the line with a spliced eye, a swivel and a longline snap lying on the coil. Same origin as the stamp.
-    line_g    the same coil in green, its turns flecked lighter and darker so it reads as a braided line with a tracer.
-    kroker    the hooks hung on the rim: 30 bright steel J hooks (48 mm long, 2.2 mm wire) on 150 degrees of the rim, each with its
-              bend over the rim, the shank and its eye inside, the point outside tucked under the rolled lip, and a dark snood from
-              the eye down to the coil. Same origin as the stamp, so it sits on the rim when placed at the same point.
-    garn      a heap of gill net in a fish tub after hauling: a lumpy, folded mound of green and blue monofilament (ridged noise
-              for the folds, patches of colour, strands and draped meshes of lighter line over it), the float line (light green,
-              with small white floats) mostly along one side and the lead line (dark) along the other, both diving in and out of
-              the netting. Inside a 1.06 x 0.86 m opening (long axis along z), from y = 0.05 up to y = 1.0 in the middle and
-              0.70 at the walls; it tapers 4 cm a side towards its base like a fish tub. From the middle of its base.
+    line_r    the longline coiled in the tub, red-pink braided line: a ring of coil with a hole in the middle (11 cm across) that
+              fills the tub from y = 0.02 (over its bottom) to y = 0.32: a body for the deep coils (the stacked turns show as
+              bands in the hole), fifteen turns of 8 mm line laid on top of it, each near a radius of its own and crossing over to
+              the next (each turn resting on the ones laid before it), a loose loop hanging into the hole and one across the top,
+              and the end of the line with a spliced eye, a swivel and a longline snap lying on the coil. Same origin as the stamp.
+    line_g    the same coil in green, its turns flecked lighter and darker along the line so it reads as a braided line.
+    kroker    the hooks hung on the rim: 30 bright steel J hooks (about 55 mm long, 2.4 mm wire) on 150 degrees of the rim (about
+              +x), each with its bend over the rim, the shank and its eye down the outside, the point down the inside, and a dark
+              snood from the eye up over the rim and down to the coil. Same origin as the stamp, so it sits on the rim when placed
+              at the same point. The baiter hangs them so, in order, so they come off one by one when the line is set.
+    garn      a heap of gill net in a fish tub after hauling: a crumpled mound of green and blue monofilament (billowed noise on a
+              warped plane for the bunches and the creases between them; the two colours change mostly at the creases, as two
+              nets folded into each other; the bunches lighter, the creases darker), meshes of the netting spread over a few bunches
+              and loose strands as thin light strips on it, the float line (light green, with small white floats) mostly on one
+              side and the lead line (dark) on the other, meandering in loose loops and diving in and out of the netting. Inside a
+              1.06 x 0.86 m opening (long axis along z), from y = 0.05 up to y = 1.0 in the middle and 0.70 at the walls; it tapers
+              4 cm a side towards its base like a fish tub. From the middle of its base.
     kasse     a wooden freight crate 1.20 x 0.80 x 0.80 m (long axis z) of rough sawn spruce: vertical boards (19 mm, 6 mm gaps,
-              mixed widths and shades), corner posts 70 mm square, three battens 22 x 95 mm round each side, a lid of boards
-              along its length with three battens across it; dark inside, so the gaps read as gaps. From the middle of its base.
+              mixed widths and shades, darker end grain), corner posts 70 mm square, three battens 22 x 95 mm round each side, a
+              lid of boards along its length with three battens across it; dark inside, so the gaps read as gaps. No marks or text.
+              From the middle of its base.
     pall      a EUR pallet (EPAL 1) 1200 x 800 x 144 mm: three bottom boards (100, 145, 100 x 22 mm), nine blocks 78 mm high
               (six 145 x 100, three 145 x 145), three stringer boards 145 x 22 x 800 and five top boards (145, 100, 145, 100,
-              145 x 22 mm) along its length; pale wood, the blocks darker. From the middle of its base.
+              145 x 22 mm) along its length; pale wood, the blocks darker. No stamps. From the middle of its base.
     kasse_s   a smaller crate 0.80 x 0.60 x 0.60 m in the same style (60 mm posts, 80 mm battens).
+No brand names or logos anywhere (the photos' tubs carry a shop's stickers; these are plain).
 
 Where the measures come from: the tub's from the user's photos and the common 60-70 litre line tub; the hooks are the common autoline
-size; the EUR pallet's from the EPAL standard (EN 13698-1); the crates' are the caller's. What I chose myself: the tub's profile
-(foot ring, band, rim bead), the bail's height (27 cm over the lugs), the line's thickness (7 mm, a little over a haddock line's
-so it reads at a distance), the hole in the coil (14 cm), the net's colours and the heap's shape, the crate's posts and battens.
+size; the EUR pallet's from the EPAL standard (EN 13698-1); the crates' outer sizes are the caller's. What I chose myself: the tub's
+profile (foot ring, band, rim bead), the bail's height (27 cm over the lugs), the line's thickness (8 mm, a little over a haddock
+line's so it reads at a distance), the hole in the coil, how the hooks hang, the net's colours and the heap's shape, the crate's
+posts and battens. The occlusion is baked into the colours of the line (in its tub), the net (in a tub) and the wood.
 
 The line and the tub: the game scales the line in y to show how much is left. The tub tapers, so the coil's outer wall is made to
-stay inside the tub's wall at every y scale down to 0.45 (a scale of 0.47 puts the top at 0.15); when full it stands 1-2 cm off the
-wall at its top. Below 0.45 the game can scale x and z too by the extras' line.xz table, which keeps it inside the wall to the bottom.
+stay inside the tub's wall at every y scale down to 0.45 (a scale of 0.47 puts the top at 0.15); when full it stands about 2 cm off
+the wall at its top. Below 0.45 the game can scale x and z too by the extras' line.xz table, which keeps it inside the wall to the
+bottom. The net's sides taper 4 cm a side for the same reason; scaled low in a tub that tapers as much, its edge sinks a centimetre
+or so into the tub's thick wall, which does not show.
 
     pip install bpy==4.5.4
     python3 tools/deck/rigg.py          -> src/data/deck-rig.b64, renders tools/deck/out/rigg_*.png
     python3 tools/deck/rigg.py fast     -> without the renders
+    python3 tools/deck/rigg.py stamp garn -> only those renders (stamp, hooks, stampg, empty, stamps, garn, kasse)
 
 Frames. Here in Blender: x to the right, y forward, z up. The game's: x right, y up, z aft; to_game(p) = (x, z, -y)."""
 import os, sys, math, base64, random
@@ -329,7 +339,7 @@ def top_F(r, a):
     """the body's top (the coils under the top turns): a little higher between the hole and the wall, falling off at the wall
     and into the hole, lumpy"""
     d = (r - 0.12) / 0.06
-    z = 0.2945 + 0.004 * max(0.0, 1 - d * d) + 0.0022 * nz(math.cos(a) * 3.1, math.sin(a) * 3.1, r * 9)
+    z = 0.2915 + 0.004 * max(0.0, 1 - d * d) + 0.0022 * nz(math.cos(a) * 3.1, math.sin(a) * 3.1, r * 9)
     if r > 0.168: z -= 40 * (r - 0.168) ** 2
     if r < RH + 0.014: z -= 60 * (RH + 0.014 - r) ** 2
     return z
@@ -370,15 +380,16 @@ class Coil:
         # the loose loops: one hanging into the hole, one lying across the top
         b = s.a0 + 2.4
         s.loops = []
-        for cps, sag in (([(0.150, b), (0.118, b + 0.35), (0.075, b + 0.62), (0.030, b + 1.05), (0.040, b + 1.65), (0.085, b + 1.95), (0.130, b + 2.10), (0.158, b + 2.18)], 0.045),
-                         ([(0.176, b + 3.3), (0.152, b + 3.52), (0.118, b + 3.90), (0.104, b + 4.40), (0.128, b + 4.78), (0.162, b + 4.72)], 0.0)):
+        for cps, sag in (([(0.150, b), (0.118, b + 0.32), (0.088, b + 0.66), (0.062, b + 1.02), (0.046, b + 1.42), (0.052, b + 1.84), (0.080, b + 2.16), (0.124, b + 2.32), (0.160, b + 2.36)], 0.040),
+                         ([(0.176, b + 3.3), (0.150, b + 3.55), (0.120, b + 3.90), (0.108, b + 4.30), (0.125, b + 4.62), (0.155, b + 4.80), (0.172, b + 4.90)], 0.0)):
             pts = catmull([(r * math.cos(a), r * math.sin(a), 0) for r, a in cps], 36)
             s.loops.append(s.drape(pts, sag=sag, dive=True))
-        # the end: off the last turn, across the top towards the hole, the spliced eye and the snap
-        e0 = s.turns[-1]; ae = math.atan2(e0.y, e0.x); re = math.hypot(e0.x, e0.y)
-        cps = [(e0.x, e0.y, 0)] + [((re - dr) * math.cos(ae + da), (re - dr) * math.sin(ae + da), 0) for dr, da in ((0.004, 0.10), (0.016, 0.24), (0.030, 0.38), (0.040, 0.52))]
+        # the end: off the last turn, over the turns to the middle of the ring, then round it with the spliced eye and the snap
+        e0 = s.turns[-1]; ae = math.atan2(e0.y, e0.x); re = math.hypot(e0.x, e0.y); rt = 0.125
+        cps = [(e0.x, e0.y, 0)] + [(lerp(re, rt, f) * math.cos(ae + da), lerp(re, rt, f) * math.sin(ae + da), 0) for f, da in ((0.15, 0.10), (0.55, 0.26), (0.9, 0.42), (1.0, 0.58))]
         s.tail = s.drape(catmull(cps, 16), sag=0.0, dive=False, skip=12)
         s.tail[0] = e0.copy()
+        s.snap_a = ae + 0.58; s.snap_r = rt
     def height(s, x, y, skip=0):
         """the top of everything at (x, y): the body or a turn of rope under it; None over the hole"""
         r = math.hypot(x, y)
@@ -410,8 +421,8 @@ class Coil:
                 av = (Zs[q - 1] + 2 * Zs[q] + Zs[q + 1]) / 4
                 Z[q] = max(Zs[q], av) if H[q] is not None else av        # resting points never sink, hanging ones smooth freely
                 if H[q] is not None: Z[q] = max(Z[q], H[q] + RR * 0.95)
-        if dive:
-            for q, f in ((0, 1.6), (1, 0.9), (n - 1, 1.6), (n - 2, 0.9)): Z[q] -= RR * f
+        if dive:      # the ends go down into the coil over a few steps
+            for q, f in ((0, 2.2), (1, 1.4), (2, 0.8), (3, 0.35)): Z[q] -= RR * f; Z[n - 1 - q] -= RR * f
         return [V((p.x, p.y, Z[q])) for q, p in enumerate(pts)]
     def body_prof(s):
         p = [(RH - 0.006, L_Y0), (0.12, L_Y0), (r_fit(L_Y0), L_Y0)]
@@ -443,19 +454,25 @@ def line(colour, fleck, name):
     for lp in K.loops:
         tube_tm(M, lp, RR, m, sides=5, tint=lambda i: (lambda k: (k, k, k))(fleck[i % 2] * 1.04))
     tube_tm(M, K.tail, [RR] * (len(K.tail) - 4) + [RR * 1.3, RR * 1.45, RR * 1.45, RR * 0.9], m, sides=6, tint=lambda i: (lambda k: (k, k, k))(fleck[i % 2]))
-    # the snap at the end: a swivel and the spring clip lying on the coil
-    e = K.tail[-1]; d = (K.tail[-1] - K.tail[-3]); d.z = 0; d.normalize(); sd = V((-d.y, d.x, 0)); up = V((0, 0, 1))
-    sw0 = e + d * 0.004; sw1 = sw0 + d * 0.020
-    tube_tm(M, [sw0, sw0 + d * 0.003, sw1 - d * 0.003, sw1], [0.0022, 0.0034, 0.0034, 0.0022], C['steel'], sides=6)
-    ring_tm(M, sw1 + d * 0.0045, d, up, 0.0042, 0.0011, C['steel'], seg=8, rseg=4)
-    clip = []
-    L = 0.058; W = 0.0075; base = sw1 + d * 0.0085
+    # the snap at the end: a swivel and the spring clip lying on the coil, round the ring from the end of the line
+    def on(p, lift):      # on the highest rope under it and beside it (the snap is wider than a rope)
+        hs = [K.height(p.x + dx, p.y + dy, 12) for dx, dy in ((0, 0), (0.006, 0), (-0.006, 0), (0, 0.006), (0, -0.006))]
+        hs = [h for h in hs if h is not None]; return V((p.x, p.y, (max(hs) if hs else p.z) + lift))
+    e = K.tail[-1]; up = V((0, 0, 1))
+    def at(da, r=K.snap_r): return V((r * math.cos(K.snap_a + da), r * math.sin(K.snap_a + da), 0))
+    dl = 1.0 / K.snap_r                                     # the angle for a metre along the ring
+    sw = [on(at(dl * x), 0.0034) for x in (0.004, 0.007, 0.021, 0.024)]
+    tube_tm(M, sw, [0.0022, 0.0034, 0.0034, 0.0022], C['steel'], sides=6)
+    d = (sw[-1] - sw[0]); d.z = 0; d.normalize(); sd = V((-d.y, d.x, 0))
+    ring_tm(M, sw[-1] + d * 0.0045, d, up, 0.0042, 0.0011, C['steel'], seg=8, rseg=4)
+    clip = []; L = 0.058; W = 0.0075
     for k in range(17):
         u = k / 16 * 2 * math.pi
         x = (1 - math.cos(u)) / 2 * L; y = math.sin(u) * W * (0.55 + 0.45 * math.sin(min(math.pi, x / L * math.pi)))
-        clip.append(base + d * x + sd * y + up * 0.0012 * math.sin(u * 0.5))
+        q = at(dl * (0.033 + x)) + sd * y
+        clip.append(on(q, 0.0016 + 0.001 * math.sin(u * 0.5)))
     tube_tm(M, clip, 0.0013, C['steel'], sides=4, caps=False)
-    return M.done(70), K
+    return M.done(85), K
 
 def fit_xz():
     """the x-z scale for the coil at y scales under S_MIN, which keeps it inside the tub's wall to the bottom"""
@@ -472,32 +489,40 @@ def fit_xz():
 N_HOOK = 30; HOOK_A = 75.0       # hooks on +-75 deg about +x
 R_HOOK = (r_in(0.373) + R_RIM) / 2
 def kroker(K):
-    M = TM('kroker'); rng = random.Random(11); wr = 0.0011
-    Rc = (R_RIM - r_in(0.373)) / 2 + 0.0024 + wr              # the bend's centre line: clears the rim by 2 mm a side
+    """the hooks hung on the rim: the bend over the rim, the shank and its eye down the outside, the point down the inside against
+    the wall; the snood from the eye up over the rim beside the hook and down to the coil"""
+    M = TM('kroker'); rng = random.Random(11); wr = 0.0012
+    Rc = (R_RIM - r_in(0.373)) / 2 + 0.0022 + wr              # the bend's centre line: clears the rim by 2 mm a side
     zc = Z_RIM - Rc + wr                                      # its inside rests on the rim's top
     for h in range(N_HOOK):
         a = math.radians(-HOOK_A + 2 * HOOK_A * h / (N_HOOK - 1) + rng.uniform(-1.0, 1.0))
         er = V((math.cos(a), math.sin(a), 0)); et = V((-math.sin(a), math.cos(a), 0)); ez = V((0, 0, 1))
-        yaw = math.radians(rng.uniform(-7, 7)); roll = math.radians(rng.uniform(-6, 6))
-        Lsh = 0.034 + rng.uniform(-0.002, 0.002); lean = math.radians(8)
-        loc = [(-Rc - Lsh * math.sin(lean), -Lsh * math.cos(lean)), (-Rc - Lsh * 0.5 * math.sin(lean), -Lsh * 0.5 * math.cos(lean))]
-        for k in range(7):
-            ph = math.pi * (1 - k / 6); loc.append((Rc * math.cos(ph), Rc * math.sin(ph)))
-        loc += [(Rc + 0.0003, -0.008), (Rc - 0.0012, -0.0135), (Rc - 0.0042, -0.0172)]
-        rad = [wr] * (len(loc) - 2) + [wr * 0.75, wr * 0.25]
+        yaw = math.radians(rng.uniform(-6, 6)); roll = math.radians(rng.uniform(-5, 5)); Lsh = 0.040 + rng.uniform(-0.002, 0.002)
+        # local (radial out, up) from the bend's centre: the shank outside, the bend, the point leg inside leaning off the wall
+        loc = [(Rc + 0.0004, -Lsh)]
+        for k in range(6):
+            ph = math.pi * k / 5; loc.append((Rc * math.cos(ph), Rc * math.sin(ph)))
+        loc += [(-Rc - 0.0011, -0.0085), (-Rc - 0.0021, -0.0135), (-Rc - 0.0006, -0.0168)]
+        rad = [wr] * (len(loc) - 2) + [wr * 0.75, wr * 0.22]
         Rm = Matrix.Rotation(yaw, 3, 'Z') @ Matrix.Rotation(roll, 3, 'X')    # local: x radial, y tangential, z up
         def W(q, t=0.0):
             l = Rm @ V((q[0], t, q[1]))
             return er * (R_HOOK + l.x) + et * l.y + ez * (zc + l.z)
-        tube_tm(M, [W(q) for q in loc], rad, C['steel'], sides=4)
-        # the snood: a knot round the shank's end, then down the inside of the wall and in to the coil
-        E = W(loc[0]); eo = er * -1
-        ang = a + math.radians(rng.uniform(-6, 6)); rend = rng.uniform(0.160, 0.178)
+        hook = [W(q) for q in loc]
+        tube_tm(M, hook, rad, C['steel'], sides=4)
+        # the eye: a small ring at the shank's foot
+        ring_tm(M, hook[0] - ez * 0.0028, ez, et, 0.0026, 0.0007, C['steel'], seg=5, rseg=3)
+        # the snood: knotted at the eye, up beside the shank, over the rim's bead and top, down the inside, in to the coil
+        t = 0.0034 * (1 if rng.random() < 0.5 else -1)
+        def S(r, z): return er * r + et * t + ez * z
+        ang = a + math.radians(rng.uniform(-6, 6)); rend = rng.uniform(0.158, 0.176)
         end = V((rend * math.cos(ang), rend * math.sin(ang), 0)); zh = K.height(end.x, end.y); end.z = (zh if zh is not None else 0.29) - 0.0015
-        mid1 = E + eo * 0.006 - ez * 0.016 + et * ((end - E).dot(et) * 0.2)
-        mid2 = V((lerp(mid1.x, end.x, 0.5), lerp(mid1.y, end.y, 0.5), lerp(mid1.z, end.z, 0.6) - 0.003))
-        sn = catmull([E + ez * 0.0035, E - ez * 0.002, mid1, mid2, end], 8)
-        tube_tm(M, sn, [0.0021, 0.0021] + [0.0011] * 6, C['snood'], sides=3)
+        eye = hook[0] - ez * 0.0028
+        cps = [eye + et * t * 0.4, S(R_HOOK + Rc + 0.0016, zc - Lsh * 0.45), S(R_RIM + 0.0013, 0.3700), S(0.2278, 0.3790), S(0.2200, Z_RIM + 0.0012),
+               S(r_in(0.373) - 0.0006, 0.3755), S(r_in(0.350) - 0.0016, 0.350)]
+        mid = V((lerp(cps[-1].x, end.x, 0.55), lerp(cps[-1].y, end.y, 0.55), lerp(cps[-1].z, end.z, 0.7) - 0.004))
+        sn = catmull(cps + [mid, end], 11)
+        tube_tm(M, sn, [0.0019, 0.0016] + [0.0010] * 9, C['snood'], sides=3)
     return M.done(130)
 
 # ======================================================================================================================
@@ -506,7 +531,7 @@ GA, GB = 0.420, 0.520            # the heap's half width (x) and half length (y)
 GA0, GB0 = 0.380, 0.480          # at its base (fish tubs taper)
 G_Y0, G_TOP, G_EDGE = 0.05, 1.0, 0.70
 G_P = 4.5                        # the squircle's power (the tub's rounded corners)
-NET_G = (0.24, 0.50, 0.36); NET_B = (0.20, 0.36, 0.60)
+NET_G = (0.26, 0.52, 0.38); NET_B = (0.20, 0.38, 0.62)
 def squircle(u, v, a, b):
     s = max(abs(u), abs(v))
     if s < 1e-9: return 0.0, 0.0
@@ -514,37 +539,50 @@ def squircle(u, v, a, b):
     return a * lam * u, b * lam * v
 def rho(x, y):
     return ((abs(x) / GA) ** G_P + (abs(y) / GB) ** G_P) ** (1 / G_P)
-def ridge(x, y, z):
-    return (1 - abs(nz(x, y, z))) ** 4
-def heap_h(x, y):
-    """the heap's top: a mound off the middle a little, lumps and the folds of the netting (ridged noise), calmer at the walls"""
-    r = rho(x - 0.03 * (1 - rho(x, y)), y + 0.06 * (1 - rho(x, y)))
-    dome = max(0.0, 1 - min(1.0, r) ** 2.3) ** 0.6
-    lumps = 0.060 * nz(x * 2.4, y * 2.4, 3.1) + 0.030 * nz(x * 5.2, y * 5.2, 7.7)
-    folds = 0.034 * ridge(x * 5.0 + 0.3 * nz(x * 2, y * 2, 1), y * 5.0, 11.3) + 0.016 * ridge(x * 11, y * 11, 5.5)
-    return G_EDGE + (G_TOP - 0.06 - G_EDGE) * dome + (lumps + folds - 0.02) * (0.25 + 0.75 * dome)
+def warp(x, y):
+    return x + 0.07 * nz(x * 2.6, y * 2.6, 1.3), y + 0.07 * nz(x * 2.6, y * 2.6, 6.1)
+def crumple(x, y):
+    """the netting's folds: billowed noise (rounded bunches, sharp creases between them) on a warped plane, three sizes"""
+    wx, wy = warp(x, y)
+    n1 = nz(wx * 4.6, wy * 4.6, 3.3)
+    b1 = abs(n1); b2 = abs(nz(wx * 9.5 + 1.7, wy * 9.5, 8.1)); b3 = abs(nz(wx * 17 + 4.1, wy * 17, 1.7))
+    return b1, b2, b3, n1
+G_SCALE = [1.0]
+def heap_h(x, y, raw=False):
+    """the heap's top: a mound a little off the middle, big lumps, the netting's folds, calmer at the walls"""
+    r0 = rho(x, y); r = rho(x - 0.04 * (1 - r0), y + 0.07 * (1 - r0))
+    dome = max(0.0, 1 - min(1.0, r) ** 2.2) ** 0.55
+    b1, b2, b3, _ = crumple(x, y)
+    lumps = 0.050 * nz(x * 1.9, y * 1.9, 5.0) + 0.02 * nz(x * 3.7, y * 3.7, 2.4)
+    folds = 0.135 * b1 ** 0.8 + 0.055 * b2 + 0.014 * b3 - 0.075
+    z = (0.19 * dome + (lumps + folds) * (0.35 + 0.65 * dome)) * smooth(1.0, 0.93, r0)
+    return z if raw else G_EDGE + z * G_SCALE[0]
 def heap_n(x, y):
-    e = 0.01; dx = (heap_h(x + e, y) - heap_h(x - e, y)) / (2 * e); dy = (heap_h(x, y + e) - heap_h(x, y - e)) / (2 * e)
+    e = 0.006; dx = (heap_h(x + e, y) - heap_h(x - e, y)) / (2 * e); dy = (heap_h(x, y + e) - heap_h(x, y - e)) / (2 * e)
     return V((-dx, -dy, 1)).normalized()
+def net_mix(x, y):
+    # two nets, a green and a blue, folded into each other: the colour changes mostly at the creases between the bunches
+    wx, wy = warp(x * 1.3, y * 1.3); n1 = crumple(x, y)[3]
+    return smooth(-0.05, 0.05, 0.55 * n1 + 0.45 * nz(wx * 2.4 + 4, wy * 2.4, 2.2) + 0.06)
 def net_col(x, y):
-    b = smooth(-0.12, 0.12, nz(x * 2.0 + 4, y * 2.0, 2.2) + 0.15)
-    c = lerp3(NET_G, NET_B, b)
-    k = 1.0 + 0.10 * nz(x * 9, y * 9, 0.4)
-    return mul3(c, k)
+    c = lerp3(NET_G, NET_B, net_mix(x, y))
+    return mul3(c, 1.0 + 0.08 * nz(x * 11, y * 11, 0.4))
 
 def garn():
-    M = TM('garn'); NU, NV = 27, 33; G = []
+    M = TM('garn'); NU, NV = 36, 44; G = []
+    # scale the mound so its top is at G_TOP
+    hmax = max(heap_h(*squircle(-1 + 2 * i / 59, -1 + 2 * j / 59, GA, GB), raw=True) for i in range(60) for j in range(60))
+    G_SCALE[0] = (G_TOP - G_EDGE) / hmax
     for i in range(NU):
         row = []
         for j in range(NV):
             u = -1 + 2 * i / (NU - 1); v = -1 + 2 * j / (NV - 1); x, y = squircle(u, v, GA, GB)
             edge = i in (0, NU - 1) or j in (0, NV - 1)
-            z = G_EDGE + 0.012 * nz(x * 6, y * 6, 2) if edge else heap_h(x, y)
-            col = net_col(x, y)
-            # the crests of the folds catch the light (monofilament), the creases are darker (and the AO deepens them)
-            f = ridge(x * 5.0 + 0.3 * nz(x * 2, y * 2, 1), y * 5.0, 11.3)
-            k = 0.82 + 0.45 * f ** 1.5
-            row.append(M.v((x, y, z), mul3(col, k / 0.5)))
+            z = G_EDGE + 0.010 * nz(x * 6, y * 6, 2) if edge else heap_h(x, y)
+            # the bunches catch the light (monofilament), the creases between them are darker (the AO deepens them)
+            b1, b2, _, _ = crumple(x, y)
+            k = 0.55 + 0.60 * smooth(0.0, 0.50, b1) * (0.65 + 0.35 * smooth(0.0, 0.5, b2))
+            row.append(M.v((x, y, z), mul3(net_col(x, y), k / 0.5)))
         G.append(row)
     for i in range(NU - 1):
         for j in range(NV - 1):
@@ -553,14 +591,13 @@ def garn():
     ring = [G[i][0] for i in range(NU)] + [G[NU - 1][j] for j in range(1, NV)] + [G[i][NV - 1] for i in range(NU - 2, -1, -1)] + [G[0][j] for j in range(NV - 2, 0, -1)]
     low = []
     for v in ring:
-        x, y = v.co.x, v.co.y; low.append(M.v((x * GA0 / GA, y * GB0 / GB, G_Y0), mul3(net_col(x, y), 0.6 / 0.5)))
-    n = len(ring); cen = M.v((0, 0, G_Y0), (0.8, 0.8, 0.8))
-    for k in range(n):
-        k1 = (k + 1) % n; c = (ring[k].co + low[k1].co) / 2
-        M.f([ring[k], ring[k1], low[k1], low[k]], C['net'], out=V((c.x, c.y, 0)))
-        M.f([cen, low[k1], low[k]], C['net'], out=(0, 0, -1))
+        x, y = v.co.x, v.co.y; low.append(M.v((x * GA0 / GA, y * GB0 / GB, G_Y0), mul3(net_col(x, y), 0.5 / 0.5)))
+    n = len(ring); cen = M.v((0, 0, G_Y0), (0.6, 0.6, 0.6))
+    for k in range(0, n, 2):          # every other edge vertex down the side is enough, nobody sees it in the tub
+        k2 = (k + 2) % n; c = (ring[k].co + low[k2].co) / 2
+        M.f([ring[k], ring[k + 1], ring[k2], low[k2], low[k]], C['net'], out=V((c.x, c.y, 0)))
+        M.f([cen, low[k2], low[k]], C['net'], out=(0, 0, -1))
     rng = random.Random(5)
-    # draped meshes of the netting: two families of lines crossing in diamonds, flat strips on the surface
     def strip(pts, w, tintf):
         vs = []
         for k, p in enumerate(pts):
@@ -568,58 +605,80 @@ def garn():
             c = tintf(p); vs.append((M.v(p + sd * (w / 2), c), M.v(p - sd * (w / 2), c), nrm))
         for k in range(len(vs) - 1):
             M.f([vs[k][0], vs[k][1], vs[k + 1][1], vs[k + 1][0]], C['mono'], out=vs[k][2])
-    def surf(x, y, lift=0.003): return V((x, y, heap_h(x, y) + lift))
+    def surf(x, y, lift=0.0025): return V((x, y, heap_h(x, y) + lift))
     def light(p):
-        c = net_col(p.x, p.y); return tuple(min(0.95, c[k] * 1.5 + 0.18) / 0.5 for k in range(3))
-    for pc in range(5):
+        c = net_col(p.x, p.y); return tuple(min(0.92, c[k] * 1.35 + 0.10) / 0.5 for k in range(3))
+    # meshes of the netting where it lies spread over a bunch: a warped lattice of elongated diamonds (bars of 3.5 cm), each
+    # bar a thin strip on the surface; cut off at a ragged edge
+    for pc in range(7):
         while True:
-            cx = rng.uniform(-0.28, 0.28); cy = rng.uniform(-0.36, 0.36)
-            if rho(cx, cy) < 0.72: break
+            cx = rng.uniform(-0.30, 0.30); cy = rng.uniform(-0.38, 0.38)
+            if rho(cx, cy) < 0.75: break
         ang = rng.uniform(0, math.pi); ea = V((math.cos(ang), math.sin(ang), 0)); eb = V((-math.sin(ang), math.cos(ang), 0))
-        A, B = rng.uniform(0.13, 0.20), rng.uniform(0.08, 0.13); sp = 0.036
-        for fam in (-1, 1):
-            dl = (ea * math.cos(math.radians(30)) + eb * (fam * math.sin(math.radians(30)))).normalized(); dp = V((-dl.y, dl.x, 0))
-            for q in range(-6, 7):
+        A, B = rng.uniform(0.09, 0.14), rng.uniform(0.06, 0.09); half = math.radians(rng.uniform(22, 34)); bar = 0.035; sd = rng.random() * 9
+        def lat(i, j):      # the knot (i, j): along the patch's axis and across, warped
+            u = (i + j) * bar * math.cos(half); v = (i - j) * bar * math.sin(half)
+            p = V((cx, cy, 0)) + ea * u + eb * v
+            return p + V((0.012 * nz(p.x * 9, p.y * 9, sd), 0.012 * nz(p.x * 9, p.y * 9, sd + 3), 0))
+        def inside(p):
+            q = p - V((cx, cy, 0)); du = q.dot(ea) / A; dv = q.dot(eb) / B
+            return du * du + dv * dv < 1 + 0.25 * nz(p.x * 14, p.y * 14, sd) and rho(p.x, p.y) < 0.9
+        nn = 9
+        for fam in (0, 1):
+            for q in range(-nn, nn + 1):
                 pts = []
-                for k in range(-12, 13):
-                    p = V((cx, cy, 0)) + dp * (q * sp) + dl * (k * 0.022)
-                    du = (p - V((cx, cy, 0))).dot(ea) / A; dv = (p - V((cx, cy, 0))).dot(eb) / B
-                    if du * du + dv * dv > 1 or rho(p.x, p.y) > 0.9:
-                        if len(pts) > 2: strip(pts, 0.0026, light)
-                        pts = []; continue
-                    wob = 0.004 * nz(p.x * 30, p.y * 30, fam)
-                    pts.append(surf(p.x + dp.x * wob, p.y + dp.y * wob))
-                if len(pts) > 2: strip(pts, 0.0026, light)
-    # loose strands of netting across the heap
-    for s in range(16):
-        x, y = rng.uniform(-0.3, 0.3), rng.uniform(-0.4, 0.4); h = rng.uniform(0, 2 * math.pi); pts = []
-        for k in range(18):
+                for k in range(-nn, nn + 1):
+                    p = lat(k, q) if fam == 0 else lat(q, k)
+                    if inside(p): pts.append(surf(p.x, p.y))
+                    else:
+                        if len(pts) > 1: strip(pts, 0.0017, light)
+                        pts = []
+                if len(pts) > 1: strip(pts, 0.0017, light)
+    # bunched netting: strands along the creases and over the bunches
+    for s_ in range(26):
+        x, y = rng.uniform(-0.33, 0.33), rng.uniform(-0.43, 0.43); h = rng.uniform(0, 2 * math.pi); pts = []
+        for k in range(14):
             if rho(x, y) > 0.9: break
-            pts.append(surf(x, y, 0.0025)); h += rng.uniform(-0.35, 0.35); x += 0.024 * math.cos(h); y += 0.024 * math.sin(h)
-        if len(pts) > 3: strip(pts, 0.0022, light)
-    # the float line (one side) and the lead line (the other), folded back and forth as hauled, in and out of the netting
-    def rope(side, r, m, seed, nleg):
-        rr = random.Random(seed); cps = []
-        for leg in range(nleg):
-            y = (0.37 + rr.uniform(-0.04, 0.03)) * (1 if leg % 2 else -1); x = side * (0.31 - 0.25 * leg / (nleg - 1)) + rr.uniform(-0.03, 0.03)
-            cps.append((x, y))
-            if leg < nleg - 1: cps.append((x + side * rr.uniform(-0.07, 0.07), rr.uniform(-0.12, 0.12)))
-        P = catmull([(x, y, 0) for x, y in cps], 90); pts = []; depth = []
-        for k, p in enumerate(P):
-            t = k / (len(P) - 1)
-            dv = 0.9 * nz(t * 9.0, seed, 0.5) + 0.25                 # > 0 lying on the net, < 0 under it
-            d = r * (1.0 if dv > 0 else 1.0 + 4.0 * min(1.0, -dv * 2))
-            z = heap_h(p.x, p.y) + (r * 0.9 if dv > 0 else -d + r)
-            pts.append(V((p.x, p.y, z))); depth.append(dv)
-        tube_tm(M, pts, r, m, sides=6)
-        return pts, depth
-    fl, fd = rope(1, 0.0065, C['float'], 3, 5)
-    rope(-1, 0.0050, C['lead'], 8, 5)
+            pts.append(surf(x, y, 0.002)); h += rng.uniform(-0.45, 0.45); x += 0.026 * math.cos(h); y += 0.026 * math.sin(h)
+        if len(pts) > 3: strip(pts, 0.0015, light)
+    # the float line and the lead line: meandering in loose loops as they came in, the float line mostly on one side and the
+    # lead line on the other, diving under the netting and out again; only what shows is built
+    def rope(side, r, m, seed, steps):
+        rr = random.Random(seed); x = side * 0.22; y = rr.uniform(-0.3, 0.3); h = rr.uniform(0, 2 * math.pi); XY = []
+        for k in range(steps):
+            t = k / steps
+            cur = 0.13 * nz(t * 7.0, seed, 0.3) + 0.07 * nz(t * 17.0, seed, 4.1)      # the curvature wanders
+            # steer away from the walls and towards the line's own side
+            to = V((side * 0.20 - x, -y * 0.3, 0)); want = math.atan2(to.y, to.x)
+            pull = smooth(0.70, 0.88, rho(x, y)) * 0.45 + 0.03
+            dh = (want - h + math.pi) % (2 * math.pi) - math.pi
+            h += cur + pull * dh; x += 0.040 * math.cos(h); y += 0.040 * math.sin(h); XY.append(V((x, y, 0)))
+        XY = catmull(XY, steps * 2)                                    # a smooth line through the walk, 2 cm a step
+        for _ in range(3): XY = [XY[0]] + [(XY[k - 1] + XY[k] * 2 + XY[k + 1]) / 4 for k in range(1, len(XY) - 1)] + [XY[-1]]
+        P = []; vis = []
+        for k, q in enumerate(XY):
+            t = k / len(XY)
+            dv = 0.85 * nz(t * 13.0, seed, 0.5) + 0.12                 # > 0 lying on the net, < 0 under it
+            z = heap_h(q.x, q.y) + (r * 0.85 if dv > 0 else r * (0.85 - 6.0 * min(1.0, -dv * 2)))
+            P.append(V((q.x, q.y, z))); vis.append(dv)
+        steps = len(P)
+        runs = []; cur_ = []
+        for k in range(steps):
+            if vis[k] > -0.12: cur_.append(k)
+            elif cur_: runs.append(cur_); cur_ = []
+        if cur_: runs.append(cur_)
+        for run in runs:
+            if len(run) < 2: continue
+            k0 = max(0, run[0] - 1); k1 = min(steps - 1, run[-1] + 1)
+            tube_tm(M, P[k0:k1 + 1:2] if k1 - k0 > 3 else P[k0:k1 + 1], r, m, sides=5)
+        return P, vis
+    fl, fd = rope(1, 0.0055, C['float'], 3, 95)
+    rope(-1, 0.0045, C['lead'], 8, 95)
     # small floats threaded on the float line where it lies on top
     last = -99
-    for k in range(4, len(fl) - 4):
-        if fd[k] > 0.15 and k - last > 9:
-            t = (fl[k + 1] - fl[k - 1]).normalized(); ellipsoid(M, fl[k] + heap_n(fl[k].x, fl[k].y) * 0.006, t, (0.036, 0.017), C['floats'], seg=8, rings=5); last = k
+    for k in range(3, len(fl) - 3):
+        if fd[k] > 0.25 and k - last > 13:
+            t = (fl[k + 1] - fl[k - 1]).normalized(); ellipsoid(M, fl[k] + heap_n(fl[k].x, fl[k].y) * 0.005, t, (0.034, 0.016), C['floats'], seg=8, rings=5); last = k
     return M.done(65)
 
 # ======================================================================================================================
@@ -662,7 +721,7 @@ def crate(name, L, W, H, post, bh, seed):
     # the lid: boards along the length, three battens across on top of them
     for b0, b1 in boards(W, 0.13, gap, rng):
         cbox(M, ((b0 + b1) / 2, 0, Hc + lt / 2), ((b1 - b0) / 2, hl, lt / 2), m, ch=0.0025, tint=wood_tint(rng), grain=1, vnoise=0.07, seed=rng.random() * 9)
-    for y in (-(hl - post / 2 - 0.01), 0.0, hl - post / 2 - 0.01):
+    for y in (-(hl - bh / 2 - 0.004), 0.0, hl - bh / 2 - 0.004):
         cbox(M, (0, y, Hc + lt * 1.5), (hw, bh / 2, lt / 2), m, ch=0.003, tint=mul3(wood_tint(rng), 0.97), grain=0, vnoise=0.06, seed=rng.random() * 9)
     return M.done(30)
 
@@ -690,12 +749,13 @@ def floor(z=0.0, s=6.0, rgb=(0.40, 0.41, 0.40)):
     bm = bmesh.new(); bm.faces.new([bm.verts.new(p) for p in ((-s, -s, z), (s, -s, z), (s, s, z), (-s, s, z))])
     return obj_from_bm('floor', bm, [mat('deck', rgb, 0.2)])
 
-def tub_outline(front=True):
-    """a simple open box, 1.2 x 1.0 x 0.74 outside and 1.06 x 0.86 inside, to judge the heap's fit"""
-    M = TM('tubline'); m = mat('tubblue', (0.12, 0.30, 0.58), 0.4); w = 0.07
-    cbox(M, (0, 0, 0.025), (0.6, 0.5, 0.025), m, ch=0.005)
-    for sx in (-1, 1): cbox(M, (sx * 0.465, 0, 0.37), (0.035, 0.5, 0.37), m, ch=0.005)
-    for sy in ((-1, 1) if front else (1,)): cbox(M, (0, sy * 0.565, 0.37), (0.43, 0.035, 0.37), m, ch=0.005)
+def tub_outline(cut=False):
+    """a simple open box, 1.0 x 1.2 x 0.74 outside and 0.86 x 1.06 inside (long along y), to judge the heap's fit; cut leaves the
+    side at -x out"""
+    M = TM('tubline'); m = mat('tubblue', (0.12, 0.30, 0.58), 0.4)
+    cbox(M, (0, 0, 0.025), (0.5, 0.6, 0.025), m, ch=0.005)
+    for sx in ((1,) if cut else (-1, 1)): cbox(M, (sx * 0.465, 0, 0.37), (0.035, 0.6, 0.37), m, ch=0.005)
+    for sy in (-1, 1): cbox(M, (0, sy * 0.565, 0.37), (0.43, 0.035, 0.37), m, ch=0.005)
     return M.done(30)
 
 def main():
@@ -711,6 +771,11 @@ def main():
         for p in bpy.context.scene.objects:
             if p.type == 'MESH': p.hide_render = not (p is o or p in others)
         bake_ao(o, samples=samples, distance=dist)
+        # one value per vertex (the mean of its corners): smoother, and the corners of a smooth surface share their vertex
+        me = o.data; lay = me.color_attributes['AO']; acc = {}
+        for l in me.loops: acc.setdefault(l.vertex_index, []).append(lay.data[l.index].color[0])
+        for l in me.loops:
+            a = acc[l.vertex_index]; c = sum(a) / len(a); lay.data[l.index].color = (c, c, c, 1.0)
     bake(LR, [S], 24, 0.06); bake(LG, [S], 24, 0.06)
     bake(NET, [tl], 24, 0.12)
     for o in (KA, KS, PA): bake(o, [], 16, 0.10)
@@ -753,7 +818,11 @@ def renders(objs, tl, fl):
     if want('stamp'):
         show(objs, S, LR, KR, fl); camera((0.95, -0.85, 1.05), (0.0, 0.0, 0.22), lens=50); render(os.path.join(OUT, 'rigg_stamp.png'))
         camera((0.0, -0.18, 1.25), (0.0, 0.0, 0.2), lens=50); render(os.path.join(OUT, 'rigg_stamp_top.png'))
+    if want('hooks'):
+        show(objs, S, LR, KR, fl); camera((0.62, -0.30, 0.62), (0.18, 0.0, 0.33), lens=50); render(os.path.join(OUT, 'rigg_hooks.png'))
+    if want('stampg'):
         show(objs, S, LG, fl); camera((-0.9, -0.95, 1.0), (0.0, 0.0, 0.2), lens=50); render(os.path.join(OUT, 'rigg_stamp_g.png'))
+    if want('empty'):
         show(objs, S, fl); camera((0.8, -0.95, 0.95), (0.0, 0.0, 0.18), lens=50); render(os.path.join(OUT, 'rigg_stamp_empty.png'))
     if want('stamps'):
         extra = [dup(S, (0.52, 0, 0)), dup(LR, (0.52, 0, 0), (1, 1, 0.47)), dup(KR, (0.52, 0, 0)), dup(S, (1.04, 0, 0)), dup(LG, (1.04, 0, 0)),
@@ -761,15 +830,17 @@ def renders(objs, tl, fl):
         show(objs, S, LR, KR, fl, *extra); camera((1.9, -1.55, 1.55), (0.55, 0.15, 0.2), lens=40); render(os.path.join(OUT, 'rigg_stamps.png'))
         for o in extra: bpy.data.objects.remove(o, do_unlink=True)
     if want('garn'):
-        NET = objs['garn']; tc = tub_outline(front=False); tc.location = (2.0, 0, 0); n2 = dup(NET, (2.0, 0, 0)); n3 = dup(NET, (3.4, 0, 0), (1, 1, 0.55)); t3 = dup(tl, (3.4, 0, 0))
-        show(objs, NET, tl, fl, tc, n2, n3, t3); camera((1.7, -3.6, 2.6), (1.75, 0, 0.55), lens=38); render(os.path.join(OUT, 'rigg_garn.png'))
-        show(objs, NET, fl); camera((0.9, -1.3, 1.9), (0.0, 0.0, 0.75), lens=40); render(os.path.join(OUT, 'rigg_garn_near.png'))
-        for o in (tc, n2, n3, t3): bpy.data.objects.remove(o, do_unlink=True)
+        NET = objs['garn']; tc = tub_outline(cut=True); tc.location = (0, 0, 0); NET.location = (0, 0, 0)
+        tf = dup(tl, (0, -1.45, 0)); nf = dup(NET, (0, -1.45, 0)); tc3 = dup(tc, (0, 1.45, 0)); n3 = dup(NET, (0, 1.45, 0), (1, 1, 0.55))
+        show(objs, NET, tc, fl, tf, nf, tc3, n3); camera((-2.9, -1.1, 3.1), (0, 0, 0.45), lens=32); render(os.path.join(OUT, 'rigg_garn.png'))
+        camera((-1.05, -0.95, 2.25), (0.0, 0.0, 0.80), lens=40); render(os.path.join(OUT, 'rigg_garn_near.png'))
+        for o in (tc, tf, nf, tc3, n3): bpy.data.objects.remove(o, do_unlink=True)
     if want('kasse'):
         KA, KS, PA = objs['kasse'], objs['kasse_s'], objs['pall']
         KA.location = (0, 0, 0); KS.location = (1.25, -0.2, 0); PA.location = (-1.25, 0, 0); k2 = dup(KA, (-1.25, 0, 0.144)); p2 = dup(PA, (1.25, 1.1, 0))
         show(objs, KA, KS, PA, fl, k2, p2); camera((2.6, -3.6, 2.4), (0.0, 0.1, 0.4), lens=35); render(os.path.join(OUT, 'rigg_kasser.png'))
         camera((1.1, -1.5, 1.2), (0.0, 0.0, 0.45), lens=45); render(os.path.join(OUT, 'rigg_kasse_near.png'))
+        camera((2.35, -0.05, 0.75), (1.25, 1.1, 0.05), lens=40); render(os.path.join(OUT, 'rigg_pall.png'))
         for o in (k2, p2): bpy.data.objects.remove(o, do_unlink=True)
 
 if __name__ == '__main__':

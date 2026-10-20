@@ -2004,21 +2004,26 @@ const G3 = (() => {
   // the gear as it lies on deck (the user's wish 19.10.2026, tools/deck/rigg.py): the nets heaped in a 1000 l tub as high as the share
   // of them aboard; the line coiled in its tubs, side by side, the hooks hung on the rim while it is baited; the old box and tubs where
   // the kit is not in the page
-  function drawNetTub(BMrel, at, fill){ const T = kit('fish', 'kar1000'), N = kit('rig', 'garn'), M = chain(BMrel, M4.T(at[0], at[1], at[2]));
+  // where the rig's tubs stand: the model's places (kit.garn, kit.stamps), the hand boats' stack, or by the rail aft
+  function rigAt(G, kind, d){ const K = G.kit && G.kit[kind === 'garn' ? 'garn' : 'stamps']; if (K) return {at:K.at, ry:K.ry || 0};
+    const sx = G.beam / 2, DZ = d.z - 0.6; return G.hand && SKA.stack ? {at:[SKA.stack[0] + (kind === 'garn' ? 0.1 : 0), d.y, SKA.stack[2]], ry:0} : {at:[sx * (kind === 'garn' ? 0.3 : 0.25), d.y, DZ], ry:0}; }
+  function drawNetTub(BMrel, at, fill, ry){ const T = kit('fish', 'kar1000'), N = kit('rig', 'garn'), M = chain(BMrel, M4.T(at[0], at[1], at[2]), M4.RY(ry || 0));
     if (T && N){ drawN(T, M); if (fill > 0.02) drawN(N, chain(M, M4.S(1, 0.2 + 0.95 * fill, 1))); return; }
     drawN(GB.bin, chain(M, M4.S(1, 0.3 + 0.7 * fill, 1))); }
-  function drawLineTubs(BMrel, at, n, baited, green){ const T = kit('rig', 'stamp'), Lr = kit('rig', green ? 'line_g' : 'line_r'), K = kit('rig', 'kroker');
-    for (let i = 0; i < Math.min(8, n); i++){ const p = T ? [at[0] - (i % 2) * 0.52, at[1], at[2] + Math.floor(i / 2) * 0.5] : [at[0] - (i % 2) * 0.6, at[1] + Math.floor(i / 2) * 0.33, at[2] + (Math.floor(i / 2) % 2) * 0.1];
-      if (!T){ drawN(GB.tub, chain(BMrel, M4.T(p[0], p[1], p[2]))); continue; }
-      const M = chain(BMrel, M4.T(p[0], p[1], p[2]), M4.RY(hash(i * 3 + 1) * 6.28)); drawN(T, M); if (Lr) drawN(Lr, M); if (K && i < baited) drawN(K, M); } }
+  // the line tubs (tools/deck/rigg.py): two across and up to four along from the place, each with its coil, the baited ones with the hooks
+  // hung round the rim
+  function drawLineTubs(BMrel, at, n, baited, green, ry){ const T = kit('rig', 'stamp'), Lr = kit('rig', green ? 'line_g' : 'line_r'), K = kit('rig', 'kroker'), M0 = chain(BMrel, M4.T(at[0], at[1], at[2]), M4.RY(ry || 0));
+    for (let i = 0; i < Math.min(8, n); i++){
+      if (!T){ drawN(GB.tub, chain(M0, M4.T(-(i % 2) * 0.6, Math.floor(i / 2) * 0.33, (Math.floor(i / 2) % 2) * 0.1))); continue; }
+      const M = chain(M0, M4.T((i % 2) * 0.52, 0, Math.floor(i / 2) * 0.5), M4.RY(hash(i * 3 + 1) * 6.28)); drawN(T, M); if (Lr) drawN(Lr, M); if (K && i < baited) drawN(K, M); } }
   // the gear aboard when the boat is rigged for it and not working it: the nets left aboard, the line tubs aboard (core/10-gear.js)
   function drawRigRest(BMrel, G, d){
     const b = S.boat, rig = typeof rigOf === 'function' ? rigOf() : b.rig, sx = G.beam / 2, DZ = d.z - 0.6, K = G.kit || {};
     if (b.gop && b.status === 'fishing') return; if (!GB) buildGear();
-    if (rig === 'garn'){ const aboard = (S.pgear && S.pgear.nets || []).reduce((a, l) => a + (l.n || 1), 0), out = (typeof mySets === 'function' ? mySets() : []).filter(x => x.kind === 'garn').reduce((a, x) => a + (x.n || 0), 0);
-      if (aboard + out > 0) drawNetTub(BMrel, K.garn ? K.garn.at : [sx * 0.3, d.y, DZ], aboard / (aboard + out)); }
+    if (rig === 'garn'){ const aboard = (S.pgear && S.pgear.nets || []).reduce((a, l) => a + (l.n || 1), 0), out = (typeof mySets === 'function' ? mySets() : []).filter(x => x.kind === 'garn').reduce((a, x) => a + (x.n || 0), 0), R = rigAt(G, 'garn', d);
+      if (aboard + out > 0) drawNetTub(BMrel, R.at, aboard / (aboard + out), R.ry); }
     if (rig === 'line'){ const L = S.pgear && S.pgear.lines || {}, n = (L.hyse ? L.hyse.n : 0) + (L.bank ? L.bank.n : 0), bt = (L.hyse ? L.hyse.baited : 0) + (L.bank ? L.bank.baited : 0);
-      if (n > 0) drawLineTubs(BMrel, K.stamps ? K.stamps.at : [sx * 0.25, d.y, DZ], n, bt, false); }
+      const R = rigAt(G, 'line', d); if (n > 0) drawLineTubs(BMrel, R.at, n, bt, false, R.ry); }
   }
   // ---- the kit on the model's places (G.kit, from the boat's model; tools/deck): the life-saving gear the rules ask for (V.lsa,
   // 02-species-gear.js lsaOf), the radar that is bought, the freight on deck in crates and the crane. Nothing is drawn where the
@@ -2346,7 +2351,7 @@ const G3 = (() => {
       HAULA += v * clamp(t - HAULT, 0, 0.1) / HM.r; HAULT = t;
       litSetup(VP); drawLit(HM.frame, at([0, 0, 0])); drawLit(HM.sheave, chain(at(HM.ax), M4.RZ(HAULA))); drawLit(HM.stripper, chain(at(HM.st), M4.RZ(-HAULA * HM.r / (g.kind === 'garn' ? 0.06 : 0.08))));
       nSetup(VP);
-      if (setting) drawSetting(BMrel, t, g, G, [sx * 0.3, d.y, DZ], 0.45); else {
+      if (setting) drawSetting(BMrel, t, g, G, rigAt(G, g.kind, d).at, 0.45); else {
       const path = HM.path.map(q => [P0[0] + q[0], P0[1] + q[1], P0[2] + q[2]]); path[0] = W0.slice();
       const garn = g.kind === 'garn', rope = garn ? GB.net : GB.float;
       for (let i = 1; i < path.length; i++) seg(path[i - 1], path[i], garn ? 0.03 : 0.006, rope, i === 1 ? 0.25 : 0);
@@ -2364,22 +2369,22 @@ const G3 = (() => {
         if (garn){ drawN(GB.float, chain(BMrel, limbM([p[0], p[1] + 0.05, p[2]], [q[0], q[1] + 0.05, q[2]], 0.035))); if (s < L[0] && Math.floor(s + HAULA * HM.r) % 3 === 0) drawN(GB.net, chain(BMrel, limbM(p, [p[0], p[1] - 0.45, p[2]], 0.01))); }
         else drawN(GB.float, chain(BMrel, limbM(p, [p[0], p[1] - 0.25, p[2] + 0.02], 0.004))); }
       }
-      if (g.kind === 'garn'){ const n = g.op === 'haul' ? g.done : g.n - g.done; drawNetTub(BMrel, [sx * 0.3, d.y, DZ], clamp(n / Math.max(1, g.n), 0, 1)); }
-      else { const n = g.op === 'haul' ? g.done : g.n - g.done; drawLineTubs(BMrel, [sx * 0.25, d.y, DZ], n, g.op === 'set' ? n : 0, false); }
+      const R = rigAt(G, g.kind, d), n = g.op === 'haul' ? g.done : g.n - g.done;
+      if (g.kind === 'garn') drawNetTub(BMrel, R.at, clamp(n / Math.max(1, g.n), 0, 1), R.ry); else drawLineTubs(BMrel, R.at, n, g.op === 'set' ? n : 0, false, R.ry);
     } else if (g.kind === 'garn'){
       // float line on top, lead line below, and the mesh between them moving with the net
-      if (setting) drawSetting(BMrel, t, g, G, SKA.stack, -0.55); else {
+      if (setting) drawSetting(BMrel, t, g, G, rigAt(G, 'garn', d).at, -0.55); else {
       seg([HP[0], HP[1] + 0.12, HP[2]], [W0[0], W0[1] + 0.3, W0[2]], 0.012, GB.float, 0.15); seg([HP[0], HP[1] - 0.12, HP[2]], W0, 0.01, GB.net, 0.25);
       const ph = (t * (turning ? 0.5 : 0.15)) % 0.125, HF = haulFish(g), id0 = Math.floor(t * (turning ? 0.5 : 0.15) / 0.125);
       for (let u = ph, k = 0; u < 1; u += 0.125, k++){ const A = [HP[0] + (W0[0] - HP[0]) * u, HP[1] + 0.12 + (W0[1] + 0.3 - HP[1] - 0.12) * u - 0.15 * 4 * u * (1 - u), HP[2] + (W0[2] - HP[2]) * u], B2 = [A[0], A[1] - 0.24 - 0.1 * u, A[2]]; drawN(GB.net, chain(BMrel, limbM(A, B2, 0.004)));
         if (HF && u < 0.85 && hash((k - id0) * 7 + 13) < HF.p * 3) drawN(fishOf(HF.sp(hash((k - id0) * 3 + 1))), chain(BMrel, M4.T(B2[0], B2[1] - 0.1, B2[2]), M4.RX(Math.PI / 2), M4.S(0.45))); }
       }
       const n = g.op === 'haul' ? g.done : g.n - g.done, fill = clamp(n / Math.max(1, g.n), 0, 1);
-      drawNetTub(BMrel, [skiff ? SKA.stack[0] + 0.1 : sx * 0.3, d.y, skiff ? SKA.stack[2] : DZ], fill);
+      const R = rigAt(G, 'garn', d); drawNetTub(BMrel, R.at, fill, R.ry);
     } else if (g.kind === 'line'){
-      if (setting) drawSetting(BMrel, t, g, G, SKA.stack || [0, d.y, 0], -0.55); else seg(HP, W0, 0.008, GB.float, 0.2);
+      const R = rigAt(G, 'line', d); if (setting) drawSetting(BMrel, t, g, G, R.at, -0.55); else seg(HP, W0, 0.008, GB.float, 0.2);
       const n = g.op === 'haul' ? g.done : g.n - g.done;
-      drawLineTubs(BMrel, [skiff ? SKA.stack[0] : sx * 0.25, d.y, skiff ? SKA.stack[2] : DZ], n, g.op === 'set' ? n : 0, false);
+      drawLineTubs(BMrel, R.at, n, g.op === 'set' ? n : 0, false, R.ry);
     } else drawPots(BMrel, t, g, G, HP, sx, d, skiff, seg);
     // those on «Haling» in the work chains (the skipper too when it is his job; he then leaves the wheel, gopMe): the first at the
     // hauler taking the gear in, the next clearing it at the end of the tray, a third stacking it aft (the skiff's fisher is drawn with
