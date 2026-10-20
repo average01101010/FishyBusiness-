@@ -14,12 +14,12 @@ window.JIGG = (() => {
   // your share in kg a real second: as fish() counts it, at the game's rate (game seconds a real second)
   function kgps(){
     const b = S.boat, H = S.t / 60, sh = jigMeShare(); if (sh <= 0) return 0;
-    const f = catchFactors(H, windAt(H), hsAt(b.pos, H)); let d = 0; for (const sp of SP) d += density(sp, b.pos, H) * luck(sp) * targetF(sp, H);
+    const f = catchFactors(H, windAt(H), hsAt(b.pos, H)); let d = 0; for (const sp of SP) d += density(sp, b.pos, H) * luck(sp) * jigTake(sp, H);   // as fish() takes them: the jig factor (Greenland halibut next to none) and the tackle
     return 30 * f.eff * sh * d * f.wpen * (1 - f.cold) / 3600 * simRate();
   }
   // the next bite: about one fish a bite, 5 to 40 real seconds apart (4 to 8 on the first trip)
   function schedule(now){ if (S.tut && S.tut.catch){ tNext = now + (4 + Math.random() * 4) * 1000; return; } const k = kgps(), mean = clamp(3 / Math.max(1e-6, k), 5, 40); tNext = now + mean * (0.6 + Math.random() * 0.8) * 1000; }
-  function pick(){ const H = S.t / 60, w = SP.map(sp => [sp, density(sp, S.boat.pos, H) * luck(sp) * targetF(sp, H)]), tot = w.reduce((a, x) => a + x[1], 0) || 1; let r = Math.random() * tot, sp = w[0][0]; for (const [k, v] of w){ r -= v; if (r <= 0){ sp = k; break; } } return {sp, kg:sampleFish(sp, S.boat.pos, H)}; }
+  function pick(){ const H = S.t / 60, w = SP.map(sp => [sp, density(sp, S.boat.pos, H) * luck(sp) * jigTake(sp, H)]), tot = w.reduce((a, x) => a + x[1], 0) || 1; let r = Math.random() * tot, sp = w[0][0]; for (const [k, v] of w){ r -= v; if (r <= 0){ sp = k; break; } } return {sp, kg:sampleFish(sp, S.boat.pos, H)}; }
   function grade(off){ if (off == null) return 0.5; for (const [s, m] of GR) if (Math.abs(off) <= s) return m; return 0.5; }
   // the bite worth what came due since the last one, times the hit: whole fish until it is used up (the rest carries to the next)
   function land(m){
