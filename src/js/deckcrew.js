@@ -26,8 +26,11 @@ function crewSim(src){
   // ---- where a station is on the deck: a cell and the way to face there ----
   const near = (x, z, r) => ST.M.near(x, z, r || 1.5);
   function hauler(k){ const G = ST.G, HP = G.hauler || [1, 1, 0], d = G.deck || {z:0}, sx = (G.beam || 3) / 2, sg = HP[0] >= 0 ? 1 : -1;
-    const L = [[HP[0] - sg * 0.55, HP[2] + 0.2, 'coil', sg * Math.PI / 2], [HP[0] - sg * 1.25, HP[2] + 0.75, 'stack', sg * Math.PI * 0.6], [sx * 0.3 + 0.5, d.z - 0.4, 'stack', Math.PI]][Math.min(2, k)];
-    const c = near(L[0], L[1], 2.5); return c >= 0 ? {k:c, h:L[3], task:L[2]} : null; }
+    // a third and fourth hand stand side by side across the deck, 0.75 m apart (tilbakemelding #75: they stood inside each other)
+    const L = [[HP[0] - sg * 0.55, HP[2] + 0.2, 'coil', sg * Math.PI / 2], [HP[0] - sg * 1.25, HP[2] + 0.75, 'stack', sg * Math.PI * 0.6], [sx * 0.3 + 0.5 - (k - 2) * 0.75, d.z - 0.4, 'stack', Math.PI]][Math.min(2, k)];
+    const taken = new Set(A.filter(a => a.goal && a.kind === 'haling' && a.slot !== k).map(a => a.goal.k));
+    let c = near(L[0], L[1], 2.5); for (const dx of [-0.6, 0.6, -1.2, 1.2]){ if (c < 0 || !taken.has(c)) break; const q = near(L[0] + dx, L[1], 0.5); if (q >= 0 && !taken.has(q)) c = q; }
+    return c >= 0 ? {k:c, h:L[3], task:L[2]} : null; }
   function jigSpot(k){ const J = ST.jig; if (J && J.length){ const P = J[k % J.length], sg = P[0] >= 0 ? 1 : -1, c = near(P[0] - sg * 0.45, P[2], 1.2); if (c >= 0) return {k:c, h:sg * Math.PI / 2, task:'jig'}; }
     const sp = ST.PT['spot' + k] || ST.PT.spot0; return sp ? {k:sp.k, h:sp.h || 0, task:'jig'} : null; }
   // ---- what the game says: everyone's station this minute, and the boat's state ----
