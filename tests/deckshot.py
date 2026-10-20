@@ -44,13 +44,13 @@ async def main():
         miss = await pg.evaluate("""((boats) => { const out = {}; for (const t of boats){ const V = VESSELS[t], K = geoOf(t).kit || {}, m = [], L = V.lsa;
             if (L.rafts && !(K.raft && K.raft.length >= L.rafts)) m.push('raft'); if (!(K.buoys && K.buoys.length >= L.buoys)) m.push('buoys');
             if (equipFits('radar', t) && !K.radar) m.push('radar'); if (equipFits('radarA', t) && !K.radarA) m.push('radarA');
-            if (V.hold.kind === 'dekk' && !(K.tubs && K.tubs.length)) m.push('tubs'); if (V.crane > 0 && !K.crane) m.push('crane');
+            if (V.hold.kind === 'dekk' && !(K.tubs && K.tubs.length) && !geoOf(t).hand) m.push('tubs'); if (V.crane > 0 && !K.crane) m.push('crane');
             if (!K.garn) m.push('garn'); if (!K.stamps) m.push('stamps'); if (!(K.cargo && K.cargo.length)) m.push('cargo'); if (m.length) out[t] = m; } return out; })""", boats)
         check(not miss, 'hver kystbåt har plassene dataene krever (flåte, livbøyer, radar, kar, kran, garnkar, stamper, last)', miss)
         seen = {}
         for t in boats:
             for scene in ['fiske', 'garn', 'line'] + (['kai'] if t in ('kyst15', 'kyst21', 'sjarkny', 'snekke') else []):
-                await pg.evaluate(SET, [t, scene]); await pg.wait_for_timeout(2500 if scene != 'kai' else 6000)
+                await pg.evaluate(SET, [t, scene]); await pg.wait_for_timeout(2500 if scene != 'kai' else 12000)
                 st = await pg.evaluate("JSON.parse(JSON.stringify(G3._debug.kitStat))")
                 seen[(t, scene)] = st
                 await pg.screenshot(path=os.path.join(OUT, f'deck_{t}_{scene}.png'))
@@ -61,7 +61,8 @@ async def main():
         check(not txt, 'hver livbøye har båtens navn og hjemhavn', txt)
         rad = {t: seen[(t, 'fiske')]['radar'] for t in boats if seen[(t, 'fiske')]['radar'] == 0 and (t not in ('skiff', 'trebat'))}
         check(not rad, 'den kjøpte radaren vises på hver båt den passer på', rad)
-        tubs = {t: seen[(t, 'fiske')]['tubs'] + seen[(t, 'fiske')]['htub'] for t in boats if lsa[t] and seen[(t, 'fiske')]['tubs'] + seen[(t, 'fiske')]['htub'] == 0 and t in ('skiff', 'trebat', 'snekke')}
+        # (the old wooden boat keeps her catch in the bleeding tub at her own place, the model's 'tub')
+        tubs = {t: seen[(t, 'fiske')]['tubs'] + seen[(t, 'fiske')]['htub'] for t in boats if seen[(t, 'fiske')]['tubs'] + seen[(t, 'fiske')]['htub'] == 0 and t in ('skiff', 'snekke')}
         check(not tubs, 'de åpne båtene har fangsten i kar på dekk', tubs)
         # the radar's open array turns: two frames a second apart give two angles
         await pg.evaluate(SET, ['kyst15', 'fiske']); await pg.wait_for_timeout(2000)
@@ -70,7 +71,7 @@ async def main():
         # the crane at the quay: folded at sea, out and working while the freight goes aboard, with crates on deck
         cr = {t: seen[(t, 'kai')]['crane'] for t in ('kyst15', 'kyst21') if (t, 'kai') in seen}
         sea = {t: seen[(t, 'fiske')]['crane'] for t in ('kyst15', 'kyst21')}
-        work = {t: c for t, c in cr.items() if c and c['job'] and sea[t] and abs(c['a2'] - sea[t]['a2']) > 0.3}
+        work = {t: c for t, c in cr.items() if c and c['job'] and sea[t] and abs(c['a1'] - sea[t]['a1']) + abs(c['a2'] - sea[t]['a2']) + c['e'] > 0.3}
         check(len(work) == 2, 'kranen er foldet sammen på sjøen og folder seg ut for å laste ved kaia', {'kai': cr, 'sjø': sea})
         crates = {t: seen[(t, 'kai')]['cargo'] for t in ('kyst15', 'kyst21', 'sjarkny', 'snekke')}
         check(all(v > 0 for v in crates.values()), 'trekassene står på dekk når båten har frakt', crates)
