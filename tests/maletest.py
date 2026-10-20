@@ -76,6 +76,14 @@ async def main():
         check(rg['r0']['f'] == 'T' and rg['r0']['k'] == 'LK' and not rg['used'] and rg['card'] and rg['refused'] and rg2['r']['n'] == rg['n'] and want in rg2['papers']
               and rg['back'] in (want, 'T-%d-LK' % rg['r0']['n']) and rg['oe'] == 'N-12-BØ' and rg['strips'] >= rg['types'] - 1,
               "the registration mark: Senja's letters (T-..-LK) and a number no real boat there has; a real boat's number is refused, one's own goes on the boat and the permit; it travels to the others", {'rg': rg, 'r': rg2['r']})
+        # the name and the mark never on each other (tilbakemelding #76: on the havsjark the model's name boards lay where the mark stands on
+        # the bows): on every type the side name strips and the mark's strips do not overlap on the same side, beyond their margins
+        lap = await pg.evaluate("""(() => { const out = {}, box = s => { const P = s[0].concat(s[1]); return {sd:Math.sign(P.reduce((a, p) => a + p[0], 0)), y0:Math.min(...P.map(p => p[1])), y1:Math.max(...P.map(p => p[1])), z0:Math.min(...P.map(p => p[2])), z1:Math.max(...P.map(p => p[2]))}; };
+          for (const t of Object.keys(VESSELS)){ const N = nameStrips(t), M = markStrips(t); if (!N || !M) continue;
+            for (const n of N.map(box)) for (const m of M.map(box)) if (n.sd === m.sd && n.z1 - n.z0 > 0.05 && Math.min(n.z1, m.z1) - Math.max(n.z0, m.z0) > 0.05 && Math.min(n.y1, m.y1) - Math.max(n.y0, m.y0) > 0.08)
+              out[t] = Math.round((Math.min(n.z1, m.z1) - Math.max(n.z0, m.z0)) * 100) / 100 + ' x ' + Math.round((Math.min(n.y1, m.y1) - Math.max(n.y0, m.y0)) * 100) / 100 + ' m'; }
+          return out; })()""")
+        check(not lap, 'the name and the registration mark never lie on each other on any hull', lap)
         # the company logo: made from a sign, letters and two colours, tried on the boat and as the house flag before it is bought; bought (a
         # test), it is the company's and goes to the others in the paint code; a picture uploaded is made 256 px and small enough to share;
         # one the admin took away is gone from the boat at the next start, and the player is told why

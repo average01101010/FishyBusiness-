@@ -761,13 +761,21 @@ function sideStrip(type, frac, hMax, aspect){
 function nameStrips(type){
   if (type in NAMESTRIP) return NAMESTRIP[type];
   const m = vesselModel(type); if (!m) return NAMESTRIP[type] = null;
-  if (m.geo && m.geo.names) return NAMESTRIP[type] = m.geo.names;
-  const V = VESSELS[type] || {len:10}, h = Math.min(0.9, Math.max(0.16, 0.025 * V.len + 0.05));
+  const zr = st => { const z = st[0][0].map(p => p[2]); return [Math.min(...z), Math.max(...z)]; }, mk = markStrips(type), mz = mk && zr(mk);
+  // a strip's box on its side of the hull, and whether it lies on the registration mark (along the hull and in height, the same side)
+  const box = s => { const P = s[0].concat(s[1]); return {sd:Math.sign(P.reduce((a, p) => a + p[0], 0)), y0:Math.min(...P.map(p => p[1])), y1:Math.max(...P.map(p => p[1])), z0:Math.min(...P.map(p => p[2])), z1:Math.max(...P.map(p => p[2]))}; };
+  const onMark = st => !!mk && st.some(s => { const a = box(s); return mk.some(k => { const b = box(k); return a.sd === b.sd && a.z0 < b.z1 + 0.05 && a.z1 > b.z0 - 0.05 && Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0) > 0.08; }); });   // (strips that only touch at their margins keep their places)
+  // a model's own name boards, unless those along the bows lie where the mark must stand (on both bows, as the marking rules ask):
+  // then the name takes a place aft of it as on the other boats, and the transom keeps the model's board (tilbakemelding #76: on the
+  // havsjark the name and the mark were painted over each other)
+  const own = m.geo && m.geo.names;
+  if (own && !onMark(own)) return NAMESTRIP[type] = own;
+  const V = VESSELS[type] || {len:10}, h = Math.min(0.9, Math.max(0.16, 0.025 * V.len + 0.05)), keep = own ? own.filter(s => { const b = box(s); return b.z1 - b.z0 < 0.05; }) : [];
   // a quarter of the length from the stem, or the nearest place along the side where nothing stands proud of the hull in front of the
   // letters, smaller if it must (down to six tenths), and clear of the registration mark (the aft porthole of the Havsjark sat in the middle of the
   // name, tilbakemelding #51); where no place is clear, the quarter as before
-  const first = sideStrip(type, 0.25, h, 4); if (!first || !stripProud(type, first[0])) return NAMESTRIP[type] = first;
-  const zr = st => { const z = st[0][0].map(p => p[2]); return [Math.min(...z), Math.max(...z)]; }, mk = markStrips(type), mz = mk && zr(mk);
+  const first = sideStrip(type, 0.25, h, 4); if (!first) return NAMESTRIP[type] = own || null;
+  if (!stripProud(type, first[0]) && !onMark(first)) return NAMESTRIP[type] = first.concat(keep);
   // a strip's stretch along the hull is known before it is cut (sideStrip's mid and len): the places where something stands out at the
   // name's height anyway are skipped without cutting (the wooden boat's strakes run her whole length)
   const T = HULLT[type]; let z0 = Infinity, z1 = -Infinity; for (const t of T) for (const k of [2, 5, 8]){ z0 = Math.min(z0, t[k]); z1 = Math.max(z1, t[k]); }
@@ -778,9 +786,9 @@ function nameStrips(type){
     let n = 0; for (const z of busy) if (z > a && z < b) n++; if (n > 40) continue;
     const st = sideStrip(type, f, hh, 4); if (!st) continue;
     const z = zr(st); if (mz && z[0] < mz[1] + 0.1 && z[1] > mz[0] - 0.1) continue;
-    if (!stripProud(type, st[0])) return NAMESTRIP[type] = st;
+    if (!stripProud(type, st[0])) return NAMESTRIP[type] = st.concat(keep);
   }
-  return NAMESTRIP[type] = first;
+  return NAMESTRIP[type] = own || first;
 }
 // how many of a detailed model's triangles that face out to starboard stand proud of the hull under a strip's starboard side (a
 // porthole's rim, a fender, a step; the strip floats off above the hull by sideStrip's off): the strip's rows [B, T] from sideStrip; a kit's hull has nothing on its side
