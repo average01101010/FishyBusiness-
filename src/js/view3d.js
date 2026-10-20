@@ -2073,7 +2073,10 @@ const G3 = (() => {
   // (starboard, where she lies), down and up, and back; the crate rides the hook from the quay (loading) or to it (landing). Every
   // joint moves at its own rate, so it folds and unfolds as a real one does.
   const CRN = {p:null, t:0};
-  const crPose = (X, k) => { const p = X[k] || {}; return {sl:0, a1:p.a1 || 0, a2:p.a2 || 0, e:p.ext || 0}; };
+  // a pose from the model (ext is each telescope's slide, e both together; wire the hook's drop under the tip) and the fold limit: with
+  // the main boom low the outer one may not close so far that it goes through the column (a2_min, [a1, lowest a2])
+  const crPose = (X, k) => { const p = X[k] || {}; return {sl:0, a1:p.a1 || 0, a2:p.a2 || 0, e:2 * (p.ext || 0), w:p.wire || 0.12}; };
+  const crA2min = (X, a1) => { const T = X.a2_min; if (!T || !T.length) return -Math.PI; if (a1 <= T[0][0]) return T[0][1]; for (let i = 1; i < T.length; i++) if (a1 <= T[i][0]) return T[i - 1][1] + (T[i][1] - T[i - 1][1]) * (a1 - T[i - 1][0]) / (T[i][0] - T[i - 1][0]); return T[T.length - 1][1]; };
   function crFrames(X, Q, BMrel, p){
     const s = Q.s || 1, ca = X.col_at || [0, 0.35, 0], b1 = X.b1_at || [0, 1.0, 0], b2 = X.b2_at || [0, 0, -2.4], ea = X.ext_at || [0, 0, -1.6], e2a = X.ext2_at || [0, 0, -0.3], half = p.e / 2;
     const M0 = chain(BMrel, M4.T(Q.at[0], Q.at[1], Q.at[2]), M4.RY(Q.ry || 0), M4.S(s)), MC = chain(M0, M4.T(ca[0], ca[1], ca[2]), M4.RY(p.sl)), M1 = chain(MC, M4.T(b1[0], b1[1], b1[2]), M4.RX(p.a1));
@@ -2103,6 +2106,7 @@ const G3 = (() => {
     const folding = tgt === stow;
     if (folding){ step('e', 0.45); if (p.e < 0.05){ step('sl', 0.3); if (Math.abs(Math.atan2(Math.sin(p.sl - tgt.sl), Math.cos(p.sl - tgt.sl))) < 0.05){ step('a2', 0.35); step('a1', 0.25); } } }
     else { step('a1', 0.25); step('a2', 0.35); if (Math.abs(p.a2 - tgt.a2) < 0.3){ step('sl', 0.3); step('e', 0.45); } }
+    p.a2 = Math.max(p.a2, crA2min(X, p.a1));
     const F = crFrames(X, Q, BMrel, p), S1 = M4.S(F.s); KST.crane = {sl:p.sl, a1:p.a1, a2:p.a2, e:p.e, job:!!job, tip:F.tip.slice()};
     drawN(mB, F.M0); drawN(mC, F.MC); drawN(m1, F.M1); drawN(m2, F.M2);
     const e1 = kit('crane', 'ext1'), e2 = kit('crane', 'ext2'); if (e1) drawN(e1, F.E1); if (e2) drawN(e2, F.E2);
@@ -2112,14 +2116,15 @@ const G3 = (() => {
       drawN(cb, chain(toolM(A, v), S1)); drawN(cr, chain(toolM(B, v), S1)); }
     // the hook on its wire: short and made fast at sea, paid out to the deck or the quay in the round
     const H = kit('crane', 'hook'), tip = F.tip, near = !job || Math.hypot(p.sl - tgt.sl, p.e - tgt.e) > 0.15;
-    let hy = tip[1] - 0.35 * F.s;
-    if (job && !near && at){ const goal = xf(BMrel, at)[1] + 0.35 * F.s, wv = ph === 1 || ph === 4 ? Math.sin(((ph === 1 ? u - 0.2 : u - 0.65) / 0.1) * Math.PI) : 0; hy = tip[1] - 0.35 * F.s - (tip[1] - 0.35 * F.s - goal) * wv; }
+    let hy = tip[1] - (near ? stow.w : work.w * 0.3) * F.s;
+    if (job && !near && at){ const goal = xf(BMrel, at)[1] + 0.35 * F.s, wv = ph === 1 || ph === 4 ? Math.sin(((ph === 1 ? u - 0.2 : u - 0.65) / 0.1) * Math.PI) : 0; const h0 = tip[1] - work.w * 0.3 * F.s; hy = h0 - (h0 - goal) * wv; }
     const at0 = (y) => { const m = F.MC.slice(); m[12] = tip[0]; m[13] = y; m[14] = tip[2]; return m; };   // (the column's turn and the boat's heading, at a point)
     drawN(PM.wire, limbM([tip[0], tip[1], tip[2]], [tip[0], hy, tip[2]], 0.012)); if (H) drawN(H, at0(hy));
     // the crate on the hook: from the quay to the deck when loading, from the deck to the quay when landing
     const carry = job && !near && (loading ? u >= 0.7 || u < 0.25 : u >= 0.25 && u < 0.7), C = kit('rig', 'kasse');
     if (carry && C){ const hl = (X.hook_h || 0.35) * F.s; drawN(C, chain(at0(hy - hl - 0.8), M4.S(1 / F.s))); }
-    if (Q.rest){ const R = kit('crane', 'rest'); if (R) drawN(R, chain(BMrel, M4.T(Q.rest[0], Q.rest[1], Q.rest[2]), M4.RY(Q.ry || 0), S1)); }
+    // the boom rest stands where the parked crane's outer boom comes down (the model's rest_at, from the crane's foot)
+    if (Q.rest && X.park && X.rest_at){ const R = kit('crane', 'rest'); if (R) drawN(R, chain(F.M0, M4.T(X.rest_at[0], X.rest_at[1], X.rest_at[2]))); }
     return carry;
   }
   // the bleeding tub's top in the boat frame (where the fish are tossed)
