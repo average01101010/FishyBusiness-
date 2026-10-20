@@ -266,10 +266,13 @@ def wheelhouse(fine=True):
     for sg in (1, -1):
         y0 = sg * (WY + 0.1); abox(A, WX1 - 0.55, WX1 - 0.3, min(y0, y0 + sg * 0.09), max(y0, y0 + sg * 0.09), zr - 0.26, zr - 0.06, C['black'])
         y1 = y0 + sg * 0.09; abox(A, WX1 - 0.52, WX1 - 0.33, min(y1, y1 + sg * 0.015), max(y1, y1 + sg * 0.015), zr - 0.23, zr - 0.09, C['lampR' if sg > 0 else 'lampG'])
-    # the mast on the roof aft with the radar, the all-round white at its head, antennas; the exhaust beside it; the floodlight forward
+    # the mast on the roof aft with its radar platform, the all-round white at its head, antennas; the exhaust beside it; the floodlight
+    # forward. No radome in the model (Jonas 18.10.2026: nothing that can be bought is modelled in): the platform forward of the mast at
+    # the old dome's height carries the one the player has fitted, set by the game at kit.radar (19.10.2026)
     mx = WX0 + 0.55
     acyl(A, (mx, 0.0, zr + 0.1), (mx, 0.0, zr + 2.6), 0.045, lambda z: w, seg=8); abox(A, mx - 0.04, mx + 0.04, -0.4, 0.4, zr + 1.75, zr + 1.8, w)
-    acyl(A, (mx + 0.25, 0.0, zr + 1.0), (mx + 0.25, 0.0, zr + 1.12), 0.26, lambda z: w, seg=14, r1=0.22); abox(A, mx, mx + 0.3, -0.05, 0.05, zr + 0.95, zr + 1.0, w)
+    abox(A, mx + 0.03, RX + 0.28, -0.28, 0.28, zr + 0.97, zr + 1.0, w); acyl(A, (mx, 0.0, zr + 0.93), (mx, 0.0, zr + 1.0), 0.065, lambda z: w, seg=10)
+    for y in (-0.22, 0.22): acyl(A, (mx + 0.03, y * 0.25, zr + 0.62), (RX + 0.24, y, zr + 0.968), 0.015, lambda z: C['steel'], seg=5)
     acyl(A, (mx, 0.0, zr + 2.6), (mx, 0.0, zr + 2.76), 0.06, lambda z: C['lampW'], seg=10); acyl(A, (mx, 0.0, zr + 2.76), (mx, 0.0, zr + 2.8), 0.07, lambda z: C['dark'], seg=10)
     for y in (-0.38, 0.38): acyl(A, (mx, y, zr + 1.8), (mx, y, zr + 3.2), 0.01, lambda z: w, seg=4)
     acyl(A, (mx - 0.3, 0.55, zr + 0.1), (mx - 0.3, 0.55, zr + 1.5), 0.06, lambda z: C['black'], seg=8); acyl(A, (mx - 0.3, 0.55, zr + 1.5), (mx - 0.32, 0.55, zr + 1.58), 0.075, lambda z: C['black'], seg=8)
@@ -285,23 +288,20 @@ def wheelhouse(fine=True):
     atorus(A, (cx - 0.67, -0.6, z0 + 1.06), (1, 0, 0.45), 0.2, 0.018, lambda a: C['black'], 16, 6)
     acyl(A, (2.75, -0.6, z0), (2.75, -0.6, z0 + 0.5), 0.05, lambda z: C['steel'], seg=8); abox(A, 2.55, 3.0, -0.83, -0.37, z0 + 0.5, z0 + 0.6, C['seat']); abox(A, 2.5, 2.58, -0.83, -0.37, z0 + 0.6, z0 + 1.1, C['seat'])
     abox(A, WX0 + 0.15, 2.6, 0.7, 1.18, z0 + 0.42, z0 + 0.5, C['seat']); abox(A, WX0 + 0.15, 2.6, 1.1, 1.18, z0 + 0.5, z0 + 0.95, C['seat']); abox(A, WX0 + 0.15, 2.6, 0.7, 1.18, z0, z0 + 0.42, C['inner'])
-    # the lifebuoy on the aft wall, the liferaft in its cradle on the roof
-    atorus(A, (WX0 - 0.07, -0.9, z0 + 1.3), (1, 0, 0), 0.28, 0.045, lambda a: C['buoyW'] if (a % (math.pi / 2)) < math.pi / 9 else C['buoy'], 18, 6)
-    acyl(A, (WX0 + 1.35, 0.72, zr + 0.4), (WX0 + 2.25, 0.72, zr + 0.4), 0.28, lambda z: w, seg=14)
-    for x in (WX0 + 1.5, WX0 + 2.1): acyl(A, (x - 0.02, 0.72, zr + 0.4), (x + 0.02, 0.72, zr + 0.4), 0.285, lambda z: C['dark'], seg=14); abox(A, x - 0.05, x + 0.05, 0.4, 1.04, zr + 0.1, zr + 0.17, C['steel'])
+    # no lifebuoy and no liferaft in the model (the rules' life-saving gear is set by the game at kit.buoys and kit.raft, 19.10.2026)
     return [A.done(28)], [G.done(28)]
 
 
 # ---------- the working deck (B6) and the fittings (B3, B7, B9–B11, B13) ----------
 TABLE = (4.95, 5.7, -1.5, -0.95)
 HX = 5.95                   # the hauler's station on the starboard rail
+RX = WX0 + 0.55 + 0.42      # the radome's centre on the mast's platform, clear of the mast
 
 def fittings(fine=True):
     A = Acc('fit'); s = lambda z: C['steel']
     x0, x1, y0, y1 = TABLE; zt = z_deck(5.3) + 0.9
     abox(A, x0, x1, y0, y1, zt - 0.05, zt, C['steel']); abox(A, x0, x1, y0 - 0.02, y0, zt - 0.05, zt + 0.12, C['steel'])
     for x, y in ((x0 + 0.05, y0 + 0.05), (x1 - 0.05, y0 + 0.05), (x0 + 0.05, y1 - 0.05), (x1 - 0.05, y1 - 0.05)): acyl(A, (x, y, z_deck(x)), (x, y, zt - 0.05), 0.02, s, seg=5)
-    for k in range(2): abox(A, 4.3, 4.85, 0.95, 1.45, z_deck(4.6) + 0.3 * k, z_deck(4.6) + 0.3 * k + 0.28, C['inner'])        # fish boxes to port
     # no hauler in the model (Jonas 18.10.2026: no boat carries modelled gear, only the places for it): the hauler the player buys is drawn
     # by the game at the hauler anchor on the starboard rail (HX)
     if fine:
@@ -369,6 +369,23 @@ def name_strips(G):
     out.append([[G(x_tr(1.95) - 0.025, y, 1.95) for y in ys], [G(x_tr(2.25) - 0.025, y, 2.25) for y in ys]])
     return out
 
+def kit_places(G):
+    """the places where the game sets the deck kit (tools/deck; nothing that can be bought is modelled in, only its place, 19.10.2026):
+    the liferaft in its cradle on the wheelhouse roof to port, the canister along the boat where the old one lay; the ring buoys low on
+    the wheelhouse's aft wall under the window, a little to port so the light and the coil hang on the wall beside it (the first, with
+    its light and line), and on the cabin trunk's aft face to starboard of the companionway; the radome on the mast's platform. The
+    working deck is full: the gutting table and the bleeding tub to starboard, the way forward from the wheelhouse door and two of the
+    crew's places to port, so the net tub, the line tubs and the first freight pallet all stand on the hatch cover (the net and the
+    line rig never stand together; the line tubs' last two rows reach forward off the cover onto the deck by the cabin trunk), and
+    the second pallet on the after deck behind the wheelhouse"""
+    r = lambda a: round(a, 3); z0 = z_deck(2.3); zr = z0 + 1.98; zl = z_deck(5.0) + 0.19
+    return {'raft': [G(WX0 + 1.8, 0.72, zr + 0.1) + [r(math.pi / 2)]],
+            'buoys': [G(WX0, 0.40, z0 + 0.86) + [0.0], G(CX0, -0.71, z_deck(CX0) + 0.70) + [0.0]],
+            'radar': G(RX, 0.0, zr + 1.0),
+            'garn': {'at': G(5.0, 0.0, zl), 'ry': 0.0},
+            'stamps': {'at': G(4.54, -0.26, zl), 'ry': r(math.pi)},
+            'cargo': [G(5.0, 0.0, zl) + [0.0], G(0.52, -0.73, z_deck(0.5)) + [r(math.pi / 2)]]}
+
 def anchors():
     G = lambda x, y, z: [round(v, 3) for v in to_game((x, y, z))]
     z0 = z_deck(2.3); zr = z0 + 1.98; x0, x1, y0, y1 = TABLE; hy = -(y_at(HX, z_sheer(HX)) - 0.14)
@@ -385,7 +402,8 @@ def anchors():
             # the clear working deck amidships: the hauler at the starboard rail forward, the gear and the catch aft of it
             'deck': {'y': round(z_deck(5.0) - WL, 3), 'z': round(-(5.0 - XM), 3)}, 'gw': round(z_sheer(5.0) - WL, 3),
             'stern': round(XM - XA, 3), 'bow': round(-(XF - XM), 3), 'side': HB, 'beam': 3.3, 'pl': 3.3, 'rl': 1.4, 'open': False, 'hand': False,
-            'pole': G(XA + 0.15, 0, z_sheer(XA) + 1.2), 'hauler': G(HX, hy - 0.12, z_sheer(HX) + 0.42), 'filler': G(6.0, HB - 0.2, z_deck(6.0) + 0.12)}
+            'pole': G(XA + 0.15, 0, z_sheer(XA) + 1.2), 'hauler': G(HX, hy - 0.12, z_sheer(HX) + 0.42), 'filler': G(6.0, HB - 0.2, z_deck(6.0) + 0.12),
+            'kit': kit_places(G)}
 
 
 SHOTS = [('bow3q', (17.5, -9.5, 3.6), (4.7, 0, 2.2), 38), ('stern3q', (-7.5, 8.0, 4.2), (4.0, 0, 2.2), 35), ('side', (4.7, 19, 2.4), (4.7, 0, 2.3), 35),

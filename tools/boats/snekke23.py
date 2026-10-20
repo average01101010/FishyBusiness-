@@ -5,7 +5,7 @@ run from the fittings, slime and weed at the waterline, the bottom tarred; grey 
 built with nine strakes a side on bent frames, a small foredeck, three thwarts, the engine box amidships aft with the cylinder and its
 hot bulb up through the lid and the exhaust pipe beside it, the rudder on the sternpost with a long tiller, the propeller in the
 aperture; the old tarpaulin (Father's letter: «en slitt presenning») folded on the foredeck, oars, a bailer, two worn fenders.
-The gutting table across the port gunwale aft of the middle thwart, its open end over the side, the knife and the bucket. Fish crates, faded blue and grey, on the floorboards forward of the middle thwart and a small one aft. The propeller is a part of its own (it turns in the game), and so are the tiller, the rudder and the flag pole on the rudder head (they swing together), and the exhaust's mouth is an anchor (the black puffs at each firing).
+The gutting table across the port gunwale aft of the middle thwart, its open end over the side, the knife and the bucket. No lifebuoy and no fish crates in the model (19.10.2026: the game sets the deck kit, tools/deck, at the places in kit). The propeller is a part of its own (it turns in the game), and so are the tiller, the rudder and the flag pole on the rudder head (they swing together), and the exhaust's mouth is an anchor (the black puffs at each firing).
 
     pip install bpy==4.5.4
     python3 tools/boats/snekke23.py            -> src/data/boat-snekke23.b64 (+ the side picture), renders in tools/boats/out/
@@ -299,9 +299,6 @@ def lantern_geo(A):
     acyl(A, (sx, sy, z0), (sx, sy, zt - 0.14), 0.016, lambda zz: C['iron'], 6)                                                     # the staff
     acyl(A, (sx, sy, zt - 0.14), (sx, sy, zt - 0.02), 0.045, lambda zz: C['lampW'], 10)                                               # the white lantern
     acyl(A, (sx, sy, zt - 0.02), (sx, sy, zt), 0.055, lambda zz: C['iron'], 10)                                                      # its cap
-    # the lifebuoy against the starboard side aft of the engine box, orange with white bands
-    bx = 2.0; bz = zs(bx) - 0.30; by = -(inner_hb(bx, bz) - 0.05)        # inside the planking at the height it hangs
-    atorus(A, (bx, by, bz), (0, 1, 0), 0.28, 0.045, lambda a: C['buoyW'] if (a % (math.pi / 2)) < math.pi / 9 else C['buoy'], 20, 6)
 def lantern_anchors(G):
     z = lamp_z(); sx, sy = LAMP_W
     return [[G(LAMP_X, hb(LAMP_X) + 0.06, z), [1, 0.12, 0.1], 'port'], [G(LAMP_X, -(hb(LAMP_X) + 0.06), z), [0.1, 1, 0.35], 'stbd'], [G(sx, sy, zs(sx) + 0.86), [1, 0.95, 0.85], 'allround']]
@@ -332,25 +329,6 @@ def tarp(A):
                 A.poly(q, C['canvas'], (-1, 0, 0.2)); A.poly([p + V((0.006, 0, 0)) for p in q], C['canvas2'], (1, 0, 0))
             else: A.poly(q, C['canvas'], (0, 0, 1))
 
-def crate(A, x0, y0, z0, m, L=0.80, W=0.40, H=0.30, rot=0.0):
-    """a 70 litre fish crate, open at the top: the walls inside and out, the rim, the hand holds in the ends"""
-    c = V((x0, y0, z0)); ca, sa = math.cos(rot), math.sin(rot); ax = V((ca, sa, 0)); ay = V((-sa, ca, 0)); t = 0.025
-    P = lambda u, v, w: c + ax * u + ay * v + V((0, 0, w))
-    for (u0, v0, u1, v1, n) in ((-L / 2, -W / 2, L / 2, -W / 2, -ay), (L / 2, -W / 2, L / 2, W / 2, ax), (L / 2, W / 2, -L / 2, W / 2, ay), (-L / 2, W / 2, -L / 2, -W / 2, -ax)):
-        A.poly([P(u0, v0, 0), P(u1, v1, 0), P(u1, v1, H), P(u0, v0, H)], m, n)                         # outside, tapering a little
-        iu0, iv0, iu1, iv1 = u0 * (1 - 2 * t / L), v0 * (1 - 2 * t / W), u1 * (1 - 2 * t / L), v1 * (1 - 2 * t / W)
-        A.poly([P(iu0, iv0, 0.03), P(iu1, iv1, 0.03), P(iu1, iv1, H), P(iu0, iv0, H)], m, -n)          # inside
-        A.poly([P(u0, v0, H), P(u1, v1, H), P(iu1, iv1, H), P(iu0, iv0, H)], m, (0, 0, 1))             # the rim
-    A.poly([P(-L / 2 + t, -W / 2 + t, 0.03), P(L / 2 - t, -W / 2 + t, 0.03), P(L / 2 - t, W / 2 - t, 0.03), P(-L / 2 + t, W / 2 - t, 0.03)], C['crate_in'], (0, 0, 1))
-    for su in (-1, 1):                                                                                   # the hand holds
-        A.poly([P(su * (L / 2 + 0.002), -0.07, H - 0.09), P(su * (L / 2 + 0.002), 0.07, H - 0.09), P(su * (L / 2 + 0.002), 0.07, H - 0.04), P(su * (L / 2 + 0.002), -0.07, H - 0.04)], C['iron'], ax * su)
-
-def crates(A):
-    """fish crates on the floorboards between the middle and the forward thwart (the work place aft of the middle thwart stays clear)"""
-    crate(A, 4.86, -0.22, Z_FLOOR, C['crate'], rot=0.02); crate(A, 4.86, 0.22, Z_FLOOR, C['crate2'], rot=-0.03)
-    crate(A, 4.84, -0.21, Z_FLOOR + 0.30, C['crate'], rot=0.07)                                           # one stacked on top
-    crate(A, 1.75, 0.34, Z_FLOOR, C['crate3'], L=0.6, W=0.4, H=0.25, rot=1.5)                            # a smaller one aft for bait and the jig
-
 def gutting_table(A):
     """the gutting table across the port gunwale aft of the middle thwart: a scrubbed board with a rim on three sides, open over the
     side so the guts go overboard, on legs to the floor; the knife, a whetstone, the bucket for liver and roe"""
@@ -379,7 +357,7 @@ def propeller():
 def build(fine=True):
     A = Acc('snekke')
     hull(A, fine); keel_stem(A, fine); interior(A, fine); engine(A, fine); steering(A, fine)
-    if fine: frames(A); deck_gear(A, fine); crates(A); gutting_table(A); lantern_geo(A)
+    if fine: frames(A); deck_gear(A, fine); gutting_table(A); lantern_geo(A)
     return [A.done(40, tint=wear)], [box('noglass', 0, 0.01, 0, 0.01, -50, -49.99, C['glass'])]
 
 
@@ -396,6 +374,21 @@ def cap_obj():
 
 def to_game(p): return (-p[1], p[2] - WL, -(p[0] - XM))
 def to_game_n(n): return (-n[1], n[2], -n[0])
+
+def kit_places(G):
+    """the places where the game sets the deck kit (tools/deck; nothing that can be bought is modelled in, only its place, 19.10.2026):
+    the ring buoy under the forward edge of the stern seat, facing forward behind the skipper's thwart, clear of the tiller, the light
+    and the line beside it (a vertical ring on the inside of the round-bilged side would cut the frames and the sheer clamp; the
+    spare place on the starboard clamp abreast of the engine does, a little, and is only used if a second buoy is ever asked for);
+    the net tub, the line tubs and the freight on the floorboards between the middle and the forward thwart, where the fish crates
+    stood, clear of the oars to port (an open 7 m boat has no room for a 1000 l tub or eight line tubs: the net tub touches both
+    thwarts, and only the first four line tubs stand between them). No catch tub: the catch is drawn at the 'tub' anchor, in the
+    bleeding tub the game sets at work.tub"""
+    r = lambda a: round(a, 3); xs_ = 0.62
+    return {'buoys': [G(xs_, 0.0, zs(xs_) - 0.05) + [r(math.pi)], G(2.6, -(hb(2.6) - 0.095), zs(2.6) - 0.06) + [r(-math.pi / 2)]],
+            'garn': {'at': G(4.85, -0.15, Z_FLOOR), 'ry': r(math.pi / 2)},
+            'stamps': {'at': G(5.08, 0.16, Z_FLOOR), 'ry': 0.0},
+            'cargo': [G(4.85, -0.15, Z_FLOOR) + [r(math.pi / 2)]]}
 
 def anchors():
     G = lambda x, y, z: [round(v, 3) for v in to_game((x, y, z))]
@@ -418,7 +411,8 @@ def anchors():
             'lights': lantern_anchors(G),
             'deck': {'y': round(Z_FLOOR - WL, 3), 'z': round(-(1.2 - XM), 3)}, 'gw': gw(3.4), 'stern': round(XM + 0.1, 3), 'bow': round(-(L - XM), 3), 'side': 1.0,
             'beam': 2.26, 'pl': 2.6, 'rl': 1.2, 'open': True, 'hand': True, 'inboard': True,
-            'work': {'table': G(3.75, 0.62, Z_FLOOR), 'tub': G(3.8, -0.6, Z_FLOOR), 's': 0.75, 'own': True, 'top': round(zs(3.75) + 0.05 - WL, 3)}}
+            'work': {'table': G(3.75, 0.62, Z_FLOOR), 'tub': G(3.8, -0.6, Z_FLOOR), 's': 0.75, 'own': True, 'top': round(zs(3.75) + 0.05 - WL, 3)},
+            'kit': kit_places(G)}
 
 SHOTS = [('side', (3.2, -11.0, 1.4), (3.2, 0.0, 0.9), 30), ('q3', (9.5, -7.5, 3.0), (3.2, 0.0, 0.8), 30), ('stern', (-5.5, -4.0, 2.6), (2.6, 0.0, 0.9), 30),
          ('above', (3.0, -3.5, 6.5), (3.3, 0.0, 0.7), 34), ('engine', (1.2, -1.7, 2.1), (2.9, 0.0, 1.0), 32)]

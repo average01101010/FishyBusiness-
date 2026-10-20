@@ -253,16 +253,12 @@ def seat(fine=True):
     if fine: objs.append(torus('footrest', (x, 0, 0.60), (0, 0, 1), 0.16, 0.012, C['steel'], 20, 6))
     return objs
 
-TUB = (3.30, 0.55)
+TUB = (3.30, 0.55)          # the catch tub's place on the sole forward of the console, port side
 def fittings(fine=True):
     objs = []
     if not fine: return objs
-    # the fish tub on the sole forward of the console, port side
-    tx, ty = TUB; W, D, H = 0.84, 0.52, 0.34
-    for nm, a in (('tub_b', (tx - D / 2, tx + D / 2, ty - W / 2, ty + W / 2, Z_SOLE, Z_SOLE + 0.03)),
-                  ('tub_f', (tx + D / 2 - 0.03, tx + D / 2, ty - W / 2, ty + W / 2, Z_SOLE, Z_SOLE + H)), ('tub_a', (tx - D / 2, tx - D / 2 + 0.03, ty - W / 2, ty + W / 2, Z_SOLE, Z_SOLE + H)),
-                  ('tub_p', (tx - D / 2, tx + D / 2, ty + W / 2 - 0.03, ty + W / 2, Z_SOLE, Z_SOLE + H)), ('tub_s', (tx - D / 2, tx + D / 2, ty - W / 2, ty - W / 2 + 0.03, Z_SOLE, Z_SOLE + H))):
-        objs.append(box(nm, *a, C['tub'], 0.008))
+    # no fish tub in the model: the game sets its 300 l tub (tools/deck) at kit.tubs, on the sole forward of the console to port, where
+    # the catch is drawn (the 'tub' anchor, TUB), 19.10.2026
     # cleats on the gunwales and the bow, rod holders, the fuel filler
     for x in (0.85, 4.45):
         for sg in (1, -1):
@@ -363,6 +359,21 @@ def to_game_n(n): return (-n[1], n[2], -n[0])
 def rel_game(c):
     g = to_game(c); return lambda p: tuple(a - b for a, b in zip(to_game(p), g))
 
+def kit_places(G):
+    """the places where the game sets the deck kit (tools/deck; nothing that can be bought is modelled in, only its place, 19.10.2026):
+    the ring buoy on the inside of the starboard side aft by the skipper's seat, its bracket under the gunwale's lip, the light and the
+    line on the side beside it (a spare place on the port side forward of the gutting table); the 300 l catch tub on the sole forward
+    of the console to port, where the catch is drawn (TUB); the net tub and the freight on the casting deck, the line tubs on the sole
+    forward of the fisher's place, by the hauler (an open 5.9 m boat has no room for a 1000 l tub or eight line tubs: the net tub
+    reaches over the casting deck's sides at its forward corners, and the line tubs' third and fourth rows reach the fisher's place
+    and the console)"""
+    r = lambda a: round(a, 3)
+    return {'buoys': [G(1.63, -(yi(1.63) + 0.004), zs(1.63) - 0.04) + [r(-math.pi / 2)], G(2.42, yi(2.42) + 0.004, zs(2.42) - 0.04) + [r(math.pi / 2)]],
+            'tubs': [G(TUB[0], TUB[1], Z_SOLE) + [0.0, 300]],
+            'garn': {'at': G(4.58, 0.0, Z_CAST), 'ry': r(math.pi / 2)},
+            'stamps': {'at': G(3.78, -0.10, Z_SOLE), 'ry': 0.0},
+            'cargo': [G(4.70, 0.0, Z_CAST) + [0.0]]}
+
 def anchors():
     G = lambda x, y, z: [round(v, 3) for v in to_game((x, y, z))]
     sole = round(Z_SOLE - WL, 3); gwz = lambda x: zs(x) - WL
@@ -387,7 +398,7 @@ def anchors():
             'lights': [[G(5.42, 0.40, zs(5.4) + 0.04), [1, 0.12, 0.1], 'port'], [G(5.42, -0.40, zs(5.4) + 0.04), [0.1, 1, 0.35], 'stbd'], [G(0.85, 1.05, 2.03), [1, 0.95, 0.85], 'allround']],
             'deck': {'y': sole, 'z': round(-(1.2 - XM), 3)}, 'gw': round(gwz(3.0), 3), 'stern': round(XM + 0.1, 3), 'bow': -2.2, 'side': 0.83,
             'beam': 2.45, 'pl': 2.4, 'rl': 1.0, 'open': True, 'hand': True, 'skiff': sk,
-            'work': {'table': G(1.50, 0.72, Z_SOLE), 'tub': G(1.45, -0.62, Z_SOLE), 's': 0.75}}
+            'work': {'table': G(1.50, 0.72, Z_SOLE), 'tub': G(1.45, -0.62, Z_SOLE), 's': 0.75}, 'kit': kit_places(G)}
 
 
 # ---------- checks against the drawing ----------

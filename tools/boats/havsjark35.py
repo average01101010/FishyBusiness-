@@ -386,16 +386,15 @@ def forecastle(fine=True):
     objs.append(cyl('bow_roller', (10.76, -0.08, zr - 0.01), (10.76, 0.08, zr - 0.01), 0.06, C['dark'], 14))
     objs.append(cyl('anchor_shank', (10.48, 0, zr + 0.14), (10.84, 0, zr + 0.02), 0.028, C['dark'], 8))
     objs.append(loft_rings('anchor_fluke', [[(10.82, -0.12, zr - 0.02), (10.82, 0.12, zr - 0.02), (10.88, 0.0, zr - 0.24)], [(10.87, -0.12, zr), (10.87, 0.12, zr), (10.92, 0.0, zr - 0.22)]], C['dark']))
-    # bollards on the forecastle, and a lifebuoy on the rail
+    # bollards on the forecastle (no lifebuoy in the model: the game sets the rules' buoys at kit.buoys, 19.10.2026)
     for x, y in ((9.95, 0.72), (9.95, -0.72), (6.45, 1.55), (6.45, -1.55)):
         zb2 = z_bk(x)
         objs.append(box('bp%d' % int(x * 10 + y * 100), x - 0.11, x + 0.11, y - 0.055, y + 0.055, zb2, zb2 + 0.04, C['dark']))
         for dx in (-0.065, 0.065): objs.append(cyl('bol%d%d' % (int(x * 10 + y * 100), int(dx * 100)), (x + dx, y, zb2), (x + dx, y, zb2 + 0.26), 0.042, C['dark'], 10))
-    objs.append(torus('buoy_fwd', (8.45, 1.62, z_cap(8.45) + 0.36), (0, 1, 0), 0.25, 0.055, C['orange'], 22, 8))
     return objs, glass
 
 
-# ---------- the aft deck: gear room, hatch, hauler, rails, tubs ----------
+# ---------- the aft deck: gear room, hatch, the hauler's roller, rails ----------
 GR = [(1.25, -0.15), (1.62, -0.15), (2.55, 1.20), (2.62, 1.70), (1.25, 1.70)]     # the gear room in plan (counter-clockwise), inside the bulwark
 GR_TOP = 2.94
 
@@ -413,14 +412,13 @@ def aft_deck(fine=True):
     for k in range(1, 6): objs.append(box('board_seam%d' % k, 2.36 + 0.28 * k - 0.006, 2.36 + 0.28 * k + 0.006, -0.70, 0.70, zt, zt + 0.004, C['dark']))
     objs.append(box('small_hatch', 2.50, 3.15, -0.34, 0.40, zt, zt + 0.12, C['white'], 0.02))
     for y in (-0.2, 0.26): objs.append(tube('hatch_grip%d' % int(y * 100), [(2.70, y, zt + 0.12), (2.70, y, zt + 0.17), (2.95, y, zt + 0.17), (2.95, y, zt + 0.12)], 0.012, C['steel'], 6))
-    # the gear room's door (on its slanted side, facing starboard and forward), handrails and a lifebuoy
+    # the gear room's door (on its slanted side, facing starboard and forward) and a handrail
     a = V((1.62, -0.15, 0)); b = V((2.55, 1.20, 0)); u = (b - a).normalized(); n = V((u.y, -u.x, 0))
     mid = (a + b) / 2
     objs.append(plate('gr_door', (mid.x, mid.y, 0), (u.x, u.y, 0), (0, 0, 1), rrect(0.0, 1.70, 0.62, 1.90, 0.06, 2), C['roof'], 0.012, 0.012, nrm=n))
     glass.append(plate('gr_door_glass', (mid.x, mid.y, 0), (u.x, u.y, 0), (0, 0, 1), rrect(0.0, 2.35, 0.30, 0.36, 0.05, 2), C['glass'], 0.026, nrm=n))
     for k, (x0, x1) in enumerate(((1.30, 1.58),)):
         objs.append(tube('gr_rail%d' % k, [(x0, -0.21, 1.70), (x0, -0.21, 1.74), (x1, -0.21, 1.74), (x1, -0.21, 1.70)], 0.014, C['steel'], 6))
-    objs.append(torus('buoy_aft', (2.62 + 0.07, 1.50, 2.25), (1, 0, 0), 0.25, 0.055, C['orange'], 22, 8))
     # the line hauler on the starboard waist, and the roller over the low bulwark
     zd = z_deck(4.5)
     # no hauler in the model (Jonas 18.10.2026: no boat carries modelled gear): the one the player buys is drawn at the hauler anchor
@@ -443,13 +441,7 @@ def aft_deck(fine=True):
     pts += [(3.80, y_at(3.80, z_cap(3.80)) - 0.04, z_cap(3.80) + 0.02)]
     objs.append(tube('aft_rail', pts, 0.022, C['steel'], 8))
     for y in (-1.1, 0.0, 1.1): objs.append(cyl('sp%d' % int(y * 10), (xr, y, 1.48), (xr, y, 1.75), 0.02, C['steel'], 8))
-    # line tubs and fish boxes on the aft deck, bollards on the quarters
-    zd0 = z_deck(0.8)
-    for k, (x, y) in enumerate(((0.75, -1.15), (0.75, -0.45), (1.40, -1.15))):
-        objs.append(cyl('tub%d' % k, (x, y, zd0), (x, y, zd0 + 0.42), 0.30, C['tub'], 18, r1=0.33))
-        objs.append(cyl('tub_in%d' % k, (x, y, zd0 + 0.40), (x, y, zd0 + 0.425), 0.30, C['dark'], 18))
-    for k, (x, y) in enumerate(((4.55, 0.55), (4.55, 1.20))):
-        objs.append(box('fishbox%d' % k, x - 0.40, x + 0.40, y - 0.30, y + 0.30, z_deck(x), z_deck(x) + 0.32, C['box'], 0.03))
+    # bollards on the quarters (no line tubs or fish boxes in the model: the game sets the rig's tubs at kit.stamps and kit.garn)
     for x, y in ((0.45, 1.45), (0.45, -1.45)):
         objs.append(box('abp%d' % int(y * 10), x - 0.11, x + 0.11, y - 0.055, y + 0.055, z_deck(x), z_deck(x) + 0.04, C['dark']))
         for dx in (-0.065, 0.065): objs.append(cyl('abol%d%d' % (int(y * 10), int(dx * 100)), (x + dx, y, z_deck(x)), (x + dx, y, z_deck(x) + 0.30), 0.042, C['dark'], 10))
@@ -465,6 +457,7 @@ def aft_deck(fine=True):
 
 # ---------- masts and rigging: the tall mast by the wheelhouse with its derrick, the aft mast with the riding sail ----------
 FM = (5.27, 1.02)       # the forward mast stands against the after port corner of the wheelhouse, through the roof overhang
+RA = (4.49, 1.02)       # the open array's platform aft of the forward mast (its pedestal's centre)
 AM = (1.50, 0.0)        # the aft mast goes up through the gear room
 
 def rig(fine=True):
@@ -473,10 +466,16 @@ def rig(fine=True):
     objs.append(cyl('fmast', (fx, fy, z_deck(fx)), (fx, fy, 7.42), 0.07, C['mast'], seg))
     objs.append(cyl('fmast_top', (fx, fy, 7.42), (fx, fy, 8.34), 0.05, C['mast'], seg))
     objs.append(cyl('amast', (ax, ay, z_deck(ax)), (ax, ay, 7.59), 0.065, C['mast'], seg))
-    # the radome on its bracket forward of the mast
+    # the radar brackets on the mast (no radar in the model, Jonas 18.10.2026: the game sets the one the player has fitted, 19.10.2026):
+    # the radome's bracket forward of the mast, where the old dome stood (kit.radar), and a platform aft of it for an open array, its
+    # 4 ft bar clear of the mast, the stays and the derrick (kit.radarA; the forestay runs through the sweep forward of the mast)
     objs.append(box('radar_arm', fx, 6.20, fy - 0.04, fy + 0.04, 4.39, 4.47, C['mast']))
-    objs.append(cyl('radome', (6.12, fy - 0.35, 4.47), (6.12, fy - 0.35, 4.72), 0.32, C['white'], 22 if fine else 10, r1=0.30))
-    objs.append(box('radar_arm2', 6.0, 6.24, fy - 0.40, fy + 0.04, 4.39, 4.47, C['mast']))
+    objs.append(box('radar_arm2', 5.94, 6.30, fy - 0.40, fy + 0.04, 4.39, 4.47, C['mast']))
+    ax_, ay_ = RA
+    objs.append(box('radar_plat', ax_ - 0.25, ax_ + 0.25, ay_ - 0.22, ay_ + 0.22, 4.43, 4.47, C['mast'], 0.01 if fine else 0))
+    objs.append(box('radar_plat_arm', ax_ + 0.25, fx - 0.04, ay_ - 0.04, ay_ + 0.04, 4.39, 4.47, C['mast']))
+    if fine:
+        for sy in (-0.16, 0.16): objs.append(cyl('radar_plat_brace%d' % int(sy * 100), (fx - 0.06, fy + sy * 0.3, 3.95), (ax_ - 0.18, ay_ + sy, 4.43), 0.018, C['mast'], 6))
     # the riding sail: a quadrilateral between the gaff, the boom and the luff pole, slightly full
     lx = ax - 0.11
     head = (-0.38, 7.27); clew = (-0.96, 3.40); tack = (lx, 3.40); peak = (lx, 7.40)
@@ -522,15 +521,12 @@ def rig(fine=True):
     objs.append(cyl('hookline', (tip[0] - 0.02, tip[1], tip[2] - 0.12), (tip[0] - 0.02, tip[1], 4.45), 0.008, C['dark'], 4))
     objs.append(torus('hook', (tip[0] - 0.02, tip[1], 4.39), (0, 1, 0), 0.06, 0.012, C['dark'], 12, 4))
     objs.append(cyl('d_winch', (fx - 0.12, fy - 0.16, 2.12), (fx - 0.12, fy + 0.10, 2.12), 0.10, C['red'], 14))
-    # on the wheelhouse roof: rail, liferaft, exhaust, searchlight, horn, the side lights
+    # on the wheelhouse roof: rail, exhaust, searchlight, horn, the side lights (no liferaft in the model: kit.raft, 19.10.2026)
     zr = roof_z(5.5) + 0.06
     posts = [(5.22, y) for y in (-1.05, -0.35, 0.35)] + [(x, sy * 1.18) for x in (5.6, 6.2, 6.8) for sy in (1, -1)]
     for k, (x, y) in enumerate(posts): objs.append(cyl('rp%d' % k, (x, y, roof_z(x) + 0.06), (x, y, roof_z(x) + 0.36), 0.016, C['steel'], 8))
     objs.append(tube('roof_rail', [(6.8, 1.18, roof_z(6.8) + 0.36), (5.32, 1.18, roof_z(5.3) + 0.36), (5.22, 1.08, roof_z(5.2) + 0.36), (5.22, -1.08, roof_z(5.2) + 0.36),
                                    (5.32, -1.18, roof_z(5.3) + 0.36), (6.8, -1.18, roof_z(6.8) + 0.36)], 0.02, C['steel'], 8))
-    objs.append(box('raft_cradle', 6.40, 6.90, -0.55, 0.45, roof_z(6.6) + 0.06, roof_z(6.6) + 0.12, C['dark']))
-    objs.append(cyl('liferaft', (6.65, -0.55, roof_z(6.6) + 0.34), (6.65, 0.45, roof_z(6.6) + 0.34), 0.22, C['white'], 18))
-    for yy in (-0.30, 0.20): objs.append(torus('raftband%d' % int(yy * 100), (6.65, yy, roof_z(6.6) + 0.34), (0, 1, 0), 0.225, 0.012, C['dark'], 20, 4))
     objs.append(tube('exhaust', [(6.05, 0.62, roof_z(6.05) + 0.06), (6.05, 0.62, 3.95), (6.08, 0.62, 4.06), (6.17, 0.62, 4.10), (6.26, 0.62, 4.04)], 0.06, C['steel'], 12))
     objs.append(cyl('sl_post', (5.12, -0.60, zr), (5.12, -0.60, zr + 0.22), 0.025, C['mast'], 8))
     objs.append(cyl('searchlight', (5.0, -0.60, zr + 0.30), (5.26, -0.60, zr + 0.30), 0.085, C['dark'], 14))
@@ -541,7 +537,6 @@ def rig(fine=True):
     for y, m in ((WH_WF + 0.10, C['lred']), (-WH_WF - 0.10, C['lgreen'])):
         x = WH_XF + LEAN * (WH_TOP - WH_SILL) - 0.05
         objs.append(box('sidelight%d' % int(y * 10), x - 0.18, x + 0.02, y - 0.05, y + 0.05, WH_TOP - 0.10, WH_TOP + 0.02, m, 0.01))
-    objs.append(torus('buoy_wh', (WH_X0 - 0.012, -0.55, 2.10), (1, 0, 0), 0.25, 0.055, C['orange'], 22, 8))
     return objs
 
 
@@ -577,6 +572,25 @@ def name_strips(G):
     out.append([[G(x_t(1.25) - 0.025, y, 1.25) for y in ys], [G(x_t(1.55) - 0.025, y, 1.55) for y in ys]])
     return out
 
+def kit_places(G):
+    """the places where the game sets the deck kit (tools/deck; nothing that can be bought is modelled in, only its place, 19.10.2026):
+    the liferaft in its cradle on the wheelhouse roof where the old one lay, across the boat; the ring buoys on the wheelhouse's aft
+    wall to starboard (the first, with the light and the line beside it) and on the gear room's forward face to port, where the
+    old ones hung; the radome on its bracket forward of the mast, the open array on the platform aft of it. The aft deck: the game's
+    gutting bench and bleeding tub stand by the hatch (port and starboard) and the crew's places beside it, so the net tub and
+    the line tubs (rows across) share the deck forward of the hatch, inboard of the hauler, with the way to the wheelhouse door
+    open along the starboard side; the freight across the forward end of the hatch cover and aft to starboard by the gear room
+    (a way stays open between them)"""
+    r = lambda a: round(a, 3)
+    gx, gy = 2.55 + 0.07 * (1.5 - 1.2) / (GR[3][1] - 1.2), 1.5                 # on the gear room's forward face, its normal turned a little to starboard
+    gn = math.atan2(GR[3][0] - 2.55, GR[3][1] - 1.2)
+    return {'raft': [G(6.6, -0.05, roof_z(6.6) + 0.06) + [0.0]],
+            'buoys': [G(WH_X0, -0.55, 2.40) + [0.0], G(gx, gy, 2.55) + [r(math.pi - gn)]],
+            'radar': G(6.12, FM[1] - 0.18, 4.47), 'radarA': G(RA[0], RA[1], 4.47),
+            'garn': {'at': G(4.58, 0.30, z_deck(4.58) + 0.055), 'ry': r(math.pi / 2)},
+            'stamps': {'at': G(4.37, 1.18, z_deck(4.6) + 0.045), 'ry': r(math.pi / 2)},
+            'cargo': [G(3.6, 0.0, z_deck(3.2) + 0.34) + [r(math.pi / 2)], G(1.45, -1.24, z_deck(1.45) + 0.032) + [0.0]]}
+
 def anchors():
     G = lambda x, y, z: [round(v, 3) for v in to_game((x, y, z))]
     zd = z_deck(3.0)
@@ -588,7 +602,8 @@ def anchors():
                        [G(7.50, -WH_WF - 0.10, WH_TOP - 0.04), [0.1, 1, 0.35], 'stbd'], [G(AM[0] + 0.11, 0, 4.16), [1, 0.95, 0.85], 'stern']],
             'names': name_strips(G),
             'deck': {'y': round(zd - WL, 3), 'z': round(-(3.0 - XM), 3)}, 'gw': round(z_cap(4.5, -1) - WL, 3),
-            'stern': round(XM + 0.2, 3), 'bow': round(-(10.3 - XM), 3), 'side': 1.9, 'beam': 4.1, 'pl': 4.2, 'rl': 1.56, 'open': False, 'hand': False}
+            'stern': round(XM + 0.2, 3), 'bow': round(-(10.3 - XM), 3), 'side': 1.9, 'beam': 4.1, 'pl': 4.2, 'rl': 1.56, 'open': False, 'hand': False,
+            'kit': kit_places(G)}
 
 
 # ---------- checks against the drawings ----------

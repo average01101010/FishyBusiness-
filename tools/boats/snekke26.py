@@ -383,6 +383,27 @@ def name_strips(G):
     out.append([[G(XA - 0.02, y, zb) for y in ys], [G(XA - 0.02, y, zt0) for y in ys]])
     return out
 
+def kit_places(G):
+    """the places where the game sets the deck kit (tools/deck; the user's wish 19.10.2026: nothing that can be bought is modelled in,
+    only its place): the liferaft in its cradle on the starboard side of the hard top, the canister along the boat beside the sliding
+    hatch; the ring buoys on the stern rail's side runs, facing out (the first, with the light and the line, to starboard); the radome on
+    the port side of the hard top abreast of the mast. The cockpit is small: the default gutting table (port) and bleeding tub
+    (starboard aft) of the game stand in its after half, the helm seat to starboard forward and the walk to the cabin door forward
+    in the middle, so the catch tub (one 300 l) stands aft on the centre line between them; the net tub stands forward to port,
+    the eight line tubs across the forward end (low enough to go under the helm seat), and the freight pallet forward to port
+    (the net tub, the line tubs and the freight share the forward end: the net and the line rig never stand together)"""
+    r = lambda a: round(a, 3); zt = HTZ + 0.1
+    yr = lambda x: deck_edge(x) - 0.06                                        # the stern rail's side run (fittings)
+    xb = 0.95; zb = (z_sheer(1.3) + z_sheer(0.6)) / 2 + 0.67; yb = (yr(1.3) + yr(0.6)) / 2 + 0.02
+    a = math.atan2(yr(1.3) - yr(0.6), 0.7)                                   # the run's angle in plan, the bracket square to it
+    return {'raft': [G(2.95, -0.70, zt) + [r(math.pi / 2)]],
+            'buoys': [G(xb, -yb, zb) + [r(math.pi / 2 - a)], G(xb, yb, zb) + [r(-(math.pi / 2 - a))]],
+            'radar': G(2.9, 0.72, zt),
+            'tubs': [G(0.62, 0.05, ZC) + [0.0, 300]],
+            'garn': {'at': G(2.74, 0.62, ZC), 'ry': 0.0},
+            'stamps': {'at': G(2.53, 0.92, ZC), 'ry': r(math.pi / 2)},
+            'cargo': [G(2.73, 0.58, ZC) + [0.0]]}
+
 def anchors():
     G = lambda x, y, z: [round(v, 3) for v in to_game((x, y, z))]
     hx = 2.0; hy = -(deck_edge(hx) - 0.12); zb = z_sheer(3.5)
@@ -395,7 +416,8 @@ def anchors():
             # the open cockpit aft: the hauler on the starboard coaming, the gear in the cockpit
             'deck': {'y': round(ZC - WL, 3), 'z': round(-(1.4 - XM), 3)}, 'gw': round(z_sheer(1.5) - WL, 3),
             'stern': round(XM - XA, 3), 'bow': round(-(XF - XM), 3), 'side': HB, 'beam': 2.7, 'pl': 2.6, 'rl': 1.2, 'open': True, 'hand': False,
-            'pole': G(-0.08, -0.5, z_sheer(0) + 0.85), 'hauler': G(hx, hy, z_sheer(hx) + 0.42), 'filler': G(3.2, HB, z_sheer(3.2) + 0.2)}
+            'pole': G(-0.08, -0.5, z_sheer(0) + 0.85), 'hauler': G(hx, hy, z_sheer(hx) + 0.42), 'filler': G(3.2, HB, z_sheer(3.2) + 0.2),
+            'kit': kit_places(G)}
 
 
 # the renders: from the same angles as Jonas' pictures (bow quarter from port, low; stern quarter; broadside; the cockpit from above)
