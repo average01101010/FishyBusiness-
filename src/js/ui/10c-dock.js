@@ -110,11 +110,22 @@ const DOCK = (() => {
       I('vedlikehold', 'vedlikehold', 'Vedlikehold', 'Maintenance', {page:'verksted', dot:svcOverdue() > 0}),
       I('maler', 'maler', 'Malerverksted', 'Paint shop', {page:'maler'}),
       bunkerItem()];
-    if (m === 'settut') return setChoices().map((c, i) => I('set' + i, 'settut', c.lbl[0], c.lbl[1], {act:'gset', data:{c:i}, wide:true}));
+    // what is aboard by line kind and bait (Jonas 20.10.2026); tubs that are not baited stand greyed with their state, and open their line
+    // card in the inventory, where they are baited
+    if (m === 'settut') return setChoices(true).map((c, i) => I('set' + i, 'settut', c.lbl[0], c.lbl[1], c.off ? {run:() => openGear(c.kind === 'line' ? 'lc-' + c.lk : 'baitCard'), wide:true, ghost:true, bc:'none'} : {act:'gset', data:{c:i, all:'1'}, wide:true, bc:c.bait ? BAITCOL[c.bait] : null}));
     if (m === 'fortoy') return moorAll(b.pos, 0.4).map((q, i) => I('fortoy' + i, 'naust', q.name.charAt(0).toUpperCase() + q.name.slice(1), q.name.charAt(0).toUpperCase() + q.name.slice(1), {run:() => moorGo(q), wide:true}));
     if (m === 'taopp'){ const s = nearSet(b.pos, 0.3); if (!s) return [];
       return [I('haul', 'taopp', 'Trekk', 'Haul', {act:'ghaul', data:{id:s.id}, pri:true}), I('haulset', 'settut', 'Trekk og sett igjen', 'Haul and set again', {act:'ghaul', data:{id:s.id, r:'1'}, wide:true})]; }
     return [];
+  }
+  // the inventory's gear page, scrolled to a card (a line kind's, or the bait's)
+  function openGear(id){ open('beholdning:gear'); const el = document.getElementById(id); if (el){ el.scrollIntoView({block:'start'}); el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1600); } }
+  // why «Sett ut» has nothing to show: no gear of the rig aboard, or it is with the crew (baiting, stripping, mending) or ashore
+  function setOff(){
+    const pg = S.pgear, R = RIGS[rigOf()], k = R.kind, sh = (pg && pg.shore) || [];
+    if (k === 'line' && sh.some(j => j.kind === 'egnself' || j.kind === 'stripself' || j.kind === 'egn')) return L('Stampene er hos mannskapet eller i egnebua.', 'The tubs are with the crew or at the baiting shed.');
+    if (k === 'garn' && sh.some(j => j.kind === 'mendself' || j.kind === 'bot')) return L('Garna bøtes.', 'The nets are being mended.');
+    return L('Ingen ' + R.no.toLowerCase() + ' om bord.', 'No ' + R.en.toLowerCase() + ' aboard.');
   }
   // the nearest of your own buoys, for the haul button's hint
   function nearestBuoy(){ let best = null; for (const s of mySets()) for (const e of [s.a, s.b]){ const d = dist(S.boat.pos, e); if (!best || d < best.d) best = {s, d}; } return best; }
@@ -127,7 +138,7 @@ const DOCK = (() => {
     const tut = typeof HAIL !== 'undefined' ? HAIL.dockItem(I) : null;
     const ptow = typeof PTOW !== 'undefined' ? PTOW.dockItem(I) : null;   // «Ta slep» by a player's broken-down boat (ui/10o-ptow.js)   // another player's boat within 1 nm (ui/10n-hail.js)
     if (b.status === 'idle'){
-      const s = nearSet(b.pos, 0.3), nb = nearestBuoy(), ch = setChoices();
+      const s = nearSet(b.pos, 0.3), nb = nearestBuoy(), ch = setChoices(true);
       const haul = s ? (s.kind === 'line' ? I('taopp', 'taopp', 'Ta opp', 'Haul', {act:'ghaul', data:{id:s.id}, pri:true}) : I('taopp', 'taopp', 'Ta opp', 'Haul', {menu:'taopp', pri:true}))
         : I('taopp', 'taopp', 'Ta opp', 'Haul', {off:[nb ? L('Nærmeste blåse er ' + fmt(nb.d / NM, 1) + ' nm unna. Bruk Auto-nav og trykk på blåsa.', 'The nearest buoy is ' + fmt(nb.d / NM, 1) + ' nm away. Use auto-nav and tap the buoy.') : L('Du har ikke redskap i sjøen.', 'You have no gear in the sea.')]});
       // «Jukse» only on a boat rigged for jigging (the user's wish 02.10.2026)
@@ -137,7 +148,7 @@ const DOCK = (() => {
       // anchor: the boat keeps her place and the crew rests; the anchor can drag in weather the boat does not hold (06e-anchor.js)
       const sp = !b.anch && anchorSpot(b.pos), anc = b.anch ? I('anker', 'anker', 'Hiv anker', 'Weigh anchor', {run:() => { weighAnchor(); refreshAll(); }, on:true}) : !moor ? I('anker', 'anker', 'Kast anker', 'Drop anchor', sp && sp.ok ? {run:() => { dropAnchor(); refreshAll(); }} : {off:[sp && anchorWhy[sp.why] ? L(anchorWhy[sp.why][0], anchorWhy[sp.why][1]) : L('Ikke her.', 'Not here.')]}) : null;
       return [I('jukse', 'jukse', 'Jukse', 'Jig', {menu:'jukse', pri:!s}),
-        I('settut', 'settut', 'Sett ut', 'Set', {menu:'settut', off:rigJig() ? [L('Båten er rigget for juksa. Rigg om til line, garn eller teiner under Beholdning.', 'The boat is rigged for jigging. Re-rig for line, nets or pots under Inventory.')] : !ch.length && [S.pgear && (S.pgear.nets.length || S.pgear.lines.hyse.n || S.pgear.lines.bank.n || S.pgear.pots.small || S.pgear.pots.big) ? L('Redskapet om bord er ikke klart: line må egnes, og teiner trenger agn og blåsesett.', 'The gear aboard is not ready: line must be baited, and pots need bait and buoy sets.') : L('Du har ikke garn, line eller teiner om bord.', 'You have no nets, line or pots aboard.')]}),
+        I('settut', 'settut', 'Sett ut', 'Set', {menu:'settut', off:rigJig() ? [L('Båten er rigget for juksa. Rigg om til line, garn eller teiner under Beholdning.', 'The boat is rigged for jigging. Re-rig for line, nets or pots under Inventory.')] : !ch.length && [setOff()]}),
         // by a quay with no buoy near, «Fortøy» takes the place of the greyed «Ta opp», so the row stays five wide on a phone
         ptow, s || !moor ? haul : null, moor, nav, tut, anc, restItem(), crew, work, beh].filter(Boolean);   // (the bunk, #70)
     }
@@ -178,13 +189,15 @@ const DOCK = (() => {
     if (b.status === 'port') return portItems();
     return seaItems();
   }
-  const btn = (x, small) => '<button type="button" class="dk-b' + (small ? ' sm' : '') + (x.pri ? ' pri' : '') + (x.warn ? ' warn' : '') + (x.on ? ' on' : '') + (x.off ? ' off' : '') + (x.wide ? ' wide' : '') + (menu === x.menu && x.menu ? ' open' : '') + '" data-dk="' + x.id + '"' + (x.act ? ' data-act="' + x.act + '"' : '') + (x.off ? ' aria-disabled="true"' : '') + '><span class="dk-i">' + IC[x.ic] + (x.dot ? '<i class="dk-dot"></i>' : '') + '</span><span class="dk-l">' + L(x.lbl[0], x.lbl[1]) + '</span></button>';
-  // the jig's fan is a small card: hours, start, and halibut or mixed
+  const btn = (x, small) => '<button type="button" class="dk-b' + (small ? ' sm' : '') + (x.pri ? ' pri' : '') + (x.warn ? ' warn' : '') + (x.on ? ' on' : '') + (x.off ? ' off' : '') + (x.ghost ? ' ghost' : '') + (x.wide ? ' wide' : '') + (menu === x.menu && x.menu ? ' open' : '') + '" data-dk="' + x.id + '"' + (x.act ? ' data-act="' + x.act + '"' : '') + (x.off ? ' aria-disabled="true"' : '') + '><span class="dk-i">' + IC[x.ic] + (x.dot ? '<i class="dk-dot"></i>' : '') + (x.bc ? '<i class="dk-bait' + (x.bc === 'none' ? ' e' : '') + '"' + (x.bc === 'none' ? '' : ' style="--bc:' + x.bc + '"') + '></i>' : '') + '</span><span class="dk-l">' + L(x.lbl[0], x.lbl[1]) + '</span></button>';
+  // the jig's fan is a small card: hours, the tackle aboard as the choices it really has (Jonas 20.10.2026: what each takes, as species chips,
+  // from the model, jigSets in ui/10-gear-ui.js; the halibut pilk only with the halibut gear aboard, and closed in its season), and start
   function jigCard(){
-    const b = S.boat, cl = kveiteClosed(S.t / 60);
+    const js = jigSets(), pick = js.length > 1;
+    const tk = js.map(j => { const nm = L(CARE.jig[j.k].no, CARE.jig[j.k].en), body = '<b>' + nm + '</b>' + (j.k === 'kveite' && j.closed ? '<span class="dk-x">' + L('Kveita er fredet til 21. april', 'Halibut closed until 21 April') + '</span>' : spChips(j.sp));
+      return pick ? '<button type="button" class="dk-tk' + (j.on ? ' on' : '') + '" data-dk="tk-' + j.k + '"' + (j.k === 'kveite' && j.closed ? ' disabled' : '') + ' aria-pressed="' + !!j.on + '">' + body + '</button>' : '<div class="dk-tk on">' + body + '</div>'; }).join('');
     return '<div class="dk-card"><div class="dk-step"><button type="button" data-dk="fh-" aria-label="−">−</button><b>' + S.fishPlanH + ' t</b><button type="button" data-dk="fh+" aria-label="+">+</button></div>' +
-      '<button type="button" class="dk-go" data-dk="startfish">' + L('Start jukse', 'Start jigging') + '</button>' +
-      (b.kgear ? '<button type="button" class="dk-tg' + (S.target === 'kveite' && !cl ? ' on' : '') + '" data-dk="target"' + (cl ? ' disabled' : '') + '>' + (cl ? L('Kveita er fredet', 'Halibut closed') : S.target === 'kveite' ? L('Fisker kveite', 'Fishing halibut') : L('Blandet fiske', 'Mixed fishing')) + '</button>' : '') + '</div>';
+      (tk ? '<div class="dk-tks">' + tk + '</div>' : '') + '<button type="button" class="dk-go" data-dk="startfish">' + L('Start jukse', 'Start jigging') + '</button></div>';
   }
   function render(){
     if (!bar) return;
@@ -251,6 +264,7 @@ const DOCK = (() => {
     const el = e.target.closest('[data-dk]'); if (!el || el.disabled) return; const k = el.dataset.dk;
     if (k === 'fh-' || k === 'fh+'){ S.fishPlanH = clamp(S.fishPlanH + (k === 'fh+' ? 1 : -1), 1, 12); save(); fanHtml = ''; render(); return; }
     if (k === 'startfish' || k === 'target'){ if (k === 'startfish') menu = null; doAct({dataset:{act:k}, disabled:false}); fanHtml = ''; html = ''; render(); return; }
+    if (k === 'tk-mark' || k === 'tk-kveite'){ const why = jigChoose(k.slice(3)); if (why) toast(why[0]); save(); fanHtml = ''; html = ''; render(); return; }
     run(fanItems.find(x => x.id === k));
   });
   // a tap anywhere else folds the fan away

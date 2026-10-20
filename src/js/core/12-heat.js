@@ -48,7 +48,9 @@ function heatValue(v, sp){ const i = HEATI[sp]; return i !== undefined ? v[i] ||
 // the soak, so for them the map says the kilos one unit would give over a soak of HEATG.T hours (the same formulas as soakHour in
 // 10-gear.js, on the same density), and the colours are the haul against what the gear usually gives (HEATG.fair: a net, a tub or a pot at a
 // good place after 24 h; green begins at a usual haul, yellow at 1.4 times that, red at 2.8 times). The jig keeps its colours (what
-// one person with a hand jig takes), and the figure in the sounder's box is your own rig's kilos an hour.
+// one person with a hand jig takes), and the figure in the sounder's box is your own rig's kilos an hour. The jig's map is what the jig
+// takes (20.10.2026, tilbakemelding #74: «mye blåkveite på ekkoloddet», and none on the jig): each species by its jig factor and the tackle
+// in use (jigTake), so the Greenland halibut does not light up as jig fish, and the halibut stands out on the halibut pilk.
 const HEATG = {T:24, fair:{garn:30, line:70, teine:20, jig:20}};
 const HEATIDX = {torsk:0, hyse:1, sei:2, blakveite:4, lyr:5, lange:6, brosme:7, uer:8, kveite:9};
 let HEATGC = null;   // the rig's gear now (null: the jig), worked out when the picture is made
@@ -68,25 +70,42 @@ function heatNet(pg){
   const sea = mySets().filter(s => s.kind === 'garn' && !s.lost).sort((a, c) => c.tSet - a.tSet)[0];
   return sea || (pg.nets || [])[0];
 }
+// the line the map speaks for, and the bait on it (20.10.2026: the bait actually on the tubs, not the remembered kind): the tubs being
+// drawn out on the chart, else those going over the side, else the kind with the most baited tubs aboard and their bait, else the last set
+// of it in the sea, else the remembered bait. bw: bait kind -> tubs
+function heatLine(pg){
+  const L = pg.lines || {}, has = lk => L[lk] && L[lk].n > 0;
+  if (typeof SETM !== 'undefined' && SETM && SETM.kind === 'line'){ const lk = SETM.spec.lk; return {lk, bw:SETM.spec.bait ? {[SETM.spec.bait]:1} : Object.assign({}, btOf(L[lk]))}; }
+  const g = S.boat.gop; if (g && g.kind === 'line' && g.s && g.s.lk) return {lk:g.s.lk, bw:g.s.baitW || {makrell:1}};
+  const by = ['hyse', 'bank'].filter(has).sort((a, c) => (L[c].baited - L[a].baited) || (L[c].n - L[a].n));
+  const lk = by[0] || (L.bank && L.bank.n > ((L.hyse || {}).n || 0) ? 'bank' : 'hyse');
+  if (L[lk] && L[lk].baited > 0) return {lk, bw:Object.assign({}, btOf(L[lk]))};
+  const sea = mySets().filter(s => s.kind === 'line' && s.lk === lk && !s.lost).sort((a, c) => c.tSet - a.tSet)[0];
+  return {lk, bw:sea && sea.baitW ? sea.baitW : {[BAITS[pg.baitPref] ? pg.baitPref : 'makrell']:1}};
+}
 function heatGearCtx(){
   const b = S.boat, rig = typeof rigOf === 'function' ? rigOf() : 'juksa', kind = RIGS[rig] && RIGS[rig].kind, pg = S.pgear || {};
-  if (!kind) return null;
+  // the jig: kg an hour for one person, as the jig takes each species with the tackle in use (the halibut pilk: halibut and its tide)
+  if (!kind){ const k = typeof jigKind === 'function' ? jigKind() : 'mark', open = k === 'kveite' && !kveiteClosed(S.t / 60);
+    const tackle = open ? 'kveite' : 'mark', H = S.t / 60, f = {}; for (const sp in HEATIDX) f[sp] = jigTake(sp, H, tackle);   // the same for every cell (the tide is the boat's)
+    return {kind:'jig', key:'jig', sig:'jig:' + tackle, tackle, f, unit:['t', 'h'], per:1, fair:HEATG.fair.jig}; }
   if (kind === 'garn'){ const l = heatNet(pg), ty = l && l.ty && l.ty !== 'bunn' ? l.ty : null, key = ty ? 'garn:' + ty : 'garn';
     return {kind, key, sig:key, unit:['garn', 'net'], per:GEAR.garn.q * heatSoakSum(30, HEATG.T), fair:HEATG.fair.garn}; }
-  if (kind === 'line'){ const lk = pg.lines && pg.lines.bank && pg.lines.bank.n > ((pg.lines.hyse || {}).n || 0) ? 'bank' : 'hyse', bait = BAITS[pg.baitPref] ? pg.baitPref : 'makrell';
-    return {kind, key:'line:' + lk, bait, sig:'line:' + lk + ':' + bait, unit:['stamp', 'tub'], per:GEAR.line.q * (LINE_KINDS[lk].hooks / 100) * heatSoakSum(10, HEATG.T), fair:HEATG.fair.line}; }
+  if (kind === 'line'){ const {lk, bw} = heatLine(pg), sig = Object.keys(bw).filter(k => bw[k] > 0).sort().map(k => k + bw[k]).join(',');
+    return {kind, key:'line:' + lk, bw, sig:'line:' + lk + ':' + sig, unit:['stamp', 'tub'], per:GEAR.line.q * (LINE_KINDS[lk].hooks / 100) * heatSoakSum(10, HEATG.T), fair:HEATG.fair.line}; }
   return {kind:'teine', key:'teine', sig:'teine', unit:['teine', 'pot'], per:GEAR.teine.q * heatPotSum(HEATG.T), fair:HEATG.fair.teine,
     crab:KC.q * GEAR.teine.q * POTS.big.f * KC.mean * heatPotSum(HEATG.T), cap:POTS.big.cap * KC.mean};
 }
 // the kilos one unit of the gear would give at a cell (v: the cell's kg an hour per species for a hand jig) over the soak
 function heatGearKg(v, sp, cx){
   if (!cx || !v) return 0;
+  if (cx.kind === 'jig'){ const H = S.t / 60; let sum = 0; for (const s of sp === 'all' ? Object.keys(HEATIDX) : HEATIDX[sp] != null ? [sp] : []) sum += v[HEATIDX[s]] * (cx.f ? cx.f[s] : jigTake(s, H, cx.tackle)); return sum; }
   if (cx.kind === 'teine'){
     if (sp === 'all' || sp === 'krabbe') return Math.min(cx.cap, cx.crab * (v[10] || 0));
     return (HEATIDX[sp] != null ? v[HEATIDX[sp]] * ((SELQ.teine || {})[sp] || 0) * cx.per : 0);
   }
   const sel = SELQ[cx.key] || {}; let sum = 0;
-  for (const s of sp === 'all' ? Object.keys(HEATIDX) : HEATIDX[sp] != null ? [sp] : []) sum += v[HEATIDX[s]] * (sel[s] || 0) * (cx.bait ? baitF(cx.bait, s) : 1);
+  for (const s of sp === 'all' ? Object.keys(HEATIDX) : HEATIDX[sp] != null ? [sp] : []) sum += v[HEATIDX[s]] * (sel[s] || 0) * (cx.bw ? baitMixF(cx.bw, s) : cx.bait ? baitF(cx.bait, s) : 1);
   return sum * cx.per;
 }
 // the value the colours are read from: the haul against a usual one, in the units the scale knows (a usual haul is 20, where green begins)
@@ -97,7 +116,7 @@ function heatRigFactor(){ const e = typeof fishEffort === 'function' ? fishEffor
 function heatGearInfo(){
   const b = S.boat, v = b.status === 'port' ? null : heatAt(b.pos); if (!v) return null;
   const cx = heatGearCtx(), sp = heatSpecies();
-  if (!cx){ const n = Math.round(heatValue(v, sp) * heatRigFactor()); return {no:'Her: ca. ' + n + ' kg/t med riggen din', en:'Here: about ' + n + ' kg/h with your rig'}; }
+  if (!cx || cx.kind === 'jig'){ const n = Math.round((cx ? heatGearKg(v, sp, cx) : heatValue(v, sp)) * heatRigFactor()); return {no:'Her: ca. ' + n + ' kg/t med riggen din', en:'Here: about ' + n + ' kg/h with your rig'}; }
   const n = Math.round(heatGearKg(v, sp, cx));
   return {no:'Her: ca. ' + n + ' kg per ' + cx.unit[0] + ' etter ' + HEATG.T + ' t', en:'Here: about ' + n + ' kg per ' + cx.unit[1] + ' after ' + HEATG.T + ' h'};
 }

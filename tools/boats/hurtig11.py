@@ -16,10 +16,11 @@ with the skeg):
 
 What I chose myself: the exact heights, the window count, the colours (yellow, white and black as in the pictures), the boom and the
 aft mast simplified to poles and stays, no name on her (the game paints the player's name and mark). Exterior only (CLAUDE.md). The
-radars, the liferaft and the lifebuoys are the game's deck kit (tools/deck), drawn at the places in anchors.kit (the user's wish 19.10.2026).
+radars, the liferaft, the lifebuoys and the folding deck crane (on the gear locker in the starboard quarter) are the game's deck kit
+(tools/deck), drawn at the places in anchors.kit (the user's wish 19.10.2026).
 
     pip install bpy==4.5.4
-    python3 tools/boats/hurtig11.py            -> src/data/boat-hurtig11.b64 (+ the side picture), renders in tools/boats/out/
+    python3 tools/boats/hurtig11.py            -> src/data/boat-hurtig11.b64 (+ the side picture), renders tools/boats/out/hu_*.png
     python3 tools/boats/hurtig11.py fast dry   -> no renders to look at, and the GLB only in tools/boats/out
 
 Frame: x forward from the transom, y to port, z up from the base line; the waterline is z = 1.0."""
@@ -220,6 +221,7 @@ def underwater(fine=True):
 
 # ---------- the wheelhouse, the masts ----------
 WS, WH = 3.42, 4.46          # the window band
+LOCKER = (0.25, 1.4, 0.1, 0.7, z_sh(0.8) + 0.3)     # the gear locker in the starboard quarter: x0, x1, its sides in from y_sh(0.8), its top
 def lean(x, z):
     """the front leans aft from its foot at WX1 to the roof"""
     return x - 0.42 * (z - ZFD) / (WR - ZFD) if x > WX1 - 0.01 else x
@@ -339,9 +341,9 @@ def house(fine=True):
     abox(A, qx - 0.05, qx + 0.05, qy - 0.55, qy + 0.35, 6.9, 6.95, C['steel'])
     acyl(A, (qx, qy, 7.6), (qx, qy, 7.75), 0.05, lambda z: C['lampW'], seg=8); acyl(A, (qx, qy, 7.75), (qx, qy, 7.78), 0.06, lambda z: C['dark'], seg=8)   # the stern light
     # the gutting bench: a white moulded block on the starboard bulwark by the hatch (the picture of the deck), and a stainless
-    # gear box in the starboard quarter aft
+    # gear locker in the starboard quarter aft, whose top is the deck crane's pedestal (kit.crane)
     abox(A, 3.5, 4.0, -(y_sh(3.75) - 0.08), -(y_sh(3.75) - 0.6), ZMD, z_sh(3.75) + 0.35, C['white'])
-    abox(A, 0.25, 1.4, -(y_sh(0.8) - 0.1), -(y_sh(0.8) - 0.7), ZMD, z_sh(0.8) + 0.3, C['plate'])
+    abox(A, LOCKER[0], LOCKER[1], -(y_sh(0.8) - LOCKER[2]), -(y_sh(0.8) - LOCKER[3]), ZMD, LOCKER[4], C['plate'])
     # the wheelhouse inside (B5): the console under the front windows with three screens and the wheel, the skipper's chair to
     # starboard on its pedestal, a bench along the port side; seen through the windows
     cx = lean(WX1, WS) - 0.55
@@ -402,7 +404,13 @@ def kit(G):
     under the starboard window, by the hauler, and one on the port grab rail aft; the dome on its bracket forward of the mast, the open
     array on the platform at the lower cross-tree; the net tub at the stern in the middle, where the nets go out over the transom (the
     deck by the hauler is the bench's, the bleeding tub's and the hauler's man's); the line tubs along the port bulwark beside the hatch,
-    under the grab rail; one cargo place in the port quarter, clear of the mast's legs"""
+    under the grab rail; one cargo place in the port quarter, clear of the mast's legs; the folding crane (Jonas 20.10.2026: «Hurtigsjarken
+    kan ha kran») on the stainless locker in the starboard quarter, which is its pedestal, as the small knuckle cranes of 1-2 t*m stand
+    on the quarters of sjarks this size: s 0.7 (about 2 t*m by the cube of the scale, 4.6 m of hydraulic reach), slewing on the locker's
+    middle 0.78 m from the transom, its booms folded forward along the starboard bulwark (ry 0); folded it lies 0.11-1.61 m from the
+    transom, 1.23-1.81 m to starboard of the centreline and up to 2.56 m over the deck (its booms from 1.39 m), all above the
+    bulwark's top and the grab rail, inboard of the bulwark's cap, aft of the bleeding tub and 0.33 m outboard of the crew's place in the quarter. From there it reaches
+    the cargo place across the deck and out over the quay to starboard; no rest (it folds up tight at sea)"""
     r = lambda v: round(v, 3); h = math.pi / 2; mx = 6.6
     gr = lambda x: hbz(x, ZMD + 0.75) - 0.2 - 0.024           # the port grab rail's inboard face
     return {'raft': [G(4.45, 0.75, WR + 0.3) + [r(h)]],
@@ -411,7 +419,8 @@ def kit(G):
             'radarA': G(mx + 0.85, 0, 8.16),
             'garn': {'at': G(0.7, 0.0, ZMD), 'ry': 0.0},
             'stamps': {'at': G(4.075, 1.565, ZMD), 'ry': 0.0},
-            'cargo': [G(0.75, 0.95, ZMD) + [0.0]]}
+            'cargo': [G(0.75, 0.95, ZMD) + [0.0]],
+            'crane': {'at': G(LOCKER[0] + 0.53, -(y_sh(0.8) - (LOCKER[2] + LOCKER[3]) / 2), LOCKER[4]), 'ry': 0.0, 's': 0.7, 'rest': None}}
 
 
 SHOTS = [('bow3q', (19.0, 9.5, 5.0), (5.5, 0, 3.0), 38), ('stern3q', (-6.5, -8.5, 6.2), (4.0, 0, 3.0), 35), ('side', (5.5, 22, 3.6), (5.5, 0, 3.6), 35),
@@ -423,7 +432,7 @@ def main():
     reset(); colours()
     solids, glass = build(True)
     join(solids, 'BOAT0'); join(glass, 'GLASS0')
-    if 'fast' not in sys.argv: beauty(OUT, 'hj', WL, SHOTS)
+    if 'fast' not in sys.argv: beauty(OUT, 'hu', WL, SHOTS)          # (hj_ is the havsjark's)
     ex = {'frame': 'kystfiske: x starboard, y up from the waterline, z aft; metres', 'type': 'hurtigsjark', 'name': 'Used speed sjark 10.99 m',
           'len': 10.99, 'beam': 3.9, 'draft': 1.6, 'anchors': anchors()}
     export_boat(build, to_game, to_game_n, OUT, 'hurtig11.glb', os.path.join(ROOT, 'src', 'data', 'boat-hurtig11.b64'), ex,

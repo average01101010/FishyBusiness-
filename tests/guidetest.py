@@ -53,13 +53,14 @@ async def main():
         print(ok(c['cols'] == 12 and c['sk'] == 5 and c['best'] and c['where'] and c['gear'] and c['bait'] and c['price'] and c['rules'] and c['back']), 'the cod card: twelve bars with the skrei in five (December to April), where, gear, bait, price, rules, and a way back', c)
         await tap('.gd-back')
         await tap('.gd-row[data-sp=blakveite]')
-        bk = await pg.evaluate("""(() => { const t = document.querySelector('.ph-appv').innerText; return {depth:t.includes('300–1100 m'), egga:t.includes('Egga'), lines:t.includes('Bankline'), jig:!t.includes('Juksa')}; })()""")
+        bk = await pg.evaluate("""(() => { const t = document.querySelector('.ph-appv').innerText, none = g => !!document.querySelector('.gd-g[data-g="' + g + '"] .gd-dots.none');
+          return {depth:t.includes('300–1100 m'), egga:t.includes('Egga'), lines:t.includes('Bankline') && !none('line:bank'), jig:none('jig') && none('jig:kveite')}; })()""")
         await tap('.gd-back'); await tap('.gd-row[data-sp=krabbe]')
         kr = await pg.evaluate("""(() => { const t = document.querySelector('.ph-appv').innerText; return {pots:t.includes('Teiner'), no_jig:!t.includes('Juksa') && !t.includes('Garn'), q:t.includes('26° Ø'), nomin:!t.includes('Minstemål')}; })()""")
         await tap('.gd-back'); await tap('.gd-row[data-sp=kveite]')
-        kv = await pg.evaluate("""(() => { const t = document.querySelector('.ph-appv').innerText; return {pilk:t.includes('Stor pilk'), closed:t.includes('20. desember'), max:t.includes('100 kg')}; })()""")
+        kv = await pg.evaluate("""(() => { const t = document.querySelector('.ph-appv').innerText, first = document.querySelector('.gd-g'); return {pilk:t.includes('Kveitepilk') && t.includes('krever kveiteutstyr') && !!first && first.dataset.g === 'jig:kveite', closed:t.includes('20. desember'), max:t.includes('100 kg')}; })()""")
         print(json.dumps([bk, kr, kv], ensure_ascii=False))
-        print(ok(all(bk.values()) and all(kr.values()) and all(kv.values())), 'the cards: Greenland halibut on the shelf edge by bank line and not the jig, king crab in pots only, halibut on the big jig with its closed spell', [bk, kr, kv])
+        print(ok(all(bk.values()) and all(kr.values()) and all(kv.values())), 'the cards: Greenland halibut on the shelf edge by bank line, and the jig and the halibut pilk marked «–», king crab in pots only, halibut best on the halibut pilk (needs the halibut gear) with its closed spell', [bk, kr, kv])
         await tap('.gd-back')
         # 5. the sea's own places: far south (60° N) there is little Greenland halibut and king crab; off Finnmark (70.5° N 25° E) next to no halibut worry and crab
         lo = await pg.evaluate("""(() => { S.boat.pos = natP(60.0, 5.0); PHONE.open('guide'); const t = i => [...document.querySelectorAll('.gd-row[data-sp=' + i + '] .gd-chip')].map(c => c.innerText).join('|'); const south = {bk:t('blakveite'), kr:t('krabbe')};

@@ -28,7 +28,7 @@ const GUIDE = (() => {
     lange:['Dypt, på kantene av bankene. Best på bankline.', 'Deep, on the edges of the banks. Best on the bank line.'],
     brosme:['Dypt, på bratt bunn. Best på bankline.', 'Deep, on steep ground. Best on the bank line.'],
     uer:['Dypt vann. Rettet fiske etter uer er bare tillatt juni–august, med juksa fra båter under 15 m. Ellers kommer den som bifangst.', 'Deep water. Directed fishing for redfish is only allowed June–August, with the jig from boats under 15 m. Otherwise it comes as by-catch.'],
-    kveite:['Eksponerte felt og kanter. Stor pilk eller tung line.', 'Exposed grounds and edges. Big jig or heavy line.'],
+    kveite:['Eksponerte felt og kanter. Kveitepilk eller bankline.', 'Exposed grounds and edges. Halibut pilk or bank line.'],
     blakveite:['Egga: kanten ut mot det dype, 300–1100 m. Nesten ingenting sør for 62° N, litt fra Storegga til Helgeland og Træna. Hovedfeltene går fra Lofoten og Vesterålen (Bleiksdjupet) til Malangsdjupet, Fugløybanken og Tromsøflaket. Mindre i Finnmark, mest i øst (Berlevåg, Vardø). Om vinteren samler gytefisken seg nord for 70° N, så sør tynnes ut og nord fylles.',
       'The shelf edge towards the deep, 300–1100 m. Next to none south of 62° N, a little from Storegga to Helgeland and Træna. The main grounds run from Lofoten and Vesterålen (Bleiksdjupet) to Malangsdjupet, Fugløybanken and Tromsøflaket. Less in Finnmark, most in the east (Berlevåg, Vardø). In winter the spawning fish gather north of 70° N, so the south thins and the north fills.'],
     krabbe:['Teiner på 40–175 m. Ingen i Troms, litt fra Sørøya, mest fra Nordkapp og østover. Fritt fiske vest for 26° Ø, kvoteområde for Finnmarks egne øst for linja.', 'Pots at 40–175 m. None in Troms, a little from Sørøya, most from the North Cape eastwards. Free fishing west of 26° E, a quota area for Finnmark\'s own east of it.']};
@@ -71,19 +71,30 @@ const GUIDE = (() => {
     return out.join(', ');
   }
   const verdict = r => r >= 0.75 ? L('Toppsesong', 'Peak season') : r >= 0.5 ? L('God tid', 'A good time') : r >= 0.3 ? L('Middels', 'Middling') : L('Svak tid', 'A weak time');
-  // ----- the gear: what keeps the species (SELQ), by the stars of a reading of it: 3 best, 2 good, 1 some
-  const GEARS = [['jig', 'Juksa', 'Jig'], ['garn', 'Garn', 'Nets'], ['garn:flyt', 'Flytegarn', 'Floating net'], ['garn:kveite', 'Blåkveitegarn', 'Halibut net'], ['line:hyse', 'Hyseline', 'Haddock line'], ['line:bank', 'Bankline', 'Bank line'], ['teine', 'Teiner', 'Pots']];
-  function stars(sp, g){
-    const s = SPECIES[sp];
-    if (g === 'jig'){ if (s.shell) return 0; if (sp === 'kveite') return 3; if ((s.jig != null ? s.jig : 1) < 0.1) return 0; return s.dep[0] > 150 ? 1 : 2; }
-    if (g === 'teine') return s.shell ? 3 : 0;
+  // ----- the gear (20.10.2026: read from the model, as it fishes): how much each takes of the species against the plain jig (1). The jig
+  // by the species' jig factor (jigTake: the Greenland halibut next to none), the halibut pilk with its pull over a day of tides at the boat
+  // (targetF); nets and lines by what they keep (SELQ), the lines with the best bait for the species (baitF). Dots against the species'
+  // best gear (3: it or near it, 2: good, 1: some), and «–» where the gear takes next to none of it (under a tenth of the plain jig), so a
+  // gear that does not work says so instead of being left out. Shellfish are for the pots alone
+  const GEARS = [['jig', 'Juksa', 'Jig', 'markkroker og pilk', 'fly hooks and pilk'], ['jig:kveite', 'Kveitepilk', 'Halibut pilk', 'krever kveiteutstyr', 'needs the halibut gear'], ['garn', 'Garn', 'Nets'], ['garn:flyt', 'Flytegarn', 'Floating net'], ['garn:kveite', 'Blåkveitegarn', 'Greenland halibut net'], ['line:hyse', 'Hyseline', 'Haddock line'], ['line:bank', 'Bankline', 'Bank line'], ['teine', 'Teiner', 'Pots']];
+  const bestBait = sp => Object.keys(BAITS).map(k => [k, baitF(k, sp)]).sort((a, b) => b[1] - a[1])[0];
+  function take(sp, g){
+    const s = SPECIES[sp], H = S.t / 60;
+    if (g === 'teine') return s.shell ? 1 : 0;
     if (s.shell) return 0;
-    const v = (SELQ[g] || {})[sp] || 0; return v >= 1.5 ? 3 : v >= 0.7 ? 2 : v >= 0.3 ? 1 : 0;
+    if (g === 'jig') return jigTake(sp, H, 'mark');
+    // the halibut pilk as it fishes in its season (in the closed season: from the day it opens), over a day of tides
+    if (g === 'jig:kveite'){ let H0 = H, v = 0; for (let d = 0; d < 140 && kveiteClosed(H0); d++) H0 += 24; for (let k = 0; k < 24; k++) v += jigTake(sp, H0 + k + 0.5, 'kveite'); return v / 24; }
+    const q = (SELQ[g] || {})[sp] || 0; return g.startsWith('line:') ? q * bestBait(sp)[1] : q;
   }
-  const dots = n => '<b class="gd-dots">' + '●'.repeat(n) + '<span>' + '●'.repeat(3 - n) + '</span></b>';
+  function gearRows(sp){
+    const s = SPECIES[sp], gs = GEARS.filter(g => s.shell ? g[0] === 'teine' : g[0] !== 'teine'), v = gs.map(g => [g, take(sp, g[0])]), best = Math.max(...v.map(x => x[1]), 1e-9);
+    return v.map(([g, x]) => [g, x, x < 0.1 ? 0 : x / best >= 0.75 ? 3 : x / best >= 0.35 ? 2 : 1]).sort((a, b) => b[2] - a[2] || b[1] - a[1]);
+  }
+  const dots = n => n ? '<b class="gd-dots">' + '●'.repeat(n) + '<span>' + '●'.repeat(3 - n) + '</span></b>' : '<b class="gd-dots none" aria-label="' + L('virker ikke', 'does not work') + '">–</b>';
   function gearTxt(sp){
-    return GEARS.map(g => [g, stars(sp, g[0])]).filter(x => x[1] > 0).sort((a, b) => b[1] - a[1])
-      .map(([g, n]) => '<div class="ph-kv"><span>' + (g[0] === 'jig' && sp === 'kveite' ? L('Stor pilk', 'Big jig') : L(g[1], g[2])) + '</span><span>' + dots(n) + '</span></div>').join('');
+    return gearRows(sp).map(([g, , n]) => { const bb = g[0].startsWith('line:') && n ? bestBait(sp) : null, sm = g[3] ? L(g[3], g[4]) : bb && bb[1] > 1 ? L('med ', 'with ') + L(BAITS[bb[0]].no, BAITS[bb[0]].en).toLowerCase() : '';
+      return '<div class="ph-kv gd-g' + (n ? '' : ' no') + '" data-g="' + g[0] + '"><span>' + L(g[1], g[2]) + (sm ? ' <small>' + sm + '</small>' : '') + '</span><span>' + dots(n) + '</span></div>'; }).join('');
   }
   const baitTxt = sp => Object.keys(BAITS).map(k => [k, baitF(k, sp)]).filter(x => x[1] >= 1.1).sort((a, b) => b[1] - a[1]).map(x => L(BAITS[x[0]].no, BAITS[x[0]].en)).join(', ');
   // ----- the month view
@@ -152,5 +163,5 @@ const GUIDE = (() => {
     else return false;
     return true;
   }
-  return {page, act, st, rel, status, monthsTxt, depthOf};
+  return {page, act, st, rel, status, monthsTxt, depthOf, COL, gearRows};
 })();

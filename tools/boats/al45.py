@@ -5,7 +5,8 @@ the repository; the lines below were measured from Jonas' picture (47.46 px/m, f
 over the base line, the forefoot's round nose at 42.7 m on the waterline, the stem hollowing to 41.1 m at 6.3 m up, the wheelhouse from 10.9 to 19.1 m
 with its windows at 12.4-13.3 m and its roof at 14.05 m, the funnel at 6.0-9.6 m, the crane forward of the wheelhouse, the raked
 foremast at 29.4-33.6 m and the hauling port on the starboard side at 20.7-23.5 m, where the line comes in to the hauler on the main
-deck. The colours are ours: a navy hull to the 2nd deck, white above. Exterior only (CLAUDE.md).
+deck. The colours are ours: a navy hull to the 2nd deck, white above. Both cranes are parked for sea with their booms laid forward
+in boom rests (Jonas 20.10.2026: the larger ocean boats' cranes need a boom rest; bpyutil.boom_rest). Exterior only (CLAUDE.md).
 
     pip install bpy==4.5.4
     python3 tools/boats/al45.py            -> src/data/boat-al45.b64 (+ the side picture), renders in tools/boats/out/
@@ -232,12 +233,15 @@ def deck_gear(fine=True):
     A.poly(list(reversed(R0)), C['orange'], (0, 0, -1)); A.poly(R1, C['dark'], (0, 0, 1))
     for x in (bx0 + 0.9, bx1 - 1.1): abox(A, x - 0.15, x + 0.15, by - 0.7, by + 0.7, D3, bz + 0.05, C['steel'])
     acyl(A, (8.3, 4.6, D3), (8.3, 4.6, D3 + 3.0), 0.14, lambda z: w, seg=8); beam(A, (8.3, 4.6, D3 + 3.0), (5.6, 3.8, D3 + 3.3), 0.2, 0.25, w)
-    # the crane on the port quarter aft, boom laid forward
+    # the crane on the port quarter aft, boom laid forward in its rest (a post with a rubber-lined cradle and a lashing, braced across
+    # to the deck) just aft of the rescue boat's stern, as larger vessels park their cranes for sea
     acyl(A, (0.8, 3.6, D3), (0.8, 3.6, D3 + 1.7), 0.35, lambda z: w, seg=sg_)
     beam(A, (0.8, 3.6, D3 + 1.9), (0.9, 3.4, D3 + 2.9), 0.35, 0.4, w); beam(A, (0.9, 3.4, D3 + 2.9), (3.6, 3.2, D3 + 2.6), 0.28, 0.32, w)
-    # the crane forward of the wheelhouse, its boom laid forward along the starboard side
+    boom_rest(A, (0.9, 3.4, D3 + 2.9), (3.6, 3.2, D3 + 2.6), 0.28, 0.32, (2.5, 3.3), D3, w, C['dark'], brace=((2.5, 4.35, D3), (2.5, 2.25, D3)), strap=C['yellow'], fine=fine)
+    # the crane forward of the wheelhouse, its boom laid forward along the starboard side in its rest aft of the hook, braced across
     acyl(A, (20.6, -2.6, D3), (20.6, -2.6, D3 + 1.6), 0.4, lambda z: w, seg=sg_)
     beam(A, (20.6, -2.6, D3 + 1.8), (20.7, -2.6, D3 + 2.6), 0.4, 0.45, w); beam(A, (20.7, -2.6, D3 + 2.6), (28.4, -2.4, D3 + 2.45), 0.3, 0.35, w)
+    boom_rest(A, (20.7, -2.6, D3 + 2.6), (28.4, -2.4, D3 + 2.45), 0.3, 0.35, (27.3, -2.43), D3, w, C['dark'], brace=((27.3, -3.55, D3), (27.3, -1.35, D3)), strap=C['yellow'], fine=fine)
     acyl(A, (28.3, -2.4, D3 + 2.4), (28.3, -2.4, D3 + 1.5), 0.04, lambda z: C['steel'], seg=6); abox(A, 28.1, 28.5, -2.6, -2.2, D3 + 1.2, D3 + 1.5, C['yellow'])
     # the cage for the crane operator, amidships forward
     for dx in (23.2, 25.6):

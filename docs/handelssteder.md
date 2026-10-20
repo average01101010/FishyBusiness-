@@ -91,6 +91,9 @@ Alle kjøpssystemer følger det spilleren eier. Regelen ligger i `buyGate(what)`
 | blåsesett, dregger | at du eier line, garn eller teiner |
 | agn | at du eier line eller teiner |
 | juksautstyr (pilk, markkroker) | ingenting (juksa følger med fra start) |
+| kveitepilk (reservesett) | kveiteutstyr om bord (Jonas 20.10.2026) |
+
+Agn selges bare på fiskemottaket (Mottak › Agn); utstyrsbutikken har ingen agnknapper. Agnet velges når stampene egnes (selv eller i egnebua) og når teinene settes, og agnet kan tas av stampene igjen (`stripSelf`) for å egne med et annet slag.
 
 Halerne heter bare linehaler, garnhaler og teinehaler (ingen «elektrisk», «hydraulisk» eller 12 V). Linehaler og teinehaler passer på alle båter. Eldre lagringer med den gamle elektriske haleren får linehaler og teinehaler. Et nytt kjøpssystem legger regelen sin i `buyGate` (eller `equipFits` for utstyr som må passe båten) i stedet for å sjekke selv.
 

@@ -14,7 +14,12 @@ JS = """async () => {
   // a cod ground in March and a crab place in August
   const G = GROUNDS[2].p; await mapNeed(G, 4); b.status = 'idle'; b.pos = {...G}; b.port = null;
   const v = heatSample(G, H0);
-  b.rig = 'juksa'; R.jig = heatGearCtx() === null;
+  // the jig (20.10.2026, tilbakemelding #74): kg an hour as the jig takes each species, so the Greenland halibut counts at its jig factor (0.03)
+  // and, with the halibut pilk in its season, the halibut stands out and the rest takes a fifth
+  b.rig = 'juksa'; b.kgear = false; S.target = 'mix'; const cj = heatGearCtx(), vj = Float64Array.from(v); vj[4] = 50; vj[0] = 10; vj[9] = 2;
+  R.jig = {kind:cj && cj.kind, all:+heatGearKg(vj, 'all', cj).toFixed(2), raw:+Object.keys(HEATIDX).reduce((a, s) => a + vj[HEATIDX[s]], 0).toFixed(2), bk:+heatGearKg(vj, 'blakveite', cj).toFixed(2)};
+  { const t0 = S.t; S.t = Math.round((Date.UTC(2028, 6, 10, 6) - EPOCH) / 6e4); b.kgear = true; S.target = 'kveite'; const ck = heatGearCtx();
+    R.jigKv = {sig:ck.sig, kv:+(heatGearKg(vj, 'kveite', ck) / vj[9]).toFixed(2), torsk:+(heatGearKg(vj, 'torsk', ck) / vj[0]).toFixed(2)}; S.t = t0; b.kgear = false; S.target = 'mix'; }
   S.pgear = newPGear(); S.pgear.nets.push({id:'n1', mesh:156, n:10, cond:1}); b.rig = 'garn'; const cg = heatGearCtx();
   R.garn = {map:+heatGearKg(v, 'all', cg).toFixed(1), soak:+dry('garn', {mesh:156}, G, 24).toFixed(1)};
   S.pgear.lines.hyse.n = 4; b.rig = 'line'; const cl = heatGearCtx();
@@ -42,7 +47,9 @@ async def main():
         r = await pg.evaluate(JS)
         print('heatgear:', json.dumps(r, ensure_ascii=False))
         near = lambda a, b: b > 0 and 0.5 <= a / b <= 1.8
-        print(ok(r['jig']), 'rigged for the jig the map keeps kg an hour (no gear context)')
+        j, jk = r['jig'], r['jigKv']
+        print(ok(j['kind'] == 'jig' and abs(j['bk'] - 1.5) < 0.01 and abs(j['all'] - (j['raw'] - 50 + 1.5)) < 0.05), 'rigged for the jig the map is kg an hour as the jig takes each species: the Greenland halibut at its jig factor', j)
+        print(ok(jk['sig'] == 'jig:kveite' and jk['kv'] >= 5 and abs(jk['torsk'] - 0.2) < 0.01), 'with the halibut pilk in its season the map shows the halibut many times over and the rest at a fifth', jk)
         print(ok(near(r['garn']['map'], r['garn']['soak'])), 'nets: the map says about what a net takes in 24 h there', r['garn'])
         print(ok(near(r['line']['map'], r['line']['soak']) and r['line']['unit'] == 'stamp'), 'line: the map says about what a tub takes in 24 h there', r['line'])
         print(ok(r['teine']['map'] > 0 and r['teine']['map'] <= 60.5 and near(r['teine']['map'], r['teine']['soak'])), 'pots: the map says about what a pot takes in 24 h, never more than a full pot', r['teine'])

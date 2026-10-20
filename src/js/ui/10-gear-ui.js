@@ -9,16 +9,78 @@ function setState(s){
   return a < 24 ? 'ok' : a < 48 ? 'due' : 'late';
 }
 const SETST = {wait:['står for kort', 'too short'], ok:['står', 'soaking'], due:['bør trekkes', 'should be hauled'], late:['står for lenge', 'standing too long'], lost:['tapt', 'lost']};
-function setLabel(s, short){
-  const n = s.n + ' ' + unitName(s.kind, s.n), a = fmt((S.t - s.tSet) / 60, 0) + ' t';
-  return short ? GEAR[s.kind][S.lang] + ' · ' + a : GEAR[s.kind][S.lang] + ', ' + n + ' · ' + a + ' · ' + GL(SETST[setState(s)][0], SETST[setState(s)][1]);
+// ---- the bait as the player sees it (Jonas 20.10.2026, after tilbakemelding #74: «det må gjøres mer intuitivt hva båten har slags
+// fiskeredskaper ombord og hva disse eventuelt er egnet med», and no hints): each kind its own colour, the same on the tubs in the inventory,
+// in the chart's panel, in the choosers and in the set choices, with its name beside it
+const BAITCOL = {makrell:'#2b7fa8', krabbe:'#e07b39', reke:'#ef8fa6', sei:'#5f7480', krill:'#c8372d', sild:'#a9c2d8', blekksprut:'#8a5bb0'};
+const baitNm = k => BAITS[k] ? GL(BAITS[k].no, BAITS[k].en) : String(k);
+const baitLc = k => baitNm(k).toLowerCase();
+// a species' name inside a sentence or on a chip: lower case, but the Greenland halibut keeps its capital in English
+const spLc = sp => S.lang === 'no' ? SPECIES[sp].no.toLowerCase() : SPECIES[sp].en.replace(/^(?!Greenland)./, c => c.toLowerCase());
+// the species a bait takes better than others (its factors over 1), best first
+const baitGood = k => { const f = (BAITS[k] || {f:{}}).f; return Object.keys(f).filter(sp => f[sp] > 1 && SPECIES[sp]).sort((a, b) => f[b] - f[a]); };
+const baitDot = (k, cls) => '<i class="bdot' + (cls ? ' ' + cls : '') + '"' + (k ? ' style="--bc:' + (BAITCOL[k] || '#8d9aa3') + '"' : '') + '></i>';
+// a line kind's tubs as they stand: baited by kind (bt, most first), with the crew (being baited or stripped, pg.shore), and unbaited
+function tubState(lk){
+  const pg = S.pgear, L0 = pg.lines[lk], bt = btOf(L0), out = {lk, n:L0.n, baited:[], work:[], un:Math.max(0, L0.n - L0.baited)};
+  for (const k of Object.keys(bt).filter(k => bt[k] > 0).sort((a, b) => bt[b] - bt[a])) out.baited.push([k, bt[k]]);
+  for (const j of pg.shore || []){ if (j.lk !== lk) continue;
+    if (j.kind === 'egnself'){ const q = (S.jobs || []).find(x => x.kind === 'egn' && x.lk === lk && x.n === j.n); out.work.push({op:'egn', k:j.bait || (q && q.bait) || 'makrell', n:j.n}); }
+    else if (j.kind === 'stripself') out.work.push({op:'strip', k:j.bait, n:j.n}); }
+  return out;
 }
-// the gear aboard as ready-made choices for setting: whole strings of nets, all baited tubs of a kind, all pots of a size with bait
-function setChoices(){
+// the tubs in a row, one mark each: filled in the bait's colour, ringed in it while the crew works on it, open when unbaited
+function tubsHtml(lk){
+  const st = tubState(lk), t = [], tub = (cls, k) => '<i class="tub ' + cls + '"' + (k ? ' style="--bc:' + (BAITCOL[k] || '#8d9aa3') + '"' : '') + '></i>';
+  for (const [k, n] of st.baited) for (let i = 0; i < n; i++) t.push(tub('b', k));
+  for (const w of st.work) for (let i = 0; i < w.n; i++) t.push(tub('w ' + w.op, w.k));
+  for (let i = 0; i < st.un; i++) t.push(tub('e'));
+  return t.length ? '<div class="tubs" role="img" aria-label="' + tubWords(st) + '">' + t.join('') + '</div>' : '';
+}
+// the same in words, kind by kind: «5 makrell · 2 egnes med sild · 3 ikke egnet»
+function tubWords(st){
+  const w = st.baited.map(([k, n]) => n + ' ' + baitLc(k)).concat(st.work.map(x => x.n + ' ' + (x.op === 'egn' ? GL('egnes med ', 'being baited with ') : GL('renses for ', 'being stripped of ')) + baitLc(x.k)));
+  if (st.un) w.push(st.un + ' ' + GL('ikke egnet', 'not baited'));
+  return w.join(' · ');
+}
+function tubLegend(lk){
+  const st = tubState(lk), c = st.baited.map(([k, n]) => '<span class="bchip">' + baitDot(k) + '<b>' + n + '</b> ' + baitLc(k) + '</span>')
+    .concat(st.work.map(x => '<span class="bchip">' + baitDot(x.k, 'w') + '<b>' + x.n + '</b> ' + (x.op === 'egn' ? GL('egnes med ', 'being baited with ') : GL('renses for ', 'being stripped of ')) + baitLc(x.k) + '</span>'));
+  if (st.un) c.push('<span class="bchip">' + baitDot(null, 'e') + '<b>' + st.un + '</b> ' + GL('ikke egnet', 'not baited') + '</span>');
+  return c.length ? '<div class="blegend">' + c.join('') + '</div>' : '';
+}
+// what a set is, in words: the line kind and the bait on its tubs, the pots' bait, the nets' kind and mesh
+function setBaitTxt(s){
+  if (s.kind === 'teine') return baitLc(s.bait || 'makrell');
+  if (s.kind !== 'line') return '';
+  const w = s.baitW || {makrell:s.n}, ks = Object.keys(w).filter(k => w[k] > 0).sort((a, b) => w[b] - w[a]);
+  return ks.map(k => (ks.length > 1 ? w[k] + ' ' : '') + baitLc(k)).join(', ');
+}
+function setWhat(s){
+  const n = s.n + ' ' + unitName(s.kind, s.n);
+  if (s.kind === 'line' && LINE_KINDS[s.lk]) return GL(LINE_KINDS[s.lk].no, LINE_KINDS[s.lk].en) + ', ' + n + ' · ' + setBaitTxt(s);
+  if (s.kind === 'teine') return GEAR.teine[S.lang] + ', ' + n + ' · ' + setBaitTxt(s);
+  if (s.kind === 'garn') return GEAR.garn[S.lang] + ', ' + n + ' · ' + GL(netNo(s), netEn(s));
+  return GEAR[s.kind][S.lang] + ', ' + n;
+}
+function setLabel(s, short){
+  const a = fmt((S.t - s.tSet) / 60, 0) + ' t';
+  return short ? GEAR[s.kind][S.lang] + ' · ' + a : setWhat(s) + ' · ' + a + ' · ' + GL(SETST[setState(s)][0], SETST[setState(s)][1]);
+}
+// the gear aboard as ready-made choices for setting: whole strings of nets, the baited tubs of a kind by their bait (Jonas 20.10.2026: «4
+// stamper bankline · makrell»), the pots by the bait there is for them. all: also what is aboard and cannot be set, as a row that says why
+// (off: «2 stamper bankline · ikke egnet», pots without bait), for the «Sett ut» fan; the plan and the route take only the settable ones
+function setChoices(all){
   const pg = S.pgear, out = [], r = RIGS[(DRIFTCTX && DRIFTCTX.rig) || rigOf()].kind; if (!pg || !r) return out;
   for (const l of pg.nets) out.push({kind:'garn', spec:{nid:l.id}, n:l.n, lbl:[l.n + ' garn ' + netNo(l), l.n + ' nets ' + netEn(l)]});
-  for (const lk of ['hyse', 'bank']){ const n = pg.lines[lk].baited; if (n > 0) out.push({kind:'line', spec:{lk, n}, n, lbl:[n + ' ' + (n === 1 ? 'stamp' : 'stamper') + ' ' + LINE_KINDS[lk].no.toLowerCase(), n + ' ' + (n === 1 ? 'tub' : 'tubs') + ' of ' + LINE_KINDS[lk].en.toLowerCase()]}); }
-  for (const pot of ['big']){ const n = Math.min(pg.pots[pot], Math.floor(Math.max(0, ...Object.values(baitOf(pg))) / GPRICE.potBait + 1e-9)); if (n > 0) out.push({kind:'teine', spec:{pot, n}, n, lbl:[n + ' ' + POTS[pot].no.toLowerCase(), n + ' ' + POTS[pot].en.toLowerCase()]}); }
+  for (const lk of ['hyse', 'bank']){ const L0 = pg.lines[lk]; if (!L0 || !L0.n) continue; const bt = btOf(L0), K = LINE_KINDS[lk];
+    const lbl = (n, no, en) => [n + ' ' + (n === 1 ? 'stamp' : 'stamper') + ' ' + K.no.toLowerCase() + ' · ' + no, n + ' ' + (n === 1 ? 'tub' : 'tubs') + ' of ' + K.en.toLowerCase() + ' · ' + en];
+    for (const k of Object.keys(bt).filter(k => bt[k] > 0).sort((a, b) => bt[b] - bt[a])) out.push({kind:'line', spec:{lk, n:bt[k], bait:k}, n:bt[k], bait:k, lbl:lbl(bt[k], BAITS[k] ? BAITS[k].no.toLowerCase() : k, BAITS[k] ? BAITS[k].en.toLowerCase() : k)});
+    const un = L0.n - L0.baited; if (all && un > 0) out.push({kind:'line', off:true, lk, n:un, lbl:lbl(un, 'ikke egnet', 'not baited')}); }
+  for (const pot of ['big']){ const np = pg.pots[pot] || 0; if (!np) continue; const B = baitOf(pg), P = POTS[pot];
+    for (const k of Object.keys(B).filter(k => BAITS[k] && B[k] >= GPRICE.potBait - 1e-9).sort((a, b) => B[b] - B[a])){ const n = Math.min(np, Math.floor(B[k] / GPRICE.potBait + 1e-9));
+      out.push({kind:'teine', spec:{pot, n, bait:k}, n, bait:k, lbl:[n + ' ' + P.no.toLowerCase() + ' · ' + BAITS[k].no.toLowerCase(), n + ' ' + P.en.toLowerCase() + ' · ' + BAITS[k].en.toLowerCase()]}); }
+    if (all && !out.some(c => c.kind === 'teine')) out.push({kind:'teine', off:true, n:np, lbl:[np + ' ' + P.no.toLowerCase() + ' · uten agn', np + ' ' + P.en.toLowerCase() + ' · no bait']}); }
   return out.filter(c => c.kind === r);
 }
 // what the boat is doing with gear, for the status line and the action bar
@@ -47,16 +109,31 @@ function gearActs(LS){
   if (ch.length > 3 || mySets().length) h.push('<button data-ui="redskap">' + LS('Redskap', 'Gear', 'Redskap', 'Gear') + '</button>');
   return h.join('');
 }
-// the gear section of the fish panel
+// the tackle the jig fishes with now, as targetF counts it: the halibut pilk when halibut is chosen, the gear is aboard and the season open
+const jigInUse = () => S.target === 'kveite' && S.boat.kgear && !kveiteClosed(S.t / 60) ? 'kveite' : 'mark';
+// the jig tackle aboard (Jonas 20.10.2026): fly hooks and pilk with the jig or the reels, the halibut pilk with the halibut gear, each with
+// the species it takes (jigTake), the halibut pilk only in its open season
+function jigSets(){
+  const b = S.boat, H = S.t / 60, out = [];
+  if (b.gear || (S.equip && S.equip.jukse > 0)) out.push({k:'mark'});
+  if (b.kgear) out.push({k:'kveite', closed:kveiteClosed(H)});
+  const use = jigInUse();
+  for (const o of out){ o.on = o.k === use; o.sp = SP.filter(sp => jigTake(sp, H, o.k) >= 0.5 && !(sp === 'kveite' && kveiteClosed(H))); }
+  return out;
+}
+const spChips = sps => '<span class="spchips">' + sps.map(sp => '<em style="--sc:' + ((typeof GUIDE !== 'undefined' && GUIDE.COL[sp]) || '#5b6c76') + '">' + spLc(sp) + '</em>').join('') + '</span>';
+// the gear section of the fish panel: what is aboard as it stands, the tubs by their bait
 function gearPanel(){
   const b = S.boat, pg = S.pgear, h = []; if (!pg) return '';
   h.push('<h3>' + GL('Redskap', 'Gear') + '</h3>');
-  const on = [];
-  if (pg.nets.length) on.push(pg.nets.map(l => l.n + ' garn ' + netNo(l) + ' (' + Math.round(l.cond * 100) + ' %)').join(', '));
-  for (const lk of ['hyse', 'bank']) if (pg.lines[lk].n) on.push(pg.lines[lk].n + ' ' + LINE_KINDS[lk].no.toLowerCase() + ' (' + pg.lines[lk].baited + ' ' + GL('egnet', 'baited') + ')');
-  for (const pot of ['big']) if (pg.pots[pot]) on.push(pg.pots[pot] + ' ' + POTS[pot].no.toLowerCase());
-  h.push('<div class="kv"><span>' + GL('Om bord', 'Aboard') + '</span><span>' + (on.length ? on.join('; ') : GL('ingen', 'none')) + '</span></div>');
-  h.push('<div class="kv"><span>' + GL('Blåsesett og agn', 'Buoy sets and bait') + '</span><span>' + pg.kits.n + ' · ' + fmt(baitKg(pg), 0) + ' kg</span></div>');
+  for (const lk of ['hyse', 'bank']){ const L0 = pg.lines[lk], all = L0.n + tubState(lk).work.reduce((a, w) => a + w.n, 0); if (!all) continue;
+    h.push('<div class="kv"><span>' + GL(LINE_KINDS[lk].no, LINE_KINDS[lk].en) + '</span><span>' + all + ' ' + GL(all === 1 ? 'stamp' : 'stamper', all === 1 ? 'tub' : 'tubs') + '</span></div>' + tubsHtml(lk) + tubLegend(lk)); }
+  for (const l of pg.nets) h.push('<div class="kv"><span>' + l.n + ' garn ' + GL(netNo(l), netEn(l)) + '</span><span>' + Math.round(l.cond * 100) + ' %</span></div>');
+  for (const pot of ['big']) if (pg.pots[pot]) h.push('<div class="kv"><span>' + GL(POTS[pot].no, POTS[pot].en) + '</span><span>' + pg.pots[pot] + ' · ' + Math.round(((pg.potc || {}).cond || 1) * 100) + ' %</span></div>');
+  for (const j of jigSets()) h.push('<div class="kv"><span>' + GL(CARE.jig[j.k].no, CARE.jig[j.k].en) + (j.on ? ' · ' + GL('i bruk', 'in use') : '') + '</span><span>' + (j.k === 'kveite' && j.closed ? GL('kveita er fredet', 'halibut closed') : Math.round(((pg.jig || {})[j.k] || {c:1}).c * 100) + ' %') + '</span></div>' + (j.sp.length ? spChips(j.sp) : ''));
+  const bk = Object.entries(baitOf(pg)).filter(e => e[1] > 0.05 && BAITS[e[0]]);
+  h.push('<div class="kv"><span>' + GL('Agn', 'Bait') + '</span><span class="bkg">' + (bk.length ? bk.map(([k, kg]) => baitDot(k) + baitNm(k) + ' ' + fmt(kg, 0) + ' kg').join(' · ') : GL('ingen', 'none')) + '</span></div>');
+  h.push('<div class="kv"><span>' + GL('Blåsesett', 'Buoy sets') + '</span><span>' + pg.kits.n + '</span></div>');
   if (b.gop){ const g = gopText(); h.push('<p><b>' + GL(g[0], g[1]) + '</b></p><div class="btns"><button class="btn" data-act="gstop">' + GL('Stopp', 'Stop') + '</button></div>'); }
   else if (b.status === 'idle'){ const ch = setChoices(), s = nearSet(b.pos, 0.3);
     h.push('<div class="btns">' + (s ? '<button class="btn primary" data-act="ghaul" data-id="' + s.id + '">' + GL('Trekk ', 'Haul ') + setLabel(s, true).toLowerCase() + '</button>' : '') + ch.map((c, i) => '<button class="btn" data-act="gset" data-c="' + i + '">' + GL('Sett ', 'Set ') + GL(c.lbl[0], c.lbl[1]) + '</button>').join('') + '</div>'); }
@@ -120,7 +197,7 @@ function wpActCycle(w){
 function gearDoAct(act, el){
   let why = null;
   // setting by hand is drawn on the chart first (ui/03d-setmode.js)
-  if (act === 'gset'){ const c = setChoices()[+el.dataset.c]; if (!c) return true; setModeStart(c); return true; }
+  if (act === 'gset'){ const c = setChoices(el.dataset.all === '1')[+el.dataset.c]; if (!c || c.off) return true; setModeStart(c); return true; }
   else if (act === 'ghaul') why = startHaul(el.dataset.id, el.dataset.r === '1', 0);
   else if (act === 'gstop'){ gopAbort('stop'); }
   else if (act === 'gwp'){ const w = S.draft[+el.dataset.i]; if (w) wpActCycle(w); }

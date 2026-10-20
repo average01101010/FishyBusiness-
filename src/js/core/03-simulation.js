@@ -459,9 +459,10 @@ function clsOf(sp, kg){ const c = SPECIES[sp].cls; for (let i = 0; i < c.length;
 // directed fishing for redfish is only allowed with jigs in June–August for boats under 15 m; otherwise only as bycatch
 // halibut is closed north of 62° N from 20 December to 20 April (høstingsforskriften § 39); live halibut must be released
 function kveiteClosed(H){ const g = gDate(H), m = g.getUTCMonth(), d = g.getUTCDate(); return (m === 11 && d >= 20) || m < 3 || (m === 3 && d <= 20); }
-// fishing for halibut: big pilk and heavy line; halibut takes it far more often, other fish rarely, and it bites best around slack tide
-function targetF(sp, H){
-  if (S.target !== 'kveite' || !S.boat.kgear || kveiteClosed(H)) return 1;
+// fishing for halibut: big pilk and heavy line; halibut takes it far more often, other fish rarely, and it bites best around slack tide.
+// pilk: whether the halibut pilk is on; by default when halibut is chosen with the halibut gear aboard (jigTake in 10-gear.js asks for either)
+function targetF(sp, H, pilk){
+  if (!(pilk == null ? S.target === 'kveite' && S.boat.kgear : pilk) || kveiteClosed(H)) return 1;
   if (sp !== 'kveite') return 0.2;
   const cur = Math.abs(tideH(H + 0.5) - tideH(H - 0.5)); return 9 * (1.4 - 0.8 * clamp(cur / 0.35, 0, 1));
 }

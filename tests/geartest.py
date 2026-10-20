@@ -253,6 +253,28 @@ async def main():
           R.own = baitFromHold('sei', 50); R.ownBait = baitOf(pg).sei; R.quota = Math.round(quotaState().sei - q0); R.left = Math.round(holdTotal()); S.hold = []; return R; })()""")
         print('bait:', json.dumps(bt))
         print(ok(bt['f'] == [1.4, 1.8, 0.6, 1, 1.6, 1.4] and bt['cod'][0] > bt['cod'][1] * 1.8 and bt['own'] == 50 and bt['ownBait'] >= 50 and bt['quota'] == 50 and bt['left'] == 10), 'bait: shrimp takes more cod than krill, and own saithe as bait leaves the hold and counts on the quota')
+        # the bait chosen when baiting, and taken off again (Jonas 20.10.2026, tilbakemelding #74): the tubs get the bait named and it is
+        # remembered, a strip takes the old bait off in a third of the baiting time and baits again with the new one, the set choices go by bait
+        st = await pg.evaluate("""(()=>{ const R = {}, b = S.boat, pg = S.pgear; b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; b.land = null; S.jobs = []; S.sets = []; pg.shore = []; S.crew = [hand()];
+          const L = () => ({cond:1, max:1, bent:0, miss:0, sharp:0}); pg.lines.hyse = Object.assign(L(), {n:4, baited:2, bt:{makrell:2}}); pg.lines.bank = Object.assign(L(), {n:0, baited:0, bt:{}}); pg.bait = {makrell:10, sild:30}; pg.baitPref = 'makrell';
+          const done = j => { S.jobs = S.jobs.filter(x => x !== j); finishJob(j); };
+          R.egn = egnSelf('hyse', 2, 'sild'); const ej = S.jobs.find(j => j.kind === 'egn'); R.ejBait = ej && ej.bait; R.pref = pg.baitPref; R.sild = pg.bait.sild; done(ej); R.bt1 = {...pg.lines.hyse.bt};
+          R.strip = stripSelf('hyse', 'makrell', 2, 'sild'); const sj = S.jobs.find(j => j.kind === 'strip'); R.stripH = sj && sj.h; R.egnH = egnHours('hyse', 2, egnHands().eff); R.during = {n:pg.lines.hyse.n, owned:ownedUnits('line')};
+          done(sj); const ej2 = S.jobs.find(j => j.kind === 'egn'); R.chain = ej2 && ej2.bait; done(ej2); R.bt2 = {...pg.lines.hyse.bt}; R.bait2 = {...pg.bait};
+          pg.lines.hyse.n++; R.short = (egnSelf('hyse', 1, 'reke') || [''])[0];
+          b.rig = 'line'; R.ch = setChoices().filter(c => c.kind === 'line').map(c => c.spec.bait + ':' + c.n); R.chAll = setChoices(true).filter(c => c.off).map(c => c.lbl[0]);
+          // a strip with nothing after keeps the tubs bare: the crew's own baiting leaves them
+          R.strip2 = stripSelf('hyse', 'sild', 1); done(S.jobs.find(j => j.kind === 'strip')); R.free = egnFreeAuto(pg.lines.hyse); R.auto = egnSelf('hyse', 2); R.autoN = (S.jobs.find(j => j.kind === 'egn') || {}).n; R.bare = pg.lines.hyse.n - pg.lines.hyse.baited;
+          // the halibut pilk only with the halibut gear (buyGate)
+          const kg = b.kgear; b.kgear = false; R.kvGate = (buyGate('jig', 'kveite') || [''])[0]; R.markGate = buyGate('jig', 'mark'); b.kgear = true; R.kvOk = buyGate('jig', 'kveite'); b.kgear = kg;
+          return R; })()""")
+        print('bait choice:', json.dumps(st, ensure_ascii=False))
+        print(ok(st['egn'] is None and st['ejBait'] == 'sild' and st['pref'] == 'sild' and st['sild'] == 20 and st['bt1'] == {'makrell': 2, 'sild': 2}), 'baiting with a chosen bait: the tubs get it, and it is remembered as the default')
+        print(ok(st['strip'] is None and st['stripH'] and abs(st['stripH'] - st['egnH'] / 3) < 0.15 and st['during'] == {'n': 2, 'owned': 4} and st['chain'] == 'sild' and st['bt2'].get('sild') == 4 and not st['bt2'].get('makrell') and st['bait2']['makrell'] == 10),
+              'stripping takes a third of the baiting time, the tubs are with the crew meanwhile, the old bait is thrown away, and they are baited again with the new bait')
+        print(ok('reke' in st['short'] and st['ch'] == ['sild:4'] and st['chAll'] == ['1 stamp hyseline · ikke egnet']), 'baiting with a bait not aboard says how much there is; the set choices go by the bait on the tubs, the unbaited tub as a row of its own', st['short'], st['ch'], st['chAll'])
+        print(ok(st['strip2'] is None and st['free'] == 1 and st['auto'] is None and st['autoN'] == 1 and st['bare'] == 1), 'a strip with nothing after keeps the tub bare: baiting with no bait named (as the crew does by itself) takes only the other unbaited tub', st['free'], st['autoN'], st['bare'])
+        print(ok('kveiteutstyr' in st['kvGate'] and st['markGate'] is None and st['kvOk'] is None), 'a halibut pilk set is sold only with the halibut gear aboard (buyGate)', st['kvGate'])
         # net types (08.10.2026): the bottom net for cod, the floating net for saithe, the Greenland halibut net for halibut; bought, joined and set by type
         nt = await pg.evaluate("""(()=>{ const R = {}; S.equip.garnhaler = true; const pg = S.pgear; pg.nets = []; const b = S.boat; b.status = 'port'; b.port = 'finnsnes'; b.pos = {...portById('finnsnes').p}; S.cash = 1e6; b.type = 'sjark'; applyVessel();
           R.buy = [buyGear('net', 156, 5), buyGear('net', 'flyt:156', 5), buyGear('net', 'kveite:360', 5), buyGear('net', 'flyt:200', 1)].map(x => x == null ? 'ok' : 'no');

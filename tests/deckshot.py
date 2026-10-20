@@ -62,7 +62,7 @@ async def main():
         check(not miss, 'hver kystbåt har plassene dataene krever (flåte, livbøyer, radar, kar, kran, garnkar, stamper, last)', miss)
         seen = {}; pose = {}
         for t in boats:
-            for scene in ['fiske', 'garn', 'line'] + (['kai'] if t in ('kyst15', 'kyst21', 'sjarkny', 'snekke') else []):
+            for scene in ['fiske', 'garn', 'line'] + (['kai'] if t in ('kyst15', 'kyst21', 'hurtigsjark', 'sjarkny', 'snekke') else []):
                 await show(pg, t, scene)
                 # the crane where the scene wants it: folded (or on its rest) at sea, out in the working pose at the quay with freight
                 want = 'work' if scene == 'kai' else 'stow'
@@ -88,11 +88,12 @@ async def main():
         a0 = await pg.evaluate("G3._debug.kitStat.radar"); await pg.screenshot(path=os.path.join(OUT, 'deck_radar_a.png')); await pg.wait_for_timeout(700); await pg.screenshot(path=os.path.join(OUT, 'deck_radar_b.png'))
         check(a0 == 2, 'den åpne radarantennen på kystbåten tegnes', a0)
         # the crane at the quay: folded at sea, out and working while the freight goes aboard, with crates on deck
-        cr = {t: seen[(t, 'kai')]['crane'] for t in ('kyst15', 'kyst21') if (t, 'kai') in seen}
-        sea = {t: seen[(t, 'fiske')]['crane'] for t in ('kyst15', 'kyst21')}
-        work = [t for t in ('kyst15', 'kyst21') if pose.get((t, 'fiske')) and pose.get((t, 'kai')) and cr.get(t) and cr[t]['job']]
-        check(len(work) == 2, 'kranen er foldet sammen på sjøen og folder seg ut for å laste ved kaia', {'kai': cr, 'sjø': sea})
-        crates = {t: seen[(t, 'kai')]['cargo'] for t in ('kyst15', 'kyst21', 'sjarkny', 'snekke')}
+        CR = ('kyst15', 'kyst21', 'hurtigsjark')
+        cr = {t: seen[(t, 'kai')]['crane'] for t in CR if (t, 'kai') in seen}
+        sea = {t: seen[(t, 'fiske')]['crane'] for t in CR}
+        work = [t for t in CR if pose.get((t, 'fiske')) and pose.get((t, 'kai')) and cr.get(t) and cr[t]['job']]
+        check(len(work) == len(CR), 'kranen er foldet sammen på sjøen og folder seg ut for å laste ved kaia', {'kai': cr, 'sjø': sea})
+        crates = {t: seen[(t, 'kai')]['cargo'] for t in ('kyst15', 'kyst21', 'hurtigsjark', 'sjarkny', 'snekke')}
         check(all(v > 0 for v in crates.values()), 'trekassene står på dekk når båten har frakt', crates)
         # two pictures standing up (the tablet held upright)
         await pg.set_viewport_size({'width': 640, 'height': 960})
