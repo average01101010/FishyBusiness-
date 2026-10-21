@@ -44,14 +44,13 @@ function heatSample(p, H){
 const heatShown = (v, sp) => heatValue(v, sp) * (HEATSC[sp] || 1);
 function heatValue(v, sp){ const i = HEATI[sp]; return i !== undefined ? v[i] || 0 : v[0] + v[1] + v[2] + v[3] + (v[4] || 0); }
 
-// ---------- the rig's own figure (Jonas 08.10.2026) ----------
-// The picture shows the fish (heatShown); the figure in the sounder's box is what your own rig would take where the boat is, in the
-// gear's unit. A hand jig is tended by the hour, so kilos an hour, as the jig takes each species with the tackle in use (jigTake; the
-// Greenland halibut hardly bites on the jig, tilbakemelding #74); a net, a line tub or a pot stands in the sea and fishes with the soak,
-// so the kilos one unit would give over a soak of HEATG.T hours (the same formulas as soakHour in 10-gear.js, on the same density).
-// HEATG.fair is a usual haul (a net, a tub or a pot at a good place after 24 h), which the catch marks and the plan are read against.
+// ---------- a usual haul, for the catch marks and the plan ----------
+// The sounder shows the fish and never a figure for the catch (Jonas 09.10.2026: «Den skal ikke vise estimert fangstrate»; 21.10.2026:
+// no figure worked out from the fish in the sea at all, only what was taken aboard). The figures the game shows are the catch marks
+// (05-vessels.js, 10-gear.js: kg an hour on the jig, kg a net, tub or pot with its soak, where it was taken) and the plan's «du fikk X
+// her» (06f-plan.js planMark). HEATG.fair is a usual haul (a net, a tub or a pot at a good place after 24 h, a hand jig an hour), the
+// marks' colour and the plan's neutral figure where there is no mark; it never reads the fish.
 const HEATG = {T:24, fair:{garn:30, line:70, teine:20, jig:20}};
-const HEATIDX = {torsk:0, hyse:1, sei:2, blakveite:4, lyr:5, lange:6, brosme:7, uer:8, kveite:9};
 const heatSoakSum = (tau, T) => { let s = 0; for (let a = 1; a <= T; a++) s += Math.exp(-a / tau); return s; };
 const heatPotSum = T => { let s = 0; for (let a = 1; a <= T; a++) s += Math.min(1, a / 6) * Math.exp(-a / 40); return s; };
 // how much of a 24-hour haul a shorter soak gives
@@ -59,63 +58,8 @@ function heatSoakShare(kind, T){
   const f = kind === 'line' ? a => heatSoakSum(10, a) : kind === 'teine' ? heatPotSum : a => heatSoakSum(30, a);
   return Math.min(1, f(Math.max(1, Math.min(HEATG.T, T))) / f(HEATG.T));
 }
-// the string of nets the map speaks for (tilbakemelding #71): the one being drawn out or set, else the one this boat set last, else the
-// first aboard. The first aboard alone switched the map to the next string's kind (a halibut net sees hardly any cod) as soon as a
-// string went over the side, so the fish seemed to vanish from the sounder
-function heatNet(pg){
-  const sm = typeof SETM !== 'undefined' && SETM && SETM.kind === 'garn' ? (pg.nets || []).find(l => l.id === SETM.spec.nid) : null; if (sm) return sm;
-  const g = S.boat.gop; if (g && g.kind === 'garn' && g.s) return g.s;
-  const sea = mySets().filter(s => s.kind === 'garn' && !s.lost).sort((a, c) => c.tSet - a.tSet)[0];
-  return sea || (pg.nets || [])[0];
-}
-// the line the map speaks for, and the bait on it (20.10.2026: the bait actually on the tubs, not the remembered kind): the tubs being
-// drawn out on the chart, else those going over the side, else the kind with the most baited tubs aboard and their bait, else the last set
-// of it in the sea, else the remembered bait. bw: bait kind -> tubs
-function heatLine(pg){
-  const L = pg.lines || {}, has = lk => L[lk] && L[lk].n > 0;
-  if (typeof SETM !== 'undefined' && SETM && SETM.kind === 'line'){ const lk = SETM.spec.lk; return {lk, bw:SETM.spec.bait ? {[SETM.spec.bait]:1} : Object.assign({}, btOf(L[lk]))}; }
-  const g = S.boat.gop; if (g && g.kind === 'line' && g.s && g.s.lk) return {lk:g.s.lk, bw:g.s.baitW || {makrell:1}};
-  const by = ['hyse', 'bank'].filter(has).sort((a, c) => (L[c].baited - L[a].baited) || (L[c].n - L[a].n));
-  const lk = by[0] || (L.bank && L.bank.n > ((L.hyse || {}).n || 0) ? 'bank' : 'hyse');
-  if (L[lk] && L[lk].baited > 0) return {lk, bw:Object.assign({}, btOf(L[lk]))};
-  const sea = mySets().filter(s => s.kind === 'line' && s.lk === lk && !s.lost).sort((a, c) => c.tSet - a.tSet)[0];
-  return {lk, bw:sea && sea.baitW ? sea.baitW : {[BAITS[pg.baitPref] ? pg.baitPref : 'makrell']:1}};
-}
-function heatGearCtx(){
-  const b = S.boat, rig = typeof rigOf === 'function' ? rigOf() : 'juksa', kind = RIGS[rig] && RIGS[rig].kind, pg = S.pgear || {};
-  // the jig: kg an hour for one person, as the jig takes each species with the tackle in use (the halibut pilk: halibut and its tide)
-  if (!kind){ const k = typeof jigKind === 'function' ? jigKind() : 'mark', open = k === 'kveite' && !kveiteClosed(S.t / 60);
-    const tackle = open ? 'kveite' : 'mark', H = S.t / 60, f = {}; for (const sp in HEATIDX) f[sp] = jigTake(sp, H, tackle);   // the same for every cell (the tide is the boat's)
-    return {kind:'jig', key:'jig', sig:'jig:' + tackle, tackle, f, unit:['t', 'h'], per:1, fair:HEATG.fair.jig}; }
-  if (kind === 'garn'){ const l = heatNet(pg), ty = l && l.ty && l.ty !== 'bunn' ? l.ty : null, key = ty ? 'garn:' + ty : 'garn';
-    return {kind, key, sig:key, unit:['garn', 'net'], per:GEAR.garn.q * heatSoakSum(30, HEATG.T), fair:HEATG.fair.garn}; }
-  if (kind === 'line'){ const {lk, bw} = heatLine(pg), sig = Object.keys(bw).filter(k => bw[k] > 0).sort().map(k => k + bw[k]).join(',');
-    return {kind, key:'line:' + lk, bw, sig:'line:' + lk + ':' + sig, unit:['stamp', 'tub'], per:GEAR.line.q * (LINE_KINDS[lk].hooks / 100) * heatSoakSum(10, HEATG.T), fair:HEATG.fair.line}; }
-  return {kind:'teine', key:'teine', sig:'teine', unit:['teine', 'pot'], per:GEAR.teine.q * heatPotSum(HEATG.T), fair:HEATG.fair.teine,
-    crab:KC.q * GEAR.teine.q * POTS.big.f * KC.mean * heatPotSum(HEATG.T), cap:POTS.big.cap * KC.mean};
-}
-// the kilos one unit of the gear would give at a cell (v: the cell's kg an hour per species for a hand jig) over the soak
-function heatGearKg(v, sp, cx){
-  if (!cx || !v) return 0;
-  if (cx.kind === 'jig'){ const H = S.t / 60; let sum = 0; for (const s of sp === 'all' ? Object.keys(HEATIDX) : HEATIDX[sp] != null ? [sp] : []) sum += v[HEATIDX[s]] * (cx.f ? cx.f[s] : jigTake(s, H, cx.tackle)); return sum; }
-  if (cx.kind === 'teine'){
-    if (sp === 'all' || sp === 'krabbe') return Math.min(cx.cap, cx.crab * (v[10] || 0));
-    return (HEATIDX[sp] != null ? v[HEATIDX[sp]] * ((SELQ.teine || {})[sp] || 0) * cx.per : 0);
-  }
-  const sel = SELQ[cx.key] || {}; let sum = 0;
-  for (const s of sp === 'all' ? Object.keys(HEATIDX) : HEATIDX[sp] != null ? [sp] : []) sum += v[HEATIDX[s]] * (sel[s] || 0) * (cx.bw ? baitMixF(cx.bw, s) : cx.bait ? baitF(cx.bait, s) : 1);
-  return sum * cx.per;
-}
 // your rig's share of what one person with a hand jig takes (several hands, jig machines)
 function heatRigFactor(){ const e = typeof fishEffort === 'function' ? fishEffort() : 0; return e > 0 ? e / JIG.hand : 1; }
-// what the sounder's box says about the boat's own place: the figure in the gear's unit
-function heatGearInfo(){
-  const b = S.boat, v = b.status === 'port' ? null : heatAt(b.pos); if (!v) return null;
-  const cx = heatGearCtx(), sp = heatSpecies();
-  if (!cx || cx.kind === 'jig'){ const n = Math.round((cx ? heatGearKg(v, sp, cx) : heatValue(v, sp)) * heatRigFactor()); return {no:'Her: ca. ' + n + ' kg/t med riggen din', en:'Here: about ' + n + ' kg/h with your rig'}; }
-  const n = Math.round(heatGearKg(v, sp, cx));
-  return {no:'Her: ca. ' + n + ' kg per ' + cx.unit[0] + ' etter ' + HEATG.T + ' t', en:'Here: about ' + n + ' kg per ' + cx.unit[1] + ' after ' + HEATG.T + ' h'};
-}
 
 // the cells: key → {x, y (centre), v, t (game minute worked out), h (stock hour), seen (game minute last inside the disk)}
 const HEATC = {key:'', tier:null, cs:0, cells:new Map(), queue:[], qi:0, busy:false, t:-1, rev:0, lastTick:0, stats:{slices:0, maxSlice:0, n:0, ms:0}};

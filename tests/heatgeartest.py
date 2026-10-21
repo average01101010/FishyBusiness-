@@ -1,7 +1,6 @@
-"""The rig's own figure (08.10.2026): the sounder's picture is the fish that stand there whatever the rig (Jonas 21.10.2026, #79); its
-box says what the rig would take there, kg an hour on the jig (each species by its jig factor), the kilos one net, tub or pot gives over
-24 h, agreeing with the gear's own soak (soakHour); the catch marks say kg per tub, net or pot with the soak, and a jig mark is coloured
-against the rig."""
+"""The sounder and the catch figures (Jonas 21.10.2026, tilbakemelding #79): the sounder's picture is the fish that stand there, the same
+whatever the boat is rigged for, and nothing works out a catch from the fish in the sea; the figures the game shows come from what was
+taken aboard: a hauled set marks kg per tub, net or pot with its soak, a jig session kg an hour, each coloured against a usual haul."""
 from _env import GAME, boot
 import asyncio, json
 from playwright.async_api import async_playwright
@@ -10,29 +9,16 @@ ok = lambda c: 'OK  ' if c else 'FEIL'
 JS = """async () => {
   const R = {}; S.tut = 0; const b = S.boat; b.type = 'sjark'; applyVessel();
   const H0 = (Date.UTC(2028, 2, 10, 6) - EPOCH) / 3.6e6; S.t = Math.round(H0 * 60);
-  const dry = (kind, extra, p, h) => { const s = Object.assign({kind, n:1, a:{x:p.x - 0.1, y:p.y}, b:{x:p.x + 0.1, y:p.y}, tSet:S.t, acc:{}, dead:0, dry:true, cond:1}, extra), t0 = S.t;
-    for (let k = 1; k <= h; k++){ S.t = t0 + k * 60; soakHour(s, S.t / 60); } S.t = t0; return Object.values(s.acc).reduce((a, x) => a + x.kg, 0); };
-  // a cod ground in March and a crab place in August
+  // a cod ground in March, with Greenland halibut and halibut in the cell too
   const G = GROUNDS[2].p; await mapNeed(G, 4); b.status = 'idle'; b.pos = {...G}; b.port = null;
-  const v = heatSample(G, H0);
-  // the jig (20.10.2026, tilbakemelding #74): kg an hour as the jig takes each species, so the Greenland halibut counts at its jig factor (0.03)
-  // and, with the halibut pilk in its season, the halibut stands out and the rest takes a fifth
-  b.rig = 'juksa'; b.kgear = false; S.target = 'mix'; const cj = heatGearCtx(), vj = Float64Array.from(v); vj[4] = 50; vj[0] = 10; vj[9] = 2;
-  R.jig = {kind:cj && cj.kind, all:+heatGearKg(vj, 'all', cj).toFixed(2), raw:+Object.keys(HEATIDX).reduce((a, s) => a + vj[HEATIDX[s]], 0).toFixed(2), bk:+heatGearKg(vj, 'blakveite', cj).toFixed(2)};
-  { const t0 = S.t; S.t = Math.round((Date.UTC(2028, 6, 10, 6) - EPOCH) / 6e4); b.kgear = true; S.target = 'kveite'; const ck = heatGearCtx();
-    R.jigKv = {sig:ck.sig, kv:+(heatGearKg(vj, 'kveite', ck) / vj[9]).toFixed(2), torsk:+(heatGearKg(vj, 'torsk', ck) / vj[0]).toFixed(2)}; S.t = t0; b.kgear = false; S.target = 'mix'; }
-  S.pgear = newPGear(); S.pgear.nets.push({id:'n1', mesh:156, n:10, cond:1}); b.rig = 'garn'; const cg = heatGearCtx();
-  R.garn = {map:+heatGearKg(v, 'all', cg).toFixed(1), soak:+dry('garn', {mesh:156}, G, 24).toFixed(1)};
-  S.pgear.lines.hyse.n = 4; b.rig = 'line'; const cl = heatGearCtx();
-  R.line = {map:+heatGearKg(v, 'all', cl).toFixed(1), soak:+dry('line', {lk:'hyse', hooks:600, baitW:{makrell:1}}, G, 24).toFixed(1), unit:cl.unit[0]};
-  const C = P(70.5, 31.0); await mapNeed(C, 4); const Hc = (Date.UTC(2028, 7, 15, 6) - EPOCH) / 3.6e6, vc = heatSample(C, Hc); b.rig = 'teiner'; const ct = heatGearCtx();
-  S.t = Math.round(Hc * 60); R.teine = {map:+heatGearKg(vc, 'all', ct).toFixed(1), soak:+dry('teine', {pot:'big', bait:'makrell'}, C, 24).toFixed(1)}; S.t = Math.round(H0 * 60);
-  // the picture is the fish that stand there whatever the boat is rigged for (Jonas 21.10.2026, #79): the same value on every rig
-  R.pic = {}; for (const rg of ['juksa', 'garn', 'line', 'teiner']){ b.rig = rg; R.pic[rg] = +heatShown(vj, 'all').toFixed(3); } R.pic.fish = +heatValue(vj, 'all').toFixed(3); b.rig = 'juksa';
-  // the sounder's box: the figure where the boat is
-  HEATC.cs = 0.1; HEATC.cells.set(heatKey(Math.floor(G.x / 0.1), Math.floor(G.y / 0.1)), {x:G.x, y:G.y, v, t:S.t, h:0, seen:S.t, near:0});
-  b.rig = 'garn'; R.infoGarn = heatGearInfo(); b.rig = 'juksa'; R.infoJig = heatGearInfo();
-  // marks: a hauled set says per unit with the soak; a jig session is coloured against the rig
+  const v = Float64Array.from(heatSample(G, H0)); v[4] = 50; v[0] = 10; v[9] = 2;
+  // the picture is the fish that stand there whatever the boat is rigged for: the same value on every rig, the Greenland halibut with it
+  S.pgear = newPGear(); S.pgear.nets.push({id:'n1', mesh:156, n:10, cond:1}); S.pgear.lines.hyse.n = 4;
+  R.pic = {}; for (const rg of ['juksa', 'garn', 'line', 'teiner']){ b.rig = rg; R.pic[rg] = +heatShown(v, 'all').toFixed(3); } b.rig = 'juksa';
+  R.pic.fish = +heatValue(v, 'all').toFixed(3); R.pic.bk = +heatValue(v, 'blakveite').toFixed(3);
+  // no catch worked out from the fish in the sea is left to show anywhere
+  R.gone = ['heatGearCtx', 'heatGearKg', 'heatGearInfo'].filter(n => typeof window[n] === 'function');
+  // marks: a hauled set says per unit with the soak; a jig session says kg an hour, both from the catch aboard
   S.marks = []; const s = {id:'mk', vid:S.cur, kind:'line', lk:'hyse', n:4, hooks:2400, a:{...G}, b:{x:G.x + 0.5, y:G.y}, tSet:S.t - 12 * 60, acc:{}, dead:0, lost:null, cond:1};
   S.sets.push(s); const g = {op:'haul', kind:'line', sid:'mk', n:4, done:4, kg:240, soak:12, rel:0, dead:0}; try { finishHaul(g, S.t / 60); } catch (e){ R.haulErr = String(e); }
   R.mark = S.marks[S.marks.length - 1] || null;
@@ -47,19 +33,13 @@ async def main():
         await boot(pg); pg.set_default_timeout(300000)
         r = await pg.evaluate(JS)
         print('heatgear:', json.dumps(r, ensure_ascii=False))
-        near = lambda a, b: b > 0 and 0.5 <= a / b <= 1.8
-        j, jk = r['jig'], r['jigKv']
-        print(ok(j['kind'] == 'jig' and abs(j['bk'] - 1.5) < 0.01 and abs(j['all'] - (j['raw'] - 50 + 1.5)) < 0.05), 'rigged for the jig the figure is kg an hour as the jig takes each species: the Greenland halibut at its jig factor', j)
-        print(ok(jk['sig'] == 'jig:kveite' and jk['kv'] >= 5 and abs(jk['torsk'] - 0.2) < 0.01), 'with the halibut pilk in its season the figure counts the halibut many times over and the rest at a fifth', jk)
-        print(ok(near(r['garn']['map'], r['garn']['soak'])), 'nets: the rig figure says about what a net takes in 24 h there', r['garn'])
-        print(ok(near(r['line']['map'], r['line']['soak']) and r['line']['unit'] == 'stamp'), 'line: the rig figure says about what a tub takes in 24 h there', r['line'])
-        print(ok(r['teine']['map'] > 0 and r['teine']['map'] <= 60.5 and near(r['teine']['map'], r['teine']['soak'])), 'pots: the rig figure says about what a pot takes in 24 h, never more than a full pot', r['teine'])
         pv = r['pic']
-        print(ok(len({pv[k] for k in ('juksa', 'garn', 'line', 'teiner')}) == 1 and pv['juksa'] == pv['fish'] and pv['fish'] > 0), 'the sounder shows the fish that stand there, the same on the jig, nets, line and pots (#79)', pv)
-        print(ok(r['infoGarn'] and 'per garn etter 24 t' in r['infoGarn']['no'] and r['infoJig'] and 'kg/t med riggen din' in r['infoJig']['no']), "the sounder's box: kg per net after 24 h, or kg an hour with your rig", r['infoGarn'], r['infoJig'])
+        print(ok(len({pv[k] for k in ('juksa', 'garn', 'line', 'teiner')}) == 1 and pv['juksa'] == pv['fish'] and pv['fish'] >= pv['bk'] >= 50),
+              'the sounder shows the fish that stand there, the Greenland halibut too, the same on the jig, nets, line and pots (#79)', pv)
+        print(ok(not r['gone']), 'nothing is left that works out a catch from the fish in the sea', r['gone'])
         m, j = r['mark'] or {}, r['jigMark'] or {}
         print(ok(m.get('g') == 'line' and abs(m.get('kgu', 0) - 60) < 0.01 and m.get('soak') == 12 and m.get('q', 0) > 0 and not r.get('haulErr')), 'a hauled line marks 60 kg a tub with its 12 h soak, coloured against a usual haul for 12 h', m, r.get('haulErr'))
-        print(ok(j.get('kgph') == 40 and j.get('q', 0) > 0), 'a jig mark keeps kg an hour and is coloured against the rig', j)
+        print(ok(j.get('kgph') == 40 and j.get('q', 0) > 0), 'a jig session marks the kg an hour taken aboard, coloured against the rig', j)
         print('errors:', errs[:3]); await br.close()
 
 asyncio.run(main())
