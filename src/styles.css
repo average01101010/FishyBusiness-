@@ -829,7 +829,7 @@ body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 2
      sea: eight in 256 px on a 352 px phone, Adrian #78) wrap upwards into a second row instead of running out over the tab and the phone
      button, and what stands above the row is lifted by --dkx (10c-dock.js rowsUp) */
   #dock{left:38px;right:58px;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);flex-wrap:wrap-reverse;row-gap:6px}
-  .dk-b{width:56px;font-size:10px} .dk-b .dk-i{width:44px;height:44px} .dk-b .dk-i svg{width:22px;height:22px}
+  .dk-b{width:min(56px, calc((100vw - 96px) / 5));font-size:10px} .dk-b .dk-i{width:44px;height:44px} .dk-b .dk-i svg{width:22px;height:22px}   /* five in a row on the narrowest phones */
   .dk-b .dk-l{white-space:normal;max-width:60px;text-align:center;line-height:1.05;font-size:9.5px;letter-spacing:-.15px}
   #dockInfo,#dockFan{bottom:calc(env(safe-area-inset-bottom,0px) + 94px + var(--dkx, 0px))}
   /* the chart plotter's top row: the echo sounder stays in the row, narrower, never on the chart (Jonas 09.10.2026: «flytte ekkolodd-baren
