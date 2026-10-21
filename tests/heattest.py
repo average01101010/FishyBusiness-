@@ -145,13 +145,13 @@ async def ui(pg, tag):
 
 
 async def sonar(pg):
-    # the sonar is sold for the sjark and the new sjark only, fits in 16 hours, and gives the 3 nm heat; a fitting that waits while
-    # the boat is traded for one it does not suit is paid back
-    r = json.loads(await pg.evaluate("""JSON.stringify((() => { const b = S.boat, R = {}, p = portById('husoy');
-      b.status = 'port'; b.port = 'husoy'; b.pos = {...p.p}; S.cash = 1e6; S.jobs = []; S.equip.sonar = false; S.settings.sonar = true; S.settings.echo = true;
-      for (const ty of ['skiff', 'snekke', 'sjark', 'sjarkny']){ b.type = ty; applyVessel(); PHONE.open('utstyr'); const btn = document.querySelector('#drawerBody [data-pa=equip][data-k=sonar]'); R[ty] = btn ? btn.textContent : null; }
-      // buy it on the sjark and let the yard finish
-      b.type = 'sjark'; applyVessel(); PHONE.open('utstyr'); const c0 = S.cash; document.querySelector('#drawerBody [data-pa=equip][data-k=sonar]').click();
+    # the sonar is sold in the tackle shop (electronics, docs/handelssteder.md; here Finnsnes) for boats of 10 m and more, fits in 30
+    # real minutes, and gives the 3 nm heat; a fitting that waits while the boat is traded for one it does not suit is paid back
+    r = json.loads(await pg.evaluate("""JSON.stringify((() => { const b = S.boat, R = {}, p = portById('finnsnes');
+      b.status = 'port'; b.port = 'finnsnes'; b.pos = {...p.p}; S.cash = 1e6; S.jobs = []; S.equip.sonar = false; S.settings.sonar = true; S.settings.echo = true;
+      for (const ty of ['skiff', 'snekke', 'sjark', 'sjarkny']){ b.type = ty; applyVessel(); PHONE.open('utstyrb'); const btn = document.querySelector('#drawerBody [data-pa=equip][data-k=sonar]'); R[ty] = btn ? btn.textContent : null; }
+      // buy it on the sjark and let the fitting finish
+      b.type = 'sjark'; applyVessel(); PHONE.open('utstyrb'); const c0 = S.cash; document.querySelector('#drawerBody [data-pa=equip][data-k=sonar]').click();
       R.paid = c0 - S.cash; R.queued = (S.jobs || []).some(j => j.kind === 'fit' && j.k === 'sonar'); const j = S.jobs.find(j => j.k === 'sonar'); finishJob(j); S.jobs = S.jobs.filter(q => q !== j);
       R.fitted = !!S.equip.sonar; R.tier = heatTier(); R.r = HEAT.tiers[R.tier].r;
       DOCK.open('beholdning:boat'); R.listed = /Sonar/.test(document.getElementById('drawerBody').textContent);
@@ -159,7 +159,7 @@ async def sonar(pg):
       S.equip.sonar = false; const c1 = S.cash; queueJob({kind:'fit', k:'sonar', h:fitHours('sonar'), no:'Sonar', en:'Sonar'}); b.type = 'skiff'; applyVessel(); finishJob(S.jobs[S.jobs.length - 1]); S.jobs = [];
       R.refund = S.cash - c1; R.skiffSonar = !!S.equip.sonar; DOCK.close();
       return R; })())"""))
-    check(r['skiff'] is None and r['snekke'] is None and r['sjark'] and r['sjarkny'], 'sonaren tilbys bare på sjark og ny sjark', {k: r[k] for k in ('skiff', 'snekke', 'sjark', 'sjarkny')})
+    check(r['skiff'] is None and r['snekke'] is None and r['sjark'] and r['sjarkny'], 'sonaren tilbys ikke på skiffen og snekka, men på sjarken og den nye sjarken (fra 10 m), i utstyrsbutikken', {k: r[k] for k in ('skiff', 'snekke', 'sjark', 'sjarkny')})
     check('30 min' in (r['sjark'] or '') and 'undefined' not in (r['sjark'] or ''), 'knappen viser monteringstida i ekte tid (verftsjobbene tar 30 minutter)', r['sjark'])
     check(r['paid'] == 150000 and r['queued'] and r['fitted'] and r['tier'] == 'sonar' and abs(r['r'] - 2.778) < 0.001 and r['listed'], 'kjøpt og montert: sonaren gir varmekart 3 nm i diameter og står under Båten i Beholdning', {k: r[k] for k in ('paid', 'tier', 'r', 'listed')})
     check(r['refund'] == 150000 and not r['skiffSonar'], 'en montering som venter mens båten byttes til en som ikke passer, betales tilbake', {k: r[k] for k in ('refund', 'skiffSonar')})
