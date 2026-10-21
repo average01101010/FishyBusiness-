@@ -76,7 +76,7 @@ Reparasjon av skroget etter støt og grunnstøting og kasko (skrogforsikring) li
 
 ## Utstyrsbutikkens service (08.10.2026)
 
-Butikken har en Service-knapp (`Butikk › Service`): den reparerer line og teiner, bøter garn og bytter kroker på halve tiden av det mannskapet bruker, mot et gebyr, og den kjøper utstyr tilbake til en firedel av nypris ganger standen (aldri lønnsomt å kjøpe og selge). Kroker i pakker på 100, 500 og 1000 og reservesett til juksa (markkroker med pilk, kveitepilk) selges her. Se 5.36 i `OVERLEVERING.md`.
+Butikken har en Service-knapp (`Butikk › Service`): den reparerer line og teiner, bøter garn og bytter kroker på halve tiden av det mannskapet bruker, mot et gebyr, og den kjøper utstyr tilbake til en firedel av nypris ganger standen (aldri lønnsomt å kjøpe og selge). Line kjøpes tilbake stamp for stamp, bare uegnede stamper (agnet tas av først under Beholdning), og det gir plass til annen line: hyseline og bankline deler plassen om bord (`gearMax.stamp`). Linekortet der line kjøpes, sier det (Adrian 21.10.2026, som ville bytte hyselina mot bankline). Kroker i pakker på 100, 500 og 1000 og reservesett til juksa (markkroker med pilk, kveitepilk) selges her. Se 5.36 i `OVERLEVERING.md`.
 
 ## Kjøpsrekkefølgen (Jonas 08.10.2026)
 
