@@ -169,10 +169,16 @@ async def console3d(pg):
     # the skiff's console in 3D shows the same heat, and «EKKOLODD AV» when the echo sounder is off
     await pg.evaluate(SETUP, ['chirp', 'nav', 2, 0, True, True])
     await pg.evaluate("(() => { S.boat.type = 'skiff'; applyVessel(); G3.show(true); })()")
-    # with 3D drawn in SwiftShader the heat takes 20-25 s here (07.10.2026, the same before the paint shop); asked every half second, not
-    # every frame (21.10.2026: the heat was done in 10 s, but with the deck kit and the crew SwiftShader's frames came so seldom that a
-    # check per frame never saw it), and the time is printed
-    t0 = time.time(); await pg.wait_for_function(DONE, polling=500, timeout=180000); print('· %4.0f s  console heat in %.0f s' % (time.time() - T0, time.time() - t0), flush=True); await pg.wait_for_timeout(4000)
+    # with 3D drawn in SwiftShader the heat takes 20-25 s here (07.10.2026, the same before the paint shop). The picture is waited for, not
+    # an empty queue (21.10.2026): heatTick queues again every tick what is missing or stale (CHIRP every 5 game minutes), and with the deck
+    # kit and the crew SwiftShader's frames let so few slices through that the queue is never empty here, though the picture is there
+    # (on a tablet the disk takes about a second); asked every half second, and the time is printed
+    PIC = "HEATC.cells.size > 0 && [...HEATC.cells.values()].filter(c => c.v).length >= 0.95 * HEATC.cells.size"
+    t0 = time.time()
+    try: await pg.wait_for_function(PIC, polling=500, timeout=180000)
+    except Exception:
+        print('· heat state', await pg.evaluate("JSON.stringify({tier:heatTier(), busy:HEATC.busy, qi:HEATC.qi, q:HEATC.queue.length, cells:HEATC.cells.size, st:S.boat.status, port:S.boat.port, ty:S.boat.type, ready:mapReadyAt(S.boat.pos, MAPD.simR), hid:document.hidden, eq:S.equip, set:{echo:S.settings.echo, sonar:S.settings.sonar}})"), flush=True); raise
+    print('· %4.0f s  console heat in %.0f s' % (time.time() - T0, time.time() - t0), flush=True); await pg.wait_for_timeout(4000)
     import base64
     for name, echo in [('heat_konsoll.png', True), ('heat_konsoll_av.png', False)]:
         await pg.evaluate(f"(() => {{ S.settings.echo = {'true' if echo else 'false'}; G3._debug.SK.tP = 0; }})()"); await pg.wait_for_timeout(1500)
