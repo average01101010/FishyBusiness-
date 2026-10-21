@@ -134,7 +134,12 @@ def levels(x, fine):
 def hull_rows(sg, fine=True):
     xs = ([0.0, 0.03, 0.08, 0.15, 0.25, 0.38, 0.52, 0.68, 0.85] + [1.0 + 0.2 * i for i in range(31)] + [7.2 + 0.07 * i for i in range(10)]) if fine \
         else [0.0, 0.2, 0.6, 1.5, 3.5, 5.5, 6.6, 7.3, 7.7]
-    xs = sorted(set(round(v, 4) for v in xs if v < XF - 0.015) | {XF - 0.015})
+    # a section where the stem passes each colour boundary, so the boot top and the dark band end on the stem at their own height
+    # (bpyutil stem_stations; Jonas 21.10.2026, #89: the bands ran along the stem)
+    # (the laps too: where they ran out into the stem as a dark wedge)
+    laps = [lambda x, k=k: WL + 0.12 + (z_sheer(x) - BAND[0] - 0.03 - WL - 0.12) * k / LAPS for k in range(1, LAPS + 1)]
+    xs += stem_stations(z_keel, [WL + 0.05, WL + 0.12] + laps + [lambda x: z_sheer(x) - BAND[0], lambda x: z_sheer(x) - BAND[1]], 5.0, XF - 0.015)
+    xs = sorted(set(round(v, 4) for v in xs if v < XF - 0.015) | {XF - 0.015, XF})   # (XF: the stem's tip, a point that closes the stem)
     rows, mats = [], None
     for x in xs:
         L = levels(x, fine); B = max(b_sheer(x), 1e-3)

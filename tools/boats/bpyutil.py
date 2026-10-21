@@ -389,6 +389,28 @@ def interp(tab, x):
             return (ys[i] * (2 * t ** 3 - 3 * t ** 2 + 1) + h * m[i] * (t ** 3 - 2 * t ** 2 + t) + ys[i + 1] * (-2 * t ** 3 + 3 * t ** 2) + h * m[i + 1] * (t ** 3 - t ** 2))
 
 
+def stem_stations(zk, tops, x0, x1, n=240):
+    """the stations where the stem, the keel line zk(x) rising from x0 to x1, passes each colour boundary in tops (a height, or a
+    function of x for one that follows the sheer). A section that starts above a band's top has that band on its stem point, so its
+    faces ran up the stem from the section aft of it (Jonas 21.10.2026, #89: the antifouling and the stripe went up the bow): with a
+    section at each crossing every band ends on the stem at its own height"""
+    out = []
+    for t in tops:
+        f = lambda x, t=t: zk(x) - (t(x) if callable(t) else t)
+        a, fa = x0, f(x0)
+        for i in range(1, n + 1):
+            b = x0 + (x1 - x0) * i / n; fb = f(b)
+            if fa < 0 <= fb:
+                lo, hi = a, b
+                for _ in range(50):
+                    m = (lo + hi) / 2
+                    if f(m) < 0: lo = m
+                    else: hi = m
+                out.append(hi)
+            a, fa = b, fb
+    return out
+
+
 def resample(sec, bands):
     """points along a section polyline [(y, z)] with rows exactly at the colour boundaries: bands [(z_top, n)] from the bottom up"""
     L = [0.0]

@@ -109,7 +109,10 @@ def levels(x, fine):
 
 def hull_rows(sg, fine=True):
     xs = ([0.0, 0.04, 0.1, 0.2, 0.35, 0.55, 0.8] + [1.0 + 0.25 * i for i in range(30)] + [8.5 + 0.08 * i for i in range(11)]) if fine else [0.0, 0.2, 0.7, 1.8, 4.0, 6.2, 7.5, 8.4, 9.0]
-    xs = sorted(set(round(v, 4) for v in xs if v < XF - 0.015) | {XF - 0.015})
+    # a section where the stem passes each colour boundary, so the boot top and the stripe end on the stem at their own height
+    # (bpyutil stem_stations; Jonas 21.10.2026, #89: the stripe went up the stem)
+    xs += stem_stations(z_keel, (Z_BOOT[0], Z_BOOT[1], lambda x: z_sheer(x) - STRIPE[0], lambda x: z_sheer(x) - STRIPE[1]), 6.0, XF - 0.015)
+    xs = sorted(set(round(v, 4) for v in xs if v < XF - 0.015) | {XF - 0.015, XF})   # (XF: the stem's tip, a point that closes the stem)
     rows, mats = [], None
     for x in xs:
         L = levels(x, fine)

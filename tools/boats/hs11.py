@@ -83,13 +83,20 @@ def colours():
 
 NB = lambda fine: (8 if fine else 3, 1, 4 if fine else 2, 1, 4 if fine else 1)   # bottom, boot top, side to the strake, the strake, side to the top
 
+BAND_Z = (WL - 0.03, WL + 0.08, Z_RUB - 0.05, Z_RUB + 0.05)   # the tops of the antifouling, the boot top, the side and the strake
+
 def hull_rows(sg, fine=True):
     rows = []; n = NB(fine)
     xs = ([0.0, 0.03, 0.08] + [0.2 + 0.3 * i for i in range(28)] + [8.6 + 0.12 * i for i in range(20)]) if fine else [0.0, 0.1, 2.0, 5.0, 8.0, 9.5, 10.4, 10.8]
-    xs = sorted(set(round(v, 4) for v in xs if v < XF - 0.01) | {X_HS, X_HS + 0.15, X_HS + 0.3, XF - 0.01})
+    # a section where the stem passes each band's top, so a band ends on the stem at its own height (bpyutil stem_stations; Jonas
+    # 21.10.2026, #89: the antifouling and the white stripe went up the bow, and the stripe's two sides met in a notch at the stem)
+    xs += stem_stations(z_keel, BAND_Z, 8.0, XF - 0.01)
+    # (and a last section at the stem's tip, where the section is a point: without it the hull stopped a centimetre short and its open
+    # end showed as a light notch at the top of the stem)
+    xs = sorted(set(round(v, 4) for v in xs if v < XF - 0.01) | {X_HS, X_HS + 0.15, X_HS + 0.3, XF - 0.01, XF})
     for x in xs:
         sec = [(abs(y), z) for y, z in section(x, sg)]
-        rows.append([(x, sg * y, z) for y, z in resample(sec, [(WL - 0.03, n[0]), (WL + 0.08, n[1]), (Z_RUB - 0.05, n[2]), (Z_RUB + 0.05, n[3]), (None, n[4])])])
+        rows.append([(x, sg * y, z) for y, z in resample(sec, list(zip(BAND_Z, n)) + [(None, n[4])])])
     return rows
 
 def band_of(j, fine):
