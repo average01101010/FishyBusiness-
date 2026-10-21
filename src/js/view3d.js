@@ -2509,17 +2509,29 @@ const G3 = (() => {
   }
   // the crab tank across from the hauler stands on clear deck: where a house or a cabin is there (the new speed sjark's hauler stands
   // under the cabin's roof, and the tank went through its wall; Jonas 21.10.2026), the nearest place on the deck map (vessel3d.js
-  // deckMap) its footprint fits, keeping to its side; worked out once per boat type and hauler
+  // deckMap) its footprint fits, keeping to its side; worked out once per boat type and hauler. The map keeps the top floor of each cell,
+  // so the deck under a shelter deck reads as the shelter's top (the 15 m coastal boat's work deck): a cell with a floor 1.9 m or more
+  // over the tank's is room under a deck. Where the deck itself is all thwarts and boxes (the old wooden boat), the tank stands on a low
+  // flat platform instead (up to 0.75 m over the deck). Where the open deck is smaller than the tank (the old wooden boat's well between
+  // the thwarts and the engine box, 0.6 by 0.8 m), a smaller tank is drawn, down to 70 %: the fifth number is its scale
   const TANKAT = {};
   function tankAt(x, z, d, vt){
     const key = vt + '|' + x.toFixed(2) + '|' + z.toFixed(2); if (key in TANKAT) return TANKAT[key];
-    const M = typeof deckMap === 'function' ? deckMap(vt) : null, T = (GB && GB.px || {}).tank || {half:[0.36, 0.56]}, hx = T.half[0] - 0.15, hz = T.half[1] - 0.15;
-    const fits = (cx, cz) => { for (let qx = cx - hx; qx <= cx + hx + 1e-6; qx += M.c / 2) for (let qz = cz - hz; qz <= cz + hz + 1e-6; qz += M.c / 2){ const f = M.floorAt(qx, qz); if (!(Math.abs(f - d.y) < 0.25)) return false; } return true; };
-    let best = [x, z];
-    if (M && !fits(x, z)){ let bd = 1e9; best = null;
-      for (let dz = -3; dz <= 3.001; dz += 0.1) for (let dx = 0; dx <= 1.5; dx += 0.1){ const cx = x - Math.sign(x) * dx, c = dz * dz + 2 * dx * dx; if (c < bd && fits(cx, z + dz)){ bd = c; best = [cx, z + dz]; } }
-      best = best || [x, z]; }
-    return TANKAT[key] = [best[0], d.y, best[1], !M || fits(best[0], best[1])];   // (the fourth: its footprint is all deck)
+    const M = typeof deckMap === 'function' ? deckMap(vt) : null, T = (GB && GB.px || {}).tank || {half:[0.36, 0.56]};
+    if (!M) return TANKAT[key] = [x, d.y, z, true, 1];
+    let hx, hz;
+    // the height its bottom stands at over the footprint (the highest floor there, the deck's camber), or null where it does not fit
+    const fits = (cx, cz, y) => { let top = -1e9; for (let qx = cx - hx; qx <= cx + hx + 1e-6; qx += M.c / 2) for (let qz = cz - hz; qz <= cz + hz + 1e-6; qz += M.c / 2){ const f = M.floorAt(qx, qz);
+      if (f > y + 1.9) continue; if (!(Math.abs(f - y) < 0.25)) return null; if (f > top) top = f; } return top > -1e8 ? top : y; };
+    // the height it stands at here: on the deck, else on the floor under its middle when that is a low platform
+    const standAt = (cx, cz) => { const y = fits(cx, cz, d.y); if (y != null) return y; const f = M.floorAt(cx, cz); return f > d.y + 0.25 && f < d.y + 0.75 ? fits(cx, cz, f) : null; };
+    for (const s of [1, 0.85, 0.7]){ hx = T.half[0] * s - 0.05; hz = T.half[1] * s - 0.05;
+      const y0 = fits(x, z, d.y); if (y0 != null) return TANKAT[key] = [x, y0, z, true, s];
+      let bd = 1e9, best = null;
+      for (let dz = -3; dz <= 3.001; dz += 0.1) for (let dx = 0; dx <= 1.5; dx += 0.1){ const cx = x - Math.sign(x) * dx, c0 = dz * dz + 2 * dx * dx; if (c0 >= bd) continue;
+        const y = standAt(cx, z + dz); if (y == null) continue; const c = c0 + 8 * (y - d.y) * (y - d.y); if (c < bd){ bd = c; best = [cx, y, z + dz]; } }
+      if (best) return TANKAT[key] = [best[0], best[1], best[2], true, s]; }
+    return TANKAT[key] = [x, d.y, z, false, 0.7];   // (the fourth: its footprint is all deck; false: no place found)
   }
   function drawPots(BMrel, t, g, G, HP, sx, d, skiff, seg){
     const s = g.op === 'haul' ? (S.sets || []).find(x => x.id === g.sid) : g.s, ps = 1, X = GB.px || {}, XP = X.pot || {};
@@ -2557,7 +2569,7 @@ const G3 = (() => {
       else { const k = ph01(0.9, 1), S2 = D.slot(g.done); p = lerp(D.spot, S2, k); p[1] += Math.sin(Math.PI * k) * (ph + 0.15); }
       if (u < 0.62){ const R = ring(p); seg(R, blk, 0.008, GB.float, 0); bridle(p); }
       // the hatch opens, the crabs go one by one to the tank (or down the hold), the bait box is filled, the hatch shuts
-      const open = ph01(0.66, 0.7) * (1 - ph01(0.85, 0.89)), tk = S.equip.krabbekar ? [D.tank[0], D.tank[1] + ((X.tank || {}).water || 0.58) + 0.05, D.tank[2]] : [0, d.y + 0.2, d.z];
+      const open = ph01(0.66, 0.7) * (1 - ph01(0.85, 0.89)), tk = S.equip.krabbekar ? [D.tank[0], D.tank[1] + ((X.tank || {}).water || 0.58) * (D.tank[4] || 1) + 0.05, D.tank[2]] : [0, d.y + 0.2, d.z];
       let left = crabN; if (u > 0.7) for (let k = 0; k < crabN; k++){ const a = 0.7 + k * 0.13 / Math.max(1, crabN), f = clamp((u - a) / 0.05, 0, 1); if (f <= 0) continue; left--; if (f >= 1) continue;
         const A = [p[0], p[1] + ph * 0.5, p[2]], Q = lerp(A, [tk[0] + (hash(k) - 0.5) * 0.4, tk[1], tk[2] + (hash(k + 3) - 0.5) * 0.6], f); Q[1] += Math.sin(Math.PI * f) * 0.7;
         drawN(fishOf('krabbe'), chain(BMrel, M4.T(Q[0], Q[1], Q[2]), M4.RY(f * 3), M4.RX(0.5), M4.S(0.8))); }
@@ -2580,9 +2592,9 @@ const G3 = (() => {
   function drawCrabTank(BMrel, G, d, sx, HP){
     if (!S.equip.krabbekar || rigOf() !== 'teiner' || !GB || !GB.tank) return;
     const pw = ((GB.px || {}).pot || {}).half || 0.7, D = potDeck(G, HP, sx, d, pw), T = (GB.px || {}).tank || {half:[0.36, 0.56], water:0.58};
-    drawN(GB.tank, chain(BMrel, M4.T(D.tank[0], D.tank[1], D.tank[2]))); KST.tank = D.tank.slice();
-    const kg = S.hold.reduce((a, x) => a + (x.sp === 'krabbe' ? x.kg : 0), 0), n = Math.min(14, Math.ceil(kg / 4));
-    for (let k = 0; k < n; k++) drawN(fishOf('krabbe'), chain(BMrel, M4.T(D.tank[0] + (hash(k * 5 + 7) - 0.5) * T.half[0] * 1.5, D.tank[1] + T.water - 0.04 + Math.floor(k / 5) * 0.03, D.tank[2] + (hash(k * 7 + 9) - 0.5) * T.half[1] * 1.6), M4.RY(hash(k) * 6.3), M4.S(0.75)));
+    const s = D.tank[4] || 1; drawN(GB.tank, chain(BMrel, M4.T(D.tank[0], D.tank[1], D.tank[2]), M4.S(s))); KST.tank = D.tank.slice();
+    const kg = S.hold.reduce((a, x) => a + (x.sp === 'krabbe' ? x.kg : 0), 0), n = Math.min(Math.round(14 * s * s), Math.ceil(kg / 4));
+    for (let k = 0; k < n; k++) drawN(fishOf('krabbe'), chain(BMrel, M4.T(D.tank[0] + (hash(k * 5 + 7) - 0.5) * T.half[0] * s * 1.5, D.tank[1] + (T.water - 0.04) * s + Math.floor(k / 5) * 0.03, D.tank[2] + (hash(k * 7 + 9) - 0.5) * T.half[1] * s * 1.6), M4.RY(hash(k) * 6.3), M4.S(0.75)));
   }
   function drawGearOp(BMrel, eye, VP, t){
     const b = S.boat, g = b.gop; if (!g || b.status !== 'fishing') return; if (!GB) buildGear();
