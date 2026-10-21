@@ -18,12 +18,13 @@ SET = """((t) => { const b = S.boat; S.tut = 0; S.mult = 0; S.t = Math.round((Da
   b.status = 'sailing'; b.port = null; b.v = VESSELS[t].vcruise || 8; const p = P(69.532, 17.926); b.pos = {x:p.x, y:p.y}; b.heading = 1.2;
   S.plan = {wps:[{x:b.pos.x + 9, y:b.pos.y, port:null, fish:0}], idx:0, speed:b.v, returning:false}; G3.setHelm(true); })"""
 
-# the room over the one at the wheel: the lowest surface of the model over his place (and a hand's breadth round it), above his knees
+# the room over the one at the wheel: the lowest surface of the model over his place (and a hand's breadth round it), above his waist
+# (the chair's seat behind him and the console before him are lower)
 ROOM = """((t) => { const G = geoOf(t), s = G.skipperAt, m = vesselModel(t); if (!s || !m) return null; const P = m.o.p; let best = 1e9;
   for (let o = 0; o < P.length; o += 9){ const ax = P[o], az = P[o + 2], bx = P[o + 3], bz = P[o + 5], cx = P[o + 6], cz = P[o + 8], d = (bz - cz) * (ax - cx) + (cx - bx) * (az - cz); if (Math.abs(d) < 1e-9) continue;
     for (const [dx, dz] of [[0, 0], [0.12, 0], [-0.12, 0], [0, 0.12], [0, -0.12]]){ const x = s[0] + dx, z = s[2] + dz;
       const l0 = ((bz - cz) * (x - cx) + (cx - bx) * (z - cz)) / d, l1 = ((cz - az) * (x - cx) + (ax - cx) * (z - cz)) / d, l2 = 1 - l0 - l1; if (l0 < 0 || l1 < 0 || l2 < 0) continue;
-      const y = l0 * P[o + 1] + l1 * P[o + 4] + l2 * P[o + 7]; if (y > s[1] + 0.6 && y < best) best = y; } }
+      const y = l0 * P[o + 1] + l1 * P[o + 4] + l2 * P[o + 7]; if (y > s[1] + 1.0 && y < best) best = y; } }
   return {room:best < 1e8 ? +(best - s[1]).toFixed(2) : null, eye:G.eye ? +(G.eye[1] - s[1]).toFixed(2) : null}; })"""
 
 
