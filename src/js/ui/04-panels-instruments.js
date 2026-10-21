@@ -21,9 +21,10 @@ function statusText(){
   if (S.plan && S.plan.depAt) return t('st_waiting', hm(S.plan.depAt / 60));
   if (b.status === 'aground') return t('st_aground');
   if (b.status === 'port') return t(b.land ? 'st_landing' : b.shift ? 'st_shift' : b.fueling ? 'st_fueling' : 'st_port', portById(b.port).name);
+  if (b.anch && b.anch.up != null) return GL('Hiver anker', 'Weighing anchor');   // (a route waits for it: 06e-anchor.js)
   if (b.status === 'sailing') return t(S.plan && S.plan.returning ? 'st_returning' : 'st_sailing', fmt(b.v, 0));
   if (b.gop){ const g = gopText(); return GL(g[2], g[3]); }
-  if (b.anch && b.status === 'idle') return GL('Ligger til ankers', 'At anchor');
+  if (b.anch && b.status === 'idle') return GL(b.anch.out != null && b.anch.out < b.anch.rode ? 'Kaster anker' : 'Ligger til ankers', b.anch.out != null && b.anch.out < b.anch.rode ? 'Anchoring' : 'At anchor');
   if (b.status === 'tow' && b.tow) return t('st_tow_' + b.tow.ph, fmt(b.v, 0));
   return t('st_' + b.status);
 }
@@ -88,6 +89,8 @@ function liveFrac(){ return clamp(acc + (Date.now() - lastWall) / 1000 * simRate
 function livePose(frac){
   if (frac === undefined) frac = liveFrac();
   const b = S.boat, q0 = quayPos(b); let p = {x:q0.x, y:q0.y}, hd = b.heading, idx = S.plan ? S.plan.idx : 0;   // at the naust, its berth
+  // at anchor: along the minute's swing round it (core/06e-anchor.js anchorSwing)
+  if (b.anch && b.status !== 'port'){ const m = b.anch.mv; return m && m.t === S.t ? {p:{x:b.pos.x + m.x * frac, y:b.pos.y + m.y * frac}, hd:b.heading + dynAng(b.heading || 0, m.hd) * frac, frac, idx} : {p:{x:b.pos.x, y:b.pos.y}, hd:b.heading, frac, idx}; }
   if (dynLive()) return dynLivePose(frac);   // the manoeuvring model's own pose, a little on from its last tick (core/16b-dyn.js)
   if (helmOn()) return helmPose(frac);
   if (b.status === 'tow'){ const q = towPose(frac); if (q && q.b) return {p:q.b.p, hd:q.b.hd, frac}; }

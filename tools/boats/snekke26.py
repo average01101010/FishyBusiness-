@@ -409,10 +409,17 @@ def kit_places(G):
             'stamps': {'at': G(2.53, 0.92, ZC), 'ry': r(math.pi / 2)},
             'cargo': [G(2.73, 0.58, ZC) + [0.0]]}
 
+# the boat's own anchor (tools/deck/anker.py, drawn and let go by the game, view3d.js drawAnchor; Jonas 21.10.2026): its kind and mass,
+# the fairlead where the rode leaves her (the bow roller's top, or the hawse pipe's mouth on the side), the hawse pipe's deck end, the
+# windlass's gypsy the chain comes off, whether the game draws the chain on deck (deck), and the spare in the other hawse
+def bower(G):
+    return {'kind': 'plog', 'kg': 8, 'fair': G(7.93, 0, z_sheer(7.75) + 0.055), 'side': 0}
+
+
 def anchors():
     G = lambda x, y, z: [round(v, 3) for v in to_game((x, y, z))]
     hx = 2.0; hy = -(deck_edge(hx) - 0.12); zb = z_sheer(3.5)
-    return {'eye': G(3.0, -0.62, zb + 1.22), 'skipperAt': G(3.0, -0.62, zb), 'hp': -0.1, 'fov': 62,
+    return {'bower': bower(G), 'eye': G(3.0, -0.62, zb + 1.22), 'skipperAt': G(3.0, -0.62, zb), 'hp': -0.1, 'fov': 62,
             'crewSpots': [G(1.6, -0.75, ZC) + [1.57], G(1.0, 0.6, ZC) + [0.0], G(0.6, -0.4, ZC) + [3.14]],
             'lights': lantern_anchors(G),
             # the companionway door in the trunk's aft end (the real door into the cabin), its sill on the bridge deck; the crew go in here

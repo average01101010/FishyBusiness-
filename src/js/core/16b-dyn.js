@@ -300,11 +300,11 @@ function dynWrite(b, d){
 }
 // the model has the boat: the tick runs it, the minute step leaves her be (sail), the chart and the 3D view draw its pose
 function dynCan(){
-  const b = S.boat; if (!DYN.on || typeof SIMREADY === 'undefined' || !SIMREADY || simRate() > 12 || b.status !== 'sailing') return false;
+  const b = S.boat; if (!DYN.on || typeof SIMREADY === 'undefined' || !SIMREADY || simRate() > 12 || b.status !== 'sailing' || b.anch) return false;   // (at anchor she lies to it until it is up: 06e-anchor.js)
   if (helmOn()) return !sleepAlone();
   return !!(S.plan && S.plan.wps.length > S.plan.idx);
 }
-function dynLive(){ const b = S.boat; return DYN.on && b === DYN.b && !!b.dyn && b.status === 'sailing'; }
+function dynLive(){ const b = S.boat; return DYN.on && b === DYN.b && !!b.dyn && b.status === 'sailing' && !b.anch; }
 // (time caught up, more than ten minutes behind the world's clock after a freeze or a long wait for the map, plays the kinematic
 // minute step with the model off (tick): she keeps the world's clock, and the model starts again from where that put her)
 // where she is now, a little on from the last tick (km, radians, m/s): for the chart plotter and the 3D view

@@ -450,11 +450,13 @@ function vesselStep(H){
     if (hooks.onTurnBack) hooks.onTurnBack(!!wl, seaOver && W <= limW, W, hs, limW, wl ? wl.hs : 0);
   }
   if (b.status === 'sailing' || b.status === 'fishing') b.engH = (b.engH || 0) + (b.status === 'sailing' ? 1 : 0.25) / 60;
-  if (b.status === 'sailing'){ if (!helmOn()){ const p0 = b.pos; sail(H, W, hs); if (meAboard()) tatAdd('nm', dist(p0, b.pos) / NM); } }   // by hand she moves every tick (helmStep)
+  if (b.status === 'sailing' && b.anch) b.v = 0;   // the anchor is coming up: the route or the helm waits for it (06e-anchor.js)
+  else if (b.status === 'sailing'){ if (!helmOn()){ const p0 = b.pos; sail(H, W, hs); if (meAboard()) tatAdd('nm', dist(p0, b.pos) / NM); } }   // by hand she moves every tick (helmStep)
   else if (b.status === 'fishing') fish(H, W, hs);
   else b.v = 0;
   if (typeof lieDrift === 'function') lieDrift(H);   // with no way on she drifts with the wind and the sea (Fysikk 2, 16b-dyn.js)
-  if (b.anch) anchorTick(H, W, hs);   // the anchor holds or drags (06e-anchor.js)
+  if (b.anch) anchorSwing(H);   // she lies to the anchor and swings round it with the wind and the current, or it comes up (06e-anchor.js)
+  if (b.anch) anchorTick(H, W, hs);   // the anchor holds or drags
   risk(W, hs);
 }
 // speed for the coming minute: the boat speeds up and slows down gradually, and keeps to 5 knots within 250 m of a harbour

@@ -353,9 +353,17 @@ def name_strips(G):
     out.append([[G(XA - 0.03, y, 8.3) for y in ys], [G(XA - 0.03, y, 9.1) for y in ys]])
     return out
 
+# the boat's own anchor (tools/deck/anker.py, drawn and let go by the game, view3d.js drawAnchor; Jonas 21.10.2026): its kind and mass,
+# the fairlead where the rode leaves her (the bow roller's top, or the hawse pipe's mouth on the side), the hawse pipe's deck end, the
+# windlass's gypsy the chain comes off, whether the game draws the chain on deck (deck), and the spare in the other hawse
+def bower(G):
+    hw = lambda sg: {'fair': G(46.0, sg * (hbz(46.0, 10.55) + 0.03), 10.55), 'pipe': G(45.4, sg * 1.9, DF + 0.05)}
+    return dict(hw(-1), kind='hall', kg=1300, gypsy=G(44.4, -1.15, DF + 1.1), side=1, deck=True, spare=hw(1))
+
+
 def anchors():
     G = lambda x, y, z: [round(v, 3) for v in to_game((x, y, z))]
-    return {'eye': G(36.6, -0.8, WF + 1.75), 'skipperAt': G(36.2, -0.8, WF), 'hp': -0.10, 'fov': 58,
+    return {'bower': bower(G), 'eye': G(36.6, -0.8, WF + 1.75), 'skipperAt': G(36.2, -0.8, WF), 'hp': -0.10, 'fov': 58,
             'crewSpots': [G(20.0, -2.6, DK) + [1.57], G(14.0, 1.0, DK) + [0.0], G(8.0, -2.0, DK) + [3.14], G(25.0, 0.5, DK) + [0.0]],
             # the lights (B8, typed): the masthead light on the wheelhouse's mast, the second one aft and higher on the shelter's mast, the sidelights
             # on the wheelhouse's wings, the stern light on the shelter's roof; the portal's floodlight and the jack staff's light are work lights

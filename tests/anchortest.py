@@ -17,7 +17,9 @@ JS = """(async () => {
   // 2. hold in calm, drag in a blow
   b.status = 'idle'; b.port = null; b.pos = {x:spot.x, y:spot.y}; S.plan = null; S.crew = []; S.me = S.cur; S.t = Math.round((Date.UTC(2028, 4, 3, 10) - EPOCH) / 6e4);
   window.windAt = () => 3; window.hsAt = () => 0.2;
-  R.dropped = dropAnchor(); const p0 = {...b.pos}; for (let i = 0; i < 12 * 60; i++) step(); R.calmHeld = b.anch && b.anch.drags === 0 && dist(b.pos, p0) < 1e-9;
+  R.dropped = dropAnchor(); const A0 = {x:b.anch.x, y:b.anch.y}; for (let i = 0; i < 12 * 60; i++) step();
+  // (she swings round it now, core/06e-anchor.js anchorSwing: the anchor holds where it went down, and she lies within the rode's reach of it)
+  R.calmHeld = b.anch && b.anch.drags === 0 && dist({x:b.anch.x, y:b.anch.y}, A0) < 1e-9 && dist(b.pos, A0) * 1000 < b.anch.rode + VESSELS[b.type].len;
   R.load = Math.round(anchorLoad(BOAT.risk[2] * 1.5, 0.3, 0.5) * 100) / 100;
   window.windAt = () => BOAT.risk[2] * 1.25; window.hsAt = () => BOAT.risk[0] * 1.1; S.settings.autoOn = false; b.windArm = false;
   S.crew = [Object.assign(genCrew(), {bi:false, off:false})];

@@ -369,6 +369,13 @@ def build(fine=True):
 def to_game(p): return (-p[1], p[2] - WL, -(p[0] - XM))
 def to_game_n(n): return (-n[1], n[2], -n[0])
 
+# the boat's own anchor (tools/deck/anker.py, drawn and let go by the game, view3d.js drawAnchor; Jonas 21.10.2026): its kind and mass,
+# the fairlead where the rode leaves her (the bow roller's top, or the hawse pipe's mouth on the side), the hawse pipe's deck end, the
+# windlass's gypsy the chain comes off, whether the game draws the chain on deck (deck), and the spare in the other hawse
+def bower(G):
+    return {'kind': 'plog', 'kg': 16, 'fair': G(10.86, 0, z_sh(10.6) + 0.095), 'gypsy': G(9.6, 0, ZFD + 0.41), 'side': 0, 'deck': True}
+
+
 def anchors():
     G = lambda x, y, z: [round(v, 3) for v in to_game((x, y, z))]
     hx = 3.9; hy = -(y_sh(hx) - 0.07)
@@ -380,7 +387,7 @@ def anchors():
         names.append([B, Tt])
     ys = [1.0 - 2.0 * k / 12 for k in range(13)]
     names.append([[G(XA - 0.02, y, z_kn(XA) + 0.22) for y in ys], [G(XA - 0.02, y, z_kn(XA) + 0.56) for y in ys]])    # across the transom's white, port to starboard
-    return {'eye': G(7.3, -0.75, ZFD + 1.65), 'skipperAt': G(7.15, -0.75, ZFD), 'hp': -0.08, 'fov': 60,
+    return {'bower': bower(G), 'eye': G(7.3, -0.75, ZFD + 1.65), 'skipperAt': G(7.15, -0.75, ZFD), 'hp': -0.08, 'fov': 60,
             'crewSpots': [G(3.6, -1.2, ZMD) + [1.57], G(2.0, 1.15, ZMD) + [0.0], G(1.0, -0.9, ZMD) + [3.14], G(2.6, 0.0, ZMD + 0.26) + [0.0]],
             'lights': [[G(6.6, 0, 9.6), [1, 0.95, 0.85], 'allround'], [G(7.6, WY + 0.25, WR + 0.43), [1, 0.12, 0.1], 'port'], [G(7.6, -WY - 0.25, WR + 0.43), [0.1, 1, 0.35], 'stbd'],
                        [G(0.45, 1.5, 7.7), [1, 0.95, 0.85], 'stern']],

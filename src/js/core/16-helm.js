@@ -15,6 +15,7 @@ function helmCan(){ const b = S.boat; return !!(S.settings && S.settings.manual)
 // the controls were touched: the hand takes the helm (from a route, Autonav or lying still), at the speed she has
 function helmTake(){
   const b = S.boat; if (!helmCan()) return false;
+  if (b.anch){ weighAnchor(); toast(gL('Hiver ankeret først.', 'Weighing the anchor first.')); return false; }   // (06e-anchor.js: the helm when it is up)
   if (S.plan){ S.plan = null; log('Du tok roret. Ruta er stoppet.', 'You took the helm. The route is stopped.'); }
   if (!S.helm) S.helm = {on:false, thr:0, rud:0, v:0, yaw:0};
   const h = S.helm;

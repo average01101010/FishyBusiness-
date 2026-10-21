@@ -373,9 +373,7 @@ def forecastle(fine=True):
     objs.append(tube('chain', [(10.12, 0, zb + 0.44), (10.55, 0, 3.96), (10.92, 0, 3.94)], 0.025, C['dark'], 6))
     for sy in (0.11, -0.11): objs.append(box('roller_cheek%d' % int(sy * 100), 10.50, 11.02, sy - 0.015, sy + 0.015, 3.78, 4.02, C['steel'], 0.01))
     objs.append(cyl('bow_roller', (10.95, -0.1, 3.88), (10.95, 0.1, 3.88), 0.07, C['dark'], 14))
-    # the anchor stowed in the roller, its flukes against the stem
-    objs.append(cyl('anchor_shank', (10.66, 0, 4.03), (11.02, 0, 3.90), 0.03, C['dark'], 8))
-    objs.append(loft_rings('anchor_fluke', [[(11.00, -0.13, 3.86), (11.00, 0.13, 3.86), (11.06, 0.0, 3.62)], [(11.05, -0.13, 3.88), (11.05, 0.13, 3.88), (11.10, 0.0, 3.64)]], C['dark']))
+    # (the anchor is the game's own, stowed in the roller and let go from it: bower())
     objs.append(cyl('capstan_post', (9.2, 0, z_bakk(9.2)), (9.2, 0, 4.0), 0.12, C['red'], 14))
     objs.append(cyl('capstan_drum', (9.2, 0, 4.0), (9.2, 0, 4.42), 0.19, C['red'], 20, r1=0.16))
     objs.append(box('fore_hatch', 8.95, 9.45, 1.00, 1.50, z_bakk(9.2), z_bakk(9.2) + 0.16, C['inner'], 0.02))
@@ -527,9 +525,16 @@ def name_strips(G):
     out.append([[G(x_transom(2.0) - 0.02, y, 2.0) for y in ys], [G(x_transom(2.34) - 0.02, y, 2.34) for y in ys]])
     return out
 
+# the boat's own anchor (tools/deck/anker.py, drawn and let go by the game, view3d.js drawAnchor; Jonas 21.10.2026): its kind and mass,
+# the fairlead where the rode leaves her (the bow roller's top, or the hawse pipe's mouth on the side), the hawse pipe's deck end, the
+# windlass's gypsy the chain comes off, whether the game draws the chain on deck (deck), and the spare in the other hawse
+def bower(G):
+    return {'kind': 'plog', 'kg': 16, 'fair': G(10.95, 0, 3.95), 'gypsy': G(10.06, 0, z_bakk(10.0) + 0.46), 'side': 0, 'deck': False}
+
+
 def anchors():
     G = lambda x, y, z: [round(v, 3) for v in to_game((x, y, z))]
-    return {'eye': G(7.80, -0.55, 4.86), 'skipperAt': G(7.62, -0.55, WH_FLOOR), 'hp': -0.06, 'fov': 58,
+    return {'bower': bower(G), 'eye': G(7.80, -0.55, 4.86), 'skipperAt': G(7.62, -0.55, WH_FLOOR), 'hp': -0.06, 'fov': 58,
             'crewSpots': [G(5.05, -1.15, Z_DECK + 0.04) + [1.57], G(4.25, -0.35, Z_DECK + 0.04) + [0.0], G(1.25, -0.55, Z_DECK + 0.04) + [3.14], G(0.55, 0.65, Z_DECK + 0.04) + [3.14]],
             'hauler': G(5.30, -1.62, 3.52), 'filler': G(4.6, 1.80, Z_DECK + 0.1), 'pole': G(-0.52, 1.62, 4.95),
             'lights': [[G(6.47, WH_YC, 9.16), [1, 0.95, 0.85], 'allround'], [G(8.71, 1.55, roof_z(8.7) + 0.04), [1, 0.12, 0.1], 'port'],

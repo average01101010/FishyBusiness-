@@ -375,7 +375,7 @@ def forecastle(fine=True):
         zv = z_bk(7.75)
         objs.append(cyl('vent%d' % int(y * 10), (7.75, y, zv), (7.75, y, zv + 0.28), 0.05, C['white'], 10))
         objs.append(cyl('vent_cap%d' % int(y * 10), (7.75, y, zv + 0.28), (7.75, y, zv + 0.36), 0.12, C['white'], 14, r1=0.05))
-    # a small windlass, the chain to the bow roller and the anchor stowed in it
+    # a small windlass and the chain to the bow roller
     zw = z_bk(9.45)
     objs.append(box('windlass_base', 9.25, 9.65, -0.20, 0.20, zw, zw + 0.12, C['red'], 0.02))
     objs.append(cyl('gypsy', (9.45, -0.20, zw + 0.26), (9.45, 0.20, zw + 0.26), 0.11, C['red'], 16))
@@ -384,8 +384,7 @@ def forecastle(fine=True):
     objs.append(tube('chain', [(9.50, 0, zw + 0.36), (10.30, 0, zr + 0.06), (10.70, 0, zr + 0.04)], 0.022, C['dark'], 6))
     for sy in (0.09, -0.09): objs.append(box('roller_cheek%d' % int(sy * 100), 10.35, 10.82, sy - 0.013, sy + 0.013, zr - 0.10, zr + 0.12, C['steel'], 0.01))
     objs.append(cyl('bow_roller', (10.76, -0.08, zr - 0.01), (10.76, 0.08, zr - 0.01), 0.06, C['dark'], 14))
-    objs.append(cyl('anchor_shank', (10.48, 0, zr + 0.14), (10.84, 0, zr + 0.02), 0.028, C['dark'], 8))
-    objs.append(loft_rings('anchor_fluke', [[(10.82, -0.12, zr - 0.02), (10.82, 0.12, zr - 0.02), (10.88, 0.0, zr - 0.24)], [(10.87, -0.12, zr), (10.87, 0.12, zr), (10.92, 0.0, zr - 0.22)]], C['dark']))
+    # (the anchor is the game's own, stowed in the roller and let go from it: bower())
     # bollards on the forecastle (no lifebuoy in the model: the game sets the rules' buoys at kit.buoys, 19.10.2026)
     for x, y in ((9.95, 0.72), (9.95, -0.72), (6.45, 1.55), (6.45, -1.55)):
         zb2 = z_bk(x)
@@ -591,10 +590,17 @@ def kit_places(G):
             'stamps': {'at': G(4.37, 1.18, z_deck(4.6) + 0.045), 'ry': r(math.pi / 2)},
             'cargo': [G(3.6, 0.0, z_deck(3.2) + 0.34) + [r(math.pi / 2)], G(1.45, -1.24, z_deck(1.45) + 0.032) + [0.0]]}
 
+# the boat's own anchor (tools/deck/anker.py, drawn and let go by the game, view3d.js drawAnchor; Jonas 21.10.2026): its kind and mass,
+# the fairlead where the rode leaves her (the bow roller's top, or the hawse pipe's mouth on the side), the hawse pipe's deck end, the
+# windlass's gypsy the chain comes off, whether the game draws the chain on deck (deck), and the spare in the other hawse
+def bower(G):
+    return {'kind': 'plog', 'kg': 16, 'fair': G(10.76, 0, z_cap(10.55) + 0.05), 'gypsy': G(9.45, 0, z_bk(9.45) + 0.37), 'side': 0, 'deck': False}
+
+
 def anchors():
     G = lambda x, y, z: [round(v, 3) for v in to_game((x, y, z))]
     zd = z_deck(3.0)
-    return {'eye': G(6.85, -0.40, 2.62), 'skipperAt': G(6.62, -0.40, WH_FLOOR), 'hp': -0.06, 'fov': 58,
+    return {'bower': bower(G), 'eye': G(6.85, -0.40, 2.62), 'skipperAt': G(6.62, -0.40, WH_FLOOR), 'hp': -0.06, 'fov': 58,
             'crewSpots': [G(4.15, -1.10, z_deck(4.15) + 0.04) + [1.57], G(3.25, 1.00, zd + 0.04) + [0.0], G(0.95, 0.30, z_deck(0.95) + 0.04) + [3.14], G(3.10, -1.00, zd + 0.04) + [3.14]],
             'hauler': G(4.51, -1.48, 1.52), 'filler': G(5.55, 1.72, z_deck(5.55) + 0.1), 'pole': G(0.02, 1.55, 2.70),
             # typed lights (B8): the all-round white on the light mast on the roof (under 12 m), the sides on the wheelhouse front, the stern light on the aft mast

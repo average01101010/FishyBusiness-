@@ -390,6 +390,14 @@ def kit_places(G):
             'stamps': {'at': G(5.08, 0.16, Z_FLOOR), 'ry': 0.0},
             'cargo': [G(4.85, -0.15, Z_FLOOR) + [r(math.pi / 2)]]}
 
+# the boat's own anchor (tools/deck/anker.py, drawn and let go by the game, view3d.js drawAnchor; Jonas 21.10.2026): its kind and mass,
+# the fairlead where the rode leaves her (the bow roller's top, or the hawse pipe's mouth on the side), the hawse pipe's deck end, the
+# windlass's gypsy the chain comes off, whether the game draws the chain on deck (deck), and the spare in the other hawse
+def bower(G):
+    return {'kind': 'dregg', 'kg': 5, 'fair': G(L - 0.06, 0, zs(L - 0.06) + 0.03), 'side': 0,
+            'stow': {'eye': G(L - 1.30, 0.14, Z_FLOOR + 0.06), 'crown': G(L - 0.82, 0.14, Z_FLOOR + 0.06)}}
+
+
 def anchors():
     G = lambda x, y, z: [round(v, 3) for v in to_game((x, y, z))]
     gw = lambda x: round(zs(x) - WL, 3)
@@ -405,7 +413,7 @@ def anchors():
           'tub': G(3.85, -0.55, Z_FLOOR), 'fisher': G(3.5, -0.45, Z_FLOOR), 'reel': gwx(3.6, 0.2), 'haul': gwx(4.7, 0.24),
           'mach': [gwx(x, 0.12) for x in (3.2, 3.75, 4.35)], 'stack': G(1.85, 0.0, Z_FLOOR), 'charm': G(2.75, 0.32, ENG[3] + 0.06),
           'skipper': G(1.12, 0.36, SEAT - 0.46), 'seat': G(4.25, 0.45, 1.04 - 0.46), 'filler': G(2.45, 0.3, ENG[3] + 0.04), 'names': names}
-    return {'eye': G(1.12, 0.36, SEAT + 0.82), 'skipperAt': G(1.12, 0.36, Z_FLOOR), 'hp': -0.22, 'fov': 62,
+    return {'bower': bower(G), 'eye': G(1.12, 0.36, SEAT + 0.82), 'skipperAt': G(1.12, 0.36, Z_FLOOR), 'hp': -0.22, 'fov': 62,
             'crewSpots': [G(4.25, 0.45, 1.04) + [0.0]], 'hauler': sk['haul'], 'filler': sk['filler'], 'pole': G(-0.15, 0.1, 2.35),
             'exhaust': G(*EXH), 'engine': G(2.95, 0.05, ENG[3] + 0.2), 'skiff': sk,
             'lights': lantern_anchors(G),

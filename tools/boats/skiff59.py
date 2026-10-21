@@ -277,11 +277,10 @@ def fittings(fine=True):
     objs.append(box('bow_green', 5.38, 5.46, -0.44, -0.36, zb, zb + 0.06, C['lgreen'], 0.01))
     objs.append(cyl('pole', (0.85, 1.05, zs(0.85)), (0.85, 1.05, 2.0), 0.016, C['steel'], 8))
     objs.append(cyl('pole_light', (0.85, 1.05, 2.0), (0.85, 1.05, 2.06), 0.035, C['lwhite'], 10))
-    # the bow roller on its bracket at the stem, with the anchor's shank
+    # the bow roller on its bracket at the stem (the anchor is the game's own, stowed in it: bower())
     zt = zs(5.7) + 0.02
     for y in (-0.06, 0.06): objs.append(box('roller_cheek%d' % int(y * 100), 5.55, 5.98, y - 0.008, y + 0.008, zt - 0.05, zt + 0.07, C['steel'], 0.005))
     objs.append(cyl('roller', (5.95, -0.055, zt), (5.95, 0.055, zt), 0.035, C['dark'], 12))
-    objs.append(cyl('anchor_shank', (5.60, 0, zt + 0.06), (5.98, 0, zt + 0.02), 0.016, C['dark'], 8))
     # the boarding ladder on the port pod
     for y in (0.62, 0.86): objs.append(tube('ladder%d' % int(y * 100), [(0.20, y, ZP), (0.03, y, ZP + 0.04), (-0.02, y, ZP - 0.05), (-0.02, y, 0.05)], 0.012, C['steel'], 6))
     for z in (0.15, 0.32, 0.49): objs.append(cyl('rung%d' % int(z * 100), (-0.02, 0.62, z), (-0.02, 0.86, z), 0.012, C['steel'], 6))
@@ -374,6 +373,13 @@ def kit_places(G):
             'stamps': {'at': G(3.78, -0.10, Z_SOLE), 'ry': 0.0},
             'cargo': [G(4.70, 0.0, Z_CAST) + [0.0]]}
 
+# the boat's own anchor (tools/deck/anker.py, drawn and let go by the game, view3d.js drawAnchor; Jonas 21.10.2026): its kind and mass,
+# the fairlead where the rode leaves her (the bow roller's top, or the hawse pipe's mouth on the side), the hawse pipe's deck end, the
+# windlass's gypsy the chain comes off, whether the game draws the chain on deck (deck), and the spare in the other hawse
+def bower(G):
+    return {'kind': 'plog', 'kg': 4, 'fair': G(5.95, 0, zs(5.7) + 0.055), 'side': 0}
+
+
 def anchors():
     G = lambda x, y, z: [round(v, 3) for v in to_game((x, y, z))]
     sole = round(Z_SOLE - WL, 3); gwz = lambda x: zs(x) - WL
@@ -392,7 +398,7 @@ def anchors():
           'tub': G(TUB[0], TUB[1], Z_SOLE), 'fisher': G(2.90, -0.45, Z_SOLE), 'reel': gw_(2.95, 0.215), 'haul': gw_(3.15, 0.25),
           'mach': [gw_(x, 0.13) for x in (2.70, 3.30, 3.85)], 'stack': G(3.95, -0.15, Z_SOLE), 'charm': G(2.16, -0.20, 1.69),
           'skipper': G(1.55, 0.0, Z_SOLE), 'seat': G(0.95, 0.55, 0.96 - 0.46), 'filler': G(0.95, -(hbs(0.95) - 0.10), zs(0.95) + 0.02), 'names': names}
-    return {'eye': G(1.62, 0.0, Z_SOLE + 1.62), 'skipperAt': G(1.55, 0.0, Z_SOLE), 'hp': -0.3, 'fov': 62,
+    return {'bower': bower(G), 'eye': G(1.62, 0.0, Z_SOLE + 1.62), 'skipperAt': G(1.55, 0.0, Z_SOLE), 'hp': -0.3, 'fov': 62,
             'crewSpots': [G(0.95, 0.55, 0.96 - 0.46) + [0.0]], 'hauler': sk['haul'], 'filler': sk['filler'], 'pole': G(0.85, 1.05, 2.03),
             # typed lights (B8, rule 23 under 7 m): the sides on the bow deck, the all-round white on its pole at the port quarter
             'lights': [[G(5.42, 0.40, zs(5.4) + 0.04), [1, 0.12, 0.1], 'port'], [G(5.42, -0.40, zs(5.4) + 0.04), [0.1, 1, 0.35], 'stbd'], [G(0.85, 1.05, 2.03), [1, 0.95, 0.85], 'allround']],

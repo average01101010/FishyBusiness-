@@ -725,8 +725,9 @@ function hullTris(type){
   return out;
 }
 const HULLT = {};
-// a strip on each side at a share of the length from the stem (frac), at most hMax tall, aspect times as long as tall
-function sideStrip(type, frac, hMax, aspect){
+// a strip on each side at a share of the length from the stem (frac), at most hMax tall, aspect times as long as tall, its top a quarter
+// of its height under the hull's top (and drop metres lower)
+function sideStrip(type, frac, hMax, aspect, drop){
   const m = vesselModel(type); if (!m) return null;
   // the hull's triangles once a type: the name's search tries many strips (nameStrips)
   const T = HULLT[type] || hullTris(type); if (T.length < 8) return null; HULLT[type] = T;
@@ -750,7 +751,7 @@ function sideStrip(type, frac, hMax, aspect){
   const len = aspect * h, off = 0.01 + 0.0006 * V.len, N = 12, B = [], Tp = [];
   for (let i = 0; i <= N; i++){
     const z = mid - len / 2 + len * i / N, sg = cut(z); if (!sg.length) return null;
-    const yT = top(sg) - h * 0.25, yB = yT - h, xT = xAt(sg, yT), xB = xAt(sg, yB); if (xT < 0 || xB < 0 || yB < bot(sg) - 1e-3) return null;
+    const yT = top(sg) - h * 0.25 - (drop || 0), yB = yT - h, xT = xAt(sg, yT), xB = xAt(sg, yB); if (xT < 0 || xB < 0 || yB < bot(sg) - 1e-3) return null;
     B.push([xB + off, yB, z]); Tp.push([xT + off, yT, z]);
   }
   // the bow is at -z and starboard at +x: seen from starboard the bow is on the right, so the text runs stern to bow there and bow to
@@ -790,20 +791,23 @@ function nameStrips(type){
   }
   return NAMESTRIP[type] = own || first;
 }
-// how many of a detailed model's triangles that face out to starboard stand proud of the hull under a strip's starboard side (a
-// porthole's rim, a fender, a step; the strip floats off above the hull by sideStrip's off): the strip's rows [B, T] from sideStrip; a kit's hull has nothing on its side
-const PROUD = {};
+// how many of a detailed model's triangles that face out to its side stand proud of the hull under a strip (a porthole's rim, a
+// fender, a step, a hawse pipe's rim; the strip floats off above the hull by sideStrip's off): the strip's rows [B, T] from sideStrip,
+// starboard or port (the port side's candidates are kept mirrored to starboard); a kit's hull has nothing on its side
+const PROUD = {}, PROUDB = {};
 function stripProud(type, st){
   if (!(type in PROUD)){
-    // the candidates once a type: the centres of the triangles off the hull's paint zone that face out to starboard
-    const G = glbHas(type) ? glbLoad(type) : null, P = G && G.parts.lod0, c = [];
+    // the candidates once a type: the centres of the triangles off the hull's paint zone that face out to a side
+    const G = glbHas(type) ? glbLoad(type) : null, P = G && G.parts.lod0, c = [], cb = [];
     if (P && P.zone) for (let v = 0; v * 3 + 9 <= P.p.length; v += 3){
-      if (P.zone[v] === 1) continue; const q = v * 3, x = (P.p[q] + P.p[q + 3] + P.p[q + 6]) / 3;
-      if (x > 0 && P.n[q] + P.n[q + 3] + P.n[q + 6] >= 0.9) c.push(x, (P.p[q + 1] + P.p[q + 4] + P.p[q + 7]) / 3, (P.p[q + 2] + P.p[q + 5] + P.p[q + 8]) / 3);
+      if (P.zone[v] === 1) continue; const q = v * 3, x = (P.p[q] + P.p[q + 3] + P.p[q + 6]) / 3, nx = P.n[q] + P.n[q + 3] + P.n[q + 6];
+      if (x > 0 && nx >= 0.9) c.push(x, (P.p[q + 1] + P.p[q + 4] + P.p[q + 7]) / 3, (P.p[q + 2] + P.p[q + 5] + P.p[q + 8]) / 3);
+      else if (x < 0 && nx <= -0.9) cb.push(-x, (P.p[q + 1] + P.p[q + 4] + P.p[q + 7]) / 3, (P.p[q + 2] + P.p[q + 5] + P.p[q + 8]) / 3);
     }
-    PROUD[type] = c;
+    PROUD[type] = c; PROUDB[type] = cb;
   }
-  const c = PROUD[type], off = 0.01 + 0.0006 * (VESSELS[type] || {len:10}).len, [B, T] = st, N = B.length - 1, za = B[0][2], zb = B[N][2], z0 = Math.min(za, zb), z1 = Math.max(za, zb); let n = 0;
+  const port = st[0][0][0] < 0, c = port ? PROUDB[type] : PROUD[type], [B, T] = port ? st.map(r => r.map(p => [-p[0], p[1], p[2]])) : st;
+  const off = 0.01 + 0.0006 * (VESSELS[type] || {len:10}).len, N = B.length - 1, za = B[0][2], zb = B[N][2], z0 = Math.min(za, zb), z1 = Math.max(za, zb); let n = 0;
   for (let k = 0; k < c.length; k += 3){
     const x = c[k], y = c[k + 1], z = c[k + 2]; if (z < z0 || z > z1) continue;
     const i = Math.round((z - za) / (zb - za) * N), b = B[i], t = T[i]; if (y < b[1] || y > t[1]) continue;
@@ -811,13 +815,57 @@ function stripProud(type, st){
   }
   return n;
 }
+// the paint under a strip on one side: the mean colour of the model's triangles there, how much of it is the hull's own paint (zone
+// 1, the colour the player paints) and how even it is (the share on the same side of mid-grey as the mean: a strip across a dark stripe
+// on a white hull is uneven, tilbakemelding: the mark half on the plastsjark's blue band and wholly on the snekke's)
+function stripPaint(type, st){
+  const G = glbHas(type) ? glbLoad(type) : null, P = G && G.parts.lod0; if (!P || !P.zone || !P.c) return null;
+  const port = st[0][0][0] < 0, [B, T] = port ? st.map(r => r.map(p => [-p[0], p[1], p[2]])) : st, N = B.length - 1, za = B[0][2], zb = B[N][2], z0 = Math.min(za, zb), z1 = Math.max(za, zb);
+  const L = [], a = [0, 0, 0]; let z1n = 0;
+  for (let v = 0; v * 3 + 9 <= P.p.length; v += 3){
+    const q = v * 3, sx = port ? -1 : 1, x = sx * (P.p[q] + P.p[q + 3] + P.p[q + 6]) / 3, nx = sx * (P.n[q] + P.n[q + 3] + P.n[q + 6]) / 3; if (x <= 0 || nx < 0.4) continue;
+    const y = (P.p[q + 1] + P.p[q + 4] + P.p[q + 7]) / 3, z = (P.p[q + 2] + P.p[q + 5] + P.p[q + 8]) / 3; if (z < z0 || z > z1) continue;
+    const i = Math.round((z - za) / (zb - za) * N), b = B[i], t = T[i]; if (y < b[1] || y > t[1] || x < b[0] - 0.2) continue;
+    const ao = Math.max(0.05, P.ao[v]), c = [0, 1, 2].map(k => P.c[v * 4 + k] / ao), lum = 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2];
+    for (let k = 0; k < 3; k++) a[k] += c[k]; L.push(lum); if (P.zone[v] === 1) z1n++;
+  }
+  if (L.length < 3) return null;
+  const rgb = a.map(v => v / L.length), m = 0.3 * rgb[0] + 0.59 * rgb[1] + 0.11 * rgb[2], even = L.filter(l => (l < 0.5) === (m < 0.5)).length / L.length;
+  return {rgb, zone1:z1n / L.length, even, n:L.length};
+}
 // the registration mark's strip near the stem: the letters as tall as § 23 asks by the boat's length (45 cm from 15 m, 25 cm from 9 m,
-// else 15 cm), the strip a little taller round them; a tenth of the length from the stem, ahead of the name
-const MARKSTRIP = {};
+// else 15 cm), the strip a little taller round them; a tenth of the length from the stem, ahead of the name. It finds a place of its own
+// (Jonas 21.10.2026, «A»): along the bow from there, a little lower, or smaller, where nothing stands proud of the hull under it on either
+// side (the hawse pipes, tilbakemelding: on the 15 m coastal boat the anchor plates hid a part of it), clear of the anchor stowed in its
+// roller or hawse (geo.bower), and on one even paint; the letters then take their colour from the paint under them (markRGB)
+const MARKSTRIP = {}, MARKPAINT = {};
 function markStrips(type){
   if (type in MARKSTRIP) return MARKSTRIP[type];
-  const V = VESSELS[type] || {len:10}, lh = V.len >= 15 ? 0.45 : V.len >= 9 ? 0.25 : 0.15;
-  return MARKSTRIP[type] = sideStrip(type, 0.11, lh * 1.35, 4) || sideStrip(type, 0.14, lh * 1.35, 4);
+  const V = VESSELS[type] || {len:10}, lh = V.len >= 15 ? 0.45 : V.len >= 9 ? 0.25 : 0.15, h = lh * 1.35;
+  const first = sideStrip(type, 0.11, h, 4) || sideStrip(type, 0.14, h, 4); MARKPAINT[type] = null;
+  if (!first || !glbHas(type)) return MARKSTRIP[type] = first;
+  // the anchors stowed at the bow, and how far from their fairlead they reach
+  const bw = (typeof geoOf === 'function' ? geoOf(type) : {}).bower, anc = [];
+  if (bw && bw.fair){ const r = anchorLen(bw) * 0.75 + 0.15; anc.push([bw.fair, r]); if (bw.spare && bw.spare.fair) anc.push([bw.spare.fair, r]); }
+  const nearAnc = st => st.some(([B, T]) => anc.some(([f, r]) => B.concat(T).some(p => Math.hypot(p[0] - f[0], p[1] - f[1], p[2] - f[2]) < r)));
+  const ok = st => { if (stripProud(type, st[0]) || stripProud(type, st[1]) || nearAnc(st)) return null;
+    const P = st.map(s => stripPaint(type, s)); if (P.some(p => !p || p.even < 0.9)) return null; return P; };
+  for (const dr of [0, 0.35, 0.7, 1.05]) for (const f of [0.11, 0.13, 0.09, 0.15, 0.17, 0.07, 0.19]) for (const k of [1, 0.85]){
+    const st = sideStrip(type, f, h * k, 4, dr * h * k); if (!st) continue; const P = ok(st);
+    if (P){ MARKPAINT[type] = P; return MARKSTRIP[type] = st; }
+  }
+  MARKPAINT[type] = [stripPaint(type, first[0]), stripPaint(type, first[1])];
+  return MARKSTRIP[type] = first;
+}
+// the anchor's length over all from its kind and mass (tools/deck/anker.py: the plough 1.00 m for 20 kg, the Hall 1.49 m for 1000 kg,
+// the grapnel 0.56 m), by the cube root of the mass
+function anchorLen(bw){ const kg = bw.kg || 10; return bw.kind === 'hall' ? 1.49 * Math.cbrt(kg / 1000) : bw.kind === 'dregg' ? 0.56 : 1.0 * Math.cbrt(kg / 20); }
+// the colour under the registration mark: the hull's own paint (as she is painted, liv) where it lies on it, else the paint that is
+// there (a stripe, a band that is not the player's to paint)
+function markRGB(type, liv){
+  markStrips(type); const P = MARKPAINT[type], p = P && (P[0] || P[1]);
+  if (!p || p.zone1 >= 0.6) return hullRGB(type, liv);
+  return p.rgb;
 }
 // the hull's colour as it is painted (liv) or as she came (a detailed model's paint zone 1 on average, a kit's hull colour): the name
 // is written light on a dark hull and dark on a light one

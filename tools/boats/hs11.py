@@ -370,12 +370,19 @@ def name_strips(G):
     out.append([[G(XA - 0.02, y, 2.28) for y in ys], [G(XA - 0.02, y, 2.62) for y in ys]])
     return out
 
+# the boat's own anchor (tools/deck/anker.py, drawn and let go by the game, view3d.js drawAnchor; Jonas 21.10.2026): its kind and mass,
+# the fairlead where the rode leaves her (the bow roller's top, or the hawse pipe's mouth on the side), the hawse pipe's deck end, the
+# windlass's gypsy the chain comes off, whether the game draws the chain on deck (deck), and the spare in the other hawse
+def bower(G):
+    return {'kind': 'plog', 'kg': 16, 'fair': G(10.3, -(hbz(10.3, 2.6) + 0.03), 2.6), 'pipe': G(9.95, -0.6, ZFD + 0.03), 'gypsy': G(9.7, -0.2, ZFD + 0.43), 'side': 1, 'deck': True}
+
+
 def anchors():
     G = lambda x, y, z: [round(v, 3) for v in to_game((x, y, z))]
     hx = 5.3
     x0, x1, y0, y1 = TABLE
     # the one at the wheel stands on the sunk sole forward of the chair, his eyes in the window band over the console's screens
-    return {'eye': G(8.0, -0.75, ZWH + 1.62), 'skipperAt': G(7.9, -0.75, ZWH), 'hp': -0.08, 'fov': 60,
+    return {'bower': bower(G), 'eye': G(8.0, -0.75, ZWH + 1.62), 'skipperAt': G(7.9, -0.75, ZWH), 'hp': -0.08, 'fov': 60,
             'crewSpots': [G(4.4, -1.4, ZMD) + [1.57], G(2.6, 1.2, ZMD) + [0.0], G(1.2, -1.0, ZMD) + [3.14], G(3.4, 0.2, ZMD) + [0.0]],
             'lights': lantern_anchors(G),
             # the real doors (B4): the cabin door aft to port, the wheelhouse door aft to starboard out to the hauling station; the sill in

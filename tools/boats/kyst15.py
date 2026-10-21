@@ -320,10 +320,14 @@ def gear(fine=True):
     for sg in (1, -1): A.poly([(0.5, sg * 0.01, 6.75), (-1.75, sg * 0.01, 6.75), (-1.45, sg * 0.01, 11.75), (0.5, sg * 0.01, 11.1)], C['sail'], (0, sg, 0))
     acyl(A, (0.55, 0, 12.2), (-0.6, 0, 12.0), 0.012, lambda z: C['dark'], seg=4)
     acyl(A, (0.55, 0, 12.2), (0.55, 0, 12.35), 0.22, lambda z: w, seg=12)
-    # the anchor in the bow
+    # the hawse pipes' mouths high in the bow, forward of the registration mark (tilbakemelding: the old plates sat on it; the anchors
+    # are the game's own, stowed in them, bower()), each a dark recess following the hull with a steel rim, and the pipes' deck ends
     for sg in (1, -1):
-        x = 13.4; y = hbz(x, 5.0) + 0.02
-        A.poly([(x - 0.25, sg * y, 4.75), (x + 0.25, sg * y, 4.85), (x + 0.25, sg * y, 5.25), (x - 0.25, sg * y, 5.15)], C['dark'], (0, sg, 0))
+        ring = [(14.25 + 0.20 * math.cos(2 * math.pi * k / 14), 5.25 + 0.17 * math.sin(2 * math.pi * k / 14)) for k in range(14)]
+        A.poly([(x, sg * (hbz(x, z) + 0.02), z) for x, z in ring], C['dark'], (0, sg, 0))
+        rim = [(x, sg * (hbz(x, z) + 0.035), z) for x, z in ring]
+        for a, b in zip(rim, rim[1:] + rim[:1]): acyl(A, a, b, 0.022, lambda z: C['steel'], seg=6, cap=False)
+        acyl(A, (13.75, sg * 0.42, ZSD), (13.75, sg * 0.42, ZSD + 0.06), 0.11, lambda z: C['steel'], seg=12)
     # the windlass on the foredeck
     abox(A, 13.0, 13.6, -0.45, 0.45, ZSD, ZSD + 0.35, C['dark'])
     for sg in (1, -1): acyl(A, (13.3, sg * 0.35, ZSD + 0.35), (13.3, sg * 0.7, ZSD + 0.35), 0.18, lambda z: C['steel'], seg=12)
@@ -351,9 +355,17 @@ def name_strips(G):
     out.append([[G(XA - 0.02, y, 5.0) for y in ys], [G(XA - 0.02, y, 5.4) for y in ys]])
     return out
 
+# the boat's own anchor (tools/deck/anker.py, drawn and let go by the game, view3d.js drawAnchor; Jonas 21.10.2026): its kind and mass,
+# the fairlead where the rode leaves her (the bow roller's top, or the hawse pipe's mouth on the side), the hawse pipe's deck end, the
+# windlass's gypsy the chain comes off, whether the game draws the chain on deck (deck), and the spare in the other hawse
+def bower(G):
+    hw = lambda sg: {'fair': G(14.25, sg * (hbz(14.25, 5.25) + 0.03), 5.25), 'pipe': G(13.75, sg * 0.42, ZSD + 0.05)}
+    return dict(hw(-1), kind='hall', kg=120, gypsy=G(13.3, -0.55, ZSD + 0.53), side=1, deck=True, spare=hw(1))
+
+
 def anchors():
     G = lambda x, y, z: [round(v, 3) for v in to_game((x, y, z))]
-    return {'eye': G(12.0, -0.6, ZSD + 1.55), 'skipperAt': G(11.7, -0.6, ZSD), 'hp': -0.08, 'fov': 58,
+    return {'bower': bower(G), 'eye': G(12.0, -0.6, ZSD + 1.55), 'skipperAt': G(11.7, -0.6, ZSD), 'hp': -0.08, 'fov': 58,
             'crewSpots': [G(5.4, -2.3, ZMD) + [1.57], G(6.9, -2.0, ZMD) + [1.57], G(2.6, 0.0, ZSD) + [3.14], G(13.6, 0.4, ZSD) + [0.0]],
             'lights': [[G(10.6, 0, 12.34), [1, 0.95, 0.85], 'masthead'], [G(11.8, WY + 0.3, WR - 0.19), [1, 0.12, 0.1], 'port'], [G(11.8, -WY - 0.3, WR - 0.19), [0.1, 1, 0.35], 'stbd'],
                        [G(XA + 0.2, 0.5, z_top(XA) + 0.91), [1, 0.95, 0.85], 'stern']],
