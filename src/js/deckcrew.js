@@ -171,7 +171,9 @@ function crewSim(src){
     if (act === 'sit') act = 'lean';
     // the lee side when it blows: the rail places whose way out is away from the wind are preferred (the wind's side is a guess by heading)
     const pick = leans[Math.floor(rnd() * leans.length)];
-    return {k:pick.k, h:pick.h, task:act === 'lean' ? 'lean' : act, until:nowS() + 30 + rnd() * 60, idle:true};
+    // sweeping and coiling are done with the back to the rail, over the deck: facing out the broom went over the side and the coiling arm
+    // worked up and down over the rail like a jig (Jonas 21.10.2026, #81 and #84)
+    return {k:pick.k, h:pick.h + (act === 'sweep' || act === 'coil' ? Math.PI : 0), task:act === 'lean' ? 'lean' : act, until:nowS() + 30 + rnd() * 60, idle:true};
   }
   // ---- a cell of one's own: the goals already given are taken, and a new one at least SEP from them (the nearest free cell within a metre) ----
   const TAKEN = new Map();

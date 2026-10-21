@@ -67,6 +67,17 @@ async def main():
           for (let i = 0; i < 20; i++){ CREW3D._st.ctxT = 0; CREW3D.tick(0.05); }
           return {before, after:CREW3D.agents().filter(a => !a.me).map(a => a.st + ':' + (a.goal && a.goal.idle ? 'idle' : a.goal && a.goal.inside || 'deck'))}; })()""")
         check(r6['before'] > 0 and all(x.endswith(':in') for x in r6['after']), 'a break on deck ends as she gets under way: the crew are on their way in within a second', r6)
+        # the rail places (vessel3d.js deckPoints lean) on every boat: no deck at their height further out the way they face (a wall, a locker
+        # or the house with deck beyond is no rail: #83 and #85; the bulwark's cap, higher, and a ledge of a cell outside it are), the hand
+        # boats aside (no crew on deck), and on the working deck where she has four or
+        # more there (not on the bulwark or a locker's top: #82)
+        r7 = await pg.evaluate("""(() => { const bad = {}; for (const t of Object.keys(VESSELS)){ const P = deckPoints(t), M = deckMap(t), G = geoOf(t); if (!P || !M || !P.lean || G.hand) continue;
+            const dy = (G.deck || {}).y, low = P.lean.filter(l => Math.abs(M.at(l.k)[1] - dy) < 0.6).length;
+            for (const l of P.lean){ const p = M.at(l.k), dx = Math.sin(l.h), dz = -Math.cos(l.h); let out = false;
+              for (let s = 0.4; s < 12; s += 0.2){ const f = M.floorAt(p[0] + dx * s, p[2] + dz * s); const g = M.floorAt(p[0] + dx * (s + 0.2), p[2] + dz * (s + 0.2)); if (f === f && g === g && Math.abs(f - p[1]) < 0.3 && Math.abs(g - p[1]) < 0.3){ out = true; break; } }
+              if (out || (low >= 4 && Math.abs(p[1] - dy) >= 0.6)) (bad[t] || (bad[t] = [])).push(p.map(v => +v.toFixed(2)).concat(+l.h.toFixed(2))); } }
+          return bad; })()""")
+        check(not r7, 'the rail places on every boat face the open air off the hull (no deck beyond them) and stand on the working deck', r7)
         check(not errs, 'no page errors', errs[:3])
         await br.close()
     print('FEIL: ' + ', '.join(bad) if bad else 'alt OK')

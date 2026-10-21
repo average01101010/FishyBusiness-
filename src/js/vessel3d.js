@@ -1149,11 +1149,22 @@ function deckPoints(type){
   if (G.doors && G.doors.length && G.doors[0].at) put('door', G.doors[0].at[0], G.doors[0].at[2], 0, 1.5);
   (G.crewSpots || []).forEach((c, i) => put('spot' + i, c[0], c[2], c[3] || 0, 1.0));
   if (G.filler) put('filler', G.filler[0] * 0.8, G.filler[2], G.filler[0] > 0 ? Math.PI / 2 : -Math.PI / 2, 1.4);
-  // the rail: deck cells at the edge with the outside beyond them, spread along both sides and the stern, facing out
-  const lean = []; for (let k = 0; k < M.nx * M.nz; k++){ if (!M.ok(k)) continue; const i = k % M.nx, j = (k - i) / M.nx, p = M.at(k);
-    for (const [di, dj, hd] of [[1, 0, Math.PI / 2], [-1, 0, -Math.PI / 2], [0, 1, Math.PI]]){ const ii = i + di, jj = j + dj; if (ii < 0 || jj < 0 || ii >= M.nx || jj >= M.nz || M.ok(jj * M.nx + ii)) continue;
-      if (di && Math.sign(p[0]) !== di && Math.abs(p[0]) > 0.3) continue;   // the outside is outboard, not an inboard fitting
+  // the rail: deck cells at the edge with the outside beyond them, spread along both sides and the stern, facing out. The outside is the
+  // open air off the hull within two cells (the bulwark and its cap between): a cell with no surface at all over or under it. A wall, a
+  // locker or the house beyond is no rail (Jonas 21.10.2026, #83 and #85: arms through the wheelhouse wall; on the new fast sjark the house
+  // runs out to the port side, so beyond its starboard wall there is no deck either). And the deck inboard of the place is at its height
+  // (no place on top of the bulwark or a locker, #82: one stood on the bulwark with both feet)
+  const lean = [], inG = (ii, jj) => ii >= 0 && jj >= 0 && ii < M.nx && jj < M.nz, okAt = (ii, jj) => inG(ii, jj) && M.ok(jj * M.nx + ii);
+  // (open air all the way out to the model's edge: an open hatch or a well with no floor near is not the outside)
+  const air = (ii, jj, di, dj) => { for (; inG(ii, jj); ii += di, jj += dj){ const F = M._floors[jj * M.nx + ii]; if (F && F.length) return false; } return true; };
+  for (let k = 0; k < M.nx * M.nz; k++){ if (!M.ok(k)) continue; const i = k % M.nx, j = (k - i) / M.nx, p = M.at(k);
+    for (const [di, dj, hd] of [[1, 0, Math.PI / 2], [-1, 0, -Math.PI / 2], [0, 1, Math.PI]]){ if (okAt(i + di, j + dj)) continue;
+      if (!(air(i + di, j + dj, di, dj) || air(i + 2 * di, j + 2 * dj, di, dj) || air(i + 3 * di, j + 3 * dj, di, dj))) continue;
+      if (!okAt(i - di, j - dj) || Math.abs(M.at((j - dj) * M.nx + (i - di))[1] - p[1]) > 0.25) continue;
       lean.push({k, h:hd}); break; } }
-  lean.sort((a, b) => M.at(a.k)[2] - M.at(b.k)[2]); const step = Math.max(1, Math.floor(lean.length / 10)); pt.lean = lean.filter((_, i) => i % step === 0).slice(0, 10);
+  // on the working deck where she has room there (not on the house's roof or a locker's top: the wide sjark's roof edge), else where the
+  // map has her rail (the shelter-deckers, whose working deck under the shelter the map does not hold)
+  const low = lean.filter(l => Math.abs(M.at(l.k)[1] - d.y) < 0.6), rail = low.length >= 4 ? low : lean;
+  rail.sort((a, b) => M.at(a.k)[2] - M.at(b.k)[2]); const step = Math.max(1, Math.floor(rail.length / 10)); pt.lean = rail.filter((_, i) => i % step === 0).slice(0, 10);
   DECKPTS[type] = pt; return pt;
 }
