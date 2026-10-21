@@ -1,6 +1,7 @@
-"""The map in the gear's own unit (08.10.2026): the jig keeps kg an hour (the rig's own figure in the sounder's box), nets, line tubs and
-pots show the kilos one unit gives over 24 h, coloured against a usual haul; the figure agrees with the gear's own soak (soakHour); the
-catch marks say kg per tub, net or pot with the soak, and a jig mark is coloured against the rig."""
+"""The rig's own figure (08.10.2026): the sounder's picture is the fish that stand there whatever the rig (Jonas 21.10.2026, #79); its
+box says what the rig would take there, kg an hour on the jig (each species by its jig factor), the kilos one net, tub or pot gives over
+24 h, agreeing with the gear's own soak (soakHour); the catch marks say kg per tub, net or pot with the soak, and a jig mark is coloured
+against the rig."""
 from _env import GAME, boot
 import asyncio, json
 from playwright.async_api import async_playwright
@@ -26,8 +27,8 @@ JS = """async () => {
   R.line = {map:+heatGearKg(v, 'all', cl).toFixed(1), soak:+dry('line', {lk:'hyse', hooks:600, baitW:{makrell:1}}, G, 24).toFixed(1), unit:cl.unit[0]};
   const C = P(70.5, 31.0); await mapNeed(C, 4); const Hc = (Date.UTC(2028, 7, 15, 6) - EPOCH) / 3.6e6, vc = heatSample(C, Hc); b.rig = 'teiner'; const ct = heatGearCtx();
   S.t = Math.round(Hc * 60); R.teine = {map:+heatGearKg(vc, 'all', ct).toFixed(1), soak:+dry('teine', {pot:'big', bait:'makrell'}, C, 24).toFixed(1)}; S.t = Math.round(H0 * 60);
-  // the colours: a usual haul is green, twice that is higher on the scale
-  HEATGC = cg; const half = heatIndex(10, false), usual = heatIndex(heatGearVal(v, 'all') / heatGearVal(v, 'all') * 20, false); R.colourUp = usual > half;
+  // the picture is the fish that stand there whatever the boat is rigged for (Jonas 21.10.2026, #79): the same value on every rig
+  R.pic = {}; for (const rg of ['juksa', 'garn', 'line', 'teiner']){ b.rig = rg; R.pic[rg] = +heatShown(vj, 'all').toFixed(3); } R.pic.fish = +heatValue(vj, 'all').toFixed(3); b.rig = 'juksa';
   // the sounder's box: the figure where the boat is
   HEATC.cs = 0.1; HEATC.cells.set(heatKey(Math.floor(G.x / 0.1), Math.floor(G.y / 0.1)), {x:G.x, y:G.y, v, t:S.t, h:0, seen:S.t, near:0});
   b.rig = 'garn'; R.infoGarn = heatGearInfo(); b.rig = 'juksa'; R.infoJig = heatGearInfo();
@@ -48,12 +49,13 @@ async def main():
         print('heatgear:', json.dumps(r, ensure_ascii=False))
         near = lambda a, b: b > 0 and 0.5 <= a / b <= 1.8
         j, jk = r['jig'], r['jigKv']
-        print(ok(j['kind'] == 'jig' and abs(j['bk'] - 1.5) < 0.01 and abs(j['all'] - (j['raw'] - 50 + 1.5)) < 0.05), 'rigged for the jig the map is kg an hour as the jig takes each species: the Greenland halibut at its jig factor', j)
-        print(ok(jk['sig'] == 'jig:kveite' and jk['kv'] >= 5 and abs(jk['torsk'] - 0.2) < 0.01), 'with the halibut pilk in its season the map shows the halibut many times over and the rest at a fifth', jk)
-        print(ok(near(r['garn']['map'], r['garn']['soak'])), 'nets: the map says about what a net takes in 24 h there', r['garn'])
-        print(ok(near(r['line']['map'], r['line']['soak']) and r['line']['unit'] == 'stamp'), 'line: the map says about what a tub takes in 24 h there', r['line'])
-        print(ok(r['teine']['map'] > 0 and r['teine']['map'] <= 60.5 and near(r['teine']['map'], r['teine']['soak'])), 'pots: the map says about what a pot takes in 24 h, never more than a full pot', r['teine'])
-        print(ok(r['colourUp']), 'a usual haul sits higher on the colours than half of one')
+        print(ok(j['kind'] == 'jig' and abs(j['bk'] - 1.5) < 0.01 and abs(j['all'] - (j['raw'] - 50 + 1.5)) < 0.05), 'rigged for the jig the figure is kg an hour as the jig takes each species: the Greenland halibut at its jig factor', j)
+        print(ok(jk['sig'] == 'jig:kveite' and jk['kv'] >= 5 and abs(jk['torsk'] - 0.2) < 0.01), 'with the halibut pilk in its season the figure counts the halibut many times over and the rest at a fifth', jk)
+        print(ok(near(r['garn']['map'], r['garn']['soak'])), 'nets: the rig figure says about what a net takes in 24 h there', r['garn'])
+        print(ok(near(r['line']['map'], r['line']['soak']) and r['line']['unit'] == 'stamp'), 'line: the rig figure says about what a tub takes in 24 h there', r['line'])
+        print(ok(r['teine']['map'] > 0 and r['teine']['map'] <= 60.5 and near(r['teine']['map'], r['teine']['soak'])), 'pots: the rig figure says about what a pot takes in 24 h, never more than a full pot', r['teine'])
+        pv = r['pic']
+        print(ok(len({pv[k] for k in ('juksa', 'garn', 'line', 'teiner')}) == 1 and pv['juksa'] == pv['fish'] and pv['fish'] > 0), 'the sounder shows the fish that stand there, the same on the jig, nets, line and pots (#79)', pv)
         print(ok(r['infoGarn'] and 'per garn etter 24 t' in r['infoGarn']['no'] and r['infoJig'] and 'kg/t med riggen din' in r['infoJig']['no']), "the sounder's box: kg per net after 24 h, or kg an hour with your rig", r['infoGarn'], r['infoJig'])
         m, j = r['mark'] or {}, r['jigMark'] or {}
         print(ok(m.get('g') == 'line' and abs(m.get('kgu', 0) - 60) < 0.01 and m.get('soak') == 12 and m.get('q', 0) > 0 and not r.get('haulErr')), 'a hauled line marks 60 kg a tub with its 12 h soak, coloured against a usual haul for 12 h', m, r.get('haulErr'))

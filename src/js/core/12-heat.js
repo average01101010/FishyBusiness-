@@ -39,21 +39,19 @@ function heatSample(p, H){
   for (const sp of SHELL){ const i = HEATI[sp]; if (i !== undefined) out[i] += 30 * denSp(sp, q, H, T); }
   return out;
 }
-// the value as the map colours it: the species against its own level (HEATSC)
-const heatShown = (v, sp) => (HEATGC ? heatGearVal(v, sp) : heatValue(v, sp)) * (HEATSC[sp] || 1);
+// the value as the map colours it: the fish that stand there, whatever the boat is rigged for (Jonas 21.10.2026, tilbakemelding #79:
+// rigged for nets «havet blir svart», the map had shown what a net takes), the species against its own level (HEATSC)
+const heatShown = (v, sp) => heatValue(v, sp) * (HEATSC[sp] || 1);
 function heatValue(v, sp){ const i = HEATI[sp]; return i !== undefined ? v[i] || 0 : v[0] + v[1] + v[2] + v[3] + (v[4] || 0); }
 
-// ---------- the map in the gear's own unit (Jonas 08.10.2026) ----------
-// A hand jig is tended by the hour, so the echo sounder says kilos an hour; a net, a line tub or a pot stands in the sea and fishes with
-// the soak, so for them the map says the kilos one unit would give over a soak of HEATG.T hours (the same formulas as soakHour in
-// 10-gear.js, on the same density), and the colours are the haul against what the gear usually gives (HEATG.fair: a net, a tub or a pot at a
-// good place after 24 h; green begins at a usual haul, yellow at 1.4 times that, red at 2.8 times). The jig keeps its colours (what
-// one person with a hand jig takes), and the figure in the sounder's box is your own rig's kilos an hour. The jig's map is what the jig
-// takes (20.10.2026, tilbakemelding #74: «mye blåkveite på ekkoloddet», and none on the jig): each species by its jig factor and the tackle
-// in use (jigTake), so the Greenland halibut does not light up as jig fish, and the halibut stands out on the halibut pilk.
+// ---------- the rig's own figure (Jonas 08.10.2026) ----------
+// The picture shows the fish (heatShown); the figure in the sounder's box is what your own rig would take where the boat is, in the
+// gear's unit. A hand jig is tended by the hour, so kilos an hour, as the jig takes each species with the tackle in use (jigTake; the
+// Greenland halibut hardly bites on the jig, tilbakemelding #74); a net, a line tub or a pot stands in the sea and fishes with the soak,
+// so the kilos one unit would give over a soak of HEATG.T hours (the same formulas as soakHour in 10-gear.js, on the same density).
+// HEATG.fair is a usual haul (a net, a tub or a pot at a good place after 24 h), which the catch marks and the plan are read against.
 const HEATG = {T:24, fair:{garn:30, line:70, teine:20, jig:20}};
 const HEATIDX = {torsk:0, hyse:1, sei:2, blakveite:4, lyr:5, lange:6, brosme:7, uer:8, kveite:9};
-let HEATGC = null;   // the rig's gear now (null: the jig), worked out when the picture is made
 const heatSoakSum = (tau, T) => { let s = 0; for (let a = 1; a <= T; a++) s += Math.exp(-a / tau); return s; };
 const heatPotSum = T => { let s = 0; for (let a = 1; a <= T; a++) s += Math.min(1, a / 6) * Math.exp(-a / 40); return s; };
 // how much of a 24-hour haul a shorter soak gives
@@ -108,8 +106,6 @@ function heatGearKg(v, sp, cx){
   for (const s of sp === 'all' ? Object.keys(HEATIDX) : HEATIDX[sp] != null ? [sp] : []) sum += v[HEATIDX[s]] * (sel[s] || 0) * (cx.bw ? baitMixF(cx.bw, s) : cx.bait ? baitF(cx.bait, s) : 1);
   return sum * cx.per;
 }
-// the value the colours are read from: the haul against a usual one, in the units the scale knows (a usual haul is 20, where green begins)
-const heatGearVal = (v, sp) => heatGearKg(v, sp, HEATGC) / HEATGC.fair * HEATG.fair.jig;
 // your rig's share of what one person with a hand jig takes (several hands, jig machines)
 function heatRigFactor(){ const e = typeof fishEffort === 'function' ? fishEffort() : 0; return e > 0 ? e / JIG.hand : 1; }
 // what the sounder's box says about the boat's own place: the figure in the gear's unit
