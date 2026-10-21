@@ -61,7 +61,8 @@ const UPGS = {
     steps:[{pc:0.02, h:8, no:'Større bysse', en:'A larger galley', cook:24, mood:2}, {pc:0.04, h:16, no:'Messe', en:'A mess', cook:18, mood:4}, {pc:0.07, h:24, no:'Messe og kjøkken', en:'Mess and kitchen', cook:12, mood:6}]},
   dry:{no:'Tørkerom og bad', en:'Drying room and shower', fit:V => V.berths > 0 && !V.fac.dry, d:['Tørkerom for oljehyre og et bad. Mannskapet fryser mindre når det er kaldt og vått, og kommer varmere ut av vakten.', 'A drying room for oilskins and a shower. The crew feel the cold and wet less and come off watch warmer.'],
     steps:[{pc:0.02, h:8, no:'Tørkerom', en:'Drying room', cold:0.85}, {pc:0.04, h:16, no:'Tørkerom og bad', en:'Drying room and shower', cold:0.7}]},
-  insul:{no:'Isolert lasterom', en:'Insulated hold', fit:V => V.hold.kind === 'rom',   // a hold to insulate: not the open boats' boxes on deck, not the freezer and RSW ships (schema v2, 17.10.2026) d:['Isolasjon i lasterommet. Isen holder lenger, så du bruker mindre is per kilo fisk.', 'Insulation in the hold. The ice lasts longer, so you use less ice per kilo of fish.'],
+  // (a hold to insulate: not the open boats' boxes on deck, not the freezer and RSW ships; schema v2, 17.10.2026)
+  insul:{no:'Isolert lasterom', en:'Insulated hold', fit:V => V.hold.kind === 'rom', d:['Isolasjon i lasterommet. Isen holder lenger, så du bruker mindre is per kilo fisk.', 'Insulation in the hold. The ice lasts longer, so you use less ice per kilo of fish.'],
     steps:[{pc:0.02, h:8, no:'Isolasjon', en:'Insulation', ice:0.85}, {pc:0.04, h:16, no:'Kjølt lasterom', en:'A chilled hold', ice:0.7}]},
   tank:{no:'Større drivstofftank', en:'A larger fuel tank', fit:V => !V.outboard && V.cls !== 'hav', d:['Ekstra tank. Lengre rekkevidde mellom bunkringene.', 'An extra tank. A longer range between refuellings.'],
     steps:[{pc:0.015, h:8, no:'Ekstra tank', en:'An extra tank', x:1.25}, {pc:0.03, h:16, no:'Stor tank', en:'A large tank', x:1.5}]},
