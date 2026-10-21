@@ -2544,9 +2544,10 @@ Brukerens valg:
     - Hekkbølgene (de to Kelvin-armene) blekner gradvis og er borte etter 10 s, rundt 115 m ved 23 kn. Før varte de 18 s, 210 m.
     - Hvert hjørne ligger på bølgene der det står. Med én høyde på tvers ble den ene armen mer skjult av bølgene enn den andre, og babord så kortere ut.
     - Propellstrømmen viser bare skumboblene, og de er borte etter 6 s: «kun vise boblepartiklene». Det lyse båndet under dem er fjernet.
+    - Stripene på armene står stille bak båten (Jonas 21.10.2026, #90), der havets egne skråbølger er: fasen er 1,5·k₀(0,816·s + 0,577·q) fra hekken, som i `wakeH`. Før hang de i punktene i `TRAIL` og gled bakover langs armene med båtens fart på skjermen, som er `GAME_RATE` ganger farten gjennom vannet bølgene regnes for. Skummet brytes opp i vannets eget sted.
   - **Baugbølgen:** klatrer opp i stevnen og løper akterover i 25° (høyde ≈ 0,12·v²/2g, maks 0,6 m).
   - **Brytning:** baugbølgen og hekkbølgen brekker hvitt når de blir bratte.
-  - **Sprøyten:** kommer når baugen stuper ned i en sjø, og blåser med vinden.
+  - **Sprøyten:** kommer når baugen stuper ned i en sjø (og litt hele tida i krapp sjø når hun planer), og blåser med vinden. Den kastes ut fra vannlinja der baugbølgen forlater skroget, 8–30 % av lengden akter for stevnen, som fin dusj (myke punkter, 700 i alt), og har med seg 90 % av båtens fart på skjermen: den vifter ut ved siden av baugen og faller akter for den (Jonas 21.10.2026, #90: kastet fra stevnen uten fart hang den igjen i lufta som runde klatter bak båten).
 
 **Ikke løst her:** fisket inne i havna i kuling (spilltest r2 «knekk» A). Havna blir roligere, slik den er i virkeligheten, så det trenger en egen regel. Bildetakten på nettbrettet er ikke målt. SwiftShader går rundt 2 bilder/s og kan ikke skille.
 
