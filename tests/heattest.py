@@ -183,13 +183,15 @@ async def console3d(pg):
 
 async def perf(pg, cdp):
     # a tablet stand-in: the CPU four times slower; no slice may hold up a frame, and the sonar's whole disk comes within 3 s.
-    # The best of up to three runs counts (garbage collection or a busy test machine can stretch a slice); every run is printed
+    # The best of up to three runs counts (garbage collection or a busy test machine can stretch a slice); every run is printed. A disk
+    # that never finishes gives up after a minute (#369), so the stages after it still run
     runs = []
     for k in range(3):
         await cdp.send('Emulation.setCPUThrottlingRate', {'rate': 4})
         await pg.evaluate(SETUP, ['sonar', 'nav', 2, 0, True, True])
         t = await pg.evaluate("""new Promise(res => { HEATC.stats = {slices:0, maxSlice:0, n:0, ms:0, over:0}; heatReset(); const t0 = performance.now(); heatTick();
-          const w = () => { if (!HEATC.busy && HEATC.qi >= HEATC.queue.length) res(JSON.stringify({ms:performance.now() - t0, ...HEATC.stats})); else setTimeout(w, 20); }; w(); })""")
+          const w = () => { if (!HEATC.busy && HEATC.qi >= HEATC.queue.length) res(JSON.stringify({ms:performance.now() - t0, ...HEATC.stats}));
+            else if (performance.now() - t0 > 60000) res(JSON.stringify({ms:performance.now() - t0, stuck:HEATC.queue.length - HEATC.qi, ...HEATC.stats})); else setTimeout(w, 20); }; w(); })""")
         await cdp.send('Emulation.setCPUThrottlingRate', {'rate': 1})
         r = json.loads(t); runs.append(r); print('· %4.0f s  perf run %d: %d ms' % (time.time() - T0, k + 1, round(r['ms'])), flush=True)
         # a slice is 5 ms of work; one slice over a frame (16 ms) is let through, never two, and none over two frames
