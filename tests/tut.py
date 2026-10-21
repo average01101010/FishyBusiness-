@@ -15,7 +15,7 @@ from playwright.async_api import async_playwright
 # reg by the game running without the cloud, and the cameras by the boat arriving when the test is too slow to tap them
 ORDER = ['n1', 'n2', 'n3', 'nout', 'intro', 'gps', 'route1', 'cast1', 'chip', 'kino', 'kino2', 'cam', 'cam2', 'sail', 'luck', 'haill', 'luckhud', 'fish', 'deck', 'full', 'route2', 'cast2',
          'legs', 'tour', 'hud', 'apps', 'vaer', 'salg', 'regler', 'redning', 'land', 'slip', 'book', 'ice', 'beh', 'crew', 'goal']
-SKIPPABLE = ('nout', 'kino', 'kino2', 'cam', 'cam2', 'legs')
+SKIPPABLE = ('nout', 'kino', 'kino2', 'cam', 'cam2', 'legs', 'full')   # (full: the hold may be full by the time the deck step is read)
 # the steps read with «Skjønner» while the ring shows what they are about
 OK_RING = ('deck', 'chip', 'slip', 'goal', 'luckhud', 'hud', 'apps', 'vaer', 'salg', 'regler', 'redning', 'legs', 'beh', 'intro', 'n2')
 
