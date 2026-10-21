@@ -2259,9 +2259,11 @@ const G3 = (() => {
     if (L && K.buoys){ const H = kit('safe', 'boyeholder'), B = kit('safe', 'livboye'), LT = kit('safe', 'boyelys'), LN = kit('safe', 'boyeline'), at = X.boye_at || [0, -0.3, 0.05];
       K.buoys.slice(0, L.buoys).forEach((q, i) => { const M = chain(BMrel, M4.T(q[0], q[1], q[2]), M4.RY(q[3] || 0)), MB = chain(M, M4.T(at[0], at[1], at[2]));
         if (H) drawN(H, M); if (B){ drawN(B, MB); BM.push(MB); KST.buoys++; } if (LT && i < L.lights) drawN(LT, chain(M, M4.T(0.42, 0.04, 0))); if (LN && i < L.lines) drawN(LN, chain(M, M4.T(-0.44, 0, 0))); }); }
-    // the radar that is bought: a dome on the roof, or the open array on the mast that turns at 24 rpm while she is out
+    // the radar that is bought: a dome on the roof or in the mast, or the open array on the mast that turns at 24 rpm while she is out
+    // (where the model gives both the same place, the open array stands there when she has both)
     const on = b.status !== 'port' && !b.land; if (on) RADS.a = (RADS.a + Math.max(0, Math.min(0.2, t - RADS.t)) * 2.5) % (Math.PI * 2); RADS.t = t;
-    if (K.radar && eq.radar){ const D = kit('safe', 'radome'); if (D){ drawN(D, chain(BMrel, M4.T(K.radar[0], K.radar[1], K.radar[2]))); KST.radar = 1; } }
+    const shared = K.radar && K.radarA && Math.hypot(K.radar[0] - K.radarA[0], K.radar[1] - K.radarA[1], K.radar[2] - K.radarA[2]) < 0.4;
+    if (K.radar && eq.radar && !(shared && eq.radarA)){ const D = kit('safe', 'radome'); if (D){ drawN(D, chain(BMrel, M4.T(K.radar[0], K.radar[1], K.radar[2]))); KST.radar = 1; } }
     if (K.radarA && eq.radarA){ const P = kit('safe', 'radar_ped'), A = kit('safe', 'radar_bar4'), ba = X.bar_at || [0, 0.38, 0], M = chain(BMrel, M4.T(K.radarA[0], K.radarA[1], K.radarA[2]));
       if (P) drawN(P, M); if (A){ drawN(A, chain(M, M4.T(ba[0], ba[1], ba[2]), M4.RY(RADS.a))); KST.radar = 2; } }
     if (BM.length){ const T = boyeTex(), q = boyeQ(); if (T && q[0]){ gl.disableVertexAttribArray(2); for (const M of BM){ drawTexQuad(q[0], T.top, M, VP, true, [0, 0.2, 0]); if (q[1]) drawTexQuad(q[1], T.bot, M, VP, true, [0, 0.2, 0]); KST.text++; } nSetup(VP); } }

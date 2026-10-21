@@ -229,8 +229,8 @@ def gear(fine=True):
         abox(A, 8.2, 8.5, sg * (WY + 0.12) - 0.05, sg * (WY + 0.12) + 0.05, WR - 0.25, WR - 0.05, C['dark'])                           # the side lights' housings
         y0 = sg * (WY + 0.17); abox(A, 8.23, 8.47, min(y0, y0 + sg * 0.015), max(y0, y0 + sg * 0.015), WR - 0.22, WR - 0.08, C['lampR' if sg > 0 else 'lampG'])   # the glass, outboard
     lantern_geo(A)
-    # the mast on the roof raked aft, the radar platform (now carried forward of the mast on a strut, where the open array the player
-    # buys turns clear of it: kit.radarA; the dome he can buy stands on the roof forward of the mast, kit.radar), the antennas
+    # the mast on the roof raked aft, the radar platform (now carried forward of the mast on a strut, where the radar the player buys
+    # stands clear of it, the open array or the dome: kit.radarA, kit.radar), the antennas
     P0 = (6.9, 0, WR + 0.12); P1 = (6.4, 0, 6.6)
     beam(A, P0, P1, 0.22, 0.32, w)
     abox(A, 6.2, 6.8, -0.5, 0.5, 5.55, 5.62, w); abox(A, 6.75, RAD_X + 0.3, -0.3, 0.3, 5.55, 5.62, w); beam(A, (6.98, 0, 5.0), (RAD_X + 0.2, 0, 5.56), 0.08, 0.08, w)
@@ -398,7 +398,8 @@ def kit(G):
     return {'raft': [G(5.3, -1.7, WR + 0.12) + [r(h)]],
             # (the bulwark flares out as it rises: the port bracket stands off it as far as its face comes in at the ring's foot)
             'buoys': [G(5.3, -0.5, 3.6) + [r(h)], G(2.35, hbz(2.35, ZMD) - 0.06, 2.85) + [r(h)]],
-            'radar': G(8.0, 0.0, WR + 0.12),
+            # (the dome on the radar platform in the mast, where the open array goes: Jonas 21.10.2026, #88: it lay on the roof)
+            'radar': G(RAD_X, 0, 5.62),
             'radarA': G(RAD_X, 0, 5.62),
             'garn': {'at': G(0.75, 0.0, ZMD), 'ry': r(h)},
             'stamps': {'at': G(1.975, 1.72, ZMD), 'ry': 0.0},
