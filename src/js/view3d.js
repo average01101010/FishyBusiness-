@@ -2503,7 +2503,21 @@ const G3 = (() => {
   // where a pot of half width pw stands on deck: the spot by the rail where it is emptied, the tank across from it, the stack aft
   function potDeck(G, HP, sx, d, pw){
     const spot = [sx - 0.25 - pw, d.y, HP[2] + pw - 0.1], cols = Math.max(1, Math.floor((2 * sx - 0.3) / (2 * pw + 0.08)));
-    return {spot, cols, tank:[-(sx - 0.5), d.y, spot[2]], slot:i => { const L = Math.floor(i / cols), c = i % cols; return [spot[0] - c * (2 * pw + 0.08), d.y + L * (pw * 0.93 + 0.01), spot[2] + 2 * pw + 0.3]; }};
+    return {spot, cols, tank:tankAt(-(sx - 0.5), spot[2], d), slot:i => { const L = Math.floor(i / cols), c = i % cols; return [spot[0] - c * (2 * pw + 0.08), d.y + L * (pw * 0.93 + 0.01), spot[2] + 2 * pw + 0.3]; }};
+  }
+  // the crab tank across from the hauler stands on clear deck: where a house or a cabin is there (the new speed sjark's hauler stands
+  // under the cabin's roof, and the tank went through its wall; Jonas 21.10.2026), the nearest place on the deck map (vessel3d.js
+  // deckMap) its footprint fits, keeping to its side; worked out once per boat type and hauler
+  const TANKAT = {};
+  function tankAt(x, z, d){
+    const vt = vtype(), key = vt + '|' + x.toFixed(2) + '|' + z.toFixed(2); if (key in TANKAT) return TANKAT[key];
+    const M = typeof deckMap === 'function' ? deckMap(vt) : null, T = (GB && GB.px || {}).tank || {half:[0.36, 0.56]}, hx = T.half[0] - 0.15, hz = T.half[1] - 0.15;
+    const fits = (cx, cz) => { for (let qx = cx - hx; qx <= cx + hx + 1e-6; qx += M.c / 2) for (let qz = cz - hz; qz <= cz + hz + 1e-6; qz += M.c / 2){ const f = M.floorAt(qx, qz); if (!(Math.abs(f - d.y) < 0.25)) return false; } return true; };
+    let best = [x, z];
+    if (M && !fits(x, z)){ let bd = 1e9; best = null;
+      for (let dz = -3; dz <= 3.001; dz += 0.1) for (let dx = 0; dx <= 1.5; dx += 0.1){ const cx = x - Math.sign(x) * dx, c = dz * dz + 2 * dx * dx; if (c < bd && fits(cx, z + dz)){ bd = c; best = [cx, z + dz]; } }
+      best = best || [x, z]; }
+    return TANKAT[key] = [best[0], d.y, best[1]];
   }
   function drawPots(BMrel, t, g, G, HP, sx, d, skiff, seg){
     const s = g.op === 'haul' ? (S.sets || []).find(x => x.id === g.sid) : g.s, ps = 1, X = GB.px || {}, XP = X.pot || {};
@@ -2559,9 +2573,10 @@ const G3 = (() => {
       if (p[1] > -6) drawN(GB.pot, potM(p, rz));
     }
   }
-  // the live crab tank on deck (EQUIP.krabbekar) with the crabs from the hold in it
+  // the live crab tank on deck (EQUIP.krabbekar) with the crabs from the hold in it: aboard only while she is rigged for pots (Jonas
+  // 21.10.2026: «Om båten ikke er rigget med teiner skal det ikke være noe krabbekar ombord»)
   function drawCrabTank(BMrel, G, d, sx, HP){
-    if (!S.equip.krabbekar || !GB || !GB.tank) return;
+    if (!S.equip.krabbekar || rigOf() !== 'teiner' || !GB || !GB.tank) return;
     const pw = ((GB.px || {}).pot || {}).half || 0.7, D = potDeck(G, HP, sx, d, pw), T = (GB.px || {}).tank || {half:[0.36, 0.56], water:0.58};
     drawN(GB.tank, chain(BMrel, M4.T(D.tank[0], D.tank[1], D.tank[2])));
     const kg = S.hold.reduce((a, x) => a + (x.sp === 'krabbe' ? x.kg : 0), 0), n = Math.min(14, Math.ceil(kg / 4));
@@ -4609,8 +4624,8 @@ const G3 = (() => {
     nSetup(VP);
   }
   // onDeck: the skipper jigs himself, so he stands at the first deck place the crew leave free (at the wheel when there is none)
-  // the people aboard where the agents have them (deckcrew.js): walking, at their work, or at the wheel inside the house; the skipper
-  // is not drawn from his own eyes (the bridge view)
+  // the people aboard where the agents have them (deckcrew.js): walking, at their work, or at the wheel inside the house; in the bridge
+  // view nobody is drawn at the wheel, where the eye is (the skipper, or a hand who has the helm)
   function drawDeckCrew(BMrel, eye, VP, t, G){
     nSetup(VP); let idx = 20; if (!GB) buildGear();
     const b = S.boat, d = G.deck || {y:G.gw, z:0}, gw = G.gw || d.y + 0.9, railH = clamp(gw - d.y, 0.6, 1.1), now = performance.now() / 1000, DW = deckWork(G), ST = CREW3D._st, V = VESSELS[vtype()] || {}, K = G.kit || {};
@@ -4630,7 +4645,7 @@ const G3 = (() => {
       if (tubs && tubs.length){ let best = tubs[0], bd = 1e9; for (const q of tubs){ const dd = Math.hypot(q[0] - a.x, q[2] - a.z); if (dd < bd){ bd = dd; best = q; } } return {p:[best[0], best[1], best[2]], top:(best[4] || 460) > 300 ? 0.62 : 0.55, tub:true}; }
       return {p:[a.x + F0[0] * 0.58, a.y, a.z + F0[1] * 0.58], top:0.28, tub:false}; };
     const pkC = pk ? crateOf(pk) : null, held = spHold(x => !x.gut && !x.iced), packed = spHold(x => x.iced), table = rel(DW.table), tubTop = rel(dkTub(G)), offal = rel(DW.offal);
-    for (const a of A){ if (a.me && cam.helm) continue;
+    for (const a of A){ if (cam.helm && (a.me || a.mode === 'helm')) continue;
       const lp = a.mode === 'helm' && G.skipperAt ? [G.skipperAt[0], G.skipperAt[1], G.skipperAt[2]] : [a.x, a.y, a.z], wl = xf(BMrel, lp), wy = wl[1] + eye[1];
       const P = {gy:() => wy, bare:true, spray:0, kit:a.me ? 'skipper' : null, look:a.me ? lookMe() : a.c ? lookOf(a.c) : lookCrew(0)};
       const ev = a.mode === 'at' ? dkFor(a.id, lp, a.task) : null;   // a fish to bleed or to gaff in at his place
