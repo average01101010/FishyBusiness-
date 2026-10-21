@@ -1154,6 +1154,13 @@ function deckPoints(type){
     for (const [di, dj, hd] of [[1, 0, Math.PI / 2], [-1, 0, -Math.PI / 2], [0, 1, Math.PI]]){ const ii = i + di, jj = j + dj; if (ii < 0 || jj < 0 || ii >= M.nx || jj >= M.nz || M.ok(jj * M.nx + ii)) continue;
       if (di && Math.sign(p[0]) !== di && Math.abs(p[0]) > 0.3) continue;   // the outside is outboard, not an inboard fitting
       lean.push({k, h:hd}); break; } }
+  // not in the stem: where the sides meet (by the centreline, within 0.4 m of a row of deck under 1.2 m across at that level) a hand
+  // stood out in the very bow, past the end of the rail, looking out over the side (the sjark's foredeck, tilbakemelding #80); a side
+  // deck by the house stays
+  const across = (j, y) => { let lo = Infinity, hi = -Infinity; for (let i = 0; i < M.nx; i++){ const q = j * M.nx + i; if (M.ok(q) && Math.abs(M.at(q)[1] - y) <= DM_STEP){ lo = Math.min(lo, i); hi = Math.max(hi, i); } } return hi < lo ? 0 : (hi - lo + 1) * M.c; };
+  const inStem = k => { const p = M.at(k), j = (k - k % M.nx) / M.nx; if (Math.abs(p[0]) >= 0.8) return false;
+    for (let r = Math.max(0, j - 2); r <= Math.min(M.nz - 1, j + 2); r++){ const w = across(r, p[1]); if (w > 0 && w < 1.2) return true; } return false; };
+  for (let i = lean.length - 1; i >= 0; i--) if (inStem(lean[i].k)) lean.splice(i, 1);
   lean.sort((a, b) => M.at(a.k)[2] - M.at(b.k)[2]); const step = Math.max(1, Math.floor(lean.length / 10)); pt.lean = lean.filter((_, i) => i % step === 0).slice(0, 10);
   DECKPTS[type] = pt; return pt;
 }

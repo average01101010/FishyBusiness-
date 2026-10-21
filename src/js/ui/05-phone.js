@@ -477,6 +477,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p130', '21.10.2026', 'Ikke ut i baugen', 'Not out in the bow', [
+       ['Mannskapet stiller seg ikke lenger helt ute i baugspissen, forbi enden av rekka, for å se utover. De lener seg på rekka der dekket er bredt nok. Takk for tipset!', 'The crew no longer stand right out in the tip of the bow, past the end of the rail, to look out. They lean on the rail where the deck is wide enough. Thanks for the tip!']]],
     ['p129', '21.10.2026', 'Utsikt fra broa', 'A view from the bridge', [
        ['Bro-visningen ser ut av vinduene på den nye hurtigsjarken, kystbåten 15 m, den nye plastsjarken, autolineren, snøkrabbebåten, tråleren og ringnotbåten. Innsiden av styrhuset dekket vinduene.', 'The bridge view looks out of the windows on the new fast sjark, the 15 m coastal boat, the new plastic sjark, the longliner, the snow crab boat, the trawler and the purse seiner. The inside of the wheelhouse covered the windows.'],
        ['Styrhuset på den nye hurtigsjarken har fått lavere dørk, så den som står ved roret har hodet under taket. På den gamle kystbåten 21 m er styrhuset et rom med full takhøyde, og på snekka sitter den som styrer under hardtoppen.', 'The wheelhouse on the new fast sjark has a lower floor, so the one at the wheel has his head under the roof. On the old 21 m coastal boat the wheelhouse is a room with full headroom, and on the snekke the one steering sits under the hard top.'],
