@@ -59,6 +59,14 @@ async def main():
           const M = CREW3D._st.M; b.gop = null; S.hold = [];
           return {st:A.map(a => a.st + ':' + a.task).sort(), d, kit:M.kit || 0, inKit:A.filter(a => a.mode === 'at' && !M.ok(M.cellOf(a.x, a.z))).map(a => a.id)}; })()""")
         check(r5['st'] == ['blogg:bleedst', 'haling:haul', 'is:pack', 'sloy:gut'] and min(r5['d']) >= 0.39 and not r5['inKit'] and r5['kit'] > 0, 'hauling line on the new sjark: one hauls, one bleeds, one guts, one packs and ices, each on a place of their own (no two closer than 0.4 m), none in the kit', r5)
+        # a break on deck (leaning on the rail, looking out) ends as she gets under way: the crew go in at once, not after the spell
+        # (Jonas 21.10.2026: two leant over the rail at 23 knots as if jigging, for up to a minute and a half)
+        r6 = await pg.evaluate("""(() => { const b = S.boat; b.status = 'idle'; b.v = 0; S.plan = null; S.hold = []; CREW3D.reset(); for (let i = 0; i < 40; i++){ CREW3D._st.ctxT = 0; CREW3D.tick(0.05); }
+          const before = CREW3D.agents().filter(a => !a.me && a.goal && a.goal.idle).length;
+          b.status = 'sailing'; b.v = 8; S.plan = {wps:[{x:b.pos.x + 5, y:b.pos.y, port:null, fish:0}], idx:0, speed:8, returning:false};
+          for (let i = 0; i < 20; i++){ CREW3D._st.ctxT = 0; CREW3D.tick(0.05); }
+          return {before, after:CREW3D.agents().filter(a => !a.me).map(a => a.st + ':' + (a.goal && a.goal.idle ? 'idle' : a.goal && a.goal.inside || 'deck'))}; })()""")
+        check(r6['before'] > 0 and all(x.endswith(':in') for x in r6['after']), 'a break on deck ends as she gets under way: the crew are on their way in within a second', r6)
         check(not errs, 'no page errors', errs[:3])
         await br.close()
     print('FEIL: ' + ', '.join(bad) if bad else 'alt OK')

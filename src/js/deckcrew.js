@@ -191,8 +191,10 @@ function crewSim(src){
     for (const p of ctx.WA){ const id = p.c ? 'c' + p.c.id : 'me'; seen.add(id); let a = A.find(q => q.id === id);
       if (!a){ a = {id, me:!p.c, c:p.c, x:0, y:0, z:0, h:0, cell:-1, goal:null, path:null, pi:0, mode:'in', task:null, st:null, blend:0, kind:null, slot:-1}; A.push(a); }
       a.c = p.c; a.st = p.st; a.role = p.role || null; a.jw = p.jw || null; const g = a.goal, kind = kindOf(p);
-      // the same station as before, and not an idle spell that is over: the place is kept (nobody swaps the table for the tub each minute)
-      const keep = g && a.kind === kind && !(g.idle && g.until < t) && !(g.inside === 'in' && g.until && g.until < t && p.st === 'pause' && !ctx.underway) && !(ctx.away && g) && (g.inside || ST.M.ok(g.k));
+      // the same station as before, and not an idle spell that is over: the place is kept (nobody swaps the table for the tub each minute);
+      // an idle spell on deck ends as she gets under way on a boat with a house, so the crew go in (Jonas 21.10.2026: they stood leaning
+      // over the rail at 23 knots for a minute and a half, as if jigging)
+      const keep = g && a.kind === kind && !(g.idle && g.until < t) && !(g.idle && ctx.underway && !ctx.open) &&!(g.inside === 'in' && g.until && g.until < t && p.st === 'pause' && !ctx.underway) && !(ctx.away && g) && (g.inside || ST.M.ok(g.k));
       if (keep){ if (a.slot >= 0) (used[kind] || (used[kind] = new Set())).add(a.slot); if (!g.inside) TAKEN.set(g.k, id); } else pend.push([p, a, kind]); }
     for (const [p, a, kind] of pend){ let n = 0; const U = used[kind] || (used[kind] = new Set()); while (U.has(n)) n++; U.add(n);
       a.goal = claim(goalOf(p, ctx, n), a.id); a.kind = kind; a.slot = n; a.path = null; a.sub = null; }
