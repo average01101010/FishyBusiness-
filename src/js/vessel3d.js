@@ -1144,7 +1144,11 @@ function deckPoints(type){
   // (within far: on a shelter-decker the table's default place can lie where the model has no floor, and the work moves to the deck)
   put('sloy', tx + (tx < 0 ? 0.62 : -0.62), tz, tx < 0 ? -Math.PI / 2 : Math.PI / 2, far); put('is', ux + (ux > tx ? -0.62 : 0.62), uz, ux > tx ? Math.PI / 2 : -Math.PI / 2, far);
   if (G.hauler) put('haling', G.hauler[0] * 0.7, G.hauler[2], G.hauler[0] > 0 ? Math.PI / 2 : -Math.PI / 2, 1.6);
-  if (G.skipperAt){ const c = M.near(G.skipperAt[0], G.skipperAt[2], 0.5); if (c >= 0) pt.ror = {k:c, h:0}; else put('door', G.skipperAt[0], G.skipperAt[2], 0, 40); }   // the helm, or the door when the house has no floor in the model
+  // the helm, or the door when the house has no floor in the model. Not a cell over the wheel: the house's roof is deck in the map (joined
+  // by the links), so the nearest cell over the wheel was the roof and the skipper steered from up there (the sjark and the havsjark,
+  // tilbakemelding #77 and #80); the door is then the nearest cell no higher than the wheel. A bridge the map has no floor for stays as it was
+  const nearLow = (x, y, z, r) => { let best = -1, bd = r * r; for (let k = 0; k < M.nx * M.nz; k++){ if (!M.ok(k)) continue; const p = M.at(k), q = (p[0] - x) ** 2 + (p[2] - z) ** 2; if (p[1] <= y + 0.6 && q < bd){ bd = q; best = k; } } return best; };
+  if (G.skipperAt){ const [sx, sy, sz] = G.skipperAt, c = nearLow(sx, sy, sz, 0.5); if (c >= 0) pt.ror = {k:c, h:0}; else { const dc = nearLow(sx, sy, sz, 40); if (dc >= 0) pt.door = {k:dc, h:0}; } }
   // a model from the Blender round names its real doors (anchors.doors: [{at, w, h, in, to}], the sill in the game's frame): the crew go in and out there
   if (G.doors && G.doors.length && G.doors[0].at) put('door', G.doors[0].at[0], G.doors[0].at[2], 0, 1.5);
   (G.crewSpots || []).forEach((c, i) => put('spot' + i, c[0], c[2], c[3] || 0, 1.0));

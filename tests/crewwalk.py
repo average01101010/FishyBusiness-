@@ -78,6 +78,11 @@ async def main():
               if (out || (low >= 4 && Math.abs(p[1] - dy) >= 0.6)) (bad[t] || (bad[t] = [])).push(p.map(v => +v.toFixed(2)).concat(+l.h.toFixed(2))); } }
           return bad; })()""")
         check(not r7, 'the rail places on every boat face the open air off the hull (no deck beyond them) and stand on the working deck', r7)
+        # the helm (deckPoints ror, or the door) is never over the wheel: the sjark's skipper steered from the wheelhouse roof (#77, #80)
+        r8 = await pg.evaluate("""(() => { const bad = {}; for (const t of Object.keys(VESSELS)){ const P = deckPoints(t), M = deckMap(t), G = geoOf(t); if (!P || !M || !G.skipperAt || G.hand) continue;
+            const q = P.ror || P.door; if (q && M.at(q.k)[1] > G.skipperAt[1] + 0.6) bad[t] = [+M.at(q.k)[1].toFixed(2), +G.skipperAt[1].toFixed(2)]; }
+          return {bad, sjark:deckPoints('sjark').ror ? 'ror' : 'door'}; })()""")
+        check(not r8['bad'], "the skipper's place at the helm is at the wheel, not on the roof over it, on every boat", r8)
         check(not errs, 'no page errors', errs[:3])
         await br.close()
     print('FEIL: ' + ', '.join(bad) if bad else 'alt OK')
