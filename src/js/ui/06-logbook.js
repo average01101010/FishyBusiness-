@@ -18,7 +18,7 @@ const BOOK = (() => {
   const ll = (x, y) => { const q = LL({x, y}), f = (v, w) => { const a = Math.abs(v), d = Math.floor(a); return String(d).padStart(w, '0') + '°' + ((a - d) * 60).toFixed(1).replace('.', S.lang === 'no' ? ',' : '.') + "'"; }; return f(q.lat, 2) + 'N<br>' + f(q.lon, 3) + (S.lang === 'no' ? 'Ø' : 'E'); };
   function navPage(day){
     const rows = S.navrows.filter(r => dayOf(r.t) === day).map(r => ({t:r.t, r})), ev = S.log.filter(e => dayOf(e.t) === day && logKind(e) === 'nav').map(e => ({t:e.t, e}));
-    const wx = S.msgs.filter(m => dayOf(m.t) === day && (m.from === 'Kystradio' || m.from === 'Værvarsel')).map(m => ({t:m.t, e:{no:m.from + ': ' + m.no, en:m.from + ': ' + m.en}}));
+    const wx = (S.radio || []).concat(S.msgs.filter(m => m.from === 'Værvarsel')).filter(m => dayOf(m.t) === day).map(m => ({t:m.t, e:{no:m.from + ': ' + m.no, en:m.from + ': ' + m.en}}));
     const all = rows.concat(ev, wx).sort((a, b) => a.t - b.t);
     let h = '<div class="pg-h"><span class="pg-t">' + L('Navigasjon', 'Navigation') + '</span><span class="pg-d">' + longDate(day) + '</span></div><div class="pg-v">' + vessel() + '</div>';
     if (!all.length) return h + '<p class="hw">' + L('Ingen føringer denne dagen.', 'No entries this day.') + '</p>';

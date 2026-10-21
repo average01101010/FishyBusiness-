@@ -15,11 +15,15 @@ async def main():
         await boot(pg, GAME)
         # 1. the skrei comes: the VHF on its day, Kystposten the same day; the dates differ from year to year
         r = await pg.evaluate("""(() => { S.tut = 0; const e = SEASON_EV[0], y = 2028, d = seasonDoy(e, y), H = Math.round((Date.UTC(y, 0, 1) + d * 864e5 - EPOCH) / 36e5) + 7;
-          S.t = H * 60; const m0 = S.msgs.length; seasonDay(H); seasonDay(H + 1); const vhf = S.msgs.slice(m0).filter(m => m.from === 'Kystradio').map(m => m.no);
+          S.t = H * 60; S.radio = []; const m0 = S.msgs.length; seasonDay(H); seasonDay(H + 1); const vhf = S.radio.map(m => m.no), inbox = S.msgs.slice(m0).filter(m => m.from === 'Kystradio').length;
           const news = newsForDay(Math.floor(H / 24)).map(n => n.h.no), ds = [2027, 2028, 2029, 2030].map(yy => seasonDoy(e, yy));
-          return {vhf, news, ds, now:seasonNow(H + 48).id, next:seasonNext(H, 6).map(x => x.no)}; })()""")
+          return {vhf, inbox, news, ds, now:seasonNow(H + 48).id, next:seasonNext(H, 6).map(x => x.no)}; })()""")
         print(json.dumps(r, ensure_ascii=False))
-        print(ok(len(r['vhf']) == 1 and 'Skreien er kommet' in r['vhf'][0] and 'Skreien er her' in r['news'] and len(set(r['ds'])) >= 3 and r['now'] == 'skrei'), 'the skrei comes on its day: once on the VHF and in Kystposten, a different day each year')
+        print(ok(len(r['vhf']) == 1 and r['inbox'] == 0 and 'Skreien er kommet' in r['vhf'][0] and 'Skreien er her' in r['news'] and len(set(r['ds'])) >= 3 and r['now'] == 'skrei'), 'the skrei comes on its day: once on the VHF (on the screen, not in the messages) and in Kystposten, a different day each year')
+        # the coast radio's forecast on the VHF: on the screen for 15 seconds, never among the messages (Jonas 21.10.2026: «De fyller innboksen totalt»)
+        rr = await pg.evaluate("""(() => { const m0 = S.msgs.length, r0 = (S.radio || []).length; radioForecast(S.t / 60); const k = toast._keep;
+          return {inbox:S.msgs.length - m0, radio:S.radio.length - r0, toast:document.getElementById('toast').textContent.slice(0, 60), ms:k ? k.until - Date.now() : 0}; })()""")
+        print(ok(rr['inbox'] == 0 and rr['radio'] == 1 and 'Kystradio' in rr['toast'] and 14000 < rr['ms'] <= 15000), 'the coast radio\'s forecast shows on the screen for 15 seconds and does not go into the messages', rr)
         # 2. the skrei festival: your biggest cod against the coast's, the prize on Sunday evening
         f = await pg.evaluate("""(() => { const y = 2028, F = festDays(y), d = new Date(EPOCH + F.H0 * 36e5); S.t = (F.H0 + 10) * 60; S.fest = null; const c0 = S.cash;
           addCatch('torsk', 12.5, 3, true); addCatch('torsk', 41.2, 3, true); addCatch('sei', 50, 3, true); const best = S.fest && S.fest.best;

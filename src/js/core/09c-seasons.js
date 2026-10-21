@@ -79,7 +79,7 @@ const FEST_PRIZE = [15000, 7500, 3000];
 // once a day (step): the events that begin today on the VHF, and the festival's result on its Sunday evening
 function seasonDay(H){
   const y = yearH(H), d = doyH(H); S.seasonSeen = S.seasonSeen || {};
-  for (const e of SEASON_EV){ const k = e.id + y; if (seasonDoy(e, y) !== d || S.seasonSeen[k]) continue; S.seasonSeen[k] = 1; msg('Kystradio', e.vhf[0], e.vhf[1]); }
+  for (const e of SEASON_EV){ const k = e.id + y; if (seasonDoy(e, y) !== d || S.seasonSeen[k]) continue; S.seasonSeen[k] = 1; radio(e.vhf[0], e.vhf[1]); }
   const F = festDays(y), kf = 'fest' + y;
   if (H >= F.H0 - 24 * 3 && H < F.H0 && !S.seasonSeen[kf + 'a']){ S.seasonSeen[kf + 'a'] = 1; msg('Kystposten', 'Skreifestivalen er neste helg. Største torsk landet fra lørdag til søndag kl. 18 vinner 15 000 kr.', 'The skrei festival is next weekend. The biggest cod landed from Saturday to Sunday 18:00 wins NOK 15,000.'); }
   if (H >= F.H1 && !S.seasonSeen[kf]){

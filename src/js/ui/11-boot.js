@@ -30,6 +30,8 @@ function bootGame(){
 S = load(); tabMark();   // this page has the game now (an older page left open stops: tabMine, 02-format-state.js)
 // the fish plants' morning price messages (gone 13.10.2026) leave the phone's message list too
 if (S && S.msgs) S.msgs = S.msgs.filter(m => !/^God morgen! Vi betaler /.test(m.no || ''));
+// the coast radio is no longer kept among the messages (21.10.2026): what it has sent moves to the deck log's list
+if (S && S.msgs && S.msgs.some(m => m.from === 'Kystradio')){ S.radio = (S.radio || []).concat(S.msgs.filter(m => m.from === 'Kystradio').map(({t, from, no, en}) => ({t, from, no, en}))).slice(-40); S.msgs = S.msgs.filter(m => m.from !== 'Kystradio'); }
 if (S){ awayMs = Date.now() - (S.lastReal || Date.now()); } else S = newState();
 // the skiff is only bought at the yard (05.10.2026, Jonas: «Den båten der skal kun være tilgjengelig for kjøp i verftet … For alle
 // brukere»): a save that still sails the free aluminium skiff it started with (the start boat until 04.10.2026: the first vessel, never

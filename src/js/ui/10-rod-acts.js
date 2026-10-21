@@ -77,6 +77,7 @@ hooks.onDeck = k => { const L = (no, en) => S.lang === 'no' ? no : en;
   if (k === 'stop'){ const e = deckEta(deckHands()); toast(L('Bløggekaret er fullt. Du sløyer og iser fangsten' + (e < Infinity ? ' (ca. ' + realDur(e) + ')' : '') + ', så fisker du videre.', 'The bleeding tub is full. You gut and ice the catch' + (e < Infinity ? ' (about ' + realDur(e) + ')' : '') + ', then you fish on.')); }
   else toast(L('Ferdig på dekk. Du fisker videre.', 'Deck work done. You fish on.')); };
 hooks.onEquip = () => { updateMapButtons(); INSTR.show(); heatReset(); };
+hooks.onRadio = (no, en) => toast('📻 Kystradio: ' + (S.lang === 'no' ? no : en), 15000);
 hooks.onMsg = () => { PHONE.setBadge(); const m = S.msgs[S.msgs.length - 1]; if (m && !PHONE.isOpen()) toast('✉ ' + m.from + ': ' + (S.lang === 'no' ? m.no : m.en), 10000); if (PHONE.isOpen() && (PHONE.app === 'meld' || PHONE.app === 'home')) PHONE.render(); };
 $('instrBtn').onclick = () => { S.settings.instr = S.settings.instr === false; save(); updateMapButtons(); INSTR.show(); };
 if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => renderBase());
