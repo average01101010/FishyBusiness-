@@ -2098,6 +2098,7 @@ Kjernen ligger i `core/06d-drift.js`, appen i `ui/05c-drift.js`. Den gamle plane
     - Ut rygger den samme vei. Den kjører mykt i gang og bremser mykt.
     - Rulleporten ruller opp etter hvor trucken er på ruta, så den er oppe før gaflene når den.
   - **Isrenna:** svinger ut over lasterommet mens isen renner, og tilbake langs kaia etterpå. Isen faller fra tuten.
+  - **Truckføreren** er havnearbeidernes figur (`arbeider.py`), som sitter på setet med hendene på rattet mens trucken kjører en levering (`drawUnitParts` med tida, oppgaven `drive`). Klossfiguren som satt i truckmodellen, er tatt ut (Jonas 21.10.2026, #86). En truck som står, har ingen fører.
   - **Folkene:** står på enhetens plasser, utenfor truckruta: én gir tegn, én tar imot, én teller og én kjører fjernkontrollen. Rundene deres (tau, spyling, feiing og kaffe på benken) går også utenfor ruta.
   - **Bunkers:** pumpa, slangetrommelen, tanken og skiltet er enhetens. Spillet tegner bare telleren og slangen.
   - **Delene som beveger seg:** kranen (`crane_house`, `crane_boom1`, `crane_boom2` og `crane_hook`), trucken (`truck` og `truck_forks`), rulleporten (`door`, med origo i overkant) og isrenna (`chute`).

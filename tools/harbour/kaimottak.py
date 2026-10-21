@@ -418,12 +418,8 @@ def truck_parts():
     b.append(box('tguard', x - 0.55, x + 0.55, y - 0.8, y + 0.6, z + 2.12, z + 2.2, C['dark']))
     for px in (-0.38, 0.38): b.append(box('tmast%d' % int(px * 10), x + px - 0.05, x + px + 0.05, y + 0.78, y + 0.9, z + 0.15, z + 2.3, C['dark']))
     b.append(box('tmast_top', x - 0.43, x + 0.43, y + 0.78, y + 0.9, z + 2.2, z + 2.3, C['dark']))
-    # the driver, seated, facing the forks: legs forward, in the blue coverall and the yellow hard hat
-    for dx in (-0.12, 0.12):
-        b.append(box('drv_t%d' % int(dx * 100), x + dx - 0.07, x + dx + 0.07, y - 0.65, y - 0.1, z + 1.1, z + 1.25, C['coverall']))
-        b.append(box('drv_s%d' % int(dx * 100), x + dx - 0.06, x + dx + 0.06, y - 0.18, y - 0.06, z + 0.85, z + 1.2, C['coverall']))
-    b.append(box('drv_b', x - 0.2, x + 0.2, y - 0.66, y - 0.38, z + 1.12, z + 1.7, C['coverall'], 0.04))
-    b.append(sphere('drv_h', (x, y - 0.5, z + 1.84), 0.11, C['skin'])); b.append(sphere('drv_c', (x, y - 0.5, z + 1.9), 0.125, C['yellow'], (1, 1, 0.7)))
+    # no driver in the model: the game seats the harbour workers' figure (tools/harbour/arbeider.py) on the seat while the truck works
+    # (Jonas 21.10.2026, #86: the boxes that were the driver did not look like the other workers)
     body = join(b, 'TRUCK')
     f = [box('tcarr', x - 0.45, x + 0.45, y + 0.92, y + 1.0, z + 0.15, z + 1.0, C['dark'])]
     for px in (-0.28, 0.28): f.append(box('tfork%d' % int(px * 10), x + px - 0.05, x + px + 0.05, y + 0.92, y + 2.1, z + 0.1, z + 0.16, C['steel']))

@@ -1549,8 +1549,10 @@ const G3 = (() => {
     return {th, e:L - C.L1, tip:[P.crane[0] + Math.sin(q.a) * Lh, C.heelY + L * Math.sin(th), P.crane[1] + Math.cos(q.a) * Lh]};
   }
   // the unit's moving parts: the crane at pose q, the forklift st {x, z, h, fl, loads}, the door open by k (0-1), the chute at angle
-  // ch (in the unit's frame, 0 = straight out over the berth); what hangs from the hook is drawn by the caller
-  function drawUnitParts(P, eye, q, st, k, ch){
+  // ch (in the unit's frame, 0 = straight out over the berth); what hangs from the hook is drawn by the caller. With the time T the
+  // forklift has its driver on the seat: the harbour workers' figure, seated with his hands on the wheel (Jonas 21.10.2026, #86: the
+  // driver was boxes in the truck's model)
+  function drawUnitParts(P, eye, q, st, k, ch, T){
     const U = P.unit, M = unitModel(U.v), A = M.A, rel = p => [p[0] - eye[0], p[1] - eye[1], p[2] - eye[2]], g = craneGeo(P, q);
     const base = rel([P.crane[0], A.crane.base[1], P.crane[1]]), heel = rel([P.crane[0], A.crane.heel[1], P.crane[1]]);
     drawN(M.house, chain(M4.T(base[0], base[1], base[2]), M4.RY(q.a)));
@@ -1559,6 +1561,7 @@ const G3 = (() => {
     const tip = rel(g.tip), hk = [tip[0], q.hook + 0.62 - eye[1], tip[2]]; drawN(PM.wire, limbM([tip[0], tip[1] - 0.2, tip[2]], hk, 0.012)); drawN(M.hook, chain(M4.T(hk[0], hk[1], hk[2]), M4.RY(q.a)));
     const fy = P.gy([st.x, st.z]), FM = chain(M4.T(st.x - eye[0], fy - eye[1], st.z - eye[2]), M4.RY(-st.h)), lift = 0.05 + st.fl * 0.45;
     drawN(M.truck, FM); drawN(M.forks, chain(FM, M4.T(0, lift, 0))); { let y = 0.17 + lift; for (const L of st.loads || []){ drawN(L.mesh, chain(FM, M4.T(0, y, -1.5))); y += L.h; } }
+    if (T != null){ const F = [Math.sin(st.h), -Math.cos(st.h)]; drawWorker(P, {x:st.x - F[0] * 0.5, z:st.z - F[1] * 0.5, h:st.h, task:'drive', seat:1.14, walk:false, s:0}, eye, T, 4); }
     const UM = unitMat(U, eye), D = A.door.top, sk = 1 - 0.94 * k; drawN(M.door, chain(UM, M4.T(D[0], D[1], D[2]), new Float32Array([1,0,0,0, 0,sk,0,0, 0,0,1,0, 0,0,0,1])));
     const S0 = A.silo.axis; drawN(M.chute, chain(UM, M4.T(S0[0], S0[1], S0[2]), M4.RY(ch)));
     return {tip:g.tip, hk};
@@ -1733,7 +1736,7 @@ const G3 = (() => {
     if (k === 'gutw'){ const s = (T + idx * 1.7) % 5.6, u = s < 0.9 ? Math.sin(s / 0.9 * Math.PI / 2) : s < 1.4 ? 1 - (s - 0.9) / 0.5 : 0; return [0.12 * u, 0.14 + 0.24 * u]; }
     if (k === 'pack'){ const L = st.lay; if (L != null && L >= 0 && L < 1.5){ const u = Math.sin(Math.min(1, L / 1.5) * Math.PI); return [0.4 * u, 0.22 + 0.3 * u]; } return [0, 0.22]; }
     if (k === 'egn' || k === 'strip') return [0, 0.3, 1];   // (sitting on an upturned bin at the tub)
-    if (k === 'helmsit') return [0, 0.05, 1];               // (on the helm seat, where the boat is steered sitting)
+    if (k === 'helmsit' || k === 'drive') return [0, 0.05, 1];   // (on the helm seat, where the boat is steered sitting, or the forklift's seat)
     if (k === 'mend') return [0, 0.16];
     if (k === 'stow'){ const u = clamp((st.s || 0) / 1.2, 0, 1); return [0.55 * Math.sin(u * Math.PI / 2), 0.5 * Math.sin(u * Math.PI / 2)]; }
     return [0, 0];
@@ -1796,6 +1799,7 @@ const G3 = (() => {
       // the agents' places (deckcrew.js): hands on the wheel, forearms on the rail, the jig worked up and down
       case 'helm': hands = [W(0.3, 1.1, 0.17), W(0.3, 1.1, -0.17)]; break;
       case 'helmsit': hands = [W(0.4, sh + 0.42, 0.16), W(0.4, sh + 0.42, -0.16)]; break;
+      case 'drive': hands = [W(0.56, sh + 0.26, 0.12), W(0.58, sh + 0.2, -0.1)]; break;
       case 'lean': hands = [W(0.4, 1.02, 0.2), W(0.4, 1.02, -0.2)]; break;
       case 'jig': { const k = Math.pow(Math.max(0, Math.sin(t * 2.6)), 3); hands = [W(0.34, 0.95 + k * 0.35, 0.16), W(0.3, 0.9, -0.16)]; break; }
       case 'gut': { const c = (T % 3) / 3, thr = c > 0.7 && c < 0.85 ? Math.sin((c - 0.7) / 0.15 * Math.PI) : 0; hands = [W(0.42 + thr * 0.25, 0.95 + thr * 0.35, 0.16 + Math.sin(T * 7) * 0.07 * (1 - thr)), W(0.42, 0.9, -0.1)]; break; }
@@ -2087,7 +2091,7 @@ const G3 = (() => {
     if (icing){ const c = xf(BMrel, [0, 0, 0]), C = [c[0] + eye[0], c[2] + eye[2]], fw = [Math.sin(bv.head), -Math.cos(bv.head)], Lb = (VESSELS[vtype()] || {len:6}).len, sw = unitW(U, ax[0], ax[2]);
       const k = clamp((sw[0] - C[0]) * fw[0] + (sw[1] - C[1]) * fw[1], -Lb / 3, Lb / 3), [tx, tz] = unitL(U, C[0] + fw[0] * k, C[1] + fw[1] * k); chW = Math.atan2(tx - ax[0], tz - ax[2]); }
     P.chA = P.chA === undefined ? P.chRest : P.chA + clamp(angDiff(P.chA, chW), -0.35 * dt, 0.35 * dt);
-    const r = drawUnitParts(P, eye, pose, FK, P.doorK, P.chA);
+    const r = drawUnitParts(P, eye, pose, FK, P.doorK, P.chA, LS ? T : null);   // (the driver is on the forklift while it works a landing)
     if (LS && LS.hang){ const h = LS.hang.h, t = rel(r.tip[0], pose.hook - 0.1 - h, r.tip[2]); drawN(LS.hang.mesh, chain(M4.T(t[0], t[1], t[2]), M4.RY(pose.a))); }
     if (LS){
       for (const q of LS.deck) drawN(q.mesh, chain(BMrel, M4.T(q.at[0], q.at[1], q.at[2])));
