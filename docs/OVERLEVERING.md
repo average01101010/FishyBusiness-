@@ -3788,7 +3788,7 @@ Mål: spilleren holder hviletiden og får mest mulig levert per døgn, og system
 
 Jonas så ingenting ut av vinduene i bro-visningen på den nye hurtigsjarken, og hodet til skipperen sto opp gjennom taket.
 
-- **Innerveggen:** fem modeller (`hs11`, `kyst15`, `plast31`, `al45`, `krabbe50`) hadde en mørk innervegg fra dørken til taket hele veien rundt, som skulle gi et mørkt rom sett utenfra. Spillet tegner begge sider av flatene, så den dekket vinduene innenfra. `lining()` i `bpyutil.py` lager innerveggen med åpning ved vindusbåndet der veggen har glass, og med karm over og under.
+- **Innerveggen:** sju modeller (`hs11`, `kyst15`, `plast31`, `al45`, `krabbe50`, `tral60`, `not75`) hadde en mørk innervegg fra dørken til taket hele veien rundt, som skulle gi et mørkt rom sett utenfra. Spillet tegner begge sider av flatene, så den dekket vinduene innenfra. `lining()` i `bpyutil.py` lager innerveggen med åpning ved vindusbåndet der veggen har glass, og med karm over og under.
 - **Takhøyden:** i `hs11` var dørken i styrhuset foredekket (`ZFD` 3,0 m), bare 1,41 m under taket, og den som står ved roret (`drawDeckCrew`, oppgave `helm`) er rundt 1,8 m. Dørken er senket til et trinn over arbeidsdekket (`ZWH` = `ZMD` + 0,25), så det er 2,05 m under taket. Konsollen, stolen og benken står på den nye dørken, og øyet i bro-visningen står i vindusbåndet over skjermene.
 - **I bro-visningen** tegnes ingen ved roret, verken skipperen eller en i mannskapet som har roret, fordi øyet står der.
 - **Test:** `brotest` tar bro-visningen på hver båt med styrhus (`bro_*.png`) og sjekker at midten av bildet ikke er mørk, og at det er minst 1,85 m fra stedet ved roret (`skipperAt`) til flaten over i modellen.

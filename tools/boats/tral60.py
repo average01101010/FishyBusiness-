@@ -428,10 +428,9 @@ def superstructure(fine=True):
         for j in range(k + 1):
             t = j / k; p = (a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t)
             q0 = lean(p, WS); q1 = lean(p, WZ1); beam(A, q0, q1, 0.12, 0.12, C['frame'])
-    # the dark room behind the glass
+    # the dark room behind the glass, open at the windows so the bridge view looks out (21.10.2026)
     io = octo(WX0 + 0.25, WX1 - 0.25, WY - 0.25, WCH)
-    for i in range(len(io)):
-        a, b = io[i], io[(i + 1) % len(io)]; A.poly([(a[0], a[1], WZ0), (b[0], b[1], WZ0), (b[0], b[1], WZ1 + 0.4), (a[0], a[1], WZ1 + 0.4)], C['dark'], (-(b[1] - a[1]), b[0] - a[0], 0))
+    lining(A, oc, io, WZ0, WS, WZ1, WZ1 + 0.4, lambda p, z, i: lean(p, z), C['dark'])
     A.poly([(x, y, WS - 0.9) for x, y in io], C['dark'], (0, 0, 1))
     # the roof with an overhang, a visor over the front windows
     ro = octo(WX0 - 0.3, WX1 + 0.75, WY + 0.3, WCH + 0.1)

@@ -298,7 +298,7 @@ def superstructure(fine=True):
         L = math.hypot(b[0] - a[0], b[1] - a[1]); k = max(1, int(L / 1.5))
         for j in range(k + 1):
             t = j / k; p = (a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t); beam(A, lean(p, zS), lean(p, zH), 0.13, 0.13, C['black'])
-    walls(A, oct_(WX0 + 0.3, WX1 - 0.3, WY - 0.3, 2.0), zW, zR, C['dark'], inward=True)
+    lining(A, pw, oct_(WX0 + 0.3, WX1 - 0.3, WY - 0.3, 2.0), zW, zS, zH, zR, lambda p, z, i: lean(p, z), C['dark'])   # (open at the windows, 21.10.2026)
     A.poly([(x, y, zS - 0.9) for x, y in oct_(WX0 + 0.3, WX1 - 0.3, WY - 0.3, 2.0)], C['dark'], (0, 0, 1))
     ro = oct_(WX0 - 0.5, WX1 + 1.0, WY + 0.5, 2.6)
     A.poly([(x, y, zR) for x, y in ro], C['roof'], (0, 0, -1)); A.poly([(x, y, zR + 0.22) for x, y in ro], C['roof'], (0, 0, 1)); walls(A, ro, zR, zR + 0.22, w)
