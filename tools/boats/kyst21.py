@@ -313,7 +313,12 @@ def deck_gear(fine=True):
     # the wheelhouse in varnished teak, windows all round, a white roof with the searchlight (the open array the player buys stands on
     # it at kit.radarA)
     zw0, zws, zwh, zwr = z1 + 0.1, z1 + 1.1, z1 + 1.85, z1 + 2.2
-    abox(A, WX0, WX1, -WY, WY, zw0, zws, C['teak']); abox(A, WX0, WX1, -WY, WY, zwh, zwr, C['teak'])
+    # the bands under and over the windows are walls round a room, not solid blocks (21.10.2026: the block over the windows was a ceiling
+    # 1.75 m over the floor, through which the one at the wheel stood with his head, and the one under them hid the console)
+    for z0_, z1_ in ((zw0, zws), (zwh, zwr)):
+        t = 0.08; abox(A, WX0, WX1, -WY, -WY + t, z0_, z1_, C['teak']); abox(A, WX0, WX1, WY - t, WY, z0_, z1_, C['teak'])
+        abox(A, WX0, WX0 + t, -WY, WY, z0_, z1_, C['teak']); abox(A, WX1 - t, WX1, -WY, WY, z0_, z1_, C['teak'])
+    A.poly([(WX0, -WY, zw0 + 0.002), (WX1, -WY, zw0 + 0.002), (WX1, WY, zw0 + 0.002), (WX0, WY, zw0 + 0.002)], C['deck'], (0, 0, 1))   # the floor
     abox(A, WX0, WX0 + 0.1, -WY, WY, zws, zwh, C['teak'])
     for sg in (1, -1):
         for xa in (WX0 + 0.2, WX0 + 1.15, WX0 + 2.1):
@@ -403,7 +408,7 @@ def name_strips(G):
 def anchors():
     G = lambda x, y, z: [round(v, 3) for v in to_game((x, y, z))]
     zw0 = z_deck(DH0) + 2.1
-    return {'eye': G(6.6, -0.5, zw0 + 1.7), 'skipperAt': G(6.3, -0.5, zw0), 'hp': -0.08, 'fov': 58,
+    return {'eye': G(6.6, -0.5, zw0 + 1.6), 'skipperAt': G(6.3, -0.5, zw0), 'hp': -0.08, 'fov': 58,
             'crewSpots': [G(11.6, -2.4, z_deck(11.6)) + [1.57], G(10.2, 2.2, z_deck(10.2)) + [0.0], G(8.2, -2.0, z_deck(8.2)) + [3.14], G(13.0, 1.6, z_deck(13.0)) + [0.0]],
             'lights': [[G(X_FC - 0.5, 0, 13.15), [1, 0.95, 0.85], 'masthead'], [G(6.6, WY + 0.32, zw0 + 1.85), [1, 0.12, 0.1], 'port'], [G(6.6, -WY - 0.32, zw0 + 1.85), [0.1, 1, 0.35], 'stbd'],
                        [G(XS + 0.3, 0.45, z_top(XS) + 0.91), [1, 0.95, 0.85], 'stern']],

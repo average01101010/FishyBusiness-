@@ -1733,6 +1733,7 @@ const G3 = (() => {
     if (k === 'gutw'){ const s = (T + idx * 1.7) % 5.6, u = s < 0.9 ? Math.sin(s / 0.9 * Math.PI / 2) : s < 1.4 ? 1 - (s - 0.9) / 0.5 : 0; return [0.12 * u, 0.14 + 0.24 * u]; }
     if (k === 'pack'){ const L = st.lay; if (L != null && L >= 0 && L < 1.5){ const u = Math.sin(Math.min(1, L / 1.5) * Math.PI); return [0.4 * u, 0.22 + 0.3 * u]; } return [0, 0.22]; }
     if (k === 'egn' || k === 'strip') return [0, 0.3, 1];   // (sitting on an upturned bin at the tub)
+    if (k === 'helmsit') return [0, 0.05, 1];               // (on the helm seat, where the boat is steered sitting)
     if (k === 'mend') return [0, 0.16];
     if (k === 'stow'){ const u = clamp((st.s || 0) / 1.2, 0, 1); return [0.55 * Math.sin(u * Math.PI / 2), 0.5 * Math.sin(u * Math.PI / 2)]; }
     return [0, 0];
@@ -1756,10 +1757,10 @@ const G3 = (() => {
     const lk = P.look || (!P.kit && !P.bare && P.id != null ? lookQuay(P.id, idx) : null);      // the people on a plant's quay each have their own look too (core/09i-look.js lookQuay)
     const K = PM.W && (lk ? lookMesh(lk) : PM.W[P.kit || (P.bare ? 'crew' : 'hw')]);      // P.look: the one who does the work, by his look (the skipper's or a crew member's); P.kit: the old kits
     // how low the work takes him (workLow): dip lowers the hips, the back and the head with the knees going forward, bend tips the back over
-    const LB = workLow(st, T, idx), bk = st.blend == null ? 1 : st.blend, sit = LB[2] ? bk : 0, dip = LB[0] * bk, dy = -dip * 0.42 - sit * 0.44;
+    const LB = workLow(st, T, idx), bk = st.blend == null ? 1 : st.blend, sit = LB[2] ? bk : 0, sh = st.seat || 0.5, dip = LB[0] * bk, dy = -dip * 0.42 - sit * (0.94 - sh);
     // (sitting, LB[2]: on a low seat, the thighs out level and the shins down to the deck; the seat is drawn with the props)
     for (const s of [-1, 1]){ let hip = W(dip * 0.06, 0.92 + dy, s * 0.11), foot = W(sw * s * 0.28, 0.08 + Math.max(0, Math.cos(ph) * s) * 0.07 * (st.walk ? 1 : 0), s * 0.12), kf = 0.07 + dip * 0.34, knee = [(hip[0] + foot[0]) / 2 + F[0] * kf, (hip[1] + foot[1]) / 2 + dip * 0.05, (hip[2] + foot[2]) / 2 + F[1] * kf];
-      if (sit){ hip = W(-0.04, 0.5, s * 0.12); knee = W(0.38, 0.52, s * 0.15); foot = W(0.44, 0.08, s * 0.17); }
+      if (sit){ hip = W(-0.04, sh, s * 0.12); knee = W(0.38, sh + 0.02, s * 0.15); foot = W(0.44, sh - 0.42, s * 0.17); }
       if (K){ drawN(K.thigh, limbM(hip, knee, 1)); drawN(K.shin, limbM(knee, foot, 1)); drawN(K.boot, chain(M4.T(foot[0], foot[1] - 0.08, foot[2]), M4.RY(-h))); continue; }
       drawN(PM.leg, limbM(hip, knee, 0.075)); drawN(PM.leg, limbM(knee, foot, 0.065)); drawN(PM.boot, chain(M4.T(foot[0], foot[1] - 0.08, foot[2]), M4.RY(-h))); }
     const bend = LB[1] * bk;
@@ -1794,6 +1795,7 @@ const G3 = (() => {
       // gutting at the table: the knife hand works along the belly, every few seconds the offal goes over the rail
       // the agents' places (deckcrew.js): hands on the wheel, forearms on the rail, the jig worked up and down
       case 'helm': hands = [W(0.3, 1.1, 0.17), W(0.3, 1.1, -0.17)]; break;
+      case 'helmsit': hands = [W(0.4, sh + 0.42, 0.16), W(0.4, sh + 0.42, -0.16)]; break;
       case 'lean': hands = [W(0.4, 1.02, 0.2), W(0.4, 1.02, -0.2)]; break;
       case 'jig': { const k = Math.pow(Math.max(0, Math.sin(t * 2.6)), 3); hands = [W(0.34, 0.95 + k * 0.35, 0.16), W(0.3, 0.9, -0.16)]; break; }
       case 'gut': { const c = (T % 3) / 3, thr = c > 0.7 && c < 0.85 ? Math.sin((c - 0.7) / 0.15 * Math.PI) : 0; hands = [W(0.42 + thr * 0.25, 0.95 + thr * 0.35, 0.16 + Math.sin(T * 7) * 0.07 * (1 - thr)), W(0.42, 0.9, -0.1)]; break; }
@@ -4649,7 +4651,9 @@ const G3 = (() => {
       const lp = a.mode === 'helm' && G.skipperAt ? [G.skipperAt[0], G.skipperAt[1], G.skipperAt[2]] : [a.x, a.y, a.z], wl = xf(BMrel, lp), wy = wl[1] + eye[1];
       const P = {gy:() => wy, bare:true, spray:0, kit:a.me ? 'skipper' : null, look:a.me ? lookMe() : a.c ? lookOf(a.c) : lookCrew(0)};
       const ev = a.mode === 'at' ? dkFor(a.id, lp, a.task) : null;   // a fish to bleed or to gaff in at his place
-      const st = {x:wl[0] + eye[0], z:wl[2] + eye[2], h:bv.head + (a.mode === 'helm' ? 0 : a.h), task:ev ? ev.kind : a.task, ev:ev ? dkEv(ev, BMrel, G) : null, walk:a.mode === 'walk', blend:a.mode === 'walk' ? 0 : a.blend, peek:true, s:0};
+      // a helm made for sitting (the model's eye low over the place, as under the snekke's hard top) is steered from the seat
+      const sat = a.mode === 'helm' && G.eye && G.skipperAt && G.eye[1] - G.skipperAt[1] < 1.4;
+      const st = {x:wl[0] + eye[0], z:wl[2] + eye[2], h:bv.head + (a.mode === 'helm' ? 0 : a.h), task:ev ? ev.kind : sat ? 'helmsit' : a.task, seat:sat ? Math.max(0.2, G.eye[1] - G.skipperAt[1] - 0.95) : 0, ev:ev ? dkEv(ev, BMrel, G) : null, walk:a.mode === 'walk', blend:a.mode === 'walk' ? 0 : a.blend, peek:true, s:0};
       const F0 = [Math.sin(a.h), -Math.cos(a.h)], R0 = [Math.cos(a.h), Math.sin(a.h)], sg = a.x >= 0 ? 1 : -1;
       if (a.mode === 'at' && !ev){
         // gutting at the table: the fish from the bleeding tub, the guts over the rail, the gutted fish to the packer

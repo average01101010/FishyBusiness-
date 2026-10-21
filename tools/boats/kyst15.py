@@ -353,7 +353,7 @@ def name_strips(G):
 
 def anchors():
     G = lambda x, y, z: [round(v, 3) for v in to_game((x, y, z))]
-    return {'eye': G(12.0, -0.6, ZSD + 1.7), 'skipperAt': G(11.7, -0.6, ZSD), 'hp': -0.08, 'fov': 58,
+    return {'eye': G(12.0, -0.6, ZSD + 1.55), 'skipperAt': G(11.7, -0.6, ZSD), 'hp': -0.08, 'fov': 58,
             'crewSpots': [G(5.4, -2.3, ZMD) + [1.57], G(6.9, -2.0, ZMD) + [1.57], G(2.6, 0.0, ZSD) + [3.14], G(13.6, 0.4, ZSD) + [0.0]],
             'lights': [[G(10.6, 0, 12.34), [1, 0.95, 0.85], 'masthead'], [G(11.8, WY + 0.3, WR - 0.19), [1, 0.12, 0.1], 'port'], [G(11.8, -WY - 0.3, WR - 0.19), [0.1, 1, 0.35], 'stbd'],
                        [G(XA + 0.2, 0.5, z_top(XA) + 0.91), [1, 0.95, 0.85], 'stern']],

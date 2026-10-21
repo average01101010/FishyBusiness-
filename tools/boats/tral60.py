@@ -570,7 +570,9 @@ def name_strips(G):
 
 def anchors():
     G = lambda x, y, z: [round(v, 3) for v in to_game((x, y, z))]
-    return {'eye': G(40.6, -0.9, WZ0 + 1.75), 'skipperAt': G(40.2, -0.9, WZ0), 'hp': -0.10, 'fov': 58,
+    # the one at the wheel stands on the bridge's raised sole (the dark floor 0.9 m under the sill, wheelhouse()), not on the deck under it,
+    # so the bridge view sees out over the sill (21.10.2026: the eye was below the sill and saw only the lining)
+    return {'eye': G(40.6, -0.9, WS - 0.9 + 1.7), 'skipperAt': G(40.2, -0.9, WS - 0.9), 'hp': -0.10, 'fov': 58,
             'crewSpots': [G(10.0, 2.6, D3) + [1.57], G(14.5, -3.0, D3) + [0.0], G(6.8, -3.2, D3) + [3.14], G(20.0, 2.8, D3) + [0.0]],
             # the lights (B8, typed): the masthead light on the main mast (the fishing lights hang there), the second white one on the bow post,
             # the sidelights on the wheelhouse's wings, the stern light on the gantry; the floodlights under the gantry are work lights
