@@ -110,7 +110,7 @@ const VESSELS = {
   sjarkny:{name:{no:'Ny hurtigsjark 10,99 m, 650 hk', en:'New 10.99 m speed sjark, 650 hp'}, len:10.99, beam:4.68, draft:2.06, disp:15, holdCap:7000, iceCap:2400, fuelCap:2000, hp:650, engine:{no:'650 hk diesel', en:'650 hp diesel'},
     vmax:25, vcruise:20, accel:10, turnR:80, planing:true, outboard:false, diesel:true, risk:[2.4, 3.8, 15, 19], sea:0.14, crewMax:3, berths:4, tubCap:400, land:'tub', std:['plotter', 'vhf'],
     rigs:['juksa', 'line', 'garn', 'teiner'], jukseMax:6, gearMax:{garn:60, stamp:30, teine:21}, svcH:300, svcCost:22000, svcJobH:10, cls:'open', price:10500000, isNew:true, year:2027,
-    hullMat:'glassfiber', hold:{kind:'rom', m3:12}, deckCargo:1800, iceMaker:0, gutMachine:0, lph:75, cabins:2, fac:{house:'hus', shelter:false, galley:'bysse', wc:true, dry:true, mess:false}, stations:{table:2, hauler:1}, crane:0,
+    hullMat:'glassfiber', hold:{kind:'rom', m3:12}, deckCargo:1800, iceMaker:0, gutMachine:0, lph:75, cabins:2, fac:{house:'hus', shelter:false, galley:'bysse', wc:true, dry:true, mess:false}, stations:{table:2, hauler:1}, crane:0.5,
     desc:{no:'Nybygd hurtigsjark fra verftet i Finnsnes, med styrhus forut og stort arbeidsdekk. Planende skrog og stor motor.', en:'Newly built speed sjark from the yard in Finnsnes, wheelhouse forward and a big working deck. Planing hull and a big engine.'}},
   // drawn after the 36-foot Malo sjark (general arrangement and data sheet from Jemar Norpower): 10.99 x 4.20 m (4.40 over the
   // fenders), depth 2.34 m, hold 19 m3, fuel 3.4 m3, 300 hp, about 10 kn; the 3D model is the detailed GLB from tools/boats/malo36.py

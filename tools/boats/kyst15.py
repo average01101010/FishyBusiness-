@@ -263,8 +263,7 @@ def gear(fine=True):
         for j in range(k + 1):
             t = j / k; p = (a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t); beam(A, lean(p, WS), lean(p, WH), 0.07, 0.07, w)
     io = [(x + (0.15 if x == WX0 else -0.15), y * 0.94) for x, y in oc]
-    for i in range(len(io)):
-        a, b = io[i], io[(i + 1) % len(io)]; A.poly([(a[0], a[1], ZSD), (b[0], b[1], ZSD), (b[0], b[1], WR), (a[0], a[1], WR)], C['dark'], (-(b[1] - a[1]), b[0] - a[0], 0))
+    lining(A, oc, io, ZSD, WS, WH, WR, lambda p, z, i: lean(p, z), C['dark'], lambda i: not (oc[i][0] == WX0 and oc[(i + 1) % len(oc)][0] == WX0))
     ro = [(WX0 - 0.2, -WY - 0.15), (WX1 - 0.7, -WY - 0.15), (WX1 + 0.75, -WY + 0.8), (WX1 + 0.75, WY - 0.8), (WX1 - 0.7, WY + 0.15), (WX0 - 0.2, WY + 0.15)]
     A.poly([(x, y, WR) for x, y in ro], C['roof'], (0, 0, -1)); A.poly([(x, y, WR + 0.18) for x, y in ro], C['roof'], (0, 0, 1))
     for i in range(len(ro)):

@@ -540,6 +540,19 @@ def beam(A, p0, p1, w, h, m, up=(0, 0, 1), skip=()):
     p0 = V(p0); p1 = V(p1); d = p1 - p0; L = d.length; d.normalize(); u = V(up); s = d.cross(u).normalized(); u = s.cross(d).normalized()
     obox(A, (p0 + p1) / 2, d * (L / 2), s * (w / 2), u * (h / 2), m, skip)
 
+def lining(A, oc, io, z0, ws, wh, wr, wall, m, glazed=lambda i: True):
+    """the dark lining inside a wheelhouse along the inner outline io (the outer one oc, its walls at wall(p, z, i)), from the sole z0 to
+    the roof wr; open at the window band ws..wh on the sides that have glass (glazed(i)), so the bridge view looks out through the
+    windows (Jonas 21.10.2026: «Vinduene på båten er svarte»), with the sill and the head closing the wall's thickness there"""
+    for i in range(len(io)):
+        a, b = io[i], io[(i + 1) % len(io)]; nrm = (-(b[1] - a[1]), b[0] - a[0], 0)
+        if not glazed(i): A.poly([(a[0], a[1], z0), (b[0], b[1], z0), (b[0], b[1], wr), (a[0], a[1], wr)], m, nrm); continue
+        A.poly([(a[0], a[1], z0), (b[0], b[1], z0), (b[0], b[1], ws), (a[0], a[1], ws)], m, nrm)
+        A.poly([(a[0], a[1], wh), (b[0], b[1], wh), (b[0], b[1], wr), (a[0], a[1], wr)], m, nrm)
+        oa, ob = oc[i], oc[(i + 1) % len(oc)]
+        A.poly([(a[0], a[1], ws), (b[0], b[1], ws), wall(ob, ws, i), wall(oa, ws, i)], m, (0, 0, 1))
+        A.poly([wall(oa, wh, i), wall(ob, wh, i), (b[0], b[1], wh), (a[0], a[1], wh)], m, (0, 0, -1))
+
 def boom_rest(A, p0, p1, w, h, at, deck, m, pad, brace=(), strap=None, post=None, length=None, fine=True):
     """a boom rest («bomstøtte»), the way larger fishing vessels park a crane's boom for sea, under the boom that beam() makes from
     p0 to p1 (w wide, h deep, up z): a square steel post on a foot plate standing on the deck (at height deck) where the boom's axis

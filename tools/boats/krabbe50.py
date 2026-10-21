@@ -309,8 +309,7 @@ def wheelhouse(fine=True):
             t = j / k; p = (a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t); beam(A, lean(p, WS), lean(p, WH), 0.1, 0.1, C['black'])
     A.poly([(x, y, WF + 0.02) for x, y in oc], C['dark'], (0, 0, 1))
     io = [(x + (0.2 if x == WX0 else -0.25), y * 0.94) for x, y in oc]
-    for i in range(len(io)):
-        a, b = io[i], io[(i + 1) % len(io)]; A.poly([(a[0], a[1], WF), (b[0], b[1], WF), (b[0], b[1], WR), (a[0], a[1], WR)], C['dark'], (-(b[1] - a[1]), b[0] - a[0], 0))
+    lining(A, oc, io, WF, WS, WH, WR, lambda p, z, i: lean(p, z), C['dark'], lambda i: not (oc[i][0] == WX0 and oc[(i + 1) % len(oc)][0] == WX0))
     ro = [(WX0 - 0.3, -WY + 0.3), (WX1 - 1.8, -WY - 0.3), (WX1 + 1.0, -WY + 1.6), (WX1 + 1.0, WY - 1.6), (WX1 - 1.8, WY + 0.3), (WX0 - 0.3, WY - 0.3)]
     A.poly([(x, y, WR) for x, y in ro], C['roof'], (0, 0, -1)); A.poly([(x, y, WR + 0.25) for x, y in ro], C['roof'], (0, 0, 1))
     for i in range(len(ro)):

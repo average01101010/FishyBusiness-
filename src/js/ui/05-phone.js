@@ -477,6 +477,12 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p129', '21.10.2026', 'Utsikt fra broa', 'A view from the bridge', [
+       ['Bro-visningen ser ut av vinduene på den nye hurtigsjarken, kystbåten 15 m, den nye plastsjarken, autolineren og snøkrabbebåten. Innsiden av styrhuset dekket vinduene.', 'The bridge view looks out of the windows on the new fast sjark, the 15 m coastal boat, the new plastic sjark, the longliner and the snow crab boat. The inside of the wheelhouse covered the windows.'],
+       ['Styrhuset på den nye hurtigsjarken har fått lavere dørk, så den som står ved roret har hodet under taket.', 'The wheelhouse on the new fast sjark has a lower floor, so the one at the wheel has his head under the roof.'],
+       ['Den nye hurtigsjarken har fått sammenleggbar kran på skapet i styrbord hekk.', 'The new fast sjark has a folding crane on the locker in the starboard quarter.'],
+       ['Krabbekaret står bare på dekk når båten er rigget for teiner, og da på ledig dekk.', 'The crab tank is only on deck when the boat is rigged for pots, and then on clear deck.'],
+       ['Kystradioen vises på skjermen i 15 sekunder og legges ikke lenger i Meldinger. Dagens værmeldinger står fortsatt i dekksdagboka.', 'The coast radio shows on the screen for 15 seconds and no longer goes into Messages. The day\'s forecasts are still in the deck log.']]],
     ['p128', '20.10.2026', 'Hver sin jobb på dekk', 'Everyone has a job on deck', [
        ['Mannskapet har faste plasser: én haler, én bløgger, én sløyer og én pakker og iser. Ingen står i hverandre, og ledige hender går dit det venter mest arbeid.', 'The crew have their places: one hauls, one bleeds, one guts and one packs and ices. Nobody stands inside anyone else, and free hands go where most work waits.'],
        ['Hver fisk går fra hånd til hånd: høttes eller plukkes inn, bløgges, sløyes, legges i kassa og ises. Full kasse bæres ned i rommet.', 'Every fish goes from hand to hand: gaffed or picked in, bled, gutted, laid in the crate and iced. A full crate is carried down to the hold.'],

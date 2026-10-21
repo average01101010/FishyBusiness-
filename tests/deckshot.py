@@ -16,7 +16,8 @@ def check(ok, what, extra=''):
 SET = """((a) => { const [type, scene] = a, b = S.boat, g = GROUNDS[0].p; S.tut = 0; S.mult = 0; S.t = Math.round((Date.UTC(2027, 2, 12, 11) - EPOCH) / 6e4);
   b.type = type; applyVessel(); G3.vesselChanged(); S.boatName = 'Havbris'; S.equip = {}; S.jobs = []; S.cargo = []; b.gop = null; S.plan = null;
   if (equipFits('radarA', type)) S.equip.radarA = true; else if (equipFits('radar', type)) S.equip.radar = true;
-  S.pgear = newPGear(); b.rig = scene === 'garn' ? 'garn' : scene === 'line' ? 'line' : 'juksa';
+  S.pgear = newPGear(); b.rig = scene === 'garn' ? 'garn' : scene === 'line' ? 'line' : scene === 'teiner' ? 'teiner' : 'juksa';
+  if (scene === 'fiske' || scene === 'teiner') S.equip.krabbekar = equipFits('krabbekar', type);
   if (scene === 'garn') S.pgear.nets = [{id:'n1', mesh:180, ty:'torsk', n:6, cond:1}];
   if (scene === 'line'){ S.pgear.lines.bank.n = 6; S.pgear.lines.bank.baited = 4; }
   const V = VESSELS[type]; S.hold = scene === 'fiske' ? [{sp:'torsk', kg:Math.round((V.holdCap || 400) * 0.55), gut:true, iced:true}, {sp:'sei', kg:60, gut:true, iced:true}] : [];
@@ -88,12 +89,22 @@ async def main():
         a0 = await pg.evaluate("G3._debug.kitStat.radar"); await pg.screenshot(path=os.path.join(OUT, 'deck_radar_a.png')); await pg.wait_for_timeout(700); await pg.screenshot(path=os.path.join(OUT, 'deck_radar_b.png'))
         check(a0 == 2, 'den åpne radarantennen på kystbåten tegnes', a0)
         # the crane at the quay: folded at sea, out and working while the freight goes aboard, with crates on deck
-        CR = ('kyst15', 'kyst21', 'hurtigsjark')
+        CR = ('kyst15', 'kyst21', 'hurtigsjark', 'sjarkny')
         cr = {t: seen[(t, 'kai')]['crane'] for t in CR if (t, 'kai') in seen}
         sea = {t: seen[(t, 'fiske')]['crane'] for t in CR}
         work = [t for t in CR if pose.get((t, 'fiske')) and pose.get((t, 'kai')) and cr.get(t) and cr[t]['job']]
         check(len(work) == len(CR), 'kranen er foldet sammen på sjøen og folder seg ut for å laste ved kaia', {'kai': cr, 'sjø': sea})
         crates = {t: seen[(t, 'kai')]['cargo'] for t in ('kyst15', 'kyst21', 'hurtigsjark', 'sjarkny', 'snekke')}
+        # the crab tank (Jonas 21.10.2026): not aboard when she is rigged for something else than pots, and when she is, on clear deck
+        # (the deck map under its whole footprint), not through the cabin as on the new fast sjark
+        tank = {t: seen[(t, 'fiske')].get('tank') for t in boats if seen[(t, 'fiske')].get('tank')}
+        check(not tank, 'krabbekaret står ikke om bord når båten er rigget for juksa', tank)
+        fit = await pg.evaluate("((boats) => Object.fromEntries(boats.filter(t => VESSELS[t].rigs.includes('teiner') && equipFits('krabbekar', t)).map(t => [t, G3._debug.tankPlace(t)])))", boats)
+        bad = {t: v for t, v in fit.items() if not v[3]}
+        check(fit and not bad, 'rigget for teiner står krabbekaret på ledig dekk på hver båt (ikke gjennom hus eller kahytt)', bad or len(fit))
+        await show(pg, 'sjarkny', 'teiner'); await pg.evaluate("(() => { const c = G3._debug.cam; c.yaw = 0.35; c.pitch = 0.5; c.dist = 9; })()"); await pg.wait_for_timeout(4000)
+        tk = await pg.evaluate("G3._debug.kitStat.tank"); await pg.screenshot(path=os.path.join(OUT, 'deck_sjarkny_teiner.png'))
+        check(bool(tk), 'rigget for teiner står krabbekaret på dekk på den nye hurtigsjarken (deck_sjarkny_teiner.png)', tk)
         check(all(v > 0 for v in crates.values()), 'trekassene står på dekk når båten har frakt', crates)
         # two pictures standing up (the tablet held upright)
         await pg.set_viewport_size({'width': 640, 'height': 960})

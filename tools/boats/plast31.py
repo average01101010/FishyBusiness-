@@ -250,9 +250,8 @@ def wheelhouse(fine=True):
         G.poly([pt(a, zs + 0.04), pt(b, zs + 0.04), pt(b, zh - 0.04), pt(a, zh - 0.04)], C['glass'], nrm)   # the front panes
         beam(A, pt(a, zs), pt(a, zh), 0.06, 0.06, C['dark']); beam(A, pt(b, zs), pt(b, zh), 0.06, 0.06, C['dark'])
     abox(A, WX1 - 0.02, WX1 + lean + 0.02, DY0 - 0.03, DY0 + 0.03, z0, zr, w)             # the post between the leaning panes and the upright door section
-    io = [(x + (0.1 if x == WX0 else -0.1), y * 0.93) for x, y in oc]                          # the inside, dark
-    for i in range(len(io)):
-        a, b = io[i], io[(i + 1) % len(io)]; A.poly([(a[0], a[1], z0), (b[0], b[1], z0), (b[0], b[1], zr), (a[0], a[1], zr)], C['dark'], (-(b[1] - a[1]), b[0] - a[0], 0))
+    io = [(x + (0.1 if x == WX0 else -0.1), y * 0.93) for x, y in oc]                          # the inside, dark, open at the windows
+    lining(A, oc, io, z0, zs, zh, zr, lambda p, z, i: pt(p, z, KIND[i]), C['dark'], lambda i: KIND[i] != 'door')
     door(A, 'x', WX1, 0.34, 0.98, z0, 1.85, face=+1, hinge=1)                                # the door forward to port, out onto the working deck
     # the roof with its lip and the visor, a rail aft, the side lights on its forward corners
     ro = [(WX0 - 0.12, -WY - 0.1), (WX1 - 0.2, -WY - 0.1), (WX1 + lean + 0.2, -1.05), (WX1 + lean + 0.2, 1.05), (WX1 - 0.2, WY + 0.1), (WX0 - 0.12, WY + 0.1)]
