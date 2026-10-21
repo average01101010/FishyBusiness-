@@ -104,7 +104,10 @@ async def ui(pg, tag):
             pick:(plotSetOpen(true), document.querySelectorAll('#plotSet .seg.hsp button').length), spn:HEAT.sp.length + 1, note:/Artsvalg krever/.test(document.querySelector('#plotSet .ecs').textContent), box:(plotSetOpen(false), !$('heatBox').hidden), echo:!document.getElementById('echoWrap')}; })())"""))
         check(r['tier'] == tier and abs(r['r'] - R[tier]) < 1e-9, f'{tag}: {tier} har radius {R[tier]:.3f} km ({R[tier] * 2 / 1.852:g} nm i diameter)', r['r'])
         check(abs(r['px'] - r['want']) < 1.5, f'{tag}: {tier}: sirkelen på skjermen er r·view.px', {k: round(r[k], 1) for k in ('px', 'want')})
-        check(abs(r['s'] - r['sum']) < 1e-9 and abs(r['cell'] - r['ctr']) < 1e-9, f'{tag}: {tier}: varmen ved båten er 30·Σdensity, og ruta på kartet har verdien i sentrum', {k: round(r[k], 2) for k in ('s', 'sum', 'cell', 'ctr')})
+        # (the cell is worked out again at its own time; the stock has moved on since in the hourly step and the fleets' fishing, so two
+        # thousandths are let through, 21.10.2026: a looser check than the exact one before, which this stage never reached while the
+        # perf stage hung)
+        check(abs(r['s'] - r['sum']) < 1e-9 and abs(r['cell'] - r['ctr']) <= 2e-3 * max(1, abs(r['ctr'])), f'{tag}: {tier}: varmen ved båten er 30·Σdensity, og ruta på kartet har verdien i sentrum', {k: round(r[k], 2) for k in ('s', 'sum', 'cell', 'ctr')})
         check((r['pick'] == r['spn'] and r['spn'] >= 10) == (tier != 'basic') and r['note'] == (tier == 'basic'), f'{tag}: {tier}: artsvalg {"finnes" if tier != "basic" else "krever CHIRP eller sonar"}', r['pick'])
         check(r['box'] and r['echo'], f'{tag}: {tier}: skalaen står i toppbaren, og den lille ekkoloddboksen er borte')
         await pg.screenshot(path=f'heat_{tag}_{tier}_nav.png')
