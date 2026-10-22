@@ -110,7 +110,8 @@ function careQuote(what, key, shop){
 }
 const careNoHands = () => [gL('Ingen om bord kan gjøre jobben.', 'Nobody aboard can do the job.')];
 function careGate(shop){ return careWhy() || (shop ? careShopWhy() : null); }
-function careQueue(j, fee){ if (fee > S.cash) return [gL('Ikke nok penger.', 'Not enough money.')]; if (!queueJob(j)) return [gL('Verkstedkøen er full.', 'The work queue is full.')]; S.cash -= fee; S.stats.costs += fee; return null; }
+// (a job that costs nothing, the crew changing hooks from the stock aboard, goes ahead also when the account is in the red: tilbakemelding #91)
+function careQueue(j, fee){ if (fee > 0 && fee > S.cash) return [gL('Ikke nok penger.', 'Not enough money.')]; if (!queueJob(j)) return [gL('Verkstedkøen er full.', 'The work queue is full.')]; S.cash -= fee; S.stats.costs += fee; return null; }
 function hooksJob(lk, shop){
   const pg = careG(), why = careGate(shop); if (why) return why;
   if (hooksNeed(lk) < 1) return [gL('Kroken sitter som den skal.', 'The hooks are in order.')];

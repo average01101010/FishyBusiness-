@@ -477,6 +477,9 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p131', '22.10.2026', 'Kroker og rorplass', 'Hooks and the helm', [
+       ['Mannskapet bytter kroker fra lageret om bord også når kontoen er i minus. Det koster ikke penger, bare tid.', 'The crew changes hooks from the stock aboard also when the account is in the red. It costs no money, only time.'],
+       ['Skipperen på sjarken styrer fra rattet og står ikke lenger oppå styrhustaket når båten går.', 'The skipper on the sjark steers from the wheel and no longer stands on the wheelhouse roof when the boat is under way.']]],
     ['p130', '21.10.2026', 'Til ankers', 'At anchor', [
        ['Båtene har fått sitt eget anker: plogankeret i baugrulla på sjarkene og snekkene, Hall-ankeret i klysset på kystbåtene og havbåtene, og dreggen på trebåten.', 'The boats have their own anchor: the plough anchor in the bow roller on the sjarks and the snekke, the Hall anchor in the hawse on the coastal and ocean boats, and the grapnel on the wooden boat.'],
        ['Kast anker: ankeret faller, kjettingen løper ut mens båten faller tilbake, og hun legger seg med baugen mot vind og strøm. Hun svinger rundt ankeret når vinden dreier eller tidevannet snur.', 'Drop anchor: the anchor falls, the chain runs out while the boat falls back, and she lies bow to the wind and the current. She swings round the anchor when the wind veers or the tide turns.'],

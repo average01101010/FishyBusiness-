@@ -30,6 +30,8 @@ async def main():
           R.noHooks = hooksJob('hyse', false);
           R.bh = buyGear('hooks', 1000, 2); R.stock = pg.hooks; const c0 = S.cash; R.hj = hooksJob('hyse', false); R.queued = S.jobs.map(j => [j.kind, j.n, j.h]); R.left = done();
           R.afterJob = [L.miss, L.bent, L.sharp, pg.hooks]; R.qSharp = lineQ({cond:L.cond, miss:L.miss, bent:L.bent, sharp:true}); R.qNoSharp = lineQ({cond:L.cond, miss:L.miss, bent:L.bent});
+          // with the account in the red the crew still changes hooks from the stock aboard: it costs nothing (tilbakemelding #91)
+          L.miss = 0.02; L.bent = 0.03; S.jobs = []; const cs = S.cash; S.cash = -2006; R.neg = hooksJob('hyse', false); R.negQ = S.jobs.filter(j => j.kind === 'hk').length; R.negCash = S.cash; S.cash = cs; S.jobs = [];
           return R; })()""")
         print('line:', json.dumps(r, ensure_ascii=False))
         print(ok(r['b0'] is None and r['fresh'] == [8, 1, 1, 0, 0]), 'a new line comes complete: full condition and no missing or bent hooks')
@@ -37,6 +39,7 @@ async def main():
         print(ok(r['q13'] < r['q1'] < 1 and r['need'] > 100), 'thirteen hauls later the catch factor is clearly lower and many hooks need changing', [r['q1'], r['q13'], r['need']])
         print(ok(r['noHooks'] and r['bh'] is None and r['stock'] == 2000 and r['hj'] is None and r['left'] == 0 and r['afterJob'][0] == 0 and r['afterJob'][1] == 0 and r['afterJob'][2] == 3), 'without hooks in the store nothing is changed; with a pack the crew changes them, and the fresh hooks are «sharp» for three hauls', r['afterJob'])
         print(ok(abs(r['qSharp'] / r['qNoSharp'] - 1.05) < 1e-6), '5 % better catch while the hooks are fresh')
+        print(ok(r['neg'] is None and r['negQ'] == 1 and r['negCash'] == -2006), 'in the red the crew still changes hooks from the stock aboard, for nothing', [r['neg'], r['negQ'], r['negCash']])
         # 2. the buoy sets and anchors only up to what the gear can use
         r = await pg.evaluate("""(()=>{ const R = {}; S.pgear = newPGear(); S.sets = []; R.none = buyGear('kit', 0, 1); buyGear('stamp', 'hyse', 2); R.two = buyGear('kit', 0, 3); R.ok2 = buyGear('kit', 0, 2); R.third = buyGear('kit', 0, 1);
           R.heavy = buyGear('heavy', 0, 3); R.heavyOk = buyGear('heavy', 0, 2); R.kits = S.pgear.kits; return R; })()""")
