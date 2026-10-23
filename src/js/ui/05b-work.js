@@ -1,10 +1,9 @@
-// ===== the Mannskap page in the drawer (once «Arbeid»): the crew at a glance, the boat's work as a flow of stations, each person's
-// chain of them, and the standing plan (ui/05-phone.js opsCard) =====
-// Tap Endre on a person, then the stations in the order you want them; Auto puts them back on the default chain. Tap the name
-// for the person card: skills, fatigue, morale and rest.
+// ===== the Mannskap page in the drawer (once «Arbeid»): the crew at a glance, the boat's work as a flow of stations with who is at each,
+// and each person with what they do and why. The crew share the work themselves (core/13-work.js workAssign); you choose the mate.
+// Tap the name for the person card: skills, fatigue, morale and rest. =====
 const WORK = (() => {
   const L = (no, en) => S.lang === 'no' ? no : en;
-  let edit = null, card = null;   // edit: {id, chain} while a chain is being built; card: the person whose card is open
+  let card = null;   // the person whose card is open
   const SHORT = {ror:['Ror', 'Helm'], fiske:['Fiske', 'Fish'], haling:['Haling', 'Haul'], blogg:['Bløgging', 'Bleed'], sort:['Krabbe', 'Crab'], sloy:['Sløying', 'Gut'], is:['Ising', 'Ice'], kokk:['Kokk', 'Cook'],
     egn:['Egning', 'Bait'], strip:['Rensing', 'Strip'], mend:['Bøting', 'Mend'], stell:['Vedlikehold', 'Upkeep'], last:['Last', 'Cargo'], pause:['Pause', 'Break']};
   const sn = k => L(SHORT[k][0], SHORT[k][1]);
@@ -33,10 +32,9 @@ const WORK = (() => {
     const cardOf = k => '<div class="wk-st' + (A.some(p => p.st === k) ? ' on' : '') + '"><b>' + sn(k) + '</b><span class="wk-q">' + queue(k) + '</span><span class="wk-who">' + who(k) + '</span></div>';
     return '<div class="wk-flow">' + flowOf().map(cardOf).join('<span class="wk-arr">→</span>') + '</div><div class="wk-flow side">' + jobSt().concat(['kokk', 'pause']).map(cardOf).join('') + '</div>';
   }
-  const chips = (job, cur) => job.map((k, i) => '<span class="wk-chip' + (k === cur ? ' on' : '') + '"><em>' + (i + 1) + '</em>' + sn(k) + '</span>').join('');
   const bar = (v, m, col) => '<div class="qbar"><i style="width:' + clamp(v / m * 100, 0, 100).toFixed(0) + '%;background:' + col + '"></i></div>';
   function personCard(c){
-    if (!c) return '<div class="wk-card"><p class="ph-note">' + L('Du er skipper og står der du trengs mest. Kjeden din bestemmer hva du gjør når båten ikke trenger deg ved roret.', 'You are the skipper and stand where you are needed most. Your chain decides what you do when the boat does not need you at the helm.') + '</p></div>';
+    if (!c) return '<div class="wk-card"><p class="ph-note">' + L('Du er skipper: til rors når båten går, ellers på dekk der du trengs mest.', 'You are the skipper: at the helm while the boat is under way, otherwise on deck where you are needed most.') + '</p></div>';
     const g = c.gear, A = c.attr, sk = [['juksa', 'Juksa', 'Jig', g.juksa], ['line', 'Line', 'Line', g.line], ['garn', 'Garn', 'Nets', g.garn], ['teiner', 'Teiner', 'Pots', g.teiner], ['sloy', 'Sløying', 'Gutting', g.sloy], ['is', 'Ising', 'Icing', g.is], ['sort', 'Krabbesortering', 'Crab sorting', g.sort], ['kokk', 'Matlaging', 'Cooking', A.kokk], ['sjo', 'Sjømannskap', 'Seamanship', A.sjo], ['styrke', 'Styrke', 'Strength', A.styrke]];
     return '<div class="wk-card"><div class="wk-sk">' + sk.map(([k, no, en, v]) => '<span>' + L(no, en) + '</span><span class="wk-v">' + fmt(v || 1, 1) + '</span>' + bar(v || 1, 5, '#2f7fc1')).join('') + '</div>' +
       '<div class="wk-sk">' + '<span>' + L('Slitenhet', 'Fatigue') + '</span><span class="wk-v">' + Math.round(c.fatigue) + '</span>' + bar(c.fatigue, 100, c.fatigue > 70 ? '#e5484d' : c.fatigue > 45 ? '#f2b705' : '#35b37e') +
@@ -49,13 +47,11 @@ const WORK = (() => {
     if (!c){ const e = S.energy == null ? 100 : S.energy; return '<br><span class="' + (e < ENERGY.dim ? 'r2' : e < ENERGY.warn ? 'r1' : '') + '">' + L('Energi ', 'Energy ') + Math.round(e) + ' %</span>'; }
     return '';
   }
-  function row(p, i){
-    const id = pid(p.c), ed = edit && edit.id === id, job = ed ? edit.chain : jobOf(p.c, i), auto = p.c ? !p.c.job : !S.myJob;
-    let h = '<div class="ph-card wk-p' + (ed ? ' ed' : '') + '"><div class="wk-top"><button class="wk-name" data-pa="wk-card" data-id="' + id + '">' + (p.c ? p.c.name : L('Du (skipper)', 'You (skipper)')) + '</button><span class="wk-now">' + workDoing(p) + restLine(p.c) + '</span></div>';
-    h += '<div class="wk-chain">' + (job.length ? chips(job, p.st) : '<span class="ph-note">' + L('Trykk stasjonene i den rekkefølgen du vil ha dem.', 'Tap the stations in the order you want them.') + '</span>') + (auto && !ed ? '<span class="wk-auto">Auto</span>' : '') + '</div>';
-    if (ed) h += '<div class="wk-pick">' + WORK_ST.map(k => '<button class="' + (job.includes(k) ? 'on' : '') + '" data-pa="wk-add" data-k="' + k + '">' + (job.includes(k) ? (job.indexOf(k) + 1) + ' ' : '') + sn(k) + '</button>').join('') + '</div>' +
-      '<div class="ph-btnrow"><button class="ph-btn p" data-pa="wk-done">' + L('Ferdig', 'Done') + '</button><button class="ph-btn" data-pa="wk-auto">Auto</button></div>';
-    else h += '<button class="ph-btn wk-edit" data-pa="wk-edit" data-id="' + id + '">' + L('Endre', 'Change') + '</button>';
+  function row(p){
+    const id = pid(p.c), role = p.c && crewRole(p.c), why = workWhyText(p);
+    let h = '<div class="ph-card wk-p"><div class="wk-top"><button class="wk-name" data-pa="wk-card" data-id="' + id + '">' + (p.c ? p.c.name : L('Du (skipper)', 'You (skipper)')) + '</button><span class="wk-now">' + workDoing(p) + restLine(p.c) + '</span></div>';
+    h += '<div class="wk-chain"><span class="ph-note">' + (why ? why.charAt(0).toUpperCase() + why.slice(1) : '') + (role && p.c ? ' · ' + L('fast på ', 'regular at ') + sn(role).toLowerCase() : '') + '</span>' + (p.c && p.c.mate ? '<span class="wk-auto">' + L('Styrmann', 'Mate') + '</span>' : '') + '</div>';
+    if (p.c && !p.c.mate) h += '<button class="ph-btn wk-edit" data-pa="wk-mate" data-id="' + id + '">' + L('Gjør til styrmann', 'Make mate') + '</button>';
     if (card === id) h += personCard(p.c);
     return h + '</div>';
   }
@@ -75,21 +71,15 @@ const WORK = (() => {
     const team = crewAboard(), A = workAssign(), h = ['<div class="ph-c wk">', overview()];
     if (!team.length) return h.join('') + '</div>';
     h.push(flow(A));
-    h.push('<div class="wk-pre">' + Object.keys(JOB_PRESETS).map(k => '<button class="ph-btn" data-pa="wk-pre" data-k="' + k + '">' + JOB_PRESETS[k][S.lang] + '</button>').join('') + '</div>');
-    const ix = new Map(team.map((c, i) => [c.id, i]));
     if (meAboard() && asleep()) h.push('<div class="ph-card wk-p"><div class="wk-top"><b>' + L('Du (skipper)', 'You (skipper)') + '</b><span class="wk-now r2">' + L('Sover', 'Asleep') + '</span></div></div>');
-    for (const p of A) h.push(row(p, p.c ? ix.get(p.c.id) : 0));
-    h.push('<p class="ph-note">' + L('Hver person går til den første stasjonen i kjeden som har arbeid og plass: én ved haleren (to der båten har to), én som bløgger når fisken kommer om bord, så mange ved sløyebordet som det er plass til, og én som pakker og iser. Den som blir til overs, tar det ledige arbeidet der mest venter, og ellers egning, rensing og bøting. Uten arbeid tar de pause. Roret og halingen står aldri tomme: da tar en som har pause over.', 'Each person goes to the first station in their chain that has work and room: one at the hauler (two where the boat has two), one bleeding as the fish come aboard, as many at the gutting table as it has room for, and one packing and icing. Whoever is left over takes the free work where most is waiting, else baiting, stripping and mending. With none, they take a break. The helm and the hauling are never left empty: someone on a break takes over.') + '</p>');
+    for (const p of A) h.push(row(p));
+    h.push('<p class="ph-note">' + L('Mannskapet fordeler arbeidet selv, etter hva de kan, hva de er vant med, hvor slitne de er og hva som hoper seg opp. Fisken bløgges, sløyes og ises. Når båten går, står du til rors. Ellers er du på dekk sammen med de andre. Styrmannen tar roret når du sover eller ikke er om bord.', 'The crew share the work themselves, by what they can do, what they are used to, how tired they are and what is piling up. The fish are bled, gutted and iced. While the boat is under way you are at the helm; otherwise you work on deck with the others. The mate takes the helm when you sleep or are not aboard.') + '</p>');
     return h.join('') + '</div>';
   }
   const who = id => id === 'me' ? null : crewById(id);
   function act(a, d){
     if (a === 'wk-card'){ card = card === d.id ? null : d.id; return true; }
-    if (a === 'wk-edit'){ edit = {id:d.id, chain:[]}; return true; }
-    if (a === 'wk-add' && edit){ const i = edit.chain.indexOf(d.k); if (i >= 0) edit.chain.splice(i, 1); else edit.chain.push(d.k); return true; }
-    if (a === 'wk-done' && edit){ const c = who(edit.id), ch = edit.chain.length ? edit.chain.slice() : null; if (c) c.job = ch; else if (edit.id === 'me') S.myJob = ch; edit = null; return true; }
-    if (a === 'wk-auto' && edit){ const c = who(edit.id); if (c) c.job = null; else S.myJob = null; edit = null; return true; }
-    if (a === 'wk-pre'){ jobPreset(d.k); edit = null; toast(JOB_PRESETS[d.k][S.lang]); return true; }
+    if (a === 'wk-mate'){ setMate(d.id); const c = who(d.id); if (c) toast(L(c.name.split(' ')[0] + ' er styrmann.', c.name.split(' ')[0] + ' is the mate.')); return true; }
     return false;
   }
   return {page, act};

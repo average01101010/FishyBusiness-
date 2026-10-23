@@ -260,7 +260,7 @@ const DRIFTUI = (() => {
     if (a === 'dr-on'){ if (o.on){ o.on = false; return true; } const C = driftCheck(o); if (!C.ok){ toast(C.errors[0]); return true; } o.on = true; o.paused = null; o.fails = 0; o.a0 = null; o.idx = 0; o.cn = 0; o.hold = 0; toast(L('Driftsplanen er på.', 'The plan is on.')); return true; }
     if (a === 'dr-rig'){ if (!DRF_RIGS[d.r] || DRF_RIGS[d.r].soon) return false; o.rig = d.r; if (o.on) o.on = false; for (const q of o.sess) if (q.route) for (const w of q.route.wps) if (w.act) delete w.act; return true; }
     if (a === 'dr-sk'){ o.skipper = d.id; if (o.mate === d.id) o.mate = null; return true; }
-    if (a === 'dr-mate'){ o.mate = d.id; if (o.skipper === d.id) o.skipper = (S.crew.find(c => c.id !== d.id) || {}).id || null; return true; }
+    if (a === 'dr-mate'){ o.mate = d.id; if (o.skipper === d.id) o.skipper = (S.crew.find(c => c.id !== d.id) || {}).id || null; setMate(d.id); return true; }   // (the boat's mate, the same on the Mannskap page)
     if (a === 'dr-mode'){ if (d.m === 'watch' && S.crew.length < driftNeedHands){ toast(L('Døgndrift 2+2 krever fire mann.', 'Round the clock 2+2 needs four hands.')); return false; } o.crewMode = d.m === 'watch' ? 'watch' : 'day'; if (o.on) o.on = false; return true; }
     if (a === 'dr-wh'){ o.watchH = clamp((o.watchH || 6) + (+d.d), 4, 8); return true; }
     if (a === 'dr-day'){ const i = +d.i; o.days[i] = o.days[i] ? 0 : 1; return true; }

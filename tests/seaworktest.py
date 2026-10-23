@@ -30,7 +30,9 @@ async def main():
           // the crew fishes for an hour: the job waits
           const u0 = j.until; b.status = 'fishing'; b.fishUntil = S.t + 600; mins(60); R.waited = j.until - u0 >= 59; b.status = 'idle'; b.fishUntil = null;
           // (it goes at the pace of those on it: two tubs take two of the three, so the time left is read as it is now, core/13-work.js jobMinute)
-          const m0 = S.msgs.length, l0 = S.log.length; S.sayT = -1e9; mins(1); R.left = j.until - S.t; R.h = h; mins(Math.max(0, R.left) + 3); R.done = !S.jobs.some(x => x.kind === 'egn') && L.baited >= 2;
+          // (the catch of that hour is gutted and iced first, the trade's way, core/13-work.js: the time left is read once the deck is clear, and
+          // the check is on this job, since the crew queues the next tubs by itself at the hour)
+          const m0 = S.msgs.length, l0 = S.log.length; S.sayT = -1e9; mins(1); for (let k = 0; k < 60 && deckPending() > 0.5; k++) mins(1); mins(1); R.left = j.until - S.t; R.h = h; mins(Math.max(0, R.left) + 3); R.done = !S.jobs.includes(j) && L.baited >= 2;
           R.doneTalk = S.log.slice(l0).some(x => /«/.test(x.no || ''));
           // the crew baits the rest by itself at sea (careTick once an hour)
           CARE_LAST = -1; S.sayT = -1e9; mins(1); R.autoQueued = S.jobs.some(x => x.kind === 'egn'); mins(600); R.allBaited = L.baited >= 4 && L.n >= 4;

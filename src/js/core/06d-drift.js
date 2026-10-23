@@ -24,7 +24,7 @@ const DRF_RIGS = {
 const driftRigName = r => DRF_RIGS[r] && DRF_RIGS[r].no ? gL(DRF_RIGS[r].no, DRF_RIGS[r].en) : rigName(r);
 const driftMode = o => (DRF_RIGS[o.rig] || DRF_RIGS.juksa).mode;
 function driftNew(over){
-  const b = S.boat, o = {v:2, on:false, name:gL('Driftsplan', 'Operations plan'), rig:RIGS[b.rig] ? b.rig : 'juksa', skipper:meAboard() ? 'me' : (S.crew[0] || {}).id || null, mate:null, crewMode:'day', watchH:6,
+  const b = S.boat, o = {v:2, on:false, name:gL('Driftsplan', 'Operations plan'), rig:RIGS[b.rig] ? b.rig : 'juksa', skipper:meAboard() ? 'me' : (S.crew[0] || {}).id || null, mate:(typeof crewMate === 'function' && crewMate() || {}).id || null, crewMode:'day', watchH:6,
     wx:{wind:12, hs:2.5, shelter:true}, days:[1, 1, 1, 1, 1, 0, 0], period:24, stock:{ice:true, fuel:true, gear:true, bait:true},
     sess:[], idx:0, cn:0, a0:null, hold:0, fails:0, paused:null, cur:null, rep:[], skipped:0};
   return Object.assign(o, over || {});
@@ -164,7 +164,7 @@ function driftPreview(o){
 // The watch off is asleep in the bunks (not on deck, not in the lists; c.sleepW), rests, and shares the catch as the rest.
 const driftNeedHands = 4;
 function driftRoles(o){
-  const sk = driftMeSk(o) ? null : S.crew.find(c => c.id === o.skipper) || S.crew[0] || null, mate = S.crew.find(c => c.id === o.mate && c !== sk) || S.crew.find(c => c !== sk) || null, deck = S.crew.filter(c => c !== sk && c !== mate);
+  const sk = driftMeSk(o) ? null : S.crew.find(c => c.id === o.skipper) || S.crew[0] || null, mate = S.crew.find(c => c.id === o.mate && c !== sk) || S.crew.find(c => c.mate && c !== sk) || S.crew.find(c => c !== sk) || null, deck = S.crew.filter(c => c !== sk && c !== mate);
   const A = [sk, deck[0]].filter(Boolean).concat(deck.slice(2).filter((c, i) => i % 2 === 0)), Bw = [mate, deck[1]].filter(Boolean).concat(deck.slice(2).filter((c, i) => i % 2 === 1));
   return {sk, mate, deck, A, B:Bw};
 }

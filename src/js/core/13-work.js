@@ -1,14 +1,21 @@
-// ================= work aboard: stations, and each person's chain of them =================
-// Every minute each person aboard goes to the first station in their chain that has work and room. With none, they rest (M4: or cook).
-// The helm and the hauling are never left empty: when nobody has them in the chain, someone with nothing to do takes them.
-// The default chains give what the boat did before: you steer, haul and fish, the first hand guts and ices, the others fish,
-// haul and help on deck. Each station goes at the speed of the people on it (crewEff for that skill; you count as 1).
+// ================= work aboard: stations, and how the crew share them =================
+// The crew organise themselves (Jonas 23.10.2026: «mannskapet skal i større grad være mer selvstendige dynamiske mennesker som tar egne
+// valg slik de ville vært ombord på en fiskebåt. Vanlige mennesker hjelper hverandre og ser arbeidsoppgaver som trenger å gjøres»):
+// nobody is given a list. Every minute each person aboard goes where they are most use, by what they can (the skill for that work), what
+// they are used to (the minutes they have stood there, c.hab, which in time makes a regular: the one who always hauls), their ways (the
+// workhorse takes the heavy work, the easy-going one is slow off a break, the perfectionist likes the gutting table, the eager learner
+// wants to try what is new to them), how tired they are and what is piling up. A person stays at a task while it has work and looks
+// around again at a natural break (every 20 minutes or so, each at their own minute), so the deck does not reshuffle every minute; and
+// the choice is the same every time it is worked out within a minute (no dice: the day's small whims come from a hash of who and when).
+// Some things are always done: a boat under way has someone at the helm (you; with you asleep or ashore the mate, c.mate, else the plan's
+// skipper, else the best seaman), gear half out is hauled, the fish coming over the rail are bled, and the catch is bled, gutted and iced
+// as the trade does it (Jonas 23.10.2026: «Fisken må nesten alltid sløyes før den ises og dette er nærmest bransjestandard»). When the
+// boat is not being driven, you work on deck with the others («Skipperen bidrar på dekk når båten ikke kjøres aktivt»).
 // Each station has its places (Jonas 20.10.2026, tilbakemelding #75: «det burde kun være en mann som har ansvaret for haling mens de
 // andre tar seg av bløgging, sløying, og ising fortløpende»): the hauler takes as many as the boat has haulers (BOAT.stations.hauler;
 // a net also one who picks the fish out of the meshes, pots one who empties, baits and stacks them), the bleeder one while the fish come
-// aboard, the gutting table stations.table, the icing one (two on the big decks). Whoever is left over takes the free work with most to do
-// («tar ansvar om det er ledig arbeid på noen av stasjonene»): the fish first, then the crew's own jobs on the gear (baiting, stripping,
-// mending; 10b-gearcare.js CREW_JOBS), which go at the pace of the hands on them; else they rest.
+// aboard, the gutting table stations.table, the icing one (two on the big decks). The crew's own jobs on the gear (baiting, stripping,
+// mending; 10b-gearcare.js CREW_JOBS) go at the pace of the hands on them, and are taken when the fish leave hands free.
 const STATIONS = {
   ror:{no:'Ror', en:'Helm', ing:['Styrer', 'Steering']},
   fiske:{no:'Fiske', en:'Fishing', ing:['Fisker', 'Fishing']},
@@ -31,21 +38,72 @@ const WORK_ST = ['ror', 'fiske', 'haling', 'blogg', 'sort', 'sloy', 'is', 'kokk'
 const JOB_ST = {egn:'egn', strip:'strip', mend:'mend', hk:'stell', lr:'stell', pr:'stell', jg:'stell', last:'last'};
 const JOB_SKILL = {egn:'line', strip:'line', hk:'line', lr:'line', mend:'garn', pr:'teiner', jg:'juksa'};
 const WORK_ALL = WORK_ST.concat(['egn', 'strip', 'mend', 'stell', 'last']);   // (the minutes of work that tire and teach, workMinute)
-// (the others pack and ice before they take the table's second place: one hauls, one bleeds, one guts and one packs and ices as it comes)
-const JOB_ME = ['ror', 'haling', 'fiske', 'sloy', 'is'], JOB_FIRST = ['sloy', 'is', 'haling', 'fiske'], JOB_REST = ['fiske', 'haling', 'is', 'sloy'];
-// ready-made setups: null is the default chain
-const JOB_PRESETS = {
-  en:{no:'Én på dekk', en:'One on deck', first:null, rest:null},
-  fisk:{no:'Alle fisker', en:'All fish', first:['fiske', 'haling', 'sloy', 'is'], rest:['fiske', 'haling', 'sloy', 'is']},
-  dekk:{no:'Alle på dekk', en:'All on deck', first:['sloy', 'is', 'haling', 'fiske'], rest:['sloy', 'is', 'haling', 'fiske']}
-};
-function jobPreset(k){ const P = JOB_PRESETS[k]; crewAboard().forEach((c, i) => { const j = i === 0 ? P.first : P.rest; c.job = j ? j.slice() : null; }); S.myJob = null; }
-const jobOf = (c, i) => c ? (c.job || (i === 0 ? JOB_FIRST : JOB_REST)) : (S.myJob || JOB_ME);
-// What is done with the catch: gutted when someone aboard has gutting in their chain, iced when someone has icing (the work menu decides;
-// the phone's switches for it are gone, the user's wish 03.10.2026). S.settings.gut and .ice decide when they are set (the tests).
-function workChains(){ const L = []; if (meAboard()) L.push(jobOf(null)); crewAboard().forEach((c, i) => L.push(jobOf(c, i))); return L; }
-function catchGut(){ const v = S.settings.gut; return v === true || v === false ? v : workChains().some(j => j.includes('sloy')); }
-function catchIce(){ const v = S.settings.ice; return v === true || v === false ? v : workChains().some(j => j.includes('is')); }
+// the stations whose work is heavy, and how heavy: a tired person leaves them to the others first
+const HEAVY_ST = {haling:1, last:1, sloy:0.5, is:0.6, fiske:0.4, sort:0.3, blogg:0.3, egn:0.2, strip:0.2, mend:0.2, stell:0.2};
+// the catch is bled, gutted and iced, the trade's way; S.settings.gut and .ice set to false leave it round or uniced (the tests)
+function catchGut(){ return S.settings.gut !== false; }
+function catchIce(){ return S.settings.ice !== false; }
+// ---- the mate (Jonas 23.10.2026: «vi må kunne definere 1 fra mannskapet til å være styrmann ombord»): one of the crew, the same one
+// as the operations plan's (06d-drift.js S.ops.mate); at the helm and in charge on deck when you sleep or are not aboard
+const crewMate = () => (S.crew || []).find(c => c.mate) || null;
+function setMate(id){
+  for (const c of S.crew || []){ if (c.id === id) c.mate = true; else delete c.mate; }
+  const o = S.ops; if (o && o.v === 2){ o.mate = id || null; if (id && o.skipper === id) o.skipper = meAboard() ? 'me' : ((S.crew || []).find(c => c.id !== id) || {}).id || null; }
+}
+// ---- what a person is used to: minutes at each station (c.hab), fading by a fifth a month. The station with most of them, once it is
+// more than ten hours and close to half of all, is their place aboard: the hauler, the one at the table (crewRole)
+const habShare = (c, k) => { const h = c && c.hab; if (!h) return 0; let t = 0; for (const s in h) t += h[s]; return t > 0 ? (h[k] || 0) / t : 0; };
+function crewRole(c){ const h = c && c.hab; if (!h) return null; let best = null, bv = 0, t = 0; for (const s in h){ t += h[s]; if (h[s] > bv){ bv = h[s]; best = s; } } return best && bv >= 600 && bv >= 0.45 * t ? best : null; }
+// a chain set up before (c.job, until 23.10.2026) becomes what the person is used to: the first station most
+function habSeed(c){ const h = c.hab || (c.hab = {}); (c.job || []).forEach((k, i) => { if (WORK_ALL.includes(k)) h[k] = Math.max(h[k] || 0, Math.round(600 * (1 - 0.2 * Math.min(4, i)))); }); }
+// ---- how good a person is at a station's work (1-5): you are a skipper who knows every job on deck
+function stSkill(c, k, ctx, sk){
+  if (!c) return k === 'ror' ? 5 : 3.2;
+  const g = c.gear, A = c.attr;
+  if (sk) return (sk === 'juksa' || sk === 'line' || sk === 'garn' || sk === 'teiner' ? g[sk] : A[sk] || g[sk]) || 1;
+  if (k === 'ror') return A.sjo; if (k === 'kokk') return A.kokk; if (k === 'fiske') return g.juksa || 1;
+  if (k === 'haling') return g[ctx.gk === 'garn' ? 'garn' : ctx.gk === 'teine' ? 'teiner' : 'line'] || 1;
+  if (k === 'blogg' || k === 'sloy') return g.sloy || 1; if (k === 'is') return g.is || 1; if (k === 'sort') return g.sort || 1;
+  return 1;
+}
+const pTired = p => p.c ? p.c.fatigue / 100 : (S.energy != null ? clamp(1 - S.energy / 100, 0, 1) : 0);
+const pPrev = p => p.c ? p.c.st : S.mySt;
+const pKey = p => p.c ? p.c.id : 'me';
+// the day's small whim for a station, the same all day
+const pWhim = (p, k) => p.c ? (hashStr(p.c.id + k + Math.floor(S.t / 1440)) % 1000 / 1000 - 0.5) * 0.16 : 0;
+// a natural break: once in 20 minutes, each person at their own minute, they look around for where they are most use
+const pBreak = p => (hashStr(pKey(p)) + S.t) % 20 === 0;
+// how much a person wants a task (need: the work waiting per head, 1 = plenty; sk: the skill a crew job goes by)
+function workScore(p, k, ctx, need, sk){
+  const c = p.c, s1 = (stSkill(c, k, ctx, sk) - 1) / 4, T = c ? c.traits : [], f = pTired(p), hv = HEAVY_ST[k] || 0;
+  let v = Math.min(1, need) + 0.45 * s1 + 0.35 * habShare(c, k);
+  if (T.includes('arbeidsjern')) v += 0.12 * hv;
+  if (T.includes('perfeksjonist') && (k === 'sloy' || k === 'is')) v += 0.1;
+  if (T.includes('laerevillig') && s1 < 0.4) v += 0.12;
+  v -= 0.5 * f * f * hv;
+  if (pPrev(p) === k) v += 0.3;
+  return v + pWhim(p, k);
+}
+// how much a person would rather rest: the easy-going more, the workhorse less, and anyone worn out
+function restScore(p){
+  const c = p.c, T = c ? c.traits : [], f = pTired(p);
+  return 0.12 + (T.includes('makelig') ? 0.1 : 0) - (T.includes('arbeidsjern') ? 0.06 : 0) + Math.max(0, f - 0.6) * 4 + (pPrev(p) === 'pause' ? 0.08 : 0);
+}
+// why a person stands where they do, said on the Mannskap page: the strongest reason
+const WORK_WHY = {skipper:['skipperen', 'the skipper'], mate:['styrmannen har roret', 'the mate has the helm'], opsk:['har roret', 'has the helm'], seaman:['den mest sjøvante har roret', 'the best seaman has the helm'],
+  role:['det er den faste plassen', 'it is their regular place'], habit:['er vant med det', 'is used to it'], skill:['er flinkest til det', 'is best at it'], learn:['vil lære det', 'wants to learn it'],
+  need:['det hoper seg opp', 'it is piling up'], stop:['alle tar i på dekk', 'all hands on deck'], cook:['det er snart mat', 'a meal is due'], tired:['er sliten', 'is tired'],
+  rest:['tar en pust i bakken', 'takes a breather'], nowork:['ingenting å gjøre akkurat nå', 'nothing to do just now'], aground:['båten sitter fast', 'the boat is aground']};
+const workWhyText = p => { const w = WORK_WHY[p.why]; return w ? w[S.lang === 'no' ? 0 : 1] : ''; };
+// why a person stands where they do (the Mannskap page, M6): the strongest reason
+function workWhy(p, k, ctx, sk){
+  const c = p.c; if (!c) return 'skipper';
+  if (crewRole(c) === k) return 'role';
+  if (habShare(c, k) >= 0.4) return 'habit';
+  const s = stSkill(c, k, ctx, sk); if (s >= 3.5) return 'skill';
+  if (c.traits.includes('laerevillig') && s < 2.6) return 'learn';
+  return 'need';
+}
 // the places at the hauler: the boat's haulers (stations.hauler), and on a net one more who picks the fish out of the meshes, on pots one
 // more who empties, baits and stacks them
 const haulPlaces = () => (BOAT.stations && BOAT.stations.hauler) || 1;
@@ -68,7 +126,7 @@ function workCtx(as){
   // on its way to it (the gutted fish, and the round fish waiting for the knife)
   return {s, stop, ror:s === 'sailing' || s === 'unmooring' || s === 'engine', fiske:s === 'fishing' && !g && !stop, haling:!!g && !stop, gk,
     blogg:!!g && g.op === 'haul' && gk !== 'teine' && !stop && s !== 'aground', gutKg:cg ? gut : 0, iceKg:icing ? gut + ice : 0,
-    sort:!!g && gk === 'teine' && g.op === 'haul', hands:g && gk === 'garn' && g.op === 'haul' ? 2 : 1, sloy:deck && gut > 0.01, is:deck && icing && (ice > 0.01 || gut > 0.01), kokk:as !== 'fishing' && mealDue(), pause:true};
+    sort:!!g && gk === 'teine' && g.op === 'haul', hands:g && gk === 'garn' && g.op === 'haul' ? 2 : 1, sloy:deck && gut > 0.01, is:deck && icing && (ice > 0.01 || gut > 0.01), iceNow:icing ? ice : 0, kokk:as !== 'fishing' && mealDue(), pause:true};
 }
 // ---- the crew's own jobs as stations: where they may be worked (in port, or at sea while she goes or lies still: seaWork), how many can
 // work one at once (a tub each at the line, a net each at the string, up to the deck's room by the table and one), and what n of them do
@@ -115,50 +173,65 @@ function jobWait(j){ if (j.until != null){ j.until += 1; j.uw = j.until; } }
 const jobLeft = j => { jobW(j); return Math.max(0, j.w - j.wd); };
 const jobDone = j => { jobW(j); return clamp(j.wd / j.w, 0, 1); };
 
-// who stands where: [{c (null for you), st, jw (the job for a job station), role (at the hauler: haler, plukk, teine)}], you first
+// who stands where: [{c (null for you), st, jw (the job for a job station), role (at the hauler: haler, plukk, teine), why}], you first
 function workAssign(as){
   const team = crewAboard(), ctx = workCtx(as), P = [];
-  if (meAboard() && !asleep() && !(typeof resting === 'function' && resting())) P.push({c:null, job:jobOf(null)});   // (in the bunk, #70: the crew work on without you)
-  team.forEach((c, i) => P.push({c, job:jobOf(c, i)}));
+  if (meAboard() && !asleep() && !(typeof resting === 'function' && resting())) P.push({c:null});   // (in the bunk, #70: the crew work on without you)
+  team.forEach(c => P.push({c}));
   if (!P.length) return P;
-  if (ctx.s === 'aground'){ for (const p of P) p.st = 'pause'; return P; }
-  const n = {}, cnt = k => n[k] || 0, room = k => cnt(k) < stPlaces(k, ctx), put = (p, k) => { if (p.st) n[p.st]--; p.st = k; n[k] = cnt(k) + 1; };
-  // each to the first station in the chain with work and room; the hauling crew also bleeds when the hauler is taken (the chain's
-  // «Haling» is the work at the hauler: hauling, picking, bleeding). The helm and the galley take one person each.
-  for (const p of P){ p.st = null;
-    for (const k of p.job){ if (!ctx[k]) continue; if (room(k)){ put(p, k); break; } if (k === 'haling' && ctx.blogg && room('blogg')){ put(p, 'blogg'); break; } }
-    if (!p.st) put(p, 'pause'); }
-  // nobody at the helm: someone resting, else the best seaman (you before the crew)
-  const sjo = p => p.c ? p.c.attr.sjo : 9;
-  if (ctx.ror && !cnt('ror')){ const q = P.filter(p => p.st === 'pause'), who = (q.length ? q : P).slice().sort((a, b) => sjo(b) - sjo(a))[0]; put(who, 'ror'); }
-  // gear half out cannot wait: someone resting hauls, else whoever bleeds or is on deck. Alone aboard with the tub full (stopped to gut),
-  // the haul waits while the one aboard guts and ices, and goes on after (07.10.2026: before, the one aboard was taken off the deck to the
-  // hauler, the deck work never came, and the haul stood still between «tub full» and «deck work done» for good)
-  const alone = P.length < 2 && ctx.stop && (ctx.sloy || ctx.is);
-  // a net takes two at the hauler: one pulls and one picks the fish out of the meshes as they come over the rail and bleeds them when
-  // nobody else does (tilbakemelding #30), so with two aboard nobody guts during the haul and the bleeding tub fills (the haul then goes
-  // slower, haulSlow in 10-gear.js); a third hand bleeds or guts
-  if (ctx.haling && !alone){ const need = Math.min(ctx.hands, stPlaces('haling', ctx), P.length);
-    while (cnt('haling') < need){ const who = P.find(p => p.st === 'pause') || P.find(p => p.st === 'blogg') || P.find(p => p.st === 'sloy' || p.st === 'is' || p.st === 'sort'); if (!who) break; put(who, 'haling'); } }
-  // the fish coming over the rail are bled by one who does nothing else, when someone is free; else the one at the hauler does it
-  if (ctx.blogg && !cnt('blogg')){ const who = P.find(p => p.st === 'pause' && !p.job.includes('pause')); if (who) put(who, 'blogg'); }
-  // a meal is due and nobody has the galley in the chain: the best cook among those on a break, if they can cook (3 or more)
-  if (ctx.kokk && !cnt('kokk')){ const q = P.filter(p => p.st === 'pause' && p.c && p.c.attr.kokk >= MEAL.ok).sort((a, b) => b.c.attr.kokk - a.c.attr.kokk)[0]; if (q) put(q, 'kokk'); }
-  // stopped to gut: everyone free goes on deck, as long as there is room at the table and the tub
-  if (ctx.stop) for (const p of P) if ((p.st === 'pause' || (alone && p.st === 'haling')) && (ctx.sloy || ctx.is)){ const k = ctx.sloy && room('sloy') ? 'sloy' : ctx.is && room('is') ? 'is' : null; if (k) put(p, k); }
-  // the rest take the free work where most waits for them: the fish first (minutes of work each, with one more on it), then the crew's own
-  // jobs on the gear; one whose chain says Pause keeps the break
-  const fishLeft = {sloy:ctx.gutKg / DECK.gut, is:ctx.iceKg / DECK.ice, blogg:ctx.blogg ? 30 : 0, haling:ctx.haling && ctx.gk !== 'teine' ? 20 : 0, sort:ctx.sort ? 10 : 0};
+  for (const p of P){ p.st = null; p.why = null; }
+  if (ctx.s === 'aground'){ for (const p of P){ p.st = 'pause'; p.why = 'aground'; } return P; }
+  const n = {}, cnt = k => n[k] || 0, room = k => cnt(k) < stPlaces(k, ctx), put = (p, k, why) => { if (p.st) n[p.st]--; p.st = k; n[k] = cnt(k) + 1; if (why) p.why = why; };
+  const free = () => P.filter(p => !p.st), bestOf = (L, k) => L.slice().sort((a, b) => workScore(b, k, ctx, 1) - workScore(a, k, ctx, 1))[0];
+  // the helm, while she is driven: you, else the mate, else the plan's skipper, else the best seaman
+  if (ctx.ror){ const me = P.find(p => !p.c), m = P.find(p => p.c && p.c.mate), sk = typeof opsSkipper === 'function' && opsSkipper(), o = sk && P.find(p => p.c === sk);
+    const who = me || m || o || P.slice().sort((a, b) => b.c.attr.sjo - a.c.attr.sjo)[0]; put(who, 'ror', me ? 'skipper' : m ? 'mate' : o ? 'opsk' : 'seaman'); }
+  // the work waiting at each station, in one person's minutes, and the crew's own jobs on the gear
+  const left = {sloy:ctx.gutKg / DECK.gut, is:ctx.iceKg / DECK.ice, blogg:ctx.blogg ? 30 : 0, haling:ctx.haling && ctx.gk !== 'teine' ? 20 : 0, sort:ctx.sort ? 10 : 0};
   const jobs = jobsOpen(as), jn = new Map(jobs.map(j => [j, 0]));
-  for (const p of P){ if (p.st !== 'pause' || p.job.includes('pause')) continue;
-    let best = null, bv = 0;
-    for (const k in fishLeft){ if (!ctx[k] || !room(k)) continue; const v = fishLeft[k] / (cnt(k) + 1); if (v > bv){ bv = v; best = k; } }
-    if (best){ put(p, best); continue; }
-    let bj = null; bv = 0;
-    for (const j of jobs){ const m = jn.get(j); if (m >= jobPlaces(j)) continue; const v = jobLeft(j) / (m + 1); if (v > bv){ bv = v; bj = j; } }
-    if (bj){ put(p, JOB_ST[bj.kind]); p.jw = bj; jn.set(bj, jn.get(bj) + 1); } }
+  const needOf = k => k === 'fiske' ? 0.55 : (left[k] || 0) / (cnt(k) + 1) / 10;
+  const jobNeed = j => 0.7 * jobLeft(j) / ((jn.get(j) || 0) + 1) / 60;
+  // (the icing station waits on the table: with nothing gutted yet and nobody gutting, there is nothing to pack, so it holds nobody;
+  // before, the one aboard alone stayed at the ice from the minute before while the round fish lay ungutted, and nothing got done)
+  const iceOpen = () => ctx.iceNow > 0.01 || cnt('sloy') > 0;
+  const workOpen = k => ctx[k] && room(k) && (k === 'fiske' || left[k] > 0.01) && (k !== 'is' || iceOpen());
+  // gear half out cannot wait. Alone aboard with the tub full (stopped to gut), the haul waits while the one aboard guts and ices, and
+  // goes on after (07.10.2026: before, the one aboard was taken off the deck to the hauler, the deck work never came, and the haul stood
+  // still between «tub full» and «deck work done» for good). A net takes two at the hauler: one pulls and one picks the fish out of the
+  // meshes as they come over the rail and bleeds them when nobody else does (tilbakemelding #30)
+  const alone = P.length < 2 && ctx.stop && (ctx.sloy || ctx.is);
+  if (ctx.haling && !alone){ const need = Math.min(ctx.hands, stPlaces('haling', ctx), P.filter(p => p.st !== 'ror').length);
+    while (cnt('haling') < need){ const L = free(); if (!L.length) break; put(bestOf(L, 'haling'), 'haling'); } }
+  // the rest stay at what they do while it has work, and look around at their break
+  for (const p of free()){ const k = pPrev(p); if (!k || k === 'pause' || k === 'ror' || k === 'kokk' || pBreak(p) || pTired(p) > 0.8) continue;
+    if (workOpen(k)){ put(p, k, p.c && p.c.why || null); continue; }
+    const j = jobs.find(x => JOB_ST[x.kind] === k && (jn.get(x) || 0) < jobPlaces(x)); if (j){ put(p, k, p.c && p.c.why || null); p.jw = j; jn.set(j, jn.get(j) + 1); } }
+  // the fish coming over the rail are bled by one who does nothing else, when someone is free
+  if (ctx.blogg && !cnt('blogg')){ const L = free(); if (L.length) put(bestOf(L, 'blogg'), 'blogg'); }
+  // everyone else where they are most use, the best match first, or a break when that is worth more to them
+  for (let guard = 0; guard < 40; guard++){
+    const L = free(); if (!L.length) break;
+    let bp = null, bk = null, bj = null, bv = -1e9;
+    for (const p of L){
+      for (const k of ['haling', 'blogg', 'sloy', 'is', 'sort', 'fiske']){ if (!workOpen(k)) continue; const v = workScore(p, k, ctx, needOf(k)); if (v > bv){ bv = v; bp = p; bk = k; bj = null; } }
+      for (const j of jobs){ if ((jn.get(j) || 0) >= jobPlaces(j)) continue; const k = JOB_ST[j.kind], v = workScore(p, k, ctx, jobNeed(j), JOB_SKILL[j.kind]); if (v > bv){ bv = v; bp = p; bk = k; bj = j; } }
+    }
+    if (!bp) break;
+    if (bv < restScore(bp)){ put(bp, 'pause', pTired(bp) > 0.65 ? 'tired' : 'rest'); continue; }
+    put(bp, bk, workWhy(bp, bk, ctx, bj ? JOB_SKILL[bj.kind] : null)); if (bj){ bp.jw = bj; jn.set(bj, jn.get(bj) + 1); }
+  }
+  for (const p of free()) put(p, 'pause', 'nowork');
+  // fish waiting and nobody at it (all on a break): the least tired goes, unless everyone is worn out
+  for (const k of ['sloy', 'is']) if (ctx[k] && !cnt(k) && left[k] > 0.01 && (k !== 'is' || iceOpen())){ const q = P.filter(p => p.st === 'pause' && pTired(p) < 0.85).sort((a, b) => pTired(a) - pTired(b))[0]; if (q) put(q, k, 'need'); }
+  // a meal is due: the best cook among those on a break, else one who jigs or works on the gear (they stop for it), if they can cook (3 or more)
+  if (ctx.kokk && !cnt('kokk')){ const ok = p => p.c && p.c.attr.kokk >= MEAL.ok, by = (a, b) => b.c.attr.kokk - a.c.attr.kokk;
+    const q = P.filter(p => p.st === 'pause' && ok(p)).sort(by)[0] || P.filter(p => ok(p) && (p.st === 'fiske' || p.jw)).sort(by)[0];
+    if (q){ if (q.jw){ jn.set(q.jw, jn.get(q.jw) - 1); q.jw = null; } put(q, 'kokk', 'cook'); } }
+  // stopped to gut: everyone free goes on deck, as long as there is room at the table and the tub
+  if (ctx.stop) for (const p of P) if ((p.st === 'pause' || (alone && p.st === 'haling')) && pTired(p) < 0.85 && (ctx.sloy || ctx.is)){ const k = ctx.sloy && room('sloy') ? 'sloy' : ctx.is && room('is') && iceOpen() ? 'is' : null; if (k) put(p, k, 'stop'); }
   // at the hauler: those at the haulers, then the one picking the net or handling the pots (who bleeds when nobody else does: p.bl)
-  const hp = haulPlaces(); P.filter(p => p.st === 'haling').forEach((p, i) => { p.role = i < hp ? 'haler' : ctx.gk === 'garn' ? 'plukk' : 'teine'; p.bl = p.role === 'plukk'; });
+  const hp = haulPlaces(); P.filter(p => p.st === 'haling').forEach((p, i) => { p.role = i < hp ? 'haler' : ctx.gk === 'garn' ? 'plukk' : 'teine'; p.bl = p.role === 'plukk'; if (!p.why) p.why = workWhy(p, 'haling', ctx); });
+  for (const p of P) if (!p.why) p.why = p.st === 'pause' ? 'nowork' : workWhy(p, p.st, ctx);
   return P;
 }
 // what a person does, for the work page: the station's word, or the part of it at the hauler
@@ -172,9 +245,16 @@ function workTeam(st, g, as){
 }
 // once a minute per vessel: where each person is, and minutes per station (for learning)
 function workMinute(){
+  for (const c of S.crew || []) if (c.job){ habSeed(c); delete c.job; }
+  if (S.myJob) delete S.myJob;
   const A = workAssign(); if (meAboard()) S.mySt = null;
-  for (const c of S.crew || []) c.st = null;
-  for (const p of A){ if (!p.c){ S.mySt = p.st; continue; } p.c.st = p.st; if (WORK_ALL.includes(p.st) && S.boat.status !== 'port'){ const w = p.c.wk || (p.c.wk = {}); w[p.st] = (w[p.st] || 0) + 1; } }
+  for (const c of S.crew || []){ c.st = null; c.why = null; }
+  const sea = S.boat.status !== 'port';
+  for (const p of A){ if (!p.c){ S.mySt = p.st; continue; } p.c.st = p.st; p.c.why = p.why;
+    if (WORK_ALL.includes(p.st)){ const h = p.c.hab || (p.c.hab = {}); h[p.st] = (h[p.st] || 0) + 1;
+      if (sea){ const w = p.c.wk || (p.c.wk = {}); w[p.st] = (w[p.st] || 0) + 1; } } }
+  // what they are used to fades by about a fifth in a month
+  if (S.t % 60 === 0) for (const c of S.crew || []) if (c.hab) for (const k in c.hab){ c.hab[k] *= 0.9997; if (c.hab[k] < 1) delete c.hab[k]; }
   mealMinute(A);
   return A;
 }

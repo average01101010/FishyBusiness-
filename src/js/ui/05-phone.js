@@ -477,6 +477,10 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p132', '23.10.2026', 'Mannskapet tar tak selv', 'The crew pitch in', [
+       ['Mannskapet fordeler arbeidet selv: de ser hva som må gjøres, hjelper hverandre og tar pause når det er stille. Fisken sløyes alltid før den ises.', 'The crew share out the work themselves: they see what needs doing, help each other and take a break when it is quiet. The fish is always gutted before it is iced.'],
+       ['Under Mannskap står det hva hver enkelt gjør og hvorfor, og hvilken plass de har blitt faste på.', 'Under Crew it says what each one is doing and why, and which place they have settled into.'],
+       ['Du kan gjøre én fra mannskapet til styrmann. Styrmannen tar roret når du ikke styrer selv. Når båten ligger stille, står du på dekk sammen med de andre.', 'You can make one of the crew the mate. The mate takes the helm when you are not steering yourself. When the boat lies still, you work on deck with the others.']]],
     ['p131', '22.10.2026', 'Kroker og rorplass', 'Hooks and the helm', [
        ['Mannskapet bytter kroker fra lageret om bord også når kontoen er i minus. Det koster ikke penger, bare tid.', 'The crew changes hooks from the stock aboard also when the account is in the red. It costs no money, only time.'],
        ['Skipperen på sjarken styrer fra rattet og står ikke lenger oppå styrhustaket når båten går.', 'The skipper on the sjark steers from the wheel and no longer stands on the wheelhouse roof when the boat is under way.']]],
