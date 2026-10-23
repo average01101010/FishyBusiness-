@@ -38,6 +38,7 @@ def colours():
     C['boot'] = mat('boot', (0.09, 0.09, 0.10), 0.35, zone=7)
     C['sole'] = mat('sole', (0.24, 0.22, 0.20), 0.1)
     C['glove'] = mat('glove', (0.84, 0.78, 0.50), 0.15)
+    C['tape'] = mat('tape', (0.94, 0.93, 0.89), 0.2)
     C['zip'] = mat('zip', (0.55, 0.57, 0.60), 0.6, metal=0.5)
     C['refl'] = mat('reflective', (0.85, 0.87, 0.85), 0.6)
     C['wool'] = mat('wool', (0.07, 0.07, 0.08), 0.05, zone=6)
@@ -213,7 +214,7 @@ def build_all():
     # the boot and the hands from hender.py (Jonas 23.10.2026: a foot's last for the boot, fingers and grips for the hands); 'hand' stays
     # as the relaxed right hand for whatever draws one hand for both
     import hender
-    P = {'torso': torso(), 'sweater': sweater(), 'head': head(), 'hardhat': hardhat(), 'beanie': beanie(), 'skippercap': skippercap(), 'uarm': uarm(), 'farm': farm(), 'thigh': thigh(), 'shin': shin(), 'boot': hender.boot(C), 'hand': hender.hand(C['glove'], 'relax', False, 'HAND')[0], 'hand_lo': hand()}
+    P = {'torso': torso(), 'sweater': sweater(), 'head': head(), 'hardhat': hardhat(), 'beanie': beanie(), 'skippercap': skippercap(), 'uarm': uarm(), 'farm': farm(), 'thigh': thigh(), 'shin': shin(), 'boot': hender.boot(C), 'hand': hender.hand(C['glove'], 'relax', False, 'HAND')[0], 'hand_lo': hand(), 'tape_L': hender.tape(C['tape'])}
     global HANDS; HANDS = {}
     for g in hender.HAND_GRIPS:
         for sd in ('R', 'L'):
@@ -257,7 +258,7 @@ def main():
         if hat == 'hardhat': bake_ao(P['head'], 48, 0.06)
         bake_ao(P[hat], 32, 0.05)
         for x in hid: x.hide_render = False
-    for nm in [k for k in P if k in ('boot', 'hand', 'hand_lo') or k.startswith('hR_') or k.startswith('hL_')]: only(P[nm], lambda o: bake_ao(o, 32, 0.05))
+    for nm in [k for k in P if k in ('boot', 'hand', 'hand_lo', 'tape_L') or k.startswith('hR_') or k.startswith('hL_')]: only(P[nm], lambda o: bake_ao(o, 32, 0.05))
     # the wardrobe (garderobe.py): each part with the head (and the others hidden) so it shades like the hats do
     import garderobe
     WR = garderobe.build(sys.modules[__name__])
@@ -276,7 +277,7 @@ def main():
              ('boot', mesh_arrays(P['boot'], to_game, to_game_n), 1.0), ('hand', mesh_arrays(P['hand'], ident, ident), 1.0)]
     for nm in ('uarm', 'farm', 'thigh', 'shin'): parts.append((nm, mesh_arrays(P[nm], ident, ident, ao=False), 1.0))
     # (hand_lo: the old one-piece glove, for the hands of people far off, where the fingers are less than a pixel)
-    for nm in [k for k in P if k.startswith('hR_') or k.startswith('hL_') or k == 'hand_lo']: parts.append((nm, mesh_arrays(P[nm], ident, ident), 1.0))
+    for nm in [k for k in P if k.startswith('hR_') or k.startswith('hL_') or k in ('hand_lo', 'tape_L')]: parts.append((nm, mesh_arrays(P[nm], ident, ident), 1.0))
     for nm, o, origin in WR:
         xf = {'neck': (rel(NECK), to_game_n), 'hip': (rel(HIP), to_game_n), 'ground': (to_game, to_game_n), 'wrist': (ident, ident)}[origin]
         parts.append((nm, mesh_arrays(o, xf[0], xf[1]), 1.0))

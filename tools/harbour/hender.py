@@ -193,6 +193,21 @@ def hand(m, grip='relax', left=False, name=None):
     return o, [round(v, 4) for v in at], [round(v, 4) for v in ax]
 
 
+def tape(m):
+    """a band of white tape round the left palm, over the glove (a cut hand: plastered, the glove back on and taped; the game shows it
+    for the four hours the cut slows the one cut), in the left hand's frame like the hands"""
+    rings = []
+    for z, a, b, yc, pad in ((0.036, 0.0418, 0.0193, 0.003, 0.0072), (0.050, 0.0430, 0.0180, 0.003, 0.006), (0.064, 0.0445, 0.0168, 0.0023, 0.0032)):
+        a, b = a + 0.0025, b + 0.0025; r = []        # (2.5 mm out from the palm's section, palm() above)
+        for k in range(14):
+            t = 2 * math.pi * k / 14; c, s = math.cos(t), math.sin(t)
+            x = a * math.copysign(abs(c) ** (2 / 3.2), c); y = b * math.copysign(abs(s) ** (2 / 2.4), s) + yc
+            if s > 0 and c > 0: y += pad * (s * c) * 2
+            r.append((-x, y, z))
+        rings.append(r[::-1])
+    return loft_rings('TAPE', rings, m, False, False, 50)
+
+
 def circle3(a, b, c):
     """the centre of the circle through three points (the fingers wrapped round a handle)"""
     a, b, c = V3(a), V3(b), V3(c); ab = b - a; ac = c - a; n = ab.cross(ac)

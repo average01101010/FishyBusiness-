@@ -198,6 +198,9 @@ function workAssign(as){
   // (the icing station waits on the table: with nothing gutted yet and nobody gutting, there is nothing to pack, so it holds nobody;
   // before, the one aboard alone stayed at the ice from the minute before while the round fish lay ungutted, and nothing got done)
   const iceOpen = () => ctx.iceNow > 0.01 || cnt('sloy') > 0;
+  // (and with the gear coming in, or two at the table, the one who packs comes before a second hand at the table: both wants are full,
+  // so before the skills decided, and the 15 m boat hauling line with four hands had two gutting and nobody packing, selfcrew.py)
+  const iceFirst = () => !cnt('is') && cnt('sloy') > 0 && (ctx.haling || cnt('sloy') > 1);
   const workOpen = k => ctx[k] && room(k) && (k === 'fiske' || left[k] > 0.01) && (k !== 'is' || iceOpen());
   // gear half out cannot wait. Alone aboard with the tub full (stopped to gut), the haul waits while the one aboard guts and ices, and
   // goes on after (07.10.2026: before, the one aboard was taken off the deck to the hauler, the deck work never came, and the haul stood
@@ -217,7 +220,7 @@ function workAssign(as){
     const L = free(); if (!L.length) break;
     let bp = null, bk = null, bj = null, bv = -1e9;
     for (const p of L){
-      for (const k of ['haling', 'blogg', 'sloy', 'is', 'sort', 'fiske']){ if (!workOpen(k)) continue; const v = workScore(p, k, ctx, needOf(k)); if (v > bv){ bv = v; bp = p; bk = k; bj = null; } }
+      for (const k of ['haling', 'blogg', 'sloy', 'is', 'sort', 'fiske']){ if (!workOpen(k)) continue; const v = workScore(p, k, ctx, needOf(k)) + (k === 'is' && iceFirst() ? 0.3 : 0); if (v > bv){ bv = v; bp = p; bk = k; bj = null; } }
       for (const j of jobs){ if ((jn.get(j) || 0) >= jobPlaces(j)) continue; const k = JOB_ST[j.kind], v = workScore(p, k, ctx, jobNeed(j), JOB_SKILL[j.kind]); if (v > bv){ bv = v; bp = p; bk = k; bj = j; } }
     }
     if (!bp) break;

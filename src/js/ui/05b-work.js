@@ -101,6 +101,8 @@ hooks.onBilge = (kind, b, left) => { const L = (no, en) => S.lang === 'no' ? no 
   if (kind !== 'pump' && typeof SND !== 'undefined' && SND.anchorAlarm) SND.anchorAlarm();
   if (typeof toast === 'function') toast(kind === 'pump' ? L(nm + 'Lensepumpa går. Den holder unna lekkasjen.', nm + 'The bilge pump is running. It keeps up with the leak.') : kind === 'flood' ? L(nm + 'Motorrommet er fullt av vann. Redningsskøyta er ringt etter.', nm + 'The engine room is full of water. The rescue boat is called.') : L('VANN I BÅTEN: ' + nm + 'lensepumpa klarer ikke å holde unna, motorrommet er fullt om ' + left + ' min.', 'WATER IN THE BOAT: ' + nm + 'the bilge pump cannot keep up, the engine room is full in ' + left + ' min.')); };
 hooks.onPlantSay = (pid, idx, nm, no, en) => { if (typeof G3 !== 'undefined' && G3.isActive() && G3.sayWorker(pid, idx, nm, no, en)) return; if (typeof toast === 'function') toast(nm + ': «' + (S.lang === 'no' ? no : en) + '»'); };
+// a slip or a cut seen on deck in 3D (view3d.js G3.crewFx)
+hooks.onCrewFx = (c, kind, o) => typeof G3 !== 'undefined' && G3.isActive() && G3.crewFx ? G3.crewFx(c, kind, o) : false;
 hooks.onSay = (c, no, en) => { if (typeof G3 !== 'undefined' && G3.isActive() && G3.say(c, no, en)) return; if (typeof toast === 'function') toast(c.name.split(' ')[0] + ': «' + (S.lang === 'no' ? no : en) + '»'); };
 // your energy on screen: the edges darken under 15 %, and asleep the screen is black with a countdown in real time
 function energyUi(){

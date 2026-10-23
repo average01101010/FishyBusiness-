@@ -21,11 +21,14 @@ function crewSim(src){
   // the boat's type, its deck map and places; false while the boat has none (the hand-worked boats keep their seated figures)
   function ready(){
     const t = src ? src.type() : S && S.boat && S.boat.type; if (!t || typeof deckMap !== 'function') return false;
-    if (ST.type !== t){ ST.type = t; ST.M0 = ST.M = deckMap(t); ST.PT = ST.M ? deckPoints(t) : null; ST.G = typeof geoOf === 'function' ? geoOf(t) : null; ST.PL = null; ST.kitSig = ''; A.length = 0; ST.lastSim = null; ST.ctx = null; ST.ctxT = 0; ST.crates = -1; }
+    if (ST.type !== t){ ST.type = t; ST.M0 = ST.M = deckMap(t); ST.PT = ST.M ? deckPoints(t) : null; ST.G = typeof geoOf === 'function' ? geoOf(t) : null; doorFace(); ST.PL = null; ST.kitSig = ''; A.length = 0; ST.lastSim = null; ST.ctx = null; ST.ctxT = 0; ST.crates = -1; }
     return !!(ST.M && ST.PT && ST.G && !ST.G.hand && ST.PT.sloy);
   }
   const on = () => ready();
   // the jigging places the view found on the rail (view3d.js jigRail): the hands stand inboard of the machines
+  // the way to face at the door to go in: towards the point inside it (the model's anchors.doors[0].in), else forward as before
+  function doorFace(){ const D = ST.PT && ST.PT.door, A0 = ST.G && ST.G.doors && ST.G.doors[0]; if (!D || !A0 || !A0.in || !ST.M.ok(D.k)) return; const p = ST.M.at(D.k);
+    if (Math.hypot(A0.in[0] - p[0], A0.in[2] - p[2]) > 0.2) D.h = Math.atan2(A0.in[0] - p[0], -(A0.in[2] - p[2])); }
   function setJig(spots){ ST.jig = spots || null; }
   function setRoll(r){ ST.roll = r || 0; }
   // the skipper sits at the wheel in the bridge view: someone else takes his place on deck (the view does not draw him from his own eyes)
@@ -142,14 +145,14 @@ function crewSim(src){
   function goalOf(p, ctx, n){
     const PT = ST.PT, PL = places(), st = p.st;
     if (ctx.away) return null;
-    if (st === 'ror'){ if (PT.ror) return {k:PT.ror.k, h:PT.ror.h || 0, task:'helm', inside:'helm'}; return PT.door ? {k:PT.door.k, h:0, task:'helm', inside:'helm'} : null; }
+    if (st === 'ror'){ if (PT.ror) return {k:PT.ror.k, h:PT.ror.h || 0, task:'helm', inside:'helm'}; return PT.door ? {k:PT.door.k, h:PT.door.h || 0, task:'helm', inside:'helm'} : null; }
     // a break as the game chose it (core/13-work.js idleAssign): inside, asleep in the bunk and up at the shop are not on deck
-    if (st === 'pause' && p.idle){ if (p.idle === 'inside' || p.idle === 'sleep' || p.idle === 'shop') return PT.door ? {k:PT.door.k, h:0, task:null, inside:'in'} : null; return idleGoal(p, ctx); }
-    if (ctx.underway && !ctx.open && st === 'pause') return PT.door ? {k:PT.door.k, h:0, task:null, inside:'in'} : null;   // under way the crew are inside (03.10.2026)
-    if (ctx.port && ctx.hasBunks && !ctx.open && p.c && p.c.fatigue >= 1 && st === 'pause') return PT.door ? {k:PT.door.k, h:0, task:null, inside:'in'} : null;   // asleep in the bunks (tilbakemelding #65)
+    if (st === 'pause' && p.idle){ if (p.idle === 'inside' || p.idle === 'sleep' || p.idle === 'shop') return PT.door ? {k:PT.door.k, h:PT.door.h || 0, task:null, inside:'in'} : null; return idleGoal(p, ctx); }
+    if (ctx.underway && !ctx.open && st === 'pause') return PT.door ? {k:PT.door.k, h:PT.door.h || 0, task:null, inside:'in'} : null;   // under way the crew are inside (03.10.2026)
+    if (ctx.port && ctx.hasBunks && !ctx.open && p.c && p.c.fatigue >= 1 && st === 'pause') return PT.door ? {k:PT.door.k, h:PT.door.h || 0, task:null, inside:'in'} : null;   // asleep in the bunks (tilbakemelding #65)
     // the deck work under a shelter deck or below the weather deck (the 15 m coastal boat's table, the longliner's factory deck): the
     // place on the deck map is the deck over it, so they work inside, out of sight, and nobody reaches down through the deck
-    const below = y => y != null && ST.M.ok((PT.sloy || {}).k) && Math.abs(ST.M.at(PT.sloy.k)[1] - y) > 0.5, IN = PT.door ? {k:PT.door.k, h:0, task:null, inside:'in'} : null;
+    const below = y => y != null && ST.M.ok((PT.sloy || {}).k) && Math.abs(ST.M.at(PT.sloy.k)[1] - y) > 0.5, IN = PT.door ? {k:PT.door.k, h:PT.door.h || 0, task:null, inside:'in'} : null;
     const Wk = ST.G.work, Dk = ST.G.deck || {}, workY = Wk ? Wk.table[1] : Dk.y;
     if ((st === 'sloy' || st === 'is') && below(workY)) return IN;
     if ((st === 'haling' || st === 'blogg') && ST.G.hauler && PT.haling && Math.abs(ST.M.at(PT.haling.k)[1] - ST.G.hauler[1]) > 1.2) return IN;
@@ -164,7 +167,7 @@ function crewSim(src){
     if (st === 'egn' || st === 'strip' || st === 'stell'){ const q = at(PL.tubAt(n), 1.2); if (q){ q.task = st === 'stell' ? 'egn' : st; q.tub = n; } return q || idleGoal(p, ctx, 'coil'); }
     if (st === 'mend'){ const q = PL.mend[n % Math.max(1, PL.mend.length)], g = q ? at(q, 1.0) : null; if (g) g.task = 'mend'; return g || idleGoal(p, ctx, 'coil'); }
     if (st === 'last') return at(PL.cargo, 1.6) || idleGoal(p, ctx, 'look');
-    if (st === 'kokk') return PT.door ? {k:PT.door.k, h:0, task:null, inside:'in'} : null;
+    if (st === 'kokk') return PT.door ? {k:PT.door.k, h:PT.door.h || 0, task:null, inside:'in'} : null;
     return idleGoal(p, ctx);
   }
   // the station and its part (at the hauler: the hauler, the picker, the pot hand): a person keeps the place while it stays the same
@@ -260,7 +263,7 @@ function crewSim(src){
       return {k:g.k, h:g.h, rail:g.rail, off:g.off, task:g1 && k !== 'gear' ? k : 'look', until:1e12, idle:true, with:p.with || null}; }
     let act = force || IDLE[Math.floor(rnd() * IDLE.length)];
     if (!force){ if (T.includes('makelig') && rnd() < 0.5) act = rnd() < 0.5 ? 'lean' : 'coffee'; if ((T.includes('arbeidsjern') || T.includes('perfeksjonist')) && rnd() < 0.5) act = rnd() < 0.5 ? 'sweep' : 'coil';
-      if ((ctx.night || ctx.wind > 12) && rnd() < 0.5 && PT.door && !ctx.open) return {k:PT.door.k, h:0, task:null, inside:'in', until:nowS() + 40 + rnd() * 80}; }
+      if ((ctx.night || ctx.wind > 12) && rnd() < 0.5 && PT.door && !ctx.open) return {k:PT.door.k, h:PT.door.h || 0, task:null, inside:'in', until:nowS() + 40 + rnd() * 80}; }
     if (act === 'sit') act = 'lean';
     // sweeping and coiling are done with the back to the rail, over the deck: facing out the broom went over the side and the coiling arm
     // worked up and down over the rail like a jig (Jonas 21.10.2026, #81 and #84); a place where the pose is clear of everything
@@ -295,18 +298,32 @@ function crewSim(src){
     TAKEN.set(g.k, id); return g;
   }
   // ---- the agents follow the people aboard ----
+  // the break's things that are put away before the walk to work (the mug back on the flask, the phone in the pocket ...), and the
+  // places held until the one taking over is there (the hauler hauls on, the helm is not left)
+  const PROP = {coffee:1, phone:1, binoc:1, smoke:1, snus:1, lunch:1}, PUT_S = 1.4;
+  const relieves = g => !!g && (g.task === 'haul' || g.inside === 'helm');
   function sync(ctx){
     const seen = new Set(), used = {}, pend = [], t = nowS(); TAKEN.clear();
+    // how hard each one works now (04-crew.js crewEffort): the tired walk slower, work at a slower beat and stoop (the view's a.tk, a.ef)
+    const H = S.t / 60, hs = !src && typeof hsWork === 'function' ? hsWork(S.boat.pos, H) : 0;
     for (const p of ctx.WA){ const id = p.c ? 'c' + p.c.id : 'me'; seen.add(id); let a = A.find(q => q.id === id);
       if (!a){ a = {id, me:!p.c, c:p.c, x:0, y:0, z:0, h:0, cell:-1, goal:null, path:null, pi:0, mode:'in', task:null, st:null, blend:0, kind:null, slot:-1}; A.push(a); }
       a.c = p.c; a.st = p.st; a.role = p.role || null; a.jw = p.jw || null; const g = a.goal, kind = kindOf(p);
+      a.ef = !src && p.c && typeof crewEffort === 'function' ? crewEffort(p.c, H, hs).f : 1;
       // the same station as before, and not an idle spell that is over: the place is kept (nobody swaps the table for the tub each minute);
       // an idle spell on deck ends as she gets under way on a boat with a house, so the crew go in (Jonas 21.10.2026: they stood leaning
       // over the rail at 23 knots for a minute and a half, as if jigging)
       const keep = g && a.kind === kind && !(g.idle && g.until < t) && !(g.idle && ctx.underway && !ctx.open) &&!(g.inside === 'in' && g.until && g.until < t && p.st === 'pause' && !ctx.underway) && !(ctx.away && g) && (g.inside || ST.M.ok(g.k));
       if (keep){ if (a.slot >= 0) (used[kind] || (used[kind] = new Set())).add(a.slot); if (!g.inside) TAKEN.set(g.k, id); } else pend.push([p, a, kind]); }
     for (const [p, a, kind] of pend){ let n = 0; const U = used[kind] || (used[kind] = new Set()); while (U.has(n)) n++; U.add(n);
-      a.goal = fitWork(claim(goalOf(p, ctx, n), a.id), a.id); a.kind = kind; a.slot = n; a.path = null; a.sub = null; }
+      const was = a.goal, there = was && a.mode !== 'walk' && !a.sub && a.cell === was.k;
+      a.goal = fitWork(claim(goalOf(p, ctx, n), a.id), a.id); a.kind = kind; a.slot = n; a.path = null; a.sub = null; a.door = 0;
+      if (there && PROP[was.task] && a.mode === 'at' && a.blend > 0.6 && !(a.goal && a.goal.task === was.task)) a.put = {task:was.task, t0:t, g:was};
+      if (there && relieves(was) && (a.mode === 'at' || a.mode === 'helm')) a.was = was; else a.was = null; }
+    // the old one stays at the hauler or the helm until the one taking over is there (or for 25 s at most)
+    for (const [, a] of pend){ const w = a.was; a.was = null; if (!w) continue;
+      const W = ST.M.at(w.k), b = A.find(q => q !== a && q.goal && (w.inside ? q.goal.inside === 'helm' : q.goal.task === 'haul' && !q.goal.inside && (() => { const Q = ST.M.at(q.goal.k); return Math.hypot(Q[0] - W[0], Q[2] - W[2]) < 0.6; })()));
+      if (b && !(b.cell === b.goal.k && b.mode !== 'walk')) a.relief = {g:w, by:b.id, until:t + 25}; }
     for (let i = A.length - 1; i >= 0; i--) if (!seen.has(A[i].id)) A.splice(i, 1);
     // two chatting stand together: the later of the two moves next to the other (0.7-1.1 m), and they face each other
     for (const [p, a] of pend){ const g = a.goal; if (!g || g.task !== 'chat' || !g.with) continue; const o = A.find(q => q.id === (g.with === 'me' ? 'me' : 'c' + g.with)); if (!o || !o.goal || o.goal.task !== 'chat' || o.goal.inside) continue;
@@ -324,7 +341,7 @@ function crewSim(src){
     ST.crateFill = ctx.crateFill || 0;
   }
   // everyone straight to their place (the first frame, a change of boat, the clock run on)
-  function snap(){ for (const a of A){ a.sub = null; if (!a.goal){ a.mode = 'in'; continue; } const p = ST.M.at(a.goal.k); a.x = p[0]; a.y = p[1]; a.z = p[2]; a.cell = a.goal.k; a.h = a.goal.h; a.task = a.goal.task; a.mode = a.goal.inside ? a.goal.inside : 'at'; a.path = null; } }
+  function snap(){ for (const a of A){ a.sub = null; a.put = a.relief = null; a.door = a.out = 0; if (!a.goal){ a.mode = 'in'; continue; } const p = ST.M.at(a.goal.k); a.x = p[0]; a.y = p[1]; a.z = p[2]; a.cell = a.goal.k; a.h = a.goal.h; a.task = a.goal.task; a.mode = a.goal.inside ? a.goal.inside : 'at'; a.path = null; } }
   function tick(dt){
     if (!ready()) return; dt = Math.min(0.1, Math.max(0, dt || 0)); ST.clk += dt; const t = nowS();
     const jump = ST.lastSim == null || Math.abs(S.t - ST.lastSim) > 30 || (src && src.jump && src.jump()); ST.lastSim = S.t;
@@ -332,6 +349,13 @@ function crewSim(src){
     if (jump){ snap(); return; }
     const M = ST.M, roll = Math.abs(ST.roll || 0), spd = WALK * (roll > 0.21 ? 0 : roll > 0.14 ? 0.65 : 1);
     for (const a of A){
+      const ef = a.ef == null ? 1 : a.ef; a.tk = (a.tk || 0) + dt * clamp(0.55 + 0.45 * ef, 0.72, 1.05);
+      // the moments between (M7c): the break's thing put away first, the station held until relieved, a breath at the door
+      if (a.put){ a.putU = (t - a.put.t0) / PUT_S; if (a.putU < 1){ a.task = a.put.task; continue; } a.put = null; }
+      if (a.relief){ const r = a.relief, b = A.find(q => q.id === r.by), P = ST.M.at(r.g.k);
+        const done = !b || !b.goal || t > r.until || (r.g.inside ? b.goal.inside !== 'helm' || b.mode === 'helm' : b.goal.task !== 'haul' || Math.hypot(b.x - P[0], b.z - P[2]) < 0.9);
+        if (!done){ a.task = r.g.task; continue; } a.relief = null; a.path = null; }
+      if (a.out && t < a.out){ a.task = null; continue; } a.out = 0;
       if (a.sub && a.sub.done && t > a.sub.done){ if (a.sub.thru != null) a.thru = a.sub.thru; a.sub = null; a.path = null; }
       const g = a.sub || a.goal;
       if (!g){ a.mode = 'in'; continue; }
@@ -339,7 +363,8 @@ function crewSim(src){
       // (or out on the other side of the house, after the way through it: a.thru)
       if (a.mode === 'in' || a.mode === 'helm'){ if (g.inside && (a.cell === g.k || a.thru === -1)){ a.thru = null; a.cell = g.k; a.task = g.task; a.mode = g.inside; continue; }
         const th = a.thru != null && a.thru >= 0 && M.ok(a.thru) && deckComp(M)[a.thru] === deckComp(M)[g.k] ? a.thru : -1; a.thru = null;
-        const d = th >= 0 ? th : ST.PT.door ? ST.PT.door.k : g.k, p = M.ok(d) ? M.at(d) : ST.M0.at(d); a.x = p[0]; a.y = p[1]; a.z = p[2]; a.cell = d; a.mode = 'at'; a.path = null; }
+        const d = th >= 0 ? th : ST.PT.door ? ST.PT.door.k : g.k, p = M.ok(d) ? M.at(d) : ST.M0.at(d); a.x = p[0]; a.y = p[1]; a.z = p[2]; a.cell = d; a.mode = 'at'; a.path = null;
+        if (ST.PT.door && d === ST.PT.door.k && d !== g.k){ const q = M.ok(g.k) ? M.at(g.k) : p; a.h = Math.atan2(q[0] - p[0], -(q[2] - p[2])); a.out = t + 0.45; a.task = null; a.blend = 1; continue; } }
       if (a.cell !== g.k || a.mode === 'walk'){
         if (!a.path){ let from = M.cellOf(a.x, a.z); if (!M.ok(from)) from = M.near(a.x, a.z, 2); if (from < 0){ snap(); return; }
           const P = deckPath(M, from, g.k);
@@ -351,16 +376,20 @@ function crewSim(src){
         // along the way: towards the next cell's centre, turning as it goes, and slowly or not at all when she rolls hard
         const q = M.at(a.path[Math.min(a.pi, a.path.length - 1)]), dx = q[0] - a.x, dz = q[2] - a.z, dist = Math.hypot(dx, dz);
         const want = Math.atan2(dx, -dz); let dh = dist > 1e-3 ? want - a.h : 0; while (dh > Math.PI) dh -= 2 * Math.PI; while (dh < -Math.PI) dh += 2 * Math.PI;
-        a.h += Math.max(-TURN * dt, Math.min(TURN * dt, dh)); const climb = Math.abs(q[1] - a.y) > 0.4 ? 0.45 : 1, step = spd * climb * dt * (Math.abs(dh) > 1.2 ? 0.3 : 1);
+        a.h += Math.max(-TURN * dt, Math.min(TURN * dt, dh)); const climb = Math.abs(q[1] - a.y) > 0.4 ? 0.45 : 1, step = spd * clamp(0.7 + 0.3 * ef, 0.76, 1.04) * climb * dt * (Math.abs(dh) > 1.2 ? 0.3 : 1);
         a.mode = 'walk'; a.task = a.sub && a.sub.carry ? 'carry' : null; a.near = dist;
         if (dist <= step + 1e-6){ a.x = q[0]; a.z = q[2]; a.y = q[1]; a.cell = a.path[Math.min(a.pi, a.path.length - 1)]; a.pi++;   // the point is reached this very step: no jump, ever
-          if (a.pi >= a.path.length){ a.mode = g.inside ? g.inside : 'at'; a.task = g.task; a.path = null; a.cell = g.k; a.blend = 0; if (a.sub && !a.sub.done) a.sub.done = t + (a.sub.hold || 2); continue; } }
+          // (at the door, 'at' first: in after a hand to it, below)
+          if (a.pi >= a.path.length){ a.mode = g.inside && !(g.inside === 'in' && ST.PT.door && g.k === ST.PT.door.k) ? g.inside : 'at'; a.task = g.task; a.path = null; a.cell = g.k; a.blend = 0; if (a.sub && !a.sub.done) a.sub.done = t + (a.sub.hold || 2); continue; } }
         else { a.x += dx / dist * step; a.z += dz / dist * step; const fy = M.floorAt(a.x, a.z); a.y = fy === fy ? fy : a.y + (q[1] - a.y) * Math.min(1, step / Math.max(dist, 1e-3)); }
         sideways(a, t, dt); unclip(a, t);
       } else {
         // at the place: turn to face the work, and the blend into its pose
         let dh = g.h - a.h; while (dh > Math.PI) dh -= 2 * Math.PI; while (dh < -Math.PI) dh += 2 * Math.PI; a.h += Math.max(-TURN * dt, Math.min(TURN * dt, dh));
-        a.blend = Math.min(1, a.blend + dt / 0.4); a.task = g.task; if (g.inside && Math.abs(dh) < 0.3) a.mode = g.inside; a.sqW = 0; a.sqA = Math.max(0, (a.sqA || 0) - dt * 6); }
+        a.blend = Math.min(1, a.blend + dt / 0.4); a.task = g.task; a.sqW = 0; a.sqA = Math.max(0, (a.sqA || 0) - dt * 6);
+        // (in through the door: a hand to it for a moment first)
+        if (g.inside && Math.abs(dh) < 0.3){ if (g.inside !== 'in' || !ST.PT.door || g.k !== ST.PT.door.k){ a.mode = g.inside; continue; }
+          if (!a.door) a.door = t + 0.6; if (t < a.door) a.task = 'door'; else { a.mode = g.inside; a.door = 0; } } }
     }
     // nobody walks through anybody: two within 0.45 m push apart a little, sideways; the one walking gives way (the places are 0.4 m apart at least)
     for (let i = 0; i < A.length; i++) for (let j = i + 1; j < A.length; j++){ const a = A[i], b = A[j]; if (a.mode === 'in' || b.mode === 'in' || a.mode === 'helm' || b.mode === 'helm') continue;
@@ -411,12 +440,23 @@ function crewSim(src){
     const nearest = (c, P) => { let best = -1, bd = Infinity; for (let k = 0; k < N; k++){ if (C[k] !== c) continue; const q = M.at(k), d = Math.hypot(q[0] - P[0], (q[1] - P[1]) * 2, q[2] - P[2]); if (d < bd){ bd = d; best = k; } } return best; };
     const ex = door >= 0 && C[door] === ca ? door : nearest(ca, M.at(to)), en = door >= 0 && C[door] === cb ? door : nearest(cb, M.at(ex)), E = M.at(ex), F = M.at(en);
     return [ex, en, 1 + (Math.hypot(F[0] - E[0], F[2] - E[2]) + Math.abs(F[1] - E[1]) * 2) / WALK]; }
+  // the nearest rail from where someone stands, ahead or to either side within 3 m (a fish that slips over the side goes over it):
+  // the way [forward, right] in the boat's frame, how far, and its top over the deck; null with none (a wall is not a rail)
+  function railNear(a){ const M = ST.M; let best = null;
+    for (const dh of [0, Math.PI / 2, -Math.PI / 2]){ const h = a.h + dh, F = [Math.sin(h), -Math.cos(h)];
+      for (let d = 0.12; d <= 3; d += 0.06){ const x = a.x + F[0] * d, z = a.z + F[1] * d, u = M.hit([x, a.y + 1.4, z], [x, a.y + 0.3, z]); if (u < 0) continue;
+        const y = 1.4 - u * 1.1; if (y > 1.25) break; if (y < 0.45) continue; const ox = x + F[0] * 0.5, oz = z + F[1] * 0.5;
+        // (the open sea beyond it: a rail; else something on deck before the rail, the gutting table or a tub: on past it)
+        if (M.hit([ox, a.y + 1.4, oz], [ox, a.y - 1.5, oz]) < 0){ if (!best || d < best.d) best = {F, d, y}; break; } } }
+    return best; }
   // the last steps to a place stood off its cell (a step back from a close rail, the back at the rail) go to where the person will stand
-  function walkOff(a){ const o = a.goal && a.goal.off; if (!o) return [0, 0]; if (a.mode === 'at') return [o[0] * (a.blend == null ? 1 : a.blend), o[1] * (a.blend == null ? 1 : a.blend)];
+  // (the place still held: the break's, while its thing is put away, the station, until relieved)
+  const holds = a => a.relief ? a.relief.g : a.put ? a.put.g : a.goal;
+  function walkOff(a){ const g = holds(a), o = g && g.off; if (!o) return [0, 0]; if (a.mode === 'at') return [o[0] * (a.blend == null ? 1 : a.blend), o[1] * (a.blend == null ? 1 : a.blend)];
     if (a.mode !== 'walk' || !a.path || a.pi < a.path.length - 1) return [0, 0]; const u = clamp(1 - (a.near || 0) / 0.6, 0, 1); return [o[0] * u, o[1] * u]; }
   function clipWhy(k){ if (!ready()) return null; const M = ST.M; return (ST.PT.lean || []).filter(l => M.ok(l.k)).map(q => { const f = fitPlace(k, q), p = M.at(q.k), F = [Math.sin(f.h), -Math.cos(f.h)], Rv = [Math.cos(f.h), Math.sin(f.h)], o = f.off || [0, 0];
     const W = v => [p[0] + o[0] + F[0] * v[0] + Rv[0] * v[2], p[1] + v[1], p[2] + o[1] + F[1] * v[0] + Rv[1] * v[2]]; return {rail:railAt(q.k, q.h), fit:f.rail, off:f.off, hits:poseSegs(k, f.rail).map(([a, b], i) => M.hit(W(a), W(b)) >= 0 ? i : -1).filter(i => i >= 0)}; }); }
-  return {tick, agents, visible, anchorOf, on, setJig, setRoll, setHelm, places:() => ready() ? places() : null, reset, clipNow, clipScan, clipWhy, bodyHits, walkOff, railAt:(k, h) => ready() ? railAt(k, h) : null, _st:ST};
+  return {tick, agents, visible, anchorOf, on, setJig, setRoll, setHelm, places:() => ready() ? places() : null, reset, clipNow, clipScan, clipWhy, bodyHits, walkOff, holds, railAt:(k, h) => ready() ? railAt(k, h) : null, railNear:a => ready() ? railNear(a) : null, _st:ST};
 }
 const CREW3D = crewSim(null);
 // the context of another boat as the view knows her (core/05-vessels.js npcStates: st fishing, in, out or port; a player's boat

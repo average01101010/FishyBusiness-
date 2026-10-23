@@ -279,20 +279,22 @@ function adviceGround(H){
 // ---- mistakes on deck (Jonas 23.10.2026: «Ja, det kan de godt gjøre. Det skaper realisme»): now and then a fish slips over the side, the
 // knife slips and someone cuts a hand, or a fish is gutted badly. Likelier tired, cold, in a heavy sea, with little skill or little heart in
 // it; rare otherwise (about once in a long day at the table). A cut slows the one cut for four hours (04-crew.js crewDrive 'cut').
+// (the dice for the mistakes: Math.random, or a seeded run for the tests, window.CREW_SEED, so a test sees the same slips each time)
+function crewRand(){ if (typeof window === 'undefined' || window.CREW_SEED == null) return Math.random(); window.CREW_SEED = (window.CREW_SEED * 1664525 + 1013904223) >>> 0; return window.CREW_SEED / 4294967296; }
 function crewSlip(team){
   if (!team.length) return;
   const b = S.boat, H = S.t / 60, hs = hsWork(b.pos, H), cp = coldPen(H, hs);
   for (const c of team){
     const sk = (c.gear && c.gear.sloy) || 1, f = c.fatigue / 100, e = crewEffort(c, H, hs).f;
     const pr = 0.0012 * (1 + 2 * f * f + Math.max(0, hs - 1) + 2 * cp + (5 - sk) / 3 + 3 * Math.max(0, 1 - e));
-    if (Math.random() >= pr) continue;
-    const r = Math.random(), nm = c.name.split(' ')[0];
+    if (crewRand() >= pr) continue;
+    const r = crewRand(), nm = c.name.split(' ')[0];
     if (r < 0.45){ const x = S.hold.filter(y => !y.iced && !SPECIES[y.sp].live && y.kg > 0.5).sort((a, y) => y.kg - a.kg)[0]; if (!x) continue;
-      const kg = Math.min(x.kg, 1.5 + Math.random() * 3); if (x.n) x.n = Math.max(0, x.n - 1); x.kg -= kg; if (x.kg < 0.01) S.hold.splice(S.hold.indexOf(x), 1);
-      log(nm + ' mistet en ' + SPECIES[x.sp].no.toLowerCase() + ' på ' + fmt(kg, 1) + ' kg over ripa.', nm + ' lost a ' + SPECIES[x.sp].en.toLowerCase() + ' of ' + fmt(kg, 1) + ' kg over the rail.'); crewSay(c, 'slip'); }
+      const kg = Math.min(x.kg, 1.5 + crewRand() * 3); if (x.n) x.n = Math.max(0, x.n - 1); x.kg -= kg; if (x.kg < 0.01) S.hold.splice(S.hold.indexOf(x), 1);
+      log(nm + ' mistet en ' + SPECIES[x.sp].no.toLowerCase() + ' på ' + fmt(kg, 1) + ' kg over ripa.', nm + ' lost a ' + SPECIES[x.sp].en.toLowerCase() + ' of ' + fmt(kg, 1) + ' kg over the rail.'); crewSay(c, 'slip'); if (hooks.onCrewFx) hooks.onCrewFx(c, 'slip', {sp:x.sp, kg}); }
     else if (r < 0.75){ const x = S.hold.find(y => y.gut && !y.iced && !SPECIES[y.sp].live); if (!x) continue;
       x.fresh = Math.max(0, x.fresh - 6 * Math.min(1, 4 / x.kg)); log(nm + ' sløyde en fisk stygt. Den blir litt dårligere betalt.', nm + ' gutted a fish badly. It will fetch a little less.'); crewSay(c, 'botch'); }
-    else { c.cut = S.t + 240; log(nm + ' skar seg i hånda på sløyekniven.', nm + ' cut a hand on the gutting knife.'); crewSay(c, 'cut'); }
+    else { c.cut = S.t + 240; log(nm + ' skar seg i hånda på sløyekniven.', nm + ' cut a hand on the gutting knife.'); crewSay(c, 'cut'); if (hooks.onCrewFx) hooks.onCrewFx(c, 'cut'); }
   }
 }
 
