@@ -110,8 +110,8 @@ const rigOfKind = kind => Object.keys(RIGS).find(r => RIGS[r].kind === kind) || 
 // an old save has no rig: the kind of gear in the sea or in the standing plan, otherwise jigging
 function rigGuess(){
   const s = mySets()[0]; if (s) return rigOfKind(s.kind);
-  const o = S.ops; if (o && o.v === 2 && RIGS[o.rig]) return o.rig;
-  const w = o && (o.wps || []).find(x => x.act && x.act.kind); return w ? rigOfKind(w.act.kind) : 'juksa';
+  const o = S.ops; if (o && RIGS[o.rig]) return o.rig;
+  return 'juksa';
 }
 function rigOf(){ const b = S.boat; if (!RIGS[b.rig]) b.rig = rigGuess(); return b.rig; }
 const rigKindOk = kind => RIGS[rigOf()].kind === kind;
@@ -269,7 +269,7 @@ function startSet(kind, spec, fishAfter, hdg){
     L0.n -= n; L0.baited -= n; s.baitW = w; }
   else { const kg = n * GPRICE.potBait, k = spec.bait && BAITS[spec.bait] && (baitOf(pg)[spec.bait] || 0) >= kg - 1e-9 ? spec.bait : baitPick(pg, kg); pg.pots[spec.pot] -= n; baitOf(pg)[k] -= kg; s.bait = k; }
   const heavy = pg.kits.heavy > 0; pg.kits.n--; if (heavy) pg.kits.heavy--;
-  Object.assign(s, {n, heavy});
+  Object.assign(s, {n, heavy}); if (spec.fid) s.fid = spec.fid;
   if (hdg != null) b.heading = hdg;
   b.status = 'fishing'; b.fishUntil = null; b.deckStop = false; b.deckEnd = null;
   b.gop = {op:'set', kind, s, n, done:0, prog:0, a:geo.a, b:geo.b, fishAfter:fishAfter || 0, hooksPer:kind === 'line' ? LINE_KINDS[spec.lk].hooks : 0, lead:endLines('set', kind, depthF(geo.a))};
@@ -453,7 +453,7 @@ function finishHaul(g, H){
     S.marks.push({x:setMid(s).x, y:setMid(s).y, t:S.t, kgph:0, g:s.kind, kgu:Math.round(kgu * 10) / 10, soak, q:Math.round(kgu / fair * 100) / 100}); if (S.marks.length > 80) S.marks.shift(); }
   // set the same gear again where it stood (line has to be baited in port first)
   if (g.reset && back > 0 && s.kind !== 'line'){
-    const spec = s.kind === 'garn' ? {nid:S.pgear.nets[S.pgear.nets.length - 1].id} : {pot:s.pot, n:back};
+    const spec = s.kind === 'garn' ? {nid:S.pgear.nets[S.pgear.nets.length - 1].id} : {pot:s.pot, n:back}; if (s.fid) spec.fid = s.fid;
     // back to where the string started, and out again along the same line
     b.gop = null; b.pos = {...s.a}; b.heading = Math.atan2(s.b.x - s.a.x, -(s.b.y - s.a.y));
     const why = startSet(s.kind, spec, g.fishAfter);
@@ -465,24 +465,33 @@ function finishHaul(g, H){
 
 // ---- a station on a route or the standing plan: haul what stands here and set it again, or set new gear if nothing stands here.
 // Before a gale (over 17 m/s within 36 hours) the gear is brought home instead of set again.
-function cycleSpec(kind, want){
+// n: how many units the standing plan's field wants (06d-drift.js); a string of nets longer than that is split, a shorter one goes as it is
+function cycleSpec(kind, want, n){
   const pg = S.pgear;
-  if (kind === 'garn'){ const l = pg.nets.find(x => !want || (x.mesh === want.mesh && netTy(x) === netTy(want))) || pg.nets[0]; return l ? {nid:l.id} : null; }
+  if (kind === 'garn'){ const ok = x => !want || (x.mesh === want.mesh && netTy(x) === netTy(want)), L = pg.nets.filter(ok).length ? pg.nets.filter(ok) : pg.nets;
+    let l = n ? L.find(x => x.n === n) || L.filter(x => x.n > n).sort((a, c) => a.n - c.n)[0] || L.slice().sort((a, c) => c.n - a.n)[0] : L[0];
+    if (l && n && l.n > n && splitNets(l.id, n)) l = pg.nets[pg.nets.length - 1];
+    return l ? {nid:l.id} : null; }
   // all the baited tubs of the kind go out, those with the bait the station named first (startSet)
   if (kind === 'line'){ const lk = want && want.lk && pg.lines[want.lk] && pg.lines[want.lk].baited ? want.lk : pg.lines.hyse.baited ? 'hyse' : 'bank'; if (!pg.lines[lk].baited) return null;
-    const sp = {lk, n:pg.lines[lk].baited}; if (want && want.bait && (btOf(pg.lines[lk])[want.bait] || 0) > 0) sp.bait = want.bait; return sp; }
-  const pot = 'big', B = baitOf(pg), bk = want && want.bait && (B[want.bait] || 0) >= GPRICE.potBait ? want.bait : null, n = Math.min(pg.pots[pot], Math.floor((bk ? B[bk] : Math.max(...Object.values(B), 0)) / GPRICE.potBait + 1e-9));
-  return n > 0 ? Object.assign({pot, n}, bk ? {bait:bk} : {}) : null;
+    const sp = {lk, n:n ? Math.min(n, pg.lines[lk].baited) : pg.lines[lk].baited}; if (want && want.bait && (btOf(pg.lines[lk])[want.bait] || 0) > 0) sp.bait = want.bait; return sp; }
+  const pot = 'big', B = baitOf(pg), bk = want && want.bait && (B[want.bait] || 0) >= GPRICE.potBait ? want.bait : null, k = Math.min(pg.pots[pot], Math.floor((bk ? B[bk] : Math.max(...Object.values(B), 0)) / GPRICE.potBait + 1e-9));
+  const m = n ? Math.min(n, k) : k;
+  return m > 0 ? Object.assign({pot, n:m}, bk ? {bait:bk} : {}) : null;
 }
 function gearCycle(w, fishAfter){
   const a = w.act, b = S.boat, H = S.t / 60;
   let gale = false; for (let k = 0; k <= 36; k += 3) if (windAt(H + k) > 17) gale = true;
-  const s = mySets().find(x => x.kind === a.kind && segDist(w, x.a, x.b) < 0.5);
+  // the standing plan names its field (a.fid) and what the visit is for (a.only: 'haul' or 'set'); a visit with nothing to do says so and goes on
+  const s = (a.fid && mySets().find(x => x.fid === a.fid)) || mySets().find(x => x.kind === a.kind && segDist(w, x.a, x.b) < 0.5 && (!a.fid || !x.fid));
+  if (s && a.only === 'set') return [gL('Redskapet står allerede på plassen.', 'The gear already stands at the place.')];
+  if (!s && a.only === 'haul') return [gL('Fant ikke redskapet på plassen.', 'Found no gear at the place.')];
   if (s){ b.pos = dist(b.pos, s.a) <= dist(b.pos, s.b) ? {...s.a} : {...s.b}; const why = startHaul(s.id, a.kind !== 'line' && !gale && !a.final, fishAfter); if (!why && gale) log('Kuling i varselet. Tar redskapet med hjem.', 'A gale in the forecast. Taking the gear home.'); return why; }
   if (!s && !rigKindOk(a.kind)) return rigWrong(a.kind);
   if (gale) return [gL('Kuling i varselet. Setter ikke ut redskap nå.', 'A gale in the forecast. Not setting gear now.')];
-  const spec = cycleSpec(a.kind, a.spec && (a.kind === 'garn' ? {mesh:(S.pgear.nets.find(l => l.id === a.spec.nid) || {}).mesh, ty:(S.pgear.nets.find(l => l.id === a.spec.nid) || {}).ty} : a.spec));
+  const spec = cycleSpec(a.kind, a.spec && (a.kind === 'garn' ? {mesh:(S.pgear.nets.find(l => l.id === a.spec.nid) || {}).mesh, ty:(S.pgear.nets.find(l => l.id === a.spec.nid) || {}).ty} : a.spec), a.n);
   if (!spec) return [gL('Ikke noe ' + GEAR[a.kind].no.toLowerCase() + ' klart om bord.', 'No ' + GEAR[a.kind].en.toLowerCase() + ' ready aboard.')];
+  if (a.fid) spec.fid = a.fid;
   return startSet(a.kind, spec, fishAfter);
 }
 // what the standing plan needs before it leaves: two aboard for nets, bait for the pots (bought at the plant), line baited
@@ -490,6 +499,7 @@ function opsGearNeeds(o){
   const acts = (o.wps || []).filter(w => w.act).map(w => w.act.kind), pg = S.pgear, p = portById(S.boat.port), miss = [];
   if (!acts.length || !pg) return null;
   if (acts.includes('garn') && handsAboard() < 2) miss.push(gL('garn krever to om bord', 'nets need two aboard'));
+  { const n = (o.wps || []).filter(w => w.act && w.act.only === 'set').length; if (n > pg.kits.n) miss.push(gL('for få blåsesett om bord (' + pg.kits.n + ' av ' + n + ')', 'too few buoy sets aboard (' + pg.kits.n + ' of ' + n + ')')); }
   if (acts.includes('teine')){ const k = BAITS[pg.baitPref] ? pg.baitPref : 'makrell', need = pg.pots.big * GPRICE.potBait - (baitOf(pg)[k] || 0); if (need > 0 && p && p.mottak && driftStock().bait){ const kg = Math.ceil(need), c = kg * BAITS[k].kr; if (c <= S.cash){ S.cash -= c; S.stats.costs += c; baitOf(pg)[k] = (baitOf(pg)[k] || 0) + kg; } } }
   if (acts.includes('line') && !pg.lines.hyse.baited && !pg.lines.bank.baited && !mySets().some(s => s.kind === 'line')) miss.push(gL('lina er ikke egnet', 'the line is not baited'));
   return miss.length ? miss : null;

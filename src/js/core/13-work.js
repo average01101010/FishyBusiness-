@@ -7,8 +7,8 @@
 // wants to try what is new to them), how tired they are and what is piling up. A person stays at a task while it has work and looks
 // around again at a natural break (every 20 minutes or so, each at their own minute), so the deck does not reshuffle every minute; and
 // the choice is the same every time it is worked out within a minute (no dice: the day's small whims come from a hash of who and when).
-// Some things are always done: a boat under way has someone at the helm (you; with you asleep or ashore the mate, c.mate, else the plan's
-// skipper, else the best seaman), gear half out is hauled, the fish coming over the rail are bled, and the catch is bled, gutted and iced
+// Some things are always done: a boat under way has someone at the helm (you; with you asleep or ashore the mate, c.mate, else the
+// skipper, c.sk, else the best seaman), gear half out is hauled, the fish coming over the rail are bled, and the catch is bled, gutted and iced
 // as the trade does it (Jonas 23.10.2026: «Fisken må nesten alltid sløyes før den ises og dette er nærmest bransjestandard»). When the
 // boat is not being driven, you work on deck with the others («Skipperen bidrar på dekk når båten ikke kjøres aktivt»).
 // Each station has its places (Jonas 20.10.2026, tilbakemelding #75: «det burde kun være en mann som har ansvaret for haling mens de
@@ -44,11 +44,16 @@ const HEAVY_ST = {haling:1, last:1, sloy:0.5, is:0.6, fiske:0.4, sort:0.3, blogg
 function catchGut(){ return S.settings.gut !== false; }
 function catchIce(){ return S.settings.ice !== false; }
 // ---- the mate (Jonas 23.10.2026: «vi må kunne definere 1 fra mannskapet til å være styrmann ombord»): one of the crew, the same one
-// as the operations plan's (06d-drift.js S.ops.mate); at the helm and in charge on deck when you sleep or are not aboard
+// who with the skipper runs the boat on the operations plan when you are not aboard (06d-drift.js); at the helm and in charge on deck when you sleep or are not aboard
 const crewMate = () => (S.crew || []).find(c => c.mate) || null;
 function setMate(id){
-  for (const c of S.crew || []){ if (c.id === id) c.mate = true; else delete c.mate; }
-  const o = S.ops; if (o && o.v === 2){ o.mate = id || null; if (id && o.skipper === id) o.skipper = meAboard() ? 'me' : ((S.crew || []).find(c => c.id !== id) || {}).id || null; }
+  for (const c of S.crew || []){ if (c.id === id){ c.mate = true; delete c.sk; } else delete c.mate; }
+}
+// ---- the skipper (Jonas 23.10.2026: «når jeg/brukeren ikke er ombord må det utnevnes en skipper og en styrmann ombord»): one of the crew,
+// who runs the boat and the operations plan when you are not aboard (06d-drift.js). Aboard you are the skipper; the mate is someone else.
+const crewSkipper = () => (S.crew || []).find(c => c.sk) || null;
+function setSkipper(id){
+  for (const c of S.crew || []){ if (c.id === id){ c.sk = true; delete c.mate; } else delete c.sk; }
 }
 // ---- what a person is used to: minutes at each station (c.hab), fading by a fifth a month. The station with most of them, once it is
 // more than ten hours and close to half of all, is their place aboard: the hauler, the one at the table (crewRole)
@@ -184,7 +189,7 @@ function workAssign(as){
   if (ctx.s === 'aground'){ for (const p of P){ p.st = 'pause'; p.why = 'aground'; } return P; }
   const n = {}, cnt = k => n[k] || 0, room = k => cnt(k) < stPlaces(k, ctx), put = (p, k, why) => { if (p.st) n[p.st]--; p.st = k; n[k] = cnt(k) + 1; if (why) p.why = why; };
   const free = () => P.filter(p => !p.st), bestOf = (L, k) => L.slice().sort((a, b) => workScore(b, k, ctx, 1) - workScore(a, k, ctx, 1))[0];
-  // the helm, while she is driven: you, else the mate, else the plan's skipper, else the best seaman
+  // the helm, while she is driven: you, else the mate, else the skipper, else the best seaman
   if (ctx.ror){ const me = P.find(p => !p.c), m = P.find(p => p.c && p.c.mate), sk = typeof opsSkipper === 'function' && opsSkipper(), o = sk && P.find(p => p.c === sk);
     const who = me || m || o || P.slice().sort((a, b) => b.c.attr.sjo - a.c.attr.sjo)[0]; put(who, 'ror', me ? 'skipper' : m ? 'mate' : o ? 'opsk' : 'seaman'); }
   // the work waiting at each station, in one person's minutes, and the crew's own jobs on the gear

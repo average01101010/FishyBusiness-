@@ -596,7 +596,7 @@ function dock(pid, berth){
   b.berth = berth === 'naust' && quayFace(pid, 'naust') ? 'naust' : 'main';   // a route can end at Father's naust (07c-naust.js)
   if (typeof achVisitPort === 'function') achVisitPort(pid);
   if (typeof PTOW !== 'undefined') PTOW.docked(pid);   // moored with another player's boat in tow: the tow is done (ui/10o-ptow.js)   // «Havner besøkt» and the rest (09f-merker.js)
-  const wasOps = S.plan && S.plan.ops;
+  const wasOps = S.plan && S.plan.ops, opsK = S.plan && S.plan.opsK;
   S.plan = null; S.trail = [{x:port.p.x, y:port.p.y, port:pid}];
   if (b.berth === 'naust') log('Fortøyd ved naustet i ' + port.name + '.', 'Moored at the boathouse in ' + port.name + '.');
   else if (port.rorbu) log('Fortøyd ved rorbua i ' + port.name + '.', 'Moored at the rorbu in ' + port.name + '.');   // 07d-rorbu.js
@@ -608,7 +608,7 @@ function dock(pid, berth){
   tatTripEnd(pid);
   turDock(pid);   // freight picked up or delivered (09g-turer.js)
   // the skipper starts landing and restocks straight away, on this vessel (a deferred call would act on whichever vessel is bound then)
-  if (wasOps && !port.rorbu){ opsLanded(pid); if (typeof refreshAll === 'function') setTimeout(refreshAll, 0); }
+  if (wasOps && !port.rorbu){ opsLanded(pid, opsK); if (typeof refreshAll === 'function') setTimeout(refreshAll, 0); }
 }
 // What the boat makes of the fish where it is, besides the fish itself: effort (people, jigs, machines, the team), weather and
 // sea, cold, hands busy on deck, and your own share while you play the jig game. fish() uses it, and so does the heat map's «Her nå» line.

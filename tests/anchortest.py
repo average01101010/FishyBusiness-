@@ -34,23 +34,25 @@ JS = """(async () => {
   // a rorbu: arrival by a route starts the rest by itself (Jonas 08.10.2026), a tired skipper aboard, none when rested
   { const rid = RORBUER[0].id; S.me = S.cur; S.energy = 40; S.rest = null; S.plan = {wps:[], idx:0}; b.status = 'sailing'; b.port = null; S.cash = 5e5; dock(rid); R.rorbuRest = !!S.rest && S.rest.w === 'rorbu';
     S.rest = null; S.energy = 100; S.plan = {wps:[], idx:0}; b.status = 'sailing'; dock(rid); R.rorbuRested = !S.rest; S.rest = null; b.status = 'idle'; b.port = null; b.pos = {x:spot.x, y:spot.y}; S.plan = null; }
-  // 3. a rest at anchor in the plan
-  const W = q => ({x:q.x, y:q.y, port:null, fish:0}), rt = FLEET.find(f => f.home === 'husoy' && f.L < 15).rt[0].slice(1).map(q => ({x:q[0], y:q[1]}));
-  const wps = exitWps(HP, rt[0]).map(W).concat(rt.map((q, i) => ({x:q.x, y:q.y, port:null, fish:i === rt.length - 1 ? 1 : 0}))); rt.slice(0, -1).reverse().forEach(q => wps.push(W(q)));
-  entryWps(HP, rt[0]).forEach(q => wps.push(W(q))); wps.push({x:HP.p.x, y:HP.p.y, port:'husoy', fish:0});
-  const trip = dep => ({id:driftSid(), type:'tur', dep, route:{wps:wps.map(w => ({...w})), speed:16, home:'husoy', end:'husoy', hours:3}});
-  let calm = null; for (let d = 0; d < 150 && calm == null; d++){ const H0 = (Date.UTC(2028, 4, 1 + d, 4) - EPOCH) / 3.6e6; let good = true; for (let k = 0; k <= 22; k++) if (realW(H0 + k) > 7.5 || hsOpen(H0 + k) > 1.2) good = false; if (good) calm = H0; } R.calm = calm; if (calm == null) return R;
+  // 3. the plan: a big boat (from 24 m, Jonas 23.10.2026) lies at anchor near home between the days, and at the quay when the night is too hard
+  // (a boat of 15 m or more may not fish cod inside the fjord lines, so the place is outside them: a harbour on the outer coast)
+  b.type = 'autoliner'; applyVessel(); let HQ = null, spot2 = null;
+  for (const pid of ['husoy', 'botnhamn', 'gryllefjord', 'finnsnes']){ const P = portById(pid); if (!P || spot2) continue; await mapNeed(P.p, 20);
+    for (let r = 3; r < 20 && !spot2; r += 0.5) for (let a = 0; a < 24 && !spot2; a++){ const q = {x:P.p.x + r * Math.sin(a * 0.26), y:P.p.y - r * Math.cos(a * 0.26)}; try { if (!isLand(q) && depthF(q) > 30 && coastDist(q) > 0.5 && !ruBlockMsg({p:q, len:BOAT.len, gear:'juksa', sp:null, hand:true})){ spot2 = q; HQ = P; } } catch (e){} } }
+  R.bigHome = HQ && HQ.id;
+  let calm = null; for (let d = 0; d < 150 && calm == null; d++){ const H0 = (Date.UTC(2028, 4, 1 + d, 4) - EPOCH) / 3.6e6; let good = true; for (let k = 0; k <= 30; k++) if (realW(H0 + k) > 7.5 || hsOpen(H0 + k) > 1.2) good = false; if (good) calm = H0; } R.calm = calm; if (calm == null || !spot2) return R;
   const run = async (mode) => {
-    b.status = 'port'; b.port = 'husoy'; b.pos = {...HP.p}; b.fuel = 90; b.gear = true; b.kgear = true; b.land = b.shift = b.fueling = null; S.hold = []; S.plan = null; b.anch = null; S.sales = []; S.me = 'nobody';
-    S.t = Math.round(calm * 60); const ole = Object.assign(genCrew(), {bi:false, off:false, name:'Ole'}); S.crew = [ole];
-    const o = driftNew({skipper:ole.id, days:[1, 1, 1, 1, 1, 1, 1]}); o.wx.wind = 40; o.wx.hs = 7; o.sess = [trip(5), {id:driftSid(), type:'hvile', dep:9, at:'anker', near:'husoy', pos:null}, trip(15)]; S.ops = o; o.on = true;
-    if (mode === 'storm'){ window.windAt = () => BOAT.risk[2] * 1.3; window.hsAt = () => 0.3; window.hsOpen = () => 0.3; }
-    const ev = {anch:0, outAfterAnch:0, port:0}; let wasAnch = false, outs = 0, hold = 0;
+    b.type = 'autoliner'; applyVessel(); b.status = 'port'; b.port = HQ.id; b.pos = {...HQ.p}; b.fuel = BOAT.fuelCap; b.gear = true; b.land = b.shift = b.fueling = null; S.hold = []; S.plan = null; b.anch = null; S.sales = []; S.me = 'nobody';
+    S.t = Math.round(calm * 60); const ole = Object.assign(genCrew(), {bi:false, off:false, name:'Ole'}), per = Object.assign(genCrew(), {bi:false, off:false, name:'Per'}); S.crew = [ole, per]; setSkipper(ole.id); setMate(per.id);
+    const o = driftNew({home:HQ.id, anchor:true, rig:'juksa', jigs:[{id:'a', x:spot2.x, y:spot2.y}], dep:Math.round(driftHod(calm)), wx:'tough'}); S.ops = o;
+    const err = await new Promise(r => driftMake(o, r)); o.on = true;
+    // the storm comes at night only: the day is fished, and the anchorage is too open for the night
+    if (mode === 'storm') window.windAt = (H, p) => { const h = driftHod(H); return h >= 21 || h < 4 ? BOAT.risk[2] * 1.3 : realW(H, p); };
+    const ev = {err, anch:0, outAfterAnch:0, port:0, homeA:!!o.homeA}; let wasAnch = false;
     for (let i = 0; i < 28 * 60; i++){ DYN.on = false; step(); if (i % 15 === 0) await tick(); if (b.anch && !wasAnch){ ev.anch++; } wasAnch = !!b.anch;
-      if (b.status !== 'port' && ev.anch >= 1 && !b.anch && b.status === 'sailing') ev.outAfterAnch++; if (b.status === 'port' && S.t % 60 === 0) ev.port++;
-      if (b.status !== 'port' && !b.anch && !S.hold.length && b.status === 'sailing' && hold < 3){ for (const [sp, kg] of [['torsk', 80]]) S.hold.push({sp, cls:SPECIES[sp].ref, kg, n:1, bled:true, iced:true, hr:0, fresh:95, gut:false, hook:true}); hold++; } }
-    ev.logs = S.log.slice(-40).map(l => hm(l.t / 60) + ' ' + (l.no || '').slice(0, 70)); ev.reps = o.rep.length; ev.msgs = S.msgs.filter(m => /ankers/.test(m.no)).map(m => m.no.slice(0, 80)); ev.fails = o.fails; ev.on = o.on; ev.pos = o.sess[1].pos; ev.status = b.status; ev.anchNow = !!b.anch; ev.dbg = {idx:o.idx, cn:o.cn, a0:o.a0, hold:o.hold, delay:o.delay, sk:o.skipped, H:S.t / 60, hod:driftHod(S.t / 60), busy:portBusy(b), jobs:S.jobs && S.jobs.length, plan:!!S.plan, land:!!b.land, shift:!!b.shift, st:b.status, crew:S.crew.length, wxw:windAt(S.t/60), hs:hsOpen(S.t/60)};
-    window.windAt = realW; window.hsAt = realH; window.hsOpen = realO; S.ops = null; return ev;
+      if (b.status !== 'port' && ev.anch >= 1 && !b.anch && b.status === 'sailing') ev.outAfterAnch++; if (b.status === 'port' && S.t % 60 === 0) ev.port++; }
+    ev.logs = S.log.slice(-30).map(l => hm(l.t / 60) + ' ' + (l.no || '').slice(0, 70)); ev.reps = o.rep.length; ev.on = o.on; ev.stop = o.stop; ev.wait = o.wait; ev.status = b.status; ev.anchNow = !!b.anch; ev.portNow = b.port;
+    window.windAt = realW; window.hsAt = realH; window.hsOpen = realO; S.ops = null; b.type = 'skiff'; applyVessel(); return ev;
   };
   R.calmPlan = await run('calm'); R.stormPlan = await run('storm');
   S.me = S.cur; return R; })()"""
@@ -71,8 +73,8 @@ async def main():
         print(ok(r.get('alarmRang')), 'ankeralarmen ringer ved slep')
         print(ok(r.get('rorbuRest') and r.get('rorbuRested')), 'ankomst til rorbu starter hvilen av seg selv (ikke når du er uthvilt)')
         c = r.get('calmPlan') or {}
-        print(ok(c.get('anch') == 1 and c.get('reps') >= 2), 'planen: tur, hvile til ankers, tur fra ankeret, to leveringer')
+        print(ok(not c.get('err') and c.get('homeA') and c.get('anch', 0) >= 1 and c.get('outAfterAnch', 0) > 0 and c.get('reps') >= 1), 'planen: en stor båt fisker, leverer, ligger til ankers hjemme og går ut fra ankeret neste dag')
         s = r.get('stormPlan') or {}
-        print(ok(s.get('anch') == 0 and s.get('reps') >= 2), 'planen: i hardt vær ligger båten ved kai i stedet for å ankre')
+        print(ok(s.get('anch') == 0 and s.get('reps') >= 1 and s.get('port', 0) >= 8), 'planen: når natta blir for hard for ankerplassen, ligger båten ved kai i stedet (natta ved kaia, ut igjen neste dag)')
         print('sidefeil', errs[:3]); await b.close()
 asyncio.run(main())

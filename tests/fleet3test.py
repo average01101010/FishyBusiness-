@@ -19,7 +19,7 @@ async def main():
           const v1 = curVessel(), v2 = newVesselObj('snekke', 'husoy');
           // something to report on each vessel
           S.boat.engH = 150; S.boat.svcAt = 0;
-          withVessel(v2, () => { const c = Object.assign(genCrew(), {bi:false, off:false}); S.crew = [c]; S.boat.fuel = 10; S.ops = {on:true, dep:5, days:[1, 1, 1, 1, 1, 0, 0], maxWind:12, skipper:null, last:-1, wps:[], speed:8, home:'husoy', end:'husoy', hours:8}; });
+          withVessel(v2, () => { const c = Object.assign(genCrew(), {bi:false, off:false}); S.crew = [c]; S.boat.fuel = 10; S.ops = Object.assign(driftNew({home:'husoy'}), {on:false, stop:{t:S.t, k:'roles', no:'Når du ikke er om bord, må både en skipper og en styrmann være utnevnt.', en:'When you are not aboard, both a skipper and a mate must be appointed.', fix:'mannskap'}}); });
           R.alerts = PHONE.alerts().map(a => a.id + ':' + a.k);
           PHONE.open('home'); const bd = [...document.querySelectorAll('.ph-app')].find(x => x.dataset.a === 'rederi'); R.badge = bd && bd.querySelector('.bd') ? bd.querySelector('.bd').textContent : null;
           // the Company app lists both vessels and the alerts
@@ -43,7 +43,7 @@ async def main():
           return R; })()""")
         print(json.dumps(r, ensure_ascii=False))
         a = r['alerts']
-        print(ok('v1:svc' in a and 'v2:fuel' in a and 'v2:ops' in a), 'alerts: service on the first vessel, low fuel and a plan without skipper on the second')
+        print(ok('v1:svc' in a and 'v2:fuel' in a and 'v2:ops' in a), 'alerts: service on the first vessel, low fuel and a stopped plan (no skipper and mate) on the second')
         print(ok(r['badge'] == str(len(a))), 'the Company icon shows the number of alerts')
         print(ok(r['cards'] >= 2 and r['hasFuel']), 'the Company app shows the fleet and the alerts')
         print(ok(r['goto']['app'] == 'drift' and r['goto']['sel'] == 'v2' and r['goto']['cur'] == 'v1' and r['goto']['crewShown']), 'an alert opens the Drift page in the drawer on the second vessel, following stays on the first')

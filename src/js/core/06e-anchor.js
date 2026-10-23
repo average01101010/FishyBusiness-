@@ -167,7 +167,7 @@ function anchorTick(H, W, hs){
   if (blocked){ b.anch = null; if (typeof runAground === 'function' && b.status !== 'aground' && isFinite(to.x)) runAground(b.pos); return; }
   move(); log('Ankeret slepper, og ingen er våkne.', 'The anchor is dragging, and nobody is awake.');
 }
-// the best place to anchor near a port for the plan to rest at: sheltered, the right depth, room to swing, near the port
+// the best place to anchor near a port for the plan's big boats to rest at (06d-drift.js homeA, restA): sheltered, the right depth, room to swing, near the port
 function driftAnchorage(pid){
   const pt = portById(pid); if (!pt) return null; let best = null;
   for (const r of ANCH.plan.ring) for (let k = 0; k < ANCH.plan.bearings; k++){
@@ -176,10 +176,4 @@ function driftAnchorage(pid){
     if (!best || score < best.score) best = {x:p.x, y:p.y, depth:Math.round(sp.depth), expo:sp.expo, level:sp.level, d:r, score};
   }
   return best;
-}
-// the player picks «anker» for a rest: the place is found once the chart is in, and stays until he chooses again
-async function driftPickAnchorage(sess, done){
-  const pt = portById(sess.near); if (!pt) return null;
-  try { await mapNeed(pt.p, 14); } catch (e){}
-  const sp = driftAnchorage(sess.near); sess.pos = sp ? {x:sp.x, y:sp.y} : null; if (done) done(sp); return sp;
 }

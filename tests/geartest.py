@@ -167,17 +167,17 @@ async def main():
 
         # 6. the standing plan: a net station set on day one, hauled and set again after that, and refused with one hand
         await pg.evaluate(SEED)   # a fresh seed: the plan's three days must not hang on how many random numbers the sections before used (gear is lost at random)
-        r = await pg.evaluate("""(()=>{ const b = S.boat; S.sets = []; S.hold = []; S.cash = 5e6; S.settings.autoW = 16; S.stock = initStock();
+        r = await pg.evaluate("""(async ()=>{ const b = S.boat; S.sets = []; S.hold = []; S.cash = 5e6; S.settings.autoW = 16; S.stock = initStock();
           let t0 = null; for (let d = 0; d < 60 && t0 == null; d++){ const H0 = HOUR(2028, 2, 1 + d, 5); let okw = true; for (let k = 0; k <= 60; k++) if (windAt(H0 + k) > 13 || hsOpen(H0 + k) > 2.2) okw = false; if (okw) t0 = H0; }
           S.t = Math.round(t0 * 60) - 30; b.type = 'sjark'; applyVessel(); S.equip.garnhaler = true; b.rig = 'garn'; b.fuel = BOAT.fuelCap; b.port = 'husoy'; b.pos = {...portById('husoy').p}; b.status = 'port'; b.gop = null;
-          S.crew = [hand(), hand()]; S.me = 'nobody'; S.pgear = newPGear(); S.pgear.nets.push({id:'np', mesh:180, n:30, cond:1}); S.pgear.kits.n = 2;
-          const HP = portById('husoy'), W = q => ({x:q.x, y:q.y, port:null, fish:0}), rt = FLEET.find(f => f.home === 'husoy' && f.L < 15).rt[0].slice(1).map(q => ({x:q[0], y:q[1]}));
-          const wps = exitWps(HP, rt[0]).map(W).concat(rt.map((q, i) => ({x:q.x, y:q.y, port:null, fish:0, act:i === rt.length - 1 ? {op:'cycle', kind:'garn', spec:{nid:'np'}} : undefined})));
-          rt.slice(0, -1).reverse().forEach(q => wps.push(W(q))); entryWps(HP, rt[0]).forEach(q => wps.push(W(q))); wps.push({x:HP.p.x, y:HP.p.y, port:'husoy', fish:0});
-          S.ops = {on:true, dep:5, days:[1, 1, 1, 1, 1, 1, 1], maxWind:16, skipper:S.crew[0].id, last:-1, wps, speed:9, home:'husoy', end:'husoy', hours:8};
-          const s0 = S.sales.length, days = []; for (let d = 0; d < 3; d++){ for (let i = 0; i < 1440; i++) step(); days.push(S.sets.filter(s => !s.lost).map(s => Math.round((S.t - s.tSet) / 60))); }
-          const R = {days, sales:S.sales.slice(s0).map(x => x.kg)};
-          S.crew = [S.crew[0]]; S.ops.last = -1; const m0 = S.msgs.length; for (let i = 0; i < 1440; i++) step(); R.oneHand = S.msgs.slice(m0).some(m => /to om bord/.test(m.no));
+          S.crew = [hand(), hand()]; setSkipper(S.crew[0].id); setMate(S.crew[1].id); S.me = 'nobody'; S.pgear = newPGear(); S.pgear.nets.push({id:'np', mesh:180, n:30, cond:1}); S.pgear.kits.n = 2;
+          const rt = FLEET.find(f => f.home === 'husoy' && f.L < 15).rt[0], end = rt[rt.length - 1];
+          const o = S.ops = driftNew({home:'husoy', rig:'garn', jig:false, fields:[{id:'g', x:end[0], y:end[1], n:30, soak:24}], dep:5, wx:'tough'});
+          await new Promise(r => driftMake(o, r)); o.on = true;
+          const s0 = S.sales.length, days = []; for (let d = 0; d < 3; d++){ for (let i = 0; i < 1440; i++){ DYN.on = false; step(); if (i % 240 === 0) await new Promise(r => setTimeout(r, 0)); } days.push(S.sets.filter(s => !s.lost).map(s => Math.round((S.t - s.tSet) / 60))); }
+          const R = {days, sales:S.sales.slice(s0).map(x => x.kg), stop:o.stop};
+          // you alone aboard: nets need two
+          S.crew = []; S.me = S.cur; o.on = true; o.stop = null; o.hold = 0; o.fails = 0; o.day = null; o.last = null; const m0 = S.msgs.length; for (let i = 0; i < 1440; i++){ DYN.on = false; step(); } R.oneHand = S.msgs.slice(m0).some(m => /to om bord/.test(m.no));
           S.ops = null; S.me = S.cur; return R; })()""")
         print('plan:', json.dumps(r))
         print(ok(len(r['sales']) >= 2 and all(k > 100 for k in r['sales']) and all(len(d) == 1 and d[0] <= 30 for d in r['days'])), 'standing plan: the net station is hauled and set again every day, and the catch is landed')
