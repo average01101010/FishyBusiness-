@@ -91,8 +91,10 @@ function pushItems(now){
   for (const v of (S.fleet && S.fleet.length ? S.fleet : [null])) (v ? withVessel : (vv, f) => f())(v, () => {
     const b = S.boat, nm = S.boatName || 'Det Store Blå', tag = v && v.id || 'b', kg = (S.hold || []).reduce((a, x) => a + x.kg, 0), out_ = b.status !== 'port';
     // a boat on a route, at the end of it (as the route's ETA, 04-panels-instruments.js navOf): at a harbour, a shop or a yard, or out at sea
-    const P = S.plan;
-    if (P && P.idx < P.wps.length && out_){
+    // (a trip on the operations plan is the crew's: they land, rest and go out again by themselves, so its arrival, a full hold and a tired
+    // crew are not told; the plan's stop is, below)
+    const P = S.plan, onPlan = !!(P && P.ops), O = S.ops && S.ops.v === DRV ? S.ops : null;
+    if (P && P.idx < P.wps.length && out_ && !onPlan){
       const wps = P.wps.slice(P.idx), last = wps[wps.length - 1], pt = last.port && portById(last.port);
       let km = 0, a = b.pos, fishH = 0; wps.forEach((q, i) => { km += dist(a, q); a = q; if (i && q.fish > 0) fishH += q.fish; });
       const H0 = P.depAt ? Math.max(S.t / 60, P.depAt / 60) : S.t / 60, T = (H0 + km / ((P.speed || 10) * NM) + fishH) * 60;
@@ -104,12 +106,12 @@ function pushItems(now){
       } else add(T, 'end-' + tag, nm, nm + ' er ferdig med ruta og venter på ordre.', nm + ' has finished the route and waits for orders.', 12, 1);
     }
     // the hold full, while jigging (the session's catch so far gives the rate), before the fishing time is out
-    if (b.status === 'fishing' && S.fsess && typeof rigJig === 'function' && rigJig() && S.t - S.fsess.t0 >= 20 && S.fsess.kg > 0){
+    if (b.status === 'fishing' && !onPlan && S.fsess && typeof rigJig === 'function' && rigJig() && S.t - S.fsess.t0 >= 20 && S.fsess.kg > 0){
       const rate = S.fsess.kg / ((S.t - S.fsess.t0) / 60), left = capHold() - kg;
       if (left > 1 && rate > 1){ const T = S.t + left / rate * 60; if (b.fishUntil == null || T < b.fishUntil) add(T, 'full-' + tag, nm, 'Lasten på ' + nm + ' er full. Tid for å gå inn.', 'The hold on ' + nm + ' is full. Time to head in.', 6, 1); }
     }
     // fish in the hold about to drop a grade (not while she is on her way in: that is the line above), two game hours before
-    if (kg > 20 && !(P && P.idx < P.wps.length)){
+    if (kg > 20 && !(P && P.idx < P.wps.length) && !(O && O.on)){
       const clean = 1; let best = null;
       for (const x of S.hold){ if (x.kg < 20 || SPECIES[x.sp].live) continue;
         const r = (x.bled ? (x.iced ? 0.9 : 3.0) : (x.iced ? 2.2 : 6.0)) * clean, f = x.fresh, nx = f >= 85 ? 85 : f >= 65 ? 65 : f >= 40 ? 40 : f >= 15 ? 15 : null;
@@ -127,7 +129,7 @@ function pushItems(now){
     if (yj.length){ const T = Math.max(...yj.map(j => j.until)), fitOnly = yj.every(j => j.kind === 'fit'), names = yj.map(j => L2(j.no || '', j.en || j.no || '')).filter(Boolean).slice(0, 3).join(', ');
       add(T, 'yard-' + tag, nm, (fitOnly ? 'Monteringen er ferdig' : 'Verftet er ferdig') + (names ? ' med ' + names.toLowerCase() : '') + '. Båten er klar til å gå ut.', (fitOnly ? 'The fitting is done' : 'The yard is done') + (names ? ' with ' + names.toLowerCase() : '') + '. The boat is ready to go out.', 12, 2); }
     // a crew getting tired, and one about to break the rest rule (core/04-crew.js, 14-crewlife.js): while she is out
-    if (out_ && S.crew && S.crew.length){
+    if (out_ && !onPlan && S.crew && S.crew.length){
       let tired = null; const t0 = typeof skipOn === 'function' && skipOn() ? S.skip.until : S.t;   // (Skippertak: rested until it runs out)
       for (const c of S.crew){
         if (typeof crewAboard === 'function' && !crewAboard().some(x => x.id === c.id)) continue;
@@ -135,6 +137,14 @@ function pushItems(now){
       }
       if (tired != null) add(tired, 'crew-' + tag, nm, 'Mannskapet på ' + nm + ' begynner å bli sliten. Gå inn til kai og la dem hvile.', 'The crew of ' + nm + ' is getting tired. Head in to the quay and let them rest.', 6, 1);
     }
+    // the operations plan stops (Jonas 23.10.2026): when it has just stopped, and when one of its places is closed by the rules within the
+    // days ahead (the regulations' calendar, 03e-rules.js rulesAt with the hour); the other stops come from what happens and are told in the app
+    if (O && !O.on && O.stop && S.t - O.stop.t < 120) add(S.t + 1, 'ops-' + tag, nm, 'Driftsplanen for ' + nm + ' har stoppet: ' + O.stop.no, 'The plan for ' + nm + ' has stopped: ' + O.stop.en, 24, 1);
+    else if (O && O.on){ const H0 = S.t / 60, kind = drKind(O); let hit = null;
+      for (let d = 1; d <= Math.floor(PUSH_AHEAD / 1440) && !hit; d++){ const H = H0 + d * 24;
+        O.fields.forEach((f, i) => { if (!hit && ruBlockMsg({p:f, H, len:BOAT.len, gear:O.rig === 'teiner' ? 'teiner' : kind, sp:kind === 'teine' ? 'krabbe' : null})) hit = {H, no:'felt ' + (i + 1), en:'field ' + (i + 1)}; });
+        if (drJig(O)) O.jigs.forEach((j, i) => { if (!hit && ruBlockMsg({p:j, H, len:BOAT.len, gear:'juksa', sp:null, hand:!(S.equip && S.equip.jukse > 0)})) hit = {H, no:'juksplass ' + (i + 1), en:'jig place ' + (i + 1)}; }); }
+      if (hit) add(hit.H * 60, 'ops-' + tag, nm, 'Driftsplanen for ' + nm + ' har stoppet: ' + hit.no + ' er stengt etter reglene fra i dag. Velg en ny plass.', 'The plan for ' + nm + ' has stopped: ' + hit.en + ' is closed by the rules from today. Choose a new place.', 24, 1); }
     // an engine overdue for service, while she is out: the risk of a stop grows with every hour (core/05-vessels.js risk)
     if (out_ && typeof svcOverdue === 'function' && svcOverdue() > 0) add(S.t + 60, 'svc-' + tag, nm, 'Motoren på ' + nm + ' er over tid for service. Faren for motorstopp øker på sjøen.', 'The engine on ' + nm + ' is overdue for service. The risk of a stop grows at sea.', 3, 2);
     // a gale or high waves on the way (the boat's own limits, riskLevel) while she is out or her gear is in the sea; two game hours before

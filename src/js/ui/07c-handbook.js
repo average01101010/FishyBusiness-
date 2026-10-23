@@ -50,7 +50,7 @@ const HB = [
     no:'Langt hjemmefra kan du leie rorbu for natta: hvil der, så ligger båten trygt ved kaia til i morgen.', en:'Far from home you can rent a rorbu for the night: rest there, and the boat lies safe at the quay until morning.'},
   // 4: the routine, after the third landing
   {id:'drift', ch:4, t:['Driftsplanen', 'The operations plan'], when:() => hbLand() >= 3 && S.crew.length > 0, show:() => phoneApp('drift'),
-    no:'Driftsplanen lar mannskapet ta morgenturen mens du sover: velg felt og redskap, så går båten av seg selv.', en:'The operations plan lets the crew take the morning trip while you sleep: choose the ground and the gear, and the boat goes by itself.'},
+    no:'Driftsplanen lar båten fiske, levere og hvile på egen hånd, også når spillet er lukket: velg hjem, redskap, plasser, vær og rytme, og trykk Start. Uten deg om bord trenger den en skipper og en styrmann.', en:'The operations plan lets the boat fish, land and rest on her own, also while the game is closed: choose home, gear, places, weather and rhythm, and tap Start. Without you aboard it needs a skipper and a mate.'},
   {id:'topp', ch:4, t:['Salgslaget og topplista', 'Sales and the top list'], when:() => hbLand() >= 3, show:() => phoneApp('salg'),
     no:'Salgslaget viser prisene i dag, det du har levert, og topplista over kysten denne uka.', en:'The sales organisation shows today’s prices, what you have landed, and the week’s top list along the coast.'},
   {id:'merker', ch:4, t:['Milepæler', 'Milestones'], when:() => hbLand() >= 3, show:() => phoneApp('merker'),

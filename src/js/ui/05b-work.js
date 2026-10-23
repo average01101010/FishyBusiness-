@@ -50,7 +50,7 @@ const WORK = (() => {
   // one card per person aboard: what and why in one line, how they work, energy and mood, the last thing said, the regular place
   function row(p){
     const c = p.c, id = pid(c), role = c && crewRole(c), why = workWhyText(p), ef = c && p.st !== 'pause' ? crewEffort(c) : null;
-    const tags = c ? (c.mate ? badge('mate', L('Styrmann', 'Mate')) : '') + (c.cut && S.t < c.cut ? badge('cut', L('Skåret seg', 'Cut a hand')) : '') + (p.idle === 'seasick' ? badge('sick', L('Sjøsyk', 'Seasick')) : '') : badge('mate', L('Skipper', 'Skipper'));
+    const tags = c ? (c.sk ? badge('mate', meAboard() ? L('Skipper uten deg', 'Skipper without you') : L('Skipper', 'Skipper')) : '') + (c.mate ? badge('mate', L('Styrmann', 'Mate')) : '') + (c.cut && S.t < c.cut ? badge('cut', L('Skåret seg', 'Cut a hand')) : '') + (p.idle === 'seasick' ? badge('sick', L('Sjøsyk', 'Seasick')) : '') : badge('mate', L('Skipper', 'Skipper'));
     const e = c ? 100 - c.fatigue : (S.energy == null ? 100 : S.energy), last = c && (c.said || []).length ? c.said[c.said.length - 1] : null;
     let h = '<div class="ph-card wk-p"><div class="wk-top">' + (c ? '<button class="wk-name" data-pa="wk-card" data-id="' + id + '">' + c.name + '</button>' : '<b class="wk-name">' + L('Du', 'You') + '</b>') + '<span class="wk-bs">' + tags + '</span></div>';
     h += '<p class="wk-now">' + workDoing(p) + (why && p.why !== 'skipper' ? ' – ' + why : '') + '</p>';
@@ -58,7 +58,8 @@ const WORK = (() => {
     h += '<div class="wk-ms">' + meter(L('Energi', 'Energy'), e) + (c ? meter(L('Humør', 'Mood'), c.morale) : '') + '</div>';
     if (last) h += '<p class="wk-last">«' + last[S.lang] + '» <span class="ph-note">' + hm(last.t / 60) + '</span></p>';
     if (role) h += '<p class="ph-note">' + L('Fast på ', 'Regular at ') + sn(role).toLowerCase() + '</p>';
-    if (c && !c.mate) h += '<button class="ph-btn wk-edit" data-pa="wk-mate" data-id="' + id + '">' + L('Gjør til styrmann', 'Make mate') + '</button>';
+    // the skipper runs the boat and the operations plan when you are not aboard, the mate is at the helm when you sleep (13-work.js)
+    if (c && (!c.mate || !c.sk)) h += '<div class="ph-row2">' + (c.sk ? '' : '<button class="ph-btn wk-edit" data-pa="wk-sk" data-id="' + id + '">' + L('Gjør til skipper', 'Make skipper') + '</button>') + (c.mate ? '' : '<button class="ph-btn wk-edit" data-pa="wk-mate" data-id="' + id + '">' + L('Gjør til styrmann', 'Make mate') + '</button>') + '</div>';
     if (c && card === id) h += personCard(c);
     return h + '</div>';
   }
@@ -89,6 +90,7 @@ const WORK = (() => {
   function act(a, d){
     if (a === 'wk-card'){ card = card === d.id ? null : d.id; return true; }
     if (a === 'wk-mate'){ setMate(d.id); const c = who(d.id); if (c) toast(L(c.name.split(' ')[0] + ' er styrmann.', c.name.split(' ')[0] + ' is the mate.')); return true; }
+    if (a === 'wk-sk'){ setSkipper(d.id); const c = who(d.id); if (c) toast(L(c.name.split(' ')[0] + ' er skipper når du ikke er om bord.', c.name.split(' ')[0] + ' is the skipper when you are not aboard.')); return true; }
     return false;
   }
   return {page, act};

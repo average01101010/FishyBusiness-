@@ -62,15 +62,17 @@ const DOCK = (() => {
     // the bunk aboard (#70, 17.10.2026): at anchor, or at sea with a watch, on a boat with berths
     return w === 'koye' ? I('rest', 'naust', 'Hvil i køya', 'Rest in the bunk', {act:'rest', pri:S.energy < 30}) : I('rest', 'naust', 'Hvil', 'Rest', {act:'rest', pri:S.energy < (w === 'rorbu' ? 60 : 40)});
   }
+  // the operations plan wants you: it has stopped, or waits until you give the boat back (the Crew page has its line, ui/05c-drift.js)
+  const opsDot = () => { const o = S.ops; return !!(o && o.v === DRV && ((!o.on && o.stop) || (o.on && o.held))); };
   // at home the rest is in the Bygd fan, and on the dock itself when you are tired or resting (five buttons crowd a phone)
   const restOnDock = () => resting() || S.energy < 40;
   function portItems(){
     const b = S.boat, p = port(), tot = holdTotal(), busy = portBusy(b);
     // a rorbu has a bed and a quay, nothing more (07d-rorbu.js)
-    if (p.rorbu) return [restItem(), I('gjestebok', 'oppdrag', 'Gjestebok', 'Guestbook', {page:'gbook'}), S.crew.length || S.ops ? I('arbeid', 'arbeid', 'Mannskap', 'Crew', {page:'arbeid'}) : null, I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'})].filter(Boolean);
+    if (p.rorbu) return [restItem(), I('gjestebok', 'oppdrag', 'Gjestebok', 'Guestbook', {page:'gbook'}), S.crew.length || S.ops ? I('arbeid', 'arbeid', 'Mannskap', 'Crew', {page:'arbeid', dot:opsDot()}) : null, I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'})].filter(Boolean);
     // Father's naust is a home, not a place of trade (Jonas 07.10.2026): rest, the boathouse itself, the crew and the inventory; the
     // shop, the plant and the yard are at their own quays
-    if (berthKind(b) === 'naust') return [restItem(), I('naustup', 'naust', 'Naustet', 'Boathouse', {run:() => { NAUST3D.open(); }}), S.crew.length || S.ops ? I('arbeid', 'arbeid', 'Mannskap', 'Crew', {page:'arbeid'}) : null, I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'})].filter(Boolean);
+    if (berthKind(b) === 'naust') return [restItem(), I('naustup', 'naust', 'Naustet', 'Boathouse', {run:() => { NAUST3D.open(); }}), S.crew.length || S.ops ? I('arbeid', 'arbeid', 'Mannskap', 'Crew', {page:'arbeid', dot:opsDot()}) : null, I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'})].filter(Boolean);
     // the three places of trade (Jonas 07.10.2026): the plant (core/06c-steder.js portServices) takes the catch and sells ice, bait and fuel,
     // the tackle shop sells gear and electronics, the yard sells and mends boats and sells fuel; each has its own button, and all three have the village
     const sv = portServices(p, berthKind(b));
@@ -79,7 +81,7 @@ const DOCK = (() => {
       sv.butikk ? I('butikk', 'butikk', 'Butikk', 'Shop', {menu:'butikk'}) : null,
       I('bygd', 'bygd', 'Bygd', 'Village', {menu:'bygd'}),
       sv.verft ? I('verft', 'verft', 'Verft', 'Yard', {menu:'verft', dot:svcOverdue() > 0}) : null,
-      S.crew.length || S.ops ? I('arbeid', 'arbeid', 'Mannskap', 'Crew', {page:'arbeid'}) : null,
+      S.crew.length || S.ops ? I('arbeid', 'arbeid', 'Mannskap', 'Crew', {page:'arbeid', dot:opsDot()}) : null,
       I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'})].filter(Boolean);   // «Planlegg» went 02.10.2026: the little chart opens the plotter
   }
   function menuItems(m){
@@ -133,7 +135,7 @@ const DOCK = (() => {
   function seaItems(){
     // a quarrel aboard waits for an answer, also at sea
     const crew = S.cevt && I('mannskap', 'mannskap', 'Ansatte', 'Employees', {page:'mannskap', dot:true});
-    const work = (S.crew.length || S.ops) && I('arbeid', 'arbeid', 'Mannskap', 'Crew', {page:'arbeid'});
+    const work = (S.crew.length || S.ops) && I('arbeid', 'arbeid', 'Mannskap', 'Crew', {page:'arbeid', dot:opsDot()});
     const b = S.boat, beh = I('beh', 'beh', 'Beholdning', 'Inventory', {page:'beholdning'});   // no «Hjem» (the user's wish 02.10.2026: Autonav to the harbour, or «Returner samme vei» in the plotter)
     const nav = I('nav', 'nav', 'Auto-nav', 'Auto-nav', {run:autoNav});
     const tut = typeof HAIL !== 'undefined' ? HAIL.dockItem(I) : null;
