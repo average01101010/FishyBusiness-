@@ -1121,21 +1121,38 @@ body.vplot .depc{display:none}
 #cash.cashup{color:#3ddc84;text-shadow:0 0 10px rgba(61,220,132,.55);transition:color .2s}
 @media (prefers-reduced-motion:reduce){.cashfx{animation:cashFade 2.2s linear forwards}@keyframes cashFade{0%,70%{opacity:1}100%{opacity:0}}}
 
-/* Drift, the operations plan (ui/05c-drift.js) */
-.dr-bar{position:relative;height:22px;margin:6px 0 22px;border-radius:6px;background:rgba(120,140,160,.22);overflow:visible}
-.dr-bar i{position:absolute;top:0;bottom:0;border-radius:5px;min-width:4px}
-.dr-bar i.work{background:#2f7fd0}.dr-bar i.rest{background:#29a36a;opacity:.85}
-.dr-bar b{position:absolute;top:24px;transform:translateX(-50%);font-size:10px;font-weight:600;opacity:.65}
-.dr-s{border-top:1px solid rgba(120,140,160,.25);padding:8px 0}
-.dr-s:first-of-type{border-top:0}
-.dr-h{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-.dr-tm{white-space:nowrap}
-.dr-tm button,.ph-kv button{min-width:30px}
+/* Drift, the operations plan (ui/05c-drift.js): the answers as rows that open where they are tapped, the timeline, the last seven days */
+.dr-rows{padding-top:4px;padding-bottom:4px}
+.dr-row{border-top:1px solid rgba(120,140,160,.25)}
+.dr-row:first-child{border-top:0}
+.dr-rh{display:flex;align-items:center;gap:10px;width:100%;min-height:50px;padding:8px 2px;background:none;border:0;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.dr-rl{flex:0 0 86px;font-weight:700;font-size:14px}
+.dr-rv{flex:1;min-width:0;font-size:14px;line-height:1.3;opacity:.85}
+.dr-rc{flex:0 0 14px;font-weight:700;opacity:.55;text-align:right}
+.dr-row.on .dr-rl,.dr-row.on .dr-rc{color:#1e8c6e;opacity:1}
+.dr-row.bad .dr-rv{color:#b3261e;opacity:1}
+.dr-rb{padding:0 0 12px}
+.dr-k{font-weight:400;opacity:.75}
+.dr-now{padding:10px 12px;border-radius:10px;background:rgba(30,140,110,.12);margin:6px 0;font-size:14px;line-height:1.35}
+.dr-now.wait{background:rgba(230,160,30,.16)}
+.dr-now.bad{background:rgba(200,40,30,.13);color:#8c1d18}
+.dr-pl{padding:8px 0;border-top:1px dashed rgba(120,140,160,.3)}
+.dr-plh b{display:block;font-size:14px}.dr-plh small{display:block;font-size:12.5px;opacity:.8;margin-top:1px}
+.dr-plc{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:6px}
+.dr-plc>span{display:flex;gap:4px;align-items:center}
+.dr-plc button,.dr-st button{min-width:38px;min-height:36px;background:#e3eaee;color:#15252f;border:1px solid #b9c7cf;border-radius:8px;font-weight:600;padding:0 10px}
+.dr-plc button:disabled{opacity:.4}
+.dr-st{display:inline-flex;align-items:center;gap:6px}.dr-st output{min-width:64px;text-align:center;font-weight:600;font-size:13.5px}
+.dr-add{margin:4px 0 8px}
 .dr-pv{margin:8px 0}
 .dr-ev{display:flex;gap:10px;padding:3px 0;font-size:13px}
-.dr-ev span:first-child{min-width:62px;font-variant-numeric:tabular-nums;font-weight:600}
-.dr-ev.rest span:last-child{color:#29a36a}.dr-ev.land span:last-child{color:#2f7fd0}
-.dr-watch{font-size:13px;margin:4px 0 8px;line-height:1.5}.dr-watch b{display:inline-block;min-width:54px}
+.dr-ev span:first-child{min-width:46px;font-variant-numeric:tabular-nums;font-weight:600}
+.dr-ev.rest span:last-child{color:#29a36a}.dr-ev.land span:last-child{color:#2f7fd0}.dr-ev.st span:last-child{color:#c06a16}
+.dr-ev.now{font-weight:700}.dr-ev.now span:last-child{color:#1e8c6e}
+.dr-w7{display:flex;align-items:flex-end;gap:6px;height:70px;margin:10px 0 2px;border-bottom:1px solid rgba(120,140,160,.35)}
+.dr-w7 i{flex:1;background:#2f7fd0;border-radius:4px 4px 0 0}
+.dr-w7l{display:flex;gap:6px;margin-bottom:6px}.dr-w7l span{flex:1;text-align:center;font-size:11px;opacity:.7}
+.dr-line{display:flex;justify-content:space-between;align-items:center;gap:10px}.dr-line b{display:block}.dr-line small{display:block;font-size:12.5px;opacity:.8;margin-top:2px}.dr-line .ph-btn{margin:0;flex:0 0 auto}
 .dr-kv{flex-wrap:wrap;gap:4px 8px}.dr-kv>span:last-child{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;align-items:center;max-width:100%}.dr-kv>span:last-child .ops-days{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}
 
 /* the anchor alarm in 3D (view3d.js ANCHAL) */
@@ -1147,15 +1164,13 @@ body.vplot .depc{display:none}
 .dr-kv button,.ops-days button{background:#e3eaee;color:#15252f;border:1px solid #b9c7cf;border-radius:8px;font-weight:600}
 .dr-kv button.on,.ops-days button.on{background:#1e8c6e;color:#fff;border-color:#1e8c6e}
 .dr-kv button:disabled{background:transparent;color:#6c7d87;border:1px dashed #9aabb4;opacity:1}
-/* the plan maker (ui/05c-drift.js): one question at a time, big buttons for a finger */
-.dr-step{margin:0 0 2px;font-size:12px;color:#5b6c76;text-transform:uppercase;letter-spacing:.04em}
+/* the plan's choices (ui/05c-drift.js): big buttons for a finger */
 .dr-big{display:block;width:100%;text-align:left;margin:6px 0;padding:12px 14px;border:1px solid #b9c7cf;border-radius:12px;background:#f4f7f9;color:#15252f;font:inherit;cursor:pointer}
 .dr-big b{display:block;font-size:15px}.dr-big small{display:block;margin-top:2px;font-size:12.5px;color:#4b5d68}
 .dr-big.on{background:#1e8c6e;border-color:#1e8c6e;color:#fff}.dr-big.on small{color:#e3f4ee}
 .dr-big:disabled{background:transparent;border-style:dashed;color:#7d8d96;cursor:default}.dr-big:disabled small{color:#8a9aa3}
 .dr-onoff{display:block;width:100%;margin:8px 0;padding:14px;border:0;border-radius:12px;background:#e3eaee;color:#15252f;font:700 15px var(--sans)}
 .dr-onoff.on{background:#1e8c6e;color:#fff}.dr-onoff:disabled{background:transparent;border:1px dashed #9aabb4;color:#6c7d87}
-.dr-day .dr-pv{margin-top:8px}
 /* Venner (ui/10k-friends.js): the code, the add field, the friends with a green dot when their game is open; friends' boats on the chart */
 .fr-big{letter-spacing:.18em;font-family:var(--mono,monospace);text-align:center;margin:4px 0 6px}
 .fr-add{display:flex;gap:8px;align-items:center} .fr-add input{flex:1;min-width:0;font:600 18px var(--mono,monospace);letter-spacing:.15em;text-transform:uppercase;padding:9px 10px;border:1px solid #b9c4cc;border-radius:8px}

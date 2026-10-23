@@ -71,7 +71,7 @@ function setLabel(s, short){
 // stamper bankline · makrell»), the pots by the bait there is for them. all: also what is aboard and cannot be set, as a row that says why
 // (off: «2 stamper bankline · ikke egnet», pots without bait), for the «Sett ut» fan; the plan and the route take only the settable ones
 function setChoices(all){
-  const pg = S.pgear, out = [], r = RIGS[(DRIFTCTX && DRIFTCTX.rig) || rigOf()].kind; if (!pg || !r) return out;
+  const pg = S.pgear, out = [], r = RIGS[rigOf()].kind; if (!pg || !r) return out;
   for (const l of pg.nets) out.push({kind:'garn', spec:{nid:l.id}, n:l.n, lbl:[l.n + ' garn ' + netNo(l), l.n + ' nets ' + netEn(l)]});
   for (const lk of ['hyse', 'bank']){ const L0 = pg.lines[lk]; if (!L0 || !L0.n) continue; const bt = btOf(L0), K = LINE_KINDS[lk];
     const lbl = (n, no, en) => [n + ' ' + (n === 1 ? 'stamp' : 'stamper') + ' ' + K.no.toLowerCase() + ' · ' + no, n + ' ' + (n === 1 ? 'tub' : 'tubs') + ' of ' + K.en.toLowerCase() + ' · ' + en];
