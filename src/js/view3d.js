@@ -1788,6 +1788,8 @@ const G3 = (() => {
     if (K){ drawN(K.head, HM); for (const m of [K.hair, K.beard, K.hat]) if (m) drawN(m, HM); } else drawN(P.bare ? PM.headB : PM.head, HM);
     let hands;
     const t = T + idx * 1.7;
+    // (near, the hands are drawn in their grips, the pose's points being where they hold: a hanging hand's grip is below its wrist)
+    const HMS = K ? handMeshes() : null, near = !!HMS && Math.hypot(...W(0, 1.2, 0)) < 10;
     const ease = u => u * u * (3 - 2 * u), lerp3 = (A, B, u) => [A[0] + (B[0] - A[0]) * u, A[1] + (B[1] - A[1]) * u, A[2] + (B[2] - A[2]) * u], norm3 = v => { const l = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / l, v[1] / l, v[2] / l]; };
     switch (st.task){
       case 'hose': hands = [W(0.45, 1.15, 0.12), W(0.3, 1.1, -0.1)]; break;
@@ -1968,29 +1970,42 @@ const G3 = (() => {
       case 'snus': { const c = (t % 24) / 24; if (c < 0.28){ const u = ease(Math.min(1, c / 0.1)); hands = [lerp3(W(0.0, 0.95, 0.19), W(0.26, 1.13, 0.02), u), W(0.26, 1.1, -0.04)]; st.can = true; }
         else if (c < 0.4){ const u = Math.sin((c - 0.28) / 0.12 * Math.PI); hands = [lerp3(W(0.26, 1.13, 0.02), W(0.12, 1.47, 0.03), u), W(0.26, 1.1, -0.04)]; st.can = true; }
         else { const r = st.rail; hands = r ? [W(r[0] + 0.02, r[1] + 0.04, 0.2), W(r[0] + 0.02, r[1] + 0.04, -0.2)] : [W(0.0, 0.95, 0.19), W(0.0, 0.95, -0.19)]; } break; }
-      default: hands = [W(-sw * 0.15, 0.82, 0.26), W(sw * 0.15, 0.82, -0.26)];
+      default: { const hy = near ? 0.76 : 0.82; hands = [W(-sw * 0.15, hy, 0.26), W(sw * 0.15, hy, -0.26)]; }
     }
-    [0.21, -0.21].forEach((r, i) => { const sh = W(bend * 0.8, 1.42 + dy, r), hd2 = hands[i], el = [(sh[0] + hd2[0]) / 2 - F[0] * 0.05 + R[0] * r * 0.25, (sh[1] + hd2[1]) / 2 - 0.08, (sh[2] + hd2[2]) / 2 - F[1] * 0.05 + R[1] * r * 0.25];
+    // the hands (tools/harbour/hender.py; Jonas 23.10.2026: «Det er også viktig hvordan objekter holdes med hendene for realismen»):
+    // each in the grip its work takes, the palm turned the way the work turns it; the pose's point is where the hand holds (its grip),
+    // the wrist is found back from it, and what the hand holds is drawn in the grip (GP, GA). Far off (and on the old figure) the one-piece
+    // glove at the wrist as before.
+    const HS = near ? handSpecs(st, F, R, hands) : null, GP = [hands[0], hands[1]], GA = [null, null];
+    [0.21, -0.21].forEach((r, i) => { const sh = W(bend * 0.8, 1.42 + dy, r), elOf = q => [(sh[0] + q[0]) / 2 - F[0] * 0.05 + R[0] * r * 0.25, (sh[1] + q[1]) / 2 - 0.08, (sh[2] + q[2]) / 2 - F[1] * 0.05 + R[1] * r * 0.25];
+      if (near){ const sd = i ? 'L' : 'R', sp = HS[i], gd = (HMS.grip[sp.g] || HMS.grip.relax)[sd], tg = hands[i];
+        let Fr = handFrame(nrm3(sub3(tg, elOf(tg))), sp, i ? -1 : 1); const wr = sub3(tg, inFrame(Fr, gd.at)), el = elOf(wr);
+        Fr = handFrame(nrm3(sub3(wr, el)), sp, i ? -1 : 1);
+        drawN(K.uarm, limbM(sh, el, 1)); drawN(K.farm, limbM(el, wr, 1)); drawN(HMS[sd][sp.g] || HMS[sd].relax, handMtx(Fr, wr));
+        GP[i] = add3(wr, inFrame(Fr, gd.at)); GA[i] = inFrame(Fr, gd.ax); return; }
+      const hd2 = hands[i], el = elOf(hd2);
       if (K){ const f = [hd2[0] - el[0], hd2[1] - el[1], hd2[2] - el[2]], fl = Math.hypot(f[0], f[1], f[2]) || 1;
-        drawN(K.uarm, limbM(sh, el, 1)); drawN(K.farm, limbM(el, hd2, 1)); drawN(K.hand, limbM(hd2, [hd2[0] + f[0] / fl, hd2[1] + f[1] / fl, hd2[2] + f[2] / fl], 1)); return; }
+        drawN(K.uarm, limbM(sh, el, 1)); drawN(K.farm, limbM(el, hd2, 1)); drawN(HMS ? HMS.lo : K.hand, limbM(hd2, [hd2[0] + f[0] / fl, hd2[1] + f[1] / fl, hd2[2] + f[2] / fl], 1)); return; }
       drawN(PM.arm, limbM(sh, el, 0.06)); drawN(PM.arm, limbM(el, hd2, 0.055)); drawN(PM.hand, M4.T(hd2[0], hd2[1], hd2[2])); });
     // the break's things in the hands (tools/deck/pause.py), where the page has them; the old cup otherwise
     const pz = nm => kit('pause', nm), atH = (q, ...m) => chain(M4.T(q[0], q[1], q[2]), M4.RY(-h), ...m);
-    if (st.task === 'coffee'){ const K = pz('krus'), FL = pz('termos'); if (K) drawN(K, atH([hands[0][0], hands[0][1] - 0.04, hands[0][2]], M4.RY(-1.2))); else drawN(PM.cup, M4.T(hands[0][0], hands[0][1] + 0.02, hands[0][2]));
+    if (st.task === 'coffee'){ const K = pz('krus'), FL = pz('termos'); if (K) drawN(K, atH([GP[0][0], GP[0][1] - 0.045, GP[0][2]], M4.RY(-1.2))); else drawN(PM.cup, M4.T(hands[0][0], hands[0][1] + 0.02, hands[0][2]));
       if (FL){ const q = W(0.12, 0, -0.32); drawN(FL, atH([q[0], y - eye[1] + 0.01, q[2]])); } }
-    if (st.task === 'knife' && st.steel){ const B = pz('bryne'); if (B) drawN(B, toolM(st.steel.at, st.steel.dir)); }
-    if (st.task === 'lunch'){ const M = pz('mat'); if (M) drawN(M, atH(hands[1], M4.RX(0.35), M4.S(0.75))); }
-    if (st.task === 'phone'){ const P2 = pz((st.age || 40) >= 62 ? 'tlf2' : 'tlf'); if (P2){ const c = [(hands[0][0] + hands[1][0]) / 2, (hands[0][1] + hands[1][1]) / 2 + 0.01, (hands[0][2] + hands[1][2]) / 2]; drawN(P2, atH(c, M4.RX(0.95))); } }
+    if (st.task === 'knife' && st.steel){ const B = pz('bryne'); if (B) drawN(B, toolM(GP[1], st.steel.dir)); }
+    if (st.task === 'lunch'){ const M = pz('mat'); if (M) drawN(M, atH(GP[1], M4.RX(0.35), M4.S(0.75))); }
+    if (st.task === 'phone'){ const P2 = pz((st.age || 40) >= 62 ? 'tlf2' : 'tlf'); if (P2){ const c = [(GP[0][0] + GP[1][0]) / 2, (GP[0][1] + GP[1][1]) / 2 + 0.01, (GP[0][2] + GP[1][2]) / 2]; drawN(P2, atH(c, M4.RX(0.95))); } }
     if (st.task === 'binoc'){ const B = pz('kikk'); if (B){ const c = W(0.13, 1.57, 0); drawN(B, atH(c, M4.RY(-hy))); } }
-    if (st.task === 'smoke'){ const C = pz('sig'); if (C) drawN(C, atH(hands[0], M4.RY(0.6), M4.RX(0.25)));
+    if (st.task === 'smoke'){ const C = pz('sig'); if (C) drawN(C, atH(GP[0], M4.RY(0.6), M4.RX(0.25)));
       // a breath of smoke after each draw, drifting off with the wind of the deck (DKSMOKE: the view's grey points)
       if (st.puff < 0.05){ const ph = (t * 0.8) % (Math.PI * 2) / (Math.PI * 2), m0 = W(0.2, 1.52, 0.02); if (ph > 0.55 && ph < 0.95) for (let i = 0; i < 14; i++){ const u = clamp((ph - 0.55) / 0.4 - hash(i + idx) * 0.3, 0, 1); if (u <= 0) continue;
         DKSMOKE.push([m0[0] + F[0] * u * 0.45 + (hash(i * 3) - 0.5) * 0.12 * u, m0[1] + u * 0.3 + (hash(i * 7) - 0.5) * 0.04, m0[2] + F[1] * u * 0.45 + (hash(i * 5) - 0.5) * 0.12 * u, 0.35 * (1 - u)]); } } }
     if (st.task === 'sit'){ const sb = W(-0.06, 0, 0); drawN(PM.icebin, chain(M4.T(sb[0], y - eye[1] - 0.02, sb[2]), M4.RY(-h), M4.S(0.8, 0.98, 0.8))); }
-    if (st.task === 'snus' && st.can){ const C = pz('snus'); if (C) drawN(C, atH([hands[1][0], hands[1][1] + 0.01, hands[1][2]])); }
+    if (st.task === 'snus' && st.can){ const C = pz('snus'); if (C) drawN(C, atH([GP[1][0], GP[1][1] + 0.01, GP[1][2]])); }
     // the knife in the gutting hand, the gaff and the fish on it, the fish held up by the head and the toss into the tub (tools/deck/fisk.py)
     const kn = kit('fish', 'kniv'), fishAt = (P, sp, kg, rz) => { const sc = clamp(0.42 * Math.cbrt(kg || 2), 0.28, 1.2); drawN(fishOf(sp || 'torsk'), chain(M4.T(P[0], P[1] - sc * 0.45, P[2]), M4.RX(Math.PI / 2), M4.RZ(rz || 0), M4.S(sc))); };
-    if (kn && (st.task === 'gut' || (st.task === 'bleed' && st.knife))) drawN(kn, toolM(hands[0], [F[0] * 0.7 - R[0] * 0.35, -0.55, F[1] * 0.7 - R[1] * 0.35]));
+    if (kn && (st.task === 'gut' || (st.task === 'bleed' && st.knife))) drawN(kn, toolM(GP[0], st.kd || [F[0] * 0.7 - R[0] * 0.35, -0.55, F[1] * 0.7 - R[1] * 0.35]));
+    // (sharpening: the knife in the right hand, its blade drawn across the steel)
+    if (kn && st.task === 'knife') drawN(kn, toolM(GP[0], st.kd || [-R[0], 0.15, -R[1]]));
     if (st.task === 'gaff' && st.gaff){ const hm = kit('fish', 'hott'); if (hm) drawN(hm, toolM(st.gaff.g, st.gaff.n)); else drawN(PM.broom, limbM(hands[1], st.gaff.tip, 0.018));
       const e = st.ev; if (e && st.gaffFish) fishAt(st.gaff.tip, e.sp, e.kg, Math.sin(T * 9) * 0.4);
       if (e && st.gaffDrop >= 0){ const u = st.gaffDrop, A = st.gaff.tip; fishAt([A[0] + (e.U[0] - A[0]) * u, A[1] + (e.U[1] + 0.15 - A[1]) * u * u, A[2] + (e.U[2] - A[2]) * u], e.sp, e.kg, u * 2); } }
@@ -2007,13 +2022,13 @@ const G3 = (() => {
     if ((st.task === 'pick' || st.task === 'jigup') && st.ev && fishy){ const e = st.ev; if (st.held) fishAt(st.held, e.sp, e.kg, st.hrz != null ? st.hrz : Math.sin(T * 7) * 0.25);
       if (st.fall){ const u = clamp(st.fall.u, 0, 1), A0 = st.fall.A, B0 = st.fall.B; lie([A0[0] + (B0[0] - A0[0]) * u, A0[1] + (B0[1] + 0.05 - A0[1]) * u * u, A0[2] + (B0[2] - A0[2]) * u], e.sp, clamp(0.42 * Math.cbrt(e.kg || 2), 0.28, 1.2), -h + u * 1.5); } }
     if (st.line) for (let i = 0; i + 1 < st.line.length; i++) drawN(PM.wire, limbM(st.line[i], st.line[i + 1], 0.004));
-    if (st.task === 'jig' && st.Rl && !st.ev){ drawN(PM.wire, limbM(hands[1], st.Rl, 0.004)); drawN(PM.wire, limbM(st.Rl, st.Wt || [st.Rl[0], st.Rl[1] - 2, st.Rl[2]], 0.004)); }
-    if (kn && st.task === 'bleedst') drawN(kn, toolM(hands[0], [F[0] * 0.5 - R[0] * 0.2, -0.75, F[1] * 0.5 - R[1] * 0.2]));
+    if (st.task === 'jig' && st.Rl && !st.ev){ drawN(PM.wire, limbM(GP[1], st.Rl, 0.004)); drawN(PM.wire, limbM(st.Rl, st.Wt || [st.Rl[0], st.Rl[1] - 2, st.Rl[2]], 0.004)); }
+    if (kn && st.task === 'bleedst') drawN(kn, toolM(GP[0], st.kd || [F[0] * 0.5 - R[0] * 0.2, -0.75, F[1] * 0.5 - R[1] * 0.2]));
     if (st.task === 'gutw'){ const sp = st.gsp || 'torsk', sc = st.gsc || 0.46, yaw = Math.PI / 2 - h, HD = kit('pause', 'hode');
       // (on the table the fish lies across him, its head to his left where the head is cut; cut, it is drawn a little shorter at the head
       // and the head is its own piece, tools/deck/pause.py)
       const lieCut = (P, y0) => { if (!fishy) return; if (!st.cut || !HD){ lie(P, sp, sc, y0); return; } drawN(fishOf(sp), chain(M4.T(P[0], P[1], P[2]), M4.RY(y0), M4.RZ(Math.PI / 2), M4.S(sc), M4.T(0, 0, 0.075), M4.S(1, 1, 0.85))); };
-      if (kn && st.knife) drawN(kn, toolM(hands[0], st.kdir || [F[0] * 0.3 - R[0] * 0.6, -0.55, F[1] * 0.3 - R[1] * 0.6]));
+      if (kn && st.knife) drawN(kn, toolM(GP[0], st.kd || st.kdir || [F[0] * 0.3 - R[0] * 0.6, -0.55, F[1] * 0.3 - R[1] * 0.6]));
       if (st.gf){ if (st.gf.hang){ if (fishy) fishAt(st.gf.at, sp, st.gkg || 3, Math.sin(T * 6) * 0.08); } else lieCut(st.gf.at, yaw); }
       if (st.slo) drawN(PM.slo, M4.T(st.slo.at[0], st.slo.at[1], st.slo.at[2]));
       if (HD && st.hd) drawN(HD, chain(M4.T(st.hd.at[0], st.hd.at[1], st.hd.at[2]), M4.RY(yaw + st.hd.spin), M4.RZ(Math.PI / 2 + st.hd.spin * 0.7), M4.S(sc)));
@@ -2220,6 +2235,72 @@ const G3 = (() => {
     return KITM[k] = m; }
   function kitX(f){ if (f in KITX) return KITX[f]; const t = KITF[f], G = typeof glbHas === 'function' && glbHas(t) ? glbLoad(t) : null; return KITX[f] = (G && G.ex) || {}; }
   // a rigid tool held at A with its head (the part's -z) along dir
+  // ---- the hands in their grips (tools/harbour/hender.py): the meshes once for all the figures (the glove is the same on every look),
+  // and where each grip holds its thing (the worker GLB's extras 'hands': per grip and side, the point and the axis in the hand's frame) ----
+  let HANDM = null;
+  function handMeshes(){
+    if (HANDM !== null) return HANDM; const g = n => { const o = wkPart(n, 'crew'); return o ? upA(o) : null; }, GR = ['relax', 'flat', 'grip', 'hold', 'pinch', 'hook'];
+    const Rm = {}, Lm = {}; for (const k of GR){ Rm[k] = g('hR_' + k); Lm[k] = g('hL_' + k); }
+    const ex = (glbLoad('worker') || {}).ex || {};
+    return HANDM = Rm.relax && Lm.relax && ex.hands ? {R:Rm, L:Lm, lo:g('hand_lo') || g('hand'), grip:ex.hands} : false;
+  }
+  const sub3 = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], add3 = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]], mul3 = (a, k) => [a[0] * k, a[1] * k, a[2] * k];
+  const dot3 = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2], crs3 = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  const nrm3 = v => { const l = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / l, v[1] / l, v[2] / l]; };
+  // a hand's frame [x, y, z]: the fingers along z, the palm toward y, x = y × z (the thumb at +x on the right hand, -x on the left).
+  // Holding a handle (sp.a, its axis) the fist closes across it: x along the handle, the thumb toward a tool's head (sp.tool) or the
+  // palm toward sp.n; otherwise the palm turned toward sp.n, the wrist bending to lay a flat hand flat
+  function handFrame(z0, sp, side){
+    if (sp.a){ const a = nrm3(sp.a), z = nrm3(sub3(z0, mul3(a, dot3(z0, a)))); let x = a, y = crs3(z, a);
+      if (sp.tool ? side < 0 : sp.n && dot3(y, sp.n) < 0){ x = mul3(a, -1); y = mul3(y, -1); } return [x, y, z]; }
+    const n = nrm3(sp.n), z = nrm3(sub3(z0, mul3(n, dot3(z0, n) * (sp.g === 'flat' ? 1 : 0.6)))), y = nrm3(sub3(n, mul3(z, dot3(n, z))));
+    return [crs3(y, z), y, z]; }
+  const inFrame = (Fr, v) => [Fr[0][0] * v[0] + Fr[1][0] * v[1] + Fr[2][0] * v[2], Fr[0][1] * v[0] + Fr[1][1] * v[1] + Fr[2][1] * v[2], Fr[0][2] * v[0] + Fr[1][2] * v[1] + Fr[2][2] * v[2]];
+  const handMtx = (Fr, o) => new Float32Array([Fr[0][0], Fr[0][1], Fr[0][2], 0, Fr[1][0], Fr[1][1], Fr[1][2], 0, Fr[2][0], Fr[2][1], Fr[2][2], 0, o[0], o[1], o[2], 1]);
+  // what each hand does in each pose: the grip, the way the palm faces (n) or the axis held (a), as directions in the figure's frame
+  // (forward, up, right); the knife's way (st.kd) is set here for the props after
+  function handSpecs(st, F, R, hands){
+    const D = (a, u, r) => [F[0] * a + R[0] * r, u, F[1] * a + R[1] * r], IN = s => D(0.15, -0.35, -s), dn = D(0, -1, 0), up = D(0, 1, 0);
+    const rel = (g, n) => ({g, n}), both = (g, n) => [rel(g, n || IN(1)), rel(g, n || IN(-1))], across = () => sub3(hands[0], hands[1]);
+    const knife = d => { st.kd = d; return {g:'grip', a:d, tool:true}; };
+    switch (st.task){
+      case 'lean': return [rel('flat', dn), rel('flat', dn)];
+      case 'seasick': return [{g:'grip', a:D(0, 0, 1), n:D(0.4, -1, 0)}, {g:'grip', a:D(0, 0, 1), n:D(0.4, -1, 0)}];
+      case 'jig': return [rel('hook', D(0, -0.6, -1)), rel('pinch', dn)];
+      case 'haul': return [{g:'grip', a:D(0.3, 1, 0), n:IN(1)}, {g:'grip', a:D(0.3, 1, 0), n:IN(-1)}];
+      case 'helm': case 'helmsit': case 'drive': return [{g:'grip', a:up, n:D(0.3, 0, -1)}, {g:'grip', a:up, n:D(0.3, 0, 1)}];
+      case 'coffee': return [{g:'hold', a:up, n:IN(1)}, rel('relax', IN(-1))];
+      case 'phone': return [rel('hold', D(-0.2, 0.6, -1)), rel('hold', D(-0.2, 0.6, 1))];
+      case 'binoc': return [rel('hold', D(0, 0, -1)), rel('hold', D(0, 0, 1))];
+      case 'smoke': return [rel('pinch', D(-0.5, -0.2, -0.8)), st.lean === false || !st.rail ? rel('relax', IN(-1)) : rel('flat', dn)];
+      case 'snus': return [rel('pinch', D(-0.4, 0, -0.9)), rel('hold', up)];
+      case 'lunch': return [rel('pinch', D(-0.4, 0, -0.9)), rel('hold', up)];
+      case 'sit': return both('relax', dn);
+      case 'back': case 'worry': return [rel('relax', D(-1, 0, 0)), rel('relax', D(-1, 0, 0))];
+      case 'chat': return hands[0][1] > hands[1][1] + 0.1 ? [rel('relax', D(0.3, 0.8, -0.5)), rel('relax', IN(-1))] : [rel('relax', D(-1, 0, 0)), rel('relax', D(-1, 0, 0))];
+      case 'gear': case 'tend': case 'pack': return both('hold', dn);
+      case 'knife': return [knife(D(0, 0.15, -1)), {g:'grip', a:st.steel ? st.steel.dir : up, tool:true}];
+      case 'sweep': case 'hose': case 'ice': { const a = across(); return [{g:'grip', a, n:IN(1)}, {g:'grip', a, n:IN(-1)}]; }
+      case 'coil': return [{g:'hook', a:D(0, 0, 1), n:D(0, -0.5, -1)}, rel('hold', up)];
+      case 'stack': case 'carry': case 'stow': return [{g:'hook', a:D(1, 0, 0), n:IN(1)}, {g:'hook', a:D(1, 0, 0), n:IN(-1)}];
+      case 'gut': return [knife([F[0] * 0.7 - R[0] * 0.35, -0.55, F[1] * 0.7 - R[1] * 0.35]), rel('hook', dn)];
+      case 'bleedst': return [knife([F[0] * 0.5 - R[0] * 0.2, -0.75, F[1] * 0.5 - R[1] * 0.2]), rel('relax', IN(-1))];
+      case 'bleed': return [st.knife ? knife([F[0] * 0.7 - R[0] * 0.35, -0.55, F[1] * 0.7 - R[1] * 0.35]) : rel('hook', dn), rel('hook', D(0, -0.6, 1))];
+      case 'gutw': return [st.knife ? knife(st.kdir || [F[0] * 0.3 - R[0] * 0.6, -0.55, F[1] * 0.3 - R[1] * 0.6]) : rel('hold', dn), st.gf && st.gf.hang ? rel('hook', D(0, -0.6, 1)) : rel('flat', dn)];
+      case 'gaff': return st.gaff ? [{g:'grip', a:st.gaff.n, n:IN(1)}, {g:'grip', a:st.gaff.n, n:IN(-1)}] : both('relax');
+      case 'pick': return [rel('pinch', IN(1)), rel('hook', D(0, -0.5, 1))];
+      case 'jigup': return [rel('hook', dn), {g:'grip', a:up, n:IN(-1)}];
+      case 'egn': case 'strip': case 'tally': return [rel('pinch', IN(1)), rel('hold', up)];
+      case 'mend': return [rel('pinch', IN(1)), rel('hook', D(0, -0.5, 1))];
+      case 'signal': return [rel('relax', D(1, 0, 0)), rel('relax', IN(-1))];
+      case 'guide': return [rel('flat', D(1, 0, 0)), rel('flat', D(1, 0, 0))];
+      case 'unhook': return [{g:'grip', a:up, n:IN(1)}, rel('relax', IN(-1))];
+      case 'remote': return [rel('hold', D(-0.3, 0.6, -1)), rel('hold', D(-0.3, 0.6, 1))];
+      case 'nozzle': return [{g:'grip', a:D(1, -0.5, 0), n:IN(1)}, {g:'grip', a:D(1, -0.5, 0), n:IN(-1)}];
+      case 'aurora': return both('relax');
+      default: return both('relax');
+    }
+  }
   function toolM(A, dir){ const l = Math.hypot(dir[0], dir[1], dir[2]) || 1; return limbM(A, [A[0] - dir[0] / l, A[1] - dir[1] / l, A[2] - dir[2] / l], 1); }
   // the catch coming aboard: a jigged fish is taken off at the rail, bled with the knife and tossed into the bleeding tub ('bleed'); on a
   // longline the hand at the hauler takes each fish in over the rail with the gaff and shakes it off into the tub ('gaff'). Each fish is
@@ -3432,21 +3513,27 @@ const G3 = (() => {
       }
       // every fish is bled before it goes in the tub (Jonas 20.10.2026): he takes it in at the rail, holds it up by the head, the knife across the
       // throat and the blood running, and tosses it in the tub; the machines and the line wait meanwhile (one at a time, the next one queued)
-      if (!A.bl && A.bq.length) A.bl = {f:A.bq.shift(), t:0};
+      let kDir = null; if (!A.bl && A.bq.length) A.bl = {f:A.bq.shift(), t:0};
       if (A.bl){ const B = A.bl, f = B.f, c = (B.t += dt), ch = [F[0] + 0.36, F[1] + shY - 0.18, F[2] - 0.08], kU = [F[0] + 0.3, F[1] + shY - 0.05, F[2] + 0.2], kD = [F[0] + 0.42, F[1] + shY - 0.24, F[2] - 0.02], ease = u => u * u * (3 - 2 * u), L3 = (P, Q2, u) => [P[0] + (Q2[0] - P[0]) * u, P[1] + (Q2[1] - P[1]) * u, P[2] + (Q2[2] - P[2]) * u];
         if (c < 0.4){ hL = L3(f.a, ch, ease(c / 0.4)); hang(f.sp, f.kg, hL, 2); }
         else if (c < 1.45){ hL = ch; hang(f.sp, f.kg, hL, 2 + Math.sin(c * 7) * 0.1); hR = L3(kU, kD, ease(clamp((c - 0.45) / 0.35, 0, 1)));
-          const kn = kit('fish', 'kniv'); if (kn) drawN(kn, chain(BMrel, toolM(hR, [0.6, -0.6, -0.4])));
+          kDir = [0.6, -0.6, -0.4];   // (the knife is drawn in the right hand's grip, below with the arms)
           if (c > 0.75){ const sc = fsc(f.kg), th = xf(BMrel, [ch[0], ch[1] - sc * 0.12, ch[2]]), U = xf(BMrel, TUB); for (let i = 0; i < 10; i++){ const u = ((c - 0.75) * 1.6 + hash(i * 5) * 0.6) % 1; DKBLOOD.push([th[0] + (U[0] - th[0]) * 0.2 * u + (hash(i) - 0.5) * 0.03, th[1] - 0.9 * u * u, th[2] + (U[2] - th[2]) * 0.2 * u + (hash(i + 3) - 0.5) * 0.03]); } } }
         else { A.fly.push({sp:f.sp, kg:f.kg, a:ch, u:0}); A.bl = null; A.nb = (A.nb || 0) + 1; } }   // (nb: bled, for the tests)
       // arms: shoulder to hand with the elbow bent down and out
-      const arm = (Sw, Hw, sd) => { const d = [Hw[0] - Sw[0], Hw[1] - Sw[1], Hw[2] - Sw[2]], Lh = Math.hypot(d[0], d[1], d[2]) || 1e-6, u = d.map(v => v / Lh), seg = 0.31, Lc = Math.min(Lh, 2 * seg * 0.995);
+      const arm = (Sw, Hw, sd, sp) => { const d = [Hw[0] - Sw[0], Hw[1] - Sw[1], Hw[2] - Sw[2]], Lh = Math.hypot(d[0], d[1], d[2]) || 1e-6, u = d.map(v => v / Lh), seg = 0.31, Lc = Math.min(Lh, 2 * seg * 0.995);
         let bv = [0, -1, sd * 0.5]; const kk = bv[0] * u[0] + bv[1] * u[1] + bv[2] * u[2]; bv = [bv[0] - kk * u[0], bv[1] - kk * u[1], bv[2] - kk * u[2]]; const bl = Math.hypot(bv[0], bv[1], bv[2]) || 1, h = Math.sqrt(Math.max(0, seg * seg - (Lc / 2) ** 2));
         const Hc = [Sw[0] + u[0] * Lc, Sw[1] + u[1] * Lc, Sw[2] + u[2] * Lc], E = [(Sw[0] + Hc[0]) / 2 + bv[0] / bl * h, (Sw[1] + Hc[1]) / 2 + bv[1] / bl * h, (Sw[2] + Hc[2]) / 2 + bv[2] / bl * h];
         if (SK.wk){ const W = SK.wk, f = [Hc[0] - E[0], Hc[1] - E[1], Hc[2] - E[2]], fl = Math.hypot(f[0], f[1], f[2]) || 1, HT = [Hc[0] + f[0] / fl * WK_S, Hc[1] + f[1] / fl * WK_S, Hc[2] + f[2] / fl * WK_S];
-          drawN(W.uarm, chain(BMrel, limbM(Sw, E, WK_S))); drawN(W.farm, chain(BMrel, limbM(E, Hc, WK_S))); drawN(W.hand, chain(BMrel, limbM(Hc, HT, WK_S))); return; }
-        drawN(SK.limb, chain(BMrel, limbM(Sw, E, 0.056))); drawN(SK.limb, chain(BMrel, limbM(E, Hc, 0.048))); drawN(SK.hand, chain(BMrel, M4.T(Hc[0], Hc[1], Hc[2]))); };
-      arm(shR, hR, 1); arm(shL, hL, -1); if (DKBLOOD.length) dkBloodDraw(VP);
+          drawN(W.uarm, chain(BMrel, limbM(Sw, E, WK_S))); drawN(W.farm, chain(BMrel, limbM(E, Hc, WK_S)));
+          // the hands in their grips (hender.py): relaxed, the palm in and down; round the knife's handle when it bleeds a fish
+          const HM = handMeshes(); if (!HM){ drawN(W.hand, chain(BMrel, limbM(Hc, HT, WK_S))); return Hc; }
+          const s2 = sp || {g:'relax', n:[-sd * 0.9, -0.4, 0]}, Fr = handFrame(nrm3(f), s2, sd), gd = (HM.grip[s2.g] || HM.grip.relax)[sd > 0 ? 'R' : 'L'];
+          drawN(HM[sd > 0 ? 'R' : 'L'][s2.g] || HM[sd > 0 ? 'R' : 'L'].relax, chain(BMrel, handMtx(Fr, Hc), M4.S(WK_S))); return add3(Hc, mul3(inFrame(Fr, gd.at), WK_S)); }
+        drawN(SK.limb, chain(BMrel, limbM(Sw, E, 0.056))); drawN(SK.limb, chain(BMrel, limbM(E, Hc, 0.048))); drawN(SK.hand, chain(BMrel, M4.T(Hc[0], Hc[1], Hc[2]))); return Hc; };
+      const gR = arm(shR, hR, 1, kDir ? {g:'grip', a:kDir, tool:true} : null); arm(shL, hL, -1);
+      if (kDir && gR){ const kn = kit('fish', 'kniv'); if (kn) drawN(kn, chain(BMrel, toolM(gR, kDir))); }
+      if (DKBLOOD.length) dkBloodDraw(VP);
     }
     if (SK.wheelAt){
       drawN(SK.wheel, chain(BMrel, M4.T(...SK.wheelAt), M4.RX(-SK.wheelTilt), M4.RZ(SK.wheelA)));

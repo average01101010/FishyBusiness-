@@ -1,6 +1,7 @@
 """The people on the quays and on deck, built in Blender (02.10.2026, after Jonas' picture of a harbour worker: yellow hard hat, blue
 work clothes). One body in parts the 3D view poses joint by joint (drawWorker in view3d.js): the torso, the head with the face, the hard
-hat, a knitted cap for the fishermen, the upper arm and the forearm, the thigh and the lower leg, the boot and the gloved hand.
+hat, a knitted cap for the fishermen, the upper arm and the forearm, the thigh and the lower leg, the boot and the gloved hand (the
+boot and the hands in their grips from hender.py).
 The garment is paint: zone 1 is the jacket (torso and sleeves), zone 3 the trousers; the game paints them per kit (blue coverall on the
 quay, orange oilskins on deck).
 
@@ -185,7 +186,7 @@ def boot():
     return join(objs, 'BOOT')
 
 def hand():
-    """a work glove: palm and fingers as a flattened block, the thumb to the side; from the wrist along +z (game frame)"""
+    """a work glove at a distance: palm and fingers as a flattened block, the thumb to the side; from the wrist along +z (game frame)"""
     objs = [cyl('cuff', (0, 0, -0.01), (0, 0, 0.035), 0.046, C['glove'], 12)]
     lv = [(0.03, 0.040, 0.022, 0.0), (0.06, 0.046, 0.024, 0.0), (0.10, 0.044, 0.021, 0.0), (0.135, 0.038, 0.018, 0.0), (0.155, 0.026, 0.012, 0.0)]
     objs.append(loft_rings('palm', rings(lv, 12, 2.6), C['glove'], True, True, 50))
@@ -209,7 +210,14 @@ def only(o, fn):
     for x in hid: x.hide_render = False
 
 def build_all():
-    P = {'torso': torso(), 'sweater': sweater(), 'head': head(), 'hardhat': hardhat(), 'beanie': beanie(), 'skippercap': skippercap(), 'uarm': uarm(), 'farm': farm(), 'thigh': thigh(), 'shin': shin(), 'boot': boot(), 'hand': hand()}
+    # the boot and the hands from hender.py (Jonas 23.10.2026: a foot's last for the boot, fingers and grips for the hands); 'hand' stays
+    # as the relaxed right hand for whatever draws one hand for both
+    import hender
+    P = {'torso': torso(), 'sweater': sweater(), 'head': head(), 'hardhat': hardhat(), 'beanie': beanie(), 'skippercap': skippercap(), 'uarm': uarm(), 'farm': farm(), 'thigh': thigh(), 'shin': shin(), 'boot': hender.boot(C), 'hand': hender.hand(C['glove'], 'relax', False, 'HAND')[0], 'hand_lo': hand()}
+    global HANDS; HANDS = {}
+    for g in hender.HAND_GRIPS:
+        for sd in ('R', 'L'):
+            o, at, ax = hender.hand(C['glove'], g, sd == 'L', 'h%s_%s' % (sd, g)); P['h%s_%s' % (sd, g)] = o; HANDS.setdefault(g, {})[sd] = {'at': at, 'ax': ax}
     import garderobe
     for nm in ('hardhat', 'beanie', 'skippercap'): garderobe.tilt_hat(P[nm])      # the hats sit tilted back: the brows and eyes are free
     return P
@@ -249,7 +257,7 @@ def main():
         if hat == 'hardhat': bake_ao(P['head'], 48, 0.06)
         bake_ao(P[hat], 32, 0.05)
         for x in hid: x.hide_render = False
-    for nm in ('boot', 'hand'): only(P[nm], lambda o: bake_ao(o, 32, 0.05))
+    for nm in [k for k in P if k in ('boot', 'hand', 'hand_lo') or k.startswith('hR_') or k.startswith('hL_')]: only(P[nm], lambda o: bake_ao(o, 32, 0.05))
     # the wardrobe (garderobe.py): each part with the head (and the others hidden) so it shades like the hats do
     import garderobe
     WR = garderobe.build(sys.modules[__name__])
@@ -267,11 +275,16 @@ def main():
              ('skippercap', mesh_arrays(P['skippercap'], rel(NECK), to_game_n), 1.0), ('sweater', mesh_arrays(P['sweater'], rel(HIP), to_game_n), 1.0),
              ('boot', mesh_arrays(P['boot'], to_game, to_game_n), 1.0), ('hand', mesh_arrays(P['hand'], ident, ident), 1.0)]
     for nm in ('uarm', 'farm', 'thigh', 'shin'): parts.append((nm, mesh_arrays(P[nm], ident, ident, ao=False), 1.0))
+    # (hand_lo: the old one-piece glove, for the hands of people far off, where the fingers are less than a pixel)
+    for nm in [k for k in P if k.startswith('hR_') or k.startswith('hL_') or k == 'hand_lo']: parts.append((nm, mesh_arrays(P[nm], ident, ident), 1.0))
     for nm, o, origin in WR:
         xf = {'neck': (rel(NECK), to_game_n), 'hip': (rel(HIP), to_game_n), 'ground': (to_game, to_game_n), 'wrist': (ident, ident)}[origin]
         parts.append((nm, mesh_arrays(o, xf[0], xf[1]), 1.0))
     ex = {'frame': 'kystfiske worker: x right, y up, z back (faces -z); torso from the hips (0.92 m), head and hats from the neck (1.50 m), boot from the ground; limbs one unit along +z, hand from the wrist along +z',
-          'joints': {'hip': HIP, 'neck': NECK, 'hipX': 0.11, 'shoulder': list(SHO)}, 'zones': {'1': 'jacket', '3': 'trousers', '4': 'skin', '5': 'hair', '6': 'hat', '7': 'shoes'}}
+          'joints': {'hip': HIP, 'neck': NECK, 'hipX': 0.11, 'shoulder': list(SHO)}, 'zones': {'1': 'jacket', '3': 'trousers', '4': 'skin', '5': 'hair', '6': 'hat', '7': 'shoes'},
+          # the hands in their grips (hR_<grip>, hL_<grip>): from the wrist along +z, the palm +y, the thumb +x (right) or -x (left); where
+          # the held thing sits and its axis, per grip and side (hender.py)
+          'hands': HANDS}
     glb = os.path.join(OUT, 'worker.glb'); n = write_glb(glb, parts, ex)
     import base64
     open(os.path.join(ROOT, 'src', 'data', 'worker.b64'), 'w').write(base64.b64encode(open(glb, 'rb').read()).decode())

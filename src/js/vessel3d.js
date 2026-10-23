@@ -954,7 +954,7 @@ function figureVB(B, x, y, z, seated, hands, kit){
     const el = [(S0[0] + hd[0]) / 2 + sd * 0.04, (S0[1] + hd[1]) / 2 - 0.06, (S0[2] + hd[2]) / 2 + 0.05];
     wkLimb(B, P('uarm'), S0, el, S); wkLimb(B, P('farm'), el, hd, S);
     const d = [hd[0] - el[0], hd[1] - el[1], hd[2] - el[2]], l = Math.hypot(d[0], d[1], d[2]) || 1;
-    wkLimb(B, P('hand'), hd, [hd[0] + d[0] / l * S, hd[1] + d[1] / l * S, hd[2] + d[2] / l * S], S);
+    wkLimb(B, P('hand_lo') || P('hand'), hd, [hd[0] + d[0] / l * S, hd[1] + d[1] / l * S, hd[2] + d[2] / l * S], S);   // (the one-piece glove: these figures are seen from a distance)
   }
 }
 // a side view of a type as SVG (bow to the right), from the same spec as the 3D model: the market draws it on every card, with or
