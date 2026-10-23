@@ -190,7 +190,9 @@ function workAssign(as){
   // the work waiting at each station, in one person's minutes, and the crew's own jobs on the gear
   const left = {sloy:ctx.gutKg / DECK.gut, is:ctx.iceKg / DECK.ice, blogg:ctx.blogg ? 30 : 0, haling:ctx.haling && ctx.gk !== 'teine' ? 20 : 0, sort:ctx.sort ? 10 : 0};
   const jobs = jobsOpen(as), jn = new Map(jobs.map(j => [j, 0]));
-  const needOf = k => k === 'fiske' ? 0.55 : (left[k] || 0) / (cnt(k) + 1) / 10;
+  // (with someone gutting and nobody at the ice, the gutted fish come off the table as fast as they are gutted and lie unpacked: the
+  // ice is wanted as much as the table; before, a second hand went to the table and nobody packed, crewwalk.py on the new sjark)
+  const needOf = k => k === 'fiske' ? 0.55 : k === 'is' && !cnt('is') && cnt('sloy') ? Math.max(left.is, left.sloy / cnt('sloy')) / 10 : (left[k] || 0) / (cnt(k) + 1) / 10;
   const jobNeed = j => 0.7 * jobLeft(j) / ((jn.get(j) || 0) + 1) / 60;
   // (the icing station waits on the table: with nothing gutted yet and nobody gutting, there is nothing to pack, so it holds nobody;
   // before, the one aboard alone stayed at the ice from the minute before while the round fish lay ungutted, and nothing got done)
@@ -233,10 +235,79 @@ function workAssign(as){
   // at the hauler: those at the haulers, then the one picking the net or handling the pots (who bleeds when nobody else does: p.bl)
   const hp = haulPlaces(); P.filter(p => p.st === 'haling').forEach((p, i) => { p.role = i < hp ? 'haler' : ctx.gk === 'garn' ? 'plukk' : 'teine'; p.bl = p.role === 'plukk'; if (!p.why) p.why = workWhy(p, 'haling', ctx); });
   for (const p of P) if (!p.why) p.why = p.st === 'pause' ? 'nowork' : workWhy(p, p.st, ctx);
+  idleAssign(P, ctx);
   return P;
+}
+// ---- what a person does on a break (Jonas 23.10.2026: «La det også stå hva de gjør når de ikke har en aktiv arbeidsoppgave som feks: lener
+// seg på rekka, drikker kaffe, skrubber dekk og alle andre aktuelle ting de kan finne på å gjøre»): a spell of about twelve minutes each
+// (each at their own minute), chosen by the weather, the hour, where she lies, how tired and hungry they are, what they are like and who
+// else is free, and the same every time it is worked out within the spell (a hash of who and when, no dice). Some smoke and some take snus
+// (crewVice; Jonas 23.10.2026: on deck, never in the wheelhouse, and never you). Under way on a boat with a house the crew are inside, and
+// a smoker steps out aft in fair weather. Two who both chat stand together (p.with). The 3D view walks them to it (deckcrew.js idleGoal)
+// and the Mannskap page says it (workDoing).
+const IDLE_ACTS = {
+  lean:['Lener seg på rekka', 'Leaning on the rail'], back:['Står med ryggen mot rekka', 'Back to the rail'], look:['Ser utover sjøen', 'Looking out over the sea'],
+  coffee:['Drikker kaffe fra termosen', 'Coffee from the flask'], sit:['Sitter og hviler', 'Sitting down for a rest'], chat:['Prater med {b}', 'Chatting with {b}'],
+  sweep:['Skrubber dekket', 'Scrubbing the deck'], hose:['Spyler dekket', 'Hosing down the deck'], coil:['Kveiler tau', 'Coiling rope'], knife:['Sliper kniven', 'Sharpening the knife'],
+  lunch:['Spiser matpakka', 'Eating a packed lunch'], phone:['Ser på telefonen', 'On the phone'], binoc:['Speider med kikkerten', 'Scanning with the binoculars'],
+  aurora:['Ser på nordlyset', 'Watching the northern lights'], seasick:['Er sjøsyk over rekka', 'Seasick over the rail'], gear:['Ser over redskapen', 'Looking over the gear'],
+  smoke:['Tar seg en røyk', 'Having a smoke'], snus:['Legger inn en snus', 'Taking a snus'], inside:['Er inne og varmer seg', 'Inside, warming up'], sleep:['Sover i køya', 'Asleep in the bunk'],
+  quay:['Slår av en prat på kaia', 'Chatting on the quay'], shop:['Er en tur på butikken', 'Gone up to the shop'], worry:['Ser etter grunnen', 'Looking at the ground she sits on']};
+// smoke, snus or neither, from who they are (about one in seven smokes and three in ten take snus): set once, kept
+function crewVice(c){ if (!c) return null; if (c.vice === undefined){ const h = hashStr(c.id + ':vice') % 100; c.vice = h < 15 ? 'smoke' : h < 45 ? 'snus' : null; } return c.vice; }
+let IDLE_ENV = {t:-1};
+function idleEnv(){
+  if (IDLE_ENV.t === S.t) return IDLE_ENV;
+  const b = S.boat, H = S.t / 60, p = b.pos, F = BOAT.fac || {}, hr = gDate(H).getUTCHours(); let dark = false, aur = 0, W = 0, hs = 0, cold = 0;
+  try { dark = sunAt(H, p).el < -6; aur = dark && typeof auroraAt === 'function' ? auroraAt(H, p) : 0; W = windAt(H, p); hs = hsWork(p, H); cold = coldPen(H, hs); } catch (e) { /* a block not loaded */ }
+  const M = S.meal, hungry = !!(M && M.due != null && S.t > M.due + 10) || (F.galley === 'none' && (hr === 11 || hr === 12 || hr === 18));
+  return IDLE_ENV = {t:S.t, hr, dark, aur, W, hs, cold, open:F.house === 'open', bunks:typeof bunks === 'function' && !!bunks(b), hungry, mess:b.deckT != null && S.t - b.deckT < 40,
+    gear:typeof rigOf === 'function' && rigOf() !== 'juksa', team:typeof crewTeam === 'function' ? crewTeam().v : 50, shop:hr >= 8 && hr < 20};
+}
+function idleWeights(p, ctx, E, mates){
+  const c = p.c, T = c ? c.traits : [], has = t => T.includes(t), vice = crewVice(c), f = pTired(p), w = {}, add = (k, v) => { if (v > 0) w[k] = (w[k] || 0) + v; };
+  const port = ctx.s === 'port', under = ctx.ror, closed = !E.open;
+  if (ctx.s === 'aground'){ add('worry', 5); add('back', 2); add('look', 2); return w; }
+  if (c && c.traits.includes('sjosyk') && E.hs > 1.2 && !port){ add('seasick', 20); return w; }
+  if (under && closed){
+    // under way on a boat with a house: inside; asleep in a bunk when tired; a smoker out aft in fair weather
+    add('inside', 6 + (has('makelig') ? 2 : 0)); if (c && E.bunks) add('sleep', 8 * f); if (vice === 'smoke' && E.W < 10 && E.hs < 1.2) add('smoke', 3); return w; }
+  if (port && c && E.bunks && closed && c.fatigue > 30) add('sleep', 2 + 8 * f);
+  if (under){ add('sit', 4 + 4 * f); add('look', 2); add('coffee', 1.5 + 3 * E.cold); }
+  else { add('lean', 3); add('back', 2); add('look', 2); add('coffee', 2 + 3 * E.cold + (E.hr >= 5 && E.hr < 9 ? 1.5 : 0)); add('sit', 1 + 4 * f);
+    add('coil', 1 + (has('arbeidsjern') || has('perfeksjonist') ? 1.5 : 0)); add('knife', 0.6 + (E.mess ? 1.5 : 0));
+    add('sweep', 0.4 + (E.mess ? 3 : 0) + (has('perfeksjonist') ? 1.5 : 0) - (has('makelig') ? 0.3 : 0)); if (closed) add('hose', E.mess ? 2 : 0);
+    if (E.gear) add('gear', 1 + (has('perfeksjonist') ? 1 : 0));
+    if (!port && !E.dark) add('binoc', 0.6); if (E.aur > 0.25) add('aurora', 10 * E.aur); }
+  add('lunch', E.hungry ? 5 : 0.3); add('phone', 0.8 + (c && c.age < 35 ? 1.5 : 0));
+  if (mates > 0) add('chat', 2 + (E.team - 50) / 12 + (has('spokefugl') ? 1.5 : 0) - (has('grinebiter') ? 1 : 0));
+  if (vice === 'smoke' && E.W < 15) add('smoke', 3); if (vice === 'snus') add('snus', 2);
+  if (closed && !under) add('inside', 0.5 + 4 * E.cold + (E.dark ? 1.5 : 0) + (E.W > 12 ? 3 : 0) + (has('makelig') ? 1.5 : 0));
+  if (port){ add('quay', 2.5); if (E.shop) add('shop', 0.8); }
+  return w;
+}
+function idleAssign(P, ctx){
+  const L = P.filter(p => p.st === 'pause'); if (!L.length) return;
+  const E = idleEnv(), crewFree = L.filter(p => p.c).length;
+  for (const p of L){
+    const id = pKey(p), slot = Math.floor((S.t + hashStr(id) % 12) / 12), w = idleWeights(p, ctx, E, crewFree - (p.c ? 1 : 0));
+    let tot = 0; for (const k in w) tot += w[k]; let r = hashStr(id + ':' + slot) / 4294967296 * tot, pick = 'look';
+    for (const k in w){ r -= w[k]; if (r <= 0){ pick = k; break; } }
+    p.idle = pick; p.with = null; }
+  // two who both chose to chat stand together; one left over looks out over the sea
+  const ch = L.filter(p => p.idle === 'chat').sort((a, b) => pKey(a) < pKey(b) ? -1 : 1);
+  for (let i = 0; i + 1 < ch.length; i += 2){ ch[i].with = pKey(ch[i + 1]); ch[i + 1].with = pKey(ch[i]); }
+  if (ch.length % 2) ch[ch.length - 1].idle = 'look';
+}
+// the break in words: «Drikker kaffe fra termosen», «Prater med Sindre»
+function idleText(p){
+  const k = p.idle, a = IDLE_ACTS[k]; if (!a) return null; let t = a[S.lang === 'no' ? 0 : 1];
+  if (t.includes('{b}')){ const o = p.with === 'me' ? null : crewById(p.with); t = t.replace('{b}', p.with === 'me' ? (S.lang === 'no' ? 'deg' : 'you') : o ? o.name.split(' ')[0] : '?'); }
+  return t;
 }
 // what a person does, for the work page: the station's word, or the part of it at the hauler
 function workDoing(p){ const no = S.lang === 'no'; if (p.role === 'plukk') return no ? 'Plukker og bløgger' : 'Picking and bleeding'; if (p.role === 'teine') return no ? 'Tømmer og egner teiner' : 'Emptying and baiting pots';
+  if (p.st === 'pause' && p.idle){ const t = idleText(p); if (t) return t; }
   return STATIONS[p.st].ing[no ? 0 : 1]; }
 // the people on a station and what they do there together: n, the sum of their efficiency for skill g, and the mean
 function workTeam(st, g, as){
@@ -251,7 +322,7 @@ function workMinute(){
   const A = workAssign(); if (meAboard()) S.mySt = null;
   for (const c of S.crew || []){ c.st = null; c.why = null; }
   const sea = S.boat.status !== 'port';
-  for (const p of A){ if (!p.c){ S.mySt = p.st; continue; } p.c.st = p.st; p.c.why = p.why;
+  for (const p of A){ if (!p.c){ S.mySt = p.st; continue; } p.c.st = p.st; p.c.why = p.why; p.c.idle = p.idle || null;
     if (WORK_ALL.includes(p.st)){ const h = p.c.hab || (p.c.hab = {}); h[p.st] = (h[p.st] || 0) + 1;
       if (sea){ const w = p.c.wk || (p.c.wk = {}); w[p.st] = (w[p.st] || 0) + 1; } } }
   // what they are used to fades by about a fifth in a month

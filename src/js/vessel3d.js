@@ -1110,17 +1110,58 @@ function deckMap(type){
   let n = 0; for (let k = 0; k < N; k++) if (H[k] === H[k]) n++;
   const M = {type, c:DM_C, x0, z0, nx, nz, h:H, bar, n, parts, yDeck, links, LINK, cellOf, _floors:floors, _lab:lab, at(k){ const i = k % nx; return [x0 + (i + 0.5) * DM_C, H[k], z0 + ((k - i) / nx + 0.5) * DM_C]; },
     ok(k){ return k >= 0 && H[k] === H[k]; }, floorAt(x, z){ const k = cellOf(x, z); return k >= 0 && H[k] === H[k] ? H[k] : NaN; }};
+  // where the segment a-b (the boat's frame) first passes through the model's surface, as a share of the way (0..1), or -1: the crew's
+  // limbs are kept out of the walls, the rail and the kit with it (deckcrew.js poseClear; Jonas 23.10.2026: «Sørg også for at mannskapet
+  // aldri "clipper" gjennom vegger, rekka eller andre ting»)
+  M.hit = (a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2], seen = new Set(); let best = -1;
+    const i0 = Math.max(0, Math.floor((Math.min(a[0], b[0]) - x0) / DM_C)), i1 = Math.min(nx - 1, Math.floor((Math.max(a[0], b[0]) - x0) / DM_C));
+    const j0 = Math.max(0, Math.floor((Math.min(a[2], b[2]) - z0) / DM_C)), j1 = Math.min(nz - 1, Math.floor((Math.max(a[2], b[2]) - z0) / DM_C));
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++){ const B = bins[j * nx + i]; if (!B) continue;
+      for (const t of B){ if (seen.has(t)) continue; seen.add(t); const o = t * 12, ax = tri[o], ay = tri[o + 1], az = tri[o + 2];
+        const e1x = tri[o + 3] - ax, e1y = tri[o + 4] - ay, e1z = tri[o + 5] - az, e2x = tri[o + 6] - ax, e2y = tri[o + 7] - ay, e2z = tri[o + 8] - az;
+        const px = dy * e2z - dz * e2y, py = dz * e2x - dx * e2z, pz = dx * e2y - dy * e2x, det = e1x * px + e1y * py + e1z * pz; if (Math.abs(det) < 1e-12) continue;
+        const inv = 1 / det, sx = a[0] - ax, sy = a[1] - ay, sz = a[2] - az, u = (sx * px + sy * py + sz * pz) * inv; if (u < 0 || u > 1) continue;
+        const qx = sy * e1z - sz * e1y, qy = sz * e1x - sx * e1z, qz = sx * e1y - sy * e1x, v = (dx * qx + dy * qy + dz * qz) * inv; if (v < 0 || u + v > 1) continue;
+        const tt = (e2x * qx + e2y * qy + e2z * qz) * inv; if (tt > 1e-4 && tt < 1 - 1e-4 && (best < 0 || tt < best)) best = tt; } }
+    return best; };
   // the nearest deck cell to a point (within r m), for the places the anchors name
   M.near = (x, z, r = 1.5) => { let best = -1, bd = r * r; for (let k = 0; k < N; k++){ if (H[k] !== H[k]) continue; const p = M.at(k), d = (p[0] - x) ** 2 + (p[2] - z) ** 2; if (d < bd){ bd = d; best = k; } } return best; };
   DECKMAP[type] = M; return M;
 }
 // a way over the deck from a to b (cells), as cells; eight neighbours, a diagonal only past two free sides, and the cells by a bar or
 // an edge cost a little more, so the way keeps off the walls and the rail. Then pulled straight where the deck between is free.
+// can a body step from cell k to its neighbour q? Not where something crosses between them at the knees, the hips or the chest (a rail
+// across the stern, a boom, a tube between the house and the bulwark: the floor goes on under it, the person does not). Cached per map.
+const DM_PASS = [0.6, 1.0, 1.45];
+function deckPass(M, k, q){
+  const N = M.nx * M.nz; if (!M.pc || M.pc.length !== N * 9) M.pc = new Uint8Array(N * 9);
+  const d = (q - k) + M.nx + 1, di = d % M.nx, slot = di <= 2 && d >= 0 ? (d - di) / M.nx * 3 + di : -1;
+  if (slot < 0 || slot > 8) return passLine(M, M.at(k), M.at(q));
+  const c = M.pc[k * 9 + slot]; if (c) return c === 1; const ok = passLine(M, M.at(k), M.at(q)); M.pc[k * 9 + slot] = ok ? 1 : 2; return ok; }
+function passLine(M, A, B){ for (const h of DM_PASS) if (M.hit([A[0], A[1] + h, A[2]], [B[0], B[1] + h, B[2]]) >= 0) return false; return true; }
+// and over a link (a step, a ladder, a gate past a bar): level with the higher end, so a link the map made through a wall is no way
+function linkPass(M, k, q){ const c = M.lp || (M.lp = {}), key = k < q ? k + ',' + q : q + ',' + k; if (c[key] != null) return c[key];
+  const A = M.at(k), B = M.at(q), y = Math.max(A[1], B[1]); return (c[key] = passLine(M, [A[0], y, A[2]], [B[0], y, B[2]])); }
+// the parts of a deck one can walk between (the same steps as deckPath): on the big boats the deck fore and aft of the house are two,
+// and the crew go through the house between them (deckcrew.js). Cached on the map.
+function deckComp(M){
+  if (M.comp) return M.comp; const {nx, nz, h:H} = M, N = nx * nz, C = new Int32Array(N).fill(-1); let n = 0;
+  for (let s = 0; s < N; s++){ if (!M.ok(s) || C[s] >= 0) continue; const st = [s]; C[s] = n;
+    while (st.length){ const k = st.pop(), i = k % nx, j = (k - i) / nx;
+      for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]){ const ii = i + di, jj = j + dj; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; const q = jj * nx + ii;
+        if (C[q] >= 0 || !M.ok(q) || di && dj && !(M.ok(j * nx + ii) && M.ok(jj * nx + i)) || Math.abs(H[q] - H[k]) > DM_STEP || !deckPass(M, k, q)) continue; C[q] = n; st.push(q); }
+      for (const q of M.LINK[k] || []) if (C[q] < 0 && linkPass(M, k, q)){ C[q] = n; st.push(q); } }
+    n++; }
+  return (M.comp = C); }
 function deckPath(M, a, b){
   if (!M || !M.ok(a) || !M.ok(b)) return null; if (a === b) return [a];
   const {nx, nz, h:H} = M, N = nx * nz, g = new Float32Array(N).fill(Infinity), came = new Int32Array(N).fill(-1), open = [a]; g[a] = 0;
   const edge = k => { const i = k % nx, j = (k - i) / nx; for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]){ const ii = i + di, jj = j + dj; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz || !M.ok(jj * nx + ii)) return true; } return false; };
-  const EC = new Float32Array(N); for (let k = 0; k < N; k++) if (M.ok(k)) EC[k] = edge(k) ? 0.6 : 0;
+  // (and a cell where a body would touch something within 0.2 m, a wall or the rail at shoulder height, costs more again, so the way keeps
+  // the shoulders off them where there is room: Jonas 23.10.2026, «aldri "clipper" gjennom vegger, rekka eller andre ting»)
+  if (!M.tight){ const TT = new Uint8Array(N); for (let k = 0; k < N; k++){ if (!M.ok(k)) continue; const p = M.at(k);
+      for (const [dx, dz] of [[0.2, 0], [-0.2, 0], [0, 0.2], [0, -0.2]]) if (M.hit([p[0] + dx, p[1] + 0.35, p[2] + dz], [p[0] + dx, p[1] + 1.55, p[2] + dz]) >= 0){ TT[k] = 1; break; } } M.tight = TT; }
+  const EC = new Float32Array(N); for (let k = 0; k < N; k++) if (M.ok(k)) EC[k] = (edge(k) ? 0.6 : 0) + (M.tight[k] ? 2.5 : 0);
   const hx = b % nx, hz = (b - hx) / nx, heur = k => { const i = k % nx, j = (k - i) / nx; return Math.hypot(i - hx, j - hz); };
   const closed = new Uint8Array(N);
   while (open.length){
@@ -1128,15 +1169,15 @@ function deckPath(M, a, b){
     const k = open[bi]; open[bi] = open[open.length - 1]; open.pop(); if (k === b) break; if (closed[k]) continue; closed[k] = 1;
     const i = k % nx, j = (k - i) / nx;
     for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]){ const ii = i + di, jj = j + dj; if (ii < 0 || jj < 0 || ii >= nx || jj >= nz) continue; const q = jj * nx + ii; if (!M.ok(q) || closed[q]) continue;
-      if (di && dj && !(M.ok(j * nx + ii) && M.ok(jj * nx + i))) continue; if (Math.abs(H[q] - H[k]) > DM_STEP) continue;
+      if (di && dj && !(M.ok(j * nx + ii) && M.ok(jj * nx + i))) continue; if (Math.abs(H[q] - H[k]) > DM_STEP || !deckPass(M, k, q)) continue;
       const c = g[k] + (di && dj ? 1.414 : 1) + EC[q] + Math.abs(H[q] - H[k]) * 3; if (c < g[q]){ g[q] = c; came[q] = k; if (!open.includes(q)) open.push(q); } }
     // a ladder, a step or a gate: the link's other end, at the cost of the climb
-    for (const q of M.LINK[k] || []){ if (closed[q]) continue; const c = g[k] + 3 + Math.abs(H[q] - H[k]) * 4; if (c < g[q]){ g[q] = c; came[q] = k; if (!open.includes(q)) open.push(q); } } }
+    for (const q of M.LINK[k] || []){ if (closed[q] || !linkPass(M, k, q)) continue; const c = g[k] + 3 + Math.abs(H[q] - H[k]) * 4; if (c < g[q]){ g[q] = c; came[q] = k; if (!open.includes(q)) open.push(q); } } }
   if (came[b] < 0 && b !== a) return null;
   const path = []; for (let k = b; k >= 0; k = came[k]){ path.push(k); if (k === a) break; } path.reverse(); if (path[0] !== a) return null;
   // pulled straight: skip to the furthest cell seen over free deck (sampled every half cell)
   const free = (p, q) => { const A = M.at(p), B = M.at(q), n = Math.ceil(Math.hypot(B[0] - A[0], B[2] - A[2]) / (DM_C / 2)) + 1; let last = A[1];
-    for (let s = 0; s <= n; s++){ const t = s / n, k = M.cellOf(A[0] + (B[0] - A[0]) * t, A[2] + (B[2] - A[2]) * t); if (!M.ok(k) || EC[k] > 0 && s > 0 && s < n || Math.abs(H[k] - last) > DM_STEP) return false; last = H[k]; } return true; };
+    for (let s = 0; s <= n; s++){ const t = s / n, k = M.cellOf(A[0] + (B[0] - A[0]) * t, A[2] + (B[2] - A[2]) * t); if (!M.ok(k) || EC[k] > 0 && s > 0 && s < n || Math.abs(H[k] - last) > DM_STEP) return false; last = H[k]; } return passLine(M, A, B); };
   const out = [path[0]]; let i = 0; while (i < path.length - 1){ let j = path.length - 1; while (j > i + 1 && !free(path[i], path[j])) j--; out.push(path[j]); i = j; }
   return out;
 }

@@ -106,6 +106,20 @@ const SAY = {
     ['Æ drømme om varm mat. Det her e en lang dag førr en matpakke.', 'I dream of hot food. This is a long day for a packed lunch.', 'grinebiter']],
   noWc:[['Tolv tima uten do. Æ sei ikkje meir.', 'Twelve hours without a toilet. I say no more.'], ['Neste båt har toalett, skipper. Det e alt æ ber om.', 'The next boat has a toilet, skipper. That is all I ask.'],
     ['Det e grensa førr ka en kar held ut uten do.', 'There is a limit to what a man puts up with without a toilet.', 'grinebiter']],
+  // mistakes on deck (crewSlip; Jonas 23.10.2026: «Ja, det kan de godt gjøre. Det skaper realisme»)
+  slip:[['Der gikk den. Torsken ville heller svømme.', 'There it went. The cod would rather swim.'], ['Han glapp ut av nævan, rett over ripa.', 'It slipped out of my hand, straight over the rail.'],
+    ['Ikkje sei det te nån.', 'Do not tell anyone.', 'stolt'], ['Typisk. Den største, sjølsagt.', 'Typical. The biggest one, of course.', 'grinebiter']],
+  cut:[['Au! Æ skar mæ i tommeln.', 'Ow! I cut my thumb.'], ['Søren, kniven glapp. Det e bare et lite kutt.', 'Blast, the knife slipped. It is only a small cut.'],
+    ['Det blør litt, men det går. Plaster og hansken på igjen.', 'It bleeds a bit, but it is fine. A plaster and the glove back on.', 'arbeidsjern']],
+  botch:[['Den der ble ikkje pen. Æ tar neste bedre.', 'That one was not pretty. I will do the next one better.'], ['Æ har sløyd bedre fesk i søvne.', 'I have gutted better fish in my sleep.', 'grinebiter'],
+    ['Æ må finne teknikken igjen. Hode, buk, rens.', 'I have to find the knack again. Head, belly, clean.', 'laerevillig']],
+  // advice from those who know (sayHour): never a question to answer, only a word to go by (Jonas 23.10.2026: «de skal fungere mer som guidelines»)
+  adviceWx:[['Det kjem te å friske på rundt {t}, skipper. Med den her båten bør vi vær i ly før det.', 'It is going to freshen around {t}, skipper. In this boat we should be in shelter before then.'],
+    ['Æ liker ikkje himmelen i vest. Varselet sei mer vind rundt {t}.', 'I do not like the sky to the west. The forecast says more wind around {t}.'],
+    ['Æ har sett sånne dager før. Det blir stygt utpå, rundt {t}.', 'I have seen days like this before. It turns nasty out here, around {t}.', 'lokalkjent']],
+  adviceGround:[['Æ har fått bra med {sp} {place} før. Kanskje verdt et forsøk?', 'I have done well for {sp} {place} before. Might be worth a go?'],
+    ['På sånne dager pleide vi å prøve {place}. Der står {sp} gjerne nu.', 'On days like this we used to try {place}. There is often {sp} there now.'],
+    ['Æ kjenne de her farvannan. {Place} ligg {sp} i denne tida.', 'I know these waters. {Place} is where the {sp} lie at this time.', 'lokalkjent']],
   // a meal that is late, and how the crew pull together (04-crew.js crewDrive, crewTeam; Jonas 23.10.2026: «De kan gjerne mumle, klage og sånt»)
   hungry:[['Æ e så sulten at æ kunne ete en sjøstøvel.', 'I am so hungry I could eat a sea boot.'], ['Kæm har byssa i dag? Magen min knurre høgere enn motoren.', 'Who has the galley today? My stomach is growling louder than the engine.'],
     ['Ka blir det te middag? Eller blir det ingenting i dag heller?', 'What is for dinner? Or is it nothing today as well?', 'grinebiter'], ['Æ tar gjerne kokkevakta, bare æ får ete først.', 'I will gladly take the galley, as long as I get to eat first.', 'spokefugl']],
@@ -182,7 +196,8 @@ function dialectText(key, text){
 }
 function crewDialect(c, text){ return dialectText(dialectOf(c), text); }
 // someone says a line for the situation: c, or a person whose ways suit one of the lines, or anyone aboard
-function crewSay(c, sit){
+// (vars fill the line's {t}, {place}, {sp}: a value, or [no, en]; filled after the dialect, so a place keeps its name)
+function crewSay(c, sit, vars){
   const on = crewAboard(), L0 = sit && SAY[sit]; if (!on.length || !L0) return false;
   // what happens is said at once, but not more than once every 15 minutes
   if (S.t - (S.sayT || -1e9) < 15) return false;
@@ -192,7 +207,8 @@ function crewSay(c, sit){
     if (fit.length && Math.random() < 0.6){ const l = pick1(fit); who = pick1(on.filter(p => p.traits.includes(l[2]))); pool = [l]; }
     else { pool = L0.filter(l => !l[2]); who = pick1(on); } }
   if (!pool.length || !who) return false;
-  const l = pick1(pool), nm = who.name.split(' ')[0], no = crewDialect(who, l[0]); S.sayT = S.t;
+  const fill = (t, i) => vars ? t.replace(/\{(\w+)\}/g, (m, k) => vars[k] == null ? m : Array.isArray(vars[k]) ? vars[k][i] : vars[k]) : t;
+  const l0 = pick1(pool), l = [fill(crewDialect(who, l0[0]), 0), fill(l0[1], 1)], nm = who.name.split(' ')[0], no = l[0]; S.sayT = S.t;
   log(nm + ': «' + no + '»', nm + ': «' + l[1] + '»');
   (who.said = who.said || []).push({t:S.t, no, en:l[1]}); if (who.said.length > 5) who.said.shift();
   if (hooks.onSay && meAboard()) hooks.onSay(who, no, l[1]);
@@ -224,8 +240,60 @@ function sayHour(H, on, hs){
   { const F = BOAT.fac || {}; let n = 0; for (let i = (S.workLog || []).length - 1; i >= 0 && S.workLog[i]; i--) n++;
     if (F.galley === 'none' && n >= 10) sits.push(['noGalley']); if (!F.wc && n >= 12) sits.push(['noWc']); }
   if (hr >= 5 && hr <= 7) sits.push(['morning']);
+  // advice first when someone aboard knows: the weather turning, a better ground (each at most every six hours)
+  if (crewAdvice(H, on, W, fs)) return;
   const s = sits.length && Math.random() < 0.75 ? pick1(sits) : ['chat'];
   crewSay(s[1] || null, s[0]);
+}
+// ---- advice from those who know (Jonas 23.10.2026: «de kan gjerne ta initiativ og komme med kommentarer knyttet til driften om de vet
+// hva de snakker om, men det skal ikke komme opp et ja/nei-spørsmål»): the most seasoned hand (seamanship 3 or more) speaks when the
+// forecast brings more wind than the boat is built for within six hours; the most experienced (experience 3.5 or more, or local to these
+// waters) speaks of a better ground near by after two poor hours. A word to go by, said once in six hours each; nothing to answer.
+function crewAdvice(H, on, W, fs){
+  const b = S.boat, said = S.gsay || (S.gsay = {}), fresh = k => S.t - (said[k] || -1e9) > 6 * 60;
+  const sea = on.slice().sort((a, c) => c.attr.sjo - a.attr.sjo)[0];
+  if (sea && sea.attr.sjo >= 3 && fresh('adviceWx') && BOAT.risk){ let at = null;
+    try { for (let k = 1; k <= 6 && at == null; k++) if (fcWind(H + k, H, b.pos) >= BOAT.risk[2]) at = H + k; } catch (e) { /* no forecast here */ }
+    if (at != null && W < BOAT.risk[2] - 1 && crewSay(sea, 'adviceWx', {t:hm(at)})){ said.adviceWx = S.t; return true; } }
+  if (b.status === 'fishing' && fs && S.t - fs.t0 >= 120 && fs.kg / ((S.t - fs.t0) / 60) < 8 && fresh('adviceGround')){
+    const near = c => c.traits.includes('lokalkjent') && c.homePort && portById(c.homePort) && dist(portById(c.homePort).p, b.pos) < 25;
+    const who = on.filter(c => c.attr.erf >= 3.5 || near(c)).sort((a, c) => c.attr.erf - a.attr.erf)[0]; if (!who) return false;
+    const g = adviceGround(H), cap = t => t.charAt(0).toUpperCase() + t.slice(1);
+    if (g && crewSay(who, 'adviceGround', {place:g.place, Place:g.place.map(cap), sp:[SPECIES[g.sp].no.toLowerCase(), SPECIES[g.sp].en.toLowerCase()]})){ said.adviceGround = S.t; return true; } }
+  return false;
+}
+// a better ground within six kilometres for cod, saithe or haddock: the best point by the fish model, worth it at half as much again
+function adviceGround(H){
+  const p0 = S.boat.pos; let best = null;
+  for (const sp of ['torsk', 'sei', 'hyse']){ let here = 0; try { here = density(sp, p0, H); } catch (e) { continue; }
+    for (let dy = -6; dy <= 6; dy += 0.8) for (let dx = -6; dx <= 6; dx += 0.8){ if (dx * dx + dy * dy > 36 || dx * dx + dy * dy < 2) continue; const p = {x:p0.x + dx, y:p0.y + dy};
+      try { if (isLand(p)) continue; const d = depthF(p); if (d < 8 || d > 400) continue; const v = density(sp, p, H), r = v / Math.max(1e-9, here); if (r >= 1.5 && (!best || r > best.r)) best = {sp, p, r}; } catch (e) { /* a block not loaded */ } } }
+  if (!best) return null;
+  // said as a way from the nearest harbour within 15 km: «nord for Gryllefjord», or «ved Gryllefjord» close in
+  let pt = null, pd = 15; for (const q of PORTS){ const d = dist(q.p, best.p); if (d < pd){ pd = d; pt = q; } } if (!pt) return null;
+  if (pd < 1.5) return {sp:best.sp, p:best.p, place:['ved ' + pt.name, 'off ' + pt.name]};
+  const deg = (Math.atan2(best.p.x - pt.p.x, pt.p.y - best.p.y) * 180 / Math.PI + gridGamma(pt.p) + 360) % 360, i = Math.round(deg / 45) % 8;
+  const NO = ['nord', 'nordøst', 'øst', 'sørøst', 'sør', 'sørvest', 'vest', 'nordvest'], EN = ['north', 'north-east', 'east', 'south-east', 'south', 'south-west', 'west', 'north-west'];
+  return {sp:best.sp, p:best.p, place:[NO[i] + ' for ' + pt.name, EN[i] + ' of ' + pt.name]};
+}
+// ---- mistakes on deck (Jonas 23.10.2026: «Ja, det kan de godt gjøre. Det skaper realisme»): now and then a fish slips over the side, the
+// knife slips and someone cuts a hand, or a fish is gutted badly. Likelier tired, cold, in a heavy sea, with little skill or little heart in
+// it; rare otherwise (about once in a long day at the table). A cut slows the one cut for four hours (04-crew.js crewDrive 'cut').
+function crewSlip(team){
+  if (!team.length) return;
+  const b = S.boat, H = S.t / 60, hs = hsWork(b.pos, H), cp = coldPen(H, hs);
+  for (const c of team){
+    const sk = (c.gear && c.gear.sloy) || 1, f = c.fatigue / 100, e = crewEffort(c, H, hs).f;
+    const pr = 0.0012 * (1 + 2 * f * f + Math.max(0, hs - 1) + 2 * cp + (5 - sk) / 3 + 3 * Math.max(0, 1 - e));
+    if (Math.random() >= pr) continue;
+    const r = Math.random(), nm = c.name.split(' ')[0];
+    if (r < 0.45){ const x = S.hold.filter(y => !y.iced && !SPECIES[y.sp].live && y.kg > 0.5).sort((a, y) => y.kg - a.kg)[0]; if (!x) continue;
+      const kg = Math.min(x.kg, 1.5 + Math.random() * 3); if (x.n) x.n = Math.max(0, x.n - 1); x.kg -= kg; if (x.kg < 0.01) S.hold.splice(S.hold.indexOf(x), 1);
+      log(nm + ' mistet en ' + SPECIES[x.sp].no.toLowerCase() + ' på ' + fmt(kg, 1) + ' kg over ripa.', nm + ' lost a ' + SPECIES[x.sp].en.toLowerCase() + ' of ' + fmt(kg, 1) + ' kg over the rail.'); crewSay(c, 'slip'); }
+    else if (r < 0.75){ const x = S.hold.find(y => y.gut && !y.iced && !SPECIES[y.sp].live); if (!x) continue;
+      x.fresh = Math.max(0, x.fresh - 6 * Math.min(1, 4 / x.kg)); log(nm + ' sløyde en fisk stygt. Den blir litt dårligere betalt.', nm + ' gutted a fish badly. It will fetch a little less.'); crewSay(c, 'botch'); }
+    else { c.cut = S.t + 240; log(nm + ' skar seg i hånda på sløyekniven.', nm + ' cut a hand on the gutting knife.'); crewSay(c, 'cut'); }
+  }
 }
 
 // ===== Del 2 of «mannskap med liv» (docs/mannskap-plan.md; Jonas 17.10.2026): each person's life beside the work =====

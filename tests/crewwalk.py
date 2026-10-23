@@ -65,8 +65,9 @@ async def main():
           const before = CREW3D.agents().filter(a => !a.me && a.goal && a.goal.idle).length;
           b.status = 'sailing'; b.v = 8; S.plan = {wps:[{x:b.pos.x + 5, y:b.pos.y, port:null, fish:0}], idx:0, speed:8, returning:false};
           for (let i = 0; i < 20; i++){ CREW3D._st.ctxT = 0; CREW3D.tick(0.05); }
-          return {before, after:CREW3D.agents().filter(a => !a.me).map(a => a.st + ':' + (a.goal && a.goal.idle ? 'idle' : a.goal && a.goal.inside || 'deck'))}; })()""")
-        check(r6['before'] > 0 and all(x.endswith(':in') for x in r6['after']), 'a break on deck ends as she gets under way: the crew are on their way in within a second', r6)
+          return {before, after:CREW3D.agents().filter(a => !a.me).map(a => a.st + ':' + (a.goal && a.goal.idle ? (a.goal.task === 'smoke' ? 'smoke' : 'idle') : a.goal && a.goal.inside || 'deck'))}; })()""")
+        # (a smoker may step out aft for a smoke, never in the wheelhouse: Jonas 23.10.2026; nobody leans on the rail)
+        check(r6['before'] > 0 and all(x.endswith(':in') or x.endswith(':smoke') for x in r6['after']), 'a break on deck ends as she gets under way: the crew are on their way in within a second (a smoker may go aft)', r6)
         # the rail places (vessel3d.js deckPoints lean) on every boat: no deck at their height further out the way they face (a wall, a locker
         # or the house with deck beyond is no rail: #83 and #85; the bulwark's cap, higher, and a ledge of a cell outside it are), the hand
         # boats aside (no crew on deck), and on the working deck where she has four or

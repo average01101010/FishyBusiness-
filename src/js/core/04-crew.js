@@ -87,14 +87,14 @@ function crewDrive(c, H, hs){
     if (DRIVE_SUN.t !== S.t){ DRIVE_SUN.t = S.t; DRIVE_SUN.dark = sunAt(H, b.pos).el < -6; } if (DRIVE_SUN.dark) F.push(['dark', 0.98]);
   }
   const tv = crewTeam().v; if (Math.abs(tv - 50) > 5) F.push([tv > 50 ? 'team' : 'noteam', 0.96 + 0.08 * tv / 100]);
-  if (c.cpen) F.push(['quarrel', 0.9]);
+  if (c.cpen) F.push(['quarrel', 0.9]); if (c.cut && S.t < c.cut) F.push(['cut', 0.88]);
   if (T.includes('olglad') && S.pubE === pubEvening(H - 12) && gDate(H).getUTCHours() < 12) F.push(['hangover', 0.8]);
   return F;
 }
 // how a person is working, in words for the Mannskap page: a level and the strongest reason when it matters
 const DRIVE_WHY = {tired:['sliten', 'tired'], glad:['i godt humør', 'in good spirits'], sour:['misfornøyd', 'unhappy'], hungry:['sulten', 'hungry'], food:['god mat i magen', 'good food inside'],
   poorfood:['dårlig mat', 'poor food'], sea:['grov sjø', 'a heavy sea'], seasick:['sjøsyk', 'seasick'], dark:['mørkt på dekk', 'dark on deck'], team:['godt lag om bord', 'a good team aboard'],
-  noteam:['dårlig stemning om bord', 'a sour atmosphere aboard'], quarrel:['uvenner med noen', 'at odds with someone'], hangover:['tung i hodet etter puben', 'heavy-headed after the pub'], cold:['kald på fingrene', 'cold fingers']};
+  noteam:['dårlig stemning om bord', 'a sour atmosphere aboard'], quarrel:['uvenner med noen', 'at odds with someone'], hangover:['tung i hodet etter puben', 'heavy-headed after the pub'], cut:['har skåret seg i hånda', 'has cut a hand'], cold:['kald på fingrene', 'cold fingers']};
 const DRIVE_LVL = [[1.03, 'Står på', 'Going hard'], [0.95, 'Jevn innsats', 'Steady'], [0.85, 'Går litt tregt', 'A bit slow'], [0, 'Har lite å gi', 'Little left to give']];
 function crewEffort(c, H, hs){
   if (H == null) H = S.t / 60; if (hs == null) hs = hsWork(S.boat.pos, H);

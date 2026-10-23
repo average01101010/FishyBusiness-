@@ -18,7 +18,8 @@ SET = """((a) => { const [type, scene, yaw, pitch, dist] = a, b = S.boat, g = GR
   const hand = () => Object.assign(genCrew(), {bi:false, off:false, fatigue:5, morale:70, job:null});
   S.crew = scene === 'skiff' ? [] : [hand(), hand(), hand()].slice(0, scene === 'garn' ? 3 : 3);
   const fish = (kg, gut, iced) => ({sp:'torsk', cls:SPECIES.torsk.ref, kg, n:Math.round(kg / 3), bled:true, iced, hr:Math.floor(S.t / 60), fresh:100, gut, hook:true});
-  S.hold = scene === 'egn' || scene === 'mend' ? [] : scene === 'skiff' ? [fish(8, false, false)] : [fish(220, false, false), fish(12, true, false), fish(30, true, true)];
+  // (jigging: only fish already gutted and iced aboard, else the crew, who see the work themselves, gut it first and one jigs)
+  S.hold = scene === 'egn' || scene === 'mend' ? [] : scene === 'skiff' ? [fish(8, false, false)] : scene === 'jig' ? [fish(30, true, true)] : [fish(220, false, false), fish(12, true, false), fish(30, true, true)];
   b.status = 'fishing'; b.port = null; b.pos = {x:g.x, y:g.y}; b.heading = 0.4; b.v = 0; b.fishUntil = S.t + 600;
   if (scene === 'line'){ b.rig = 'line'; S.pgear.lines.hyse.n = 4; S.pgear.lines.hyse.baited = 2; b.gop = {op:'haul', kind:'line', n:6, done:2, prog:0.3, sub:0, sl:6, hooksPer:600, a:{x:g.x, y:g.y}, b:{x:g.x + 0.6, y:g.y}, lead:0, kg:0, rel:0, dead:0}; }
   if (scene === 'garn'){ b.rig = 'garn'; S.pgear.nets = [{id:'n1', mesh:180, ty:'bunn', n:4, cond:1}]; b.gop = {op:'haul', kind:'garn', n:6, done:2, prog:0.3, sub:0, sl:3, hooksPer:0, a:{x:g.x, y:g.y}, b:{x:g.x + 0.6, y:g.y}, lead:0, kg:0, rel:0, dead:0}; }

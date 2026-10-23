@@ -1739,6 +1739,13 @@ const G3 = (() => {
     if (k === 'helmsit' || k === 'drive') return [0, 0.05, 1];   // (on the helm seat, where the boat is steered sitting, or the forklift's seat)
     if (k === 'mend') return [0, 0.16];
     if (k === 'stow'){ const u = clamp((st.s || 0) / 1.2, 0, 1); return [0.55 * Math.sin(u * Math.PI / 2), 0.5 * Math.sin(u * Math.PI / 2)]; }
+    // the breaks (core/13-work.js idleAssign): leaning back on the rail, sitting on an upturned tub, over the rail seasick, bent over the gear
+    if (k === 'back') return [0, -0.1];
+    if (k === 'sit') return [0, 0.24, 1];
+    if (k === 'seasick') return [0.06, 0.55 + 0.05 * Math.max(0, Math.sin(T * 1.3 + idx)) ** 6];
+    if (k === 'gear') return [0.1, 0.32];
+    if (k === 'knife' || k === 'phone' || k === 'lunch' || k === 'snus') return [0, 0.06];
+    if (k === 'aurora') return [0, -0.05];
     return [0, 0];
   }
   // he turns from his place towards what he reaches for: the gutter to the bleeding tub for the next fish, the bleeder to the tub as he
@@ -1764,6 +1771,8 @@ const G3 = (() => {
     // (sitting, LB[2]: on a low seat, the thighs out level and the shins down to the deck; the seat is drawn with the props)
     for (const s of [-1, 1]){ let hip = W(dip * 0.06, 0.92 + dy, s * 0.11), foot = W(sw * s * 0.28, 0.08 + Math.max(0, Math.cos(ph) * s) * 0.07 * (st.walk ? 1 : 0), s * 0.12), kf = 0.07 + dip * 0.34, knee = [(hip[0] + foot[0]) / 2 + F[0] * kf, (hip[1] + foot[1]) / 2 + dip * 0.05, (hip[2] + foot[2]) / 2 + F[1] * kf];
       if (sit){ hip = W(-0.04, sh, s * 0.12); knee = W(0.38, sh + 0.02, s * 0.15); foot = W(0.44, sh - 0.42, s * 0.17); }
+      // back to the rail with the legs crossed: the feet a little out, the right one over in front of the left
+      if (st.task === 'back' && !st.walk){ hip = W(0.05, 0.92 + dy, s * 0.11); foot = s > 0 ? W(0.3, 0.08, -0.05) : W(0.2, 0.08, -0.13); knee = [(hip[0] + foot[0]) / 2 + F[0] * 0.05, (hip[1] + foot[1]) / 2 + 0.02, (hip[2] + foot[2]) / 2 + F[1] * 0.05]; }
       if (K){ drawN(K.thigh, limbM(hip, knee, 1)); drawN(K.shin, limbM(knee, foot, 1)); drawN(K.boot, chain(M4.T(foot[0], foot[1] - 0.08, foot[2]), M4.RY(-h))); continue; }
       drawN(PM.leg, limbM(hip, knee, 0.075)); drawN(PM.leg, limbM(knee, foot, 0.065)); drawN(PM.boot, chain(M4.T(foot[0], foot[1] - 0.08, foot[2]), M4.RY(-h))); }
     const bend = LB[1] * bk;
@@ -1771,7 +1780,11 @@ const G3 = (() => {
     // the head: looking about when idle, and at you when you bring the camera close in front of him (deckcrew agents, st.peek)
     let hy = st.task === 'look' ? Math.sin(T * 0.4 + idx) * 0.5 : 0;
     if (st.peek){ const ex = eye[0] - st.x, ez = eye[2] - st.z, d = Math.hypot(ex, ez); if (d < 7){ let dh = Math.atan2(ex, -ez) - h; while (dh > Math.PI) dh -= 2 * Math.PI; while (dh < -Math.PI) dh += 2 * Math.PI; if (Math.abs(dh) < 1.3) hy = -dh * 0.85 * Math.min(1, (7 - d) / 2); } }
-    const hd = W(bend, 1.6 + dy, 0), HM = chain(M4.T(hd[0], hd[1] - 0.1, hd[2]), M4.RY(-h + hy));
+    // the head's pitch by what he does (down at the phone, the knife, over the rail; up at the northern lights), and a slow turn talking or
+    // scanning with the binoculars
+    const HP = {phone:-0.5, knife:-0.4, seasick:-0.6, lunch:-0.12, gear:-0.35, sit:-0.12, snus:-0.08, aurora:0.6, binoc:0.04};
+    const hp = HP[st.task] || 0; if (st.task === 'chat') hy += Math.sin(T * 0.7 + idx) * 0.12; if (st.task === 'aurora') hy += Math.sin(T * 0.15 + idx) * 0.4; if (st.task === 'binoc') hy += Math.sin(T * 0.22 + idx) * 0.25;
+    const hd = W(bend, 1.6 + dy, 0), HM = chain(M4.T(hd[0], hd[1] - 0.1, hd[2]), M4.RY(-h + hy), M4.RX(hp));
     if (K){ drawN(K.head, HM); for (const m of [K.hair, K.beard, K.hat]) if (m) drawN(m, HM); } else drawN(P.bare ? PM.headB : PM.head, HM);
     let hands;
     const t = T + idx * 1.7;
@@ -1800,8 +1813,8 @@ const G3 = (() => {
       case 'helm': hands = [W(0.3, 1.1, 0.17), W(0.3, 1.1, -0.17)]; break;
       case 'helmsit': hands = [W(0.4, sh + 0.42, 0.16), W(0.4, sh + 0.42, -0.16)]; break;
       case 'drive': hands = [W(0.56, sh + 0.26, 0.12), W(0.58, sh + 0.2, -0.1)]; break;
-      case 'lean': hands = [W(0.4, 1.02, 0.2), W(0.4, 1.02, -0.2)]; break;
-      case 'jig': { const k = Math.pow(Math.max(0, Math.sin(t * 2.6)), 3); hands = [W(0.34, 0.95 + k * 0.35, 0.16), W(0.3, 0.9, -0.16)]; break; }
+      case 'lean': { const r = st.rail; hands = r ? [W(r[0] + 0.02, r[1] + 0.04, 0.2), W(r[0] + 0.02, r[1] + 0.04, -0.2)] : [W(0.4, 1.02, 0.2), W(0.4, 1.02, -0.2)]; break; }
+      case 'jig': { const k = Math.pow(Math.max(0, Math.sin(t * 2.6)), 3), r = st.rail; hands = r ? [W(r[0] + 0.02, r[1] + 0.05 + k * 0.35, 0.16), W(r[0] - 0.02, r[1] + 0.01, -0.16)] : [W(0.34, 0.95 + k * 0.35, 0.16), W(0.3, 0.9, -0.16)]; break; }
       case 'gut': { const c = (T % 3) / 3, thr = c > 0.7 && c < 0.85 ? Math.sin((c - 0.7) / 0.15 * Math.PI) : 0; hands = [W(0.42 + thr * 0.25, 0.95 + thr * 0.35, 0.16 + Math.sin(T * 7) * 0.07 * (1 - thr)), W(0.42, 0.9, -0.1)]; break; }
       // the gaff (linehøtt) at the hauler (the event: dkFor, seconds st.ev.k): out over the rail and down to the fish on the line, a
       // jerk as it bites, up and in over the rail with the fish hanging on it, shaken off into the bleeding tub, back to the ready
@@ -1832,11 +1845,11 @@ const G3 = (() => {
       // ---- the work on deck, step by step (Jonas 20.10.2026: «Alle deler av arbeidsprosessene må ha egne animasjoner»); the places the
       // hands go to (the table, the bleeding tub, the crate, the rail) come from drawDeckCrew as points in the eye's frame (st.Tb, st.Ub ...)
       // at the line hauler between the fish: a hand on the hauler's lever, the other guiding the line in over the sheave
-      case 'haul': { const k = Math.sin(t * 1.6) * 0.03; hands = [W(0.42, 1.08 + k, 0.2), W(0.52, 1.22 - k, -0.06)]; break; }
+      case 'haul': { const k = Math.sin(t * 1.6) * 0.03, r = st.rail; hands = r ? [W(r[0] + 0.08, r[1] + 0.1 + k, 0.2), W(r[0] + 0.12, r[1] + 0.24 - k, -0.06)] : [W(0.42, 1.08 + k, 0.2), W(0.52, 1.22 - k, -0.06)]; break; }
       // the pot hand and the crab sorter: hands at the work in front, low
       case 'tend': { const k = Math.sin(t * 2.2); hands = [W(0.45 + k * 0.05, 0.8 + Math.max(0, k) * 0.12, 0.16), W(0.45 - k * 0.05, 0.8 + Math.max(0, -k) * 0.12, -0.16)]; break; }
       // the net off the hauler: the hands at the meshes; a fish (the event) is worked out of them, held up and let fall to the deck
-      case 'pick': { const e = st.ev, c = e ? e.k : 99, i0 = Math.sin(t * 2.4), idle = [W(0.48, 1.02 + i0 * 0.05, 0.14), W(0.48, 1.0 - i0 * 0.05, -0.14)]; st.held = null; st.fall = null;
+      case 'pick': { const e = st.ev, c = e ? e.k : 99, i0 = Math.sin(t * 2.4), pr = st.rail, idle = pr ? [W(pr[0] + 0.06, pr[1] + 0.05 + i0 * 0.05, 0.14), W(pr[0] + 0.06, pr[1] + 0.03 - i0 * 0.05, -0.14)] : [W(0.48, 1.02 + i0 * 0.05, 0.14), W(0.48, 1.0 - i0 * 0.05, -0.14)]; st.held = null; st.fall = null;
         if (e && c < DKDUR.pick){ const Rt = e.R, aR = [Rt[0] + R[0] * 0.09, Rt[1], Rt[2] + R[1] * 0.09], aL = [Rt[0] - R[0] * 0.09, Rt[1] + 0.05, Rt[2] - R[1] * 0.09], back = [W(0.36, 1.0, 0.12), W(0.36, 1.02, -0.12)];
           if (c < 0.4){ const u = ease(c / 0.4); hands = [lerp3(idle[0], aR, u), lerp3(idle[1], aL, u)]; }
           else if (c < 1.6){ const w = Math.sin((c - 0.4) * 11) * 0.04; hands = [[aR[0], aR[1] + w, aR[2]], [aL[0], aL[1] - w, aL[2]]]; st.held = [Rt[0], Rt[1] - 0.04, Rt[2]]; st.hrz = Math.sin(c * 9) * 0.45; }
@@ -1887,33 +1900,94 @@ const G3 = (() => {
       case 'mend': { const Nt = st.Nt || W(0.42, 1.0, 0), k = (T * 1.2 + idx) % 1, pull = k > 0.8 ? Math.sin((k - 0.8) / 0.2 * Math.PI) : 0, a = k * Math.PI * 2 * 3;
         hands = [[Nt[0] + R[0] * (0.08 + Math.cos(a) * 0.04 * (1 - pull)) - F[0] * pull * 0.18, Nt[1] + Math.sin(a) * 0.04 * (1 - pull) + pull * 0.06, Nt[2] + R[1] * (0.08 + Math.cos(a) * 0.04 * (1 - pull)) - F[1] * pull * 0.18], [Nt[0] - R[0] * 0.1, Nt[1] + 0.02, Nt[2] - R[1] * 0.1]];
         st.needle = {at:hands[0], dir:[F[0] * 0.6 + R[0] * 0.3, 0.55, F[1] * 0.6 + R[1] * 0.3]}; break; }
-      // gutting at the table (st.Tb, the table in front; st.Ub the bleeding tub): a fish out of the tub onto the table, the knife along the
-      // belly, the guts out and over the rail (st.Of; the gulls come down for them), and the gutted fish on to the packer's crate (st.Cr),
-      // else to the end of the table; 5.6 s a fish (about the simulation's 5 kg a minute at the game's pace)
+      // gutting at the table as the trade does it (Jonas 23.10.2026, his video of a cod gutted slowly to show it): a fish out of the
+      // bleeding tub (st.Ub) and held head up against the table's edge, the belly opened from the vent up to the throat, the cut at the
+      // throat and the gills, the guts pulled out and over the rail (st.Of; the gulls come for them), the fish laid on the table (st.Tb),
+      // the head cut off at a slant behind the gill cover and over the side, the belly scraped clean, and the fish on to the packer's
+      // crate (st.Cr), else to the end of the table; 5.6 s a fish (about the simulation's 5 kg a minute at the game's pace)
       case 'gutw': { const Gs = ((T + idx * 1.7) % 5.6), Tb = st.Tb, sh = W(0.1, 1.3 + dy, 0), Ub = st.Ub ? lerp3(sh, st.Ub, Math.min(1, 0.68 / Math.max(0.01, Math.hypot(st.Ub[0] - sh[0], st.Ub[1] - sh[1], st.Ub[2] - sh[2])))) : W(0.45, 0.6, 0.5);
-        const fH = [Tb[0] - R[0] * 0.2, Tb[1] + 0.05, Tb[2] - R[1] * 0.2], fT = [Tb[0] + R[0] * 0.2, Tb[1] + 0.05, Tb[2] + R[1] * 0.2], mid = lerp3(fH, fT, 0.5), rest = [W(0.36, 0.98, 0.18), W(0.36, 0.96, -0.12)], lo = [Ub[0], Ub[1] - 0.14, Ub[2]];
+        const sc = st.gsc || 0.46, fH = [Tb[0] - R[0] * 0.2, Tb[1] + 0.05, Tb[2] - R[1] * 0.2], fT = [Tb[0] + R[0] * 0.2, Tb[1] + 0.05, Tb[2] + R[1] * 0.2], mid = lerp3(fH, fT, 0.5), rest = [W(0.36, 0.98, 0.18), W(0.36, 0.96, -0.12)], lo = [Ub[0], Ub[1] - 0.14, Ub[2]];
         const end = st.Cr ? [st.Cr[0], st.Cr[1] + (st.crTop || 0.3), st.Cr[2]] : [Tb[0] + F[0] * 0.05 + R[0] * 0.55, Tb[1] + 0.05, Tb[2] + F[1] * 0.05 + R[1] * 0.55];
-        st.gf = null; st.slo = null; st.gt = null; st.knife = Gs >= 1.2 && Gs < 3.4;
-        if (Gs < 0.9){ const u = ease(Gs / 0.9); hands = [rest[0], lerp3(rest[1], lo, Math.sin(u * Math.PI / 2))]; if (Gs > 0.65) st.gf = {at:hands[1], hang:true}; }
-        else if (Gs < 1.4){ const u = ease((Gs - 0.9) / 0.5); hands = [lerp3(rest[0], W(0.4, 1.0, 0.18), u), lerp3(lo, fH, u)]; st.gf = u < 0.7 ? {at:hands[1], hang:true} : {at:mid}; }
-        else if (Gs < 3.2){ const u = (Gs - 1.4) / 1.8, sk = Math.sin(u * Math.PI * 7) * 0.025, kx = lerp3(fT, fH, Math.min(1, u * 1.15)); hands = [[kx[0] - F[0] * (0.04 + sk), kx[1] + 0.05, kx[2] - F[1] * (0.04 + sk)], [fH[0] - R[0] * 0.05, fH[1] + 0.04, fH[2] - R[1] * 0.05]]; st.gf = {at:mid}; }
-        else if (Gs < 3.8){ const u = ease((Gs - 3.2) / 0.6); hands = [W(0.36, 1.02, 0.22), lerp3([mid[0] - F[0] * 0.04, mid[1] + 0.02, mid[2] - F[1] * 0.04], W(0.3, 1.12, -0.32), u)]; st.gf = {at:mid}; st.slo = {at:hands[1]}; }
-        else if (Gs < 4.3){ const u = ease((Gs - 3.8) / 0.5), tw = st.Of ? lerp3(W(0.3, 1.12, -0.32), [sh[0] + (st.Of[0] - sh[0]) * 0.3, sh[1] + 0.05, sh[2] + (st.Of[2] - sh[2]) * 0.3], u) : W(0.3, 1.12, -0.32); hands = [W(0.36, 1.02, 0.22), tw]; st.gf = {at:mid}; if (Gs < 4.05) st.slo = {at:hands[1]}; }
-        else if (Gs < 5.1){ const u = ease((Gs - 4.3) / 0.8); hands = [lerp3(W(0.36, 1.02, 0.22), [mid[0] + R[0] * 0.08, mid[1] + 0.05, mid[2] + R[1] * 0.08], Math.min(1, u * 2)), lerp3(W(0.3, 1.0, -0.2), [mid[0] - R[0] * 0.12, mid[1] + 0.05, mid[2] - R[1] * 0.12], Math.min(1, u * 2))];
-          st.gt = {A:mid, B:end, u:clamp((u - 0.45) / 0.55, 0, 1)}; if (u <= 0.45) st.gf = {at:mid}; }
-        else { const u = ease((Gs - 5.1) / 0.5); hands = [lerp3([mid[0] + R[0] * 0.08, mid[1] + 0.05, mid[2] + R[1] * 0.08], rest[0], u), lerp3([mid[0] - R[0] * 0.12, mid[1] + 0.05, mid[2] - R[1] * 0.12], rest[1], u)]; }
+        // the head held at the table's near edge, the fish hanging from it; the vent and the throat on its belly, towards him
+        const E = [Tb[0] - F[0] * 0.16, Tb[1] + 0.9 * sc, Tb[2] - F[1] * 0.16], up = (P, d) => [P[0] - F[0] * 0.035, P[1] - d, P[2] - F[1] * 0.035], vent = up(E, 0.55 * sc), throat = up(E, 0.13 * sc);
+        const cutAt = [mid[0] - R[0] * 0.35 * sc, mid[1], mid[2] - R[1] * 0.35 * sc];   // (behind the gill cover: 0.35 of the fish from its middle)
+        st.gf = null; st.slo = null; st.gt = null; st.knife = Gs >= 1.2 && Gs < 5.0; st.kdir = null; st.cut = Gs >= 4.05; st.hd = null;
+        if (Gs < 0.8){ const u = ease(Gs / 0.8); hands = [rest[0], lerp3(rest[1], lo, Math.sin(u * Math.PI / 2))]; if (Gs > 0.6) st.gf = {at:hands[1], hang:true}; }
+        else if (Gs < 1.3){ const u = ease((Gs - 0.8) / 0.5); hands = [lerp3(rest[0], vent, u * 0.8), lerp3(lo, E, u)]; st.gf = {at:hands[1], hang:true}; }
+        // the belly opened from the vent up to the throat
+        else if (Gs < 2.0){ const u = ease((Gs - 1.3) / 0.7); hands = [lerp3(vent, throat, u), E]; st.gf = {at:E, hang:true}; st.kdir = [F[0] * 0.6, 0.55, F[1] * 0.6]; }
+        // the cut at the throat and across the gills, a few strokes
+        else if (Gs < 2.5){ const k = Math.sin((Gs - 2.0) * 22) * 0.03; hands = [[throat[0] + R[0] * k, throat[1] + 0.01, throat[2] + R[1] * k], E]; st.gf = {at:E, hang:true}; st.kdir = [F[0] * 0.5 - R[0] * 0.4, 0.2, F[1] * 0.5 - R[1] * 0.4]; }
+        // the guts pulled out and down, and thrown over the rail
+        else if (Gs < 2.95){ const u = ease((Gs - 2.5) / 0.45), g0 = up(E, 0.3 * sc), g1 = [g0[0] - F[0] * 0.18, g0[1] - 0.12, g0[2] - F[1] * 0.18]; hands = [lerp3(g0, g1, u), E]; st.gf = {at:E, hang:true}; st.slo = {at:hands[0]}; }
+        else if (Gs < 3.35){ const u = ease((Gs - 2.95) / 0.4), g1 = up(E, 0.42 * sc), tw = st.Of ? [sh[0] + (st.Of[0] - sh[0]) * 0.3, sh[1] + 0.05, sh[2] + (st.Of[2] - sh[2]) * 0.3] : W(0.3, 1.12, 0.32);
+          hands = [lerp3([g1[0] - F[0] * 0.18, g1[1] - 0.06, g1[2] - F[1] * 0.18], tw, u), E]; st.gf = {at:E, hang:true}; if (Gs < 3.15) st.slo = {at:hands[0]}; }
+        // the fish laid on the table
+        else if (Gs < 3.7){ const u = ease((Gs - 3.35) / 0.35); hands = [lerp3(W(0.34, 1.05, 0.2), [mid[0] + R[0] * 0.1, mid[1] + 0.05, mid[2] + R[1] * 0.1], u), lerp3(E, [fH[0] + R[0] * 0.04, fH[1] + 0.05, fH[2] + R[1] * 0.04], u)];
+          if (u < 0.5) st.gf = {at:lerp3(E, mid, u * 2), hang:u < 0.25}; else st.gf = {at:mid}; }
+        // the head off behind the gill cover, at a slant: two strokes down
+        else if (Gs < 4.2){ const k = Math.abs(Math.sin((Gs - 3.7) / 0.5 * Math.PI * 2)); hands = [[cutAt[0], cutAt[1] + 0.1 - k * 0.1, cutAt[2]], [mid[0] + R[0] * 0.08, mid[1] + 0.05, mid[2] + R[1] * 0.08]]; st.gf = {at:mid}; st.kdir = [-F[0] * 0.3 + R[0] * 0.25, -0.9, -F[1] * 0.3 + R[1] * 0.25]; if (st.cut) st.hd = {at:cutAt, spin:0}; }
+        // the head over the side, the belly scraped clean with the knife's back
+        else if (Gs < 4.55){ const u = ease((Gs - 4.2) / 0.35); hands = [lerp3(cutAt, W(0.3, 1.15, 0.3), u), [mid[0] + R[0] * 0.08, mid[1] + 0.05, mid[2] + R[1] * 0.08]]; st.gf = {at:mid};
+          const O = st.Of || W(1.6, -0.2, 0.3), A0 = [cutAt[0], cutAt[1] + 0.03, cutAt[2]], v = (Gs - 4.2) / 0.6; st.hd = {at:[A0[0] + (O[0] - A0[0]) * v, A0[1] + 0.6 * 4 * v * (1 - v) - (A0[1] - O[1]) * v * v, A0[2] + (O[2] - A0[2]) * v], spin:v * 5}; }
+        else if (Gs < 5.0){ const k = Math.sin((Gs - 4.55) * 26), kx = lerp3(fH, fT, 0.42 + k * 0.14); hands = [[kx[0] - F[0] * 0.03, kx[1] + 0.03, kx[2] - F[1] * 0.03], [fT[0] - R[0] * 0.05, fT[1] + 0.05, fT[2] - R[1] * 0.05]]; st.gf = {at:mid}; st.kdir = [F[0] * 0.2 + R[0] * 0.8, -0.3, F[1] * 0.2 + R[1] * 0.8];
+          if (Gs < 4.8 && st.Of){ const O = st.Of, A0 = [cutAt[0], cutAt[1] + 0.03, cutAt[2]], v = (Gs - 4.2) / 0.6; st.hd = {at:[A0[0] + (O[0] - A0[0]) * v, A0[1] + 0.6 * 4 * v * (1 - v) - (A0[1] - O[1]) * v * v, A0[2] + (O[2] - A0[2]) * v], spin:v * 5}; } }
+        // the fish on to the crate, and back for the next
+        else { const u = ease((Gs - 5.0) / 0.6); hands = [lerp3([mid[0] + R[0] * 0.08, mid[1] + 0.05, mid[2] + R[1] * 0.08], rest[0], u), lerp3([mid[0] - R[0] * 0.12, mid[1] + 0.05, mid[2] - R[1] * 0.12], rest[1], u)];
+          st.gt = {A:mid, B:end, u:clamp(u * 1.4, 0, 1)}; }
         // the guts in flight: out of the hand at the throw, over the rail and down to the water
-        if (Gs >= 4.05 && Gs < 5.2 && st.Of){ const u = (Gs - 4.05) / 1.15, A0 = [sh[0] + (st.Of[0] - sh[0]) * 0.3, sh[1] + 0.05, sh[2] + (st.Of[2] - sh[2]) * 0.3]; st.slo = {at:[A0[0] + (st.Of[0] - A0[0]) * u, A0[1] + 0.5 * 4 * u * (1 - u) * (1 - u) - (A0[1] - st.Of[1]) * u * u, A0[2] + (st.Of[2] - A0[2]) * u]}; }
+        if (Gs >= 3.15 && Gs < 4.3 && st.Of){ const u = (Gs - 3.15) / 1.15, A0 = [sh[0] + (st.Of[0] - sh[0]) * 0.3, sh[1] + 0.05, sh[2] + (st.Of[2] - sh[2]) * 0.3]; st.slo = {at:[A0[0] + (st.Of[0] - A0[0]) * u, A0[1] + 0.5 * 4 * u * (1 - u) * (1 - u) - (A0[1] - st.Of[1]) * u * u, A0[2] + (st.Of[2] - A0[2]) * u]}; }
         // the fish is in the crate: the packer lays it straight (DKLAY, once a fish)
-        if (st.packId && Gs >= 5.1){ const n = Math.floor((T + idx * 1.7) / 5.6), q = DKLAY[st.packId]; if (!q || q.n !== n + idx * 1e4){ DKLAY[st.packId] = {t:performance.now() / 1000, n:n + idx * 1e4}; } }
+        if (st.packId && Gs >= 5.3){ const n = Math.floor((T + idx * 1.7) / 5.6), q = DKLAY[st.packId]; if (!q || q.n !== n + idx * 1e4){ DKLAY[st.packId] = {t:performance.now() / 1000, n:n + idx * 1e4}; } }
         break; }
+      // ---- the breaks (Jonas 23.10.2026: «Husk at vi må ha animasjoner for alle handlinger og aktiviteter»; core/13-work.js idleAssign)
+      // back to the rail: the arms crossed, or the elbows back on the rail
+      case 'back': hands = [W(0.17, 1.18, -0.07), W(0.17, 1.16, 0.07)]; break;
+      // on an upturned tub, the elbows on the knees and the hands together
+      case 'sit': hands = [W(0.36, sh + 0.2, 0.05), W(0.36, sh + 0.18, -0.05)]; break;
+      // talking: one tells it with a hand now and then, the other listens with the arms crossed
+      case 'chat': { const k = Math.pow(Math.max(0, Math.sin(t * 1.1)), 2); hands = idx % 2 === 0 ? [W(0.22 + k * 0.12, 0.98 + k * 0.32, 0.2), W(0.04, 0.92, -0.22)] : [W(0.17, 1.18, -0.07), W(0.17, 1.16, 0.07)]; break; }
+      // the knife along the honing steel, one side and then the other (the steel in the left hand, its tip up and out)
+      case 'knife': { const S0 = W(0.3, 1.02, -0.06), sd = norm3([F[0] * 0.35 + R[0] * 0.25, 0.9, F[1] * 0.35 + R[1] * 0.25]), c = (t * 1.4) % 1, side = Math.floor(t * 1.4) % 2 ? 1 : -1, u = ease(c), al = 0.06 + u * 0.2;
+        const kp = [S0[0] + sd[0] * al + R[0] * side * 0.025, S0[1] + sd[1] * al, S0[2] + sd[2] * al + R[1] * side * 0.025]; hands = [[kp[0] + R[0] * 0.13, kp[1] - 0.02, kp[2] + R[1] * 0.13], S0]; st.steel = {at:S0, dir:sd}; break; }
+      // a packed lunch: the paper in the left hand, a slice to the mouth now and then
+      case 'lunch': { const k = Math.pow(Math.max(0, Math.sin(t * 0.55)), 6); hands = [lerp3(W(0.3, 1.08, 0.08), W(0.13, 1.5, 0.03), k), W(0.3, 1.03, -0.1)]; break; }
+      // the phone held in both hands at the chest, a thumb at work
+      case 'phone': { const k = Math.sin(t * 3.1) * 0.006; hands = [W(0.26, 1.13 + k, 0.035), W(0.26, 1.12, -0.035)]; break; }
+      // the binoculars up at the eyes
+      case 'binoc': hands = [W(0.15, 1.56, 0.07), W(0.15, 1.56, -0.07)]; break;
+      // the hands in the pockets, the head up at the sky
+      case 'aurora': hands = [W(0.0, 0.93, 0.19), W(0.0, 0.93, -0.19)]; break;
+      // over the rail, holding on
+      case 'seasick': { const r = st.rail || [0.42, 0.96]; hands = [W(r[0] + 0.02, r[1] + 0.04, 0.24), W(r[0] + 0.02, r[1] + 0.04, -0.24)]; break; }
+      // going over the gear: the hands at it, low, turning it over
+      case 'gear': { const k = Math.sin(t * 1.3); hands = [W(0.45 + k * 0.04, 0.72 + Math.max(0, k) * 0.1, 0.15), W(0.45 - k * 0.04, 0.72 + Math.max(0, -k) * 0.1, -0.15)]; break; }
+      // a smoke: the cigarette to the mouth every few seconds, the other hand on the rail (facing out) or in a pocket (aft, under way)
+      case 'smoke': { const k = Math.pow(Math.max(0, Math.sin(t * 0.8)), 10); hands = [lerp3(W(0.24, 1.02, 0.17), W(0.13, 1.52, 0.02), k), st.lean === false || !st.rail ? W(0.0, 0.93, -0.19) : W(st.rail[0] + 0.02, st.rail[1] + 0.04, -0.2)]; st.puff = k; break; }
+      // snus: the can out of the pocket, a portion under the lip, the can back; then the hands on the rail
+      case 'snus': { const c = (t % 24) / 24; if (c < 0.28){ const u = ease(Math.min(1, c / 0.1)); hands = [lerp3(W(0.0, 0.95, 0.19), W(0.26, 1.13, 0.02), u), W(0.26, 1.1, -0.04)]; st.can = true; }
+        else if (c < 0.4){ const u = Math.sin((c - 0.28) / 0.12 * Math.PI); hands = [lerp3(W(0.26, 1.13, 0.02), W(0.12, 1.47, 0.03), u), W(0.26, 1.1, -0.04)]; st.can = true; }
+        else { const r = st.rail; hands = r ? [W(r[0] + 0.02, r[1] + 0.04, 0.2), W(r[0] + 0.02, r[1] + 0.04, -0.2)] : [W(0.0, 0.95, 0.19), W(0.0, 0.95, -0.19)]; } break; }
       default: hands = [W(-sw * 0.15, 0.82, 0.26), W(sw * 0.15, 0.82, -0.26)];
     }
     [0.21, -0.21].forEach((r, i) => { const sh = W(bend * 0.8, 1.42 + dy, r), hd2 = hands[i], el = [(sh[0] + hd2[0]) / 2 - F[0] * 0.05 + R[0] * r * 0.25, (sh[1] + hd2[1]) / 2 - 0.08, (sh[2] + hd2[2]) / 2 - F[1] * 0.05 + R[1] * r * 0.25];
       if (K){ const f = [hd2[0] - el[0], hd2[1] - el[1], hd2[2] - el[2]], fl = Math.hypot(f[0], f[1], f[2]) || 1;
         drawN(K.uarm, limbM(sh, el, 1)); drawN(K.farm, limbM(el, hd2, 1)); drawN(K.hand, limbM(hd2, [hd2[0] + f[0] / fl, hd2[1] + f[1] / fl, hd2[2] + f[2] / fl], 1)); return; }
       drawN(PM.arm, limbM(sh, el, 0.06)); drawN(PM.arm, limbM(el, hd2, 0.055)); drawN(PM.hand, M4.T(hd2[0], hd2[1], hd2[2])); });
-    if (st.task === 'coffee') drawN(PM.cup, M4.T(hands[0][0], hands[0][1] + 0.02, hands[0][2]));
+    // the break's things in the hands (tools/deck/pause.py), where the page has them; the old cup otherwise
+    const pz = nm => kit('pause', nm), atH = (q, ...m) => chain(M4.T(q[0], q[1], q[2]), M4.RY(-h), ...m);
+    if (st.task === 'coffee'){ const K = pz('krus'), FL = pz('termos'); if (K) drawN(K, atH([hands[0][0], hands[0][1] - 0.04, hands[0][2]], M4.RY(-1.2))); else drawN(PM.cup, M4.T(hands[0][0], hands[0][1] + 0.02, hands[0][2]));
+      if (FL){ const q = W(0.12, 0, -0.32); drawN(FL, atH([q[0], y - eye[1] + 0.01, q[2]])); } }
+    if (st.task === 'knife' && st.steel){ const B = pz('bryne'); if (B) drawN(B, toolM(st.steel.at, st.steel.dir)); }
+    if (st.task === 'lunch'){ const M = pz('mat'); if (M) drawN(M, atH(hands[1], M4.RX(0.35), M4.S(0.75))); }
+    if (st.task === 'phone'){ const P2 = pz((st.age || 40) >= 62 ? 'tlf2' : 'tlf'); if (P2){ const c = [(hands[0][0] + hands[1][0]) / 2, (hands[0][1] + hands[1][1]) / 2 + 0.01, (hands[0][2] + hands[1][2]) / 2]; drawN(P2, atH(c, M4.RX(0.95))); } }
+    if (st.task === 'binoc'){ const B = pz('kikk'); if (B){ const c = W(0.13, 1.57, 0); drawN(B, atH(c, M4.RY(-hy))); } }
+    if (st.task === 'smoke'){ const C = pz('sig'); if (C) drawN(C, atH(hands[0], M4.RY(0.6), M4.RX(0.25)));
+      // a breath of smoke after each draw, drifting off with the wind of the deck (DKSMOKE: the view's grey points)
+      if (st.puff < 0.05){ const ph = (t * 0.8) % (Math.PI * 2) / (Math.PI * 2), m0 = W(0.2, 1.52, 0.02); if (ph > 0.55 && ph < 0.95) for (let i = 0; i < 14; i++){ const u = clamp((ph - 0.55) / 0.4 - hash(i + idx) * 0.3, 0, 1); if (u <= 0) continue;
+        DKSMOKE.push([m0[0] + F[0] * u * 0.45 + (hash(i * 3) - 0.5) * 0.12 * u, m0[1] + u * 0.3 + (hash(i * 7) - 0.5) * 0.04, m0[2] + F[1] * u * 0.45 + (hash(i * 5) - 0.5) * 0.12 * u, 0.35 * (1 - u)]); } } }
+    if (st.task === 'sit'){ const sb = W(-0.06, 0, 0); drawN(PM.icebin, chain(M4.T(sb[0], y - eye[1] - 0.02, sb[2]), M4.RY(-h), M4.S(0.8, 0.98, 0.8))); }
+    if (st.task === 'snus' && st.can){ const C = pz('snus'); if (C) drawN(C, atH([hands[1][0], hands[1][1] + 0.01, hands[1][2]])); }
     // the knife in the gutting hand, the gaff and the fish on it, the fish held up by the head and the toss into the tub (tools/deck/fisk.py)
     const kn = kit('fish', 'kniv'), fishAt = (P, sp, kg, rz) => { const sc = clamp(0.42 * Math.cbrt(kg || 2), 0.28, 1.2); drawN(fishOf(sp || 'torsk'), chain(M4.T(P[0], P[1] - sc * 0.45, P[2]), M4.RX(Math.PI / 2), M4.RZ(rz || 0), M4.S(sc))); };
     if (kn && (st.task === 'gut' || (st.task === 'bleed' && st.knife))) drawN(kn, toolM(hands[0], [F[0] * 0.7 - R[0] * 0.35, -0.55, F[1] * 0.7 - R[1] * 0.35]));
@@ -1935,11 +2009,15 @@ const G3 = (() => {
     if (st.line) for (let i = 0; i + 1 < st.line.length; i++) drawN(PM.wire, limbM(st.line[i], st.line[i + 1], 0.004));
     if (st.task === 'jig' && st.Rl && !st.ev){ drawN(PM.wire, limbM(hands[1], st.Rl, 0.004)); drawN(PM.wire, limbM(st.Rl, st.Wt || [st.Rl[0], st.Rl[1] - 2, st.Rl[2]], 0.004)); }
     if (kn && st.task === 'bleedst') drawN(kn, toolM(hands[0], [F[0] * 0.5 - R[0] * 0.2, -0.75, F[1] * 0.5 - R[1] * 0.2]));
-    if (st.task === 'gutw'){ const sp = st.gsp || 'torsk', sc = st.gsc || 0.46;
-      if (kn && st.knife) drawN(kn, toolM(hands[0], [F[0] * 0.3 - R[0] * 0.6, -0.55, F[1] * 0.3 - R[1] * 0.6]));
-      if (st.gf){ if (st.gf.hang){ if (fishy) fishAt(st.gf.at, sp, st.gkg || 3, Math.sin(T * 6) * 0.2); } else lie(st.gf.at, sp, sc, -h); }
+    if (st.task === 'gutw'){ const sp = st.gsp || 'torsk', sc = st.gsc || 0.46, yaw = Math.PI / 2 - h, HD = kit('pause', 'hode');
+      // (on the table the fish lies across him, its head to his left where the head is cut; cut, it is drawn a little shorter at the head
+      // and the head is its own piece, tools/deck/pause.py)
+      const lieCut = (P, y0) => { if (!fishy) return; if (!st.cut || !HD){ lie(P, sp, sc, y0); return; } drawN(fishOf(sp), chain(M4.T(P[0], P[1], P[2]), M4.RY(y0), M4.RZ(Math.PI / 2), M4.S(sc), M4.T(0, 0, 0.075), M4.S(1, 1, 0.85))); };
+      if (kn && st.knife) drawN(kn, toolM(hands[0], st.kdir || [F[0] * 0.3 - R[0] * 0.6, -0.55, F[1] * 0.3 - R[1] * 0.6]));
+      if (st.gf){ if (st.gf.hang){ if (fishy) fishAt(st.gf.at, sp, st.gkg || 3, Math.sin(T * 6) * 0.08); } else lieCut(st.gf.at, yaw); }
       if (st.slo) drawN(PM.slo, M4.T(st.slo.at[0], st.slo.at[1], st.slo.at[2]));
-      if (st.gt){ const u = st.gt.u, A0 = st.gt.A, B0 = st.gt.B; lie([A0[0] + (B0[0] - A0[0]) * u, A0[1] + (B0[1] - A0[1]) * u + 0.3 * 4 * u * (1 - u), A0[2] + (B0[2] - A0[2]) * u], sp, sc, -h + u * 0.6); } }
+      if (HD && st.hd) drawN(HD, chain(M4.T(st.hd.at[0], st.hd.at[1], st.hd.at[2]), M4.RY(yaw + st.hd.spin), M4.RZ(Math.PI / 2 + st.hd.spin * 0.7), M4.S(sc)));
+      if (st.gt){ const u = st.gt.u, A0 = st.gt.A, B0 = st.gt.B; lieCut([A0[0] + (B0[0] - A0[0]) * u, A0[1] + (B0[1] - A0[1]) * u + 0.3 * 4 * u * (1 - u), A0[2] + (B0[2] - A0[2]) * u], yaw + u * 0.6); } }
     if (st.task === 'pack'){ const bin = W(0.15, 0, (st.binR || -0.5) * 1.15); drawN(PM.icebin, chain(M4.T(bin[0], bin[1], bin[2]), M4.RY(-h)));
       // the crate on his right with the fish packed in it so far, in layers of three (st.fill); on an open boat the fish go in her tub
       if (!st.crTub){ const C = st.Cr || W(0.58, 0, 0), CM = chain(M4.T(C[0], C[1], C[2]), M4.RY(-st.h)); drawN(PM.fbox, CM); const n = fishy ? Math.round((st.fill || 0) * 9) : 0;
@@ -1974,8 +2052,11 @@ const G3 = (() => {
       if (st.tip > 0.05) for (let i = 0; i < 10; i++){ const q = (st.c - 0.55) / 0.2 * 1.4 - hash(i) * 0.4; if (q < 0 || q > 1) continue;
         drawN(PM.icebit, M4.T(B[0] + (box[0] - B[0]) * q * 0.4 + (hash(i + 3) - 0.5) * 0.18, B[1] - q * q * Math.max(0, B[1] - box[1] - 0.3), B[2] + (box[2] - B[2]) * q * 0.4 + (hash(i + 9) - 0.5) * 0.18)); } }
     if (st.task === 'carry' || st.task === 'stack'){ const c = [(hands[0][0] + hands[1][0]) / 2, (hands[0][1] + hands[1][1]) / 2 - 0.1, (hands[0][2] + hands[1][2]) / 2]; drawN(PM.fbox, chain(M4.T(c[0], c[1], c[2]), M4.RY(-h + Math.PI / 2))); }
-    if (st.task === 'sweep'){ const top = hands[0], foot = [top[0] + F[0] * 0.55, y - eye[1] + 0.02, top[2] + F[1] * 0.55]; drawN(PM.broom, limbM(top, foot, 0.02)); drawN(PM.fbox, chain(M4.T(foot[0], foot[1], foot[2]), M4.RY(-h), M4.S(0.5))); }
-    if (st.task === 'hose'){ const nz = hands[0]; drawN(PM.hose, limbM(W(-0.4, 0.05, 0.4), nz, 0.025));
+    if (st.task === 'sweep'){ const top = hands[0], KH = pz('kosthode'), foot = [top[0] + F[0] * 0.55, y - eye[1] + (KH ? 0.108 : 0.02), top[2] + F[1] * 0.55]; drawN(PM.broom, limbM(top, foot, 0.02));
+      if (KH) drawN(KH, chain(M4.T(foot[0], foot[1], foot[2]), M4.RY(-h))); else drawN(PM.fbox, chain(M4.T(foot[0], foot[1], foot[2]), M4.RY(-h), M4.S(0.5))); }
+    if (st.task === 'hose'){ const nz = hands[0], RL = st.deck ? pz('spole') : null; if (RL){ const q = W(0.12, 0, 0.62); drawN(RL, atH([q[0], y - eye[1], q[2]], M4.RY(Math.PI / 2))); }
+      drawN(PM.hose, limbM(RL ? W(0.12, 0.3, 0.5) : W(-0.4, 0.05, 0.4), nz, 0.025));
+      if (st.deck) for (let i = 0; i < 24; i++){ const q = ((t * 1.3 + i / 24) % 1), d = q * 1.4; DKWATER.push([nz[0] + F[0] * d + (hash(i) - 0.5) * 0.15 * q, nz[1] + d * 0.2 - q * q * 1.2, nz[2] + F[1] * d + (hash(i + 7) - 0.5) * 0.15 * q]); }
       let k = 0; for (let i = 0; i < 40; i++){ const q = ((t * 1.3 + i / 40) % 1), d = q * 1.6; PB[k * 3] = nz[0] + F[0] * d + (hash(i) - 0.5) * 0.15 * q; PB[k * 3 + 1] = nz[1] + d * 0.25 - q * q * 1.3; PB[k * 3 + 2] = nz[2] + F[1] * d + (hash(i + 7) - 0.5) * 0.15 * q; PA[k] = 0.7 * (1 - q); k++; }
       P.spray = k; } 
   }
@@ -2133,7 +2214,7 @@ const G3 = (() => {
   // ---------- the deck kit (the user's wish 19.10.2026, tools/deck/*.py): the fish tubs, the gaff and the knife, the gutting table and
   // bench, the line tubs and the net in its tub, the crates, each a part of its own GLB (src/data/deck-*.b64) drawn like the fish; a part
   // the page does not have leaves the old block in its place ----------
-  const KITF = {fish:'deck-fish', rig:'deck-rig', crane:'deck-crane', safe:'deck-safety', anchor:'deck-anchor'}, KITM = {}, KITX = {};
+  const KITF = {fish:'deck-fish', rig:'deck-rig', crane:'deck-crane', safe:'deck-safety', anchor:'deck-anchor', pause:'deck-pause'}, KITM = {}, KITX = {};
   function kit(f, nm){ const k = f + ':' + nm; if (k in KITM) return KITM[k]; let m = null; const t = KITF[f];
     if (typeof glbHas === 'function' && glbHas(t)){ const o = glbPart(t, nm); if (o) m = {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3}; }
     return KITM[k] = m; }
@@ -2144,7 +2225,7 @@ const G3 = (() => {
   // longline the hand at the hauler takes each fish in over the rail with the gaff and shakes it off into the tub ('gaff'). Each fish is
   // an event at its place on the rail (boat frame); the nearest hand at work there plays it (drawWorker), so the fish he handles is the
   // one that came up. DKBLOOD: the drops of the cut, drawn as points after the people.
-  const DKEV = [], DKDUR = {bleed:3.0, gaff:2.4, pick:2.4, jigup:2.2}, DKDROP = {gaff:1.75, pick:2.0}, DKBLOOD = [], DKDECK = [], DKF = {t:0, jig:{}}, DKN = {gaff:0, pick:0, jigup:0, bleed:0};   // DKN: the events played (the tests)
+  const DKEV = [], DKDUR = {bleed:3.0, gaff:2.4, pick:2.4, jigup:2.2}, DKDROP = {gaff:1.75, pick:2.0}, DKBLOOD = [], DKWATER = [], DKSMOKE = [], DKDECK = [], DKF = {t:0, jig:{}}, DKN = {gaff:0, pick:0, jigup:0, bleed:0};   // DKN: the events played (the tests)
   // (o: the rest of it: D where it is let fall on the deck, for the one meant to take it, wait how long it may wait for him, t0 a later start)
   function dkEvent(kind, at, sp, kg, o){ const now = performance.now() / 1000; while (DKEV.length && (DKEV.length > 12 || now - DKEV[0].t0 > (DKEV[0].wait || DKDUR[DKEV[0].kind]) + 4)) DKEV.shift(); const e = {kind, at:at.slice(), sp, kg, t0:now, who:null}; if (o) Object.assign(e, o); DKEV.push(e); return e; }
   // which events a hand at his work plays (the agents' tasks, deckcrew.js): the hauler gaffs the fish in, the one at the net picks them out,
@@ -2178,8 +2259,11 @@ const G3 = (() => {
       else if (e.kind === 'bleed' && e.deckF && age >= 0.3){ e.chained = true; const i = DKDECK.indexOf(e.deckF); if (i >= 0) DKDECK.splice(i, 1); } }
     for (let i = DKDECK.length - 1; i >= 0; i--) if (now - DKDECK[i].t > 24) DKDECK.splice(i, 1);
   }
-  function dkBloodDraw(VP){ if (!DKBLOOD.length) return; let n = 0; for (const q of DKBLOOD){ if (n >= 300) break; PB[n * 3] = q[0]; PB[n * 3 + 1] = q[1]; PB[n * 3 + 2] = q[2]; PA[n] = 1; n++; }
-    DKBLOOD.length = 0; drawPts(n, gl.POINTS, VP, [0.42, 0.02, 0.03], 60, true); nSetup(VP); }
+  function dkBloodDraw(VP){
+    // the blood of the bleeding, the water of the deck hose and the smoke of a cigarette (drawWorker), as points after the people
+    const pts = (L, col, sz) => { if (!L.length) return; let n = 0; for (const q of L){ if (n >= 300) break; PB[n * 3] = q[0]; PB[n * 3 + 1] = q[1]; PB[n * 3 + 2] = q[2]; PA[n] = q[3] == null ? 1 : q[3]; n++; } L.length = 0; drawPts(n, gl.POINTS, VP, col, sz, true); };
+    if (!DKBLOOD.length && !DKWATER.length && !DKSMOKE.length) return;
+    pts(DKBLOOD, [0.42, 0.02, 0.03], 60); pts(DKWATER, [0.8, 0.88, 0.95], 70); pts(DKSMOKE, [0.78, 0.78, 0.76], 34); nSetup(VP); }
   // the gear as it lies on deck (the user's wish 19.10.2026, tools/deck/rigg.py): the nets heaped in a 1000 l tub as high as the share
   // of them aboard; the line coiled in its tubs, side by side, the hooks hung on the rim while it is baited; the old box and tubs where
   // the kit is not in the page
@@ -4672,13 +4756,16 @@ const G3 = (() => {
       return {p:[a.x + F0[0] * 0.58, a.y, a.z + F0[1] * 0.58], top:0.28, tub:false}; };
     const pkC = pk ? crateOf(pk) : null, held = spHold(x => !x.gut && !x.iced), packed = spHold(x => x.iced), table = rel(DW.table), tubTop = rel(dkTub(G)), offal = rel(DW.offal);
     for (const a of A){ if (cam.helm && (a.me || a.mode === 'helm')) continue;
-      const lp = a.mode === 'helm' && G.skipperAt ? [G.skipperAt[0], G.skipperAt[1], G.skipperAt[2]] : [a.x, a.y, a.z], wl = xf(BMrel, lp), wy = wl[1] + eye[1];
+      // (a place stood off its cell: leaning back, the back at the rail, deckcrew.js idlePlace)
+      const go = CREW3D.walkOff(a);
+      const lp = a.mode === 'helm' && G.skipperAt ? [G.skipperAt[0], G.skipperAt[1], G.skipperAt[2]] : [a.x + go[0], a.y, a.z + go[1]], wl = xf(BMrel, lp), wy = wl[1] + eye[1];
       const P = {gy:() => wy, bare:true, spray:0, kit:a.me ? 'skipper' : null, look:a.me ? lookMe() : a.c ? lookOf(a.c) : lookCrew(0)};
       const ev = a.mode === 'at' ? dkFor(a.id, lp, a.task) : null;   // a fish to bleed or to gaff in at his place
       // a helm made for sitting (the model's eye low over the place, as under the snekke's hard top) is steered from the seat
       const sat = a.mode === 'helm' && G.eye && G.skipperAt && G.eye[1] - G.skipperAt[1] < 1.4;
-      const st = {x:wl[0] + eye[0], z:wl[2] + eye[2], h:bv.head + (a.mode === 'helm' ? 0 : a.h), task:ev ? ev.kind : sat ? 'helmsit' : a.task, seat:sat ? Math.max(0.2, G.eye[1] - G.skipperAt[1] - 0.95) : 0, ev:ev ? dkEv(ev, BMrel, G) : null, walk:a.mode === 'walk', blend:a.mode === 'walk' ? 0 : a.blend, peek:true, s:0};
+      const st = {x:wl[0] + eye[0], z:wl[2] + eye[2], h:bv.head + (a.mode === 'helm' ? 0 : a.h + (a.sqA || 0) * Math.PI / 2), task:ev ? ev.kind : sat ? 'helmsit' : a.task, seat:sat ? Math.max(0.2, G.eye[1] - G.skipperAt[1] - 0.95) : 0, ev:ev ? dkEv(ev, BMrel, G) : null, walk:a.mode === 'walk', blend:a.mode === 'walk' ? 0 : a.blend, peek:true, s:0};
       const F0 = [Math.sin(a.h), -Math.cos(a.h)], R0 = [Math.cos(a.h), Math.sin(a.h)], sg = a.x >= 0 ? 1 : -1;
+      st.age = a.c ? a.c.age : 45; st.deck = true; st.rail = a.mode === 'at' && a.goal ? a.goal.rail || null : null; if (a.task === 'smoke' && b.status === 'sailing') st.lean = false;
       if (a.mode === 'at' && !ev){
         // gutting at the table: the fish from the bleeding tub, the guts over the rail, the gutted fish to the packer
         if (a.task === 'gut'){ st.task = 'gutw'; st.Tb = table; st.Ub = tubTop; st.Of = offal; const n = Math.floor((t + idx * 1.7) / 5.6); st.gsp = held(hash(n * 3 + idx)); st.gkg = 2 + hash(n * 5) * 3;
@@ -5232,7 +5319,9 @@ const G3 = (() => {
       V = viewDir(f, [Mh[4], Mh[5], Mh[6]]); camFwd = [f[0], f[2]];
     } else {
       if ((SHOW || PAINTV) && !drag) cam.yaw += dt * 0.12;   // the showroom and the paint shop turn slowly round the boat
-      const C = SHOW ? [SHOW.x, (env.tide || 0) + 1.3 + Math.min(4, VESSELS[SHOW.t].len * 0.06), SHOW.z] : [bv.x, bv.y + 1.3, bv.z], yawW = (SHOW ? SHOW.h : bv.head) + cam.yaw, tgt = C;
+      // (cam.at: a point on the deck in the boat's frame to look at instead of her middle, for the tests' close shots of the crew)
+      const AT = cam.at && !SHOW ? xf(model(0, 0, 0, -bv.head, bv.pitch, bv.roll), cam.at) : null;
+      const C = SHOW ? [SHOW.x, (env.tide || 0) + 1.3 + Math.min(4, VESSELS[SHOW.t].len * 0.06), SHOW.z] : AT ? [bv.x + AT[0], bv.y + AT[1] + 1.0, bv.z + AT[2]] : [bv.x, bv.y + 1.3, bv.z], yawW = (SHOW ? SHOW.h : bv.head) + cam.yaw, tgt = C;
       if (PAINTV && !SHOW) paintAim(C, yawW);
       const eyeAt = p => { const cp = Math.cos(p), sp = Math.sin(p), e = [C[0] - Math.sin(yawW) * cam.dist * cp, C[1] + cam.dist * sp, C[2] + Math.cos(yawW) * cam.dist * cp];
         const ground = Math.max(terrH(e[0], e[2]), seaH(e[0], e[2], t)) + 2; if (e[1] < ground) e[1] = ground; return e; };

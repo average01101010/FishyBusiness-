@@ -757,8 +757,9 @@ function deckMinute(){
     if (kg <= 0.01){ if (S.t - (S.lastIceWarn || -1e9) > 120){ log('Tom for is. Fangsten ises ikke.', 'Out of ice. The catch is not being iced.'); S.lastIceWarn = S.t; } break; }
     moveKg(x, kg, {iced:true}); b.ice -= kg * 0.3 * ((BOAT.fx && BOAT.fx.ice) || 1); pm -= kg / DECK.ice; worked += kg;
   }
-  // your own minutes on deck
+  // your own minutes on deck; when the deck was last worked (the crew's break: a deck to scrub, 13-work.js idleEnv); now and then a mistake (14-crewlife.js crewSlip)
   if (worked > 0 && (G.me || I.me)) S.deckMe = (S.deckMe || 0) + 1;
+  if (worked > 0){ b.deckT = S.t; if (typeof crewSlip === 'function') crewSlip(G.crew.concat(I.crew)); }
 }
 function risk(W, hs){
   const b = S.boat; if (b.status === 'port' || (S.tut && S.tut.catch)) return;
