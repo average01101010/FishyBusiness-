@@ -178,25 +178,25 @@ async def main():
         print(ok(r['crewTrip']['asleep'] and r['crewTrip']['moved'] > 100 and r['crewTrip']['st'] == 'sailing' and len(r['crewTrip']['helm']) == 1 and r['crewTrip']['helm'][0] >= 4.5), 'with crew the trip goes on while you sleep, the best seaman at the helm')
         print(ok(r['vign'] > 0.4 and r['vignOff'] == 0), 'under 15 % the edges of the screen darken')
 
-        # the Mannskap page: the button shows with crew aboard, each row with why, the mate button and the person card
+        # the Mannskap page (Jonas 23.10.2026): the chips of «På dekk nå», one card each with why, effort, energy and mood, the mate badge and button, and the skills on a tap
         for vw, vh, tag in ((1100, 800, 'liggende'), (800, 1180, 'staende')):
             await pg.set_viewport_size({'width':vw, 'height':vh})
             u = await pg.evaluate("""(()=>{ const R = {}, b = S.boat; b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; b.gop = null; S.hold = []; S.plan = null; addCatch('torsk', 40, null, true);   // (fish to gut at the quay: someone at work)
               const c0 = S.crew; S.crew = []; DOCK.render(); R.noCrew = !document.querySelector('#dock [data-dk=arbeid]'); S.crew = c0; DOCK.render();
               R.btn = !!document.querySelector('#dock [data-dk=arbeid]'); DOCK.open('arbeid'); const dr = () => document.getElementById('drawerBody');
-              R.rows = dr().querySelectorAll('.wk-p').length; R.flow = [...dr().querySelectorAll('.wk-flow:not(.side) .wk-st b')].map(e => e.textContent);
+              R.rows = dr().querySelectorAll('.wk-p').length; R.flow = [...dr().querySelectorAll('.wk-dks .wk-dk b')].map(e => e.textContent); R.meters = dr().querySelectorAll('.wk-p .wk-ms .wk-m').length; R.kv = dr().querySelectorAll('.ph-kv').length;
               const tap = sel => { const e = dr().querySelector(sel); if (e) e.click(); return !!e; };
-              const B = S.crew[1]; R.noChains = !dr().querySelector('[data-pa=wk-edit], [data-pa=wk-pre], .wk-pick'); R.whyShown = [...dr().querySelectorAll('.wk-p .wk-chain .ph-note')].filter(e => e.textContent.trim()).length;
+              const B = S.crew[1]; R.noChains = !dr().querySelector('[data-pa=wk-edit], [data-pa=wk-pre], .wk-pick'); R.whyShown = [...dr().querySelectorAll('.wk-p .wk-now')].filter(e => e.textContent.includes(' – ')).length;
               tap('[data-pa=wk-mate][data-id="' + B.id + '"]'); R.mate = [!!B.mate, !S.crew[0].mate, ![...dr().querySelectorAll('[data-pa=wk-mate]')].some(e => e.dataset.id === B.id), (S.ops && S.ops.v === 2) ? S.ops.mate === B.id : true];
-              tap('[data-pa=wk-card][data-id="' + S.crew[0].id + '"]'); R.card = dr().querySelectorAll('.wk-card .wk-sk span.wk-v').length; tap('[data-pa=wk-card][data-id="' + S.crew[0].id + '"]'); R.cardShut = !dr().querySelector('.wk-card');
+              tap('[data-pa=wk-card][data-id="' + S.crew[0].id + '"]'); R.card = dr().querySelectorAll('.wk-card .wk-sk span.wk-v').length; R.badge = [...dr().querySelectorAll('.wk-b.mate')].map(e => e.textContent); tap('[data-pa=wk-card][data-id="' + S.crew[0].id + '"]'); R.cardShut = !dr().querySelector('.wk-card');
               R.team = (dr().querySelector('.wk-team') || {}).textContent || ''; R.effShown = dr().querySelectorAll('.wk-eff').length; R.working = workAssign().filter(p => p.c && p.st !== 'pause').length;
               const W = dr().getBoundingClientRect(); R.overflow = dr().scrollWidth > dr().clientWidth + 1; R.small = [...dr().querySelectorAll('button')].filter(e => e.offsetParent && e.getBoundingClientRect().height < 43).map(e => e.textContent.slice(0, 20));
               return R; })()""")
             print(tag, json.dumps(u, ensure_ascii=False))
             await pg.screenshot(path=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'out', 'work_' + tag + '.png'))
-            print(ok(u['noCrew'] and u['btn'] and u['rows'] == 3 and u['flow'] == ['Ror', 'Fiske', 'Sløying', 'Ising']), tag + ': the Arbeid button shows only with crew; the page has the flow for the rig and a row each')
+            print(ok(u['noCrew'] and u['btn'] and u['rows'] == 3 and u['flow'][:4] == ['Ror', 'Fiske', 'Sløying', 'Ising'] and u['meters'] == 5 and u['kv'] == 0), tag + ': the Mannskap button shows only with crew; «På dekk nå» has a chip for each station of the rig, and one card each with energy (and mood for the crew), nobody listed twice', u['flow'], u['meters'], u['kv'])
             print(ok(u['noChains'] and u['whyShown'] >= 2), tag + ': no chains to set up: each row says why the person does what they do', u['whyShown'])
-            print(ok(all(u['mate']) and u['card'] == 12 and u['cardShut']), tag + ': Gjør til styrmann makes the mate (the plan\'s too); the person card shows skills, fatigue and morale, and closes on a second tap', u['mate'])
+            print(ok(all(u['mate']) and u['card'] >= 9 and u['cardShut'] and 'Styrmann' in u['badge']), tag + ': Gjør til styrmann makes the mate (the plan\'s too) and marks the card; a tap on the name shows the skills, and closes on a second tap', u['mate'], u['card'], u['badge'])
             print(ok(u['team'] and u['working'] >= 1 and u['effShown'] == u['working']), tag + ': the samhold line on top, and how each one at work is going in words', u['team'], u['effShown'], u['working'])
             print(ok(not u['overflow'] and not u['small']), tag + ': no sideways scroll, and every button is at least 44 px', u['small'])
             await pg.evaluate("DOCK.close()")

@@ -477,6 +477,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p134', '23.10.2026', 'Ny Mannskap-side', 'A new Crew page', [
+       ['Mannskap-siden er ny. Øverst står stemningen om bord, og under den «På dekk nå», som viser hvem som står hvor. Hver person har sitt eget kort med hva de gjør og hvorfor, hvordan de jobber, energi og humør, det siste de sa og den faste plassen. Trykk på navnet for ferdighetene.', 'The Crew page is new. At the top is the mood aboard, and below it «On deck now» shows who stands where. Each person has a card of their own with what they do and why, how they are working, energy and mood, the last thing they said and their regular place. Tap the name for the skills.']]],
     ['p133', '23.10.2026', 'Pauser, feil og gode råd', 'Breaks, slips and good advice', [
        ['Når det er stille, tar mannskapet pause på hver sin måte: kaffe fra termosen, en prat ved rekka, en røyk eller en snus på dekk, telefonen, kikkerten eller matpakka. Noen spyler og koster dekket. Når båten går, holder de seg inne, og den som røyker, går akterut.', 'When it is quiet, the crew take a break each in their own way: coffee from the flask, a chat at the rail, a smoke or a snus on deck, the phone, the binoculars or a packed lunch. Some hose and sweep the deck. Under way they keep inside, and whoever smokes goes aft.'],
        ['Folk gjør feil av og til: en fisk glipper over rekka, en sløying blir ikke helt fin, eller noen skjærer seg og jobber saktere en stund.', 'People slip up now and then: a fish slides over the rail, a gutting is not quite right, or someone cuts a hand and works slower for a while.'],

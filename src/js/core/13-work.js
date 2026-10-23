@@ -190,9 +190,10 @@ function workAssign(as){
   // the work waiting at each station, in one person's minutes, and the crew's own jobs on the gear
   const left = {sloy:ctx.gutKg / DECK.gut, is:ctx.iceKg / DECK.ice, blogg:ctx.blogg ? 30 : 0, haling:ctx.haling && ctx.gk !== 'teine' ? 20 : 0, sort:ctx.sort ? 10 : 0};
   const jobs = jobsOpen(as), jn = new Map(jobs.map(j => [j, 0]));
-  // (with someone gutting and nobody at the ice, the gutted fish come off the table as fast as they are gutted and lie unpacked: the
-  // ice is wanted as much as the table; before, a second hand went to the table and nobody packed, crewwalk.py on the new sjark)
-  const needOf = k => k === 'fiske' ? 0.55 : k === 'is' && !cnt('is') && cnt('sloy') ? Math.max(left.is, left.sloy / cnt('sloy')) / 10 : (left[k] || 0) / (cnt(k) + 1) / 10;
+  // (while the gear comes in, or two gut, and nobody is at the ice, the gutted fish come off the table as fast as they are gutted and lie
+  // unpacked: the ice is wanted as much as the table; before, a second hand went to the table and nobody packed, crewwalk.py on the new
+  // sjark. Jigging with one at the table, the one gutting packs their own after, and the others jig)
+  const needOf = k => k === 'fiske' ? 0.55 : k === 'is' && !cnt('is') && cnt('sloy') && (ctx.haling || cnt('sloy') > 1) ? Math.max(left.is, left.sloy / cnt('sloy')) / 10 : (left[k] || 0) / (cnt(k) + 1) / 10;
   const jobNeed = j => 0.7 * jobLeft(j) / ((jn.get(j) || 0) + 1) / 60;
   // (the icing station waits on the table: with nothing gutted yet and nobody gutting, there is nothing to pack, so it holds nobody;
   // before, the one aboard alone stayed at the ice from the minute before while the round fish lay ungutted, and nothing got done)
