@@ -619,6 +619,10 @@ body.setmode #rAuto{display:none!important}
 .wk-sk{display:grid;grid-template-columns:auto 34px 1fr;gap:2px 8px;align-items:center;font-size:12.5px;margin-bottom:6px}.wk-sk .qbar{margin:0}.wk-v{text-align:right;font-variant-numeric:tabular-nums}
 .wk-p .ph-btnrow{display:flex;gap:6px}.wk-p .ph-btnrow .ph-btn{flex:1;min-height:44px;margin:0}
 .wk-said{margin-top:6px;font-size:12.5px}.wk-said p{margin:2px 0}
+/* how each one is working, and how the crew pull together (core/04-crew.js crewEffort, teamLine) */
+.wk-eff{font-size:12px;font-weight:600}.wk-eff.e0{color:#1e8c6e}.wk-eff.e2{color:#b7791f}.wk-eff.e3{color:#d64545}
+.wk-team{margin:0 0 6px;padding:6px 10px;border-radius:8px;font:600 13px var(--sans);background:rgba(127,127,127,.12);border-left:4px solid #8a94a0}
+.wk-team.t0{border-left-color:#1e8c6e}.wk-team.t1{border-left-color:#5aa889}.wk-team.t2{border-left-color:#d1a43a}.wk-team.t3{border-left-color:#d64545}
 /* your energy: the edges darken under 15 %, and at 0 the screen goes black while you sleep */
 #vign{position:fixed;inset:0;pointer-events:none;z-index:63;opacity:0;transition:opacity 2s;background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.92) 100%)}
 #sleep{position:fixed;inset:0;z-index:64;background:#000;color:#cfd6dd;display:flex;align-items:center;justify-content:center;text-align:center;opacity:0;transition:opacity 3s;padding:16px}

@@ -106,6 +106,13 @@ const SAY = {
     ['Æ drømme om varm mat. Det her e en lang dag førr en matpakke.', 'I dream of hot food. This is a long day for a packed lunch.', 'grinebiter']],
   noWc:[['Tolv tima uten do. Æ sei ikkje meir.', 'Twelve hours without a toilet. I say no more.'], ['Neste båt har toalett, skipper. Det e alt æ ber om.', 'The next boat has a toilet, skipper. That is all I ask.'],
     ['Det e grensa førr ka en kar held ut uten do.', 'There is a limit to what a man puts up with without a toilet.', 'grinebiter']],
+  // a meal that is late, and how the crew pull together (04-crew.js crewDrive, crewTeam; Jonas 23.10.2026: «De kan gjerne mumle, klage og sånt»)
+  hungry:[['Æ e så sulten at æ kunne ete en sjøstøvel.', 'I am so hungry I could eat a sea boot.'], ['Kæm har byssa i dag? Magen min knurre høgere enn motoren.', 'Who has the galley today? My stomach is growling louder than the engine.'],
+    ['Ka blir det te middag? Eller blir det ingenting i dag heller?', 'What is for dinner? Or is it nothing today as well?', 'grinebiter'], ['Æ tar gjerne kokkevakta, bare æ får ete først.', 'I will gladly take the galley, as long as I get to eat first.', 'spokefugl']],
+  teamGood:[['Det e godt å jobbe med folk som vet ka dem gjør.', 'It is good to work with people who know what they are doing.'], ['Vi e et godt lag, vi. Det merkes på dekk.', 'We are a good team, us. You can tell on deck.'],
+    ['Med det her mannskapet kunne vi tatt Lofotfisket aleine.', 'With this crew we could take the Lofoten fishery on our own.', 'stolt'], ['Ingen ka det e lenger, vi bare gjør det.', 'Nobody needs telling any more, we just do it.', 'arbeidsjern']],
+  teamBad:[['Det e ikkje akkurat god stemning om bord i dag.', 'It is not exactly a good mood aboard today.'], ['Æ sei ingenting. Æ bare jobbe her.', 'I say nothing. I just work here.', 'grinebiter'],
+    ['Kanskje vi alle treng en dag i land.', 'Maybe we all need a day ashore.', 'omsorgsfull'], ['Det e stille på dekk. For stille.', 'It is quiet on deck. Too quiet.']],
   cold:[['Æ har låppen på nævan. Kjenn ikkje fingran lenger.', 'My hands have gone numb with cold. I cannot feel my fingers.'], ['Hustri e det. Kæm va det som snakka om sommer i Nord-Norge?', 'It is bitterly cold. Who said anything about summer up north?'],
     ['Naggelbett på alle ti. Takk førr det.', 'Frostbitten nails on all ten. Thanks for that.'], ['Snørret mitt har frosse te istapp. Ny rekord.', 'My snot has frozen into an icicle. New record.', 'spokefugl'],
     ['Neste gang kjøpe vi ordentlige klær. Eller ny skipper.', 'Next time we buy proper clothes. Or a new skipper.', 'grinebiter']],
@@ -208,6 +215,7 @@ function sayHour(H, on, hs){
   if (b.status === 'fishing' && fs && S.t - fs.t0 >= 60){ const kgh = fs.kg / ((S.t - fs.t0) / 60); if (kgh > 40) sits.push(['goodCatch']); else if (kgh < 8 && S.t - fs.t0 >= 120) sits.push(['badCatch']); }
   if (deckPending() > tubCap() * 0.8) sits.push(['tubFull']);
   if (coldPen(H, hs) > 0.1) sits.push(['cold']);
+  { const M = S.meal, tv = typeof crewTeam === 'function' ? crewTeam().v : 50; if (M && M.due != null && S.t - M.due > 20) sits.push(['hungry']); if (tv >= 72 && Math.random() < 0.4) sits.push(['teamGood']); else if (tv < 35) sits.push(['teamBad']); }
   const sick = on.find(c => c.traits.includes('sjosyk')); if (sick && hs > 1.2) sits.push(['seasick', sick]);
   const tired = on.slice().sort((a, c) => c.fatigue - a.fatigue)[0]; if (tired.fatigue > 70) sits.push(['tired', tired]);
   if (hs > 2 || W > 14) sits.push(['storm']); else if (W < 2) sits.push(['calm']);

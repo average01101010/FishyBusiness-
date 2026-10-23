@@ -64,12 +64,81 @@ function payHyre(){ let sum = 0; eachVessel(() => { for (const c of S.crew) if (
 function crewAboard(H, all){ if (H == null) H = S.t / 60; const wd = (gDate(H).getUTCDay() + 6) % 7, C = S.crew || []; for (let i = 0; i < C.length; i++) if (!C[i].attr) C[i] = crewUpgrade(C[i]); return C.filter(c => !c.off && (all || !c.sleepW) && (!c.bi || c.biDays[wd])); }
 function crewEff(c, H, hs, g = 'juksa'){
   const A = c.attr, T = c.traits; let e = 0.55 + 0.08 * A.erf + 0.07 * (c.gear[g] || c.gear.juksa || 1) + 0.04 * A.styrke;
-  e *= 1 - 0.5 * sstep(50, 100, c.fatigue); e *= c.morale < 30 ? 0.85 : c.morale > 75 ? 1.05 : 1; if (c.cpen) e *= 0.9;
   if (T.includes('arbeidsjern')) e *= 1.12; if (T.includes('makelig')) e *= 0.9; if (T.includes('perfeksjonist')) e *= 0.95;
-  if (T.includes('sjosyk') && hs > 1.2) e *= 0.75;
   if (T.includes('lokalkjent') && c.homePort && dist(portById(c.homePort).p, S.boat.pos) < 15) e *= 1.12;
-  if (T.includes('olglad') && S.pubE === pubEvening(H - 12) && gDate(H).getUTCHours() < 12) e *= 0.8;
+  for (const f of crewDrive(c, H, hs)) e *= f[1];
   return e;
+}
+// ---- what lifts or drags a person's effort just now, besides what they can and who they are (Jonas 23.10.2026: «dette skal være dynamisk
+// og vil variere alt etter energi, humør, miljø, sult, og andre faktorer»): [reason, factor about 1]. Fatigue and mood as before (the
+// mood now in a smooth step, the same 0.85 at the bottom and a little over 1 at the top), a meal that is late, poor or good food, a heavy
+// sea (the seaman minds it less), the seasick, the dark, how the crew pull together (crewTeam), a quarrel and the morning after the pub.
+// The cold is not here: it already takes its share of the fishing and the hauling (coldPen), and crewEffort shows it beside these.
+let DRIVE_SUN = {t:-1, dark:false};
+function crewDrive(c, H, hs){
+  const T = c.traits, b = S.boat, sea = b.status !== 'port', F = [];
+  F.push(['tired', 1 - 0.5 * sstep(50, 100, c.fatigue)]);
+  F.push([c.morale >= 62 ? 'glad' : 'sour', 0.85 + 0.2 * sstep(20, 85, c.morale)]);
+  if (sea){
+    const M = S.meal; if (M && M.due != null && S.t > M.due) F.push(['hungry', 1 - 0.08 * clamp((S.t - M.due) / 60, 0, 1)]);
+    if (typeof foodScore === 'function'){ const q = foodScore(); if (Math.abs(q - 3) > 0.4) F.push([q > 3 ? 'food' : 'poorfood', 1 + (q - 3) * 0.02]); }
+    const hw = hs * ((BOAT.fx && BOAT.fx.sea) || 1); if (hw > 1.5) F.push(['sea', 1 - Math.min(0.12, 0.05 * (hw - 1.5) * (1.2 - 0.12 * c.attr.sjo))]);
+    if (T.includes('sjosyk') && hs > 1.2) F.push(['seasick', 0.75]);
+    if (DRIVE_SUN.t !== S.t){ DRIVE_SUN.t = S.t; DRIVE_SUN.dark = sunAt(H, b.pos).el < -6; } if (DRIVE_SUN.dark) F.push(['dark', 0.98]);
+  }
+  const tv = crewTeam().v; if (Math.abs(tv - 50) > 5) F.push([tv > 50 ? 'team' : 'noteam', 0.96 + 0.08 * tv / 100]);
+  if (c.cpen) F.push(['quarrel', 0.9]);
+  if (T.includes('olglad') && S.pubE === pubEvening(H - 12) && gDate(H).getUTCHours() < 12) F.push(['hangover', 0.8]);
+  return F;
+}
+// how a person is working, in words for the Mannskap page: a level and the strongest reason when it matters
+const DRIVE_WHY = {tired:['sliten', 'tired'], glad:['i godt humør', 'in good spirits'], sour:['misfornøyd', 'unhappy'], hungry:['sulten', 'hungry'], food:['god mat i magen', 'good food inside'],
+  poorfood:['dårlig mat', 'poor food'], sea:['grov sjø', 'a heavy sea'], seasick:['sjøsyk', 'seasick'], dark:['mørkt på dekk', 'dark on deck'], team:['godt lag om bord', 'a good team aboard'],
+  noteam:['dårlig stemning om bord', 'a sour atmosphere aboard'], quarrel:['uvenner med noen', 'at odds with someone'], hangover:['tung i hodet etter puben', 'heavy-headed after the pub'], cold:['kald på fingrene', 'cold fingers']};
+const DRIVE_LVL = [[1.03, 'Står på', 'Going hard'], [0.95, 'Jevn innsats', 'Steady'], [0.85, 'Går litt tregt', 'A bit slow'], [0, 'Har lite å gi', 'Little left to give']];
+function crewEffort(c, H, hs){
+  if (H == null) H = S.t / 60; if (hs == null) hs = hsWork(S.boat.pos, H);
+  const F = crewDrive(c, H, hs); if (S.boat.status !== 'port'){ const cp = coldPen(H, hs); if (cp > 0.03) F.push(['cold', 1 - cp]); }
+  const f = F.reduce((a, x) => a * x[1], 1), L = DRIVE_LVL.find(x => f >= x[0]), no = S.lang === 'no';
+  let why = null, wv = 0.03; for (const [k, v] of F){ const d = f >= 1 ? v - 1 : 1 - v; if (d > wv){ wv = d; why = k; } }
+  return {f, lvl:DRIVE_LVL.indexOf(L), word:no ? L[1] : L[2], why, text:(no ? L[1] : L[2]) + (why ? ': ' + DRIVE_WHY[why][no ? 0 : 1] : '')};
+}
+// ---- samhold: how the crew aboard pull together (Jonas 23.10.2026: «Samhold ja, men det må gjøres intuitivt»), 0-100 per vessel (S.team,
+// VKEYS), 50 among strangers. Once an hour it moves towards what the hour gives it: time at sea together (hard weather counts half again),
+// people who get on (compat), the food, their spirits, and against it a quarrel, grudges and new faces (a newcomer takes it some of the way
+// back to 50 and the shared time down by four tenths). It lifts their effort (crewDrive, ±4 %), their mood (crewTick), how ready they are
+// to pitch in rather than rest (13-work.js restScore), and makes quarrels rarer. It stands still while nobody is aboard.
+function crewTeam(){ return S.team || (S.team = {v:50, h:0, ids:'', nw:null, c:{}, why:null}); }
+const TEAM_WHY = {pair:[['de kommer godt overens', 'they get on well'], ['{a} og {b} går hverandre på nervene', '{a} and {b} get on each other\'s nerves']],
+  time:[['de har stått i det sammen en stund', 'they have been through it together for a while'], null], food:[['maten er god', 'the food is good'], ['maten er dårlig', 'the food is poor']],
+  mood:[['humøret er godt', 'spirits are high'], ['flere er misfornøyde', 'several are unhappy']], quarrel:[null, ['krangelen henger i', 'the quarrel hangs over them']],
+  grudge:[null, ['noen bærer nag', 'someone bears a grudge']], fresh:[null, ['det er nye folk om bord', 'there are new faces aboard']]};
+function teamHour(H, on, hs, food){
+  const T = crewTeam(); if (!on.length) return;
+  const ids = on.map(c => c.id).sort().join(',');
+  if (T.ids && ids !== T.ids){ const was = new Set(T.ids.split(',')), fresh = on.filter(c => !was.has(c.id)).length;
+    if (fresh){ T.h *= 0.6; T.v += (50 - T.v) * Math.min(0.5, 0.25 * fresh); T.nw = S.t; } }
+  T.ids = ids;
+  const sea = S.boat.status !== 'port'; if (sea) T.h += hs > 1.5 ? 1.5 : 1;
+  let pk = 0, n = 0, worst = null, wk = 1e9; for (let i = 0; i < on.length; i++) for (let j = i + 1; j < on.length; j++){ const k = compat(on[i], on[j]); pk += k; n++; if (k < wk){ wk = k; worst = [on[i], on[j]]; } }
+  const mood = on.reduce((a, c) => a + c.morale, 0) / on.length, grudge = on.reduce((a, c) => a + Object.values(c.grudge || {}).reduce((x, v) => x + v, 0), 0);
+  const ev = S.cevt && on.some(c => c.id === S.cevt.a || c.id === S.cevt.b);
+  const C = {pair:n ? clamp(6 * pk / n, -12, 12) : 0, time:Math.min(14, T.h / 15), food:(food - 3) * 4, mood:clamp((mood - 60) * 0.25, -15, 10), quarrel:ev ? -14 : 0,
+    grudge:-Math.min(12, grudge * 3), fresh:T.nw != null && S.t - T.nw < 3 * 1440 ? -5 : 0};
+  const tg = clamp(50 + Object.values(C).reduce((a, v) => a + v, 0), 0, 100);
+  T.v = clamp(T.v + (tg - T.v) * (sea ? 0.04 : 0.015), 0, 100); T.c = C; T.pair = worst && wk < 0 ? [worst[0].id, worst[1].id] : null;
+  // the reason said with it: the strongest pull the way it is going (falling: what drags it down, even while it is still good), or, while
+  // it holds, the way it stands
+  const up = Math.abs(tg - T.v) >= 3 ? tg > T.v : T.v >= 50; let why = null, wv = 1; for (const k in C){ const v = up ? C[k] : -C[k]; if (v > wv && TEAM_WHY[k][up ? 0 : 1]){ wv = v; why = k; } } T.why = why; T.up = up;
+}
+// samhold in one line for the Mannskap page: how it stands and why
+function teamLine(){
+  const T = crewTeam(), no = S.lang === 'no', v = T.v, i = no ? 0 : 1;
+  const w = v >= 70 ? ['Godt samhold', 'Pulling together well'] : v >= 55 ? ['Greit samhold', 'Getting along'] : v >= 40 ? ['Samholdet er så som så', 'So-so as a crew'] : ['Dårlig samhold', 'Not pulling together'];
+  let r = T.why && TEAM_WHY[T.why][(T.up != null ? T.up : v >= 50) ? 0 : 1]; r = r ? r[i] : '';
+  if (r && T.pair){ const a = crewById(T.pair[0]), b = crewById(T.pair[1]); r = a && b ? r.replace('{a}', a.name.split(' ')[0]).replace('{b}', b.name.split(' ')[0]) : ''; }
+  if (r.includes('{a}')) r = '';
+  return {v, text:w[i] + (r ? ': ' + r : ''), lvl:v >= 70 ? 0 : v >= 55 ? 1 : v >= 40 ? 2 : 3};
 }
 function teamEff(team, me = true, g = 'juksa'){ const H = S.t / 60, hs = hsWork(S.boat.pos, H), n = (me ? 1 : 0) + team.length; return n ? ((me ? 1 : 0) + team.reduce((a, c) => a + crewEff(c, H, hs, g), 0)) / n : 1; }
 // how two people get along: habits, home village, age, and old grudges
@@ -159,6 +228,7 @@ function crewTick(H){
     if (here) tg += (food - 3) * 3 + ((BOAT.fx && BOAT.fx.mood) || 0) + (F.mess ? 3 : F.galley === 'bysse' ? 1 : 0) - (!F.wc && tripH >= 12 ? 3 : 0);   // the food on board (the last four meals), the mess and galley (built in, or UPGS.galley), no toilet on a long day
     tg -= Math.max(0, c.fatigue - 50) * 0.5; tg -= cold * 50 * (here ? 1 : 0.3);
     if (here && hs * ((BOAT.fx && BOAT.fx.sea) || 1) > 1.5) tg -= (hs * ((BOAT.fx && BOAT.fx.sea) || 1) - 1.5) * 10 * (1.2 - 0.12 * c.attr.sjo); if (here && hs > 1.2 && c.traits.includes('sjosyk')) tg -= 15;
+    if (here) tg += (crewTeam().v - 50) * 0.1;   // samhold (teamHour)
     const me = t => c.traits.includes(t) ? 1 : 0; tg += 4 * (has('spokefugl') - me('spokefugl')) + 3 * (has('omsorgsfull') - me('omsorgsfull')) - 2 * (has('grinebiter') - me('grinebiter')); if (me('grinebiter')) tg -= 5;
     tg -= Object.values(c.grudge || {}).reduce((a, v) => a + v, 0) * 5; if (me('olglad') && S.pubE === pubEvening(H)) tg += 6; if (c.cpen) tg -= c.cpen;
     c.morale = clamp(c.morale + (tg - c.morale) * (me('rastlos') ? 0.07 : 0.04), 0, 100);
@@ -167,8 +237,9 @@ function crewTick(H){
     const lim = me('rastlos') ? 30 : me('grinebiter') ? 15 : 22; c.low = c.morale < lim ? (c.low || 0) + 1 : 0;
     if (c.low > 36 && b.status === 'port'){ crewQuit(c, 'Jeg har ikke trivdes på lenge. Jeg mønstrer av her.'); continue; }
   }
-  // quarrels between people, or with you as skipper; bad food makes them likelier, good food rarer
-  const foodQ = food < 2.5 ? 1.6 : food > 3.5 ? 0.7 : 1;
+  teamHour(H, on, hs, food);
+  // quarrels between people, or with you as skipper; bad food makes them likelier, good food rarer, and so does a crew that pulls together
+  const foodQ = (food < 2.5 ? 1.6 : food > 3.5 ? 0.7 : 1) * (1.5 - crewTeam().v / 100);
   if (!S.cevt && atSea){
     for (let i = 0; i < on.length && !S.cevt; i++) for (let j = i + 1; j < on.length && !S.cevt; j++){ const a = on[i], c2 = on[j], k = compat(a, c2); if (k > -1) continue;
       const pr = 0.004 * (-k) * (1 + (a.fatigue + c2.fatigue) / 200) * (1 + (100 - (a.morale + c2.morale) / 2) / 100) * foodQ;

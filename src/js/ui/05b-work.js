@@ -49,7 +49,9 @@ const WORK = (() => {
   }
   function row(p){
     const id = pid(p.c), role = p.c && crewRole(p.c), why = workWhyText(p);
-    let h = '<div class="ph-card wk-p"><div class="wk-top"><button class="wk-name" data-pa="wk-card" data-id="' + id + '">' + (p.c ? p.c.name : L('Du (skipper)', 'You (skipper)')) + '</button><span class="wk-now">' + workDoing(p) + restLine(p.c) + '</span></div>';
+    // how they are working just now, in words (core/04-crew.js crewEffort: fatigue, mood, hunger, the sea, samhold, …)
+    const ef = p.c && p.st !== 'pause' ? crewEffort(p.c) : null;
+    let h = '<div class="ph-card wk-p"><div class="wk-top"><button class="wk-name" data-pa="wk-card" data-id="' + id + '">' + (p.c ? p.c.name : L('Du (skipper)', 'You (skipper)')) + '</button><span class="wk-now">' + workDoing(p) + restLine(p.c) + (ef ? '<br><span class="wk-eff e' + ef.lvl + '">' + ef.text + '</span>' : '') + '</span></div>';
     h += '<div class="wk-chain"><span class="ph-note">' + (why ? why.charAt(0).toUpperCase() + why.slice(1) : '') + (role && p.c ? ' · ' + L('fast på ', 'regular at ') + sn(role).toLowerCase() : '') + '</span>' + (p.c && p.c.mate ? '<span class="wk-auto">' + L('Styrmann', 'Mate') + '</span>' : '') + '</div>';
     if (p.c && !p.c.mate) h += '<button class="ph-btn wk-edit" data-pa="wk-mate" data-id="' + id + '">' + L('Gjør til styrmann', 'Make mate') + '</button>';
     if (card === id) h += personCard(p.c);
@@ -65,7 +67,9 @@ const WORK = (() => {
     const me = meAboard() ? '<div class="ph-kv"><span><b>' + L('Du (skipper)', 'You (skipper)') + '</b></span><span>' + (shore ? L('Hviler i ', 'Resting in ') + lie : at ? L('Om bord, ved kai', 'Aboard, at the quay') : L('Om bord', 'Aboard')) + restLine(null) + '</span></div>' : '<div class="ph-kv"><span><b>' + L('Du', 'You') + '</b></span><span>' + L('Ikke om bord', 'Not aboard') + '</span></div>';
     const rows = S.crew.map(c => {
       return '<div class="ph-kv"><span><b>' + c.name.split(' ')[0] + '</b></span><span>' + st(c) + '<br>' + L('Slitenhet ', 'Fatigue ') + Math.round(c.fatigue) + ' · ' + L('trivsel ', 'morale ') + Math.round(c.morale) + restLine(c) + '</span></div>'; }).join('');
-    return '<div class="ph-card"><h4>' + L('Mannskapet', 'The crew') + '</h4>' + me + rows + (S.crew.length ? '<p class="ph-note">' + L('Den som er mønstret på, følger båten dit den ligger, og hviler i rorbua når båten ligger der.', 'Those signed on follow the boat wherever she lies, and rest in the rorbu when she lies there.') + '</p>' : '<p class="ph-note">' + L('Ingen mannskap ennå. Finn folk under Bygd, Ansatte.', 'No crew yet. Find people under Village, Employees.') + '</p>') + '</div>';
+    // samhold in one line (core/04-crew.js teamLine), when there is a crew aboard
+    const tl = on.size ? teamLine() : null, team = tl ? '<p class="wk-team t' + tl.lvl + '">' + tl.text + '</p>' : '';
+    return '<div class="ph-card"><h4>' + L('Mannskapet', 'The crew') + '</h4>' + team + me + rows + (S.crew.length ? '<p class="ph-note">' + L('Den som er mønstret på, følger båten dit den ligger, og hviler i rorbua når båten ligger der.', 'Those signed on follow the boat wherever she lies, and rest in the rorbu when she lies there.') + '</p>' : '<p class="ph-note">' + L('Ingen mannskap ennå. Finn folk under Bygd, Ansatte.', 'No crew yet. Find people under Village, Employees.') + '</p>') + '</div>';
   }
   function page(){
     const team = crewAboard(), A = workAssign(), h = ['<div class="ph-c wk">', overview()];

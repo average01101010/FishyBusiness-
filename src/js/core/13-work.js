@@ -84,10 +84,11 @@ function workScore(p, k, ctx, need, sk){
   if (pPrev(p) === k) v += 0.3;
   return v + pWhim(p, k);
 }
-// how much a person would rather rest: the easy-going more, the workhorse less, and anyone worn out
+// how much a person would rather rest: the easy-going more, the workhorse less, anyone worn out, and a crew that pulls together less
+// (they see the others at it and pitch in: samhold, 04-crew.js crewTeam)
 function restScore(p){
   const c = p.c, T = c ? c.traits : [], f = pTired(p);
-  return 0.12 + (T.includes('makelig') ? 0.1 : 0) - (T.includes('arbeidsjern') ? 0.06 : 0) + Math.max(0, f - 0.6) * 4 + (pPrev(p) === 'pause' ? 0.08 : 0);
+  return 0.12 + (T.includes('makelig') ? 0.1 : 0) - (T.includes('arbeidsjern') ? 0.06 : 0) + Math.max(0, f - 0.6) * 4 + (pPrev(p) === 'pause' ? 0.08 : 0) - (c ? (crewTeam().v - 50) / 500 : 0);
 }
 // why a person stands where they do, said on the Mannskap page: the strongest reason
 const WORK_WHY = {skipper:['skipperen', 'the skipper'], mate:['styrmannen har roret', 'the mate has the helm'], opsk:['har roret', 'has the helm'], seaman:['den mest sjøvante har roret', 'the best seaman has the helm'],

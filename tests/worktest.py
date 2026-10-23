@@ -115,6 +115,39 @@ async def main():
         print(ok(r['mood'][0] > r['mood'][1] + 3), 'good food lifts the mood, bad food sinks it')
         print(ok(r['said'] >= 3 and r['minGap'] >= 15 and r['kept'] >= 1), 'the crew talks during a day at sea, not in bursts, and each keeps their last lines')
 
+        # effort that varies (hunger, the sea, the mood) and samhold (core/04-crew.js crewDrive, crewEffort, crewTeam, teamHour, teamLine)
+        r = await pg.evaluate("""(()=>{ const R = {}, b = S.boat, g = GROUNDS[2].p, H = () => S.t / 60;
+          const hand = (sjo, tr) => { const c = Object.assign(genCrew(), {bi:false, off:false, fatigue:10, morale:62, traits:tr || [], known:[true, true], grudge:{}}); c.cpen = 0; if (sjo) c.attr.sjo = sjo; return c; };
+          b.status = 'fishing'; b.port = null; b.pos = {...g}; b.gop = null; b.fishUntil = S.t + 1e5; S.hold = []; S.plan = null; S.cevt = null; S.lang = 'no';
+          const A = hand(2, ['omsorgsfull']), B = hand(4.5, ['spokefugl']); S.crew = [A, B]; S.team = null;
+          // a meal an hour late takes some of the effort, and the words say so
+          S.meal = {due:S.t + 120, cook:null, hist:[3, 3, 3, 3]}; const e0 = crewEff(A, H(), 0.5); S.meal.due = S.t - 60; const e1 = crewEff(A, H(), 0.5), cp = window.coldPen; window.coldPen = () => 0; const w1 = crewEffort(A, H(), 0.5); window.coldPen = cp; S.meal.due = S.t + 120;   // (the cold kept out of the words here: on a winter day it is the bigger drag)
+          R.hungry = [+(e1 / e0).toFixed(3), w1.why, w1.text];
+          // a heavy sea: the seaman minds it less
+          R.sea = [A, B].map(c => +(crewEff(c, H(), 3) / crewEff(c, H(), 0.5)).toFixed(3));
+          // the mood in a smooth step
+          A.morale = 20; const m20 = crewEff(A, H(), 0.5); A.morale = 85; const m85 = crewEff(A, H(), 0.5); A.morale = 62; R.mood = +(m85 / m20).toFixed(3);
+          // samhold: two who get on, good food, sixty hours at sea together
+          S.meal.hist = [4, 4, 5, 4]; A.morale = B.morale = 70; const v0 = crewTeam().v; for (let h = 0; h < 60; h++) teamHour(H() + h, [A, B], 0.5, foodScore());
+          R.team = [Math.round(v0), Math.round(crewTeam().v), teamLine().text, crewTeam().why];
+          // what it does: more effort, and readier to pitch in than to rest
+          S.team.v = 80; const eh = crewEff(A, H(), 0.5), rh = restScore({c:A}); S.team.v = 50; const em = crewEff(A, H(), 0.5), rm = restScore({c:A}); S.team.v = R.team[1];
+          R.effect = [+(eh / em).toFixed(3), +(rm - rh).toFixed(3)];
+          // a new face takes it some of the way back
+          const C = hand(3); S.crew.push(C); const vb = crewTeam().v; teamHour(H(), [A, B, C], 0.5, foodScore()); R.fresh = [Math.round(vb), Math.round(crewTeam().v), crewTeam().nw === S.t];
+          // a quarrel left hanging pulls it down, and the line says why
+          S.cevt = {type:'pair', a:A.id, b:C.id, topic:'kaffe', t0:S.t}; const vq = crewTeam().v; for (let h = 0; h < 30; h++) teamHour(H() + h, [A, B, C], 0.5, foodScore());
+          R.quarrel = [Math.round(vq), Math.round(crewTeam().v), teamLine().text]; S.cevt = null;
+          return R; })()""")
+        print('drive:', json.dumps(r, ensure_ascii=False))
+        print(ok(0.9 <= r['hungry'][0] <= 0.94 and r['hungry'][1] == 'hungry' and 'sulten' in r['hungry'][2]), 'a meal an hour late takes about 8 % of the effort, and the words say they are hungry', r['hungry'])
+        print(ok(r['sea'][0] < r['sea'][1] < 1), 'a heavy sea slows them, the seaman less', r['sea'])
+        print(ok(r['mood'] > 1.2), 'a glad hand works a fifth faster than a sour one', r['mood'])
+        print(ok(r['team'][1] >= r['team'][0] + 8 and r['team'][2].startswith(('Godt', 'Greit')) and ':' in r['team'][2]), 'two who get on, with good food and days at sea together, pull together, and the line says why', r['team'])
+        print(ok(r['effect'][0] > 1.015 and r['effect'][1] > 0.04), 'a crew that pulls together works harder and rests less', r['effect'])
+        print(ok(r['fresh'][1] < r['fresh'][0] and r['fresh'][2]), 'a new face takes the samhold some of the way back to the start', r['fresh'])
+        print(ok(r['quarrel'][1] < r['quarrel'][0] - 5 and 'krangel' in r['quarrel'][2]), 'a quarrel left hanging pulls it down, and the line says so', r['quarrel'])
+
         # your energy (core/15-energy.js): a day at sea empties it, eight hours at the quay fill it; at 0 you sleep for eight hours
         r = await pg.evaluate("""(()=>{ const R = {}, b = S.boat, g = GROUNDS[2].p; S.me = S.cur; S.sleep = null; S.myJob = null;
           const hand = () => Object.assign(genCrew(), {bi:false, off:false, fatigue:10, morale:62, traits:['stolt'], known:[true, true]});
@@ -148,7 +181,7 @@ async def main():
         # the Mannskap page: the button shows with crew aboard, each row with why, the mate button and the person card
         for vw, vh, tag in ((1100, 800, 'liggende'), (800, 1180, 'staende')):
             await pg.set_viewport_size({'width':vw, 'height':vh})
-            u = await pg.evaluate("""(()=>{ const R = {}, b = S.boat; b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; b.gop = null; S.hold = []; S.plan = null;
+            u = await pg.evaluate("""(()=>{ const R = {}, b = S.boat; b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; b.gop = null; S.hold = []; S.plan = null; addCatch('torsk', 40, null, true);   // (fish to gut at the quay: someone at work)
               const c0 = S.crew; S.crew = []; DOCK.render(); R.noCrew = !document.querySelector('#dock [data-dk=arbeid]'); S.crew = c0; DOCK.render();
               R.btn = !!document.querySelector('#dock [data-dk=arbeid]'); DOCK.open('arbeid'); const dr = () => document.getElementById('drawerBody');
               R.rows = dr().querySelectorAll('.wk-p').length; R.flow = [...dr().querySelectorAll('.wk-flow:not(.side) .wk-st b')].map(e => e.textContent);
@@ -156,6 +189,7 @@ async def main():
               const B = S.crew[1]; R.noChains = !dr().querySelector('[data-pa=wk-edit], [data-pa=wk-pre], .wk-pick'); R.whyShown = [...dr().querySelectorAll('.wk-p .wk-chain .ph-note')].filter(e => e.textContent.trim()).length;
               tap('[data-pa=wk-mate][data-id="' + B.id + '"]'); R.mate = [!!B.mate, !S.crew[0].mate, ![...dr().querySelectorAll('[data-pa=wk-mate]')].some(e => e.dataset.id === B.id), (S.ops && S.ops.v === 2) ? S.ops.mate === B.id : true];
               tap('[data-pa=wk-card][data-id="' + S.crew[0].id + '"]'); R.card = dr().querySelectorAll('.wk-card .wk-sk span.wk-v').length; tap('[data-pa=wk-card][data-id="' + S.crew[0].id + '"]'); R.cardShut = !dr().querySelector('.wk-card');
+              R.team = (dr().querySelector('.wk-team') || {}).textContent || ''; R.effShown = dr().querySelectorAll('.wk-eff').length; R.working = workAssign().filter(p => p.c && p.st !== 'pause').length;
               const W = dr().getBoundingClientRect(); R.overflow = dr().scrollWidth > dr().clientWidth + 1; R.small = [...dr().querySelectorAll('button')].filter(e => e.offsetParent && e.getBoundingClientRect().height < 43).map(e => e.textContent.slice(0, 20));
               return R; })()""")
             print(tag, json.dumps(u, ensure_ascii=False))
@@ -163,6 +197,7 @@ async def main():
             print(ok(u['noCrew'] and u['btn'] and u['rows'] == 3 and u['flow'] == ['Ror', 'Fiske', 'Sløying', 'Ising']), tag + ': the Arbeid button shows only with crew; the page has the flow for the rig and a row each')
             print(ok(u['noChains'] and u['whyShown'] >= 2), tag + ': no chains to set up: each row says why the person does what they do', u['whyShown'])
             print(ok(all(u['mate']) and u['card'] == 12 and u['cardShut']), tag + ': Gjør til styrmann makes the mate (the plan\'s too); the person card shows skills, fatigue and morale, and closes on a second tap', u['mate'])
+            print(ok(u['team'] and u['working'] >= 1 and u['effShown'] == u['working']), tag + ': the samhold line on top, and how each one at work is going in words', u['team'], u['effShown'], u['working'])
             print(ok(not u['overflow'] and not u['small']), tag + ': no sideways scroll, and every button is at least 44 px', u['small'])
             await pg.evaluate("DOCK.close()")
         print('errors:', errs[:5]); await br.close()
