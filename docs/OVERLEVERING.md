@@ -4145,7 +4145,6 @@ Gjennomgått punkt for punkt mot koden, git-loggen og feilloggen 24.10.2026. Det
 
 - **Noen få leibiter i NPC-rutene skjærer et hjørne av land** (`gr.pts` fra `npc.py` brukes som de er). Målt mot vektorkysten 24.10.2026: 5 av 119 leibiter rundt Tromsø, hver med rundt 10 m (ett målepunkt). Rettes best i `npc.py`.
 - **3D på Galaxy A52s (Adreno 642L, oppgave #171):** 3D starter nå med en enklere sjø (6ce4f50, 2c349cd), men konteksten mistes under spill (feilloggen: fire ganger, 11–17 minutter ut i økta og én gang etter 83, på alle kvalitetsnivåer, sist 23.10.2026). Spillet lagrer og laster siden på nytt da. Fra 24.10.2026 skriver feilloggen også om siden var skjult og hvor lenge, hvor lenge 3D har gått, levende buffere og teksturer, kvalitetsnivå, terrengbiter og JS-minne (`glDiag`, `GLN` i `view3d.js`). En seiling på 30 km i testmiljøet ga ingen lekkasje (1 000–1 076 buffere og 15 teksturer hele veien), men JS-minnet var 347 MB.
-- **Kranen er ikke med i kamerahindringene** (`camSolid`/`camFree` i `view3d.js`). Kaier, bruer, fyr, siloer, bygninger og båtene i nærheten er med.
 
 ### 10.2 Spillbarhet (fra spilltestene og egne notater)
 
@@ -4171,6 +4170,7 @@ Gjennomgått punkt for punkt mot koden, git-loggen og feilloggen 24.10.2026. Det
 ### 10.4 Valg (står med vilje)
 
 - **Turen går videre når du sover:** med mannskap om bord tar styrmannen eller den mest sjøvante roret. Det følger regelen om én felles klokke.
+- **Kranen er ikke med i kamerahindringene** (`camSolid`/`camFree` i `view3d.js`; kaier, bruer, fyr, siloer, bygninger og båtene i nærheten er med). Søyla er rundt 1 m tykk og står 2 m fra landingsplassen, så som hindring ville den dratt følgekameraet helt inn hver gang den kom mellom båten og kameraet under levering. Bommen svinger (vurdert 24.10.2026).
 - **Tempo 1:6** (`GAME_RATE`): farten ser høy ut i 3D, men de korte bølgene følger båten med 5/6 av farten, så vannet passerer skroget i ekte fart (Jonas 19.10.2026).
 - **Lån:** et nytt lån legges til restgjelda og betales over nye 10 eller 15 år (120 måneder ved båtkjøp, 180 ved strukturkjøp og kjøp med hjemmel). Lånet innfris ved salg og innbytte.
 - **Båtmodellene viser bare utsiden** (Jonas 06.10.2026): ingen innredning, og fra rattet på Malo ses konsollen og en enkel stol.
