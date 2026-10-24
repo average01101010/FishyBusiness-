@@ -28,37 +28,46 @@ function havnPlace(id){
 }
 PORTX = havnPlace;
 // the harbour's name: the nearest local name on the chart (a town or a settlement within 1.2 km, a bay or a sound within 1 km, an island
-// within 0.7 km; skerries, shoals and lakes left out) + «havn», each harbour its own among its neighbours (the one nearest a name takes
-// it first), so the harbours of a town can be told apart (Tromsø, Hungerbukta, Lilleholla); else the place it lies in (the nearest of the
-// game's places within a few km) and where from it (Bodø øst havn). No firm's name: CLAUDE.md, the places are named after the place.
+// within 0.7 km, or one up to twice as far; skerries, shoals and lakes left out) + «havn», else the place it lies in and the side of it
+// (Bodø nordøst havn), each harbour its own among those within 6 km (havnLocal), so the harbours of a town can be told apart (Tromsø,
+// Hungerbukta, Lilleholla). No firm's name: CLAUDE.md, the places are named after the place.
 const HVN = {lim:[1.2, 1, 0.7], pen:[0, 0.2, 0.4], skip:/skjær|skjer|skjæran|grunnen?$|grunn$|flua$|fluene$|båen$|vatnet$|vatn$|vannet$|tjønna?$|tjernet$/i};
-function havnName(p, side){
+// the place a harbour lies in: the nearest of the game's places within a few km (a plant, shop or yard by the place's name alone), a
+// rorbu, or a town of the chart's national names; {nm, q} (q: where the place is)
+function havnTown(p){
   let best = null, bd = 1e9, bq = null; const take = (nm, q, lim) => { const d = dist(q, p); if (d < lim && d < bd && nm){ bd = d; best = nm; bq = q; } };
   // (the plants, shops and yards are named after the place and what they are: the place alone)
   const place = nm => String(nm || '').replace(/\s+(utstyrsbutikk|butikk|verft|båtverft|fiskemottak|mottak|fiskebruk)$/i, '');
   for (const q of PORTS) take(place(q.name), q.p, 6);
   if (typeof rorbuIn === 'function') for (const R of rorbuIn(p.x - 4, p.y - 4, p.x + 4, p.y + 4)) take(R.name, R.cand, 4);
   if (typeof chartNamesOf === 'function' && MAPD.core && MAPD.core.buf){ try { for (const q of chartNamesOf(MAPD.core, 'names0', 0.01, 0, 0)) if (q[2] === 0) take(q[4], {x:q[0], y:q[1]}, 8); } catch (e){} }
-  if (!best){ const q = nearestPort(p); best = q ? place(q.name) : 'Havna'; bq = q && q.p; }
-  // (side: a harbour that shares the place with a nearer one is told by the side of the place it lies on, in true directions)
-  if (side && bq && dist(bq, p) > 0.3 && !/(nord|sør|øst|vest|indre|ytre)$/i.test(best)){ const a = trueDeg(Math.atan2(p.x - bq.x, bq.y - p.y), p);
-    best += ' ' + ['nord', 'nordøst', 'øst', 'sørøst', 'sør', 'sørvest', 'vest', 'nordvest'][Math.round(a / 45) % 8]; }
-  return best + ' havn';
+  if (!best){ const q = nearestPort(p); best = q ? place(q.name) : 'Havna'; bq = q ? q.p : p; }
+  return {nm:best, q:bq};
 }
+// the side of the place the harbour lies on, in true directions: ' nordøst' and so on; '' right by the place (unless forced) or when the
+// place's name has a side already
+function havnSide(p, T, force){
+  if ((!force && dist(T.q, p) <= 0.3) || dist(T.q, p) < 0.01 || /(nord|sør|øst|vest|indre|ytre)$/i.test(T.nm)) return '';
+  return ' ' + ['nord', 'nordøst', 'øst', 'sørøst', 'sør', 'sørvest', 'vest', 'nordvest'][Math.round(trueDeg(Math.atan2(p.x - T.q.x, T.q.y - p.y), p) / 45) % 8];
+}
+function havnName(p, side){ const T = havnTown(p); return T.nm + (side ? havnSide(p, T) : '') + ' havn'; }
 const havnFmt = nm => /(havn|havna|havnen|hamn|hamna|hamnen|vågen|vågan)$/i.test(nm) ? nm : nm + ' havn';
-// the local name of a pack tile's harbour hi: its neighbours within 2.5 km take part (the one nearest a name takes it first); null when
-// none, undefined while a chart pack round them is not loaded
+// the name of a pack tile's harbour hi, each its own among the harbours of the tile within 6 km of it (the reach of havnTown): the names are dealt out nearest
+// first, a local name of the chart (HVN.lim), then one a little farther (twice the limit), then the place it lies in (havnTown), the
+// place and its side, the place and its side even right by it. undefined while a chart pack round them is not loaded
 function havnLocal(t, hi){
   const C = t.hvNames || (t.hvNames = []); if (C[hi] !== undefined) return C[hi];
   const hs = t.npc || [], h0 = hs[hi], T = MAPD.man.tile, pairs = [], near = [];
-  for (let j = 0; j < hs.length; j++) if (Math.hypot(hs[j].x - h0.x, hs[j].y - h0.y) < 2.5) near.push(j);
+  for (let j = 0; j < hs.length; j++) if (Math.hypot(hs[j].x - h0.x, hs[j].y - h0.y) < 6) near.push(j);
   for (const j of near){ const h = hs[j];
-    for (const pk of mapPacksIn('chart', h.x - 1, h.y - 1, h.x + 1, h.y + 1)){ if (!pk.buf) return undefined; if (!mapVec(pk, 'names')) continue;
+    for (const pk of mapPacksIn('chart', h.x - 2.4, h.y - 2.4, h.x + 2.4, h.y + 2.4)){ if (!pk.buf) return undefined; if (!mapVec(pk, 'names')) continue;
       for (const q of chartNamesOf(pk, 'names', 0.001, pk.tile[0] * T, pk.tile[1] * T)){ const k = q[2]; if (k > 2 || HVN.skip.test(q[4])) continue;
-        const d = Math.hypot(q[0] - h.x, q[1] - h.y); if (d < HVN.lim[k]) pairs.push([d + HVN.pen[k], j, q[4]]); } } }
+        const d = Math.hypot(q[0] - h.x, q[1] - h.y); if (d < HVN.lim[k]) pairs.push([d + HVN.pen[k], j, havnFmt(q[4])]); else if (d < 2 * HVN.lim[k]) pairs.push([2 + d + HVN.pen[k], j, havnFmt(q[4])]); } }
+    const P = {x:h.x, y:h.y}, Tn = havnTown(P), d = dist(Tn.q, P), s1 = havnSide(P, Tn), s2 = havnSide(P, Tn, true);
+    pairs.push([5 + d, j, Tn.nm + ' havn']); if (s1) pairs.push([6 + d, j, Tn.nm + s1 + ' havn']); if (s2 && s2 !== s1) pairs.push([7 + d, j, Tn.nm + s2 + ' havn']); }
   pairs.sort((x, y) => x[0] - y[0] || x[1] - y[1] || (x[2] < y[2] ? -1 : 1));
   const got = new Map(), used = new Set();
-  for (const [, j, nm] of pairs) if (!got.has(j) && !used.has(nm)){ got.set(j, havnFmt(nm)); used.add(nm); }
+  for (const [, j, nm] of pairs) if (!got.has(j) && !used.has(nm)){ got.set(j, nm); used.add(nm); }
   return (C[hi] = got.get(hi) || null);
 }
 // the harbours of the packs within r km of p, nearest first: [{id, name, x, y, h}]
