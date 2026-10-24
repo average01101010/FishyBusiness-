@@ -1,0 +1,50 @@
+# Autonav between every plant and its three nearest along the whole coast, and the longest ways (Oslo to Kirkenes and more), each
+# leg checked the way the boat sails it (tests/allpairs.py; step 3 of the coast-wide Autonav, 08.10.2026). Four shards side by side
+# on the newest map release; the report of each is an artifact. Started by a push that changes the route finder, the harbours, the
+# fairway net or the plants, every Monday, or by hand.
+name: Autonav langs hele kysten
+on:
+  push:
+    branches: [main, ccr-5e1ba2f4-pusvyd]
+    paths: ['src/js/core/11-route.js', 'src/js/core/11b-obstacles.js', 'src/js/core/11c-leinett.js', 'src/js/core/07-harbours.js', 'src/js/core/01-world.js',
+            'src/data/leinett.json', 'src/data/mottak.json', 'tests/allpairs.py', '.github/workflows/autonav.yml']
+  schedule:
+    - cron: '17 3 * * 1'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: autonav-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  pairs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ['1/4', '2/4', '3/4', '4/4']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: The whole coast's map packs and the game
+        run: |
+          pip install requests playwright==1.56.0
+          python3 -m playwright install --with-deps chromium
+          python3 tools/map/game.py
+          node build.mjs
+      - name: Autonav between the plants
+        env:
+          SHARD: ${{ matrix.shard }}
+          KYST_LITE: '1'
+        run: python3 tests/allpairs.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: autonav-${{ strategy.job-index }}
+          path: tests/out/allpairs-*.json

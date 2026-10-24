@@ -1,0 +1,2 @@
+# Compressed map data: keep it out of diffs
+src/data/** -diff linguist-generated
