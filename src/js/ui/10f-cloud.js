@@ -196,6 +196,8 @@ function cloudStart(){
   // goes to the background: Android often ends a page in the background without a pagehide
   // (a half minute since 13.10.2026: what goes up is what another device starts from)
   setInterval(cloudSaveSoon, 30000);
+  // the berths the company holds in the harbours are told the server again (07e-havn.js), so a home berth does not lapse while the plan runs
+  setTimeout(() => { if (typeof havnRenew === 'function') havnRenew(); }, 20000); setInterval(() => { if (typeof havnRenew === 'function') havnRenew(); }, 6 * 3600e3);
   CLOUD.fp0 = cloudFp(); CLOUD.beatAt = Date.now();
   document.addEventListener('visibilitychange', () => { if (document.hidden) cloudSaveSoon(true); else { cloudWake(); if (CLOUD.noBeat) cloudCheckHead(); } });
   addEventListener('online', () => { cloudStatus('error'); cloudSaveSoon(); cloudBeat(); if (CLOUD.noBeat) cloudCheckHead(); }); addEventListener('offline', () => cloudStatus('offline'));

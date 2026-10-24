@@ -396,6 +396,12 @@ function renderStatic(){
     g.push('<path d="M' + (q.x - s) + ',' + (q.y + s) + 'v' + (-s) + 'l' + s + ',' + (-s) + 'l' + s + ',' + s + 'v' + s + 'z" class="rorbu" stroke-width="' + (1.3 * u) + '"/>');
     if (view.z >= 2){ const nm = 'Rorbu ' + R.name; g.push(txt({x:q.x + 8 * u, y:q.y + 4 * u}, nm, 'lbl-ground', 11 * u, 'stroke-width="' + (2.5 * u) + '"')); taken.push([q.x - s, q.y - 8 * u, q.x + 8 * u + nm.length * 6.5 * u, q.y + 6 * u]); }
   }
+  // the coast's harbours (07e-havn.js), where a boat can lie at a quay or a floating dock: a teal ring with a hull, the name when near
+  if (view.z >= 2.5) for (const H of havnsNear({x:mX, y:mY}, mR)){
+    if (!inV(H.x, H.y)) continue; const s = (view.z >= 4 ? 5 : 4) * u;
+    g.push('<circle cx="' + H.x + '" cy="' + H.y + '" r="' + s + '" class="havn" stroke-width="' + (1.3 * u) + '"/><path d="M' + (H.x - s * 0.6) + ',' + (H.y - s * 0.05) + 'h' + (s * 1.2) + 'l' + (-s * 0.25) + ',' + (s * 0.45) + 'h' + (-s * 0.7) + 'z" class="havn-h"/>');
+    if (view.z >= 4){ const nm = havnNm(H); g.push(txt({x:H.x + 8 * u, y:H.y + 4 * u}, nm, 'lbl-ground', 11 * u, 'stroke-width="' + (2.5 * u) + '"')); taken.push([H.x - s, H.y - 8 * u, H.x + 8 * u + nm.length * 6.5 * u, H.y + 6 * u]); }
+  }
   g.push(soundingsSvg(vx0, vy0, vx1, vy1, u, taken));
   g.push(chartNamesSvg(vx0, vy0, vx1, vy1, u, taken));
   gStatic.innerHTML = g.join('');
@@ -635,6 +641,8 @@ function addWaypoint(pt){
   // a rorbu's quay (07d-rorbu.js), when the chart is close enough to show its name and not in «Første tur» (a tap in the field's ring
   // went to a rorbu by it)
   if (view.z >= 2 && !tutOn()) for (const R of rorbuSites(pt, r + 0.05)){ const d = dist(R.p, pt); if (d < r && d < bd){ bd = d; near = R; } }
+  // a harbour of the coast's packs: the route ends at a free berth there (07e-havn.js), when no place of the game is nearer
+  if (view.z >= 2 && !tutOn() && !near){ const B = havnTapNear(pt, r); if (B) near = B; }
   // Father's naust: a route can end there (you sail to it; 07c-naust.js naustTarget)
   const nt = naustTarget(pt, r), atN = b.status === 'port' && berthKind(b) === 'naust';
   if (nt && atN && !S.draft.length){ toast(t('already_here')); return; }

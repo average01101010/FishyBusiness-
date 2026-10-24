@@ -18,6 +18,7 @@ const DRIFTUI = (() => {
     return '<div class="dr-row' + (on ? ' on' : '') + (bad ? ' bad' : '') + '"><button class="dr-rh" data-pa="dr-row" data-k="' + k + '"><span class="dr-rl">' + label + '</span><span class="dr-rv">' + value + '</span><span class="dr-rc">' + (body ? (on ? '▾' : '›') : '') + '</span></button>' + (on ? '<div class="dr-rb">' + body() + '</div>' : '') + '</div>';
   }
   const kindName = id => { const p = portById(id); if (!p) return ''; if (id === (S.home || HOME0)) return L('naustet', 'the naust'); if (isRorbu(id)) return L('rorbu', 'rorbu');
+    if (isBerth(id)) return p.kind === 'dock' ? L('flytebrygge', 'floating dock') : L('kai', 'quay');
     const k = portKind(p); return k === 'mottak' ? L('fiskemottak', 'fish plant') : k === 'verft' ? L('verft', 'yard') : k === 'butikk' ? L('butikk', 'shop') : L('kai', 'quay'); };
   // ---- Hjem: where she lies and the crew sleep
   function homeOpts(o){
@@ -25,8 +26,14 @@ const DRIFTUI = (() => {
     const add = id => { const p = portById(id); if (!p || out.some(q => q.id === id)) return; out.push({id, d:dist(p.p, p0)}); };
     add(here); if (portById(home) && dist(portById(home).p, p0) < 80) add(home); if (o.home) add(o.home);
     try { for (const R of rorbuSites(p0, 40).slice(0, 3)) add(R.id); } catch (e){}
+    // a free berth at a quay or a floating dock in the harbours near (07e-havn.js; Jonas 23.10.2026: a proper quay before the plants, anchor last)
+    // (one berth a harbour: the one held already, else the best free)
+    const hids = new Set(out.map(q => isBerth(q.id) && portById(q.id).hid).filter(Boolean));
+    for (const q of havnOptions(p0, 25).filter(q => !hids.has(q.place.hid)).slice(0, 3)) add(q.place.id);
     for (const q of PORTS.filter(q => !q.rorbu && dist(q.p, p0) < 30).sort((a, c) => dist(a.p, p0) - dist(c.p, p0)).slice(0, 4)) add(q.id);
-    return out.sort((a, c) => a.d - c.d).slice(0, 7);
+    // the order: where the crew sleep well first (a rorbu, the naust; a harbour's berth on a boat with bunks), then a harbour's berth, then the plants, shops and yards
+    const rank = id => planRestOk(id) && !portServices(portById(id)).mottak && !portServices(portById(id)).verft && !portServices(portById(id)).butikk ? 0 : isBerth(id) ? 1 : 2;
+    return out.sort((a, c) => rank(a.id) - rank(c.id) || a.d - c.d).slice(0, 8);
   }
   function homeBody(o){
     const h = homeOpts(o).map(q => BIG('dr-home', nm(q.id) + ' <span class="dr-k">(' + kindName(q.id) + ')</span>', (planRestOk(q.id) ? L('Mannskapet sover godt her', 'The crew sleep well here') : L('Ingen køyer: mannskapet hviler dårlig', 'No bunks: the crew rest poorly')) + (q.d > 0.2 ? ' · ' + km(portById(q.id).p, portById(S.boat.status === 'port' ? S.boat.port : nearestPort(S.boat.pos).id).p) + L(' unna', ' away') : ''), o.home === q.id, 'data-p="' + q.id + '"')).join('');
@@ -192,9 +199,14 @@ const DRIFTUI = (() => {
   // a new plan, with sensible answers to begin with: home where she lies if the crew can sleep there, else the nearest rorbu; the rig she has;
   // the gear standing in the sea as fields; the best catch mark near as the jig place
   function fresh(){
-    const b = S.boat, here = b.status === 'port' ? b.port : nearestPort(b.pos).id; let home = planRestOk(here) ? here : null;
+    // (where the crew sleep well: a rorbu or the naust, or a free berth in a harbour near on a boat with bunks; else the berth, else where she lies)
+    const b = S.boat, here = b.status === 'port' ? b.port : nearestPort(b.pos).id, bunk = (VESSELS[b.type].berths || 0) > 0, hv = havnOptions(portById(here).p, 15)[0];
+    let home = planRestOk(here) && (isRorbu(here) || here === (S.home || HOME0) || isBerth(here)) ? here : bunk && hv ? hv.place.id : null;
     if (!home){ try { const r = rorbuSites(portById(here).p, 40)[0]; if (r) home = r.id; } catch (e){} }
+    if (!home && hv) home = hv.place.id;
+    if (!home && planRestOk(here)) home = here;
     const rig = RIGS[b.rig] && rigHas(b.rig) ? b.rig : 'juksa', kind = PLAN_KIND[rig] || null, o = driftNew({home:home || here, rig});
+    if (isBerth(o.home)) havnHold(o.home);
     if (kind) for (const s of mySets().filter(s => s.kind === kind).slice(0, DRP.fieldsMax)){ const m = setMid(s); o.fields.push({id:driftSid(), x:m.x, y:m.y, n:s.n, soak:DRP.soakDef[kind]}); }
     const p0 = portById(o.home).p, m = (S.marks || []).filter(x => !x.g && S.t - x.t < PLAN_MEMO && dist(x, p0) < 30).sort((a, c) => (c.kgph || 0) - (a.kgph || 0))[0];
     if (m) o.jigs.push({id:driftSid(), x:m.x, y:m.y});
@@ -217,7 +229,7 @@ const DRIFTUI = (() => {
     if (a === 'dr-resume'){ driftResume(o); return true; }
     if (a === 'dr-fix'){ const f = o.stop && o.stop.fix; if (f === 'mannskap'){ PHONE.open('arbeid'); return false; } if (f === 'quota'){ PHONE.open('kvote'); return false; } open = f === 'rig' ? 'fish' : 'places'; return true; }
     if (a === 'dr-crew'){ PHONE.open('arbeid'); return false; }
-    if (a === 'dr-home'){ o.home = d.p; return true; }
+    if (a === 'dr-home'){ const old = o.home; o.home = d.p; if (isBerth(d.p)) havnHold(d.p); if (isBerth(old) && old !== d.p) havnFree(old); return true; }
     if (a === 'dr-anchor'){ o.anchor = d.v === '1'; return true; }
     if (a === 'dr-rig'){ if (gearWhy(d.g)) return false; if (d.g !== o.rig){ o.rig = d.g; o.fields = []; if (!PLAN_KIND[d.g]) o.jig = true; } return true; }
     if (a === 'dr-jig'){ o.jig = d.v === '1'; return true; }
@@ -234,7 +246,7 @@ const DRIFTUI = (() => {
     if (a === 'dr-move'){ pick(d.k); return true; }
     if (a === 'dr-show'){ DRIFTCTX = {vid:S.cur, view:true}; S.draft = []; if (typeof routeChanged === 'function') routeChanged(); PHONE.show(false); if (typeof DOCK !== 'undefined' && DOCK.close) DOCK.close(); return true; }
     if (a === 'dr-copy'){ if (driftCopy(d.id)) toast(L('Planen er kopiert til «' + vget(vesselById(d.id), 'boatName') + '». Sjekk den og start den der.', 'The plan is copied to «' + vget(vesselById(d.id), 'boatName') + '». Check it and start it there.')); return true; }
-    if (a === 'dr-reset'){ if (!confirm(L('Slette driftsplanen for «' + S.boatName + '»?', 'Delete the plan for «' + S.boatName + '»?'))) return false; S.ops = null; open = null; if (S.plan && S.plan.ops) S.plan.ops = false; return true; }
+    if (a === 'dr-reset'){ if (!confirm(L('Slette driftsplanen for «' + S.boatName + '»?', 'Delete the plan for «' + S.boatName + '»?'))) return false; const hm = o.home; S.ops = null; open = null; if (S.plan && S.plan.ops) S.plan.ops = false; if (isBerth(hm)) havnFree(hm); return true; }
     return false;
   }
   // one line for the Crew page: what the plan does now, and the way to it

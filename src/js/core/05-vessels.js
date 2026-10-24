@@ -132,6 +132,7 @@ const MOOR = {ver:-1, PEN:3};   // PEN: the mooring pennant from the buoy to the
 function moorBlocked(x, z, r){
   for (const q of PORTS) if (Math.abs(q.p.x * 1000 - x) < r + 60 && Math.abs(q.p.y * 1000 - z) < r + 60 && Math.hypot(q.p.x * 1000 - x, q.p.y * 1000 - z) < r + 45) return true;
   if (unitNear(x, z, r + 60)) return true;
+  if (typeof havnBlocked === 'function' && havnBlocked(x, z, r)) return true;   // the berths the players hold (07e-havn.js)
   const nh = S && S.naust && S.naust.o; if (nh && Math.hypot(nh[0] - x, nh[1] - z) < r + 45) return true;
   for (const R of rorbuIn(x / 1000 - 0.3, z / 1000 - 0.3, x / 1000 + 0.3, z / 1000 + 0.3)){ const s = R.site, o = s && s.o; if (Math.hypot((o ? o[0] : R.cand.x * 1000) - x, (o ? o[1] : R.cand.y * 1000) - z) < r + 35) return true; }
   return false;
@@ -410,7 +411,7 @@ function vesselStep(H){
   else if (S.jobs && S.jobs.length && b.status !== 'port') for (const j of S.jobs) if (crewJob(j)) jobWait(j);   // nobody free: it waits
   // the landing note comes when the catch is weighed in; the pump runs and the boat moves along the harbour
   if (b.land && S.t >= b.land.until) finishLanding();
-  if (b.status === 'port'){ quayMinute(); shoreTick(); }
+  if (b.status === 'port'){ quayMinute(); shoreTick(); havnMinute(); }
   else if (typeof careTick === 'function' && S.pgear) careTick();   // the crew's upkeep and gear talk at sea (10b-gearcare.js seaWork)
   opsStep(H);
   // planned departure
@@ -422,6 +423,7 @@ function vesselStep(H){
     else depart();
   }
   if (b.status === 'unmooring'){ if (S.t >= b.castUntil){ const pid = b.port, q = quayPos(b), kind = berthKind(b); b.pos = {x:q.x, y:q.y}; b.status = 'sailing'; b.port = null;
+      if (isBerth(pid)) havnFree(pid);   // a berth in a harbour is given up when she leaves it, unless it is her plan's home (07e-havn.js)
       // with the manoeuvring model running (the game open, 16b-dyn.js) she starts from the berth she lay at and backs out on the line
       const bp = typeof DYN !== 'undefined' && DYN.on && simRate() <= 12 && S.plan ? berthPose(pid, b.type || 'skiff', kind) || berthPose(pid, b.type || 'skiff') : null;
       if (bp){ b.pos = {x:bp.x, y:bp.y}; b.heading = bp.hd; DYN.dep = {bp, pid, naust:kind === 'naust'}; DYN.line = null; }
@@ -592,6 +594,7 @@ function dock(pid, berth){
   const b = S.boat, port = portById(pid); S.tripBuff = null; if (b.gop) gopAbort('dock');
   S.dockLog = (S.dockLog || []).concat([{t:S.t, pid, st:b.status}]).slice(-6);   // the last moorings, for «Sitter båten fast?» (unstuck)
   if (port.rorbu) rorbuSite(port);   // its berth is found before the boat is put there (07d-rorbu.js)
+  if (isBerth(pid)){ havnHold(pid); b.hvDay = null; }   // a berth in a harbour: hers while she lies there, the day's due paid (07e-havn.js)
   b.anch = null; b.status = 'port'; b.port = pid; b.v = 0; b.fishUntil = null; b.pos = {x:port.p.x, y:port.p.y}; b.moorT = S.t; b.shift = b.fueling = b.after = null;
   b.berth = berth === 'naust' && quayFace(pid, 'naust') ? 'naust' : 'main';   // a route can end at Father's naust (07c-naust.js)
   if (typeof achVisitPort === 'function') achVisitPort(pid);

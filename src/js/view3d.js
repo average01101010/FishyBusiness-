@@ -486,7 +486,35 @@ const G3 = (() => {
       else { const r = COAST3.top + Math.min(0, sd + fl) * (COAST.mole ? COAST3.gMole : COAST3.g); h = r > COAST3.deep ? r : Math.min(h, COAST3.deep); }
     }
     h = siteTerr(x, z, h);   // Father's naust and the Finnsnes shop (SITES)
+    if (BPIT.l.length) h = berthPit(x, z, h);
     return h > -3 && harbourNear(x, z) && inHarbourPocket({x:x / 1000, y:z / 1000}) ? -3 : h;   // the water in front of a quay (01-world.js)
+  }
+  // ---------- The water at the berths the company holds in the coast's harbours (core/07e-havn.js) ----------
+  // The packs' quay faces lie on the fine coast, and its bank (COAST3: 2 m over the sea at the line, down 1 in 3) would have the boat on
+  // the shore. In front of a held berth the ground goes down to 3 m under mean sea level (her draught and a metre if more), as in front
+  // of a designed quay (inHarbourPocket): out to her side and 6 m, along her length and 3 m at each end, and 4 m in under the quay's
+  // deck (kai_betong, kai_tre: drawDocks), so the step between the ground's points (4 m in the fine mesh) is under it and not in the
+  // water by her side. The held berths are looked at each frame (updateNear); when they change, the meshes round them are made again.
+  const BPIT = {k:'', l:[]};
+  function berthPits(){
+    const st = typeof S !== 'undefined' && S && S.havn; let k = '';
+    if (st) for (const id in st.s) if (st.s[id].vid && st.s[id].face) k += id + ',';
+    if (k === BPIT.k) return;
+    const was = BPIT.l; BPIT.k = k; BPIT.l = [];
+    if (st) for (const id in st.s){ const s = st.s[id], f = s.face; if (!s.vid || !f) continue;
+      const B = s.B || 3, a1 = s.L / 2 + 1 + 3, w = B + 6, r = Math.hypot(a1, w + 4) + 1, T = (VESSELS[s.vtype] || {}).draft || 1.5;
+      BPIT.l.push({x:f.x, z:f.z, ux:f.ux, uz:f.uz, nx:f.nx, nz:f.nz, a1, a0:s.L / 2 + 2, w, d:Math.max(3, T + 1), x0:f.x - r, x1:f.x + r, z0:f.z - r, z1:f.z + r}); }
+    // (the ground round the berths that came or went is made again: the terrain chunks within 700 m and the near and fine meshes)
+    const moved = was.filter(q => !BPIT.l.some(p => p.x === q.x && p.z === q.z)).concat(BPIT.l.filter(q => !was.some(p => p.x === q.x && p.z === q.z)));
+    if (!moved.length) return;
+    for (const [kk, c] of CH) if (moved.some(q => Math.hypot(c.x - q.x, c.z - q.z) < 700)){ freeChunk(c); CH.delete(kk); }
+    staleMesh('near'); staleMesh('fine');
+  }
+  function berthPit(x, z, h){
+    for (const q of BPIT.l){ if (x < q.x0 || x > q.x1 || z < q.z0 || z > q.z1) continue;
+      const dx = x - q.x, dz = z - q.z, a = Math.abs(dx * q.ux + dz * q.uz), n = dx * q.nx + dz * q.nz;
+      if (n <= q.w && (n >= 0 ? a <= q.a1 : n >= -4 && a <= q.a0)) return Math.min(h, -q.d); }
+    return h;
   }
   // ---------- Father's naust and the Finnsnes shop (tools/harbour/naust.py, butikk.py; where: core/07c-naust.js) ----------
   // Each a model set down at a quay face, in its frame: x along the face (s.u), out to sea s.n, y up from mean sea level. The naust
@@ -875,7 +903,7 @@ const G3 = (() => {
     meshTask('mid', MIDM && MIDM.gn === QUAL.midN[QUAL.lvl] ? MIDM : null, cx - span / 2, cz - span / 2, span, QUAL.midN[QUAL.lvl], null, (M, dirty) => { const old = MIDM; MIDM = M; MIDM.cx = cx; MIDM.cz = cz; MIDM.stale = dirty; shSeed(MIDM, old); if (old) freeMesh(old); });
   }
   function updateNear(){
-    stream3d(); nearWanted(); fineWanted(); updateMid(); updateFar(); meshStep(); tileStep(); if (LMJOB) lmStep();   // the near mesh first when more than one is due
+    berthPits(); stream3d(); nearWanted(); fineWanted(); updateMid(); updateFar(); meshStep(); tileStep(); if (LMJOB) lmStep();   // the near mesh first when more than one is due
   }
   function nearWanted(){
     const span = QUAL.near[QUAL.lvl][cam.dist > 1200 ? 1 : 0], snap = span / 10, cx = Math.round(bv.x / snap) * snap, cz = Math.round(bv.z / snap) * snap;
@@ -5195,7 +5223,7 @@ const G3 = (() => {
   function buildDocks(){
     DKM = false; if (typeof glbHas !== 'function' || !glbHas('brygge')) return;
     const up = nm => { const o = glbPart('brygge', nm); return o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null; };
-    DKM = {kar:up('landkar'), gang:up('landgang'), pon:up('ponton'), end:up('ponton_end'), boye:up('boye')};
+    DKM = {kar:up('landkar'), gang:up('landgang'), pon:up('ponton'), end:up('ponton_end'), boye:up('boye'), kaib:up('kai_betong'), ktre:up('kai_tre')};
     if (!DKM.pon || !DKM.gang) DKM = false;
   }
   function drawDocks(eye, t, VP){
@@ -5204,6 +5232,15 @@ const G3 = (() => {
     for (const tl of vecTilesIn(eye[0] - R, eye[2] - R, eye[0] + R, eye[2] + R)) for (const h of tl.npc || []) if (h.moorVer === MOOR.ver && Math.hypot(h.x * 1000 - eye[0], h.y * 1000 - eye[2]) < R + 500) H.push(h);
     if (!H.length) return; if (DKM === null) buildDocks(); if (!DKM) return;
     nSetup(VP); const tide = env.tide || 0;
+    // the berths the company holds along a quay face or the shore of a harbour (core/07e-havn.js): a quay front where she lies, in 6 m
+    // bays, its top 2.4 m over mean sea level: concrete at a quay (kai_betong: the face at z = 0, the deck back to z = -5), and a timber
+    // pier on piles along the shore for a boat under 15 m (kai_tre: 4.2 m wide about z = 0, so its middle 2.3 m in from the face); the
+    // piers are drawn already
+    if (DKM.kaib && typeof havnStore === 'function'){ const st = havnStore();
+      for (const id in st.s){ const s = st.s[id], f = s.face; if (!s.vid || !f || f.dock || !(f.kind === 2 || f.kind === 3) || Math.hypot(f.x - eye[0], f.z - eye[2]) > R) continue;
+        let yaw = Math.atan2(-f.uz, f.ux); if (-f.uz * f.nx + f.ux * f.nz < 0) yaw += Math.PI;
+        const tre = f.kind === 3 && s.L < 15 && DKM.ktre, M = tre ? DKM.ktre : DKM.kaib, bk = tre ? 2.3 : 0;
+        const n = Math.ceil((s.L + 4) / 6); for (let k = 0; k < n; k++){ const a = (k - (n - 1) / 2) * 6; drawN(M, model(f.x + f.ux * a - f.nx * bk - eye[0], -eye[1], f.z + f.uz * a - f.nz * bk - eye[2], yaw, 0, 0)); } } }
     for (const h of H){
       for (const d of h.docks || []){ const [ox, oz] = d.o, [nx, nz] = d.n; if (Math.hypot(ox - eye[0], oz - eye[2]) > R) continue;
         const yaw = Math.atan2(-nz, nx), fl = tide + FDOCK.FB, top = FDOCK.QTOP + 0.16, dh = top - fl, run = Math.sqrt(Math.max(1, FDOCK.GL * FDOCK.GL - dh * dh));

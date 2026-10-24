@@ -16,8 +16,9 @@ JS = """(async () => {
   S.marks.push({x:sea[0].x, y:sea[0].y, t:S.t - 300, kgph:52, q:1}, {x:sea[2].x, y:sea[2].y, t:S.t - 400, kgph:30, q:1});
   const page = () => PHONE.page('drift'), act = (a, d) => PHONE.dact('drift', a, d || {});
   R.intro = page().includes('dr-new');
-  // a new plan comes filled in: home where she lies, the rig she has, the best catch mark as the jig place
-  act('dr-new'); const o = S.ops; R.fresh = {v:o.v, home:o.home, rig:o.rig, jigs:o.jigs.length};
+  // a new plan comes filled in: home where the crew sleep well (at Husøy's plant that is the nearest rorbu; 05c-drift.js fresh), the rig she
+  // has, the best catch mark as the jig place
+  act('dr-new'); const o = S.ops; R.fresh = {v:o.v, home:o.home, rest:planRestOk(o.home), sleep:isRorbu(o.home) || o.home === (S.home || HOME0) || isBerth(o.home), rig:o.rig, jigs:o.jigs.length};
   const p1 = page(); R.rows = ['Hjem', 'Fiske', 'Plasser', 'Levering', 'Vær', 'Rytme', 'Mannskap'].every(k => p1.includes('>' + k + '<'));
   R.noSessions = !/Økter|Flere valg|Maler|Test planen/.test(p1);
   // the rows open where they are tapped
@@ -64,7 +65,7 @@ async def main():
         await boot(pg)
         r = await pg.evaluate(JS)
         print(json.dumps(r, ensure_ascii=False))
-        print(ok(r['intro'] and r['fresh']['v'] == 3 and r['fresh']['home'] == 'husoy' and r['fresh']['jigs'] == 1), 'a new plan comes filled in: home where she lies, the best catch mark as the jig place', r['fresh'])
+        print(ok(r['intro'] and r['fresh']['v'] == 3 and r['fresh']['rest'] and r['fresh']['sleep'] and r['fresh']['jigs'] == 1), 'a new plan comes filled in: home where the crew sleep well (a rorbu, the naust or a harbour berth), the best catch mark as the jig place', r['fresh'])
         print(ok(r['rows'] and r['noSessions']), 'one screen with the seven rows, and no sessions, routes, templates or «Flere valg»')
         print(ok(r['homeOpen'] and r['homeShut']), 'a row opens and shuts where it is tapped')
         print(ok(r['wx'] == 'safe' and r['watchOff'] and r['dep'] == 6), 'the weather, the rhythm (2+2 locked without four hands) and the hour out', [r['wx'], r['watchOff'], r['dep']])

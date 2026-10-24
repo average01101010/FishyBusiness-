@@ -48,6 +48,8 @@ function moorAll(p, r){
   for (const q of PORTS){ if (dist(p, q.p) > r + 0.5) continue; const bp = berthPose(q.id, t); take(q.id, q.name, q.p, bp ? Math.min(dist(p, bp), dist(p, q.p)) : dist(p, q.p), undefined, 'port'); }
   const nt = naustTarget(p, r); if (nt) take(nt.port, S.lang === 'en' ? 'the boathouse' : 'naustet', nt, dist(p, nt), 'naust', 'naust');
   for (const R of rorbuSites(p, r + 0.1)){ const bp = berthPose(R.id, t, 'main'); if (bp) take(R.id, (S.lang === 'en' ? 'the rorbu at ' : 'rorbua i ') + R.name, R.p, dist(p, bp), undefined, 'rorbu'); }
+  // a free berth in a harbour of the coast's packs (07e-havn.js): at a quay or a floating dock, before the plants (Jonas 23.10.2026)
+  if (typeof havnFind === 'function'){ const f = havnFind(p, r + 0.3, t); if (f){ const bp = berthPose(f.place.id, t, 'main'); if (bp) take(f.place.id, f.place.name, f.place.p, dist(p, bp), undefined, 'havn'); } }
   return out.sort((a, b) => a.d - b.d);
 }
 const moorNear = (p, r) => moorAll(p, r)[0] || null;
