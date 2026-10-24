@@ -490,7 +490,7 @@ const G3 = (() => {
       else { const r = COAST3.top + Math.min(0, sd + fl) * (COAST.mole ? COAST3.gMole : COAST3.g); h = r > COAST3.deep ? r : Math.min(h, COAST3.deep); }
     }
     h = siteTerr(x, z, h);   // Father's naust and the Finnsnes shop (SITES)
-    if (BPIT.l.length) h = berthPit(x, z, h);
+    if (BPIT.l.length || (NPIT.l.length && !NPIT.off)) h = berthPit(x, z, h);
     return h > -3 && harbourNear(x, z) && inHarbourPocket({x:x / 1000, y:z / 1000}) ? -3 : h;   // the water in front of a quay (01-world.js)
   }
   // ---------- The water at the berths the company holds in the coast's harbours (core/07e-havn.js) ----------
@@ -514,10 +514,37 @@ const G3 = (() => {
     for (const [kk, c] of CH) if (moved.some(q => Math.hypot(c.x - q.x, c.z - q.z) < 700)){ freeChunk(c); CH.delete(kk); }
     staleMesh('near'); staleMesh('fine');
   }
+  // The coast's own boats at their quay berths (05-vessels.js moorHarbour, 4.16b) stood on the same bank: there too the ground goes down,
+  // where it stands over -1.2 m under the hull, out to her side and 6 m and along her length and 3 m, and only 1.5 m in from the face
+  // (no quay of ours is drawn there). Their places are fixed again only when packs or coast indexes come (MOOR.ver), so the set changes
+  // rarely: it is looked at every 30th frame for the harbours within 2.5 km of the boat, and kept in 64 m cells.
+  const NPIT = {k:'', l:[], g:new Map(), off:false, n:0};
+  function npcPits(){
+    if (++NPIT.n % 30 || typeof MOOR === 'undefined' || !VEC.tiles.size) return;
+    const R = 2500, ex = bv.x, ez = bv.z, H = []; let k = MOOR.ver + ':';
+    for (const tl of vecTilesIn(ex - R, ez - R, ex + R, ez + R)) for (const h of tl.npc || []) if (h.moorVer === MOOR.ver && Math.hypot(h.x * 1000 - ex, h.y * 1000 - ez) < R){ H.push(h); k += Math.round(h.x * 1000) + ',' + Math.round(h.y * 1000) + ';'; }
+    if (k === NPIT.k) return;
+    const was = NPIT.l; NPIT.k = k; NPIT.l = []; NPIT.g = new Map(); NPIT.off = true;
+    for (const h of H) for (const b of h.boats){ const m = b.moored; if (!m || m.buoy || m.dock || m.none) continue;
+      const px = m.p.x * 1000, pz = m.p.y * 1000, sn = Math.sin(m.hd), cs = Math.cos(m.hd), B = b.B || 3, L = b.L || 10, o = B / 2 + 2;
+      if (terrRaw(px, pz) < -1.2) continue;
+      // (the face on the side with the bank: across her heading, the higher ground)
+      const sg = terrRaw(px + cs * o, pz + sn * o) > terrRaw(px - cs * o, pz - sn * o) ? 1 : -1, nx = -sg * cs, nz = -sg * sn, fx = px - nx * (B / 2 + 0.4), fz = pz - nz * (B / 2 + 0.4);
+      const a1 = L / 2 + 3, w = B + 6, r = Math.hypot(a1, w + 2) + 1;
+      NPIT.l.push({x:fx, z:fz, ux:sn, uz:-cs, nx, nz, a1, a0:L / 2 + 2, w, inl:1.5, d:Math.max(3, (b.T || 1.5) + 1), x0:fx - r, x1:fx + r, z0:fz - r, z1:fz + r}); }
+    NPIT.off = false;
+    for (const q of NPIT.l) for (let i = Math.floor(q.x0 / 64); i <= Math.floor(q.x1 / 64); i++) for (let j = Math.floor(q.z0 / 64); j <= Math.floor(q.z1 / 64); j++){ const c = i * 65536 + j; let L = NPIT.g.get(c); if (!L) NPIT.g.set(c, L = []); L.push(q); }
+    const moved = was.filter(q => !NPIT.l.some(p => p.x === q.x && p.z === q.z)).concat(NPIT.l.filter(q => !was.some(p => p.x === q.x && p.z === q.z)));
+    if (!moved.length) return;
+    for (const [kk, c] of CH) if (moved.some(q => Math.hypot(c.x - q.x, c.z - q.z) < 700)){ freeChunk(c); CH.delete(kk); }
+    staleMesh('near'); staleMesh('fine');
+  }
   function berthPit(x, z, h){
-    for (const q of BPIT.l){ if (x < q.x0 || x > q.x1 || z < q.z0 || z > q.z1) continue;
+    const pit = q => { if (x < q.x0 || x > q.x1 || z < q.z0 || z > q.z1) return false;
       const dx = x - q.x, dz = z - q.z, a = Math.abs(dx * q.ux + dz * q.uz), n = dx * q.nx + dz * q.nz;
-      if (n <= q.w && (n >= 0 ? a <= q.a1 : n >= -4 && a <= q.a0)) return Math.min(h, -q.d); }
+      return n <= q.w && (n >= 0 ? a <= q.a1 : n >= -(q.inl || 4) && a <= q.a0); };
+    for (const q of BPIT.l) if (pit(q)) return Math.min(h, -q.d);
+    if (!NPIT.off){ const L = NPIT.g.get(Math.floor(x / 64) * 65536 + Math.floor(z / 64)); if (L) for (const q of L) if (pit(q)) return Math.min(h, -q.d); }
     return h;
   }
   // ---------- Father's naust and the Finnsnes shop (tools/harbour/naust.py, butikk.py; where: core/07c-naust.js) ----------
@@ -907,7 +934,7 @@ const G3 = (() => {
     meshTask('mid', MIDM && MIDM.gn === QUAL.midN[QUAL.lvl] ? MIDM : null, cx - span / 2, cz - span / 2, span, QUAL.midN[QUAL.lvl], null, (M, dirty) => { const old = MIDM; MIDM = M; MIDM.cx = cx; MIDM.cz = cz; MIDM.stale = dirty; shSeed(MIDM, old); if (old) freeMesh(old); });
   }
   function updateNear(){
-    berthPits(); stream3d(); nearWanted(); fineWanted(); updateMid(); updateFar(); meshStep(); tileStep(); if (LMJOB) lmStep();   // the near mesh first when more than one is due
+    berthPits(); npcPits(); stream3d(); nearWanted(); fineWanted(); updateMid(); updateFar(); meshStep(); tileStep(); if (LMJOB) lmStep();   // the near mesh first when more than one is due
   }
   function nearWanted(){
     const span = QUAL.near[QUAL.lvl][cam.dist > 1200 ? 1 : 0], snap = span / 10, cx = Math.round(bv.x / snap) * snap, cz = Math.round(bv.z / snap) * snap;

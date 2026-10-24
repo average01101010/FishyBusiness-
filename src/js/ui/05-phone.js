@@ -482,6 +482,7 @@ const PHONE = (() => {
        ['Driftsplanen sier fra når båten ikke kan lande torsk, hyse og sei uten deg om bord, og at den fisker kveite med kveiteutstyr.', 'The operations plan tells you when the boat cannot land cod, haddock and saithe without you aboard, and that it fishes halibut with halibut gear.'],
        ['Båthandel viser hvilket utstyr som blir med den gamle båten ved innbytte.', 'The boat market shows which equipment goes with the old boat when you trade in.'],
        ['Fiskebåtene i Finnsnes ligger ikke lenger med skroget på land, og havnene i kartet har hvert sitt navn.', 'The fishing boats at Finnsnes no longer lie with the hull on land, and the harbours in the chart each have a name of their own.'],
+       ['Fiskebåtene langs kysten ligger i vannet ved kaia i 3D, ikke oppå stranda, og de går ikke lenger gjennom brygger og land på vei ut av havna.', 'The coast\'s fishing boats lie in the water at the quay in 3D, not on the shore, and no longer go through piers and land on their way out of the harbour.'],
        ['Kulden om bord regner med klærne til dem som er med på turen.', 'The cold aboard counts the clothes of those on the trip.']]],
     ['p137', '24.10.2026', 'Ferskhet og frysing', 'Freshness and freezing', [
        ['Iset fisk holder seg nå som i virkeligheten: ekstra kvalitet i to døgn, A til seks døgn og B til tolv. Turer over flere døgn lønner seg med is om bord.', 'Iced fish now keeps as it does in real life: extra quality for two days, A to six days and B to twelve. Trips of several days pay with ice aboard.'],
