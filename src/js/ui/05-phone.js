@@ -477,6 +477,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p138', '24.10.2026', 'Plassene i driftsplanen', 'The places in the operations plan', [
+       ['«Velg i kartet» i driftsplanen lager ikke lenger en rute. Trykket i kartet blir plassen til feltet eller juksplassen, og panelet med «Bruk plassen» kommer opp med en gang, også på telefonen. Trykker du igjen, flyttes plassen.', '«Choose in the chart» in the operations plan no longer makes a route. The tap in the chart becomes the place for the field or the jig place, and the panel with «Use the place» comes up at once, on the phone too. Tap again to move the place.']]],
     ['p137', '24.10.2026', 'Ferskhet og frysing', 'Freshness and freezing', [
        ['Iset fisk holder seg nå som i virkeligheten: ekstra kvalitet i to døgn, A til seks døgn og B til tolv. Turer over flere døgn lønner seg med is om bord.', 'Iced fish now keeps as it does in real life: extra quality for two days, A to six days and B to twelve. Trips of several days pay with ice aboard.'],
        ['Uiset fisk holder seg dårligere jo varmere det er. Om sommeren holder den ekstra kvalitet i rundt et halvt døgn, om vinteren lenger.', 'Fish that is not iced keeps worse the warmer it is. In summer it keeps extra quality for about half a day, in winter longer.'],

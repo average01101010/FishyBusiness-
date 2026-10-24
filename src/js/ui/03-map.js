@@ -633,6 +633,15 @@ if (window.visualViewport) visualViewport.addEventListener('resize', () => { if 
 function addWaypoint(pt){
   const b = S.boat;
   if (!tutAllow('waypoint')) return;
+  // a place for the operations plan (05c-drift.js pick): the tap is the place, not a route, wherever the boat is, and the panel with
+  // «Use the place» is opened on a phone, where it lay hidden under the chart (tilbakemelding #95)
+  if (DRIFTCTX && DRIFTCTX.spot){
+    if (isLandUI(pt)){ toast(t('on_land')); return; }
+    LEIA_ARM = false; S.draft = [{x:pt.x, y:pt.y, port:null, fish:0}];
+    if (window.innerWidth <= 700) document.body.classList.add('drawer');
+    if (tab !== 'route') setTab('route'); else panelDirty = true;
+    renderDyn(); renderRouteTools(); return;
+  }
   if (LEIA_ARM){ leiaTo(pt); return; }
   if (!['port', 'idle'].includes(b.status)){ toast(t('cant_plan')); return; }
   if (S.draft.length && S.draft[S.draft.length - 1].port){ toast(t('ends_port')); return; }
