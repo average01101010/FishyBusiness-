@@ -2,7 +2,7 @@
 window.PUBW = (() => {
   const el = document.createElement('div'); el.id = 'pubUI'; el.hidden = true; document.getElementById('mapwrap').appendChild(el);
   const L = (no, en) => S.lang === 'no' ? no : en, tot = PUB_WHEEL.reduce((a, w) => a + w[1], 0);
-  const COL = {tom:'#56636d', kveit:'#2f8f83', rykte:'#b0772b', haill:'#3fa34d', luksus:'#d4af37'}, LAB = {tom:'–', kveit:'Kveithaill', rykte:'Rykte', haill:'Haill', luksus:'★'};
+  const COL = {tom:'#56636d', rykte:'#b0772b', haill:'#3fa34d', luksus:'#d4af37'}, LAB = {tom:'–', rykte:'Rykte', haill:'Haill', luksus:'★'};
   let a0 = 0, spinning = false;
   const segs = PUB_WHEEL.map(([k, w]) => { const s0 = a0; a0 += w / tot * 360; return {k, s0, s1:a0}; });
   const arc = (s0, s1, r) => { const p = a => [Math.sin(a * Math.PI / 180) * r, -Math.cos(a * Math.PI / 180) * r], A = p(s0), B = p(s1); return 'M0,0 L' + A[0].toFixed(2) + ',' + A[1].toFixed(2) + ' A' + r + ',' + r + ' 0 ' + (s1 - s0 > 180 ? 1 : 0) + ',1 ' + B[0].toFixed(2) + ',' + B[1].toFixed(2) + ' Z'; };

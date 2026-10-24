@@ -384,7 +384,7 @@ function shopBuy(k, kg, free){
       return buyIce(kg, free) ? null : ['Isrenna er opptatt. Prøv igjen litt senere.', 'The ice chute is busy. Try again a little later.'];
     }
     b.ice += kg; pay(c);
-    log('Kjøpte ' + kg + ' kg is i sekker for ' + kr(c) + '. Butikken bar den om bord.', 'Bought ' + kg + ' kg of bagged ice for ' + kr(c) + '. The shop carried it aboard.');
+    log('Kjøpte ' + kg + ' kg is i sekker for ' + kr(c) + '. Mottaket bar den om bord.', 'Bought ' + kg + ' kg of bagged ice for ' + kr(c) + '. The plant carried it aboard.');
     if (c > 0) folkShop(); return null;
   }
   return ['Ukjent vare.', 'Unknown item.'];
