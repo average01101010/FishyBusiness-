@@ -98,7 +98,7 @@ async def main():
           const crew0 = S.crew; S.crew = [{id:'kz1', name:'Ola', fatigue:55}];
           const itc = pushItems(t0), cw = itc.find(x => x.tag.startsWith('crew-')), rt = itc.find(x => x.tag.startsWith('rest-')); S.crew = crew0; S.plan = null; b.status = 'port'; b.port = 'finnsnes';
           S.settings.pushCat = {drift:false, uke:true}; const off = pushItems(t0).length; S.settings.pushCat = null;
-          return {fresh:f && {min:(Date.parse(f.at) - t0) / 60000, body:f.body}, want:((90 - 85) / 0.9 * 60 - 120) / GAME_RATE, yard:yd && {min:(Date.parse(yd.at) - t0) / 60000, body:yd.body},
+          return {fresh:f && {min:(Date.parse(f.at) - t0) / 60000, body:f.body}, want:(keepHours(90, 85, 1) * 60 - 120) / GAME_RATE, yard:yd && {min:(Date.parse(yd.at) - t0) / 60000, body:yd.body},
             end:en && en.body, full:full && {min:(Date.parse(full.at) - t0) / 60000, body:full.body}, wantFull:left / 60 * 60 / GAME_RATE, rest:rest && {min:(Date.parse(rest.at) - t0) / 60000, body:rest.body}, wantRest:60 / rr / GAME_RATE,
             wx:wx && {min:(Date.parse(wx.at) - t0) / 60000, body:wx.body}, cw:cw && {min:(Date.parse(cw.at) - t0) / 60000, body:cw.body}, rt:rt && {min:(Date.parse(rt.at) - t0) / 60000, body:rt.body}, off}; })()""")
         fr, yd, en, fu, rs, wx = r.get('fresh') or {}, r.get('yard') or {}, r.get('end'), r.get('full') or {}, r.get('rest') or {}, r.get('wx') or {}

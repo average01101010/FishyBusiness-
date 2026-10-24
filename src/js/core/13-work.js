@@ -125,7 +125,7 @@ function stPlaces(st, ctx){
 // what has work now (the hauler waits while the boat is stopped to gut, so those on it go on deck: tilbakemelding #29). as = 'fishing': as if the boat were jigging where it lies (for the fishing effort outside the fishing minute)
 function workCtx(as){
   const b = S.boat, st = S.settings, s = as === 'fishing' ? 'fishing' : b.status, g = as === 'fishing' ? null : b.gop, stop = as === 'fishing' ? false : !!b.deckStop;
-  const icing = catchIce() && b.ice > 0.5, cg = catchGut(); let gut = 0, ice = 0, pend = 0;
+  const icing = iceReady(), cg = catchGut(); let gut = 0, ice = 0, pend = 0;
   for (const x of S.hold){ if (SPECIES[x.sp].live || x.iced) continue; if (cg && !x.gut) gut += x.kg; else if (icing) ice += x.kg; if ((cg && !x.gut) || icing) pend += x.kg; }
   const deck = s !== 'aground' && pend > 0.5, gk = g ? g.kind : null;
   // the icing station packs what is gutted into the crate or the tub and ices it as it comes from the table, so it has work while anything is
@@ -317,6 +317,7 @@ function idleText(p){
 // what a person does, for the work page: the station's word, or the part of it at the hauler
 function workDoing(p){ const no = S.lang === 'no'; if (p.role === 'plukk') return no ? 'Plukker og bløgger' : 'Picking and bleeding'; if (p.role === 'teine') return no ? 'Tømmer og egner teiner' : 'Emptying and baiting pots';
   if (p.st === 'pause' && p.idle){ const t = idleText(p); if (t) return t; }
+  if (p.st === 'is' && holdFreezes()) return no ? 'Pakker og fryser' : 'Packing and freezing';   // a freezer hold (05-vessels.js)
   return STATIONS[p.st].ing[no ? 0 : 1]; }
 // the people on a station and what they do there together: n, the sum of their efficiency for skill g, and the mean
 function workTeam(st, g, as){

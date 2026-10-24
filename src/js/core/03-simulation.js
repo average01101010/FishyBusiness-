@@ -654,6 +654,23 @@ function depthWater(p){
 function depthAt(p){ return Math.round(depthF(p)); }
 function depthModel(p){ return (2 + (13 + 220 * Math.pow(exposure(p), 1.6) + 25 * vn(p.x / 4 + p.y / 7, 5)) * Math.pow(sstep(0, 1.5, coastDistFar(p)), 0.6)); }
 function grade(f){ return f >= 85 ? 'E' : f >= 65 ? 'A' : f >= 40 ? 'B' : f >= 15 ? 'X' : 'V'; }
+// ---- How the catch keeps (D3 of the operations plan, Jonas 23.10.2026, svar 15a: calibrated against the sources) ----
+// Bled and gutted white fish in ice at 0 °C go through the four phases of Huss et al. (FAO Fisheries Technical Paper 348, 1995): fresh
+// 0-2 days, neutral 2-6, stale 6-12, spoiled 12-15; cod and haddock are condemned about 16 days after the catch (FAO), and whole cod
+// on ice keep 11-14 days by the sensory panels (Matís). The grades follow the phases: E to 2 days, A to 6, B to 12, X to 16, then V.
+// Warmer keeps worse by the relative rate of spoilage (1 + 0.1 T)², T °C (FAO, the square root model; packed cod 14 days at 0 °C and
+// 6 at 5 °C): fish not iced lie between the sea's and the air's temperature. In chilled sea water (RSW) the fish keep as in ice; frozen
+// aboard (a freezer hold) they keep the grade they had. Unbled fish keep twice as badly (the game's: the quality rules want the fish
+// bled, and Råfisklaget's minimum prices are for well bled fish, the price of poorly bled fish may be cut by up to 40 %).
+const KEEP = {d:[0, 2, 6, 12, 16, 20], f:[100, 85, 65, 40, 15, 0]};
+// freshness as days in ice, and back
+function keepDay(f){ const {d, f:F} = KEEP; for (let i = 1; i < F.length; i++) if (f >= F[i]) return d[i - 1] + (F[i - 1] - f) / (F[i - 1] - F[i]) * (d[i] - d[i - 1]); return d[d.length - 1]; }
+function keepF(day){ const {d, f:F} = KEEP; for (let i = 1; i < d.length; i++) if (day <= d[i]) return F[i - 1] + (F[i] - F[i - 1]) * (day - d[i - 1]) / (d[i] - d[i - 1]); return 0; }
+// days in ice a day of x is worth here: 0 frozen, 1 iced, more on deck in the warmth (rrs: (1 + 0.1 T)² where the boat is)
+const keepRRS = (H, p) => { const T = Math.max(0, (seaTemp(H, p) + airTemp(H, p)) / 2); return (1 + 0.1 * T) * (1 + 0.1 * T); };
+function keepK(x, rrs){ return x.frozen ? 0 : (x.iced ? 1 : rrs) * (x.bled ? 1 : 2); }
+// hours until fresh fish at f with k ice days a day are down to f2
+function keepHours(f, f2, k){ return k > 0 ? Math.max(0, keepDay(f2) - keepDay(f)) * 24 / k : Infinity; }
 // days with few boats out give slightly higher prices; 2025 showed almost no link between local volume and price, so the effect is small
 function supplyFactor(H){
   const H0 = Math.floor(H / 24) * 24 + 1; let good = 0, n = 0;

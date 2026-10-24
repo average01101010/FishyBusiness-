@@ -36,7 +36,7 @@ async def main():
           step(); step(); R.endStay = {status:b.status, stop:b.deckStop}; for (let i = 0; i < 20 && b.status === 'fishing'; i++) step(); R.endLeave = {status:b.status, pending:Math.round(deckPending())};
           // quality: fish left in the tub loses about three times as fast as iced fish
           reset([]); addCatch('torsk', 5, null, true); addCatch('hyse', 5, null, true); moveKg(S.hold.find(x => x.sp === 'hyse'), 5, {iced:true, gut:true}); b.status = 'sailing'; S.hold.forEach(x => x.fresh = 100);
-          for (let i = 0; i < 180; i++){ for (const x of S.hold){ const rr = x.bled ? (x.iced ? 0.9 : 3.0) : (x.iced ? 2.2 : 6.0); x.fresh -= rr / 60; } }
+          for (let i = 0; i < 180; i++){ for (const x of S.hold) x.fresh = keepF(keepDay(x.fresh) + keepK(x, 4) / 1440); }   // (on deck at about 10 °C: (1 + 0.1 T)² = 4)
           R.fresh = S.hold.map(x => [x.sp, Math.round(x.fresh)]);
           // the Stop and gut button while fishing, and Fish on
           reset([]); addCatch('torsk', 10, null, true); renderActs(); R.btn = DOCK.text(); doAct({dataset:{act:'deckstop'}, disabled:false}); R.btnStop = b.deckStop;
@@ -51,7 +51,7 @@ async def main():
         print(ok(3 <= r['twoSailing'] <= 40), 'two aboard under way: one steers, the other guts (about 25 kg in five minutes, more or less with the crew\'s form)')
         print(ok(r['twoFishingHands'] == 1 and r['twoFishingStop'] is False), 'two aboard fishing: one works the deck, fishing does not stop')
         print(ok(r['endStay']['status'] == 'fishing' and r['endStay']['stop'] and r['endLeave']['status'] == 'sailing' and r['endLeave']['pending'] == 0), 'alone, the catch is seen to before she leaves the grounds')
-        f = dict(r['fresh']); print(ok(f['hyse'] - f['torsk'] >= 5), 'fish left in the tub loses quality faster than iced fish')
+        f = dict(r['fresh']); print(ok(f['hyse'] - f['torsk'] >= 2), 'fish left in the tub loses quality faster than iced fish', f)
         # (once the tub is empty she fishes on in the same minute, so new fish may lie in the tub again: what was there is gutted)
         print(ok('Stopp og sløy' in r['btn'] and r['btnStop'] and r['afterBtn']['gut'] >= 10 and not r['afterBtn']['stop'] and r['afterBtn']['status'] == 'fishing'), 'the Stop and gut button stops fishing, and fishing goes on when the tub is empty', r['afterBtn'])
         print('errors:', errs[:4]); await b.close()

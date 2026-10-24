@@ -477,6 +477,10 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p137', '24.10.2026', 'Ferskhet og frysing', 'Freshness and freezing', [
+       ['Iset fisk holder seg nå som i virkeligheten: ekstra kvalitet i to døgn, A til seks døgn og B til tolv. Turer over flere døgn lønner seg med is om bord.', 'Iced fish now keeps as it does in real life: extra quality for two days, A to six days and B to twelve. Trips of several days pay with ice aboard.'],
+       ['Uiset fisk holder seg dårligere jo varmere det er. Om sommeren holder den ekstra kvalitet i rundt et halvt døgn, om vinteren lenger.', 'Fish that is not iced keeps worse the warmer it is. In summer it keeps extra quality for about half a day, in winter longer.'],
+       ['Skip med fryserom fryser fangsten om bord, og fryst fisk holder kvaliteten. Ringnotskipet kjøler fangsten i tankene idet den kommer om bord. Fryst fisk betales som fersk av samme kvalitet og står som fryst på sluttseddelen.', 'Ships with a freezer hold freeze the catch aboard, and frozen fish keeps its quality. The purse seiner chills the catch in its tanks as it comes aboard. Frozen fish is paid as fresh of the same quality and is marked frozen on the landing note.']]],
     ['p136', '24.10.2026', 'Liggeplass i havnene', 'A berth in the harbours', [
        ['Båten kan ligge ved kai eller flytebrygge i havnene langs hele kysten, på en ledig plass som passer båten og har vann nok ved fjære sjø. Havnene står i kartet, og Fortøy og Autonav tar deg helt inn til plassen.', 'The boat can lie at a quay or a floating dock in the harbours along the whole coast, at a free berth that fits her and has water enough at low tide. The harbours are in the chart, and Moor and Autonav take you all the way in to the berth.'],
        ['Plassen er din mens båten ligger der, eller når den er hjemmet i driftsplanen, og ingen andre spillere får den. Havneavgiften trekkes per døgn etter båtens lengde.', 'The berth is yours while the boat lies there, or while it is the home of the operations plan, and no other player gets it. The harbour due is drawn per day by the length of the boat.'],
@@ -1551,7 +1555,7 @@ const PHONE = (() => {
     if (b.status === 'engine') A('eng', 'Motorstopp', 'Engine stopped', 'redning');
     if (b.status === 'adrift') A('drift', 'Driver uten drivstoff', 'Adrift without fuel', 'redning');
     if (b.fuel < BOAT.fuelCap * 0.2) A('fuel', 'Lite drivstoff, ' + fmt(b.fuel, 0) + ' L', 'Low on fuel, ' + fmt(b.fuel, 0) + ' L', 'beholdning:boat');
-    if (b.status !== 'port' && catchIce() && b.ice < 1 && holdTotal() > 0) A('ice', 'Tom for is, fangsten ises ikke', 'Out of ice, the catch is not iced', 'beholdning:last');
+    if (b.status !== 'port' && catchIce() && !holdFreezes() && b.ice < 1 && holdTotal() > 0) A('ice', 'Tom for is, fangsten ises ikke', 'Out of ice, the catch is not iced', 'beholdning:last');
     if (b.status !== 'port' && holdTotal() >= capHold() - 1) A('full', 'Full last', 'Hold full', 'beholdning:last');
     if (svcOverdue() > 0) A('svc', 'Motorservice er forfalt', 'Engine service overdue', 'verksted');
     if (S.cevt) A('cevt', 'Uløst krangel om bord', 'Unresolved quarrel aboard', 'mannskap');

@@ -118,8 +118,8 @@ function bookSales(){
     for (const sp of Object.keys(bySp)){
       const sd = SPECIES[sp];
       h += '<div class="bk-sp"><span class="bk-sn">' + spName(sp) + '</span><span class="bk-fish">' + BKFISH(sp) + '</span></div><table class="lg bk-st"><thead><tr><th>' + BKL('Størrelse', 'Size') + '</th><th>' + BKL('Kv.', 'Gr.') + '</th><th>' + BKL('Kr/kg', 'NOK/kg') + '</th><th>' + BKL('Sløyd', 'Gutted') + '</th><th>' + BKL('Ant.', 'No.') + '</th><th>kg</th><th>' + BKL('Beløp', 'Amount') + '</th></tr></thead><tbody>';
-      for (const [, c, g, gut, kg, sum, n] of bySp[sp]){ const cl = sd && sd.cls[c], wk = gut && sd ? kg / sd.uh : kg; sumKr += sum; sumKg += Math.round(wk); sumN += n || 0;
-        h += '<tr><td>' + (cl ? cl[2] : '') + '</td><td>' + g + '</td><td>' + fmt(sum / Math.max(wk, 0.01), 2) + '</td><td>' + (gut ? BKL('ja', 'yes') : '–') + '</td><td>' + (n ? fmt(n, 0) : '–') + '</td><td>' + fmt(Math.round(wk), 0) + '</td><td>' + fmt(sum, 0) + '</td></tr>'; }
+      for (const [, c, g, gut, kg, sum, n, fz] of bySp[sp]){ const cl = sd && sd.cls[c], wk = gut && sd ? kg / sd.uh : kg; sumKr += sum; sumKg += Math.round(wk); sumN += n || 0;
+        h += '<tr><td>' + (cl ? cl[2] : '') + '</td><td>' + g + (fz ? BKL(' fryst', ' frozen') : '') + '</td><td>' + fmt(sum / Math.max(wk, 0.01), 2) + '</td><td>' + (gut ? BKL('ja', 'yes') : '–') + '</td><td>' + (n ? fmt(n, 0) : '–') + '</td><td>' + fmt(Math.round(wk), 0) + '</td><td>' + fmt(sum, 0) + '</td></tr>'; }
       h += '</tbody></table>';
     }
     const row = (a, b, cls) => '<div class="bk-row' + (cls ? ' ' + cls : '') + '"><span>' + a + '</span><span class="hw">' + b + '</span></div>';

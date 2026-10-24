@@ -112,10 +112,11 @@ function pushItems(now){
     }
     // fish in the hold about to drop a grade (not while she is on her way in: that is the line above), two game hours before
     if (kg > 20 && !(P && P.idx < P.wps.length) && !(O && O.on)){
-      const clean = 1; let best = null;
-      for (const x of S.hold){ if (x.kg < 20 || SPECIES[x.sp].live) continue;
-        const r = (x.bled ? (x.iced ? 0.9 : 3.0) : (x.iced ? 2.2 : 6.0)) * clean, f = x.fresh, nx = f >= 85 ? 85 : f >= 65 ? 65 : f >= 40 ? 40 : f >= 15 ? 15 : null;
-        if (nx == null || r <= 0) continue; const T = S.t + (f - nx) / r * 60 - 120;
+      let best = null, rrs = null;
+      for (const x of S.hold){ if (x.kg < 20 || SPECIES[x.sp].live || x.frozen) continue;
+        const f = x.fresh, nx = f >= 85 ? 85 : f >= 65 ? 65 : f >= 40 ? 40 : f >= 15 ? 15 : null; if (nx == null) continue;
+        if (!x.iced && rrs === null) rrs = keepRRS(S.t / 60, b.pos);
+        const h = keepHours(f, nx, keepK(x, rrs)); if (!isFinite(h)) continue; const T = S.t + h * 60 - 120;
         if (!best || T < best.T) best = {T, g:grade(f), g2:grade(nx - 0.01)}; }
       if (best) add(Math.max(S.t, best.T), 'fresh-' + tag, nm, 'Fisken i lasterommet går snart ned fra ' + best.g + '- til ' + best.g2 + '-kvalitet. Lever den nå, så får du bedre betalt.',
         'The fish in the hold will soon drop from grade ' + best.g + ' to ' + best.g2 + '. Land it now and you are paid better.', 2, 2);

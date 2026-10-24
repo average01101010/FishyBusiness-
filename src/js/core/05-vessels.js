@@ -395,7 +395,11 @@ function vesselStep(H){
   const clean = 1;
   const WA = workMinute();
   const kar = S.equip && S.equip.krabbekar;
-  for (const x of S.hold){ const r = SPECIES[x.sp].live ? (kar ? 0.4 : 2.5) : x.bled ? (x.iced ? 0.9 : 3.0) : (x.iced ? 2.2 : 6.0); x.fresh = Math.max(0, x.fresh - r * clean / 60); }
+  // (live crab by its own rates; the fish as KEEP: a day in ice a day when iced, faster on deck in the warmth, not at all frozen)
+  let rrs = null;
+  for (const x of S.hold){ if (SPECIES[x.sp].live){ x.fresh = Math.max(0, x.fresh - (kar ? 0.4 : 2.5) * clean / 60); continue; }
+    if (x.frozen) continue; if (!x.iced && rrs === null) rrs = keepRRS(H, b.pos);
+    x.fresh = Math.max(0, keepF(keepDay(x.fresh) + keepK(x, rrs) * clean / 1440)); }
   iceMinute(); deckMinute();
   // a leak, the bilge pump, the water aboard (Fysikk 3, 16c-hull.js): every minute, also under tow and in port
   if (typeof hullMinute === 'function') hullMinute();
@@ -715,8 +719,9 @@ function addCatch(sp, kg, cls, hook, opt){
   achCatch(sp, cls);   // «Storfisken» (09f-merker.js)
   recCatch(sp, kg, opt && opt.how);   // the personal records (09b-records.js)
   for (const c of crewAboard(null, true)) c.trip = 1;   // aboard for this catch: a share of it at the landing, or when let go before it (crewSettle)
-  const bled = true, iced = false, gut = false, hr = Math.floor(S.t / 60), start = opt && opt.fresh != null ? opt.fresh : 100; hook = hook !== false;
-  let x = S.hold.find(h => h.sp === sp && h.cls === cls && h.bled === bled && h.iced === iced && h.hr === hr && !!h.gut === gut && h.hook === hook);
+  // (into chilled sea water the catch is chilled as it comes aboard: an RSW hold)
+  const bled = true, iced = holdRSW() && !SPECIES[sp].live, gut = false, hr = Math.floor(S.t / 60), start = opt && opt.fresh != null ? opt.fresh : 100; hook = hook !== false;
+  let x = S.hold.find(h => h.sp === sp && h.cls === cls && h.bled === bled && h.iced === iced && !h.frozen && h.hr === hr && !!h.gut === gut && h.hook === hook);
   if (!x){ x = {sp, cls, kg:0, n:0, bled, iced, hr, fresh:start, gut, hook}; S.hold.push(x); }
   x.n = (x.n || 0) + 1;
   x.fresh = (x.fresh * x.kg + start * kg) / (x.kg + kg); x.kg += kg;
@@ -726,21 +731,26 @@ function addCatch(sp, kg, cls, hook, opt){
 // Alone you cannot gut while you steer or fish: fishing stops when the bleeding tub is full, or when you ask, and by default the catch
 // is seen to before you leave the grounds. With two or more, one steers or fishes while the others work the deck.
 const DECK = {gut:5, ice:800 / 60};
+// the hold (VESSELS hold.kind): a freezer hold freezes what the crew put down, at the icing's pace and with no ice (plate freezers);
+// chilled sea water (RSW) chills the catch as it comes aboard
+const holdFreezes = () => !!(BOAT.hold && BOAT.hold.kind === 'frys');
+const holdRSW = () => !!(BOAT.hold && BOAT.hold.kind === 'rsw');
+const iceReady = () => catchIce() && (holdFreezes() || S.boat.ice > 0.5);
 const tubCap = () => BOAT.tubCap || 150;
 const handsAboard = () => (meAboard() ? 1 : 0) + crewAboard().length;
 // the hands at the gutting and icing stations (core/13-work.js): under way one steers, fishing they follow their chains
 function deckHands(){ return workAssign().filter(p => p.st === 'sloy' || p.st === 'is').length; }
 // what is still to be done: gutting (when the catch is gutted on board) and icing (when there is ice)
 // live crab is kept wet in tubs: it is neither gutted nor iced
-function deckPending(){ const cg = catchGut(), icing = catchIce() && S.boat.ice > 0.5; return S.hold.reduce((a, x) => a + (!SPECIES[x.sp].live && ((cg && !x.gut && !x.iced) || (icing && !x.iced)) ? x.kg : 0), 0); }
+function deckPending(){ const cg = catchGut(), icing = iceReady(); return S.hold.reduce((a, x) => a + (!SPECIES[x.sp].live && ((cg && !x.gut && !x.iced) || (icing && !x.iced)) ? x.kg : 0), 0); }
 function deckEta(hands){
-  const cg = catchGut(), icing = catchIce() && S.boat.ice > 0.5, e = hands ? workTeam(['sloy', 'is'], 'sloy').sum : 0; if (!e) return Infinity;
+  const cg = catchGut(), icing = iceReady(), e = hands ? workTeam(['sloy', 'is'], 'sloy').sum : 0; if (!e) return Infinity;
   let m = 0; for (const x of S.hold){ if (SPECIES[x.sp].live) continue; if (cg && !x.gut && !x.iced) m += x.kg / DECK.gut; if (icing && !x.iced) m += x.kg / DECK.ice; } return m / e;
 }
 // move kg of a hold entry into the entry with the new state (gutted, iced), keeping its freshness
 function moveKg(x, kg, patch){
   if (kg <= 0.001) return; const y0 = {...x, ...patch}, n = (x.n || 0) * kg / x.kg;
-  let y = S.hold.find(h => h !== x && h.sp === y0.sp && h.cls === y0.cls && h.bled === y0.bled && h.iced === y0.iced && h.hr === y0.hr && !!h.gut === !!y0.gut && h.hook === y0.hook);
+  let y = S.hold.find(h => h !== x && h.sp === y0.sp && h.cls === y0.cls && h.bled === y0.bled && h.iced === y0.iced && !!h.frozen === !!y0.frozen && h.hr === y0.hr && !!h.gut === !!y0.gut && h.hook === y0.hook);
   if (!y){ y = {...y0, kg:0, n:0}; S.hold.push(y); }
   y.fresh = (y.fresh * y.kg + x.fresh * kg) / (y.kg + kg); y.kg += kg; y.n = (y.n || 0) + n; x.kg -= kg; x.n = (x.n || 0) - n;
   if (x.kg < 0.01) S.hold.splice(S.hold.indexOf(x), 1);
@@ -755,10 +765,12 @@ function deckMinute(){
   let pm = G.sum + (G.n && BOAT.gutMachine ? BOAT.gutMachine / 60 / DECK.gut : 0), worked = 0;
   if (cg) for (const x of S.hold.filter(x => !x.gut && !x.iced && !SPECIES[x.sp].live)){ if (pm <= 0.001) break; const kg = Math.min(x.kg, pm * DECK.gut); moveKg(x, kg, {gut:true}); pm -= kg / DECK.gut; worked += kg; }
   pm = Math.min(pm, G.sum) + I.sum;   // the gutters ice what they have gutted once the gutting is done
+  const fz = holdFreezes();
   if (catchIce()) for (const x of S.hold.filter(x => !x.iced && (x.gut || !cg) && !SPECIES[x.sp].live)){
-    if (pm <= 0.001) break; const kg = Math.min(x.kg, pm * DECK.ice, b.ice / (0.3 * ((BOAT.fx && BOAT.fx.ice) || 1)));
+    if (pm <= 0.001) break; const kg = Math.min(x.kg, pm * DECK.ice, fz ? Infinity : b.ice / (0.3 * ((BOAT.fx && BOAT.fx.ice) || 1)));
     if (kg <= 0.01){ if (S.t - (S.lastIceWarn || -1e9) > 120){ log('Tom for is. Fangsten ises ikke.', 'Out of ice. The catch is not being iced.'); S.lastIceWarn = S.t; } break; }
-    moveKg(x, kg, {iced:true}); b.ice -= kg * 0.3 * ((BOAT.fx && BOAT.fx.ice) || 1); pm -= kg / DECK.ice; worked += kg;
+    if (fz) moveKg(x, kg, {iced:true, frozen:true}); else { moveKg(x, kg, {iced:true}); b.ice -= kg * 0.3 * ((BOAT.fx && BOAT.fx.ice) || 1); }
+    pm -= kg / DECK.ice; worked += kg;
   }
   // your own minutes on deck; when the deck was last worked (the crew's break: a deck to scrub, 13-work.js idleEnv); now and then a mistake (14-crewlife.js crewSlip)
   if (worked > 0 && (G.me || I.me)) S.deckMe = (S.deckMe || 0) + 1;

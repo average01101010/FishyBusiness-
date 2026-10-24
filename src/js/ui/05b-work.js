@@ -6,7 +6,7 @@ const WORK = (() => {
   let card = null;   // the person whose card is open
   const SHORT = {ror:['Ror', 'Helm'], fiske:['Fiske', 'Fish'], haling:['Haling', 'Haul'], blogg:['Bløgging', 'Bleed'], sort:['Krabbe', 'Crab'], sloy:['Sløying', 'Gut'], is:['Ising', 'Ice'], kokk:['Kokk', 'Cook'],
     egn:['Egning', 'Bait'], strip:['Rensing', 'Strip'], mend:['Bøting', 'Mend'], stell:['Vedlikehold', 'Upkeep'], last:['Last', 'Cargo'], pause:['Pause', 'Break']};
-  const sn = k => L(SHORT[k][0], SHORT[k][1]);
+  const sn = k => k === 'is' && holdFreezes() ? L('Frysing', 'Freeze') : L(SHORT[k][0], SHORT[k][1]);
   // the first name, with the surname's initial when two aboard share it
   const first = p => { if (!p.c) return L('Du', 'You'); const n = p.c.name.split(' '); return S.crew.some(c => c !== p.c && c.name.split(' ')[0] === n[0]) ? n[0] + ' ' + n[n.length - 1][0] + '.' : n[0]; };
   const pid = c => c ? c.id : 'me';

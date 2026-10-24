@@ -90,8 +90,9 @@ panel.addEventListener('change', panelChange);
 // over its limits): the share of each species. Apart from sell() so the quay can show it before you land (R4); q is not changed
 function landConf(H, q, acc){
   const kgOf = sp => S.hold.filter(x => x.sp === sp).reduce((a, x) => a + x.kg, 0), wk = weekOfH(H), ffTot = q.ffW === wk ? q.ffTot : 0, ffCod = q.ffW === wk ? q.ffCod : 0;
-  // the fresh-fish allowance counts fish only (assumed: shellfish do not count)
-  const saleKg = S.hold.reduce((a, x) => a + (SPECIES[x.sp].shell || (x.sp === 'hyse' && x.cls === 2) ? 0 : grade(x.fresh) === 'V' ? 0 : x.kg), 0);
+  // the fresh-fish allowance counts fish only (assumed: shellfish do not count), and fresh fish only (J-161-2026 § 25: the fresh landings;
+  // fish frozen aboard is not fresh)
+  const saleKg = S.hold.reduce((a, x) => a + (SPECIES[x.sp].shell || x.frozen || (x.sp === 'hyse' && x.cls === 2) ? 0 : grade(x.fresh) === 'V' ? 0 : x.kg), 0);
   const codKg = kgOf('torsk'), confBy = {};   // share of each species that is confiscated
   let codFF = 0, codQ = 0, codConf = 0, byCod = 0;
   if (acc === 'none'){
@@ -102,8 +103,8 @@ function landConf(H, q, acc){
     if (codConf > 0.001) confBy.torsk = codConf / codKg;
   } else {
     // cod: the fresh-fish allowance first, then the quota; the rest is confiscated by the sales organisation
-    const pct = ffPct(H), ffAllow = pct ? Math.max(0, pct * (ffTot + saleKg) - ffCod) : 0;
-    codFF = Math.min(codKg, ffAllow); codQ = Math.min(codKg - codFF, codRoom(H)); codConf = codKg - codFF - codQ;
+    const pct = ffPct(H), ffAllow = pct ? Math.max(0, pct * (ffTot + saleKg) - ffCod) : 0, codFresh = S.hold.reduce((a, x) => a + (x.sp === 'torsk' && !x.frozen ? x.kg : 0), 0);
+    codFF = Math.min(codFresh, ffAllow); codQ = Math.min(codKg - codFF, codRoom(H)); codConf = codKg - codFF - codQ;
     if (codKg > 0 && codConf > 0) confBy.torsk = codConf / codKg;
     // the closed group's haddock and saithe: the maximum quota, then up to 30 % haddock and 20 % saithe as bycatch in each landing
     // (J-161-2026 §§ 18 and 19); the rest is confiscated
@@ -137,8 +138,8 @@ function sell(){
     const keptKg = x.kg * (1 - cs);
     if (v > 0) for (const o of ordState().active){ if (o.port !== port.id || o.sp !== sp || o.left <= 0.01 || !gradeOk(g, o.q)) continue; const take = Math.min(keptKg - (x._used || 0), o.left); if (take <= 0.01) continue;
       x._used = (x._used || 0) + take; o.left -= take; const add = take / keptKg * v * o.prem; ordKr += add; o.saleKg = (o.saleKg || 0) + take; o.saleKr = (o.saleKr || 0) + add; }
-    const k = sp + '|' + c + '|' + g + '|' + (x.gut ? 1 : 0);
-    lines[k] = lines[k] || {sp, c, g, gut:!!x.gut, kg:0, sum:0, n:0}; lines[k].kg += x.kg; lines[k].sum += gross; lines[k].n += x.n || 0; kg += x.kg;
+    const k = sp + '|' + c + '|' + g + '|' + (x.gut ? 1 : 0) + (x.frozen ? '|f' : '');
+    lines[k] = lines[k] || {sp, c, g, gut:!!x.gut, fz:!!x.frozen, kg:0, sum:0, n:0}; lines[k].kg += x.kg; lines[k].sum += gross; lines[k].n += x.n || 0; kg += x.kg;
     // liver and roe from fish gutted on board
     if (x.gut && sd.liver){ const m = gDate(H).getUTCMonth(), roeF = sp === 'torsk' && m <= 3 ? 0.04 : 0.01;
       extra.push(['lever', x.kg * 0.05, sd.liver]); extra.push(['rogn', x.kg * roeF, sd.roe]); }
@@ -192,7 +193,7 @@ function sell(){
   const fs = S.marks.length ? S.marks[S.marks.length - 1] : null, field = fieldCode(S.fsess || fs || b.pos);
   // the whole landing note goes with the sale, for the deck log's Salg tab (ui/06b-book-tabs.js)
   S.saleSeq = (S.saleSeq || 0) + 1;
-  const det = {id:S.saleSeq, ln:arr.map(r => [r.sp, r.c, r.g, r.gut ? 1 : 0, Math.round(r.kg * 10) / 10, r.sum, Math.round(r.n || 0)]), ex:Object.fromEntries(Object.entries(ex).map(([n, v]) => [n, [Math.round(v.kg * 10) / 10, v.sum]])),
+  const det = {id:S.saleSeq, ln:arr.map(r => [r.sp, r.c, r.g, r.gut ? 1 : 0, Math.round(r.kg * 10) / 10, r.sum, Math.round(r.n || 0)].concat(r.fz ? [1] : [])), ex:Object.fromEntries(Object.entries(ex).map(([n, v]) => [n, [Math.round(v.kg * 10) / 10, v.sum]])),
     st:[stPct, stKr], ord:ordKr, conf:[Math.round(confKg), confKr, Math.round(crabSmall * 10) / 10, crabKr], roe:roeCut, crew:aboardNow.map(c => [c.name, c.share]), lott, fine:0, tk:[tk.lag, tk.pens, tk.prod, tk.forsk, tk.ress, tk.ktrl], mva};
   folkSold(port.id, kg);   // the plant's manager keeps count (09d-folk.js)
   S.sales.push({t:S.t, v:S.cur, port:port.id, kg:Math.round(kg), total, sp:ALLSP.map(sp => [sp, Math.round(arr.filter(r => r.sp === sp).reduce((a, r) => a + r.kg, 0))]).filter(r => r[1] > 0), d:det}); if (S.sales.length > 200) S.sales.shift();
