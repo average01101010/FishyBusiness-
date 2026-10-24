@@ -477,6 +477,12 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p138', '24.10.2026', 'Rettelser', 'Fixes', [
+       ['Ruta kan avsluttes ved å trykke på havnas navn i kartet, også havna du startet fra. Et trykk ved havna tar ikke lenger utseilingspunktet.', 'A route can be ended by tapping the harbour\'s name in the chart, also the harbour you set out from. A tap by the harbour no longer takes the way-out point.'],
+       ['Driftsplanen sier fra når båten ikke kan lande torsk, hyse og sei uten deg om bord, og at den fisker kveite med kveiteutstyr.', 'The operations plan tells you when the boat cannot land cod, haddock and saithe without you aboard, and that it fishes halibut with halibut gear.'],
+       ['Båthandel viser hvilket utstyr som blir med den gamle båten ved innbytte.', 'The boat market shows which equipment goes with the old boat when you trade in.'],
+       ['Fiskebåtene i Finnsnes ligger ikke lenger med skroget på land, og havnene i kartet har hvert sitt navn.', 'The fishing boats at Finnsnes no longer lie with the hull on land, and the harbours in the chart each have a name of their own.'],
+       ['Kulden om bord regner med klærne til dem som er med på turen.', 'The cold aboard counts the clothes of those on the trip.']]],
     ['p137', '24.10.2026', 'Ferskhet og frysing', 'Freshness and freezing', [
        ['Iset fisk holder seg nå som i virkeligheten: ekstra kvalitet i to døgn, A til seks døgn og B til tolv. Turer over flere døgn lønner seg med is om bord.', 'Iced fish now keeps as it does in real life: extra quality for two days, A to six days and B to twelve. Trips of several days pay with ice aboard.'],
        ['Uiset fisk holder seg dårligere jo varmere det er. Om sommeren holder den ekstra kvalitet i rundt et halvt døgn, om vinteren lenger.', 'Fish that is not iced keeps worse the warmer it is. In summer it keeps extra quality for about half a day, in winter longer.'],

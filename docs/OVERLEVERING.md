@@ -4144,16 +4144,10 @@ Gjennomgått punkt for punkt mot koden, git-loggen og feilloggen 24.10.2026. Det
 ### 10.1 Feil som skal rettes
 
 - **NPC-båtene ved vec-kaiene står på strandskråningen i 3D** (24.10.2026): kaifrontene ligger på den fine kystlinja, og `COAST3` gir 2 m over sjøen ved linja, ned 1 på 3, så bakken står rundt +1,3 til +1,9 m der skroget ligger. Spillerens holdte plasser er gravd ut (`berthPits`, 4.16c). Det samme kan gjøres for alle kaifronter av type 2 i `terrRaw` med et cellenett over kaiene, men det endrer hele kysten i 3D og må prøves med coast3d, vectest og unittest.
-- **Senja-flåten har ingen landsjekk ved kaiplassen:** `npcBerths` (`07-harbours.js`) leser flisene som er lastet og faller tilbake til `berthShift` uten front, men har ingen `isLand`-sjekk som `coastMoor`/`moorFree` for kystbåtene (4.16b). `npc.py` utelater Senja-ruta, så plassene der er aldri regnet ut i rørledningen. Båtene kan derfor stå på land også i kartet.
 - **NPC-båtene går rett fra kaiplassen til havnemunningen** (`along(moored.p, m0, …)` i `05-vessels.js`). Streken sjekkes ikke mot hindringer og kan krysse brygger, flytebrygger og fortøyde båter.
 - **Noen få leibiter i NPC-rutene skjærer et hjørne av land** (`gr.pts` fra `npc.py` brukes som de er). Tallet «23 av 680» gjaldt 25 m-masken og er ikke målt på nytt mot vektorkysten.
-- **Havnenavn kan bli like** (`havnNm` i `07e-havn.js`): et reservenavn uten side kan bli lik naboens lokale navn, to reservenavn i samme sektor fra samme sted blir like, og `havnLocal` ser bare havnene i samme flis. Navnet lagres i `S.havn` og blir stående.
 - **3D på Galaxy A52s (Adreno 642L, oppgave #171):** 3D starter nå med en enklere sjø (6ce4f50, 2c349cd), men konteksten mistes under spill (feilloggen: fire ganger, sist 23.10.2026). Spillet laster siden på nytt da.
-- **Havna man startet fra kan ikke velges som sluttpunkt** (spilltest 2): `addWaypoint` og `leiaTo` treffer bare innenfor 22 px av havnepunktet, navneskiltet har ingen treffsone, og `routeGrab` tar et utseilingspunkt før havna.
-- **Driftsplan uten adgang til torskefisket:** planen stopper når torskekvoten er brukt opp (`06d-drift.js`), men en båt uten adgang (`access() === 'none'`) fisker videre, og torsk, hyse og sei over bifangstgrensen blir inndratt. Planen råder heller ikke til kveiteutstyr.
-- **Utstyr ved båtbytte:** utstyr som ikke passer den nye båten, settes til `false` uten refusjon (`switchVessel`), og teksten i Utstyr-appen sier ikke at pengene ikke kommer tilbake. En båt som kjøpes til flåten uten innbytte, mister ingenting.
 - **Kameraet** (`camSolid`/`camFree` i `view3d.js`) holdes unna kaier, bruer, fyr, siloer og bygninger, men ikke andre båter, og kranen er ikke med i hindringene i det hele tatt.
-- **Klær og kulde:** `coldPen` regner med hele mannskapet (`1 + S.crew.length`), også dem som har fri.
 - **Fartsglideren i rutepanelet fanger sveip** (spilltest 2): en vanlig `<input type=range>` uten vern. Feilen er ikke gjenskapt.
 
 ### 10.2 Spillbarhet (fra spilltestene og egne notater)
@@ -4208,6 +4202,8 @@ Gjennomgått punkt for punkt mot koden, git-loggen og feilloggen 24.10.2026. Det
 - Startbåten er `trebat`. `buildSkiff` bygges fortsatt og er grunnlaget for kitet til håndbåtene (`handKit`), så den kan ikke bare fjernes. På skiffen står sløyebordet og blødekaret (75 % størrelse) tett ved setet, og konsollskjermene er ikke levende (Jonas).
 
 ### Strøket 24.10.2026 (løst eller foreldet)
+
+Rettet 24.10.2026 etter gjennomgangen: Senja-flåtens skrog på land ved kaia (`hullDry` i `npcBerths`, Finnsnes hadde to), like havnenavn (`havnLocal` deler ut navnene blant havnene innen 6 km, også reservenavnene etter stedet), starthavna som sluttpunkt (`portByLabel`, og en havn nærmere enn et veipunkt tar trykket i `routeGrab`), driftsplanen uten adgang til torskefisket (varsel med råd om kveiteutstyr i `driftCheck`), utstyret ved båtbytte (merknad i tilbudet og linje i loggen, `swapLeaves`), klærne og kulden (`coldPen` regner med dem om bord).
 
 Kino-visningen (d0fdfc2) og ristingen i bro-visningen (dc1a5a6, 5.40) fra 04.10; hviletiden i hele timer (regelen fjernet 11.10); kveithaill (fjernet 04.10); fraværsfangsten før dybdedataene (5448b5a, 02.10); bare skiffen med konsoll i 3D (varmen og ekkoloddet vises i det lille kartet for alle båter); sonarens monteringstid (alle verftsjobber tar `YARD_H`); sekkeis på driftsplanen (isen fylles på mottaket); drivstoff i Finnsnes (diesel ved butikk og verft, `docs/handelssteder.md`); § 32 og grunnlinja (håndheves fra R2, 04.10, `03e-rules.js`); minsteprisene etter 21.09 (rundskriv 13/2026, kontrollert); G (136 549 kr fra 1. mai 2026); sertifikatene i Sjømann (fjernet 09.10); heattest-målingen (besto 21.10 med 1,0 s); tester som sovner; dobbel kyst i kartplotteren (4.19); artifacten uten vec (artifacten oppdateres ikke lenger, appen har alltid vec; testbygget `dist/` har ikke vec, bare `npctest`, `havntest` og `vectest` bygger `dist-vec/`).
 
