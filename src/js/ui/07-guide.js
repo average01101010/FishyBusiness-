@@ -31,6 +31,17 @@ function chartSettings(){
 }
 function panelRoute(){
   const b = S.boat, h = [];
+  // choosing a place for the operations plan (05c-drift.js pick): the place and «Use the place» first, not a route, whatever the boat
+  // is doing (tilbakemelding #95: a tap made only a route, and the button lay under its cards)
+  if (DRIFTCTX && DRIFTCTX.spot && DRIFTUI.wizOn()){
+    const L = (no, en) => S.lang === 'no' ? no : en, q = S.draft.filter(w => !w.port).pop(), F = DRIFTCTX.spot[0] === 'F';
+    h.push('<h3>' + L('Plass til driftsplanen', 'A place for the plan') + '</h3>');
+    h.push('<p class="note">' + (F ? L('Trykk i kartet der redskapet skal stå. Trykker du igjen, flyttes plassen.', 'Tap the chart where the gear shall stand. Tap again to move the place.') : L('Trykk i kartet der dere skal jukse. Trykker du igjen, flyttes plassen.', 'Tap the chart where you will jig. Tap again to move the place.')) + '</p>');
+    if (q){ let dp = null; try { dp = depthAt(q); } catch (e){}
+      h.push('<div class="kv"><span>' + L('Plassen', 'The place') + '</span><span>' + coordStr(q) + '</span></div>' + (dp !== null ? '<div class="kv"><span>' + L('Dybde', 'Depth') + '</span><span>' + dp + ' m</span></div>' : '')); }
+    h.push('<div class="btns rbar"><button class="btn primary" data-act="driftsave"' + (q ? '' : ' disabled') + '>' + L('Bruk plassen', 'Use the place') + '</button><button class="btn" data-act="driftcancel">' + L('Avbryt', 'Cancel') + '</button></div>');
+    return h.join('');
+  }
   // the chart's and the echo sounder's settings are under «Innstillinger» in the top bar (08-actions.js plotSetRender)
   if (b.status === 'tow' && b.tow){
     const tw = b.tow, no = S.lang === 'no', port = portById(tw.port);
@@ -95,8 +106,7 @@ function panelRoute(){
   if (false){ let rk = 0, a0 = b.pos; for (const w of S.draft){ rk += rocksNear(a0, w, 0.03); a0 = w; } if (rk) h.push('<p class="warn">' + (S.lang === 'no' ? 'Ruten går tett forbi ' + rk + (rk === 1 ? ' skjær eller båe' : ' skjær og båer') + '. Sjekk kartet.' : 'The route passes close to ' + rk + (rk === 1 ? ' rock' : ' rocks') + '. Check the chart.') + '</p>'); }
   if (e.fuel > b.fuel){ h.push('<p class="bad">' + t('nofuel') + '</p>'); can = false; }
   else if (e.fuel > b.fuel * 0.8) h.push('<p class="warn">' + t('lowres') + '</p>');
-  if (DRIFTCTX && DRIFTCTX.spot && DRIFTUI.wizOn()) h.push('<p class="note">' + (DRIFTCTX.spot[0] === 'F' ? L('Trykk i kartet der redskapet skal stå. Det siste punktet du trykker, blir plassen.', 'Tap the chart where the gear shall stand. The last point you tap is the place.') : L('Trykk i kartet der dere skal jukse. Det siste punktet du trykker, blir plassen.', 'Tap the chart where you will jig. The last point you tap is the place.')) + '</p><div class="btns rbar"><button class="btn primary" data-act="driftsave"' + (S.draft.some(w => !w.port) ? '' : ' disabled') + '>' + L('Bruk plassen', 'Use the place') + '</button><button class="btn" data-act="driftcancel">' + L('Avbryt', 'Cancel') + '</button></div>');
-  else h.push('<div class="btns rbar"><button class="btn primary" data-act="start"' + (can ? '' : ' disabled') + '>' + t('start') + '</button><button class="btn" data-act="clear">' + t('clear') + '</button></div>');
+  h.push('<div class="btns rbar"><button class="btn primary" data-act="start"' + (can ? '' : ' disabled') + '>' + t('start') + '</button><button class="btn" data-act="clear">' + t('clear') + '</button></div>');
   return h.join('');
 }
 
