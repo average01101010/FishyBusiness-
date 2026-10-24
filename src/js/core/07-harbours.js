@@ -82,8 +82,15 @@ function quayFree(f){
 }
 const NPCB = new Map();
 // boats [{key, L, B, T}] of a harbour (group) round p (km), within R km: {key: {p (km), hd, face}} for those that got a place
+// (the hull clear of land: 15 points with a metre and half a metre to spare, as moorFree for the coast's boats, 4.16b)
+function hullDry(p, hd, L, B){
+  const s = Math.sin(hd), c = Math.cos(hd), hl = L / 2 + 1, hb = B / 2 + 0.5;
+  for (const fa of [-1, -0.5, 0, 0.5, 1]) for (const ab of [-1, 0, 1]) if (isLand({x:p.x + (s * fa * hl + c * ab * hb) / 1000, y:p.y + (-c * fa * hl + s * ab * hb) / 1000})) return false;
+  return true;
+}
 function npcBerths(group, p, boats, R = 0.6){
-  const c = NPCB.get(group); if (c && c.ver === VEC.ver) return c.v;
+  // (again when new packs or coast indexes come: the hulls are held off land by the fine coast where it is in)
+  const ver = VEC.ver * 1000 + COAST.built, c = NPCB.get(group); if (c && c.ver === ver) return c.v;
   const x = p.x * 1000, z = p.y * 1000, Rm = R * 1000, faces = [];
   for (const t of vecTilesIn(x - Rm, z - Rm, x + Rm, z + Rm)) for (const f of t.quays){
     const a = clamp((x - f.x) * f.ux + (z - f.z) * f.uz, -f.hl, f.hl), d = Math.hypot(f.x + f.ux * a - x, f.z + f.uz * a - z);
@@ -97,13 +104,17 @@ function npcBerths(group, p, boats, R = 0.6){
       const u = used.get(f.id) || [], lim = f.hl - b.L / 2 - 1; let at = null;
       for (let s = 0; s <= lim * 2 && at === null; s += 2) for (const a of s ? [s / 2, -s / 2] : [0]){ if (Math.abs(a) > lim || u.some(([a0, a1]) => a + b.L / 2 + 1 > a0 && a - b.L / 2 - 1 < a1)) continue; at = a; break; }
       if (at === null) continue;
+      // off the face by her half beam and 0.4 m, or up to 8 m further out where the face and the fine coast disagree; else the next face
+      const hd0 = Math.atan2(f.ux, -f.uz); let q = null;
+      for (let k = 0; k <= 8 && !q; k += 2){ const off = b.B / 2 + 0.4 + k, cp = {x:(f.x + f.ux * at + f.nx * off) / 1000, y:(f.z + f.uz * at + f.nz * off) / 1000}; if (hullDry(cp, hd0, b.L, b.B)) q = cp; }
+      if (!q) continue;
       u.push([at - b.L / 2 - 1, at + b.L / 2 + 1]); used.set(f.id, u);
-      const off = b.B / 2 + 0.4, cx = f.x + f.ux * at + f.nx * off, cz = f.z + f.uz * at + f.nz * off, flip = hash(hashStr(b.key)) < 0.5;
-      v[b.key] = {p:{x:cx / 1000, y:cz / 1000}, hd:Math.atan2(f.ux, -f.uz) + (flip ? Math.PI : 0), face:f.id};
+      const flip = hash(hashStr(b.key)) < 0.5;
+      v[b.key] = {p:q, hd:hd0 + (flip ? Math.PI : 0), face:f.id};
       break;
     }
   }
-  NPCB.set(group, {ver:VEC.ver, v}); return v;
+  NPCB.set(group, {ver, v}); return v;
 }
 // The way in: waypoints from open water to the harbour point, outermost first. Found breadth-first through the water cells of the
 // chart (no cutting across the corner of a land cell), then straightened wherever the line is clear. A harbour behind a breakwater,
