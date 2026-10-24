@@ -1,6 +1,7 @@
 // actions
 panel.addEventListener('pointerdown', () => { pressHold = true; });
-window.addEventListener('pointerup', () => { setTimeout(() => { pressHold = false; }, 250); });
+// a swipe that scrolls the panel ends in pointercancel, not pointerup, and the panel shall go on showing the clock after it too
+for (const k of ['pointerup', 'pointercancel']) window.addEventListener(k, () => { setTimeout(() => { pressHold = false; }, 250); });
 panel.addEventListener('click', e => { const el = e.target.closest('[data-act]'); if (el && !el.disabled) doAct(el); });
 function doAct(el){
   const act = el.dataset.act, i = +el.dataset.i, b = S.boat, L = (no, en) => S.lang === 'no' ? no : en;
@@ -86,6 +87,14 @@ function panelChange(e){
 }
 panel.addEventListener('input', panelInput);
 panel.addEventListener('change', panelChange);
+// a vertical swipe over a slider scrolls its panel, but the browser has already moved the thumb to the finger on touch down: when the
+// swipe turns into a scroll (pointercancel) the slider gets its value back (spilltest 2: the speed slider caught swipes). The panel may
+// have been drawn anew under the finger, so the slider is found again by its id; the cancel can come to whatever lies under the finger
+// then, so it is matched by the pointer
+let rangeTouch = null;
+document.addEventListener('pointerdown', e => { const r = e.target; rangeTouch = e.pointerType === 'touch' && r && r.type === 'range' ? {r, v:r.value, id:e.pointerId} : null; }, true);
+document.addEventListener('pointercancel', e => { const q = rangeTouch; rangeTouch = null; if (!q || e.pointerId !== q.id) return;
+  const r = q.r.isConnected ? q.r : q.r.id && document.getElementById(q.r.id); if (!r || r.value === q.v) return; r.value = q.v; r.dispatchEvent(new Event('input', {bubbles:true})); }, true);
 // what the sales organisation confiscates of the hold if it is landed now (cod beyond the fresh-fish allowance and the quota, bycatch
 // over its limits): the share of each species. Apart from sell() so the quay can show it before you land (R4); q is not changed
 function landConf(H, q, acc){
