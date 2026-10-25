@@ -477,6 +477,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p140', '25.10.2026', 'Flytebrygger', 'Floating docks', [
+       ['Flytebryggene langs kysten er bygd av pontonger, med fingre der de finnes, endepontong med leider og livbøye, og landgang fra land. De følger tidevannet. Før var de grå kasser.', 'The floating docks along the coast are built of pontoons, with fingers where they have them, an end pontoon with a ladder and life ring, and a gangway from land. They ride the tide. Before, they were grey boxes.']]],
     ['p139', '25.10.2026', 'Plassene i driftsplanen', 'The places in the operations plan', [
        ['«Velg i kartet» i driftsplanen lager ikke lenger en rute. Trykket i kartet blir plassen til feltet eller juksplassen, og panelet med «Bruk plassen» kommer opp med en gang, også på telefonen. Trykker du igjen, flyttes plassen.', '«Choose in the chart» in the operations plan no longer makes a route. The tap in the chart becomes the place for the field or the jig place, and the panel with «Use the place» comes up at once, on the phone too. Tap again to move the place.']]],
     ['p138', '24.10.2026', 'Rettelser', 'Fixes', [

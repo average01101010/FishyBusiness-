@@ -772,6 +772,31 @@ Jonas sto i Tromsø og så ingen hus. Før dette fantes bygg, veier, bruer og br
 
 **Pakkenes brygger, flater og veier under enhetene (Jonas 08.10.2026, tilbakemelding #45, #46, #50).** `tileStatics` i `view3d.js` hopper over vec-brygger og -flater som ligger under en havneenhet (blokk, fylling, 3 m margin eller basseng, `unitCovers` i `01-world.js`) eller et rorbu-/naustområde (`onSite`), og `addRoads` hopper over veisegmenter der (6 m margin). `11b-obstacles.js` gjør ikke lenger slike brygger til båthinder. Kontroll med alle steder (08.10.2026, før rettingen): 0 synlige bygg i konflikt, men brygger/moloer i liggeplassen ved 98 av 161 mottak, 99 av 132 verft og 45 av 64 butikker, vei over enheten ved 31/77/11 av dem, og bruer innenfor 5 m ved 16 steder (ikke rettet: bruer, `shoreSpot` i `07c-naust.js` ser bare Senjas `PIERBOX`, og 17 mottak–verft/butikk-par i samme by ligger nærmere enn 1,5 km). Neste: la `tools/steder/steder.py` avvise kaifronter med fast hinder i liggeplassen, og flytt stedene som berører en bru.
 
+**Flytebryggene blant pakkenes brygger (Jonas 25.10.2026, tilbakemelding #94, alternativ a).** Bryggene som OpenStreetMap merker `floating=yes`, tegnes med havnas Blender-moduler (`tools/harbour/brygge.py`), ikke som grå kasser 2,4 m over sjøen.
+- **Dataene:** `python3 tools/map/flyte.py` lager `src/data/flyte.json`, rundt 340 kB.
+  - Kilden er Overtures `base/infrastructure` (brygger med `source_tags` `floating=yes`), samme utgave som kartet (`kart.json`).
+  - Den trenger `tools/map/out/game` for flisene.
+  - Resultatet er 6 764 flytebrygger i spillets fliser. Andelen merket i noen byer: Bodø 41 av 50 brygger, Bergen 45 av 93, Tromsø 32 av 55, Båtsfjord 16 av 24, Kristiansand 13 av 48 og Hammerfest 3 av 19.
+  - Brygger uten merket står som før.
+  - Dataene ligger utenfor vec-pakkene, så kartet trenger ikke bygges på nytt. Rørledningen er endret siden `kart-8`, og et nytt bygg ville tatt med mer.
+- **Hver flytebrygge** har midtpunktet slik spillet regner det (snittet av punktene i hele meter), og linjene pontongene følger.
+  - En brygge tegnet som linje er linja selv.
+  - En brygge tegnet som flate får midtlinja: et rektangel får langaksen, ellers Voronoi-kantene av omrisset uten sporene ut til hjørnene. Bredden er medianen langs linja.
+- **Kjent igjen:** `vecDecode` gir hver bryggeboks midtpunktet (`fm`), og `flyteTile` i `01c-vec.js` gir flisas flytebrygger. `tileStatics` hopper over bryggeboksene og flatene med samme midtpunkt (innenfor 1 m) og bygger flytebryggene (`floatJob` i `view3d.js`, én brygge per steg i flisas jobb, så Bergens 339 ikke blir 150 ms i ett bilde). Senja er unntatt, som for de andre vec-bryggene.
+- **Modulene:**
+  - Pontonger på 12 m langs linjer på 1,6 m og bredere, skalert på langs så de passer etappen og på tvers etter bredden (0,7–1,6).
+  - Fingre på 8 m langs smalere linjer, fra enden der de møter en annen linje.
+  - Endepontongen med leider og livbøye i en åpen ende.
+  - Høyst én landgang per brygge: fra landkaret på land eller en fast brygge innenfor 10 m bak den nærmeste åpne enden.
+  - En ende som møter en annen linje innenfor 1,5 m, er sammenkoblet, også mot en annen brygge, fordi OSM ofte har hver arm som egen brygge. En ende inntil land (3 m) får ingenting.
+- **Tegningen** følger tidevannet:
+  - Nær øyet (150, 250, 350 eller 450 m etter `QUAL.lvl`) tegnes modulene som er i synsfeltet. Hver har 800–1 600 trekanter og tegnes i ett kall. Pontongene hiver litt med sjøen (0,3), og landgangen vinkles etter høyden.
+  - Hele flisa har i tillegg lave kasser i ett nett, litt innenfor modulene (`relM` har høyden `oy`).
+  - Kamerahindringene er dekkene fra under vann til over rekka.
+  - De tetteste havnene, rundt Oslo, har rundt 300 moduler innenfor 350 m. I testmiljøet tegnes 138 der.
+- **Prøvd** i mN51 (der #94 ble meldt), Bergen, Bodø, Tromsø, Båtsfjord, Hammerfest og ved Oslo. Sjekken ligger i `vectest.py` (Tromsø).
+- **Ikke gjort:** NPC-båtenes kaiplasser ved en flytebrygge kartlagt som linje regnes som før mot en brygge på 4,2 m. Båten ligger derfor rundt 0,9 m fra pontongkanten.
+
 ### 4.16 NPC-trafikk langs hele kysten (del 5, 04.10.2026)
 
 Jonas valgte «Full trafikk langs kysten», men «NPC båtene skal kun dukke opp innenfor spillerens AIS område».

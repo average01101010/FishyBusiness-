@@ -15,6 +15,7 @@
 //           where the 50 m depth has no water off it) and kind (0 pier, 1 pier line, 2 quay, 3 coast); Senja's too (npcBerths)
 //   npc     the NPC traffic (tools/map/npc.py): harbours {x, y (km), boats [{id, L, B, T, p, hd, name, liv}], grounds [{p, pts}]},
 //           which 05-vessels.js sails by the clock within AIS range
+// A pier's boxes keep its middle (fm, the mean of its points) so the 3D view knows the floating docks among them (flyteTile).
 const VEC = {tiles:new Map(), want:new Set(), wait:new Map(), came:[], drop:[], ver:0, worker:null, id:0, ms:0};
 // Senja's legacy square as its corners in the national frame (metres): its edges bow by millimetres, so a point is tested against the
 // quadrilateral (inSenja takes km)
@@ -80,7 +81,8 @@ function vecDecode(D){
   // piers, breakwaters and quays' lines, by their middle
   if (D.pier && D.np) for (const [c, xs, zs] of lines(D.pier)){
     let mx = 0, mz = 0; for (let j = 0; j < xs.length; j++){ mx += xs[j]; mz += zs[j]; } if (senja(mx / xs.length, mz / xs.length)) continue;
-    pierBoxes(r.piers, c, xs.length, k => xs[k], k => zs[k], r.slabs.length);
+    const i0 = r.piers.length; pierBoxes(r.piers, c, xs.length, k => xs[k], k => zs[k], r.slabs.length);
+    if (c === 0){ const fm = [mx / xs.length, mz / xs.length]; for (let i = i0; i < r.piers.length; i++) r.piers[i].fm = fm; }
     if (c === 1) r.molos.push(Array.from(xs, (x, j) => [x, zs[j]]));
     else if (c === 0 && xs.length > 3 && Math.hypot(xs[0] - xs[xs.length - 1], zs[0] - zs[xs.length - 1]) < 1) r.slabs.push(Array.from(xs, (x, j) => [x, zs[j]]));
   }
@@ -105,6 +107,20 @@ function vecDecode(D){
         grounds:h.g.map(g => { const pts = []; for (let i = 0; i + 1 < g[2].length; i += 2) pts.push(k(g[2][i], g[2][i + 1])); return {p:k(g[0], g[1]), pts}; })}); });
   }
   return r;
+}
+// The floating docks among the packs' piers (tools/map/flyte.py: Overture's piers that OpenStreetMap tags floating=yes, tilbakemelding
+// #94), which the 3D view builds of the harbour's pontoons and fingers (tools/harbour/brygge.py) in place of the pier: per tile, each
+// {mx, mz (the pier's middle, m, as fm), L: [{w (m), p: [[x, z], ...]}]}, the lines its pontoons (w 1.6 m and more) and fingers follow;
+// Senja's are left out as its piers are
+const FLYTE = /*@include(data/flyte.json)*/null;
+let FLYT = null;
+function flyteTile(tx, ty){
+  if (!FLYTE || !MAPD.man) return [];
+  if (!FLYT){ FLYT = new Map(); const T = MAPD.man.tile * 1000;
+    for (const [mx, mz, L] of FLYTE.d){ if (inSenja(mx / 1000, mz / 1000)) continue;
+      const k = Math.floor(mx / T) + ':' + Math.floor(mz / T); let a = FLYT.get(k); if (!a) FLYT.set(k, a = []);
+      a.push({mx, mz, L:L.map(q => { const p = []; for (let i = 1; i + 1 < q.length; i += 2) p.push([mx + q[i] / 10, mz + q[i + 1] / 10]); return {w:q[0] / 10, p}; })}); } }
+  return FLYT.get(tx + ':' + ty) || [];
 }
 // the decoded arrays into the tile the views read: the cells as maps of index lists, the roads as objects over the shared arrays
 function vecFinish(r){

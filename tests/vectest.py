@@ -4,7 +4,8 @@ them) and needs the whole coast in tools/map/out/game (tools/map/release.py, the
 has its buildings, roads without the tunnels, Tromsøbrua and Sandnessundbrua and quay faces with depth, and the 3D view builds its
 bridges, piers and breakwaters a few at a time; no pack item lies in Senja's square, where the embedded data is alone; a breakwater is a
 rubble mound (crest about 2.8 m, foot under the sea); Senja's fleet lies at quay faces that fit it, never two in one place; the chart
-draws the roads; Henningsvær and Bergen have their buildings too; a tile far behind is let go with what was built from it. Pictures:
+draws the roads; Henningsvær and Bergen have their buildings too; a tile far behind is let go with what was built from it; the floating
+docks among Tromsø's piers are built of pontoons (flyte.json, tilbakemelding #94). Pictures:
 tests/out/vec_<place>.png. Prints OK or FEIL."""
 import os, subprocess, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -55,6 +56,19 @@ async def main():
         check(d3['tris'] > 20000 and d3['gl'] == 0, 'bruene, bryggene og moloene i Tromsø står i 3D, uten GL-feil', d3)
         await pg.evaluate("() => { const c = G3._debug.cam; c.helm = false; c.yaw = 2.6; c.pitch = 0.3; c.dist = 900; }"); await pg.wait_for_timeout(5000)
         await pg.screenshot(path='vec_tromso.png')
+        # the floating docks among the piers (flyte.json, OpenStreetMap floating=yes; tilbakemelding #94): known again by the pier's middle,
+        # built of the harbour's pontoons with end pontoons and gangways instead of the pier's box, and drawn near without GL errors
+        fd = await pg.evaluate("""(() => { const D = flyteTile(18, 6), t = vecTile(18, 6), fm = t.piers.filter(q => q.fm).map(q => q.fm);
+          const hit = D.filter(d => fm.some(m => Math.abs(m[0] - d.mx) < 1.5 && Math.abs(m[1] - d.mz) < 1.5)).length, F = G3._debug.flt.find(f => f.k === '18:6');
+          let best = null; for (const d of D) if (!best || d.L.length > best.L.length) best = d;
+          const b = S.boat, p = {x:best.mx / 1000 + 0.03, y:best.mz / 1000}; b.status = 'idle'; b.pos = p; b.v = 0;
+          return {docks:D.length, hit, F}; })()""")
+        await pg.evaluate("() => { const c = G3._debug.cam; c.helm = false; c.yaw = 0; c.pitch = 0.7; c.dist = 70; }"); await pg.wait_for_timeout(6000)
+        fd.update(await pg.evaluate("(() => ({drawn:G3._debug.fln, gl:G3._debug.glErr()}))()"))
+        await pg.screenshot(path='vec_flyte.png')
+        F = fd['F'] or {'kinds': {}}
+        check(fd['docks'] > 20 and fd['hit'] >= 0.9 * fd['docks'] and F['kinds'].get('pon', 0) > 100 and F['kinds'].get('end', 0) > 20 and F['kinds'].get('gang', 0) > 10 and fd['drawn'] > 0 and fd['gl'] == 0,
+              'flytebryggene i Tromsø kjennes igjen blant bryggene og bygges av pontonger, endepontonger og landganger, uten GL-feil', fd)
         # nothing of a pack in Senja's square, where the embedded buildings, roads, bridges and piers are alone
         sj = await pg.evaluate("""(() => { let n = 0, k = 0; for (const t of VEC.tiles.values()){ if (t.bld) for (let i = 0; i < t.bld.n; i++){ k++; if (inSenja(t.bld.x[i] / 1000, t.bld.z[i] / 1000)) n++; }
           for (const q of t.bridges){ const m = 4 + 2 * Math.floor((q.length - 4) / 4); if (inSenja(q[m] / 1000, q[m + 1] / 1000)) n++; } } return {n, k, tiles:[...VEC.tiles.keys()]}; })()""")
