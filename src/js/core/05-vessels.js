@@ -94,6 +94,55 @@ const AIS_KM = 15;
 // AIS_KM of the boat you follow too (Jonas 09.10.2026: «Jeg er langt oppe i Finnmarka, men kan enda se NPC-båtene som er på Senja»)
 const aisShown = n => !(n.fleet || n.id === 'ferje' || n.id === 'kystn' || n.id === 'kysts') || !S.boat || dist(n.p, S.boat.pos) <= AIS_KM;
 const hodOf = H => { const g = gDate(H); return g.getUTCHours() + g.getUTCMinutes() / 60 + g.getUTCSeconds() / 3600; };
+// the way from a coast boat's berth out to the harbour mouth m0 (and back): straight where that leg is clear of the piers, docks, marks
+// (obsSegHit, 3 m) and land, else straight out from the face first, 25 or 60 m, and on to m0; as before when neither is clear. Kept per
+// boat, mooring version and mouth: {k, pts, len}
+function coastWay(b, moored, m0){
+  const k = MOOR.ver + ':' + m0.x + ':' + m0.y; if (b.way && b.way.k === k) return b.way;
+  const p = moored.p, clear = (a, c) => { if (obsSegHit(a, c, 3)) return false; const n = Math.ceil(dist(a, c) * 1000 / 15); for (let i = 1; i < n; i++){ const u = i / n; if (coastLand({x:a.x + (c.x - a.x) * u, y:a.y + (c.y - a.y) * u})) return false; } return true; };
+  let pts = [p, m0];
+  if (!moored.buoy){
+    // (out from the side she lies with to the water: across her heading, the side with water 15 m off)
+    const sn = Math.sin(moored.hd || 0), cs = Math.cos(moored.hd || 0); let nr = null;
+    for (const sg of [1, -1]) if (!nr && !coastLand({x:p.x + cs * sg * 0.015, y:p.y + sn * sg * 0.015})) nr = [cs * sg, sn * sg];
+    const st = nr ? {x:p.x + nr[0] * 0.004, y:p.y + nr[1] * 0.004} : p;
+    if (nr && !clear(st, m0)){
+      for (const d of [0.025, 0.06]){ const o = {x:p.x + nr[0] * d, y:p.y + nr[1] * d}; if (!coastLand(o) && clear(st, o) && clear(o, m0)){ pts = [p, o, m0]; break; } }
+      // else through the water cells of the 25 m mask to the mouth (a point of land between), pulled straight where the legs are clear
+      if (pts.length === 2){ const W = coastCells(st, m0); if (W){ const P = [st]; let i = 0;
+        while (i < W.length - 1){ let j = W.length - 1; while (j > i + 1 && !clear(W[i], W[j])) j--; P.push(W[j]); i = j; }
+        // (only a way clear all along: else the straight line stands, as before)
+        if (P.every((q, k) => !k || clear(P[k - 1], q))) pts = [p].concat(P.slice(0, -1), [m0]); } }
+    }
+  }
+  let len = 0; for (let i = 1; i < pts.length; i++) len += dist(pts[i - 1], pts[i]);
+  return (b.way = {k, pts, len: Math.max(len, 1e-6)});
+}
+// a way a to z (km) through the water cells of the 25 m mask within 300 m of the two (8 neighbours, no corner of a land cell cut, no
+// breakwater thinner than a cell crossed: coastSegHit), as the cells' middles from a to z; null when there is none
+function coastCells(a, z){
+  const M = MAPD.L.mask; if (!M) return null; const c = M.c, x0 = Math.floor((Math.min(a.x, z.x) - 0.3) / c), y0 = Math.floor((Math.min(a.y, z.y) - 0.3) / c), x1 = Math.ceil((Math.max(a.x, z.x) + 0.3) / c), y1 = Math.ceil((Math.max(a.y, z.y) + 0.3) / c);
+  const W = x1 - x0 + 1, at = (x, y) => ({x:(x + 0.5) * c, y:(y + 0.5) * c}), LM = new Map(), land = (x, y) => { const k = y * W + x; let v = LM.get(k); if (v === undefined){ v = coastLand(at(x0 + x, y0 + y)); LM.set(k, v); } return v; };
+  const sx = Math.floor(a.x / c) - x0, sy = Math.floor(a.y / c) - y0, ex = Math.floor(z.x / c) - x0, ey = Math.floor(z.y / c) - y0, s0 = sy * W + sx, e0 = ey * W + ex;
+  const prev = new Map([[s0, -1]]), Q = [s0];
+  for (let h = 0; h < Q.length && h < 40000; h++){ const k = Q[h]; if (k === e0) break; const x = k % W, y = (k - x) / W;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]){ const X = x + dx, Y = y + dy, kk = Y * W + X;
+      if (X < 0 || Y < 0 || X >= W || Y > y1 - y0 || prev.has(kk) || (kk !== e0 && land(X, Y))) continue;
+      if (dx && dy && (land(X, y) || land(x, Y))) continue;
+      if (coastSegHit(at(x0 + x, y0 + y), at(x0 + X, y0 + Y))) continue;
+      prev.set(kk, k); Q.push(kk); } }
+  if (!prev.has(e0)) return null;
+  const out = []; for (let k = e0; k !== -1; k = prev.get(k)){ const x = k % W; out.push(k === s0 ? {...a} : k === e0 ? {...z} : at(x0 + x, y0 + (k - x) / W)); }
+  return out.reverse();
+}
+// where on that way at the share u of it (back: coming in, the heading turned about)
+function coastWayAt(w, u, back){
+  let d = clamp(u, 0, 1) * w.len;
+  for (let i = 1; i < w.pts.length; i++){ const a = w.pts[i - 1], c = w.pts[i], L = dist(a, c);
+    if (d <= L || i === w.pts.length - 1){ const t = L > 0 ? Math.min(1, d / L) : 1, hd = Math.atan2(c.x - a.x, -(c.y - a.y)); return {p:{x:a.x + (c.x - a.x) * t, y:a.y + (c.y - a.y) * t}, hd:back ? hd + Math.PI : hd}; }
+    d -= L; }
+  return {p:{...w.pts[w.pts.length - 1]}, hd:0};
+}
 function coastState(b, H, hod = hodOf(H)){
   const i = b.seed || (b.seed = hashStr(b.id) % 1000003);
   const dep = 4 + hash(i * 13 + 5) * 4, e = ((hod - dep) % 24 + 24) % 24, day0 = H - e, dI = Math.floor((day0 + 6) / 24), G = b.h.grounds;
@@ -102,9 +151,9 @@ function coastState(b, H, hod = hodOf(H)){
   if (e > 17 || !G.length || hash(dI * 17 + i * 7) < 0.3 || windAt(day0, b.p) >= (b.L >= 15 ? 15 : b.L >= 12 ? 13.5 : 12)) return moored;
   const gr = G[Math.floor(hash(dI * 31 + i) * G.length)], R = gr.R || (gr.R = prepRoute(gr.pts.map(q => [q.x, q.y]))), RR = gr.RR || (gr.RR = prepRoute(gr.pts.map(q => [q.x, q.y]).reverse()));
   const cs = ((b.L >= 14 ? 9.8 : 7.8) + hash(i * 3 + 1) * 1.8) * clamp(1 - (hsOpen(day0, b.p) - 1.2) * 0.12, 0.65, 1) * NM, hsp = 5 * NM;
-  const m0 = R.pts[0], t0 = dist(moored.p, m0) / hsp, tr = R.len / cs, T = t0 + tr, fishH = 5 + hash(dI * 7 + i * 3) * 3.5;
+  const m0 = R.pts[0], wy = coastWay(b, moored, m0), t0 = wy.len / hsp, tr = R.len / cs, T = t0 + tr, fishH = 5 + hash(dI * 7 + i * 3) * 3.5;
   const along = (a, c, u) => ({p:{x:a.x + (c.x - a.x) * u, y:a.y + (c.y - a.y) * u}, hd:Math.atan2(c.x - a.x, -(c.y - a.y))});
-  if (e < t0){ const q = along(moored.p, m0, e / t0); return {p:q.p, hd:q.hd, st:'out'}; }
+  if (e < t0){ const q = coastWayAt(wy, e / t0, false); return {p:q.p, hd:q.hd, st:'out'}; }
   if (e < T){ const a = atRoute(R, (e - t0) * cs); return {p:a.p, hd:a.hd, st:'out'}; }
   // on the ground: over to the boat's own spot, whole casts drifting off it (each cast ends where the next starts), back to the centre
   const spot = coastSpot(gr, dI, i), C = 0.75, nc = Math.max(1, Math.round(fishH / C)), fH = nc * C, tin = Math.max(1e-3, dist(gr.p, spot) / cs);
@@ -116,7 +165,7 @@ function coastState(b, H, hod = hodOf(H)){
   }
   const eb = e - T - tin - fH;
   if (eb < tr){ const a = atRoute(RR, eb * cs); return {p:a.p, hd:a.hd, st:'in'}; }
-  if (eb < tr + t0){ const q = along(m0, moored.p, (eb - tr) / t0); return {p:q.p, hd:q.hd, st:'in'}; }
+  if (eb < tr + t0){ const q = coastWayAt(wy, 1 - (eb - tr) / t0, true); return {p:q.p, hd:q.hd, st:'in'}; }
   return moored;
 }
 // ===== where a coast boat lies at home (Jonas 18.10.2026: «npc-båter mange plasser er plassert i landmassen når de ligger ved kai»;

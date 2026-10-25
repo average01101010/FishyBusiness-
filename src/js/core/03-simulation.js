@@ -721,8 +721,8 @@ const LIC_OFFERS = [
 function licValue(l){ return l ? Math.round(licQ(l).torsk * KPK) : 0; }
 // blad B in the fishermen's register, simplified. Deltakerloven § 6 asks the buyer of a closed-group vessel to have fished commercially
 // in at least three of the last five years, and blad B (fishing as the main occupation) is the usual proof. Here: 10 landing days with
-// you aboard and 1 G of first-hand value (G from 1 May 2025, nav.no; to be updated for 2026)
-const BLADB = {days:10, kr:130160};
+// you aboard and 1 G of first-hand value (G from 1 May 2026: 136 549 kr, nav.no/grunnbelopet)
+const BLADB = {days:10, kr:136549};
 // The sales organisation's deductions on the landing note (Norges Råfisklag, «Forklaring til trekk på fiskers avregning», rafisklaget.no,
 // read 04.10.2026): the organisation's own levy on the gross value (fresh fish 0,43 % from 1.7.2026), and on the gross less it
 // («trekkgrunnlag 1») the pension levy to Garantikassen for fiskere (0,4 % from 1.1.2023, every fisher), the product levy to NAV
@@ -797,8 +797,8 @@ function mvaCheck(total){
   const yr = (S.sales || []).filter(s => s.t > S.t - 365 * 1440).reduce((a, s) => a + (s.total || 0), 0) + total;
   if (yr < MVA.limit) return false;
   S.mva = {t:S.t, org:900000000 + Math.floor(h2(S.t % 100000, 77) * 99999999)};
-  msg('Brønnøysundregistrene', 'Salget ditt har passert 50 000 kr på tolv måneder. Fisket ditt er registrert som enkeltpersonforetak i Enhetsregisteret, og foretaket er ført i Merverdiavgiftsregisteret. Fra nå legger Råfisklaget 11,11 % MVA på oppgjøret, og du betaler den videre til staten. Se Papirer under Sjømann.',
-    'Your sales have passed NOK 50,000 in twelve months. Your fishing is registered as a sole proprietorship in the Central Coordinating Register and in the VAT register. From now the sales organisation adds 11.11 % VAT to the settlement, which you pass on to the state. See Papers under Seaman.');
+  msg('Brønnøysundregistrene', 'Salget ditt har passert 50 000 kr på tolv måneder. Fisket ditt er registrert som enkeltpersonforetak i Enhetsregisteret, og foretaket er ført i Merverdiavgiftsregisteret. Fra nå legger Råfisklaget 11,11 % MVA på oppgjøret, og du betaler den videre til staten. Se Papirer i Kvote-appen.',
+    'Your sales have passed NOK 50,000 in twelve months. Your fishing is registered as a sole proprietorship in the Central Coordinating Register and in the VAT register. From now the sales organisation adds 11.11 % VAT to the settlement, which you pass on to the state. See Papers in the Quota app.');
   return true;
 }
 function trekkOf(total, len){
@@ -905,7 +905,8 @@ const CLOTHES = {olje:{no:'Oljehyre', en:'Oilskins', price:1290, d:{no:'Jakke og
 function effTemp(H){ const T = airTemp(H), v = windAt(H) * 3.6; return (T > 10 || v < 4.8) ? T : 13.12 + 0.6215 * T - 11.37 * Math.pow(v, 0.16) + 0.3965 * T * Math.pow(v, 0.16); }
 function coldPen(H, hs){
   const cold = clamp((5 - effTemp(H)) / 25, 0, 1), wet = Math.max(precipAt(H), sstep(0.6, 1.8, hs == null ? hsAt(S.boat.pos, H) : hs));
-  const people = 1 + (S.crew ? S.crew.length : 0), c = S.clothes || {}, o = Math.min(1, (c.olje || 0) / people), w = Math.min(1, (c.varme || 0) / people);
+  // (the sets of clothes go round those aboard: you, if you are, and the crew on this trip, not those ashore or off)
+  const people = Math.max(1, (meAboard() ? 1 : 0) + crewAboard(H).length), c = S.clothes || {}, o = Math.min(1, (c.olje || 0) / people), w = Math.min(1, (c.varme || 0) / people);
   const pen = (kc, kw) => Math.min(0.5, 0.35 * cold * kc + 0.15 * wet * kw);
   return pen(1, 1) * (1 - o) * (1 - w) + pen(0.85, 0.2) * o * (1 - w) + pen(0.3, 0.6) * w * (1 - o) + pen(0.25, 0.15) * o * w;
 }

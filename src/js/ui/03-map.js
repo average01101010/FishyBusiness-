@@ -630,6 +630,13 @@ function unzoom(){ const vv = window.visualViewport, m = document.querySelector(
 window.addEventListener('orientationchange', () => { unzoom(); setTimeout(() => window.dispatchEvent(new Event('resize')), 350); });
 if (window.visualViewport) visualViewport.addEventListener('resize', () => { if (visualViewport.scale > 1.01) unzoom(); });
 
+// a port tapped on its name in the chart (drawn right of the point from view.z 0.5, as renderStatic places it), when no place nearer took
+// the tap (spilltest 2: a tap on the name of the harbour you set out from gave «Det er land»)
+function portByLabel(pt){
+  if (view.z < 0.5) return null; const u = 1 / view.px;
+  for (const p of PORTS){ const nm = portLabel(p); if (pt.x >= p.p.x + 8 * u && pt.x <= p.p.x + 10 * u + nm.length * 7.5 * u && pt.y >= p.p.y - 9 * u && pt.y <= p.p.y + 6 * u) return p; }
+  return null;
+}
 function addWaypoint(pt){
   const b = S.boat;
   if (!tutAllow('waypoint')) return;
@@ -654,6 +661,7 @@ function addWaypoint(pt){
   if (view.z >= 2 && !tutOn() && !near){ const B = havnTapNear(pt, r); if (B) near = B; }
   // Father's naust: a route can end there (you sail to it; 07c-naust.js naustTarget)
   const nt = naustTarget(pt, r), atN = b.status === 'port' && berthKind(b) === 'naust';
+  if (!near && !nt) near = portByLabel(pt);
   if (nt && atN && !S.draft.length){ toast(t('already_here')); return; }
   if (!nt && near && draftPort() === near.id && !S.draft.length && !atN){ toast(t('already_here')); return; }
   if (!near && !nt && isLandUI(pt)){ toast(t('on_land')); return; }

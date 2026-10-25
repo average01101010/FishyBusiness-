@@ -181,6 +181,11 @@ function driftCheck(o){
   }
   // the places: closed to the boat or the gear (03e-rules.js)
   { const r = drRulesWhy(o, S.t / 60, true); if (r) E.push(gL(r.no, r.en)); }
+  // no access to cod, haddock and saithe without you aboard (the open group: the owner aboard, J-30-2026 § 35; a second vessel: none):
+  // what goes over 10 % bycatch is confiscated. With halibut gear, and halibut open, the plan fishes halibut instead (drGo)
+  if (!S.lic && o.rig !== 'teiner' && (S.cur !== openVesselId() || !meAboard()) && !(S.boat.kgear && !kveiteClosed(S.t / 60)))
+    W.push(S.cur !== openVesselId() ? no('Båten har ikke adgang til å fiske torsk, hyse og sei. De kan bare være bifangst, høyst 10 % av landingen, og resten blir inndratt. Med kveiteutstyr fisker planen kveite.', 'The boat has no access to fish cod, haddock and saithe. They can only be bycatch, at most 10% of the landing, and the rest is confiscated. With halibut gear the plan fishes halibut.')
+      : no('I åpen gruppe må du være om bord for å fiske torsk, hyse og sei. Uten deg kan de bare være bifangst, høyst 10 % av landingen, og resten blir inndratt. Kjøp kveiteutstyr i butikken, så fisker planen kveite når du ikke er med.', 'In the open group you must be aboard to fish cod, haddock and saithe. Without you they can only be bycatch, at most 10% of the landing, and the rest is confiscated. Buy halibut gear at the shop, and the plan fishes halibut when you are not along.'));
   // the crew: you are the skipper aboard; without you the skipper and the mate must both be aboard
   const why = driftCrewWhy(o, true); if (why) (why.wait ? W : E).push(gL(why.no, why.en));
   // the rhythm

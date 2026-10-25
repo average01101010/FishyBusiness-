@@ -260,7 +260,7 @@ function panelPort(){
     btn.push('<button class="btn' + (b.gear ? '' : ' primary') + '" data-act="gear">' + t('shop_open') + '</button>');
     h.push('<div class="btns">' + btn.join('') + '</div>');
     if (!p.mottak) h.push('<p class="note">' + t('no_mottak') + '</p>');
-    if (!p.ice) h.push('<p class="note">' + (S.lang === 'no' ? 'Her er det ikke noe mottak med isrenne, så butikken selger is i sekker og bærer den om bord.' : 'There is no plant with an ice chute here, so the shop sells bagged ice and carries it aboard.') + '</p>');
+    if (p.mottak && !p.ice) h.push('<p class="note">' + (S.lang === 'no' ? 'Mottaket her har ingen isrenne, så det selger is i sekker og bærer den om bord.' : 'The plant here has no ice chute, so it sells bagged ice and carries it aboard.') + '</p>');
     h.push(portSlip());
   } else h.push('<p class="note">' + t('not_port') + '</p>');
   h.push('<h3>' + t('prices') + '</h3><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>' + t('port_col') + '</th>' + SP.map(sp => '<th>' + spName(sp) + '</th>').join('') + '</tr></thead><tbody>');

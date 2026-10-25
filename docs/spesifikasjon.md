@@ -14,7 +14,7 @@ Fiskerisystemet skal gi et realistisk kystfiske fra Senja for en båt i åpen gr
 | --- | --- |
 | Råfisklaget, salgsstatistikk 2025 for 16 arter, nasjonalt | Ukentlig pris og rundvekt per tilstand og konservering |
 | Råfisklaget, torsk, hyse og sei per sone 2025 | Sesong og pris for Troms, som brukes for Senja |
-| [Rundskriv 7/2026](https://www.rafisklaget.no/rundskriv-list/72026) og [minsteprislisten](https://www.rafisklaget.no/media/5ivb5yqe/minste-1.pdf) | Faste minstepriser per størrelse og restråstoff |
+| [Rundskriv 13/2026](https://rafisklaget.no/rundskriv-list/132026) og [minsteprislisten 21.09–13.12.2026](https://rafisklaget.no/media/mnilh0oe/minsteprisliste-16092026.pdf) | Faste minstepriser per størrelse og restråstoff |
 | [Rundskriv 33/2021](https://www.rafisklaget.no/rundskriv-list/332021) | Omregning mellom sløyeformer, kvalitetstrekk og minstemål |
 | [Råfisklaget, minstepris](https://www.rafisklaget.no/minstepris) | Dynamiske minstepriser og omregning av rund sei og hyse |
 | J-30-2026, reguleringsforskrift for torsk, hyse og sei nord for 62° N | Kvoter og regler for åpen og lukket gruppe |

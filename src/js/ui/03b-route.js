@@ -89,6 +89,8 @@ function insHandles(){
 function routeGrab(mp){
   if (!canEditDraft() || !S.draft.length) return null;
   let best = null, bd = WP_HIT / view.px;
+  // (a port's point nearer than the waypoint takes the tap: the route ends there; the ways out and in lie close by the harbour)
+  for (const p of PORTS){ const d = dist(p.p, mp); if (d < bd) bd = d; }
   S.draft.forEach((w, i) => { if (w.port) return; const d = dist(w, mp); if (d < bd){ bd = d; best = {kind:'move', i}; } });
   if (!best){ let hd = INS_HIT / view.px; for (const hdl of insHandles()){ const d = dist(hdl.p, mp); if (d < hd){ hd = d; best = {kind:'ins', i:hdl.i, p:hdl.p}; } } }
   if (best){ best.before = JSON.stringify(S.draft); best.land = false; best.moved = false; }
@@ -141,6 +143,7 @@ async function leiaTo(pt, buoy, act){   // buoy: to a set's buoy, to haul it (th
   if (view.z >= 2 && !tutOn()) for (const R of rorbuSites(pt, r + 0.05)){ const d = dist(R.p, pt); if (d < r && d < bd){ bd = d; near = R; } }
   // a harbour of the coast's packs: Autonav goes to a free berth there (07e-havn.js), when no place of the game is nearer
   if (view.z >= 2 && !tutOn() && !near && !buoy){ const B = havnTapNear(pt, r); if (B) near = B; }
+  if (!near && !buoy) near = portByLabel(pt);
   // from Father's naust the way starts at its berth, not by the harbour's way out from the plant (tilbakemelding #20)
   const atN = !S.draft.length && b.status === 'port' && berthKind(b) === 'naust';
   const start = S.draft.length ? S.draft[S.draft.length - 1] : draftOrigin(), aPort = !S.draft.length && !atN ? draftPort() : null;

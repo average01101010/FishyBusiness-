@@ -5,6 +5,10 @@ const G3 = (() => {
   let gl = null, ready = false, failed = false, active = false, raf = 0, lastF = 0;
   let PL, PS, PSF, PK, PP, SST_VS = false, SSDUMMY = null, SEADBG = false;
   let TERR, STAT, BOATM, CAPM, RODM, FLAGM, SKYQ, PATCH, FARQ, DYNP, DYNA;
+  const GLN = {b:0, t:0, t0:0, hid:0, vis:0};   // the GPU's buffers and textures alive, when the view began, when the page was last hidden and shown
+  const glDiag = () => { const now = Date.now(), m = performance.memory;
+    return (document.hidden ? 'skjult' : 'synlig') + (GLN.hid ? ', sist skjult for ' + Math.round((now - GLN.hid) / 1000) + ' s siden' + (GLN.vis > GLN.hid ? ' i ' + Math.round((GLN.vis - GLN.hid) / 1000) + ' s' : '') : ', ikke skjult') +
+      ', 3D i ' + Math.round((performance.now() - GLN.t0) / 60000) + ' min, buffere ' + GLN.b + ', teksturer ' + GLN.t + ', nivå ' + QUAL.lvl + ', biter ' + CH.size + (m ? ', JS ' + Math.round(m.usedJSHeapSize / 1048576) + ' MB' : ''); };
   let HG = null, NEARM = null, MIDM = null, FINEM = null, loading = false, LIGHTS = [], snowNow = null, grassAt = null;   // the snow line in use (m; below 0 in winter), null before the first frame
   // Quality (phase K8 of the coast plan): 0 low, 1 medium, 2 high, 3 ultra (Jonas 05.10.2026: «en ultra grafikk setting ... finne ut
   // hvor grensa ligger for flagship-modeller»; only when chosen, never by auto, and only where 32-bit indices are there: UINT).
@@ -486,7 +490,7 @@ const G3 = (() => {
       else { const r = COAST3.top + Math.min(0, sd + fl) * (COAST.mole ? COAST3.gMole : COAST3.g); h = r > COAST3.deep ? r : Math.min(h, COAST3.deep); }
     }
     h = siteTerr(x, z, h);   // Father's naust and the Finnsnes shop (SITES)
-    if (BPIT.l.length) h = berthPit(x, z, h);
+    if (BPIT.l.length || (NPIT.l.length && !NPIT.off)) h = berthPit(x, z, h);
     return h > -3 && harbourNear(x, z) && inHarbourPocket({x:x / 1000, y:z / 1000}) ? -3 : h;   // the water in front of a quay (01-world.js)
   }
   // ---------- The water at the berths the company holds in the coast's harbours (core/07e-havn.js) ----------
@@ -510,10 +514,37 @@ const G3 = (() => {
     for (const [kk, c] of CH) if (moved.some(q => Math.hypot(c.x - q.x, c.z - q.z) < 700)){ freeChunk(c); CH.delete(kk); }
     staleMesh('near'); staleMesh('fine');
   }
+  // The coast's own boats at their quay berths (05-vessels.js moorHarbour, 4.16b) stood on the same bank: there too the ground goes down,
+  // where it stands over -1.2 m under the hull, out to her side and 6 m and along her length and 3 m, and only 1.5 m in from the face
+  // (no quay of ours is drawn there). Their places are fixed again only when packs or coast indexes come (MOOR.ver), so the set changes
+  // rarely: it is looked at every 30th frame for the harbours within 2.5 km of the boat, and kept in 64 m cells.
+  const NPIT = {k:'', l:[], g:new Map(), off:false, n:0};
+  function npcPits(){
+    if (++NPIT.n % 30 || typeof MOOR === 'undefined' || !VEC.tiles.size) return;
+    const R = 2500, ex = bv.x, ez = bv.z, H = []; let k = MOOR.ver + ':';
+    for (const tl of vecTilesIn(ex - R, ez - R, ex + R, ez + R)) for (const h of tl.npc || []) if (h.moorVer === MOOR.ver && Math.hypot(h.x * 1000 - ex, h.y * 1000 - ez) < R){ H.push(h); k += Math.round(h.x * 1000) + ',' + Math.round(h.y * 1000) + ';'; }
+    if (k === NPIT.k) return;
+    const was = NPIT.l; NPIT.k = k; NPIT.l = []; NPIT.g = new Map(); NPIT.off = true;
+    for (const h of H) for (const b of h.boats){ const m = b.moored; if (!m || m.buoy || m.dock || m.none) continue;
+      const px = m.p.x * 1000, pz = m.p.y * 1000, sn = Math.sin(m.hd), cs = Math.cos(m.hd), B = b.B || 3, L = b.L || 10, o = B / 2 + 2;
+      if (terrRaw(px, pz) < -1.2) continue;
+      // (the face on the side with the bank: across her heading, the higher ground)
+      const sg = terrRaw(px + cs * o, pz + sn * o) > terrRaw(px - cs * o, pz - sn * o) ? 1 : -1, nx = -sg * cs, nz = -sg * sn, fx = px - nx * (B / 2 + 0.4), fz = pz - nz * (B / 2 + 0.4);
+      const a1 = L / 2 + 3, w = B + 6, r = Math.hypot(a1, w + 2) + 1;
+      NPIT.l.push({x:fx, z:fz, ux:sn, uz:-cs, nx, nz, a1, a0:L / 2 + 2, w, inl:1.5, d:Math.max(3, (b.T || 1.5) + 1), x0:fx - r, x1:fx + r, z0:fz - r, z1:fz + r}); }
+    NPIT.off = false;
+    for (const q of NPIT.l) for (let i = Math.floor(q.x0 / 64); i <= Math.floor(q.x1 / 64); i++) for (let j = Math.floor(q.z0 / 64); j <= Math.floor(q.z1 / 64); j++){ const c = i * 65536 + j; let L = NPIT.g.get(c); if (!L) NPIT.g.set(c, L = []); L.push(q); }
+    const moved = was.filter(q => !NPIT.l.some(p => p.x === q.x && p.z === q.z)).concat(NPIT.l.filter(q => !was.some(p => p.x === q.x && p.z === q.z)));
+    if (!moved.length) return;
+    for (const [kk, c] of CH) if (moved.some(q => Math.hypot(c.x - q.x, c.z - q.z) < 700)){ freeChunk(c); CH.delete(kk); }
+    staleMesh('near'); staleMesh('fine');
+  }
   function berthPit(x, z, h){
-    for (const q of BPIT.l){ if (x < q.x0 || x > q.x1 || z < q.z0 || z > q.z1) continue;
+    const pit = q => { if (x < q.x0 || x > q.x1 || z < q.z0 || z > q.z1) return false;
       const dx = x - q.x, dz = z - q.z, a = Math.abs(dx * q.ux + dz * q.uz), n = dx * q.nx + dz * q.nz;
-      if (n <= q.w && (n >= 0 ? a <= q.a1 : n >= -4 && a <= q.a0)) return Math.min(h, -q.d); }
+      return n <= q.w && (n >= 0 ? a <= q.a1 : n >= -(q.inl || 4) && a <= q.a0); };
+    for (const q of BPIT.l) if (pit(q)) return Math.min(h, -q.d);
+    if (!NPIT.off){ const L = NPIT.g.get(Math.floor(x / 64) * 65536 + Math.floor(z / 64)); if (L) for (const q of L) if (pit(q)) return Math.min(h, -q.d); }
     return h;
   }
   // ---------- Father's naust and the Finnsnes shop (tools/harbour/naust.py, butikk.py; where: core/07c-naust.js) ----------
@@ -903,7 +934,7 @@ const G3 = (() => {
     meshTask('mid', MIDM && MIDM.gn === QUAL.midN[QUAL.lvl] ? MIDM : null, cx - span / 2, cz - span / 2, span, QUAL.midN[QUAL.lvl], null, (M, dirty) => { const old = MIDM; MIDM = M; MIDM.cx = cx; MIDM.cz = cz; MIDM.stale = dirty; shSeed(MIDM, old); if (old) freeMesh(old); });
   }
   function updateNear(){
-    berthPits(); stream3d(); nearWanted(); fineWanted(); updateMid(); updateFar(); meshStep(); tileStep(); if (LMJOB) lmStep();   // the near mesh first when more than one is due
+    berthPits(); npcPits(); stream3d(); nearWanted(); fineWanted(); updateMid(); updateFar(); meshStep(); tileStep(); if (LMJOB) lmStep();   // the near mesh first when more than one is due
   }
   function nearWanted(){
     const span = QUAL.near[QUAL.lvl][cam.dist > 1200 ? 1 : 0], snap = span / 10, cx = Math.round(bv.x / snap) * snap, cz = Math.round(bv.z / snap) * snap;
@@ -4501,6 +4532,13 @@ const G3 = (() => {
       // closed and opened again), or for the machine
       if (!gl) throw new Error(S.lang === 'en' ? 'no WebGL context (the browser has turned 3D off, often after a driver error: close the browser fully and open it again)' : 'ingen WebGL-kontekst (nettleseren har slått av 3D, ofte etter en driverfeil: lukk nettleseren helt og åpne den igjen)');
       { const dbg = gl.getExtension('WEBGL_debug_renderer_info'); GPU = String((dbg && gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL)) || gl.getParameter(gl.RENDERER) || '').slice(0, 80); }
+      // what lives on the GPU and whether the page was out of sight, for the log when the context is lost in play (#171, a phone that
+      // loses it 11-17 minutes in): the buffers and textures made and not deleted, counted where the view makes them (rare calls only)
+      if (!gl.__n){ gl.__n = true; GLN.b = 0; GLN.t = 0; GLN.t0 = performance.now();
+        const cb = gl.createBuffer.bind(gl), db = gl.deleteBuffer.bind(gl), ct = gl.createTexture.bind(gl), dtx = gl.deleteTexture.bind(gl);
+        gl.createBuffer = () => { GLN.b++; return cb(); }; gl.deleteBuffer = x => { if (x) GLN.b--; return db(x); };
+        gl.createTexture = () => { GLN.t++; return ct(); }; gl.deleteTexture = x => { if (x) GLN.t--; return dtx(x); };
+        document.addEventListener('visibilitychange', () => { if (document.hidden) GLN.hid = Date.now(); else GLN.vis = Date.now(); }); }
       if (!glWatch){
         // a lost context: the view stops; lost before it was ready (a phone short of memory, or a GPU process that restarted), it
         // starts again when the browser gives the context back
@@ -4509,7 +4547,7 @@ const G3 = (() => {
           if (!wasReady && stage === 'shadere' && seaLvl < 2){ try { localStorage.setItem(SEA_KEY, String(seaLvl + 1)); } catch (e2){}
             failWhy = S.lang === 'en' ? 'the graphics driver gave up while starting. Reload the page and the game tries a simpler sea' : 'grafikkdriveren ga opp under oppstarten. Last siden på nytt, så prøver spillet en enklere sjø';
             if (typeof cloudErr === 'function') cloudErr('3D konteksten mistet i shaderne, sjønivå ' + seaLvl + ' → ' + (seaLvl + 1) + ' · ' + GPU, 'view3d init', ''); }
-          else { failWhy = 'WebGL-konteksten ble mistet'; if (wasReady && typeof cloudErr === 'function') cloudErr('3D konteksten mistet under spill · ' + GPU, 'view3d', ''); } });
+          else { failWhy = 'WebGL-konteksten ble mistet'; if (wasReady && typeof cloudErr === 'function') cloudErr('3D konteksten mistet under spill · ' + GPU + ' · ' + glDiag(), 'view3d', ''); } });
         // lost in play, every buffer, texture and program is gone with it: the game saves and loads the page again, which builds them
         // anew, at most once in ten minutes (sessionStorage), so a driver that keeps failing does not reload the page over and over
         canvas.addEventListener('webglcontextrestored', () => { if (!wasReady){ failed = false; failWhy = ''; show(true); return; }
@@ -5351,6 +5389,14 @@ const G3 = (() => {
       if (!slab(px * b.c - pz * b.s, dx * b.c - dz * b.s, -b.hx, b.hx, r) || !slab(px * b.s + pz * b.c, dx * b.s + dz * b.c, -b.hz, b.hz, r) || !slab(o[1], dy, b.y0, b.y1, r)) continue;
       if (r[0] >= 0 && r[0] < best) best = r[0];
     }
+    // the other boats in sight (npcNow: the coast's, Senja's fleet, the players'), each a box of her length and beam from the waterline to
+    // her wheelhouse's roof (the coastal ship and the ferry to their bridges), so the camera does not go into a boat lying alongside
+    for (const n of npcNow){ const L = n.L || 9, B = n.B || L / 3, x = n.p.x * 1000, z = n.p.y * 1000, rr = L / 2 + B;
+      if (x + rr < x0 || x - rr > x1 || z + rr < z0 || z - rr > z1) continue;
+      const big = n.type === 'coastal' || n.type === 'ferry', cs = Math.sin(n.hd || 0), sn = Math.cos(n.hd || 0), px = o[0] - x, pz = o[2] - z; r[0] = -Infinity; r[1] = Infinity;
+      if (!slab(px * cs - pz * sn, dx * cs - dz * sn, -L / 2, L / 2, r) || !slab(px * sn + pz * cs, dx * sn + dz * cs, -B / 2, B / 2, r) || !slab(o[1], dy, (env.tide || 0) - 1, (env.tide || 0) + (big ? 18 : Math.min(7, 2 + L * 0.25)), r)) continue;
+      if (r[0] >= 0 && r[0] < best) best = r[0];
+    }
     return best;
   }
   // is a point inside something solid (for the tests)
@@ -5888,6 +5934,6 @@ const G3 = (() => {
     // the cinema: on or off (the HUD is the page's: body.kino-clean)
     kino(on){ if (on !== undefined){ KINO.on = !!on; KINO.shot = null; } return KINO.on; }, intro:introStart, introOn:() => !!INTRO, get kinoShot(){ return KINO.shot ? KINO.shot.type : null; },
     isHelm:() => cam.helm, setHelm(on){ const G = GEO(vtype()); cam.helm = !!on; cam.zoom = 1; cam.hy = 0; cam.hp = G.hp !== undefined ? G.hp : -0.07; cam.fov = G.fov || 55; },
-    _debug:{matp:MATP, nf:NF, cld:CLD, cfx:CFX, get kitStat(){ return KST; }, tankPlace(t){ if (!GB) buildGear(); const G = GEO(t), d = G.deck || {y:G.gw, z:2}, sx = G.beam / 2; return potDeck(G, G.hauler || [sx * 0.92, d.y + 1, d.z - 1.3], sx, d, ((GB.px || {}).pot || {}).half || 0.7, t).tank; }, get dk(){ const now = performance.now() / 1000; return {ev:DKEV.map(e => ({kind:e.kind, who:e.who, for:e.for || null, age:+(now - e.t0).toFixed(2), chained:!!e.chained})), deck:DKDECK.length, lay:Object.keys(DKLAY).length, n:Object.assign({}, DKN)}; }, kitPart:(f, nm) => !!kit(f, nm), kitX, get anchl(){ return ANCHAL; }, get anc3(){ return {mode:ANC3.mode, Lg:+ANC3.Lg.toFixed(2), links:ANC3.links, splash:ANC3.splash}; }, jigRail:t => jigRail(t, GEO(t)), get jsms(){ return JSMS; }, lift:LIFT, bv, pota:POTA, get fps(){ return FPS.v; }, get cam(){ return cam; }, trawl(mode, at, hold){ TRAWL.mode = mode || null; TRAWL.t0 = performance.now() / 1000 - (at || 0); TRAWL.hold = hold ? at || 0 : null; return mode; }, seine(mode, at, hold){ SEINE.mode = mode || null; SEINE.t0 = performance.now() / 1000 - (at || 0); SEINE.hold = hold ? at || 0 : null; return mode; }, get seineNow(){ return seineState(performance.now() / 1000); }, get trawlNow(){ const st = trawlState(performance.now() / 1000); return TRAWL.mode ? Object.assign({mode:TRAWL.mode}, st) : null; }, get trk(){ const D = dynTrackView(); if (D) return D; return TRK && {s:TRK.s, v:TRK.v, vc:TRK.vc, end:TRK.end, sIn:TRK.sIn, back:TRK.back, turnL:TRK.turnL, done:TRK.done, stops:TRK.stops.map(q => q.s), P:TRK.P}; }, get peers(){ return npcNow.filter(n => n.player).map(n => ({id:n.id, vtype:n.vtype, t:n.K ? n.K.t : null, glass:!!(n.K && n.K.glass)})); }, get air(){ return airNow.map(a => ({kind:a.kind, w:a.w.map(Math.round)})); }, get airM(){ return !!(AIRM && AIRM.plane); }, get curFov(){ return curFov; }, cam, moundTop, bridgeInto, get statTris(){ return STAT ? STAT.n / 3 : 0; }, get vec(){ return {tiles:[...VEC.tiles.values()].map(t => ({k:t.k, bld:t.bld ? t.bld.n : 0, roads:t.roads.length, bridges:t.bridges.length, piers:t.piers.length, molos:t.molos.length, quays:t.quays.length, ms:Math.round(t.ms)})), statics:[...TST].map(([k, s]) => ({k, tris:s.tris, ms:Math.round(s.ms)})), chunks:CH.size}; }, moundInto, MB, haulModel, get haulA(){ return HAULA; }, gopHands:() => typeof workAssign === 'function' ? workAssign().filter(p => p.st === 'haling').length : 0, kinoNext(){ KINO.shot = null; }, get kino(){ const k = KINO.shot, e = KINO.eye, g = KINO.tgt; if (!k || !e) return null; const t = (performance.now() - T0) / 1000; return {type:k.type, up:e[1] - Math.max(terrH(e[0], e[2]), seaH(e[0], e[2], t)), free:camFree(g, e), d:Math.hypot(e[0] - bv.x, e[2] - bv.z)}; }, get PLA(){ return PLA; }, get PCA(){ return PCA; }, set noPL(v){ NOPL = !!v; }, get beams(){ return BMN; }, glErr(){ return gl ? gl.getError() : -1; }, mastTop:t => mastTop(geoOf(t)), QUAL, qualTick, TERRW, get TERR(){ return TERR; }, get MIDM(){ return MIDM; }, RO, SSL, WV, WK, ssAt, seaH, waves:(dt, H) => updateWaves(dt, H), get sstVS(){ return SST_VS; }, get seaLvl(){ return seaLvl; }, get seaBasic(){ return !!(PS && PS.basic); }, get seaOne(){ return PSF === PS; }, get seaLite(){ return !!(PS && PS.lite); }, set seaDbg(v){ SEADBG = v; }, get drift(){ let c = 0; for (let i = 0; i < SDN; i++) if (SD.age[i] < SD.life[i]) c++; return c; }, get eye(){ return lastEye; }, camInside, camFree, get camPull(){ return camPull; }, get camLift(){ return camLift; }, get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, BUNKERS, nearestPlant, fkRun, legAt, terrH, terrRaw, unitModel, get UPATCH(){ return UPATCH; }, sitesNow, siteModel, onSite, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; lightsHere(e, 50).forEach(L => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(L, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }, get landMask(){ return LMON ? lcv : null; }, get maskMs(){ return LMMS; }, get coast3(){ return COAST3; }, meshH(x, z){ const M = FINEM && x > FINEM.x0 + 8 && x < FINEM.x0 + FINEM.sx - 8 && z > FINEM.z0 + 8 && z < FINEM.z0 + FINEM.sz - 8 ? FINEM : NEARM; return M ? nearSurf(M, x, z) : NaN; }, seaU(){ if (!PS) return null; gl.useProgram(PS.p); const g = n => PS.u[n] == null ? 'none' : gl.getUniform(PS.p, PS.u[n]); return {ls:g('uLSOn'), land:g('uLandS'), rect:g('uLRect') && Array.from(g('uLRect')), hOn:g('uHOn'), sOn:g('uSOn'), lmon:LMON, gr:!!GRECT, lt:!!LMTEX}; },  get FINEM(){ return FINEM; }, get seaNP(){ return NP; }, get dpr(){ return canvas ? canvas.width / Math.max(1, canvas.getBoundingClientRect().width) : 0; }}
+    _debug:{matp:MATP, nf:NF, cld:CLD, cfx:CFX, get gln(){ return Object.assign({diag:glDiag()}, GLN); }, get kitStat(){ return KST; }, tankPlace(t){ if (!GB) buildGear(); const G = GEO(t), d = G.deck || {y:G.gw, z:2}, sx = G.beam / 2; return potDeck(G, G.hauler || [sx * 0.92, d.y + 1, d.z - 1.3], sx, d, ((GB.px || {}).pot || {}).half || 0.7, t).tank; }, get dk(){ const now = performance.now() / 1000; return {ev:DKEV.map(e => ({kind:e.kind, who:e.who, for:e.for || null, age:+(now - e.t0).toFixed(2), chained:!!e.chained})), deck:DKDECK.length, lay:Object.keys(DKLAY).length, n:Object.assign({}, DKN)}; }, kitPart:(f, nm) => !!kit(f, nm), kitX, get anchl(){ return ANCHAL; }, get anc3(){ return {mode:ANC3.mode, Lg:+ANC3.Lg.toFixed(2), links:ANC3.links, splash:ANC3.splash}; }, jigRail:t => jigRail(t, GEO(t)), get jsms(){ return JSMS; }, lift:LIFT, bv, pota:POTA, get fps(){ return FPS.v; }, get cam(){ return cam; }, trawl(mode, at, hold){ TRAWL.mode = mode || null; TRAWL.t0 = performance.now() / 1000 - (at || 0); TRAWL.hold = hold ? at || 0 : null; return mode; }, seine(mode, at, hold){ SEINE.mode = mode || null; SEINE.t0 = performance.now() / 1000 - (at || 0); SEINE.hold = hold ? at || 0 : null; return mode; }, get seineNow(){ return seineState(performance.now() / 1000); }, get trawlNow(){ const st = trawlState(performance.now() / 1000); return TRAWL.mode ? Object.assign({mode:TRAWL.mode}, st) : null; }, get trk(){ const D = dynTrackView(); if (D) return D; return TRK && {s:TRK.s, v:TRK.v, vc:TRK.vc, end:TRK.end, sIn:TRK.sIn, back:TRK.back, turnL:TRK.turnL, done:TRK.done, stops:TRK.stops.map(q => q.s), P:TRK.P}; }, get peers(){ return npcNow.filter(n => n.player).map(n => ({id:n.id, vtype:n.vtype, t:n.K ? n.K.t : null, glass:!!(n.K && n.K.glass)})); }, get air(){ return airNow.map(a => ({kind:a.kind, w:a.w.map(Math.round)})); }, get airM(){ return !!(AIRM && AIRM.plane); }, get curFov(){ return curFov; }, cam, moundTop, bridgeInto, get statTris(){ return STAT ? STAT.n / 3 : 0; }, get vec(){ return {tiles:[...VEC.tiles.values()].map(t => ({k:t.k, bld:t.bld ? t.bld.n : 0, roads:t.roads.length, bridges:t.bridges.length, piers:t.piers.length, molos:t.molos.length, quays:t.quays.length, ms:Math.round(t.ms)})), statics:[...TST].map(([k, s]) => ({k, tris:s.tris, ms:Math.round(s.ms)})), chunks:CH.size}; }, moundInto, MB, haulModel, get haulA(){ return HAULA; }, gopHands:() => typeof workAssign === 'function' ? workAssign().filter(p => p.st === 'haling').length : 0, kinoNext(){ KINO.shot = null; }, get kino(){ const k = KINO.shot, e = KINO.eye, g = KINO.tgt; if (!k || !e) return null; const t = (performance.now() - T0) / 1000; return {type:k.type, up:e[1] - Math.max(terrH(e[0], e[2]), seaH(e[0], e[2], t)), free:camFree(g, e), d:Math.hypot(e[0] - bv.x, e[2] - bv.z)}; }, get PLA(){ return PLA; }, get PCA(){ return PCA; }, set noPL(v){ NOPL = !!v; }, get beams(){ return BMN; }, glErr(){ return gl ? gl.getError() : -1; }, mastTop:t => mastTop(geoOf(t)), QUAL, qualTick, TERRW, get TERR(){ return TERR; }, get MIDM(){ return MIDM; }, RO, SSL, WV, WK, ssAt, seaH, waves:(dt, H) => updateWaves(dt, H), get sstVS(){ return SST_VS; }, get seaLvl(){ return seaLvl; }, get seaBasic(){ return !!(PS && PS.basic); }, get seaOne(){ return PSF === PS; }, get seaLite(){ return !!(PS && PS.lite); }, set seaDbg(v){ SEADBG = v; }, get drift(){ let c = 0; for (let i = 0; i < SDN; i++) if (SD.age[i] < SD.life[i]) c++; return c; }, get eye(){ return lastEye; }, camInside, camFree, get camPull(){ return camPull; }, get camLift(){ return camLift; }, get SK(){ return SK; }, get MO(){ return MO; }, PLANTS, BUNKERS, nearestPlant, fkRun, legAt, terrH, terrRaw, unitModel, get UPATCH(){ return UPATCH; }, sitesNow, siteModel, onSite, deckSlots, stepBoat:(dt, t, f) => updateBoat(dt, t, f), TRAIL, get wk(){ return wk; }, cam, bv, env, WILD, CH, lightsSeen(t){ const e = [bv.x, bv.y, bv.z]; let inR = 0, on = 0, sec = 0; lightsHere(e, 50).forEach(L => { const x = L[0] * 1000, z = L[1] * 1000, d = Math.hypot(x - e[0], z - e[2]); if (d > L[3] * 1852 * 1.3 + 500) return; inR++; if (!lightOn(L, t)) return; on++; const brg = ((Math.atan2(x - e[0], -(z - e[2])) * 180 / Math.PI) + 360) % 360; if (L[5].find(q => q[0] <= q[1] ? brg >= q[0] && brg <= q[1] : brg >= q[0] || brg <= q[1])) sec++; }); return {inR, on, sec}; }, treeTest(key){ const m = MB(); addTrees(m, key, BLD.cells.get(key) || [], false); return m.p.length; }, spawnWild(type, ahead){ const a = ahead !== undefined ? bv.head + cam.yaw + ahead : Math.random() * 6.28, dm = type === 'porpoise' ? 50 : 200; WILD.ev.push({type, t0:(performance.now() - T0) / 1000, x:bv.x + Math.sin(a) * dm, z:bv.z - Math.cos(a) * dm, hd:a + 1.6, n:type === 'humpback' ? 1 : 3, blown:{}}); }, get BLD(){ return BLD; }, CH, get NEARM(){ return NEARM; }, get landMask(){ return LMON ? lcv : null; }, get maskMs(){ return LMMS; }, get coast3(){ return COAST3; }, meshH(x, z){ const M = FINEM && x > FINEM.x0 + 8 && x < FINEM.x0 + FINEM.sx - 8 && z > FINEM.z0 + 8 && z < FINEM.z0 + FINEM.sz - 8 ? FINEM : NEARM; return M ? nearSurf(M, x, z) : NaN; }, seaU(){ if (!PS) return null; gl.useProgram(PS.p); const g = n => PS.u[n] == null ? 'none' : gl.getUniform(PS.p, PS.u[n]); return {ls:g('uLSOn'), land:g('uLandS'), rect:g('uLRect') && Array.from(g('uLRect')), hOn:g('uHOn'), sOn:g('uSOn'), lmon:LMON, gr:!!GRECT, lt:!!LMTEX}; },  get FINEM(){ return FINEM; }, get seaNP(){ return NP; }, get dpr(){ return canvas ? canvas.width / Math.max(1, canvas.getBoundingClientRect().width) : 0; }}
   };
 })();

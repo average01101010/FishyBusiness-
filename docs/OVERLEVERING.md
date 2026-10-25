@@ -850,7 +850,7 @@ Jonas: «Båten burde som oftest ligge til en skikkelig kai fremfor å ligge på
 - **Navn** (`havnNm`): nærmeste lokale navn i kartet (by eller tettsted innen 1,2 km, bukt eller sund innen 1 km, øy innen 0,7 km; skjær, grunner og vann tas ikke med) + «havn», og hver havn får sitt eget blant naboene innen 2,5 km (den som ligger nærmest et navn, tar det først). Ellers stedet havna ligger i og hvilken side av det (Bodø øst havn). Ingen firmanavn. Stikkprøve 24.10.2026: Tromsø havn, Hungerbukta, Lilleholla, Tromsøysundet, Lanesbukta, Tromsdalen; Bergen havn, Sjøflyhavnen, Breiviken; Bodø havn, Nyholmsundet, Hernes, Skagen; Båtsfjord havn, Liholmen; Hammerfest havn, Meland, Rypefjord, Indrefjorden.
 - **Serveren** (`supabase/migrations/20261023120000_berths.sql`, lagt inn 24.10.2026): tabellen `berths` (RLS uten policyer) og `berth_get(hid)`, `berth_put(...)` → `'ok' | 'taken' | 'full'` og `berth_free(slot)`, bare for `authenticated`. Et krav varer 30 dager og fornyes av `havnRenew` hver 6. time (`ui/10f-cloud.js`); høyst 30 per spiller. `havnAsk` spør om en havn høyst hvert 2. minutt. Svarer serveren `taken`, får båten en ny plass i samme havn (`havnMoved`). Prøvd i databasen med to spillere: `ok`, så `taken` for den andre, og `berth_free` sletter bare eierens.
 - **3D:** båten ligger ved `berthPose`. Ved en holdt plass langs en kaifront av type 2 tegnes betongkaia (`kai_betong`, fag på 6 m, `DKM.kaib`) langs plassen, og langs strand (type 3) trekaia på påler (`kai_tre`, `DKM.ktre`) for båter under 15 m (større: betong). Fingrene (`finger`) er ikke tatt i bruk: båtene ligger langs flytebryggene, slik havnas egne båter gjør, ikke inn mellom fingre. Fortøyningen inn i 3D tar opptil 45 s (`moorStep`).
-- **Vannet ved plassen i 3D** (`berthPits`/`berthPit` i `view3d.js`): kaifrontene i pakkene ligger på den fine kystlinja, og strandskråningen i 3D (`COAST3`: 2 m over sjøen ved linja, ned 1 på 3) satte båten på stranda (målt i Bodø: +0,9 m 3 m ut, der båten ligger). Foran en holdt plass går bakken derfor ned til 3 m under middelvann (dypgang + 1 m om det er mer), ut til båtsida + 6 m, langs lengden + 3 m i hver ende og 4 m inn under kaidekket, så trinnet mellom terrengpunktene (4 m i det fine nettet) ligger under kaia. Plassene som holdes, leses hver ramme, og når de endres, lages terrengbitene innen 700 m og det nære og fine nettet på nytt. Bare holdte plasser graves ut; NPC-båtene ved vec-kaiene har den samme skråningen under seg (ikke rettet her, se kapittel 10). Kontrollbilder 24.10.2026: Bodø (trekai, strand), Båtsfjord (betongkai), Tromsø (brygge).
+- **Vannet ved plassen i 3D** (`berthPits`/`berthPit` i `view3d.js`): kaifrontene i pakkene ligger på den fine kystlinja, og strandskråningen i 3D (`COAST3`: 2 m over sjøen ved linja, ned 1 på 3) satte båten på stranda (målt i Bodø: +0,9 m 3 m ut, der båten ligger). Foran en holdt plass går bakken derfor ned til 3 m under middelvann (dypgang + 1 m om det er mer), ut til båtsida + 6 m, langs lengden + 3 m i hver ende og 4 m inn under kaidekket, så trinnet mellom terrengpunktene (4 m i det fine nettet) ligger under kaia. Plassene som holdes, leses hver ramme, og når de endres, lages terrengbitene innen 700 m og det nære og fine nettet på nytt. Fra 24.10.2026 graves det også ut ved NPC-båtenes kaiplasser der bakken står over −1,2 m under skroget (`npcPits`: ut til båtsida + 6 m, langs lengden + 3 m, og bare 1,5 m inn fra fronten, fordi ingen kai av våre tegnes der), for havnene innen 2,5 km, sett på hver 30. ramme og holdt i ruter på 64 m. Før og etter i Båtsfjord, Tromsø og Bodø: båtene lå på stranda og flyter nå ved kaia. Kontrollbilder 24.10.2026: Bodø (trekai, strand), Båtsfjord (betongkai), Tromsø (brygge).
 - Test: `havntest.py` (bygger `dist-vec/` selv) i Bergen, Bodø, Tromsø og Båtsfjord: havner med ledig plass for sjark og 15 m-båt, plassen på vann og dyp nok, fri for havnas båter, Autonav inn, fortøyd, holdt og avgift per døgn, ikke gitt til selskapets andre båt eller der en annen spiller ligger, og sluppet ved avgang.
 
 ### 4.17 Reglenes kartdata langs hele kysten (R1 av regelplanen, 04.10.2026)
@@ -1766,7 +1766,7 @@ Kvotesystemet ligger i `core/03d-quota.js` (04.10.2026, plan Q1–Q6). Grunnlage
 - **Kvote-appen:** fanene Mine kvoter, Åpen gruppe (gruppekvote, fisket så langt, stopp, økninger og ferskfisk), Bestand (graf over gytebestand og totalkvote med B_pa og B_lim) og Marked.
 - **Kystposten:** stoppvarsel og stopp, økning, fritt fiske, endringer i ferskfiskordningen, kvoterådet for neste år (26. juni), totalkvoten (17. oktober) og reguleringen for neste år (19. desember).
 - **Kvoteprisen** (`KPK`) står på 260 kr/kg. Jeg fant ingen kilde for kvotepriser (se kapittel 10). Med større kvoter i 2027 koster hjemlene mer, og inngangen til lukket gruppe kommer litt senere i `progweek`.
-- **Blad B** (`BLADB`, `S.fm`, `fmLand` i `sell()`): Deltakerloven § 6 krever at den som får ervervstillatelse, har drevet ervervsmessig fiske i minst tre av de siste fem årene (lov 26. mars 1999 nr. 15, Lovdata). Blad B i fiskermanntallet er det vanlige beviset. I spillet er det forenklet til 10 landingsdager med deg om bord og 1 G i førstehåndsverdi (130 160 kr, G fra 1. mai 2025, nav.no). Fiskeridirektoratet sender melding, Papirer i Sjømann-appen har et kort med fremdriften, og en båt med hjemmel krever blad B. Gamle lagringer får det fra sluttsedlene, eller med en gang hvis de har en hjemmel.
+- **Blad B** (`BLADB`, `S.fm`, `fmLand` i `sell()`): Deltakerloven § 6 krever at den som får ervervstillatelse, har drevet ervervsmessig fiske i minst tre av de siste fem årene (lov 26. mars 1999 nr. 15, Lovdata). Blad B i fiskermanntallet er det vanlige beviset. I spillet er det forenklet til 10 landingsdager med deg om bord og 1 G i førstehåndsverdi (136 549 kr, G fra 1. mai 2026, nav.no/grunnbelopet). Fiskeridirektoratet sender melding, Papirer i Kvote-appen har et kort med fremdriften, og en båt med hjemmel krever blad B. Gamle lagringer får det fra sluttsedlene, eller med en gang hvis de har en hjemmel.
 - **Finansiering** (`deal()`, `finance()`, `payDown()` i `core/03-simulation.js`):
   - Kystbanken låner inntil 80 % av prisen til 6,9 %, over 15 år for båt med hjemmel og 10 år ellers, og krever tre sluttsedler.
   - Innbytte og salg innfrir lånene først, og bare resten teller som egenkapital (smutthullet fra spilltest 1 er tettet). All gjeld til sammen holdes innenfor 80 % av verdien på flåten med den nye båten.
@@ -3432,7 +3432,7 @@ Ikke gjort: animert mannskap og kran ved løftet, lyd, og at stedene i `steder.j
 | Én båt | NFD pressemelding 19.12.2025 | «Ein person, ein båt, ein kvote» |
 | Bifangst uten adgang | J-161-2026 § 35 (sjekket 04.10.2026) | Høyst 10 % torsk, hyse og sei samlet per landing, og høyst 2 t torsk |
 | Kveite | Høstingsforskriften § 39, 2026 | Fredet 20.12–20.4, 84 cm / 7,2 kg, slippes over 200 cm |
-| Minstepriser | Råfisklaget, 21.09.2026 og rundskriv 7/2026 | Se `SPECIES.cls` |
+| Minstepriser | Råfisklaget: dynamiske minstepriser for torsk, hyse og sei, og rundskriv 13/2026 for de andre artene (21.09–13.12.2026, kontrollert 24.10.2026) | Se `SPECIES.cls` |
 | Priser og sesong | Råfisklaget, salgsstatistikk 2025 | Troms-sonen, fersk |
 | Fiskere | Fiskerregisteret 2025 | 9 210 med fiske som hovedyrke og 1 115 med biyrke. Troms 963, 6 % kvinner, 24 % under 30 år |
 | Kvotepris | Riksrevisjonen 2017 | 9-meters hjemmel rundt 1,8 mill. kr |
@@ -4139,111 +4139,70 @@ Jonas: «Spilleren trykker på pub og blir dermed sendt inn i puben hvor man sit
 
 ## 10. Kjente problemer og åpne spørsmål
 
-- **NPC-båtene ved vec-kaiene ligger på strandskråningen i 3D** (24.10.2026): kaifrontene ligger på den fine kystlinja, og `COAST3` gir 2 m over sjøen ved linja, ned 1 på 3, så båtene ved kaia står delvis på skråningen. Spillerens holdte plasser er gravd ut (`berthPits`, 4.16c). Det samme kan gjøres for alle kaifronter av type 2 i `terrRaw` med et cellenett over kaiene, men det endrer hele kysten i 3D og må prøves med coast3d, vectest og unittest.
-- **Mannskapssystemet (01.10.2026) er ikke spilltestet.** Usikre punkter:
-  - Antakelser: du våkner med 60 %, maten i havn er nøytral, terskelen for å lage mat uten Kokk i kjeden er kokk ≥ 3, og gode og dårlige trekk måles med faste kg per enhet (garn 25, stamp 80, teine 1,2).
-  - Hviletiden telles i hele timer. En kort tur innom kai gir derfor en hvileperiode på én time.
-  - Med standardkjedene og uten kokk på 3 eller mer får mannskapet brødskiver hver 6. time, og trivselen går mot −6. Følg med på om det blir for hardt.
-  - Når du sovner med mannskap på en båt du ikke følger, går turen videre uten deg. Ingenting stopper båten fra å komme i havn og levere mens du sover.
-  - Tester som går over 24 timer på sjøen med deg om bord, kan nå få deg til å sovne. Det vil vise seg i full regresjon.
-- **Riggen:** En båt med blandet redskap i sjøen fra en gammel lagring kan trekke alt, men bare sette det riggen tillater.
-- **Havet (02.10.2026, 5.20):**
-  - Bildetakten på nettbrettet etter endringene i havskyggeren er ikke målt (åpne med `#fps`).
-  - Skumtoppene er flekker fra støy på kammene, ikke brytende bølger.
-  - Kelvin-mønsteret er en tilnærming med én retning for skråbølgene.
-  - Vinden har ikke le bak fjellene, og den herskende vindretningen er ikke sjekket mot seklima.met.no.
-  - Fisket inne i havna i kuling trenger fortsatt en egen regel.
-- **Hus, veier, bruer og kaier langs kysten (03.10.2026, 4.15):**
-  - Artifacten har ikke `vec`-pakkene (35,5 MB får ikke plass under 256 MB), så husene utenfor Senja finnes bare i appen.
-  - Dønningen leses av eksponeringen på 500 m (`swellFactor`), som ikke ser moloene. Vindsjøen er roligere bak en molo, men dønningen er ikke det. Den kan dempes ved å lese masken nær land.
-  - Dybden ved en kaifront er fra 50 m-dybden og grov. Ukjent dybde regnes som 3 m.
-  - Kystkantene som regnes som kai, er funnet med en regel (rett kyst nær en brygge eller et stort industribygg). Små havner uten kartlagte brygger kan mangle fronter, og en steinfylling nær en brygge kan bli regnet som kai.
-  - Senja-flåtens kaiplasser kommer når flisas `vec`-pakke er lastet (i 3D innenfor 14 km), og før det ligger båtene som før. Del 5 skal regne plassene ut i rørledningen, så alle får de samme uansett hva som er lastet.
-  - Bildetakten med bygg i tette byer er ikke målt på nettbrettet (åpne med «Vis bildetakt»).
-- **NPC-trafikken langs kysten (04.10.2026, 4.16):**
-  - Båtene går rett fra kaiplassen til havnemunningen, og den streken kan krysse en brygge.
-  - Noen få leibiter skjærer et hjørne av land.
-  - Terrenget ved en kaifront er fra 25 m-masken, så en båt ved kai kan stå litt inn i terrenget der kaia ikke er kartlagt som brygge.
-  - Havnene har ingen navn.
-  - Flåten er en tilnærming. Den følger kaiplassen, ikke Fiskeridirektoratets register.
-- **Kartplotteren: dobbel kyst langs vannlinja (03.10.2026). Løst 04.10.2026 med «Kystlinja gjelder», se 4.19.** Det som sto her:
-  - **Hva som ses:** på nært hold ligger et mykt grønt felt ved siden av den gule kysten, og smale sund er tettet med grønt. Det ser ut som to landmasser oppå hverandre.
-  - **Årsaken:** kartet tegner land fra to kilder.
-    - Den gule kysten er vektorkysten fra Overture/OSM (`coast2`, forenklet til 3 m, `chartCoast` i `03a-chart.js`).
-    - Det grønne er 25 m-masken, de samme polygonene gjort om til ruter (en rute er land hvis midten er det, `fill` i `tools/map/region.py`), pluss moloene. Spillet bruker masken i `isLand`, `legClear` og `groundCheck` (`01-world.js`).
-    - På nivå 2 tegner `chartRaster` (`03-map.js`) masken som grønn fjære der den er land utenfor kysten (K7, så spilleren skal se hvorfor en rute blir avvist). Siden 03.10.2026 leses den bilineært, så kanten blir myk.
-    - Maskens kant kan ligge 12–18 m fra kysten, til begge sider, og sund under 25–40 m blir lukket.
-  - **Tre måter å rette det på:**
-    1. **Kystlinja gjelder** (anbefalt):
-       - Landsjekken nær kysten bruker `coast2`, og masken er bare en rask forhåndssjekk. Vektorkysten brukes bare der maskens 3 × 3 nabolag er blandet. Avgjørelsen tas lokalt ved å telle kryssinger av kanter fra en rute med kjent svar.
-       - Chart-pakkene lastes da rundt båtene, ikke bare i kartvisningen.
-       - Moloene, og mask-land mer enn én rute fra vektorland, er fortsatt land.
-       - Fjæra tegnes bare der kildene virkelig er uenige.
-       - Ingen nye kartdata. Rundt en halv til en hel dag, med `routetest`, `charttest`, `helmtest` og `trip2`.
-    2. **Bare fjern det grønne:** raskt, men en rute gjennom et smalt sund kan bli avvist uten synlig grunn.
-    3. **Kysten tegnes fra masken** (glattet konturlinje): kart og spill blir like, men kysten blir mindre detaljert på nært hold.
+Gjennomgått punkt for punkt mot koden, git-loggen og feilloggen 24.10.2026. Det som var løst, er strøket (lista nederst). Resten er sortert: feil som skal rettes, spillbarhet, anslag, valg, det som må måles, testene og små ryddejobber.
 
-- **Sertifikatene i Sjømann er ikke sjekket mot kildene.** Søk viste «Fiskeskippersertifikat klasse C eller D6» for båter under 15 m og navnene «helseerklæring for arbeidstakere på skip» og «sikkerhetsopplæring for sjøfolk på mindre skip» (Sjøfartsdirektoratet, 12 PAX-siden), men sdir.no og Lovdata var sperret fra arbeidsmiljøet. Hvilket sertifikat en fører av fiskefartøy under 15 m faktisk trenger, og at helseerklæringen varer 2 år, må sjekkes før papirene får betydning i spillet.
+### 10.1 Feil som skal rettes
 
-- **Blind spilltest 1 (30.09.2026):** Se `docs/playtest/rapport-1.md`. Feilene A1–A13 og A15 er rettet 01.10.2026 (`fixtest.py`, `shoptest.py`, `camtest.py`, `routetest.py`). A14 (ryktekoppen) forsvant med «Kaffe på kaia». Åpent fra rapporten:
-  - Lånet innfris nå ved salg og innbytte (V7). Et nytt lån starter fortsatt nye 10 eller 15 år for hele restgjelda.
-  - Fangstfeltene har liten vekt i kartet.
-  - En skipper på driftsplan kjøper ikke sekkeis i Finnsnes. Bare mottakene fyller is på driftsplanen.
-  - Kameraet holdes unna kaier, bruer, fyr, siloer, kraner og bygninger, men ikke andre båter eller kranarmen.
-  - Laster man siden på nytt rett etter en endring, kan Chrome lese en lagring som er noen sekunder gammel (localStorage skrives med forsinkelse). Sett i testmiljøet, ikke kontrollert på nettbrett. Det koster i så fall bare de siste sekundene.
+- **Noen få leibiter i NPC-rutene skjærer et hjørne av land** (`gr.pts` fra `npc.py` brukes som de er). Målt mot vektorkysten 24.10.2026: 5 av 119 leibiter rundt Tromsø, hver med rundt 10 m (ett målepunkt). Rettes best i `npc.py`.
+- **3D på Galaxy A52s (Adreno 642L, oppgave #171):** 3D starter nå med en enklere sjø (6ce4f50, 2c349cd), men konteksten mistes under spill (feilloggen: fire ganger, 11–17 minutter ut i økta og én gang etter 83, på alle kvalitetsnivåer, sist 23.10.2026). Spillet lagrer og laster siden på nytt da. Fra 24.10.2026 skriver feilloggen også om siden var skjult og hvor lenge, hvor lenge 3D har gått, levende buffere og teksturer, kvalitetsnivå, terrengbiter og JS-minne (`glDiag`, `GLN` i `view3d.js`). En seiling på 30 km i testmiljøet ga ingen lekkasje (1 000–1 076 buffere og 15 teksturer hele veien), men JS-minnet var 347 MB.
 
-- **Blind spilltest 2 (01.10.2026):** Se `docs/playtest/rapport-2.md`. Starten og ruteplanleggingen virker, og agenten kjøpte juksamaskin og ansatte mannskap. Åpent fra rapporten, i prioritert rekkefølge:
-  - Fangsten er uforklart, og den garanterte første turen (175 kg/t) gir feil forventning.
-  - Havna man startet fra kan ikke velges som sluttpunkt. Trykket på navneskiltet gir «Det er land», og et trykk nær havnepunktet tar utseilingspunktet.
-  - Fartsglideren i rutepanelet fanger sveip.
-  - Planleggeren viser ikke bølger langs ruta.
-  - Innloggingsbonusen forklarer ikke at den gjelder ekte dager.
-  - Reglene når ikke fram uten at spilleren leter dem opp.
+### 10.2 Spillbarhet (fra spilltestene og egne notater)
 
-- **Varmekartet, åpne punkter:**
-  - Fangsten for fraværstida (`catchUp` i `11-boot.js`) regnes før dybdedataene er lastet. Da brukes den grove dybdemodellen, og på de tre ytre feltene blir fraværsfangsten bare 42–60 % av det den skulle vært. Ikke rettet: det endrer balansen og må avgjøres først.
-  - Sonarens pris (150 000 kr) og monteringstid (16 t) er antakelser.
-  - Bare skiffen har konsoll i 3D, så de andre båtene viser ikke ekkolodd eller varme i 3D.
-  - Utstyr som ikke passer en ny båt, forsvinner ved båtbytte uten refusjon (som før). Teksten i Utstyr-appen sier det nå.
+- **Fangsten er uforklart, og den garanterte første turen gir feil forventning** (spilltest 2): full last på første tur (`03-simulation.js`, påfyllingen i `05-vessels.js`), nå også med luksushaill. Etter første levering sier ingenting at turen var ekstra god eller hva vanlig fiske gir. Varmekartet, ekkoloddet, fangstmerkene og Fiskeguiden viser nå hvor fisken er.
+- **Planleggeren viser ikke bølger langs ruta**, bare «her» og på åpent hav i Vær-fanen.
+- **Innloggingsbonusen** sier «Hver dag du åpner spillet gir 1 % til», men ikke at det er ekte dager eller når neste prosent kommer (kjernen regner riktig med kalenderdager).
+- **De navngitte fangstfeltene finnes bare på Senja** (spilltest 1: «fangstfeltene har liten vekt»). Resten av kysten har varmekartet og ekkoloddet.
+- **Reglene** ble lagt der spilleren er i R4 (05.10.2026: røde linjer i rutekortene, sperre ved «Kast loss», regelrad i statusboksen, førstegangstips). Bekreftes i neste spilltest.
+- **Fiske inne i havna i kuling** har ingen egen regel (`inHarbour` brukes ikke av fisket).
+- **Mannskapet er ikke spilltestet:** du våkner med 60 % (`ENERGY.wake`); uten noen med kokk ≥ 3 blir det tørre brødskiver hvert 6. time, som gir −6 i trivselen; båter uten bysse får matpakke (−3). Følg med på om det blir for hardt.
 
-- **Redskap, åpne punkter:**
-  - Kongekrabbe: fangsten per teine, hvor lenge krabben lever om bord, teineprisene, prisen under 0,8 kg og månedsprisene mellom de kjente er anslag. Linjene for kvoteområdet er tilnærmet.
-  - Hvilke havner som har egnebu, og hva egning koster, er antakelser.
-  - Kvotetillegg for landegnet line er ikke bekreftet og ikke bygget inn.
-  - NPC-båtene har ikke egne blåser ennå.
+### 10.3 Anslag og antakelser (tall uten sikker kilde)
 
-- **Malo-modellen (`breisjark`), åpne punkter:** Skrogformen under vannlinja er anslått (tegningen har ikke spantriss). Fra rattet ser du bare konsollen, ikke stoler eller instrumenter. Rekkverk og vaiere er tynne og kan flimre på avstand. Lyset i spillet er enklere enn i Blender, så sammenlign i spillet, ikke bare med Cycles-bildene. Fila gjør `dist/index.html` 1,25 MB større (6,2 MB). Alle 14 typer på denne måten ville gitt rundt 18 MB, over grensen på 16 MB for én artifact, så de neste krever ekstra filer i artifacten eller PWA-en.
-- **Havsjarken (`sjark`), åpne punkter:** Formen under vannlinja er anslått, og ballastkjølen er en egen kropp som ikke glir over i skroget. Stytteseglet står alltid, også i havn. Styrhusets dør på babord side og innredningen er ikke med. De to sjarkmodellene gjør sammen `dist/index.html` rundt 2,6 MB større (7,5 MB).
-- **Starterbåten (`skiff`), åpne punkter:** Den gamle skiffen i `buildSkiff` bygges fortsatt én gang og byttes ut med GLB-delene. Den er reserve og kan ryddes bort. Skjermene i konsollen er ikke levende lenger (Jonas). Sløyebordet og blødekaret står tett ved setet, og blødekaret er tegnet i 75 % størrelse. Med de tre detaljerte båtene er `dist/index.html` 8,2 MB.
-- **Fartøystigen, usikre tall og regler:**
-  - Kvoteprisen (260 kr/kg) er et anslag fra ett salg i 2025 og Riksrevisjonen i 2017. Ingen kilde publiserer kvotepriser (Fiskeridirektoratet, Råfisklaget, HI og NAV sjekket 04.10.2026). Fiskeridirektoratet regner 54 kr/kg ved første hånd, så 260 kr/kg er rundt fem års førstehåndsverdi.
-  - Vilkårene til Innovasjon Norge (15 %, 8,9 %, 10 år) er ikke sjekket. Andelen er satt for spillets tempo.
-  - G er 130 160 kr (fra 1. mai 2025) og er ikke oppdatert for 2026.
-  - Havbåtenes priser og vekt er grove anslag, og statusen til snøkrabbekonsesjonen er ikke sjekket.
-  - Blad B er en forenkling av deltakerloven § 6 (tre av fem år). Sertifikatene låser ingenting ennå.
-  - Et nytt lån legges sammen med det gamle og betales over nye 10 eller 15 år.
-  - `portFits` (kaifront og dybde per havn) er ikke bygget. Alle kystbåtene får plass i alle havner, men havbåtene trenger det når havsteget kommer.
-  - NPC-modellene er ikke målt med CPU-struping. Første gang en modell trengs, tar den 5–11 ms å bygge.
-- **Minstepriser for andre arter etter 21.09:** Rundskriv 13/2026 er ikke hentet, så lyr og de andre bygger på rundskriv 7/2026.
-- **Farten i 3D:** Med tempo 1:6 går båten seks ganger raskere enn virkeligheten. Bevegelsen er jevn, men farten ser høy ut.
-- **`S.owned`** er en liste over båttyper fra før flåtemodellen. «Neste mål» følger stigen og bruker hjemlene i flåten, men lista finnes fortsatt.
-- **Kveithaill** kan gi rundt 8 000 kr per dag ved kveitefiske om høsten. Sjekk balansen i spilltesting.
-- **Klær og kulde:** `coldPen` bruker hele mannskapet (`S.crew.length`), ikke bare dem som er om bord.
-- **Sløyetid:** 300 kg per person og time for sløying og 800 for ising er anslag. Jeg fant ingen god kilde for håndsløying av torsk, så tallene må justeres i spilltesting.
-- **Driftsplan i åpen gruppe:** En skiff på driftsplan uten kveiteutstyr leverer nesten bare fisk som blir inndratt, fordi torsk, hyse og sei er over bifangstgrensen. Det er etter reglene, men spilleren bør få et tydeligere råd om å kjøpe kveiteutstyr.
-- **Drivstoff i Finnsnes:** Bildene viser bare bøteri og utstyrsforhandler i Finnsnes. Jonas vil at Finnsnes selger drivstoff inntil videre (29.09.2026), fra kaia båten ligger ved.
+- **Penger og stigen:** kvoteprisen 260 kr/kg (`KPK`, ett salg i 2025 på rundt 270 kr/kg; ingen kilde publiserer kvotepriser), Innovasjon Norges vilkår (15 %, 8,9 %, 10 år, ikke funnet), havbåtenes priser og vekt, snøkrabbekonsesjonen (bare en tekst), blad B som forenkling av deltakerloven § 6.
+- **Kvotemodellen (04.10.2026):** totalkvoten for 2027 (HIs råd med inntil 8 % over; sjekk igjen etter fiskerikommisjonen), tredjelandsandelen 13,455 % (regnet ut fra § 2 for 2026), bestandsmodellen fra 2028 (seiens gytebestand mangler), flåtemodellen i åpen gruppe (trekkes nå per år, halvparten av årene stopper mellom tidlig april og midten av mai; 2025 er ikke sjekket), fordelingen av de 1 622 hjemlene på lengdene, min lesning av J-244-2025 (ingen avkorting under 11 m), NPC-eierens andel på 50 % i kvotesamarbeid, og at strukturgevinst etter «modell X» ikke går tilbake.
+- **Priser:** minsteprisene for de andre artene følger rundskriv 13/2026 og gjelder til 13.12.2026; ny liste må hentes da. Kvitlange under 0,7 kg har fri pris i rundskrivet, spillet bruker 4,30 kr/kg rund. Fryst fisk betales etter minsteprisen (lik fersk) og tas imot på alle mottak (D3; i virkeligheten fryselager og auksjon).
+- **Redskap:** kongekrabbe (fangst per teine, hvor lenge krabben lever om bord, teineprisene, prisen under 0,8 kg, månedsprisene mellom de kjente, linjene for kvoteområdet), hvilke havner som har egnebu og hva egning koster (`egnPort`, «not checked»), sonarens pris (150 000 kr). Kvotetillegg for landegnet line er ikke bekreftet og ikke bygget inn.
+- **Arbeid og fisk:** sløying 300 kg og ising 800 kg per person og time (`DECK`, skaleres nå med innsats og ferdighet), ublødd fisk holder dobbelt så dårlig (spillets regel, D3).
+- **Kart og havner:** dybden ved en kaifront er fra 50 m-rutenettet og grov, ukjent dybde regnes som 3 m (`QUAY_DEPTH_UNKNOWN`); kystkantene som regnes som kai, er funnet med en regel, så en steinfylling som ikke er kartlagt som molo, kan bli kai; dønningen (`swellFactor`, eksponeringen på 500 m) ser ikke moloene; NPC-flåten følger kaiplassene, ikke Fiskeridirektoratets register.
+- **Havet og været:** skumtoppene er støyflekker på kammene (dekningen følger Monahan og O'Muircheartaigh), Kelvin-mønsteret har én retning for skråbølgene, vinden har ingen le bak fjellene, og grunnretningen (225° pluss støy) er ikke sjekket mot seklima.met.no.
+- **Havner for havbåtene:** `quayFit` sjekker kailengde og dybde for NPC-båtene og spillerens liggeplasser (4.16c), men mottakene, butikkene og verftene i `PORTS` har ingen slik sjekk. Det trengs når havsteget kommer.
 
-- **Kvotesystemet, usikre tall og regler (04.10.2026):**
-  - Totalkvoten for 2027 var ikke satt da systemet ble bygget, så spillet bruker HIs råd med inntil 8 % over.
-  - Tredjelandsandelen i formelen for Norges kvote (13,455 %) er regnet ut fra § 2 for 2026, ikke hentet fra en kilde.
-  - Bestandsmodellen fra 2028 er enkel og kalibrert på HIs serie 2014–2027. Seiens historiske gytebestand ble ikke funnet.
-  - Flåtemodellen i åpen gruppe er kalibrert slik at kvotene for 2026 gir stopp rundt midten av april. Den treffer ikke 2025, da stoppen kom 15. mai med høyere overregulering.
-  - Fordelingen av de 1 622 hjemlene på hjemmelslengdene spillet selger, er et anslag. Fiskeridirektoratet oppgir bare gruppene under 11, 11–14,9, 15–20,9 og 21–27,9 m.
-  - Om den særlige kvoteordningen under 11 m har avkorting, er min lesning av J-244-2025 (ingen avkorting).
-  - Andelen til NPC-eieren i et kvotesamarbeid (50 %) er en antakelse.
-  - Fartøy på 21–27,99 m har forbud mot å fiske torsk innenfor grunnlinjen (§ 32). Grunnlinjen finnes ikke i kartdataene, så det er ikke håndhevet.
-  - Strukturgevinst som går tilbake etter «modell X», er ikke modellert. Strukturkvoten bare faller bort.
-- **`heattest` i testmiljøet (04.10.2026):** Ytelsesmålingen med CPU ×4 holder ikke 3 s i testmiljøet, fordi SwiftShader tegner 3D på den strupede CPU-en. Bygget fra før 04.10 oppfører seg likt (målt med det samme prøveskriptet). Testen bruker rundt 50 minutter. Mål heller på nettbrettet.
+### 10.4 Valg (står med vilje)
+
+- **Turen går videre når du sover:** med mannskap om bord tar styrmannen eller den mest sjøvante roret. Det følger regelen om én felles klokke.
+- **Kranen er ikke med i kamerahindringene** (`camSolid`/`camFree` i `view3d.js`; kaier, bruer, fyr, siloer, bygninger og båtene i nærheten er med). Søyla er rundt 1 m tykk og står 2 m fra landingsplassen, så som hindring ville den dratt følgekameraet helt inn hver gang den kom mellom båten og kameraet under levering. Bommen svinger (vurdert 24.10.2026).
+- **Tempo 1:6** (`GAME_RATE`): farten ser høy ut i 3D, men de korte bølgene følger båten med 5/6 av farten, så vannet passerer skroget i ekte fart (Jonas 19.10.2026).
+- **Lån:** et nytt lån legges til restgjelda og betales over nye 10 eller 15 år (120 måneder ved båtkjøp, 180 ved strukturkjøp og kjøp med hjemmel). Lånet innfris ved salg og innbytte.
+- **Båtmodellene viser bare utsiden** (Jonas 06.10.2026): ingen innredning, og fra rattet på Malo ses konsollen og en enkel stol.
+- **Fingrene på flytebryggene er ikke i bruk:** båtene ligger langs bryggene, slik havnas egne båter gjør (4.16c).
+- **Riggen:** trekking sjekker ikke riggen, men utsetting gjør det, og omrigging er sperret så lenge redskap står i sjøen. Blandet redskap kan bare komme fra lagringer fra før 07.10.2026, og det er ufarlig.
+
+### 10.5 Må måles eller ses i spillet
+
+- **Bildetakten på nettbrettet** etter endringene i havskyggeren og med bygg i tette byer. Telemetrien `tm_perf` (`10f-cloud.js`) sender bildetakten, men ikke posisjonen, så tette byer kan ikke skilles ut i dashbordet.
+- **NPC-modellenes byggetid med CPU-struping:** tallet 5–11 ms er fra før Blender-modellene og må måles på nytt.
+- **Båtmodellene:** formen under vannlinja er anslått på Malo og havsjarken, havsjarkens ballastkjøl er en egen kropp, og stytteseglet står alltid, også i havn. Om Maloens tynne rekkverk og vaiere (7–24 mm) flimrer, må ses i spillet.
+- **Lagringen:** spillet lagrer hvert 5. sekund, når siden lukkes og når fanen skjules. At Chrome skriver localStorage til disk litt etter, er nettleserens oppførsel; det er ikke målt på nettbrettet.
+
+### 10.6 Tester som feiler (regresjonen 24.10.2026)
+
+- **Feiler også før D1 (4601b9b):** maptest (fangsten 62,6 mot 69,7 kg og 1–2 minutter ulik med og uten pakker), camtest (Gisundbrua, 0 av 24), bunkertest (mottakene i nærheten fyller ved kaia), charttest (navn i regionen, sømmer i hele landet, tegnetid 3,1 s i fjorden).
+- **Feiler også før D2:** geartest (stasjonene ved garn- og linehaling, #75), routetest (båten i 3D stopper 22 m fra siste veipunkt).
+- **Ustabile:** worktest og crewwalk (tilfeldig mannskap fra `genCrew`), anchor3d (tidsfølsom; feiler annenhver gang på D2 og D3, besto 3 av 3 før D1).
+- **Svak sjekk:** `heattest.console3d` lagrer `SK.cvP`, som ikke males på GLB-skiffen, og sjekker bare `G3.isActive()`.
+- Ikke kjørt i siste regresjon (tidsgrensen): heattest, sea3d, teleport3d, lighttest, kinotest, haultest, potshot, aurorashot, penshot, deckshot, workshot, brotest og tut. De dekker ingen filer som ble endret i D2 og D3.
+
+### 10.7 Små ryddejobber
+
+- `S.owned` skrives fortsatt (`03-simulation.js`, `05-phone.js`, `05-vessels.js`), men leses bare av en lagringsmigrering i `11-boot.js`.
+- Ikonet `sjomann` i `05-phone.js` brukes ikke (Sjømann-appen ble fjernet 09.10.2026).
+- Startbåten er `trebat`. `buildSkiff` bygges fortsatt og er grunnlaget for kitet til håndbåtene (`handKit`), så den kan ikke bare fjernes. På skiffen står sløyebordet og blødekaret (75 % størrelse) tett ved setet, og konsollskjermene er ikke levende (Jonas).
+
+### Strøket 24.10.2026 (løst eller foreldet)
+
+Rettet 24.10.2026 etter gjennomgangen: Senja-flåtens skrog på land ved kaia (`hullDry` i `npcBerths`, Finnsnes hadde to), like havnenavn (`havnLocal` deler ut navnene blant havnene innen 6 km, også reservenavnene etter stedet), starthavna som sluttpunkt (`portByLabel`, og en havn nærmere enn et veipunkt tar trykket i `routeGrab`), driftsplanen uten adgang til torskefisket (varsel med råd om kveiteutstyr i `driftCheck`), utstyret ved båtbytte (merknad i tilbudet og linje i loggen, `swapLeaves`), klærne og kulden (`coldPen` regner med dem om bord), NPC-båtene på strandskråningen i 3D (`npcPits`, 4.16c), NPC-båtenes vei fra kaiplassen til havnemunningen (`coastWay` i `05-vessels.js`: rett der streken er fri for brygger, flytebrygger, merker og land, ellers rett ut fra kaia 25 eller 60 m først, ellers gjennom vannrutene i 25 m-masken (`coastCells`) og rettet ut der bitene er frie, og bare en vei som er fri hele veien; i Tromsø, Bergen, Bodø og Båtsfjord gikk de blokkerte strekene fra 16 til 3, lengste omvei 2,75 ganger den rette), kameraet inn i andre båter (`camFree` sjekker båtene som tegnes nær, `npcNow`, som bokser langs kursen), fartsglideren som fanget sveip (Chromium flytter glideren til fingeren allerede ved berøringen og sender `pointercancel` når sveipet blir rulling; da får glideren verdien tilbake, `rangeTouch` i `08-actions.js`, `slidertest.py`; `pressHold` slippes nå også ved `pointercancel`, så panelet ikke står stille etter en rulling).
+
+Kino-visningen (d0fdfc2) og ristingen i bro-visningen (dc1a5a6, 5.40) fra 04.10; hviletiden i hele timer (regelen fjernet 11.10); kveithaill (fjernet 04.10); fraværsfangsten før dybdedataene (5448b5a, 02.10); bare skiffen med konsoll i 3D (varmen og ekkoloddet vises i det lille kartet for alle båter); sonarens monteringstid (alle verftsjobber tar `YARD_H`); sekkeis på driftsplanen (isen fylles på mottaket); drivstoff i Finnsnes (diesel ved butikk og verft, `docs/handelssteder.md`); § 32 og grunnlinja (håndheves fra R2, 04.10, `03e-rules.js`); minsteprisene etter 21.09 (rundskriv 13/2026, kontrollert); G (136 549 kr fra 1. mai 2026); sertifikatene i Sjømann (fjernet 09.10); heattest-målingen (besto 21.10 med 1,0 s); tester som sovner; dobbel kyst i kartplotteren (4.19); artifacten uten vec (artifacten oppdateres ikke lenger, appen har alltid vec; testbygget `dist/` har ikke vec, bare `npctest`, `havntest` og `vectest` bygger `dist-vec/`).
 
 ## 11. Testing
 

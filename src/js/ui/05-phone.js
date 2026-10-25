@@ -477,8 +477,17 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
-    ['p138', '24.10.2026', 'Plassene i driftsplanen', 'The places in the operations plan', [
+    ['p139', '25.10.2026', 'Plassene i driftsplanen', 'The places in the operations plan', [
        ['«Velg i kartet» i driftsplanen lager ikke lenger en rute. Trykket i kartet blir plassen til feltet eller juksplassen, og panelet med «Bruk plassen» kommer opp med en gang, også på telefonen. Trykker du igjen, flyttes plassen.', '«Choose in the chart» in the operations plan no longer makes a route. The tap in the chart becomes the place for the field or the jig place, and the panel with «Use the place» comes up at once, on the phone too. Tap again to move the place.']]],
+    ['p138', '24.10.2026', 'Rettelser', 'Fixes', [
+       ['Ruta kan avsluttes ved å trykke på havnas navn i kartet, også havna du startet fra. Et trykk ved havna tar ikke lenger utseilingspunktet.', 'A route can be ended by tapping the harbour\'s name in the chart, also the harbour you set out from. A tap by the harbour no longer takes the way-out point.'],
+       ['Driftsplanen sier fra når båten ikke kan lande torsk, hyse og sei uten deg om bord, og at den fisker kveite med kveiteutstyr.', 'The operations plan tells you when the boat cannot land cod, haddock and saithe without you aboard, and that it fishes halibut with halibut gear.'],
+       ['Båthandel viser hvilket utstyr som blir med den gamle båten ved innbytte.', 'The boat market shows which equipment goes with the old boat when you trade in.'],
+       ['Fiskebåtene i Finnsnes ligger ikke lenger med skroget på land, og havnene i kartet har hvert sitt navn.', 'The fishing boats at Finnsnes no longer lie with the hull on land, and the harbours in the chart each have a name of their own.'],
+       ['Fiskebåtene langs kysten ligger i vannet ved kaia i 3D, ikke oppå stranda, og de går ikke lenger gjennom brygger og land på vei ut av havna.', 'The coast\'s fishing boats lie in the water at the quay in 3D, not on the shore, and no longer go through piers and land on their way out of the harbour.'],
+       ['Kulden om bord regner med klærne til dem som er med på turen.', 'The cold aboard counts the clothes of those on the trip.'],
+       ['Kameraet i 3D går ikke lenger inn i andre båter.', 'The 3D camera no longer goes into other boats.'],
+       ['Et sveip over fartsglideren i rutepanelet ruller panelet uten å endre farten.', 'A swipe over the speed slider in the route panel scrolls the panel without changing the speed.']]],
     ['p137', '24.10.2026', 'Ferskhet og frysing', 'Freshness and freezing', [
        ['Iset fisk holder seg nå som i virkeligheten: ekstra kvalitet i to døgn, A til seks døgn og B til tolv. Turer over flere døgn lønner seg med is om bord.', 'Iced fish now keeps as it does in real life: extra quality for two days, A to six days and B to twelve. Trips of several days pay with ice aboard.'],
        ['Uiset fisk holder seg dårligere jo varmere det er. Om sommeren holder den ekstra kvalitet i rundt et halvt døgn, om vinteren lenger.', 'Fish that is not iced keeps worse the warmer it is. In summer it keeps extra quality for about half a day, in winter longer.'],
@@ -1516,6 +1525,7 @@ const PHONE = (() => {
       const ov = openVesselId(); if (ov && !mineO) h.push('<p class="ph-note">' + L('Et rederi med en båt i lukket gruppe kan ikke ha noen båt i åpen gruppe. «' + vget(vesselById(ov), 'boatName') + '» mister plassen der, men kan fiske kveite og krabbe.', 'A company with a closed-group vessel can have no vessel in the open group. «' + vget(vesselById(ov), 'boatName') + '» loses its place there, but can fish halibut and crab.') + '</p>'); }
     else { const A = deal(V.price, ti), B = deal(V.price, 0), verb = V.isNew ? L('Bestill', 'Order') : L('Kjøp', 'Buy'), openOnly = V.len < 11 && !hasLic();
       h.push(payNote(A, 'Mellomlegg med ' + bn + ' i bytte: ', 'To pay with ' + bn + ' traded in: ') + '<button class="ph-btn p" data-pa="buy" data-ti="1" data-k="' + k + '"' + (A.ok && free && !tiLocked(curVessel()) ? '' : ' disabled') + '>' + verb + L(' og bytt inn ' + bn, ', trading in ' + bn) + '</button>');
+      { const lv = swapLeaves(k); if (lv.length) h.push('<p class="ph-note">' + L('Ved innbytte passer ikke dette utstyret den nye båten. Det følger med ' + bn + ' og betales ikke: ', 'With the trade-in this equipment does not suit the new vessel. It goes with ' + bn + ' and is not paid for: ') + lv.map(q => L(EQUIP[q].name.no, EQUIP[q].name.en)).join(', ') + '.</p>'); }
       if (openOnly) h.push('<p class="ph-note">' + L('Til flåten: et rederi kan bare ha én båt i åpen gruppe. Kjøp heller en båt med hjemmel, eller bytt inn ' + bn + '.', 'For the fleet: a company can only have one boat in the open group. Buy a boat with a right instead, or trade in ' + bn + '.') + '</p>');
       else h.push(payNote(B, 'Til flåten, uten innbytte: ', 'For the fleet, no trade-in: ') + '<button class="ph-btn" data-pa="buy" data-ti="0" data-k="' + k + '"' + (B.ok && free ? '' : ' disabled') + '>' + verb + L(' til flåten', ' for the fleet') + '</button>' + (V.len >= 11 || hasLic() ? '<p class="ph-note">' + L('Uten hjemmel kan hun bare ta torsk, hyse og sei som bifangst.', 'Without a right she can only take cod, haddock and saithe as bycatch.') + '</p>' : '')); }
     if (vesselSpec(k)) h.push('<button class="ph-btn alt" data-pa="mk3d" data-k="' + k + '">' + L('Se båten i 3D', 'See her in 3D') + '</button>');
@@ -1613,7 +1623,7 @@ const PHONE = (() => {
   // the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the shop's (electronics, haulers, the jigging machine and the clothes)
   function utstyr(mode){
     mode = mode || 'verft'; const yardEq = EQ_YARD;
-    const h = ['<div class="ph-c"><p class="ph-note">' + L('Montering skjer i havn. Utstyret følger med om du bytter båt, bortsett fra motoren og utstyr som ikke passer den nye båten.', 'Fitting is done in port. Equipment moves with you if you change vessel, except the engine and equipment that does not suit the new vessel.') + '</p>'];
+    const h = ['<div class="ph-c"><p class="ph-note">' + L('Montering skjer i havn. Utstyret følger med om du bytter båt, bortsett fra motoren og utstyr som ikke passer den nye båten. Det blir igjen på den gamle båten og betales ikke.', 'Fitting is done in port. Equipment moves with you if you change vessel, except the engine and equipment that does not suit the new vessel. That stays with the old vessel and is not paid for.') + '</p>'];
     if (!atKind(mode)) h.push(nearHint(mode));
     // the hold in three steps (core/03-simulation.js HOLDUP)
     if (mode === 'verft' && VESSELS[S.boat.type].cls !== 'hav'){ const b = S.boat, lv = b.holdLv || 0, nx = HOLDUP[lv], base = VESSELS[b.type].holdCap, queued = (S.jobs || []).some(j => j.kind === 'hold');
@@ -1855,8 +1865,11 @@ const PHONE = (() => {
     h.push('</div>'); return h.join('');
   }
   // --- actions
+  // the equipment owned that does not suit type k: it stays with the boat traded in, and is not paid for
+  const swapLeaves = k => Object.keys(EQUIP).filter(q => S.equip[q] && !EQUIP[q].multi && !equipFits(q, k));
   function switchVessel(k){
-    const b = S.boat, old = VESSELS[b.type];
+    const b = S.boat, old = VESSELS[b.type], left = swapLeaves(k);
+    if (left.length) log('Utstyr som ikke passer den nye båten, ble med ' + old.name.no + ': ' + left.map(q => EQUIP[q].name.no).join(', ') + '.', 'Equipment that does not suit the new vessel went with the ' + old.name.en + ': ' + left.map(q => EQUIP[q].name.en).join(', ') + '.');
     b.type = k; delete b.liv; for (const q of Object.keys(EQUIP)) if (!equipFits(q, k)) S.equip[q] = EQUIP[q].multi ? Math.min(S.equip[q] || 0, VESSELS[k].jukseMax || 0) : false; applyVessel(); loreNewBoat(S.boatName);
     S.equip.jukse = Math.min(S.equip.jukse, BOAT.jukseMax); b.fuel = BOAT.fuelCap * 0.4; b.ice = 0; b.engH = 0; b.svcAt = 0; S.svcTold = false;
     while (S.crew.length > BOAT.crewMax) S.crew.pop();
