@@ -4,6 +4,7 @@
 
 ## Spillarbeid som venter (26.10.2026)
 
+- **Driftsplan 2** (Jonas 26.10.2026): fullstendig redesign av driftsplanen med nye øyne. Oppdraget, kravene R0–R10 og scenariene S1–S14 står i `docs/planer/driftsplan-2/00-oppdrag.md`. Fase 0 (revisjon) og 1 (design) først, uten kode; så én del per økt. Går foran sikkerheten SK1–SK6.
 - **Sikkerhet SK1–SK6** (oppgave #164): Blender-modeller (vest, drakt, leider, livbøye, PLB), risiko, mann over bord, nødstopp, utstyr og kurs, nestenulykker. Ikke begynt.
 - **Brygger uten `floating=yes`** står som grå kasser (Kristiansand og Hammerfest har flest). Alternativ b fra #94 (kassene med dekke, pæler og utriggere) er ikke bygd.
 - **NPC-båter ved flytebrygger tegnet som linje** ligger rundt 0,9 m fra pontongkanten (kaiplassen regnes mot en brygge på 4,2 m).
