@@ -10,7 +10,10 @@ R = json.load(open(ROUTES))['3']   # Finnsnes north to Malangsgapet: the end is 
 # panels, the sounder) does not shift it
 SEED = """(() => { let a = 20261002; const R = () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
   const st = step; step = function(){ const o = Math.random; Math.random = R; try { return st(); } finally { Math.random = o; } }; })()"""
-TRIP = """(w) => { S.mult = 0; """ + SEED + """; S.tut = 0; S.settings.autoOn = false; S.t = Math.round((Date.UTC(2028, 2, 10, 6) - EPOCH) / 6e4);
+# (and the game's own seed is fixed: a new game draws S.qseed at random without the world's clock (05-vessels.js newState), and the
+# spawning stock of cod, haddock and saithe for the year (03d-quota.js stockF, ssbAt) is keyed on it, so two new games fished the
+# same ground with different densities: 61,2 against 69,8 kg in the regression of 24.10.2026, whichever pack was held back)
+TRIP = """(w) => { S.mult = 0; S.qseed = 20261002; """ + SEED + """; S.tut = 0; S.settings.autoOn = false; S.t = Math.round((Date.UTC(2028, 2, 10, 6) - EPOCH) / 6e4);
   const f = PORTS[0].p, wps = w.map((q, i) => ({x:q.x, y:q.y, port:null, fish:i === w.length - 1 ? 2 : 0}));
   w.slice(0, -1).reverse().forEach(q => wps.push({x:q.x, y:q.y, port:null, fish:0})); wps.push({x:f.x, y:f.y, port:'finnsnes', fish:0});
   S.plan = {wps, idx:0, speed:8}; return depart(); }"""
