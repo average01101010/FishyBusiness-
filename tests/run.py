@@ -28,6 +28,7 @@ LITE = ['slidertest', 'anchorswing', 'selfcrew', 'crewclip', 'regmarktest', 'doc
         'shoptest', 'selltest', 'timetest', 'worktest', 'vesseltest', 'fuelcal', 'bunktest', 'lanterntest', 'streaktest', 'fixtest', 'hailltest', 'harbourtest', 'simday', 'calib', 'kvtest', 'progweek', 'seatest', 'stabtest', 'projtest', 'boottest', 'maptest', 'mig2test', 'charttest', 'helmtest', 'soundtest', 'sleeptest', 'pwatest', 'bktest']
 # they measure milliseconds, so they run alone at the end, when nothing else takes the CPU
 SOLO = ['routetest', 'heattest', 'landtest', 'charttest']
+VECB = ['npctest', 'havntest', 'vectest']   # need dist-vec/ with the vec packs; run.py builds it once before them (KYST_VEC_BUILT)
 READ = {'selltest', 'hailltest', 'simday', 'calib', 'kvtest', 'progweek', 'seatest'}
 LONG = {'tut': 3600, 'deckshot': 2400, 'workshot': 1800, 'vessel3d': 2400, 'sea3d': 3000, 'vectest': 1500, 'havntest': 1500, 'heattest': 3600, 'trackfollow': 3300}   # SwiftShader can take ~40 s for one 3D screenshot; sea3d takes 27
 # not in D3, but they draw 3D all the same (tut.py plays the first trip with the 3D view), so they run in the 3D lane
@@ -123,6 +124,12 @@ def main():
     heavy = [n for n in names if (n in D3 or n in DRAWS3D or all3d) and n not in solo]
     light = [n for n in names if n not in heavy and n not in solo]
     print('Bygg først: node build.mjs. %d tester: %d uten 3D to om gangen, så %d med 3D alene etter hverandre, og %d som måler tid, alene til slutt. Logger: tests/out/logs/' % (len(names), len(light), len(heavy), len(solo)), flush=True)
+    # dist-vec/ once for the tests that need the vec packs: each built it itself, and two building at once broke the build (25.10.2026)
+    if any(n in VECB for n in names):
+        env = dict(os.environ, KYST_VEC='1', KYST_DIST=os.path.join(ROOT, 'dist-vec'))
+        r = subprocess.run(['node', 'build.mjs'], cwd=ROOT, env=env, capture_output=True, text=True)
+        print('dist-vec/ bygd én gang for %s: %s' % (', '.join(n for n in names if n in VECB), 'OK' if r.returncode == 0 else 'FEIL ' + r.stderr[-200:]))
+        if r.returncode == 0: os.environ['KYST_VEC_BUILT'] = '1'
     t0 = time.time(); res = []
     with ThreadPoolExecutor(2) as ex:
         for r in ex.map(lambda n: run(n, True), light):

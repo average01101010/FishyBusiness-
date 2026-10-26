@@ -54,8 +54,10 @@ JS = """async ([name, lat, lon]) => {
 async def main():
     if not os.path.exists(os.path.join(ROOT, 'tools', 'map', 'out', 'game', 'manifest.json')):
         print(ok(False), 'hele kysten i tools/map/out/game (python3 tools/map/release.py og game.py)'); return
-    r = subprocess.run(['node', 'build.mjs'], cwd=ROOT, env=dict(os.environ, KYST_VEC='1'), capture_output=True, text=True)
-    print(ok(r.returncode == 0), 'dist-vec/ bygges med vec-pakkene', r.stderr[-200:])
+    if os.environ.get('KYST_VEC_BUILT'): print(ok(True), 'dist-vec/ bygd av run.py før testene')
+    else:
+        r = subprocess.run(['node', 'build.mjs'], cwd=ROOT, env=dict(os.environ, KYST_VEC='1'), capture_output=True, text=True)
+        print(ok(r.returncode == 0), 'dist-vec/ bygges med vec-pakkene', r.stderr[-200:])
     async with async_playwright() as p:
         b = await p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
         pg = await (await b.new_context(viewport={'width': 1000, 'height': 800})).new_page(); errs = []

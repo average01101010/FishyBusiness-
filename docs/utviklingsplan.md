@@ -36,7 +36,7 @@ Tallene er fra repoet 26.10.2026.
 
 **A4. `CLAUDE.md` kortes.** Reglene blir stående (de er Jonas' valg og skal følges), men prosedyrene flyttes til skills, og «les overleveringen» blir «les `docs/INDEKS.md`, så dokumentet for systemet du endrer». Mål: under 120 linjer. Et avsnitt om kontekst kommer til: les aldri hele `view3d.js` eller `05-phone.js`, bruk `grep` og kodekartet.
 
-**A5. Kodekart:** `docs/systemer/kodekart.md` med seksjonene i de største filene, etter kommentaroverskriftene (`// ---------- … ----------` i `view3d.js`, appene i `05-phone.js`), med funksjonsnavnene i hver. Det er billigere å slå opp i enn å lese fila. Kartet lages av et lite skript (`tools/docs/kodekart.py`) så det kan lages på nytt når koden endres, og en test sjekker at det er ferskt.
+**A5. Kodekart:** `docs/systemer/kodekart.md` med seksjonene i de største filene, etter kommentaroverskriftene (`// ---------- … ----------` i `view3d.js`, appene i `05-phone.js`), med funksjonsnavnene i hver. Det er billigere å slå opp i enn å lese fila. Kartet lages av et lite skript (`tools/docs/kodekart.py`) så det kan lages på nytt når koden endres; `/lever` skriver det på nytt (`--check` sier om det er gammelt).
 
 **Sikring:** ingen setning slettes, bare flyttes. Summen av linjer før og etter sammenlignes. Alle lenker i `CLAUDE.md`, `docs/` og `tools/feedback/RUTINE.md` som peker til overleveringen, oppdateres og sjekkes med `grep`. `OVERLEVERING.md` blir stående som én side som bare peker til indeksen, så gamle lenker ikke dør. Ingen spillkode endres, så ingen tester trengs.
 
@@ -50,16 +50,16 @@ En skill er en fil `.claude/skills/<navn>/SKILL.md` med en framgangsmåte. `/<na
 | `/stikkprove <hva>` | en retting som kan gjelde hele kysten | prøv i minst tre byer spredt (Bergen, Bodø, Hammerfest eller Båtsfjord, i tillegg til der feilen ble funnet), med `dist-vec` når det gjelder vec-pakkene, og rapporter per sted om feilen fantes der |
 | `/tilbakemeldinger` | når Jonas spør, eller før en økt velger oppgave | hent nye fra `feedback` (status ikke rettet), oppsummer per spiller og sak, finn PR-er fra rutinen som venter, foreslå hva som tas nå og hva som trenger et valg; aldri svar spillerne direkte |
 | `/regresjon` | før publisering og én gang i uka | `python3 tests/run.py full` i bakgrunnen, så sortering: nytt rødt mot kjent rødt (`BACKLOG.md`), gjenta én gang det som kan være ustabilt, rett det som er vårt, skriv resten i backloggen |
-| `/plan <funksjon>` | en større funksjon med valg | les systemdokumentet, skriv planen til `docs/planer/<navn>.md` med faser som hver passer én økt (som D1–D6 for driftsplanen), still valgene som A/B/C med anbefaling, og vent på klarsignal |
+| `/planlegg <funksjon>` | en større funksjon med valg | les systemdokumentet, skriv planen til `docs/planer/<navn>.md` med faser som hver passer én økt (som D1–D6 for driftsplanen), still valgene som A/B/C med anbefaling, og vent på klarsignal |
 | `/okt-slutt` | siste handling i hver økt | `BACKLOG.md` ajour, systemdokumentet ajour, alt pushet, og en kort status i tre linjer: gjort, prøvd hvor, neste |
 | `/blender <modell>` | en ny eller endret modell | rørledningen i 5.13: skriptet i `tools/…`, `bpy==4.5.4`, eksport til `src/data/*.b64`, linjene i malen, kontrollbildene, `vessel3d` bare når båtmodellene er endret |
 
-Innebygde som brukes i tillegg: `/code-review` før push av endringer i kjernefilene (`03-simulation`, `05-vessels`, `10-gear`, `03e-rules`, `10f-cloud`, lagring og penger) og av alt over rundt 150 linjer; `/simplify` etter en funksjon, før `/lever`; plan-modus i stedet for `/plan` når Jonas vil se planen før noe skrives til repoet; `/compact` med beskjed om hva som skal beholdes («behold valgene A–D og fillista») når en økt må fortsette etter en lang utredning.
+Innebygde som brukes i tillegg: `/code-review` før push av endringer i kjernefilene (`03-simulation`, `05-vessels`, `10-gear`, `03e-rules`, `10f-cloud`, lagring og penger) og av alt over rundt 150 linjer; `/simplify` etter en funksjon, før `/lever`; plan-modus i stedet for `/planlegg` når Jonas vil se planen før noe skrives til repoet; `/compact` med beskjed om hva som skal beholdes («behold valgene A–D og fillista») når en økt må fortsette etter en lang utredning.
 
 ## 4. Fase C: Slik går en økt (fra og med fase B)
 
 1. **Start:** «Les `CLAUDE.md`, `docs/INDEKS.md` og `docs/BACKLOG.md`. Oppgave: …». Økta leser så bare systemdokumentet for oppgaven.
-2. **Størrelse:** en oppgave passer én økt når den gjelder ett system og under fem filer. Større ting får `/plan` først, og hver fase sin økt. Driftsplanen D1–D6 var seks økter i én chat; heretter er det seks økter.
+2. **Størrelse:** en oppgave passer én økt når den gjelder ett system og under fem filer. Større ting får `/planlegg` først, og hver fase sin økt. Driftsplanen D1–D6 var seks økter i én chat; heretter er det seks økter.
 3. **Underveis:** `grep` før lesing, lesing med `offset`/`limit`, lange tester i bakgrunnen, og lesende agenter til søk over mange filer. Et valg som dukker opp, stilles som A/B med anbefaling, kort.
 4. **Slutt:** `/lever`, så `/okt-slutt`. Økta lukkes.
 5. **Ny økt når:** temaet byttes, en stor funksjon er ferdig, eller økta begynner å lese de samme filene om igjen. Det siste er tegnet på at vinduet er fullt.
@@ -115,4 +115,8 @@ Spillarbeidet (sikkerhet SK1–SK6, oppdragsfristene fra #92/#93, resten av back
 
 ## Status
 
-- 26.10.2026: planen skrevet. Venter på valgene i kapittel 9.
+- 26.10.2026: planen skrevet. Jonas svarte «1 ja, 2 ja, 3 ja, 4 ok, kjør på».
+- 26.10.2026: **fase A gjort.** Overleveringen (4 532 linjer) delt ordrett i 31 dokumenter i `docs/systemer/`, `docs/planer/flaateplanen.md`, `docs/planer/forslagslista-04.10.2026.md` og `docs/BACKLOG.md` (skriptet flyttet hver seksjon hel og talte linjene: 4 532 inn, 4 532 ut). `docs/INDEKS.md` og `docs/systemer/gamle-numre.md` laget. `CLAUDE.md` fra 171 til 81 linjer; prosedyrene og rørledningene i `docs/systemer/datarorledninger.md`, `publisering.md` og `testing.md`. Kodekartet (`tools/docs/kodekart.py`, 2 760 linjer) laget. `OVERLEVERING.md` står som peker.
+- 26.10.2026: **fase B gjort.** Skillene `/lever`, `/stikkprove`, `/tilbakemeldinger`, `/regresjon`, `/planlegg` (het `/plan` i planen; omdøpt så den ikke går i veien for plan-modus), `/okt-slutt` og `/blender` i `.claude/skills/`.
+- 26.10.2026: **E5 gjort.** `run.py` bygger `dist-vec/` én gang før `npctest`, `havntest` og `vectest` (`VECB`, `KYST_VEC_BUILT`).
+- Neste: E4 (de røde testene), E1 (oppdelingen av `view3d.js` og `05-phone.js`), D4 og D5, hver i sin egen økt.

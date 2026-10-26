@@ -29,11 +29,13 @@ READY = """(q) => { const v = G3._debug.vec, tx = Math.floor(q.x / 50), ty = Mat
 async def main():
     if not os.path.exists(os.path.join(ROOT, 'tools', 'map', 'out', 'game', 'manifest.json')):
         check(False, 'hele kysten i tools/map/out/game (python3 tools/map/release.py og game.py)'); return
-    env = dict(os.environ, KYST_VEC='1', KYST_DIST=os.path.join(ROOT, 'dist-vec'))
-    r = subprocess.run(['node', 'build.mjs'], cwd=ROOT, env=env, capture_output=True, text=True)
-    nvec = json.load(open(os.path.join(ROOT, 'dist-vec', 'map', 'manifest.json')))['packs'] if r.returncode == 0 else []
+    if os.environ.get('KYST_VEC_BUILT'): built, err = True, 'bygd av run.py før testene'
+    else:
+        env = dict(os.environ, KYST_VEC='1', KYST_DIST=os.path.join(ROOT, 'dist-vec'))
+        r = subprocess.run(['node', 'build.mjs'], cwd=ROOT, env=env, capture_output=True, text=True); built, err = r.returncode == 0, r.stderr[-200:]
+    nvec = json.load(open(os.path.join(ROOT, 'dist-vec', 'map', 'manifest.json')))['packs'] if built else []
     nvec = sum(1 for p in nvec if p['kind'] == 'vec')
-    check(r.returncode == 0 and nvec > 100, 'dist-vec/ bygges med vec-pakkene for hele kysten', (nvec, r.stderr[-200:]))
+    check(built and nvec > 100, 'dist-vec/ bygges med vec-pakkene for hele kysten', (nvec, err))
     async with async_playwright() as p:
         b = await p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--disable-gpu-compositing'])
         pg = await b.new_page(viewport={'width': 1100, 'height': 700}); errs = []

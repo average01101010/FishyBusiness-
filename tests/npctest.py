@@ -24,9 +24,11 @@ STATES = """(() => { const H = S.t / 60, a = npcStates(H).filter(n => n.coast), 
 async def main():
     if not os.path.exists(os.path.join(ROOT, 'tools', 'map', 'out', 'game', 'manifest.json')):
         check(False, 'hele kysten i tools/map/out/game (python3 tools/map/release.py og game.py)'); return
-    env = dict(os.environ, KYST_VEC='1', KYST_DIST=os.path.join(ROOT, 'dist-vec'))
-    r = subprocess.run(['node', 'build.mjs'], cwd=ROOT, env=env, capture_output=True, text=True)
-    check(r.returncode == 0, 'dist-vec/ bygges med vec-pakkene', r.stderr[-200:])
+    if os.environ.get('KYST_VEC_BUILT'): check(True, 'dist-vec/ bygd av run.py før testene')
+    else:
+        env = dict(os.environ, KYST_VEC='1', KYST_DIST=os.path.join(ROOT, 'dist-vec'))
+        r = subprocess.run(['node', 'build.mjs'], cwd=ROOT, env=env, capture_output=True, text=True)
+        check(r.returncode == 0, 'dist-vec/ bygges med vec-pakkene', r.stderr[-200:])
     async with async_playwright() as p:
         b = await p.chromium.launch()
         pg = await (await b.new_context(viewport={'width': 1100, 'height': 760})).new_page(); errs = []
