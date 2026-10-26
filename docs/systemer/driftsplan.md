@@ -4,6 +4,8 @@
 
 ## 5.7 Driftsplan (`S.ops`, per båt) – Driftsplan-appen (laget på nytt 23.10.2026)
 
+> **Driftsplan 2 (26.10.2026):** planen gjøres om en tredje gang. Revisjonen av det som står her, spilt i testmiljøet, er `docs/planer/driftsplan-2/01-revisjon.md`; designet for den nye (dagen som plan, motor uten søk, kartvindu) er `02-design.md`. Det som står under, gjelder til delene i designet er bygd; hver del skriver sitt avsnitt her.
+
 Jonas 23.10.2026: «en fullstendig redesign av driftsplan-systemet … forenkles ytterligere og gjøres så intuitivt som mulig for brukerne samtidig som det innehar dem funksjonen det må ha». Kjernen ligger i `core/06d-drift.js`, siden i `ui/05c-drift.js`. Den gamle planen (økter med klokkeslett, egne ruter, ukedager, maler, «Flere valg», planleggeren i `06f-plan.js`) er fjernet. Gamle planer i lagringene slås av med en melding første gang de leses (`driftOps`; Jonas: «nytt system, nye planer»). Redskapet i sjøen står der det står.
 
 - **Planen er svarene** (`driftNew`): `S.ops = {v:3, on, home, anchor, rig, jig, fields:[{id, x, y, n, soak}], jigs:[{id, x, y}], wx, rhythm, dep, days, …}`. Den er et av båtens egne felt (`VKEYS`), så hver båt har sin plan.

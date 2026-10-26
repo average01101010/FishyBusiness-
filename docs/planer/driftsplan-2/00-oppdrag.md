@@ -113,3 +113,4 @@ Testene for scenariene er de nødvendige testene for dette arbeidet (Jonas 26.10
 ## Status
 
 - 26.10.2026: oppdraget skrevet av hovedøkta. Venter på at Jonas starter økta for fase 0 og 1.
+- 26.10.2026: fase 0 og 1 gjort i én økt (`01-revisjon.md`, `02-design.md`, loggene og skriptene i `revisjon/`). Venter på Jonas' svar på valgene 1–7 i designet og «kjør på». Ingen spillkode.
