@@ -34,7 +34,10 @@ async def main():
 
         for name, dist, pitch, setup in [
             ('kaia i Botnhamn', 26, 0.08, None),
-            ('under Gisundbrua', 45, 0.02, "const b = S.boat; b.status = 'idle'; b.port = null; b.pos = LG(55.515, 53.125); b.v = 0; b.heading = 0.6"),
+            # (the game's loop is held while she lies under the bridge: lying still at sea she drifts with the wind and the sea, about 24 m a
+            # game minute here (core/16b-dyn.js lieDrift, Fysikk 2 of 19.10.2026), and the slow frames of SwiftShader let the clock catch up
+            # several minutes at a time, so she was 100 m out from under the bridge before the sweep began: 0 av 24 in the regression of 24.10.2026)
+            ('under Gisundbrua', 45, 0.02, "TAB.held = true; const b = S.boat; b.status = 'idle'; b.port = null; b.pos = LG(55.515, 53.125); b.v = 0; b.heading = 0.6; b.drv = null"),
         ]:
             if setup:
                 await pg.evaluate(setup); await pg.wait_for_timeout(3000)
@@ -44,6 +47,7 @@ async def main():
             check(not now_in and not blocked, name + ': øyet er utenfor alt og sikten til båten er fri', {'inne': len(now_in), 'blokkert': [(x['free'], x['d']) for x in blocked]})
             await pg.evaluate("G3._debug.cam.yaw = 2.2"); await pg.wait_for_timeout(1500)
             await pg.screenshot(path='cam_' + ('botn' if 'Botn' in name else 'bru') + '.png')
+            if setup: await pg.evaluate("TAB.held = false; lastWall = Date.now()")
 
         ms = await pg.evaluate("(() => { const D = G3._debug, bv = D.bv, t0 = performance.now(); for (let i = 0; i < 2000; i++){ const a = i * 0.01; D.camFree([bv.x, bv.y + 1.3, bv.z], [bv.x + Math.sin(a) * 40, bv.y + 3, bv.z + Math.cos(a) * 40]); } return (performance.now() - t0) / 2000; })()")
         check(ms < 0.2, 'en siktsjekk tar under 0,2 ms', str(round(ms * 1000)) + ' µs')
