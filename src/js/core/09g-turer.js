@@ -9,7 +9,8 @@
 // hours, at most four waiting and two taken, more slowly once the week's missions have brought more than 30 % of the week's income.
 // The jobs that lie on the boat's way (the route she sails, or the plant she lands at) come first, with the detour they cost. The
 // deadline is at least two and a half times the time and never moves (Friction for Flow: the distance is real, and trim only shortens
-// it). Kinds:
+// it); an order the player fishes for also gets the hours the kilos take with the gear she has (turFishH; alternative A, Jonas
+// 26.10.2026, tilbakemeldingene #92 and #93). Kinds:
 //   best    an order from a plant farther off (an order of 03-simulation.js at its premium, with the trip's pay as the bonus)
 //   frakt   freight along the coast: goods in the hold from one harbour to another (S.cargo, per vessel: it takes its room from
 //           capHold and its weight in boatTons, and is no part of a landing)
@@ -37,7 +38,12 @@ const TUR = {
   // taken at once, a new one every refillH game hours, slowF times as slowly once the week's missions are over share of the week's
   // fishing and missions together (turSlow); a mission waits life game hours on the board
   keepF:0.5, share:0.3, maxAct:2, boardMax:4, refillH:18, slowF:3, life:48, detour:1.25, rate0:9000, move:37, sesongR:30, tipGap:20 * 3600e3, mechGap:72 * 3600e3,
-  stasjonR:1, ekkoV:7, ekkoMax:8, fotoR:3, fotoNo3d:1.5
+  stasjonR:1, ekkoV:7, ekkoMax:8, fotoR:3, fotoNo3d:1.5,
+  // the hours an order's kilos take (turFishH): the fishery model's own usual catch (HEATG.fair: 20 kg an hour for one hand with a
+  // jig, 70 kg a tub of line and 30 kg a net at the soak it is fished with, docs/systemer/redskap.md), the soak (hours) and the minutes
+  // a unit takes to set and haul (GEAR.set + GEAR.haul, a 600-hook tub), a margin on the fishing for the weather and the rest, and the
+  // most the fishing may add (a game week)
+  fish:{jig:20, line:{kg:70, soak:12, min:25}, garn:{kg:30, soak:20, min:5}, marg:1.5, max:168, slack:30}
 };
 const TUR_GOODS = [
   {kg:[20, 60], no:'medisiner til legekontoret', en:'medicine for the surgery'}, {kg:[30, 120], no:'post og pakker', en:'mail and parcels'},
@@ -107,6 +113,22 @@ function turForm(){ const D = (turState().done || []).slice(0, 10); if (D.length
 const turPay = (hGame, f) => Math.max(500, Math.round(turRate() * hGame / GAME_RATE * f / 100) * 100);
 function turClass(hGame){ for (const k in TUR.cls){ const c = TUR.cls[k].h; if (hGame >= c[0] && hGame < c[1]) return k; } return null; }
 const turMinR = hGame => Math.round(hGame * 60 / GAME_RATE);
+// the game hours the kilos of a species take with the quickest gear the player has (the fishery model's usual catch, TUR.fish): the
+// jig by the hands and reels aboard (effortOf; not for the Greenland halibut), a line or nets by the sets it takes, each a soak and the
+// setting and hauling of every unit (gear in the sea counts as hers). Without a hauler or hands for it, the gear is not counted
+function turFishH(kg, sp){
+  const F = TUR.fish, pg = S.pgear || {}, sets = typeof mySets === 'function' ? mySets() : [], hands = Math.max(1, typeof handsAboard === 'function' ? handsAboard() : 1);
+  const inSea = kind => sets.filter(s => s.kind === kind).reduce((a, s) => a + (s.n || 0), 0);
+  const cyc = (kg1, g, n) => n > 0 ? Math.ceil(kg / (n * kg1)) * (g.soak + n * g.min / 60) : Infinity;
+  let h = Infinity;
+  if (sp !== 'blakveite'){ const eff = typeof effortOf === 'function' ? effortOf(hands, Math.min(S.equip ? S.equip.jukse || 0 : 0, hands * JIG.perPerson), JIG.hand) : JIG.hand; h = kg / (F.jig * Math.max(0.5, eff / JIG.hand)); }
+  if (typeof hasHauler === 'function' && hasHauler('line')){ const L = pg.lines || {}, n = ((L.bank || {}).n || 0) + ((L.hyse || {}).n || 0) + inSea('line'); h = Math.min(h, cyc(F.line.kg, F.line, n)); }
+  if (typeof hasHauler === 'function' && hasHauler('garn') && hands >= GEAR.garn.crewMin){ const n = (pg.nets || []).reduce((a, l) => a + (l.n || 0), 0) + inSea('garn'); h = Math.min(h, cyc(F.garn.kg, F.garn, n)); }
+  if (!isFinite(h)) h = kg / F.jig;   // (nothing counted: one hand with a jig)
+  return Math.min(F.max, h * F.marg);
+}
+// the deadline of an order the player fishes for: the sailing, the slack every order has, and the hours the kilos take
+const turBestH = (h, kg, sp) => h * 2.5 + TUR.fish.slack + turFishH(kg, sp);
 // whether the boat can make the trip: on her tank (out and home for gear at sea; the plants sell diesel), along a line an open boat may
 // take (sheltered water), and with a forecast that stays below where her own sea limit warns for the hours of the trip (fc false: the
 // week's move, where the days to go are the player's own)
@@ -160,7 +182,7 @@ function turBest(o, cls, used, me = turMe()){
     const sp = sps.slice().sort((a, b) => (me.sp[b] || 0) - (me.sp[a] || 0))[0], base = me.kg > 30 ? me.kg * (0.8 + Math.random() * 0.5) : BOAT.holdCap * (0.4 + Math.random() * 0.4);
     const kg = Math.max(50, Math.round(Math.min(BOAT.holdCap, base * turForm(), turRoom(sp, H) * 0.7) / 10) * 10), xq = me.y >= 10 && Math.random() < 0.4;
     // the plant pays a known skipper a little more (its reputation, 03-simulation.js repOf: 0.8 to 1.2)
-    return {k:'best', cls, to:q.id, p:q.p, nm:Math.round(turNm(o, q.p)), h, sp, kg, q:xq ? 'E' : 'A', prem:xq ? 0.2 : 0.1, cust:cust.id, base:Math.round(turPay(h, TUR.keepF) * (0.8 + repOf(cust.id) / 250) / 100) * 100, hTot:h * 2.5 + 30};
+    return {k:'best', cls, to:q.id, p:q.p, nm:Math.round(turNm(o, q.p)), h, sp, kg, q:xq ? 'E' : 'A', prem:xq ? 0.2 : 0.1, cust:cust.id, base:Math.round(turPay(h, TUR.keepF) * (0.8 + repOf(cust.id) / 250) / 100) * 100, hTot:turBestH(h, kg, sp)};
   }
   return null;
 }
@@ -507,7 +529,9 @@ function turTake(id){
   if (m.k === 'slep'){ m.stage = 'reach'; msg(m.owner, 'Takk for at du kommer! «' + m.boat + '» har motorstopp og ligger og driver ved ' + coordStr(m.p) + '.', 'Thank you for coming! The «' + m.boat + '» has engine trouble and is drifting at ' + coordStr(m.p) + '.'); }
   T.act.push(m);
   if (typeof cloudEv === 'function') cloudEv('tur_take', {k:m.k, cls:m.cls, nm:m.nm, min:turMinR(m.h)});
-  log('Tok oppdraget: ' + turWhat(m)[0] + '.', 'Took the mission: ' + turWhat(m)[1] + '.');
+  // (the deck log says the deadline as it is set, in both tongues: the day, the hour and the real time it leaves)
+  const dd = gDate(m.due / 60), p2 = n => String(n).padStart(2, '0'), at = p2(dd.getUTCHours()) + ':' + p2(dd.getUTCMinutes()), dn = typeof DAYS !== 'undefined' ? [DAYS.no[dd.getUTCDay()] + ' ' + dd.getUTCDate() + '. ' + MONS.no[dd.getUTCMonth()], DAYS.en[dd.getUTCDay()] + ' ' + dd.getUTCDate() + ' ' + MONS.en[dd.getUTCMonth()]] : ['', ''];
+  log('Tok oppdraget: ' + turWhat(m)[0] + '. Frist ' + dn[0] + ' kl. ' + at + ', om ca. ' + turDur(m.hTot) + '.', 'Took the mission: ' + turWhat(m)[1] + '. Deadline ' + dn[1] + ' at ' + at + ', in about ' + turDur(m.hTot) + '.');
   return null;
 }
 function turDrop(id){

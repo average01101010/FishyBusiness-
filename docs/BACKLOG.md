@@ -5,7 +5,6 @@
 ## Spillarbeid som venter (26.10.2026)
 
 - **Sikkerhet SK1–SK6** (oppgave #164): Blender-modeller (vest, drakt, leider, livbøye, PLB), risiko, mann over bord, nødstopp, utstyr og kurs, nestenulykker. Ikke begynt.
-- **Oppdragsfristene** (tilbakemeldingene #92 og #93, 23.10.2026): for mye fisk for fristen når line og garn ikke kan stå samtidig. Fristen er 2,5 × reisetida (`09g-turer.js`), uten tid for å fiske kiloene. Jonas valgte 26.10.2026 alternativ A: fristen regnes med fisketid for kiloene i tillegg til reisetida for oppdrag der spilleren fisker selv (ikke mindre fisk). Bygges i egen økt.
 - **Brygger uten `floating=yes`** står som grå kasser (Kristiansand og Hammerfest har flest). Alternativ b fra #94 (kassene med dekke, pæler og utriggere) er ikke bygd.
 - **NPC-båter ved flytebrygger tegnet som linje** ligger rundt 0,9 m fra pontongkanten (kaiplassen regnes mot en brygge på 4,2 m).
 - **Utviklingsplanen** (`docs/utviklingsplan.md`): E1 (oppdelingen av `view3d.js` og `05-phone.js`), E4 (de røde testene i 10.6: gjort 26.10.2026 så nær som tegnetiden i charttest, en ytelsesoppgave), D4 (rutinen får stikkprøver og skjermbilder) og D5 (ukentlig regresjon).
@@ -56,6 +55,7 @@ Gjennomgått punkt for punkt mot koden, git-loggen og feilloggen 24.10.2026. Det
 - **NPC-modellenes byggetid med CPU-struping:** tallet 5–11 ms er fra før Blender-modellene og må måles på nytt.
 - **Båtmodellene:** formen under vannlinja er anslått på Malo og havsjarken, havsjarkens ballastkjøl er en egen kropp, og stytteseglet står alltid, også i havn. Om Maloens tynne rekkverk og vaiere (7–24 mm) flimrer, må ses i spillet.
 - **Lagringen:** spillet lagrer hvert 5. sekund, når siden lukkes og når fanen skjules. At Chrome skriver localStorage til disk litt etter, er nettleserens oppførsel; det er ikke målt på nettbrettet.
+- **Oppdragsfristene etter alternativ A** (26.10.2026): hvor lang tid spillerne bruker på bestillingene mot fristen, og om flere går ut på tid eller blir ferdige (`tur_done`/`tur_fail` i admin), før marginen 1,5 og taket på en spilluke justeres.
 
 ## 10.6 Tester som feiler (regresjonen 24.10.2026, gjennomgått i E4 26.10.2026)
 
@@ -73,6 +73,10 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - `S.owned` skrives fortsatt (`03-simulation.js`, `05-phone.js`, `05-vessels.js`), men leses bare av en lagringsmigrering i `11-boot.js`.
 - Ikonet `sjomann` i `05-phone.js` brukes ikke (Sjømann-appen ble fjernet 09.10.2026).
 - Startbåten er `trebat`. `buildSkiff` bygges fortsatt og er grunnlaget for kitet til håndbåtene (`handKit`), så den kan ikke bare fjernes. På skiffen står sløyebordet og blødekaret (75 % størrelse) tett ved setet, og konsollskjermene er ikke levende (Jonas).
+
+## Strøket 26.10.2026 (oppdragsfristene, alternativ A)
+
+- **Oppdragsfristene** (tilbakemeldingene #92 og #93, 23.10.2026): bestillingene får fisketida for kiloene i fristen i tillegg til 2,5 × seilingstida + 30 spilltimer (`turFishH`/`turBestH` i `09g-turer.js`: det raskeste redskapet spilleren eier, etter modellens vanlige fangst, × 1,5, høyst en spilluke). Ikke mindre fisk, belønningen uendret. Prøvd ved Finnsnes, Bergen, Bodø og Hammerfest. Tallene står i `docs/systemer/oppdrag-og-kystposten.md` (4.26, Fristen). Commit «Trip missions: an order's deadline includes the hours its kilos take» (26.10.2026).
 
 ## Strøket 26.10.2026 (E4, de røde testene)
 

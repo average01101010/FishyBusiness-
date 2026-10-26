@@ -31,6 +31,13 @@ async def main():
         ph = b['perH']
         check(b['n'] >= 3 and 'kort' in b['cls'] and b['ok'] and b['rate'] == b['cap'],
               'the board: short, middle and long missions by the real time to sail; paid by the boat\'s hourly curve (ordinary fishing without haill); deadlines at least 2.5 times the time without trim', b)
+        # 1a. an order the player fishes for gets the hours the kilos take on top (alternative A, Jonas 26.10.2026, #92 and #93): longer
+        #     than freight with the same sailing, growing with the kilos, and the board's own orders carry it
+        fh = await pg.evaluate("""(() => { const h = 2, frakt = h * 2.5 + 12, B = S.turer.board.filter(m => m.k === 'best');
+          return {best300:+turBestH(h, 300, 'torsk').toFixed(1), best1500:+turBestH(h, 1500, 'torsk').toFixed(1), frakt, fish300:+turFishH(300, 'torsk').toFixed(1), fish1500:+turFishH(1500, 'torsk').toFixed(1),
+            onBoard:B.map(m => [m.kg, +m.hTot.toFixed(1), +turBestH(m.h, m.kg, m.sp).toFixed(1)]), gear:{hands:handsAboard(), line:!!hasHauler('line'), garn:!!hasHauler('garn')}}; })()""")
+        check(fh['best300'] > fh['frakt'] and fh['best1500'] > fh['best300'] and fh['fish1500'] > fh['fish300'] and all(abs(x[1] - x[2]) < 0.2 for x in fh['onBoard']),
+              'an order\'s deadline: longer than freight with the same sailing, and longer the more kilos it asks for (the hours the gear takes, turFishH)', fh)
         # 1b. weighed by the player's own record: a newcomer gets no long trip and no season's move; an old hand's long go further;
         #     the order is for a species the player lands, about a usual landing; a plant pays a known skipper more
         w = await pg.evaluate("""(() => { const o = turHere(), fs = fsState(), p0 = fs.p, sales0 = S.sales;
