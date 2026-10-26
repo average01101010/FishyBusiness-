@@ -301,7 +301,9 @@ async def main():
           const round = () => { S.hold = [{sp:'torsk', cls:SPECIES.torsk.ref, kg:400, n:100, bled:true, iced:false, hr:Math.floor(S.t / 60), fresh:100, gut:false, hook:true}]; b.status = 'fishing'; b.gop = null; b.deckStop = false; b.fishUntil = S.t + 300; b.deckEnd = null; };
           // the bleeding tub: up to half full the haul goes at full pace, then slower, to a fifth of it at a full tub (tilbakemelding #30)
           const fillTo = kg => { S.hold = kg ? [{sp:'torsk', cls:SPECIES.torsk.ref, kg, n:Math.round(kg / 3), bled:true, iced:false, hr:Math.floor(S.t / 60), fresh:100, gut:false, hook:true}] : []; return haulSlow({op:'haul'}); };
-          // who stands at the hauler: two on a net (one pulls, one bleeds), one on a line, and a third hand guts meanwhile
+          // who stands at the hauler: two on a net (one pulls, one picks the fish out and bleeds when nobody else does), one on a line; the
+          // fish coming over the rail are bled by one who does nothing else before anyone guts (Jonas 23.10.2026, folk-om-bord.md «det som
+          // alltid gjøres først»; before, from #75 20.10.2026, the next hand gutted), so the third hand on a line guts
           const who = (kind, crew) => { S.crew = []; for (let i = 0; i < crew; i++) S.crew.push(hand()); S.hold = [{sp:'torsk', cls:SPECIES.torsk.ref, kg:100, n:30, bled:true, iced:false, hr:Math.floor(S.t / 60), fresh:100, gut:false, hook:true}]; b.status = 'fishing'; b.deckStop = false;
             b.gop = {op:'haul', kind, n:2, done:0, prog:0, sub:0, sl:1}; const A = workAssign(), st = A.map(p => p.st).sort().join(), bl = A.filter(p => p.bl).length, ms = gopUnitMin(b.gop, S.t / 60, 0); b.gop = null; return {st, bl, ms}; };
           R.who = {net2:who('garn', 1), net3:who('garn', 2), line2:who('line', 1), line3:who('line', 2)}; S.crew = [hand()];
@@ -311,7 +313,7 @@ async def main():
         print(ok(r['line']['sl'] == 6 and r['line']['firstUnit'] >= 4 and r['line']['ups'] > r['line']['n'] * 2), 'a haddock-line tub of 600 hooks comes aboard in six slices, several of them in the first tub')
         print(ok(r['net']['sl'] == 3 and r['net']['ups'] > r['net']['n'] and r['net']['kg'] > 30), 'a net comes aboard in thirds')
         print(ok(r['line']['left'] <= 1 and r['net']['left'] <= 1), 'everything the strings held has been landed or released when they are up')
-        print(ok(r['who']['net2']['st'] == 'haling,haling' and r['who']['net2']['bl'] == 1 and r['who']['net3']['st'] == 'haling,haling,sloy' and r['who']['net3']['bl'] == 1 and r['who']['line2']['st'] == 'haling,sloy' and r['who']['line2']['bl'] == 0 and r['who']['line3']['bl'] == 0 and r['who']['line3']['st'] == 'blogg,haling,sloy'), 'a net takes two at the hauler, one pulling and one picking and bleeding, with a third hand gutting; a line takes one at the hauler, and the next bleeds while the third guts (Jonas 20.10.2026, #75)', r['who'])
+        print(ok(r['who']['net2']['st'] == 'haling,haling' and r['who']['net2']['bl'] == 1 and r['who']['net3']['st'] == 'blogg,haling,haling' and r['who']['net3']['bl'] == 1 and r['who']['line2']['st'] == 'blogg,haling' and r['who']['line2']['bl'] == 0 and r['who']['line3']['bl'] == 0 and r['who']['line3']['st'] == 'blogg,haling,sloy'), 'a net takes two at the hauler, one pulling and one picking (who bleeds when nobody else does), and the next hand bleeds; a line takes one at the hauler, the next bleeds, and a third guts (Jonas 20.10.2026 #75, and 23.10.2026: the fish over the rail are bled first)', r['who'])
         print(ok(r['slow'][0] == 1 and r['slow'][1] == 1 and r['slow'][2] == 1 and 0.55 < r['slow'][3] < 0.65 and r['slow'][4] == 0.2 and r['slowSet'] == 1), 'the haul goes at full pace up to half a tub, then slower, to a fifth at a full tub; setting is not slowed', r['slow'])
 
         print('errors:', errs[:5]); await br.close()
