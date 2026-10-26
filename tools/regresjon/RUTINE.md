@@ -1,6 +1,6 @@
 # Regresjonsrutinen (D5)
 
-En planlagt Claude Code-økt kjører dette natt til mandag kl. 02.17 (Oslo-tid), hver gang i en ny økt. Den ble satt opp 26.10.2026 etter utviklingsplanen (`docs/utviklingsplan.md`, D5): hele regresjonen går én gang i uka på arbeidsgrenen, og det røde skrives i backloggen med loggene, slik at hovedøkta kan rette samlet. Rutinen retter ingenting selv.
+En planlagt Claude Code-økt (`Ukentlig regresjon`, `trig_013Aut9VYSRkSPkQjUh17A36`, første kjøring natt til mandag 02.11.2026) kjører dette natt til mandag kl. 02.17 (Oslo-tid), hver gang i en ny økt. Den har ingen koblinger (Supabase og lignende) og trenger ingen; repoet får den med `add_repo`. Den ble satt opp 26.10.2026 etter utviklingsplanen (`docs/utviklingsplan.md`, D5): hele regresjonen går én gang i uka på arbeidsgrenen, og det røde skrives i backloggen med loggene, slik at hovedøkta kan rette samlet. Rutinen retter ingenting selv.
 
 ## Absolutte regler
 
