@@ -5,7 +5,7 @@
 ## Spillarbeid som venter (26.10.2026)
 
 - **Sikkerhet SK1–SK6** (oppgave #164): Blender-modeller (vest, drakt, leider, livbøye, PLB), risiko, mann over bord, nødstopp, utstyr og kurs, nestenulykker. Ikke begynt.
-- **Oppdragsfristene** (tilbakemeldingene #92 og #93, 23.10.2026): for mye fisk for fristen når line og garn ikke kan stå samtidig. Fristen er 2,5 × reisetida (`09g-turer.js`), uten tid for å fiske kiloene. Forslag: frist etter kilo og fisketid i tillegg til reisetida for oppdrag der spilleren fisker selv. Venter på Jonas' valg.
+- **Oppdragsfristene** (tilbakemeldingene #92 og #93, 23.10.2026): for mye fisk for fristen når line og garn ikke kan stå samtidig. Fristen er 2,5 × reisetida (`09g-turer.js`), uten tid for å fiske kiloene. Jonas valgte 26.10.2026 alternativ A: fristen regnes med fisketid for kiloene i tillegg til reisetida for oppdrag der spilleren fisker selv (ikke mindre fisk). Bygges i egen økt.
 - **Brygger uten `floating=yes`** står som grå kasser (Kristiansand og Hammerfest har flest). Alternativ b fra #94 (kassene med dekke, pæler og utriggere) er ikke bygd.
 - **NPC-båter ved flytebrygger tegnet som linje** ligger rundt 0,9 m fra pontongkanten (kaiplassen regnes mot en brygge på 4,2 m).
 - **Utviklingsplanen** (`docs/utviklingsplan.md`): E1 (oppdelingen av `view3d.js` og `05-phone.js`), E4 (de røde testene i 10.6: gjort 26.10.2026 så nær som tegnetiden i charttest, en ytelsesoppgave), D4 (rutinen får stikkprøver og skjermbilder) og D5 (ukentlig regresjon).
