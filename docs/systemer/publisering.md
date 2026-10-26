@@ -1,0 +1,18 @@
+# Publisering
+
+> Flyttet ordrett fra `CLAUDE.md` («Publisering») 26.10.2026 (`docs/utviklingsplan.md`, fase A4). Serveren og det som gjenstår før lansering, står i `docs/lansering.md`.
+
+**Spillet publiseres på detstorebla.no** (Jonas 08.10.2026): en push til arbeidsgrenen som endrer `src/` ruller det ut av `.github/workflows/deploy.yml` («Appen på Hetzner», PWA-bygget). Sjekk at kjøringen er grønn med `gh api repos/average01101010/FishyBusiness-/actions/runs`.
+
+**Artifacten oppdateres ikke lenger** (Jonas 08.10.2026: «La artifacten stå»). Siden er over 16 MB (23 MB), og artifacten tar høyst 16 MB per side, så publiseringen avvises. Artifacten https://claude.ai/artifact/HHehndJQmtCYBJpQ1b8L6f står som den var 03.10.2026 og skal ikke slettes. Publiser bare dit hvis brukeren ber om det, og da trengs en lettere utgave (modeller og skrifter ut av siden).
+
+Slik ble artifacten publisert da den ble oppdatert: `dist/index.html` til artifactens URL, slik at lenken beholdes.
+
+Appen for hjemskjermen (PWA, fra 03.10.2026) bygges med `KYST_PWA=1 node build.mjs` til `dist-pwa/`. Den legges ut på GitHub Pages av `.github/workflows/pwa.yml` hver gang en push endrer spillet, bygget eller kart-releasen: https://average01101010.github.io/FishyBusiness-/. Kartdata for hele kysten som ikke får plass i artifacten (256 MB), kommer bare i appen.
+
+- Kartpakkene skal være med som `files`: `map/manifest.json` og hver `map/*.wasm` fra `dist/map/`.
+- Navnene har hashen, så en pakke som ikke er endret, har samme navn og trenger ikke sendes på nytt.
+- Pakker som ikke lenger står i manifestet, kan fjernes med `null`.
+- Med hele kysten (4.13) er det 425 kartfiler og 195 MB. Én publisering tar høyst 255 filer og 64 MB, og en versjon høyst 511 filer og 256 MB. Send derfor de endrede filene i flere publiseringer til samme URL, hver med siden og en bunke filer under 64 MB.
+
+Begrensningen som gjelder: siden må forbli én fil. Alt er innebygd, også skriftene (fra 05.10.2026), bortsett fra kartpakkene i `map/` (fra kystplanens fase K3), som ligger ved siden av siden i samme artifact. Et framtidig PWA-bygg på GitHub Pages kan ha flere filer (manifest, service worker, ikoner, kartsoner), se veikartet «PWA og hele kysten» i `docs/planer/flaateplanen.md`.
