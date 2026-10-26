@@ -8,19 +8,23 @@ import asyncio, json
 from playwright.async_api import async_playwright
 
 bad = []
+# genCrew draws the hands from Math.random; a seeded one inside each block that makes or moves them gives the same crew every run
+# (the regression of 24.10.2026 saw the test fail now and then). The hands get no traits: a seasick one (sjosyk, 13-work.js idleWeights)
+# stands over the rail in a sea over 1.2 m even under way, which is meant, and not what this test looks at. The game is not changed.
+seed = lambda n: "{ let a = %d; Math.random = () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }" % n
 def check(c, msg, d=None):
     print(('OK   ' if c else 'FEIL ') + msg, '' if c else json.dumps(d, ensure_ascii=False, default=str)[:400])
     if not c: bad.append(msg)
 
-SETUP = """(() => { const b = S.boat, g = GROUNDS[0].p; S.tut = 0; S.cash = 1e6; S.t = Math.round((Date.UTC(2027, 2, 12, 11) - EPOCH) / 6e4); S.settings.autoOn = false;
-  b.type = 'sjark'; applyVessel(); S.crew = [Object.assign(genCrew(), {bi:false, off:false, fatigue:0}), Object.assign(genCrew(), {bi:false, off:false, fatigue:0})]; S.crew.forEach(c => { c.job = null; });
+SETUP = """(() => { """ + seed(20261031) + """ const b = S.boat, g = GROUNDS[0].p; S.tut = 0; S.cash = 1e6; S.t = Math.round((Date.UTC(2027, 2, 12, 11) - EPOCH) / 6e4); S.settings.autoOn = false;
+  b.type = 'sjark'; applyVessel(); S.crew = [Object.assign(genCrew(), {bi:false, off:false, fatigue:0, traits:[]}), Object.assign(genCrew(), {bi:false, off:false, fatigue:0, traits:[]})]; S.crew.forEach(c => { c.job = null; });
   S.equip.jukse = 2; S.target = 'torsk'; S.hold = []; b.ice = 300; b.status = 'fishing'; b.port = null; b.pos = {x:g.x, y:g.y}; b.heading = 0.4; b.v = 0; b.fishUntil = S.t + 600; b.gop = null; b.deckStop = false; S.plan = null; S.rest = null;
   CREW3D.reset(); CREW3D.tick(0.05); const M = deckMap('sjark');
   const A = CREW3D.agents().map(a => ({id:a.id, st:a.st, mode:a.mode, task:a.task, cell:a.cell, ok:M.ok(M.cellOf(a.x, a.z)), goal:a.goal && a.goal.k}));
   return {on:CREW3D.on(), A, people:workAssign().map(p => (p.c ? 'c' : 'me') + ':' + p.st)}; })()"""
 
 # step the agents n times by dt seconds; every step checks that each visible agent stands on a deck cell; returns the walked distance per agent and the end state
-STEP = """(([n, dt]) => { const M = deckMap('sjark'), walked = {}, off = [], last = {}; let moved = 0;
+STEP = """(([n, dt]) => { """ + seed(20261032) + """ const M = deckMap('sjark'), walked = {}, off = [], last = {}; let moved = 0;
   for (let i = 0; i < n; i++){ CREW3D._st.ctxT = 0; CREW3D.tick(dt);
     for (const a of CREW3D.agents()){ if (a.mode === 'in') continue; if (!M.ok(M.cellOf(a.x, a.z))) off.push([a.id, +a.x.toFixed(2), +a.z.toFixed(2)]);
       if (last[a.id]){ const d = Math.hypot(a.x - last[a.id][0], a.z - last[a.id][1]); walked[a.id] = (walked[a.id] || 0) + d; if (d > dt * 2.5) off.push([a.id, 'too fast', d]); } last[a.id] = [a.x, a.z]; } }
@@ -51,7 +55,7 @@ async def main():
         check(r4 == 2, 'a hand given time off has no agent', r4)
         # each on a place of their own (Jonas 20.10.2026, tilbakemelding #75: «To av mannskapet står også inni hverandre»): hauling line on
         # the new sjark with three hands, one hauls, one bleeds, one guts and one packs, none closer to another than 0.4 m and none in the deck kit
-        r5 = await pg.evaluate("""(() => { const b = S.boat; b.type = 'sjarkny'; applyVessel(); S.crew = [0, 1, 2].map(() => Object.assign(genCrew(), {bi:false, off:false, fatigue:0})); S.crew.forEach(c => { c.job = null; });
+        r5 = await pg.evaluate("""(() => { """ + seed(20261033) + """ const b = S.boat; b.type = 'sjarkny'; applyVessel(); S.crew = [0, 1, 2].map(() => Object.assign(genCrew(), {bi:false, off:false, fatigue:0, traits:[]})); S.crew.forEach(c => { c.job = null; });
           S.equip.linehaler = true; S.hold = [{sp:'torsk', cls:SPECIES.torsk.ref, kg:60, n:18, bled:true, iced:false, hr:Math.floor(S.t / 60), fresh:100, gut:false, hook:true}]; b.status = 'fishing'; b.deckStop = false; b.ice = 300;
           b.gop = {op:'haul', kind:'line', n:4, done:0, prog:0, sub:0, sl:1, hooksPer:600, a:{...b.pos}, b:{x:b.pos.x + 0.2, y:b.pos.y}};
           CREW3D.reset(); for (let i = 0; i < 600; i++) CREW3D.tick(0.05);
@@ -61,7 +65,7 @@ async def main():
         check(r5['st'] == ['blogg:bleedst', 'haling:haul', 'is:pack', 'sloy:gut'] and min(r5['d']) >= 0.39 and not r5['inKit'] and r5['kit'] > 0, 'hauling line on the new sjark: one hauls, one bleeds, one guts, one packs and ices, each on a place of their own (no two closer than 0.4 m), none in the kit', r5)
         # a break on deck (leaning on the rail, looking out) ends as she gets under way: the crew go in at once, not after the spell
         # (Jonas 21.10.2026: two leant over the rail at 23 knots as if jigging, for up to a minute and a half)
-        r6 = await pg.evaluate("""(() => { const b = S.boat; b.status = 'idle'; b.v = 0; S.plan = null; S.hold = []; CREW3D.reset(); for (let i = 0; i < 40; i++){ CREW3D._st.ctxT = 0; CREW3D.tick(0.05); }
+        r6 = await pg.evaluate("""(() => { """ + seed(20261034) + """ const b = S.boat; b.status = 'idle'; b.v = 0; S.plan = null; S.hold = []; CREW3D.reset(); for (let i = 0; i < 40; i++){ CREW3D._st.ctxT = 0; CREW3D.tick(0.05); }
           const before = CREW3D.agents().filter(a => !a.me && a.goal && a.goal.idle).length;
           b.status = 'sailing'; b.v = 8; S.plan = {wps:[{x:b.pos.x + 5, y:b.pos.y, port:null, fish:0}], idx:0, speed:8, returning:false};
           for (let i = 0; i < 20; i++){ CREW3D._st.ctxT = 0; CREW3D.tick(0.05); }
