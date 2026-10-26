@@ -170,8 +170,8 @@ async def leia(p):
         nat[name] = json.loads(await pg.evaluate("""async ([a, b, aport]) => { const sd = safeDepth(), sea = async ([la, lo]) => { const c = P(la, lo); await mapNeed(c, 7); for (let r = 0; r <= 60; r++) for (let k = 0; k < Math.max(1, r * 6); k++){ const t = k / Math.max(1, r * 6) * 2 * Math.PI, q = {x:c.x + Math.cos(t) * r * 0.1, y:c.y + Math.sin(t) * r * 0.1}; if (!isLand(q) && coastDist(q) >= 0.3 && depthF(q) >= sd + 1) return q; } return null; };
           const A = aport ? portById(aport).p : await sea(a), B = await sea(b), t0 = performance.now(), res = await leiaRoute(A, B, aport, null);
           if (res.why) return JSON.stringify({why:res.why[0]});
-          let p = A, bad = 0, far = 0, len = 0; for (const w of res.wps){ if (!clearLine(p, w) || legHazard(p, w, sd).unsafe) bad++; const L = dist(p, w); for (let k = 1; k < L / 0.25; k++){ const u = k * 0.25 / L; far = Math.max(far, coastDistFar({x:p.x + (w.x - p.x) * u, y:p.y + (w.y - p.y) * u})); } len += L; p = w; }
-          return JSON.stringify({n:res.wps.filter(w => !w.obs).length, obs:res.wps.filter(w => w.obs).length, max:res.st.maxWp, mended:res.st.mendPts || 0, km:+len.toFixed(1), ratio:+(len / dist(A, B)).toFixed(2), bad, far:+far.toFixed(1), slice:+res.st.maxSlice.toFixed(1), at:res.st.at, cell:res.st.cell, s:+((performance.now() - t0) / 1000).toFixed(1)}); }""", [a, bb, aport]))
+          let p = A, bad = 0, far = 0, len = 0; const badLegs = []; for (const w of res.wps){ const cl = clearLine(p, w), hz = legHazard(p, w, sd); if (!cl || hz.unsafe){ bad++; badLegs.push({i:badLegs.length + bad, from:[+p.x.toFixed(2), +p.y.toFixed(2)], to:[+w.x.toFixed(2), +w.y.toFixed(2)], ll:(q => [+q.lat.toFixed(4), +q.lon.toFixed(4)])(natLL(w)), clear:cl, minD:+hz.minD.toFixed(1), rocks:hz.rocks, sd}); } const L = dist(p, w); for (let k = 1; k < L / 0.25; k++){ const u = k * 0.25 / L; far = Math.max(far, coastDistFar({x:p.x + (w.x - p.x) * u, y:p.y + (w.y - p.y) * u})); } len += L; p = w; }
+          return JSON.stringify({n:res.wps.filter(w => !w.obs).length, obs:res.wps.filter(w => w.obs).length, max:res.st.maxWp, mended:res.st.mendPts || 0, km:+len.toFixed(1), ratio:+(len / dist(A, B)).toFixed(2), bad, far:+far.toFixed(1), slice:+res.st.maxSlice.toFixed(1), at:res.st.at, cell:res.st.cell, s:+((performance.now() - t0) / 1000).toFixed(1), badLegs}); }""", [a, bb, aport]))
     print('     K9:', json.dumps(nat, ensure_ascii=False))
     okn = all('why' not in v for v in nat.values())
     check(okn and all(v['bad'] == 0 and v['n'] <= max(40, v['km'] / 2) + v.get('mended', 0) for v in nat.values()), 'Autonav over hele kysten: Finnsnes–Tromsø, Bodø–Reine og Bergen–Florø gir en vei fri for land, grunner og skjær, med høyst 40 punkter, eller ett per 2 km der ruta følger leia (maxWp er et mål), pluss de som legger etapper utenom grunt vann', {k: (v.get('n'), v.get('max'), v.get('mended'), v.get('bad'), v.get('why')) for k, v in nat.items()})
@@ -225,21 +225,30 @@ async def main():
             const ch2 = [to].concat(en, [pt.p]); for (let i = 1; i < ch2.length; i++) if (en.length && !clearLine(ch2[i - 1], ch2[i])) { R.bad.push([pt.id, 'in', i]); break; } } }
           return JSON.stringify(R); })()"""))
         check(r['n'] > 500 and r['out'] > 20 and r['inn'] > 20 and not r['bad'], 'A12: innseilingspunkter bare med fri sikt hele veien, og aldri selve havnepunktet', {k: r[k] for k in ('n', 'out', 'inn')} | {'bad': r['bad'][:5]})
-        # the 3D boat at a route's last waypoint (the user's test 04.10.2026: she spun round it): the simulation paused, the minutes stepped
-        # by hand and the 3D follower stepped at 30 frames a second (G3._debug.stepBoat), she comes in to the point without turning round
+        # the 3D boat at a route's last waypoint (the user's test 04.10.2026: she spun round it): the game's own loop held (TAB.held, as
+        # tick() in ui/08-actions.js checks first), the manoeuvring model (core/16b-dyn.js dynTick, Fysikk 2 of 19.10.2026: it has her on
+        # every route at the normal pace, and ends the route exactly on the point) and the minutes stepped by hand as tick() steps them, and
+        # the 3D follower stepped at 30 frames a second (G3._debug.stepBoat): she comes in to the point without turning round. (Before, with
+        # SIMREADY off, the model could not run (dynCan) and the test drove the old kinematic follower, which stopped 22 m short: the game
+        # never sails a route on it any more.)
         sp = []
         # 23 kn to a fishing stop: the simulation brakes from 23 to 8 knots in one minute and the follower came past the point it steers
         # for and turned round for it (the user's test 04.10.2026: a pirouette before the stop)
         for spd, fish, far in ((16, 0, 1), (5, 0, 1), (23, 1, 2)):
-            sp.append(await pg.evaluate("""([spd, fish, far]) => { SIMREADY = false; const b = S.boat, c = tutField().p; b.status = 'idle'; b.port = null; b.pos = {x:c.x, y:c.y}; b.v = 0;
+            sp.append(await pg.evaluate("""([spd, fish, far]) => { TAB.held = true; const b = S.boat, c = tutField().p; b.status = 'idle'; b.port = null; b.pos = {x:c.x, y:c.y}; b.v = 0;
               const end = {x:c.x + 0.9 * far, y:c.y - 0.6 * far, fish}; b.heading = Math.atan2(0.9, 0.6); S.plan = {wps:[end], idx:0, speed:spd}; b.status = 'sailing';
               const D = G3._debug; D.bv.init = false; D.stepBoat(0, 0, 0); let frac = 0, turn = 0, prev = null, idleK = -1; const R = 1 / 30;
-              for (let k = 0; k < 30 * 400; k++){ frac += R * simRate() / 60; if (frac >= 1){ frac -= 1; step(); } D.stepBoat(R, k * R, b.status === 'sailing' ? frac : 0);
+              // the distance to the point is read as she stops (the route over), and the turning up to two seconds after it: from the next
+              // minute step on she lies still and drifts off the point with the wind and the sea (core/16b-dyn.js lieDrift, Fysikk 2, 19.10.2026:
+              // «hun står på punktet ... og driver derfra når hun ligger»), and turns to the drift; that was the 22 m the check saw before
+              let endD = null, drift = null;
+              for (let k = 0; k < 30 * 400; k++){ dynTick(R); frac += R * simRate() / 60; if (frac >= 1){ frac -= 1; step(); } D.stepBoat(R, k * R, b.status === 'sailing' ? frac : 0);
                 const bv = D.bv, d = Math.hypot(bv.px - end.x * 1000, bv.pz - end.y * 1000);
-                if (d < 500 || idleK >= 0){ if (prev !== null){ let a = bv.cog - prev; while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; turn += Math.abs(a); } prev = bv.cog; }
-                if (b.status !== 'sailing' && idleK < 0) idleK = k; if (idleK >= 0 && k - idleK > 600) break; }
-              SIMREADY = true; return {spd, turn:+(turn * 180 / Math.PI).toFixed(1), end:+Math.hypot(G3._debug.bv.px - end.x * 1000, G3._debug.bv.pz - end.y * 1000).toFixed(1)}; }""", [spd, fish, far]))
-        check(all(v['turn'] < 30 and v['end'] < 5 for v in sp), 'båten i 3D kommer inn til siste veipunkt og til et stopp i 23 knop, og stopper der uten å snurre (gammel kode: 360 grader)', sp)
+                if (b.status !== 'sailing' && idleK < 0){ idleK = k; endD = d; }
+                if ((d < 500 || idleK >= 0) && (idleK < 0 || k - idleK <= 60)){ if (prev !== null){ let a = bv.cog - prev; while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; turn += Math.abs(a); } prev = bv.cog; }
+                if (idleK >= 0 && k - idleK > 600){ drift = d; break; } }
+              TAB.held = false; lastWall = Date.now(); return {spd, turn:+(turn * 180 / Math.PI).toFixed(1), end:endD == null ? null : +endD.toFixed(1), drift:drift == null ? null : +drift.toFixed(1), st:b.status, model:!!S.boat.dyn}; }""", [spd, fish, far]))
+        check(all(v['end'] is not None and v['turn'] < 30 and v['end'] < 5 for v in sp), 'båten i 3D kommer inn til siste veipunkt og til et stopp i 23 knop, og stopper der uten å snurre (gammel kode: 360 grader); etterpå driver hun av punktet (drift)', sp)
         print('sidefeil', errs)
         await b.close()
 
