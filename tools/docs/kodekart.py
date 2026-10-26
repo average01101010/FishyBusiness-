@@ -11,6 +11,8 @@ OUT = os.path.join(ROOT, 'docs', 'systemer', 'kodekart.md')
 HDR = re.compile(r'^\s*// (?:={5,}|-{3,}) ?(.*?)\s*(?:={5,}|-{3,})?\s*$')
 FN = re.compile(r'^(\s{0,2})(?:async )?function\s+(\w+)\s*\(([^)]*)\)')
 IIFE = {'src/js/view3d.js', 'src/js/vessel3d.js'}
+# the pieces of view3d.js (src/js/view3d/) and of the phone (src/js/ui/phone/) are one function's body each (E1, 26.10.2026)
+iife = lambda f: f in IIFE or f.startswith('src/js/view3d/') or f.startswith('src/js/ui/phone/')
 
 def files():
     # the order of the template, which is the order the browser sees
@@ -39,7 +41,7 @@ def build():
             if m and len(m.group(1).strip()) > 2:
                 L.append('- **%d** %s' % (i, m.group(1)[:160])); n += 1; continue
             m = FN.match(s)
-            if m and (not m.group(1) or f in IIFE):
+            if m and (not m.group(1) or iife(f)):
                 args = m.group(3).strip(); L.append('  - %d `%s(%s)`' % (i, m.group(2), args[:60] + ('…' if len(args) > 60 else ''))); n += 1
         if not n: L.append('- (ingen seksjoner eller funksjoner på toppnivå)')
         L.append('')
