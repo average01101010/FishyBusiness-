@@ -13,3 +13,6 @@ tools/air/out/
 tools/brand/out/
 tools/opening/out/
 tests/saves/
+
+# agent worktrees are local
+.claude/worktrees/

@@ -1,0 +1,18 @@
+---
+name: regresjon
+description: Kjører hele regresjonen før publisering og én gang i uka, sorterer det røde mot det som er kjent rødt i backloggen, retter det som er vårt og skriver resten ned.
+---
+
+# /regresjon
+
+Full regresjon tar rundt en time, med 3D-testene alene etter de andre, og over to timer med alt. Den kjøres bare før publisering og som ukentlig sjekk (`docs/utviklingsplan.md`, D5). Feil som dukker opp, rettes samlet.
+
+1. **Bygg** begge: `node build.mjs` og `KYST_VEC=1 KYST_DIST=dist-vec node build.mjs` (`run.py` bygger `dist-vec/` selv for `npctest`, `havntest` og `vectest`, men bygget avslører syntaksfeil først).
+2. **Start i bakgrunnen** med den lengste tidsgrensen verktøyet har: `python3 tests/run.py full > <scratchpad>/full.log 2>&1`. Arbeid videre imens. Kjør aldri flere 3D-tester ved siden av; `run.py` ordner rekkefølgen.
+3. **Les resultatet én gang:** `grep -E "^(OK|FEIL|LES)|OK, " <scratchpad>/full.log`, og `tests/out/logs/<test>.txt` for de røde. Ble kjøringen stoppet av tidsgrensen, kjøres de som manglet med `smoke`, de med 3D én og én.
+4. **Sorter:**
+   - **Kjent rødt:** står i `docs/BACKLOG.md` under testene som feiler, med samme linje. Noteres, ikke mer.
+   - **Ustabilt:** feiler på tid eller tilfeldighet (tilfeldig mannskap, SwiftShader under last). Kjør den én gang til, alene. Grønn andre gang: skriv «ustabil» med grunn i backloggen, og gjør testen robust om det kan gjøres i testen selv. Rød igjen: ekte.
+   - **Nytt rødt:** sjekk om det feiler på forrige commit også (`git stash` eller `git worktree`). Gjør det ikke det, er det vårt: rett det. Gjør det det, skriv det i backloggen med commiten det feiler fra.
+5. **Rettingene** går som vanlige endringer med `/lever`, én commit hver. Aldri hopp over, slå av eller myk opp en test for å bli grønn.
+6. **Backloggen** får datoen, hva som var rødt, hva som ble rettet og hva som står igjen, under «Tester som feiler».
