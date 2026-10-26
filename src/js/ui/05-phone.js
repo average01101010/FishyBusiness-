@@ -477,6 +477,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p141', '26.10.2026', 'Autonav', 'Autonav', [
+       ['Autonav setter ikke lenger båten på grunn når hun skjærer et hjørne eller driver av ruta i fart. Hun stopper i stedet, og Autonav finner en vei rundt.', 'Autonav no longer puts the boat aground when she cuts a corner or drifts off the route at speed. She stops instead, and Autonav finds a way round.']]],
     ['p140', '25.10.2026', 'Flytebrygger', 'Floating docks', [
        ['Flytebryggene langs kysten er bygd av pontonger, med fingre der de finnes, endepontong med leider og livbøye, og landgang fra land. De følger tidevannet. Før var de grå kasser.', 'The floating docks along the coast are built of pontoons, with fingers where they have them, an end pontoon with a ladder and life ring, and a gangway from land. They ride the tide. Before, they were grey boxes.']]],
     ['p139', '25.10.2026', 'Plassene i driftsplanen', 'The places in the operations plan', [
