@@ -17,7 +17,7 @@ Oppgaven er å lese de nye tilbakemeldingene fra spillerne og vekte dem. Rutinen
 
 1. **Kode og verktøy:**
    - Har økta ikke repoet med skrivetilgang, kobler du det til med `add_repo` (eier `average01101010`, repo `FishyBusiness-`, `access: push`) og kloner slik svaret sier. Går ikke det, kloner du det offentlige repoet og kan bare notere og rapportere. Da sier du det i rapporten.
-   - `git fetch origin ccr-5e1ba2f4-pusvyd`, og les `CLAUDE.md`.
+   - `git fetch origin ccr-5e1ba2f4-pusvyd`, og les `CLAUDE.md` og `docs/INDEKS.md`. Dokumentasjonen per system ligger i `docs/systemer/` (overleveringen ble delt opp 26.10.2026; `docs/systemer/gamle-numre.md` viser hvor de gamle kapittelnumrene havnet). Les bare dokumentet for systemet saken gjelder, og slå opp i `docs/systemer/kodekart.md` før en stor fil leses.
    - Før du tester: `pip install playwright==1.56.0` (nettleseren ligger i `/opt/pw-browsers`). `node build.mjs` bygger med Senja når kartet for hele kysten mangler. Trenger en test hele kysten (feilen sier at en blokk ikke er lastet), henter du det med `python3 tools/map/release.py && python3 tools/map/game.py`.
 2. **Hent:** `python3 tools/feedback/agent.py list --imgs --out <scratchpad-mappa>/fb`. Utskriften viser én linje per ny tilbakemelding. Hele dataene ligger i `feedback.json`:
    - `rows` er de nye.
@@ -27,7 +27,7 @@ Oppgaven er å lese de nye tilbakemeldingene fra spillerne og vekte dem. Rutinen
    Er det ingen nye tilbakemeldinger, ingen feil i `noted`, ingen sak med en PR som er merget (punkt 6) og ingen tekniske saker (punkt 3) som kan rettes (se punkt 7), skriver du bare «Ingen nye tilbakemeldinger» og avslutter, uten rapport. Står det at `FEEDBACK_AGENT_TOKEN` mangler, eller at nettverket stopper kallet, skriver du det kort og avslutter.
 3. **Teknikk:** `python3 tools/feedback/agent.py tech --out <scratchpad-mappa>/fb`. Den viser hva spillet selv har meldt de siste 7 dagene, uten noe om hvem: feilene slått sammen per melding (hvor mange ganger, økter og spillere, versjoner, plattformer, grafikkbrikker og én stack), bildetakten per plattform, nettleser og grafikkbrikke, og per versjon. Jonas: «vi må samle inn så mye viktig data vi kan og analysere for å optimalisere spillet for så mange enheter som mulig.»
    - En feil teller som en sak med alvor etter hva den gjør (krasj eller 3D som ikke starter: 5) × antall økter den har rammet. Feil som er nye i siste versjon, går først.
-   - Bildetakt under 25 i snitt på en grafikkbrikke med mange målinger er en sak (alvor 2 × antall målinger / 50). Se om 3D-nivået allerede er lavest der, og hva som koster mest (overleveringen kapittel 6 om ytelse). Ikke senk grafikken for alle: rett det for de enhetene det gjelder (CLAUDE.md: «Grafikken er nesten det viktigste»).
+   - Bildetakt under 25 i snitt på en grafikkbrikke med mange målinger er en sak (alvor 2 × antall målinger / 50). Se om 3D-nivået allerede er lavest der, og hva som koster mest (`docs/systemer/3d-verden.md` om ytelsen). Ikke senk grafikken for alle: rett det for de enhetene det gjelder (CLAUDE.md: «Grafikken er nesten det viktigste»).
    - Knytt feil og tilbakemeldinger om det samme sammen i notatet («som feilen … på Mali-G57»).
 4. **Forstå** hver tilbakemelding:
    - Se på bildene, og les koden der det hjelper.

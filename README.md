@@ -23,7 +23,7 @@ Byggeskriptet setter sammen `src/` til `dist/index.html`, som kan åpnes direkte
 | `src/js/ui/` | Grensesnitt: språk, kart, instrumenter, mobil, dekksdagbok, guide, handlinger, håndfiske, «Kaffe på kaia» og oppstart |
 | `src/js/view3d.js` | 3D-visning |
 | `src/data/` | Kartdata (Senja innebygd, hele kysten som kartpakker), sjømerker, mottak, regler og kaier (JSON) |
-| `docs/OVERLEVERING.md` | Overlevering fra chatten: visjon, arkitektur, systemer, regelverk og flåteplanen |
+| `docs/INDEKS.md`, `docs/systemer/` | Dokumentasjonen per system (overleveringen delt opp 26.10.2026), `docs/BACKLOG.md` det som gjenstår |
 | `docs/spesifikasjon.md` | Spesifikasjon for fiskerisystemet |
 | `tests/` | Playwright-tester i Python, som kjøres mot `dist/index.html` |
 

@@ -1,4 +1,4 @@
-"""The feedback agent's hands (06.10.2026; tools/feedback/RUTINE.md, supabase/functions/feedback-agent, docs/OVERLEVERING.md 4.22).
+"""The feedback agent's hands (06.10.2026; tools/feedback/RUTINE.md, supabase/functions/feedback-agent, docs/systemer/tilbakemelding-og-admin.md 4.22).
 
 Talks to the Edge Function feedback-agent with the token FEEDBACK_AGENT_TOKEN (Jonas sets it as an API credential in the Claude
 Code environment, which sessions use without seeing it; it is never written anywhere). What it fetches is the players' feedback: it goes to a folder outside the repo

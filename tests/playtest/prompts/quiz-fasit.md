@@ -1,6 +1,6 @@
 # Fasit til quizen (ikke for agenten)
 
-Svarene følger reglene slik spillet bruker dem. Kilder: `docs/OVERLEVERING.md` kap. 5.5 og 6, og koden som er nevnt.
+Svarene følger reglene slik spillet bruker dem. Kilder: `docs/systemer/kvoter-og-regler.md` (5.5 og kapittel 6 fra overleveringen), og koden som er nevnt.
 
 | Nr. | Riktig svar i spillet | Delvis riktig |
 |---|---|---|
