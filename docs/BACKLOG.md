@@ -8,7 +8,7 @@
 - **Oppdragsfristene** (tilbakemeldingene #92 og #93, 23.10.2026): for mye fisk for fristen når line og garn ikke kan stå samtidig. Fristen er 2,5 × reisetida (`09g-turer.js`), uten tid for å fiske kiloene. Forslag: frist etter kilo og fisketid i tillegg til reisetida for oppdrag der spilleren fisker selv. Venter på Jonas' valg.
 - **Brygger uten `floating=yes`** står som grå kasser (Kristiansand og Hammerfest har flest). Alternativ b fra #94 (kassene med dekke, pæler og utriggere) er ikke bygd.
 - **NPC-båter ved flytebrygger tegnet som linje** ligger rundt 0,9 m fra pontongkanten (kaiplassen regnes mot en brygge på 4,2 m).
-- **Utviklingsplanen** (`docs/utviklingsplan.md`): E1 (oppdelingen av `view3d.js` og `05-phone.js`), E4 (de røde testene i 10.6: gjort 26.10.2026 så nær som Bodø–Reine i routetest og charttest), D4 (rutinen får stikkprøver og skjermbilder) og D5 (ukentlig regresjon).
+- **Utviklingsplanen** (`docs/utviklingsplan.md`): E1 (oppdelingen av `view3d.js` og `05-phone.js`), E4 (de røde testene i 10.6: gjort 26.10.2026 så nær som tegnetiden i charttest, en ytelsesoppgave), D4 (rutinen får stikkprøver og skjermbilder) og D5 (ukentlig regresjon).
 
 ## 10. Kjente problemer og åpne spørsmål
 
@@ -59,13 +59,10 @@ Gjennomgått punkt for punkt mot koden, git-loggen og feilloggen 24.10.2026. Det
 
 ## 10.6 Tester som feiler (regresjonen 24.10.2026, gjennomgått i E4 26.10.2026)
 
-E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i et bygg med bare kjernen og Senja (`src/data/map`, uten hele kysten fra `tools/map/out/game/`). Alle rettingene er i testene; spillet er ikke endret. Det som står igjen:
+E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i to økter. Åtte av ni er grønne (se «Strøket 26.10.2026»). Det som står igjen:
 
-- **routetest, K9 Bodø–Reine (ny, ikke i lista 24.10):** `leiaRoute` på 200 m-kjerneceller gir to etapper som `clearLine` avviser, fordi rasteret (`isLand`) sier land 110–130 m fra kysten ved Bodø (67,2873° N 14,3641° Ø, etappe 2) og ved 67,4385° N 14,0021° Ø (etappe 5, starten av det 39 km lange strekket over Vestfjorden); dybden er grei (5 og 27 m), ingen skjær. Planleggerens egen landsjekk (`mend`, `safe`, `clean` i `11-route.js`) slapp dem gjennom. Skal prøves i et bygg med hele kysten (100 m-celler, `autonav.md` 4.12), der `release.py`/`game.py` gir detaljen; K9-linja i loggen skriver nå de dårlige etappene med posisjon, dybde og skjær. Er den rød også der, er det planleggeren som må rettes (`/stikkprove`).
-- **charttest (SOLO):** tre ting, alle uavklart om spillet eller testen:
-  - *Regionen, navn (liggende):* `Senja` og `Malangen` mangler blant de 44 navnene på regionnivået; `Andfjorden` og `Finnsnes` er der. Stående består sjekken. Trolig fortrenger de mange nye stedsnavnene (mottak, verft, butikker fra `steder.json`) øynavnet og fjordnavnet i plasseringen (`03a-chart.js`).
-  - *Hele landet, søm (stående):* punktet ved Lyngen (69,6° N 19,0° Ø) er mørkere land ([215, 197, 150] mot [232, 215, 166]); liggende er det riktig. Kan være en etikett eller gradnettet over punktet i det smalere utsnittet, eller to landbiter tegnet oppå hverandre. Se på `chart_land.png` fra en stående kjøring.
-  - *Tegnetid:* fjorden 3,0–3,2 s og regionen 2,0–2,7 s med CPU strupet 4x, grensen er 2,5 s (3,1 s i regresjonen 24.10 også). Første bilde er innen 0,6 s. Enten har kartet blitt tyngre (vektorkysten med moloene, 4.19), eller grensen er for stram for maskinen; mål på nettbrettet før grensen flyttes.
+- **charttest, tegnetiden (SOLO):** fjorden stående tegnes på 3,0 s med CPU strupet 4x (liggende 1,6 s, grensen fra 02.10 er 2,5 s; beste av to målinger). Profilen: alt er rasterflisene (`chartFlush` → `chartTile` → `chartRaster`, per-piksel B-spline over dybden; stående er 915 × 1162 piksler), vektorene (kyst, gradnett, navn) tar 15 ms. En ytelsesoppgave, ikke en testretting: enten en raskere `chartRaster` (flisene i en worker, eller grovere dybde der linjene ikke synes) eller en måling på nettbrettet før grensen flyttes. Sjekken står som den er.
+- **routetest K9 Bodø–Reine krever hele kysten i bygget:** med bare kjernen (200 m-celler) skjærer `leiaRoute` to hjørner av land med rundt 100 m (ved Bodø 67,2873° N 14,3641° Ø og ved 67,4385° N 14,0021° Ø); med hele kysten (100 m-celler, `release.py` + `game.py`, slik appen bygges) er den grønn. Regresjonen må kjøres med hele kysten (`testing.md`). Planleggerens landsjekk på 200 m-celler er fortsatt svak, men ingen spiller får kjernebygget.
 - **Svak sjekk:** `heattest.console3d` lagrer `SK.cvP`, som ikke males på GLB-skiffen, og sjekker bare `G3.isActive()`.
 - **Svake bilder:** `anchor3d_lying.png` og `anchor3d_up.png` viser skrogsiden av kyst15 (kameraet står ved siden, `c.yaw = 3.9`), ikke baugen med ankeret og kjettingen. Sjekkene leser `G3._debug.anc3`, så testen er grønn uansett; bildene bør flyttes til baugen om Jonas vil se ankeret.
 - **Ytelse sett i testene (ikke rettet):** med SwiftShader står hovedtråden stille i opptil et minutt nå og da (ingen bilder, ingen `evaluate`); spillklokka tar igjen tiden (`tick` spiller 4–5 minutter på ett tikk), mens 3D-ting som trekkes per bilde (ankerkjettingen `ANC3.Lg`) henger etter. Testene tåler det nå; om det også skjer på nettbrettet, er det en lagg Jonas vil merke.
@@ -77,7 +74,10 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i e
 - Ikonet `sjomann` i `05-phone.js` brukes ikke (Sjømann-appen ble fjernet 09.10.2026).
 - Startbåten er `trebat`. `buildSkiff` bygges fortsatt og er grunnlaget for kitet til håndbåtene (`handKit`), så den kan ikke bare fjernes. På skiffen står sløyebordet og blødekaret (75 % størrelse) tett ved setet, og konsollskjermene er ikke levende (Jonas).
 
-## Strøket 26.10.2026 (E4, de røde testene; bare testene er endret)
+## Strøket 26.10.2026 (E4, de røde testene)
+
+- **routetest, Autonav Bodø–Reine** (andre økt): grønn med hele kysten i bygget (43 OK); i kjernebygget var det planleggeren på 200 m-celler (10.6). Ingen kodeendring.
+- **charttest, Lyngen og navnene i regionen** (andre økt): Lyngen-punktet lå på kystlinjens egen strek, som pikselrutenettet stående traff; nå måles inne i Lyngsalpene. «Senja» forsvant fordi den 18 km lange etiketten «Kaldfarnes fiskebruk» sto først og boksene berørte hverandre akkurat på grensen; rang 0 «vises alltid» (`kartplotter.md`), så **spillet er rettet:** rang 0 plasseres før havneetikettene i `renderStatic`, og en havneetikett som ville dekke et slikt navn, droppes på det nivået. Fjordnavnene (rang 1) sjekkes slik pakkene plasserer dem uten havn i veien (Malangen møter Botnhamn og Vangshamn liggende, etter regelen). Tegnetiden måles som beste av to. fad44f5. Tegnetiden stående står igjen (10.6).
 
 - **worktest og crewwalk** (ustabile): frø for `Math.random` inne i hver `evaluate`-blokk (mønsteret fra `caretest.py`), og mannskapet i crewwalk uten trekk: en sjøsyk mann (`sjosyk`) står over rekka i sjø over 1,2 m også under fart (`13-work.js idleWeights`, med vilje), og testen antok at alle går inn. c1f6427, 3bbbb7d.
 - **anchor3d** (tidsfølsom): ventet et fast antall runder; nå venter den på tilstanden (rode ute, anker oppe og stuet) med frister fra kjernens egne tider (`ANCH.pay`, `anchorUpIn()`, `simRate()`) og romslig margin for stoppene i SwiftShader. Skriver spor ved feil. 00d858f.

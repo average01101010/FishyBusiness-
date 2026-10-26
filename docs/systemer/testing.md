@@ -59,6 +59,7 @@ Hvilke tester som dekker hvilke filer, står i `COVER` i `tests/run.py`. Funksjo
     - `kinotest.py` (3D): kino-opptakene, «Skjul» og avslutning
     - `haultest.py` (3D): halerne fra Blender, skiva og mannskapet
     - `charttest.py`: tidsmåler også første bilde og drar kartet et halvt utsnitt
+      - Tegnetiden er beste av to malinger med CPU strupet 4x; fjorden stående ligger på 3,0 s mot grensen 2,5 s (rasterflisene i `chartRaster`, `BACKLOG.md` 10.6). Lyngen måles inne i alpene (69,3 N 20,3 E), og fjordnavnene slik pakkene plasserer dem uten havn i veien (E4, 26.10.2026).
   - **`sea3d.py` (3D):**
     - ingen hopp fra stille til orkan, ved brå vindendring eller når det nære kartet bygges på nytt
     - skumdekket mot Monahan, både regnet ut og tegnet
@@ -76,6 +77,7 @@ Hvilke tester som dekker hvilke filer, står i `COVER` i `tests/run.py`. Funksjo
   - `docktest.py`: knappelinja, viftene, skuffen og «Sett ut» med berøring, liggende og stående. Knappene i havn og på sjøen, grå knapper som sier hvorfor, kjøp i skuffen, de ti appene, linjelengden i kartet (±2 px), dra i enden, setting langs linja, avbrutt setting, og «Ta opp» 50 m fra blåsa.
   - `camtest.py`: kameraet holdes utenfor kaier, kraner og bropilarer.
   - `routetest.py`: rute-editoren med berøring (WP-navn, kort, angre, dra, sett inn, A12) og «Følg leia».
+    - K9 (Finnsnes–Tromsø, Bodø–Reine, Bergen–Florø) trenger hele kysten i bygget (`python3 tools/map/release.py`, `python3 tools/map/game.py`, så `node build.mjs`): med bare kjernen går Bodø–Reine på 200 m-celler og får to etapper som `isLand` avviser (E4, 26.10.2026). K9-linja i loggen skriver de dårlige etappene med posisjon, dybde og skjær. Regresjonen kjøres derfor med hele kysten.
   - `heattest.py`: fiskemodellen og varmekartet. Bestanden (nedtrekk på fire ruter, gjenvekst helt tilbake), hotspotene som trekker, stimene, skreiflekken på første tur, radius per trinn, varmen ved båten = 30·Σdensity, av og på, artsvalget, avlesningen, ettergløden, sonaren som utstyr, konsollen i 3D og ytelsen med CPU-en struping fire ganger (`Emulation.setCPUThrottlingRate`, en stand-in for nettbrettet). Skjermbilder i `tests/out/heat_*.png`.
   - `hailltest.py` og `luck2.py`: haill og pub.
   - `crewtest.py`: mannskap.
