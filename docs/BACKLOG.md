@@ -8,7 +8,7 @@
 - **Oppdragsfristene** (tilbakemeldingene #92 og #93, 23.10.2026): for mye fisk for fristen når line og garn ikke kan stå samtidig. Fristen er 2,5 × reisetida (`09g-turer.js`), uten tid for å fiske kiloene. Forslag: frist etter kilo og fisketid i tillegg til reisetida for oppdrag der spilleren fisker selv. Venter på Jonas' valg.
 - **Brygger uten `floating=yes`** står som grå kasser (Kristiansand og Hammerfest har flest). Alternativ b fra #94 (kassene med dekke, pæler og utriggere) er ikke bygd.
 - **NPC-båter ved flytebrygger tegnet som linje** ligger rundt 0,9 m fra pontongkanten (kaiplassen regnes mot en brygge på 4,2 m).
-- **Utviklingsplanen** (`docs/utviklingsplan.md`): E1 (oppdelingen av `view3d.js` og `05-phone.js`), E4 (de røde testene i 10.6), D4 (rutinen får stikkprøver og skjermbilder) og D5 (ukentlig regresjon).
+- **Utviklingsplanen** (`docs/utviklingsplan.md`): E1 (oppdelingen av `view3d.js` og `05-phone.js`), E4 (de røde testene i 10.6: gjort 26.10.2026 så nær som Bodø–Reine i routetest og charttest), D4 (rutinen får stikkprøver og skjermbilder) og D5 (ukentlig regresjon).
 
 ## 10. Kjente problemer og åpne spørsmål
 
@@ -57,12 +57,18 @@ Gjennomgått punkt for punkt mot koden, git-loggen og feilloggen 24.10.2026. Det
 - **Båtmodellene:** formen under vannlinja er anslått på Malo og havsjarken, havsjarkens ballastkjøl er en egen kropp, og stytteseglet står alltid, også i havn. Om Maloens tynne rekkverk og vaiere (7–24 mm) flimrer, må ses i spillet.
 - **Lagringen:** spillet lagrer hvert 5. sekund, når siden lukkes og når fanen skjules. At Chrome skriver localStorage til disk litt etter, er nettleserens oppførsel; det er ikke målt på nettbrettet.
 
-## 10.6 Tester som feiler (regresjonen 24.10.2026)
+## 10.6 Tester som feiler (regresjonen 24.10.2026, gjennomgått i E4 26.10.2026)
 
-- **Feiler også før D1 (4601b9b):** maptest (fangsten 62,6 mot 69,7 kg og 1–2 minutter ulik med og uten pakker), camtest (Gisundbrua, 0 av 24), bunkertest (mottakene i nærheten fyller ved kaia), charttest (navn i regionen, sømmer i hele landet, tegnetid 3,1 s i fjorden).
-- **Feiler også før D2:** geartest (stasjonene ved garn- og linehaling, #75), routetest (båten i 3D stopper 22 m fra siste veipunkt).
-- **Ustabile:** worktest og crewwalk (tilfeldig mannskap fra `genCrew`), anchor3d (tidsfølsom; feiler annenhver gang på D2 og D3, besto 3 av 3 før D1).
+E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i et bygg med bare kjernen og Senja (`src/data/map`, uten hele kysten fra `tools/map/out/game/`). Alle rettingene er i testene; spillet er ikke endret. Det som står igjen:
+
+- **routetest, K9 Bodø–Reine (ny, ikke i lista 24.10):** `leiaRoute` på 200 m-kjerneceller gir to etapper som `clearLine` avviser, fordi rasteret (`isLand`) sier land 110–130 m fra kysten ved Bodø (67,2873° N 14,3641° Ø, etappe 2) og ved 67,4385° N 14,0021° Ø (etappe 5, starten av det 39 km lange strekket over Vestfjorden); dybden er grei (5 og 27 m), ingen skjær. Planleggerens egen landsjekk (`mend`, `safe`, `clean` i `11-route.js`) slapp dem gjennom. Skal prøves i et bygg med hele kysten (100 m-celler, `autonav.md` 4.12), der `release.py`/`game.py` gir detaljen; K9-linja i loggen skriver nå de dårlige etappene med posisjon, dybde og skjær. Er den rød også der, er det planleggeren som må rettes (`/stikkprove`).
+- **charttest (SOLO):** tre ting, alle uavklart om spillet eller testen:
+  - *Regionen, navn (liggende):* `Senja` og `Malangen` mangler blant de 44 navnene på regionnivået; `Andfjorden` og `Finnsnes` er der. Stående består sjekken. Trolig fortrenger de mange nye stedsnavnene (mottak, verft, butikker fra `steder.json`) øynavnet og fjordnavnet i plasseringen (`03a-chart.js`).
+  - *Hele landet, søm (stående):* punktet ved Lyngen (69,6° N 19,0° Ø) er mørkere land ([215, 197, 150] mot [232, 215, 166]); liggende er det riktig. Kan være en etikett eller gradnettet over punktet i det smalere utsnittet, eller to landbiter tegnet oppå hverandre. Se på `chart_land.png` fra en stående kjøring.
+  - *Tegnetid:* fjorden 3,0–3,2 s og regionen 2,0–2,7 s med CPU strupet 4x, grensen er 2,5 s (3,1 s i regresjonen 24.10 også). Første bilde er innen 0,6 s. Enten har kartet blitt tyngre (vektorkysten med moloene, 4.19), eller grensen er for stram for maskinen; mål på nettbrettet før grensen flyttes.
 - **Svak sjekk:** `heattest.console3d` lagrer `SK.cvP`, som ikke males på GLB-skiffen, og sjekker bare `G3.isActive()`.
+- **Svake bilder:** `anchor3d_lying.png` og `anchor3d_up.png` viser skrogsiden av kyst15 (kameraet står ved siden, `c.yaw = 3.9`), ikke baugen med ankeret og kjettingen. Sjekkene leser `G3._debug.anc3`, så testen er grønn uansett; bildene bør flyttes til baugen om Jonas vil se ankeret.
+- **Ytelse sett i testene (ikke rettet):** med SwiftShader står hovedtråden stille i opptil et minutt nå og da (ingen bilder, ingen `evaluate`); spillklokka tar igjen tiden (`tick` spiller 4–5 minutter på ett tikk), mens 3D-ting som trekkes per bilde (ankerkjettingen `ANC3.Lg`) henger etter. Testene tåler det nå; om det også skjer på nettbrettet, er det en lagg Jonas vil merke.
 - Ikke kjørt i siste regresjon (tidsgrensen): heattest, sea3d, teleport3d, lighttest, kinotest, haultest, potshot, aurorashot, penshot, deckshot, workshot, brotest og tut. De dekker ingen filer som ble endret i D2 og D3.
 
 ## 10.7 Små ryddejobber
@@ -70,6 +76,16 @@ Gjennomgått punkt for punkt mot koden, git-loggen og feilloggen 24.10.2026. Det
 - `S.owned` skrives fortsatt (`03-simulation.js`, `05-phone.js`, `05-vessels.js`), men leses bare av en lagringsmigrering i `11-boot.js`.
 - Ikonet `sjomann` i `05-phone.js` brukes ikke (Sjømann-appen ble fjernet 09.10.2026).
 - Startbåten er `trebat`. `buildSkiff` bygges fortsatt og er grunnlaget for kitet til håndbåtene (`handKit`), så den kan ikke bare fjernes. På skiffen står sløyebordet og blødekaret (75 % størrelse) tett ved setet, og konsollskjermene er ikke levende (Jonas).
+
+## Strøket 26.10.2026 (E4, de røde testene; bare testene er endret)
+
+- **worktest og crewwalk** (ustabile): frø for `Math.random` inne i hver `evaluate`-blokk (mønsteret fra `caretest.py`), og mannskapet i crewwalk uten trekk: en sjøsyk mann (`sjosyk`) står over rekka i sjø over 1,2 m også under fart (`13-work.js idleWeights`, med vilje), og testen antok at alle går inn. c1f6427, 3bbbb7d.
+- **anchor3d** (tidsfølsom): ventet et fast antall runder; nå venter den på tilstanden (rode ute, anker oppe og stuet) med frister fra kjernens egne tider (`ANCH.pay`, `anchorUpIn()`, `simRate()`) og romslig margin for stoppene i SwiftShader. Skriver spor ved feil. 00d858f.
+- **geartest** (stasjonene ved haling, #75): testen ventet regelen fra 20.10; spillet følger 23.10 («fisken som kommer over ripa, bløgges» først, `folk-om-bord.md`). Garn med tre om bord: bløgging, haling, haling; line med to: bløgging, haling. 77d79cb.
+- **routetest** (22 m fra siste veipunkt): testen satte `SIMREADY = false`, som også stanser manøvreringsmodellen (`dynCan`), og leste avstanden to spillminutter etter stoppet, da båten hadde drevet av punktet (`lieDrift`, Fysikk 2). Nå holdes spillets løkke med `TAB.held`, `dynTick` går per bilde, og avstanden leses idet ruta slutter: 0,3–0,4 m, 7° sving, 18 m drift etterpå. 999eb8b. (Bodø–Reine står igjen, 10.6.)
+- **camtest** (Gisundbrua 0 av 24): båten driver med vinden rundt 24 m per spillminutt mens den ligger stille (`lieDrift`), og klokka tar igjen flere minutter om gangen i SwiftShader, så den var 100 m unna brua før sveipet. Testen holder løkka (`TAB.held`) under sveipet. 2 av 24 nå. 716a07e.
+- **maptest** (62,6 mot 69,7 kg): to nye spill har hver sin `S.qseed` (`newState` uten felles klokke), og gytebestanden per år for torsk, hyse og sei (`stockF`, `ssbAt` i `03d-quota.js`) er nøklet på den. Pakkeholdingen var uskyldig: klokka sto, hvert minutt etterpå var likt. Testen låser `S.qseed`. 7287963.
+- **bunkertest** (mottakene i nærheten): hvert kystmottak har havneenheten med landings- og bunkersplass siden 05.10.2026 (`havner-og-mottak.md`), så stasjonen står ved bunkersplassen; testen ventet «ved kaia». 7abb8f6.
 
 ## Strøket 24.10.2026 (løst eller foreldet)
 
