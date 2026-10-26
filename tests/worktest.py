@@ -6,6 +6,10 @@ from _env import boot
 from playwright.async_api import async_playwright
 
 ok = lambda c: 'OK  ' if c else 'FEIL'
+# the crew comes from genCrew, which draws everything (skills, traits, names) from Math.random: with a seeded one at the start of
+# each block the test gets the same hands every run (the regression of 24.10.2026 saw it fail now and then on an unlucky crew).
+# It is set inside the block, because the game's own loop draws numbers between the blocks. The game is not changed.
+seed = lambda n: "{ let a = %d; Math.random = () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }" % n
 
 
 async def main():
@@ -13,7 +17,7 @@ async def main():
         br = await p.chromium.launch(args=['--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
         pg = await (await br.new_context(viewport={'width':1100, 'height':800})).new_page(); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
         await boot(pg)
-        r = await pg.evaluate("""(()=>{ const R = {}, b = S.boat, g = GROUNDS[2].p; S.tut = 0; S.settings.autoOn = false; S.settings.gut = true; S.settings.ice = true;
+        r = await pg.evaluate("""(()=>{ """ + seed(20261027) + """ const R = {}, b = S.boat, g = GROUNDS[2].p; S.tut = 0; S.settings.autoOn = false; S.settings.gut = true; S.settings.ice = true;
           const hand = (sjo) => { const c = Object.assign(genCrew(), {bi:false, off:false, fatigue:10, morale:62, traits:[]}); if (sjo) c.attr.sjo = sjo; return c; };
           const at = () => workAssign().map(p => (p.c ? p.c.name.split(' ')[0] : 'me') + ':' + p.st);
           const sea = (st) => { b.status = st; b.port = null; b.pos = {...g}; b.gop = null; b.deckStop = false; b.ice = 300; S.hold = []; b.rig = 'juksa'; b.gear = true; };
@@ -65,7 +69,7 @@ async def main():
         # the stations' places (Jonas 20.10.2026, tilbakemelding #75): on the new sjark with you and three hands one hauls the line while one
         # bleeds and two gut, and three more at the hauler do not haul faster than one; on a net one picks beside the one hauling; the crew's
         # jobs go at the pace of those on them: three baiting three tubs are done sooner than one alone, and the time left follows them
-        r = await pg.evaluate("""(()=>{ const R = {}, b = S.boat, g = GROUNDS[2].p, T0 = b.type; b.type = 'sjarkny'; applyVessel(); S.equip.linehaler = S.equip.garnhaler = true;
+        r = await pg.evaluate("""(()=>{ """ + seed(20261028) + """ const R = {}, b = S.boat, g = GROUNDS[2].p, T0 = b.type; b.type = 'sjarkny'; applyVessel(); S.equip.linehaler = S.equip.garnhaler = true;
           const hand = () => Object.assign(genCrew(), {bi:false, off:false, fatigue:10, morale:62, traits:[]}), H = S.t / 60;
           const haul = (kind, crew) => { S.crew = []; for (let i = 0; i < crew; i++) S.crew.push(hand()); S.me = S.cur; S.mySt = null; b.status = 'fishing'; b.port = null; b.pos = {...g}; b.deckStop = false; b.ice = 300;
             S.hold = [{sp:'torsk', cls:SPECIES.torsk.ref, kg:30, n:9, bled:true, iced:false, hr:Math.floor(S.t / 60), fresh:100, gut:false, hook:true}];
@@ -85,7 +89,7 @@ async def main():
         print(ok(r['net4']['roles'] == 'haler,plukk' and 'blogg' in r['net4']['st']), 'on a net one hauls and one picks the fish out, and a third bleeds', r['net4'])
         print(ok(r['bait1']['done'] and r['bait3']['done'] and r['bait3']['on'] == 3 and r['bait3']['min'] < r['bait1']['min'] * 0.6 and abs(r['bait3']['left0'] - r['bait3']['min']) <= 3), 'three baiting three tubs together are done sooner than one alone, and the time left shown is the time it takes', r['bait1'], r['bait3'])
         # learning, meals, the rest rule and the crew's lines (core/14-crewlife.js)
-        r = await pg.evaluate("""(()=>{ const R = {}, b = S.boat, g = GROUNDS[2].p;
+        r = await pg.evaluate("""(()=>{ """ + seed(20261029) + """ const R = {}, b = S.boat, g = GROUNDS[2].p;
           const hand = (age, kokk) => { const c = Object.assign(genCrew(), {bi:false, off:false, fatigue:10, morale:62, traits:['stolt'], known:[true, true], age}); c.gear.sloy = 2; if (kokk) c.attr.kokk = kokk; return c; };
           // learning: 20 hours of gutting for a 19-year-old and a 55-year-old; and the young one again, unhappy
           const y = hand(19), o = hand(55), u = hand(19); u.morale = 20;
@@ -116,7 +120,7 @@ async def main():
         print(ok(r['said'] >= 3 and r['minGap'] >= 15 and r['kept'] >= 1), 'the crew talks during a day at sea, not in bursts, and each keeps their last lines')
 
         # effort that varies (hunger, the sea, the mood) and samhold (core/04-crew.js crewDrive, crewEffort, crewTeam, teamHour, teamLine)
-        r = await pg.evaluate("""(()=>{ const R = {}, b = S.boat, g = GROUNDS[2].p, H = () => S.t / 60;
+        r = await pg.evaluate("""(()=>{ """ + seed(20261030) + """ const R = {}, b = S.boat, g = GROUNDS[2].p, H = () => S.t / 60;
           const hand = (sjo, tr) => { const c = Object.assign(genCrew(), {bi:false, off:false, fatigue:10, morale:62, traits:tr || [], known:[true, true], grudge:{}}); c.cpen = 0; if (sjo) c.attr.sjo = sjo; return c; };
           b.status = 'fishing'; b.port = null; b.pos = {...g}; b.gop = null; b.fishUntil = S.t + 1e5; S.hold = []; S.plan = null; S.cevt = null; S.lang = 'no';
           const A = hand(2, ['omsorgsfull']), B = hand(4.5, ['spokefugl']); S.crew = [A, B]; S.team = null;
@@ -149,7 +153,7 @@ async def main():
         print(ok(r['quarrel'][1] < r['quarrel'][0] - 5 and 'krangel' in r['quarrel'][2]), 'a quarrel left hanging pulls it down, and the line says so', r['quarrel'])
 
         # your energy (core/15-energy.js): a day at sea empties it, eight hours at the quay fill it; at 0 you sleep for eight hours
-        r = await pg.evaluate("""(()=>{ const R = {}, b = S.boat, g = GROUNDS[2].p; S.me = S.cur; S.sleep = null; S.myJob = null;
+        r = await pg.evaluate("""(()=>{ """ + seed(20261031) + """ const R = {}, b = S.boat, g = GROUNDS[2].p; S.me = S.cur; S.sleep = null; S.myJob = null;
           const hand = () => Object.assign(genCrew(), {bi:false, off:false, fatigue:10, morale:62, traits:['stolt'], known:[true, true]});
           const sea = st => { b.status = st; b.port = null; b.pos = {...g}; b.gop = null; b.deckStop = false; S.hold = []; S.plan = null; b.rig = 'juksa'; b.gear = true; b.drift = 0; };
           sea('idle'); S.crew = []; S.energy = 100; for (let i = 0; i < 60; i++) step(); R.seaHour = +(100 - S.energy).toFixed(2);
@@ -181,7 +185,7 @@ async def main():
         # the Mannskap page (Jonas 23.10.2026): the chips of «På dekk nå», one card each with why, effort, energy and mood, the mate badge and button, and the skills on a tap
         for vw, vh, tag in ((1100, 800, 'liggende'), (800, 1180, 'staende')):
             await pg.set_viewport_size({'width':vw, 'height':vh})
-            u = await pg.evaluate("""(()=>{ const R = {}, b = S.boat; b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; b.gop = null; S.hold = []; S.plan = null; addCatch('torsk', 40, null, true);   // (fish to gut at the quay: someone at work)
+            u = await pg.evaluate("""(()=>{ """ + seed(20261032) + """ const R = {}, b = S.boat; b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; b.gop = null; S.hold = []; S.plan = null; addCatch('torsk', 40, null, true);   // (fish to gut at the quay: someone at work)
               const c0 = S.crew; S.crew = []; DOCK.render(); R.noCrew = !document.querySelector('#dock [data-dk=arbeid]'); S.crew = c0; DOCK.render();
               R.btn = !!document.querySelector('#dock [data-dk=arbeid]'); DOCK.open('arbeid'); const dr = () => document.getElementById('drawerBody');
               R.rows = dr().querySelectorAll('.wk-p').length; R.flow = [...dr().querySelectorAll('.wk-dks .wk-dk b')].map(e => e.textContent); R.meters = dr().querySelectorAll('.wk-p .wk-ms .wk-m').length; R.kv = dr().querySelectorAll('.ph-kv').length;
