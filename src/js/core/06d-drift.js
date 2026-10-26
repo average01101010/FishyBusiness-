@@ -44,6 +44,7 @@ function driftNew(over){
 // an older plan (sessions and routes, before 23.10.2026) is switched off with a word (Jonas: «nytt system, nye planer»); the gear in the sea stays
 function driftOps(){
   const o = S.ops; if (!o || o.v === DRV) return o;
+  if (o.v === 4) return null;   // a Driftsplan 2 plan (06g-plan2.js) is the new engine's, not this one's
   S.ops = null;
   msg(gL('Driftsplan', 'Operations plan'), 'Driftsplanen er laget på nytt og er enklere å sette opp. Den gamle planen for «' + S.boatName + '» er slått av. Lag en ny under Driftsplan. Redskapet i sjøen står der det står.', 'The operations plan has been made anew and is simpler to set up. The old plan for «' + S.boatName + '» is switched off. Make a new one under Operations plan. The gear in the sea stays where it is.');
   return null;

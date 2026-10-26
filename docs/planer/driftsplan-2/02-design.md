@@ -28,7 +28,7 @@ Designet svarer på de fire: **dagen blir planen**, **alt dagen trenger regnes u
  dep:5,                                              // avgang (R2)
  rhythm:'day' | 'watch' | 'multi', days:3,           // som v3
  land:{mode:'near' | 'port', port:null,              // nærmeste eller valgt mottak (R7)
-       when:'trip' | 'full' | 'days', days:2},       // hver tur, når lasten er full eller fisken må leveres, eller hvert N. døgn (valg 7)
+       when:'trip' | 'full' | 'days', days:2},       // hver tur, når lasten er full eller fisken må leveres, eller hvert N. døgn (valg 7: spillerens valg, standard 'full')
  …}
 ```
 
@@ -83,9 +83,7 @@ Alt som skjer *etterpå* (motoren) trenger ingen søk.
 
 ### 1.5 Lagringene: v3 og eldre
 
-- **v3 → v4** føres over automatisk første gang planen leses (`planFrom3`): `fields` → `places` med `k:'felt'`, `jigs` → `places` med `k:'juks'` (feltene først, i dagens `drOrder`-rekkefølge, så juksplassene i spillerens rekkefølge), `wx:'safe'|'normal'|'tough'` → tallene fra `DRW`, `dep`, `rhythm`, `days`, `home`, `anchor`, `rig`, `jig` som de er, `land:{mode:'near', when:'trip'}` (dagens oppførsel), `rep` → `stats`. `legs` kastes og lages på nytt (med kontrollen i 1.3) før neste dag; til da venter planen med «Lager planen på nytt …». En v3-plan som er *på tur* når spillet åpnes (`S.plan.ops`), fullfører turen med dagens motor, og den nye tar over ved neste dagsskille. Redskap i sjøen, mannskap, fangst og penger røres ikke. Meldingen på siden: «Driftsplanen er ført over til den nye planen. Se gjennom dagen før du lar den gå.» Planen *står på* hvis den sto på. (Valg 5 sier om det skal være slik.)
-- **Eldre enn v3** slås av med melding som i dag.
-- Så lenge bryteren (kapittel 7) er av, røres ingen lagring.
+Jonas valgte C (26.10.2026): **gamle planer slås av med melding**, som ved omleggingen 23.10 («nytt system, nye planer»). Når bryteren slås på (kapittel 7), gjør `plan2Ops()` med en v3- eller v2-plan det `driftOps()` gjør med en v2 i dag: `S.ops = null` og meldingen «Driftsplanen er laget på nytt. Den gamle planen for «…» er slått av. Lag en ny under Driftsplan. Redskapet i sjøen står der det står.» En v3-plan som er *på tur* når spillet åpnes, fullfører turen (`S.plan.ops` seiles ferdig av `sail`/`dock` som i dag) og slås av når båten er inne. Redskap i sjøen, mannskap, fangst og penger røres ikke; det som sto i `o.rep`, går tapt (statistikken begynner på nytt). Så lenge bryteren er av, røres ingen lagring. Ingen overføring v3 → v4 bygges.
 
 ## 2. Motoren: hva planen gjør
 
@@ -150,7 +148,8 @@ Tallene er spillets egne (`15-energy.js`, `04-crew.js`, `06d-drift.js`), målt i
   - **Avgang krever** alle ≤ 25 (`DRP.rested`).
   - **Dagen planlegges** så ingen passerer 72 (`DRP.tired`) med 5 per time: fra 10 gir det 12 timer, fra 25 gir det 9. Det er derfor dagen «er 14 t» bare når mannskapet er helt uthvilt.
   - Slitne midt på dagen: 2.2.
-- **Døgndrift** (`watch`): minst fire om bord (skipper, styrmann, to på dekk), styrhus og køyer (`V.watch`), to vakter à 6 timer (`DRWATCH`); vakt A er skipperen (eller du) og én på dekk, vakt B styrmannen og én på dekk; flere fordeles annenhver. Den som har fri, sover i køya (−8/−12 per time) og regnes **som om bord** (rettelsen av «Rune har fri, så båten venter»). Målt: slitenheten holder seg under 35 over 48 timer. Tre i mannskapet avvises med «Døgnet rundt 2 + 2 krever fire …» som i dag. Dagen viser vaktene: «06–12 vakt A: Stian og Roger».
+- **Skipperen går dagvakt, styrmannen natt** (Jonas 26.10.2026). Dagvakta er 06–18, nattvakta 18–06 (`DRP2.dayFrom`, `DRP2.watch` = 12). På dagdrift er skipperen (du, når du er om bord) våken hele dagen: en dag planlegges aldri slik at du må sove mens mannskapet jobber (energiregelen over), og de stegene som går om natta (hjemturen etter kl. 18, natta til ankers på flerdøgnstur) går under styrmannen.
+- **Døgndrift** (`watch`, Jonas 26.10.2026): minst fire om bord (skipper, styrmann, to på dekk), styrhus (`V.watch`), og **køyer til alle om bord** (`berths` ≥ mannskapet pluss deg når du er med; i dag kreves bare halvparten). **To vakter à 12 timer:** vakt A er skipperen (eller du) og halve dekket, 06–18; vakt B styrmannen og resten, 18–06. Den som har fri, sover i køya (−8 per time, −12 om natta) og regnes **som om bord** (rettelsen av «Rune har fri, så båten venter»). Med 12 timer på vakt stiger slitenheten til rundt 40–60 ved vaktskiftet (3–6 per time) og faller til 0 i løpet av frivakta; ingen når 72. Tre i mannskapet avvises med «Døgnet rundt krever fire …», for få køyer med «Køyer til alle: båten har 4, dere er 5». Dagen viser vaktene: «06–18 vakt A: Stian og Roger · 18–06 vakt B: Rune og Kjell».
 - **Flerdøgnstur:** som dagdrift per dag, hvile om bord om natta (køyer: 25/t ved kai, 21/t til ankers).
 
 ## 4. Det spilleren ser og gjør
@@ -256,6 +255,8 @@ Svar A/B/C per nummer. Anbefalingen står først.
 7. **Standard for leveringen når en plan lages?**
    **A (anbefalt):** «når lasten er full eller fisken må leveres» (`full`): det sparer dagene på steder uten mottak (Finnsnes: 6,5 t seiling per levering) og ferskheten fra D3 passer på. B: «hver tur» som i dag. C: «hvert 2. døgn».
 
+**Jonas' svar 26.10.2026:** 1 A · 2 «ta det du mener er mest riktig» → A · 3 A · 4 A · **5 C** (gamle planer slås av med melding, som ved forrige omlegging) · 6 A («siden alle båter må rigges om for å fiske med de ulike passive redskapene») · 7 «dette kan være et valg for brukeren, men da må vi teste at funksjonen fungerer som den skal» → regelen er spillerens valg i Levering-raden, standard A, og S7 tester alle tre. Og to regler til, ordrett: «Om båten går dagdrift på driftsplanen skal ikke skipperen bare kunne gå å legge seg for å sove mens mannskapet jobber, det vil være uansvarlig. Skipper går alltid dagvakt, styrmann natt. Ved døgndrift jobber mannskapet 12 timer hver og mannskap som har frivakt sover ombord. Båten må ha køyer nok til mannskapet for å kunne gå døgndrift.» Begge står i kapittel 3. «Kjør på» gitt samme dag.
+
 Jonas' gamle svar som står uendret: skipper og styrmann når du ikke er med (3), alle dager (6a), felt med antall og ståtid (8), aldri over det båten tåler (9a), én-manns båt bare med deg (13a), anker fra 24 m (C), ingen forventet fangst. Svar 4b (alltid nærmeste) er overstyrt av R7.
 
 ## 6. Testplanen
@@ -275,7 +276,7 @@ Jonas' gamle svar som står uendret: skipper og styrmann når du ikke er med (3)
 | S9 | `s9_lukket` | S1 med 30 t lukket midt i, og 9 døgn lukket; mot åpent med samme frø | landingene, redskapet, hvilen, stedet; «spilte av 9 døgn på 2,6 s» | kg ±2 %, kr ±2 %, samme steg til samme klokkeslett ±1 min, under 10 s |
 | S10 | `s10_to_baater` | S1 og S2 samtidig, du på den ene | per båt som S1/S2; Rederi-lista | begge går; ingen på land; din båt har adgangen |
 | S11 | `s11_tar_over` | din rute midt i S1, så tilbake | «planen venter: du har tatt over», «fortsetter fra der båten er: trekker felt 2 kl. …» | redskapet står; neste steg riktig |
-| S12 | `s12_gamle_lagringer` | en v3 på tur, en v3 i havn, en v2 | «ført over til v4», «slått av» | ingen feil, redskap/mannskap/fangst/penger uendret |
+| S12 | `s12_gamle_lagringer` | en v3 på tur, en v3 i havn, en v2, en v4 | «slått av» for v2 og v3 (valg 5 C), v4 beholdt; turen seiles ferdig | ingen feil, redskap/mannskap/fangst/penger uendret |
 | S13 | `driftsplan2ui.py` | hel plan fra null med ekte trykk i 384×853, 800×1280, 1280×800: plasser i kartvinduet, lenker, ståtid, juksplasser, avgang, vær, mottak; Start | antall trykk, skjermbildene (ses på) | planen som startes er den som ble lagt; «Velg i kartet» overlever trykket |
 | S14 | `s14_statistikk` | etter S1 og S2 | kg, kr, arter, turer per døgn og samlet | bevart over lagring og omlasting |
 
@@ -287,13 +288,13 @@ Hver del er én økt, i avhengighetsrekkefølge, bak **bryteren** `DRIFT2` (`let
 
 | Del | Bygger | Filer | Grønt etterpå | Står rødt (VENTER) |
 |---|---|---|---|---|
-| 1 | **Modellen og dagen.** v4-modellen, `planDay` (1.2) med egning, levering og vakter, `planFrom3`, dagen som tekst. Ingen motor, ingenting synlig. | `core/06g-plan2.js`, `tests/driftsplan2test.py` (harnesset) | S1–S3 og S7 *tørt* (dagen fra svarene, uten å seile), S12 tørt | resten |
+| 1 | **Modellen og dagen.** v4-modellen, `planDay` (1.2) med egning, levering og vakter, `plan2Ops` (gamle planer av, 1.5), `plan2Check`, dagen som tekst. Ingen motor, ingenting synlig. | `core/06g-plan2.js`, `tests/driftsplan2test.py` (harnesset) | S1–S3 og S7 *tørt* (dagen fra svarene, uten å seile), S12 tørt | resten |
 | 2 | **Motoren, del 1.** `planMake` med leiekontroll (1.3), `plan2Step` med stegene avgang/sett/trekk/juks/lever/hjem/hvile/egning, venting i stedet for stopp, dagsskillet, statistikken. | `core/06h-plan2-engine.js`, `05-vessels.js` (ett kall), `10-gear.js` (`DRP2.work`-tallene fra motoren) | S1, S2, S3, S7, S14 | S4–S6, S8–S13 |
 | 3 | **Motoren, del 2.** Været uten søk (2.2), energien og skiftene (3), reglene med dato, du tar over, slitne, full last, tapt redskap. | `06h-plan2-engine.js`, `06e-anchor.js` (ly), `13-work.js` (vaktene) | S4, S5, S6, S8, S11 | S9, S10, S12, S13 |
 | 4 | **Lukket spill.** Likhet åpent/lukket, determinismen (motoren trekker ingen tilfeldige tall), ni døgn under 10 s, «Mens du var borte» med planens turer. | `06h-plan2-engine.js`, `ui/08-actions.js` | S9 | S10, S12, S13 |
 | 5 | **Siden.** Driftsplan-appen med dagen, radene (Levering og Vær nye), statistikken, stopp/venting, i begge formater og på telefon. | `ui/05d-plan2.js`, `ui/phone/…` (appen), `styles.css` | S14 på siden, halve S13 (alt uten kartet) | S13 kartet, S10, S12 |
 | 6 | **Kartvinduet.** Planmodus i plotteren (4.2) med berøring i tre størrelser; `panelRoute`-tilstanden fjernes. | `ui/03g-planmap.js`, `03-map.js`, `07-guide.js` | S13 helt | S10, S12 |
-| 7 | **Flere fartøy, overføringen og bryteren.** Rederi (4.4), v3 → v4 i lagringene, `DRIFT2 = true`, push ved lang venting, stikkprøver sør/midt/nord (`/stikkprove`: Bergen, Bodø, Hammerfest), `/regresjon` med hele kysten, patchnotes (én oppføring), `docs/systemer/driftsplan.md` skrevet om, lista til Jonas. | `06g`, `06h`, `ui/phone/11-rederi.js`, `10g-push.js`, docs | S10, S12, hele lista | – |
+| 7 | **Flere fartøy og bryteren.** Rederi (4.4), gamle planer slås av (1.5), `DRIFT2 = true`, push ved lang venting, stikkprøver sør/midt/nord (`/stikkprove`: Bergen, Bodø, Hammerfest), `/regresjon` med hele kysten, patchnotes (én oppføring), `docs/systemer/driftsplan.md` skrevet om, lista til Jonas. | `06g`, `06h`, `ui/phone/11-rederi.js`, `10g-push.js`, docs | S10, S12, hele lista | – |
 | 8 | **Rydding** (egen økt, etter at Jonas har prøvd): `06d-drift.js` og `05c-drift.js` fjernes, `drifttest.py`/`driftuitest.py` erstattes av de nye, `tutdrift.py` og `opsowntest.py` flyttes over. | | | |
 
 Hver del: leser `00-oppdrag.md`, dette dokumentet og statusen nederst, bygger, gjør sine scenarier grønne, skjermbilder i begge formater av alt nytt (del 5–7), `docs/systemer/driftsplan.md` får et avsnitt «Driftsplan 2» per del (det gamle 5.7 står til del 8), status nederst her, `/lever`, `/okt-slutt`. Én commit per del.
@@ -307,3 +308,5 @@ Hver del: leser `00-oppdrag.md`, dette dokumentet og statusen nederst, bygger, g
 ## Status
 
 - 26.10.2026: designet skrevet etter revisjonen. Venter på Jonas' svar på valgene 1–7 og «kjør på». Ingen spillkode er skrevet.
+- 26.10.2026: Jonas svarte (kapittel 5) og sa «kjør på».
+- 26.10.2026: **del 1 gjort.** `core/06g-plan2.js` (modellen v4, `planDay`, `planDayText`, `plan2Check`, `plan2Ops`, bryteren av), `tests/driftsplan2test.py` med S1, S2, S3, S7, S12 og vaktene tørt (17 OK), resten VENTER. Dagen fra Finnsnes med line og levering hver tur blir 14,2 t fordi mottaket er 16 nm unna; dagen sier det, og sjekken advarer. Neste: del 2, motoren.
