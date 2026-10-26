@@ -36,6 +36,7 @@ DRAWS3D = {'tut'}
 MUST = {'trip2': ('"st":"port"', 'ender ikke i havn'), 'tut': ('"tut": 0', 'veiledningen er ikke ferdig')}
 # which tests cover which file: «changed» runs these for the files in the diff. A file not listed runs trip2; texts and docs run nothing
 COVER = {
+  'src/js/ui/phone/13-mannskap-bank-meld.js':['skiptest', 'docktest'],
   'src/js/ui/phone/12-utstyr-redskap.js':['shoptest', 'geartest'],
   'src/js/ui/phone/11-rederi.js':['fleet3test', 'fleet2test'],
   'src/js/ui/phone/10-fartoy.js':['fleet3test', 'vesseltest'],
