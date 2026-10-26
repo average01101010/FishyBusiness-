@@ -1478,7 +1478,7 @@ HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
   - 155 `codeRead(code)`
   - 163 `loadCode(code)`
 
-## `src/js/ui/03a-chart.js` (144 linjer)
+## `src/js/ui/03a-chart.js` (147 linjer)
 
 THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, the graticule and the place names
 
@@ -1494,9 +1494,9 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 87 `chartGrid(ctx, x0, y0, kx, ky, W, H, dpr, fish)`
 - **108** the place names
   - 111 `chartNamesOf(pk, entry, sc, ox, oy)`
-  - 121 `chartNamesSvg(vx0, vy0, vx1, vy1, u, taken)`
+  - 124 `chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, part)`
 
-## `src/js/ui/03-map.js` (689 linjer)
+## `src/js/ui/03-map.js` (692 linjer)
 
 ---------- map ----------
 
@@ -1529,20 +1529,20 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 325 `renderBase()`
   - 339 `updateMapButtons()`
   - 350 `renderStatic()`
-  - 412 `portIcon(p, s, u)`
-  - 427 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
-  - 446 `scheduleStatic()`
-  - 451 `aisTrack(id, H)`
-  - 454 `aisInfo(n)`
-  - 467 `renderAisCard()`
-  - 468 `renderDyn()`
-  - 545 `pinAdd(mp)`
-  - 550 `pinOpen(id, fresh)`
-  - 570 `pinKb()`
-  - 600 `ptrUp(e)`
-  - 628 `unzoom()`
-  - 635 `portByLabel(pt)`
-  - 640 `addWaypoint(pt)`
+  - 415 `portIcon(p, s, u)`
+  - 430 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
+  - 449 `scheduleStatic()`
+  - 454 `aisTrack(id, H)`
+  - 457 `aisInfo(n)`
+  - 470 `renderAisCard()`
+  - 471 `renderDyn()`
+  - 548 `pinAdd(mp)`
+  - 553 `pinOpen(id, fresh)`
+  - 573 `pinKb()`
+  - 603 `ptrUp(e)`
+  - 631 `unzoom()`
+  - 638 `portByLabel(pt)`
+  - 643 `addWaypoint(pt)`
 
 ## `src/js/ui/03b-route.js` (219 linjer)
 
@@ -1663,7 +1663,7 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
 
 - **1** sailors' tattoos: the flash and the seated sailor they go on
 
-## `src/js/ui/05-phone.js` (2119 linjer)
+## `src/js/ui/05-phone.js` (2121 linjer)
 
 ---------- the phone ----------
 
@@ -1674,23 +1674,23 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
 - **440** Trim: more speed for the boat you are aboard for a while (core BOOSTS; Jonas 05.10.2026: sold for real money, the time in game
 - **459** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
 - **478** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-- **1215** the seaman's life: the tattoos you have earned, and the old ways at sea you have heard of
-- **1278** weather
-- **1299** newspaper
-- **1307** sales organisation
-- **1397** rescue
-- **1415** vessels: my vessel overview and the market
-- **1445** the boat market: tabs for the open group, boats with a closed-group right, the coastal fleet over 11 m and the ocean fleet;
-- **1557** the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
-- **1624** equipment
-- **1658** gear: in the sea, aboard (baiting and mending), and the shop
-- **1659** gear care (core/10b-gearcare.js): the condition of the gear aboard, and what the crew can do about it in port
-- **1664** a line kind as it stands (Jonas 20.10.2026, tilbakemelding #74: «hva båten har slags fiskeredskaper ombord og hva disse eventuelt er
-- **1786** crew
-- **1790** the crew, person by person
-- **1843** bank
-- **1861** messages
-- **1869** actions
+- **1217** the seaman's life: the tattoos you have earned, and the old ways at sea you have heard of
+- **1280** weather
+- **1301** newspaper
+- **1309** sales organisation
+- **1399** rescue
+- **1417** vessels: my vessel overview and the market
+- **1447** the boat market: tabs for the open group, boats with a closed-group right, the coastal fleet over 11 m and the ocean fleet;
+- **1559** the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
+- **1626** equipment
+- **1660** gear: in the sea, aboard (baiting and mending), and the shop
+- **1661** gear care (core/10b-gearcare.js): the condition of the gear aboard, and what the crew can do about it in port
+- **1666** a line kind as it stands (Jonas 20.10.2026, tilbakemelding #74: «hva båten har slags fiskeredskaper ombord og hva disse eventuelt er
+- **1788** crew
+- **1792** the crew, person by person
+- **1845** bank
+- **1863** messages
+- **1871** actions
 
 ## `src/js/ui/05b-work.js` (136 linjer)
 

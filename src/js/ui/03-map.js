@@ -382,12 +382,15 @@ function renderStatic(){
   // Father's naust (ui/06c-notebook.js)
   g.push(NOTEBOOK.svg(u, inV));
   g.push(turSvg(u, inV));   // where the missions go (ui/05f-turer.js)
-  // ports, their names when the view is closer than the whole region; the place names (03a-chart.js) keep clear of them
-  const taken = [], pl = view.z >= 0.5;
+  // the rank-0 place names first (the big towns, fjords and islands: always shown, 03a-chart.js), then the ports, their names when the
+  // view is closer than the whole region, each label kept only where it does not cover a rank-0 name (the icon stands anyway); the other
+  // place names keep clear of the labels
+  const taken = [], pl = view.z >= 0.5, over = b => taken.some(t => b[0] < t[2] && b[2] > t[0] && b[1] < t[3] && b[3] > t[1]);
+  g.push(chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, 'first'));
   for (const p of PORTS){
     const s = (pl ? 5 : 3) * u; if (!inV(p.p.x, p.p.y)) continue;
     g.push(portIcon(p, s * 1.25, u));
-    if (pl){ const nm = portLabel(p); g.push(txt({x:p.p.x + 10 * u, y:p.p.y + 4 * u}, nm, 'lbl-port', 13 * u, 'stroke-width="' + (3 * u) + '"')); taken.push([p.p.x - s, p.p.y - 9 * u, p.p.x + 10 * u + nm.length * 7.5 * u, p.p.y + 6 * u]); }
+    if (pl){ const nm = portLabel(p), bx = [p.p.x - s, p.p.y - 9 * u, p.p.x + 10 * u + nm.length * 7.5 * u, p.p.y + 6 * u]; if (over(bx)) continue; g.push(txt({x:p.p.x + 10 * u, y:p.p.y + 4 * u}, nm, 'lbl-port', 13 * u, 'stroke-width="' + (3 * u) + '"')); taken.push(bx); }
   }
   // the rorbuer (07d-rorbu.js): a little red house, the name when near
   if (view.z >= 0.5) for (const R of rorbuIn(vx0 - 1, vy0 - 1, vx1 + 1, vy1 + 1)){
@@ -403,7 +406,7 @@ function renderStatic(){
     if (view.z >= 4){ const nm = havnNm(H); g.push(txt({x:H.x + 8 * u, y:H.y + 4 * u}, nm, 'lbl-ground', 11 * u, 'stroke-width="' + (2.5 * u) + '"')); taken.push([H.x - s, H.y - 8 * u, H.x + 8 * u + nm.length * 6.5 * u, H.y + 6 * u]); }
   }
   g.push(soundingsSvg(vx0, vy0, vx1, vy1, u, taken));
-  g.push(chartNamesSvg(vx0, vy0, vx1, vy1, u, taken));
+  g.push(chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, 'rest'));
   gStatic.innerHTML = g.join('');
 }
 // each kind of place its own sign on the chart (Jonas 08.10.2026: «forskjellige ikoner på kartene for de forskjellige forhandlerne»):

@@ -477,6 +477,8 @@ const PHONE = (() => {
   }
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p141', '26.10.2026', 'Navn på kartet', 'Names on the chart', [
+       ['De store navnene på kartet (byer, fjorder og øyer) vises alltid. Før kunne en lang havneetikett dekke dem, så «Senja» var borte fra kartet over regionen.', 'The big names on the chart (towns, fjords and islands) are always shown. Before, a long harbour label could cover them, so «Senja» was missing from the chart of the region.']]],
     ['p140', '25.10.2026', 'Flytebrygger', 'Floating docks', [
        ['Flytebryggene langs kysten er bygd av pontonger, med fingre der de finnes, endepontong med leider og livbøye, og landgang fra land. De følger tidevannet. Før var de grå kasser.', 'The floating docks along the coast are built of pontoons, with fingers where they have them, an end pontoon with a ladder and life ring, and a gangway from land. They ride the tide. Before, they were grey boxes.']]],
     ['p139', '25.10.2026', 'Plassene i driftsplanen', 'The places in the operations plan', [

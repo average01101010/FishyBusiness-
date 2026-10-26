@@ -117,12 +117,15 @@ function chartNamesOf(pk, entry, sc, ox, oy){
 // the view height (km) up to which a rank shows, and the type size per kind and rank (px)
 const NAME_H = [Infinity, 140, 30, 9], NAME_PX = [[14, 12.5, 11, 10], [15, 13, 11.5, 10], [18, 14, 12, 10.5], [10, 10, 10, 9.5]];
 // the names in the view, the most important first (the packs keep them in that order within a rank), each kept only where it does
-// not cover one placed before (or a port's label); names0 gives the rank-0 names everywhere, the tiles the rest. Returns SVG for gStatic
-function chartNamesSvg(vx0, vy0, vx1, vy1, u, taken){
+// not cover one placed before (or a port's label); names0 gives the rank-0 names everywhere, the tiles the rest. Returns SVG for gStatic.
+// Rank 0 (the big towns, fjords and islands of names0) is always shown (kartplotter.md): renderStatic places it first, with part 'first',
+// before the harbours' labels, which keep clear of it; 'rest' is everything after them. Before, a harbour's long label (Kaldfarnes
+// fiskebruk, 18 km wide at 100 km) stood first and took the island's name «Senja» off the region's chart (E4, 26.10.2026).
+function chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, part){
   const hh = vy1 - vy0, lv = chartLevel(hh), T = MAPD.man.tile, cand = [];
-  const tiles = lv ? mapPacksIn('chart', vx0, vy0, vx1, vy1).filter(pk => pk.buf && mapVec(pk, 'names')) : [];
+  const tiles = lv && part !== 'first' ? mapPacksIn('chart', vx0, vy0, vx1, vy1).filter(pk => pk.buf && mapVec(pk, 'names')) : [];
   const inV = (x, y) => x > vx0 && x < vx1 && y > vy0 && y < vy1, n0 = MAPD.core ? chartNamesOf(MAPD.core, 'names0', 0.01, 0, 0) : [];
-  for (const q of n0) if (inV(q[0], q[1])) cand.push(q);
+  for (const q of n0) if (inV(q[0], q[1]) && (part === 'first' ? q[3] === 0 : part !== 'rest' || q[3] !== 0)) cand.push(q);
   for (const pk of tiles) for (const q of chartNamesOf(pk, 'names', 0.001, pk.tile[0] * T, pk.tile[1] * T))
     if (q[3] > 0 && q[3] < 4 && hh <= NAME_H[q[3]] && inV(q[0], q[1]) && !n0.some(o => o[4] === q[4] && Math.abs(o[0] - q[0]) + Math.abs(o[1] - q[1]) < 60)) cand.push(q);
   cand.sort((a, b) => a[3] - b[3]);

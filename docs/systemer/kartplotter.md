@@ -39,7 +39,7 @@
   - Stiene ligger som `Path2D` i km, flisene fra sitt eget hjørne, så tallene holder seg små ved største zoom. Hver flis tegnes innenfor sin rute, så kantene der polygonene er kuttet, ikke blir streket opp.
 - **Gradnettet** tegnes i lerretet med et steg som gir minst tre paralleller over utsnittet (fra 10° ned til 15″). Meridianene får omtrent samme avstand på bakken. Breddene står ved venstre kant og lengdene ved nedre kant (`69°20'N`, `17°30'Ø`).
 - **Stedsnavnene** står i SVG-en (`chartNamesSvg`):
-  - Rang 0 vises alltid og kommer fra `names0` i kjernen, også over flisene. Rang 1 vises under 140 km, rang 2 under 30 km og rang 3 under 9 km, alle fra flisene. Et flisnavn som `names0` alt har innen 60 km, droppes.
+  - Rang 0 vises alltid og kommer fra `names0` i kjernen, også over flisene. Fra 26.10.2026 (E4) plasseres rang 0 før havneetikettene (`chartNamesSvg(…, 'first')` i `renderStatic`), og en havneetikett som ville dekke et slikt navn, droppes på det nivået (ikonet står; etiketten kommer igjen nærmere inne). Før sto havneetikettene først, og «Kaldfarnes fiskebruk» (18 km bred på 100 km-nivået) tok «Senja» av regionkartet. Rang 1 vises under 140 km, rang 2 under 30 km og rang 3 under 9 km, alle fra flisene. Et flisnavn som `names0` alt har innen 60 km, droppes.
   - Det viktigste kommer først, og et navn som dekker et navn som alt står (eller en havns navn), droppes.
   - Et sted med samme navn som en havn innen 3 km droppes.
   - De håndplasserte navnene og Senja-kysten (`geo-coast.b64`, `COAST_D`) er borte. Havnenavnene og feltnavnene vises først fra `view.z ≥ 0,5`.

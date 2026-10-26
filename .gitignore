@@ -16,3 +16,4 @@ tests/saves/
 
 # agent worktrees are local
 .claude/worktrees/
+dist-full/
