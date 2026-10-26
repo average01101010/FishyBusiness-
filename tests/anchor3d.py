@@ -3,7 +3,7 @@ places (geo.bower) and the kit has the anchors and the links; on the 15 m coasta
 rope) it lies stowed, falls when let go (the splash where it goes in), lies on the bottom with the chain drawn link by link, comes up
 under the bow when weighed and goes back to its place, with no page errors. Two pictures: lying to it, and coming up."""
 from _env import boot, OUT
-import asyncio, os, json
+import asyncio, os, json, time
 from playwright.async_api import async_playwright
 ok = lambda c: 'OK  ' if c else 'FEIL'
 
@@ -23,25 +23,37 @@ async def main():
         miss = [t for t, h in r['types'] if not h]
         print(ok(not miss and all(r['kit'])), 'every detailed boat has its anchor places, and the kit its anchors and links', miss, r['kit'])
         for vt in ('kyst15', 'trebat'):
-            await pg.evaluate(SET, vt); await pg.wait_for_timeout(2500)
+            await pg.evaluate(SET, vt)
+            # the last anchor's chain runs back in at a few metres a second after b.anch is gone (ANC3.Lg), so wait for the stowed anchor, not 2.5 s
+            await pg.wait_for_function("G3._debug.anc3.mode === 'stow' && !S.boat.anch", timeout=240000); await pg.wait_for_timeout(500)
             seen = {'stow': (await pg.evaluate("G3._debug.anc3"))['mode'] == 'stow'}
             await pg.evaluate("dropAnchor()")
-            modes = []
-            for k in range(60):
-                s = await pg.evaluate("G3._debug.anc3"); modes.append(s['mode'])
+            # the rode runs out ANCH.fall then ANCH.pay metres a game minute (06e-anchor.js anchorSwing), a game minute is 60 / simRate() s
+            # (10 s here): the test waits for that time and breaks on the state, not after a fixed number of polls (the regression of
+            # 24.10.2026 saw it fail on alternate runs). The margin is wide: with SwiftShader the page stands still for up to a minute now
+            # and then (no frame, no poll), the clock catches up, and the 3D chain runs in only as frames are drawn
+            secs = await pg.evaluate("(() => { const a = S.boat.anch; return ((a ? Math.ceil(a.rode / ANCH.pay) : 0) + 3) * 60 / simRate() + 180; })()")
+            modes = []; end = time.time() + secs; t0 = time.time(); trace = []
+            while time.time() < end:
+                s = await pg.evaluate("G3._debug.anc3"); modes.append(s['mode']); trace.append(await pg.evaluate("(() => { const a = S.boat.anch, A = G3._debug.anc3; return [%d, A.mode, A.Lg, a ? a.out : null, a ? a.up : null, S.t, G3._debug.fps]; })()" % round(time.time() - t0, 1)))
                 if s['mode'] == 'bottom' and s['links'] > 0: seen['links'] = s['links']
                 if s['splash']: seen['splash'] = True
                 if s['mode'] == 'bottom' and await pg.evaluate("!!S.boat.anch && S.boat.anch.out >= S.boat.anch.rode"): break
                 await pg.wait_for_timeout(500)
             seen['hang'] = 'hang' in modes; seen['bottom'] = modes[-1] == 'bottom'
+            if not (seen['hang'] and seen['bottom']): print('  drop trace [s, mode, Lg, out, up, S.t, fps]:', json.dumps(trace[-30:]))
             if vt == 'kyst15': await pg.screenshot(path=os.path.join(OUT, 'anchor3d_lying.png'))
             await pg.evaluate("weighAnchor()"); up = []
-            for k in range(90):
-                s = await pg.evaluate("[G3._debug.anc3.mode, !!S.boat.anch]"); up.append(s[0])
+            # up in anchorUpIn() game minutes, gone the minute after it is in, then the chain runs back in: wait for that time with a margin
+            secs = await pg.evaluate("(anchorUpIn() + 3) * 60 / simRate() + 180")
+            end = time.time() + secs; t0 = time.time(); trace = []
+            while time.time() < end:
+                s = await pg.evaluate("[G3._debug.anc3.mode, !!S.boat.anch]"); up.append(s[0]); trace.append(await pg.evaluate("(() => { const a = S.boat.anch, A = G3._debug.anc3; return [%d, A.mode, A.Lg, a ? a.out : null, a ? a.up : null, S.t, G3._debug.fps]; })()" % round(time.time() - t0, 1)))
                 if s[0] == 'hang' and vt == 'kyst15' and 'shot' not in seen: seen['shot'] = True; await pg.screenshot(path=os.path.join(OUT, 'anchor3d_up.png'))
                 if not s[1] and s[0] == 'stow': break
                 await pg.wait_for_timeout(500)
             seen['upHang'] = 'hang' in up; seen['stowed'] = up[-1] == 'stow'
+            if not (seen['upHang'] and seen['stowed']): print('  weigh trace [s, mode, Lg, out, up, S.t, fps]:', json.dumps(trace[-40:]))
             # (the wooden boat has rope, its few metres of chain at the anchor are under the water: no links to see there)
             chain = await pg.evaluate("anchorGear(S.boat.type).chain")
             print(ok(seen['stow'] and seen['hang'] and seen['bottom'] and seen.get('splash') and (seen.get('links', 0) > 0 or not chain)), vt, 'stowed, falls with a splash, lies on the bottom with its chain', json.dumps(seen))
