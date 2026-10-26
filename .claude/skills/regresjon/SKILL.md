@@ -5,9 +5,9 @@ description: Kjører hele regresjonen før publisering og én gang i uka, sorter
 
 # /regresjon
 
-Full regresjon tar rundt en time, med 3D-testene alene etter de andre, og over to timer med alt. Den kjøres bare før publisering og som ukentlig sjekk (`docs/utviklingsplan.md`, D5). Feil som dukker opp, rettes samlet.
+Full regresjon tar rundt en time, med 3D-testene alene etter de andre, og over to timer med alt. Den kjøres bare før publisering og som ukentlig sjekk (`docs/utviklingsplan.md`, D5: en planlagt økt natt til mandag følger `tools/regresjon/RUTINE.md` og leverer bare en PR mot backloggen; hovedøkta retter). Feil som dukker opp, rettes samlet.
 
-1. **Bygg** begge: `node build.mjs` og `KYST_VEC=1 KYST_DIST=dist-vec node build.mjs` (`run.py` bygger `dist-vec/` selv for `npctest`, `havntest` og `vectest`, men bygget avslører syntaksfeil først).
+1. **Hele kysten først:** `pip install requests && python3 tools/map/release.py && python3 tools/map/game.py` (den nyeste `kart-N`-releasen, rundt 255 MB, til `tools/map/out/game/`), fordi `routetest` K9 og alt som leser pakkene utenfor Senja trenger den (E4, 26.10.2026). **Bygg** så begge: `node build.mjs` og `KYST_VEC=1 KYST_DIST=dist-vec node build.mjs` (`run.py` bygger `dist-vec/` selv for `npctest`, `havntest` og `vectest`, men bygget avslører syntaksfeil først).
 2. **Start i bakgrunnen** med den lengste tidsgrensen verktøyet har: `python3 tests/run.py full > <scratchpad>/full.log 2>&1`. Arbeid videre imens. Kjør aldri flere 3D-tester ved siden av; `run.py` ordner rekkefølgen.
 3. **Les resultatet én gang:** `grep -E "^(OK|FEIL|LES)|OK, " <scratchpad>/full.log`, og `tests/out/logs/<test>.txt` for de røde. Ble kjøringen stoppet av tidsgrensen, kjøres de som manglet med `smoke`, de med 3D én og én.
 4. **Sorter:**
