@@ -1,0 +1,28 @@
+# Revisjonslogg C (open): tilstandsskifter minutt for minutt, spilt i testbygget 26.10.2026
+# hjem Finnsnes · mottak Botnhamn · felt [] · juksplasser 2
+# slutt: on=True stop=None wait=Rune har fri, så båten venter.
+# tid: dag klokke | tilstand (plan:status@havn/redskapsarbeid ?venter !stopp) | energi | høyeste slitenhet | last kg
+D1 03:01  fish:unmooring@finnsnes                        en=100 fat=  0 hold=    0
+D1 03:02  fish:sailing                                   en=100 fat=  0 hold=    0
+D1 03:21  fish:fishing/J1                                en=100 fat=  0 hold=    0
+D1 13:27  fish:sailing                                   en=100 fat= 14 hold=  346
+D1 13:33  fish:fishing/J2                                en=100 fat= 14 hold=  346
+D1 23:39  fish:sailing                                   en=100 fat= 33 hold=  887
+D1 02:15  -:port@botnhamn/land                           en=100 fat=  6 hold=  887
+D1 02:29  -:port@botnhamn                                en=100 fat=  6 hold=    0
+D1 02:38  -:port@botnhamn?off                            en=100 fat=  6 hold=    0
+D2 03:01  fish:unmooring@botnhamn                        en=100 fat=  0 hold=    0
+D2 03:02  fish:sailing                                   en=100 fat=  0 hold=    0
+D2 06:04  fish:fishing/J1                                en=100 fat=  1 hold=    0
+D2 14:40  fish:sailing                                   en=100 fat= 11 hold=  306
+D2 14:46  fish:fishing/J2                                en=100 fat= 11 hold=  306
+D2 23:34  fish:sailing                                   en=100 fat= 33 hold=  586
+D2 02:10  -:port@botnhamn/land                           en=100 fat=  6 hold=  586
+D2 02:21  -:port@botnhamn                                en=100 fat=  6 hold=    0
+D2 02:32  -:port@botnhamn?off                            en=100 fat=  6 hold=    0
+# landinger (o.rep): [{"w": "D1 02:29", "port": "botnhamn", "kg": 887, "kr": 1877, "h": 23.5, "landed": true}, {"w": "D2 02:21", "port": "botnhamn", "kg": 586, "kr": 1206, "h": 23.3, "landed": true}]
+# salg: [{"w": "D1 02:29", "port": "botnhamn", "kg": 887, "total": 5441, "conf": 0}, {"w": "D2 02:21", "port": "botnhamn", "kg": 586, "total": 3496, "conf": 0}]
+# redskap i sjøen ved slutt: []
+# «Neste tur» slik siden viste den: []
+# slutt: {"en": 100, "fat": [6, 0, 3, 0], "cash": 993808, "hold": 0, "status": "port", "port": "botnhamn", "pos": [863.55, 336.19], "revenue": 8937, "kg": 1473, "costs": 15129}
+# meldinger: D1 02:29 Marit på mottaket i Botnhamn: Velkommen til oss. Jeg er Marit og har ansvaret for mottaket. Leverer du jevnt hos oss, skal vi behandle deg godt. || D1 02:29 Norges Råfisklag: Båten har ikke adgang til å fiske torsk, hyse og sei. Av disse kan bare 10 % av landingen være bifangst, og høyst 2 tonn torsk i året. 688 kg er inndratt, verdi 24 399 kr. || D1 02:29 Stian Isaksen: Driftsrapport: 887 kg levert i Botnhamn, 1 877 kr etter lott, skippertillegg 94 kr. || D1 02:38 Stian Isaksen: Rune har fri, så båten venter. || D2 00:00 Kystposten: Skreifestivalen er neste helg. Største torsk landet fra lørdag til søndag kl. 18 vinner 15 000 kr. || D2 02:21 Norges Råfisklag: Båten har ikke adgang til å fiske torsk, hyse og sei. Av disse kan bare 10 % av landingen være bifangst, og høyst 2 tonn torsk i året. 462 kg er inndratt, verdi 17 220 kr. || D2 02:21 Stian Isaksen: Driftsrapport: 586 kg levert i Botnhamn, 1 206 kr etter lott, skippertillegg 60 kr. || D2 02:32 Stian Isaksen: Rune har fri, så båten venter.
