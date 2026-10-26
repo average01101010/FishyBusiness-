@@ -20,12 +20,12 @@ Les denne først, så bare dokumentet for systemet du skal endre, og `docs/BACKL
 | `arkitektur.md` | Én fil i flere lag, tilstanden `S`, tiden og den felles klokka, konvensjoner og fallgruver i koden. | `src/index.html`, `build.mjs`, `core/00-proj.js`, `core/02-*`, `ui/11-boot.js` |
 | `kart-og-terreng.md` | Rammen (UTM 33), presisjonen, kartpakkene og lasteren, kartrørledningen og releasene, kjernen for hele kysten, sjømerkene, vektorkysten. | `core/01-world.js`, `core/01b-mapdata.js`, `tools/map/`, `.github/workflows/kart.yml` |
 | `kartplotter.md` | Sjøkartet i 2D: lag, søk, lasting, bunnen i den lille plotteren. | `ui/03-map.js`, `ui/03b-route.js`, `ui/04-panels-instruments.js` |
-| `3d-verden.md` | 3D for hele kysten: terreng, bakkens materialer, lys og fyrlykter, kameraet og kino-visningen, nordlyset. | `src/js/view3d.js` |
-| `3d-baater-og-animasjon.md` | Båtene i 3D: bevegelse, animasjoner, styrhuset innenfra, måkene og halerne fra Blender. | `src/js/vessel3d.js`, `view3d.js`, `tools/boats/`, `tools/wild/` |
+| `3d-verden.md` | 3D for hele kysten: terreng, bakkens materialer, lys og fyrlykter, kameraet og kino-visningen, nordlyset. | `src/js/view3d/` (delene av `view3d.js`: `01-shaders`, `02-mesh-terrain`, `06-buildings-lights`, `15-env-mooring`, `17-draw`, `18-setup`, `23-camera-frame`, `24-cinema`) |
+| `3d-baater-og-animasjon.md` | Båtene i 3D: bevegelse, animasjoner, styrhuset innenfra, måkene og halerne fra Blender. | `src/js/vessel3d.js`, `view3d/` (`09-landing-deck`, `10-gear`, `12-skiff`, `13-instruments`, `16-motion`, `19-wildlife-npc`, `20-trawl-seine`, `21-rescue-anchor`), `tools/boats/`, `tools/wild/` |
 | `fysikk-og-styring.md` | Skipsstabilitet, manøvreringsmodellen, manuell styring, fysikk 1–3. | `core/16b-dyn.js`, `core/16c-hull.js`, `ui/10-rod-acts.js` |
 | `autonav.md` | Ruteplanleggeren, Autonav, leinettet, hindringene i sjøen, aldri på land. | `core/06-*`, `ui/03b-route.js`, `tools/leia/`, `src/data/leinett.json` |
 | `vaer-og-hav.md` | Vær og hav, nærfeltet, tidevann per sted, sol etter posisjon, skyene i ekte tid. | `core/03-simulation.js` (tidevann), `core/03b-*`, `src/data/tide.json`, `src/data/climate.json` |
-| `bygg-veier-og-kaier.md` | Hus, veier, bruer, brygger, moloer og kaifronter fra vec-pakkene, og flytebryggene. | `core/01c-vec.js`, `view3d.js`, `tools/map/vectors.py`, `tools/map/flyte.py` |
+| `bygg-veier-og-kaier.md` | Hus, veier, bruer, brygger, moloer og kaifronter fra vec-pakkene, og flytebryggene. | `core/01c-vec.js`, `view3d/` (`04-vec-packs`, `05-quays-breakwaters`, `06-buildings-lights`, `22-docks-air`), `tools/map/vectors.py`, `tools/map/flyte.py` |
 | `npc-trafikk.md` | NPC-trafikken langs kysten, Senja-flåten, kaiplassene, liggeplassen for spillerens båt (4.16c). | `core/05-vessels.js`, `core/07-harbours.js`, `core/07e-havn.js`, `tools/map/npc.py` |
 | `havner-og-mottak.md` | Fiskemottakene, mottakene som havner, start langs kysten, naustet og butikken i 3D, rorbuene, havner B1–B5. | `core/07-harbours.js`, `src/data/mottak.json`, `src/data/rorbuer.json`, `tools/mottak/`, `tools/harbour/` |
 | `handel-og-steder.md` | De tre handelsstedene, butikken, verftet og butikken som havneenheter, plassering og ikoner. Regelen står i `docs/handelssteder.md`. | `ui/10i-shop.js`, `ui/10c-dock.js`, `src/data/steder.json`, `tools/steder/` |
@@ -42,7 +42,7 @@ Les denne først, så bare dokumentet for systemet du skal endre, og `docs/BACKL
 | `skyen-og-felles-verden.md` | Skyen (Supabase, WorkOS), felles verden V1–V3, fartstid og «Mens du var borte», innlastingen og innloggingen, push, sesongene, venner, delte merker, tuting, slep. | `ui/10f-cloud.js`, `ui/10g-push.js`, `ui/10l-share.js`, `supabase/` |
 | `tilbakemelding-og-admin.md` | Tilbakemeldingsagenten og rutinen, admin, Tilbakemelding-appen. | `ui/06e-feedback.js`, `src/admin/`, `tools/feedback/`, `supabase/functions/feedback-agent` |
 | `opning-og-veiledning.md` | Åpningsscenen og veiledningen «Første tur». | `ui/07b-first-trip.js`, `ui/08b-letter.js`, `ui/08c-start.js`, `tools/opening/` |
-| `ui-og-telefon.md` | Knappelinja, skuffen og «Sett ut», dekksdagboka, telefon, nettbrett og PC. | `ui/05-phone.js`, `ui/07-guide.js`, `ui/08-actions.js`, `src/styles.css` |
+| `ui-og-telefon.md` | Knappelinja, skuffen og «Sett ut», dekksdagboka, telefon, nettbrett og PC. | `ui/phone/` (delene av `05-phone.js`, én per app), `ui/07-guide.js`, `ui/08-actions.js`, `src/styles.css` |
 | `lyd.md` | Lyden. | `ui/12-sound.js` |
 | `monetisering-og-engasjement.md` | Monetisering og engasjement slik det sto i overleveringen. Reglene som gjelder, står i `CLAUDE.md` og `docs/engasjement.md`. | `ui/10i-shop.js` |
 | `rettelser.md` | Rettelsesrundene etter spilltestene og tilbakemeldingene. | |

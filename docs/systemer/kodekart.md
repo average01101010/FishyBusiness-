@@ -1663,34 +1663,176 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
 
 - **1** sailors' tattoos: the flash and the seated sailor they go on
 
-## `src/js/ui/05-phone.js` (2121 linjer)
+## `src/js/ui/phone/00-shell.js` (57 linjer)
 
 ---------- the phone ----------
 
 - **1** the phone
-- **57** workshop: service, fitting and getting the gear ready, one job after the other while the boat is in port
-- **79** the tackle shop on the quay: a purchase takes two taps, the second one confirms the price
-- **171** the pages of the dock's drawer (ui/10c-dock.js): the market, the village and the yard in port, the inventory everywhere
-- **440** Trim: more speed for the boat you are aboard for a while (core BOOSTS; Jonas 05.10.2026: sold for real money, the time in game
-- **459** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
-- **478** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-- **1217** the seaman's life: the tattoos you have earned, and the old ways at sea you have heard of
-- **1280** weather
-- **1301** newspaper
-- **1309** sales organisation
-- **1399** rescue
-- **1417** vessels: my vessel overview and the market
-- **1447** the boat market: tabs for the open group, boats with a closed-group right, the coastal fleet over 11 m and the ocean fleet;
-- **1559** the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
-- **1626** equipment
-- **1660** gear: in the sea, aboard (baiting and mending), and the shop
-- **1661** gear care (core/10b-gearcare.js): the condition of the gear aboard, and what the crew can do about it in port
-- **1666** a line kind as it stands (Jonas 20.10.2026, tilbakemelding #74: «hva båten har slags fiskeredskaper ombord og hva disse eventuelt er
-- **1788** crew
-- **1792** the crew, person by person
-- **1845** bank
-- **1863** messages
-- **1871** actions
+  - 56 `setBadge()`
+
+## `src/js/ui/phone/01-haill-fiske-service.js` (112 linjer)
+
+--- workshop: service, fitting and getting the gear ready, one job after the other while the boat is in port
+
+- **1** workshop: service, fitting and getting the gear ready, one job after the other while the boat is in port
+  - 2 `haill()`
+- **23** the tackle shop on the quay: a purchase takes two taps, the second one confirms the price
+  - 28 `fiske()`
+  - 41 `service()`
+  - 62 `iceCard()`
+  - 72 `verksted()`
+
+## `src/js/ui/phone/02-havn-last-agn-ordre.js` (48 linjer)
+
+the old tabs live on as phone apps
+
+  - 2 `havn()`
+  - 3 `last()`
+- **4** the pages of the dock's drawer (ui/10c-dock.js): the market, the village and the yard in port, the inventory everywhere
+  - 5 `lever()`
+  - 6 `isApp()`
+  - 8 `agn()`
+  - 31 `oppdrag()`
+  - 32 `ordl()`
+  - 37 `ordlBest(tabs)`
+
+## `src/js/ui/phone/03-regler.js` (60 linjer)
+
+the Regler app (R3 of the rules plan, 05.10.2026): «Her og nå» answers «can I fish here?» for your boat, gear and target where she is,
+
+  - 8 `ruList(r)`
+  - 11 `ruWhere(p)`
+  - 17 `ruGrid(p, len, H, hand)`
+  - 21 `ruChk()`
+  - 23 `ruHere()`
+  - 29 `ruCheck()`
+  - 44 `ruLearn()`
+  - 54 `regler()`
+
+## `src/js/ui/phone/04-kvote.js` (64 linjer)
+
+the Kvote app: your quotas, the open group's season, the stocks, and the market for rights (core/03d-quota.js)
+
+  - 2 `kvote()`
+  - 8 `kvOpen(H)`
+  - 25 `kvStock(H)`
+  - 43 `kvMkt(H)`
+
+## `src/js/ui/phone/05-rigg-innst-admin.js` (78 linjer)
+
+the rig: one kind of fishing at a time, changed here aboard (under Beholdning) when none of the boat's gear is in the sea
+
+  - 2 `rigg()`
+  - 13 `beholdning()`
+  - 20 `logg()`
+  - 21 `innst()`
+  - 59 `admin()`
+
+## `src/js/ui/phone/06-render.js` (65 linjer)
+
+  - 1 `show(on, a)`
+  - 2 `status()`
+  - 8 `tickHome()`
+  - 14 `render()`
+  - 18 `shell(a)`
+  - 20 `page(a)`
+  - 21 `dact(cur, a, d)`
+- **27** Trim: more speed for the boat you are aboard for a while (core BOOSTS; Jonas 05.10.2026: sold for real money, the time in game
+  - 32 `trim()`
+- **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
+  - 50 `skipApp()`
+
+## `src/js/ui/phone/07-patch.js` (717 linjer)
+
+--- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
+
+- **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
+  - 710 `patch()`
+
+## `src/js/ui/phone/08-home-papers-merker.js` (87 linjer)
+
+  - 1 `home()`
+  - 20 `nearHint(kind)`
+- **24** the seaman's life: the tattoos you have earned, and the old ways at sea you have heard of
+  - 25 `tattoos()`
+  - 43 `papBladB()`
+  - 48 `papPermit()`
+  - 53 `papBiz()`
+  - 59 `fsChip()`
+  - 61 `fsCard()`
+  - 68 `merker()`
+  - 79 `lore()`
+
+## `src/js/ui/phone/09-vaer-post-salg-redning.js` (139 linjer)
+
+--- weather
+
+- **1** weather
+  - 2 `sunTimesOld(H)`
+  - 3 `vaer()`
+- **22** newspaper
+  - 24 `post()`
+- **30** sales organisation
+  - 34 `salg(s)`
+- **120** rescue
+  - 121 `redning()`
+- **138** vessels: my vessel overview and the market
+
+## `src/js/ui/phone/10-fartoy.js` (143 linjer)
+
+  - 10 `goals()`
+  - 25 `goalsCard()`
+- **30** the boat market: tabs for the open group, boats with a closed-group right, the coastal fleet over 11 m and the ocean fleet;
+  - 39 `mkCard(k, O)`
+  - 43 `market()`
+  - 67 `specSecs(k, O)`
+  - 91 `sheet(k, O)`
+  - 122 `fartoy(tab0)`
+- **142** the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
+
+## `src/js/ui/phone/11-rederi.js` (68 linjer)
+
+  - 6 `selRow()`
+  - 8 `vSummary()`
+  - 32 `rederi()`
+- **67** equipment
+
+## `src/js/ui/phone/12-utstyr-redskap.js` (162 linjer)
+
+the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the shop's (electronics, haulers, the jigging machine and the clothes)
+
+  - 2 `utstyr(mode)`
+- **34** gear: in the sea, aboard (baiting and mending), and the shop
+- **35** gear care (core/10b-gearcare.js): the condition of the gear aboard, and what the crew can do about it in port
+- **40** a line kind as it stands (Jonas 20.10.2026, tilbakemelding #74: «hva båten har slags fiskeredskaper ombord og hva disse eventuelt er
+  - 44 `lineCard(lk, o)`
+  - 69 `egnChooser(lk, o)`
+  - 93 `careAboard(inPort, p)`
+  - 117 `redskap(tab0)`
+
+## `src/js/ui/phone/13-mannskap-bank-meld.js` (97 linjer)
+
+--- crew
+
+- **1** crew
+  - 4 `candidates()`
+- **5** the crew, person by person
+  - 9 `traitChips(c, all)`
+  - 11 `lifeHtml(c)`
+  - 16 `personCard(c, cand)`
+  - 23 `bors()`
+  - 38 `mannskap()`
+- **58** bank
+  - 59 `bank()`
+- **76** messages
+  - 77 `meld()`
+- **84** actions
+  - 87 `switchVessel(k)`
+
+## `src/js/ui/phone/14-act.js` (238 linjer)
+
+  - 2 `act(a, d)`
+  - 8 `act0(a, d)`
 
 ## `src/js/ui/05b-work.js` (136 linjer)
 
@@ -2359,7 +2501,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **435** no way over the deck between two parts of it (fore and aft of the house on the big boats): through the house, out of sight for
   - 465 `npcCrewCtx(n, G)`
 
-## `src/js/view3d.js` (6036 linjer)
+## `src/js/view3d/00-head.js` (88 linjer)
 
 - **2** 3D VIEW (plain WebGL, no dependencies)
   - 27 `qualSet()`
@@ -2374,387 +2516,512 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 84 `fbm(x, y, o, s)`
   - 85 `ridged(x, y)`
   - 86 `rng(seed)`
-- **88** shaders
-  - 362 `cloudStep(dt)`
-  - 368 `skyFrame(u, Hh, tn, bv)`
-  - 380 `compile(type, src, nm)`
-  - 386 `program(vs, fs, attrs, nm = '?')`
-  - 394 `buf(data, target, usage)`
-  - 395 `attr(loc, b, size)`
-  - 404 `upload(pos, col, idx)`
-- **406** mesh builder
-  - 407 `MB()`
-- **450** terrain
-  - 478 `terrRaw(x, z, dil)`
-- **496** The water at the berths the company holds in the coast's harbours (core/07e-havn.js)
-  - 503 `berthPits()`
-  - 522 `npcPits()`
-  - 542 `berthPit(x, z, h)`
-- **550** Father's naust and the Finnsnes shop (tools/harbour/naust.py, butikk.py; where: core/07c-naust.js)
-  - 567 `rorbuNow()`
-  - 573 `sitesNow()`
-  - 600 `siteTerr(x, z, h)`
-  - 622 `onSite(x, z)`
-  - 632 `tileIn(kind, tx, ty)`
-  - 633 `tileH(L, kind, x, z)`
-  - 640 `terrH(x, z)`
-  - 649 `unitTerr(x, z, h0)`
-  - 674 `terrCoarse(x, z, dil)`
-  - 684 `forestAt(x, z)`
-  - 698 `meshBegin(x0, z0, sx, sz, n, hf)`
-  - 702 `meshRows(B, until)`
-  - 714 `meshEnd(B)`
-  - 726 `makeMesh(x0, z0, sx, sz, n, hf)`
-  - 727 `freeMesh(m)`
-  - 729 `nearSurf(M, x, z)`
-  - 739 `unitPatch(U, M)`
-  - 764 `buildPatches()`
-  - 773 `buildTerrain()`
-  - 782 `stream3d()`
-- **795** the coast's packs (01c-vec.js, part 4 of the coast-wide plan): buildings, roads, bridges, piers and breakwaters
-  - 802 `tileStatics()`
-  - 831 `tileStep()`
-  - 851 `drawTileStatics(TM, eye)`
-  - 858 `meshTask(kind, cur, x0, z0, span, n, hf, done)`
-  - 869 `meshStep()`
-  - 876 `staleMesh(kind)`
-  - 877 `staleOver(pk)`
-  - 888 `updateFar()`
-  - 899 `meshH(m, x, z)`
-  - 904 `shadeH(x, z, dd)`
-  - 906 `shSeed(m, old)`
-  - 915 `updateShadows()`
-  - 944 `updateMid()`
-  - 949 `updateNear()`
-  - 952 `nearWanted()`
-  - 962 `fineWanted()`
-  - 969 `recolor(m, snow)`
-- **1000** the breakwaters' armour stones: a mesh a breakwater, drawn only within STONE_R of the eye (beyond it a stone is less than a
-  - 1004 `stonesOf(list, build)`
-  - 1009 `drawStones(list, TM, eye)`
-- **1012** villages and quays
-  - 1021 `fyrInto(m, f)`
-  - 1036 `markInto(m, mk, tag)`
-  - 1050 `marksStatics()`
-  - 1060 `buildStatics()`
-  - 1099 `pierInto(m, q, tag)`
-  - 1112 `slabInto(m, pts, tag, cut)`
-  - 1128 `bridgeInto(m, br, tag)`
-- **1169** breakwaters (the user's wish 03.10.2026: they shelter the boats at the quays, and should look it)
-  - 1177 `rockInto(m, x, y, z, sx, sy, sz, seed, k)`
-  - 1192 `moundTop(x, z)`
-  - 1201 `moundInto(m, pts, seed, unit, tag, sm)`
-- **1265** harbour fittings along the berth faces: tyres hung on chains, a timber fender beam, the yellow edge and bollards
-  - 1267 `obox(nb, c, u, n, len, wid, y0, h, k)`
-  - 1273 `buildHarbourFittings()`
-- **1297** real buildings (OpenStreetMap), streamed in 1 km chunks inside the terrain corridor
-  - 1302 `bldCells(key)`
-  - 1310 `vecBldIn(t, key)`
-  - 1314 `loadBuildings()`
-  - 1335 `onQuayStrip(x, z)`
-  - 1340 `bldOnUnit(B, i)`
-  - 1351 `buildChunk(key, detail)`
-- **1386** details: chimney, windows, doors (only close to the boat)
-  - 1429 `addTrees(m, key, srcs, snowy)`
-  - 1455 `addRoads(m, key, snowy)`
-  - 1476 `freeChunk(c)`
-  - 1477 `updateChunks(maxBuilds)`
-  - 1494 `drawBuildings(TM)`
-  - 1513 `lightY(L, x, z)`
-  - 1514 `lightOn(L, t)`
-  - 1515 `drawSeaLights(VP, eye, t, near)`
-- **1530** lights that light up round them at night (the user's wish 03.10.2026)
-  - 1535 `pickLights(eye, t)`
-  - 1556 `plSet(u)`
-  - 1561 `drawBeams(VP, eye, t)`
-  - 1589 `drawChunkLights(VP, eye)`
-- **1596** the harbour unit (tools/harbour/kaimottak.py): quay, fish plant, crane, forklift, ice silo and bunker station in one
-  - 1603 `unitModel(v)`
-  - 1615 `onUnit(x, z, m)`
-  - 1619 `craneGeo(P, q)`
-  - 1627 `drawUnitParts(P, eye, q, st, k, ch, T)`
-- **1641** the yard's ship lift (tools/harbour/steder.py; Jonas 07.10.2026: «dock eller slipvogn som kan tørrlegge alle båtene»)
-  - 1649 `liftStep(dt, b)`
-  - 1662 `drawYardLift(U, eye, M, UM)`
-  - 1671 `drawUnits(eye, VP, near, far, skip)`
-  - 1690 `siteSnow(P, snow)`
-  - 1704 `siteModel(k)`
-  - 1714 `drawSites(eye, VP, near, far)`
-- **1723** fish plants: the harbour unit's crane, forklift, door and chute at work, and the people on the quay
-  - 1725 `plantLayout(pt)`
-  - 1735 `buildPlants()`
-  - 1745 `buildPlantParts()`
-  - 1775 `roundAt(R, T)`
-  - 1786 `plantRounds(P)`
-  - 1800 `workLow(st, T, idx)`
-  - 1825 `workTurn(st, eye, T, idx)`
-  - 1833 `drawWorker(P, st, eye, T, idx)`
-- **1920** the work on deck, step by step (Jonas 20.10.2026: «Alle deler av arbeidsprosessene må ha egne animasjoner»); the places the
-- **2018** the breaks (Jonas 23.10.2026: «Husk at vi må ha animasjoner for alle handlinger og aktiviteter»; core/13-work.js idleAssign)
-- **2119** the props of the deck work (the poses above): the fish in the hands and on the table, the guts over the rail, the crate and the
-- **2178** landing the catch
-  - 2193 `deckSlots(kind)`
-  - 2200 `fkRun(P)`
-  - 2215 `legAt(g, w)`
-  - 2224 `landScene(P, T, BMrel, eye)`
-  - 2267 `follow(P, key, st, T, v)`
-  - 2275 `drawPlant(P, eye, VP, T, BMrel)`
-  - 2308 `plantsCoast(eye)`
-  - 2316 `nearestPlant(eye)`
-- **2318** work on deck: the bleeding tub and the gutting table on the after deck; whoever works the deck guts or ices there
-  - 2320 `deckActivity()`
-- **2329** the deck kit (the user's wish 19.10.2026, tools/deck/*.py): the fish tubs, the gaff and the knife, the gutting table and
-  - 2333 `kit(f, nm)`
-  - 2336 `kitX(f)`
-- **2338** the hands in their grips (tools/harbour/hender.py): the meshes once for all the figures (the glove is the same on every look),
-  - 2341 `handMeshes()`
-  - 2353 `handFrame(z0, sp, side)`
-  - 2362 `handSpecs(st, F, R, hands)`
-  - 2408 `toolM(A, dir)`
-  - 2415 `dkEvent(kind, at, sp, kg, o)`
-  - 2421 `dkFor(who, p, task)`
-  - 2429 `dkEv(e, BMrel, G)`
-  - 2431 `catchQ()`
-  - 2436 `dkTick()`
-  - 2447 `dkBloodDraw(VP)`
-  - 2456 `rigAt(G, kind, d)`
-  - 2460 `drawNetTub(BMrel, at, fill, ry)`
-  - 2466 `drawLineTubs(BMrel, at, n, baited, green, ry, fill)`
-  - 2477 `jobTubs(j)`
-  - 2481 `drawMendNet(BMrel, G, d, R)`
-  - 2495 `drawRigRest(BMrel, G, d)`
-- **2507** the kit on the model's places (G.kit, from the boat's model; tools/deck): the life-saving gear the rules ask for (V.lsa,
-  - 2513 `boyeCanvas(txt)`
-  - 2519 `boyeTex()`
-  - 2524 `boyeQ()`
-  - 2525 `drawSafety(BMrel, G, VP, t)`
-  - 2546 `cargoUnits(G)`
-  - 2547 `drawCargo(BMrel, G, hide)`
-  - 2562 `crFrames(X, Q, BMrel, p)`
-  - 2571 `crLink(X, a2)`
-  - 2574 `drawCrane(BMrel, G, VP, t, d)`
-  - 2630 `dkTub(G)`
-  - 2631 `drawDeck(BMrel, eye, VP, t, DK)`
-- **2684** passive gear: buoys at both ends of every set, and the work over the rail when setting and hauling
-  - 2686 `buildGear()`
-  - 2712 `drawGearSea(eye, t, VP, H)`
-  - 2734 `drawSetting(BMrel, t, g, G, stack, x0)`
-  - 2751 `haulFish(g)`
-  - 2760 `haulModel(kind)`
-  - 2769 `gopHauls()`
-  - 2781 `potDeck(G, HP, sx, d, pw, vt)`
-  - 2793 `tankAt(x, z, d, vt)`
-  - 2811 `drawPots(BMrel, t, g, G, HP, sx, d, skiff, seg)`
-  - 2867 `drawCrabTank(BMrel, G, d, sx, HP)`
-  - 2874 `drawGearOp(BMrel, eye, VP, t)`
-- **2943** bunker quays: a tank in its bund, the pump with its meter and hose reel, the sign; someone from the boat holds the nozzle
-  - 2945 `buildBunkers()`
-  - 2973 `nearestBunker(eye)`
-  - 2974 `drawBunker(B, eye, VP, T, BMrel)`
-- **3007** boat
-- **3009** the starter boat: a 19 ft centre-console skiff, modelled in detail
-  - 3058 `NB()`
-  - 3066 `lookMesh(look)`
-  - 3073 `nSetup(VP)`
-  - 3079 `wearOn(t)`
-  - 3080 `wearOff()`
-  - 3081 `drawN(m, M)`
-  - 3083 `texStrip(Pb, Pt)`
-  - 3084 `texQuad(P0, P1, P2, P3)`
-  - 3085 `mkTex()`
-  - 3086 `upTex(t, cv)`
-  - 3087 `drawTexQuad(q, tex, M, VP, lit, nrm)`
-- **3095** the open boats worked by hand: one kit per type
-  - 3103 `refreshPeople(K)`
-  - 3114 `useHand(t)`
-  - 3120 `handKit(t)`
-  - 3141 `buildSkiff()`
-- **3352** the skiff's live instruments
-  - 3362 `engineOn()`
-  - 3363 `paintPlotter()`
-  - 3409 `dial(g, cx, cy, r, v0, v1, v, a0, a1, ticks, labels, title, redFr…)`
-  - 3420 `paintGauges(dt)`
-  - 3436 `paintVhf()`
-  - 3446 `paintName(t, liv)`
-  - 3453 `markCanvas(cv, txt, light)`
-  - 3459 `markTex(t, liv)`
-  - 3467 `imgOf(src)`
-  - 3468 `curLogo()`
-  - 3469 `logoTexOf(L, img)`
-  - 3477 `logoQ(t)`
-  - 3478 `drawLogo(t, M, VP, L, img)`
-  - 3481 `markQ(t)`
-  - 3482 `drawMark(t, M, VP, liv)`
-  - 3483 `nameCanvas(cv, nm, light)`
-  - 3492 `nameTex(nm, light, mark)`
-  - 3500 `drawNPCNames(kit, VP)`
-  - 3515 `nameQ(t)`
-  - 3517 `paintHand()`
-  - 3526 `limbM(A, B, r)`
-  - 3529 `drawSkiff(BMrel, VP, dt, showSkipper, showCrew)`
-  - 3663 `drawSkiffGlass(BMrel, VP)`
-  - 3668 `jigRail(t, G)`
-  - 3685 `drawJigRail(BMrel, VP, t, G, dt)`
-  - 3716 `drawGlass(m, BMrel, VP)`
-  - 3722 `buildBoat()`
-  - 3748 `buildFlag()`
-  - 3760 `flagTex()`
-  - 3775 `penTex()`
-  - 3788 `mastTop(G)`
-  - 3792 `updateFlag(t, appW)`
-- **3804** sea
-  - 3806 `buildPatch()`
-  - 3814 `buildSea()`
-- **3823** the waves: wind sea and swell from the sea model (03b-sea.js)
-  - 3829 `specW(L0)`
-  - 3830 `updateWaves(dt, H)`
-- **3856** the near field: the short sea rides with the boat
-  - 3865 `nfStep()`
-- **3876** the boat's own waves (the uniforms of WAKE_GLSL)
-  - 3881 `updateWake()`
-  - 3894 `wakeHFast(x, z)`
-- **3902** the sea state over the near terrain and the whole map
-  - 3909 `ssLevel(n, unit)`
-  - 3911 `ssRect(L)`
-  - 3912 `ssWork(L, until)`
-  - 3935 `ssStep(rdt)`
-  - 3937 `ssBlend(L)`
-  - 3939 `ssTex(L, x, z, out)`
-  - 3946 `ssAt(x, z)`
-  - 3955 `seaDisp(x, z, t, S, fade)`
-  - 3966 `seaFade(x, z)`
-  - 3967 `seaH(x, z, t)`
-  - 3973 `seaHFast(x, z, t)`
-- **3975** environment
-  - 3977 `pal(el)`
-  - 3982 `computeEnv(H)`
-- **4011** mooring: in along the quay, then the lines: aft spring first, bow line, stern line, fore spring (and in reverse when casting off)
-  - 4015 `buildMooring()`
-  - 4017 `berthNow()`
-  - 4023 `approach(F, bp, u0, du0)`
-  - 4034 `pathM(pts)`
-  - 4039 `pathAt(M, s)`
-  - 4040 `lieAlongside(dt, bp)`
-  - 4043 `moorStep(dt, bp, at = dt)`
-  - 4075 `drawMooring(BMrel, eye, VP, t)`
-- **4098** boat motion
-  - 4099 `currentFrac()`
-  - 4100 `predict(frac)`
-- **4108** along the route (Jonas 06.10.2026: «båten strengt må følge rutestreken som lages i kartplotteren», «Svingingen kan være
-  - 4121 `trkBuild(pl, dep)`
-  - 4148 `trkAt(T, s)`
-  - 4154 `trkProj(T, x, z, s0, back = 30)`
-  - 4164 `trkOn()`
-  - 4180 `trkHaltNeed()`
-  - 4185 `trkStep(dt, pr)`
-  - 4221 `dynFollow(dt)`
-  - 4229 `updateBoat(dt, t, frac, rdt)`
-- **4307** particles
-  - 4311 `spawn(x, y, z, vx, vy, vz, life, g)`
-  - 4313 `drawPts(n, mode, VP, col, size, round, off, mx)`
-- **4322** drawing
-  - 4323 `litSetup(VP)`
-  - 4329 `drawLit(m, M, hole)`
-  - 4338 `terProg(q)`
-  - 4346 `drawTerrain(TM, eye, VP, near)`
-  - 4366 `buildGround()`
-  - 4401 `buildLandMask()`
-  - 4424 `lmStep()`
-  - 4457 `seaRing(u, eye, y, R, Hl)`
-  - 4467 `drawSea(VP, eye, t, far, drop)`
-- **4507** setup
-  - 4536 `init()`
-  - 4632 `anchorAlarm3d(kind)`
-  - 4635 `sayBoat(id, txt)`
-  - 4637 `sayWorker(pid, idx, nm, no, en)`
-  - 4641 `crewFx3d(c, kind, o)`
-  - 4643 `say3d(c, no, en)`
-  - 4647 `buildLabels()`
-  - 4648 `resize()`
-- **4654** wildlife
-  - 4655 `bodyLoft(m, L, R, prof, col, belly, y0)`
-  - 4659 `buildWild()`
-  - 4686 `wildSpawn(t)`
-  - 4700 `blow(x, y, z)`
-  - 4701 `drawWild(eye, t, dt, M0)`
-  - 4755 `drawBlows(VP, eye, dt)`
-- **4765** other vessels
-  - 4766 `shipHull(m, L, B, D, F, hull, bottom, deck)`
-  - 4773 `windows(m, x0, x1, y, z, h, col, sideX)`
-  - 4774 `buildNPC()`
-  - 4804 `pvm(t, liv)`
-  - 4819 `personMesh(kind, look, key)`
-  - 4831 `people()`
-- **4835** the trawl (tools/boats/tral60.py; Jonas 06.10.2026: «en tråler har slike tråldører på hekken som senkes i havet ved
-  - 4842 `trawlKit(t)`
-  - 4850 `alongM(A, d)`
-  - 4857 `trawlState(now)`
-  - 4866 `drawTrawl(t, A, BMrel, now)`
-- **4891** the purse seine (tools/boats/not75.py; Jonas 06.10.2026: «Denne kan både bruke ringnot og trål og trenger dermed
-  - 4897 `seineState(now)`
-  - 4903 `drawSeine(t, A, BMrel, VP, now)`
-  - 4942 `drawDeckCrew(BMrel, eye, VP, t, G)`
-  - 5001 `spHold(f)`
-  - 5004 `deckWork(G)`
-  - 5012 `drawHelmKit(BMrel, eye, G)`
-  - 5021 `drawVessel(t, G, BMrel, VP, skipper, ncrew, onDeck, liv, named)`
-  - 5043 `npcMesh(n, lod)`
-  - 5052 `drawNPC(eye, t, H, VP)`
-  - 5085 `npcCrewDraw(n, K, eye, t)`
-- **5106** the rescue boat (tools/boats/redning.py) and its tow line, where core/05-vessels.js towPose says
-  - 5109 `drawTowLine(BMrel, VP)`
-- **5119** the boat's own anchor (tools/deck/anker.py, core/06e-anchor.js; Jonas 21.10.2026)
-  - 5132 `frameM(o, z, up, s)`
-  - 5134 `drawMany(m, Ms)`
-  - 5136 `ancMesh(bw)`
-  - 5141 `ancStow(F, P, bw, L)`
-  - 5152 `rodePts(A, F, Lr, n)`
-  - 5165 `rodeDraw(pts, dm, rope, wy, Lr, CH, M)`
-  - 5187 `ancSplash(x, y, z, n, up)`
-  - 5190 `drawNPCAnchor(n, K)`
-  - 5194 `drawAnchor(BMrel, eye, VP, t)`
-  - 5243 `buildRescue()`
-  - 5249 `drawRescue(BMrel, eye, VP, t)`
-  - 5263 `drawRescueLights(VP, t)`
-- **5270** the coast harbours' floating docks and mooring buoys (core/05-vessels.js moorHarbour, tools/harbour/brygge.py)
-  - 5274 `buildDocks()`
-  - 5280 `drawDocks(eye, t, VP)`
-- **5312** the floating docks among the packs' piers (01c-vec.js flyteTile, tools/harbour/brygge.py; tilbakemelding #94)
-  - 5325 `floatFree(k)`
-  - 5326 `floatJob(t, FD, solid)`
-  - 5377 `drawFloats(eye, t, VP)`
-- **5395** aircraft (tools/air/fly.py) where core/05c-air.js airStates puts them, within about 15 km of the eye
-  - 5397 `buildAir()`
-  - 5402 `drawAir(eye, t, H, VP)`
-  - 5416 `drawAirLights(VP, t)`
-  - 5426 `drawNPCGlass(VP)`
-  - 5427 `drawNPCLights(VP)`
-- **5441** the chase camera stays out of solid things
-  - 5447 `camSolid(x, z, sx, sz, ry, y0, y1, tag)`
-  - 5454 `camBuildings(key)`
-  - 5462 `camBld(B, idx, tag)`
-  - 5473 `camDropTag(tag)`
-  - 5476 `camFree(o, e)`
-  - 5499 `camInside(x, y, z)`
-  - 5506 `compassStrip(W, H, dpr)`
-  - 5518 `compassDraw(az, p)`
-- **5531** frame
-  - 5535 `fpsEl()`
-- **5541** cinema (the user's wish 03.10.2026)
-  - 5548 `kinoWant(K, t)`
-  - 5559 `kinoNext(t)`
-  - 5578 `kinoCam(t, rdt)`
-  - 5598 `introStart(sec)`
-  - 5603 `frame()`
-  - 5605 `frame0()`
-  - 5775 `snapTake()`
-  - 5780 `drawRoute(VP, eye)`
-  - 5792 `driftSpray(VP, eye, dt, t, col)`
-  - 5807 `drawSmoke(VP, eye, BM, dt)`
-  - 5834 `drawEffects(VP, eye, BM, dt, t)`
-  - 5935 `updateLabels(VP, eye, W, Hh)`
-- **5953** controls
-  - 5970 `paintView(on)`
-  - 5975 `paintAim(C, yawW)`
-  - 5982 `showroom(type)`
-  - 5991 `show(on, auto)`
+
+## `src/js/view3d/01-shaders.js` (319 linjer)
+
+---------- shaders ----------
+
+- **1** shaders
+  - 275 `cloudStep(dt)`
+  - 281 `skyFrame(u, Hh, tn, bv)`
+  - 293 `compile(type, src, nm)`
+  - 299 `program(vs, fs, attrs, nm = '?')`
+  - 307 `buf(data, target, usage)`
+  - 308 `attr(loc, b, size)`
+  - 317 `upload(pos, col, idx)`
+
+## `src/js/view3d/02-mesh-terrain.js` (91 linjer)
+
+---------- mesh builder ----------
+
+- **1** mesh builder
+  - 2 `MB()`
+- **45** terrain
+  - 73 `terrRaw(x, z, dil)`
+
+## `src/js/view3d/03-berths-naust.js` (300 linjer)
+
+---------- The water at the berths the company holds in the coast's harbours (core/07e-havn.js) ----------
+
+- **1** The water at the berths the company holds in the coast's harbours (core/07e-havn.js)
+  - 8 `berthPits()`
+  - 27 `npcPits()`
+  - 47 `berthPit(x, z, h)`
+- **55** Father's naust and the Finnsnes shop (tools/harbour/naust.py, butikk.py; where: core/07c-naust.js)
+  - 72 `rorbuNow()`
+  - 78 `sitesNow()`
+  - 105 `siteTerr(x, z, h)`
+  - 127 `onSite(x, z)`
+  - 137 `tileIn(kind, tx, ty)`
+  - 138 `tileH(L, kind, x, z)`
+  - 145 `terrH(x, z)`
+  - 154 `unitTerr(x, z, h0)`
+  - 179 `terrCoarse(x, z, dil)`
+  - 189 `forestAt(x, z)`
+  - 203 `meshBegin(x0, z0, sx, sz, n, hf)`
+  - 207 `meshRows(B, until)`
+  - 219 `meshEnd(B)`
+  - 231 `makeMesh(x0, z0, sx, sz, n, hf)`
+  - 232 `freeMesh(m)`
+  - 234 `nearSurf(M, x, z)`
+  - 244 `unitPatch(U, M)`
+  - 269 `buildPatches()`
+  - 278 `buildTerrain()`
+  - 287 `stream3d()`
+
+## `src/js/view3d/04-vec-packs.js` (218 linjer)
+
+---------- the coast's packs (01c-vec.js, part 4 of the coast-wide plan): buildings, roads, bridges, piers and breakwaters ----------
+
+- **1** the coast's packs (01c-vec.js, part 4 of the coast-wide plan): buildings, roads, bridges, piers and breakwaters
+  - 8 `tileStatics()`
+  - 37 `tileStep()`
+  - 57 `drawTileStatics(TM, eye)`
+  - 64 `meshTask(kind, cur, x0, z0, span, n, hf, done)`
+  - 75 `meshStep()`
+  - 82 `staleMesh(kind)`
+  - 83 `staleOver(pk)`
+  - 94 `updateFar()`
+  - 105 `meshH(m, x, z)`
+  - 110 `shadeH(x, z, dd)`
+  - 112 `shSeed(m, old)`
+  - 121 `updateShadows()`
+  - 150 `updateMid()`
+  - 155 `updateNear()`
+  - 158 `nearWanted()`
+  - 168 `fineWanted()`
+  - 175 `recolor(m, snow)`
+- **206** the breakwaters' armour stones: a mesh a breakwater, drawn only within STONE_R of the eye (beyond it a stone is less than a
+  - 210 `stonesOf(list, build)`
+  - 215 `drawStones(list, TM, eye)`
+
+## `src/js/view3d/05-quays-breakwaters.js` (286 linjer)
+
+---------- villages and quays ----------
+
+- **1** villages and quays
+  - 10 `fyrInto(m, f)`
+  - 25 `markInto(m, mk, tag)`
+  - 39 `marksStatics()`
+  - 49 `buildStatics()`
+  - 88 `pierInto(m, q, tag)`
+  - 101 `slabInto(m, pts, tag, cut)`
+  - 117 `bridgeInto(m, br, tag)`
+- **158** breakwaters (the user's wish 03.10.2026: they shelter the boats at the quays, and should look it)
+  - 166 `rockInto(m, x, y, z, sx, sy, sz, seed, k)`
+  - 181 `moundTop(x, z)`
+  - 190 `moundInto(m, pts, seed, unit, tag, sm)`
+- **254** harbour fittings along the berth faces: tyres hung on chains, a timber fender beam, the yellow edge and bollards
+  - 256 `obox(nb, c, u, n, len, wid, y0, h, k)`
+  - 262 `buildHarbourFittings()`
+
+## `src/js/view3d/06-buildings-lights.js` (300 linjer)
+
+---------- real buildings (OpenStreetMap), streamed in 1 km chunks inside the terrain corridor ----------
+
+- **1** real buildings (OpenStreetMap), streamed in 1 km chunks inside the terrain corridor
+  - 6 `bldCells(key)`
+  - 14 `vecBldIn(t, key)`
+  - 18 `loadBuildings()`
+  - 39 `onQuayStrip(x, z)`
+  - 44 `bldOnUnit(B, i)`
+  - 55 `buildChunk(key, detail)`
+- **90** details: chimney, windows, doors (only close to the boat)
+  - 133 `addTrees(m, key, srcs, snowy)`
+  - 159 `addRoads(m, key, snowy)`
+  - 180 `freeChunk(c)`
+  - 181 `updateChunks(maxBuilds)`
+  - 198 `drawBuildings(TM)`
+  - 217 `lightY(L, x, z)`
+  - 218 `lightOn(L, t)`
+  - 219 `drawSeaLights(VP, eye, t, near)`
+- **234** lights that light up round them at night (the user's wish 03.10.2026)
+  - 239 `pickLights(eye, t)`
+  - 260 `plSet(u)`
+  - 265 `drawBeams(VP, eye, t)`
+  - 293 `drawChunkLights(VP, eye)`
+
+## `src/js/view3d/07-harbour-unit.js` (128 linjer)
+
+---------- the harbour unit (tools/harbour/kaimottak.py): quay, fish plant, crane, forklift, ice silo and bunker station in one ----------
+
+- **1** the harbour unit (tools/harbour/kaimottak.py): quay, fish plant, crane, forklift, ice silo and bunker station in one
+  - 8 `unitModel(v)`
+  - 20 `onUnit(x, z, m)`
+  - 24 `craneGeo(P, q)`
+  - 32 `drawUnitParts(P, eye, q, st, k, ch, T)`
+- **46** the yard's ship lift (tools/harbour/steder.py; Jonas 07.10.2026: «dock eller slipvogn som kan tørrlegge alle båtene»)
+  - 54 `liftStep(dt, b)`
+  - 67 `drawYardLift(U, eye, M, UM)`
+  - 76 `drawUnits(eye, VP, near, far, skip)`
+  - 95 `siteSnow(P, snow)`
+  - 109 `siteModel(k)`
+  - 119 `drawSites(eye, VP, near, far)`
+
+## `src/js/view3d/08-plants.js` (456 linjer)
+
+---------- fish plants: the harbour unit's crane, forklift, door and chute at work, and the people on the quay ----------
+
+- **1** fish plants: the harbour unit's crane, forklift, door and chute at work, and the people on the quay
+  - 3 `plantLayout(pt)`
+  - 13 `buildPlants()`
+  - 23 `buildPlantParts()`
+  - 53 `roundAt(R, T)`
+  - 64 `plantRounds(P)`
+  - 78 `workLow(st, T, idx)`
+  - 103 `workTurn(st, eye, T, idx)`
+  - 111 `drawWorker(P, st, eye, T, idx)`
+- **198** the work on deck, step by step (Jonas 20.10.2026: «Alle deler av arbeidsprosessene må ha egne animasjoner»); the places the
+- **296** the breaks (Jonas 23.10.2026: «Husk at vi må ha animasjoner for alle handlinger og aktiviteter»; core/13-work.js idleAssign)
+- **397** the props of the deck work (the poses above): the fish in the hands and on the table, the guts over the rail, the crate and the
+
+## `src/js/view3d/09-landing-deck.js` (507 linjer)
+
+---------- landing the catch ----------
+
+- **1** landing the catch
+  - 16 `deckSlots(kind)`
+  - 23 `fkRun(P)`
+  - 38 `legAt(g, w)`
+  - 47 `landScene(P, T, BMrel, eye)`
+  - 90 `follow(P, key, st, T, v)`
+  - 98 `drawPlant(P, eye, VP, T, BMrel)`
+  - 131 `plantsCoast(eye)`
+  - 139 `nearestPlant(eye)`
+- **141** work on deck: the bleeding tub and the gutting table on the after deck; whoever works the deck guts or ices there
+  - 143 `deckActivity()`
+- **152** the deck kit (the user's wish 19.10.2026, tools/deck/*.py): the fish tubs, the gaff and the knife, the gutting table and
+  - 156 `kit(f, nm)`
+  - 159 `kitX(f)`
+- **161** the hands in their grips (tools/harbour/hender.py): the meshes once for all the figures (the glove is the same on every look),
+  - 164 `handMeshes()`
+  - 176 `handFrame(z0, sp, side)`
+  - 185 `handSpecs(st, F, R, hands)`
+  - 231 `toolM(A, dir)`
+  - 238 `dkEvent(kind, at, sp, kg, o)`
+  - 244 `dkFor(who, p, task)`
+  - 252 `dkEv(e, BMrel, G)`
+  - 254 `catchQ()`
+  - 259 `dkTick()`
+  - 270 `dkBloodDraw(VP)`
+  - 279 `rigAt(G, kind, d)`
+  - 283 `drawNetTub(BMrel, at, fill, ry)`
+  - 289 `drawLineTubs(BMrel, at, n, baited, green, ry, fill)`
+  - 300 `jobTubs(j)`
+  - 304 `drawMendNet(BMrel, G, d, R)`
+  - 318 `drawRigRest(BMrel, G, d)`
+- **330** the kit on the model's places (G.kit, from the boat's model; tools/deck): the life-saving gear the rules ask for (V.lsa,
+  - 336 `boyeCanvas(txt)`
+  - 342 `boyeTex()`
+  - 347 `boyeQ()`
+  - 348 `drawSafety(BMrel, G, VP, t)`
+  - 369 `cargoUnits(G)`
+  - 370 `drawCargo(BMrel, G, hide)`
+  - 385 `crFrames(X, Q, BMrel, p)`
+  - 394 `crLink(X, a2)`
+  - 397 `drawCrane(BMrel, G, VP, t, d)`
+  - 453 `dkTub(G)`
+  - 454 `drawDeck(BMrel, eye, VP, t, DK)`
+
+## `src/js/view3d/10-gear.js` (260 linjer)
+
+---------- passive gear: buoys at both ends of every set, and the work over the rail when setting and hauling ----------
+
+- **1** passive gear: buoys at both ends of every set, and the work over the rail when setting and hauling
+  - 3 `buildGear()`
+  - 29 `drawGearSea(eye, t, VP, H)`
+  - 51 `drawSetting(BMrel, t, g, G, stack, x0)`
+  - 68 `haulFish(g)`
+  - 77 `haulModel(kind)`
+  - 86 `gopHauls()`
+  - 98 `potDeck(G, HP, sx, d, pw, vt)`
+  - 110 `tankAt(x, z, d, vt)`
+  - 128 `drawPots(BMrel, t, g, G, HP, sx, d, skiff, seg)`
+  - 184 `drawCrabTank(BMrel, G, d, sx, HP)`
+  - 191 `drawGearOp(BMrel, eye, VP, t)`
+
+## `src/js/view3d/11-bunker.js` (65 linjer)
+
+---------- bunker quays: a tank in its bund, the pump with its meter and hose reel, the sign; someone from the boat holds the nozzle ----------
+
+- **1** bunker quays: a tank in its bund, the pump with its meter and hose reel, the sign; someone from the boat holds the nozzle
+  - 3 `buildBunkers()`
+  - 31 `nearestBunker(eye)`
+  - 32 `drawBunker(B, eye, VP, T, BMrel)`
+
+## `src/js/view3d/12-skiff.js` (346 linjer)
+
+---------- boat ----------
+
+- **1** boat
+- **3** the starter boat: a 19 ft centre-console skiff, modelled in detail
+  - 52 `NB()`
+  - 60 `lookMesh(look)`
+  - 67 `nSetup(VP)`
+  - 73 `wearOn(t)`
+  - 74 `wearOff()`
+  - 75 `drawN(m, M)`
+  - 77 `texStrip(Pb, Pt)`
+  - 78 `texQuad(P0, P1, P2, P3)`
+  - 79 `mkTex()`
+  - 80 `upTex(t, cv)`
+  - 81 `drawTexQuad(q, tex, M, VP, lit, nrm)`
+- **89** the open boats worked by hand: one kit per type
+  - 97 `refreshPeople(K)`
+  - 108 `useHand(t)`
+  - 114 `handKit(t)`
+  - 135 `buildSkiff()`
+
+## `src/js/view3d/13-instruments.js` (453 linjer)
+
+---------- the skiff's live instruments ----------
+
+- **1** the skiff's live instruments
+  - 11 `engineOn()`
+  - 12 `paintPlotter()`
+  - 58 `dial(g, cx, cy, r, v0, v1, v, a0, a1, ticks, labels, title, redFr…)`
+  - 69 `paintGauges(dt)`
+  - 85 `paintVhf()`
+  - 95 `paintName(t, liv)`
+  - 102 `markCanvas(cv, txt, light)`
+  - 108 `markTex(t, liv)`
+  - 116 `imgOf(src)`
+  - 117 `curLogo()`
+  - 118 `logoTexOf(L, img)`
+  - 126 `logoQ(t)`
+  - 127 `drawLogo(t, M, VP, L, img)`
+  - 130 `markQ(t)`
+  - 131 `drawMark(t, M, VP, liv)`
+  - 132 `nameCanvas(cv, nm, light)`
+  - 141 `nameTex(nm, light, mark)`
+  - 149 `drawNPCNames(kit, VP)`
+  - 164 `nameQ(t)`
+  - 166 `paintHand()`
+  - 175 `limbM(A, B, r)`
+  - 178 `drawSkiff(BMrel, VP, dt, showSkipper, showCrew)`
+  - 312 `drawSkiffGlass(BMrel, VP)`
+  - 317 `jigRail(t, G)`
+  - 334 `drawJigRail(BMrel, VP, t, G, dt)`
+  - 365 `drawGlass(m, BMrel, VP)`
+  - 371 `buildBoat()`
+  - 397 `buildFlag()`
+  - 409 `flagTex()`
+  - 424 `penTex()`
+  - 437 `mastTop(G)`
+  - 441 `updateFlag(t, appW)`
+
+## `src/js/view3d/14-sea.js` (172 linjer)
+
+---------- sea ----------
+
+- **1** sea
+  - 3 `buildPatch()`
+  - 11 `buildSea()`
+- **20** the waves: wind sea and swell from the sea model (03b-sea.js)
+  - 26 `specW(L0)`
+  - 27 `updateWaves(dt, H)`
+- **53** the near field: the short sea rides with the boat
+  - 62 `nfStep()`
+- **73** the boat's own waves (the uniforms of WAKE_GLSL)
+  - 78 `updateWake()`
+  - 91 `wakeHFast(x, z)`
+- **99** the sea state over the near terrain and the whole map
+  - 106 `ssLevel(n, unit)`
+  - 108 `ssRect(L)`
+  - 109 `ssWork(L, until)`
+  - 132 `ssStep(rdt)`
+  - 134 `ssBlend(L)`
+  - 136 `ssTex(L, x, z, out)`
+  - 143 `ssAt(x, z)`
+  - 152 `seaDisp(x, z, t, S, fade)`
+  - 163 `seaFade(x, z)`
+  - 164 `seaH(x, z, t)`
+  - 170 `seaHFast(x, z, t)`
+
+## `src/js/view3d/15-env-mooring.js` (124 linjer)
+
+---------- environment ----------
+
+- **1** environment
+  - 3 `pal(el)`
+  - 8 `computeEnv(H)`
+- **37** mooring: in along the quay, then the lines: aft spring first, bow line, stern line, fore spring (and in reverse when casting off)
+  - 41 `buildMooring()`
+  - 43 `berthNow()`
+  - 49 `approach(F, bp, u0, du0)`
+  - 60 `pathM(pts)`
+  - 65 `pathAt(M, s)`
+  - 66 `lieAlongside(dt, bp)`
+  - 69 `moorStep(dt, bp, at = dt)`
+  - 101 `drawMooring(BMrel, eye, VP, t)`
+
+## `src/js/view3d/16-motion.js` (225 linjer)
+
+---------- boat motion ----------
+
+- **1** boat motion
+  - 2 `currentFrac()`
+  - 3 `predict(frac)`
+- **11** along the route (Jonas 06.10.2026: «båten strengt må følge rutestreken som lages i kartplotteren», «Svingingen kan være
+  - 24 `trkBuild(pl, dep)`
+  - 51 `trkAt(T, s)`
+  - 57 `trkProj(T, x, z, s0, back = 30)`
+  - 67 `trkOn()`
+  - 83 `trkHaltNeed()`
+  - 88 `trkStep(dt, pr)`
+  - 124 `dynFollow(dt)`
+  - 132 `updateBoat(dt, t, frac, rdt)`
+- **210** particles
+  - 214 `spawn(x, y, z, vx, vy, vz, life, g)`
+  - 216 `drawPts(n, mode, VP, col, size, round, off, mx)`
+
+## `src/js/view3d/17-draw.js` (186 linjer)
+
+---------- drawing ----------
+
+- **1** drawing
+  - 2 `litSetup(VP)`
+  - 8 `drawLit(m, M, hole)`
+  - 17 `terProg(q)`
+  - 25 `drawTerrain(TM, eye, VP, near)`
+  - 45 `buildGround()`
+  - 80 `buildLandMask()`
+  - 103 `lmStep()`
+  - 136 `seaRing(u, eye, y, R, Hl)`
+  - 146 `drawSea(VP, eye, t, far, drop)`
+
+## `src/js/view3d/18-setup.js` (148 linjer)
+
+---------- setup ----------
+
+- **1** setup
+  - 30 `init()`
+  - 126 `anchorAlarm3d(kind)`
+  - 129 `sayBoat(id, txt)`
+  - 131 `sayWorker(pid, idx, nm, no, en)`
+  - 135 `crewFx3d(c, kind, o)`
+  - 137 `say3d(c, no, en)`
+  - 141 `buildLabels()`
+  - 142 `resize()`
+
+## `src/js/view3d/19-wildlife-npc.js` (182 linjer)
+
+---------- wildlife ----------
+
+- **1** wildlife
+  - 2 `bodyLoft(m, L, R, prof, col, belly, y0)`
+  - 6 `buildWild()`
+  - 33 `wildSpawn(t)`
+  - 47 `blow(x, y, z)`
+  - 48 `drawWild(eye, t, dt, M0)`
+  - 102 `drawBlows(VP, eye, dt)`
+- **112** other vessels
+  - 113 `shipHull(m, L, B, D, F, hull, bottom, deck)`
+  - 120 `windows(m, x0, x1, y, z, h, col, sideX)`
+  - 121 `buildNPC()`
+  - 151 `pvm(t, liv)`
+  - 166 `personMesh(kind, look, key)`
+  - 178 `people()`
+
+## `src/js/view3d/20-trawl-seine.js` (272 linjer)
+
+---------- the trawl (tools/boats/tral60.py; Jonas 06.10.2026: «en tråler har slike tråldører på hekken som senkes i havet ved
+
+- **1** the trawl (tools/boats/tral60.py; Jonas 06.10.2026: «en tråler har slike tråldører på hekken som senkes i havet ved
+  - 8 `trawlKit(t)`
+  - 16 `alongM(A, d)`
+  - 23 `trawlState(now)`
+  - 32 `drawTrawl(t, A, BMrel, now)`
+- **57** the purse seine (tools/boats/not75.py; Jonas 06.10.2026: «Denne kan både bruke ringnot og trål og trenger dermed
+  - 63 `seineState(now)`
+  - 69 `drawSeine(t, A, BMrel, VP, now)`
+  - 108 `drawDeckCrew(BMrel, eye, VP, t, G)`
+  - 167 `spHold(f)`
+  - 170 `deckWork(G)`
+  - 178 `drawHelmKit(BMrel, eye, G)`
+  - 187 `drawVessel(t, G, BMrel, VP, skipper, ncrew, onDeck, liv, named)`
+  - 209 `npcMesh(n, lod)`
+  - 218 `drawNPC(eye, t, H, VP)`
+  - 251 `npcCrewDraw(n, K, eye, t)`
+
+## `src/js/view3d/21-rescue-anchor.js` (165 linjer)
+
+---------- the rescue boat (tools/boats/redning.py) and its tow line, where core/05-vessels.js towPose says ----------
+
+- **1** the rescue boat (tools/boats/redning.py) and its tow line, where core/05-vessels.js towPose says
+  - 4 `drawTowLine(BMrel, VP)`
+- **14** the boat's own anchor (tools/deck/anker.py, core/06e-anchor.js; Jonas 21.10.2026)
+  - 27 `frameM(o, z, up, s)`
+  - 29 `drawMany(m, Ms)`
+  - 31 `ancMesh(bw)`
+  - 36 `ancStow(F, P, bw, L)`
+  - 47 `rodePts(A, F, Lr, n)`
+  - 60 `rodeDraw(pts, dm, rope, wy, Lr, CH, M)`
+  - 82 `ancSplash(x, y, z, n, up)`
+  - 85 `drawNPCAnchor(n, K)`
+  - 89 `drawAnchor(BMrel, eye, VP, t)`
+  - 138 `buildRescue()`
+  - 144 `drawRescue(BMrel, eye, VP, t)`
+  - 158 `drawRescueLights(VP, t)`
+
+## `src/js/view3d/22-docks-air.js` (172 linjer)
+
+---------- the coast harbours' floating docks and mooring buoys (core/05-vessels.js moorHarbour, tools/harbour/brygge.py) ----------
+
+- **1** the coast harbours' floating docks and mooring buoys (core/05-vessels.js moorHarbour, tools/harbour/brygge.py)
+  - 5 `buildDocks()`
+  - 11 `drawDocks(eye, t, VP)`
+- **43** the floating docks among the packs' piers (01c-vec.js flyteTile, tools/harbour/brygge.py; tilbakemelding #94)
+  - 56 `floatFree(k)`
+  - 57 `floatJob(t, FD, solid)`
+  - 108 `drawFloats(eye, t, VP)`
+- **126** aircraft (tools/air/fly.py) where core/05c-air.js airStates puts them, within about 15 km of the eye
+  - 128 `buildAir()`
+  - 133 `drawAir(eye, t, H, VP)`
+  - 147 `drawAirLights(VP, t)`
+  - 157 `drawNPCGlass(VP)`
+  - 158 `drawNPCLights(VP)`
+
+## `src/js/view3d/23-camera-frame.js` (101 linjer)
+
+---------- the chase camera stays out of solid things ----------
+
+- **1** the chase camera stays out of solid things
+  - 7 `camSolid(x, z, sx, sz, ry, y0, y1, tag)`
+  - 14 `camBuildings(key)`
+  - 22 `camBld(B, idx, tag)`
+  - 33 `camDropTag(tag)`
+  - 36 `camFree(o, e)`
+  - 59 `camInside(x, y, z)`
+  - 66 `compassStrip(W, H, dpr)`
+  - 78 `compassDraw(az, p)`
+- **91** frame
+  - 95 `fpsEl()`
+
+## `src/js/view3d/24-cinema.js` (413 linjer)
+
+---------- cinema (the user's wish 03.10.2026) ----------
+
+- **1** cinema (the user's wish 03.10.2026)
+  - 8 `kinoWant(K, t)`
+  - 19 `kinoNext(t)`
+  - 38 `kinoCam(t, rdt)`
+  - 58 `introStart(sec)`
+  - 63 `frame()`
+  - 65 `frame0()`
+  - 235 `snapTake()`
+  - 240 `drawRoute(VP, eye)`
+  - 252 `driftSpray(VP, eye, dt, t, col)`
+  - 267 `drawSmoke(VP, eye, BM, dt)`
+  - 294 `drawEffects(VP, eye, BM, dt, t)`
+  - 395 `updateLabels(VP, eye, W, Hh)`
+
+## `src/js/view3d/25-controls.js` (84 linjer)
+
+---------- controls ----------
+
+- **1** controls
+  - 18 `paintView(on)`
+  - 23 `paintAim(C, yawW)`
+  - 30 `showroom(type)`
+  - 39 `show(on, auto)`

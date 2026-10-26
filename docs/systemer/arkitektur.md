@@ -13,6 +13,8 @@
    - Rasterkartene (land, dybde, avstand til land, eksponering, høyde og skog) ligger i kartpakker i `dist/map/`, som spillet henter (4.6).
    - Resten er base64-blobber i `<script type="application/octet-stream">`, blant annet vei, bygg, fin kyst og båtmodellene.
 
+**Filene (E1, 26.10.2026):** `view3d.js` (6 035 linjer) er delt i `src/js/view3d/00-head.js` til `25-controls.js`, og telefonen `05-phone.js` (2 120 linjer) i `src/js/ui/phone/00-shell.js` til `14-act.js`, én fil per seksjon eller app. Delene er rent flytt etter kommentaroverskriftene, og malen setter dem sammen i samme `<script>` i nummerrekkefølge, så bygget ble byte-identisk (`cmp` på `dist/index.html` for hver commit). Hver del er et stykke av én funksjon (`const G3 = (() => { … })()` og `const PHONE = (() => { … })()`), så en del kan ikke kjøres eller `node --check`-es alene: syntaksen sjekkes med `node build.mjs` og `node --check dist/index.html`-lignende kjøring av testene. Der dokumentene sier «`view3d.js`» eller «`05-phone.js`», menes nå mappene; `docs/systemer/kodekart.md` viser hvilken del en funksjon ligger i. `COVER` i `tests/run.py` har hver del med testene som dekker innholdet.
+
 ## 4.2 Tilstand og tid
 
 - `S` er hele spilltilstanden. Lagres i `localStorage` under `KEY`, med `v:1`.
