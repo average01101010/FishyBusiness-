@@ -203,7 +203,7 @@ function tutStep(){
   for (let i = 0; i < TSTEPS.length; i++){ const st = TSTEPS[i]; if (S.tut.m[st.id]) continue; if (TSTEPS.slice(i + 1).some(q => S.tut.m[q.id])){ tutSettle(st.id); continue; } if (st.done()){ if (!st.live){ for (const q of TSTEPS){ if (q === st) break; tutSettle(q.id); } tutMark(st.id); } continue; } return st; }
   return null;
 }
-function tutFinish(){ if (S.tut && S.tut.m && !S.tut.m.free_ice) S.iceFree = 1; if (typeof cloudEv === 'function' && S.tut && S.tut.t0) cloudEv('tut_done', {s:Math.round((Date.now() - S.tut.t0) / 1000), r:S.tut.reg || null, home:S.home || null}); S.tut = 0; log('Første tur er fullført. Nå er du din egen skipper.', 'The first trip is done. Now you are your own skipper.'); save(); tutUpdate(); if (typeof refreshAll === 'function') refreshAll(); if (typeof pushAsk === 'function') setTimeout(pushAsk, 3000); }
+function tutFinish(){ if (S.tut && S.tut.m && !S.tut.m.free_ice) S.iceFree = 1; if (typeof cloudEv === 'function' && S.tut && S.tut.t0) cloudEv('tut_done', {s:Math.round((Date.now() - S.tut.t0) / 1000), r:S.tut.reg || null, home:S.home || null}); S.tut = 0; log('Første tur er fullført. Nå er du din egen skipper.', 'The first trip is done. Now you are your own skipper.'); save(); tutUpdate(); if (typeof refreshAll === 'function') refreshAll(); S.pushWait = 1; }
 function tutScrollSlip(){ const v = $('drawerBody'), t = v && v.querySelector('.slipt'); if (t) v.scrollTop = Math.max(0, t.offsetTop - 60); }
 // what the guide lets the player do on each step; the rest waits until the first trip is done
 const TUT_ALLOW = {start:['cast1', 'cast2'], waypoint:['route1', 'fish2', 'route2'], sell:['land']};
@@ -235,6 +235,9 @@ function tutView(st){
 function tutUpdate(){
   if (tutOn() && S.boat && !S.boat.gear && !S.tut.m.free_jig) S.boat.gear = true;   // a first trip begun before the jig came with the boat
   if (tutOn() && !S.tut.m.nout) tutNaustTry();
+  if (tutOn() && !S.apps && !S.tut.m.gps) S.apps = {};   // a new game: the phone shows what the first trip uses (07c-handbook.js appShown, O5)
+  // the push question at the first real wait after the first trip, the boat out on her own (O5; was three seconds after the trip)
+  if (!tutOn() && S.pushWait && ['sailing', 'fishing'].includes(S.boat.status)){ S.pushWait = 0; if (typeof pushAsk === 'function') setTimeout(pushAsk, 3000); }
   if (tutOn() && !S.tut.m.fish1 && holdTotal() > 0) tutFishEv();
   // the point in the ring gets its hour of fishing of itself (the first trip teaches the route, not the fishing time)
   if (tutOn() && !S.tut.m.cast1){ const k = tutFieldWp(S.draft); if (k >= 0 && !(S.draft[k].fish >= TUT_FISH_H)){ S.draft[k].fish = TUT_FISH_H; if (typeof panelDirty !== 'undefined') panelDirty = true; } }

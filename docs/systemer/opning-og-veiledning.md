@@ -151,3 +151,13 @@ Jonas valgte 1A–8A og sa «kjør på» 27.10.2026. Fasene O0–O6 står i plan
   - Admin-lista `HB_TIPS` har de nye dryppene.
 - **Tester:** `tut.py` har ny `ORDER` og sjekker isen som åpen oppgave, linja om vanlig fiske, og at ingen er mønstret på. `icestep.py` del 3 prøver isen som drypp etter første tur.
 
+### O5: det som skjules (27.10.2026, V7 A)
+
+- **Telefonen** (`appShown` i `07c-handbook.js`, brukt av app-rutenettet i `ui/phone/08-home-papers-merker.js`):
+  - I første tur vises bare Vær, Meldinger, Redning, Håndboka, Tilbakemelding og Innstillinger (`APP_ALWAYS`).
+  - Etter første tur kommer hver app fram når dryppet dens vises (`HB_APP`: `guide`, `lykke` → Kaiboden, `regler`, `sesong`, `post`, `meld`, `drift`, `topp` → Salgslaget, `merker`, `patch`, `oppdrag`, `venner`, `rederi`, `kvote`, `vaer`, `redning`). Appen har da merket «ny» (`.bd.ny`) til den åpnes (`appSeen` i `14-act.js`).
+  - Fra tredje levering vises alt, så ingen holdes borte fra noe lenge.
+  - Et spill fra før har ingen `S.apps` og ser alt som før. Et nytt spill får `S.apps = {}` i `tutUpdate` før `gps`.
+- **Knappelinja ved mottaket i første tur:** bare Mottak (og hvile). Butikk, Bygd, Verft og Beholdning kommer etter første tur (`10c-dock.js`).
+- **Push-spørsmålet** kommer første gang båten går eller fisker etter første tur (`S.pushWait`, satt i `tutFinish`, tatt i `tutUpdate`), ikke tre sekunder etter at turen er ferdig.
+

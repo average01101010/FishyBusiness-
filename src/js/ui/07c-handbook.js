@@ -135,10 +135,24 @@ function hbSkip(ch, id){ const H = hbState(); H.skip[ch] = 1; if (id){ H.seen[id
 // the tips whose moment has come and that have not been seen: the dot on the app
 function hbReady(){ const H = hbState(); return HB.filter(x => !H.seen[x.id] && !H.skip[x.ch] && hbTry(x.when)).length; }
 // the drip's box, drawn by the guide's code (tipPlace in 07b-first-trip.js); true when something is shown
+// ---------- what the phone shows (Onboarding 2, O5, V7 A, 27.10.2026) ----------
+// The first trip shows only what it uses; after it each app comes out, marked «ny», when its drip comes (or its chapter is put to rest), and
+// from the third landing everything is out, so nobody is kept from anything for long. S.apps: {id:'ny' | 1}; a game from before has none
+// and sees everything as it did
+const APP_ALWAYS = ['vaer', 'meld', 'redning', 'handbok', 'tilbake', 'innst', 'admin'];
+const HB_APP = {guide:'guide', lykke:'kaiboden', regler:'regler', sesong:'sesong', post:'post', meld:'meld', drift:'drift', topp:'salg', merker:'merker', patch:'patch', oppdrag:'ordl', venner:'folk', rederi:'rederi', kvote:'kvote', vaer:'vaer', redning:'redning'};
+function appShown(id){
+  if (!S.apps || APP_ALWAYS.includes(id) || S.apps[id]) return true;
+  return !tutOn() && hbLand() >= 3;
+}
+function appUnlock(id){ if (id && S.apps && !S.apps[id]) S.apps[id] = 'ny'; }
+const appNew = id => !!(S.apps && S.apps[id] === 'ny');
+function appSeen(id){ if (S.apps && S.apps[id] === 'ny') S.apps[id] = 1; }
 function hbUpdate(){
   if (typeof NAUST3D !== 'undefined' && NAUST3D.isOpen()) return false;
   if (typeof PUB3D !== 'undefined' && PUB3D.isOpen && PUB3D.isOpen()) return false;
   const t = hbPick(); if (!t) return false;
+  appUnlock(HB_APP[t.id]);   // its app comes out with it (O5)
   let T0 = {}; if (t.show){ try { T0 = t.show() || {}; } catch (e){ T0 = {}; } }
   if (PHONE.isOpen() && T0.el && !T0.el.closest('#phone')) T0 = {el:vis('#phone .ph-nav [data-pa=close]'), no:'Lukk telefonen først.', en:'Close the phone first.'};
   const txt = T0.no ? hbL(T0.no, T0.en) : hbL(t.no, t.en);
