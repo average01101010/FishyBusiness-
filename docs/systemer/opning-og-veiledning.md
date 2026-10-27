@@ -129,4 +129,5 @@ Jonas valgte 1A–8A og sa «kjør på» 27.10.2026. Fasene O0–O6 står i plan
 - **«Kast loss» sier selv hva den venter på** (`tutStartWhy`, vist over knappen i rutepanelet i `07-guide.js`): «Legg et punkt i ringen … først» eller «Ruta skal ende i …». Knappen er grå til det er gjort, i stedet for en toast etter trykket. Sperrene i `tutAllow` er som før.
 - **Ikke gjort i O2:** «Lever» som grå knapp (levering andre steder enn mottaket for første tur er allerede skjult), og `deck` ved første fisk (kommer med O3, sammen med fisketida).
 - `tut.py`: ny `ORDER` (`n1`, `nout`, `intro`, `gps`, `route1`, `cast1`, `sail`, …), `sail` kan hoppes over når båten er framme.
+- **Energien står stille under første tur** (27.10.2026, Jonas: «Kan vi ikke bare skru av energien til etter tutorialen?»): `energyMinute` (`core/15-energy.js`) trekker ikke energi, vekker en sovende og tar bort døsingen så lenge `S.tut.v === 2`. Før kunne en spiller som gikk fra båten i mange timer midt i turen sovne, og båten drev i land der ruta hjem ikke fant noen vei. Energien går som vanlig fra minuttet etter første tur. Skippertak er ikke berørt, og gjester kan ikke kjøpe noe i første tur uansett.
 
