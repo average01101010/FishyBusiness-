@@ -108,7 +108,7 @@
   // 8 bits hold it), rolls the birth windows, and FOAM_FS adds the foam made this frame; the sea shader reads it (foamBind, unit 7) and
   // ages it as exp(-age / tau). «#foam0» in the address turns it off (the sea as before, for the comparison); it is off too on the lite
   // and the basic sea, on the low quality (the far shader draws the near sea there), and when no framebuffer can be made.
-  const FOAM = {on:!/foam0/.test(location.hash), ok:false, N:0, M:600, tex:[null, null], fb:[null, null], r:0, ox:0, oz:0, t0:[0, 0], win:[160, 32], tau:[20, 4.5], now:[0, 0], prog:null, pB:null, fresh:true, why:'', ms:0};
+  const FOAM = {on:!/foam0/.test(location.hash), ok:false, N:0, M:600, tex:[null, null], fb:[null, null], r:0, ox:0, oz:0, t0:[0, 0], win:[160, 32], tau:[20, 3.5], now:[0, 0], prog:null, pB:null, fresh:true, why:'', ms:0, sh:[0, 0], n:0};
   const foamLive = () => FOAM.on && FOAM.ok;
   const foamSize = () => QUAL.lvl >= 2 ? 1024 : 512;
   function foamFree(){ for (let k = 0; k < 2; k++){ if (FOAM.fb[k]) gl.deleteFramebuffer(FOAM.fb[k]); if (FOAM.tex[k]) gl.deleteTexture(FOAM.tex[k]); FOAM.fb[k] = FOAM.tex[k] = null; } FOAM.ok = false; }
@@ -162,7 +162,7 @@
     gl.uniform4f(u.uFB, pb[0] - FOAM.ox, pb[1] - FOAM.oz, qx - FOAM.ox, qz - FOAM.oz); gl.uniform4f(u.uFH, pb[2], pb[3], fx, fz);
     gl.uniform4f(u.uHull, (VG.stern - VG.bow) || 6, (VG.beam || 2.4) / 2, -(VG.bow || -2.2), VG.stern || 3.1); gl.uniform4f(u.uFSp, (WK.kn || 0) * 0.5144, WK.Fr || 0, BOAT.planing ? 1 : 0, dt);
     attr(0, SKYQ, 2); gl.drawArrays(gl.TRIANGLES, 0, 6);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null); FOAM.r = w; FOAM.pB = [qx, qz, fx, fz]; FOAM.ms = FOAM.ms * 0.9 + (performance.now() - t1) * 0.1;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null); FOAM.r = w; FOAM.pB = [qx, qz, fx, fz]; FOAM.ms = FOAM.ms * 0.9 + (performance.now() - t1) * 0.1; FOAM.sh = [sx, sz]; FOAM.n++;
   }
   // the sea shader reads the map (unit 7) where it is on
   function foamBind(u){
