@@ -45,7 +45,8 @@ function plan2New(over){
 // the plan the new engine runs: with the switch off, none (today's plan is left alone); on, a v4, and an older plan is switched off with a word
 function plan2Ops(){
   if (!DRIFT2) return null;
-  const o = S.ops; if (!o) return null; if (o.v === DRV2) return o;
+  const o = S.ops; if (!o) return null;
+  if (o.v === DRV2){ if (o.rig === 'line' && o.places.some(q => q.k === 'felt' && !q.lk)){ for (const q of o.places) if (q.k === 'felt' && !q.lk){ q.lk = p2LineKind(o); q.n = Math.max(1, Math.min(q.n, p2Left(o, q))); } } return o; }   // (fields from before 27.10.2026: the line's kind and the tubs the boat owns)
   S.ops = null;
   msg(gL('Driftsplan', 'Operations plan'), 'Driftsplanen er laget på nytt. Den gamle planen for «' + S.boatName + '» er slått av. Lag en ny under Driftsplan. Redskapet i sjøen står der det står.', 'The operations plan has been made anew. The old plan for «' + S.boatName + '» is switched off. Make a new one under Operations plan. The gear in the sea stays where it is.');
   return null;
@@ -153,14 +154,14 @@ function planDay(o, H0, st){
     } else if (fetch) skipped.push({id:q.id, no:'ingenting står her', en:'nothing stands here'});
     else {
       const n = Math.min(q.n, readyOf(q));
-      if (n >= 1){ go(q); steps.push({t, k:'sett', pid:q.id, n, kind, lk:q.lk || null, h:n * W.sett[kind]}); t += n * W.sett[kind]; setToday += n; if (kind === 'line') setTodayK[q.lk || 'hyse'] = (setTodayK[q.lk || 'hyse'] || 0) + n; pending.push({q, due:t + q.soak, setToday:true}); }
+      if (n >= 1){ go(q); steps.push({t, k:'sett', pid:q.id, n, kind, lk:q.lk || null, h:n * W.sett[kind]}); t += n * W.sett[kind]; setToday += n; if (kind === 'line') setTodayK[q.lk || 'hyse'] = (setTodayK[q.lk || 'hyse'] || 0) + n; pending.push({q, due:t + q.soak, setToday:true, n}); }
       else { const lost = (st.lost || []).find(e => e.kind === kind && dist(e, q) < 0.5); skipped.push(lost ? {id:q.id, no:'redskapet gikk tapt i været (' + lost.n + ' ' + unitName(kind, lost.n) + '). Meld det til Kystvakten under Beholdning', en:'the gear was lost in the weather (' + lost.n + ' ' + unitName(kind, lost.n) + '). Report it to the Coast Guard under Inventory'} : {id:q.id, no:kind === 'line' ? 'lina er ikke egnet' : kind === 'teine' ? (st.aboard.teine < 1 ? 'ingen teiner om bord' : 'ikke nok agn til teinene') : 'ingen garn om bord', en:kind === 'line' ? 'the line is not baited' : kind === 'teine' ? (st.aboard.teine < 1 ? 'no pots aboard' : 'not enough bait for the pots') : 'no nets aboard'}); }
     }
   }
   // what the day must still hold after the fishing: the hauls due today, the landing (decided now, from the rule and the hold) and the way home
   const dueToday = pending.filter(p => p.due != null && p.due <= endBy).sort((a, b) => a.due - b.due);
   const mustFresh = st.hold > 0.5 && keepF(keepDay(st.fresh) + 1) < DRP2.freshLand, L = o.land || {when:'full'};
-  const willFish = (jig && (jigs.length || dueToday.length)) || dueToday.length > 0;
+  const willFish = (jig && (jigs.length || preJigs.length || dueToday.length)) || dueToday.length > 0;
   const land = watch ? false : fetch ? (st.sets.length > 0 || st.hold > 0.5) : L.when === 'trip' ? (willFish || st.hold > 0.5) : L.when === 'days' ? ((st.dayIndex % Math.max(1, L.days || 2)) === 0 && (willFish || st.hold > 0.5)) || st.hold >= DRP2.full * st.cap || mustFresh : st.hold >= DRP2.full * st.cap || mustFresh;
   const lineUn = kind === 'line' ? st.aboard.line.n - st.aboard.line.baited + dueToday.reduce((a, p) => a + (p.s ? p.s.n : 0), 0) : 0;
   const needBait = (kind === 'teine' && (st.aboard.teine + potsSea) >= 1 && st.aboard.bait < baitRound - 1e-6) || (kind === 'line' && lineUn >= 1 && st.aboard.bait < lineUn * LINE_KINDS.hyse.baitKg - 1e-6), toM = (land || needBait) && !!plan2P(o, 'M');
@@ -177,7 +178,7 @@ function planDay(o, H0, st){
   // tubs are left and the soak fits before the day ends
   for (const p of dueToday){
     go(p.q); const tArr = t; t = Math.max(t, p.due);
-    const n = p.s ? p.s.n : Math.min(p.q.n, kind === 'line' ? readyOf(p.q) : ready); const soakH = p.s ? t - p.s.tSet / 60 : p.q.soak, wait = t - tArr;
+    const n = p.s ? p.s.n : p.setToday ? p.n : Math.min(p.q.n, kind === 'line' ? readyOf(p.q) : ready); const soakH = p.s ? t - p.s.tSet / 60 : p.q.soak, wait = t - tArr;   // (a string set today is hauled whole: its units, not the tubs left aboard)
     let reset = kind !== 'line'; if (kind === 'line'){ const left = readyOf(p.q); reset = left >= 1 && t + n * W.trekk.line + p.q.soak + n * W.trekk.line + DRP2.landH + 2 <= endBy; }
     steps.push({t, k:'trekk', pid:p.q.id, n, kind, h:n * W.trekk[kind], soakH, reset, wait, due:p.due}); t += n * W.trekk[kind]; if (kind === 'line') hauledLine += n;
     if (reset){ steps.push({t, k:'sett', pid:p.q.id, n, kind, lk:p.q.lk || null, h:n * W.sett[kind]}); t += n * W.sett[kind]; if (kind === 'line'){ setToday += n; setTodayK[p.q.lk || 'hyse'] = (setTodayK[p.q.lk || 'hyse'] || 0) + n; } }
@@ -250,6 +251,8 @@ function plan2Check(o, st){
   if (kind){ const own = ownedUnits(kind), want = F.reduce((a, f) => a + f.n, 0), sk = DRP2.soak[kind];
     { const k = (S.pgear && S.pgear.kits ? S.pgear.kits.n : 0) || 0; if (F.length > k) Wn.push(no('Hver lenke i sjøen trenger et blåsesett, og båten har ' + k + ' til ' + F.length + ' felt. Kjøp i utstyrsbutikken.', 'Every string in the sea needs a buoy set, and the boat has ' + k + ' for ' + F.length + ' fields. Buy them at the gear shop.')); }
     if (want > own) Wn.push(no('Feltene vil ha ' + want + ' ' + unitName(kind, want) + ', men båten eier ' + own + '. De første feltene får det som finnes.', 'The fields want ' + want + ' ' + unitName(kind, want) + ', but the boat owns ' + own + '. The first fields get what there is.'));
+    for (const [i, f] of F.entries()){ const km = kind === 'line' ? f.n * LINE_KINDS[f.lk || 'hyse'].hooks * GEAR.line.kmHook : f.n * GEAR[kind].km; let room = true; try { room = !!(f.hdg != null ? setGeomExact(f, f.hdg, km) : setGeom(f, 0, km)); } catch (e){}
+      if (!room) Wn.push(no('Lenka på felt ' + (i + 1) + ' er ' + fmt(km, 1) + ' km og får ikke plass der' + (f.hdg != null ? ' i den retningen' : ' i noen retning') + '. Flytt feltet lenger ut, gi lenka en annen retning i kartet, eller del stampene på flere felt.', 'The string at field ' + (i + 1) + ' is ' + fmt(km, 1) + ' km and has no room there' + (f.hdg != null ? ' on that heading' : ' in any direction') + '. Move the field further out, give the string another heading in the chart, or split the tubs over more fields.')); }
     if (kind === 'line') for (const lk of ['hyse', 'bank']){ const w = F.filter(f => (f.lk || 'hyse') === lk).reduce((a, f) => a + f.n, 0), ow = p2Units('line', lk); if (w > ow) Wn.push(no('Feltene vil ha ' + w + ' stamper ' + LINE_KINDS[lk].no.toLowerCase() + ', men båten eier ' + ow + '.', 'The fields want ' + w + ' tubs of ' + LINE_KINDS[lk].en.toLowerCase() + ', but the boat owns ' + ow + '.')); }
     for (const f of F){ if (f.soak < sk[0]) Wn.push(no('Ståtiden ' + f.soak + ' t er kort for ' + GEAR[kind].no.toLowerCase() + '.', 'A soak of ' + f.soak + ' h is short for ' + GEAR[kind].en.toLowerCase() + '.')); else if (f.soak > sk[3]) Wn.push(no('Ståtiden ' + f.soak + ' t er lang for ' + GEAR[kind].no.toLowerCase() + '. Fangsten forringes og redskapet kan gå tapt.', 'A soak of ' + f.soak + ' h is long for ' + GEAR[kind].en.toLowerCase() + '. The catch spoils and the gear can be lost.')); }
     if (kind === 'garn' && st.crewMax < 1) E.push(no('Garn krever to om bord, og båten har ikke plass til flere.', 'Nets need two aboard, and the boat has no room for more.')); }

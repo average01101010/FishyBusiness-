@@ -341,20 +341,20 @@ async def main():
         L = await pg.evaluate("""(async () => { const R = {};
           D2.reset(51); const home = D2.boat('sjark', 2, true); D2.gear('line', 4); const pg = S.pgear; pg.lines.bank.n = 10; pg.lines.bank.baited = 10; pg.lines.bank.bt = {makrell:10}; pg.bait = {makrell:80};
           await mapNeed(portById(home).p, 14); const F = D2.spots(2, 4, 12), J = D2.spots(1, 2.5, 4);
-          const o = S.ops = plan2New({home, rig:'line', jig:true, places:[D2.felt('f1', F[0], 4, 6, 'hyse'), D2.felt('f2', F[1], 10, 6, 'bank'), D2.juks('j1', J[0])], dep:5, land:{mode:'near', port:null, when:'trip'}}); o.M = D2.plant(o);
+          const o = S.ops = plan2New({home, rig:'line', jig:true, places:[D2.felt('f1', F[0], 4, 6, 'hyse'), D2.felt('f2', F[1], 4, 6, 'bank'), D2.juks('j1', J[0])], dep:5, land:{mode:'near', port:null, when:'trip'}}); o.M = D2.plant(o);
           R.units = {hyse:p2Units('line', 'hyse'), bank:p2Units('line', 'bank'), leftF1:p2Left(o, o.places[0]), leftF2:p2Left(o, o.places[1]), kind:p2LineKind(o)};
           const d = D2.dry(o, D2.T0 / 60 + 2); R.dryText = d.text; R.sets = d.day.steps.filter(s => s.k === 'sett').map(s => [s.pid, s.lk, s.n]);
           // a third field of hyseline gets nothing: the four tubs are on field 1 (the page refuses it, the day skips it)
           o.places.splice(2, 0, D2.felt('f3', F[1], 2, 6, 'hyse')); const d2 = D2.dry(o, D2.T0 / 60 + 2); R.skipped3 = d2.day.skipped.map(x => x.id); o.places.splice(2, 1);
           DRIFT2 = true; const err = await D2.make(o); if (err) return {err}; o.on = true; let seaMax = {};
-          const Lr = await D2.run(1440, 'open', 'S15', () => { for (const s of mySets()) seaMax[s.fid] = [s.lk, s.n]; }); R.sea = seaMax; R.ev = Lr.ev.length; R.fin = Lr.fin; R.log = Lr.log.filter(e => /Setter|lina|line/i.test(e[1])).slice(0, 6); return R; })()""")
+          const Lr = await D2.run(1440, 'open', 'S15', () => { for (const s of mySets()) seaMax[s.fid] = [s.lk, s.n]; }); R.sea = seaMax; R.ev = Lr.ev.length; R.fin = Lr.fin; R.log = Lr.msgs.filter(e => /Kunne ikke|plass/i.test(e[1])).slice(0, 4); return R; })()""")
         if L.get('err'): print('FEIL S15 plan2Make:', L['err'])
         else:
-            print('  enheter:', L['units']); print('  sett:', L['sets']); print('  i sjøen:', L['sea'])
+            print('  enheter:', L['units']); print('  sett:', L['sets']); print('  i sjøen:', L['sea'], L['log'])
             print(ok(L['units']['hyse'] == 4 and L['units']['bank'] == 10 and L['units']['leftF1'] == 4 and L['units']['leftF2'] == 10 and L['units']['kind'] == 'bank'), 'S15 the tubs are counted per line kind, and a new field would get the kind with most left', L['units'])
-            print(ok(L['sets'] == [['f1', 'hyse', 4], ['f2', 'bank', 10]]), 'S15 the day sets each field with its own kind and tubs', L['sets'])
+            print(ok(L['sets'] == [['f1', 'hyse', 4], ['f2', 'bank', 4]]), 'S15 the day sets each field with its own kind and tubs', L['sets'])
             print(ok('f3' in L['skipped3']), 'S15 a third hyseline field has no tubs left and is skipped in the day', L['skipped3'])
-            print(ok(L['sea'].get('f1') == ['hyse', 4] and L['sea'].get('f2') == ['bank', 10]), 'S15 the engine sets the haddock line at field 1 and the bank line at field 2', L['sea'])
+            print(ok(L['sea'].get('f1') == ['hyse', 4] and L['sea'].get('f2') == ['bank', 4]), 'S15 the engine sets the haddock line at field 1 and the bank line at field 2', L['sea'])
         print('== S16: juksplassen først i lista: juksa mesteparten av dagen, lina settes før hjemturen og trekkes neste morgen')
         L = await pg.evaluate("""(async () => { const R = {};
           D2.reset(52); const home = D2.boat('sjark', 2, true); D2.gear('line', 4); await mapNeed(portById(home).p, 14); const F = D2.spots(1, 4, 10), J = D2.spots(1, 2.5, 4);

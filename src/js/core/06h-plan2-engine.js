@@ -299,7 +299,7 @@ function plan2Go(o, H, i0){
 // out on a trip: the soak is kept (a haul never starts before its hour), and a hold that fills lands before the day is over
 function plan2Sea(o, H){
   const b = S.boat, pl = S.plan; if (!pl || !pl.p2) return;
-  if (pl.opsK === 'fish' && !pl.cut && !pl.returning){ if (meAboard() && S.energy != null && S.energy <= DRP2.enMin) plan2Cut(o, 'energy'); else if (o.rhythm !== 'watch' && drTired()) plan2Cut(o, 'tired'); }
+  if (pl.opsK === 'fish' && !pl.cut && !pl.returning && o.rhythm !== 'watch'){ if (meAboard() && S.energy != null && S.energy <= DRP2.enMin) plan2Cut(o, 'energy'); else if (drTired()) plan2Cut(o, 'tired'); }   // (round the clock: the watches rest, you in the bunk, plan2WatchTick)
   const nx = pl.wps[pl.idx];
   // (the jig before a haul ends when the soak is up, whether she came to the grounds early or late: the haul starts at its hour)
   if (nx && nx.act && nx.act.due && b.status === 'fishing' && b.fishUntil != null && !b.gop && !b.deckStop){ const legMin = dist(b.pos, nx) / (Math.max(1, BOAT.vcruise || 7) * NM) * 60; const at = Math.max(S.t, Math.round(nx.act.due * 60 - legMin + 6)); if (Math.abs(b.fishUntil - at) > 2) b.fishUntil = at; }   // (six minutes to spare: she is never early)
@@ -359,9 +359,11 @@ function plan2WatchTick(H){
   const o = plan2Ops(), me = meAboard(), on = !!o && o.on && o.rhythm === 'watch' && S.crew.length + (me ? 1 : 0) >= 4;
   if (!on){ for (const c of S.crew) if (c.sleepW) delete c.sleepW; return; }
   // you keep the day watch (06-18) and sleep in the bunk the night watch (Jonas 26.10.2026); the bunk is the game's own (15-energy.js restStart)
-  if (me && S.boat.status !== 'port' && S.plan && S.plan.ops){ const mine = plan2Watch(H).w === 'A';
-    if (!mine && !resting() && restWhere(S.boat) === 'koye' && !S.sleep) restStart();
-    else if (mine && resting() && S.rest && S.rest.w === 'koye') restEnd(); }
+  if (me && S.boat.status !== 'port' && S.plan && S.plan.ops){ const mine = plan2Watch(H).w === 'A', r = o.run || (o.run = {});
+    // out of energy on your own watch: six hours in the bunk, the mate has the deck (said once)
+    if (mine && S.energy != null && S.energy <= DRP2.enMin && !resting() && restWhere(S.boat) === 'koye' && !S.sleep){ r.nap = H + 6; restStart(); plan2Say(o, 'Du er tom for energi midt i vakta og går i køya seks timer. Styrmannen har dekket.', 'You are out of energy in your watch and take six hours in the bunk. The mate has the deck.'); }
+    else if (!mine && !resting() && restWhere(S.boat) === 'koye' && !S.sleep) restStart();
+    else if (mine && resting() && S.rest && S.rest.w === 'koye' && !(r.nap && H < r.nap)){ r.nap = null; restEnd(); } }
   const sk = meAboard() ? null : crewSkipper(), m0 = crewMate(), mate = m0 && m0 !== sk ? m0 : S.crew.find(c => c !== sk) || null, deck = S.crew.filter(c => c !== sk && c !== mate);
   const A = [sk].filter(Boolean).concat(deck.filter((c, i) => i % 2 === 0)), B = [mate].filter(Boolean).concat(deck.filter((c, i) => i % 2 === 1)), off = plan2Watch(H).w === 'A' ? B : A;
   for (const c of S.crew){ if (off.includes(c)) c.sleepW = true; else delete c.sleepW; }
