@@ -94,6 +94,8 @@ if (!S.kc){ S.kc = 1; let kg = 0;
 delete S.tubs; delete S.clean; delete S.rodN; delete S.rodBest; for (const v of S.fleet || []){ delete v.tubs; delete v.clean; }
 // before 01.10.2026 a hauler fitting had no length and never finished (until NaN, saved as null), which kept the boat in port
 for (const v of S.fleet) withVessel(v, () => { for (const j of S.jobs || []) jobOk(j); if (S.plan && S.plan.depAt != null && !Number.isFinite(S.plan.depAt)) S.plan.depAt = S.t; });
+// a way round shallow water that was being found when the game was closed is never answered: the next minute finds it again (#97)
+for (const v of S.fleet) withVessel(v, () => { if (S.plan && S.plan.replan) S.plan.replan = null; });
 // before 30.09.2026 a standing-plan trip with you aboard counted as the hired skipper's, and the landing lost its access
 for (const v of S.fleet) withVessel(v, () => { const b = S.boat; if (S.plan && S.plan.ops && (b.status !== 'port' || b.land) && meAboard()) S.tripOwner = true; });
 view.cx = HOME.x0 + MAP_W * 0.56; view.cy = HOME.y0 + MAP_H * 0.5;

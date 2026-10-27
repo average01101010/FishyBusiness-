@@ -300,7 +300,8 @@ const CATCHUP_CAP = 72 * 60;
 // Game minutes are played only while every vessel's waters are loaded (simAreaReady, 01b-mapdata.js): what is left waits in
 // CATCH_LEFT and is played by the tick once the packs are in, so a slow network makes the clock wait, never guess.
 let CATCH_LEFT = 0;
-function playMinutes(n){ let i = 0; for (; i < n; i++){ if (!simAreaReady()){ CATCH_LEFT += n - i; break; } step(); } return i; }
+// (the time away, away: also while Autonav finds a way round shallow water, sailWaiting in core/05-vessels.js)
+function playMinutes(n, away){ let i = 0; for (; i < n; i++){ if (!simAreaReady() || (away && sailWaiting())){ CATCH_LEFT += n - i; break; } step(); } return i; }
 // on the world's clock (core/01-world.js) the time away is what the game is behind it, all of it; more than two weeks is skipped to the
 // last two (the clock moves on, the simulation plays the last two weeks)
 const WORLD_SIM_MAX = 14 * 24 * 60;
@@ -309,7 +310,7 @@ function catchUp(realMs){
   if (WCLOCK.on){ const w = worldT(); mins = Math.max(0, w - S.t); if (mins > WORLD_SIM_MAX){ S.t = w - WORLD_SIM_MAX; mins = WORLD_SIM_MAX; } realMs = mins / GAME_RATE * 60000; }
   if (mins < 1) return;
   if (mins >= 10) awayStart(mins, realMs);
-  playMinutes(mins);
+  playMinutes(mins, true);
   panelDirty = true;
   if (!CATCH_LEFT && AWAYR) awayEnd();
   if (realMs >= 5 * 60000) WAKE_BACK = true;
@@ -323,7 +324,7 @@ function tick(){
   if (dt > 8 && typeof cloudWake === 'function') cloudWake();
   if (TAB.held || TAB.wait) return;
   // (until the simulation's data is in, the clock waits: 11-boot.js)
-  if (SIMREADY){ if (CATCH_LEFT > 0){ DYN.on = false; const n = Math.min(CATCH_LEFT, 3000); CATCH_LEFT -= n; playMinutes(n); panelDirty = true; if (!CATCH_LEFT && AWAYR) awayEnd(); }
+  if (SIMREADY){ if (CATCH_LEFT > 0){ DYN.on = false; const n = Math.min(CATCH_LEFT, 3000); CATCH_LEFT -= n; playMinutes(n, true); panelDirty = true; if (!CATCH_LEFT && AWAYR) awayEnd(); }
   else if (WCLOCK.on){
     // one clock for everyone: step on to the world's minute; more than ten minutes behind (the tab slept) is time away; a save from
     // before that is ahead goes at half pace until the world has caught up with it
