@@ -114,3 +114,4 @@ Testene for scenariene er de nødvendige testene for dette arbeidet (Jonas 26.10
 
 - 26.10.2026: oppdraget skrevet av hovedøkta. Venter på at Jonas starter økta for fase 0 og 1.
 - 26.10.2026: fase 0 og 1 gjort i én økt (`01-revisjon.md`, `02-design.md`, loggene og skriptene i `revisjon/`). Venter på Jonas' svar på valgene 1–7 i designet og «kjør på». Ingen spillkode.
+- 27.10.2026: Jonas svarte på valgene og sa «kjør på» (svarene står i `02-design.md` kapittel 5). Delene 1–7 bygd og slått på samme dag (commit 7f817c3 på `ccr-b4896e99-t1nayv`): modellen og dagen, motoren, lukket spill, siden, kartvinduet, flåten og bryteren. Stikkprøvene langs kysten mangler (testmiljøet har bare Senja) og står i backloggen; del 8 (rydding) venter til Jonas har prøvd den nye planen.
