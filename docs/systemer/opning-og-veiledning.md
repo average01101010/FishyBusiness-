@@ -120,3 +120,13 @@ Jonas valgte 1A–8A og sa «kjør på» 27.10.2026. Fasene O0–O6 står i plan
   - Ingen av de 47 stedene ga et ulovlig felt med den gamle koden heller, så feilen med feltet i et stengt gytefelt er ikke sett i praksis, bare funnet i koden.
   - De fire stedene over 2,5 km i januar er Egersund, Skudeneshavn, Hidrasund og Bokn: Rogaland med gytefelt og åpen sjø.
   - **Første levering blir mindre verdt.** Miksen er den lokale, ikke 72 % torsk overalt, så den er rundt 30 % mindre verdt per kilo i januar. Det gamle tallet kom fra et oppdiktet skreifelt hele året. Om første levering trenger flere kilo for å kjennes like god, tas i O3, sammen med fisketida (V2).
+
+### O2: fram til første napp (27.10.2026)
+
+- **Naustet er én linje** (`n1`), og den peker på fars torsk (`NAUST3D.farRect()`). `n2` og `n3` er tatt ut; de ble trykket bort på 1–2 s hver.
+- **På vei ut:** `chip`, `kino`, `kino2`, `cam` og `cam2` er tatt ut som steg. `sail` er nå ett lite tips som ikke må besvares og forsvinner etter 9 s: «Neste» viser når båten er framme, og Kino og broa nevnes (V4 A). Fire av sju spillere 11.–13.10.2026 sluttet på dette stedet.
+- **Ingen dempet lag** (V3 A): `tipPlace` viser bare ringen og boksen, også for dryppene i Håndboka.
+- **«Kast loss» sier selv hva den venter på** (`tutStartWhy`, vist over knappen i rutepanelet i `07-guide.js`): «Legg et punkt i ringen … først» eller «Ruta skal ende i …». Knappen er grå til det er gjort, i stedet for en toast etter trykket. Sperrene i `tutAllow` er som før.
+- **Ikke gjort i O2:** «Lever» som grå knapp (levering andre steder enn mottaket for første tur er allerede skjult), og `deck` ved første fisk (kommer med O3, sammen med fisketida).
+- `tut.py`: ny `ORDER` (`n1`, `nout`, `intro`, `gps`, `route1`, `cast1`, `sail`, …), `sail` kan hoppes over når båten er framme.
+
