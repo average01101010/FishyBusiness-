@@ -20,9 +20,9 @@ window.PUBW = (() => {
   function why(H){ if (S.boat.status !== 'port') return L('Puben er bare åpen når båten ligger i havn.', 'The pub is only open while the boat is in port.');
     if (!pubOpen(H)) return L('Puben åpner klokka 15.', 'The pub opens at 15:00.');
     if (S.pubE === pubEvening(H)) return L('Du har tatt kveldens runde. Neste runde i morgen kveld.', 'You have had tonight\'s round. Next round tomorrow evening.');
-    if (S.cash < cost()) return L('Du har ikke nok penger til en runde.', 'You do not have enough money for a round.'); return ''; }
+    if (spendable() < cost()) return L('Du har ikke nok penger til en runde.', 'You do not have enough money for a round.'); return ''; }
   function render(msg){
-    const H = S.t / 60, can = S.boat.status === 'port' && pubOpen(H) && S.pubE !== pubEvening(H) && S.cash >= cost();
+    const H = S.t / 60, can = S.boat.status === 'port' && pubOpen(H) && S.pubE !== pubEvening(H) && spendable() >= cost();
     // after a reload the round is already decided: show what came of it
     if (!msg && !spinning && S.pubLast && S.pubLast.e === pubEvening(H) && S.pubE === S.pubLast.e) msg = S.pubLast.m;
     el.innerHTML = '<div class="pubbox"><h3>🍺 ' + L('Puben i ', 'The pub in ') + (portById(S.boat.port) || {}).name + '</h3>' + wheel +
@@ -32,10 +32,10 @@ window.PUBW = (() => {
   }
   // a round paid, drawn and saved (also for the 3D pub, ui/09b-pub.js): {seg, m}, or null when no round can be had now
   function draw(){
-    const H = S.t / 60, c = cost(); if (spinning || S.boat.status !== 'port' || !pubOpen(H) || S.pubE === pubEvening(H) || S.cash < c) return null;
+    const H = S.t / 60, c = cost(); if (spinning || S.boat.status !== 'port' || !pubOpen(H) || S.pubE === pubEvening(H) || spendable() < c) return null;
     let r = Math.random() * tot, seg = segs[0]; for (const g of segs){ r -= (g.s1 - g.s0) / 360 * tot; if (r <= 0){ seg = g; break; } }
     // the round is paid, drawn and saved before the wheel turns, so closing the app mid-spin loses nothing
-    S.cash -= c; S.stats.costs += c; S.pubE = pubEvening(H);
+    book('land', -c, 'En runde på puben', 'A round at the pub'); S.pubE = pubEvening(H);
     let m;
     if (seg.k === 'haill' || seg.k === 'luksus'){ giveHaill(seg.k, 'pub'); m = L('Du vant ', 'You won ') + HAILL[seg.k][S.lang].toLowerCase() + '! ' + L('Den ligger i Haill-appen til du aktiverer den.', 'It waits in the Luck app until you switch it on.'); msg('Puben', L('Du gikk hjem med ', 'You went home with ') + HAILL[seg.k][S.lang].toLowerCase() + '.', 'You went home with ' + HAILL[seg.k].en.toLowerCase() + '.'); }
     else if (seg.k === 'rykte'){ const cr = crewRumour(), t0 = cr || rumour()[0]; m = t0; msg('Puben', t0, t0); }

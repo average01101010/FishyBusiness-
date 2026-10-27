@@ -536,7 +536,7 @@ function sail(H, W, hs){
   if (pl.replan){ b.v = 0; return; }   // a way round shallow water ahead is being found (sailReplan)
   const v = sailV(H, hs); b.v = v;
   let left = v * NM / 60;
-  b.fuel = Math.max(0, b.fuel - fuelLph(v, W) / 60);
+  fuelUse(b, fuelLph(v, W) / 60);
   obsSail(pl, b);   // round a bridge's pier, a pier or a mark on the leg ahead (11b-obstacles.js)
   while (left > 1e-9 && pl.idx < pl.wps.length){
     const w = pl.wps[pl.idx], d = dist(b.pos, w);
@@ -734,7 +734,7 @@ function fish(H, W, hs){
     if (typeof window !== 'undefined') window.TUTTOP = (window.TUTTOP || 0) + gotTop;   // for the tests: how much the guarantee had to add
   }
   // only the stock's own share of the catch is taken from it: not the guide's skrei patch, nor what the guarantee tops up
-  takeStock(b.pos, (got - gotTop) * (dsum > 0 ? Math.max(0, (dsum - tsum) / dsum) : 1)); S.fsess.kg += got; if (got > 0) (b.tripGear = b.tripGear || {}).juksa = 1;
+  takeStock(b.pos, (got - gotTop) * (dsum > 0 ? Math.max(0, (dsum - tsum) / dsum) : 1)); S.fsess.kg += got; if (got > 0) (b.tripGear = b.tripGear || {}).juksa = S.t;
   // a plan's jig places in turn (06f-plan.js, wp.jc; feedback #57): each hour's catch is weighed against the first hour's here, and when it
   // has fallen to half the crew move on to the next place, taking the hours left with them
   { const pl = S.plan, w = pl && pl.ops && pl.wps[pl.idx - 1], fs = S.fsess;
@@ -818,7 +818,7 @@ function deckMinute(){
   if (catchIce()) for (const x of S.hold.filter(x => !x.iced && (x.gut || !cg) && !SPECIES[x.sp].live)){
     if (pm <= 0.001) break; const kg = Math.min(x.kg, pm * DECK.ice, fz ? Infinity : b.ice / (0.3 * ((BOAT.fx && BOAT.fx.ice) || 1)));
     if (kg <= 0.01){ if (S.t - (S.lastIceWarn || -1e9) > 120){ log('Tom for is. Fangsten ises ikke.', 'Out of ice. The catch is not being iced.'); S.lastIceWarn = S.t; } break; }
-    if (fz) moveKg(x, kg, {iced:true, frozen:true}); else { moveKg(x, kg, {iced:true}); b.ice -= kg * 0.3 * ((BOAT.fx && BOAT.fx.ice) || 1); }
+    if (fz) moveKg(x, kg, {iced:true, frozen:true}); else { moveKg(x, kg, {iced:true}); const ik = Math.min(b.ice, kg * 0.3 * ((BOAT.fx && BOAT.fx.ice) || 1)); b.ice -= ik; tripOf(b).iceKg += ik; }
     pm -= kg / DECK.ice; worked += kg;
   }
   // your own minutes on deck; when the deck was last worked (the crew's break: a deck to scrub, 13-work.js idleEnv); now and then a mistake (14-crewlife.js crewSlip)
@@ -852,7 +852,7 @@ function risk(W, hs){
 }
 // after a tow (towDone): a damaged hull is mended where she was towed (the nearest yard), the insurance and the first free repair
 // counted (Fysikk 3, 16c-hull.js hullOrder); scratches alone wait for the player
-function hullRepair(){ const b = S.boat; if (typeof hullOrder === 'function'){ hullOld(b); if (hullBad(b) && b.status === 'port') hullOrder(true); return; } if (!b.damage) return; b.damage = 0; const full = Math.round(VESSELS[b.type].price * 0.035), first = freeFirst('rep'), cost = first ? 0 : full; S.cash -= cost; S.stats.costs += cost; queueJob({kind:'repair', h:8, no:'Reparasjon av skroget', en:'Hull repair'});
+function hullRepair(){ const b = S.boat; if (typeof hullOrder === 'function'){ hullOld(b); if (hullBad(b) && b.status === 'port') hullOrder(true); return; } if (!b.damage) return; b.damage = 0; const full = Math.round(VESSELS[b.type].price * 0.035), first = freeFirst('rep'), cost = first ? 0 : full; book('verft', -cost, 'Reparasjon av skroget', 'Hull repair'); queueJob({kind:'repair', h:8, no:'Reparasjon av skroget', en:'Hull repair'});
   if (first) msg('Verkstedet', 'Skroget har fått skader etter grunnstøtingen. Den første reparasjonen tar vi gratis, den tar 8 timer. Neste gang koster den ' + full + ' kr. Følg dybdene i kartet og hold avstand til skjær og grunner.', 'The hull was damaged when you ran aground. The first repair is on us; it takes 8 hours. Next time it costs NOK ' + full + '. Watch the depths on the chart and keep clear of rocks and shoals.');
   else msg('Verkstedet', 'Skroget har fått skader etter grunnstøtingen. Reparasjonen koster ' + cost + ' kr og tar 8 timer.', 'The hull was damaged when you ran aground. The repair costs NOK ' + cost + ' and takes 8 hours.'); }
 function svcOverdue(){ const b = S.boat; return Math.max(0, ((b.engH || 0) - (b.svcAt || 0)) / BOAT.svcH - 1); }
@@ -905,7 +905,7 @@ function rescue(keepCatch){
   const b = S.boat, port = nearestYard(b.pos) || nearestPort(b.pos), base = rescueBase(b.pos), fee = S.member || first ? 0 : keepCatch ? PRICE.tow : PRICE.rescue;
   if (first) msg('Redningsselskapet', 'Det første slepet er gratis, og fangsten får du beholde. Neste gang koster et slep ' + kr(PRICE.tow) + ', og et nødanrop i farlig sjø ' + kr(PRICE.rescue) + ' og fangsten. Hold øye med dieselen og værmeldingen. Som medlem slipper du å betale.',
     'The first tow is free, and you keep the catch. Next time a tow costs ' + kr(PRICE.tow) + ', and a distress call in dangerous seas ' + kr(PRICE.rescue) + ' and the catch. Keep an eye on the diesel and the forecast. Members pay nothing.');
-  S.cash -= fee; S.stats.costs += fee;
+  book('forsikring', -fee, 'Slep til havn', 'Tow to harbour');
   let lost = 0; if (!keepCatch){ lost = Math.round(holdTotal()); S.hold = []; }
   b.prev = null; b.tripBad = true; if (meAboard()){ tatAdd('rescued', 1); checkTattoos(); }
   const t = {ph:'muster', t0:S.t, keep:keepCatch, fee, lost, port:port.id, base:base.n, baseId:base.id, bp:{x:base.p.x, y:base.p.y}, at:{x:b.pos.x, y:b.pos.y}, P1:null, P2:null, r:0, s:0};

@@ -53,6 +53,8 @@ Les denne først, så bare dokumentet for systemet du skal endre, og `docs/BACKL
 |---|---|
 | `docs/planer/flaateplanen.md` | Flåteplanen fase 1–5 og veikartene (PWA og hele kysten), slik de ble vedtatt. |
 | `docs/planer/forslagslista-04.10.2026.md` | Forslagslista fra 04.10.2026. |
+| `docs/planer/okonomi/01-gjennomgang.md` | Økonomi 2 (27.10.2026): gjennomgangen av økonomien, skatten (ENK/AS), lotten og kostnadene mot virkeligheten, forslagene (bankkontoer, turoppgjør, regnskap per år) og spørsmålene til Jonas. Venter på svar. |
+| `docs/planer/okonomi/02-design.md` | Økonomi 2: designet i fem faser Ø1–Ø5 (hovedbok og regnskap per år, turoppgjør med lott etter felleskostnader, bankkontoer, skatten som i livet, håndboka), valgene V1–V4 og kildene. Venter på «kjør på». |
 | `docs/forslag.md` | Forslagslista fra 13.10.2026 (dybde og sjel). |
 | `docs/slagplan.md` | Slagplanen fra 05.10.2026 med status. |
 | `docs/batplan.md` | Planen for båtene og stigen. |

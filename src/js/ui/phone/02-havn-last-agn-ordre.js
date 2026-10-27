@@ -15,7 +15,7 @@
     h.push('<div class="ph-card" id="baitStore"><h4>' + L('Agn', 'Bait') + '</h4><p class="ph-note">' + L('Hver stamp hyseline tar ', 'Each tub of haddock line takes ') + fmt(LINE_KINDS.hyse.baitKg, 0) + L(' kg, hver stamp bankline ', ' kg, each tub of bank line ') + fmt(LINE_KINDS.bank.baitKg, 0) + L(' kg og hver teine ', ' kg and each pot ') + fmt(GPRICE.potBait, 1) + ' kg.</p>');
     for (const [k, X] of Object.entries(BAITS)){ const c20 = 20 * X.kr, c100 = 100 * X.kr;
       h.push('<div class="ph-kv"><span>' + baitDot(k) + '<b>' + X[S.lang] + '</b> · ' + good(k) + '</span><span>' + fmt(B[k] || 0, 0) + ' kg</span></div><div class="ph-row2">' +
-        '<button class="ph-btn"' + (here && c20 <= S.cash && !buyGate('bait') ? '' : ' disabled') + ' data-pa="grbuy" data-w="bait" data-s="' + k + '" data-n="20">20 kg · ' + kr(c20) + '</button><button class="ph-btn"' + (here && c100 <= S.cash && !buyGate('bait') ? '' : ' disabled') + ' data-pa="grbuy" data-w="bait" data-s="' + k + '" data-n="100">100 kg · ' + kr(c100) + '</button></div>'); }
+        '<button class="ph-btn"' + (here && c20 <= spendable() && !buyGate('bait') ? '' : ' disabled') + ' data-pa="grbuy" data-w="bait" data-s="' + k + '" data-n="20">20 kg · ' + kr(c20) + '</button><button class="ph-btn"' + (here && c100 <= spendable() && !buyGate('bait') ? '' : ' disabled') + ' data-pa="grbuy" data-w="bait" data-s="' + k + '" data-n="100">100 kg · ' + kr(c100) + '</button></div>'); }
     if (buyGate('bait')) h.push('<p class="ph-note"><b>' + buyGate('bait')[0] + '</b></p>');
     h.push('</div>');
     // own catch as bait, before it is landed

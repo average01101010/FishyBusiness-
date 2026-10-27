@@ -340,7 +340,7 @@ function startFueling(ops){
 function quayMinute(){
   const b = S.boat, f = b.fueling;
   if (f){
-    if (S.t > f.pumpAt && f.done < f.liters){ const l = Math.min(f.lpm, f.liters - f.done), c = l * fuelPrice(); if (c > S.cash){ f.liters = f.done; f.until = S.t + PUMP.stow; } else { b.fuel = Math.min(BOAT.fuelCap, b.fuel + l); f.done += l; f.paid = (f.paid || 0) + c; S.cash -= c; S.stats.costs += c; if (f.done >= f.liters - 0.01) f.until = Math.min(f.until, S.t + PUMP.stow); } }
+    if (S.t > f.pumpAt && f.done < f.liters){ const l = Math.min(f.lpm, f.liters - f.done), c = l * fuelPrice(); if (c > spendable()){ f.liters = f.done; f.until = S.t + PUMP.stow; } else { fuelAdd(b, Math.min(BOAT.fuelCap, b.fuel + l) - b.fuel, c); f.done += l; f.paid = (f.paid || 0) + c; book('diesel', -c, 'Bunkring', 'Bunkering'); if (f.done >= f.liters - 0.01) f.until = Math.min(f.until, S.t + PUMP.stow); } }
     if (S.t >= f.until){ b.fueling = null; log('Fylte ' + fmt(f.done, 0) + ' L for ' + kr(Math.round(f.paid || 0)) + '.', 'Filled ' + fmt(f.done, 0) + ' L for ' + kr(Math.round(f.paid || 0)) + '.'); }
   }
   const s = b.shift;
@@ -356,8 +356,8 @@ function quayMinute(){
 function buyIce(kg, free){
   const b = S.boat, pt = portById(b.port); if (b.status !== 'port' || !pt || !pt.ice) return false;
   if (berthKind(b) !== 'main'){ b.iceKg = kg; b.iceFree = !!free; return startShift('main', 'ice'); }
-  kg = Math.round(Math.min(kg, BOAT.iceCap - b.ice)); const c = free ? 0 : Math.round(kg * PRICE.ice); if (kg <= 0 || c > S.cash) return false;
-  b.ice += kg; S.cash -= c; S.stats.costs += c; iceChute(kg);
+  kg = Math.round(Math.min(kg, BOAT.iceCap - b.ice)); const c = free ? 0 : Math.round(kg * PRICE.ice); if (kg <= 0 || c > spendable()) return false;
+  b.ice += kg; book('is', -c, 'Is fra isrenna', 'Ice from the chute'); iceChute(kg);
   log('Kjøpte ' + kg + ' kg is fra isrenna for ' + kr(c) + '.', 'Bought ' + kg + ' kg of ice from the chute for ' + kr(c) + '.');
   // the first fill is on the plant (Jonas 07.10.2026): a new customer, and they know the old boat
   if (free) msg(FOLK_NAMES.plant[0] + ' på mottaket', 'Så det er du som har tatt over naustet! Faren din var innom her i fjor høst og snakket om deg. Første fylling is er på huset: vi kjenner igjen den gamle båten.', 'So you’re the one who has taken over the boathouse! Your father dropped in last autumn and talked about you. The first fill of ice is on the house: we know the old boat.');
@@ -370,7 +370,7 @@ const shopIceKr = () => { const pt = portById(S.boat.port); return pt && pt.ice 
 const shopIceRoom = () => Math.max(0, Math.round(BOAT.iceCap - S.boat.ice));
 // buys one thing; returns null, or why not as [no, en]. free: the first-trip tutorial hands it out
 function shopBuy(k, kg, free){
-  const b = S.boat, pt = portById(b.port), pay = c => { S.cash -= c; S.stats.costs += c; };
+  const b = S.boat, pt = portById(b.port), pay = (c, k, no, en, felles) => { book(k, -c, no, en); if (felles) tripAdd(b, 'jigKr', c); };
   if (b.status !== 'port' || !pt) return ['Butikken er på land. Handle når båten ligger i havn.', 'The shop is ashore. Buy when the boat is in port.'];
   if (pt.rorbu) return ['Det er ingen butikk ved rorbua. Handle i en havn.', 'There is no shop at the rorbu. Buy in a harbour.'];   // 07d-rorbu.js
   if (berthKind(b) === 'naust') return NAUST_NOSHOP;   // Father's naust is a home: nothing is sold there (Jonas 07.10.2026)
@@ -378,23 +378,23 @@ function shopBuy(k, kg, free){
     if (!portServices(pt, berthKind(b)).butikk) return ['Fiskeutstyr kjøper du i utstyrsbutikken.', 'You buy fishing gear at the tackle shop.'];
     const have = k === 'jig' ? b.gear : b.kgear, c = free ? 0 : Math.round((k === 'jig' ? PRICE.gear : PRICE.kgear) * (naustHas('benk') && atHome(b) ? 0.75 : 1));   // Father's workbench (07c-naust.js)
     if (have) return ['Det har du allerede om bord.', 'You already have that aboard.'];
-    if (c > S.cash) return ['Du har ikke nok penger.', 'Not enough money.'];
-    if (k === 'jig'){ b.gear = true; pay(c); log('Kjøpte håndjuksa med pilk og markkroker for ' + kr(c) + '.', 'Bought a hand jig with pilk and fly hooks for ' + kr(c) + '.');
+    if (c > spendable()) return ['Du har ikke nok penger.', 'Not enough money.'];
+    if (k === 'jig'){ b.gear = true; pay(c, 'redskap', 'Håndjuksa', 'Hand jig', true); log('Kjøpte håndjuksa med pilk og markkroker for ' + kr(c) + '.', 'Bought a hand jig with pilk and fly hooks for ' + kr(c) + '.');
       // the first trip's jig and ice are Father's: he paid for them before he went (the letter leaves nothing else)
       if (free) msg(FOLK_NAMES.shop + ' i butikken', 'Så det er du som har tatt over naustet. Faren din var innom her i fjor høst og betalte for ei ny juksa og is til den første turen. «Til den som tar over», sa han. Den har ligget her og venta på deg. Gutten bærer issekkene ned til båten.',
         'So you’re the one who has taken over the boathouse. Your father came in here last autumn and paid for a new jig and ice for the first trip. «For whoever takes over», he said. It has been lying here waiting for you. The boy will carry the ice down to the boat.'); }
-    else { b.kgear = true; pay(c); log('Kjøpte kveiteutstyr for ' + kr(c) + ': stor pilk, kraftig snøre og gaff.', 'Bought halibut gear for ' + kr(c) + ': big pilk, heavy line and gaff.'); }
+    else { b.kgear = true; pay(c, 'redskap', 'Kveiteutstyr', 'Halibut gear', true); log('Kjøpte kveiteutstyr for ' + kr(c) + ': stor pilk, kraftig snøre og gaff.', 'Bought halibut gear for ' + kr(c) + ': big pilk, heavy line and gaff.'); }
     if (c > 0) folkShop(); return null;
   }
   if (k === 'ice'){
     if (!pt.mottak) return ['Is og agn selges på fiskemottaket.', 'Ice and bait are sold at the fish plant.'];
     kg = Math.round(Math.min(kg, shopIceRoom())); if (kg < 1) return ['Iskassa er full.', 'The ice box is full.'];
-    const c = free ? 0 : Math.round(kg * shopIceKr()); if (c > S.cash) return ['Du har ikke nok penger.', 'Not enough money.'];
+    const c = free ? 0 : Math.round(kg * shopIceKr()); if (c > spendable()) return ['Du har ikke nok penger.', 'Not enough money.'];
     if (pt.ice && berthKind(b) !== 'naust'){
       if (b.shift || b.land && berthKind(b) !== 'main') return ['Vent til båten ligger ved mottakskaia.', 'Wait until the boat lies at the plant\'s quay.'];
       return buyIce(kg, free) ? null : ['Isrenna er opptatt. Prøv igjen litt senere.', 'The ice chute is busy. Try again a little later.'];
     }
-    b.ice += kg; pay(c);
+    b.ice += kg; pay(c, 'is', 'Is i sekker', 'Bagged ice');
     log('Kjøpte ' + kg + ' kg is i sekker for ' + kr(c) + '. Mottaket bar den om bord.', 'Bought ' + kg + ' kg of bagged ice for ' + kr(c) + '. The plant carried it aboard.');
     if (c > 0) folkShop(); return null;
   }

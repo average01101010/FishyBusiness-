@@ -118,12 +118,14 @@ async def run(p, w, h, tag):
           return {active:O.active.length, name:t.includes(CUSTOMERS[1].no), deadline:/Frist/.test(t), earlier:/Tidligere/.test(t)}; })())"""))
         check(r['active'] == 1 and r['name'] and r['deadline'] and r['earlier'], 'et oppdrag tatt i Bygd står i oppdragslista på telefonen med frist, og de tidligere under', r)
         # the papers (Jonas 09.10.2026: the Sjømann app is gone): the permit and the business in Rederi, blad B in Kvote
-        await pg.evaluate("PHONE.open('kvote')"); await pg.wait_for_timeout(300)
+        # (Økonomi 2, Ø1: the Company app also opens with crew aboard, so the papers are read without crew and with one vessel)
+        await pg.evaluate("window._crew = S.crew; S.crew = []; PHONE.open('kvote')"); await pg.wait_for_timeout(300)
         t2 = await pg.evaluate("document.getElementById('phView').innerText")
         await pg.evaluate("S.form = 'AS'; PHONE.open('rederi')"); await pg.wait_for_timeout(300)
         t = await pg.evaluate("document.getElementById('phView').innerText")
         await pg.evaluate("PHONE.open('kvote')"); await pg.wait_for_timeout(300)
         t3 = await pg.evaluate("(S.form = undefined, document.getElementById('phView').innerText)")
+        await pg.evaluate("S.crew = window._crew")
         check('blad B' in t2 and 'Ervervstillatelse' in t2 and 'Foretaket' in t2 and 'Foretaket' in t and 'Aksjeselskap' in t and 'Ervervstillatelse' in t3 and 'Foretaket' not in t3 and 'Helseerklæring' not in t + t2,
               'papirene står i Kvote; med rederiet stiftet står foretaket som AS i Rederi og ikke lenger i Kvote, og de oppdiktede sertifikatene er borte', [x in y for x, y in [('blad B', t2), ('Ervervstillatelse', t2), ('Foretaket', t2), ('Foretaket', t), ('Aksjeselskap', t), ('Ervervstillatelse', t3), ('Foretaket', t3)]])
         await pg.screenshot(path='book_papirer.png')

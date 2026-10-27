@@ -34,12 +34,14 @@
     const h = ['<div class="ph-c"><div class="ph-card"><h4>' + (S.company || L('Rederiet', 'The company')) + '</h4>' + kv(L('Båter', 'Vessels'), all.length) + kv(L('Konto', 'Account'), kr(S.cash)) + kv(L('Inntekt i dag', 'Income today'), kr(Math.round(all.reduce((a, x) => a + x.s.inc, 0)))) + '</div>'];
     // the company's books (tilbakemelding #9, Jonas 09.10.2026: «lånedetaljer burde stå i regnskapet til rederiet»): the year's result, each
     // loan with its balance, rate, instalment and the interest paid on it, and what the company owns against what it owes
-    { const fleetV = all.reduce((a, x) => a + vesselValue(x.v), 0), D = debt(), res = S.stats.revenue - S.stats.costs;
+    // (Økonomi 2, Ø1: the year's figures from the books, the whole accounts in the bank's Regnskap tab)
+    { const fleetV = all.reduce((a, x) => a + vesselValue(x.v), 0), D = debt(), H = S.t / 60, yR = bookResult(yearH(H)), dep = Math.round(depBase() * TAX.dep * yearFrac(H));
       const loanRows = k => { const Q = S[k]; if (!Q) return ''; return '<p class="ph-note" style="margin:8px 0 2px"><b>' + (k === 'loanIN' ? L('Risikolån, ', 'Risk loan, ') : L('Båtlån, ', 'Vessel loan, ')) + LOANS[k].who + '</b></p>' +
         kv(L('Restgjeld', 'Balance'), kr(Math.round(Q.bal))) + kv(L('Rente', 'Interest'), fmt(Q.rate * 100, 1) + ' %') + kv(L('Terminbeløp', 'Monthly payment'), kr(Q.pay)) +
         kv(L('Neste trekk', 'Next payment'), dayStr(Q.next / 60)) + kv(L('Renter betalt', 'Interest paid'), kr(Math.round(Q.intPaid || 0))); };
-      h.push('<div class="ph-card"><h4>' + L('Regnskap', 'Accounts') + '</h4>' + kv(L('Inntekter', 'Revenue'), kr(S.stats.revenue)) + kv(L('Kostnader', 'Costs'), kr(S.stats.costs)) +
-        kv(L('Resultat', 'Result'), kr(res)) + (S.loan || S.loanIN ? loanRows('loan') + loanRows('loanIN') : '<p class="ph-note">' + L('Rederiet har ingen lån.', 'The company has no loans.') + '</p>') +
+      h.push('<div class="ph-card"><h4>' + L('Regnskap ', 'Accounts ') + yearH(H) + '</h4>' + kv(L('Inntekter i år', 'Income this year'), kr(yR.inc)) + kv(L('Kostnader i år', 'Costs this year'), kr(yR.cost)) +
+        kv(L('Avskrivning', 'Depreciation'), kr(dep)) + kv(L('Resultat før skatt', 'Result before tax'), kr(yR.res - dep)) +
+        '<button class="ph-btn" data-pa="open" data-a="bank" data-s="regnskap">' + L('Hele regnskapet', 'The whole accounts') + '</button>' + (S.loan || S.loanIN ? loanRows('loan') + loanRows('loanIN') : '<p class="ph-note">' + L('Rederiet har ingen lån.', 'The company has no loans.') + '</p>') +
         '<p class="ph-note" style="margin:8px 0 2px"><b>' + L('Balanse', 'Balance sheet') + '</b></p>' + kv(L('Flåten (verdi)', 'The fleet (value)'), kr(fleetV)) + kv(L('Konto', 'Account'), kr(Math.round(S.cash))) +
         kv(L('Gjeld', 'Debt'), kr(Math.round(D))) + kv(L('Egenkapital', 'Equity'), kr(Math.round(fleetV + S.cash - D))) +
         '<button class="ph-btn" data-pa="open" data-a="bank">' + L('Til banken (nedbetaling og nye lån)', 'To the bank (repayment and new loans)') + '</button></div>'); }

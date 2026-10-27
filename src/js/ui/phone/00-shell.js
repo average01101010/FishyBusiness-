@@ -52,5 +52,7 @@ const PHONE = (() => {
   const kbBest = () => ' <span class="kb-best">' + L('Mest for pengene', 'Best value') + '</span>';
   const unread = () => S.msgs.filter(m => !m.read).length;
   // the Rederi app comes with the company: founded as an AS in the bank (Jonas 06.10.2026), or already more than one vessel
-  const rederiOpen = () => S.form === 'AS' || (S.fleet && S.fleet.length > 1);
+  // the Company app opens with a fleet to run: a company, more than one vessel, or crew aboard (Økonomi 2, Ø1, 27.10.2026; before it
+  // opened only with the AS or a second vessel, Jonas 09.10.2026, which tied the fleet to the company form)
+  const rederiOpen = () => S.form === 'AS' || (S.fleet && S.fleet.length > 1) || (S.fleet || []).some(v => (vget(v, 'crew') || []).length > 0);
   function setBadge(){ const n = unread(); for (const bd of [badge, $('phoneBadge2')]){ bd.hidden = !n; bd.textContent = n; } }

@@ -220,7 +220,7 @@ function havnMinute(){
   const b = S.boat; if (b.status !== 'port' || !isBerth(b.port)) return;
   const day = Math.floor(S.t / 1440); if (b.hvDay === day) return;
   b.hvDay = day; const B = havnPlace(b.port), kr0 = havnDue(BOAT.len);
-  S.cash -= kr0; S.stats.costs += kr0;
+  book('havn', -kr0, 'Havneavgift, ' + B.name, 'Harbour due, ' + B.name); tripAdd(b, 'havnKr', kr0);   // a common cost (§ 8 B 7)
   log('Havneavgift i ' + B.name + ': ' + kr(kr0) + ' for døgnet.', 'Harbour due in ' + B.name + ': ' + kr(kr0) + ' for the day.');
 }
 // the NPC boats keep off the berths held by the company and by the other players (05-vessels.js moorBlocked)

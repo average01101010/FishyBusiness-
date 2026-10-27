@@ -84,7 +84,7 @@ function seasonDay(H){
   if (H >= F.H0 - 24 * 3 && H < F.H0 && !S.seasonSeen[kf + 'a']){ S.seasonSeen[kf + 'a'] = 1; msg('Kystposten', 'Skreifestivalen er neste helg. Største torsk landet fra lørdag til søndag kl. 18 vinner 15 000 kr.', 'The skrei festival is next weekend. The biggest cod landed from Saturday to Sunday 18:00 wins NOK 15,000.'); }
   if (H >= F.H1 && !S.seasonSeen[kf]){
     S.seasonSeen[kf] = 1; const B = festBoard(y), i = B.findIndex(r => r.me), w = B[0];
-    if (i >= 0 && i < 3){ const p = FEST_PRIZE[i]; S.cash += p; S.stats.income = (S.stats.income || 0) + p;
+    if (i >= 0 && i < 3){ const p = FEST_PRIZE[i]; book('annet', p, 'Premie fra festivalen', 'Festival prize');
       msg('Skreifestivalen', (i === 0 ? 'Du vant Skreifestivalen' : 'Du ble nummer ' + (i + 1) + ' i Skreifestivalen') + ' med en torsk på ' + fmt(B[i].kg, 1) + ' kg. Premien er ' + fmt(p, 0) + ' kr.', (i === 0 ? 'You won the skrei festival' : 'You came ' + ['', 'second', 'third'][i] + ' in the skrei festival') + ' with a cod of ' + fmt(B[i].kg, 1) + ' kg. The prize is NOK ' + fmt(p, 0) + '.');
       log('Premie fra Skreifestivalen: ' + fmt(p, 0) + ' kr.', 'Prize from the skrei festival: NOK ' + fmt(p, 0) + '.'); }
     else msg('Skreifestivalen', w.name + ' fra ' + w.port + ' vant med en torsk på ' + fmt(w.kg, 1) + ' kg.' + (i >= 0 ? ' Din største var ' + fmt(B[i].kg, 1) + ' kg, nummer ' + (i + 1) + '.' : ''), w.name + ' from ' + w.port + ' won with a cod of ' + fmt(w.kg, 1) + ' kg.' + (i >= 0 ? ' Your biggest was ' + fmt(B[i].kg, 1) + ' kg, number ' + (i + 1) + '.' : ''));

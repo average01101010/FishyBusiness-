@@ -42,22 +42,130 @@ function genCrew(){
   const traits = [pickW(tw())]; if (Math.random() < 0.55){ let t2 = traits[0]; for (let i = 0; i < 8 && t2 === traits[0]; i++) t2 = pickW(tw()); if (t2 !== traits[0]) traits.push(t2); }
   if (traits.includes('kranglefant')) attr.styrke = Math.min(5, attr.styrke + 1);
   const bi = Math.random() < 0.108, nm = (f ? CREW_F : CREW_M)[Math.floor(Math.random() * (f ? CREW_F : CREW_M).length)] + ' ' + CREW_SN[Math.floor(Math.random() * CREW_SN.length)];
-  const ask = Math.round((0.07 + 0.025 * attr.erf + (traits.includes('arbeidsjern') ? 0.01 : 0) + (skreiSeason(S.t / 60) ? 0.015 : 0)) * 100) / 100;
+  // what they ask, in shares (lott, Økonomi 2): an apprentice the agreement's 40, 60 or 75 % of a share by his years (§ 24.4), a hand a whole
+  // share, a tenth more for a workhorse or when every boat wants hands in the skrei season
+  const ask = attr.erf < 2.5 ? LOTT.appr[Math.min(LOTT.appr.length - 1, Math.floor(yrs))] : lotR(LOTT.hand + (traits.includes('arbeidsjern') ? 0.1 : 0) + (skreiSeason(S.t / 60) ? 0.1 : 0));
   return crewDerive({id:'k' + Math.random().toString(36).slice(2, 9), name:nm, sex:f ? 'f' : 'm', age, home:home[0], homePort:home[1], yrs, attr, gear, traits, known:[true, traits.length < 2], bi, biDays:bi ? [0, 0, 0, 0, 1, 1, 1] : null, ask, share:ask, morale:62, fatigue:10, seaH:0, grudge:{}, earn:[], hiredT:S.t});
 }
 // the deck skills: gutting, icing and crab sorting grow with the years on deck
 function deckSkills(ex){ return {sloy:r15(1.2 + ex * 0.6 * Math.random() + 0.3), is:r15(1.3 + ex * 0.5 * Math.random()), sort:r15(1 + ex * 0.4 * Math.random())}; }
 // crew from before this system get skills that match their level; crew from before the deck skills get those
-function crewUpgrade(c){ if (c.attr){ if (c.gear && c.gear.sloy == null) Object.assign(c.gear, deckSkills(c.attr.erf)); return c; } const g = genCrew(), e = c.lv === 'dreven' ? 4.5 : c.lv === 'erfaren' ? 3 : 1.5; return crewDerive(Object.assign(g, {id:c.id, name:c.name, sex:c.sex || (CREW_F.includes(String(c.name).split(' ')[0]) ? 'f' : 'm'), age:c.age || g.age, share:c.share, ask:c.share, bi:false, biDays:null, known:[true, true], attr:Object.assign(g.attr, {erf:e, sjo:r15(e * 0.9)})})); }
-// Hyre (E3 of the economy plan, 04.10.2026): instead of a share of the catch a crew member can be paid a day wage for every day signed
-// on, whatever the catch and whether the boat goes out or not. It is allowed in the open group as in the closed one, and on a fishing
-// vessel no employer's tax is paid on it (the product levy covers it: Skatteetaten, «Hyre til mannskap på fiske-, småhval- og
-// selfangstfartøy»). The day wage asked is 90 % of what the share asked for would bring in a week such as the morale reckons with
-// (6 000 kr a day, five days), a day: safety costs a little (an assumption, not a tariff).
-const HYRE = {week:6000 * 5, safe:0.9};
-const hyreAsk = c => Math.max(100, Math.round(c.ask * HYRE.week / 7 * HYRE.safe / 10) * 10);
-// the day wages, paid at midnight for every vessel's crew on hyre
-function payHyre(){ let sum = 0; eachVessel(() => { for (const c of S.crew) if (c.pay === 'hyre'){ S.cash -= c.hyre; S.stats.costs += c.hyre; sum += c.hyre; if (typeof lifeEarn === 'function') lifeEarn(c, c.hyre); c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, c.hyre]]); } }); return sum; }
+function crewUpgrade(c){ lotMigrate(c); if (c.attr){ if (c.gear && c.gear.sloy == null) Object.assign(c.gear, deckSkills(c.attr.erf)); return c; } const g = genCrew(), e = c.lv === 'dreven' ? 4.5 : c.lv === 'erfaren' ? 3 : 1.5; return crewDerive(Object.assign(g, {id:c.id, name:c.name, sex:c.sex || (CREW_F.includes(String(c.name).split(' ')[0]) ? 'f' : 'm'), age:c.age || g.age, share:c.share, ask:c.share, bi:false, biDays:null, known:[true, true], attr:Object.assign(g.attr, {erf:e, sjo:r15(e * 0.9)})})); }
+// ---- the share system of the coastal fleet (Økonomi 2, Ø2, 27.10.2026; docs/planer/okonomi/02-design.md) ----
+// After «Fiskerioverenskomst og oppgjørsavtaler mellom Mannskapsseksjonen og Båteierseksjonen i Norges Fiskarlag», in force from
+// 1.1.2025 (the copy Jonas found, 27.10.2026). The gross catch less the expenses of § 8 B (the levies; fuel, ice, bait, harbour dues,
+// baiting, the jig's gear; for nets, lines and pots the gear lost: the oppgjørsavtaler §§ 1, 3, 19) is the shared catch (delingsfangst);
+// VAT stays outside (§ 8 E). The crew's percentage of it is in the oppgjørsavtaler, by the fishery, the vessel's length in feet and the
+// men aboard (the jig's by the jigging machines in use, § 18); everyone aboard counts, you too, an apprentice as half a man (§ 24.3). The
+// tables also weigh the hold in m³; here the length alone is used. A man whose number is not in the table takes the nearest row
+// (the oppgjørsavtaler, introduction). The crew's part is split in shares: a hand 1, an apprentice 40 %, 60 % and 75 % of a share in his
+// first, second and third year (§ 24.4); you aboard have one share, which stays in the cash box with the boat's part (no private economy,
+// Jonas 27.10.2026). The skipper while you are ashore has an extra share paid by the company (§ 22 a: 1/6 of a share at 10-15 m,
+// 1/3 at 15-24 m, 1/2 from 24 m; the game gives 1/6 under 10 m too), and a mate on a round-the-clock plan the mate's wage (§ 22 a:
+// 408 kr a day under 24 m, 500 from 24 m, the company's). The day wage for everyone (hyre, E3 04.10.2026) is gone: the share is the rule.
+// A table row is [from men, to men, first column, the percentages ...].
+const OPPG = {
+  // § 18 juksa og dorgefiske: by the jigging machines in use, the feet
+  juksa:{ref:'§ 18', by:'mask', b:[30, 35, 40, 50, 60, 70, 80, 90, 100, Infinity], r:[
+    [0, 0, 0, 74.5, 70.5, 68.5, 66.5, 65.5, 64.5, 63.5, 62.5, 61.5, 60.5], [1, 1, 0, 72.5, 68.5, 66.5, 64.5, 63.5, 62.5, 61.5, 60.5, 59.5, 58.5],
+    [2, 2, 0, 70.5, 66.5, 64.5, 62.5, 61.5, 60.5, 59.5, 58.5, 57.5, 56.5], [3, 3, 0, 69.5, 65.5, 63.5, 61.5, 60.5, 59.5, 58.5, 57.5, 56.5, 55.5],
+    [4, 4, 0, 68.5, 64.5, 62.5, 60.5, 59.5, 58.5, 57.5, 56.5, 55.5, 54.5], [5, 5, 0, 67.5, 63.5, 60.5, 59.5, 58.5, 57.5, 56.5, 55.5, 54.5, 53.5],
+    [6, 6, 1, 62.5, 58.5, 57.5, 56.5, 55.5, 54.5, 53.5, 52.5, 51.5], [7, 7, 1, 61.5, 56.5, 55.5, 54.5, 53.5, 52.5, 51.5, 50.5, 49.5],
+    [8, 8, 2, 54.5, 53.5, 52.5, 51.5, 50.5, 49.5, 48.5, 47.5], [9, 9, 2, 52.5, 51.5, 50.5, 49.5, 48.5, 47.5, 46.5, 45.5], [10, 10, 2, 50.5, 49.5, 48.5, 47.5, 46.5, 45.5, 44.5, 43.5]]},
+  // § 1 garnfiske etter bunnfisk samt teinefiske etter krabbe (+3 % for the crab pots, § 1 c)
+  garn:{ref:'§ 1', b:[30, 35, 40, 45, 50, 55, 60, 65, 75, 90, 110, 120, 135, 150, Infinity], r:[
+    [2, 2, 0, 59.5, 55, 50, 47.5, 45.5, 43.5, 41.5, 40.5, 39.5], [3, 3, 0, 60.5, 56, 51, 48.5, 46.5, 44.5, 42.5, 41.5, 40.5, 37.5],
+    [4, 4, 2, 52, 49.5, 47.5, 45.5, 43.5, 42.5, 41.5, 38.5, 37.5], [5, 5, 3, 51.5, 49.5, 46.5, 44.5, 43.5, 42.5, 39.5, 38.5, 37.5],
+    [6, 6, 3, 52.5, 50.5, 48.5, 46.5, 45.5, 43.5, 40.5, 39.5, 38.5, 37.5, 36.5, 35.5], [7, 7, 5, 50.5, 48.5, 47.5, 45.5, 41.5, 40.5, 39.5, 38.5, 37.5, 36.5],
+    [8, 8, 8, 47.5, 42.5, 41.5, 40.5, 39.5, 38.3, 37.5], [9, 9, 9, 43.5, 42.5, 41.5, 40.5, 39.5, 38.5], [10, 10, 10, 43.5, 42.5, 41.5, 40.5, 39.5],
+    [11, 11, 10, 44.5, 43.5, 42.5, 41.5, 40.5], [12, 12, 10, 45.5, 44.5, 43.5, 42.5, 41.5], [13, 13, 10, 46.5, 45.5, 44.5, 43.5, 42.5],
+    [14, 15, 10, 47.5, 46.5, 45.5, 44.5, 43.5], [16, 17, 10, 48.5, 47.5, 46.5, 45.5, 44.5], [18, 19, 10, 49.5, 48.5, 47.5, 46.5, 45.5], [20, 21, 10, 50.5, 49.5, 48.5, 47.5, 46.5]]},
+  // § 3 linefiske med haling, egnet i land
+  line:{ref:'§ 3', b:[35, 40, 45, 50, 55, 60, 65, 70, 75, 80, Infinity], r:[
+    [2, 2, 0, 60, 58, 56.5, 53.5, 52.5, 50.5, 48.5, 46.5], [3, 3, 0, 61, 59, 57.5, 54.5, 53.5, 51.5, 49.5, 47.5, 46.5],
+    [4, 4, 1, 60, 58.5, 55.5, 54.5, 52.5, 50.5, 48.5, 47.5, 45.5, 44.5], [5, 5, 2, 60.5, 57.5, 55.5, 53.5, 51.5, 49.5, 48.5, 46.5, 45.5],
+    [6, 6, 2, 61.5, 58.5, 56.5, 54.5, 52.5, 50.5, 49.5, 47.5, 46.5], [7, 7, 4, 57.5, 55.5, 53.5, 51.5, 50.5, 48.5, 47.5], [8, 8, 8, 51.5, 49.5, 48.5]]},
+  // § 6 konvensjonell havfiskeflåte over 28 meter, autoline, garn og snurrevad: by the length in metres
+  hav:{ref:'§ 6', m:true, b:[28, 35, 39, 44, 49, 54, 59, 62, Infinity], r:[
+    [4, 4, 0, 41.5], [5, 5, 0, 42.5, 41.5], [6, 6, 0, 43.5, 42.5, 41.5, 40.5, 39.5], [7, 7, 0, 44.5, 43.5, 42.5, 41.5, 40.5], [8, 8, 0, 45.5, 44.5, 43.5, 42.5, 41.5],
+    [9, 9, 0, 46.5, 45.5, 44.5, 43.5, 42.5], [10, 10, 0, 47.5, 46.5, 45.5, 44.5, 43.5], [11, 11, 0, 48.5, 47.5, 46.5, 45.5, 44.5], [12, 12, 0, 49.5, 48.5, 47.5, 46.5, 45.5],
+    [13, 13, 0, 50.5, 49.5, 48.5, 47.5, 46.5, 45, 44, 43, 42], [14, 15, 0, 51.5, 50.5, 49.5, 48.5, 47.5, 46, 45, 44, 43], [16, 17, 0, 52.5, 51.5, 50.5, 49.5, 48.5, 47, 46, 45, 44],
+    [18, 19, 0, 53.5, 52.5, 51.5, 50.5, 49.5, 48, 47, 46, 45], [20, 21, 0, 54.5, 53.5, 52.5, 51.5, 50.5, 49, 48, 47, 46], [22, 99, 0, 55.5, 54.5, 53.5, 52.5, 51.5, 50, 49, 48, 47]]},
+  // § 20 snøkrabbe: 35 %
+  snokrabbe:{ref:'§ 20', flat:35}
+};
+const LOTT = {appr:[0.4, 0.6, 0.75], hand:1, step:0.1, min:0.5, max:1.5, half:0.5, ft:3.2808, crabAdd:3, hav:28,
+  skip:[[10, 1 / 6], [15, 1 / 6], [24, 1 / 3], [Infinity, 1 / 2]], mate:[[24, 408], [Infinity, 500]]};
+const lotR = v => clamp(Math.round(v * 20) / 20, LOTT.min, LOTT.max);
+const lotS = v => fmt(v, Math.round(v * 100) % 10 ? 2 : Math.round(v * 10) % 10 ? 1 : 0) + (S.lang === 'no' ? ' lott' : (Math.abs(v - 1) < 1e-9 ? ' share' : ' shares'));
+// an apprentice (by his experience) is paid by his years at sea (§ 24.4); everyone else by his share
+const isAppr = c => c.lv === 'lærling';
+const apprLot = c => LOTT.appr[Math.min(LOTT.appr.length - 1, Math.max(0, Math.floor(c.yrs || 0)))];
+const lotOf = c => isAppr(c) ? apprLot(c) : c.share;
+// a crew member from before the shares: a percentage of the catch (0.07-0.20) becomes the nearest quarter share (15 % was a hand's whole
+// share), and one on a day wage goes over to a share
+function lotMigrate(c){
+  if (!c) return c;
+  const q4 = v => lotR(Math.round(v / 0.15 * 4) / 4);
+  if (c.share != null && c.share < 0.45) c.share = q4(c.share);
+  if (c.ask != null && c.ask < 0.45) c.ask = q4(c.ask);
+  if (c.share == null) c.share = c.ask != null ? c.ask : LOTT.hand;
+  if (c.pay === 'hyre'){ delete c.pay; delete c.hyre; if (typeof log === 'function') log(c.name + ' går over fra hyre til lott: ' + lotS(c.share) + '.', c.name + ' moves from a wage to a share: ' + lotS(c.share) + '.'); }
+  return c;
+}
+// the table's percentage for n men (a half for an apprentice: the mean of the rows on either side, § 24.3) at length len (m)
+function oppgPct(T, n, len){
+  if (T.flat != null) return T.flat;
+  const x = T.m ? len : len * LOTT.ft; let col = T.b.findIndex(b => x < b); if (col < 0) col = T.b.length - 1;
+  const at = (row, c0) => row[2] <= c0 && c0 < row[2] + row.length - 3 ? row[3 + c0 - row[2]] : null;
+  const one = k => { // the row for k men, else the nearest row this column has (and the nearest column when the length has none)
+    for (let d = 0; d < T.b.length; d++) for (const c0 of [col - d, col + d]){ if (c0 < 0 || c0 >= T.b.length) continue;
+      const R = T.r.map(r => ({r, v:at(r, c0), dn:k < r[0] ? r[0] - k : k > r[1] ? k - r[1] : 0})).filter(q => q.v != null).sort((a, b) => a.dn - b.dn);
+      if (R.length) return R[0].v; }
+    return 50; };
+  const lo = Math.floor(n), hi = Math.ceil(n); return lo === hi ? one(lo) : (one(lo) + one(hi)) / 2;
+}
+// the fishery the trip is settled by: the gear used last on it (§ 8 A: «det siste fisket det har deltatt i»), else the jig
+function lottFishery(b = S.boat){ const G = b.tripGear || {}, ks = Object.keys(G).sort((x, y) => (G[y] || 0) - (G[x] || 0)), g = ks[0] || 'juksa', len = BOAT.len || 0;
+  if (g === 'teine') return len >= LOTT.hav ? 'snokrabbe' : 'teine'; if ((g === 'line' || g === 'garn') && len >= LOTT.hav) return 'hav'; return OPPG[g] ? g : 'juksa'; }
+// the crew's percentage of the shared catch: the fishery's table, by the men aboard (or the jigging machines), the length
+function lottM(n, len, fishery = 'juksa'){
+  if (n <= 0) return 0;
+  if (fishery === 'juksa') return oppgPct(OPPG.juksa, Math.min(10, (S.equip && S.equip.jukse) || 0), len) / 100;
+  if (fishery === 'teine') return (oppgPct(OPPG.garn, Math.max(2, n), len) + LOTT.crabAdd) / 100;
+  return oppgPct(OPPG[fishery] || OPPG.garn, Math.max(2, n), len) / 100;
+}
+const skipExtra = len => LOTT.skip.find(x => len < x[0])[1];
+const mateWage = len => LOTT.mate.find(x => len < x[0])[1];
+// the trip's common costs (§ 8 B), counted where they come: the litres burnt (fuelUse), the ice on the fish (deckMinute), the bait set
+// (startSet), the baiting at the shed (egnOrder), the harbour dues (havnMinute), the jig's gear bought (careBuy, shopBuy) and the gear lost
+// (gearHour); priced at the tank's average price, the plant's ice price and what was paid. A new trip starts at each landing.
+function tripOf(b = S.boat){ return b.trip || (b.trip = {t0:S.t, fuelL:0, iceKg:0, baitKr:0}); }
+function tripAdd(b, k, kr0){ if (!b || !(kr0 > 0)) return; const T = tripOf(b); T[k] = (T[k] || 0) + kr0; }
+function tripCost(b = S.boat){ const T = tripOf(b), fuelKr = Math.round(T.fuelL * (b.fuelKrL || fuelPrice())), iceKr = Math.round(T.iceKg * PRICE.ice), baitKr = Math.round((T.baitKr || 0) + (T.egnKr || 0)),
+  havnKr = Math.round(T.havnKr || 0), gearKr = Math.round((T.jigKr || 0) + (T.lostKr || 0));
+  return {fuelL:T.fuelL, fuelKr, iceKg:T.iceKg, iceKr, baitKr, havnKr, gearKr, sum:fuelKr + iceKr + baitKr + havnKr + gearKr}; }
+// who shares: the crew aboard (those asleep in their bunks too) or aboard when fish now in the hold was caught (c.trip); with you ashore
+// the one who skippers (the skipper you named, else the most seasoned)
+function lottParty(){
+  const onIds = new Set(crewAboard(null, true).map(c => c.id)), me = meAboard(), C = (S.crew || []).filter(c => c.trip || onIds.has(c.id)).map(lotMigrate), len = BOAT.len || 0;
+  const sk = me ? null : (crewSkipper() && C.includes(crewSkipper()) ? crewSkipper() : C.slice().sort((a, b) => (b.attr ? b.attr.erf + b.attr.sjo : 0) - (a.attr ? a.attr.erf + a.attr.sjo : 0))[0]);
+  const P = C.map(c => ({c, lots:lotOf(c), sk:sk === c, appr:isAppr(c)})), own = me ? LOTT.hand : 0, n = P.reduce((a, p) => a + (p.appr ? LOTT.half : 1), 0) + (me ? 1 : 0), f = lottFishery();
+  return {P, n, own, tot:P.reduce((a, p) => a + p.lots, 0) + own, M:lottM(n, len, f), f, ref:(OPPG[f === 'teine' ? 'garn' : f] || {}).ref, skX:sk ? skipExtra(len) : 0};
+}
+// the shares of a shared catch D: {M, n, tot, f, per:[{c, lots, kr, sk, x (the skipper's extra share, paid by the company)}], crew}
+function lottSplit(D){ const Q = lottParty(), pot = Math.max(0, D) * Q.M, one = Q.tot > 0 ? pot / Q.tot : 0;
+  const per = Q.P.map(p => ({c:p.c, lots:p.lots, sk:p.sk, appr:p.appr, kr:Math.round(one * (p.lots + (p.sk ? Q.skX : 0))), x:p.sk ? Q.skX : 0}));
+  return {M:Q.M, n:Q.n, tot:Q.tot, own:Q.own, f:Q.f, ref:Q.ref, skX:Q.skX, D:Math.round(Math.max(0, D)), pot:Math.round(pot), per, crew:per.reduce((a, p) => a + p.kr, 0)}; }
+// the mate's wage on a round-the-clock plan (§ 22 a), the company's, paid at midnight
+function payMates(){ eachVessel(() => { const len = BOAT.len || 0; for (const c of S.crew || []) if (c.mate && !c.off){ const w = mateWage(len); book('mannskap', -w, 'Bestmannshyre, ' + c.name, 'Mate\'s wage, ' + c.name); if (typeof lifeEarn === 'function') lifeEarn(c, w); c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, w]]); } }); }
+// what a share of this boat's ordinary week brings (the morale's yardstick): the week's catch value at the vessel's length (WEEKKR, an
+// estimate in the game's money, to be calibrated against progweek), less a fifth for the levies and the common costs, the crew's part,
+// split in the shares aboard; more in the skrei season, less outside it
+const WEEKKR = [[5, 25000], [7, 40000], [9, 60000], [11, 90000], [15, 220000], [21, 450000], [28, 800000], [40, 2000000], [70, 5000000]];
+function weekKr(len){ const T = WEEKKR; if (len <= T[0][0]) return T[0][1]; for (let i = 1; i < T.length; i++) if (len <= T[i][0]){ const [a, va] = T[i - 1], [b, vb] = T[i]; return va + (vb - va) * (len - a) / (b - a); } return T[T.length - 1][1]; }
+function lotWeek(c, H = S.t / 60){ const Q = lottParty(), tot = Math.max(Q.tot, lotOf(c));
+  return weekKr(BOAT.len || 6) * 0.8 * (skreiSeason(H) ? 1.25 : 0.85) * Q.M * (isAppr(c) ? lotOf(c) : c.ask) / tot; }
 // (all: those off watch asleep in their bunks too, 06d-drift.js driftWatch; they are crew and share the catch, but are not on deck)
 // (a hand in the old form, as the quay's candidates are hired, is made whole in place once: made again at every call he came out
 // different each time, aboard in one call and ashore in the next, until the hour's crewTick kept one)
@@ -168,13 +276,12 @@ function holdNet(){
 // hold was caught gets the share of it at once, and one on a wage gets the day's wage for the part of the day worked (Adrian 13.10.2026:
 // crew let go just before the landing were paid nothing for the trip)
 function crewSettle(c){
-  let lott = 0, hyre = 0;
-  if (c.pay === 'hyre'){ const g = gDate(S.t / 60), since = g.getUTCHours() * 60 + g.getUTCMinutes(), m = Math.min(since, c.hiredT != null ? Math.max(0, S.t - c.hiredT) : since);
-    hyre = Math.round((c.hyre || 0) * m / 1440); }
-  else if (c.trip && S.hold.length) lott = Math.round(c.share * holdNet());
-  const sum = lott + hyre; delete c.trip; if (sum <= 0) return 0;
-  S.cash -= sum; S.stats.costs += sum; c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, sum]]); if (typeof lifeEarn === 'function') lifeEarn(c, sum);
-  log(c.name + ' fikk ' + kr(sum) + (lott ? ' i lott for fangsten om bord.' : ' i hyre for dagen.'), c.name + ' was paid ' + kr(sum) + (lott ? ' as the share of the catch aboard.' : ' in wages for the day.'));
+  lotMigrate(c); let lott = 0;
+  // the shared catch of the hold as it would be landed now: its value less the levies and the trip's common costs so far
+  if (c.trip && S.hold.length){ const L = lottSplit(holdNet() - tripCost().sum), p = L.per.find(x => x.c === c); lott = p ? p.kr : 0; }
+  const sum = lott; delete c.trip; if (sum <= 0) return 0;
+  book('mannskap', -sum, 'Oppgjør med ' + c.name, 'Settled with ' + c.name); c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, sum]]); if (typeof lifeEarn === 'function') lifeEarn(c, sum);
+  log(c.name + ' fikk ' + kr(sum) + ' i lott for fangsten om bord.', c.name + ' was paid ' + kr(sum) + ' as the share of the catch aboard.');
   return sum;
 }
 function crewQuit(c, why, whyEn){ const i = S.crew.indexOf(c); if (i < 0) return; crewSettle(c); S.crew.splice(i, 1); for (const o of S.crew){ if (o.grudge) delete o.grudge[c.id]; }
@@ -218,12 +325,11 @@ function crewTick(H){
       if (c.seaH % 40 === 0){ c.attr.erf = Math.min(5, c.attr.erf + 0.1 * k); c.attr.sjo = Math.min(5, c.attr.sjo + 0.05 * k); crewDerive(c); }
       if (!c.known[1] && c.seaH >= 12){ c.known = [true, true]; const T = TRAITS[c.traits[c.traits.length - 1]]; msg(c.name, 'Etter noen dager på sjøen vet du mer om ' + c.name + ': ' + T.no.toLowerCase() + '. ' + T.d.no, 'After some days at sea you know more about ' + c.name + ': ' + T.en.toLowerCase() + '. ' + T.d.en); } }
     // what their mood is heading towards
-    // on lott: the share against the one asked for, and the week's earnings against what was hoped for; on hyre: the day wage against
-    // the one asked for, and a little for the safety of it, whatever the catch
     let tg;
-    if (c.pay === 'hyre') tg = 64 + clamp((c.hyre / hyreAsk(c) - 1) * 30, -20, 20);
-    else { tg = 60 + (c.share - c.ask) * 300;
-      const earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).reduce((a, e) => a + e[1], 0), expect = c.ask * 6000 * 5;
+    // the share against the one asked for (a tenth of a share about 4), and the week's earnings against what a share of this boat brings in
+    // an ordinary week (lotWeek)
+    { tg = 60 + (isAppr(c) ? 0 : (c.share - c.ask) * 40);
+      const earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).reduce((a, e) => a + e[1], 0), expect = Math.max(500, lotWeek(c, H));
       if (S.t - (c.hiredT || 0) > 3 * 1440) tg += clamp((earn - expect) / expect * 12, -12, 12); }
     if (here) tg += (food - 3) * 3 + ((BOAT.fx && BOAT.fx.mood) || 0) + (F.mess ? 3 : F.galley === 'bysse' ? 1 : 0) - (!F.wc && tripH >= 12 ? 3 : 0);   // the food on board (the last four meals), the mess and galley (built in, or UPGS.galley), no toilet on a long day
     tg -= Math.max(0, c.fatigue - 50) * 0.5; tg -= cold * 50 * (here ? 1 : 0.3);
@@ -246,7 +352,7 @@ function crewTick(H){
       if (Math.random() < pr){ const tp = (a.traits.includes('arbeidsjern') && c2.traits.includes('makelig')) ? 'jobb' : (a.traits.includes('stolt') || c2.traits.includes('stolt')) ? 'respekt' : hs > 1.5 ? 'vaer' : ['sloying', 'musikk', 'kaffe'][Math.floor(Math.random() * 3)];
         S.cevt = {type:'pair', a:a.id, b:c2.id, topic:tp, t0:S.t}; const tx = PAIR_TOPICS[tp]; msg('Om bord', tx.no.replace('{a}', a.name).replace('{b}', c2.name) + ' Løs det under Mannskap.', tx.en.replace('{a}', a.name).replace('{b}', c2.name) + ' Sort it out under Crew.'); } }
     for (const c of on){ if (S.cevt || c.morale >= 45) continue; const tf = c.traits.some(t => ['kranglefant', 'stolt', 'grinebiter', 'rastlos'].includes(t)) ? 1.5 : 0.6;
-      if (Math.random() < 0.003 * (45 - c.morale) / 20 * tf * foodQ){ const tp = c.pay !== 'hyre' && c.share < c.ask - 0.001 ? 'lott' : hs > 1.5 ? 'vaer' : cold > 0.1 ? 'kulde' : 'generelt'; S.cevt = {type:'boss', a:c.id, topic:tp, t0:S.t};
+      if (Math.random() < 0.003 * (45 - c.morale) / 20 * tf * foodQ){ const tp = !isAppr(c) && c.share < c.ask - 0.001 ? 'lott' : hs > 1.5 ? 'vaer' : cold > 0.1 ? 'kulde' : 'generelt'; S.cevt = {type:'boss', a:c.id, topic:tp, t0:S.t};
         const tx = BOSS_TOPICS[tp]; msg(c.name, tx.no.replace('{a}', c.name) + ' Svar under Mannskap.', tx.en.replace('{a}', c.name) + ' Answer under Crew.'); } }
   }
   vitalsTalk(on);

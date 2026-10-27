@@ -91,7 +91,7 @@ const PTOW = (() => {
     rpc('tow_done', {id:H.id, port:String(pid)}).then(r => {
       S.ptowH = null; save(); if (!r || !r.ok) return;
       const pt = portById(pid), who = nm(H) + ' ' + bt(H);
-      if (r.pay){ S.cash += PTOW_PAY; S.stats.revenue += PTOW_PAY; if (typeof achAdd === 'function') achAdd('ptow');
+      if (r.pay){ book('annet', PTOW_PAY, 'Slep av en annen båt', 'Towing another boat'); if (typeof achAdd === 'function') achAdd('ptow');
         msg('Slep', 'Du slepte ' + who + ' inn til ' + (pt ? pt.name : 'havn') + '. Belønning ' + kr(PTOW_PAY) + '.', 'You towed ' + who + ' in to ' + (pt ? pt.name : 'harbour') + '. Reward ' + kr(PTOW_PAY) + '.'); }
       else msg('Slep', 'Du slepte ' + who + ' inn til ' + (pt ? pt.name : 'havn') + '. Takk! (Belønningen gis én gang i døgnet for samme spiller, og for tre slep i døgnet.)', 'You towed ' + who + ' in to ' + (pt ? pt.name : 'harbour') + '. Thanks! (The reward is given once a day for the same player, and for three tows a day.)');
       if (typeof refreshAll === 'function') refreshAll();
