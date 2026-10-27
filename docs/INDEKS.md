@@ -55,6 +55,7 @@ Les denne først, så bare dokumentet for systemet du skal endre, og `docs/BACKL
 | `docs/planer/forslagslista-04.10.2026.md` | Forslagslista fra 04.10.2026. |
 | `docs/planer/okonomi/01-gjennomgang.md` | Økonomi 2 (27.10.2026): gjennomgangen av økonomien, skatten (ENK/AS), lotten og kostnadene mot virkeligheten, forslagene (bankkontoer, turoppgjør, regnskap per år) og spørsmålene til Jonas. Venter på svar. |
 | `docs/planer/okonomi/02-design.md` | Økonomi 2: designet i fem faser Ø1–Ø5 (hovedbok og regnskap per år, turoppgjør med lott etter felleskostnader, bankkontoer, skatten som i livet, håndboka), valgene V1–V4 og kildene. Venter på «kjør på». |
+| `docs/planer/fysikk-4-sjo-og-skrog.md` | Fysikk 4 (vedtatt 27.10.2026): sjøen og skroget i åtte faser F1–F8 (skumkartet, oppdrift per skrogsnitt, Jacobi-brytning og spekteret, kystnær sjø, skrogfartskneik og squat, FFT-måling, brottsjø, strøm), gjennomgangen av notatet om havsimulering og videoene, Jonas' valg, nullpunktet på nettbrettet og status per fase. |
 | `docs/forslag.md` | Forslagslista fra 13.10.2026 (dybde og sjel). |
 | `docs/slagplan.md` | Slagplanen fra 05.10.2026 med status. |
 | `docs/batplan.md` | Planen for båtene og stigen. |
