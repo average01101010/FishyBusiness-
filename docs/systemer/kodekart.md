@@ -148,7 +148,7 @@ Placeholder prices (NOK/kg, grade A) – to be tuned
   - 200 `vesselDerive(V)`
   - 214 `lsaOf(V)`
 
-## `src/js/core/03-simulation.js` (1151 linjer)
+## `src/js/core/03-simulation.js` (1154 linjer)
 
 fleet: each vessel keeps its own state; the company holds the rest. The simulation steps through the vessels one at a
 
@@ -250,113 +250,113 @@ fleet: each vessel keeps its own state; the company holds the rest. The simulati
   - 491 `denSp(sp, q, H, T)`
   - 504 `density(sp, p, H)`
   - 511 `eggaArea(p, d, H, E)`
-  - 530 `tutBonus(sp, p)`
-  - 542 `stockIdx(p)`
-  - 544 `stockW(p)`
-  - 549 `stockFill(v)`
-  - 552 `stockAt(p, sp)`
-  - 559 `takeStock(p, kg, sp, npc)`
-- **565** the shared world V2 (05.10.2026; ui/10h-world.js, supabase/migrations/20261006000000_world_v2.sql): one sea, one quota and one
-  - 571 `wq()`
-  - 572 `wshOpen(y)`
-  - 573 `wshSat(pid, sp, H)`
-  - 574 `wshTake(k, kg)`
-  - 576 `wshLand(port, H, acc, kgSp, codQ)`
-  - 581 `initStock()`
-  - 589 `stockHour(H)`
-  - 611 `depthFactor(sp, d)`
-  - 616 `depthF(p)`
-  - 622 `depthHas(p)`
-  - 631 `deepAt(p)`
-  - 636 `offDepth(p)`
-  - 639 `tileDepth(p, d)`
-  - 646 `depthWater(p)`
-  - 658 `depthAt(p)`
-  - 659 `depthModel(p)`
-  - 660 `grade(f)`
-- **661** How the catch keeps (D3 of the operations plan, Jonas 23.10.2026, svar 15a: calibrated against the sources)
-  - 671 `keepDay(f)`
-  - 672 `keepF(day)`
-  - 675 `keepK(x, rrs)`
-  - 677 `keepHours(f, f2, k)`
-  - 679 `supplyFactor(H)`
-  - 686 `weekOfH(H)`
-  - 687 `weekDev(sp, H)`
-  - 693 `marketPrice(sp, H)`
-  - 695 `clsPrice(port, sp, c, H, hook)`
-  - 701 `price(port, sp, H)`
-  - 703 `avgPrice(sp, H, days)`
-- **704** quotas north of 62° N: the regulation and the year's figures are in 03d-quota.js
-  - 705 `doyH(H)`
-  - 706 `yearH(H)`
-  - 707 `quotaState()`
-  - 725 `licValue(l)`
-- **742** the books (Økonomi 2, Ø1, 27.10.2026, docs/planer/okonomi/02-design.md)
-  - 764 `bookMigrate()`
-  - 772 `bookAll(parts, no, en, vid)`
-  - 786 `bookResult(y)`
-- **788** the bank's accounts (Økonomi 2, Ø3, 27.10.2026; Jonas: «Automatisk skatteavsetning, rente på sparekonto, kassakreditt med
-  - 797 `bankS()`
-  - 805 `bankMove(k, kr0, no, en)`
-  - 808 `bankAfterIncome(inKr)`
-  - 815 `taxPay(kr0, no, en)`
-  - 818 `bankRelease()`
-  - 822 `bankDay(H)`
-  - 855 `taxOf(P, form, days, skj = 0, carry = 0)`
-  - 865 `saldoOf(v)`
-  - 871 `txInit(H, adv)`
-  - 873 `yearFrac(H)`
-  - 875 `txProfit(H)`
-  - 878 `txNow(H = S.t / 60)`
-  - 884 `taxOwed(H = S.t / 60)`
-  - 889 `enkAdv(H)`
-  - 895 `taxPlan(H = S.t / 60)`
-  - 907 `asBase(y)`
-  - 911 `txClose(H)`
-  - 926 `taxTick(H)`
-  - 964 `foundAS()`
-  - 975 `mvaCheck(total)`
-  - 984 `trekkOf(total, len)`
-  - 989 `fmInit()`
-  - 991 `fmLand(total)`
-  - 1000 `takeLoan(amount, months, k)`
-  - 1004 `payDown(x)`
-  - 1010 `deal(price, ti, inn)`
-  - 1017 `finance(x, months)`
-  - 1020 `lenGroup()`
-  - 1021 `codLimits(H)`
-  - 1024 `codOpen(H)`
-  - 1025 `codLimitNow(H)`
-- **1026** haill: luck from the quay. Fresh goods: full effect for two days, fading to nothing on day seven. Sold for real money only (test mode now) or won at the pub.
-  - 1044 `haillBoost()`
-  - 1045 `haillLeft()`
-  - 1046 `haillStage()`
-  - 1048 `haillF()`
-  - 1049 `luck(sp)`
-  - 1051 `giveHaill(type, how)`
-  - 1052 `useHaill(type)`
-  - 1058 `pubEvening(H)`
-  - 1059 `pubOpen(H)`
-  - 1062 `capHold()`
-  - 1064 `cargoRoom()`
-  - 1066 `cargoMin(kg)`
-- **1067** the daily login bonus: each real calendar day you open the game adds a point to a bonus on the fish price; each day
-  - 1070 `streakState()`
-  - 1071 `streakPct()`
-  - 1072 `streakTouch()`
-- **1083** cold: effective temperature from air temperature and wind, plus wet from rain, snow and spray. Cold, wet hands fish worse;
-  - 1087 `effTemp(H)`
-  - 1088 `coldPen(H, hs)`
-- **1095** orders from buyers and customers: species, amount, quality, deadline and a price premium; reputation builds with each buyer
-  - 1110 `gradeOk(g, q)`
-  - 1111 `ordState()`
-  - 1114 `custNear(c)`
-  - 1119 `repOf(id)`
-  - 1121 `bkOrderable(H)`
-  - 1123 `bkPlant(id)`
-  - 1124 `custSp(c)`
-  - 1125 `spCatchable(sp, H)`
-  - 1127 `ordersTick(H)`
+  - 533 `tutBonus(sp, p)`
+  - 545 `stockIdx(p)`
+  - 547 `stockW(p)`
+  - 552 `stockFill(v)`
+  - 555 `stockAt(p, sp)`
+  - 562 `takeStock(p, kg, sp, npc)`
+- **568** the shared world V2 (05.10.2026; ui/10h-world.js, supabase/migrations/20261006000000_world_v2.sql): one sea, one quota and one
+  - 574 `wq()`
+  - 575 `wshOpen(y)`
+  - 576 `wshSat(pid, sp, H)`
+  - 577 `wshTake(k, kg)`
+  - 579 `wshLand(port, H, acc, kgSp, codQ)`
+  - 584 `initStock()`
+  - 592 `stockHour(H)`
+  - 614 `depthFactor(sp, d)`
+  - 619 `depthF(p)`
+  - 625 `depthHas(p)`
+  - 634 `deepAt(p)`
+  - 639 `offDepth(p)`
+  - 642 `tileDepth(p, d)`
+  - 649 `depthWater(p)`
+  - 661 `depthAt(p)`
+  - 662 `depthModel(p)`
+  - 663 `grade(f)`
+- **664** How the catch keeps (D3 of the operations plan, Jonas 23.10.2026, svar 15a: calibrated against the sources)
+  - 674 `keepDay(f)`
+  - 675 `keepF(day)`
+  - 678 `keepK(x, rrs)`
+  - 680 `keepHours(f, f2, k)`
+  - 682 `supplyFactor(H)`
+  - 689 `weekOfH(H)`
+  - 690 `weekDev(sp, H)`
+  - 696 `marketPrice(sp, H)`
+  - 698 `clsPrice(port, sp, c, H, hook)`
+  - 704 `price(port, sp, H)`
+  - 706 `avgPrice(sp, H, days)`
+- **707** quotas north of 62° N: the regulation and the year's figures are in 03d-quota.js
+  - 708 `doyH(H)`
+  - 709 `yearH(H)`
+  - 710 `quotaState()`
+  - 728 `licValue(l)`
+- **745** the books (Økonomi 2, Ø1, 27.10.2026, docs/planer/okonomi/02-design.md)
+  - 767 `bookMigrate()`
+  - 775 `bookAll(parts, no, en, vid)`
+  - 789 `bookResult(y)`
+- **791** the bank's accounts (Økonomi 2, Ø3, 27.10.2026; Jonas: «Automatisk skatteavsetning, rente på sparekonto, kassakreditt med
+  - 800 `bankS()`
+  - 808 `bankMove(k, kr0, no, en)`
+  - 811 `bankAfterIncome(inKr)`
+  - 818 `taxPay(kr0, no, en)`
+  - 821 `bankRelease()`
+  - 825 `bankDay(H)`
+  - 858 `taxOf(P, form, days, skj = 0, carry = 0)`
+  - 868 `saldoOf(v)`
+  - 874 `txInit(H, adv)`
+  - 876 `yearFrac(H)`
+  - 878 `txProfit(H)`
+  - 881 `txNow(H = S.t / 60)`
+  - 887 `taxOwed(H = S.t / 60)`
+  - 892 `enkAdv(H)`
+  - 898 `taxPlan(H = S.t / 60)`
+  - 910 `asBase(y)`
+  - 914 `txClose(H)`
+  - 929 `taxTick(H)`
+  - 967 `foundAS()`
+  - 978 `mvaCheck(total)`
+  - 987 `trekkOf(total, len)`
+  - 992 `fmInit()`
+  - 994 `fmLand(total)`
+  - 1003 `takeLoan(amount, months, k)`
+  - 1007 `payDown(x)`
+  - 1013 `deal(price, ti, inn)`
+  - 1020 `finance(x, months)`
+  - 1023 `lenGroup()`
+  - 1024 `codLimits(H)`
+  - 1027 `codOpen(H)`
+  - 1028 `codLimitNow(H)`
+- **1029** haill: luck from the quay. Fresh goods: full effect for two days, fading to nothing on day seven. Sold for real money only (test mode now) or won at the pub.
+  - 1047 `haillBoost()`
+  - 1048 `haillLeft()`
+  - 1049 `haillStage()`
+  - 1051 `haillF()`
+  - 1052 `luck(sp)`
+  - 1054 `giveHaill(type, how)`
+  - 1055 `useHaill(type)`
+  - 1061 `pubEvening(H)`
+  - 1062 `pubOpen(H)`
+  - 1065 `capHold()`
+  - 1067 `cargoRoom()`
+  - 1069 `cargoMin(kg)`
+- **1070** the daily login bonus: each real calendar day you open the game adds a point to a bonus on the fish price; each day
+  - 1073 `streakState()`
+  - 1074 `streakPct()`
+  - 1075 `streakTouch()`
+- **1086** cold: effective temperature from air temperature and wind, plus wet from rain, snow and spray. Cold, wet hands fish worse;
+  - 1090 `effTemp(H)`
+  - 1091 `coldPen(H, hs)`
+- **1098** orders from buyers and customers: species, amount, quality, deadline and a price premium; reputation builds with each buyer
+  - 1113 `gradeOk(g, q)`
+  - 1114 `ordState()`
+  - 1117 `custNear(c)`
+  - 1122 `repOf(id)`
+  - 1124 `bkOrderable(H)`
+  - 1126 `bkPlant(id)`
+  - 1127 `custSp(c)`
+  - 1128 `spCatchable(sp, H)`
+  - 1130 `ordersTick(H)`
 
 ## `src/js/core/03b-sea.js` (156 linjer)
 
@@ -1854,12 +1854,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (731 linjer)
+## `src/js/ui/phone/07-patch.js` (733 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 724 `patch()`
+  - 726 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (87 linjer)
 
@@ -2118,31 +2118,33 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 366 `renderPanel()`
   - 370 `panelBusy()`
 
-## `src/js/ui/07b-first-trip.js` (316 linjer)
+## `src/js/ui/07b-first-trip.js` (326 linjer)
 
 ---------- «Første tur»: the guided first trip every new player goes through ----------
 
 - **1** «Første tur»: the guided first trip every new player goes through
   - 16 `tutEv(k, settle)`
-  - 17 `tutMark(k)`
-  - 18 `tutSettle(k)`
-  - 24 `tutFieldWp(list)`
-  - 33 `dockApp(menu, item, page, inner)`
-  - 38 `phoneApp(app, inner)`
-  - 50 `tutNaustTry()`
-  - 57 `tutIntroGo()`
-  - 195 `tutAdrift()`
-  - 203 `tutDriftTip(d)`
-  - 220 `tutTip(st)`
-  - 228 `tutReveal(el)`
-  - 234 `tutRect(T0)`
-  - 240 `tutStep()`
-  - 246 `tutFinish()`
-  - 247 `tutScrollSlip()`
-  - 250 `tutAllow(what)`
-  - 268 `tutView(st)`
-  - 275 `tutUpdate()`
-  - 294 `tipPlace(txt, T0, o)`
+  - 21 `tutLoadEv(room)`
+  - 24 `tutFishEv()`
+  - 26 `tutMark(k)`
+  - 27 `tutSettle(k)`
+  - 33 `tutFieldWp(list)`
+  - 42 `dockApp(menu, item, page, inner)`
+  - 47 `phoneApp(app, inner)`
+  - 59 `tutNaustTry()`
+  - 66 `tutIntroGo()`
+  - 204 `tutAdrift()`
+  - 212 `tutDriftTip(d)`
+  - 229 `tutTip(st)`
+  - 237 `tutReveal(el)`
+  - 243 `tutRect(T0)`
+  - 249 `tutStep()`
+  - 255 `tutFinish()`
+  - 256 `tutScrollSlip()`
+  - 259 `tutAllow(what)`
+  - 277 `tutView(st)`
+  - 284 `tutUpdate()`
+  - 304 `tipPlace(txt, T0, o)`
 
 ## `src/js/ui/07c-handbook.js` (154 linjer)
 
@@ -2197,7 +2199,7 @@ actions
   - 393 `plotSetOpen(on)`
   - 406 `kinoUi()`
 
-## `src/js/ui/08b-letter.js` (126 linjer)
+## `src/js/ui/08b-letter.js` (127 linjer)
 
 ---------- the opening: the letter from Father ----------
 
@@ -2206,7 +2208,7 @@ actions
   - 32 `letterSound(kind)`
   - 44 `showLetter(done)`
 
-## `src/js/ui/08c-start.js` (135 linjer)
+## `src/js/ui/08c-start.js` (167 linjer)
 
 «Hvor står fars naust?»: where a new game starts (05.10.2026)
 
@@ -2216,8 +2218,9 @@ actions
   - 47 `startRing(pt)`
   - 48 `startWx(pt, H0)`
   - 56 `showStart(done)`
-  - 107 `tutFieldNear(pt)`
-  - 120 `chooseStart(pt, onProgress)`
+  - 119 `tutMixAt(q, H, len, land)`
+  - 129 `tutFieldNear(pt, land)`
+  - 152 `chooseStart(pt, onProgress)`
 
 ## `src/js/ui/09-hand-fishing.js` (59 linjer)
 

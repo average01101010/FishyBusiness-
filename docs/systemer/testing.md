@@ -9,6 +9,7 @@ Fra `CLAUDE.md` 26.10.2026 (Jonas 07.10.2026, «Spør før hver test»: «Dekker
 | Test | Tid | Nødvendig når dette endres |
 |---|---|---|
 | `tut` | 40 min | veiledningen «Første tur», åpningen (brev, startsted) eller knappene den trykker på |
+| `tutcoast` | 15 min (`--all` rundt en time) | feltet og miksen for første tur (`tutFieldNear` i `08c-start.js`, `TUTB`/`tutBonus`), reglene (`03e-rules.js`) eller fiskemodellen. Krever hele kysten i bygget, og står ikke i `run.py` sine lister. Kjøres for seg: `python3 tests/tutcoast.py` |
 | `heattest` | 30 min | varmekartet, ekkoloddet, sonaren eller fiskemodellen |
 | `vessel3d` | 24 min | båtmodellene eller malingen |
 | `sea3d` | 15 min | havskyggeren eller sjøtilstanden |

@@ -1,6 +1,6 @@
 # Onboarding 2: en kortere og lettere første tur, for hele kysten (plan 27.10.2026, andre utgave)
 
-> Plan etter `/planlegg`. Ingenting er bygd. Venter på Jonas' svar på valgene V1–V8 og «kjør på».
+> Plan etter `/planlegg`. Jonas valgte 1A–8A og sa «kjør på» 27.10.2026. O0 og O1 er bygd; O2–O6 står igjen (status nederst).
 
 ## Hva Jonas ba om
 
@@ -221,3 +221,15 @@ du sier noe annet.
 - 27.10.2026: første utgave av planen (V1–V6).
 - 27.10.2026: andre utgave etter Jonas' ti prinsipper: tabellen over prinsippene, O4 og O5 nye, V7 og V8 nye. Venter på svar og
   «kjør på».
+- 27.10.2026: **Jonas: 1A 2A 3A 4A 5A 6A 7A 8A, «kjør på»** (svaret kom via Gemini, med to presiseringer). Den ene var å måle tida fra
+  landsdelen er valgt til naustet er lastet; det er gjort i O0. Den andre var en hardkodet linje som «I dag har 4 andre båter levert her»
+  når det mangler data. Den bygges ikke, fordi det ville være et oppdiktet tall vist som fakta: linja bruker NPC-flåtens leveringer i
+  spillet og står ikke når det ingen er (O4).
+- 27.10.2026: **O0 og O1 bygd** (`docs/systemer/opning-og-veiledning.md`, «Onboarding 2»). Funn underveis:
+  - Selve fisket spør regelmotoren, og båten venter der reglene stopper juksa. Et første felt i et stengt gytefelt ville latt veiledningen
+    stå fast. Feltet sjekkes nå mot det.
+  - Torskefiske utenfor grunnlinjen i Skagerrak er forbudt for norske fartøy (FOR-2022-12-16-2281 § 1). Regelmotoren mangler dette
+    (`BACKLOG.md`).
+  - Gytefeltforskriften (FOR-2019-03-25-321 § 1): alt fiske er forbudt 1.1–30.4 i 15 gytefelt fra Indre Oslofjord til Skjernøysund. Det
+    står i regelmotoren.
+

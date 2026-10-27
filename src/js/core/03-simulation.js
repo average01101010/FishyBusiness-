@@ -526,9 +526,12 @@ const AREAS = {egga:eggaArea};
 const TUT_FIELD = 4;   // Gisundet nord
 // the first trip's patch: where a start along the coast put it (S.tut.f, ui/08c-start.js), else Gisundet nord
 const tutFieldAt = () => (typeof S !== 'undefined' && S && S.tut && S.tut.f) ? S.tut.f : GROUNDS[TUT_FIELD];
+// the mix: the patch's own (S.tut.f.mix, the jig's fish that stand there now and are lawful there, ui/08c-start.js tutFieldNear), else
+// the skrei mix of the Senja start
 const TUTB = {peak:5.2, mix:{torsk:0.72, sei:0.18, hyse:0.1}};
+const tutMixOf = () => (typeof S !== 'undefined' && S && S.tut && S.tut.f && S.tut.f.mix) || TUTB.mix;
 function tutBonus(sp, p){
-  const m = TUTB.mix[sp]; if (!m || !(S && S.tut && S.tut.catch)) return 0;
+  const m = tutMixOf()[sp]; if (!m || !(S && S.tut && S.tut.catch)) return 0;
   const g = tutFieldAt(), d = dist(p, g.p), x = Math.max(0, d - g.r * 0.5) / (g.r * 0.33);
   return TUTB.peak * m * Math.exp(-x * x);
 }

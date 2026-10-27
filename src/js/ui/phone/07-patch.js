@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p146', '27.10.2026', 'Første tur langs hele kysten', 'The first trip along the whole coast', [
+       ['Første tur går til et felt like utenfor havna der du starter, uansett hvor på kysten det er. Feltet ligger der juksa får fiske den dagen, og fisken du får, er den som står der: sei og lyr der torsken er fredet, skrei der skreiet står.', 'The first trip goes to a patch just off the harbour where you start, wherever on the coast that is. The patch lies where the jig may fish that day, and the fish you get are the ones that stand there: saithe and pollack where the cod is protected, skrei where the skrei is.']]],
     ['p145', '27.10.2026', 'Skum som blir liggende', 'Foam that stays', [
        ['Kjølvannet er laget på nytt: skummet baugen og hekken lager, blir liggende i sjøen i opptil et halvt minutt og trekker ut i et langt, bredt spor bak båten, også gjennom svinger. Skumtoppene i kuling etterlater seg striper med vinden.', 'The wake has been made anew: the foam the bow and the stern make stays in the sea for up to half a minute and draws out into a long, wide trail behind the boat, through turns too. The whitecaps in a gale leave streaks along the wind.']]],
     ['p144', '27.10.2026', 'Økonomien', 'The money', [
