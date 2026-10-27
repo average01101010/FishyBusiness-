@@ -20,7 +20,7 @@ function radioForecast(H){
 }
 function hourly(){
   const H = S.t / 60, hr = gDate(H).getUTCHours();
-  if (hr === 0){ checkTattoos(); taxTick(H); bankDay(H); }   // the fleet and the crew's years are checked once a day (the day wages are gone: Økonomi 2, Ø2)
+  if (hr === 0){ checkTattoos(); payMates(); taxTick(H); bankDay(H); }   // the fleet and the crew's years are checked once a day (the day wages are gone: Økonomi 2, Ø2)
   // the company hears it if any vessel does: in port, with mobile coverage, or on VHF
   const bars = Math.max(0, ...S.fleet.map(v => { const vb = vget(v, 'boat'); return vb.status === 'port' ? 4 : coverage(vb.pos); })), vhf = S.fleet.some(v => (vget(v, 'equip') || {}).vhf);
   // gale warning ahead (coast radio on VHF, or text message when there is coverage)
@@ -143,7 +143,7 @@ function autoRestock(){
   const st = driftStock();
   if (st.ice && pt.ice && catchIce() && berthKind(b) === 'main'){ const kg = Math.max(0, BOAT.iceCap - b.ice), c = kg * PRICE.ice; if (kg > 0 && c <= spendable()){ b.ice += kg; book('is', -c, 'Is fra isrenna', 'Ice from the chute'); iceChute(kg); } }
   if (st.fuel && pt.fuel && BOAT.fuelCap - b.fuel > 0.5 && spendable() > 0) startFueling(true);
-  if (st.gear && !b.gear && PRICE.gear <= spendable()){ b.gear = true; book('redskap', -PRICE.gear, 'Håndjuksa', 'Hand jig'); }
+  if (st.gear && !b.gear && PRICE.gear <= spendable()){ b.gear = true; book('redskap', -PRICE.gear, 'Håndjuksa', 'Hand jig'); tripAdd(b, 'jigKr', PRICE.gear); }
 }
 function depart(){
   const b = S.boat; b.windArm = false; if (b.anch) weighAnchor(true);   // armed again once the wind is under the turn-back limit (05-vessels.js)

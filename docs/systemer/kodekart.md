@@ -487,7 +487,7 @@ The rules along the coast (R2 of the rules plan, 05.10.2026). rulesAt() takes a 
   - 247 `ruOpenNear(p, q, maxKm)`
   - 256 `ruTips()`
 
-## `src/js/core/04-crew.js` (301 linjer)
+## `src/js/core/04-crew.js` (368 linjer)
 
 crew: people with skills, habits and moods
 
@@ -501,33 +501,37 @@ crew: people with skills, habits and moods
   - 51 `deckSkills(ex)`
   - 53 `crewUpgrade(c)`
 - **54** the share system of the coastal fleet (Økonomi 2, Ø2, 27.10.2026; docs/planer/okonomi/02-design.md)
-  - 68 `lotMigrate(c)`
-  - 78 `lottM(n, len)`
-  - 81 `tripOf(b = S.boat)`
-  - 82 `tripCost(b = S.boat)`
-  - 86 `lottParty()`
-  - 93 `lottSplit(D)`
-  - 99 `weekKr(len)`
-  - 100 `lotWeek(c, H = S.t / 60)`
-  - 105 `crewAboard(H, all)`
-  - 106 `crewEff(c, H, hs, g = 'juksa')`
-- **113** what lifts or drags a person's effort just now, besides what they can and who they are (Jonas 23.10.2026: «dette skal være dynamisk
-  - 119 `crewDrive(c, H, hs)`
-  - 140 `crewEffort(c, H, hs)`
-- **147** samhold: how the crew aboard pull together (Jonas 23.10.2026: «Samhold ja, men det må gjøres intuitivt»), 0-100 per vessel (S.team,
-  - 152 `crewTeam()`
-  - 157 `teamHour(H, on, hs, food)`
-  - 176 `teamLine()`
-  - 184 `teamEff(team, me = true, g = 'juksa')`
-  - 186 `compat(a, b)`
-  - 199 `crewById(id)`
-  - 202 `holdNet()`
-  - 211 `crewSettle(c)`
-  - 220 `crewQuit(c, why, whyEn)`
-  - 223 `borsTick(H)`
-  - 231 `crewRumour()`
-  - 233 `crewTick(H)`
-  - 299 `codRoom(H)`
+  - 107 `lotMigrate(c)`
+  - 117 `oppgPct(T, n, len)`
+  - 129 `lottFishery(b = S.boat)`
+  - 132 `lottM(n, len, fishery = 'juksa')`
+  - 143 `tripOf(b = S.boat)`
+  - 144 `tripAdd(b, k, kr0)`
+  - 145 `tripCost(b = S.boat)`
+  - 150 `lottParty()`
+  - 157 `lottSplit(D)`
+  - 161 `payMates()`
+  - 166 `weekKr(len)`
+  - 167 `lotWeek(c, H = S.t / 60)`
+  - 172 `crewAboard(H, all)`
+  - 173 `crewEff(c, H, hs, g = 'juksa')`
+- **180** what lifts or drags a person's effort just now, besides what they can and who they are (Jonas 23.10.2026: «dette skal være dynamisk
+  - 186 `crewDrive(c, H, hs)`
+  - 207 `crewEffort(c, H, hs)`
+- **214** samhold: how the crew aboard pull together (Jonas 23.10.2026: «Samhold ja, men det må gjøres intuitivt»), 0-100 per vessel (S.team,
+  - 219 `crewTeam()`
+  - 224 `teamHour(H, on, hs, food)`
+  - 243 `teamLine()`
+  - 251 `teamEff(team, me = true, g = 'juksa')`
+  - 253 `compat(a, b)`
+  - 266 `crewById(id)`
+  - 269 `holdNet()`
+  - 278 `crewSettle(c)`
+  - 287 `crewQuit(c, why, whyEn)`
+  - 290 `borsTick(H)`
+  - 298 `crewRumour()`
+  - 300 `crewTick(H)`
+  - 366 `codRoom(H)`
 
 ## `src/js/core/05-vessels.js` (968 linjer)
 
@@ -1146,7 +1150,7 @@ looks: how the people of the game look (Jonas 10.10.2026: character customisatio
   - 99 `lookQuay(id, i)`
   - 106 `lookFromKey(s)`
 
-## `src/js/core/10-gear.js` (696 linjer)
+## `src/js/core/10-gear.js` (698 linjer)
 
 passive gear: nets, line and pots that stand in the sea while the boat is away
 
@@ -1213,18 +1217,18 @@ passive gear: nets, line and pots that stand in the sea while the boat is away
 - **514** in the sea, every hour: catch, losses, weather and deadlines (company level)
   - 515 `soakHour(s, H)`
   - 542 `gearHour(H)`
-  - 571 `reportLost(sid)`
-  - 579 `netMended(l)`
-- **580** in port: baiting at the shed or by the crew, mending by the crew or at the net loft in Finnsnes
-  - 586 `egnOrder(lk, n, bait)`
-  - 600 `egnHands()`
-  - 609 `egnSelf(lk, n, bait)`
-  - 630 `stripSelf(lk, bait, n, then)`
-  - 644 `mendSelf(nid)`
-  - 655 `botOrder(nid)`
-  - 666 `gearJob(j)`
-  - 678 `gearJobCancel(j)`
-  - 685 `shoreTick()`
+  - 573 `reportLost(sid)`
+  - 581 `netMended(l)`
+- **582** in port: baiting at the shed or by the crew, mending by the crew or at the net loft in Finnsnes
+  - 588 `egnOrder(lk, n, bait)`
+  - 602 `egnHands()`
+  - 611 `egnSelf(lk, n, bait)`
+  - 632 `stripSelf(lk, bait, n, then)`
+  - 646 `mendSelf(nid)`
+  - 657 `botOrder(nid)`
+  - 668 `gearJob(j)`
+  - 680 `gearJobCancel(j)`
+  - 687 `shoreTick()`
 
 ## `src/js/core/10b-gearcare.js` (244 linjer)
 
@@ -1918,7 +1922,7 @@ the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the
   - 93 `careAboard(inPort, p)`
   - 117 `redskap(tab0)`
 
-## `src/js/ui/phone/13-mannskap-bank-meld.js` (174 linjer)
+## `src/js/ui/phone/13-mannskap-bank-meld.js` (176 linjer)
 
 --- crew
 
@@ -1930,14 +1934,14 @@ the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the
   - 16 `personCard(c, cand)`
   - 23 `bors()`
   - 38 `mannskap()`
-- **61** bank (Økonomi 2, Ø1): two tabs, the accounts with the statement, and the year's accounts (core/03-simulation.js book, ACCT)
-  - 68 `ledger()`
-  - 79 `accounts()`
-  - 102 `bank()`
-- **153** messages
-  - 154 `meld()`
-- **161** actions
-  - 164 `switchVessel(k)`
+- **63** bank (Økonomi 2, Ø1): two tabs, the accounts with the statement, and the year's accounts (core/03-simulation.js book, ACCT)
+  - 70 `ledger()`
+  - 81 `accounts()`
+  - 104 `bank()`
+- **155** messages
+  - 156 `meld()`
+- **163** actions
+  - 166 `switchVessel(k)`
 
 ## `src/js/ui/phone/14-act.js` (242 linjer)
 
@@ -2088,7 +2092,7 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
 - **116** the year view
 - **124** the species card
 
-## `src/js/ui/07-guide.js` (368 linjer)
+## `src/js/ui/07-guide.js` (371 linjer)
 
   - 1 `renderClock()`
   - 10 `mottakShut()`
@@ -2108,11 +2112,11 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 241 `quayText(short)`
   - 247 `panelPort()`
   - 279 `portSlip()`
-  - 331 `landWarn(p)`
-  - 344 `landPage()`
-  - 357 `panelLog()`
-  - 362 `renderPanel()`
-  - 366 `panelBusy()`
+  - 334 `landWarn(p)`
+  - 347 `landPage()`
+  - 360 `panelLog()`
+  - 365 `renderPanel()`
+  - 369 `panelBusy()`
 
 ## `src/js/ui/07b-first-trip.js` (316 linjer)
 

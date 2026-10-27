@@ -74,7 +74,7 @@ function careBuy(what, spec, n){
   else if (what === 'jig'){ if (!CARE.jig[spec]) return [gL('Ukjent juksautstyr.', 'Unknown jig tackle.')]; cost = CARE.jig[spec].kr * n; }
   else return null;
   if (cost > spendable()) return [gL('Ikke nok penger.', 'Not enough money.')];
-  book('redskap', -cost, what === 'hooks' ? 'Kroker' : 'Juksautstyr', what === 'hooks' ? 'Hooks' : 'Jig tackle');
+  book('redskap', -cost, what === 'hooks' ? 'Kroker' : 'Juksautstyr', what === 'hooks' ? 'Hooks' : 'Jig tackle'); if (what === 'jig') tripAdd(b, 'jigKr', cost);   // the jig's gear is a common cost (§ 8 B 19)
   if (what === 'hooks') pg.hooks += spec * n; else pg.jig[spec].n += n;
   return null;
 }

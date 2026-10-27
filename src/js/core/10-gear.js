@@ -380,7 +380,7 @@ const HAUL_SLICES = (kind, hooks) => kind === 'line' ? Math.max(1, Math.round(ho
 function haulUnit(g, H, SL){
   const b = S.boat, s = S.sets.find(x => x.id === g.sid); if (!s) return;
   SL = SL || 1; const left = (s.n - g.done) * SL - (g.sub || 0), f = 1 / left, mid = setMid(s), hook = s.kind === 'line';
-  (b.tripGear = b.tripGear || {})[s.kind] = 1;
+  (b.tripGear = b.tripGear || {})[s.kind] = S.t;
   for (const sp in s.acc){
     const A = s.acc[sp], kg = A.kg * f, n = A.n * f, ts = A.ts * f; A.kg -= kg; A.n -= n; A.ts -= ts; if (kg <= 0) continue;
     if (sp === 'krabbe'){ landCrabs(g, n, kg); continue; }
@@ -550,6 +550,8 @@ function gearHour(H){
     const r = Math.random(), what = GEAR[s.kind].no.toLowerCase(), whatEn = GEAR[s.kind].en.toLowerCase();
     if (r < p){
       s.lost = S.t; { const e = (S.gearLog || []).find(x => x.id === s.id); if (e) e.lost = S.t; }
+      { const v = vesselById(s.vid), cf = 0.2 + 0.8 * (s.cond != null ? s.cond : 1), val = (s.kind === 'garn' ? (NETTY[netTy(s)] || NETTY.bunn).price : s.kind === 'line' ? (LINE_KINDS[s.lk] || LINE_KINDS.hyse).price : POTS.big.price) * s.n * cf + GPRICE.kit + (s.heavy ? GPRICE.heavy : 0);
+        if (v) tripAdd(vget(v, 'boat'), 'lostKr', Math.round(val)); }   // the gear lost is a common cost of nets, lines and pots (oppgjørsavtalene §§ 1, 3, 19)
       setLog(s, 'Mistet ' + what + ' (' + s.n + ' ' + unitName(s.kind, s.n) + ') i været. Tapt redskap skal meldes til Kystvakten.', 'Lost ' + whatEn + ' (' + s.n + ' ' + unitName(s.kind, s.n) + ') in the weather. Lost gear must be reported to the Coast Guard.');
       msg(gL('Redskap', 'Gear'), 'Blåsene er borte, og ' + what + ' er tapt. Meld tapt redskap til Kystvakten under Beholdning.', 'The buoys are gone and the ' + whatEn + ' is lost. Report the lost gear to the Coast Guard under Inventory.');
       continue;
@@ -588,7 +590,7 @@ function egnOrder(lk, n, bait){
   if (b.status !== 'port' || !egnPort(p)) return [gL('Det er ingen egnebu her.', 'There is no baiting shed here.')];
   if (n < 1 || free < n) return [gL('Du har ikke så mange uegnede stamper om bord.', 'You do not have that many unbaited tubs aboard.')];
   const bk = BAITS[bait] ? bait : BAITS[pg.baitPref] ? pg.baitPref : 'makrell', fee = egnFee(lk, n, bk); if (fee > spendable()) return [gL('Ikke nok penger.', 'Not enough money.')];
-  book('agn', -fee, 'Egning i egnebua', 'Baiting at the shed'); L0.n -= n; if (BAITS[bait]) pg.baitPref = bait;
+  book('agn', -fee, 'Egning i egnebua', 'Baiting at the shed'); tripAdd(b, 'egnKr', n * LINE_KINDS[lk].egn); L0.n -= n;   // the bait is counted when the line is set if (BAITS[bait]) pg.baitPref = bait;
   const busy = pg.shore.filter(j => j.kind === 'egn' && j.port === b.port && j.ready > S.t).reduce((a, j) => Math.max(a, j.ready), S.t);
   const ready = Math.max(S.t, busy) + 180 + n * 20;
   pg.shore.push({kind:'egn', port:b.port, lk, n, ready, fee, bait:bk});

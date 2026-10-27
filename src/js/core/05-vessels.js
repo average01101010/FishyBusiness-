@@ -734,7 +734,7 @@ function fish(H, W, hs){
     if (typeof window !== 'undefined') window.TUTTOP = (window.TUTTOP || 0) + gotTop;   // for the tests: how much the guarantee had to add
   }
   // only the stock's own share of the catch is taken from it: not the guide's skrei patch, nor what the guarantee tops up
-  takeStock(b.pos, (got - gotTop) * (dsum > 0 ? Math.max(0, (dsum - tsum) / dsum) : 1)); S.fsess.kg += got; if (got > 0) (b.tripGear = b.tripGear || {}).juksa = 1;
+  takeStock(b.pos, (got - gotTop) * (dsum > 0 ? Math.max(0, (dsum - tsum) / dsum) : 1)); S.fsess.kg += got; if (got > 0) (b.tripGear = b.tripGear || {}).juksa = S.t;
   // a plan's jig places in turn (06f-plan.js, wp.jc; feedback #57): each hour's catch is weighed against the first hour's here, and when it
   // has fallen to half the crew move on to the next place, taking the hours left with them
   { const pl = S.plan, w = pl && pl.ops && pl.wps[pl.idx - 1], fs = S.fsess;
