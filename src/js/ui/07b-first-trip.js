@@ -69,12 +69,10 @@ const arrived = () => !!S.boat.tutWait || S.boat.status === 'fishing' || holdTot
 const no3dv = () => typeof G3 === 'undefined' || !!G3.failWhy || !G3.isActive();
 const to3d = () => inPlot() ? {el:vis('#ecClose'), noOk:true, no:'Trykk «Lukk» for å gå tilbake til 3D først.', en:'Tap «Close» to go back to 3D first.'} : null;
 const TSTEPS = [
+  // the naust in one line (Onboarding 2, O2, docs/planer/onboarding-2.md: the three lines were tapped away in a second or two each),
+  // pointing at Father's cod on the wall
   {id:'n1', ok:true, done:() => false,
-    tip:() => ({no:'Fars naust. Her satt han etter hver tur, så lenge du kan huske. Nå er det ditt.', en:'Father’s boathouse. He sat here after every trip, as long as you can remember. Now it is yours.'})},
-  {id:'n2', ok:true, done:() => false,
-    tip:() => ({rect:() => naustOpen() ? NAUST3D.farRect() : null, no:'Fars torsk, ' + fmt(FAR_REC.kg, 1) + ' kg. Den eneste fisken han hengte opp. Den største du selv får av hver art, kommer til å henge under den.', en:'Father’s cod, ' + fmt(FAR_REC.kg, 1) + ' kg. The only fish he ever hung up. The biggest you land of each species will hang below it.'})},
-  {id:'n3', ok:true, done:() => false,
-    tip:() => ({no:'Ovnen, taket og benken kan du sette i stand etter hvert. Alt om naustet står under «Liste».', en:'The stove, the roof and the bench you can put right in time. Everything about the boathouse is under «List».'})},
+    tip:() => ({rect:() => naustOpen() ? NAUST3D.farRect() : null, no:'Fars naust, nå ditt. Torsken på veggen er hans, ' + fmt(FAR_REC.kg, 1) + ' kg. Den største du selv får av hver art, kommer til å henge under den.', en:'Father’s boathouse, yours now. The cod on the wall is his, ' + fmt(FAR_REC.kg, 1) + ' kg. The biggest you land of each species will hang below it.'})},
   {id:'nout', done:() => !naustOpen(),
     tip:() => ({el:vis('#naust3 [data-q=out]'), no:'Gå ut og se båten.', en:'Go out and see the boat.'})},
   {id:'intro', ok:true, done:() => false,
@@ -96,19 +94,10 @@ const TSTEPS = [
       if (e.bad >= 0) return {el:vis(['#rUndo', '#panel [data-act=clear]']), no:'Etappe ' + legName(e.bad) + ' krysser land. Trykk angre, og bruk «Autonav», eller dra punktet ut på sjøen.', en:'Leg ' + legName(e.bad) + ' crosses land. Tap undo and use «Autonav», or drag the point out to sea.'};
       if (e.fuel > S.boat.fuel) return {el:vis('#panel [data-act=clear]'), no:'Turen bruker mer drivstoff enn du har. Gjør ruta kortere.', en:'The trip needs more fuel than you have. Make the route shorter.'};
       return {el:vis('#panel .rbar [data-act=start]'), no:'Trykk «Kast loss». Båten kjører selv ut til feltet. Punktet har fått to timer fisketid.', en:'Tap «Cast off». The boat runs out to the grounds on its own. The point has two hours of fishing time.'}; }},
-  // on the way out (docs/onboarding.md C8): the «Next» chip, the cinema, the bridge with the binoculars, each until the boat is at the grounds
-  {id:'chip', ok:true, done:() => false,
-    tip:() => ({el:vis('#hud .st.nx'), no:'Båten kjører selv. Brikka «Neste» viser hva som skjer og når, også i ekte tid. Du kan gjøre andre ting imens.', en:'The boat runs on her own. The «Next» chip shows what happens next and when, also in real time. You can do other things meanwhile.'})},
-  {id:'kino', done:() => no3dv() || arrived() || G3.kino(),
-    tip:() => to3d() || {el:vis('#kinoBtn'), no:'Trykk Kino. Da filmer kameraet båten av seg selv, fra lufta, fra sjøen og fra land.', en:'Tap Cinema. The camera films the boat on its own, from the air, from the sea and from the shore.'}},
-  {id:'kino2', done:() => no3dv() || arrived() || !G3.kino(),
-    tip:() => { const b = vis('#kinoBtn'); return b ? {el:b, no:'Fint, ikke sant? Trykk Kino igjen for å ta tilbake kameraet.', en:'Nice, is it not? Tap Cinema again to take the camera back.'} : {no:'Trykk på skjermen for å få knappene fram, så Kino igjen for å ta tilbake kameraet.', en:'Tap the screen to bring the buttons back, then Cinema again to take the camera back.'}; }},
-  {id:'cam', done:() => no3dv() || arrived() || G3.isHelm(),
-    tip:() => to3d() || {el:vis('#camBtn'), no:'Trykk kameraknappen for å stå på broa.', en:'Tap the camera button to stand on the bridge.'}},
-  {id:'cam2', done:() => no3dv() || arrived() || !G3.isHelm(),
-    tip:() => ({el:vis('#camBtn'), no:'Nå ser du som skipperen. Dra med fingeren for å se deg rundt, og knip med to fingre for kikkerten. Trykk kameraknappen igjen for å gå tilbake.', en:'Now you see as the skipper does. Drag a finger to look round, and pinch with two fingers for the binoculars. Tap the camera button again to go back.'})},
+  // on the way out (Onboarding 2, O2, V4 A): one small tip that needs no answer, and goes by itself; the chip, the cinema and the bridge
+  // are named in it, not taught step by step (the players who left, left here, 11.-13.10.2026)
   {id:'sail', done:() => arrived(),
-    tip:() => ({el:vis('#hud .st.nx'), no:'Båten er på vei ut til feltet ' + tutAt().no + '.', en:'The boat is on its way out to the grounds ' + tutAt().en + '.', small:true})},
+    tip:() => ({el:vis('#hud .st.nx'), small:true, no:'Båten går selv ut til feltet ' + tutAt().no + '. «Neste» viser når hun er framme. Imens kan du trykke Kino, eller kameraknappen for å stå på broa.', en:'The boat runs out to the grounds ' + tutAt().en + ' on her own. «Next» shows when she gets there. Meanwhile you can tap Cinema, or the camera button to stand on the bridge.'})},
   // just before the first fishing (Jonas 05.10.2026: «Spilleren burde introduseres for "fiskelykke" og haill-appen like før han skal
   // fiske første gangen»): what the luck is, then the Luck app, then where the luck aboard shows
   {id:'luck', ok:true, done:() => false,
@@ -221,6 +210,16 @@ function tutDriftTip(d){
   if (LEIA_ARM || LEIA_BUSY) return {map:g, noOk:true, no:into ? 'Trykk på ' + tutLandN() + ' i kartet.' : 'Trykk i kartet innenfor ringen ' + tutAt().no + '.', en:into ? 'Tap ' + tutLandN() + ' on the chart.' : 'Tap the chart inside the ring ' + tutAt().en + '.'};
   return {el:vis('#rAuto'), noOk:true, no:'Trykk «Autonav», og så på ' + (into ? tutLandN() : 'ringen ' + tutAt().no) + ' i kartet. Båten finner en trygg vei.', en:'Tap «Autonav», then ' + (into ? tutLandN() : 'the ring ' + tutAt().en) + ' on the chart. The boat finds a safe way.'};
 }
+// why «Kast loss» waits on the guide's steps (Onboarding 2, O2, V3 A: the button says it itself, greyed, instead of a toast after the tap);
+// null when it can be tapped
+function tutStartWhy(){
+  if (!tutOn()) return null; const drift = tutAdrift(), st = tutStep(), id = st ? st.id : '', L = (no, en) => S.lang === 'no' ? no : en;
+  const field = () => L('Legg et punkt i ringen ' + tutAt().no + ' først.', 'Put a point in the ring ' + tutAt().en + ' first.'), land = () => L('Ruta skal ende i ' + tutLandN() + '.', 'The route should end at ' + tutLandN() + '.');
+  if (drift) return tutDriftReady(drift) ? null : drift === 'in' ? land() : field();
+  if (id === 'route1' || (id === 'cast1' && !(tutFieldFish() >= 2 && tutFieldWp(S.draft) >= 0))) return field();
+  if (id === 'route2' || (id === 'cast2' && !draftEnds(tutLand()))) return land();
+  return null;
+}
 let tutCur = null;
 // a small tip only tells what is going on (the boat is on its way, the hold is filling): it goes after nine seconds, or at a tap on it,
 // and comes back when the text changes (a player 05.10.2026: «Den teksten der går ikke bort, den e litt irriterende»)
@@ -311,7 +310,7 @@ function tipPlace(txt, T0, o){
   tip.hidden = false; tip.classList.toggle('small', !!T0.small);
   const {R, round} = tutRect(T0);
   const place = (el, cls) => { el.hidden = !R; if (!R) return; el.style.left = R.x + 'px'; el.style.top = R.y + 'px'; el.style.width = R.w + 'px'; el.style.height = R.h + 'px'; el.classList.toggle('round', round); };
-  place(dim); place(ring); if ((T0.small || T0.nodim) && R) dim.hidden = true; if (T0.nodim && !R) ring.hidden = true;
+  place(ring); dim.hidden = true; if (T0.nodim && !R) ring.hidden = true;   // no dimmed layer (Onboarding 2, V3 A): the ring shows the way
   const tw = tip.offsetWidth, th = tip.offsetHeight, ar = tip.querySelector('.tip-arrow'), vw = window.innerWidth, vh = window.innerHeight;
   if (!R){ tip.style.left = Math.max(8, (vw - tw) / 2) + 'px'; tip.style.top = '72px'; ar.style.display = 'none'; return; }
   const above = R.y > th + 24 && (R.y + R.h > vh * 0.45), x = clamp(R.x + R.w / 2 - tw / 2, 8, vw - tw - 8), y = above ? R.y - th - 12 : Math.min(vh - th - 8, R.y + R.h + 12);
