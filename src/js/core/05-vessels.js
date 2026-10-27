@@ -553,7 +553,11 @@ function sail(H, W, hs){
 // back to the draft. Three tries a leg at most. (Tilbakemeldinger #47 and #48, 08.10.2026: a boat on Autonav must never end up on
 // land. The legs are checked when the route is made; this is the net under them, also after a drift, a pause or a tow.)
 // Returns true when she is held back here, false when the leg is the player's own unsafe one (then she grounds as before).
-const SAIL_RP = {n:0, at:''};
+const SAIL_RP = {n:0, at:'', wait:0, since:0};
+// a way round being found while the time away is played (ui/08-actions.js playMinutes): the minutes wait for it, as they wait for the
+// map, so a boat that meets shallow water with the game closed goes round and on instead of lying still for the rest of the time away
+// (tilbakemelding #97); a search that never answers holds them 20 s at most
+function sailWaiting(){ return SAIL_RP.wait > 0 && Date.now() - SAIL_RP.since < 20000; }
 function sailReplan(pl, b, gp){
   if (pl.unsafe && pl.unsafe[pl.idx]) return false;
   const w = pl.wps[pl.idx], d = dist(b.pos, gp);
@@ -568,14 +572,16 @@ function sailReplan(pl, b, gp){
   // on this vessel's state when the way is found (the player may be aboard another by then)
   const bound = fn => { const v = typeof vesselById === 'function' ? vesselById(vid) : null; if (v && v.id !== S.cur) onVessel(v, fn); else fn(); };
   let pr; try { pr = leiaRoute(from, to, null, w.port || null); } catch (e){ pr = Promise.resolve(null); }
-  pr.then(res => bound(() => {
+  let open = true; const done = () => { if (open){ open = false; SAIL_RP.wait = Math.max(0, SAIL_RP.wait - 1); } };
+  SAIL_RP.wait++; SAIL_RP.since = Date.now();
+  pr.then(res => bound(() => { done();
     if (S.plan !== PL || !PL.replan) return;   // the route was changed meanwhile
     PL.replan = null;
     if (!res || res.why || !res.wps || !res.wps.length){ sailStop(PL, S.boat, none); return; }
     const ins = res.wps.slice(0, -1).map(q => ({x:q.x, y:q.y, port:null, fish:0, leia:true, obs:true}));
     PL.wps.splice(PL.idx, 0, ...ins); if (PL.unsafe) PL.unsafe.splice(PL.idx, 0, ...ins.map(() => false)); PL.obsK = null;
     log('Autonav fant en vei rundt. Går videre.', 'Autonav found a way round. Going on.', 'nav');
-  })).catch(e => { console.error(e); bound(() => { if (S.plan === PL && PL.replan){ PL.replan = null; sailStop(PL, S.boat, none); } }); });
+  })).catch(e => { done(); console.error(e); bound(() => { if (S.plan === PL && PL.replan){ PL.replan = null; sailStop(PL, S.boat, none); } }); });
   return true;
 }
 // the boat stops where she is, and what is left of the route goes back to the draft (as «pause» does, ui/03b-route.js routePause)
