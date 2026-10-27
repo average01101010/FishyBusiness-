@@ -35,7 +35,7 @@ function hourly(){
   // the sea now, and how the wind goes the next twelve hours (a gale in it counts as the gale warning too)
   if (radioHr) radioForecast(H);
   // monthly loan payment
-  for (const k of ['loan', 'loanIN']){ const L = S[k]; if (!L || S.t < L.next) continue; const r = L.rate / 12, int = L.bal * r, pay = Math.min(L.bal + int, L.pay); L.bal = L.bal + int - pay; S.cash -= pay; S.stats.costs += int; L.intPaid = (L.intPaid || 0) + int; L.next += 30 * 24 * 60;
+  for (const k of ['loan', 'loanIN']){ const L = S[k]; if (!L || S.t < L.next) continue; const r = L.rate / 12, int = L.bal * r, pay = Math.min(L.bal + int, L.pay); L.bal = L.bal + int - pay; bookAll({renter:-int, avdrag:-(pay - int)}, 'Terminbeløp, ' + LOANS[k].who, 'Instalment, ' + LOANS[k].who); L.intPaid = (L.intPaid || 0) + int; L.next += 30 * 24 * 60;
     msg(LOANS[k].who, 'Terminbeløp ' + Math.round(pay) + ' kr trukket. Restgjeld ' + Math.round(L.bal) + ' kr.', 'Instalment of NOK ' + Math.round(pay) + ' paid. Remaining NOK ' + Math.round(L.bal) + '.'); if (L.bal < 1) S[k] = null; }
   // the hull insurance's premium, vessel by vessel (Fysikk 3, 16c-hull.js)
   if (typeof kaskoHour === 'function') eachVessel(kaskoHour);
@@ -141,9 +141,9 @@ function autoRestock(){
   // which takes her over there and runs the pump
   const b = S.boat, pt = portById(b.port) || {};
   const st = driftStock();
-  if (st.ice && pt.ice && catchIce() && berthKind(b) === 'main'){ const kg = Math.max(0, BOAT.iceCap - b.ice), c = kg * PRICE.ice; if (kg > 0 && c <= S.cash){ b.ice += kg; S.cash -= c; S.stats.costs += c; iceChute(kg); } }
+  if (st.ice && pt.ice && catchIce() && berthKind(b) === 'main'){ const kg = Math.max(0, BOAT.iceCap - b.ice), c = kg * PRICE.ice; if (kg > 0 && c <= S.cash){ b.ice += kg; book('is', -c, 'Is fra isrenna', 'Ice from the chute'); iceChute(kg); } }
   if (st.fuel && pt.fuel && BOAT.fuelCap - b.fuel > 0.5 && S.cash > 0) startFueling(true);
-  if (st.gear && !b.gear && PRICE.gear <= S.cash){ b.gear = true; S.cash -= PRICE.gear; S.stats.costs += PRICE.gear; }
+  if (st.gear && !b.gear && PRICE.gear <= S.cash){ b.gear = true; book('redskap', -PRICE.gear, 'Håndjuksa', 'Hand jig'); }
 }
 function depart(){
   const b = S.boat; b.windArm = false; if (b.anch) weighAnchor(true);   // armed again once the wind is under the turn-back limit (05-vessels.js)
@@ -172,7 +172,7 @@ function finishJob(j){
   if (j.kind === 'svc'){ b.svcAt = b.engH || 0; S.svcTold = false; log('Service på motoren er ferdig.', 'The engine service is done.'); turMechanic(); }
   else if (j.kind === 'fit'){ const E = EQUIP[j.k];
     // the boat may have been traded for one the equipment does not suit while it waited: the yard pays back
-    if (!equipFits(j.k, b.type)){ S.cash += E.price; log(E.name.no + ' passer ikke denne båten. Verkstedet betalte tilbake ' + kr(E.price) + '.', E.name.en + ' does not suit this vessel. The yard paid back ' + kr(E.price) + '.'); }
+    if (!equipFits(j.k, b.type)){ book('redskap', E.price, 'Tilbakebetalt: ' + E.name.no, 'Paid back: ' + E.name.en); log(E.name.no + ' passer ikke denne båten. Verkstedet betalte tilbake ' + kr(E.price) + '.', E.name.en + ' does not suit this vessel. The yard paid back ' + kr(E.price) + '.'); }
     else { if (E.multi) S.equip[j.k] = (S.equip[j.k] || 0) + 1; else S.equip[j.k] = true; applyVessel(); log('Montert: ' + E.name.no + '.', 'Fitted: ' + E.name.en + '.'); if (hooks.onEquip) hooks.onEquip(); } }
   else if (j.kind === 'repair'){ if (typeof hullMended === 'function') hullMended(j); else b.damage = 0; log('Skroget er reparert.', 'The hull is repaired.'); }
   else if (j.kind === 'eng'){ b.engLv = j.lv; applyVessel(); log('Ny motor montert: ' + BOAT.hp + ' hk, ' + fmt(BOAT.vmax, 1) + ' knop.', 'New engine fitted: ' + BOAT.hp + ' hp, ' + fmt(BOAT.vmax, 1) + ' knots.'); }

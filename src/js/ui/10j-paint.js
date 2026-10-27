@@ -148,7 +148,7 @@ var PAINT = (() => {
       return true; }
     if (a === 'pntgo'){
       if (b.status !== 'port') return false; const s = pre.hull || 'orig', free = !(b.liv && b.liv.hull) || (HULLPAL.find(x => x[0] === s) || [])[4] === 'ach', zc = zoneCost(b), cost = (s !== cur(b) && !free ? price(b) : 0) + zc; if (cost > S.cash) return false;
-      const was = cur(b); if (cost){ S.cash -= cost; S.stats.costs += cost; }
+      const was = cur(b); if (cost) book('verft', -cost, 'Maling', 'Paint');
       apply(b); pre = copy(b.liv); PAINTPRE = pre;
       if (s !== was){ const e = HULLPAL.find(x => x[0] === s);
         log((S.boatName || 'Båten') + ' er malt ' + (s === 'orig' ? 'tilbake i originalfargen' : e[1].toLowerCase()) + (cost ? ' for ' + fmt(cost) + ' kr' : '') + '.',

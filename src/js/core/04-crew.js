@@ -57,7 +57,7 @@ function crewUpgrade(c){ if (c.attr){ if (c.gear && c.gear.sloy == null) Object.
 const HYRE = {week:6000 * 5, safe:0.9};
 const hyreAsk = c => Math.max(100, Math.round(c.ask * HYRE.week / 7 * HYRE.safe / 10) * 10);
 // the day wages, paid at midnight for every vessel's crew on hyre
-function payHyre(){ let sum = 0; eachVessel(() => { for (const c of S.crew) if (c.pay === 'hyre'){ S.cash -= c.hyre; S.stats.costs += c.hyre; sum += c.hyre; if (typeof lifeEarn === 'function') lifeEarn(c, c.hyre); c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, c.hyre]]); } }); return sum; }
+function payHyre(){ let sum = 0; eachVessel(() => { for (const c of S.crew) if (c.pay === 'hyre'){ book('mannskap', -c.hyre, 'Hyre', 'Wages'); sum += c.hyre; if (typeof lifeEarn === 'function') lifeEarn(c, c.hyre); c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, c.hyre]]); } }); return sum; }
 // (all: those off watch asleep in their bunks too, 06d-drift.js driftWatch; they are crew and share the catch, but are not on deck)
 // (a hand in the old form, as the quay's candidates are hired, is made whole in place once: made again at every call he came out
 // different each time, aboard in one call and ashore in the next, until the hour's crewTick kept one)
@@ -173,7 +173,7 @@ function crewSettle(c){
     hyre = Math.round((c.hyre || 0) * m / 1440); }
   else if (c.trip && S.hold.length) lott = Math.round(c.share * holdNet());
   const sum = lott + hyre; delete c.trip; if (sum <= 0) return 0;
-  S.cash -= sum; S.stats.costs += sum; c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, sum]]); if (typeof lifeEarn === 'function') lifeEarn(c, sum);
+  book('mannskap', -sum, 'Oppgjør med ' + c.name, 'Settled with ' + c.name); c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, sum]]); if (typeof lifeEarn === 'function') lifeEarn(c, sum);
   log(c.name + ' fikk ' + kr(sum) + (lott ? ' i lott for fangsten om bord.' : ' i hyre for dagen.'), c.name + ' was paid ' + kr(sum) + (lott ? ' as the share of the catch aboard.' : ' in wages for the day.'));
   return sum;
 }

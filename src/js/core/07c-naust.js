@@ -161,7 +161,7 @@ function naustWhy(k){
 }
 function naustBuy(k){
   const why = naustWhy(k); if (why) return why;
-  const U = NAUST_UP.find(x => x.k === k); S.cash -= U.kr; S.stats.costs += U.kr; (S.naustUp = S.naustUp || {})[k] = S.t;
+  const U = NAUST_UP.find(x => x.k === k); book('land', -U.kr, 'Naustet: ' + U.no, 'The boathouse: ' + U.en); (S.naustUp = S.naustUp || {})[k] = S.t;
   log('Naustet: ' + U.no.toLowerCase() + ' for ' + kr(U.kr) + '.', 'The boathouse: ' + U.en.toLowerCase() + ' for ' + kr(U.kr) + '.');
   return null;
 }

@@ -35,7 +35,7 @@ window.PUBW = (() => {
     const H = S.t / 60, c = cost(); if (spinning || S.boat.status !== 'port' || !pubOpen(H) || S.pubE === pubEvening(H) || S.cash < c) return null;
     let r = Math.random() * tot, seg = segs[0]; for (const g of segs){ r -= (g.s1 - g.s0) / 360 * tot; if (r <= 0){ seg = g; break; } }
     // the round is paid, drawn and saved before the wheel turns, so closing the app mid-spin loses nothing
-    S.cash -= c; S.stats.costs += c; S.pubE = pubEvening(H);
+    book('land', -c, 'En runde på puben', 'A round at the pub'); S.pubE = pubEvening(H);
     let m;
     if (seg.k === 'haill' || seg.k === 'luksus'){ giveHaill(seg.k, 'pub'); m = L('Du vant ', 'You won ') + HAILL[seg.k][S.lang].toLowerCase() + '! ' + L('Den ligger i Haill-appen til du aktiverer den.', 'It waits in the Luck app until you switch it on.'); msg('Puben', L('Du gikk hjem med ', 'You went home with ') + HAILL[seg.k][S.lang].toLowerCase() + '.', 'You went home with ' + HAILL[seg.k].en.toLowerCase() + '.'); }
     else if (seg.k === 'rykte'){ const cr = crewRumour(), t0 = cr || rumour()[0]; m = t0; msg('Puben', t0, t0); }

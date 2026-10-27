@@ -500,7 +500,7 @@ function opsReport(pid, kg, total, landed){
   if (DRIFT2){ plan2Report(pid, kg, total, landed); return; }
   const o = driftOps(), sk = meAboard() ? null : crewSkipper(), port = portById(pid);
   autoRestock();
-  const extra = S.tripOwner ? 0 : Math.round(Math.max(0, total) * 0.05); if (extra > 0){ S.cash -= extra; S.stats.costs += extra; }
+  const extra = S.tripOwner ? 0 : Math.round(Math.max(0, total) * 0.05); if (extra > 0) book('mannskap', -extra, 'Skippertillegg', 'Skipper bonus');
   const what = landed ? [fmt(kg, 0) + ' kg levert i ' + port.name + ', ' + kr(Math.round(total)) + ' etter lott' + (extra ? ', skippertillegg ' + kr(extra) : '') + '.', fmt(kg, 0) + ' kg landed at ' + port.name + ', ' + kr(Math.round(total)) + ' after shares' + (extra ? ', skipper bonus ' + kr(extra) : '') + '.']
     : kg > 0.5 ? [fmt(kg, 0) + ' kg om bord. ' + port.name + ' har ikke fiskemottak.', fmt(kg, 0) + ' kg aboard. ' + port.name + ' has no fish plant.'] : ['ingen fangst å levere.', 'no catch to land.'];
   if (o){ const c = o.cur || {}; o.rep.push({t:S.t, port:pid, kg:Math.round(kg), kr:Math.round(total), h:c.t0 ? Math.round((S.t - c.t0) / 6) / 10 : null, landed:!!landed}); while (o.rep.length > DRP.repMax) o.rep.shift(); o.cur = null; }

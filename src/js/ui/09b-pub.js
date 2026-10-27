@@ -274,7 +274,7 @@ const PUB3 = (() => {
   function kjentBuy(sp){
     if (!KJENT_SP.includes(sp) || (S.kjent && S.kjent.d === gameDay()) || S.cash < KJENT_COST) return;
     const r = kjentFind(sp); if (!r){ toast(L('Kjentmannen har ikke vært ute her i dag.', 'The old hand has not been out round here today.')); return; }
-    S.cash -= KJENT_COST; S.stats.costs += KJENT_COST;
+    book('land', -KJENT_COST, 'Kjentmannen på puben', 'The local at the pub');
     const until = (gameDay() + 1) * 1440;
     S.kjent = {d:gameDay(), sp, lv:r.lv, place:r.place, x:r.p.x, y:r.p.y};
     // his place as a chart mark until the day is out (the chart leaves out marks whose time has run)
@@ -285,7 +285,7 @@ const PUB3 = (() => {
   }
   function crewRound(){
     const cr = crewHere(), cost = ROUND_PP * cr.length; if (!cr.length || S.crewRoundE === ev() || S.cash < cost) return;
-    S.cash -= cost; S.stats.costs += cost; S.crewRoundE = ev();
+    book('land', -cost, 'En runde for mannskapet', 'A round for the crew'); S.crewRoundE = ev();
     for (const c of cr){ c.morale = clamp((c.morale || 50) + (c.traits && c.traits.includes('olglad') ? 12 : 8), 0, 100); }
     msg('Puben', L('Du spanderte en runde på mannskapet. Stemningen steg.', 'You bought the crew a round. The mood rose.'), 'You bought the crew a round. The mood rose.');
     save(); PANELS.bartender(); renderTop(); if (typeof renderHud === 'function') renderHud();

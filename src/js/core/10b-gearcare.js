@@ -74,7 +74,7 @@ function careBuy(what, spec, n){
   else if (what === 'jig'){ if (!CARE.jig[spec]) return [gL('Ukjent juksautstyr.', 'Unknown jig tackle.')]; cost = CARE.jig[spec].kr * n; }
   else return null;
   if (cost > S.cash) return [gL('Ikke nok penger.', 'Not enough money.')];
-  S.cash -= cost; S.stats.costs += cost;
+  book('redskap', -cost, what === 'hooks' ? 'Kroker' : 'Juksautstyr', what === 'hooks' ? 'Hooks' : 'Jig tackle');
   if (what === 'hooks') pg.hooks += spec * n; else pg.jig[spec].n += n;
   return null;
 }
@@ -111,7 +111,7 @@ function careQuote(what, key, shop){
 const careNoHands = () => [gL('Ingen om bord kan gjøre jobben.', 'Nobody aboard can do the job.')];
 function careGate(shop){ return careWhy() || (shop ? careShopWhy() : null); }
 // (a job that costs nothing, the crew changing hooks from the stock aboard, goes ahead also when the account is in the red: tilbakemelding #91)
-function careQueue(j, fee){ if (fee > 0 && fee > S.cash) return [gL('Ikke nok penger.', 'Not enough money.')]; if (!queueJob(j)) return [gL('Verkstedkøen er full.', 'The work queue is full.')]; S.cash -= fee; S.stats.costs += fee; return null; }
+function careQueue(j, fee){ if (fee > 0 && fee > S.cash) return [gL('Ikke nok penger.', 'Not enough money.')]; if (!queueJob(j)) return [gL('Verkstedkøen er full.', 'The work queue is full.')]; book('redskap', -fee, j.no, j.en); return null; }
 function hooksJob(lk, shop){
   const pg = careG(), why = careGate(shop); if (why) return why;
   if (hooksNeed(lk) < 1) return [gL('Kroken sitter som den skal.', 'The hooks are in order.')];
@@ -170,10 +170,10 @@ function careJobDone(j){
 }
 function careJobCancel(j){
   const pg = S.pgear; if (!pg) return;
-  if (j.kind === 'hk'){ if (j.shop) { S.cash += j.fee || 0; } else pg.hooks += j.n; }
-  else if (j.kind === 'lr' || j.kind === 'pr'){ S.cash += j.fee || 0; }
+  if (j.kind === 'hk'){ if (j.shop) { book('redskap', j.fee || 0, 'Avbestilt: ' + j.no, 'Cancelled: ' + j.en); } else pg.hooks += j.n; }
+  else if (j.kind === 'lr' || j.kind === 'pr'){ book('redskap', j.fee || 0, 'Avbestilt: ' + j.no, 'Cancelled: ' + j.en); }
   else if (j.kind === 'jg') pg.jig[j.k].n++;
-  else if (j.kind === 'mend' && j.shop) S.cash += j.fee || 0;
+  else if (j.kind === 'mend' && j.shop) book('redskap', j.fee || 0, 'Avbestilt: ' + j.no, 'Cancelled: ' + j.en);
 }
 
 // ---- the shop buys gear back: a quarter of the new price times the condition (never above it)
@@ -191,13 +191,13 @@ function sellValue(what, key, n){
 function sellGear(what, key, n){
   const pg = careG(), b = S.boat, why = careWhy() || careShopWhy(); if (why) return why;
   n = Math.max(1, Math.round(n || 1));
-  if (what === 'line'){ const L = pg.lines[key], free = L.n - L.baited; if (!L || free < n) return [gL('Du har ikke så mange uegnede stamper om bord.', 'You do not have that many unbaited tubs aboard.')]; S.cash += sellValue('line', key, n); L.n -= n; }
-  else if (what === 'net'){ const l = pg.nets.find(x => x.id === key); if (!l) return [gL('Finner ikke garna.', 'Cannot find the nets.')]; S.cash += sellValue('net', key, 1); pg.nets.splice(pg.nets.indexOf(l), 1); }
-  else if (what === 'pot'){ if (pg.pots.big < n) return [gL('Du har ikke så mange teiner om bord.', 'You do not have that many pots aboard.')]; S.cash += sellValue('pot', key, n); pg.pots.big -= n; }
-  else if (what === 'kit'){ if (pg.kits.n - pg.kits.heavy < n && pg.kits.n < n) return [gL('Du har ikke så mange blåsesett.', 'You do not have that many buoy sets.')]; S.cash += sellValue('kit', key, n); pg.kits.n -= n; pg.kits.heavy = Math.min(pg.kits.heavy, pg.kits.n); }
-  else if (what === 'heavy'){ if (pg.kits.heavy < n) return [gL('Du har ikke så mange tunge dregger.', 'You do not have that many heavy anchors.')]; S.cash += sellValue('heavy', key, n); pg.kits.heavy -= n; }
-  else if (what === 'jig'){ if (pg.jig[key].n < n) return [gL('Du har ikke så mange reservesett.', 'You do not have that many spare sets.')]; S.cash += sellValue('jig', key, n); pg.jig[key].n -= n; }
-  else if (what === 'hooks'){ if (pg.hooks < n) return [gL('Du har ikke så mange kroker.', 'You do not have that many hooks.')]; S.cash += sellValue('hooks', key, n); pg.hooks -= n; }
+  if (what === 'line'){ const L = pg.lines[key], free = L.n - L.baited; if (!L || free < n) return [gL('Du har ikke så mange uegnede stamper om bord.', 'You do not have that many unbaited tubs aboard.')]; book('redskap', sellValue('line', key, n), 'Solgt redskap', 'Gear sold'); L.n -= n; }
+  else if (what === 'net'){ const l = pg.nets.find(x => x.id === key); if (!l) return [gL('Finner ikke garna.', 'Cannot find the nets.')]; book('redskap', sellValue('net', key, 1), 'Solgt redskap', 'Gear sold'); pg.nets.splice(pg.nets.indexOf(l), 1); }
+  else if (what === 'pot'){ if (pg.pots.big < n) return [gL('Du har ikke så mange teiner om bord.', 'You do not have that many pots aboard.')]; book('redskap', sellValue('pot', key, n), 'Solgt redskap', 'Gear sold'); pg.pots.big -= n; }
+  else if (what === 'kit'){ if (pg.kits.n - pg.kits.heavy < n && pg.kits.n < n) return [gL('Du har ikke så mange blåsesett.', 'You do not have that many buoy sets.')]; book('redskap', sellValue('kit', key, n), 'Solgt redskap', 'Gear sold'); pg.kits.n -= n; pg.kits.heavy = Math.min(pg.kits.heavy, pg.kits.n); }
+  else if (what === 'heavy'){ if (pg.kits.heavy < n) return [gL('Du har ikke så mange tunge dregger.', 'You do not have that many heavy anchors.')]; book('redskap', sellValue('heavy', key, n), 'Solgt redskap', 'Gear sold'); pg.kits.heavy -= n; }
+  else if (what === 'jig'){ if (pg.jig[key].n < n) return [gL('Du har ikke så mange reservesett.', 'You do not have that many spare sets.')]; book('redskap', sellValue('jig', key, n), 'Solgt redskap', 'Gear sold'); pg.jig[key].n -= n; }
+  else if (what === 'hooks'){ if (pg.hooks < n) return [gL('Du har ikke så mange kroker.', 'You do not have that many hooks.')]; book('redskap', sellValue('hooks', key, n), 'Solgt redskap', 'Gear sold'); pg.hooks -= n; }
   else return [gL('Ukjent vare.', 'Unknown item.')];
   log('Solgte tilbake til utstyrsbutikken.', 'Sold back to the tackle shop.'); void b; return null;
 }

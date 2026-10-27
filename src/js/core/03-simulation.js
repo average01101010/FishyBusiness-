@@ -735,6 +735,52 @@ const TREKK = {lag:0.0043, pens:0.004, prod:0.016, forsk:0.0135, ress:0.0042, kt
 // A business must register when its sales pass 50 000 kr in twelve months (merverdiavgiftsloven § 2-1); a fisher's business is then a
 // sole proprietorship (enkeltpersonforetak) in the Central Coordinating Register (Enhetsregisteret), which needs no company to fish.
 const MVA = {rate:0.1111, limit:50000};
+// ---------- the books (Økonomi 2, Ø1, 27.10.2026, docs/planer/okonomi/02-design.md) ----------
+// Every krone in or out goes through book(): a cost is negative, an income positive. The categories of the result feed S.stats.revenue
+// and S.stats.costs (which the tax, the plan's day statistics and the stats panel read), the year's sums in S.stats.y[year] (the
+// accounts in the bank) and the statement S.ledger (the last LEDGER_N postings). The categories outside the result (loans paid out,
+// instalments, vessels bought and sold, the transfers between the bank's accounts) move the money only. The tax is a category of its
+// own (S.stats.tax). VAT is not booked: it comes with the settlement and goes straight on to the state.
+const ACCT = {
+  fisk:{s:'in', no:'Fisk levert', en:'Fish landed'}, tillegg:{s:'in', no:'Tillegg, lever og rogn', en:'Premiums, liver and roe'}, oppdrag:{s:'in', no:'Oppdrag', en:'Missions'},
+  rente:{s:'in', no:'Renteinntekter', en:'Interest earned'}, annet:{s:'in', no:'Andre inntekter', en:'Other income'},
+  trekk:{s:'out', no:'Trekk til Råfisklaget og staten', en:'Sales organisation and state levies'}, mannskap:{s:'out', no:'Mannskap (lott)', en:'Crew (shares)'},
+  kvote:{s:'out', no:'Kvotesamarbeid', en:'Quota cooperation'}, diesel:{s:'out', no:'Drivstoff', en:'Fuel'}, is:{s:'out', no:'Is', en:'Ice'}, agn:{s:'out', no:'Agn og egning', en:'Bait and baiting'},
+  redskap:{s:'out', no:'Redskap og utstyr', en:'Gear and equipment'}, verft:{s:'out', no:'Verft og verksted', en:'Yard and workshop'}, havn:{s:'out', no:'Havneavgift', en:'Harbour dues'},
+  forsikring:{s:'out', no:'Forsikring og slep', en:'Insurance and towing'}, renter:{s:'out', no:'Rentekostnader', en:'Interest paid'}, regnskap:{s:'out', no:'Regnskap og gebyrer', en:'Books and fees'},
+  land:{s:'out', no:'Naust, rorbu, pub og klær', en:'Boathouse, rorbu, pub and clothes'},
+  eldre_inn:{s:'in', no:'Inntekter før regnskapet fikk poster', en:'Income before the accounts had categories'}, eldre_ut:{s:'out', no:'Kostnader før regnskapet fikk poster', en:'Costs before the accounts had categories'},
+  skatt:{s:'tax', no:'Skatt', en:'Tax'},
+  laan:{s:'bal', no:'Lån utbetalt', en:'Loans paid out'}, avdrag:{s:'bal', no:'Avdrag på lån', en:'Loan instalments'}, baat:{s:'bal', no:'Båter kjøpt og solgt', en:'Vessels bought and sold'},
+  spare:{s:'bal', no:'Til og fra sparekonto', en:'To and from savings'}, skattekonto:{s:'bal', no:'Til og fra skattekonto', en:'To and from the tax account'}
+};
+const LEDGER_N = 250;
+// a save from before the books: this tax year's income and costs so far (S.tx counts them from the new year) stand as one line each,
+// and the advance tax paid this year as the year's tax. Run the first time the books are touched, also for a save from the cloud.
+function bookMigrate(){
+  const Y = S.stats.y = {}, T = S.tx; if (!T) return;
+  const R = Y[T.y] = {}, inn = Math.round(S.stats.revenue - T.rev0), ut = Math.round(S.stats.costs - T.cost0);
+  if (inn) R.eldre_inn = inn; if (ut) R.eldre_ut = -ut; if (T.paid) R.skatt = -Math.round(T.paid);
+}
+const bookYear = (H = S.t / 60) => { if (!S.stats.y) bookMigrate(); const Y = S.stats.y, y = yearH(H); return Y[y] || (Y[y] = {}); };
+// parts {category: kr}; one posting on the statement (a landing is one line, with its levies and shares inside). A posting like the
+// last one (same text and category, within two game hours: the pump's litres, the day's harbour due) is added to it.
+function bookAll(parts, no, en, vid){
+  let sum = 0; const Y = bookYear(), P = {};
+  for (const k in parts){ const kr0 = Math.round(parts[k] || 0), B = ACCT[k]; if (!kr0 || !B) continue; P[k] = kr0; sum += kr0; Y[k] = (Y[k] || 0) + kr0;
+    if (B.s === 'in') S.stats.revenue += kr0; else if (B.s === 'out') S.stats.costs -= kr0; else if (B.s === 'tax') S.stats.tax = (S.stats.tax || 0) - kr0; }
+  const ks = Object.keys(P); if (!ks.length) return 0;
+  S.cash += sum;
+  const L = S.ledger || (S.ledger = []), last = L[L.length - 1], v = vid != null ? vid : S.cur;
+  no = no || ACCT[ks[0]].no; en = en || ACCT[ks[0]].en;
+  if (last && ks.length === 1 && last.p && Object.keys(last.p).length === 1 && last.p[ks[0]] != null && last.no === no && last.v === v && S.t - last.t < 120){ last.p[ks[0]] += P[ks[0]]; last.kr += sum; last.t = S.t; last.bal = Math.round(S.cash); }
+  else { L.push({t:S.t, kr:sum, no, en, p:P, v, bal:Math.round(S.cash)}); if (L.length > LEDGER_N) L.splice(0, L.length - LEDGER_N); }
+  return sum;
+}
+const book = (k, kr0, no, en, vid) => bookAll({[k]:kr0}, no, en, vid);
+// a year's result from its sums: income, costs, the result before tax (the depreciation is not booked: it moves no money)
+function bookResult(y){ bookYear(); const Y = S.stats.y[y] || {}; let inc = 0, cost = 0; for (const k in Y){ const B = ACCT[k]; if (!B) continue; if (B.s === 'in') inc += Y[k]; else if (B.s === 'out') cost -= Y[k]; }
+  return {inc, cost, res:inc - cost, tax:-(Y.skatt || 0), Y}; }
 // Income tax (E4 of the economy plan, 04.10.2026). The year's profit is the revenue less the costs in S.stats (the levies, the shares,
 // fuel, gear, interest ...; not the instalments, the boats bought or the tax itself) less the boats' depreciation (14 % a year of the
 // hulls and engines, saldogruppe e; a quota right is not depreciated). As a sole proprietor (ENK) the profit is the owner's income:
@@ -758,6 +804,8 @@ function taxOf(P, form, days){
 const depBase = () => S.fleet.reduce((a, v) => { const b = vget(v, 'boat'), eq = vget(v, 'equip') || {}; return a + VESSELS[b.type].price * 0.7 + (eq.motor90 ? EQUIP.motor90.price * 0.5 : 0); }, 0);
 function txInit(H){ S.tx = {y:gDate(H).getUTCFullYear(), rev0:S.stats.revenue, cost0:S.stats.costs, paid:0, days:[]}; }
 // the profit of the year so far, with the depreciation for the part of the year that has gone
+// the part of the calendar year that has gone at game hour H
+function yearFrac(H){ const d = gDate(H), y = d.getUTCFullYear(), y0 = Date.UTC(y, 0, 1); return clamp((d.getTime() - y0) / (Date.UTC(y + 1, 0, 1) - y0), 0, 1); }
 function txProfit(H){ const T = S.tx, d = gDate(H), y0 = Date.UTC(T.y, 0, 1), frac = clamp((d.getTime() - y0) / (Date.UTC(T.y + 1, 0, 1) - y0), 0, 1);
   return (S.stats.revenue - T.rev0) - (S.stats.costs - T.cost0) - depBase() * TAX.dep * frac; }
 const txForm = () => S.form === 'AS' ? 'AS' : 'ENK';
@@ -767,26 +815,27 @@ function taxTick(H){
   const T = S.tx, d = gDate(H), mv = vesselById(S.me), mb = mv ? vget(mv, 'boat') : null, day = Math.floor(H / 24);
   if (mb && ['sailing', 'fishing'].includes(mb.status) && T.days[T.days.length - 1] !== day) T.days.push(day);
   if (d.getUTCDate() !== 1) return;
-  if (S.form === 'AS'){ const c = Math.round(TAX.as.books / 12); S.cash -= c; S.stats.costs += c; }
+  if (S.form === 'AS') book('regnskap', -Math.round(TAX.as.books / 12), 'Regnskapsfører', 'Accountant');
   const m = d.getUTCMonth(); if (m % 3) return;
   const L2 = (no, en) => S.lang === 'no' ? no : en;
   if (m === 0 && d.getUTCFullYear() > T.y){
     // the settlement for the year that has ended
-    const R = taxOf(txProfit(H), txForm(), T.days.length), rest = R.sum - T.paid; S.cash -= rest; S.stats.tax = (S.stats.tax || 0) + rest;
+    const R = taxOf(txProfit(H), txForm(), T.days.length), rest = R.sum - T.paid; book('skatt', -rest, 'Skatteoppgjøret ' + T.y, 'Tax settlement ' + T.y);
     S.taxLast = {y:T.y, form:txForm(), days:T.days.length, R, paid:T.paid, rest};
+    { bookYear(); const Yp = S.stats.y[T.y] || (S.stats.y[T.y] = {}); Yp._dep = Math.round(depBase() * TAX.dep); Yp._tax = R.sum; }   // for the accounts (bookResult)
     msg('Skatteetaten', 'Skatteoppgjøret for ' + T.y + ' (' + (txForm() === 'AS' ? 'aksjeselskap' : 'enkeltpersonforetak') + '): overskudd ' + kr(R.P) + ', skatt ' + kr(R.sum) + (R.fd ? ', fiskerfradrag ' + kr(R.fd) : '') + '. Forskudd betalt ' + kr(T.paid) + '. ' + (rest >= 0 ? 'Restskatt ' + kr(rest) + ' er trukket.' : 'Du får ' + kr(-rest) + ' tilbake.'),
       'The tax settlement for ' + T.y + ': profit NOK ' + R.P + ', tax NOK ' + R.sum + '. Paid in advance NOK ' + T.paid + '. ' + (rest >= 0 ? 'NOK ' + rest + ' still owed has been taken.' : 'NOK ' + (-rest) + ' comes back to you.'));
     txInit(H); return;
   }
   // the advance on the year so far (nothing comes back until the settlement)
   const due = taxOf(txProfit(H), txForm(), T.days.length).sum - T.paid;
-  if (due > 0){ S.cash -= due; T.paid += due; S.stats.tax = (S.stats.tax || 0) + due;
+  if (due > 0){ book('skatt', -due, 'Forskuddsskatt ' + T.y, 'Advance tax ' + T.y); T.paid += due;
     msg('Skatteetaten', 'Forskuddsskatt for ' + T.y + ': ' + kr(due) + ' er trukket. Betalt i år: ' + kr(T.paid) + '.', 'Advance tax for ' + T.y + ': NOK ' + due + ' taken. Paid this year: NOK ' + T.paid + '.'); }
 }
 // founding the company: the share capital stays the company's money, the registration fee goes
 function foundAS(){
   if (S.form === 'AS' || S.cash < TAX.as.capital + TAX.as.fee) return false;
-  S.cash -= TAX.as.fee; S.stats.costs += TAX.as.fee; S.form = 'AS'; S.formT = S.t; if (!S.company) S.company = (S.boatName || 'Havbris') + ' Fiskeri'; if (!/ AS$/.test(S.company)) S.company += ' AS'; pressPut('as', {type:S.boat.type});
+  book('regnskap', -TAX.as.fee, 'Registrering i Foretaksregisteret', 'Registration of the company'); S.form = 'AS'; S.formT = S.t; if (!S.company) S.company = (S.boatName || 'Havbris') + ' Fiskeri'; if (!/ AS$/.test(S.company)) S.company += ' AS'; pressPut('as', {type:S.boat.type});
   msg('Brønnøysundregistrene', S.company + ' er registrert i Foretaksregisteret med ' + kr(TAX.as.capital) + ' i aksjekapital. Fra nå skattlegges overskuddet med 22 % i selskapet, uten fiskerfradrag, og selskapet fører regnskap. Rederi-appen ligger nå på telefonen.', S.company + ' is registered with NOK ' + TAX.as.capital + ' in share capital. From now the profit is taxed at 22 % in the company, without the fisherman\'s deduction, and the company keeps books. The Company app is now on the phone.');
   return true;
 }
@@ -818,7 +867,7 @@ const LOANS = {loan:{who:'Kystbanken', rate:0.069}, loanIN:{who:'Innovasjon Norg
 const debt = () => (S.loan ? S.loan.bal : 0) + (S.loanIN ? S.loanIN.bal : 0);
 const innOK = () => bladB() && !S.inUsed && !S.fleet.some(v => vget(v, 'lic'));
 function takeLoan(amount, months, k){ k = k || 'loan'; const C = LOANS[k], r = C.rate / 12, n = months || 120, O = S[k], bal = (O ? O.bal : 0) + amount;
-  S[k] = {bal, rate:C.rate, pay:Math.round(bal * r / (1 - Math.pow(1 + r, -n))), next:O ? O.next : S.t + 30 * 24 * 60}; S.cash += amount;
+  S[k] = {bal, rate:C.rate, pay:Math.round(bal * r / (1 - Math.pow(1 + r, -n))), next:O ? O.next : S.t + 30 * 24 * 60}; book('laan', amount, 'Lån fra ' + C.who, 'Loan from ' + C.who);
   msg(C.who, (k === 'loanIN' ? 'Toppfinansieringen er innvilget: risikolån på ' : 'Lånet på ') + Math.round(amount) + ' kr er utbetalt, over ' + Math.round(n / 12) + ' år. Terminbeløp ' + S[k].pay + ' kr.', (k === 'loanIN' ? 'The top-up is granted: a risk loan of NOK ' : 'The loan of NOK ') + Math.round(amount) + ' has been paid out, over ' + Math.round(n / 12) + ' years. Monthly payment NOK ' + S[k].pay + '.'); }
 // a sold or traded-in vessel pays off the loans first (Kystbanken's, then Innovasjon Norge's); returns what went to the lenders
 function payDown(x){ let left = x; for (const k of ['loan', 'loanIN']){ const L = S[k]; if (!L || left <= 0) continue; const p = Math.min(L.bal, left); L.bal -= p; left -= p; if (L.bal < 1) S[k] = null; } return x - left; }
@@ -834,7 +883,7 @@ function deal(price, ti, inn){
   const why = !loanNeed ? null : S.sales.length < 3 ? 'notes' : S.cash < eqNeed ? 'eq' : inL > (inn ? price * INN : 0) + 1 || loanNeed > cap + 1 ? 'cap' : null;
   return {cost, eqNeed, loanNeed, bankL, inL, payoff, tiNet, ok:!why, why};
 }
-function finance(x, months){ if (x.payoff) payDown(x.payoff); if (x.bankL > 0) takeLoan(x.bankL, months); if (x.inL > 0) takeLoan(x.inL, 120, 'loanIN'); S.cash -= x.cost; }
+function finance(x, months){ if (x.payoff) payDown(x.payoff); if (x.bankL > 0) takeLoan(x.bankL, months); if (x.inL > 0) takeLoan(x.inL, 120, 'loanIN'); book('baat', -x.cost, 'Båtkjøp', 'Vessel bought'); }
 function lenGroup(){ const L = BOAT.len || 5.8; return L < 8 ? 0 : L < 10 ? 1 : 2; }
 function codLimits(H){ if (H == null) H = S.t / 60; if (S.lic){ const c = licQ(S.lic, H).torsk; return {max:c, guar:c}; } const O = yearQuota(yearH(H)).open, g = lenGroup(); return {max:(O.max[g] + openMaxAdd(H)) * 1000, guar:O.guar[g] * 1000}; }
 // the open group's maximum-quota fishing is stopped when the group quota is estimated fished (the stop and the raises are worked out in

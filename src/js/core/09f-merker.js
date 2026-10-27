@@ -115,7 +115,7 @@ function achPool(scale){
   const lines = pg.lines ? (pg.lines.hyse ? pg.lines.hyse.n : 0) + (pg.lines.bank ? pg.lines.bank.n : 0) : 0, pots = pg.pots ? (pg.pots.big || 0) : 0;
   const nets = pg.nets || [], iceRoom = (BOAT.iceCap || 0) - (b.ice || 0), fuelRoom = (BOAT.fuelCap || 0) - (b.fuel || 0);
   const money = (lo, hi, who) => r => { const v = Math.round((lo + (hi - lo) * r) * scale / 100) * 100;
-    return {apply:() => { S.cash += v; }, t:L(who[0] + ' ' + kr(v) + '.', who[1] + ' ' + kr(v) + '.')}; };
+    return {apply:() => { book('annet', v, who[0], who[1]); }, t:L(who[0] + ' ' + kr(v) + '.', who[1] + ' ' + kr(v) + '.')}; };
   if (lines + pots > 0) add(0, 3, () => { const kg = sc(15); return {apply:() => { const B = baitOf(pg); B.makrell = (B.makrell || 0) + kg; }, t:L('Butikken gir deg ' + kg + ' kg makrell til agn.', 'The shop gives you ' + kg + ' kg of mackerel for bait.')}; });
   if (iceRoom > 20) add(0, 2, () => { const kg = Math.round(Math.min(iceRoom, sc(120))); return {apply:() => { b.ice = (b.ice || 0) + kg; }, t:L('Mottaket gir deg ' + kg + ' kg is.', 'The plant gives you ' + kg + ' kg of ice.')}; });
   if (fuelRoom > 5) add(0, 2, () => { const l = Math.round(Math.min(fuelRoom, Math.max(10, sc(BOAT.fuelCap * 0.25)))); return {apply:() => { b.fuel = (b.fuel || 0) + l; }, t:L('Bunkerskaia fyller ' + l + ' liter på tanken.', 'The bunker quay puts ' + l + ' litres in the tank.')}; });

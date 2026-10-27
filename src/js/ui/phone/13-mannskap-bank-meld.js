@@ -55,21 +55,63 @@
     h.push('<div class="ph-card"><h4>' + L('Trenger du folk?', 'Need hands?') + '</h4><p class="ph-note">' + L('Ledige fiskere finner du i Mannskapsbørsen.', 'Available fishers are in the crew exchange.') + '</p><button class="ph-btn p" data-pa="open" data-a="bors">' + L('Åpne Mannskapsbørsen', 'Open the crew exchange') + '</button></div>');
     return h.join('');
   }
-  // --- bank
+  // --- bank (Økonomi 2, Ø1): two tabs, the accounts with the statement, and the year's accounts (core/03-simulation.js book, ACCT)
+  let ledN = 25;
+  const krS = v => (Math.round(v) < 0 ? '−' : '') + kr(Math.abs(Math.round(v)));
+  const krC = v => '<span class="' + (Math.round(v) < 0 ? 'kout' : 'kin') + '">' + (Math.round(v) > 0 ? '+' : '') + krS(v) + '</span>';
+  const bkv = (k, v, cls) => '<div class="ph-kv' + (cls ? ' ' + cls : '') + '"><span>' + k + '</span>' + v + '</div>';
+  const bookL = k => L(ACCT[k].no, ACCT[k].en);
+  // the statement: the newest postings first, a landing as one line with its parts under it
+  function ledger(){
+    const all = (S.ledger || []).slice().reverse();
+    if (!all.length) return '<p class="ph-note">' + L('Ingen bevegelser ennå.', 'No transactions yet.') + '</p>';
+    return all.slice(0, ledN).map(e => { const ks = Object.keys(e.p || {});
+      return '<div class="ph-led"><div class="ph-kv hrow"><span><small>' + dayStr(e.t / 60).replace(/^\S+ /, '') + ' ' + hm(e.t / 60) + '</small><br>' + L(e.no, e.en) + '</span>' + krC(e.kr) + '</div>' +
+        (ks.length > 1 ? '<p class="ph-note ph-ledp">' + ks.map(k => bookL(k) + ' ' + krS(e.p[k])).join(' · ') + '</p>' : '') + '</div>'; }).join('') +
+      (all.length > ledN ? '<button class="ph-btn alt" data-pa="ledmore">' + L('Vis flere', 'Show more') + '</button>' : '');
+  }
+  const yearFracNow = () => yearFrac(S.t / 60);
+  // the year's accounts: the income and costs by category, the depreciation, the result before and after tax, and the money that moved
+  // outside the result (loans, instalments, vessels, tax paid), so the account and the result can be told apart
+  function accounts(){
+    const H = S.t / 60; if (!S.tx) txInit(H); bookYear(H);
+    const y0 = yearH(H), ys = Object.keys(S.stats.y).map(Number).filter(y => y <= y0).sort((a, b) => b - a).slice(0, 4), y = ys.includes(+sub.acy) ? +sub.acy : y0, cur = y === y0, R = bookResult(y), Y = R.Y;
+    const dep = cur ? Math.round(depBase() * TAX.dep * yearFracNow()) : Math.round(Y._dep != null ? Y._dep : depBase() * TAX.dep), pre = R.res - dep;
+    const tax = cur ? taxOf(Math.max(0, pre), txForm(), S.tx.days.length).sum : Y._tax;
+    const rows = s0 => Object.keys(ACCT).filter(k => ACCT[k].s === s0 && Y[k]).map(k => bkv(bookL(k), krS(s0 === 'out' ? Y[k] : Y[k]))).join('');
+    const h = ['<div class="ph-c">'];
+    if (ys.length > 1) h.push('<div class="ph-sub">' + ys.map(v => '<button class="' + (v === y ? 'on' : '') + '" data-pa="acy" data-y="' + v + '">' + v + '</button>').join('') + '</div>');
+    h.push('<div class="ph-card ph-acc"><h4>' + L('Regnskap ', 'Accounts ') + y + (cur ? L(' så langt', ' so far') : '') + '</h4>' +
+      '<h5>' + L('Inntekter', 'Income') + '</h5>' + (rows('in') || '<p class="ph-note">–</p>') + bkv(L('Sum inntekter', 'Total income'), kr(R.inc), 'tot') +
+      '<h5>' + L('Kostnader', 'Costs') + '</h5>' + (rows('out') || '<p class="ph-note">–</p>') + bkv(L('Sum kostnader', 'Total costs'), krS(-R.cost), 'tot') +
+      bkv(L('Avskrivning på båtene', 'Depreciation of the vessels'), krS(-dep)) + bkv(L('Resultat før skatt', 'Result before tax'), krS(pre), 'tot') +
+      bkv(cur ? L('Beregnet skatt så langt', 'Tax reckoned so far') : L('Skatt for året', 'Tax for the year'), tax == null ? '–' : krS(-tax)) +
+      bkv(L('Resultat etter skatt', 'Result after tax'), tax == null ? '–' : krS(pre - tax), 'tot') +
+      '<p class="ph-note">' + L('Avskrivningen er 14 % i året av skrog og motor (saldogruppe e). Den flytter ingen penger, men trekkes fra overskuddet som skatten regnes av.', 'The depreciation is 14 % a year of the hulls and engines. It moves no money, but comes off the profit the tax is reckoned on.') + '</p></div>');
+    const out = Object.keys(ACCT).filter(k => (ACCT[k].s === 'bal' || ACCT[k].s === 'tax') && Y[k]).map(k => bkv(k === 'skatt' ? L('Skatt betalt', 'Tax paid') : bookL(k), krS(Y[k]))).join('');
+    h.push('<div class="ph-card ph-acc"><h4>' + L('Penger utenom resultatet', 'Money outside the result') + '</h4>' + (out || '<p class="ph-note">' + L('Ingenting ennå i år.', 'Nothing yet this year.') + '</p>') +
+      '<p class="ph-note">' + L('Lån, avdrag og båtkjøp flytter penger, men er verken inntekt eller kostnad. Skatten betales på etterskudd og i terminer. Derfor går kontoen og resultatet ikke likt.', 'Loans, instalments and vessels bought move money, but are neither income nor cost. The tax is paid in arrears and in instalments. So the account and the result do not move alike.') + '</p></div>');
+    { const fleetV = S.fleet.reduce((a, v) => a + vesselValue(v), 0), D = debt();
+      h.push('<div class="ph-card ph-acc"><h4>' + L('Balanse nå', 'Balance sheet now') + '</h4>' + bkv(L('Flåten (verdi)', 'The fleet (value)'), kr(fleetV)) + bkv(L('Konto', 'Account'), krS(S.cash)) +
+        bkv(L('Gjeld', 'Debt'), krS(-D)) + bkv(L('Egenkapital', 'Equity'), krS(fleetV + S.cash - D), 'tot') + '</div>'); }
+    h.push('</div>'); return h.join('');
+  }
   function bank(){
-    const Lo = S.loan, h = ['<div class="ph-c"><div class="ph-card"><p class="ph-note">' + L('Brukskonto', 'Current account') + '</p><div class="ph-big">' + kr(S.cash) + '</div></div>'];
-    const loanCard = (k, title) => { const Q = S[k]; return '<div class="ph-card"><h4>' + title + '</h4>' + kv(L('Restgjeld', 'Balance'), kr(Q.bal)) + kv(L('Rente', 'Interest'), fmt(Q.rate * 100, 1) + ' %') + kv(L('Terminbeløp', 'Monthly payment'), kr(Q.pay)) + kv(L('Neste trekk', 'Next payment'), dayStr(Q.next / 60)) + '<button class="ph-btn" data-pa="repay" data-k="' + k + '"' + (S.cash >= 10000 ? '' : ' disabled') + '>' + L('Innbetal 10 000 kr', 'Pay NOK 10 000') + '</button><button class="ph-btn alt" data-pa="repayAll" data-k="' + k + '"' + (S.cash >= Q.bal ? '' : ' disabled') + '>' + L('Innfri lånet', 'Pay off the loan') + '</button></div>'; };
+    const tab = sub.bank || 'konto', h = [subs('bank', [['konto', 'Kontoer', 'Accounts'], ['regnskap', 'Regnskap', 'Books']])];
+    if (tab === 'regnskap') return h[0] + accounts();
+    h.push('<div class="ph-c"><div class="ph-card"><p class="ph-note">' + L('Brukskonto', 'Current account') + '</p><div class="ph-big">' + krS(S.cash) + '</div></div>');
+    const loanCard = (k, title) => { const Q = S[k]; return '<div class="ph-card"><h4>' + title + '</h4>' + kv(L('Restgjeld', 'Balance'), kr(Q.bal)) + kv(L('Rente', 'Interest'), fmt(Q.rate * 100, 1) + ' %') + kv(L('Terminbeløp', 'Monthly payment'), kr(Q.pay)) + kv(L('Neste trekk', 'Next payment'), dayStr(Q.next / 60)) + kv(L('Renter betalt', 'Interest paid'), kr(Math.round(Q.intPaid || 0))) + '<button class="ph-btn" data-pa="repay" data-k="' + k + '"' + (S.cash >= 10000 ? '' : ' disabled') + '>' + L('Innbetal 10 000 kr', 'Pay NOK 10 000') + '</button><button class="ph-btn alt" data-pa="repayAll" data-k="' + k + '"' + (S.cash >= Q.bal ? '' : ' disabled') + '>' + L('Innfri lånet', 'Pay off the loan') + '</button></div>'; };
     if (S.loanIN) h.push(loanCard('loanIN', L('Risikolån, Innovasjon Norge', 'Risk loan, Innovasjon Norge')));
-    if (Lo){ h.push(loanCard('loan', L('Båtlån, Kystbanken', 'Vessel loan, Kystbanken'))); }
+    if (S.loan) h.push(loanCard('loan', L('Båtlån, Kystbanken', 'Vessel loan, Kystbanken')));
     else h.push('<div class="ph-card"><h4>' + L('Båtlån', 'Vessel loan') + '</h4><p>' + L('Kystbanken finansierer inntil 80 % av båtprisen mot pant i flåten, over 10 år (15 år for båt med hjemmel), rente 6,9 %. Selger eller bytter du inn en båt, går pengene først til å innfri lånet. Søk direkte fra Båthandel under Verft når du kjøper.', 'Kystbanken finances up to 80% of the price secured on the fleet, over 10 years (15 for a boat with a right), at 6.9%. If you sell or trade in a vessel, the money first pays off the loan. Apply straight from the boat market in the yard when you buy.') + '</p></div>');
-    h.push('<div class="ph-card"><h4>' + L('Regnskap', 'Accounts') + '</h4>' + kv(L('Inntekter', 'Revenue'), kr(S.stats.revenue)) + kv(L('Kostnader', 'Costs'), kr(S.stats.costs)) + kv(L('Resultat', 'Result'), kr(S.stats.revenue - S.stats.costs)) + '</div>');
     // the tax of this year (E4, 03-simulation.js TAX): the profit so far, what is paid, and what it would be as ENK and as AS
     { const H = S.t / 60; if (!S.tx) txInit(H); const P = txProfit(H), dn = S.tx.days.length, E = taxOf(P, 'ENK', dn), A = taxOf(P, 'AS', dn);
       h.push('<div class="ph-card"><h4>' + L('Skatt ', 'Tax ') + S.tx.y + '</h4>' + kv(L('Foretaket', 'Business'), S.form === 'AS' ? L('Aksjeselskap', 'Limited company') : L('Enkeltpersonforetak', 'Sole proprietorship')) + kv(L('Overskudd så langt', 'Profit so far'), kr(Math.round(P))) +
         kv(L('Dager på fiske', 'Days fishing'), dn + ' / ' + TAX.fisk.days) + kv(L('Skatt som ENK', 'Tax as ENK'), kr(E.sum) + (E.fd ? L(' (fiskerfradrag ', ' (fisherman\'s deduction ') + kr(E.fd) + ')' : '')) + kv(L('Skatt som AS', 'Tax as AS'), kr(A.sum) + L(' + regnskap', ' + books')) + kv(L('Forskudd betalt', 'Paid in advance'), kr(S.tx.paid)) +
         (S.taxLast ? kv(L('Oppgjøret for ', 'Settlement for ') + S.taxLast.y, S.taxLast.rest >= 0 ? L('restskatt ', 'owed ') + kr(S.taxLast.rest) : L('tilbake ', 'back ') + kr(-S.taxLast.rest)) : '') +
-        (S.form === 'AS' ? '' : '<button class="ph-btn" data-pa="foundas"' + (S.cash >= TAX.as.capital + TAX.as.fee ? '' : ' disabled') + '>' + L('Stift Rederi AS (', 'Found a company (') + kr(TAX.as.capital) + L(' i aksjekapital, gebyr ', ' share capital, fee ') + kr(TAX.as.fee) + ')</button><p class="ph-note">' + L('Med rederiet får du Rederi-appen på telefonen: hele flåten på én skjerm.', 'With the company you get the Company app on the phone: the whole fleet on one screen.') + '</p>') +
+        (S.form === 'AS' ? '' : '<button class="ph-btn" data-pa="foundas"' + (S.cash >= TAX.as.capital + TAX.as.fee ? '' : ' disabled') + '>' + L('Stift Rederi AS (', 'Found a company (') + kr(TAX.as.capital) + L(' i aksjekapital, gebyr ', ' share capital, fee ') + kr(TAX.as.fee) + ')</button>') +
         '<p class="ph-note">' + L('Forskuddsskatten trekkes hvert kvartal, og oppgjøret kommer ved nyttår. Som ENK er overskuddet din inntekt, med fiskerfradrag når du har fisket minst 130 dager. Et AS betaler 22 % og fører regnskap. Satsene er fra 2026 (skattevedtaket), funnet med søk.', 'The advance tax is taken every quarter, and the settlement comes at the new year. As ENK the profit is your income, with the fisherman\'s deduction after 130 days fishing. A company pays 22 % and keeps books. The rates are 2026\'s, found by search.') + '</p></div>'); }
+    h.push('<div class="ph-card"><h4>' + L('Kontoutskrift', 'Statement') + '</h4>' + ledger() + '</div>');
     h.push('</div>');
     return h.join('');
   }

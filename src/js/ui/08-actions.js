@@ -197,7 +197,7 @@ function sell(){
   achSale(total, Object.values(lines).map(r => r.sp));   // the badges (core/09f-merker.js)
   { const by = {}; for (const r of arr) by[r.sp] = (by[r.sp] || 0) + r.kg; turSale(port.id, by); }   // missions (core/09g-turer.js)
   const cashBefore = S.cash;
-  S.cash += net - lott - coopKr; S.stats.revenue += total; S.stats.costs += tk.sum + lott + coopKr;
+  bookAll({fisk:fishKr, tillegg:stKr + ordKr + exKr, trekk:-tk.sum, mannskap:-lott, kvote:-coopKr}, 'Levering, ' + port.name, 'Landing, ' + port.name);
   if (coopKr > 0) log(S.lic.coop.name + ' fikk ' + kr(coopKr) + ' for torsken på kvoten hans.', S.lic.coop.name + ' got ' + kr(coopKr) + ' for the cod on his quota.'); S.stats.kg += kg; S.hold = [];
   const fs = S.marks.length ? S.marks[S.marks.length - 1] : null, field = fieldCode(S.fsess || fs || b.pos);
   // the whole landing note goes with the sale, for the deck log's Salg tab (ui/06b-book-tabs.js)

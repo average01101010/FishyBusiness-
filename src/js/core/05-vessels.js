@@ -852,7 +852,7 @@ function risk(W, hs){
 }
 // after a tow (towDone): a damaged hull is mended where she was towed (the nearest yard), the insurance and the first free repair
 // counted (Fysikk 3, 16c-hull.js hullOrder); scratches alone wait for the player
-function hullRepair(){ const b = S.boat; if (typeof hullOrder === 'function'){ hullOld(b); if (hullBad(b) && b.status === 'port') hullOrder(true); return; } if (!b.damage) return; b.damage = 0; const full = Math.round(VESSELS[b.type].price * 0.035), first = freeFirst('rep'), cost = first ? 0 : full; S.cash -= cost; S.stats.costs += cost; queueJob({kind:'repair', h:8, no:'Reparasjon av skroget', en:'Hull repair'});
+function hullRepair(){ const b = S.boat; if (typeof hullOrder === 'function'){ hullOld(b); if (hullBad(b) && b.status === 'port') hullOrder(true); return; } if (!b.damage) return; b.damage = 0; const full = Math.round(VESSELS[b.type].price * 0.035), first = freeFirst('rep'), cost = first ? 0 : full; book('verft', -cost, 'Reparasjon av skroget', 'Hull repair'); queueJob({kind:'repair', h:8, no:'Reparasjon av skroget', en:'Hull repair'});
   if (first) msg('Verkstedet', 'Skroget har fått skader etter grunnstøtingen. Den første reparasjonen tar vi gratis, den tar 8 timer. Neste gang koster den ' + full + ' kr. Følg dybdene i kartet og hold avstand til skjær og grunner.', 'The hull was damaged when you ran aground. The first repair is on us; it takes 8 hours. Next time it costs NOK ' + full + '. Watch the depths on the chart and keep clear of rocks and shoals.');
   else msg('Verkstedet', 'Skroget har fått skader etter grunnstøtingen. Reparasjonen koster ' + cost + ' kr og tar 8 timer.', 'The hull was damaged when you ran aground. The repair costs NOK ' + cost + ' and takes 8 hours.'); }
 function svcOverdue(){ const b = S.boat; return Math.max(0, ((b.engH || 0) - (b.svcAt || 0)) / BOAT.svcH - 1); }
@@ -905,7 +905,7 @@ function rescue(keepCatch){
   const b = S.boat, port = nearestYard(b.pos) || nearestPort(b.pos), base = rescueBase(b.pos), fee = S.member || first ? 0 : keepCatch ? PRICE.tow : PRICE.rescue;
   if (first) msg('Redningsselskapet', 'Det første slepet er gratis, og fangsten får du beholde. Neste gang koster et slep ' + kr(PRICE.tow) + ', og et nødanrop i farlig sjø ' + kr(PRICE.rescue) + ' og fangsten. Hold øye med dieselen og værmeldingen. Som medlem slipper du å betale.',
     'The first tow is free, and you keep the catch. Next time a tow costs ' + kr(PRICE.tow) + ', and a distress call in dangerous seas ' + kr(PRICE.rescue) + ' and the catch. Keep an eye on the diesel and the forecast. Members pay nothing.');
-  S.cash -= fee; S.stats.costs += fee;
+  book('forsikring', -fee, 'Slep til havn', 'Tow to harbour');
   let lost = 0; if (!keepCatch){ lost = Math.round(holdTotal()); S.hold = []; }
   b.prev = null; b.tripBad = true; if (meAboard()){ tatAdd('rescued', 1); checkTattoos(); }
   const t = {ph:'muster', t0:S.t, keep:keepCatch, fee, lost, port:port.id, base:base.n, baseId:base.id, bp:{x:base.p.x, y:base.p.y}, at:{x:b.pos.x, y:b.pos.y}, P1:null, P2:null, r:0, s:0};

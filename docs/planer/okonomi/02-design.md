@@ -123,4 +123,5 @@ Ingen privatøkonomi, lønn eller utbytte. Ingen småkostnader (kaileie, ansvars
 
 ## 8. Status
 
-- 27.10.2026: planen skrevet. Venter på Jonas: «kjør på», og valgene V1–V4.
+- 27.10.2026: planen skrevet. Jonas: «kjør på», V1 A, V2 A, V3 A, V4 A («så lenge det er ganske nøyaktig går det greit»).
+- 27.10.2026, Ø1 bygd: `ACCT`/`book`/`bookAll` i `core/03-simulation.js`, alle rundt 70 pengeflyttingene i 28 filer gjennom `book`, bankens faner Kontoer og Regnskap, Rederi-appens årstall, `rederiOpen` etter flåten, `boktest.py`. Navnet `BOOK` var tatt (dekksdagboka), så kategoriene heter `ACCT`. Bryteren `ECON2` ble ikke laget for Ø1: hovedboka endrer ingen tall, bare hvor de føres.

@@ -87,7 +87,7 @@ const PUBSOC = (() => {
   }
   function lagPay(){
     const d = LG.d, w = wk(), P = S.pubSoc || (S.pubSoc = {}); if (!d || !d.port || P.lagW === w || lagSum(d) < lagGoal(d)) return;
-    P.lagW = w; S.cash += LAG_PAY; if (typeof achAdd === 'function'){ achAdd('lag'); if (typeof achCheck === 'function') achCheck(); }
+    P.lagW = w; book('annet', LAG_PAY, 'Fiskarlagets premie', 'The fishing team\'s prize'); if (typeof achAdd === 'function'){ achAdd('lag'); if (typeof achCheck === 'function') achCheck(); }
     msg('Fiskarlaget', L('Laget nådde ukas mål. Du fikk ' + kr(LAG_PAY) + '.', 'The club reached the week\'s goal. You got ' + kr(LAG_PAY) + '.'), 'The club reached the week\'s goal. You got ' + kr(LAG_PAY) + '.'); save();
   }
 
@@ -144,7 +144,7 @@ const PUBSOC = (() => {
   function quizAnswer(k){
     const Q = quizState(), set = quizSet(Q.w), i = Q.a.length; if (i >= QUIZ_N) return;
     const q = QUIZ[set[i]], ok = k === q[2]; Q.a.push(k);
-    if (ok){ S.cash += QUIZ_PAY; }
+    if (ok){ book('annet', QUIZ_PAY, 'Pubquiz', 'Pub quiz'); }
     toast(ok ? L('Riktig! +' + kr(QUIZ_PAY), 'Right! +' + kr(QUIZ_PAY)) : L('Feil. Riktig svar: ', 'Wrong. The answer: ') + L(...q[1][q[2]]));
     if (Q.a.length >= QUIZ_N){ const right = Q.a.filter((a, j) => a === QUIZ[set[j]][2]).length;
       if (right === QUIZ_N && typeof achAdd === 'function'){ achAdd('quiz'); if (typeof achCheck === 'function') achCheck(); }

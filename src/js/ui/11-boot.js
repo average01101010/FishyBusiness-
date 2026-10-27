@@ -43,7 +43,7 @@ if (S){ awayMs = Date.now() - (S.lastReal || Date.now()); } else S = newState();
     let back = 0;
     on(() => { const b = S.boat; b.type = 'trebat'; b.fuel = Math.min(b.fuel || 0, VESSELS.trebat.fuelCap); b.engH = 0; b.svcAt = 0;
       for (const q of Object.keys(EQUIP)) if (S.equip && S.equip[q] && !equipFits(q, 'trebat')){ back += EQUIP[q].price * (EQUIP[q].multi ? S.equip[q] : 1); S.equip[q] = EQUIP[q].multi ? 0 : false; } });
-    S.owned = ['trebat']; S.cash += back;
+    S.owned = ['trebat']; book('redskap', back, 'Utstyr tilbakebetalt', 'Equipment paid back');
     log('Aluminiumsskiffen kan nå bare kjøpes på verftet. Du har fått fars gamle trebåt i stedet' + (back ? ', og ' + kr(back) + ' tilbake for utstyr som ikke passer i henne' : '') + '.',
       'The aluminium skiff can now only be bought at the yard. You have Father’s old wooden boat instead' + (back ? ', and ' + kr(back) + ' back for gear that does not fit her' : '') + '.');
   } }
@@ -83,7 +83,7 @@ for (const v of S.fleet) withVessel(v, () => { const p = S.pgear.pots; if (p.sma
 for (const s of S.sets || []) if (s.kind === 'teine') s.pot = 'big';
 // «Kaffe på kaia» was replaced by the daily login bonus on 01.10.2026: unused free pub rounds are paid out, borrowed deck tubs
 // and the clean-hull bonus are gone, and the bonus starts at zero
-if (S.daily){ const v = S.daily.pubV || 0; if (v > 0){ S.cash += v * PUB_COST; log('Kaffe på kaia er lagt ned. Du fikk ' + kr(v * PUB_COST) + ' for ' + v + (v > 1 ? ' ubrukte pubrunder.' : ' ubrukt pubrunde.'), '«Coffee on the quay» is gone. You got ' + kr(v * PUB_COST) + ' for ' + v + ' unused pub round' + (v > 1 ? 's.' : '.')); } delete S.daily; }
+if (S.daily){ const v = S.daily.pubV || 0; if (v > 0){ book('annet', v * PUB_COST, 'Ubrukte pubrunder', 'Unused pub rounds'); log('Kaffe på kaia er lagt ned. Du fikk ' + kr(v * PUB_COST) + ' for ' + v + (v > 1 ? ' ubrukte pubrunder.' : ' ubrukt pubrunde.'), '«Coffee on the quay» is gone. You got ' + kr(v * PUB_COST) + ' for ' + v + ' unused pub round' + (v > 1 ? 's.' : '.')); } delete S.daily; }
 // trim was for good and free to try until 05.10.2026; now it is for a while and bought (core BOOSTS): the old fittings go
 for (const v of S.fleet || []) if (v.boat) delete v.boat.boost; if (S.boat) delete S.boat.boost;
 if (!S.haillInv) S.haillInv = {haill:0, luksus:0}; if (S.haill && !HAILL[S.haill.type]) S.haill.type = 'haill';   // the halibut luck is gone (04.10.2026)
