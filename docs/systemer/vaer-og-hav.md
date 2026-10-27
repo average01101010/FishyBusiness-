@@ -228,6 +228,23 @@ Brukerens valg:
 
 **Ikke løst her:** skummet i kjølvannet og baugbølgen var alt i båtens ramme. Resten av fysikkplanen (manøvreringsmodell, bølgekrefter, skade) står i 5.58.
 
+## 5.20c Skumkartet: skummet som blir liggende i sjøen (Fysikk 4, F1, 27.10.2026)
+
+Jonas 27.10.2026 (`docs/planer/fysikk-4-sjo-og-skrog.md`, valg 3A og 7A): kjølvannet og skummet først. Før var skummet bare det hvert bilde selv laget: skumtoppene over terskelen og kjølvannets brytning ved skroget, og sporet to tynne striper (`TRAIL`) som var borte etter 10 s. I sjøen blir skum liggende: vasken et skrog legger fra seg er hvit i titalls sekunder og hundrevis av meter, og skummet fra en kam ligger igjen og drar ut i striper med vinden (videoene fra chillboats.game).
+
+**Kartet** (`view3d/14-sea.js` `FOAM`, `foamInit`, `foamStep`, `foamBind`; skyggerne `FOAM_VS`/`FOAM_FS` i `01-shaders.js`):
+- To teksturer (RGBA8, ping-pong) over 600 m rundt båten, 1024 × 1024 texler (0,59 m) på Høy og Ultra, 512 under. Kartet ligger i nærfeltets ramme (`Pb = P − NF.D`, 5.20b: vannet den korte sjøen og skumflekkene følger), så sporet legges igjen i båtens ekte fart gjennom vannet, ikke skjermens 6×, og blir liggende der når hun stopper.
+- Hver texel: kjølvannets skum (mengde, fødsel) i r og g, skumtoppenes (mengde, fødsel) i b og a. Fødselen er en andel av et vindu fra kartets `t0` (kjølvannet 160 s, skumtoppene 32 s), rullet 128/255 av vinduet når bildets tid passerer 0,95 av det, så en fødsel alltid er en hel texelverdi; eldre skum faller bort ved rullingen. Alderen regnes når det tegnes: mengde · e^(−alder/τ), τ 20 s for kjølvannet og 3,5 s for skumtoppene.
+- Hvert bilde (`foamStep`, etter `updateWake`): det gamle kartet tegnes inn i det nye flyttet med de hele texlene vinduet har gått (ingenting slører, 8 bit holder), og `FOAM_FS` legger inn skummet som lages nå, der det lages: vasken langs skroget (skrogets omriss av `VESSELS`-målene og `GEO`, sveipet langs veien hun kom siden forrige bilde, så et tregt bilde ikke gir hull), vannet hekken etterlater (en båtbredde, 6 m bak), hekkbølgen som bryter langs Kelvin-armene og baugbølgen (`wakeH`, samme terskler som sjøskyggeren), og skumtoppene (samme kam, støy og Monahan-terskel som sjøskyggeren, bare kammene godt over terskelen). Nytt skum over gammelt: det som er sterkest nå, vinner og fødes på nytt.
+- Sjøskyggeren leser kartet med ett oppslag (enhet 7) i nærpassen: kjølvannets skum tett ved skroget, brutt opp i bobler og striper av støy som ligger stille i vannet (`n1`, `n2` av `Pb`) etter hvert som det tynnes; skumtoppenes skum som halen en kam legger igjen etter at kammen selv (som skyggeren tegner som før) er forbi, dratt ut langs vinden (`n3`); vannet under tynt skum melkeaktig av bobler.
+- Når kartet er på, tegnes ikke de gamle stripene i `drawEffects` (`WKB`); boblene fra propellen er som før. `SEA_VER` ble `u2`, så alle enheter prøver den fulle sjøen på nytt.
+- **Av:** `#foam0` i adressen (sammenligning; skjult, som `#nf0`), den lette og den enkle sjøen, lavt kvalitetsnivå (fjernskyggeren tegner den nære sjøen der), og når ingen rammebuffer kan lages (`FOAM.why`, til skyen som «3D skumkart av»). Ved et hopp over 300 m (teleport, innhenting) og ved kartets første bilde nullstilles kartet.
+- **Kostnad:** passet er 1024² texler med 10 bølger per texel for skumtoppene, rundt en firedel av sjøskyggeren; CPU-tiden i `foamStep` er 0,1–0,4 ms. Målt på nettbrettet: (fylles inn).
+
+**Testing:** Playwrights `screenshot` under SwiftShader fryser siden i 1–2 minutter; båten hopper kilometer når den våkner, og kartet nullstilles som ved teleport, så bildene viste aldri sporet. Bilder av kartet tas med spillets eget `G3.snap(w)` (ingen frys), og kartet leses tilbake med `readPixels` på `FOAM.fb[FOAM.r]` (`G3._debug.foam`).
+
+**Ikke gjort i F1:** NPC-båtene lager ikke skum i kartet; sprøyten legger ikke inn skum der den lander; brytning med Jacobi-determinanten og kalibreringen av skumtoppene (F3).
+
 ## 5.61 Skyene i ekte tid (#352, 19.10.2026)
 
 Skyene på himmelen (`cp` i himmelskyggeleggeren) driver med vinden i skyhøyden, i ekte tid som bølgene: 1,5 ganger vinden ved sjøen (overflatevinden over sjø er rundt to tredjedeler av vinden over friksjonslaget), dreid 15° med klokka (overflatevinden krysser isobarene inn mot lavtrykket), minst 2 m/s, over et skydekke i 1 500 m (`CLD`, `cloudStep` i `view3d.js`). Forskyvningen samles opp bilde for bilde på tiden som virkelig har gått (`uCloudOff`). Før gikk skyene mot vinden i fast fart (forskyvningen var vindretningen ganger tiden siden start, lagt til prøvepunktet), og når vinden dreide noen grader, hoppet hele himmelen. Test: `tests/skytest.py` (3D, rundt 1 min): retning og fart i vind fra vest, og ingen hopp når vinden dreier 30°.
