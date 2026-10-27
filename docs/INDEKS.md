@@ -63,6 +63,7 @@ Les denne først, så bare dokumentet for systemet du skal endre, og `docs/BACKL
 | `docs/plan-blakveite.md`, `docs/blakveite.md` | Blåkveita: planen og kunnskapen. |
 | `docs/lansering.md` | Det som gjenstår før lansering, og serveren. |
 | `docs/onboarding.md` | Onboardingen. |
+| `docs/planer/onboarding-2.md` | Onboarding 2 (27.10.2026): kortere første tur for hele kysten, målingene som viser frafall under seilingen ut, fasene O0–O6 og valgene V1–V6. Venter på svar. |
 
 ## Regler og kilder
 
