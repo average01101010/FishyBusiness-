@@ -19,7 +19,7 @@
     return Math.min(2, /Direct3D/i.test(GPU) ? Math.max(v, 1) : v); };
   // the sea program that linked on this device when the full one did not, for this version of the sea's shaders (SEA_VER: change it
   // when they change, so every device tries the full sea again); #sealite in the address forces the lite one (the tests)
-  const SEA_OK = 'dsb_sea_ok', SEA_VER = 'u1';
+  const SEA_OK = 'dsb_sea_ok', SEA_VER = 'u2';
   const seaOkGet = () => { if (/sealite/.test(location.hash)) return 'true,true,true'; if (/sealvl=/.test(location.hash)) return null;
     try { const v = localStorage.getItem(SEA_OK) || ''; return v.startsWith(SEA_VER + ':') ? v.slice(SEA_VER.length + 1) : null; } catch (e){ return null; } };
   const seaOkSet = v => { if (/sealvl=|sealite/.test(location.hash)) return; try { if (v) localStorage.setItem(SEA_OK, SEA_VER + ':' + v); else localStorage.removeItem(SEA_OK); } catch (e){} };
