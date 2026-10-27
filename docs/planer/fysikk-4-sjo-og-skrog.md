@@ -1,6 +1,6 @@
-# Fysikk 4: sjøen og skroget (plan, utkast 27.10.2026)
+# Fysikk 4: sjøen og skroget (plan, vedtatt 27.10.2026)
 
-> Planen for den neste runden med vannfysikk og samspillet mellom båt og sjø. Skrevet av økta 27.10.2026 etter `/planlegg`. **Utkast: venter på Jonas' svar på valgene i kapittel 6.** Hver fase er én økt. Status står nederst og oppdateres av hver økt som bygger en fase.
+> Planen for den neste runden med vannfysikk og samspillet mellom båt og sjø. Skrevet av økta 27.10.2026 etter `/planlegg`. **Vedtatt 27.10.2026** (Jonas: «1a, 2b, 3a, 4a, 5a, 6a, 7a, 8ok, 9a», kapittel 6). Hver fase er én økt, F1 først. Status står nederst og oppdateres av hver økt som bygger en fase.
 
 ## 1. Bestillingen
 
@@ -34,7 +34,7 @@ Fysikken i notatet er stort sett riktig. Det som ikke stemmer, eller ikke passer
 | Brytning når Jacobi-determinanten J ≤ 0; skum og energitap derfra | Ja. J ≤ 0 er selvkryssing; i praksis settes skum fra J under rundt 0,5. For en Gerstner-sum er J analytisk og billig. | Skum statistisk på de høyeste kammene (Monahans dekning som terskel) | F3 |
 | Stivt legeme med 6 frihetsgrader, trykket integrert over skroget (hydrostatikk + Froude-Krylov), demping og tilleggsmasse | Ja | 3 frihetsgrader vannrett i kjernen (spilltid); hiv, stamp og rull følger overflaten som dempede svingere i 3D | Valg 2. F2: oppdrift per skrogsnitt i 3D for hiv og stamp; rull som i dag; kjernen beholder sine 3 |
 | Kelvin-kilen 19,47° uansett fart; Froudetallet; skrogfart ved Fr ≈ 0,4; motstanden stiger bratt mot skrogfart; hekkbølgen som vann som fyller tomrommet | Ja. 19,47° gjelder dypt vann; ved Fr over rundt 0,5 ser kilen smalere ut (Rabaud og Moisy 2013), og på grunt vann videre. «Eksponentiell» er løst sagt; bølgemotstanden går som Fr⁴–Fr⁶ med kneiker. | Kelvin-mønsteret, Fr-regimene, baugbølgen, hvit brytning og skumstripa finnes. Motstanden i modellen er kvadratisk, uten kneik ved skrogfart | F1 (skummet), F5 (kneika) |
-| Bølge–strøm: Doppler-skift ω = σ + k·U; motstrøm gir kortere, brattere og farligere sjø | Ja | Ingen strøm på bølgene; `curAt` er en forenklet strøm bare for ankeret | Ikke i denne planen (valg 5) |
+| Bølge–strøm: Doppler-skift ω = σ + k·U; motstrøm gir kortere, brattere og farligere sjø | Ja | Ingen strøm på bølgene; `curAt` er en forenklet strøm bare for ankeret | F8 (Jonas valgte 5A, mot anbefalingen) |
 | Sanntidsdata: GRIB fra Frost API eller BarentsWatch inn i skyggerne | Delvis feil: Frost gir observasjoner som JSON, ikke GRIB; varslene ligger på MET sin thredds-tjener og api.met.no. Og det strider mot Jonas' valg 06.10.2026 (eget simulert vær, én felles klokke som går 6×). | Simulert vær per sted fra klimanormaler, lavtrykk på spor | Ikke med |
 | BEM-beregnede RAO-er og Cummins-ligningen med retardasjonsfunksjon | Riktig fysikk, men krever et BEM-program og skrogformer vi ikke har; gevinsten over riktig tilleggsmasse og demping er liten i et spill | Tilleggsmasse 0,8 i hiv, Ikeda-demping i rull | Ikke med; tilleggsmasse og demping settes i F2 |
 | Medstrømsfaktor og propelleffekt (prop walk), særlig akterover | Ja | Skruevirkningen finnes (7 % av skyvkraften akterover, 1,2 % forover) | Ikke mer nå |
@@ -109,9 +109,17 @@ Hver fase passer én økt, bygges bak et flagg i adressen der det er mulig (`#fo
 - **Filer:** `core/03b-sea.js` (hendelsen), `view3d/14-sea.js`, `core/16c-hull.js`, `core/14-crewlife.js`.
 - **Tester:** `hulltest`, `seatest`.
 
-Rekkefølgen er F1, F2, F3, F4, F5, så F6 og F7 om Jonas vil. F1 og F2 kan bytte plass (valg 7).
+### F8. Strøm og tidevannsstrøm (to økter; Jonas valgte 5A, mot anbefalingen)
 
-## 6. Valgene
+- **Hva, første økt (modellen og dataene):** et strømfelt for hele kysten uten måledata (Kartverkets strømtabeller er ikke åpne), regnet av vårt eget kart og tidevann: `tools/strom/strom.py` finner de trange sundene langs kysten i 25 m-masken (et sund med et basseng innenfor), måler bredde, dybde (`depthF`) og bassengets vannflate, og skriver `src/data/strom.json` (akse, bredde, dybde, bassengareal, rekkevidde) som `leinett.json`. I spillet gir `curAt(p, H)` (den som ankeret alt bruker, bygd ut) strømmen: gjennom sundet U = (A_basseng/(bredde·dybde))·dH/dt fra `tideH` sin endring per time, langs aksen, inn når det flør og ut når det fjærer, dempet med avstanden fra munningen; utenfor sundene en svak kyststrøm nordover langs land (Den norske kyststrømmen, 0,2–0,5 knop) og tidevannets egen strøm langs kysten (liten). Kjente straumer brukes som sjekk og tak: Saltstraumen (inntil 20 knop, spillet klemmer til 8), Rystraumen (5–6), Moskstraumen. Kartplotteren viser strømpiler der den er over en halv knop.
+- **Andre økt (sjøen og båten):** i kjernen (spilltid) legges strømmen til farten over grunn (`dynMove`), driften i ro (`lieDrift`, `dynDrift`), ankeret (som før) og møtefrekvensen (`dynEnv`). I 3D får bølgene strømmens virkning der den går: bølgetallet av (ω − k·U)² = g·k og amplituden etter bølgeaksjon (Longuet-Higgins og Stewart: H/H₀ = √(c₀·c_g0 / (c·(c_g + U)))), så motstrøm gir kortere og brattere sjø med mer brytning (F3 sitt Jacobi-skum tar resten), medstrøm lengre og slakere; blokkert ved U = −c₀/4 klemmes til faktor 2,5. Sjøtilstandsteksturen får strømmen (to kanaler til, eller en egen liten tekstur), og `seaH` på CPU det samme. Vær-panelet og planleggeren sier «krapp sjø i strømmen» der vind og strøm står mot hverandre.
+- **Filer:** `tools/strom/`, `src/data/strom.json`, `core/03-simulation.js` (`curAt`), `core/16b-dyn.js`, `core/06e-anchor.js`, `view3d/14-sea.js`, `01-shaders.js`, `ui/03-map.js` (pilene).
+- **Tester:** `tidetest` (strømmen snur med tidevannet, styrken i Saltstraumen og Gisundet), `dyntest` (driften med strøm), `anchortest`, `sea3d` (bildet av sjøen i motstrøm).
+- **Måles:** strømmen i Saltstraumen, Rystraumen, Gisundet og en åpen kyst mot det som er kjent; at ingenting endres der strømmen er under 0,2 knop.
+
+Rekkefølgen er F1, F2, F3, F4, F5, F8, så F6 og F7. Jonas valgte 7A: skummet først, så skroget.
+
+## 6. Valgene (avgjort 27.10.2026)
 
 1. **Bølgefeltet.** A: Gerstner-summen forbedres (F3), FFT måles for seg (F6) etterpå. B: FFT i en worker med en gang, Gerstner som reserve. C: FFT på GPU-en med ping-pong-pass. **Anbefalt A.** Skumkartet og Jacobi-skummet gir mesteparten av det videoene viser, virker på nettbrettet med dagens reserver, og FFT-en kan prøves med måling når det andre er på plass. C frarådes: sjøskyggeren lenker alt ikke på Jonas' telefon, og flere pass per bilde er det som koster på en mobil GPU.
 2. **Skroget.** A: overflatefølgingen forbedres (baugen ned ved høye kammer, slag fra relativ fart), ingen krefter. B: oppdrift per skrogsnitt for hiv og stamp i 3D, rull som i dag, kjernens 3 frihetsgrader uendret (F2). C: full 6-DOF i kjernen i spilltid, 3D følger den. **Anbefalt B.** C ville møte bølgene 6× for ofte igjen («rister voldsomt», 03.10.2026) eller kreve at bølgene går i spilltid, som Jonas sa nei til 19.10.2026.
@@ -129,6 +137,8 @@ Spørsmål uten A/B:
 - Hvilke enheter måler vi på? Nettbrettet (merke og modell) og Galaxy A52s. Kan du sende `#fps`-tallet fra sjøen i dag (åpent hav, kuling) før F1 starter, så vi har et nullpunkt?
 - Skal `#foam0`/`#hull0` (av-bryterne) bli stående etter at fasen er levert, som `#nf0`, eller tas bort?
 
+**Avgjort.** Jonas 27.10.2026: «1a, 2b, 3a, 4a, 5a, 6a, 7a, 8ok, 9a». Altså: Gerstner-summen forbedres og FFT måles for seg (1A); oppdrift per skrogsnitt i 3D, rull som i dag, kjernen uendret (2B); skumkart (3A); kystnær sjø (4A); **strøm som egen fase i denne planen, F8, mot anbefalingen** (5A); brottsjø sist og liten (6A); skummet først, så skroget (7A); BEM/Cummins, SPH, hydroakustikk, thrustere, kran, kavitasjon og sanntidsdata tas ut (8); F1–F4 bare bilde og lyd, konsekvensene samlet i F7 (9A). Om videoene: «Alt i videoen veier like tungt fordi det er det totale resultatet som betyr noe.» Nettbrettet er en OnePlus Pad 3 (nullpunktet står i kapittel 10). Av-bryterne (`#foam0`, `#hull0`): Jonas lot økta velge («gjør det du mener gir det beste og mest realistiske resultatet»); de blir stående som skjulte sammenligningsbrytere, som `#nf0`, og det nye er alltid på.
+
 ## 7. Antatt og usikkert
 
 - Skrogformene under vann er anslått (parametrisk av `VESSELS`); GLB-modellene har ikke snitt vi kan lese. F2 kalibreres mot `stabOf` sine perioder, ikke mot tegningene.
@@ -138,10 +148,11 @@ Spørsmål uten A/B:
 - Barrass' formel er laget for skip; for en sjark på 10 m er squaten liten (0,3 m i 8 knop) og trolig i overkant. Det er en forsiktig feil.
 - Froudetallet som styrer kneika regnes av lengden i `VESSELS` (lengde over alt), ikke vannlinjelengden; for en sjark er forskjellen rundt 5 %.
 - Toppfartene i `VESSELS` står (Jonas' tall), så kneika endrer bare veien dit.
+- Strømmen (F8) kommer fra vår egen modell av tidevannet og kartet, uten måledata. De kjente straumene brukes som sjekk, og styrken klemmes til det spillet må tåle. Et sund som 25 m-masken ikke ser (under 25 m bredt) får ingen strøm.
 
 ## 8. Det planen ikke gjør
 
-- Ingen live-data (Jonas 06.10.2026) og ingen endring av 6×-klokka eller nærfeltet (19.10.2026).
+- Ingen live-data (Jonas 06.10.2026) og ingen endring av 6×-klokka eller nærfeltet (19.10.2026). Strømmen (F8) regnes av spillets eget tidevann, ikke av varsler.
 - Ingen SPH, ingen BEM, ingen 6-DOF i kjernen, ingen thrustere, ingen hydroakustikk, ingen kranfysikk, ingen Morison på redskap.
 - Fjernpassen (sjøen utenfor det nære terrenget) endres ikke.
 - Kjernens `motionAt`, fangsten og økonomien kalibreres ikke på nytt; `simday` og `progweek` skal stå innenfor ±3 %.
@@ -159,6 +170,12 @@ Spørsmål uten A/B:
 - **Sjarken i ro tvers i Beaufort 8** (5,9 m sjø) ruller og krenger 5° for vinden, som den skal, men skumflekkene rundt henne er 20–30 m store og sjøen ser ut som glatte åser. Det er det samme som F3 retter.
 - I Beaufort 7–8 snudde simuleringen sjarken hjem av seg selv («Returnerer», været over båtens grense), som den skal. Sjøen var 5,3 m.
 
+## 10. Måling på nettbrettet
+
+Nettbrettet er en OnePlus Pad 3. Nullpunkt 27.10.2026 (skjermbilde fra Jonas, jukse ved 69°24′ N 15°40′ Ø i fint vær, vind V 3,8 m/s, 0,8 m sjø): **71 bilder/s, 14,1 ms per bilde, kvalitet Høy.** Et tall i kuling mangler; havskyggeren koster omtrent det samme i all slags vær (skumtoppene og sjørokket er det eneste som kommer til), så tallet brukes som nullpunkt for F1–F4. Hver fase måles mot det, med `#fps`, i samme vær som Jonas har når han tester.
+
 ## Status
 
-- 27.10.2026: utkast skrevet, med gjennomgangen av notatet og videoene. **Venter på Jonas' svar på valgene 1–9 og spørsmålene uten bokstav.** Ingenting er bygd.
+- 27.10.2026: utkast skrevet, med gjennomgangen av notatet og videoene, og bilder av dagens sjø.
+- 27.10.2026: **vedtatt.** Jonas svarte «1a, 2b, 3a, 4a, 5a, 6a, 7a, 8ok, 9a»; F8 (strøm) lagt til etter 5A; nettbrettet og nullpunktet ført inn. Ingenting er bygd. Planen ligger på grenen `ccr-abdf5ed8-6xcw0q` (økta hadde ikke arbeidsgrenen) og må flettes inn i `ccr-5e1ba2f4-pusvyd`, eller neste økt starter fra denne grenen.
+- **Neste økt:** «Les `CLAUDE.md`, `docs/INDEKS.md` og `docs/BACKLOG.md`. Oppgave: bygg F1 (skumkartet) etter `docs/planer/fysikk-4-sjo-og-skrog.md`.» Økta leser planfila og `docs/systemer/vaer-og-hav.md`, bygger F1 bak `#foam0`, måler mot kapittel 10, og avslutter med `/lever` og `/okt-slutt`.
