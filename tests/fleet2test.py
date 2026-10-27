@@ -16,7 +16,7 @@ async def main():
             dialogs.append(d.type)
             await (d.accept('Testbåt') if d.type == 'prompt' else d.accept())
         pg.on('dialog', lambda d: asyncio.ensure_future(on_dialog(d)))
-        await boot(pg)
+        await boot(pg); await pg.evaluate("DRIFT2 = false")   # (the old plan, until part 8 of Driftsplan 2 replaces this test)
 
         # 1. landing with and without access
         land = await pg.evaluate("""(()=>{

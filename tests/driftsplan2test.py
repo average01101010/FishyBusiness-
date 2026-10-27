@@ -5,10 +5,11 @@ import asyncio, json, sys
 from playwright.async_api import async_playwright
 from _env import boot
 ok = lambda c: 'OK  ' if c else 'FEIL'
-BUILT = {'S1', 'S2', 'S3', 'S7', 'S12'}   # the scenarios the parts built so far cover (part 1: dry)
+BUILT = {'S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S11', 'S12', 'S14'}   # the scenarios the parts built so far cover (part 1: dry; part 2: the engine; part 3: weather, energy, watches, rules, takeover; part 4: closed)
 
 D2 = r"""window.D2 = (() => {
-  function seed(s){ let a = s >>> 0; Math.random = () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  // the seeded numbers are used only inside step(): the page's own frames between the awaits of an open run draw with the native ones, so two runs draw the same catch
+  const NATIVE = Math.random, RNG = {f:null}; function seed(s){ let a = s >>> 0; Math.random = RNG.f = () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
   const T0 = Math.round((Date.UTC(2028, 2, 6, 3, 0) - EPOCH) / 6e4);
   const hod = t => driftClock(driftHod(t / 60)), when = t => 'D' + (Math.floor((t - T0) / 1440) + 1) + ' ' + hod(t);
   function reset(sd){
@@ -44,7 +45,25 @@ D2 = r"""window.D2 = (() => {
   // a dry day: the day from the answers and a state (the live one, with overrides), and its text
   function dry(o, H0, over){ const st = Object.assign(plan2State(o), over || {}); if (over && over.aboard) st.aboard = Object.assign(plan2State(o).aboard, over.aboard); const day = planDay(o, H0, st); return {day, text:planDayText(o, day).map(x => x[0] + ' ' + x[1]), st}; }
   const h = t => Math.round((t - T0 / 60) * 100) / 100;   // hours since the test's start
-  return {seed, reset, boat, gear, spots, plant, felt, juks, dry, h, T0, when};
+  // the engine: the plan made (plan2Make), switched on, and the minutes played as catchUp plays them ('closed') or with the loop let go every ten minutes ('open')
+  const make = o => new Promise(res => plan2Make(o, res));
+  const st = (b, o) => { const pl = S.plan, w = pl && pl.wps[pl.idx - 1], r = o.run; return (pl && pl.ops ? pl.opsK : pl ? (pl.returning ? 'ret' : 'own') : '-') + ':' + b.status + (b.port ? '@' + b.port : '') + (b.gop ? '/' + b.gop.op + '-' + b.gop.kind : '') + (b.status === 'fishing' && w && w.jc ? '/J' + w.jc : '') + (b.anch ? '/anch' : '') + (S.shelter ? '/shelter' : '') + (b.land ? '/land' : '') + (r && r.wait ? '?' + r.wait.k : '') + (r && r.day ? '#' + r.i : '') + (o.held ? '!held' : '') + (o.stop ? '!stop:' + o.stop.k : '') + (!o.on ? '!off' : '') + (asleep() ? '/zz' : ''); };
+  async function run(mins, mode, tag, hook){
+    const b = S.boat, o = S.ops, L = {tag, mode, ev:[], log0:S.log.length, msg0:S.msgs.length, t0:S.t, days:[]}; let was = null, dayT0 = null;
+    for (let i = 0; i < mins; i++){
+      if (hook) hook(i);
+      DYN.on = false; step();
+      const r = o.run; if (r && r.day && r.t0 !== dayT0){ dayT0 = r.t0; L.days.push({at:when(S.t), text:planDayText(o, r.day).map(x => x[0] + ' ' + x[1])}); }
+      const s2 = st(b, o); if (s2 !== was){ L.ev.push([when(S.t), s2, Math.round(S.energy), Math.round(Math.max(0, ...S.crew.map(c => c.fatigue))), Math.round(holdTotal())]); was = s2; }
+      if (mode === 'open' && i % 10 === 9){ Math.random = NATIVE; await new Promise(r => setTimeout(r, 0)); Math.random = RNG.f; }
+    }
+    L.log = S.log.slice(L.log0).map(e => [when(e.t), (e.no || '').slice(0, 160)]); L.msgs = S.msgs.slice(L.msg0).map(m => [when(m.t), (m.no || '').slice(0, 200)]);
+    L.gearLog = (S.gearLog || []).filter(e => (e.tSet || 0) >= L.t0).map(e => ({kind:e.kind, n:e.n, set:when(e.tSet), haul:e.tHaul ? when(e.tHaul) : null, soak:e.tHaul ? Math.round((e.tHaul - e.n * DRP2.work.trekk[e.kind] * 60 - e.tSet) / 6) / 10 : null, kg:e.kg}));   // the soak: from the set to the start of the haul
+    L.stats = JSON.parse(JSON.stringify(o.stats)); L.ops = {on:o.on, stop:o.stop, wait:o.run && o.run.wait, i:o.run && o.run.i, held:o.held, M:o.M, ly:o.ly};
+    L.fin = {en:Math.round(S.energy), fat:S.crew.map(c => Math.round(c.fatigue)), cash:Math.round(S.cash), hold:Math.round(holdTotal()), status:b.status, port:b.port, sets:mySets().map(s => [s.fid, s.n])};
+    return L;
+  }
+  return {seed, reset, boat, gear, spots, plant, felt, juks, dry, h, T0, when, make, run, st};
 })();"""
 
 def steps(d): return [s['k'] + (':' + s['pid'] if s.get('pid') else '') for s in d['steps']]
@@ -57,7 +76,9 @@ async def main():
         try: await boot(pg)
         except Exception as e: print('FEIL boot:', str(e)[:200], 'sidefeil:', errs[:5]); raise
         await pg.evaluate(D2)
-        R = {}
+        # the crew's own life (a fever, a wedding, 14-crewlife.js) is not what is tested here: it would give the skipper days off by chance
+        await pg.evaluate("lifeDay = () => {}; lifeInjury = () => {};")
+        R = {}; S1L = None
 
         # S1 (dry): line 2 + 2 at 6 h, one jig place, out at 05:00, you aboard: the day from the answers, and the next days
         r = await pg.evaluate("""(async () => { D2.reset(1); const home = D2.boat('sjark', 2, true); D2.gear('line', 4); await mapNeed(portById(home).p, 14);
@@ -143,7 +164,227 @@ async def main():
         print(ok(any('fire' in e for e in r['three']) and r['four'] and any('køyer til alle' in e for e in r['fiveOnSjark'])), 'S6 (dry) three hands refused, four go, and five aboard with four bunks refused', [r['three'], r['fiveOnSjark']])
         print(ok(len(r['vakt']) >= 2 and all(v[2] == 2 for v in r['vakt']) and r['vakt'][0][1] != r['vakt'][1][1] and all(v[3] in ('06:00', '18:00') for v in r['vakt']) and r['lever']), 'S6 (dry) two watches of two, changing at 06:00 and 18:00, landing when the hold is full', r['vakt'])
 
-        for s in ['S4', 'S5', 'S6', 'S8', 'S9', 'S10', 'S11', 'S13', 'S14']:
+        # ---- the engine (part 2): the days played minute by minute with DRIFT2 on
+        def tl(L, n=60): return '\n'.join('  %-10s %-48s en=%3s fat=%3s hold=%5s' % tuple(e[:5]) for e in L['ev'][:n])
+        def days(L): return [d for d in L['days']]
+        def outs(L): return [e[0] for e in L['ev'] if 'unmooring@' in e[1] and e[1].startswith('fish')]
+        def logs(L, pat): return [e for e in L['log'] if pat in e[1]]
+        print('== S1 med motoren: line 2 + 2 ved 6 t, juksa, ut kl. 05:00, deg om bord, tre døgn')
+        L = await pg.evaluate("""(async () => { D2.reset(21); const home = D2.boat('sjark', 2, true); D2.gear('line', 4); S.pgear.bait = {makrell:60}; await mapNeed(portById(home).p, 14);
+          const F = D2.spots(2, 4, 12), J = D2.spots(1, 2.5, 4);
+          const o = S.ops = plan2New({home, rig:'line', jig:true, places:[D2.felt('f1', F[0], 2, 6), D2.felt('f2', F[1], 2, 6), D2.juks('j1', J[0])], dep:5, land:{mode:'near', port:null, when:'trip'}});
+          DRIFT2 = true; const err = await D2.make(o); if (err) return {err}; o.on = true;
+          const L = await D2.run(3 * 1440, 'open', 'S1e'); L.err = err; L.legs = Object.keys(o.legs).length; return L; })()""")
+        if L.get('err') and not L.get('ev'): print('FEIL S1e plan2Make:', L['err'])
+        else:
+            print(tl(L, 70)); print('  dager:', len(L['days'])); [print('   ' + d['at'] + ' | ' + ' | '.join(d['text'][:12])) for d in L['days']]
+            print('  log:', '\n   '.join(['%s %s' % tuple(e) for e in L['log'] if 'WP' not in e[1] and 'rekord' not in e[1] and ': «' not in e[1]][:70]))
+            print('  gearLog:', L['gearLog']); print('  stats:', json.dumps(L['stats'], ensure_ascii=False)[:800]); print('  ops:', json.dumps(L['ops'], ensure_ascii=False)[:300]); print('  fin:', L['fin'])
+            o_ = outs(L); hauls = [g for g in L['gearLog'] if g['haul']]
+            print(ok(not L['err'] and len(o_) >= 3 and all(x.endswith('05:00') or x.endswith('05:01') or x.endswith('05:02') or x.endswith('05:03') or x.endswith('05:04') or x.endswith('05:05') for x in o_[:3])), 'S1 out at 05:00 (within 5 min) three days running', o_)
+            print(ok(len([g for g in L['gearLog']]) >= 6 and len(hauls) >= 6 and all(6.0 - 0.05 <= g['soak'] <= 7.5 for g in hauls)), 'S1 the line is set on both fields and hauled after 6-7.5 h each day', [(g['set'], g['soak']) for g in hauls])
+            print(ok(len(logs(L, 'Ferdig med fisket')) >= 3), 'S1 the jig fishes each day', len(logs(L, 'Ferdig med fisket')))
+            print(ok(len(L['stats']['days']) >= 3 and all(d['trips'] >= 1 and d['kg'] > 0 for d in L['stats']['days'][:3])), 'S1 landed each day: the statistics have three days with kg and kr', [(d['d'], d['trips'], d['kg'], d['kr']) for d in L['stats']['days']])
+            print(ok(len(logs(L, 'Fortøyd i Finnsnes')) >= 3 and len(logs(L, 'stamper er egnet')) >= 4), 'S1 home at Finnsnes each day, and the crew bait the tubs again (at sea on the way home, or at the quay)', [len(logs(L, 'Fortøyd i Finnsnes')), len(logs(L, 'stamper er egnet'))])
+            print(ok(L['ops']['on'] and not L['ops']['stop']), 'S1 the plan is still on after three days', L['ops'])
+            S1L = L
+        print('== S2 med motoren: garn 6 + 6 + 6 ved 24 t, mannskapet alene, tre døgn')
+        L = await pg.evaluate("""(async () => { D2.reset(22); const home = D2.boat('sjark', 3, false); D2.gear('garn', 18); await mapNeed(portById(home).p, 14);
+          const F = D2.spots(3, 4, 12), J = D2.spots(1, 2.5, 4);
+          const o = S.ops = plan2New({home, rig:'garn', jig:true, places:[D2.felt('g1', F[0], 6, 24), D2.felt('g2', F[1], 6, 24), D2.felt('g3', F[2], 6, 24), D2.juks('j1', J[0])], dep:5, land:{mode:'near', port:null, when:'trip'}});
+          DRIFT2 = true; const err = await D2.make(o); if (err) return {err}; o.on = true;
+          const L = await D2.run(3 * 1440, 'open', 'S2e'); L.err = err; return L; })()""")
+        if L.get('err') and not L.get('ev'): print('FEIL S2e plan2Make:', L['err'])
+        else:
+            print(tl(L, 70)); [print('   ' + d['at'] + ' | ' + ' | '.join(d['text'][:12])) for d in L['days']]
+            print('  log:', '\n   '.join(['%s %s' % tuple(e) for e in L['log'] if 'WP' not in e[1] and 'rekord' not in e[1] and ': «' not in e[1]][:60]))
+            print('  gearLog:', L['gearLog']); print('  stats:', json.dumps(L['stats'], ensure_ascii=False)[:600]); print('  ops:', json.dumps(L['ops'], ensure_ascii=False)[:300]); print('  fin:', L['fin'])
+            hauls = [g for g in L['gearLog'] if g['haul']]; d1 = [g for g in L['gearLog'] if g['set'].startswith('D1')]
+            print(ok(not L['err'] and len(d1) == 3 and all(g['n'] == 6 for g in d1)), 'S2 day 1 sets the three strings of six', [(g['set'], g['n']) for g in d1])
+            print(ok(len(hauls) >= 6 and all(24.0 - 0.05 <= g['soak'] <= 26 for g in hauls)), 'S2 every string is hauled after 24-26 h, and set again', [(g['set'], g['soak']) for g in hauls])
+            print(ok(len(L['fin']['sets']) == 3 and len(L['stats']['days']) >= 2), 'S2 three strings stand at the end, and the catch was landed on day 2 and 3', [L['fin']['sets'], [(d['d'], d['kg']) for d in L['stats']['days']]])
+        print('== S3 med motoren: 15 + 15 teiner ved 48 t, juksa, agn kjøpt på mottaket, fire døgn')
+        L = await pg.evaluate("""(async () => { D2.reset(23); const home = D2.boat('kyst15', 3, false); D2.gear('teine', 30, 0); await mapNeed(portById(home).p, 14);
+          const F = D2.spots(2, 4, 12), J = D2.spots(1, 2.5, 4);
+          const o = S.ops = plan2New({home, rig:'teiner', jig:true, places:[D2.felt('t1', F[0], 15, 48), D2.felt('t2', F[1], 15, 48), D2.juks('j1', J[0])], dep:5, land:{mode:'near', port:null, when:'full'}});
+          DRIFT2 = true; const err = await D2.make(o); if (err) return {err}; o.on = true; const c0 = S.cash;
+          const L = await D2.run(4 * 1440, 'open', 'S3e'); L.err = err; L.spent = Math.round(c0 - S.cash); L.bait = S.pgear.bait; return L; })()""")
+        if L.get('err') and not L.get('ev'): print('FEIL S3e plan2Make:', L['err'])
+        else:
+            print(tl(L, 80)); [print('   ' + d['at'] + ' | ' + ' | '.join(d['text'][:12])) for d in L['days']]
+            print('  log:', '\n   '.join(['%s %s' % tuple(e) for e in L['log'] if 'WP' not in e[1] and 'rekord' not in e[1] and ': «' not in e[1]][:60]))
+            print('  gearLog:', L['gearLog']); print('  ops:', json.dumps(L['ops'], ensure_ascii=False)[:300]); print('  fin:', L['fin'], 'spent', L['spent'], 'bait', L['bait'])
+            hauls = [g for g in L['gearLog'] if g['haul']]; bought = logs(L, 'Kjøpte')
+            print(ok(not L['err'] and bought and all(g['n'] == 15 for g in L['gearLog'][:2]) and len(L['gearLog']) >= 2), 'S3 bait is bought at the plant, then both strings of 15 pots are set', [bought[:2], [(g['set'], g['n']) for g in L['gearLog'][:2]]])
+            print(ok(len(hauls) >= 2 and all(48.0 - 0.05 <= g['soak'] <= 52 for g in hauls)), 'S3 the pots are hauled after 48-52 h and set again', [(g['set'], g['soak']) for g in hauls])
+            print(ok(L['ops']['on'] and not L['ops']['stop']), 'S3 the plan is still on after four days', L['ops'])
+        print('== S7 med motoren: valgt mottak, og «når lasten er full» holder fangsten om bord')
+        L = await pg.evaluate("""(async () => { D2.reset(27); const home = D2.boat('sjark', 2, true); await mapNeed(portById(home).p, 14);
+          const J = D2.spots(1, 2.5, 4);
+          const o = S.ops = plan2New({home, rig:'juksa', jig:true, places:[D2.juks('j1', J[0])], dep:5, land:{mode:'port', port:'husoy', when:'trip'}});
+          DRIFT2 = true; const err = await D2.make(o); if (err) return {err}; o.on = true; const L = await D2.run(1440, 'open', 'S7e');
+          D2.reset(28); const home2 = D2.boat('sjark', 2, true); await mapNeed(portById(home2).p, 14);
+          const o2 = S.ops = plan2New({home:home2, rig:'juksa', jig:true, places:[D2.juks('j1', J[0])], dep:5, land:{mode:'near', port:null, when:'full'}});
+          const err2 = await D2.make(o2); if (err2) return {err:err2}; o2.on = true; const L2 = await D2.run(1440, 'open', 'S7f');
+          return {err, M:o.M, port:L.stats.sum.port, days:L.days.map(d => d.text.slice(0, 8)), ev:L.ev.slice(0, 30), full:{M:o2.M, hold:L2.fin.hold, port:L2.fin.port, days:L2.days.map(d => d.text.slice(0, 8)), stats:L2.stats.sum, ev:L2.ev.slice(0, 30), log:L2.log.filter(e => /Fortøyd|Beholder|levert/.test(e[1]))}}; })()""")
+        if L.get('err') and 'M' not in L: print('FEIL S7e plan2Make:', L['err'])
+        else:
+            print('  valgt:', L['M'], L['port'], L['days']); print('  full:', json.dumps(L['full'], ensure_ascii=False)[:1200])
+            print(ok(L['M'] == 'husoy' and 'husoy' in L['port']), 'S7 the chosen plant (Husøy) is where the plan lands', [L['M'], L['port']])
+            print(ok(L['full']['hold'] > 0 and L['full']['port'] == 'finnsnes' and L['full']['stats']['trips'] == 0), 'S7 «when the hold is full»: the day\'s small catch stays aboard at home, nothing landed yet', [L['full']['hold'], L['full']['port'], L['full']['stats']['trips']])
+        print('== S14: statistikken etter S1, og etter lagring og omlasting')
+        if S1L:
+            d = S1L['stats']['days']; sm = S1L['stats']['sum']
+            print(ok(len(d) >= 3 and sum(x['kg'] for x in d) == sm['kg'] and sum(x['trips'] for x in d) == sm['trips'] and all(x['sp'] and x['port'] for x in d[:3])), 'S14 three days with kg, kr, species and plant, and the sum adds up', [(x['d'], x['kg'], x['kr'], list(x['sp'].items())[:3], x['port']) for x in d[:3]])
+            r = await pg.evaluate("""(async () => { D2.reset(29); const home = D2.boat('sjark', 2, true); const o = S.ops = plan2New({home, rig:'juksa', places:[D2.juks('j1', {x:portById(home).p.x, y:portById(home).p.y - 3})]}); o.stats.days.push({d:'2028-03-06', trips:1, kg:216, kr:3875, lott:2087, cost:761, conf:0, sp:{torsk:120}, port:{botnhamn:216}}); o.stats.sum.kg = 216; save(); return S.ops.stats.sum.kg; })()""")
+            await pg.reload(); await pg.wait_for_timeout(2500)
+            r2 = await pg.evaluate("S.ops && S.ops.v === 4 && S.ops.stats && S.ops.stats.days.length === 1 && S.ops.stats.days[0].kg === 216 && S.ops.stats.sum.kg === 216")
+            print(ok(r == 216 and r2), 'S14 the statistics survive a save and a reload', [r, r2])
+            await pg.evaluate(D2)
+        # ---- part 3: the weather without a search, the energy and the tiredness, the watches, the rules with a date, the takeover
+        print('== S4: været. Grense 10 m/s. Dag 1: 12 m/s kl. 03–08. Dag 2: fint ved avgang, 15 m/s kl. 11–14. Mannskapet alene.')
+        L = await pg.evaluate("""(async () => { D2.reset(24); const home = D2.boat('sjark', 2, false); D2.gear('line', 4); S.pgear.bait = {makrell:60}; await mapNeed(portById(home).p, 14);
+          const F = D2.spots(2, 4, 12), J = D2.spots(1, 2.5, 4);
+          const o = S.ops = plan2New({home, rig:'line', jig:true, places:[D2.felt('f1', F[0], 2, 6), D2.felt('f2', F[1], 2, 6), D2.juks('j1', J[0])], dep:5, wx:{wind:10, hs:1.5}, land:{mode:'near', port:null, when:'trip'}});
+          DRIFT2 = true; const err = await D2.make(o); if (err) return {err}; o.on = true;
+          let LR = 0; const lr0 = leiaRoute; leiaRoute = (...a) => { LR++; return lr0(...a); };
+          // the wind by the hour asked for, so the forecast sees it too: 12 m/s 03-08 on day 1, 15 m/s 11-14 on day 2, else 5
+          const wind0 = windAt; windAt = (H, p) => { const h = driftHod(H), d = Math.floor((H * 60 - D2.T0) / 1440) + 1; return d === 1 && h >= 3 && h < 8 ? 12 : d === 2 && h >= 11 && h < 14 ? 15 : 5; }; const dir0 = windDir; windDir = () => 200;
+          const L = await D2.run(2 * 1440 + 600, 'open', 'S4e'); leiaRoute = lr0; windAt = wind0; windDir = dir0; L.err = err; L.LR = LR; L.ly = o.ly; return L; })()""")
+        if L.get('err') and not L.get('ev'): print('FEIL S4e plan2Make:', L['err'])
+        else:
+            print(tl(L, 90)); [print('   ' + d['at'] + ' | ' + ' | '.join(d['text'][:10])) for d in L['days']]
+            print('  log:', '\n   '.join(['%s %s' % tuple(e) for e in L['log'] if 'WP' not in e[1] and 'rekord' not in e[1] and ': «' not in e[1]][:70]))
+            print('  msgs:', '\n   '.join(['%s %s' % tuple(e) for e in L['msgs'] if 'Trofeveggen' not in e[1]][:20]))
+            print('  gearLog:', L['gearLog']); print('  ops:', json.dumps(L['ops'], ensure_ascii=False)[:400]); print('  LR:', L['LR'], 'ly:', L['ly'])
+            o_ = outs(L); waits = [m for m in L['msgs'] if 'Venter på været' in m[1]]
+            print(ok(len(o_) >= 1 and o_[0].startswith('D1 08:') and waits and 'Går kl. 08:00' in waits[0][1]), 'S4 day 1: the plan waits for the weather with the hour it will go, and goes at 08:00', [o_[:1], waits[:1]])
+            ly = logs(L, 'Går i ly'); back = [e for e in L['ev'] if e[0].startswith('D2') and '-:port@' in e[1]]
+            print(ok(len(o_) >= 2 and o_[1].startswith('D2 05:0') and ly and back), 'S4 day 2: out at 05:00, the gale at 11 sends her to shelter on the kept legs, and she is moored', [o_[1:2], ly[:1], back[:1]])
+            out3 = [x for x in o_ if x.startswith('D2 1')]; hauls = [g for g in L['gearLog'] if g['haul'] and g['set'].startswith('D2')]
+            print(ok(out3 and hauls and all(g['soak'] >= 6 for g in hauls) and L['ops']['on'] and not L['ops']['stop']), 'S4 day 2: she goes out again when the wind drops, hauls the line that stood, and the plan is still on', [out3, [(g['set'], g['soak']) for g in hauls], L['ops']['on']])
+            print(ok(L['LR'] == 0), 'S4 no route was searched while the plan ran (the shelter used the kept legs)', L['LR'])
+        print('== S5: energien. Deg om bord med 0 % kl. 03:00; så mannskapet slitne midt på dagen.')
+        L = await pg.evaluate("""(async () => { D2.reset(25); const home = D2.boat('sjark', 2, true); D2.gear('line', 4); S.pgear.bait = {makrell:60}; await mapNeed(portById(home).p, 14);
+          const F = D2.spots(2, 4, 12), J = D2.spots(1, 2.5, 4);
+          const o = S.ops = plan2New({home, rig:'line', jig:true, places:[D2.felt('f1', F[0], 2, 6), D2.felt('f2', F[1], 2, 6), D2.juks('j1', J[0])], dep:5, land:{mode:'near', port:null, when:'trip'}});
+          DRIFT2 = true; const err = await D2.make(o); if (err) return {err}; o.on = true; S.energy = 0;
+          let dep = null; const hook = i => { if (dep == null && S.boat.status === 'unmooring') dep = S.t; if (dep != null && S.t === dep + 240) for (const c of S.crew) c.fatigue = 75; };   // four hours after the departure: the line has stood two, and is due in four
+          const L = await D2.run(1440 + 600, 'open', 'S5e', hook); L.err = err; return L; })()""")
+        if L.get('err') and not L.get('ev'): print('FEIL S5e plan2Make:', L['err'])
+        else:
+            print(tl(L, 60)); [print('   ' + d['at'] + ' | ' + ' | '.join(d['text'][:10])) for d in L['days']]
+            print('  log:', '\n   '.join(['%s %s' % tuple(e) for e in L['log'] if 'WP' not in e[1] and 'rekord' not in e[1] and ': «' not in e[1]][:40]))
+            print('  msgs:', '\n   '.join(['%s %s' % tuple(e) for e in L['msgs'] if 'Trofeveggen' not in e[1]][:12])); print('  gearLog:', L['gearLog'])
+            o_ = outs(L); waits = [m for m in L['msgs'] if 'Du må hvile til' in m[1]]; enAt = [e for e in L['ev'] if 'unmooring' in e[1]]
+            print(ok(waits and o_ and not o_[0].startswith('D1 05:0') and enAt and enAt[0][2] >= 50), 'S5 with 0 % energy the plan waits, says until when, and goes out rested', [waits[:1], o_[:1], enAt[:1]])
+            cut = logs(L, 'Mannskapet er slitne'); hauls = [g for g in L['gearLog'] if g['haul']]
+            d1h = [g for g in hauls if g['set'].startswith('D1')]
+            print(ok(cut and len(d1h) == 2 and all(5.9 <= g['soak'] <= 7 for g in d1h) and logs(L, 'Fortøyd i Finnsnes')), 'S5 the tired crew end the day: no more jigging, the line is still hauled when due (within 3 h), then in', [cut[:1], [(g['set'], g['soak']) for g in d1h]])
+        print('== S6: døgndrift med fire på kyst15, 48 timer')
+        L = await pg.evaluate("""(async () => { D2.reset(26); const home = D2.boat('kyst15', 4, false); await mapNeed(portById(home).p, 14);
+          const J = D2.spots(2, 4, 12);
+          const o = S.ops = plan2New({home, rig:'juksa', jig:true, places:[D2.juks('j1', J[0]), D2.juks('j2', J[1])], rhythm:'watch', dep:5, land:{mode:'near', port:null, when:'full'}});
+          DRIFT2 = true; const err = await D2.make(o); if (err) return {err}; o.on = true;
+          const W = []; let fatMax = 0, offWait = 0; const hook = i => { if (i % 60 === 0) W.push(S.crew.map(c => c.sleepW ? 'z' : 'w').join('')); fatMax = Math.max(fatMax, ...S.crew.map(c => c.fatigue)); if (o.run && o.run.wait && o.run.wait.k === 'off') offWait++; };
+          const L = await D2.run(2 * 1440, 'open', 'S6e', hook); L.err = err; L.W = W; L.fatMax = Math.round(fatMax); L.offWait = offWait; return L; })()""")
+        if L.get('err') and not L.get('ev'): print('FEIL S6e plan2Make:', L['err'])
+        else:
+            print(tl(L, 40)); [print('   ' + d['at'] + ' | ' + ' | '.join(d['text'][:10])) for d in L['days']]
+            print('  vaktene per time:', ''.join(w[0] for w in L['W']), '|', ''.join(w[1] for w in L['W'])); print('  fatMax', L['fatMax'], 'offWait', L['offWait'], 'stats', json.dumps(L['stats']['sum'])[:200], 'fin', L['fin'])
+            seq = ''.join(w[0] for w in L['W']); changes = sum(1 for a, c in zip(seq, seq[1:]) if a != c)
+            print(ok(L['fatMax'] < 85 and 3 <= changes <= 6 and 'z' in seq and 'w' in seq), 'S6 two watches of 12 hours: the skipper sleeps and wakes at 06 and 18, and the tiredness stays under 85 (a 12-hour watch, Jonas 26.10.2026)', [L['fatMax'], changes])
+            print(ok(L['offWait'] == 0 and L['stats']['sum']['trips'] >= 1 and L['ops']['on']), 'S6 the boat never waits for the watch asleep, lands and goes out again', [L['offWait'], L['stats']['sum']['trips'], L['ops']['on']])
+        print('== S8: reglene. Et felt stengt til en dato; torskekvoten oppbrukt; åpen gruppe uten deg om bord.')
+        L = await pg.evaluate("""(async () => { D2.reset(28); const home = D2.boat('sjark', 2, false); D2.gear('line', 4); await mapNeed(portById(home).p, 14);
+          const F = D2.spots(2, 4, 12), J = D2.spots(1, 2.5, 4), R = {};
+          const o = S.ops = plan2New({home, rig:'line', jig:true, places:[D2.felt('f1', F[0], 2, 6), D2.felt('f2', F[1], 2, 6), D2.juks('j1', J[0])], dep:5, land:{mode:'near', port:null, when:'trip'}});
+          DRIFT2 = true; R.warn = plan2Check(o).warnings; const err = await D2.make(o); if (err) return {err}; o.on = true;
+          // field 1 closed until the day after tomorrow at 05:00 (the rules with the hour)
+          const closeUntil = D2.T0 / 60 + 48 + 2, rb0 = ruBlockMsg; ruBlockMsg = q => { const H = q.H == null ? S.t / 60 : q.H; if (q.gear === 'line' && q.p && dist(q.p, F[0]) < 0.01 && H < closeUntil) return 'Stengt felt (test).'; return rb0(q); };
+          const L1 = await D2.run(3 * 1440, 'open', 'S8a'); ruBlockMsg = rb0;
+          R.a = {ev:L1.ev.slice(0, 12), wait:L1.ev.filter(e => e[1].includes('?closed')).map(e => e[0]), msgs:L1.msgs.filter(m => /stengt|Stengt/.test(m[1])).slice(0, 3), outs:L1.ev.filter(e => e[1].includes('unmooring@finnsnes') && e[1].startsWith('fish')).map(e => e[0]), on:o.on, stop:o.stop, sets:L1.gearLog.map(g => g.set)};
+          // the cod quota used up: the plan stops with the reason and the button
+          S.tripOwner = true; const lim = codLimitNow(S.t / 60), q0 = quotaState().torsk; quotaState().torsk = lim + 10; o.on = true; o.stop = null; o.hold = 0; o.run = null; await D2.run(10, 'open', 'S8b'); R.b = {stop:o.stop && o.stop.k, fix:o.stop && o.stop.fix, access:access()}; quotaState().torsk = q0;
+          return R; })()""")
+        if L.get('err'): print('FEIL S8 plan2Make:', L['err'])
+        else:
+            print('  S8:', json.dumps(L, ensure_ascii=False)[:1500])
+            a = L['a']
+            print(ok(any('om bord for å fiske torsk' in w for w in L['warn'])), 'S8 open group without you aboard: the check warns (cod, haddock and saithe are bycatch)', L['warn'][:1])
+            print(ok(a['wait'] and a['msgs'] and 'venter til' in a['msgs'][0][1] and a['on'] and not a['stop'] and a['outs'] and a['outs'][0].startswith('D3')), 'S8 a field closed until a date: the plan waits with the date, does not stop, and goes out when it opens', [a['wait'][:1], a['msgs'][:1], a['outs'][:1]])
+            print(ok(L['b']['stop'] == 'quota' and L['b']['fix'] == 'quota'), 'S8 the cod quota used up stops the plan with the button to the quota', L['b'])
+        print('== S11: du tar over midt i S1, seiler et stykke, og gir båten tilbake')
+        L = await pg.evaluate("""(async () => { D2.reset(31); const home = D2.boat('sjark', 2, true); D2.gear('line', 4); S.pgear.bait = {makrell:60}; await mapNeed(portById(home).p, 14);
+          const F = D2.spots(2, 4, 12), J = D2.spots(1, 2.5, 4), R = {};
+          const o = S.ops = plan2New({home, rig:'line', jig:true, places:[D2.felt('f1', F[0], 2, 6), D2.felt('f2', F[1], 2, 6), D2.juks('j1', J[0])], dep:5, land:{mode:'near', port:null, when:'trip'}});
+          DRIFT2 = true; const err = await D2.make(o); if (err) return {err}; o.on = true;
+          const L1 = await D2.run(60 * 4, 'open', 'S11a');   // 07:00: jigging with the line in the sea
+          R.before = {status:S.boat.status, sets:mySets().length, i:o.run.i};
+          // your own route: a kilometre north, then stop there
+          const p = {x:S.boat.pos.x, y:S.boat.pos.y - 1}; S.plan = {wps:[{x:p.x, y:p.y, port:null, fish:0}], idx:0, speed:6, returning:false}; S.boat.status = 'sailing'; S.boat.fishUntil = null;
+          const L2 = await D2.run(60, 'open', 'S11b'); R.held = !!o.held; R.took = {status:S.boat.status, plan:!!S.plan, held:!!o.held};
+          if (S.plan){ S.plan = null; S.boat.status = 'idle'; }
+          plan2Resume(o); const L3 = await D2.run(60 * 14, 'open', 'S11c');
+          R.after = {days:L3.days.map(d => d.text.slice(0, 8)), ev:L3.ev.slice(0, 20), gearLog:L3.gearLog, log:L3.log.filter(e => /Trekker|Trakk|Fortøyd|tatt over|Gikk ut/.test(e[1])), on:o.on, stop:o.stop, fin:L3.fin};
+          R.sets = mySets().length; return R; })()""")
+        if L.get('err'): print('FEIL S11 plan2Make:', L['err'])
+        else:
+            print('  S11:', json.dumps(L, ensure_ascii=False)[:2000])
+            a = L['after']; hauls = [g for g in a['gearLog'] if g['haul']]
+            print(ok(L['before']['status'] == 'fishing' and L['before']['sets'] == 2 and L['held'] and L['took']['held']), 'S11 the plan waits while you have the boat; the line stands in the sea', [L['before'], L['took']])
+            trakk = [e for e in a['log'] if 'Trakk line' in e[1]]
+            print(ok(a['days'] and any('Trekker felt 1' in x for x in a['days'][0]) and len(trakk) == 2 and all('sto 6 t' in e[1] or 'sto 7 t' in e[1] for e in trakk) and L['sets'] == 0 and a['on'] and not a['stop'] and a['fin']['port'] == 'finnsnes'), 'S11 given back, the day goes on from where she is: the line is hauled when due, landed, and home', [a['days'][0][:5] if a['days'] else None, trakk, a['fin']['port']])
+        # ---- part 4: the game closed. The same plan with the same seed: open all the way; open, 30 h closed (playMinutes, as catchUp), open;
+        # nine days closed with the wall clock on; and «Mens du var borte»
+        print('== S9: lukket spill')
+        L = await pg.evaluate("""(async () => { const R = {};
+          const setup = async () => { D2.reset(39); const home = D2.boat('sjark', 2, true); D2.gear('line', 4); S.pgear.bait = {makrell:60}; await mapNeed(portById(home).p, 14); return home; };
+          const home = await setup(); const F = D2.spots(2, 4, 12), J = D2.spots(1, 2.5, 4);
+          const mk = () => plan2New({home, rig:'line', jig:true, places:[D2.felt('f1', F[0], 2, 6), D2.felt('f2', F[1], 2, 6), D2.juks('j1', J[0])], dep:5, land:{mode:'near', port:null, when:'trip'}});
+          DRIFT2 = true; const o0 = S.ops = mk(); const err = await D2.make(o0); if (err) return {err}; const made = JSON.stringify(o0);
+          const fresh = async () => { await setup(); const o = S.ops = JSON.parse(made); o.on = true; return o; };
+          // the map's tiles round the whole plan in first, and one open run as a warm-up: the density reads the sim tiles as they come in, and a
+          // tile that comes in between two frames of an open run gives another catch than one that was in from the start
+          for (const q of [portById(home).p, portById(o0.M).p].concat(F, J)) await mapNeed(q, 12);
+          await fresh(); await D2.run(3 * 1440, 'open', 'S9warm');
+          // open all the way
+          await fresh(); const A = await D2.run(3 * 1440, 'open', 'S9open');
+          // open, then 30 hours in one go, then open
+          const o2 = await fresh(); const B1 = await D2.run(1440, 'open', 'S9b1'); const t0 = performance.now(); const B2 = await D2.run(1800, 'closed', 'S9b2'); const ms30 = performance.now() - t0; const B3 = await D2.run(3 * 1440 - 1440 - 1800, 'open', 'S9b3');
+          const cat = (...Ls) => Ls.reduce((a, L) => a.concat(L.ev.filter((e, i) => !(i === 0 && a.length && a[a.length - 1][1] === e[1]))), []);
+          const B = {ev:cat(B1, B2, B3), stats:JSON.parse(JSON.stringify(o2.stats)), gearLog:B3.gearLog, fin:B3.fin, log:B1.log.concat(B2.log, B3.log)};
+          B.gearLogAll = (S.gearLog || []).filter(e => e.tSet >= D2.T0).map(e => [D2.when(e.tSet), e.tHaul ? D2.when(e.tHaul) : null, e.kg]);
+          const gl = (S.gearLog || []); 
+          // the open run's gear log, for the comparison (kept from run A)
+          R.A = {ev:A.ev, stats:A.stats, gearLog:A.gearLog, fin:A.fin, days:A.days.length}; R.B = {ev:B.ev, stats:B.stats, gearLogAll:B.gearLogAll, fin:B.fin, ms30:Math.round(ms30)};
+          R.A.gearLogAll = A.gearLog.map(g => [g.set, g.haul, g.kg]);
+          // nine days closed, the wall clock on
+          const o3 = await fresh(); const t1 = performance.now(); const C = await D2.run(9 * 1440, 'closed', 'S9c'); R.C = {wall_s:Math.round((performance.now() - t1) / 100) / 10, trips:o3.stats.sum.trips, kg:o3.stats.sum.kg, days:C.days.length, on:o3.on, stop:o3.stop, wait:o3.run && o3.run.wait && o3.run.wait.k, fin:C.fin, sets:mySets().length, lr:0};
+          // «Mens du var borte»: two days away, played as catchUp plays them, with the away screen before and after
+          const o4 = await fresh(); awayStart(2 * 1440, 2 * 1440 / GAME_RATE * 60000); playMinutes(2 * 1440); awayEnd(); await new Promise(r => setTimeout(r, 1600));
+          const md = document.getElementById('modal'); R.away = {shown:!!md && !md.hidden, text:(md ? md.innerText : '').replace(/\\s+/g, ' ').slice(0, 400), trips:o4.stats.sum.trips, kg:o4.stats.sum.kg}; if (typeof closeModal === 'function') closeModal(); else if (md) md.hidden = true;
+          return R; })()""")
+        if L.get('err'): print('FEIL S9 plan2Make:', L['err'])
+        else:
+            A, B, C = L['A'], L['B'], L['C']
+            print('  åpent: dager', A['days'], 'stats', [(d['d'], d['kg'], d['kr']) for d in A['stats']['days']], 'fin', A['fin']); print('  lukket 30 t:', [(d['d'], d['kg'], d['kr']) for d in B['stats']['days']], 'fin', B['fin'], 'ms', B['ms30'])
+            print('  redskap åpent:', A['gearLogAll']); print('  redskap lukket:', B['gearLogAll'])
+            same_ev = [e[:2] for e in A['ev']] == [e[:2] for e in B['ev']]
+            if not same_ev:
+                import itertools
+                for i, (ea, eb) in enumerate(itertools.zip_longest(A['ev'], B['ev'])):
+                    if ea is None or eb is None or ea[:2] != eb[:2]: print('  første avvik ved', i, ea, eb); break
+            kgA = sum(d['kg'] for d in A['stats']['days']); kgB = sum(d['kg'] for d in B['stats']['days']); krA = sum(d['kr'] for d in A['stats']['days']); krB = sum(d['kr'] for d in B['stats']['days'])
+            print(ok(len(A['stats']['days']) == 3 and len(B['stats']['days']) == 3 and abs(kgA - kgB) <= 0.02 * max(1, kgA) and abs(krA - krB) <= 0.02 * max(1, krA)), 'S9 30 h closed in the middle gives the same landings as open (kg and kr within 2 %)', [(kgA, krA), (kgB, krB)])
+            # the kg a set gives differs a little between the runs (the density reads the sim tiles as they come in between the frames of an open run), so the minutes are compared, not the kg
+            gA = [g[:2] for g in A['gearLogAll']]; gB = [g[:2] for g in B['gearLogAll']]
+            print(ok(same_ev and gA == gB and A['fin']['port'] == B['fin']['port'] and A['fin']['en'] == B['fin']['en'] and A['fin']['sets'] == B['fin']['sets']), 'S9 the same steps at the same minutes, the same gear set and hauled at the same minutes, the same place and rest at the end', ['likt' if same_ev else 'ulikt', gA == gB, A['fin'], B['fin']])
+            print('  ni døgn lukket:', C)
+            print(ok(C['wall_s'] < 20 and C['trips'] >= 8 and C['on'] and not C['stop'] and C['days'] >= 9), 'S9 nine days closed: played in under 20 s (8 s alone, more with other tests beside it), with a landing every day and the plan still on', [C['wall_s'], C['trips'], C['days']])
+            print('  borte:', L['away'])
+            print(ok(L['away']['shown'] and 'borte' in L['away']['text'] and L['away']['trips'] >= 2), 'S9 «Mens du var borte» shows what the plan landed', L['away'])
+        for s in ['S10', 'S13']:
             if s not in BUILT: print('VENTER', s, 'bygges i en senere del (02-design.md kapittel 7)')
         print('sidefeil:', errs[:5])
         await b.close()

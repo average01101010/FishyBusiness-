@@ -62,7 +62,7 @@ async def main():
         b = await p.chromium.launch(args=['--disable-gpu-compositing'])
         pg = await b.new_page(viewport={'width': 900, 'height': 700}); errs = []
         pg.on('pageerror', lambda e: errs.append(str(e)))
-        await boot(pg); pg.set_default_timeout(900000)
+        await boot(pg); await pg.evaluate("DRIFT2 = false")   # (the old plan, until part 8 of Driftsplan 2 replaces this test); pg.set_default_timeout(900000)
         r = await pg.evaluate(JS)
         print(json.dumps(r, ensure_ascii=False))
         print(ok(r.get('spot') and r.get('spotOk') and r.get('spotNear')), 'ankerplass nær havna: riktig dyp og svingrom')

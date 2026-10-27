@@ -63,7 +63,7 @@ const DOCK = (() => {
     return w === 'koye' ? I('rest', 'naust', 'Hvil i køya', 'Rest in the bunk', {act:'rest', pri:S.energy < 30}) : I('rest', 'naust', 'Hvil', 'Rest', {act:'rest', pri:S.energy < (w === 'rorbu' ? 60 : 40)});
   }
   // the operations plan wants you: it has stopped, or waits until you give the boat back (the Crew page has its line, ui/05c-drift.js)
-  const opsDot = () => { const o = S.ops; return !!(o && o.v === DRV && ((!o.on && o.stop) || (o.on && o.held))); };
+  const opsDot = () => { const o = S.ops; return !!(o && (o.v === DRV || o.v === DRV2) && ((!o.on && o.stop) || (o.on && o.held))); };
   // at home the rest is in the Bygd fan, and on the dock itself when you are tired or resting (five buttons crowd a phone)
   const restOnDock = () => resting() || S.energy < 40;
   function portItems(){

@@ -10,7 +10,7 @@ async def main():
         b = await p.chromium.launch(args=['--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
         pg = await b.new_page(viewport={'width':900, 'height':900})
         errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
-        await boot(pg)
+        await boot(pg); await pg.evaluate("DRIFT2 = false")   # (the old plan, until part 8 of Driftsplan 2 replaces this test)
 
         r = await pg.evaluate("""(async ()=>{
           const R = {}, q = s => document.querySelector(s), view = () => document.getElementById('phView').innerText;

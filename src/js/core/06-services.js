@@ -229,6 +229,7 @@ function shelterReturn(W, hsOver){
 function startReturn(auto, W, home, hsOver, opsKeep){
   // the plan's trips always take the nearest quay (the plan has its own limits); the player's own trips follow the setting
   const ops = opsKeep != null ? opsKeep : !!(S.plan && S.plan.ops);
+  if (auto && !home && ops && DRIFT2 && S.plan && S.plan.p2 && plan2Shelter(W, hsOver)) return;   // Driftsplan 2: shelter on the kept legs, no search (06h-plan2-engine.js)
   if (auto && !home && (ops || S.settings.autoTo !== 'home')){ shelterReturn(W, hsOver); return; }
   const b = S.boat, tr = S.trail.slice().reverse(), wps = [];
   if (b.gop) gopAbort('return');

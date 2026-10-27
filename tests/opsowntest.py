@@ -38,12 +38,12 @@ async def main():
         b = await p.chromium.launch(args=['--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'])
         pg = await b.new_page(viewport={'width':900, 'height':900})
         errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
-        await boot(pg)
+        await boot(pg); await pg.evaluate("DRIFT2 = false")   # (the old plan, until part 8 of Driftsplan 2 replaces this test)
         own = await pg.evaluate(TRIP, False)
         print('aboard:', json.dumps(own, ensure_ascii=False))
         # a fresh game for the second case, so nothing from the first trip is left on the quay
         await pg.close(); pg = await (await b.new_context(viewport={'width':900, 'height':900})).new_page(); pg.on('pageerror', lambda e: errs.append(str(e)))
-        await boot(pg)
+        await boot(pg); await pg.evaluate("DRIFT2 = false")   # (the old plan, until part 8 of Driftsplan 2 replaces this test)
         alone = await pg.evaluate(TRIP, True)
         print('alone: ', json.dumps(alone, ensure_ascii=False))
         eff = await pg.evaluate("""(()=>{ S.crew = [Object.assign(genCrew(), {bi:false, off:false})]; setSkipper(S.crew[0].id); S.me = S.cur;

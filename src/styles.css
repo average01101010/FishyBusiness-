@@ -1309,3 +1309,16 @@ body.in-naust #dock,body.in-naust #dockFan,body.in-naust #dockInfo,body.in-naust
 .gd-g small{font-size:11px;color:#7a8a93;font-weight:400}
 .gd-g.no span:first-child{opacity:.7} .gd-dots.none{color:#9b2c24;letter-spacing:0;font-weight:700}
 .dk-bait{position:absolute;right:-2px;bottom:-2px;width:15px;height:15px;border-radius:50%;background:var(--bc);border:2px solid #0d1b24} .dk-bait.e{background:#0d1b24;border:2px dashed #9aa8b0}
+
+/* Driftsplan 2 (ui/05d-plan2.js): the statistics table and the day's skipped lines */
+.p2-stat{width:100%;border-collapse:collapse;font-size:13px;margin:4px 0 8px}.p2-stat th{font-weight:600;text-align:right;color:#6b7580;padding:2px 4px}.p2-stat th:first-child{text-align:left}.p2-stat td{padding:3px 4px;text-align:right;font-variant-numeric:tabular-nums;border-top:1px solid rgba(0,0,0,.06)}.p2-stat td:first-child{text-align:left}
+.dr-ev.skip span:last-child{color:#8a94a0}.dr-ev.skip span:first-child{min-width:46px}
+/* Driftsplan 2, the plotter in plan mode (ui/03g-planmap.js): the bar over the chart and the place's card */
+#pmBar{position:absolute;z-index:7;left:8px;right:8px;top:8px;background:rgba(10,22,32,.94);color:#e7f4ee;border:1px solid #6b5a1e;border-radius:10px;padding:8px 10px;font:12.5px var(--sans);box-shadow:0 6px 18px rgba(0,0,0,.35)} #pmBar[hidden],body.v3d #pmBar{display:none}
+#pmBar .pm-h{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px} #pmBar .pm-h button{background:#2b8a5c;border:0;color:#fff;font:600 14px var(--sans);padding:8px 16px;border-radius:8px;min-height:40px;cursor:pointer}
+#pmBar .pm-t{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:6px} #pmBar .pm-t button{background:#0d2230;border:1px solid #2c5870;color:#cde;font:600 13px var(--sans);padding:7px 12px;border-radius:8px;min-height:36px;cursor:pointer} #pmBar .pm-t button.on{background:#ffd95e;color:#1a1200;border-color:#ffd95e} #pmBar .pm-hint{color:#8fc7e4;font-size:12px}
+#pmCard{position:absolute;z-index:7;left:8px;bottom:14px;width:270px;background:rgba(10,22,32,.94);color:#e7f4ee;border:1px solid #6b5a1e;border-radius:10px;padding:8px 10px;font:12.5px var(--sans);box-shadow:0 6px 18px rgba(0,0,0,.35)} #pmCard[hidden],body.v3d #pmCard{display:none}
+#pmCard .ai-h{display:flex;justify-content:space-between;align-items:center;font-size:15px} #pmCard .ai-h button{background:none;border:0;color:#cde;font-size:20px;cursor:pointer;padding:0 4px}
+#pmCard .pm-kv{display:flex;justify-content:space-between;align-items:center;margin:4px 0} #pmCard .pm-kv span:last-child{display:flex;align-items:center;gap:6px} #pmCard .pm-kv button,#pmCard .pin-b button{background:#0d2230;border:1px solid #2c5870;color:#fff;font:600 15px var(--sans);min-width:36px;min-height:36px;border-radius:8px;cursor:pointer} #pmCard .pin-b{display:flex;gap:6px;margin-top:6px} #pmCard .pin-b button[disabled]{opacity:.5} #pmCard .ai-t{color:#8fc7e4;font-size:12px;margin:4px 0}
+@media (max-width:700px){#pmCard{width:auto;right:8px}}
+body.pm #hud,body.pm #pinCard{visibility:hidden}

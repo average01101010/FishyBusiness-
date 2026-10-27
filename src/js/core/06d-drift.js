@@ -232,6 +232,7 @@ function driftRoles(o){
 const drWatchMode = o => !!o && (o.rhythm === 'watch' || o.rhythm === 'multi') && S.crew.length >= driftNeedHands;
 const driftWatchActive = o => !!o && o.v === DRV && o.on && drWatchMode(o) && !!S.plan && !!S.plan.ops && S.boat.status !== 'port';
 function driftWatch(H){
+  if (DRIFT2){ plan2WatchTick(H); return; }
   const o = S.ops;
   if (!driftWatchActive(o)){ for (const c of S.crew) if (c.sleepW) delete c.sleepW; return; }
   const R = driftRoles(o), aOn = Math.floor(driftHod(H) / DRWATCH) % 2 === 0, off = aOn ? R.B : R.A;
@@ -239,7 +240,7 @@ function driftWatch(H){
 }
 
 // ---- the weather the plan allows, while it runs (05-vessels.js turns back over it)
-function driftWx(){ const o = S.ops; if (!o || o.v !== DRV || !S.plan || !S.plan.ops) return null; const w = DRW[o.wx] || DRW.normal; return {wind:w.wind, hs:Math.min(w.hs, BOAT.risk[1] * 0.95), shelter:true}; }
+function driftWx(){ if (DRIFT2) return plan2Wx(); const o = S.ops; if (!o || o.v !== DRV || !S.plan || !S.plan.ops) return null; const w = DRW[o.wx] || DRW.normal; return {wind:w.wind, hs:Math.min(w.hs, BOAT.risk[1] * 0.95), shelter:true}; }
 // the most wind and sea over the hours ahead at the places of the trip (hsAt: sheltered where the place is), the open sea where a map is not in
 function driftWxAhead(o, H, dur, pts){
   const P = (pts || []).filter(Boolean), w0 = DRW[o.wx] || DRW.normal;
@@ -355,6 +356,7 @@ function driftFail(o, no, en){
 const drTook = () => !!(S.plan && !S.plan.ops) || (typeof helmOn === 'function' && helmOn());
 function driftResume(o){ o.held = null; o.hold = 0; o.wait = null; o.fails = 0; }
 function opsStep(H){
+  if (DRIFT2){ plan2Step(H); return; }   // Driftsplan 2 (06h-plan2-engine.js)
   const o = driftOps(), b = S.boat; if (!o || !o.on) return;
   if (!o.held && drTook()){ o.held = {t:S.t}; o.wait = null; log('Du har tatt over båten. Driftsplanen venter til du gir den tilbake.', 'You have taken the boat over. The plan waits until you give her back.'); }
   if (o.held) return;
@@ -482,6 +484,7 @@ function drRulesWhy(o, H, placesOnly){
 }
 // the boat has come in on the plan (05-vessels.js dock): a fishing trip or a trip to land unloads at the plant
 function opsLanded(pid, k){
+  if (DRIFT2){ plan2Landed(pid, k); return; }
   const o = driftOps(); if (!o) return;
   if (k === 'home' || k === 'rest'){ o.cur = null; if (k === 'rest' || holdTotal() < 0.5) return; }
   const pt = portById(pid); if (pt && pt.mottak && holdTotal() >= 0.5 && !mottakOpen(S.t / 60)){ S.boat.landWait = pid; return; }
@@ -494,6 +497,7 @@ function opsLanded(pid, k){
 // the bunker and ice at the plant: all of it (the plan has no stock choices since 23.10.2026)
 function driftStock(){ return {ice:true, fuel:true, gear:true, bait:true}; }
 function opsReport(pid, kg, total, landed){
+  if (DRIFT2){ plan2Report(pid, kg, total, landed); return; }
   const o = driftOps(), sk = meAboard() ? null : crewSkipper(), port = portById(pid);
   autoRestock();
   const extra = S.tripOwner ? 0 : Math.round(Math.max(0, total) * 0.05); if (extra > 0){ S.cash -= extra; S.stats.costs += extra; }

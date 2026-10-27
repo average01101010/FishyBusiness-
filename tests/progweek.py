@@ -60,7 +60,7 @@ async def main():
         errs = []
         for name, every in PROFILES:
             pg = await (await br.new_context(viewport={'width':900, 'height':800})).new_page(); pg.on('pageerror', lambda e: errs.append(str(e)))
-            await boot(pg)
+            await boot(pg); await pg.evaluate("DRIFT2 = false")   # (the old plan, until part 8 of Driftsplan 2 replaces this test)
             r = await pg.evaluate(PLAY, [every, 56, 6])
             print('==', name)
             for row in r['rows']: print('  dag %(day)2d: %(trips)2d turer, kasse %(cash)9d, netto %(net)9d, torsk %(cod)5d / %(codMax)5d kg, blad B %(fm)s, juksamaskiner %(reels)d, egenkapital som trengs %(eqNeed)d' % row)

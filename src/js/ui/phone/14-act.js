@@ -71,6 +71,7 @@
     else if (a === 'svc'){ const c = d.m === 'self' ? Math.round(svcCostOf(b) * 0.35) : svcCostOf(b), hh = d.m === 'self' ? 2 * YARD_H : YARD_H; if (S.cash < c){ toast(t('no_cash')); return; } if (!queueJob({kind:'svc', h:hh, self:d.m === 'self', no:d.m === 'self' ? 'Egen service på motoren' : 'Service på verkstedet', en:d.m === 'self' ? 'Servicing the engine yourself' : 'Engine service at the yard'})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } S.cash -= c; S.stats.costs += c; }
     else if (a.slice(0, 3) === 'wk-'){ if (!WORK.act(a, d)) return; }
     else if (a.slice(0, 3) === 'dr-'){ if (!DRIFTUI.act(a, d)) return; }
+    else if (a.slice(0, 3) === 'p2-'){ if (!PLAN2UI.act(a, d)) return; }   // Driftsplan 2 (ui/05d-plan2.js)
     // Autonav to a named place from the phone: the chart plotter opens on it and finds the way; «Kast loss» is for the player (Jonas 07.10.2026)
     else if (a === 'goplace'){ const q = portById(d.id); if (!q) return; show(false); if (typeof DOCK !== 'undefined' && DOCK.close) DOCK.close(); if (S.draft.length) draftEdit(() => { S.draft = []; }); openPlotter(); view.cx = q.p.x; view.cy = q.p.y; setTimeout(() => leiaTo({x:q.p.x, y:q.p.y}), 450); return; }
     else if (a === 'rig'){ const why = rigSet(d.r); if (why){ toast(why[0]); return; } }

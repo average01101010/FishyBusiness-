@@ -62,7 +62,7 @@ async def main():
         b = await p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
         pg = await b.new_page(viewport={'width': 900, 'height': 900}); errs = []
         pg.on('pageerror', lambda e: errs.append(str(e)))
-        await boot(pg)
+        await boot(pg); await pg.evaluate("DRIFT2 = false")   # (the old plan, until part 8 of Driftsplan 2 replaces this test)
         r = await pg.evaluate(JS)
         print(json.dumps(r, ensure_ascii=False))
         print(ok(r['intro'] and r['fresh']['v'] == 3 and r['fresh']['rest'] and r['fresh']['sleep'] and r['fresh']['jigs'] == 1), 'a new plan comes filled in: home where the crew sleep well (a rorbu, the naust or a harbour berth), the best catch mark as the jig place', r['fresh'])

@@ -24,7 +24,7 @@ CRABP = """async () => { const c = P(71.05, 24.9); await mapNeed(c, MAPD.simR); 
 
 async def fresh(br):
     pg = await (await br.new_context(viewport={'width':1100, 'height':800})).new_page(); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
-    await boot(pg)
+    await boot(pg); await pg.evaluate("DRIFT2 = false")   # (the old plan, until part 8 of Driftsplan 2 replaces this test)
     await pg.evaluate(SEED); await pg.evaluate(PREP); await pg.evaluate(CRABP)
     return pg, errs
 
