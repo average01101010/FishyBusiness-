@@ -27,7 +27,7 @@ def check(ok, what, extra=''):
 # the target is worked out afresh (the ring on screen slides there over 0.2 s)
 STATE = """JSON.stringify((() => { const st = tutOn() ? tutStep() : null, q = st && !$('tutRing').hidden ? tutRect(tutTip(st)).R : null;
   return {id:st ? st.id : null, tut:S.tut && S.tut.v ? 'v2' : S.tut, ring:q && {x:q.x + q.w / 2, y:q.y + q.h / 2, w:q.w}, ok:!$('tipOk').hidden && !$('tip').hidden, okText:$('tipOk').textContent,
-    tip:$('tip').hidden ? '' : $('tipText').textContent, rod:!!window.jigActive, book:BOOK.isOpen(), st:S.boat.status, hold:Math.round(holdTotal()), busy:LEIA_BUSY, skip:!$('tipSkip').hidden}; })())"""
+    tip:$('tip').hidden ? '' : $('tipText').textContent, rod:!!window.jigActive, book:BOOK.isOpen(), st:S.boat.status, hold:Math.round(holdTotal()), busy:LEIA_BUSY, skip:!$('tipSkip').hidden, sleep:!$('sleep').hidden, wake:!$('sleep').hidden && !$('slSkip').hidden && !$('slSkip').disabled, ack:!$('slAck').hidden}; })())"""
 
 
 async def play(p, W, H, tag):
@@ -82,6 +82,12 @@ async def play(p, W, H, tag):
         if sid is None: break
         stuck += 1
         if stuck and stuck % 30 == 0: print('    ', tag, 'still', sid, json.dumps({k: s[k] for k in ('ring', 'ok', 'okText', 'st', 'hold', 'rod')}), (await pg.evaluate("JSON.stringify({open:PHONE.isOpen(), app:PHONE.app, tip:tutStep() && tutTip(tutStep()).el ? tutTip(tutStep()).el.outerHTML.slice(0, 80) : null, wait:S.boat.tutWait, plan:!!S.plan})")), flush=True)
+        # asleep (the game clock runs at 30× here, and a slow run in portrait spent the skipper's energy on the grounds, 27.10.2026): the
+        # sleep screen lies over the guide; wake up with its own button, as a player would (or acknowledge the bridge watch alarm)
+        if s['sleep']:
+            if s['ack']: await tap_el('#slAck')
+            elif s['wake']: await tap_el('#slSkip')
+            await pg.wait_for_timeout(500); continue
         if s['book']:   # the deck log, opened on its step: leaf once and close it
             await pg.wait_for_timeout(600); await pg.evaluate("BOOK.close()"); await pg.wait_for_timeout(300); continue
         if s['rod'] and sid != 'fish':
