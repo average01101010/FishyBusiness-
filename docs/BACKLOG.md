@@ -4,7 +4,7 @@
 
 ## Spillarbeid som venter (26.10.2026)
 
-- **Driftsplan 2** (Jonas 26.10.2026): fullstendig redesign av driftsplanen med nye øyne. Oppdraget, kravene R0–R10 og scenariene S1–S14 står i `docs/planer/driftsplan-2/00-oppdrag.md`. Fase 0 (revisjon) og 1 (design) først, uten kode; så én del per økt. Går foran sikkerheten SK1–SK6.
+- **Driftsplan 2, del 8 (rydding) venter på at Jonas har prøvd den nye planen** (27.10.2026): delene 1–7 er bygd og bryteren på (7f817c3). Del 8 fjerner `core/06d-drift.js` og `ui/05c-drift.js`, bytter `drifttest.py`/`driftuitest.py` ut med `driftsplan2test.py`/`driftsplan2ui.py`/`driftsplan2map.py`, og flytter `tutdrift.py` og `opsowntest.py` over; til da setter de gamle testene `DRIFT2 = false`. `DRIFTCTX` på rutepanelet (`07-guide.js`, `03-map.js`, `08-actions.js`) hører til den gamle siden og går samme vei. Oppdraget, kravene R0–R10 og scenariene står i `docs/planer/driftsplan-2/00-oppdrag.md`, status i `02-design.md`. Går foran sikkerheten SK1–SK6.
 - **`drifttest` scenario 6 er ustabil** (funnet 27.10.2026): den gamle planens flerdøgnstur (`rested`) var grønn i to av fire kjøringer. Det gamle testseletøyet frør ikke tilfeldighetstallene, så utfallet avhenger av fangsten. Den gamle planen slås av i Driftsplan 2 del 7; testen rettes eller tas ut da.
 - **Driftsplan 2: stikkprøver langs kysten mangler** (27.10.2026): planen er bygd og slått på, men bare prøvd på Senja (Finnsnes, Husøy, Botnhamn), fordi testmiljøet mangler hele kysten (`tools/map/out/game`). Må prøves i Bergen, Bodø og Hammerfest/Båtsfjord (lag plan, start, ett døgn) før den regnes som ferdig for hele landet. Del 8 (rydding: `06d-drift.js`, `05c-drift.js`, de gamle testene) venter til Jonas har prøvd den nye.
 - **`anchortest` og `fleet2test` er ustabile** (27.10.2026): begge var røde i én regresjon og grønne alene rett etter; de bruker været og fangsten uten frø, som `drifttest`.
@@ -78,6 +78,10 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - `S.owned` skrives fortsatt (`03-simulation.js`, `05-phone.js`, `05-vessels.js`), men leses bare av en lagringsmigrering i `11-boot.js`.
 - Ikonet `sjomann` i `05-phone.js` brukes ikke (Sjømann-appen ble fjernet 09.10.2026).
 - Startbåten er `trebat`. `buildSkiff` bygges fortsatt og er grunnlaget for kitet til håndbåtene (`handKit`), så den kan ikke bare fjernes. På skiffen står sløyebordet og blødekaret (75 % størrelse) tett ved setet, og konsollskjermene er ikke levende (Jonas).
+
+## Strøket 27.10.2026 (Driftsplan 2, 7f817c3)
+
+Revisjonens funn (`docs/planer/driftsplan-2/01-revisjon.md`) er løst med den nye planen: planen uten dag («Neste tur» som ikke stemte med det som skjedde), motoren som improviserte med feil konstanter og søkte asynkront i `catchUp` («Grunt vann forut», tre feil og stopp), siden som viste noe annet enn motoren gjorde, plassvalget som ble avbrutt av en ny tegning av siden (#95), ståtida som ikke ble holdt, den sovende vakta som ble regnet som i land («Rune har fri, så båten venter»), og statistikken uten dag og mottak. Alt sammen i `core/06g-plan2.js`, `core/06h-plan2-engine.js`, `ui/05d-plan2.js` og `ui/03g-planmap.js`; `docs/systemer/driftsplan.md` «Driftsplan 2» del 1–7.
 
 ## Strøket 26.10.2026 (oppdragsfristene, alternativ A)
 
