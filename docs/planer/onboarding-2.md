@@ -1,204 +1,223 @@
-# Onboarding 2: en kortere og lettere første tur, for hele kysten (plan 27.10.2026)
+# Onboarding 2: en kortere og lettere første tur, for hele kysten (plan 27.10.2026, andre utgave)
 
-> Plan etter `/planlegg`. Ingenting er bygd. Venter på Jonas' svar på valgene V1–V6 og «kjør på».
+> Plan etter `/planlegg`. Ingenting er bygd. Venter på Jonas' svar på valgene V1–V8 og «kjør på».
 
 ## Hva Jonas ba om
 
 27.10.2026: «re-design av tutorial/on-boarding for å gjøre opplevelsen bedre for brukerne. Husk at spillet dekker hele norskekysten,
 ikke bare Senja. Det må vi ta høyde for.» Med et utdrag fra en samtale med Gemini. Hovedpunktene derfra:
 
-- Behold brevet, båtnavnet, landsdelen, den garanterte første fangsten, «Senere» på registreringen og dryppene.
-- Kutt: de sju «Skjønner»-boksene på vei hjem (`tour`, `hud`, `apps`, `vaer`, `salg`, `regler`, `redning`), haill på første tur,
-  is og mannskap ved mottaket. Slå sammen `n1`–`n3`.
-- Fjern det dempede laget med hull og ring. Led med knappenes tilstand og korte tekster («Legg inn rute for å kaste loss») i stedet.
-- Ikke AI-radio (Gemini trakk det selv tilbake: «feature creep»).
+- Behold brevet, båtnavnet, landsdelen, den garanterte fangsten, «Senere» på registreringen og dryppene.
+- Kutt informasjonsdumpen på vei hjem, haill på første tur, og is og mannskap ved mottaket.
+- Bytt det dempede laget ut med knappenes egen tilstand. Ingen AI-radio.
+
+Samme dag, etter første utgave av planen: «Husk at vi må tenke på alt som kan forhindre churn i denne perioden av spillet», med ti
+prinsipper (under), og «Tenk gjerne gjennom planen en gang til og presenter den på nytt før vi kjører på.»
 
 ## Hva målingene sier (skyen, `events`, 27.10.2026)
 
 Få spillere, så dette er et signal og ikke et bevis. Bare spillere som deler bruksstatistikk, er med.
 
-- **7 spillere** startet veiledningen 11.–13.10.2026. Ingen nye siden 13.10.
-- **Ingen sendte `tut_done`.** Ingen kom så langt som til `land`.
-- **4 av 7 stoppet på steget `sail`**, altså mens båten gikk ut til feltet, etter kino- og kamerastegene. Tre av dem kom aldri tilbake.
-- Én kom forbi `sail` (175 s på det steget), fikk haillen og fisket, og stoppet ved `deck`.
-- `n1` tok 10 s i median, `n2`, `n3`, `nout` og `intro` 1–2 s. Altså trykket spillerne bare videre.
+- **7 spillere** startet veiledningen 11.–13.10.2026. Ingen nye er målt siden 13.10.
+- **Ingen sendte `tut_done`**, og ingen kom så langt som til `land`.
+- **4 av 7 stoppet på `sail`**, altså mens båten gikk ut til feltet, etter kino- og kamerastegene. Tre av dem kom aldri tilbake.
+- Naustlinjene ble trykket bort på 1–2 s (`n1` 10 s).
 
-**Det betyr:** spillerne faller av i ventetida før første napp, ikke i informasjonsdumpen på vei hjem. Den nådde ingen. Gemini har
-rett i at hjemturen er for tung, men det viktigste er tida fra «Ta over» til første fisk.
+Spillerne faller av i ventetida før første napp. Hjemturens gjennomgang nådde ingen. Kapittel 1 tar i dag rundt 30 ekte minutter og
+har 33 steg. Regnet fra koden (`GAME_RATE` 6, trebåten 6 knop, feltet 1,5–6 km ut) tar turen ut 1,5–5,5 minutter. Fisketida er 2
+spilltimer, altså 20 ekte minutter.
 
-**Tida i dag**, regnet fra koden: med `GAME_RATE` 6 er én spilltime 10 ekte minutter. Trebåten går 6 knop, og feltet ligger 1,5–6 km
-ut (`tutFieldNear`), så turen ut tar 1,5–5,5 ekte minutter. Fisketida er 2 spilltimer, altså 20 ekte minutter (350 kg rom ved
-rundt 175 kg/t). Deretter kommer turen hjem og leveringen. Kapittel 1 tar dermed rundt 30 ekte minutter og har 33 steg. Målet i
-`docs/onboarding.md` var «første napp innen fem ekte minutter».
+## De ti prinsippene, og hva de blir i spillet
+
+| Prinsipp | I dag | I planen |
+|---|---|---|
+| **1. Første mestring på under fem minutter** | Første fisk kommer etter rundt 6–10 minutter (brev, start, naust, rute, seiling) | Feltet 1,5–2,5 km ut, så turen tar 1,5–2,5 minutter. Naustet blir én linje. «Jukse selv» kommer straks båten er framme, og nappet kommer etter 4–8 s. Måles som `tFish` (O0), med 5 minutter fra «Ta over» som mål |
+| **2. Rigget forsprang** | Garantert flekk, juksa om bord, 15 000 kr | Uendret. Etter første levering står «Neste mål»-stripa alt et stykke på vei (pengene fra leveringen teller) |
+| **3. Styring med knappenes tilstand** | Dempet lag, ring og «Skjønner» | Laget fjernes. Knappene viser selv hva som mangler («Legg et punkt i ringen først»). Bare tre ting er sperret, slik som i dag |
+| **4. Skjul det til det trengs** | Puben, kveita og driftsplanen er skjult; alle appene og knappene synes | Kapittel 1 viser bare det turen bruker. Resten kommer fram når det trengs, med et merke «ny» og et drypp (V7) |
+| **5. En uløst oppgave ved slutten** | «Neste mål: juksamaskin», uten noe å gjøre nå | Kapittel 1 slutter med én konkret, liten oppgave: «Fyll is og kast loss på tur 2». Neste mål står ved siden av |
+| **6. Ekte tall som belønning** | Sluttseddelen med kr/kg | Sluttseddelen blir øyeblikket: kilo, kr/kg per størrelse og netto. Og en linje om hva vanlig fiske gir der nå (backloggen 10.2). Ingen poeng eller stjerner |
+| **7. Eierskap tidlig** | Båtnavnet, landsdelen | Båtnavnet nevnes i tekstene og i loggen fra første linje («[navn] er klar»). Ingen nye valg før første fisk |
+| **8. Tap når appen er lukket** | Fisk råtner uten is, været snur båten, push om full last | Bare simuleringens egne følger: fersk fisk uten is, været, ståtid. Ikke noe forsprang som går tapt. Se V8, det kolliderer med en regel |
+| **9. Andre fiskere straks etter første seier** | Topplista og AIS ligger i apper | Sluttseddelen får en linje som «I dag har 6 båter levert her, mest torsk.» Andre båter ved mottaket synes alt i 3D. Topplista kommer som første drypp etter levering. Ingenting om haill deles |
+| **10. Tidlig nedetid som forventning** | Ventingen ut er tom | Seilingen og fisketida vises fra første tur i ekte tid («Framme om 2 min», «Fisker til 14:20»), og push-spørsmålet kommer ved første ekte venting etter kapittel 1. Ingen ventetid legges til. Se V8 |
 
 ## Hva som finnes i dag
 
-- `ui/07b-first-trip.js`: `TSTEPS` (33 steg), `tutAllow` (bare «Kast loss», nye rutepunkter og levering sperres; resten av UI-et er
-  åpent), `tipPlace` (boksen, `#tutDim` og `#tutRing`; `nodim` og `small` finnes alt), `tutAdrift`.
+- `ui/07b-first-trip.js`: `TSTEPS` (33 steg), `tutAllow` (bare «Kast loss», nye rutepunkter og levering sperres), `tipPlace` (boksen,
+  `#tutDim`, `#tutRing`, `nodim`, `small`), `tutAdrift`.
 - `ui/08c-start.js`: startlista for hele kysten, `tutFieldNear` (beste torsk 1,5–6 km ut, 20–150 m dybde, under båtens grense for
-  sjø), `S.tutStart = {f, land}` (mottaket på startstedet, Botnhamn fra Vangshamn), `mapPreload`.
+  sjø), `S.tutStart = {f, land}`, `mapPreload`.
 - `core/03-simulation.js`: `TUT_FIELD` (Gisundet nord), `tutFieldAt`, `TUTB` (175 kg/t, 72 % torsk, 18 % sei, 10 % hyse, overalt
-  og hele året), `tutBonus`.
-- `ui/07c-handbook.js`: dryppene (`HB`, 26 tips, `when()`, `HB_GAP` 90 s) og Håndboka-appen.
+  og hele året).
+- `ui/07c-handbook.js`: dryppene (`HB`, 26 tips, `HB_GAP` 90 s) og Håndboka-appen.
+- `ui/10g-push.js`: `pushAsk`, som venter til veiledningen er ferdig.
+- Neste mål: `goals()` i `ui/phone/08-home-papers-merker.js`, med stripe i kroner.
 - Målingen: `tut_step`/`tut_done`, `admin_tut`, trakten i admin.
 
-## Det som ikke holder for hele kysten (funnet i gjennomgangen)
+## Det som ikke holder for hele kysten
 
-1. **Feltet kan havne på Senja.** Finner ikke `tutFieldNear` noe felt (ingen 20–150 m dybde innen 6 km, eller sjøen er over
-   grensen overalt), settes ikke `S.tut.f`. Da faller `tutFieldAt()` tilbake til `GROUNDS[TUT_FIELD]`, som er Gisundet nord.
-   Spilleren i for eksempel Kristiansand får da en ring i Troms. Teksten faller samtidig tilbake til «ved Gisundet nord».
-2. **Feltet sjekkes ikke mot reglene.** `tutFieldNear` spør ikke regelmotoren (`03e-rules.js`). Fra 1.1. til 30.4. kan feltet havne i
-   et gytefelt for kysttorsk sør for 62° N, der alt fiske er forbudt. Rundt Oslofjorden er torskefiske forbudt hele året, og bare
-   håndholdt redskap er lov. Da ber veiledningen spilleren om å bryte en regel.
-3. **Samme fiskemiks overalt.** Flekken er 72 % torsk hele året, også på Sørlandet om sommeren, der det ikke står skrei. Den gir
-   også feil forventning (backloggen 10.2).
-4. **Senja-navn igjen i tekster:** `route_empty_fs` («nord i Gisundet»), reserveverdiene i `tutAt`/`tutLandN` («Botnhamn»).
-5. **Testen kjører bare fra Vangshamn.** `tut.py` velger `vangshamn`. Ingen test viser at første tur går fra Bergen, Bodø,
-   Båtsfjord eller sørkysten.
+1. **Feltet kan havne på Senja.** Finner ikke `tutFieldNear` et felt, faller `tutFieldAt()` tilbake til Gisundet nord, uansett hvor
+   spilleren starter, og teksten sier «ved Gisundet nord».
+2. **Feltet sjekkes ikke mot reglene.** Sør for 62° N kan det havne i et gytefelt for kysttorsk (alt fiske forbudt 1.1–30.4), og
+   rundt Oslofjorden er torskefiske forbudt hele året. Da ber veiledningen spilleren bryte en regel.
+3. **Samme fiskemiks overalt.** 72 % torsk hele året, også på Sørlandet om sommeren.
+4. **Senja-navn i tekster:** `route_empty_fs` («nord i Gisundet»), reserveverdiene i `tutAt`/`tutLandN` («Botnhamn»).
+5. **Testen kjører bare fra Vangshamn** (`tut.py`).
+6. **Sluttseddelens linje om andre fiskere** og linja om vanlig fiske må virke langs hele kysten, også der det er få NPC-båter og
+   ingen andre spillere.
 
 ## Den nye første turen (kapittel 1)
 
-Fra 33 steg til rundt 14, og fra rundt 30 til rundt 15 ekte minutter. Målet er første napp innen 5 minutter etter «Ta over».
+Fra 33 steg til rundt 12, og fra rundt 30 til rundt 15 ekte minutter.
 
-| Del | I dag | Nytt |
+| Del | Steg | Hva spilleren gjør og ser |
 |---|---|---|
-| Åpningen | brevet, båtnavnet, landsdelen | uendret |
-| Naustet | `n1`, `n2`, `n3`, `nout`, `intro` | `n1` blir én linje som peker på fars torsk, så «Gå ut». `intro` blir én linje mens kameraet glir |
-| Ut | `gps`, `route1`, `fish2`, `cast1`, `chip`, `kino`, `kino2`, `cam`, `cam2`, `sail` | `gps`, `route1`, `cast1`. Mens båten går, kommer ett lite tips som ikke må besvares: «Prøv Kino eller broa mens hun går» (V4) |
-| Fisket | `luck`, `haill`, `luckhud`, `fish`, `deck`, `full` | `fish` («Jukse selv» med en gang hun er framme), `deck` ved første fisk over ripa, ikke ved full last. Haill etter V1 |
-| Hjem | `route2`, `cast2`, `legs`, `tour`, `hud`, `apps`, `vaer`, `salg`, `regler`, `redning` | `route2`, `cast2`. Resten blir drypp |
-| Mottaket | `land`, `slip`, `reg`, `book`, `ice`, `beh`, `crew`, `goal` | `land`, `slip` (med en linje om at første tur var ekstra god, og hva vanlig fiske her gir nå), `reg` («Senere» står), `goal` |
+| Åpningen | brevet, båtnavnet, landsdelen | Uendret |
+| Naustet | `n1`, `nout` | Én linje som peker på fars torsk: «Fars torsk, 24,6 kg. Slå den.» Så «Gå ut». Kameraet glir ut til båten, og navnet hennes står i tipset |
+| Ut | `gps`, `route1`, `cast1` | Kartplotteren. Ett trykk i ringen. «Kast loss» er grå til punktet ligger der, og lyser så. Mens hun går: «Neste» viser ekte tid til framme, og ett lite tips om Kino eller broa som ikke må besvares (V4) |
+| Fisket | `fish`, `deck` | «Jukse selv» straks båten er framme. Nappet kommer etter 4–8 s. `deck` kommer ved første fisk over ripa. Fisketid etter V2 |
+| Hjem | `route2`, `cast2` | Ett trykk på mottaket, så «Kast loss». «Neste» viser tid til framme |
+| Mottaket | `land`, `slip`, `reg`, `goal` | Levering. Sluttseddelen med kr/kg, hva vanlig fiske gir her nå, og hvor mange båter som har levert i dag. Registrering («Senere» står). Til slutt den åpne oppgaven: «Fyll is og kast loss på tur 2», med Neste mål ved siden av |
 
-**Dit det som tas ut, går.** Det blir drypp i Håndboka, utløst når det gjelder:
+**Det som tas ut, blir drypp** i Håndboka, utløst når det trengs:
 
-| Steg som tas ut | Nytt drypp, utløst når |
+| Tatt ut | Drypp, utløst når |
 |---|---|
-| `ice` | spilleren ligger ved et mottak uten is før neste avgang, eller trykker «Kast loss» uten is |
-| `crew` | fisken hoper seg opp på dekk første gang (sløyinga henger etter), eller ved andre levering |
+| `ice` | den åpne oppgaven etter kapittel 1, og ellers «Kast loss» uten is |
+| `crew` | fisken hoper seg opp på dekk første gang, eller ved andre levering |
 | `vaer` | varselet blir gult for båten første gang |
-| `redning` | motorstopp eller grunnstøting første gang (den første redningen er gratis, så det mister ingen noe på) |
-| `regler` | første gang båten nærmer seg et stengt felt eller en regel i statusboksen |
-| `salg` | etter andre levering |
-| `hud`, `apps`, `book`, `beh` | ett drypp hver i kapittel 2, ett om gangen, med 90 s mellom som i dag |
-| `kino`, `cam` | tipset på vei ut (V4), ellers et drypp på neste lange seiling |
-
-**Visningen (V3):** Det dempede laget tas bort. Ringen rundt knappen og tipsboksen blir stående. Der en handling ikke er klar ennå,
-er knappen grå og sier selv hva som mangler. «Kast loss» sier for eksempel «Legg et punkt i ringen først» i stedet for å vise en
-toast. Sperrene i `tutAllow` blir som i dag, for de er bare tre. Det meste av UI-et er alt åpent; det var «Skjønner»-stegene som
-føltes som et tvunget løp.
-
-**Obligatorisk (V6):** Turen er fortsatt obligatorisk, slik Jonas bestemte 05.10.2026. Når den er kort og bare består av ting
-spilleren gjør, trengs ingen nødutgang.
+| `redning` | motorstopp eller grunnstøting første gang |
+| `regler` | første gang båten nærmer seg et stengt felt |
+| `salg` og topplista | rett etter første levering (prinsipp 9), så etter andre levering |
+| `luck`, `haill`, `luckhud` | etter V1 |
+| `hud`, `apps`, `book`, `beh`, `legs` | ett drypp hver i kapittel 2, ett om gangen, med 90 s mellom |
+| `kino`, `cam` | tipset på vei ut (V4), ellers første lange seiling |
 
 ## Fasene
 
 Hver fase passer i én økt og avsluttes med `/lever` og `/okt-slutt`.
 
 **O0. Måling og stikkprøver (først, liten).**
-- `tut_step` og `tut_done` får med startstedet (`home`, landsdelen) og `tFish`, de ekte sekundene fra «Ta over» til første fisk om
-  bord. Trakten i admin kan da deles opp per landsdel og vise tid til første napp.
-- Sjekk hvorfor ingen nye spillere er målt siden 13.10.2026. Er det bare ingen nye, eller har målingen stoppet?
-- Stikkprøve med dagens kode fra Bergen, Bodø, Båtsfjord og én havn på sørkysten (Egersund eller Kristiansand), i januar og i juli:
-  ble feltet funnet, er det lovlig, hvor langt er det, og hvor lang tid går fra start til første fisk?
+- `tut_step`/`tut_done` får startstedet (havn og landsdel) og `tFish`, de ekte sekundene fra «Ta over» til første fisk om bord.
+  Trakten i admin deles opp per landsdel og viser tid til første napp.
+- Sjekk om målingen har stoppet, eller om det bare ikke har kommet nye spillere siden 13.10.
+- Stikkprøve med dagens kode fra Bergen, Bodø, Båtsfjord og Egersund eller Kristiansand, i januar og i juli: om feltet blir funnet,
+  om det er lovlig, hvor langt ut det ligger, og tida til første fisk.
 - Filer: `07b-first-trip.js`, `admin/`, en ny migrering. Test: `tut.py` (bare at hendelsene går).
 
-**O1. Hele kysten (robusthet).**
-- `tutFieldNear` søker videre ut (opp til 10 km, så grunnere eller dypere vann). Finner den fortsatt ikke noe, legges flekken i
-  nærmeste lovlige sjø ved havna. Senja-feltet brukes aldri utenfor Senja.
-- Feltet sjekkes mot regelmotoren for juksa, arten og datoen: ingen stengte felt, gytefelt eller forbud. Helst ligger det 1,5–3 km
-  ut, så første napp kommer fort.
-- `TUTB.mix` lages av de artene som faktisk står på feltet nå (`density` per art), avgrenset til arter som tas på juksa, som er lovlige
-  der og da, og som mottaket tar imot. Mengden er fortsatt garantert.
-- Senja-navnene tas ut av reservetekstene og `route_empty_fs`.
-- Filer: `08c-start.js`, `core/03-simulation.js`, `07b-first-trip.js`, `01-i18n.js`. Test: ny lett test `tutcoast.py`, som starter
-  første tur fra fem steder langs kysten (sør, vest, midt, nord, øst) og sjekker felt, lovlighet, miks og avstand.
-- Reglene sjekkes mot kildene før bygging (se «Usikkert»).
+**O1. Hele kysten.**
+- `tutFieldNear` foretrekker 1,5–2,5 km og søker videre ut ved behov. Finner den ikke noe, legges flekken i nærmeste lovlige sjø
+  ved havna. Senja-feltet brukes aldri utenfor Senja.
+- Feltet sjekkes mot regelmotoren for juksa, arten og datoen.
+- `TUTB.mix` lages av artene som står der nå, avgrenset til det som tas på juksa, er lovlig der og da, og tas imot av mottaket.
+  Mengden er fortsatt garantert.
+- Senja-navnene tas ut av reservetekstene.
+- Filer: `08c-start.js`, `core/03-simulation.js`, `07b-first-trip.js`, `01-i18n.js`. Test: ny lett `tutcoast.py` fra fem steder
+  (sør, vest, midt, nord, øst): feltet, lovligheten, miksen og avstanden.
+- Reglene sjekkes mot Fiskeridirektoratet og Lovdata før bygging.
 
-**O2. Fram til første napp.**
-- Naustet blir én linje og «Gå ut». `fish2` ligger igjen bare som sikkerhetsnett (den løser seg allerede av seg selv).
-- `chip`, `kino`, `kino2`, `cam`, `cam2` og `sail` tas ut som steg. Inn kommer ett lite tips som ikke må besvares (V4).
-- `fish` kommer med en gang båten er framme. `deck` kommer ved første fisk over ripa.
-- Filer: `07b-first-trip.js`. Test: `tut.py` (ny `ORDER`), begge formater.
-
-**O3. Fisket og haillen (V1, V2).**
-- Fisketida og påfyllingen etter V2. `luck`/`haill`/`luckhud` og `tutWait` i `05-vessels.js` etter V1.
-- Sluttseddelen får en linje om at første tur var ekstra god, og hva vanlig fiske gir her nå (stryker backloggen 10.2).
-- Filer: `07b-first-trip.js`, `core/05-vessels.js`, `core/03-simulation.js`, sluttseddelen i `10c-dock.js`. Test: `tut.py`,
-  `hailltest`.
-
-**O4. Hjem og levering.**
-- Ta ut `legs`, `tour`, `hud`, `apps`, `vaer`, `salg`, `regler`, `redning`, `book`, `ice`, `beh` og `crew`.
-- De nye dryppene i `HB` med utløserne i tabellen over. `icestep.py` flyttes fra veiledningen til drypp.
-- Filer: `07b-first-trip.js`, `07c-handbook.js`. Test: `tut.py`, `hbtest.py`, `icestep.py`.
-
-**O5. Visningen (V3).**
-- Ta bort `#tutDim`. Ringen og boksen blir stående.
-- Grå knapper med egen tekst for «Kast loss» og «Lever» på veiledningens steg.
-- Filer: `07b-first-trip.js`, `styles.css`, rutepanelet (`03b-route.js`). Test: `tut.py`, `hbtest.py`, skjermbilder 800×1280 og
+**O2. Fram til første napp (prinsipp 1, 3, 7).**
+- Naustet blir én linje og «Gå ut».
+- `chip`, `kino`, `kino2`, `cam`, `cam2` og `sail` blir ett tips som ikke må besvares.
+- «Kast loss» og «Lever» blir grå knapper med egen tekst på veiledningens steg (`03b-route.js`, `10c-dock.js`).
+- Det dempede laget fjernes (V3).
+- Filer: `07b-first-trip.js`, `03b-route.js`, `10c-dock.js`, `styles.css`. Test: `tut.py` (ny `ORDER`), skjermbilder 800×1280 og
   1280×800.
+
+**O3. Fisket (prinsipp 1, 2).**
+- Fisketida og påfyllingen etter V2. Haillen og `tutWait` i `05-vessels.js` etter V1. `deck` kommer ved første fisk.
+- Filer: `07b-first-trip.js`, `core/05-vessels.js`, `core/03-simulation.js`. Test: `tut.py`, `hailltest`.
+
+**O4. Mottaket og slutten (prinsipp 5, 6, 9).**
+- Sluttseddelen får linja om vanlig fiske og linja om dagens leveringer på mottaket. Kilden er felles verden der den finnes, ellers
+  NPC-flåtens landinger på mottaket. Står ingen andre båter der, skrives linja ikke.
+- `goal` slutter med den åpne oppgaven (is og tur 2).
+- Stegene som tas ut, blir drypp med utløserne over. `icestep.py` flyttes fra veiledningen til den åpne oppgaven.
+- Filer: `07b-first-trip.js`, `07c-handbook.js`, sluttseddelen i `10c-dock.js`. Test: `tut.py`, `hbtest.py`, `icestep.py`.
+
+**O5. Det som skjules (prinsipp 4, 10, etter V7).**
+- I kapittel 1 viser knappelinja og telefonen bare det turen bruker. Hver app eller knapp kommer fram med merket «ny» når dryppet
+  dens utløses, eller etter kapittel 1 når V7 B er valgt.
+- `pushAsk` kommer første gang båten går eller fisker etter kapittel 1, ikke ved slutten.
+- Filer: `10c-dock.js`, `ui/phone/`, `07c-handbook.js`, `10g-push.js`. Test: `hbtest.py`, `tut.py`, skjermbilder i begge formater.
 
 **O6. Avslutning.**
 - `/stikkprove` av hele første tur i Bergen, Bodø og Båtsfjord, i tillegg til Senja.
-- Patchnote (kort, uten noe om hvorfor). Oppdater `opning-og-veiledning.md` og `docs/onboarding.md`. Fjern de utdaterte stegene i
-  `TUT_STEPS` i admin.
+- Patchnote: kort, og uten noe om hvorfor.
+- Oppdater `opning-og-veiledning.md` og `docs/onboarding.md`, og ta de gamle stegene ut av `TUT_STEPS` i admin.
 - Mål trakten i to uker før noe mer endres.
 
-O1 kan gå før O2–O5, for det er en feil for spillere som starter langt fra Senja i dag.
+O1 kan gå først, fordi det er en feil i dag for spillere som starter langt fra Senja.
 
 ## Valgene
 
-**V1. Haillen på første tur.** Jonas ba 05.10.2026 om at fiskelykke og haill skulle vises like før første fiske. I dag venter båten
-på feltet til haillen er hentet (tre steg).
-- **A (anbefalt):** Ingen haill i kapittel 1. Den kommer som drypp etter første levering, sammen med gaven ved registrering.
-  Hvorfor: den garanterte flekken skjuler uansett hva haillen gjør, og ventingen sperrer det første nappet.
-- B: Én kort linje om fiskelykke og en gratis haill, men båten fisker uten å vente.
+**V1. Haillen på første tur.** Jonas ba 05.10.2026 om fiskelykke og haill like før første fiske. I dag venter båten på feltet til
+haillen er hentet.
+- **A (anbefalt):** Ingen haill i kapittel 1. Den kommer som drypp etter første levering, med gaven ved registrering. Hvorfor: den
+  garanterte flekken skjuler hva haillen gjør, og ventingen kommer før første napp.
+- B: Én linje og gratis haill, uten venting.
 - C: Som i dag.
 
 **V2. Fisketida på første tur.**
-- **A (anbefalt):** 1 spilltime (10 ekte minutter) og rundt 175 kg. Leveringen er ikke avhengig av full last, og sluttseddelen
-  forklarer at turen var god. Hvorfor: det halverer den lengste ventetida uten å endre den felles klokka.
-- B: 2 timer som i dag, men «Jukse selv» kommer med en gang, så tida fylles med noe å gjøre.
-- C: 1 time med en sterkere flekk, så rommet blir fullt likevel. Det gjør forventningen enda mer feil (backloggen 10.2).
+- **A (anbefalt):** 1 spilltime (10 ekte minutter) og rundt 175 kg. Leveringen krever ikke full last. Hvorfor: det halverer den
+  lengste ventetida uten å røre den felles klokka.
+- B: 2 timer som i dag, med «Jukse selv» straks.
+- C: 1 time med sterkere flekk og full last. Det gir enda mer feil forventning.
 
 **V3. Det dempede laget.**
-- **A (anbefalt):** Borte overalt. Ringen og boksen blir stående, og knappene sier selv hva som mangler. Hvorfor: det er det voksne
-  spillere reagerer på, og ringen peker like godt.
-- B: Bare på første steg (GPS-en), der spilleren ikke vet hvor noe er ennå.
-- C: Som i dag.
+- **A (anbefalt):** Borte overalt. Ringen og knappenes tilstand blir stående.
+- B: Bare på første steg (GPS-en).
 
 **V4. Kino og broa på vei ut.**
-- **A (anbefalt):** Ett lite tips som ikke må besvares mens båten går. Hvorfor: det er det fineste i spillet og bør vises, men det
-  skal ikke være en oppgave.
-- B: Bare som drypp, på neste lange seiling.
-- C: Som i dag (fire steg).
+- **A (anbefalt):** Ett lite tips som ikke må besvares. Hvorfor: det fineste i spillet bør vises, men ikke som en oppgave.
+- B: Bare som drypp.
 
 **V5. Is og mannskap.**
-- **A (anbefalt):** Begge blir drypp. Is kommer ved neste avgang uten is, og den første fyllingen er fortsatt gratis. Mannskap kommer
-  når fisken hoper seg opp på dekk. Hvorfor: der lærer spilleren hvorfor det trengs.
-- B: Is blir i kapittel 1 (fordi tur 2 uten is gir dårligere pris), og mannskap blir drypp.
+- **A (anbefalt):** Is blir den åpne oppgaven ved slutten av kapittel 1, og mannskap blir drypp. Hvorfor: isen er det spilleren
+  trenger neste gang, så den egner seg som oppgaven som henger igjen.
+- B: Begge blir drypp.
 
 **V6. Obligatorisk.**
-- **A (anbefalt):** Fortsatt obligatorisk og uten nødutgang, slik Jonas bestemte 05.10.2026. Turen blir kort og består av ting
-  spilleren gjør.
-- B: En knapp «Jeg har spilt før» på startskjermen som hopper til `goal`, med den garanterte fangsten slått av.
+- **A (anbefalt):** Fortsatt obligatorisk og uten nødutgang (Jonas 05.10.2026). Turen blir kort og består av ting spilleren gjør.
+- B: En knapp «Jeg har spilt før» som hopper til `goal`.
+
+**V7. Hvor mye som skjules i kapittel 1.**
+- **A (anbefalt):** Knappelinja og telefonen viser bare det kapittel 1 bruker. Hver app kommer fram når dryppet dens utløses, med
+  merket «ny». Hvorfor: det gir progressiv avsløring uten en eneste tekstboks.
+- B: Alt kommer fram samlet etter kapittel 1.
+- C: Alt synes som i dag.
+
+**V8. Prinsipp 8 og 10 mot reglene i `CLAUDE.md`.** «Tapt forsprang når appen er lukket» kolliderer med «Ingen straff for fravær».
+«Nedetid for å forankre spite-spending» kolliderer med «vi legger aldri inn ventetid … for å selge oss forbi den». Reglene står til
+du sier noe annet.
+- **A (anbefalt):** Reglene står. Tap når appen er lukket kommer bare fra simuleringen selv (fisk uten is, været, ståtid), og vises
+  ærlig. Nedetida er den ekte seilingen og fisketida, vist i ekte tid fra første tur, så trim gir mening senere uten at noe er lagt
+  til. Ingen salg eller trim i kapittel 1, for gjester kan ikke kjøpe uansett. Hvorfor: reglene er grunnen til at spillet tåler å
+  tjene penger på voksne fiskere uten at det oppleves som et mobilspill.
+- B: Reglene endres, og det skrives inn i `CLAUDE.md` og `docs/engasjement.md` hva som nå er lov.
 
 ## Usikkert
 
-- **Tallene er tynne.** 7 spillere i tre dager. At de falt av under seilingen ut, er det beste signalet vi har, men det kan også ha
-  vært lasting, 3D eller noe annet. O0 måler tida til første napp per landsdel før resten bygges, og etter.
-- **Regler for torsk sør for 62° N:** regelmotoren har gytefeltene (1.1–30.4) og Oslofjorden. Om annet kystfiske etter torsk i
-  Skagerrak, eller juksa for de andre artene, er regulert, må sjekkes mot Fiskeridirektoratet og Lovdata før O1 bygges. Kildene
-  skrives inn.
-- **Tida ut regnet fra koden,** ikke målt: 1,5–6 km ved 6 knop. Det kan bli lenger med Autonav rundt holmer.
-- Om tidsforbruket med 1 time fisketid holder for en fangst som føles god, må spilles.
+- **Tallene er tynne:** 7 spillere på tre dager. O0 måler tida til første napp per landsdel før og etter.
+- **Torskeregler sør for 62° N:** regelmotoren har gytefeltene og Oslofjorden. Annet kystfiske etter torsk i Skagerrak, og juksa for
+  andre arter, må sjekkes mot Fiskeridirektoratet og Lovdata før O1. Kildene skrives inn.
+- **Fem minutter til første fisk** henger på hvor lang tid brevet og startlista tar (lasting av kartet). Det er ikke målt. Målet
+  regnes fra «Ta over».
+- **Linja om dagens leveringer** trenger data om andre båter per mottak. Om felles verden har det per mottak, er ikke sjekket. Ellers
+  brukes NPC-flåten, som er tynn noen steder.
+- Om 1 times fisketid gir en fangst som føles god nok, må spilles.
 
 ## Det planen ikke gjør
 
 - Ingen AI-radio og ingen ny VHF.
-- Brevet, båtnavnet, startlista og naustet i 3D endres ikke (bare tekstene i naustet).
-- Ingen endring av den felles klokka eller tempoet (`GAME_RATE`). Første tur får ikke spole fram.
-- Dryppene i kapittel 3–6 endres ikke utover de nye fra kapittel 1.
+- Brevet, båtnavnet, startlista og naustet i 3D endres ikke (bare teksten i naustet).
+- Ingen endring av den felles klokka eller `GAME_RATE`.
+- Ingen ny ventetid, ingen straff for fravær, og ingen salg i kapittel 1.
+- Dryppene i kapittel 3–6 endres ikke, utover de nye som kommer fra kapittel 1.
 
 ## Status
 
-- 27.10.2026: planen skrevet. Venter på svar på V1–V6 og «kjør på».
+- 27.10.2026: første utgave av planen (V1–V6).
+- 27.10.2026: andre utgave etter Jonas' ti prinsipper: tabellen over prinsippene, O4 og O5 nye, V7 og V8 nye. Venter på svar og
+  «kjør på».
