@@ -47,7 +47,12 @@ const PLAN2UI = (() => {
     if (r && r.day && r.i < r.day.steps.length && !r.replan){ let now = r.i; if (r.trip && S.plan && S.plan.ops){ for (let i = r.i; i < r.day.steps.length; i++){ const s = r.day.steps[i]; if (s.t != null && s.t <= H) now = i; } } return {day:r.day, now, label:L('I dag', 'Today')}; }
     // a plan not made yet has no plant: the nearest one to the places stands in, so the day can be read before Start
     let oo = o; if (!o.M){ const P = o.places, mid = P.length ? {x:P.reduce((a, q) => a + q.x, 0) / P.length, y:P.reduce((a, q) => a + q.y, 0) / P.length} : (portById(o.home) || {p:S.boat.pos}).p, M = o.land.mode === 'port' && o.land.port ? portById(o.land.port) : PORTS.filter(q => q.mottak).sort((x, y) => dist(x.p, mid) - dist(y.p, mid))[0]; if (M) oo = Object.assign({}, o, {M:M.id}); }
-    try { const from = r && r.day ? r.day.end : H, dep = plan2NextDep(oo, H, from), day = planDay(oo, dep, plan2State(oo)); return {day, now:-1, label:dep - H > 20 ? L('I morgen', 'Tomorrow') : L('Neste dag', 'Next day'), dep}; } catch (e){ return null; }
+    // the next day is reckoned from the state at its departure, not now: the crew's fatigue and your energy fall and rise with the rest until then
+    // (the engine lays the day anew at the departure; this is the page's estimate, as the note under the day says)
+    try { const from = r && r.day ? r.day.end : H, dep = plan2NextDep(oo, H, from), st = plan2State(oo), hrs = Math.max(0, dep - H);
+      if (hrs > 0){ const b = S.boat, atRest = b.status === 'port' && (b.port === oo.home ? st.homeRest : plan2RestOk(b.port)), rate = atRest ? p2RestRate('bunks') : b.status === 'port' ? p2RestRate('quay') : 0;
+        for (const c of st.crew) c.fat = Math.max(0, c.fat - rate * hrs); if (st.me.aboard && b.status === 'port' && typeof restRate === 'function') st.me.energy = Math.min(100, st.me.energy + Math.max(0, restRate(b)) * 60 * hrs); }
+      const day = planDay(oo, dep, st); return {day, now:-1, label:dep - H > 20 ? L('I morgen', 'Tomorrow') : L('Neste dag', 'Next day'), dep}; } catch (e){ return null; }
   }
   function dayCard(o){
     const P = preview(o); if (!P) return '';

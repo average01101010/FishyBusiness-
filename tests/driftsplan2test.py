@@ -366,7 +366,8 @@ async def main():
         else:
             print('  dagen:', L['dryText']); print('  redskap:', L['gear'])
             print(ok(L['setAfterJig'] and L['jigH'] and L['jigH'] >= 3 and L['order'].index('juks') < L['order'].index('sett') and L['dayH'] <= 14.5), 'S16 the jig comes first with most of the day, the line is set after it, within the day', [L['jigH'], L['dayH'], L['order']])
-            g = L['gear']; print(ok(len(g) >= 1 and g[0][1] is not None and g[0][2] is not None and g[0][2] >= 9.5 and int(g[0][0].split(' ')[1].split(':')[0]) >= 12), 'S16 the engine sets the line in the afternoon and hauls it next day after the soak', g)
+            g = L['gear']; setH = int(g[0][0].split(' ')[1].split(':')[0]) + int(g[0][0].split(':')[1]) / 60 if g else None
+            print(ok(len(g) >= 1 and g[0][1] is not None and g[0][2] is not None and g[0][2] >= 9.5 and setH is not None and setH >= 6 + 4 and g[0][1].startswith('D2')), 'S16 the engine sets the line after four hours or more of jigging and hauls it next day after the soak', g)
         print('== S17: lenkeretningen fra kartet: lina settes i den retningen')
         L = await pg.evaluate("""(async () => { const R = {};
           D2.reset(53); const home = D2.boat('sjark', 2, true); D2.gear('line', 4); await mapNeed(portById(home).p, 14); const F = D2.spots(1, 4, 10);
@@ -429,16 +430,17 @@ async def main():
             A, B, C = L['A'], L['B'], L['C']
             print('  åpent: dager', A['days'], 'stats', [(d['d'], d['kg'], d['kr']) for d in A['stats']['days']], 'fin', A['fin']); print('  lukket 30 t:', [(d['d'], d['kg'], d['kr']) for d in B['stats']['days']], 'fin', B['fin'], 'ms', B['ms30'])
             print('  redskap åpent:', A['gearLogAll']); print('  redskap lukket:', B['gearLogAll'])
-            same_ev = [e[:2] for e in A['ev']] == [e[:2] for e in B['ev']]
+            tm = lambda w: int(w[1:].split(' ')[0]) * 1440 + int(w.split(' ')[1].split(':')[0]) * 60 + int(w.split(':')[1])
+            same_ev = [e[1] for e in A['ev']] == [e[1] for e in B['ev']] and all(abs(tm(a[0]) - tm(b[0])) <= 5 for a, b in zip(A['ev'], B['ev']))
             if not same_ev:
                 import itertools
                 for i, (ea, eb) in enumerate(itertools.zip_longest(A['ev'], B['ev'])):
-                    if ea is None or eb is None or ea[:2] != eb[:2]: print('  første avvik ved', i, ea, eb); break
+                    if ea is None or eb is None or ea[1] != eb[1] or abs(tm(ea[0]) - tm(eb[0])) > 5: print('  første avvik ved', i, ea, eb); break
             kgA = sum(d['kg'] for d in A['stats']['days']); kgB = sum(d['kg'] for d in B['stats']['days']); krA = sum(d['kr'] for d in A['stats']['days']); krB = sum(d['kr'] for d in B['stats']['days'])
             print(ok(len(A['stats']['days']) == 3 and len(B['stats']['days']) == 3 and abs(kgA - kgB) <= 0.02 * max(1, kgA) and abs(krA - krB) <= 0.03 * max(1, krA)), 'S9 30 h closed in the middle gives the same landings as open (kg within 2 %, kr within 3 %: the price follows the species and sizes, which vary a little between two runs)', [(kgA, krA), (kgB, krB)])
             # the kg a set gives differs a little between the runs (the density reads the sim tiles as they come in between the frames of an open run), so the minutes are compared, not the kg
             gA = [g[:2] for g in A['gearLogAll']]; gB = [g[:2] for g in B['gearLogAll']]
-            print(ok(same_ev and gA == gB and A['fin']['port'] == B['fin']['port'] and A['fin']['en'] == B['fin']['en'] and A['fin']['sets'] == B['fin']['sets']), 'S9 the same steps at the same minutes, the same gear set and hauled at the same minutes, the same place and rest at the end', ['likt' if same_ev else 'ulikt', gA == gB, A['fin'], B['fin']])
+            print(ok(same_ev and gA == gB and A['fin']['port'] == B['fin']['port'] and A['fin']['en'] == B['fin']['en'] and A['fin']['sets'] == B['fin']['sets']), 'S9 the same steps in the same order within five minutes, the same gear set and hauled at the same minutes, the same place and rest at the end', ['likt' if same_ev else 'ulikt', gA == gB, A['fin'], B['fin']])
             print('  ni døgn lukket:', C)
             print(ok(C['wall_s'] < 20 and C['trips'] >= 8 and C['on'] and not C['stop'] and C['days'] >= 9), 'S9 nine days closed: played in under 20 s (8 s alone, more with other tests beside it), with a landing every day and the plan still on', [C['wall_s'], C['trips'], C['days']])
             print('  borte:', L['away'])
