@@ -5,7 +5,7 @@
 // the game state as well as the milestones, so the guide survives reloads and surprises. Saves from before it are not sent through.
 // While it runs, a dimmed layer with a hole and a pulsing ring shows where to tap (z-index 61–62, over the phone), with the tip above.
 const tutOn = () => !!(S.tut && S.tut.v === 2);
-const tutNew = () => ({v:2, m:{}, catch:true, pAt:Date.now(), t0:Date.now(), ...(S && S.tutStart ? S.tutStart : {})});   // a start along the coast brings its patch and plant (ui/08c-start.js)
+const tutNew = () => ({v:2, m:{}, catch:true, pAt:Date.now(), t0:Date.now(), T:S && S.tutT ? {...S.tutT} : {}, ...(S && S.tutStart ? S.tutStart : {})});   // a start along the coast brings its patch and plant (ui/08c-start.js)
 const tutField = () => tutFieldAt();   // Gisundet nord, or near a start along the coast (core: the skrei patch while the catch is guaranteed)
 // where the first catch is landed: Botnhamn from Vangshamn (and the old Finnsnes start), the start's own plant elsewhere (ui/08c-start.js); the field's name for the tips
 const tutLand = () => (S.tut && S.tut.land) || 'botnhamn', tutLandN = () => (portById(tutLand()) || {name:'Botnhamn'}).name;
@@ -13,7 +13,16 @@ const tutAt = () => S.tut && S.tut.f && S.tut.f.at ? S.tut.f.at : {no:'ved Gisun
 const tutHome = () => portById(S.home || HOME0) || PORTS[0];
 // a step done (the guide's funnel, docs/onboarding.md point 6): the real seconds it took since the step before go to the cloud as
 // tut_step; a step settled by a later one (settle) took no time of its own
-function tutEv(k, settle){ if (typeof cloudEv !== 'function') return; const s = settle ? 0 : Math.round((Date.now() - (S.tut.pAt || Date.now())) / 1000); cloudEv('tut_step', settle ? {id:k, s:0, settled:true} : {id:k, s:Math.max(0, Math.min(s, 86400))}); }
+function tutEv(k, settle){ if (typeof cloudEv !== 'function') return; const s = settle ? 0 : Math.round((Date.now() - (S.tut.pAt || Date.now())) / 1000), r = S.tut.reg || null; cloudEv('tut_step', settle ? {id:k, s:0, settled:true, r} : {id:k, s:Math.max(0, Math.min(s, 86400)), r}); }
+// the time to the first fish (Onboarding 2, O0, docs/planer/onboarding-2.md): the real seconds between two moments of the opening
+// (S.tut.T: take, the letter's «Ta over»; pick, «Start her»; map, the start's map in), null where one is missing (a game begun before)
+const tutSec = (a, b) => a && b && b >= a ? Math.min(Math.round((b - a) / 1000), 86400) : null;
+// once: how long the start's map and the naust took after the place was picked (naust null without the room: no 3D, given up)
+function tutLoadEv(room){ if (S.tut.m.loadEv) return; S.tut.m.loadEv = 1; if (typeof cloudEv !== 'function') return; const T = S.tut.T || {}, now = Date.now();
+  cloudEv('tut_load', {r:S.tut.reg || null, home:S.home || null, letter:tutSec(T.take, T.pick), map:tutSec(T.pick, T.map), naust:room ? tutSec(T.pick, now) : null}); }
+// once: the first fish aboard, the real seconds from the letter's «Ta over» (s) and from taking over the boat (sBoat)
+function tutFishEv(){ if (S.tut.m.fish1) return; S.tut.m.fish1 = S.t || 1; if (typeof cloudEv !== 'function') return; const T = S.tut.T || {}, now = Date.now();
+  cloudEv('tut_fish', {r:S.tut.reg || null, home:S.home || null, s:tutSec(T.take, now), sBoat:tutSec(S.tut.t0, now)}); }
 function tutMark(k){ if (!tutOn() || S.tut.m[k]) return; tutEv(k); S.tut.m[k] = S.t || 1; S.tut.pAt = Date.now(); save(); }
 function tutSettle(k){ if (S.tut.m[k]) return; tutEv(k, true); S.tut.m[k] = S.t || 1; }
 // free the first time: the ice (the first fill, up to 150 kg, on the plant after the first landing) and one luxury luck. The hand jig is
@@ -48,10 +57,10 @@ function phoneApp(app, inner){
 // Without the room (no WebGL, the tests without 3D, the site not found within 25 s) the lines go by on their own
 const naustOpen = () => typeof NAUST3D !== 'undefined' && NAUST3D.isOpen();
 function tutNaustTry(){
-  if (S.tut.m.naustOpened || S.tut.m.naustGaveUp || typeof NAUST3D === 'undefined') return;
-  if (Date.now() - (S.tut.t0 || 0) > 25000 || /no3d/.test(location.hash)){ S.tut.m.naustGaveUp = 1; return; }
+  if (S.tut.m.naustOpened || S.tut.m.naustGaveUp) return;
+  if (typeof NAUST3D === 'undefined' || Date.now() - (S.tut.t0 || 0) > 25000 || /no3d/.test(location.hash)){ S.tut.m.naustGaveUp = 1; tutLoadEv(false); return; }
   if (!(typeof NOTEBOOK !== 'undefined' && NOTEBOOK.atNaust()) || !NAUST3D.ready()) return;
-  if (NAUST3D.open()) S.tut.m.naustOpened = 1; else S.tut.m.naustGaveUp = 1;
+  if (NAUST3D.open()){ S.tut.m.naustOpened = 1; tutLoadEv(true); } else { S.tut.m.naustGaveUp = 1; tutLoadEv(false); }
 }
 // out of the naust: the camera glides from the quay back to its place behind the boat (view3d.js intro), once
 function tutIntroGo(){ if (S.tut.m.introGo) return; S.tut.m.introGo = 1; if (S.tut.m.naustOpened && typeof G3 !== 'undefined' && G3.intro && G3.isActive()) G3.intro(5); }
@@ -243,7 +252,7 @@ function tutStep(){
   for (let i = 0; i < TSTEPS.length; i++){ const st = TSTEPS[i]; if (S.tut.m[st.id]) continue; if (TSTEPS.slice(i + 1).some(q => S.tut.m[q.id])){ tutSettle(st.id); continue; } if (st.done()){ if (!st.live){ for (const q of TSTEPS){ if (q === st) break; tutSettle(q.id); } tutMark(st.id); } continue; } return st; }
   return null;
 }
-function tutFinish(){ if (typeof cloudEv === 'function' && S.tut && S.tut.t0) cloudEv('tut_done', {s:Math.round((Date.now() - S.tut.t0) / 1000)}); S.tut = 0; log('Første tur er fullført. Nå er du din egen skipper.', 'The first trip is done. Now you are your own skipper.'); save(); tutUpdate(); if (typeof refreshAll === 'function') refreshAll(); if (typeof pushAsk === 'function') setTimeout(pushAsk, 3000); }
+function tutFinish(){ if (typeof cloudEv === 'function' && S.tut && S.tut.t0) cloudEv('tut_done', {s:Math.round((Date.now() - S.tut.t0) / 1000), r:S.tut.reg || null, home:S.home || null}); S.tut = 0; log('Første tur er fullført. Nå er du din egen skipper.', 'The first trip is done. Now you are your own skipper.'); save(); tutUpdate(); if (typeof refreshAll === 'function') refreshAll(); if (typeof pushAsk === 'function') setTimeout(pushAsk, 3000); }
 function tutScrollSlip(){ const v = $('drawerBody'), t = v && v.querySelector('.slipt'); if (t) v.scrollTop = Math.max(0, t.offsetTop - 60); }
 // what the guide lets the player do on each step; the rest waits until the first trip is done
 const TUT_ALLOW = {start:['cast1', 'cast2'], waypoint:['route1', 'fish2', 'route2'], sell:['land']};
@@ -275,6 +284,7 @@ function tutView(st){
 function tutUpdate(){
   if (tutOn() && S.boat && !S.boat.gear && !S.tut.m.free_jig) S.boat.gear = true;   // a first trip begun before the jig came with the boat
   if (tutOn() && !S.tut.m.nout) tutNaustTry();
+  if (tutOn() && !S.tut.m.fish1 && holdTotal() > 0) tutFishEv();
   // the point in the ring gets its two hours of fishing of itself (the first trip teaches the route, not the fishing time)
   if (tutOn() && !S.tut.m.cast1){ const k = tutFieldWp(S.draft); if (k >= 0 && !(S.draft[k].fish >= 2)){ S.draft[k].fish = 2; if (typeof panelDirty !== 'undefined') panelDirty = true; } }
   const tip = $('tip'), dim = $('tutDim'), ring = $('tutRing'), hide = () => { tip.hidden = true; dim.hidden = true; ring.hidden = true; tutCur = null; };

@@ -343,7 +343,7 @@ VIEW.trakt = () => {
       worst ? 'Størst frafall før «' + esc(FN_STEPS[worst.i][1]) + '»: ' + Math.round(worst.fall * 100) + ' % kommer ikke videre. Der er neste sted å gjøre noe.' : '') +
     card('Per uke de startet', table(FN.weeks, [['wk', 'Uke fra', v => esc(String(v).slice(0, 10))], ['start', 'Startet'], ['catch', 'Fangst', (v, x) => r(v, x.start)], ['land1', '1. levering', (v, x) => r(v, x.start)],
       ['land3', '3. levering', (v, x) => r(v, x.start)], ['reg', 'Registrert', (v, x) => r(v, x.start)], ['d1', 'Dag 1', (v, x) => r(v, x.d1n)], ['d7', 'Dag 7', (v, x) => r(v, x.d7n)], ['d30', 'Dag 30', (v, x) => r(v, x.d30n)]]),
-      'Andel av dem som startet den uka. Dag 1, 7 og 30 regnes av dem som har hatt så lang tid.') + tuView() + hbView();
+      'Andel av dem som startet den uka. Dag 1, 7 og 30 regnes av dem som har hatt så lang tid.') + tuView() + ttView() + hbView();
 };
 // ---------- the first trip's steps (supabase/migrations/20261010100000_tut_steps.sql; the game's ui/07b-first-trip.js; docs/onboarding.md) ----------
 // Each step of the guided first trip in the game's order: how many reached it of those who began the guide, and the median real
@@ -367,6 +367,25 @@ function tuView(){
   const body = '<table><tr><th></th><th>Trinn</th><th>Spillere</th><th></th><th>Av dem som begynte</th><th>Median tid</th></tr>' + rows + '</table>';
   return '<div class="grid">' + kpi('Begynte på Første tur', nf(TU.started || 0, 0), 'siste 8 uker, med statistikk') + kpi('Fullførte', nf(TU.done || 0, 0), Math.round((TU.done || 0) / all * 100) + ' % av dem som begynte') + kpi('Median tid, hele turen', mm(TU.doneMed), 'ekte tid') + '</div>' +
     card('Første tur, trinn for trinn', body, worst ? 'Størst frafall før «' + esc(TUT_STEPS[worst.i][1]) + '»: ' + Math.round(worst.fall * 100) + ' % kommer ikke videre. Tida er ekte sekunder på trinnet (trinn som ble avgjort av et senere trinn teller ikke).' : 'Tida er ekte sekunder på trinnet.');
+}
+// ---------- The first trip's clock (supabase/migrations/20261027120000_tut_time.sql; Onboarding 2, O0) ----------
+// Per region of the start (the game's REGIONS in ui/08c-start.js) and for the whole coast: the time to the first fish from the letter's
+// «Ta over» (the goal is five minutes), and how long the map and Father's naust took after «Start her». 'ukjent': steps sent before 27.10.2026.
+const TT_REG = [['alle', 'Hele kysten'], ['ofin', 'Øst-Finnmark'], ['vfin', 'Vest-Finnmark'], ['troms', 'Troms'], ['lofv', 'Lofoten og Vesterålen'], ['hel', 'Helgeland og Salten'],
+  ['tro', 'Trøndelag'], ['more', 'Møre og Romsdal'], ['vest', 'Vestlandet'], ['sor', 'Rogaland og Sørlandet'], ['ukjent', 'Uten landsdel (før 27.10)']];
+let TT = null;
+async function ttLoad(){ await null; try { TT = DEMO ? ttDemo() : await rpc('admin_tut_time', {weeks:8}); } catch (e){ TT = {err:e.message}; } if (TAB === 'trakt') render(); }
+function ttDemo(){ const o = {}; TT_REG.forEach(([r], i) => { o[r] = {started:20 - i, fish:14 - i, done:9 - (i >> 1), fishMed:240 + i * 25, fishP90:520 + i * 30, fish5:8 - (i >> 1), fishBoatMed:150 + i * 20, loads:18 - i, mapMed:6 + i, mapP90:14 + i, naustMed:11 + i, naustP90:30 + i, noRoom:i % 3, letterMed:40}; }); return o; }
+function ttView(){
+  if (!TT){ ttLoad(); return '<p class="note">Henter …</p>'; }
+  if (TT.err) return card('Tid til første fisk', '<p class="warn">' + esc(TT.err) + '</p>', 'Er migreringen supabase/migrations/20261027120000_tut_time.sql kjørt?');
+  const mm = s => s == null ? '–' : s >= 90 ? (Math.round(s / 6) / 10).toString().replace('.', ',') + ' min' : Math.round(s) + ' s', a = TT.alle || {};
+  const rows = TT_REG.filter(([r]) => TT[r]).map(([r, nm]) => { const x = TT[r];
+    return '<tr><td>' + esc(nm) + '</td><td>' + nf(x.started || 0, 0) + '</td><td>' + nf(x.fish || 0, 0) + '</td><td>' + nf(x.done || 0, 0) + '</td><td>' + mm(x.fishMed) + '</td><td class="note">' + mm(x.fishP90) + '</td><td>' + (x.fish ? Math.round((x.fish5 || 0) / x.fish * 100) + ' %' : '–') + '</td><td>' + mm(x.mapMed) + '</td><td>' + mm(x.naustMed) + '</td><td class="note">' + mm(x.naustP90) + '</td><td class="note">' + nf(x.noRoom || 0, 0) + '</td></tr>'; }).join('');
+  const body = '<table><tr><th>Landsdel</th><th>Begynte</th><th>Fikk fisk</th><th>Fullførte</th><th>Til første fisk</th><th>90 %</th><th>Under 5 min</th><th>Kartet</th><th>Naustet</th><th>90 %</th><th>Uten naust</th></tr>' + rows + '</table>';
+  return '<div class="grid">' + kpi('Tid til første fisk', mm(a.fishMed), 'median fra brevets «Ta over»; målet er 5 min') + kpi('Første fisk innen 5 min', a.fish ? Math.round((a.fish5 || 0) / a.fish * 100) + ' %' : '–', 'av dem som fikk fisk') +
+    kpi('Fra «Start her» til naustet', mm(a.naustMed), '90 %: ' + mm(a.naustP90)) + '</div>' +
+    card('Første tur per landsdel', body, 'Ekte tid. «Kartet»: fra «Start her» til kartet er lastet. «Naustet»: fra «Start her» til fars naust er åpent i 3D. «Uten naust»: uten 3D, eller naustet ble ikke funnet innen 25 s.');
 }
 // ---------- Håndboka's drips (supabase/migrations/20261010120000_hb.sql; the game's ui/07c-handbook.js) ----------
 // Each tip of chapters 2–6: how many read it («Skjønner») and how many put the chapter to rest from it («Jeg kan dette»). A tip many

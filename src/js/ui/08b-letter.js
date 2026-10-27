@@ -119,6 +119,7 @@ function showLetter(done){
   });
   go.addEventListener('click', async () => {
     go.disabled = true; letterSound('fold');
+    if (typeof S !== 'undefined' && S && !S.intro) S.tutT = {take:Date.now()};   // the first trip's clock (07b-first-trip.js tutLoadEv, tutFishEv)
     if (app) app.style.visibility = ''; await anim(sc, [{opacity:1}, {opacity:0}], {duration:900, easing:'ease-in'});
     removeEventListener('resize', layout); if (app) app.style.visibility = ''; sc.remove(); done();
   });
