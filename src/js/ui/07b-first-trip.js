@@ -28,7 +28,7 @@ function tutSettle(k){ if (S.tut.m[k]) return; tutEv(k, true); S.tut.m[k] = S.t 
 // free the first time: the ice (the first fill, up to 150 kg, on the plant after the first landing) and one luxury luck. The hand jig is
 // mounted from the start (Jonas 07.10.2026); there is no ice on the first fishing
 // (the first trip is short and the catch guaranteed), the plant teaches it after the first landing
-const tutFree = k => tutOn() && !S.tut.m['free_' + k];
+const tutFree = k => k !== 'haill' && tutOn() && !S.tut.m['free_' + k];   // (no free luck in the first trip any more, O3)
 // the waypoint inside the ring at Gisundet nord, in the draft or the plan
 function tutFieldWp(list){ const g = tutField(); return (list || []).findIndex(w => !w.port && dist(w, g.p) <= g.r); }
 const tutFieldFish = () => { const d = tutFieldWp(S.draft), p = S.plan ? tutFieldWp(S.plan.wps) : -1; return Math.max(d >= 0 ? S.draft[d].fish || 0 : 0, p >= 0 ? S.plan.wps[p].fish || 0 : 0); };
@@ -65,7 +65,7 @@ function tutNaustTry(){
 // out of the naust: the camera glides from the quay back to its place behind the boat (view3d.js intro), once
 function tutIntroGo(){ if (S.tut.m.introGo) return; S.tut.m.introGo = 1; if (S.tut.m.naustOpened && typeof G3 !== 'undefined' && G3.intro && G3.isActive()) G3.intro(5); }
 // the way out: the cameras are tried until the boat is at the grounds; in the chart plotter the 3D view comes first
-const arrived = () => !!S.boat.tutWait || S.boat.status === 'fishing' || holdTotal() > 1;
+const arrived = () => S.boat.status === 'fishing' || holdTotal() > 1;
 const no3dv = () => typeof G3 === 'undefined' || !!G3.failWhy || !G3.isActive();
 const to3d = () => inPlot() ? {el:vis('#ecClose'), noOk:true, no:'Trykk «Lukk» for å gå tilbake til 3D først.', en:'Tap «Close» to go back to 3D first.'} : null;
 const TSTEPS = [
@@ -84,42 +84,33 @@ const TSTEPS = [
       const g = tutField();
       if (LEIA_ARM || LEIA_BUSY) return {map:{p:g.p, r:g.r}, no:'Trykk i kartet innenfor ringen ' + tutAt().no + '. Der står fisken nå.', en:'Tap the chart inside the ring ' + tutAt().en + '. That is where the fish are.'};
       return {el:vis('#rAuto'), no:'Fisken står ' + tutAt().no + '. Trykk «Autonav», og så i ringen der, så finner båten en trygg vei.', en:'The fish are ' + tutAt().en + '. Tap «Autonav», then inside the ring there, and the boat finds a safe way.'}; }},
-  // the point in the ring gets its two hours of fishing of itself (tutUpdate); this step only shows when that did not happen
-  {id:'fish2', live:true, done:() => tutFieldFish() >= 2 || S.boat.status === 'fishing',
+  // the point in the ring gets its hour of fishing of itself (tutUpdate); this step only shows when that did not happen
+  {id:'fish2', live:true, done:() => tutFieldFish() >= TUT_FISH_H || S.boat.status === 'fishing',
     tip:() => { const k = tutFieldWp(S.draft); if (k < 0) return {no:'Legg et punkt innenfor ringen igjen.', en:'Put a point inside the ring again.'};
       if (window.innerWidth <= 700) document.body.classList.add('drawer');
-      return {el:vis('#panel .wpc[data-i="' + k + '"] [data-act=fp]'), scroll:true, no:'Gi punktet minst 2 timer fisketid med +. Båten fisker der til tida er ute.', en:'Give the point at least 2 hours of fishing time with +. The boat fishes there until the time is up.'}; }},
+      return {el:vis('#panel .wpc[data-i="' + k + '"] [data-act=fp]'), scroll:true, no:'Gi punktet minst én time fisketid med +. Båten fisker der til tida er ute.', en:'Give the point at least an hour of fishing time with +. The boat fishes there until the time is up.'}; }},
   {id:'cast1', done:() => !!S.plan || ['unmooring', 'sailing', 'fishing'].includes(S.boat.status),
     tip:() => { const e = estimate();
       if (e.bad >= 0) return {el:vis(['#rUndo', '#panel [data-act=clear]']), no:'Etappe ' + legName(e.bad) + ' krysser land. Trykk angre, og bruk «Autonav», eller dra punktet ut på sjøen.', en:'Leg ' + legName(e.bad) + ' crosses land. Tap undo and use «Autonav», or drag the point out to sea.'};
       if (e.fuel > S.boat.fuel) return {el:vis('#panel [data-act=clear]'), no:'Turen bruker mer drivstoff enn du har. Gjør ruta kortere.', en:'The trip needs more fuel than you have. Make the route shorter.'};
-      return {el:vis('#panel .rbar [data-act=start]'), no:'Trykk «Kast loss». Båten kjører selv ut til feltet. Punktet har fått to timer fisketid.', en:'Tap «Cast off». The boat runs out to the grounds on its own. The point has two hours of fishing time.'}; }},
+      return {el:vis('#panel .rbar [data-act=start]'), no:'Trykk «Kast loss». Båten kjører selv ut til feltet. Punktet har fått en time fisketid.', en:'Tap «Cast off». The boat runs out to the grounds on its own. The point has an hour of fishing time.'}; }},
   // on the way out (Onboarding 2, O2, V4 A): one small tip that needs no answer, and goes by itself; the chip, the cinema and the bridge
   // are named in it, not taught step by step (the players who left, left here, 11.-13.10.2026)
   {id:'sail', done:() => arrived(),
     tip:() => ({el:vis('#hud .st.nx'), small:true, no:'Båten går selv ut til feltet ' + tutAt().no + '. «Neste» viser når hun er framme. Imens kan du trykke Kino, eller kameraknappen for å stå på broa.', en:'The boat runs out to the grounds ' + tutAt().en + ' on her own. «Next» shows when she gets there. Meanwhile you can tap Cinema, or the camera button to stand on the bridge.'})},
-  // just before the first fishing (Jonas 05.10.2026: «Spilleren burde introduseres for "fiskelykke" og haill-appen like før han skal
-  // fiske første gangen»): what the luck is, then the Luck app, then where the luck aboard shows
-  {id:'luck', ok:true, done:() => false,
-    tip:() => ({no:'Fremme på feltet! Før du fisker: fiskelykke. Hvor mye som biter, kommer an på hvor tett fisken står, redskapet, været, årstida og fiskelykka. Fiskerne langs kysten har alltid hatt troen på haill, lykke på havet. Haill gir deg mer fiskelykke en stund.',
-      en:'At the grounds! Before you fish: luck. How much bites depends on how dense the fish stand, the gear, the weather, the season and your luck. Fishermen along the coast have always believed in haill, luck at sea. Haill gives you more luck for a while.'})},
-  {id:'haill', done:() => !!(S.haill && S.haill.type === 'luksus'),
-    tip:() => { const got = S.haillInv && S.haillInv.luksus > 0, t0 = phoneApp('haill', got ? '#phone [data-pa=haillon][data-k=luksus]' : '#phone [data-pa=haillbuy][data-k=luksus]');
-      if (got) return {...t0, no:'Haillen ligger i beholdningen. Trykk «Aktiver luksushaill». Haill blir aldri aktivert av seg selv, så du velger når den skal virke.', en:'The luck is in store. Tap «Switch on luxury luck». Luck is never switched on by itself, so you choose when it works.'};
-      return {...t0, no:'Båten venter på feltet til du har hentet haillen. Åpne Haill-appen og hent en gratis luksushaill. Den gir +200 % fiskelykke det første døgnet, og så blekner den.', en:'The boat waits on the grounds until you have fetched the luck. Open the Luck app and fetch a free luxury luck. It gives +200% luck for the first day, and then it fades.'}; }},
-  {id:'luckhud', ok:true, done:() => false,
-    tip:() => { const r = vis('#hud .haill'); return {el:r ? r.closest('.row') || r : vis('#hud'), no:'Her i statusboksen ser du haillen om bord og hvor mye fiskelykke den gir nå. Den blekner trinn for trinn over fire døgn. Ny haill får du i Haill-appen, eller med litt flaks på puben.',
-      en:'Here in the status box you see the luck aboard and how much it gives now. It fades stage by stage over four days. New luck comes from the Luck app, or with a bit of fortune at the pub.'}; }},
-  {id:'fish', done:() => S.tut.m.jigOn || (S.fsess && S.t - S.fsess.t0 >= 20 && S.t - (S.tut.m.luckhud || 0) >= 20) || (S.tut.m.cast1 && S.boat.status === 'idle' && holdTotal() > 1 && !S.boat.tutWait),
+  // the luck (haill) is not in the first trip any more (Onboarding 2, O3, V1 A, 27.10.2026; Jonas 05.10.2026 had it just before the
+  // first fishing): the guaranteed patch hid what it does, and the boat waited on the grounds for it before the first bite. It comes as a
+  // drip after the first landing (07c-handbook.js), and the luxury luck stays the gift at the registration (CLAUDE.md)
+  {id:'fish', done:() => S.tut.m.jigOn || (S.fsess && S.t - S.fsess.t0 >= 20) || (S.tut.m.cast1 && S.boat.status === 'idle' && holdTotal() > 1),
     tip:() => { if (S.boat.status !== 'fishing') return {no:'Båten er på vei ut. Den begynner å fiske når den er fremme.', en:'The boat is on its way out. It starts fishing when it gets there.', small:true};
       if (inPlot()) return {el:vis('#ecClose'), no:'Nå fisker juksa. Trykk «Lukk» for å se fisket i 3D.', en:'The jig is fishing now. Tap «Close» to watch in 3D.'};
       return {el:vis('#dock [data-act=jigg]'), no:'Nå fisker juksa for deg. Trykk «Jukse selv» for å jukse selv: når det napper, trykk «Rykk» mens nåla er midt på. Knappen blir rød når det napper, og midt på gir to fisk på kroken.', en:'The jig fishes for you now. Tap «Jig yourself» to jig yourself: when it bites, tap «Strike» as the needle is in the middle. The button turns red when it bites, and the middle gives two fish on the hooks.'}; }},
   {id:'deck', ok:true, done:() => false,
-    tip:() => ({el:vis(['#dockInfo', '#hud']), no:'Fisken blør i bløggekaret idet den kommer over ripa. Så blir den sløyd og lagt i lasterommet. Godt bløgget og sløyd fisk gir bedre pris.', en:'The fish is bled in the tub as it comes over the rail. Then it is gutted and put in the hold. Well bled and gutted fish fetches a better price.'})},
-  {id:'full', done:() => holdTotal() >= capHold() - 1 || (S.boat.status === 'idle' && holdTotal() > 1 && !S.boat.fishUntil && !S.boat.tutWait) || !!S.lastSale,
-    tip:() => ({el:vis('#hud'), no:'Lasterommet fylles. Når det er fullt, går du til ' + tutLandN() + ' og leverer.', en:'The hold is filling up. When it is full, you go to ' + tutLandN() + ' and land the catch.', small:true})},
+    tip:() => holdTotal() <= 0 ? {el:vis('#dock [data-act=jigg]'), small:true, noOk:true, no:'Rykk når det napper.', en:'Strike when it bites.'} : ({el:vis(['#dockInfo', '#hud']), no:'Fisken blør i bløggekaret idet den kommer over ripa. Så blir den sløyd og lagt i lasterommet. Godt bløgget og sløyd fisk gir bedre pris.', en:'The fish is bled in the tub as it comes over the rail. Then it is gutted and put in the hold. Well bled and gutted fish fetches a better price.'})},
+  {id:'full', done:() => (S.boat.status === 'idle' && holdTotal() > 1 && !S.boat.fishUntil) || !!S.lastSale,
+    tip:() => ({el:vis('#hud .st.nx'), no:'Båten fisker en time. Så går du til ' + tutLandN() + ' og leverer.', en:'The boat fishes for an hour. Then you go to ' + tutLandN() + ' and land the catch.', small:true})},
   {id:'route2', live:true, view:() => [S.boat.pos, portById(tutLand()).p], done:() => draftEnds(tutLand()) || planEnds(tutLand()) || (S.boat.status === 'port' && S.boat.port === tutLand()),
-    tip:() => { if (!inPlot()) return {el:vis('#miniPlot'), no:tutLand() !== tutHome().id ? 'Lasten er full! Åpne kartplotteren. ' + tutHome().name + ' har ikke fiskemottak, så fisken skal til ' + tutLandN() + '.' : 'Lasten er full! Åpne kartplotteren. Fisken skal inn til mottaket i ' + tutLandN() + '.', en:tutLand() !== tutHome().id ? 'The hold is full! Open the chart plotter. ' + tutHome().name + ' has no fish plant, so the catch goes to ' + tutLandN() + '.' : 'The hold is full! Open the chart plotter. The catch goes to the plant at ' + tutLandN() + '.'};
+    tip:() => { if (!inPlot()) return {el:vis('#miniPlot'), no:tutLand() !== tutHome().id ? 'God fangst! Åpne kartplotteren. ' + tutHome().name + ' har ikke fiskemottak, så fisken skal til ' + tutLandN() + '.' : 'God fangst! Åpne kartplotteren. Fisken skal inn til mottaket i ' + tutLandN() + '.', en:tutLand() !== tutHome().id ? 'A good catch! Open the chart plotter. ' + tutHome().name + ' has no fish plant, so the catch goes to ' + tutLandN() + '.' : 'A good catch! Open the chart plotter. The catch goes to the plant at ' + tutLandN() + '.'};
       if (LEIA_ARM || LEIA_BUSY) return {map:{p:portById(tutLand()).p, r:0.5}, no:'Trykk på ' + tutLandN() + ' i kartet.', en:'Tap ' + tutLandN() + ' on the chart.'};
       return {el:vis('#rAuto'), no:'Trykk «Autonav», og så på ' + tutLandN() + ' i kartet. Båten finner en trygg vei dit.', en:'Tap «Autonav», then ' + tutLandN() + ' on the chart. The boat finds a safe way there.'}; }},
   {id:'cast2', done:() => (planEnds(tutLand()) && S.boat.status !== 'idle') || (S.boat.status === 'port' && S.boat.port === tutLand()),
@@ -197,7 +188,7 @@ function tutAdrift(){
   if (m.cast1 && !m.luck && !m.haill && !m.fish && holdTotal() <= 1) return 'out';
   return null;
 }
-const tutDriftReady = d => d === 'in' ? draftEnds(tutLand()) : tutFieldFish() >= 2 && tutFieldWp(S.draft) >= 0;
+const tutDriftReady = d => d === 'in' ? draftEnds(tutLand()) : tutFieldFish() >= TUT_FISH_H && tutFieldWp(S.draft) >= 0;
 function tutDriftTip(d){
   const into = d === 'in', where = into ? {no:'til ' + tutLandN(), en:'to ' + tutLandN()} : {no:'ut til feltet ' + tutAt().no, en:'out to the grounds ' + tutAt().en};
   if (!inPlot()) return {el:vis('#miniPlot'), noOk:true, no:'Båten ligger stille. Åpne kartplotteren og lag ruta ' + where.no + ' på nytt.', en:'The boat lies still. Open the chart plotter and make the route ' + where.en + ' again.'};
@@ -205,7 +196,7 @@ function tutDriftTip(d){
     if (e.bad >= 0) return {el:vis(['#rUndo', '#panel [data-act=clear]']), noOk:true, no:'Etappe ' + legName(e.bad) + ' krysser land. Trykk angre, og bruk «Autonav».', en:'Leg ' + legName(e.bad) + ' crosses land. Tap undo and use «Autonav».'};
     return {el:vis('#panel .rbar [data-act=start]'), noOk:true, no:'Trykk «Kast loss».', en:'Tap «Cast off».'}; }
   if (!into){ const k = tutFieldWp(S.draft);
-    if (k >= 0){ if (window.innerWidth <= 700) document.body.classList.add('drawer'); return {el:vis('#panel .wpc[data-i="' + k + '"] [data-act=fp]'), scroll:true, noOk:true, no:'Gi punktet minst 2 timer fisketid med +.', en:'Give the point at least 2 hours of fishing time with +.'}; } }
+    if (k >= 0){ if (window.innerWidth <= 700) document.body.classList.add('drawer'); return {el:vis('#panel .wpc[data-i="' + k + '"] [data-act=fp]'), scroll:true, noOk:true, no:'Gi punktet minst én time fisketid med +.', en:'Give the point at least an hour of fishing time with +.'}; } }
   const g = into ? {p:portById(tutLand()).p, r:0.5} : {p:tutField().p, r:tutField().r};
   if (LEIA_ARM || LEIA_BUSY) return {map:g, noOk:true, no:into ? 'Trykk på ' + tutLandN() + ' i kartet.' : 'Trykk i kartet innenfor ringen ' + tutAt().no + '.', en:into ? 'Tap ' + tutLandN() + ' on the chart.' : 'Tap the chart inside the ring ' + tutAt().en + '.'};
   return {el:vis('#rAuto'), noOk:true, no:'Trykk «Autonav», og så på ' + (into ? tutLandN() : 'ringen ' + tutAt().no) + ' i kartet. Båten finner en trygg vei.', en:'Tap «Autonav», then ' + (into ? tutLandN() : 'the ring ' + tutAt().en) + ' on the chart. The boat finds a safe way.'};
@@ -216,7 +207,7 @@ function tutStartWhy(){
   if (!tutOn()) return null; const drift = tutAdrift(), st = tutStep(), id = st ? st.id : '', L = (no, en) => S.lang === 'no' ? no : en;
   const field = () => L('Legg et punkt i ringen ' + tutAt().no + ' først.', 'Put a point in the ring ' + tutAt().en + ' first.'), land = () => L('Ruta skal ende i ' + tutLandN() + '.', 'The route should end at ' + tutLandN() + '.');
   if (drift) return tutDriftReady(drift) ? null : drift === 'in' ? land() : field();
-  if (id === 'route1' || (id === 'cast1' && !(tutFieldFish() >= 2 && tutFieldWp(S.draft) >= 0))) return field();
+  if (id === 'route1' || (id === 'cast1' && !(tutFieldFish() >= TUT_FISH_H && tutFieldWp(S.draft) >= 0))) return field();
   if (id === 'route2' || (id === 'cast2' && !draftEnds(tutLand()))) return land();
   return null;
 }
@@ -260,12 +251,12 @@ function tutAllow(what){
   const st = tutStep(), id = st ? st.id : '', L = (no, en) => S.lang === 'no' ? no : en;
   const drift = tutAdrift();
   if (drift && (what === 'waypoint' || what === 'start')){
-    if (what === 'start' && !tutDriftReady(drift)){ toast(drift === 'in' ? L('Ruta skal ende i ' + tutLandN() + '.', 'The route should end at ' + tutLandN() + '.') : L('Ruta må ha et punkt i ringen ' + tutAt().no + ' med minst 2 timer fisketid.', 'The route needs a point in the ring ' + tutAt().en + ' with at least 2 hours of fishing.')); return false; }
+    if (what === 'start' && !tutDriftReady(drift)){ toast(drift === 'in' ? L('Ruta skal ende i ' + tutLandN() + '.', 'The route should end at ' + tutLandN() + '.') : L('Ruta må ha et punkt i ringen ' + tutAt().no + ' med minst én time fisketid.', 'The route needs a point in the ring ' + tutAt().en + ' with at least an hour of fishing.')); return false; }
     return true;
   }
   if (!TUT_ALLOW[what]) return false;
   if (TUT_ALLOW[what].includes(id)){
-    if (what === 'start' && id === 'cast1' && !(tutFieldFish() >= 2 && tutFieldWp(S.draft) >= 0)){ toast(L('Ruta må ha et punkt i ringen ' + tutAt().no + ' med minst 2 timer fisketid.', 'The route needs a point in the ring ' + tutAt().en + ' with at least 2 hours of fishing.')); return false; }
+    if (what === 'start' && id === 'cast1' && !(tutFieldFish() >= TUT_FISH_H && tutFieldWp(S.draft) >= 0)){ toast(L('Ruta må ha et punkt i ringen ' + tutAt().no + ' med minst én time fisketid.', 'The route needs a point in the ring ' + tutAt().en + ' with at least an hour of fishing.')); return false; }
     if (what === 'start' && id === 'cast2' && !draftEnds(tutLand())){ toast(L('Ruta skal ende i ' + tutLandN() + '.', 'The route should end at ' + tutLandN() + '.')); return false; }
     return true;
   }
@@ -284,8 +275,8 @@ function tutUpdate(){
   if (tutOn() && S.boat && !S.boat.gear && !S.tut.m.free_jig) S.boat.gear = true;   // a first trip begun before the jig came with the boat
   if (tutOn() && !S.tut.m.nout) tutNaustTry();
   if (tutOn() && !S.tut.m.fish1 && holdTotal() > 0) tutFishEv();
-  // the point in the ring gets its two hours of fishing of itself (the first trip teaches the route, not the fishing time)
-  if (tutOn() && !S.tut.m.cast1){ const k = tutFieldWp(S.draft); if (k >= 0 && !(S.draft[k].fish >= 2)){ S.draft[k].fish = 2; if (typeof panelDirty !== 'undefined') panelDirty = true; } }
+  // the point in the ring gets its hour of fishing of itself (the first trip teaches the route, not the fishing time)
+  if (tutOn() && !S.tut.m.cast1){ const k = tutFieldWp(S.draft); if (k >= 0 && !(S.draft[k].fish >= TUT_FISH_H)){ S.draft[k].fish = TUT_FISH_H; if (typeof panelDirty !== 'undefined') panelDirty = true; } }
   const tip = $('tip'), dim = $('tutDim'), ring = $('tutRing'), hide = () => { tip.hidden = true; dim.hidden = true; ring.hidden = true; tutCur = null; };
   if (tutOn() && BOOK.isOpen()){ const st = tutStep(); if (st && st.id === 'book') tutMark('book'); }
   if (!tutOn()){ if (!$('modal').hidden || BOOK.isOpen() || JIG_OPEN() || typeof hbUpdate !== 'function' || !hbUpdate()) hide(); return; }   // after the first trip the box is the handbook's (07c-handbook.js)

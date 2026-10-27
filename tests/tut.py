@@ -13,11 +13,11 @@ from playwright.async_api import async_playwright
 # the first trip after the rewrite of 10.10.2026 (docs/onboarding.md): the naust first, the cameras on the way out, the apps on the way
 # in, the register, the inventory and a hand on the quay at the plant. fish2 is settled by the two hours the ring's point gets of itself,
 # reg by the game running without the cloud, and the cameras by the boat arriving when the test is too slow to tap them
-ORDER = ['n1', 'nout', 'intro', 'gps', 'route1', 'cast1', 'sail', 'luck', 'haill', 'luckhud', 'fish', 'deck', 'full', 'route2', 'cast2',
+ORDER = ['n1', 'nout', 'intro', 'gps', 'route1', 'cast1', 'sail', 'fish', 'deck', 'full', 'route2', 'cast2',
          'legs', 'tour', 'hud', 'apps', 'vaer', 'salg', 'regler', 'redning', 'land', 'slip', 'book', 'ice', 'beh', 'crew', 'goal']
 SKIPPABLE = ('nout', 'sail', 'legs', 'full')   # (sail: a small tip that needs no answer, gone when the boat is there)   # (full: the hold may be full by the time the deck step is read)
 # the steps read with «Skjønner» while the ring shows what they are about
-OK_RING = ('deck', 'chip', 'slip', 'goal', 'luckhud', 'hud', 'apps', 'vaer', 'salg', 'regler', 'redning', 'legs', 'beh', 'intro', 'n1')
+OK_RING = ('deck', 'chip', 'slip', 'goal', 'hud', 'apps', 'vaer', 'salg', 'regler', 'redning', 'legs', 'beh', 'intro', 'n1')
 
 
 def check(ok, what, extra=''):
@@ -74,7 +74,7 @@ async def play(p, W, H, tag):
         if not seen or seen[-1] != sid:
             seen.append(sid); stuck = -1; print('   ', tag, sid, '·', s['tip'][:70], flush=True)
             # three reloads on the way: at the start, on the way out, and during the landing
-            if sid in ('gps', 'haill', 'slip') and reloads < 3:
+            if sid in ('gps', 'fish', 'slip') and reloads < 3:
                 if sid == 'gps': free = json.loads(await pg.evaluate("JSON.stringify({cash:S.cash, gear:S.boat.gear, ice:S.boat.ice})"))
                 await pg.evaluate("save()"); await pg.reload(); await pg.wait_for_timeout(1500); reloads += 1
                 await pg.wait_for_function("G3.isActive() || document.body.classList.contains('vplot')", timeout=90000); await pg.wait_for_timeout(600)
@@ -111,8 +111,8 @@ async def play(p, W, H, tag):
     check(end['tut'] == 0 and 'Første tur er fullført' in ' '.join(end['log']), tag + ': veiledningen er fullført', end['log'])
     check(free.get('gear') and free.get('ice', 1) == 0 and free.get('cash') == 15000, tag + ': juksa satt på fra start, og ingen is før første fiske', free)
     check(end['ice'] >= 149 and end['gear'], tag + ': første fylling is fra mottaket etter første levering (15 000 kr igjen)', {k: end[k] for k in ('ice', 'gear')})
-    check(end['haill'] == 'luksus', tag + ': gratis luksushaill om bord')
-    check(hold_at_land is not None and hold_at_land >= 349, tag + ': full last ved levering', hold_at_land)
+    check(end['haill'] != 'luksus', tag + ': ingen gratis luksushaill i første tur (Onboarding 2, V1 A: den er gaven ved registrering)', end['haill'])
+    check(hold_at_land is not None and hold_at_land >= 174, tag + ': minst halvt lasterom ved levering etter en time på feltet (Onboarding 2, V2 A)', hold_at_land)
     check(end['sale'] and end['sale']['port'] == 'botnhamn' and bonus_row, tag + ': levert i Botnhamn med bonuslinje på sluttseddelen', end['sale'])
     check(reloads == 3, tag + ': tre omlastinger underveis', reloads)
     check(end['crew'] == 1, tag + ': mannen på kaia mønstret på ved mottaket', end['crew'])

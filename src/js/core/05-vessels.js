@@ -488,7 +488,8 @@ function vesselStep(H){
   if (['sailing', 'fishing', 'idle'].includes(b.status)) stabTick(H);
   if (b.status === 'engine' && S.t >= b.engineUntil){ b.status = b.prev || 'idle'; b.prev = null; log('Motoren startet igjen.', 'The engine is running again.'); }
   // the first trip waits in port for wind (the departure is put off) but does not turn back once out
-  if (b.tutWait && (b.status !== 'idle' || (S.haill && S.haill.type === 'luksus'))){ if (b.status === 'idle'){ b.status = 'fishing'; b.fishUntil = S.t + b.tutWait * 60; log('Haillen er om bord. Starter fiske i ' + b.tutWait + ' t.', 'The luck is aboard. Fishing for ' + b.tutWait + ' h.'); } b.tutWait = null; }
+  // (a save from before O3 that waits on the grounds for the luck: it fishes now, the first trip has no luck any more)
+  if (b.tutWait){ if (b.status === 'idle'){ b.status = 'fishing'; b.fishUntil = S.t + b.tutWait * 60; log('Starter fiske i ' + b.tutWait + ' t.', 'Fishing for ' + b.tutWait + ' h.'); } b.tutWait = null; }
   // you are asleep alone aboard: nobody fishes, and the boat drifts (core/15-energy.js). On a route the autopilot holds her course and
   // she goes on to the route's end (tilbakemeldinger #47 and #48, 08.10.2026: asleep on Autonav to Honningsvåg, she drifted ashore)
   if (sleepAlone() && !b.anch && ['sailing', 'fishing', 'idle'].includes(b.status) && !(b.status === 'sailing' && S.plan)){ sleepDrift(H); risk(W, hs); return; }
@@ -606,7 +607,6 @@ function arrive(w){
   if (!(w.fish > 0) && pl.idx < pl.wps.length){ const nw = pl.wps[pl.idx], c = Math.round(trueDeg(Math.atan2(nw.x - w.x, -(nw.y - w.y)), w)) % 360; log('WP' + pl.idx + ' passert. Ny kurs ' + String(c).padStart(3, '0') + '°.', 'WP' + pl.idx + ' passed. New course ' + String(c).padStart(3, '0') + '°.', 'nav'); }
   // work with passive gear at this waypoint: set or haul, then any fishing hours with the jig
   if (w.act){ b.status = 'idle'; const why = w.act.op === 'cycle' ? gearCycle(w, w.fish) : w.act.op === 'haul' ? startHaul(w.act.sid, w.act.reset, w.fish) : startSet(w.act.kind, w.act.spec, w.fish); if (!why) return true; log(why[0], why[0]); if (S.plan && S.plan.p2 && typeof plan2ActWhy === 'function') plan2ActWhy(w, why); if (!(w.fish > 0)) b.status = 'sailing'; }
-  if (w.fish > 0 && S.tut && S.tut.v === 2 && !(S.haill && S.haill.type === 'luksus')){ b.status = 'idle'; b.v = 0; b.tutWait = w.fish; log('Fremme på feltet. Venter med fisket til haillen er hentet.', 'Arrived on the grounds. Waiting to fish until the luck is fetched.'); return true; }
   if (w.fish > 0){ b.status = 'fishing'; b.fishUntil = S.t + w.fish * 60; if (rigJig() || (S.plan && S.plan.ops && !S.plan.noJig)) log('Fremme på feltet. Starter fiske i ' + w.fish + ' t.', 'Arrived on the grounds. Fishing for ' + w.fish + ' h.'); else log('Fremme. Båten er rigget for ' + rigName(rigOf()).toLowerCase() + ', så den ligger og venter i ' + w.fish + ' t.', 'Arrived. The boat is rigged for ' + rigName(rigOf()).toLowerCase() + ', so it waits for ' + w.fish + ' h.'); return true; }
   if (pl.idx >= pl.wps.length){ S.plan = null; b.status = 'idle'; b.v = 0; if (pl.halt) log('Stoppet båten.', 'Stopped the boat.'); else log('Fremme ved siste veipunkt. Ligger stille.', 'Reached the last waypoint. Stopped.'); return true; }
   return false;
@@ -723,8 +723,8 @@ function fish(H, W, hs){
       if (typeof window !== 'undefined'){ const cq = window.CATCHQ || (window.CATCHQ = []); if (cq.length < 30) cq.push({sp, kg, t:performance.now()}); }
     }
   }
-  if (S.tut && S.tut.catch && room > 0){
-    const left = Math.max(1, (b.fishUntil != null ? b.fishUntil : S.t) - S.t), want = (capHold() - holdTotal()) / left, mix = Object.entries(tutMixOf());   // the patch's own mix (03-simulation.js)
+  if (S.tut && S.tut.catch && room > 0 && holdTotal() < tutTarget()){
+    const left = Math.max(1, (b.fishUntil != null ? b.fishUntil : S.t) - S.t), want = Math.max(0, tutTarget() - holdTotal()) / left, mix = Object.entries(tutMixOf());   // the patch's own mix (03-simulation.js)
     for (let k = 0; got < want && room > 0.01 && k < 40; k++){
       let r = Math.random(), sp = mix[0][0]; for (const [s2, pw] of mix){ if (r < pw){ sp = s2; break; } r -= pw; }
       const w = sampleFish(sp, b.pos, H); if (w < SPECIES[sp].minKg || (SPECIES[sp].maxKg && w > SPECIES[sp].maxKg)) continue;

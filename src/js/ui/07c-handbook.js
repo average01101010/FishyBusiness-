@@ -27,6 +27,10 @@ const HB = [
     en:'Trip 2 is your own. Tap the chart where you want to fish and the waypoints line up, and the course list below shows course, distance and time for each leg. Autonav finds the fairway for you if you like.'},
   {id:'guide', ch:2, t:['Fiskeguiden', 'The fish guide'], when:() => hbLand() >= 1 && (hbSea() || hbPort()), show:() => phoneApp('guide'),
     no:'Fiskeguiden viser hvor hver art står, på hvilket dyp og når på året. Se i den før du velger felt.', en:'The fish guide shows where each species stands, at what depth and when in the year. Look there before you choose a ground.'},
+  // the luck, out of the first trip (Onboarding 2, O3, V1 A): the first time the boat fishes after the first landing
+  {id:'lykke', ch:2, t:['Fiskelykke og haill', 'Luck and haill'], when:() => hbLand() >= 1 && S.boat.status === 'fishing', show:() => phoneApp('haill'),
+    no:'Hvor mye som biter, kommer an på hvor tett fisken står, redskapet, været, årstida og fiskelykka. Fiskerne langs kysten har alltid hatt troen på haill, lykke på havet. En haill gir mer fiskelykke en stund, og den ser du i Haill-appen.',
+    en:'How much bites depends on how dense the fish stand, the gear, the weather, the season and your luck. Fishermen along the coast have always believed in haill, luck at sea. A haill gives more luck for a while, and you find it in the Luck app.'},
   {id:'ekko', ch:2, t:['Ekkoloddet', 'The echo sounder'], when:() => inPlot() && hbSea(), show:() => ({el:vis('#heatBox [data-hm]')}),
     no:'Ekkoloddet viser fisken under båten. Trykk på arten for å bytte hva det leter etter.', en:'The echo sounder shows the fish under the boat. Tap the species to change what it looks for.'},
   {id:'tide', ch:2, t:['Flo og fjære', 'The tide'], when:() => inPlot() && hbLand() >= 1, show:() => ({el:vis('#ecTide')}),
