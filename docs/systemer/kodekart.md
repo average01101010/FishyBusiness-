@@ -1854,12 +1854,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (729 linjer)
+## `src/js/ui/phone/07-patch.js` (731 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 722 `patch()`
+  - 724 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (87 linjer)
 
@@ -2092,7 +2092,7 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
 - **116** the year view
 - **124** the species card
 
-## `src/js/ui/07-guide.js` (371 linjer)
+## `src/js/ui/07-guide.js` (372 linjer)
 
   - 1 `renderClock()`
   - 10 `mottakShut()`
@@ -2112,11 +2112,11 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 241 `quayText(short)`
   - 247 `panelPort()`
   - 279 `portSlip()`
-  - 334 `landWarn(p)`
-  - 347 `landPage()`
-  - 360 `panelLog()`
-  - 365 `renderPanel()`
-  - 369 `panelBusy()`
+  - 335 `landWarn(p)`
+  - 348 `landPage()`
+  - 361 `panelLog()`
+  - 366 `renderPanel()`
+  - 370 `panelBusy()`
 
 ## `src/js/ui/07b-first-trip.js` (316 linjer)
 
@@ -2650,18 +2650,21 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 85 `ridged(x, y)`
   - 86 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (319 linjer)
+## `src/js/view3d/01-shaders.js` (380 linjer)
 
 ---------- shaders ----------
 
 - **1** shaders
-  - 275 `cloudStep(dt)`
-  - 281 `skyFrame(u, Hh, tn, bv)`
-  - 293 `compile(type, src, nm)`
-  - 299 `program(vs, fs, attrs, nm = '?')`
-  - 307 `buf(data, target, usage)`
-  - 308 `attr(loc, b, size)`
-  - 317 `upload(pos, col, idx)`
+- **72** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
+- **96** the boat's own foam, when she has way on
+- **114** the whitecaps, as the sea shader finds them: the crest in standard deviations plus the mottle, over Monahan's threshold
+  - 336 `cloudStep(dt)`
+  - 342 `skyFrame(u, Hh, tn, bv)`
+  - 354 `compile(type, src, nm)`
+  - 360 `program(vs, fs, attrs, nm = '?')`
+  - 368 `buf(data, target, usage)`
+  - 369 `attr(loc, b, size)`
+  - 378 `upload(pos, col, idx)`
 
 ## `src/js/view3d/02-mesh-terrain.js` (91 linjer)
 
@@ -2943,33 +2946,39 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 437 `mastTop(G)`
   - 441 `updateFlag(t, appW)`
 
-## `src/js/view3d/14-sea.js` (172 linjer)
+## `src/js/view3d/14-sea.js` (254 linjer)
 
 ---------- sea ----------
 
 - **1** sea
   - 3 `buildPatch()`
   - 11 `buildSea()`
-- **20** the waves: wind sea and swell from the sea model (03b-sea.js)
-  - 26 `specW(L0)`
-  - 27 `updateWaves(dt, H)`
-- **53** the near field: the short sea rides with the boat
-  - 62 `nfStep()`
-- **73** the boat's own waves (the uniforms of WAKE_GLSL)
-  - 78 `updateWake()`
-  - 91 `wakeHFast(x, z)`
-- **99** the sea state over the near terrain and the whole map
-  - 106 `ssLevel(n, unit)`
-  - 108 `ssRect(L)`
-  - 109 `ssWork(L, until)`
-  - 132 `ssStep(rdt)`
-  - 134 `ssBlend(L)`
-  - 136 `ssTex(L, x, z, out)`
-  - 143 `ssAt(x, z)`
-  - 152 `seaDisp(x, z, t, S, fade)`
-  - 163 `seaFade(x, z)`
-  - 164 `seaH(x, z, t)`
-  - 170 `seaHFast(x, z, t)`
+- **21** the waves: wind sea and swell from the sea model (03b-sea.js)
+  - 27 `specW(L0)`
+  - 28 `updateWaves(dt, H)`
+- **54** the near field: the short sea rides with the boat
+  - 63 `nfStep()`
+- **74** the boat's own waves (the uniforms of WAKE_GLSL)
+  - 79 `updateWake()`
+  - 92 `wakeHFast(x, z)`
+- **101** the foam map: the foam the boat and the sea leave in the water (Fysikk 4, F1, 27.10.2026)
+  - 114 `foamFree()`
+  - 115 `foamInit()`
+  - 131 `wavePh()`
+  - 138 `foamStep(dt, t)`
+  - 175 `foamBind(u)`
+- **181** the sea state over the near terrain and the whole map
+  - 188 `ssLevel(n, unit)`
+  - 190 `ssRect(L)`
+  - 191 `ssWork(L, until)`
+  - 214 `ssStep(rdt)`
+  - 216 `ssBlend(L)`
+  - 218 `ssTex(L, x, z, out)`
+  - 225 `ssAt(x, z)`
+  - 234 `seaDisp(x, z, t, S, fade)`
+  - 245 `seaFade(x, z)`
+  - 246 `seaH(x, z, t)`
+  - 252 `seaHFast(x, z, t)`
 
 ## `src/js/view3d/15-env-mooring.js` (124 linjer)
 
@@ -3008,7 +3017,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 214 `spawn(x, y, z, vx, vy, vz, life, g)`
   - 216 `drawPts(n, mode, VP, col, size, round, off, mx)`
 
-## `src/js/view3d/17-draw.js` (186 linjer)
+## `src/js/view3d/17-draw.js` (185 linjer)
 
 ---------- drawing ----------
 
