@@ -105,7 +105,7 @@
     'float band=exp(-pow(max(q-wo,0.0)/wd,2.0));float str=smoothstep(1.2,3.5,v)*(0.5+0.5*smoothstep(0.0,0.3,al))*(1.0-0.3*smoothstep(0.6,1.0,al));' +
     'float inside=step(q,w)*smoothstep(0.0,0.4,al)*0.5;iw=max(iw,max(band*str,inside)*clump);}' +
     // the water the transom leaves and the screw churns: a band behind the stern, a beam wide, going on with her way
-    'if(a<st+0.5&&a>st-6.0){float back=st+0.5-a;float wb=(hullW(st)+0.15+0.3+0.1*v+pl*(0.4+0.08*v))*(1.0+0.03*back);float band=1.0-smoothstep(wb*0.75,wb*1.1,q);float core=1.0-smoothstep(wb*0.2,wb*0.5,q);iw=max(iw,(0.7*band+0.3*core)*clump*smoothstep(1.0,3.0,v)*(0.85+0.15*smoothstep(0.6,1.0,Fr)));}' +
+    'if(a<st+0.5&&a>st-6.0){float back=st+0.5-a;float wb=(hullW(st)+0.15+0.3+0.1*v+pl*(0.4+0.08*v))*(1.0+0.03*back)*(0.85+0.3*ns(Pb*0.45+vec2(4.0,9.0)));float band=1.0-smoothstep(wb*0.75,wb*1.1,q);float core=1.0-smoothstep(wb*0.2,wb*0.5,q);iw=max(iw,(0.7*band+0.3*core)*clump*smoothstep(1.0,3.0,v)*(0.85+0.15*smoothstep(0.6,1.0,Fr)));}' +
     // the stern wave breaking along the Kelvin arms and the bow wave, as the sea shader breaks them (uWk0 is given in the map's metres)
     'float wh=wakeH(M,1.0);if(wh>0.0){vec2 rr=M-uWk0.xy;float s=-dot(rr,uWk0.zw);float br=ns(Pb*1.4+vec2(uTime*1.3,0.0))*0.5+0.5;float lam=6.2832/uWk1.x;' +
     'float arm=uWk3.y*smoothstep(0.45,0.9,wh/max(uWk1.y,0.02))*(1.0-smoothstep(0.0,lam,s))*step(0.0,s)*br;' +
@@ -187,7 +187,7 @@
     '\n#ifndef FAR\nif(uFoamOn>0.5){vec2 fu=(Pb-uFoamRect.xy)*uFoamRect.z;if(fu.x>0.0&&fu.y>0.0&&fu.x<1.0&&fu.y<1.0){vec4 m=texture2D(uFoam,fu);' +
     'float b0=m.r>0.002?m.g/m.r:0.0;float c0=m.b>0.002?m.a/m.b:0.0;float aw=m.r*exp(-max(uFoamT.x-b0,0.0)*uFoamT.y/uFoamT.z);float ac=m.b*exp(-max(uFoamTc.x-c0,0.0)*uFoamTc.y/uFoamTc.z);' +
     'float n1=ns(Pb*1.1+vec2(3.1,7.7));float n2=ns(Pb*2.9+vec2(1.3,9.2));float n3=ns(vec2(dot(Pb,w)*0.16,dot(Pb,wp)*1.2)+vec2(5.0,2.0));float n4=ns(Pb*0.4+vec2(8.0,1.0));' +
-    'float dens=aw*(0.55+0.45*n4)*(0.6+0.4*n1);float fw=smoothstep(0.025,0.38,dens*(0.75+0.25*n2))*(0.6+0.4*min(aw*1.5,1.0))*lod;' +
+    'float dens=aw*(0.55+0.45*n4)*(0.6+0.4*n1);float fw=smoothstep(0.06,0.45,dens*(0.75+0.25*n2))*(0.6+0.4*min(aw*1.5,1.0))*lod;' +
     'float agc=max(uFoamTc.x-c0,0.0)*uFoamTc.y;float acv=ac*smoothstep(0.2,1.2,agc);float fcp=smoothstep(0.55,0.9,acv*(0.25+0.75*n3)*(0.6+0.4*n2))*lod*0.6;' +
     'foam=max(foam,max(fw,fcp));col=mix(col,fc*0.6+col*0.4,clamp(aw*0.35,0.0,0.4)*lod);}}\n#endif\n' +
     // shallows and surf, the surf from the sea that reaches this shore
