@@ -64,6 +64,14 @@ Gjennomgått punkt for punkt mot koden, git-loggen og feilloggen 24.10.2026. Det
 
 ## 10.6 Tester som feiler (regresjonen 24.10.2026, gjennomgått i E4 26.10.2026)
 
+**Regresjonen 27.10.2026 (Driftsplan 2 del 7, bryteren på, bare Senja i bygget):** 117 uten 3D og de 10 første med 3D rakk å gå før tidsgrensen på to timer (`run.py full`); 25 3D-tester ble ikke kjørt (trackfollow, tral3d, seatrytest, sitetest, coast3d, ultratest, camtest, moortest, landtest, bunkertest, heattest, vessel3d, unittest, sea3d, teleport3d, lighttest, kinotest, haultest, vectest, potshot, aurorashot, penshot, deckshot, workshot, brotest). 110 grønne. Røde, sortert:
+- **Krever hele kysten i bygget** (`tools/map/out/game` finnes ikke i testmiljøet): autonavtest (rutene Vannareid–Honningsvåg, Skjervøy–Hammerfest, Tromsø–Vannareid, Havøysund, 8b nærmeste kai ved Vannareid), npctest, havntest, marktest (sjømerkene rundt Tromsø).
+- **Ustabile uten frø** (grønne alene samme dag): anchortest (6 av 9 i regresjonen, 9 av 9 alene to ganger), fleet2test («no vessel on land», 16 OK alene), drifttest scenario 6.
+- **Røde også på grunnbygget uten Driftsplan 2** (prøvd mot `origin/ccr-5e1ba2f4-pusvyd` bygd for seg, 27.10.2026): sidetab («a tap slides the list off … the map is as wide as the screen»), starttest (`wait_for_function` 25 s), pwatest (service workeren tar over, `packs: 0`). Ikke rørt av Driftsplan 2; må tas for seg.
+- **saytest** var rød på bygget med Driftsplan 2 og grønn på grunnbygget én gang: bobla i 3D kommer med neste bilde, som under SwiftShader tar 0,8–6 s. Testen venter nå på bobla (inntil 5 s) i stedet for 800 ms fast, og er grønn to ganger på rad (0efca3c og senere). Om bygget med Driftsplan 2 er tregere i 3D, er ikke målt.
+- **anchor3d, anchorlight3d:** `wait_for_function` gikk ut (240 s og 20 s); kjent svake under SwiftShader (se «Ytelse sett i testene» under).
+- selltest, hailltest, simday, calib, kvtest, progweek skriver bare tall (ingen feil-linjer, `errors: []`).
+
 E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i to økter. Åtte av ni er grønne (se «Strøket 26.10.2026»). Det som står igjen:
 
 - **charttest, tegnetiden (SOLO):** fjorden stående tegnes på 3,0 s med CPU strupet 4x (liggende 1,6 s, grensen fra 02.10 er 2,5 s; beste av to målinger). Profilen: alt er rasterflisene (`chartFlush` → `chartTile` → `chartRaster`, per-piksel B-spline over dybden; stående er 915 × 1162 piksler), vektorene (kyst, gradnett, navn) tar 15 ms. En ytelsesoppgave, ikke en testretting: enten en raskere `chartRaster` (flisene i en worker, eller grovere dybde der linjene ikke synes) eller en måling på nettbrettet før grensen flyttes. Sjekken står som den er.
