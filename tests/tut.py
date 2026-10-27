@@ -13,9 +13,8 @@ from playwright.async_api import async_playwright
 # the first trip after the rewrite of 10.10.2026 (docs/onboarding.md): the naust first, the cameras on the way out, the apps on the way
 # in, the register, the inventory and a hand on the quay at the plant. fish2 is settled by the two hours the ring's point gets of itself,
 # reg by the game running without the cloud, and the cameras by the boat arriving when the test is too slow to tap them
-ORDER = ['n1', 'nout', 'intro', 'gps', 'route1', 'cast1', 'sail', 'fish', 'deck', 'full', 'route2', 'cast2',
-         'legs', 'tour', 'hud', 'apps', 'vaer', 'salg', 'regler', 'redning', 'land', 'slip', 'book', 'ice', 'beh', 'crew', 'goal']
-SKIPPABLE = ('nout', 'sail', 'legs', 'full')   # (sail: a small tip that needs no answer, gone when the boat is there)   # (full: the hold may be full by the time the deck step is read)
+ORDER = ['n1', 'nout', 'intro', 'gps', 'route1', 'cast1', 'sail', 'fish', 'deck', 'full', 'route2', 'cast2', 'land', 'slip', 'reg', 'goal']   # Onboarding 2, O2–O4
+SKIPPABLE = ('nout', 'sail', 'full')   # (sail: a small tip that needs no answer, gone when the boat is there)   # (full: the hold may be full by the time the deck step is read)
 # the steps read with «Skjønner» while the ring shows what they are about
 OK_RING = ('deck', 'chip', 'slip', 'goal', 'hud', 'apps', 'vaer', 'salg', 'regler', 'redning', 'legs', 'beh', 'intro', 'n1')
 
@@ -67,7 +66,7 @@ async def play(p, W, H, tag):
     await pg.wait_for_timeout(400); await tap_el('#obGo'); await pg.wait_for_timeout(600)
     await pg.wait_for_function("G3.isActive() || document.body.classList.contains('vplot')", timeout=90000); await pg.wait_for_timeout(800)
     await pg.evaluate("S.mult = 30; save()")
-    seen, reloads, hold_at_land, free, t0, stuck, bonus_row = [], 0, None, {}, time.time(), 0, False
+    seen, reloads, hold_at_land, free, t0, stuck, bonus_row, norm = [], 0, None, {}, time.time(), 0, False, ''
     for it in range(900):
         # the skipper kept rested: the clock runs at 30× here, so a run of 25 real minutes is over twelve game hours at sea and the
         # energy (100 % a day at sea, ENERGY in core/15-energy.js) ran out on the grounds in two runs on 27.10.2026, the boat drifting ashore
@@ -99,6 +98,7 @@ async def play(p, W, H, tag):
         if sid == 'land' and s['st'] == 'port' and hold_at_land is None: hold_at_land = s['hold']
         # the landing note is read while the guide shows it: it leaves the page a few game hours after the sale, and the rest of the trip takes longer than that at 30×
         if sid == 'slip' and not bonus_row: bonus_row = await pg.evaluate("[...document.querySelectorAll('#drawerBody .slipt td')].some(td => /Innloggingsbonus/.test(td.textContent))")
+        if sid == 'slip' and not norm: norm = await pg.evaluate("(document.querySelector('#drawerBody .tutnorm') || {}).textContent || ''")
         if sid in ('route2',) and s['busy']:
             await pg.wait_for_timeout(300); continue
         if s['ok'] and (not s['ring'] or sid in OK_RING) and not (sid == 'slip' and not s['ring'] and s['okText'].startswith('Skjønner')):
@@ -106,7 +106,7 @@ async def play(p, W, H, tag):
         if s['ring']:
             await tap(s['ring']['x'], s['ring']['y']); await pg.wait_for_timeout(350 if sid != 'route2' else 700); continue
         await pg.wait_for_timeout(500)
-    end = json.loads(await pg.evaluate("JSON.stringify({crew:S.crew.length, tut:S.tut, haill:S.haill && S.haill.type, sale:S.lastSale && {port:S.lastSale.port, total:S.lastSale.total, streak:S.lastSale.streak}, catchFlag:!!(S.tut && S.tut.catch), ice:S.boat.ice, gear:S.boat.gear, log:S.log.slice(-8).map(e => e.no)})"))
+    end = json.loads(await pg.evaluate("JSON.stringify({crew:S.crew.length, tut:S.tut, haill:S.haill && S.haill.type, sale:S.lastSale && {port:S.lastSale.port, total:S.lastSale.total, streak:S.lastSale.streak}, catchFlag:!!(S.tut && S.tut.catch), iceFree:!!S.iceFree, freeIce:tutFree('ice'), ice:S.boat.ice, gear:S.boat.gear, log:S.log.slice(-8).map(e => e.no)})"))
     await pg.evaluate("PHONE.show(false); DOCK.open('lever')"); await pg.wait_for_timeout(600)
     await pg.screenshot(path='tut_' + tag + '.png')
     order = [x for x in seen if x]
@@ -114,12 +114,13 @@ async def play(p, W, H, tag):
     check(order == want, tag + ': alle stegene kom i rekkefølge', order)
     check(end['tut'] == 0 and 'Første tur er fullført' in ' '.join(end['log']), tag + ': veiledningen er fullført', end['log'])
     check(free.get('gear') and free.get('ice', 1) == 0 and free.get('cash') == 15000, tag + ': juksa satt på fra start, og ingen is før første fiske', free)
-    check(end['ice'] >= 149 and end['gear'], tag + ': første fylling is fra mottaket etter første levering (15 000 kr igjen)', {k: end[k] for k in ('ice', 'gear')})
+    check(end['iceFree'] and end['freeIce'] and end['gear'], tag + ': isen er den åpne oppgaven etter første tur: første fylling venter gratis på mottaket (Onboarding 2, O4, V5 A)', {k: end[k] for k in ('ice', 'iceFree', 'freeIce', 'gear')})
+    check('i timen' in norm, tag + ': sluttseddelen sier at første tur var ekstra god, og hva fisket her vanligvis gir (O4)', norm[:120])
     check(end['haill'] != 'luksus', tag + ': ingen gratis luksushaill i første tur (Onboarding 2, V1 A: den er gaven ved registrering)', end['haill'])
     check(hold_at_land is not None and hold_at_land >= 174, tag + ': minst halvt lasterom ved levering etter en time på feltet (Onboarding 2, V2 A)', hold_at_land)
     check(end['sale'] and end['sale']['port'] == 'botnhamn' and bonus_row, tag + ': levert i Botnhamn med bonuslinje på sluttseddelen', end['sale'])
     check(reloads == 3, tag + ': tre omlastinger underveis', reloads)
-    check(end['crew'] == 1, tag + ': mannen på kaia mønstret på ved mottaket', end['crew'])
+    check(end['crew'] == 0, tag + ': ingen mannskap i første tur; det kommer som drypp (O4)', end['crew'])
     check('nout' in order, tag + ': naustet åpnet seg ved start, og «Gå ut» tok spilleren ned på kaia', [x for x in order if x.startswith('n')])
     print('   ', tag, 'tid', round(time.time() - t0), 's, iterasjoner', it)
     print(json.dumps({'tut': end['tut'], 'tag': tag}))

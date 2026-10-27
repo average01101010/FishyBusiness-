@@ -13,7 +13,7 @@
     if (a === 'open'){ app = d.a === 'kaiboden' ? kbLast : d.a; confirmMayday = false; if (d.s) sub[d.a] = d.s; if (d.a === 'post') sub.postArt = null; }
     else if (a === 'home'){ app = 'home'; }
     else if (a === 'back'){ app = 'home'; }
-    else if (a === 'shop'){ const k = d.k, kg = +d.kg || 0; if (!shopPend || shopPend.k !== k || shopPend.kg !== kg){ shopPend = {k, kg}; return true; } shopPend = null; const free = tutFree(k), why = shopBuy(k, kg, free); if (why){ toast(L(why[0], why[1])); } else if (free) tutMark('free_' + k); }
+    else if (a === 'shop'){ const k = d.k, kg = +d.kg || 0; if (!shopPend || shopPend.k !== k || shopPend.kg !== kg){ shopPend = {k, kg}; return true; } shopPend = null; const free = tutFree(k), why = shopBuy(k, kg, free); if (why){ toast(L(why[0], why[1])); } else if (free){ if (k === 'ice') S.iceFree = 0; tutMark('free_' + k); } }
     else if (a === 'shop0'){ }
     else if (a === 'shopgear'){ app = 'redskap'; sub.redskap = 'kjop'; }
     else if (a === 'close'){ show(false); return; }

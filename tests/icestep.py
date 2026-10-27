@@ -1,6 +1,6 @@
 """The jig and the ice (Jonas 07.10.2026): the hand jig is mounted from the start and there is no ice on the first fishing; Father's naust
-is a home, not a place of trade (no market, village or yard buttons, nothing sold); after the first landing the guide's «ice» step sends the
-player to the plant's ice page, where the first fill is on the house, with a word from the plant. Prints OK or FEIL per check."""
+is a home, not a place of trade (no market, village or yard buttons, nothing sold); after the first trip the first fill of ice waits on the
+plant as the task left open, and the handbook's first drip sends the player to the ice page, where it is on the house. Prints OK or FEIL per check."""
 from _env import GAME_TUT, GAME, boot
 import asyncio, json
 from playwright.async_api import async_playwright
@@ -27,19 +27,19 @@ async def main():
             c = await pg.evaluate("(() => { const b = S.boat; b.berth = 'naust'; S.tut = 0; DOCK.render(); return {items:DOCK.items().map(x => x.id), buy:shopBuy('ice', 50, false), atTrade:berthKind(b)}; })()")
             check(c['atTrade'] == 'naust' and not any(i in c['items'] for i in ('marked', 'bygd', 'verft')) and 'naustup' in c['items'] and 'beh' in c['items'] and c['buy'] and 'hjem' in c['buy'][0], 'at the naust: no market, village or yard buttons, and nothing is sold', c)
         else: check(False, 'the naust is found in the home harbour')
-        # 3. after the first landing the guide sends the player to the ice page, and the first fill is on the house
+        # 3. the ice is the task the first trip leaves open (Onboarding 2, O4, V5 A, 27.10.2026): after the first trip the first fill waits on
+        # the plant (S.iceFree), the handbook's first drip points to the ice page, and two taps give it, paid by the plant
         d = await pg.evaluate("""(() => { const b = S.boat; b.berth = 'main'; b.status = 'port'; b.port = 'botnhamn'; const q = portById('botnhamn'); b.pos = {x:q.p.x, y:q.p.y}; b.ice = 0;
-          const m = {}; for (const s of TSTEPS) { if (s.id === 'ice' || s.id === 'goal') break; m[s.id] = 1; }
-          S.tut = {v:2, m, catch:false, pAt:Date.now()}; S.lastSale = {port:'botnhamn', total:1000}; b.land = null; tutUpdate();
-          const st = tutStep(), T = st && tutTip(st); return {step:st && st.id, tip:T && T.no}; })()""")
-        check(d['step'] == 'ice' and 'Mottak' in (d['tip'] or ''), 'after the landing the guide asks for the ice, pointing to the market', d)
-        await pg.evaluate("DOCK.open('is')"); await pg.wait_for_timeout(400)
-        e = await pg.evaluate("""(() => { const bt = document.querySelector('#drawerBody [data-pa=shop][data-k=ice][data-fill]'); const T = tutTip(tutStep()); return {btn:bt ? bt.textContent : null, ring:T.el === bt}; })()""")
-        check(e['btn'] and 'på huset' in e['btn'] and e['ring'], 'on the ice page the fill-up button is the guide\'s target and says it is on the house', e)
+          S.tut = {v:2, m:{}, catch:false, pAt:Date.now()}; tutFinish(); S.landN = 1; S.hb = {seen:{}, skip:{}, at:0}; if (DOCK.page) DOCK.close(); PHONE.show(false); tutUpdate();
+          return {iceFree:!!S.iceFree, free:tutFree('ice'), drip:tutCur && tutCur.st.id, tip:$('tip').hidden ? '' : $('tipText').textContent}; })()""")
+        check(d['iceFree'] and d['free'] and d['drip'] == 'hb:is' and 'Mottak' in d['tip'], 'after the first trip the first fill of ice waits on the plant, and the first drip sends the player to it', d)
+        await pg.evaluate("DOCK.open('is'); tutUpdate()"); await pg.wait_for_timeout(400)
+        e = await pg.evaluate("""(() => { const bt = document.querySelector('#drawerBody [data-pa=shop][data-k=ice][data-fill]'); tutUpdate(); return {btn:bt ? bt.textContent : null, ring:!!(tutCur && tutCur.T0 && tutCur.T0.el === bt)}; })()""")
+        check(e['btn'] and 'på huset' in e['btn'] and e['ring'], 'on the ice page the fill-up button is the drip\'s target and says it is on the house', e)
         await pg.evaluate("document.querySelector('#drawerBody [data-pa=shop][data-k=ice][data-fill]').click()"); await pg.wait_for_timeout(200)
         await pg.evaluate("document.querySelector('#drawerBody [data-pa=shop][data-k=ice][data-fill]').click()"); await pg.wait_for_timeout(400)
-        f = await pg.evaluate("({ice:S.boat.ice, cash:S.cash, shift:!!S.boat.shift, mark:!!S.tut.m.free_ice, msg:(S.msgs || []).slice(-3).map(m => (m.no || m.txt || '').slice(0, 60))})")
-        check((f['ice'] >= 149 or f['shift']) and f['mark'], 'two taps give the first fill of ice, paid by the plant', f)
+        f = await pg.evaluate("({ice:S.boat.ice, cash:S.cash, shift:!!S.boat.shift, iceFree:!!S.iceFree, free:tutFree('ice')})")
+        check((f['ice'] >= 149 or f['shift']) and not f['iceFree'] and not f['free'], 'two taps give the first fill of ice, paid by the plant, once', f)
         print('errors:', errs[:3]); await br.close()
 
 asyncio.run(main())
