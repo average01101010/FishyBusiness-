@@ -168,7 +168,7 @@
     if (FOAM.log && FOAM.log.length < 400){   // (a trace for the tests: G3._debug.foam.log = []; counts the foam in a 64 x 64 block round the boat and its distinct births)
       const i = Math.max(0, Math.min(N - 64, Math.floor((qx - FOAM.ox) / px) - 32)), j = Math.max(0, Math.min(N - 64, Math.floor((qz - FOAM.oz) / px) - 32)), b4 = new Uint8Array(64 * 64 * 4);
       gl.bindFramebuffer(gl.FRAMEBUFFER, FOAM.fb[FOAM.r]); gl.readPixels(i, j, 64, 64, gl.RGBA, gl.UNSIGNED_BYTE, b4); gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-      let cnt = 0; const g = new Set(); for (let k = 0; k < 64 * 64; k++) if (b4[k * 4] > 64){ cnt++; g.add(b4[k * 4 + 1]); }
+      let cnt = 0; const g = new Set(); for (let k = 0; k < 64 * 64; k++) if (b4[k * 4] > 64){ cnt++; g.add(Math.round(b4[k * 4 + 1] / b4[k * 4] * 255)); }
       FOAM.log.push([+t.toFixed(2), sx, sz, +reb[0].toFixed(3), +FOAM.now[0].toFixed(3), cnt, g.size, Math.min(...g), Math.max(...g)]); }
   }
   // the sea shader reads the map (unit 7) where it is on

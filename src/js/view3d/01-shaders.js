@@ -71,7 +71,8 @@
   const SEAF = f => f.replace(/\buWa\b/g, 'uFWa').replace(/\buWb\b/g, 'uFWb').replace(/\buGp\b/g, 'uFGp').replace(/\buNFp\b/g, 'uFNFp').replace(/\buNFg\b/g, 'uFNFg');
   // ---------- the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water ----------
   // One texture that follows the boat in the near field's frame (Pb = P - uNFD, the water the short sea and the foam's mottle ride
-  // in): each texel holds the wake's foam (amount, birth) in r and g and the whitecaps' (amount, birth) in b and a. The map is only
+  // in): each texel holds the wake's foam (amount, birth times the amount) in r and g and the whitecaps' in b and a; the birth is kept
+  // times the amount so the sea shader's bilinear read of a thin trail never mixes a birth with an empty neighbour's zero. The map is only
   // ever copied, texel for texel, by the whole texels the window has moved (foamStep), so nothing blurs and 8 bits hold it; the age
   // is reckoned when it is drawn, and the foam fades as exp(-age / tau). A birth is a share of a window from the map's t0 (the wake's
   // and the caps' each their own, uFoamT and uFoamTc); when a window rolls (uRebase, 128/255 of it, so a birth stays a whole texel
@@ -89,7 +90,7 @@
     'vec2 M=vUV*uFoamRect.w;vec2 P=M+uFoamRect.xy+uNFD;vec2 Pb=M+uFoamRect.xy;' +
     // what was here last frame, moved by whole texels (nothing from outside the old map)
     'vec2 su=(gl_FragCoord.xy+uShift)/uN;vec4 old=(su.x>=0.0&&su.y>=0.0&&su.x<=1.0&&su.y<=1.0)?texture2D(uPrev,su):vec4(0.0);' +
-    'float aw=old.r;float bw=old.g-uRebase.x;float ac=old.b;float bc=old.a-uRebase.y;if(bw<0.0){aw=0.0;bw=0.0;}if(bc<0.0){ac=0.0;bc=0.0;}' +
+    'float aw=old.r;float bw=(aw>0.002?old.g/aw:0.0)-uRebase.x;float ac=old.b;float bc=(ac>0.002?old.a/ac:0.0)-uRebase.y;if(bw<0.0){aw=0.0;bw=0.0;}if(bc<0.0){ac=0.0;bc=0.0;}' +
     'float dw=aw*exp(-max(uFoamT.x-bw,0.0)*uFoamT.y/uFoamT.z);float dc=ac*exp(-max(uFoamTc.x-bc,0.0)*uFoamTc.y/uFoamTc.z);' +
     'float iw=0.0;float ic=0.0;' +
     // --- the boat's own foam, when she has way on ---
@@ -119,7 +120,7 @@
     'float fv=crest*0.25+fn*0.45;ic=smoothstep(th+0.02,th+0.09,fv);}' +
     // new foam over what is left of the old: born now
     'if(iw>dw){aw=iw;bw=uFoamT.x;}if(ic>dc){ac=ic;bc=uFoamTc.x;}' +
-    'gl_FragColor=vec4(aw,bw,ac,bc);}';
+    'gl_FragColor=vec4(aw,bw*aw,ac,bc*ac);}';
   // the last resort when no sea program links: a flat sea with a little ripple, the sky in it and the sun's glitter
   const BASIC_VS = 'precision highp float;attribute vec2 aXZ;uniform mat4 uVP;uniform vec2 uOrigin;uniform vec3 uOriginRel;uniform vec2 uScale;varying vec3 vW;varying vec2 vXZ;' +
     'void main(){vec2 lxz=aXZ*uScale;vec3 rel=uOriginRel+vec3(lxz.x,0.0,lxz.y);vW=rel;vXZ=uOrigin+lxz;gl_Position=uVP*vec4(rel,1.0);}';
@@ -184,10 +185,10 @@
     // and breaks up into bubbles and streaks as it thins (noise that lies still in the water, Pb); the whitecaps' is what the crests left,
     // drawn out along the wind. The water under thin foam is milky with bubbles.
     '\n#ifndef FAR\nif(uFoamOn>0.5){vec2 fu=(Pb-uFoamRect.xy)*uFoamRect.z;if(fu.x>0.0&&fu.y>0.0&&fu.x<1.0&&fu.y<1.0){vec4 m=texture2D(uFoam,fu);' +
-    'float aw=m.r*exp(-max(uFoamT.x-m.g,0.0)*uFoamT.y/uFoamT.z);float ac=m.b*exp(-max(uFoamTc.x-m.a,0.0)*uFoamTc.y/uFoamTc.z);' +
+    'float b0=m.r>0.002?m.g/m.r:0.0;float c0=m.b>0.002?m.a/m.b:0.0;float aw=m.r*exp(-max(uFoamT.x-b0,0.0)*uFoamT.y/uFoamT.z);float ac=m.b*exp(-max(uFoamTc.x-c0,0.0)*uFoamTc.y/uFoamTc.z);' +
     'float n1=ns(Pb*0.8+vec2(3.1,7.7));float n2=ns(Pb*2.6+vec2(1.3,9.2));float n3=ns(vec2(dot(Pb,w)*0.16,dot(Pb,wp)*1.2)+vec2(5.0,2.0));float n4=ns(Pb*0.22+vec2(8.0,1.0));' +
     'float dens=aw*(0.55+0.45*n4)*(0.6+0.4*n1);float fw=smoothstep(0.12,0.55,dens*(0.75+0.25*n2))*(0.75+0.25*aw)*lod;' +
-    'float agc=max(uFoamTc.x-m.a,0.0)*uFoamTc.y;float acv=ac*smoothstep(0.2,1.2,agc);float fcp=smoothstep(0.55,0.9,acv*(0.25+0.75*n3)*(0.6+0.4*n2))*lod*0.6;' +
+    'float agc=max(uFoamTc.x-c0,0.0)*uFoamTc.y;float acv=ac*smoothstep(0.2,1.2,agc);float fcp=smoothstep(0.55,0.9,acv*(0.25+0.75*n3)*(0.6+0.4*n2))*lod*0.6;' +
     'foam=max(foam,max(fw,fcp));col=mix(col,fc*0.6+col*0.4,clamp(aw*0.35,0.0,0.4)*lod);}}\n#endif\n' +
     // shallows and surf, the surf from the sea that reaches this shore
     'if(uSOn>0.5&&uHOn>0.5){vec2 su=(vW.xz-uSRect.xy)*uSRect.zw;if(su.x>0.0&&su.y>0.0&&su.x<1.0&&su.y<1.0){float ef=smoothstep(0.0,0.06,min(min(su.x,su.y),min(1.0-su.x,1.0-su.y)));' +
