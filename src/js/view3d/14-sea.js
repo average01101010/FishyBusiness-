@@ -165,11 +165,11 @@
     gl.uniform4f(u.uHull, (VG.stern - VG.bow) || 6, (VG.beam || 2.4) / 2, -(VG.bow || -2.2), VG.stern || 3.1); gl.uniform4f(u.uFSp, (WK.kn || 0) * 0.5144, WK.Fr || 0, BOAT.planing ? 1 : 0, dt);
     attr(0, SKYQ, 2); gl.drawArrays(gl.TRIANGLES, 0, 6);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null); FOAM.r = w; FOAM.pB = [qx, qz, fx, fz]; FOAM.ms = FOAM.ms * 0.9 + (performance.now() - t1) * 0.1; FOAM.sh = [sx, sz]; FOAM.n++;
-    if (FOAM.log && FOAM.log.length < 400){   // (a trace for the tests: G3._debug.foam.log = []; probes the texel where the stern stood five frames ago)
-      const Pq = FOAM.probe || (FOAM.probe = []); Pq.push([WK.u0[0] - Dx, WK.u0[1] - Dz]); let pr = null;
-      if (Pq.length > 5){ const q = Pq.shift(), i = Math.floor((q[0] - FOAM.ox) / px), j = Math.floor((q[1] - FOAM.oz) / px);
-        if (i >= 0 && j >= 0 && i < N && j < N){ const b4 = new Uint8Array(4); gl.bindFramebuffer(gl.FRAMEBUFFER, FOAM.fb[FOAM.r]); gl.readPixels(i, j, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, b4); gl.bindFramebuffer(gl.FRAMEBUFFER, null); pr = [i, j, b4[0], b4[1]]; } }
-      FOAM.log.push([+t.toFixed(2), sx, sz, +reb[0].toFixed(3), +FOAM.now[0].toFixed(3), +(qx - FOAM.ox).toFixed(1), +(qz - FOAM.oz).toFixed(1), pr]); }
+    if (FOAM.log && FOAM.log.length < 400){   // (a trace for the tests: G3._debug.foam.log = []; counts the foam in a 64 x 64 block round the boat and its distinct births)
+      const i = Math.max(0, Math.min(N - 64, Math.floor((qx - FOAM.ox) / px) - 32)), j = Math.max(0, Math.min(N - 64, Math.floor((qz - FOAM.oz) / px) - 32)), b4 = new Uint8Array(64 * 64 * 4);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, FOAM.fb[FOAM.r]); gl.readPixels(i, j, 64, 64, gl.RGBA, gl.UNSIGNED_BYTE, b4); gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      let cnt = 0; const g = new Set(); for (let k = 0; k < 64 * 64; k++) if (b4[k * 4] > 64){ cnt++; g.add(b4[k * 4 + 1]); }
+      FOAM.log.push([+t.toFixed(2), sx, sz, +reb[0].toFixed(3), +FOAM.now[0].toFixed(3), cnt, g.size, Math.min(...g), Math.max(...g)]); }
   }
   // the sea shader reads the map (unit 7) where it is on
   function foamBind(u){
