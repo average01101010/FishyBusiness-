@@ -155,6 +155,8 @@ Spørsmål uten A/B:
 - **Skum rundt skroget** er en tynn hvit strek langs vannlinja og noen sprøytprikker ved baugen i Beaufort 5; i Beaufort 7–8 lite mer. Skroget sitter riktig i vannet (sjarken krenger 5° for vinden, hiver og stamper), men ingenting av videoenes skumkrage og sprøytteppe.
 - **Skumtoppene** er store, glatte, hvite flekker (5–10 m) som ligger flatt på sjøen og ser like ut i Beaufort 5 og 8; i videoene er skummet finkornet, med skarp forkant på kammen og en hale som drar ut i striper med vinden. Det er et spørsmål om *hvor* skummet lages (på kammen som bryter, så det ligger igjen og driver) og om kornet i støyen (0,3–3 m, ikke 5–10), og det hører til F1 (kartet som husker) og F3 (Jacobi-terskelen og støyen).
 - **Kammene** er runde og lange; sjøen i Beaufort 8 ser ut som glatte åser med flekker på, mens videoenes sjø er krapp og kort-kammet med mange retninger. Det er retningsspredningen og brattheten (F3), og det er grensen for 13 komponenter (F6 måler om FFT gir mer).
+- **Kyst21 i 10 knop** (Beaufort 6) har et lite hvitt felt rett bak hekken og nesten usynlige armer; en 21 m båt i 10 knop legger etter seg et bredt, hvitt kjølvann i flere hundre meter. Samme sak som over, F1.
+- **Sjarken i ro tvers i Beaufort 8** (5,9 m sjø) ruller og krenger 5° for vinden, som den skal, men skumflekkene rundt henne er 20–30 m store og sjøen ser ut som glatte åser. Det er det samme som F3 retter.
 - I Beaufort 7–8 snudde simuleringen sjarken hjem av seg selv («Returnerer», været over båtens grense), som den skal. Sjøen var 5,3 m.
 
 ## Status
