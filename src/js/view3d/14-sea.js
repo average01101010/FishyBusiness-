@@ -143,9 +143,11 @@
     let sx = Math.round((tx - FOAM.ox) / px), sz = Math.round((tz - FOAM.oz) / px);
     if (FOAM.fresh || Math.abs(sx) >= N || Math.abs(sz) >= N){ FOAM.ox = tx; FOAM.oz = tz; sx = sz = N; FOAM.fresh = false; FOAM.pB = null; FOAM.t0[0] = FOAM.t0[1] = t; }
     else { FOAM.ox += sx * px; FOAM.oz += sz * px; }
-    // the birth windows roll on (by 128/255 of the window at 0.95 of it; a stall past the window, or the clock set back, clears)
+    // the birth windows roll on: by 128/255 of the window each time the frame's time passes 0.95 of it (a long frame may need several
+    // rolls; the foam born before the rolled t0 is dropped, which only an age past half the window is); the clock set back clears
     const reb = [0, 0];
-    for (let k = 0; k < 2; k++){ const f = (t - FOAM.t0[k]) / FOAM.win[k]; if (f > 1 || f < 0){ reb[k] = 1; FOAM.t0[k] = t; } else if (f > 0.95){ reb[k] = 128 / 255; FOAM.t0[k] += FOAM.win[k] * 128 / 255; } FOAM.now[k] = (t - FOAM.t0[k]) / FOAM.win[k]; }
+    for (let k = 0; k < 2; k++){ let f = (t - FOAM.t0[k]) / FOAM.win[k], n = 0; while (f > 0.95 && n < 4){ FOAM.t0[k] += FOAM.win[k] * 128 / 255; f = (t - FOAM.t0[k]) / FOAM.win[k]; n++; }
+      if (f > 0.95 || f < 0){ reb[k] = 1; FOAM.t0[k] = t; f = 0; } else reb[k] = n * 128 / 255; FOAM.now[k] = f; }
     // the hull this frame and last, in the map's metres (the way she came since the last frame is swept; after a jump, just here)
     const VG = GEO(vtype()), fx = Math.sin(bv.head), fz = -Math.cos(bv.head), pb = FOAM.pB && Math.hypot(FOAM.pB[0] - qx, FOAM.pB[1] - qz) < 300 ? FOAM.pB : [qx, qz, fx, fz];
     const w = 1 - FOAM.r, P = FOAM.prog, u = P.u;
