@@ -16,6 +16,7 @@
     for (let j = 0; j < NG; j++) for (let i = 0; i < NG; i++){ const a = j * (NG + 1) + i, b = a + 1, c = a + NG + 1, d = c + 1; gi[k++] = a; gi[k++] = c; gi[k++] = b; gi[k++] = b; gi[k++] = c; gi[k++] = d; }
     FARQ = {pb:buf(g), ib:buf(gi, gl.ELEMENT_ARRAY_BUFFER), n:gi.length};
     SKYQ = buf(new Float32Array([-1, -1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1]));
+    foamInit();
   }
   // ---------- the waves: wind sea and swell from the sea model (03b-sea.js) ----------
   const WL = [96, 67, 49, 36.5, 27.5, 20.5, 15.3, 11.4, 8.6, 6.4], WOFF = [0, -0.46, 0.53, -0.92, 0.27, 0.84, -0.21, 1.12, -0.68, 0.41], WPH = [0, 2.1, 4.4, 1.3, 5.6, 3.2, 0.7, 4.9, 2.6, 5.9];
@@ -94,6 +95,80 @@
     if (s <= 0 || s > WK.u1[3] || q > s * 0.42 + L * 0.6 + 4) return 0;
     const e = s * 0.3536, a = WK.u1[1] * (1 - sstep(WK.u1[3] * 0.55, WK.u1[3], s)) * sstep(0, 1.2, s);   // as wakeH: no step at the stern
     return (WK.u1[2] * a / Math.sqrt(1 + s / L) * Math.cos(k * s) * (1 - sstep(e * 0.75, e * 1.02, q)) * 0.75 + a * Math.pow(1 + s / L, -0.333) * Math.sin(1.5 * k * (0.816 * s + 0.577 * q)) * Math.exp(-(((q - e) / (0.1 * s + 1.2)) ** 2))) * WK.u3[2];
+  }
+
+
+  // ---------- the foam map: the foam the boat and the sea leave in the water (Fysikk 4, F1, 27.10.2026) ----------
+  // The sea's foam used to be only what each frame made: the crests over the threshold and the wake breaking by the hull, and the trail
+  // two thin strips (TRAIL, 24-cinema.js). In the water foam stays: the wash a hull leaves is white for tens of seconds and hundreds of
+  // metres, and a crest's foam lies and streaks downwind (the chillboats videos Jonas showed 27.10.2026, docs/planer/fysikk-4-sjo-og-skrog.md).
+  // So a map of it: two textures (ping-pong) of FOAM.N texels over FOAM.M metres round the boat in the water's frame (Pb = P - NF.D, the
+  // frame the short sea and the foam's mottle ride in, 5.20b; so the wake is left behind at her real speed through the water, not the
+  // screen's 6x). Every frame foamStep draws the old map into the new one shifted by the whole texels the window has moved (nothing blurs,
+  // 8 bits hold it), rolls the birth windows, and FOAM_FS adds the foam made this frame; the sea shader reads it (foamBind, unit 7) and
+  // ages it as exp(-age / tau). «#foam0» in the address turns it off (the sea as before, for the comparison); it is off too on the lite
+  // and the basic sea, on the low quality (the far shader draws the near sea there), and when no framebuffer can be made.
+  const FOAM = {on:!/foam0/.test(location.hash), ok:false, N:0, M:600, tex:[null, null], fb:[null, null], r:0, ox:0, oz:0, t0:[0, 0], win:[160, 32], tau:[20, 4.5], now:[0, 0], prog:null, pB:null, fresh:true, why:'', ms:0};
+  const foamLive = () => FOAM.on && FOAM.ok;
+  const foamSize = () => QUAL.lvl >= 2 ? 1024 : 512;
+  function foamFree(){ for (let k = 0; k < 2; k++){ if (FOAM.fb[k]) gl.deleteFramebuffer(FOAM.fb[k]); if (FOAM.tex[k]) gl.deleteTexture(FOAM.tex[k]); FOAM.fb[k] = FOAM.tex[k] = null; } FOAM.ok = false; }
+  function foamInit(){
+    foamFree(); if (!FOAM.on || !PS || PS.basic || PS.lite) return;
+    try {
+      if (!FOAM.prog) FOAM.prog = program(FOAM_VS, FOAM_FS, ['aXZ'], 'skumkart');
+      const N = foamSize();
+      for (let k = 0; k < 2; k++){
+        const tx = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tx); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, N, N, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        const fb = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tx, 0);
+        const st = gl.checkFramebufferStatus(gl.FRAMEBUFFER); gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        FOAM.tex[k] = tx; FOAM.fb[k] = fb; if (st !== gl.FRAMEBUFFER_COMPLETE) throw new Error('rammebuffer ' + st);
+      }
+      FOAM.N = N; FOAM.ok = true; FOAM.fresh = true; FOAM.r = 0;
+    } catch (e){ foamFree(); FOAM.why = String(e && e.message || e); FOAM.on = false; if (typeof cloudErr === 'function') cloudErr('3D skumkart av: ' + FOAM.why + ' · ' + GPU, 'view3d foam', ''); }
+  }
+  // the waves' phases and their groups' phases at the render origin (doubles, then wrapped), so the shaders work near zero
+  function wavePh(){
+    const ub = WV.ub.slice(), gp = new Float32Array(13), TAU = 2 * Math.PI;
+    for (let i = 0; i < 13; i++){ const c = WV.list[i]; if (!c) continue; const a = c.Dx * RO.x + c.Dz * RO.z, g = c.Dz * RO.x - c.Dx * RO.z;
+      ub[i * 4 + 2] = (c.ph + c.k * a) % TAU; gp[i] = (i * 2.59 + c.k * (0.083 * a + 0.041 * g)) % TAU; }
+    return {ub, gp};
+  }
+  // one frame of the map: the window after the boat, the birth windows rolled, the old map shifted in and this frame's foam added
+  function foamStep(dt, t){
+    if (!FOAM.on) return; if (FOAM.ok && foamSize() !== FOAM.N) foamInit(); if (!FOAM.ok || !WV.list.length) return;
+    const t1 = performance.now(), N = FOAM.N, M = FOAM.M, px = M / N, Dx = NF.D[0], Dz = NF.D[1];
+    // the window: the boat's place in the water's frame, the map's origin snapped to whole texels round it (a jump or the first frame clears it)
+    const qx = bv.x - Dx, qz = bv.z - Dz, tx = qx - M / 2, tz = qz - M / 2;
+    let sx = Math.round((tx - FOAM.ox) / px), sz = Math.round((tz - FOAM.oz) / px);
+    if (FOAM.fresh || Math.abs(sx) >= N || Math.abs(sz) >= N){ FOAM.ox = tx; FOAM.oz = tz; sx = sz = N; FOAM.fresh = false; FOAM.pB = null; FOAM.t0[0] = FOAM.t0[1] = t; }
+    else { FOAM.ox += sx * px; FOAM.oz += sz * px; }
+    // the birth windows roll on (by 128/255 of the window at 0.95 of it; a stall past the window, or the clock set back, clears)
+    const reb = [0, 0];
+    for (let k = 0; k < 2; k++){ const f = (t - FOAM.t0[k]) / FOAM.win[k]; if (f > 1 || f < 0){ reb[k] = 1; FOAM.t0[k] = t; } else if (f > 0.95){ reb[k] = 128 / 255; FOAM.t0[k] += FOAM.win[k] * 128 / 255; } FOAM.now[k] = (t - FOAM.t0[k]) / FOAM.win[k]; }
+    // the hull this frame and last, in the map's metres (the way she came since the last frame is swept; after a jump, just here)
+    const VG = GEO(vtype()), fx = Math.sin(bv.head), fz = -Math.cos(bv.head), pb = FOAM.pB && Math.hypot(FOAM.pB[0] - qx, FOAM.pB[1] - qz) < 300 ? FOAM.pB : [qx, qz, fx, fz];
+    const w = 1 - FOAM.r, P = FOAM.prog, u = P.u;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, FOAM.fb[w]); gl.viewport(0, 0, N, N); gl.disable(gl.DEPTH_TEST); gl.disable(gl.BLEND); gl.disable(gl.CULL_FACE); gl.useProgram(P.p);
+    gl.activeTexture(gl.TEXTURE7); gl.bindTexture(gl.TEXTURE_2D, FOAM.tex[FOAM.r]); gl.uniform1i(u.uPrev, 7);
+    for (const L of [SSL.n, SSL.w]){ gl.activeTexture(gl.TEXTURE0 + L.unit); gl.bindTexture(gl.TEXTURE_2D, L.on ? L.tex : SSDUMMY); gl.uniform1i(L === SSL.n ? u.uSSTn : u.uSSTw, L.unit); gl.uniform4fv(L === SSL.n ? u.uSSN : u.uSSW, L.on ? [L.rect[0] - RO.x, L.rect[1] - RO.z, 1 / L.rect[2], 1] : [0, 0, 1, 0]); }
+    gl.activeTexture(gl.TEXTURE0);
+    gl.uniform2f(u.uShift, sx, sz); gl.uniform1f(u.uN, N); gl.uniform2f(u.uRebase, reb[0], reb[1]);
+    gl.uniform4fv(u.uFoamRect, [FOAM.ox - RO.x, FOAM.oz - RO.z, 1 / M, M]); gl.uniform4fv(u.uFoamT, [FOAM.now[0], FOAM.win[0], FOAM.tau[0], 0]); gl.uniform4fv(u.uFoamTc, [FOAM.now[1], FOAM.win[1], FOAM.tau[1], 0]);
+    gl.uniform1f(u.uTime, t); gl.uniform2f(u.uNFD, Dx, Dz); gl.uniform1f(u.uWind, env.wind || 0); gl.uniform2fv(u.uWindDir, env.windDir || [0, 1]);
+    gl.uniform4fv(u.uSea, [WV.C, WV.cap, WV.lnFcap, WV.swHs]); gl.uniform4fv(u.uSea2, [WV.dot, WV.steep, ssBlend(SSL.n), ssBlend(SSL.w)]); gl.uniform4fv(u.uLocal, WV.loc);
+    const ph = wavePh(); gl.uniform4fv(u.uWa, WV.ua); gl.uniform4fv(u.uWb, ph.ub); gl.uniform1fv(u.uGp, ph.gp); gl.uniform1fv(u.uNFp, NF.ph); gl.uniform1fv(u.uNFg, NF.gp);
+    gl.uniform4fv(u.uWk0, [WK.u0[0] - Dx - FOAM.ox, WK.u0[1] - Dz - FOAM.oz, WK.u0[2], WK.u0[3]]); gl.uniform4fv(u.uWk1, WK.u1); gl.uniform4fv(u.uWk2, WK.u2); gl.uniform4fv(u.uWk3, WK.u3);
+    gl.uniform4f(u.uFB, pb[0] - FOAM.ox, pb[1] - FOAM.oz, qx - FOAM.ox, qz - FOAM.oz); gl.uniform4f(u.uFH, pb[2], pb[3], fx, fz);
+    gl.uniform4f(u.uHull, (VG.stern - VG.bow) || 6, (VG.beam || 2.4) / 2, -(VG.bow || -2.2), VG.stern || 3.1); gl.uniform4f(u.uFSp, (WK.kn || 0) * 0.5144, WK.Fr || 0, BOAT.planing ? 1 : 0, dt);
+    attr(0, SKYQ, 2); gl.drawArrays(gl.TRIANGLES, 0, 6);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null); FOAM.r = w; FOAM.pB = [qx, qz, fx, fz]; FOAM.ms = FOAM.ms * 0.9 + (performance.now() - t1) * 0.1;
+  }
+  // the sea shader reads the map (unit 7) where it is on
+  function foamBind(u){
+    if (u.uFoamOn == null) return; const on = foamLive(); gl.uniform1f(u.uFoamOn, on ? 1 : 0); if (!on) return;
+    gl.activeTexture(gl.TEXTURE7); gl.bindTexture(gl.TEXTURE_2D, FOAM.tex[FOAM.r]); gl.uniform1i(u.uFoam, 7); gl.activeTexture(gl.TEXTURE0);
+    gl.uniform4fv(u.uFoamRect, [FOAM.ox - RO.x, FOAM.oz - RO.z, 1 / FOAM.M, FOAM.M]); gl.uniform4fv(u.uFoamT, [FOAM.now[0], FOAM.win[0], FOAM.tau[0], 0]); gl.uniform4fv(u.uFoamTc, [FOAM.now[1], FOAM.win[1], FOAM.tau[1], 0]);
   }
 
   // ---------- the sea state over the near terrain and the whole map ----------

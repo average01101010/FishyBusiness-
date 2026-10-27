@@ -69,6 +69,56 @@
   // thing the sea has that no other program has, and the one guess left for the phone that would link none of its variants
   // (Adreno 642L, 05.10.2026). drawSea sets both.
   const SEAF = f => f.replace(/\buWa\b/g, 'uFWa').replace(/\buWb\b/g, 'uFWb').replace(/\buGp\b/g, 'uFGp').replace(/\buNFp\b/g, 'uFNFp').replace(/\buNFg\b/g, 'uFNFg');
+  // ---------- the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water ----------
+  // One texture that follows the boat in the near field's frame (Pb = P - uNFD, the water the short sea and the foam's mottle ride
+  // in): each texel holds the wake's foam (amount, birth) in r and g and the whitecaps' (amount, birth) in b and a. The map is only
+  // ever copied, texel for texel, by the whole texels the window has moved (foamStep), so nothing blurs and 8 bits hold it; the age
+  // is reckoned when it is drawn, and the foam fades as exp(-age / tau). A birth is a share of a window from the map's t0 (the wake's
+  // and the caps' each their own, uFoamT and uFoamTc); when a window rolls (uRebase, 128/255 of it, so a birth stays a whole texel
+  // value) the foam born before the new t0 is dropped. Foam is made here, a frame at a time, where it is made in the water: the wash
+  // along the hull and the bow wave (the hull swept along the way she came since the last frame, so a slow frame leaves no gap), the
+  // water the transom leaves and the screw churns, the stern wave breaking along the Kelvin arms (wakeH, as the sea shader breaks it)
+  // and the whitecaps the sea shader sets (the same crest, noise and threshold).
+  const FOAM_VS = 'attribute vec2 aXZ;varying vec2 vUV;void main(){vUV=aXZ*0.5+0.5;gl_Position=vec4(aXZ,0.0,1.0);}';
+  const FOAM_FS = 'precision highp float;uniform sampler2D uPrev;uniform vec2 uShift;uniform float uN;uniform vec2 uRebase;uniform vec4 uFoamRect;uniform vec4 uFoamT;uniform vec4 uFoamTc;uniform float uTime;uniform vec2 uNFD;uniform float uWind;uniform vec2 uWindDir;' +
+    'uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];uniform vec4 uFB;uniform vec4 uFH;uniform vec4 uHull;uniform vec4 uFSp;varying vec2 vUV;' + NOISE + SEA_STATE + WAKE_GLSL +
+    // the hull's half width a metres forward of her origin: full in the body, drawn in over the forebody to the stem, a little to the transom
+    'float hullW(float a){float hb=uHull.y;if(a>0.0){float t=clamp(a/uHull.z,0.0,1.0);return hb*sqrt(max(1.0-pow(t,2.6),0.0));}float t=clamp(-a/uHull.w,0.0,1.0);return hb*(1.0-0.25*t*t);}' +
+    'void main(){' +
+    // this texel in the map's own metres, in the sea shader's frame P (from the render origin) and the water's Pb
+    'vec2 M=vUV*uFoamRect.w;vec2 P=M+uFoamRect.xy+uNFD;vec2 Pb=M+uFoamRect.xy;' +
+    // what was here last frame, moved by whole texels (nothing from outside the old map)
+    'vec2 su=(gl_FragCoord.xy+uShift)/uN;vec4 old=(su.x>=0.0&&su.y>=0.0&&su.x<=1.0&&su.y<=1.0)?texture2D(uPrev,su):vec4(0.0);' +
+    'float aw=old.r;float bw=old.g-uRebase.x;float ac=old.b;float bc=old.a-uRebase.y;if(bw<0.0){aw=0.0;bw=0.0;}if(bc<0.0){ac=0.0;bc=0.0;}' +
+    'float dw=aw*exp(-max(uFoamT.x-bw,0.0)*uFoamT.y/uFoamT.z);float dc=ac*exp(-max(uFoamTc.x-bc,0.0)*uFoamTc.y/uFoamTc.z);' +
+    'float iw=0.0;float ic=0.0;' +
+    // --- the boat's own foam, when she has way on ---
+    'if(uWk3.w>0.5){' +
+    // the hull swept along the way she came this frame: the nearest point of that way, with her heading there
+    'vec2 B0=uFB.xy;vec2 B1=uFB.zw;vec2 dB=B1-B0;float l2=max(dot(dB,dB),1e-4);float tt=clamp(dot(M-B0,dB)/l2,0.0,1.0);vec2 C=mix(B0,B1,tt);vec2 f=normalize(mix(uFH.xy,uFH.zw,tt));vec2 rt=vec2(-f.y,f.x);' +
+    'vec2 r=M-C;float a=dot(r,f);float q=abs(dot(r,rt));float v=uFSp.x;float Fr=uFSp.y;float pl=uFSp.z;float w=hullW(a);float st=-uHull.w;float bo=uHull.z;' +
+    // the wash along the side: a band outside the hull from the stem aft, widening aft as the bow wave runs out, thickest where the bow
+    // wave breaks on the shoulder; a planing hull throws it further out; the water under the after body is churned too
+    'if(a>st-1.0&&a<bo+1.5){float al=clamp((bo-a)/(bo-st),0.0,1.0);float wo=w+0.15+al*(0.35+0.12*v)+pl*0.6*(1.0-al)*(1.0-al);float wd=0.35+0.05*v+al*0.5+pl*0.5;' +
+    'float band=exp(-pow(max(q-wo,0.0)/wd,2.0));float str=smoothstep(1.2,3.5,v)*(0.55+0.45*smoothstep(0.0,0.35,al))*(1.0-0.35*smoothstep(0.6,1.0,al));' +
+    'float inside=step(q,w)*smoothstep(0.0,0.4,al)*0.55;iw=max(iw,max(band*str,inside));}' +
+    // the water the transom leaves and the screw churns: a band behind the stern, a beam wide, going on with her way
+    'if(a<st+0.5&&a>st-6.0){float back=st+0.5-a;float wb=uHull.y*(0.95+0.06*back);float band=1.0-smoothstep(wb*0.8,wb*1.15,q);float chur=0.72+0.28*ns(Pb*1.3);iw=max(iw,band*chur*smoothstep(1.0,3.0,v)*(0.85+0.15*smoothstep(0.6,1.0,Fr)));}' +
+    // the stern wave breaking along the Kelvin arms and the bow wave, as the sea shader breaks them (uWk0 is given in the map's metres)
+    'float wh=wakeH(M,1.0);if(wh>0.0){vec2 rr=M-uWk0.xy;float s=-dot(rr,uWk0.zw);float br=ns(Pb*1.4+vec2(uTime*1.3,0.0))*0.5+0.5;float lam=6.2832/uWk1.x;' +
+    'float arm=uWk3.y*smoothstep(0.45,0.9,wh/max(uWk1.y,0.02))*(1.0-smoothstep(0.0,lam,s))*step(0.0,s)*br;' +
+    'float bow=uWk3.x*smoothstep(0.35,0.85,wh/max(uWk2.y,0.02))*step(-uWk2.x-0.5,s)*step(s,0.2)*br;iw=max(iw,max(arm,bow)*0.9);}' +
+    '}' +
+    // --- the whitecaps, as the sea shader finds them: the crest in standard deviations plus the mottle, over Monahan's threshold ---
+    'if(uWind>3.0){vec4 S=seaAt(P);float px=uFoamRect.w/uN;vec3 N=vec3(0.0,1.0,0.0);float y=0.0;float sa=1e-6;float lost=0.0;vec2 w2=uWindDir;vec2 wp=vec2(-w2.y,w2.x);' +
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => SEA_WAVE(true, i)).join('') +
+    'float crest=y*inversesqrt(sa);float dw2=smoothstep(0.45,1.73,S.w);float Wc=clamp(3.84e-6*pow(max(uWind,0.3),3.41)*dw2,1e-5,0.5);' +
+    'vec2 cq=vec2(dot(Pb,w2),dot(Pb,wp));float fn=ns(cq*vec2(0.3,0.12)+vec2(uTime*0.25,0.0))*0.6+ns(cq*vec2(0.7,0.3)-vec2(uTime*0.4,uTime*0.1))*0.4;' +
+    'float zt=sqrt(-2.0*log(Wc));zt-=(2.515517+0.802853*zt+0.010328*zt*zt)/(1.0+1.432788*zt+0.189269*zt*zt+0.001308*zt*zt*zt);float th=0.228+0.293*zt-0.016*zt*zt;' +
+    'float fv=crest*0.25+fn*0.45;ic=smoothstep(th-0.02,th+0.02,fv);}' +
+    // new foam over what is left of the old: born now
+    'if(iw>dw){aw=iw;bw=uFoamT.x;}if(ic>dc){ac=ic;bc=uFoamTc.x;}' +
+    'gl_FragColor=vec4(aw,bw,ac,bc);}';
   // the last resort when no sea program links: a flat sea with a little ripple, the sky in it and the sun's glitter
   const BASIC_VS = 'precision highp float;attribute vec2 aXZ;uniform mat4 uVP;uniform vec2 uOrigin;uniform vec3 uOriginRel;uniform vec2 uScale;varying vec3 vW;varying vec2 vXZ;' +
     'void main(){vec2 lxz=aXZ*uScale;vec3 rel=uOriginRel+vec3(lxz.x,0.0,lxz.y);vW=rel;vXZ=uOrigin+lxz;gl_Position=uVP*vec4(rel,1.0);}';
@@ -80,7 +130,7 @@
     'gl_FragColor=vec4(mix(uFog,col,exp(-uFogD*uFogD*d*d)),1.0);}';
   // FAR (the far pass beyond the near terrain): the four longest wind waves and the swell, the rest of the wind sea only as roughness, no ripples
   const SEA_FS = '#extension GL_OES_standard_derivatives : enable\nprecision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;uniform vec3 uZen;uniform vec3 uHor;uniform vec3 uDeep;' +
-    'uniform float uTime;uniform float uWind;uniform vec2 uWindDir;uniform float uFlat;uniform float uSpec;uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];uniform vec2 uNFD;uniform sampler2D uHgt;uniform float uHOn;uniform sampler2D uLandS;uniform vec4 uLRect;uniform float uLSOn;uniform float uTideL;uniform vec4 uSRect;uniform float uSOn;uniform float uPx;uniform float uDbg;' + PLG +
+    'uniform float uTime;uniform float uWind;uniform vec2 uWindDir;uniform float uFlat;uniform float uSpec;uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];uniform vec2 uNFD;uniform sampler2D uHgt;uniform float uHOn;uniform sampler2D uLandS;uniform vec4 uLRect;uniform float uLSOn;uniform float uTideL;uniform vec4 uSRect;uniform float uSOn;uniform float uPx;uniform float uDbg;uniform sampler2D uFoam;uniform vec4 uFoamRect;uniform vec4 uFoamT;uniform vec4 uFoamTc;uniform float uFoamOn;' + PLG +
     'varying vec3 vW;varying vec2 vXZ;' + NOISE + SEA_STATE + WAKE_GLSL +
     'void main(){float d=length(vW);vec2 P=vXZ;vec4 S=seaAt(P);' +
     // metres covered by one pixel here (grows with distance and grazing angle); a wave shorter than a few pixels is faded out and its slope becomes roughness instead
@@ -129,6 +179,14 @@
     '\n#ifndef FAR\nif(uFlat<0.5&&uWk3.w>0.5&&wh>0.0){vec2 r=P-uWk0.xy;float s=-dot(r,uWk0.zw);float br=ns(Pb*1.4+vec2(uTime*1.3,0.0))*0.5+0.5;' +
     'foam=max(foam,uWk3.x*smoothstep(0.35,0.85,wh/max(uWk2.y,0.02))*step(-uWk2.x-0.5,s)*step(s,0.2)*br);' +
     'foam=max(foam,uWk3.y*smoothstep(0.45,0.9,wh/max(uWk1.y,0.02))*(1.0-smoothstep(0.0,6.2832/uWk1.x,s))*step(0.0,s)*br);}\n#endif\n' +
+    // the foam map (14-sea.js foamStep): the foam the boat and the sea have left in the water, aged here. The wake's is dense by the hull
+    // and breaks up into bubbles and streaks as it thins (noise that lies still in the water, Pb); the whitecaps' is what the crests left,
+    // drawn out along the wind. The water under thin foam is milky with bubbles.
+    '\n#ifndef FAR\nif(uFoamOn>0.5){vec2 fu=(Pb-uFoamRect.xy)*uFoamRect.z;if(fu.x>0.0&&fu.y>0.0&&fu.x<1.0&&fu.y<1.0){vec4 m=texture2D(uFoam,fu);' +
+    'float aw=m.r*exp(-max(uFoamT.x-m.g,0.0)*uFoamT.y/uFoamT.z);float ac=m.b*exp(-max(uFoamTc.x-m.a,0.0)*uFoamTc.y/uFoamTc.z);' +
+    'float n1=ns(Pb*0.9+vec2(3.1,7.7));float n2=ns(Pb*2.7+vec2(1.3,9.2));float n3=ns(vec2(dot(Pb,w)*0.16,dot(Pb,wp)*1.2)+vec2(5.0,2.0));' +
+    'float tex=0.45+0.35*n1+0.2*n2;float fw=smoothstep(0.1,0.5,aw*tex*1.35)*lod;float fcp=smoothstep(0.22,0.65,ac*(0.45+0.55*n3)*(0.7+0.3*n2))*lod*0.8;' +
+    'foam=max(foam,max(fw,fcp));col=mix(col,fc*0.6+col*0.4,clamp(aw*0.6,0.0,0.6)*lod);}}\n#endif\n' +
     // shallows and surf, the surf from the sea that reaches this shore
     'if(uSOn>0.5&&uHOn>0.5){vec2 su=(vW.xz-uSRect.xy)*uSRect.zw;if(su.x>0.0&&su.y>0.0&&su.x<1.0&&su.y<1.0){float ef=smoothstep(0.0,0.06,min(min(su.x,su.y),min(1.0-su.x,1.0-su.y)));' +
     'float hb=texture2D(uHgt,su*(255.0/256.0)+0.5/256.0).r*16.0-8.0;float dep=uTideL-hb;float hl=length(S.xy);' +
