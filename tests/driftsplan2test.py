@@ -5,7 +5,7 @@ import asyncio, json, sys
 from playwright.async_api import async_playwright
 from _env import boot
 ok = lambda c: 'OK  ' if c else 'FEIL'
-BUILT = {'S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S11', 'S12', 'S14'}   # the scenarios the parts built so far cover (part 1: dry; part 2: the engine; part 3: weather, energy, watches, rules, takeover; part 4: closed)
+BUILT = {'S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S11', 'S12', 'S14', 'S15', 'S16', 'S17', 'S18'}   # the scenarios the parts built so far cover (part 1: dry; part 2: the engine; part 3: weather, energy, watches, rules, takeover; part 4: closed)
 
 D2 = r"""window.D2 = (() => {
   // the seeded numbers are used only inside step(): the page's own frames between the awaits of an open run draw with the native ones, so two runs draw the same catch
@@ -41,7 +41,7 @@ D2 = r"""window.D2 = (() => {
   }
   // the nearest plant to the places, for the dry day (part 2 makes the plan properly)
   function plant(o){ const P = o.places; const mid = {x:P.reduce((a, q) => a + q.x, 0) / P.length, y:P.reduce((a, q) => a + q.y, 0) / P.length}; return PORTS.filter(q => q.mottak).sort((a, c) => dist(a.p, mid) - dist(c.p, mid))[0].id; }
-  const felt = (id, q, n, soak) => ({id, k:'felt', x:q.x, y:q.y, n, soak, hdg:null}), juks = (id, q) => ({id, k:'juks', x:q.x, y:q.y});
+  const felt = (id, q, n, soak, lk, hdg) => ({id, k:'felt', x:q.x, y:q.y, n, soak, hdg:hdg == null ? null : hdg, lk:lk || null}), juks = (id, q) => ({id, k:'juks', x:q.x, y:q.y});
   // a dry day: the day from the answers and a state (the live one, with overrides), and its text
   function dry(o, H0, over){ const st = Object.assign(plan2State(o), over || {}); if (over && over.aboard) st.aboard = Object.assign(plan2State(o).aboard, over.aboard); const day = planDay(o, H0, st); return {day, text:planDayText(o, day).map(x => x[0] + ' ' + x[1]), st}; }
   const h = t => Math.round((t - T0 / 60) * 100) / 100;   // hours since the test's start
@@ -304,7 +304,7 @@ async def main():
           const closeUntil = D2.T0 / 60 + 48 + 2, rb0 = ruBlockMsg; ruBlockMsg = q => { const H = q.H == null ? S.t / 60 : q.H; if (q.gear === 'line' && q.p && dist(q.p, F[0]) < 0.01 && H < closeUntil) return 'Stengt felt (test).'; return rb0(q); };
           const L1 = await D2.run(3 * 1440, 'open', 'S8a'); ruBlockMsg = rb0;
           R.a = {ev:L1.ev.slice(0, 12), wait:L1.ev.filter(e => e[1].includes('?closed')).map(e => e[0]), msgs:L1.msgs.filter(m => /stengt|Stengt/.test(m[1])).slice(0, 3), outs:L1.ev.filter(e => e[1].includes('unmooring@finnsnes') && e[1].startsWith('fish')).map(e => e[0]), on:o.on, stop:o.stop, sets:L1.gearLog.map(g => g.set)};
-          // the cod quota used up: the plan stops with the reason and the button
+          // the cod quota used up: not the plan's business (Jonas 27.10.2026): she goes on, the check only notes it
           S.tripOwner = true; const lim = codLimitNow(S.t / 60), q0 = quotaState().torsk; quotaState().torsk = lim + 10; o.on = true; o.stop = null; o.hold = 0; o.run = null; await D2.run(10, 'open', 'S8b'); R.b = {stop:o.stop && o.stop.k, fix:o.stop && o.stop.fix, access:access()}; quotaState().torsk = q0;
           return R; })()""")
         if L.get('err'): print('FEIL S8 plan2Make:', L['err'])
@@ -313,7 +313,7 @@ async def main():
             a = L['a']
             print(ok(any('om bord for å fiske torsk' in w for w in L['warn'])), 'S8 open group without you aboard: the check warns (cod, haddock and saithe are bycatch)', L['warn'][:1])
             print(ok(a['wait'] and a['msgs'] and 'venter til' in a['msgs'][0][1] and a['on'] and not a['stop'] and a['outs'] and a['outs'][0].startswith('D3')), 'S8 a field closed until a date: the plan waits with the date, does not stop, and goes out when it opens', [a['wait'][:1], a['msgs'][:1], a['outs'][:1]])
-            print(ok(L['b']['stop'] == 'quota' and L['b']['fix'] == 'quota'), 'S8 the cod quota used up stops the plan with the button to the quota', L['b'])
+            print(ok(not L['b']['stop']), 'S8 the cod quota used up does not stop the plan (the rules confiscate cod over the bycatch share at the landing)', L['b'])
         print('== S11: du tar over midt i S1, seiler et stykke, og gir båten tilbake')
         L = await pg.evaluate("""(async () => { D2.reset(31); const home = D2.boat('sjark', 2, true); D2.gear('line', 4); S.pgear.bait = {makrell:60}; await mapNeed(portById(home).p, 14);
           const F = D2.spots(2, 4, 12), J = D2.spots(1, 2.5, 4), R = {};
@@ -335,6 +335,65 @@ async def main():
             print(ok(L['before']['status'] == 'fishing' and L['before']['sets'] == 2 and L['held'] and L['took']['held']), 'S11 the plan waits while you have the boat; the line stands in the sea', [L['before'], L['took']])
             trakk = [e for e in a['log'] if 'Trakk line' in e[1]]
             print(ok(a['days'] and any('Trekker felt 1' in x for x in a['days'][0]) and len(trakk) == 2 and all('sto 6 t' in e[1] or 'sto 7 t' in e[1] for e in trakk) and L['sets'] == 0 and a['on'] and not a['stop'] and a['fin']['port'] == 'finnsnes'), 'S11 given back, the day goes on from where she is: the line is hauled when due, landed, and home', [a['days'][0][:5] if a['days'] else None, trakk, a['fin']['port']])
+        # ---- Jonas' round of 27.10.2026: the line's kind per field and the units owned (points 2 and 4), the order of the places (5), the
+        # string's heading from the chart (3), and round the clock with you as the skipper and three crew (the question)
+        print('== S15: to linetyper, stampene fordelt på feltene, og dagen i den rekkefølgen plassene står')
+        L = await pg.evaluate("""(async () => { const R = {};
+          D2.reset(51); const home = D2.boat('sjark', 2, true); D2.gear('line', 4); const pg = S.pgear; pg.lines.bank.n = 10; pg.lines.bank.baited = 10; pg.lines.bank.bt = {makrell:10}; pg.bait = {makrell:80};
+          await mapNeed(portById(home).p, 14); const F = D2.spots(2, 4, 12), J = D2.spots(1, 2.5, 4);
+          const o = S.ops = plan2New({home, rig:'line', jig:true, places:[D2.felt('f1', F[0], 4, 6, 'hyse'), D2.felt('f2', F[1], 10, 6, 'bank'), D2.juks('j1', J[0])], dep:5, land:{mode:'near', port:null, when:'trip'}}); o.M = D2.plant(o);
+          R.units = {hyse:p2Units('line', 'hyse'), bank:p2Units('line', 'bank'), leftF1:p2Left(o, o.places[0]), leftF2:p2Left(o, o.places[1]), kind:p2LineKind(o)};
+          const d = D2.dry(o, D2.T0 / 60 + 2); R.dryText = d.text; R.sets = d.day.steps.filter(s => s.k === 'sett').map(s => [s.pid, s.lk, s.n]);
+          // a third field of hyseline gets nothing: the four tubs are on field 1 (the page refuses it, the day skips it)
+          o.places.splice(2, 0, D2.felt('f3', F[1], 2, 6, 'hyse')); const d2 = D2.dry(o, D2.T0 / 60 + 2); R.skipped3 = d2.day.skipped.map(x => x.id); o.places.splice(2, 1);
+          DRIFT2 = true; const err = await D2.make(o); if (err) return {err}; o.on = true; let seaMax = {};
+          const Lr = await D2.run(1440, 'open', 'S15', () => { for (const s of mySets()) seaMax[s.fid] = [s.lk, s.n]; }); R.sea = seaMax; R.ev = Lr.ev.length; R.fin = Lr.fin; R.log = Lr.log.filter(e => /Setter|lina|line/i.test(e[1])).slice(0, 6); return R; })()""")
+        if L.get('err'): print('FEIL S15 plan2Make:', L['err'])
+        else:
+            print('  enheter:', L['units']); print('  sett:', L['sets']); print('  i sjøen:', L['sea'])
+            print(ok(L['units']['hyse'] == 4 and L['units']['bank'] == 10 and L['units']['leftF1'] == 4 and L['units']['leftF2'] == 10 and L['units']['kind'] == 'bank'), 'S15 the tubs are counted per line kind, and a new field would get the kind with most left', L['units'])
+            print(ok(L['sets'] == [['f1', 'hyse', 4], ['f2', 'bank', 10]]), 'S15 the day sets each field with its own kind and tubs', L['sets'])
+            print(ok('f3' in L['skipped3']), 'S15 a third hyseline field has no tubs left and is skipped in the day', L['skipped3'])
+            print(ok(L['sea'].get('f1') == ['hyse', 4] and L['sea'].get('f2') == ['bank', 10]), 'S15 the engine sets the haddock line at field 1 and the bank line at field 2', L['sea'])
+        print('== S16: juksplassen først i lista: juksa mesteparten av dagen, lina settes før hjemturen og trekkes neste morgen')
+        L = await pg.evaluate("""(async () => { const R = {};
+          D2.reset(52); const home = D2.boat('sjark', 2, true); D2.gear('line', 4); await mapNeed(portById(home).p, 14); const F = D2.spots(1, 4, 10), J = D2.spots(1, 2.5, 4);
+          const o = S.ops = plan2New({home, rig:'line', jig:true, places:[D2.juks('j1', J[0]), D2.felt('f1', F[0], 4, 10, 'hyse')], dep:6, land:{mode:'near', port:null, when:'trip'}}); o.M = D2.plant(o);
+          const d = D2.dry(o, D2.T0 / 60 + 3); R.dryText = d.text; const ks = d.day.steps.map(s => s.k); R.order = ks; const jk = d.day.steps.find(s => s.k === 'juks'), st = d.day.steps.find(s => s.k === 'sett'); R.jigH = jk ? Math.round(jk.h * 10) / 10 : null; R.setAfterJig = !!(jk && st && st.t > jk.t); R.dayH = Math.round((d.day.home - d.day.t0) * 10) / 10;
+          DRIFT2 = true; const err = await D2.make(o); if (err) return {err}; o.on = true;
+          const Lr = await D2.run(2 * 1440, 'open', 'S16'); R.gear = Lr.gearLog.map(g => [g.set, g.haul, g.soak]); R.fin = Lr.fin; R.days = Lr.days.map(x => x.text); return R; })()""")
+        if L.get('err'): print('FEIL S16 plan2Make:', L['err'])
+        else:
+            print('  dagen:', L['dryText']); print('  redskap:', L['gear'])
+            print(ok(L['setAfterJig'] and L['jigH'] and L['jigH'] >= 3 and L['order'].index('juks') < L['order'].index('sett') and L['dayH'] <= 14.5), 'S16 the jig comes first with most of the day, the line is set after it, within the day', [L['jigH'], L['dayH'], L['order']])
+            g = L['gear']; print(ok(len(g) >= 1 and g[0][1] is not None and g[0][2] is not None and g[0][2] >= 9.5 and int(g[0][0].split(' ')[1].split(':')[0]) >= 12), 'S16 the engine sets the line in the afternoon and hauls it next day after the soak', g)
+        print('== S17: lenkeretningen fra kartet: lina settes i den retningen')
+        L = await pg.evaluate("""(async () => { const R = {};
+          D2.reset(53); const home = D2.boat('sjark', 2, true); D2.gear('line', 4); await mapNeed(portById(home).p, 14); const F = D2.spots(1, 4, 10);
+          const km = 4 * LINE_KINDS.hyse.hooks * GEAR.line.kmHook; let hdg = null; for (let a = 0; a < 16 && hdg == null; a++){ const h = a * Math.PI / 8; try { if (setGeomExact(F[0], h, km)) hdg = h; } catch (e){} } if (hdg == null) return {err:'ingen retning passer'};
+          const o = S.ops = plan2New({home, rig:'line', jig:false, places:[D2.felt('f1', F[0], 4, 8, 'hyse', hdg)], dep:6, land:{mode:'near', port:null, when:'trip'}}); o.M = D2.plant(o);
+          DRIFT2 = true; const err = await D2.make(o); if (err) return {err}; o.on = true; let got = null;
+          await D2.run(600, 'open', 'S17', () => { const s = mySets()[0]; if (s && !got) got = {a:s.a, b:s.b}; }); if (!got) return {err:'ingen setting på 10 t', hdg};
+          const dh = Math.atan2(got.b.x - got.a.x, -(got.b.y - got.a.y)); R.hdg = hdg; R.got = ((dh % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI); R.km = Math.round(dist(got.a, got.b) * 100) / 100; R.want = Math.round(km * 100) / 100; return R; })()""")
+        if L.get('err'): print('FEIL S17:', L['err'])
+        else:
+            dd = abs(L['got'] - L['hdg']); dd = min(dd, 2 * 3.14159 - dd)
+            print(ok(dd < 0.05 and abs(L['km'] - L['want']) < 0.2), 'S17 the string goes out exactly on the heading from the card, at its length', L)
+        print('== S18: døgndrift med deg som skipper og tre i mannskapet: du går dagvakt og sover i køya om natta')
+        L = await pg.evaluate("""(async () => { const R = {};
+          D2.reset(54); const home = D2.boat('kyst15', 3, true); D2.gear('line', 10); S.pgear.bait = {makrell:200}; await mapNeed(portById(home).p, 16); const F = D2.spots(2, 4, 12), J = D2.spots(1, 2.5, 4);
+          const o = S.ops = plan2New({home, rig:'line', jig:true, places:[D2.felt('f1', F[0], 5, 8, 'hyse'), D2.felt('f2', F[1], 5, 8, 'hyse'), D2.juks('j1', J[0])], rhythm:'watch', dep:6, land:{mode:'near', port:null, when:'full'}}); o.M = D2.plant(o);
+          const C = plan2Check(o); R.check = {ok:C.ok, errors:C.errors}; if (!C.ok) return R;
+          DRIFT2 = true; const err = await D2.make(o); if (err) return {err}; o.on = true;
+          const W = []; let enMin = 100, bunkAt = [], upAt = [];
+          const Lr = await D2.run(2 * 1440, 'open', 'S18', i => { if (i % 60 === 0){ const h = driftHod(S.t / 60); W.push([Math.round(h), S.boat.status, resting() ? 'koye' : '-', Math.round(S.energy), plan2Watch(S.t / 60).w, S.crew.filter(c => c.sleepW).length]); } enMin = Math.min(enMin, S.energy); if (resting() && S.rest && S.rest.w === 'koye') bunkAt.push(Math.round(driftHod(S.t / 60))); });
+          R.W = W; R.enMin = Math.round(enMin); R.bunkHours = [...new Set(bunkAt)].sort((a, b) => a - b); R.fin = Lr.fin; R.trips = o.stats.sum.trips; R.on = o.on; R.stop = o.stop; R.wait = o.run && o.run.wait && o.run.wait.no; R.ev = Lr.ev.slice(0, 14); return R; })()""")
+        if L.get('err'): print('FEIL S18:', L['err'])
+        elif not L['check']['ok']: print('FEIL S18 the check refuses round the clock with you and three crew:', L['check'])
+        else:
+            print('  timer:', L['W'][:30]); print('  køya:', L['bunkHours'], 'energi min', L['enMin'], 'turer', L['trips'], 'på', L['on'], 'venter', L['wait'])
+            night = [h for h in L['bunkHours'] if h >= 19 or h < 5]; day = [h for h in L['bunkHours'] if 7 <= h < 17]
+            print(ok(L['on'] and not L['stop'] and L['enMin'] >= 15 and len(night) >= 6 and len(day) == 0), 'S18 with you and three crew the plan runs round the clock: you sleep in the bunk at night, are up by day, and never run out of energy', [L['enMin'], L['bunkHours'], L['on'], L['stop'], L['wait']])
         # ---- part 4: the game closed. The same plan with the same seed: open all the way; open, 30 h closed (playMinutes, as catchUp), open;
         # nine days closed with the wall clock on; and «Mens du var borte»
         print('== S9: lukket spill')

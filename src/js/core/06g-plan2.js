@@ -19,6 +19,19 @@ const DRP2 = {
 const p2RestRate = where => where === 'anker' ? RORBU.rate * 60 * 0.85 : where === 'bunks' ? RORBU.rate * 60 : DRP2.rest.quay;   // (RORBU is defined later in the build, so it is read when used)
 const PLAN2_KIND = {line:'line', garn:'garn', teiner:'teine'};
 const p2Kind = o => PLAN2_KIND[o.rig] || null;
+// the units the boat owns of a kind (aboard, in the sea, ashore for baiting), for the line per kind (hyse or bank), and what is left for one
+// field when the other fields of the same kind have theirs (the page and the chart clamp to it: a plan never asks for more than she owns)
+function p2Units(kind, lk){
+  if (kind !== 'line' || !lk) return ownedUnits(kind);
+  const pg = S.pgear || newPGear(), sea = mySets().filter(x => x.kind === 'line' && (x.lk || 'hyse') === lk).reduce((a, x) => a + x.n, 0);
+  const shore = (pg.shore || []).reduce((a, j) => a + ((j.kind === 'egn' || j.kind === 'egnself' || j.kind === 'stripself') && (j.lk || 'hyse') === lk ? j.n : 0), 0);
+  return (pg.lines[lk] ? pg.lines[lk].n : 0) + sea + shore;
+}
+function p2Left(o, q){ const kind = p2Kind(o); if (!kind || !q || q.k !== 'felt') return 0; const own = p2Units(kind, kind === 'line' ? q.lk || 'hyse' : null); return own - o.places.filter(f => f !== q && f.k === 'felt' && (kind !== 'line' || (f.lk || 'hyse') === (q.lk || 'hyse'))).reduce((a, f) => a + f.n, 0); }
+// the line's kind a new field gets: the one with the most tubs not yet on a field
+function p2LineKind(o){ const k = ['hyse', 'bank'].map(lk => [lk, p2Units('line', lk) - o.places.filter(f => f.k === 'felt' && (f.lk || 'hyse') === lk).reduce((a, f) => a + f.n, 0)]).sort((a, b) => b[1] - a[1]); return k[0][1] > 0 ? k[0][0] : (p2Units('line', 'hyse') >= p2Units('line', 'bank') ? 'hyse' : 'bank'); }
+// the jig's gear, chosen under Beholdning (10b-gearcare.js jigKind): the plan fishes with it, and says so
+const p2JigGear = () => (typeof jigKind === 'function' ? jigKind() : 'mark') === 'kveite' ? ['kveitepilk', 'halibut pilk'] : ['markkroker', 'mark hooks'];
 const p2Jig = o => !p2Kind(o) || !!o.jig;
 let P2_SID = 0;
 const plan2Sid = () => 'p' + Date.now().toString(36).slice(-4) + (P2_SID++).toString(36);
@@ -62,7 +75,7 @@ function plan2State(o){
   const V = VESSELS[b.type] || {};
   return {H:S.t / 60, at, hold, cap:capHold(), fresh:S.hold.length ? Math.min(...S.hold.map(x => x.fresh)) : 100,
     sets:mySets().map(s => ({fid:s.fid || null, kind:s.kind, n:s.n, tSet:s.tSet, x:setMid(s).x, y:setMid(s).y})),
-    aboard:{line:{n:(pg.lines.hyse.n || 0) + (pg.lines.bank.n || 0), baited:(pg.lines.hyse.baited || 0) + (pg.lines.bank.baited || 0)}, garn:pg.nets.reduce((a, l) => a + l.n, 0), teine:pg.pots.big || 0, bait:Object.values(baitOf(pg)).reduce((a, v) => a + v, 0)},
+    aboard:{line:{n:(pg.lines.hyse.n || 0) + (pg.lines.bank.n || 0), baited:(pg.lines.hyse.baited || 0) + (pg.lines.bank.baited || 0), kinds:{hyse:{n:pg.lines.hyse.n || 0, baited:pg.lines.hyse.baited || 0}, bank:{n:pg.lines.bank.n || 0, baited:pg.lines.bank.baited || 0}}}, garn:pg.nets.reduce((a, l) => a + l.n, 0), teine:pg.pots.big || 0, bait:Object.values(baitOf(pg)).reduce((a, v) => a + v, 0)},
     crew:crewAboard(null, true).map(c => ({name:c.name, fat:c.fatigue || 0, sk:!!c.sk, mate:!!c.mate, rate:6 * (1.4 - 0.16 * ((c.attr && c.attr.uth) || 2.5)) * ((BOAT.fx && BOAT.fx.fat) || 1) * (V.fac && V.fac.house === 'open' ? 1.1 : 1)})),   // fatigue an hour of fishing (04-crew.js crewTick)
     me:{aboard:meAboard(), energy:S.energy == null ? 100 : S.energy}, bunks:V.berths || 0, house:!!V.watch, crewMax:V.crewMax || 0, v:BOAT.vcruise || 7,
     homeRest:plan2RestOk(o.home), homeShed:!!(portById(o.home) || {}).mottak, dayIndex:o.t0 == null ? 0 : Math.floor((S.t - o.t0) / 1440),
@@ -70,7 +83,7 @@ function plan2State(o){
 }
 function plan2RestOk(pid){ const p = portById(pid); if (!p) return false; return isRorbu(pid) || pid === (S.home || HOME0) || (VESSELS[S.boat.type].berths || 0) > 0; }
 // the units ready to set, of the plan's kind
-function plan2Ready(kind, st){ return kind === 'line' ? st.aboard.line.baited : kind === 'garn' ? st.aboard.garn : kind === 'teine' ? Math.min(st.aboard.teine, Math.floor(st.aboard.bait / GPRICE.potBait + 1e-9)) : 0; }
+function plan2Ready(kind, st, lk){ return kind === 'line' ? (lk && st.aboard.line.kinds && st.aboard.line.kinds[lk] ? st.aboard.line.kinds[lk].baited : st.aboard.line.baited) : kind === 'garn' ? st.aboard.garn : kind === 'teine' ? Math.min(st.aboard.teine, Math.floor(st.aboard.bait / GPRICE.potBait + 1e-9)) : 0; }
 // the next departure: today's hour if it has not passed by more than DRP2.late, else tomorrow's; never before `from`
 function plan2NextDep(o, H, from){
   const ds = H - driftHod(H); let dep = ds + o.dep;
@@ -114,11 +127,22 @@ function planDay(o, H0, st){
   const potsSea = kind === 'teine' ? st.sets.filter(x => x.kind === 'teine').reduce((a, x) => a + x.n, 0) : 0, baitRound = kind === 'teine' ? (st.aboard.teine + potsSea) * GPRICE.potBait : 0;
   const dueSoon = kind === 'teine' ? st.sets.filter(x => x.kind === 'teine' && (() => { const q = o.places.find(y => y.id === x.fid); return q && x.tSet / 60 + q.soak <= H0 + dayMax; })()).reduce((a, x) => a + x.n, 0) : 0;
   if (kind === 'teine' && dueSoon > 0 && st.aboard.bait < dueSoon * GPRICE.potBait - 1e-6 && plan2P(o, 'M') && !watch){ go(plan2P(o, 'M'), o.M); steps.push({t, k:'agn', port:o.M, kg:Math.ceil(baitRound * 2 - st.aboard.bait)}); t += DRP2.stockH; st = Object.assign({}, st, {aboard:Object.assign({}, st.aboard, {bait:baitRound * 2})}); }
-  // pass 1: the places in the player's order. A field: haul what is due by arrival (and set again), set what is empty if gear is ready,
-  // remember what is not yet due. A jig place: remembered for the jig hours
-  const pending = [], jigs = [];
+  // pass 1: the places in the player's order (Jonas 27.10.2026: the order is the player's). A field: haul what is due by arrival (and
+  // set again), set what is empty if gear of its kind is ready, remember what is not yet due. The jig places before the first field get
+  // the day's free hours first (jig most of the day, set the line before going home); those after the fields get the hours until the
+  // first haul is due and the rest of the day, as before. A line field names its kind (lk, hyse or bank): its tubs, not the other's
+  const pending = [], jigs = [], preJigs = []; { let seen = false; for (const q of o.places){ if (q.k === 'juks'){ if (!seen && kind) preJigs.push(q); } else seen = true; } }
+  const setTodayK = {}, readyOf = q => kind === 'line' ? plan2Ready(kind, st, q.lk) - (setTodayK[q.lk || 'hyse'] || 0) : ready - setToday;
+  const jigAt = (list, until) => { const hours = until - (t + legH(at, atPort, list[0], null)); if (hours < DRP2.jigMin) return false;
+    const R = list.map(j => Math.max(1, planJigRate(j))), Rs = R.reduce((a, r) => a + r, 0);
+    list.forEach((j, i) => { const share = hours * (0.5 / list.length + 0.5 * R[i] / Rs); go(j); const h = Math.max(DRP2.jigMin / 2, Math.min(share, until - t)); steps.push({t, k:'juks', pid:j.id, h, until:t + h}); t += h; });
+    return true; };
+  // the jig places before the fields: the day less the fields' work (legs, sets, hauls), the landing and the way home, estimated in list order
+  if (jig && preJigs.length){ const fixed = (() => { let h = 0, a = at, ap = atPort; for (const q of o.places){ if (q.k !== 'felt') continue; const s = st.sets.find(x => x.fid === q.id); h += legH(a, ap, q, null) + Math.max(1, q.n) * (s ? W.trekk[kind] + (kind !== 'line' ? W.sett[kind] : 0) : W.sett[kind]); a = q; ap = null; }
+      const M = plan2P(o, 'M'); if (M && (o.land || {}).when === 'trip'){ h += legH(a, ap, M, o.M) + DRP2.landH; a = M; ap = o.M; } return h + (watch ? 0 : legH(a, ap, plan2P(o, 'H'), plan2Port(o, 'H'))); })();
+    if (!jigAt(preJigs, t + Math.max(0, endBy - t - fixed))) for (const j of preJigs) skipped.push({id:j.id, no:'ingen tid til juksa før redskapet i dag', en:'no time for the jig before the gear today'}); }
   for (const q of o.places){
-    if (q.k === 'juks'){ jigs.push(q); continue; }
+    if (q.k === 'juks'){ if (!preJigs.includes(q)) jigs.push(q); continue; }
     if (!kind){ skipped.push({id:q.id, no:'båten fisker bare med juksa', en:'the boat fishes with the jig only'}); continue; }
     const s = st.sets.find(x => x.fid === q.id);
     if (s){
@@ -128,8 +152,8 @@ function planDay(o, H0, st){
       else pending.push({q, due, s});
     } else if (fetch) skipped.push({id:q.id, no:'ingenting står her', en:'nothing stands here'});
     else {
-      const n = Math.min(q.n, ready - setToday);
-      if (n >= 1){ go(q); steps.push({t, k:'sett', pid:q.id, n, kind, h:n * W.sett[kind]}); t += n * W.sett[kind]; setToday += n; pending.push({q, due:t + q.soak, setToday:true}); }
+      const n = Math.min(q.n, readyOf(q));
+      if (n >= 1){ go(q); steps.push({t, k:'sett', pid:q.id, n, kind, lk:q.lk || null, h:n * W.sett[kind]}); t += n * W.sett[kind]; setToday += n; if (kind === 'line') setTodayK[q.lk || 'hyse'] = (setTodayK[q.lk || 'hyse'] || 0) + n; pending.push({q, due:t + q.soak, setToday:true}); }
       else { const lost = (st.lost || []).find(e => e.kind === kind && dist(e, q) < 0.5); skipped.push(lost ? {id:q.id, no:'redskapet gikk tapt i været (' + lost.n + ' ' + unitName(kind, lost.n) + '). Meld det til Kystvakten under Beholdning', en:'the gear was lost in the weather (' + lost.n + ' ' + unitName(kind, lost.n) + '). Report it to the Coast Guard under Inventory'} : {id:q.id, no:kind === 'line' ? 'lina er ikke egnet' : kind === 'teine' ? (st.aboard.teine < 1 ? 'ingen teiner om bord' : 'ikke nok agn til teinene') : 'ingen garn om bord', en:kind === 'line' ? 'the line is not baited' : kind === 'teine' ? (st.aboard.teine < 1 ? 'no pots aboard' : 'not enough bait for the pots') : 'no nets aboard'}); }
     }
   }
@@ -146,10 +170,6 @@ function planDay(o, H0, st){
   // the jig: until the first haul is due, or the day's end less what remains; the hours shared by the player's own numbers (06d-drift.js planJigRate)
   // (the hours until the first haul is due are free whatever the day's length: the haul cannot come sooner, so the jig has them)
   const jigTo = dueToday.length ? dueToday[0].due : watch ? H0 + 24 : endBy - tailH();
-  const jigAt = (list, until) => { const hours = until - (t + legH(at, atPort, list[0], null)); if (hours < DRP2.jigMin) return false;
-    const R = list.map(j => Math.max(1, planJigRate(j))), Rs = R.reduce((a, r) => a + r, 0);
-    list.forEach((j, i) => { const share = hours * (0.5 / list.length + 0.5 * R[i] / Rs); go(j); const h = Math.max(DRP2.jigMin / 2, Math.min(share, until - t)); steps.push({t, k:'juks', pid:j.id, h, until:t + h}); t += h; });
-    return true; };
   if (jig && jigs.length) jigAt(jigs, jigTo);
   else if (jig && dueToday.length && jigTo - t >= DRP2.jigMin){ steps.push({t, k:'juks', pid:null, h:jigTo - t, until:jigTo}); t = jigTo; }
   else if (!jig && dueToday.length && dueToday[0].due > t){ go(dueToday[0].q); steps.push({t, k:'vent', pid:dueToday[0].q.id, until:dueToday[0].due}); t = Math.max(t, dueToday[0].due); }
@@ -157,10 +177,10 @@ function planDay(o, H0, st){
   // tubs are left and the soak fits before the day ends
   for (const p of dueToday){
     go(p.q); const tArr = t; t = Math.max(t, p.due);
-    const n = p.s ? p.s.n : Math.min(p.q.n, ready); const soakH = p.s ? t - p.s.tSet / 60 : p.q.soak, wait = t - tArr;
-    let reset = kind !== 'line'; if (kind === 'line'){ const left = ready - setToday; reset = left >= 1 && t + n * W.trekk.line + p.q.soak + n * W.trekk.line + DRP2.landH + 2 <= endBy; }
+    const n = p.s ? p.s.n : Math.min(p.q.n, kind === 'line' ? readyOf(p.q) : ready); const soakH = p.s ? t - p.s.tSet / 60 : p.q.soak, wait = t - tArr;
+    let reset = kind !== 'line'; if (kind === 'line'){ const left = readyOf(p.q); reset = left >= 1 && t + n * W.trekk.line + p.q.soak + n * W.trekk.line + DRP2.landH + 2 <= endBy; }
     steps.push({t, k:'trekk', pid:p.q.id, n, kind, h:n * W.trekk[kind], soakH, reset, wait, due:p.due}); t += n * W.trekk[kind]; if (kind === 'line') hauledLine += n;
-    if (reset){ steps.push({t, k:'sett', pid:p.q.id, n, kind, h:n * W.sett[kind]}); t += n * W.sett[kind]; if (kind === 'line') setToday += n; }
+    if (reset){ steps.push({t, k:'sett', pid:p.q.id, n, kind, lk:p.q.lk || null, h:n * W.sett[kind]}); t += n * W.sett[kind]; if (kind === 'line'){ setToday += n; setTodayK[p.q.lk || 'hyse'] = (setTodayK[p.q.lk || 'hyse'] || 0) + n; } }
     p.done = true;
   }
   for (const p of pending) if (p.due != null && p.due > endBy) skipped.push({id:p.q.id, no:'trekkes ' + (p.due - H0 < 24 ? 'i kveld etter dagen' : p.due - H0 < 48 ? 'i morgen' : 'om ' + Math.ceil((p.due - H0) / 24) + ' døgn') + ' (ståtida er ute kl. ' + driftClock(driftHod(p.due)) + ')', en:'hauled ' + (p.due - H0 < 48 ? 'tomorrow' : 'in ' + Math.ceil((p.due - H0) / 24) + ' days') + ' (the soak is up at ' + driftClock(driftHod(p.due)) + ')'});
@@ -199,7 +219,7 @@ function planDayText(o, day){
   for (const s of day.steps){
     const c = ck(s.t); let no = '', en = '';
     if (s.k === 'avgang'){ no = 'Går fra ' + (s.from ? nm(s.from) : 'der båten ligger'); en = 'Leaves ' + (s.from ? nm(s.from) : 'where the boat lies'); }
-    else if (s.k === 'sett'){ no = 'Setter ' + s.n + ' ' + un(s.n, 'no') + ' på ' + pl(s.pid)[0]; en = 'Sets ' + s.n + ' ' + un(s.n, 'en') + ' at ' + pl(s.pid)[1]; }
+    else if (s.k === 'sett'){ const lk = s.lk && LINE_KINDS[s.lk] ? ' ' + LINE_KINDS[s.lk].no.toLowerCase() : '', lke = s.lk && LINE_KINDS[s.lk] ? ' ' + LINE_KINDS[s.lk].en.toLowerCase() : ''; no = 'Setter ' + s.n + ' ' + un(s.n, 'no') + lk + ' på ' + pl(s.pid)[0]; en = 'Sets ' + s.n + ' ' + un(s.n, 'en') + lke + ' at ' + pl(s.pid)[1]; }
     else if (s.k === 'trekk'){ no = 'Trekker ' + pl(s.pid)[0] + ' (sto ' + fmt(s.soakH, 1) + ' t)' + (s.reset ? ', setter på nytt' : ''); en = 'Hauls ' + pl(s.pid)[1] + ' (stood ' + fmt(s.soakH, 1) + ' h)' + (s.reset ? ', sets again' : ''); }
     else if (s.k === 'juks'){ no = 'Jukser ' + (s.pid ? 'på ' + pl(s.pid)[0] : 'ved redskapet') + ' til kl. ' + ck(s.until) + ' (' + fmt(s.h, 1) + ' t)'; en = 'Jigs ' + (s.pid ? 'at ' + pl(s.pid)[1] : 'by the gear') + ' until ' + ck(s.until) + ' (' + fmt(s.h, 1) + ' h)'; }
     else if (s.k === 'vent'){ no = 'Venter ved ' + pl(s.pid)[0] + ' til ståtida er ute kl. ' + ck(s.until); en = 'Waits by ' + pl(s.pid)[1] + ' until the soak is up at ' + ck(s.until); }
@@ -230,6 +250,7 @@ function plan2Check(o, st){
   if (kind){ const own = ownedUnits(kind), want = F.reduce((a, f) => a + f.n, 0), sk = DRP2.soak[kind];
     { const k = (S.pgear && S.pgear.kits ? S.pgear.kits.n : 0) || 0; if (F.length > k) Wn.push(no('Hver lenke i sjøen trenger et blåsesett, og båten har ' + k + ' til ' + F.length + ' felt. Kjøp i utstyrsbutikken.', 'Every string in the sea needs a buoy set, and the boat has ' + k + ' for ' + F.length + ' fields. Buy them at the gear shop.')); }
     if (want > own) Wn.push(no('Feltene vil ha ' + want + ' ' + unitName(kind, want) + ', men båten eier ' + own + '. De første feltene får det som finnes.', 'The fields want ' + want + ' ' + unitName(kind, want) + ', but the boat owns ' + own + '. The first fields get what there is.'));
+    if (kind === 'line') for (const lk of ['hyse', 'bank']){ const w = F.filter(f => (f.lk || 'hyse') === lk).reduce((a, f) => a + f.n, 0), ow = p2Units('line', lk); if (w > ow) Wn.push(no('Feltene vil ha ' + w + ' stamper ' + LINE_KINDS[lk].no.toLowerCase() + ', men båten eier ' + ow + '.', 'The fields want ' + w + ' tubs of ' + LINE_KINDS[lk].en.toLowerCase() + ', but the boat owns ' + ow + '.')); }
     for (const f of F){ if (f.soak < sk[0]) Wn.push(no('Ståtiden ' + f.soak + ' t er kort for ' + GEAR[kind].no.toLowerCase() + '.', 'A soak of ' + f.soak + ' h is short for ' + GEAR[kind].en.toLowerCase() + '.')); else if (f.soak > sk[3]) Wn.push(no('Ståtiden ' + f.soak + ' t er lang for ' + GEAR[kind].no.toLowerCase() + '. Fangsten forringes og redskapet kan gå tapt.', 'A soak of ' + f.soak + ' h is long for ' + GEAR[kind].en.toLowerCase() + '. The catch spoils and the gear can be lost.')); }
     if (kind === 'garn' && st.crewMax < 1) E.push(no('Garn krever to om bord, og båten har ikke plass til flere.', 'Nets need two aboard, and the boat has no room for more.')); }
   { const r = drRulesWhy({fields:F, jigs:J, rig:o.rig, jig:o.jig}, S.t / 60, true); if (r) E.push(gL(r.no, r.en)); }
@@ -241,7 +262,7 @@ function plan2Check(o, st){
     else if (!st.crew.some(c => c.sk) || !st.crew.some(c => c.mate && !c.sk)) E.push(no('Når du ikke er om bord, må både en skipper og en styrmann være utnevnt. Gjør det på Mannskap-siden.', 'When you are not aboard, both a skipper and a mate must be appointed. Do it on the Crew page.')); }
   const aboard = st.crew.length + (st.me.aboard ? 1 : 0);
   if (o.rhythm === 'watch'){
-    if (st.crew.length < 4) E.push(no('Døgndrift krever fire i mannskapet: skipper, styrmann og to på dekk. Båten har ' + st.crew.length + '.', 'Round the clock needs four crew: a skipper, a mate and two on deck. The boat has ' + st.crew.length + '.'));
+    if (aboard < 4) E.push(no('Døgndrift krever fire om bord, deg medregnet: skipper, styrmann og to på dekk. Dere er ' + aboard + '.', 'Round the clock needs four aboard, you included: a skipper, a mate and two on deck. You are ' + aboard + '.'));
     if (!st.house) E.push(no('Døgndrift krever styrhus og køyer om bord.', 'Round the clock needs a wheelhouse and bunks aboard.'));
     else if (st.bunks < aboard) E.push(no('Døgndrift krever køyer til alle om bord: båten har ' + st.bunks + ', dere er ' + aboard + '.', 'Round the clock needs bunks for everyone aboard: the boat has ' + st.bunks + ', you are ' + aboard + '.')); }
   if (o.rhythm === 'multi' && !(st.bunks > 0)) E.push(no('Turer over flere døgn krever køyer om bord.', 'Trips of several days need bunks aboard.'));

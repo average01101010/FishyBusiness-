@@ -77,11 +77,13 @@ const PLAN2UI = (() => {
   }
   // ---- Redskap
   function gearWhy(g){ if (g === 'juksa') return null; const k = PLAN2_KIND[g]; if (!rigHas(g)) return L('Båten mangler ' + GEAR[k].no.toLowerCase().replace(/r$/, '') + 'haler', 'The boat has no hauler for ' + GEAR[k].en.toLowerCase()); if (ownedUnits(k) < 1) return L('Ingen ' + GEAR[k].no.toLowerCase() + ' om bord', 'No ' + GEAR[k].en.toLowerCase() + ' aboard'); return null; }
-  const rigVal = o => o.rig === 'juksa' ? L('Juksa', 'Jigging') : rigName(o.rig) + ', ' + ownedUnits(PLAN2_KIND[o.rig]) + ' ' + unitName(PLAN2_KIND[o.rig], ownedUnits(PLAN2_KIND[o.rig])) + (o.jig ? L(' · og juksa', ' · and the jig') : '');
+  const lineOwn = () => ['hyse', 'bank'].map(lk => [lk, p2Units('line', lk)]).filter(x => x[1] > 0);
+  const jigTxt = () => L(' · og juksa (' + p2JigGear()[0] + ')', ' · and the jig (' + p2JigGear()[1] + ')');
+  const rigVal = o => o.rig === 'juksa' ? L('Juksa (' + p2JigGear()[0] + ')', 'Jigging (' + p2JigGear()[1] + ')') : o.rig === 'line' ? L('Line: ', 'Line: ') + (lineOwn().map(x => x[1] + ' ' + LINE_KINDS[x[0]].no.toLowerCase()).join(', ') || L('ingen stamper', 'no tubs')) + (o.jig ? jigTxt() : '') : rigName(o.rig) + ', ' + ownedUnits(PLAN2_KIND[o.rig]) + ' ' + unitName(PLAN2_KIND[o.rig], ownedUnits(PLAN2_KIND[o.rig])) + (o.jig ? jigTxt() : '');
   function rigBody(o){
     const h = ['juksa', 'line', 'garn', 'teiner'].map(g => { const why = gearWhy(g), k = PLAN2_KIND[g]; return BIG('p2-rig', g === 'juksa' ? L('Bare juksa', 'Jigging only') : rigName(g), why || (g === 'juksa' ? L('Ut, fyll lasten, lever, og ut igjen', 'Out, fill the hold, land, and out again') : ownedUnits(k) + ' ' + unitName(k, ownedUnits(k)) + L(' eies', ' owned')), o.rig === g, 'data-g="' + g + '"', !!why); }).join('');
     const jig = p2Kind(o) ? '<h4 style="margin-top:12px">' + L('Jukse i tillegg mens redskapet står?', 'Jig as well while the gear stands?') + '</h4>' + BIG('p2-jig', L('Ja', 'Yes'), L('Juksa får timene til ståtida er ute, og resten av dagen.', 'The jig gets the hours until the soak is up, and the rest of the day.'), o.jig, 'data-v="1"') + BIG('p2-jig', L('Nei, bare redskapet', 'No, only the gear'), L('Båten venter ved redskapet', 'The boat waits by the gear'), !o.jig, 'data-v="0"') : '';
-    return '<p class="ph-note">' + L('Ett redskap om gangen, fordelt i lenker på plassene, og juksa ved siden av. Alt redskap i sjøen må være trukket før båten rigges om.', 'One kind of gear at a time, in strings at the places, and the jig beside it. All gear in the sea must be hauled before the boat is re-rigged.') + '</p>' + h + jig;
+    return '<p class="ph-note">' + L('Ett redskap om gangen, fordelt i lenker på plassene, og juksa ved siden av. Alt redskap i sjøen må være trukket før båten rigges om. Juksa fisker med det som er valgt under Beholdning (nå ' + p2JigGear()[0] + '); lina settes med den typen hvert felt har, og agnet er det stampene er egnet med.', 'One kind of gear at a time, in strings at the places, and the jig beside it. All gear in the sea must be hauled before the boat is re-rigged. The jig fishes with what is chosen under Inventory (now ' + p2JigGear()[1] + '); the line goes out in the kind each field has, with the bait its tubs were baited with.') + '</p>' + h + jig;
   }
   // ---- Plasser: the list in the order she works them
   const own = (p, kind) => { const m = planMark(p, kind || null); return m ? (kind ? L('sist ' + fmt(m.kgu, 1) + ' kg per ' + GEAR[kind].u[0] + ' etter ' + Math.round(m.soak || 0) + ' t', 'last ' + fmt(m.kgu, 1) + ' kg a ' + GEAR[kind].u[2] + ' after ' + Math.round(m.soak || 0) + ' h') : L('sist ' + m.kgph + ' kg/t', 'last ' + m.kgph + ' kg/h')) : L('ikke fisket her ennå', 'not fished here yet'); };
@@ -92,7 +94,7 @@ const PLAN2UI = (() => {
     h.push('<p class="ph-note">' + L('Plassene i den rekkefølgen båten går dem. Tallene er dine egne fra de siste to ukene.', 'The places in the order the boat works them. The numbers are your own from the last two weeks.') + '</p>');
     o.places.forEach((q, i) => { fi[q.k]++; const isF = q.k === 'felt';
       h.push('<div class="dr-pl"><div class="dr-plh"><b>' + (isF ? L('Felt ', 'Field ') : L('Juksplass ', 'Jig place ')) + fi[q.k] + '</b><small>' + (home ? km(home.p, q) + L(' fra hjem · ', ' from home · ') : '') + own(q, isF ? kind : null) + '</small></div>' +
-        '<div class="dr-plc">' + (isF ? '<span>' + STEP('p2-pn', q.n + ' ' + unitName(kind, q.n), ' data-id="' + q.id + '"') + '</span><span>' + STEP('p2-ps', q.soak + L(' t ståtid', ' h soak'), ' data-id="' + q.id + '"') + '</span>' : '') +
+        '<div class="dr-plc">' + (isF ? (kind === 'line' && lineOwn().length > 1 ? '<span>' + T('p2-plk', LINE_KINDS[q.lk || 'hyse'].no, false, 'data-id="' + q.id + '"') + '</span>' : '') + '<span>' + STEP('p2-pn', q.n + ' ' + unitName(kind, q.n) + (kind === 'line' && lineOwn().length > 1 ? '' : '') + ' <small>' + L('av ', 'of ') + Math.max(0, p2Left(o, q)) + '</small>', ' data-id="' + q.id + '"') + '</span><span>' + STEP('p2-ps', q.soak + L(' t ståtid', ' h soak'), ' data-id="' + q.id + '"') + '</span>' : '') +
         '<span>' + T('p2-pup', '↑', false, 'data-i="' + i + '"' + (i ? '' : ' disabled')) + T('p2-pdn', '↓', false, 'data-i="' + i + '"' + (i < o.places.length - 1 ? '' : ' disabled')) + T('p2-pdel', L('Fjern', 'Remove'), false, 'data-id="' + q.id + '"') + '</span></div></div>'); });
     if (o.places.length < DRP2.placesMax){ if (kind) h.push(B('p2-add', L('+ Felt for ', '+ Field for ') + GEAR[kind].no.toLowerCase(), 'data-k="felt"', adding === 'felt' ? 'p' : '')); if (p2Jig(o)) h.push(B('p2-add', L('+ Juksplass', '+ Jig place'), 'data-k="juks"', adding === 'juks' ? 'p' : '')); }
     if (adding) h.push(addBody(o, adding));
@@ -111,13 +113,15 @@ const PLAN2UI = (() => {
   function placeWhy(o, k, q){
     try { if (isLand(q)) return L('Det er land der.', 'That is land.'); if (depthF(q) < 5) return L('For grunt der.', 'Too shallow there.'); } catch (e){}
     const kind = p2Kind(o); if (k === 'felt' && !kind) return L('Båten fisker bare med juksa.', 'The boat fishes with the jig only.');
-    return (k === 'felt' ? ruBlockMsg({p:q, len:BOAT.len, gear:o.rig === 'teiner' ? 'teiner' : kind, sp:kind === 'teine' ? 'krabbe' : null}) : ruBlockMsg({p:q, len:BOAT.len, gear:'juksa', sp:null, hand:!(S.equip && S.equip.jukse > 0)})) || null;
+    return (k === 'felt' ? ruBlockMsg({p:q, len:BOAT.len, gear:o.rig === 'teiner' ? 'teiner' : kind, sp:kind === 'teine' ? 'krabbe' : null}) : ruBlockMsg({p:q, len:BOAT.len, gear:'juksa', sp:(typeof jigKind === 'function' && jigKind() === 'kveite') ? 'kveite' : null, hand:!(S.equip && S.equip.jukse > 0)})) || null;
   }
   function put(o, k, q){
     const kind = p2Kind(o), why = placeWhy(o, k, q);
     if (why){ toast(why); return false; }
-    if (k === 'felt'){ const left = Math.max(1, ownedUnits(kind) - o.places.filter(p => p.k === 'felt').reduce((a, f) => a + f.n, 0)), n = kind === 'garn' ? Math.min(left, (S.pgear.nets[0] || {n:6}).n) : kind === 'line' ? Math.min(left, 2) : Math.min(left, 10);
-      o.places.push({id:plan2Sid(), k:'felt', x:q.x, y:q.y, n, soak:DRP2.soakDef[kind], hdg:null}); }
+    if (k === 'felt'){ const lk = kind === 'line' ? p2LineKind(o) : null, probe = {k:'felt', lk, n:0}, left = p2Left(o, probe);
+      if (left < 1){ toast(L('Alle ' + unitName(kind, 2) + (kind === 'line' ? ' ' + LINE_KINDS[lk].no.toLowerCase() : '') + ' er alt fordelt på feltene. Ta fra et annet felt først.', 'All the ' + unitName(kind, 2) + (kind === 'line' ? ' of ' + LINE_KINDS[lk].en.toLowerCase() : '') + ' are already on the fields. Take from another field first.')); return false; }
+      const n = kind === 'garn' ? Math.min(left, (S.pgear.nets[0] || {n:6}).n) : kind === 'line' ? Math.min(left, Math.max(2, Math.round(left / 2))) : Math.min(left, 10);
+      o.places.push({id:plan2Sid(), k:'felt', x:q.x, y:q.y, n, soak:DRP2.soakDef[kind], hdg:null, lk}); }
     else o.places.push({id:plan2Sid(), k:'juks', x:q.x, y:q.y});
     return true;
   }
@@ -149,9 +153,9 @@ const PLAN2UI = (() => {
   const rhythmVal = o => o.rhythm === 'watch' ? L('Døgndrift, to vakter à 12 t', 'Round the clock, two watches of 12 h') : o.rhythm === 'multi' ? L('Turer på ' + o.days + ' døgn, ut kl. ', 'Trips of ' + o.days + ' days, out at ') + driftClock(o.dep) : L('Dagdrift, ut kl. ', 'Day trips, out at ') + driftClock(o.dep);
   function rhythmBody(o){
     const st = plan2State(o), aboard = st.crew.length + (st.me.aboard ? 1 : 0);
-    const wWhy = st.crew.length < 4 ? L('Krever fire i mannskapet', 'Needs four crew') : !st.house ? L('Krever styrhus og køyer', 'Needs a wheelhouse and bunks') : st.bunks < aboard ? L('Krever køyer til alle om bord (' + st.bunks + ' av ' + aboard + ')', 'Needs bunks for everyone aboard (' + st.bunks + ' of ' + aboard + ')') : null, mWhy = st.bunks > 0 ? null : L('Krever køyer om bord', 'Needs bunks aboard');
+    const wWhy = aboard < 4 ? L('Krever fire om bord, deg medregnet (dere er ' + aboard + ')', 'Needs four aboard, you included (you are ' + aboard + ')') : !st.house ? L('Krever styrhus og køyer', 'Needs a wheelhouse and bunks') : st.bunks < aboard ? L('Krever køyer til alle om bord (' + st.bunks + ' av ' + aboard + ')', 'Needs bunks for everyone aboard (' + st.bunks + ' of ' + aboard + ')') : null, mWhy = st.bunks > 0 ? null : L('Krever køyer om bord', 'Needs bunks aboard');
     return BIG('p2-rhythm', L('Dagdrift', 'Day trips'), L('Ut til fast tid, hjem og hvile om kvelden. Skipperen går dagvakt.', 'Out at a set hour, home and rest in the evening. The skipper keeps the day watch.'), o.rhythm === 'day', 'data-v="day"') +
-      BIG('p2-rhythm', L('Døgndrift', 'Round the clock'), wWhy || L('To vakter på tolv timer: skipperen 06–18, styrmannen 18–06. Den som har fri, sover i køya. Båten leverer når lasten er full.', 'Two watches of twelve hours: the skipper 06–18, the mate 18–06. The watch off sleeps in the bunks. The boat lands when the hold is full.'), o.rhythm === 'watch', 'data-v="watch"', !!wWhy && o.rhythm !== 'watch') +
+      BIG('p2-rhythm', L('Døgndrift', 'Round the clock'), wWhy || L('To vakter på tolv timer: skipperen 06–18 (du, når du er om bord), styrmannen 18–06. Den som har fri, sover i køya. Båten leverer når lasten er full.', 'Two watches of twelve hours: the skipper 06–18 (you, when aboard), the mate 18–06. The watch off sleeps in the bunks. The boat lands when the hold is full.'), o.rhythm === 'watch', 'data-v="watch"', !!wWhy && o.rhythm !== 'watch') +
       BIG('p2-rhythm', L('Turer over flere døgn', 'Trips of several days'), mWhy || L('Mannskapet hviler om bord underveis. Hjem når turen er over.', 'The crew rest aboard on the way. Home when the trip is over.'), o.rhythm === 'multi', 'data-v="multi"', !!mWhy && o.rhythm !== 'multi') +
       (o.rhythm !== 'watch' ? '<div class="ph-kv dr-kv"><span>' + L('Ut kl.', 'Out at') + '</span><span>' + STEP('p2-dep', driftClock(o.dep)) + '</span></div>' : '') +
       (o.rhythm === 'multi' ? '<div class="ph-kv dr-kv"><span>' + L('Turen varer', 'The trip lasts') + '</span><span>' + STEP('p2-days', o.days + L(' døgn', ' days')) + '</span></div>' : '');
@@ -257,11 +261,13 @@ const PLAN2UI = (() => {
     if (a === 'p2-home'){ const old = o.home; o.home = d.p; if (isBerth(d.p)) havnHold(d.p); if (isBerth(old) && old !== d.p) havnFree(old); return true; }
     if (a === 'p2-anchor'){ o.anchor = d.v === '1'; return true; }
     if (a === 'p2-rig'){ if (gearWhy(d.g)) return false; if (d.g !== o.rig){ o.rig = d.g; o.places = o.places.filter(q => q.k === 'juks'); if (!PLAN2_KIND[d.g]) o.jig = true; } return true; }
+    if (a === 'p2-quota'){ PHONE.open('kvote'); return false; }
     if (a === 'p2-jig'){ o.jig = d.v === '1'; return true; }
     if (a === 'p2-add'){ adding = adding === d.k ? null : d.k; return true; }
     if (a === 'p2-addp'){ const q = (sugg || [])[+d.i]; if (!q) return false; if (put(o, adding, q)) adding = null; return true; }
     if (a === 'p2-map'){ if (typeof PLANMAP !== 'undefined') PLANMAP.open(S.cur); return true; }
-    if (a === 'p2-pn'){ const q = pl(d.id); if (!q) return false; q.n = clamp(q.n + (+d.d), 1, Math.max(1, (BOAT.gearMax || {})[kind === 'line' ? 'stamp' : kind] || 99)); return true; }
+    if (a === 'p2-pn'){ const q = pl(d.id); if (!q) return false; const mx = Math.max(1, Math.min(p2Left(o, q), (BOAT.gearMax || {})[kind === 'line' ? 'stamp' : kind] || 99)); const n = clamp(q.n + (+d.d), 1, mx); if (n === q.n && +d.d > 0) toast(L('Båten har ikke flere ' + unitName(kind, 2) + (kind === 'line' ? ' ' + LINE_KINDS[q.lk || 'hyse'].no.toLowerCase() : '') + ' til dette feltet.', 'The boat has no more ' + unitName(kind, 2) + ' for this field.')); q.n = n; return true; }
+    if (a === 'p2-plk'){ const q = pl(d.id); if (!q || kind !== 'line') return false; q.lk = (q.lk || 'hyse') === 'hyse' ? 'bank' : 'hyse'; q.n = clamp(q.n, 1, Math.max(1, p2Left(o, q))); return true; }
     if (a === 'p2-ps'){ const q = pl(d.id); if (!q) return false; const st = SOAKSTEP[kind] || 1; q.soak = clamp(q.soak + st * (+d.d), st, DRP2.soak[kind][3]); return true; }
     if (a === 'p2-pdel'){ const i = o.places.findIndex(q => q.id === d.id); if (i >= 0) o.places.splice(i, 1); return true; }
     if (a === 'p2-pup' || a === 'p2-pdn'){ const i = +d.i, j = a === 'p2-pup' ? i - 1 : i + 1; if (j < 0 || j >= o.places.length) return false; const t = o.places[i]; o.places[i] = o.places[j]; o.places[j] = t; return true; }

@@ -156,7 +156,7 @@ function plan2RulesWhy(o, H, placesOnly){
   const kind = p2Kind(o), hand = !(S.equip && S.equip.jukse > 0), F = o.places.filter(q => q.k === 'felt'), J = o.places.filter(q => q.k === 'juks');
   for (const [i, f] of F.entries()){ const why = ruBlockMsg({p:f, len:BOAT.len, gear:o.rig === 'teiner' ? 'teiner' : kind, sp:kind === 'teine' ? 'krabbe' : null, H}); if (why) return {k:'closed', fix:'places', no:'Felt ' + (i + 1) + ' er stengt: ' + why, en:'Field ' + (i + 1) + ' is closed: ' + why}; }
   if (p2Jig(o)) for (const [i, j] of J.entries()){ const why = ruBlockMsg({p:j, len:BOAT.len, gear:'juksa', sp:null, hand, H}); if (why) return {k:'closed', fix:'places', no:'Juksplass ' + (i + 1) + ' er stengt: ' + why, en:'Jig place ' + (i + 1) + ' is closed: ' + why}; }
-  if (!placesOnly && o.rig !== 'teiner' && access() !== 'none'){ const q = quotaState(); if (q.torsk >= codLimitNow(H) - 1) return {k:'quota', fix:'quota', no:'Torskekvoten er brukt opp.', en:'The cod quota is used up.'}; }
+  // (the cod quota is not the plan's business, Jonas 27.10.2026: a used-up quota stopped a halibut line plan. Cod over the bycatch share is confiscated at the landing, as the rules say, and the statistics show it)
   return null;
 }
 function plan2RulesOpenAt(o, H){ for (let k = 1; k <= 31; k++) if (!plan2RulesWhy(o, H + 24 * k, true)) return H + 24 * k; return null; }
@@ -237,7 +237,7 @@ function plan2Trip(o, D, i0){
   for (let i = i0; i < D.steps.length && !ended; i++){
     const s = D.steps[i]; to = i;
     if (s.k === 'sett'){ const q = P(s.pid), pv = D.steps[i - 1]; if (pv && pv.k === 'trekk' && pv.pid === s.pid && kind !== 'line') continue;   // nets and pots are set again by the haul
-      h += leg(q); pts.push(q); wps.push({x:q.x, y:q.y, port:null, fish:0, act:{op:'cycle', kind, n:s.n, fid:s.pid, final:true, only:'set'}}); h += s.h; }
+      h += leg(q); pts.push(q); wps.push({x:q.x, y:q.y, port:null, fish:0, act:{op:'cycle', kind, n:s.n, fid:s.pid, final:true, only:'set', spec:kind === 'line' ? {lk:s.lk || q.lk || 'hyse'} : null, hdg:q.hdg != null ? q.hdg : null}}); h += s.h; }
     else if (s.k === 'trekk'){ const q = P(s.pid); h += leg(q); pts.push(q);
       if (s.wait > 1 / 60){ wps.push({x:q.x, y:q.y, port:null, fish:Math.max(0.1, Math.round(s.wait * 10) / 10)}); if (!p2Jig(o)) noJig = true; h += s.wait; }   // she is there before the soak is up: jigs (or waits) by the gear until then
       wps.push({x:q.x, y:q.y, port:null, fish:0, act:{op:'cycle', kind, n:s.n, fid:s.pid, final:!(s.reset && kind !== 'line'), only:'haul', due:s.due != null ? s.due : s.t}}); h += s.h; }
@@ -267,7 +267,7 @@ function plan2Go(o, H, i0){
   // the day was laid for an earlier departure (the weather, the quay): it is made again from now, so the soak and the hours are right
   if (i0 === 1 && D.t0 < H - 0.5 && !r.remade){ r.remade = true; return plan2NewDay(o, H); }
   // with you aboard the day needs your energy: 15 % left when she is home, at 4.2 % an hour (15-energy.js ENERGY.sea)
-  if (i0 === 1 && meAboard() && S.energy != null){ const seaH = D.home != null ? D.home - D.t0 : DRP2.dayMax, need = Math.min(100, DRP2.enMin + DRP2.enH * seaH);
+  if (i0 === 1 && meAboard() && S.energy != null){ const seaH = D.home != null ? D.home - D.t0 : DRP2.watch, need = Math.min(100, DRP2.enMin + DRP2.enH * seaH);   // (round the clock: your watch, you sleep in the bunk the other)
     if (S.energy < need - 0.5){ const rate = (typeof restRate === 'function' ? restRate(b) : 0) * 60, hours = rate > 0 ? (need - S.energy) / rate : null;
       if (hours == null){ plan2Wait(o, 'energy', 'Du har ' + Math.round(S.energy) + ' % energi og trenger ' + Math.round(need) + ' % til dagen. Hvil i naustet, på en rorbu eller i køya først.', 'You have ' + Math.round(S.energy) + ' % energy and need ' + Math.round(need) + ' % for the day. Rest in the boathouse, at a rorbu or in the bunk first.', H + 1); return; }
       const at = H + hours; plan2Wait(o, 'energy', 'Du må hvile til kl. ' + driftClock(driftHod(at)) + ' før dagen kan begynne (' + Math.round(S.energy) + ' % energi, dagen trenger ' + Math.round(need) + ' %).', 'You must rest until ' + driftClock(driftHod(at)) + ' before the day can begin (' + Math.round(S.energy) + ' % energy, the day needs ' + Math.round(need) + ' %).', at); return; } }
@@ -356,8 +356,12 @@ function plan2Egn(o, s){
 }
 // round the clock: who sleeps this hour (04-crew.js crewTick through driftWatch): the watch off sleeps in the bunks
 function plan2WatchTick(H){
-  const o = plan2Ops(), on = !!o && o.on && o.rhythm === 'watch' && S.crew.length >= 4;
+  const o = plan2Ops(), me = meAboard(), on = !!o && o.on && o.rhythm === 'watch' && S.crew.length + (me ? 1 : 0) >= 4;
   if (!on){ for (const c of S.crew) if (c.sleepW) delete c.sleepW; return; }
+  // you keep the day watch (06-18) and sleep in the bunk the night watch (Jonas 26.10.2026); the bunk is the game's own (15-energy.js restStart)
+  if (me && S.boat.status !== 'port' && S.plan && S.plan.ops){ const mine = plan2Watch(H).w === 'A';
+    if (!mine && !resting() && restWhere(S.boat) === 'koye' && !S.sleep) restStart();
+    else if (mine && resting() && S.rest && S.rest.w === 'koye') restEnd(); }
   const sk = meAboard() ? null : crewSkipper(), m0 = crewMate(), mate = m0 && m0 !== sk ? m0 : S.crew.find(c => c !== sk) || null, deck = S.crew.filter(c => c !== sk && c !== mate);
   const A = [sk].filter(Boolean).concat(deck.filter((c, i) => i % 2 === 0)), B = [mate].filter(Boolean).concat(deck.filter((c, i) => i % 2 === 1)), off = plan2Watch(H).w === 'A' ? B : A;
   for (const c of S.crew){ if (off.includes(c)) c.sleepW = true; else delete c.sleepW; }

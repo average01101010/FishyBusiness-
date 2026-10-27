@@ -1322,3 +1322,4 @@ body.in-naust #dock,body.in-naust #dockFan,body.in-naust #dockInfo,body.in-naust
 #pmCard .pm-kv{display:flex;justify-content:space-between;align-items:center;margin:4px 0} #pmCard .pm-kv span:last-child{display:flex;align-items:center;gap:6px} #pmCard .pm-kv button,#pmCard .pin-b button{background:#0d2230;border:1px solid #2c5870;color:#fff;font:600 15px var(--sans);min-width:36px;min-height:36px;border-radius:8px;cursor:pointer} #pmCard .pin-b{display:flex;gap:6px;margin-top:6px} #pmCard .pin-b button[disabled]{opacity:.5} #pmCard .ai-t{color:#8fc7e4;font-size:12px;margin:4px 0}
 @media (max-width:700px){#pmCard{width:auto;right:8px}}
 body.pm #hud,body.pm #pinCard{visibility:hidden}
+#pmBar .pm-day{margin-top:6px;color:#ffd95e;font-size:13px} #pmCard .pm-w{min-width:0;padding:0 10px;font-size:13px} #pmCard .pm-kv small{color:#8fc7e4;font-weight:400}

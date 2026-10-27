@@ -12,6 +12,10 @@ const PLANMAP = (() => {
   const ops = () => { const o = typeof plan2Ops === 'function' ? plan2Ops() : null; return o && vid === S.cur ? o : null; };
   const labels = o => { const fi = {felt:0, juks:0}, out = {}; for (const q of o.places){ fi[q.k]++; out[q.id] = q.k === 'felt' ? L('Felt ', 'Field ') + fi[q.k] : L('Juksplass ', 'Jig place ') + fi[q.k]; } return out; };
   const find = (o, id) => o ? o.places.find(p => p.id === id) : null;
+  // the string of a field: its length from the units (startSet: the line by hooks, nets and pots by the unit), and where it ends for a heading
+  const stringKm = (o, q) => { const kind = p2Kind(o); if (!kind) return 0; return kind === 'line' ? q.n * LINE_KINDS[q.lk || 'hyse'].hooks * GEAR.line.kmHook : q.n * GEAR[kind].km; };
+  const stringEnd = (q, hdg, km) => ({x:q.x + Math.sin(hdg) * km, y:q.y - Math.cos(hdg) * km});
+  const degOf = (q, hdg) => Math.round(((typeof trueDeg === 'function' ? trueDeg(hdg, q) : hdg * 180 / Math.PI) % 360 + 360) % 360);
   const hit = (o, mp, rr) => { let best = null, bd = rr; for (const q of o.places){ const d = dist(q, mp); if (d < bd){ bd = d; best = q; } } return best; };
   // the chart round the whole plan: home, the plant and the places
   function fit(o){
@@ -37,18 +41,23 @@ const PLANMAP = (() => {
     bar.innerHTML = '<div class="pm-h"><b>' + L('Driftsplan: plassene til «', 'Operations plan: the places of «') + S.boatName + '»</b><button type="button" data-pm="done">' + L('Ferdig', 'Done') + '</button></div>' +
       '<div class="pm-t">' + (kind ? '<button type="button" data-pm="tool" data-k="felt" class="' + (tool === 'felt' ? 'on' : '') + '">' + L('Felt', 'Field') + '</button>' : '') +
       (p2Jig(o) ? '<button type="button" data-pm="tool" data-k="juks" class="' + (tool === 'juks' ? 'on' : '') + '">' + L('Juksplass', 'Jig place') + '</button>' : '') +
-      '<span class="pm-hint">' + (full ? L('Planen har ' + DRP2.placesMax + ' plasser, det er alt den tar.', 'The plan has ' + DRP2.placesMax + ' places, all it takes.') : L('Trykk i sjøen for å legge til · dra en nål for å flytte · trykk en nål for antall og ståtid', 'Tap the sea to add · drag a pin to move it · tap a pin for units and soak')) + '</span></div>';
+      '<span class="pm-hint">' + (full ? L('Planen har ' + DRP2.placesMax + ' plasser, det er alt den tar.', 'The plan has ' + DRP2.placesMax + ' places, all it takes.') : L('Trykk i sjøen for å legge til · dra en nål for å flytte · trykk en nål for antall, ståtid og retning', 'Tap the sea to add · drag a pin to move it · tap a pin for units, soak and heading')) + '</span></div>' + dayLine(o);
     const q = find(o, sel); if (!q){ card.hidden = true; return; }
     const i = o.places.indexOf(q), isF = q.k === 'felt', hp = portById(o.home), m = typeof planMark === 'function' ? planMark(q, isF ? kind : null) : null;
     const dkm = hp ? fmt(dist(hp.p, q) / NM, 1) + L(' nm fra hjem', ' nm from home') : '';
     const own = m ? (isF ? L(' · sist ' + fmt(m.kgu, 1) + ' kg per ' + GEAR[kind].u[0] + ' etter ' + Math.round(m.soak || 0) + ' t', ' · last ' + fmt(m.kgu, 1) + ' kg a ' + GEAR[kind].u[2] + ' after ' + Math.round(m.soak || 0) + ' h') : L(' · sist ' + m.kgph + ' kg/t', ' · last ' + m.kgph + ' kg/h')) : L(' · ikke fisket her ennå', ' · not fished here yet');
     card.hidden = false;
     card.innerHTML = '<div class="ai-h"><b>' + lb[q.id] + '</b><button type="button" data-pm="x" aria-label="' + L('Lukk', 'Close') + '">×</button></div>' +
-      (isF ? '<div class="pm-kv"><span>' + L(GEAR[kind].no, GEAR[kind].en) + '</span><span><button type="button" data-pm="n" data-d="-1" aria-label="−">−</button><b>' + q.n + ' ' + unitName(kind, q.n) + '</b><button type="button" data-pm="n" data-d="1" aria-label="+">+</button></span></div>' +
-        '<div class="pm-kv"><span>' + L('Ståtid', 'Soak') + '</span><span><button type="button" data-pm="s" data-d="-1" aria-label="−">−</button><b>' + q.soak + ' t</b><button type="button" data-pm="s" data-d="1" aria-label="+">+</button></span></div>' : '') +
+      (isF ? (kind === 'line' && ['hyse', 'bank'].filter(lk => p2Units('line', lk) > 0).length > 1 ? '<div class="pm-kv"><span>' + L('Line', 'Line') + '</span><span><button type="button" data-pm="lk" class="pm-w">' + LINE_KINDS[q.lk || 'hyse'].no + ' ⇄</button></span></div>' : '') +
+        '<div class="pm-kv"><span>' + (kind === 'line' ? LINE_KINDS[q.lk || 'hyse'].no : L(GEAR[kind].no, GEAR[kind].en)) + '</span><span><button type="button" data-pm="n" data-d="-1" aria-label="−">−</button><b>' + q.n + ' ' + unitName(kind, q.n) + ' <small>' + L('av ', 'of ') + Math.max(0, p2Left(o, q)) + '</small></b><button type="button" data-pm="n" data-d="1" aria-label="+">+</button></span></div>' +
+        '<div class="pm-kv"><span>' + L('Ståtid', 'Soak') + '</span><span><button type="button" data-pm="s" data-d="-1" aria-label="−">−</button><b>' + q.soak + ' t</b><button type="button" data-pm="s" data-d="1" aria-label="+">+</button></span></div>' +
+        '<div class="pm-kv"><span>' + L('Lenka', 'The string') + ' <small>' + fmt(stringKm(o, q), 1) + ' km</small></span><span><button type="button" data-pm="h" data-d="-15" aria-label="↶">↶</button><b>' + (q.hdg == null ? L('etter kursen', 'by the course') : degOf(q, q.hdg) + '°') + '</b><button type="button" data-pm="h" data-d="15" aria-label="↷">↷</button>' + (q.hdg != null ? '<button type="button" data-pm="h0" class="pm-w">' + L('fri', 'free') + '</button>' : '') + '</span></div>' : '') +
       '<div class="ai-t">' + dkm + own + '</div>' +
       '<div class="pin-b"><button type="button" data-pm="up"' + (i ? '' : ' disabled') + ' aria-label="' + L('Før', 'Earlier') + '">↑</button><button type="button" data-pm="dn"' + (i < o.places.length - 1 ? '' : ' disabled') + ' aria-label="' + L('Etter', 'Later') + '">↓</button><button type="button" data-pm="del">' + L('Fjern', 'Remove') + '</button></div>';
   }
+  // the day as the page reckons it from the places (PLAN2UI.preview): its length and the hour home
+  function dayLine(o){ let P = null; try { P = PLAN2UI.preview(o); } catch (e){} if (!P || !P.day) return ''; const d = P.day, h = d.home != null ? d.home - d.t0 : 24;
+    return '<div class="pm-day">' + (o.rhythm === 'watch' ? L('Døgndrift: to vakter à 12 t', 'Round the clock: two watches of 12 h') : L('Dagen blir ' + fmt(h, 1) + ' t' + (d.home != null ? ', hjemme kl. ' + driftClock(driftHod(d.home)) : ''), 'The day comes to ' + fmt(h, 1) + ' h' + (d.home != null ? ', home at ' + driftClock(driftHod(d.home)) : ''))) + (h > DRP2.dayMax + 0.1 ? ' · ' + L('over ' + DRP2.dayMax + ' t: mannskapet blir slitne', 'over ' + DRP2.dayMax + ' h: the crew will be tired') : '') + '</div>'; }
   function act(el){
     const o = ops(); if (!o) return; const a = el.dataset.pm, q = find(o, sel), i = q ? o.places.indexOf(q) : -1;
     if (a === 'done'){ close(); return; }
@@ -56,6 +65,12 @@ const PLANMAP = (() => {
     if (a === 'x'){ sel = null; render(); renderDyn(); return; }
     if (!q) return;
     if (a === 'n') PLAN2UI.act('p2-pn', {id:q.id, d:el.dataset.d});
+    else if (a === 'lk') PLAN2UI.act('p2-plk', {id:q.id});
+    // the string's heading, in steps of 15 degrees: the string must fit in the sea there (startSet setGeomExact), else the turn is refused and said
+    else if (a === 'h'){ const d = (+el.dataset.d) * Math.PI / 180, h0 = q.hdg != null ? q.hdg : (S.boat.heading || 0), hdg = ((h0 + d) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+      let okG = false; try { okG = !!setGeomExact(q, hdg, stringKm(o, q)); } catch (e){ okG = true; }
+      if (!okG){ toast(L('Lenka går på land eller for grunt i den retningen. Prøv en annen.', 'The string runs on land or too shallow that way. Try another.')); return; } q.hdg = hdg; }
+    else if (a === 'h0') q.hdg = null;
     else if (a === 's') PLAN2UI.act('p2-ps', {id:q.id, d:el.dataset.d});
     else if (a === 'up' || a === 'dn') PLAN2UI.act(a === 'up' ? 'p2-pup' : 'p2-pdn', {i:String(i)});
     else if (a === 'del'){ PLAN2UI.act('p2-pdel', {id:q.id}); sel = null; }
@@ -88,6 +103,7 @@ const PLANMAP = (() => {
     if (hp && o.places.length){ const pts = [hp.p].concat(o.places, [hp.p]); g.push('<polyline points="' + pts.map(p => p.x.toFixed(3) + ',' + p.y.toFixed(3)).join(' ') + '" fill="none" stroke="#ffd95e" stroke-opacity=".55" stroke-width="' + (1.5 * u).toFixed(3) + '" stroke-dasharray="' + (6 * u).toFixed(3) + ' ' + (5 * u).toFixed(3) + '"/>'); }
     if (hp) pin(o.homeA || hp.p, L('Hjem', 'Home'), '#29a36a');
     if (mp && mp.id !== o.home) pin(mp.p, mp.name, '#2f7fd0');
+    for (const q of o.places) if (q.k === 'felt' && q.hdg != null){ const e = stringEnd(q, q.hdg, stringKm(o, q)); g.push('<line x1="' + q.x.toFixed(3) + '" y1="' + q.y.toFixed(3) + '" x2="' + e.x.toFixed(3) + '" y2="' + e.y.toFixed(3) + '" stroke="#d9822b" stroke-width="' + (3 * u).toFixed(3) + '" stroke-linecap="round" class="pm-string"/>'); }
     for (const q of o.places) pin(q, lb[q.id], q.k === 'felt' ? '#d9822b' : '#b05ad6', q.id === sel);
     return '<g class="pm">' + g.join('') + '</g>';
   }

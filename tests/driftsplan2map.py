@@ -58,6 +58,9 @@ async def main():
         # the card's buttons: units and soak
         await tap_el('#pmCard [data-pm=n][data-d="1"]'); await tap_el('#pmCard [data-pm=s][data-d="1"]'); P2 = await pg.evaluate(PLACES)
         print(ok(len(P2) == 1 and P2[0]['n'] == P[0]['n'] + 1 and P2[0]['soak'] == P[0]['soak'] + 1), 'the card\'s + buttons add a tub and an hour of soak', [P[0]['n'], P2[0]['n'], P[0]['soak'], P2[0]['soak']])
+        # the string's heading: a turn from the card draws the string on the chart, and the day's length stands in the bar
+        hd = await pg.evaluate("() => { const o = S.ops, q = o.places[0]; let n = 0; for (let k = 0; k < 24 && q.hdg == null; k++){ document.querySelector('#pmCard [data-pm=h][data-d=\"15\"]').click(); n++; } return {hdg:q.hdg, tries:n, line:(document.querySelector('#map g.pm') || {innerHTML:''}).innerHTML.includes('pm-string'), card:document.getElementById('pmCard').innerText.replace(/\\s+/g, ' ').slice(0, 160), bar:document.getElementById('pmBar').innerText}; }")
+        print(ok(hd['hdg'] is not None and hd['line'] and '°' in hd['card'] and 'Dagen blir' in hd['bar']), 'a turn from the card gives the string a heading, drawn on the chart; the bar says how long the day gets', [hd['hdg'], hd['tries'], hd['line'], hd['bar'][-60:]])
         await pg.screenshot(path=os.path.join(OUT, 'driftsplan2map-800x1280-kort.png'))
         # a tap on land is refused (a toast, no place)
         l0 = await pg.evaluate(SCR, land[0]); await tap(l0['x'], l0['y']); P3 = await pg.evaluate(PLACES)

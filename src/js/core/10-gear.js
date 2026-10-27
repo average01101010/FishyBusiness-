@@ -492,7 +492,7 @@ function gearCycle(w, fishAfter){
   const spec = cycleSpec(a.kind, a.spec && (a.kind === 'garn' ? {mesh:(S.pgear.nets.find(l => l.id === a.spec.nid) || {}).mesh, ty:(S.pgear.nets.find(l => l.id === a.spec.nid) || {}).ty} : a.spec), a.n);
   if (!spec) return [gL('Ikke noe ' + GEAR[a.kind].no.toLowerCase() + ' klart om bord.', 'No ' + GEAR[a.kind].en.toLowerCase() + ' ready aboard.')];
   if (a.fid) spec.fid = a.fid;
-  return startSet(a.kind, spec, fishAfter);
+  return startSet(a.kind, spec, fishAfter, a.hdg != null ? a.hdg : undefined);   // (Driftsplan 2: the string's heading from the chart's card, 03g-planmap.js)
 }
 // what the standing plan needs before it leaves: two aboard for nets, bait for the pots (bought at the plant), line baited
 function opsGearNeeds(o){
