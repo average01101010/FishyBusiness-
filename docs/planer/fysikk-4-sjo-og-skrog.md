@@ -79,7 +79,7 @@ Hver fase passer én økt, bygges bak et flagg i adressen der det er mulig (`#fo
 
 ### F3. Brytning og spekteret
 
-- **Hva:** Jacobi-determinanten av Gerstner-forskyvningen regnes per piksel (analytisk, tre ekstra ledd per bølge), og skum lages der J faller under en terskel som følger brattheten, lagt inn i skumkartet (F1) så det blir liggende og driver med vinden. Monahans dekning beholdes som *kalibreringsmål*: terskelen settes så den tegnede andelen hvitt treffer Monahan innenfor faktor to i 8–25 m/s, som `sea3d` måler i dag. Sjørokk fra kammer som bryter (fra Beaufort 7, i dag jevnt fra 8). Spekteret: amplitudevektene får JONSWAPs form (γ = 3,3) i stedet for dagens log-normale, retningsspredningen cos^2s per komponent etter bølgealder (ung sjø smalere), brattheten `Q` nær grensen i ung, strøklengdebegrenset sjø og slakere i utvokst, og om budsjettet tåler det, to komponenter til mellom 6 og 20 m (der kammene i video 3 og 4 ligger). Fjernpassen rører vi ikke.
+- **Hva:** Jacobi-determinanten av Gerstner-forskyvningen regnes per piksel (analytisk, tre ekstra ledd per bølge), og skum lages der J faller under en terskel som følger brattheten, lagt inn i skumkartet (F1) så det blir liggende og driver med vinden. Monahans dekning beholdes som *kalibreringsmål*: terskelen settes så den tegnede andelen hvitt treffer Monahan innenfor faktor to i 8–25 m/s, som `sea3d` måler i dag. Skummets utseende etter bildene i kapittel 9: lagt inn med skarp forkant på kammen som bryter, med en hale som blekner og driver med vinden (kartet fra F1), og støyen i kornet 0,3–3 m i stedet for dagens 5–10 m-flekker. Sjørokk fra kammer som bryter (fra Beaufort 7, i dag jevnt fra 8). Spekteret: amplitudevektene får JONSWAPs form (γ = 3,3) i stedet for dagens log-normale, retningsspredningen cos^2s per komponent etter bølgealder (ung sjø smalere), brattheten `Q` nær grensen i ung, strøklengdebegrenset sjø og slakere i utvokst, og om budsjettet tåler det, to komponenter til mellom 6 og 20 m (der kammene i video 3 og 4 ligger). Fjernpassen rører vi ikke.
 - **Filer:** `01-shaders.js` (`SEA_FS`: J, skum inn i kartet; `SEA_VS_WAVE` om komponenter legges til), `14-sea.js` (`specW`, `WL`, `WOFF`), `sea3d.py` (skummålet står).
 - **Tester:** `sea3d` (ingen hopp, skumdekket, bildene), `skytest` (deler skyggerfila).
 - **Måles:** andel hvitt mot Monahan ved 8, 12, 17 og 25 m/s; bildetakten før og etter på nettbrettet; den lengste skyggerlinja (Adreno 642L lenket ikke dagens sjø, så `dsb_sea`-trappa må virke som før, `seatrytest`).
@@ -149,7 +149,13 @@ Spørsmål uten A/B:
 
 ## 9. Bilder fra i dag (27.10.2026)
 
-Økta tok bilder av dagens sjø med SwiftShader (tregt, men riktig tegnet) for å sammenligne med videoene. Bildene ligger ikke i repoet; det de viste, står her når økta er ferdig med dem.
+Økta tok bilder av dagens sjø i testnettleseren (SwiftShader: tregt, men tegnet som på en GPU) for å sammenligne med videoene: skiffen i 18 knop i Beaufort 3 (ovenfra, bakfra), sjarken i 8,5 knop i Beaufort 5 og 7–8 (ovenfra, fra låringen, fra baugen, fra siden) og kyst21 i Beaufort 6. Bildene ligger ikke i repoet. Det de viste:
+
+- **Kjølvannet ovenfra** er to tynne rekker av skumprikker langs Kelvin-armene og en smal stripe av bobler midt bak, i begge båtene. Videoenes brede, hvite V og det turbulente båndet finnes ikke. Fra låringen er Kelvin-tverrbølgene bak sjarken gode, og det er et lite hvitt felt ved hekken.
+- **Skum rundt skroget** er en tynn hvit strek langs vannlinja og noen sprøytprikker ved baugen i Beaufort 5; i Beaufort 7–8 lite mer. Skroget sitter riktig i vannet (sjarken krenger 5° for vinden, hiver og stamper), men ingenting av videoenes skumkrage og sprøytteppe.
+- **Skumtoppene** er store, glatte, hvite flekker (5–10 m) som ligger flatt på sjøen og ser like ut i Beaufort 5 og 8; i videoene er skummet finkornet, med skarp forkant på kammen og en hale som drar ut i striper med vinden. Det er et spørsmål om *hvor* skummet lages (på kammen som bryter, så det ligger igjen og driver) og om kornet i støyen (0,3–3 m, ikke 5–10), og det hører til F1 (kartet som husker) og F3 (Jacobi-terskelen og støyen).
+- **Kammene** er runde og lange; sjøen i Beaufort 8 ser ut som glatte åser med flekker på, mens videoenes sjø er krapp og kort-kammet med mange retninger. Det er retningsspredningen og brattheten (F3), og det er grensen for 13 komponenter (F6 måler om FFT gir mer).
+- I Beaufort 7–8 snudde simuleringen sjarken hjem av seg selv («Returnerer», været over båtens grense), som den skal. Sjøen var 5,3 m.
 
 ## Status
 
