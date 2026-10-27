@@ -163,6 +163,7 @@
     gl.uniform4f(u.uHull, (VG.stern - VG.bow) || 6, (VG.beam || 2.4) / 2, -(VG.bow || -2.2), VG.stern || 3.1); gl.uniform4f(u.uFSp, (WK.kn || 0) * 0.5144, WK.Fr || 0, BOAT.planing ? 1 : 0, dt);
     attr(0, SKYQ, 2); gl.drawArrays(gl.TRIANGLES, 0, 6);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null); FOAM.r = w; FOAM.pB = [qx, qz, fx, fz]; FOAM.ms = FOAM.ms * 0.9 + (performance.now() - t1) * 0.1; FOAM.sh = [sx, sz]; FOAM.n++;
+    if (FOAM.log && FOAM.log.length < 400) FOAM.log.push([+t.toFixed(2), sx, sz, reb[0], reb[1], +FOAM.now[0].toFixed(3), +FOAM.ox.toFixed(1), +qx.toFixed(1), w]);   // (a trace for the tests: G3._debug.foam.log = [])
   }
   // the sea shader reads the map (unit 7) where it is on
   function foamBind(u){
