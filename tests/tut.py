@@ -69,6 +69,10 @@ async def play(p, W, H, tag):
     await pg.evaluate("S.mult = 30; save()")
     seen, reloads, hold_at_land, free, t0, stuck, bonus_row = [], 0, None, {}, time.time(), 0, False
     for it in range(900):
+        # the skipper kept rested: the clock runs at 30× here, so a run of 25 real minutes is over twelve game hours at sea and the
+        # energy (100 % a day at sea, ENERGY in core/15-energy.js) ran out on the grounds in two runs on 27.10.2026, the boat drifting ashore
+        # while he slept; a real first trip takes four or five game hours. The test is of the guide, not of the sleep
+        await pg.evaluate("if (!asleep() && S.energy < 60) S.energy = 60")
         s = json.loads(await pg.evaluate(STATE))
         sid = s['id']
         if not seen or seen[-1] != sid:
