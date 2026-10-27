@@ -7,7 +7,7 @@ at test pace (S.mult) to save time. Checks: every step comes in order, the guide
 "tut":0, the jig aboard from the start, the first fill of ice on the plant after the landing, the free luxury luck, a full hold at landing, and a login bonus row on the landing note.
 Prints OK or FEIL per check and ends with the old summary line {"tut":0, …} and the page errors."""
 from _env import GAME_TUT as GAME
-import asyncio, json, time
+import asyncio, json, os, time
 from playwright.async_api import async_playwright
 
 # the first trip after the rewrite of 10.10.2026 (docs/onboarding.md): the naust first, the cameras on the way out, the apps on the way
@@ -126,8 +126,11 @@ async def play(p, W, H, tag):
 async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(args=['--disable-gpu-compositing', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
-        errs = await play(b, 1293, 830, 'liggende')
-        errs += await play(b, 915, 1208, 'staaende')
+        # both formats, or one with KYST_TUT_ONE=liggende|staaende (Jonas 27.10.2026: one format when only the logic changed, both
+        # when the guide's tips or the buttons they point at move; docs/systemer/testing.md)
+        one, errs = os.environ.get('KYST_TUT_ONE', ''), []
+        if one != 'staaende': errs += await play(b, 1293, 830, 'liggende')
+        if one != 'liggende': errs += await play(b, 915, 1208, 'staaende')
         print(errs)
         await b.close()
 
