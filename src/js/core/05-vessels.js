@@ -536,7 +536,7 @@ function sail(H, W, hs){
   if (pl.replan){ b.v = 0; return; }   // a way round shallow water ahead is being found (sailReplan)
   const v = sailV(H, hs); b.v = v;
   let left = v * NM / 60;
-  b.fuel = Math.max(0, b.fuel - fuelLph(v, W) / 60);
+  fuelUse(b, fuelLph(v, W) / 60);
   obsSail(pl, b);   // round a bridge's pier, a pier or a mark on the leg ahead (11b-obstacles.js)
   while (left > 1e-9 && pl.idx < pl.wps.length){
     const w = pl.wps[pl.idx], d = dist(b.pos, w);
@@ -818,7 +818,7 @@ function deckMinute(){
   if (catchIce()) for (const x of S.hold.filter(x => !x.iced && (x.gut || !cg) && !SPECIES[x.sp].live)){
     if (pm <= 0.001) break; const kg = Math.min(x.kg, pm * DECK.ice, fz ? Infinity : b.ice / (0.3 * ((BOAT.fx && BOAT.fx.ice) || 1)));
     if (kg <= 0.01){ if (S.t - (S.lastIceWarn || -1e9) > 120){ log('Tom for is. Fangsten ises ikke.', 'Out of ice. The catch is not being iced.'); S.lastIceWarn = S.t; } break; }
-    if (fz) moveKg(x, kg, {iced:true, frozen:true}); else { moveKg(x, kg, {iced:true}); b.ice -= kg * 0.3 * ((BOAT.fx && BOAT.fx.ice) || 1); }
+    if (fz) moveKg(x, kg, {iced:true, frozen:true}); else { moveKg(x, kg, {iced:true}); const ik = Math.min(b.ice, kg * 0.3 * ((BOAT.fx && BOAT.fx.ice) || 1)); b.ice -= ik; tripOf(b).iceKg += ik; }
     pm -= kg / DECK.ice; worked += kg;
   }
   // your own minutes on deck; when the deck was last worked (the crew's break: a deck to scrub, 13-work.js idleEnv); now and then a mistake (14-crewlife.js crewSlip)

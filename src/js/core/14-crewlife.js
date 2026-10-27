@@ -372,7 +372,7 @@ function lifeHail(H){
 // back to the exchange after the years with a boat of their own: a smaller share asked, and the story goes on
 function alumniReturn(B){
   for (const a of (S.alumni || []).slice()){ if (a.back > S.t || !a.c || B.pool.length >= 6) continue; S.alumni.splice(S.alumni.indexOf(a), 1);
-    const c = crewDerive(Object.assign(a.c, {ask:Math.round(a.c.ask * 0.9 * 100) / 100, morale:62, fatigue:0, known:[true, true], grudge:{}, earn:[], off:false, until:S.t + 5 * 1440})); c.share = c.ask; if (c.cpen) delete c.cpen;
+    const c = crewDerive(Object.assign(a.c, {ask:lotR(lotMigrate(a.c).ask - LOTT.step), morale:62, fatigue:0, known:[true, true], grudge:{}, earn:[], off:false, until:S.t + 5 * 1440})); c.share = c.ask; if (c.cpen) delete c.cpen;
     if (c.life){ c.life.notice = null; c.life.goal = 'ro'; c.life.saved = Math.round(c.life.target * 0.3); c.life.day = -1; lifeStory(c, 'Solgte «' + a.boat + '» og søker hyre igjen.', 'Sold the «' + a.boat + '» and looks for a berth again.'); }
     B.pool.push(c); }
 }

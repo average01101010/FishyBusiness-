@@ -56,7 +56,7 @@ var PAINT = (() => {
     if (b.status !== 'port') return '<div class="ph-c"><p class="ph-note">' + L('Båten må ligge i havn for å males.', 'The boat must be in port to be painted.') + '</p></div>';
     const c = cur(b), s = pre.hull || 'orig', e = HULLPAL.find(x => x[0] === s) || HULLPAL[0], free = !(b.liv && b.liv.hull), pr = price(b);
     const fCh = flagCh(b, pre) && flagOk(pre), lgCh = pre.logo !== undefined && owned('logo') && logoStr(pre.logo) !== logoStr(S.logo);
-    const hullCh = s !== c, zc = zoneCost(b), zCh = zc > 0, dCh = DESIGNS.some(k => owned(k) && (pre.d[k] || null) !== curD(b, k)) || fCh || lgCh, cost = (hullCh && !free && e[4] !== 'ach' ? pr : 0) + zc, short = cost > S.cash;
+    const hullCh = s !== c, zc = zoneCost(b), zCh = zc > 0, dCh = DESIGNS.some(k => owned(k) && (pre.d[k] || null) !== curD(b, k)) || fCh || lgCh, cost = (hullCh && !free && e[4] !== 'ach' ? pr : 0) + zc, short = cost > spendable();
     const tried = DESIGNS.filter(k => !owned(k) && pre.d[k] && designFits(b.type, k)).concat(!flagOk(pre) ? ['flagg'] : []).concat(!owned('logo') && pre.logo ? ['logo'] : []);
     const h = ['<div class="ph-c"><div class="ph-card"><h4>' + L('Skrogfarge', 'Hull colour') + '</h4>' +
       '<p class="ph-note">' + L('Trykk på en farge, så vises den på skroget. Du betaler først når du maler.', 'Tap a colour and it shows on the hull. You pay only when you paint.') + '</p>' +
@@ -147,7 +147,7 @@ var PAINT = (() => {
       payBuy('des_' + k, () => { giveCos(k); const was = pre; pre = copy(S.boat.liv); if (k === 'logo' && was && flagOf(was).code === 'LOGO') pre.flag = was.flag; PAINTPRE = pre; if (typeof DOCK !== 'undefined'){ DOCK.render(); DOCK.redraw(); } });
       return true; }
     if (a === 'pntgo'){
-      if (b.status !== 'port') return false; const s = pre.hull || 'orig', free = !(b.liv && b.liv.hull) || (HULLPAL.find(x => x[0] === s) || [])[4] === 'ach', zc = zoneCost(b), cost = (s !== cur(b) && !free ? price(b) : 0) + zc; if (cost > S.cash) return false;
+      if (b.status !== 'port') return false; const s = pre.hull || 'orig', free = !(b.liv && b.liv.hull) || (HULLPAL.find(x => x[0] === s) || [])[4] === 'ach', zc = zoneCost(b), cost = (s !== cur(b) && !free ? price(b) : 0) + zc; if (cost > spendable()) return false;
       const was = cur(b); if (cost) book('verft', -cost, 'Maling', 'Paint');
       apply(b); pre = copy(b.liv); PAINTPRE = pre;
       if (s !== was){ const e = HULLPAL.find(x => x[0] === s);

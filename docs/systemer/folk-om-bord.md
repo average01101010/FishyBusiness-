@@ -8,13 +8,13 @@
   - Kandidater følger fiskerregisteret 2025. Aldersgrupper: 4,3 / 19,4 / 19,5 / 16,7 / 20,1 / 16,1 / 3,9 %. 6 % kvinner. 10,8 % har biyrke og er om bord fredag–søndag.
   - Én eller to nye kandidater kl. 07 hver dag, ofte ingen i skreisesongen. Hver søker hyre i 2–5 dager, og det er høyst 6 i børsen.
   - Stjernene er anslag, og det andre trekket er skjult til det er avslørt.
-  - Forhandling ned 2 prosentpoeng lykkes i 60 % av tilfellene, 35 % for stolte folk.
+  - Kandidatene ber om lotter (lærling 0,75, ellers 1, en tidel mer for arbeidsjern og erfarne i skreisesongen). Forhandling ned en tidel lott lykkes i 60 % av tilfellene, 35 % for stolte folk.
   - Mønstring skjer i havn. Pubrykter kan avsløre skjulte trekk.
 - **Egenskaper** (1–5): erfaring, styrke, utholdenhet, teknisk, kokk og sjømannskap. **Redskap og dekk** (`c.gear`): juksa, line, garn, teiner, sløying (`sloy`), ising (`is`) og krabbesortering (`sort`). Dekksferdighetene ble lagt til 01.10.2026, og gamle lagringer får dem ut fra erfaringen (`deckSkills`).
 - **13 trekk:** arbeidsjern, kranglefant, spøkefugl, grinebiter, perfeksjonist, lokalkjent, sjøsyk, ølglad, lærevillig, rastløs, makelig, omsorgsfull og stolt. Alle har fordeler og ulemper, se `TRAITS` og `crewEff`.
 - **Trivsel** drifter mot et mål:
-  - Utgangspunkt 60, pluss (lott − ønsket lott) × 300.
-  - Pluss eller minus opptil 12 for ukesinntekt mot forventning.
+  - Utgangspunkt 60, pluss (lott − ønsket lott) × 40, i lotter (Økonomi 2, Ø2, 27.10.2026; før: prosent × 300).
+  - Pluss eller minus opptil 12 for ukas lott mot det en lott på båten gir i en vanlig uke (`lotWeek` i `core/04-crew.js`, se `priser-og-salg.md`).
   - Mat: (matstell − 3) × 3, der matstell er snittet av de fire siste måltidene (5.19).
   - Minus (slitenhet − 50) × 0,5.
   - Minus kulde × 50.

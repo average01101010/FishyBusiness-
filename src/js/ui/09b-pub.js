@@ -239,8 +239,8 @@ const PUB3 = (() => {
     const pt = portById(S.boat.port), dial = pt ? dialectAt(pt.p) : null, H = H_(), st = seasonTalk(H), tip = barTip(), cr = crewHere(), cost = ROUND_PP * cr.length, had = S.crewRoundE === ev();
     const hello = S.lang === 'no' ? dialectText(dial, ['Kva ska det være i kveld?', 'Sett dæ, du. Kaffe eller øl?', 'Dæven, er det dæ igjen? Velkommen!'][ev() % 3]) : ['What will it be tonight?', 'Have a seat. Coffee or beer?', 'Well, look who it is. Welcome!'][ev() % 3];
     return '<p class="pb-say">«' + esc(hello) + '»</p>' + (tip ? '<p>«' + esc(tip) + '»</p>' : '') + (st ? '<p>' + esc(L(st[0], st[1])) + '</p>' : '') +
-      (cr.length ? '<div class="pb-bt">' + btn('round', L('Spander en runde på mannskapet', 'Buy your crew a round') + ' · ' + kr(cost), had || S.cash < cost, 'pri') + '</div><p class="pb-why">' +
-        (had ? L('Mannskapet har fått sin runde i kveld.', 'The crew have had their round tonight.') : S.cash < cost ? L('Du har ikke nok penger til en runde.', 'You do not have enough money for a round.') : L('En øl på deg løfter stemningen om bord, og de husker det en stund.', 'A beer on you lifts the mood aboard, and they remember it for a while.')) + '</p>'
+      (cr.length ? '<div class="pb-bt">' + btn('round', L('Spander en runde på mannskapet', 'Buy your crew a round') + ' · ' + kr(cost), had || spendable() < cost, 'pri') + '</div><p class="pb-why">' +
+        (had ? L('Mannskapet har fått sin runde i kveld.', 'The crew have had their round tonight.') : spendable() < cost ? L('Du har ikke nok penger til en runde.', 'You do not have enough money for a round.') : L('En øl på deg løfter stemningen om bord, og de husker det en stund.', 'A beer on you lifts the mood aboard, and they remember it for a while.')) + '</p>'
         : '<p class="pb-why">' + L('Har du mannskap, kan du spandere en runde på dem her.', 'With a crew, you can buy them a round here.') + '</p>') + kjentHtml();
   }
   // ---------- the old hand at the bar with the echo sounder's news (tilbakemelding #58; Jonas 09.10.2026: «i puben 1 gang per spilldøgn») ----------
@@ -264,15 +264,15 @@ const PUB3 = (() => {
   }
   const LVL = [['nesten ingenting', 'next to nothing'], ['litt', 'a little'], ['bra', 'good'], ['mye', 'plenty']];
   function kjentHtml(){
-    const K = S.kjent && S.kjent.d === gameDay() ? S.kjent : null, can = !K && S.cash >= KJENT_COST;
+    const K = S.kjent && S.kjent.d === gameDay() ? S.kjent : null, can = !K && spendable() >= KJENT_COST;
     if (K){ const sp = SPECIES[K.sp];
       return '<div class="pb-card"><h5>' + L('Kjentmannen ved disken', 'The old hand at the bar') + '</h5><p>«' + esc(L('Æ var ute med loddet i dag. ' + sp.no + ' står ' + LVL[K.lv[K.sp]][0] + ' ' + K.place.no + '.', 'I was out with the sounder today. ' + sp.en + ': ' + LVL[K.lv[K.sp]][1] + ', ' + K.place.en + '.')) + '»</p><p>' +
         KJENT_SP.filter(k => k !== K.sp).map(k => esc(L(SPECIES[k].no + ': ' + LVL[K.lv[k]][0], SPECIES[k].en + ': ' + LVL[K.lv[k]][1]))).join(' · ') + '</p><p class="pb-why">' + L('Plassen står som et merke i kartet resten av dagen. Ny rapport i morgen.', 'The place is a mark on the chart for the rest of the day. A new report tomorrow.') + '</p></div>'; }
     return '<div class="pb-card"><h5>' + L('Kjentmannen ved disken', 'The old hand at the bar') + '</h5><p>' + L('Han med skipperlua har vært ute med ekkoloddet. For ' + kr(KJENT_COST) + ' forteller han hvor det står best innen ' + KJENT_R + ' km, og hva annet som står der.', 'The man in the skipper\'s cap has been out with his echo sounder. For ' + kr(KJENT_COST) + ' he tells you where it stands best within ' + KJENT_R + ' km, and what else is there.') + '</p>' +
-      '<div class="pb-bt">' + KJENT_SP.map(k => btn('kjent:' + k, esc(L(SPECIES[k].no, SPECIES[k].en)), !can)).join('') + '</div>' + (S.cash < KJENT_COST ? '<p class="pb-why">' + L('Du har ikke nok penger.', 'You do not have enough money.') + '</p>' : '') + '</div>';
+      '<div class="pb-bt">' + KJENT_SP.map(k => btn('kjent:' + k, esc(L(SPECIES[k].no, SPECIES[k].en)), !can)).join('') + '</div>' + (spendable() < KJENT_COST ? '<p class="pb-why">' + L('Du har ikke nok penger.', 'You do not have enough money.') + '</p>' : '') + '</div>';
   }
   function kjentBuy(sp){
-    if (!KJENT_SP.includes(sp) || (S.kjent && S.kjent.d === gameDay()) || S.cash < KJENT_COST) return;
+    if (!KJENT_SP.includes(sp) || (S.kjent && S.kjent.d === gameDay()) || spendable() < KJENT_COST) return;
     const r = kjentFind(sp); if (!r){ toast(L('Kjentmannen har ikke vært ute her i dag.', 'The old hand has not been out round here today.')); return; }
     book('land', -KJENT_COST, 'Kjentmannen på puben', 'The local at the pub');
     const until = (gameDay() + 1) * 1440;
@@ -284,7 +284,7 @@ const PUB3 = (() => {
     save(); PANELS.bartender(); renderTop(); if (typeof scheduleStatic === 'function') scheduleStatic();
   }
   function crewRound(){
-    const cr = crewHere(), cost = ROUND_PP * cr.length; if (!cr.length || S.crewRoundE === ev() || S.cash < cost) return;
+    const cr = crewHere(), cost = ROUND_PP * cr.length; if (!cr.length || S.crewRoundE === ev() || spendable() < cost) return;
     book('land', -cost, 'En runde for mannskapet', 'A round for the crew'); S.crewRoundE = ev();
     for (const c of cr){ c.morale = clamp((c.morale || 50) + (c.traits && c.traits.includes('olglad') ? 12 : 8), 0, 100); }
     msg('Puben', L('Du spanderte en runde på mannskapet. Stemningen steg.', 'You bought the crew a round. The mood rose.'), 'You bought the crew a round. The mood rose.');

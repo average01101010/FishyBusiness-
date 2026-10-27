@@ -96,7 +96,7 @@ const kaskoClaims = (b = S.boat) => ((b.kasko && b.kasko.claims) || []).filter(t
 const kaskoPrem = (b = S.boat) => Math.round(kaskoPrice(b) * KASKO.rate / 12 * (1 + KASKO.malus * kaskoClaims(b)) / 10) * 10;
 const kaskoSelf = (b = S.boat) => Math.max(KASKO.selfMin, Math.round(kaskoPrice(b) * KASKO.self / 1000) * 1000);
 function kaskoSign(b = S.boat){
-  if (b.kasko) return null; const p = kaskoPrem(b); if (S.cash < p) return ['no_cash'];
+  if (b.kasko) return null; const p = kaskoPrem(b); if (spendable() < p) return ['no_cash'];
   book('forsikring', -p, 'Kasko, første premie', 'Hull insurance, first premium'); b.kasko = {t0:S.t, next:S.t + KASKO.month, claims:[]};
   log('Tegnet kasko for «' + S.boatName + '»: ' + kr(p) + ' i måneden, egenandel ' + kr(kaskoSelf(b)) + '.', 'Took out hull insurance for «' + S.boatName + '»: ' + kr(p) + ' a month, deductible ' + kr(kaskoSelf(b)) + '.');
   return null;
@@ -124,7 +124,7 @@ function hullBill(b = S.boat){
 // order the repair at the yard she lies at (auto: after a tow): paid at the order, the damage taken off when the job is done
 function hullOrder(auto, b = S.boat){
   hullOld(b); const L = hullLeft(b); if (!L || !(hullCost(b, L).tot > 0)) return null;
-  const B = hullBill(b); if (!auto && S.cash < B.you) return ['no_cash'];
+  const B = hullBill(b); if (!auto && spendable() < B.you) return ['no_cash'];
   const j = {kind:'repair', h:YARD_H, no:'Reparasjon av skroget', en:'Hull repair', dmg:L, paid:B.you, ins:B.ins};
   if (!queueJob(j)) return ['full'];
   if (B.free) freeFirst('rep');

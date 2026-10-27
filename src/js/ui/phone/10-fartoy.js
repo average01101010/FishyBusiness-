@@ -20,7 +20,7 @@
     // the company (Jonas 09.10.2026): the Rederi app opens with it; after the boats, so the ladder comes first
     if (S.form !== 'AS') steps.push({n:L('Stift Rederi AS', 'Found a limited company'), need:TAX.as.capital + TAX.as.fee, a:'bank', txt:L('Et AS betaler 22 % av overskuddet og fører regnskap. Som ENK betaler du personskatt, som blir høyere når overskuddet vokser. Skattekortet i banken viser begge. Aksjekapital og gebyr: ', 'A company pays 22 % of the profit and keeps books. As ENK you pay personal tax, which grows with the profit. The tax card in the bank shows both. Share capital and fee: ') + kr(TAX.as.capital + TAX.as.fee)});
     steps.push({n:L('Havfiske', 'Ocean fishing'), pc:0, lock:true, txt:L('Kommer når kartet utvides vestover', 'Comes when the chart is extended west')});
-    return steps.slice(0, 2).map(x => Object.assign(x, {pc:x.pc != null ? x.pc : Math.min(1, Math.max(0, S.cash) / Math.max(1, x.need))}));
+    return steps.slice(0, 2).map(x => Object.assign(x, {pc:x.pc != null ? x.pc : Math.min(1, (x.bank ? eqCash() : Math.max(0, S.cash)) / Math.max(1, x.need))}));
   }
   function goalsCard(){
     const g = goals(); if (!g.length) return '';

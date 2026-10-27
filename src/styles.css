@@ -291,6 +291,7 @@ body.v3d #aisCard{display:none} .lbl-ais{font-family:var(--sans);font-weight:600
 .ph-big{font:700 22px var(--sans);margin:2px 0}
 .ph-led{border-bottom:1px solid #e4ebef;padding:3px 0}.ph-led:last-of-type{border-bottom:0}.ph-led small{color:#7b8b94;font-size:11px}.ph-ledp{margin:0 0 3px;font-size:11px}
 .ph-kv .kin{color:#1e7a5c;font-weight:600}.ph-kv .kout{color:#a3262a;font-weight:600}.ph-kv.tot{font-weight:700;border-top:1px solid #d5dee3;margin-top:3px;padding-top:4px}.ph-kv.tot span:first-child{color:#15252f}
+.ph-pick{padding:2px 0 6px}.ph-big.kout{color:#a3262a}
 .ph-acc h5{margin:9px 0 2px;font:700 11px var(--sans);color:#15252f;text-transform:uppercase;letter-spacing:.05em}
 .mapbtn.locked{opacity:.65}
 .mapbtn{position:absolute;right:10px;height:34px;min-width:58px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:var(--paper);color:var(--ink);font:600 13px var(--sans);cursor:pointer}

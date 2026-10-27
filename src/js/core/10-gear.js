@@ -185,7 +185,7 @@ function buyGear(what, spec, n){
   if (kind && gearRoom(kind) < n) return [gL('Det er ikke plass til mer ' + GEAR[kind].no.toLowerCase() + ' på denne båten.', 'There is no room for more ' + GEAR[kind].en.toLowerCase() + ' on this vessel.')];
   if (what === 'kit' && n > kitRoomNow()) return [gL('Du har ikke redskap til flere blåsesett. Kjøp mer line, garn eller teiner først.', 'You have no gear for more buoy sets. Buy more line, nets or pots first.')];
   if (what === 'heavy' && pg.kits.heavy + n > pg.kits.n) return [gL('Tunge dregger kjøpes til blåsesett du har.', 'Heavy anchors go with buoy sets you own.')];
-  if (cost > S.cash) return [gL('Ikke nok penger.', 'Not enough money.')];
+  if (cost > spendable()) return [gL('Ikke nok penger.', 'Not enough money.')];
   book(what === 'bait' ? 'agn' : 'redskap', -cost, what === 'bait' ? 'Agn' : 'Redskap', what === 'bait' ? 'Bait' : 'Gear');
   if (what === 'net'){ const o = NETOPT.find(x => netKey(x[0], x[1]) === String(spec)); pg.nets.push({id:gid('n'), mesh:o[1], ty:o[0], n, cond:1, max:0.95}); }
   else if (what === 'stamp'){ const L = pg.lines[spec], tot = L.n + n; L.cond = careRound((L.cond * L.n + n) / tot); L.miss = careRound(L.miss * L.n / tot); L.bent = careRound(L.bent * L.n / tot); L.max = careRound((L.max * L.n + n) / tot); L.n = tot; }   // new line comes complete with its hooks
@@ -266,8 +266,8 @@ function startSet(kind, spec, fishAfter, hdg){
   if (kind === 'garn') pg.nets.splice(pg.nets.findIndex(x => x.id === spec.nid), 1);
   else if (kind === 'line'){ const L0 = pg.lines[spec.lk], bt = btOf(L0), w = {}; let left = n;   // the tubs with the bait chosen first (the choice's bait group, else the remembered one), then the most common
     for (const k of [spec.bait, pg.baitPref].concat(Object.keys(bt).sort((x, y) => bt[y] - bt[x]))){ if (!k || !bt[k] || left <= 0) continue; const t = Math.min(bt[k], left); bt[k] -= t; w[k] = (w[k] || 0) + t; left -= t; }
-    L0.n -= n; L0.baited -= n; s.baitW = w; }
-  else { const kg = n * GPRICE.potBait, k = spec.bait && BAITS[spec.bait] && (baitOf(pg)[spec.bait] || 0) >= kg - 1e-9 ? spec.bait : baitPick(pg, kg); pg.pots[spec.pot] -= n; baitOf(pg)[k] -= kg; s.bait = k; }
+    L0.n -= n; L0.baited -= n; s.baitW = w; for (const k in w) tripOf(b).baitKr += w[k] * LINE_KINDS[spec.lk].baitKg * (BAITS[k] || BAITS.makrell).kr; }
+  else { const kg = n * GPRICE.potBait, k = spec.bait && BAITS[spec.bait] && (baitOf(pg)[spec.bait] || 0) >= kg - 1e-9 ? spec.bait : baitPick(pg, kg); pg.pots[spec.pot] -= n; baitOf(pg)[k] -= kg; s.bait = k; tripOf(b).baitKr += kg * (BAITS[k] || BAITS.makrell).kr; }
   const heavy = pg.kits.heavy > 0; pg.kits.n--; if (heavy) pg.kits.heavy--;
   Object.assign(s, {n, heavy}); if (spec.fid) s.fid = spec.fid;
   if (hdg != null) b.heading = hdg;
@@ -500,7 +500,7 @@ function opsGearNeeds(o){
   if (!acts.length || !pg) return null;
   if (acts.includes('garn') && handsAboard() < 2) miss.push(gL('garn krever to om bord', 'nets need two aboard'));
   { const n = (o.wps || []).filter(w => w.act && w.act.only === 'set').length; if (n > pg.kits.n) miss.push(gL('for få blåsesett om bord (' + pg.kits.n + ' av ' + n + ')', 'too few buoy sets aboard (' + pg.kits.n + ' of ' + n + ')')); }
-  if (acts.includes('teine')){ const k = BAITS[pg.baitPref] ? pg.baitPref : 'makrell', need = pg.pots.big * GPRICE.potBait - (baitOf(pg)[k] || 0); if (need > 0 && p && p.mottak && driftStock().bait){ const kg = Math.ceil(need), c = kg * BAITS[k].kr; if (c <= S.cash){ book('agn', -c, 'Agn til teinene', 'Bait for the pots'); baitOf(pg)[k] = (baitOf(pg)[k] || 0) + kg; } } }
+  if (acts.includes('teine')){ const k = BAITS[pg.baitPref] ? pg.baitPref : 'makrell', need = pg.pots.big * GPRICE.potBait - (baitOf(pg)[k] || 0); if (need > 0 && p && p.mottak && driftStock().bait){ const kg = Math.ceil(need), c = kg * BAITS[k].kr; if (c <= spendable()){ book('agn', -c, 'Agn til teinene', 'Bait for the pots'); baitOf(pg)[k] = (baitOf(pg)[k] || 0) + kg; } } }
   if (acts.includes('line') && !pg.lines.hyse.baited && !pg.lines.bank.baited && !mySets().some(s => s.kind === 'line')) miss.push(gL('lina er ikke egnet', 'the line is not baited'));
   return miss.length ? miss : null;
 }
@@ -587,7 +587,7 @@ function egnOrder(lk, n, bait){
   const b = S.boat, pg = S.pgear, p = portById(b.port), L0 = pg.lines[lk], free = bait ? L0.n - L0.baited : egnFreeAuto(L0); if (!bait && free >= 1) n = Math.min(n, free);
   if (b.status !== 'port' || !egnPort(p)) return [gL('Det er ingen egnebu her.', 'There is no baiting shed here.')];
   if (n < 1 || free < n) return [gL('Du har ikke så mange uegnede stamper om bord.', 'You do not have that many unbaited tubs aboard.')];
-  const bk = BAITS[bait] ? bait : BAITS[pg.baitPref] ? pg.baitPref : 'makrell', fee = egnFee(lk, n, bk); if (fee > S.cash) return [gL('Ikke nok penger.', 'Not enough money.')];
+  const bk = BAITS[bait] ? bait : BAITS[pg.baitPref] ? pg.baitPref : 'makrell', fee = egnFee(lk, n, bk); if (fee > spendable()) return [gL('Ikke nok penger.', 'Not enough money.')];
   book('agn', -fee, 'Egning i egnebua', 'Baiting at the shed'); L0.n -= n; if (BAITS[bait]) pg.baitPref = bait;
   const busy = pg.shore.filter(j => j.kind === 'egn' && j.port === b.port && j.ready > S.t).reduce((a, j) => Math.max(a, j.ready), S.t);
   const ready = Math.max(S.t, busy) + 180 + n * 20;
@@ -656,7 +656,7 @@ function botOrder(nid){
   const b = S.boat, pg = S.pgear, p = portById(b.port), l = pg.nets.find(x => x.id === nid);
   if (b.status !== 'port' || !botPort(p)) return [gL('Bøteriet ligger i Finnsnes.', 'The net loft is in Finnsnes.')];
   if (!l || l.cond >= nMax(l) - 0.05) return [gL('Garna trenger ikke bøting.', 'The nets do not need mending.')];
-  const fee = Math.round(GPRICE.bot * l.n * (nMax(l) - l.cond) / 0.1); if (fee > S.cash) return [gL('Ikke nok penger.', 'Not enough money.')];
+  const fee = Math.round(GPRICE.bot * l.n * (nMax(l) - l.cond) / 0.1); if (fee > spendable()) return [gL('Ikke nok penger.', 'Not enough money.')];
   book('redskap', -fee, 'Bøting av garn', 'Net mending'); pg.nets.splice(pg.nets.indexOf(l), 1);
   const ready = S.t + 24 * 60; pg.shore.push({kind:'bot', port:b.port, lenke:l, n:l.n, ready, fee});
   log('Leverte ' + l.n + ' garn til bøteriet i ' + p.name + ', ' + kr(fee) + '. Klare om et døgn.', 'Left ' + l.n + ' nets at the net loft in ' + p.name + ', ' + kr(fee) + '. Ready in a day.');

@@ -156,7 +156,7 @@ function naustWhy(k){
   if (naustHas(k)) return ['Det er gjort.', 'That is done.'];
   if (U.after && !naustHas(U.after)) return ['Taket må tettes først.', 'The roof must be made tight first.'];
   if (!atHome(S.boat)) return ['Snekkeren jobber når du er i hjemhavna.', 'The carpenter works while you are in the home harbour.'];
-  if (S.cash < U.kr) return ['Du har ikke nok penger.', 'Not enough money.'];
+  if (spendable() < U.kr) return ['Du har ikke nok penger.', 'Not enough money.'];
   return null;
 }
 function naustBuy(k){

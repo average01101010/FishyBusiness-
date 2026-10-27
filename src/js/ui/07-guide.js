@@ -302,9 +302,24 @@ function portSlip(){
       ['forsk', 'Fiskeriforskningsavgift', 'Fisheries research levy'], ['ress', 'Ressursavgift', 'Resource levy'], ['ktrl', 'Kontrollavgift', 'Control levy']])
       if (tk[k] > 0) h.push(row(LN(no, en) + ' ' + pc(TREKK[k]), '', '−' + fmt(tk[k], 0)));
     if (ls.mva > 0) h.push(row(LN('MVA 11,11 % på salget', 'VAT 11.11 % on the sale'), '', fmt(ls.mva, 0)) + row(LN('MVA videre til staten', 'VAT on to the state'), '', '−' + fmt(ls.mva, 0)));
-    if (ls.lott > 0) h.push(row(LN('Lott til mannskapet', 'The crew\'s share'), '', '−' + fmt(ls.lott, 0)));
-    if (tk.sum > 0 || ls.lott > 0) h.push(row('<b>' + LN('Til kassa', 'To the cash box') + '</b>', '', '<b>' + fmt(ls.total - tk.sum - ls.lott, 0) + '</b>'));
+    // the share settlement (Økonomi 2, Ø2): the trip's common costs come off before the sharing, the crew's part is split in shares
+    const S2 = ls.ls, F = ls.fk;
+    if (S2 && (S2.per.length || (F && F.sum > 0))){
+      h.push(row('<b>' + LN('Netto etter trekk', 'Net after levies') + '</b>', '', '<b>' + fmt(ls.total - tk.sum, 0) + '</b>', 'sum'));
+      if (F && F.fuelKr > 0) h.push(row(LN('Felleskostnad: drivstoff ', 'Common cost: fuel ') + fmt(F.fuelL, 0) + ' l', '', '−' + fmt(F.fuelKr, 0)));
+      if (F && F.iceKr > 0) h.push(row(LN('Felleskostnad: is ', 'Common cost: ice ') + fmt(F.iceKg, 0) + ' kg', '', '−' + fmt(F.iceKr, 0)));
+      if (F && F.baitKr > 0) h.push(row(LN('Felleskostnad: agn', 'Common cost: bait'), '', '−' + fmt(F.baitKr, 0)));
+      h.push(row('<b>' + LN('Delingsfangst', 'Shared catch') + '</b>', '', '<b>' + fmt(S2.D, 0) + '</b>', 'sum'));
+      if (S2.per.length){
+        h.push(row(LN('Mannskapets del med ' + S2.n + ' om bord: ' + fmt(S2.M * 100, 0) + ' %, delt på ' + lotS(S2.tot), 'The crew\'s part with ' + S2.n + ' aboard: ' + fmt(S2.M * 100, 0) + ' %, split in ' + lotS(S2.tot)), '', fmt(Math.round(S2.D * S2.M), 0)));
+        for (const p of S2.per) h.push(row(p.name + ' · ' + lotS(p.lots) + (p.sk ? LN(' (skipper)', ' (skipper)') : ''), '', '−' + fmt(p.kr, 0)));
+        if (S2.own) h.push(row(LN('Din lott og båtens del blir i kassa', 'Your share and the boat\'s part stay in the cash box'), '', ''));
+      }
+    } else if (ls.lott > 0) h.push(row(LN('Lott til mannskapet', 'The crew\'s share'), '', '−' + fmt(ls.lott, 0)));
+    if (ls.coopKr > 0) h.push(row(LN('Kvotesamarbeid', 'Quota cooperation'), '', '−' + fmt(ls.coopKr, 0)));
+    if (tk.sum > 0 || ls.lott > 0) h.push(row('<b>' + LN('Til kassa', 'To the cash box') + '</b>', '', '<b>' + fmt(ls.total - tk.sum - ls.lott - (ls.coopKr || 0), 0) + '</b>', 'sum'));
     h.push('</tbody></table></div>');
+    if (S2 && F && F.sum > 0) h.push('<p class="note">' + LN('Drivstoff, is og agn ble betalt fra kontoen da du kjøpte dem. Her trekkes de bare fra før fangsten deles, slik lottsystemet gjør, og ikke fra kassa en gang til.', 'Fuel, ice and bait were paid from the account when you bought them. Here they only come off before the catch is shared, as the share system does, not from the cash box again.') + '</p>');
     if (ls.crabFine) h.push('<p class="note">' + LN('Overtredelsesgebyr fra Fiskeridirektoratet for krabbe under minstemålet: ', 'Fine from the Directorate of Fisheries for undersized crab: ') + kr(ls.crabFine) + LN('. Det står ikke på sluttseddelen, men er trukket fra kassa.', '. It is not on the landing note, but has been taken from the cash box.') + '</p>');
     for (const o of (ls.ord || [])) h.push('<p class="note">' + LN('Bestilling fra ' + o.cust + ': ' + fmt(o.kg, 0) + ' kg ' + SPECIES[o.sp].no.toLowerCase() + ', tillegg ' + kr(Math.round(o.kr)) + (o.done ? ', ferdig levert, bonus ' + kr(o.bonus) : ', ' + fmt(o.left, 0) + ' kg igjen') + '.', 'Order from ' + o.cust + ': ' + fmt(o.kg, 0) + ' kg ' + SPECIES[o.sp].en.toLowerCase() + ', premium ' + kr(Math.round(o.kr)) + (o.done ? ', fully delivered, bonus ' + kr(o.bonus) : ', ' + fmt(o.left, 0) + ' kg left') + '.') + '</p>');
     if (ls.ffKg > 0.5) h.push('<p class="note">' + LN(fmt(ls.ffKg, 0) + ' kg torsk gikk på ferskfiskordningen og belastes ikke kvoten.', fmt(ls.ffKg, 0) + ' kg of cod went on the fresh-fish scheme and does not count against the quota.') + '</p>');

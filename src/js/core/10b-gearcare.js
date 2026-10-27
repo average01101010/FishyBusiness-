@@ -73,7 +73,7 @@ function careBuy(what, spec, n){
   if (what === 'hooks'){ if (!CARE.hookKr[spec]) return [gL('Ukjent krokpakke.', 'Unknown hook pack.')]; cost = CARE.hookKr[spec] * n; }
   else if (what === 'jig'){ if (!CARE.jig[spec]) return [gL('Ukjent juksautstyr.', 'Unknown jig tackle.')]; cost = CARE.jig[spec].kr * n; }
   else return null;
-  if (cost > S.cash) return [gL('Ikke nok penger.', 'Not enough money.')];
+  if (cost > spendable()) return [gL('Ikke nok penger.', 'Not enough money.')];
   book('redskap', -cost, what === 'hooks' ? 'Kroker' : 'Juksautstyr', what === 'hooks' ? 'Hooks' : 'Jig tackle');
   if (what === 'hooks') pg.hooks += spec * n; else pg.jig[spec].n += n;
   return null;
@@ -111,7 +111,7 @@ function careQuote(what, key, shop){
 const careNoHands = () => [gL('Ingen om bord kan gjøre jobben.', 'Nobody aboard can do the job.')];
 function careGate(shop){ return careWhy() || (shop ? careShopWhy() : null); }
 // (a job that costs nothing, the crew changing hooks from the stock aboard, goes ahead also when the account is in the red: tilbakemelding #91)
-function careQueue(j, fee){ if (fee > 0 && fee > S.cash) return [gL('Ikke nok penger.', 'Not enough money.')]; if (!queueJob(j)) return [gL('Verkstedkøen er full.', 'The work queue is full.')]; book('redskap', -fee, j.no, j.en); return null; }
+function careQueue(j, fee){ if (fee > 0 && fee > spendable()) return [gL('Ikke nok penger.', 'Not enough money.')]; if (!queueJob(j)) return [gL('Verkstedkøen er full.', 'The work queue is full.')]; book('redskap', -fee, j.no, j.en); return null; }
 function hooksJob(lk, shop){
   const pg = careG(), why = careGate(shop); if (why) return why;
   if (hooksNeed(lk) < 1) return [gL('Kroken sitter som den skal.', 'The hooks are in order.')];

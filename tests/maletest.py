@@ -112,8 +112,8 @@ async def main():
               'an uploaded picture is made 256 × 256 and small enough to share, tried on the boat and then put on', {k: lg[k] for k in ('upInfo', 'wh', 'upSet')})
         check(rm['L'] is None and rm['flag'] == {'c': 'NO', 's': 'rekt'} and 'Støtende innhold' in rm['msg'] and 'uten å betale' in rm['msg'] and rm['own'],
               'a picture the admin took away is gone from the boat and the flag at the next start, the player is told why and may upload another without paying', rm)
-        # too little money: the button is off
-        c = await pg.evaluate("""(() => { S.cash = 100; document.querySelector('#drawerBody .pnt-sw[data-k=gul]').click(); const btn = document.querySelector('#drawerBody [data-pa=pntgo]');
+        # too little money (with the overdraft used up, Økonomi 2): the button is off
+        c = await pg.evaluate("""(() => { S.cash = 100 - kkLimit(); document.querySelector('#drawerBody .pnt-sw[data-k=gul]').click(); const btn = document.querySelector('#drawerBody [data-pa=pntgo]');
           return {dis:btn.disabled, note:document.getElementById('drawerBody').innerText.includes('ikke nok penger')}; })()""")
         check(c['dis'] and c['note'], 'without the money the button is off and says so', c)
         # closing the drawer ends the trying; the paint is in the save

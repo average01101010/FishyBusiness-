@@ -48,7 +48,7 @@ function restStart(){
   const pt = b.port ? portById(b.port) : null;
   if (w === 'koye'){ const sk = crewOf(myVessel()).filter(c => !c.off).slice().sort((a, c) => c.attr.sjo - a.attr.sjo)[0]; log(b.anch ? 'Du gikk ned i køya mens båten ligger til ankers.' : 'Du gikk ned i køya. ' + sk.name.split(' ')[0] + ' har vakta.', b.anch ? 'You went down to the bunk while the boat lies at anchor.' : 'You went down to the bunk. ' + sk.name.split(' ')[0] + ' has the watch.'); }
   else if (w === 'rorbu'){
-    if (S.cash < RORBU.kr) return ['Du har ikke ' + kr(RORBU.kr) + ' til en natt på rorbua.', 'You do not have ' + kr(RORBU.kr) + ' for a night at the rorbu.'];
+    if (spendable() < RORBU.kr) return ['Du har ikke ' + kr(RORBU.kr) + ' til en natt på rorbua.', 'You do not have ' + kr(RORBU.kr) + ' for a night at the rorbu.'];
     book('land', -RORBU.kr, 'Rorbu', 'Rorbu');
     log('Du tok inn på rorbua i ' + pt.name + ' for ' + kr(RORBU.kr) + ' natta.', 'You took a room at the rorbu in ' + pt.name + ' for ' + kr(RORBU.kr) + ' a night.');
   } else log('Du gikk opp i naustet for å hvile.', 'You went up to the boathouse to rest.');
@@ -66,7 +66,7 @@ function restMinute(){
   if (!S.rest) return;
   if (!resting()){ S.rest = null; return; }
   if (S.rest.w === 'rorbu' && S.t >= S.rest.paid){
-    if (S.cash < RORBU.kr){ restEnd(true); log('Du hadde ikke penger til en natt til på rorbua og gikk om bord.', 'You had no money for another night at the rorbu and went aboard.'); return; }
+    if (spendable() < RORBU.kr){ restEnd(true); log('Du hadde ikke penger til en natt til på rorbua og gikk om bord.', 'You had no money for another night at the rorbu and went aboard.'); return; }
     book('land', -RORBU.kr, 'Rorbu', 'Rorbu'); S.rest.paid += RORBU.night;
     log('En natt til på rorbua, ' + kr(RORBU.kr) + '.', 'Another night at the rorbu, ' + kr(RORBU.kr) + '.');
   }
