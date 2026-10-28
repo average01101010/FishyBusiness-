@@ -64,7 +64,7 @@ Les denne først, så bare dokumentet for systemet du skal endre, og `docs/BACKL
 | `docs/lansering.md` | Det som gjenstår før lansering, og serveren. |
 | `docs/onboarding.md` | Onboardingen. |
 | `docs/planer/onboarding-2.md` | Onboarding 2 (27.10.2026): kortere første tur for hele kysten, målingene som viser frafall under seilingen ut, fasene O0–O6, de ti prinsippene mot churn og valgene V1–V8. Venter på svar. |
-| `docs/planer/lover-og-regler.md` | Lover og regler på sjøen (28.10.2026): sjøveisreglene, sjøloven, skipssikkerhetsloven, skipsarbeidsloven, merkeforskriften, havne- og farvannsloven, farvannsskiltene og IALA, i fasene L0–L8 (én lov om gangen), valgene V1–V5 og kildene. Venter på svar. |
+| `docs/planer/lover-og-regler.md` | Lover og regler på sjøen (28.10.2026): sjøveisreglene, sjøloven, skipssikkerhetsloven, skipsarbeidsloven, merkeforskriften, havne- og farvannsloven, farvannsskiltene og IALA, i fasene L0–L8 (én lov om gangen), valgene V1–V6, lista over påbudt utstyr per båt og kildene. Venter på V6 og «kjør på». |
 
 ## Regler og kilder
 

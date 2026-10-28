@@ -1,6 +1,6 @@
 # Lover og regler på sjøen (plan 28.10.2026)
 
-> Plan etter `/planlegg`. Ingenting er bygd. **Venter på Jonas' svar på V1–V5 og «kjør på».** Status står nederst.
+> Plan etter `/planlegg`. Ingenting er bygd. Jonas svarte på valgene 28.10.2026: «V1: A, V2: A, V3: Nei, men finn ut listen for påbudt utstyr for relevant skip så kan vi heller lage modeller av utstyret i blender om vi ikke har det fra før. V4: Ja, V5: A». Lista over påbudt utstyr står under L6. **Venter på V6 og «kjør på» for L0.** Status står nederst.
 
 ## Hva Jonas ba om
 
@@ -23,8 +23,8 @@ Lest eller slått opp 28.10.2026. «Ikke lest» betyr at bare tittel og nummer e
 | Havne- og farvannsloven | LOV-2019-06-21-70 | Ja (fartsgrenser, havneområder, ferdsel) | Ikke lest |
 | IALA-konvensjonen (Den internasjonale organisasjonen for maritime navigasjonsinnretninger og -tjenester) | Traktat, nummeret sjekkes i L0 | Konvensjonen oppretter organisasjonen og gir ingen regler for båtene. Det som gjelder spillet, er IALAs merkesystem (region A: rødt om babord inn fra havet, grønt om styrbord, kardinalmerkene, toppmerkene, lyskarakterene), som de norske sjømerkene følger | Ikke lest |
 | Forskrift om navigasjon og navigasjonshjelpemidler for skip og flyttbare innretninger | FOR-2014-05-05-1157 | **Nei**, fiskefartøy er unntatt (lasteskip, passasjerskip, innretninger). Den gjelder NPC-trafikken, ikke spillerens båter | Omfanget sjekket |
-| **Lagt til:** Forskrift om fiske- og fangstfartøy under 15 meter største lengde | FOR-2013-11-22-1404 | Ja, de fleste båtene i spillet. Det er her utstyrskravene for fiskebåtene står (det navigasjonsforskriften gjør for andre skip) | Ikke lest |
-| **Lagt til:** Forskriften for fiskefartøy på 15 m og over (Sjøfartsdirektoratet) | Nummeret sjekkes i L0 | Ja, havbåtene | Ikke funnet |
+| **Lagt til:** Forskrift om fiske- og fangstfartøy under 15 meter største lengde | FOR-2013-11-22-1404 | Ja, de fleste båtene i spillet. Det er her utstyrskravene for fiskebåtene står (det navigasjonsforskriften gjør for andre skip) | Utstyrskravene lest 28.10.2026 (§§ 15–17, 36–45, 60–61, 63–68, 75–89) |
+| **Lagt til:** Forskrift om konstruksjon, utstyr, drift og besiktelser for fiske- og fangstfartøy med største lengde på 15 m og derover | FOR-2000-06-13-660 | Ja, båtene fra 15 m (kyst21 og havbåtene) | Kap. 7 (redningsmidler), 9 (radio) og 10 (navigasjon) lest 28.10.2026. Kap. 5 (brann) ikke lest |
 | **Lagt til:** Kvalifikasjonsforskriften (sertifikater og fartsområder) | Nummeret sjekkes i L0 | Bare som bakgrunn (se V3) | Ikke lest |
 | Allerede i spillet: ervervstillatelsesforskriften §§ 22–23 (registreringsmerket) | | Bygd 07.10.2026 (`docs/systemer/baater.md`) | Lest |
 | Allerede i spillet: forskrift om arbeids- og hviletid på fiskefartøy | FOR-2017-11-10-1758 | **Fjernet** (Jonas 11.10.2026: «Fjern alt om hviletid») | Lest |
@@ -89,45 +89,96 @@ FOR-2002-06-27-754 § 5 og § 9: kjenningssignal (fire tegn, `LK1234`-form, sjek
 
 Havne- og farvannsloven og farvannsskiltforskriften: fartsgrenser i havner og sund (skiltene og grensa i kartet), forbud mot ankring der det er skiltet, og at sjømerkene i spillet følger skiltforskriften og IALAs region A (lateral og kardinal, farger, toppmerker, lyskarakter), sjekket mot `sjomerker-N` i kartet. Et merke spilleren går feil side av, er en grunnstøting som venter (Fysikk 3), så varselet fra L1 får en linje for det («Du går på feil side av merket»). Datakilden for fartsgrensene er det usikre: de lokale fartsforskriftene er kommunale, og et åpent datasett fra Kystverket er ikke funnet ennå (L0 leter). Hvis det ikke finnes, holder det med havnene og mottakene spillet kjenner (V4). Autonav holder fartsgrensa selv. Kjølvannet fra Fysikk 4 (F1) gjør at fart i havn synes. Stikkprøver langs kysten.
 
-### L6 Skipssikkerheten: sjødyktig båt og påbudt utstyr (slås sammen med SK1–SK6)
+### L6 Påbudt utstyr: modellene i Blender og plassen på båtene (V3, to økter)
 
-Skipssikkerhetsloven, sjøloven § 131 og forskriften for fiskefartøy under 15 m: hva båten skal ha om bord etter lengden (redningsvest eller flytedress per person, livbøye, nødraketter, brannslukker, VHF, nødpeilesender fra en viss lengde, redningsflåte), og at skipperen sjekker før avgang. Det er her SK1–SK6 (Blender-modellene, mann over bord, nødstopp) hører hjemme, så de bygges som denne fasen. Følgen er V3. Del i to økter: L6a utstyret og sjekken, L6b mann over bord og nestenulykker.
+Jonas (V3, 28.10.2026): ingen sjekkliste, ingen sperre og ingen følger i kaskoen. I stedet lista over hva hver båt skal ha om bord, så utstyret som mangler, lages i Blender og står på båtene. **L6a** lager modellene som mangler (`/blender`, `tools/deck/sikker.py` utvides). **L6b** setter dem på båtene etter lista, i det antallet reglene krever, slik livbøyene og flåtene står i dag (`view3d/09-landing-deck.js`, `K.buoys`). Mann over bord og nestenulykker (resten av SK1–SK6) er ikke med her og står i backloggen.
+
+**Båtene i spillet og hvilken forskrift som gjelder dem:**
+
+| Gruppe | Båtene | Forskrift |
+|---|---|---|
+| Åpne, uten styrhus | skiff (5,9 m), trebat (7,0 m) | FOR-2013-11-22-1404 |
+| Åpen med hardtop | snekke (7,9 m) | FOR-2013-11-22-1404 (regnes som åpen med styrhus: drakt og radio gjelder) |
+| Med styrhus under 10,67 m | plastsjark (9,45 m), sjark (10,57 m) | FOR-2013-11-22-1404 |
+| 10,67–15 m | hurtigsjark, sjarkny, breisjark (10,99 m), kyst15 (14,99 m) | FOR-2013-11-22-1404, og de strengere kravene fra 10,67 m (12 m for horn og lyskaster) |
+| 15–24 m | kyst21 (21 m) | FOR-2000-06-13-660 |
+| 24–45 m | ingen nå | FOR-2000-06-13-660 |
+| 45 m og over | autoliner (45,4 m), snokrabbe (50 m), bunntral (60,3 m), pelagisk (75 m: 75 m-grensa for livbøyene) | FOR-2000-06-13-660 |
+
+**Lista** (antall per person = `crewMax` + skipperen; «fra» er største lengde):
+
+| Utstyr | Under 15 m (FOR-2013-11-22-1404) | 15 m og over (FOR-2000-06-13-660) | Modell i dag |
+|---|---|---|---|
+| Redningsvest | én per person (§ 36) | én per person (§ 7-8) | **Mangler** |
+| Overlevelsesdrakt | én per person på dekkede båter og åpne med styrhus (§ 37) | én per person (§ 7-9) | **Mangler** (varmedressen finnes bare som klær) |
+| Redningsflåte | dekkede båter over 6 m: plass til alle; høyst tre om bord: 4-mannsflåte etter ISO 9650-1 (§ 38) | plass til 200 % av de om bord; fra 45 m én på hver side som tar alle (§ 7-5) | Finnes: `flate4`, `flate6`, `flate12` med vugge (`sikker.py`) |
+| MOB-båt | | fra 45 m; 24–45 m med bankfiske II (§ 7-5) | **Mangler** |
+| Livbøye | én per tre personer, minst halvparten med lys; under 10,67 m minst én med 30 m flytende line, 10,67–15 m minst to, én med line på hver side (§ 43) | under 24 m 3, 24–45 m 4, 45–75 m 6, fra 75 m 8; lys på minst halvparten (under 24 m minst én); røyk på minst to (under 24 m én); line på hver side (§ 7-10) | Finnes: `livboye`, `livboye_w`, `boyeholder`, `boyelys`, `boyeline`. **Mangler:** røykbøyen |
+| Nødsignaler | to røyksignaler; fjord- og kystfiske tre fallskjermraketter og tre håndbluss, bankfiske seks og fire (§ 44) | fallskjermraketter 12 fra 24 m, ellers 4; håndbluss 4–10 etter lengden; to røyksignaler (§ 7-12) | **Mangler** (en vanntett boks med raketter og bluss) |
+| Linekaster | | fra 24 m (§ 7-11) | **Mangler** |
+| Nødpeilesender (EPIRB, fritt flytende) | kystfiske og større (§ 68) | kystfiske og større, og fra 24 m (§ 9-6) | **Mangler** |
+| SART (radar- eller AIS-SART) | kystfiske og større (§ 68) | under 24 m én, fra 24 m én i hver flåte (§ 7-14) | **Mangler** |
+| Håndholdt VHF | kystfiske og større (§ 68) | én per flåte og MOB-båt (§ 7-13) | **Mangler** |
+| VHF med DSC | dekkede og åpne med styrhus (§§ 64, 68) | alle (§ 9-6) | I butikken (`EQUIP.vhf`), modell i konsollen |
+| AIS | | fra 15 m (§ 10-4a) | I butikken (`EQUIP.ais`), ingen synlig del |
+| Brannslukker | minst to på 6 kg, én om båten ikke har styrhus eller lugar (§ 17) | kap. 5, ikke lest | **Mangler** |
+| Kompass | alle (§ 75) | alle; fra 24 m standardkompass og styrekompass (§ 10-3) | Finnes i skiffen og havsjarken |
+| Radar | 10,67–15 m bygd etter 1997 (§ 79) | fra 24 m, og under 24 m med bankfiske I (§ 10-3) | Finnes (`radome`, åpen antenne) |
+| Brovaktsalarm | 10,67–15 m med autopilot (§ 77) | med autopilot og kystfiske (§ 10-7) | I butikken (`EQUIP.brovakt`), ingen synlig del trengs |
+| Kikkert | alle (§ 84) | alle (§ 10-4) | Finnes i hendene (`hender.py`) |
+| Horn eller fløyte | 12–15 m fast montert (§ 88) | sjøveisreglene vedlegg III | Finnes på havsjarken, hurtigsjarken og Maloen |
+| Lyskaster | 12–15 m (§ 89) | alle (§ 10-5) | Finnes på fem modeller |
+| Signalfigurer (kjegler, kule) | alle (§ 87) | alle (§ 10-5) | **Mangler** (L3 tegner dem) |
+| Radarreflektor | når overbygget reflekterer dårlig (§ 60) | | **Mangler** (bare de åpne båtene og snekka) |
+| Refleksstriper | fire per side, minst 50 × 300 mm, og seks synlige ovenfra (§ 61) | | **Mangler** (en tekstur på skroget, ikke en modell) |
+| Leider akter | fast, med håndtak, nederste trinn minst 300 mm under vannlinja (§ 63) | | Finnes på flere modeller som badeleider. Sjekkes mot § 63 |
+| Lanterner | sjøveisreglene (§ 86) | sjøveisreglene (§ 10-5) | Finnes (`lanterns`) |
+
+**Modellene som må lages i L6a:** redningsvest (i en kasse eller på en krok i styrhuset), overlevelsesdrakt i pose, MOB-båt i davit, røykbøye på brakett, nødsignalboks, linekaster, nødpeilesender i fritt flytende holder, SART, håndholdt VHF i lader, brannslukker på brakett, signalfigurer (to kjegler og kule), radarreflektor, og refleksstripene som tekstur. Mål fra standardene (LSA-koden, ISO 9650-1, NS 3910), ingen merkenavn eller logoer, som i `sikker.py`.
+
+**Det som ikke kan avgjøres fra forskriften:** spillet har ingen fartsområder (fjordfiske, kystfiske, bankfiske I og II). Lista antar **kystfiske** for båtene under 15 m, **bankfiske I** for kyst21 og **havfiske** for havbåtene, fordi feltene de fisker på, ligger der. Kravene til nødpeilesender, SART og håndholdt VHF følger av dette.
 
 ### L7 Skipsarbeidsloven: mannskapet ansettes og sies opp (én økt)
 
 Skriftlig arbeidsavtale når noen mønstrer på (lott eller hyre, stilling, båt), prøvetid, oppsigelsesfrist og vern mot usaklig oppsigelse, og at mannskapet går i land når avtalen sier det. Bygger på Mannskap-appen og avmønstringen som finnes. **Hviletiden kommer ikke tilbake** (Jonas 11.10.2026), med mindre Jonas sier det. Tester: `selfcrew`, mannskapstestene.
 
-### L8 Sjøloven for skipperen: havsnød og alkohol (én økt, valgfri)
+### L8 Sjøloven for skipperen: havsnød (én økt, valgfri)
 
-§ 135 havsnød: plikten til å hjelpe folk i havsnød, som et rop på VHF når en båt i nærheten trenger hjelp (bygger på slepet og bergelønnen). §§ 143–145 alkohol: puben finnes, og det ville vært ekte at skipperen ikke fører båten etter pubkvelden. Om det er morsomt eller bare irriterende, er V5.
+§ 135 havsnød: plikten til å hjelpe folk i havsnød, som et rop på VHF når en båt i nærheten trenger hjelp (bygger på slepet og bergelønnen). Alkohol (§§ 143–145) er ikke med (V5 A).
 
 ## Valgene
 
-**V1 Hva skjer når en regel brytes?**
+**V1 Hva skjer når en regel brytes?** Jonas: **A**.
 - **A (anbefalt):** følgene kommer fra simuleringen: skade, ansvar etter skyld, høyere kaskopremie, og en linje i dagboka. Ingen bøter. *Det er den ekte følgen og den Friction for Flow tillater.*
 - B: som A, og i tillegg sjeldne kontroller (Kystvakten eller politiet) med forelegg etter de ekte satsene.
 - C: bare varsel og forklaring, ingen følger.
 
-**V2 Hvor strenge er NPC-båtene?**
+**V2 Hvor strenge er NPC-båtene?** Jonas: **A**.
 - **A (anbefalt):** NPC-ene følger reglene 13–18 fullt ut: de viker når de skal, og holder kurs når spilleren skal vike. *Da lærer spilleren reglene av det som skjer rundt henne.*
 - B: NPC-ene viker alltid for spilleren, uansett regel. Tryggere, men urealistisk.
 
-**V3 Hva gjør påbudt utstyr (L6)?**
+**V3 Hva gjør påbudt utstyr (L6)?** Jonas: **ingen av dem**. Finn lista over påbudt utstyr, og lag modellene i Blender der de mangler (L6).
 - **A (anbefalt):** utstyret som mangler, vises på sjekklista før avgang med paragraf, og kaskoen dekker ikke det som skjer for en båt som ikke var sjødyktig. Ingen sperre ved «Kast loss». *Spilleren kan velge selv, og følgen er ekte.*
 - B: «Kast loss» er sperret til båten har det loven krever.
 - C: bare sjekklista.
 
-**V4 Fartsgrensene (L5) hvis Kystverket ikke har et åpent datasett:**
+**V4 Fartsgrensene (L5) hvis Kystverket ikke har et åpent datasett:** Jonas: **A** («Ja»).
 - **A (anbefalt):** en fast grense i havnene og ved mottakene spillet kjenner (5 knop er vanlig i kommunale fartsforskrifter; sjekkes), merket i kartet. *Det dekker det spilleren merker.*
 - B: L5 venter til et datasett er funnet.
 
-**V5 L8 (alkohol etter puben):**
+**V5 L8 (alkohol etter puben):** Jonas: **A**.
 - **A (anbefalt):** ikke med nå; vurderes når L1–L7 er spilt. *Risikoen for at det blir irriterende er stor, og det gir lite å gjøre.*
 - B: med i L8.
 
+**V6 Påbudt utstyr i butikken (ny 28.10.2026, fra lista under L6).** VHF, AIS og brovaktsalarm selges i dag som valgfritt utstyr (`EQUIP`), men AIS er påbudt fra 15 m, VHF på alle dekkede båter, og brovaktsalarmen med autopilot. Livbøyene og flåtene står allerede på båtene uten at de kjøpes.
+- **A (anbefalt):** det som er påbudt for båten, følger med båten (står i databladet, er med i prisen og synes på båten), og butikken selger det bare til båtene der det er valgfritt. *Da har ingen båt mindre enn loven krever, og spilleren slipper å kjøpe noe hun ikke kan velge bort.* Gamle lagringer får det som mangler, gratis.
+- B: som i dag. Butikken selger det, og ingen båt må ha det.
+
 ## Det som er antatt eller usikkert
 
-- Paragrafene i skipssikkerhetsloven, skipsarbeidsloven og forskriften for fiskefartøy under 15 m er ikke lest. Det som står om dem over, er fra overskrifter og egen kunnskap og sjekkes i L0 før noe bygges.
+- Fartsområdene som lista under L6 antar (kystfiske under 15 m, bankfiske I for kyst21, havfiske for havbåtene).
+- Brannkapitlet (kap. 5) i FOR-2000-06-13-660 er ikke lest, så antallet brannslukkere fra 15 m er ikke kjent.
+- Paragrafene i skipssikkerhetsloven og skipsarbeidsloven er ikke lest. Det som står om dem over, er fra overskrifter og egen kunnskap og sjekkes i L0 før noe bygges.
 - Formen på kjenningssignalet for fiskefartøy (bokstaver og tall) er ikke sjekket.
 - At de kommunale fartsgrensene i havn ofte er 5 knop, er ikke sjekket.
 - Skyldfordelingen etter sjøloven § 161 avgjøres i virkeligheten av en domstol; spillet bruker en enkel regel ut fra vikeplikten.
@@ -143,4 +194,5 @@ Skriftlig arbeidsavtale når noen mønstrer på (lott eller hyre, stilling, båt
 
 ## Status
 
-- 28.10.2026: planen skrevet. Venter på V1–V5 og «kjør på».
+- 28.10.2026: planen skrevet.
+- 28.10.2026: Jonas svarte på V1–V5. Lista over påbudt utstyr per båt er funnet (L6) fra FOR-2013-11-22-1404 og FOR-2000-06-13-660. Venter på V6 og «kjør på» for L0.
