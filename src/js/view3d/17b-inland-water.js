@@ -61,7 +61,7 @@
         const ux = (bx - ax) / len, uz = (bz - az) / len, px = -uz * w / 2, pz = ux * w / 2, n = Math.max(1, Math.ceil(len / 8));
         for (let q = 0; q < n; q++){
           const s0 = q / n, s1 = (q + 1) / n, x0 = ax + (bx - ax) * s0, z0 = az + (bz - az) * s0, x1 = ax + (bx - ax) * s1, z1 = az + (bz - az) * s1;
-          const h0 = terrH(x0, z0), h1 = terrH(x1, z1), wh = clamp((Math.abs(h1 - h0) / (len / n) - 0.18) * 2.5, 0, 1) * (L.k === 1 ? 1 : 0.6), y0 = Math.max(h0, 0.15) + 0.25, y1 = Math.max(h1, 0.15) + 0.25, a0 = along + len * s0, a1 = along + len * s1;
+          const h0 = terrH(x0, z0), h1 = terrH(x1, z1), wh = clamp((Math.abs(h1 - h0) / (len / n) - 0.18) * 2.5, 0, 1) * (L.k === 1 ? 1 : 0.4), y0 = Math.max(h0, 0.15) + 0.25, y1 = Math.max(h1, 0.15) + 0.25, a0 = along + len * s0, a1 = along + len * s1;
           const c = [[x0 + px, y0, z0 + pz, a0], [x1 + px, y1, z1 + pz, a1], [x1 - px, y1, z1 - pz, a1], [x0 - px, y0, z0 - pz, a0]];
           for (const k of [0, 1, 2, 0, 2, 3]){ P.push(c[k][0] - ox, c[k][1], c[k][2] - oz); A.push(1, c[k][3], wh); }
         }
