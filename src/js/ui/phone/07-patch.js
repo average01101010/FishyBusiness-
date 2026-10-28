@@ -1,5 +1,10 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['g1-281026', '28.10.2026', 'Naturen etter kartet', 'Nature from the map', [
+       ['Bakken følger Kartverkets og satellittenes kart over naturen: myrene, jordene, lyngheiene, vidda, bart fjell, ur og breene ligger der de ligger i virkeligheten.', 'The ground follows Kartverket\'s and the satellites\' maps of nature: the bogs, the fields, the heaths, the fells, bare rock, scree and the glaciers lie where they lie in life.'],
+       ['Skogen står der det er skog, med spredte bjørker i lyngen, og ingen trær på myr, vidde eller berg.', 'The woods stand where there are woods, with scattered birches in the heath, and no trees on bogs, fells or rock.'],
+       ['Om høsten kommer ruska: lyngen blir rødbrun og bjørkeskogen gul.', 'In autumn the colours turn: the heath goes red-brown and the birch woods yellow.'],
+       ['Myrene har tjern og tuer, og åkrene har kjørespor, når du er nær.', 'The bogs have pools and tussocks, and the fields have tram lines, when you are close.']]],
     ['p147', '28.10.2026', 'Skatten for aksjeselskap', 'The tax of a limited company', [
        ['Stifter du aksjeselskap, gjelder det hele året fra 1. januar, slik det gjør når et enkeltpersonforetak omdannes: hele årets overskudd skattlegges i selskapet, og forskuddet du alt har betalt, regnes med.', 'Found a limited company, and it counts for the whole year from 1 January, as when a sole proprietorship is converted: the whole year\'s profit is taxed in the company, and the advance you have already paid counts.'],
        ['Et aksjeselskap som fikk forskuddsskatten trukket i inntektsåret etter de gamle reglene, får rentegodtgjørelse for pengene som ble trukket for tidlig.', 'A limited company that had its advance tax taken in the income year under the old rules gets interest for the money taken too early.'],

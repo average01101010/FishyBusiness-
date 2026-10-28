@@ -172,9 +172,20 @@
     meshTask('fine', FINEM && FINEM.sx === span && FINEM.gn === n ? FINEM : null, cx - span / 2, cz - span / 2, span, n, (x, z) => terrCoarse(x, z, span / (n - 1)), (M, dirty) => { const old = FINEM; FINEM = M; FINEM.cx = cx; FINEM.cz = cz; FINEM.stale = dirty; shSeed(FINEM, old); if (old) freeMesh(old); if (snowNow != null) recolor(FINEM, snowNow); buildPatches(); });
   }
   const WEED = [0.27, 0.24, 0.13], WEED2 = [0.22, 0.2, 0.12], BARN = [0.66, 0.66, 0.62];   // rockweed and barnacles in the tidal zone
+  // the land cover's own ground (G1, coverAt): the heaths of crowberry, heather and dwarf birch (ESA's 'shrub', most of the fells along
+  // the coast), the lichen and the sparse grass of the high ground ('moss'), the bogs, the fields, bare rock and gravel, and the town's
+  // ground; each from its straw colour (late autumn to spring) to its summer one by grassNow
+  const COVC = {heath:[[0.43, 0.36, 0.27], [0.33, 0.37, 0.22]], lichen:[[0.6, 0.59, 0.51], [0.55, 0.56, 0.44]], bog:[[0.6, 0.5, 0.31], [0.45, 0.47, 0.25]],
+    field:[[0.52, 0.45, 0.32], [0.37, 0.46, 0.23]], meadow:[[0.55, 0.5, 0.34], [0.38, 0.47, 0.25]], gravel:[0.46, 0.45, 0.42], town:[0.42, 0.43, 0.38],
+    sand:[0.76, 0.73, 0.62], scree:[0.52, 0.51, 0.48], shingle:[0.56, 0.55, 0.51]};
   function recolor(m, snow){
-    const {slope, nz, col, h, fo, mat} = m;
+    const {slope, nz, col, h, fo, mat, cv, ck} = m;
+    if (cv && !m.vb){ m.cov = new Float32Array(h.length * 4); m.vb = buf(m.cov, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); }
+    const cov = m.cov, gs = grassNow(), cc = k => mix3(COVC[k][0], COVC[k][1], gs), [ry, rl] = ruskNow();
+    // ruska: the heath's bilberry, crowberry and dwarf birch red-brown, the bog's sedge rust, the birch woods yellow while the leaves hang
+    const heath = mix3(cc('heath'), [0.5, 0.26, 0.15], ry * 0.85), lichen = cc('lichen'), bogc = mix3(cc('bog'), [0.6, 0.42, 0.22], ry * 0.6), field = cc('field'), meadow = cc('meadow');
     const gr = grassNow(), grass = mix3([0.5, 0.46, 0.33], [0.36, 0.43, 0.28], gr), birch = mix3([0.33, 0.3, 0.26], [0.25, 0.33, 0.22], gr), shore = [0.5, 0.49, 0.44], bed = [0.3, 0.3, 0.27];
+    const woodC = mix3(birch, [0.52, 0.44, 0.14], ry * rl * 0.8);   // the birch woods yellow in ruska while the leaves hang
     const asph = [0.3, 0.31, 0.32], gravel = [0.47, 0.45, 0.41], pv = m.pv;   // a harbour unit's fill and the flat land by it (unitPatch)
     // the rock (0.33, 0.35, 0.37) and the snow (0.9, 0.92, 0.95) are laid on in the fragment shader (terFS) by the weights in mat, so their
     // edges can be sharpened per pixel; the colour here is the ground under them
@@ -191,8 +202,23 @@
         if (tw > 0 || tb > 0){ c = mix3(c, mix3(WEED, WEED2, sstep(0.4, 0.7, n)), tw * (1 - sstep(0.5, 0.85, slope[i]) * 0.5)); c = mix3(c, BARN, tb * 0.55); }
         // birch woods below the tree line stay dark through the snow; steep faces show bare rock
         const rs = sstep(0.32, 0.7, slope[i]); wood = Math.max(y < 320 ? sstep(0.42, 0.62, n) * sstep(320, 200, y) : 0, fo ? fo[i] * sstep(420, 260, y) * 0.9 : 0) * (1 - rs);
-        p = pv ? pv[i] : 0; sn = sstep(snow - 60, snow + 60, y + n * 90) * (1 - rs * 0.85) * (1 - wood * 0.55) * (1 - p * 0.6) * sstep(1.5, 2.3, y);   // no snow where the tide comes
-        R = (1 - alt * (1 - rs * 0.75)) * (1 - p);
+        R = 1 - alt * (1 - rs * 0.75);
+        let gl0 = 0;
+        if (ck && ck[i]){
+          // the land cover where it is known: the ground's colour from the classes' shares, the wood from the forest (and a little from the
+          // heaths' dwarf birch), the rock from bare ground and the lichen fells besides the steepness and the height (the summits are
+          // stonier than ESA's 10 m classes show: the heath on Senja's tops reads as green to the top otherwise)
+          const o = i * 12, F = cv[o] / 255, SH = cv[o + 1] / 255, GR = cv[o + 2] / 255, CR = cv[o + 3] / 255, WE = cv[o + 4] / 255, MO = cv[o + 5] / 255, BA = cv[o + 6] / 255, SN = cv[o + 7] / 255, UR = cv[o + 8] / 255, SA = cv[o + 9] / 255, SC = cv[o + 10] / 255, SG = cv[o + 11] / 255;
+          const v = 0.93 + 0.14 * n, cg = [0, 1, 2].map(q => (F * woodC[q] + SH * heath[q] + GR * meadow[q] + CR * field[q] + WE * bogc[q] + MO * lichen[q] + BA * COVC.gravel[q] + SN * lichen[q] + UR * (COVC.town[q] + meadow[q]) * 0.5 + SA * COVC.sand[q] + SC * COVC.scree[q] + SG * COVC.shingle[q]) * v);   // a town's ground is half gardens
+          c = y < 3.5 ? mix3(shore, cg, y / 3.5) : cg;
+          if (tw > 0 || tb > 0){ c = mix3(c, mix3(WEED, WEED2, sstep(0.4, 0.7, n)), tw * (1 - sstep(0.5, 0.85, slope[i]) * 0.5)); c = mix3(c, BARN, tb * 0.55); }
+          wood = (F * 0.95 + SH * 0.12) * sstep(440, 260, y) * (1 - rs);
+          R = Math.max(R, BA * 0.95, MO * 0.45, SC * 0.85, SG * 0.5);   // the rock above the vegetation (280-420 m) and on the steep faces as before
+          gl0 = SN * sstep(120, 220, y);   // snow fields and glaciers that lie through the summer (ESA's 'snow', seen in August)
+          if (cov){ cov[i * 4] = WE; cov[i * 4 + 1] = CR; cov[i * 4 + 2] = SH; cov[i * 4 + 3] = 1 + MO; }
+        } else if (cov){ cov[i * 4] = cov[i * 4 + 1] = cov[i * 4 + 2] = cov[i * 4 + 3] = 0; }
+        p = pv ? pv[i] : 0; sn = Math.max(sstep(snow - 60, snow + 60, y + n * 90) * (1 - rs * 0.85) * (1 - wood * 0.55), gl0 * (1 - rs * 0.6)) * (1 - p * 0.6) * sstep(1.5, 2.3, y);   // no snow where the tide comes
+        R *= 1 - p;
         c = mix3(c, birch, wood * 0.6);
         if (p) c = mix3(c, mix3(asph, gravel, sstep(0.4, 0.75, n) * 0.7 + (1 - p) * 0.3), p);
       }
@@ -200,6 +226,7 @@
       mat[i * 4] = R; mat[i * 4 + 1] = wood; mat[i * 4 + 2] = sn; mat[i * 4 + 3] = p;
     }
     gl.bindBuffer(gl.ARRAY_BUFFER, m.mb); gl.bufferSubData(gl.ARRAY_BUFFER, 0, mat);
+    if (m.vb){ gl.bindBuffer(gl.ARRAY_BUFFER, m.vb); gl.bufferSubData(gl.ARRAY_BUFFER, 0, cov); }
     gl.bindBuffer(gl.ARRAY_BUFFER, m.cb); gl.bufferSubData(gl.ARRAY_BUFFER, 0, col);
   }
 

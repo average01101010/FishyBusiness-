@@ -6,7 +6,7 @@
 
 Jonas 28.10.2026, ordrett: «Grafisk overhaling av natur, miljø og omgivelser i spillet. Mål: Høyest mulig nivå av realisme.» Og: «kan ikke du finne ut hvordan vi kan gjøre ta spillet grafisk til next-level? Jeg tenker da på alt som ligger i offentlige kartdata eller andre ting som vi burde ta inn i spillet for at spillere skal kjenne seg igjen i verden. Kom gjerne også med andre forslag til hvordan du mener vi kan ta spillet til et mye bedre grafisk nivå.»
 
-Reglene som gjelder: grafikken er nesten det viktigste, og kvaliteten senkes ikke uten målinger (Jonas 03.10.2026); terrenget er viktigst, «arbeidsplassen er naturen og båten», og spillet skal gå jevnt på telefoner, nettbrett og i nettleser (18.10.2026); spillet er nasjonalt, alt bygges for hele kysten (06.10.2026); eget simulert vær, ikke live-vær (06.10.2026); ingen ekte firmanavn (07.10.2026); kildene oppgis. Sjøen og skroget hører til Fysikk 4 (`docs/planer/fysikk-4-sjo-og-skrog.md`) og er ikke med her.
+Reglene som gjelder: grafikken er nesten det viktigste, og kvaliteten senkes ikke uten målinger (Jonas 03.10.2026); terrenget er viktigst, «arbeidsplassen er naturen og båten», og spillet skal gå jevnt på telefoner, nettbrett og i nettleser (18.10.2026); spillet er nasjonalt, alt bygges for hele kysten (06.10.2026); eget simulert vær, ikke live-vær (06.10.2026); ingen ekte firmanavn (07.10.2026); kildene oppgis. **Bare Norge** (Jonas 28.10.2026: «vi trenger ikke å ta med Sverige, Finland, Danmark i dette selv om vi har data derfra allerede»): de nye lagene fylles bare over norsk land (`national.norway200`), og nabolandene beholder bakken slik den er. **Vannlinja skal med** (Jonas 28.10.2026: «Husk også alt som ligger i vannlinjen som kaier, moloer, flytebrygger eller andre ting som kan være relevante for de kystnære detaljene»): fase G10. Sjøen og skroget hører til Fysikk 4 (`docs/planer/fysikk-4-sjo-og-skrog.md`) og er ikke med her.
 
 ## 2. Slik er det i dag
 
@@ -47,6 +47,19 @@ Alt under er sjekket mot katalogene 28.10.2026 (`data.norge.no`, Geonorge). «Li
 | **Norge i bilder** (ortofoto) | Flybilder | 0,1–0,5 m | Norge digitalt, tillatelse fra rettighetshaverne også for ikke-kommersiell publisering | Ikke med. Sentinel-2 er det åpne alternativet. |
 | **Kartverket dybde 25 m** | Finere bunn | 25 m | CC BY 4.0, men bare utenfor 12 nm | Innenfor territorialgrensen er alt finere enn 50 m gradert. Ingenting nytt å hente. |
 
+### 3b. Det Overture alt har fra OpenStreetMap (funnet i G1, 28.10.2026)
+
+Overture-utgaven rørledningen alt leser (`tools/map/ov.py`, `2026-09-23.1`) har mer enn planen regnet med, fordi OpenStreetMap i Norge i stor grad er Kartverkets N50 importert. Talt over Senja-ruta (90 × 100 km):
+
+| Tema i Overture | Det som finnes (antall flater, linjer eller punkter) | Brukes i |
+|---|---|---|
+| `base/land` (naturtyper) | myr 15 134, skog 3 791, holmer 2 186, enkelttrær 505, topper 492, bart fjell 227, stup 203, strand 183, ur 171, steiner 115, gressmark 91, kratt 80, bre 32, lyng 36, skjær 19, rullestein 10 | G1 (arealdekket), G8 (stup, ur), G10 (strand, skjær) |
+| `base/land_use` | dyrket mark 2 465, skiløyper 636, boligfelt 283, idrettsbaner 174, steinbrudd 70, oppdrett 53 (ikke brukt), kirkegårder 64, industri 35, småbåthavner 5 | G1 (jorder, eng, steinbrudd, industri), G10 (småbåthavner) |
+| `base/water` | bekker 11 415, vann 8 451, elver 724, fosser 116, innsjøer 126, tjern 66, bukter 202 | G2 |
+| `base/infrastructure` | strømstolper 5 158, høyspentmaster 2 589, gatelys 1 299, bruer 568, brygger 418, moloer 93, kaier 67, ferjekaier 21, demninger 37, master 107, lysmaster 72 | G7 (kraftspenn), G9 (gatelys), G10 (vannlinja) |
+
+ESA alene fant myr på 1,4 % av Senjas land og én åker; med N50-flatene er det 8 % myr og 2,2 % dyrket mark. Det gjør valg 1 (N50 der ESA tar feil) overflødig: N50 kommer med uten egen rørledning.
+
 ## 4. Andre grafiske løft (uten nye data)
 
 Det som ikke avhenger av kartdata, i rekkefølge etter hvor mye det løfter hvert bilde mot hva det koster på nettbrettet:
@@ -65,7 +78,10 @@ Det som ikke avhenger av kartdata, i rekkefølge etter hvor mye det løfter hver
 
 Hver fase er én økt. Hver fase slutter med bilder før og etter fra de samme seks stedene (Senja, Lofoten, Bergen, Bodø, Hammerfest, Hvaler) i stående og liggende format, og en måling på nettbrettet (`#fps`) mot nullpunktet 71 bilder/s. Alt nytt følger `QUAL` og kan slås av på Lav. Rekkefølgen under er anbefalingen (valg 3).
 
-### G1. Arealdekket: alle ti klassene, og byggenes høyde og takform
+### G1. Arealdekket: ESA, N50-naturtypene og jordene, og byggenes høyde og takform
+
+> **Bygd 28.10.2026** (`3d-verden.md` 4.11c). Byggenes høyde og takform er tatt ut: Overture har 0 % høyde, takform og farge og 4,7 % etasjer i Norge (Finnsnes). Punktene under er planen slik den var.
+
 
 - **Bygger:** `forest` (u8, 50 m, 1 bit) blir `cover` (u8, 50 m, klassekode 0–10, samme størrelse). `region.py`, `coast.py`, `game.py` skriver det; `GAME` i `coast.py` får laget; ny kartrelease `kart-N` fra `kart.yml`. I spillet leser `recolor` (`04-vec-packs.js`) og `terFS` klassen: `barren` gir berg uavhengig av helning (bart fjell på vidda og svaberget), `wetland` gir myr (i dag bare under 70 m), `crop` gir jorder med kanter og striper, `moss` gir vidde (lav og lyng, ingen trær), `snow` gir evig snø og bre over snøgrensen, `shrub` gir kratt, `grass` gir eng og beite. `addTrees` planter skog bare i `forest` og kratt i `shrub`. Byggene tar `height`, `num_floors`, `roof_shape`, `roof_color` og `facade_color` fra Overture der de finnes (`vectors.py` skriver dem i bygglaget, `bldCells` leser dem); ellers som i dag.
 - **Filer:** `tools/map/region.py`, `coast.py`, `game.py`, `vectors.py`, `core/01b-mapdata.js` (laget), `view3d/04-vec-packs.js`, `01-shaders.js`, `06-buildings-lights.js`.
@@ -136,6 +152,14 @@ Hver fase er én økt. Hver fase slutter med bilder før og etter fra de samme s
 - **Tester:** `lighttest`, `vectest`; nytt `lifeshot.py` (måkene har ingen egen test i dag).
 - **Måles:** tegnekall om natta i Tromsø.
 
+### G10. Vannlinja: kaier, moloer, brygger, strender og skjær
+
+- **Bestilt** av Jonas 28.10.2026 underveis i G1 (sitatet står i kapittel 1). I dag finnes kaifronter, moloer med plastringsstein, faste brygger som flater eller kasser, flytebrygger fra Blender, tang og rur i tidevannssona og brenninga (`bygg-veier-og-kaier.md` 4.15, `3d-verden.md`).
+- **Bygger:** kaiveggene får materiale (betong med tidevannsstripe og grønske under middelvann, tre med svarte fendere og bildekk, stein i eldre kaier), pullerter, leidere og fenderlister langs kaifrontene (`quay` i vec-pakkene) etter lengden; de faste bryggene uten `floating=yes` (BACKLOG: grå kasser i Kristiansand og Hammerfest) får dekke, pæler og utriggere (alternativ b fra #94); strendene og rullesteinsfjærene fra N50 (`base/land` sand og shingle) legges som eget lag langs kysten på 5 m, siden de er for smale for 50 m-rutene i `cover`; skjærene og holmene får tang, rur og brenning etter eksponeringen; stupene (`physical/cliff`) gir brattkant i fjæra; småbåthavnene (`recreation/marina`) får bøyer og fortøyde småbåter.
+- **Filer:** `tools/map/vectors.py` (nye lag: strand, skjær, stup, småbåthavn), `core/01c-vec.js`, `view3d/05-quays-breakwaters.js`, `22-docks-air.js`, `tools/harbour/` (pullert, leider, fender, brygge på pæler i Blender).
+- **Tester:** `vectest`, `moortest`, `docktest`, `havntest`; `terrshot.py` med havnene (Finnsnes, Husøy, Bergen, Bodø, Hammerfest).
+- **Ingen firmanavn** og ingenting fra oppdrettsanleggene.
+
 ## 5a. Rammene, og hva som er mulig (28.10.2026)
 
 Jonas ba om «det du mener er fysisk mulig å få til innenfor prosjektets rammer og potensielle begrensninger». Rammene, og hva de betyr for hver fase:
@@ -158,14 +182,15 @@ Jonas ba om «det du mener er fysisk mulig å få til innenfor prosjektets ramme
 | G7 turbiner og spenn | Ja, lite | NVEs lister. |
 | G8 10 m-bakke og nærfeltet | Bakken bare om `hgt10` for hele kysten holder seg under rundt 150 MB; tuer, teksturer og ur uansett | Måles på Senja-flisa før noe bygges for kysten. |
 | G9 liv | Ja | Tegnekall om natta i byene. |
+| G10 vannlinja | Ja | Vec-pakkene vokser litt (strand og skjær på 5 m bare langs kysten). |
 
 ## 6. Valgene (tatt av økta 28.10.2026)
 
 Jonas overlot valgene til økta («kjør på med det du mener er fysisk mulig»). Tatt slik, med grunnen:
 
-1. **Arealdekket: A**, Overtures ESA-klasser. Samme rørledning, én økt. N50 tas bare inn om G1 viser at ESA tar feil på vidda eller på Jæren (da som egen økt).
+1. **Arealdekket: A og C i ett**: ESA-klassene, med OpenStreetMaps naturtyper og arealbruk over (N50 importert i OSM), i samme rørledning (kapittel 3b).
 2. **Bakkens farge: A**, Sentinel-2 prøves på Senja, og økta som bygger G3 avgjør etter bildene og størrelsen om hele kysten får det. Bildene legges i `docs/pr/` så Jonas kan se dem.
-3. **Rekkefølgen: A**: G1, G5, G2, G3, G4, G7, G6, G8, G9. De billige dataene først, så lyset som endrer hvert bilde, så resten etter gevinst.
+3. **Rekkefølgen: A**: G1, G5, G2, G3, G4, G7, G6, G8, G9, og G10 (vannlinja) etter G2, fordi den bruker de samme vec-lagene. De billige dataene først, så lyset som endrer hvert bilde, så resten etter gevinst.
 4. **Oppdrettsanleggene: ute** (Jonas 28.10.2026). G7 er bare turbiner og spenn, uten eiere og navn.
 5. **Datamengden: A**, pakkene får vokse til rundt det dobbelte, målt per fase.
 6. **Fjernterrenget på 100 m: A**, avgjøres etter G5 med bilder.
@@ -199,3 +224,5 @@ Hver fase måles på Jonas' OnePlus Pad 3 (det han spiller på, 28.10.2026) med 
 
 - 28.10.2026: planen skrevet (gren `ccr-1d00422f-gjapvb`, må flettes inn i arbeidsgrenen).
 - 28.10.2026: Jonas: «Dropp oppdrettsanlegg. Jeg ønsker ikke noe søksmål. Kjør på med det du mener er fysisk mulig å få til innenfor prosjektets rammer og potensielle begrensninger. Lag en plan for dette før vi går i gang.» Oppdrettsanleggene tatt ut, valgene tatt av økta (kapittel 6), rammene og gjennomførbarheten skrevet (kapittel 5a). **Neste: G1 (arealdekket) i egen økt.**
+- 28.10.2026: Jonas: «Husk bare at vi ikke trenger å ta med sverige, finland, danmark … Kjør på når du er klar. Husk å ta gode bilder underveis», og underveis: «Husk også alt som ligger i vannlinjen som kaier, moloer, flytebrygger …» (fase G10).
+- 28.10.2026: **G1 bygd** (`3d-verden.md` 4.11c): laget `cover` fra ESA, N50-naturtypene og arealbruken, i Senjas pakker og i kartreleasen `kart-10` for hele kysten (258,7 MB mot 250,1 MB i `kart-8`); farger, myr, jorder, lyng, vidde, bre, trær og ruska i spillet. Bilder før og etter i `docs/pr/ccr-1d00422f-gjapvb/g1/`. Byggenes høyde og takform er tatt ut (Overture har dem ikke i Norge).

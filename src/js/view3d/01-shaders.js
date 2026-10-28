@@ -10,7 +10,7 @@
     'uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform float uEmis;uniform vec4 uHole;uniform vec4 uOver;varying vec3 vW;varying vec3 vC;' + PLG +
     'void main(){if(vW.x>uHole.x&&vW.x<uHole.z&&vW.z>uHole.y&&vW.z<uHole.w)discard;vec3 n=normalize(cross(dFdx(vW),dFdy(vW)));if(dot(n,vW)>0.0)n=-n;float dif=max(dot(n,uSun),0.0);' +
     'vec3 amb=mix(uGnd,uAmb,n.y*0.5+0.5);vec3 bc=mix(vC,uOver.rgb,uOver.a);vec3 c=bc*(amb+uSunCol*dif+pLit(vW,n))+bc*uEmis;float d=length(vW);float f=1.0-exp(-uFogD*uFogD*d*d);gl_FragColor=vec4(mix(c,uFog,f),1.0);}';
-  const TER_VS = 'attribute vec3 aPos;attribute vec3 aCol;attribute vec3 aNor;attribute float aShd;attribute vec4 aMat;uniform mat4 uVP;uniform mat4 uM;uniform vec3 uPO;varying vec3 vW;varying vec3 vC;varying vec3 vN;varying vec3 vP;varying float vS;varying vec4 vM;void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;vC=aCol;vN=aNor;vP=aPos+uPO;vS=aShd;vM=aMat;gl_Position=uVP*w;}';
+  const TER_VS = 'attribute vec3 aPos;attribute vec3 aCol;attribute vec3 aNor;attribute float aShd;attribute vec4 aMat;attribute vec4 aCov;uniform mat4 uVP;uniform mat4 uM;uniform vec3 uPO;varying vec3 vW;varying vec3 vC;varying vec3 vN;varying vec3 vP;varying float vS;varying vec4 vM;varying vec4 vV;void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;vC=aCol;vN=aNor;vP=aPos+uPO;vS=aShd;vM=aMat;vV=aCov;gl_Position=uVP*w;}';
   const NOISE = 'float hs(vec2 p){vec3 q=fract(vec3(p.xyx)*0.1031);q+=dot(q,q.yzx+33.33);return fract((q.x+q.y)*q.z);}' +
     'float ns(vec2 p){vec2 i=floor(p),f=fract(p);vec2 u=f*f*(3.0-2.0*f);return mix(mix(hs(i),hs(i+vec2(1.0,0.0)),u.x),mix(hs(i+vec2(0.0,1.0)),hs(i+vec2(1.0,1.0)),u.x),u.y);}';
   // The local sea (03b-sea.js) from the sea-state textures, n (32 x 32 over the near terrain) and w (128 x 128 over the whole map): R and G hold
@@ -204,7 +204,7 @@
     'if(uDbg>0.5){gl_FragColor=vec4(vec3(clamp(foam,0.0,1.0)),1.0);return;}' +
     'col=mix(col,fc,clamp(foam,0.0,1.0)*0.85);float fg=1.0-exp(-uFogD*uFogD*d*d);gl_FragColor=vec4(mix(col,uFog,fg),1.0);}';
   const terFS = q => '#extension GL_OES_standard_derivatives : enable\n#define MATQ ' + q + '\nprecision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform vec4 uHole;' +
-    'uniform sampler2D uGround;uniform sampler2D uLand;uniform vec4 uGRect;uniform float uGOn;uniform float uLOn;uniform float uTideY;uniform float uSwash;uniform vec3 uSand;varying vec3 vW;varying vec3 vC;varying vec3 vN;varying vec3 vP;varying float vS;varying vec4 vM;uniform vec4 uMP;uniform vec4 uMQ;' + NOISE + PLG +
+    'uniform sampler2D uGround;uniform sampler2D uLand;uniform vec4 uGRect;uniform float uGOn;uniform float uLOn;uniform float uTideY;uniform float uSwash;uniform vec3 uSand;varying vec3 vW;varying vec3 vC;varying vec3 vN;varying vec3 vP;varying float vS;varying vec4 vM;varying vec4 vV;uniform vec4 uMP;uniform vec4 uMQ;' + NOISE + PLG +
     // the ground near the water is cut where the shore texture (buildLandMask: the foreshore's own height, h = r * 8 - 4) lies under
     // the tide, so the waterline is the coast's own line at high water and the foreshore's at ebb, whatever the mesh's cells
     'void main(){if(vW.x>uHole.x&&vW.x<uHole.z&&vW.z>uHole.y&&vW.z<uHole.w)discard;vec2 luv=(vW.xz-uGRect.xy)*uGRect.zw;' +
@@ -242,7 +242,17 @@
     'float peb=hs(floor(wp*1.5));rc=rc*(0.86+0.28*blk)*(1.0-crack*0.45)*(1.0+(peb-0.5)*1.2*R*(1.0-R));rc=mix(rc,vec3(0.56,0.58,0.46),lic*0.5);' +
     'float tf=(f1+0.5)+(f2+0.5)*0.5;float heath=smoothstep(0.5,0.75,ns(wp/16.0+5.0))*smoothstep(0.05,0.2,st)*(1.0-vM.y);' +
     'float bog=smoothstep(0.58,0.78,ns(wp/64.0+11.0))*(1.0-smoothstep(0.03,0.1,st))*smoothstep(70.0,20.0,h)*step(4.0,h)*(1.0-vM.y);' +
+    // where the land cover is known (vV: the bog's, the field's and the heath's shares, and 1 + the lichen fell's; 0 where unknown, G1):
+    // the heather where the heath is and not by a noise on any slope, the bog where the bog is (with its dark pools and sedge tussocks)
+    // and not on every flat low patch, the lichen's pale carpet broken by stones, and the tram lines of a field, turned per field
+    'float kn=step(0.5,vV.w);float mo=max(vV.w-1.0,0.0);' +
+    'heath=mix(heath,smoothstep(0.38,0.72,ns(wp/16.0+5.0))*vV.z*(1.0-vM.y),kn);' +
+    'float wet=smoothstep(0.15,0.65,vV.x)*(1.0-smoothstep(0.1,0.28,st));bog=mix(bog,wet*(0.75+0.25*smoothstep(0.3,0.7,ns(wp/24.0+11.0))),kn);' +
     'c*=1.0+(tf-0.75)*(0.24-vM.y*0.12);c=mix(c,c*vec3(0.92,0.78,0.86),heath*0.6);c=mix(c,vec3(0.4,0.37,0.2)*(0.9+0.2*tf),bog*0.55);' +
+    'float pool=kn*smoothstep(0.66,0.72,ns(wp/14.0+3.0)+f2*0.12)*smoothstep(0.55,0.9,vV.x)*(1.0-smoothstep(0.04,0.1,st));c=mix(c,vec3(0.07,0.08,0.08),pool*0.85);' +
+    'c=mix(c,vec3(0.72,0.72,0.62)*(0.85+0.3*f2),kn*mo*smoothstep(0.42,0.6,ns(wp*0.3+7.0))*0.55);' +
+    'vec2 fc=floor(wp/90.0);float fa=hs(fc)*3.1416;vec2 fd=vec2(cos(fa),sin(fa));float tram=abs(fract(dot(wp,fd)/18.0)-0.5);' +
+    'c*=1.0-kn*smoothstep(0.2,0.6,vV.y)*(0.1*(0.5+0.5*sin(dot(wp,fd)*2.0944))+0.18*(1.0-smoothstep(0.012,0.03,tram)));' +
     'c=mix(c0,c,det1);rc=mix(r0,rc,det1);}' +
     '\n#endif\n' +
     'n=normalize(n+vec3(b1*0.5+b3,0.0,b2*0.5-b3*0.6)*(0.2+st*0.7)*det*(1.0+R*0.8)*(1.0-S*0.7));' +

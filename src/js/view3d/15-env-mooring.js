@@ -30,7 +30,7 @@
     if (mlight > 0.02){ const ml = [0.62, 0.7, 0.9].map(v => v * mlight * 0.32); env.sunCol = env.sunCol.map((v, k) => v + ml[k]); env.amb = env.amb.map((v, k) => v + [0.02, 0.025, 0.04][k] * mlight); const my = Math.max(env.moonDir[1], 0.25), mll = Math.hypot(env.moonDir[0], my, env.moonDir[2]); env.lightDir = [env.moonDir[0] / mll, my / mll, env.moonDir[2] / mll]; }
     env.shadowDir = el > -1 ? env.sunDir : mlight > 0.02 ? env.moonDir : null;
     env.tide = tideH(H);
-    const sn = Math.round(snowLine(H) / 20) * 20, gn = grassNow(); if (sn !== snowNow || gn !== grassAt){ snowNow = sn; grassAt = gn; recolor(TERR, sn); if (NEARM) recolor(NEARM, sn); if (FINEM) recolor(FINEM, sn); for (const m of UPATCH) recolor(m, sn); }
+    const sn = Math.round(snowLine(H) / 20) * 20, rk = ruskNow(), gn = grassNow() + rk[0] * 10 + rk[1] * 100; if (sn !== snowNow || gn !== grassAt){ snowNow = sn; grassAt = gn; recolor(TERR, sn); if (NEARM) recolor(NEARM, sn); if (FINEM) recolor(FINEM, sn); for (const m of UPATCH) recolor(m, sn); }
   }
 
 

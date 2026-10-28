@@ -1857,12 +1857,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (741 linjer)
+## `src/js/ui/phone/07-patch.js` (746 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 734 `patch()`
+  - 739 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (87 linjer)
 
@@ -2661,7 +2661,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 85 `ridged(x, y)`
   - 86 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (380 linjer)
+## `src/js/view3d/01-shaders.js` (390 linjer)
 
 ---------- shaders ----------
 
@@ -2669,24 +2669,24 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **72** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
 - **96** the boat's own foam, when she has way on
 - **114** the whitecaps, as the sea shader finds them: the crest in standard deviations plus the mottle, over Monahan's threshold
-  - 336 `cloudStep(dt)`
-  - 342 `skyFrame(u, Hh, tn, bv)`
-  - 354 `compile(type, src, nm)`
-  - 360 `program(vs, fs, attrs, nm = '?')`
-  - 368 `buf(data, target, usage)`
-  - 369 `attr(loc, b, size)`
-  - 378 `upload(pos, col, idx)`
+  - 346 `cloudStep(dt)`
+  - 352 `skyFrame(u, Hh, tn, bv)`
+  - 364 `compile(type, src, nm)`
+  - 370 `program(vs, fs, attrs, nm = '?')`
+  - 378 `buf(data, target, usage)`
+  - 379 `attr(loc, b, size)`
+  - 388 `upload(pos, col, idx)`
 
-## `src/js/view3d/02-mesh-terrain.js` (91 linjer)
+## `src/js/view3d/02-mesh-terrain.js` (94 linjer)
 
 ---------- mesh builder ----------
 
 - **1** mesh builder
   - 2 `MB()`
 - **45** terrain
-  - 73 `terrRaw(x, z, dil)`
+  - 76 `terrRaw(x, z, dil)`
 
-## `src/js/view3d/03-berths-naust.js` (300 linjer)
+## `src/js/view3d/03-berths-naust.js` (329 linjer)
 
 ---------- The water at the berths the company holds in the coast's harbours (core/07e-havn.js) ----------
 
@@ -2705,18 +2705,20 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 154 `unitTerr(x, z, h0)`
   - 179 `terrCoarse(x, z, dil)`
   - 189 `forestAt(x, z)`
-  - 203 `meshBegin(x0, z0, sx, sz, n, hf)`
-  - 207 `meshRows(B, until)`
-  - 219 `meshEnd(B)`
-  - 231 `makeMesh(x0, z0, sx, sz, n, hf)`
-  - 232 `freeMesh(m)`
-  - 234 `nearSurf(M, x, z)`
-  - 244 `unitPatch(U, M)`
-  - 269 `buildPatches()`
-  - 278 `buildTerrain()`
-  - 287 `stream3d()`
+  - 206 `coverAt(x, z, cv, ck, k)`
+  - 224 `coverClass(x, z)`
+  - 232 `meshBegin(x0, z0, sx, sz, n, hf)`
+  - 236 `meshRows(B, until)`
+  - 248 `meshEnd(B)`
+  - 260 `makeMesh(x0, z0, sx, sz, n, hf)`
+  - 261 `freeMesh(m)`
+  - 263 `nearSurf(M, x, z)`
+  - 273 `unitPatch(U, M)`
+  - 298 `buildPatches()`
+  - 307 `buildTerrain()`
+  - 316 `stream3d()`
 
-## `src/js/view3d/04-vec-packs.js` (218 linjer)
+## `src/js/view3d/04-vec-packs.js` (245 linjer)
 
 ---------- the coast's packs (01c-vec.js, part 4 of the coast-wide plan): buildings, roads, bridges, piers and breakwaters ----------
 
@@ -2737,10 +2739,10 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 155 `updateNear()`
   - 158 `nearWanted()`
   - 168 `fineWanted()`
-  - 175 `recolor(m, snow)`
-- **206** the breakwaters' armour stones: a mesh a breakwater, drawn only within STONE_R of the eye (beyond it a stone is less than a
-  - 210 `stonesOf(list, build)`
-  - 215 `drawStones(list, TM, eye)`
+  - 181 `recolor(m, snow)`
+- **233** the breakwaters' armour stones: a mesh a breakwater, drawn only within STONE_R of the eye (beyond it a stone is less than a
+  - 237 `stonesOf(list, build)`
+  - 242 `drawStones(list, TM, eye)`
 
 ## `src/js/view3d/05-quays-breakwaters.js` (286 linjer)
 
@@ -2762,7 +2764,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 256 `obox(nb, c, u, n, len, wid, y0, h, k)`
   - 262 `buildHarbourFittings()`
 
-## `src/js/view3d/06-buildings-lights.js` (300 linjer)
+## `src/js/view3d/06-buildings-lights.js` (305 linjer)
 
 ---------- real buildings (OpenStreetMap), streamed in 1 km chunks inside the terrain corridor ----------
 
@@ -2775,18 +2777,18 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 55 `buildChunk(key, detail)`
 - **90** details: chimney, windows, doors (only close to the boat)
   - 133 `addTrees(m, key, srcs, snowy)`
-  - 159 `addRoads(m, key, snowy)`
-  - 180 `freeChunk(c)`
-  - 181 `updateChunks(maxBuilds)`
-  - 198 `drawBuildings(TM)`
-  - 217 `lightY(L, x, z)`
-  - 218 `lightOn(L, t)`
-  - 219 `drawSeaLights(VP, eye, t, near)`
-- **234** lights that light up round them at night (the user's wish 03.10.2026)
-  - 239 `pickLights(eye, t)`
-  - 260 `plSet(u)`
-  - 265 `drawBeams(VP, eye, t)`
-  - 293 `drawChunkLights(VP, eye)`
+  - 164 `addRoads(m, key, snowy)`
+  - 185 `freeChunk(c)`
+  - 186 `updateChunks(maxBuilds)`
+  - 203 `drawBuildings(TM)`
+  - 222 `lightY(L, x, z)`
+  - 223 `lightOn(L, t)`
+  - 224 `drawSeaLights(VP, eye, t, near)`
+- **239** lights that light up round them at night (the user's wish 03.10.2026)
+  - 244 `pickLights(eye, t)`
+  - 265 `plSet(u)`
+  - 270 `drawBeams(VP, eye, t)`
+  - 298 `drawChunkLights(VP, eye)`
 
 ## `src/js/view3d/07-harbour-unit.js` (128 linjer)
 
