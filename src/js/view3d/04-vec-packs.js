@@ -219,14 +219,19 @@
           // heaths' dwarf birch), the rock from bare ground and the lichen fells besides the steepness and the height (the summits are
           // stonier than ESA's 10 m classes show: the heath on Senja's tops reads as green to the top otherwise)
           const F = src[o] / 255, SH = src[o + 1] / 255, GR = src[o + 2] / 255, CR = src[o + 3] / 255, WE = src[o + 4] / 255, MO = src[o + 5] / 255, BA = src[o + 6] / 255, SN = src[o + 7] / 255, UR = src[o + 8] / 255, SA = src[o + 9] / 255, SC = src[o + 10] / 255, SG = src[o + 11] / 255;
-          let r = 0, g = 0, b = 0; for (let k = 0; k < 12; k++){ const w = src[o + k]; if (w){ r += w * PT[k * 3]; g += w * PT[k * 3 + 1]; b += w * PT[k * 3 + 2]; } }
+          // ESA's heath ('shrub') and lichen fell ('moss') are one share here, split by the height (heath low, lichen and stone over 150-450 m)
+          // with a little noise: ESA draws the line between them differently on each side of its 3 x 3 degree squares (a straight line
+          // across Kvaløya at Hammerfest, 24° E, 28.10.2026), so its own split would draw that line in the game
+          const HM = SH + MO, lam = clamp(0.12 + 0.8 * sstep(150, 450, y + (n - 0.5) * 140), 0, 1), SHn = HM * (1 - lam), MOn = HM * lam;
+          let r = (SHn * PT[3] + MOn * PT[15]) * 255, g = (SHn * PT[4] + MOn * PT[16]) * 255, b = (SHn * PT[5] + MOn * PT[17]) * 255;
+          for (let k = 0; k < 12; k++){ if (k === 1 || k === 5) continue; const w = src[o + k]; if (w){ r += w * PT[k * 3]; g += w * PT[k * 3 + 1]; b += w * PT[k * 3 + 2]; } }
           const v = (0.93 + 0.14 * n) / 255, cg = [r * v, g * v, b * v];   // (a town's ground is half gardens: its colour in CP)
           c = y < 3.5 ? mix3(shore, cg, y / 3.5) : cg;
           if (tw > 0 || tb > 0){ c = mix3(c, mix3(WEED, WEED2, sstep(0.4, 0.7, n)), tw * (1 - sstep(0.5, 0.85, slope[i]) * 0.5)); c = mix3(c, BARN, tb * 0.55); }
-          wood = (F * 0.95 + SH * 0.12) * sstep(440, 260, y) * (1 - rs);
-          R = Math.max(R, BA * 0.95, MO * 0.45, SC * 0.85, SG * 0.5);   // the rock above the vegetation (280-420 m) and on the steep faces as before
+          wood = (F * 0.95 + SHn * 0.12) * sstep(440, 260, y) * (1 - rs);
+          R = Math.max(R, BA * 0.95, MOn * 0.45, SC * 0.85, SG * 0.5);   // the rock above the vegetation (280-420 m) and on the steep faces as before
           gl0 = SN * sstep(120, 220, y);   // snow fields and glaciers that lie through the summer (ESA's 'snow', seen in August)
-          if (cov){ cov[i * 4] = WE; cov[i * 4 + 1] = CR; cov[i * 4 + 2] = SH; cov[i * 4 + 3] = 1 + MO; }
+          if (cov){ cov[i * 4] = WE; cov[i * 4 + 1] = CR; cov[i * 4 + 2] = SHn; cov[i * 4 + 3] = 1 + MOn; }
         } else if (cov){ cov[i * 4] = cov[i * 4 + 1] = cov[i * 4 + 2] = cov[i * 4 + 3] = 0; }
         p = pv ? pv[i] : 0; sn = Math.max(sstep(snow - 60, snow + 60, y + n * 90) * (1 - rs * 0.85) * (1 - wood * 0.55), gl0 * (1 - rs * 0.6)) * (1 - p * 0.6) * sstep(1.5, 2.3, y);   // no snow where the tide comes
         R *= 1 - p;
