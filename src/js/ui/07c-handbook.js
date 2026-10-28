@@ -24,14 +24,14 @@ const HB = [
   // 2: trips 2 and 3, the same day
   // what the first trip used to teach on the way home and at the plant (Onboarding 2, O4): each drips when it matters. The ice first: the
   // task the first trip leaves open (the first fill is on the plant, S.iceFree)
-  {id:'is', ch:2, t:['Is før turen', 'Ice before the trip'], when:() => hbPort() && hbLand() >= 1 && S.boat.ice < 50 && hbSvc('ice'), show:() => dockApp('marked', 'is', 'is', '#drawerBody [data-pa=shop][data-k=ice][data-fill]'),
+  {id:'is', ch:2, t:['Is før turen', 'Ice before the trip'], when:() => hbPort() && hbLand() >= 1 && S.boat.ice < 50 && hbSvc('mottak'), show:() => dockApp('marked', 'is', 'is', '#drawerBody [data-pa=shop][data-k=ice][data-fill]'),
     no:'Is holder fisken fersk og gir bedre pris. Fyll iskassa før du går ut: Mottak, så Is. Den første fyllingen tar mottaket.', en:'Ice keeps the fish fresh and gets a better price. Fill the ice box before you go out: Plant, then Ice. The plant covers the first fill.'},
   {id:'bok', ch:2, t:['Dekksdagboka', 'The deck log'], when:() => hbLand() >= 1 && !hbSea(), show:() => ({el:vis('#logbook')}),
     no:'Dekksdagboka: alt som skjer om bord skrives her, med fangst, salg, sesonger og utstyr. Første tur står der alt.', en:'The deck log: everything that happens aboard is written here, with catches, sales, seasons and gear. The first trip is in it already.'},
   {id:'status', ch:2, t:['Statusboksen', 'The status box'], when:() => hbLand() >= 1 && hbSea(), show:() => ({el:vis('#hud')}),
     no:'Statusboksen: klokka og dagen, hva båten gjør, pengene, drivstoffet, lasten og energien din. «–» gjør den til en tynn stripe, «+» åpner den igjen.', en:'The status box: the clock and the day, what the boat is doing, your money, the fuel, the hold and your energy. «–» folds it to a thin strip, «+» opens it again.'},
   {id:'beh', ch:2, t:['Beholdning', 'The inventory'], when:() => hbPort() && hbLand() >= 1, show:() => hbDock('beh'),
-    no:'Beholdning: lasterommet, isen, dieselen og redskapet. Her ser du hva du har med deg før du går ut.', en:'The inventory: the hold, the ice, the diesel and the gear. Here you see what you have with you before you go out.'},
+    no:'Beholdning: lasterommet, isen, drivstoffet og redskapet. Her ser du hva du har med deg før du går ut.', en:'The inventory: the hold, the ice, the diesel and the gear. Here you see what you have with you before you go out.'},
   {id:'rute', ch:2, t:['Egen rute', 'Your own route'], when:() => inPlot() && hbPort() && !S.plan && hbLand() >= 1,
     no:'Tur 2 er din egen. Trykk i kartet der du vil fiske, så legger rutepunktene seg etter hverandre, og kurslista under viser kurs, distanse og tid for hver etappe. Autonav finner leia for deg om du vil.',
     en:'Trip 2 is your own. Tap the chart where you want to fish and the waypoints line up, and the course list below shows course, distance and time for each leg. Autonav finds the fairway for you if you like.'},

@@ -13,7 +13,7 @@ from playwright.async_api import async_playwright
 # the first trip after the rewrite of 10.10.2026 (docs/onboarding.md): the naust first, the cameras on the way out, the apps on the way
 # in, the register, the inventory and a hand on the quay at the plant. fish2 is settled by the two hours the ring's point gets of itself,
 # reg by the game running without the cloud, and the cameras by the boat arriving when the test is too slow to tap them
-ORDER = ['n1', 'nout', 'intro', 'gps', 'route1', 'cast1', 'sail', 'fish', 'deck', 'full', 'route2', 'cast2', 'land', 'slip', 'reg', 'goal']   # Onboarding 2, O2–O4
+ORDER = ['n1', 'nout', 'intro', 'gps', 'route1', 'cast1', 'sail', 'fish', 'deck', 'full', 'route2', 'cast2', 'land', 'slip', 'goal']   # Onboarding 2, O2–O4 (reg is settled without the cloud)
 SKIPPABLE = ('nout', 'sail', 'full')   # (sail: a small tip that needs no answer, gone when the boat is there)   # (full: the hold may be full by the time the deck step is read)
 # the steps read with «Skjønner» while the ring shows what they are about
 OK_RING = ('deck', 'chip', 'slip', 'goal', 'hud', 'apps', 'vaer', 'salg', 'regler', 'redning', 'legs', 'beh', 'intro', 'n1')

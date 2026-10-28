@@ -30,7 +30,7 @@ async def main():
         # 3. the ice is the task the first trip leaves open (Onboarding 2, O4, V5 A, 27.10.2026): after the first trip the first fill waits on
         # the plant (S.iceFree), the handbook's first drip points to the ice page, and two taps give it, paid by the plant
         d = await pg.evaluate("""(() => { const b = S.boat; b.berth = 'main'; b.status = 'port'; b.port = 'botnhamn'; const q = portById('botnhamn'); b.pos = {x:q.p.x, y:q.p.y}; b.ice = 0;
-          S.tut = {v:2, m:{}, catch:false, pAt:Date.now()}; tutFinish(); S.landN = 1; S.hb = {seen:{}, skip:{}, at:0}; if (DOCK.page) DOCK.close(); PHONE.show(false); tutUpdate();
+          history.replaceState(null, '', location.href.split('#')[0] + location.hash + '#hb'); S.tut = {v:2, m:{}, catch:false, pAt:Date.now()}; tutFinish(); S.landN = 1; S.hb = {seen:{}, skip:{}, at:0}; if (DOCK.page) DOCK.close(); PHONE.show(false); tutUpdate();
           return {iceFree:!!S.iceFree, free:tutFree('ice'), drip:tutCur && tutCur.st.id, tip:$('tip').hidden ? '' : $('tipText').textContent}; })()""")
         check(d['iceFree'] and d['free'] and d['drip'] == 'hb:is' and 'Mottak' in d['tip'], 'after the first trip the first fill of ice waits on the plant, and the first drip sends the player to it', d)
         await pg.evaluate("DOCK.open('is'); tutUpdate()"); await pg.wait_for_timeout(400)
