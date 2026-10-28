@@ -20,6 +20,7 @@ function radioForecast(H){
 }
 function hourly(){
   const H = S.t / 60, hr = gDate(H).getUTCHours();
+  if (typeof taxDayMark === 'function') taxDayMark(H);   // a day at sea counts for the fisherman's deduction, whenever in the day
   if (hr === 0){ checkTattoos(); payMates(); taxTick(H); bankDay(H); }   // the fleet and the crew's years are checked once a day (the day wages are gone: Økonomi 2, Ø2)
   // the company hears it if any vessel does: in port, with mobile coverage, or on VHF
   const bars = Math.max(0, ...S.fleet.map(v => { const vb = vget(v, 'boat'); return vb.status === 'port' ? 4 : coverage(vb.pos); })), vhf = S.fleet.some(v => (vget(v, 'equip') || {}).vhf);
