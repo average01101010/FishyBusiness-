@@ -161,3 +161,15 @@ Jonas valgte 1A–8A og sa «kjør på» 27.10.2026. Fasene O0–O6 står i plan
 - **Knappelinja ved mottaket i første tur:** bare Mottak (og hvile). Butikk, Bygd, Verft og Beholdning kommer etter første tur (`10c-dock.js`).
 - **Push-spørsmålet** kommer første gang båten går eller fisker etter første tur (`S.pushWait`, satt i `tutFinish`, tatt i `tutUpdate`), ikke tre sekunder etter at turen er ferdig.
 
+### O6: stikkprøve av hele første tur langs kysten (28.10.2026)
+
+`tut.py` med `KYST_TUT_START=lat,lon` (startstedet nærmest punktet, steder stengt for uvær hoppes over) og `KYST_TUT_ONE=liggende`, med hele kysten i bygget. Alle sjekker OK på alle tre:
+
+| Startsted | Levert | Vanlig fiske (sluttseddelen) | Testtid |
+|---|---|---|---|
+| Bøvågen (nærmest Bergen) | 184 kg, 9 672 kr | rundt 80 kg i timen | 559 s |
+| Bodø | 186 kg, 8 498 kr | rundt 20 kg i timen | 509 s |
+| Vadsø (Båtsfjord var stengt for uvær i spillet) | 259 kg, 9 064 kr | rundt 40 kg i timen | 491 s |
+
+Vangshamn på Senja er prøvd i begge formater (O2–O5). Trakten i admin har de nye stegene (`TUT_STEPS`). Det som gjenstår av O6, er to uker med måling før noe mer endres.
+

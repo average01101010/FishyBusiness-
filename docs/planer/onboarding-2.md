@@ -244,4 +244,6 @@ du sier noe annet.
   16 steg (fra 33), og tok 19 minutter for testen i begge formater (fra rundt 50).
 - 28.10.2026: **O6 påbegynt:** trakten i admin har de nye stegene; `tut.py` kan starte hvor som helst (`KYST_TUT_START=lat,lon`), og hele
   første tur prøves fra Bergen, Bodø og Båtsfjord.
+- 28.10.2026: **O6 stikkprøven grønn:** hele første tur fra Bøvågen (Bergen), Bodø og Vadsø (Båtsfjord var stengt for uvær), alle sjekker OK
+  (tallene i `docs/systemer/opning-og-veiledning.md`, O6). Gjenstår: to uker måling i admin («Første tur per landsdel» og trakten per steg).
 
