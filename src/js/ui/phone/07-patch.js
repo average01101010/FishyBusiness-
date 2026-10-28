@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p147', '28.10.2026', 'Rettelser', 'Fixes', [
+       ['I trebåten og færingen står skipperen ikke lenger både ved rekka med juksa og ved sløyebordet når du er alene om bord. Mens du sløyer og iser, ligger juksa.', 'In the wooden boat and the skiff the skipper no longer stands both at the rail with the jig and at the gutting table when you are alone aboard. While you gut and ice, the jig rests.']]],
     ['p146', '27.10.2026', 'Første tur langs hele kysten', 'The first trip along the whole coast', [
        ['Første tur går til et felt like utenfor havna der du starter, uansett hvor på kysten det er. Feltet ligger der juksa får fiske den dagen, og fisken du får, er den som står der: sei og lyr der torsken er fredet, skrei der skreiet står.', 'The first trip goes to a patch just off the harbour where you start, wherever on the coast that is. The patch lies where the jig may fish that day, and the fish you get are the ones that stand there: saithe and pollack where the cod is protected, skrei where the skrei is.'],
        ['Første tur er kortere: én linje i naustet, ett tips på vei ut, og skjermen blir ikke mørk rundt det du skal trykke på. «Kast loss» sier selv hva som mangler.', 'The first trip is shorter: one line in the boathouse, one tip on the way out, and the screen no longer darkens round what to tap. «Cast off» says itself what is missing.']]],
