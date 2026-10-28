@@ -51,8 +51,18 @@
       // a pond under 400 m2 is a few corners after the 4 m simplification, a dark plate rather than water (Bergen 28.10.2026): left out
       if (!a.kind){ let ar = 0; for (let i = 0; i < a.ix.length; i += 3){ const p = a.ix[i] * 2, q = a.ix[i + 1] * 2, r = a.ix[i + 2] * 2; ar += Math.abs((a.v[q] - a.v[p]) * (a.v[r + 1] - a.v[p + 1]) - (a.v[r] - a.v[p]) * (a.v[q + 1] - a.v[p + 1])) / 2; } if (ar < 400) continue; }
       if (!a.kind){ const hs = []; for (let j = 0; j < a.v.length; j += 2) hs.push(terrH(ox + a.v[j], oz + a.v[j + 1])); hs.sort((p, q) => p - q); lv = Math.min(lv, hs[Math.floor(hs.length * 0.1)] + 0.3); }
-      for (let i = 0; i < a.ix.length; i++){ const j = a.ix[i], x = a.v[j * 2], z = a.v[j * 2 + 1];
-        P.push(x, a.kind ? Math.max(terrH(ox + x, oz + z), 0.2) + 0.2 : lv, z); A.push(a.kind, 0, 0); }
+      if (!a.kind){ for (let i = 0; i < a.ix.length; i++){ const j = a.ix[i]; P.push(a.v[j * 2], lv, a.v[j * 2 + 1]); A.push(0, 0, 0); } continue; }
+      // a river's area lies on the ground: its triangles split at the longest edge down to 12 m, each point on the ground, so a big
+      // triangle on a slope does not cut through it (a dark wedge on an islet at Bergen, 28.10.2026)
+      const put = (x, z) => { P.push(x, Math.max(terrH(ox + x, oz + z), 0.2) + 0.2, z); A.push(1, 0, 0); };
+      const tri = (x0, z0, x1, z1, x2, z2, d) => {
+        const l0 = (x1 - x0) ** 2 + (z1 - z0) ** 2, l1 = (x2 - x1) ** 2 + (z2 - z1) ** 2, l2 = (x0 - x2) ** 2 + (z0 - z2) ** 2, m = Math.max(l0, l1, l2);
+        if (m <= 144 || d > 8){ put(x0, z0); put(x1, z1); put(x2, z2); return; }
+        if (m === l0){ const mx = (x0 + x1) / 2, mz = (z0 + z1) / 2; tri(x0, z0, mx, mz, x2, z2, d + 1); tri(mx, mz, x1, z1, x2, z2, d + 1); }
+        else if (m === l1){ const mx = (x1 + x2) / 2, mz = (z1 + z2) / 2; tri(x0, z0, x1, z1, mx, mz, d + 1); tri(x0, z0, mx, mz, x2, z2, d + 1); }
+        else { const mx = (x2 + x0) / 2, mz = (z2 + z0) / 2; tri(x0, z0, x1, z1, mx, mz, d + 1); tri(mx, mz, x1, z1, x2, z2, d + 1); }
+      };
+      for (let i = 0; i < a.ix.length; i += 3){ const p = a.ix[i] * 2, q = a.ix[i + 1] * 2, r = a.ix[i + 2] * 2; tri(a.v[p], a.v[p + 1], a.v[q], a.v[q + 1], a.v[r], a.v[r + 1], 0); }
     }
     return {tx, ty, o:[ox, oz], D, mesh:P.length ? Object.assign(waterMesh(P, A), {o:[ox, oz]}) : null, near:null, nearAt:null};
   }
