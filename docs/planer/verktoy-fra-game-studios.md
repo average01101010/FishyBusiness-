@@ -1,6 +1,6 @@
 # Verktøy fra Claude Code Game Studios: hva vi bør ta, og hva vi lar ligge (vurdering 28.10.2026)
 
-> Vurdering etter `/planlegg`. Jonas ba 28.10.2026 om en gjennomgang av github.com/donchitos/claude-code-game-studios for å se om noe der bør brukes i Det Store Blå. Venter på svar på valgene 1–4 nederst. Ingen spillkode er endret.
+> Vurdering etter `/planlegg`. Jonas ba 28.10.2026 om en gjennomgang av github.com/donchitos/claude-code-game-studios for å se om noe der bør brukes i Det Store Blå, og ba så økta svare på valgene selv. Svaret står under «Valg» og «Status». Venter på «kjør på». Ingen spillkode er endret.
 
 ## Hva prosjektet er
 
@@ -74,17 +74,19 @@ Skillen deres er bundet til motorene, men kategoriene er riktige for et online-s
 
 | Økt | Hva | Omfang | Risiko |
 |---|---|---|---|
-| 1 | A1 deny-liste, A2 øktstart, A3 commit-vakt, A4 lesevakt, A6 regelen (én `settings.json`, tre skript, to setninger i doku) | 1 økt, 1–2 timer | ingen for spillet; en hook som feiler, slipper gjennom (exit 0) så ingenting låser seg |
-| 2 | A5 historikk i `run.py` og tabellen i regresjonsrutinen | 1 økt, 1 time | ingen; `run.py` er dekket av at `smoke` kjøres én gang etterpå |
-| 3 | A7 sikkerhetsgjennomgangen | 1 økt, bare lesing | ingen; funn blir oppgaver i backloggen |
+| 1 | A7 sikkerhetsgjennomgangen | 1 økt, bare lesing | ingen; funn blir oppgaver i backloggen |
+| 2 | A1 deny-liste, A2 øktstart, A4 lesevakt, A6 regelen (én `settings.json`, to skript, to setninger i doku) | 1 økt, rundt 1 time | ingen for spillet; en hook som selv feiler, slipper verktøyet gjennom (exit 0) så ingenting låser seg |
+| venter | A3 commit-vakt og A5 historikk i `run.py` | 1 økt til sammen | tas den dagen en commit eller en ustabil test faktisk koster noe |
 
 ## Valg for Jonas
 
-1. **Hooks og sikring (A1–A4, A6) i én økt?** A: ja, alle fem (anbefalt). B: bare A1 og A2 (sikringen og øktstarten). C: nei.
-2. **Historikk for ustabile tester (A5)?** A: ja, i `run.py` og regresjonsrutinen (anbefalt). B: nei, backloggen holder.
-3. **Sikkerhetsgjennomgangen (A7)?** A: ja, én økt nå, før lanseringsarbeidet i `docs/lansering.md` går videre (anbefalt). B: senere, som del av lanseringen. C: nei, RLS og funksjonene holder.
-4. **Statuslinjen (del C)?** A: ja (ti linjer). B: nei.
+Jonas ba økta svare selv (28.10.2026). Svarene, med grunnen:
+
+1. **Hooks og sikring (A1–A4, A6) i én økt?** A: alle fem. B: bare A1 og A2. C: nei. **Svar: A1, A2, A4 og A6; A3 venter.** Øktstarten og lesevakten sparer noe hver dag (færre økter på feil gren, færre komprimeringer), deny-lista er billig forsikring for en gren som ruller ut til detstorebla.no, og A6 er to setninger. Commit-vakten tas den dagen en commit faktisk går galt.
+2. **Historikk for ustabile tester (A5)?** A: ja. B: nei. **Svar: B, venter.** Ingen ustabil test har kostet en feil i spillet ennå.
+3. **Sikkerhetsgjennomgangen (A7)?** A: nå. B: som del av lanseringen. C: nei. **Svar: A, først av alt.** Det er den eneste som kan ramme spillerne og pengene (topplista, gjester, haill).
+4. **Statuslinjen (del C)?** A: ja. B: nei. **Svar: B.** Jonas kjører øktene i appen og tester på nettbrettet, så linjen i terminalen ville ikke blitt sett.
 
 ## Status
 
-- 28.10.2026: vurderingen skrevet. Venter på Jonas' svar.
+- 28.10.2026: vurderingen skrevet. Jonas spurte hva som ville merkes i ettertid, og ba økta svare på valgene selv. Svar: 1 A1+A2+A4+A6 (A3 venter), 2 B, 3 A, 4 B. Rekkefølge: A7 først, så hook-økta. Venter på «kjør på».
