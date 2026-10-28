@@ -350,11 +350,8 @@ let markEnd = Infinity;
 function renderStatic(){
   if (document.body.classList.contains('vplot')) scheduleChart();
   const u = 1 / view.px, g = [];
-  // grounds
-  for (const gr of GROUNDS){
-    g.push('<circle cx="' + gr.p.x + '" cy="' + gr.p.y + '" r="' + (gr.r * 0.75) + '" class="ground" stroke-width="' + u + '" stroke-dasharray="' + (4 * u) + ' ' + (3 * u) + '"/>');
-    if (view.z >= 0.5) g.push(txt({x:gr.p.x, y:gr.p.y + 3.6 * u}, gr.name[S.lang], 'lbl-ground', 11 * u, 'text-anchor="middle" stroke-width="' + (3 * u) + '"'));
-  }
+  // grounds: the name only, no circle (Jonas 28.10.2026: a ground is not a defined circle on the sea)
+  if (view.z >= 0.5) for (const gr of GROUNDS) g.push(txt({x:gr.p.x, y:gr.p.y + 3.6 * u}, gr.name[S.lang], 'lbl-ground', 11 * u, 'text-anchor="middle" stroke-width="' + (3 * u) + '"'));
   // what is inside the view (with a margin)
   const vr = svg.getBoundingClientRect(), vhh = MAP_H / view.z / 2 + 0.5, vww = vhh * (vr.width / (vr.height || 1)) + 0.5, vx0 = view.cx - vww, vx1 = view.cx + vww, vy0 = view.cy - vhh, vy1 = view.cy + vhh, inV = (x, y) => x > vx0 && x < vx1 && y > vy0 && y < vy1;
   // roads and bridges: Senja's and those of the coast's packs (01c-vec.js), asked for when the view is near enough to show them

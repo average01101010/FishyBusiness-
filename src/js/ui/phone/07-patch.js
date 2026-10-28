@@ -1,5 +1,10 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['g2-281026', '28.10.2026', 'Innsjøer, elver og himmel', 'Lakes, rivers and sky', [
+       ['Innsjøene, tjernene, elvene, bekkene og fossene ligger der kartet har dem, med mørkt vann som speiler himmelen, stryk og is om vinteren.', 'The lakes, tarns, rivers, streams and waterfalls lie where the map has them, with dark water mirroring the sky, rapids, and ice in winter.'],
+       ['Skyene lyses av sola, med lyse kanter og mørkere undersider, og når sola står lavt, kommer det rosa beltet over jordskyggen.', 'The clouds are lit by the sun, with bright edges and darker undersides, and when the sun is low the pink belt rises over the earth\'s shadow.'],
+       ['Brenningene ligger ved strandkanten og på grunnene, ikke i et bånd et stykke ut fra land.', 'The surf breaks at the shore and on the shoals, not in a band some way out from land.'],
+       ['Fangstfeltene har bare navnet sitt i kartet, ingen sirkel.', 'The fishing grounds have only their name on the chart, no circle.']]],
     ['g1-281026', '28.10.2026', 'Naturen etter kartet', 'Nature from the map', [
        ['Bakken følger Kartverkets og satellittenes kart over naturen: myrene, jordene, lyngheiene, vidda, bart fjell, ur og breene ligger der de ligger i virkeligheten.', 'The ground follows Kartverket\'s and the satellites\' maps of nature: the bogs, the fields, the heaths, the fells, bare rock, scree and the glaciers lie where they lie in life.'],
        ['Skogen står der det er skog, med spredte bjørker i lyngen, og ingen trær på myr, vidde eller berg.', 'The woods stand where there are woods, with scattered birches in the heath, and no trees on bogs, fells or rock.'],
