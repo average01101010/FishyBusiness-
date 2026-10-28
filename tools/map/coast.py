@@ -2,7 +2,7 @@
 # (the artifact's): mask 25 m (with the breakwaters), distance to land 100 m, ground 25 m, forest 50 m, depth 50 m and openness 500 m.
 # Kept per tile in out/national/tiles/, so a stopped run goes on.
 #   python3 tools/map/coast.py game [tx,ty ...]   the game's packs (01b-mapdata.js, as region.py groups them): per tile 'sim' (mask, dc,
-#                                                 depth), 'view' (hgt, forest, cover), 'chart' (coast1, coast2, names) and 'vec' (bld, road,
+#                                                 depth), 'view' (hgt, forest, cover), 'chart' (coast1, coast2, names) and 'vec' (bld, road, water,
 #                                                 bridge, pier, quay: vectors.py; npc: npc.py) in out/national/game/;
 #                                                 the core and the far heights come from src/data/map (tools/map/game.py joins them)
 #   python3 tools/map/coast.py [lite] [tx,ty ...] the K5 packs in out/national/lite/ (a pack per kind and tile, the core per tile too)
@@ -118,7 +118,7 @@ def tile(tx, ty):
 # the vector layers of a tile (vectors.py), kept in out/national/vec/ (worked out again when a layer is missing); the lite profile has
 # the buildings within 2 km of the sea; the quays need the tile's mask and depth (L, as tile() gives it)
 VD = os.path.join(OUT, 'vec'); os.makedirs(VD, exist_ok=True)
-VKEYS = ('bld', 'road', 'bridge', 'pier', 'quay', 'coast')
+VKEYS = ('bld', 'road', 'bridge', 'pier', 'quay', 'coast', 'water')
 def vec(tx, ty, L):
     f = os.path.join(VD, f'{tx}_{ty}.npz')
     if os.path.exists(f):
@@ -128,11 +128,12 @@ def vec(tx, ty, L):
     dsea = ndimage.distance_transform_edt(L['mask'] > 0) * 25   # m to the sea at 25 m
     near = lambda x, y: dsea[min(1999, max(0, int(y // 25))), min(1999, max(0, int(x // 25)))] <= 2000
     v = vectors.build(tx, ty, near, L)
+    import water; v['water'] = water.build(tx, ty, L)   # the fresh water (G2, water.py)
     np.savez_compressed(f, **{k: np.frombuffer(b, np.uint8) for k, (b, n) in v.items()}, **{k + '_n': n for k, (b, n) in v.items()})
     return v
 # the vector layers the game takes, in a 'vec' pack per tile (01c-vec.js): the 'view' packs keep their hash, so a new vector release does
 # not fetch the heights again
-VGAME = ('bld', 'road', 'bridge', 'pier', 'quay')
+VGAME = ('bld', 'road', 'bridge', 'pier', 'quay', 'water')
 # the NPC traffic of a tile (npc.py: harbours, fleets, grounds, routes), kept in out/national/npc/; worked out for all the tiles in
 # parallel before the packs are written (a tile of a city is half a minute)
 ND = os.path.join(OUT, 'npc'); os.makedirs(ND, exist_ok=True)

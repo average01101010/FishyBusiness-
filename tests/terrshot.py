@@ -2,12 +2,12 @@
 docs/planer/grafikk-natur-og-miljo.md). The boat is moved to a sea point near each place, the camera turned towards the side with the
 most land within 1-4 km, and the canvas taken from low over the sea and from a drone, in the season asked for. No checks but the page
 errors and the GL errors; the pictures are for the eye.
-  KYST_DIST=<dist> python3 tests/terrshot.py [tag] [season: summer|autumn|winter|spring] [place ...] [close] [clear|grey]
+  KYST_DIST=<dist> python3 tests/terrshot.py [tag] [season: summer|autumn|winter|spring] [place ...] [close] [clear|grey|broken] [eve]
 (close: also a near view, the boat 80-500 m off the land and the camera high behind her; clear or grey: the sky held clear, or
 full grey with a little rain, by cloudAt and precipAt)
 Pictures: tests/out/terr_<tag>_<season>_<place>_<low|high|close>.png"""
 from _env import GAME, boot
-import asyncio, base64, json, sys, time
+import asyncio, base64, json, os, sys, time
 from playwright.async_api import async_playwright
 
 # lat, lon near the place (a sea point is looked for round it)
@@ -30,15 +30,16 @@ CLOSE = False
 async def main():
     global CLOSE
     tag = sys.argv[1] if len(sys.argv) > 1 else 'x'; season = sys.argv[2] if len(sys.argv) > 2 else 'summer'
-    WX = {'clear': (0.0, 0.0), 'grey': (0.95, 0.3)}; wx = next((WX[n] for n in sys.argv[3:] if n in WX), None)
-    names = [n for n in sys.argv[3:] if n != 'close' and n not in WX] or list(PLACES); CLOSE = 'close' in sys.argv[3:]
+    WX = {'clear': (0.0, 0.0), 'grey': (0.95, 0.3), 'broken': (0.5, 0.0)}; wx = next((WX[n] for n in sys.argv[3:] if n in WX), None)
+    names = [n for n in sys.argv[3:] if n not in ('close', 'eve') and n not in WX] or list(PLACES); CLOSE = 'close' in sys.argv[3:]
     async with async_playwright() as p:
         b = await p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--disable-gpu-compositing'])
         pg = await b.new_page(viewport={'width': 1280, 'height': 800})
         errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
-        await boot(pg)
+        await boot(pg, GAME + os.environ.get('KYST_HASH', ''))   # KYST_HASH: more of the address, e.g. '#water0' or '#air0'
         y, mo, d, h = SEASON[season]
-        await pg.evaluate("([y, mo, d, h]) => { S.cash = 1e6; S.t = Math.round((Date.UTC(y, mo, d, h) - EPOCH) / 6e4); if (!G3.isActive()) G3.show(true); }", [y, mo, d, h])
+        if 'eve' in sys.argv[3:]: h = 16.6   # the evening, the sun low (autumn: sunset in the north)
+        await pg.evaluate("([y, mo, d, h]) => { S.cash = 1e6; S.t = Math.round((Date.UTC(y, mo, d, 0) + h * 3.6e6 - EPOCH) / 6e4); if (!G3.isActive()) G3.show(true); }", [y, mo, d, h])
         await pg.wait_for_function("G3.isActive()", timeout=60000)
         if wx:   # the weather held: the sky's cloud cover and the rain, the same for the pictures before and after
             await pg.evaluate("([c, p]) => { window.cloudAt = () => c; window.precipAt = () => p; }", list(wx))

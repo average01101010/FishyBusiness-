@@ -114,6 +114,24 @@ Planen: `docs/planer/grafikk-natur-og-miljo.md`, G5. Før dette ble alt tonet mo
 - **Skodde på fjellet** (i `fin()`, `uCB`/`uCC`/`uEye`; `computeEnv` i `15-env-mooring.js`): over skybasen går terrenget, trærne, husene og båtene inn i skyens grå, med samme ujevne kant for alt (støy på verdens x og z, foldet som terrengets `wp`; med en glatt kant for trærne sto de mørke inne i skya), med en ujevn underkant som stiger og synker over noen hundre meter. Skybasen er rundt 2 700 m under spredt skydekke og 250–300 m under helt grått, 150 m lavere i regn eller snø. Bare et skydekke over 55 % legger den på bakken. Fargen er horisontens grå, så skodda på fjellet er himmelens.
 - **`#air0`** i adressen gir den gamle disen og ingen skulder, for sammenligning. Et program som ikke får de nye uniformene (`airSet`), tegner som før.
 
+- **Himmelen og skyene** (resten av G5, 28.10.2026, bare med lufta på): en bred, svak glans rundt sola i tillegg til solskiva, en dypere blåfarge på motsatt side, og jordskyggen med det rosa beltet over den (Venus-beltet) på motsatt side når sola står like under eller over horisonten (`uSunD.y` innenfor rundt 4°). Skyene lyses fra sola: skystøyen leses en gang til litt mot sola, og der skya er tynnere mot sola, får kanten solens farge (sølvkant), mens den tykke midten og undersida blir mørkere grå. I helt grått vær (skydekke over 75–98 %) går det over i det jevne grå laget som før.
+
+## 4.11e Innsjøer, elver, bekker og fosser (G2, 28.10.2026)
+
+Planen: `docs/planer/grafikk-natur-og-miljo.md`, G2. Før dette fantes det ikke ferskvann i 3D: innsjøene var bakke i 25 m-høydene.
+
+- **Dataene** (`tools/map/water.py`, kalt fra `coast.py vec()`): Overtures `base/water` (OpenStreetMap, i Norge stort sett Kartverkets N50) på land, som en `water`-post i flisas vec-pakke. Saltvann og flater som for det meste ligger på sjøen (landmasken), tas ikke med; flater under 150 m² er for små. Alt forenkles til 4 m.
+  - **Stående vann** (innsjø, tjern, magasin): en flat flate i vannets høyde, medianen av 25 m-høydene inne i den + 0,3 m (Kartverkets terreng har innsjøene flate i vannflata). Trianguleres i rørledningen (shapely, constrained Delaunay).
+  - **Elveflater** draperes på bakken (0,2 m over).
+  - **Linjene** (bekk, elv, kanal og grøft) og **fossene** (punkter).
+  - Hammerfest-flisa: rundt 6 000 ting, 210 kB pakket, 18 s å lage. Hele kysten kommer med neste kartrelease; eldre klienter hopper over posten (`VECN` i `core/01c-vec.js` kjenner den ikke).
+  - `python3 tools/map/water.py inject tools/map/out/game tx,ty` legger posten inn i en lokal spillmappe for å prøve uten en release.
+- **Spillet** (`view3d/17b-inland-water.js`): et nett per flis med innsjøene og elveflatene, bygd når flisas `view`-pakke er lastet (innen 14 km, to fliser per halve sekund), og frigjort med den. Elvene og bekkene innen 3,5 km legges som bånd på bakken (bekk 2,4 m, elv 9 m, kanal 3 m), hvite der fallet er over rundt 18 % (bekkene litt mindre), og en foss som et hvitt fall ned den bratteste retningen.
+  - **Skyggeren** (`vann`): mørkt, torvbrunt vann (norske innsjøer er mørke), himmelen speilet etter Fresnel, krusning som driver med vinden på innsjøene og med strømmen i elvene, solglimt, hvitt vann i strykene, og is med snø om vinteren under snøgrensen (`uIce`, `uSnowY`). Slutter med `fin()`, så lufta og skodda er den samme som for terrenget.
+  - Tegnes etter terrenget i både det fjerne og det nære passet i `24-cinema.js`, med `polygonOffset` mot bakken.
+  - **`#water0`** i adressen tegner ikke ferskvannet, for sammenligning.
+- **Ikke bygd ennå:** innsjøene og elvene i kartplotteren (2D), lyden av fosser, og sprut ved fossene.
+
 ## 5.23 Lys om natta og fyrlykter (03.10.2026)
 
 - **Lyskildene:** opptil 8 punktlys lyser opp terreng, bygg, havneenheter, båter og sjø (`PLG`, `pLit` i skyggeleggerne, `pickLights` hvert bilde). På «Lav» brukes 2, på «Middels» 4.

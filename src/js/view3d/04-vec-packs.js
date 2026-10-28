@@ -81,6 +81,7 @@
   // a pack has come: the meshes over its tile are built again (one being built over it goes again when it is done)
   function staleMesh(kind){ const m = kind === 'near' ? NEARM : kind === 'fine' ? FINEM : kind === 'mid' ? MIDM : TERR; if (m) m.stale = true; if (MJOB && MJOB.kind === kind) MJOB.dirty = true; }
   function staleOver(pk){
+    if (pk.kind === 'view') staleWater(pk);   // the fresh water lies on the tile's ground (17b-inland-water.js)
     const T = MAPD.man.tile * 1000, x0 = pk.tile[0] * T, z0 = pk.tile[1] * T;
     for (const [m, kind] of [[NEARM, 'near'], [FINEM, 'fine'], [MIDM, 'mid'], [TERR, 'far']]){
       if (MJOB && MJOB.kind === kind){ const B = MJOB.B; if (B.x0 < x0 + T && B.x0 + B.sx > x0 && B.z0 < z0 + T && B.z0 + B.sz > z0) MJOB.dirty = true; }

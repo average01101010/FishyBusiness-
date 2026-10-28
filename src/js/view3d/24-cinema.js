@@ -142,7 +142,7 @@
     gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL);
     // far pass
     pickLights(eye, t);
-    drawTerrain(TM, eye, VPf, false); drawLit(STAT, TM); drawTileStatics(TM, eye); drawBuildings(TM); drawUnits(eye, VPf, false, 15000); drawSites(eye, VPf, false, 15000); if (NPCM) for (const n of npcStates(H)){ const x = n.p.x * 1000, z = n.p.y * 1000, d = Math.hypot(x - eye[0], z - eye[2]); if (d < 30000 && !((n.fleet || n.coast) && d < 1500)) drawLit(NPCM[n.type], model(x - eye[0], (env.tide || 0) - eye[1], z - eye[2], -n.hd, 0, 0)); }
+    drawTerrain(TM, eye, VPf, false); drawWater(VPf, eye); litSetup(VPf); drawLit(STAT, TM); drawTileStatics(TM, eye); drawBuildings(TM); drawUnits(eye, VPf, false, 15000); drawSites(eye, VPf, false, 15000); if (NPCM) for (const n of npcStates(H)){ const x = n.p.x * 1000, z = n.p.y * 1000, d = Math.hypot(x - eye[0], z - eye[2]); if (d < 30000 && !((n.fleet || n.coast) && d < 1500)) drawLit(NPCM[n.type], model(x - eye[0], (env.tide || 0) - eye[1], z - eye[2], -n.hd, 0, 0)); }
     drawSea(VPf, eye, t, 1);
     drawSeaLights(VPf, eye, t, false);
     if (env.night > 0.02){
@@ -154,7 +154,7 @@
     // near pass
     gl.clear(gl.DEPTH_BUFFER_BIT);
     const VT = vtype(), VG = GEO(VT), ncrew = Math.min(crewAboard().length, (VG.crewSpots || []).length); if (VG.hand) useHand(VT);
-    drawTerrain(TM, eye, VPn, true); drawLit(STAT, TM); drawTileStatics(TM, eye); drawBuildings(TM);
+    drawTerrain(TM, eye, VPn, true); updateWater(eye); drawWater(VPn, eye); litSetup(VPn); drawLit(STAT, TM); drawTileStatics(TM, eye); drawBuildings(TM);
     // whoever works the deck leaves their place: alone, the skipper leaves the wheel
     // resting ashore in the naust or a rorbu (15-energy.js; Jonas 05.10.2026: «Ved hvile forsvinner skipperen fra båten») he is not aboard
     // never more people aboard than the crew list (tilbakemelding #24): the crew at the hauler and the one at the table leave their

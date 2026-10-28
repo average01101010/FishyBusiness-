@@ -295,6 +295,11 @@
     'return 1.1*sin(x*0.16+T*0.012+fk*2.1)+0.55*sin(x*0.37-T*0.02+fk*4.7)+lod*(0.3*sin(x*0.9+T*0.05+fk)+0.9*exp(-q*q*0.12)*sin(q*1.6))+0.6*(ns(vec2(x*0.22-T*0.015,fk*7.0))-0.5);}' +
     'void main(){vec3 d=normalize(uF+vP.x*uTan.x*uR+vP.y*uTan.y*uU);float h=clamp(d.y,0.0,1.0);vec3 col=mix(uHor,uZen,pow(h,0.55));' +
     'float sd=max(dot(d,uSunD),0.0);col+=uSunCol*(pow(sd,12.0)*0.35+smoothstep(0.9993,0.99965,sd)*2.5)*(1.0-uCloud*0.9);' +
+    // the sky's light by the sun (G5, with the air on): a broad warm glow low over the horizon towards the sun, the sky a little deeper
+    // blue away from it, and at sunrise and sunset the earth's shadow (dark blue) low opposite the sun with the pink belt over it
+    'if(uAirOn>0.5){float cl=1.0-uCloud*0.85;col+=uSunCol*pow(sd,4.0)*0.14*(1.0-h)*cl;col*=1.0-0.07*(1.0-sd)*h*cl;' +
+    'vec2 sh=normalize(uSunD.xz+vec2(1e-4,0.0));float anti=max(-dot(normalize(d.xz+vec2(1e-4,0.0)),sh),0.0);float tw=exp(-pow(uSunD.y/0.07,2.0))*cl*anti*anti;' +
+    'col=mix(col,col*vec3(0.62,0.66,0.85),tw*(1.0-smoothstep(0.0,0.06,h))*0.7);col+=vec3(0.22,0.1,0.13)*tw*smoothstep(0.03,0.08,h)*(1.0-smoothstep(0.1,0.24,h));}' +
     // the night sky (Jonas 09.10.2026: «litt mer realistisk og spektakulær ... Litt som i spillet skyrim»): the stars and the Milky Way
     // stand where they are on the real sky and turn round the pole star with the sidereal time (uCX/uCY/uCP: the equator's RA 0h and
     // 6h and the pole, from the boat's latitude and longitude). Stars are round points a pixel or two wide (uPx), many faint and few bright,
@@ -347,7 +352,15 @@
     'acc=acc/(1.0+0.35*max(acc.g,max(acc.r,acc.b)));' +
     'col+=acc*uAur*0.6*smoothstep(0.0,0.06,d.y)+vec3(0.03,0.16,0.08)*uAur*smoothstep(0.0,0.35,d.y)*(1.0-smoothstep(0.35,0.9,d.y))*0.35;}' +
     'if(d.y>0.0){vec2 cp=d.xz/(d.y+0.08)*1.2+uCloudOff+160.0;float c=ns(cp)*0.6+ns(cp*2.3)*0.3+ns(cp*5.1)*0.1;float cov=smoothstep(1.0-uCloud-0.05,1.0-uCloud+0.35,c);' +
-    'vec3 cc=mix(uHor*0.85,vec3(0.9,0.92,0.95),0.35*uDay)*(0.3+0.7*uDay);col=mix(col,cc,cov*smoothstep(0.0,0.12,d.y)*0.95);}' +
+    'vec3 cc=mix(uHor*0.85,vec3(0.9,0.92,0.95),0.35*uDay)*(0.3+0.7*uDay);' +
+    // the clouds lit by the sun (G5, with the air on): the side of a cloud towards the sun is lit in the sun's colour (the density a step
+    // towards the sun against here), a thick cloud's underside is dark, and the thin edges near the sun shine (the silver lining). Under a
+    // full grey sky it stays the old flat grey
+    'if(uAirOn>0.5){vec2 sv=normalize(uSunD.xz+vec2(1e-4,0.0))*0.18;vec2 cq=cp+sv;float c2=ns(cq)*0.6+ns(cq*2.3)*0.3+ns(cq*5.1)*0.1;' +
+    'float li=clamp(0.55+(c-c2)*4.0,0.0,1.0)*smoothstep(-0.05,0.15,uSunD.y+0.1);float thick=smoothstep(0.35,1.0,cov)*smoothstep(0.3,0.9,uCloud);' +
+    'vec3 lc=mix(uHor*0.55+uZen*0.15,uSunCol*0.95+uZen*0.25,li)*(1.0-0.45*thick);lc+=uSunCol*pow(sd,8.0)*cov*(1.0-cov)*2.2;' +
+    'cc=mix(lc,cc,smoothstep(0.75,0.98,uCloud));}' +
+    'col=mix(col,cc,cov*smoothstep(0.0,0.12,d.y)*0.95);}' +
     'gl_FragColor=vec4(uAirOn>0.5?tone(col):col,1.0);}';
   const PT_VS = 'attribute vec3 aPos;attribute float aA;uniform mat4 uVP;uniform vec3 uOff;uniform float uSize;uniform float uPull;uniform float uMax;varying float vA;' +
     'void main(){vA=aA;vec3 r=aPos+uOff;r-=normalize(r+vec3(0.0,0.0,1e-4))*min(length(r)*0.5,uPull);vec4 p=uVP*vec4(r,1.0);gl_Position=p;gl_PointSize=clamp(uSize/max(p.w,0.1),1.0,uMax);}';
