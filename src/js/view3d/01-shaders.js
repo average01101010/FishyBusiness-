@@ -358,7 +358,7 @@
     // full grey sky it stays the old flat grey
     'if(uAirOn>0.5){vec2 sv=normalize(uSunD.xz+vec2(1e-4,0.0))*0.18;vec2 cq=cp+sv;float c2=ns(cq)*0.6+ns(cq*2.3)*0.3+ns(cq*5.1)*0.1;' +
     'float li=clamp(0.55+(c-c2)*4.0,0.0,1.0)*smoothstep(-0.05,0.15,uSunD.y+0.1);float thick=smoothstep(0.35,1.0,cov)*smoothstep(0.3,0.9,uCloud);' +
-    'vec3 lc=mix(uHor*0.55+uZen*0.15,uSunCol*0.95+uZen*0.25,li)*(1.0-0.45*thick);lc+=uSunCol*pow(sd,8.0)*cov*(1.0-cov)*2.2;' +
+    'vec3 lc=mix(uHor*0.55+uZen*0.15,uSunCol*0.95+uZen*0.25,li)*(1.0-0.3*thick);lc+=uSunCol*pow(sd,8.0)*cov*(1.0-cov)*2.2;' +
     'cc=mix(lc,cc,smoothstep(0.75,0.98,uCloud));}' +
     'col=mix(col,cc,cov*smoothstep(0.0,0.12,d.y)*0.95);}' +
     'gl_FragColor=vec4(uAirOn>0.5?tone(col):col,1.0);}';
