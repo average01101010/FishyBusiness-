@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p148', '28.10.2026', 'Båten går langs redskapet', 'The boat runs along the gear', [
+       ['Når du setter eller trekker line, garn og teiner, går båten jevnt og sakte langs strengen i stedet for å stå stille og så hoppe et stykke fram.', 'When you set or haul lines, nets and pots, the boat runs slowly and evenly along the string instead of standing still and then jumping ahead.']]],
     ['p147', '28.10.2026', 'Skatten for aksjeselskap', 'The tax of a limited company', [
        ['Stifter du aksjeselskap, gjelder det hele året fra 1. januar, slik det gjør når et enkeltpersonforetak omdannes: hele årets overskudd skattlegges i selskapet, og forskuddet du alt har betalt, regnes med.', 'Found a limited company, and it counts for the whole year from 1 January, as when a sole proprietorship is converted: the whole year\'s profit is taxed in the company, and the advance you have already paid counts.'],
        ['Et aksjeselskap som fikk forskuddsskatten trukket i inntektsåret etter de gamle reglene, får rentegodtgjørelse for pengene som ble trukket for tidlig.', 'A limited company that had its advance tax taken in the income year under the old rules gets interest for the money taken too early.'],
