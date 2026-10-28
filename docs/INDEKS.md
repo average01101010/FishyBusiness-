@@ -64,6 +64,7 @@ Les denne først, så bare dokumentet for systemet du skal endre, og `docs/BACKL
 | `docs/lansering.md` | Det som gjenstår før lansering, og serveren. |
 | `docs/onboarding.md` | Onboardingen. |
 | `docs/planer/onboarding-2.md` | Onboarding 2 (27.10.2026): kortere første tur for hele kysten, målingene som viser frafall under seilingen ut, fasene O0–O6, de ti prinsippene mot churn og valgene V1–V8. Venter på svar. |
+| `docs/planer/verktoy-fra-game-studios.md` | Vurdering 28.10.2026 av Claude Code Game Studios (github.com/donchitos): det vi bør ta (deny-liste, øktstart-, commit- og lesevakt som hooks, historikk for ustabile tester, «se testen feile først», én sikkerhetsgjennomgang), det vi lar ligge (roller, GDD/epics/stories, `project.yaml`), og valgene 1–4. Venter på svar. |
 
 ## Regler og kilder
 
