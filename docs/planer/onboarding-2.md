@@ -232,4 +232,9 @@ du sier noe annet.
     (`BACKLOG.md`).
   - Gytefeltforskriften (FOR-2019-03-25-321 § 1): alt fiske er forbudt 1.1–30.4 i 15 gytefelt fra Indre Oslofjord til Skjernøysund. Det
     står i regelmotoren.
+- 27.10.2026: **O0 og O1 rullet ut** på detstorebla.no (PR #26, merge 4993de5; «Appen på Hetzner» og «Appen på GitHub Pages» grønne). Jonas kjørte
+  migreringen `20261027120000_tut_time.sql` i SQL-editoren. `tut.py` var grønn liggende; stående sovnet skipperen på feltet i testen
+  (klokka går 30× der), og testen vekker den nå med søvnskjermens egen knapp. Jonas valgte å rulle ut uten å vente på en ny kjøring.
+- 27.10.2026: **O2 bygd** (`docs/systemer/opning-og-veiledning.md`, «O2»): naustet i én linje, ett lite tips på vei ut, ingen dempet lag,
+  «Kast loss» grå med det den venter på. Testes.
 

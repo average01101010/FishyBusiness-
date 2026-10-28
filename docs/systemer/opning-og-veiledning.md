@@ -120,3 +120,44 @@ Jonas valgte 1A–8A og sa «kjør på» 27.10.2026. Fasene O0–O6 står i plan
   - Ingen av de 47 stedene ga et ulovlig felt med den gamle koden heller, så feilen med feltet i et stengt gytefelt er ikke sett i praksis, bare funnet i koden.
   - De fire stedene over 2,5 km i januar er Egersund, Skudeneshavn, Hidrasund og Bokn: Rogaland med gytefelt og åpen sjø.
   - **Første levering blir mindre verdt.** Miksen er den lokale, ikke 72 % torsk overalt, så den er rundt 30 % mindre verdt per kilo i januar. Det gamle tallet kom fra et oppdiktet skreifelt hele året. Om første levering trenger flere kilo for å kjennes like god, tas i O3, sammen med fisketida (V2).
+
+### O2: fram til første napp (27.10.2026)
+
+- **Naustet er én linje** (`n1`), og den peker på fars torsk (`NAUST3D.farRect()`). `n2` og `n3` er tatt ut; de ble trykket bort på 1–2 s hver.
+- **På vei ut:** `chip`, `kino`, `kino2`, `cam` og `cam2` er tatt ut som steg. `sail` er nå ett lite tips som ikke må besvares og forsvinner etter 9 s: «Neste» viser når båten er framme, og Kino og broa nevnes (V4 A). Fire av sju spillere 11.–13.10.2026 sluttet på dette stedet.
+- **Ingen dempet lag** (V3 A): `tipPlace` viser bare ringen og boksen, også for dryppene i Håndboka.
+- **«Kast loss» sier selv hva den venter på** (`tutStartWhy`, vist over knappen i rutepanelet i `07-guide.js`): «Legg et punkt i ringen … først» eller «Ruta skal ende i …». Knappen er grå til det er gjort, i stedet for en toast etter trykket. Sperrene i `tutAllow` er som før.
+- **Ikke gjort i O2:** «Lever» som grå knapp (levering andre steder enn mottaket for første tur er allerede skjult), og `deck` ved første fisk (kommer med O3, sammen med fisketida).
+- `tut.py`: ny `ORDER` (`n1`, `nout`, `intro`, `gps`, `route1`, `cast1`, `sail`, …), `sail` kan hoppes over når båten er framme.
+- **Energien står stille under første tur** (27.10.2026, Jonas: «Kan vi ikke bare skru av energien til etter tutorialen?»): `energyMinute` (`core/15-energy.js`) trekker ikke energi, vekker en sovende og tar bort døsingen så lenge `S.tut.v === 2`. Før kunne en spiller som gikk fra båten i mange timer midt i turen sovne, og båten drev i land der ruta hjem ikke fant noen vei. Energien går som vanlig fra minuttet etter første tur. Skippertak er ikke berørt, og gjester kan ikke kjøpe noe i første tur uansett.
+
+### O3: fisket (27.10.2026, V1 A, V2 A)
+
+- **Ingen haill i første tur:** `luck`, `haill` og `luckhud` er tatt ut, båten venter ikke lenger på feltet (`tutWait`; en lagring som venter, begynner å fiske), og første tur gir ingen gratis luksushaill (`tutFree('haill')` er alltid usann). Luksushaill er bare gaven ved registrering (`CLAUDE.md`). Haillen kommer som dryppet `lykke` (kapittel 2) første gang båten fisker etter første levering.
+- **Én times fisketid** (`TUT_FISH_H` i `core/03-simulation.js`, ti ekte minutter), og påfyllingen fyller til halvt lasterom (`TUT_HOLD`, `tutTarget()`, 175 kg i trebåten). Leveringen venter ikke på full last: `full` er ferdig når fisketida er ute.
+- **`deck`** viser «Rykk når det napper» til første fisk er om bord, og bløggingen etterpå.
+
+### O4: hjem og mottaket (27.10.2026, V5 A)
+
+- **Første tur er nå 15 steg:** `n1`, `nout`, `intro`, `gps`, `route1` (`fish2`), `cast1`, `sail`, `fish`, `deck`, `full`, `route2`, `cast2`, `land`, `slip`, `reg`, `goal`. `legs`, `tour`, `hud`, `apps`, `vaer`, `salg`, `regler`, `redning`, `book`, `ice`, `beh` og `crew` er tatt ut.
+- **Den åpne oppgaven er isen:** `goal` sier «Før tur 2: fyll iskassa på mottaket». Første fylling venter gratis etter første tur (`S.iceFree`, satt i `tutFinish`, brukt opp i `14-act.js`).
+- **Sluttseddelen i første tur** har to nye linjer (`portSlip` i `07-guide.js`):
+  - **Vanlig fiske her:** at turen var ekstra god, og hva håndjuksa vanligvis gir der nå. Tallet er fangsten ganger bestandens andel av tettheten på feltet (`S.tut.fk`, summert i `05-vessels.js`) per fisketime, rundet til 10 kg. Det retter backloggen 10.2.
+  - **Andre fiskere:** at andre har levert på mottaket det siste døgnet, og mest av hvilken art (`WSH.mkt`, felles verden). Linja står bare når det finnes slike leveringer. Det skrives aldri et oppdiktet tall.
+- **Nye drypp** (`07c-handbook.js`):
+  - Kapittel 2: `is` (først, ved mottaket med under 50 kg is), `bok`, `status` og `beh`.
+  - Kapittel 3: `mannskap` (når fisken hoper seg opp på dekk, eller ved andre levering), `vaer` (når sjøen nærmer seg båtens grense) og `redning` (ved motorstopp).
+  - `topp` (Salgslaget og topplista) kommer rett etter første levering, ikke etter tredje.
+  - Admin-lista `HB_TIPS` har de nye dryppene.
+- **Tester:** `tut.py` har ny `ORDER` og sjekker isen som åpen oppgave, linja om vanlig fiske, og at ingen er mønstret på. `icestep.py` del 3 prøver isen som drypp etter første tur.
+
+### O5: det som skjules (27.10.2026, V7 A)
+
+- **Telefonen** (`appShown` i `07c-handbook.js`, brukt av app-rutenettet i `ui/phone/08-home-papers-merker.js`):
+  - I første tur vises bare Vær, Meldinger, Redning, Håndboka, Tilbakemelding og Innstillinger (`APP_ALWAYS`).
+  - Etter første tur kommer hver app fram når dryppet dens vises (`HB_APP`: `guide`, `lykke` → Kaiboden, `regler`, `sesong`, `post`, `meld`, `drift`, `topp` → Salgslaget, `merker`, `patch`, `oppdrag`, `venner`, `rederi`, `kvote`, `vaer`, `redning`). Appen har da merket «ny» (`.bd.ny`) til den åpnes (`appSeen` i `14-act.js`).
+  - Fra tredje levering vises alt, så ingen holdes borte fra noe lenge.
+  - Et spill fra før har ingen `S.apps` og ser alt som før. Et nytt spill får `S.apps = {}` i `tutUpdate` før `gps`.
+- **Knappelinja ved mottaket i første tur:** bare Mottak (og hvile). Butikk, Bygd, Verft og Beholdning kommer etter første tur (`10c-dock.js`).
+- **Push-spørsmålet** kommer første gang båten går eller fisker etter første tur (`S.pushWait`, satt i `tutFinish`, tatt i `tutUpdate`), ikke tre sekunder etter at turen er ferdig.
+

@@ -22,11 +22,25 @@ const hbDock = ids => inPlot() ? to3d() : {el:vis([].concat(ids).map(k => '#dock
 // the tips: id, chapter, a short name, the text, when it drips (first time true), and where it points while shown
 const HB = [
   // 2: trips 2 and 3, the same day
+  // what the first trip used to teach on the way home and at the plant (Onboarding 2, O4): each drips when it matters. The ice first: the
+  // task the first trip leaves open (the first fill is on the plant, S.iceFree)
+  {id:'is', ch:2, t:['Is før turen', 'Ice before the trip'], when:() => hbPort() && hbLand() >= 1 && S.boat.ice < 50 && hbSvc('mottak'), show:() => dockApp('marked', 'is', 'is', '#drawerBody [data-pa=shop][data-k=ice][data-fill]'),
+    no:'Is holder fisken fersk og gir bedre pris. Fyll iskassa før du går ut: Mottak, så Is. Den første fyllingen tar mottaket.', en:'Ice keeps the fish fresh and gets a better price. Fill the ice box before you go out: Plant, then Ice. The plant covers the first fill.'},
+  {id:'bok', ch:2, t:['Dekksdagboka', 'The deck log'], when:() => hbLand() >= 1 && !hbSea(), show:() => ({el:vis('#logbook')}),
+    no:'Dekksdagboka: alt som skjer om bord skrives her, med fangst, salg, sesonger og utstyr. Første tur står der alt.', en:'The deck log: everything that happens aboard is written here, with catches, sales, seasons and gear. The first trip is in it already.'},
+  {id:'status', ch:2, t:['Statusboksen', 'The status box'], when:() => hbLand() >= 1 && hbSea(), show:() => ({el:vis('#hud')}),
+    no:'Statusboksen: klokka og dagen, hva båten gjør, pengene, drivstoffet, lasten og energien din. «–» gjør den til en tynn stripe, «+» åpner den igjen.', en:'The status box: the clock and the day, what the boat is doing, your money, the fuel, the hold and your energy. «–» folds it to a thin strip, «+» opens it again.'},
+  {id:'beh', ch:2, t:['Beholdning', 'The inventory'], when:() => hbPort() && hbLand() >= 1, show:() => hbDock('beh'),
+    no:'Beholdning: lasterommet, isen, drivstoffet og redskapet. Her ser du hva du har med deg før du går ut.', en:'The inventory: the hold, the ice, the diesel and the gear. Here you see what you have with you before you go out.'},
   {id:'rute', ch:2, t:['Egen rute', 'Your own route'], when:() => inPlot() && hbPort() && !S.plan && hbLand() >= 1,
     no:'Tur 2 er din egen. Trykk i kartet der du vil fiske, så legger rutepunktene seg etter hverandre, og kurslista under viser kurs, distanse og tid for hver etappe. Autonav finner leia for deg om du vil.',
     en:'Trip 2 is your own. Tap the chart where you want to fish and the waypoints line up, and the course list below shows course, distance and time for each leg. Autonav finds the fairway for you if you like.'},
   {id:'guide', ch:2, t:['Fiskeguiden', 'The fish guide'], when:() => hbLand() >= 1 && (hbSea() || hbPort()), show:() => phoneApp('guide'),
     no:'Fiskeguiden viser hvor hver art står, på hvilket dyp og når på året. Se i den før du velger felt.', en:'The fish guide shows where each species stands, at what depth and when in the year. Look there before you choose a ground.'},
+  // the luck, out of the first trip (Onboarding 2, O3, V1 A): the first time the boat fishes after the first landing
+  {id:'lykke', ch:2, t:['Fiskelykke og haill', 'Luck and haill'], when:() => hbLand() >= 1 && S.boat.status === 'fishing', show:() => phoneApp('haill'),
+    no:'Hvor mye som biter, kommer an på hvor tett fisken står, redskapet, været, årstida og fiskelykka. Fiskerne langs kysten har alltid hatt troen på haill, lykke på havet. En haill gir mer fiskelykke en stund, og den ser du i Haill-appen.',
+    en:'How much bites depends on how dense the fish stand, the gear, the weather, the season and your luck. Fishermen along the coast have always believed in haill, luck at sea. A haill gives more luck for a while, and you find it in the Luck app.'},
   {id:'ekko', ch:2, t:['Ekkoloddet', 'The echo sounder'], when:() => inPlot() && hbSea(), show:() => ({el:vis('#heatBox [data-hm]')}),
     no:'Ekkoloddet viser fisken under båten. Trykk på arten for å bytte hva det leter etter.', en:'The echo sounder shows the fish under the boat. Tap the species to change what it looks for.'},
   {id:'tide', ch:2, t:['Flo og fjære', 'The tide'], when:() => inPlot() && hbLand() >= 1, show:() => ({el:vis('#ecTide')}),
@@ -40,6 +54,12 @@ const HB = [
   {id:'meld', ch:2, t:['Meldinger', 'Messages'], when:() => hbLand() >= 1 && S.msgs.length > 0, show:() => phoneApp('meld'),
     no:'Meldinger fra mottaket, Salgslaget og folk langs kysten havner her.', en:'Messages from the plant, the sales organisation and people along the coast land here.'},
   // 3: the evening and the night
+  {id:'mannskap', ch:3, t:['Mannskap', 'Crew'], when:() => hbLand() >= 1 && !S.crew.length && BOAT.crewMax > 0 && (deckPending() > tubCap() * 0.5 || hbLand() >= 2), show:() => dockApp('bygd', 'mannskap', 'mannskap', null),
+    no:'Fisken hoper seg opp på dekk? Med en mann til går sløyinga dobbelt så fort. Mannskap får lott, en del av fangsten, så det koster ingenting før du leverer. Se Bygd, så Ansatte.', en:'Fish piling up on deck? With one more hand the gutting goes twice as fast. The crew gets a share of the catch, so it costs nothing until you land. See Village, then Employees.'},
+  {id:'vaer', ch:3, t:['Været', 'The weather'], when:() => hbLand() >= 1 && hbTry(() => hsAt(S.boat.pos, S.t / 60) > (VESSELS[S.boat.type] || VESSELS.skiff).risk[0] * 0.8), show:() => phoneApp('vaer'),
+    no:'Sjøen øker. Vær-appen har varselet for to døgn, farget etter hva båten din tåler. Blir det rødt, snur båten av seg selv eller blir liggende ved kai.', en:'The sea is building. The Weather app has the forecast for two days, coloured for what your boat can take. When it turns red, the boat turns back on her own or stays at the quay.'},
+  {id:'redning', ch:3, t:['Redning', 'Rescue'], when:() => S.boat.status === 'engine', show:() => phoneApp('redning'),
+    no:'Motoren har stoppet. Starter den ikke igjen, eller går du på grunn, ber du om hjelp i Redning-appen. Første gang er gratis.', en:'The engine has stopped. If it does not start again, or you run aground, you ask for help in the Rescue app. The first time is free.'},
   {id:'energi', ch:3, t:['Hvile', 'Rest'], when:() => typeof S.energy === 'number' && S.energy < 45 && hbPort(), show:() => hbDock('rest'),
     no:'Du er trøtt. Sov i naustet eller rorbua, så er du uthvilt til morgenturen. En trøtt skipper jobber saktere og døser på vakt.', en:'You are tired. Sleep in the boathouse or the rorbu and you are rested for the morning trip. A tired skipper works slower and dozes on watch.'},
   {id:'kulde', ch:3, t:['Kulda', 'The cold'], when:() => hbSea() && hbTry(() => airTemp(S.t / 60, S.boat.pos) < 0),
@@ -51,7 +71,8 @@ const HB = [
   // 4: the routine, after the third landing
   {id:'drift', ch:4, t:['Driftsplanen', 'The operations plan'], when:() => hbLand() >= 3 && S.crew.length > 0, show:() => phoneApp('drift'),
     no:'Driftsplanen lar båten fiske, levere og hvile på egen hånd, også når spillet er lukket: velg hjem, redskap, plasser, vær og rytme, og trykk Start. Uten deg om bord trenger den en skipper og en styrmann.', en:'The operations plan lets the boat fish, land and rest on her own, also while the game is closed: choose home, gear, places, weather and rhythm, and tap Start. Without you aboard it needs a skipper and a mate.'},
-  {id:'topp', ch:4, t:['Salgslaget og topplista', 'Sales and the top list'], when:() => hbLand() >= 3, show:() => phoneApp('salg'),
+  {id:'topp', ch:4, t:['Salgslaget og topplista', 'Sales and the top list'], when:() => hbLand() >= 1 && hbPort(),   // right after the first landing (Onboarding 2, O4: the others on the coast)
+ show:() => phoneApp('salg'),
     no:'Salgslaget viser prisene i dag, det du har levert, og topplista over kysten denne uka.', en:'The sales organisation shows today’s prices, what you have landed, and the week’s top list along the coast.'},
   {id:'merker', ch:4, t:['Milepæler', 'Milestones'], when:() => hbLand() >= 3, show:() => phoneApp('merker'),
     no:'Milepæler samler alt du har oppnådd, og hvert merke gir en gave fra noen på kysten.', en:'Milestones gather everything you have achieved, and each badge gives a gift from someone on the coast.'},
@@ -114,10 +135,24 @@ function hbSkip(ch, id){ const H = hbState(); H.skip[ch] = 1; if (id){ H.seen[id
 // the tips whose moment has come and that have not been seen: the dot on the app
 function hbReady(){ const H = hbState(); return HB.filter(x => !H.seen[x.id] && !H.skip[x.ch] && hbTry(x.when)).length; }
 // the drip's box, drawn by the guide's code (tipPlace in 07b-first-trip.js); true when something is shown
+// ---------- what the phone shows (Onboarding 2, O5, V7 A, 27.10.2026) ----------
+// The first trip shows only what it uses; after it each app comes out, marked «ny», when its drip comes (or its chapter is put to rest), and
+// from the third landing everything is out, so nobody is kept from anything for long. S.apps: {id:'ny' | 1}; a game from before has none
+// and sees everything as it did
+const APP_ALWAYS = ['vaer', 'meld', 'redning', 'handbok', 'tilbake', 'innst', 'admin'];
+const HB_APP = {guide:'guide', lykke:'kaiboden', regler:'regler', sesong:'sesong', post:'post', meld:'meld', drift:'drift', topp:'salg', merker:'merker', patch:'patch', oppdrag:'ordl', venner:'folk', rederi:'rederi', kvote:'kvote', vaer:'vaer', redning:'redning'};
+function appShown(id){
+  if (!S.apps || APP_ALWAYS.includes(id) || S.apps[id]) return true;
+  return !tutOn() && hbLand() >= 3;
+}
+function appUnlock(id){ if (id && S.apps && !S.apps[id]) S.apps[id] = 'ny'; }
+const appNew = id => !!(S.apps && S.apps[id] === 'ny');
+function appSeen(id){ if (S.apps && S.apps[id] === 'ny') S.apps[id] = 1; }
 function hbUpdate(){
   if (typeof NAUST3D !== 'undefined' && NAUST3D.isOpen()) return false;
   if (typeof PUB3D !== 'undefined' && PUB3D.isOpen && PUB3D.isOpen()) return false;
   const t = hbPick(); if (!t) return false;
+  appUnlock(HB_APP[t.id]);   // its app comes out with it (O5)
   let T0 = {}; if (t.show){ try { T0 = t.show() || {}; } catch (e){ T0 = {}; } }
   if (PHONE.isOpen() && T0.el && !T0.el.closest('#phone')) T0 = {el:vis('#phone .ph-nav [data-pa=close]'), no:'Lukk telefonen først.', en:'Close the phone first.'};
   const txt = T0.no ? hbL(T0.no, T0.en) : hbL(t.no, t.en);
