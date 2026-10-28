@@ -20,13 +20,13 @@
     'float db=smoothstep(0.0,0.12,vP.y)*(1.0-smoothstep(0.9*top,1.02*top,vP.y)),dz=wn(vec2(vP.z*0.8+2.1,vP.y*2.6+vP.x*0.3)),rs=wn(vec2(vP.z*3.0,vP.y*9.0));' +
     'float dm=clamp(uWear.y*sd*db*(0.35+0.65*smoothstep(0.2,0.8,bow))*smoothstep(0.5,0.68,dz+0.3*uWear.y)*1.6,0.0,1.0);' +
     'bc=mix(bc,mix(bc*0.35,vec3(0.32,0.16,0.07),0.45*smoothstep(0.4,0.8,rs)),dm*0.9);gs*=1.0-0.85*dm;}';
-  const LITN_FS = 'precision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform float uAlpha;uniform float uEmis;varying vec3 vW;varying vec3 vN;varying vec4 vC;' + PLG + WEAR_GL +
+  const LITN_FS = 'precision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform float uAlpha;uniform float uEmis;varying vec3 vW;varying vec3 vN;varying vec4 vC;' + PLG + AIR + WEAR_GL +
     'void main(){vec3 n=normalize(vN);vec3 V=normalize(-vW);if(dot(n,V)<0.0)n=-n;float dif=max(dot(n,uSun),0.0);vec3 amb=mix(uGnd,uAmb,n.y*0.5+0.5);vec3 bc=vC.rgb;float gs=vC.a;if(uWear.x+uWear.y>0.0)wearHull(bc,gs);' +
     'float sp=pow(max(dot(reflect(-uSun,n),V),0.0),mix(12.0,90.0,gs))*gs;float fr=pow(1.0-max(dot(n,V),0.0),4.0)*gs*0.35;' +
-    'vec3 c=bc*(amb+uSunCol*dif+pLit(vW,n))+uSunCol*sp*0.55+uAmb*1.2*fr+bc*uEmis;float d=length(vW);float f=1.0-exp(-uFogD*uFogD*d*d);gl_FragColor=vec4(mix(c,uFog,f),uAlpha);}';
+    'vec3 c=bc*(amb+uSunCol*dif+pLit(vW,n))+uSunCol*sp*0.55+uAmb*1.2*fr+bc*uEmis;gl_FragColor=vec4(fin(c,vW),uAlpha);}';
   const TEX_VS = 'attribute vec3 aPos;attribute vec2 aUV;uniform mat4 uVP;uniform mat4 uM;varying vec2 vUV;varying vec3 vW;void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;vUV=aUV;gl_Position=uVP*w;}';
-  const TEX_FS = 'precision mediump float;uniform sampler2D uTex;uniform float uLit;uniform vec3 uN;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;varying vec2 vUV;varying vec3 vW;' +
-    'void main(){vec4 t=texture2D(uTex,vUV);if(t.a<0.05)discard;vec3 c=uLit>0.5?t.rgb*(uAmb+uSunCol*max(dot(uN,uSun),0.0)):t.rgb;float d=length(vW);float f=1.0-exp(-uFogD*uFogD*d*d);gl_FragColor=vec4(mix(c,uFog,f),t.a);}';
+  const TEX_FS = 'precision mediump float;uniform sampler2D uTex;uniform float uLit;uniform vec3 uN;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;varying vec2 vUV;varying vec3 vW;' + AIR +
+    'void main(){vec4 t=texture2D(uTex,vUV);if(t.a<0.05)discard;vec3 c=uLit>0.5?t.rgb*(uAmb+uSunCol*max(dot(uN,uSun),0.0)):t.rgb;gl_FragColor=vec4(fin(c,vW),t.a);}';
   let PRGN = null, PRGX = null, SK = null, PRGW = null, WKB = null, CHARM_AT = [0.2, 1.6, 0.1];
   const fishOf = sp => SK.fishM[sp] || SK.fishM.torsk;      // a species' fish mesh (tools/fish), 1 m long
   // the places on the starter boat that the live parts and the people use, in its frame; a detailed model (GLB) brings its own
@@ -66,7 +66,7 @@
   }
   function nSetup(VP){
     gl.useProgram(PRGN.p); const u = PRGN.u; plSet(u);
-    gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uSun, env.lightDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb); gl.uniform3fv(u.uGnd, env.gnd); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD); gl.uniform1f(u.uAlpha, 1); gl.uniform1f(u.uEmis, 0); gl.uniform4fv(u.uWear, WEAR0);
+    gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uSun, env.lightDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb); gl.uniform3fv(u.uGnd, env.gnd); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD); airSet(u); gl.uniform1f(u.uAlpha, 1); gl.uniform1f(u.uEmis, 0); gl.uniform4fv(u.uWear, WEAR0);
   }
   // your own hull's wear for the next draws (core/16c-hull.js b.dmg), and back to none
   const WEAR0 = new Float32Array([0, 0, 1, 1]);
@@ -81,7 +81,7 @@
   function drawTexQuad(q, tex, M, VP, lit, nrm){
     gl.useProgram(PRGX.p); const u = PRGX.u;
     gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniformMatrix4fv(u.uM, false, M); gl.uniform1f(u.uLit, lit ? 1 : 0); gl.uniform3fv(u.uN, nrm || [0, 1, 0]);
-    gl.uniform3fv(u.uSun, env.lightDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD);
+    gl.uniform3fv(u.uSun, env.lightDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD); airSet(u);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(u.uTex, 0);
     attr(0, q.pb, 3); attr(1, q.ub, 2); gl.drawArrays(gl.TRIANGLES, 0, q.n || 6);
   }

@@ -21,6 +21,10 @@
     // from a strong gale (Beaufort 9) the spray in the air shortens the view over the sea: about 15 km at force 10, 4 km at 11, 1 km at 12
     // (only in 3D; the game's visibility() is unchanged)
     env.fog = hor; env.fogD = 1.73 / (Math.min(QUAL.lvl === 3 ? env.vis * 1.8 : env.vis, (QUAL.lvl === 3 ? 90 : 50) * Math.exp(-0.325 * Math.max(0, windAt(H) - 20.8))) * 1000);
+    // the cloud base on the fells (G5): from about 2 700 m under a broken sky down to 250-300 m under a full grey one, 150 m lower in rain
+    // or snow; only a sky over 55 % cloud lays it on the ground at all. Its colour is the overcast horizon's, so the cloud on the fell is the sky's
+    env.cbase = 250 + 2500 * Math.pow(1 - env.cloud, 1.5) - 150 * sstep(0.1, 0.6, env.precip || 0); env.cstr = sstep(0.55, 0.85, env.cloud) * 0.92;
+    env.ccol = hor;
     env.stars = sstep(-5, -12, el) * (1 - env.cloud); env.spec = sstep(-1, 4, el) * (1 - env.cloud) * 2.2;
     env.night = sstep(3, -5, el);
     // moon: where it is, how full, and the light it gives at night

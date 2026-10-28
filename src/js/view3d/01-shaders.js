@@ -4,12 +4,29 @@
   const PLG = '\n#define NPL 8\nuniform vec4 uPL[NPL];uniform vec3 uPC[NPL];uniform float uNPL;' +
     'vec3 pLit(vec3 p,vec3 n){vec3 s=vec3(0.0);for(int i=0;i<NPL;i++){if(float(i)>=uNPL)break;float R=uPL[i].w;if(R<=0.0)continue;vec3 L=uPL[i].xyz-p;float r2=dot(L,L);float a=max(0.0,1.0-r2/(R*R));' +
     'if(a<=0.0)continue;s+=uPC[i]*a*a*(0.2+0.8*max(dot(n,L*inversesqrt(r2+0.01)),0.0));}return s;}';
+  // The air and the light's shoulder (G5 of docs/planer/grafikk-natur-og-miljo.md), the end of every lit fragment shader: fin(c, v) for
+  // the colour c of a point at v from the eye. The haze as before has the visibility's density (uFogD) and the horizon's colour (uFog),
+  // but the extinction is per channel, the blue more than the red, so the far fells go blue and lose their contrast before they fade into
+  // the sky (Rayleigh), and towards the sun the haze is lit warm with the sky's own glow round the sun (Mie, uAirMie = the sky shader's
+  // term), so the land meets the horizon in the same colour. tone() keeps every value under 0.8 as it is and bends those above it softly
+  // towards white instead of clipping (the snow, the foam and the sunlit hulls keep their shading); a filmic curve with a toe was not
+  // taken: it darkens the night and the shadows that were tuned without it. uAirOn 0 (a program not set, or #air0) is the old haze.
+  // The cloud on the fells is here too (uCB: the base in m and how much; uCC its colour; uEye the eye's x and z modulo 4096 and its
+  // height), with one ragged edge for everything (the noise of the world's x and z, as the terrain's own wp), so the trees, the houses and
+  // the boats on a fell go into the cloud with the ground under them (with a smooth edge of their own the trees stood dark in it)
+  const AIR = 'uniform vec3 uAirSun;uniform vec3 uAirMie;uniform float uAirOn;uniform vec3 uCB;uniform vec3 uCC;uniform vec3 uEye;' +
+    'float aH(vec2 p){vec3 q=fract(vec3(p.xyx)*0.1031);q+=dot(q,q.yzx+33.33);return fract((q.x+q.y)*q.z);}' +
+    'float aN(vec2 p){vec2 i=floor(p),f=fract(p);vec2 u=f*f*(3.0-2.0*f);return mix(mix(aH(i),aH(i+vec2(1.0,0.0)),u.x),mix(aH(i+vec2(0.0,1.0)),aH(i+vec2(1.0,1.0)),u.x),u.y);}' +
+    'vec3 tone(vec3 c){vec3 e=max(c-0.8,0.0);return min(c,vec3(0.8))+0.2*(1.0-exp(-e/0.2));}' +
+    'vec3 fin(vec3 c,vec3 v){float d=length(v);float k=uFogD*d;k*=k;if(uAirOn<0.5)return mix(c,uFog,1.0-exp(-k));' +
+    'if(uCB.y>0.0){vec2 wq=mod(v.xz+uEye.xy,4096.0);float e=(aN(wq/260.0+31.0)-0.5)*140.0+(aN(wq/70.0+7.0)-0.5)*45.0;c=mix(c,uCC,smoothstep(uCB.x-40.0,uCB.x+110.0,v.y+uEye.z+e)*uCB.y);}' +
+    'vec3 T=exp(-k*vec3(0.8,0.95,1.2));float mu=max(dot(v/max(d,1.0),uAirSun),0.0);vec3 s=uFog+uAirMie*pow(mu,12.0);return tone(c*T+s*(1.0-T));}';
   const LIT_VS = 'attribute vec3 aPos;attribute vec3 aCol;uniform mat4 uVP;uniform mat4 uM;varying vec3 vW;varying vec3 vC;' +
     'void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;vC=aCol;gl_Position=uVP*w;}';
   const LIT_FS = '#extension GL_OES_standard_derivatives : enable\nprecision highp float;' +
-    'uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform float uEmis;uniform vec4 uHole;uniform vec4 uOver;varying vec3 vW;varying vec3 vC;' + PLG +
+    'uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform float uEmis;uniform vec4 uHole;uniform vec4 uOver;varying vec3 vW;varying vec3 vC;' + PLG + AIR +
     'void main(){if(vW.x>uHole.x&&vW.x<uHole.z&&vW.z>uHole.y&&vW.z<uHole.w)discard;vec3 n=normalize(cross(dFdx(vW),dFdy(vW)));if(dot(n,vW)>0.0)n=-n;float dif=max(dot(n,uSun),0.0);' +
-    'vec3 amb=mix(uGnd,uAmb,n.y*0.5+0.5);vec3 bc=mix(vC,uOver.rgb,uOver.a);vec3 c=bc*(amb+uSunCol*dif+pLit(vW,n))+bc*uEmis;float d=length(vW);float f=1.0-exp(-uFogD*uFogD*d*d);gl_FragColor=vec4(mix(c,uFog,f),1.0);}';
+    'vec3 amb=mix(uGnd,uAmb,n.y*0.5+0.5);vec3 bc=mix(vC,uOver.rgb,uOver.a);vec3 c=bc*(amb+uSunCol*dif+pLit(vW,n))+bc*uEmis;gl_FragColor=vec4(fin(c,vW),1.0);}';
   const TER_VS = 'attribute vec3 aPos;attribute vec3 aCol;attribute vec3 aNor;attribute float aShd;attribute vec4 aMat;attribute vec4 aCov;uniform mat4 uVP;uniform mat4 uM;uniform vec3 uPO;varying vec3 vW;varying vec3 vC;varying vec3 vN;varying vec3 vP;varying float vS;varying vec4 vM;varying vec4 vV;void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;vC=aCol;vN=aNor;vP=aPos+uPO;vS=aShd;vM=aMat;vV=aCov;gl_Position=uVP*w;}';
   const NOISE = 'float hs(vec2 p){vec3 q=fract(vec3(p.xyx)*0.1031);q+=dot(q,q.yzx+33.33);return fract((q.x+q.y)*q.z);}' +
     'float ns(vec2 p){vec2 i=floor(p),f=fract(p);vec2 u=f*f*(3.0-2.0*f);return mix(mix(hs(i),hs(i+vec2(1.0,0.0)),u.x),mix(hs(i+vec2(0.0,1.0)),hs(i+vec2(1.0,1.0)),u.x),u.y);}';
@@ -125,16 +142,16 @@
   const BASIC_VS = 'precision highp float;attribute vec2 aXZ;uniform mat4 uVP;uniform vec2 uOrigin;uniform vec3 uOriginRel;uniform vec2 uScale;varying vec3 vW;varying vec2 vXZ;' +
     'void main(){vec2 lxz=aXZ*uScale;vec3 rel=uOriginRel+vec3(lxz.x,0.0,lxz.y);vW=rel;vXZ=uOrigin+lxz;gl_Position=uVP*vec4(rel,1.0);}';
   const BASIC_FS = 'precision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;uniform vec3 uZen;uniform vec3 uHor;uniform vec3 uDeep;uniform float uTime;varying vec3 vW;varying vec2 vXZ;' +
-    'void main(){float d=length(vW);vec3 V=normalize(-vW);vec2 p=vXZ;' +
+    AIR + 'void main(){float d=length(vW);vec3 V=normalize(-vW);vec2 p=vXZ;' +
     'vec3 N=normalize(vec3(0.05*sin(p.x*0.35+uTime*1.1)+0.03*sin(p.y*0.52-uTime*0.9)+0.02*sin((p.x+p.y)*1.7+uTime*2.3),1.0,0.05*cos(p.y*0.31+uTime*1.3)+0.03*cos(p.x*0.47+uTime*0.7)+0.02*cos((p.x-p.y)*1.9-uTime*2.1)));' +
     'float fr=0.02+0.98*pow(1.0-max(dot(N,V),0.0),5.0);vec3 R=reflect(-V,N);vec3 sky=mix(uHor,uZen,clamp(R.y*1.5,0.0,1.0));' +
     'vec3 body=uDeep*(uAmb*1.7+uSunCol*0.3*max(dot(N,uSun),0.0));vec3 col=mix(body,sky,fr)+uSunCol*pow(max(dot(R,uSun),0.0),220.0)*0.9;' +
-    'gl_FragColor=vec4(mix(uFog,col,exp(-uFogD*uFogD*d*d)),1.0);}';
+    'gl_FragColor=vec4(fin(col,vW),1.0);}';
   // FAR (the far pass beyond the near terrain): the four longest wind waves and the swell, the rest of the wind sea only as roughness, no ripples
   const SEA_FS = '#extension GL_OES_standard_derivatives : enable\nprecision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;uniform vec3 uZen;uniform vec3 uHor;uniform vec3 uDeep;' +
     'uniform float uTime;uniform float uWind;uniform vec2 uWindDir;uniform float uFlat;uniform float uSpec;uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];uniform vec2 uNFD;uniform sampler2D uHgt;uniform float uHOn;uniform sampler2D uLandS;uniform vec4 uLRect;uniform float uLSOn;uniform float uTideL;uniform vec4 uSRect;uniform float uSOn;uniform float uPx;uniform float uDbg;uniform sampler2D uFoam;uniform vec4 uFoamRect;uniform vec4 uFoamT;uniform vec4 uFoamTc;uniform float uFoamOn;' + PLG +
     'varying vec3 vW;varying vec2 vXZ;' + NOISE + SEA_STATE + WAKE_GLSL +
-    'void main(){float d=length(vW);vec2 P=vXZ;vec4 S=seaAt(P);' +
+    AIR + 'void main(){float d=length(vW);vec2 P=vXZ;vec4 S=seaAt(P);' +
     // metres covered by one pixel here (grows with distance and grazing angle); a wave shorter than a few pixels is faded out and its slope becomes roughness instead
     'vec3 V=normalize(-vW);float px=d*uPx/max(abs(V.y),0.12);vec2 w=uWindDir;vec2 wp=vec2(-w.y,w.x);' +
     // gusts: slow patches of rougher and calmer water break up any repetition
@@ -202,9 +219,9 @@
     'float ln=ns(P*0.32+vec2(uTime*0.35,-uTime*0.25))*0.6+ns(P*0.95-uTime*0.45)*0.4;' +
     'foam=max(foam,band*smoothstep(0.35,0.72,ln+band*0.2)*(0.3+0.7*clamp(hl*1.6,0.0,1.0))*(0.7+0.3*sw)*ef);}}' +
     'if(uDbg>0.5){gl_FragColor=vec4(vec3(clamp(foam,0.0,1.0)),1.0);return;}' +
-    'col=mix(col,fc,clamp(foam,0.0,1.0)*0.85);float fg=1.0-exp(-uFogD*uFogD*d*d);gl_FragColor=vec4(mix(col,uFog,fg),1.0);}';
+    'col=mix(col,fc,clamp(foam,0.0,1.0)*0.85);gl_FragColor=vec4(fin(col,vW),1.0);}';
   const terFS = q => '#extension GL_OES_standard_derivatives : enable\n#define MATQ ' + q + '\nprecision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform vec4 uHole;' +
-    'uniform sampler2D uGround;uniform sampler2D uLand;uniform vec4 uGRect;uniform float uGOn;uniform float uLOn;uniform float uTideY;uniform float uSwash;uniform vec3 uSand;varying vec3 vW;varying vec3 vC;varying vec3 vN;varying vec3 vP;varying float vS;varying vec4 vM;varying vec4 vV;uniform vec4 uMP;uniform vec4 uMQ;' + NOISE + PLG +
+    'uniform sampler2D uGround;uniform sampler2D uLand;uniform vec4 uGRect;uniform float uGOn;uniform float uLOn;uniform float uTideY;uniform float uSwash;uniform vec3 uSand;varying vec3 vW;varying vec3 vC;varying vec3 vN;varying vec3 vP;varying float vS;varying vec4 vM;varying vec4 vV;uniform vec4 uMP;uniform vec4 uMQ;' + NOISE + PLG + AIR +
     // the ground near the water is cut where the shore texture (buildLandMask: the foreshore's own height, h = r * 8 - 4) lies under
     // the tide, so the waterline is the coast's own line at high water and the foreshore's at ebb, whatever the mesh's cells
     'void main(){if(vW.x>uHole.x&&vW.x<uHole.z&&vW.z>uHole.y&&vW.z<uHole.w)discard;vec2 luv=(vW.xz-uGRect.xy)*uGRect.zw;' +
@@ -266,10 +283,12 @@
     'float wd=(1.0-smoothstep(0.9,1.5,h+b2*0.6))*step(-0.6,h);c=mix(c,mix(vec3(0.22,0.19,0.1),vec3(0.32,0.28,0.14),ns(wp*0.35)),wd*0.92);' +
     'float br=smoothstep(1.0,1.45,h+b2*0.6)*(1.0-smoothstep(1.55,2.1,h+b1*0.8));c=mix(c,vec3(0.7,0.7,0.66),br*0.55);' +
     'if(uGOn>0.5&&ins>0.5){vec4 g=texture2D(uGround,uv);c=mix(c,g.rgb,g.a*ef);}' +
-    'float dif=max(dot(n,uSun),0.0)*mix(0.08,1.0,smoothstep(0.15,0.85,vS));vec3 amb=mix(uGnd,uAmb,n.y*0.5+0.5);vec3 col=c*(amb+uSunCol*dif+pLit(vW,n));float f=1.0-exp(-uFogD*uFogD*d*d);gl_FragColor=vec4(mix(col,uFog,f),1.0);}';
+    'float dif=max(dot(n,uSun),0.0)*mix(0.08,1.0,smoothstep(0.15,0.85,vS));vec3 amb=mix(uGnd,uAmb,n.y*0.5+0.5);vec3 col=c*(amb+uSunCol*dif+pLit(vW,n));' +
+    'gl_FragColor=vec4(fin(col,vW),1.0);}';
   const SKY_VS = 'attribute vec2 aP;varying vec2 vP;void main(){vP=aP;gl_Position=vec4(aP,0.9999,1.0);}';
   const SKY_FS = 'precision highp float;uniform vec3 uF;uniform vec3 uR;uniform vec3 uU;uniform vec2 uTan;uniform vec3 uZen;uniform vec3 uHor;uniform vec3 uSunD;uniform vec3 uSunCol;' +
-    'uniform vec3 uCX;uniform vec3 uCY;uniform vec3 uCP;uniform float uPx;uniform float uCloud;uniform vec2 uCloudOff;uniform float uTime;uniform float uStars;uniform float uAur;uniform float uDay;uniform vec2 uWindDir;uniform vec3 uMoonD;uniform float uMoonA;varying vec2 vP;' + NOISE +
+    'uniform vec3 uCX;uniform vec3 uCY;uniform vec3 uCP;uniform float uPx;uniform float uCloud;uniform vec2 uCloudOff;uniform float uTime;uniform float uStars;uniform float uAur;uniform float uDay;uniform vec2 uWindDir;uniform vec3 uMoonD;uniform float uMoonA;uniform float uAirOn;varying vec2 vP;' + NOISE +
+    'vec3 tone(vec3 c){vec3 e=max(c-0.8,0.0);return min(c,vec3(0.8))+0.2*(1.0-exp(-e/0.2));}' +
     // the aurora's line across the sky plane: wide arcs, S-folds, small ripples and a tighter curl that wanders along it
     // lod fades the small folds and the curl where the samples along the ray stand too far apart to follow them (low in the sky)
     'float aFold(float x,float fk,float T,float lod){float xc=5.0*sin(T*0.007+fk*5.0);float q=x-xc;' +
@@ -329,7 +348,7 @@
     'col+=acc*uAur*0.6*smoothstep(0.0,0.06,d.y)+vec3(0.03,0.16,0.08)*uAur*smoothstep(0.0,0.35,d.y)*(1.0-smoothstep(0.35,0.9,d.y))*0.35;}' +
     'if(d.y>0.0){vec2 cp=d.xz/(d.y+0.08)*1.2+uCloudOff+160.0;float c=ns(cp)*0.6+ns(cp*2.3)*0.3+ns(cp*5.1)*0.1;float cov=smoothstep(1.0-uCloud-0.05,1.0-uCloud+0.35,c);' +
     'vec3 cc=mix(uHor*0.85,vec3(0.9,0.92,0.95),0.35*uDay)*(0.3+0.7*uDay);col=mix(col,cc,cov*smoothstep(0.0,0.12,d.y)*0.95);}' +
-    'gl_FragColor=vec4(col,1.0);}';
+    'gl_FragColor=vec4(uAirOn>0.5?tone(col):col,1.0);}';
   const PT_VS = 'attribute vec3 aPos;attribute float aA;uniform mat4 uVP;uniform vec3 uOff;uniform float uSize;uniform float uPull;uniform float uMax;varying float vA;' +
     'void main(){vA=aA;vec3 r=aPos+uOff;r-=normalize(r+vec3(0.0,0.0,1e-4))*min(length(r)*0.5,uPull);vec4 p=uVP*vec4(r,1.0);gl_Position=p;gl_PointSize=clamp(uSize/max(p.w,0.1),1.0,uMax);}';
   const PT_FS = 'precision mediump float;uniform vec3 uCol;uniform float uRound;varying float vA;' +
@@ -376,6 +395,15 @@
     return {p, u};
   }
   function buf(data, target, usage){ const b = gl.createBuffer(); target = target || gl.ARRAY_BUFFER; gl.bindBuffer(target, b); gl.bufferData(target, data, usage || gl.STATIC_DRAW); return b; }
+  // the air's uniforms for a program that has them (AIR); the sky's glow round the sun as the sky shader draws it (pow 12 x 0.35, less
+  // under cloud), so the haze towards the sun meets it
+  const AIRON = /air0/.test(location.hash) ? 0 : 1;
+  let AIRE = [0, 0, 0];   // the eye's x and z modulo 4096 and its height, set by drawTerrain each frame (the terrain's wp folds the same way)
+  function airSet(u, terr){
+    if (u.uAirOn) gl.uniform1f(u.uAirOn, AIRON);
+    if (u.uCB){ gl.uniform3fv(u.uCB, [env.cbase || 3000, env.cstr || 0, 0]); gl.uniform3fv(u.uCC, env.ccol || env.fog); gl.uniform3fv(u.uEye, AIRE); }
+    if (u.uAirSun){ gl.uniform3fv(u.uAirSun, env.sunDir || [0, 1, 0]); const k = 0.35 * (1 - 0.9 * (env.cloud || 0)); gl.uniform3fv(u.uAirMie, (env.sunCol || [0, 0, 0]).map(v => v * k)); }
+  }
   function attr(loc, b, size){ gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 0, 0); }
   // World meshes keep their vertices relative to their own origin m.o ([x, z], metres), so Float32 holds them to the millimetre
   // anywhere in the country; the model matrix carries the origin less the eye, worked out in doubles (relM). The shaders get the

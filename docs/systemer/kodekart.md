@@ -2661,21 +2661,22 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 85 `ridged(x, y)`
   - 86 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (390 linjer)
+## `src/js/view3d/01-shaders.js` (418 linjer)
 
 ---------- shaders ----------
 
 - **1** shaders
-- **72** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
-- **96** the boat's own foam, when she has way on
-- **114** the whitecaps, as the sea shader finds them: the crest in standard deviations plus the mottle, over Monahan's threshold
-  - 346 `cloudStep(dt)`
-  - 352 `skyFrame(u, Hh, tn, bv)`
-  - 364 `compile(type, src, nm)`
-  - 370 `program(vs, fs, attrs, nm = '?')`
-  - 378 `buf(data, target, usage)`
-  - 379 `attr(loc, b, size)`
-  - 388 `upload(pos, col, idx)`
+- **89** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
+- **113** the boat's own foam, when she has way on
+- **131** the whitecaps, as the sea shader finds them: the crest in standard deviations plus the mottle, over Monahan's threshold
+  - 365 `cloudStep(dt)`
+  - 371 `skyFrame(u, Hh, tn, bv)`
+  - 383 `compile(type, src, nm)`
+  - 389 `program(vs, fs, attrs, nm = '?')`
+  - 397 `buf(data, target, usage)`
+  - 402 `airSet(u, terr)`
+  - 407 `attr(loc, b, size)`
+  - 416 `upload(pos, col, idx)`
 
 ## `src/js/view3d/02-mesh-terrain.js` (94 linjer)
 
@@ -2686,7 +2687,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **45** terrain
   - 76 `terrRaw(x, z, dil)`
 
-## `src/js/view3d/03-berths-naust.js` (329 linjer)
+## `src/js/view3d/03-berths-naust.js` (349 linjer)
 
 ---------- The water at the berths the company holds in the coast's harbours (core/07e-havn.js) ----------
 
@@ -2706,19 +2707,21 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 179 `terrCoarse(x, z, dil)`
   - 189 `forestAt(x, z)`
   - 206 `coverAt(x, z, cv, ck, k)`
-  - 224 `coverClass(x, z)`
-  - 232 `meshBegin(x0, z0, sx, sz, n, hf)`
-  - 236 `meshRows(B, until)`
-  - 248 `meshEnd(B)`
-  - 260 `makeMesh(x0, z0, sx, sz, n, hf)`
-  - 261 `freeMesh(m)`
-  - 263 `nearSurf(M, x, z)`
-  - 273 `unitPatch(U, M)`
-  - 298 `buildPatches()`
-  - 307 `buildTerrain()`
-  - 316 `stream3d()`
+  - 228 `covBlk(LC, bx, by)`
+  - 232 `coverRing(LC, ix, iz)`
+  - 242 `coverClass(x, z)`
+  - 252 `meshBegin(x0, z0, sx, sz, n, hf)`
+  - 256 `meshRows(B, until)`
+  - 268 `meshEnd(B)`
+  - 280 `makeMesh(x0, z0, sx, sz, n, hf)`
+  - 281 `freeMesh(m)`
+  - 283 `nearSurf(M, x, z)`
+  - 293 `unitPatch(U, M)`
+  - 318 `buildPatches()`
+  - 327 `buildTerrain()`
+  - 336 `stream3d()`
 
-## `src/js/view3d/04-vec-packs.js` (245 linjer)
+## `src/js/view3d/04-vec-packs.js` (260 linjer)
 
 ---------- the coast's packs (01c-vec.js, part 4 of the coast-wide plan): buildings, roads, bridges, piers and breakwaters ----------
 
@@ -2740,9 +2743,9 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 158 `nearWanted()`
   - 168 `fineWanted()`
   - 181 `recolor(m, snow)`
-- **233** the breakwaters' armour stones: a mesh a breakwater, drawn only within STONE_R of the eye (beyond it a stone is less than a
-  - 237 `stonesOf(list, build)`
-  - 242 `drawStones(list, TM, eye)`
+- **248** the breakwaters' armour stones: a mesh a breakwater, drawn only within STONE_R of the eye (beyond it a stone is less than a
+  - 252 `stonesOf(list, build)`
+  - 257 `drawStones(list, TM, eye)`
 
 ## `src/js/view3d/05-quays-breakwaters.js` (286 linjer)
 
@@ -2993,22 +2996,22 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 246 `seaH(x, z, t)`
   - 252 `seaHFast(x, z, t)`
 
-## `src/js/view3d/15-env-mooring.js` (124 linjer)
+## `src/js/view3d/15-env-mooring.js` (128 linjer)
 
 ---------- environment ----------
 
 - **1** environment
   - 3 `pal(el)`
   - 8 `computeEnv(H)`
-- **37** mooring: in along the quay, then the lines: aft spring first, bow line, stern line, fore spring (and in reverse when casting off)
-  - 41 `buildMooring()`
-  - 43 `berthNow()`
-  - 49 `approach(F, bp, u0, du0)`
-  - 60 `pathM(pts)`
-  - 65 `pathAt(M, s)`
-  - 66 `lieAlongside(dt, bp)`
-  - 69 `moorStep(dt, bp, at = dt)`
-  - 101 `drawMooring(BMrel, eye, VP, t)`
+- **41** mooring: in along the quay, then the lines: aft spring first, bow line, stern line, fore spring (and in reverse when casting off)
+  - 45 `buildMooring()`
+  - 47 `berthNow()`
+  - 53 `approach(F, bp, u0, du0)`
+  - 64 `pathM(pts)`
+  - 69 `pathAt(M, s)`
+  - 70 `lieAlongside(dt, bp)`
+  - 73 `moorStep(dt, bp, at = dt)`
+  - 105 `drawMooring(BMrel, eye, VP, t)`
 
 ## `src/js/view3d/16-motion.js` (225 linjer)
 
@@ -3030,7 +3033,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 214 `spawn(x, y, z, vx, vy, vz, life, g)`
   - 216 `drawPts(n, mode, VP, col, size, round, off, mx)`
 
-## `src/js/view3d/17-draw.js` (185 linjer)
+## `src/js/view3d/17-draw.js` (186 linjer)
 
 ---------- drawing ----------
 
@@ -3039,11 +3042,11 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 8 `drawLit(m, M, hole)`
   - 17 `terProg(q)`
   - 25 `drawTerrain(TM, eye, VP, near)`
-  - 45 `buildGround()`
-  - 80 `buildLandMask()`
-  - 103 `lmStep()`
-  - 136 `seaRing(u, eye, y, R, Hl)`
-  - 146 `drawSea(VP, eye, t, far, drop)`
+  - 46 `buildGround()`
+  - 81 `buildLandMask()`
+  - 104 `lmStep()`
+  - 137 `seaRing(u, eye, y, R, Hl)`
+  - 147 `drawSea(VP, eye, t, far, drop)`
 
 ## `src/js/view3d/18-setup.js` (148 linjer)
 
