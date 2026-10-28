@@ -98,6 +98,10 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - Ikonet `sjomann` i `05-phone.js` brukes ikke (Sjømann-appen ble fjernet 09.10.2026).
 - Startbåten er `trebat`. `buildSkiff` bygges fortsatt og er grunnlaget for kitet til håndbåtene (`handKit`), så den kan ikke bare fjernes. På skiffen står sløyebordet og blødekaret (75 % størrelse) tett ved setet, og konsollskjermene er ikke levende (Jonas).
 
+## Strøket 28.10.2026 (skatten for AS med forskudd fra før terminene)
+
+- **CapteinAdrian ble trukket 795 941 kr i forskuddsskatt** (67 226 kr 1. april og 728 715 kr 1. juli i spillåret 2027) etter reglene før 27.10.2026: 22 % AS-skatt av 3,62 millioner kroner i overskudd så langt i året. Regnestykket var riktig etter de gamle reglene. Gjennomgangen fant en feil i de nye: forskuddet et AS hadde betalt før terminene, ble ikke regnet med ved årsskiftet, så selskapet ville betalt årets skatt én gang til i februar og april, og skattekontoen satte av for mye. Rettet i `txClose`, `taxOwed`, selskapets terminer og `taxPlan`; `skattetest` har tilfellet.
+
 ## Strøket 27.10.2026 (Driftsplan 2, 7f817c3)
 
 Revisjonens funn (`docs/planer/driftsplan-2/01-revisjon.md`) er løst med den nye planen: planen uten dag («Neste tur» som ikke stemte med det som skjedde), motoren som improviserte med feil konstanter og søkte asynkront i `catchUp` («Grunt vann forut», tre feil og stopp), siden som viste noe annet enn motoren gjorde, plassvalget som ble avbrutt av en ny tegning av siden (#95), ståtida som ikke ble holdt, den sovende vakta som ble regnet som i land («Rune har fri, så båten venter»), og statistikken uten dag og mottak. Alt sammen i `core/06g-plan2.js`, `core/06h-plan2-engine.js`, `ui/05d-plan2.js` og `ui/03g-planmap.js`; `docs/systemer/driftsplan.md` «Driftsplan 2» del 1–7.

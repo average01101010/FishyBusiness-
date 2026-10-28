@@ -34,6 +34,14 @@ PLAY = r"""(() => {
   // a year with a loss carries it
   S.form = undefined; S.taxCarry = {ENK:0, AS:0}; S.t = ((Date.UTC(2031, 0, 1) - EPOCH) / 36e5) * 60; S.tx = {y:2030, rev0:S.stats.revenue + 100000, cost0:S.stats.costs, f0:0, paid:0, adv:0, days:[], enk:null}; txClose(S.t / 60);
   R.loss = [Math.round(taxCarry().ENK), S.txY[2030].enk.R.sum];
+  // a company that paid the quarterly advance before the terms (CapteinAdrian 28.10.2026): it counts in what is owed, at the close and in
+  // the terms the year after, so the year's tax is paid once
+  S.form = 'AS'; S.taxCarry = {ENK:0, AS:0}; S.txY = {}; S.bank = null; S.cash = 5e6; const pays2 = [];
+  taxPay = (kr0, no, en) => { pays2.push([gDate(S.t / 60).toISOString().slice(0, 10), Math.round(kr0), no]); return pay0(kr0, no, en); };
+  S.t = ((Date.UTC(2032, 6, 15) - EPOCH) / 36e5) * 60; S.tx = {y:2032, rev0:S.stats.revenue - 2000000, cost0:S.stats.costs, paid:300000, days:[]};
+  R.owedOld = [taxOwed(), Math.round(txNow().as.sum)];
+  for (let H = S.t / 60; H < (Date.UTC(2033, 10, 1) - EPOCH) / 36e5; H += 24){ S.t = H * 60; taxTick(H); bankDay(H); }
+  const A = S.txY[2032].as; R.as2 = {sum:A.R.sum, paid:A.paid, settled:A.settled}; R.pays2 = pays2;
   taxPay = pay0; msg = msg0; return R; })()"""
 async def main():
     async with async_playwright() as p:
@@ -61,6 +69,9 @@ async def main():
         print(ok(r['sal'][1] < r['sal'][0] * 0.86 ** 2 + 1), 'the vessels\' tax values are written down 14 % a year', r['sal'])
         print(ok(r['carry'] == [200000, True, True, True, True]), 'a loss carried lowers the tax; the shielding lowers the social security and the bracket tax, not the 22 %', r['carry'])
         print(ok(r['loss'][0] > 0 and r['loss'][1] == 0), 'a year with a loss is carried forward', r['loss'])
+        A2 = r['as2']; P2 = r['pays2']; tot2 = 300000 + sum(x[1] for x in P2)
+        print(ok(r['owedOld'][0] == r['owedOld'][1] - 300000 and A2['paid'] >= 300000 and A2['settled'] and abs(tot2 - A2['sum']) <= 2 and all(x[1] <= A2['sum'] - 300000 + 1 for x in P2)),
+              'a company\'s advance paid before the terms counts: it is owed less, closed as paid, and the terms and the settlement take only the rest', (r['owedOld'], A2, P2))
         # the bank's tax card, standing and lying
         for w, h, tag in ((800, 1280, 'staende'), (1280, 800, 'liggende')):
             await pg.set_viewport_size({'width': w, 'height': h})

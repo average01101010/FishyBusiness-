@@ -816,6 +816,7 @@ function bankAfterIncome(inKr){
   const B = bankS(); if (!(inKr > 0)) return;
   const tx = B.auto ? Math.min(Math.max(0, taxOwed() - B.skatt), inKr * BANK.autoMax) : inKr * (B.pct || 0);
   if (tx >= 1) bankMove('skatt', tx, 'Avsatt til skatt', 'Set aside for tax');
+  else if (B.auto && B.skatt - taxOwed() >= 1) bankMove('skatt', -(B.skatt - taxOwed()), 'Mer avsatt enn skatten, tilbake', 'More set aside than the tax, back');   // the automatic set-aside follows the tax down too
   if (B.spPct > 0) bankMove('spare', inKr * B.spPct, 'Fast sparing', 'Regular savings');
 }
 // the tax paid: from the tax account first, the rest from the current account; a refund comes to the current account
@@ -888,7 +889,7 @@ function txNow(H = S.t / 60){ const T = S.tx; if (!T) return {enk:null, as:null}
   return {enk:taxOf(P, 'ENK', T.days.length, skj, C.ENK), as:null};
 }
 // the tax still owed: this year's so far less the advance paid, and the years closed but not settled. What the tax account should hold.
-function taxOwed(H = S.t / 60){ if (!S.tx) return 0; const N = txNow(H); let o = (N.enk ? N.enk.sum - S.tx.paid : 0) + (N.as ? N.as.sum : 0);
+function taxOwed(H = S.t / 60){ if (!S.tx) return 0; const N = txNow(H); let o = (N.enk ? N.enk.sum : 0) + (N.as ? N.as.sum : 0) - S.tx.paid;   // (T.paid: the sole proprietor's terms, or a company's advance from before the terms)
   for (const y in (S.txY || {})){ const Y = S.txY[y]; for (const k of ['enk', 'as']) if (Y[k] && !Y[k].settled) o += Y[k].R.sum - Y[k].paid; }
   return Math.max(0, Math.round(o)); }
 // the sole proprietor's advance for the year: last year's tax, changed when the year so far, carried to a whole year, is more than 20 %
@@ -905,8 +906,9 @@ function taxPlan(H = S.t / 60){
     left.forEach((md, i) => { const kr0 = small ? (md[0] === 5 ? Math.max(0, adv - T.paid) : 0) : Math.max(0, (adv - T.paid) / left.length); if (kr0 >= 1) out.push({t:taxDate(T.y, md), kind:'enk', y:T.y, kr:Math.round(kr0)}); }); }
   for (const yy in (S.txY || {})){ const Y = S.txY[yy], n = +yy;
     if (Y.enk && !Y.enk.settled) out.push({t:taxDate(n + 1, TAX.enkSettle), kind:'enkS', y:n, kr:Y.enk.R.sum - Y.enk.paid});
-    if (Y.as && !Y.as.settled){ const tk = asBase(n) >= TAX.min ? Math.round(asBase(n) / 2) : 0; TAX.asT.forEach((md, i) => { if (i >= (Y.as.terms || 0) && tk) out.push({t:taxDate(n + 1, md), kind:'as', y:n, kr:tk}); });
-      out.push({t:taxDate(n + 1, TAX.asSettle), kind:'asS', y:n, kr:Y.as.R.sum - Y.as.paid - tk * (2 - (Y.as.terms || 0))}); } }
+    if (Y.as && !Y.as.settled){ const tk = asBase(n) >= TAX.min ? Math.round(asBase(n) / 2) : 0; let left = Math.max(0, Y.as.R.sum - Y.as.paid), sum = 0;
+      TAX.asT.forEach((md, i) => { if (i < (Y.as.terms || 0) || !tk) return; const kr0 = Math.min(tk, left); left -= kr0; sum += kr0; if (kr0 >= 1) out.push({t:taxDate(n + 1, md), kind:'as', y:n, kr:kr0}); });
+      out.push({t:taxDate(n + 1, TAX.asSettle), kind:'asS', y:n, kr:Y.as.R.sum - Y.as.paid - sum}); } }
   return out.filter(x => x.t >= now - 864e5 + 1 && Math.abs(x.kr) >= 1).sort((a, b) => a.t - b.t);
 }
 // the company's advance for a year: the last tax set (the year before's), or the year's own when it is more than 20 % off (the
@@ -919,7 +921,9 @@ function txClose(H){
   const T = S.tx, C = taxCarry(), Y = (S.txY || (S.txY = {}))[T.y] = {form:txForm()}, P = txProfit(H), skj = skjBase() * TAX.skjerm * (1 - (T.f0 || 0));
   const part = (P0, form, days, sk, paid) => { const R = taxOf(P0, form, days, sk, C[form]); C[form] += P0 < 0 ? -P0 : -R.carry; return {P:Math.round(P0), days, R, paid:Math.round(paid || 0), settled:false, terms:0}; };
   if (T.enk) Y.enk = part(T.enk.P, 'ENK', T.enk.days, T.enk.skj, T.paid);
-  if (S.form === 'AS') Y.as = part(P, 'AS', 0, 0, 0); else Y.enk = part(P, 'ENK', T.days.length, skj, T.paid);
+  // (an AS whole year has paid nothing in the year under the terms; what a save paid in it under the quarterly advance before 27.10.2026
+  // counts: T.paid is then the company's, CapteinAdrian 28.10.2026)
+  if (S.form === 'AS') Y.as = part(P, 'AS', 0, 0, T.enk ? 0 : T.paid); else Y.enk = part(P, 'ENK', T.days.length, skj, T.paid);
   const tax = (Y.enk ? Y.enk.R.sum : 0) + (Y.as ? Y.as.R.sum : 0);
   { bookYear(); const Yp = S.stats.y[T.y] || (S.stats.y[T.y] = {}); Yp._dep = Math.round(depBase() * TAX.dep); Yp._tax = tax; }   // for the accounts (bookResult)
   for (const v of S.fleet || []) S.saldo[v.id] = Math.round(saldoOf(v) * (1 - TAX.dep));
@@ -955,7 +959,7 @@ function taxTick(H){
       'The tax settlement for ' + (y - 1) + ' (sole proprietorship): profit NOK ' + E.P + ', tax NOK ' + E.R.sum + '. Paid in advance NOK ' + E.paid + '. ' + (rest >= 0 ? 'NOK ' + rest + ' still owed has been paid.' : 'NOK ' + (-rest) + ' comes back to you.'));
     bankRelease(); }
   if (Y && Y.as && !Y.as.settled){ const A = Y.as, k = TAX.asT.findIndex(md => atDay(d, md));
-    if (k >= 0 && (A.terms || 0) <= k){ const due = Math.round(asBase(y - 1) / 2); A.terms = k + 1; if (due >= 1 && asBase(y - 1) >= TAX.min){ taxPay(due, 'Forskuddsskatt for selskapet ' + (y - 1), 'The company\'s advance tax ' + (y - 1)); A.paid += due;
+    if (k >= 0 && (A.terms || 0) <= k){ const due = Math.min(Math.round(asBase(y - 1) / 2), Math.max(0, A.R.sum - A.paid)); A.terms = k + 1; if (due >= 1 && asBase(y - 1) >= TAX.min){ taxPay(due, 'Forskuddsskatt for selskapet ' + (y - 1), 'The company\'s advance tax ' + (y - 1)); A.paid += due;
       msg('Skatteetaten', (k + 1) + '. termin av selskapets forskuddsskatt for ' + (y - 1) + ': ' + kr(due) + ' er betalt.', 'Term ' + (k + 1) + ' of the company\'s advance tax for ' + (y - 1) + ': NOK ' + due + ' paid.'); } }
     if (atDay(d, TAX.asSettle)){ const rest = A.R.sum - A.paid; taxPay(rest, 'Skatteoppgjøret for selskapet ' + (y - 1), 'The company\'s tax settlement ' + (y - 1)); A.settled = true;
       S.taxLast = {y:y - 1, form:'AS', days:0, R:A.R, paid:A.paid, rest};
