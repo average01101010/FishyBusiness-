@@ -6,6 +6,8 @@
 #   hgt     the ground at 25 m: Terrarium z13 (Kartverket's 10 m terrain in Norway) on land, above 0; on the sea the sea floor from
 #           the depth layer (Terrarium has the sea at 0 there, which the 3D view took for shallows everywhere)
 #   forest  50 m: Overture's land cover 'forest' (ESA WorldCover 10 m)
+#   cover   50 m: the land cover as a class per cell (COVER: 1 forest ... 12 shingle, 0 none) from ESA, OpenStreetMap's natural areas
+#           and its land use (cover(), G1 of docs/planer/grafikk-natur-og-miljo.md)
 #   depth   50 m, half metres: Kartverket's depth model as the legacy Senja raster has it (until Geonorge is open)
 #   core    the national core (national.py core_layers: land200, dc200, expo), the same for every region
 #   far     the far heights at 200 m (national.py far_layer) for the 3D view, a pack per coast tile with land
@@ -53,6 +55,49 @@ def breakwaters(box):
         bw.append(affinity.scale(w, 1 / k, 1, origin=(0, 0)))
     return bw
 
+# The land cover classes as the 'cover' layer codes them (G1 of docs/planer/grafikk-natur-og-miljo.md); 0 is none (the sea, or land
+# with nothing). Three sources, each over the one before:
+#   1. Overture's land cover (base/land_cover, ESA WorldCover 10 m from satellite): the whole land. Overture has the country twice,
+#      generalised polygons for zoom 0-7 (a forest over the whole of Senja, grass under everything) and the detailed ones for zoom
+#      8-15, which are the ones taken.
+#   2. OpenStreetMap's natural areas (base/land), in Norway mostly Kartverket's N50 brought in: the bogs (15 000 on Senja, where ESA
+#      sees 1.4 % of the land as wet), the woods, bare rock, scree, beaches, shingle, glaciers, heath and grassland.
+#   3. OpenStreetMap's land use (base/land_use): the fields (N50's cultivated land; ESA has one field on Senja), meadows, quarries,
+#      industry, and the grass of parks, pitches and churchyards.
+COVER = ['forest', 'shrub', 'grass', 'crop', 'wetland', 'moss', 'barren', 'snow', 'urban', 'sand', 'scree', 'shingle']
+CODE = {k: i + 1 for i, k in enumerate(COVER)}
+LAND = {('wetland', None): 'wetland', ('forest', 'wood'): 'forest', ('forest', 'forest'): 'forest', ('rock', 'bare_rock'): 'barren',
+        ('rock', 'rock'): 'barren', ('rock', 'scree'): 'scree', ('rock', 'shingle'): 'shingle', ('sand', 'beach'): 'sand', ('sand', 'sand'): 'sand',
+        ('glacier', 'glacier'): 'snow', ('shrub', 'heath'): 'shrub', ('shrub', 'scrub'): 'shrub', ('shrub', 'shrub'): 'shrub', ('grass', 'grassland'): 'grass'}
+LANDUSE = {('agriculture', 'farmland'): 'crop', ('agriculture', 'meadow'): 'grass', ('agriculture', 'farmyard'): 'grass', ('managed', 'grass'): 'grass',
+           ('recreation', 'pitch'): 'grass', ('park', 'park'): 'grass', ('cemetery', 'cemetery'): 'grass', ('cemetery', 'grave_yard'): 'grass',
+           ('resource_extraction', 'quarry'): 'barren', ('developed', 'industrial'): 'urban', ('developed', 'commercial'): 'urban', ('developed', 'retail'): 'urban'}
+COVER_COLS = ['geometry', 'subtype', 'class']
+def _polys(tab, pick):
+    if tab is None or tab.num_rows == 0: return {}
+    g = from_wkb(tab.column('geometry').to_numpy(zero_copy_only=False)); sub = tab.column('subtype').to_pylist()
+    cls = tab.column('class').to_pylist() if 'class' in tab.column_names else [None] * len(sub)
+    out = {}
+    for p, s, c in zip(g, sub, cls):
+        k = pick(s, c)
+        if k and p is not None and p.geom_type in ('Polygon', 'MultiPolygon'): out.setdefault(k, []).append(p)
+    return out
+def cover(lc, c, ix0, iy0, nx, ny, land=None, lu=None):
+    out = np.zeros((ny, nx), np.uint8)
+    if lc is not None and lc.num_rows:
+        import pyarrow.compute as pc
+        mz = pc.struct_field(lc.column('cartography'), 'max_zoom').to_pylist() if 'cartography' in lc.column_names else None
+        keep = [i for i in range(lc.num_rows) if mz is None or mz[i] is None or mz[i] >= 8]
+        lc = lc.take(keep)
+    for P in (_polys(lc, lambda s, k: s if s in CODE else None), _polys(land, lambda s, k: LAND.get((s, None)) or LAND.get((s, k))),
+              _polys(lu, lambda s, k: LANDUSE.get((s, k)))):
+        for name in COVER:
+            if P.get(name): out[fill(P[name], c, ix0, iy0, nx, ny) > 0] = CODE[name]
+    return out
+def cover_box(box, c, ix0, iy0, nx, ny):
+    return cover(features('base/land_cover', box, ['geometry', 'subtype', 'cartography']), c, ix0, iy0, nx, ny,
+                 features('base/land', box, COVER_COLS), features('base/land_use', box, COVER_COLS))
+
 hgtEnc = lambda v: np.sign(v) * np.where(np.abs(v) < 9.75, np.round(np.abs(v) * 2), 20 + np.round((np.abs(v) - 10) / 2))
 
 def build(R):
@@ -77,6 +122,7 @@ def build(R):
     lc = features('base/land_cover', box, ['geometry', 'subtype'])
     fx0, fy0, fnx, fny = R.grid(0.05); F = fill(polys_of(lc, lambda s: s == 'forest'), 0.05, fx0, fy0, fnx, fny)
     L['forest'] = dict(c=0.05, ix0=fx0, iy0=fy0, nx=fnx, ny=fny, type='u8', kind='view', arr=F); log['forest'] = round(float(F.mean()), 4)
+    L['cover'] = dict(c=0.05, ix0=fx0, iy0=fy0, nx=fnx, ny=fny, type='u8', kind='view', arr=cover_box(box, 0.05, fx0, fy0, fnx, fny))
     # the legacy rasters, read at the national cells
     G = legacy.load()
     dx0, dy0, dnx, dny = R.grid(0.05); X, Y = np.meshgrid((dx0 + np.arange(dnx) + 0.5) * 0.05, (dy0 + np.arange(dny) + 0.5) * 0.05)

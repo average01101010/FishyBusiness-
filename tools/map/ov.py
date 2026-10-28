@@ -8,7 +8,7 @@ import pyarrow as pa, pyarrow.parquet as pq, pyarrow.compute as pc
 RELEASE = '2026-09-23.1'
 BASE = 'https://overturemaps-us-west-2.s3.us-west-2.amazonaws.com/'
 NOR = (4.0, 57.7, 32.0, 71.5)   # lon/lat box round Norway with Jutland and Kola
-TYPES = ['base/land', 'base/water', 'base/land_cover', 'base/infrastructure', 'base/bathymetry', 'buildings/building', 'transportation/segment', 'divisions/division_area', 'divisions/division']
+TYPES = ['base/land', 'base/water', 'base/land_cover', 'base/land_use', 'base/infrastructure', 'base/bathymetry', 'buildings/building', 'transportation/segment', 'divisions/division_area', 'divisions/division']
 CACHE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cache')
 os.makedirs(CACHE, exist_ok=True)
 S = requests.Session()

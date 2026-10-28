@@ -2,7 +2,7 @@
 # (the artifact's): mask 25 m (with the breakwaters), distance to land 100 m, ground 25 m, forest 50 m, depth 50 m and openness 500 m.
 # Kept per tile in out/national/tiles/, so a stopped run goes on.
 #   python3 tools/map/coast.py game [tx,ty ...]   the game's packs (01b-mapdata.js, as region.py groups them): per tile 'sim' (mask, dc,
-#                                                 depth), 'view' (hgt, forest), 'chart' (coast1, coast2, names) and 'vec' (bld, road,
+#                                                 depth), 'view' (hgt, forest, cover), 'chart' (coast1, coast2, names) and 'vec' (bld, road,
 #                                                 bridge, pier, quay: vectors.py; npc: npc.py) in out/national/game/;
 #                                                 the core and the far heights come from src/data/map (tools/map/game.py joins them)
 #   python3 tools/map/coast.py [lite] [tx,ty ...] the K5 packs in out/national/lite/ (a pack per kind and tile, the core per tile too)
@@ -15,7 +15,7 @@
 import os, sys, json, time, numpy as np
 from scipy import ndimage
 import frame, terrain, legacy, pack, national
-from region import polys_of, fill, hgtEnc, breakwaters, cached
+from region import polys_of, fill, hgtEnc, breakwaters, cached, cover_box
 from ov import features
 OUT = national.OUT; TD = os.path.join(OUT, 'tiles'); os.makedirs(TD, exist_ok=True)
 
@@ -52,9 +52,20 @@ def kartverket(tx, ty):
     z = np.load(f)['z'].astype(np.float32)
     return np.where((z == 0) | (z == -32768), np.nan, np.maximum(-z / 10, 0.5))
 
+# the land cover classes of a tile (region.cover) on its 50 m cells, Norway's land only (the 200 m country mask, national.norway200):
+# Sweden, Finland and Russia keep the ground as before (Jonas 28.10.2026: they need not be in this)
+def cover_tile(tx, ty):
+    R = frame.Region(f't{tx}_{ty}', tx * 5, ty * 5, tx * 5 + 5, ty * 5 + 5); fx0, fy0, fnx, fny = R.grid(0.05)
+    C = cover_box(R.lonlat_box(1), 0.05, fx0, fy0, fnx, fny)
+    NL = national.norway200()[0][ty * 250:(ty + 1) * 250, tx * 250:(tx + 1) * 250]
+    return np.where(np.kron(NL, np.ones((4, 4), bool))[:fny, :fnx], C, 0).astype(np.uint8)
+
 def tile(tx, ty):
     f = os.path.join(TD, f'{tx}_{ty}.npz')
-    if os.path.exists(f): return seafloor(dict(np.load(f)))
+    if os.path.exists(f):
+        z = dict(np.load(f))
+        if 'cover' not in z: z['cover'] = cover_tile(tx, ty); np.savez_compressed(f, **z)   # a tile cached before the layer
+        return seafloor(z)
     t0 = time.time(); R = frame.Region(f't{tx}_{ty}', tx * 5, ty * 5, tx * 5 + 5, ty * 5 + 5); box = R.lonlat_box(1); out = {}
     ix0, iy0, nx, ny = R.grid(0.025)
     tab = features('base/land', box, ['geometry', 'subtype']); M = fill(polys_of(tab, lambda s: s == 'land'), 0.025, ix0, iy0, nx, ny) if tab is not None else np.zeros((ny, nx), np.uint8)
@@ -81,6 +92,7 @@ def tile(tx, ty):
     out['hgt'] = H
     fx0, fy0, fnx, fny = R.grid(0.05); lc = features('base/land_cover', box, ['geometry', 'subtype'])
     out['forest'] = fill(polys_of(lc, lambda s: s == 'forest'), 0.05, fx0, fy0, fnx, fny) if lc is not None else np.zeros((fny, fnx), np.uint8)
+    out['cover'] = cover_tile(tx, ty)
     E = national.expo(); out['expo'] = E[ty * 100:(ty + 1) * 100, tx * 100:(tx + 1) * 100].copy()
     # depth (half metres): the model from openness and the distance to the shore; Kartverket's inside the legacy square
     X, Y = np.meshgrid((fx0 + np.arange(fnx) + 0.5) * 0.05, (fy0 + np.arange(fny) + 0.5) * 0.05)
@@ -139,9 +151,9 @@ def chart_tile(tx, ty):
     nm = cached(f'names-{tx}-{ty}', lambda: chart.names(tx, ty))
     return {'coast1': (b1, k1, 'chart'), 'coast2': (b2, k2, 'chart'), 'names': (chart.names_bytes(nm), len(nm), 'chart')}
 
-GAME = dict(mask=(0.025, 'u8', 'sim', None), dc=(0.1, 'f32', 'sim', None), depth=(0.05, 'i16', 'sim', 'half'), hgt=(0.025, 'i16', 'view', 'hgt'), forest=(0.05, 'u8', 'view', None))
+GAME = dict(mask=(0.025, 'u8', 'sim', None), dc=(0.1, 'f32', 'sim', None), depth=(0.05, 'i16', 'sim', 'half'), hgt=(0.025, 'i16', 'view', 'hgt'), forest=(0.05, 'u8', 'view', None), cover=(0.05, 'u8', 'view', None))
 LAYERS = dict(mask=(0.025, 'u8', 'core', None), dc=(0.1, 'f32', 'core', None), expo=(0.5, 'u8', 'core', None), depth=(0.05, 'i16', 'sim', 'half'),
-              hgt=(0.025, 'i16', 'view', 'hgt'), forest=(0.05, 'u8', 'view', None))
+              hgt=(0.025, 'i16', 'view', 'hgt'), forest=(0.05, 'u8', 'view', None), cover=(0.05, 'u8', 'view', None))
 if __name__ == '__main__':
     # part k of n of the coast's tiles, only into the caches (out/national/tiles, vec): the workflow runs the parts side by side
     if sys.argv[1:2] == ['cache']:
