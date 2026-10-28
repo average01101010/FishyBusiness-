@@ -58,7 +58,14 @@ async def play(p, W, H, tag):
     await tap_el('#ltGo'); await pg.wait_for_selector('#stGo', state='visible', timeout=20000); await pg.wait_for_timeout(300); await pg.screenshot(path='start_%s.png' % tag)
     sp = await pg.evaluate("(() => { const b = document.getElementById('stGo').getBoundingClientRect(), l = document.getElementById('stAll').getBoundingClientRect(); return {go:b.bottom <= innerHeight + 1 && b.top >= 0, list:(l.height > 60 || document.getElementById('stAll').scrollHeight > 60) && document.querySelectorAll('#stAll > .st-it.rec').length > 0, n:document.querySelectorAll('#startPick .st-it').length}; })()")
     check(sp['go'] and sp['list'] and sp['n'] >= 150, tag + ': the start lists the coast\'s plants, and «Start her» is on the screen', sp)
-    await pg.evaluate("document.querySelector('#startPick .st-it[data-id=vangshamn]').click()")
+    # the start: Vangshamn, or the start place nearest KYST_TUT_START=lat,lon (the first trip along the coast, Onboarding 2, O6)
+    at = os.environ.get('KYST_TUT_START', '')
+    if at:
+        la, lo = map(float, at.split(','))
+        sid = await pg.evaluate("([la, lo]) => { const p = P(la, lo); let b = null; for (const e of document.querySelectorAll('#startPick .st-it[data-id]')){ const q = portById(e.dataset.id); if (!q || e.classList.contains('wx')) continue; const d = dist(q.p, p); if (!b || d < b.d) b = {d, id:e.dataset.id}; } return b && b.id; }", [la, lo])
+        print('   ', tag, 'start', sid, flush=True)
+        await pg.evaluate("id => document.querySelector('#startPick .st-it[data-id=\"' + id + '\"]').click()", sid)
+    else: await pg.evaluate("document.querySelector('#startPick .st-it[data-id=vangshamn]').click()")
     await tap_el('#stGo'); await pg.wait_for_selector('#obGo', state='visible', timeout=60000)
     co = await pg.evaluate("({co:!!document.getElementById('obCo'), boat:!!document.getElementById('obBoat'), letter:!!document.getElementById('letter'), mark:document.getElementById('modal').innerText.includes(regText(regOf(S.boat)))})")
     check(lt['flat'] and lt['text'].startswith('Til deg som står igjen på kaia') and '– Far' in lt['text'] and lt['fits'] and lt['font'] >= 11, tag + ': the envelope opens with a tap, the letter unfolds whole and readable', {k: lt[k] for k in ('flat', 'fits', 'w', 'h', 'font')})
@@ -106,7 +113,7 @@ async def play(p, W, H, tag):
         if s['ring']:
             await tap(s['ring']['x'], s['ring']['y']); await pg.wait_for_timeout(350 if sid != 'route2' else 700); continue
         await pg.wait_for_timeout(500)
-    end = json.loads(await pg.evaluate("JSON.stringify({crew:S.crew.length, tut:S.tut, haill:S.haill && S.haill.type, sale:S.lastSale && {port:S.lastSale.port, total:S.lastSale.total, streak:S.lastSale.streak}, catchFlag:!!(S.tut && S.tut.catch), iceFree:!!S.iceFree, freeIce:tutFree('ice'), ice:S.boat.ice, gear:S.boat.gear, log:S.log.slice(-8).map(e => e.no)})"))
+    end = json.loads(await pg.evaluate("JSON.stringify({crew:S.crew.length, tut:S.tut, haill:S.haill && S.haill.type, sale:S.lastSale && {port:S.lastSale.port, total:S.lastSale.total, streak:S.lastSale.streak}, catchFlag:!!(S.tut && S.tut.catch), land:S.tutStart && S.tutStart.land, iceFree:!!S.iceFree, freeIce:tutFree('ice'), ice:S.boat.ice, gear:S.boat.gear, log:S.log.slice(-8).map(e => e.no)})"))
     await pg.evaluate("PHONE.show(false); DOCK.open('lever')"); await pg.wait_for_timeout(600)
     await pg.screenshot(path='tut_' + tag + '.png')
     order = [x for x in seen if x]
@@ -118,7 +125,7 @@ async def play(p, W, H, tag):
     check('i timen' in norm, tag + ': sluttseddelen sier at første tur var ekstra god, og hva fisket her vanligvis gir (O4)', norm[:120])
     check(end['haill'] != 'luksus', tag + ': ingen gratis luksushaill i første tur (Onboarding 2, V1 A: den er gaven ved registrering)', end['haill'])
     check(hold_at_land is not None and hold_at_land >= 174, tag + ': minst halvt lasterom ved levering etter en time på feltet (Onboarding 2, V2 A)', hold_at_land)
-    check(end['sale'] and end['sale']['port'] == 'botnhamn' and bonus_row, tag + ': levert i Botnhamn med bonuslinje på sluttseddelen', end['sale'])
+    check(end['sale'] and end['sale']['port'] == (end.get('land') or 'botnhamn') and bonus_row, tag + ': levert på første turs mottak med bonuslinje på sluttseddelen', end['sale'])
     check(reloads == 3, tag + ': tre omlastinger underveis', reloads)
     check(end['crew'] == 0, tag + ': ingen mannskap i første tur; det kommer som drypp (O4)', end['crew'])
     check('nout' in order, tag + ': naustet åpnet seg ved start, og «Gå ut» tok spilleren ned på kaia', [x for x in order if x.startswith('n')])
