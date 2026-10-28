@@ -1,6 +1,6 @@
 # Onboarding 2: en kortere og lettere første tur, for hele kysten (plan 27.10.2026, andre utgave)
 
-> Plan etter `/planlegg`. Jonas valgte 1A–8A og sa «kjør på» 27.10.2026. O0 og O1 er bygd; O2–O6 står igjen (status nederst).
+> Plan etter `/planlegg`. Jonas valgte 1A–8A og sa «kjør på» 27.10.2026. O0–O5 er bygd og rullet ut; O6 pågår (status nederst).
 
 ## Hva Jonas ba om
 
@@ -237,4 +237,13 @@ du sier noe annet.
   (klokka går 30× der), og testen vekker den nå med søvnskjermens egen knapp. Jonas valgte å rulle ut uten å vente på en ny kjøring.
 - 27.10.2026: **O2 bygd** (`docs/systemer/opning-og-veiledning.md`, «O2»): naustet i én linje, ett lite tips på vei ut, ingen dempet lag,
   «Kast loss» grå med det den venter på. Testes.
+- 27.10.2026: **O3, O4 og O5 bygd** sammen med energien som står stille under første tur (Jonas: «Kan vi ikke bare skru av energien til
+  etter tutorialen?»). `tut.py` kan kjøres i ett format (`KYST_TUT_ONE`, Jonas: ett format når bare logikken endres).
+- 28.10.2026: **O2–O5 rullet ut** (PR #27, merge 91dc790). Testet samlet: `tut.py` i begge formater (26 OK; det eneste røde var `reg` i
+  testens forventede rekkefølge, som hoppes over uten skyen), `hbtest`, `icestep`, `tutdrift`, `docktest`, `admintest`. Første tur er nå
+  16 steg (fra 33), og tok 19 minutter for testen i begge formater (fra rundt 50).
+- 28.10.2026: **O6 påbegynt:** trakten i admin har de nye stegene; `tut.py` kan starte hvor som helst (`KYST_TUT_START=lat,lon`), og hele
+  første tur prøves fra Bergen, Bodø og Båtsfjord.
+- 28.10.2026: **O6 stikkprøven grønn:** hele første tur fra Bøvågen (Bergen), Bodø og Vadsø (Båtsfjord var stengt for uvær), alle sjekker OK
+  (tallene i `docs/systemer/opning-og-veiledning.md`, O6). Gjenstår: to uker måling i admin («Første tur per landsdel» og trakten per steg).
 
