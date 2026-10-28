@@ -1,6 +1,6 @@
 # Grafikk: natur, miljø og omgivelser (plan, 28.10.2026)
 
-> Planen for den grafiske overhalingen av naturen og omgivelsene langs kysten. Skrevet av økta 28.10.2026 etter `/planlegg`. **Venter på Jonas' svar på valgene i kapittel 6 og «kjør på».** Hver fase er én økt. Status står nederst og oppdateres av hver økt som bygger en fase. Systemdokumentene som gjelder: `docs/systemer/3d-verden.md`, `kart-og-terreng.md`, `bygg-veier-og-kaier.md`, `vaer-og-hav.md`.
+> Planen for den grafiske overhalingen av naturen og omgivelsene langs kysten. Skrevet av økta 28.10.2026 etter `/planlegg`. **Vedtatt 28.10.2026** (Jonas: «Dropp oppdrettsanlegg. Jeg ønsker ikke noe søksmål. Kjør på med det du mener er fysisk mulig å få til innenfor prosjektets rammer og potensielle begrensninger.»). Valgene i kapittel 6 er tatt av økta etter det; rammene og hva som er mulig står i kapittel 5a. Hver fase er én økt, G1 først. Måleenheten er Jonas' OnePlus Pad 3. Status står nederst og oppdateres av hver økt som bygger en fase. Systemdokumentene som gjelder: `docs/systemer/3d-verden.md`, `kart-og-terreng.md`, `bygg-veier-og-kaier.md`, `vaer-og-hav.md`.
 
 ## 1. Bestillingen
 
@@ -36,9 +36,9 @@ Alt under er sjekket mot katalogene 28.10.2026 (`data.norge.no`, Geonorge). «Li
 | **Kartverket Sentinel-2 skyfri mosaikk** (årlig, 1. august) | Den ekte fargen på bakken: jorder, myr, lav, berg, hogstflater, grustak, tettsteder | 10 m, tas på 20 m | Åpen lisens hos Kartverket; Copernicus-data krediteres | Trolig det største løftet for «kjenne seg igjen». Må prøves: mosaikken har solskygger og augustfarger, og må blandes med årstidene våre. |
 | **NIBIO SR16 skogressurskart** | Treslag (gran, furu, lauv), trehøyde, kronedekning per celle | 16 m raster | NLOD 2.0 i nyeste post (eldre post sier Norge digitalt; sjekk) | Riktig skog: granskog i Trøndelag og på Helgeland, furu i Pasvik, bjørk i Troms. |
 | **Kartverket DTM1 / Høydedata** | 1 m-terreng: svaberg, skjær, strandberg, hyller | 1 m | CC BY 4.0 | For stort for hele kysten (anslag over 2 GB bare i en 300 m-stripe langs kysten). Brukes ikke direkte; i stedet tettere lesing av Terrarium z13 (10 m) nær sjøen, se G8. |
-| **Fiskeridirektoratet akvakulturregister** | Oppdrettsanleggene: merdringer, fôrflåte, lys om natta, fiskeforbudet rundt dem | Punkter og flater | NLOD, kilde oppgis | Rundt 1 000 anlegg i sjøen langs kysten; alle som har seilt der, kjenner dem igjen. Ingen firmanavn i spillet. |
+| **Fiskeridirektoratet akvakulturregister** | Oppdrettsanleggene | Punkter og flater | NLOD | **Ikke med** (Jonas 28.10.2026: «Dropp oppdrettsanlegg. Jeg ønsker ikke noe søksmål»). Anleggene er private eiendommer med eiere i registeret; ingenting av det tas inn, heller ikke som hinder. |
 | **NVE vindkraftverk** | Turbinene på Fosen, Smøla, Kvitfjell/Raudfjell utenfor Tromsø, Havøygavlen, Raggovidda, Berlevåg med flere, med posisjon per turbin | Punkter | Åpen (NVE) | Landemerker sett fra sjøen. Modell i Blender, roterer med vinden. |
-| **NVE nettanlegg** | Kraftspennene over sundene (Gisundet, Tromsøysundet) med mastene | Linjer | Åpen (NVE) | Senere, G9. |
+| **NVE nettanlegg** | Kraftspennene over sundene (Gisundet, Tromsøysundet) med mastene | Linjer | Åpen (NVE) | G7, sammen med turbinene. Bare det som synes fra sjøen. |
 | **Kartverket N50 Arealdekke** | Myr, skog, åpent område, dyrket mark, snø og bre, steinbrudd, industri, tettbebyggelse, innsjø, elv | Vektor 1:50 000 | CC BY 4.0 | Alternativ til ESA der ESA tar feil (valg 1). Egen rørledning (SOSI/GML via Geonorge). |
 | **NVE breatlas** | Breene (Svartisen fra Helgeland, Øksfjordjøkelen som kalver i sjøen, Folgefonna) | Vektor | Åpen (NVE) | Kontroll av ESA-klassen `snow`, som også kan ta skygger og sent snødekke. |
 | **seNorge** (NVE/MET) | Snødybde per km², daglig og normaler | 1 km | Åpen | Daglig strider mot «eget simulert vær». Normalene kan kalibrere `snowLineAt` per sted senere. Ikke med nå. |
@@ -113,13 +113,13 @@ Hver fase er én økt. Hver fase slutter med bilder før og etter fra de samme s
 - **Tester:** `kinotest`, `lighttest`; nytt `wetshot.py` (Bergen i regn, Senja i snøvær, bro-visning).
 - **Måles:** partikkelantall mot bildetakt; av på Lav.
 
-### G7. Oppdrettsanlegg og vindturbiner
+### G7. Vindturbiner og kraftspenn (landemerkene)
 
-- **Bygger:** `tools/akva/akva.py` henter akvakulturregisteret (Fiskeridirektoratets WFS eller nedlastingsportalen, NLOD) til `src/data/akva.json` (anlegg i sjø, punkt, flate, art, status i drift; ingen firmanavn), og `tools/vind/vind.py` henter NVEs vindkraftverk til `src/data/vind.json` (turbin for turbin, navhøyde der den finnes). Blender: en merdring (plastring 160 m omkrets, hoppenett, fortøyningsbøyer), fôrflåte med lys, og en vindturbin i to størrelser (`/blender`). I 3D tegnes anleggene innenfor 6 km, med lys om natta (5.23) og rotorene i vindens hastighet. **Regelen** (valg 4): fiske nærmere enn 100 m og ferdsel nærmere enn 20 m fra et akvakulturanlegg er forbudt (akvakulturdriftsforskriften, FOR-2008-06-17-822 § 18; **sjekkes mot Lovdata før det bygges inn**), inn i `03e-rules.js` og Regler-appen med kilde, og anleggene som hinder for Autonav og NPC (`11b-obstacles.js`). Kartplotteren viser dem med sjøkartets symbol.
-- **Filer:** `tools/akva/`, `tools/vind/` (nye), `src/data/akva.json`, `vind.json`, `view3d/22-docks-air.js` eller ny del, `core/11b-obstacles.js`, `core/03e-rules.js`, `ui/03-map.js`, `docs/systemer/kvoter-og-regler.md`.
-- **Tester:** `rulestest`, `autonavtest`, `obstest`; nytt `akvashot.py` (Alta, Frøya, Hitra, Senja: ingen anlegg på land, ingen rute gjennom et anlegg).
-- **Måles:** antall anlegg innenfor 6 km i Frøya/Hitra (tettest i landet) og kostnaden.
-- **Usikkert:** registeret har godkjente ytterpunkter, ikke merdenes faktiske plass; anleggene flyttes innenfor lokaliteten. Vi tegner en standard-utforming innenfor flaten.
+- **Bygger:** `tools/vind/vind.py` henter NVEs vindkraftverk (turbin for turbin, navhøyde der den finnes) og nettanleggene som krysser sjø (linjer med mastepunkter) til `src/data/vind.json` og `src/data/spenn.json`; ingen eier- eller firmanavn tas med, bare posisjon, høyde og spennvidde. Blender (`/blender`): en vindturbin i to størrelser (rundt 80 og 150 m navhøyde) og en kraftmast med liner. I 3D tegnes turbinene innenfor 12 km (de er 150–250 m høye og synes langt) med rotorene i vindens hastighet og rødt hinderlys om natta (5.23), spennene innenfor 3 km som liner med nedheng mellom mastene. Kartplotteren viser turbinene og spennene med sjøkartets symboler (vindturbin, luftspenn med seilingshøyde der NVE oppgir den).
+- **Filer:** `tools/vind/` (ny), `src/data/vind.json`, `spenn.json`, `view3d/22-docks-air.js` eller ny del, `ui/03-map.js`, `docs/systemer/datarorledninger.md`.
+- **Tester:** `lighttest`; nytt `vindshot.py` (Kvitfjell/Raudfjell fra Malangen, Smøla, Havøygavlen, Gisundet med spennet: ingen turbin i sjøen, ingen mast under vann).
+- **Måles:** tegnekall med Fosen-parkene i synsfeltet (de største, over 200 turbiner).
+- **Usikkert:** NVE-lista har konsesjonsstatus, og en turbin under bygging kan stå i lista før den står på fjellet; bare «i drift» tas med. Seilingshøyden på spennene finnes ikke i alle poster.
 
 ### G8. Nærfeltet på land: 10 m-bakke langs sjøen, tuer, detaljteksturer og ur
 
@@ -131,19 +131,44 @@ Hver fase er én økt. Hver fase slutter med bilder før og etter fra de samme s
 
 ### G9. Liv i landskapet
 
-- **Bygger:** punkt 8 i kapittel 4: gatelys langs veiene i tettbebyggelse (`cover` = urban) som punktlys i avstand og lyspunkter nær, biler som lyspar som følger veiene om natta og små kasser om dagen (vec-veiene, deterministisk av flisas frø, 2–10 per km i tettsted, 0–1 på landet), røyk fra pipene under 5 °C, havørn (seiler i oppvind langs stup over 100 m, to per 10 km kyst i nord), skarv på skjær (sjømerkenes skjær, 4.12c), ærfugl i fjæra, sau på øyer med `grass` mai–september, hvalene etter sted og årstid (`spawnWild` finnes for måkene), fuglefjellene for hånd (de ti kjente), og kraftspennene fra NVE over sundene. Hvert dyr som egen liten modell i `tools/wild/` med LOD.
-- **Filer:** `view3d/19-wildlife-npc.js`, `22-docks-air.js`, `06-buildings-lights.js`, `tools/wild/`, `tools/vind/` (nettanlegg), `src/data/fuglefjell.json` (ny, for hånd med kilde).
+- **Bygger:** punkt 8 i kapittel 4: gatelys langs veiene i tettbebyggelse (`cover` = urban) som punktlys i avstand og lyspunkter nær, biler som lyspar som følger veiene om natta og små kasser om dagen (vec-veiene, deterministisk av flisas frø, 2–10 per km i tettsted, 0–1 på landet), røyk fra pipene under 5 °C, havørn (seiler i oppvind langs stup over 100 m, to per 10 km kyst i nord), skarv på skjær (sjømerkenes skjær, 4.12c), ærfugl i fjæra, sau på øyer med `grass` mai–september, hvalene etter sted og årstid (`spawnWild` finnes for måkene), og fuglefjellene for hånd (de ti kjente). Hvert dyr som egen liten modell i `tools/wild/` med LOD.
+- **Filer:** `view3d/19-wildlife-npc.js`, `22-docks-air.js`, `06-buildings-lights.js`, `tools/wild/`, `src/data/fuglefjell.json` (ny, for hånd med kilde).
 - **Tester:** `lighttest`, `vectest`; nytt `lifeshot.py` (måkene har ingen egen test i dag).
 - **Måles:** tegnekall om natta i Tromsø.
 
-## 6. Valgene
+## 5a. Rammene, og hva som er mulig (28.10.2026)
 
-1. **Arealdekket (G1):** **A** Overtures ESA-klasser (anbefalt: samme rørledning, ingen ny kilde, ferdig i én økt) / B Kartverkets N50 Arealdekke (vektor, kuratert, men egen SOSI/GML-rørledning, to økter) / C ESA nå, N50 bare der ESA viser seg feil (prøvd på Finnmarksvidda og Jæren i G1).
-2. **Bakkens farge (G3):** **A** prøve Sentinel-2 på Senja og bestemme etter bildene (anbefalt: det er det eneste som gir den ekte teksturen i landskapet, og det koster én økt å se) / B bare regler og klasser fra G1 (ingen nye MB, men alle åser like) / C hoppe over G3 til G1 og G4 er sett.
-3. **Rekkefølgen:** **A** G1, G5, G2, G3, G4, G7, G6, G8, G9 (anbefalt: data som er billige først, så lyset som endrer hvert bilde, så resten etter gevinst) / B alle datafasene først (G1–G4, G7), lyset etterpå / C lyset først (G5, G6), dataene etterpå.
-4. **Oppdrettsanleggene (G7):** **A** med regelen (fiskeforbud 100 m, ferdsel 20 m) og som hinder for Autonav (anbefalt: realisme er kjerneverdien, og regelen er ekte; kilden sjekkes først) / B bare å se på.
-5. **Datamengden:** **A** kartpakkene får vokse til rundt det dobbelte av i dag (230 MB), målt fase for fase, fordi de strømmes per flis og huskes i IndexedDB (anbefalt) / B dagens størrelse holdes, med grovere lesing (Sentinel på 40 m, ingen `hgt10`).
-6. **Fjernterrenget på 100 m** (punkt 9): **A** avgjøres etter G5 med bilder (anbefalt) / B med i G8 uansett / C ikke.
+Jonas ba om «det du mener er fysisk mulig å få til innenfor prosjektets rammer og potensielle begrensninger». Rammene, og hva de betyr for hver fase:
+
+- **Én side, kartpakkene ved siden av.** Alt nytt av data går i pakkene (`view` og `vec`), aldri i siden (6,2 MB). Pakkene strømmes per flis og huskes i IndexedDB; GitHub Pages har 1 GB per side og Hetzner ingen grense som betyr noe, så det dobbelte av dagens 230 MB er trygt. Valg 5: A.
+- **Nettbrettet.** Jonas spiller på OnePlus Pad 3; nullpunktet er 71 bilder/s på Høy der. Det som ligger i hver piksel (G5, G6, G8s teksturer), får høyst 3 ms til sammen, ellers trinnvis etter `QUAL`. Det som er data (G1–G4, G7), koster bare der det tegnes og styres av avstandene som i dag. Pad 3 har skjerm nok til Ultra, så Ultra-trinnet måles også der.
+- **Adreno 642L og Direct3D** nekter enkelte skyggere. Hver ny skygger får en reserve og en bryter i adressen, som sjøen (`dsb_sea`), og kan ikke ta 3D ned. Ikke en hindring, men en regel for G5, G6 og G8.
+- **GitHub Actions** lager kartet (`kart.yml`, noen timer per release, 6 timer er taket per jobb). G1, G2, G3 og G8 trenger hver sin release, eller én felles; Sentinel-mosaikken (G3) og SR16 (G4) må kunne hentes uten en handlekurv på Geonorge (WMS/WCS eller en direkte fil), ellers hentes de én gang for hånd og legges som en release, slik `dybde-N` gjøres.
+- **Lisensene** avgjør hva som i det hele tatt tas inn: ESA/Overture, OpenStreetMap, Kartverkets Sentinel-mosaikk, SR16 (NLOD) og NVE er åpne; FKB, Norge i bilder og alt med eiere og firmaer er ute.
+- **Testmiljøet** har bare Senja (`tools/map/out/game` mangler), så hver fase bygges og måles på Senja først, og hele kysten prøves der stikkprøvene krever det (`/stikkprove`).
+
+| Fase | Mulig? | Grensen |
+|---|---|---|
+| G1 arealdekket | Ja, sikkert | Én kartrelease. ESA er fra 2020. |
+| G2 innsjøer og elver | Ja, sikkert | Innsjøhøyden fra 25 m-høyder; flata legges under bredden. |
+| G3 Sentinel-2 | Ja som prøve på Senja; hele kysten bare om bildene holder og laget er under rundt 60 MB | Solskygger og augustfarger i mosaikken; størrelsen. Avgjøres i økta etter bildene, ikke før. |
+| G4 SR16 | Trolig; om rasteret ikke kan hentes automatisk, hentes det for hånd som en release. Reserve: treslag etter klima og sted (gran innenlands sør for Saltfjellet, furu i Finnmark og Pasvik, bjørk på kysten) over `forest` fra G1 | Nedlastingsveien og lisensposten. |
+| G5 himmel og lys | Ja; det dyreste i tid per piksel | 3 ms-grensen; reserver for Adreno. |
+| G6 vått og nedbør | Ja | Partiklene av på Lav. |
+| G7 turbiner og spenn | Ja, lite | NVEs lister. |
+| G8 10 m-bakke og nærfeltet | Bakken bare om `hgt10` for hele kysten holder seg under rundt 150 MB; tuer, teksturer og ur uansett | Måles på Senja-flisa før noe bygges for kysten. |
+| G9 liv | Ja | Tegnekall om natta i byene. |
+
+## 6. Valgene (tatt av økta 28.10.2026)
+
+Jonas overlot valgene til økta («kjør på med det du mener er fysisk mulig»). Tatt slik, med grunnen:
+
+1. **Arealdekket: A**, Overtures ESA-klasser. Samme rørledning, én økt. N50 tas bare inn om G1 viser at ESA tar feil på vidda eller på Jæren (da som egen økt).
+2. **Bakkens farge: A**, Sentinel-2 prøves på Senja, og økta som bygger G3 avgjør etter bildene og størrelsen om hele kysten får det. Bildene legges i `docs/pr/` så Jonas kan se dem.
+3. **Rekkefølgen: A**: G1, G5, G2, G3, G4, G7, G6, G8, G9. De billige dataene først, så lyset som endrer hvert bilde, så resten etter gevinst.
+4. **Oppdrettsanleggene: ute** (Jonas 28.10.2026). G7 er bare turbiner og spenn, uten eiere og navn.
+5. **Datamengden: A**, pakkene får vokse til rundt det dobbelte, målt per fase.
+6. **Fjernterrenget på 100 m: A**, avgjøres etter G5 med bilder.
 
 ## 7. Antatt og usikkert
 
@@ -151,7 +176,6 @@ Hver fase er én økt. Hver fase slutter med bilder før og etter fra de samme s
 - **Størrelsene** er anslag til flisa er bygd: `cover` koster ingenting (samme lag), `water` som bryggene (0,5 MB rått), Sentinel på 20 m rundt det dobbelte av høydelaget, `trees` som høydelaget på 25 m delt på to, `hgt10` måles.
 - **Bildetakten** på nettbrettet er bare målt én gang (71 bilder/s). G5 og G6 ligger i hver piksel og kan koste 2–5 ms; det er grensen for at Høy holder 60.
 - **ESA WorldCover er fra 2020** og klassifisert av satellitt: hogstflater, nye felt og snødekke i opptaksåret kan slå ut. `snow` kontrolleres mot NVEs breatlas.
-- **Regelen om 100 m og 20 m** ved akvakulturanlegg er skrevet etter hukommelsen (§ 18) og må leses på Lovdata før den bygges inn.
 - **Innsjøenes høyde** fra 25 m-høyder kan være noen meter feil i bratt terreng; flata legges etter det laveste strandpunktet, så den aldri ligger over land.
 - **Terrarium z13** er Kartverkets 10 m i Norge, men pikselstørrelsen varierer med breddegraden (5–8 m); `hgt10` leses bilineært.
 - **Adreno og Direct3D:** hver ny skygger får en bryter og en reserve, som sjøen (`dsb_sea`).
@@ -160,17 +184,18 @@ Hver fase er én økt. Hver fase slutter med bilder før og etter fra de samme s
 
 - Sjøen, skummet, bølgene mot land og skroget: Fysikk 4 (F2–F8).
 - Båtmodellene, dekket og folkene om bord (`3d-baater-og-animasjon.md`).
-- Kartplotteren i 2D, bortsett fra innsjøer, elver og oppdrettsanlegg der G2 og G7 legger dem inn.
+- Kartplotteren i 2D, bortsett fra innsjøer, elver, turbiner og spenn der G2 og G7 legger dem inn.
 - Live-vær og seNorge daglig (Jonas 06.10.2026: eget simulert vær).
-- Ortofoto og FKB (lisens).
+- Oppdrettsanleggene (Jonas 28.10.2026: ingen søksmål), ortofoto og FKB (lisens), og alt annet med eiere og firmaer.
 - Interiør, fabrikker og rom under dekk (Jonas 06.10.2026).
 - Lyd (fosser, regn på taket) hører til `lyd.md` og kommer når G2 og G6 er sett.
 - Etterbehandling med egne pass (bloom, SSAO, TAA): dyrt på nettbrett, og tonemapping gjøres i skyggerne. Vurderes etter G5 om målingene gir rom.
 
 ## 9. Måling på nettbrettet
 
-Hver fase måles på OnePlus Pad 3 med `#fps` i fint vær ved Finnsnes (nullpunktet 71 bilder/s, 14,1 ms, Høy), og i Tromsø om natta (tettest bebyggelse). Jonas sender tallene, og en fase som koster mer enn 3 ms på Høy, får effekten trinnvis etter `QUAL` før neste fase begynner. `tm_perf` sender bildetakten til dashbordet, men ikke stedet (BACKLOG 10.5); G5 legger stedet (flisa) til, så tette byer kan skilles ut.
+Hver fase måles på Jonas' OnePlus Pad 3 (det han spiller på, 28.10.2026) med `#fps` i fint vær ved Finnsnes (nullpunktet 71 bilder/s, 14,1 ms, Høy), og i Tromsø om natta (tettest bebyggelse). Jonas sender tallene, og en fase som koster mer enn 3 ms på Høy, får effekten trinnvis etter `QUAL` før neste fase begynner. `tm_perf` sender bildetakten til dashbordet, men ikke stedet (BACKLOG 10.5); G5 legger stedet (flisa) til, så tette byer kan skilles ut.
 
 ## Status
 
-- 28.10.2026: planen skrevet (gren `ccr-1d00422f-gjapvb`, må flettes inn i arbeidsgrenen). Venter på valgene 1–6 og «kjør på».
+- 28.10.2026: planen skrevet (gren `ccr-1d00422f-gjapvb`, må flettes inn i arbeidsgrenen).
+- 28.10.2026: Jonas: «Dropp oppdrettsanlegg. Jeg ønsker ikke noe søksmål. Kjør på med det du mener er fysisk mulig å få til innenfor prosjektets rammer og potensielle begrensninger. Lag en plan for dette før vi går i gang.» Oppdrettsanleggene tatt ut, valgene tatt av økta (kapittel 6), rammene og gjennomførbarheten skrevet (kapittel 5a). **Neste: G1 (arealdekket) i egen økt.**
