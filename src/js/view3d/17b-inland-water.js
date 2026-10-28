@@ -48,6 +48,8 @@
       // standing water never above its shore: the level no higher than the lowest tenth of the ground at its outline (a pond of a
       // cell or two on a slope took the slope's median and lay as a dark plate over the bank, Bergen 28.10.2026)
       let lv = a.level;
+      // a pond under 400 m2 is a few corners after the 4 m simplification, a dark plate rather than water (Bergen 28.10.2026): left out
+      if (!a.kind){ let ar = 0; for (let i = 0; i < a.ix.length; i += 3){ const p = a.ix[i] * 2, q = a.ix[i + 1] * 2, r = a.ix[i + 2] * 2; ar += Math.abs((a.v[q] - a.v[p]) * (a.v[r + 1] - a.v[p + 1]) - (a.v[r] - a.v[p]) * (a.v[q + 1] - a.v[p + 1])) / 2; } if (ar < 400) continue; }
       if (!a.kind){ const hs = []; for (let j = 0; j < a.v.length; j += 2) hs.push(terrH(ox + a.v[j], oz + a.v[j + 1])); hs.sort((p, q) => p - q); lv = Math.min(lv, hs[Math.floor(hs.length * 0.1)] + 0.3); }
       for (let i = 0; i < a.ix.length; i++){ const j = a.ix[i], x = a.v[j * 2], z = a.v[j * 2 + 1];
         P.push(x, a.kind ? Math.max(terrH(ox + x, oz + z), 0.2) + 0.2 : lv, z); A.push(a.kind, 0, 0); }

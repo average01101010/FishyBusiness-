@@ -4,7 +4,7 @@
 #   areas   triangulated here (shapely's constrained Delaunay), each with its kind (0 standing water, flat at its level; 1 a river's
 #           area, draped on the ground) and its level: the median of the ground's heights (25 m, Kartverket's terrain has a lake's
 #           surface flat at the water) at the cells inside it, in decimetres. Water that lies mostly on the sea (the land mask) is the
-#           sea's and left out; areas under 150 m2 are too small to see
+#           sea's and left out; areas under 400 m2 are too small to see (a few corners after the simplification; the game leaves them out too)
 #   lines   class (0 stream, 1 river, 2 canal or ditch), the points (m)
 #   falls   the waterfalls, a point each
 # Coordinates are metres from the tile's corner (tx * 50 000, ty * 50 000), simplified to 4 m. Packed as varints (vectors.py varint,
@@ -51,11 +51,11 @@ def build(tx, ty, L):
             if kind is None: continue
             m = to_m(geo, ox, oy)
             for q in getattr(m, 'geoms', [m]):
-                if q.area < 150: continue
+                if q.area < 400: continue
                 c0 = q.representative_point()
                 if not inside(c0.x, c0.y): continue
                 q = q.simplify(4.0)
-                if q.is_empty or q.geom_type != 'Polygon' or q.area < 150: continue
+                if q.is_empty or q.geom_type != 'Polygon' or q.area < 400: continue
                 # the 25 m cells inside: on the land mask (or it is the sea's), and their ground for the level
                 x0, y0, x1, y1 = q.bounds; i0, j0 = max(0, int(x0 // 25)), max(0, int(y0 // 25)); i1, j1 = min(1999, int(x1 // 25)), min(1999, int(y1 // 25))
                 hs, land, n = [], 0, 0
