@@ -202,13 +202,15 @@
   // ESA WorldCover with OpenStreetMap's natural areas and land use over it, tools/map/region.py cover; a class per 50 m cell, 1 forest ... 12 shingle): the share of each class among the land cells of the 4 x 4 cells
   // forestAt reads, weighted as it weighs them, into cv at k * 9 (0-255), and ck[k] = 1. Where the layer has no block (a tile from a
   // release before it, outside Norway) or no land cell has a class, ck[k] = 0 and recolor keeps the rules from before.
-  const COVN = 12, COVW = new Float32Array(COVN);
+  const COVN = 12, COVW = new Float32Array(COVN), COVB = {k:NaN, ok:false, t:0};   // the last block check, kept a second (a mesh asks the same few blocks for every point)
   function coverAt(x, z, cv, ck, k){
     ck[k] = 0; const LC = MAPD.L.cover; if (!HG || !LC) return;
     const cm = LC.c * 1000, gx = x / cm - 0.5, gz = z / cm - 0.5, ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz, n = LC.n;
     if (!mapIn(LC, ix - 1, iz - 1) || !mapIn(LC, ix + 2, iz + 2)) return;
     const b0 = Math.floor((ix - 1) / n), b1 = Math.floor((ix + 2) / n), c0 = Math.floor((iz - 1) / n), c1 = Math.floor((iz + 2) / n);
-    for (let by = c0; by <= c1; by++) for (let bx = b0; bx <= b1; bx++) if (!mapHasBlock(LC, bx, by)) return;
+    const bk = ((b0 * 8192 + c0) * 2 + (b1 - b0)) * 2 + (c1 - c0), now = performance.now();
+    if (bk !== COVB.k || now - COVB.t > 1000){ let ok = true; for (let by = c0; by <= c1 && ok; by++) for (let bx = b0; bx <= b1; bx++) if (!mapHasBlock(LC, bx, by)){ ok = false; break; } COVB.k = bk; COVB.ok = ok; COVB.t = now; }
+    if (!COVB.ok) return;
     COVW.fill(0); let s = 0;
     for (let dz = -1; dz <= 2; dz++) for (let dx = -1; dx <= 2; dx++){
       const v = rcell(LC, ix + dx, iz + dz); if (!v || v > COVN) continue;

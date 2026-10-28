@@ -186,6 +186,9 @@
     const heath = mix3(cc('heath'), [0.5, 0.26, 0.15], ry * 0.85), lichen = cc('lichen'), bogc = mix3(cc('bog'), [0.6, 0.42, 0.22], ry * 0.6), field = cc('field'), meadow = cc('meadow');
     const gr = grassNow(), grass = mix3([0.5, 0.46, 0.33], [0.36, 0.43, 0.28], gr), birch = mix3([0.33, 0.3, 0.26], [0.25, 0.33, 0.22], gr), shore = [0.5, 0.49, 0.44], bed = [0.3, 0.3, 0.27];
     const woodC = mix3(birch, [0.52, 0.44, 0.14], ry * rl * 0.8);   // the birch woods yellow in ruska while the leaves hang
+    // the classes' colours in the cover layer's order (03-berths-naust.js coverAt), flat, so the sum per point allocates nothing
+    const CP = [woodC, heath, meadow, field, bogc, lichen, COVC.gravel, lichen, mix3(COVC.town, meadow, 0.5), COVC.sand, COVC.scree, COVC.shingle], PT = new Float32Array(36);
+    for (let k = 0; k < 12; k++){ PT[k * 3] = CP[k][0]; PT[k * 3 + 1] = CP[k][1]; PT[k * 3 + 2] = CP[k][2]; }
     const asph = [0.3, 0.31, 0.32], gravel = [0.47, 0.45, 0.41], pv = m.pv;   // a harbour unit's fill and the flat land by it (unitPatch)
     // the rock (0.33, 0.35, 0.37) and the snow (0.9, 0.92, 0.95) are laid on in the fragment shader (terFS) by the weights in mat, so their
     // edges can be sharpened per pixel; the colour here is the ground under them
@@ -209,7 +212,8 @@
           // heaths' dwarf birch), the rock from bare ground and the lichen fells besides the steepness and the height (the summits are
           // stonier than ESA's 10 m classes show: the heath on Senja's tops reads as green to the top otherwise)
           const o = i * 12, F = cv[o] / 255, SH = cv[o + 1] / 255, GR = cv[o + 2] / 255, CR = cv[o + 3] / 255, WE = cv[o + 4] / 255, MO = cv[o + 5] / 255, BA = cv[o + 6] / 255, SN = cv[o + 7] / 255, UR = cv[o + 8] / 255, SA = cv[o + 9] / 255, SC = cv[o + 10] / 255, SG = cv[o + 11] / 255;
-          const v = 0.93 + 0.14 * n, cg = [0, 1, 2].map(q => (F * woodC[q] + SH * heath[q] + GR * meadow[q] + CR * field[q] + WE * bogc[q] + MO * lichen[q] + BA * COVC.gravel[q] + SN * lichen[q] + UR * (COVC.town[q] + meadow[q]) * 0.5 + SA * COVC.sand[q] + SC * COVC.scree[q] + SG * COVC.shingle[q]) * v);   // a town's ground is half gardens
+          let r = 0, g = 0, b = 0; for (let k = 0; k < 12; k++){ const w = cv[o + k]; if (w){ r += w * PT[k * 3]; g += w * PT[k * 3 + 1]; b += w * PT[k * 3 + 2]; } }
+          const v = (0.93 + 0.14 * n) / 255, cg = [r * v, g * v, b * v];   // (a town's ground is half gardens: its colour in CP)
           c = y < 3.5 ? mix3(shore, cg, y / 3.5) : cg;
           if (tw > 0 || tb > 0){ c = mix3(c, mix3(WEED, WEED2, sstep(0.4, 0.7, n)), tw * (1 - sstep(0.5, 0.85, slope[i]) * 0.5)); c = mix3(c, BARN, tb * 0.55); }
           wood = (F * 0.95 + SH * 0.12) * sstep(440, 260, y) * (1 - rs);

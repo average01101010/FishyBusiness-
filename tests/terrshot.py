@@ -12,7 +12,9 @@ from playwright.async_api import async_playwright
 
 # lat, lon near the place (a sea point is looked for round it)
 PLACES = {'finnsnes': (69.235, 17.97), 'gibostad': (69.35, 18.08), 'bergsfjord': (69.42, 17.32), 'senjahopen': (69.49, 17.53),
-          'gryllefjord': (69.37, 17.07), 'botnhamn': (69.53, 17.98), 'stonglandet': (69.12, 17.27), 'torsken': (69.33, 17.1)}
+          'gryllefjord': (69.37, 17.07), 'botnhamn': (69.53, 17.98), 'stonglandet': (69.12, 17.27), 'torsken': (69.33, 17.1),
+          # along the coast (a build with the whole coast, tools/map/out/game): south, middle and north
+          'bergen': (60.42, 5.22), 'bodo': (67.29, 14.33), 'reine': (67.93, 13.09), 'hammerfest': (70.67, 23.66), 'hvaler': (59.05, 11.0)}
 SEASON = {'summer': (2027, 6, 18, 12), 'autumn': (2027, 8, 24, 12), 'winter': (2027, 2, 10, 12), 'spring': (2027, 4, 20, 12)}
 SEA = """([la, lo, dmin]) => { const c = P(la, lo); for (let r = 0; r <= 60; r++) for (let a = 0; a < Math.max(1, r * 6); a++){
   const t = a / Math.max(1, r * 6) * 2 * Math.PI, q = {x:c.x + Math.cos(t) * r * 0.1, y:c.y + Math.sin(t) * r * 0.1};
