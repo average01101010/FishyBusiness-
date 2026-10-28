@@ -146,8 +146,8 @@
       const LF = MAPD.L.forest, fc = Math.floor(x / (LF.c * 1000)), fr = Math.floor(z / (LF.c * 1000)), fo = HG && mapViewIn({x:x / 1000, y:z / 1000}) && mapIn(LF, fc, fr) && rcell(LF, fc, fr) ? 1 : 0;
       // where the land cover is known (G1): the woods where ESA has forest, a few low birches in the heath, the meadow and the town's
       // gardens, none on the bog, the lichen fells, bare rock, the snow or the fields; else the old rule (the forest layer and a noise)
-      const cl = coverClass(x, z), CK = [0, 1, 0.07, 0.06, 0.01, 0.015, 0, 0, 0, 0.05, 0, 0, 0];
-      const pr = cl >= 0 ? (1 - sstep(260, 420, h)) * (1 - sstep(0.42, 0.75, sl)) * CK[cl] * (cl === 1 ? 1 : sstep(0.4, 0.6, noise2(x / 120, z / 120, 31)))
+      const cl = coverClass(x, z), CK = [0, 1, 0.07, 0.06, 0.01, 0.015, 0, 0, 0, 0.05, 0, 0, 0];   // (0, land with no class near the shore, keeps the old rule)
+      const pr = cl > 0 ? (1 - sstep(260, 420, h)) * (1 - sstep(0.42, 0.75, sl)) * CK[cl] * (cl === 1 ? 1 : sstep(0.4, 0.6, noise2(x / 120, z / 120, 31)))
         : (1 - sstep(210, 330, h)) * (1 - sstep(0.42, 0.75, sl)) * (fo ? 0.95 : 0.5) * sstep(0.36, 0.62, noise2(x / 260, z / 260, 31) * 0.7 + noise2(x / 60, z / 60, 37) * 0.3);
       if (hash((hh * 5e7 | 0) + 11) > pr) continue;
       const th = (cl === 2 ? 0.45 : 1) * (4 + 6 * hash((hh * 9e7 | 0) + 13) * (1 - sstep(120, 320, h) * 0.55)), y = h - 0.3, isPine = hash((hh * 2e7 | 0) + 17) < 0.18, v = 0.88 + 0.24 * hash((hh * 4e7 | 0) + 19);
