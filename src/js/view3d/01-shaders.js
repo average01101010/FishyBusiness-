@@ -252,7 +252,7 @@
     'float pool=kn*smoothstep(0.66,0.72,ns(wp/14.0+3.0)+f2*0.12)*smoothstep(0.55,0.9,vV.x)*(1.0-smoothstep(0.04,0.1,st));c=mix(c,vec3(0.07,0.08,0.08),pool*0.85);' +
     'c=mix(c,vec3(0.72,0.72,0.62)*(0.85+0.3*f2),kn*mo*smoothstep(0.42,0.6,ns(wp*0.3+7.0))*0.55);' +
     'vec2 fc=floor(wp/90.0);float fa=hs(fc)*3.1416;vec2 fd=vec2(cos(fa),sin(fa));float tram=abs(fract(dot(wp,fd)/18.0)-0.5);' +
-    'c*=1.0-kn*smoothstep(0.2,0.6,vV.y)*(0.1*(0.5+0.5*sin(dot(wp,fd)*2.0944))+0.18*(1.0-smoothstep(0.012,0.03,tram)));' +
+    'c*=1.0-kn*smoothstep(0.2,0.6,vV.y)*(0.06*(0.5+0.5*sin(dot(wp,fd)*2.0944))+0.07*(1.0-smoothstep(0.01,0.03,tram)));' +
     'c=mix(c0,c,det1);rc=mix(r0,rc,det1);}' +
     '\n#endif\n' +
     'n=normalize(n+vec3(b1*0.5+b3,0.0,b2*0.5-b3*0.6)*(0.2+st*0.7)*det*(1.0+R*0.8)*(1.0-S*0.7));' +
