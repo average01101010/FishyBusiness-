@@ -182,7 +182,9 @@
     SK.wheelA += (clamp(rate * 9, -2.4, 2.4) - SK.wheelA) * Math.min(1, dt * 2.5);
     const on = engineOn(), frac = on ? clamp(b.v / BOAT.vmax, 0, 1) : 0; SK.propA += (on ? 6 + frac * 120 : 0) * dt;
     nSetup(VP);
-    const fishing = S.boat.status === 'fishing' && !S.boat.deckStop;   // with all hands on deck, nobody fishes
+    // with all hands on deck, nobody fishes; nor when the one aboard alone is at the table or the tub (drawDeck draws him there; tilbakemelding
+    // #98: he jigged at the rail and gutted at the table at once)
+    const fishing = S.boat.status === 'fishing' && !S.boat.deckStop && !(DECKACT.on && DECKACT.alone);
     refreshPeople(SK); paintHand(); const wr = wearOn(vtype()); drawN(SK.hull, BMrel); if (wr) wearOff(); if (showSkipper && !fishing) drawN(SK.skipper, BMrel); if (showCrew) drawN(SK.crew, BMrel);
     SK.rodT += dt; SK.lines = [];
     const T = SK.rodT, A = SK.anim || (SK.anim = {mode:null, st:'jig', t:0, fish:[], fly:[], th:0, mc:[], bq:[], bl:null});
