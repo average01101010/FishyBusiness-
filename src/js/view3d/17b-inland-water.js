@@ -45,8 +45,12 @@
     const T = MAPD.man.tile * 1000, ox = tx * T, oz = ty * T, D = waterData(tx, ty); if (D === undefined) return undefined; if (!D) return null;
     const P = [], A = [];
     for (const a of D.areas){
+      // standing water never above its shore: the level no higher than the lowest tenth of the ground at its outline (a pond of a
+      // cell or two on a slope took the slope's median and lay as a dark plate over the bank, Bergen 28.10.2026)
+      let lv = a.level;
+      if (!a.kind){ const hs = []; for (let j = 0; j < a.v.length; j += 2) hs.push(terrH(ox + a.v[j], oz + a.v[j + 1])); hs.sort((p, q) => p - q); lv = Math.min(lv, hs[Math.floor(hs.length * 0.1)] + 0.3); }
       for (let i = 0; i < a.ix.length; i++){ const j = a.ix[i], x = a.v[j * 2], z = a.v[j * 2 + 1];
-        P.push(x, a.kind ? Math.max(terrH(ox + x, oz + z), 0.2) + 0.2 : a.level, z); A.push(a.kind, 0, 0); }
+        P.push(x, a.kind ? Math.max(terrH(ox + x, oz + z), 0.2) + 0.2 : lv, z); A.push(a.kind, 0, 0); }
     }
     return {tx, ty, o:[ox, oz], D, mesh:P.length ? Object.assign(waterMesh(P, A), {o:[ox, oz]}) : null, near:null, nearAt:null};
   }
