@@ -116,6 +116,7 @@
   // a pack that came over a tile (its ground): its water is built again on the new heights
   function staleWater(pk){ const k = pk.tile[0] + ':' + pk.tile[1], W = WATER.get(k); if (W){ freeWater(W.mesh); freeWater(W.near); } WATER.delete(k); }
   const WATER0 = /water0/.test(location.hash);   // #water0 in the address: no fresh water drawn (for comparison)
+  const WATERK = (location.hash.match(/water([AL])/) || [])[1];   // #waterA only the areas, #waterL only the lines and falls (to find a fault)
   function drawWater(VP, eye){
     if (!WATER.size || WATER0) return;
     if (!PW){ try { PW = program(WATER_VS, WATER_FS, ['aPos', 'aT'], 'vann'); } catch (e){ console.warn('vann', e.message || e); PW = false; } }
@@ -128,7 +129,7 @@
     gl.uniform1f(u.uIce, snowNow == null || env.temp == null ? 0 : sstep(2, -3, env.temp)); gl.uniform1f(u.uSnowY, snowNow == null ? 9999 : snowNow);
     gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(-2, -4);
     for (const W of WATER.values()){ if (!W) continue;
-      for (const m of [W.mesh, W.near]){ if (!m) continue;
+      for (const m of WATERK === 'A' ? [W.mesh] : WATERK === 'L' ? [W.near] : [W.mesh, W.near]){ if (!m) continue;
         gl.uniformMatrix4fv(u.uM, false, relM(m)); attr(0, m.pb, 3); attr(1, m.tb, 3); gl.drawArrays(gl.TRIANGLES, 0, m.n); }
     }
     gl.disable(gl.POLYGON_OFFSET_FILL); gl.disableVertexAttribArray(1);
