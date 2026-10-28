@@ -87,8 +87,8 @@ def cover(lc, c, ix0, iy0, nx, ny, land=None, lu=None):
     if lc is not None and lc.num_rows:
         import pyarrow.compute as pc
         mz = pc.struct_field(lc.column('cartography'), 'max_zoom').to_pylist() if 'cartography' in lc.column_names else None
-        keep = [i for i in range(lc.num_rows) if mz is None or mz[i] is None or mz[i] >= 8]
-        lc = lc.take(keep)
+        import pyarrow as pa
+        lc = lc.filter(pa.array([mz is None or z is None or z >= 8 for z in (mz or [None] * lc.num_rows)], pa.bool_()))   # (a tile with none left gives an empty table)
     for P in (_polys(lc, lambda s, k: s if s in CODE else None), _polys(land, lambda s, k: LAND.get((s, None)) or LAND.get((s, k))),
               _polys(lu, lambda s, k: LANDUSE.get((s, k)))):
         for name in COVER:
