@@ -209,12 +209,11 @@
         R = 1 - alt * (1 - rs * 0.75);
         let gl0 = 0;
         if (cv){
-          // a point without the land cover (nearer the shore than ESA's polygons reach, or a tile without the layer) gets a likely mix in
-          // the same style: the old rule's wood as forest, heath under the fells and lichen fell over them; a mesh with both styles
-          // stretched a corner's colour over its coarse triangles (a light wedge at Hammerfest, 28.10.2026)
+          // a point without the land cover within 500 m (coverAt looks out in rings; a tile without the layer) gets heath in the same
+          // style, split by the height below; a mesh with both styles stretched a corner's colour over its coarse triangles (a light wedge
+          // and a dark band at Hammerfest, 28.10.2026)
           let src = cv, o = i * 12;
-          if (!ck[i]){ const Fw = Math.max(y < 320 ? sstep(0.42, 0.62, n) * sstep(320, 200, y) : 0, fo ? fo[i] * sstep(420, 260, y) * 0.9 : 0), hi = sstep(250, 500, y);
-            FR.fill(0); FR[0] = Fw * 255; FR[1] = (1 - Fw) * (1 - hi) * 255; FR[5] = (1 - Fw) * hi * 255; src = FR; o = 0; }
+          if (!ck[i]){ FR.fill(0); FR[1] = 255; src = FR; o = 0; }   // (heath, split by the height below; no wood: the old rule's wood made dark patches on bare fells)
           // the land cover where it is known: the ground's colour from the classes' shares, the wood from the forest (and a little from the
           // heaths' dwarf birch), the rock from bare ground and the lichen fells besides the steepness and the height (the summits are
           // stonier than ESA's 10 m classes show: the heath on Senja's tops reads as green to the top otherwise)

@@ -218,9 +218,24 @@
       const wx = dx <= 0 ? (dx === 0 ? 1 - fx * 0.5 : 0.5 - fx * 0.5) : (dx === 1 ? 0.5 + fx * 0.5 : fx * 0.5), wz = dz <= 0 ? (dz === 0 ? 1 - fz * 0.5 : 0.5 - fz * 0.5) : (dz === 1 ? 0.5 + fz * 0.5 : fz * 0.5);
       COVW[v - 1] += wx * wz; s += wx * wz;
     }
+    if (s < 1e-3) s = coverRing(LC, ix, iz);   // no class in the 4 x 4 cells (nearer the shore than ESA's polygons reach): the nearest ring
     if (s < 1e-3) return;
     for (let c = 0; c < COVN; c++) cv[k * COVN + c] = Math.round(COVW[c] / s * 255);
     ck[k] = 1;
+  }
+  // a block of the cover layer that is there, kept a second (positives only, as COVB)
+  const COVK = new Map();
+  function covBlk(LC, bx, by){ const key = bx * 8192 + by, t = COVK.get(key), now = performance.now(); if (t && now - t < 1000) return true; if (!mapHasBlock(LC, bx, by)) return false; if (COVK.size > 64) COVK.clear(); COVK.set(key, now); return true; }
+  // the classes of the nearest ring of cells (2 to 10 cells out, 100-500 m) that has any, counted into COVW; the sum (0 if none). The
+  // land within 50-100 m of the shore often has no class (ESA's polygons stop short of OpenStreetMap's coastline), and the old rule
+  // there made dark patches and bands where the fells are bare (Hammerfest, 28.10.2026)
+  function coverRing(LC, ix, iz){
+    const n = LC.n; let s = 0;
+    for (let r = 2; r <= 10 && s === 0; r++) for (let dz = -r; dz <= r; dz++) for (let dx = -r; dx <= r; dx += (dz === -r || dz === r) ? 1 : 2 * r){
+      const cx = ix + dx, cz = iz + dz; if (!mapIn(LC, cx, cz) || !covBlk(LC, Math.floor(cx / n), Math.floor(cz / n))) continue;
+      const v = rcell(LC, cx, cz); if (v && v <= COVN){ COVW[v - 1]++; s++; }
+    }
+    return s;
   }
   // the land cover's class at a point (the nearest 50 m cell, 1 forest ... 12 shingle), 0 for land with none, -1 where the layer has no
   // block there (the trees keep their old rule)
@@ -228,7 +243,9 @@
     const LC = MAPD.L.cover; if (!HG || !LC) return -1;
     const cm = LC.c * 1000, ix = Math.floor(x / cm), iz = Math.floor(z / cm);
     if (!mapIn(LC, ix, iz) || !mapHasBlock(LC, Math.floor(ix / LC.n), Math.floor(iz / LC.n))) return -1;
-    return rcell(LC, ix, iz);
+    const v = rcell(LC, ix, iz); if (v) return v;
+    // land with no class: the most common class of the nearest ring that has any (coverRing)
+    COVW.fill(0); if (!coverRing(LC, ix, iz)) return 0; let b = 0; for (let c = 1; c < COVN; c++) if (COVW[c] > COVW[b]) b = c; return b + 1;
   }
   // A mesh is built in three parts so it can be done a few rows a frame (meshTask): the heights row by row, then the normals, the
   // indices and the buffers at once. makeMesh does it all in one go.
