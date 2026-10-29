@@ -108,7 +108,7 @@
   // 8 bits hold it), rolls the birth windows, and FOAM_FS adds the foam made this frame; the sea shader reads it (foamBind, unit 7) and
   // ages it as exp(-age / tau). «#foam0» in the address turns it off (the sea as before, for the comparison); it is off too on the lite
   // and the basic sea, on the low quality (the far shader draws the near sea there), and when no framebuffer can be made.
-  const FOAM = {on:!/foam0/.test(location.hash), ok:false, N:0, M:600, tex:[null, null], fb:[null, null], r:0, ox:0, oz:0, t0:[0, 0], win:[160, 32], tau:[24, 3.5], now:[0, 0], prog:null, pB:null, fresh:true, why:'', ms:0, sh:[0, 0], n:0};
+  const FOAM = {on:!/foam0/.test(location.hash), ok:false, N:0, M:600, tex:[null, null], fb:[null, null], r:0, ox:0, oz:0, t0:[0, 0], win:[160, 32], tau:[9, 3.5], now:[0, 0], prog:null, pB:null, fresh:true, why:'', ms:0, sh:[0, 0], n:0, G:[0, 0], C:[0, 0], gs:[0, 0], cur:{x:0, y:0}, curT:-1e9};
   const foamLive = () => FOAM.on && FOAM.ok;
   const foamSize = () => QUAL.lvl >= 2 ? 1024 : 512;
   function foamFree(){ for (let k = 0; k < 2; k++){ if (FOAM.fb[k]) gl.deleteFramebuffer(FOAM.fb[k]); if (FOAM.tex[k]) gl.deleteTexture(FOAM.tex[k]); FOAM.fb[k] = FOAM.tex[k] = null; } FOAM.ok = false; }
@@ -141,8 +141,18 @@
     // the window: the boat's place in the water's frame, the map's origin snapped to whole texels round it (a jump or the first frame clears it)
     const qx = bv.x - Dx, qz = bv.z - Dz, tx = qx - M / 2, tz = qz - M / 2;
     let sx = Math.round((tx - FOAM.ox) / px), sz = Math.round((tz - FOAM.oz) / px);
-    if (FOAM.fresh || Math.abs(sx) >= N || Math.abs(sz) >= N){ FOAM.ox = tx; FOAM.oz = tz; sx = sz = N; FOAM.fresh = false; FOAM.pB = null; FOAM.t0[0] = FOAM.t0[1] = t; }
+    if (FOAM.fresh || Math.abs(sx) >= N || Math.abs(sz) >= N){ FOAM.ox = tx; FOAM.oz = tz; sx = sz = N; FOAM.fresh = false; FOAM.pB = null; FOAM.t0[0] = FOAM.t0[1] = t; FOAM.G[0] = Dx; FOAM.G[1] = Dz; FOAM.C[0] = FOAM.C[1] = 0; }
     else { FOAM.ox += sx * px; FOAM.oz += sz * px; }
+    // the wake's foam (r, g) lies still in the water where the boat made it, not in the near field's frame (it slid with the boat's way,
+    // straight through a breakwater when she turned into a harbour, Jonas 29.10.2026): its frame is the map's plus G, kept within half a
+    // texel of the near field's D by shifting its content by whole texels (gs) each frame; the water itself drifts with the current
+    // (curAt, the tide's stream and the wind's drift, along the shore near land), at the game's rate. FOAM_FS drops what drifts onto land.
+    if (t - FOAM.curT > 0.5 && typeof curAt === 'function'){ try { FOAM.cur = curAt({x:bv.x / 1000, y:bv.z / 1000}, S.t / 60); } catch (e){ FOAM.cur = {x:0, y:0}; } FOAM.curT = t; }
+    const rate = typeof simRate === 'function' ? simRate() : 6, cdx = (FOAM.cur.x || 0) * dt * rate, cdz = (FOAM.cur.y || 0) * dt * rate;
+    FOAM.C[0] += cdx; FOAM.C[1] += cdz;
+    for (let k = 0; k < 2; k++){ const d = (k ? Dz : Dx) - FOAM.G[k]; if (Math.abs(d) > 30000) FOAM.G[k] += Math.round(d / 65536) * 65536; }   // (nfStep folds D by 65 536 m)
+    const gsx = Math.round((Dx - FOAM.G[0] - cdx) / px), gsz = Math.round((Dz - FOAM.G[1] - cdz) / px);
+    FOAM.G[0] += gsx * px + cdx; FOAM.G[1] += gsz * px + cdz; FOAM.gs[0] = gsx; FOAM.gs[1] = gsz;
     // the birth windows roll on: by 128/255 of the window each time the frame's time passes 0.95 of it (a long frame may need several
     // rolls; the foam born before the rolled t0 is dropped, which only an age past half the window is); the clock set back clears
     const reb = [0, 0];
@@ -155,7 +165,10 @@
     gl.activeTexture(gl.TEXTURE7); gl.bindTexture(gl.TEXTURE_2D, FOAM.tex[FOAM.r]); gl.uniform1i(u.uPrev, 7);
     for (const L of [SSL.n, SSL.w]){ gl.activeTexture(gl.TEXTURE0 + L.unit); gl.bindTexture(gl.TEXTURE_2D, L.on ? L.tex : SSDUMMY); gl.uniform1i(L === SSL.n ? u.uSSTn : u.uSSTw, L.unit); gl.uniform4fv(L === SSL.n ? u.uSSN : u.uSSW, L.on ? [L.rect[0] - RO.x, L.rect[1] - RO.z, 1 / L.rect[2], 1] : [0, 0, 1, 0]); }
     gl.activeTexture(gl.TEXTURE0);
-    gl.uniform2f(u.uShift, sx, sz); gl.uniform1f(u.uN, N); gl.uniform2f(u.uRebase, reb[0], reb[1]);
+    gl.uniform2f(u.uShift, sx, sz); gl.uniform2f(u.uShiftG, sx === N ? 0 : gsx, sz === N ? 0 : gsz); gl.uniform2f(u.uFoamG, Dx - FOAM.G[0], Dz - FOAM.G[1]); gl.uniform1f(u.uN, N); gl.uniform2f(u.uRebase, reb[0], reb[1]);
+    // the land the wake's foam may not lie on: the shore texture (buildLandMask, the foreshore's height), as the sea shader reads it
+    const lon = !!(LMTEX && LMON && LRECT); gl.uniform1f(u.uLSOn, lon ? 1 : 0); gl.uniform1f(u.uTideL, env.tide || 0);
+    if (lon){ gl.activeTexture(gl.TEXTURE6); gl.bindTexture(gl.TEXTURE_2D, LMTEX); gl.uniform1i(u.uLandS, 6); gl.uniform4fv(u.uLRect, [LRECT[0] - RO.x, LRECT[1] - RO.z, LRECT[2], LRECT[3]]); gl.activeTexture(gl.TEXTURE0); }
     gl.uniform4fv(u.uFoamRect, [FOAM.ox - RO.x, FOAM.oz - RO.z, 1 / M, M]); gl.uniform4fv(u.uFoamT, [FOAM.now[0], FOAM.win[0], FOAM.tau[0], 0]); gl.uniform4fv(u.uFoamTc, [FOAM.now[1], FOAM.win[1], FOAM.tau[1], 0]);
     gl.uniform1f(u.uTime, t); gl.uniform2f(u.uNFD, Dx, Dz); gl.uniform1f(u.uWind, env.wind || 0); gl.uniform2fv(u.uWindDir, env.windDir || [0, 1]);
     gl.uniform4fv(u.uSea, [WV.C, WV.cap, WV.lnFcap, WV.swHs]); gl.uniform4fv(u.uSea2, [WV.dot, WV.steep, ssBlend(SSL.n), ssBlend(SSL.w)]); gl.uniform4fv(u.uLocal, WV.loc);
@@ -176,6 +189,7 @@
     if (u.uFoamOn == null) return; const on = foamLive(); gl.uniform1f(u.uFoamOn, on ? 1 : 0); if (!on) return;
     gl.activeTexture(gl.TEXTURE7); gl.bindTexture(gl.TEXTURE_2D, FOAM.tex[FOAM.r]); gl.uniform1i(u.uFoam, 7); gl.activeTexture(gl.TEXTURE0);
     gl.uniform4fv(u.uFoamRect, [FOAM.ox - RO.x, FOAM.oz - RO.z, 1 / FOAM.M, FOAM.M]); gl.uniform4fv(u.uFoamT, [FOAM.now[0], FOAM.win[0], FOAM.tau[0], 0]); gl.uniform4fv(u.uFoamTc, [FOAM.now[1], FOAM.win[1], FOAM.tau[1], 0]);
+    gl.uniform2f(u.uFoamG, NF.D[0] - FOAM.G[0], NF.D[1] - FOAM.G[1]); gl.uniform2f(u.uFoamW, NF.D[0] - FOAM.C[0], NF.D[1] - FOAM.C[1]);
   }
 
   // ---------- the sea state over the near terrain and the whole map ----------
