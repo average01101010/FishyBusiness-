@@ -179,6 +179,12 @@
   const COVC = {heath:[[0.43, 0.36, 0.27], [0.33, 0.37, 0.22]], lichen:[[0.6, 0.59, 0.51], [0.55, 0.56, 0.44]], bog:[[0.6, 0.5, 0.31], [0.45, 0.47, 0.25]],
     field:[[0.52, 0.45, 0.32], [0.37, 0.46, 0.23]], meadow:[[0.55, 0.5, 0.34], [0.38, 0.47, 0.25]], gravel:[0.46, 0.45, 0.42], town:[0.42, 0.43, 0.38],
     sand:[0.76, 0.73, 0.62], scree:[0.52, 0.51, 0.48], shingle:[0.56, 0.55, 0.51]};
+  // the satellites' summer colour (G3) in the game's colours: Sentinel-2's true colour (TCI, a linear stretch of the reflectance) to the
+  // albedo the palette is set in, per channel (SATK, SATG fitted on Senja against the classes' summer colours); #sat0 in the address
+  // leaves it out (for comparison)
+  const SATON = !/sat0/.test(location.hash), SATW = 0.85, SATK = [1, 1, 1], SATG = 1;
+  const satCol = (r, g, b) => [SATK[0] * Math.pow(r / 255, SATG), SATK[1] * Math.pow(g / 255, SATG), SATK[2] * Math.pow(b / 255, SATG)];
+  const birch0S = () => [0.25, 0.33, 0.22];
   function recolor(m, snow){
     const {slope, nz, col, h, fo, mat, cv, ck} = m;
     if (cv && !m.vb){ m.cov = new Float32Array(h.length * 4); m.vb = buf(m.cov, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); }
@@ -191,11 +197,14 @@
     const FR = new Float32Array(12);
     const CP = [woodC, heath, meadow, field, bogc, lichen, COVC.gravel, lichen, mix3(COVC.town, meadow, 0.5), COVC.sand, COVC.scree, COVC.shingle], PT = new Float32Array(36);
     for (let k = 0; k < 12; k++){ PT[k * 3] = CP[k][0]; PT[k * 3 + 1] = CP[k][1]; PT[k * 3 + 2] = CP[k][2]; }
+    // the classes' colours in summer (full green, no ruska): what the satellites' colour is measured against (G3)
+    const ccS = k => COVC[k][1], CPS = [birch0S(), ccS('heath'), ccS('meadow'), ccS('field'), ccS('bog'), ccS('lichen'), COVC.gravel, ccS('lichen'), mix3(COVC.town, ccS('meadow'), 0.5), COVC.sand, COVC.scree, COVC.shingle], PTS = new Float32Array(36);
+    for (let k = 0; k < 12; k++){ PTS[k * 3] = CPS[k][0]; PTS[k * 3 + 1] = CPS[k][1]; PTS[k * 3 + 2] = CPS[k][2]; }
     const asph = [0.3, 0.31, 0.32], gravel = [0.47, 0.45, 0.41], pv = m.pv;   // a harbour unit's fill and the flat land by it (unitPatch)
     // the rock (0.33, 0.35, 0.37) and the snow (0.9, 0.92, 0.95) are laid on in the fragment shader (terFS) by the weights in mat, so their
     // edges can be sharpened per pixel; the colour here is the ground under them
     for (let i = 0; i < h.length; i++){
-      const y = h[i], n = nz[i]; let c, R = 0, wood = 0, sn = 0, p = 0;
+      const y = h[i], n = nz[i]; let c, R = 0, wood = 0, sn = 0, p = 0, satHere = 0;
       if (y < 0) c = bed;
       else {
         const alt = y < 280 ? 1 : sstep(420, 280, y);   // bare rock above the vegetation
@@ -213,7 +222,7 @@
           // a point without the land cover within 500 m (coverAt looks out in rings; a tile without the layer) gets heath in the same
           // style, split by the height below; a mesh with both styles stretched a corner's colour over its coarse triangles (a light wedge
           // and a dark band at Hammerfest, 28.10.2026)
-          let src = cv, o = i * 12;
+          let src = cv, o = i * COVS;
           if (!ck[i]){ FR.fill(0); FR[1] = 255; src = FR; o = 0; }   // (heath, split by the height below; no wood: the old rule's wood made dark patches on bare fells)
           // the land cover where it is known: the ground's colour from the classes' shares, the wood from the forest (and a little from the
           // heaths' dwarf birch), the rock from bare ground and the lichen fells besides the steepness and the height (the summits are
@@ -226,6 +235,17 @@
           let r = (SHn * PT[3] + MOn * PT[15]) * 255, g = (SHn * PT[4] + MOn * PT[16]) * 255, b = (SHn * PT[5] + MOn * PT[17]) * 255;
           for (let k = 0; k < 12; k++){ if (k === 1 || k === 5) continue; const w = src[o + k]; if (w){ r += w * PT[k * 3]; g += w * PT[k * 3 + 1]; b += w * PT[k * 3 + 2]; } }
           const v = (0.93 + 0.14 * n) / 255, cg = [r * v, g * v, b * v];   // (a town's ground is half gardens: its colour in CP)
+          // the satellites' summer colour where it is known (G3, satAt): the ground as Sentinel-2 saw it from mid June to August, in the
+          // game's colours (SATK), with the season laid on as the classes' colour now over their colour in summer, so the ruska, the
+          // straw of spring and autumn and the snow come as before; the classes' own colour keeps a little of the say (SATW)
+          const s0 = ck[i] && SATON ? cv[i * COVS + 12] : 0;
+          if (s0){
+            let rS = (SHn * PTS[3] + MOn * PTS[15]) * 255, gS = (SHn * PTS[4] + MOn * PTS[16]) * 255, bS = (SHn * PTS[5] + MOn * PTS[17]) * 255;
+            for (let k = 0; k < 12; k++){ if (k === 1 || k === 5) continue; const w = src[o + k]; if (w){ rS += w * PTS[k * 3]; gS += w * PTS[k * 3 + 1]; bS += w * PTS[k * 3 + 2]; } }
+            const sat = satCol(s0, cv[i * COVS + 13], cv[i * COVS + 14]), rr = [r / Math.max(rS, 1), g / Math.max(gS, 1), b / Math.max(bS, 1)];
+            for (let q = 0; q < 3; q++) cg[q] = cg[q] * (1 - SATW) + sat[q] * clamp(rr[q], 0.5, 2) * (0.96 + 0.08 * n) * SATW;
+            satHere = 1;
+          }
           c = y < 3.5 ? mix3(shore, cg, y / 3.5) : cg;
           if (tw > 0 || tb > 0){ c = mix3(c, mix3(WEED, WEED2, sstep(0.4, 0.7, n)), tw * (1 - sstep(0.5, 0.85, slope[i]) * 0.5)); c = mix3(c, BARN, tb * 0.55); }
           wood = (F * 0.95 + SHn * 0.12) * sstep(440, 260, y) * (1 - rs);
@@ -235,7 +255,7 @@
         } else if (cov){ cov[i * 4] = cov[i * 4 + 1] = cov[i * 4 + 2] = cov[i * 4 + 3] = 0; }
         p = pv ? pv[i] : 0; sn = Math.max(sstep(snow - 60, snow + 60, y + n * 90) * (1 - rs * 0.85) * (1 - wood * 0.55), gl0 * (1 - rs * 0.6)) * (1 - p * 0.6) * sstep(1.5, 2.3, y);   // no snow where the tide comes
         R *= 1 - p;
-        c = mix3(c, birch, wood * 0.6);
+        c = mix3(c, birch, wood * 0.6 * (satHere ? 1 - SATW * 0.85 : 1));   // (the satellites see the woods' darkness already)
         if (p) c = mix3(c, mix3(asph, gravel, sstep(0.4, 0.75, n) * 0.7 + (1 - p) * 0.3), p);
       }
       col[i * 3] = c[0]; col[i * 3 + 1] = c[1]; col[i * 3 + 2] = c[2];

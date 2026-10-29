@@ -60,12 +60,35 @@ def cover_tile(tx, ty):
     NL = national.norway200()[0][ty * 250:(ty + 1) * 250, tx * 250:(tx + 1) * 250]
     return np.where(np.kron(NL, np.ones((4, 4), bool))[:fny, :fnx], C, 0).astype(np.uint8)
 
+# the summer colour of the ground from Sentinel-2 (G3, tools/s2/s2.py: the median of the clear scenes from mid June to August 2021-2025
+# on the tile's 50 m cells), as three u8 layers sr, sg, sb (1-255; 0 where there is none: the sea, outside Norway, never clear). The
+# scenes' own sun is taken out: they were taken near 11 in the morning, the sun in the south-southeast about (90 - latitude + 13)
+# degrees up, and a slope facing it is lighter, one facing away darker; each cell is divided by its light from the 50 m ground (35 %
+# from the sky, 65 % from the sun, against flat ground's), so the game's own sun and shadows are not laid on twice. Without the
+# mosaic (S2D has no file for the tile) the layers are 0 and the game colours the ground as before.
+S2D = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'out', 's2')
+def sat_tile(tx, ty, L):
+    f = os.path.join(S2D, f'{tx}_{ty}.npz'); z = {k: np.zeros((1000, 1000), np.uint8) for k in ('sr', 'sg', 'sb')}
+    if not os.path.exists(f): return z
+    S = np.load(f); rgb = S['rgb'].astype(np.float32); n = S['n']
+    a = np.abs(L['hgt'].astype(np.float32)); h = np.sign(L['hgt']) * np.where(a < 20, a / 2, 10 + (a - 20) * 2)
+    h = h.reshape(1000, 2, 1000, 2).mean(axis=(1, 3)); h = np.maximum(h, 0)
+    gy, gx = np.gradient(h, 50.0)   # rows run south, columns east: gx = dh/dx east, gy = dh/dy south
+    lon, lat = frame.to_ll(np.array([tx * 50 + 25.0]), np.array([ty * 50 + 25.0])); el = np.radians(min(55.0, 90 - float(lat[0]) + 13)); az = np.radians(165.0)
+    sx, sy, sz = np.cos(el) * np.sin(az), -np.cos(el) * np.cos(az), np.sin(el)   # the sun: east, south, up
+    nz = 1 / np.sqrt(1 + gx * gx + gy * gy); nx, ny = -gx * nz, -gy * nz
+    sh = np.clip(nx * sx + ny * sy + nz * sz, 0, None) / sz
+    I = np.clip(0.35 + 0.65 * sh, 0.45, 1.8)
+    land = (L['cover'] > 0) & (n > 0)
+    for k, c in enumerate(('sr', 'sg', 'sb')): z[c] = np.where(land, np.clip(np.round(rgb[..., k] / I), 1, 255), 0).astype(np.uint8)
+    return z
+
 def tile(tx, ty):
     f = os.path.join(TD, f'{tx}_{ty}.npz')
     if os.path.exists(f):
         z = dict(np.load(f))
         if 'cover' not in z: z['cover'] = cover_tile(tx, ty); np.savez_compressed(f, **z)   # a tile cached before the layer
-        return seafloor(z)
+        z = seafloor(z); z.update(sat_tile(tx, ty, z)); return z
     t0 = time.time(); R = frame.Region(f't{tx}_{ty}', tx * 5, ty * 5, tx * 5 + 5, ty * 5 + 5); box = R.lonlat_box(1); out = {}
     ix0, iy0, nx, ny = R.grid(0.025)
     tab = features('base/land', box, ['geometry', 'subtype']); M = fill(polys_of(tab, lambda s: s == 'land'), 0.025, ix0, iy0, nx, ny) if tab is not None else np.zeros((ny, nx), np.uint8)
@@ -113,7 +136,7 @@ def tile(tx, ty):
     out['depth'] = np.where(land50 & ~ins, 0, np.round(d * 2)).astype(np.int16)
     seafloor(out)
     out['sec'] = np.array(time.time() - t0)
-    np.savez_compressed(f, **out); return out
+    np.savez_compressed(f, **out); out.update(sat_tile(tx, ty, out)); return out
 
 # the vector layers of a tile (vectors.py), kept in out/national/vec/ (worked out again when a layer is missing); the lite profile has
 # the buildings within 2 km of the sea; the quays need the tile's mask and depth (L, as tile() gives it)
@@ -152,7 +175,8 @@ def chart_tile(tx, ty):
     nm = cached(f'names-{tx}-{ty}', lambda: chart.names(tx, ty))
     return {'coast1': (b1, k1, 'chart'), 'coast2': (b2, k2, 'chart'), 'names': (chart.names_bytes(nm), len(nm), 'chart')}
 
-GAME = dict(mask=(0.025, 'u8', 'sim', None), dc=(0.1, 'f32', 'sim', None), depth=(0.05, 'i16', 'sim', 'half'), hgt=(0.025, 'i16', 'view', 'hgt'), forest=(0.05, 'u8', 'view', None), cover=(0.05, 'u8', 'view', None))
+GAME = dict(mask=(0.025, 'u8', 'sim', None), dc=(0.1, 'f32', 'sim', None), depth=(0.05, 'i16', 'sim', 'half'), hgt=(0.025, 'i16', 'view', 'hgt'), forest=(0.05, 'u8', 'view', None), cover=(0.05, 'u8', 'view', None),
+            sr=(0.05, 'u8', 'view', None), sg=(0.05, 'u8', 'view', None), sb=(0.05, 'u8', 'view', None))
 LAYERS = dict(mask=(0.025, 'u8', 'core', None), dc=(0.1, 'f32', 'core', None), expo=(0.5, 'u8', 'core', None), depth=(0.05, 'i16', 'sim', 'half'),
               hgt=(0.025, 'i16', 'view', 'hgt'), forest=(0.05, 'u8', 'view', None), cover=(0.05, 'u8', 'view', None))
 if __name__ == '__main__':
