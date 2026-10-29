@@ -91,12 +91,33 @@ def sat_tile(tx, ty, L):
     z['scg'] = np.where(w > 0, np.clip(np.round(h2(Cg) / 4 - 0.5), 0, 63) + 1, 0).astype(np.int16)
     return z
 
+# the trees of a tile (G4, tools/trees/trees.py: Meta and WRI's canopy height maps, CC BY 4.0) on its 50 m cells as one u8 layer
+# (25 m was 1.4 MB a forested tile, 50 m 0.4)
+# 'trees': bits 0-3 the share under trees (0-15), bits 4-6 the trees' height (0: under 4 m, then 4 m steps, 7: 28 m and over), bit 7
+# needles (where Sentinel-2's summer near infrared, tools/s2/s2.py nir, is under NIR_NEEDLE: broad leaves reflect about twice what
+# needles do). Norway's land only. Without the canopy file for the tile the layer is 0 and the game plants its old trees.
+TREED = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'out', 'trees'); NIR_NEEDLE = 75
+def trees_tile(tx, ty, L):
+    out = np.zeros((1000, 1000), np.uint8); f = os.path.join(TREED, f'{tx}_{ty}.npz')
+    if not os.path.exists(f): return {'trees': out}
+    T = np.load(f); c25 = T['cover'].astype(np.float32) / 255; h25 = np.where(c25 > 0.02, T['height'].astype(np.float32) / 4, 0)
+    cov = c25.reshape(1000, 2, 1000, 2).mean(axis=(1, 3)); h = h25.reshape(1000, 2, 1000, 2).max(axis=(1, 3))
+    land = L['cover'] > 0
+    c4 = np.clip(np.round(cov * 15), 0, 15).astype(np.uint8); hc = np.clip(np.floor(h / 4), 0, 7).astype(np.uint8)
+    nd = np.zeros((1000, 1000), bool); g = os.path.join(S2D, f'{tx}_{ty}.npz')
+    if os.path.exists(g):
+        Z = np.load(g)
+        if 'nir' in Z: nir = Z['nir']; nd = (nir > 0) & (nir < NIR_NEEDLE)
+    v = c4 | (hc << 4) | (nd.astype(np.uint8) << 7)
+    out = np.where(land & (c4 > 0), v, 0).astype(np.uint8)
+    return {'trees': out}
+
 def tile(tx, ty):
     f = os.path.join(TD, f'{tx}_{ty}.npz')
     if os.path.exists(f):
         z = dict(np.load(f))
         if 'cover' not in z: z['cover'] = cover_tile(tx, ty); np.savez_compressed(f, **z)   # a tile cached before the layer
-        z = seafloor(z); z.update(sat_tile(tx, ty, z)); return z
+        z = seafloor(z); z.update(sat_tile(tx, ty, z)); z.update(trees_tile(tx, ty, z)); return z
     t0 = time.time(); R = frame.Region(f't{tx}_{ty}', tx * 5, ty * 5, tx * 5 + 5, ty * 5 + 5); box = R.lonlat_box(1); out = {}
     ix0, iy0, nx, ny = R.grid(0.025)
     tab = features('base/land', box, ['geometry', 'subtype']); M = fill(polys_of(tab, lambda s: s == 'land'), 0.025, ix0, iy0, nx, ny) if tab is not None else np.zeros((ny, nx), np.uint8)
@@ -144,7 +165,7 @@ def tile(tx, ty):
     out['depth'] = np.where(land50 & ~ins, 0, np.round(d * 2)).astype(np.int16)
     seafloor(out)
     out['sec'] = np.array(time.time() - t0)
-    np.savez_compressed(f, **out); out.update(sat_tile(tx, ty, out)); return out
+    np.savez_compressed(f, **out); out.update(sat_tile(tx, ty, out)); out.update(trees_tile(tx, ty, out)); return out
 
 # the vector layers of a tile (vectors.py), kept in out/national/vec/ (worked out again when a layer is missing); the lite profile has
 # the buildings within 2 km of the sea; the quays need the tile's mask and depth (L, as tile() gives it)
@@ -184,7 +205,7 @@ def chart_tile(tx, ty):
     return {'coast1': (b1, k1, 'chart'), 'coast2': (b2, k2, 'chart'), 'names': (chart.names_bytes(nm), len(nm), 'chart')}
 
 GAME = dict(mask=(0.025, 'u8', 'sim', None), dc=(0.1, 'f32', 'sim', None), depth=(0.05, 'i16', 'sim', 'half'), hgt=(0.025, 'i16', 'view', 'hgt'), forest=(0.05, 'u8', 'view', None), cover=(0.05, 'u8', 'view', None),
-            sy=(0.05, 'i16', 'view', 'raw'), sco=(0.1, 'i16', 'view', 'raw'), scg=(0.1, 'i16', 'view', 'raw'))
+            sy=(0.05, 'i16', 'view', 'raw'), sco=(0.1, 'i16', 'view', 'raw'), scg=(0.1, 'i16', 'view', 'raw'), trees=(0.05, 'u8', 'view', None))
 LAYERS = dict(mask=(0.025, 'u8', 'core', None), dc=(0.1, 'f32', 'core', None), expo=(0.5, 'u8', 'core', None), depth=(0.05, 'i16', 'sim', 'half'),
               hgt=(0.025, 'i16', 'view', 'hgt'), forest=(0.05, 'u8', 'view', None), cover=(0.05, 'u8', 'view', None))
 if __name__ == '__main__':

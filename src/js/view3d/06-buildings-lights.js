@@ -120,7 +120,7 @@
         if (ty === 6) wins(l, w / 2, bx, bz, ca, sa, [floor + 1.6], 0.8, 0.7, 4, -1);
       }
     }
-    addTrees(m, key, srcs, snowy);
+    addTrees(m, key, srcs, snowy, c);
     const o = c.o = [gridKeyX(key) * 1000, gridKeyY(key) * 1000];
     c.mesh = m.p.length ? m.mesh(o) : null;
     const RM = MB(); addRoads(RM, key, snowy); if (RM.p.length) c.rd = RM.mesh(o);
@@ -130,11 +130,12 @@
   }
   // trees: birch woods below the tree line with some pine, kept off roads and buildings; colours follow the season
   const treeSeason = () => { if (typeof seasonAt === 'function'){ const st = seasonAt(S.t / 60); return st.leaf < 0.4 ? 0 : st.yel > 0.45 ? 2 : 1; } const mo = gDate(S.t / 60).getUTCMonth(); return mo >= 5 && mo <= 7 ? 1 : mo === 8 ? 2 : 0; };
-  function addTrees(m, key, srcs, snowy){
+  function addTrees(m, key, srcs, snowy, c){
     const gz = gridKeyY(key), gx = gridKeyX(key), x0 = gx * 1000, z0 = gz * 1000, occ = new Uint8Array(1600);
     const mark = (x, z, r) => { const cx = Math.floor((x - x0) / 25), cz = Math.floor((z - z0) / 25); for (let a = -r; a <= r; a++) for (let b = -r; b <= r; b++){ const i = cx + b, j = cz + a; if (i >= 0 && j >= 0 && i < 40 && j < 40) occ[j * 40 + i] = 1; } };
     for (const [B, idx] of srcs) for (const i of idx) mark(B.x[i], B.z[i], Math.max(B.l[i], B.w[i]) > 30 ? 2 : 1);
     for (const r of roadsIn(x0 - 30, z0 - 30, x0 + 1030, z0 + 1030)){ for (let j = 1; j < r.xs.length; j++){ const L = Math.hypot(r.xs[j] - r.xs[j - 1], r.zs[j] - r.zs[j - 1]), n = Math.ceil(L / 12); for (let q = 0; q <= n; q++) mark(r.xs[j - 1] + (r.xs[j] - r.xs[j - 1]) * q / n, r.zs[j - 1] + (r.zs[j] - r.zs[j - 1]) * q / n, 0); } }
+    if (c && treeChunk(c, key, occ, snowy)) return;   // the trees from the map (G4, 17c-trees.js), where it has them
     const ses = treeSeason(), leaf = ses === 1 ? [0.15, 0.29, 0.11] : ses === 2 ? [0.7, 0.48, 0.12] : [0.55, 0.5, 0.47], pine = [0.06, 0.15, 0.08], trunk = [0.78, 0.76, 0.7];
     let count = 0;
     // the 900 places in a stride over the square (397 is prime to 900), so the cap of 260 does not fill the northern rows first
@@ -182,7 +183,7 @@
       }
     }
   }
-  function freeChunk(c){ const del = mm => { if (mm.parts) mm.parts.forEach(del); else { gl.deleteBuffer(mm.pb); gl.deleteBuffer(mm.cb); } }; for (const mm of [c.rd, c.mesh, c.dm, c.gd, c.gl]) if (mm) del(mm); if (c.lights) gl.deleteBuffer(c.lights); }
+  function freeChunk(c){ treeFree(c); const del = mm => { if (mm.parts) mm.parts.forEach(del); else { gl.deleteBuffer(mm.pb); gl.deleteBuffer(mm.cb); } }; for (const mm of [c.rd, c.mesh, c.dm, c.gd, c.gl]) if (mm) del(mm); if (c.lights) gl.deleteBuffer(c.lights); }
   function updateChunks(maxBuilds){
     if (!NEARM) return;
     const sf = (snowNow == null || snowNow < 80 ? 1 : 0) + 10 * treeSeason();

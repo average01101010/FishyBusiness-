@@ -63,6 +63,7 @@ COVER = {
   'src/js/view3d/17b-inland-water.js':['dbg23o', 'vectest', 'lighttest'],
   'src/js/view3d/16-motion.js':['trackfollow', 'routetest', 'helmjit'],
   'src/js/view3d/15-env-mooring.js':['moortest', 'skytest'],
+  'src/js/view3d/17c-trees.js':['dbg23o', 'treeshot'], 'src/data/trees.b64':['treeshot'],
   'src/js/view3d/14-sea.js':['sea3d', 'seatrytest', 'wakeshot'],
   'src/js/view3d/13-instruments.js':['heattest', 'dbg23o'],
   'src/js/view3d/12-skiff.js':['dbg23o', 'deckshot'],
