@@ -7,7 +7,7 @@
   const WATER = new Map(), WATER_R = 3500, WATER_W = [2.4, 9, 3];   // the lines' widths: stream, river, canal
   const WATER_VS = 'attribute vec3 aPos;attribute vec3 aT;uniform mat4 uVP;uniform mat4 uM;varying vec3 vW;varying vec3 vT;void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;vT=aT;gl_Position=uVP*w;}';
   // vT: x 0 standing water, 1 running; y the distance along a river (m); z how white (a steep reach, a fall)
-  const WATER_FS = 'precision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;uniform vec3 uZen;uniform vec3 uHor;uniform float uT;uniform float uIce;uniform float uSnowY;uniform vec2 uWind;varying vec3 vW;varying vec3 vT;' + NOISE + AIR +
+  const WATER_FS = 'precision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;uniform vec3 uZen;uniform vec3 uHor;uniform float uT;uniform float uIce;uniform float uSnowY;uniform float uDbgI;uniform float uDbgT;uniform vec2 uWind;varying vec3 vW;varying vec3 vT;' + NOISE + AIR +
     'void main(){float d=length(vW);vec3 V=-vW/max(d,0.01);vec2 wq=mod(vW.xz+uEye.xy,4096.0);' +
     // the ripples: two noises drifting with the wind on the lakes, the flow along a river (its across-direction unknown here, so the
     // streaks run with the noise of the distance along it)
@@ -20,7 +20,7 @@
     'float wh=clamp(vT.z+smoothstep(0.62,0.8,ns(vec2(vT.y*0.35-uT*3.0,wq.y*0.3)))*vT.z*0.5,0.0,1.0);c=mix(c,vec3(0.86,0.9,0.92)*(uAmb+uSunCol*0.8),wh);' +
     // ice and snow on it in winter
     'float ice=uIce*smoothstep(uSnowY-80.0,uSnowY+40.0,vW.y+uEye.z);c=mix(c,vec3(0.9,0.92,0.95)*(uAmb+uSunCol*0.75)*(0.94+0.06*ns(wq*0.2)),ice*(1.0-step(0.5,vT.x)*0.3));' +
-    'gl_FragColor=vec4(fin(c,vW),1.0);}';
+    'gl_FragColor=vec4(fin(c,vW),1.0);if(uDbgI>0.5)gl_FragColor=vec4(mod(vT.y,256.0)/255.0,floor(vT.y/256.0)/255.0,uDbgT/255.0,1.0);}';
   let PW = null;
   // the entry of a tile's vec pack, read on the main thread (a few thousand items); null when the pack has none
   function waterData(tx, ty){
@@ -44,14 +44,15 @@
   function waterTile(tx, ty){
     const T = MAPD.man.tile * 1000, ox = tx * T, oz = ty * T, D = waterData(tx, ty); if (D === undefined) return undefined; if (!D) return null;
     const P = [], A = [];
-    for (const a of D.areas){
+    let ai = -1;
+    for (const a of D.areas){ ai++;
       // standing water never above its shore: the level no higher than the lowest tenth of the ground at its outline (a pond of a
       // cell or two on a slope took the slope's median and lay as a dark plate over the bank, Bergen 28.10.2026)
       let lv = a.level;
       // a pond under 400 m2 is a few corners after the 4 m simplification, a dark plate rather than water (Bergen 28.10.2026): left out
       if (!a.kind){ let ar = 0; for (let i = 0; i < a.ix.length; i += 3){ const p = a.ix[i] * 2, q = a.ix[i + 1] * 2, r = a.ix[i + 2] * 2; ar += Math.abs((a.v[q] - a.v[p]) * (a.v[r + 1] - a.v[p + 1]) - (a.v[r] - a.v[p]) * (a.v[q + 1] - a.v[p + 1])) / 2; } if (ar < 400) continue; }
       if (!a.kind){ const hs = []; for (let j = 0; j < a.v.length; j += 2) hs.push(terrH(ox + a.v[j], oz + a.v[j + 1])); hs.sort((p, q) => p - q); lv = Math.min(lv, hs[Math.floor(hs.length * 0.1)] + 0.3); }
-      if (!a.kind){ for (let i = 0; i < a.ix.length; i++){ const j = a.ix[i]; P.push(a.v[j * 2], lv, a.v[j * 2 + 1]); A.push(0, 0, 0); } continue; }
+      if (!a.kind){ for (let i = 0; i < a.ix.length; i++){ const j = a.ix[i]; P.push(a.v[j * 2], lv, a.v[j * 2 + 1]); A.push(0, WATERI ? ai : 0, 0); } continue; }
       // a river's area lies on the ground: its triangles split at the longest edge down to 12 m, each point on the ground, so a big
       // triangle on a slope does not cut through it (a dark wedge on an islet at Bergen, 28.10.2026)
       const put = (x, z) => { P.push(x, Math.max(terrH(ox + x, oz + z), 0.2) + 0.2, z); A.push(1, 0, 0); };
@@ -116,6 +117,7 @@
   // a pack that came over a tile (its ground): its water is built again on the new heights
   function staleWater(pk){ const k = pk.tile[0] + ':' + pk.tile[1], W = WATER.get(k); if (W){ freeWater(W.mesh); freeWater(W.near); } WATER.delete(k); }
   const WATER0 = /water0/.test(location.hash);   // #water0 in the address: no fresh water drawn (for comparison)
+  const WATERI = /waterI/.test(location.hash);   // #waterI: each standing water drawn in the colour of its index (r + 256 g) and its tile (b = 7 tx + ty mod 256)
   const WATERK = (location.hash.match(/water([AL])/) || [])[1];   // #waterA only the areas, #waterL only the lines and falls (to find a fault)
   function drawWater(VP, eye){
     if (!WATER.size || WATER0) return;
@@ -130,7 +132,7 @@
     gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(-2, -4);
     for (const W of WATER.values()){ if (!W) continue;
       for (const m of WATERK === 'A' ? [W.mesh] : WATERK === 'L' ? [W.near] : [W.mesh, W.near]){ if (!m) continue;
-        gl.uniformMatrix4fv(u.uM, false, relM(m)); attr(0, m.pb, 3); attr(1, m.tb, 3); gl.drawArrays(gl.TRIANGLES, 0, m.n); }
+        gl.uniform1f(u.uDbgI, WATERI ? 1 : 0); gl.uniform1f(u.uDbgT, (W.tx * 7 + W.ty) % 256); gl.uniformMatrix4fv(u.uM, false, relM(m)); attr(0, m.pb, 3); attr(1, m.tb, 3); gl.drawArrays(gl.TRIANGLES, 0, m.n); }
     }
     gl.disable(gl.POLYGON_OFFSET_FILL); gl.disableVertexAttribArray(1);
   }
