@@ -125,3 +125,5 @@ Rederi-appen har også fått regnskap med lånene (tilbakemelding #9): resultat,
 Tromsøyas gater kom og gikk i kartplotteren. `vecPrune` slapp vec-flisene som lå langt fra punktene den fikk. Båten ber om det med bare sin egen posisjon (`05-vessels.js`, 120 km), og 3D-visningen med øyet. Med båten på vei mot Båtsfjord ble flisene under kartet sluppet. Kartet ba om dem igjen (`vecWant`), de kom, og så ble de sluppet på nytt.
 
 Nå tar `vecPrune` alltid med midten av kartplotteren når den er åpen. Kontroll: med kartet over Tromsø og båten ved Båtsfjord sto 3 666 veier igjen etter en runde med `vecPrune`, mot 0 uten. Det er målt med `KYST_VEC=1`, fordi vec-pakkene bare er med i bygget da.
+
+- **Fangstfeltene uten sirkel** (Jonas 28.10.2026: «Fjern sirklene for fangstfelt langs hele kysten. Bare navn på felt langs hele kysten er ok, men det skal ikke vises som en definert sirkel»): `renderStatic` i `ui/03-map.js` tegner bare feltets navn (fra `view.z ≥ 0,5`). Fisket bruker feltene som før.
