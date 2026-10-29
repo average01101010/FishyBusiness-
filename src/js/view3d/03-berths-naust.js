@@ -231,7 +231,9 @@
   // over the nearest 2 x 2 cells that have it, weighted bilinearly, and turned back (G = Y + Cg, R = Y - Cg + Co, B = Y - Cg - Co).
   function satRead(L, x, z){
     const cm = L.c * 1000, gx = x / cm - 0.5, gz = z / cm - 0.5, ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz;
-    if (!mapIn(L, ix, iz) || !mapIn(L, ix + 1, iz + 1) || !covBlk(L, Math.floor(ix / L.n), Math.floor(iz / L.n)) || !covBlk(L, Math.floor((ix + 1) / L.n), Math.floor((iz + 1) / L.n))) return -1;
+    if (!mapIn(L, ix, iz) || !mapIn(L, ix + 1, iz + 1)) return -1;
+    const b0 = Math.floor(ix / L.n), b1 = Math.floor((ix + 1) / L.n), c0 = Math.floor(iz / L.n), c1 = Math.floor((iz + 1) / L.n);
+    if (!covBlk(L, b0, c0) || !covBlk(L, b1, c0) || !covBlk(L, b0, c1) || !covBlk(L, b1, c1)) return -1;   // (all four: by a block's corner the cells reach into three)
     let v = 0, w = 0;
     for (let dz = 0; dz <= 1; dz++) for (let dx = 0; dx <= 1; dx++){ const c = rcell(L, ix + dx, iz + dz); if (!c) continue; const q = (dx ? fx : 1 - fx) * (dz ? fz : 1 - fz) + 1e-4; v += (c - 1) * q; w += q; }
     return w > 0.05 ? v / w : -1;
