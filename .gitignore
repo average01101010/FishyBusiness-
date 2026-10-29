@@ -18,3 +18,4 @@ tests/saves/
 .claude/worktrees/
 dist-full/
 tools/s2/out/
+tools/trees/out/
