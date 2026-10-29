@@ -7,7 +7,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 # this test's own on a free port; each test gets its own origin, so its own localStorage
 class _Quiet(http.server.SimpleHTTPRequestHandler):
     def log_message(self, *a): pass
-_SRV = http.server.ThreadingHTTPServer(('127.0.0.1', 0), functools.partial(_Quiet, directory=os.environ.get('KYST_DIST') or os.path.join(os.path.dirname(HERE), 'dist')))
+# (KYST_DIST is made absolute here: the handler resolves its directory on every request, and this module chdirs to tests/out below, so
+# a relative KYST_DIST=dist-pwa served nothing and the game never started, 29.10.2026)
+_SRV = http.server.ThreadingHTTPServer(('127.0.0.1', 0), functools.partial(_Quiet, directory=os.path.abspath(os.environ.get('KYST_DIST') or os.path.join(os.path.dirname(HERE), 'dist'))))
 threading.Thread(target=_SRV.serve_forever, daemon=True).start()
 BASE = 'http://127.0.0.1:%d/' % _SRV.server_port
 # «#qfix»: the 3D view keeps its high quality (view3d.js QUAL), so SwiftShader's few frames a second do not step it down.
