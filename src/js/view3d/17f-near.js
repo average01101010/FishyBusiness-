@@ -1,13 +1,14 @@
   // ---------- the near field on land (G8 of docs/planer/grafikk-natur-og-miljo.md) ----------
-  // Within NEAR_R[QUAL.lvl] m of the eye the ground gets its small things as instances of the Blender models (tools/wild/naer.py,
+  // Within NEAR_R[QUAL.lvl] m of the eye (45, 70 and 100 m on Middels, Høy and Ultra; 29.10.2026 60, 90 and 120 m cost a third of a
+  // frame more in SwiftShader at Finnsnes' harbour) the ground gets its small things as instances of the Blender models (tools/wild/naer.py,
   // src/data/naer.b64): tufts of grass on the grass and the fields, heather on the heath, the fell and the bog, boulders in the scree and a
   // few on the bare rock, pebbles on the shingle and the sand, and rockweed lying on the foreshore under the high water. Where they go is
   // the land cover (the 'cover' layer) and the ground's own height and slope, cell by cell (NEAR_C m), decided by the cell's hash, so it
   // is the same for everyone; nothing on the roads, the buildings, the harbour units, the sites or under the snow (the stones stay). Built
   // in 32 m squares, three a frame, the nearest first, and all drawn in one instanced call per model; the grass and the heather take the
   // season's colour, everything the wet. Off on «Lav»; #near0 in the address: off.
-  const NEAR = {on:!/near0/.test(location.hash), M:null, P:null, sq:new Map(), dirty:true, bufs:null, n:0};
-  const NEAR_K = ['gress', 'lyng', 'stein0', 'stein1', 'stein2', 'tang'], NEAR_R = [0, 60, 90, 120], NEAR_C = [3, 3, 2.5, 2], NEAR_SQ = 32;
+  const NEAR = {on:!/near0/.test(location.hash), M:null, P:null, sq:new Map(), dirty:true, bufs:null, n:0, ms:0};
+  const NEAR_K = ['gress', 'lyng', 'stein0', 'stein1', 'stein2', 'tang'], NEAR_R = [0, 45, 70, 100], NEAR_C = [3, 3.5, 3, 2.5], NEAR_SQ = 32;
   function nearModels(){
     if (NEAR.M !== null) return NEAR.M;
     NEAR.M = false; if (typeof glbHas !== 'function' || !glbHas('naer')) return false;
@@ -57,7 +58,8 @@
     }
     return {o:[x0, z0], a:out, lvl:QUAL.lvl};
   }
-  function drawNear(VP, eye, t){
+  function drawNear(VP, eye, t){ const t0 = performance.now(); drawNear0(VP, eye, t); NEAR.ms = NEAR.ms * 0.9 + (performance.now() - t0) * 0.1; }
+  function drawNear0(VP, eye, t){
     if (!NEAR.on || QUAL.lvl === 0 || !treeExt() || !nearModels()) return;
     if (!NEAR.P){ try { NEAR.P = program(NEAR_VS, NEAR_FS, ['aP', 'aN', 'aC', 'aI', 'aJ'], 'naer'); } catch (e){ console.warn('naer', e.message || e); NEAR.on = false; return; } }
     const R = NEAR_R[QUAL.lvl], i0 = Math.floor((eye[0] - R) / NEAR_SQ), i1 = Math.floor((eye[0] + R) / NEAR_SQ), j0 = Math.floor((eye[2] - R) / NEAR_SQ), j1 = Math.floor((eye[2] + R) / NEAR_SQ);
