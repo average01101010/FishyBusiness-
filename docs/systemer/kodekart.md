@@ -1604,7 +1604,7 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 111 `chartNamesOf(pk, entry, sc, ox, oy)`
   - 124 `chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, part)`
 
-## `src/js/ui/03-map.js` (696 linjer)
+## `src/js/ui/03-map.js` (693 linjer)
 
 ---------- map ----------
 
@@ -1637,20 +1637,20 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 325 `renderBase()`
   - 339 `updateMapButtons()`
   - 350 `renderStatic()`
-  - 415 `portIcon(p, s, u)`
-  - 430 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
-  - 449 `scheduleStatic()`
-  - 454 `aisTrack(id, H)`
-  - 457 `aisInfo(n)`
-  - 470 `renderAisCard()`
-  - 471 `renderDyn()`
-  - 549 `pinAdd(mp)`
-  - 554 `pinOpen(id, fresh)`
-  - 574 `pinKb()`
-  - 605 `ptrUp(e)`
-  - 635 `unzoom()`
-  - 642 `portByLabel(pt)`
-  - 647 `addWaypoint(pt)`
+  - 412 `portIcon(p, s, u)`
+  - 427 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
+  - 446 `scheduleStatic()`
+  - 451 `aisTrack(id, H)`
+  - 454 `aisInfo(n)`
+  - 467 `renderAisCard()`
+  - 468 `renderDyn()`
+  - 546 `pinAdd(mp)`
+  - 551 `pinOpen(id, fresh)`
+  - 571 `pinKb()`
+  - 602 `ptrUp(e)`
+  - 632 `unzoom()`
+  - 639 `portByLabel(pt)`
+  - 644 `addWaypoint(pt)`
 
 ## `src/js/ui/03b-route.js` (219 linjer)
 
@@ -1857,12 +1857,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (746 linjer)
+## `src/js/ui/phone/07-patch.js` (751 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 739 `patch()`
+  - 744 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (87 linjer)
 
@@ -2661,7 +2661,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 85 `ridged(x, y)`
   - 86 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (418 linjer)
+## `src/js/view3d/01-shaders.js` (436 linjer)
 
 ---------- shaders ----------
 
@@ -2669,14 +2669,14 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **89** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
 - **113** the boat's own foam, when she has way on
 - **131** the whitecaps, as the sea shader finds them: the crest in standard deviations plus the mottle, over Monahan's threshold
-  - 365 `cloudStep(dt)`
-  - 371 `skyFrame(u, Hh, tn, bv)`
-  - 383 `compile(type, src, nm)`
-  - 389 `program(vs, fs, attrs, nm = '?')`
-  - 397 `buf(data, target, usage)`
-  - 402 `airSet(u, terr)`
-  - 407 `attr(loc, b, size)`
-  - 416 `upload(pos, col, idx)`
+  - 383 `cloudStep(dt)`
+  - 389 `skyFrame(u, Hh, tn, bv)`
+  - 401 `compile(type, src, nm)`
+  - 407 `program(vs, fs, attrs, nm = '?')`
+  - 415 `buf(data, target, usage)`
+  - 420 `airSet(u, terr)`
+  - 425 `attr(loc, b, size)`
+  - 434 `upload(pos, col, idx)`
 
 ## `src/js/view3d/02-mesh-terrain.js` (94 linjer)
 
@@ -2721,7 +2721,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 327 `buildTerrain()`
   - 336 `stream3d()`
 
-## `src/js/view3d/04-vec-packs.js` (260 linjer)
+## `src/js/view3d/04-vec-packs.js` (261 linjer)
 
 ---------- the coast's packs (01c-vec.js, part 4 of the coast-wide plan): buildings, roads, bridges, piers and breakwaters ----------
 
@@ -2733,19 +2733,19 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 75 `meshStep()`
   - 82 `staleMesh(kind)`
   - 83 `staleOver(pk)`
-  - 94 `updateFar()`
-  - 105 `meshH(m, x, z)`
-  - 110 `shadeH(x, z, dd)`
-  - 112 `shSeed(m, old)`
-  - 121 `updateShadows()`
-  - 150 `updateMid()`
-  - 155 `updateNear()`
-  - 158 `nearWanted()`
-  - 168 `fineWanted()`
-  - 181 `recolor(m, snow)`
-- **248** the breakwaters' armour stones: a mesh a breakwater, drawn only within STONE_R of the eye (beyond it a stone is less than a
-  - 252 `stonesOf(list, build)`
-  - 257 `drawStones(list, TM, eye)`
+  - 95 `updateFar()`
+  - 106 `meshH(m, x, z)`
+  - 111 `shadeH(x, z, dd)`
+  - 113 `shSeed(m, old)`
+  - 122 `updateShadows()`
+  - 151 `updateMid()`
+  - 156 `updateNear()`
+  - 159 `nearWanted()`
+  - 169 `fineWanted()`
+  - 182 `recolor(m, snow)`
+- **249** the breakwaters' armour stones: a mesh a breakwater, drawn only within STONE_R of the eye (beyond it a stone is less than a
+  - 253 `stonesOf(list, build)`
+  - 258 `drawStones(list, TM, eye)`
 
 ## `src/js/view3d/05-quays-breakwaters.js` (286 linjer)
 
@@ -3047,6 +3047,20 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 104 `lmStep()`
   - 137 `seaRing(u, eye, y, R, Hl)`
   - 147 `drawSea(VP, eye, t, far, drop)`
+
+## `src/js/view3d/17b-inland-water.js` (148 linjer)
+
+---------- the fresh water: lakes, ponds, rivers, streams and waterfalls (G2 of docs/planer/grafikk-natur-og-miljo.md) ----------
+
+- **1** the fresh water: lakes, ponds, rivers, streams and waterfalls (G2 of docs/planer/grafikk-natur-og-miljo.md)
+  - 26 `waterData(tx, ty)`
+  - 42 `waterMesh(P, A)`
+  - 44 `waterTile(tx, ty)`
+  - 80 `waterNear(W, ex, ez)`
+  - 108 `freeWater(m)`
+  - 111 `updateWater(eye)`
+  - 127 `staleWater(pk)`
+  - 131 `drawWater(VP, eye)`
 
 ## `src/js/view3d/18-setup.js` (148 linjer)
 
