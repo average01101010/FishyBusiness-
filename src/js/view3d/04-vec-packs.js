@@ -182,8 +182,8 @@
   // the satellites' summer colour (G3) in the game's colours: Sentinel-2's true colour (TCI, a linear stretch of the reflectance) to the
   // albedo the palette is set in, per channel (SATK, SATG fitted on Senja against the classes' summer colours); #sat0 in the address
   // leaves it out (for comparison)
-  const SATON = !/sat0/.test(location.hash), SATW = 0.85, SATK = [1, 1, 1], SATG = 1;
-  const satCol = (r, g, b) => [SATK[0] * Math.pow(r / 255, SATG), SATK[1] * Math.pow(g / 255, SATG), SATK[2] * Math.pow(b / 255, SATG)];
+  const SATON = !/sat0/.test(location.hash), SATW = 0.85, SATK = [0.8, 0.8, 1.02], SATG = [0.455, 0.455, 0.667];   // (fitted on the Finnsnes tile 29.10.2026: forest, heath, field, bog, lichen fell, bare ground)
+  const satCol = (r, g, b) => [SATK[0] * Math.pow(r / 255, SATG[0]), SATK[1] * Math.pow(g / 255, SATG[1]), SATK[2] * Math.pow(b / 255, SATG[2])];
   const birch0S = () => [0.25, 0.33, 0.22];
   function recolor(m, snow){
     const {slope, nz, col, h, fo, mat, cv, ck} = m;

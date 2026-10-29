@@ -61,14 +61,17 @@ def cover_tile(tx, ty):
     return np.where(np.kron(NL, np.ones((4, 4), bool))[:fny, :fnx], C, 0).astype(np.uint8)
 
 # the summer colour of the ground from Sentinel-2 (G3, tools/s2/s2.py: the median of the clear scenes from mid June to August 2021-2025
-# on the tile's 50 m cells), as three u8 layers sr, sg, sb (1-255; 0 where there is none: the sea, outside Norway, never clear). The
+# on the tile's 50 m cells), as three layers (below; 0 where there is none: the sea, outside Norway, never clear). The
 # scenes' own sun is taken out: they were taken near 11 in the morning, the sun in the south-southeast about (90 - latitude + 13)
 # degrees up, and a slope facing it is lighter, one facing away darker; each cell is divided by its light from the 50 m ground (35 %
 # from the sky, 65 % from the sun, against flat ground's), so the game's own sun and shadows are not laid on twice. Without the
 # mosaic (S2D has no file for the tile) the layers are 0 and the game colours the ground as before.
 S2D = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'out', 's2')
+# Packed as luma and chroma, as a JPEG is (the colour per channel was 1.9 MB a tile, this 0.65): sy the luma Y = (R + 2G + B) / 4 at 50 m
+# in 7 bits, sco and scg the chroma Co = (R - B) / 2 and Cg = (2G - R - B) / 4 at 100 m in 6 bits, each + 1 (0: none), as i16 layers
+# (the median predictor packs a smooth picture well). The game (03-berths-naust.js satAt) turns them back into R, G, B.
 def sat_tile(tx, ty, L):
-    f = os.path.join(S2D, f'{tx}_{ty}.npz'); z = {k: np.zeros((1000, 1000), np.uint8) for k in ('sr', 'sg', 'sb')}
+    f = os.path.join(S2D, f'{tx}_{ty}.npz'); z = dict(sy=np.zeros((1000, 1000), np.int16), sco=np.zeros((500, 500), np.int16), scg=np.zeros((500, 500), np.int16))
     if not os.path.exists(f): return z
     S = np.load(f); rgb = S['rgb'].astype(np.float32); n = S['n']
     a = np.abs(L['hgt'].astype(np.float32)); h = np.sign(L['hgt']) * np.where(a < 20, a / 2, 10 + (a - 20) * 2)
@@ -80,7 +83,12 @@ def sat_tile(tx, ty, L):
     sh = np.clip(nx * sx + ny * sy + nz * sz, 0, None) / sz
     I = np.clip(0.35 + 0.65 * sh, 0.45, 1.8)
     land = (L['cover'] > 0) & (n > 0)
-    for k, c in enumerate(('sr', 'sg', 'sb')): z[c] = np.where(land, np.clip(np.round(rgb[..., k] / I), 1, 255), 0).astype(np.uint8)
+    C = np.clip(rgb / I[..., None], 0, 255); R, G, B = C[..., 0], C[..., 1], C[..., 2]
+    Y = (R + 2 * G + B) / 4; Co = (R - B) / 2 + 128; Cg = (2 * G - R - B) / 4 + 128
+    z['sy'] = np.where(land, np.clip(np.round(Y / 2), 0, 127) + 1, 0).astype(np.int16)
+    w = land.reshape(500, 2, 500, 2).sum(axis=(1, 3)); h2 = lambda a: np.where(w > 0, (np.where(land, a, 0)).reshape(500, 2, 500, 2).sum(axis=(1, 3)) / np.maximum(w, 1), 0)
+    z['sco'] = np.where(w > 0, np.clip(np.round(h2(Co) / 4 - 0.5), 0, 63) + 1, 0).astype(np.int16)
+    z['scg'] = np.where(w > 0, np.clip(np.round(h2(Cg) / 4 - 0.5), 0, 63) + 1, 0).astype(np.int16)
     return z
 
 def tile(tx, ty):
@@ -176,7 +184,7 @@ def chart_tile(tx, ty):
     return {'coast1': (b1, k1, 'chart'), 'coast2': (b2, k2, 'chart'), 'names': (chart.names_bytes(nm), len(nm), 'chart')}
 
 GAME = dict(mask=(0.025, 'u8', 'sim', None), dc=(0.1, 'f32', 'sim', None), depth=(0.05, 'i16', 'sim', 'half'), hgt=(0.025, 'i16', 'view', 'hgt'), forest=(0.05, 'u8', 'view', None), cover=(0.05, 'u8', 'view', None),
-            sr=(0.05, 'u8', 'view', None), sg=(0.05, 'u8', 'view', None), sb=(0.05, 'u8', 'view', None))
+            sy=(0.05, 'i16', 'view', None), sco=(0.1, 'i16', 'view', None), scg=(0.1, 'i16', 'view', None))
 LAYERS = dict(mask=(0.025, 'u8', 'core', None), dc=(0.1, 'f32', 'core', None), expo=(0.5, 'u8', 'core', None), depth=(0.05, 'i16', 'sim', 'half'),
               hgt=(0.025, 'i16', 'view', 'hgt'), forest=(0.05, 'u8', 'view', None), cover=(0.05, 'u8', 'view', None))
 if __name__ == '__main__':

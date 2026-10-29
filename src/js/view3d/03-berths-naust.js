@@ -225,19 +225,22 @@
     for (let c = 0; c < COVN; c++) cv[k * COVS + c] = Math.round(COVW[c] / s * 255);
     ck[k] = 1;
   }
-  // the satellites' summer colour at a point (G3: the layers sr, sg, sb, Sentinel-2's median of the clear days from mid June to August,
-  // the scenes' own sun taken out, 1-255, 0 where there is none) into cv at o, o + 1, o + 2: the 2 x 2 nearest 50 m cells that have it,
-  // weighted bilinearly; 0, 0, 0 where none has it (the sea, outside Norway, a release before the layer). The blocks are the cover's.
+  // the satellites' summer colour at a point (G3: Sentinel-2's median of the clear days from mid June to August, the scenes' own sun
+  // taken out, coast.py sat_tile) into cv at o, o + 1, o + 2 as R, G, B 1-255; 0, 0, 0 where there is none (the sea, outside Norway, a
+  // release before the layers). Packed as luma sy (50 m, 7 bits) and chroma sco, scg (100 m, 6 bits), each + 1, 0 for none: each read
+  // over the nearest 2 x 2 cells that have it, weighted bilinearly, and turned back (G = Y + Cg, R = Y - Cg + Co, B = Y - Cg - Co).
+  function satRead(L, x, z){
+    const cm = L.c * 1000, gx = x / cm - 0.5, gz = z / cm - 0.5, ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz;
+    if (!mapIn(L, ix, iz) || !mapIn(L, ix + 1, iz + 1) || !covBlk(L, Math.floor(ix / L.n), Math.floor(iz / L.n)) || !covBlk(L, Math.floor((ix + 1) / L.n), Math.floor((iz + 1) / L.n))) return -1;
+    let v = 0, w = 0;
+    for (let dz = 0; dz <= 1; dz++) for (let dx = 0; dx <= 1; dx++){ const c = rcell(L, ix + dx, iz + dz); if (!c) continue; const q = (dx ? fx : 1 - fx) * (dz ? fz : 1 - fz) + 1e-4; v += (c - 1) * q; w += q; }
+    return w > 0.05 ? v / w : -1;
+  }
   function satAt(x, z, cv, o){
-    cv[o] = cv[o + 1] = cv[o + 2] = 0; const R = MAPD.L.sr, G = MAPD.L.sg, B = MAPD.L.sb; if (!R || !G || !B) return;
-    const cm = R.c * 1000, gx = x / cm - 0.5, gz = z / cm - 0.5, ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz;
-    if (!mapIn(R, ix, iz) || !mapIn(R, ix + 1, iz + 1) || !covBlk(R, Math.floor(ix / R.n), Math.floor(iz / R.n)) || !covBlk(R, Math.floor((ix + 1) / R.n), Math.floor((iz + 1) / R.n))) return;
-    let r = 0, g = 0, b = 0, w = 0;
-    for (let dz = 0; dz <= 1; dz++) for (let dx = 0; dx <= 1; dx++){
-      const v = rcell(R, ix + dx, iz + dz); if (!v) continue; const q = (dx ? fx : 1 - fx) * (dz ? fz : 1 - fz) + 1e-4;
-      r += v * q; g += rcell(G, ix + dx, iz + dz) * q; b += rcell(B, ix + dx, iz + dz) * q; w += q;
-    }
-    if (w > 0.05){ cv[o] = Math.max(1, Math.round(r / w)); cv[o + 1] = Math.max(1, Math.round(g / w)); cv[o + 2] = Math.max(1, Math.round(b / w)); }
+    cv[o] = cv[o + 1] = cv[o + 2] = 0; const SY = MAPD.L.sy, SO = MAPD.L.sco, SG = MAPD.L.scg; if (!SY || !SO || !SG) return;
+    const y = satRead(SY, x, z); if (y < 0) return; const co = satRead(SO, x, z), cg = satRead(SG, x, z); if (co < 0 || cg < 0) return;
+    const Y = y * 2 + 1, Co = co * 4 + 2 - 128, Cg = cg * 4 + 2 - 128, t = Y - Cg;
+    cv[o] = clamp(Math.round(t + Co), 1, 255); cv[o + 1] = clamp(Math.round(Y + Cg), 1, 255); cv[o + 2] = clamp(Math.round(t - Co), 1, 255);
   }
   // a block of the cover layer that is there, kept a second (positives only, as COVB)
   const COVK = new Map();
