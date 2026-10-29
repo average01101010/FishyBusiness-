@@ -171,7 +171,7 @@ def tile(tx, ty):
 # the vector layers of a tile (vectors.py), kept in out/national/vec/ (worked out again when a layer is missing); the lite profile has
 # the buildings within 2 km of the sea; the quays need the tile's mask and depth (L, as tile() gives it)
 VD = os.path.join(OUT, 'vec'); os.makedirs(VD, exist_ok=True)
-VKEYS = ('bld', 'road', 'bridge', 'pier', 'quay', 'coast', 'water')
+VKEYS = ('bld', 'road', 'bridge', 'pier', 'quay', 'coast', 'water', 'shore')
 def vec(tx, ty, L):
     f = os.path.join(VD, f'{tx}_{ty}.npz')
     if os.path.exists(f):
@@ -182,11 +182,12 @@ def vec(tx, ty, L):
     near = lambda x, y: dsea[min(1999, max(0, int(y // 25))), min(1999, max(0, int(x // 25)))] <= 2000
     v = vectors.build(tx, ty, near, L)
     import water; v['water'] = water.build(tx, ty, L)   # the fresh water (G2, water.py)
+    import shore; v['shore'] = shore.build(tx, ty, L)   # the beaches and the shingle (G10, shore.py)
     np.savez_compressed(f, **{k: np.frombuffer(b, np.uint8) for k, (b, n) in v.items()}, **{k + '_n': n for k, (b, n) in v.items()})
     return v
 # the vector layers the game takes, in a 'vec' pack per tile (01c-vec.js): the 'view' packs keep their hash, so a new vector release does
 # not fetch the heights again
-VGAME = ('bld', 'road', 'bridge', 'pier', 'quay', 'water')
+VGAME = ('bld', 'road', 'bridge', 'pier', 'quay', 'water', 'shore')
 # the NPC traffic of a tile (npc.py: harbours, fleets, grounds, routes), kept in out/national/npc/; worked out for all the tiles in
 # parallel before the packs are written (a tile of a city is half a minute)
 ND = os.path.join(OUT, 'npc'); os.makedirs(ND, exist_ok=True)

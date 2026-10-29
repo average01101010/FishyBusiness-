@@ -1,6 +1,6 @@
 """The waterline (G10): the small-boat harbours (view3d/17g-marina.js, src/data/marina.json) at Kristiansand, Bergen, Bodø and
 Hammerfest, and the quays with their wall bands and fittings and the timber piers on piles (05-quays-breakwaters.js pierInto,
-quayFit) there and at Finnsnes, summer noon. The boat lies on the water nearest each marina's middle; pictures in tests/out/havn_*.png.
+quayFit) there and at Finnsnes, and the beaches and shingle (17h-shore.js, tools/map/shore.py), summer noon. The boat lies on the water nearest each marina's middle; pictures in tests/out/havn_*.png.
 Checks: small boats lie moored at each marina, no GL errors, no page errors."""
 import asyncio, json, os
 from playwright.async_api import async_playwright
@@ -26,11 +26,12 @@ async def main():
             await pg.wait_for_function("G3.isActive()", timeout=120000); await pg.wait_for_timeout(20000)
             await pg.evaluate("() => { for (const b of document.querySelectorAll('button[data-close]')) if (/Til sjøs|To sea/.test(b.textContent)) b.click(); }")
             await pg.evaluate("() => { const c = G3._debug.cam; c.helm = false; c.dist = 70; c.pitch = 0.3; c.yaw = 2.3; }"); await pg.wait_for_timeout(8000)
-            await pg.screenshot(path=os.path.join(OUT, f'havn_{name}.png'), timeout=300000); R[name] = await pg.evaluate("G3._debug.marina")
+            await pg.screenshot(path=os.path.join(OUT, f'havn_{name}.png'), timeout=300000); R[name] = await pg.evaluate("G3._debug.marina"); R[name]['shore'] = await pg.evaluate("G3._debug.shore")
         R['gl'] = await pg.evaluate("G3._debug.glErr()"); R['glFirst'] = await pg.evaluate("G3._debug.glFirst")
         print(json.dumps(R))
         for name, *_, mar in SHOTS:
             if mar: check(R[name]['n'] > 0, f'{name}: small boats moored in the marina', R[name])
+        check(R['bergen']['shore']['meshes'] > 0, 'the beaches and the shingle lie on the shore at Bergen (needs the shore entry in the packs)', R['bergen']['shore'])
         check(R['gl'] == 0 and not R['glFirst'], 'no GL errors', (R['gl'], R['glFirst']))
         check(not errs, 'no page errors', errs[:2])
         await b.close()
