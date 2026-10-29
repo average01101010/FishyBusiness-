@@ -7,7 +7,8 @@
 #   the clearest MAXS per square; each warped to the tile's grid (GDAL picks the overview: 40 m for 50 m cells), the true colour (TCI)
 #   averaged, the classification (SCL) by its nearest. A cell counts where SCL says vegetation (4), bare ground (5), water (6) or
 #   unclassified (7); clouds (8, 9, 10), cloud shadows (3), snow (11), dark or topographic shadow (2) and no data (0, 1) do not.
-#   The colour is the median of the scenes that count (n of them); a cell none counts is 0.
+#   The colour is the median of the scenes that count (n of them); a cell none counts is 0. nir: the near infrared's median (B08,
+#   reflectance x 10 000 / 32), for the trees' leaf type (G4: broad leaves reflect it about twice as much as needles in summer).
 #   python3 tools/s2/s2.py tile tx,ty [...]     an .npz per tile in tools/s2/out/tiles (rgb 1000 x 1000 x 3 u8, rows north to south; n)
 #   python3 tools/s2/s2.py part k K             the k-th of K shares of the tiles in tools/map/dybde.json (the coast's 168), for s2.yml
 import os, sys, json, time, re, urllib.request, urllib.parse, numpy as np
@@ -73,18 +74,20 @@ def tile(tx, ty):
             if not a.any(): continue
             with rasterio.open('/vsicurl/' + S3 + p + 'SCL.tif') as src, WarpedVRT(src, crs='EPSG:32633', transform=tr, width=n, height=n, resampling=Resampling.nearest) as v:
                 c = v.read(1)
+            with rasterio.open('/vsicurl/' + S3 + p + 'B08.tif') as src, WarpedVRT(src, crs='EPSG:32633', transform=tr, width=n, height=n, resampling=Resampling.average) as v:
+                nir = v.read(1)
         except Exception as e:
             print('  skip', p[-30:], str(e)[:80], flush=True); continue
         ok = np.isin(c, GOOD) & (a.sum(0) > 0)
-        if ok.any(): rgbs.append(a.transpose(1, 2, 0)); oks.append(ok)
-    rgb = np.zeros((n, n, 3), np.uint8); cnt = np.zeros((n, n), np.uint8)
+        if ok.any(): rgbs.append(np.concatenate([a.transpose(1, 2, 0), np.clip(nir / 32, 0, 255).astype(np.uint8)[..., None]], axis=2)); oks.append(ok)
+    rgb = np.zeros((n, n, 4), np.uint8); cnt = np.zeros((n, n), np.uint8)
     if rgbs:
         for r0 in range(0, n, 100):   # the median in strips (14 scenes per square, up to 4 squares)
             st = np.stack([q[r0:r0 + 100] for q in rgbs]).astype(np.float32); ok = np.stack([q[r0:r0 + 100] for q in oks])
             st[~ok] = np.nan
             with np.errstate(all='ignore'): m = np.nanmedian(st, axis=0)
             rgb[r0:r0 + 100] = np.nan_to_num(m).clip(0, 255).astype(np.uint8); cnt[r0:r0 + 100] = ok.sum(0)
-    np.savez_compressed(os.path.join(OUT, f'{tx}_{ty}.npz'), rgb=rgb, n=cnt)
+    np.savez_compressed(os.path.join(OUT, f'{tx}_{ty}.npz'), rgb=rgb[..., :3], nir=rgb[..., 3], n=cnt)
     print(json.dumps({'tile': [tx, ty], 'squares': squares(tx, ty), 'scenes': len(rgbs), 'covered': round(float((cnt > 0).mean()), 3), 's': round(time.time() - t0)}), flush=True)
 
 if __name__ == '__main__':
