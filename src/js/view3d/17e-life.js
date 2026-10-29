@@ -158,6 +158,7 @@
         const x = p[0] + rx * 1.8, z = p[1] + rz * 1.8; if (Math.hypot(x - eye[0], z - eye[2]) > 4000 || cut(x - eye[0], z - eye[2])) continue; const y = terrH(x, z) + 0.7 - eye[1]; if (y + eye[1] < 1) continue;
         for (const sd of [-0.65, 0.65]){ if (w < 1300){ PB[w * 3] = x + fx * 2.1 + rx * sd - eye[0]; PB[w * 3 + 1] = y; PB[w * 3 + 2] = z + fz * 2.1 + rz * sd - eye[2]; PA[w] = A; w++; }
           if (r < 1300){ RB[r * 3] = x - fx * 2.1 + rx * sd - eye[0]; RB[r * 3 + 1] = y; RB[r * 3 + 2] = z - fz * 2.1 + rz * sd - eye[2]; r++; } } ncar += 1; }
+      if (!far) LIFE.nCar = ncar;   // (at night the cars are their lights)
       if (w) drawPts(w, gl.POINTS, VP, [1, 0.95, 0.85], 500, true);
       if (r){ PB.set(RB.subarray(0, r * 3)); for (let i = 0; i < r; i++) PA[i] = A * 0.8; drawPts(r, gl.POINTS, VP, LCOL.r, 300, true); }
     }
