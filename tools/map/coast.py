@@ -95,8 +95,9 @@ def sat_tile(tx, ty, L):
 # (25 m was 1.4 MB a forested tile, 50 m 0.4)
 # 'trees': bits 0-3 the share under trees (0-15), bits 4-6 the trees' height (0: under 4 m, then 4 m steps, 7: 28 m and over), bit 7
 # needles (where Sentinel-2's summer near infrared, tools/s2/s2.py nir, is under NIR_NEEDLE: broad leaves reflect about twice what
-# needles do). Norway's land only. Without the canopy file for the tile the layer is 0 and the game plants its old trees.
-TREED = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'out', 'trees'); NIR_NEEDLE = 75
+# needles do; calibrated 29.10.2026 on dense, tall forest: the birch at Finnsnes has a median of 103 (p25 93), the spruce at Namsos 73
+# (p75 81), Trondheim 75 and Kristiansand 76; 88 splits them). Norway's land only. Without the canopy file for the tile the layer is 0 and the game plants its old trees.
+TREED = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'out', 'trees'); NIR_NEEDLE = 88
 def trees_tile(tx, ty, L):
     out = np.zeros((1000, 1000), np.uint8); f = os.path.join(TREED, f'{tx}_{ty}.npz')
     if not os.path.exists(f): return {'trees': out}
