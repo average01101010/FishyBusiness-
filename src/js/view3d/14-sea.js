@@ -138,7 +138,7 @@
   // 8 bits hold it), rolls the birth windows, and FOAM_FS adds the foam made this frame; the sea shader reads it (foamBind, unit 7) and
   // ages it as exp(-age / tau). «#foam0» in the address turns it off (the sea as before, for the comparison); it is off too on the lite
   // and the basic sea, on the low quality (the far shader draws the near sea there), and when no framebuffer can be made.
-  const FOAM = {on:!/foam0/.test(location.hash), ok:false, N:0, M:600, tex:[null, null], fb:[null, null], r:0, ox:0, oz:0, t0:[0, 0], win:[160, 32], tau:[9, 3.5], now:[0, 0], prog:null, pB:null, fresh:true, why:'', ms:0, sh:[0, 0], n:0, G:[0, 0], C:[0, 0], gs:[0, 0], cur:{x:0, y:0}, curT:-1e9};
+  const FOAM = {on:!/foam0/.test(location.hash), ok:false, N:0, M:600, tex:[null, null], fb:[null, null], r:0, ox:0, oz:0, t0:[0, 0], win:[160, 32], tau:[14, 3.5], now:[0, 0], prog:null, pB:null, fresh:true, why:'', ms:0, sh:[0, 0], n:0, G:[0, 0], C:[0, 0], gs:[0, 0], cur:{x:0, y:0}, curT:-1e9};
   const foamLive = () => FOAM.on && FOAM.ok;
   const foamSize = () => QUAL.lvl >= 2 ? 1024 : 512;
   function foamFree(){ for (let k = 0; k < 2; k++){ if (FOAM.fb[k]) gl.deleteFramebuffer(FOAM.fb[k]); if (FOAM.tex[k]) gl.deleteTexture(FOAM.tex[k]); FOAM.fb[k] = FOAM.tex[k] = null; } FOAM.ok = false; }

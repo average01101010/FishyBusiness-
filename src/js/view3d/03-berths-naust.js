@@ -246,7 +246,7 @@
   }
   // a block of the cover layer that is there, kept a second (positives only, as COVB)
   const COVK = new Map();
-  function covBlk(LC, bx, by){ const key = bx * 8192 + by, t = COVK.get(key), now = performance.now(); if (t && now - t < 1000) return true; if (!mapHasBlock(LC, bx, by)) return false; if (COVK.size > 64) COVK.clear(); COVK.set(key, now); return true; }
+  function covBlk(LC, bx, by){ const key = (bx * 8192 + by) * 64 + LC.id, t = COVK.get(key), now = performance.now(); if (t && now - t < 1000) return true; if (!mapHasBlock(LC, bx, by)) return false; if (COVK.size > 64) COVK.clear(); COVK.set(key, now); return true; }
   // the classes of the nearest ring of cells (2 to 10 cells out, 100-500 m) that has any, counted into COVW; the sum (0 if none). The
   // land within 50-100 m of the shore often has no class (ESA's polygons stop short of OpenStreetMap's coastline), and the old rule
   // there made dark patches and bands where the fells are bare (Hammerfest, 28.10.2026)

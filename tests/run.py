@@ -23,7 +23,7 @@ LOGS = os.path.join(HERE, 'out', 'logs')
 os.makedirs(LOGS, exist_ok=True)
 
 # draw 3D: they look at the 3D view itself (frames, camera, quays, cranes, pumps)
-D3 = ['anchor3d', 'skytest', 'jigshot', 'naust3dtest', 'pubtest', 'helmjit', 'anchorlight3d', 'saytest', 'yardtest', 'dbg23o', 'trackfollow', 'tral3d', 'seatrytest', 'sitetest', 'coast3d', 'ultratest', 'camtest', 'moortest', 'landtest', 'bunkertest', 'heattest', 'vessel3d', 'unittest', 'sea3d', 'teleport3d', 'lighttest', 'kinotest', 'haultest', 'vectest', 'potshot', 'aurorashot', 'penshot', 'deckshot', 'workshot', 'brotest']
+D3 = ['wakeshot', 'anchor3d', 'skytest', 'jigshot', 'naust3dtest', 'pubtest', 'helmjit', 'anchorlight3d', 'saytest', 'yardtest', 'dbg23o', 'trackfollow', 'tral3d', 'seatrytest', 'sitetest', 'coast3d', 'ultratest', 'camtest', 'moortest', 'landtest', 'bunkertest', 'heattest', 'vessel3d', 'unittest', 'sea3d', 'teleport3d', 'lighttest', 'kinotest', 'haultest', 'vectest', 'potshot', 'aurorashot', 'penshot', 'deckshot', 'workshot', 'brotest']
 LITE = ['boktest', 'lotttest', 'skattetest', 'driftsplan2test', 'driftsplan2ui', 'driftsplan2map', 'slidertest', 'anchorswing', 'selfcrew', 'crewclip', 'regmarktest', 'dockrow', 'hulltest', 'dyntest', 'crewlifetest', 'crewwalk', 'walktest', 'tabtest', 'navbarshot', 'skiptest', 'synctest', 'installtest', 'looktest', 'hbtest', 'naustclear', 'rectest', 'ptowtest', 'seaworktest', 'hailtest', 'gbtest', 'sharetest', 'friendtest', 'searchtest', 'savestest', 'caretest', 'yardupgtest', 'jigalongtest', 'heatgeartest', 'anchortest', 'drifttest', 'driftuitest', 'plantsaytest', 'cashfxtest', 'autonavtest', 'placetest', 'sidetab', 'guidetest', 'stedertest', 'icestep', 'heatpick', 'peergear', 'turtest', 'posttest', 'merketest', 'fartstidtest', 'maletest', 'climtest', 'sqltest', 'cloudtest', 'guesttest', 'kjoptest', 'r4test', 'tutdrift', 'worldtest', 'pushtest', 'feedbacktest', 'hudtest', 'obstest', 'marktest', 'rorbutest', 'admintest', 'tut', 'starttest', 'seasontest', 'uishots', 'quotatest', 'rulestest', 'npctest', 'havntest', 'keeptest', 'tidetest', 'trip2', 'docktest', 'booktest', 'decktest', 'geartest', 'loretest', 'tattest', 'towtest', 'airtest', 'fleet2test', 'fleet3test', 'opsowntest', 'routetest', 'naustleia',
         'shoptest', 'selltest', 'timetest', 'worktest', 'vesseltest', 'fuelcal', 'bunktest', 'lanterntest', 'streaktest', 'fixtest', 'hailltest', 'harbourtest', 'simday', 'calib', 'kvtest', 'progweek', 'seatest', 'stabtest', 'projtest', 'boottest', 'maptest', 'mig2test', 'charttest', 'helmtest', 'soundtest', 'sleeptest', 'pwatest', 'bktest']
 # they measure milliseconds, so they run alone at the end, when nothing else takes the CPU
@@ -63,7 +63,7 @@ COVER = {
   'src/js/view3d/17b-inland-water.js':['dbg23o', 'vectest', 'lighttest'],
   'src/js/view3d/16-motion.js':['trackfollow', 'routetest', 'helmjit'],
   'src/js/view3d/15-env-mooring.js':['moortest', 'skytest'],
-  'src/js/view3d/14-sea.js':['sea3d', 'seatrytest'],
+  'src/js/view3d/14-sea.js':['sea3d', 'seatrytest', 'wakeshot'],
   'src/js/view3d/13-instruments.js':['heattest', 'dbg23o'],
   'src/js/view3d/12-skiff.js':['dbg23o', 'deckshot'],
   'src/js/view3d/11-bunker.js':['bunkertest'],

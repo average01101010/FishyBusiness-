@@ -13,16 +13,16 @@ async def main():
         b = await p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
         pg = await (await b.new_context(viewport={'width': 1000, 'height': 700})).new_page(); errs = []
         pg.on('pageerror', lambda e: errs.append(str(e)))
-        await boot(pg)
+        await boot(pg, GAME + '#qfix')   # (the quality held at high: on low the foam map is off, and SwiftShader's slow frames would take it there)
         q = await pg.evaluate("""async () => { const q = P(69.2765, 15.9425); await mapNeed(q, MAPD.simR); const b = S.boat; b.status = 'idle'; b.port = null; S.plan = null; S.draft = [];
-          b.pos = {x:q.x, y:q.y}; b.heading = Math.PI * 0.9; b.v = 0; S.settings.manual = true; if (!G3.isActive()) G3.show(true); return q; }""")
+          b.pos = {x:q.x, y:q.y}; b.heading = Math.PI * 0.9; b.v = 0; S.settings.manual = true; S.t = Math.round((Date.UTC(2027, 6, 10, 0) + 12 * 3.6e6 - EPOCH) / 6e4); if (!G3.isActive()) G3.show(true); return q; }""")
         await pg.wait_for_function("G3.isActive()", timeout=120000); await pg.wait_for_timeout(20000)
         async def leg(name, thr, rud, secs):
             await pg.evaluate("([t, r]) => { helmTake(); S.helm.thr = t; S.helm.rud = r; }", [thr, rud])
             await pg.wait_for_timeout(secs * 1000)
             await pg.evaluate("() => { const c = G3._debug.cam; c.helm = false; c.dist = 260; c.pitch = 1.15; }"); await pg.wait_for_timeout(2500)
             await pg.screenshot(path=os.path.join(OUT, f'wake_{name}.png'))
-            return await pg.evaluate("() => { const D = G3._debug, F = D.foam; return {kn: +(S.helm.v || 0).toFixed(1), u: S.boat.dyn ? +S.boat.dyn.u.toFixed(2) : null, foam: F ? {ok: F.ok, G: F.G.map(v => +v.toFixed(1)), cur: F.cur && [+(+F.cur.x).toFixed(2), +(+F.cur.y).toFixed(2)]} : null}; }")
+            return await pg.evaluate("() => { const D = G3._debug, F = D.foam; return {lvl: D.QUAL.lvl, kn: +(S.helm.v || 0).toFixed(1), u: S.boat.dyn ? +S.boat.dyn.u.toFixed(2) : null, foam: F ? {ok: F.ok, G: F.G ? F.G.map(v => +v.toFixed(1)) : null, cur: F.cur && [+(+F.cur.x).toFixed(2), +(+F.cur.y).toFixed(2)]} : null}; }")
         R = {}
         R['ahead'] = await leg('ahead', 0.7, 0, 14)
         R['turn'] = await leg('turn', 0.7, 0.8, 12)
