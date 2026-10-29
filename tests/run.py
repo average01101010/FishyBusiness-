@@ -5,6 +5,7 @@ before publishing.
   python3 tests/run.py smoke test ...     just the tests you name
   python3 tests/run.py full               the whole regression (before publishing)
   python3 tests/run.py full --3d          the same with 3D drawn in every test
+  node tests/unit/run.mjs                 the unit tests of the core alone (run.py runs them first when src/js/core/ changed)
 
 The tests that do not look at 3D run with KYST_LITE=1: the game runs as before, but no 3D frame is drawn (#no3d), and that is
 most of the time a test takes with SwiftShader. They run two at a time, first. Then the 3D tests (and tut.py, which draws 3D)
@@ -157,9 +158,22 @@ def main():
     if args[0] == 'changed':
         files, names = changed_tests()
         print('Endrede filer: ' + (', '.join(files) or 'ingen'))
-        if not names: print('Ingen tester dekker disse endringene. Ingenting å kjøre.'); sys.exit(0)
+        if not names and not any(f.startswith(('src/js/core/', 'tests/unit/')) for f in files): print('Ingen tester dekker disse endringene. Ingenting å kjøre.'); sys.exit(0)
     else: names = [a.replace('.py', '') for a in args[1:]] if args[0] == 'smoke' else D3 + LITE
     names = list(dict.fromkeys(names))
+    # the unit tests of the core (tests/unit/run.mjs, 29.10.2026): Node only, a few seconds, no build. They run first when the core or
+    # the unit tests changed, in every full run, and in smoke when «unit» is named
+    unit = args[0] == 'full' or (args[0] == 'changed' and any(f.startswith(('src/js/core/', 'tests/unit/')) for f in files)) or 'unit' in names
+    names = [n for n in names if n != 'unit']
+    unit_bad = False
+    if unit:
+        t0 = time.time(); u = subprocess.run(['node', os.path.join(HERE, 'unit', 'run.mjs')], cwd=ROOT, capture_output=True, text=True)
+        open(os.path.join(LOGS, 'unit.txt'), 'w').write(u.stdout + u.stderr)
+        unit_bad = u.returncode != 0
+        print('%-4s %-12s %5.0f s  Node      %s' % ('FEIL' if unit_bad else 'OK', 'unit', time.time() - t0, (u.stdout.strip().splitlines() or [''])[-1]), flush=True)
+        for l in u.stdout.splitlines():
+            if l.startswith('FEIL'): print('       ' + l[:300])
+        if not names: sys.exit(1 if unit_bad else 0)
     missing = [n for n in names if not os.path.exists(os.path.join(HERE, n + '.py'))]
     if missing: print('Finner ikke: ' + ', '.join(missing)); sys.exit(2)
     solo = [n for n in names if n in SOLO]
@@ -180,7 +194,7 @@ def main():
         r = run(n, n not in D3 and not all3d); report(r); res.append(r)
     for n in solo:
         r = run(n, not (all3d or n in D3)); report(r); res.append(r)
-    bad = [r['name'] for r in res if r['status'] == 'FEIL']
+    bad = (['unit'] if unit_bad else []) + [r['name'] for r in res if r['status'] == 'FEIL']
     les = [r['name'] for r in res if r['status'] == 'LES']
     print('\n%d OK, %d FEIL, %d å lese, på %.0f s.%s%s' % (sum(r['status'] == 'OK' for r in res), len(bad), len(les), time.time() - t0,
           (' Feil i: ' + ', '.join(bad) + '.') if bad else '', (' Les: ' + ', '.join(les) + '.') if les else ''))
