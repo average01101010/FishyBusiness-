@@ -125,11 +125,12 @@ function mapDecode(L, raw){
   // depth in half metres; the ground's height in half metres to 10 m and then 2 m steps (the page's own packing of hgt), kept as
   // Int16 decimetres (L.k = 0.1)
   if (L.dec === 'half'){ const out = new Float32Array(N); for (let i = 0; i < N; i++) out[i] = q[i] / 2; return out; }
+  if (L.dec === 'raw') return Int16Array.from(q);   // (the satellites' colour, G3: the values as they are)
   const out = new Int16Array(N); for (let i = 0; i < N; i++){ const a = Math.abs(q[i]); out[i] = Math.sign(q[i]) * (a < 20 ? a * 5 : 100 + (a - 20) * 20); }
   return out;
 }
 function mapBlock(L, bx, by){
-  const k = gridKey(bx, by) * 16 + L.id; let a = MAPD.blk.get(k);   // room for 16 layers (there are 10 with 'deep')
+  const k = gridKey(bx, by) * 64 + L.id; let a = MAPD.blk.get(k);   // room for 64 layers (there are 14 with the satellites' three)
   if (a){ MAPD.blk.delete(k); MAPD.blk.set(k, a); return a; }
   const pk = mapPackOf(L, bx, by), e = pk && pk.idx && pk.idx.get(L.name + ':' + bx + ':' + by);
   if (!pk || !pk.buf || !e){ MAPD.miss++; const er = new Error('map: ' + L.name + ' block ' + bx + ',' + by + (pk ? (pk.buf ? ' is not in ' : ' is not loaded (') + pk.file + (pk.buf ? '' : ')') : ' has no pack')); if (pk && !pk.buf) er.pk = pk; throw er; }

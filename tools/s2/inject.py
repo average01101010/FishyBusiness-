@@ -7,8 +7,8 @@ from pack import raw_deflate, med16
 from frame import BLOCK
 def inject(d, tiles):
     mp = os.path.join(d, 'manifest.json'); man = json.load(open(mp)); C = man['layers']['cover']; n = C['n']
-    man['layers']['sy'] = dict(C, type='i16')
-    for k in ('sco', 'scg'): man['layers'][k] = dict(C, type='i16', c=C['c'] * 2, ix0=C['ix0'] // 2, iy0=C['iy0'] // 2, nx=C['nx'] // 2, ny=C['ny'] // 2, n=n // 2)
+    man['layers']['sy'] = dict(C, type='i16', dec='raw')
+    for k in ('sco', 'scg'): man['layers'][k] = dict(C, type='i16', dec='raw', c=C['c'] * 2, ix0=C['ix0'] // 2, iy0=C['iy0'] // 2, nx=C['nx'] // 2, ny=C['ny'] // 2, n=n // 2)
     for pk in man['packs']:
         if pk['kind'] != 'view' or tuple(pk['tile']) not in tiles: continue
         tx, ty = pk['tile']; L = coast.tile(tx, ty); S = coast.sat_tile(tx, ty, L)
