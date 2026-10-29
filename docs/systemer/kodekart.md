@@ -49,7 +49,7 @@ Seksjonene og funksjonene i hver kildefil, med linjenummer, i rekkefølgen malen
   - 360 `bridgeUnderUnit(br, extra)`
   - 365 `portApproach(pt)`
 
-## `src/js/core/01b-mapdata.js` (198 linjer)
+## `src/js/core/01b-mapdata.js` (202 linjer)
 
 MAP DATA (phase K3 of the coast plan): the rasters in 10 km blocks, fetched in packs from map/
 
@@ -59,35 +59,35 @@ MAP DATA (phase K3 of the coast plan): the rasters in 10 km blocks, fetched in p
   - 24 `mapIdb()`
   - 28 `idbDo(mode, f)`
   - 29 `mapFetch(pk)`
-- **44** the manifest and the packs
-  - 45 `mapStart(base)`
-  - 61 `mapLoad(pk)`
-  - 72 `mapPackOf(L, bx, by)`
-  - 73 `mapPacksIn(kind, x0, y0, x1, y1)`
-  - 81 `mapSimPacks(p, r)`
-  - 82 `mapReadyAt(p, r)`
-  - 84 `mapSimAt(p)`
-  - 85 `mapViewAt(p)`
-  - 88 `mapKindIn(kind, p, memo)`
-  - 90 `mapNeed(p, r)`
-  - 96 `mapPreload(pts, kinds, onProgress)`
-  - 113 `mapLoadKind(kind)`
-- **114** blocks
-  - 115 `med16(raw, n)`
-  - 120 `mapDecode(L, raw)`
-  - 131 `mapBlock(L, bx, by)`
-  - 143 `mapHasBlock(L, bx, by)`
-  - 146 `mapBlockKnown(L, bx, by)`
-  - 148 `rcell(L, ix, iy)`
-  - 154 `rbil(L, p)`
-  - 159 `rbilM(L, x, z)`
-  - 164 `mapHasM(L, x0, z0, x1, z1)`
-  - 171 `mapVec(pk, name)`
-  - 178 `mapViewReady(x0, y0, x1, y1, then, kinds)`
-  - 185 `simAreaReady()`
-  - 193 `mapDrop(pk)`
+- **47** the manifest and the packs
+  - 48 `mapStart(base)`
+  - 64 `mapLoad(pk)`
+  - 75 `mapPackOf(L, bx, by)`
+  - 76 `mapPacksIn(kind, x0, y0, x1, y1)`
+  - 84 `mapSimPacks(p, r)`
+  - 85 `mapReadyAt(p, r)`
+  - 87 `mapSimAt(p)`
+  - 88 `mapViewAt(p)`
+  - 91 `mapKindIn(kind, p, memo)`
+  - 93 `mapNeed(p, r)`
+  - 99 `mapPreload(pts, kinds, onProgress)`
+  - 116 `mapLoadKind(kind)`
+- **117** blocks
+  - 118 `med16(raw, n)`
+  - 123 `mapDecode(L, raw)`
+  - 135 `mapBlock(L, bx, by)`
+  - 147 `mapHasBlock(L, bx, by)`
+  - 150 `mapBlockKnown(L, bx, by)`
+  - 152 `rcell(L, ix, iy)`
+  - 158 `rbil(L, p)`
+  - 163 `rbilM(L, x, z)`
+  - 168 `mapHasM(L, x0, z0, x1, z1)`
+  - 175 `mapVec(pk, name)`
+  - 182 `mapViewReady(x0, y0, x1, y1, then, kinds)`
+  - 189 `simAreaReady()`
+  - 197 `mapDrop(pk)`
 
-## `src/js/core/01c-vec.js` (211 linjer)
+## `src/js/core/01c-vec.js` (214 linjer)
 
 THE COAST'S VECTORS (part 4 of the coast-wide plan, 03.10.2026): buildings, roads, bridges, piers and quay faces
 
@@ -95,17 +95,17 @@ THE COAST'S VECTORS (part 4 of the coast-wide plan, 03.10.2026): buildings, road
   - 23 `inQuad(Q, x, z)`
   - 28 `pierBoxes(out, kind, n, X, Z, src)`
   - 45 `vecDecode(D)`
-  - 117 `flyteTile(tx, ty)`
-  - 126 `vecFinish(r)`
-  - 134 `vecWorker()`
-  - 151 `vecInput(pk, inflate)`
-  - 159 `vecDecodeHere(pk)`
-  - 161 `vecTile(tx, ty)`
-  - 170 `vecTilesIn(x0, z0, x1, z1)`
-  - 178 `roadsIn(x0, z0, x1, z1)`
-  - 191 `bridgesIn(x0, z0, x1, z1)`
-  - 193 `vecWant(x0, y0, x1, y1, then)`
-  - 201 `vecPrune(pts, R = 60)`
+  - 120 `flyteTile(tx, ty)`
+  - 129 `vecFinish(r)`
+  - 137 `vecWorker()`
+  - 154 `vecInput(pk, inflate)`
+  - 162 `vecDecodeHere(pk)`
+  - 164 `vecTile(tx, ty)`
+  - 173 `vecTilesIn(x0, z0, x1, z1)`
+  - 181 `roadsIn(x0, z0, x1, z1)`
+  - 194 `bridgesIn(x0, z0, x1, z1)`
+  - 196 `vecWant(x0, y0, x1, y1, then)`
+  - 204 `vecPrune(pts, R = 60)`
 
 ## `src/js/core/01d-coast.js` (148 linjer)
 
@@ -1303,23 +1303,23 @@ gear care: wear, mending, hooks, jig tackle, and the tackle shop's service and b
   - 403 `leiaPocketOut(e, sd, st)`
   - 413 `leiaRoute0(a, b, aPort, bPort, pocket, opt0)`
 
-## `src/js/core/11b-obstacles.js` (219 linjer)
+## `src/js/core/11b-obstacles.js` (226 linjer)
 
 WHAT A ROUTE MUST NOT SAIL THROUGH (Jonas 05.10.2026: «autoruter aldri skal gå gjennom 3d elementer eller landmasse», along
 
 - **1** WHAT A ROUTE MUST NOT SAIL THROUGH (Jonas 05.10.2026: «autoruter aldri skal gå gjennom 3d elementer eller landmasse», along
-  - 23 `obsBridge(br)`
-  - 45 `obsIndex()`
-  - 77 `obsDist(o, ax, az, bx, bz)`
-  - 93 `obsCounts(o, air)`
-  - 99 `obsSegHit(a, b, clr)`
-  - 121 `obsRock(a, b)`
-  - 127 `obsSafe(a, b, ref)`
-  - 137 `obsWays(o, a, b)`
-  - 172 `obsDetour(a, b, depth = 3, ref)`
-  - 186 `obsRoute(a, wps)`
-  - 193 `obsLoad(pts, ms = 4000)`
-  - 208 `obsSail(pl, b)`
+  - 25 `obsBridge(br)`
+  - 47 `obsIndex()`
+  - 84 `obsDist(o, ax, az, bx, bz)`
+  - 100 `obsCounts(o, air)`
+  - 106 `obsSegHit(a, b, clr)`
+  - 128 `obsRock(a, b)`
+  - 134 `obsSafe(a, b, ref)`
+  - 144 `obsWays(o, a, b)`
+  - 179 `obsDetour(a, b, depth = 3, ref)`
+  - 193 `obsRoute(a, wps)`
+  - 200 `obsLoad(pts, ms = 4000)`
+  - 215 `obsSail(pl, b)`
 
 ## `src/js/core/11c-leinett.js` (98 linjer)
 
@@ -1604,7 +1604,7 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 111 `chartNamesOf(pk, entry, sc, ox, oy)`
   - 124 `chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, part)`
 
-## `src/js/ui/03-map.js` (693 linjer)
+## `src/js/ui/03-map.js` (699 linjer)
 
 ---------- map ----------
 
@@ -1637,20 +1637,20 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 325 `renderBase()`
   - 339 `updateMapButtons()`
   - 350 `renderStatic()`
-  - 412 `portIcon(p, s, u)`
-  - 427 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
-  - 446 `scheduleStatic()`
-  - 451 `aisTrack(id, H)`
-  - 454 `aisInfo(n)`
-  - 467 `renderAisCard()`
-  - 468 `renderDyn()`
-  - 546 `pinAdd(mp)`
-  - 551 `pinOpen(id, fresh)`
-  - 571 `pinKb()`
-  - 602 `ptrUp(e)`
-  - 632 `unzoom()`
-  - 639 `portByLabel(pt)`
-  - 644 `addWaypoint(pt)`
+  - 418 `portIcon(p, s, u)`
+  - 433 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
+  - 452 `scheduleStatic()`
+  - 457 `aisTrack(id, H)`
+  - 460 `aisInfo(n)`
+  - 473 `renderAisCard()`
+  - 474 `renderDyn()`
+  - 552 `pinAdd(mp)`
+  - 557 `pinOpen(id, fresh)`
+  - 577 `pinKb()`
+  - 608 `ptrUp(e)`
+  - 638 `unzoom()`
+  - 645 `portByLabel(pt)`
+  - 650 `addWaypoint(pt)`
 
 ## `src/js/ui/03b-route.js` (219 linjer)
 
@@ -1857,12 +1857,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (751 linjer)
+## `src/js/ui/phone/07-patch.js` (765 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 744 `patch()`
+  - 758 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (87 linjer)
 
@@ -2661,22 +2661,22 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 85 `ridged(x, y)`
   - 86 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (436 linjer)
+## `src/js/view3d/01-shaders.js` (465 linjer)
 
 ---------- shaders ----------
 
 - **1** shaders
-- **89** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
-- **113** the boat's own foam, when she has way on
-- **131** the whitecaps, as the sea shader finds them: the crest in standard deviations plus the mottle, over Monahan's threshold
-  - 383 `cloudStep(dt)`
-  - 389 `skyFrame(u, Hh, tn, bv)`
-  - 401 `compile(type, src, nm)`
-  - 407 `program(vs, fs, attrs, nm = '?')`
-  - 415 `buf(data, target, usage)`
-  - 420 `airSet(u, terr)`
-  - 425 `attr(loc, b, size)`
-  - 434 `upload(pos, col, idx)`
+- **100** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
+- **132** the boat's own foam, when she has way on
+- **150** the whitecaps, as the sea shader finds them: the crest in standard deviations plus the mottle, over Monahan's threshold
+  - 408 `cloudStep(dt)`
+  - 414 `skyFrame(u, Hh, tn, bv)`
+  - 426 `compile(type, src, nm)`
+  - 432 `program(vs, fs, attrs, nm = '?')`
+  - 440 `buf(data, target, usage)`
+  - 445 `airSet(u, terr)`
+  - 450 `attr(loc, b, size)`
+  - 463 `upload(pos, col, idx)`
 
 ## `src/js/view3d/02-mesh-terrain.js` (94 linjer)
 
@@ -2687,7 +2687,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **45** terrain
   - 76 `terrRaw(x, z, dil)`
 
-## `src/js/view3d/03-berths-naust.js` (349 linjer)
+## `src/js/view3d/03-berths-naust.js` (370 linjer)
 
 ---------- The water at the berths the company holds in the coast's harbours (core/07e-havn.js) ----------
 
@@ -2706,22 +2706,24 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 154 `unitTerr(x, z, h0)`
   - 179 `terrCoarse(x, z, dil)`
   - 189 `forestAt(x, z)`
-  - 206 `coverAt(x, z, cv, ck, k)`
-  - 228 `covBlk(LC, bx, by)`
-  - 232 `coverRing(LC, ix, iz)`
-  - 242 `coverClass(x, z)`
-  - 252 `meshBegin(x0, z0, sx, sz, n, hf)`
-  - 256 `meshRows(B, until)`
-  - 268 `meshEnd(B)`
-  - 280 `makeMesh(x0, z0, sx, sz, n, hf)`
-  - 281 `freeMesh(m)`
-  - 283 `nearSurf(M, x, z)`
-  - 293 `unitPatch(U, M)`
-  - 318 `buildPatches()`
-  - 327 `buildTerrain()`
-  - 336 `stream3d()`
+  - 207 `coverAt(x, z, cv, ck, k)`
+  - 232 `satRead(L, x, z)`
+  - 241 `satAt(x, z, cv, o)`
+  - 249 `covBlk(LC, bx, by)`
+  - 253 `coverRing(LC, ix, iz)`
+  - 263 `coverClass(x, z)`
+  - 273 `meshBegin(x0, z0, sx, sz, n, hf)`
+  - 277 `meshRows(B, until)`
+  - 289 `meshEnd(B)`
+  - 301 `makeMesh(x0, z0, sx, sz, n, hf)`
+  - 302 `freeMesh(m)`
+  - 304 `nearSurf(M, x, z)`
+  - 314 `unitPatch(U, M)`
+  - 339 `buildPatches()`
+  - 348 `buildTerrain()`
+  - 357 `stream3d()`
 
-## `src/js/view3d/04-vec-packs.js` (261 linjer)
+## `src/js/view3d/04-vec-packs.js` (283 linjer)
 
 ---------- the coast's packs (01c-vec.js, part 4 of the coast-wide plan): buildings, roads, bridges, piers and breakwaters ----------
 
@@ -2742,12 +2744,12 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 156 `updateNear()`
   - 159 `nearWanted()`
   - 169 `fineWanted()`
-  - 182 `recolor(m, snow)`
-- **249** the breakwaters' armour stones: a mesh a breakwater, drawn only within STONE_R of the eye (beyond it a stone is less than a
-  - 253 `stonesOf(list, build)`
-  - 258 `drawStones(list, TM, eye)`
+  - 188 `recolor(m, snow)`
+- **271** the breakwaters' armour stones: a mesh a breakwater, drawn only within STONE_R of the eye (beyond it a stone is less than a
+  - 275 `stonesOf(list, build)`
+  - 280 `drawStones(list, TM, eye)`
 
-## `src/js/view3d/05-quays-breakwaters.js` (286 linjer)
+## `src/js/view3d/05-quays-breakwaters.js` (337 linjer)
 
 ---------- villages and quays ----------
 
@@ -2757,17 +2759,23 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 39 `marksStatics()`
   - 49 `buildStatics()`
   - 88 `pierInto(m, q, tag)`
-  - 101 `slabInto(m, pts, tag, cut)`
-  - 117 `bridgeInto(m, br, tag)`
-- **158** breakwaters (the user's wish 03.10.2026: they shelter the boats at the quays, and should look it)
-  - 166 `rockInto(m, x, y, z, sx, sy, sz, seed, k)`
-  - 181 `moundTop(x, z)`
-  - 190 `moundInto(m, pts, seed, unit, tag, sm)`
-- **254** harbour fittings along the berth faces: tyres hung on chains, a timber fender beam, the yellow edge and bollards
-  - 256 `obox(nb, c, u, n, len, wid, y0, h, k)`
-  - 262 `buildHarbourFittings()`
+  - 109 `pierPiles(m, q)`
+  - 117 `fitAdd(tag, f)`
+  - 118 `fitDrop(tag)`
+  - 119 `drawFits(eye, VP)`
+  - 131 `seaOff(cx, cz, nx, nz, L, ax, az)`
+  - 134 `quayFit(m, x, z, ax, az, nx, nz, L)`
+  - 149 `slabInto(m, pts, tag, cut)`
+  - 168 `bridgeInto(m, br, tag)`
+- **209** breakwaters (the user's wish 03.10.2026: they shelter the boats at the quays, and should look it)
+  - 217 `rockInto(m, x, y, z, sx, sy, sz, seed, k)`
+  - 232 `moundTop(x, z)`
+  - 241 `moundInto(m, pts, seed, unit, tag, sm)`
+- **305** harbour fittings along the berth faces: tyres hung on chains, a timber fender beam, the yellow edge and bollards
+  - 307 `obox(nb, c, u, n, len, wid, y0, h, k)`
+  - 313 `buildHarbourFittings()`
 
-## `src/js/view3d/06-buildings-lights.js` (305 linjer)
+## `src/js/view3d/06-buildings-lights.js` (309 linjer)
 
 ---------- real buildings (OpenStreetMap), streamed in 1 km chunks inside the terrain corridor ----------
 
@@ -2778,20 +2786,20 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 39 `onQuayStrip(x, z)`
   - 44 `bldOnUnit(B, i)`
   - 55 `buildChunk(key, detail)`
-- **90** details: chimney, windows, doors (only close to the boat)
-  - 133 `addTrees(m, key, srcs, snowy)`
-  - 164 `addRoads(m, key, snowy)`
-  - 185 `freeChunk(c)`
-  - 186 `updateChunks(maxBuilds)`
-  - 203 `drawBuildings(TM)`
-  - 222 `lightY(L, x, z)`
-  - 223 `lightOn(L, t)`
-  - 224 `drawSeaLights(VP, eye, t, near)`
-- **239** lights that light up round them at night (the user's wish 03.10.2026)
-  - 244 `pickLights(eye, t)`
-  - 265 `plSet(u)`
-  - 270 `drawBeams(VP, eye, t)`
-  - 298 `drawChunkLights(VP, eye)`
+- **92** details: chimney, windows, doors (only close to the boat)
+  - 136 `addTrees(m, key, srcs, snowy, c)`
+  - 168 `addRoads(m, key, snowy)`
+  - 189 `freeChunk(c)`
+  - 190 `updateChunks(maxBuilds)`
+  - 207 `drawBuildings(TM)`
+  - 226 `lightY(L, x, z)`
+  - 227 `lightOn(L, t)`
+  - 228 `drawSeaLights(VP, eye, t, near)`
+- **243** lights that light up round them at night (the user's wish 03.10.2026)
+  - 248 `pickLights(eye, t)`
+  - 269 `plSet(u)`
+  - 274 `drawBeams(VP, eye, t)`
+  - 302 `drawChunkLights(VP, eye)`
 
 ## `src/js/view3d/07-harbour-unit.js` (128 linjer)
 
@@ -2901,30 +2909,30 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 31 `nearestBunker(eye)`
   - 32 `drawBunker(B, eye, VP, T, BMrel)`
 
-## `src/js/view3d/12-skiff.js` (346 linjer)
+## `src/js/view3d/12-skiff.js` (348 linjer)
 
 ---------- boat ----------
 
 - **1** boat
 - **3** the starter boat: a 19 ft centre-console skiff, modelled in detail
-  - 52 `NB()`
-  - 60 `lookMesh(look)`
-  - 67 `nSetup(VP)`
-  - 73 `wearOn(t)`
-  - 74 `wearOff()`
-  - 75 `drawN(m, M)`
-  - 77 `texStrip(Pb, Pt)`
-  - 78 `texQuad(P0, P1, P2, P3)`
-  - 79 `mkTex()`
-  - 80 `upTex(t, cv)`
-  - 81 `drawTexQuad(q, tex, M, VP, lit, nrm)`
-- **89** the open boats worked by hand: one kit per type
-  - 97 `refreshPeople(K)`
-  - 108 `useHand(t)`
-  - 114 `handKit(t)`
-  - 135 `buildSkiff()`
+  - 54 `NB()`
+  - 62 `lookMesh(look)`
+  - 69 `nSetup(VP)`
+  - 75 `wearOn(t)`
+  - 76 `wearOff()`
+  - 77 `drawN(m, M)`
+  - 79 `texStrip(Pb, Pt)`
+  - 80 `texQuad(P0, P1, P2, P3)`
+  - 81 `mkTex()`
+  - 82 `upTex(t, cv)`
+  - 83 `drawTexQuad(q, tex, M, VP, lit, nrm)`
+- **91** the open boats worked by hand: one kit per type
+  - 99 `refreshPeople(K)`
+  - 110 `useHand(t)`
+  - 116 `handKit(t)`
+  - 137 `buildSkiff()`
 
-## `src/js/view3d/13-instruments.js` (453 linjer)
+## `src/js/view3d/13-instruments.js` (477 linjer)
 
 ---------- the skiff's live instruments ----------
 
@@ -2955,14 +2963,15 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 317 `jigRail(t, G)`
   - 334 `drawJigRail(BMrel, VP, t, G, dt)`
   - 365 `drawGlass(m, BMrel, VP)`
-  - 371 `buildBoat()`
-  - 397 `buildFlag()`
-  - 409 `flagTex()`
-  - 424 `penTex()`
-  - 437 `mastTop(G)`
-  - 441 `updateFlag(t, appW)`
+  - 384 `drawDrops(m, BMrel, VP, t)`
+  - 395 `buildBoat()`
+  - 421 `buildFlag()`
+  - 433 `flagTex()`
+  - 448 `penTex()`
+  - 461 `mastTop(G)`
+  - 465 `updateFlag(t, appW)`
 
-## `src/js/view3d/14-sea.js` (254 linjer)
+## `src/js/view3d/14-sea.js` (300 linjer)
 
 ---------- sea ----------
 
@@ -2975,43 +2984,46 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **54** the near field: the short sea rides with the boat
   - 63 `nfStep()`
 - **74** the boat's own waves (the uniforms of WAKE_GLSL)
-  - 79 `updateWake()`
-  - 92 `wakeHFast(x, z)`
-- **101** the foam map: the foam the boat and the sea leave in the water (Fysikk 4, F1, 27.10.2026)
-  - 114 `foamFree()`
-  - 115 `foamInit()`
-  - 131 `wavePh()`
-  - 138 `foamStep(dt, t)`
-  - 175 `foamBind(u)`
-- **181** the sea state over the near terrain and the whole map
-  - 188 `ssLevel(n, unit)`
-  - 190 `ssRect(L)`
-  - 191 `ssWork(L, until)`
-  - 214 `ssStep(rdt)`
-  - 216 `ssBlend(L)`
-  - 218 `ssTex(L, x, z, out)`
-  - 225 `ssAt(x, z)`
-  - 234 `seaDisp(x, z, t, S, fade)`
-  - 245 `seaFade(x, z)`
-  - 246 `seaH(x, z, t)`
-  - 252 `seaHFast(x, z, t)`
+  - 81 `wakeTrack(x, z, fx, fz, ds)`
+  - 100 `wakeTU(u, ox, oz)`
+  - 101 `updateWake()`
+  - 122 `wakeHFast(x, z)`
+- **131** the foam map: the foam the boat and the sea leave in the water (Fysikk 4, F1, 27.10.2026)
+  - 144 `foamFree()`
+  - 145 `foamInit()`
+  - 161 `wavePh()`
+  - 168 `foamStep(dt, t)`
+  - 220 `foamBind(u)`
+- **227** the sea state over the near terrain and the whole map
+  - 234 `ssLevel(n, unit)`
+  - 236 `ssRect(L)`
+  - 237 `ssWork(L, until)`
+  - 260 `ssStep(rdt)`
+  - 262 `ssBlend(L)`
+  - 264 `ssTex(L, x, z, out)`
+  - 271 `ssAt(x, z)`
+  - 280 `seaDisp(x, z, t, S, fade)`
+  - 291 `seaFade(x, z)`
+  - 292 `seaH(x, z, t)`
+  - 298 `seaHFast(x, z, t)`
 
-## `src/js/view3d/15-env-mooring.js` (128 linjer)
+## `src/js/view3d/15-env-mooring.js` (145 linjer)
 
 ---------- environment ----------
 
 - **1** environment
   - 3 `pal(el)`
-  - 8 `computeEnv(H)`
-- **41** mooring: in along the quay, then the lines: aft spring first, bow line, stern line, fore spring (and in reverse when casting off)
-  - 45 `buildMooring()`
-  - 47 `berthNow()`
-  - 53 `approach(F, bp, u0, du0)`
-  - 64 `pathM(pts)`
-  - 69 `pathAt(M, s)`
-  - 70 `lieAlongside(dt, bp)`
-  - 73 `moorStep(dt, bp, at = dt)`
-  - 105 `drawMooring(BMrel, eye, VP, t)`
+  - 12 `wetSet(H)`
+  - 24 `computeEnv(H)`
+- **58** mooring: in along the quay, then the lines: aft spring first, bow line, stern line, fore spring (and in reverse when casting off)
+  - 62 `buildMooring()`
+  - 64 `berthNow()`
+  - 70 `approach(F, bp, u0, du0)`
+  - 81 `pathM(pts)`
+  - 86 `pathAt(M, s)`
+  - 87 `lieAlongside(dt, bp)`
+  - 90 `moorStep(dt, bp, at = dt)`
+  - 122 `drawMooring(BMrel, eye, VP, t)`
 
 ## `src/js/view3d/16-motion.js` (225 linjer)
 
@@ -3061,6 +3073,74 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 111 `updateWater(eye)`
   - 127 `staleWater(pk)`
   - 131 `drawWater(VP, eye)`
+
+## `src/js/view3d/17c-trees.js` (103 linjer)
+
+---------- the trees (G4 of docs/planer/grafikk-natur-og-miljo.md) ----------
+
+- **1** the trees (G4 of docs/planer/grafikk-natur-og-miljo.md)
+  - 12 `treeExt()`
+  - 14 `treeModels()`
+  - 39 `treeSpecies(needle, x, z, y, h, r)`
+  - 47 `treeChunk(c, key, occ, snowy)`
+  - 55 `treePlant(c)`
+  - 73 `treeFree(c)`
+  - 75 `treeSeasonU()`
+  - 79 `drawTrees(VP, eye)`
+
+## `src/js/view3d/17d-vind.js` (96 linjer)
+
+---------- the wind turbines and the power lines over the sea (G7 of docs/planer/grafikk-natur-og-miljo.md) ----------
+
+- **1** the wind turbines and the power lines over the sea (G7 of docs/planer/grafikk-natur-og-miljo.md)
+  - 11 `vindModels()`
+  - 37 `vdGround(x, z, now)`
+  - 43 `vdSpan(s, now)`
+  - 51 `vdBuild(eye, now)`
+  - 71 `drawVind(VP, eye, dt, far)`
+
+## `src/js/view3d/17e-life.js` (174 linjer)
+
+---------- life in the landscape (G9 of docs/planer/grafikk-natur-og-miljo.md) ----------
+
+- **1** life in the landscape (G9 of docs/planer/grafikk-natur-og-miljo.md)
+  - 13 `lifeModels()`
+  - 26 `lifeCls(x, z)`
+  - 34 `lifeGrid(eye, g, R, salt, f)`
+  - 38 `lifeBuild(eye, now)`
+  - 99 `roadAt(xs, zs, cum, s)`
+  - 103 `drawLife(eye, t, VP)`
+  - 146 `lifePts(VP, eye, t, far)`
+
+## `src/js/view3d/17f-near.js` (92 linjer)
+
+---------- the near field on land (G8 of docs/planer/grafikk-natur-og-miljo.md) ----------
+
+- **1** the near field on land (G8 of docs/planer/grafikk-natur-og-miljo.md)
+  - 12 `nearModels()`
+  - 33 `nearSquare(i, j)`
+  - 61 `drawNear(VP, eye, t)`
+  - 62 `drawNear0(VP, eye, t)`
+
+## `src/js/view3d/17g-marina.js` (61 linjer)
+
+---------- the small-boat harbours (G10 of docs/planer/grafikk-natur-og-miljo.md) ----------
+
+- **1** the small-boat harbours (G10 of docs/planer/grafikk-natur-og-miljo.md)
+  - 9 `marinaModels()`
+  - 27 `marinaBuild(eye, now)`
+  - 49 `drawMarinas(eye, t, VP)`
+
+## `src/js/view3d/17h-shore.js` (63 linjer)
+
+---------- the beaches and the shingle (G10 of docs/planer/grafikk-natur-og-miljo.md) ----------
+
+- **1** the beaches and the shingle (G10 of docs/planer/grafikk-natur-og-miljo.md)
+  - 8 `shoreData(tx, ty)`
+  - 22 `shoreTile(tx, ty)`
+  - 45 `updateShore(eye)`
+  - 56 `staleShore(pk)`
+  - 57 `drawShore(VP)`
 
 ## `src/js/view3d/18-setup.js` (148 linjer)
 
@@ -3170,7 +3250,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **91** frame
   - 95 `fpsEl()`
 
-## `src/js/view3d/24-cinema.js` (413 linjer)
+## `src/js/view3d/24-cinema.js` (416 linjer)
 
 ---------- cinema (the user's wish 03.10.2026) ----------
 
@@ -3181,12 +3261,12 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 58 `introStart(sec)`
   - 63 `frame()`
   - 65 `frame0()`
-  - 235 `snapTake()`
-  - 240 `drawRoute(VP, eye)`
-  - 252 `driftSpray(VP, eye, dt, t, col)`
-  - 267 `drawSmoke(VP, eye, BM, dt)`
-  - 294 `drawEffects(VP, eye, BM, dt, t)`
-  - 395 `updateLabels(VP, eye, W, Hh)`
+  - 237 `snapTake()`
+  - 242 `drawRoute(VP, eye)`
+  - 254 `driftSpray(VP, eye, dt, t, col)`
+  - 269 `drawSmoke(VP, eye, BM, dt)`
+  - 296 `drawEffects(VP, eye, BM, dt, t)`
+  - 398 `updateLabels(VP, eye, W, Hh)`
 
 ## `src/js/view3d/25-controls.js` (84 linjer)
 
