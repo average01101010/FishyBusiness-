@@ -1,5 +1,10 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['g3-291026', '29.10.2026', 'Landet slik satellittene ser det', 'The land as the satellites see it', [
+       ['Bakken langs hele kysten har fargene fra satellittbilder tatt om sommeren: liene, fjellene, myrene og byene ser ut som de gjør. Årstidene, ruska og snøen kommer som før.', 'The ground along the whole coast has the colours of satellite pictures taken in summer: the slopes, the fells, the bogs and the towns look as they do. The seasons, the autumn colours and the snow come as before.'],
+       ['Skummet bak båten blir liggende i vannet der båten gikk, driver med strømmen og går ikke gjennom moloer og land.', 'The foam behind the boat stays in the water where she went, drifts with the current and no longer passes through breakwaters and land.'],
+       ['Båtens bølger svinger med båten, både forover og når du bakker.', 'The boat\'s waves turn with her, ahead and when you go astern.'],
+       ['Ingen skumtopper i havna når vinden ikke har plass til å bygge sjø, og det grunne vannet langs land har ingen skarpe kanter.', 'No whitecaps in the harbour when the wind has no room to raise a sea, and the shallow water along land has no sharp edges.']]],
     ['g2-281026', '28.10.2026', 'Innsjøer, elver og himmel', 'Lakes, rivers and sky', [
        ['Innsjøene, tjernene, elvene, bekkene og fossene ligger der kartet har dem, med mørkt vann som speiler himmelen, stryk og is om vinteren.', 'The lakes, tarns, rivers, streams and waterfalls lie where the map has them, with dark water mirroring the sky, rapids, and ice in winter.'],
        ['Skyene lyses av sola, med lyse kanter og mørkere undersider, og når sola står lavt, kommer det rosa beltet over jordskyggen.', 'The clouds are lit by the sun, with bright edges and darker undersides, and when the sun is low the pink belt rises over the earth\'s shadow.'],
