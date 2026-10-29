@@ -5,12 +5,29 @@
     for (let i = 0; i < PAL.length - 1; i++){ const a = PAL[i], b = PAL[i + 1]; if (el <= b[0]){ const t = (el - a[0]) / (b[0] - a[0]); return [mix3(a[1], b[1], t), mix3(a[2], b[2], t)]; } }
     const L = PAL[PAL.length - 1]; return [L[1], L[2]];
   }
+  // How wet the ground is and how much fresh snow lies on what is built (G6), from the shared clock as everything else is: the rain of the
+  // last three hours, each ten minutes' as much as it rained (sleet and snow less) and dried out over about an hour and a half (the wind
+  // dries faster); the snow that fell under 0 °C in the last 12 hours, going in mild weather. Worked out again each game minute.
+  const WETQ = {m:-1, wet:0, fresh:0};
+  function wetSet(H){
+    const m = Math.floor(H * 60);
+    if (m !== WETQ.m){ WETQ.m = m; let w = 0, f = 0;
+      for (let k = 0; k <= 18; k++){ const h = H - k / 6, pr = precipAt(h), tp = airTemp(h); if (pr < 0.04) continue;
+        const dry = Math.exp(-k / 6 / (1.5 / (1 + Math.max(0, windAt(h) - 6) / 10)));
+        w = Math.max(w, Math.min(1, pr * 1.8) * (tp > 1 ? 1 : 0.5) * dry); }
+      for (let k = 0; k <= 24; k++){ const h = H - k / 2, pr = precipAt(h); if (pr < 0.08 || airTemp(h) > 0.5) continue; f = Math.max(f, Math.min(1, pr * 2) * Math.exp(-k / 2 / 10)); }
+      WETQ.wet = w; WETQ.fresh = f * (env.temp > 2 ? 0.2 : 1); }
+    env.wet = WETQ.wet;
+    // the snow on quays, breakwaters and roofs: the shore's (the snow line under the sea), or the fresh fall
+    env.snowC = Math.max(snowNow == null ? 0 : clamp(1 - snowNow / 60, 0, 1) * 0.6, WETQ.fresh * 0.95);   // (the old snow on a quay or a road is cleared and trodden; the fresh fall lies white)
+  }
   function computeEnv(H){
     // the sun's and the moon's true azimuths onto the grid the world is drawn on
     const s = sunAt(H), el = s.el, er = el * DEG, gz = gridGamma({x:bv.x / 1000, y:bv.z / 1000}) * DEG, saz = s.az - gz; env.el = el;
     env.sunDir = [Math.cos(er) * Math.sin(saz), Math.sin(er), -Math.cos(er) * Math.cos(saz)];
     const ly = Math.max(env.sunDir[1], 0.25), ll = Math.hypot(env.sunDir[0], ly, env.sunDir[2]); env.lightDir = [env.sunDir[0] / ll, ly / ll, env.sunDir[2] / ll];
     env.cloud = cloudAt(H); env.precip = precipAt(H); env.temp = airTemp(H); env.vis = visibility(H); env.aur = auroraAt(H);
+    wetSet(H);
     let [zen, hor] = pal(el); const lum = 0.3 * hor[0] + 0.59 * hor[1] + 0.11 * hor[2], grey = [lum * 0.92, lum * 0.96, lum * 1.02];
     zen = mix3(zen, grey.map(v => v * 0.9), env.cloud * 0.8); hor = mix3(hor, grey, env.cloud * 0.85);
     env.zen = zen; env.hor = hor; env.day = sstep(-6, 6, el);
@@ -24,7 +41,9 @@
     // the cloud base on the fells (G5): from about 2 700 m under a broken sky down to 250-300 m under a full grey one, 150 m lower in rain
     // or snow; only a sky over 55 % cloud lays it on the ground at all. Its colour is the overcast horizon's, so the cloud on the fell is the sky's
     env.cbase = 250 + 2500 * Math.pow(1 - env.cloud, 1.5) - 150 * sstep(0.1, 0.6, env.precip || 0); env.cstr = sstep(0.55, 0.85, env.cloud) * 0.92;
-    env.ccol = hor;
+    env.ccol = hor.map(v => v * 0.86);
+    // the cloud on the fells drifts with the wind (a tenth of its speed, as the eye sees the cloud's edge move), from the shared clock
+    { const wd = env.windDir || [1, 0], w = env.wind || windAt(H), s = (H * 3600) * w * 0.1; env.cdrift = [-(wd[0] * s) % 4096, -(wd[1] * s) % 4096]; }
     env.stars = sstep(-5, -12, el) * (1 - env.cloud); env.spec = sstep(-1, 4, el) * (1 - env.cloud) * 2.2;
     env.night = sstep(3, -5, el);
     // moon: where it is, how full, and the light it gives at night

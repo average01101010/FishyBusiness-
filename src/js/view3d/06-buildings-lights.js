@@ -54,7 +54,7 @@
   const FRAME = [0.93, 0.93, 0.9], BGLASS = [0.1, 0.13, 0.16], WARM = [1, 0.78, 0.42], DOORS = [[0.3,0.2,0.14],[0.2,0.3,0.24],[0.55,0.15,0.12],[0.9,0.9,0.88],[0.22,0.28,0.4]];
   function buildChunk(key, detail){
     const srcs = bldCells(key), c = {mesh:null, lights:null, nl:0, detail, dm:null, gd:null, gl:null};
-    const m = MB(), L = [], snowy = chunkSnow % 10 === 1, D = detail ? MB() : null, GD = detail ? MB() : null, GLm = detail ? MB() : null;
+    const m = MB(), L = [], SMK = [], snowy = chunkSnow % 10 === 1, D = detail ? MB() : null, GD = detail ? MB() : null, GLm = detail ? MB() : null;
     for (const [B, idx] of srcs) for (const j of idx){
       const i = j + B.seed, x = B.x[j], z = B.z[j], l = B.l[j], w = B.w[j], ty = B.t[j], lv = B.lv[j], ry = Math.PI / 2 - B.a[j], hsh = hash(i * 7 + 3);
       const ca = Math.cos(B.a[j]), sa = Math.sin(B.a[j]);
@@ -81,6 +81,8 @@
         case 15: wall = [0.5, 0.48, 0.45]; hg = 1.2; gable = false; break;
         default: wall = pick(PAL_HOUSE); hg = lv ? 2.8 * lv : 3.6; light = 0.3;
       }
+      // a chimney on some of the houses and cabins, for the smoke in the cold (G9, 17e-life.js)
+      if ((ty === 1 || ty === 4) && hash(i * 13 + 5) < 0.4) SMK.push(x + ca * l * 0.22, base + rise + hg + pitch * w * 0.5 + 0.7, z + sa * l * 0.22);
       if (snowy) roof = mix3(roof, SNOW, 0.85);
       const H = hg + rise;
       if (gable) m.house(x, base, z, w, l, H, ry, wall, roof, pitch, cap); else m.box(x, base, z, w, H, l, wall, ry, roof);
@@ -120,21 +122,23 @@
         if (ty === 6) wins(l, w / 2, bx, bz, ca, sa, [floor + 1.6], 0.8, 0.7, 4, -1);
       }
     }
-    addTrees(m, key, srcs, snowy);
+    addTrees(m, key, srcs, snowy, c);
     const o = c.o = [gridKeyX(key) * 1000, gridKeyY(key) * 1000];
     c.mesh = m.p.length ? m.mesh(o) : null;
     const RM = MB(); addRoads(RM, key, snowy); if (RM.p.length) c.rd = RM.mesh(o);
     if (detail){ if (D.p.length) c.dm = D.mesh(o); if (GD.p.length) c.gd = GD.mesh(o); if (GLm.p.length) c.gl = GLm.mesh(o); }
     if (L.length){ c.lights = buf(relTo(L, o)); c.nl = L.length / 3; }
+    if (SMK.length) c.smk = SMK;
     return c;
   }
   // trees: birch woods below the tree line with some pine, kept off roads and buildings; colours follow the season
   const treeSeason = () => { if (typeof seasonAt === 'function'){ const st = seasonAt(S.t / 60); return st.leaf < 0.4 ? 0 : st.yel > 0.45 ? 2 : 1; } const mo = gDate(S.t / 60).getUTCMonth(); return mo >= 5 && mo <= 7 ? 1 : mo === 8 ? 2 : 0; };
-  function addTrees(m, key, srcs, snowy){
+  function addTrees(m, key, srcs, snowy, c){
     const gz = gridKeyY(key), gx = gridKeyX(key), x0 = gx * 1000, z0 = gz * 1000, occ = new Uint8Array(1600);
     const mark = (x, z, r) => { const cx = Math.floor((x - x0) / 25), cz = Math.floor((z - z0) / 25); for (let a = -r; a <= r; a++) for (let b = -r; b <= r; b++){ const i = cx + b, j = cz + a; if (i >= 0 && j >= 0 && i < 40 && j < 40) occ[j * 40 + i] = 1; } };
     for (const [B, idx] of srcs) for (const i of idx) mark(B.x[i], B.z[i], Math.max(B.l[i], B.w[i]) > 30 ? 2 : 1);
     for (const r of roadsIn(x0 - 30, z0 - 30, x0 + 1030, z0 + 1030)){ for (let j = 1; j < r.xs.length; j++){ const L = Math.hypot(r.xs[j] - r.xs[j - 1], r.zs[j] - r.zs[j - 1]), n = Math.ceil(L / 12); for (let q = 0; q <= n; q++) mark(r.xs[j - 1] + (r.xs[j] - r.xs[j - 1]) * q / n, r.zs[j - 1] + (r.zs[j] - r.zs[j - 1]) * q / n, 0); } }
+    if (c && treeChunk(c, key, occ, snowy)) return;   // the trees from the map (G4, 17c-trees.js), where it has them
     const ses = treeSeason(), leaf = ses === 1 ? [0.15, 0.29, 0.11] : ses === 2 ? [0.7, 0.48, 0.12] : [0.55, 0.5, 0.47], pine = [0.06, 0.15, 0.08], trunk = [0.78, 0.76, 0.7];
     let count = 0;
     // the 900 places in a stride over the square (397 is prime to 900), so the cap of 260 does not fill the northern rows first
@@ -182,7 +186,7 @@
       }
     }
   }
-  function freeChunk(c){ const del = mm => { if (mm.parts) mm.parts.forEach(del); else { gl.deleteBuffer(mm.pb); gl.deleteBuffer(mm.cb); } }; for (const mm of [c.rd, c.mesh, c.dm, c.gd, c.gl]) if (mm) del(mm); if (c.lights) gl.deleteBuffer(c.lights); }
+  function freeChunk(c){ treeFree(c); const del = mm => { if (mm.parts) mm.parts.forEach(del); else { gl.deleteBuffer(mm.pb); gl.deleteBuffer(mm.cb); } }; for (const mm of [c.rd, c.mesh, c.dm, c.gd, c.gl]) if (mm) del(mm); if (c.lights) gl.deleteBuffer(c.lights); }
   function updateChunks(maxBuilds){
     if (!NEARM) return;
     const sf = (snowNow == null || snowNow < 80 ? 1 : 0) + 10 * treeSeason();

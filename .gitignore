@@ -17,3 +17,6 @@ tests/saves/
 # agent worktrees are local
 .claude/worktrees/
 dist-full/
+tools/s2/out/
+tools/trees/out/
+tools/vind/out/

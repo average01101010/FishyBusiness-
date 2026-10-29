@@ -202,7 +202,8 @@
   // ESA WorldCover with OpenStreetMap's natural areas and land use over it, tools/map/region.py cover; a class per 50 m cell, 1 forest ... 12 shingle): the share of each class among the land cells of the 4 x 4 cells
   // forestAt reads, weighted as it weighs them, into cv at k * 9 (0-255), and ck[k] = 1. Where the layer has no block (a tile from a
   // release before it, outside Norway) or no land cell has a class, ck[k] = 0 and recolor keeps the rules from before.
-  const COVN = 12, COVW = new Float32Array(COVN), COVB = {k:NaN, t:0};   // the last block check that found them all, kept a second (a mesh asks the same few blocks for every point)
+  const COVN = 12, COVS = 15, COVW = new Float32Array(COVN), COVB = {k:NaN, t:0};   // COVS: a point's bytes in cv, the 12 classes' shares and the satellites' summer colour (G3)
+    // the last block check that found them all, kept a second (a mesh asks the same few blocks for every point)
   function coverAt(x, z, cv, ck, k){
     ck[k] = 0; const LC = MAPD.L.cover; if (!HG || !LC) return;
     const cm = LC.c * 1000, gx = x / cm - 0.5, gz = z / cm - 0.5, ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz, n = LC.n;
@@ -212,6 +213,7 @@
     // only a yes is kept (a second): a no is asked again, since the pack may come in the meantime and the mesh be built again at once
     // (kept, a fine mesh built just after its pack came had no land cover: a lighter square a kilometre wide at Hammerfest, 28.10.2026)
     if (bk !== COVB.k || now - COVB.t > 1000){ for (let by = c0; by <= c1; by++) for (let bx = b0; bx <= b1; bx++) if (!mapHasBlock(LC, bx, by)) return; COVB.k = bk; COVB.t = now; }
+    satAt(x, z, cv, k * COVS + 12);
     COVW.fill(0); let s = 0;
     for (let dz = -1; dz <= 2; dz++) for (let dx = -1; dx <= 2; dx++){
       const v = rcell(LC, ix + dx, iz + dz); if (!v || v > COVN) continue;
@@ -220,12 +222,31 @@
     }
     if (s < 1e-3) s = coverRing(LC, ix, iz);   // no class in the 4 x 4 cells (nearer the shore than ESA's polygons reach): the nearest ring
     if (s < 1e-3) return;
-    for (let c = 0; c < COVN; c++) cv[k * COVN + c] = Math.round(COVW[c] / s * 255);
+    for (let c = 0; c < COVN; c++) cv[k * COVS + c] = Math.round(COVW[c] / s * 255);
     ck[k] = 1;
+  }
+  // the satellites' summer colour at a point (G3: Sentinel-2's median of the clear days from mid June to August, the scenes' own sun
+  // taken out, coast.py sat_tile) into cv at o, o + 1, o + 2 as R, G, B 1-255; 0, 0, 0 where there is none (the sea, outside Norway, a
+  // release before the layers). Packed as luma sy (50 m, 7 bits) and chroma sco, scg (100 m, 6 bits), each + 1, 0 for none: each read
+  // over the nearest 2 x 2 cells that have it, weighted bilinearly, and turned back (G = Y + Cg, R = Y - Cg + Co, B = Y - Cg - Co).
+  function satRead(L, x, z){
+    const cm = L.c * 1000, gx = x / cm - 0.5, gz = z / cm - 0.5, ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz;
+    if (!mapIn(L, ix, iz) || !mapIn(L, ix + 1, iz + 1)) return -1;
+    const b0 = Math.floor(ix / L.n), b1 = Math.floor((ix + 1) / L.n), c0 = Math.floor(iz / L.n), c1 = Math.floor((iz + 1) / L.n);
+    if (!covBlk(L, b0, c0) || !covBlk(L, b1, c0) || !covBlk(L, b0, c1) || !covBlk(L, b1, c1)) return -1;   // (all four: by a block's corner the cells reach into three)
+    let v = 0, w = 0;
+    for (let dz = 0; dz <= 1; dz++) for (let dx = 0; dx <= 1; dx++){ const c = rcell(L, ix + dx, iz + dz); if (!c) continue; const q = (dx ? fx : 1 - fx) * (dz ? fz : 1 - fz) + 1e-4; v += (c - 1) * q; w += q; }
+    return w > 0.05 ? v / w : -1;
+  }
+  function satAt(x, z, cv, o){
+    cv[o] = cv[o + 1] = cv[o + 2] = 0; const SY = MAPD.L.sy, SO = MAPD.L.sco, SG = MAPD.L.scg; if (!SY || !SO || !SG) return;
+    const y = satRead(SY, x, z); if (y < 0) return; const co = satRead(SO, x, z), cg = satRead(SG, x, z); if (co < 0 || cg < 0) return;
+    const Y = y * 2 + 1, Co = co * 4 + 2 - 128, Cg = cg * 4 + 2 - 128, t = Y - Cg;
+    cv[o] = clamp(Math.round(t + Co), 1, 255); cv[o + 1] = clamp(Math.round(Y + Cg), 1, 255); cv[o + 2] = clamp(Math.round(t - Co), 1, 255);
   }
   // a block of the cover layer that is there, kept a second (positives only, as COVB)
   const COVK = new Map();
-  function covBlk(LC, bx, by){ const key = bx * 8192 + by, t = COVK.get(key), now = performance.now(); if (t && now - t < 1000) return true; if (!mapHasBlock(LC, bx, by)) return false; if (COVK.size > 64) COVK.clear(); COVK.set(key, now); return true; }
+  function covBlk(LC, bx, by){ const key = (bx * 8192 + by) * 64 + LC.id, t = COVK.get(key), now = performance.now(); if (t && now - t < 1000) return true; if (!mapHasBlock(LC, bx, by)) return false; if (COVK.size > 64) COVK.clear(); COVK.set(key, now); return true; }
   // the classes of the nearest ring of cells (2 to 10 cells out, 100-500 m) that has any, counted into COVW; the sum (0 if none). The
   // land within 50-100 m of the shore often has no class (ESA's polygons stop short of OpenStreetMap's coastline), and the old rule
   // there made dark patches and bands where the fells are bare (Hammerfest, 28.10.2026)
@@ -251,7 +272,7 @@
   // indices and the buffers at once. makeMesh does it all in one go.
   function meshBegin(x0, z0, sx, sz, n, hf){
     const N = n * n;
-    return {x0, z0, sx, sz, n, hf:hf || terrH, dx:sx / (n - 1), dz:sz / (n - 1), j:0, pos:new Float32Array(N * 3), h:new Float32Array(N), nz:new Float32Array(N), fo:new Float32Array(N), cv:new Uint8Array(N * COVN), ck:new Uint8Array(N)};
+    return {x0, z0, sx, sz, n, hf:hf || terrH, dx:sx / (n - 1), dz:sz / (n - 1), j:0, pos:new Float32Array(N * 3), h:new Float32Array(N), nz:new Float32Array(N), fo:new Float32Array(N), cv:new Uint8Array(N * COVS), ck:new Uint8Array(N)};
   }
   function meshRows(B, until){
     const {x0, z0, n, dx, dz, hf, pos, h, nz, fo, cv, ck} = B;
@@ -295,7 +316,7 @@
     let X0 = -E, X1 = E, Z0 = -B; if (U.f) for (let i = 0; i < U.f.length; i += 2){ X0 = Math.min(X0, U.f[i]); X1 = Math.max(X1, U.f[i]); Z0 = Math.min(Z0, U.f[i + 1]); }
     const xs = [...span(X0 - F, X0, 22), ...span(X0, X1, Math.ceil((X1 - X0) / 1.6)).slice(1), ...span(X1, X1 + F, 22).slice(1)];
     const zs = [...span(Z0 - F, Z0, 22), ...(Z0 < -B ? span(Z0, -B, Math.ceil((-B - Z0) / 2.5)).slice(1) : []), ...span(-B, 0, 14).slice(1), ...span(0, UG.basinZ + F, 34).slice(1)];
-    const nx = xs.length, nz = zs.length, N = nx * nz, pos = new Float32Array(N * 3), h = new Float32Array(N), nzA = new Float32Array(N), slope = new Float32Array(N), nor = new Float32Array(N * 3), fo = new Float32Array(N), pv = new Float32Array(N), cv = new Uint8Array(N * COVN), ck = new Uint8Array(N);
+    const nx = xs.length, nz = zs.length, N = nx * nz, pos = new Float32Array(N * 3), h = new Float32Array(N), nzA = new Float32Array(N), slope = new Float32Array(N), nor = new Float32Array(N * 3), fo = new Float32Array(N), pv = new Float32Array(N), cv = new Uint8Array(N * COVS), ck = new Uint8Array(N);
     for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++){
       const k = j * nx + i, w = unitW(U, xs[i], zs[j]), x = w[0], z = w[1], y = unitTerr(x, z, nearSurf(M, x, z));
       h[k] = y; pos[k * 3] = x - U.o[0]; pos[k * 3 + 1] = y; pos[k * 3 + 2] = z - U.o[1]; nzA[k] = fbm(x / 600, z / 600, 2, 90); fo[k] = forestAt(x, z); if (y > 0) coverAt(x, z, cv, ck, k); else ck[k] = 0;

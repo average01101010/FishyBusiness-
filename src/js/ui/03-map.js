@@ -362,6 +362,12 @@ function renderStatic(){
   const mR = Math.max(vx1 - vx0, vy1 - vy0) / 2 + 1, mX = (vx0 + vx1) / 2, mY = (vy0 + vy1) / 2;   // the coast's marks too (01e-marks.js)
   if (view.z > 3.5) for (const mk of marksNear('marks', mX, mY, mR)){ if (!inV(mk[0], mk[1]) || mk[2] === 'M' || mk[2] === 'm') continue; const c = mk[2] === 'L' || mk[2] === 'B' ? (mk[3] === 'starb' ? '#1f8a3c' : '#c8231c') : mk[2] === 'C' || mk[2] === 'S' ? '#d6a800' : '#333'; g.push('<circle cx="' + mk[0] + '" cy="' + mk[1] + '" r="' + (2 * u) + '" fill="' + c + '" stroke="#fff" stroke-width="' + (0.6 * u) + '"/>'); }
   if (view.z > 2) for (const L of marksNear('lights', mX, mY, mR)){ if (!inV(L[0], L[1])) continue; const s0 = (L[6] === 'M' ? 9 : 6.5) * u; g.push('<path d="M' + L[0] + ',' + L[1] + 'q' + (s0 * 0.35) + ',' + (-s0 * 0.5) + ' ' + (s0 * 0.12) + ',' + (-s0) + 'q' + (-s0 * 0.5) + ',' + (s0 * 0.3) + ' ' + (-s0 * 0.12) + ',' + s0 + 'z" class="lightsym"/><circle cx="' + L[0] + '" cy="' + L[1] + '" r="' + (1.3 * u) + '" class="lightdot" stroke-width="' + (0.8 * u) + '"/>'); }
+  // the power lines over the sea as the chart's dashed magenta overhead line, the wind turbines as its three-armed symbol (G7)
+  if (VIND && view.z > 2.5){ let d = ''; for (const q of VIND.s){ const x1 = q[0] / 1000, y1 = q[1] / 1000, x2 = q[2] / 1000, y2 = q[3] / 1000; if (!inV(x1, y1) && !inV(x2, y2) && !inV((x1 + x2) / 2, (y1 + y2) / 2)) continue; d += 'M' + x1.toFixed(3) + ',' + y1.toFixed(3) + 'L' + x2.toFixed(3) + ',' + y2.toFixed(3); }
+    if (d) g.push('<path d="' + d + '" fill="none" stroke="#a3268f" stroke-width="' + (1.4 * u) + '" stroke-dasharray="' + (5 * u) + ',' + (3 * u) + '"/>'); }
+  if (VIND && view.z > 2){ let d = ''; const r = (view.z > 5 ? 5 : 3.6) * u; for (const q of VIND.t){ const x = q[0] / 1000, y = q[1] / 1000; if (!inV(x, y)) continue;
+      for (let k = 0; k < 3; k++){ const a = k * 2.0944; d += 'M' + x.toFixed(3) + ',' + y.toFixed(3) + 'l' + (Math.sin(a) * r).toFixed(4) + ',' + (-Math.cos(a) * r).toFixed(4); } }
+    if (d) g.push('<path d="' + d + '" fill="none" stroke="#a3268f" stroke-width="' + (1.1 * u) + '" stroke-linecap="round"/>'); }
   // own catch marks, coloured by kilos per hour; each is gone from the chart 12 game hours after it was made (Jonas 05.10.2026: «Prikkene
   // med fangst-rate skal forsvinne etter 12 in-game timer»), and renderDyn redraws when the next one runs out
   markEnd = Infinity;

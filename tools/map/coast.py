@@ -60,12 +60,65 @@ def cover_tile(tx, ty):
     NL = national.norway200()[0][ty * 250:(ty + 1) * 250, tx * 250:(tx + 1) * 250]
     return np.where(np.kron(NL, np.ones((4, 4), bool))[:fny, :fnx], C, 0).astype(np.uint8)
 
+# the summer colour of the ground from Sentinel-2 (G3, tools/s2/s2.py: the median of the clear scenes from mid June to August 2021-2025
+# on the tile's 50 m cells), as three layers (below; 0 where there is none: the sea, outside Norway, never clear). The
+# scenes' own sun is taken out: they were taken near 11 in the morning, the sun in the south-southeast about (90 - latitude + 13)
+# degrees up, and a slope facing it is lighter, one facing away darker; each cell is divided by its light from the 50 m ground (35 %
+# from the sky, 65 % from the sun, against flat ground's), so the game's own sun and shadows are not laid on twice. Without the
+# mosaic (S2D has no file for the tile) the layers are 0 and the game colours the ground as before.
+S2D = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'out', 's2')
+# Packed as luma and chroma, as a JPEG is (the colour per channel was 1.9 MB a tile, this 0.65): sy the luma Y = (R + 2G + B) / 4 at 50 m
+# in 7 bits, sco and scg the chroma Co = (R - B) / 2 and Cg = (2G - R - B) / 4 at 100 m in 6 bits, each + 1 (0: none), as i16 layers
+# (the median predictor packs a smooth picture well). The game (03-berths-naust.js satAt) turns them back into R, G, B.
+def sat_tile(tx, ty, L):
+    f = os.path.join(S2D, f'{tx}_{ty}.npz'); z = dict(sy=np.zeros((1000, 1000), np.int16), sco=np.zeros((500, 500), np.int16), scg=np.zeros((500, 500), np.int16))
+    if not os.path.exists(f): return z
+    S = np.load(f); rgb = S['rgb'].astype(np.float32); n = S['n']
+    a = np.abs(L['hgt'].astype(np.float32)); h = np.sign(L['hgt']) * np.where(a < 20, a / 2, 10 + (a - 20) * 2)
+    h = h.reshape(1000, 2, 1000, 2).mean(axis=(1, 3)); h = np.maximum(h, 0)
+    gy, gx = np.gradient(h, 50.0)   # rows run south, columns east: gx = dh/dx east, gy = dh/dy south
+    lon, lat = frame.to_ll(np.array([tx * 50 + 25.0]), np.array([ty * 50 + 25.0])); el = np.radians(min(55.0, 90 - float(lat[0]) + 13)); az = np.radians(165.0)
+    sx, sy, sz = np.cos(el) * np.sin(az), -np.cos(el) * np.cos(az), np.sin(el)   # the sun: east, south, up
+    nz = 1 / np.sqrt(1 + gx * gx + gy * gy); nx, ny = -gx * nz, -gy * nz
+    sh = np.clip(nx * sx + ny * sy + nz * sz, 0, None) / sz
+    I = np.clip(0.35 + 0.65 * sh, 0.45, 1.8)
+    land = (L['cover'] > 0) & (n > 0)
+    C = np.clip(rgb / I[..., None], 0, 255); R, G, B = C[..., 0], C[..., 1], C[..., 2]
+    Y = (R + 2 * G + B) / 4; Co = (R - B) / 2 + 128; Cg = (2 * G - R - B) / 4 + 128
+    z['sy'] = np.where(land, np.clip(np.round(Y / 2), 0, 127) + 1, 0).astype(np.int16)
+    w = land.reshape(500, 2, 500, 2).sum(axis=(1, 3)); h2 = lambda a: np.where(w > 0, (np.where(land, a, 0)).reshape(500, 2, 500, 2).sum(axis=(1, 3)) / np.maximum(w, 1), 0)
+    z['sco'] = np.where(w > 0, np.clip(np.round(h2(Co) / 4 - 0.5), 0, 63) + 1, 0).astype(np.int16)
+    z['scg'] = np.where(w > 0, np.clip(np.round(h2(Cg) / 4 - 0.5), 0, 63) + 1, 0).astype(np.int16)
+    return z
+
+# the trees of a tile (G4, tools/trees/trees.py: Meta and WRI's canopy height maps, CC BY 4.0) on its 50 m cells as one u8 layer
+# (25 m was 1.4 MB a forested tile, 50 m 0.4)
+# 'trees': bits 0-3 the share under trees (0-15), bits 4-6 the trees' height (0: under 4 m, then 4 m steps, 7: 28 m and over), bit 7
+# needles (where Sentinel-2's summer near infrared, tools/s2/s2.py nir, is under NIR_NEEDLE: broad leaves reflect about twice what
+# needles do; calibrated 29.10.2026 on dense, tall forest: the birch at Finnsnes has a median of 103 (p25 93), the spruce at Namsos 73
+# (p75 81), Trondheim 75 and Kristiansand 76; 88 splits them). Norway's land only. Without the canopy file for the tile the layer is 0 and the game plants its old trees.
+TREED = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'out', 'trees'); NIR_NEEDLE = 88
+def trees_tile(tx, ty, L):
+    out = np.zeros((1000, 1000), np.uint8); f = os.path.join(TREED, f'{tx}_{ty}.npz')
+    if not os.path.exists(f): return {'trees': out}
+    T = np.load(f); c25 = T['cover'].astype(np.float32) / 255; h25 = np.where(c25 > 0.02, T['height'].astype(np.float32) / 4, 0)
+    cov = c25.reshape(1000, 2, 1000, 2).mean(axis=(1, 3)); h = h25.reshape(1000, 2, 1000, 2).max(axis=(1, 3))
+    land = L['cover'] > 0
+    c4 = np.clip(np.round(cov * 15), 0, 15).astype(np.uint8); hc = np.clip(np.floor(h / 4), 0, 7).astype(np.uint8)
+    nd = np.zeros((1000, 1000), bool); g = os.path.join(S2D, f'{tx}_{ty}.npz')
+    if os.path.exists(g):
+        Z = np.load(g)
+        if 'nir' in Z: nir = Z['nir']; nd = (nir > 0) & (nir < NIR_NEEDLE)
+    v = c4 | (hc << 4) | (nd.astype(np.uint8) << 7)
+    out = np.where(land & (c4 > 0), v, 0).astype(np.uint8)
+    return {'trees': out}
+
 def tile(tx, ty):
     f = os.path.join(TD, f'{tx}_{ty}.npz')
     if os.path.exists(f):
         z = dict(np.load(f))
         if 'cover' not in z: z['cover'] = cover_tile(tx, ty); np.savez_compressed(f, **z)   # a tile cached before the layer
-        return seafloor(z)
+        z = seafloor(z); z.update(sat_tile(tx, ty, z)); z.update(trees_tile(tx, ty, z)); return z
     t0 = time.time(); R = frame.Region(f't{tx}_{ty}', tx * 5, ty * 5, tx * 5 + 5, ty * 5 + 5); box = R.lonlat_box(1); out = {}
     ix0, iy0, nx, ny = R.grid(0.025)
     tab = features('base/land', box, ['geometry', 'subtype']); M = fill(polys_of(tab, lambda s: s == 'land'), 0.025, ix0, iy0, nx, ny) if tab is not None else np.zeros((ny, nx), np.uint8)
@@ -113,12 +166,12 @@ def tile(tx, ty):
     out['depth'] = np.where(land50 & ~ins, 0, np.round(d * 2)).astype(np.int16)
     seafloor(out)
     out['sec'] = np.array(time.time() - t0)
-    np.savez_compressed(f, **out); return out
+    np.savez_compressed(f, **out); out.update(sat_tile(tx, ty, out)); out.update(trees_tile(tx, ty, out)); return out
 
 # the vector layers of a tile (vectors.py), kept in out/national/vec/ (worked out again when a layer is missing); the lite profile has
 # the buildings within 2 km of the sea; the quays need the tile's mask and depth (L, as tile() gives it)
 VD = os.path.join(OUT, 'vec'); os.makedirs(VD, exist_ok=True)
-VKEYS = ('bld', 'road', 'bridge', 'pier', 'quay', 'coast', 'water')
+VKEYS = ('bld', 'road', 'bridge', 'pier', 'quay', 'coast', 'water', 'shore')
 def vec(tx, ty, L):
     f = os.path.join(VD, f'{tx}_{ty}.npz')
     if os.path.exists(f):
@@ -129,11 +182,12 @@ def vec(tx, ty, L):
     near = lambda x, y: dsea[min(1999, max(0, int(y // 25))), min(1999, max(0, int(x // 25)))] <= 2000
     v = vectors.build(tx, ty, near, L)
     import water; v['water'] = water.build(tx, ty, L)   # the fresh water (G2, water.py)
+    import shore; v['shore'] = shore.build(tx, ty, L)   # the beaches and the shingle (G10, shore.py)
     np.savez_compressed(f, **{k: np.frombuffer(b, np.uint8) for k, (b, n) in v.items()}, **{k + '_n': n for k, (b, n) in v.items()})
     return v
 # the vector layers the game takes, in a 'vec' pack per tile (01c-vec.js): the 'view' packs keep their hash, so a new vector release does
 # not fetch the heights again
-VGAME = ('bld', 'road', 'bridge', 'pier', 'quay', 'water')
+VGAME = ('bld', 'road', 'bridge', 'pier', 'quay', 'water', 'shore')
 # the NPC traffic of a tile (npc.py: harbours, fleets, grounds, routes), kept in out/national/npc/; worked out for all the tiles in
 # parallel before the packs are written (a tile of a city is half a minute)
 ND = os.path.join(OUT, 'npc'); os.makedirs(ND, exist_ok=True)
@@ -152,7 +206,8 @@ def chart_tile(tx, ty):
     nm = cached(f'names-{tx}-{ty}', lambda: chart.names(tx, ty))
     return {'coast1': (b1, k1, 'chart'), 'coast2': (b2, k2, 'chart'), 'names': (chart.names_bytes(nm), len(nm), 'chart')}
 
-GAME = dict(mask=(0.025, 'u8', 'sim', None), dc=(0.1, 'f32', 'sim', None), depth=(0.05, 'i16', 'sim', 'half'), hgt=(0.025, 'i16', 'view', 'hgt'), forest=(0.05, 'u8', 'view', None), cover=(0.05, 'u8', 'view', None))
+GAME = dict(mask=(0.025, 'u8', 'sim', None), dc=(0.1, 'f32', 'sim', None), depth=(0.05, 'i16', 'sim', 'half'), hgt=(0.025, 'i16', 'view', 'hgt'), forest=(0.05, 'u8', 'view', None), cover=(0.05, 'u8', 'view', None),
+            sy=(0.05, 'i16', 'view', 'raw'), sco=(0.1, 'i16', 'view', 'raw'), scg=(0.1, 'i16', 'view', 'raw'), trees=(0.05, 'u8', 'view', None))
 LAYERS = dict(mask=(0.025, 'u8', 'core', None), dc=(0.1, 'f32', 'core', None), expo=(0.5, 'u8', 'core', None), depth=(0.05, 'i16', 'sim', 'half'),
               hgt=(0.025, 'i16', 'view', 'hgt'), forest=(0.05, 'u8', 'view', None), cover=(0.05, 'u8', 'view', None))
 if __name__ == '__main__':

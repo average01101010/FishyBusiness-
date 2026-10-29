@@ -113,6 +113,9 @@ function vecDecode(D){
 // {mx, mz (the pier's middle, m, as fm), L: [{w (m), p: [[x, z], ...]}]}, the lines its pontoons (w 1.6 m and more) and fingers follow;
 // Senja's are left out as its piers are
 const FLYTE = /*@include(data/flyte.json)*/null;
+// the wind turbines [x, z, hub, rotor] and the power line spans over the sea [x1, z1, x2, z2, kV] in metres (tools/vind/vind.py): the
+// 3D view stands them up (view3d/17d-vind.js), the chart draws them (ui/03-map.js)
+const VIND = /*@include(data/vind.json)*/null;
 let FLYT = null;
 function flyteTile(tx, ty){
   if (!FLYTE || !MAPD.man) return [];

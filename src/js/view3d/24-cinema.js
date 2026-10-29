@@ -141,10 +141,12 @@
     gl.disableVertexAttribArray(1); attr(0, SKYQ, 2); gl.drawArrays(gl.TRIANGLES, 0, 6);
     gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL);
     // far pass
-    pickLights(eye, t);
+    glChk('frame'); pickLights(eye, t);
     drawTerrain(TM, eye, VPf, false); drawWater(VPf, eye); litSetup(VPf); drawLit(STAT, TM); drawTileStatics(TM, eye); drawBuildings(TM); drawUnits(eye, VPf, false, 15000); drawSites(eye, VPf, false, 15000); if (NPCM) for (const n of npcStates(H)){ const x = n.p.x * 1000, z = n.p.y * 1000, d = Math.hypot(x - eye[0], z - eye[2]); if (d < 30000 && !((n.fleet || n.coast) && d < 1500)) drawLit(NPCM[n.type], model(x - eye[0], (env.tide || 0) - eye[1], z - eye[2], -n.hd, 0, 0)); }
-    drawSea(VPf, eye, t, 1);
+    glChk('far'); drawVind(VPf, eye, dt, true); glChk('vindF');
+    drawSea(VPf, eye, t, 1); glChk('seaF');
     drawSeaLights(VPf, eye, t, false);
+    lifePts(VPf, eye, t, true);
     if (env.night > 0.02){
       gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.depthMask(false);
       if (BLD) drawChunkLights(VPf, eye);
@@ -154,7 +156,7 @@
     // near pass
     gl.clear(gl.DEPTH_BUFFER_BIT);
     const VT = vtype(), VG = GEO(VT), ncrew = Math.min(crewAboard().length, (VG.crewSpots || []).length); if (VG.hand) useHand(VT);
-    drawTerrain(TM, eye, VPn, true); updateWater(eye); drawWater(VPn, eye); litSetup(VPn); drawLit(STAT, TM); drawTileStatics(TM, eye); drawBuildings(TM);
+    drawTerrain(TM, eye, VPn, true); updateWater(eye); drawWater(VPn, eye); updateShore(eye); drawShore(VPn); litSetup(VPn); drawLit(STAT, TM); drawTileStatics(TM, eye); drawBuildings(TM); glChk('nearT'); drawTrees(VPn, eye); drawNear(VPn, eye, t); glChk('trees'); drawVind(VPn, eye, dt, false); glChk('vind'); litSetup(VPn);
     // whoever works the deck leaves their place: alone, the skipper leaves the wheel
     // resting ashore in the naust or a rorbu (15-energy.js; Jonas 05.10.2026: «Ved hvile forsvinner skipperen fra båten») he is not aboard
     // never more people aboard than the crew list (tilbakemelding #24): the crew at the hauler and the one at the table leave their
@@ -194,7 +196,7 @@
     if (SAY.w && plant && plant.id === SAY.w.pid && plant.wpos && performance.now() - SAY.t0 < SAYMS){ const q = plant.wpos[SAY.w.idx] || plant.wpos[Object.keys(plant.wpos)[0]]; if (q) SAY.a = [q.x - eye[0], q.y + 2.1 - eye[1], q.z - eye[2]]; }
     if (SAY.b && performance.now() - SAY.t0 < SAYMS){ const n = (npcNow || []).find(q => q.id === SAY.b); if (n) SAY.a = [n.p.x * 1000 - eye[0], (env.tide || 0) + 7 - eye[1], n.p.y * 1000 - eye[2]]; }
     const bunk = PM ? nearestBunker(eye) : null; if (bunk) bunk.last = drawBunker(bunk, eye, VPn, t, BMrel); gl.useProgram(PL.p);
-    wildSpawn(t); drawNPC(eye, t, H, VPn); drawAir(eye, t, H, VPn); drawGearSea(eye, t, VPn, H); drawDocks(eye, t, VPn); drawFloats(eye, t, VPn); drawWild(eye, t, dt);
+    glChk('boat'); wildSpawn(t); drawNPC(eye, t, H, VPn); glChk('npc'); drawAir(eye, t, H, VPn); drawGearSea(eye, t, VPn, H); glChk('gear'); drawDocks(eye, t, VPn); drawFloats(eye, t, VPn); glChk('docks'); drawFits(eye, VPn); drawMarinas(eye, t, VPn); glChk('marina'); drawWild(eye, t, dt); glChk('wild'); drawLife(eye, t, VPn); glChk('life'); lifePts(VPn, eye, t, false); glChk('lifePts');
 
     // the ensign in its hours (core/03-simulation.js flagUp; always while the paint shop tries one on); the pennant flies day and night
     gl.disableVertexAttribArray(2);
@@ -204,12 +206,12 @@
     gl.useProgram(PL.p);
     if (SHOW && SHOW.M && GEO(SHOW.t).open && pvm(SHOW.t).cap){ gl.colorMask(false, false, false, false); drawLit(pvm(SHOW.t).cap, SHOW.M); gl.colorMask(true, true, true, true); }
     { const cap = VG.hand ? (SK ? SK.cap : CAPM) : VG.open ? pvm(VT, hullLiv(S.boat)).cap : null; if (cap){ gl.colorMask(false, false, false, false); drawLit(cap, BMrel); gl.colorMask(true, true, true, true); } }
-    drawSea(VPn, eye, t, nearFar, 0);
+    glChk('nearObj'); drawSea(VPn, eye, t, nearFar, 0);
     drawSea(VPn, eye, t, false);
-    drawBeams(VPn, eye, t);
+    glChk('seaN'); drawBeams(VPn, eye, t);
     if (BLD && env.night > 0.02){ gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.depthMask(false); drawChunkLights(VPn, eye); gl.depthMask(true); gl.disable(gl.BLEND); }
     drawEffects(VPn, eye, BMabs, dt, t); drawBlows(VPn, eye, dt); drawNPCLights(VPn); drawAirLights(VPn, t); drawRescueLights(VPn, t); drawSeaLights(VPn, eye, t, true);
-    if (VG.hand) drawSkiffGlass(BMrel, VPn); else drawGlass(pvm(VT, hullLiv(S.boat)).glass, BMrel, VPn);
+    if (VG.hand) drawSkiffGlass(BMrel, VPn); else { const gm = pvm(VT, hullLiv(S.boat)).glass; drawGlass(gm, BMrel, VPn); drawDrops(gm, BMrel, VPn, t); }
     if (SHOW && SHOW.M) drawGlass(pvm(SHOW.t).glass, SHOW.M, VPn);
     drawNPCGlass(VPn);
     if (pr && pr.spray){ gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false); drawPts(pr.spray, gl.POINTS, VPn, [0.86, 0.93, 1], 30, true); gl.depthMask(true); gl.disable(gl.BLEND); }
@@ -372,23 +374,24 @@
         PB.set([A0[0] - eye[0], A0[1] - eye[1], A0[2] - eye[2], B0[0] - eye[0], B0[1] - eye[1], B0[2] - eye[2]], n * 6); PA[n * 2] = PA[n * 2 + 1] = 0.8; n++; }
       if (n) drawPts(n * 2, gl.LINES, VP, [0.12, 0.12, 0.12], 1, false);
     }
-    // rain or snow
+    // rain or snow, and sleet between 0.5 and 2 °C (G6: every other particle a flake); on «Lav» half as many
     const pr = env.precip;
     if (pr > 0.04){
-      const snow = env.temp < 1, BX = 26, BY = 16;
+      const tp = env.temp, snow = tp < 0.5, sleet = !snow && tp < 2, BX = 26, BY = 16;
       if (!pinit){ for (let i = 0; i < PN; i++){ pp[i * 3] = eye[0] + (Math.random() * 2 - 1) * BX; pp[i * 3 + 1] = eye[1] + (Math.random() * 2 - 1) * BY; pp[i * 3 + 2] = eye[2] + (Math.random() * 2 - 1) * BX; } pinit = true; }
-      const wx = env.windDir[0] * env.wind * (snow ? 0.8 : 0.9), wz = env.windDir[1] * env.wind * (snow ? 0.8 : 0.9), vy = snow ? -1.3 : -7.5;
-      const cnt = Math.floor(PN * Math.min(1, pr * 1.2)); let m = 0;
+      const cnt = Math.floor(PN * Math.min(1, pr * 1.2) * (QUAL.lvl === 0 ? 0.5 : 1)); let m = 0, mf = 0; const fl = PFL;
       for (let i = 0; i < cnt; i++){
-        const jx = snow ? Math.sin(t * 1.3 + i) * 0.6 : 0, jz = snow ? Math.cos(t * 1.1 + i * 1.7) * 0.6 : 0;
+        const flake = snow || (sleet && (i & 1)), f = flake ? 0.8 : 0.9, wx = env.windDir[0] * env.wind * f, wz = env.windDir[1] * env.wind * f, vy = flake ? (snow ? -1.3 : -2.4) : -7.5;
+        const jx = flake ? Math.sin(t * 1.3 + i) * 0.6 : 0, jz = flake ? Math.cos(t * 1.1 + i * 1.7) * 0.6 : 0;
         pp[i * 3] += (wx + jx) * dt; pp[i * 3 + 1] += vy * dt; pp[i * 3 + 2] += (wz + jz) * dt;
         for (let a = 0; a < 3; a++){ const e = a === 1 ? BY : BX; let r = pp[i * 3 + a] - eye[a]; if (r > e) pp[i * 3 + a] -= 2 * e; else if (r < -e) pp[i * 3 + a] += 2 * e; }
         const rx = pp[i * 3] - eye[0], ry = pp[i * 3 + 1] - eye[1], rz = pp[i * 3 + 2] - eye[2];
-        if (snow){ PB[m * 3] = rx; PB[m * 3 + 1] = ry; PB[m * 3 + 2] = rz; PA[m] = 0.85; m++; }
-        else { PB.set([rx, ry, rz, rx - (wx) * 0.05, ry - vy * 0.05, rz - (wz) * 0.05], m * 3); PA[m] = PA[m + 1] = 0.35; m += 2; }
+        if (flake){ fl[mf * 3] = rx; fl[mf * 3 + 1] = ry; fl[mf * 3 + 2] = rz; mf++; }
+        else { PB.set([rx, ry, rz, rx - wx * 0.05, ry - vy * 0.05, rz - wz * 0.05], m * 3); PA[m] = PA[m + 1] = 0.35; m += 2; }
       }
       const pc = [Math.min(1, env.amb[0] * 2 + env.sunCol[0] * 0.6 + 0.25), Math.min(1, env.amb[1] * 2 + env.sunCol[1] * 0.6 + 0.27), Math.min(1, env.amb[2] * 2 + env.sunCol[2] * 0.6 + 0.3)];
-      drawPts(m, snow ? gl.POINTS : gl.LINES, VP, pc, 95, true);
+      if (m) drawPts(m, gl.LINES, VP, pc, 95, true);
+      if (mf){ PB.set(fl.subarray(0, mf * 3)); for (let i = 0; i < mf; i++) PA[i] = sleet ? 0.7 : 0.85; drawPts(mf, gl.POINTS, VP, pc, sleet ? 80 : 95, true); }
     }
     gl.depthMask(true); gl.disable(gl.BLEND);
   }
