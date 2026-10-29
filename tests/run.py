@@ -28,7 +28,7 @@ LITE = ['boktest', 'lotttest', 'skattetest', 'driftsplan2test', 'driftsplan2ui',
         'shoptest', 'selltest', 'timetest', 'worktest', 'vesseltest', 'fuelcal', 'bunktest', 'lanterntest', 'streaktest', 'fixtest', 'hailltest', 'harbourtest', 'simday', 'calib', 'kvtest', 'progweek', 'seatest', 'stabtest', 'projtest', 'boottest', 'maptest', 'mig2test', 'charttest', 'helmtest', 'soundtest', 'sleeptest', 'pwatest', 'bktest']
 # they measure milliseconds, so they run alone at the end, when nothing else takes the CPU
 SOLO = ['routetest', 'heattest', 'landtest', 'charttest']
-VECB = ['npctest', 'havntest', 'vectest']   # need dist-vec/ with the vec packs; run.py builds it once before them (KYST_VEC_BUILT)
+VECB = ['npctest', 'havntest', 'vectest', 'lifeshot', 'havnshot']   # need dist-vec/ with the vec packs; run.py builds it once before them (KYST_VEC_BUILT)
 READ = {'selltest', 'hailltest', 'simday', 'calib', 'kvtest', 'progweek', 'seatest'}
 LONG = {'tut': 3600, 'deckshot': 2400, 'workshot': 1800, 'vessel3d': 2400, 'sea3d': 3000, 'vectest': 1500, 'havntest': 1500, 'heattest': 3600, 'trackfollow': 3300, 'vindshot': 2400, 'wetshot': 2400, 'treeshot': 1500, 'lifeshot': 2400, 'havnshot': 2400}   # SwiftShader can take ~40 s for one 3D screenshot; sea3d takes 27
 # not in D3, but they draw 3D all the same (tut.py plays the first trip with the 3D view), so they run in the 3D lane

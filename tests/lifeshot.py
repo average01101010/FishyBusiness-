@@ -4,6 +4,8 @@ in June (the birds of the bird cliff). Pictures in tests/out/life_*.png; the cou
 that each place has what it should, the animals' models are in, the whales are the Blender ones, no GL errors and no page errors."""
 import asyncio, json, os
 from playwright.async_api import async_playwright
+ROOT0 = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+os.environ['KYST_DIST'] = os.path.join(ROOT0, 'dist-vec')   # the towns' houses, roads and quays are in the vec packs (run.py builds dist-vec/)
 from _env import *
 
 def check(c, what, extra=''): print(('OK  ' if c else 'FEIL') + ' ' + what + (('  ' + str(extra)) if extra else ''))

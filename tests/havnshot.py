@@ -4,6 +4,8 @@ quayFit) there and at Finnsnes, and the beaches and shingle (17h-shore.js, tools
 Checks: small boats lie moored at each marina, no GL errors, no page errors."""
 import asyncio, json, os
 from playwright.async_api import async_playwright
+ROOT0 = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+os.environ['KYST_DIST'] = os.path.join(ROOT0, 'dist-vec')   # the towns' houses, roads and quays are in the vec packs (run.py builds dist-vec/)
 from _env import *
 
 def check(c, what, extra=''): print(('OK  ' if c else 'FEIL') + ' ' + what + (('  ' + str(extra)) if extra else ''))
