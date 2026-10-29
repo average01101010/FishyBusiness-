@@ -177,6 +177,7 @@ Spillet skal ligge på Hetzner-serveren din, ikke på GitHub Pages (se G).
 7. **Stabilitet før lansering** (Jonas 08.10.2026: venter til spillet offentliggjøres, fordi det endres mange ganger daglig i utviklingen):
    - **Ekte lagringer stopper utrullingen:** et steg i `deploy.yml` henter alle lagringene (`tools/saves/fetch.py --hist 1`, med GitHub-hemmeligheten `SUPABASE_SERVICE_ROLE_KEY`, som alt er lagt inn) og kjører `tests/savestest.py` mot `dist-pwa` før opplastingen. Én lagring som ikke starter, stopper utrullingen. Lagringene blir bare på maskinen som kjører jobben, og loggen viser bare fingeravtrykk. Tidsgrensen heves til 45 minutter.
    - **Testutgave før produksjon:** arbeidsgrenen rulles ut til en egen adresse, og bare `main` til detstorebla.no.
+   - **Gjort 29.10.2026 (Jonas: «kjør på» etter Geminis gjennomgang):** `deploy.yml` og `pwa.yml` kjører enhetstestene av kjernen (`node tests/unit/run.mjs`, før kartet hentes) og `boottest` mot `dist-pwa` (`python3 tests/run.py smoke boottest`, Playwright 1.63 med Chromium i jobben) før opplastingen. En rød stopper utrullingen. Lagringstesten over venter fortsatt på offentliggjøringen.
    - **Feil fra spillerne** (`cloudErr`, «boot:») som varsel til Jonas, ikke bare i admin.
    - Til da kan lagringene testes for hånd: `python3 tools/saves/fetch.py` med nøkkelen, så `python3 tests/savestest.py`.
 
