@@ -8,7 +8,8 @@
 //   node tests/unit/run.mjs            all the tests
 //   node tests/unit/run.mjs quota      the files whose name has «quota»
 //
-// A test file exports `export default function (t){ … }` and uses t.eq, t.near, t.ok, t.throws and t.K (the core's names). It prints one
+// A test file exports `export default function (t){ … }` and uses t.eq, t.near, t.ok, t.throws and t.K (the core's names), and may export
+// `stubs` to change the browser it runs in (location, localStorage …) and call t.fresh(stubs) for a second core. It prints one
 // OK line per check and a FEIL line for a failure, as the Playwright tests do; the exit code is 1 on any failure. tests/run.py runs this
 // first when a file in src/js/core/ or here has changed, and /lever runs it before a push.
 import { readFileSync, readdirSync } from 'node:fs';
@@ -55,16 +56,18 @@ function browserStubs(){
 // global lookup go through an interceptor, which made PIERBOX in 07-harbours.js take 13 s instead of 0.1), with the browser's names as
 // parameters that shadow Node's globals. The core's top-level functions, consts and lets are then locals of that function, and a direct
 // eval appended inside the same body hands them out by name (and `set` assigns to them, so a test can do set('S', newState())).
-const PARAMS = ['window', 'self', 'document', 'localStorage', 'sessionStorage', 'navigator', 'location', 'requestAnimationFrame', 'cancelAnimationFrame',
+const PARAMS = ['Math', 'window', 'self', 'document', 'localStorage', 'sessionStorage', 'navigator', 'location', 'requestAnimationFrame', 'cancelAnimationFrame',
   'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'addEventListener', 'removeEventListener', 'dispatchEvent', 'matchMedia', 'Worker', 'Image', 'Audio',
   'AudioContext', 'webkitAudioContext', 'fetch', 'screen', 'innerWidth', 'innerHeight', 'devicePixelRatio', 'alert', 'confirm', 'open', 'scrollTo', 'getComputedStyle', 'history'];
 const EXPORTER = `\nconst __K = {set:(n, v) => { __K.__v = v; eval(n + ' = __K.__v'); }, get:n => eval(n)};
 for (const n of ${JSON.stringify(NAMES)}) { try { __K[n] = eval(n); } catch (e) {} }
 return __K;`;
 let coreFn;
-function fresh(){
+// `stubs` from a test file (export const stubs = {location:{hash:'#seed=5', hostname:'localhost'}}) replace the defaults by name. Math is a
+// copy of its own (Object.create(Math)) so a core that replaces Math.random (#seed) does not touch the harness's or the next test's
+function fresh(stubs){
   coreFn = coreFn || new Function(...PARAMS, CORE + EXPORTER);
-  const w = browserStubs();
+  const w = Object.assign(browserStubs(), stubs || {}); w.Math = Object.create(Math);
   return {K:coreFn(...PARAMS.map(p => w[p]))};
 }
 
@@ -90,8 +93,10 @@ const t0 = performance.now();
 let fails = 0, checks = 0;
 for (const f of files){
   const name = basename(f, '.test.mjs');
-  const {K} = fresh(), t = harness(name, K);
-  try { (await import(pathToFileURL(join(HERE, f)).href)).default(t); }
+  const mod = await import(pathToFileURL(join(HERE, f)).href);
+  const {K} = fresh(mod.stubs), t = harness(name, K);
+  t.fresh = stubs => fresh(stubs).K;   // another core, for a test that compares two runs
+  try { mod.default(t); }
   catch (e){ t.out.push('FEIL ' + name + ': ' + (e && e.stack || e)); fails++; }
   for (const line of t.out) console.log(line);
   fails += t.fails; checks += t.out.filter(l => l.startsWith('OK ')).length;
