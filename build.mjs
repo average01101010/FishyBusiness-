@@ -48,8 +48,6 @@ if (PWA){
   if (h < 0 || b < 0) { console.error('build: no </head> or </body> for the app'); process.exit(1); }
   page = page.slice(0, h) + head + page.slice(h, b) + reg + page.slice(b);
 }
-writeFileSync(OUT, page);
-console.log(`${basename(DIST)}/index.html: ${(Buffer.byteLength(page) / 1e6).toFixed(2)} MB`);
 // the map's rasters in packs of 10 km blocks, made by the map pipeline (tools/map/region.py, phase K5 of the coast plan) into
 // src/data/map/ and fetched by the page from map/. The whole coast (tools/map/game.py: src/data/map with a release's tiles) is taken
 // from tools/map/out/game/ when it is there, or from KYST_MAP
@@ -61,10 +59,17 @@ let mapBytes = 0; const mapFiles = readdirSync(MAPSRC).filter(f => f.endsWith('.
 for (const f of mapFiles){ copyFileSync(join(MAPSRC, f), join(MAPOUT, f)); mapBytes += statSync(join(MAPSRC, f)).size; }
 const mapMan = JSON.parse(readFileSync(join(MAPSRC, 'manifest.json'), 'utf8')); if (!VECP) mapMan.packs = mapMan.packs.filter(p => p.kind !== 'vec');
 writeFileSync(join(MAPOUT, 'manifest.json'), JSON.stringify(mapMan)); mapFiles.push('manifest.json');
+// the build's version (29.10.2026): the first 12 hex of the sha256 of the page and the map's manifest, the same the service worker's
+// cache name has (@V@ in src/pwa/sw.js), written into the page as <meta name="dsb-version"> so the telemetry (ui/10f-cloud.js cloudMeta)
+// and the admin's tables tell the builds apart; until now every build reported 'dev'
+const ver = createHash('sha256').update(page).update(JSON.stringify(mapMan)).digest('hex').slice(0, 12);
+page = page.replace('</head>', `<meta name="dsb-version" content="${ver}">\n</head>`);
+writeFileSync(OUT, page);
+console.log(`${basename(DIST)}/index.html: ${(Buffer.byteLength(page) / 1e6).toFixed(2)} MB, version ${ver}`);
 console.log(`${basename(DIST)}/map/: ${mapFiles.length - 1} packs, ${(mapBytes / 1e6).toFixed(2)} MB (${MAPSRC === GAMEMAP ? 'the whole coast, tools/map/out/game' : MAPSRC})`);
 // the app's own files: the manifest, the icons, and the service worker with the build's version (the page and the map's manifest)
 if (PWA){
-  const P = join(SRC, 'pwa'), ver = createHash('sha256').update(page).update(readFileSync(join(MAPOUT, 'manifest.json'))).digest('hex').slice(0, 12);
+  const P = join(SRC, 'pwa');
   for (const f of readdirSync(P)){ if (f === 'sw.js') writeFileSync(join(DIST, f), readFileSync(join(P, f), 'utf8').replace('@V@', ver)); else copyFileSync(join(P, f), join(DIST, f)); }
   console.log(`dist-pwa/: the app's files (service worker ${ver})`);
 }

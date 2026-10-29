@@ -4,6 +4,8 @@
 
 **Spillet publiseres på detstorebla.no** (Jonas 08.10.2026): en push til arbeidsgrenen som endrer `src/` ruller det ut av `.github/workflows/deploy.yml` («Appen på Hetzner», PWA-bygget). Sjekk at kjøringen er grønn med `gh api repos/average01101010/FishyBusiness-/actions/runs`.
 
+**Byggets versjon:** `build.mjs` skriver `<meta name="dsb-version" content="…">` i siden, de første 12 heksadesimale tegnene av sha256 av siden og kartmanifestet, det samme som tjenestearbeiderens cache-navn (`@V@` i `sw.js`). `cloudMeta()` i `ui/10f-cloud.js` sender den med hendelser og feil, så admin-tabellene (bildetakt per versjon, feil) kan skille byggene; før 29.10.2026 sto det `dev` i alle, fordi ingen skrev metaen. Bygget skriver versjonen i utskriften (`dist/index.html: 38.18 MB, version 8e0adf3dc0c4`).
+
 **Artifacten oppdateres ikke lenger** (Jonas 08.10.2026: «La artifacten stå»). Siden er over 16 MB (23 MB), og artifacten tar høyst 16 MB per side, så publiseringen avvises. Artifacten https://claude.ai/artifact/HHehndJQmtCYBJpQ1b8L6f står som den var 03.10.2026 og skal ikke slettes. Publiser bare dit hvis brukeren ber om det, og da trengs en lettere utgave (modeller og skrifter ut av siden).
 
 Slik ble artifacten publisert da den ble oppdatert: `dist/index.html` til artifactens URL, slik at lenken beholdes.
