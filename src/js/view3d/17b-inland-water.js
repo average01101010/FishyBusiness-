@@ -48,16 +48,19 @@
     for (const a of D.areas){ ai++;
       // standing water never above its shore: the level no higher than the lowest tenth of the ground at its outline (a pond of a
       // cell or two on a slope took the slope's median and lay as a dark plate over the bank, Bergen 28.10.2026)
-      let lv = a.level;
+      let lv = a.level, lvShore = 0;
       // a pond under 400 m2 is a few corners after the 4 m simplification, a dark plate rather than water (Bergen 28.10.2026): left out
       if (!a.kind){ let ar = 0; for (let i = 0; i < a.ix.length; i += 3){ const p = a.ix[i] * 2, q = a.ix[i + 1] * 2, r = a.ix[i + 2] * 2; ar += Math.abs((a.v[q] - a.v[p]) * (a.v[r + 1] - a.v[p + 1]) - (a.v[r] - a.v[p]) * (a.v[q + 1] - a.v[p + 1])) / 2; } if (ar < 400) continue; }
-      if (!a.kind){ const hs = []; for (let j = 0; j < a.v.length; j += 2) hs.push(terrH(ox + a.v[j], oz + a.v[j + 1])); hs.sort((p, q) => p - q); lv = Math.min(lv, hs[Math.floor(hs.length * 0.1)] + 0.3); }
-      // and only where the ground knows it: Kartverket's terrain has a lake flat at its water, so most of a real lake lies under the
-      // level; a pond the 25 m ground does not have stands half buried, a dark wedge of water on a slope (Bergen 28.10.2026): left out
-      // when under 70 % of the points inside (each triangle's middle and the three points halfway from it to the corners) are wet
-      if (!a.kind){ let wet = 0, n = 0; for (let i = 0; i < a.ix.length; i += 3){ const p = a.ix[i] * 2, q = a.ix[i + 1] * 2, r = a.ix[i + 2] * 2, cx = (a.v[p] + a.v[q] + a.v[r]) / 3, cz = (a.v[p + 1] + a.v[q + 1] + a.v[r + 1]) / 3;
-          for (const [x, z] of [[cx, cz], [(cx + a.v[p]) / 2, (cz + a.v[p + 1]) / 2], [(cx + a.v[q]) / 2, (cz + a.v[q + 1]) / 2], [(cx + a.v[r]) / 2, (cz + a.v[r + 1]) / 2]]){ n++; if (terrH(ox + x, oz + z) < lv - 0.05) wet++; } }
-        if (wet < n * 0.7) continue; }
+      if (!a.kind){ const hs = []; for (let j = 0; j < a.v.length; j += 2) hs.push(terrH(ox + a.v[j], oz + a.v[j + 1])); hs.sort((p, q) => p - q); lvShore = hs[Math.floor(hs.length * 0.1)]; lv = Math.min(lv, lvShore + 0.3); }
+      // and over the ground inside it: the heights over 10 m are kept in 2 m steps (region.hgtEnc), so a lake Kartverket has flat reads
+      // a step or two high inside, and a pond the ground does not have stands half buried (a dark wedge on an islet at Bergen,
+      // 28.10.2026). The level goes to 0.3 m over the highest but a seventh of the points inside (each triangle's middle and the three points
+      // halfway to its corners), at most 2.5 m over the shore's lowest tenth; water still under 70 % of them is left out
+      if (!a.kind){ const S = [];
+        for (let i = 0; i < a.ix.length; i += 3){ const p = a.ix[i] * 2, q = a.ix[i + 1] * 2, r = a.ix[i + 2] * 2, cx = (a.v[p] + a.v[q] + a.v[r]) / 3, cz = (a.v[p + 1] + a.v[q + 1] + a.v[r + 1]) / 3;
+          for (const [x, z] of [[cx, cz], [(cx + a.v[p]) / 2, (cz + a.v[p + 1]) / 2], [(cx + a.v[q]) / 2, (cz + a.v[q + 1]) / 2], [(cx + a.v[r]) / 2, (cz + a.v[r + 1]) / 2]]) S.push(terrH(ox + x, oz + z)); }
+        S.sort((p, q) => p - q); lv = Math.min(Math.max(lv, S[Math.floor((S.length - 1) * 0.85)] + 0.3), lvShore + 2.5);
+        if (S.filter(h => h < lv - 0.05).length < S.length * 0.7) continue; }
       if (!a.kind){ for (let i = 0; i < a.ix.length; i++){ const j = a.ix[i]; P.push(a.v[j * 2], lv, a.v[j * 2 + 1]); A.push(0, WATERI ? ai : 0, 0); } continue; }
       // a river's area lies on the ground: its triangles split at the longest edge down to 12 m, each point on the ground, so a big
       // triangle on a slope does not cut through it (a dark wedge on an islet at Bergen, 28.10.2026)
