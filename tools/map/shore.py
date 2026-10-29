@@ -3,8 +3,10 @@
 # tile's land mask), too narrow for the 50 m cells of the cover layer. A 'shore' entry in the tile's vec pack (coast.py); the game drapes
 # them on the ground in view3d/17h-shore.js, older games skip it.
 #   areas   kind (0 sand, 1 shingle), triangulated here (shapely's constrained Delaunay), the outline simplified to 2 m
+#   cliffs  OpenStreetMap's natural=cliff (physical/cliff) within 200 m of the sea, the lines simplified to 3 m; the cliff's foot is on
+#           the line's right (OpenStreetMap's way), the game stands a rock face along it (view3d/17h-shore.js)
 # Coordinates are metres from the tile's corner, packed as water.py's areas (varints): n areas; per area kind, 0 (the level, unused),
-# n vertices as zz steps, n triangles, the indices.
+# n vertices as zz steps, n triangles, the indices; then n cliffs, per cliff n points as zz steps (an older game reads only the areas).
 #   python3 tools/map/shore.py inject <game dir> [tx,ty ...]   adds the entry to the vec packs of a built game dir (for a local test)
 import os, sys, json, hashlib, numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
@@ -40,13 +42,30 @@ def build(tx, ty, L):
                         if key not in idx: idx[key] = len(V); V.append(key)
                         I.append(idx[key])
                 if len(I) >= 3: areas.append((k, V, I))
+    cl = []
+    t2 = features('base/land', box, ['geometry', 'subtype', 'class'])
+    if t2 is not None:
+        for g, sub, cls in zip(t2.column('geometry').to_pylist(), t2.column('subtype').to_pylist(), t2.column('class').to_pylist()):
+            if sub != 'physical' or cls != 'cliff' or g is None: continue
+            m = to_m(from_wkb(g), ox, oy)
+            for part in getattr(m, 'geoms', [m]):
+                if part.geom_type == 'Polygon': part = part.exterior
+                if part.geom_type not in ('LineString', 'LinearRing') or part.length < 15: continue
+                c = part.interpolate(0.5, normalized=True)
+                if not (0 <= c.x < 50000 and 0 <= c.y < 50000) or dsea[min(M.shape[0] - 1, max(0, int(c.y // 25))), min(M.shape[1] - 1, max(0, int(c.x // 25)))] > 200: continue
+                q = part.simplify(3.0); pts = [(round(x), round(y)) for x, y in q.coords]
+                if len(pts) >= 2: cl.append(pts)
     b = bytearray(); varint(b, len(areas))
     for k, V, I in areas:
         varint(b, k); varint(b, 0); varint(b, len(V)); px = py = 0
         for x, y in V: varint(b, zz(x - px)); varint(b, zz(y - py)); px, py = x, y
         varint(b, len(I) // 3)
         for i in I: varint(b, i)
-    return bytes(b), len(areas)
+    varint(b, len(cl))
+    for pts in cl:
+        varint(b, len(pts)); px = py = 0
+        for x, y in pts: varint(b, zz(x - px)); varint(b, zz(y - py)); px, py = x, y
+    return bytes(b), len(areas) + len(cl)
 
 if __name__ == '__main__' and len(sys.argv) > 2 and sys.argv[1] == 'inject':
     import coast, zlib

@@ -247,7 +247,7 @@
     'if(uDbg>0.5){gl_FragColor=vec4(vec3(clamp(foam,0.0,1.0)),1.0);return;}' +
     'col=mix(col,fc,clamp(foam,0.0,1.0)*0.85);gl_FragColor=vec4(fin(col,vW),1.0);}';
   const terFS = q => '#extension GL_OES_standard_derivatives : enable\n#define MATQ ' + q + '\nprecision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform vec4 uHole;' +
-    'uniform sampler2D uGround;uniform sampler2D uLand;uniform vec4 uGRect;uniform float uGOn;uniform float uLOn;uniform float uTideY;uniform float uSwash;uniform vec3 uSand;uniform vec2 uWet;varying vec3 vW;varying vec3 vC;varying vec3 vN;varying vec3 vP;varying float vS;varying vec4 vM;varying vec4 vV;uniform vec4 uMP;uniform vec4 uMQ;' + NOISE + PLG + AIR +
+    'uniform sampler2D uGround;uniform sampler2D uLand;uniform vec4 uGRect;uniform float uGOn;uniform float uLOn;uniform float uTideY;uniform float uSwash;uniform vec3 uSand;uniform vec2 uWet;uniform float uExpo;varying vec3 vW;varying vec3 vC;varying vec3 vN;varying vec3 vP;varying float vS;varying vec4 vM;varying vec4 vV;uniform vec4 uMP;uniform vec4 uMQ;' + NOISE + PLG + AIR +
     // the ground near the water is cut where the shore texture (buildLandMask: the foreshore's own height, h = r * 8 - 4) lies under
     // the tide, so the waterline is the coast's own line at high water and the foreshore's at ebb, whatever the mesh's cells
     'void main(){if(vW.x>uHole.x&&vW.x<uHole.z&&vW.z>uHole.y&&vW.z<uHole.w)discard;vec2 luv=(vW.xz-uGRect.xy)*uGRect.zw;' +
@@ -306,8 +306,11 @@
 'float sand=(1.0-smoothstep(1.2,2.1,h+b1*0.8))*step(0.05,h);c=mix(c,uSand,sand*0.7);' +
     // the tidal zone along the whole coast: rockweed up to about the high water and a pale band of barnacles above it, never under
     // snow (Jonas 07.10.2026: «det ser litt dumt ut når den eneste plassen det er tang og rur i verden er rundt stolpene til naustet»)
-    'float wd=(1.0-smoothstep(0.9,1.5,h+b2*0.6))*step(-0.6,h);c=mix(c,mix(vec3(0.22,0.19,0.1),vec3(0.32,0.28,0.14),ns(wp*0.35)),wd*0.92);' +
-    'float br=smoothstep(1.0,1.45,h+b2*0.6)*(1.0-smoothstep(1.55,2.1,h+b1*0.8));c=mix(c,vec3(0.7,0.7,0.66),br*0.55);' +
+    // G10: by the exposure to the open sea (uExpo, the core's expo where the boat is): in a sheltered fjord the rockweed grows thick
+    // and a little higher, on an open coast it is thinner and the barnacles' pale band climbs with the splash
+    'float wtop=mix(1.65,1.25,uExpo),btop=mix(1.85,2.7,uExpo);' +
+    'float wd=(1.0-smoothstep(wtop-0.6,wtop,h+b2*0.6))*step(-0.6,h);c=mix(c,mix(vec3(0.22,0.19,0.1),vec3(0.32,0.28,0.14),ns(wp*0.35)),wd*mix(0.95,0.75,uExpo));' +
+    'float br=smoothstep(wtop-0.5,wtop-0.05,h+b2*0.6)*(1.0-smoothstep(btop-0.55,btop,h+b1*0.8));c=mix(c,vec3(0.7,0.7,0.66),br*mix(0.4,0.65,uExpo));' +
     'if(uGOn>0.5&&ins>0.5){vec4 g=texture2D(uGround,uv);c=mix(c,g.rgb,g.a*ef);}' +
     // G6: wet ground (uWet.x, env.wet) is darker, the rock and the foreshore most and the grass least, not under snow, with the sun's
     // sheen on it

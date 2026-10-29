@@ -1,4 +1,4 @@
-  // ---------- the beaches and the shingle (G10 of docs/planer/grafikk-natur-og-miljo.md) ----------
+  // ---------- the beaches, the shingle and the cliffs by the sea (G10 of docs/planer/grafikk-natur-og-miljo.md) ----------
   // From the 'shore' entry of the coast's vec packs (tools/map/shore.py: OpenStreetMap's sand and shingle within 150 m of the sea; older
   // packs have none, and nothing is drawn): each area draped on the ground, its triangles split down to 6 m so they follow it, a little
   // over it with the polygon offset. Sand pale and warm, darker and wet low down by the water; shingle grey in rounded stones' tones,
@@ -17,10 +17,14 @@
       const nt = vi(), ix = new Uint32Array(nt * 3); for (let i = 0; i < nt * 3; i++) ix[i] = vi();
       areas.push({kind, v, ix});
     }
+    // the cliffs (kart-17 on; an older pack ends here)
+    const cliffs = [];
+    if (p < b.length){ const nc = vi(); for (let c = 0; c < nc; c++){ const np = vi(), v = new Float32Array(np * 2); let x = 0, y = 0; for (let i = 0; i < np; i++){ x += zi(); y += zi(); v[i * 2] = x; v[i * 2 + 1] = y; } cliffs.push(v); } }
+    areas.cliffs = cliffs;
     return areas;
   }
   function shoreTile(tx, ty){
-    const T = MAPD.man.tile * 1000, ox = tx * T, oz = ty * T, A = shoreData(tx, ty); if (A === undefined) return undefined; if (!A || !A.length) return null;
+    const T = MAPD.man.tile * 1000, ox = tx * T, oz = ty * T, A = shoreData(tx, ty); if (A === undefined) return undefined; if (!A || (!A.length && !(A.cliffs && A.cliffs.length))) return null;
     const m = MB(), SAND = [0.78, 0.73, 0.6], WETS = [0.5, 0.46, 0.38], SHG = [0.55, 0.54, 0.51];
     for (const a of A){
       const col = (x, z, y) => { const h = hash(Math.floor(x) * 0.37 + Math.floor(z) * 0.71), f = 0.9 + 0.2 * h;
@@ -39,7 +43,25 @@
       };
       for (let i = 0; i < a.ix.length; i += 3){ const p = a.ix[i] * 2, q = a.ix[i + 1] * 2, r = a.ix[i + 2] * 2; tri(a.v[p], a.v[p + 1], a.v[q], a.v[q + 1], a.v[r], a.v[r + 1], 0); }
     }
-    return m.p.length ? {mesh:m.mesh([ox, oz])} : null;
+    // the cliffs by the sea: a rock face down from the top (1 m to the line's left, OpenStreetMap's cliff falls to its right) to the
+    // ground or the low water 12 m out, where it falls 4 m or more, in steps of 4 m; grey rock, darker and wet low down
+    let faces = 0, cl = 0;
+    for (const v of A.cliffs || []){
+      let pv = null; cl++;
+      for (let i = 0; i + 1 < v.length; i += 2){ const ax = v[i], az = v[i + 1], bx = v[Math.min(i + 2, v.length - 2)], bz = v[Math.min(i + 3, v.length - 1)], L = Math.hypot(bx - ax, bz - az); if (L < 0.5 && i + 2 < v.length) continue;
+        const n = Math.max(1, Math.ceil(L / 4));
+        for (let k = 0; k < n || (i + 2 >= v.length && k === 0); k++){ const f = L > 0.5 ? k / n : 0, x = ox + ax + (bx - ax) * f, z = oz + az + (bz - az) * f, ux = L > 0.5 ? (bx - ax) / L : 1, uz = L > 0.5 ? (bz - az) / L : 0, lx = uz, lz = -ux;
+          const top = terrH(x + lx, z + lz), foot = Math.max(-1.5, Math.min(terrH(x - lx * 12, z - lz * 12), terrH(x - lx * 6, z - lz * 6))), q = {x, z, top, foot, lx, lz};
+          if (pv && pv.top - pv.foot > 4 && top - foot > 4){
+            const h = hash(Math.floor(x) * 0.13 + Math.floor(z) * 0.29), R = [0.38, 0.38, 0.36].map(c => c * (0.85 + 0.3 * h)), W = [0.2, 0.19, 0.17];
+            const A0 = [pv.x - pv.lx * 0.5, pv.top + 0.3, pv.z - pv.lz * 0.5], B0 = [x - lx * 0.5, top + 0.3, z - lz * 0.5], A1 = [pv.x - pv.lx * 2.5, pv.foot, pv.z - pv.lz * 2.5], B1 = [x - lx * 2.5, foot, z - lz * 2.5];
+            const Am = [(A0[0] + A1[0]) / 2 - pv.lx * 0.4, Math.max(pv.foot + 1.6, (A0[1] + A1[1]) / 2), (A0[2] + A1[2]) / 2 - pv.lz * 0.4], Bm = [(B0[0] + B1[0]) / 2 - lx * 0.4, Math.max(foot + 1.6, (B0[1] + B1[1]) / 2), (B0[2] + B1[2]) / 2 - lz * 0.4];
+            m.quad(A0, B0, Bm, Am, R); m.quad(Am, Bm, B1, A1, pv.foot < 1.5 ? W : R.map(c => c * 0.85)); faces++;
+          }
+          pv = q; if (L <= 0.5) break; }
+      }
+    }
+    return m.p.length ? {mesh:m.mesh([ox, oz]), cliffs:cl, faces} : null;
   }
   let shoreT = 0;
   function updateShore(eye){

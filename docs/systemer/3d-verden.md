@@ -201,7 +201,9 @@ Planen: G7. NVEs lister (kart.nve.no, api.nve.no) er stengt fra containeren; Ope
 - **Beslagene** (`quayFit`) langs hver kaikant med sjø utenfor, i hele landet: to fenderlister i tre, bildekk hver 6 m, pullerter hver 12 m litt inn på dekket, en leider ned i vannet hver 35 m og den gule kanten. Havneenhetene og kaiplassene til spillets havner har sine egne fra før.
 - **De faste bryggene** som er kartlagt som linje (ikke `floating=yes`), er tredekke på pæler hver 3 m, ikke grå kasser (BACKLOG: Kristiansand og Hammerfest; alternativ b fra #94).
 - **Småbåthavnene** (`tools/map/marina.py` til `src/data/marina.json`, OpenStreetMaps `leisure=marina` i Overture, 460 i Norge; `view3d/17g-marina.js`): innen 1,5 km ligger småbåter med baugen inn ved fingerplassene langs begge sider av flytebryggene i havna, 3,2 m mellom, ellers på bøyer i rekker der det er dypt nok. Fire slag (åpen båt med påhengsmotor, snekke, motorbåt med kahytt, seilbåt med mast); fire av fem plasser tatt fra mai til september, én av tre om vinteren. `#marina0` i adressen skrur dem av.
-- **Ikke gjort ennå:** strendene og rullesteinsfjærene på 5 m, tang og rur på skjærene etter eksponeringen og stupene i fjæra; de trenger nye lag i kartpakkene (`vectors.py`) og en kartrelease.
+- **Strendene og rullesteinsfjærene** (`tools/map/shore.py`, laget `shore` i vec-pakkene fra `kart-16`; `view3d/17h-shore.js`): OpenStreetMaps sand og rullestein innen 150 m fra sjøen, 4 115 områder for hele kysten, lagt på bakken i trekanter på høyst 6 m; sanden mørk og våt nede ved vannet. `#shore0` skrur dem av.
+- **Stupene i fjæra** (samme lag fra `kart-18`): OpenStreetMaps `natural=cliff` innen 200 m fra sjøen får en bergvegg langs linja, fra toppen ned til bakken eller fjæra 12 m ut, der den faller 4 m eller mer (i Bergen-flisa 46 stup, 1 246 flater).
+- **Tangen og ruren etter eksponeringen** (`terFS`, `uExpo` fra kjernens `expo` der båten er): i en lun fjord står tangbeltet tettere og litt høyere, på en åpen kyst er det tynnere og rurbeltet går høyere med sprøytet.
 - **Test:** `havnshot.py` (Kristiansand, Bergen, Bodø, Hammerfest og Finnsnes).
 
 ## 5.23 Lys om natta og fyrlykter (03.10.2026)
