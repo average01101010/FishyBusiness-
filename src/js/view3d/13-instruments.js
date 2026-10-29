@@ -373,12 +373,12 @@
   // gale too. Drawn over the glass with the same mesh; each bead lighter at the top and darker under, as a drop shows the sky upside down.
   const DROP_FS = 'precision highp float;uniform float uRain;uniform float uT;uniform vec3 uSunCol;uniform vec3 uAmb;varying vec3 vW;varying vec3 vN;varying vec4 vC;varying vec3 vP;varying vec3 vNm;' + NOISE +
     'void main(){vec3 a=abs(vNm);vec2 q=a.x>a.z?vP.zy:vP.xy;' +
-    'vec2 g=q*45.0;vec2 c=floor(g);vec2 f=fract(g)-0.5;float on=step(hs(c),uRain*0.6);vec2 o=vec2(hs(c+7.1),hs(c+3.3))-0.5;float r=0.16+0.24*hs(c+1.7);' +
-    'vec2 dl=f-o*0.5;float dd=length(dl*vec2(1.0,1.15));float bead=on*(1.0-smoothstep(r*0.75,r,dd));float lt=smoothstep(-0.3,0.7,dl.y/r);' +
+    'vec2 g=q*38.0;vec2 c=floor(g);vec2 f=fract(g)-0.5;float on=step(hs(c),uRain*0.32);vec2 o=vec2(hs(c+7.1),hs(c+3.3))-0.5;float r=0.08+0.3*pow(hs(c+1.7),2.0);' +
+    'vec2 dl=f-o*(1.0-2.0*r);float dd=length(dl*vec2(1.0,1.15));float bead=on*(1.0-smoothstep(r*0.75,r,dd));float lt=smoothstep(-0.3,0.7,dl.y/r);' +
     'float cl=floor(q.x*30.0);float hc=hs(vec2(cl,9.0));float run=step(hc,uRain*0.3);float fx=fract(q.x*30.0)-0.5;float u=fract((q.y+uT*(0.05+0.12*hc))*0.8+hc*5.0);' +
     'float head=run*(1.0-smoothstep(0.22,0.42,abs(fx)))*(1.0-smoothstep(0.006,0.018,u));float trail=run*(1.0-smoothstep(0.06,0.14,abs(fx)))*smoothstep(0.012,0.02,u)*(1.0-smoothstep(0.02,0.25,u));' +
     'bead*=1.0-run*(1.0-smoothstep(0.3,0.5,abs(fx)))*smoothstep(0.0,0.02,u)*(1.0-smoothstep(0.02,0.5,u));' +
-    'float al=max(bead,head)*0.6+trail*0.18;if(al<0.01)discard;vec3 base=uAmb*1.3+uSunCol*0.25;vec3 col=base*(0.45+1.1*max(lt*bead,head*0.8))+uSunCol*0.5*smoothstep(0.55,0.9,lt)*bead;' +
+    'float al=max(bead,head)*0.45+trail*0.14;if(al<0.01)discard;vec3 base=uAmb*1.3+uSunCol*0.25;vec3 col=base*(0.45+1.1*max(lt*bead,head*0.8))+uSunCol*0.5*smoothstep(0.55,0.9,lt)*bead;' +
     'gl_FragColor=vec4(col,al);}';
   let PDROP = null;
   function drawDrops(m, BMrel, VP, t){
