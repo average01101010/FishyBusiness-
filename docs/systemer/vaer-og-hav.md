@@ -229,6 +229,16 @@ Brukerens valg:
 
 **Ikke løst her:** skummet i kjølvannet og baugbølgen var alt i båtens ramme. Resten av fysikkplanen (manøvreringsmodell, bølgekrefter, skade) står i 5.58.
 
+## 5.20d Skummet i vannet, båtens bølger i sving og revers, og skumtopper i le (Jonas 29.10.2026, Bleik)
+
+Jonas sendte bilder fra Bleik: propellskummet drev som en rett strek rett gjennom moloen, båtens bølger svingte ikke med skummet, og det var skarpe flekker i vannet langs land og på grunnene.
+
+- **Skummet ligger i vannet** (`foamStep` i `14-sea.js`, `FOAM_FS`): kjølvannets skum (r, g i skumkartet) lå i nærfeltets ramme (5.20b), som følger båten med 5/6 av farten, så hele sporet gled med i hver sving. Nå flyttes det hele teksler hvert bilde (`uShiftG`) så det ligger fast i vannet der båten var, og vannet driver med strømmen (`curAt`: tidevannsstrømmen og vinddriften, langs land nær land) i spillets tempo. Skum på land (strandteksturen, `buildLandMask`) slettes. Skumtoppene (b, a) ligger som før i nærfeltets ramme. Levetiden er 14 s (et spor på rundt 150 m i full fart i spillets 6x).
+- **Bølgene følger sporet** (`WAKE_GLSL`, `wakeTrack`): kilden (hekken forover, baugen akterover, ut fra båtens egen vei mellom bildene) husker veien sin, og Kelvin-mønsteret regnes langs de sju bitene av den (`uWkT`, `uWkS`) i stedet for langs en rett linje bak hekken. Farten er manøvreringsmodellens når båten styres for hånd, også bakover.
+- **Skumtopper etter vindstrekningen der du er** (`FETCHG` i `01-shaders.js`): tilstanden til sjøen kjenner vindstrekningen på 190 m-ruter, så et havnebasseng fikk havets. Seks blikk opp mot vinden i strandteksturen (30-960 m) gir strekningen, og den minste av de to gjelder, både i sjøskyggeren og i skumkartet.
+- **Det turkise uten kant:** der strandteksturen slutter, gikk dybden brått over til nettets; nå glir den over mellom -4 og -1,5 m.
+- `tests/wakeshot.py` kjører båten for hånd utenfor Bleik (forover, hard sving, revers) og tar bilder ovenfra; kvaliteten holdes på Høy (`#qfix`), fordi skumkartet er av på Lav.
+
 ## 5.20c Skumkartet: skummet som blir liggende i sjøen (Fysikk 4, F1, 27.10.2026)
 
 Jonas 27.10.2026 (`docs/planer/fysikk-4-sjo-og-skrog.md`, valg 3A og 7A): kjølvannet og skummet først. Før var skummet bare det hvert bilde selv laget: skumtoppene over terskelen og kjølvannets brytning ved skroget, og sporet to tynne striper (`TRAIL`) som var borte etter 10 s. I sjøen blir skum liggende: vasken et skrog legger fra seg er hvit i titalls sekunder og hundrevis av meter, og skummet fra en kam ligger igjen og drar ut i striper med vinden (videoene fra chillboats.game).

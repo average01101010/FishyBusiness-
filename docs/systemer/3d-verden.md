@@ -134,6 +134,16 @@ Planen: `docs/planer/grafikk-natur-og-miljo.md`, G2. Før dette fantes det ikke 
   - **`#water0`** i adressen tegner ikke ferskvannet, for sammenligning.
 - **Ikke bygd ennå:** innsjøene og elvene i kartplotteren (2D), lyden av fosser, og sprut ved fossene.
 
+## 4.11f Bakkens farge fra Sentinel-2 (G3, 29.10.2026)
+
+Planen: `docs/planer/grafikk-natur-og-miljo.md`, G3. Jonas 29.10.2026: G3 avgjøres av økta ut fra bildene, og hele kysten får det om det er klart bedre. Det var det: sommermosaikken av Senja viser de grønne liene, de brune og grå fjellene, myrene, innsjøene og byene slik de er, mens arealklassene bare gir én farge per klasse.
+
+- **Kilden:** Sentinel-2 L2A fra Element 84s åpne lager på AWS (`s3://sentinel-cogs`, lest over HTTPS uten konto). Copernicus-dataene er fri for all bruk, også kommersiell, med kilden oppgitt: «Contains modified Copernicus Sentinel data 2021-2025». Vurdert og forkastet: ESA WorldCovers årsmosaikk (CC BY 4.0, men årsmedianen har vinterens snø over det meste av fjellet), Kartverkets skyfrie mosaikker (bare handlekurv, ingen lisens oppgitt) og EOX' Sentinel-2 cloudless 2016 (lisensen kan kreve deling på like vilkår, originalene krever AWS-konto).
+- **Mosaikken** (`tools/s2/s2.py`, workflowen `.github/workflows/s2.yml`, releasen `s2-N`, startes av `tools/s2/s2.json`): per flis scenene fra MGRS-rutene over den, 15. juni til 31. august 2021-2025, under 60 % skyer, de 14 klareste per rute; hver projisert til flisas 50 m-ruter i UTM 33 (GDAL tar 40 m-oversikten). Medianen av scenene der klassifiseringen (SCL) sier vegetasjon, bar mark, vann eller uklassifisert; skyer, skyskygger, snø og topografisk skygge tas ikke med. 168 fliser i 24 deler, rundt en time. `s2-1` 29.10.2026.
+- **I kartdataene** (`coast.py sat_tile`, fra `kart.json` sitt `s2`): solskyggen fra opptakene tas ut (opptakene er fra rundt kl. 11, sola i sør-sørøst rundt 90 - breddegrad + 13 grader opp; hver rute deles på lyset fra 50 m-terrenget, 35 % himmel og 65 % sol, mot flat mark), så spillets egen sol ikke legges på to ganger. Pakket som i JPEG: lysstyrke `sy` på 50 m (7 bit) og fargetone `sco`, `scg` på 100 m (6 bit), som 16-biters lag med dekodingen `raw` (0,65 MB for en flis med bare land, mot 1,9 MB for tre fargekanaler). Bare norsk land; sjøen og utlandet er 0.
+- **I spillet** (`view3d/03-berths-naust.js satAt`, `04-vec-packs.js recolor`): fargen leses per punkt i nettene (de fire nærmeste rutene) og blir sommerfargen, i spillets farger (`SATK`, `SATG`: en potenskurve per kanal, tilpasset seks arealklasser på Finnsnes-flisa). Årstiden legges på som klassenes farge nå delt på deres sommerfarge, så ruska, halmgult og snø kommer som før. Satellittfargen har 85 % av vekten, i tettsteder mindre (taket og asfalten tegner spillet selv). Skogens mørke legges ikke på igjen der satellitten alt ser den. `#sat0` i adressen gir fargen fra før.
+- **Rettet underveis:** spillets dekoder leste alle 16-biters lag som høyder (`mapDecode`, nå `dec: 'raw'`), blokkhurtigbufferen hadde plass til 16 lag (nå 64), og sjekken av om en blokk er lastet, delte svar mellom lagene (`covBlk`, nå per lag).
+
 ## 5.23 Lys om natta og fyrlykter (03.10.2026)
 
 - **Lyskildene:** opptil 8 punktlys lyser opp terreng, bygg, havneenheter, båter og sjø (`PLG`, `pLit` i skyggeleggerne, `pickLights` hvert bilde). På «Lav» brukes 2, på «Middels» 4.
