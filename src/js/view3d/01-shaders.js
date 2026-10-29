@@ -54,8 +54,14 @@
   // the cusp lines and decay as s^-1/3; the bow wave climbs the stem and runs aft along each side at 25 degrees.
   // Both rise from nothing over the first 1.2 m behind the stern: starting at full height they made a step across the stern, drawn as a
   // white line on the water at the transom (feedback 08.10.2026).
-  const WAKE_GLSL = 'uniform vec4 uWk0;uniform vec4 uWk1;uniform vec4 uWk2;uniform vec4 uWk3;' +
+  // The pattern follows the way the boat came (Jonas 29.10.2026: «Se på propellbølgene til båten slik at disse svinger på lik linje som
+  // skummet bak båten»): uWkT the source's track behind it, seven points uWkS.x metres apart along it (the stern going ahead, the bow
+  // going astern), and s, q are measured along that track and off it (the nearest of its pieces) instead of along a straight line;
+  // the first piece reaches on forward (the bow wave), the last on back. uWkS.y 0: a straight line, as before. Written out with fixed
+  // indices (no loop over a uniform array: Adreno 642L, Direct3D 11).
+  const WAKE_GLSL = 'uniform vec4 uWk0;uniform vec4 uWk1;uniform vec4 uWk2;uniform vec4 uWk3;uniform vec4 uWkT[4];uniform vec2 uWkS;' +
     'float wakeH(vec2 P,float bow){if(uWk3.w<0.5)return 0.0;vec2 r=P-uWk0.xy;float s=-dot(r,uWk0.zw);float q=abs(r.x*uWk0.w-r.y*uWk0.z);float L=uWk2.x;' +
+    'if(uWkS.y>0.5&&dot(r,r)<pow(uWk1.w+L+20.0,2.0)){float bd=1e9;' + '{vec2 A=uWk0.xy;vec2 B=uWkT[0].xy;vec2 ab=B-A;float l=max(length(ab),1e-3);float t=dot(P-A,ab)/(l*l);t=min(t,1.0);float d=length(P-A-ab*t);if(d<bd){bd=d;s=0.0*uWkS.x+t*l;q=d;}}{vec2 A=uWkT[0].xy;vec2 B=uWkT[0].zw;vec2 ab=B-A;float l=max(length(ab),1e-3);float t=dot(P-A,ab)/(l*l);t=clamp(t,0.0,1.0);float d=length(P-A-ab*t);if(d<bd){bd=d;s=1.0*uWkS.x+t*l;q=d;}}{vec2 A=uWkT[0].zw;vec2 B=uWkT[1].xy;vec2 ab=B-A;float l=max(length(ab),1e-3);float t=dot(P-A,ab)/(l*l);t=clamp(t,0.0,1.0);float d=length(P-A-ab*t);if(d<bd){bd=d;s=2.0*uWkS.x+t*l;q=d;}}{vec2 A=uWkT[1].xy;vec2 B=uWkT[1].zw;vec2 ab=B-A;float l=max(length(ab),1e-3);float t=dot(P-A,ab)/(l*l);t=clamp(t,0.0,1.0);float d=length(P-A-ab*t);if(d<bd){bd=d;s=3.0*uWkS.x+t*l;q=d;}}{vec2 A=uWkT[1].zw;vec2 B=uWkT[2].xy;vec2 ab=B-A;float l=max(length(ab),1e-3);float t=dot(P-A,ab)/(l*l);t=clamp(t,0.0,1.0);float d=length(P-A-ab*t);if(d<bd){bd=d;s=4.0*uWkS.x+t*l;q=d;}}{vec2 A=uWkT[2].xy;vec2 B=uWkT[2].zw;vec2 ab=B-A;float l=max(length(ab),1e-3);float t=dot(P-A,ab)/(l*l);t=clamp(t,0.0,1.0);float d=length(P-A-ab*t);if(d<bd){bd=d;s=5.0*uWkS.x+t*l;q=d;}}{vec2 A=uWkT[2].zw;vec2 B=uWkT[3].xy;vec2 ab=B-A;float l=max(length(ab),1e-3);float t=dot(P-A,ab)/(l*l);t=max(t,0.0);float d=length(P-A-ab*t);if(d<bd){bd=d;s=6.0*uWkS.x+t*l;q=d;}}' + '}' +
     'if(s<-L-2.0||s>uWk1.w||q>max(s,0.0)*0.42+L*0.6+4.0)return 0.0;float h=0.0;' +
     'if(s>0.0){float e=s*0.3536;float far=1.0-smoothstep(uWk1.w*0.55,uWk1.w,s);float a=uWk1.y*far*smoothstep(0.0,1.2,s);' +
     'h+=uWk1.z*a*inversesqrt(1.0+s/L)*cos(uWk1.x*s)*(1.0-smoothstep(e*0.75,e*1.02,q))*0.75;' +

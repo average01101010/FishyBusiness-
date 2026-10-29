@@ -75,17 +75,47 @@
   // The regime follows the Froude number Fr = v / sqrt(g L) with the hull's length from VESSELS: below about 0.4 a displacement hull
   // makes transverse and divergent waves and a stern wave that breaks near hull speed; a planing hull (Fr > 1) leaves mostly divergent
   // waves and a flat white wash. v is the boat's real speed (the scene runs faster than real time, the waves are drawn for the real speed).
-  const WK = {u0:new Float64Array(4), u1:new Float32Array(4), u2:new Float32Array(4), u3:new Float32Array(4), Fr:0};
+  const WK = {u0:new Float64Array(4), u1:new Float32Array(4), u2:new Float32Array(4), u3:new Float32Array(4), Fr:0, T:new Float64Array(14), S:new Float32Array(2), H:[], astern:false};
+  // the source's track (WAKE_GLSL uWkT): where the pattern's source (the stern going ahead, the bow going astern) has been, a point each
+  // 1.5 m it moves over the ground, and from it the seven points ds apart along the way back (straight on past its end)
+  function wakeTrack(x, z, fx, fz, ds){
+    const H = WK.H, last = H[H.length - 1];
+    if (!last || Math.hypot(x - last[0], z - last[1]) > 300 || WK.flip){ H.length = 0; H.push([x, z]); WK.flip = false; }
+    else if (Math.hypot(x - last[0], z - last[1]) > 1.5){ H.push([x, z]); if (H.length > 400) H.splice(0, H.length - 400); }
+    let k = H.length - 1, px = x, pz = z, acc = 0;
+    for (let j = 0; j < 7; j++){
+      let need = ds;
+      while (need > 0){
+        const q = k >= 0 ? H[k] : null;
+        if (!q){ px -= fx * need; pz -= fz * need; need = 0; break; }   // past the track's end: straight on back
+        const d = Math.hypot(q[0] - px, q[1] - pz);
+        if (d >= need){ px += (q[0] - px) * need / d; pz += (q[1] - pz) * need / d; need = 0; } else { px = q[0]; pz = q[1]; need -= d; k--; }
+      }
+      WK.T[j * 2] = px; WK.T[j * 2 + 1] = pz; acc += ds;
+    }
+    WK.S[0] = ds; WK.S[1] = 1;
+  }
+  // the track's points for a shader whose frame is the world less (ox, oz)
+  const WKT4 = new Float32Array(16);
+  function wakeTU(u, ox, oz){ if (u.uWkT == null) return; for (let j = 0; j < 7; j++){ WKT4[j * 2] = WK.T[j * 2] - ox; WKT4[j * 2 + 1] = WK.T[j * 2 + 1] - oz; } WKT4[14] = WKT4[12]; WKT4[15] = WKT4[13]; gl.uniform4fv(u.uWkT, WKT4); gl.uniform2fv(u.uWkS, WK.S); }
   function updateWake(){
     // the boat's speed through the water from the simulation (the drawn speed also catches up on lag, which is not the hull's speed)
-    const VG = GEO(vtype()), kn = S.boat.status === 'sailing' ? S.boat.v || 0 : 0, v = kn * 0.5144, Lb = BOAT.len || 6, Fr = v / Math.sqrt(9.81 * Lb); WK.Fr = Fr; WK.kn = kn;
+    // (under the manoeuvring model, by hand: its speed through the water, ahead or astern)
+    const VG = GEO(vtype()), kn = typeof dynLive === 'function' && dynLive() ? Math.abs(S.boat.dyn.u || 0) / 0.5144 : S.boat.status === 'sailing' ? Math.abs(S.boat.v || 0) : 0, v = kn * 0.5144, Lb = BOAT.len || 6, Fr = v / Math.sqrt(9.81 * Lb); WK.Fr = Fr; WK.kn = kn;
     if (v < 0.8){ WK.u3[3] = 0; return; }
     const fx = Math.sin(bv.head), fz = -Math.cos(bv.head), k0 = 9.81 / (v * v), lam = 2 * Math.PI / k0;
     const A = Math.min(0.6, 0.045 * Lb * sstep(0.12, 0.38, Fr) * (1 - 0.55 * sstep(0.6, 1.5, Fr)));
     // in a turn the straight pattern reaches only as far as it stays within a few metres of the curved track; the foam trail goes on
     const R = bv.spd / Math.max(Math.abs(bv.yr || 0), 1e-3), smax = Math.min(clamp(10 * Lb, 40, 120), Math.sqrt(6 * R) + 8);
     const Ab = Math.min(0.6, 0.12 * v * v / (2 * 9.81)) * sstep(0.1, 0.35, Fr) * (1 - 0.5 * sstep(0.9, 1.6, Fr));
-    WK.u0.set([bv.x - fx * VG.stern, bv.z - fz * VG.stern, fx, fz]); WK.u1.set([k0, A, 1 - sstep(0.55, 1.0, Fr), smax]); WK.u2.set([VG.stern - VG.bow, Ab, (VG.beam || 2.4) / 2, Fr]);
+    // going astern (the way over the ground against the heading) the pattern comes off the bow and lies ahead of her, along the way she backed
+    // (from her own way over the ground between frames: under the manoeuvring model the course is drawn as the heading)
+    const lp = WK.lp || [bv.x, bv.z], mx = bv.x - lp[0], mz = bv.z - lp[1]; WK.lp = [bv.x, bv.z];
+    const mv = Math.hypot(mx, mz); if (mv > 0.02 && mv < 50) WK.ad = (WK.ad || 0) * 0.8 + ((mx * fx + mz * fz) / mv) * 0.2;
+    const ast = (WK.ad || 0) < -0.3; if (ast !== WK.astern){ WK.astern = ast; WK.flip = true; }
+    const ux = ast ? -fx : fx, uz = ast ? -fz : fz, sx0 = ast ? bv.x - fx * VG.bow : bv.x - fx * VG.stern, sz0 = ast ? bv.z - fz * VG.bow : bv.z - fz * VG.stern;
+    WK.u0.set([sx0, sz0, ux, uz]); WK.u1.set([k0, A, 1 - sstep(0.55, 1.0, Fr), smax]); WK.u2.set([VG.stern - VG.bow, Ab, (VG.beam || 2.4) / 2, Fr]);
+    wakeTrack(sx0, sz0, ux, uz, Math.max(2, (smax + 10) / 7));
     WK.u3.set([sstep(0.28, 0.5, Fr), sstep(0.3, 0.45, Fr) * (1 - sstep(0.9, 1.2, Fr)), sstep(2.5, 5, lam / (2 * HALF / NP)), 1]);
   }
   // the long wake waves as the vertex shader lifts them (for what lies on the water, like the foam trail)
@@ -173,7 +203,7 @@
     gl.uniform1f(u.uTime, t); gl.uniform2f(u.uNFD, Dx, Dz); gl.uniform1f(u.uWind, env.wind || 0); gl.uniform2fv(u.uWindDir, env.windDir || [0, 1]);
     gl.uniform4fv(u.uSea, [WV.C, WV.cap, WV.lnFcap, WV.swHs]); gl.uniform4fv(u.uSea2, [WV.dot, WV.steep, ssBlend(SSL.n), ssBlend(SSL.w)]); gl.uniform4fv(u.uLocal, WV.loc);
     const ph = wavePh(); gl.uniform4fv(u.uWa, WV.ua); gl.uniform4fv(u.uWb, ph.ub); gl.uniform1fv(u.uGp, ph.gp); gl.uniform1fv(u.uNFp, NF.ph); gl.uniform1fv(u.uNFg, NF.gp);
-    gl.uniform4fv(u.uWk0, [WK.u0[0] - Dx - FOAM.ox, WK.u0[1] - Dz - FOAM.oz, WK.u0[2], WK.u0[3]]); gl.uniform4fv(u.uWk1, WK.u1); gl.uniform4fv(u.uWk2, WK.u2); gl.uniform4fv(u.uWk3, WK.u3);
+    gl.uniform4fv(u.uWk0, [WK.u0[0] - Dx - FOAM.ox, WK.u0[1] - Dz - FOAM.oz, WK.u0[2], WK.u0[3]]); gl.uniform4fv(u.uWk1, WK.u1); gl.uniform4fv(u.uWk2, WK.u2); gl.uniform4fv(u.uWk3, WK.u3); wakeTU(u, Dx + FOAM.ox, Dz + FOAM.oz);
     gl.uniform4f(u.uFB, pb[0] - FOAM.ox, pb[1] - FOAM.oz, qx - FOAM.ox, qz - FOAM.oz); gl.uniform4f(u.uFH, pb[2], pb[3], fx, fz);
     gl.uniform4f(u.uHull, (VG.stern - VG.bow) || 6, (VG.beam || 2.4) / 2, -(VG.bow || -2.2), VG.stern || 3.1); gl.uniform4f(u.uFSp, (WK.kn || 0) * 0.5144, WK.Fr || 0, BOAT.planing ? 1 : 0, dt);
     attr(0, SKYQ, 2); gl.drawArrays(gl.TRIANGLES, 0, 6);
