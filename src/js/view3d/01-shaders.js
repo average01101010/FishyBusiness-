@@ -238,11 +238,13 @@
     // of the tide, on the coast's own line at high water and out on the foreshore at ebb; beyond the foreshore the heights as before,
     // except the coarse mesh's own shelf by the line (its bed over 1 m), which is no shoal: 3 m deep there; nor is the shallow the 23 m
     // cells make where one of them is on land (a cell across the line blends the land's height with the bed, and the surf and the
-    // turquoise lay in a band 30-60 m off every shore, Jonas 28.10.2026): a shoal there only where the cells around are all under water, and else deep enough (5 m) that
-    // the turquoise ends where the foreshore's does, without an edge of its own
+    // turquoise lay in a band 30-60 m off every shore, Jonas 28.10.2026)
     'if(uLSOn>0.5){vec2 lu=(vW.xz-uLRect.xy)*uLRect.zw;if(lu.x>0.0&&lu.y>0.0&&lu.x<1.0&&lu.y<1.0){float hs=texture2D(uLandS,lu).r*8.0-4.0;' +
-    'vec2 hu=su*(255.0/256.0)+0.5/256.0;const float o=1.5/256.0;float hn=max(max(texture2D(uHgt,hu+vec2(o,0.0)).r,texture2D(uHgt,hu-vec2(o,0.0)).r),max(texture2D(uHgt,hu+vec2(0.0,o)).r,texture2D(uHgt,hu-vec2(0.0,o)).r))*16.0-8.0;' +
-    'float dc=hb>1.0?3.0:hn>uTideL-0.2?max(dep,5.0):dep;dep=mix(dc,uTideL-hs,smoothstep(-3.95,-1.5,hs));}}' +
+    // (29.10.2026, Jonas' pictures from Bleik: the 5 m by the line made a dark ring a coarse cell wide round every islet and breakwater,
+    // stepped like the cells, and the coarse shallows beyond it a pale ring): the shore texture knows the depth to 4 m, so where it is
+    // in, the depth is its own down to 4 m and at least 4 m beyond, the coarse heights only deeper than that; the turquoise then fades
+    // out smoothly from the foreshore with no edge of the coarse cells
+    'dep=mix(max(dep,4.0),uTideL-hs,smoothstep(-3.95,-3.0,hs));}}' +
     'col=mix(col,vec3(0.07,0.33,0.32)*(uAmb*1.5+uSunCol*0.75),(1.0-smoothstep(0.3,5.0,dep))*0.42*(1.0-fr)*ef);' +
     'float bw=0.3+hl*1.4;float band=(1.0-smoothstep(0.0,bw,dep))*smoothstep(-0.2,0.02,dep);float sw=0.5+0.5*sin(uTime*0.9+dot(P,w)*0.06);' +
     'float ln=ns(P*0.32+vec2(uTime*0.35,-uTime*0.25))*0.6+ns(P*0.95-uTime*0.45)*0.4;' +
