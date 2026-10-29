@@ -75,8 +75,9 @@ function obsIndex(){
   SEAMARKS.marks.forEach(mark); for (const t of MARKS.tiles.values()) if (t) t.marks.forEach(mark);   // and the coast's (01e-marks.js)
   // the wind turbines that stand in the sea (the floating ones off Karmøy, a few on skerries; tools/vind/vind.py): the tower and its
   // foundation (view3d/17d-vind.js draws it 0.045 x the hub across at the foot, the ring 0.11)
-  // (only where the map is in: isLand throws for a block not loaded, and the index is built again as the packs come, VEC.ver)
-  if (VIND) for (const q of VIND.t){ let land = true; try { land = isLand({x:q[0] / 1000, y:q[1] / 1000}); } catch (e){ continue; } if (!land) put({t:0, x:q[0], z:q[1], r:Math.max(5, q[2] * 0.11), why:'turbine'}); }
+  // (only where the map is in, mapReadyAt: isLand throws for a block not loaded and counts it as a miss; the index is built again as
+  // the packs come, VEC.ver)
+  if (VIND) for (const q of VIND.t){ const p = {x:q[0] / 1000, y:q[1] / 1000}; if (!mapReadyAt(p, 0)) continue; let land = true; try { land = isLand(p); } catch (e){ continue; } if (!land) put({t:0, x:q[0], z:q[1], r:Math.max(5, q[2] * 0.11), why:'turbine'}); }
   HIND.idx = idx; HIND.list = list; HIND.key = key; return idx;
 }
 // the distance (m) from the leg a-b (metres) to a thing, 0 inside it
