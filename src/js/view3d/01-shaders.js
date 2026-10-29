@@ -14,12 +14,15 @@
   // The cloud on the fells is here too (uCB: the base in m and how much; uCC its colour; uEye the eye's x and z modulo 4096 and its
   // height), with one ragged edge for everything (the noise of the world's x and z, as the terrain's own wp), so the trees, the houses and
   // the boats on a fell go into the cloud with the ground under them (with a smooth edge of their own the trees stood dark in it)
-  const AIR = 'uniform vec3 uAirSun;uniform vec3 uAirMie;uniform float uAirOn;uniform vec3 uCB;uniform vec3 uCC;uniform vec3 uEye;' +
+  const AIR = 'uniform vec3 uAirSun;uniform vec3 uAirMie;uniform float uAirOn;uniform vec3 uCB;uniform vec3 uCC;uniform vec3 uEye;uniform vec2 uCD;' +
     'float aH(vec2 p){vec3 q=fract(vec3(p.xyx)*0.1031);q+=dot(q,q.yzx+33.33);return fract((q.x+q.y)*q.z);}' +
     'float aN(vec2 p){vec2 i=floor(p),f=fract(p);vec2 u=f*f*(3.0-2.0*f);return mix(mix(aH(i),aH(i+vec2(1.0,0.0)),u.x),mix(aH(i+vec2(0.0,1.0)),aH(i+vec2(1.0,1.0)),u.x),u.y);}' +
     'vec3 tone(vec3 c){vec3 e=max(c-0.8,0.0);return min(c,vec3(0.8))+0.2*(1.0-exp(-e/0.2));}' +
     'vec3 fin(vec3 c,vec3 v){float d=length(v);float k=uFogD*d;k*=k;if(uAirOn<0.5)return mix(c,uFog,1.0-exp(-k));' +
-    'if(uCB.y>0.0){vec2 wq=mod(v.xz+uEye.xy,4096.0);float e=(aN(wq/260.0+31.0)-0.5)*140.0+(aN(wq/70.0+7.0)-0.5)*45.0;c=mix(c,uCC,smoothstep(uCB.x-40.0,uCB.x+110.0,v.y+uEye.z+e)*uCB.y);}' +
+    // (29.10.2026, Jonas' picture from Finnsnes: the cloud read as snow, white and in fingers down the fall line, standing still): the
+    // edge only from noise of 300-700 m, which drifts with the wind (uCD, m), a wide soft edge thin at its foot, and the cloud a little
+    // darker than the sky
+    'if(uCB.y>0.0){vec2 wq=mod(v.xz+uEye.xy+uCD,4096.0);float e=(aN(wq/700.0+31.0)-0.5)*170.0+(aN(wq/300.0+7.0)-0.5)*70.0;float k2=smoothstep(uCB.x-90.0,uCB.x+260.0,v.y+uEye.z+e);c=mix(c,uCC,k2*k2*(3.0-2.0*k2)*uCB.y);}' +
     'vec3 T=exp(-k*vec3(0.8,0.95,1.2));float mu=max(dot(v/max(d,1.0),uAirSun),0.0);vec3 s=uFog+uAirMie*pow(mu,12.0);return tone(c*T+s*(1.0-T));}';
   const LIT_VS = 'attribute vec3 aPos;attribute vec3 aCol;uniform mat4 uVP;uniform mat4 uM;varying vec3 vW;varying vec3 vC;' +
     'void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;vC=aCol;gl_Position=uVP*w;}';
@@ -447,7 +450,7 @@
   let AIRE = [0, 0, 0];   // the eye's x and z modulo 4096 and its height, set by drawTerrain each frame (the terrain's wp folds the same way)
   function airSet(u, terr){
     if (u.uAirOn) gl.uniform1f(u.uAirOn, AIRON);
-    if (u.uCB){ gl.uniform3fv(u.uCB, [env.cbase || 3000, env.cstr || 0, 0]); gl.uniform3fv(u.uCC, env.ccol || env.fog); gl.uniform3fv(u.uEye, AIRE); }
+    if (u.uCB){ gl.uniform3fv(u.uCB, [env.cbase || 3000, env.cstr || 0, 0]); gl.uniform3fv(u.uCC, env.ccol || env.fog); gl.uniform3fv(u.uEye, AIRE); if (u.uCD) gl.uniform2fv(u.uCD, env.cdrift || [0, 0]); }
     if (u.uAirSun){ gl.uniform3fv(u.uAirSun, env.sunDir || [0, 1, 0]); const k = 0.35 * (1 - 0.9 * (env.cloud || 0)); gl.uniform3fv(u.uAirMie, (env.sunCol || [0, 0, 0]).map(v => v * k)); }
   }
   function attr(loc, b, size){ gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 0, 0); }

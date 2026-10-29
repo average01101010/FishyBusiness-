@@ -116,6 +116,8 @@ Planen: `docs/planer/grafikk-natur-og-miljo.md`, G5. Før dette ble alt tonet mo
 
 - **Himmelen og skyene** (resten av G5, 28.10.2026, bare med lufta på): en bred, svak glans rundt sola i tillegg til solskiva, en dypere blåfarge på motsatt side, og jordskyggen med det rosa beltet over den (Venus-beltet) på motsatt side når sola står like under eller over horisonten (`uSunD.y` innenfor rundt 4°). Skyene lyses fra sola: skystøyen leses en gang til litt mot sola, og der skya er tynnere mot sola, får kanten solens farge (sølvkant), mens den tykke midten og undersida blir mørkere grå. I helt grått vær (skydekke over 75–98 %) går det over i det jevne grå laget som før.
 
+- **Skodda på fjellet rettet 29.10.2026** (Jonas' bilde fra Finnsnes i regn: den så ut som snø, hvit og i striper nedover lia): kanten bare fra støy på 300–700 m som driver med vinden (`uCD`, `env.cdrift`, en tiendedel av vindfarten), en bred og myk kant som er tynn nederst, og skyen litt mørkere enn himmelen (`env.ccol` 0,86 × horisonten). Bilde før og etter i `docs/pr/ccr-1d00422f-gjapvb/g10/skodde_for_etter.png`.
+
 ## 4.11e Innsjøer, elver, bekker og fosser (G2, 28.10.2026)
 
 Planen: `docs/planer/grafikk-natur-og-miljo.md`, G2. Før dette fantes det ikke ferskvann i 3D: innsjøene var bakke i 25 m-høydene.

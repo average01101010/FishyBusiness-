@@ -41,7 +41,9 @@
     // the cloud base on the fells (G5): from about 2 700 m under a broken sky down to 250-300 m under a full grey one, 150 m lower in rain
     // or snow; only a sky over 55 % cloud lays it on the ground at all. Its colour is the overcast horizon's, so the cloud on the fell is the sky's
     env.cbase = 250 + 2500 * Math.pow(1 - env.cloud, 1.5) - 150 * sstep(0.1, 0.6, env.precip || 0); env.cstr = sstep(0.55, 0.85, env.cloud) * 0.92;
-    env.ccol = hor;
+    env.ccol = hor.map(v => v * 0.86);
+    // the cloud on the fells drifts with the wind (a tenth of its speed, as the eye sees the cloud's edge move), from the shared clock
+    { const wd = env.windDir || [1, 0], w = env.wind || windAt(H), s = (H * 3600) * w * 0.1; env.cdrift = [-(wd[0] * s) % 4096, -(wd[1] * s) % 4096]; }
     env.stars = sstep(-5, -12, el) * (1 - env.cloud); env.spec = sstep(-1, 4, el) * (1 - env.cloud) * 2.2;
     env.night = sstep(3, -5, el);
     // moon: where it is, how full, and the light it gives at night
