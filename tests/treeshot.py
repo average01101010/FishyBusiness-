@@ -12,19 +12,19 @@ async def main():
         b = await p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
         pg = await (await b.new_context(viewport={'width': 1000, 'height': 700})).new_page(); errs = []
         pg.on('pageerror', lambda e: errs.append(str(e)))
-        await boot(pg, GAME + '#qfix')
+        await boot(pg, GAME + '#qfix#glchk')
         await pg.evaluate("""async () => { const q = P(69.226, 17.96); await mapNeed(q, MAPD.simR); const b = S.boat; b.status = 'idle'; b.port = null; S.plan = null; S.draft = [];
           b.pos = {x:q.x, y:q.y}; b.heading = 1.8; b.v = 0; S.t = Math.round((Date.UTC(2027, 6, 10, 0) + 13 * 3.6e6 - EPOCH) / 6e4); if (!G3.isActive()) G3.show(true); }""")
         await pg.wait_for_function("G3.isActive()", timeout=120000); await pg.wait_for_timeout(30000)
         R = {}
         for name, dist, pitch in (('low', 150, 0.12), ('high', 700, 0.5)):
             await pg.evaluate("([d, p]) => { const c = G3._debug.cam; c.helm = false; c.dist = d; c.pitch = p; c.yaw = -1.2; }", [dist, pitch]); await pg.wait_for_timeout(6000)
-            await pg.screenshot(path=os.path.join(OUT, f'tree_{name}.png')); R[name] = await pg.evaluate("G3._debug.trees")
-        R['gl'] = await pg.evaluate("G3._debug.glErr()")
+            await pg.screenshot(path=os.path.join(OUT, f'tree_{name}.png'), timeout=300000); R[name] = await pg.evaluate("G3._debug.trees")
+        R['gl'] = await pg.evaluate("G3._debug.glErr()"); R['glFirst'] = await pg.evaluate("G3._debug.glFirst")
         print(json.dumps(R))
         check(R['high']['M'] and R['high']['P'], 'the tree models and their program are in')
         check(R['high']['n'] > 1000, 'over a thousand trees are drawn off Finnsnes', R['high']['n'])
-        check(R['gl'] == 0, 'no GL errors', R['gl'])
+        check(R['gl'] == 0 and not R['glFirst'], 'no GL errors', (R['gl'], R['glFirst']))
         check(not errs, 'no page errors', errs[:2])
         await b.close()
 asyncio.run(main())

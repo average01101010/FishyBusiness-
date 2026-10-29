@@ -144,6 +144,66 @@ Planen: `docs/planer/grafikk-natur-og-miljo.md`, G3. Jonas 29.10.2026: G3 avgjø
 - **I spillet** (`view3d/03-berths-naust.js satAt`, `04-vec-packs.js recolor`): fargen leses per punkt i nettene (de fire nærmeste rutene) og blir sommerfargen, i spillets farger (`SATK`, `SATG`: en potenskurve per kanal, tilpasset seks arealklasser på Finnsnes-flisa). Årstiden legges på som klassenes farge nå delt på deres sommerfarge, så ruska, halmgult og snø kommer som før. Satellittfargen har 85 % av vekten, i tettsteder mindre (taket og asfalten tegner spillet selv). Skogens mørke legges ikke på igjen der satellitten alt ser den. `#sat0` i adressen gir fargen fra før.
 - **Rettet underveis:** spillets dekoder leste alle 16-biters lag som høyder (`mapDecode`, nå `dec: 'raw'`), blokkhurtigbufferen hadde plass til 16 lag (nå 64), og sjekken av om en blokk er lastet, delte svar mellom lagene (`covBlk`, nå per lag).
 
+## 4.11g Trærne fra trehøydekartet (G4, 29.10.2026)
+
+Planen: G4. SR16 (NIBIOs skogkart) kan ikke hentes herfra og har ikke en åpen lisens for spill, så den åpne erstatningen er brukt (Jonas 29.10.2026: «Bruk åpen erstatning»).
+
+- **Kilden:** Meta og World Resources Institutes trehøydekart v2 (CC BY 4.0, `s3://dataforgood-fb-data/forests/v2/global/dinov3_global_chm_v2_ml3`, 1 m, Web Mercator-fliser etter quadkey på z10), lest på 1/8-oversikten (rundt 9,6 m). Kilden som oppgis: «Canopy height: Meta and World Resources Institute (2024), CC BY 4.0». Løv eller nåler fra Sentinel-2s nær-infrarøde om sommeren (`s2.py nir`, B08): løvtrær reflekterer rundt dobbelt så mye.
+- **Uttrekket** (`tools/trees/trees.py`, workflowen `trees.yml`, releasen `trees-N`, startes av `tools/trees/trees.json`): per flis andelen under trær (over 2,5 m) og middelhøyden på 25 m. `trees-1` 29.10.2026; ved Finnsnes er middelhøyden rundt 7 m.
+- **I kartdataene** (`coast.py trees_tile`, fra `kart.json` sitt `trees`): laget `trees` på 50 m, u8: bit 0-3 andelen (0-15), bit 4-6 høydeklassen (under 4 m, så 4 m-trinn, 28 m og over), bit 7 nåler. Grensen for nåler er nær-infrarødt under 88 (`NIR_NEEDLE`), kalibrert på tett, høy skog: bjørka ved Finnsnes har median 103 (25-persentilen 93), grana ved Namsos 73 (75-persentilen 81), Trondheim 75 og Kristiansand 76.
+- **Modellene** (`tools/wild/trees.py`, `src/data/trees.b64`): gran, furu og bjørk i to detaljnivåer, 1 m høye fra bakken. Bjørka har blad (sone 1) og kvister (sone 2) som byttes om vinteren; snø legger seg på toppen av kronene.
+- **I spillet** (`view3d/17c-trees.js`): per 50 m-rute så mange trær som andelen sier (`TREE_DENS` per kvalitet: 3, 6, 10, 16 i en full rute), så høye som kartet sier (±28 %), snudd og farget litt hver. Nåletrær er gran i sør under 450 m og på god mark, ellers furu; nord for Saltfjellet mest furu. Ingen trær i fjæra (under 1,5 m), i bratt berg, på bygg, havneenheter eller steder. Tegnes med `ANGLE_instanced_arrays`, ett kall per art og detaljnivå per kilometerrute; de nære rutene (`TREE_LOD0`) får de detaljerte modellene. Uten laget (en eldre release, utenfor Norge) eller utvidelsen står de gamle kjeglene. `#trees0` i adressen gir de gamle trærne.
+- **Rettet før første test:** forskyvningen ble regnet fra gjengivelsesorigo (`RO`) i stedet for øyet; skyggeleggerne tegner fra øyet (`V.m` har ingen flytting), og tåka (`fin`) vil ha avstanden fra øyet.
+
+## 4.11h Vindturbiner og kraftspenn over sjøen (G7, 29.10.2026)
+
+Planen: G7. NVEs lister (kart.nve.no, api.nve.no) er stengt fra containeren; OpenStreetMap i Overture (`base/infrastructure`, ODbL, som kartet alt bruker) har turbinene som står, med høyden fra Kartverkets register over luftfartshindre for de fleste, og kraftlinjene mast for mast.
+
+- **Uttrekket** (`tools/vind/vind.py` til `src/data/vind.json`, 52 kB): turbinene (`power=generator`, `generator:source=wind`, ikke under bygging eller nedlagt) på norsk land eller i norsk sjø, i kystens fliser: posisjon, navhøyde og rotordiameter (fra `height:hub` og `rotor:diameter`; med bare totalhøyden er rotoren 0,75 av den). Ingen eier, operatør eller produsent tas med. Spennene: strekket mellom to master på en kraftlinje (`power_line`, `minor_line`) på 120 m og mer der midten krysser sjøen og begge mastene står på land; der OpenStreetMap tegner en linje per fase (Sognefjorden), blir det ett spenn. 29.10.2026: 1 228 turbiner og 735 spenn.
+- **Modellene** (`tools/vind/models.py`, `src/data/vind.b64`): tårnet (1 m høyt, skaleres med navhøyden), maskinhuset med navet og bladene (1 m rotor), en stålportal for 66 kV og mer og en H-mast i tre under det.
+- **I spillet** (`view3d/17d-vind.js`): turbinene innen 14 km, både i fjern- og nærpasset, snudd mot vinden der båten er; bladene går med tuppen på åtte ganger vinden fra 3 m/s opp til 80 m/s og står over 25 m/s. Om natta har de rødt hinderlys på maskinhuset, blinkende i takt på dem som er over 150 m til tuppen. Spennene innen 4 km får en mast i hver ende og tre liner med nedheng (3 % av spennet, minst 1 %), aldri under 30 m over sjøen på midten; mastene heves til det. Ett instanstegnekall per del. `#vind0` i adressen skrur det av.
+- **Kartplotteren** (`ui/03-map.js`): turbinene med sjøkartets trearmede symbol, spennene som stiplet magenta luftspenn.
+- **Autonav** (`core/11b-obstacles.js`): en turbin som står i sjøen (de flytende ved Karmøy, noen på skjær), er et hinder med foten og fundamentet. Spennene henger høyere enn noen båt (`obsAir`), så de er ikke hindre.
+- **Test:** `vindshot.py` (Smøla dag og natt, Havøygavlen, Kvitfjell fra sjøen vest for Kvaløya, Sognefjordspennet ved Ortnevik).
+
+## 4.11i Vått og nedbør (G6, 29.10.2026)
+
+- **Våtheten** (`view3d/15-env-mooring.js wetSet`, `env.wet` 0-1): regnet de siste tre timene etter den felles klokka (`precipAt`, `airTemp`), hvert tiende minutt så vått som det regnet (sludd og snø halvparten), tørket ut over rundt halvannen time (raskere i vind). Regnes på nytt hvert spillminutt, så alle spillerne ser det samme.
+- **Snøen på det som er bygd** (`env.snowC`): snøen ved sjøen (snøgrensen under havet, 60 %, fordi gammel snø på kaier og veier er brøytet og tråkket), eller nysnøen som har falt under 0 °C de siste 12 timene (95 %), som går i mildvær.
+- **I skyggeleggerne** (`uWet` = våthet, snø): terrenget (`terFS`) blir mørkere i vått, berget og fjæra mest og graset minst, ikke under snø, med solas glans innen 1,5 km. Det som er bygd (`LIT_FS`: kaier, moloer, bruer, hus): snø på flatene som vender opp, og i vått mørkere med glans av sol og himmel, mest på det flate. Modellene (`LITN_FS`: båtene, havneenhetene, brygger): de ru flatene mørkere og alt blankere i vått, mest det flate, som et vått dekk.
+- **Nedbøren i lufta** (`24-cinema.js`): regn som streker, snø som flak, og sludd mellom 0,5 og 2 °C (annenhver partikkel et flak som faller raskere enn snø); på «Lav» halvparten så mange.
+- **Dråpene på vinduene** (`13-instruments.js drawDrops`): fra roret i en båt med styrehus, perler som sitter på glasset og dråper som renner ned med et vått spor, i glassets egen ramme, så de blir sittende på vinduet. Mer jo hardere det regner, noen igjen mens det tørker, og sjøsprøyt i kuling.
+- `#wet0` i adressen skrur våthet, snø på bygg og dråper av. Test: `wetshot.py` (Bergen tørt, i regn og fra roret, Finnsnes i snøvær, Bodø i sludd; været holdes ved å bytte ut `precipAt` og `airTemp`).
+
+## 4.11j Nærfeltet på land (G8, 29.10.2026)
+
+- **Modellene** (`tools/wild/naer.py`, `src/data/naer.b64`): grastue, lyngtue, tre steinblokker og tang som ligger i fjæra, 1 m til målestokken.
+- **I spillet** (`view3d/17f-near.js`): innen 60, 90 og 120 m (Middels, Høy, Ultra; av på Lav) får bakken sine små ting celle for celle (3, 3, 2,5 og 2 m), avgjort av cellas hash og arealdekket (`cover`): tuer på gras og jorder, lyng på heia, vidda og myra, blokker i ura (0,5–1,9 m) og noen på bart berg, småstein på rullestein og sand, og tang i fjæra under høyvann. Ikke på veier, bygg, havneenheter, steder eller under snøen (steinen blir). Bygges i ruter på 32 m, tre i bildet, de nærmeste først, og tegnes i ett instanstegnekall per modell. Graset følger årstiden (grønt til halmgult), lyngen blomstrer i august og september, og alt er mørkere i vått. Graset vaier litt. `#near0` i adressen skrur det av.
+- **Ikke gjort ennå:** høydelaget på 10 m langs sjøen (`hgt10`) fra planen; det trenger en egen kartrelease. Detaljteksturene i `terFS` finnes som støy på Høy og Ultra fra før (4.11b).
+
+## 4.11k Liv i landskapet (G9, 29.10.2026)
+
+- **Modellene** (`tools/wild/dyr.py`, `src/data/dyr.b64`): havørn (kropp og vinger), skarv sittende og med vingene ute, ærfugl hann og hunn, hvit og grå sau, nise, spekkhogger, knølhval og knølhvalens hale. Mønstrene er farget per hjørne (`TINT`). Nisen og hvalene erstatter de gamle formene i `19-wildlife-npc.js`.
+- **I spillet** (`view3d/17e-life.js`), alt avgjort av stedet og den felles klokka:
+  - havørn i én av to 2 km-ruter i nord (én av tre i Trøndelag, én av sju lenger sør) der bakken går over 110 m med sjø i ruta, sirklende over det høyeste punktet, noen ganger to; om dagen
+  - skarv på de lave bergene i vannkanten (0,4–4 m), 2–6 sammen, noen med vingene ute til tørk
+  - ærfugl i flokker på 4–12 på sjøen inntil land, hele året, som rir på dønningene
+  - sau på gras, lyng og jorder fra mai til september, 3–9 sammen
+  - røyk fra pipene på hus og hytter under 5 °C (pipene samles når kilometerrutene bygges, `06-buildings-lights.js`)
+  - gatelys hver 35 m langs veiene der de går gjennom tettsteder (`cover` = bebyggelse), om natta, innen 5 km
+  - biler på veiene: 6 per km i tettsted, 0,6 på hovedveiene utenfor; små biler om dagen innen 1,5 km, to hvite og to røde lys om natta innen 4 km
+  - fuglene ved de ti kjente fuglefjellene (`src/data/fuglefjell.json`, satt for hånd etter SEAPOP og Miljødirektoratet; posisjonene er omtrentlige), som hvite prikker som sirkler foran fjellet, om dagen
+- Lysene og fuglefjellets fugler tegnes i fjernpasset utenfor nærpassets rekkevidde og i nærpasset innenfor. På Lav bare lysene, fuglefjellene og hvalene. `#life0` i adressen skrur det av.
+
+## 4.11l Vannlinja (G10, 29.10.2026)
+
+- **Kaiveggene** (`05-quays-breakwaters.js pierInto`, `slabInto`): i bånd, grønske under middelvann, den mørke stripa av tidevannet over den, og betongen (kaiens steinfylling litt varmere) opp til dekket.
+- **Beslagene** (`quayFit`) langs hver kaikant med sjø utenfor, i hele landet: to fenderlister i tre, bildekk hver 6 m, pullerter hver 12 m litt inn på dekket, en leider ned i vannet hver 35 m og den gule kanten. Havneenhetene og kaiplassene til spillets havner har sine egne fra før.
+- **De faste bryggene** som er kartlagt som linje (ikke `floating=yes`), er tredekke på pæler hver 3 m, ikke grå kasser (BACKLOG: Kristiansand og Hammerfest; alternativ b fra #94).
+- **Småbåthavnene** (`tools/map/marina.py` til `src/data/marina.json`, OpenStreetMaps `leisure=marina` i Overture, 460 i Norge; `view3d/17g-marina.js`): innen 1,5 km ligger småbåter med baugen inn ved fingerplassene langs begge sider av flytebryggene i havna, 3,2 m mellom, ellers på bøyer i rekker der det er dypt nok. Fire slag (åpen båt med påhengsmotor, snekke, motorbåt med kahytt, seilbåt med mast); fire av fem plasser tatt fra mai til september, én av tre om vinteren. `#marina0` i adressen skrur dem av.
+- **Ikke gjort ennå:** strendene og rullesteinsfjærene på 5 m, tang og rur på skjærene etter eksponeringen og stupene i fjæra; de trenger nye lag i kartpakkene (`vectors.py`) og en kartrelease.
+- **Test:** `havnshot.py` (Kristiansand, Bergen, Bodø, Hammerfest og Finnsnes).
+
 ## 5.23 Lys om natta og fyrlykter (03.10.2026)
 
 - **Lyskildene:** opptil 8 punktlys lyser opp terreng, bygg, havneenheter, båter og sjø (`PLG`, `pLit` i skyggeleggerne, `pickLights` hvert bilde). På «Lav» brukes 2, på «Middels» 4.

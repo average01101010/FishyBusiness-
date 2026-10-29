@@ -54,7 +54,7 @@
   const FRAME = [0.93, 0.93, 0.9], BGLASS = [0.1, 0.13, 0.16], WARM = [1, 0.78, 0.42], DOORS = [[0.3,0.2,0.14],[0.2,0.3,0.24],[0.55,0.15,0.12],[0.9,0.9,0.88],[0.22,0.28,0.4]];
   function buildChunk(key, detail){
     const srcs = bldCells(key), c = {mesh:null, lights:null, nl:0, detail, dm:null, gd:null, gl:null};
-    const m = MB(), L = [], snowy = chunkSnow % 10 === 1, D = detail ? MB() : null, GD = detail ? MB() : null, GLm = detail ? MB() : null;
+    const m = MB(), L = [], SMK = [], snowy = chunkSnow % 10 === 1, D = detail ? MB() : null, GD = detail ? MB() : null, GLm = detail ? MB() : null;
     for (const [B, idx] of srcs) for (const j of idx){
       const i = j + B.seed, x = B.x[j], z = B.z[j], l = B.l[j], w = B.w[j], ty = B.t[j], lv = B.lv[j], ry = Math.PI / 2 - B.a[j], hsh = hash(i * 7 + 3);
       const ca = Math.cos(B.a[j]), sa = Math.sin(B.a[j]);
@@ -81,6 +81,8 @@
         case 15: wall = [0.5, 0.48, 0.45]; hg = 1.2; gable = false; break;
         default: wall = pick(PAL_HOUSE); hg = lv ? 2.8 * lv : 3.6; light = 0.3;
       }
+      // a chimney on some of the houses and cabins, for the smoke in the cold (G9, 17e-life.js)
+      if ((ty === 1 || ty === 4) && hash(i * 13 + 5) < 0.4) SMK.push(x + ca * l * 0.22, base + rise + hg + pitch * w * 0.5 + 0.7, z + sa * l * 0.22);
       if (snowy) roof = mix3(roof, SNOW, 0.85);
       const H = hg + rise;
       if (gable) m.house(x, base, z, w, l, H, ry, wall, roof, pitch, cap); else m.box(x, base, z, w, H, l, wall, ry, roof);
@@ -126,6 +128,7 @@
     const RM = MB(); addRoads(RM, key, snowy); if (RM.p.length) c.rd = RM.mesh(o);
     if (detail){ if (D.p.length) c.dm = D.mesh(o); if (GD.p.length) c.gd = GD.mesh(o); if (GLm.p.length) c.gl = GLm.mesh(o); }
     if (L.length){ c.lights = buf(relTo(L, o)); c.nl = L.length / 3; }
+    if (SMK.length) c.smk = SMK;
     return c;
   }
   // trees: birch woods below the tree line with some pine, kept off roads and buildings; colours follow the season

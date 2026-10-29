@@ -89,9 +89,38 @@
     if (q.closed && q.src !== undefined && tag !== undefined) return;   // a pack's area pier: slabInto, in its shape
     camSolid(q.x, q.z, q.w, q.l, q.ang, -3, q.bw ? 3.2 : QTOP, tag);
     if (q.bw) return;
-    if (q.closed) m.box(q.x, -2.4, q.z, q.w, QTOP + 2.4, q.l, [0.5, 0.49, 0.46], q.ang, [0.6, 0.58, 0.54]);
-    else if (q.made) m.box(q.x, -3, q.z, q.w, QTOP + 3, q.l, [0.52, 0.53, 0.5], q.ang, [0.6, 0.6, 0.58]);
-    else m.box(q.x, -2.4, q.z, q.w, QTOP + 2.4, q.l, [0.46, 0.42, 0.37], q.ang, [0.56, 0.52, 0.46]);
+    const ux = Math.sin(q.ang), uz = Math.cos(q.ang), vx = Math.cos(q.ang), vz = -Math.sin(q.ang);
+    if (q.closed || q.made){
+      // G10: the wall in bands, green slime under mean sea level, the dark wet stripe of the tide over it, the concrete (a quay's
+      // stone fill a little warmer) up to the deck
+      const wall = q.made ? [0.52, 0.53, 0.5] : [0.5, 0.49, 0.46], top = q.made ? [0.6, 0.6, 0.58] : [0.6, 0.58, 0.54], y0 = q.made ? -3 : -2.4;
+      m.box(q.x, y0, q.z, q.w, 0.2 - y0, q.l, WALL_SLIME, q.ang); m.box(q.x, 0.2, q.z, q.w, 1.0, q.l, mix3(wall, WALL_WET, 0.6), q.ang); m.box(q.x, 1.2, q.z, q.w, QTOP - 1.2, q.l, wall, q.ang, top);
+      // the fittings along each side that has the sea off it
+      const hl = q.l / 2, hw = q.w / 2;
+      for (const [cx, cz, nx, nz, L, ax, az] of [[q.x + vx * hw, q.z + vz * hw, vx, vz, q.l, ux, uz], [q.x - vx * hw, q.z - vz * hw, -vx, -vz, q.l, -ux, -uz], [q.x + ux * hl, q.z + uz * hl, ux, uz, q.w, -vx, -vz], [q.x - ux * hl, q.z - uz * hl, -ux, -uz, q.w, vx, vz]])
+        if (L >= 6 && seaOff(cx, cz, nx, nz, L, ax, az)) quayFit(m, cx - ax * L / 2, cz - az * L / 2, ax, az, nx, nz, L);
+    } else {
+      // a timber pier (one mapped as a line, not floating): the plank deck on piles every 3 m along both sides (and the middle when wide)
+      m.box(q.x, QTOP - 0.35, q.z, q.w, 0.35, q.l, [0.3, 0.24, 0.18], q.ang, [0.46, 0.4, 0.32]);
+      const cols = q.w > 5 ? [-1, 0, 1] : [-1, 1], np = Math.max(2, Math.round(q.l / 3) + 1);
+      for (let k = 0; k < np; k++){ const a = -q.l / 2 + 0.4 + (q.l - 0.8) * k / (np - 1);
+        for (const c of cols){ const o = c * (q.w / 2 - 0.25); m.box(q.x + ux * a + vx * o, -3, q.z + uz * a + vz * o, 0.3, QTOP - 0.35 + 3, 0.3, k % 2 ? [0.2, 0.17, 0.13] : [0.24, 0.2, 0.15], q.ang); } }
+    }
+  }
+  const WALL_SLIME = [0.17, 0.2, 0.14], WALL_WET = [0.22, 0.22, 0.21];
+  // is the sea off this side (its middle and its quarters, 3 m out)?
+  function seaOff(cx, cz, nx, nz, L, ax, az){ for (const f of [-0.3, 0, 0.3]) if (terrRaw(cx + ax * L * f + nx * 3, cz + az * L * f + nz * 3) > -0.3) return false; return true; }
+  // G10: a quay side's fittings from (x, z) along (ax, az) for L m, the sea along (nx, nz): two timber fender beams, tyres each 6 m,
+  // bollards each 12 m set back on the deck, a ladder each 35 m down into the water, and the yellow edge
+  function quayFit(m, x, z, ax, az, nx, nz, L){
+    const ang = Math.atan2(ax, az), at = (s, o) => [x + ax * s + nx * o, z + az * s + nz * o], mid = at(L / 2, 0.12);
+    m.box(mid[0], QTOP - 1.45, mid[1], 0.22, 0.3, L, [0.24, 0.18, 0.12], ang); m.box(mid[0], QTOP - 0.65, mid[1], 0.22, 0.28, L, [0.26, 0.2, 0.13], ang);
+    const e = at(L / 2, -0.18); m.box(e[0], QTOP, e[1], 0.36, 0.03, L, [0.86, 0.7, 0.12], ang);
+    for (let s = 3; s < L - 1; s += 6){ const p = at(s, 0.36); m.box(p[0], QTOP - 1.75, p[1], 0.28, 0.85, 0.85, [0.07, 0.07, 0.08], ang); }
+    for (let s = 2.5; s < L - 1; s += 12){ const p = at(s, -0.75); m.box(p[0], QTOP, p[1], 0.36, 0.5, 0.36, [0.14, 0.15, 0.16], ang); m.box(p[0], QTOP + 0.5, p[1], 0.5, 0.08, 0.5, [0.14, 0.15, 0.16], ang); }
+    if (L > 10) for (let s = Math.min(17, L / 2); s < L - 2; s += 35){ const G = [0.6, 0.62, 0.64];
+      for (const sd of [-0.23, 0.23]){ const p = at(s + sd, 0.1); m.box(p[0], -1.3, p[1], 0.06, QTOP + 2.2, 0.06, G, ang); }
+      for (let y = -1.1; y < QTOP; y += 0.3){ const p = at(s, 0.1); m.box(p[0], y, p[1], 0.05, 0.04, 0.46, G, ang); } }
   }
   // a pier mapped as an area, in its shape (its bounding box, as Senja's small ones are drawn, lay over the water at a big quay in
   // Bergen): the deck in strips a metre deep, each cut where the outline crosses its middle, the walls down the outline's edges; the
@@ -105,7 +134,10 @@
         const k = Math.max(1, Math.ceil((b - a) / 2)), d = (b - a) / k; let s0 = null;
         for (let i = 0; i <= k; i++){ const off = i === k || cut(a + (i + 0.5) * d, z); if (off){ if (s0 !== null){ f(a + s0 * d, a + i * d); s0 = null; } } else if (s0 === null) s0 = i; } } };
     for (let z = z0; z < z1; z += 1){ const z2 = Math.min(z1, z + 1); runs((z + z2) / 2, (a, b) => m.quad([a, QTOP, z], [b, QTOP, z], [b, QTOP, z2], [a, QTOP, z2], top)); }
-    for (let k = 0; k < n - 1; k++){ const [ax, az] = pts[k], [bx, bz] = pts[k + 1]; if (Math.hypot(bx - ax, bz - az) < 0.2 || (cut && cut((ax + bx) / 2, (az + bz) / 2))) continue; m.quad([ax, -2.4, az], [bx, -2.4, bz], [bx, QTOP, bz], [ax, QTOP, az], side); }
+    for (let k = 0; k < n - 1; k++){ const [ax, az] = pts[k], [bx, bz] = pts[k + 1]; if (Math.hypot(bx - ax, bz - az) < 0.2 || (cut && cut((ax + bx) / 2, (az + bz) / 2))) continue; m.quad([ax, -2.4, az], [bx, -2.4, bz], [bx, 0.2, bz], [ax, 0.2, az], WALL_SLIME); m.quad([ax, 0.2, az], [bx, 0.2, bz], [bx, 1.2, bz], [ax, 1.2, az], mix3(side, WALL_WET, 0.6)); m.quad([ax, 1.2, az], [bx, 1.2, bz], [bx, QTOP, bz], [ax, QTOP, az], side);
+      // G10: the fittings along an edge with the sea off it (either way round the outline)
+      const L = Math.hypot(bx - ax, bz - az), ex = (bx - ax) / L, ez = (bz - az) / L;
+      if (L >= 6){ for (const sd of [1, -1]){ const nx = -ez * sd, nz = ex * sd; if (seaOff((ax + bx) / 2, (az + bz) / 2, nx, nz, L, ex, ez)){ quayFit(m, ax, az, ex, ez, nx, nz, L); break; } } } }
     for (let z = z0; z < z1; z += 4){ const z2 = Math.min(z1, z + 4); runs((z + z2) / 2, (a, b) => camSolid((a + b) / 2, (z + z2) / 2, b - a, z2 - z, 0, -3, QTOP, tag)); }
   }
   // a road bridge [class, length, name, type, x, z, ...]: the deck rises from its ends to a clearance by its length (Tromsøbrua, 1046 m,

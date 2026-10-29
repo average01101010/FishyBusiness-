@@ -368,6 +368,30 @@
     drawN(m, BMrel); gl.disableVertexAttribArray(2);
     gl.depthMask(true); gl.disable(gl.BLEND); gl.useProgram(PL.p);
   }
+  // Rain on the wheelhouse's windows, seen from the helm (G6): beads that sit on the glass (more the harder it rains, some left while it
+  // dries) and drops that run down with a wet trail, in the glass's own frame so they stay on the window as the boat moves; spray in a
+  // gale too. Drawn over the glass with the same mesh; each bead lighter at the top and darker under, as a drop shows the sky upside down.
+  const DROP_FS = 'precision highp float;uniform float uRain;uniform float uT;uniform vec3 uSunCol;uniform vec3 uAmb;varying vec3 vW;varying vec3 vN;varying vec4 vC;varying vec3 vP;varying vec3 vNm;' + NOISE +
+    'void main(){vec3 a=abs(vNm);vec2 q=a.x>a.z?vP.zy:vP.xy;' +
+    'vec2 g=q*45.0;vec2 c=floor(g);vec2 f=fract(g)-0.5;float on=step(hs(c),uRain*0.6);vec2 o=vec2(hs(c+7.1),hs(c+3.3))-0.5;float r=0.16+0.24*hs(c+1.7);' +
+    'vec2 dl=f-o*0.5;float dd=length(dl*vec2(1.0,1.15));float bead=on*(1.0-smoothstep(r*0.75,r,dd));float lt=smoothstep(-0.3,0.7,dl.y/r);' +
+    'float cl=floor(q.x*30.0);float hc=hs(vec2(cl,9.0));float run=step(hc,uRain*0.3);float fx=fract(q.x*30.0)-0.5;float u=fract((q.y+uT*(0.05+0.12*hc))*0.8+hc*5.0);' +
+    'float head=run*(1.0-smoothstep(0.22,0.42,abs(fx)))*(1.0-smoothstep(0.006,0.018,u));float trail=run*(1.0-smoothstep(0.06,0.14,abs(fx)))*smoothstep(0.012,0.02,u)*(1.0-smoothstep(0.02,0.25,u));' +
+    'bead*=1.0-run*(1.0-smoothstep(0.3,0.5,abs(fx)))*smoothstep(0.0,0.02,u)*(1.0-smoothstep(0.02,0.5,u));' +
+    'float al=max(bead,head)*0.6+trail*0.18;if(al<0.01)discard;vec3 base=uAmb*1.3+uSunCol*0.25;vec3 col=base*(0.45+1.1*max(lt*bead,head*0.8))+uSunCol*0.5*smoothstep(0.55,0.9,lt)*bead;' +
+    'gl_FragColor=vec4(col,al);}';
+  let PDROP = null;
+  function drawDrops(m, BMrel, VP, t){
+    if (!m || !m.n || !cam.helm || !WETON) return;
+    const rain = env.temp > 0.5 ? sstep(0.04, 0.7, env.precip || 0) : 0, spray = sstep(12, 22, env.wind || 0) * 0.5, R = Math.max(rain, spray, (env.wet || 0) * 0.45);
+    if (R < 0.03) return;
+    if (!PDROP){ try { PDROP = program(LITN_VS, DROP_FS, ['aPos', 'aNor', 'aCol'], 'draaper'); } catch (e){ console.warn('draaper', e.message || e); PDROP = false; } }
+    if (!PDROP) return;
+    gl.useProgram(PDROP.p); const u = PDROP.u; gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniformMatrix4fv(u.uM, false, BMrel); gl.uniform1f(u.uRain, R); gl.uniform1f(u.uT, t % 3600); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb);
+    gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
+    attr(0, m.pb, 3); attr(1, m.nb, 3); gl.bindBuffer(gl.ARRAY_BUFFER, m.cb); gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 4, gl.FLOAT, false, 0, 0); gl.drawArrays(gl.TRIANGLES, 0, m.n); gl.disableVertexAttribArray(2);
+    gl.depthMask(true); gl.disable(gl.BLEND); gl.useProgram(PL.p);
+  }
   function buildBoat(){
     const m = MB(), cap = MB(), NS = 16, Lh = 5.8;
     const bw = s => s < 0.35 ? 1.0 + 0.1 * s / 0.35 : 1.1 * Math.sqrt(Math.max(0, 1 - ((s - 0.35) / 0.65) ** 2));

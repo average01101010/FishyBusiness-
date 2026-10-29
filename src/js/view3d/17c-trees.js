@@ -6,7 +6,9 @@
   // per species and level per chunk; the near chunks (TREE_LOD0[QUAL.lvl] m) get the detailed models. Without the extension or the
   // layer (an older release, outside Norway) the old trees stay (06-buildings-lights.js addTrees). #trees0 in the address: the old trees.
   const TREE = {ext:null, tried:false, M:null, P:null, on:!/trees0/.test(location.hash), n:0};
-  const TREEK = ['spruce', 'pine', 'birch'], TREE_LOD0 = [0, 220, 320, 520], TREE_DENS = [3, 6, 10, 16];   // per quality level: the detailed models' reach (m), trees per full 50 m cell
+  const TREEK = ['spruce', 'pine', 'birch'], TREE_LOD0 = [0, 220, 320, 450], TREE_DENS = [3, 5, 8, 12], TREE_R = [700, 1200, 1800, 2500];
+  // per quality level: the detailed models' reach (m), trees per full 50 m cell, and how far trees are planted at all (beyond, the
+  // satellites' colour shows the wood; 29.10.2026: planted in every chunk in sight, some 700, the trees took minutes a frame in the tests)
   function treeExt(){ if (!TREE.tried){ TREE.tried = true; try { TREE.ext = gl.getExtension('ANGLE_instanced_arrays'); } catch (e){ TREE.ext = null; } } return TREE.ext; }
   // the models as buffers: position, normal, colour and paint zone (1 the needles or leaves, 2 the birch's twigs) per vertex
   function treeModels(){
@@ -40,14 +42,20 @@
     const spr = (lat < 64.5 ? 0.8 : lat < 66.3 ? 0.55 : 0.12) * (y < 450 ? 1 : 0.3) * (h > 9 ? 1 : 0.6);
     return r < spr ? 0 : 1;
   }
-  // a chunk's trees from the layer (addTrees calls it): returns false where the layer has no block here (the old trees then)
+  // a chunk's trees from the layer (addTrees calls it): returns false where the layer has no block here (the old trees then); else the
+  // chunk keeps what is needed and drawTrees plants it when the eye comes within TREE_R (one chunk a frame), and clears it again further off
   function treeChunk(c, key, occ, snowy){
     const L = MAPD.L.trees; if (!L || !TREE.on || !treeExt() || !treeModels()) return false;
     const gx = gridKeyX(key), gz = gridKeyY(key), x0 = gx * 1000, z0 = gz * 1000, cm = L.c * 1000, n = Math.round(1000 / cm);
     const ix0 = Math.floor(x0 / cm), iz0 = Math.floor(z0 / cm);
     if (!mapIn(L, ix0, iz0) || !mapIn(L, ix0 + n - 1, iz0 + n - 1)) return false;
     for (const [bx, by] of [[ix0, iz0], [ix0 + n - 1, iz0], [ix0, iz0 + n - 1], [ix0 + n - 1, iz0 + n - 1]]) if (!mapHasBlock(L, Math.floor(bx / L.n), Math.floor(by / L.n))) return false;
-    const D = TREE_DENS[QUAL.lvl], out = [[], [], []];
+    c.trq = {key, occ}; c.tr = null; c.trN = 0; return true;
+  }
+  function treePlant(c){
+    const L = MAPD.L.trees, {key, occ} = c.trq, gx = gridKeyX(key), gz = gridKeyY(key), x0 = gx * 1000, z0 = gz * 1000, cm = L.c * 1000, n = Math.round(1000 / cm);
+    const ix0 = Math.floor(x0 / cm), iz0 = Math.floor(z0 / cm);
+    const D = TREE_DENS[QUAL.lvl], out = [[], [], []]; c.trD = D;
     for (let j = 0; j < n; j++) for (let i = 0; i < n; i++){
       const v = rcell(L, ix0 + i, iz0 + j); if (!v) continue;
       const cov = (v & 15) / 15, hc = (v >> 4) & 7, needle = v >> 7, base = hash((gx * 7919 + gz * 104729) * 1600 + j * n + i), k = Math.floor(cov * D + base);
@@ -61,9 +69,8 @@
       }
     }
     c.tr = out.map(a => a.length ? {b:buf(new Float32Array(a)), n:a.length / 6} : null); c.trN = out.reduce((s, a) => s + a.length / 6, 0);
-    return true;
   }
-  function treeFree(c){ if (c.tr) for (const t of c.tr) if (t) gl.deleteBuffer(t.b); c.tr = null; }
+  function treeFree(c){ if (c.tr) for (const t of c.tr) if (t) gl.deleteBuffer(t.b); c.tr = null; c.trN = 0; }
   // the season's colours: the birch's leaves from spring green to summer to autumn yellow, bare in winter; snow on the crowns
   function treeSeasonU(){
     const st = typeof seasonAt === 'function' ? seasonAt(S.t / 60) : {leaf:1, yel:0}, leaf = clamp(st.leaf == null ? 1 : st.leaf, 0, 1), yel = clamp(st.yel || 0, 0, 1);
@@ -76,10 +83,13 @@
     const P = TREE.P, u = P.u, X = TREE.ext, se = treeSeasonU(); gl.useProgram(P.p);
     gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uSun, env.lightDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD); airSet(u);
     gl.uniform1f(u.uSnow, se.snow); gl.uniform1f(u.uBare, se.bare);
-    const R0 = TREE_LOD0[QUAL.lvl]; let drawn = 0;
+    const R0 = TREE_LOD0[QUAL.lvl], RT = TREE_R[QUAL.lvl]; let drawn = 0, best = null, bd = 1e9;
     for (const c of CH.values()){
-      if (!c.tr) continue; const d = Math.hypot(c.o[0] + 500 - eye[0], c.o[1] + 500 - eye[2]), lod = d < R0 + 500 ? 0 : 1;
-      gl.uniform3f(u.uO, c.o[0] - RO.x, 0, c.o[1] - RO.z);
+      if (!c.trq) continue; const d = Math.hypot(c.o[0] + 500 - eye[0], c.o[1] + 500 - eye[2]);
+      if (c.tr && (d > RT + 1500 || c.trD !== TREE_DENS[QUAL.lvl])) treeFree(c);
+      if (!c.tr && d < RT + 700 && d < bd){ bd = d; best = c; }
+      if (!c.tr || d > RT + 700) continue; const lod = d < R0 + 500 ? 0 : 1;
+      gl.uniform3f(u.uO, c.o[0] - eye[0], -eye[1], c.o[1] - eye[2]);   // the view is from the eye (V.m has no move), as fin's fog wants
       for (let s = 0; s < 3; s++){ const t = c.tr[s]; if (!t) continue; const m = TREE.M[TREEK[s] + lod];
         gl.uniform1f(u.uBirch, s === 2 ? 1 : 0); gl.uniform3fv(u.uLeaf, s === 2 ? se.birch : [1, 1, 1]);
         gl.bindBuffer(gl.ARRAY_BUFFER, m.b); for (const [a, sz, off] of [[0, 3, 0], [1, 3, 12], [2, 4, 24]]){ gl.enableVertexAttribArray(a); gl.vertexAttribPointer(a, sz, gl.FLOAT, false, 40, off); X.vertexAttribDivisorANGLE(a, 0); }
@@ -88,5 +98,5 @@
       }
     }
     X.vertexAttribDivisorANGLE(3, 0); X.vertexAttribDivisorANGLE(4, 0); gl.disableVertexAttribArray(2); gl.disableVertexAttribArray(3); gl.disableVertexAttribArray(4);
-    TREE.n = drawn;
+    TREE.n = drawn; if (best) treePlant(best);   // the nearest chunk still bare, one a frame (drawn from the next)
   }
