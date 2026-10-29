@@ -198,7 +198,9 @@
     gl.uniform2f(u.uShift, sx, sz); gl.uniform2f(u.uShiftG, sx === N ? 0 : gsx, sz === N ? 0 : gsz); gl.uniform2f(u.uFoamG, Dx - FOAM.G[0], Dz - FOAM.G[1]); gl.uniform1f(u.uN, N); gl.uniform2f(u.uRebase, reb[0], reb[1]);
     // the land the wake's foam may not lie on: the shore texture (buildLandMask, the foreshore's height), as the sea shader reads it
     const lon = !!(LMTEX && LMON && LRECT); gl.uniform1f(u.uLSOn, lon ? 1 : 0); gl.uniform1f(u.uTideL, env.tide || 0);
-    if (lon){ gl.activeTexture(gl.TEXTURE6); gl.bindTexture(gl.TEXTURE_2D, LMTEX); gl.uniform1i(u.uLandS, 6); gl.uniform4fv(u.uLRect, [LRECT[0] - RO.x, LRECT[1] - RO.z, LRECT[2], LRECT[3]]); gl.activeTexture(gl.TEXTURE0); }
+    // (the sampler is always on unit 6, a stand-in when the shore is not in: left on unit 0 it read the map being drawn, GL error 1282)
+    gl.activeTexture(gl.TEXTURE6); gl.bindTexture(gl.TEXTURE_2D, lon ? LMTEX : SSDUMMY); gl.uniform1i(u.uLandS, 6); gl.activeTexture(gl.TEXTURE0);
+    if (lon) gl.uniform4fv(u.uLRect, [LRECT[0] - RO.x, LRECT[1] - RO.z, LRECT[2], LRECT[3]]);
     gl.uniform4fv(u.uFoamRect, [FOAM.ox - RO.x, FOAM.oz - RO.z, 1 / M, M]); gl.uniform4fv(u.uFoamT, [FOAM.now[0], FOAM.win[0], FOAM.tau[0], 0]); gl.uniform4fv(u.uFoamTc, [FOAM.now[1], FOAM.win[1], FOAM.tau[1], 0]);
     gl.uniform1f(u.uTime, t); gl.uniform2f(u.uNFD, Dx, Dz); gl.uniform1f(u.uWind, env.wind || 0); gl.uniform2fv(u.uWindDir, env.windDir || [0, 1]);
     gl.uniform4fv(u.uSea, [WV.C, WV.cap, WV.lnFcap, WV.swHs]); gl.uniform4fv(u.uSea2, [WV.dot, WV.steep, ssBlend(SSL.n), ssBlend(SSL.w)]); gl.uniform4fv(u.uLocal, WV.loc);
