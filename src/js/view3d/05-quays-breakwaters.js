@@ -98,14 +98,33 @@
       // the fittings along each side that has the sea off it
       const hl = q.l / 2, hw = q.w / 2;
       for (const [cx, cz, nx, nz, L, ax, az] of [[q.x + vx * hw, q.z + vz * hw, vx, vz, q.l, ux, uz], [q.x - vx * hw, q.z - vz * hw, -vx, -vz, q.l, -ux, -uz], [q.x + ux * hl, q.z + uz * hl, ux, uz, q.w, -vx, -vz], [q.x - ux * hl, q.z - uz * hl, -ux, -uz, q.w, vx, vz]])
-        if (L >= 6 && seaOff(cx, cz, nx, nz, L, ax, az)) quayFit(m, cx - ax * L / 2, cz - az * L / 2, ax, az, nx, nz, L);
+        if (L >= 6 && seaOff(cx, cz, nx, nz, L, ax, az)) fitAdd(tag, {q:1, x:cx - ax * L / 2, z:cz - az * L / 2, ax, az, nx, nz, L});
     } else {
       // a timber pier (one mapped as a line, not floating): the plank deck on piles every 3 m along both sides (and the middle when wide)
       m.box(q.x, QTOP - 0.35, q.z, q.w, 0.35, q.l, [0.3, 0.24, 0.18], q.ang, [0.46, 0.4, 0.32]);
-      const cols = q.w > 5 ? [-1, 0, 1] : [-1, 1], np = Math.max(2, Math.round(q.l / 3) + 1);
-      for (let k = 0; k < np; k++){ const a = -q.l / 2 + 0.4 + (q.l - 0.8) * k / (np - 1);
-        for (const c of cols){ const o = c * (q.w / 2 - 0.25); m.box(q.x + ux * a + vx * o, -3, q.z + uz * a + vz * o, 0.3, QTOP - 0.35 + 3, 0.3, k % 2 ? [0.2, 0.17, 0.13] : [0.24, 0.2, 0.15], q.ang); } }
+      fitAdd(tag, {q:0, x:q.x, z:q.z, w:q.w, l:q.l, ang:q.ang});
     }
+  }
+  // the timber pier's piles (the near fittings build them): every 3 m along both sides, and the middle when wide
+  function pierPiles(m, q){
+    const ux = Math.sin(q.ang), uz = Math.cos(q.ang), vx = Math.cos(q.ang), vz = -Math.sin(q.ang), cols = q.w > 5 ? [-1, 0, 1] : [-1, 1], np = Math.max(2, Math.round(q.l / 3) + 1);
+    for (let k = 0; k < np; k++){ const a = -q.l / 2 + 0.4 + (q.l - 0.8) * k / (np - 1);
+      for (const c of cols){ const o = c * (q.w / 2 - 0.25); m.box(q.x + ux * a + vx * o, -3, q.z + uz * a + vz * o, 0.3, QTOP - 0.35 + 3, 0.3, k % 2 ? [0.2, 0.17, 0.13] : [0.24, 0.2, 0.15], q.ang); } }
+  }
+  // G10's fittings are many (a city's quays run for tens of kilometres): the tile only notes where they go (fitAdd, by the tile's
+  // tag), and the near fittings (drawFits) build them within FIT_R of the eye, again when it has moved a fifth of that
+  const FITS = new Map(), FIT = {m:null, at:[1e9, 1e9], t:0, n:0, ver:0, v:-1}, FIT_R = 700;
+  function fitAdd(tag, f){ if (tag === undefined) tag = '_'; let a = FITS.get(tag); if (!a) FITS.set(tag, a = []); a.push(f); FIT.ver++; }   // ('_': Senja's own piers)
+  function fitDrop(tag){ if (FITS.delete(tag)) FIT.ver++; }
+  function drawFits(eye, VP){
+    const now = performance.now();
+    if (Math.hypot(eye[0] - FIT.at[0], eye[2] - FIT.at[1]) > FIT_R / 5 || (FIT.v !== FIT.ver && now - FIT.t > 2000)){
+      if (FIT.m) freeMesh(FIT.m); FIT.m = null; FIT.at = [eye[0], eye[2]]; FIT.t = now; FIT.v = FIT.ver; const m = MB(); let n = 0;
+      for (const a of FITS.values()) for (const f of a){ if (Math.abs(f.x - eye[0]) > FIT_R + 60 || Math.abs(f.z - eye[2]) > FIT_R + 60 || n > 1500) continue;
+        if (f.q) quayFit(m, f.x, f.z, f.ax, f.az, f.nx, f.nz, f.L); else pierPiles(m, f); n++; }
+      FIT.n = n; if (m.p.length) FIT.m = m.mesh([Math.round(eye[0]), Math.round(eye[2])]);
+    }
+    if (FIT.m){ litSetup(VP); drawLit(FIT.m); }
   }
   const WALL_SLIME = [0.17, 0.2, 0.14], WALL_WET = [0.22, 0.22, 0.21];
   // is the sea off this side (its middle and its quarters, 3 m out)?
@@ -137,7 +156,7 @@
     for (let k = 0; k < n - 1; k++){ const [ax, az] = pts[k], [bx, bz] = pts[k + 1]; if (Math.hypot(bx - ax, bz - az) < 0.2 || (cut && cut((ax + bx) / 2, (az + bz) / 2))) continue; m.quad([ax, -2.4, az], [bx, -2.4, bz], [bx, 0.2, bz], [ax, 0.2, az], WALL_SLIME); m.quad([ax, 0.2, az], [bx, 0.2, bz], [bx, 1.2, bz], [ax, 1.2, az], mix3(side, WALL_WET, 0.6)); m.quad([ax, 1.2, az], [bx, 1.2, bz], [bx, QTOP, bz], [ax, QTOP, az], side);
       // G10: the fittings along an edge with the sea off it (either way round the outline)
       const L = Math.hypot(bx - ax, bz - az), ex = (bx - ax) / L, ez = (bz - az) / L;
-      if (L >= 6){ for (const sd of [1, -1]){ const nx = -ez * sd, nz = ex * sd; if (seaOff((ax + bx) / 2, (az + bz) / 2, nx, nz, L, ex, ez)){ quayFit(m, ax, az, ex, ez, nx, nz, L); break; } } } }
+      if (L >= 6){ for (const sd of [1, -1]){ const nx = -ez * sd, nz = ex * sd; if (seaOff((ax + bx) / 2, (az + bz) / 2, nx, nz, L, ex, ez)){ fitAdd(tag, {q:1, x:ax, z:az, ax:ex, az:ez, nx, nz, L}); break; } } } }
     for (let z = z0; z < z1; z += 4){ const z2 = Math.min(z1, z + 4); runs((z + z2) / 2, (a, b) => camSolid((a + b) / 2, (z + z2) / 2, b - a, z2 - z, 0, -3, QTOP, tag)); }
   }
   // a road bridge [class, length, name, type, x, z, ...]: the deck rises from its ends to a clearance by its length (Tromsøbrua, 1046 m,
