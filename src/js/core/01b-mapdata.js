@@ -27,7 +27,10 @@ function mapIdb(){
 }
 function idbDo(mode, f){ return mapIdb().then(db => db && new Promise(res => { try { const tx = db.transaction('f', mode), q = f(tx.objectStore('f')); tx.oncomplete = () => res(q && q.result); tx.onerror = tx.onabort = () => res(null); } catch (e){ res(null); } })); }
 async function mapFetch(pk){
-  const kept = await idbDo('readonly', s => s.get(pk.hash));
+  // the copy kept in IndexedDB, unless the store is slow to answer: a read waits behind the writes before it, and after a long jump
+  // (a teleport, a new place on the map) tens of packs are being written, so a read could wait half a minute and the view's packs not
+  // come at all (Tromsø 29.10.2026, the larger view packs of G3 and G4); after 1.5 s the network is asked instead
+  const kept = await Promise.race([idbDo('readonly', s => s.get(pk.hash)), new Promise(res => setTimeout(() => res(null), 1500))]);
   if (kept && kept.byteLength === pk.bytes){ MAPD.cached++; return new Uint8Array(kept); }
   // a pack that does not come (a slow or dropped connection, a proxy that cuts a large file, a hiccup on the server) is asked for again
   // up to three times, 0.7 s, 1.4 s and 2.1 s apart, before the player sees an error (08.10.2026: players stuck at «Kartet lastet ikke»)
