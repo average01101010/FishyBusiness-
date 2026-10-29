@@ -11,43 +11,43 @@ Seksjonene og funksjonene i hver kildefil, med linjenummer, i rekkefølgen malen
   - 60 `natP(lat, lon)`
   - 61 `natLL(p)`
 
-## `src/js/core/01-world.js` (385 linjer)
+## `src/js/core/01-world.js` (390 linjer)
 
 - **4** one clock for everyone (05.10.2026, the shared world V1)
-  - 39 `gridGamma(p)`
-  - 54 `b64bytes(s)`
-  - 55 `varints(b)`
-  - 63 `loadFine()`
-  - 71 `loadRoads()`
-  - 87 `inHarbour(p)`
-  - 94 `legHazard(a, c, sd)`
-  - 104 `legHazardMemo(a, c, sd)`
-  - 109 `draftHazards()`
-  - 119 `legReady(a, c)`
-  - 126 `nearestPlace(p)`
-  - 130 `groundCheck(a, c)`
-  - 141 `runAground(p)`
-  - 156 `rocksNear(a, b, r)`
-  - 166 `rocksIn(x0, y0, x1, y1)`
-  - 179 `coastDist(p)`
-  - 180 `coastDistFar(p)`
-  - 186 `decodeContours()`
-  - 195 `isLand(p)`
-  - 203 `isLandFar(p)`
-  - 209 `isLandUI(p)`
-  - 215 `inHarbourPocket(p)`
-  - 221 `harbourNear(x, z)`
-  - 227 `qPockets()`
-  - 228 `pocketHit(US, QS, x, z)`
-  - 235 `pocketsIn(x0, y0, x1, y1)`
-  - 244 `legClear(a, b)`
-  - 275 `portLabel(p)`
-- **291** the harbour unit (02.10.2026)
-  - 332 `fillOut(U, lx, lz)`
-  - 345 `onUnitGround(p)`
-  - 352 `unitCovers(x, z, m)`
-  - 360 `bridgeUnderUnit(br, extra)`
-  - 365 `portApproach(pt)`
+  - 44 `gridGamma(p)`
+  - 59 `b64bytes(s)`
+  - 60 `varints(b)`
+  - 68 `loadFine()`
+  - 76 `loadRoads()`
+  - 92 `inHarbour(p)`
+  - 99 `legHazard(a, c, sd)`
+  - 109 `legHazardMemo(a, c, sd)`
+  - 114 `draftHazards()`
+  - 124 `legReady(a, c)`
+  - 131 `nearestPlace(p)`
+  - 135 `groundCheck(a, c)`
+  - 146 `runAground(p)`
+  - 161 `rocksNear(a, b, r)`
+  - 171 `rocksIn(x0, y0, x1, y1)`
+  - 184 `coastDist(p)`
+  - 185 `coastDistFar(p)`
+  - 191 `decodeContours()`
+  - 200 `isLand(p)`
+  - 208 `isLandFar(p)`
+  - 214 `isLandUI(p)`
+  - 220 `inHarbourPocket(p)`
+  - 226 `harbourNear(x, z)`
+  - 232 `qPockets()`
+  - 233 `pocketHit(US, QS, x, z)`
+  - 240 `pocketsIn(x0, y0, x1, y1)`
+  - 249 `legClear(a, b)`
+  - 280 `portLabel(p)`
+- **296** the harbour unit (02.10.2026)
+  - 337 `fillOut(U, lx, lz)`
+  - 350 `onUnitGround(p)`
+  - 357 `unitCovers(x, z, m)`
+  - 365 `bridgeUnderUnit(br, extra)`
+  - 370 `portApproach(pt)`
 
 ## `src/js/core/01b-mapdata.js` (202 linjer)
 
@@ -1857,12 +1857,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (765 linjer)
+## `src/js/ui/phone/07-patch.js` (767 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 758 `patch()`
+  - 760 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (87 linjer)
 
@@ -2516,15 +2516,16 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 
 - **1** put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne laster ned spillet»)
 
-## `src/js/ui/11-boot.js` (148 linjer)
+## `src/js/ui/11-boot.js` (166 linjer)
 
 ---------- boot ----------
 
 - **1** boot
   - 7 `bootMap()`
-  - 10 `bootMapLoad()`
-  - 29 `bootGame()`
-  - 132 `bootFail(e)`
+  - 14 `bootData()`
+  - 28 `bootMapLoad()`
+  - 47 `bootGame()`
+  - 150 `bootFail(e)`
 
 ## `src/js/vessel3d.js` (1264 linjer)
 
@@ -2661,22 +2662,22 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 85 `ridged(x, y)`
   - 86 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (465 linjer)
+## `src/js/view3d/01-shaders.js` (471 linjer)
 
 ---------- shaders ----------
 
 - **1** shaders
-- **100** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
-- **132** the boat's own foam, when she has way on
-- **150** the whitecaps, as the sea shader finds them: the crest in standard deviations plus the mottle, over Monahan's threshold
-  - 408 `cloudStep(dt)`
-  - 414 `skyFrame(u, Hh, tn, bv)`
-  - 426 `compile(type, src, nm)`
-  - 432 `program(vs, fs, attrs, nm = '?')`
-  - 440 `buf(data, target, usage)`
-  - 445 `airSet(u, terr)`
-  - 450 `attr(loc, b, size)`
-  - 463 `upload(pos, col, idx)`
+- **103** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
+- **135** the boat's own foam, when she has way on
+- **153** the whitecaps, as the sea shader finds them: the crest in standard deviations plus the mottle, over Monahan's threshold
+  - 414 `cloudStep(dt)`
+  - 420 `skyFrame(u, Hh, tn, bv)`
+  - 432 `compile(type, src, nm)`
+  - 438 `program(vs, fs, attrs, nm = '?')`
+  - 446 `buf(data, target, usage)`
+  - 451 `airSet(u, terr)`
+  - 456 `attr(loc, b, size)`
+  - 469 `upload(pos, col, idx)`
 
 ## `src/js/view3d/02-mesh-terrain.js` (94 linjer)
 
@@ -3007,7 +3008,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 292 `seaH(x, z, t)`
   - 298 `seaHFast(x, z, t)`
 
-## `src/js/view3d/15-env-mooring.js` (145 linjer)
+## `src/js/view3d/15-env-mooring.js` (147 linjer)
 
 ---------- environment ----------
 
@@ -3015,15 +3016,15 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 3 `pal(el)`
   - 12 `wetSet(H)`
   - 24 `computeEnv(H)`
-- **58** mooring: in along the quay, then the lines: aft spring first, bow line, stern line, fore spring (and in reverse when casting off)
-  - 62 `buildMooring()`
-  - 64 `berthNow()`
-  - 70 `approach(F, bp, u0, du0)`
-  - 81 `pathM(pts)`
-  - 86 `pathAt(M, s)`
-  - 87 `lieAlongside(dt, bp)`
-  - 90 `moorStep(dt, bp, at = dt)`
-  - 122 `drawMooring(BMrel, eye, VP, t)`
+- **60** mooring: in along the quay, then the lines: aft spring first, bow line, stern line, fore spring (and in reverse when casting off)
+  - 64 `buildMooring()`
+  - 66 `berthNow()`
+  - 72 `approach(F, bp, u0, du0)`
+  - 83 `pathM(pts)`
+  - 88 `pathAt(M, s)`
+  - 89 `lieAlongside(dt, bp)`
+  - 92 `moorStep(dt, bp, at = dt)`
+  - 124 `drawMooring(BMrel, eye, VP, t)`
 
 ## `src/js/view3d/16-motion.js` (225 linjer)
 
@@ -3131,16 +3132,16 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 27 `marinaBuild(eye, now)`
   - 49 `drawMarinas(eye, t, VP)`
 
-## `src/js/view3d/17h-shore.js` (63 linjer)
+## `src/js/view3d/17h-shore.js` (85 linjer)
 
----------- the beaches and the shingle (G10 of docs/planer/grafikk-natur-og-miljo.md) ----------
+---------- the beaches, the shingle and the cliffs by the sea (G10 of docs/planer/grafikk-natur-og-miljo.md) ----------
 
-- **1** the beaches and the shingle (G10 of docs/planer/grafikk-natur-og-miljo.md)
+- **1** the beaches, the shingle and the cliffs by the sea (G10 of docs/planer/grafikk-natur-og-miljo.md)
   - 8 `shoreData(tx, ty)`
-  - 22 `shoreTile(tx, ty)`
-  - 45 `updateShore(eye)`
-  - 56 `staleShore(pk)`
-  - 57 `drawShore(VP)`
+  - 26 `shoreTile(tx, ty)`
+  - 67 `updateShore(eye)`
+  - 78 `staleShore(pk)`
+  - 79 `drawShore(VP)`
 
 ## `src/js/view3d/18-setup.js` (148 linjer)
 

@@ -17,7 +17,12 @@ const SRC = join(ROOT, 'src');
 // KYST_VEC: whether the coast's 'vec' packs (buildings, roads, bridges, piers and quays per tile, kart-5 on; 35 MB for the whole coast)
 // go with the map: in the app always, in the artifact only with KYST_VEC=1 (it has 256 MB a version, and the map is near that), where
 // Senja's embedded buildings and roads stand alone as before
-const PWA = process.env.KYST_PWA === '1', VECP = PWA || process.env.KYST_VEC === '1';
+// KYST_ONE=1: the page as one file with the models inside it, as the artifact had it. Otherwise (29.10.2026, Jonas: «Du kan godt lempe
+// på regelen om at siden må være 1 fil, om det gjør opplevelsen for meg og brukerne bedre») the models, the pictures and Senja's
+// buildings (src/data/*.b64, 36 MB of base64 in <script type="application/octet-stream"> elements) go out of the page as binary files
+// in data/, named by their hash like the map packs, fetched by the page at boot (ui/11-boot.js bootData) and cached by the service
+// worker. The page falls from 38 MB to 6 MB, a build changes only the files it changed, and a model is downloaded once.
+const PWA = process.env.KYST_PWA === '1', VECP = PWA || process.env.KYST_VEC === '1', ONE = process.env.KYST_ONE === '1';
 const DIST = process.env.KYST_DIST || join(ROOT, PWA ? 'dist-pwa' : 'dist'), OUT = join(DIST, 'index.html');
 
 function expand(file, stack = []){
@@ -39,6 +44,19 @@ for (const m of html.matchAll(/<script>([\s\S]*?)<\/script>/g)){
 }
 mkdirSync(dirname(OUT), {recursive:true});
 let page = html;
+// the data elements out of the page: each <script id="X" type="application/octet-stream" …>base64</script> becomes an empty element
+// with data-src="data/X-<hash>.bin" and the bytes go to that file; data/manifest.json lists them for the service worker's pruning
+const DATAOUT = join(DIST, 'data'); if (existsSync(DATAOUT)) rmSync(DATAOUT, {recursive:true});
+let dataFiles = [], dataBytes = 0;
+if (!ONE){
+  mkdirSync(DATAOUT, {recursive:true});
+  page = page.replace(/<script id="([^"]+)" type="application\/octet-stream"([^>]*)>([^<]*)<\/script>/g, (m, id, attrs, b64) => {
+    const bytes = Buffer.from(b64.trim(), 'base64'), file = id + '-' + createHash('sha256').update(bytes).digest('hex').slice(0, 12) + '.bin';
+    writeFileSync(join(DATAOUT, file), bytes); dataFiles.push({id, file, bytes:bytes.length}); dataBytes += bytes.length;
+    return `<script id="${id}" type="application/octet-stream"${attrs} data-src="data/${file}"></script>`;
+  });
+  writeFileSync(join(DATAOUT, 'manifest.json'), JSON.stringify({v:1, files:dataFiles}));
+}
 if (PWA){
   // the manifest and the icon in the head; the service worker registered once the page has loaded, and the storage asked to be kept
   const head = '<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0b1622"><link rel="apple-touch-icon" href="icon-192.png"><meta name="mobile-web-app-capable" content="yes">';
@@ -62,11 +80,12 @@ writeFileSync(join(MAPOUT, 'manifest.json'), JSON.stringify(mapMan)); mapFiles.p
 // the build's version (29.10.2026): the first 12 hex of the sha256 of the page and the map's manifest, the same the service worker's
 // cache name has (@V@ in src/pwa/sw.js), written into the page as <meta name="dsb-version"> so the telemetry (ui/10f-cloud.js cloudMeta)
 // and the admin's tables tell the builds apart; until now every build reported 'dev'
-const ver = createHash('sha256').update(page).update(JSON.stringify(mapMan)).digest('hex').slice(0, 12);
+const ver = createHash('sha256').update(page).update(JSON.stringify(mapMan)).update(JSON.stringify(dataFiles)).digest('hex').slice(0, 12);
 page = page.replace('</head>', `<meta name="dsb-version" content="${ver}">\n</head>`);
 writeFileSync(OUT, page);
 console.log(`${basename(DIST)}/index.html: ${(Buffer.byteLength(page) / 1e6).toFixed(2)} MB, version ${ver}`);
 console.log(`${basename(DIST)}/map/: ${mapFiles.length - 1} packs, ${(mapBytes / 1e6).toFixed(2)} MB (${MAPSRC === GAMEMAP ? 'the whole coast, tools/map/out/game' : MAPSRC})`);
+if (!ONE) console.log(`${basename(DIST)}/data/: ${dataFiles.length} files, ${(dataBytes / 1e6).toFixed(2)} MB (the models, the pictures and Senja's buildings; KYST_ONE=1 keeps them in the page)`);
 // the app's own files: the manifest, the icons, and the service worker with the build's version (the page and the map's manifest)
 if (PWA){
   const P = join(SRC, 'pwa');

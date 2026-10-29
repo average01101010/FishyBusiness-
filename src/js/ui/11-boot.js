@@ -4,7 +4,25 @@
 let awayMs = 0, AWAY = 0, SIMREADY = false;
 const BOOT_T = Date.now();
 const g3Live = () => typeof G3 !== 'undefined' && G3.isActive();
-async function bootMap(){ await mapStart(); await bootMapLoad(); }
+async function bootMap(){ await Promise.all([(async () => { await mapStart(); await bootMapLoad(); })(), bootData()]); }
+// The data elements (the boat models, the pictures, Senja's buildings: src/data/*.b64) are out of the page from 29.10.2026 (build.mjs,
+// Jonas: the page need not be one file when that is better for the players): each empty <script type="application/octet-stream"
+// data-src="data/<id>-<hash>.bin"> gets its bytes fetched here beside the map and put back as base64 in textContent, so the readers
+// (vessel3d.js glbData, 08b-letter.js letterPic, view3d/06 bld) see what they always saw. The files are named by their hash, so the
+// browser and the service worker keep them, and a build changes only what changed. A file that does not come in four tries stops the
+// boot, like a pack. A one-file build (KYST_ONE=1) has no data-src and nothing to do here.
+async function bootData(){
+  const els = [...document.querySelectorAll('script[type="application/octet-stream"][data-src]')]; if (!els.length) return;
+  const b64 = blob => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => { const s = String(r.result); res(s.slice(s.indexOf(',') + 1)); }; r.onerror = () => rej(r.error); r.readAsDataURL(blob); });
+  await Promise.all(els.map(async el => {
+    const src = el.dataset.src; let r;
+    for (let t = 0; ; t++){
+      try { r = await fetch(src, t ? {cache:'reload'} : undefined); if (!r.ok) throw new Error('HTTP ' + r.status); break; }
+      catch (e){ if (t >= 3) throw new Error('data ' + src + ': ' + (e && e.message || e)); await new Promise(res => setTimeout(res, 700 * (t + 1))); }
+    }
+    el.textContent = await b64(await r.blob()); el.removeAttribute('data-src');
+  }));
+}
 // The packs round everything the saved game holds. It runs again after the cloud gate (08.10.2026, a player on a new PC: the cloud save
 // is put in place only then, and its boat may lie in a tile the first round never asked for: «mask block 105,20 is not loaded»).
 async function bootMapLoad(){
