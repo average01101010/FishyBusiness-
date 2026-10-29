@@ -243,7 +243,9 @@
             let rS = (SHn * PTS[3] + MOn * PTS[15]) * 255, gS = (SHn * PTS[4] + MOn * PTS[16]) * 255, bS = (SHn * PTS[5] + MOn * PTS[17]) * 255;
             for (let k = 0; k < 12; k++){ if (k === 1 || k === 5) continue; const w = src[o + k]; if (w){ rS += w * PTS[k * 3]; gS += w * PTS[k * 3 + 1]; bS += w * PTS[k * 3 + 2]; } }
             const sat = satCol(s0, cv[i * COVS + 13], cv[i * COVS + 14]), rr = [r / Math.max(rS, 1), g / Math.max(gS, 1), b / Math.max(bS, 1)];
-            for (let q = 0; q < 3; q++) cg[q] = cg[q] * (1 - SATW) + sat[q] * clamp(rr[q], 0.5, 2) * (0.96 + 0.08 * n) * SATW;
+            // (in a town the satellites see roofs and asphalt the game draws itself: there the gardens keep more of the say)
+            const sw = SATW * (1 - 0.55 * src[o + 8] / 255);
+            for (let q = 0; q < 3; q++) cg[q] = cg[q] * (1 - sw) + sat[q] * clamp(rr[q], 0.5, 2) * (0.96 + 0.08 * n) * sw;
             satHere = 1;
           }
           c = y < 3.5 ? mix3(shore, cg, y / 3.5) : cg;
