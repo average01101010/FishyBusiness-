@@ -17,6 +17,7 @@ import os, sys, math
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bpy
 from bpyutil import *
+import fittings as F
 
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(HERE)); OUT = os.path.join(HERE, 'out')
 WL = 3.30; XA = -2.00; XF = 43.40; XM = (XA + XF) / 2; HB = 5.225
@@ -105,6 +106,8 @@ def colours():
     C['orange'] = mat('orange', (0.95, 0.38, 0.06), 0.45)
     C['yellow'] = mat('yellow', (0.92, 0.72, 0.10), 0.45)
     C['winch'] = mat('winch', (0.12, 0.28, 0.55), 0.5)
+    C['zinc'] = mat('zinc', (0.55, 0.57, 0.58), 0.35, metal=0.6); C['mark'] = mat('mark', (0.92, 0.91, 0.86), 0.4)
+    C['lens'] = mat('lens', (0.95, 0.94, 0.85), 0.9)
     C['lampR'] = mat('lampR', (0.85, 0.08, 0.06), 0.7); C['lampG'] = mat('lampG', (0.08, 0.75, 0.3), 0.7); C['lampW'] = mat('lampW', (0.95, 0.93, 0.85), 0.7)
 
 def band_mat(z):
@@ -170,6 +173,14 @@ def decks(fine=True):
     return [A.done(25)]
 
 
+def surf(x, z, sg, off=0.0):
+    """the hull's outside at (x, z) on side sg (1 port): the point, its outward normal, and the direction along the hull forward"""
+    p = lambda xx, zz: V((xx, sg * (hbz(xx, zz) + off), zz))
+    tx = p(x + 0.15, z) - p(x - 0.15, z); tz = p(x, z + 0.15) - p(x, z - 0.15); n = tx.cross(tz)
+    if n.y * sg < 0: n = -n
+    return p(x, z), n.normalized(), tx.normalized()
+
+
 def underwater(fine=True):
     objs = []
     xs = [2.6 + (9.0 - 2.6) * k / 14 for k in range(15)]
@@ -177,14 +188,17 @@ def underwater(fine=True):
     rings = [[(x, sy * (0.35 if x < 7.5 else 0.35 * (9.0 - x) / 1.5 + 0.02), z) for x, z in top + bot] for sy in (1, -1)]
     objs.append(loft_rings('skeg', rings, C['af']))
     objs.append(box('shoe', -1.35, 2.7, -0.15, 0.15, -0.45, -0.28, C['af']))
-    zc = 1.0
-    objs.append(cyl('hub', (0.9, 0, zc), (1.8, 0, zc), 0.32, C['prop'], 12, r1=0.24))
+    # the controllable pitch propeller (FRM-01, fittings.py), the zinc anodes (FRM-04) and the thruster tunnels (FRM-06)
+    zc = 1.0; U = Acc('under')
     objs.append(cyl('shaft', (1.8, 0, zc), (2.7, 0, zc), 0.15, C['steel'], 10))
-    for k in range(4):
-        a = 2 * math.pi * k / 4 + 0.5; e = (0, math.cos(a), math.sin(a)); t = (0, -math.sin(a), math.cos(a))
-        bl = [(1.4 + 0.2 * f, (0.28 + 0.86 * r) * e[1] + t[1] * w, zc + (0.28 + 0.86 * r) * e[2] + t[2] * w)
-              for r, w, f in ((0, -0.22, 0), (0.5, -0.32, 0.4), (1.0, -0.16, 1.0), (1.0, 0.16, 1.0), (0.5, 0.3, -0.4), (0, 0.2, 0))]
-        objs.append(loft_rings('blade%d' % k, [[(p[0] - 0.03, p[1], p[2]) for p in bl], [(p[0] + 0.03, p[1], p[2]) for p in bl]], C['prop']))
+    F.propeller(U, (1.4, 0, zc), (1, 0, 0), 1.12, C['prop'], n=4, hub=0.27, cpp=True, m_hub=C['prop'], m_bolt=C['steel'], m_guard=C['af'], fine=fine)
+    if fine:
+        for sg in (1, -1):
+            for z in (0.5, 1.9): F.anode(U, (-0.8, sg * (0.2 + 0.002), z), (0, sg, 0), (1, 0, 0), C['zinc'], L=0.34, m_strap=C['steel'])
+            for x, z in ((4.0, 0.3), (6.2, -0.05)): F.anode(U, (x, sg * 0.352, z), (0, sg, 0), (1, 0, 0), C['zinc'], L=0.34, m_strap=C['steel'])
+            for x, z, r in ((37.4, 1.9, 0.62), (4.4, 2.0, 0.5)):
+                p, n, tt = surf(x, z, sg); F.thruster_tunnel(U, p, n, r, C['dark'], C['af'], m_prop=C['prop'], fine=fine)
+    objs.append(U.done(30))
     rud = [(-0.30, 2.55), (-1.35, 2.55), (-1.45, 2.3), (-1.45, -0.15), (-1.35, -0.28), (-0.30, -0.28), (-0.2, 0.1), (-0.2, 2.3)]
     w = lambda x: 0.2 * max(0.25, 1 - abs(x + 0.8) / 1.0)
     objs.append(loft_rings('rudder', [[(x, w(x), z) for x, z in rud], [(x, -w(x), z) for x, z in rud]], C['af']))
@@ -260,9 +274,30 @@ def deck_gear(fine=True):
     b0, b1, t0, t1 = 30.4, 33.4, 29.4, 29.9
     for y, s in ((-0.35, -1), (0.35, 1)): A.poly([(b0, y, D3 + 1.2), (b1, y, D3 + 1.2), (t1, y, 17.6), (t0, y, 17.6)], w, (0, s, 0))
     A.poly([(b1, -0.35, D3 + 1.2), (b1, 0.35, D3 + 1.2), (t1, 0.35, 17.6), (t1, -0.35, 17.6)], w, (1, 0.4, 0)); A.poly([(b0, -0.35, D3 + 1.2), (b0, 0.35, D3 + 1.2), (t0, 0.35, 17.6), (t0, -0.35, 17.6)], w, (-1, 0, 0))
-    abox(A, 29.0, 30.3, -0.7, 0.7, 17.6, 17.75, w)
-    acyl(A, (29.6, 0, 17.75), (29.6, 0, 21.0), 0.08, lambda z: w, seg=8)
-    for z in (18.6, 20.2): abox(A, 29.4, 29.8, -0.3, 0.3, z, z + 0.08, C['steel'])
+    # (MST-01: a plate mast is a box of plate, lightened with oval holes, with a railed top, a ladder up its aft face and its lights)
+    zb, zt = D3 + 1.2, 17.6; chord = lambda z: (b0 + (t0 - b0) * (z - zb) / (zt - zb), b1 + (t1 - b1) * (z - zb) / (zt - zb))
+    if fine:
+        for zc in (12.2, 14.0, 15.8):
+            xa, xb = chord(zc); xc = (xa + xb) / 2; rx = 0.09 * (xb - xa); rz = 0.5
+            for sgy in (1, -1):
+                for d, y, m in ((0.06, 0.354, C['inner']), (0.0, 0.358, C['dark'])):
+                    A.poly([(xc + (rx + d) * math.cos(2 * math.pi * k / 16), sgy * y, zc + (rz + d) * math.sin(2 * math.pi * k / 16)) for k in range(16)][::sgy], m, (0, sgy, 0))
+    abox(A, 28.8, 30.6, -0.9, 0.9, 17.6, 17.72, w)
+    acyl(A, (29.6, 0, 17.72), (29.6, 0, 21.0), 0.1, lambda z: w, seg=10, r1=0.07)
+    # the fishing lights on the pole under the masthead light: red over white, all round (COLREG Rule 26(c))
+    for z, m in ((19.6, C['lampR']), (18.6, C['lampW'])):
+        acyl(A, (29.6, 0, z), (29.6, 0, z + 0.22), 0.11, lambda q, m=m: m, seg=10); acyl(A, (29.6, 0, z + 0.22), (29.6, 0, z + 0.26), 0.13, lambda q: C['dark'], seg=10)
+    if fine:
+        rl = [(28.8, -0.9), (30.6, -0.9), (30.6, 0.9), (28.8, 0.9), (28.8, -0.9)]
+        for a, b in zip(rl, rl[1:]):
+            for h in (0.5, 1.0): acyl(A, (a[0], a[1], 17.72 + h), (b[0], b[1], 17.72 + h), 0.022, lambda z: w, seg=5, cap=False)
+        for q in rl[:4]: acyl(A, (q[0], q[1], 17.72), (q[0], q[1], 18.72), 0.022, lambda z: w, seg=5)
+        F.ladder(A, (b0 - 0.05, 0, zb + 0.1), (t0 - 0.05, 0, zt - 0.05), 0.4, C['steel'], side=(0, 1, 0), away=(-1, 0, 0))
+        for sg in (1, -1):
+            F.searchlight(A, (30.45, sg * 0.6, 17.95), (1, 0, -0.25), 0.16, w, C['lens'], m_yoke=C['dark'])
+            F.whip(A, (28.85, sg * 0.85, 18.72), 3.2, w, m_foot=C['dark'])
+            # the deck lights on the mast's fore face, down on the foredeck and the windlass
+            xa, xb = chord(15.0); F.searchlight(A, (xb + 0.1, sg * 0.25, 15.0), (1, 0, -0.8), 0.14, w, C['lens'], m_yoke=C['dark'])
     # the masthead light at the top of the pole (B8)
     acyl(A, (29.6, 0, 20.55), (29.6, 0, 20.85), 0.14, lambda z: C['lampW'], seg=10); acyl(A, (29.6, 0, 20.85), (29.6, 0, 20.9), 0.16, lambda z: C['dark'], seg=10)
     # the hauling port on the starboard side, open: a dark opening with its door swung up, the roller in its sill
@@ -321,9 +356,18 @@ def wheelhouse(fine=True):
     for y in (-2.6, 2.6):
         acyl(A, (11.6, y, WR + 0.2), (11.6, y, 16.6), 0.09, lambda z: w, seg=6)
         acyl(A, (11.6, y, 16.6), (11.6, y, 17.4), 0.55, lambda z: w, seg=12, r1=0.4); acyl(A, (11.6, y, 17.4), (11.6, y, 17.8), 0.4, lambda z: w, seg=12, r1=0.1)
-    acyl(A, (12.2, 0, 15.95), (12.2, 0, 22.0), 0.06, lambda z: w, seg=6)
+    # the pole tall enough that the aft masthead light stands 4.5 m over the one on the foremast (COLREG Annex I 2(a)(ii): 25.45 m against
+    # 20.7 m; it was 0.9 m over before 30.10.2026), a yard on it with the whips, GPS on the platform, its rail
+    acyl(A, (12.2, 0, 15.95), (12.2, 0, 26.0), 0.14, lambda z: w, seg=8, r1=0.06)
+    abox(A, 12.05, 12.35, -1.2, 1.2, 22.6, 22.7, w)
     # the aft masthead light at the top of the pole, higher than the one on the foremast (B8), and the sidelights' coloured glass
-    acyl(A, (12.2, 0, 21.45), (12.2, 0, 21.75), 0.13, lambda z: C['lampW'], seg=10); acyl(A, (12.2, 0, 21.75), (12.2, 0, 21.8), 0.15, lambda z: C['dark'], seg=10)
+    acyl(A, (12.2, 0, 25.3), (12.2, 0, 25.6), 0.13, lambda z: C['lampW'], seg=10); acyl(A, (12.2, 0, 25.6), (12.2, 0, 25.65), 0.15, lambda z: C['dark'], seg=10)
+    if fine:
+        for sg in (1, -1):
+            F.whip(A, (12.2, sg * 1.15, 22.7), 3.6, w, m_foot=C['dark']); F.gps(A, (11.3, sg * 0.95, 15.95), w, m_post=w)
+        rl = [(11.1, -1.2), (13.2, -1.2), (13.2, 1.2), (11.1, 1.2), (11.1, -1.2)]
+        for a, b in zip(rl, rl[1:]): acyl(A, (a[0], a[1], 16.85), (b[0], b[1], 16.85), 0.022, lambda z: w, seg=5, cap=False)
+        for q in rl[:4]: acyl(A, (q[0], q[1], 15.95), (q[0], q[1], 16.85), 0.022, lambda z: w, seg=5)
     for sg in (1, -1):
         abox(A, 16.0, 16.6, sg * (WY + 0.3) - 0.1, sg * (WY + 0.3) + 0.1, WR - 0.3, WR - 0.05, C['dark'])
         yo = sg * (WY + 0.4); abox(A, 16.05, 16.55, min(yo, yo + sg * 0.015), max(yo, yo + sg * 0.015), WR - 0.27, WR - 0.08, C['lampR' if sg > 0 else 'lampG'])
@@ -335,8 +379,32 @@ def wheelhouse(fine=True):
     return [A.done(30)], [G.done(30)]
 
 
+def hull_details(fine=True):
+    A = Acc('details')
+    if not fine: return []
+    for sg in (1, -1):
+        # the freeing ports along the weather deck's bulwark (SKR-11), clear of the platform forward
+        for x in [0.4 + 3.0 * k for k in range(10)]:
+            p, n, tt = surf(x, D3 + 0.2, sg, off=0.004); F.freeing_port(A, p, n, 0.7, 0.26, C['white'], C['dark'], flap=C['white'])
+        # the plating's weld seams (SKR-09): butts every 6 m up to the white, a long seam between the main deck and the 2nd
+        for x in [3.0 + 6.0 * k for k in range(7)]:
+            zs = [WL + 0.40 + (D2 - 0.1 - WL - 0.40) * i / 12 for i in range(13)]
+            F.seam(A, [surf(x, z, sg)[0] for z in zs], lambda q, sg=sg: surf(q.x, q.z, sg)[1], C['hull'])
+        xs = [XA + 0.6 + (40.6 - XA - 0.6) * i / 30 for i in range(31)]
+        F.seam(A, [surf(x, 5.6, sg)[0] for x in xs if not (sg < 0 and HP_X0 - 0.3 < x < HP_X1 + 0.3)], lambda q, sg=sg: surf(q.x, q.z, sg)[1], C['hull'])
+        # the draft marks on the bow, the stern and amidships (IDN-06); the figures read from outside
+        along = lambda tt: -sg * tt
+        F.draft_scale(A, lambda z: (lambda p, n, tt: (p, n, along(tt)))(*surf(x_stem(z) - 0.6, z, sg, off=0.004)), 1.0, 4.2, C['mark'])
+        F.draft_scale(A, lambda z: (lambda p, n, tt: (p, n, along(tt)))(*surf(0.2, z, sg, off=0.004)), 2.4, 4.2, C['mark'])
+        F.draft_scale(A, lambda z: (lambda p, n, tt: (p, n, along(tt)))(*surf(XM, z, sg, off=0.004)), 2.0, 4.0, C['mark'])
+        # the thruster marks over the tunnels (IDN-08)
+        for x in (37.4, 4.4):
+            p, n, tt = surf(x, WL + 0.75, sg, off=0.004); F.thruster_symbol(A, p, n, (0, 0, 1), 0.28, C['mark'])
+    return [A.done(30)]
+
+
 def build(fine=True):
-    solids = build_hull(fine) + decks(fine) + underwater(fine) + deck_gear(fine)
+    solids = build_hull(fine) + decks(fine) + underwater(fine) + deck_gear(fine) + hull_details(fine)
     o, g = wheelhouse(fine); solids += o
     return [s for s in solids if s], [x for x in g if x]
 
@@ -368,7 +436,7 @@ def anchors():
             'crewSpots': [G(4.0, -2.0, D3) + [1.57], G(22.0, 1.5, D3) + [0.0], G(1.0, -3.0, D3) + [3.14], G(26.0, -1.5, D3) + [0.0]],
             # the lights (B8, typed): the masthead light on the foremast, the second one aft and higher on the radar mast's pole, the sidelights
             # on the wheelhouse's sides, the stern light on its staff
-            'lights': [[G(29.6, 0, 20.7), [1, 0.95, 0.85], 'masthead'], [G(12.2, 0, 21.6), [1, 0.95, 0.85], 'masthead2'], [G(16.3, WY + 0.3, WR - 0.15), [1, 0.12, 0.1], 'port'],
+            'lights': [[G(29.6, 0, 20.7), [1, 0.95, 0.85], 'masthead'], [G(12.2, 0, 25.45), [1, 0.95, 0.85], 'masthead2'], [G(16.3, WY + 0.3, WR - 0.15), [1, 0.12, 0.1], 'port'],
                        [G(16.3, -WY - 0.3, WR - 0.15), [0.1, 1, 0.35], 'stbd'], [G(XA + 0.3, 0.6, z_top(XA) + 1.0), [1, 0.95, 0.85], 'stern']],
             # the doors (B4): into the funnel casing from the boat deck on both sides, and the wheelhouse's aft door from the bridge deck
             'doors': [{'at': G(FY0 - 0.03, 7.8, D3), 'w': 0.8, 'h': 2.0, 'in': G(FY0 + 1.0, 7.8, D3), 'to': 'mess', 'hinge': 'port'},
@@ -383,7 +451,8 @@ def anchors():
 
 SHOTS = [('bow3q', (72.0, -42.0, 15.0), (20.0, 0, 6.0), 35), ('stern3q', (-30.0, 32.0, 19.0), (14.0, 0, 7.0), 35), ('side', (20.7, -80, 7.0), (20.7, 0, 8.0), 35),
          ('above', (56.0, -36.0, 46.0), (20.0, 0, 5.0), 35), ('haul', (30.0, -18.0, 9.0), (22.0, -5.0, 6.3), 35),
-         ('doors', (16.0, -14.0, 12.5), (8.0, -0.5, 10.6), 34), ('bowname', (52.0, -16.0, 7.5), (38.0, 0.0, 6.0), 30)]
+         ('doors', (16.0, -14.0, 12.5), (8.0, -0.5, 10.6), 34), ('bowname', (52.0, -16.0, 7.5), (38.0, 0.0, 6.0), 30),
+         ('foremast', (44.0, -14.0, 19.0), (30.5, 0, 15.0), 35), ('under', (-12.0, -12.0, 0.8), (3.0, 0, 1.2), 35)]
 
 def main():
     os.makedirs(OUT, exist_ok=True)
