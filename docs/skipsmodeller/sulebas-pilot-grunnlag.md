@@ -484,7 +484,16 @@ nota hales over blokka, faller gjennom trakta og legges i notbingen akterut. Pla
 husets tak under. Styrehusets bakside har stolper mellom vinduene som de andre sidene (hver 1,3 m). Vinduene i huset under
 styrehuset manglet glass (glasset lå 2 cm inne i veggen); nå ligger det like utenfor.
 
-Igjen etter runde 8, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
+Runde 9 (Jonas 30.10.2026: «Trakten clipper gjennom styrhuset»): en **klasjsjekk** er lagt inn i sløyfen
+(`scratchpad/r38/clipcheck.py`): hvert punkt i dekksutstyret, mastene og akterdekket prøves mot styrehusets plan (mellom dekk B og
+takkanten), dekk B's kantplate og huset under; gangbanens rekkverk prøves mot traktas rør. Første kjøring: 147 klasj. Rettet:
+trakta flyttet akterover og utover (fot 12,3 m / y −4,55, munning 9,7 m / 13,05 m) så munningen er helt akter for styrehusets
+bakvegg og over rekkverket; plattformens rekkverk stopper ved utskjæringens innerhjørne og gangbanens rekkverk går rundt traktas
+innside; vakuumtankene flyttet fram under dekk B's utstikk med toppen under kantplata; den forreste kranens knekk flyttet fram
+foran dekk B's front og utenfor tankene, jiben under plattformen; MOB-båten og daviten akter for huset og dekk B. Sluttkjøring:
+0 klasj. Sjekken kjøres etter hver runde fra nå.
+
+Igjen etter runde 9, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
 ved 8 m, åpningen i baksida), bredden på hus og plattform, dekksutstyrets nøyaktige plasser på arbeidsdekket. Det som krever F2:
 plater, sveis, rust, slitasje, glansen i malingen.
 

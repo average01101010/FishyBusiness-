@@ -790,7 +790,8 @@ def superstructure(fine=True):
         A.poly([(a[0], a[1], ZB2 + 0.30), (b[0], b[1], ZB2 + 0.30), (ib[0], ib[1], ZB2 + 0.30), (ia[0], ia[1], ZB2 + 0.30)], w, (0, 0, 1))
     if fine:
         # the rail on the platform's edge, open at its aft end over the ladders (the posts every 0.9 m, a top and a middle rail)
-        ri = [(p[0] - n[0] * 0.03, p[1] - n[1] * 0.03, ZB2 + 0.30) for p, n in zip(pp, pn)]
+        # (the rail stops at the cut-out's inboard corner; the walkway's rail takes over round the chute)
+        ri = [(p[0] - n[0] * 0.03, p[1] - n[1] * 0.03, ZB2 + 0.30) for p, n in zip(pp, pn)][2:]
         rail(A, ri, h=12.05 - (ZB2 + 0.30), every=0.9)
     # ---- the starboard walkway aft of the wheelhouse (7b36cbe5, 3bd16b40): deck B carried aft to 8.3 m over the upper deck, on two
     #      stanchions, with its edge plate and rail; the lower balcony on the house's top under it ----
@@ -803,7 +804,8 @@ def superstructure(fine=True):
         A.poly([(a[0], a[1], ZB2 - 0.32), (b[0], b[1], ZB2 - 0.32), (b[0], b[1], ZB2 + 0.30), (a[0], a[1], ZB2 + 0.30)], w, (b[1] - a[1], -(b[0] - a[0]), 0))
     for yy in (-4.1, -1.15): acyl(A, (8.55, yy, z_dk(8.55) + 0.1), (8.55, yy, ZB2 - 0.2), 0.06, lambda z: w, seg=8)
     if fine:
-        rail(A, [(10.3, -0.93, ZB2 + 0.30), (8.33, -0.93, ZB2 + 0.30), (8.33, -4.32, ZB2 + 0.30), (10.3, -4.32, ZB2 + 0.30)], h=12.05 - (ZB2 + 0.30), every=0.9)
+        # the walkway's rail wraps the chute's inboard side: out along the side to 9.45 m, in to the cut-out, forward to the platform
+        rail(A, [(10.3, -0.93, ZB2 + 0.30), (8.33, -0.93, ZB2 + 0.30), (8.33, -4.32, ZB2 + 0.30), (9.45, -4.32, ZB2 + 0.30), (9.45, -3.03, ZB2 + 0.30), (10.35, -3.03, ZB2 + 0.30)], h=12.05 - (ZB2 + 0.30), every=0.9)
         abox(A, 8.6, HX0 + 0.05, -3.3, -1.3, ZB2 - 0.95, ZB2 - 0.85, w)
         rail(A, [(HX0, -1.33, ZB2 - 0.85), (8.63, -1.33, ZB2 - 0.85), (8.63, -3.27, ZB2 - 0.85), (HX0, -3.27, ZB2 - 0.85)], h=0.95, every=0.8, r=0.02)
     # ---- the wheelhouse ----
@@ -1046,11 +1048,15 @@ def deck_gear(fine=True):
     yc = -3.0
     acyl(A, (26.85, yc, zd(26.85)), (26.85, yc, 10.2), 0.34, lambda z: W, seg=14)
     abox(A, 26.45, 27.25, yc - 0.4, yc + 0.4, 10.15, 10.55, W)
-    beam(A, (26.85, yc, 10.5), (19.7, yc - 0.4, 11.5), 0.36, 0.32, W)
-    beam(A, (19.7, yc - 0.45, 11.45), (18.6, yc - 0.7, 9.4), 0.30, 0.30, W)
-    acyl(A, (26.2, yc - 0.15, 10.1), (23.1, yc - 0.05, 10.75), 0.07, lambda z: C['steel'], seg=8)
-    acyl(A, (20.2, yc - 0.55, 11.0), (19.2, yc - 0.65, 10.0), 0.08, lambda z: C['steel'], seg=8)
-    abox(A, 25.6, 26.1, yc - 0.19, yc - 0.181, 10.62, 10.82, C['yellow'])
+    # (the knuckle stands forward of deck B's front at 21.6 m, outboard of the vacuum tanks; the jib folds aft and down under the
+    # platform to the working deck's aft end)
+    # (4929aa51: the boom rises aft to the knuckle just under the wheelhouse's sill at the ship's side, outboard of deck B; the jib
+    # folds down and aft along the side to the working deck)
+    beam(A, (26.85, yc, 10.5), (21.0, yc - 1.65, 11.9), 0.36, 0.32, W)
+    beam(A, (21.0, yc - 1.65, 11.85), (18.6, yc - 1.65, 9.4), 0.30, 0.30, W)
+    acyl(A, (26.2, yc - 0.3, 10.1), (23.3, yc - 1.1, 11.15), 0.07, lambda z: C['steel'], seg=8)
+    acyl(A, (20.9, yc - 1.85, 11.4), (19.5, yc - 1.85, 10.0), 0.08, lambda z: C['steel'], seg=8)
+    abox(A, 25.6, 26.1, yc - 0.4, yc - 0.381, 10.55, 10.75, C['yellow'])
     # -- the aft crane by the funnel: its column, the slewing head, the main boom forward over the deck, the link over it, the
     #    folded jib under it, the lift cylinder, the hanging arm with the yoke and the net hauler's wheel --
     xc, yc = 7.16, 3.2
@@ -1064,26 +1070,26 @@ def deck_gear(fine=True):
     beam(A, (11.65, yc, 17.0), (5.2, yc, 14.45), 0.30, 0.26, W)                   # the jib, folded aft under the boom
     acyl(A, (9.9, yc - 0.3, 16.95), (7.75, yc - 0.3, 17.2), 0.08, lambda z: C['steel'], seg=8)   # the jib's cylinder
     acyl(A, (7.90, yc - 0.42, 10.8), (7.90, yc - 0.42, 13.6), 0.11, lambda z: C['steel'], seg=8, r1=0.09)   # the lift cylinder
-    beam(A, (5.2, yc, 14.35), (10.3, -3.95, 14.9), 0.24, 0.30, W)                  # the swing arm from the jib's tip to over the chute
+    beam(A, (5.2, yc, 14.35), (9.7, -4.55, 14.95), 0.24, 0.30, W)                  # the swing arm from the jib's tip to over the chute
     if fine:
         # the power block: two spoked sheaves 1.6 m across either side of the hydraulic motor, a rubber-lined groove between
-        bc = -3.95; bx = 10.3
-        for yy, R in ((bc - 0.55, 0.80), (bc + 0.55, 0.72)): spoked_wheel(A, (bx, yy, 14.5), (0, 1, 0), R, 0.16, W)
-        acyl(A, (bx, bc - 0.42, 14.5), (bx, bc + 0.42, 14.5), 0.34, lambda z: C['rubber'], seg=18)
-        acyl(A, (bx, bc + 0.68, 14.5), (bx, bc + 0.95, 14.5), 0.18, lambda z: C['dark'], seg=12)
-        abox(A, bx - 0.25, bx + 0.25, bc - 0.12, bc + 0.12, 14.5, 14.95, W)
+        bc = -4.55; bx = 9.7
+        for yy, R in ((bc - 0.55, 0.80), (bc + 0.55, 0.72)): spoked_wheel(A, (bx, yy, 14.75), (0, 1, 0), R, 0.16, W)
+        acyl(A, (bx, bc - 0.42, 14.75), (bx, bc + 0.42, 14.75), 0.34, lambda z: C['rubber'], seg=18)
+        acyl(A, (bx, bc + 0.68, 14.75), (bx, bc + 0.95, 14.75), 0.18, lambda z: C['dark'], seg=12)
+        abox(A, bx - 0.25, bx + 0.25, bc - 0.12, bc + 0.12, 14.75, 15.2, W)
         # the tarpaulin-covered box on the deck under the boom, the net chute's mouth just aft of the wheelhouse
         abox(A, 8.4, 10.2, 1.3, 2.9, zd(9.3), 12.17, C['tarp'])
     # -- the rescue boat (4.25 m) on its cradle aft at port, its davit, the tarpaulin-covered box by it, the rollers on the bin's wall --
     if fine:
-        bx0, bx1, by, bz = 7.85, 12.05, 3.3, 9.55
+        bx0, bx1, by, bz = 7.55, 11.6, 3.3, 9.55
         path = [(bx0, by + 0.62), (bx1 - 0.75, by + 0.62)] + [(bx1 - 0.75 + 0.62 * math.sin(math.pi * k / 8), by + 0.62 * math.cos(math.pi * k / 8)) for k in range(1, 8)] + [(bx1 - 0.75, by - 0.62), (bx0, by - 0.62)]
         objs.append(tube('rescueboat', [(x, y, bz + 0.25 * max(0.0, (x - (bx1 - 1.4)) / 1.4)) for x, y in path], 0.23, C['orange'], seg=12))
         A.poly([(bx0, by - 0.55, bz - 0.2), (bx1 - 0.8, by - 0.55, bz - 0.2), (bx1 - 0.3, by, bz - 0.05), (bx1 - 0.8, by + 0.55, bz - 0.2), (bx0, by + 0.55, bz - 0.2)], C['dark'], (0, 0, -1))
-        abox(A, 9.3, 10.0, by - 0.3, by + 0.3, bz - 0.2, bz + 0.45, C['dark'])
-        for x in (8.6, 11.0): abox(A, x - 0.1, x + 0.1, by - 0.7, by + 0.7, zd(x), bz - 0.18, C['steel'])
-        acyl(A, (11.45, 4.2, zd(11.45)), (11.45, 4.2, 11.4), 0.13, lambda z: W, seg=10)
-        beam(A, (11.45, 4.2, 11.35), (10.2, 3.6, 12.0), 0.16, 0.16, W)
+        abox(A, 9.0, 9.7, by - 0.3, by + 0.3, bz - 0.2, bz + 0.45, C['dark'])
+        for x in (8.3, 10.6): abox(A, x - 0.1, x + 0.1, by - 0.7, by + 0.7, zd(x), bz - 0.18, C['steel'])
+        acyl(A, (10.0, 4.2, zd(10.0)), (10.0, 4.2, 11.4), 0.13, lambda z: W, seg=10)
+        beam(A, (10.0, 4.2, 11.35), (8.9, 3.6, 12.0), 0.16, 0.16, W)
         for x in (0.8, 2.0):
             for yy in (-3.4, 3.4): acyl(A, (x - 0.45, yy, 10.12), (x + 0.45, yy, 10.12), 0.22, lambda z: C['dark'], seg=12)
     objs.append(A.done(30))
@@ -1166,7 +1172,7 @@ def aft_deck(fine=True):
     # (7b36cbe5, 3bd16b40, c6db804c, Jonas 30.10.2026: the chute stands at the wheelhouse's aft starboard corner, its mouth aft and up
     # at the windows' level, the tube leaning so its open foot points forward and down onto the upper deck; the net is hauled over the
     # power block above the mouth, falls through the chute and is laid in the net bin aft)
-    foot = V((12.9, -3.95, 9.8)); tip = V((10.3, -3.95, 12.9)); ax = (tip - foot).normalized(); s, u, _ = frame_of(ax)
+    foot = V((12.3, -4.55, 9.8)); tip = V((9.7, -4.55, 13.05)); ax = (tip - foot).normalized(); s, u, _ = frame_of(ax)
     ts_ = (0.0, 0.2, 0.5, 0.75, 0.9, 1.0); rings = []
     for t, r in zip(ts_, (0.5, 0.5, 0.56, 0.7, 0.86, 0.98)):
         c = foot + (tip - foot) * t; rings.append([c + (s * math.cos(2 * math.pi * k / 20) + u * math.sin(2 * math.pi * k / 20)) * r for k in range(20)])
@@ -1175,12 +1181,14 @@ def aft_deck(fine=True):
     aring_loft(A, inner[::-1], C['dark'], cap0=False, cap1=False)
     aring_loft(A, [rings[-1], inner[-1]], W, cap0=False, cap1=False); aring_loft(A, [inner[0], rings[0]], W, cap0=False, cap1=False)
     # ---- the fish pump's vacuum tanks: three black uprights at the house's front to starboard, their manifold ----
+    # (they stand forward of the house's front under deck B's overhang, their tops just under its edge plate; the platform on them
+    # carries a rail only along its forward edge, clear of deck B)
     for yy in (-1.55, -2.45, -3.35):
-        acyl(A, (20.95, yy, zs(20.95)), (20.95, yy, 10.85), 0.42, lambda z: C['black'], seg=18)
-        acyl(A, (20.95, yy, 10.85), (20.95, yy, 11.05), 0.3, lambda z: C['steel'], seg=12)
-    acyl(A, (20.95, -1.3, 10.95), (20.95, -3.6, 10.95), 0.09, lambda z: C['steel'], seg=8)
-    abox(A, 20.35, 21.55, -3.85, -1.05, 10.85, 10.92, C['steel'])
-    if fine: rail(A, [(20.35, -1.05, 10.92), (20.35, -3.85, 10.92), (21.55, -3.85, 10.92), (21.55, -1.05, 10.92)], h=0.9, every=0.7, r=0.018)
+        acyl(A, (21.35, yy, zs(21.35)), (21.35, yy, 10.45), 0.42, lambda z: C['black'], seg=18)
+        acyl(A, (21.35, yy, 10.45), (21.35, yy, 10.62), 0.3, lambda z: C['steel'], seg=12)
+    acyl(A, (21.35, -1.3, 10.55), (21.35, -3.6, 10.55), 0.09, lambda z: C['steel'], seg=8)
+    abox(A, 20.85, 21.95, -3.85, -1.05, 10.62, 10.69, C['steel'])
+    if fine: rail(A, [(21.5, -1.05, 10.69), (21.95, -1.05, 10.69), (21.95, -3.85, 10.69), (21.5, -3.85, 10.69)], h=0.8, every=0.7, r=0.018)
     # ---- the fish pump's hopper amidships: a steel tank with a grating top, the pipes from it over the side ----
     abox(A, 22.3, 25.4, -2.6, 0.2, zs(23.5), 10.1, C['steel'])
     if fine:
@@ -1257,7 +1265,7 @@ def anchors():
             # is stacked in the net bin; the fish are pumped over the starboard side into the hopper
             'deck': {'y': round(DK - WL, 3), 'z': round(-(23.0 - LOA / 2), 3)}, 'gw': round(DK + 0.35 - WL, 3),
             'stern': round(LOA / 2 - XA, 3), 'bow': round(-(XF - LOA / 2), 3), 'side': HB, 'beam': BM, 'pl': 20.0, 'rl': 4.2, 'open': True, 'hand': False,
-            'pole': G(XA + 0.4, 0, z_bw(0.4) + 0.2), 'hauler': G(10.3, -3.95, 14.5), 'filler': G(23.5, -4.4, 8.3)}
+            'pole': G(XA + 0.4, 0, z_bw(0.4) + 0.2), 'hauler': G(9.7, -4.55, 14.75), 'filler': G(23.5, -4.4, 8.3)}
 
 
 def to_game(p): return (-p[1], p[2] - WL, -(p[0] - LOA / 2))
