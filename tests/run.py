@@ -26,7 +26,7 @@ os.makedirs(LOGS, exist_ok=True)
 # draw 3D: they look at the 3D view itself (frames, camera, quays, cranes, pumps)
 D3 = ['benchshot', 'profshot', 'f1test', 'havnshot', 'lifeshot', 'wetshot', 'vindshot', 'treeshot', 'wakeshot', 'anchor3d', 'skytest', 'jigshot', 'naust3dtest', 'pubtest', 'helmjit', 'anchorlight3d', 'saytest', 'yardtest', 'dbg23o', 'trackfollow', 'tral3d', 'seatrytest', 'sitetest', 'coast3d', 'ultratest', 'camtest', 'moortest', 'landtest', 'bunkertest', 'heattest', 'vessel3d', 'unittest', 'sea3d', 'teleport3d', 'lighttest', 'kinotest', 'haultest', 'vectest', 'potshot', 'aurorashot', 'penshot', 'deckshot', 'workshot', 'brotest']
 LITE = ['kystvakttest', 'lagtest', 'eventtest', 'boktest', 'lotttest', 'skattetest', 'driftsplan2test', 'driftsplan2ui', 'driftsplan2map', 'slidertest', 'anchorswing', 'selfcrew', 'crewclip', 'regmarktest', 'dockrow', 'hulltest', 'dyntest', 'crewlifetest', 'crewwalk', 'walktest', 'tabtest', 'navbarshot', 'skiptest', 'synctest', 'installtest', 'looktest', 'hbtest', 'naustclear', 'rectest', 'ptowtest', 'seaworktest', 'hailtest', 'gbtest', 'sharetest', 'friendtest', 'searchtest', 'savestest', 'caretest', 'yardupgtest', 'jigalongtest', 'heatgeartest', 'anchortest', 'drifttest', 'driftuitest', 'plantsaytest', 'cashfxtest', 'autonavtest', 'placetest', 'sidetab', 'guidetest', 'stedertest', 'icestep', 'heatpick', 'peergear', 'turtest', 'posttest', 'merketest', 'fartstidtest', 'maletest', 'climtest', 'sqltest', 'cloudtest', 'guesttest', 'kjoptest', 'r4test', 'tutdrift', 'worldtest', 'pushtest', 'feedbacktest', 'hudtest', 'obstest', 'marktest', 'rorbutest', 'admintest', 'tut', 'starttest', 'seasontest', 'uishots', 'quotatest', 'rulestest', 'npctest', 'havntest', 'keeptest', 'tidetest', 'trip2', 'docktest', 'booktest', 'decktest', 'geartest', 'loretest', 'tattest', 'towtest', 'airtest', 'fleet2test', 'fleet3test', 'opsowntest', 'routetest', 'naustleia',
-        'shoptest', 'selltest', 'timetest', 'worktest', 'vesseltest', 'fuelcal', 'bunktest', 'lanterntest', 'streaktest', 'fixtest', 'hailltest', 'harbourtest', 'simday', 'calib', 'kvtest', 'progweek', 'seatest', 'stabtest', 'projtest', 'boottest', 'maptest', 'mig2test', 'charttest', 'helmtest', 'soundtest', 'sleeptest', 'pwatest', 'bktest']
+        'shoptest', 'selltest', 'timetest', 'worktest', 'vesseltest', 'adminbuytest', 'fuelcal', 'bunktest', 'lanterntest', 'streaktest', 'fixtest', 'hailltest', 'harbourtest', 'simday', 'calib', 'kvtest', 'progweek', 'seatest', 'stabtest', 'projtest', 'boottest', 'maptest', 'mig2test', 'charttest', 'helmtest', 'soundtest', 'sleeptest', 'pwatest', 'bktest']
 # they measure milliseconds, so they run alone at the end, when nothing else takes the CPU
 SOLO = ['routetest', 'heattest', 'landtest', 'charttest']
 VECB = ['npctest', 'havntest', 'vectest', 'lifeshot', 'havnshot']   # need dist-vec/ with the vec packs; run.py builds it once before them (KYST_VEC_BUILT)
@@ -37,11 +37,11 @@ DRAWS3D = {'tut'}
 MUST = {'trip2': ('"st":"port"', 'ender ikke i havn'), 'tut': ('"tut": 0', 'veiledningen er ikke ferdig')}
 # which tests cover which file: «changed» runs these for the files in the diff. A file not listed runs trip2; texts and docs run nothing
 COVER = {
-  'src/js/ui/phone/14-act.js':['docktest', 'turtest', 'teleport3d'],
+  'src/js/ui/phone/14-act.js':['docktest', 'turtest', 'teleport3d', 'adminbuytest'],
   'src/js/ui/phone/13-mannskap-bank-meld.js':['skattetest', 'lotttest', 'boktest', 'skiptest', 'docktest'],
   'src/js/ui/phone/12-utstyr-redskap.js':['shoptest', 'geartest'],
   'src/js/ui/phone/11-rederi.js':['boktest', 'fleet3test', 'fleet2test'],
-  'src/js/ui/phone/10-fartoy.js':['fleet3test', 'vesseltest'],
+  'src/js/ui/phone/10-fartoy.js':['fleet3test', 'vesseltest', 'adminbuytest'], 'tests/adminbuytest.py':['adminbuytest'],
   'src/js/ui/phone/09-vaer-post-salg-redning.js':['posttest', 'shoptest'],
   'src/js/ui/phone/08-home-papers-merker.js':['merketest', 'docktest', 'kystvakttest'],
   'src/js/ui/phone/07-patch.js':['docktest'],

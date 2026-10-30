@@ -29,6 +29,12 @@
   - Båtvelgeren: appene i `SEL_APPS` (Fartøy, Utstyr, Mannskap, Mannskapsbørs, Verksted) viser og endrer båten i `selV`, som standard båten du følger. Handlinger i disse appene kjøres inne i `withSel`, bortsett fra navigasjon (`NAV`).
   - `S.sales` har båtens id i `v`. `hourly()` er delt: varsler og lån for rederiet, service per båt.
 
+- **Admin: gratis båt til testing** (Jonas 30.10.2026: «La meg som admin kunne kjøpe båter gratis, selv fra havflåten. Jeg må
+  kunne teste dem»): på arket til hver båt i Båthandelen står knappen «Admin: ta gratis til flåten» når `adminOk()` (Jonas' konto
+  på skyens adresser, alltid i lokale testbygg; samme regel som Admin-appen). Båten legges i flåten uten pris, lån, hjemmel eller
+  lås (`lock`), i havna den fulgte båten ligger i eller den nærmeste, og følges med en gang (`adminbuy` i `ui/phone/14-act.js`).
+  Gjelder også havflåten og pilotbåten `ringnot38`. Test: `adminbuytest`.
+
 ## 4.23 Malerverkstedet og navnet på skroget (06.–07.10.2026)
 
 Jonas' bestilling ligger i `docs/engasjement.md`, arbeidslista punkt 1. Alle seks stegene er bygget: skrogfarge, navn på alle båter, malingen til andre spillere, malingsdesign, flagg, registreringsmerke og rederilogo.
