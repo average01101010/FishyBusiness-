@@ -31,7 +31,7 @@ Gjennomgangen av koden og dokumentasjonen ga mer enn jeg hadde regnet med. Det m
 1. **Fast klokke.** Spillet tegner i sanntid med `performance.now()` (rundt 80 steder i 3D-koden). For film må hvert bilde være nøyaktig 1/60 s etter det forrige. Dette løses uten å endre spillet: Playwright legger inn et skript før siden laster som bytter ut `performance.now`, `Date.now` og `requestAnimationFrame` med en kunstig klokke som filmoppsettet stepper fram ett bilde om gangen.
 2. **Fritt kamera.** Kinokameraet velger selv. Filmen trenger øye, siktepunkt og brennvidde per bilde fra en bane vi har tegnet. Det krever én liten tilføyelse i spillet: `G3.film({eye, tgt, fov})` som, når den er satt, overstyrer kameraet. Noen linjer i `25-controls.js` og `24-cinema.js`, i egen PR, uten virkning når den ikke brukes.
 3. **Lydopptak.** Lyden er laget i Web Audio mens spillet går, ingenting er innspilt. Et hodeløst Chromium gir ingen lyd ut. Se del 5.
-4. **Rask tegning.** Testmaskinene tegner med programvare-GPU (SwiftShader), «noen bilder i sekundet». Målingen pågår (del 6).
+4. **Rask tegning.** Skyen tegner med programvare-GPU (SwiftShader): rundt 45 s per bilde i halv størrelse. Klippene må filmes på en maskin med GPU (del 6).
 
 ## 2. Historien og de to båtene
 
@@ -118,11 +118,19 @@ Musikk og stemme som i `SLIK-LAGER-VI-TRAILEREN.md`: Suno rundt 96 BPM, to stilr
 
 ## 6. Hvor filmes det
 
-Testmaskinene og denne skyen tegner med SwiftShader. Målingen av bilder per sekund ved 540×960, 1080×1920 og 1920×1080 kjøres nå, og tallene føres inn her når de er klare. Planen uansett utfall:
+**Målt 30.10.2026 i denne skyen** (SwiftShader, Chromium 1243, spillet på «Høy», trebåten ved kaia i Finnsnes kl. 04 en junimorgen, UI skjult):
 
-- **Grovklipp og kontrollbilder i skyen** i halv størrelse (540×960). Her er det deterministisk og kan kjøres i bakgrunnen.
-- **Full størrelse på en maskin med GPU.** Filmoppsettet er Python, Chromium og Playwright, og kjører likt på Jonas' iMac. Chromium med ekte GPU tegner spillet på «Ultra» i 60 bilder i sekundet eller bedre, så et klipp på 10 sekunder tar sekunder, ikke minutter.
-- **Hvis skyen er for treg selv i halv størrelse,** tas også grovklippene på iMacen, og skyen brukes til klipping, musikk og miks.
+| Størrelse | Tid per skjermbilde |
+|---|---|
+| 540×960 | rundt 45 s |
+| 1080×1920 | over 60 s, det tredje bildet gikk over 2 minutter |
+
+Bildene ser riktige ut (trebåten med skipperen foran «Båt & Fiskeutstyr», lav sol, rolig sjø), men hastigheten holder ikke til film: et klipp på 10 sekunder er 600 bilder, altså mange timer per klipp. Tallet er målt med spillet i sanntid i bakgrunnen; med den kunstige klokka tegnes bare ett bilde per steg, så det blir raskere, men neppe raskt nok. Konklusjon:
+
+- **Enkeltbilder og kontaktark kan lages i skyen** (ett bilde per nøkkelpunkt i kamerabanen), til å velge utsnitt og lys.
+- **Alle klipp filmes på en maskin med GPU**, det vil si Jonas' iMac. Filmoppsettet er Python, Chromium og Playwright og kjører likt der. Med ekte GPU tegner spillet «Ultra» i 60 bilder i sekundet, så et klipp på 10 sekunder tar sekunder til et minutt.
+- **Skyen brukes til resten:** klipp-JSON, musikkanalyse, klippekart, stemme, sammensetting, miks og kontroller på ferdige bilder.
+- Alternativ hvis iMacen ikke kan stå og filme: en leid GPU-maskin i skyen for en dag eller to.
 
 ## 7. Måling etter publisering
 
@@ -136,7 +144,7 @@ CLAUDE.md krever «mål og se» for hver engasjementsendring. Traileren er en sl
 
 | Fase | Hva | Resultat | Avhenger av |
 |---|---|---|---|
-| **F0** | Avklaringer. Gjort 30.10.2026, se del 1. Gjenstår: målingen av tegnehastighet, og om hele kysten kan hentes i skyen. | Denne planen | – |
+| **F0** | Avklaringer. Gjort 30.10.2026, se del 1 og del 6. Gjenstår: om hele kysten kan hentes i skyen, og at filmoppsettet kjører på iMacen. | Denne planen | – |
 | **F1** | Filmoppsettet: kunstig klokke, klipp-JSON, teleportering, væroppslag, kontrollbilder, de automatiske kontrollene. PR med `G3.film`. | `trailer/tools/film.py`, `HARNESS.md` | F0 |
 | **F2** | De to viktigste klippene først, i halv størrelse: naustdøra med trebåten (klipp 1–2) og snurperen under brua (klipp 13). Holder de, holder resten. | Kontrollbilder og forhåndsvisning til Jonas | F1 |
 | **F3** | Musikk: Jonas lager 2–3 Suno-versjoner i to retninger, vi analyserer og velger. Klippekart. Lydopptak fra iMacen (vei A). | `audio/music-edit-1.json`, motorlyd | F0 |
@@ -158,7 +166,7 @@ CLAUDE.md krever «mål og se» for hver engasjementsendring. Traileren er en sl
 
 ## 10. Risiko
 
-- **Tegnehastighet i skyen.** Måles nå. Løsningen er iMacen for full størrelse uansett.
+- **Tegnehastighet i skyen.** Målt til rundt 45 s per bilde i halv størrelse. Klippene filmes på iMacen; skyen lager enkeltbilder og alt rundt.
 - **Hele kysten i skyen.** Kartpakkene er 195–259 MB og hentes fra en GitHub-release. Disken i en økt er begrenset. Det må prøves.
 - **Lyd.** Vei B er usikker. Vei A holder for alt vi trenger.
 - **Sprang i detaljnivå** på trær, bygg og nærfelt når kameraet beveger seg fort. Den automatiske hopp-sjekken finner dem, og banene legges så de ikke skjer, eller spillet rettes i PR.
