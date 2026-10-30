@@ -506,7 +506,12 @@ Runde 11: en vegg som rendret svart viste seg å være to flater i samme plan (h
 andre. Regel fra nå: **aldri to flater i samme plan**; `dbg12.py`-metoden (skjul objekt for objekt, slett flata) finner slike.
 Styrbord sidedør akter tatt ut (det er arbeidsdekk der). Kontrollbildene rendres med himmellys 0,45 og eksponering −1,0.
 
-Igjen etter runde 11, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
+Runde 12 (hekkbildet 274df4a7, flybildet 82e91969, kaibildet 47d6785c): akterspeilet går 0,65 m under bunnstofflinja (rød stripe
+på speilet i bildet), med flat bunn og en knekk ut til sida 1,0 m høyere, ikke en rund (`section_body`, x < 2,6); livbøyer på
+bakkens akterskott, gangbanens akterkant og dekk B's babordkant; sidedøra akter på babord som et hvitt dørblad med vindu i
+nisjen. Fjernversjonen 11 595 punkter, nærversjonen 93 352.
+
+Igjen etter runde 12, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
 ved 8 m, åpningen i baksida), bredden på hus og plattform, dekksutstyrets nøyaktige plasser på arbeidsdekket. Det som krever F2:
 plater, sveis, rust, slitasje, glansen i malingen.
 

@@ -32,7 +32,7 @@ HB = BM / 2
 
 # ---------- the lines (metres) ----------
 # the keel and the buttock at the centreline aft: the counter over the propeller, the run up from the flat keel
-LOW = [(XA, 4.15), (1.0, 3.90), (2.2, 3.60), (3.8, 3.15), (5.5, 1.90), (7.5, 0.65), (9.5, 0.0), (31.5, 0.0), (32.6, 0.25)]
+LOW = [(XA, 3.40), (1.0, 3.35), (2.2, 3.28), (3.8, 3.15), (5.5, 1.90), (7.5, 0.65), (9.5, 0.0), (31.5, 0.0), (32.6, 0.25)]
 def z_low(x): return interp(LOW, x)
 # the half-breadth at the waterline and at the shelter deck; the transom's corners are rounded in plan (the photographs: a large radius)
 HBW = [(XA, 3.55), (1.5, 4.05), (4.0, 4.50), (8.0, 4.72), (27.0, 4.72)]
@@ -88,7 +88,17 @@ def st_bot(x): return st_top(x) - ST_W
 def section_body(x, n=28):
     """the section at x aft of X_ENT, from the keel at the centreline up to the bulwark's top: (half-breadth, height)"""
     zl = z_low(x); zs = z_sh(x); zb = z_bw(x); bw = interp(HBW, x); bd = interp(HBD, x); nn = interp(NX, x); pts = []
-    if zl < WL - 0.02:
+    if x < 2.6:
+        # the counter aft (the stern photograph 274df4a7): a flat bottom under the transom and a chine sloping out to the side
+        # 1.0 m higher, not a round; the chine's knuckle fades into the round of the sections forward of 2.6 m
+        f = x / 2.6; wb = bw * (0.55 + 0.25 * f); hc = 1.0
+        for k in range(n + 1):
+            t = k / n
+            if t < 0.3: pts.append((wb * t / 0.3, zl))
+            else:
+                tt = (t - 0.3) / 0.7; pts.append((wb + (bw - wb) * (tt ** (1 + 1.2 * f)), zl + hc * tt))
+        z0 = zl + hc
+    elif zl < WL - 0.02:
         for k in range(n + 1):
             th = (math.pi / 2) * k / n; c = math.cos(th); s = math.sin(th)
             pts.append((bw * (s ** (2 / nn) if s > 0 else 0.0), zl + (WL - zl) * (1 - (c ** (2 / nn) if c > 0 else 0.0))))
@@ -481,7 +491,7 @@ def holes():
     while z > 4.85: H.append((1, 22.50, 22.92, z - 0.05, z + 0.05, 0.02, 'box', 0.12)); z -= 0.38
     for x0, x1, z0, z1 in ((13.03, 13.46, 7.17, 7.87), (13.92, 14.36, 7.17, 7.87), (9.35, 9.78, 7.30, 8.00), (10.04, 10.47, 7.30, 8.00), (4.69, 5.12, 7.40, 8.12)):
         H.append((1, x0, x1, z0, z1, 0.08, 'glass', 0.08))
-    H.append((1, 6.65, 7.65, 7.22, 8.33, 0.06, 'box', 1.2)); H.append((1, 6.55, 7.36, 5.80, 6.00, 0.03, 'box', 0.15))
+    H.append((1, 6.65, 7.65, 7.22, 8.33, 0.06, 'door', 0.45)); H.append((1, 6.55, 7.36, 5.80, 6.00, 0.03, 'box', 0.15))
     # the recessed steps under the side door aft, from the door down to the waterline, on both sides (47d6785c, 1000a4bd)
     for sg in (1, -1):
         z = 7.0
@@ -576,10 +586,10 @@ def hull_side(fine=True):
                 A.poly([P(a[0], a[1], 0.0), P(b[0], b[1], 0.0), P(b[0], b[1], dep), P(a[0], a[1], dep)], wall, (0, 0, 0)); continue
             # the plate's edge, then the dark space behind it
             A.poly([P(a[0], a[1], 0.0), P(b[0], b[1], 0.0), P(b[0], b[1], 0.03), P(a[0], a[1], 0.03)], wall, (0, 0, 0))
-            A.poly([P(a[0], a[1], 0.03), P(b[0], b[1], 0.03), P(b[0], b[1], dep), P(a[0], a[1], dep)], C['dark'] if kind != 'pocket' else C['inner'], (0, 0, 0))
+            A.poly([P(a[0], a[1], 0.03), P(b[0], b[1], 0.03), P(b[0], b[1], dep), P(a[0], a[1], dep)], C['dark'] if kind not in ('pocket', 'door') else C['inner'], (0, 0, 0))
         if kind == 'thru': continue
         # the back of the box: dark in an opening into a space, the glass in a window, the pocket's grey steel behind the anchor
-        back = {'box': C['dark'], 'louvre': C['black'], 'glass': C['glass'], 'pocket': C['steel']}[kind]
+        back = {'box': C['dark'], 'louvre': C['black'], 'glass': C['glass'], 'pocket': C['steel'], 'door': W}[kind]
         A.poly([P(x, z, dep) for x, z in o], back, (0, -sg, 0))
         if kind == 'louvre':
             # the louvre: blades across the opening sloping down outwards, held by two dividers
@@ -592,6 +602,11 @@ def hull_side(fine=True):
         if kind == 'glass':
             # the window's frame (a white rim proud of the side) and its glass a little in
             hull_frame(A, o, sg, W, w=0.05, h=0.02)
+        if kind == 'door':
+            # the side door in its recess (47d6785c): the white leaf at the back with its small window and dogs
+            cx = (x0 + x1) / 2
+            hull_patch(A, [(cx - 0.14, z0 + 0.55), (cx + 0.14, z0 + 0.55), (cx + 0.14, z0 + 0.85), (cx - 0.14, z0 + 0.85)], sg, C['glass'], off=-(d - 0.01), rings=1)
+            for zz in (z0 + 0.3, z0 + 0.6, z0 + 0.9): acyl(A, P(x1 - 0.1, zz, d), P(x1 - 0.1, zz, d - 0.04), 0.02, lambda z: C['steel'], seg=6)
         if kind == 'pocket':
             # the anchor in its pocket: the crown and flukes near the mouth, the shank running in and up to the hawse pipe
             cx, cz = (x0 + x1) / 2, (z0 + z1) / 2
@@ -1149,6 +1164,11 @@ def stair(A, x0, y0, z0, x1, z1, w, m, side=(0, 1, 0)):
             q = a + (b - a) * t + e; acyl(A, q, q + V((0, 0, 0.95)), 0.02, lambda z: m, seg=6)
         acyl(A, a + e + V((0, 0, 0.95)), b + e + V((0, 0, 0.95)), 0.024, lambda z: m, seg=6, cap=False)
 
+def lifebuoy(A, c, n, up=(0, 0, 1)):
+    """a lifebuoy hung on a wall at c (its outward normal n): an orange ring with four white bands, 0.75 m across"""
+    R, r = 0.33, 0.055; c = V(c) + V(n).normalized() * (r + 0.01)
+    atorus(A, c, n, R, r, lambda a: C['white'] if int(a / (math.pi / 4)) % 2 else C['orange'], seg=24, rseg=8)
+
 def aft_deck(fine=True):
     A = Acc('aftdeck'); W = C['white']; objs = []
     zs = z_sh
@@ -1202,6 +1222,11 @@ def aft_deck(fine=True):
         for k in range(8): abox(A, 22.4, 25.3, -3.4 + 0.33 * k, -3.36 + 0.33 * k, 10.1, 10.14, C['dark'])
         P = [(23.5, -3.5, 9.6), (23.5, -3.7, 9.6), (23.5, -4.0, 9.2), (23.5, -4.4, 8.3)]
         for a_, b_ in zip(P, P[1:]): acyl(A, a_, b_, 0.17, lambda z: C['steel'], seg=12)
+    # ---- the lifebuoys (SIK): on the forecastle's aft bulkhead to starboard, on the walkway's aft edge, on deck B's port edge ----
+    if fine:
+        lifebuoy(A, (X_FC - 0.05, -2.9, zs(X_FC) + 1.6), (-1, 0, 0))
+        lifebuoy(A, (8.28, -2.6, ZB2 + 0.0), (-1, 0, 0))
+        lifebuoy(A, (12.5, 4.47, ZB2 + 0.0), (0, 1, 0))
     # ---- the stairs: from the working deck up to the forecastle at starboard, and to the casing's deck by the house ----
     if fine:
         stair(A, X_FC - 2.6, -3.9, zs(24.5), X_FC + 0.05, z_dk(X_FC), 0.8, W)
