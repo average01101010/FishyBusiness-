@@ -1,6 +1,6 @@
 # Trailerplan for Det Store Blå
 
-*Versjon 2, 30. oktober 2026. Skrevet etter gjennomgang av spillkoden på arbeidsgrenen `ccr-5e1ba2f4-pusvyd` og Jonas' svar samme dag: spillet er gratis, semidiesel-lyden finnes, hele kysten og alle årstider finnes, og vi viser båter og natur framfor arbeidsanimasjoner. Strategien og begrunnelsene står i `TRAILER-STRATEGI.md`, arbeidsbeskrivelsen i `SLIK-LAGER-VI-TRAILEREN.md`. Dette er planen som binder dem sammen med det spillet faktisk kan.*
+*Versjon 2.1, 30. oktober 2026 (valgene i del 9 tatt samme kveld). Skrevet etter gjennomgang av spillkoden på arbeidsgrenen `ccr-5e1ba2f4-pusvyd` og Jonas' svar samme dag: spillet er gratis, semidiesel-lyden finnes, hele kysten og alle årstider finnes, og vi viser båter og natur framfor arbeidsanimasjoner. Strategien og begrunnelsene står i `TRAILER-STRATEGI.md`, arbeidsbeskrivelsen i `SLIK-LAGER-VI-TRAILEREN.md`. Dette er planen som binder dem sammen med det spillet faktisk kan.*
 
 ## 1. Det spillet gir oss, sett med filmøyne
 
@@ -46,7 +46,7 @@ Det Jonas har sagt styrer utvalget: båtene og naturen bærer filmen. Arbeidet o
 
 ## 3. Opptaksliste, utkast 1
 
-Tidene er omtrentlige til musikken er valgt. Formatet er stående 9:16 og liggende 16:9 fra samme opptak, så viktig innhold holdes midt i bildet. Alle steder er ekte og navngis på skjermen med ett ord.
+**Den gjeldende lista er `shotlist.md`** (v1 for 9:16, uten UI-klipp, etter Jonas' valg 30.10.2026). Tabellen under er utkastet den bygger på. Tidene er omtrentlige til musikken er valgt. Formatet er stående 9:16 og liggende 16:9 fra samme opptak, så viktig innhold holdes midt i bildet. Alle steder er ekte og navngis på skjermen med ett ord.
 
 | # | Tid | Sted og tid på året | Båt | Hva som skjer | Kamera | Lyd | Tekst |
 |---|---|---|---|---|---|---|---|
@@ -60,7 +60,6 @@ Tidene er omtrentlige til musikken er valgt. Formatet er stående 9:16 og liggen
 | 8 | 24–27 | Vardø, 15. oktober, kl. 14, Beaufort 7 | kyst 21 | Sjø over baugen, skum i stripene. | Forfra, lavt, sprut mot kamera | Vind, sjø | «Varanger» |
 | 9 | 27–30 | Bergen, 5. april, kl. 19 | hurtigsjark | Byen, Bryggen, lys i husene, MS Kystpilen går ut. | Drone over havna | – | «Bergen» |
 | 10 | 30–33 | Hekkingen fyr, Senja, 20. desember, kl. 23, klart | havsjark 35 | Lyskjeglene går rundt. Nordlyset bygger seg opp over 5 sekunder, aldri brått. | Fast kamera fra sjøen, båten passerer under fyret | Musikken åpner seg | – |
-| 11 | 33–37 | Finnsnes, Båthandelen | – | Fakta-kortet for trebåten: «Pris 45 000 kr. Byggeår 1956. Fjordlinja: kan fiske innenfor.» Rulles sakte. Det eneste UI-klippet. | Skjermbildet, som det er | Oppbygning mot drop | – |
 | 12 | 37–40 | Finnsnes verft | kyst 15 → kyst 21 | Kjøp. Større båt ved kaia. | Nært, båtnavnet på baugen | Siste slag før drop | «Fra sjark …» |
 | 13 | 40–50 | Gisundet, 21. juni, kl. 04, midnattssol | kystnotbåt 38,55 | Hun legger ut under Gisundbrua. Masten klarer brua. Sola lavt i nordøst, lang skygge og glitter. | Én lang bevegelse: lavt forfra, stiger og dreier rundt styrbord side til akterut | Drop. Ingen tekst, ingen stemme | – |
 | 14 | 50–54 | Finnsnes kai, samme morgen | begge | Trebåten fortøyd ved siden av snurperen. Kameraet trekker ut til begge er i bildet. | Fra kaia, sakte ut | Nedtrapping over to slag | «… til snurper» |
@@ -112,7 +111,7 @@ Lyden i spillet er laget i Web Audio hvert 100. millisekund, ingenting er innspi
 | **B. Offline-rendering i oppsettet** | Filmoppsettet bytter `AudioContext` med `OfflineAudioContext` og lar lydmotoren tikke på den kunstige klokka, så lyden rendres bilde for bilde sammen med filmen. | Perfekt synkron, røykpuffene og tennene i takt | Usikkert om lydmotoren tåler det uten endringer. Prøves først når bildene er godkjent. |
 | **C. Jonas' Sabb-video** | Ekte opptak av en ekte Sabb G, som lydmotoren alt er laget etter. | Autentisk, varm | Ikke spillyd, så «alt er ekte spillgrafikk» må sies om bildet alene |
 
-**Anbefaling:** A nå, så vi har lyd til grovklippene og kroken. B prøves som forbedring når bildene er låst. C holdes i reserve. Uansett vei legges motorlyden under klipp 2 og 3 og i det siste sekundet, og alt annet ambient (vind, sjø, blåst, måker) tas fra samme opptak.
+**Avgjort 30.10.2026:** Jonas kan ikke ta opp lyd, og lyden er ikke viktig i denne traileren så lenge musikken setter stemningen. Musikken bærer derfor hele filmen. Vei B prøves som forbedring når bildene er låst, så semidieselen kan ligge under klipp 1–3 og i siste sekund; lykkes den ikke, utgår motorlyden uten at filmen lider. Vei A og C utgår. Uansett vei legges motorlyden under klipp 2 og 3 og i det siste sekundet, og alt annet ambient (vind, sjø, blåst, måker) tas fra samme opptak.
 
 Musikk og stemme som i `SLIK-LAGER-VI-TRAILEREN.md`: Suno rundt 96 BPM, to stilretninger, klipp på slag, tekst på skjermen i masteren og en eventuell ekte nordnorsk stemme som egen versjon.
 
@@ -147,22 +146,22 @@ CLAUDE.md krever «mål og se» for hver engasjementsendring. Traileren er en sl
 | **F0** | Avklaringer. Gjort 30.10.2026, se del 1 og del 6. Gjenstår: om hele kysten kan hentes i skyen, og at filmoppsettet kjører på iMacen. | Denne planen | – |
 | **F1** | Filmoppsettet: kunstig klokke, klipp-JSON, teleportering, væroppslag, kontrollbilder, de automatiske kontrollene. PR med `G3.film`. | `trailer/tools/film.py`, `HARNESS.md` | F0 |
 | **F2** | De to viktigste klippene først, i halv størrelse: naustdøra med trebåten (klipp 1–2) og snurperen under brua (klipp 13). Holder de, holder resten. | Kontrollbilder og forhåndsvisning til Jonas | F1 |
-| **F3** | Musikk: Jonas lager 2–3 Suno-versjoner i to retninger, vi analyserer og velger. Klippekart. Lydopptak fra iMacen (vei A). | `audio/music-edit-1.json`, motorlyd | F0 |
+| **F3** | Musikk: Jonas lager versjonene etter `audio/SUNO-PROMPT.md`, vi analyserer og velger. Klippekart. | `audio/music-edit-1.json` | F0 |
 | **F4** | Resten av opptakslista, `script.md`, `shotlist.md` låst mot klippekartet. Første grovklipp. | `rough/m1.mp4` | F2, F3 |
 | **F5** | Runder: Jonas ser på mobilen, notater med tidskode, retting, nytt grovklipp. Som Laksebaronen, 3–5 runder. | `rough/m2…` | F4 |
 | **F6** | Animasjoner sjekkes: sette og dra bruk, sløying, levering, mannskap på dekk. Det som holder, kan få et klipp. Det som ikke holder, vises ikke, og noteres i backloggen. | Beslutning per animasjon | F5 |
 | **F7** | Full størrelse på GPU, lydmiks til −14 LUFS, sluttkort fra `logo.py`, tekstede versjoner, fem korte klipp, plakat, `CREDITS.md`, tekster. | Leveransen | F5, F6 |
-| **F8** | Publisering i rekkefølge: korte klipp først, hovedtrailer uka før 20. januar. Måling i admin. | Tall i trakten | F7, PR for `#fra=` |
+| **F8** | Publisering: korte klipp fra 4. januar, hovedtrailer 11.–15. januar 2027. Måling i admin. | Tall i trakten | F7, PR for `#fra=` |
 
-## 9. Valg Jonas må ta
+## 9. Valgene (Jonas 30.10.2026)
 
-1. **Musikkretning:** nordisk og nedpå (fele eller trekkspill) eller moderne kyst (elektronisk puls med ett akustisk instrument). Begge kan prøves i Suno først.
-2. **Stemme:** bare tekst på skjermen (anbefalt som master), eller i tillegg en versjon med en ekte nordnorsk stemme. Hvem?
-3. **Første format:** 16:9 til Facebook og YouTube der kystfolket er, eller 9:16 til TikTok og Reels. Begge lages, men ett kommer først.
-4. **Fakta-kortet** (klipp 11): skal det eneste UI-klippet være med, eller skal masteren være helt uten grensesnitt?
-5. **Engelsk versjon:** spillet har engelsk språk. En engelsk tekstversjon av samme film koster lite. Da trengs også det engelske navnet som ikke er valgt.
-6. **Lydopptaket** fra iMacen (vei A): når kan det gjøres?
-7. **Tidspunkt:** sikte på uka før Lofotfisket 20. januar, eller tidligere?
+1. **Musikk:** valget er vårt. Vi velger retning A, nordisk og nedpå, med retning B som reserve i samme Suno-økt. Bestillingen står i `audio/SUNO-PROMPT.md`.
+2. **Stemme:** Jonas ordner den selv, som egen versjon. Masteren har bare tekst på skjermen (`script.md`).
+3. **Format:** 9:16 til TikTok først. 16:9 senere fra de samme klippene.
+4. **UI:** ingen klipp med grensesnitt. Fakta-kortet er tatt ut.
+5. **Engelsk:** ikke nå.
+6. **Lyd:** ingen opptak. Musikken bærer. Semidieselen eventuelt senere gjennom offline-rendering (del 5).
+7. **Tidspunkt:** vårt valg. Vi sikter på hovedtraileren i uka 11.–15. januar 2027, uka før Lofotfisket åpner 20. januar, med de korte klippene fra 4. januar. Det gir tid til Onboarding 2 og Fysikk 4 før full størrelse.
 
 ## 10. Risiko
 

@@ -1,0 +1,9 @@
+{
+  "name": "Fars naust: døra og trebåten ved kaia i grålysning",
+  "when": "2026-10-12T04:30:00Z",
+  "boat": "trebat",
+  "quality": "high",
+  "load_s": 15,
+  "dur": 6,
+  "cam": {"mode": "intro", "sec": 6}
+}

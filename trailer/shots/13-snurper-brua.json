@@ -1,0 +1,17 @@
+{
+  "name": "Kystnotbåten legger ut under Gisundbrua i midnattssol",
+  "when": "2027-06-21T02:00:00Z",
+  "boat": "ringnot38",
+  "place": {"lat": 69.2345, "lon": 17.9735, "clear": 0.08},
+  "heading": 345,
+  "speed": 8,
+  "quality": "high",
+  "pre": 4,
+  "load_s": 20,
+  "dur": 10,
+  "cam": {"mode": "orbit", "keys": [
+    {"t": 0, "yaw": 150, "pitch": 4, "dist": 70, "fov": 45},
+    {"t": 5, "yaw": 95, "pitch": 12, "dist": 85, "fov": 42},
+    {"t": 10, "yaw": 30, "pitch": 20, "dist": 110, "fov": 40}
+  ]}
+}
