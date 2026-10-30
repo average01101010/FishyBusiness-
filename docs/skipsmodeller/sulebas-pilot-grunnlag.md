@@ -11,21 +11,44 @@
 
 ## 1. Fakta om båten
 
-| Hva | Verdi | Kilde |
-|---|---|---|
-| Navn, merke, kallesignal | SULEBAS, SF-100-SU, LECW | S (bildene) |
-| IMO | 9675092 | R: shipspotting.com (søketreff 30.10.2026) |
-| Design | Seacon SC38 | R: seacon.no (søketreff) |
-| Verft, levert | Solund Verft AS, byggenummer 6, februar 2014 | R: seacon.no (søketreff) |
-| Lengde over alt | **38,55 m** (byggerapporten) eller **34,32 m** (uavpic.com). Kildene er uenige | R: maritimt.com «Sulebas (04/2014)», uavpic.com. Må avgjøres mot merkeregisteret |
-| Bredde | 9,50 m (begge kildene) | R |
-| Bruttotonnasje | 499 | R: maritimt.com |
-| Dypgang, dybde til dekk, motor, propell, thrustere | ukjent | Sidene kunne ikke leses herfra (nettverket i økta stenger maritimt.com, seacon.no og uavpic.com) |
-| Bruk | Flerbruk: ringnot, snurrevad (fly-shooting) og garn | R: fiskerforum.com (om etterfølgeren «Sulehav») |
-| Eiere | Lending (Kolgrov, Solund). Hjemmehavn på skroget: FLORØ | R, S |
+Fra byggerapporten i Maritimt Magasin («Sulebas», 04/2014), skjermbilder fra Jonas 30.10.2026 (R), og søk (R).
 
-**Viktig:** ringnotbåten i spillet (`pelagisk`, `not75.py`) er 75 m. Sulebas er under 40 m og et annet slags fartøy: en
-flerbruks kystbåt med ringnot og snurrevad, ikke en stor pelagisk tråler/ringnotbåt. Se avgjørelse B1.
+| Hva | Verdi | Følger for modellen |
+|---|---|---|
+| Navn, merke, kallesignal | SULEBAS, SF-100-SU, LECW (IMO 9675092) | Brukes ikke i spillet (kap. 2) |
+| Design, verft | Seacon SC38. Skroget bygd ved Riga Shipyard (Latvia), utrustet og levert av Solund Verft AS (byggenummer 6) 15.02.2014 | – |
+| Klasse | DNV 1A1 Fishing Vessel, Sjøfartsdirektoratets regler for fiskefartøy, fartsområde Havfiske II | – |
+| **Lengde o.a.** | **38,55 m** | Låst |
+| **Lengde p.p.** | **34,00 m** | Avstanden mellom perpendikulærene: hekken stikker rundt 1 m akter for roraksen, baugen med bulb rundt 3,5 m forut for FP (A) |
+| **Bredde** | **9,50 m** | Låst |
+| **Dybde til hoveddekket** | **4,30 m** | Låst (fra kjølen) |
+| **Dybde til shelterdekket** | **6,60 m** | Låst: shelterdekket ligger 2,30 m over hoveddekket |
+| Bruttotonnasje | 499 | – |
+| Brennolje / RSW | 78,6 m³ / 419,5 m³ | RSW-tankene under hoveddekket midtskips: luker (DKS-03) |
+| Dypgang | Ikke oppgitt | Anslått fra bildene (kap. 4.0) |
+| Hovedmotor | 749 kW ved 1000 o/min, gir 5,04:1 | Propellen går rundt 200 o/min: stor propell |
+| Propellanlegg | Type P70.22.280.4 (vribare blader) | Tolket: CPP, 4 blader, rundt 2,80 m diameter (T: siste to tall) |
+| Ror | Eget styremaskinanlegg | Ror bak propellen |
+| Thrustere | To tunnelthrustere FU-45-LTC-1225, 368 og 450 kW | Tunnel rundt 1,2 m (T: «1225»). Merkene i bildene viser én forut og én akter |
+| Hjelpemotorer | 3 × 260 kW + akselgenerator 1240 kVA | – |
+| Dekkskran | 25 tm | Knekkbomkranen midtskips (bilde 1, 2) |
+| Fiskepumpekran | Egen kran | Kranen ved pumpa |
+| Notkran | Egen modell (NK-6000) | Kranen akter styrbord med kraftblokka |
+| Nothåndtering | Flålegger, mellomrull, notvinsj | Notbingen akter (RNG-03, -04) |
+| Vinsjer | 2 ankervinsjer, brystvinsj, ørekalvinsj | Ankervinsjene på bakken; brystvinsj og ørekalvinsj er ringnotvinsjer (snurpinga) |
+| Garn | Garnhaler og garngreier | Garnhaleren ved rekka (GRN-modulen: båten fisker også garn) |
+| Fiskepumpe, RSW, vakuum/lossing, ozon | Egne anlegg | Pumpa midtskips; losseanlegg på dekk (A) |
+| Fabrikk | Ja (lite anlegg) | Ikke synlig utvendig |
+| MOB-båt og davit | RRB 425 (4,25 m), davit MOB 400-B | Oransje redningsbåt bak styrehuset babord, 4,25 m |
+| Radarer | To: en 6 fots X-band og en «solid state» | To åpne radarantenner på mastetårnene |
+| Sonarer | To: en lavfrekvent sonar og en høyfrekvent, pluss ekkolodd | To sonarkjøler/senkerør under forskipet (SKR-15) |
+| Satellitt | SAT-TV-kuppel, Inmarsat-C, satellittelefoner, GMDSS A3 (MF/HF) | Radomene på taket, MF/HF-pisk, små sopper |
+| Annet | AIS, VHF ×2, UHF, kompass, GPS, strømlogg, notovervåking, CCTV | Små antenner og kameraer på mastene |
+
+Leverandørnavnene står i kilden, men brukes ikke i spillet.
+
+**Viktig:** ringnotbåten i spillet (`pelagisk`, `not75.py`) er 75 m. Sulebas er en annen klasse: en flerbruks kystbåt med
+ringnot, snurrevad og garn på 38,55 m. Se avgjørelse B1.
 
 ## 2. Reglene som gjelder modellen
 
@@ -53,6 +76,64 @@ flerbruks kystbåt med ringnot og snurrevad, ikke en stor pelagisk tråler/ringn
 
 Mål i meter langs skroget fra baugen er **anslag** fra bilde 2 (babord side, baugen til venstre, rundt 16,7 px/m med 38,55 m). Alt
 merket A skal kontrolleres mot bedre kilder (kap. 8).
+
+### 4.0 Målt på sidebilde 3 (30.10.2026)
+
+Bilde 3 er babord side under fart, tatt med tele fra land (3392 × 2400 i skjermbildet). Skala 80,47 px/m fra stevntoppen (u 118) til
+akterspeilet (u 3220). Høyder regnes fra shelterdekket, 6,60 m midtskips (byggerapporten), som ligger på v 1571 ved x = 18,2 m. Alle
+mål er i modellens ramme: x forover fra akterspeilet, z opp fra basislinja. Overlegget (`ov_edge`, ortografisk babord) treffer
+stevn, hekk, spring, stripe, styrehus, master og kraner innen et par cm i bildet.
+
+- **Spring er ekte.** Den blå toppen (shelterdekkets kant) går fra 7,39 m ved hekken, ned til 6,54 m ved x 15,5 og opp til 8,13 m ved
+  stevnen (målt hver 0,5 m etter fargen). Det eldre sidebildet viser samme stigning i meter, så den kommer ikke fra linsa. Den brede
+  hvite stripen har sin egen spring: toppen ligger på 4,92 m på det laveste og 5,57 m akter. Den er 0,33 m bred og går sammenhengende
+  fra 4,35 til 27,35 m, med tre skrå streker i hver ende.
+- **Stevnen** heller rundt 33°, gjennom 35,2 m i vannlinja (= AP + Lpp med rorstammen i 1,2 m) og opp til 9,18 m.
+- **Sida:** toppen ligger på 9,85 m rundt notbingen akter (0–6,35 m) og på 8,44–8,84 m langs øvre dekk. Forut stiger den til 9,18 m som
+  et lavt skansekledning. Rekkverkets topp ligger på 9,78 m fra 8 m og helt fram. Øvre dekk går nesten flatt fra 8,66 m (6,42 m) til
+  8,72 m ved baugen. Shelterdekket under er lukket hele veien fram.
+- **Styrehuset:** glass fra karmen på 11,95 m til overkanten på 13,18 m. Glasset heller utover på alle sider (0,30 m forut, 0,36 m
+  akter). Den blå takkanten ligger på 13,26–13,42 m og står 0,64 m ut over fronten og 0,3 m ellers. Taket skrår 0,6 m opp innover til
+  kompassdekket på 14,02 m, med rekkverk til 15,0 m. Dekk B er en plattform rundt styrehuset på 11,05 m, med rekkverk til 12,05 m,
+  fra 10,28 til 21,22 m. Døra på babord står mellom 11,58 og 12,18 m. Styrbords sidelys sitter på takskråningen, lampa ved x 14,6
+  og z 13,8. Kallesignalskiltet står på 11,85–14,69 m × 13,88–14,98 m.
+- **Huset på øvre dekk:** 11,73–20,35 m, med to par høye vinduer på hver side (z 9,72–10,5) og en blå linje på 9,88–10,0 m.
+- **Skrogsida:**
+  - Ankerlomma ligger på 30,6–32,2 × 7,40–7,94, med ankerkronen under.
+  - Lufteåpninger med lameller ligger på 5,76–6,05 m mellom 16,8 og 27,1 m.
+  - Innfelte trinn går fra dekket til vannet ved 22,5–22,9 m.
+  - Vinduer i shelterdekkssida: 13,0–14,4, 9,35–10,5 og 4,7–5,1 m.
+  - En sidedør står ved 6,65–7,65 m.
+  - Åtte lensporter sitter i bingeveggen (0,3–3,6 × 8,8–9,07 m), og fem utløp under de aktre strekene.
+- **Pipa:** står på babord akter, flukt med sida, på 4,06–6,36 m. Den går fra veggen til den blå toppen på 12,14–12,45 m og har ett
+  svanehalsrør.
+- **Formasten:** forkanten heller akterover og akterkanten står nesten loddrett (bunnen 30,14–31,38, toppen 29,9–30,3). Plattformene
+  ligger på 13,52 og 15,33 m, og topplanterna på 17,5 m. Lyskasteren står på den nedre plattformen.
+- **Radarmasta:** tårnet går til plattformen på 17,2 m og videre til kuppelplattformen på 19,3 m. Kuppel 1 har 1,3 m diameter og
+  sitter på x 14,3. Kuppel 2 har 1,5 m diameter og står på en stang ved x 11,5 (topp 21,5 m). Stigemasta har røde lys på 22,1 m.
+  Radarene står på 15,9–16,2 m (4,4 m antenne) og 18,0–18,2 m (1,6 m). Piskeantennene går til 24,2 og 24,7 m.
+- **Kranene:**
+  - Den forreste kranen er sammenfoldet, med knekken på 19,6 × 11,7 og jiben ned til hvilen ved 26,9 × 10,5.
+  - Akterkranen har søylen ved 7,2 m til 16,8 m og hodet til 18,1 m. Bommen går fram til 12,1 m.
+  - Hjulet til nothaleren (1,75 m) henger på et åk på 14,3 m.
+- **MOB-båten** (4,25 m) står på 7,85–12,05 m med davit ved 11,45 m.
+
+**Styrbord er lavere enn babord** (Jonas 30.10.2026, bildene 274df4a7, 82e91969, 3f711e55). På styrbord ligger et åpent
+arbeidsdekk på shelterdekket fra 7,3 til 25,8 m, med bare et blått rørrekkverk (1,1 m) på skrogkanten. Den høye bingeveggen akter
+bøyer ned mot dekket ved 5,0–7,3 m, og forut reiser sida seg til bakken ved 25,8–26,6 m. Babord halvdel er et lukket hus (kassen,
+`Y_C` = −0,6 m) opp til øvre dekk. Huset på dekket går ned til arbeidsdekket på styrbord. Den forreste kranen står på foten ved
+bakken (26,85 m, babord) og ligger foldet akterover langs babord side med knekken ved 19,7 m. Det leste jeg feil første gang, og
+flybildet viser det.
+
+**Åpningene er ekte hull** (Jonas 30.10.2026: «ikke bare bruk svarte teksturer»). Skroget og skansekledningens innside skjæres med
+et prisme gjennom omrisset (`holes()` og `cutter()`, boolsk EXACT). Lokket som løseren legger over hullet, slettes etterpå. Hvert
+hull får en lysning: platekanten og så et mørkt rom bak med bakvegg (`box`), lameller (`louvre`), glass (`glass`) eller ankeret
+(`pocket`). Hull gjennom skansekledningen (`thru`) viser dekket bak. På styrbord er stedene for lufteåpningene akter for 16 m,
+trinnene ved 8 m og den store åpningen i baksida (27,05–28,45 m) anslått fra skråbilder uten skala.
+
+Antatt, ikke målt: alt som ligger på tvers av båten. Bredden på husene, styrehuset (±3,9) og plattformen (±4,45) er anslått, og
+master, kupler og kraner står midt i båten eller ved babord rekke. Styrbord side antas lik babord, bortsett fra pipa og døra. Det
+trengs bilder forfra, akterfra og fra styrbord.
 
 ### 4.1 Skrog og merking (begge sider)
 
@@ -363,10 +444,41 @@ Modellen får typede plasser for hver lanterne (`lights`), og spillet tenner dem
 - `vessel3d` med det nye taket, `brotest`, `lanterntest`, `deckshot`.
 - Jonas godkjenner nivået før resten av flåten tas.
 
+## 7.1 Kritikksløyfen (30.10.2026)
+
+Arbeidsmåten for piloten, og for båtene etter den: modellen rendres fra de samme vinklene som fotoene (`scratchpad/r38/shape.py`:
+`sq` styrbord låring høyt som 1000a4bd, `pq` babord låring som 8cdb9214, `aer` flybildet 82e91969, `slipq` slippen 226293a9,
+`sternv` hekken 274df4a7, og det ortografiske overlegget mot sidebildet 42432bd5), bildene sammenlignes med fotoene, feilene
+skrives opp, rettes og rendres på nytt. Overlegget mot sidebildet kjøres etter hver runde, så ingenting flytter seg.
+
+Runde 1 (akterskipet og dekksutstyret): notbingens skillevegg, rekkverket på den fremre brønnen, bøyene og tauskivene, rullene på
+hekkveggen, leideren på akterspeilet, nottrakta akter for styrehuset, kraftblokka på akterkranen, vakuumtankene og pumpehopperen,
+trappene til bakken og kassedekket, ankervinsjen og varpehodene. Funnet og rettet: plattformens dekkprisme lå i plan med kantplata
+(svart stripe), bingegulvet for lyst.
+
+Runde 2 (baug og hekk): leideren sto på styrbord, skal på babord; dypgangsmerkene på baug og hekk, thrusterringene over begge
+tunnelene, de to V-ene og bulbmerket lagt inn; baugens skala flyttet opp over thrusterrista.
+
+Runde 3 (mot 8cdb9214 og 82e91969): akterkranens søyle som avsmalnende kasse, ankervinsjens presenning lavere og lenger akter,
+skansekledningen 0,35 m langs arbeidsdekket under det blå rekkverket.
+
+Runde 4 (mot 4929aa51, 5e85f70b, 47d6785c, 82e91969, nye bilder 30.10.2026): **arbeidsdekket på styrbord ligger bare mellom
+husfronten (20,35 m) og bakken (25,8 m)**; akter for huset er styrbord side lukket opp til øvre dekk som babord, med husets vinduer i
+den (anslaget 7,3–25,8 m var feil). **Den forreste kranen står på styrbord** (foten ved bakkens akterkant, bommen akterover over
+arbeidsdekket og hopperen, jiben foldet ned bak vakuumtankene), ikke babord. Pipa er en trapes (2,9 m ved foten, 1,45 m under den
+blå toppen) med **to** bare stålrør med svanehals. Trinnene ned sida på styrbord ligger ved 24,0–24,4 m (mellom lufteåpningene),
+ikke ved 8 m. Lagt til: rørrekkverk langs bingeveggens topp, plattform med rekkverk på vakuumtankene, trapp fra arbeidsdekket opp
+på kassen ved hopperen, dør og to vinduer i bakkens akterskott på styrbord, den gule kisten på arbeidsdekket.
+
+Runde 5 (mot 95c900de): radarmastas to tårn som platetårn med rette sider og avfasede hjørner, ikke runde.
+
+Igjen etter runde 5, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
+ved 8 m, åpningen i baksida), bredden på hus og plattform, dekksutstyrets nøyaktige plasser på arbeidsdekket. Det som krever F2:
+plater, sveis, rust, slitasje, glansen i malingen.
+
 ## 8. Det som mangler før 100 % klar
 
-1. **Mål fra registeret:** lengde (38,55 eller 34,32 m), dypgang og dybde. Fiskeridirektoratets merkeregister eller
-   Skipsregisteret på SF-100-SU / LECW / IMO 9675092. Jonas kan slå det opp, eller nettverket i økta må åpnes for kildene.
+1. ~~Mål fra registeret~~ **Løst 30.10.2026** med byggerapporten (kap. 1). Bare dypgangen mangler; den anslås fra bildene.
 2. **Bilder som mangler:** hekken rett bakfra; akterdekket ovenfra eller fra styrbord (vinsjer, binge, nothaler, snurpeblokker);
    baugen rett forfra; bakken ovenfra (ankervinsj); styrehusfronten rett forfra. Helst ett bilde i dokk (undervannsskroget). Har
    Jonas generalarrangementet (GA) for SC38, er det bedre enn alle bildene: det låser alle mål på en gang. Tegningen legges ikke i
@@ -379,4 +491,10 @@ Når 1–5 er på plass, er grunnlaget klart, og pilotøkta kan starte.
 
 ## Endringslogg
 
+- 30.10.2026: kritikksløyfen runde 4: arbeidsdekket bare 20,35–25,8 m, forreste kran til styrbord, pipa med to rør.
+- 30.10.2026: kritikksløyfen (kap. 7.1), runde 1 og 2: akterskipet, dekksutstyret, merkene.
+- 30.10.2026: styrbords arbeidsdekk (båten er ikke symmetrisk), den forreste kranen snudd, alle åpninger som ekte hull (kap. 4.0).
+- 30.10.2026: kap. 4.0, alt målt på sidebilde 3 (spring, stevn, stripe, sida, styrehuset med plattform og skrått tak, hus, åpninger,
+  pipe, master, kraner); modellen bygd og lagt over bildet.
+- 30.10.2026: byggerapporten (hoveddata, maskineri, dekksutstyr, elektronikk) lagt inn i kap. 1.
 - 30.10.2026: første versjon (fakta, avgjørelser, sonene fra fire bilder, kravlista, lanternene, mangler).
