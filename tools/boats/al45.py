@@ -285,7 +285,7 @@ def deck_gear(fine=True):
     abox(A, 28.8, 30.6, -0.9, 0.9, 17.6, 17.72, w)
     acyl(A, (29.6, 0, 17.72), (29.6, 0, 21.0), 0.1, lambda z: w, seg=10, r1=0.07)
     # the fishing lights on the pole under the masthead light: red over white, all round (COLREG Rule 26(c))
-    for z, m in ((19.6, C['lampR']), (18.6, C['lampW'])):
+    for z, m in ((19.9, C['lampR']), (17.9, C['lampW'])):   # 2 m apart (vedlegg I 2(i)), the white 4 m over the sidelights (2(j))
         acyl(A, (29.6, 0, z), (29.6, 0, z + 0.22), 0.11, lambda q, m=m: m, seg=10); acyl(A, (29.6, 0, z + 0.22), (29.6, 0, z + 0.26), 0.13, lambda q: C['dark'], seg=10)
     if fine:
         rl = [(28.8, -0.9), (30.6, -0.9), (30.6, 0.9), (28.8, 0.9), (28.8, -0.9)]

@@ -1206,17 +1206,19 @@ function lanterns(G, V, st){
   const stern = typed ? T('stern')[0] || null : W.length > 1 ? W.slice(1).sort((a, b) => b[0][2] - a[0][2])[0] : null;
   const extra = typed ? T('masthead2') : W.filter(l => l !== mast && l !== stern), sides = typed ? T('port').concat(T('stbd')) : L.filter(l => isR(l[1]) || isG(l[1]));
   const len = (V && V.len) || 8, mt = mast ? mast[0] : [0, 3.4, 0], up = (p, dy) => [p[0], p[1] + dy, p[2]], push = (p, c, k) => out.push([p, LANT_C[c] || c, k]);
-  const moving = (st.v || 0) > 0.5, sideStern = () => { for (const s of sides) push(s[0], s[1], 'side'); if (stern) push(stern[0], 'w', 'stern'); };
+  // lights one over the other at least 2 m apart from 20 m, 1 m under (FOR-1975-12-01-5 vedlegg I 2(i), read on Lovdata 30.10.2026;
+  // it was 1 m on every boat)
+  const sp = len >= 20 ? 2.0 : 1.0, moving = (st.v || 0) > 0.5, sideStern = () => { for (const s of sides) push(s[0], s[1], 'side'); if (stern) push(stern[0], 'w', 'stern'); };
   if (st.aground || (st.anch && !st.fishing)){
     push(mt, 'w', 'anchor'); if (len >= 50 && stern) push(stern[0], 'w', 'anchor2');
-    if (st.aground && len >= 12){ push(up(mt, 1.0), 'r', 'nuc'); push(up(mt, 2.0), 'r', 'nuc'); }
+    if (st.aground && len >= 12){ push(up(mt, sp), 'r', 'nuc'); push(up(mt, 2 * sp), 'r', 'nuc'); }
     return out; }
   if (st.fishing){
-    push(mt, 'w', 'fishW'); push(up(mt, 1.0), st.trawl ? 'g' : 'r', st.trawl ? 'trawlG' : 'fishR');
-    if (st.trawl && len >= 50) push(extra.length ? extra[0][0] : up(mt, 2.0), 'w', 'masthead2');
+    push(mt, 'w', 'fishW'); push(up(mt, sp), st.trawl ? 'g' : 'r', st.trawl ? 'trawlG' : 'fishR');
+    if (st.trawl && len >= 50) push(extra.length && extra[0][0][1] > mt[1] + sp ? extra[0][0] : up(mt, 2 * sp), 'w', 'masthead2');
     if (moving) sideStern();
     return out; }
-  if (st.nuc){ push(up(mt, 1.0), 'r', 'nuc'); push(up(mt, 2.0), 'r', 'nuc'); if (moving) sideStern(); return out; }
+  if (st.nuc){ push(up(mt, sp), 'r', 'nuc'); push(up(mt, 2 * sp), 'r', 'nuc'); if (moving) sideStern(); return out; }
   push(mt, 'w', len < 12 ? 'allround' : 'masthead');
   if (len < 7 && (V && V.vmax || 99) <= 7) return out;
   sideStern();
