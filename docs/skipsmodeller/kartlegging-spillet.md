@@ -252,6 +252,11 @@ Tallene er lest ut av GLB-filene. `lod0` er nærmodellen og `lod1` avstandsmodel
 - **Fargene er punktfarger.** Det finnes ingen UV-er, teksturer, normal maps eller roughness-kart.
   Alfakanalen er glans, skyggen er bakt med Cycles inn i punktfargen, og slitasjen er en mørking per punkt
   (`TINT`). Malingssonene 1–4 (skrog, stripe, overbygg, dekk) ligger i `_PAINT`, så Malerverkstedet kan male om.
+- **Pilotbåten `ringnot38.py` (30.10.2026) går lenger** enn de andre skriptene, og er malen for båtene etter den
+  (`docs/skipsmodeller/sulebas-bygging.md`): skroget er én glatt flate der bulben er slått sammen med forskipet, sida er
+  usymmetrisk (arbeidsdekk på styrbord), alle åpninger i skrog og rekke er ekte hull med lysning og rom bak (boolsk utskjæring),
+  målene er lest av et sidebilde i fast skala og modellen lagt over bildet, og eksporten gir `lodm` (Decimate). Fortsatt bare
+  punktfarger.
 - **Festepunktene** (`anchors` i GLB-ens `extras`) gir spillet øye, ratt, mannskapsplasser, dekk,
   lanterner med type, dører, navnefelt, haleren, arbeidsplassen og utstyrsplassene i `kit`.
 - **I spillet** henter `glbModel` og `buildVesselModel` modellen første gang typen vises. NPC-båtene i samme
@@ -485,6 +490,7 @@ grensen i `vessel3d.py` etter det.
 | Kyst15 | M4 (avrundede hekkhjørner i skrogets farger, fender, klyss, redningsleider), M5 (seil av duk med bue, sømmer, kantbånd og forsterkninger), M15 (felles propell, anoder, baugthruster), M20 (kjølen som dødved, propellåpning) | `kyst15.py` |
 | Havsjark35 | M5 (seil av duk) | `havsjark35.py` |
 | Plastsjarken | M10: bak sideglasset sto en hel hvit vegg, så vinduene så ut som matte plater; nå er veggen bare der den er hel, med karmer, og det mørke rommet synes gjennom glasset. Taket har fått bue | `plast31.py` |
+| Pilotbåten (F4) | Kystnotbåten på 38,55 m etter byggerapport og 20 bilder: skroget som én flate med bulben, ekte hull, usymmetrisk side, alle beslag fra `fittings.py`, `lodm`; 22 runder i kritikksløyfen; i spillet som låst type | `ringnot38.py`, `sulebas-bygging.md` |
 | Teina (D1) | 1,55 × 1,45 × 1,07 m som i dataene. Daviten er hevet til 2,8 m så den høye teina går klar av rekka | `tools/gear/teine.py` |
 | Snøkrabbeteina (TEI-01, ny) | Konisk teine 1,3 m nederst, 0,7 m øverst og 0,62 m høy, med inngang ovenfra og agnboks; stables tolv i høyden med 0,16 m mellom | `teine.py` (`kon`, `kontopp`, `konlag`, `konlag11`) |
 | Juksamaskinene (D2) | Alle vises, opptil `jukseMax`: styrbord rekke først, så babord, der maskinen er snudd utover | `view3d/13-instruments.js` |

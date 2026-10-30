@@ -61,6 +61,13 @@ Les denne først, så bare dokumentet for systemet du skal endre, og `docs/BACKL
 | `docs/forslag.md` | Forslagslista fra 13.10.2026 (dybde og sjel). |
 | `docs/slagplan.md` | Slagplanen fra 05.10.2026 med status. |
 | `docs/batplan.md` | Planen for båtene og stigen. |
+| `docs/planer/grafikk-batmodeller.md` | Grafikk: båtmodellene (plan 30.10.2026, vedtatt): F0 målingen på Pad 3, F1 WebGL 2 og tre detaljnivåer med taket på 300 000 trekanter, F2 materialer, F3 skygger, F4 pilotbåten (bygd), F5 resten av flåten, F6 utstyret. |
+| `docs/skipsmodeller/planliste-fiskefartoy.md` | Kravlista for en Blender-modell av et fiskefartøy: alle punktene per sone (skrog, dekk, overbygg, master, lys, sikkerhet, fangst, kraner, identitet, materialer, slitasje), med prioritet. |
+| `docs/skipsmodeller/referanseanalyse-runde-2.md` | Bildeanalysene av ti referansebåter og det de la til i planlisten. |
+| `docs/skipsmodeller/eksempel-sulebas-sf-100-su.md` | Eksempel på et utfylt prosjektark etter planlisten. |
+| `docs/skipsmodeller/kartlegging-spillet.md` | Kartleggingen av det som finnes i spillet (arter, redskap, utstyrsmodeller, båtene, feil), arbeidslista og det som er utført 30.10.2026. |
+| `docs/skipsmodeller/sulebas-pilot-grunnlag.md` | Pilotbåtens byggegrunnlag: fakta fra byggerapporten, reglene, avgjørelsene B1–B5, alle målene fra bildene (kap. 4.0), kravlista mot planlisten, lanternene, kritikksløyfens 22 runder (kap. 7.1). |
+| `docs/skipsmodeller/sulebas-bygging.md` | **Slik bygges en båt:** hele byggingen av pilotbåten fra bilde til spill, kildene og hva de gir, målingen, skroget som én flate, hullene, kritikksløyfen, eksporten, feilene og reglene de ga, hva neste båt trenger, og hva som ville gjort resultatet bedre. Les før en ny båtmodell. |
 | `docs/mannskap-plan.md` | Planen for mannskapet. |
 | `docs/plan-blakveite.md`, `docs/blakveite.md` | Blåkveita: planen og kunnskapen. |
 | `docs/lansering.md` | Det som gjenstår før lansering, og serveren. |
