@@ -432,7 +432,7 @@ def hull_patch(A, outline, sg, m, off=0.004, rings=3):
     for k in range(len(outline)):
         a, b = outline[k], outline[(k + 1) % len(outline)]; m_ = max(1, int(math.hypot(b[0] - a[0], b[1] - a[1]) / 0.08))
         dense += [(a[0] + (b[0] - a[0]) * t / m_, a[1] + (b[1] - a[1]) * t / m_) for t in range(m_)]
-    outline = dense; n = len(outline); rings = max(rings, 4)
+    outline = dense; n = len(outline); rings = max(rings, 3)
     for k in range(n):
         a, b = outline[k], outline[(k + 1) % n]
         for i in range(rings):
@@ -498,7 +498,7 @@ def hole_outline(h):
     o = rrect((x0 + x1) / 2, (z0 + z1) / 2, x1 - x0, z1 - z0, max(0.005, min(r, (x1 - x0) / 2 - 0.002, (z1 - z0) / 2 - 0.002)), n=5)
     dense = []
     for k in range(len(o)):
-        a, b = o[k], o[(k + 1) % len(o)]; m_ = max(1, int(math.hypot(b[0] - a[0], b[1] - a[1]) / 0.1))
+        a, b = o[k], o[(k + 1) % len(o)]; m_ = max(1, int(math.hypot(b[0] - a[0], b[1] - a[1]) / 0.14))
         dense += [(a[0] + (b[0] - a[0]) * t / m_, a[1] + (b[1] - a[1]) * t / m_) for t in range(m_)]
     return dense
 
@@ -752,8 +752,9 @@ def wall_window(A, G, x0, x1, z0, z1, y, sg, r=0.08, frame=0.05):
     for k in range(len(o)):
         a, b, c, d = o[k], o[(k + 1) % len(o)], i[(k + 1) % len(i)], i[k]
         A.poly([(a[0], y + sg * 0.03, a[1]), (b[0], y + sg * 0.03, b[1]), (c[0], y + sg * 0.03, c[1]), (d[0], y + sg * 0.03, d[1])], C['white'], (0, sg, 0))
-        A.poly([(d[0], y + sg * 0.03, d[1]), (c[0], y + sg * 0.03, c[1]), (c[0], y - sg * 0.02, c[1]), (d[0], y - sg * 0.02, d[1])], C['inner'], (0, 0, 0))
-    G.poly([(p[0], y - sg * 0.02, p[1]) for p in i], C['glass'], (0, sg, 0))
+        A.poly([(d[0], y + sg * 0.03, d[1]), (c[0], y + sg * 0.03, c[1]), (c[0], y + sg * 0.012, c[1]), (d[0], y + sg * 0.012, d[1])], C['inner'], (0, 0, 0))
+    A.poly([(p[0], y + sg * 0.011, p[1]) for p in i][::sg], C['dark'], (0, sg, 0))
+    G.poly([(p[0], y + sg * 0.012, p[1]) for p in i][::sg], C['glass'], (0, sg, 0))
 
 def superstructure(fine=True):
     A = Acc('house'); G = Acc('glass'); w = C['white']
@@ -777,6 +778,8 @@ def superstructure(fine=True):
         door_x(A, HX0, 1.6, zd, face=-1)
     # ---- deck B: the platform round the wheelhouse, its edge plate (the name board's place on the front), its rail ----
     pp, plw = wh_plan(10.28, 21.22, 4.45, n=10, a=2.1, e=3.2)
+    # the cut-out round the net chute on the starboard side (5f57d449): the edge steps inboard to y -3.0 between 10.35 and 13.9 m
+    pp = [pp[0]] + [(10.35, -4.45), (10.35, -3.0), (13.9, -3.0), (13.9, -4.45)] + pp[1:]; plw = [plw[0]] + [0.0] * 4 + plw[1:]
     pn = plan_normals(pp)
     prism(A, offset_plan(pp, pn, lambda i: -0.05), ZB2 - 0.2, ZB2, C['deck'])
     for i in range(len(pp)):
@@ -789,6 +792,20 @@ def superstructure(fine=True):
         # the rail on the platform's edge, open at its aft end over the ladders (the posts every 0.9 m, a top and a middle rail)
         ri = [(p[0] - n[0] * 0.03, p[1] - n[1] * 0.03, ZB2 + 0.30) for p, n in zip(pp, pn)]
         rail(A, ri, h=12.05 - (ZB2 + 0.30), every=0.9)
+    # ---- the starboard walkway aft of the wheelhouse (7b36cbe5, 3bd16b40): deck B carried aft to 8.3 m over the upper deck, on two
+    #      stanchions, with its edge plate and rail; the lower balcony on the house's top under it ----
+    # (a U round the chute's cut-out: the strip along the side, the strip inboard, the cross strip aft)
+    WK = [(8.3, -4.35), (10.35, -4.35), (10.35, -0.9), (8.3, -0.9)]
+    prism(A, [(x + (0.05 if x < 9 else -0.05), y + (0.05 if y < -2 else -0.05)) for x, y in WK], ZB2 - 0.2, ZB2, C['deck'])
+    for i in range(len(WK)):
+        a, b = WK[i], WK[(i + 1) % len(WK)]
+        if a[0] == 10.35 and b[0] == 10.35: continue
+        A.poly([(a[0], a[1], ZB2 - 0.32), (b[0], b[1], ZB2 - 0.32), (b[0], b[1], ZB2 + 0.30), (a[0], a[1], ZB2 + 0.30)], w, (b[1] - a[1], -(b[0] - a[0]), 0))
+    for yy in (-4.1, -1.15): acyl(A, (8.55, yy, z_dk(8.55) + 0.1), (8.55, yy, ZB2 - 0.2), 0.06, lambda z: w, seg=8)
+    if fine:
+        rail(A, [(10.3, -0.93, ZB2 + 0.30), (8.33, -0.93, ZB2 + 0.30), (8.33, -4.32, ZB2 + 0.30), (10.3, -4.32, ZB2 + 0.30)], h=12.05 - (ZB2 + 0.30), every=0.9)
+        abox(A, 8.6, HX0 + 0.05, -3.3, -1.3, ZB2 - 0.95, ZB2 - 0.85, w)
+        rail(A, [(HX0, -1.33, ZB2 - 0.85), (8.63, -1.33, ZB2 - 0.85), (8.63, -3.27, ZB2 - 0.85), (HX0, -3.27, ZB2 - 0.85)], h=0.95, every=0.8, r=0.02)
     # ---- the wheelhouse ----
     oc, lw = wh_plan(WX0, WX1, WY)
     nrm_at = plan_normals(oc)
@@ -814,6 +831,10 @@ def superstructure(fine=True):
             for xp in W_POSTS:
                 t = (xp - a[0]) / (b[0] - a[0])
                 if 0 < t < 1: ts.append(t)
+        if not side:
+            # the aft wall and the front's facets: posts between the windows about every 1.3 m (Jonas 30.10.2026)
+            Lg = math.hypot(b[0] - a[0], b[1] - a[1]); k = int(Lg / 1.3 + 0.5)
+            ts += [j / k for j in range(1, k)]
         ts = sorted(ts) + [1.0]
         door_here = side and a[1] > 0
         for t0, t1 in zip(ts, ts[1:]):
@@ -823,7 +844,7 @@ def superstructure(fine=True):
                 A.poly([s0, s1, h1, h0], w, nr)
                 continue
             G.poly([s0, s1, h1, h0], C['glass'], nr)
-        for t in ts[:-1]:
+        for t in (ts[:-1] if fine else ts[:1]):
             s0, h0 = at(t); beam(A, s0, h0, 0.11, 0.10, w)
         beam(A, lean(a, WS), lean(b, WS), 0.12, 0.10, w); beam(A, lean(a, WH), lean(b, WH), 0.12, 0.10, w)
     if fine:
@@ -833,7 +854,7 @@ def superstructure(fine=True):
         abox(A, x0 + 0.18, x1 - 0.18, y + 0.05, y + 0.055, 12.55, 12.95, C['glass'])
         for zz in (11.6, 12.1, 12.6): abox(A, x0 + 0.06, x0 + 0.13, y + 0.05, y + 0.09, zz - 0.03, zz + 0.03, C['steel'])
     io = [(x + n[0] * -0.25, y + n[1] * -0.25) for (x, y), n in zip(oc, nrm_at)]
-    lining(A, oc, io, ZB2, WS, WH, WF, lambda p, z, i: lean(p, z), C['dark'], lambda i: True)
+    if fine: lining(A, oc, io, ZB2, WS, WH, WF, lambda p, z, i: lean(p, z), C['dark'], lambda i: True)
     # ---- the roof: the soffit out to the edge, the blue band, the slope up inwards, the flat top, its rail ----
     head = [lean(p, WH)[:2] for p in oc]
     ro = offset_plan(head, nrm_at, lambda i: 0.64 if oc[i][0] > WX0 + 1e-6 and lw[i] > 0.5 else (0.28 if oc[i][0] <= WX0 + 1e-6 else 0.30 + 0.34 * lw[i]))
@@ -913,11 +934,12 @@ def aring_loft(A, rings, m, cap0=False, cap1=True):
 
 def ell(cx, cy, z, rx, ry, n=16): return [(cx + rx * math.cos(2 * math.pi * k / n), cy + ry * math.sin(2 * math.pi * k / n), z) for k in range(n)]
 
-def dome(A, c, r, h, m, base=None):
+def dome(A, c, r, h, m, base=None, fine=True):
     """a radome: a short cylinder of height h under a hemisphere of radius r, on its base plate"""
-    c = V(c); rings = [ell(c.x, c.y, c.z, r, r, 20), ell(c.x, c.y, c.z + h, r, r, 20)]
-    for k in range(1, 7):
-        a = math.pi / 2 * k / 7; rings.append(ell(c.x, c.y, c.z + h + r * math.sin(a), r * math.cos(a), r * math.cos(a), 20))
+    n = 20 if fine else 10; kk = 7 if fine else 4
+    c = V(c); rings = [ell(c.x, c.y, c.z, r, r, n), ell(c.x, c.y, c.z + h, r, r, n)]
+    for k in range(1, kk):
+        a = math.pi / 2 * k / kk; rings.append(ell(c.x, c.y, c.z + h + r * math.sin(a), r * math.cos(a), r * math.cos(a), n))
     aring_loft(A, rings, m, cap0=True)
     acyl(A, c + V((0, 0, -0.04)), c, r * 0.75, lambda z: base or C['steel'], seg=16)
 
@@ -964,7 +986,7 @@ def masts(fine=True):
     platform(A, 11.90, 15.85, 1.30, 17.20, T, fine=fine)
     aring_loft(A, [oct_(13.85, 0, 17.2, 0.52, 0.48, 0.08), oct_(13.9, 0, 19.1, 0.32, 0.32, 0.06)], W)
     abox(A, 12.88, 14.47, -0.75, 0.75, 19.10, 19.30, T)
-    dome(A, (14.30, 0, 19.30), 0.66, 0.55, W)
+    dome(A, (14.30, 0, 19.30), 0.66, 0.55, W, fine=fine)
     for x in (14.05, 12.33):
         for yy in (-0.25, 0.25): acyl(A, (x, yy, 17.2), (x, yy, 22.12), 0.05, lambda z: W, seg=8)
     for z in (21.2, 21.7, 22.1):
@@ -975,7 +997,7 @@ def masts(fine=True):
     for x in (14.05, 12.5): lamp(A, (x, 0, 22.12), C['lampR'])
     lamp(A, (13.5, 0, 22.0), C['lampW'], r=0.07)
     acyl(A, (11.48, 0, ZR), (11.48, 0, 19.8), 0.10, lambda z: W, seg=10)
-    dome(A, (11.50, 0, 19.80), 0.76, 0.55, W)
+    dome(A, (11.50, 0, 19.80), 0.76, 0.55, W, fine=fine)
     acyl(A, (12.13, 0.4, 17.2), (12.13, 0.4, 18.8), 0.04, lambda z: W, seg=6); dome(A, (12.13, 0.4, 18.8), 0.16, 0.08, W)
     # the radars: the long scanner low on the compass deck, the short one on the upper platform
     abox(A, 15.75, 16.65, -0.35, 0.35, ZR, 15.75, W); abox(A, 15.9, 16.5, -0.25, 0.25, 15.75, 15.92, C['dark'])
@@ -1042,13 +1064,14 @@ def deck_gear(fine=True):
     beam(A, (11.65, yc, 17.0), (5.2, yc, 14.45), 0.30, 0.26, W)                   # the jib, folded aft under the boom
     acyl(A, (9.9, yc - 0.3, 16.95), (7.75, yc - 0.3, 17.2), 0.08, lambda z: C['steel'], seg=8)   # the jib's cylinder
     acyl(A, (7.90, yc - 0.42, 10.8), (7.90, yc - 0.42, 13.6), 0.11, lambda z: C['steel'], seg=8, r1=0.09)   # the lift cylinder
-    beam(A, (5.2, yc, 14.35), (9.6, yc, 14.35), 0.24, 0.30, W)                    # the block's hanger arm
+    beam(A, (5.2, yc, 14.35), (10.3, -3.95, 14.9), 0.24, 0.30, W)                  # the swing arm from the jib's tip to over the chute
     if fine:
         # the power block: two spoked sheaves 1.6 m across either side of the hydraulic motor, a rubber-lined groove between
-        for yy, R in ((yc - 0.55, 0.80), (yc + 0.55, 0.72)): spoked_wheel(A, (9.3, yy, 14.05), (0, 1, 0), R, 0.16, W)
-        acyl(A, (9.3, yc - 0.42, 14.05), (9.3, yc + 0.42, 14.05), 0.34, lambda z: C['rubber'], seg=18)
-        acyl(A, (9.3, yc + 0.68, 14.05), (9.3, yc + 0.95, 14.05), 0.18, lambda z: C['dark'], seg=12)
-        abox(A, 9.05, 9.55, yc - 0.12, yc + 0.12, 14.05, 14.5, W)
+        bc = -3.95; bx = 10.3
+        for yy, R in ((bc - 0.55, 0.80), (bc + 0.55, 0.72)): spoked_wheel(A, (bx, yy, 14.5), (0, 1, 0), R, 0.16, W)
+        acyl(A, (bx, bc - 0.42, 14.5), (bx, bc + 0.42, 14.5), 0.34, lambda z: C['rubber'], seg=18)
+        acyl(A, (bx, bc + 0.68, 14.5), (bx, bc + 0.95, 14.5), 0.18, lambda z: C['dark'], seg=12)
+        abox(A, bx - 0.25, bx + 0.25, bc - 0.12, bc + 0.12, 14.5, 14.95, W)
         # the tarpaulin-covered box on the deck under the boom, the net chute's mouth just aft of the wheelhouse
         abox(A, 8.4, 10.2, 1.3, 2.9, zd(9.3), 12.17, C['tarp'])
     # -- the rescue boat (4.25 m) on its cradle aft at port, its davit, the tarpaulin-covered box by it, the rollers on the bin's wall --
@@ -1140,13 +1163,17 @@ def aft_deck(fine=True):
         y = hbz(0.15, z_bw(0.15)) - 0.05
         acyl(A, (0.15, -y, z_bw(0.15) + 0.03), (0.15, y, z_bw(0.15) + 0.03), 0.03, lambda z: W, seg=8, cap=False)
     # ---- the net chute: a wide white cone standing on the deck aft of the house at port, leaning aft, its mouth up and forward ----
-    base = V((10.9, 0.3, z_dk(10.9))); tip = V((10.1, 0.3, 13.1)); ax = (tip - base).normalized(); s, u, _ = frame_of(ax)
-    rings = []
-    for t, r in ((0.0, 0.5), (0.25, 0.52), (0.55, 0.6), (0.8, 0.75), (1.0, 0.95)):
-        c = base + (tip - base) * t; rings.append([c + (s * math.cos(2 * math.pi * k / 20) + u * math.sin(2 * math.pi * k / 20)) * r for k in range(20)])
-    aring_loft(A, rings, W, cap0=True, cap1=False)
-    c = tip; A.poly([c + (s * math.cos(2 * math.pi * k / 20) + u * math.sin(2 * math.pi * k / 20)) * 0.95 for k in range(20)], C['dark'], ax)
-    aring_loft(A, [rings[-1], [p - ax * 0.4 + (p - c).normalized() * -0.08 for p in rings[-1]]], C['dark'], cap0=False, cap1=False)
+    # (7b36cbe5, 3bd16b40, c6db804c, Jonas 30.10.2026: the chute stands at the wheelhouse's aft starboard corner, its mouth aft and up
+    # at the windows' level, the tube leaning so its open foot points forward and down onto the upper deck; the net is hauled over the
+    # power block above the mouth, falls through the chute and is laid in the net bin aft)
+    foot = V((12.9, -3.95, 9.8)); tip = V((10.3, -3.95, 12.9)); ax = (tip - foot).normalized(); s, u, _ = frame_of(ax)
+    ts_ = (0.0, 0.2, 0.5, 0.75, 0.9, 1.0); rings = []
+    for t, r in zip(ts_, (0.5, 0.5, 0.56, 0.7, 0.86, 0.98)):
+        c = foot + (tip - foot) * t; rings.append([c + (s * math.cos(2 * math.pi * k / 20) + u * math.sin(2 * math.pi * k / 20)) * r for k in range(20)])
+    aring_loft(A, rings, W, cap0=False, cap1=False)
+    inner = [[p + (c_ - p).normalized() * 0.06 for p in r] for r, c_ in zip(rings, [foot + (tip - foot) * t for t in ts_])]
+    aring_loft(A, inner[::-1], C['dark'], cap0=False, cap1=False)
+    aring_loft(A, [rings[-1], inner[-1]], W, cap0=False, cap1=False); aring_loft(A, [inner[0], rings[0]], W, cap0=False, cap1=False)
     # ---- the fish pump's vacuum tanks: three black uprights at the house's front to starboard, their manifold ----
     for yy in (-1.55, -2.45, -3.35):
         acyl(A, (20.95, yy, zs(20.95)), (20.95, yy, 10.85), 0.42, lambda z: C['black'], seg=18)
@@ -1191,6 +1218,48 @@ def build(fine=True):
     return [s for s in solids if s], [x for x in g if x]
 
 
+def name_strips(G):
+    """where the game writes the player's name and marks: the registration on both bows on the forecastle's white side under the rail
+    (the photographs: 30.5-34.3 m, 8.3-9.0 m), the name across the transom, and on the net bin's wall both sides"""
+    out = []
+    for sg, xs in ((1, [34.3 - 3.8 * k / 12 for k in range(13)]), (-1, [30.5 + 3.8 * k / 12 for k in range(13)])):
+        out.append([[G(x, sg * (hbz(x, 8.3) + 0.03), 8.3) for x in xs], [G(x, sg * (hbz(x, 9.0) + 0.03), 9.0) for x in xs]])
+    ys = [2.4 - 4.8 * k / 12 for k in range(13)]
+    out.append([[G(XA - 0.03, y, 8.1) for y in ys], [G(XA - 0.03, y, 9.0) for y in ys]])
+    for sg, xs in ((1, [5.9 - 3.4 * k / 12 for k in range(13)]), (-1, [2.5 + 3.4 * k / 12 for k in range(13)])):
+        out.append([[G(x, sg * (hbz(x, 8.3) + 0.03), 8.3) for x in xs], [G(x, sg * (hbz(x, 9.1) + 0.03), 9.1) for x in xs]])
+    return out
+
+def bower(G):
+    """the anchor in its pocket on the starboard bow (the slip and the aerial photographs), its hawse pipe up to the windlass under
+    the tarpaulin, the spare to port"""
+    hw = lambda sg: {'fair': G(31.5, sg * (hbz(31.5, 7.7) + 0.03), 7.7), 'pipe': G(33.0, sg * 1.3, z_dk(33.0) + 0.17)}
+    return dict(hw(-1), kind='hall', kg=900, gypsy=G(33.3, -1.6, z_dk(33.3) + 0.72), side=1, deck=False, spare=hw(1))
+
+def anchors():
+    G = lambda x, y, z: [round(v, 3) for v in to_game((x, y, z))]
+    DK = z_sh(23.0); UD = z_dk(16.0) + 0.12
+    return {'bower': bower(G), 'eye': G(17.0, 1.0, ZB2 + 1.65), 'skipperAt': G(17.0, 1.0, ZB2), 'hp': -0.10, 'fov': 58,
+            # the crew on the working deck by the hopper and the vacuum tanks, one on the upper deck aft by the net chute
+            'crewSpots': [G(23.0, -3.5, DK) + [1.57], G(21.5, -2.0, DK) + [0.0], G(24.5, -1.5, DK) + [3.14], G(9.5, 0.2, z_dk(9.5) + 0.12) + [3.14]],
+            # the lights (kap. 6 of the groundwork, FOR-1975-12-01-5): the one masthead light on the foremast's top, the sidelights in
+            # their screens on the wheelhouse roof's slope, the stern light on the A-frame's apex, the floodlights as work lights
+            'lights': [[G(29.97, 0, 17.69), [1, 0.95, 0.85], 'masthead'], [G(14.5, WY + 0.26, 13.9), [1, 0.12, 0.1], 'port'],
+                       [G(14.5, -WY - 0.26, 13.9), [0.1, 1, 0.35], 'stbd'], [G(0.35, 1.5, z_bw(0.3) + 1.67), [1, 0.95, 0.85], 'stern'],
+                       [G(31.05, 0.0, 14.45), [1, 0.95, 0.85], 'work'], [G(19.45, 0.9, 15.15), [1, 0.95, 0.85], 'work'], [G(19.45, -0.9, 15.15), [1, 0.95, 0.85], 'work']],
+            # the doors: the wheelhouse's port door onto deck B, the house's doors on the upper deck, the forecastle's door on the working deck
+            'doors': [{'at': G((W_DOOR[0] + W_DOOR[1]) / 2, WY + 0.03, ZB2), 'w': 0.6, 'h': 2.0, 'in': G((W_DOOR[0] + W_DOOR[1]) / 2, WY - 1.0, ZB2), 'to': 'bridge', 'hinge': 'stbd'},
+                      {'at': G(13.7, HY + 0.03, UD), 'w': 0.8, 'h': 2.0, 'in': G(13.7, HY - 1.0, UD), 'to': 'mess', 'hinge': 'port'},
+                      {'at': G(HX0 - 0.03, 1.6, UD), 'w': 0.8, 'h': 2.07, 'in': G(HX0 + 1.0, 1.6, UD), 'to': 'cabin', 'hinge': 'port'},
+                      {'at': G(X_FC - 0.03, -2.3, DK), 'w': 0.8, 'h': 2.07, 'in': G(X_FC + 1.0, -2.3, DK), 'to': 'mess', 'hinge': 'stbd'}],
+            'names': name_strips(G),
+            # the working deck to starboard between the house and the forecastle: the net comes aboard over the power block aft and
+            # is stacked in the net bin; the fish are pumped over the starboard side into the hopper
+            'deck': {'y': round(DK - WL, 3), 'z': round(-(23.0 - LOA / 2), 3)}, 'gw': round(DK + 0.35 - WL, 3),
+            'stern': round(LOA / 2 - XA, 3), 'bow': round(-(XF - LOA / 2), 3), 'side': HB, 'beam': BM, 'pl': 20.0, 'rl': 4.2, 'open': True, 'hand': False,
+            'pole': G(XA + 0.4, 0, z_bw(0.4) + 0.2), 'hauler': G(10.3, -3.95, 14.5), 'filler': G(23.5, -4.4, 8.3)}
+
+
 def to_game(p): return (-p[1], p[2] - WL, -(p[0] - LOA / 2))
 def to_game_n(n): return (-n[1], n[2], -n[0])
 
@@ -1204,6 +1273,11 @@ def main():
     join(solids, 'BOAT0')
     if glass: join(glass, 'GLASS0')
     if 'fast' not in sys.argv: beauty(OUT, 'r38', WL, SHOTS)
+    if 'export' in sys.argv:
+        ex = {'frame': 'kystfiske: x starboard, y up from the waterline, z aft; metres', 'type': 'ringnot38', 'name': 'Purse seiner and fly-shooter 38.55 m',
+              'len': LOA, 'beam': BM, 'draft': WL, 'anchors': anchors()}
+        export_boat(build, to_game, to_game_n, OUT, 'ringnot38.glb', os.path.join(ROOT, 'src', 'data', 'boat-ringnot38.b64'), ex,
+                    side=(os.path.join(ROOT, 'src', 'data', 'boat-ringnot38-side.b64'), LOA / 2, 9.0, 44.0), dry='dry' in sys.argv)
 
 
 if __name__ == '__main__':

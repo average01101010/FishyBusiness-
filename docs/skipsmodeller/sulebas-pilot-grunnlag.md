@@ -472,7 +472,19 @@ på kassen ved hopperen, dør og to vinduer i bakkens akterskott på styrbord, d
 
 Runde 5 (mot 95c900de): radarmastas to tårn som platetårn med rette sider og avfasede hjørner, ikke runde.
 
-Igjen etter runde 5, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
+Runde 6–7: akterkranen målt på sidebildet (bommen til knekken ved 11,4 m, jiben foldet akterover under den), nottrakta,
+presenningskassen, ankervinsjens runde presenning, tausnella, den runde luka, varpevinsjene, A-ramma på hekken; fjernversjonen
+trimmet under 12 000 punkter.
+
+Runde 8 (Jonas' meldinger 30.10.2026, bildene 7b36cbe5, 3bd16b40, c6db804c, 5f57d449, a5d2b0af): **nottrakta står helt på
+styrbord side av styrehuset**, utenfor husveggen på øvre dekk (fot 12,9 m, y −3,95), med munningen akterover i vindushøyde over
+plattformens rekkverk (topp 12,9 m). **Kraftblokka henger rett over munningen** (10,3 m, 14,5 m) på svingarmen fra jibens tupp:
+nota hales over blokka, faller gjennom trakta og legges i notbingen akterut. Plattformen (dekk B) er skåret ut rundt trakta
+(kanten inn til y −3,0 mellom 10,35 og 13,9 m) og ført akterover til 8,3 m som en gangbane på to stolper, med en lavere balkong på
+husets tak under. Styrehusets bakside har stolper mellom vinduene som de andre sidene (hver 1,3 m). Vinduene i huset under
+styrehuset manglet glass (glasset lå 2 cm inne i veggen); nå ligger det like utenfor.
+
+Igjen etter runde 8, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
 ved 8 m, åpningen i baksida), bredden på hus og plattform, dekksutstyrets nøyaktige plasser på arbeidsdekket. Det som krever F2:
 plater, sveis, rust, slitasje, glansen i malingen.
 
