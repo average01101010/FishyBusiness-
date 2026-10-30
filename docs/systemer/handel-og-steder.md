@@ -33,6 +33,10 @@ Jonas: «hele spillet skal være free-to-play, men med betalte boostere i form a
 - **Brytere** (hemmeligheter i Supabase): `STRIPE_SECRET_KEY` og `STRIPE_WEBHOOK_SECRET`. `STRIPE_MANAGED=1` gjør Stripe til selger (Managed Payments), og er av. `STRIPE_TAX=1` lar Stripe Tax legge på MVA når foretaket er MVA-registrert.
 - **Tester:** `tests/kjoptest.py` (spillet med stand-ins for Stripe og Supabase) og `tests/sqltest.py` (databasen).
 
+## Butikker, markeder og sponsorer (plan 30.10.2026, M0 gjort)
+
+Planen `docs/planer/butikker-og-sponsorer.md` (Jonas: «kjør» 30.10.2026, alle valg etter anbefalingen: V1–V12 = A) bygger butikkene om i ni økter M0–M9: ett felles varekort, butikken på ny med Nettet-appen (se og bestille på telefonen, overta på stedet), prøv før du kjøper, bruktmarkedet i meglerens side, kjøpsøyeblikket, sponsor-grunnmuren i databasen, skilt med måling etter IAB, de andre formatene og mediekortet. **M0 (30.10.2026):** reglene (`CLAUDE.md`, `docs/engasjement.md`, `docs/handelssteder.md`), personvernerklæringen (nytt kort «Sponsede skilt og varer», måling bare med samtykke til statistikk), vilkårene (avsnittet «Samarbeidspartnere» under 3) og kildesiden («Samarbeidspartnere: Ingen ennå.»). Ingen spillkode er endret i M0; sidene rulles ut først når grenen flettes inn i arbeidsgrenen. Status per økt står nederst i planfila.
+
 ## 5.29b Handelssteder (regel, 07.10.2026)
 
 - Tre steder handler man: utstyrsbutikken, fiskemottaket og verftet. Fars naust og rorbuene selger ingenting. Hele regelen, den vedtatte første turen og det som mangler (verftsmodellen, plassering av butikker og verft langs kysten), står i `docs/handelssteder.md`. Dagens spill har fortsatt alt på kaia i hver havn, også fra naustet.

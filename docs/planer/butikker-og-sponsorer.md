@@ -350,6 +350,11 @@ Svar gjerne som før: «2A, 3A, 4A, 5A, 6A, 7A, 8A, 9A, 10A, 11A, 12A, kjør på
 - Ingen endring i Kaiboden, haill, trim eller Skippertak.
 - Ingen patchnotes om sponsing, priser eller psykologi. Patchnotes for M1–M5 sier bare hva butikkene og markedet gjør nytt.
 
+## Status
+
+- 30.10.2026: planen skrevet (del 1–9), gjennomføringsplanen med meglersidenes lærdommer (del 10), Nettet-appen (10.2b). Jonas: V1 = A (regelen endret samme dag), og «kjør» 30.10.2026 til hele lista: **V2–V12 = A** (alle formatene; bruktmarkedet lokalt og deterministisk først; takst og prøvetur; sponset vare har samme tall; byttehandel først; sponsede plagg gratis; én annonse per Kystposten-utgave; bud fra 90 %; «Ønsket båt»; Nettet-appen; henting i butikk).
+- 30.10.2026: **M0 gjort** (gren `claude/marketplace-sponsor-integration-cacyur`): `CLAUDE.md` (ekte navn bare med avtale; reklameregelen presisert), `docs/engasjement.md` («Det vi ikke gjør»), `docs/handelssteder.md` (Nettet-appen, bruktmarkedet, sponsede varer), `docs/systemer/handel-og-steder.md`, `src/legal/personvern.html` (kortversjonen, nytt kort «Sponsede skilt og varer», avsnittet om lagring), `src/legal/vilkar.html` («Samarbeidspartnere» under 3), `src/legal/kilder.html` («Samarbeidspartnere: Ingen ennå.»). Bygget går; `cloudtest` sjekker bare at sidene finnes, så den ble ikke kjørt. Sidene rulles ut når grenen flettes inn i arbeidsgrenen; utkastbanneret på sidene står til Jonas godkjenner. Neste: M1 (varekortet).
+
 ## Kilder
 
 - IAB, Intrinsic In-Game Measurement Guidelines (2009, 2.0 2022): https://www.iab.com/blog/intrinsic-in-game-measurement-guidelines/ og https://www.iab.com/blog/first-update-to-intrinsic-in-game-standards-released-since-2009/

@@ -68,9 +68,15 @@ Gjelder alle fiskemottak, verft, utstyrsbutikker, rorbuer og fars naust, og alle
 
 Reparasjon av skroget etter støt og grunnstøting og kasko (skrogforsikring) ligger på verftet, under Vedlikehold: kortet «Skrog og skade» med «Reparer», og kortet «Kasko» med «Tegn kasko» og «Si opp kaskoen». Båten må ligge ved verftets kai. Planen 18.10.2026 sa kasko hos Salgslaget; den ble lagt på verftet fordi verftet er stedet for reparasjoner og vedlikehold, og Råfisklaget selger ikke forsikring. Se 5.60 i overleveringen.
 
+## Nettet-appen, bruktmarkedet og sponsede varer (Jonas 30.10.2026, `docs/planer/butikker-og-sponsorer.md`)
+
+- **Se og bestille på telefonen, overta på stedet.** Nettet-appen på telefonen (meglerens side, nettbutikken, verftets side) viser utvalget hvor som helst, også om bord. En vare kan bestilles til henting i en utstyrsbutikk, men overtas og monteres bare når båten ligger der. En båt kan ses, bys på og avtales visning på i appen, men kjøpes bare der hun ligger (ved et verft i første runde, senere selgerens hjemhavn), eller leveres til hjemhavna av en NPC-skipper for spillpenger. Regelen om tre handelssteder står; appen flytter bare valget, ikke overtakelsen.
+- **Bruktmarkedet:** oppføringer er enkeltbåter med nummer, navn, byggeår, motortimer, tilstand og det som følger med, lagt ut av en selger (NPC-skipper, dødsbo, megler), med prisantydning som synker når båten har stått lenge, takst (første gratis), prøvetur, bud (ett per dag fra 90 % av prisantydningen) og kommisjonssalg av egen båt («Legg ut hos megleren»). De faste tilbudene (nybygg, hjemmelstilbudene) står fortsatt. Verftets knapp viser bare båtene som ligger der.
+- **Sponsede varer og skilt:** en vare med merke har nøyaktig samme tall som den usponsede, og begge selges. Sponsorer finnes bare som rader i databasen (`sponsors`, `sponsor_placements`) etter skriftlig avtale, og alt sponset er merket. Ingenting sponset på sjøen, i kartplotteren, i HUD, i Driftsplanen eller i push.
+
 ## Å fylle på
 
-- Foreslått, ikke vedtatt: diesel (bunkring) hører til mottaket (bunkerkaia står alt ved mottakene), og omrigging hører til utstyrsbutikken. Telefonen kan ikke brukes til å kjøpe fysiske ting borte fra stedet. En hjelp for å finne nærmeste butikk, verft og mottak (kartlag med avstand og Autonav dit).
+- Foreslått, ikke vedtatt: diesel (bunkring) hører til mottaket (bunkerkaia står alt ved mottakene), og omrigging hører til utstyrsbutikken. Telefonen kan brukes til å se og bestille, aldri til å overta fysiske ting borte fra stedet (presisert 30.10.2026). En hjelp for å finne nærmeste butikk, verft og mottak (kartlag med avstand og Autonav dit).
 - Åpne spørsmål: hvor hører **bunkring** (diesel), **riggen** (omrigging mellom juksa, line, garn og teiner), **kveiteutstyret**, **klær** og **pub, bank, oppdrag og ansatte** hjemme under denne inndelingen? Foreløpig står de som i dag.
 - Hvordan finner vi gode steder for verft og utstyrsbutikker langs kysten (virkelige verft og båtutstyrsbutikker fra kartdata, som mottakene)?
 
