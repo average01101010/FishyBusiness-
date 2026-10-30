@@ -7,11 +7,16 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 # this test's own on a free port; each test gets its own origin, so its own localStorage
 class _Quiet(http.server.SimpleHTTPRequestHandler):
     def log_message(self, *a): pass
-_SRV = http.server.ThreadingHTTPServer(('127.0.0.1', 0), functools.partial(_Quiet, directory=os.environ.get('KYST_DIST') or os.path.join(os.path.dirname(HERE), 'dist')))
+# (KYST_DIST is made absolute here: the handler resolves its directory on every request, and this module chdirs to tests/out below, so
+# a relative KYST_DIST=dist-pwa served nothing and the game never started, 29.10.2026)
+_SRV = http.server.ThreadingHTTPServer(('127.0.0.1', 0), functools.partial(_Quiet, directory=os.path.abspath(os.environ.get('KYST_DIST') or os.path.join(os.path.dirname(HERE), 'dist'))))
 threading.Thread(target=_SRV.serve_forever, daemon=True).start()
 BASE = 'http://127.0.0.1:%d/' % _SRV.server_port
-# «#qfix»: the 3D view keeps its high quality (view3d.js QUAL), so SwiftShader's few frames a second do not step it down
-GAME_TUT = BASE + 'index.html#qfix'
+# «#qfix»: the 3D view keeps its high quality (view3d.js QUAL), so SwiftShader's few frames a second do not step it down.
+# «#seed=N» (29.10.2026): the game swaps Math.random for a seeded generator (core/01-world.js), so the weather, the catch and the crew
+# repeat from run to run and a red test is a bug, not a bad roll. KYST_SEED=0 turns it off, another number gives another run.
+SEED = os.environ.get('KYST_SEED', '1')
+GAME_TUT = BASE + 'index.html#qfix' + (',seed=' + SEED if SEED != '0' else '')
 # the tests play without the first-trip tutorial; tut.py uses GAME_TUT
 GAME = GAME_TUT + '#notut'
 # KYST_LITE=1 (tests/run.py sets it for the tests that do not look at 3D): the game runs as before, but no 3D frame is drawn,

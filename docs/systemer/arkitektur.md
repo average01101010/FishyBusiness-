@@ -11,7 +11,7 @@
 3. **3D:** `G3`, en egen WebGL-renderer for sjø, terreng, båter og effekter. Kartplotteren er Canvas2D og SVG.
 4. **Data:**
    - Rasterkartene (land, dybde, avstand til land, eksponering, høyde og skog) ligger i kartpakker i `dist/map/`, som spillet henter (4.6).
-   - Resten er base64-blobber i `<script type="application/octet-stream">`, blant annet vei, bygg, fin kyst og båtmodellene.
+   - Resten er base64-blobber: Senja-veiene og -kysten i strenger i `core/01-world.js`, og båtmodellene, bildene og Senja-byggene i `<script type="application/octet-stream">`-elementer, som bygget fra 29.10.2026 legger ved siden av siden som `data/<id>-<hash>.bin` og `bootData` (`ui/11-boot.js`) henter inn igjen ved oppstart (se `publisering.md`).
 
 **Filene (E1, 26.10.2026):** `view3d.js` (6 035 linjer) er delt i `src/js/view3d/00-head.js` til `25-controls.js`, og telefonen `05-phone.js` (2 120 linjer) i `src/js/ui/phone/00-shell.js` til `14-act.js`, én fil per seksjon eller app. Delene er rent flytt etter kommentaroverskriftene, og malen setter dem sammen i samme `<script>` i nummerrekkefølge, så bygget ble byte-identisk (`cmp` på `dist/index.html` for hver commit). Hver del er et stykke av én funksjon (`const G3 = (() => { … })()` og `const PHONE = (() => { … })()`), så en del kan ikke kjøres eller `node --check`-es alene: syntaksen sjekkes med `node build.mjs` og `node --check dist/index.html`-lignende kjøring av testene. Der dokumentene sier «`view3d.js`» eller «`05-phone.js`», menes nå mappene; `docs/systemer/kodekart.md` viser hvilken del en funksjon ligger i. `COVER` i `tests/run.py` har hver del med testene som dekker innholdet.
 

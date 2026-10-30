@@ -12,7 +12,7 @@ Full regresjon tar rundt en time, med 3D-testene alene etter de andre, og over t
 3. **Les resultatet én gang:** `grep -E "^(OK|FEIL|LES)|OK, " <scratchpad>/full.log`, og `tests/out/logs/<test>.txt` for de røde. Ble kjøringen stoppet av tidsgrensen, kjøres de som manglet med `smoke`, de med 3D én og én.
 4. **Sorter:**
    - **Kjent rødt:** står i `docs/BACKLOG.md` under testene som feiler, med samme linje. Noteres, ikke mer.
-   - **Ustabilt:** feiler på tid eller tilfeldighet (tilfeldig mannskap, SwiftShader under last). Kjør den én gang til, alene. Grønn andre gang: skriv «ustabil» med grunn i backloggen, og gjør testen robust om det kan gjøres i testen selv. Rød igjen: ekte.
+   - **Ustabilt:** feiler på tid eller tilfeldighet (tilfeldig mannskap, SwiftShader under last). Kjør den én gang til, alene. Testene kjører med frø (`seed=1` fra `_env.py`, 29.10.2026), så det samme kastet kommer igjen: rød to ganger med samme frø er en feil i koden eller i testen, ikke uflaks; `KYST_SEED=2` viser om et annet kast går. Grønn andre gang: skriv «ustabil» med grunn i backloggen, og gjør testen robust om det kan gjøres i testen selv. Rød igjen: ekte.
    - **Nytt rødt:** sjekk om det feiler på forrige commit også (`git stash` eller `git worktree`). Gjør det ikke det, er det vårt: rett det. Gjør det det, skriv det i backloggen med commiten det feiler fra.
 5. **Rettingene** går som vanlige endringer med `/lever`, én commit hver. Aldri hopp over, slå av eller myk opp en test for å bli grønn.
 6. **Backloggen** får datoen, hva som var rødt, hva som ble rettet og hva som står igjen, under «Tester som feiler».
