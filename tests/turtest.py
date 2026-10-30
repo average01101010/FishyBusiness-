@@ -337,6 +337,28 @@ async def main():
           Object.assign(T, keep); return {sp:m.sp, okSp, qs, ansIn, seen, stage, done:!!(d && d.ok), gain:S.cash - cash0, pay:d && d.pay, base:m.base, bonus:m.bonusMax, line:L[0] && L[0].no, who:turLeteWho(m), ring, badge}; })()""")
         check(le.get('none') or (le['okSp'] and 1 <= len(le['qs']) <= 3 and le['ansIn'] and le['seen'] == [1, 2, 3] and le['stage'] == 'answer' and le['done'] and le['pay'] == le['base'] + le['bonus'] and le['gain'] == le['pay'] and le['line'] and le['who'] and le['ring'] and le['badge'] >= 1),
               'the search: a species the boat may fish and land, one to three questions the model can answer, three places fished an hour each make the questions hers, all right pays the full bonus, the line stays, the ring is on the chart for a day and the badge counts', le)
+        # 19. the chain (K1, 31.10.2026): the manager's own order done brings a second link of another kind from her place, that done a third,
+        #     her order again at 20 % over; the third done gives the badge, the follow-on and the paper; a link run out ends the chain with a word;
+        #     a link takes no place on the board
+        ch = await pg.evaluate("""(() => { const T = turState(), ty = S.boat.type, keep = {act:T.act, board:T.board, rep:T.rep, slots:T.slots}; T.act = []; T.board = []; S.boat.type = 'sjark'; applyVessel(); S.boat.fuel = BOAT.fuelCap; S.adm = Object.assign(S.adm || {}, {noEnergy:true});
+          const o = turHere(), me = turMe(); let q = null, first = null;
+          for (const c of turPlants().filter(x => x.id !== S.boat.port).sort((a, b) => turNm(o, a.p) - turNm(o, b.p))){ const h = turNm(o, c.p) / turV(); if (h < 0.4 || h >= 18) continue; first = turBestAt(o, c, h, h < 3 ? 'kort' : h < 7.5 ? 'mid' : 'lang', me); if (first){ q = c; break; } }
+          if (!first) return {none:true};
+          first.id = ++T.seq; first.ask = true; const m0 = S.msgs.length;
+          const l2 = turChainNext(first), k2 = l2 && l2.k, n2 = l2 && l2.chain && l2.chain.n, onBoard2 = !!(l2 && T.board.includes(l2)), said2 = S.msgs.length - m0;
+          if (!l2){ S.boat.type = ty; applyVessel(); Object.assign(T, keep); return {k2:null}; }
+          T.board = T.board.filter(x => x !== l2); const slots0 = T.slots; T.board.push(l2); turTake(l2.id); const slots1 = T.slots; T.act = T.act.filter(x => x !== l2);
+          const l3 = turChainNext(l2), k3 = l3 && l3.k, n3 = l3 && l3.chain && l3.chain.n, prem3 = l3 && l3.prem, again = turChainNext(l2);
+          // the third done: the badge, the paper and the follow-on
+          T.board = T.board.filter(x => x !== l3); T.act = [l3]; l3.t0 = S.t; l3.due = S.t + 600; const b0 = achC('kjede'), p0 = pressState().own.length, m1 = S.msgs.length;
+          turEnd(l3, true, null); const badge = achC('kjede') - b0, pressed = pressState().own.slice(p0).some(x => x.kind === 'tur' && x.d && x.d.k === 'kjede'), ended = S.msgs.slice(m1).some(x => /Tre på rad/.test(x.no));
+          // a link run out: the chain ends with a word, nothing more is laid
+          const l2b = Object.assign({}, l2, {id:++T.seq, chain:{id:999, n:2, to:q.id, sp:first.sp}, t0:S.t, due:S.t + 600}); T.act = [l2b]; T.board = []; const m2 = S.msgs.length; turEnd(l2b, false, null, 'due'); const broke = S.msgs.slice(m2).some(x => /ikke noe av resten/.test(x.no)), laid = T.board.some(x => x.chain);
+          const story = pressStory({id:5, kind:'tur', gh:100, x:q.p.x, y:q.p.y, boat:'Havgull', d:{k:'kjede', to:q.id, sp:first.sp, kg:300, nm:20}});
+          S.boat.type = ty; applyVessel(); Object.assign(T, keep); return {k2, n2, onBoard2, said2, slots0, slots1, k3, n3, prem3, again:!!again, badge, pressed, ended, broke, laid, story:!!(story && /fast leverandør/.test(story.h[0]))}; })()""")
+        check(ch.get('none') or ch.get('k2') is None or (ch['k2'] in ('lete', 'frakt', 'foto') and ch['n2'] == 2 and ch['onBoard2'] and ch['said2'] == 1 and ch['slots1'] == ch['slots0'] and ch['k3'] == 'best' and ch['n3'] == 3 and ch['prem3'] == 0.2 and not ch['again']
+                                                        and ch['badge'] == 1 and ch['pressed'] and ch['ended'] and ch['broke'] and not ch['laid'] and ch['story']),
+              "the chain: her order done brings a link of another kind (no place used), that one a third order at 20 % over, the third gives the badge, the follow-on and the paper; a link run out ends it with a word", ch)
         check(errs == [], 'sidefeil', errs[:3])
         await br.close()
 

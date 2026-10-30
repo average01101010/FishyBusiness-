@@ -1022,31 +1022,31 @@ Fartstid: years at sea, 0 to 40 (Jonas 07.10.2026; docs/engasjement.md, arbeidsl
   - 51 `fsLand(total)`
   - 53 `fsRested(realMs)`
 
-## `src/js/core/09f-merker.js` (207 linjer)
+## `src/js/core/09f-merker.js` (208 linjer)
 
 Merker: «Første uke på sjøen» and the long badges (Jonas 07.10.2026; docs/engasjement.md, arbeidslista 1.5 and 3)
 
 - **1** Merker: «Første uke på sjøen» and the long badges (Jonas 07.10.2026; docs/engasjement.md, arbeidslista 1.5 and 3)
   - 22 `achVisits()`
   - 23 `achVisitPort(pid)`
-  - 80 `achState()`
-  - 96 `achAdd(k, n)`
-  - 97 `achSale(total, sps)`
-  - 98 `achCatch(sp, cls)`
-  - 100 `achMinute()`
-  - 109 `achTripEnd(bad)`
-- **111** the gifts: what fits the player now, in three tiers (seven in ten common, two good, one rare), bigger in later chapters
-  - 113 `achPool(scale)`
-  - 137 `achDraw(key, scale)`
-  - 145 `achGive(key, scale, title)`
-- **154** checking: each milestone in an open chapter, the chapters' own rewards, and the long badges
-  - 156 `achCheck(quiet)`
-  - 184 `achChapter(ch)`
-  - 194 `achSeed()`
-- **205** the first tow and the first repair are free (core/05-vessels.js rescue, hullRepair)
-  - 206 `freeFirst(k)`
+  - 81 `achState()`
+  - 97 `achAdd(k, n)`
+  - 98 `achSale(total, sps)`
+  - 99 `achCatch(sp, cls)`
+  - 101 `achMinute()`
+  - 110 `achTripEnd(bad)`
+- **112** the gifts: what fits the player now, in three tiers (seven in ten common, two good, one rare), bigger in later chapters
+  - 114 `achPool(scale)`
+  - 138 `achDraw(key, scale)`
+  - 146 `achGive(key, scale, title)`
+- **155** checking: each milestone in an open chapter, the chapters' own rewards, and the long badges
+  - 157 `achCheck(quiet)`
+  - 185 `achChapter(ch)`
+  - 195 `achSeed()`
+- **206** the first tow and the first repair are free (core/05-vessels.js rescue, hullRepair)
+  - 207 `freeFirst(k)`
 
-## `src/js/core/09g-turer.js` (940 linjer)
+## `src/js/core/09g-turer.js` (984 linjer)
 
 Turoppdrag: missions from where the boat is (07.10.2026; docs/engasjement.md point 4)
 
@@ -1089,52 +1089,55 @@ Turoppdrag: missions from where the boat is (07.10.2026; docs/engasjement.md poi
 - **354** the people: who sends a mission, and what they remember
   - 359 `turManagerSays(m, n)`
   - 369 `turAsk(T = turState()`
-- **383** the first mission
-  - 386 `turFirst(o)`
-  - 401 `turFirstEnsure(T = turState()`
-  - 412 `turGarn(o)`
-  - 430 `turValue(L)`
-  - 435 `turSlep(o, cls)`
-  - 455 `turNpcs()`
-  - 467 `turMinute()`
-  - 496 `turStuck(T, b)`
-  - 505 `turProveMinute(m, b)`
-  - 529 `turSesong(o)`
-  - 550 `turStages(m)`
-  - 557 `turSesongStage(m)`
-- **570** survey fishing for Havforskningsinstituttet
-  - 575 `turProve(o, cls)`
-  - 602 `turProveFish(m)`
-  - 613 `turProveDone(m)`
-  - 620 `turEkkoSaw(m)`
-- **628** a picture of a lighthouse for Kystposten
-  - 638 `turLysNext(m, from)`
-  - 639 `turFoto(o, cls)`
-  - 660 `turFotoAt()`
-  - 663 `turFotoTake(m, seen, img)`
-  - 682 `turMake()`
-  - 708 `turEnsure(force)`
-  - 729 `turWay()`
-  - 736 `turDetour(m, way = turWay()`
-- **748** taking, doing and finishing
-  - 749 `turTake(id)`
-  - 777 `turDrop(id)`
-  - 782 `cargoJob(kg, no, en)`
-  - 783 `turLoad(m)`
-  - 792 `turSpawn(m)`
-  - 811 `turEnd(m, ok, why, how)`
-  - 825 `turPayOut(m, from, no, en, part)`
-  - 833 `turDock(pid)`
-  - 847 `turSale(pid, bySp)`
-  - 860 `turHauled(s)`
-  - 864 `turHour()`
-  - 883 `turWhat(m)`
-- **895** the trip as it starts: when it will be there, and a word from the crew (or the memory of Father, alone aboard)
-  - 909 `turSay(who, no, en, k)`
-  - 914 `turDepart()`
-  - 934 `turMechanic()`
+- **383** the chain: three links for a manager who knows the boat (docs/planer/oppdrag-2.md K1, Jonas 30.10.2026 «Ja»)
+  - 393 `turChainNext(prev)`
+  - 414 `turChainEnd(m, ok)`
+- **423** the first mission
+  - 426 `turFirst(o)`
+  - 441 `turFirstEnsure(T = turState()`
+  - 452 `turGarn(o)`
+  - 470 `turValue(L)`
+  - 475 `turSlep(o, cls)`
+  - 495 `turNpcs()`
+  - 507 `turMinute()`
+  - 536 `turStuck(T, b)`
+  - 545 `turProveMinute(m, b)`
+  - 569 `turSesong(o)`
+  - 590 `turStages(m)`
+  - 597 `turSesongStage(m)`
+- **610** survey fishing for Havforskningsinstituttet
+  - 615 `turProve(o, cls)`
+  - 642 `turProveFish(m)`
+  - 653 `turProveDone(m)`
+  - 660 `turEkkoSaw(m)`
+- **668** a picture of a lighthouse for Kystposten
+  - 678 `turLysNext(m, from)`
+  - 679 `turFoto(o, cls, near = null)`
+  - 700 `turFotoAt()`
+  - 703 `turFotoTake(m, seen, img)`
+  - 722 `turMake()`
+  - 748 `turEnsure(force)`
+  - 769 `turWay()`
+  - 776 `turDetour(m, way = turWay()`
+- **788** taking, doing and finishing
+  - 789 `turTake(id)`
+  - 817 `turDrop(id)`
+  - 822 `cargoJob(kg, no, en)`
+  - 823 `turLoad(m)`
+  - 832 `turSpawn(m)`
+  - 851 `turEnd(m, ok, why, how)`
+  - 869 `turPayOut(m, from, no, en, part)`
+  - 877 `turDock(pid)`
+  - 891 `turSale(pid, bySp)`
+  - 904 `turHauled(s)`
+  - 908 `turHour()`
+  - 927 `turWhat(m)`
+- **939** the trip as it starts: when it will be there, and a word from the crew (or the memory of Father, alone aboard)
+  - 953 `turSay(who, no, en, k)`
+  - 958 `turDepart()`
+  - 978 `turMechanic()`
 
-## `src/js/core/09h-press.js` (206 linjer)
+## `src/js/core/09h-press.js` (210 linjer)
 
 Kystposten: the coast's paper (07.10.2026)
 
@@ -1144,20 +1147,20 @@ Kystposten: the coast's paper (07.10.2026)
 - **35** the words
   - 39 `pressWho(it)`
   - 45 `pressStory(it)`
-  - 124 `pressTop()`
-  - 136 `pressLand(local)`
-- **146** the market: a record price, the highest in a year (Jonas 07.10.2026: «Ta rekordpriser»)
-  - 151 `pressIx(sp, d)`
-  - 152 `pressHigh(sp, d)`
-  - 153 `pressRecords(d)`
-  - 154 `pressPrice(sp, d)`
-  - 169 `pressDay(H)`
-- **173** the year's first skrei: the first cod landing north of Stad (62° N) after the skrei season begins (09c-seasons.js), from the
-  - 175 `pressSkreiH(y)`
-  - 177 `pressSkrei()`
-  - 188 `pressList(local)`
-  - 204 `pressUnread()`
-  - 205 `pressSeen()`
+  - 128 `pressTop()`
+  - 140 `pressLand(local)`
+- **150** the market: a record price, the highest in a year (Jonas 07.10.2026: «Ta rekordpriser»)
+  - 155 `pressIx(sp, d)`
+  - 156 `pressHigh(sp, d)`
+  - 157 `pressRecords(d)`
+  - 158 `pressPrice(sp, d)`
+  - 173 `pressDay(H)`
+- **177** the year's first skrei: the first cod landing north of Stad (62° N) after the skrei season begins (09c-seasons.js), from the
+  - 179 `pressSkreiH(y)`
+  - 181 `pressSkrei()`
+  - 192 `pressList(local)`
+  - 208 `pressUnread()`
+  - 209 `pressSeen()`
 
 ## `src/js/core/09i-look.js` (111 linjer)
 
@@ -1881,12 +1884,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **46** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 50 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (789 linjer)
+## `src/js/ui/phone/07-patch.js` (790 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 782 `patch()`
+  - 783 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (87 linjer)
 

@@ -58,7 +58,8 @@ const ACHL = [
   {id:'mottak', n:['Mottak langs kysten', 'Plants along the coast'], tiers:[3, 5, 10, 25, 50], unit:'', v:() => achPorts()},
   {id:'fisk', n:['Fisk tatt', 'Fish caught'], tiers:[100, 1000, 5000, 10000, 50000, 100000], unit:'', v:() => achFish()},
   {id:'turer', n:['Turer fullført', 'Trips completed'], tiers:[10, 50, 100, 250, 500], unit:'', v:() => (S.stats && S.stats.trips) || 0},
-  {id:'lete', n:['Letefisker: leteoppdrag', 'Searcher: search missions'], tiers:[1, 5, 10, 25], unit:'', v:() => achC('lete')},   // (core/09g-turer.js turLeteAnswer, docs/planer/oppdrag-2.md L2)
+  {id:'lete', n:['Letefisker: leteoppdrag', 'Searcher: search missions'], tiers:[1, 5, 10, 25], unit:'', v:() => achC('lete')},
+  {id:'kjede', n:['Fast leverandør: tre oppdrag på rad', 'Regular supplier: three missions in a row'], tiers:[1, 3, 10], unit:'', v:() => achC('kjede')},   // (core/09g-turer.js turChainEnd, docs/planer/oppdrag-2.md K1)   // (core/09g-turer.js turLeteAnswer, docs/planer/oppdrag-2.md L2)
   {id:'havner', n:['Havner besøkt', 'Harbours visited'], tiers:[5, 10, 25, 50, 100], unit:'', v:() => achVisitN(() => true)},
   {id:'verft', n:['Verft besøkt', 'Yards visited'], tiers:[1, 3, 5, 10, 20], unit:'', v:() => achVisitN(pt => /verft/.test(pt.sted || ''))},
   {id:'butikk', n:['Utstyrsbutikker besøkt', 'Tackle shops visited'], tiers:[1, 3, 5, 10, 20], unit:'', v:() => achVisitN(pt => /butikk/.test(pt.sted || ''))},

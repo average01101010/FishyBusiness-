@@ -104,11 +104,15 @@ function pressStory(it){
     else if (d.k === 'best'){ if (!port || !sp) return null;
       s.h = P2(w[0] + ' kom med ' + sp.no.toLowerCase() + ' til ' + port, w[1] + ' brought ' + sp.en.toLowerCase() + ' to ' + port);
       s.ing = P2('Mottaket i ' + port + ' hadde bestilt ' + fmt(d.kg || 0, 0) + ' kg ' + sp.no.toLowerCase() + ', og ' + w[0] + ' leverte' + (d.nm > 0 ? ' etter ' + fmt(d.nm, 0) + ' nautiske mil' : '') + '.', 'The plant at ' + port + ' had ordered ' + fmt(d.kg || 0, 0) + ' kg of ' + sp.en.toLowerCase() + ', and ' + w[1] + ' delivered' + (d.nm > 0 ? ' after ' + fmt(d.nm, 0) + ' nautical miles' : '') + '.'); }
+    else if (d.k === 'kjede'){ if (!port) return null;   // three missions in a row for one plant (09g-turer.js turChainEnd)
+      s.h = P2(w[0] + ' er fast leverandør i ' + port, w[1] + ' is a regular supplier at ' + port);
+      s.ing = P2(w[0] + ' har gjort tre oppdrag på rad for mottaket i ' + port + (sp ? ', sist ' + fmt(d.kg || 0, 0) + ' kg ' + sp.no.toLowerCase() : '') + '. Bestyreren kaller båten fast leverandør.', w[1] + ' has done three missions in a row for the plant at ' + port + (sp ? ', last ' + fmt(d.kg || 0, 0) + ' kg of ' + sp.en.toLowerCase() : '') + '. The manager calls the boat a regular supplier.');
+      s.body.push(P2('Mottakene langs kysten holder seg med faste båter de kan ringe til først når det er noe å hente.', 'The plants along the coast keep regular boats they call first when there is something to fetch.')); s.big = true; }
     else if (d.k === 'frakt'){ if (!port) return null;
       s.h = P2(w[0] + ' fraktet varer til ' + port, w[1] + ' carried goods to ' + port);
       s.ing = P2(w[0] + ' kom til ' + port + ' med ' + fmt(d.kg || 0, 0) + ' kg last' + (pressPort(d.from) ? ' fra ' + pressPort(d.from) : '') + '.', w[1] + ' came to ' + port + ' with ' + fmt(d.kg || 0, 0) + ' kg of freight' + (pressPort(d.from) ? ' from ' + pressPort(d.from) : '') + '.'); }
     else return null;
-    s.body.push(P2('Turen var på rundt ' + fmt(d.nm || 0, 0) + ' nautiske mil.', 'The trip was about ' + fmt(d.nm || 0, 0) + ' nautical miles.')); }
+    if (d.k !== 'kjede') s.body.push(P2('Turen var på rundt ' + fmt(d.nm || 0, 0) + ' nautiske mil.', 'The trip was about ' + fmt(d.nm || 0, 0) + ' nautical miles.')); }
   else if (it.kind === 'lag'){ const port = pressPort(d.port); if (!port || !(d.kg > 0)) return null;   // (written by the server, 20261030140000_lag_goal.sql: no names)
     s.h = P2('Fiskarlaget i ' + port + ' nådde ukemålet', 'The fishing club of ' + port + ' reached its weekly goal');
     s.ing = P2(fmt(d.kg, 0) + ' kg levert av ' + (d.n || 0) + ' båter denne uka. Laget setter målet etter hvor mange som har levert, så ingen trekker de andre ned.', fmt(d.kg, 0) + ' kg landed by ' + (d.n || 0) + ' boats this week. The club sets its goal by how many have landed, so nobody pulls the others down.');
