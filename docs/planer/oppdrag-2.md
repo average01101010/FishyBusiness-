@@ -91,6 +91,15 @@
 - Ukemålet × 1,1 er en regel, ikke et målt tall. Den leses av i `lag_goal_hit` mot antall lag etter noen uker.
 - Kystvaktas hyppighet (én per spilluke) er et valg for ikke å mase; måles i `kv_check`.
 
+## Jonas' svar (30.10.2026)
+
+- «2. Ja dette er en grei ide, men de må være kontekstualiserte slik at han ikke spør om å dra hjem til feks botnhamn hvis båten ligger i kirkenes, for det blir litt for dumt.» Ærendene bygges med mannskapsplanens del 2, og bare for steder innen rekkevidde av der båten er (hjemstedet innen 40 nm, ellers et ærende som passer der båten er).
+- «7. Ja, dette er intressante stats for enkelte, og vil bygge geografisk lærdom.» Kystkartet bygges (K2 under).
+- «8. Ja, enig i dette.» Lærlingen bygges etter mannskapsplanens del 2.
+- «9. Nei, jeg liker ikke konseptet med fars notatbok og ønsker det ikke tilbake.» Strøket for godt.
+- «10. Ja.» Ukas fangst bygges (U1 under).
+- «Gjør det du mener er riktig for spillet, men sørg for at det blir så bra som mulig.» Valgene tas etter anbefalingene: L-A B, L-B A, K-A A, F-A A, F-C B, V-A A. F-B: fiskarlaget har alt et ukemål (1 500 kg per medlem som har levert, premie 3 000 kr per medlem, Jonas 08.10.2026, `ui/09c-pubsoc.js`); det beholdes som regel, og F1 flytter det til serveren så tavla, avisa og merket blir felles. Rekkefølgen: F1, L1, K1, V1, F2, L2, F3, K2 (Kystkartet), U1 (Ukas fangst); ærendene og lærlingen når mannskapsplanens del 2 er bygd.
+
 ## Status
 
-- 30.10.2026: planen skrevet. Venter på Jonas' valg (L-A, L-B, K-A, F-A, F-B, F-C, V-A) og «kjør på».
+- 30.10.2026: planen skrevet, Jonas' svar inn samme dag. F1 begynt.
