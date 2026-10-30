@@ -282,7 +282,7 @@ def neck():
 
 def hull_rows(fine=True, sg=1):
     """the hull's rows (stations) for side sg: the main body from the transom to the neck, the bulb's nose and the bow above it"""
-    x0, x1, zp = neck(); _F[0] = 1.0 if fine else 0.42
+    x0, x1, zp = neck(); _F[0] = 1.0 if fine else 0.40
     st = [XA + 0.04 * i for i in range(5)] + [0.25 * i for i in range(1, 24)] + [6.0 + 0.4 * i for i in range(56)] + [28.4 + 0.2 * i for i in range(60)]
     st += list(ST_X) + [5.0 + 0.15 * i for i in range(17)] + [25.4 + 0.15 * i for i in range(10)]
     if not fine: st = [XA, 0.2, 0.6, 1.2, 2.0, 3.0, 4.0, 5.0, 6.5, 8.0, 10.0] + [12.0 + 2.0 * i for i in range(8)] + [28.0 + 1.0 * i for i in range(8)]
@@ -1092,10 +1092,13 @@ def deck_gear(fine=True):
     aring_loft(A, [[(xs0, -hy, zd(xs0)), (xs1, -hy * 0.95, zd(xs1)), (xs1, hy * 0.95, zd(xs1)), (xs0, hy, zd(xs0))],
                    [(xs0 + 0.6, -hy, 10.1), (xs1, -hy * 0.95, 10.1), (xs1, hy * 0.95, 10.1), (xs0 + 0.6, hy, 10.1)]], W)
     if fine: rail(A, [(xs0 + 0.7, -hy + 0.1, 10.1), (xs0 + 0.7, hy - 0.1, 10.1)], h=0.9, every=0.8)
-    # the blue tarpaulin over the anchor windlass (fore.png: 33.2-34.9 m, up to 10.6 m, rounded over the top)
-    zt = zd(33.3) + 0.12
-    aring_loft(A, [[(33.2, -1.1, zt), (34.9, -1.1, zt), (34.9, 1.1, zt), (33.2, 1.1, zt)], [(33.25, -1.08, zt + 1.0), (34.85, -1.08, zt + 1.0), (34.85, 1.08, zt + 1.0), (33.25, 1.08, zt + 1.0)],
-                   [(33.45, -0.85, zt + 1.3), (34.65, -0.85, zt + 1.3), (34.65, 0.85, zt + 1.3), (33.45, 0.85, zt + 1.3)], [(33.8, -0.4, zt + 1.42), (34.3, -0.4, zt + 1.42), (34.3, 0.4, zt + 1.42), (33.8, 0.4, zt + 1.42)]], C['tarp'], cap0=True)
+    # the anchor windlass on the forecastle house's top beside the mast (82e91969: two grey gypsies with the green rope, to port of
+    # the mast); the tarpaulin shape at 33.2-34.9 m in the side photograph is the purse winch's pedestal and reel under its cover
+    wx, wy, wz = 28.8, 0.9, 10.1
+    acyl(A, (wx, wy - 1.0, wz + 0.52), (wx, wy + 1.0, wz + 0.52), 0.42, lambda z: C['dark'], seg=16 if fine else 8)
+    for e in (-0.55, 0.55): acyl(A, (wx, wy + e - 0.12, wz + 0.52), (wx, wy + e + 0.12, wz + 0.52), 0.46, lambda z: C['green'], seg=16 if fine else 8)
+    for e in (-1.05, 0.0, 1.05): abox(A, wx - 0.5, wx + 0.5, wy + e - 0.05, wy + e + 0.05, wz, wz + 0.95, W)
+    abox(A, wx - 0.55, wx + 0.55, wy - 1.1, wy + 1.1, wz, wz + 0.12, W)
     if fine:
         # the big rope reel at the forecastle's aft end to port (82e91969), the round hatch, the two warping winches on the working deck
         zf2 = zd(28.5) + 0.12
@@ -1107,7 +1110,6 @@ def deck_gear(fine=True):
             abox(A, x - 0.35, x + 0.35, yy - 0.5, yy + 0.5, z_sh(x), z_sh(x) + 0.35, C['steel'])
             acyl(A, (x, yy - 0.45, z_sh(x) + 0.65), (x, yy + 0.45, z_sh(x) + 0.65), 0.32, lambda z: C['dark'], seg=14)
             acyl(A, (x, yy - 0.2, z_sh(x) + 0.65), (x, yy + 0.2, z_sh(x) + 0.65), 0.34, lambda z: C['green'], seg=14)
-    abox(A, 31.45, 32.4, -0.9, 0.9, zd(32), 10.5, W); acyl(A, (31.9, -0.75, 9.9), (31.9, 0.75, 9.9), 0.45, lambda z: C['bin'], seg=14)
     # the fish pump's vacuum tank and its housing between the wheelhouse and the forecastle, the boxes on it, the yellow chest
     abox(A, 26.5, 28.8, -1.8, 1.8, 10.1, 10.8, C['dark'])
     abox(A, 21.3, 22.5, -4.15, -3.35, z_sh(21.9), z_sh(21.9) + 0.9, C['yellow'])
@@ -1275,7 +1277,7 @@ def aft_deck(fine=True):
         for a_, b_ in zip(P, P[1:]): acyl(A, a_, b_, 0.17, lambda z: C['steel'], seg=12)
     # ---- the lifebuoys (SIK): on the forecastle's aft bulkhead to starboard, on the walkway's aft edge, on deck B's port edge ----
     if fine:
-        lifebuoy(A, (X_FC - 0.05, -2.9, zs(X_FC) + 1.6), (-1, 0, 0))
+        lifebuoy(A, (X_FC - 0.05, -2.9, zs(X_FC) + 1.6), (-1, 0, 0)); lifebuoy(A, (X_FC - 0.05, 2.9, zs(X_FC) + 1.6), (-1, 0, 0))
         lifebuoy(A, (8.28, -2.6, ZB2 + 0.0), (-1, 0, 0))
         lifebuoy(A, (12.5, 4.47, ZB2 + 0.0), (0, 1, 0))
     # ---- the liferafts in their cradles on deck B's port side aft, and the red chest for rescue gear on the balcony (c6db804c, 7b36cbe5) ----
@@ -1302,6 +1304,13 @@ def aft_deck(fine=True):
         acyl(A, (33.3, yy - 0.3, zf + 0.6), (33.3, yy + 0.3, zf + 0.6), 0.52, lambda z: C['green'], seg=16)
     for yy in (-2.6, 2.6):
         acyl(A, (31.2, yy, zf), (31.2, yy, zf + 0.75), 0.22, lambda z: W, seg=12); acyl(A, (31.2, yy, zf + 0.75), (31.2, yy, zf + 0.9), 0.28, lambda z: C['steel'], seg=12)
+    # the purse winch on the forecastle (82e91969): a tapered white pedestal with the rope reel across its top, a little to starboard
+    px, py = 33.6, -0.6
+    aring_loft(A, [[(px - 0.9, py - 0.7, zf), (px + 0.9, py - 0.7, zf), (px + 0.9, py + 0.7, zf), (px - 0.9, py + 0.7, zf)],
+                   [(px - 0.35, py - 0.55, zf + 1.7), (px + 0.35, py - 0.55, zf + 1.7), (px + 0.35, py + 0.55, zf + 1.7), (px - 0.35, py + 0.55, zf + 1.7)]], W)
+    acyl(A, (px, py - 0.5, zf + 1.95), (px, py + 0.5, zf + 1.95), 0.5, lambda z: C['steel'], seg=16 if fine else 8)
+    acyl(A, (px, py - 0.3, zf + 1.95), (px, py + 0.3, zf + 1.95), 0.52, lambda z: C['green'], seg=16 if fine else 8)
+    for e in (-0.6, 0.6): abox(A, px - 0.08, px + 0.08, py + e - 0.04, py + e + 0.04, zf + 1.7, zf + 2.25, W)
     objs.append(A.done(30))
     return objs
 

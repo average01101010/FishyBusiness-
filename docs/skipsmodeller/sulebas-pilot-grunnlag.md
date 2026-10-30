@@ -544,7 +544,13 @@ på balkongen under. MOB-båtens davit flyttet til båtens akterende (7,5 m) så
 Runde 19 (c6db804c i nærbilde): flåtene og den røde kisten står sammen på den lavere balkongen på husets tak (z 10,2), under
 gangbanen, ikke oppe på den; flyttet. Fjernversjonen 11 802 punkter (`_F` 0,42), nærversjonen 133 247.
 
-Igjen etter runde 19, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
+Runde 20 (bakken fra lufta 82e91969 og fra låringen 274df4a7): ankervinsjen (to grå gypsier med grønt tau) står oppå
+bakkhuset babord for masta (28,8 m), ikke på dekket forut; presenningsformen på 33,2–34,9 m i sidebildet er notvinsjen (et
+avsmalnende hvitt fundament med tausnella på tvers oppå) under dekke, nå bygd åpen på 33,6 m litt til styrbord; livbøye på
+bakkens akterskott på begge sider. Bakkens rekke (plate med rørrekkverk oppå), varpehodene, tausnella ved masta og den runde
+luka stemmer med bildene.
+
+Igjen etter runde 20, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
 ved 8 m, åpningen i baksida), bredden på hus og plattform, dekksutstyrets nøyaktige plasser på arbeidsdekket. Det som krever F2:
 plater, sveis, rust, slitasje, glansen i malingen.
 
