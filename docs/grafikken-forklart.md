@@ -80,6 +80,22 @@ piksel og hvert tegnekall.
 koster nesten ingenting på et moderne nettbrett. Det som koster, er piksler (oppløsning × hvor tung skyggeren er per
 piksel). Taket for egen båt er derfor nå hevet til rundt 300 000 trekanter.
 
+**Nivået framover: pilotbåten.** Den første båten som er laget på det nye nivået, er en ringnotbåt på 38,55 m, bygd etter
+fotografier av en ekte båt og gått gjennom over 20 runder med kritikk mot bildene (kraner, kraftblokk, ankerlommer,
+redningsflåter, anoder langs bunnen, merker på baugen). Den ble lagt inn i spillet 30.10.2026, og alle båtene skal opp på
+samme nivå:
+
+| Del | Trekanter | Brukes til |
+|---|---|---|
+| Nær | 119 302 | din egen båt på nært hold |
+| Middels | 40 000 | din egen båt lenger unna, og andres båter nær deg |
+| Fjern | 12 066 | båter langt unna |
+| Glass | 286 | vinduene |
+
+Fila er 6,1 MB. Til sammenligning har de eldre båtene 7 000–40 000 trekanter, så nærmodellen er 3–17 ganger så detaljert,
+og den bruker omtrent 40 % av taket. Middels-utgaven lages automatisk av eksporten: Blender forenkler den ferdig bakte
+nærmodellen (Decimate) ned til 40 000 trekanter, og lakksonene og den bakte skyggen blir med.
+
 ## 4. Landskapet: ekte data for hele kysten
 
 Det meste av «realismen» kommer fra åpne data. Alt er bearbeidet på forhånd av Python-skript i GitHub Actions, delt i
