@@ -972,25 +972,25 @@ Personal records: the biggest fish you have landed of each species (Jonas 09.10.
   - 18 `recPlace(p)`
   - 22 `recCatch(sp, kg, how)`
 
-## `src/js/core/09c-seasons.js` (154 linjer)
+## `src/js/core/09c-seasons.js` (161 linjer)
 
 the seasons as events (05.10.2026; Jonas chose it from the list of what makes people play on, 5)
 
 - **1** the seasons as events (05.10.2026; Jonas chose it from the list of what makes people play on, 5)
 - **41** the seasons as shared events (30.10.2026; docs/forslag.md A2, point 7 of docs/research/oppdrag-gap-analyse.md)
-  - 60 `evIn(e, p)`
-  - 62 `evAt(H, port, sps)`
-  - 67 `evClose(e, y, top)`
-  - 77 `seasonNow(H)`
-  - 83 `seasonNext(H, n = 8)`
-  - 93 `festDays(y)`
-  - 99 `festField(y)`
-  - 103 `festCatch(sp, kg)`
-  - 109 `festBoard(y)`
-  - 116 `seasonDay(H)`
-  - 135 `seasonNews(day)`
-  - 144 `seasonTalk(H)`
-  - 146 `seasonGrid()`
+  - 66 `evIn(e, p)`
+  - 69 `evAt(H, port, sps)`
+  - 74 `evClose(e, y, top)`
+  - 84 `seasonNow(H)`
+  - 90 `seasonNext(H, n = 8)`
+  - 100 `festDays(y)`
+  - 106 `festField(y)`
+  - 110 `festCatch(sp, kg)`
+  - 116 `festBoard(y)`
+  - 123 `seasonDay(H)`
+  - 142 `seasonNews(day)`
+  - 151 `seasonTalk(H)`
+  - 153 `seasonGrid()`
 
 ## `src/js/core/09d-folk.js` (149 linjer)
 
