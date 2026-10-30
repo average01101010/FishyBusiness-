@@ -493,7 +493,16 @@ innside; vakuumtankene flyttet fram under dekk B's utstikk med toppen under kant
 foran dekk B's front og utenfor tankene, jiben under plattformen; MOB-båten og daviten akter for huset og dekk B. Sluttkjøring:
 0 klasj. Sjekken kjøres etter hver runde fra nå.
 
-Igjen etter runde 9, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
+Runde 10 (Jonas 30.10.2026: «arbeidsdekk nesten hele veien bak på styrbord-siden», a5d2b0af, 4929aa51): **arbeidsdekket på
+styrbord går fra notbingens vegg (7,3 m) til bakken (25,8 m)**, med lav skansekledning og blått rørrekkverk hele veien; runde 4
+tok feil om stykket akter for huset. Huset under styrehuset står på øvre dekk med sin styrbord vegg (y −3,35) som kassens vegg ned
+til shelterdekket; akter for huset en kasse under gangbanen med dør (8,8–9,6 m) og vinduene i veggen; forut for huset springer
+kassen inn til y −0,6 med en tverrvegg ved 20,35 m. Døra i husets styrbord side er på arbeidsdekkets nivå. Trinnene under sidedøra
+akter (7,3–7,7 m) på begge sider. **De tre svarte vakuumtankene er tatt ut** (Jonas: «Hva er disse svarte rørene? Fjern dem»); på
+bildene henger tre korte svarte tanker (rundt 1,3 m) under plattformen ved husfronten, ikke fra dekket og opp som mine var.
+Hopperen flyttet til y −0,7…−3,5. Klasjsjekk: 0.
+
+Igjen etter runde 10, ikke mulig å måle fra bildene som finnes: alt på tvers av styrbord side (lufteåpningene akter for 16 m, trinnene
 ved 8 m, åpningen i baksida), bredden på hus og plattform, dekksutstyrets nøyaktige plasser på arbeidsdekket. Det som krever F2:
 plater, sveis, rust, slitasje, glansen i malingen.
 
