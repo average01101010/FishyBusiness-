@@ -11,7 +11,7 @@ Fra `CLAUDE.md` 26.10.2026 (Jonas 07.10.2026, «Spør før hver test»: «Dekker
 | `tut` | 40 min (ett format rundt 25 min) | veiledningen «Første tur», åpningen (brev, startsted) eller knappene den trykker på. Begge formater når tipsene eller knappene endres; ellers ett format med `KYST_TUT_ONE=liggende` eller `staaende` (Jonas 27.10.2026) |
 | `tutcoast` | 15 min (`--all` rundt en time) | feltet og miksen for første tur (`tutFieldNear` i `08c-start.js`, `TUTB`/`tutBonus`), reglene (`03e-rules.js`) eller fiskemodellen. Krever hele kysten i bygget, og står ikke i `run.py` sine lister. Kjøres for seg: `python3 tests/tutcoast.py` |
 | `heattest` | 30 min | varmekartet, ekkoloddet, sonaren eller fiskemodellen |
-| `vessel3d` | 24 min | båtmodellene eller malingen |
+| `vessel3d` | 24 min, over 40 min i skyen fra 30.10.2026 (går ut på tid i `run.py`: kjør den direkte, `python3 -u tests/vessel3d.py`) | båtmodellene, malingen eller detaljnivåene (`glbModel`) |
 | `sea3d` | 15 min | havskyggeren eller sjøtilstanden |
 | `trackfollow` | 30 min | styringen, Autonav, rutene eller manøvreringsmodellen (`16b-dyn.js`) |
 | `tral3d` | 12 min | trål eller not |
@@ -22,6 +22,8 @@ Fra `CLAUDE.md` 26.10.2026 (Jonas 07.10.2026, «Spør før hver test»: «Dekker
 | `coast3d`, `sitetest` | 4–5 min | terrenget, kartdataene eller mottaksregisteret |
 | `kjoptest` | 3,5 min | butikken |
 | `lighttest`, `ultratest`, `uishots`, `haultest` | 2–3 min | lys, ultra-grafikk, UI-oppsett, haling |
+| `f1test` | 4 min | konteksten (WebGL 2 og 1), skyggeroversettelsen (`glsl3`), egen båts detaljnivåer, ultra-forsøket i `qualTick` |
+| `profshot`, `benchshot` | 3–5 min | profilen (`#prof`) og målebenken (`#bench`), merkene i bildeløkka |
 
 Hvilke tester som dekker hvilke filer, står i `COVER` i `tests/run.py`. Funksjonstestene og triksene står nedenfor (kapittel 11).
 

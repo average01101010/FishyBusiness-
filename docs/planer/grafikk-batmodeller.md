@@ -114,3 +114,21 @@ har samme oppløsning som bruker-styrte båter»). Pilotbåten er ringnotbåten,
   nivået skal se best mulig ut på den. Merk: spillet tegner i dag med pikseltetthet 1,5 på nivå 2 (`QUAL.dpr`), altså rundt
   1940 × 1170 på en skjerm som har 3392 × 2042 i det samme vinduet, og når 50 bilder/s på en skjerm som kan vise 144. Hva som holder
   det på 20 ms, finnes i F1 (profil av JS-tid mot GPU-tid), før et nytt «ultra»-nivå med full oppløsning vurderes.
+- **F1 bygd 30.10.2026** (`docs/systemer/3d-baater-og-animasjon.md`, «Tegnegrunnlaget for båtene»):
+  - **Profilen `#prof`** (`G3.prof`) rullet ut først, så Jonas kan måle på Pad 3: hovedtråden og GPU-en per del av bildet (ni deler),
+    og bildet med én del tatt ut eller i en annen pikseltetthet (11 oppsett, rundt 75 s), med fordelingen av bildeintervallene og
+    de lange oppgavene. **Venter på målingen.** Den skal avgjøre om de 20 ms er GPU-en (fyllrate, sjøen, terrenget), hovedtråden eller
+    takten nettleseren gir (tomt bilde), og det er der ytelsen hentes før ultra kan komme av seg selv på Pad 3.
+  - **WebGL 2 med WebGL 1 som reserve:** samme skyggere, oversatt fra GLSL ES 1.00 til 3.00 ved kompileringen; alle 21 programmene
+    kompilerer på begge, og bildet er det samme i SwiftShader. `#gl1` tvinger WebGL 1. Enheten, ikke kvalitetsnivået, velger
+    konteksten; en enhet der WebGL 2 feiler ved oppstart, går over til WebGL 1 og husker det.
+  - **Tre detaljnivåer for egen båt** (nær `lod0`, middels `lodm`, fjern `lod1`) etter hvor lang hun er på skjermen, med terskler per
+    nivå (`QUAL.blod`, kan slås av per nivå). NPC-båtene er på dagens nivå (`lodm`, ellers `lod0`). **Taket:** egen båt nær rundt
+    300 000 trekanter (900 000 punkter), middels og NPC 40 000 (120 000 punkter), i `vessel3d.py`, `batplan.md` (B17) og eksporten
+    (`LODM_TRIS`, Decimate). Ingen modell har `lodm` ennå; den kommer med pilotbåten, og Decimate-steget er ikke prøvd i Blender.
+  - **Ultra etter målt bildetid:** `auto` prøver ultra (full oppløsning, opptil 3 i pikseltetthet) etter 20 s over 80 bilder/s på
+    Høy, går tilbake under 45 og husker utfallet per enhet; `QUAL.autoU` slår det av. Med dagens 20 ms på Pad 3 starter forsøket ikke.
+    Svakere enheter er som før.
+  - **Ikke gjort i F1 (står i planen):** indekserte båter (`drawElements` med GLB-indeksene), komprimerte punkter og utstyret som
+    instanser. Målingen i F0 viste at trekantene ikke koster målbart, så de er utsatt til profilen viser at geometrien eller minnet
+    betyr noe.
