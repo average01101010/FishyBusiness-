@@ -31,6 +31,8 @@
 //           Within 3 km, the lighthouse in the 3D view's picture and nothing in front of it (G3.seen), the shutter takes it (G3.snap)
 //           and the paper prints it (T.press, newsForDay)
 // The crew talks about the trip as it starts (turDepart): the time it takes, and now and then the engine (the trim app's words).
+// Measured (cloudEv): tur_show when a new board is seen, tur_take, and tur_done or tur_fail with how it ended and the share of the
+// deadline used, all with the mission's id (30.10.2026, so taken, dropped, timed out and done can be told apart in admin).
 const TUR = {
   cls:{kort:{h:[0.4, 3], f:1.0}, mid:{h:[3, 7.5], f:1.1}, lang:{h:[7.5, 18], f:1.25}},   // travel in game hours (6 a real hour) and the pay factor of the boat's curve
   // the missions' economy (Jonas 19.10.2026, tilbakemelding #73, after #72): a mission where the catch is the player's (an order, the
@@ -267,7 +269,7 @@ function turMinute(){
       const d = Math.min(W * 0.03 * 60 / 1000, m.cap); m.p = {x:m.p.x + Math.sin(a) * d, y:m.p.y - Math.cos(a) * d};
       let ashore = false; try { ashore = isLandFar(m.p) || coastDistFar(m.p) < 0.03; } catch (e){}
       if (ashore){ msg(m.owner, '«' + m.boat + '» drev på land før hjelpen kom fram. Redningsselskapet tar henne av.', 'The «' + m.boat + '» drifted ashore before help came. The rescue service takes her off.');
-        turEnd(m, false, turL('«' + m.boat + '» drev på land. Ingen bergelønn.', 'The «' + m.boat + '» drifted ashore. No salvage reward.')); continue; } }
+        turEnd(m, false, turL('«' + m.boat + '» drev på land. Ingen bergelønn.', 'The «' + m.boat + '» drifted ashore. No salvage reward.'), 'ashore'); continue; } }
     if (m.vid !== S.cur) continue;
     if (m.stage === 'reach' && ['idle', 'fishing'].includes(b.status) && (b.v || 0) < 1.5 && dist(b.pos, m.p) < 0.15){
       m.stage = 'tow'; m.danger = turDanger(m.p); b.status = 'idle'; b.v = 0; S.plan = null;
@@ -276,7 +278,7 @@ function turMinute(){
       if (typeof turGo === 'function') setTimeout(() => turGo(m.id), 0);
     }
     // the boat itself in tow (the rescue service, 05-vessels.js rescue): the line is let go and the other boat waits for help
-    if (m.stage === 'tow' && b.status === 'tow'){ msg(m.owner, 'Vi får vente på Redningsselskapet. Takk for forsøket.', 'We will wait for the rescue service. Thank you for trying.'); turEnd(m, false, null); }
+    if (m.stage === 'tow' && b.status === 'tow'){ msg(m.owner, 'Vi får vente på Redningsselskapet. Takk for forsøket.', 'We will wait for the rescue service. Thank you for trying.'); turEnd(m, false, null, 'rescue'); }
   }
 }
 // The time you are stuck does not count against a deadline: aground, under tow, and in port with the hull on the slip after it (the
@@ -528,7 +530,7 @@ function turTake(id){
   if (m.k === 'foto') msg('Kystposten', 'Fint at du tar den. Vi vil ha et bilde av ' + turFyrName(m) + (m.lys ? ' ' + TUR_LYS[m.lys].no : '') + '. Snu kameraet mot fyret og trykk på utløseren når du er innen 3 km.', 'Good that you take it. We want a picture of ' + turFyrName(m) + (m.lys ? ' ' + TUR_LYS[m.lys].en : '') + '. Turn the camera to the lighthouse and press the shutter when you are within 3 km.');
   if (m.k === 'slep'){ m.stage = 'reach'; msg(m.owner, 'Takk for at du kommer! «' + m.boat + '» har motorstopp og ligger og driver ved ' + coordStr(m.p) + '.', 'Thank you for coming! The «' + m.boat + '» has engine trouble and is drifting at ' + coordStr(m.p) + '.'); }
   T.act.push(m);
-  if (typeof cloudEv === 'function') cloudEv('tur_take', {k:m.k, cls:m.cls, nm:m.nm, min:turMinR(m.h)});
+  if (typeof cloudEv === 'function') cloudEv('tur_take', {id:m.id, k:m.k, cls:m.cls, nm:m.nm, min:turMinR(m.h), allow:turMinR(m.hTot)});
   // (the deck log says the deadline as it is set, in both tongues: the day, the hour and the real time it leaves)
   const dd = gDate(m.due / 60), p2 = n => String(n).padStart(2, '0'), at = p2(dd.getUTCHours()) + ':' + p2(dd.getUTCMinutes()), dn = typeof DAYS !== 'undefined' ? [DAYS.no[dd.getUTCDay()] + ' ' + dd.getUTCDate() + '. ' + MONS.no[dd.getUTCMonth()], DAYS.en[dd.getUTCDay()] + ' ' + dd.getUTCDate() + ' ' + MONS.en[dd.getUTCMonth()]] : ['', ''];
   log('Tok oppdraget: ' + turWhat(m)[0] + '. Frist ' + dn[0] + ' kl. ' + at + ', om ca. ' + turDur(m.hTot) + '.', 'Took the mission: ' + turWhat(m)[1] + '. Deadline ' + dn[1] + ' at ' + at + ', in about ' + turDur(m.hTot) + '.');
@@ -536,7 +538,7 @@ function turTake(id){
 }
 function turDrop(id){
   const T = turState(), m = T.act.find(x => x.id === id); if (!m) return;
-  turEnd(m, false, turL('Gav fra deg oppdraget.', 'Gave up the mission.'));
+  turEnd(m, false, turL('Gav fra deg oppdraget.', 'Gave up the mission.'), 'drop');
 }
 // the crew's job of getting the freight aboard or ashore (cargoMin, 03-simulation.js): the boat stays at the quay until it is done
 function cargoJob(kg, no, en){ if (typeof queueJob !== 'function' || S.boat.status !== 'port') return; queueJob({kind:'last', crew:true, h:cargoMin(kg) / 60, no, en}); }
@@ -565,7 +567,10 @@ function turSpawn(m){
   Object.assign(s, {id:gid('s'), vid:S.cur, a, b, tSet:S.t - 36 * 60, depth, acc, dead:0, lost:null, rep:false, warn:0, tur:m.id, owner:m.owner});
   S.sets = S.sets || []; S.sets.push(s); m.sid = s.id; m.vid = S.cur;
 }
-function turEnd(m, ok, why){
+// how: why a mission ended without pay (the measurement, 30.10.2026): 'drop' given up, 'due' the deadline passed (an order's too),
+// 'ashore' the drifting boat reached land, 'rescue' the rescue service took the tow over. The event carries the mission's id (joins its
+// tur_take) and frac, the share of the time allowed that was used, so the deadlines can be read against how long the jobs took
+function turEnd(m, ok, why, how){
   const T = turState(); T.act = T.act.filter(x => x !== m);
   if (!ok){
     if (m.k === 'frakt') S.cargo = (S.cargo || []).filter(c => c.tur !== m.id);
@@ -574,7 +579,8 @@ function turEnd(m, ok, why){
   }
   T.done.unshift({id:m.id, k:m.k, cls:m.cls, to:m.to || null, ok, pay:ok ? m.pay : 0, t:S.t, what:turWhat(m)}); T.done = T.done.slice(0, 20);
   if (why) log(why, why);
-  if (typeof cloudEv === 'function') cloudEv(ok ? 'tur_done' : 'tur_fail', {k:m.k, cls:m.cls, nm:m.nm, trim:!!trimOn(S.boat), min:Math.round((S.t - m.t0) / GAME_RATE), pay:ok ? Math.round(m.pay || 0) : 0});
+  const frac = m.due > m.t0 ? Math.round((S.t - m.t0) / (m.due - m.t0) * 100) / 100 : null;
+  if (typeof cloudEv === 'function') cloudEv(ok ? 'tur_done' : 'tur_fail', Object.assign({id:m.id, k:m.k, cls:m.cls, nm:m.nm, trim:!!trimOn(S.boat), min:Math.round((S.t - m.t0) / GAME_RATE), frac, pay:ok ? Math.round(m.pay || 0) : 0}, ok ? {} : {how:how || 'other'}));
 }
 function turPayOut(m, from, no, en){
   if (m.k !== 'best'){ book('oppdrag', m.pay, 'Oppdrag fullført', 'Mission completed'); bankAfterIncome(m.pay); }
@@ -617,12 +623,12 @@ function turHour(){
   for (const k in L) if (+k < d - 15) delete L[k];
   for (const m of T.act.slice()) if (m.due && S.t > m.due){
     // an order out of time is the orders' own to end and tell (ordersTick); once it has, the mission goes with it
-    if (m.k === 'best'){ if (!ordState().active.some(o => o.tur === m.id)) turEnd(m, false, null); continue; }
+    if (m.k === 'best'){ if (!ordState().active.some(o => o.tur === m.id)) turEnd(m, false, null, 'due'); continue; }
     if (m.k === 'garn' && (S.sets || []).some(s => s.tur === m.id && s.hauling)) continue;   // the haul under way finishes
     if (m.k === 'slep' && m.stage === 'tow') continue;   // and the tow under way
     if (m.k === 'prove' && m.stage === 'measure') continue;   // the fish are caught; the board waits
     msg(m.k === 'garn' ? m.owner : 'Oppdrag', 'Fristen gikk ut: ' + turWhat(m)[0] + '. Ta et nytt fra tavla når det passer.', 'The deadline passed: ' + turWhat(m)[1] + '. Take a new one from the board when it suits you.');
-    turEnd(m, false, null);
+    turEnd(m, false, null, 'due');
   }
 }
 // the mission in a few words, and the time it takes in real time

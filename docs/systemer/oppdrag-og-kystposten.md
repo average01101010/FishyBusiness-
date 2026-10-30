@@ -74,6 +74,12 @@ Punkt 4 i `docs/engasjement.md`. Jonas: en blanding av korte og lange oppdrag ut
   - Aldri til gjester, aldri i veiledningen, aldri i hardt vær eller med lite diesel. Mekanikeren nevner pumpa etter service høyst hver tredje ekte dag (`turMechanic`).
   - Ingenting av dette står i patchnotes.
 - **Måling:** `cloudEv` sender `tur_take`, `tur_done` og `tur_fail` (med type, klasse, nm og om trim var på) og `crew_tip` (hvilken kommentar).
+  - **Fra 30.10.2026** (`docs/research/oppdrag-gap-analyse.md`, punkt 1 i rekkefølgen, Jonas: «Kjør på»): av 52 oppdrag tatt 5.–29.10.2026 var 22 fullført og 13 feilet, og feilene kunne ikke skilles (gitt fra seg, frist ute, båten drev på land). Nå:
+    - `tur_show` når tavla vises med et nytt sett oppdrag (`T.shown` er id-ene; én gang per sett, også etter omlasting), med antall, typer, klasser og hvor mange som er tatt. Så kan en tavle som ble sett uten at noe ble tatt, telles.
+    - `tur_take` har oppdragets `id` og `allow` (ekte minutter til rådighet).
+    - `tur_done` og `tur_fail` har `id` (så de kan kobles til sitt `tur_take`) og `frac` (brukt tid delt på fristen, to desimaler). `tur_fail` har `how`: `drop` (gitt fra seg), `due` (fristen gikk ut, også bestillinger som ordresystemet avsluttet), `ashore` (båten med motorstopp drev på land), `rescue` (Redningsselskapet tok over slepet), ellers `other`.
+    - Admin («Oppdrag og fangst per spiller», `admin_tur_share` i `supabase/migrations/20261030120000_tur_how.sql`) viser tavler sett, tatt, fullført, gitt fra seg, frist ute, feilet ellers og snittet av brukt frist for de fullførte. Migreringen må kjøres i SQL Editor; til da viser kolonnene «–». SQL-en er røyktestet mot hendelsene med MCP (uten `is_admin`): gamle `tur_fail` uten `how` havner i «Feilet ellers».
+    - Ingenting av dette synes i spillet, og ingen patchnote.
 - **Skjermen:** fanen «Turer» i Oppdrag-appen viser «Dine oppdrag», tavla og tidligere oppdrag. Bestillingene har egen fane. Kartet viser en stiplet ring der hvert oppdrag går (`turSvg`).
 - **Tavla** trekker nå blant typene med vekter (`draw` i `turMake`): de korte mellom bestilling, frakt, prøvefiske og fyrbilde, middels også med slep, og lange mellom bestilling, frakt og fyrbilde. Høyst ett prøvefiske og ett fyrbilde om gangen.
 - **Neste:** se Kystposten (4.27).

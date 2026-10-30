@@ -243,6 +243,16 @@ async def main():
           return {moved1:seq1 > seq0, moved2:seq2 > seq1, kg:after.kg, pay:after.pay, v:after.v, slots:after.slots, hold:BOAT.holdCap}; })()""")
         check(rr['moved1'] and not rr['moved2'] and rr['kg'] <= 2 * rr['hold'] and rr['pay'] < 400000 and rr['v'] == 3 and rr['slots'] == 4,
               'moving far makes a new board once a game day, not twice; a season\'s move from the oldest saves is brought down to two holds; the save comes over to the new rules with a full board', rr)
+        # 14. the measurement (30.10.2026): a board seen sends tur_show once for that set of missions; a mission taken sends tur_take with its id
+        #     and the real minutes allowed; given up it sends tur_fail with the same id, how it ended ('drop') and the share of the deadline used
+        ev = await pg.evaluate("""(() => { const T = turState(), EV = []; const keep = {ev:cloudEv, act:T.act, shown:T.shown}; cloudEv = (k, d) => EV.push({k, d}); T.act = []; T.shown = null;
+          turEnsure(true); turPage(); turPage(); const shows = EV.filter(e => e.k === 'tur_show').length, show = EV.find(e => e.k === 'tur_show');
+          const m = T.board[0]; turTake(m.id); const take = EV.find(e => e.k === 'tur_take'); S.t += 30; turDrop(m.id); const fail = EV.find(e => e.k === 'tur_fail');
+          cloudEv = keep.ev; T.act = keep.act; T.shown = keep.shown;
+          return {shows, show:show && show.d, take:take && take.d, fail:fail && fail.d, id:m.id}; })()""")
+        check(ev['shows'] == 1 and ev['show'] and ev['show']['n'] >= 1 and ev['take'] and ev['take']['id'] == ev['id'] and ev['take']['allow'] > ev['take']['min']
+              and ev['fail'] and ev['fail']['id'] == ev['id'] and ev['fail']['how'] == 'drop' and 0 < ev['fail']['frac'] < 1 and ev['fail']['pay'] == 0,
+              'the measurement: tur_show once per board seen; tur_take with the mission\'s id and the minutes allowed; given up, tur_fail with the same id, how=drop and the share of the deadline used', ev)
         check(errs == [], 'sidefeil', errs[:3])
         await br.close()
 

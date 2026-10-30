@@ -46,6 +46,9 @@ function turPage(){
   if (!T.board.length) h.push('<div class="ph-card"><p class="ph-note">' + L0('Ingen oppdrag på tavla akkurat nå.', 'No missions on the board just now.') + (next ? L0(' Det neste kommer om ca. ', ' The next comes in about ') + next + '.' : '') + '</p></div>');
   const way = turWay(), o = turHere(), B = T.board.map(m => ({m, d:turDetour(m, way, o)})).sort((a, c) => (a.d == null ? 1e9 : a.d) - (c.d == null ? 1e9 : c.d));
   for (const {m, d} of B) h.push(turCard(m, false, d));
+  // the board seen (the measurement, 30.10.2026): once for each set of missions shown, so a board looked at and left alone can be counted
+  const sig = T.board.map(m => m.id).join(',');
+  if (sig && T.shown !== sig){ T.shown = sig; if (typeof cloudEv === 'function') cloudEv('tur_show', {n:T.board.length, k:T.board.map(m => m.k), cls:T.board.map(m => m.cls), act:T.act.length}); }
   if (T.board.length && next) h.push('<p class="ph-note tur-n">' + L0('Neste oppdrag kommer om ca. ', 'The next mission comes in about ') + next + '.</p>');
   const old = T.done.slice(0, 6);
   if (old.length) h.push('<h4 class="tur-sec">' + L0('Tidligere', 'Earlier') + '</h4><div class="ph-card">' + old.map(d => '<div class="kv"><span>' + turEsc(L0(d.what[0], d.what[1])) + '</span><b>' + (d.ok ? kr(d.pay) : '<span class="r2">' + L0('ikke fullført', 'not done') + '</span>') + '</b></div>').join('') + '</div>');

@@ -13,7 +13,7 @@
 1. **Ansikt og hook.** Oppdragene er kontrakter uten avsender. Ingen husker at du leverte, ingenting følger av det senere. Dette er det RuneScape, CDPR og Sea of Thieves peker på som forskjellen mellom en plikt og en opplevelse.
 2. **Noe som skjer underveis.** Oppdraget sjekkes så det er gjennomførbart, og så skjer ingenting før du er framme. Emergensen (vær, bestand, andre båter) brukes til å *filtrere* oppdrag, ikke til å *forandre* dem.
 3. **Terskelen inn.** Spilleren i intervjuet så oppdragene og «turte ikke». 4 av 14 aktive spillere har tatt et oppdrag. Første oppdrag må være garantert trygt og ligge på veien.
-4. **Måling.** 17 av 52 tatte oppdrag er verken fullført eller feilet i hendelsene (gitt fra seg, umålt). `pay` mangler i 14 av 22 `tur_done`. Sesongflyttingen feiler 7 av 11 ganger. Dette er signaler, ikke bevis (14 spillere), men de peker tydelig.
+4. **Måling.** De 13 feilede oppdragene kan ikke skilles (gitt fra seg, frist ute, på land), og 17 av 52 tatte har ikke noe utfall i hendelsene. Sesongflyttingen feiler 7 av 11 ganger. Dette er signaler, ikke bevis (14 spillere), men de peker tydelig. (Målingen er bygd 30.10.2026.)
 
 ---
 
@@ -42,7 +42,7 @@ Konklusjon: del 1 bekrefter retningen. Ingenting i grunnreglene bør endres.
 
 Bare spillere som deler statistikk. 14 aktive spillere, 5 har solgt fisk, 4 har tatt oppdrag, 3 har fullført.
 
-| | Tatt | Fullført | Feilet | Umålt (gitt fra seg?) |
+| | Tatt | Fullført | Feilet (også gitt fra seg) | Uten utfall |
 |---|---|---|---|---|
 | Alle | 52 | 22 | 13 | 17 |
 | Kort | 9 | 5 | 3 | 1 |
@@ -115,12 +115,13 @@ Research: Koster, moro er læring. Spillets fortrinn er ekte data.
 
 ### 3.7 Målingen har hull
 
-- Ingen hendelse når et oppdrag gis fra seg (`turdrop`). 17 av 52 forsvinner.
-- `pay` mangler i 14 av 22 `tur_done`, så `admin_tur_share` undervurderer oppdragsandelen.
+- Et oppdrag som gis fra seg logges som `tur_fail`, likt med et som gikk ut på tid eller en båt som drev på land. De 13 feilene kan ikke skilles. (Rettet fra første utkast, som sa at det ikke ble logget.)
+- 17 av 52 `tur_take` har verken `tur_done` eller `tur_fail`. Uten en id på oppdraget kan vi ikke se om de fortsatt står, eller om hendelsen aldri kom fram (lukket fane, konflikt i lagringen).
+- `pay` mangler i 14 av 22 `tur_done`, men bare i dem fra før 17.10.2026 (feltet kom med oppdragsøkonomien). Ikke et hull i koden i dag.
 - Ingen hendelse for at tavla ble sett uten at noe ble tatt.
 - Ingen måling av tid brukt mot frist (backlog 10.5 ber om det).
 
-**Minste versjon:** `tur_drop` med type, klasse, minutter siden tatt og om lasta var om bord; `pay` alltid i `tur_done`; `tur_show` én gang per tavle; `due_frac` (brukt tid / frist) i `tur_done`. Dette er en liten jobb og bør gå først, fordi alt annet skal leses av i tallene.
+**Minste versjon:** `how` i `tur_fail` (gitt fra seg, frist, på land, Redningsselskapet); `id` på alle tre så tatt kan kobles til utfall; `tur_show` én gang per sett på tavla; `frac` (brukt tid / frist). Dette er en liten jobb og bør gå først, fordi alt annet skal leses av i tallene. **Bygd 30.10.2026**, se `docs/systemer/oppdrag-og-kystposten.md` (Måling).
 
 ---
 
@@ -139,7 +140,7 @@ Hver linje passer i én økt etter `docs/utviklingsplan.md`.
 
 | # | Hva | Hvorfor først | Måles som |
 |---|---|---|---|
-| 1 | Måling: `tur_drop`, `pay` alltid, `tur_show`, `due_frac` | Alt etterpå skal leses av her | Andel umålt → 0 |
+| 1 | Måling: `how` i `tur_fail`, `id`, `tur_show`, `frac` (bygd 30.10.2026) | Alt etterpå skal leses av her | Andel uten utfall → 0 |
 | 2 | Garantert første oppdrag i Første uke, kapittel 2 | Største terskel, 4 av 14 | Andel som tar oppdrag nr. 2 innen 7 dager |
 | 3 | Sesongflytting i tre etapper med delbelønning | 7 av 11 feiler | Fullført + delvis mot feilet |
 | 4 | Avsender med navn og én linje hukommelse ved levering | Hook, immersion, billig med `09d-folk.js` | Gjentatte oppdrag fra samme sted |
