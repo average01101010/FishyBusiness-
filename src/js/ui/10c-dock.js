@@ -323,10 +323,18 @@ const DOCK = (() => {
 function renderActs(){ DOCK.render(); }
 
 // the market's showroom (G3.showroom): a chip with the boat's name and size, and the way back to her spec sheet
+let SHOWST = null;   // your own boat's status when the showroom opened
 hooks.onShowroom = type => {
+  SHOWST = type ? S.boat.status : null;
   const el = $('showChip'); if (!el) return;
   if (!type){ el.hidden = true; return; }
   const V = VESSELS[type], L = (no, en) => S.lang === 'no' ? no : en;
   $('scTx').textContent = V.name[S.lang] + ' · ' + fmt(V.len, 2) + ' × ' + fmt(V.beam, 1) + ' m'; $('scBack').textContent = L('‹ Tilbake', '‹ Back'); el.hidden = false;
 };
 $('scBack').addEventListener('click', () => { G3.showroom(null); DOCK.open('fartoy'); });
+// every tick: when your own boat casts off from the harbour or runs aground, the showroom ends and the camera goes back to her
+function showroomTick(){
+  if (!SHOWST || !G3.showing) return;
+  const st = S.boat.status; if (!(st === 'aground' && SHOWST !== 'aground') && !(SHOWST === 'port' && st !== 'port')) return;
+  G3.showroom(null); toast(S.lang === 'no' ? 'Visningen er lukket. Kameraet er tilbake på båten din.' : 'The showroom is closed. The camera is back on your boat.');
+}

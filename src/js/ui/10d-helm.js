@@ -36,7 +36,9 @@ const HUI = (() => {
   }
   // every tick: shown in 3D with the setting on, at sea where the hand can take her; the button where it can be used
   function tick(){
-    const on = !!(S.settings && S.settings.manual) && document.body.classList.contains('v3d'), b = S.boat;
+    // not while the market's showroom or the paint shop has the screen: the boat in view is not the one the helm steers (tilbakemelding #101)
+    const away = typeof G3 !== 'undefined' && (G3.showing || G3.painting);
+    const on = !!(S.settings && S.settings.manual) && document.body.classList.contains('v3d') && !away, b = S.boat;
     document.body.classList.toggle('helm', on && (helmOn() || helmCan()));
     const moor = on && helmMoorable(), cast = on && b.status === 'port' && !portBusy(b) && !(S.plan && S.plan.depAt);
     btn.hidden = !(moor || cast);
