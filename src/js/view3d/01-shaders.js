@@ -437,8 +437,20 @@
   // 05.10.2026: «shadere: Error», nothing more)
   const FS_HP = '\n#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\n';
   const glWhy = (log, nm) => nm + ': ' + (gl.isContextLost() ? 'konteksten er mistet' : (log && log.trim()) || 'ingen logg fra driveren');
+  // the shaders are written in GLSL ES 1.00 (WebGL 1); on WebGL 2 (F1, 30.10.2026) they are turned into 3.00 word for word, as 1.00
+  // there has no derivatives (fwidth), and the same source draws the same picture: in and out for attribute and varying, texture() for
+  // texture2D, an out colour for gl_FragColor, and no #extension (derivatives are core). #version must be the first line.
+  function glsl3(src, fs){
+    src = src.replace(/#extension GL_OES_standard_derivatives\s*:\s*enable\s*\n?/g, '').replace(/\btexture2D\s*\(/g, 'texture(').replace(/\btextureCube\s*\(/g, 'texture(').replace(/\btexture2DLodEXT\s*\(/g, 'textureLod(');
+    if (fs) src = src.replace(/\bvarying\b/g, 'in').replace(/\bgl_FragColor\b/g, 'oCol_');
+    else src = src.replace(/\battribute\b/g, 'in').replace(/\bvarying\b/g, 'out');
+    // the out colour after the precision line (or at the top), so it never comes before a #define the source starts with
+    if (fs){ const m = /precision\s+\w+\s+float\s*;/.exec(src); src = m ? src.slice(0, m.index + m[0].length) + 'out vec4 oCol_;' + src.slice(m.index + m[0].length) : 'out vec4 oCol_;\n' + src; }
+    return '#version 300 es\n' + src;
+  }
   function compile(type, src, nm){
-    if (type === gl.FRAGMENT_SHADER) src = src.replace('precision highp float;', FS_HP);
+    if (type === gl.FRAGMENT_SHADER && !GL2) src = src.replace('precision highp float;', FS_HP);   // (ES 3.00 always has highp there)
+    if (GL2) src = glsl3(src, type === gl.FRAGMENT_SHADER);
     const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
     if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(glWhy(gl.getShaderInfoLog(s), nm + (type === gl.VERTEX_SHADER ? ' VS' : ' FS')));
     return s;

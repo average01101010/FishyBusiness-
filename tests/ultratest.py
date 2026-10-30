@@ -1,7 +1,7 @@
 """The ultra graphics level (05.10.2026, view3d.js QUAL lvl 3; Jonas: «en ultra grafikk setting ... finne ut hvor grensa ligger for
 flagship-modeller»): chosen in Settings it draws at the screen's own pixels, builds the near terrain at 384 points a side, the fine
 ground at 384, the far terrain 160 km wide at 511 points (32-bit indices), the wave patch at 2 m, and draws without GL errors; back on
-high it builds them as before. Auto never goes to ultra. SwiftShader draws on the CPU, so this shows that ultra is built right, not how
+high it builds them as before. Auto goes to ultra only by the measured frame time (F1, 30.10.2026). SwiftShader draws on the CPU, so this shows that ultra is built right, not how
 fast it runs on a phone (that is measured there, with «Vis bildetakt»). Pictures: ultra.png, ultra_high.png. Prints OK or FEIL per check."""
 from _env import GAME, boot
 import asyncio, json
@@ -38,8 +38,10 @@ async def main():
         h = await pg.evaluate(STATE); print(json.dumps(h))
         print(ok(h['q']['lvl'] == 2 and h['near']['gn'] == 256 and h['terr']['sx'] == 100000 and h['np'] == 150 and h['dpr'] <= 1.5 and h['err'] == 0), 'back on high the meshes, the wave patch and the pixels are as before', h)
         await pg.screenshot(path='ultra_high.png', timeout=120000)
-        a = await pg.evaluate("(() => { G3.quality('auto'); const D = G3._debug; for (let i = 0; i < 200; i++) D.qualTick(0.1, 90, performance.now() + i * 100); return G3.quality().lvl; })()")
-        print(ok(a <= 2), 'auto never goes to ultra', a)
+        # (auto went never to ultra until F1 of the boat models, 30.10.2026, valg 2 A: now after 20 s over 80 frames a second on high,
+        # tried by f1test in full)
+        a = await pg.evaluate("(() => { G3.quality('auto'); const D = G3._debug, Q = D.QUAL, t0 = performance.now() + 2e5, r = []; Q.capT = -1e9; D.QU.st = null; try { localStorage.removeItem('dsb_ultra'); } catch (e){} for (let i = 0; i < 150; i++) D.qualTick(0.1, 90, t0 + i * 100); r.push(Q.lvl); for (let i = 0; i < 70; i++) D.qualTick(0.1, 90, t0 + 15000 + i * 100); r.push(Q.lvl); return r; })()")
+        print(ok(a == [2, 3]), 'auto stays on high for 15 s over 80 frames a second, and goes to ultra after 20 s (the device has 32-bit indices)', a)
         print('errors:', errs[:3]); await b.close()
 
 asyncio.run(main())

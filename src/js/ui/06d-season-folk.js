@@ -5,6 +5,18 @@
 const SEASONAPP = (() => {
   const L = (no, en) => S.lang === 'no' ? no : en;
   const MON = [['jan', 'feb', 'mar', 'apr', 'mai', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'des'], ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']];
+  // the village contest (docs/planer/oppdrag-2.md F3; ui/10h-world.js bygdeTop): which plant in your part of the coast got most landed
+  // this week, your own plant's place and the three above it. No prize: the honour, and Kystposten on Sunday evening
+  function bygdeCard(H){
+    if (typeof bygdeTop !== 'function' || typeof landsdel !== 'function' || typeof CLOUD === 'undefined' || !CLOUD.on || !CLOUD.user) return '';
+    const q = portById(S.boat.port) || portById(S.home || ''); if (!q) return ''; const reg = landsdel(q.p), rn = L(LANDSDEL[reg][0], LANDSDEL[reg][1]), w = weekOf(H), t = bygdeTop(w), d = t && t.data && t.data[reg];
+    const head = '<div class="ph-card"><h4>' + L('Bygdekampen i ' + rn, 'The village contest in ' + rn) + '</h4>';
+    if (!t || t.err || !t.data) return head + '<p class="ph-note">' + (t && t.err ? L('Tavla er ikke å få tak i nå.', 'The board cannot be reached now.') : L('Henter tavla …', 'Fetching the board …')) + '</p></div>';
+    if (!d || !d.rows || !d.rows.length) return head + '<p class="ph-note">' + L('Ingen leveringer i ' + rn + ' denne uka ennå. Hvert mottak teller alt som leveres til det, og det med mest står øverst søndag kveld.', 'No landings in ' + rn + ' this week yet. Every plant counts all that is landed to it, and the one with most stands top on Sunday evening.') + '</p></div>';
+    const pn = id => portById(id) ? portById(id).name : id, mine = d.mine, rows = mine && mine.rank > 4 ? d.rows.slice(0, 3).concat(d.rows.filter(r => r.port === mine.port)) : d.rows.slice(0, 4);
+    return head + '<p class="ph-note">' + L('Mottakene i ' + rn + ' etter det som er levert denne uka. ', 'The plants of ' + rn + ' by what was landed this week. ') + (mine ? L('Ditt mottak, ' + pn(mine.port) + ', er nummer ' + mine.rank + ' av ' + (d.n || d.rows.length) + '.', 'Your plant, ' + pn(mine.port) + ', is number ' + mine.rank + ' of ' + (d.n || d.rows.length) + '.') : L('Lever, så teller mottaket ditt.', 'Land, and your plant counts.')) + '</p>' +
+      '<table class="ph-tbl"><tr><th>#</th><th>' + L('Mottak', 'Plant') + '</th><th>kg</th><th>' + L('båter', 'boats') + '</th></tr>' + rows.map(r => '<tr' + (r.me ? ' class="here"' : '') + '><td>' + r.rank + '</td><td>' + pn(r.port) + '</td><td>' + fmt(r.kg, 0) + '</td><td>' + (r.n || 0) + '</td></tr>').join('') + '</table></div>';
+  }
   function page(){
     const H = S.t / 60, e = seasonNow(H), y = yearH(H), F = festDays(y), h = ['<div class="ph-c">'], mon = gDate(H).getUTCMonth();
     // the shared events (core/09c-seasons.js EVENTS): the board for everyone, from a week before to two weeks after
@@ -12,12 +24,15 @@ const SEASONAPP = (() => {
       const on = H >= D.H0 && H < D.H1, over = H >= D.H1, t = typeof evTop === 'function' ? evTop(ev.id, y) : null, d = t && t.data, B = evBadges()[ev.id + y];
       const name = L(ev.no, ev.en) + ' ' + y, pl = d && d.plants && d.plants[0], plName = pl && portById(pl.port) ? portById(pl.port).name : (pl ? pl.port : '');
       h.push('<div class="ph-card sn-fest"><h4>' + name + '</h4><p class="ph-note">' + (on ? L('Dag ' + evDayN(ev, H) + ' av ' + D.days + '. ', 'Day ' + evDayN(ev, H) + ' of ' + D.days + '. ') : over ? L('Over. ', 'Over. ') : L('Begynner ' + dayStr(D.H0).replace(/^\S+ /, '') + '. ', 'Begins ' + dayStr(D.H0).replace(/^\S+ /, '') + '. ')) +
-        (ev.box ? L('Alt som leveres i området teller', 'Everything landed in the area counts') : L('Alt som leveres langs hele kysten teller', 'Everything landed along the whole coast counts')) + ' (' + ev.sp.map(s => SPECIES[s] ? SPECIES[s][S.lang === 'en' ? 'en' : 'no'].toLowerCase() : s).join(', ') + '). ' +
-        L('Over ' + fmt(ev.kg, 0) + ' kg gir merket «' + ev.badge[0] + ' ' + y + '». De tre beste får ' + EV_PRIZE.map(p => fmt(p, 0)).join(', ') + ' kr.', 'Over ' + fmt(ev.kg, 0) + ' kg gives the badge «' + ev.badge[1] + ' ' + y + '». The top three get ' + EV_PRIZE.map(p => fmt(p, 0)).join(', ') + ' kr.') + '</p>' +
+        L('Alt som leveres i ' + ev.area[0] + ' teller', 'Everything landed in ' + ev.area[1] + ' counts') + ' (' + ev.sp.map(s => SPECIES[s] ? SPECIES[s][S.lang === 'en' ? 'en' : 'no'].toLowerCase() : s).join(', ') + '). ' +
+        L('Tre fulle lastrom av båten din (' + fmt(evBadgeNeed(BOAT.holdCap), 0) + ' kg) gir merket «' + ev.badge[0] + ' ' + y + '». De tre beste får ' + EV_PRIZE.map(p => fmt(p, 0)).join(', ') + ' kr.', 'Three full holds of your boat (' + fmt(evBadgeNeed(BOAT.holdCap), 0) + ' kg) give the badge «' + ev.badge[1] + ' ' + y + '». The top three get ' + EV_PRIZE.map(p => fmt(p, 0)).join(', ') + ' kr.') + '</p>' +
         (d ? '<p>' + L(fmt(d.kg / 1000, 1) + ' tonn levert av ' + d.n + ' båter.', fmt(d.kg / 1000, 1) + ' tonnes landed by ' + d.n + ' boats.') + (d.mine ? ' ' + L('Du: ' + fmt(d.mine.kg, 0) + ' kg, plass ' + d.mine.rank + '.', 'You: ' + fmt(d.mine.kg, 0) + ' kg, place ' + d.mine.rank + '.') : ' ' + L('Du har ikke levert der ennå.', 'You have not landed there yet.')) + (plName ? ' ' + L(plName + ' leder med ' + fmt(pl.kg / 1000, 1) + ' tonn.', plName + ' leads with ' + fmt(pl.kg / 1000, 1) + ' tonnes.') : '') + '</p>' +
           (d.rows && d.rows.length ? '<table class="ph-tbl"><tr><th>#</th><th>' + L('Båt', 'Boat') + '</th><th>kg</th></tr>' + d.rows.slice(0, 8).map(r => '<tr' + (r.me ? ' class="here"' : '') + '><td>' + r.rank + '</td><td>' + (r.boat || '–') + (r.port && portById(r.port) ? ' <small>' + portById(r.port).name + '</small>' : '') + '</td><td>' + fmt(r.kg, 0) + '</td></tr>').join('') + '</table>' : '<p class="ph-note">' + L('Ingen båter har levert der ennå.', 'No boats have landed there yet.') + '</p>')
           : t && t.err ? '<p class="ph-note">' + L('Tavla er ikke å få tak i nå.', 'The board cannot be reached now.') + '</p>' : t ? '<p class="ph-note">' + L('Henter tavla …', 'Fetching the board …') + '</p>' : '<p class="ph-note">' + L('Tavla trenger nett og innlogging.', 'The board needs the net and a sign-in.') + '</p>') +
         (B && B.badge ? '<p><b>' + L('Merket «' + ev.badge[0] + ' ' + y + '» er ditt', 'The badge «' + ev.badge[1] + ' ' + y + '» is yours') + (B.rank ? ' · ' + L('nummer ', 'number ') + B.rank : '') + '</b></p>' : '') + '</div>'); }
+    // the fiskarlag's week (ui/09c-pubsoc.js PUBSOC.lagCard; docs/planer/oppdrag-2.md F1)
+    if (typeof PUBSOC !== 'undefined' && PUBSOC.lagCard) h.push(PUBSOC.lagCard());
+    h.push(bygdeCard(H));
     if (e) h.push('<div class="ph-card sn-now"><small>' + L('Nå', 'Now') + '</small><h4>' + L(e.post[0][0], e.post[0][1]) + '</h4><p>' + L(e.post[1][0], e.post[1][1]) + '</p></div>');
     // the festival from a week before to three days after
     if (H > F.H0 - 24 * 7 && H < F.H1 + 24 * 3){

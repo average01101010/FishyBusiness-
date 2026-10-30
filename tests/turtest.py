@@ -305,7 +305,9 @@ async def main():
           let rolled = 0; for (let i = 0; i < 12; i++){ const t = Object.assign({}, m, {cls:'lang'}); turEventRoll(t); if (t.ev && ['more', 'tip', 'wx'].includes(t.ev.k) && t.ev.at > 0) rolled++; }
           m.id = ++T.seq; m.until = S.t + 9999; m.cls = 'lang'; m.pay = turFinal(m); T.board.push(m); turTake(m.id); const act = T.act.find(x => x.id === m.id), had = !!act.ev;
           const st0 = b.status; b.status = 'sailing'; const n0 = S.msgs.length;
-          act.ev = {k:'more', at:0, done:false}; turEventFire(act, b); const more = {extra:act.extra && act.extra.kg, prem:act.extra && act.extra.prem, said:S.msgs.length > n0 && S.msgs[S.msgs.length - 1].from};
+          act.ev = {k:'more', at:0, done:false}; turEventFire(act, b); const more = {extra:act.extra && act.extra.kg, prem:act.extra && act.extra.prem, said:S.msgs.length > n0 && S.msgs[S.msgs.length - 1].from, room:turRoom(act.sp, S.t / 60)};
+          // no extra kilos beyond the quota's room: with the quota nearly used up, the call does not come (Jonas 31.10.2026)
+          const keepRoom = turRoom; const n0b = S.msgs.length; const a2 = Object.assign({}, act, {extra:null, ev:{k:'more', at:0, done:false}}); window.turRoom = () => a2.kg + 20; turEventFire(a2, b); window.turRoom = keepRoom; const noRoom = {extra:a2.extra, said:S.msgs.length > n0b};
           act.ev = {k:'tip', at:0, done:false}; const n1 = S.msgs.length; turEventFire(act, b); const tip = {has:!!act.tip, said:S.msgs.length > n1 ? S.msgs[S.msgs.length - 1].from : null};
           act.ev = {k:'wx', at:0, done:false}; const n2 = S.msgs.length; turEventFire(act, b); const wx = {has:!!act.wx, said:S.msgs.length > n2 ? S.msgs[S.msgs.length - 1].from : null};
           b.status = st0;
@@ -316,11 +318,47 @@ async def main():
           const w = {id:9, due:1000, wx:{hs:3, at:0}, t0:0, k:'frakt'}, w2 = {id:10, due:1000, t0:0, k:'frakt'}; T.act = [w, w2]; b.status = 'port'; let wind = 0; try { wind = windAt(S.t / 60, b.pos); } catch (e){} turStuck(T, b); b.status = st0;
           const gale = {wind:+wind.toFixed(1), due:w.due, due2:w2.due};
           Object.assign(T, {done:keep.done, act:keep.act, board:keep.board, rep:keep.rep, slots:keep.slots}); ordState().active = [];
-          return {rolled, had, more, tip, wx, paid, gain, gale, kg:act.kg, sp:act.sp}; })()""")
+          return {rolled, had, more, noRoom, tip, wx, paid, gain, gale, kg:act.kg, sp:act.sp}; })()""")
         g = ev2.get('gale', {})
-        ok17 = ev2.get('none') or (ev2['rolled'] == 12 and ev2['had'] and ev2['more']['extra'] and ev2['more']['prem'] == 0.3 and ev2['more']['said'] and (not ev2['tip']['has'] or ev2['tip']['said']) and (not ev2['wx']['has'] or ev2['wx']['said'] == 'Kystradio')
+        ok17 = ev2.get('none') or (ev2['rolled'] == 12 and ev2['had'] and ev2['more']['extra'] and ev2['more']['prem'] == 0.3 and ev2['more']['said'] and (not ev2['more']['room'] or ev2['kg'] + ev2['more']['extra'] <= ev2['more']['room'] * 0.8 + 10) and not ev2['noRoom']['extra'] and not ev2['noRoom']['said'] and (not ev2['tip']['has'] or ev2['tip']['said']) and (not ev2['wx']['has'] or ev2['wx']['said'] == 'Kystradio')
                                    and ev2['paid'] > 0 and ev2['gain'] >= ev2['paid'] and g['due2'] == 1000 and g['due'] == (1001 if g['wind'] >= 13.9 else 1000))
         check(ok17, "something happens under way: a long mission rolls one event; the plant's call for extra kilos pays them when landed; the VHF tip and the worsened forecast speak only when the model bears them out; harbour time under a gale does not count against a mission the forecast turned on", ev2)
+        # 18. the search (L1, 30.10.2026): a mission with the questions the model can answer, the species one the boat may fish and land; three
+        #     places fished inside the area (an hour each, apart) and the questions are hers; right answers pay the bonus; the line stays in S.lete
+        le = await pg.evaluate("""(() => { const T = turState(), ty = S.boat.type, keep = {act:T.act, board:T.board}; T.act = []; T.board = []; S.boat.type = 'sjark'; applyVessel(); S.boat.fuel = BOAT.fuelCap;
+          let m = null; for (let i = 0; i < 6 && !m; i++) m = turLete(turHere(), 'mid'); S.boat.type = ty; applyVessel(); if (!m) return {none:true};
+          const okSp = turSpOk(m.sp) && turRoom(m.sp, S.t / 60) >= 200, qs = m.qs.map(q => q.k), ansIn = m.qs.every(q => q.opts.includes(q.ans));
+          m.id = ++T.seq; m.until = S.t + 9999; m.pay = turFinal(m); T.board.push(m); turTake(m.id); const a = T.act.find(x => x.id === m.id); const b = S.boat, st = b.status, p0 = {...b.pos};
+          b.status = 'fishing'; const places = [[0, 0], [1.2, 0], [0, 1.2]]; const seen = [];
+          for (const [dx, dy] of places){ b.pos = {x:m.p.x + dx, y:m.p.y + dy}; for (let k = 0; k < 60; k++) turLeteMinute(a, b); seen.push(a.seen.length); }
+          const stage = a.stage, cash0 = S.cash; b.pos = p0; b.status = st;
+          for (let i = 0; i < a.qs.length; i++) turLeteAnswer(a.id, i, a.qs[i].ans);
+          const d = T.done.find(x => x.id === m.id), L = (S.lete || {})[m.sp] || [], ring = /turmk lete/.test(turSvg(1, () => true)), badge = achC('lete');
+          Object.assign(T, keep); return {sp:m.sp, okSp, qs, ansIn, seen, stage, done:!!(d && d.ok), gain:S.cash - cash0, pay:d && d.pay, base:m.base, bonus:m.bonusMax, line:L[0] && L[0].no, who:turLeteWho(m), ring, badge}; })()""")
+        check(le.get('none') or (le['okSp'] and 1 <= len(le['qs']) <= 3 and le['ansIn'] and le['seen'] == [1, 2, 3] and le['stage'] == 'answer' and le['done'] and le['pay'] == le['base'] + le['bonus'] and le['gain'] == le['pay'] and le['line'] and le['who'] and le['ring'] and le['badge'] >= 1),
+              'the search: a species the boat may fish and land, one to three questions the model can answer, three places fished an hour each make the questions hers, all right pays the full bonus, the line stays, the ring is on the chart for a day and the badge counts', le)
+        # 19. the chain (K1, 31.10.2026): the manager's own order done brings a second link of another kind from her place, that done a third,
+        #     her order again at 20 % over; the third done gives the badge, the follow-on and the paper; a link run out ends the chain with a word;
+        #     a link takes no place on the board
+        ch = await pg.evaluate("""(() => { const T = turState(), ty = S.boat.type, keep = {act:T.act, board:T.board, rep:T.rep, slots:T.slots}; T.act = []; T.board = []; S.boat.type = 'sjark'; applyVessel(); S.boat.fuel = BOAT.fuelCap; S.adm = Object.assign(S.adm || {}, {noEnergy:true});
+          const o = turHere(), me = turMe(); let q = null, first = null;
+          for (const c of turPlants().filter(x => x.id !== S.boat.port).sort((a, b) => turNm(o, a.p) - turNm(o, b.p))){ const h = turNm(o, c.p) / turV(); if (h < 0.4 || h >= 18) continue; first = turBestAt(o, c, h, h < 3 ? 'kort' : h < 7.5 ? 'mid' : 'lang', me); if (first){ q = c; break; } }
+          if (!first) return {none:true};
+          first.id = ++T.seq; first.ask = true; const m0 = S.msgs.length;
+          const l2 = turChainNext(first), k2 = l2 && l2.k, n2 = l2 && l2.chain && l2.chain.n, onBoard2 = !!(l2 && T.board.includes(l2)), said2 = S.msgs.length - m0;
+          if (!l2){ S.boat.type = ty; applyVessel(); Object.assign(T, keep); return {k2:null}; }
+          T.board = T.board.filter(x => x !== l2); const slots0 = T.slots; T.board.push(l2); turTake(l2.id); const slots1 = T.slots; T.act = T.act.filter(x => x !== l2);
+          const l3 = turChainNext(l2), k3 = l3 && l3.k, n3 = l3 && l3.chain && l3.chain.n, prem3 = l3 && l3.prem, again = turChainNext(l2);
+          // the third done: the badge, the paper and the follow-on
+          T.board = T.board.filter(x => x !== l3); T.act = [l3]; l3.t0 = S.t; l3.due = S.t + 600; const b0 = achC('kjede'), p0 = pressState().own.length, m1 = S.msgs.length;
+          turEnd(l3, true, null); const badge = achC('kjede') - b0, pressed = pressState().own.slice(p0).some(x => x.kind === 'tur' && x.d && x.d.k === 'kjede'), ended = S.msgs.slice(m1).some(x => /Tre på rad/.test(x.no));
+          // a link run out: the chain ends with a word, nothing more is laid
+          const l2b = Object.assign({}, l2, {id:++T.seq, chain:{id:999, n:2, to:q.id, sp:first.sp}, t0:S.t, due:S.t + 600}); T.act = [l2b]; T.board = []; const m2 = S.msgs.length; turEnd(l2b, false, null, 'due'); const broke = S.msgs.slice(m2).some(x => /ikke noe av resten/.test(x.no)), laid = T.board.some(x => x.chain);
+          const story = pressStory({id:5, kind:'tur', gh:100, x:q.p.x, y:q.p.y, boat:'Havgull', d:{k:'kjede', to:q.id, sp:first.sp, kg:300, nm:20}});
+          S.boat.type = ty; applyVessel(); Object.assign(T, keep); return {k2, n2, onBoard2, said2, slots0, slots1, k3, n3, prem3, again:!!again, badge, pressed, ended, broke, laid, story:!!(story && /fast leverandør/.test(story.h[0]))}; })()""")
+        check(ch.get('none') or ch.get('k2') is None or (ch['k2'] in ('lete', 'frakt', 'foto') and ch['n2'] == 2 and ch['onBoard2'] and ch['said2'] == 1 and ch['slots1'] == ch['slots0'] and ch['k3'] == 'best' and ch['n3'] == 3 and ch['prem3'] == 0.2 and not ch['again']
+                                                        and ch['badge'] == 1 and ch['pressed'] and ch['ended'] and ch['broke'] and not ch['laid'] and ch['story']),
+              "the chain: her order done brings a link of another kind (no place used), that one a third order at 20 % over, the third gives the badge, the follow-on and the paper; a link run out ends it with a word", ch)
         check(errs == [], 'sidefeil', errs[:3])
         await br.close()
 

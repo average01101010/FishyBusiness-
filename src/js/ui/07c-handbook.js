@@ -83,6 +83,8 @@ const HB = [
   // 5: gear and boat, the first week
   {id:'oppdrag', ch:5, t:['Oppdrag', 'Orders'], when:() => (hbLand() >= 4 && hbTry(() => ordState().offers.length > 0)) || hbTry(() => S.turer.board.some(m => m.first) || S.turer.act.some(m => m.first)), show:() => phoneApp('ordl'),
     no:'Oppdragstavla: turer med god betaling ut fra der du er. Det første ligger klart: litt post til nabohavna, uten hast. Lang tur, god lønn. Med trim går båten fortere, så turen tar kortere tid.', en:'The order board: well-paid trips from where you are. The first lies ready: a little mail for the next harbour, no hurry. Long trip, good pay. With tuning the boat goes faster, so the trip takes less time.'},
+  {id:'kystvakt', ch:5, t:['Kystvakta', 'The coast guard'], when:() => hbTry(() => S.kv && S.kv.n > 0), show:() => phoneApp('regler'),
+    no:'Kystvakta kom langs siden. Den spør om det Regler-appen alt kan si deg: redskapen i sjøen, fangsten om bord og reglene der du er. Se «Kan jeg fiske her?» før du setter, så er kontrollen bare en hilsen. Papirene i Kvote-appen viser kontrollene.', en:'The coast guard came alongside. She asks what the Regler app can already tell you: the gear in the sea, the catch aboard and the rules where you are. Check «Can I fish here?» before you set, and the inspection is only a greeting. The papers in the Kvote app show the inspections.'},
   {id:'butikk', ch:5, t:['Utstyrsbutikken', 'The tackle shop'], when:() => hbSvc('butikk'), show:() => hbDock(['butikk', 'fiskeutstyr']),
     no:'Utstyrsbutikken: line, garn og teiner trenger hver sin haler, og kroker, blåser og agn hører til redskapet. Det som ikke passer båten, kan du ikke kjøpe.', en:'The tackle shop: lines, nets and pots each need their hauler, and hooks, floats and bait belong to the gear. What does not fit the boat cannot be bought.'},
   {id:'verft', ch:5, t:['Verftet', 'The yard'], when:() => hbSvc('verft'), show:() => hbDock(['vedlikehold', 'oppgr', 'batmarked']),
@@ -140,7 +142,7 @@ function hbReady(){ const H = hbState(); return HB.filter(x => !H.seen[x.id] && 
 // from the third landing everything is out, so nobody is kept from anything for long. S.apps: {id:'ny' | 1}; a game from before has none
 // and sees everything as it did
 const APP_ALWAYS = ['vaer', 'meld', 'redning', 'handbok', 'tilbake', 'innst', 'admin'];
-const HB_APP = {guide:'guide', lykke:'kaiboden', regler:'regler', sesong:'sesong', post:'post', meld:'meld', drift:'drift', topp:'salg', merker:'merker', patch:'patch', oppdrag:'ordl', venner:'folk', rederi:'rederi', kvote:'kvote', vaer:'vaer', redning:'redning'};
+const HB_APP = {guide:'guide', lykke:'kaiboden', regler:'regler', kystvakt:'regler', sesong:'sesong', post:'post', meld:'meld', drift:'drift', topp:'salg', merker:'merker', patch:'patch', oppdrag:'ordl', venner:'folk', rederi:'rederi', kvote:'kvote', vaer:'vaer', redning:'redning'};
 function appShown(id){
   if (!S.apps || APP_ALWAYS.includes(id) || S.apps[id]) return true;
   return !tutOn() && hbLand() >= 3;
