@@ -275,6 +275,26 @@ async def main():
         check(fm['first'] and fm['first']['k'] == 'frakt' and 20 <= fm['first']['kg'] <= 40 and fm['first']['nm'] <= 35 and fm['first']['hTot'] == 168 and fm['first']['pay'] >= 500
               and fm['told'] == 1 and fm['ev1'] == 1 and fm['again'] == 1 and fm['told2'] == 1 and fm['err'] is None and fm['take'] and fm['take']['first'] == 1 and fm['slots1'] == fm['slots0'] and fm['act'] and fm['none'],
               "the first mission: a short freight of mail laid on top of the board after the first landing, a week to do it, told once by the harbour; taken, it uses no place on the board; none once a mission is done", fm)
+        # 16. the people behind the missions (30.10.2026): an order's card names the plant's manager; taken, she sends a word; landed, she
+        #     remembers how many the boat has landed there (the first, the second, the third), and the place counts it; from the third
+        #     she lays an order of her own on the board (20 % over the price, no place used), told by her, and not again within a week
+        pp = await pg.evaluate("""(() => { const T = turState(), keep = {done:T.done, act:T.act, board:T.board, rep:T.rep, slots:T.slots, msgs:S.msgs.length}; T.done = []; T.act = []; T.board = []; T.rep = {}; S.landN = 9;
+          const o = turHere(), me = turMe(); let q = null, m = null;
+          for (const cand of turPlants().filter(x => x.id !== S.boat.port).sort((a, b) => turNm(o, a.p) - turNm(o, b.p))){ const h = turNm(o, cand.p) / turV(); if (h < 0.4 || h >= 18) continue; const c = h < 3 ? 'kort' : h < 7.5 ? 'mid' : 'lang'; m = turBestAt(o, cand, h, c, me); if (m){ q = cand; break; } }
+          if (!m) return {none:true};
+          const name = folkPlantName(q.id), said = [], land = () => { const O = ordState(), a = O.active.find(x => x.tur === m.id); O.active = O.active.filter(x => x !== a); O.done.unshift({...a, ok:true}); turSale(q.id, {[m.sp]:m.kg}); };
+          const run = () => { m = Object.assign({}, m, {id:++T.seq, until:S.t + 9999, ask:false}); m.pay = turFinal(m); T.board.push(m); const n0 = S.msgs.length; turTake(m.id); const took = S.msgs.slice(n0).map(x => x.from + ': ' + x.no); const n1 = S.msgs.length; land(); said.push({took, landed:S.msgs.slice(n1).map(x => x.from + ': ' + x.no)}); };
+          run(); run(); const asksBefore = T.board.filter(x => x.ask).length; run();
+          const rep = T.rep[q.id] && T.rep[q.id].n, card = turCard(T.board.length ? T.board[0] : m, false);
+          const slots0 = T.slots; T.board = []; turEnsure(true); const ask = T.board.find(x => x.ask), askMsg = ask ? S.msgs[S.msgs.length - 1].from : null, slotsAfterLaid = T.slots;
+          let took2 = null; if (ask){ turTake(ask.id); took2 = {slots:T.slots, prem:ordState().active.find(x => x.tur === ask.id).prem, act:T.act.some(x => x.ask)}; T.act = []; ordState().active = []; }
+          T.board = []; turEnsure(true); const again = T.board.filter(x => x.ask).length;
+          Object.assign(T, {done:keep.done, act:keep.act, board:keep.board, rep:keep.rep, slots:keep.slots}); ordState().active = [];
+          return {name, said, asksBefore, rep, card:/Bestilling fra/.test(card), ask:ask && {prem:ask.prem, pay:ask.pay, to:ask.to, hTot:ask.hTot, base:ask.base}, askMsg, slots0, slotsAfterLaid, took2, again}; })()""")
+        ok16 = pp.get('none') or (len(pp['said']) == 3 and all(any(pp['name'] in t for t in s['took']) for s in pp['said']) and 'Første gang' in ' '.join(pp['said'][0]['landed']) and 'Andre gangen' in ' '.join(pp['said'][1]['landed'])
+                                  and 'Tredje gangen' in ' '.join(pp['said'][2]['landed']) and pp['rep'] == 3 and pp['card'] and pp['asksBefore'] == 0 and pp['ask'] and pp['ask']['prem'] == 0.2 and pp['askMsg'] and pp['name'] in pp['askMsg']
+                                  and pp['took2'] and pp['took2']['slots'] == pp['slotsAfterLaid'] and pp['took2']['prem'] == 0.2 and pp['took2']['act'] and pp['again'] == 0)
+        check(ok16, "the people: the order names the manager, she sends a word when it is taken, remembers the first, second and third landing, and from the third lays an order of her own (20 % over, no place used), not again within a week", pp)
         check(errs == [], 'sidefeil', errs[:3])
         await br.close()
 
